@@ -27,14 +27,14 @@ from slack_code_channel_surface_helpers import (  # noqa: F401 - fixtures by nam
 )
 from slack_code_channels_helpers import OWNER
 
-from kiro_crew.slack.code_channels import wrapup
-from kiro_crew.slack.code_channels.workspace.store import WorkspaceStore
+from aj_crew.slack.code_channels import wrapup
+from aj_crew.slack.code_channels.workspace.store import WorkspaceStore
 
 
 @pytest.fixture(autouse=True)
 def _folder_subtree(_floor_monkeypatch: Any) -> None:
     """The channel folder ``f1`` is its own subtree (no folder tree in this env)."""
-    from kiro_crew.slack.code_channels.workspace import folders
+    from aj_crew.slack.code_channels.workspace import folders
 
     _floor_monkeypatch.setattr(
         folders, "subtree_ids", lambda _s, fid: frozenset({fid}) if fid else frozenset()

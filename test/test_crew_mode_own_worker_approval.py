@@ -1,6 +1,6 @@
 """A Crew Mode conductor's own READS of ITS crew members need no per-call approval.
 
-Only the verified ``kirocrew-dashboard`` session_status / session_read_message
+Only the verified ``ajcrew-dashboard`` session_status / session_read_message
 identity with a verified ``target`` that is the exact key of a live session whose
 GATEWAY-VOUCHED creator is the calling conductor qualifies: the settled session
 tree's edge, else a birth stamp this process minted, never the saved ``created_by``
@@ -15,8 +15,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import crew_mode
-from kiro_crew.dashboard.chat_turn.tool_approval import _crew_root_own_worker_call
+from aj_crew import crew_mode
+from aj_crew.dashboard.chat_turn.tool_approval import _crew_root_own_worker_call
 
 
 @pytest.fixture(autouse=True)
@@ -56,26 +56,24 @@ def _slot(
 
 
 def _state() -> SimpleNamespace:
-    root = _slot("root-1", agent="kirocrew-conductor")
-    other_root = _slot("root-2", agent="kirocrew-conductor")
+    root = _slot("root-1", agent="ajcrew-conductor")
+    other_root = _slot("root-2", agent="ajcrew-conductor")
     return SimpleNamespace(
         _slots={
             "root-1": root,
-            "w-1": _slot("w-1", agent="kirocrew-worker", created_by="root-1"),
+            "w-1": _slot("w-1", agent="ajcrew-worker", created_by="root-1"),
             "root-2": other_root,
-            "w-2": _slot("w-2", agent="kirocrew-worker", created_by="root-2"),
+            "w-2": _slot("w-2", agent="ajcrew-worker", created_by="root-2"),
             "plain": _slot("plain"),
             # Reopened after a restart: the creator is known only from the saved
             # metadata line, which an agent's file tools can edit.
             "restored": _slot(
-                "restored", agent="kirocrew-worker", minted=False, saved_created_by="root-1"
+                "restored", agent="ajcrew-worker", minted=False, saved_created_by="root-1"
             ),
             # A restored birth stamp with no mint witness is the same unvouched claim.
-            "unminted": _slot(
-                "unminted", agent="kirocrew-worker", created_by="root-1", minted=False
-            ),
-            "trusted": _slot("trusted", agent="kirocrew-worker", created_by="root-1", trust=True),
-            "reads": _slot("reads", agent="kirocrew-worker", created_by="root-1", trust_reads=True),
+            "unminted": _slot("unminted", agent="ajcrew-worker", created_by="root-1", minted=False),
+            "trusted": _slot("trusted", agent="ajcrew-worker", created_by="root-1", trust=True),
+            "reads": _slot("reads", agent="ajcrew-worker", created_by="root-1", trust_reads=True),
         }
     )
 
@@ -85,7 +83,7 @@ def _event(tool: str = "session_status", target: object = "w-1", **over: object)
         sub_session_id="",
         mcp_identity_trusted=True,
         raw_params_trusted=True,
-        mcp_server_name="kirocrew-dashboard",
+        mcp_server_name="ajcrew-dashboard",
         tool_name=tool,
         raw_tool_params={"target": target, "message": "go"},
     )
@@ -102,14 +100,14 @@ def test_conductor_call_to_its_own_worker_is_granted(tool: str) -> None:
 def test_a_deferred_tool_call_reads_the_target_from_its_arguments() -> None:
     state = _state()
     wrapped = {
-        "tool_id": "kirocrew-dashboard::session_status",
+        "tool_id": "ajcrew-dashboard::session_status",
         "arguments": {"target": "w-1"},
     }
     assert (
         _crew_root_own_worker_call(state, state._slots["root-1"], _event(raw_tool_params=wrapped))
         is True
     )
-    other = {"tool_id": "kirocrew-dashboard::session_stop", "arguments": {"target": "w-1"}}
+    other = {"tool_id": "ajcrew-dashboard::session_stop", "arguments": {"target": "w-1"}}
     assert (
         _crew_root_own_worker_call(state, state._slots["root-1"], _event(raw_tool_params=other))
         is False
@@ -126,7 +124,7 @@ def test_a_deferred_tool_call_reads_the_target_from_its_arguments() -> None:
         ("root-1", _event(tool="session_stop")),  # a verb not on the list
         ("root-1", _event(tool="session_send")),  # a send is never auto-approved
         ("root-1", _event(tool="session_send", target="trusted")),
-        ("root-1", _event(mcp_server_name="kirocrew-core")),
+        ("root-1", _event(mcp_server_name="ajcrew-core")),
         ("root-1", _event(mcp_identity_trusted=False)),
         ("root-1", _event(raw_params_trusted=False)),
         ("root-1", _event(sub_session_id="sub-1")),  # a subagent's call

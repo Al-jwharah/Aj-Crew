@@ -12,7 +12,7 @@
  * direction: `test_dashboard_frame.py` reads `widgetSrcdoc.ts` and
  * `CrewDynamicDashboard.tsx` to keep one policy in one place. Same reason both ways.
  *
- * Each case sets `window.kirocrew` the way the frame does, inserts the markup, and
+ * Each case sets `window.ajcrew` the way the frame does, inserts the markup, and
  * runs the script. The markup goes in through `DOMParser`, whose parsed scripts stay
  * inert, so the page's script is lifted out and called -- which is also what makes a
  * case able to re-run it with a new bag.
@@ -23,7 +23,7 @@ import { resolve } from 'node:path'
 
 const TEMPLATE = resolve(
   __dirname,
-  '../../../src/kiro_crew/dashboard_templates/builtin/project-report/template.html',
+  '../../../src/aj_crew/dashboard_templates/builtin/project-report/template.html',
 )
 
 const RAW = readFileSync(TEMPLATE, 'utf-8')
@@ -105,7 +105,7 @@ function mount(
     last_user_at?: string
   } = {},
 ) {
-  ;(window as unknown as { kirocrew: unknown }).kirocrew = {
+  ;(window as unknown as { ajcrew: unknown }).ajcrew = {
     fields,
     agentic: extra.agentic ?? ['ci', 'for_you', 'verdict'],
     seq: extra.seq ?? 412,
@@ -128,7 +128,7 @@ function mount(
  * `mount` runs the script in a fresh `new Function`, so every piece of module state
  * the page keeps -- which rows are expanded, which drawer is open, what each row
  * looked like last time -- starts empty. That is a page LOAD. What the host actually
- * does is replace the field bag and fire `kirocrew-dashboard`, which the page's script
+ * does is replace the field bag and fire `ajcrew-dashboard`, which the page's script
  * hears and re-renders from. Only this second thing can show that a refresh leaves
  * an expanded row expanded, because only this second thing has the state to lose.
  */
@@ -136,11 +136,11 @@ function refresh(
   fields: Record<string, unknown>,
   extra: { written_at?: Record<string, string>; last_user_at?: string } = {},
 ) {
-  const api = (window as unknown as { kirocrew: Record<string, unknown> }).kirocrew
+  const api = (window as unknown as { ajcrew: Record<string, unknown> }).ajcrew
   api.fields = fields
   if (extra.written_at) api.written_at = extra.written_at
   if (extra.last_user_at !== undefined) api.last_user_at = extra.last_user_at
-  window.dispatchEvent(new Event('kirocrew-dashboard'))
+  window.dispatchEvent(new Event('ajcrew-dashboard'))
 }
 
 const text = (sel: string) => document.querySelector(sel)?.textContent?.trim() ?? ''
@@ -769,7 +769,7 @@ describe('project-report: the page the gateway ships', () => {
       mount({ items: [{ id: 'w1', goal: 'G', open: 1, total: 1, tasks: [] }] })
       const span = () => document.querySelector('[data-dashboard-field="items"]')
       span()!.textContent = 'clobbered'
-      window.dispatchEvent(new Event('kirocrew-dashboard'))
+      window.dispatchEvent(new Event('ajcrew-dashboard'))
       expect(span()?.textContent).toBe('1 workstream')
     })
 

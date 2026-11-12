@@ -57,7 +57,7 @@ vi.mock('../api/client', () => ({
      'chatSlotWorkspace', 'models', 'planFromChat', 'renameSlot',
      'resolveApproval', 'screenshot', 'slackChannels', 'slackLink', 'spawnList',
      'stopChatSlot', 'uploadFiles', 'voiceSynthesize', 'workspaces', 'chatSlots',
-     'notifications', 'status', 'generateTitle', 'kirocrewConfig', 'agentResolvedModel',
+     'notifications', 'status', 'generateTitle', 'ajcrewConfig', 'agentResolvedModel',
      // The pane's unrestored-tabs notice reads this on arrival. Unmocked, the read
      // FAILS and the notice says so -- correctly, but it is a second `role="alert"`
      // in a file that counts them. The generic `{}` leaves `reported` unset, which

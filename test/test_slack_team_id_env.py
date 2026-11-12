@@ -1,6 +1,6 @@
-"""KIROCREW_SLACK_TEAM_ID: the Slack workspace of the conversation an agent serves.
+"""AJCREW_SLACK_TEAM_ID: the Slack workspace of the conversation an agent serves.
 
-The spawn sets it beside KIROCREW_CHANNEL_ID when the workspace is known and
+The spawn sets it beside AJCREW_CHANNEL_ID when the workspace is known and
 removes it otherwise, on both the kiro and the Claude backend, and the mirrors'
 control-plane element carries the same pair. The value comes only from the Slack
 client's channel -> home-workspace store (conversations.info), never from an
@@ -21,13 +21,13 @@ from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401
 from acp_client_helpers import _stop_stderr_drain
 from acp_launch_capture import _windows_cleanup_passthrough
 
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.slack import enterprise, team_ids
-from kiro_crew.slack.client import RealSlackClient
-from kiro_crew.slack.team_ids import SLACK_TEAM_ID_ENV
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.acp import client as client_mod
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.slack import enterprise, team_ids
+from aj_crew.slack.client import RealSlackClient
+from aj_crew.slack.team_ids import SLACK_TEAM_ID_ENV
+from aj_crew.testing.ids import UNALLOCATABLE_PID
 
 CHANNEL = "C0ABC123"
 TEAM = "T0HOME42"
@@ -66,22 +66,20 @@ async def _spawn_env(client: AcpClient, *, claude: bool = False) -> dict[str, st
     """Spawn *client* against a mocked process and return the child env."""
     if claude:
         bin_patch = patch(
-            "kiro_crew.acp.client._resolve_claude_acp_bin",
+            "aj_crew.acp.client._resolve_claude_acp_bin",
             return_value=(["/usr/bin/node", "/x/acp.js"], ""),
         )
         argv = ["/usr/bin/node", "/x/acp.js"]
     else:
-        bin_patch = patch(
-            "kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"
-        )
+        bin_patch = patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli")
         argv = ["/usr/bin/kiro-cli", "acp"]
     with (
         bin_patch,
         patch(
-            "kiro_crew.acp.client._resolve_claude_code_executable",
+            "aj_crew.acp.client._resolve_claude_code_executable",
             return_value="/usr/local/bin/claude",
         ),
-        patch("kiro_crew.acp.client.wrap_argv", return_value=(argv, None)),
+        patch("aj_crew.acp.client.wrap_argv", return_value=(argv, None)),
         patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec,
         # On Windows the launch spawns through the cleanup admission, which hands the
         # factory an owner and creates a real child instead of reaching the patched
@@ -92,9 +90,9 @@ async def _spawn_env(client: AcpClient, *, claude: bool = False) -> dict[str, st
             "create_windows_cleanup_owned_process",
             side_effect=_windows_cleanup_passthrough,
         ),
-        patch("kiro_crew.acp.client.finish_suspended_spawn", return_value=True),
-        patch("kiro_crew.session._track_pid"),
-        patch("kiro_crew.session._track_session_pid"),
+        patch("aj_crew.acp.client.finish_suspended_spawn", return_value=True),
+        patch("aj_crew.session._track_pid"),
+        patch("aj_crew.session._track_session_pid"),
     ):
         mock_proc = MagicMock()
         mock_proc.pid = UNALLOCATABLE_PID
@@ -118,7 +116,7 @@ class TestSpawnEnv:
     async def test_set_beside_channel_when_home_team_known(self, tmp_path):
         _known(**{CHANNEL: TEAM})
         env = await _spawn_env(AcpClient(work_dir=tmp_path, session_key="k", channel_id=CHANNEL))
-        assert env["KIROCREW_CHANNEL_ID"] == CHANNEL
+        assert env["AJCREW_CHANNEL_ID"] == CHANNEL
         assert env[SLACK_TEAM_ID_ENV] == TEAM
 
     @pytest.mark.asyncio
@@ -128,7 +126,7 @@ class TestSpawnEnv:
             work_dir=tmp_path, session_key="k", channel_id=CHANNEL, acp_backend=ACP_BACKEND_CLAUDE
         )
         env = await _spawn_env(client, claude=True)
-        assert env["KIROCREW_CHANNEL_ID"] == CHANNEL
+        assert env["AJCREW_CHANNEL_ID"] == CHANNEL
         assert env[SLACK_TEAM_ID_ENV] == TEAM
 
     @pytest.mark.asyncio
@@ -136,7 +134,7 @@ class TestSpawnEnv:
         _known(**{CHANNEL: TEAM})
         with patch.dict(os.environ, {SLACK_TEAM_ID_ENV: "T0STALE11"}):
             env = await _spawn_env(AcpClient(work_dir=tmp_path, session_key="k", channel_id=None))
-        assert "KIROCREW_CHANNEL_ID" not in env
+        assert "AJCREW_CHANNEL_ID" not in env
         assert SLACK_TEAM_ID_ENV not in env
 
     @pytest.mark.asyncio
@@ -146,7 +144,7 @@ class TestSpawnEnv:
             env = await _spawn_env(
                 AcpClient(work_dir=tmp_path, session_key="k", channel_id=CHANNEL)
             )
-        assert env["KIROCREW_CHANNEL_ID"] == CHANNEL
+        assert env["AJCREW_CHANNEL_ID"] == CHANNEL
         assert SLACK_TEAM_ID_ENV not in env
 
     @pytest.mark.asyncio
@@ -156,7 +154,7 @@ class TestSpawnEnv:
         env = await _spawn_env(
             AcpClient(work_dir=tmp_path, session_key="k", channel_id="123456789012345678")
         )
-        assert env["KIROCREW_CHANNEL_ID"] == "123456789012345678"
+        assert env["AJCREW_CHANNEL_ID"] == "123456789012345678"
         assert SLACK_TEAM_ID_ENV not in env
 
     @pytest.mark.asyncio
@@ -165,7 +163,7 @@ class TestSpawnEnv:
         client = AcpClient(work_dir=tmp_path, session_key="k", channel_id=CHANNEL)
         client.rekey("k2", "C0OTHER01")
         env = await _spawn_env(client)
-        assert env["KIROCREW_CHANNEL_ID"] == "C0OTHER01"
+        assert env["AJCREW_CHANNEL_ID"] == "C0OTHER01"
         assert env[SLACK_TEAM_ID_ENV] == "T0OTHER02"
 
 
@@ -216,7 +214,7 @@ class TestWriters:
         assert team_ids.slack_team_id_for(CHANNEL) == TEAM
 
     def test_the_bots_own_workspace_is_never_a_fallback(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         RealSlackClient("xoxb-token")
         web_mod = types.ModuleType("slack_sdk.web")
         web_mod.WebClient = lambda *a, **k: types.SimpleNamespace(
@@ -235,15 +233,15 @@ class TestWriters:
 
 class TestControlPlaneElement:
     def test_carries_the_team_beside_the_channel(self):
-        from kiro_crew.providers.mirrors.identity import control_plane_identity_env
+        from aj_crew.providers.mirrors.identity import control_plane_identity_env
 
         _known(**{CHANNEL: TEAM})
         env = control_plane_identity_env("slack:1.2", CHANNEL, label="codex")
-        assert env["KIROCREW_CHANNEL_ID"] == CHANNEL
+        assert env["AJCREW_CHANNEL_ID"] == CHANNEL
         assert env[SLACK_TEAM_ID_ENV] == TEAM
 
     def test_omitted_when_unknown_or_without_a_channel(self):
-        from kiro_crew.providers.mirrors.identity import control_plane_identity_env
+        from aj_crew.providers.mirrors.identity import control_plane_identity_env
 
         _known()
         assert SLACK_TEAM_ID_ENV not in control_plane_identity_env("k", CHANNEL, label="codex")

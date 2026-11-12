@@ -1,5 +1,5 @@
 """Requirement (Connections G2 pod-grant-isolation): a ``HOME`` remap must never
-unfence the real home's sensitive paths (``~/.aws``, ``~/.ssh``, ``~/.kirocrew*``).
+unfence the real home's sensitive paths (``~/.aws``, ``~/.ssh``, ``~/.ajcrew*``).
 
 ``security.py``'s matchers run in the GATEWAY against its own ``Path.home()``.
 ``_apply_pod_home_remap`` changes only the CHILD's env dict, never the gateway's
@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import security
-from kiro_crew.acp.client import _apply_pod_home_remap
+from aj_crew import security
+from aj_crew.acp.client import _apply_pod_home_remap
 
 
 def _pin_home(monkeypatch: pytest.MonkeyPatch, home: Path) -> Path:
@@ -43,8 +43,8 @@ class TestGatewayHomeIsIndependentOfAChildsRemappedHome:
 
         child_env = {
             "HOME": str(real_home),
-            "KIROCREW_POD": "1",
-            "KIROCREW_OS_HOME": str(tmp_path / "pod-os-home"),
+            "AJCREW_POD": "1",
+            "AJCREW_OS_HOME": str(tmp_path / "pod-os-home"),
         }
         _apply_pod_home_remap(child_env, pod_home_remap=True)
 
@@ -56,14 +56,14 @@ class TestGatewayHomeIsIndependentOfAChildsRemappedHome:
     def test_sensitive_paths_stay_denied_against_the_gateways_own_home(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        """Simulates the pod boot ordering: a KIROCREW_POD/KIROCREW_OS_HOME
+        """Simulates the pod boot ordering: an AJCREW_POD/AJCREW_OS_HOME
         pair is present in the GATEWAY's own os.environ too (build_pod_env
         sets both on the whole pod gateway process), yet a tool call naming
         the real ~/.aws/credentials must still be denied by is_sensitive_path
         -- the pod anchor ADDS a fenced root, it never removes the real one."""
         real_home = _pin_home(monkeypatch, tmp_path / "real-home")
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(tmp_path / "pod-os-home"))
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", str(tmp_path / "pod-os-home"))
 
         assert security.is_sensitive_path(str(real_home / ".aws" / "credentials")) is True
         assert security.is_sensitive_path(str(real_home / ".ssh" / "id_rsa")) is True
@@ -75,12 +75,12 @@ class TestGatewayHomeIsIndependentOfAChildsRemappedHome:
         """Relocating the credential store must not move it out from under the fence.
 
         `_seed_pod_os_home` copies the operator's SSO bearer token under the pod home,
-        so `KIROCREW_OS_HOME` is an alternate home root and EVERY fenced entry
+        so `AJCREW_OS_HOME` is an alternate home root and EVERY fenced entry
         re-anchors under it, not only `.aws`."""
         pod_os_home = tmp_path / "pod-os-home"
         _pin_home(monkeypatch, tmp_path / "real-home")
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(pod_os_home))
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", str(pod_os_home))
 
         # The seeded host SSO token, at the pod-path spelling.
         assert (
@@ -106,14 +106,14 @@ class TestGatewayHomeIsIndependentOfAChildsRemappedHome:
 
         child_env = {
             "HOME": str(real_home),
-            "KIROCREW_POD": "1",
-            "KIROCREW_OS_HOME": str(tmp_path / "pod-os-home"),
+            "AJCREW_POD": "1",
+            "AJCREW_OS_HOME": str(tmp_path / "pod-os-home"),
         }
         _apply_pod_home_remap(child_env, pod_home_remap=True)
         assert child_env["HOME"] == str(tmp_path / "pod-os-home")
 
         assert security.is_sensitive_path(str(real_home / ".ssh" / "id_ed25519")) is True
-        # No KIROCREW_OS_HOME in THIS process's environ, so the pod spelling is
+        # No AJCREW_OS_HOME in THIS process's environ, so the pod spelling is
         # not anchored here -- which is why build_pod_env sets it on the pod
         # gateway itself, covered by the test above.
         assert (
@@ -130,7 +130,7 @@ class TestGatewayHomeIsIndependentOfAChildsRemappedHome:
         nothing on Windows.
         """
         real_home = _pin_home(monkeypatch, tmp_path / "real-home")
-        monkeypatch.setenv("KIROCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_POD", "1")
 
         for leaf in ((".aws", "credentials"), (".ssh", "id_ed25519")):
             target = str(real_home / Path(*leaf))
@@ -141,7 +141,7 @@ class TestPodMintedGrantsAreFencedFromToolCalls:
     # The sandbox mask carves out <os-home>/.aws so the pod's kiro-cli can write its
     # MCP OAuth grants there (no env lever relocates them). The other audience, an
     # agent TOOL call, is fenced in-band by `is_sensitive_path`, the resolving layer:
-    # KIROCREW_OS_HOME is an alternate $HOME and every fenced entry re-anchors under it.
+    # AJCREW_OS_HOME is an alternate $HOME and every fenced entry re-anchors under it.
     # The command matcher fences no path spelling at all.
 
     @staticmethod
@@ -152,8 +152,8 @@ class TestPodMintedGrantsAreFencedFromToolCalls:
         self, tmp_path: Path, monkeypatch
     ) -> None:
         os_home = tmp_path / "pod-os-home"
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(os_home))
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", str(os_home))
 
         grant = self._grant(os_home)
         assert security.is_sensitive_path(str(grant)) is True
@@ -171,9 +171,9 @@ class TestPodMintedGrantsAreFencedFromToolCalls:
         """
         os_home = tmp_path / "pod-os-home"
         crew_home = tmp_path / "crew-home"
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(os_home))
-        monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", str(os_home))
+        monkeypatch.setenv("AJCREW_HOME", str(crew_home))
 
         grant = self._grant(os_home)
         crew_secret = crew_home / ".env"
@@ -196,8 +196,8 @@ class TestPodMintedGrantsAreFencedFromToolCalls:
 
     def test_a_non_pod_gateway_target_set_is_unchanged(self, monkeypatch) -> None:
         # No marker, no os-home: the fence is exactly the real home's.
-        monkeypatch.delenv("KIROCREW_POD", raising=False)
-        monkeypatch.delenv("KIROCREW_OS_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_POD", raising=False)
+        monkeypatch.delenv("AJCREW_OS_HOME", raising=False)
 
         assert security.is_sensitive_path("~/.aws/credentials") is True
         assert security.is_sensitive_path("/tmp/not-a-secret") is False
@@ -210,8 +210,8 @@ class TestPodMintedGrantsAreFencedFromToolCalls:
         hand-backslashed root would be a spelling no platform emits.
         """
         os_home = tmp_path / "pod-os-home"
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(os_home))
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", str(os_home))
 
         targets = security._home_dir_targets(security._SENSITIVE_HOME_DIRS)
         root = str(os_home).rstrip("/\\").casefold()
@@ -227,8 +227,8 @@ class TestPodMintedGrantsAreFencedFromToolCalls:
     ) -> None:
         """The running platform's own spelling stays fenced through `is_sensitive_path`."""
         os_home = tmp_path / "pod-os-home"
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(os_home))
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", str(os_home))
 
         grant = self._grant(os_home)
 
@@ -251,7 +251,7 @@ class TestTheStagedIdentityStoreIsFencedFromToolCalls:
 
     def test_every_table_row_is_in_the_fence(self) -> None:
         """One table. A row that is not fenced would be staged and readable."""
-        from kiro_crew import identity_stores
+        from aj_crew import identity_stores
 
         fenced = set(security._SENSITIVE_HOME_DIRS)
         missing = [d for d in identity_stores.fenced_home_dirs() if d not in fenced]
@@ -261,8 +261,8 @@ class TestTheStagedIdentityStoreIsFencedFromToolCalls:
         self, tmp_path: Path, monkeypatch
     ) -> None:
         os_home = tmp_path / "pod-os-home"
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(os_home))
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", str(os_home))
 
         db = self._staged_db(os_home)
         assert security.is_sensitive_path(str(db)) is True
@@ -280,8 +280,8 @@ class TestTheStagedIdentityStoreIsFencedFromToolCalls:
         Asserted at `is_sensitive_path`, since the bash text layer fences no path.
         """
         os_home = tmp_path / "pod-os-home"
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(os_home))
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", str(os_home))
 
         db = self._staged_db(os_home)
         # ``.local/share`` itself is a general-purpose parent and deliberately NOT
@@ -293,11 +293,11 @@ class TestTheStagedIdentityStoreIsFencedFromToolCalls:
         self, tmp_path: Path, monkeypatch
     ) -> None:
         """macOS and Windows layouts too -- the pod's platform is not the fence's."""
-        from kiro_crew import identity_stores
+        from aj_crew import identity_stores
 
         os_home = tmp_path / "pod-os-home"
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(os_home))
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", str(os_home))
 
         for relative in identity_stores.fenced_home_dirs():
             target = os_home / Path(*relative.split("/")) / "data.sqlite3"
@@ -310,7 +310,7 @@ class TestTheStagedIdentityStoreIsFencedFromToolCalls:
         breaks sign-in. Pod-home variant of
         ``test_the_agent_runtime_auth_stores_stay_visible``.
         """
-        from kiro_crew import identity_stores, sandbox
+        from aj_crew import identity_stores, sandbox
 
         store_dirs = set(identity_stores.fenced_home_dirs())
         for tier_name in ("_STRICT_DIRS", "_CC_DIRS", "_STANDARD_DIRS"):

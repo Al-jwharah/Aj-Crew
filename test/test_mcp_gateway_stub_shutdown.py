@@ -16,7 +16,7 @@ import sys
 import textwrap
 from pathlib import Path
 
-from kiro_crew.mcp_gateway import stub
+from aj_crew.mcp_gateway import stub
 
 
 class TestHardExit:

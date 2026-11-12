@@ -29,7 +29,7 @@ const CUT_HINT = `… ${EN_MANUAL.pages.chat.toolCallLine.tip_cut_hint}`
 
 const OUT = process.argv[2] || '../temp-screenshots/tool-pill-hover'
 const SLOT = 'chat-tool-pill-hover'
-const PROJECT = '/home/user/workspace/kirocrew'
+const PROJECT = '/home/user/workspace/ajcrew'
 mkdirSync(OUT, { recursive: true })
 
 const CMD = '.venv/bin/python -m pytest -q -p no:cacheprovider --no-cov -o addopts="" test/test_remote_session_local_only_tools.py 2>&1 | grep -E "^(FAILED|E )|passed|failed|Error" | head -20'
@@ -43,7 +43,7 @@ const CLASSIFIED_PURPOSE = 'Find tooltip call sites'
 const CMD3 = [
   'cd website', 'npm ci --no-audit', 'npx tsc -b', 'npx eslint src --max-warnings=0', 'npx vitest run --no-coverage',
   'npm run build', 'cd ..', 'python3 scripts/check_black_formatting.py', 'python3 scripts/check_subprocess_encoding.py',
-  'isort --check src/kiro_crew test', 'flake8 src/kiro_crew test', 'mypy src/kiro_crew',
+  'isort --check src/aj_crew test', 'flake8 src/aj_crew test', 'mypy src/aj_crew',
   'FEATURE_MAP_BASE_REF=origin/main python3 scripts/check_feature_map.py', 'python3 scripts/local-gate.py',
 ].join(' && ')
 const PURPOSE3 = 'Run every local gate'
@@ -54,7 +54,7 @@ const PURPOSE4 = 'Read the pill host'
 const t0 = Date.now() / 1000 - 600
 const slots = [{
   key: SLOT, title: 'Fence remote-only tools', running: false, last_message: 'Tests pass.', messages: 8,
-  agent: 'kirocrew', memory_mode: 'persistent', project: PROJECT, modified: Math.floor(Date.now() / 1000),
+  agent: 'ajcrew', memory_mode: 'persistent', project: PROJECT, modified: Math.floor(Date.now() / 1000),
   source_links: [], source_links_total: 0,
 }]
 const shellRow = (id, ts, purpose, command) => ({

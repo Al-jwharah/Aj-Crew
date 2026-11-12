@@ -1,6 +1,6 @@
 """Tests for posture-gated admission control.
 
-Covers :func:`kiro_crew.resource_status.admission_check` (critical refuses;
+Covers :func:`aj_crew.resource_status.admission_check` (critical refuses;
 ample/tight/unknown admit; off-switch; fail-open), the cron scheduler's
 critical-posture deferral in ``_on_timer`` (deferred jobs are not marked
 failed, fire on recovery, one INFO per episode; manual triggers are never
@@ -36,16 +36,16 @@ from admission_gate_helpers import (  # noqa: F401 -- the autouse fixture regist
 )
 from overload_fakes import wait_taskq_open
 
-from kiro_crew import resource_status as rs
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.constants import DEFAULT_SUBAGENT_QUEUE_MAX_WAIT_SECS
-from kiro_crew.cron import CronService
-from kiro_crew.subagent import _UNLEARNED_DEDICATED_START_GB
-from kiro_crew.testing.wait import await_until, wait_until
+from aj_crew import resource_status as rs
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.constants import DEFAULT_SUBAGENT_QUEUE_MAX_WAIT_SECS
+from aj_crew.cron import CronService
+from aj_crew.subagent import _UNLEARNED_DEDICATED_START_GB
+from aj_crew.testing.wait import await_until, wait_until
 
 
 def _cfg(pressure: float = 4.0, critical: float = 2.0, gate: bool = True) -> SimpleNamespace:
-    """Minimal stand-in for KiroCrewConfig exposing the gate's config surface."""
+    """Minimal stand-in for AjCrewConfig exposing the gate's config surface."""
     return SimpleNamespace(
         agent=SimpleNamespace(
             resource_pressure_gb=pressure,
@@ -172,7 +172,7 @@ class TestAdmissionCheck:
         # An unreadable config must ADMIT (fail-open), never gate work on
         # default thresholds it could not actually read.
         monkeypatch.setattr(
-            rs.KiroCrewConfig,
+            rs.AjCrewConfig,
             "load",
             MagicMock(side_effect=RuntimeError("config unreadable")),
         )
@@ -218,8 +218,8 @@ class TestCronAdmissionDeferral:
         job = svc._jobs[0]
         job.last_run_ts = time.time() - 120
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.cron"):
-            with patch("kiro_crew.cron.admission_check", return_value=_refused()):
+        with caplog.at_level(logging.INFO, logger="aj_crew.cron"):
+            with patch("aj_crew.cron.admission_check", return_value=_refused()):
                 await svc._on_timer()
                 await svc._on_timer()
 
@@ -233,7 +233,7 @@ class TestCronAdmissionDeferral:
         assert len(infos) == 1  # one INFO per episode, not per tick
 
         # Recovery: the same job fires on the next admitted tick.
-        with patch("kiro_crew.cron.admission_check", return_value=_admitted()):
+        with patch("aj_crew.cron.admission_check", return_value=_admitted()):
             await svc._on_timer()
             run_task = svc._claims[job.id].task
         assert run_task is not None
@@ -246,8 +246,8 @@ class TestCronAdmissionDeferral:
         # wrote the store from a worker thread, so backdate the live record.
         await _backdate_persisted(svc, job.id, 120)
         caplog.clear()
-        with caplog.at_level(logging.INFO, logger="kiro_crew.cron"):
-            with patch("kiro_crew.cron.admission_check", return_value=_refused()):
+        with caplog.at_level(logging.INFO, logger="aj_crew.cron"):
+            with patch("aj_crew.cron.admission_check", return_value=_refused()):
                 await svc._on_timer()
         assert any(
             "deferring" in r.getMessage() for r in caplog.records if r.levelno == logging.INFO
@@ -264,7 +264,7 @@ class TestCronAdmissionDeferral:
         svc.add_job("gated", "msg", every_secs=60)
         job_id = svc._jobs[0].id
         await _backdate_persisted(svc, job_id, 120)
-        with patch("kiro_crew.cron.admission_check", return_value=_admitted()):
+        with patch("aj_crew.cron.admission_check", return_value=_admitted()):
             await svc._on_timer()
             run_task = svc._claims[job_id].task
         assert run_task is not None
@@ -278,8 +278,8 @@ class TestCronAdmissionDeferral:
         before = svc._jobs[0]
 
         caplog.clear()
-        with caplog.at_level(logging.INFO, logger="kiro_crew.cron"):
-            with patch("kiro_crew.cron.admission_check", return_value=_refused()):
+        with caplog.at_level(logging.INFO, logger="aj_crew.cron"):
+            with patch("aj_crew.cron.admission_check", return_value=_refused()):
                 await svc._on_timer()
         assert svc._jobs[0] is not before  # the tick really reloaded
         assert job_id not in svc._claims
@@ -300,7 +300,7 @@ class TestCronAdmissionDeferral:
         svc.add_job("manual", "msg", every_secs=3600)
         job_id = svc._jobs[0].id
 
-        with patch("kiro_crew.cron.admission_check", return_value=_refused()):
+        with patch("aj_crew.cron.admission_check", return_value=_refused()):
             ran = await svc.run_job(job_id)
 
         assert ran is True
@@ -319,7 +319,7 @@ class TestCronAdmissionDeferral:
         svc.add_job("open", "msg", every_secs=60)
         svc._jobs[0].last_run_ts = time.time() - 120
 
-        with patch("kiro_crew.cron.admission_check", return_value=_admitted()):
+        with patch("aj_crew.cron.admission_check", return_value=_admitted()):
             await svc._on_timer()
         await _wait_for(lambda: "open" in executed)
         await svc.stop()
@@ -347,14 +347,14 @@ class TestSpawnAdmissionGate(_TestSpawnAdmissionGateHarness):
         mgr._spawn_stagger_secs = 3600.0
         posture = MagicMock(return_value=_refused())
         with (
-            patch("kiro_crew.subagent.check_memory_available", return_value=(True, 8.0)),
-            patch("kiro_crew.subagent.KiroCrewConfig") as mock_cfg,
-            patch("kiro_crew.resource_status.cached_admission_check", posture),
-            patch("kiro_crew.resource_status.admission_check", posture),
+            patch("aj_crew.subagent.check_memory_available", return_value=(True, 8.0)),
+            patch("aj_crew.subagent.AjCrewConfig") as mock_cfg,
+            patch("aj_crew.resource_status.cached_admission_check", posture),
+            patch("aj_crew.resource_status.admission_check", posture),
             # A posture read through the subagent module counts too; create=True
             # because the module does not define the name.
-            patch("kiro_crew.subagent.cached_admission_check", posture, create=True),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.cached_admission_check", posture, create=True),
+            patch("aj_crew.subagent.sel") as mock_sel,
         ):
             mock_cfg.load.return_value.agent.spawn_min_memory_gb = 4.0
             mock_cfg.load.return_value.agent.subagent_cost_gb = 0.5
@@ -374,10 +374,10 @@ class TestSpawnAdmissionGate(_TestSpawnAdmissionGateHarness):
         """An admitted decision falls through to the next guard (cwd here)."""
         mgr = self._mgr()
         with (
-            patch("kiro_crew.subagent.check_memory_available", return_value=(True, 8.0)),
-            patch("kiro_crew.subagent.KiroCrewConfig") as mock_cfg,
-            patch("kiro_crew.subagent.validate_cwd", return_value=("", "not allowed")),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.check_memory_available", return_value=(True, 8.0)),
+            patch("aj_crew.subagent.AjCrewConfig") as mock_cfg,
+            patch("aj_crew.subagent.validate_cwd", return_value=("", "not allowed")),
+            patch("aj_crew.subagent.sel") as mock_sel,
         ):
             mock_cfg.load.return_value.agent.spawn_min_memory_gb = 4.0
             mock_cfg.load.return_value.agent.subagent_cwd_allowed_roots = []
@@ -402,10 +402,10 @@ class TestSpawnAdmissionGate(_TestSpawnAdmissionGateHarness):
         mgr._last_spawn_ts = time.monotonic()
         mgr._spawn_stagger_secs = 3600.0
         with (
-            patch("kiro_crew.subagent.check_memory_available", return_value=(True, -1.0)),
-            patch("kiro_crew.platform_compat.IS_LINUX", True),
-            patch("kiro_crew.subagent.KiroCrewConfig") as mock_cfg,
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.check_memory_available", return_value=(True, -1.0)),
+            patch("aj_crew.platform_compat.IS_LINUX", True),
+            patch("aj_crew.subagent.AjCrewConfig") as mock_cfg,
+            patch("aj_crew.subagent.sel") as mock_sel,
         ):
             mock_cfg.load.return_value.agent.spawn_min_memory_gb = 4.0
             mock_cfg.load.return_value.agent.subagent_cost_gb = 0.5
@@ -450,7 +450,7 @@ class TestSpawnAdmissionGate(_TestSpawnAdmissionGateHarness):
         A settled worker already sits inside the free-memory reading and owes
         nothing.
         """
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         mgr = self._mgr()
         mgr._agents["heavy"] = SubagentInfo(
@@ -463,9 +463,9 @@ class TestSpawnAdmissionGate(_TestSpawnAdmissionGateHarness):
             return True, 32.0
 
         with (
-            patch("kiro_crew.subagent.check_memory_available", side_effect=memory_check),
-            patch("kiro_crew.subagent.KiroCrewConfig") as mock_cfg,
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.check_memory_available", side_effect=memory_check),
+            patch("aj_crew.subagent.AjCrewConfig") as mock_cfg,
+            patch("aj_crew.subagent.sel") as mock_sel,
         ):
             mock_cfg.load.return_value.agent.spawn_min_memory_gb = 4.0
             mock_cfg.load.return_value.agent.subagent_cost_gb = configured
@@ -480,9 +480,9 @@ class TestSpawnAdmissionGate(_TestSpawnAdmissionGateHarness):
         mgr = self._mgr()
         assert mgr._taskq is not None
         with (
-            patch("kiro_crew.subagent.check_memory_available", return_value=(False, 3.0)),
-            patch("kiro_crew.subagent.KiroCrewConfig") as mock_cfg,
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.check_memory_available", return_value=(False, 3.0)),
+            patch("aj_crew.subagent.AjCrewConfig") as mock_cfg,
+            patch("aj_crew.subagent.sel") as mock_sel,
         ):
             mock_cfg.load.return_value.agent.spawn_min_memory_gb = 4.0
             mock_cfg.load.return_value.agent.subagent_cost_gb = 0.5
@@ -540,12 +540,12 @@ class TestSpawnAdmissionGate(_TestSpawnAdmissionGateHarness):
 # ── config key ───────────────────────────────────────────────────────────────
 
 
-def _load_from_dict(data: dict, tmp_path: Path) -> KiroCrewConfig:
+def _load_from_dict(data: dict, tmp_path: Path) -> AjCrewConfig:
     """Write *data* to a config file under *tmp_path* and load it."""
     tmp = tmp_path / "config.json"
     tmp.write_text(json.dumps(data))
-    with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-        return KiroCrewConfig.load()
+    with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+        return AjCrewConfig.load()
 
 
 class TestAdmissionGateConfig:
@@ -642,7 +642,7 @@ class TestCronExprPassthrough:
             manual.append(svc._claim_run(job.id, "manual"))  # a manual run claims it
             return _admitted()
 
-        with patch("kiro_crew.cron.admission_check", side_effect=claiming_check):
+        with patch("aj_crew.cron.admission_check", side_effect=claiming_check):
             await svc._on_timer()
         # The scan claims what it dispatches before it returns, so a duplicate
         # would already have replaced the manual claim.
@@ -674,7 +674,7 @@ class TestCronExprPassthrough:
             job.last_run_ts = time.time()  # manual run ran to completion
             return _admitted()
 
-        with patch("kiro_crew.cron.admission_check", side_effect=completing_check):
+        with patch("aj_crew.cron.admission_check", side_effect=completing_check):
             await svc._on_timer()
         # The scan claims what it dispatches before it returns, and a run releases
         # its claim only after its callback ran: one of the two shows a re-fire.
@@ -701,7 +701,7 @@ class TestCronExprPassthrough:
             job.message = "new-message"
             return _admitted()
 
-        with patch("kiro_crew.cron.admission_check", side_effect=editing_check):
+        with patch("aj_crew.cron.admission_check", side_effect=editing_check):
             await svc._on_timer()
         await _wait_for(lambda: len(executed) == 1)
         assert executed == ["new-message"]
@@ -723,8 +723,8 @@ class TestCronExprPassthrough:
         svc.add_job("expr-job", "msg", cron_expr="* * * * *")
 
         with (
-            patch("kiro_crew.cron.admission_check", return_value=_refused()),
-            patch("kiro_crew.cron.cron_expr_matches", return_value=True),
+            patch("aj_crew.cron.admission_check", return_value=_refused()),
+            patch("aj_crew.cron.cron_expr_matches", return_value=True),
         ):
             await svc._on_timer()
         await _wait_for(lambda: "expr-job" in executed)
@@ -750,8 +750,8 @@ class TestCronExprPassthrough:
         interval_job.last_run_ts = time.time() - 120
 
         with (
-            patch("kiro_crew.cron.admission_check", return_value=_refused()),
-            patch("kiro_crew.cron.cron_expr_matches", return_value=True),
+            patch("aj_crew.cron.admission_check", return_value=_refused()),
+            patch("aj_crew.cron.cron_expr_matches", return_value=True),
         ):
             await svc._on_timer()
         # The tick claims what it dispatches before it returns.
@@ -761,7 +761,7 @@ class TestCronExprPassthrough:
         assert interval_job.last_status is None  # untouched: still due
 
         # Recovery: the deferred interval job fires on its own.
-        with patch("kiro_crew.cron.admission_check", return_value=_admitted()):
+        with patch("aj_crew.cron.admission_check", return_value=_admitted()):
             await svc._on_timer()
         await _wait_for(lambda: "interval" in executed)
         await svc.stop()
@@ -772,7 +772,7 @@ class TestCronExprPassthrough:
         # at zero delay — a busy loop of scans and admission probes on a host
         # already under memory pressure. During an episode the re-arm delay
         # is floored at the poll cadence.
-        from kiro_crew.cron import _TIMER_POLL_SECS
+        from aj_crew.cron import _TIMER_POLL_SECS
 
         svc = CronService(base_dir=tmp_path, on_job=AsyncMock())
         await svc.start()
@@ -781,12 +781,12 @@ class TestCronExprPassthrough:
 
         assert svc._effective_delay() < 1.0  # overdue: due immediately
 
-        with patch("kiro_crew.cron.admission_check", return_value=_refused()):
+        with patch("aj_crew.cron.admission_check", return_value=_refused()):
             await svc._on_timer()  # opens the episode, defers the job
         assert svc._admission_deferring is True
         assert svc._effective_delay() == _TIMER_POLL_SECS  # floored
 
-        with patch("kiro_crew.cron.admission_check", return_value=_admitted()):
+        with patch("aj_crew.cron.admission_check", return_value=_admitted()):
             await svc._on_timer()  # recovery closes the episode
         assert svc._admission_deferring is False
         await svc.stop()
@@ -807,7 +807,7 @@ class TestCronExprPassthrough:
         job = svc._jobs[0]
         job.last_run_ts = time.time() - 120
 
-        from kiro_crew.cron import CronSchedule
+        from aj_crew.cron import CronSchedule
 
         def editing_check(cfg: object | None = None):
             job.schedule = CronSchedule(kind="cron", cron_expr="* * * * *")
@@ -815,8 +815,8 @@ class TestCronExprPassthrough:
             return _refused()
 
         with (
-            patch("kiro_crew.cron.admission_check", side_effect=editing_check),
-            patch("kiro_crew.cron.cron_expr_matches", return_value=True),
+            patch("aj_crew.cron.admission_check", side_effect=editing_check),
+            patch("aj_crew.cron.cron_expr_matches", return_value=True),
         ):
             await svc._on_timer()
         await _wait_for(lambda: "morph" in executed)  # fired, not deferred
@@ -831,7 +831,7 @@ class TestCronExprPassthrough:
         # duplicate completion injection and wave/orchestration counters
         # double-count the failure. Exercises the REAL spawn path (no stubs)
         # so both potential announce sites are live.
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         announced: list = []
 
@@ -859,10 +859,10 @@ class TestCronExprPassthrough:
         mgr._emit_queue_depth = MagicMock()
 
         with (
-            patch("kiro_crew.subagent.check_memory_available", return_value=(True, 8.0)),
-            patch("kiro_crew.subagent.KiroCrewConfig") as mock_cfg,
-            patch("kiro_crew.subagent._vet_spawn_governance", return_value="spawning is disabled"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.check_memory_available", return_value=(True, 8.0)),
+            patch("aj_crew.subagent.AjCrewConfig") as mock_cfg,
+            patch("aj_crew.subagent._vet_spawn_governance", return_value="spawning is disabled"),
+            patch("aj_crew.subagent.sel") as mock_sel,
         ):
             mock_cfg.load.return_value.agent.spawn_min_memory_gb = 4.0
             mock_cfg.load.return_value.agent.subagent_cost_gb = 0.5
@@ -896,17 +896,17 @@ class TestCronExprPassthrough:
         job = svc._jobs[0]
         job.last_run_ts = time.time() - 7200
 
-        with patch("kiro_crew.cron.admission_check", return_value=_refused()):
+        with patch("aj_crew.cron.admission_check", return_value=_refused()):
             await svc._on_timer()
         assert executed == []  # deferred
 
         # Manual run during the episode completes the work.
-        with patch("kiro_crew.cron.admission_check", return_value=_refused()):
+        with patch("aj_crew.cron.admission_check", return_value=_refused()):
             assert await svc.run_job(job.id) is True
         await _wait_for(lambda: executed == ["interval"])
         job.last_run_ts = time.time()  # manual run marked it
 
-        with patch("kiro_crew.cron.admission_check", return_value=_admitted()):
+        with patch("aj_crew.cron.admission_check", return_value=_admitted()):
             await svc._on_timer()
         # The recovery tick claims what it dispatches before it returns.
         assert job.id not in svc._claims, "the recovery tick replayed the job"
@@ -936,16 +936,15 @@ class TestALearnedWholeTreePeakNeverPricesAStart:
     def test_a_132_gb_learned_p90_leaves_the_bar_at_floor_plus_the_start_price(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         log = tmp_path / "subagents" / "cost_samples.jsonl"
         log.parent.mkdir(parents=True)
         now = time.time()
         log.write_text(
             "".join(
-                json.dumps({"agent": "kirocrew", "mem_gb": v, "cpu_cores": 1.0, "ts": now - i})
-                + "\n"
+                json.dumps({"agent": "ajcrew", "mem_gb": v, "cpu_cores": 1.0, "ts": now - i}) + "\n"
                 for i, v in enumerate([1.2] * 5 + [132.3] * 5)
             )
         )
@@ -959,7 +958,7 @@ class TestALearnedWholeTreePeakNeverPricesAStart:
         )
         # A learned p90 published on the manager, where a gate that priced
         # starts from learned costs would read it. The start bar ignores it.
-        mgr._learned_costs_gb = {"kirocrew": 132.3}  # type: ignore[attr-defined]
+        mgr._learned_costs_gb = {"ajcrew": 132.3}  # type: ignore[attr-defined]
         asked: list[float] = []
 
         def _check(min_gb: float) -> tuple[bool, float]:
@@ -967,9 +966,9 @@ class TestALearnedWholeTreePeakNeverPricesAStart:
             return (85.9 >= min_gb, 85.9)
 
         with (
-            patch("kiro_crew.subagent.check_memory_available", side_effect=_check),
-            patch("kiro_crew.subagent.KiroCrewConfig") as mock_cfg,
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.check_memory_available", side_effect=_check),
+            patch("aj_crew.subagent.AjCrewConfig") as mock_cfg,
+            patch("aj_crew.subagent.sel"),
         ):
             mock_cfg.load.return_value.agent.spawn_min_memory_gb = 4.0
             mock_cfg.load.return_value.agent.subagent_cost_gb = 0.5
@@ -983,7 +982,7 @@ class TestALearnedWholeTreePeakNeverPricesAStart:
 
 
 def _row(**fields: Any) -> Any:
-    from kiro_crew.subagent import SubagentInfo
+    from aj_crew.subagent import SubagentInfo
 
     return SubagentInfo(id=str(fields.pop("id", "r")), task="t", **fields)
 
@@ -1031,7 +1030,7 @@ def _row(**fields: Any) -> Any:
 def test_owns_dedicated_runtime(
     rows: list[dict[str, Any]], claims: dict[str, tuple[float, bool]], owns: bool
 ) -> None:
-    from kiro_crew.subagent import _owns_dedicated_runtime
+    from aj_crew.subagent import _owns_dedicated_runtime
 
     assert _owns_dedicated_runtime([_row(**r) for r in rows], claim_prices=claims) is owns
 
@@ -1040,8 +1039,8 @@ def test_a_defer_write_outage_answers_still_queued_never_refused() -> None:
     """A ``TaskStoreUnavailable`` leaves the row QUEUED and due: announcing a
     refusal would give one id a refusal now and a completion when the pump starts
     it later."""
-    from kiro_crew import taskq
-    from kiro_crew.subagent import SubagentInfo, SubagentManager
+    from aj_crew import taskq
+    from aj_crew.subagent import SubagentInfo, SubagentManager
 
     sessions = MagicMock()
     sessions.get_agent_selection.return_value = ("template", "")
@@ -1081,7 +1080,7 @@ def test_a_defer_write_outage_answers_still_queued_never_refused() -> None:
 
 
 def test_a_queued_stop_drops_what_the_process_kept_for_the_start() -> None:
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.subagent import SubagentManager
 
     sessions = MagicMock()
     sessions.get_agent_selection.return_value = ("template", "")
@@ -1107,13 +1106,13 @@ def test_the_user_docs_state_the_hold_bounds_the_code_uses() -> None:
     ``agent.subagent_queue_max_wait_secs``, so the docs name that key and its
     default, and the config field and its configuration.md row carry the same
     default."""
-    from kiro_crew.config.sections import AgentConfig
-    from kiro_crew.subagent_wait_reasons import MEMORY_PRESSURE_RECHECK_SECS
+    from aj_crew.config.sections import AgentConfig
+    from aj_crew.subagent_wait_reasons import MEMORY_PRESSURE_RECHECK_SECS
 
     root = Path(__file__).resolve().parents[1]
     minutes = DEFAULT_SUBAGENT_QUEUE_MAX_WAIT_SECS // 60
     assert AgentConfig().subagent_queue_max_wait_secs == DEFAULT_SUBAGENT_QUEUE_MAX_WAIT_SECS
-    doc = (root / "src/kiro_crew/docs/subagents.md").read_text(encoding="utf-8")
+    doc = (root / "src/aj_crew/docs/subagents.md").read_text(encoding="utf-8")
     assert f"every {MEMORY_PRESSURE_RECHECK_SECS} seconds" in doc
     hold = next(line for line in doc.splitlines() if line.startswith("- **macOS memory pressure**"))
     assert f"held for `agent.subagent_queue_max_wait_secs` ({minutes} minutes by default)" in hold
@@ -1123,7 +1122,7 @@ def test_the_user_docs_state_the_hold_bounds_the_code_uses() -> None:
     assert "with no other top-level start from the same chat beginning" in hold
     assert "from any `spawn_run` batch" in hold
     assert "to resubmit once memory eases" in hold
-    reference = (root / "src/kiro_crew/docs/configuration.md").read_text(encoding="utf-8")
+    reference = (root / "src/aj_crew/docs/configuration.md").read_text(encoding="utf-8")
     row = next(
         line
         for line in reference.splitlines()
@@ -1159,7 +1158,7 @@ def test_the_user_docs_state_the_hold_bounds_the_code_uses() -> None:
 def test_the_card_and_the_gate_agree_on_the_never_started_prefix() -> None:
     """The run card headlines a wholly never-started wave by matching the gate's
     terminal error, so the two spellings must not drift."""
-    from kiro_crew.subagent_wait_reasons import (
+    from aj_crew.subagent_wait_reasons import (
         MEMORY_PRESSURE_NEVER_STARTED,
         NEVER_STARTED_MEMORY_PREFIX,
         QUEUED_WAIT_EXPIRED_TEXT,
@@ -1186,9 +1185,9 @@ def test_the_card_and_the_gate_agree_on_the_never_started_prefix() -> None:
 def test_event_loop_spawns_validate_the_agent_off_the_loop(monkeypatch: pytest.MonkeyPatch) -> None:
     """``spawn_async`` and the coroutine pump take the agent-directory scan off
     the loop and hand the gate the answer; the gate never walks it on the loop."""
-    import kiro_crew.subagent as subagent_mod
-    from kiro_crew.subagent import SubagentManager
-    from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+    import aj_crew.subagent as subagent_mod
+    from aj_crew.subagent import SubagentManager
+    from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
 
     monkeypatch.setattr(SpawnAdmissionCoordinator, "open_store_off_loop", True)
     monkeypatch.setattr(SpawnAdmissionCoordinator, "pump_off_loop", True)
@@ -1209,9 +1208,9 @@ def test_event_loop_spawns_validate_the_agent_off_the_loop(monkeypatch: pytest.M
         await wait_taskq_open(mgr)
         mgr._spawn_stagger_secs = 60.0  # the second spawn queues for the stagger
         with (
-            patch("kiro_crew.subagent.check_memory_available", return_value=(True, 8.0)),
-            patch("kiro_crew.subagent.KiroCrewConfig") as mock_cfg,
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.check_memory_available", return_value=(True, 8.0)),
+            patch("aj_crew.subagent.AjCrewConfig") as mock_cfg,
+            patch("aj_crew.subagent.sel"),
         ):
             mock_cfg.load.return_value.agent.spawn_min_memory_gb = 4.0
             mock_cfg.load.return_value.agent.subagent_cost_gb = 0.5
@@ -1239,8 +1238,8 @@ def test_event_loop_spawns_validate_the_agent_off_the_loop(monkeypatch: pytest.M
 def test_an_app_spawn_proves_ownership_off_the_loop(monkeypatch: pytest.MonkeyPatch) -> None:
     """App ownership walks the agents directory too, so the gate must read the
     off-loop answer instead of calling it on the loop."""
-    import kiro_crew.subagent as subagent_mod
-    from kiro_crew.subagent import SubagentManager
+    import aj_crew.subagent as subagent_mod
+    from aj_crew.subagent import SubagentManager
 
     threads: list[bool] = []
 
@@ -1258,9 +1257,9 @@ def test_an_app_spawn_proves_ownership_off_the_loop(monkeypatch: pytest.MonkeyPa
             sessions=sessions, ctx_builder=MagicMock(), on_done=MagicMock(), max_concurrent=3
         )
         with (
-            patch("kiro_crew.subagent.check_memory_available", return_value=(True, 8.0)),
-            patch("kiro_crew.subagent.KiroCrewConfig") as mock_cfg,
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.check_memory_available", return_value=(True, 8.0)),
+            patch("aj_crew.subagent.AjCrewConfig") as mock_cfg,
+            patch("aj_crew.subagent.sel"),
         ):
             mock_cfg.load.return_value.agent.spawn_min_memory_gb = 4.0
             mock_cfg.load.return_value.agent.subagent_cost_gb = 0.5
@@ -1280,8 +1279,8 @@ def test_the_off_loop_check_keys_on_the_app_the_gate_settles_on(
     the captured execution's app (``resolve_spawn_execution``), so the off-loop
     answer must be computed and keyed for that app or the gate walks the agents
     directory on the loop after all."""
-    import kiro_crew.subagent as subagent_mod
-    from kiro_crew.subagent import SubagentManager
+    import aj_crew.subagent as subagent_mod
+    from aj_crew.subagent import SubagentManager
 
     asked: list[str] = []
     monkeypatch.setattr(
@@ -1310,8 +1309,8 @@ def test_the_off_loop_agent_check_keys_on_the_canonical_cwd(
     agents directory on the loop."""
     import os
 
-    import kiro_crew.subagent as subagent_mod
-    from kiro_crew.subagent import SubagentManager
+    import aj_crew.subagent as subagent_mod
+    from aj_crew.subagent import SubagentManager
 
     real = tmp_path / "real"
     real.mkdir()
@@ -1332,9 +1331,9 @@ def test_the_off_loop_agent_check_keys_on_the_canonical_cwd(
             sessions=sessions, ctx_builder=MagicMock(), on_done=MagicMock(), max_concurrent=3
         )
         with (
-            patch("kiro_crew.subagent.check_memory_available", return_value=(True, 8.0)),
-            patch("kiro_crew.subagent.KiroCrewConfig") as mock_cfg,
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.check_memory_available", return_value=(True, 8.0)),
+            patch("aj_crew.subagent.AjCrewConfig") as mock_cfg,
+            patch("aj_crew.subagent.sel"),
         ):
             mock_cfg.load.return_value.agent.spawn_min_memory_gb = 4.0
             mock_cfg.load.return_value.agent.subagent_cost_gb = 0.5

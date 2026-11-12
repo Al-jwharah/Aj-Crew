@@ -17,13 +17,13 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from kiro_crew.config.loader import config_path
-from kiro_crew.context import ContextBuilder, _neutralize_structural_markers
-from kiro_crew.hooks import ContextRule, HookManager, HooksConfig
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.memory_stores import memory_store_name_defect
-from kiro_crew.skills import SkillsLoader
+from aj_crew.config.loader import config_path
+from aj_crew.context import ContextBuilder, _neutralize_structural_markers
+from aj_crew.hooks import ContextRule, HookManager, HooksConfig
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.memory_stores import memory_store_name_defect
+from aj_crew.skills import SkillsLoader
 
 # Each context-builder file keeps this xdist group; ``test_context_memory_lessons``'s ratchet
 # walks the package through the shared ``source_corpus`` (one memoised file list per
@@ -75,14 +75,14 @@ class TestMemoryStoreOverrideProperty:
         distinct memory_store parameter, get_memory_for must be called
         with the memory_store value, not the workspace value.
         """
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.config.sections import MemoryStoreConfig
-        from kiro_crew.memory_stores import memory_store_dir_for
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.config.sections import MemoryStoreConfig
+        from aj_crew.memory_stores import memory_store_dir_for
 
         # These are legacy named V1 stores: the property checks routing, while
         # the member-isolation suite covers owned V2 provisioning and algorithms.
         # The shared test fixture pins the data home to a temporary directory.
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.memory_stores[memory_store] = MemoryStoreConfig()
         cfg.save()
         memory_store_dir_for(memory_store).mkdir(parents=True, exist_ok=True)
@@ -95,7 +95,7 @@ class TestMemoryStoreOverrideProperty:
         # Assert the resolved target: store names and workspace names use
         # separate namespaces, so inspecting one positional argument can miss
         # a store-routing error.
-        from kiro_crew import context as ctx_mod
+        from aj_crew import context as ctx_mod
 
         calls: list[tuple[str | None, str | None]] = []
         original_get_memory = ContextBuilder.get_memory_for
@@ -335,21 +335,21 @@ class TestContextBuilder:
 
     @pytest.mark.parametrize("density", ["more", "less"])
     def test_dashboard_artifacts_discovery_uses_existing_system_pointer(self, density, monkeypatch):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.dashboard.widget_density = density
-        monkeypatch.setattr(KiroCrewConfig, "load", lambda: cfg)
+        monkeypatch.setattr(AjCrewConfig, "load", lambda: cfg)
         prompt = ContextBuilder._resolve_prompt_templates("{{WIDGET_BLOCK}}", "dashboard:card-hint")
         assert "Load the `artifacts` skill" in prompt
         assert "{{WIDGET_BLOCK}}" not in prompt
 
     def test_dashboard_capability_tracks_a_channel_tabs_presence(self, tmp_path, monkeypatch):
-        from kiro_crew import session_surface
-        from kiro_crew.config import live
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew import session_surface
+        from aj_crew.config import live
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.dashboard.dynamic_dashboard_cards = True
         monkeypatch.setattr(live, "snapshot", lambda: cfg)
 
@@ -374,9 +374,9 @@ class TestContextBuilder:
     def test_dashboard_hint_is_not_a_generation_or_persistence_grant(
         self, tmp_path, memory_mode, enabled
     ):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.dashboard.dynamic_dashboard_cards = enabled
         cfg.save()
         builder = ContextBuilder(
@@ -394,7 +394,7 @@ class TestContextBuilder:
             hint = msg.split("Automatic cards:", 1)[1].split("\n\n", 1)[0]
             assert len(hint) < 400
             assert "Do not enable generation, spawn a builder" in hint
-        assert KiroCrewConfig.load().dashboard.dynamic_dashboard_cards is enabled
+        assert AjCrewConfig.load().dashboard.dynamic_dashboard_cards is enabled
 
     @pytest.mark.parametrize(
         "lifecycle",
@@ -407,10 +407,10 @@ class TestContextBuilder:
     def test_dashboard_milestone_guidance_reads_current_live_toggle(
         self, tmp_path, monkeypatch, lifecycle
     ):
-        from kiro_crew.config import live
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config import live
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         monkeypatch.setattr(live, "snapshot", lambda: cfg)
         builder = ContextBuilder(
             memory=MemoryStore(workspace=tmp_path / "ws"),
@@ -443,10 +443,10 @@ class TestContextBuilder:
     def test_dashboard_capability_does_not_expand_other_surfaces(
         self, tmp_path, kwargs, monkeypatch
     ):
-        from kiro_crew.config import live
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config import live
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.dashboard.dynamic_dashboard_cards = True
         monkeypatch.setattr(live, "snapshot", lambda: cfg)
         builder = ContextBuilder(
@@ -459,13 +459,13 @@ class TestContextBuilder:
         assert "Automatic cards:" not in msg
 
     def test_dashboard_capability_respects_custom_agent_opt_out(self, tmp_path, monkeypatch):
-        from kiro_crew.config import live
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config import live
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.dashboard.dynamic_dashboard_cards = True
         monkeypatch.setattr(live, "snapshot", lambda: cfg)
-        monkeypatch.setattr("kiro_crew.context._agent_includes_crew_context", lambda _: False)
+        monkeypatch.setattr("aj_crew.context._agent_includes_crew_context", lambda _: False)
         builder = ContextBuilder(
             memory=MemoryStore(workspace=tmp_path / "ws"),
             skills=SkillsLoader(skills_path=tmp_path / "skills", install_builtins=False),
@@ -625,7 +625,7 @@ class TestContextBuilder:
         """A ``$skill`` body arrives ``.strip()``ed (no trailing newline). The
         assembly must still open the next block on its own line, or the context
         breakdown books that block's bytes to the skill."""
-        from kiro_crew.context_blocks import split_blocks
+        from aj_crew.context_blocks import split_blocks
 
         builder = ContextBuilder(
             memory=MemoryStore(workspace=tmp_path / "ws"),
@@ -720,7 +720,7 @@ class TestContextBuilder:
 
     def test_reinjection_restores_agent_contract_after_compaction(self, tmp_path):
         """The managed spec prompt only points at this block, so compaction must restore it."""
-        from kiro_crew.agent import _NATIVE_PROMPT_STUB
+        from aj_crew.agent import _NATIVE_PROMPT_STUB
 
         builder = self._reinject_builder(tmp_path)
         fresh, _ = builder.build_message("first turn", is_new_session=True)
@@ -782,7 +782,7 @@ class TestContextBuilder:
         per-session snapshot, and re-injection reuses it."""
         builder = self._reinject_builder(tmp_path)
         with patch(
-            "kiro_crew.resource_status.adaptive_exec_cap",
+            "aj_crew.resource_status.adaptive_exec_cap",
             side_effect=[4242, 4343, 4444],
         ):
             fresh, _ = builder.build_message(
@@ -805,7 +805,7 @@ class TestContextBuilder:
         reads the cap in force for it, so the figure still tracks the host."""
         builder = self._reinject_builder(tmp_path)
         with patch(
-            "kiro_crew.resource_status.adaptive_exec_cap",
+            "aj_crew.resource_status.adaptive_exec_cap",
             side_effect=[4242, 4343, 4444],
         ):
             first, _ = builder.build_message(
@@ -823,7 +823,7 @@ class TestContextBuilder:
         compaction restores here."""
         builder = self._reinject_builder(tmp_path)
         with patch(
-            "kiro_crew.resource_status.adaptive_exec_cap",
+            "aj_crew.resource_status.adaptive_exec_cap",
             side_effect=[4242, 4343, 4444],
         ):
             fresh, _ = builder.build_message(
@@ -940,7 +940,7 @@ class TestContextBuilder:
         # This test counts the skills reinjection only; keep the reply-style
         # block (on by default, answer_only) out of the count.
         monkeypatch.setattr(
-            "kiro_crew.context_assembly.sections._response_preferences_apply",
+            "aj_crew.context_assembly.sections._response_preferences_apply",
             lambda *a, **k: False,
         )
         builder = self._reinject_builder(tmp_path)
@@ -961,7 +961,7 @@ class TestContextBuilder:
             "carry on",
             is_new_session=False,
             needs_reinjection=True,
-            agent="kirocrew",
+            agent="ajcrew",
         )
         assert "[REINJECTED AFTER COMPACTION" in msg
         assert "## Available Skills" in msg
@@ -1011,10 +1011,10 @@ class TestContextBuilder:
         # build_message injects whenever the caller supplies folder_path
         # (is_new_session=False here proves the block is not gated to new sessions).
         msg, _ = builder.build_message(
-            "hello", is_new_session=False, folder_path="KiroCrew › Backend"
+            "hello", is_new_session=False, folder_path="Aj Crew › Backend"
         )
         assert "[FOLDER]" in msg
-        assert "KiroCrew › Backend" in msg
+        assert "Aj Crew › Backend" in msg
         # Absent when no folder path is supplied.
         msg_none, _ = builder.build_message("hello", is_new_session=False)
         assert "[FOLDER]" not in msg_none
@@ -1102,7 +1102,7 @@ class TestContextBuilder:
         assert "pipeline tool" in msg
 
     def test_hook_modify(self, tmp_path):
-        from kiro_crew.hooks import TransformHook
+        from aj_crew.hooks import TransformHook
 
         hooks_cfg = HooksConfig(transforms=[TransformHook(pattern="deploy", prefix="[DEPLOY]")])
         builder = ContextBuilder(
@@ -1115,7 +1115,7 @@ class TestContextBuilder:
 
     def test_dashboard_cross_session_removed(self, tmp_path):
         """Cross-tab context injection is removed -- sibling sessions never leak."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -1133,7 +1133,7 @@ class TestContextBuilder:
 
     def test_history_budget_truncates_long_messages(self, tmp_path):
         """Long assistant messages are truncated to _PER_MESSAGE_CAP."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -1152,8 +1152,8 @@ class TestContextBuilder:
 
     def test_history_budget_limits_total_chars(self, tmp_path):
         """History injection respects _HISTORY_BUDGET_CHARS."""
-        from kiro_crew.context import _HISTORY_BUDGET_CHARS
-        from kiro_crew.history import ConversationLog
+        from aj_crew.context import _HISTORY_BUDGET_CHARS
+        from aj_crew.history import ConversationLog
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -1181,7 +1181,7 @@ class TestGetMemoryForVectorStore:
 
     def test_nondefault_store_shares_vector_store(self, tmp_path, monkeypatch):
         """Non-default stores get the same vector_store as the default store."""
-        import kiro_crew.context as ctx_mod
+        import aj_crew.context as ctx_mod
 
         original = ctx_mod._memory_stores.copy()
         ctx_mod._memory_stores.clear()
@@ -1204,7 +1204,7 @@ class TestGetMemoryForVectorStore:
 
     def test_nondefault_store_without_default_has_no_vector_store(self, tmp_path, monkeypatch):
         """If no default store exists yet, non-default store gets no vector_store."""
-        import kiro_crew.context as ctx_mod
+        import aj_crew.context as ctx_mod
 
         original = ctx_mod._memory_stores.copy()
         ctx_mod._memory_stores.clear()
@@ -1221,13 +1221,13 @@ class TestCompressAssistantMessage:
     """Tests for _compress_assistant_message code block and JSON handling."""
 
     def test_small_code_block_preserved(self):
-        from kiro_crew.context import _compress_assistant_message
+        from aj_crew.context import _compress_assistant_message
 
         text = "Here:\n```python\nprint('hi')\n```\nDone."
         assert _compress_assistant_message(text) == text
 
     def test_large_code_block_head_tail(self):
-        from kiro_crew.context import _compress_assistant_message
+        from aj_crew.context import _compress_assistant_message
 
         lines = [f"line {i} " + "a" * 100 for i in range(30)]
         block = "```python\n" + "\n".join(lines) + "\n```"
@@ -1239,7 +1239,7 @@ class TestCompressAssistantMessage:
         assert "line 15" not in result  # middle omitted
 
     def test_few_long_lines_char_truncated(self):
-        from kiro_crew.context import _compress_assistant_message
+        from aj_crew.context import _compress_assistant_message
 
         # 5 lines of 1K each = 5K total, >2K but <=15 lines
         lines = ["x" * 1000 for _ in range(5)]
@@ -1249,13 +1249,13 @@ class TestCompressAssistantMessage:
         assert len(result) < len(block)
 
     def test_json_blob_small_preserved(self):
-        from kiro_crew.context import _compress_assistant_message
+        from aj_crew.context import _compress_assistant_message
 
         text = 'Result: {"key": "value", "num": 42}'
         assert _compress_assistant_message(text) == text
 
     def test_json_blob_large_truncated(self):
-        from kiro_crew.context import _compress_assistant_message
+        from aj_crew.context import _compress_assistant_message
 
         blob = '{"data": "' + "x" * 1500 + '"}'
         result = _compress_assistant_message(f"Output: {blob}")
@@ -1265,7 +1265,7 @@ class TestCompressAssistantMessage:
 class TestDocsSection:
     def test_docs_section_present_when_docs_exist(self, tmp_path, monkeypatch):
         """_build_docs_section returns content when docs dir exists."""
-        from kiro_crew import context as ctx_mod
+        from aj_crew import context as ctx_mod
 
         docs_dir = tmp_path / "docs"
         docs_dir.mkdir()
@@ -1279,16 +1279,16 @@ class TestDocsSection:
 
     def test_docs_section_empty_when_no_docs(self, tmp_path, monkeypatch):
         """_build_docs_section returns empty string when docs dir missing."""
-        from kiro_crew import context as ctx_mod
+        from aj_crew import context as ctx_mod
 
         monkeypatch.setattr(ctx_mod, "_BUNDLED_DOCS_DIR", tmp_path / "nonexistent")
 
         result = ctx_mod._build_docs_section()
         assert result == ""
 
-    def test_docs_injected_for_kirocrew_agent(self, tmp_path, monkeypatch):
-        """build_session_context includes docs for the default kirocrew agent."""
-        from kiro_crew import context as ctx_mod
+    def test_docs_injected_for_ajcrew_agent(self, tmp_path, monkeypatch):
+        """build_session_context includes docs for the default ajcrew agent."""
+        from aj_crew import context as ctx_mod
 
         docs_dir = tmp_path / "docs"
         docs_dir.mkdir()
@@ -1303,8 +1303,8 @@ class TestDocsSection:
         assert "[DOCUMENTATION]" in ctx
 
     def test_docs_not_injected_for_custom_agent(self, tmp_path, monkeypatch):
-        """build_session_context skips docs for custom (non-kirocrew) agents."""
-        from kiro_crew import context as ctx_mod
+        """build_session_context skips docs for custom (non-ajcrew) agents."""
+        from aj_crew import context as ctx_mod
 
         docs_dir = tmp_path / "docs"
         docs_dir.mkdir()
@@ -1320,10 +1320,10 @@ class TestDocsSection:
 
     def test_docs_still_injected_for_the_mate_conductor(self, tmp_path, monkeypatch):
         """The mate conductor is a Crew-owned spec a crewmate's chat runs on, not
-        a user's custom agent -- ``is_kirocrew_default_agent`` keeps it off the
+        a user's custom agent -- ``is_ajcrew_default_agent`` keeps it off the
         ``is_custom`` path the test above pins, so it gets the docs pointer and
-        workspace identity block exactly like the plain ``kirocrew`` agent does."""
-        from kiro_crew import context as ctx_mod
+        workspace identity block exactly like the plain ``ajcrew`` agent does."""
+        from aj_crew import context as ctx_mod
 
         docs_dir = tmp_path / "docs"
         docs_dir.mkdir()
@@ -1334,7 +1334,7 @@ class TestDocsSection:
             memory=MemoryStore(workspace=tmp_path / "ws"),
             skills=SkillsLoader(skills_path=tmp_path / "skills", install_builtins=False),
         )
-        ctx = builder.build_session_context(agent="kirocrew-mate-conductor", workspace="default")
+        ctx = builder.build_session_context(agent="ajcrew-mate-conductor", workspace="default")
         assert "[DOCUMENTATION]" in ctx
         assert "[WORKSPACE IDENTITY]" in ctx
 
@@ -1359,13 +1359,13 @@ class TestCustomAgentSkillLog:
         self, tmp_path, monkeypatch, caplog
     ):
         """A custom agent the plan gives skill globs logs that skills are injected."""
-        from kiro_crew import context as ctx_mod
+        from aj_crew import context as ctx_mod
 
         monkeypatch.setattr(
             ctx_mod, "_skills_injection_plan", lambda *a, **k: (True, ["some-skill/**"])
         )
         builder = self._builder(tmp_path)
-        with caplog.at_level("INFO", logger="kiro_crew.context"):
+        with caplog.at_level("INFO", logger="aj_crew.context"):
             builder.build_session_context(agent="code-reviewer")
 
         line = next(r.getMessage() for r in caplog.records if "code-reviewer" in r.getMessage())
@@ -1374,11 +1374,11 @@ class TestCustomAgentSkillLog:
 
     def test_unmapped_custom_agent_logs_skipping(self, tmp_path, monkeypatch, caplog):
         """A custom agent with no skill globs still logs that skills are skipped."""
-        from kiro_crew import context as ctx_mod
+        from aj_crew import context as ctx_mod
 
         monkeypatch.setattr(ctx_mod, "_skills_injection_plan", lambda *a, **k: (False, []))
         builder = self._builder(tmp_path)
-        with caplog.at_level("INFO", logger="kiro_crew.context"):
+        with caplog.at_level("INFO", logger="aj_crew.context"):
             builder.build_session_context(agent="code-reviewer")
 
         line = next(r.getMessage() for r in caplog.records if "code-reviewer" in r.getMessage())
@@ -1389,7 +1389,7 @@ class TestCustomAgentSkillLog:
 class TestCompressedHistory:
     def test_build_session_context_uses_compressed_history(self, tmp_path):
         """When compressed_history is passed, it replaces naive truncation."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -1409,8 +1409,8 @@ class TestCompressedHistory:
     def test_compressed_history_keeps_its_verbatim_head_up_to_its_own_cap(self, tmp_path):
         """The compressed variant is sized to ``compressed_history``, not the
         smaller fallback cap, so its opening verbatim head survives admission."""
-        from kiro_crew import context as ctx_mod
-        from kiro_crew.history import ConversationLog
+        from aj_crew import context as ctx_mod
+        from aj_crew.history import ConversationLog
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -1470,12 +1470,12 @@ class TestLoadAgentPrompt:
             json.dumps({"name": "test", "prompt": prompt}), encoding="utf-8"
         )
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir)
-        monkeypatch.setattr("kiro_crew.agent_discovery._KIRO_AGENTS_DIR", agents_dir)
+        monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir)
+        monkeypatch.setattr("aj_crew.agent_discovery._KIRO_AGENTS_DIR", agents_dir)
 
     @staticmethod
     def _managed_contract(tmp_path, monkeypatch):
-        from kiro_crew import agent
+        from aj_crew import agent
 
         package = tmp_path / "installed-package" / "config"
         package.mkdir(parents=True)
@@ -1491,7 +1491,7 @@ class TestLoadAgentPrompt:
         """The stub is the managed contract whatever spec carries it: a fork or
         template copy inherits it verbatim and must not receive the stub TEXT as
         its persona."""
-        from kiro_crew import agent
+        from aj_crew import agent
 
         self._managed_contract(tmp_path, monkeypatch)
         self._write_spec(tmp_path, monkeypatch, agent._NATIVE_PROMPT_STUB)
@@ -1519,7 +1519,7 @@ class TestLoadAgentPrompt:
         """End to end: a plain (non-member) session on a template copy of the
         managed default, whose spec inherited the stub verbatim, gets the resolved
         contract as its [AGENT SYSTEM PROMPT] exactly once, and never the stub text."""
-        from kiro_crew import agent
+        from aj_crew import agent
 
         self._managed_contract(tmp_path, monkeypatch)
         self._write_spec(tmp_path, monkeypatch, agent._NATIVE_PROMPT_STUB)
@@ -1534,7 +1534,7 @@ class TestLoadAgentPrompt:
 
     def test_custom_agent_gets_own_prompt_under_claude_code(self, tmp_path, monkeypatch):
         """Under claude_code a custom agent without a private owner gets its own
-        prompt as its [AGENT SYSTEM PROMPT], not the Kiro Crew persona."""
+        prompt as its [AGENT SYSTEM PROMPT], not the Aj Crew persona."""
         self._managed_contract(tmp_path, monkeypatch)
         self._write_spec(tmp_path, monkeypatch, "You are a bespoke reviewer.")
         builder = ContextBuilder(
@@ -1556,28 +1556,31 @@ class TestRuntimeDisplayName:
     @pytest.mark.parametrize(
         "session_key, expected_runtime",
         [
-            ("dashboard:chat-1-100", "KiroCrew dashboard"),
-            ("dashboard_chat-1-100", "KiroCrew dashboard"),
-            ("cron:daily", "KiroCrew cron job"),
-            ("cron_076ab486", "KiroCrew cron job"),
-            ("subagent:abc-123", "KiroCrew subagent"),
-            ("taskrunner:proj:task1", "KiroCrew task runner"),
-            ("_bg", "KiroCrew background"),
-            ("_hb", "KiroCrew heartbeat"),
+            ("dashboard:chat-1-100", "AjCrew dashboard"),  # brand-ok: prompt bytes the model reads
+            ("dashboard_chat-1-100", "AjCrew dashboard"),  # brand-ok: prompt bytes the model reads
+            ("cron:daily", "AjCrew cron job"),  # brand-ok: prompt bytes the model reads
+            ("cron_076ab486", "AjCrew cron job"),  # brand-ok: prompt bytes the model reads
+            ("subagent:abc-123", "AjCrew subagent"),  # brand-ok: prompt bytes the model reads
+            (
+                "taskrunner:proj:task1",
+                "AjCrew task runner",  # brand-ok: prompt bytes the model reads
+            ),
+            ("_bg", "AjCrew background"),  # brand-ok: prompt bytes the model reads
+            ("_hb", "AjCrew heartbeat"),  # brand-ok: prompt bytes the model reads
             ("cli_chat", "CLI terminal"),
             ("slack:1234567890.123456", "Slack"),
-            ("discord:kirocrew:direct:474737235959480320", "Discord"),
-            ("discord_kirocrew_direct_474737235959480320", "Discord"),
-            ("telegram:kirocrew:direct:123", "Telegram"),
-            ("wecom:kirocrew:direct:user@example.com", "WeCom"),
-            ("weixin:kirocrew:direct:wxid", "Weixin"),
-            ("webex:kirocrew:direct:user@example.com", "Webex"),
-            ("teams:kirocrew:direct:user@example.com", "Microsoft Teams"),
+            ("discord:ajcrew:direct:474737235959480320", "Discord"),
+            ("discord_ajcrew_direct_474737235959480320", "Discord"),
+            ("telegram:ajcrew:direct:123", "Telegram"),
+            ("wecom:ajcrew:direct:user@example.com", "WeCom"),
+            ("weixin:ajcrew:direct:wxid", "Weixin"),
+            ("webex:ajcrew:direct:user@example.com", "Webex"),
+            ("teams:ajcrew:direct:user@example.com", "Microsoft Teams"),
             ("1234567890.123456", "Slack"),
         ],
     )
     def test_runtime_display_name(self, session_key, expected_runtime):
-        from kiro_crew.context import _runtime_display_name
+        from aj_crew.context import _runtime_display_name
 
         assert _runtime_display_name(session_key) == expected_runtime
 
@@ -1586,7 +1589,7 @@ class TestRuntimeDisplayName:
         builder = ContextBuilder(memory=MemoryStore(workspace=tmp_path))
         ctx = builder.build_session_context("dashboard:chat-1", agent="gpu-comms")
         assert "[CURRENT AGENT] gpu-comms" in ctx
-        assert "[RUNTIME] KiroCrew dashboard" in ctx
+        assert "[RUNTIME] AjCrew dashboard" in ctx  # brand-ok: prompt bytes the model reads
 
     def test_agent_identity_omitted_without_session_key(self, tmp_path):
         """build_session_context omits agent identity when session_key is None."""
@@ -1595,11 +1598,11 @@ class TestRuntimeDisplayName:
         assert "[CURRENT AGENT]" not in ctx
         assert "[RUNTIME]" not in ctx
 
-    def test_agent_defaults_to_kirocrew(self, tmp_path):
-        """Agent label defaults to 'kirocrew' when agent param is None."""
+    def test_agent_defaults_to_ajcrew(self, tmp_path):
+        """Agent label defaults to 'ajcrew' when agent param is None."""
         builder = ContextBuilder(memory=MemoryStore(workspace=tmp_path))
         ctx = builder.build_session_context("dashboard:chat-1")
-        assert "[CURRENT AGENT] kirocrew" in ctx
+        assert "[CURRENT AGENT] ajcrew" in ctx
 
     def test_explicit_runtime_source_overrides_stable_session_key(self, tmp_path):
         """The current transport wins when a dashboard session resumes elsewhere."""
@@ -1609,7 +1612,7 @@ class TestRuntimeDisplayName:
             runtime_source="discord",
         )
         assert "[RUNTIME] Discord" in ctx
-        assert "[RUNTIME] KiroCrew dashboard" not in ctx
+        assert "[RUNTIME] AjCrew dashboard" not in ctx  # brand-ok: prompt bytes the model reads
 
     def test_follow_up_refreshes_runtime_from_current_transport(self, tmp_path):
         """Warm cross-surface sessions receive authoritative per-turn runtime."""

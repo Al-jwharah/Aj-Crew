@@ -25,13 +25,13 @@ from discord_sessions_helpers import (
     _picker_button,
 )
 
-from kiro_crew import history_search
-from kiro_crew.discord import session_resume
-from kiro_crew.discord.client import DISCORD_CHUNK_LIMIT
-from kiro_crew.discord.commands import parse_command, parse_command_argument
-from kiro_crew.history import transcript_stem
-from kiro_crew.messaging import session_resume as resume_core
-from kiro_crew.messaging.link import ChannelLink
+from aj_crew import history_search
+from aj_crew.discord import session_resume
+from aj_crew.discord.client import DISCORD_CHUNK_LIMIT
+from aj_crew.discord.commands import parse_command, parse_command_argument
+from aj_crew.history import transcript_stem
+from aj_crew.messaging import session_resume as resume_core
+from aj_crew.messaging.link import ChannelLink
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _isolated_home = discord_sessions_helpers._isolated_home
@@ -147,7 +147,7 @@ async def test_the_resume_parse_runs_off_the_event_loop(monkeypatch) -> None:
 async def test_sessions_delegates_to_the_shared_search() -> None:
     """Assert DELEGATION, not re-implemented ranking.
 
-    The scoring formula belongs to KiroCrewHistory.search_sessions and is tested
+    The scoring formula belongs to AjCrewHistory.search_sessions and is tested
     there; what this surface must guarantee is that it calls that search rather
     than growing a second one that drifts from the dashboard.
     """
@@ -262,8 +262,8 @@ async def test_sessions_requires_exactly_one_allowed_user() -> None:
 @pytest.mark.asyncio
 async def test_sessions_lists_dashboard_and_same_dm_generations_only_and_redacts() -> None:
     secret = "ghp_" + "a" * 36
-    prior_key = "discord:kirocrew:direct:u1:gen4"
-    other_user_key = "discord:kirocrew:direct:u2:gen4"
+    prior_key = "discord:ajcrew:direct:u1:gen4"
+    other_user_key = "discord:ajcrew:direct:u2:gen4"
     log = _ConversationLog(
         [
             {
@@ -272,7 +272,7 @@ async def test_sessions_lists_dashboard_and_same_dm_generations_only_and_redacts
                 "memory_mode": "persistent",
             },
             {
-                "key": "discord_kirocrew_direct_u1",
+                "key": "discord_ajcrew_direct_u1",
                 "title": "Current Discord session",
                 "memory_mode": "persistent",
             },
@@ -294,7 +294,7 @@ async def test_sessions_lists_dashboard_and_same_dm_generations_only_and_redacts
         ],
         {
             "dashboard:chat-1": [],
-            "discord:kirocrew:direct:u1": [],
+            "discord:ajcrew:direct:u1": [],
             prior_key: [],
             other_user_key: [],
         },
@@ -361,7 +361,7 @@ async def test_new_reports_generation_floor_failure_without_rolling_back() -> No
 
 @pytest.mark.asyncio
 async def test_native_generation_pick_replaces_only_same_dm_origin_mirrors() -> None:
-    prior_key = "discord:kirocrew:direct:u1:gen4"
+    prior_key = "discord:ajcrew:direct:u1:gen4"
     log = _ConversationLog(
         [
             {
@@ -397,9 +397,9 @@ async def test_a_failed_pick_restores_displaced_rows_without_laundering_them() -
     """
     import dataclasses
 
-    from kiro_crew.mirror_admission import sign_mirror_admission, verify_mirror_admission
+    from aj_crew.mirror_admission import sign_mirror_admission, verify_mirror_admission
 
-    prior_key = "discord:kirocrew:direct:u1:gen4"
+    prior_key = "discord:ajcrew:direct:u1:gen4"
     log = _ConversationLog(
         [
             {
@@ -462,8 +462,8 @@ async def test_a_failed_picks_rollback_leaves_a_refreshed_relink_in_place(monkey
     import dataclasses
     import secrets
 
-    from kiro_crew.dashboard import token_secret
-    from kiro_crew.mirror_admission import sign_mirror_admission, verify_mirror_admission
+    from aj_crew.dashboard import token_secret
+    from aj_crew.mirror_admission import sign_mirror_admission, verify_mirror_admission
 
     log = _log()
     log.messages["dashboard:chat-1"] = [{"role": "assistant", "content": "prior"}]
@@ -1029,7 +1029,7 @@ async def test_own_session_records_the_origin_conversation() -> None:
 @pytest.mark.asyncio
 async def test_new_own_session_surfaces_in_dashboard_immediately(monkeypatch) -> None:
     """Discord must not wait for the 30-second lifetime reconcile pass."""
-    from kiro_crew.dashboard import channel_slots
+    from aj_crew.dashboard import channel_slots
 
     log = _log()
     dispatcher, _, sessions = _dispatcher({"u1"}, log)
@@ -1052,7 +1052,7 @@ async def test_new_own_session_surfaces_in_dashboard_immediately(monkeypatch) ->
 @pytest.mark.asyncio
 async def test_resumed_session_does_not_surface_duplicate_dashboard_slot(monkeypatch) -> None:
     """A Discord-driven dashboard resume already owns a slot."""
-    from kiro_crew.dashboard import channel_slots
+    from aj_crew.dashboard import channel_slots
 
     log = _log()
     log.messages["dashboard:chat-1"] = [{"role": "assistant", "content": "prior"}]

@@ -8,12 +8,12 @@ from unittest.mock import Mock
 
 import pytest
 
-from kiro_crew.agent_sdk import context_provider_of
-from kiro_crew.agent_sdk.drivers.acp import projected_session_mcp_servers
-from kiro_crew.essential_delivery import EssentialDelivery
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import LLMProvider
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.agent_sdk import context_provider_of
+from aj_crew.agent_sdk.drivers.acp import projected_session_mcp_servers
+from aj_crew.essential_delivery import EssentialDelivery
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import LLMProvider
+from aj_crew.testing.wait import default_timeout
 
 
 def test_only_real_provider_types_can_bind_context():
@@ -34,7 +34,7 @@ def test_only_real_provider_types_can_bind_context():
 
 
 def test_projected_mcp_sdk_bridge_preserves_exact_underlying_result(monkeypatch, tmp_path):
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     wire = [{"name": "fixture", "command": "fixture-tool", "args": []}]
     projection = Mock(return_value=wire)
@@ -49,9 +49,9 @@ def test_projected_mcp_sdk_bridge_preserves_exact_underlying_result(monkeypatch,
 @pytest.mark.parametrize(
     "modules",
     [
-        "kiro_crew.essential_delivery,kiro_crew.providers.base,kiro_crew.context",
-        "kiro_crew.providers.base,kiro_crew.essential_delivery,kiro_crew.context",
-        "kiro_crew.agent_sdk,kiro_crew.context,kiro_crew.providers.acp",
+        "aj_crew.essential_delivery,aj_crew.providers.base,aj_crew.context",
+        "aj_crew.providers.base,aj_crew.essential_delivery,aj_crew.context",
+        "aj_crew.agent_sdk,aj_crew.context,aj_crew.providers.acp",
     ],
 )
 def test_context_import_orders_do_not_form_a_cycle(tmp_path, modules):
@@ -92,7 +92,7 @@ def test_context_import_orders_do_not_form_a_cycle(tmp_path, modules):
 
 
 def test_projected_mcp_helper_stays_on_driver_surface():
-    from kiro_crew import agent_sdk
+    from aj_crew import agent_sdk
 
     assert "projected_session_mcp_servers" not in agent_sdk.__all__
     assert not hasattr(agent_sdk, "projected_session_mcp_servers")

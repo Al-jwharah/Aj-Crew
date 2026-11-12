@@ -16,17 +16,17 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from slack_gateway_coverage_helpers import _make_orchestrator
 
-from kiro_crew import session_directive
-from kiro_crew.acp.types import (
+from aj_crew import session_directive
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     EVENT_TOOL_RESULT,
     AcpEvent,
 )
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.messaging import dispatch as messaging_dispatch
-from kiro_crew.slack import gateway as gw
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.messaging import dispatch as messaging_dispatch
+from aj_crew.slack import gateway as gw
 
 _KEY = "slack:111.222"
 
@@ -86,7 +86,7 @@ class _OneToolProvider:
 
 async def _armed(tmp_path, monkeypatch) -> tuple[AutoNudgeService, Any]:
     service = AutoNudgeService(base_dir=tmp_path)
-    monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: service)
+    monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: service)
     monkeypatch.setattr(gw, "_persist_turn_row", AsyncMock())
     loop = await service.add(slot_key=_KEY, message="watch the PR", idle_secs=3600)
     return service, loop

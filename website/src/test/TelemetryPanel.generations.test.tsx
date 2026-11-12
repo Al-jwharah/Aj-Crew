@@ -8,7 +8,7 @@
  *     generation was invisible on the page — a subset was styled exactly like a
  *     full-window total. The caveat quantifies in EXCLUDED SAMPLES, because a
  *     generation count cannot be reconciled against the numbers beside it.
- *  2. The MCP cold-load card read `kirocrew.mcp.lazy_load.duration`, which only
+ *  2. The MCP cold-load card read `ajcrew.mcp.lazy_load.duration`, which only
  *     the legacy pre-ensure_backend spawn path emits. Modern stubs never take
  *     that path, so the card said "no data yet" forever while real cold spawns
  *     were recorded on the acquire histogram under `warm=false`.
@@ -53,7 +53,7 @@ const resp = (over: Record<string, unknown> = {}) => ({
 })
 
 const acquireRow = (over: Record<string, unknown> = {}) => ({
-  name: 'kirocrew.mcp.backend.acquire.duration',
+  name: 'ajcrew.mcp.backend.acquire.duration',
   kind: 'histogram',
   ...stat({ count: 1134 }),
   ...over,

@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-_SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew" / "dashboard"
+_SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew" / "dashboard"
 
 _READS = [
     ("handlers/artifacts_parts/library_reads.py", "archived_session_names_in_folders"),

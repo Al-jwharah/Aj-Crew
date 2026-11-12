@@ -22,8 +22,8 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _slot,
 )
 
-from kiro_crew.config import loader
-from kiro_crew.dashboard import session_control as sc
+from aj_crew.config import loader
+from aj_crew.dashboard import session_control as sc
 
 
 def test_an_agent_name_that_does_not_resolve_is_refused(tmp_path, monkeypatch):
@@ -83,7 +83,7 @@ def test_the_binding_is_resolved_with_the_childs_project_dir(tmp_path, monkeypat
 async def test_agent_binding_resolution_is_off_loop_and_precedes_allocation(
     tmp_path, monkeypatch, outcome
 ):
-    from kiro_crew.memory_stores import UnknownMemoryStore
+    from aj_crew.memory_stores import UnknownMemoryStore
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -288,7 +288,7 @@ def test_the_opened_entry_cites_lineage_only_from_a_witnessed_mint():
     """
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.chat_runner import _crew_log_lineage
+    from aj_crew.dashboard.chat_runner import _crew_log_lineage
 
     minted = SimpleNamespace(
         _created_by="chat-1", _created_by_sid="acp-sess-creator-at-mint", _lineage_minted=True
@@ -318,9 +318,9 @@ def test_the_opened_entry_records_the_session_class_from_the_live_slot(monkeypat
     """
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard import session_control as sc
-    from kiro_crew.dashboard.chat_runner import _crew_log_class
-    from kiro_crew.dashboard.session_control import CRON_LINK_PREFIX
+    from aj_crew.dashboard import session_control as sc
+    from aj_crew.dashboard.chat_runner import _crew_log_class
+    from aj_crew.dashboard.session_control import CRON_LINK_PREFIX
 
     mirrored: dict[str, bool] = {"value": False}
     monkeypatch.setattr(sc, "_has_channel_mirror", lambda state, slot: mirrored["value"])
@@ -366,7 +366,7 @@ def test_an_oversize_creator_session_id_is_dropped_at_mint_not_retained(tmp_path
     """
     from unittest.mock import MagicMock
 
-    from kiro_crew.validation import MAX_ACP_SESSION_ID_LEN
+    from aj_crew.validation import MAX_ACP_SESSION_ID_LEN
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -440,9 +440,9 @@ def test_creation_never_loads_the_config_on_the_event_loop():
 
     src = inspect.getsource(sc.create_session)
     code = "\n".join(line.split("#", 1)[0] for line in src.splitlines())
-    assert "KiroCrewConfig.load()" not in code, "the config load must not run inline on the loop"
+    assert "AjCrewConfig.load()" not in code, "the config load must not run inline on the loop"
     assert (
-        "await asyncio.to_thread(KiroCrewConfig.load)" in code
+        "await asyncio.to_thread(AjCrewConfig.load)" in code
     ), "the config load must be offloaded to a worker thread"
 
 
@@ -594,10 +594,10 @@ def test_slot_cap_has_one_owning_constant() -> None:
     Session create, chat fork and session import all import ``state.MAX_LIVE_SLOTS``,
     so the limit cannot differ by which path the caller came through.
     """
-    from kiro_crew.dashboard import chat_fork
-    from kiro_crew.dashboard import session_control as sc_mod
-    from kiro_crew.dashboard import session_transfer
-    from kiro_crew.dashboard import state as state_mod
+    from aj_crew.dashboard import chat_fork
+    from aj_crew.dashboard import session_control as sc_mod
+    from aj_crew.dashboard import session_transfer
+    from aj_crew.dashboard import state as state_mod
 
     owning = state_mod.MAX_LIVE_SLOTS
     # The same object, so a per-path literal is caught.

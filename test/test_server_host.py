@@ -1,6 +1,6 @@
 """The Notes backend's host programs: the file-manager binary, the reveal and the folder chooser.
 
-These units live in ``kiro_crew.apps.builtins.md_notebook.server_host`` and are reached
+These units live in ``aj_crew.apps.builtins.md_notebook.server_host`` and are reached
 through ``server``, the backend's facade, as every caller reaches them. The route tests in
 ``test_md_notebook.py`` stub ``_reveal_binary`` and never run the macOS chooser, so the
 platform choice, the refusals and the chooser's output handling are pinned here, each spawn
@@ -18,7 +18,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps.builtins.md_notebook import git_ops, server
+from aj_crew.apps.builtins.md_notebook import git_ops, server
 
 
 class _Spawn:

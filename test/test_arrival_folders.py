@@ -1,6 +1,6 @@
 """Arrival provenance filing — the folder resolution behind an arriving session.
 
-Unit-level cover for :mod:`kiro_crew.dashboard.arrival_folders`. The handler's own
+Unit-level cover for :mod:`aj_crew.dashboard.arrival_folders`. The handler's own
 use of it (both arrival routes, the late resolution, the mid-import repair) is
 pinned in ``test/test_session_transfer_landing.py``; what is pinned HERE is the resolution
 itself, and specifically the five folder-lifecycle constraints
@@ -24,8 +24,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.dashboard import arrival_folders as af
-from kiro_crew.dashboard.chat_folders import (
+from aj_crew.dashboard import arrival_folders as af
+from aj_crew.dashboard.chat_folders import (
     MAX_CHAT_FOLDERS,
     folder_ids_filed_into,
     note_folder_filed,
@@ -82,7 +82,7 @@ def test_the_mirrored_clip_matches_the_folder_store_itself():
     following it here fails HERE instead of shipping a duplicate folder per
     arrival from a long-named sender.
     """
-    from kiro_crew.dashboard.chat_folders import create_folder_record
+    from aj_crew.dashboard.chat_folders import create_folder_record
 
     source = inspect.getsource(create_folder_record)
     found = re.search(r"name = name\.strip\(\)\[:(\d+)\]", source)
@@ -742,7 +742,7 @@ async def test_filing_a_session_through_the_route_records_the_row(tmp_path, monk
     from aiohttp.test_utils import TestClient, TestServer
     from chat_test_helpers import _make_folder_app, _make_state
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("myslot")
     slot.append("user", "hello")
@@ -773,7 +773,7 @@ async def test_a_refused_placement_records_nothing(tmp_path, monkeypatch):
     from aiohttp.test_utils import TestClient, TestServer
     from chat_test_helpers import _make_folder_app, _make_state
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("myslot")
     slot.append("user", "hello")
@@ -811,22 +811,22 @@ async def test_a_placement_refused_under_the_lock_records_nothing(tmp_path, monk
 
     # chat_handlers and chat_fork copy _unhide_folder from chat_folders when they are
     # first imported, and the resume, slot-create and fork handlers read those copies.
-    # _make_folder_app imports kiro_crew.dashboard.chat, which loads both. If that
+    # _make_folder_app imports aj_crew.dashboard.chat, which loads both. If that
     # first import happened under the patch below, the stub would stay in those
     # modules after monkeypatch undoes the patch, and every later test on this
     # worker would see its folders as deleted. Import them first so they hold the
     # real function.
-    import kiro_crew.dashboard.chat  # noqa: F401
-    import kiro_crew.dashboard.chat_fork as chat_fork
-    import kiro_crew.dashboard.chat_handlers as chat_handlers
-    from kiro_crew.dashboard.chat_folders_records import _unhide_folder
+    import aj_crew.dashboard.chat  # noqa: F401
+    import aj_crew.dashboard.chat_fork as chat_fork
+    import aj_crew.dashboard.chat_handlers as chat_handlers
+    from aj_crew.dashboard.chat_folders_records import _unhide_folder
 
     assert chat_handlers._unhide_folder is _unhide_folder
     assert chat_fork._unhide_folder is _unhide_folder
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_folders._unhide_folder",
+        "aj_crew.dashboard.chat_folders._unhide_folder",
         _refuse_unhide,
     )
     state = _make_state(tmp_path)
@@ -865,7 +865,7 @@ def test_the_untouched_test_reads_content_edits_and_ignores_view_state():
         ("name", "Work"),
         ("parent_id", "elsewhere"),
         ("project_dir", "/home/me/code"),
-        ("default_agent", "kirocrew"),
+        ("default_agent", "ajcrew"),
     ):
         edited = {**base, field: value}
         assert not af._is_untouched_arrival_row(

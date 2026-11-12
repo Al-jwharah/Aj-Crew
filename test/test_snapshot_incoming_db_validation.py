@@ -14,11 +14,11 @@ from pathlib import Path
 import pytest
 from test_snapshot import unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 def _make_bundle(tmp_path: Path, memory_db: bytes, *, name: str = "memory.db") -> Path:
-    payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+    payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
     payload.mkdir(parents=True, exist_ok=True)
     (payload / name).write_bytes(memory_db)
     manifest = payload / "MANIFEST.json"
@@ -156,7 +156,7 @@ class TestAnUnsoundIncomingDatabaseIsRefusedBeforeMutation:
         live.write_bytes(_real_db(tmp_path / "live3.db"))
         before = live.read_bytes()
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         payload.mkdir(parents=True, exist_ok=True)
         (payload / "memory.db").write_bytes(_real_db(tmp_path / "sound.db"))
         (payload / "memory_index.db").write_bytes(b"not a database either")
@@ -185,7 +185,7 @@ class TestAnUnsoundIncomingDatabaseIsRefusedBeforeMutation:
         live.write_bytes(_real_db(tmp_path / "live4.db"))
         before = live.read_bytes()
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         kdir = payload / "workspace" / "knowledge"
         kdir.mkdir(parents=True)
         (payload / "memory.db").write_bytes(_real_db(tmp_path / "sound2.db"))
@@ -228,7 +228,7 @@ class TestAnUnsoundIncomingDatabaseIsRefusedBeforeMutation:
         """
         (home / "memory.db").write_bytes(_real_db(tmp_path / "live5.db"))
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         kdir = payload / "workspace" / "knowledge"
         kdir.mkdir(parents=True)
         (payload / "memory.db").write_bytes(_real_db(tmp_path / "sound3.db"))
@@ -265,7 +265,7 @@ class TestAnUnextractableBundleIsARefusalNotATraceback:
         The download probe passing does not mean extraction will, and a refusal has to
         read as a refusal rather than a traceback.
         """
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         payload.mkdir(parents=True)
         (payload / "memory.db").write_bytes(_real_db(tmp_path / "ok.db"))
         bundle = tmp_path / "ok.tar.gz"

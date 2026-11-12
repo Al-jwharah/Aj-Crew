@@ -82,9 +82,9 @@ from unittest.mock import MagicMock, create_autospec
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.acp.types import AcpEvent
-from kiro_crew.history import HUMAN_TURN_META_KEY
-from kiro_crew.providers.base import LLMProvider
+from aj_crew.acp.types import AcpEvent
+from aj_crew.history import HUMAN_TURN_META_KEY
+from aj_crew.providers.base import LLMProvider
 
 #: The decisions a person's click puts on a prompt's approval future.
 APPROVED = "approved"
@@ -691,7 +691,7 @@ def _session_manager(helper: Any, unanswered: list[str]) -> Any:
     and is noted in *unanswered*, so the run fails by name even when production
     code catches the error around that call.
     """
-    from kiro_crew.session import SessionManager
+    from aj_crew.session import SessionManager
 
     sessions = create_autospec(SessionManager, instance=True)
     sessions.count = 0
@@ -778,7 +778,7 @@ def _answer_sessions(
 def _autonudge_service(calls: Callable[[], list[Call]], clock: VirtualClock) -> Any:
     """A running AutoNudge service specced on ``AutoNudgeService``, with no goal
     loop armed: every call is recorded, and ``add``/``remove`` are awaitable."""
-    from kiro_crew.autonudge import AutoNudgeService
+    from aj_crew.autonudge import AutoNudgeService
 
     answers: dict[str, Any] = {"get_by_id": None, "get_by_slot": None, "list_all": []}
     service = create_autospec(AutoNudgeService, instance=True)
@@ -822,7 +822,7 @@ def _answerer(
     state: Any, slot: Any, answers: Mapping[str, str | Sequence[str]], turn: Any
 ) -> Callable[..., None]:
     """Answer each prompt once it is pending, as a person's click would."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     loop = asyncio.get_running_loop()
     # The futures themselves, not their ids: a freed future's id is reused, and
@@ -911,7 +911,7 @@ def _record_crew_log(
     The runner calls them as attributes of the module (``crew_log_emit.on_x``),
     so a spy installed on the module is the one it reaches.
     """
-    from kiro_crew.crew_log import emit
+    from aj_crew.crew_log import emit
 
     for name in dir(emit):
         real = getattr(emit, name)
@@ -941,7 +941,7 @@ def _write_config(config: Mapping[str, Any] | None) -> Callable[[], None]:
     and a same-size rewrite inside one coarse mtime tick would otherwise be
     served the previous config.
     """
-    from kiro_crew.config.loader import _invalidate_config_cache, config_path
+    from aj_crew.config.loader import _invalidate_config_cache, config_path
 
     if config is None:
         return lambda: None
@@ -1031,9 +1031,9 @@ def _state_for(home: Path, spec: SlotSpec, sink: _Sink, clock: VirtualClock) -> 
 async def _one_turn(
     script: TurnScript, state: Any, slot: Any, sink: _Sink, clock: VirtualClock
 ) -> None:
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.dashboard.chat_utils import slot_history_key
-    from kiro_crew.dashboard.turn_dispatch import chat_turn_timeout_secs, spawn_guarded_turn
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard.turn_dispatch import chat_turn_timeout_secs, spawn_guarded_turn
 
     seen = sink.begin(clock)
     ctx = TurnContext(state=state, slot=slot, clock=clock)
@@ -1140,9 +1140,9 @@ async def run_turn(
     real loader reads it) and put back afterwards. *clock* is the run's virtual
     time; by default a fresh one.
     """
-    from kiro_crew import autonudge
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.sel import SecurityEventLog
+    from aj_crew import autonudge
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.sel import SecurityEventLog
 
     spec = slot or SlotSpec()
     clock = clock or VirtualClock()

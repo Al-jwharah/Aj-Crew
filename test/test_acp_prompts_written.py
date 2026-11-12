@@ -13,9 +13,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.testing.wait import finished
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.testing.wait import finished
 
 
 def _handle() -> tuple[AcpSessionHandle, AcpRuntime]:

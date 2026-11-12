@@ -1,8 +1,8 @@
 """``dashboard/handlers/artifacts.py`` is a mirrored facade over ``artifacts_parts``.
 
 The artifact HTTP routes live in the owner modules under
-``kiro_crew.dashboard.handlers.artifacts_parts``; ``kiro_crew.dashboard.handlers.artifacts``
-stays the import path and the patch seam, built on ``kiro_crew._facade_mirror``. The
+``aj_crew.dashboard.handlers.artifacts_parts``; ``aj_crew.dashboard.handlers.artifacts``
+stays the import path and the patch seam, built on ``aj_crew._facade_mirror``. The
 contract every mirrored facade holds to (one object per name, the ``TYPE_CHECKING``
 manifest, no owner importing the facade, every patched name reaching every reader) is
 ``test_facade_mirror_guards.py``'s. These cases pin what is particular to this family: it
@@ -24,8 +24,8 @@ from types import ModuleType
 
 import pytest
 
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard.handlers import artifacts, artifacts_parts
+from aj_crew import _facade_mirror
+from aj_crew.dashboard.handlers import artifacts, artifacts_parts
 
 # One worker per file, so the shared checks run beside the tests that load this module.
 pytestmark = pytest.mark.xdist_group(name="artifacts_parts_contract")
@@ -91,14 +91,14 @@ def _reexport_group() -> set[str]:
 
 
 def test_the_names_owners_import_from_elsewhere_stay_visible_to_type_checkers() -> None:
-    """A served name an owner imports from another ``kiro_crew`` module was the facade's
+    """A served name an owner imports from another ``aj_crew`` module was the facade's
     own import before the split; the last ``TYPE_CHECKING`` block keeps it there for
     mypy and IDEs, and names nothing else."""
     imported_from_elsewhere = set()
     for name, owner_name in _MIRROR.exports.items():
         owner = importlib.import_module(owner_name)
         for node in _tree(owner).body:
-            if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("kiro_crew"):
+            if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("aj_crew"):
                 bound = {alias.asname or alias.name for alias in node.names}
                 if name in bound and not _in_family(node.module or ""):
                     imported_from_elsewhere.add(name)
@@ -115,7 +115,7 @@ def test_every_route_the_server_registers_is_a_coroutine_an_owner_defines() -> N
     """The dashboard server imports each artifact route from the facade by name; each one
     is the coroutine function its owner defines, so a patch through the facade and the
     route the server registers are one object."""
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     routes = {
         name for name in vars(server) if name.startswith(("api_artifact", "api_remote_artifact"))

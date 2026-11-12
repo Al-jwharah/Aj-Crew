@@ -98,7 +98,7 @@ describe('useWebSocket turn_end refresh', () => {
     expect(api.sessions).not.toHaveBeenCalled()
     expect(unfilteredCronCalls(spy)).toEqual([])
     const keys = spy.mock.calls.map(c => JSON.stringify(c[0]?.queryKey))
-    expect(keys).toContain(JSON.stringify(['kirocrewConfig']))
+    expect(keys).toContain(JSON.stringify(['ajcrewConfig']))
   })
 
   it('history still fetches the Older Sessions listing', () => {

@@ -20,8 +20,8 @@ import MarkdownRenderer from '../components/MarkdownRenderer'
 
 const NESTED = [
   '- [ ] 1. Add TeamsConfig and credential wiring',
-  '  - [ ] 1.1 Add `TeamsConfig` dataclass in `src/kiro_crew/config/loader.py`',
-  '  - [ ] 1.2 Add `teams: TeamsConfig` to `KiroCrewConfig`',
+  '  - [ ] 1.1 Add `TeamsConfig` dataclass in `src/aj_crew/config/loader.py`',
+  '  - [ ] 1.2 Add `teams: TeamsConfig` to `AjCrewConfig`',
 ].join('\n')
 
 const FLAT = ['- [ ] first thing', '- [x] second thing'].join('\n')

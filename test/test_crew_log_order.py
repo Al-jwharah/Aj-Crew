@@ -18,7 +18,7 @@ import pytest
 from chat_test_helpers import _make_state
 from crew_log_drain import assert_drained
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_CLEAR_STATUS,
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
@@ -26,8 +26,8 @@ from kiro_crew.acp.types import (
     EVENT_TOOL_RESULT,
     AcpEvent,
 )
-from kiro_crew.crew_log import crew_log_path, emit
-from kiro_crew.dashboard.chat_runner import _run_chat
+from aj_crew.crew_log import crew_log_path, emit
+from aj_crew.dashboard.chat_runner import _run_chat
 
 SESSION = "acp-order-0001"
 
@@ -35,7 +35,7 @@ SESSION = "acp-order-0001"
 @pytest.fixture(autouse=True)
 def _log_home(tmp_path, monkeypatch):
     """Own data home, emitter on, and no state carried between tests."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     emit.reset_caches()
     yield
@@ -234,7 +234,7 @@ async def test_a_recovery_path_records_the_partial_reply_it_persists(tmp_path, e
     ``_flush_segment``, and record it via one shared helper. The body is written with
     ``interrupted`` and BEFORE the closers, the order it happened.
     """
-    import kiro_crew.acp.client as _acp
+    import aj_crew.acp.client as _acp
 
     exc_cls = getattr(_acp, exc_name)
     state, slot = _state_and_slot(
@@ -264,7 +264,7 @@ async def test_a_recovery_path_persists_a_glued_option_marker_reflowed(tmp_path)
     a turn that dies right after gluing one goes through ``_persist_partial_reply``
     instead, and must not be the one path that stores the marker unrepaired.
     """
-    from kiro_crew.acp.client import AcpProcessDied
+    from aj_crew.acp.client import AcpProcessDied
 
     state, slot = _state_and_slot(
         tmp_path,
@@ -275,7 +275,7 @@ async def test_a_recovery_path_persists_a_glued_option_marker_reflowed(tmp_path)
     await _run_chat(state, slot, "do the thing")
 
     stored = [m["content"] for m in slot.messages if m.get("role") == "assistant"]
-    from kiro_crew.constants import GLUED_FOOTER_TEXT_LABEL
+    from aj_crew.constants import GLUED_FOOTER_TEXT_LABEL
 
     assert stored == [f"Pick.\n[OPTIONS: A | B]\n{GLUED_FOOTER_TEXT_LABEL}\nAnytime."]
 
@@ -309,7 +309,7 @@ def test_no_recovery_handler_persists_a_partial_reply_without_recording_it():
     so this checks the source: only the recording helper purges chunk rows and appends
     the partial text.
     """
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     src = "\n".join(
         turn_file.read_text(encoding="utf-8")
@@ -360,7 +360,7 @@ async def test_the_input_is_recorded_before_what_was_derived_from_it(tmp_path):
 @pytest.mark.asyncio
 async def test_message_received_records_entry_text_before_prompt_expansion(tmp_path):
     """The crew log records the accepted text, while the model sees its expansion."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     state, slot = _state_and_slot(tmp_path, [AcpEvent(kind=EVENT_TEXT_CHUNK, text="ok")])
 
@@ -386,7 +386,7 @@ def test_the_model_recorded_is_the_one_the_session_runs_on():
     runs on the backend default. The log records `served_model`, empty when the backend
     serves its own default.
     """
-    from kiro_crew.dashboard.chat_runner import _crew_log_model
+    from aj_crew.dashboard.chat_runner import _crew_log_model
 
     class _Withheld:
         model = "some-pinned-model"
@@ -448,7 +448,7 @@ def test_a_segment_cut_by_a_steer_is_recorded_as_interrupted():
     """
     import inspect
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     flush_src = inspect.getsource(chat_runner._flush_segment)
     assert "interrupted: bool = False" in flush_src, "the flush cannot carry the fact"
@@ -481,7 +481,7 @@ def test_an_ordinary_segment_is_not_marked_interrupted():
     """The default has to stay false, or every reply reads as cut off."""
     import inspect
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     signature = inspect.signature(chat_runner._flush_segment)
     assert signature.parameters["interrupted"].default is False
@@ -497,7 +497,7 @@ async def test_the_turn_ordinal_keeps_rising_past_the_message_cap(tmp_path, monk
     Both turns run with the window already AT the cap (patched low so the trim runs),
     so a length-based ordinal would collide.
     """
-    from kiro_crew.dashboard import state as state_mod
+    from aj_crew.dashboard import state as state_mod
 
     monkeypatch.setattr(state_mod, "_MAX_SLOT_MESSAGES", 8)
 
@@ -650,7 +650,7 @@ async def test_a_process_death_closer_names_the_exception_it_caught(tmp_path):
     its class. An empty ``error`` there does not read as "the process died", it
     reads as a failure nobody could name -- in a file that is never rewritten.
     """
-    import kiro_crew.acp.client as _acp
+    import aj_crew.acp.client as _acp
 
     state, slot = _state_and_slot(
         tmp_path,

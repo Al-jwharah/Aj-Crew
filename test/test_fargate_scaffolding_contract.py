@@ -19,21 +19,21 @@ import pytest
 import yaml
 from yaml_helpers import load_with
 
-from kiro_crew.cloud.fargate.identity import _CREW_RE  # the contract the template mirrors
-from kiro_crew.cloud.fargate.identity import _PARTITION_RE  # ditto, for ARN partitions
-from kiro_crew.cloud.fargate.identity import (
+from aj_crew.cloud.fargate.identity import _CREW_RE  # the contract the template mirrors
+from aj_crew.cloud.fargate.identity import _PARTITION_RE  # ditto, for ARN partitions
+from aj_crew.cloud.fargate.identity import (
     SECRET_NAME_PREFIX,
     CrewBinding,
     execution_role_arn,
     log_group_name,
     task_role_arn,
 )
-from kiro_crew.cloud.fargate.taskdef import CPU_ARCHITECTURES
+from aj_crew.cloud.fargate.taskdef import CPU_ARCHITECTURES
 
 ROOT = Path(__file__).resolve().parents[1]
-TEMPLATES = ROOT / "src" / "kiro_crew" / "cloud" / "templates"
-BASE = TEMPLATES / "kirocrew-fargate-base.yaml"
-CREW = TEMPLATES / "kirocrew-fargate-crew.yaml"
+TEMPLATES = ROOT / "src" / "aj_crew" / "cloud" / "templates"
+BASE = TEMPLATES / "ajcrew-fargate-base.yaml"
+CREW = TEMPLATES / "ajcrew-fargate-crew.yaml"
 
 #: A crew name for rendering ``${Crew}`` so the rendered value can be compared
 #: against what the identity functions derive for the same crew.
@@ -158,7 +158,7 @@ def test_the_crew_parameter_admits_exactly_the_crew_names_identity_admits() -> N
 
     Two patterns can be spelled differently and mean the same thing, and can be
     spelled almost identically and differ on the case that matters -- a trailing
-    hyphen, which would derive the role name ``kirocrew-crew-demo--exec``.
+    hyphen, which would derive the role name ``ajcrew-crew-demo--exec``.
     """
     template_pattern = re.compile(f"^(?:{_pattern(_load(CREW), 'Crew')})$".replace("^^", "^"))
     candidates = [
@@ -330,7 +330,7 @@ def test_each_roles_ceiling_covers_its_own_grant() -> None:
     An uncovered grant is silently capped away and fails only at launch, when ECS does
     the secret read and log-stream open. Derived from the template, not restated.
     """
-    from kiro_crew.cloud import iam
+    from aj_crew.cloud import iam
 
     document = _load(CREW)
     ceilings = {
@@ -369,7 +369,7 @@ def test_neither_ceiling_admits_the_other_roles_work() -> None:
     A union would permit ``secretsmanager:GetSecretValue`` to the task role, the one a
     prompt can reach.
     """
-    from kiro_crew.cloud import iam
+    from aj_crew.cloud import iam
 
     task = set(_statement_actions(iam.crew_boundary_policy_document()["Statement"][0]))
     execution = set(_statement_actions(iam.crew_exec_boundary_policy_document()["Statement"][0]))
@@ -391,8 +391,8 @@ def test_the_boundary_parameter_admits_only_the_one_boundary() -> None:
     parameters = _load(CREW)["Parameters"]
     account = "123456789012"
     for name, policy in (
-        ("PermissionsBoundaryArn", "kirocrew-crew-boundary"),
-        ("ExecutionPermissionsBoundaryArn", "kirocrew-crew-exec-boundary"),
+        ("PermissionsBoundaryArn", "ajcrew-crew-boundary"),
+        ("ExecutionPermissionsBoundaryArn", "ajcrew-crew-exec-boundary"),
     ):
         parameter = parameters[name]
         assert "Default" not in parameter, (
@@ -412,9 +412,9 @@ def test_the_boundary_parameter_admits_only_the_one_boundary() -> None:
         # Neither parameter may admit the OTHER role's ceiling: that swap is how a
         # deployment would cap a role with a ceiling sized for different work.
         other = (
-            "kirocrew-crew-exec-boundary"
-            if policy == "kirocrew-crew-boundary"
-            else "kirocrew-crew-boundary"
+            "ajcrew-crew-exec-boundary"
+            if policy == "ajcrew-crew-boundary"
+            else "ajcrew-crew-boundary"
         )
         assert not pattern.fullmatch(
             f"arn:aws:iam::{account}:policy/{other}"
@@ -467,8 +467,8 @@ def test_both_arn_patterns_accept_exactly_the_partitions_identity_accepts() -> N
         "",
     ):
         identity_accepts = bool(_PARTITION_RE.fullmatch(partition))
-        boundary_arn = f"arn:{partition}:iam::{account}:policy/kirocrew-crew-boundary"
-        ecr_arn = f"arn:{partition}:ecr:us-east-1:{account}:repository/kirocrew-crew"
+        boundary_arn = f"arn:{partition}:iam::{account}:policy/ajcrew-crew-boundary"
+        ecr_arn = f"arn:{partition}:ecr:us-east-1:{account}:repository/ajcrew-crew"
         assert bool(boundary.fullmatch(boundary_arn)) == identity_accepts, (
             f"PermissionsBoundaryArn and identity._PARTITION_RE disagree on partition "
             f"{partition!r} (identity accepts it: {identity_accepts})"

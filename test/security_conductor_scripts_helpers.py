@@ -20,7 +20,7 @@ from skill_script_helpers import load_skill_script
 SCRIPTS = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "security-conductor"
     / "scripts"
@@ -105,7 +105,7 @@ FINDING_ARGS = (
     "--title",
     "echo text is classified as an executed program",
     "--path",
-    "src/kiro_crew/security.py",
+    "src/aj_crew/security.py",
     "--poc",
     "pytest::test/test_security.py::test_echo_is_not_a_program",
 )

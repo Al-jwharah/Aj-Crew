@@ -16,7 +16,7 @@ rules:
   # the bound method to an off-loop runner (run_in_embed_pool, _io) rather
   # than calling it directly.
 
-  - id: kirocrew.unattended-build-message-interactive
+  - id: ajcrew.unattended-build-message-interactive
     patterns:
       - pattern-either:
           - pattern: $RUN(..., $CTX.build_message, ...)
@@ -25,13 +25,13 @@ rules:
       - pattern-not: $CTX.build_message(..., interactive=False, ...)
     paths:
       include:
-        - src/kiro_crew/task_executor.py
-        - src/kiro_crew/task_planner.py
-        - src/kiro_crew/workflow_memory.py
-        - src/kiro_crew/slack/gateway_runtime/heartbeat_turns.py
-        - src/kiro_crew/slack/gateway_runtime/cron_turn.py
-        - src/kiro_crew/dashboard/handlers/hooks.py
-        - src/kiro_crew/apps/builtins/auto_improvement/spine/crew_runner.py
+        - src/aj_crew/task_executor.py
+        - src/aj_crew/task_planner.py
+        - src/aj_crew/workflow_memory.py
+        - src/aj_crew/slack/gateway_runtime/heartbeat_turns.py
+        - src/aj_crew/slack/gateway_runtime/cron_turn.py
+        - src/aj_crew/dashboard/handlers/hooks.py
+        - src/aj_crew/apps/builtins/auto_improvement/spine/crew_runner.py
     message: >
       This module runs turns that no person reads live, but this build_message
       call leaves `interactive` at its True default, so the prompt tells the

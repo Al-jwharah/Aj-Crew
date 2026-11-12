@@ -1,11 +1,11 @@
 /**
  * Crew agents: installed agents, agent templates and spec
- * detail/patch/fork/publish/reset, Kiro Crew agent CRUD, the catalog and
+ * detail/patch/fork/publish/reset, Aj Crew agent CRUD, the catalog and
  * resolved model, the members roster and drawer reads, crew teams, appearance
  * packs and avatar upload.
  */
 
-import type { KiroCrewAgent } from '../../components/AgentSelector'
+import type { AjCrewAgent } from '../../components/AgentSelector'
 import type { ProjectionsBlock } from '../../state/memberProjectionTypes'
 import { activeLocale } from '../../i18n/format'
 import { agentPath, needsProxySafePath } from '../agentPath'
@@ -94,10 +94,10 @@ export interface MemberRosterRow {
   /** Optional presentation label shown in place of `name`. `name` stays the
    *  identity every per-member route and binding is keyed on. */
   display_name?: string
-  /** Crew origin, NORMALIZED by the server to exactly 'kirocrew' (created in
+  /** Crew origin, NORMALIZED by the server to exactly 'ajcrew' (created in
    *  the crew manager), 'builtin', or 'package' (agent-sync-installed; the
    *  legacy 'aim' spelling and any unknown value collapse to this). */
-  source?: 'kirocrew' | 'builtin' | 'package' | string
+  source?: 'ajcrew' | 'builtin' | 'package' | string
   /** User's favourite mark; toggled via PUT /api/agents/{name}. A starred
    *  crewmate is also a row in the left dock. */
   starred?: boolean
@@ -111,7 +111,7 @@ export interface MemberRosterRow {
   dashboard_card_send?: boolean
   /** The person created this crewmate (the Crewmates page's create, or an
    *  approved `crewmate.create` / `crewmate.import` card): `source` is
-   *  `kirocrew` AND the record carries a member id. Never true for the reserved
+   *  `ajcrew` AND the record carries a member id. Never true for the reserved
    *  `default` member. Listed on the roster even with an empty chat. Absent on
    *  an older gateway. */
   dashboard_created?: boolean
@@ -291,7 +291,7 @@ export interface CrewTeam {
  * a value the crewmate asserted. The frame marks the second kind, because a
  * reader deciding whether to act on a number is entitled to know which it is.
  *
- * Mirrors `FieldSpec` in `src/kiro_crew/dashboard_templates/manifest.py`. */
+ * Mirrors `FieldSpec` in `src/aj_crew/dashboard_templates/manifest.py`. */
 export interface DashboardFieldSpec {
   type: 'number' | 'string' | 'boolean' | 'array' | 'object'
   source: { agentic: true } | { fold: string; path: string }
@@ -363,17 +363,17 @@ export function createAgentsEndpoints({ post, put, del, j, jfetch: fetch, jMembe
     // vice versa). May reject with origin_missing / stale_binding / not_a_private_copy
     // / ambiguous_template_name / rebind_failed.
     agentReset: (name: string, crew: string) => fetch('/api/agents/detail/' + encodeURIComponent(name) + '/reset', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ crew }) }).then(j),
-    // Settings > Developer: mount one opt-in managed set (`kirocrew-dashboard`,
-    // `kirocrew-debug`) on the default agent through the mount-only record. The body
+    // Settings > Developer: mount one opt-in managed set (`ajcrew-dashboard`,
+    // `ajcrew-debug`) on the default agent through the mount-only record. The body
     // names no entry and the request carries no card: the gateway builds the managed
     // launch line and records it under its own Settings card id
     // (`handlers/template_server_request.py`). Rejects 409 `already_added` when the
     // record already holds the server.
-    defaultMcpSetAdd: (server: string) => fetch('/api/agents/detail/kirocrew/mcp-additions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ server, mount_only: true }) }).then(j) as Promise<{ sessions_reset?: number }>,
+    defaultMcpSetAdd: (server: string) => fetch('/api/agents/detail/ajcrew/mcp-additions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ server, mount_only: true }) }).then(j) as Promise<{ sessions_reset?: number }>,
     // Its counterpart: delete the server's mount-only record on the default agent,
     // whichever card recorded it. Rejects 409 `not_found` when there is none.
-    defaultMcpSetRemove: (server: string) => fetch('/api/agents/detail/kirocrew/mcp-additions/' + encodeURIComponent(server), { method: 'DELETE' }).then(j) as Promise<{ sessions_reset?: number }>,
-    // Kiro Crew agents
+    defaultMcpSetRemove: (server: string) => fetch('/api/agents/detail/ajcrew/mcp-additions/' + encodeURIComponent(server), { method: 'DELETE' }).then(j) as Promise<{ sessions_reset?: number }>,
+    // Aj Crew agents
     // sessionKey identifies the CHAT SLOT whose project scope applies. The
     // server resolves project-local agents through
     // active_project_dir(state, session_key); with no key it falls back to
@@ -381,11 +381,11 @@ export function createAgentsEndpoints({ post, put, del, j, jfetch: fetch, jMembe
     // slots sit on different projects, so project-scoped agents silently
     // vanish from the picker. Surfaces with no slot context (Channels,
     // Schedule) pass nothing and keep the global-only view.
-    kirocrewAgents: (sessionKey?: string) =>
+    ajcrewAgents: (sessionKey?: string) =>
       fetch('/api/agents', {
         headers: sessionKey ? { 'X-Session-Key': sessionKey } : { ..._sk },
       }).then(j),
-    /** The model a new session on this Kiro Crew agent would run on. Empty
+    /** The model a new session on this Aj Crew agent would run on. Empty
      *  `agent` resolves the configured default agent; `app` adds the owning
      *  app's own model setting. */
     agentResolvedModel: (agent: string, app?: string) =>
@@ -395,7 +395,7 @@ export function createAgentsEndpoints({ post, put, del, j, jfetch: fetch, jMembe
      *  templates, each row tagged with its `selection_kind`. Read-only -- unlike
      *  the sync route it enrols nothing and allocates no member memory, so
      *  every picker can call it without side effects. Same `X-Session-Key`
-     *  scoping as `kirocrewAgents`: project templates come from THIS chat's
+     *  scoping as `ajcrewAgents`: project templates come from THIS chat's
      *  project, never from another open pane's. With no chat to name,
      *  `projectPath` names the directory instead (the folder settings modal);
      *  the server honours it for the owner only. */
@@ -403,7 +403,7 @@ export function createAgentsEndpoints({ post, put, del, j, jfetch: fetch, jMembe
       fetch('/api/agents/catalog' + (projectPath ? '?project_path=' + encodeURIComponent(projectPath) : ''), {
         headers: sessionKey ? { 'X-Session-Key': sessionKey } : { ..._sk },
       }).then(j) as Promise<{
-        agents: KiroCrewAgent[]
+        agents: AjCrewAgent[]
         default_agent: string
         /** The harness this chat (no key: a new session) runs, config spelling. */
         session_backend?: string
@@ -418,7 +418,7 @@ export function createAgentsEndpoints({ post, put, del, j, jfetch: fetch, jMembe
       }>,
     /** `extra` carries per-request headers (a guided create's `X-Guide-*`);
      *  it rides THIS request only, never the shared transport. */
-    createKirocrewAgent: (body: object, extra?: Record<string, string>) =>
+    createAjcrewAgent: (body: object, extra?: Record<string, string>) =>
       (extra ? post('/api/agents', body, undefined, extra) : post('/api/agents', body)).then(j),
     // Crew Members page — roster of GLOBAL crews with DM-thread binding and the
     // cheap live-status fields the backend can answer without IO (richer live
@@ -620,7 +620,7 @@ export function createAgentsEndpoints({ post, put, del, j, jfetch: fetch, jMembe
         put('/api/teams/' + encodeURIComponent(id), body).then(j) as Promise<{ team: CrewTeam }>,
       remove: (id: string) => del('/api/teams/' + encodeURIComponent(id)).then(j) as Promise<{ ok: boolean }>,
     },
-    updateKirocrewAgent: (name: string, body: object) => {
+    updateAjcrewAgent: (name: string, body: object) => {
       // Names with characters that need URL encoding (e.g. spaces → %20) are
       // sent via the body-form route PUT /api/agents so a path-normalising
       // proxy cannot decode the path segment to an HTTP delimiter and return 502.
@@ -630,7 +630,7 @@ export function createAgentsEndpoints({ post, put, del, j, jfetch: fetch, jMembe
       }
       return put('/api/agents/' + encodeURIComponent(name), body).then(j)
     },
-    deleteKirocrewAgent: (name: string) => del(agentPath(name)).then(j),
+    deleteAjcrewAgent: (name: string) => del(agentPath(name)).then(j),
     /** Stage a crew's picture on the server (a `.pending` file only — the
      *  config PUT with `avatar: {kind:'image'}` is what promotes it live,
      *  keeping the editor's Apply→Save two-step a real commit point). */

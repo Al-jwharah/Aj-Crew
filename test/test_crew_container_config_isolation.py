@@ -26,7 +26,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 BACKEND_SRC = (
     REPO_ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "apps"
     / "builtins"
     / "aws_control"
@@ -70,8 +70,8 @@ def _literal(name: str) -> Any:
 @pytest.fixture(scope="module")
 def registry():
     """The gateway's own channel roster, with each channel's credential variables."""
-    from kiro_crew.channels import builtin_channel_descriptors
-    from kiro_crew.messaging.registry import governed_members
+    from aj_crew.channels import builtin_channel_descriptors
+    from aj_crew.messaging.registry import governed_members
 
     descriptors = tuple(builtin_channel_descriptors())
     assert descriptors, "the channel registry is empty; every assertion here would be vacuous"
@@ -90,7 +90,7 @@ def sandbox_keys() -> set[str]:
     """
     import dataclasses
 
-    from kiro_crew.config.sections import AgentConfig
+    from aj_crew.config.sections import AgentConfig
 
     keys = {f.name for f in dataclasses.fields(AgentConfig) if f.name.startswith("sandbox")}
     assert keys, "no sandbox settings found on AgentConfig; this test would be vacuous"
@@ -159,7 +159,7 @@ def test_no_sandbox_setting_is_forced_to_a_permissive_value(sandbox_keys) -> Non
     and leave CI green. Every boolean ``sandbox*`` setting must be ``False``; the mode must
     not be ``JAIL_MODE_OFF`` and must be one the schema declares.
     """
-    from kiro_crew.config.sections import JAIL_MODE_OFF, AgentConfig
+    from aj_crew.config.sections import JAIL_MODE_OFF, AgentConfig
 
     declared = AgentConfig()
     forced = dict(_literal("FORCED_AGENT_SETTINGS"))
@@ -192,7 +192,7 @@ def _schema_enum(field_name: str) -> tuple:
     """
     import dataclasses
 
-    from kiro_crew.config.sections import AgentConfig
+    from aj_crew.config.sections import AgentConfig
 
     for f in dataclasses.fields(AgentConfig):
         if f.name == field_name:
@@ -207,7 +207,7 @@ def test_the_permissive_value_rule_has_something_to_stand_on(sandbox_keys) -> No
     """
     import dataclasses
 
-    from kiro_crew.config.sections import JAIL_MODE_OFF, AgentConfig
+    from aj_crew.config.sections import JAIL_MODE_OFF, AgentConfig
 
     declared = AgentConfig()
     booleans = {
@@ -250,7 +250,7 @@ def test_the_container_forces_no_agent_setting_the_gateway_does_not_have() -> No
     """A key the gateway does not read is written and ignored, which reads as coverage."""
     import dataclasses
 
-    from kiro_crew.config.sections import AgentConfig
+    from aj_crew.config.sections import AgentConfig
 
     known = {f.name for f in dataclasses.fields(AgentConfig)}
     forced = set(_literal("FORCED_AGENT_SETTINGS"))

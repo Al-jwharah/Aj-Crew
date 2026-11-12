@@ -15,9 +15,9 @@ type rather than by a ``"timed out"`` string in ``_TRANSIENT_MARKERS`` keeps a
 reword of the message from flipping retryability.
 """
 
-from kiro_crew.acp.client import AcpTimeoutError
-from kiro_crew.acp.session_handle import AcpRequestTimeout, AcpRuntimeError
-from kiro_crew.llm_helpers import acp_error_is_transient
+from aj_crew.acp.client import AcpTimeoutError
+from aj_crew.acp.session_handle import AcpRequestTimeout, AcpRuntimeError
+from aj_crew.llm_helpers import acp_error_is_transient
 
 
 class TestHandshakeTimeoutIsStructurallyTransient:
@@ -29,7 +29,7 @@ class TestHandshakeTimeoutIsStructurallyTransient:
     def test_verdict_comes_from_type_not_wording(self) -> None:
         # Message carries no word in _TRANSIENT_MARKERS ("timed out" is not a
         # marker), so a True verdict can only come from the structural flag.
-        from kiro_crew.llm_helpers import is_transient_backend_error
+        from aj_crew.llm_helpers import is_transient_backend_error
 
         exc = AcpRequestTimeout("Request initialize took too long")
         assert not is_transient_backend_error(str(exc))  # string classifier says no

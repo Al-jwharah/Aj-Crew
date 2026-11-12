@@ -72,7 +72,7 @@ export default function SourcesPopover({ open, onOpenChange, onError, onInstalle
             <Trans
               i18nKey="components.appstore.sourcesPopover.developer_install_equivalent_to_command"
               components={{
-                command: <code className="bg-bg-elevated px-1 py-0.5 rounded">{i18nT('components.appstore.sourcesPopover.kirocrew_app_install_path')}</code>,
+                command: <code className="bg-bg-elevated px-1 py-0.5 rounded">{i18nT('components.appstore.sourcesPopover.ajcrew_app_install_path')}</code>,
               }}
             />
           </p>

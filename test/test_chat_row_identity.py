@@ -9,8 +9,8 @@ coarse OS clock stamps two same-tick appends identically) and neither can conten
 
 from __future__ import annotations
 
-from kiro_crew.dashboard.chat_persistence import _build_message_entry
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.chat_persistence import _build_message_entry
+from aj_crew.dashboard.state import _ChatSlot
 
 
 def _slot() -> _ChatSlot:

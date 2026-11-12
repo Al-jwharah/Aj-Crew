@@ -1,6 +1,6 @@
 """The display redaction battery reads no mutable state beyond its two exempt sets.
 
-``kiro_crew.dashboard.chat_utils._redact_for_display`` memoizes the output of
+``aj_crew.dashboard.chat_utils._redact_for_display`` memoizes the output of
 ``redact_exfiltration_urls`` followed by ``redact_credentials``, keyed on the
 input text, the exempt-host set and the pass-4 token-parameter prefix set. That
 key is only sound while the battery's OUTPUT is a pure function of exactly those
@@ -35,9 +35,9 @@ from collections import deque
 
 import pytest
 
-import kiro_crew.dashboard.chat_utils as chat_utils
-from kiro_crew import _facade_mirror
-from kiro_crew.security import exfil, redaction
+import aj_crew.dashboard.chat_utils as chat_utils
+from aj_crew import _facade_mirror
+from aj_crew.security import exfil, redaction
 
 # The two battery entry points, as the display cache composes them.
 BATTERY_ROOTS: tuple[tuple[object, str], ...] = (
@@ -387,7 +387,7 @@ def test_operator_file_read_sits_under_the_oauth_flag(graph: _Graph) -> None:
 
 def test_display_cache_memoizes_exactly_the_guarded_battery() -> None:
     """The consumer runs ``display_battery``, which composes exactly the guarded roots, in order."""
-    from kiro_crew.dashboard import display_battery
+    from aj_crew.dashboard import display_battery
 
     fn = ast.parse(inspect.getsource(display_battery.display_battery)).body[0]
     assert isinstance(fn, ast.FunctionDef)

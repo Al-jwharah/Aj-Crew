@@ -35,8 +35,8 @@ from push_guard_helpers import (
     _write_message,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+from aj_crew import platform_compat
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 # pytest resolves a fixture in the requesting test's module, so each shared
 # fixture this module uses is bound here by name.
@@ -536,7 +536,7 @@ class TestPushGuardContracts:
     def test_the_docs_name_the_message_file_the_script_reads(self):
         skill = (PUSH_GUARD_DIR.parent / "SKILL.md").read_text(encoding="utf-8")
         brief = (
-            REPO_ROOT / "src" / "kiro_crew" / "builtin_skills" / "pipeline-conductor" / "SKILL.md"
+            REPO_ROOT / "src" / "aj_crew" / "builtin_skills" / "pipeline-conductor" / "SKILL.md"
         ).read_text(encoding="utf-8")
         hint = (REPO_ROOT / ".github" / "workflows" / "pr-hygiene.yml").read_text(encoding="utf-8")
         for text in (skill, brief, hint):
@@ -603,7 +603,7 @@ class TestPushGuardContracts:
 
     def test_no_shipped_text_carries_the_soft_reset_squash(self):
         roots = [
-            REPO_ROOT / "src" / "kiro_crew" / "builtin_skills",
+            REPO_ROOT / "src" / "aj_crew" / "builtin_skills",
             REPO_ROOT / ".github" / "workflows",
             REPO_ROOT / "scripts",
         ]

@@ -12,7 +12,7 @@ import logging
 
 import pytest
 
-from kiro_crew.mcp_provenance import (
+from aj_crew.mcp_provenance import (
     ABSENT,
     MARKER_KEY,
     is_marked,
@@ -113,7 +113,7 @@ class TestResolveWriteDecisions:
         ``None`` is here on purpose: a JSON ``null`` is a value the user typed, so
         absence needs its own signal.
         """
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_provenance"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_provenance"):
             assert self._resolve(on_disk) is None
         assert "srv" in caplog.text
 
@@ -156,7 +156,7 @@ class TestResolveWriteDecisions:
         user's. The log line is the only trace, and it names the server so a
         silent divergence is diagnosable.
         """
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_provenance"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_provenance"):
             assert self._resolve({"url": "https://theirs.example.com/mcp"}) is None
         assert "srv" in caplog.text
         assert "~/.kiro/settings/mcp.json" in caplog.text
@@ -180,7 +180,7 @@ class TestResolveWriteDecisions:
 class TestOwnershipIsPerFileNotPerName:
     """A name-set cannot answer for two surfaces at once.
 
-    ``kirocrew_managed_names`` stays name-only on purpose: the same managed name
+    ``ajcrew_managed_names`` stays name-only on purpose: the same managed name
     can be ours in the kiro-global file and the user's in the sidecar, so folding
     marker state into the set would make it answer for whichever surface happened
     to be checked last.
@@ -209,16 +209,16 @@ class TestOwnershipIsPerFileNotPerName:
         """PR3 consumes this signature; the marker did not change it."""
         from unittest.mock import patch
 
-        from kiro_crew.mcp_discovery import SCOPE_KIROCREW, kirocrew_managed_names
+        from aj_crew.mcp_discovery import SCOPE_AJCREW, ajcrew_managed_names
 
         with patch(
-            "kiro_crew.mcp_discovery._load_mcp_json_by_source",
+            "aj_crew.mcp_discovery._load_mcp_json_by_source",
             return_value={
-                SCOPE_KIROCREW: {
+                SCOPE_AJCREW: {
                     "plain": {"url": "https://x"},
                     "marked": stamp({"url": "https://y"}),
                     "bad": "not-a-dict",
                 }
             },
         ):
-            assert kirocrew_managed_names() == {"plain", "marked"}
+            assert ajcrew_managed_names() == {"plain", "marked"}

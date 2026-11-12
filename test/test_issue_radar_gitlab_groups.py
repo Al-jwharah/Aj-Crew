@@ -28,9 +28,9 @@ from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 from dashboard_owner_helpers import NoConfiguredOwner
 
-from kiro_crew.apps.builtins.issue_radar.backend import gitlab_client as gl
-from kiro_crew.apps.builtins.issue_radar.backend import routes, store
-from kiro_crew.apps.builtins.issue_radar.backend.errors import RepoUrlError
+from aj_crew.apps.builtins.issue_radar.backend import gitlab_client as gl
+from aj_crew.apps.builtins.issue_radar.backend import routes, store
+from aj_crew.apps.builtins.issue_radar.backend.errors import RepoUrlError
 
 BASE = "/api/apps/issue-radar"
 
@@ -84,7 +84,7 @@ class Router:
 
 @pytest.fixture(autouse=True)
 def _isolate(_floor_monkeypatch, tmp_path):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _floor_monkeypatch.setattr(gl, "sel", lambda: SimpleNamespace(log_api_access=lambda **kw: None))
     _floor_monkeypatch.setattr(gl, "allowed_hosts", lambda: frozenset({"gitlab.acme.example"}))
     _floor_monkeypatch.setattr(store, "app_data_dir", lambda _name: tmp_path / "data")

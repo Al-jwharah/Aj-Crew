@@ -4,7 +4,7 @@
 that opens every path part on Windows, so a busy disk turns a call on the loop into a
 stall the loop watchdog ends the gateway for. The run start (``_run_inner_impl``)
 and the restart orphan notice (``_notify_orphan_impl``) each build that path; both run on
-``kiro_crew.subagent``'s globals, which is the binding patched here.
+``aj_crew.subagent``'s globals, which is the binding patched here.
 """
 
 from __future__ import annotations
@@ -22,9 +22,9 @@ from subagent_turn_resilience_helpers import (  # noqa: F401 -- the autouse fixt
     _text_event,
 )
 
-import kiro_crew.subagent as subagent_mod
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.testing.wait import await_until
+import aj_crew.subagent as subagent_mod
+from aj_crew.subagent import SubagentManager
+from aj_crew.testing.wait import await_until
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -54,7 +54,7 @@ async def test_the_run_start_builds_the_result_path_off_the_event_loop(monkeypat
         yield _complete_event()
 
     mgr = _manager(_mock_sessions(stream))
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("do work")
         assert info is not None
         await await_until(mgr._tasks[info.id], what="the run finishing")
@@ -76,7 +76,7 @@ async def test_the_orphan_notice_builds_the_result_path_off_the_event_loop(monke
     }
     mgr = SubagentManager(sessions=MagicMock(), ctx_builder=None)
 
-    with patch("kiro_crew.subagent.has_dashboard_surface", return_value=False):
+    with patch("aj_crew.subagent.has_dashboard_surface", return_value=False):
         notice = await mgr._notify_orphan("orphan-off-loop", state, True)
 
     assert threads and threading.get_ident() not in threads, threads

@@ -30,9 +30,9 @@ const {
 
 test("parseDesktopEntry reads the [Desktop Entry] group only", () => {
   const e = parseDesktopEntry(BUNDLED_DESKTOP + "\n[Desktop Action new]\nIcon=other\n");
-  assert.equal(e.Name, "Kiro Crew");
-  assert.equal(e.Icon, "kirocrew-desktop");
-  assert.equal(e.StartupWMClass, "kirocrew-desktop");
+  assert.equal(e.Name, "Aj Crew");
+  assert.equal(e.Icon, "ajcrew-desktop");
+  assert.equal(e.StartupWMClass, "ajcrew-desktop");
   assert.equal(e.Exec, "AppRun --no-sandbox %U");
   assert.equal(e.Categories, "Development;");
 });
@@ -57,12 +57,12 @@ test("escapeExecArg applies the two-layer Desktop Entry Exec escaping", () => {
 
 test("rewriteExec swaps AppRun and removes its unconditional sandbox bypass", () => {
   assert.equal(
-    rewriteExec("AppRun --no-sandbox %U", "/opt/KiroCrew-x86_64.AppImage"),
-    '"/opt/KiroCrew-x86_64.AppImage" %U'
+    rewriteExec("AppRun --no-sandbox %U", "/opt/AjCrew-x86_64.AppImage"),
+    '"/opt/AjCrew-x86_64.AppImage" %U'
   );
   assert.equal(
-    rewriteExec("AppRun --custom-flag --no-sandbox %U", "/opt/KiroCrew-x86_64.AppImage"),
-    '"/opt/KiroCrew-x86_64.AppImage" --custom-flag %U'
+    rewriteExec("AppRun --custom-flag --no-sandbox %U", "/opt/AjCrew-x86_64.AppImage"),
+    '"/opt/AjCrew-x86_64.AppImage" --custom-flag %U'
   );
   assert.equal(rewriteExec("AppRun %U", "/home/a b/Kiro.AppImage"), '"/home/a b/Kiro.AppImage" %U');
   assert.equal(rewriteExec("", "/x/K.AppImage"), '"/x/K.AppImage" %U');
@@ -100,19 +100,19 @@ test("rewriteExec preserves active extract-and-run mode once before the field co
 
 test("renderDesktopEntry emits required keys and omits empties", () => {
   const body = renderDesktopEntry({
-    name: "Kiro Crew",
+    name: "Aj Crew",
     comment: "",
     tryExec: "/x/a\\b/K.AppImage",
     execLine: '"/x/K.AppImage" %U',
-    iconName: "kirocrew-desktop",
-    wmClass: "kirocrew-desktop",
+    iconName: "ajcrew-desktop",
+    wmClass: "ajcrew-desktop",
     categories: "Development;",
   });
   assert.match(body, /^\[Desktop Entry\]$/m);
   assert.match(body, /^TryExec=\/x\/a\\\\b\/K\.AppImage$/m);
   assert.match(body, /^Exec="\/x\/K\.AppImage" %U$/m);
-  assert.match(body, /^Icon=kirocrew-desktop$/m);
-  assert.match(body, /^StartupWMClass=kirocrew-desktop$/m);
+  assert.match(body, /^Icon=ajcrew-desktop$/m);
+  assert.match(body, /^StartupWMClass=ajcrew-desktop$/m);
   assert.doesNotMatch(body, /^Comment=/m); // empty comment omitted
 });
 
@@ -131,10 +131,10 @@ test("planIntegration requires Linux, AppImage identity, and both runtime paths"
   assert.deepEqual(ok, { integrate: true, appImage: "/a", appDir: "/b" });
 });
 
-test("planIntegration honors the KIROCREW_DISABLE_DESKTOP_INTEGRATION opt-out", () => {
+test("planIntegration honors the AJCREW_DISABLE_DESKTOP_INTEGRATION opt-out", () => {
   for (const v of ["1", "true", "YES", " on "]) {
     const r = planIntegration(
-      { APPIMAGE: "/a", APPDIR: "/b", KIROCREW_DISABLE_DESKTOP_INTEGRATION: v },
+      { APPIMAGE: "/a", APPDIR: "/b", AJCREW_DISABLE_DESKTOP_INTEGRATION: v },
       "linux",
       "appimage"
     );
@@ -144,7 +144,7 @@ test("planIntegration honors the KIROCREW_DISABLE_DESKTOP_INTEGRATION opt-out", 
   // a non-truthy value does not opt out
   assert.equal(
     planIntegration(
-      { APPIMAGE: "/a", APPDIR: "/b", KIROCREW_DISABLE_DESKTOP_INTEGRATION: "0" },
+      { APPIMAGE: "/a", APPDIR: "/b", AJCREW_DISABLE_DESKTOP_INTEGRATION: "0" },
       "linux",
       "appimage"
     ).integrate,
@@ -164,22 +164,22 @@ test("integrateLinuxDesktop creates icons + launcher and resolves refreshers", (
   const fs = makeFakeFs(bundleWithIcons(["16x16", "128x128", "512x512"]));
   const runs = [];
   const res = integrateLinuxDesktop(baseDeps(fs, { run: (cmd, args) => runs.push([cmd, args]) }));
-  assert.deepEqual(res, { installed: true, iconName: "kirocrew-desktop", sizes: 3 });
+  assert.deepEqual(res, { installed: true, iconName: "ajcrew-desktop", sizes: 3 });
 
   // Icons copied under our name, at the shipped sizes only.
-  assert.equal(fs._files.get(`${HOME}/.local/share/icons/hicolor/512x512/apps/kirocrew-desktop.png`), "PNG:512x512");
-  assert.ok(!fs._files.has(`${HOME}/.local/share/icons/hicolor/256x256/apps/kirocrew-desktop.png`));
+  assert.equal(fs._files.get(`${HOME}/.local/share/icons/hicolor/512x512/apps/ajcrew-desktop.png`), "PNG:512x512");
+  assert.ok(!fs._files.has(`${HOME}/.local/share/icons/hicolor/256x256/apps/ajcrew-desktop.png`));
 
   // Launcher written with Exec at the real AppImage and matching WMClass.
-  const launcher = fs._files.get(`${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`);
+  const launcher = fs._files.get(`${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`);
   assert.match(launcher, /^Exec="\/opt\/K\.AppImage" %U$/m);
-  assert.match(launcher, /^StartupWMClass=kirocrew-desktop$/m);
+  assert.match(launcher, /^StartupWMClass=ajcrew-desktop$/m);
 
   // The private manifest records the exact launcher and icon bytes we wrote.
   const state = JSON.parse(fs._files.get(STATE_PATH));
   assert.equal(state.schema, 3);
-  const launcherRecord = state.artifacts[`${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`];
-  const iconRecord = state.artifacts[`${HOME}/.local/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`];
+  const launcherRecord = state.artifacts[`${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`];
+  const iconRecord = state.artifacts[`${HOME}/.local/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`];
   assert.match(launcherRecord.owned[0], /^[0-9a-f]{64}$/);
   assert.match(iconRecord.owned[0], /^[0-9a-f]{64}$/);
   assert.equal(typeof launcherRecord.metadata.mtimeNs, "string");
@@ -187,7 +187,7 @@ test("integrateLinuxDesktop creates icons + launcher and resolves refreshers", (
   assert.ok(fs._files.has(launcherRecord.anchorPath));
   assert.equal(
     fs.lstatSync(launcherRecord.anchorPath).ino,
-    fs.lstatSync(`${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`).ino
+    fs.lstatSync(`${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`).ino
   );
 
   // Refreshers resolved to ABSOLUTE system-dir paths, kbuildsycoca5 skipped (absent).
@@ -208,7 +208,7 @@ test("integrateLinuxDesktop preserves the runtime's active extract-and-run mode"
 
   assert.equal(res.installed, true);
   const launcher = fs._files.get(
-    `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`
+    `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`
   );
   assert.match(
     launcher,
@@ -219,39 +219,39 @@ test("integrateLinuxDesktop preserves the runtime's active extract-and-run mode"
 });
 
 test("appImageLauncherName gives stable and nightly ids distinct from the package entry", () => {
-  assert.equal(appImageLauncherName("kirocrew-desktop"), "kirocrew-desktop-appimage.desktop");
+  assert.equal(appImageLauncherName("ajcrew-desktop"), "ajcrew-desktop-appimage.desktop");
   assert.equal(
-    appImageLauncherName("kirocrew-desktop-nightly"),
-    "kirocrew-desktop-nightly-appimage.desktop"
+    appImageLauncherName("ajcrew-desktop-nightly"),
+    "ajcrew-desktop-nightly-appimage.desktop"
   );
   // Neither id equals the deb/rpm entry electron-builder installs for its
   // channel (desktopName), so a user-level launcher never shadows a package.
-  for (const packageId of ["kirocrew-desktop.desktop", "kirocrew-desktop-nightly.desktop"]) {
-    assert.notEqual(appImageLauncherName("kirocrew-desktop"), packageId);
-    assert.notEqual(appImageLauncherName("kirocrew-desktop-nightly"), packageId);
+  for (const packageId of ["ajcrew-desktop.desktop", "ajcrew-desktop-nightly.desktop"]) {
+    assert.notEqual(appImageLauncherName("ajcrew-desktop"), packageId);
+    assert.notEqual(appImageLauncherName("ajcrew-desktop-nightly"), packageId);
   }
 });
 
 test("the AppImage launcher never shadows a same-id package entry and keeps window association", () => {
   // A user-level copy of the package launcher id is what XDG would prefer over
   // /usr/share/applications; the AppImage must neither create nor touch it.
-  const packageLauncher = `${HOME}/.local/share/applications/kirocrew-desktop.desktop`;
+  const packageLauncher = `${HOME}/.local/share/applications/ajcrew-desktop.desktop`;
   const fs = makeFakeFs(bundleWithIcons(["16x16"], {
-    [packageLauncher]: "[Desktop Entry]\nName=KiroCrew\nExec=/usr/bin/kirocrew-desktop %U\n", // brand-ok -- package launcher fixture
+    [packageLauncher]: "[Desktop Entry]\nName=AjCrew\nExec=/usr/bin/ajcrew-desktop %U\n", // brand-ok -- package launcher fixture
   }));
 
   const res = integrateLinuxDesktop(baseDeps(fs));
 
-  assert.deepEqual(res, { installed: true, iconName: "kirocrew-desktop", sizes: 1 });
-  const managed = fs._files.get(`${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`);
+  assert.deepEqual(res, { installed: true, iconName: "ajcrew-desktop", sizes: 1 });
+  const managed = fs._files.get(`${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`);
   assert.ok(managed, "managed launcher written under its own id");
   // StartupWMClass still equals Electron's app_id (desktopName sans suffix), so
   // GNOME/KDE map the running window to this entry through that key, not the id.
-  assert.match(managed, /^StartupWMClass=kirocrew-desktop$/m);
-  assert.match(managed, /^Icon=kirocrew-desktop$/m);
+  assert.match(managed, /^StartupWMClass=ajcrew-desktop$/m);
+  assert.match(managed, /^Icon=ajcrew-desktop$/m);
   assert.equal(
     fs._files.get(packageLauncher),
-    "[Desktop Entry]\nName=KiroCrew\nExec=/usr/bin/kirocrew-desktop %U\n" // brand-ok -- package launcher fixture
+    "[Desktop Entry]\nName=AjCrew\nExec=/usr/bin/ajcrew-desktop %U\n" // brand-ok -- package launcher fixture
   );
   const state = JSON.parse(fs._files.get(STATE_PATH));
   assert.equal(state.artifacts[packageLauncher], undefined);
@@ -259,28 +259,28 @@ test("the AppImage launcher never shadows a same-id package entry and keeps wind
 
 test("nightly AppImage keeps its own launcher id and icon name beside stable", () => {
   const nightlyEntry = BUNDLED_DESKTOP
-    .replace("Name=Kiro Crew", "Name=Kiro Crew Nightly")
-    .replace("Icon=kirocrew-desktop", "Icon=kirocrew-desktop-nightly")
-    .replace("StartupWMClass=kirocrew-desktop", "StartupWMClass=kirocrew-desktop-nightly");
-  const stableLauncher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+    .replace("Name=Aj Crew", "Name=Aj Crew Nightly")
+    .replace("Icon=ajcrew-desktop", "Icon=ajcrew-desktop-nightly")
+    .replace("StartupWMClass=ajcrew-desktop", "StartupWMClass=ajcrew-desktop-nightly");
+  const stableLauncher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const fs = makeFakeFs({
-    [`${APPDIR}/kirocrew-desktop-nightly.desktop`]: nightlyEntry,
-    [`${APPDIR}/usr/share/icons/hicolor/16x16/apps/kirocrew-desktop-nightly.png`]: "PNG:nightly",
+    [`${APPDIR}/ajcrew-desktop-nightly.desktop`]: nightlyEntry,
+    [`${APPDIR}/usr/share/icons/hicolor/16x16/apps/ajcrew-desktop-nightly.png`]: "PNG:nightly",
     [stableLauncher]: "stable launcher body",
     ...SYS_BINS,
   });
 
   const res = integrateLinuxDesktop(baseDeps(fs));
 
-  assert.deepEqual(res, { installed: true, iconName: "kirocrew-desktop-nightly", sizes: 1 });
+  assert.deepEqual(res, { installed: true, iconName: "ajcrew-desktop-nightly", sizes: 1 });
   const launcher = fs._files.get(
-    `${HOME}/.local/share/applications/kirocrew-desktop-nightly-appimage.desktop`
+    `${HOME}/.local/share/applications/ajcrew-desktop-nightly-appimage.desktop`
   );
-  assert.match(launcher, /^Name=Kiro Crew Nightly$/m);
-  assert.match(launcher, /^Icon=kirocrew-desktop-nightly$/m);
-  assert.match(launcher, /^StartupWMClass=kirocrew-desktop-nightly$/m);
+  assert.match(launcher, /^Name=Aj Crew Nightly$/m);
+  assert.match(launcher, /^Icon=ajcrew-desktop-nightly$/m);
+  assert.match(launcher, /^StartupWMClass=ajcrew-desktop-nightly$/m);
   assert.equal(fs._files.get(stableLauncher), "stable launcher body");
-  assert.ok(!fs._files.has(`${HOME}/.local/share/applications/kirocrew-desktop-nightly.desktop`));
+  assert.ok(!fs._files.has(`${HOME}/.local/share/applications/ajcrew-desktop-nightly.desktop`));
 });
 
 test("integrateLinuxDesktop makes provenance durable before public publication", () => {
@@ -293,8 +293,8 @@ test("integrateLinuxDesktop makes provenance durable before public publication",
 
   integrateLinuxDesktop(baseDeps(fs));
 
-  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`;
-  const stateDirSync = events.indexOf(`fsync:${HOME}/.config/kirocrew-desktop`);
+  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`;
+  const stateDirSync = events.indexOf(`fsync:${HOME}/.config/ajcrew-desktop`);
   const xdgParentSync = events.indexOf(`fsync:${HOME}/.local`);
   const iconDir = `${HOME}/.local/share/icons/hicolor/16x16/apps`;
   const iconDirSync = events.indexOf(`fsync:${iconDir}`);
@@ -315,14 +315,14 @@ test("integrateLinuxDesktop verifies current managed files without refreshing ca
 
   const res = integrateLinuxDesktop(baseDeps(fs, { run: (cmd) => runs.push(cmd) }));
 
-  assert.deepEqual(res, { installed: true, iconName: "kirocrew-desktop", sizes: 1 });
+  assert.deepEqual(res, { installed: true, iconName: "ajcrew-desktop", sizes: 1 });
   assert.deepEqual(runs, []);
 });
 
 test("integrateLinuxDesktop updates its managed launcher after the AppImage moves", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
 
   const res = integrateLinuxDesktop(baseDeps(fs, {
     env: { APPIMAGE: "/new/K.AppImage", APPDIR, HOME },
@@ -339,11 +339,11 @@ test("integrateLinuxDesktop updates its managed launcher after the AppImage move
 test("integrateLinuxDesktop preserves a user-modified managed launcher", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
-  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`;
-  const customized = "[Desktop Entry]\nType=Application\nName=My Kiro\nExec=/custom/wrapper %U\nIcon=kirocrew-desktop\n";
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
+  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`;
+  const customized = "[Desktop Entry]\nType=Application\nName=My Kiro\nExec=/custom/wrapper %U\nIcon=ajcrew-desktop\n";
   fs._files.set(launcher, customized);
-  fs._files.set(`${APPDIR}/usr/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`, "NEW ICON");
+  fs._files.set(`${APPDIR}/usr/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`, "NEW ICON");
 
   const res = integrateLinuxDesktop(baseDeps(fs, { version: "0.6.0" }));
 
@@ -355,7 +355,7 @@ test("integrateLinuxDesktop preserves a user-modified managed launcher", () => {
 test("integrateLinuxDesktop preserves byte-identical replacement of a managed launcher", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const identical = fs._files.get(launcher);
   fs.unlinkSync(launcher);
   fs._files.set(launcher, identical); // editor-style atomic replacement: same bytes, new inode
@@ -373,15 +373,15 @@ test("integrateLinuxDesktop preserves byte-identical replacement of a managed la
 test("integrateLinuxDesktop updates managed icons and preserves customized sizes", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16", "128x128"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const icon16 = `${HOME}/.local/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`;
-  const icon128 = `${HOME}/.local/share/icons/hicolor/128x128/apps/kirocrew-desktop.png`;
+  const icon16 = `${HOME}/.local/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`;
+  const icon128 = `${HOME}/.local/share/icons/hicolor/128x128/apps/ajcrew-desktop.png`;
   fs._files.set(icon16, "CUSTOM ICON");
-  fs._files.set(`${APPDIR}/usr/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`, "NEW:16");
-  fs._files.set(`${APPDIR}/usr/share/icons/hicolor/128x128/apps/kirocrew-desktop.png`, "NEW:128");
+  fs._files.set(`${APPDIR}/usr/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`, "NEW:16");
+  fs._files.set(`${APPDIR}/usr/share/icons/hicolor/128x128/apps/ajcrew-desktop.png`, "NEW:128");
 
   const res = integrateLinuxDesktop(baseDeps(fs, { version: "0.6.0" }));
 
-  assert.deepEqual(res, { installed: true, iconName: "kirocrew-desktop", sizes: 2 });
+  assert.deepEqual(res, { installed: true, iconName: "ajcrew-desktop", sizes: 2 });
   assert.equal(fs._files.get(icon16), "CUSTOM ICON");
   assert.equal(fs._files.get(icon128), "NEW:128");
 });
@@ -389,9 +389,9 @@ test("integrateLinuxDesktop updates managed icons and preserves customized sizes
 test("customized icon sizes remain available while a moved launcher self-heals", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16", "128x128"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
-  const icon16 = `${HOME}/.local/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`;
-  const icon128 = `${HOME}/.local/share/icons/hicolor/128x128/apps/kirocrew-desktop.png`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
+  const icon16 = `${HOME}/.local/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`;
+  const icon128 = `${HOME}/.local/share/icons/hicolor/128x128/apps/ajcrew-desktop.png`;
   fs._files.set(icon16, "CUSTOM:16");
   fs._files.set(icon128, "CUSTOM:128");
 
@@ -400,7 +400,7 @@ test("customized icon sizes remain available while a moved launcher self-heals",
     version: "0.6.0",
   }));
 
-  assert.deepEqual(res, { installed: true, iconName: "kirocrew-desktop", sizes: 2 });
+  assert.deepEqual(res, { installed: true, iconName: "ajcrew-desktop", sizes: 2 });
   assert.equal(fs._files.get(icon16), "CUSTOM:16");
   assert.equal(fs._files.get(icon128), "CUSTOM:128");
   assert.match(fs._files.get(launcher), /\/new\/K\.AppImage/);
@@ -408,7 +408,7 @@ test("customized icon sizes remain available while a moved launcher self-heals",
 
 test("integrateLinuxDesktop completes a manifest-recorded partial installation", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const linkSync = fs.linkSync;
   let failLauncher = true;
   fs.linkSync = (src, dest) => {
@@ -433,7 +433,7 @@ test("integrateLinuxDesktop completes a manifest-recorded partial installation",
 
 test("a recovered first-install launcher is reconciled against a moved AppImage", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const linkSync = fs.linkSync;
   let failLauncher = true;
   fs.linkSync = (src, dest) => {
@@ -463,7 +463,7 @@ test("a recovered first-install launcher is reconciled against a moved AppImage"
 test("integrateLinuxDesktop preserves managed files when the manifest becomes invalid", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const original = fs._files.get(launcher);
   fs._files.set(STATE_PATH, "not json");
 
@@ -480,7 +480,7 @@ test("integrateLinuxDesktop preserves managed files when the manifest becomes in
 
 test("recreates a first-install artifact after public and pending temp are deleted", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const linkSync = fs.linkSync;
   let failLauncher = true;
   fs.linkSync = (src, dest) => {
@@ -508,11 +508,11 @@ test("recreates a first-install artifact after public and pending temp are delet
 test("integrateLinuxDesktop restores content changed at the displacement boundary", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const customized = "[Desktop Entry]\nType=Application\nName=Concurrent Edit\nExec=/custom/wrapper %U\n";
   const renameSync = fs.renameSync;
   fs.renameSync = (src, dest) => {
-    if (src === launcher && dest.includes(".kirocrew-displaced-")) {
+    if (src === launcher && dest.includes(".ajcrew-displaced-")) {
       fs._files.set(src, customized);
     }
     return renameSync(src, dest);
@@ -530,7 +530,7 @@ test("integrateLinuxDesktop restores content changed at the displacement boundar
 test("integrateLinuxDesktop preserves a concurrent writer that wins publication", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const winner = "[Desktop Entry]\nType=Application\nName=Concurrent Winner\nExec=/winner %U\n";
   const linkSync = fs.linkSync;
   fs.linkSync = (src, dest) => {
@@ -550,7 +550,7 @@ test("integrateLinuxDesktop preserves a concurrent writer that wins publication"
 test("integrateLinuxDesktop restores the old launcher when replacement linking fails", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const original = fs._files.get(launcher);
   const linkSync = fs.linkSync;
   let failReplacement = true;
@@ -580,13 +580,13 @@ test("integrateLinuxDesktop restores the old launcher when replacement linking f
 test("integrateLinuxDesktop restores a managed launcher after displacement fsync fails", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const appsDir = `${HOME}/.local/share/applications`;
   const original = fs._files.get(launcher);
   const fsyncSync = fs.fsyncSync;
   let failed = false;
   fs.fsyncSync = (fd) => {
-    const displacedExists = [...fs._files.keys()].some((p) => p.startsWith(`${launcher}.kirocrew-displaced-`));
+    const displacedExists = [...fs._files.keys()].some((p) => p.startsWith(`${launcher}.ajcrew-displaced-`));
     if (!failed && fd === appsDir && displacedExists) {
       failed = true;
       throw Object.assign(new Error("EIO"), { code: "EIO" });
@@ -612,7 +612,7 @@ test("integrateLinuxDesktop restores a managed launcher after displacement fsync
 
 test("byte-identical external publication never gains ownership from pending hash alone", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const linkSync = fs.linkSync;
   fs.linkSync = (src, dest) => {
     if (dest === launcher) fs._files.set(dest, fs._files.get(src)); // different inode, same bytes
@@ -635,7 +635,7 @@ test("byte-identical external publication never gains ownership from pending has
 test("pending public inode is promoted after post-link durability failure", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const fsyncSync = fs.fsyncSync;
   let failPublicSync = true;
   fs.fsyncSync = (fd) => {
@@ -659,7 +659,7 @@ test("pending public inode is promoted after post-link durability failure", () =
   }));
   assert.equal(retry.installed, true);
   assert.match(fs._files.get(launcher), /\/new\/K\.AppImage/);
-  assert.ok([...fs._files.keys()].some((p) => p.startsWith(`${launcher}.kirocrew-displaced-`)));
+  assert.ok([...fs._files.keys()].some((p) => p.startsWith(`${launcher}.ajcrew-displaced-`)));
 });
 
 test("integrateLinuxDesktop is a no-op off Linux, outside AppImage, and for package installs", () => {
@@ -670,14 +670,14 @@ test("integrateLinuxDesktop is a no-op off Linux, outside AppImage, and for pack
   const packageFs = makeFakeFs(bundleWithIcons(["16x16"]));
   const packageResult = integrateLinuxDesktop(baseDeps(packageFs, { installKind: "package" }));
   assert.deepEqual(packageResult, { skipped: true, reason: "not an AppImage install" });
-  assert.ok(!packageFs._files.has(`${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`));
+  assert.ok(!packageFs._files.has(`${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`));
 });
 
 test("integrateLinuxDesktop leaves an existing desktop integration untouched", () => {
   const present = bundleWithIcons(["16x16"]);
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
-  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`;
-  const existingBody = "[Desktop Entry]\nName=My Custom\nExec=/opt/K.AppImage --my-flag %U\nIcon=kirocrew-desktop\n";
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
+  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`;
+  const existingBody = "[Desktop Entry]\nName=My Custom\nExec=/opt/K.AppImage --my-flag %U\nIcon=ajcrew-desktop\n";
   present[launcher] = existingBody;
   present[icon] = "CUSTOM ICON";
   const fs = makeFakeFs(present);
@@ -691,8 +691,8 @@ test("integrateLinuxDesktop leaves an existing desktop integration untouched", (
 
 test("integrateLinuxDesktop leaves an uninspectable launcher path untouched", () => {
   const present = bundleWithIcons(["16x16"]);
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
-  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
+  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`;
   const existingBody = "[Desktop Entry]\nName=Uninspectable Launcher\nExec=/opt/K.AppImage %U\n";
   present[launcher] = existingBody;
   present[icon] = "CUSTOM ICON";
@@ -711,20 +711,20 @@ test("integrateLinuxDesktop leaves an uninspectable launcher path untouched", ()
 });
 
 test("integrateLinuxDesktop uses but does not replace an unowned existing icon", () => {
-  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`;
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const present = bundleWithIcons(["16x16"], { [icon]: "CUSTOM ICON" });
   const fs = makeFakeFs(present);
 
   const res = integrateLinuxDesktop(baseDeps(fs));
 
-  assert.deepEqual(res, { installed: true, iconName: "kirocrew-desktop", sizes: 1 });
+  assert.deepEqual(res, { installed: true, iconName: "ajcrew-desktop", sizes: 1 });
   assert.equal(fs._files.get(icon), "CUSTOM ICON");
   assert.ok(fs._files.has(launcher));
 });
 
 test("integrateLinuxDesktop loses an icon-creation race without overwriting the winner", () => {
-  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`;
+  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`;
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   const linkSync = fs.linkSync;
   fs.linkSync = (src, dest) => {
@@ -734,13 +734,13 @@ test("integrateLinuxDesktop loses an icon-creation race without overwriting the 
 
   const res = integrateLinuxDesktop(baseDeps(fs));
 
-  assert.deepEqual(res, { installed: true, iconName: "kirocrew-desktop", sizes: 1 });
+  assert.deepEqual(res, { installed: true, iconName: "ajcrew-desktop", sizes: 1 });
   assert.equal(fs._files.get(icon), "RACE WINNER");
-  assert.ok(fs._files.has(`${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`));
+  assert.ok(fs._files.has(`${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`));
 });
 
 test("integrateLinuxDesktop loses a launcher-creation race without overwriting the winner", () => {
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const winner = "[Desktop Entry]\nName=Race Winner\nExec=/other/app %U\n";
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   const linkSync = fs.linkSync;
@@ -756,8 +756,8 @@ test("integrateLinuxDesktop loses a launcher-creation race without overwriting t
 });
 
 test("a symlinked launcher is treated as existing and leaves integration untouched", () => {
-  const launcherPath = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
-  const iconPath = `${HOME}/.local/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`;
+  const launcherPath = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
+  const iconPath = `${HOME}/.local/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`;
   const present = bundleWithIcons(["16x16"], { [iconPath]: "CUSTOM ICON" });
   const fs = makeFakeFs(present, { symlinks: [launcherPath] });
 
@@ -769,12 +769,12 @@ test("a symlinked launcher is treated as existing and leaves integration untouch
 });
 
 test("desktop integration refuses a symlinked icon destination (no write-through)", () => {
-  const iconDest = `${HOME}/.local/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`;
+  const iconDest = `${HOME}/.local/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`;
   const fs = makeFakeFs(bundleWithIcons(["16x16", "128x128"]), { symlinks: [iconDest] });
   const res = integrateLinuxDesktop(baseDeps(fs));
   assert.equal(res.installed, true);
   assert.ok(!fs._files.has(iconDest)); // symlinked icon dest refused, not written through
-  assert.equal(fs._files.get(`${HOME}/.local/share/icons/hicolor/128x128/apps/kirocrew-desktop.png`), "PNG:128x128");
+  assert.equal(fs._files.get(`${HOME}/.local/share/icons/hicolor/128x128/apps/ajcrew-desktop.png`), "PNG:128x128");
 });
 
 test("desktop integration refuses a symlinked icon ancestor before creating children", () => {
@@ -786,7 +786,7 @@ test("desktop integration refuses a symlinked icon ancestor before creating chil
 
   assert.deepEqual(res, { skipped: true, reason: "no managed icons" });
   assert.ok(!fs._dirs.has(child));
-  assert.ok(!fs._files.has(`${child}/kirocrew-desktop.png`));
+  assert.ok(!fs._files.has(`${child}/ajcrew-desktop.png`));
 });
 
 test("desktop integration checks symlink ancestors above a pre-existing child", () => {
@@ -800,7 +800,7 @@ test("desktop integration checks symlink ancestors above a pre-existing child", 
   const res = integrateLinuxDesktop(baseDeps(fs));
 
   assert.deepEqual(res, { skipped: true, reason: "no managed icons" });
-  assert.ok(!fs._files.has(`${child}/kirocrew-desktop.png`));
+  assert.ok(!fs._files.has(`${child}/ajcrew-desktop.png`));
 });
 
 test("desktop integration refuses a symlinked applications directory", () => {
@@ -811,8 +811,8 @@ test("desktop integration refuses a symlinked applications directory", () => {
 
   assert.equal(res.skipped, true);
   assert.equal(res.reason, "launcher customized");
-  assert.ok(!fs._files.has(`${appsDir}/kirocrew-desktop-appimage.desktop`));
-  assert.ok(fs._files.has(`${HOME}/.local/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`));
+  assert.ok(!fs._files.has(`${appsDir}/ajcrew-desktop-appimage.desktop`));
+  assert.ok(fs._files.has(`${HOME}/.local/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`));
 });
 
 test("integrateLinuxDesktop refuses an untrusted manifest directory", () => {
@@ -822,12 +822,12 @@ test("integrateLinuxDesktop refuses an untrusted manifest directory", () => {
   ]) {
     const res = integrateLinuxDesktop(baseDeps(fs));
     assert.deepEqual(res, { skipped: true, reason: "manifest unavailable" }, label);
-    assert.ok(!fs._files.has(`${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`), label);
+    assert.ok(!fs._files.has(`${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`), label);
   }
 });
 
 test("integrateLinuxDesktop skips cleanly when the bundle ships no icons", () => {
-  const fs = makeFakeFs({ [`${APPDIR}/kirocrew-desktop.desktop`]: BUNDLED_DESKTOP, ...SYS_BINS });
+  const fs = makeFakeFs({ [`${APPDIR}/ajcrew-desktop.desktop`]: BUNDLED_DESKTOP, ...SYS_BINS });
   const res = integrateLinuxDesktop(baseDeps(fs));
   assert.equal(res.skipped, true);
   assert.equal(res.reason, "no managed icons");
@@ -836,9 +836,9 @@ test("integrateLinuxDesktop skips cleanly when the bundle ships no icons", () =>
 test("absent deferred icons do not authorize launcher restoration", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   assert.equal(integrateLinuxDesktop(baseDeps(fs)).installed, true);
-  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`;
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
-  const source = `${APPDIR}/usr/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`;
+  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
+  const source = `${APPDIR}/usr/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`;
   fs._files.set(source, "UPDATED ICON");
   assert.equal(integrateLinuxDesktop(baseDeps(fs)).installed, true);
   const recovery = JSON.parse(fs._files.get(STATE_PATH)).artifacts[icon].recovery;
@@ -857,7 +857,7 @@ test("absent deferred icons do not authorize launcher restoration", () => {
 test("a missing launcher with deferred recovery cleanup reports a deferred outcome", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
 
   integrateLinuxDesktop(baseDeps(fs, {
     env: { APPIMAGE: "/new/K.AppImage", APPDIR, HOME },

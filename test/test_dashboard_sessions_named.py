@@ -20,9 +20,9 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.dashboard import revocation_gen, token_auth
-from kiro_crew.dashboard.routes import register_all
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.dashboard import revocation_gen, token_auth
+from aj_crew.dashboard.routes import register_all
 
 _APP = "named-app"
 
@@ -44,20 +44,20 @@ _MANIFESTS = {_APP: _manifest(_APP)}
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(token_auth, "_get_secret", lambda: b"sessions-named-key")
     monkeypatch.setattr(token_auth, "_state", token_auth.TokenStateManager())
     monkeypatch.setattr(token_auth, "_app_perms_cache", {})
     monkeypatch.setattr(token_auth, "_revoked_store_singleton", None)
     monkeypatch.setattr(revocation_gen, "_gen", 0)
-    monkeypatch.setattr("kiro_crew.apps.manager.get_app_manifest", _MANIFESTS.get)
-    monkeypatch.setattr("kiro_crew.apps.permissions.get_app_manifest", _MANIFESTS.get)
-    monkeypatch.setattr("kiro_crew.apps.permissions.is_app_enabled", _MANIFESTS.__contains__)
-    from kiro_crew.apps.manager import InstalledApp
+    monkeypatch.setattr("aj_crew.apps.manager.get_app_manifest", _MANIFESTS.get)
+    monkeypatch.setattr("aj_crew.apps.permissions.get_app_manifest", _MANIFESTS.get)
+    monkeypatch.setattr("aj_crew.apps.permissions.is_app_enabled", _MANIFESTS.__contains__)
+    from aj_crew.apps.manager import InstalledApp
 
     monkeypatch.setattr(
-        "kiro_crew.apps.permissions._read_installed",
+        "aj_crew.apps.permissions._read_installed",
         lambda name, **_kw: InstalledApp(name=name) if name in _MANIFESTS else None,
     )
     st = _make_state(tmp_path)

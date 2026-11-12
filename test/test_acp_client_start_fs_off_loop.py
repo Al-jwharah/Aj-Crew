@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.acp import client_start
-from kiro_crew.acp.client_start import _jsonl_size
+from aj_crew.acp import client_start
+from aj_crew.acp.client_start import _jsonl_size
 
 
 def test_jsonl_size_is_the_file_size(tmp_path: Path) -> None:

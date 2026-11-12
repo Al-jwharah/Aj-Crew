@@ -26,37 +26,37 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from kiro_crew import history_consolidation
-from kiro_crew import history_consolidation_pass as consolidation_pass
-from kiro_crew.llm_helpers import background_turn, stream_and_collect
-from kiro_crew.session import CONSOLIDATE_KEY
-from kiro_crew.testing import fake_acp_backend
-from kiro_crew.testing.harness import fake_acp_backend_launcher
+from aj_crew import history_consolidation
+from aj_crew import history_consolidation_pass as consolidation_pass
+from aj_crew.llm_helpers import background_turn, stream_and_collect
+from aj_crew.session import CONSOLIDATE_KEY
+from aj_crew.testing import fake_acp_backend
+from aj_crew.testing.harness import fake_acp_backend_launcher
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
 pytestmark = pytest.mark.usefixtures("ample_host_free_memory")
 
-_USAGE_TARGET = "kiro_crew.dashboard.handlers.usage.persist_token_record_async"
+_USAGE_TARGET = "aj_crew.dashboard.handlers.usage.persist_token_record_async"
 
 
 # ── real child process ──
 
 
 def _real_manager(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[object, Path]:
-    from kiro_crew import agent as agent_mod
-    from kiro_crew.agent_materialization.service_agents import _install_lite_agent_fallback
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.config.loader import build_provider_factory
-    from kiro_crew.session import SessionManager
+    from aj_crew import agent as agent_mod
+    from aj_crew.agent_materialization.service_agents import _install_lite_agent_fallback
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.config.loader import build_provider_factory
+    from aj_crew.session import SessionManager
 
     store = tmp_path / "native-store"
     store.mkdir()
-    monkeypatch.setenv("KIROCREW_KIRO_BIN", str(fake_acp_backend_launcher(tmp_path)))
+    monkeypatch.setenv("AJCREW_KIRO_BIN", str(fake_acp_backend_launcher(tmp_path)))
     monkeypatch.setenv(fake_acp_backend.NATIVE_STORE_ENV, str(store))
     agent_mod.kiro_agents_dir_path().mkdir(parents=True, exist_ok=True)
     _install_lite_agent_fallback()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     # The fake backend is the only child these tests spawn, and CI hosts have no
     # OS sandbox backend (no user namespaces on Linux, none on Windows), so this
     # test's own config runs it unsandboxed. The product default is untouched.
@@ -98,7 +98,7 @@ async def test_back_to_back_jobs_each_send_only_their_own_prompt_on_one_runtime(
     sessions, store = _real_manager(tmp_path, monkeypatch)
     jobs = ["JOB-ONE transcript about apples", "JOB-TWO transcript about pears"]
     try:
-        with caplog.at_level(logging.INFO, logger="kiro_crew.llm_helpers"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.llm_helpers"):
             records_after = await _run_jobs(sessions, store, jobs)
     finally:
         await sessions.close_all()
@@ -124,7 +124,7 @@ async def test_back_to_back_jobs_each_send_only_their_own_prompt_on_one_runtime(
 async def test_a_failed_new_conversation_falls_back_to_a_fresh_runtime(
     tmp_path, monkeypatch, caplog
 ):
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     monkeypatch.setattr(
         AcpProvider, "new_conversation", AsyncMock(side_effect=RuntimeError("no warm reset"))
@@ -132,7 +132,7 @@ async def test_a_failed_new_conversation_falls_back_to_a_fresh_runtime(
     sessions, store = _real_manager(tmp_path, monkeypatch)
     jobs = ["FALLBACK-ONE apples", "FALLBACK-TWO pears"]
     try:
-        with caplog.at_level(logging.INFO, logger="kiro_crew.llm_helpers"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.llm_helpers"):
             await _run_jobs(sessions, store, jobs)
     finally:
         await sessions.close_all()
@@ -154,7 +154,7 @@ async def test_the_shared_key_without_a_fresh_conversation_stacks_jobs(tmp_path,
     try:
         for prompt in jobs:
             async with background_turn(
-                sessions, task="consolidation", agent="kirocrew-lite", session_key=CONSOLIDATE_KEY
+                sessions, task="consolidation", agent="ajcrew-lite", session_key=CONSOLIDATE_KEY
             ) as client:
                 await stream_and_collect(client, prompt)
     finally:

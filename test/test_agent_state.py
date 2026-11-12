@@ -14,46 +14,46 @@ import logging
 import pytest
 from sidecar_fault_helpers import fail_one_sidecar_read
 
-from kiro_crew import agent_state
+from aj_crew import agent_state
 
 
 def test_lifts_when_unset():
-    config = {"name": "kirocrew", "model_managed": True, "cc_model": "claude-sonnet-4.6"}
+    config = {"name": "ajcrew", "model_managed": True, "cc_model": "claude-sonnet-4.6"}
 
-    changed = agent_state.lift_and_strip_bookkeeping(config, "kirocrew")
+    changed = agent_state.lift_and_strip_bookkeeping(config, "ajcrew")
 
     assert changed is True
     assert "model_managed" not in config
     assert "cc_model" not in config
-    assert agent_state.get_model_managed("kirocrew") is True
-    assert agent_state.get_cc_model("kirocrew") == "claude-sonnet-4.6"
+    assert agent_state.get_model_managed("ajcrew") is True
+    assert agent_state.get_cc_model("ajcrew") == "claude-sonnet-4.6"
 
 
 def test_does_not_clobber_existing_sidecar_value():
-    agent_state.set_model_managed("kirocrew", False)
-    agent_state.set_cc_model("kirocrew", "test-model-stub")
+    agent_state.set_model_managed("ajcrew", False)
+    agent_state.set_cc_model("ajcrew", "test-model-stub")
     config = {"model_managed": True, "cc_model": "claude-sonnet-4.6"}
 
-    changed = agent_state.lift_and_strip_bookkeeping(config, "kirocrew")
+    changed = agent_state.lift_and_strip_bookkeeping(config, "ajcrew")
 
     assert changed is True
     assert "model_managed" not in config
     assert "cc_model" not in config
-    assert agent_state.get_model_managed("kirocrew") is False
-    assert agent_state.get_cc_model("kirocrew") == "test-model-stub"
+    assert agent_state.get_model_managed("ajcrew") is False
+    assert agent_state.get_cc_model("ajcrew") == "test-model-stub"
 
 
 def test_non_bool_model_managed_discarded_not_lifted(caplog):
     config = {"model_managed": "false"}
 
     with caplog.at_level(logging.WARNING):
-        changed = agent_state.lift_and_strip_bookkeeping(config, "kirocrew")
+        changed = agent_state.lift_and_strip_bookkeeping(config, "ajcrew")
 
     assert changed is True
     assert "model_managed" not in config
     # Not lifted: bool("false") is True, which would have silently flipped
     # the flag's meaning had the raw value been coerced instead of guarded.
-    assert agent_state.get_model_managed("kirocrew") is None
+    assert agent_state.get_model_managed("ajcrew") is None
     assert "non-bool model_managed" in caplog.text
 
 
@@ -61,32 +61,32 @@ def test_non_string_cc_model_discarded_not_lifted(caplog):
     config = {"cc_model": 123}
 
     with caplog.at_level(logging.WARNING):
-        changed = agent_state.lift_and_strip_bookkeeping(config, "kirocrew")
+        changed = agent_state.lift_and_strip_bookkeeping(config, "ajcrew")
 
     assert changed is True
     assert "cc_model" not in config
-    assert agent_state.get_cc_model("kirocrew") is None
+    assert agent_state.get_cc_model("ajcrew") is None
     assert "non-string cc_model" in caplog.text
 
 
 def test_returns_false_when_neither_key_present():
-    config = {"name": "kirocrew", "model": "auto"}
+    config = {"name": "ajcrew", "model": "auto"}
 
-    changed = agent_state.lift_and_strip_bookkeeping(config, "kirocrew")
+    changed = agent_state.lift_and_strip_bookkeeping(config, "ajcrew")
 
     assert changed is False
-    assert config == {"name": "kirocrew", "model": "auto"}
+    assert config == {"name": "ajcrew", "model": "auto"}
 
 
 def test_falsy_cc_model_strips_without_lifting(caplog):
     config = {"cc_model": ""}
 
     with caplog.at_level(logging.WARNING):
-        changed = agent_state.lift_and_strip_bookkeeping(config, "kirocrew")
+        changed = agent_state.lift_and_strip_bookkeeping(config, "ajcrew")
 
     assert changed is True
     assert "cc_model" not in config
-    assert agent_state.get_cc_model("kirocrew") is None
+    assert agent_state.get_cc_model("ajcrew") is None
     assert caplog.text == ""
 
 
@@ -117,7 +117,7 @@ def test_a_failed_read_does_not_lift_a_stale_cc_model_over_the_owner_pick(monkey
 
 
 def test_a_failed_read_in_a_spec_refresh_keeps_the_pinned_model(monkeypatch):
-    from kiro_crew.agent import _refresh_dynamic_fields
+    from aj_crew.agent import _refresh_dynamic_fields
 
     agent_state.set_model_managed("agentx", False)
     config = {"name": "agentx", "model": "pinned-model-x", "model_managed": True}
@@ -144,10 +144,10 @@ def test_claim_records_the_given_value_only_when_unset():
 
 
 def test_fork_info_roundtrips():
-    agent_state.set_fork_info("design-crew", forked_from="kirocrew", private_to="design-crew")
+    agent_state.set_fork_info("design-crew", forked_from="ajcrew", private_to="design-crew")
 
     info = agent_state.get_fork_info("design-crew")
-    assert info == {"forked_from": "kirocrew", "private_to": "design-crew"}
+    assert info == {"forked_from": "ajcrew", "private_to": "design-crew"}
 
 
 def test_get_fork_info_none_when_unset():
@@ -157,10 +157,10 @@ def test_get_fork_info_none_when_unset():
 def test_fork_info_survives_alongside_model_bookkeeping():
     """Fork keys and model keys share one entry and must not clobber each other."""
     agent_state.set_model_managed("copy", True)
-    agent_state.set_fork_info("copy", forked_from="kirocrew", private_to="a-crew")
+    agent_state.set_fork_info("copy", forked_from="ajcrew", private_to="a-crew")
 
     assert agent_state.get_fork_info("copy") == {
-        "forked_from": "kirocrew",
+        "forked_from": "ajcrew",
         "private_to": "a-crew",
     }
     assert agent_state.get_model_managed("copy") is True
@@ -169,7 +169,7 @@ def test_fork_info_survives_alongside_model_bookkeeping():
 def test_clear_fork_info_drops_lineage_and_keeps_model_bookkeeping():
     """Clearing lineage flips a copy back to shared without touching model state."""
     agent_state.set_model_managed("copy", True)
-    agent_state.set_fork_info("copy", forked_from="kirocrew", private_to="a-crew")
+    agent_state.set_fork_info("copy", forked_from="ajcrew", private_to="a-crew")
 
     agent_state.clear_fork_info("copy")
 
@@ -178,7 +178,7 @@ def test_clear_fork_info_drops_lineage_and_keeps_model_bookkeeping():
 
 
 def test_clear_fork_info_removes_an_entry_left_empty_and_tolerates_unknown_names():
-    agent_state.set_fork_info("only-lineage", forked_from="kirocrew", private_to="a-crew")
+    agent_state.set_fork_info("only-lineage", forked_from="ajcrew", private_to="a-crew")
 
     agent_state.clear_fork_info("only-lineage")
     agent_state.clear_fork_info("never-recorded")
@@ -192,7 +192,7 @@ def test_get_fork_info_ignores_empty_strings():
     agent_state.set_fork_info("blank", forked_from="", private_to="crew")
     assert agent_state.get_fork_info("blank") is None
 
-    agent_state.set_fork_info("blank2", forked_from="kirocrew", private_to="")
+    agent_state.set_fork_info("blank2", forked_from="ajcrew", private_to="")
     assert agent_state.get_fork_info("blank2") is None
 
 
@@ -202,7 +202,7 @@ def test_get_fork_info_ignores_non_string_values():
     Written straight to the sidecar so the type guard is exercised without
     set_fork_info's str() coercion masking it.
     """
-    from kiro_crew import agent_state as _st
+    from aj_crew import agent_state as _st
 
     _st._write({"weird": {_st._FORKED_FROM: 123, _st._PRIVATE_TO: ["c"]}})
     assert agent_state.get_fork_info("weird") is None
@@ -210,15 +210,15 @@ def test_get_fork_info_ignores_non_string_values():
 
 
 def test_all_fork_info_returns_only_valid_entries():
-    agent_state.set_fork_info("f1", forked_from="kirocrew", private_to="c1")
-    agent_state.set_fork_info("f2", forked_from="kirocrew-lite", private_to="c2")
+    agent_state.set_fork_info("f1", forked_from="ajcrew", private_to="c1")
+    agent_state.set_fork_info("f2", forked_from="ajcrew-lite", private_to="c2")
     # A model-only entry carries no fork keys and must not appear.
     agent_state.set_model_managed("plain", False)
 
     allf = agent_state.all_fork_info()
     assert allf == {
-        "f1": {"forked_from": "kirocrew", "private_to": "c1"},
-        "f2": {"forked_from": "kirocrew-lite", "private_to": "c2"},
+        "f1": {"forked_from": "ajcrew", "private_to": "c1"},
+        "f2": {"forked_from": "ajcrew-lite", "private_to": "c2"},
     }
 
 
@@ -233,7 +233,7 @@ def test_mutation_refuses_an_unreadable_existing_sidecar(monkeypatch, tmp_path):
     monkeypatch.setattr(agent_state, "_state_path", lambda: sidecar)
 
     with pytest.raises(ValueError):
-        agent_state.set_fork_info("a-crew", forked_from="kirocrew", private_to="a-crew")
+        agent_state.set_fork_info("a-crew", forked_from="ajcrew", private_to="a-crew")
     with pytest.raises(ValueError):
         agent_state.set_model_managed("a-crew", True)
     with pytest.raises(ValueError):
@@ -243,9 +243,9 @@ def test_mutation_refuses_an_unreadable_existing_sidecar(monkeypatch, tmp_path):
 
     # A MISSING file stays the ordinary empty case: mutations create it.
     sidecar.unlink()
-    agent_state.set_fork_info("a-crew", forked_from="kirocrew", private_to="a-crew")
+    agent_state.set_fork_info("a-crew", forked_from="ajcrew", private_to="a-crew")
     assert agent_state.get_fork_info("a-crew") == {
-        "forked_from": "kirocrew",
+        "forked_from": "ajcrew",
         "private_to": "a-crew",
     }
 
@@ -276,24 +276,24 @@ def test_spec_digest_matches_the_bytes_the_installer_writes():
     import hashlib
     import json
 
-    config = {"name": "kirocrew-dashboard-author", "mcpServers": {"kirocrew-core": {}}}
+    config = {"name": "ajcrew-dashboard-author", "mcpServers": {"ajcrew-core": {}}}
     expected = hashlib.sha256((json.dumps(config, indent=2) + "\n").encode("utf-8")).hexdigest()
     assert agent_state.spec_digest(config) == expected
 
 
 def test_managed_digest_roundtrips_and_clears():
-    assert agent_state.get_managed_digest("kirocrew-dashboard-author") is None
-    agent_state.set_managed_digest("kirocrew-dashboard-author", "deadbeef")
-    assert agent_state.get_managed_digest("kirocrew-dashboard-author") == "deadbeef"
-    agent_state.set_managed_digest("kirocrew-dashboard-author", None)
-    assert agent_state.get_managed_digest("kirocrew-dashboard-author") is None
+    assert agent_state.get_managed_digest("ajcrew-dashboard-author") is None
+    agent_state.set_managed_digest("ajcrew-dashboard-author", "deadbeef")
+    assert agent_state.get_managed_digest("ajcrew-dashboard-author") == "deadbeef"
+    agent_state.set_managed_digest("ajcrew-dashboard-author", None)
+    assert agent_state.get_managed_digest("ajcrew-dashboard-author") is None
 
 
 def test_managed_digest_survives_alongside_model_bookkeeping():
-    agent_state.set_model_managed("kirocrew-dashboard-author", True)
-    agent_state.set_managed_digest("kirocrew-dashboard-author", "cafe1234")
-    assert agent_state.get_managed_digest("kirocrew-dashboard-author") == "cafe1234"
-    assert agent_state.get_model_managed("kirocrew-dashboard-author") is True
+    agent_state.set_model_managed("ajcrew-dashboard-author", True)
+    agent_state.set_managed_digest("ajcrew-dashboard-author", "cafe1234")
+    assert agent_state.get_managed_digest("ajcrew-dashboard-author") == "cafe1234"
+    assert agent_state.get_model_managed("ajcrew-dashboard-author") is True
 
 
 def test_prune_drops_the_managed_digest():
@@ -326,7 +326,7 @@ def test_strict_get_managed_digest_surfaces_corruption_while_lenient_degrades(
 
 
 def test_managed_digest_matches_finalized_or_pending():
-    name = "kirocrew-dashboard-author"
+    name = "ajcrew-dashboard-author"
     old, new = "oldoldold", "newnewnew"
     agent_state.set_managed_digest(name, old)
     # Before any write: only the finalized digest matches.
@@ -345,7 +345,7 @@ def test_managed_digest_matches_finalized_or_pending():
 def test_crash_after_begin_before_write_leaves_old_bytes_confirmable():
     """Process death between begin and the file replace: the file still holds the OLD bytes,
     which reproduce the finalized digest -> still confirmed, so a rebuild refreshes it."""
-    name = "kirocrew-dashboard-author"
+    name = "ajcrew-dashboard-author"
     old_bytes_digest = "oldbytes"
     agent_state.set_managed_digest(name, old_bytes_digest)
     agent_state.begin_managed_write(name, "newbytes")  # crash here, no file write, no finalize
@@ -355,7 +355,7 @@ def test_crash_after_begin_before_write_leaves_old_bytes_confirmable():
 def test_crash_after_write_before_finalize_leaves_new_bytes_confirmable():
     """Process death between the file replace and finalize: the file holds the NEW bytes,
     which reproduce the pending digest -> still confirmed, so a rebuild refreshes it."""
-    name = "kirocrew-dashboard-author"
+    name = "ajcrew-dashboard-author"
     agent_state.set_managed_digest(name, "oldbytes")
     agent_state.begin_managed_write(name, "newbytes")  # file now written to new bytes...
     # ...crash before finalize_managed_write(name)
@@ -363,7 +363,7 @@ def test_crash_after_write_before_finalize_leaves_new_bytes_confirmable():
 
 
 def test_finalize_is_a_noop_without_a_pending():
-    name = "kirocrew-dashboard-author"
+    name = "ajcrew-dashboard-author"
     agent_state.set_managed_digest(name, "keepme")
     agent_state.finalize_managed_write(name)  # nothing pending
     assert agent_state.get_managed_digest(name) == "keepme"
@@ -385,7 +385,7 @@ def test_begin_carries_the_current_on_disk_digest_so_a_double_interruption_recov
     own replace then fails. ``begin`` writes the CURRENT on-disk digest (B) to finalized
     before setting the new pending (C), so the worst case is finalized=B, pending=C, file=B
     -- B still matches, so the spec is recoverable rather than frozen."""
-    name = "kirocrew-dashboard-author"
+    name = "ajcrew-dashboard-author"
     A, B, C = "digestA", "digestB", "digestC"
     # State after a finalize-interrupted first write: finalized=A, pending=B, file=B.
     agent_state.set_managed_digest(name, A)
@@ -402,7 +402,7 @@ def test_begin_carries_the_current_on_disk_digest_so_a_double_interruption_recov
 def test_begin_without_current_only_sets_pending():
     """A first install (nothing on disk) passes no ``current``: only the pending slot is set,
     no spurious finalized digest is invented for bytes that are not there yet."""
-    name = "kirocrew-dashboard-author"
+    name = "ajcrew-dashboard-author"
     agent_state.begin_managed_write(name, "firstbytes")
     assert agent_state.managed_digest_matches(name, "firstbytes") is True
     assert agent_state.get_managed_digest(name) is None  # finalized still unset

@@ -20,11 +20,11 @@ from pathlib import Path
 import pytest
 from fake_pool_mcp_server import recorded
 
-from kiro_crew import code_fingerprint as cf
-from kiro_crew import platform_compat as pc
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.mcp_gateway import transport
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew import code_fingerprint as cf
+from aj_crew import platform_compat as pc
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway import transport
+from aj_crew.testing.wait import async_wait_until, finished
 
 _FAKE_SERVER = Path(__file__).with_name("fake_pool_mcp_server.py")
 
@@ -98,15 +98,15 @@ async def _spawn_stub(
     ``session_key``: the Register-frame identity; empty makes gatewayd send ``caller=None``.
     ``env_json``: folded into ``effective_env_hash``, a real pool dimension to vary.
     """
-    env = {**_clean_env(), "KIROCREW_HOME": str(home)}
+    env = {**_clean_env(), "AJCREW_HOME": str(home)}
     if session_key:
-        env["KIROCREW_SESSION_KEY"] = session_key
+        env["AJCREW_SESSION_KEY"] = session_key
     else:
-        env.pop("KIROCREW_SESSION_KEY", None)
+        env.pop("AJCREW_SESSION_KEY", None)
     return await asyncio.create_subprocess_exec(
         sys.executable,
         "-m",
-        "kiro_crew.mcp_gateway.stub",
+        "aj_crew.mcp_gateway.stub",
         "--server",
         server,
         "--agent",
@@ -132,7 +132,7 @@ async def _spawn_stub(
         # inherits pytest's cwd (the checkout), and a real process tree rooted
         # there is exactly the leak the hygiene sweep exists to catch.
         cwd=work_dir,
-        # KIROCREW_HOME redirects the stub's fallback audit log into the test's
+        # AJCREW_HOME redirects the stub's fallback audit log into the test's
         # own tree, so a degradation is observable instead of landing in the
         # developer's real home.
         env=env,
@@ -144,7 +144,7 @@ def _clean_env() -> dict[str, str]:
 
     # Drop any inherited channel id: it feeds PoolKey.channel_id, and a value
     # leaking in from the developer's shell would silently change partitioning.
-    return {k: v for k, v in os.environ.items() if k != "KIROCREW_CHANNEL_ID"}
+    return {k: v for k, v in os.environ.items() if k != "AJCREW_CHANNEL_ID"}
 
 
 async def _drive_frame(proc: asyncio.subprocess.Process, frame: str, req_id: int) -> dict:
@@ -273,7 +273,7 @@ async def test_two_stubs_on_one_backend_are_told_apart(tmp_path: Path, short_soc
     """Each session's calls reach the SHARED backend carrying its own identity.
 
     gatewayd injects the caller block only when the backend advertised
-    ``kirocrew.caller-identity`` in a REAL ``initialize`` response, which the in-process
+    ``ajcrew.caller-identity`` in a REAL ``initialize`` response, which the in-process
     stub seam never sends. So two real stubs read back what the backend was handed.
     """
     endpoint_root = short_sock_dir
@@ -854,7 +854,7 @@ async def test_backends_hosting_stub_covers_exclusive() -> None:
     """The stub lookup must cover exclusive (private) backends too: a
     private stub rekeys like a pooled one, and omitting it would leave the
     previous caller's subscriptions routing to the new owner."""
-    from kiro_crew.mcp_gateway.pool import BackendPool
+    from aj_crew.mcp_gateway.pool import BackendPool
 
     class _Stub:
         def __init__(self, inboxes: dict) -> None:
@@ -874,7 +874,7 @@ async def test_backends_hosting_stub_covers_exclusive() -> None:
 
 #: Private (non-poolable) stubs launched at once. The storm the spawn gate exists
 #: for is ~30 such stubs; every one is a full Python process importing
-#: ``kiro_crew`` plus its backend, so this suite runs a smaller storm with a
+#: ``aj_crew`` plus its backend, so this suite runs a smaller storm with a
 #: proportionally smaller gate. The assertions are the same shape at any size.
 _STORM_STUBS = 12
 _STORM_CAPACITY = 3

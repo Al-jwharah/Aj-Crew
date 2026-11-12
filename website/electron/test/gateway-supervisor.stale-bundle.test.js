@@ -28,7 +28,7 @@ const {
 // A macOS app whose bundled backend sits at the usual resourcesPath layout. The
 // `pruned` flag flips the bundle out from under the supervisor mid-test, the
 // way an in-place update does; the fs then reports ENOENT for every bundled
-// candidate and findKirocrewBin falls through to the bare PATH name. Whether
+// candidate and findAjcrewBin falls through to the bare PATH name. Whether
 // the app's own executable survives is separate (`appExecutableGone`): a swap
 // leaves a new one at the same path, a prune takes it too.
 function staleBundleHarness({
@@ -97,7 +97,7 @@ function staleBundleHarness({
       arch: "x64",
       execPath: APP_EXEC_PATH,
       argv: APP_ARGV,
-      env: { KIROCREW_HOME: "/virtual/kirocrew-home" },
+      env: { AJCREW_HOME: "/virtual/ajcrew-home" },
       resourcesPath: "/virtual/resources",
       kill() { throw new Error("process kill must not run in this harness"); },
     },
@@ -133,7 +133,7 @@ async function spawnedSuccessor(built) {
 
 const SUCCESSOR_READY_TIMEOUT_MS = 60_000;
 
-const BUNDLED_BIN = "/virtual/resources/backend-dist/kirocrew-backend-x64/bin/kirocrew";
+const BUNDLED_BIN = "/virtual/resources/backend-dist/ajcrew-backend-x64/bin/ajcrew";
 
 test("a bundled gateway that exits with the stale-asset status is respawned from a fresh probe", async () => {
   const { supervisor, spawnCalls, logs, state } = staleBundleHarness();
@@ -283,7 +283,7 @@ test("a second stale exit starts a fresh copy of the app and exits only once its
   assert.deepStrictEqual(successor[1], ["--some-flag"], "the successor gets this instance's arguments");
   assert.deepStrictEqual(successor[2], { detached: true, stdio: "ignore" });
   assert.strictEqual(state.lockReleases, 1, "the single-instance lock is released so the successor can win it");
-  assert.ok(state.statuses.includes("status:Restarting Kiro Crew to finish the update…"),
+  assert.ok(state.statuses.includes("status:Restarting Aj Crew to finish the update…"),
     "the window is told why it is about to go away");
   assert.deepStrictEqual(state.exits, [], "this instance must not exit before the successor is confirmed running");
 
@@ -306,7 +306,7 @@ test("a second stale exit starts a fresh copy of the app and exits only once its
   assert.deepStrictEqual(state.exits, [0]);
   assert.ok(logs.some((line) => line.includes("is serving on :5476") && line.includes("exiting this instance")));
   assert.deepStrictEqual(timers.pending, [], "the deadline is disarmed once the successor is confirmed");
-  assert.ok(state.statuses.filter((entry) => entry === "status:Restarting Kiro Crew to finish the update…").length >= 2,
+  assert.ok(state.statuses.filter((entry) => entry === "status:Restarting Aj Crew to finish the update…").length >= 2,
     "the restart announcement is re-sent on every poll so a splash that loaded late still shows it");
 });
 
@@ -423,7 +423,7 @@ test("a pruned bundle re-probes once, then surfaces the failure when the app exe
 
   // The re-probe found nothing bundled and fell through to the PATH name.
   assert.strictEqual(spawnCalls.length, 2);
-  assert.strictEqual(spawnCalls[1][0], "kirocrew");
+  assert.strictEqual(spawnCalls[1][0], "ajcrew");
 
   spawnCalls[1].child.emit("error", enoent);
 
@@ -453,7 +453,7 @@ test("a stale-bundle respawn onto a non-bundled launcher tells the caller", asyn
   spawnCalls[0].child.emit("exit", 75, null);
 
   assert.strictEqual(spawnCalls.length, 2);
-  assert.strictEqual(spawnCalls[1][0], "kirocrew", "re-resolved to the PATH launcher");
+  assert.strictEqual(spawnCalls[1][0], "ajcrew", "re-resolved to the PATH launcher");
   assert.deepStrictEqual(respawns, [2], "told once, after the replacement was spawned");
   assert.deepStrictEqual(state.exits, []);
 });
@@ -578,7 +578,7 @@ test("Windows re-probes after a stale-asset exit and respawns the backend found 
 
 // The running version's directory was pruned: nothing bundled is left at any
 // probed path. A packaged Windows app must not hand the launch to whatever
-// kirocrew.exe is first on PATH -- that child serves nothing and exits 0,
+// ajcrew.exe is first on PATH -- that child serves nothing and exits 0,
 // which no recovery reads as a failure.
 test("a packaged Windows app whose bundle was pruned refuses the PATH fallback instead of spawning it", async () => {
   const { supervisor, spawnCalls, errors, state } = staleBundleHarness({ platform: "win32", isPackaged: true });
@@ -646,7 +646,7 @@ test("a pruned Windows backend opens the removed-files dialog and still auto-sta
   const dialog = windows[0];
   const html = decodeURIComponent(dialog.loaded[0]);
   assert.match(html, /app files missing/);
-  assert.match(html, /app files were removed, likely by an update\. Quit and reopen Kiro Crew/);
+  assert.match(html, /app files were removed, likely by an update\. Quit and reopen Aj Crew/);
   assert.doesNotMatch(html, /installation still finishing|still being installed|five minutes/);
   assert.ok(html.includes(QUIT_ACCENTED), "the accent follows the sentence onto Quit");
   assert.match(html, /var primaryAct = "act\('quit'\)";/, "Enter presses the highlighted Quit");
@@ -686,7 +686,7 @@ test("a Retry from the removed-files dialog reopens it with the same copy", asyn
 // not say "Finishing installation".
 test("the splash behind the removed-files dialog does not claim an install", async () => {
   const { statuses } = await windowsNoBundleDialog({ pruneMidRun: true });
-  assert.ok(statuses.some((line) => line.includes("Some app files are missing. Use Quit in the dialog, then reopen Kiro Crew.")), statuses.join(" | "));
+  assert.ok(statuses.some((line) => line.includes("Some app files are missing. Use Quit in the dialog, then reopen Aj Crew.")), statuses.join(" | "));
   assert.ok(!statuses.some((line) => line.includes("Finishing installation")), statuses.join(" | "));
 });
 
@@ -740,13 +740,13 @@ test("a packaged Windows app that boots with no bundle reports it instead of spa
 
 // A source checkout finds the developer's own install by name, so only a
 // packaged app gives the PATH fallback up.
-test("an unpackaged Windows launch still falls back to kirocrew.exe on PATH", async () => {
+test("an unpackaged Windows launch still falls back to ajcrew.exe on PATH", async () => {
   const { supervisor, spawnCalls, state } = staleBundleHarness({ platform: "win32", isPackaged: false });
   state.pruned = true;
 
   assert.strictEqual(await supervisor.start(), true);
   assert.strictEqual(spawnCalls.length, 1);
-  assert.strictEqual(spawnCalls[0][0], "kirocrew.exe");
+  assert.strictEqual(spawnCalls[0][0], "ajcrew.exe");
 });
 
 test("a macOS Gatekeeper hint uses the user-facing warning channel", async () => {

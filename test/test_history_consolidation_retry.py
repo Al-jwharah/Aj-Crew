@@ -26,19 +26,19 @@ from history_consolidation_retry_helpers import (
     _total,
 )
 
-from kiro_crew import history as history_mod
-from kiro_crew.history import ConversationLog
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew import history as history_mod
+from aj_crew.history import ConversationLog
+from aj_crew.testing.wait import await_until, finished
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["persistent", "incognito", "temporary"])
 async def test_consolidation_captures_execution_off_loop(tmp_path, monkeypatch, mode):
-    from kiro_crew import execution_context
-    from kiro_crew.history_consolidation import _CONSOLIDATION_BUSY, _CONSOLIDATION_REFUSED
+    from aj_crew import execution_context
+    from aj_crew.history_consolidation import _CONSOLIDATION_BUSY, _CONSOLIDATION_REFUSED
 
     captured = execution_context.ExecutionContext(
-        None, execution_context.MemoryStoreRef("default"), "template", "kirocrew", mode
+        None, execution_context.MemoryStoreRef("default"), "template", "ajcrew", mode
     )
     loop_thread = threading.get_ident()
     reads = []
@@ -91,7 +91,7 @@ class TestTheLineIsValidatedWithTheRows:
     async def test_a_line_tightened_before_the_snapshot_refuses_without_a_model_turn(
         self, tmp_path, monkeypatch, mode
     ):
-        from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
+        from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
 
         log = _seed_log(tmp_path)
         c = _make_consolidator(log)
@@ -115,7 +115,7 @@ class TestTheLineIsValidatedWithTheRows:
     async def test_a_line_tightened_during_the_model_turn_discards_the_result(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
+        from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
 
         log = _seed_log(tmp_path)
         c = _make_consolidator(log)
@@ -154,7 +154,7 @@ class TestTheLineIsValidatedWithTheRows:
     async def test_a_line_tightened_before_history_publication_refuses_the_write(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
+        from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
 
         log = _seed_log(tmp_path)
         c = _make_consolidator(log)
@@ -172,9 +172,9 @@ class TestTheLineIsValidatedWithTheRows:
     async def test_a_line_tightened_before_member_publication_refuses_the_atomic_write(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-        from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
+        from aj_crew.context import ContextBuilder
+        from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+        from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
 
         log = _seed_log(tmp_path)
         vectors = MagicMock()
@@ -186,13 +186,13 @@ class TestTheLineIsValidatedWithTheRows:
             "member-id",
             MemoryStoreRef("member-store", "member-id"),
             "member",
-            "kirocrew",
+            "ajcrew",
             "persistent",
         )
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution", lambda _key: execution
+            "aj_crew.execution_context.read_session_execution", lambda _key: execution
         )
-        monkeypatch.setattr("kiro_crew.memory_stores.memory_store_version", lambda _store: 2)
+        monkeypatch.setattr("aj_crew.memory_stores.memory_store_version", lambda _store: 2)
         monkeypatch.setattr(ContextBuilder, "ensure_store", AsyncMock(return_value=vectors))
         c = _make_consolidator(log)
         monkeypatch.setattr(ContextBuilder, "get_memory_for", lambda **_kwargs: c._memory)
@@ -209,7 +209,7 @@ class TestTheLineIsValidatedWithTheRows:
     @pytest.mark.asyncio
     async def test_an_unreadable_line_under_the_snapshot_lock_refuses(self, tmp_path, monkeypatch):
         """Fail closed: rows whose contract cannot be read are not derived from."""
-        from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
+        from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
 
         log = _seed_log(tmp_path)
         c = _make_consolidator(log)
@@ -256,15 +256,15 @@ class TestTheLineIsValidatedWithTheRows:
     (
         {"history_entry": "must not persist"},
         {"preferences_update": "# User Preferences\n- dark mode"},
-        {"projects_update": "# Active Projects\n- Kiro Crew"},
+        {"projects_update": "# Active Projects\n- Aj Crew"},
     ),
     ids=("history", "preferences", "projects"),
 )
 async def test_persistence_disabled_after_extraction_refuses_before_marking(
     tmp_path, monkeypatch, result
 ):
-    from kiro_crew import history_consolidation
-    from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
+    from aj_crew import history_consolidation
+    from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
 
     log = _seed_log(tmp_path)
     c = _make_consolidator(log)
@@ -293,7 +293,7 @@ async def test_persistence_disabled_after_extraction_refuses_before_marking(
 
 @pytest.mark.asyncio
 async def test_persistence_flip_after_first_commit_finishes_the_run(tmp_path, monkeypatch):
-    from kiro_crew import history_consolidation
+    from aj_crew import history_consolidation
 
     log = _seed_log(tmp_path)
     c = _make_consolidator(log)
@@ -329,8 +329,8 @@ async def test_persistence_flip_after_first_commit_finishes_the_run(tmp_path, mo
 
 @pytest.mark.asyncio
 async def test_cas_refused_first_publication_does_not_arm_commit_latch(tmp_path, monkeypatch):
-    from kiro_crew import history_consolidation
-    from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
+    from aj_crew import history_consolidation
+    from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
 
     log = _seed_log(tmp_path)
     c = _make_consolidator(log)
@@ -346,7 +346,7 @@ async def test_cas_refused_first_publication_does_not_arm_commit_latch(tmp_path,
     c._call_llm = AsyncMock(
         return_value={
             "preferences_update": "# User Preferences\n- dark mode",
-            "projects_update": "# Active Projects\n- Kiro Crew",
+            "projects_update": "# Active Projects\n- Aj Crew",
         }
     )
     c._memory.write_preferences.side_effect = refuse_preferences
@@ -412,7 +412,7 @@ async def test_a_refused_hold_after_the_first_commit_marks_the_span(
         return_value={
             "history_entry": "committed history",
             "preferences_update": "# User Preferences\n- dark mode",
-            "projects_update": "# Active Projects\n- Kiro Crew",
+            "projects_update": "# Active Projects\n- Aj Crew",
         }
     )
     c._memory.write_preferences.return_value = True
@@ -421,7 +421,7 @@ async def test_a_refused_hold_after_the_first_commit_marks_the_span(
     mark_consolidated = MagicMock(wraps=log.mark_consolidated)
     monkeypatch.setattr(log, "mark_consolidated", mark_consolidated)
 
-    with caplog.at_level("WARNING", logger="kiro_crew.history"):
+    with caplog.at_level("WARNING", logger="aj_crew.history"):
         outcome = await finished(c._consolidate(KEY, include_history=True), "consolidation")
 
     assert outcome is None
@@ -464,7 +464,7 @@ async def test_a_refused_hold_before_the_first_commit_still_refuses_the_run(
     mark_consolidated = MagicMock(wraps=log.mark_consolidated)
     monkeypatch.setattr(log, "mark_consolidated", mark_consolidated)
 
-    from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
+    from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
 
     outcome = await finished(c._consolidate(KEY, include_history=True), "consolidation")
 
@@ -504,10 +504,10 @@ async def test_a_marker_failure_after_a_refused_later_hold_is_charged(tmp_path, 
 
 @pytest.mark.asyncio
 async def test_persistence_rechecked_inside_member_publication_hold(tmp_path, monkeypatch):
-    from kiro_crew import history_consolidation
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-    from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
+    from aj_crew import history_consolidation
+    from aj_crew.context import ContextBuilder
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
 
     log = _seed_log(tmp_path)
     vectors = MagicMock()
@@ -519,13 +519,11 @@ async def test_persistence_rechecked_inside_member_publication_hold(tmp_path, mo
         "member-id",
         MemoryStoreRef("member-store", "member-id"),
         "member",
-        "kirocrew",
+        "ajcrew",
         "persistent",
     )
-    monkeypatch.setattr(
-        "kiro_crew.execution_context.read_session_execution", lambda _key: execution
-    )
-    monkeypatch.setattr("kiro_crew.memory_stores.memory_store_version", lambda _store: 2)
+    monkeypatch.setattr("aj_crew.execution_context.read_session_execution", lambda _key: execution)
+    monkeypatch.setattr("aj_crew.memory_stores.memory_store_version", lambda _store: 2)
     monkeypatch.setattr(ContextBuilder, "ensure_store", AsyncMock(return_value=vectors))
     c = _make_consolidator(log)
     monkeypatch.setattr(ContextBuilder, "get_memory_for", lambda **_kwargs: c._memory)
@@ -571,8 +569,8 @@ async def test_persistence_rechecked_inside_member_publication_hold(tmp_path, mo
 async def test_persistence_rechecked_inside_v1_vector_publication_hold(
     tmp_path, monkeypatch, result, blocked_writer
 ):
-    from kiro_crew import history_consolidation
-    from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
+    from aj_crew import history_consolidation
+    from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
 
     log = _seed_log(tmp_path)
     vectors = MagicMock()
@@ -606,8 +604,8 @@ async def test_persistence_rechecked_inside_v1_vector_publication_hold(
 
 @pytest.mark.asyncio
 async def test_persistence_rechecked_inside_skill_publication_hold(tmp_path, monkeypatch):
-    from kiro_crew import history_consolidation
-    from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
+    from aj_crew import history_consolidation
+    from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
 
     log = _seed_log(tmp_path)
     loader = MagicMock()
@@ -667,13 +665,13 @@ async def test_consolidate_refuses_a_channel_thread_whose_map_entry_was_pruned(
     """
     from types import SimpleNamespace
 
-    from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
-    from kiro_crew.messaging import privacy_mode
-    from kiro_crew.session_map import SessionMap
+    from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
+    from aj_crew.messaging import privacy_mode
+    from aj_crew.session_map import SessionMap
 
-    monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
-    live_key = "telegram:kirocrew:direct:4242"
+    monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
+    live_key = "telegram:ajcrew:direct:4242"
     log = _seed_default_log(live_key)  # three turns before the modifier
     sm = SessionMap()
     sessions = SimpleNamespace(_session_map=sm, channel_key_for_stem=sm.channel_key_for_stem)
@@ -728,14 +726,14 @@ async def test_a_legacy_privacy_flag_is_kept_by_prune_and_stamped_by_the_startup
     """
     import threading
 
-    from kiro_crew.history import ConversationLog
-    from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
-    from kiro_crew.messaging import privacy_mode
-    from kiro_crew.session_map import SessionMap
+    from aj_crew.history import ConversationLog
+    from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
+    from aj_crew.messaging import privacy_mode
+    from aj_crew.session_map import SessionMap
 
-    monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
-    live_key = "telegram:kirocrew:direct:4242"
+    monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
+    live_key = "telegram:ajcrew:direct:4242"
     log = _seed_default_log(live_key)
     assert "memory_mode" not in log.get_metadata(live_key), "premise: legacy header, no mode"
     sm = SessionMap()
@@ -796,17 +794,17 @@ async def test_a_legacy_privacy_flag_is_kept_by_prune_and_stamped_by_the_startup
 async def test_pending_extraction_rechecks_its_actual_transcript(
     tmp_path, monkeypatch, version, seed_source, assistant_value, mutation
 ):
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.history_consolidation import _CONSOLIDATION_STALE
-    from kiro_crew.memory_stores import memory_store_dir_for, provision_member_memory
-    from kiro_crew.vector_memory import VectorMemoryStore, open_member_database
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+    from aj_crew.context import ContextBuilder
+    from aj_crew.history_consolidation import _CONSOLIDATION_STALE
+    from aj_crew.memory_stores import memory_store_dir_for, provision_member_memory
+    from aj_crew.vector_memory import VectorMemoryStore, open_member_database
 
     store_name = None
     directory = tmp_path / "global"
     if version == 2:
-        cfg = KiroCrewConfig.load()
-        cfg.agents["writer"] = KiroCrewAgentConfig()
+        cfg = AjCrewConfig.load()
+        cfg.agents["writer"] = AjCrewAgentConfig()
         store_name = provision_member_memory(cfg, "writer")
         cfg.save()
         directory = memory_store_dir_for(store_name)
@@ -824,7 +822,7 @@ async def test_pending_extraction_rechecks_its_actual_transcript(
         with history_mod.allow_on_loop_persist():
             log.append(KEY, "user", quote)
         c = _make_consolidator(log, vector_store=vectors)
-        monkeypatch.setattr("kiro_crew.context.store_of_session", lambda *_: store_name)
+        monkeypatch.setattr("aj_crew.context.store_of_session", lambda *_: store_name)
         monkeypatch.setattr(ContextBuilder, "ensure_store", AsyncMock(return_value=vectors))
         monkeypatch.setattr(ContextBuilder, "get_memory_for", lambda *a, **kw: c._memory)
         monkeypatch.setattr(ContextBuilder, "get_lessons_for", lambda *a, **kw: None)
@@ -920,7 +918,7 @@ class TestEveryEntryPointRespectsTheAccounting:
 
     @pytest.mark.asyncio
     async def test_manual_dashboard_trigger_refuses_inside_the_backoff(self, tmp_path):
-        from kiro_crew.dashboard.handlers.memory import api_memory_consolidate
+        from aj_crew.dashboard.handlers.memory import api_memory_consolidate
 
         log = _seed_log(tmp_path)
         c = _make_consolidator(log)
@@ -961,7 +959,7 @@ class TestTheManualTriggerClaimsAtomically:
 
     @pytest.mark.asyncio
     async def test_concurrent_triggers_dispatch_only_once(self, tmp_path):
-        from kiro_crew.dashboard.handlers.memory import api_memory_consolidate
+        from aj_crew.dashboard.handlers.memory import api_memory_consolidate
 
         log = _seed_log(tmp_path)
         c = _make_consolidator(log)
@@ -991,7 +989,7 @@ class TestTheManualTriggerClaimsAtomically:
     @pytest.mark.asyncio
     async def test_a_refused_trigger_releases_its_claim(self, tmp_path):
         """A 429 must not leave the key claimed, or the span is wedged forever."""
-        from kiro_crew.dashboard.handlers.memory import api_memory_consolidate
+        from aj_crew.dashboard.handlers.memory import api_memory_consolidate
 
         log = _seed_log(tmp_path)
         c = _make_consolidator(log)

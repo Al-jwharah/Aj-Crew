@@ -13,12 +13,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import agent_sdk
-from kiro_crew.acp.types import PROVIDER_LABEL_KAS
-from kiro_crew.context import ContextBuilder
-from kiro_crew.essential_delivery import EssentialDelivery
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew import agent_sdk
+from aj_crew.acp.types import PROVIDER_LABEL_KAS
+from aj_crew.context import ContextBuilder
+from aj_crew.essential_delivery import EssentialDelivery
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 PERSONA = "You are the release-notes writer. Keep every entry to one line."
 BLOCK = "[AGENT SYSTEM PROMPT]"
@@ -31,8 +31,8 @@ def _write_spec(tmp_path, monkeypatch, prompt: str) -> None:
         json.dumps({"name": "writer", "prompt": prompt}), encoding="utf-8"
     )
     monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir)
-    monkeypatch.setattr("kiro_crew.agent_discovery._KIRO_AGENTS_DIR", agents_dir)
+    monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir)
+    monkeypatch.setattr("aj_crew.agent_discovery._KIRO_AGENTS_DIR", agents_dir)
     # Admit the provider double below, as the real provider classes are admitted.
     monkeypatch.setattr(agent_sdk, "context_provider_of", lambda value: value)
 

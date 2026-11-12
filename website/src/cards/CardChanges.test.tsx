@@ -271,7 +271,7 @@ describe('CardChanges', () => {
   it("shows a reasoning effort in the editor's words, and an unset one as inherited", () => {
     render(<CardChanges changes={[{ field: 'reasoning_effort', label: 'reasoning_effort', before: '', after: 'high' }]} />)
     const value = screen.getByTestId('change-card-value').textContent ?? ''
-    expect(value).toContain(i18nT('pages.kiroCrewAgentsPage.inherited'))
+    expect(value).toContain(i18nT('pages.ajCrewAgentsPage.inherited'))
     expect(value).toContain(effortLabel('high'))
     expect(value).not.toContain(L('empty_value'))
   })

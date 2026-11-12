@@ -12,13 +12,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import session, session_pid
+from aj_crew import session, session_pid
 
 
 def _make_manager(rss_max_mb: int):
     """Build a SessionManager with a MagicMock cfg and an explicit int RSS
     threshold (a bare MagicMock attribute would be treated as disabled)."""
-    from kiro_crew.session import SessionManager
+    from aj_crew.session import SessionManager
 
     cfg = MagicMock()
     cfg.session.pool_size = 0
@@ -79,10 +79,10 @@ class TestGetSessionRssMb:
         unreachable, so a session tree could grow without ever being recycled.
         """
         with (
-            patch("kiro_crew.session_pid.sys.platform", "win32"),
-            patch("kiro_crew.session_pid.platform_compat.IS_WINDOWS", True),
+            patch("aj_crew.session_pid.sys.platform", "win32"),
+            patch("aj_crew.session_pid.platform_compat.IS_WINDOWS", True),
             patch(
-                "kiro_crew.session_pid.platform_compat.proc_rss_tree_mb_for_pid",
+                "aj_crew.session_pid.platform_compat.proc_rss_tree_mb_for_pid",
                 return_value=512.7,
             ),
         ):
@@ -94,14 +94,14 @@ class TestGetSessionRssMb:
         to a recycled PID -- and recycle a HEALTHY session. The measurement must
         go through the helper that validates each edge against creation times."""
         with (
-            patch("kiro_crew.session_pid.sys.platform", "win32"),
-            patch("kiro_crew.session_pid.platform_compat.IS_WINDOWS", True),
+            patch("aj_crew.session_pid.sys.platform", "win32"),
+            patch("aj_crew.session_pid.platform_compat.IS_WINDOWS", True),
             patch(
-                "kiro_crew.session_pid.platform_compat.proc_rss_tree_mb_for_pid",
+                "aj_crew.session_pid.platform_compat.proc_rss_tree_mb_for_pid",
                 return_value=1.0,
             ),
             patch(
-                "kiro_crew.session_pid._build_child_map",
+                "aj_crew.session_pid._build_child_map",
                 side_effect=AssertionError("must not walk a raw Toolhelp parent map"),
             ),
         ):
@@ -110,10 +110,10 @@ class TestGetSessionRssMb:
     def test_windows_treats_an_unreadable_tree_as_zero(self) -> None:
         """None means "unknown"; the ceiling must not fire on a guess."""
         with (
-            patch("kiro_crew.session_pid.sys.platform", "win32"),
-            patch("kiro_crew.session_pid.platform_compat.IS_WINDOWS", True),
+            patch("aj_crew.session_pid.sys.platform", "win32"),
+            patch("aj_crew.session_pid.platform_compat.IS_WINDOWS", True),
             patch(
-                "kiro_crew.session_pid.platform_compat.proc_rss_tree_mb_for_pid",
+                "aj_crew.session_pid.platform_compat.proc_rss_tree_mb_for_pid",
                 return_value=None,
             ),
         ):
@@ -124,10 +124,10 @@ class TestGetSessionRssMb:
         child_map = {100: [200, 300], 300: [400]}
         pages = {100: 1000, 200: 2000, 300: 3000, 400: 4000}
         with (
-            patch("kiro_crew.session_pid.sys.platform", "linux"),
-            patch("kiro_crew.session_pid._build_child_map", return_value=child_map),
+            patch("aj_crew.session_pid.sys.platform", "linux"),
+            patch("aj_crew.session_pid._build_child_map", return_value=child_map),
             patch(
-                "kiro_crew.session_pid._read_rss_pages",
+                "aj_crew.session_pid._read_rss_pages",
                 side_effect=lambda p, proc_root=None: pages.get(p, 0),
             ),
         ):
@@ -138,10 +138,10 @@ class TestGetSessionRssMb:
         child_map = {100: [200, 300], 300: [400]}
         pages = {100: 1000, 200: 2000, 300: 3000, 400: 4000}
         with (
-            patch("kiro_crew.session_pid.sys.platform", "linux"),
-            patch("kiro_crew.session_pid._build_child_map", return_value=child_map),
+            patch("aj_crew.session_pid.sys.platform", "linux"),
+            patch("aj_crew.session_pid._build_child_map", return_value=child_map),
             patch(
-                "kiro_crew.session_pid._read_rss_pages",
+                "aj_crew.session_pid._read_rss_pages",
                 side_effect=lambda p, proc_root=None: pages.get(p, 0),
             ),
         ):
@@ -151,10 +151,10 @@ class TestGetSessionRssMb:
         # Pathological cycle 100 -> 200 -> 100 must terminate; each counted once.
         child_map = {100: [200], 200: [100]}
         with (
-            patch("kiro_crew.session_pid.sys.platform", "linux"),
-            patch("kiro_crew.session_pid._build_child_map", return_value=child_map),
+            patch("aj_crew.session_pid.sys.platform", "linux"),
+            patch("aj_crew.session_pid._build_child_map", return_value=child_map),
             patch(
-                "kiro_crew.session_pid._read_rss_pages",
+                "aj_crew.session_pid._read_rss_pages",
                 side_effect=lambda p, proc_root=None: 5,
             ),
         ):
@@ -172,10 +172,10 @@ class TestGetSessionRssMb:
         child_map = {100: [200]}
         pages = {100: half, 200: half}
         with (
-            patch("kiro_crew.session_pid.sys.platform", "linux"),
-            patch("kiro_crew.session_pid._build_child_map", return_value=child_map),
+            patch("aj_crew.session_pid.sys.platform", "linux"),
+            patch("aj_crew.session_pid._build_child_map", return_value=child_map),
             patch(
-                "kiro_crew.session_pid._read_rss_pages",
+                "aj_crew.session_pid._read_rss_pages",
                 side_effect=lambda p, proc_root=None: pages.get(p, 0),
             ),
         ):
@@ -186,12 +186,12 @@ class TestGetSessionRssMb:
         child_map = {100: [200, 300], 300: [400]}
         pages = {100: 1000, 200: 2000, 300: 3000, 400: 4000}
         with (
-            patch("kiro_crew.session_pid.sys.platform", "linux"),
+            patch("aj_crew.session_pid.sys.platform", "linux"),
             patch(
-                "kiro_crew.session_pid._read_rss_pages",
+                "aj_crew.session_pid._read_rss_pages",
                 side_effect=lambda p, proc_root=None: pages.get(p, 0),
             ),
-            patch("kiro_crew.session_pid._build_child_map") as bm,
+            patch("aj_crew.session_pid._build_child_map") as bm,
         ):
             got = session_pid._rss_mb_from_tree(100, child_map)
         assert got == _mib_of_pages(10000)
@@ -267,7 +267,7 @@ class TestProcParsingPrimitives:
             (tmp_path / str(pid)).mkdir()
             (tmp_path / str(pid) / "stat").write_text(f"{pid} (p) S {ppid} {pid} 0 0\n")
             (tmp_path / str(pid) / "statm").write_text(f"9999 {resident} 0 0 0 0 0\n")
-        with patch("kiro_crew.session_pid.sys.platform", "linux"):
+        with patch("aj_crew.session_pid.sys.platform", "linux"):
             expected = _mib_of_pages(300 + 300)
             assert session_pid.get_session_rss_mb(100, proc_root=tmp_path) == expected
 
@@ -288,7 +288,7 @@ class TestWindowsRssPrimitives:
         """
         import inspect
 
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         for function in (session_pid._build_child_map, platform_compat.proc_child_map):
             assert "_windows_process_parent_map" not in inspect.getsource(function)
@@ -307,7 +307,7 @@ class TestRssThresholdCheck:
     def test_shipped_default_reaches_the_enforcement_point(self) -> None:
         """A manager built from the shipped SessionConfig default holds the
         shipped ceiling, so ``_rss_threshold_check`` enforces it out of the box."""
-        from kiro_crew.config.sections import DEFAULT_WATCHDOG_RSS_MAX_MB, SessionConfig
+        from aj_crew.config.sections import DEFAULT_WATCHDOG_RSS_MAX_MB, SessionConfig
 
         manager = _make_manager(rss_max_mb=SessionConfig().watchdog_rss_max_mb)
         assert manager._rss_max_mb == DEFAULT_WATCHDOG_RSS_MAX_MB == 4096
@@ -318,8 +318,8 @@ class TestRssThresholdCheck:
         manager._sessions["dashboard:x"] = _session_stub(busy=False)
         manager.reset = AsyncMock()
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=99999) as g,
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=99999) as g,
         ):
             await manager._rss_threshold_check()
         g.assert_not_called()
@@ -334,8 +334,8 @@ class TestRssThresholdCheck:
         manager.reset = AsyncMock(return_value=True)
         manager.get_pid = MagicMock(return_value=4242)
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
         ):
             await manager._rss_threshold_check()
         manager.reset.assert_awaited_once()
@@ -360,8 +360,8 @@ class TestRssThresholdCheck:
         manager.reset = AsyncMock(return_value=True)
         manager.get_pid = MagicMock(side_effect={"dashboard:a": 11, "dashboard:b": 22}.get)
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}) as bm,
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048) as rt,
+            patch("aj_crew.session._build_child_map", return_value={}) as bm,
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048) as rt,
         ):
             await manager._rss_threshold_check()
         assert bm.call_count == 1  # one /proc scan for the whole tick
@@ -387,10 +387,10 @@ class TestRssThresholdCheck:
         with (
             patch.object(session.platform_compat, "IS_WINDOWS", True),
             patch(
-                "kiro_crew.session._build_child_map",
+                "aj_crew.session._build_child_map",
                 side_effect=AssertionError("must not build a raw Toolhelp parent map"),
             ),
-            patch("kiro_crew.session.get_session_rss_mb", return_value=2048) as gs,
+            patch("aj_crew.session.get_session_rss_mb", return_value=2048) as gs,
         ):
             await manager._rss_threshold_check()
         assert gs.call_count == 2
@@ -416,8 +416,8 @@ class TestRssThresholdCheck:
 
         manager.reset = _reset  # type: ignore[assignment]
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
         ):
             await manager._rss_threshold_check()  # must not raise
         assert reset_calls == ["dashboard:a", "dashboard:b"]
@@ -435,8 +435,8 @@ class TestRssThresholdCheck:
         manager.reset = AsyncMock(return_value=True)
         manager.get_pid = MagicMock(return_value=4242)  # one runtime, two tenants
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048) as rt,
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048) as rt,
         ):
             await manager._rss_threshold_check()
         assert rt.call_count == 1  # one walk per DISTINCT pid
@@ -454,8 +454,8 @@ class TestRssThresholdCheck:
         manager.reset = AsyncMock(return_value=True)
         manager.get_pid = MagicMock(side_effect={"dashboard:a": 11, "dashboard:b": 22}.get)
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048) as rt,
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048) as rt,
         ):
             await manager._rss_threshold_check()
         assert rt.call_count == 2
@@ -482,8 +482,8 @@ class TestRssThresholdCheck:
 
         manager.reset = _reset  # type: ignore[assignment]
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
         ):
             await manager._rss_threshold_check()
         assert reset_calls == ["dashboard:a", "dashboard:b"]
@@ -497,8 +497,8 @@ class TestRssThresholdCheck:
         cb = AsyncMock()
         manager.set_recycle_callback(cb)
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
         ):
             await manager._rss_threshold_check()
         cb.assert_awaited_once()
@@ -527,8 +527,8 @@ class TestRssThresholdCheck:
 
         manager.reset = _reset  # type: ignore[assignment]
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
         ):
             await manager._rss_threshold_check()
         assert set(reset_calls) == {"dashboard:a", "dashboard:b"}
@@ -544,8 +544,8 @@ class TestRssThresholdCheck:
         cb = AsyncMock()
         manager.set_recycle_callback(cb)
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=512) as g,
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=512) as g,
         ):
             await manager._rss_threshold_check()
         g.assert_called_once()
@@ -574,8 +574,8 @@ class TestRssThresholdCheck:
         manager.reset = AsyncMock(return_value=True)
         manager.get_pid = MagicMock(return_value=pid)
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=999999) as g,
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=999999) as g,
         ):
             await manager._rss_threshold_check()
         g.assert_not_called()
@@ -591,9 +591,9 @@ class TestRssThresholdCheck:
         manager.reset = AsyncMock(return_value=True)
         manager.get_pid = MagicMock(return_value=4242)
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=999999) as g,
-            patch("kiro_crew.session_pid.find_session_leftovers", return_value=None),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=999999) as g,
+            patch("aj_crew.session_pid.find_session_leftovers", return_value=None),
         ):
             await manager._rss_threshold_check()
         g.assert_called_once()
@@ -615,9 +615,9 @@ class TestRssThresholdCheck:
         probe = MagicMock(return_value=True)
         manager.set_subagent_probe(probe)
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
-            caplog.at_level(logging.DEBUG, logger="kiro_crew.session"),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
+            caplog.at_level(logging.DEBUG, logger="aj_crew.session"),
         ):
             await manager._rss_threshold_check()
         probe.assert_called_once_with("dashboard:x")
@@ -635,8 +635,8 @@ class TestRssThresholdCheck:
         probe = MagicMock(return_value=False)
         manager.set_subagent_probe(probe)
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
         ):
             await manager._rss_threshold_check()
         probe.assert_called_once_with("dashboard:x")
@@ -655,9 +655,9 @@ class TestRssThresholdCheck:
         manager.get_pid = MagicMock(return_value=4242)
         manager.set_subagent_probe(MagicMock(side_effect=RuntimeError("registry gone")))
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
-            caplog.at_level(logging.DEBUG, logger="kiro_crew.session"),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
+            caplog.at_level(logging.DEBUG, logger="aj_crew.session"),
         ):
             await manager._rss_threshold_check()
         manager.reset.assert_not_awaited()
@@ -673,8 +673,8 @@ class TestRssThresholdCheck:
         manager.get_pid = MagicMock(return_value=4242)
         assert manager._subagent_probe is None
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
         ):
             await manager._rss_threshold_check()
         manager.reset.assert_awaited_once()
@@ -702,8 +702,8 @@ class TestRssThresholdCheck:
         manager.reset = AsyncMock(side_effect=[True, False, False])
         rss = [2048]
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", side_effect=lambda *_: rss[0]),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", side_effect=lambda *_: rss[0]),
             caplog.at_level("WARNING"),
         ):
             await manager._rss_threshold_check()
@@ -729,8 +729,8 @@ class TestRssThresholdCheck:
         self._clocked(manager, clock)
         manager.reset = AsyncMock(return_value=True)
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
             caplog.at_level("WARNING"),
         ):
             for _ in range(3):
@@ -748,8 +748,8 @@ class TestRssThresholdCheck:
         self._clocked(manager, [5000.0])
         manager.reset = AsyncMock(return_value=False)
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
             caplog.at_level("WARNING"),
         ):
             await manager._rss_threshold_check()
@@ -758,7 +758,7 @@ class TestRssThresholdCheck:
 
     @pytest.mark.asyncio
     async def test_crossing_after_the_window_is_not_a_rebound(self, caplog) -> None:
-        from kiro_crew.session_rss_rebound import RSS_REBOUND_WINDOW_SECS
+        from aj_crew.session_rss_rebound import RSS_REBOUND_WINDOW_SECS
 
         manager = _make_manager(rss_max_mb=1000)
         manager._sessions["dashboard:x"] = _session_stub(busy=False)
@@ -768,8 +768,8 @@ class TestRssThresholdCheck:
         manager.reset = AsyncMock(return_value=True)
         rss = [2048]
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", side_effect=lambda *_: rss[0]),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", side_effect=lambda *_: rss[0]),
             caplog.at_level("WARNING"),
         ):
             await manager._rss_threshold_check()
@@ -812,15 +812,15 @@ class TestRssThresholdCheck:
         clock = [5000.0]
         recycled, held = self._rebounding(manager, clock)
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=footprint),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=footprint),
             caplog.at_level("WARNING"),
         ):
             for _ in range(6):
                 await manager._rss_threshold_check()
                 clock[0] += 60.0
         assert manager.reset.await_count == 3
-        from kiro_crew.session_rss_rebound import RssHold
+        from aj_crew.session_rss_rebound import RssHold
 
         hold = RssHold(rss_mb=footprint, ceiling_mb=1000, limit_mb=2 * footprint, recycles=3)
         assert held == [("dashboard:x", hold)]
@@ -838,8 +838,8 @@ class TestRssThresholdCheck:
         rss = [1500]
         _recycled, held = self._rebounding(manager, clock)
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", side_effect=lambda *_: rss[0]),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", side_effect=lambda *_: rss[0]),
         ):
             for _ in range(4):
                 await manager._rss_threshold_check()
@@ -855,14 +855,14 @@ class TestRssThresholdCheck:
 
     @pytest.mark.asyncio
     async def test_the_hold_ends_with_the_rebound_window(self) -> None:
-        from kiro_crew.session_rss_rebound import RSS_REBOUND_WINDOW_SECS
+        from aj_crew.session_rss_rebound import RSS_REBOUND_WINDOW_SECS
 
         manager = _make_manager(rss_max_mb=1000)
         clock = [5000.0]
         recycled, _held = self._rebounding(manager, clock)
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=1500),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=1500),
         ):
             for _ in range(4):
                 await manager._rss_threshold_check()
@@ -883,8 +883,8 @@ class TestRssThresholdCheck:
         _recycled, held = self._rebounding(manager, clock)
         manager.reset = AsyncMock(side_effect=[True, False, True, True])
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=1500),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=1500),
         ):
             for _ in range(6):
                 await manager._rss_threshold_check()
@@ -921,8 +921,8 @@ class TestRssThresholdSpareRuntime:
         provider = _pool_warm_provider(manager, pid=7777)
         manager._discard_pool_provider = AsyncMock()
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
             caplog.at_level("WARNING"),
         ):
             await manager._rss_threshold_check()
@@ -942,8 +942,8 @@ class TestRssThresholdSpareRuntime:
         manager._discard_pool_provider = AsyncMock()
         manager._schedule_replenish = MagicMock()
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
         ):
             await manager._rss_threshold_check()
         manager._schedule_replenish.assert_called_once()
@@ -956,8 +956,8 @@ class TestRssThresholdSpareRuntime:
         _pool_warm_provider(manager, pid=7777)
         manager._discard_pool_provider = AsyncMock()
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
         ):
             await manager._rss_threshold_check()
         assert manager.warm_providers() == []
@@ -978,8 +978,8 @@ class TestRssThresholdSpareRuntime:
             return 2048
 
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", side_effect=_claim),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", side_effect=_claim),
         ):
             await manager._rss_threshold_check()
         manager._discard_pool_provider.assert_not_awaited()
@@ -993,8 +993,8 @@ class TestRssThresholdSpareRuntime:
         manager._discard_pool_provider = AsyncMock()
         manager._schedule_replenish = MagicMock()
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=500),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=500),
         ):
             await manager._rss_threshold_check()
         manager._discard_pool_provider.assert_not_awaited()
@@ -1009,8 +1009,8 @@ class TestRssThresholdSpareRuntime:
         _pool_warm_provider(manager, pid=7777)
         manager._discard_pool_provider = AsyncMock()
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=999999) as rt,
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=999999) as rt,
         ):
             await manager._rss_threshold_check()
         manager._discard_pool_provider.assert_not_awaited()
@@ -1027,8 +1027,8 @@ class TestRssThresholdSpareRuntime:
         manager._remove_pooled_providers_by_pid = MagicMock(return_value=[(7777, provider)])
         manager._discard_pool_provider = AsyncMock()
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048) as rt,
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048) as rt,
         ):
             await manager._rss_threshold_check()
         assert rt.call_count == 1
@@ -1045,8 +1045,8 @@ class TestRssThresholdSpareRuntime:
         spare = _pool_warm_provider(manager, pid=7777)
         manager._discard_pool_provider = AsyncMock()
         with (
-            patch("kiro_crew.session._build_child_map", return_value={}),
-            patch("kiro_crew.session._rss_mb_from_tree", return_value=2048),
+            patch("aj_crew.session._build_child_map", return_value={}),
+            patch("aj_crew.session._rss_mb_from_tree", return_value=2048),
         ):
             await manager._rss_threshold_check()
         manager.reset.assert_awaited_once()

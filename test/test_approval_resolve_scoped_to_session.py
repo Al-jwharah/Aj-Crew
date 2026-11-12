@@ -22,19 +22,19 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_approve
-from kiro_crew.dashboard.handlers.sessions import api_approval_resolve
-from kiro_crew.dashboard.state import SlotOrigin
+from aj_crew.dashboard.chat_handlers import api_chat_slot_approve
+from aj_crew.dashboard.handlers.sessions import api_approval_resolve
+from aj_crew.dashboard.state import SlotOrigin
 
 
 @pytest.fixture(autouse=True)
 def _hermetic_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()

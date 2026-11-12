@@ -19,7 +19,7 @@ import { store } from '../store'
 import { api, type DeniedCommandsData } from '../api/client'
 import { SecurityPanel } from '../pages/settings/SecurityPanel'
 
-const FLOOR_TOOLTIP = 'Enforced by an always-on protection built into Kiro Crew'
+const FLOOR_TOOLTIP = 'Enforced by an always-on protection built into Aj Crew'
 const PINNED_TOOLTIP = "Enforced by your organization's security policy"
 
 const snapshot: DeniedCommandsData = {
@@ -80,7 +80,7 @@ describe('SecurityPanel floor-enforced rule lock', () => {
       headers: new Headers({ 'content-type': 'application/json' }),
     }))
     vi.spyOn(api, 'deniedCommands').mockResolvedValue(snapshot)
-    vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({} as never)
+    vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({} as never)
     vi.spyOn(api, 'tailnetStatus').mockResolvedValue({ state: 'disabled' } as never)
   })
   afterEach(() => {

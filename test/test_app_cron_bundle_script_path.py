@@ -37,8 +37,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from aj_crew.cron_script import resolve_script_path
 from conftest import make_escaping_link
-from kiro_crew.cron_script import resolve_script_path
 
 APP = "bundle-app"
 CRON = f"{APP}/refresh"
@@ -51,7 +51,7 @@ def home(tmp_path, monkeypatch):
     (root / "crons").mkdir(parents=True)
     bundle = root / "apps" / APP
     bundle.mkdir(parents=True)
-    monkeypatch.setenv("KIROCREW_HOME", str(root))
+    monkeypatch.setenv("AJCREW_HOME", str(root))
     return root
 
 
@@ -65,14 +65,14 @@ def _write_app_crons(home: Path, defs: list[dict], app: str = APP) -> None:
 
 def _register(app: str = APP):
     """Drive the bridge with a mocked CronSDK; returns (registered, add_kwargs)."""
-    import kiro_crew.apps.execution as execution_mod
-    from kiro_crew.apps.bridges import register_app_crons_with_service
+    import aj_crew.apps.execution as execution_mod
+    from aj_crew.apps.bridges import register_app_crons_with_service
 
     sdk = MagicMock()
     sdk.list_jobs.return_value = []
     sdk.add_job_if_absent_async = AsyncMock(return_value=MagicMock(id="job-1"))
     with patch.object(execution_mod, "third_party_execution_allowed", lambda: True):
-        with patch("kiro_crew.apps.bridges.CronSDK", return_value=sdk):
+        with patch("aj_crew.apps.bridges.CronSDK", return_value=sdk):
             registered = asyncio.run(register_app_crons_with_service(app, MagicMock()))
     kwargs = (
         sdk.add_job_if_absent_async.call_args.kwargs if sdk.add_job_if_absent_async.called else {}
@@ -390,7 +390,7 @@ class TestAuthoringPathsGainNothing:
 
     def test_cron_add_refuses_a_bundle_script(self, home, tmp_path, monkeypatch):
         """End-to-end through the agent-facing MCP tool's own vetting."""
-        from kiro_crew.mcp_cron import _vet_script_file
+        from aj_crew.mcp_cron import _vet_script_file
 
         (_bundle(home) / "job.py").write_text("def run(ctx):\n    return 'ok'\n")
         monkeypatch.chdir(tmp_path)
@@ -412,7 +412,7 @@ class TestCronSdkDirectEntryPoint:
     """
 
     def _sdk(self, app: str = APP):
-        from kiro_crew.apps.cron_sdk import CronSDK
+        from aj_crew.apps.cron_sdk import CronSDK
 
         service = MagicMock()
         service.add_job = MagicMock(return_value=MagicMock(id="job-2", name=CRON))
@@ -425,8 +425,8 @@ class TestCronSdkDirectEntryPoint:
         elsewhere = tmp_path / "foreign-cwd"
         elsewhere.mkdir()
         monkeypatch.chdir(elsewhere)
-        from kiro_crew.apps.cron_sdk import CronSDK
-        from kiro_crew.cron import CronService
+        from aj_crew.apps.cron_sdk import CronSDK
+        from aj_crew.cron import CronService
 
         service = CronService(base_dir=home / "crons")
         job = CronSDK(APP, service).add_job(CRON, "go", every_secs=600, script="job.py:run")
@@ -472,7 +472,7 @@ class TestDownstreamReResolution:
         self, home, tmp_path, monkeypatch
     ):
         """``mcp_cron`` re-resolves the spec on EVERY fire before allowing the run."""
-        from kiro_crew.mcp_cron import vet_job_at_fire_time
+        from aj_crew.mcp_cron import vet_job_at_fire_time
 
         monkeypatch.chdir(tmp_path)  # a CWD holding none of these files
         job = MagicMock()
@@ -505,7 +505,7 @@ class TestDownstreamReResolution:
         invariant: no persisted job state may produce a 500, so the outcome is a
         typed 4xx refusal rather than an exception.
         """
-        from kiro_crew.dashboard.handlers.cron import _read_script_source_sync
+        from aj_crew.dashboard.handlers.cron import _read_script_source_sync
 
         monkeypatch.chdir(tmp_path)
 
@@ -528,7 +528,7 @@ class TestTheAppRootIsNotCallerControlled:
     """
 
     def _sdk(self):
-        from kiro_crew.apps.cron_sdk import CronSDK
+        from aj_crew.apps.cron_sdk import CronSDK
 
         service = MagicMock()
         service.add_job_async = AsyncMock(return_value=MagicMock(id="j", name=CRON))
@@ -540,7 +540,7 @@ class TestTheAppRootIsNotCallerControlled:
         """Asserted on the signature, because absence is the whole point."""
         import inspect
 
-        from kiro_crew.apps.cron_sdk import CronSDK
+        from aj_crew.apps.cron_sdk import CronSDK
 
         params = inspect.signature(getattr(CronSDK, method)).parameters
 
@@ -601,7 +601,7 @@ class TestTheAsyncPathDoesNotStallTheLoop:
         """Asserted by thread identity, which no source reading can fake."""
         import threading
 
-        import kiro_crew.apps.bridges as bridges_mod
+        import aj_crew.apps.bridges as bridges_mod
 
         (_bundle(home) / "job.py").write_text("def run(ctx):\n    return 'ok'\n")
         _write_app_crons(home, [{"name": CRON, "every": 600, "script": "job.py:run"}])
@@ -623,8 +623,8 @@ class TestTheAsyncPathDoesNotStallTheLoop:
 
     def test_the_bundle_walk_happens_once_per_sdk_not_once_per_job(self, home):
         """Memoised per instance, so a registrar looping over jobs pays it once."""
-        import kiro_crew.apps.execution as execution_mod
-        from kiro_crew.apps.cron_sdk import CronSDK
+        import aj_crew.apps.execution as execution_mod
+        from aj_crew.apps.cron_sdk import CronSDK
 
         (_bundle(home) / "job.py").write_text("def run(ctx):\n    return 'ok'\n")
         service = MagicMock()
@@ -654,7 +654,7 @@ class TestTheAsyncPathDoesNotStallTheLoop:
         """
         import threading
 
-        from kiro_crew.apps.cron_sdk import CronSDK
+        from aj_crew.apps.cron_sdk import CronSDK
 
         (_bundle(home) / "job.py").write_text("def run(ctx):\n    return 'ok'\n")
         service = MagicMock()
@@ -690,8 +690,8 @@ class TestEditionBundleRootsAreOneAuthority:
     """
 
     def test_an_edition_manifest_source_is_trusted_at_fire_time(self, home, tmp_path, monkeypatch):
-        import kiro_crew.apps.execution as execution_mod
-        from kiro_crew.cron_script import _trusted_script_bundle_roots
+        import aj_crew.apps.execution as execution_mod
+        from aj_crew.cron_script import _trusted_script_bundle_roots
 
         edition = tmp_path / "edition-builtins"
         (edition / "edition-app").mkdir(parents=True)
@@ -717,9 +717,9 @@ class TestEditionBundleRootsAreOneAuthority:
         OUTSIDE the builtins tree -- every ``.py`` under the installed package
         would resolve as a bundle script, for no builtin bundle that needs it.
         """
-        import kiro_crew.apps.execution as execution_mod
-        import kiro_crew.cron_script as cron_script_mod
-        from kiro_crew.cron_script import _trusted_script_bundle_roots
+        import aj_crew.apps.execution as execution_mod
+        import aj_crew.cron_script as cron_script_mod
+        from aj_crew.cron_script import _trusted_script_bundle_roots
 
         edition = tmp_path / "edition-builtins"
         edition.mkdir()
@@ -740,9 +740,9 @@ class TestEditionBundleRootsAreOneAuthority:
         self, home, tmp_path, monkeypatch
     ):
         """The fallback leg: a composition without the platform seam still works."""
-        import kiro_crew.apps.execution as execution_mod
-        import kiro_crew.cron_script as cron_script_mod
-        from kiro_crew.cron_script import _trusted_script_bundle_roots
+        import aj_crew.apps.execution as execution_mod
+        import aj_crew.cron_script as cron_script_mod
+        from aj_crew.cron_script import _trusted_script_bundle_roots
 
         def _boom():
             raise RuntimeError("platform seam not composed")

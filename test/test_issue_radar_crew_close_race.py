@@ -16,9 +16,9 @@ from unittest.mock import AsyncMock
 import pytest
 from test_slot_close_nudge_race import NAME, _Req, _service, _state_with_slot
 
-from kiro_crew.apps.builtins.issue_radar.backend import crew_runtime
-from kiro_crew.autonudge import NudgeAdmissionRefused
-from kiro_crew.dashboard import chat_handlers as handlers
+from aj_crew.apps.builtins.issue_radar.backend import crew_runtime
+from aj_crew.autonudge import NudgeAdmissionRefused
+from aj_crew.dashboard import chat_handlers as handlers
 
 
 @pytest.mark.asyncio
@@ -37,7 +37,7 @@ async def test_issue_radar_arm_queued_behind_final_retirement_is_refused(
         await release_hook.wait()
         return True
 
-    monkeypatch.setattr("kiro_crew.apps.teardown.notify_slot_closed", _hook)
+    monkeypatch.setattr("aj_crew.apps.teardown.notify_slot_closed", _hook)
     monkeypatch.setattr(crew_runtime, "ensure_crew_session", AsyncMock(return_value=slot))
     monkeypatch.setattr(
         crew_runtime,

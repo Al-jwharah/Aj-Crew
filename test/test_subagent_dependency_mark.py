@@ -24,18 +24,18 @@ from types import SimpleNamespace
 import pytest
 from overload_fakes import Clock, open_task_store
 
-from kiro_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
-from kiro_crew.subagent_manager.run import RunEventCoordinator
-from kiro_crew.taskq import model as m
-from kiro_crew.taskq.dependency import (
+from aj_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
+from aj_crew.subagent_manager.run import RunEventCoordinator
+from aj_crew.taskq import model as m
+from aj_crew.taskq.dependency import (
     KIND_RATE_LIMITED,
     PARK_STATE,
     WAIT_STATE,
     DependencyCoordinator,
     DependencySignal,
 )
-from kiro_crew.taskq.reconcile import reconcile_on_boot
-from kiro_crew.taskq.store import TaskStore, TaskStoreUnavailable
+from aj_crew.taskq.reconcile import reconcile_on_boot
+from aj_crew.taskq.store import TaskStore, TaskStoreUnavailable
 
 
 @pytest.fixture
@@ -492,7 +492,7 @@ def test_a_locked_mark_is_swallowed_at_debug_and_never_raises_at_the_spawn_path(
         rival.execute("BEGIN EXCLUSIVE")
         rival.execute("UPDATE tasks SET updated_at=1 WHERE id='sa-1'")
         try:
-            with caplog.at_level(logging.DEBUG, logger="kiro_crew.subagent_manager.admission"):
+            with caplog.at_level(logging.DEBUG, logger="aj_crew.subagent_manager.admission"):
                 _Bridge().taskq_mark(info, m.RUNNING)  # must not raise
         finally:
             rival.execute("ROLLBACK")
@@ -518,14 +518,14 @@ def test_a_refused_terminal_write_is_said_out_loud_with_the_rows_real_state(
     assert store.transition("sa-1", PARK_STATE, generation=generation)
     assert not store.finish("sa-1", m.DONE, generation=generation)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.subagent_manager.admission"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.subagent_manager.admission"):
         _TaskqBridgeMixin.taskq_report_refused_settle(store, "sa-1", m.DONE, False)
 
     said = [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING]
     assert said and "sa-1" in said[0] and PARK_STATE in said[0]
     # A committed write says nothing: the log is the exception, not the norm.
     caplog.clear()
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.subagent_manager.admission"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.subagent_manager.admission"):
         _TaskqBridgeMixin.taskq_report_refused_settle(store, "sa-1", m.DONE, True)
     assert caplog.records == []
 
@@ -574,7 +574,7 @@ def test_taskq_settle_itself_is_what_reads_the_terminal_writes_boolean(
         outcome="completed",
     )
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.subagent_manager.admission"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.subagent_manager.admission"):
         _settle_bridge(store).taskq_settle(info)  # type: ignore[attr-defined]
 
     said = [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING]
@@ -599,7 +599,7 @@ def test_a_settle_the_store_took_says_nothing_through_the_real_method(
         outcome="completed",
     )
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.subagent_manager.admission"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.subagent_manager.admission"):
         _settle_bridge(store).taskq_settle(info)  # type: ignore[attr-defined]
 
     assert [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING] == []

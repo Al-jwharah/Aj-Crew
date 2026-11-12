@@ -14,10 +14,10 @@ import threading
 
 import pytest
 
-from kiro_crew import acp_tool_gate
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp import launch as launch_mod
-from kiro_crew.acp.client import (
+from aj_crew import acp_tool_gate
+from aj_crew.acp import client as acp_client
+from aj_crew.acp import launch as launch_mod
+from aj_crew.acp.client import (
     OPENCODE_BIN,
     OPENCODE_INSTALL_COMMAND,
     PROTOCOL_VERSION_OPENCODE,
@@ -26,11 +26,11 @@ from kiro_crew.acp.client import (
     _opencode_uniform_permission,
     _resolve_self_served_bin,
 )
-from kiro_crew.acp.harness import opencode as opencode_mod
-from kiro_crew.acp.harness.base import SpawnContext
-from kiro_crew.acp_backends import ACP_BACKEND_OPENCODE, Routing, routing_for
-from kiro_crew.acp_tool_gate import seeded_setting_issue
-from kiro_crew.agent_sdk.backends import launch_for
+from aj_crew.acp.harness import opencode as opencode_mod
+from aj_crew.acp.harness.base import SpawnContext
+from aj_crew.acp_backends import ACP_BACKEND_OPENCODE, Routing, routing_for
+from aj_crew.acp_tool_gate import seeded_setting_issue
+from aj_crew.agent_sdk.backends import launch_for
 
 #: A read-back argv as the spawn arm hands it over: already sandbox-wrapped there,
 #: so these tests pass one through unchanged rather than reconstructing it.
@@ -117,7 +117,7 @@ class TestResolutionLadder:
 
     def test_there_is_no_adapter_package_in_the_argv(self):
         """The argv is the binary and its own subcommand: no node, no entry script."""
-        from kiro_crew.agent_sdk.backends import launch_for
+        from aj_crew.agent_sdk.backends import launch_for
 
         record = launch_for(ACP_BACKEND_OPENCODE)
         assert record.acp_args == ("acp",)
@@ -284,7 +284,7 @@ class TestTheReadBackReportsFailureRatherThanAssuming:
             returncode = 0
             stdout = (
                 'banner\n{"permission": "ask", "mcp": {"docs.server": {"type": "local"},'
-                ' "kirocrew-core": {"type": "local"}}}'
+                ' "ajcrew-core": {"type": "local"}}}'
             )
             stderr = ""
 
@@ -298,15 +298,15 @@ class TestTheReadBackReportsFailureRatherThanAssuming:
         assert client._opencode_config_mcp_servers == ("docs.server",)
 
     def test_only_the_names_opencode_rewrites_are_kept(self):
-        from kiro_crew.acp.client import _opencode_config_mcp_server_names
+        from aj_crew.acp.client import _opencode_config_mcp_server_names
 
-        resolved = {"mcp": {"docs.server": {}, "kirocrew-core": {}, "a_b": {}}}
+        resolved = {"mcp": {"docs.server": {}, "ajcrew-core": {}, "a_b": {}}}
         assert _opencode_config_mcp_server_names(resolved) == (("docs.server",), "")
 
     @pytest.mark.parametrize("shape", ["count", "length"])
     def test_a_config_past_the_bounds_refuses_the_session(self, shape, tmp_path, monkeypatch):
         """Bounded by refusing, never by truncating: a dropped name would miss its deny."""
-        from kiro_crew.acp.harness_tool_names import (
+        from aj_crew.acp.harness_tool_names import (
             MAX_HARNESS_CONFIG_MCP_SERVERS,
             MAX_HARNESS_TOOL_NAME_LEN,
         )
@@ -594,9 +594,9 @@ class _OpencodeLaunchRig:
 
     BIN = "/opt/bin/opencode"
     HIDDEN = ("/opt/creds/.aws",)
-    SANDBOX = ["/opt/run/kirocrew_sandbox_launcher"]
-    CLEANUP = "/opt/run/kirocrew_sandbox_readback"
-    CLEANUP_VERSION = "/opt/run/kirocrew_sandbox_version"
+    SANDBOX = ["/opt/run/ajcrew_sandbox_launcher"]
+    CLEANUP = "/opt/run/ajcrew_sandbox_readback"
+    CLEANUP_VERSION = "/opt/run/ajcrew_sandbox_version"
     MODE = "standard"
 
     def __init__(self, monkeypatch, tmp_path, *, routing=("", ""), probe_stdout="1.19.0"):
@@ -665,7 +665,7 @@ class _OpencodeLaunchRig:
             self.loop_thread = threading.get_ident()
             return await self.adapter.resolve_spawn(
                 SpawnContext(
-                    agent="kirocrew",
+                    agent="ajcrew",
                     work_dir=self._tmp_path,
                     model=None,
                     environ={},
@@ -793,7 +793,7 @@ def test_a_successful_load_is_adopted_without_a_modes_block() -> None:
     success, fall through to session/new anyway, and discard the conversation the
     harness had just restored -- on every reopened slot, silently.
     """
-    from kiro_crew.acp_backends import ACP_BACKENDS_LOAD_WITHOUT_MODES
+    from aj_crew.acp_backends import ACP_BACKENDS_LOAD_WITHOUT_MODES
 
     assert ACP_BACKEND_OPENCODE in ACP_BACKENDS_LOAD_WITHOUT_MODES
     body = inspect.getsource(AcpClient._initialize_session)
@@ -809,7 +809,7 @@ def test_a_resumed_session_is_not_gated_on_a_kiro_transcript() -> None:
     own, so gating the resume on a kiro transcript path silently starts every
     reopened slot fresh -- the opposite of what the host contract records.
     """
-    from kiro_crew.acp_backends import ACP_BACKENDS_HARNESS_OWNED_SESSIONS
+    from aj_crew.acp_backends import ACP_BACKENDS_HARNESS_OWNED_SESSIONS
 
     assert ACP_BACKEND_OPENCODE in ACP_BACKENDS_HARNESS_OWNED_SESSIONS
     body = inspect.getsource(AcpClient._initialize_session)

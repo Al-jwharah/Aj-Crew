@@ -21,11 +21,11 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from body_stream_helpers import attach_json_body
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew import publish_provider, publish_sync
-from kiro_crew.artifacts import ArtifactPublication, ArtifactStore, ForkMetadata
-from kiro_crew.dashboard.handlers import artifacts as art_handlers
-from kiro_crew.dashboard.handlers.artifacts import (
+from aj_crew import artifacts as art_mod
+from aj_crew import publish_provider, publish_sync
+from aj_crew.artifacts import ArtifactPublication, ArtifactStore, ForkMetadata
+from aj_crew.dashboard.handlers import artifacts as art_handlers
+from aj_crew.dashboard.handlers.artifacts import (
     api_artifact_overwrite_remote,
     api_artifact_pull_latest,
     api_artifact_update,
@@ -40,7 +40,7 @@ from kiro_crew.dashboard.handlers.artifacts import (
     api_remote_artifacts_clone,
     api_remote_artifacts_fork,
 )
-from kiro_crew.publish_provider import Capability, PublishProvider, RemoteComment
+from aj_crew.publish_provider import Capability, PublishProvider, RemoteComment
 
 # ── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -803,7 +803,7 @@ class TestIndexByArtifactId:
         # clone bind an unrelated legacy artifact that happens to share the id).
         # ForkMetadata keeps an empty provider on load (unlike ArtifactPublication
         # which defaults to the registry default provider), so it is the faithful legacy case.
-        from kiro_crew.publish_provider import DEFAULT_PROVIDER
+        from aj_crew.publish_provider import DEFAULT_PROVIDER
 
         legacy = isolated_store.create(name="L", content="z", kind="text")
         isolated_store.set_fork_metadata(legacy.slug, ForkMetadata(upstream_artifact_id="999"))
@@ -1081,7 +1081,7 @@ class TestRoutesAndAllowlist:
     def test_remote_artifact_routes_registered(self):
         from aiohttp import web
 
-        from kiro_crew.dashboard.server import _register_mcp_routes
+        from aj_crew.dashboard.server import _register_mcp_routes
 
         app = web.Application()
         app["state"] = MagicMock()
@@ -1102,7 +1102,7 @@ class TestRoutesAndAllowlist:
         """--slack-only auth parity: /api/remote-artifacts is a mixed internal
         prefix (browser cookie auth + X-Internal-Secret callers), shared by
         both entrypoints so the headless server can never drift."""
-        from kiro_crew.dashboard.server import _MIXED_INTERNAL_API_PATHS
+        from aj_crew.dashboard.server import _MIXED_INTERNAL_API_PATHS
 
         assert "/api/remote-artifacts" in _MIXED_INTERNAL_API_PATHS
         assert "/api/artifacts" in _MIXED_INTERNAL_API_PATHS

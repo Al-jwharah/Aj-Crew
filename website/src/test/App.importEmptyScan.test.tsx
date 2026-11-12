@@ -19,7 +19,7 @@ import type { AgentImportScanResponse } from '../api/client'
 
 /** Mutable so a test can pick which first-run flags the shell boots with. */
 const themeState = {
-  colorTheme: 'kiro',
+  colorTheme: 'aj',
   theme: 'dark' as const,
   mode: 'dark' as const,
   onboarded: true,
@@ -48,7 +48,7 @@ vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page
 vi.mock('../pages/SystemPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => null }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 
 import { api } from '../api/client'
 import { renderWithProviders } from './helpers'

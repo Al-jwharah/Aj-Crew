@@ -17,16 +17,16 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew import mcp_apps_render
-from kiro_crew.acp.types import (
+from aj_crew import mcp_apps_render
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     EVENT_TOOL_RESULT,
     AcpEvent,
 )
-from kiro_crew.dashboard import chat_persistence
-from kiro_crew.dashboard.chat_utils import effective_session_key, session_key_for
+from aj_crew.dashboard import chat_persistence
+from aj_crew.dashboard.chat_utils import effective_session_key, session_key_for
 
 TOOL_CALL_ID = "tc-app-1"
 
@@ -40,7 +40,7 @@ LEAD_KEY = "mcp_app_lead"
 def spool(tmp_path, monkeypatch):
     d = tmp_path / "mcp-apps"
     d.mkdir()
-    monkeypatch.setenv("KIROCREW_MCP_APPS_SPOOL", str(d))
+    monkeypatch.setenv("AJCREW_MCP_APPS_SPOOL", str(d))
     return d
 
 
@@ -76,7 +76,7 @@ def _stub_state(tmp_path):
 
 
 async def _drive(state, slot, events):
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     async def _stream(_msg):
         for ev in events:
@@ -167,7 +167,7 @@ class TestAClaimedAppIsRecordedOnItsRow:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        await _drive(state, slot, _events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, _events(f"[ajcrew-mcp-app:{sid}]"))
 
         rows = _tool_rows(slot)
         assert rows, "the turn recorded no tool row to carry the flag"
@@ -186,7 +186,7 @@ class TestAClaimedAppIsRecordedOnItsRow:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        await _drive(state, slot, _events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, _events(f"[ajcrew-mcp-app:{sid}]"))
 
         sent = [c.args[0] for c in state.broadcast_ws_owners.call_args_list if c.args]
         assert sent.count("mcp_app_render") == 1
@@ -227,7 +227,7 @@ class TestTheFlagAlsoReachesOpenClients:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        await _drive(state, slot, _events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, _events(f"[ajcrew-mcp-app:{sid}]"))
 
         patches = [
             c.args[1]
@@ -285,7 +285,7 @@ class TestNoViewerStillRecordsTheApp:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        await _drive(state, slot, _events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, _events(f"[ajcrew-mcp-app:{sid}]"))
 
         rows = _tool_rows(slot)
         assert rows
@@ -316,7 +316,7 @@ class TestNothingIsFlaggedWithoutAClaim:
         slot._titled = True
         sid = uuid.uuid4().hex  # deliberately no spool file
 
-        await _drive(state, slot, _events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, _events(f"[ajcrew-mcp-app:{sid}]"))
 
         rows = _tool_rows(slot)
         assert rows
@@ -334,7 +334,7 @@ class TestNothingIsFlaggedWithoutAClaim:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, "dashboard:someone-else")
 
-        await _drive(state, slot, _events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, _events(f"[ajcrew-mcp-app:{sid}]"))
 
         rows = _tool_rows(slot)
         assert rows
@@ -371,7 +371,7 @@ class TestAPreservedRowSharingTheIdIsNotFlagged:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        await _drive(state, slot, _events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, _events(f"[ajcrew-mcp-app:{sid}]"))
 
         rows = _tool_rows(slot)
         fresh = [r for r in rows if str(r.get("ts") or "") != stale_ts]
@@ -404,7 +404,7 @@ class TestAPreservedRowSharingTheIdIsNotFlagged:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        await _drive(state, slot, _events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, _events(f"[ajcrew-mcp-app:{sid}]"))
 
         patched = [
             c.args[1].get("ts")
@@ -437,7 +437,7 @@ class TestAPreservedRowSharingTheIdIsNotFlagged:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        await _drive(state, slot, _events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, _events(f"[ajcrew-mcp-app:{sid}]"))
 
         sentinel = spool / f"{sid}.rendered"
         assert sentinel.exists(), "the claim was never taken, so this proves nothing"
@@ -467,7 +467,7 @@ class TestOneRowPerOccurrenceIsMarkedTheLead:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        await _drive(state, slot, _events_two_rows(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, _events_two_rows(f"[ajcrew-mcp-app:{sid}]"))
 
         flagged = [r for r in _tool_rows(slot) if r["meta"].get(META_KEY) is True]
         assert len(flagged) >= 2, (
@@ -502,7 +502,7 @@ class TestOneRowPerOccurrenceIsMarkedTheLead:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        await _drive(state, slot, _events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, _events(f"[ajcrew-mcp-app:{sid}]"))
 
         fresh = [r for r in _tool_rows(slot) if str(r.get("ts") or "") != stale_ts]
         assert fresh, "the turn recorded no row of its own"
@@ -1095,7 +1095,7 @@ class TestACollapsedCallIdFlagsNothing:
         If the detector stops matching these, every assertion below would pass
         for the wrong reason, so the premise fails the test loudly instead.
         """
-        from kiro_crew.dashboard.chat_utils import _redact_tool_field
+        from aj_crew.dashboard.chat_utils import _redact_tool_field
 
         assert self.ID_APP != self.ID_OTHER, "the two ids must really differ"
         left = _redact_tool_field(self.ID_APP)
@@ -1142,7 +1142,7 @@ class TestACollapsedCallIdFlagsNothing:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        await _drive(state, slot, self._events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, self._events(f"[ajcrew-mcp-app:{sid}]"))
 
         rows = [m for m in slot.messages if m.get("role") == "tool"]
         assert len(rows) >= 2, "the harness must append a row for each of the two calls"
@@ -1176,7 +1176,7 @@ class TestACollapsedCallIdFlagsNothing:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        await _drive(state, slot, self._events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, self._events(f"[ajcrew-mcp-app:{sid}]"))
 
         rows = [m for m in slot.messages if m.get("role") == "tool"]
         flagged = [r for r in rows if META_KEY in r.get("meta", {})]
@@ -1202,7 +1202,7 @@ class TestACollapsedCallIdFlagsNothing:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        await _drive(state, slot, self._events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, self._events(f"[ajcrew-mcp-app:{sid}]"))
 
         sentinel = spool / f"{sid}.rendered"
         assert sentinel.exists(), "the claim was never taken, so this proves nothing"
@@ -1230,7 +1230,7 @@ class TestACollapsedCallIdFlagsNothing:
         must keep flagging its own row -- otherwise the fix above would have
         turned the feature off rather than made it honest.
         """
-        from kiro_crew.dashboard.chat_utils import _redact_tool_field
+        from aj_crew.dashboard.chat_utils import _redact_tool_field
 
         assert (
             _redact_tool_field(TOOL_CALL_ID) == TOOL_CALL_ID
@@ -1243,7 +1243,7 @@ class TestACollapsedCallIdFlagsNothing:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        await _drive(state, slot, _events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, _events(f"[ajcrew-mcp-app:{sid}]"))
 
         rows = _tool_rows(slot)
         assert rows, "the turn recorded no row for the ordinary id"
@@ -1263,7 +1263,7 @@ class TestAnIdThatAlreadyIsTheRedactionTag:
     @staticmethod
     def _tag() -> str:
         """The redaction tag, taken from the module that writes it."""
-        from kiro_crew.security.redaction import REDACTED_CREDENTIAL_TAG
+        from aj_crew.security.redaction import REDACTED_CREDENTIAL_TAG
 
         return REDACTED_CREDENTIAL_TAG
 
@@ -1272,7 +1272,7 @@ class TestAnIdThatAlreadyIsTheRedactionTag:
 
     def _premise(self) -> str:
         """Both halves of the collision, asserted rather than assumed."""
-        from kiro_crew.dashboard.chat_utils import _redact_tool_field
+        from aj_crew.dashboard.chat_utils import _redact_tool_field
 
         tag = self._tag()
         assert self.ID_APP != tag, "the two ids must really differ before redaction"
@@ -1323,7 +1323,7 @@ class TestAnIdThatAlreadyIsTheRedactionTag:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        await _drive(state, slot, self._events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, self._events(f"[ajcrew-mcp-app:{sid}]"))
 
         rows = [m for m in slot.messages if m.get("role") == "tool"]
         assert len(rows) >= 2, "the harness must append a row for each of the two calls"
@@ -1352,7 +1352,7 @@ class TestAnIdThatAlreadyIsTheRedactionTag:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        await _drive(state, slot, self._events(f"[kirocrew-mcp-app:{sid}]"))
+        await _drive(state, slot, self._events(f"[ajcrew-mcp-app:{sid}]"))
 
         sentinel = spool / f"{sid}.rendered"
         assert sentinel.exists(), "the claim was never taken, so this proves nothing"
@@ -1379,7 +1379,7 @@ class TestTheRetainedIdentityKeyIsBounded:
     """
 
     def test_the_key_is_a_fixed_width_digest_however_long_the_id(self):
-        from kiro_crew.dashboard.chat_runner import _MAX_TCID_LEN, _tcid_identity_key
+        from aj_crew.dashboard.chat_runner import _MAX_TCID_LEN, _tcid_identity_key
 
         short = _tcid_identity_key("tool-call-1")
         assert len(short) == 16, f"an ordinary id must key to 16 chars, got {len(short)}"
@@ -1392,7 +1392,7 @@ class TestTheRetainedIdentityKeyIsBounded:
         )
 
     def test_an_over_long_id_names_nothing(self):
-        from kiro_crew.dashboard.chat_runner import _MAX_TCID_LEN, _tcid_identity_key
+        from aj_crew.dashboard.chat_runner import _MAX_TCID_LEN, _tcid_identity_key
 
         assert _tcid_identity_key("x" * (_MAX_TCID_LEN + 1)) == "", (
             "an id past the tracking length cannot be told from another that shares "
@@ -1403,8 +1403,8 @@ class TestTheRetainedIdentityKeyIsBounded:
 
     def test_the_key_matches_what_the_reader_computes(self):
         """Both ends must agree, or the gate reads unambiguous for a collapsed id."""
-        from kiro_crew.dashboard.chat_runner import _tcid_identity_key
-        from kiro_crew.dashboard.chat_utils import _redact_tool_field
+        from aj_crew.dashboard.chat_runner import _tcid_identity_key
+        from aj_crew.dashboard.chat_utils import _redact_tool_field
 
         raw = f"eyJhbGciOiJIUzI1NiJ9.{'d' * 30}.{'s' * 20}"
         once = _redact_tool_field(raw)
@@ -1415,7 +1415,7 @@ class TestTheRetainedIdentityKeyIsBounded:
 
     @pytest.mark.asyncio
     async def test_an_over_long_id_flags_no_row(self, tmp_path, spool):
-        from kiro_crew.dashboard.chat_runner import _MAX_TCID_LEN
+        from aj_crew.dashboard.chat_runner import _MAX_TCID_LEN
 
         over_long = "z" * (_MAX_TCID_LEN + 1)
 
@@ -1426,7 +1426,7 @@ class TestTheRetainedIdentityKeyIsBounded:
         sid = uuid.uuid4().hex
         _write_spool(spool, sid, effective_session_key(slot))
 
-        marker = f"[kirocrew-mcp-app:{sid}]"
+        marker = f"[ajcrew-mcp-app:{sid}]"
         events = [
             AcpEvent(
                 kind=EVENT_TOOL_CALL,
@@ -1464,7 +1464,7 @@ class TestTheTrackedSourcesAreBounded:
     """
 
     def test_the_bound_is_finite(self):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         cap = chat_runner._MAX_TCID_SOURCES
         assert isinstance(cap, int) and cap > 0, "the bound must be a positive int"
@@ -1476,8 +1476,8 @@ class TestTheTrackedSourcesAreBounded:
         Lowering the cap rather than driving hundreds of events keeps the test
         fast and pins the mechanism rather than the number.
         """
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat_utils import _redact_tool_field
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat_utils import _redact_tool_field
 
         assert (
             _redact_tool_field(TOOL_CALL_ID) == TOOL_CALL_ID
@@ -1502,7 +1502,7 @@ class TestTheTrackedSourcesAreBounded:
                 tool_name="read_file",
                 mcp_server_name="filesystem",
             ),
-            *_events(f"[kirocrew-mcp-app:{sid}]"),
+            *_events(f"[ajcrew-mcp-app:{sid}]"),
         ]
         await _drive(state, slot, events)
 

@@ -24,9 +24,9 @@ class TestSlotDetailPaginationPersistedSuffix:
         row could share a ``ts`` with the second window row, which the save treats as an
         in-place edit and drops. Do not collapse these back to clock defaults.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("interleave")
         key = "dashboard:interleave"
@@ -79,7 +79,7 @@ class TestSlotDetailPaginationPersistedSuffix:
         The fixture asserts the disk region is MIXED (which selects the ordered path)
         and that the two sides really differ by the redaction.
         """
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _save_slot_to_history,
             redact_credentials,
             redact_exfiltration_urls,
@@ -90,7 +90,7 @@ class TestSlotDetailPaginationPersistedSuffix:
         redacted, _ = redact_credentials(redacted)
         assert redacted != secret, "fixture needs content the real redactor changes"
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("redactdup")
         key = "dashboard:redactdup"
@@ -144,7 +144,7 @@ class TestSlotDetailPaginationPersistedSuffix:
         always share a ``ts`` (save and load both copy it), so the compare also requires
         matching stamps.
         """
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _save_slot_to_history,
             redact_credentials,
             redact_exfiltration_urls,
@@ -164,7 +164,7 @@ class TestSlotDetailPaginationPersistedSuffix:
             red(mine) == red(theirs) != mine
         ), f"fixture needs two bodies that redact alike; got {red(mine)!r} vs {red(theirs)!r}"
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("redconflate")
         key = "dashboard:redconflate"
@@ -213,9 +213,9 @@ class TestSlotDetailPaginationPersistedSuffix:
         """
         import threading
 
-        import kiro_crew.dashboard.chat_handlers as ch
+        import aj_crew.dashboard.chat_handlers as ch
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("offloop")
         slot.append("user", "q1")
@@ -254,9 +254,9 @@ class TestSlotDetailPaginationPersistedSuffix:
         A prefix boundary would move past it on the next match and drop it. The owed set
         is every window row whose id is NOT in the disk region, in window order.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("interleaveid")
         key = "dashboard:interleaveid"
@@ -308,9 +308,9 @@ class TestSlotDetailPaginationPersistedSuffix:
         ``queued`` is dropped by the save but, being outside ``_WIRE_ONLY_ROLES``, still
         gets an id, so ending the walk at the first miss would re-append what follows.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("transid")
         key = "dashboard:transid"
@@ -358,9 +358,9 @@ class TestSlotDetailPaginationPersistedSuffix:
         """
         import json as _json
 
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("perm")
         key = "dashboard:perm"
@@ -415,9 +415,9 @@ class TestSlotDetailPaginationPersistedSuffix:
         """
         import json as _json
 
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("permdone")
         key = "dashboard:permdone"
@@ -470,9 +470,9 @@ class TestSlotDetailPaginationPersistedSuffix:
         ``_prepare_messages`` folds chunk rows into one ``streaming`` row, the only way
         in-flight text reaches the client (which drops raw ``chunk`` in ``SKIP_ROLES``).
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("livechunk")
         key = "dashboard:livechunk"
@@ -521,7 +521,7 @@ class TestSlotDetailPaginationPersistedSuffix:
         """
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.chat_handlers import _append_unflushed_tail
+        from aj_crew.dashboard.chat_handlers import _append_unflushed_tail
 
         all_msgs = [
             {"role": "user", "content": "q1", "ts": "t1", "meta": {"mid": "m1"}},

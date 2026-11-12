@@ -23,8 +23,8 @@ from acp_runtime_helpers import (
     _stop_reader,
 )
 
-from kiro_crew.acp.runtime import AcpRuntimeError, AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.runtime import AcpRuntimeError, AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     METHOD_MCP_OAUTH_REQUEST,
@@ -33,8 +33,8 @@ from kiro_crew.acp.types import (
     METHOD_SESSION_TERMINATE,
     METHOD_SET_MODE,
 )
-from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
-from kiro_crew.testing.wait import await_until
+from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+from aj_crew.testing.wait import await_until
 
 
 def _kas_turn_frame(session_id: str, *, replay: bool) -> dict:
@@ -42,7 +42,7 @@ def _kas_turn_frame(session_id: str, *, replay: bool) -> dict:
 
     Shape from ``test/fixtures/acp_frames/kas/mcp-live-apply-live.jsonl``.
     """
-    kiro = {"agentMode": "kirocrew", "replay": True} if replay else {"agentMode": "kirocrew"}
+    kiro = {"agentMode": "ajcrew", "replay": True} if replay else {"agentMode": "ajcrew"}
     return {
         "jsonrpc": "2.0",
         "method": "session/update",
@@ -112,8 +112,8 @@ class TestRuntimeMemberDispatchDisabled:
     @staticmethod
     def _switch_off(monkeypatch, tmp_path, *, disabled: bool):
         """Write the switch where the dashboard's own MCP action writes it."""
-        import kiro_crew.agent as agent_mod
-        from kiro_crew.members import MEMBER_DISPATCH_SERVER
+        import aj_crew.agent as agent_mod
+        from aj_crew.members import MEMBER_DISPATCH_SERVER
 
         settings = tmp_path / "mcp.json"
         entry = {"disabled": True} if disabled else {}
@@ -133,11 +133,11 @@ class TestRuntimeMemberDispatchDisabled:
         async def _fake_send(method, params, timeout=None):
             sent.append((method, params))
             if method == METHOD_SESSION_NEW:
-                return {"sessionId": "sid-new", "modes": {"currentModeId": "kirocrew"}}
+                return {"sessionId": "sid-new", "modes": {"currentModeId": "ajcrew"}}
             return {}
 
         monkeypatch.setattr(rt, "_send_and_await", _fake_send)
-        await rt.create_session(cwd="/work", agent="kirocrew", member_session_key=self.MEMBER_KEY)
+        await rt.create_session(cwd="/work", agent="ajcrew", member_session_key=self.MEMBER_KEY)
         params = next(p for m, p in sent if m == METHOD_SESSION_NEW)
         names = [e["name"] for e in params["mcpServers"]]
         assert (server in names) is (not disabled), names
@@ -153,13 +153,13 @@ class TestRuntimeMemberDispatchDisabled:
 
         async def _fake_send(method, params, timeout=None):
             if method == METHOD_SESSION_NEW:
-                return {"sessionId": "sid-new", "modes": {"currentModeId": "kirocrew"}}
+                return {"sessionId": "sid-new", "modes": {"currentModeId": "ajcrew"}}
             return {}
 
         monkeypatch.setattr(rt, "_send_and_await", _fake_send)
         handle = await rt.create_session(
             cwd="/work",
-            agent="kirocrew",
+            agent="ajcrew",
             member_session_key=self.MEMBER_KEY if member else "",
         )
         assert handle.member_dispatch_mounted is (member and not disabled)
@@ -169,7 +169,7 @@ class TestRuntimeMemberDispatchDisabled:
         driving a resume needs the re-attach bracket this fake transport does not answer."""
         import inspect
 
-        from kiro_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp.runtime import AcpRuntime
 
         source = inspect.getsource(AcpRuntime.load_session)
         assert "member_mounted = member_entry is not None" in source
@@ -181,8 +181,8 @@ class TestRuntimeMemberDispatchDisabled:
         On KAS (user-level agent) a same-named checkout file would otherwise decide it.
         Compared to ``overlay_project_scope``, the array projection's decider, not a literal.
         """
-        from kiro_crew.acp.runtime import _disable_check_scope
-        from kiro_crew.agent_sdk.backends import overlay_project_scope
+        from aj_crew.acp.runtime import _disable_check_scope
+        from aj_crew.agent_sdk.backends import overlay_project_scope
 
         for backend in ("kas", "codex", "kiro", "opencode", "claude"):
             assert _disable_check_scope(backend, "/work") == overlay_project_scope(
@@ -199,7 +199,7 @@ class TestRuntimeMemberDispatchDisabled:
         ``member_dispatch=True`` adds the member verbs to ``allowedTools``, an approval-free
         path. Read off the flag reaching ``_kas_custom_agents``, which every host enters.
         """
-        from kiro_crew.acp.harness.base import SessionExtras
+        from aj_crew.acp.harness.base import SessionExtras
 
         self._switch_off(monkeypatch, tmp_path, disabled=disabled)
         rt, _, _ = _make_runtime()
@@ -215,11 +215,11 @@ class TestRuntimeMemberDispatchDisabled:
 
         async def _fake_send(method, params, timeout=None):
             if method == METHOD_SESSION_NEW:
-                return {"sessionId": "sid-new", "modes": {"currentModeId": "kirocrew"}}
+                return {"sessionId": "sid-new", "modes": {"currentModeId": "ajcrew"}}
             return {}
 
         monkeypatch.setattr(rt, "_send_and_await", _fake_send)
-        await rt.create_session(cwd="/work", agent="kirocrew", member_session_key=self.MEMBER_KEY)
+        await rt.create_session(cwd="/work", agent="ajcrew", member_session_key=self.MEMBER_KEY)
         assert seen == [not disabled], (seen, disabled)
 
     def test_the_resume_path_carries_the_same_grant_expression(self):
@@ -230,7 +230,7 @@ class TestRuntimeMemberDispatchDisabled:
         """
         import inspect
 
-        from kiro_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp.runtime import AcpRuntime
 
         for method in (AcpRuntime.create_session, AcpRuntime.load_session):
             source = inspect.getsource(method)
@@ -242,8 +242,8 @@ class TestRuntimeMemberDispatchDisabled:
     @pytest.mark.parametrize("path", ["create", "load"])
     async def test_both_paths_pass_that_scope(self, monkeypatch, path):
         """Not just the helper: the value each path actually hands the reader."""
-        from kiro_crew.acp import runtime as runtime_mod
-        from kiro_crew.members import MEMBER_DISPATCH_SERVER, MEMBER_PANEL_SERVER
+        from aj_crew.acp import runtime as runtime_mod
+        from aj_crew.members import MEMBER_DISPATCH_SERVER, MEMBER_PANEL_SERVER
 
         seen: list[tuple[str, object]] = []
 
@@ -268,9 +268,9 @@ class TestRuntimeMemberDispatchDisabled:
 
         async def _fake_send(method, params, timeout=None):
             if method == METHOD_SESSION_NEW:
-                return {"sessionId": "sid-new", "modes": {"currentModeId": "kirocrew"}}
+                return {"sessionId": "sid-new", "modes": {"currentModeId": "ajcrew"}}
             if method == METHOD_SESSION_LOAD:
-                return {"modes": {"currentModeId": "kirocrew"}, "models": []}
+                return {"modes": {"currentModeId": "ajcrew"}, "models": []}
             return {}
 
         monkeypatch.setattr(rt, "_send_and_await", _fake_send)
@@ -281,15 +281,13 @@ class TestRuntimeMemberDispatchDisabled:
         scope = object()
         monkeypatch.setattr(runtime_mod, "_disable_check_scope", lambda _backend, _wd: scope)
         if path == "create":
-            await rt.create_session(
-                cwd="/work", agent="kirocrew", member_session_key=self.MEMBER_KEY
-            )
+            await rt.create_session(cwd="/work", agent="ajcrew", member_session_key=self.MEMBER_KEY)
         else:
             await rt.load_session(
                 "/home/u/.kiro/sessions/cli/sid-123.json",
                 "sid-123",
                 cwd="/work",
-                agent="kirocrew",
+                agent="ajcrew",
                 member_session_key=self.MEMBER_KEY,
             )
         assert {name for name, _ in seen} == {
@@ -314,7 +312,7 @@ class TestRuntimeMemberDispatchDisabled:
         async def _fake_send(method, params, timeout=None):
             sent.append((method, params))
             if method == METHOD_SESSION_LOAD:
-                return {"modes": {"currentModeId": "kirocrew"}, "models": []}
+                return {"modes": {"currentModeId": "ajcrew"}, "models": []}
             return {}
 
         monkeypatch.setattr(rt, "_send_and_await", _fake_send)
@@ -322,7 +320,7 @@ class TestRuntimeMemberDispatchDisabled:
             "/home/u/.kiro/sessions/cli/sid-123.json",
             "sid-123",
             cwd="/work",
-            agent="kirocrew",
+            agent="ajcrew",
             member_session_key=self.MEMBER_KEY,
         )
         params = next(p for m, p in sent if m == METHOD_SESSION_LOAD)
@@ -348,7 +346,7 @@ class TestAcpRuntimeLoadSession:
             sent.append((method, params))
             # session/load echoes "modes"; set_mode echoes nothing meaningful.
             if method == METHOD_SESSION_LOAD:
-                return {"modes": {"currentModeId": "kirocrew"}, "models": []}
+                return {"modes": {"currentModeId": "ajcrew"}, "models": []}
             return {}
 
         monkeypatch.setattr(rt, "_send_and_await", _fake_send)
@@ -357,7 +355,7 @@ class TestAcpRuntimeLoadSession:
             "/home/u/.kiro/sessions/cli/sid-123.json",
             "sid-123",
             cwd="/work",
-            agent="kirocrew",
+            agent="ajcrew",
         )
 
         # No session/new was issued — the first RPC is session/load itself.
@@ -368,10 +366,10 @@ class TestAcpRuntimeLoadSession:
         load_params = sent[0][1]
         servers = load_params["mcpServers"]
         assert [entry["name"] for entry in servers] == [
-            "kirocrew-core",
-            "kirocrew-cron",
-            "kirocrew-guide",
-            "kirocrew-mate",
+            "ajcrew-core",
+            "ajcrew-cron",
+            "ajcrew-guide",
+            "ajcrew-mate",
         ]
         assert all(_identity_tokens(servers))
         assert load_params == {
@@ -393,7 +391,7 @@ class TestAcpRuntimeLoadSession:
         A resumed session can come back on a default the account does not serve, so
         load_session runs ``ensure_served_default`` like create_session.
         """
-        from kiro_crew.acp.types import ACP_BACKEND_KIRO, METHOD_SET_MODEL
+        from aj_crew.acp.types import ACP_BACKEND_KIRO, METHOD_SET_MODEL
 
         rt, _, _ = _make_runtime()
         rt._can_load_session = True
@@ -402,7 +400,7 @@ class TestAcpRuntimeLoadSession:
         async def _fake_send(method, params, timeout=None):
             if method == METHOD_SESSION_LOAD:
                 return {
-                    "modes": {"currentModeId": "kirocrew"},
+                    "modes": {"currentModeId": "ajcrew"},
                     "models": {
                         "currentModelId": "auto",
                         "availableModels": [{"modelId": "gpt-5.6-sol"}, {"modelId": "glm-5"}],
@@ -415,7 +413,7 @@ class TestAcpRuntimeLoadSession:
         routed = _replying_send(lambda params: rt._session_queues[params["sessionId"]])
         monkeypatch.setattr(rt, "send_request", routed)
 
-        handle = await rt.load_session("/f.json", "sid-resume", agent="kirocrew")
+        handle = await rt.load_session("/f.json", "sid-resume", agent="ajcrew")
 
         set_model_calls = [c for c in routed.await_args_list if c.args[0] == METHOD_SET_MODEL]
         assert len(set_model_calls) == 1, routed.await_args_list
@@ -432,11 +430,11 @@ class TestAcpRuntimeLoadSession:
 
         async def _fake_send(method, params, timeout=None):
             if method == METHOD_SESSION_LOAD:
-                return {"modes": {"currentModeId": "kirocrew"}, "models": []}
+                return {"modes": {"currentModeId": "ajcrew"}, "models": []}
             return {}
 
         monkeypatch.setattr(rt, "_send_and_await", _fake_send)
-        handle = await rt.load_session("/f.json", "sid-cost", agent="kirocrew")
+        handle = await rt.load_session("/f.json", "sid-cost", agent="ajcrew")
 
         handle.last_prompt_stats.apply_cost_cumulative(5.00)
         assert handle.last_prompt_stats.cost_usd == 0.0
@@ -463,7 +461,7 @@ class TestAcpRuntimeLoadSession:
         monkeypatch.setattr(rt, "_send_and_await", _fake_send)
 
         with pytest.raises(AcpRuntimeError):
-            await rt.load_session("/f.json", "sid-y", agent="kirocrew")
+            await rt.load_session("/f.json", "sid-y", agent="ajcrew")
         # The queue registered before the send must be cleaned up on failure.
         assert "sid-y" not in rt._session_queues
 
@@ -482,7 +480,7 @@ class TestAcpRuntimeLoadSession:
                 for frame in frames:
                     _feed(reader, frame)
                 await _drain(reader)
-                return {"modes": {"currentModeId": "kirocrew"}, "models": []}
+                return {"modes": {"currentModeId": "ajcrew"}, "models": []}
             return {}
 
         monkeypatch.setattr(rt, "_send_and_await", _fake_send)
@@ -490,7 +488,7 @@ class TestAcpRuntimeLoadSession:
         try:
             try:
                 outcome = await rt.load_session(
-                    "", "sid-r", agent="kirocrew", require_replay=require_replay
+                    "", "sid-r", agent="ajcrew", require_replay=require_replay
                 )
             except AcpRuntimeError as exc:
                 outcome = exc
@@ -525,7 +523,7 @@ class TestAcpRuntimeLoadSession:
     )
     async def test_a_load_that_replayed_nothing_is_refused(self, monkeypatch, frames):
         """Record missing: KAS answers with a new empty record, which is refused
-        and evicted so the caller replays Kiro Crew's own history."""
+        and evicted so the caller replays Aj Crew's own history."""
         rt, evict, terminate, outcome = await self._load_with_frames(
             monkeypatch, frames, require_replay=True
         )
@@ -556,7 +554,7 @@ class TestAcpRuntimeLoadSession:
         KAS registers client agents per session and skips kiro-cli profiles on disk, so
         without it the requested mode is absent and the mode guard refuses the load.
         """
-        from kiro_crew.acp._dispatch import build_session_new_params
+        from aj_crew.acp._dispatch import build_session_new_params
 
         rt, _, _ = _make_runtime()
         rt._can_load_session = True
@@ -565,13 +563,13 @@ class TestAcpRuntimeLoadSession:
         async def _fake_send(method, params, timeout=None):
             sent.append((method, params))
             if method == METHOD_SESSION_LOAD:
-                return {"modes": {"currentModeId": "kirocrew"}, "models": []}
+                return {"modes": {"currentModeId": "ajcrew"}, "models": []}
             return {}
 
         async def _fake_agents(
             agent, *, member_dispatch=False, crew_panel=False, session_key="", **_kw
         ):
-            from kiro_crew.acp.harness import SessionExtras
+            from aj_crew.acp.harness import SessionExtras
 
             return SessionExtras(custom_agents=[{"id": agent, "prompt": "p", "tools": []}])
 
@@ -579,11 +577,11 @@ class TestAcpRuntimeLoadSession:
         monkeypatch.setattr(rt, "_kas_custom_agents", _fake_agents)
         rt._acp_backend = ACP_BACKEND_KAS
 
-        await rt.load_session("", "sid-kas", cwd="/work", agent="kirocrew")
+        await rt.load_session("", "sid-kas", cwd="/work", agent="ajcrew")
 
         load_params = sent[0][1]
         assert load_params["_meta"]["kiro"]["customAgents"] == [
-            {"id": "kirocrew", "prompt": "p", "tools": []}
+            {"id": "ajcrew", "prompt": "p", "tools": []}
         ]
         # Same envelope as session/new, because both go through one builder. Two
         # hand-built copies of this nesting would be free to drift, and a resumed
@@ -592,7 +590,7 @@ class TestAcpRuntimeLoadSession:
         assert (
             load_params["_meta"]["kiro"]
             == build_session_new_params(
-                "/work", kas_custom_agents=[{"id": "kirocrew", "prompt": "p", "tools": []}]
+                "/work", kas_custom_agents=[{"id": "ajcrew", "prompt": "p", "tools": []}]
             )["_meta"]["kiro"]
         )
 
@@ -610,13 +608,13 @@ class TestAcpRuntimeLoadSession:
         async def _fake_send(method, params, timeout=None):
             sent.append((method, params))
             if method == METHOD_SESSION_LOAD:
-                return {"modes": {"currentModeId": "kirocrew"}, "models": []}
+                return {"modes": {"currentModeId": "ajcrew"}, "models": []}
             return {}
 
         async def _fake_agents(
             agent, *, member_dispatch=False, crew_panel=False, session_key="", **_kw
         ):
-            from kiro_crew.acp.harness import SessionExtras
+            from aj_crew.acp.harness import SessionExtras
 
             return SessionExtras(custom_agents=[{"id": agent, "prompt": "p", "tools": []}])
 
@@ -625,7 +623,7 @@ class TestAcpRuntimeLoadSession:
             # array that was not in the roster the caller passed in.
             return agents, list(servers) + [{"name": "hoisted", "command": "/bin/h"}]
 
-        import kiro_crew.acp.runtime as runtime_mod
+        import aj_crew.acp.runtime as runtime_mod
 
         reported: list[list] = []
         monkeypatch.setattr(rt, "_send_and_await", _fake_send)
@@ -638,7 +636,7 @@ class TestAcpRuntimeLoadSession:
         )
         rt._acp_backend = ACP_BACKEND_KAS
 
-        await rt.load_session("", "sid-hoist", cwd="/work", agent="kirocrew")
+        await rt.load_session("", "sid-hoist", cwd="/work", agent="ajcrew")
 
         load_params = sent[0][1]
         names = [e.get("name") for e in load_params["mcpServers"]]
@@ -655,7 +653,7 @@ class TestAcpRuntimeLoadSession:
         """On KAS the managed servers reach the wire through the hoist, token included.
 
         The token is stamped before the hoist, onto an array that is empty on KAS. Without
-        it ``kirocrew-core`` refuses every call as ``identity_unattested``.
+        it ``ajcrew-core`` refuses every call as ``identity_unattested``.
         """
         rt, _, _ = _make_runtime()
         rt._can_load_session = True
@@ -664,7 +662,7 @@ class TestAcpRuntimeLoadSession:
         async def _fake_send(method, params, timeout=None):
             sent.append((method, params))
             if method == METHOD_SESSION_LOAD:
-                return {"modes": {"currentModeId": "kirocrew"}, "models": []}
+                return {"modes": {"currentModeId": "ajcrew"}, "models": []}
             if method == METHOD_SESSION_NEW:
                 return {"sessionId": "sid-kas-new"}
             return {}
@@ -672,19 +670,19 @@ class TestAcpRuntimeLoadSession:
         async def _fake_agents(
             agent, *, member_dispatch=False, crew_panel=False, session_key="", **_kw
         ):
-            from kiro_crew.acp.harness import SessionExtras
+            from aj_crew.acp.harness import SessionExtras
 
             return SessionExtras(
                 custom_agents=[
                     {
                         "id": agent,
                         "prompt": "p",
-                        "tools": ["@kirocrew-core", "@external"],
+                        "tools": ["@ajcrew-core", "@external"],
                         "mcpServers": {
-                            "kirocrew-core": {
+                            "ajcrew-core": {
                                 "command": "kc",
                                 "args": ["mcp-core"],
-                                "env": {"KIROCREW_SESSION_KEY": session_key},
+                                "env": {"AJCREW_SESSION_KEY": session_key},
                             },
                             "external": {"command": "ext"},
                         },
@@ -702,19 +700,19 @@ class TestAcpRuntimeLoadSession:
 
         if resume:
             handle = await rt.load_session(
-                "", "sid-kas-load", cwd="/work", agent="kirocrew", session_key="dashboard:chat-1"
+                "", "sid-kas-load", cwd="/work", agent="ajcrew", session_key="dashboard:chat-1"
             )
             method = METHOD_SESSION_LOAD
         else:
             handle = await rt.create_session(
-                cwd="/work", agent="kirocrew", session_key="dashboard:chat-1"
+                cwd="/work", agent="ajcrew", session_key="dashboard:chat-1"
             )
             method = METHOD_SESSION_NEW
         params = next(p for m, p in sent if m == method)
-        core = [e for e in params["mcpServers"] if e.get("name") == "kirocrew-core"]
-        assert len(core) == 1, "kirocrew-core must travel in the session-level array"
+        core = [e for e in params["mcpServers"] if e.get("name") == "ajcrew-core"]
+        assert len(core) == 1, "ajcrew-core must travel in the session-level array"
         (token,) = _identity_tokens(core)
-        assert token, "the hoisted kirocrew-core was launched without the session token"
+        assert token, "the hoisted ajcrew-core was launched without the session token"
         assert token == handle.stub_session_token, "the element must carry THIS session's token"
         # A third-party server stays in the agent block, and never gets the token.
         (agent_block,) = params["_meta"]["kiro"]["customAgents"]
@@ -735,13 +733,13 @@ class TestAcpRuntimeLoadSession:
         async def _fake_send(method, params, timeout=None):
             sent.append((method, params))
             if method == METHOD_SESSION_LOAD:
-                return {"modes": {"currentModeId": "kirocrew"}, "models": []}
+                return {"modes": {"currentModeId": "ajcrew"}, "models": []}
             return {}
 
         async def _fake_agents(
             agent, *, member_dispatch=False, crew_panel=False, session_key="", **_kw
         ):
-            from kiro_crew.acp.harness import SessionExtras
+            from aj_crew.acp.harness import SessionExtras
 
             return SessionExtras(custom_agents=[{"id": agent, "prompt": "p", "tools": []}])
 
@@ -749,7 +747,7 @@ class TestAcpRuntimeLoadSession:
         monkeypatch.setattr(rt, "_kas_custom_agents", _fake_agents)
         rt._acp_backend = ACP_BACKEND_KAS
 
-        await rt.load_session("/t.json", "sid-both", cwd="/work", agent="kirocrew")
+        await rt.load_session("/t.json", "sid-both", cwd="/work", agent="ajcrew")
 
         meta = sent[0][1]["_meta"]
         assert meta["_kiro.dev/session_file"] == "/t.json"
@@ -772,13 +770,13 @@ class TestAcpRuntimeLoadSession:
         async def _fake_send(method, params, timeout=None):
             sent.append((method, params))
             if method == METHOD_SESSION_LOAD:
-                return {"modes": {"currentModeId": "kirocrew"}, "models": []}
+                return {"modes": {"currentModeId": "ajcrew"}, "models": []}
             return {}
 
         async def _fake_agents(
             agent, *, member_dispatch=False, crew_panel=False, session_key="", **_kw
         ):
-            from kiro_crew.acp.harness import SessionExtras
+            from aj_crew.acp.harness import SessionExtras
 
             calls.append(agent)
             return SessionExtras(custom_agents=[{"id": agent, "prompt": "p", "tools": []}])
@@ -786,7 +784,7 @@ class TestAcpRuntimeLoadSession:
         monkeypatch.setattr(rt, "_send_and_await", _fake_send)
         monkeypatch.setattr(rt, "_kas_custom_agents", _fake_agents)
 
-        await rt.load_session("/t.json", "sid-kiro", cwd="/work", agent="kirocrew")
+        await rt.load_session("/t.json", "sid-kiro", cwd="/work", agent="ajcrew")
 
         assert calls == []
         assert sent[0][1]["_meta"] == {"_kiro.dev/session_file": "/t.json"}
@@ -807,17 +805,17 @@ class TestAcpRuntimeLoadSession:
             return {}
 
         monkeypatch.setattr(rt, "_send_and_await", _fake_send)
-        await rt.load_session("/k/sid.json", "sid", cwd="/w", agent="kirocrew")
+        await rt.load_session("/k/sid.json", "sid", cwd="/w", agent="ajcrew")
 
         # Mirror of AcpClient's kiro-branch load_params (client_start.py step 2).
         # Direct managed tools retain per-session caller attribution on resume;
         # the pooled case is covered by test_load_session_redeclares_pooled_stubs.
         servers = captured["mcpServers"]
         assert [entry["name"] for entry in servers] == [
-            "kirocrew-core",
-            "kirocrew-cron",
-            "kirocrew-guide",
-            "kirocrew-mate",
+            "ajcrew-core",
+            "ajcrew-cron",
+            "ajcrew-guide",
+            "ajcrew-mate",
         ]
         assert all(_identity_tokens(servers))
         expected = {
@@ -850,7 +848,7 @@ class TestAcpRuntimeLoadSession:
         monkeypatch.setattr(rt, "_send_and_await", _fake_send)
 
         with pytest.raises(AcpRuntimeError):
-            await rt.load_session("/k/sid.json", "sid-z", cwd="/w", agent="kirocrew")
+            await rt.load_session("/k/sid.json", "sid-z", cwd="/w", agent="ajcrew")
         assert METHOD_SESSION_TERMINATE in methods
         assert "sid-z" not in rt._session_queues
 
@@ -860,14 +858,14 @@ class TestAcpRuntimeLoadSession:
 
         session/load re-inits MCP servers, so a [] would make kiro-cli spawn its own copy
         of every pooled server. Asserts load_session emits what create_session does."""
-        from kiro_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
+        from aj_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
 
         overlay = tmp_path / "agents"
         overlay.mkdir()
-        (overlay / "kirocrew.json").write_text(
+        (overlay / "ajcrew.json").write_text(
             json.dumps(
                 {
-                    "name": "kirocrew",
+                    "name": "ajcrew",
                     "mcpServers": {
                         "builder-mcp": {
                             _WRAPPER_MARKER: True,
@@ -896,20 +894,20 @@ class TestAcpRuntimeLoadSession:
 
         monkeypatch.setattr(rt, "_send_and_await", _fake_send)
 
-        await rt.load_session("/k/sid.json", "sid-r", cwd="/w", agent="kirocrew")
+        await rt.load_session("/k/sid.json", "sid-r", cwd="/w", agent="ajcrew")
         load_params = next(p for m, p in sent if m == METHOD_SESSION_LOAD)
         assert [e["name"] for e in load_params["mcpServers"]] == [
             "builder-mcp",
-            "kirocrew-core",
-            "kirocrew-cron",
-            "kirocrew-guide",
-            "kirocrew-mate",
+            "ajcrew-core",
+            "ajcrew-cron",
+            "ajcrew-guide",
+            "ajcrew-mate",
         ]
 
         # Parity with create_session. Only the token value differs (each session mints
         # its own, ``_own_stub_session``), so it is masked; token presence is asserted
         # separately.
-        await rt.create_session(cwd="/w", agent="kirocrew")
+        await rt.create_session(cwd="/w", agent="ajcrew")
         new_params = next(p for m, p in sent if m == METHOD_SESSION_NEW)
         load_tokens = _identity_tokens(load_params["mcpServers"])
         new_tokens = _identity_tokens(new_params["mcpServers"])
@@ -928,7 +926,7 @@ class TestAcpRuntimeLoadSession:
         run via asyncio.to_thread, not on the loop thread."""
         import threading
 
-        import kiro_crew.acp.runtime as rt_mod
+        import aj_crew.acp.runtime as rt_mod
 
         rt, _, _ = _make_runtime()
         rt._can_load_session = True
@@ -951,7 +949,7 @@ class TestAcpRuntimeLoadSession:
             return {}
 
         monkeypatch.setattr(rt, "_send_and_await", _fake_send)
-        await rt.load_session("/k/sid.json", "sid-t", cwd="/w", agent="kirocrew")
+        await rt.load_session("/k/sid.json", "sid-t", cwd="/w", agent="ajcrew")
 
         assert seen, "load_session never consulted pooled_session_servers"
         assert all(t is not loop_thread for t in seen)
@@ -967,8 +965,8 @@ class TestAcpRuntimeLoadSession:
         import ast
         import inspect
 
-        import kiro_crew.acp.client as client_mod
-        import kiro_crew.acp.runtime as rt_mod
+        import aj_crew.acp.client as client_mod
+        import aj_crew.acp.runtime as rt_mod
 
         _SEND_FUNCS = {"_send_request", "_send_and_await"}
         # All THREE session-creating verbs. ``session/resume`` is the standard
@@ -1082,7 +1080,7 @@ async def test_create_session_terminates_session_when_set_mode_fails(monkeypatch
     monkeypatch.setattr(rt, "_send_and_await", _fake_send)
 
     with pytest.raises(AcpRuntimeError):
-        await rt.create_session(cwd="/w", agent="kirocrew")
+        await rt.create_session(cwd="/w", agent="ajcrew")
     # kiro-cli was told to evict the just-created session, and the local queue
     # registered before set_mode is cleaned up on failure.
     assert METHOD_SESSION_TERMINATE in methods
@@ -1102,7 +1100,7 @@ async def test_create_session_registers_queue_on_success(monkeypatch):
 
     monkeypatch.setattr(rt, "_send_and_await", _fake_send)
 
-    handle = await rt.create_session(cwd="/w", agent="kirocrew")
+    handle = await rt.create_session(cwd="/w", agent="ajcrew")
     assert handle.session_id == "sid-ok"
     assert "sid-ok" in rt._session_queues
 
@@ -1110,7 +1108,7 @@ async def test_create_session_registers_queue_on_success(monkeypatch):
 @pytest.mark.asyncio
 async def test_create_session_buffers_oauth_emitted_before_response():
     """OAuth emitted during session/new survives until the provider can drain it."""
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     rt, reader, _ = _make_runtime()
     reader_task = await _start_reader(rt)
@@ -1217,7 +1215,7 @@ async def test_kiro_create_session_never_feeds_or_persists_the_advertised_model_
 
     monkeypatch.setattr(rt, "_send_and_await", _fake_send)
 
-    handle = await rt.create_session(cwd="/w", agent="kirocrew")
+    handle = await rt.create_session(cwd="/w", agent="ajcrew")
 
     assert handle.session_id == "sid-kiro"
     feed.assert_not_called()
@@ -1245,7 +1243,7 @@ async def test_kiro_load_session_never_feeds_or_persists_the_advertised_model_ca
     async def _fake_send(method, params, timeout=None):
         if method == METHOD_SESSION_LOAD:
             return {
-                "modes": {"currentModeId": "kirocrew"},
+                "modes": {"currentModeId": "ajcrew"},
                 "models": {
                     "availableModels": [{"modelId": "claude-opus-4.8", "name": "Opus"}],
                     "currentModelId": "claude-opus-4.8",
@@ -1259,7 +1257,7 @@ async def test_kiro_load_session_never_feeds_or_persists_the_advertised_model_ca
         "/home/u/.kiro/sessions/cli/sid-123.json",
         "sid-123",
         cwd="/work",
-        agent="kirocrew",
+        agent="ajcrew",
     )
 
     assert handle.session_id == "sid-123"

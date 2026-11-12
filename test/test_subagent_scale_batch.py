@@ -24,9 +24,9 @@ from subagent_scale_helpers import (  # noqa: F401 -- the autouse fixture regist
     _mock_sessions,
 )
 
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_scale import SubagentEventCoalescer
-from kiro_crew.testing.wait import await_until
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_scale import SubagentEventCoalescer
+from aj_crew.testing.wait import await_until
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -175,19 +175,19 @@ class TestCoalescer:
 
 class TestBatchIdentity:
     def test_digest_chunk_size_env_guarded(self):
-        """A malformed KIROCREW_SUBAGENT_DIGEST_CHUNK_SIZE must never crash
+        """A malformed AJCREW_SUBAGENT_DIGEST_CHUNK_SIZE must never crash
         gateway import — guarded parse falls back to the default and clamps
         to a positive range (a zero/negative chunk size would flush forever)."""
         import os
         from unittest.mock import patch as _patch
 
-        from kiro_crew.slack.gateway import _digest_chunk_size
+        from aj_crew.slack.gateway import _digest_chunk_size
 
-        with _patch.dict(os.environ, {"KIROCREW_SUBAGENT_DIGEST_CHUNK_SIZE": "foo"}):
+        with _patch.dict(os.environ, {"AJCREW_SUBAGENT_DIGEST_CHUNK_SIZE": "foo"}):
             assert _digest_chunk_size() == 10
-        with _patch.dict(os.environ, {"KIROCREW_SUBAGENT_DIGEST_CHUNK_SIZE": "-5"}):
+        with _patch.dict(os.environ, {"AJCREW_SUBAGENT_DIGEST_CHUNK_SIZE": "-5"}):
             assert _digest_chunk_size() == 1  # clamped to positive
-        with _patch.dict(os.environ, {"KIROCREW_SUBAGENT_DIGEST_CHUNK_SIZE": "25"}):
+        with _patch.dict(os.environ, {"AJCREW_SUBAGENT_DIGEST_CHUNK_SIZE": "25"}):
             assert _digest_chunk_size() == 25
 
     def test_batch_members_pending_scoped_to_batch(self):
@@ -588,8 +588,8 @@ class TestBatchIdentity:
         mgr = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx())
         mgr._spawn_stagger_secs = 0.0
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(SubagentManager, "_run", new=AsyncMock()),
         ):
             mgr.spawn("t1", batch_id="wv", batch_total=3)
@@ -620,7 +620,7 @@ class TestBatchIdentity:
             announced.append(info)
 
         mgr = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx(), on_done=_on_done)
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             rejected = mgr.spawn("   ", batch_id="wv9", batch_total=2)
             plain = mgr.spawn("   ")  # non-batch rejection: no announce
         # flake-ok: pre-existing zero-length yield for a scheduled task or done callback -- moved verbatim; tracked for a de-flake pass
@@ -651,7 +651,7 @@ class TestBatchIdentity:
         mgr._is_yolo = None
         mgr._on_spawn_approval = None  # no approval callback configured
         mgr._spawn_stagger_secs = 0.0
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             rejected = mgr.spawn("do work", batch_id="wvA", batch_total=2)
         # flake-ok: pre-existing zero-length yield for a scheduled task or done callback -- moved verbatim; tracked for a de-flake pass
         await asyncio.sleep(0)
@@ -680,7 +680,7 @@ class TestBatchIdentity:
         m1.done = True
         mgr._agents = {"m1": m1}
         assert mgr.batch_members_pending("wvL") is True  # wedged until the loss is recorded
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             mgr.record_lost_submission(
                 "wvL", 3, "connection refused", parent_session_key="dashboard:main"
             )
@@ -708,7 +708,7 @@ class TestBatchIdentity:
                 raise RuntimeError("delivery failed")
 
         mgr = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx(), on_done=_on_done)
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             mgr.record_lost_submission("wvL", 2, "connection refused")
         (task,) = mgr._tasks.values()
         # flake-ok: pre-existing zero-length yield for a scheduled task or done callback -- moved verbatim; tracked for a de-flake pass
@@ -748,7 +748,7 @@ class TestBatchIdentity:
         window, with live members, or with queued members are left alone."""
         import time as _time
 
-        from kiro_crew.subagent import _WAVE_STUCK_SECS
+        from aj_crew.subagent import _WAVE_STUCK_SECS
 
         mgr = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx())
         # flake-ok: pre-existing wall-clock stamp handed to the sweep -- every wave's stamp is set relative to it -- moved verbatim; tracked for a de-flake pass
@@ -770,7 +770,7 @@ class TestBatchIdentity:
             "fresh": now,
             "full": stale,
         }
-        with patch("kiro_crew.subagent.sel"), patch.object(mgr, "record_lost_submission") as rec:
+        with patch("aj_crew.subagent.sel"), patch.object(mgr, "record_lost_submission") as rec:
             mgr._sweep_stuck_waves(now)
         assert rec.call_count == 1
         assert rec.call_args.args[0] == "stuck"
@@ -785,7 +785,7 @@ class TestBatchIdentity:
         import io
         import urllib.error
 
-        from kiro_crew.mcp_core import _http_error_body
+        from aj_crew.mcp_core import _http_error_body
 
         def _err(payload: bytes):
             return urllib.error.HTTPError(
@@ -814,15 +814,15 @@ class TestBatchIdentity:
         mgr._on_event = _spy
         # Skip actual execution — spawn creates the task; cancel it right away.
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(SubagentManager, "_run", new=AsyncMock()),
         ):
             i1 = mgr.spawn("t1", batch_id="wave1", batch_total=3)
             i2 = mgr.spawn("t2", batch_id="wave1", batch_total=3)
             i3 = mgr.spawn("t3", batch_id="wave1", batch_total=3)
             # flake-ok: pre-existing 50 ms wait for the fire-and-forget event task -- moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 50 ms wait for the fire-and-forget event task moved verbatim
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 50 ms wait for the fire-and-forget event task moved verbatim
             await asyncio.sleep(0.05)  # let the fire-and-forget event task run
 
         assert i1.batch_id == "wave1" and i1.batch_total == 3
@@ -836,8 +836,8 @@ class TestBatchIdentity:
         mgr = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx())
         mgr._spawn_stagger_secs = 0.0
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             patch.object(SubagentManager, "_run", new=AsyncMock()),
         ):
             info = mgr.spawn("solo task")

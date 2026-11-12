@@ -16,10 +16,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew.crew_log import emit
-from kiro_crew.dashboard import change_cards, crewmate_feed
-from kiro_crew.dashboard.change_cards import CardStore
+from aj_crew import change_card_catalog as catalog
+from aj_crew.crew_log import emit
+from aj_crew.dashboard import change_cards, crewmate_feed
+from aj_crew.dashboard.change_cards import CardStore
 
 ASK = "Open a PR for the docs fix? [OPTIONS: Open the PR | Not yet]"
 SLOT = "member-dm:atlas"
@@ -28,7 +28,7 @@ KEY = b"k" * 32
 
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     crewmate_feed._last.clear()
     crewmate_feed._inflight.clear()
     crewmate_feed._sessions.clear()

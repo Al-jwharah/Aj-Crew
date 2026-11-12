@@ -13,8 +13,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL = ROOT / "src/kiro_crew/builtin_skills/kirocrew-dev/dashboard-template/SKILL.md"
-REFERENCE = ROOT / "src/kiro_crew/dashboard_templates/builtin/goal-board/template.html"
+SKILL = ROOT / "src/aj_crew/builtin_skills/ajcrew-dev/dashboard-template/SKILL.md"
+REFERENCE = ROOT / "src/aj_crew/dashboard_templates/builtin/goal-board/template.html"
 BRIDGE = ROOT / "website/src/hooks/useFrameOpenLink.ts"
 LINK_BRIDGE = ROOT / "website/src/hooks/useFrameLinkBridge.ts"
 #: Where the crewmate Dashboard page's grant is defined; the page re-exports it.

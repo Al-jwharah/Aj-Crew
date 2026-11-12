@@ -15,10 +15,10 @@ import unicodedata
 
 import pytest
 
-from kiro_crew import memory_edit
-from kiro_crew.dashboard.handlers import _shared
-from kiro_crew.dashboard.handlers._shared import _UNSCANNABLE_JSON, _redact_memory_field
-from kiro_crew.terminal_safe import normalize_for_scanning
+from aj_crew import memory_edit
+from aj_crew.dashboard.handlers import _shared
+from aj_crew.dashboard.handlers._shared import _UNSCANNABLE_JSON, _redact_memory_field
+from aj_crew.terminal_safe import normalize_for_scanning
 
 #: A documentation-only AWS key id, matched by the plaintext credential pass.
 CREDENTIAL = "AKIAIOSFODNN7EXAMPLE"

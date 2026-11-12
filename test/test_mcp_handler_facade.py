@@ -1,9 +1,9 @@
-"""``kiro_crew.dashboard.handlers.mcp`` stays the one import path and patch surface of its owners.
+"""``aj_crew.dashboard.handlers.mcp`` stays the one import path and patch surface of its owners.
 
 The MCP server management module was split into sibling owners
-(``kiro_crew.dashboard.handlers.mcp_<role>``) behind a :mod:`kiro_crew._facade_mirror`
+(``aj_crew.dashboard.handlers.mcp_<role>``) behind a :mod:`aj_crew._facade_mirror`
 facade. Callers, tests and documents still reach every name as
-``kiro_crew.dashboard.handlers.mcp.<name>``, and the moved code reads its names as plain
+``aj_crew.dashboard.handlers.mcp.<name>``, and the moved code reads its names as plain
 module globals, so a patch through the facade reaches that code only because the mirror
 writes it into every module holding the name.
 
@@ -20,7 +20,7 @@ rebound). These tests pin what is particular to this facade:
 * every import the facade binds is accounted for, since flake8's F401 is off for its
   import header;
 * every name the facade serves is named in a ``TYPE_CHECKING`` group, so
-  ``from kiro_crew.dashboard.handlers.mcp import <name>`` stays visible to type checkers;
+  ``from aj_crew.dashboard.handlers.mcp import <name>`` stays visible to type checkers;
 * the family logs under the facade's name, the moved exception classes keep the facade's
   module, and the facade still runs as ``python -m``;
 * nothing outside the family imports an owner.
@@ -46,21 +46,21 @@ import owner_import_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard.handlers import mcp
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew.dashboard.handlers import mcp
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
-# Walks the test trees and src/kiro_crew; keep it on one worker.
+# Walks the test trees and src/aj_crew; keep it on one worker.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_mcp_handler_facade")
 
 #: Checks ``test_facade_shared_checks.py`` runs against this module's helpers; each is
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.dashboard.handlers.mcp"
+FACADE = "aj_crew.dashboard.handlers.mcp"
 HANDLERS_DIR = Path(mcp.__file__).resolve().parent
-_SRC = Path(kiro_crew.__file__).resolve().parent
+_SRC = Path(aj_crew.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
 
 #: The ``mcp_*.py`` handler modules that are route modules of their own, not owners.
@@ -71,10 +71,10 @@ _NOT_OWNERS = frozenset({"mcp_apps", "mcp_custom", "mcp_discover"})
 _BASE_MODULE_NAMES = frozenset("""
     ABSENT AGENT_FILENAME AGENT_SPEC_NOT_REWRITTEN AmbiguousServerKey Any Collection
     DashboardState FORWARD_DECLARED_ENV_DEFAULT INTERNAL_CLIENT_ID_KEY INTERNAL_SCOPES_KEY
-    KiroCrewConfig LoopBoundLock MANAGED_STUB_FOLLOWERS MCP_CONFIG_HAS_COMMENTS Mapping
-    McpConfigHasComments McpServerInfo Path PreflightKeys SCOPE_KIROCREW SCOPE_KIRO_GLOBAL
+    AjCrewConfig LoopBoundLock MANAGED_STUB_FOLLOWERS MCP_CONFIG_HAS_COMMENTS Mapping
+    McpConfigHasComments McpServerInfo Path PreflightKeys SCOPE_AJCREW SCOPE_KIRO_GLOBAL
     ShareEvidence ShareVerdict SharedAgentHomeRefused SimpleNamespace TYPE_CHECKING
-    WITHHELD_KEY _GLOBAL_MCP_JSON _KIROCREW_MCP_JSON _KIRO_GLOBAL_SURFACE _MAX_MCP_NAME_LEN
+    WITHHELD_KEY _GLOBAL_MCP_JSON _AJCREW_MCP_JSON _KIRO_GLOBAL_SURFACE _MAX_MCP_NAME_LEN
     _MAX_STUB_BATCH _MCP_APPLY_MAX_BODY_BYTES _MCP_APPLY_MAX_CHANGES
     _MCP_DEFERRED_UNINSTALL_CONCURRENCY _MCP_DEFERRED_UNINSTALL_MAX_BUDGET
     _MCP_GATEWAY_APPLY_LOCK _MCP_LOCK_PATH _MCP_PROBE_CACHE_SECS _MCP_RESOLVE_REFRESH_LOCK
@@ -84,18 +84,18 @@ _BASE_MODULE_NAMES = frozenset("""
     _atomic_write _bg_mcp_probe _bg_measure_all _collect_server_rows _config_entry_for
     _config_key_for _declined_foreign_spec_write _do_mcp_apply _edited_since_probe
     _evaluate_shareability _extra_mcp_scopes _find_server_spec_anywhere
-    _forget_owner_servers _freeze_stub_servers _get_apply_lock _get_kirocrew_entry
+    _forget_owner_servers _freeze_stub_servers _get_apply_lock _get_ajcrew_entry
     _get_mcp_lock _get_mcp_lock_sync _has_json_comments_on_disk _invalid_flag_reason
-    _is_valid_mcp_name _kirocrew_mcp_json _kirocrew_mcp_servers _launch_specs_for
+    _is_valid_mcp_name _ajcrew_mcp_json _ajcrew_mcp_servers _launch_specs_for
     _load_json_or_empty _load_shareability_state _local_overlay_section
     _mark_agent_entries_disabled _mcp_hot_reload_active _mcp_probe_cache
     _mcp_probe_in_progress _mcp_probe_task _mcp_probe_ts _mcp_reprobe_armed_for
     _measure_progress _offload_config_write _overlay_shadowed_keys _preflight_change_keys
     _probe_currency _purge_server_config _quarantine_verdicts _read_agent_spec
     _record_probe_verdicts _record_stub_decisions _refuse_commented_config
-    _remove_from_agent_file _remove_kirocrew_entry _replace_kirocrew_spec
+    _remove_from_agent_file _remove_ajcrew_entry _replace_ajcrew_spec
     _resolve_key_from_read _resolve_stub_overrides _resolve_stub_roster _rmw_remove_entry
-    _run_mcp_probe _scope_has_entry _scrub_preregistered_oauth_copies _set_kirocrew_entry
+    _run_mcp_probe _scope_has_entry _scrub_preregistered_oauth_copies _set_ajcrew_entry
     _set_scope_entry _set_tool_overrides _shared_agent_home_declined _stamp_config_state
     _string_identifier _stub_eligibility _sweep_dangling_uninstalls _sync_mcp_to_agent
     _sync_mcp_to_agent_batch _sync_mcp_to_agent_batch_unlocked _sync_mcp_to_agent_unlocked
@@ -127,7 +127,7 @@ _BASE_MODULE_NAMES = frozenset("""
 _KNOWN_SEAMS = frozenset(
     {
         "_GLOBAL_MCP_JSON",
-        "_KIROCREW_MCP_JSON",
+        "_AJCREW_MCP_JSON",
         "_MCP_LOCK_PATH",
         "_assess_server",
         "_extra_mcp_scopes",
@@ -237,7 +237,7 @@ def test_the_owners_are_the_split_siblings_in_layer_order() -> None:
     owners = list(_index().owners)
     assert owners == list(mcp._OWNERS)
     siblings = {
-        f"kiro_crew.dashboard.handlers.{path.stem}"
+        f"aj_crew.dashboard.handlers.{path.stem}"
         for path in HANDLERS_DIR.glob("mcp_*.py")
         if path.stem not in _NOT_OWNERS
     }
@@ -277,7 +277,7 @@ def test_every_base_module_name_resolves_through_the_facade() -> None:
 def test_the_handlers_package_registers_the_objects_the_facade_serves() -> None:
     """The route table reads every MCP route as ``handlers.<name>``; the package's re-exports
     are the very objects the facade answers with, wherever the route now lives."""
-    package = importlib.import_module("kiro_crew.dashboard.handlers")
+    package = importlib.import_module("aj_crew.dashboard.handlers")
     routes = sorted(
         name for name in dir(package) if name.startswith("api_mcp_") and hasattr(mcp, name)
     )
@@ -357,7 +357,7 @@ def test_every_served_name_is_named_for_type_checkers() -> None:
     """A name the facade serves but does not bind is in a ``TYPE_CHECKING`` group.
 
     The facade binds none of them, so this group is what keeps
-    ``from kiro_crew.dashboard.handlers.mcp import api_mcp_servers`` visible to mypy.
+    ``from aj_crew.dashboard.handlers.mcp import api_mcp_servers`` visible to mypy.
     """
     served = set(_index().exports)
     named = _typing_names(_source(FACADE))
@@ -380,7 +380,7 @@ def test_the_type_checker_census_finds_a_dropped_name() -> None:
 
 def test_the_family_logs_under_the_facade_name() -> None:
     """One logger, still named for the facade module, held by every module that logs:
-    log filters and ``caplog`` assertions name ``kiro_crew.dashboard.handlers.mcp``."""
+    log filters and ``caplog`` assertions name ``aj_crew.dashboard.handlers.mcp``."""
     shared = logging.getLogger(FACADE)
     assert mcp.logger is shared
     others = [m.__name__ for m in _family() if vars(m).get("logger", shared) is not shared]
@@ -397,7 +397,7 @@ def test_the_moved_exception_keeps_the_facade_module(name: str) -> None:
 
 
 def test_the_facade_runs_as_a_module(tmp_path: Path) -> None:
-    """``python -m kiro_crew.dashboard.handlers.mcp`` imported cleanly before the split; the
+    """``python -m aj_crew.dashboard.handlers.mcp`` imported cleanly before the split; the
     mirror installs on ``__main__`` too, because every member binds one logger by name."""
     env = dict(os.environ)
     src = str(Path(mcp.__file__).resolve().parents[3])
@@ -440,15 +440,15 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
-    owner = "kiro_crew.dashboard.handlers.mcp_config_files"
+    root = tmp_path / "aj_crew"
+    owner = "aj_crew.dashboard.handlers.mcp_config_files"
     sources = {
-        root / "pkg" / "caller.py": f"from {owner} import _kirocrew_mcp_json\n",
-        root / "other.py": "from kiro_crew.dashboard.handlers import mcp_config_files as low\n",
+        root / "pkg" / "caller.py": f"from {owner} import _ajcrew_mcp_json\n",
+        root / "other.py": "from aj_crew.dashboard.handlers import mcp_config_files as low\n",
         root / "dashboard" / "handlers" / "relative.py": "from .mcp_config_files import x\n",
         root / "dashboard" / "handlers" / "deep" / "up.py": "from .. import mcp_config_files\n",
-        root / "facade_user.py": "from kiro_crew.dashboard.handlers.mcp import x\n",
-        root / "sibling_user.py": "from kiro_crew.dashboard.handlers.mcp_custom import x\n",
+        root / "facade_user.py": "from aj_crew.dashboard.handlers.mcp import x\n",
+        root / "sibling_user.py": "from aj_crew.dashboard.handlers.mcp_custom import x\n",
     }
     assert _owner_importers(sources.items(), root, [owner]) == {
         "pkg/caller.py",

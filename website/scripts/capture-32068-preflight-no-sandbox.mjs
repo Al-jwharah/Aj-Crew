@@ -5,7 +5,7 @@
  *  1. `no-sandbox`: the gateway answers the preflight with its typed
  *     `503 sandbox_unavailable`. The notice says, in the reader's language, that the
  *     check could not run, that credentials were not checked, and to run
- *     `kirocrew doctor`. The line under it says the check did not run.
+ *     `ajcrew doctor`. The line under it says the check did not run.
  *  2. `raw-500`: the old answer, aiohttp's bare text 500 page. Run against a build
  *     of origin/main this is the BEFORE frame; against this branch it shows that any
  *     other failed check no longer blames credentials either.
@@ -44,7 +44,7 @@ const AWS_EC2_ROW = {
 const NO_SANDBOX = {
   error:
     'The AWS check could not run: this computer has no sandbox for the aws command, so nothing ' +
-    'was sent to AWS and your credentials were not checked. Run `kirocrew doctor` in a terminal for the fix.',
+    'was sent to AWS and your credentials were not checked. Run `ajcrew doctor` in a terminal for the fix.',
   code: 'sandbox_unavailable',
   kind: 'no_backend',
   detail: 'unshare(CLONE_NEWUSER) failed with errno 1 (EPERM)',
@@ -117,8 +117,8 @@ if (!BEFORE) {
   for (const theme of ['dark', 'light']) {
     const { page, card } = await openCard(theme)
     const text = await card.innerText()
-    if (!/The AWS check could not run because this computer has no sandbox for the aws command\. Your credentials were not checked\. Run kirocrew doctor in a terminal for the fix, then re-check\./.test(text)) {
-      fail(`${theme}: the notice must name the missing sandbox and kirocrew doctor: ${JSON.stringify(text)}`)
+    if (!/The AWS check could not run because this computer has no sandbox for the aws command\. Your credentials were not checked\. Run ajcrew doctor in a terminal for the fix, then re-check\./.test(text)) {
+      fail(`${theme}: the notice must name the missing sandbox and ajcrew doctor: ${JSON.stringify(text)}`)
     }
     if (/500 Internal Server Error|Server got itself in trouble/.test(text)) fail(`${theme}: no raw 500 text`)
     if (/Check your credentials/.test(text)) fail(`${theme}: credentials were never read, so they must not be blamed`)

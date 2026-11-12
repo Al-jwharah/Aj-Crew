@@ -1,7 +1,7 @@
-"""GATE: Kiro Crew core does not depend on the Issue Radar (``issue-radar``) app's code.
+"""GATE: Aj Crew core does not depend on the Issue Radar (``issue-radar``) app's code.
 
 Issue Radar is to leave this repository whole. That is only possible while nothing
-outside ``src/kiro_crew/apps/builtins/`` imports it, and while every core string that
+outside ``src/aj_crew/apps/builtins/`` imports it, and while every core string that
 still names it is one somebody decided to keep. What the app needs from the core it
 imports from the core. The app's pins of core parity (the shared ``gh`` runner's URL
 parser and error class, its config lock's mode, its crew-log-off refusal) run in the
@@ -11,9 +11,9 @@ app's own ``tests/``. Its three agent tools are declared in its ``app.json``
 Two properties are pinned:
 
 1. **No core module or script imports the app.** Every module under
-   ``src/kiro_crew`` outside ``apps/builtins/``, and every script under
+   ``src/aj_crew`` outside ``apps/builtins/``, and every script under
    ``scripts/``, is parsed. ``import``, ``from ... import`` (relative ones
-   resolved), ``from kiro_crew.apps.builtins import issue_radar``,
+   resolved), ``from aj_crew.apps.builtins import issue_radar``,
    ``importlib.import_module`` and ``__import__`` with a literal name are all in
    scope, and the probes below fail if any of those forms stops being caught.
 2. **The strings that still name the app are a pinned, shrinking list.** A path
@@ -38,12 +38,12 @@ from pathlib import Path
 import core_app_independence as independence
 import pytest
 
-from kiro_crew import security_posture_sinks_gateway
-from kiro_crew.crew_log import entry_types_ledgers
+from aj_crew import security_posture_sinks_gateway
+from aj_crew.crew_log import entry_types_ledgers
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_core_issue_radar_decoupling")
 
-APP_PACKAGE = "kiro_crew.apps.builtins.issue_radar"
+APP_PACKAGE = "aj_crew.apps.builtins.issue_radar"
 #: The package directory name and the app id: every spelling that addresses the app.
 APP_NAMES = ("issue_radar", "issue-radar")
 
@@ -58,7 +58,7 @@ _CLI_STDERR_REASON = next(
     if path == "apps/builtins/issue_radar/backend/errors.py"
 )
 
-#: (path relative to ``src/kiro_crew``, the literal): the core strings that still
+#: (path relative to ``src/aj_crew``, the literal): the core strings that still
 #: name the app, each with why it is not a seam. Each row is deleted together with
 #: the tool, the route, the file or the doc it names.
 KNOWN_NAME_REFERENCES: frozenset[tuple[str, str]] = frozenset(
@@ -134,28 +134,28 @@ def test_the_computed_rows_still_name_the_app():
 @pytest.mark.parametrize(
     ("source", "importer", "is_package"),
     [
-        ("import kiro_crew.apps.builtins.issue_radar.backend.routes", "kiro_crew.x", False),
+        ("import aj_crew.apps.builtins.issue_radar.backend.routes", "aj_crew.x", False),
         (
-            "from kiro_crew.apps.builtins.issue_radar.backend import crew_store",
-            "kiro_crew.x",
+            "from aj_crew.apps.builtins.issue_radar.backend import crew_store",
+            "aj_crew.x",
             False,
         ),
-        ("from kiro_crew.apps.builtins import issue_radar", "kiro_crew.x", False),
-        ("from ..apps.builtins.issue_radar.backend import store", "kiro_crew.dashboard.y", False),
-        ("from .builtins.issue_radar.backend import routes", "kiro_crew.apps.y", False),
-        ("from .builtins import issue_radar", "kiro_crew.apps", True),
+        ("from aj_crew.apps.builtins import issue_radar", "aj_crew.x", False),
+        ("from ..apps.builtins.issue_radar.backend import store", "aj_crew.dashboard.y", False),
+        ("from .builtins.issue_radar.backend import routes", "aj_crew.apps.y", False),
+        ("from .builtins import issue_radar", "aj_crew.apps", True),
         (
             "import importlib\n"
-            "importlib.import_module('kiro_crew.apps.builtins.issue_radar.backend.crew_runtime')",
-            "kiro_crew.x",
+            "importlib.import_module('aj_crew.apps.builtins.issue_radar.backend.crew_runtime')",
+            "aj_crew.x",
             False,
         ),
-        ("__import__('kiro_crew.apps.builtins.issue_radar')", "kiro_crew.x", False),
+        ("__import__('aj_crew.apps.builtins.issue_radar')", "aj_crew.x", False),
         (
             "from typing import TYPE_CHECKING\n"
             "if TYPE_CHECKING:\n"
-            "    from kiro_crew.apps.builtins.issue_radar.backend import crew_store",
-            "kiro_crew.x",
+            "    from aj_crew.apps.builtins.issue_radar.backend import crew_store",
+            "aj_crew.x",
             False,
         ),
     ],
@@ -167,13 +167,13 @@ def test_the_scan_catches_every_import_form(source, importer, is_package):
 @pytest.mark.parametrize(
     "source",
     [
-        "from kiro_crew.apps import seams",
-        "from kiro_crew.apps.builtins import BUILTIN_NAMES",
-        "import kiro_crew.apps.builtins.issue_radar_other",
+        "from aj_crew.apps import seams",
+        "from aj_crew.apps.builtins import BUILTIN_NAMES",
+        "import aj_crew.apps.builtins.issue_radar_other",
     ],
 )
 def test_the_scan_leaves_other_imports_alone(source):
-    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "kiro_crew.x", False)
+    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "aj_crew.x", False)
 
 
 def test_the_string_scan_skips_docstrings_but_not_routes_tools_or_paths():

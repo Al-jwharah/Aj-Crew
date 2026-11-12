@@ -19,7 +19,7 @@ superseded-by: []
   Phases 3 and 4 ([#23056](https://github.com/kirodotdev/KiroCrew/pull/23056))
   merged into its branch. Verified at `7ecc6c93b0`. One point diverged:
   `CONTRACT_VERSION` stayed at `1`, because it is pinned until the first public
-  release (`src/kiro_crew/platform/context.py`), so the bump under *ADD-only
+  release (`src/aj_crew/platform/context.py`), so the bump under *ADD-only
   guarantees* and *Backward compatibility* did not happen. Four review
   follow-ups logged on the tracking issue are not in the migration plan and are
   not done: resolving `stt.provider` once in the loader instead of the boot-time
@@ -42,13 +42,13 @@ Provider names are fixed in five places, and each one must agree with the others
 
 | Concern | Where | Fixed set |
 |---|---|---|
-| STT config validation | `_VALID_STT_PROVIDERS` in `src/kiro_crew/config/sections_stt.py` | `local`, `apple`, `transcribe`, `off` |
-| STT streaming grant | `_STREAMING_PROVIDERS` in `src/kiro_crew/dashboard/stt_stream.py` | `local`, `apple`, `transcribe` |
-| STT dispatch | the provider checks in `transcribe_audio` and the readiness check in `src/kiro_crew/transcribe.py` | `if provider == "transcribe"` / `"apple"`, else local |
-| TTS validation + default | `VALID_PROVIDERS` and `DEFAULT_PROVIDER` in `src/kiro_crew/voice_reply.py` | `polly`, `piper`, `system`; default `system` |
-| TTS dispatch | `is_available` and the synthesis branches in `src/kiro_crew/voice_reply.py`; `_synthesize_request` in `src/kiro_crew/dashboard/chat_voice.py` | same three |
+| STT config validation | `_VALID_STT_PROVIDERS` in `src/aj_crew/config/sections_stt.py` | `local`, `apple`, `transcribe`, `off` |
+| STT streaming grant | `_STREAMING_PROVIDERS` in `src/aj_crew/dashboard/stt_stream.py` | `local`, `apple`, `transcribe` |
+| STT dispatch | the provider checks in `transcribe_audio` and the readiness check in `src/aj_crew/transcribe.py` | `if provider == "transcribe"` / `"apple"`, else local |
+| TTS validation + default | `VALID_PROVIDERS` and `DEFAULT_PROVIDER` in `src/aj_crew/voice_reply.py` | `polly`, `piper`, `system`; default `system` |
+| TTS dispatch | `is_available` and the synthesis branches in `src/aj_crew/voice_reply.py`; `_synthesize_request` in `src/aj_crew/dashboard/chat_voice.py` | same three |
 
-`PlatformContext` (`src/kiro_crew/platform/context.py`) has no speech slot, and no Protocol in `src/kiro_crew/platform/interfaces.py` covers speech. `CONTRACT_VERSION` in `context.py` is `1`.
+`PlatformContext` (`src/aj_crew/platform/context.py`) has no speech slot, and no Protocol in `src/aj_crew/platform/interfaces.py` covers speech. `CONTRACT_VERSION` in `context.py` is `1`.
 
 ### Problems
 

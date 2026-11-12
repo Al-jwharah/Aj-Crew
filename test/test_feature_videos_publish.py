@@ -25,9 +25,9 @@ from typing import Any
 import feature_video_fixture as fixture
 import pytest
 
-from kiro_crew import feature_videos_manifest as fvm
-from kiro_crew.platform import feed_trust
-from kiro_crew.tips_allowlist import TIP_DOC_ALLOWLIST
+from aj_crew import feature_videos_manifest as fvm
+from aj_crew.platform import feed_trust
+from aj_crew.tips_allowlist import TIP_DOC_ALLOWLIST
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOL_DIR = ROOT / "scripts" / "feature-videos"
@@ -56,8 +56,8 @@ publish_mod = _load("publish")
 verify_mod = _load("verify")
 ManifestError = manifest_mod.ManifestError
 
-CONSUMER_SOURCE = ROOT / "src" / "kiro_crew" / "feature_videos_manifest.py"
-CACHE_SOURCE = ROOT / "src" / "kiro_crew" / "feature_videos_cache.py"
+CONSUMER_SOURCE = ROOT / "src" / "aj_crew" / "feature_videos_manifest.py"
+CACHE_SOURCE = ROOT / "src" / "aj_crew" / "feature_videos_cache.py"
 
 
 def _number_literal(node: ast.expr) -> int | float | None:

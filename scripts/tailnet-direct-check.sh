@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Show what this machine's Tailscale tells the Kiro Crew direct tailnet link.
+# Show what this machine's Tailscale tells the Aj Crew direct tailnet link.
 #
 # Usage: scripts/tailnet-direct-check.sh [teammate-tailscale-ip]
 #

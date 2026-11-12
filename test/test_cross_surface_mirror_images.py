@@ -16,21 +16,21 @@ from chat_test_helpers import _make_state
 # A real SEL under tmp_path, so the legs' audit writes stay out of the user's log.
 from test_cross_surface_mirror import audit  # noqa: F401
 
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew.dashboard.chat_runner import (
     _deliver_cross_surface_reply,
     _mirror_echo_text,
     _name_local_attachments,
 )
-from kiro_crew.discord.transport import DiscordTransport
-from kiro_crew.feishu.transport import FeishuTransport
-from kiro_crew.messaging import upload_gate
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.messaging.outbound_files import ExtractLimits, OutboundFile, upload_filename
-from kiro_crew.teams.transport import TeamsTransport
-from kiro_crew.telegram.transport import TelegramTransport
-from kiro_crew.webex.transport import WebexTransport
-from kiro_crew.wecom.transport import WeComTransport
-from kiro_crew.whatsapp.transport import WhatsAppTransport
+from aj_crew.discord.transport import DiscordTransport
+from aj_crew.feishu.transport import FeishuTransport
+from aj_crew.messaging import upload_gate
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.messaging.outbound_files import ExtractLimits, OutboundFile, upload_filename
+from aj_crew.teams.transport import TeamsTransport
+from aj_crew.telegram.transport import TelegramTransport
+from aj_crew.webex.transport import WebexTransport
+from aj_crew.wecom.transport import WeComTransport
+from aj_crew.whatsapp.transport import WhatsAppTransport
 
 _PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
 _FILE = OutboundFile(path="/work/chart.png", data=_PNG, alt="", mime="image/png")
@@ -237,7 +237,7 @@ async def test_wecom_sends_through_send_document() -> None:
 
 @pytest.mark.asyncio
 async def test_whatsapp_applies_the_renderers_decode_screen(monkeypatch) -> None:
-    from kiro_crew.whatsapp import files
+    from aj_crew.whatsapp import files
 
     transport = _bare(WhatsAppTransport)
     transport.send_image = AsyncMock(return_value="w1")  # type: ignore[attr-defined]

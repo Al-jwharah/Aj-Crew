@@ -13,8 +13,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.messaging.transport import ConfiguredChannelTarget, sole_direct_target
-from kiro_crew.wecom.transport import WeComTransport
+from aj_crew.messaging.transport import ConfiguredChannelTarget, sole_direct_target
+from aj_crew.wecom.transport import WeComTransport
 
 
 def _wecom(*, warm: list[str], allowed: tuple[str, ...] = (), owner_id: str = "") -> WeComTransport:
@@ -82,7 +82,7 @@ def test_sole_direct_target_skips_any_learned_target():
 @pytest.mark.asyncio
 async def test_the_owner_notice_never_reaches_a_learned_peer():
     """The cross-channel owner notice counts configured people, never learned ones."""
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     transport = _wecom(warm=["stranger"])
     sent = _record_sends(transport)
@@ -93,7 +93,7 @@ async def test_the_owner_notice_never_reaches_a_learned_peer():
 
 @pytest.mark.asyncio
 async def test_the_owner_notice_reaches_the_configured_owner_beside_learned_peers():
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     transport = _wecom(warm=["boss", "stranger"], owner_id="boss")
     sent = _record_sends(transport)

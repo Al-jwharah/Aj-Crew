@@ -14,9 +14,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_runner as cr
-from kiro_crew.dashboard.chat_utils import SYNTHETIC_RECOVERY_KIND, effective_session_key
-from kiro_crew.dashboard.recovery_replays import (
+from aj_crew.dashboard import chat_runner as cr
+from aj_crew.dashboard.chat_utils import SYNTHETIC_RECOVERY_KIND, effective_session_key
+from aj_crew.dashboard.recovery_replays import (
     ENTRY_FAMILIES,
     IMAGE_RECOVERY_CANCELLED_TEXT,
     POLICIES,
@@ -31,7 +31,7 @@ from kiro_crew.dashboard.recovery_replays import (
     log_args,
     replays_of,
 )
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
 _MA = ReplayFamily.MODEL_ACCESS
 _SNF = ReplayFamily.SESSION_NOT_FOUND
@@ -347,7 +347,7 @@ def test_replays_of_refuses_a_slot_that_cannot_keep_its_ledger():
 
 
 def _state(tmp_path, monkeypatch, counts: dict[str, int] | None = None):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.push_slots_update = MagicMock()

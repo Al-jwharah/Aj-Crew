@@ -38,7 +38,7 @@ function server(over: Record<string, unknown> = {}) {
     can_stub: true,
     in_allowlist: false,
     entry_poolable: false,
-    agents: ['kirocrew'],
+    agents: ['ajcrew'],
     transport: 'stdio',
     denylisted: false,
     ...over,
@@ -169,7 +169,7 @@ describe('the hero numbers', () => {
 
 /** Where the page's Learn more links point: a shipped user guide section. */
 const GUIDE_URL =
-  'https://github.com/kirodotdev/KiroCrew/blob/main/src/kiro_crew/docs/connections.md#sharing-mcp-servers-across-chats'
+  'https://github.com/Al-jwharah/Aj-Crew/blob/main/src/aj_crew/docs/connections.md#sharing-mcp-servers-across-chats'
 
 /** GitHub's anchor for a Markdown heading: lowercased, punctuation dropped, spaces to hyphens. */
 const headingSlug = (heading: string) =>
@@ -205,7 +205,7 @@ describe('the Learn more link', () => {
     // The anchor is a heading slug: a renamed heading would open the top of the
     // file, and a section in other words than the page's would not explain it.
     const url = new URL(DOCS_URL)
-    const repoPath = url.pathname.replace(/^\/kirodotdev\/KiroCrew\/blob\/main\//, '')
+    const repoPath = url.pathname.replace(/^\/Al-jwharah\/Aj-Crew\/blob\/main\//, '')
     const doc = readFileSync(join(__dirname, '../../..', repoPath), 'utf8')
     const section = sectionBySlug(doc, url.hash.slice(1))
     expect(section).not.toBeNull()
@@ -584,13 +584,13 @@ describe('turning sharing on', () => {
   })
 
   it('keeps a skip only when the set in effect does not hold the server', () => {
-    // A follower of kirocrew-core is stubbed once kirocrew-core is, whatever its own write said.
-    expect(settleSkipped(['kirocrew-work', 'other'], ['kirocrew-core', 'kirocrew-work'])).toEqual({
-      stubbed: ['kirocrew-work'],
+    // A follower of ajcrew-core is stubbed once ajcrew-core is, whatever its own write said.
+    expect(settleSkipped(['ajcrew-work', 'other'], ['ajcrew-core', 'ajcrew-work'])).toEqual({
+      stubbed: ['ajcrew-work'],
       skipped: ['other'],
     })
     // No write reported the set in effect: every skip stands.
-    expect(settleSkipped(['kirocrew-work'], undefined)).toEqual({ stubbed: [], skipped: ['kirocrew-work'] })
+    expect(settleSkipped(['ajcrew-work'], undefined)).toEqual({ stubbed: [], skipped: ['ajcrew-work'] })
   })
 
   it('names exactly what it shares in the confirm, then turns sharing on before the pinned writes', async () => {

@@ -12,11 +12,11 @@ import pytest
 from aiohttp.test_utils import make_mocked_request
 from test_shared_crew_entry_points import service as _service
 
-from kiro_crew.apps import spawn_sdk
-from kiro_crew.dashboard.handlers import workflows
-from kiro_crew.shared_crew import admission_entry, containment
-from kiro_crew.shared_crew.contracts import Principal
-from kiro_crew.testing.wait import await_until
+from aj_crew.apps import spawn_sdk
+from aj_crew.dashboard.handlers import workflows
+from aj_crew.shared_crew import admission_entry, containment
+from aj_crew.shared_crew.contracts import Principal
+from aj_crew.testing.wait import await_until
 
 service = _service
 
@@ -140,7 +140,7 @@ def test_shared_crew_feature_map_names_backend_owners():
     for name in ("routes_admission", "routes_collab", "routes_capabilities"):
         owner = f"shared_crew/{name}.py"
         assert owner in row
-        assert (root / "src/kiro_crew" / owner).is_file()
+        assert (root / "src/aj_crew" / owner).is_file()
     assert "GET /api/shared-crew/capacity" in row
     assert "POST /api/shared-crew/work/{work_id}/cancel" in row
 
@@ -152,9 +152,9 @@ async def test_app_startup_hooks_find_admission_ready(monkeypatch):
 
     from aiohttp import web
 
-    from kiro_crew.apps import dev_mode
-    from kiro_crew.dashboard import server
-    from kiro_crew.shared_crew import wiring
+    from aj_crew.apps import dev_mode
+    from aj_crew.dashboard import server
+    from aj_crew.shared_crew import wiring
 
     order: list[str] = []
 
@@ -192,8 +192,8 @@ async def test_app_startup_hooks_find_admission_ready(monkeypatch):
 async def test_app_first_spawn_resolves_config_off_loop(service, monkeypatch, enabled):
     import threading
 
-    from kiro_crew.config import sections, sections_shared_crew
-    from kiro_crew.shared_crew import admission_gate as ag
+    from aj_crew.config import sections, sections_shared_crew
+    from aj_crew.shared_crew import admission_gate as ag
 
     loop_thread = threading.get_ident()
     reads = []
@@ -223,8 +223,8 @@ async def test_app_first_spawn_resolves_config_off_loop(service, monkeypatch, en
 async def test_app_first_spawn_unreadable_config_never_passes_through(monkeypatch):
     from unittest.mock import Mock
 
-    from kiro_crew.config import sections
-    from kiro_crew.shared_crew import admission_gate as ag
+    from aj_crew.config import sections
+    from aj_crew.shared_crew import admission_gate as ag
 
     monkeypatch.setattr(ag, "_SERVICE", None)
     monkeypatch.setattr(

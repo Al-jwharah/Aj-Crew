@@ -7,8 +7,8 @@ from dataclasses import dataclass
 
 import pytest
 
-from kiro_crew.kas_workflows import wire
-from kiro_crew.kas_workflows.mirror import (
+from aj_crew.kas_workflows import wire
+from aj_crew.kas_workflows.mirror import (
     MAX_LIST_ITEMS,
     MAX_LIVE_RUNS,
     MAX_PATHS_PER_RUN,
@@ -757,7 +757,7 @@ def test_live_runs_past_the_cap_are_not_recorded_and_each_lossy_input_logs_once(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     mirror = RunMirror(clock=_clock)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.kas_workflows.mirror"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.kas_workflows.mirror"):
         for i in range(MAX_LIVE_RUNS + 5):
             mirror.apply_notification(
                 wire.NOTIFY_NODE_START, {"workflowId": f"live{i}", "nodeId": "a"}

@@ -14,7 +14,7 @@ import pytest
 
 
 def read_merged_config_files(*paths: Path) -> dict:
-    from kiro_crew.config.loader import read_merged_config_files as read
+    from aj_crew.config.loader import read_merged_config_files as read
 
     return read(*paths)
 
@@ -51,7 +51,7 @@ class TestTheSharedRead:
 
 
 def test_the_knowledge_pool_reads_the_overlay(tmp_path: Path, monkeypatch) -> None:
-    from kiro_crew.knowledge import llm_pool
+    from aj_crew.knowledge import llm_pool
 
     monkeypatch.setattr(llm_pool, "config_dir", lambda: tmp_path)
     _write(tmp_path / "config.json", {"knowledge": {"a": 1}, "agent": {"model": "base"}})
@@ -64,9 +64,9 @@ def test_the_knowledge_pool_reads_the_overlay(tmp_path: Path, monkeypatch) -> No
 
 
 def test_the_terminal_settings_read_the_overlay(tmp_path: Path, monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import terminal_session
+    from aj_crew.dashboard.handlers import terminal_session
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _write(tmp_path / "config.json", {"dashboard": {"terminal": {"enabled": True}}})
     _write(tmp_path / "config.local.json", {"dashboard": {"terminal": {"enabled": False}}})
 
@@ -76,7 +76,7 @@ def test_the_terminal_settings_read_the_overlay(tmp_path: Path, monkeypatch) -> 
 def test_the_voice_fallback_reads_the_overlay(tmp_path: Path, monkeypatch) -> None:
     import dataclasses
 
-    from kiro_crew.slack import handler as handler_mod
+    from aj_crew.slack import handler as handler_mod
 
     # The live voice state is process-wide: every field is restored by monkeypatch,
     # patched in place because the handler and its owners hold the same object.

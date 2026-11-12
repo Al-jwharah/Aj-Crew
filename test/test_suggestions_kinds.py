@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from kiro_crew.suggestions import SuggestionsCache, _parse_suggestions, _redact_suggestions
+from aj_crew.suggestions import SuggestionsCache, _parse_suggestions, _redact_suggestions
 
 
 def test_object_items_keep_a_known_kind() -> None:

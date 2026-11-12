@@ -7,7 +7,7 @@ structural rather than cryptographic.
 
 import pytest
 
-from kiro_crew import session_directive as sd
+from aj_crew import session_directive as sd
 
 # One representative argument payload per directive kind. ``args`` is opaque to
 # the protocol (it is just round-tripped as JSON), so any dict suffices.
@@ -150,20 +150,20 @@ def test_forgery_gate_malformed_json():
     "raw,expected",
     [
         ("monitor_start", "monitor_start"),
-        ("kirocrew-core___monitor_start", "monitor_start"),
+        ("ajcrew-core___monitor_start", "monitor_start"),
         # The separator is a run of underscores whose length is transport-specific,
         # so the ``mcp__<server>__<tool>`` form must resolve too.
-        ("mcp__kirocrew-core__monitor_start", "monitor_start"),
-        ("mcp__kirocrew-core__set_project", "set_project"),
+        ("mcp__ajcrew-core__monitor_start", "monitor_start"),
+        ("mcp__ajcrew-core__set_project", "set_project"),
         # Still bounded to a >= 2 underscore run: single-underscore joins do
         # NOT tail-match, so neither a flattened name nor a crafted identifier
         # can smuggle a directive name in.
-        ("mcp_kirocrew_core_monitor_start", ""),
+        ("mcp_ajcrew_core_monitor_start", ""),
         ("do_monitor_start", ""),
         ("evilmonitor_start", ""),
         # A non-underscore separator never tail-matches, so a crafted title/path
         # cannot smuggle a directive name in as a namespace tail.
-        ("kirocrew-core::set_project", ""),
+        ("ajcrew-core::set_project", ""),
         ("bash /tmp/set_project", ""),
         ("a.autonudge_stop", ""),
         ("echo x/monitor_start", ""),
@@ -184,14 +184,14 @@ def test_match_tool(raw, expected):
     [
         # Match: core server + a directive tool, bare and server-qualified.
         (sd.CORE_MCP_SERVER, "monitor_start", "monitor_start"),
-        (sd.CORE_MCP_SERVER, "kirocrew-core___set_project", "set_project"),
+        (sd.CORE_MCP_SERVER, "ajcrew-core___set_project", "set_project"),
         # No match: core server but a non-directive tool.
         (sd.CORE_MCP_SERVER, "some_other_tool", ""),
         (sd.CORE_MCP_SERVER, "", ""),
         # Wrong server: a third-party MCP server exposing a same-named tool
         # must never resolve to a directive.
         ("evil-mcp", "monitor_start", ""),
-        ("evil-mcp", "kirocrew-core___monitor_start", ""),
+        ("evil-mcp", "ajcrew-core___monitor_start", ""),
         # Absent identity fails closed: a shell tool has no MCP server name
         # (and its canonical tool_name is e.g. "execute_bash").
         ("", "monitor_start", ""),
@@ -211,7 +211,7 @@ def test_subagent_isolation_intent():
     """The forgery gate is what structurally prevents a subagent's UNRELATED
     tool result from ever being honored as a directive.
 
-    decode() needs expected_tool, the name Kiro Crew recorded for the CALL, to be a
+    decode() needs expected_tool, the name Aj Crew recorded for the CALL, to be a
     directive tool equal to the encoded kind; there is no session key to spoof.
     """
     genuine = sd.encode("monitor_start", {"message": "x"}, "armed")

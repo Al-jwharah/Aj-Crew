@@ -56,7 +56,7 @@ function row(name: string, lastActive: number) {
     workspace: 'default',
     memory_store: 'default',
     model: '',
-    source: 'kirocrew',
+    source: 'ajcrew',
     starred: false,
     last_active_ts: lastActive,
   }

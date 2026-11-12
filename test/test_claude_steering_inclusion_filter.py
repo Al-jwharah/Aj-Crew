@@ -14,22 +14,22 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.agent_files import AGENT_FILENAME
+from aj_crew.agent_files import AGENT_FILENAME
 
 
 @pytest.fixture
 def steering_home(tmp_path, monkeypatch):
-    """A home whose agents dir holds a ``kirocrew`` spec globbing ``steer/*.md``.
+    """A home whose agents dir holds an ``ajcrew`` spec globbing ``steer/*.md``.
 
     ``Path.home`` is redirected rather than ``HOME``: Windows ``expanduser``
     reads ``USERPROFILE``.
     """
-    from kiro_crew.config import paths as config_paths
+    from aj_crew.config import paths as config_paths
 
     agents = tmp_path / "agents"
     agents.mkdir()
     (agents / AGENT_FILENAME).write_text(
-        json.dumps({"name": "kirocrew", "resources": ["file://steer/*.md"]}), encoding="utf-8"
+        json.dumps({"name": "ajcrew", "resources": ["file://steer/*.md"]}), encoding="utf-8"
     )
     monkeypatch.setattr(config_paths, "_agents_dir_override", lambda: agents)
     monkeypatch.setattr(Path, "home", staticmethod(lambda: tmp_path))
@@ -43,7 +43,7 @@ def _write(steer: Path, name: str, text: str) -> None:
 
 
 def _load() -> str:
-    from kiro_crew.context import _load_steering_resources
+    from aj_crew.context import _load_steering_resources
 
     return _load_steering_resources()
 

@@ -16,13 +16,13 @@ from agent_capabilities_helpers import _accepting_kiro_cli  # noqa: F401
 from agent_capabilities_helpers import editor_fixture  # noqa: F401
 from agent_capabilities_helpers import save, spec_for
 
-from kiro_crew import agent, agent_state
-from kiro_crew.agent_capabilities import (
+from aj_crew import agent, agent_state
+from aj_crew.agent_capabilities import (
     CapabilityError,
     CapabilityService,
     prepare_member_capabilities,
 )
-from kiro_crew.config import loader
+from aj_crew.config import loader
 
 
 @pytest.mark.asyncio
@@ -32,8 +32,8 @@ async def test_publish_http_retries_pending_and_completed_receipts(editor, monke
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers.agent_capabilities import _SERVICE
-    from kiro_crew.dashboard.routes.agents import register
+    from aj_crew.dashboard.handlers.agent_capabilities import _SERVICE
+    from aj_crew.dashboard.routes.agents import register
 
     service, home, specs, _ = editor
     await asyncio.to_thread(save, service, enroll=True)
@@ -234,8 +234,8 @@ async def test_nested_corruption_fails_closed_without_writes(editor, path, repla
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers.agent_capabilities import _SERVICE
-    from kiro_crew.dashboard.routes.agents import register
+    from aj_crew.dashboard.handlers.agent_capabilities import _SERVICE
+    from aj_crew.dashboard.routes.agents import register
 
     service, home, specs, _ = editor
 
@@ -260,7 +260,7 @@ async def test_nested_corruption_fails_closed_without_writes(editor, path, repla
             agent_state.get_capabilities(name)
         with pytest.raises(ValueError, match="^capability_state_invalid$"):
             service.get("A")
-        from kiro_crew.agent_capabilities import reconcile_member_capabilities
+        from aj_crew.agent_capabilities import reconcile_member_capabilities
 
         with pytest.raises(ValueError, match="^capability_state_invalid$"):
             reconcile_member_capabilities("A")
@@ -343,7 +343,7 @@ async def test_nested_corruption_fails_closed_without_writes(editor, path, repla
     ],
 )
 def test_source_transport_fields_survive_enrollment_and_reconciliation(editor, legacy, transport):
-    from kiro_crew.agent_capabilities import reconcile_member_capabilities
+    from aj_crew.agent_capabilities import reconcile_member_capabilities
 
     service, home, specs, parent = editor
     parent["mcpServers"] = {"search": {**transport, "autoApprove": ["read"]}}
@@ -371,7 +371,7 @@ def test_source_transport_fields_survive_enrollment_and_reconciliation(editor, l
     assert "opaque-secret" not in json.dumps(service.get("A"))
 
 
-@pytest.mark.parametrize("name", ["kirocrew-core", "test-app:search"])
+@pytest.mark.parametrize("name", ["ajcrew-core", "test-app:search"])
 def test_resolved_managed_and_app_transports_keep_metadata(editor, monkeypatch, name):
     service, home, specs, parent = editor
     transport = {"command": "search", "args": [], "env": {"MODE": "read"}, "mountOnly": True}
@@ -431,8 +431,8 @@ async def test_oauth_secret_http_projection_and_retention(editor, secret):
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers.agent_capabilities import _SERVICE
-    from kiro_crew.dashboard.routes.agents import register
+    from aj_crew.dashboard.handlers.agent_capabilities import _SERVICE
+    from aj_crew.dashboard.routes.agents import register
 
     _, home, specs, parent = editor
     configured_secret = "configured-oauth-credential"
@@ -629,8 +629,8 @@ async def test_short_transport_credentials_http_retention(editor, field, secret)
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers.agent_capabilities import _SERVICE
-    from kiro_crew.dashboard.routes.agents import register
+    from aj_crew.dashboard.handlers.agent_capabilities import _SERVICE
+    from aj_crew.dashboard.routes.agents import register
 
     service, home, specs, parent = editor
     original = {
@@ -719,8 +719,8 @@ async def test_legacy_actions_bound_sidecar_read_errors(editor, action, damage):
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers.agent_capabilities import _SERVICE
-    from kiro_crew.dashboard.routes.agents import register
+    from aj_crew.dashboard.handlers.agent_capabilities import _SERVICE
+    from aj_crew.dashboard.routes.agents import register
 
     service, home, specs, _ = editor
 

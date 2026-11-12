@@ -23,10 +23,10 @@ class TestStdinProgramTextScoping:
     ``_has_self_importing_inline_program`` must not search that whole frame for the
     mint surface, or an unrelated neighbour's text would satisfy the check.
 
-    The REAL_STDIN_REACH payload is ``import kiro_crew.cli`` -- the smallest program
-    that reaches the mint.  A bare ``import kiro_crew`` is not one: the gate is the
+    The REAL_STDIN_REACH payload is ``import aj_crew.cli`` -- the smallest program
+    that reaches the mint.  A bare ``import aj_crew`` is not one: the gate is the
     mint surface (``TestInlinePayloadNamesTheMintSurface``), and the bare package
-    import reaches nothing (``kiro_crew/__init__`` imports no CLI).  What these
+    import reaches nothing (``aj_crew/__init__`` imports no CLI).  What these
     fixtures pin is the CARRIER walk -- every place the shell can put a program on
     stdin -- which does not depend on the payload rule.
     """
@@ -36,20 +36,20 @@ class TestStdinProgramTextScoping:
     BENIGN_NEIGHBOUR = (
         # The report's own case 2, reduced: format two source files, then edit one
         # through a heredoc whose payload does not import anything.
-        "isort src/kiro_crew/mcp_core.py\npython3 - <<'PY'\nprint(1)\nPY",
+        "isort src/aj_crew/mcp_core.py\npython3 - <<'PY'\nprint(1)\nPY",
         # The same shape behind the other two separators a frame preserves.
-        "isort src/kiro_crew/x.py && python3 -",
-        "black src/kiro_crew/security.py; python3 - <<'PY'\nprint(2)\nPY",
+        "isort src/aj_crew/x.py && python3 -",
+        "black src/aj_crew/security.py; python3 - <<'PY'\nprint(2)\nPY",
         # Order does not matter: the neighbour may follow the interpreter too.
-        "python3 - <<PY\nprint(1)\nPY\nisort src/kiro_crew/x.py",
+        "python3 - <<PY\nprint(1)\nPY\nisort src/aj_crew/x.py",
         # A here-string whose payload is harmless, next to a product-named path.
-        "isort src/kiro_crew/x.py\npython3 - <<<'print(1)'",
+        "isort src/aj_crew/x.py\npython3 - <<<'print(1)'",
         # A substitution operand whose text is harmless, next to a product-named path.
-        "isort src/kiro_crew/x.py\npython3 - <<<$(printf %s 'print(1)')",
+        "isort src/aj_crew/x.py\npython3 - <<<$(printf %s 'print(1)')",
         # A stdin redirect belonging to ANOTHER command, with no interpreter in play.
-        "isort src/kiro_crew/x.py\ncat < notes.txt",
+        "isort src/aj_crew/x.py\ncat < notes.txt",
         # A pipe that does NOT feed this interpreter (it consumes its output).
-        "python3 - <<PY\nprint(1)\nPY\n| grep kiro_crew",
+        "python3 - <<PY\nprint(1)\nPY\n| grep aj_crew",
     )
 
     # Every way the shell can put a PROGRAM on a simple command's stdin, at every
@@ -59,99 +59,99 @@ class TestStdinProgramTextScoping:
     # The program is the minimal mint reach, an import of the CLI module.
     REAL_STDIN_REACH = (
         # Heredoc body, in every spelling of the marker.
-        "python3 - <<'PY'\nimport kiro_crew.cli\nPY",
-        "python3 - <<-PY\nimport kiro_crew.cli\nPY",
-        "python3 - << PY\nimport kiro_crew.cli\nPY",
-        "python << 'PY'\nimport kiro_crew.cli\nPY",
+        "python3 - <<'PY'\nimport aj_crew.cli\nPY",
+        "python3 - <<-PY\nimport aj_crew.cli\nPY",
+        "python3 - << PY\nimport aj_crew.cli\nPY",
+        "python << 'PY'\nimport aj_crew.cli\nPY",
         # An unterminated heredoc runs to the end of the frame (over-block, not under).
-        "python3 - <<PY\nimport kiro_crew.cli\n",
+        "python3 - <<PY\nimport aj_crew.cli\n",
         # A body LINE that merely CONTAINS the tag word is not a closing delimiter:
         # bash closes only on a line holding it ALONE, and line structure does not
         # survive tokenizing, so the body must end at the LAST occurrence of the tag.
         # `# EOF` is an ordinary Python comment and was enough to close it early.
-        "python3 - <<EOF\n# EOF\nimport kiro_crew.cli\nEOF",
-        "python3 - <<EOF\nx = 1  # EOF\nimport kiro_crew.cli\nEOF",
-        "python3 - <<PY\nprint('PY')\nimport kiro_crew.cli\nPY",
+        "python3 - <<EOF\n# EOF\nimport aj_crew.cli\nEOF",
+        "python3 - <<EOF\nx = 1  # EOF\nimport aj_crew.cli\nEOF",
+        "python3 - <<PY\nprint('PY')\nimport aj_crew.cli\nPY",
         # A command AFTER the closing tag is a NEW command, not this interpreter's
         # script argument -- reading it as one made the detector answer False and
         # skipped the branch entirely, leaving the heredoc payload unscanned.
-        "python3 <<PY\nimport kiro_crew.cli\nPY\necho ok",
-        "python3 - <<PY\nimport kiro_crew.cli\nPY; echo ok",
-        "python3 - <<PY\nimport kiro_crew.cli\nPY && echo ok",
+        "python3 <<PY\nimport aj_crew.cli\nPY\necho ok",
+        "python3 - <<PY\nimport aj_crew.cli\nPY; echo ok",
+        "python3 - <<PY\nimport aj_crew.cli\nPY && echo ok",
         # HERE-STRING: the operand itself is the program on stdin. `<<<` also starts with
         # `<<`, so reading it as a heredoc made the payload a delimiter and dropped it.
-        "python3 - <<<'import kiro_crew.cli'",
-        "python3 -<<<'import kiro_crew.cli'",
-        "python3 <<<'import kiro_crew.cli'",
-        "python3 - <<< 'import kiro_crew.cli'",
-        "python3 - <<<$'import kiro_crew.cli'",
+        "python3 - <<<'import aj_crew.cli'",
+        "python3 -<<<'import aj_crew.cli'",
+        "python3 <<<'import aj_crew.cli'",
+        "python3 - <<< 'import aj_crew.cli'",
+        "python3 - <<<$'import aj_crew.cli'",
         # Pipe producer -- the left side writes this interpreter's stdin.  Every
         # spacing spelling, because the tokenizer splits on whitespace only, so the
         # operator glues into a neighbouring word and `|` is often NOT its own token.
-        "echo 'import kiro_crew.cli' | python3 -",
-        "echo 'import kiro_crew.cli'|python3 -",
-        "echo 'import kiro_crew.cli' |python3 -",
-        "echo 'import kiro_crew.cli'| python3 -",
-        "cat src/kiro_crew/cli.py | python3 -",
-        "cat src/kiro_crew/cli.py|python3 -",
-        "printf 'import kiro_crew.cli'|python3",
-        "echo 'import kiro_crew.cli' | python3",
+        "echo 'import aj_crew.cli' | python3 -",
+        "echo 'import aj_crew.cli'|python3 -",
+        "echo 'import aj_crew.cli' |python3 -",
+        "echo 'import aj_crew.cli'| python3 -",
+        "cat src/aj_crew/cli.py | python3 -",
+        "cat src/aj_crew/cli.py|python3 -",
+        "printf 'import aj_crew.cli'|python3",
+        "echo 'import aj_crew.cli' | python3",
         # Stdin redirect -- the file's CONTENT becomes the program.
-        "python3 - < src/kiro_crew/cli.py",
-        "python3 -<src/kiro_crew/cli.py",
-        "python3 - 0< src/kiro_crew/cli.py",
+        "python3 - < src/aj_crew/cli.py",
+        "python3 -<src/aj_crew/cli.py",
+        "python3 - 0< src/aj_crew/cli.py",
         # Process substitution and command substitution -- the operand is one shell WORD
         # whose text carries whitespace, so it spans tokens to its closing delimiter.
-        "python3 - < <(echo 'import kiro_crew.cli')",
-        'python3 - <<<$(printf %s "import kiro_crew.cli")',
-        "python3 - <<<`printf %s 'import kiro_crew.cli'`",
-        'python3 - <<<"${x:-import kiro_crew.cli}"',
-        'python3 - < $(printf %s "src/kiro_crew/cli.py")',
-        "python3 - <<<$(cat src/kiro_crew/cli.py)",
+        "python3 - < <(echo 'import aj_crew.cli')",
+        'python3 - <<<$(printf %s "import aj_crew.cli")',
+        "python3 - <<<`printf %s 'import aj_crew.cli'`",
+        'python3 - <<<"${x:-import aj_crew.cli}"',
+        'python3 - < $(printf %s "src/aj_crew/cli.py")',
+        "python3 - <<<$(cat src/aj_crew/cli.py)",
         # A QUOTED delimiter inside the substitution: quoting is stripped before this
         # code sees the tokens, so balancing the count is not decidable and the operand
         # must span to the LAST closer.
-        "python3 - <<<$(true ')'; printf %s \"import kiro_crew.cli\")",
-        'python3 - <<<$(echo ")" ; printf %s "import kiro_crew.cli")',
+        "python3 - <<<$(true ')'; printf %s \"import aj_crew.cli\")",
+        'python3 - <<<$(echo ")" ; printf %s "import aj_crew.cli")',
         # A split operand with NO `-`, where the detector must consume the whole operand
         # rather than read the substitution's second token as a script path.
-        'python <<< $(printf %s "import kiro_crew.cli")',
-        'python3 <<< $(printf %s "import kiro_crew.cli")',
-        'python3 < $(printf %s "src/kiro_crew/cli.py")',
+        'python <<< $(printf %s "import aj_crew.cli")',
+        'python3 <<< $(printf %s "import aj_crew.cli")',
+        'python3 < $(printf %s "src/aj_crew/cli.py")',
         # A redirection may appear ANYWHERE in a simple command, before the program
         # name included.  These are ordinary bash and reach the identical mint.
-        "<<'PY' python -\nimport kiro_crew.cli\nPY",
-        "<<PY python3 -\nimport kiro_crew.cli\nPY",
-        "<src/kiro_crew/cli.py python3 -",
-        "< src/kiro_crew/cli.py python3 -",
-        "<<<'import kiro_crew.cli' python3 -",
+        "<<'PY' python -\nimport aj_crew.cli\nPY",
+        "<<PY python3 -\nimport aj_crew.cli\nPY",
+        "<src/aj_crew/cli.py python3 -",
+        "< src/aj_crew/cli.py python3 -",
+        "<<<'import aj_crew.cli' python3 -",
         # ... a marker and its BODY may straddle the program name, so the carrier walk
         # cannot be split per side of the interpreter without losing the association.
-        "<<EOF python -\nimport kiro_crew.cli\nEOF",
-        "<<EOF python3 -\nimport kiro_crew.cli\nEOF",
-        "<< EOF python -\nimport kiro_crew.cli\nEOF",
+        "<<EOF python -\nimport aj_crew.cli\nEOF",
+        "<<EOF python3 -\nimport aj_crew.cli\nEOF",
+        "<< EOF python -\nimport aj_crew.cli\nEOF",
         # ... including GLUED to the program name with no space at all, which is one
         # single token: `python3<<<'…'`.  Excluding the interpreter's own token from the
         # walk is what missed these.
-        'python3<<<"import kiro_crew.cli"',
-        "python3<<<'import kiro_crew.cli'",
-        "python3<src/kiro_crew/cli.py",
-        "python3<<PY\nimport kiro_crew.cli\nPY",
-        "python3<<-PY\nimport kiro_crew.cli\nPY",
-        "python<<<'import kiro_crew.cli'",
-        "python<<EOF\nimport kiro_crew.cli\nEOF",
-        "python3<<EOF\nimport kiro_crew.cli\nEOF",
+        'python3<<<"import aj_crew.cli"',
+        "python3<<<'import aj_crew.cli'",
+        "python3<src/aj_crew/cli.py",
+        "python3<<PY\nimport aj_crew.cli\nPY",
+        "python3<<-PY\nimport aj_crew.cli\nPY",
+        "python<<<'import aj_crew.cli'",
+        "python<<EOF\nimport aj_crew.cli\nEOF",
+        "python3<<EOF\nimport aj_crew.cli\nEOF",
     )
 
     def test_benign_neighbour_no_longer_reads_as_a_mint(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         for cmd in self.BENIGN_NEIGHBOUR:
             assert not security._is_credential_mint(cmd.lower()), f"frame contamination: {cmd!r}"
             assert security.is_denied(cmd) is None, f"frame contamination: {cmd!r}"
 
     def test_real_stdin_reach_stays_denied(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         for cmd in self.REAL_STDIN_REACH:
             assert security.is_denied(cmd) is not None, f"stdin reach not blocked: {cmd!r}"
@@ -162,17 +162,17 @@ class TestStdinProgramTextScoping:
         Asserted on the helper directly, so the SCOPE is pinned rather than only its
         effect on one deny verdict.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         tokens = security.normalize_shell_command(
-            "isort src/kiro_crew/mcp_core.py\npython3 - <<'PY'\nprint(1)\nPY"
+            "isort src/aj_crew/mcp_core.py\npython3 - <<'PY'\nprint(1)\nPY"
         )
         i = tokens.index("python3")
         assert list(security._stdin_program_text(tokens, i)) == ["print(1)"]
 
-        piped = security.normalize_shell_command("echo 'import kiro_crew' | python3 -")
+        piped = security.normalize_shell_command("echo 'import aj_crew' | python3 -")
         j = piped.index("python3")
-        assert "import kiro_crew" in list(security._stdin_program_text(piped, j))
+        assert "import aj_crew" in list(security._stdin_program_text(piped, j))
 
     def test_bare_interpreter_with_a_heredoc_is_recognised_as_reading_stdin(self):
         """``python << 'PY' … PY`` (no ``-``) really does read its program from stdin.
@@ -185,20 +185,20 @@ class TestStdinProgramTextScoping:
         the import anywhere in the frame.  Once the scan is scoped to real carriers
         that accident stops covering it, so the detector has to be right.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         for cmd, expect_stdin in (
-            ("python << 'PY'\nimport kiro_crew\nPY", True),
-            ("python <<PY\nimport kiro_crew\nPY", True),
-            ("python <<-PY\nimport kiro_crew\nPY", True),
-            ("python <<<'import kiro_crew'", True),
-            ("python <<< 'import kiro_crew'", True),
-            ('python <<< $(printf %s "import kiro_crew")', True),
+            ("python << 'PY'\nimport aj_crew\nPY", True),
+            ("python <<PY\nimport aj_crew\nPY", True),
+            ("python <<-PY\nimport aj_crew\nPY", True),
+            ("python <<<'import aj_crew'", True),
+            ("python <<< 'import aj_crew'", True),
+            ('python <<< $(printf %s "import aj_crew")', True),
             ("python < prog.py", True),
             ("python script.py", False),
             ("python script.py < input.txt", False),
             ("python -c 'print(1)'", False),
-            ("python -m kiro_crew gateway", False),
+            ("python -m aj_crew gateway", False),
         ):
             frame = security.normalize_shell_command(cmd)
             i = next(
@@ -219,32 +219,32 @@ class TestStdinProgramTextScoping:
         token is a visible refusal.  If this assertion ever flips, the tightening that
         did it must be checked against the no-space spellings above.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         # The over-yield is still there: the left side of the pipe is handed over as
         # program text ...
-        frame = security.normalize_shell_command("grep kiro_crew.cli src | head; python3 -")
+        frame = security.normalize_shell_command("grep aj_crew.cli src | head; python3 -")
         i = frame.index("python3")
-        assert any("kiro_crew.cli" in t for t in security._stdin_program_text(frame, i))
+        assert any("aj_crew.cli" in t for t in security._stdin_program_text(frame, i))
         # ... and when that text names the mint surface the command is denied.
-        assert security.is_denied("grep kiro_crew.cli src | head; python3 -") is not None
+        assert security.is_denied("grep aj_crew.cli src | head; python3 -") is not None
         # A left side that only MENTIONS the package is not a reach, so the same
         # over-yield costs nothing: the payload gate asks for the mint surface,
         # not for the package name.
-        assert security.is_denied("grep kiro_crew src | head; python3 -") is None
+        assert security.is_denied("grep aj_crew src | head; python3 -") is None
 
     def test_rule_does_not_fire_on_its_own_pattern_text(self):
         """Quoting this rule must not trip it.
 
-        ``credential-exfil-kirocrew-token``'s code comment claims this exemption
+        ``credential-exfil-ajcrew-token``'s code comment claims this exemption
         ("a regex LITERAL quoting this very rule ... from reading as a mint"), and
         This pins that the exemption holds in practice, so discussing,
         documenting or testing the rule by quoting it stays possible.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         rule = next(
-            r for r in security.BUILTIN_DENIED_RULES if r.id == "credential-exfil-kirocrew-token"
+            r for r in security.BUILTIN_DENIED_RULES if r.id == "credential-exfil-ajcrew-token"
         )
         for cmd in (
             f'grep -n "{rule.pattern}" notes.txt',
@@ -396,7 +396,7 @@ class TestPythonStdinDetectorStepsOverOutputRedirects:
         """None when the word has no `>`, or already starts with one -- a leading file
         descriptor belongs to the redirect, and the shell reads digits as an fd only when
         they are the whole prefix (`2>err` is fd 2; `x2>err` is the word `x2`)."""
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._redirect_glue_point("-u>") == 2
         assert security._redirect_glue_point("-u>/dev/null") == 2
@@ -409,7 +409,7 @@ class TestPythonStdinDetectorStepsOverOutputRedirects:
         """``{fd}>`` is an automatic descriptor; ``{a,b}`` is a brace EXPANSION the shell
         resolves before redirect parsing. Only an identifier may sit in the braces, or an
         ordinary argument could be swallowed as a redirect."""
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._output_redirect_scan("{fd}>&1") == ("1", 7)
         assert security._output_redirect_scan("{fd}>") == ("", 5)
@@ -417,13 +417,13 @@ class TestPythonStdinDetectorStepsOverOutputRedirects:
             assert security._output_redirect_scan(token) is None, token
 
     def test_a_program_on_stdin_is_detected_through_an_output_redirect(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         for tokens in self.READS_STDIN:
             assert security._python_reads_stdin(list(tokens)) is True, tokens
 
     def test_a_script_or_inline_program_still_wins(self):
-        from kiro_crew import security
+        from aj_crew import security
 
         for tokens in self.SUPPLIES_PROGRAM_ELSEWHERE:
             assert security._python_reads_stdin(list(tokens)) is False, tokens
@@ -432,7 +432,7 @@ class TestPythonStdinDetectorStepsOverOutputRedirects:
         """Three distinct answers. A glued target ends at the word's end; an empty target
         at the word's end means the target is the NEXT token; an end short of the word
         means another operator followed and must be re-examined, not eaten."""
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._output_redirect_scan("2>&1") == ("1", 4)
         assert security._output_redirect_scan(">out.txt") == ("out.txt", 8)
@@ -472,7 +472,7 @@ class TestPythonStdinDetectorStepsOverOutputRedirects:
         at a time. Asserted here so the boundary is a test rather than a comment:
         descriptors are digits, ``&``, ``{name}`` and ``*``; modifiers are ``&``, ``|``
         and ``!``."""
-        from kiro_crew import security
+        from aj_crew import security
 
         for descriptor in ("", "2", "12", "&", "*", "{fd}"):
             for operator in (">", ">>"):
@@ -517,7 +517,7 @@ class TestPythonStdinDetectorStepsOverOutputRedirects:
         """
         import time
 
-        from kiro_crew import security
+        from aj_crew import security
 
         # Backstop budget, measured BEFORE instrumenting (the tracing wrapper below
         # would bill its own overhead against it). The input is built OUTSIDE the
@@ -583,9 +583,9 @@ class TestPythonStdinDetectorStepsOverOutputRedirects:
     def test_the_floor_denies_the_stdin_program_behind_a_redirect(self):
         """The end-to-end property: these are credential-mint attempts whose program
         rides in on stdin, and each was ALLOWED before this change."""
-        from kiro_crew import security
+        from aj_crew import security
 
-        payload = "from kiro_crew.cli import main; main()"
+        payload = "from aj_crew.cli import main; main()"
         for cmd in (
             f"python 2>&1 <<< '{payload}'",
             f"python 1>&2 <<< '{payload}'",
@@ -622,9 +622,9 @@ class TestPythonStdinDetectorStepsOverOutputRedirects:
             assert security._is_credential_mint(cmd.lower()), cmd
 
     def test_the_floor_still_allows_the_ordinary_shapes(self):
-        from kiro_crew import security
+        from aj_crew import security
 
-        payload = "from kiro_crew.cli import main; main()"
+        payload = "from aj_crew.cli import main; main()"
         for cmd in (
             "python script.py",
             f"python script.py <<< '{payload}'",
@@ -662,9 +662,9 @@ class TestOutputRedirectScanQuoting:
         the quotes; the scan sees ``2>a)(b<<<``). Measured in bash: each spelling
         runs the here-string program. On the uncorrected walk ``is_denied``
         returned None for all three."""
-        from kiro_crew import security
+        from aj_crew import security
 
-        prog = "'from kiro_crew.cli import main; main()'"
+        prog = "'from aj_crew.cli import main; main()'"
         assert security.is_denied(f"python3 2>'a)(b'<<< {prog}") is not None
         assert security.is_denied(f"python3 2>a{{b<<<{prog}") is not None
         assert security.is_denied(f'python3 > "a{{b" <<< {prog}') is not None
@@ -677,7 +677,7 @@ class TestOutputRedirectScanQuoting:
         error), and a bare ``{`` is an ordinary filename character (measured:
         ``python 2>a{b<<<'<program>'`` runs the program), so neither may hold
         the span open past the operator."""
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._output_redirect_scan("2>a)(b<<<") == ("a)(b", 6)
         assert security._output_redirect_scan("2>a{b<<<x") == ("a{b", 5)
@@ -693,7 +693,7 @@ class TestOutputRedirectScanQuoting:
         the here-string program (and the glued ``2>'a)(b'<<<'<program>'``
         likewise), so the target must end before the operator, where bash ends
         it."""
-        from kiro_crew import security
+        from aj_crew import security
 
         # The measured case: the end stops at 8, before the `<<<` at 9.
         assert security._output_redirect_scan("> 'a(b' <<< payload") == (" 'a(b' ", 8)
@@ -720,7 +720,7 @@ class TestOutputRedirectScanQuoting:
         the PID-parameter spelling (``$$'`` is not ANSI-C) and a quote inside
         backticks (bash tolerates it unterminated there) at their pre-fix
         boundaries."""
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._output_redirect_scan("2>a'b<<<x") == ("a'b", 5)
         assert security._python_reads_stdin(["2>a'b<<<", "'prog'"]) is True
@@ -732,7 +732,7 @@ class TestOutputRedirectScanQuoting:
         substitution span still holds the walk open, a real backtick region
         still toggles, and an unterminated quote or trailing backslash is
         ordinary data to the end of the text."""
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._output_redirect_scan("2>$( (x)>y )") == ("$( (x)>y )", 12)
         assert security._output_redirect_scan("2>`echo>x`") == ("`echo>x`", 10)
@@ -745,7 +745,7 @@ class TestOutputRedirectScanQuoting:
         de-quoted tokens the production frame actually carries: with the target
         absorbing the glued ``<<<``, ``_python_reads_stdin`` answered False and
         the program on stdin went unscanned."""
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._python_reads_stdin(["2>'a)(b'<<<", "'prog'"]) is True
         assert security._python_reads_stdin(["2>'a(b'<<<", "'prog'"]) is True

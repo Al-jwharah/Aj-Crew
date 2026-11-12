@@ -7,10 +7,10 @@ from typing import Callable, List
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.context import PlatformCompositionError, set_context
-from kiro_crew.preflight import run_preflight_checks
+from aj_crew.config import AjCrewConfig
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.context import PlatformCompositionError, set_context
+from aj_crew.preflight import run_preflight_checks
 
 
 class _StubIdentity:
@@ -47,7 +47,7 @@ class _RaisingIdentity(_StubIdentity):
 
 
 def _install_identity(identity: object) -> None:
-    base = build_default_context(KiroCrewConfig())
+    base = build_default_context(AjCrewConfig())
     set_context(dataclasses.replace(base, identity=identity))
 
 
@@ -71,7 +71,7 @@ class TestRunPreflightChecks:
         def _boom() -> None:
             raise RuntimeError("boom")
 
-        with caplog.at_level("WARNING", logger="kiro_crew.preflight"):
+        with caplog.at_level("WARNING", logger="aj_crew.preflight"):
             run_preflight_checks([_boom, lambda: calls.append("after")])
         # The failing check is logged and the NEXT check still runs.
         assert calls == ["after"]
@@ -94,10 +94,10 @@ class TestRunPreflightChecks:
         # A transient adapter failure must never block gateway/token startup:
         # safe_context_call degrades to [] and the runner is a no-op.
         _install_identity(_RaisingIdentity(RuntimeError("adapter broke")))
-        with caplog.at_level("DEBUG", logger="kiro_crew.platform.context"):
+        with caplog.at_level("DEBUG", logger="aj_crew.platform.context"):
             run_preflight_checks()  # should not raise
         # The skipped preflight is still written down, with its cause.
-        records = [r for r in caplog.records if r.name == "kiro_crew.platform.context"]
+        records = [r for r in caplog.records if r.name == "aj_crew.platform.context"]
         assert [r.getMessage() for r in records] == [
             "identity.preflight_checks unavailable; skipping preflight"
         ]

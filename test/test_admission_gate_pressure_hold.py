@@ -27,8 +27,8 @@ from admission_gate_helpers import (  # noqa: F401 -- the autouse fixture regist
 )
 from overload_fakes import wait_taskq_open
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.constants import DEFAULT_SUBAGENT_QUEUE_MAX_WAIT_SECS
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.constants import DEFAULT_SUBAGENT_QUEUE_MAX_WAIT_SECS
 
 #: The macOS pressure hold's bound under the default config: the
 #: ``agent.subagent_queue_max_wait_secs`` default, which a fresh manager boots on.
@@ -48,14 +48,14 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
     @staticmethod
     def _level(monkeypatch: pytest.MonkeyPatch, level: int | None) -> None:
         """Fake the kernel's answer under the floor's own reader (the fresh read)."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         monkeypatch.setattr(platform_compat, "memory_pressure_level", lambda: level)
 
     @staticmethod
     def _busy(mgr, **fields: Any) -> None:
         """Give *mgr* one live dedicated child: a runtime of ours the hold can wait on."""
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         mgr._agents["busy"] = SubagentInfo(
             id="busy", task="w", parent_session_key="sess-0", _pid=4242, **fields
@@ -79,7 +79,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
     def test_pressure_holds_a_start_in_the_capacity_window(
         self, monkeypatch: pytest.MonkeyPatch, level: int
     ) -> None:
-        from kiro_crew.subagent_wait_reasons import MEMORY_PRESSURE_DETAIL
+        from aj_crew.subagent_wait_reasons import MEMORY_PRESSURE_DETAIL
 
         mgr = self._mgr()
         self._busy(mgr)
@@ -179,7 +179,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
     def test_an_unknown_agent_is_refused_before_the_hold(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.subagent import AGENT_NOT_FOUND_CODE
+        from aj_crew.subagent import AGENT_NOT_FOUND_CODE
 
         mgr = self._mgr()
         self._busy(mgr)
@@ -195,7 +195,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         """No durable row to defer, but a capacity-style wait needs none: a
         temporary spawn waits in the in-memory queue exactly as a capacity-held
         one does, instead of being refused."""
-        from kiro_crew.subagent_wait_reasons import MEMORY_PRESSURE_DETAIL
+        from aj_crew.subagent_wait_reasons import MEMORY_PRESSURE_DETAIL
 
         mgr = self._mgr()
         self._busy(mgr)
@@ -212,7 +212,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
 
     def test_a_held_member_keeps_its_asking_turn(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """The hold exits through the capacity queue, which pins the turn that asked."""
-        from kiro_crew.crew_log import emit as crew_log_emit
+        from aj_crew.crew_log import emit as crew_log_emit
 
         pinned: list[tuple[str, str, int]] = []
         monkeypatch.setattr(crew_log_emit, "enabled", lambda: True)
@@ -233,7 +233,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
     def test_a_shared_wave_never_holds_itself(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Shared-priced starts are not runtimes the hold waits on, so a wave of
         plain shared spawns at WARN with nothing dedicated running all pass it."""
-        from kiro_crew.subagent import _SharingPlan
+        from aj_crew.subagent import _SharingPlan
 
         mgr = self._mgr()
         mgr._spawn_stagger_secs = 0.0
@@ -260,7 +260,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
     ) -> None:
         """A shared start skips the kiro-cli process but still launches a fresh
         copy of the agent's MCP servers, so it is held while a dedicated one runs."""
-        from kiro_crew.subagent import _SharingPlan
+        from aj_crew.subagent import _SharingPlan
 
         mgr = self._mgr()
         self._busy(mgr)
@@ -286,7 +286,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
                 for r in caplog.records
             )
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.subagent"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.subagent"):
             self._level(monkeypatch, 2)
             for _ in range(3):
                 self._spawn_capturing_queued(mgr, memory=(True, 8.0))
@@ -306,10 +306,10 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
     ) -> None:
 
         mgr = self._mgr()
-        with patch("kiro_crew.subagent.sel") as mock_sel:
+        with patch("aj_crew.subagent.sel") as mock_sel:
             assert mgr._memory_pressure_holds("r1", 2, parent_session_key="sess-1") == "held"
             mgr._pressure_holds["r1"] = time.monotonic() - _HOLD_BOUND_SECS - 1
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.subagent"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.subagent"):
                 assert mgr._memory_pressure_holds("r1", 2, parent_session_key="sess-1") == "expired"
             # Stays expired, and is said once.
             assert mgr._memory_pressure_holds("r1", 2, parent_session_key="sess-1") == "expired"
@@ -330,7 +330,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         the bound, it ends as before."""
         mgr = self._mgr()
         now = time.monotonic()
-        with patch("kiro_crew.subagent.sel") as mock_sel:
+        with patch("aj_crew.subagent.sel") as mock_sel:
             mgr._pressure_holds["tail"] = now - 2 * _HOLD_BOUND_SECS
             # Another session's lane is moving; it never extends this row.
             assert mgr._memory_pressure_holds("other-row", 2, parent_session_key="sess-2") == "held"
@@ -350,12 +350,12 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         assert expired["metadata"]["waited_secs"] >= 2 * _HOLD_BOUND_SECS
         # A lane start older than the row's own first hold does not extend it.
         mgr._pressure_holds["late"] = now - _HOLD_BOUND_SECS - 1
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             assert mgr._memory_pressure_holds(
                 "late", 2, parent_session_key="sess-1", commit_expiry=False
             ) == ("expired")
         mgr._pressure_lane_started_at["sess-1"] = now - 3 * _HOLD_BOUND_SECS
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             assert mgr._memory_pressure_holds(
                 "late", 2, parent_session_key="sess-1", commit_expiry=False
             ) == ("expired")
@@ -367,7 +367,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         accepted). A chat's start is still another lane and never extends it."""
         mgr = self._mgr()
         now = time.monotonic()
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             mgr._pressure_holds["cron-row"] = now - 2 * _HOLD_BOUND_SECS
             assert mgr._memory_pressure_holds(
                 "cron-row", 2, parent_session_key="cron:job-a", commit_expiry=False
@@ -391,7 +391,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         now = time.monotonic()
         mgr._pressure_lane_started("sess-1", now)
         assert mgr._pressure_lane_started_at == {}
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             for agent_id in ("a", "b"):
                 assert mgr._memory_pressure_holds(agent_id, 2, parent_session_key="sess-1") == (
                     "held"
@@ -415,14 +415,14 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         """A missing lane stamp is its own case, not a 0.0 that would win the
         max: on a host up for less than the bound, the clock itself is smaller
         than the bound and a first hold is negative."""
-        from kiro_crew import subagent as subagent_mod
+        from aj_crew import subagent as subagent_mod
 
         young = 900.0
         monkeypatch.setattr(
             subagent_mod, "time", SimpleNamespace(monotonic=lambda: young, time=time.time)
         )
         mgr = self._mgr()
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             mgr._pressure_holds["solo"] = young - _HOLD_BOUND_SECS - 1
             assert mgr._memory_pressure_holds("solo", 2, commit_expiry=False) == "expired"
             mgr._pressure_holds["member"] = young - _HOLD_BOUND_SECS - 1
@@ -591,7 +591,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
     def test_releasing_an_approved_root_member_is_its_lanes_progress(
         self, monkeypatch: pytest.MonkeyPatch, child: bool
     ) -> None:
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         mgr = self._mgr()
         self._level(monkeypatch, 1)
@@ -599,7 +599,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
             monkeypatch.setattr(
                 type(mgr._admission), "entry_is_child", staticmethod(lambda _p: True)
             )
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             assert mgr._memory_pressure_holds("waiter", 1, parent_session_key="sess-1") == "held"
 
         async def run() -> Any:
@@ -629,12 +629,12 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         not one still in the window, nor one whose lane has started a root
         within the window, which can rightly wait longer than it while its
         lane keeps moving. A pruned row leaves its lane too."""
-        from kiro_crew.subagent import _PRESSURE_HOLD_PRUNE_FACTOR
+        from aj_crew.subagent import _PRESSURE_HOLD_PRUNE_FACTOR
 
         mgr = self._mgr()
         now = time.monotonic()
         old = now - _PRESSURE_HOLD_PRUNE_FACTOR * _HOLD_BOUND_SECS - 10
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             for agent_id, lane in (
                 ("gone", "sess-gone"),
                 ("windowed", "sess-gone"),
@@ -660,12 +660,12 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         """The prune runs on the very passes where the lane makes progress (a
         pause in the hold), so it must keep the first-hold clock of a row whose
         lane is moving: the eventual expiry audit reports the whole wait."""
-        from kiro_crew.subagent import _PRESSURE_HOLD_PRUNE_FACTOR
+        from aj_crew.subagent import _PRESSURE_HOLD_PRUNE_FACTOR
 
         mgr = self._mgr()
         now = time.monotonic()
         first_hold = now - _PRESSURE_HOLD_PRUNE_FACTOR * _HOLD_BOUND_SECS - 10
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             assert mgr._memory_pressure_holds("tail", 2, parent_session_key="sess-1") == "held"
         mgr._pressure_holds["tail"] = first_hold
         mgr._pressure_lane_started("sess-1", now - 5.0)
@@ -689,7 +689,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         """Past its bound a held row does not proceed into the pressure it waited
         on: the next pump pass ends it, never started, its row failed and its
         parent's depth back to 0."""
-        from kiro_crew.subagent_wait_reasons import MEMORY_PRESSURE_NEVER_STARTED
+        from aj_crew.subagent_wait_reasons import MEMORY_PRESSURE_NEVER_STARTED
 
         mgr = self._mgr()
         self._busy(mgr)
@@ -714,7 +714,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
     def test_an_approved_start_past_its_bound_is_ended_never_started(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         mgr = self._mgr()
         self._busy(mgr)
@@ -745,9 +745,9 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         """The floor reader, the posture verdict, config and SEL, patched for a
         test that drives several spawns and pump passes on one loop."""
         with (
-            patch("kiro_crew.subagent.check_memory_available", return_value=(True, 8.0)),
-            patch("kiro_crew.subagent.KiroCrewConfig") as mock_cfg,
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.check_memory_available", return_value=(True, 8.0)),
+            patch("aj_crew.subagent.AjCrewConfig") as mock_cfg,
+            patch("aj_crew.subagent.sel") as mock_sel,
         ):
             mock_cfg.load.return_value.agent.spawn_min_memory_gb = floor_gb
             mock_cfg.load.return_value.agent.subagent_cost_gb = 0.5
@@ -757,7 +757,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
     def _starting_mgr(self, monkeypatch: pytest.MonkeyPatch, *, shared: bool) -> tuple[Any, list]:
         """A manager whose admitted starts register and stay live (a run that
         never returns), priced *shared* or dedicated, with no stagger."""
-        from kiro_crew.subagent import _SharingPlan
+        from aj_crew.subagent import _SharingPlan
 
         mgr = self._mgr()
         mgr._spawn_stagger_secs = 0.0
@@ -787,12 +787,12 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         start pay the bound in turn, and does not let them into the pressure
         either: each start the hold would keep is ended at once, never started.
         Once the level eases, the next episode holds again."""
-        from kiro_crew.subagent_wait_reasons import MEMORY_PRESSURE_NEVER_STARTED
+        from aj_crew.subagent_wait_reasons import MEMORY_PRESSURE_NEVER_STARTED
 
         mgr = self._mgr()
         self._busy(mgr)
         self._level(monkeypatch, 2)
-        with self._gate_patches(), caplog.at_level(logging.WARNING, logger="kiro_crew.subagent"):
+        with self._gate_patches(), caplog.at_level(logging.WARNING, logger="aj_crew.subagent"):
             assert mgr._memory_pressure_hold() == 2
             mgr._pressure_episode_since = time.monotonic() - _HOLD_BOUND_SECS - 1
             assert mgr._memory_pressure_hold() == 2
@@ -800,7 +800,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
             said = [r for r in caplog.records if "until it eases" in r.getMessage()]
             assert len(said) == 1
         caplog.clear()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.subagent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.subagent"):
             info, _events, sel_mock = self._spawn_capturing_queued(mgr, memory=(True, 8.0))
         assert info is not None and info.done is True and info.queued is False
         assert info.error == MEMORY_PRESSURE_NEVER_STARTED
@@ -837,7 +837,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         """Reads are sampled; a gap longer than a few recheck intervals is a break
         nobody saw, so the next read starts a fresh episode instead of finding a
         spent one and ending a start that never waited."""
-        from kiro_crew.subagent import _PRESSURE_EPISODE_MAX_GAP_SECS
+        from aj_crew.subagent import _PRESSURE_EPISODE_MAX_GAP_SECS
 
         mgr = self._mgr()
         self._busy(mgr)
@@ -858,7 +858,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         between it starts, so the pick must not have audited it as never started."""
 
         mgr = self._mgr()
-        with patch("kiro_crew.subagent.sel") as mock_sel:
+        with patch("aj_crew.subagent.sel") as mock_sel:
             mgr._pressure_holds["r1"] = time.monotonic() - _HOLD_BOUND_SECS - 1
             verdict = mgr._memory_pressure_holds("r1", 2, commit_expiry=False)
         assert verdict == "expired"
@@ -869,7 +869,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
     def _reload_max_wait(mgr, secs: int) -> None:
         """A live rewrite of ``agent.subagent_queue_max_wait_secs``, adopted the
         way the config watcher adopts it (``apply_limits``), with no restart."""
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.subagent_queue_max_wait_secs = secs
         mgr.apply_limits(cfg, max_concurrent=3)
         assert mgr._subagent_queue_max_wait_secs == secs
@@ -882,7 +882,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         once the key is reloaded to 60, and 0 lifts the bound again."""
         mgr = self._mgr()
         assert mgr._subagent_queue_max_wait_secs == DEFAULT_SUBAGENT_QUEUE_MAX_WAIT_SECS
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             mgr._pressure_holds["r1"] = time.monotonic() - 61
             assert mgr._memory_pressure_holds("r1", 2, commit_expiry=False) == "held"
             self._reload_max_wait(mgr, 60)
@@ -944,7 +944,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         """The slot release pumps the window and the pick lets the held roots go,
         with no recheck timer and no admit wait in between; while our runtime
         runs, the pick passes over them without even re-entering the gate."""
-        from kiro_crew.subagent import _SharingPlan
+        from aj_crew.subagent import _SharingPlan
 
         mgr, started = self._starting_mgr(monkeypatch, shared=True)
         self._level(monkeypatch, 2)
@@ -1006,10 +1006,10 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Nothing finishes, the level drops: only the recheck timer can notice."""
-        from kiro_crew import subagent_wait_reasons
+        from aj_crew import subagent_wait_reasons
 
         monkeypatch.setattr(subagent_wait_reasons, "MEMORY_PRESSURE_RECHECK_SECS", 0.05)
-        monkeypatch.setattr("kiro_crew.subagent.MEMORY_PRESSURE_RECHECK_SECS", 0.05)
+        monkeypatch.setattr("aj_crew.subagent.MEMORY_PRESSURE_RECHECK_SECS", 0.05)
         mgr, started = self._starting_mgr(monkeypatch, shared=True)
         self._busy(mgr)
         self._level(monkeypatch, 2)
@@ -1127,7 +1127,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
     ) -> None:
         """The child exemption must hold at release too: a pressure-held root at
         the head of the released starts is passed over, not waited on."""
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         mgr = self._mgr()
         self._busy(mgr)
@@ -1162,7 +1162,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
     ) -> None:
         """An approved start stopped while it waited, queued behind a held root,
         is popped and its waiter woken now, not when the root's hold ends."""
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         mgr = self._mgr()
         self._busy(mgr)
@@ -1195,7 +1195,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
 
     def test_an_approved_start_is_held_at_release(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """A prompt answered after the hold began must not launch past it."""
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         mgr = self._mgr()
         self._busy(mgr)
@@ -1213,7 +1213,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
                     "parent_session_key": info.parent_session_key,
                 }
             )
-            with patch("kiro_crew.subagent.sel"):
+            with patch("aj_crew.subagent.sel"):
                 held = mgr._admission._release_admitted_start_impl()
                 waiting = not fut.done()
                 self._level(monkeypatch, 1)
@@ -1248,8 +1248,8 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
 
         async def drain() -> Any:
             with (
-                patch("kiro_crew.subagent.check_memory_available", return_value=(True, 8.0)),
-                patch("kiro_crew.subagent.sel") as mock_sel,
+                patch("aj_crew.subagent.check_memory_available", return_value=(True, 8.0)),
+                patch("aj_crew.subagent.sel") as mock_sel,
             ):
                 started = mgr.spawn(**params, _from_queue=True)
                 # flake-ok: pre-existing one-tick yield before the asserts, moved verbatim
@@ -1270,8 +1270,8 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         """The floor fails open on an unmeasurable host, but never silently: the
         macOS twin of Linux's ``memory_check_unavailable``. The hold still applies,
         and its audit records the figure as unknown, not as -1."""
-        import kiro_crew.subagent as subagent_mod
-        from kiro_crew import platform_compat
+        import aj_crew.subagent as subagent_mod
+        from aj_crew import platform_compat
 
         for name in ("LINUX", "WINDOWS", "MACOS"):
             monkeypatch.setattr(platform_compat, "IS_" + name, name == "MACOS")
@@ -1293,8 +1293,8 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         the kernel level are faked. The floor check runs the real
         ``check_memory_available``, and the level is read fresh through the real
         ``read_memory_pressure_level``."""
-        import kiro_crew.subagent as subagent_mod
-        from kiro_crew import platform_compat
+        import aj_crew.subagent as subagent_mod
+        from aj_crew import platform_compat
 
         for name in ("LINUX", "WINDOWS", "MACOS"):
             monkeypatch.setattr(platform_compat, "IS_" + name, name == "MACOS")
@@ -1314,7 +1314,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         """On the coroutine pump the held row is passed over by the pick: no store
         defer is written, the label stays the pressure reason, and the row stays
         queued and due for the next pass."""
-        from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+        from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
 
         monkeypatch.setattr(SpawnAdmissionCoordinator, "open_store_off_loop", True)
         monkeypatch.setattr(SpawnAdmissionCoordinator, "pump_off_loop", True)
@@ -1329,9 +1329,9 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
             mgr._on_event = on_event
             park = MagicMock(wraps=mgr._admission.park_defer)
             with (
-                patch("kiro_crew.subagent.check_memory_available", return_value=(True, 8.0)),
-                patch("kiro_crew.subagent.KiroCrewConfig") as mock_cfg,
-                patch("kiro_crew.subagent.sel"),
+                patch("aj_crew.subagent.check_memory_available", return_value=(True, 8.0)),
+                patch("aj_crew.subagent.AjCrewConfig") as mock_cfg,
+                patch("aj_crew.subagent.sel"),
                 patch.object(type(mgr._admission), "park_defer", park),
             ):
                 mock_cfg.load.return_value.agent.spawn_min_memory_gb = 4.0
@@ -1358,7 +1358,7 @@ class TestSpawnAdmissionGatePressureHold(_TestSpawnAdmissionGateHarness):
         returned. The label must ride on THAT emit: published earlier, a row the
         store turned out not to hold (refused, not queued) would leave a memory
         label on the parent for its other, capacity-queued rows to wear."""
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         mgr = self._mgr()
         store = mgr._taskq

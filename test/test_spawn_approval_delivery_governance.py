@@ -36,10 +36,10 @@ import pytest
 # dispatcher factory) so this suite exercises a REAL registered hook.
 from test_telegram import _dispatcher  # noqa: E402
 
-from kiro_crew.constants import DENY_CAUSE_APPROVAL_TIMEOUT
-from kiro_crew.messaging import spawn_approval_delivery as seam
-from kiro_crew.telegram.renderer import TelegramApprovalDecider
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.constants import DENY_CAUSE_APPROVAL_TIMEOUT
+from aj_crew.messaging import spawn_approval_delivery as seam
+from aj_crew.telegram.renderer import TelegramApprovalDecider
+from aj_crew.testing.wait import async_wait_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -66,7 +66,7 @@ def _short_prompt_wait(monkeypatch: pytest.MonkeyPatch) -> None:
     The real window is minutes, so without this an elapsed-wait assertion, or a
     regression that posts under a deny, would park the suite instead of failing.
     """
-    import kiro_crew.telegram.renderer as renderer_mod
+    import aj_crew.telegram.renderer as renderer_mod
 
     monkeypatch.setattr(renderer_mod, "_APPROVAL_TIMEOUT_S", 0.2)
 
@@ -85,7 +85,7 @@ def _press_lands_inside_the_window(
     press resolves nothing. A press that lands returns at once, so this costs no
     time; one that never resolves still fails by name well inside ``--timeout``.
     """
-    import kiro_crew.telegram.renderer as renderer_mod
+    import aj_crew.telegram.renderer as renderer_mod
 
     monkeypatch.setattr(renderer_mod, "_APPROVAL_TIMEOUT_S", 30.0)
 
@@ -179,7 +179,7 @@ class TestTheGovernanceCeilingGatesChannelDelivery:
         # nobody registered both fall through without a governance question about
         # a channel type the policy has no opinion on.
         assert asyncio.run(seam.deliver_spawn_approval(_RID, _TASK, "dashboard:chat-1-2")) is None
-        assert asyncio.run(seam.deliver_spawn_approval(_RID, _TASK, "unified:kirocrew")) is None
+        assert asyncio.run(seam.deliver_spawn_approval(_RID, _TASK, "unified:ajcrew")) is None
         assert asyncio.run(seam.deliver_spawn_approval(_RID, _TASK, "telegram:k:direct:7")) is None
         assert _ceiling.calls == []
 
@@ -376,7 +376,7 @@ class TestTheSeamOwnsTheReading:
             asked.append((channel, request_id))
             return None
 
-        import kiro_crew.telegram.transport_dispatch as td
+        import aj_crew.telegram.transport_dispatch as td
 
         d, _cli, _sess = _dispatcher({7})
         session_key = d._session_key(("direct", "7"))
@@ -402,9 +402,9 @@ class TestTheSeamOwnsTheReading:
         # The hook's branch compares against this constant, and the decider sets
         # exactly it on an elapsed wait. A rename of either side would silently
         # turn the branch off.
-        from kiro_crew.telegram import renderer_approval as renderer_mod
+        from aj_crew.telegram import renderer_approval as renderer_mod
 
-        src = renderer_mod.__loader__.get_source("kiro_crew.telegram.renderer_approval")
+        src = renderer_mod.__loader__.get_source("aj_crew.telegram.renderer_approval")
         assert "self.last_deny_cause = DENY_CAUSE_APPROVAL_TIMEOUT" in src
         assert DENY_CAUSE_APPROVAL_TIMEOUT == "approval_timeout"
 
@@ -598,5 +598,5 @@ class TestADeliveryFaultStillFallsThrough:
         d, cli, _sess = _dispatcher({7})
         seam.register_channel_delivery("telegram", d.deliver_spawn_approval)
 
-        assert asyncio.run(seam.deliver_spawn_approval(_RID, _TASK, "telegram:kirocrew")) is None
+        assert asyncio.run(seam.deliver_spawn_approval(_RID, _TASK, "telegram:ajcrew")) is None
         assert cli.sent == []

@@ -13,15 +13,15 @@ from unittest.mock import Mock
 
 import pytest
 
-from kiro_crew import context as ctx
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.context_blocks import measure_prompt
-from kiro_crew.hooks import HookManager
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.memory_recall import bound_recall_payload
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import context as ctx
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.context_blocks import measure_prompt
+from aj_crew.hooks import HookManager
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.memory_recall import bound_recall_payload
+from aj_crew.skills import SkillsLoader
+from aj_crew.vector_memory import VectorMemoryStore
 
 pytestmark = [
     pytest.mark.xdist_group("default_context_admission"),
@@ -47,8 +47,8 @@ class _FrozenClock(datetime):
 @pytest.fixture
 def rig(tmp_path, monkeypatch):
     monkeypatch.setattr(ctx, "datetime", _FrozenClock)
-    cfg = KiroCrewConfig()
-    monkeypatch.setattr(ctx.KiroCrewConfig, "load", lambda: cfg)
+    cfg = AjCrewConfig()
+    monkeypatch.setattr(ctx.AjCrewConfig, "load", lambda: cfg)
     monkeypatch.setattr(ctx, "agent_skill_globs", lambda agent: [])
     monkeypatch.setattr(ctx, "kiro_agents_dir", lambda: tmp_path / "agents")
     monkeypatch.setattr(ctx, "_memory_stores", {})
@@ -337,7 +337,7 @@ class TestAdmissionAndSkills:
         # Named so no fixed prompt text contains it: "outside" is in a critical rule.
         seed_skill(skills._dir, "unscoped-zebra")
         monkeypatch.setattr(ctx, "agent_skill_globs", lambda agent, **kwargs: [str(mapped)])
-        text = builder.build_session_context(agent="kirocrew", provider_type="acp")
+        text = builder.build_session_context(agent="ajcrew", provider_type="acp")
         assert "skill_search" in text and "mapped" in text
         assert "unscoped-zebra" not in text
         assert "Synthetic procedure" not in text
@@ -399,7 +399,7 @@ class TestAuthoredBlocksOutsideThePool:
         assert "omitted background context" not in text
 
     def test_other_protected_content_still_uses_the_pool(self):
-        from kiro_crew.context_assembly import budget as _budgets
+        from aj_crew.context_assembly import budget as _budgets
 
         caps = _budgets._resolve_caps_cached(_budgets._effective_window(None))
         blocks = _budgets.ContextParts()
@@ -680,7 +680,7 @@ class TestExactMetering:
         calls = [
             call
             for call in recorder.histogram.call_args_list
-            if call.args[0].startswith("kirocrew.context.block.")
+            if call.args[0].startswith("ajcrew.context.block.")
         ]
         assert sum(call.args[1] for call in calls if call.kwargs["unit"] == "chars") == len(text)
         assert sum(call.args[1] for call in calls if call.kwargs["unit"] == "bytes") == len(
@@ -769,7 +769,7 @@ def test_first_oversized_summary_is_not_forced_and_footer_is_charged(rig, monkey
 def test_confined_pinned_body_preserves_reference_delivery(
     rig, tmp_path, monkeypatch, project_name, fresh, reinject
 ):
-    from kiro_crew import skill_trust
+    from aj_crew import skill_trust
 
     builder, _, skills, _, _ = rig
     project = tmp_path / project_name
@@ -815,8 +815,8 @@ def test_shared_admission_exact_fit_does_not_reserve_unused_footer(rig, monkeypa
 
 
 def test_agent_skill_search_entry_finds_omitted_catalog(rig, monkeypatch):
-    from kiro_crew import mcp_core
-    from kiro_crew.mcp_tools import skills as tools
+    from aj_crew import mcp_core
+    from aj_crew.mcp_tools import skills as tools
 
     builder, _, skills, _, _ = rig
     seed_skill(skills._dir, "notebookquartz")
@@ -866,14 +866,14 @@ def test_member_lessons_renderer_ranks_against_the_request(tmp_path, monkeypatch
     request is about. Passing the request lets ranking keep the relevant rule and
     drop an irrelevant newer one instead.
     """
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-    from kiro_crew.members import slug_for_name, write_member_rules
-    from kiro_crew.memory_stores import (
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+    from aj_crew.members import slug_for_name, write_member_rules
+    from aj_crew.memory_stores import (
         memory_store_dir_for,
         persist_member_config,
         provision_member_memory,
     )
-    from kiro_crew.vector_memory import open_member_database
+    from aj_crew.vector_memory import open_member_database
 
     home = tmp_path / "host-home"
     home.mkdir()
@@ -882,11 +882,11 @@ def test_member_lessons_renderer_ranks_against_the_request(tmp_path, monkeypatch
     monkeypatch.setenv("KIRO_HOME", str(home / ".kiro"))
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
     agents = home / ".kiro" / "agents"
-    monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", agents)
-    monkeypatch.setattr("kiro_crew.agent_discovery._KIRO_AGENTS_DIR", agents)
+    monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", agents)
+    monkeypatch.setattr("aj_crew.agent_discovery._KIRO_AGENTS_DIR", agents)
 
-    cfg = KiroCrewConfig.load()
-    cfg.agents["writer"] = KiroCrewAgentConfig(
+    cfg = AjCrewConfig.load()
+    cfg.agents["writer"] = AjCrewAgentConfig(
         kiro_agent="writer-template", description="A careful writer"
     )
     store = provision_member_memory(cfg, "writer")

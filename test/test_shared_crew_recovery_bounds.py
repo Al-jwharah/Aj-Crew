@@ -27,11 +27,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import containment as _containment
-from kiro_crew.shared_crew import host_hooks, routes_admission
-from kiro_crew.shared_crew.admission import (
+from aj_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import containment as _containment
+from aj_crew.shared_crew import host_hooks, routes_admission
+from aj_crew.shared_crew.admission import (
     ContainmentKind,
     Liveness,
     OperationKind,
@@ -39,17 +39,17 @@ from kiro_crew.shared_crew.admission import (
     ReasonCode,
     RuntimeOwnershipRef,
 )
-from kiro_crew.shared_crew.containment import ContainmentReport, SliceManager
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew.containment import ContainmentReport, SliceManager
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     ActorContext,
     EnforcementLevel,
     Principal,
     Transport,
 )
-from kiro_crew.shared_crew.work_store import WorkStore
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.shared_crew.work_store import WorkStore
+from aj_crew.taskq.store import TaskStore
+from aj_crew.testing.clock import ManualClock
 
 S = OperationState
 BOUND = 30.0
@@ -143,7 +143,7 @@ async def test_restart_holds_and_reaps_a_runtime_alive_under_its_slice(
     store.tasks.close()
 
     # -- the gateway restarts; the pre-crash runtime scope still holds a process --
-    states = {"kirocrew-rt-old.scope": "active"}
+    states = {"ajcrew-rt-old.scope": "active"}
     stopped: list[str] = []
 
     def populated(name, **_kw):
@@ -164,10 +164,10 @@ async def test_restart_holds_and_reaps_a_runtime_alive_under_its_slice(
     # Alive: the record keeps its slot, and the orphan was asked to stop.
     assert store2.get_sync(adm.work.work_id).state is S.RECONCILING
     assert svc2.capacity(A).crew.active == 1
-    assert stopped == ["kirocrew-rt-old.scope"]
+    assert stopped == ["ajcrew-rt-old.scope"]
     # A later runtime of the same person in the same slice does not hold it open.
-    states["kirocrew-rt-new.scope"] = "active"
-    states["kirocrew-rt-old.scope"] = "inactive"
+    states["ajcrew-rt-new.scope"] = "active"
+    states["ajcrew-rt-old.scope"] = "inactive"
     assert (await svc2.tick())["proven"] == 1
     ended = store2.get_sync(adm.work.work_id)
     assert ended.state is S.UNKNOWN_OUTCOME
@@ -179,18 +179,18 @@ async def test_restart_holds_and_reaps_a_runtime_alive_under_its_slice(
 async def test_slice_liveness_reads_populated_runtime_scopes(tmp_path, monkeypatch):
     group = "user.slice/user-1.slice/user@1.service/k.slice/k-a.slice/k-a-p1.slice"
     base = tmp_path / group
-    (base / "kirocrew-rt-live.scope").mkdir(parents=True)
-    (base / "kirocrew-rt-live.scope" / "cgroup.events").write_text("populated 1\nfrozen 0\n")
-    (base / "kirocrew-rt-done.scope").mkdir()
-    (base / "kirocrew-rt-done.scope" / "cgroup.events").write_text("populated 0\nfrozen 0\n")
+    (base / "ajcrew-rt-live.scope").mkdir(parents=True)
+    (base / "ajcrew-rt-live.scope" / "cgroup.events").write_text("populated 1\nfrozen 0\n")
+    (base / "ajcrew-rt-done.scope").mkdir()
+    (base / "ajcrew-rt-done.scope" / "cgroup.events").write_text("populated 0\nfrozen 0\n")
     (base / "other.scope").mkdir()
     (base / "other.scope" / "cgroup.events").write_text("populated 1\n")
     monkeypatch.setattr(
-        "kiro_crew.platform_compat.trusted_system_bin", lambda name: "/usr/bin/systemctl"
+        "aj_crew.platform_compat.trusted_system_bin", lambda name: "/usr/bin/systemctl"
     )
     runner = _Runner({"k-a-p1.slice": "/" + group + "\n"})
     found = _containment.populated_scopes("k-a-p1.slice", runner=runner, cgroup_root=str(tmp_path))
-    assert found == ["kirocrew-rt-live.scope"]
+    assert found == ["ajcrew-rt-live.scope"]
     assert _containment.populated_scopes("not-a-unit", runner=runner) is None
     empty = _Runner({"k-a-p2.slice": "\n"})
     assert _containment.populated_scopes("k-a-p2.slice", runner=empty) == []
@@ -202,7 +202,7 @@ async def test_capacity_after_restart_counts_reconciling_work(tmp_path, clock, m
     store = _open(path, clock)
     svc = _service(store, clock, liveness=lambda ref: Liveness.STOPPED)
     adm = await _admit(svc)
-    ref = RuntimeOwnershipRef(adm.work.work_id, containment_unit="kirocrew-rt-x.scope")
+    ref = RuntimeOwnershipRef(adm.work.work_id, containment_unit="ajcrew-rt-x.scope")
     store.advance_sync(adm.work, S.RUNNING, runtime=ref)
     store.tasks.close()
     store2 = _open(path, clock)
@@ -291,13 +291,13 @@ async def test_work_started_inside_a_persons_turn_is_charged_to_that_person(
     )
     svc.bind_session("dashboard:alice-tab", A, "w-root")
     signed = {"tok-alice": "dashboard:alice-tab", "tok-nobody": "dashboard:nobody"}
-    from kiro_crew.shared_crew import internal_caller
+    from aj_crew.shared_crew import internal_caller
 
     monkeypatch.setattr(internal_caller, "_verify_token", lambda token: signed.get(token, ""))
     # A declared key is proven by the transport's shared check, which verifies
     # the same signed token.
     monkeypatch.setattr(
-        "kiro_crew.member_memory_auth.verify_session_token", lambda token: signed.get(token, "")
+        "aj_crew.member_memory_auth.verify_session_token", lambda token: signed.get(token, "")
     )
 
     async def budget(headers: dict[str, str], **marks: object) -> str:
@@ -329,7 +329,7 @@ async def test_work_started_inside_a_persons_turn_is_charged_to_that_person(
     # None of them reaches the automation budget, a second one for anybody.
     assert ag.AUTOMATION_PRINCIPAL.id != unknown
     # A's agent spending on background work spends A's own budget.
-    from kiro_crew.shared_crew import admission_entry
+    from aj_crew.shared_crew import admission_entry
 
     async def _current():
         return svc
@@ -355,7 +355,7 @@ async def test_work_started_inside_a_persons_turn_is_charged_to_that_person(
 
 @pytest.mark.asyncio
 async def test_hard_limits_with_admission_off_refuses_every_start(tmp_path, clock, monkeypatch):
-    from kiro_crew.acp.runtime_start import _refuse_without_containment
+    from aj_crew.acp.runtime_start import _refuse_without_containment
 
     limits = effective_limits(
         shared_crew_config_from({"admission_enabled": False, "hard_limits": True}),
@@ -387,7 +387,7 @@ async def test_hard_limits_with_admission_off_refuses_every_start(tmp_path, cloc
 
 def test_an_unprobed_hard_limit_service_refuses_runtime_starts(tmp_path, clock, monkeypatch):
     """Installed before its first probe, hard mode refuses instead of failing open."""
-    from kiro_crew.acp.runtime_start import _refuse_without_containment
+    from aj_crew.acp.runtime_start import _refuse_without_containment
 
     svc = ag.AdmissionService(
         _open(tmp_path / "t.db", clock), limits=_limits(hard_limits=True), clock=clock.time
@@ -405,7 +405,7 @@ def test_an_unprobed_hard_limit_service_refuses_runtime_starts(tmp_path, clock, 
 
 @pytest.mark.asyncio
 async def test_a_raising_probe_reaches_the_runtime_start_backstop(tmp_path, clock, monkeypatch):
-    from kiro_crew.acp.runtime_start import _refuse_without_containment
+    from aj_crew.acp.runtime_start import _refuse_without_containment
 
     def boom():
         raise OSError("bus gone")
@@ -431,8 +431,8 @@ async def test_a_raising_probe_reaches_the_runtime_start_backstop(tmp_path, cloc
 def dash_state(tmp_path, monkeypatch):
     from chat_test_helpers import _make_state
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()
@@ -442,7 +442,7 @@ def dash_state(tmp_path, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_a_new_session_is_recorded_before_its_work_is_accepted(dash_state):
-    from kiro_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard.chat_utils import slot_history_key
 
     slot = dash_state.get_or_create_slot("fresh-tab")
     key = slot_history_key(slot)
@@ -520,7 +520,7 @@ async def test_idle_principal_slices_are_stopped_and_their_drop_ins_removed(tmp_
     await asyncio.wait_for(adm.run(asyncio.sleep(0)), BOUND)
     now = clock.time()
     assert await svc.sweep_slices(now) == 0  # idle clock starts
-    busy[name] = ["kirocrew-rt-late.scope"]
+    busy[name] = ["ajcrew-rt-late.scope"]
     assert await svc.sweep_slices(now + ag.SLICE_IDLE_SECONDS) == 0  # a scope still runs
     assert svc._slices.is_ready(name)
     busy[name] = []
@@ -543,7 +543,7 @@ async def test_slices_an_earlier_process_left_are_released_at_start(tmp_path, cl
         clock,
         runner=runner,
         liveness=lambda ref: Liveness.STOPPED,
-        slice_busy=lambda name: ["kirocrew-rt-x.scope"] if name == busy_left else [],
+        slice_busy=lambda name: ["ajcrew-rt-x.scope"] if name == busy_left else [],
         cfg={"containment_enabled": True},
     )
     assert await svc.release_stale_slices() == 1
@@ -579,7 +579,7 @@ async def test_a_stop_that_interrupted_a_running_turn_releases_its_slice(
     name = await svc.prepare_principal_slice(A)
     assert name and svc._slices.is_ready(name)
     # The stop finds A's turn still live and its runtime scope still emptying.
-    busy[name] = ["kirocrew-rt-a.scope"]
+    busy[name] = ["ajcrew-rt-a.scope"]
     pauses: list[float] = []
 
     async def pause(seconds: float) -> None:
@@ -611,7 +611,7 @@ async def test_a_stop_keeps_a_slice_a_runtime_still_holds(tmp_path, clock, monke
         clock,
         runner=runner,
         liveness=lambda ref: Liveness.STOPPED,
-        slice_busy=lambda name: ["kirocrew-rt-a.scope"],
+        slice_busy=lambda name: ["ajcrew-rt-a.scope"],
         cfg={"containment_enabled": True},
     )
     monkeypatch.setattr(ag, "_SERVICE", svc)
@@ -629,7 +629,7 @@ async def test_a_stop_keeps_a_slice_a_runtime_still_holds(tmp_path, clock, monke
 
 
 def test_the_instance_slice_is_kept_while_anything_runs_under_it():
-    from kiro_crew.shared_crew import admission_runtime
+    from aj_crew.shared_crew import admission_runtime
 
     runner = _Runner()
     slices = SliceManager(runner=runner, systemctl="/usr/bin/systemctl")

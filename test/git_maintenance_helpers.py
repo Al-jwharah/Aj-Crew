@@ -5,7 +5,7 @@ the call and adds and removes lock files under .git, so a test that walks,
 snapshots or copies the repo right after can see a file vanish.
 
 The repo-root ``conftest.py`` loads this module by path, so the floor reaches
-every testpath, ``src/kiro_crew/apps/builtins`` included. It does two things
+every testpath, ``src/aj_crew/apps/builtins`` included. It does two things
 for every session and test:
 
 * points ``GIT_CONFIG_GLOBAL`` at a session-owned file that ends with

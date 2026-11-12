@@ -15,7 +15,7 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew.dashboard.session_transfer import BUNDLE_VERSION
+from aj_crew.dashboard.session_transfer import BUNDLE_VERSION
 
 
 class _OwnerReq(SimpleNamespace):
@@ -41,7 +41,7 @@ class _OwnerReq(SimpleNamespace):
 
 def _export_gz(document) -> bytes:
     """The compressed export of *document*, staged, read and removed."""
-    from kiro_crew.dashboard.session_export import _stage_export
+    from aj_crew.dashboard.session_export import _stage_export
 
     path = _stage_export(document)
     try:
@@ -52,7 +52,7 @@ def _export_gz(document) -> bytes:
 
 def _serialise(bundle):
     """The production serialiser, writing under the per-test egress dir."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     return st.write_bundle_file(bundle, compress=False)
 
@@ -87,7 +87,7 @@ def _isolate_import_tmp(tmp_path_factory, _floor_monkeypatch):
     Arriving bodies stream to disk before they are parsed; without this they would
     land under the real crew home. ``tmp_path_factory`` is pytest-managed, so
     nothing leaks (conftest's tmp-residue watchdog would otherwise flag it)."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     d = tmp_path_factory.mktemp("kc-import")
     _floor_monkeypatch.setattr(st, "_import_tmp_dir", lambda: d)
@@ -107,7 +107,7 @@ class _PersistentLine:
 
     def derive_messages_chained(self, key):
         """The derivation seam, as the real log implements it: line, then rows."""
-        from kiro_crew.history import TranscriptWithheld, is_incognito_transcript
+        from aj_crew.history import TranscriptWithheld, is_incognito_transcript
 
         meta, readable = self.get_metadata_status(key)
         if not readable or is_incognito_transcript(meta.get("memory_mode")):
@@ -116,7 +116,7 @@ class _PersistentLine:
 
     @contextlib.contextmanager
     def publication_hold(self, key, *, expected_keys=None):
-        from kiro_crew.history import TranscriptBusy, TranscriptWithheld, is_incognito_transcript
+        from aj_crew.history import TranscriptBusy, TranscriptWithheld, is_incognito_transcript
 
         meta, readable = self.get_metadata_status(key)
         if not readable:
@@ -185,7 +185,7 @@ def _size_refusing_peer(refusal_code: str):
     """A manager whose peer refuses any bundle carrying Layer B with *refusal_code*,
     the way an importer that still enforces the size ceilings does. Returns the
     manager, the list of posted bundles, and the fake ``ClientSession`` factory."""
-    from kiro_crew.instances.ssh_tunnel_manager import (
+    from aj_crew.instances.ssh_tunnel_manager import (
         SshTunnelManager,
         TunnelState,
         TunnelStatus,
@@ -289,7 +289,7 @@ def _stub_state(st, monkeypatch, save=None):
     # happens to touch would silently diverge from the production slot; a real
     # one cannot. get_or_create_slot below mints the key the same way the real
     # one does (name=None -> a fresh key).
-    from kiro_crew.dashboard.chat_handlers import _ChatSlot
+    from aj_crew.dashboard.chat_handlers import _ChatSlot
 
     def _get_or_create(name=None, *_a, **kwargs):
         s = _ChatSlot(name or "imported-1", agent=kwargs.get("agent", ""))
@@ -379,7 +379,7 @@ async def _run_import(
 ):
     state = state if state is not None else _stub_state(st, monkeypatch, save=save)
     if created is not None:
-        from kiro_crew.dashboard.chat_handlers import _ChatSlot
+        from aj_crew.dashboard.chat_handlers import _ChatSlot
 
         def _get_or_create(name=None, *_a, **kwargs):
             created.clear()

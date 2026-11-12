@@ -21,7 +21,7 @@ import shutil
 import pytest
 from installer_test_helpers import run_bounded
 
-from kiro_crew import name_grant, platform_compat
+from aj_crew import name_grant, platform_compat
 
 pytestmark = pytest.mark.skipif(
     platform_compat.IS_WINDOWS,

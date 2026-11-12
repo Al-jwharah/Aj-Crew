@@ -26,8 +26,8 @@ export function useFolderSort({ queryClient, mcCfg, mcCfgStatus, mcCfgError, mcC
   // ── Folder sort mode ──
   // How the folder tree orders siblings: the person's stored positions (custom),
   // a natural name order, or newest first. Server-side (dashboard.folder_sort, the
-  // same kirocrewConfig query as the recency tint) rather than localStorage, because
-  // the kirocrew-dashboard MCP server's chat_folder_tree lists folders in this
+  // same ajcrewConfig query as the recency tint) rather than localStorage, because
+  // the ajcrew-dashboard MCP server's chat_folder_tree lists folders in this
   // same order and an agent picking a before/after anchor from it must read the
   // sequence the person sees on every client. Every folder sort in the sidebar goes
   // through `folderCompare`; a site sorting with `bySidebarOrder` directly would
@@ -108,13 +108,13 @@ export function useFolderSort({ queryClient, mcCfg, mcCfgStatus, mcCfgError, mcC
   // stored `order`, which is what lets Custom restore the manual arrangement
   // exactly. The mutation rides the shared config overlay's SETTLE path --
   // token-guarded success write of the accepted value into the cache at this
-  // one path (every reader of `['kirocrewConfig']` switches on that write),
+  // one path (every reader of `['ajcrewConfig']` switches on that write),
   // then the settle-time refetch, and a failure report only while this save
   // still owns the path -- but not its optimistic display: see `folderSortRead`
   // above for why the tree waits for the save to land.
   const folderSortMut = useMutation({
     ...cfgOverlay.mutationOpts<FolderSortMode>({
-      queryKey: ['kirocrewConfig'],
+      queryKey: ['ajcrewConfig'],
       mutationFn: (mode: FolderSortMode) => api.patchConfig('dashboard.folder_sort', mode),
       path: () => 'dashboard.folder_sort',
       displayValue: v => v,

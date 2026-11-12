@@ -16,14 +16,14 @@ from unittest.mock import MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_title import _TITLE_ORIGIN_USER
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.mcp_dashboard import TABLE
-from kiro_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_title import _TITLE_ORIGIN_USER
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.mcp_dashboard import TABLE
+from aj_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.testing.wait import await_until, finished
 
 
 @pytest.fixture(autouse=True)
@@ -272,7 +272,7 @@ def test_a_bad_title_is_refused_before_the_target_is_looked_up(tmp_path):
 
 def test_the_sidebar_route_still_renames_through_the_shared_helper(tmp_path):
     """The factored-out helper keeps the sidebar rename's behaviour."""
-    from kiro_crew.dashboard.chat_title import api_chat_slot_rename
+    from aj_crew.dashboard.chat_title import api_chat_slot_rename
 
     state = _make_state(tmp_path)
     target = state.get_or_create_slot("chat-2")
@@ -340,7 +340,7 @@ def test_route_renames_the_target(tmp_path):
 def test_the_route_is_registered_strict_internal():
     """An unlisted session-control path falls through to cookie auth, and the
     MCP caller's secret is then ignored in production."""
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     assert "/api/session-control/rename" in server._STRICT_INTERNAL_API_PATHS
 
@@ -394,7 +394,7 @@ def test_tool_refuses_an_unverifiable_caller_without_a_request():
 def test_the_schema_leaves_the_title_cap_to_the_route():
     """A padded title that is under the cap once stripped must reach the route;
     a schema cap on the raw string would refuse it before the strip."""
-    from kiro_crew.validation import SESSION_RENAME_SCHEMA, validate_tool_args
+    from aj_crew.validation import SESSION_RENAME_SCHEMA, validate_tool_args
 
     padded = " " * 20 + "t" * 200 + " " * 20
     args = validate_tool_args({"target": "chat-2", "title": padded}, SESSION_RENAME_SCHEMA)
@@ -407,7 +407,7 @@ def test_a_scheduled_run_cannot_rename_its_own_session(tmp_path):
     self-rename. Shaped as ``inject_cron_result_to_dashboard`` mints the tab."""
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.state import SlotOrigin
+    from aj_crew.dashboard.state import SlotOrigin
 
     state = _make_state(tmp_path)
     state.crons.list_jobs.return_value = [SimpleNamespace(id="2c3b2e25", created_by="")]
@@ -462,7 +462,7 @@ def test_an_allowed_rename_writes_its_audit_record(tmp_path, monkeypatch):
 
 
 def _fail_persist(monkeypatch):
-    from kiro_crew.dashboard import chat_title
+    from aj_crew.dashboard import chat_title
 
     async def _no(state, slot):
         return False
@@ -498,7 +498,7 @@ def test_a_failed_title_write_stays_live_and_the_verb_says_it_is_not_saved(tmp_p
 def test_overlapping_failed_renames_leave_the_newest_title(tmp_path, monkeypatch):
     """Two renames whose saves both fail, the second landing during the first's
     write: the slot ends on the newer title, never on an older one."""
-    from kiro_crew.dashboard import chat_title
+    from aj_crew.dashboard import chat_title
 
     state = _make_state(tmp_path)
     target = state.get_or_create_slot("chat-2")
@@ -526,7 +526,7 @@ def test_overlapping_failed_renames_leave_the_newest_title(tmp_path, monkeypatch
 
 def test_the_sidebar_rename_keeps_its_best_effort_save(tmp_path, monkeypatch):
     """Unchanged from main: a failed save still answers ok with the live title."""
-    from kiro_crew.dashboard import chat_title, title_audit
+    from aj_crew.dashboard import chat_title, title_audit
 
     state = _make_state(tmp_path)
     target = state.get_or_create_slot("chat-2")
@@ -564,7 +564,7 @@ def test_a_redacted_title_is_read_back_as_stored(tmp_path):
 def test_an_overtaken_rename_broadcasts_the_current_title(tmp_path, monkeypatch):
     """Rename "A" saves slowly and "B" lands during that save: when A finishes,
     what it broadcasts is the slot's current title, "B", not its own."""
-    from kiro_crew.dashboard import chat_title
+    from aj_crew.dashboard import chat_title
 
     state = _make_state(tmp_path)
     target = state.get_or_create_slot("chat-2")
@@ -594,7 +594,7 @@ def test_an_overtaken_rename_broadcasts_the_current_title(tmp_path, monkeypatch)
 def test_an_overtaken_rename_replies_with_the_current_title(tmp_path, monkeypatch):
     """session_rename "A" saves slowly and "B" lands during that save: A's reply
     names "B", the title the session now shows, because the caller acts on it."""
-    from kiro_crew.dashboard import chat_title
+    from aj_crew.dashboard import chat_title
 
     state = _make_state(tmp_path)
     caller = state.get_or_create_slot("chat-1")
@@ -625,7 +625,7 @@ def test_an_overtaken_rename_replies_with_the_current_title(tmp_path, monkeypatc
 def test_a_channel_title_on_a_live_slot_renames_through_the_shared_helper(tmp_path, monkeypatch):
     """``rename_channel_title_live`` routes a live slot through
     ``apply_manual_title``, so a channel rename is final like a sidebar one."""
-    from kiro_crew.dashboard import channel_slots, channel_titles
+    from aj_crew.dashboard import channel_slots, channel_titles
 
     calls: list = []
 
@@ -649,7 +649,7 @@ def test_a_channel_rename_reaches_an_open_channel_born_slot(tmp_path, monkeypatc
     """A Slack-born tab runs on ``slack:<ts>`` (its ``linked_session_key``), not a
     ``dashboard:`` key; the rename must land on it, or the tab's next save writes
     its old title back over the transcript."""
-    from kiro_crew.dashboard import channel_slots, channel_titles
+    from aj_crew.dashboard import channel_slots, channel_titles
 
     calls: list = []
 
@@ -680,7 +680,7 @@ def test_an_older_title_write_that_lands_last_writes_the_newest_title(tmp_path):
     moved, A's write already carries "B", so the disk ends on the newer title,
     and the write reports success without a redundant second write that could
     fail and report ``title_persist_failed`` for a title already on disk."""
-    from kiro_crew.dashboard import chat_title
+    from aj_crew.dashboard import chat_title
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("chat-2")
@@ -884,7 +884,7 @@ def test_a_redacted_title_within_the_cap_is_stored_whole(tmp_path):
 
 
 def _rename_rows(monkeypatch) -> list[dict]:
-    from kiro_crew.dashboard import title_audit
+    from aj_crew.dashboard import title_audit
 
     rows: list[dict] = []
     recorder = MagicMock()
@@ -918,7 +918,7 @@ def test_the_rename_route_records_its_app_on_the_dashboard_surface(tmp_path, mon
     """An app name is not a session key, so the route names the surface itself;
     otherwise the SEL files the row under its "slack" fallback. The route's own
     access row is kept as it was."""
-    from kiro_crew.dashboard import chat_title, title_audit
+    from aj_crew.dashboard import chat_title, title_audit
 
     rows = _rename_rows(monkeypatch)
     state = _make_state(tmp_path)
@@ -947,7 +947,7 @@ def test_the_rename_route_records_its_app_on_the_dashboard_surface(tmp_path, mon
 
 
 def test_a_channel_rename_records_its_channel_key(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import channel_slots
+    from aj_crew.dashboard import channel_slots
 
     rows = _rename_rows(monkeypatch)
     state = _make_state(tmp_path)
@@ -963,7 +963,7 @@ def test_a_channel_rename_records_its_channel_key(tmp_path, monkeypatch):
 def test_an_audit_failure_does_not_fail_the_rename(tmp_path, monkeypatch):
     """The SEL row is new on the verb and channel paths; a broken audit log must
     leave those renames working as they did before it existed."""
-    from kiro_crew.dashboard import title_audit
+    from aj_crew.dashboard import title_audit
 
     def _broken():
         raise RuntimeError("sel down")

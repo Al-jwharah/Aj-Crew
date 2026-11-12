@@ -23,11 +23,11 @@ from session_ledger_projection_helpers import (  # noqa: F401 -- the autouse fix
     _unit,
 )
 
-from kiro_crew import crew_log as lg
-from kiro_crew import session_ledger as sl
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import store
+from aj_crew import crew_log as lg
+from aj_crew import session_ledger as sl
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import store
 
 # --------------------------------------------------------------------------- #
 # the upgrade carry-forward
@@ -367,7 +367,7 @@ def test_a_carry_whose_append_may_still_be_queued_keeps_its_claim():
     """
     _legacy_document(SLOT, goal="owed")
     _unit()
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     real_flush = crew_log_emit.flush
     real_seq = sl._unit_last_seq
@@ -407,7 +407,7 @@ def test_a_carry_the_queue_drained_without_releases_its_claim():
     """
     _legacy_document(SLOT, goal="owed")
     _unit()
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     real = crew_log_emit.on_ledger_recorded
     crew_log_emit.on_ledger_recorded = lambda *a, **kw: None  # type: ignore[assignment]
@@ -472,7 +472,7 @@ def test_the_recorded_order_beats_a_backward_header_clock():
 
 def test_the_public_slot_fold_applies_the_same_exclusions():
     """The HTTP projection route must not serve a different answer from read_state."""
-    from kiro_crew.crew_log import projection as proj
+    from aj_crew.crew_log import projection as proj
 
     _unit(SESSION)
     sl.record(SLOT, session_id=SESSION, goal="deleted conversation")
@@ -1390,7 +1390,7 @@ def test_the_tombstone_is_settled_inside_the_exclusion_hold():
     delete would see those ids, add none, and unlink its transcript on an exclusion
     this call is about to take back.
     """
-    from kiro_crew.platform_compat import try_acquire_lock
+    from aj_crew.platform_compat import try_acquire_lock
 
     _unit(SESSION)
     sl.record(SLOT, session_id=SESSION, goal="g")

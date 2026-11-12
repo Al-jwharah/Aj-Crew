@@ -171,9 +171,9 @@ describe("createWillDownloadHandler", () => {
   it("sets a save path under the downloads dir so the file actually lands (issue #13047)", () => {
     const fs = { existsSync: () => false };
     const handler = createWillDownloadHandler({ app: fakeApp, fs, dashboardUrl: DASH, pending: ALWAYS() });
-    const item = fakeItem("kirocrew-export.zip");
+    const item = fakeItem("ajcrew-export.zip");
     handler({}, item);
-    assert.equal(item._savePath, path.join(DOWNLOADS, "kirocrew-export.zip"));
+    assert.equal(item._savePath, path.join(DOWNLOADS, "ajcrew-export.zip"));
   });
 
   it("logs nothing extra when the download completes (no OS file-manager reveal)", () => {

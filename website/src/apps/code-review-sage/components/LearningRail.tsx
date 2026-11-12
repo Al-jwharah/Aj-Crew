@@ -148,7 +148,7 @@ export default function LearningRail() {
                   onClick={() => selectNamespace(ns.name)}
                   aria-current={isSelected ? 'true' : undefined}
                   // Without this the accessible name is the row's whole text run
-                  // together ("kirocrew 5 patterns · 1 pending").
+                  // together ("ajcrew 5 patterns · 1 pending").
                   aria-label={i18nT('apps.codeReviewSage.components.learningRail.read_namespace', { name: ns.name })}
                   className="flex-1 min-w-0 text-left bg-transparent cursor-pointer"
                 >

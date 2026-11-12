@@ -1,7 +1,7 @@
 """Pin the globals a rebound component implementation is allowed to load.
 
 ``subagent_manager._component.bind_component_globals`` rebinds every ``*_impl`` on the
-``subagent._MANAGER_COMPONENTS`` types onto ``kiro_crew.subagent``'s module globals, so
+``subagent._MANAGER_COMPONENTS`` types onto ``aj_crew.subagent``'s module globals, so
 one of those functions executes with ``subagent.py``'s globals and an import at the top
 of its own module is invisible to it. Every global it loads has to exist in
 ``subagent.py``.
@@ -19,7 +19,7 @@ import types
 from collections.abc import Iterator
 from dis import get_instructions
 
-import kiro_crew.subagent as subagent_module
+import aj_crew.subagent as subagent_module
 
 _GLOBAL_OPS = frozenset({"LOAD_GLOBAL", "STORE_GLOBAL", "DELETE_GLOBAL"})
 

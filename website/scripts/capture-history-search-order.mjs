@@ -27,7 +27,7 @@ const NOW = Date.parse('2026-08-08T15:00:00Z') / 1000
 // One open session so the sidebar renders normally.
 const slots = [{
   key: 's1', title: 'Current work session', messages: 4, running: false,
-  agent: 'kirocrew', created: '2026-08-08T01:00:00Z', last_ts: '2026-08-08T14:00:00Z', folder_id: '',
+  agent: 'ajcrew', created: '2026-08-08T01:00:00Z', last_ts: '2026-08-08T14:00:00Z', folder_id: '',
 }]
 
 // History list (pre-search): a few sessions, newest first.

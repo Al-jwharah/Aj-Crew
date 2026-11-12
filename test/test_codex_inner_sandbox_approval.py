@@ -37,10 +37,10 @@ from pathlib import Path
 import pytest
 from test_codex_session_mcp import _ENTRY, _require_codex_acp, _run_driver_reaping_group
 
-from kiro_crew.acp.harness.codex import CodexHarness
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CODEX
-from kiro_crew.agent_sdk.backends_routing import ACP_BACKEND_PERMISSION_CONFIG
-from kiro_crew.sandbox import userns_available
+from aj_crew.acp.harness.codex import CodexHarness
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CODEX
+from aj_crew.agent_sdk.backends_routing import ACP_BACKEND_PERMISSION_CONFIG
+from aj_crew.sandbox import userns_available
 
 #: One step per prompt: the shell call the stub model makes, and Crew's answer to
 #: any ask it raises (``None`` = the step must not ask at all).
@@ -71,9 +71,9 @@ work = os.path.join(root, "work")
 USAGE = {"input_tokens": 100, "input_tokens_details": None, "output_tokens": 5,
          "output_tokens_details": None, "total_tokens": 105}
 
-from kiro_crew import permission_floor
-from kiro_crew.acp._dispatch import build_permission_event
-from kiro_crew.acp.types import JsonRpcMessage
+from aj_crew import permission_floor
+from aj_crew.acp._dispatch import build_permission_event
+from aj_crew.acp.types import JsonRpcMessage
 
 port, tool_results = [0], {}
 
@@ -153,7 +153,7 @@ with open(os.path.join(root, "codex_home", "config.toml"), "w") as fh:
              '[features]\nexec_permission_approvals = true\n'
              '[model_providers.stub]\nname = "stub"\n'
              'base_url = "http://127.0.0.1:%d/v1"\nwire_api = "responses"\n'
-             'env_key = "KIROCREW_STUB_MODEL_KEY"\n'
+             'env_key = "AJCREW_STUB_MODEL_KEY"\n'
              'request_max_retries = 0\nstream_max_retries = 0\n' % port[0])
 subprocess.run(["git", "init", "-q", work], check=True)
 # codex's bubblewrap stages mount targets under TMPDIR; keep them in this run's
@@ -161,7 +161,7 @@ subprocess.run(["git", "init", "-q", work], check=True)
 child_tmp = os.path.join(root, "tmp")
 os.makedirs(child_tmp, exist_ok=True)
 env = dict(os.environ, CODEX_HOME=os.path.join(root, "codex_home"), NO_BROWSER="1",
-           KIROCREW_STUB_MODEL_KEY="stub-key", TMPDIR=child_tmp)
+           AJCREW_STUB_MODEL_KEY="stub-key", TMPDIR=child_tmp)
 
 p = subprocess.Popen([node, entry], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                      stderr=subprocess.DEVNULL, cwd=work, env=env, text=True, bufsize=1)
@@ -273,7 +273,7 @@ print(json.dumps(out, default=str))
 @pytest.fixture(scope="module")
 def codex_inner_sandbox() -> dict:
     """One session in Crew's routing mode; one prompt per entry of ``_STEPS``."""
-    from kiro_crew.acp.client_start import CLIENT_NAME, CLIENT_VERSION
+    from aj_crew.acp.client_start import CLIENT_NAME, CLIENT_VERSION
 
     _require_codex_acp(with_node=True)
     if not shutil.which("git"):
@@ -288,7 +288,7 @@ def codex_inner_sandbox() -> dict:
         root = Path(w)
         (root / "work").mkdir()
         (root / "codex_home").mkdir()
-        (root / "kirocrew_home").mkdir()
+        (root / "ajcrew_home").mkdir()
         (root / "codex_home" / "auth.json").write_text(
             json.dumps({"OPENAI_API_KEY": "sk-not-a-real-key-" + "0" * 24}), encoding="utf-8"
         )
@@ -296,7 +296,7 @@ def codex_inner_sandbox() -> dict:
         driver.write_text(_DRIVER, encoding="utf-8")
         with pytest.MonkeyPatch.context() as mp:
             # The floor reads the live config; an empty data home is the default one.
-            mp.setenv("KIROCREW_HOME", str(root / "kirocrew_home"))
+            mp.setenv("AJCREW_HOME", str(root / "ajcrew_home"))
             result = _run_driver_reaping_group(
                 [
                     sys.executable,

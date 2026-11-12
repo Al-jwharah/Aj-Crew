@@ -8,7 +8,7 @@ These tests spy on the retrying read to record the thread it ran on, and check
 that a read still contended after its retries answers a coded 503; no real
 server is probed or spawned. The toggle, remove and DELETE routes answer the
 same 503 before they write, and again when their agent-config sync meets a held
-``kirocrew.json``, which the sync now lets raise.
+``ajcrew.json``, which the sync now lets raise.
 """
 
 from __future__ import annotations
@@ -26,9 +26,9 @@ from handlers_mcp_coverage_helpers import _request as _owner_request
 from handlers_mcp_coverage_helpers import sandbox_fixture  # noqa: F401
 from handlers_mcp_coverage_helpers import _write_global
 
-import kiro_crew.mcp_discovery as disc
-from kiro_crew import atomic_write
-from kiro_crew.dashboard.handlers import mcp as mcp_mod
+import aj_crew.mcp_discovery as disc
+from aj_crew import atomic_write
+from aj_crew.dashboard.handlers import mcp as mcp_mod
 
 
 class _ThreadRecordingFile:
@@ -89,7 +89,7 @@ def global_file(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> _ThreadRecor
     monkeypatch.setattr(
         atomic_write, "read_bytes_with_retry", recorder.spy(atomic_write.read_bytes_with_retry)
     )
-    monkeypatch.setattr(mcp_mod, "_kirocrew_mcp_json", lambda: tmp_path / "absent-kc.json")
+    monkeypatch.setattr(mcp_mod, "_ajcrew_mcp_json", lambda: tmp_path / "absent-kc.json")
     monkeypatch.setattr(disc, "list_servers", lambda *a, **k: [])
     monkeypatch.setattr(disc, "probe_all", AsyncMock(return_value=[]))
     monkeypatch.setattr(mcp_mod, "_evaluate_shareability", AsyncMock(return_value=None))
@@ -208,7 +208,7 @@ _MUTATIONS: dict[str, Callable[[], Awaitable[Any]]] = {
 async def test_a_mutation_route_answers_a_held_mcp_json_with_a_coded_503_and_writes_nothing(
     sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch, route: str
 ) -> None:
-    from kiro_crew.dashboard.handlers import _shared
+    from aj_crew.dashboard.handlers import _shared
 
     _write_global(sandbox, {"srv": {"command": "x"}})
     before = sandbox.global_json.read_bytes()
@@ -236,10 +236,10 @@ async def test_a_mutation_route_answers_a_held_mcp_json_with_a_coded_503_and_wri
 async def test_a_route_whose_agent_sync_meets_a_held_agent_config_answers_a_coded_503(
     sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch, route: str
 ) -> None:
-    from kiro_crew.dashboard.handlers import _shared
+    from aj_crew.dashboard.handlers import _shared
 
     def _held_sync(*args: Any, **kwargs: Any) -> None:
-        raise PermissionError(13, "Permission denied", "kirocrew.json")
+        raise PermissionError(13, "Permission denied", "ajcrew.json")
 
     _write_global(sandbox, {"srv": {"command": "x"}})
     monkeypatch.setattr(mcp_mod, "_sync_mcp_to_agent", _held_sync)
@@ -258,9 +258,9 @@ async def test_a_route_whose_agent_sync_meets_a_held_agent_config_answers_a_code
 def test_a_held_agent_config_raises_out_of_the_sync_and_is_left_as_it_was(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, batch: bool
 ) -> None:
-    from kiro_crew.dashboard.handlers import agents, mcp_agent_sync
+    from aj_crew.dashboard.handlers import agents, mcp_agent_sync
 
-    agent_cfg = tmp_path / "kirocrew.json"
+    agent_cfg = tmp_path / "ajcrew.json"
     agent_cfg.write_text(json.dumps({"mcpServers": {}}), encoding="utf-8")
     before = agent_cfg.read_bytes()
     monkeypatch.setattr(agents, "_installed_agent_config", lambda: agent_cfg)

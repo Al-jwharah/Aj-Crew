@@ -3,7 +3,7 @@
 ``_Transcript`` is the ordered record a scenario produces. ``_Slack``, ``_Provider``,
 ``_Sessions`` and ``_ContextBuilder`` write rows to it as the handler drives them, beside
 the SEL, stats, config and clock stand-ins the ``world`` fixture patches onto
-``kiro_crew.slack.handler``. ``_turn`` runs one ``handle_message`` call on a fresh
+``aj_crew.slack.handler``. ``_turn`` runs one ``handle_message`` call on a fresh
 ``_Slack``, ``_Provider`` and ``_Sessions``; the ``LLMEvent`` builders and ``_settle`` sit
 beside it. Only ``test_slack_handler_composition_contract_golden.py`` imports this module.
 """
@@ -19,9 +19,9 @@ from typing import Any
 
 import pytest
 
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack import handler
 from conftest import MockSlackClient
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack import handler
 
 # ── recording doubles ─────────────────────────────────────────────────────────
 
@@ -432,7 +432,7 @@ def world_fixture(monkeypatch: pytest.MonkeyPatch, tmp_path):
     for name, value in {
         "sel": lambda: _Sel(log),
         "Stats": _StatsFactory(log),
-        "KiroCrewConfig": type("_LoggedConfig", (_Config,), {"log": log}),
+        "AjCrewConfig": type("_LoggedConfig", (_Config,), {"log": log}),
         "_orch_cfg": _Config(),
         "time": _StepClock(),
         "uuid": SimpleNamespace(uuid4=lambda: SimpleNamespace(hex="0123456789abcdef")),

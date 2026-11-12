@@ -32,9 +32,8 @@ from job_sdk_helpers import (  # noqa: F401 -- the fixture is requested by name
     sdk_fixture,
 )
 
-from conftest import make_dir_link, requires_symlinks
-from kiro_crew.apps import job_sdk
-from kiro_crew.apps.job_sdk import (
+from aj_crew.apps import job_sdk
+from aj_crew.apps.job_sdk import (
     CANCELLED,
     DONE,
     FAILED,
@@ -54,9 +53,10 @@ from kiro_crew.apps.job_sdk import (
     register_sdk,
     registered_apps,
 )
-from kiro_crew.apps.manager import app_data_dir
-from kiro_crew.config import paths
-from kiro_crew.hooks import safe_read_file_bytes_nolink
+from aj_crew.apps.manager import app_data_dir
+from aj_crew.config import paths
+from aj_crew.hooks import safe_read_file_bytes_nolink
+from conftest import make_dir_link, requires_symlinks
 
 # 1. register / kinds / is_cancellable
 
@@ -1369,7 +1369,7 @@ class TestDisableTrace:
         denied_stem = "d" * 32
         (sdk.store.dir / f"{denied_stem}.json").write_text("{}")
 
-        from kiro_crew import platform_compat as _pc
+        from aj_crew import platform_compat as _pc
 
         real_no_reparse = _pc.open_file_no_reparse
 
@@ -1469,7 +1469,7 @@ class TestDisableTrace:
         disable scan reads the SDK's own store, so that fence must not turn the
         app's records into ``unreadable`` lines: a stale run keeps its kind and a
         finished one gets no line. That holds when the operator's own home is a
-        link: the default data home is not resolved, unlike ``KIROCREW_HOME``."""
+        link: the default data home is not resolved, unlike ``AJCREW_HOME``."""
         events = self._capture_sel(monkeypatch)
         if home_via_link:
             (tmp_path / "home").mkdir()
@@ -1477,11 +1477,11 @@ class TestDisableTrace:
             make_dir_link(link, tmp_path / "home")
             monkeypatch.setenv("HOME", str(link))
             monkeypatch.setattr(Path, "home", classmethod(lambda cls: link))
-            monkeypatch.delenv("KIROCREW_HOME", raising=False)
+            monkeypatch.delenv("AJCREW_HOME", raising=False)
             monkeypatch.setattr(paths, "_resolved_home", paths._default_home())
             monkeypatch.setattr(paths, "_config_dir_memo", None)
         else:
-            monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+            monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         sdk = JobSDK("aws-control", app_data_dir("aws-control"))
         assert str(sdk.store.dir).startswith(str(tmp_path / ("link" if home_via_link else "home")))
         stale = JobRun(
@@ -1509,7 +1509,7 @@ class TestDisableTrace:
         lists. An app whose ``jobs`` dir is a link into a protected dir, here
         aws-control's store, reads none of the records it reaches there."""
         events = self._capture_sel(monkeypatch)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         protected = JobSDK("aws-control", app_data_dir("aws-control")).store
         stale = JobRun(
             run_id="e" * 32, app="aws-control", kind="backup", status=RUNNING, origin="foreign"

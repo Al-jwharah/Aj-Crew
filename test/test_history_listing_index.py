@@ -21,13 +21,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from aiohttp import web
 
-from kiro_crew import history_cache, history_listing_index, history_listing_memo
-from kiro_crew.dashboard.handlers import api_sessions
-from kiro_crew.dashboard.handlers.sessions_parts.history_reads import _is_user_listed_row
-from kiro_crew.history import ConversationLog
-from kiro_crew.history_cache import _LRUCache
-from kiro_crew.history_listing_index import RECONCILE_SECS, SessionListingIndex
-from kiro_crew.history_search import SessionCatalogProjection
+from aj_crew import history_cache, history_listing_index, history_listing_memo
+from aj_crew.dashboard.handlers import api_sessions
+from aj_crew.dashboard.handlers.sessions_parts.history_reads import _is_user_listed_row
+from aj_crew.history import ConversationLog
+from aj_crew.history_cache import _LRUCache
+from aj_crew.history_listing_index import RECONCILE_SECS, SessionListingIndex
+from aj_crew.history_search import SessionCatalogProjection
 
 _BASE_NS = 1_700_000_000 * 10**9
 _SECOND_NS = 10**9
@@ -197,7 +197,7 @@ def test_every_in_process_write_shows_at_once(indexed) -> None:
 
 
 def test_rotation_shows_at_once(indexed, monkeypatch) -> None:
-    import kiro_crew.history_rewrite as rewrite
+    import aj_crew.history_rewrite as rewrite
 
     log = indexed.log
     _assert_same(log)

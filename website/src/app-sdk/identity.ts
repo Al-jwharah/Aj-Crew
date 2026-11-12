@@ -21,7 +21,7 @@
  * Imported by PATH (`app-sdk/identity`) and deliberately NOT re-exported from
  * `./index`, following the same reasoning `useComposerDraft` records there. The
  * barrel is the surface third-party apps resolve — `chatProtocolBoundary.test.ts`
- * holds it in exact agreement with `public/vendor/kirocrew-app-sdk.mjs` — so a
+ * holds it in exact agreement with `public/vendor/ajcrew-app-sdk.mjs` — so a
  * name added to it is published, and publishing later is additive while
  * un-publishing is a break. There is nothing to publish yet: the consumers are
  * host code and builtin pages, which import this module directly, and

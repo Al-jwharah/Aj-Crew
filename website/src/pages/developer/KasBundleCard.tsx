@@ -20,7 +20,7 @@ const STATUS_QUERY_KEY = ['kas-bundle'] as const
 const INSTALL_POLL_MS = 1000
 
 /**
- * Settings > Agent Harness, inside the KAS row: run Kiro Crew's own KAS engine
+ * Settings > Agent Harness, inside the KAS row: run Aj Crew's own KAS engine
  * instead of reaching it through kiro-cli.
  *
  * The switch is `agent.kas_bundle` (an ordinary config PATCH). It can only be
@@ -71,7 +71,7 @@ export function KasBundleCard() {
     onSuccess: () => {
       setRestartPending(true)
       void qc.invalidateQueries({ queryKey: STATUS_QUERY_KEY })
-      void qc.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+      void qc.invalidateQueries({ queryKey: ['ajcrewConfig'] })
     },
   })
 

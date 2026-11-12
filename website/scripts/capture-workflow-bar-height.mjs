@@ -43,13 +43,13 @@ mkdirSync(OUT, { recursive: true })
 
 const slots = [{
   key: SLOT,
-  title: 'Kiro Crew performance investigation',
+  title: 'Aj Crew performance investigation',
   running: true,
   last_message: 'Started workflow run wf_000025…',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
-  project: '/home/user/workspace/KiroCrew',
+  project: '/home/user/workspace/AjCrew',
   folder_id: '',
   modified: Math.floor(Date.now() / 1000),
   source_links: [],
@@ -61,7 +61,7 @@ const detail = {
   has_more: false,
   total: 2,
   queue: [],
-  project: '/home/user/workspace/KiroCrew',
+  project: '/home/user/workspace/AjCrew',
   messages: [
     { role: 'user', ts: Date.now() / 1000 - 900, content: 'Run a perf investigation as a workflow.' },
     {
@@ -88,7 +88,7 @@ function buildEvents() {
   const push = (type, data) => {
     events.push({ run_id: RUN_ID, seq: ++seq, ts: new Date().toISOString(), type, data })
   }
-  push('run_started', { name: 'kirocrew-perf-investigation' })
+  push('run_started', { name: 'ajcrew-perf-investigation' })
   for (const [phase, agents] of [
     ['investigate', AREAS.map((a, i) => [`invest:a${i}`, `invest:a${i}:${a}`])],
     ['critique', AREAS.map((a, i) => [`critic:a${i}`, `critic:a${i}:${a}`])],
@@ -103,9 +103,9 @@ function buildEvents() {
   for (const line of [
     'Authoring workflow from your request…',
     'Drafting the workflow script (attempt 1/3)…',
-    'Script validated: kirocrew-perf-investigation',
+    'Script validated: ajcrew-perf-investigation',
     'Workflow authored — starting execution.',
-    'Starting Kiro Crew performance investigation',
+    'Starting Aj Crew performance investigation',
   ]) push('log', { message: line })
   return events
 }
@@ -114,7 +114,7 @@ const SOURCE = Array.from({ length: 295 }, (_, i) => `# line ${i + 1} of the aut
 
 const snapshot = {
   run_id: RUN_ID,
-  name: 'kirocrew-perf-investigation',
+  name: 'ajcrew-perf-investigation',
   status: 'running',
   events: buildEvents(),
   source: SOURCE,

@@ -14,7 +14,7 @@ from contextlib import contextmanager
 
 import pytest
 
-from kiro_crew.computer_use import windows_ffi as ffi
+from aj_crew.computer_use import windows_ffi as ffi
 
 
 class _Lib:

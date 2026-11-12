@@ -18,7 +18,7 @@ const DEFAULT_GATEWAY_WAIT_MS = 30_000;
 // start without weakening the fail-fast child-exit path above.
 const WINDOWS_LOCAL_GATEWAY_WAIT_MS = 120_000;
 // An LTS gateway checks the kiro login and loads the governance policy
-// before it binds (kiro_crew/lts_boot.py), and exits if either fails.
+// before it binds (aj_crew/lts_boot.py), and exits if either fails.
 // Their own limits: kiro-cli `--version` 10s and `whoami` 30s
 // (kiro_prerequisite_probe.py), the policy fetch 10s (governance
 // DEFAULT_FETCH_TIMEOUT_SECS). A signed-in user whose token refresh is slow
@@ -173,7 +173,7 @@ function describeGatewayFailure(failure) {
       const startedHere = failure.localStartPortBusy || failure.localStartFailed
         || failure.localStartBlocked || failure.localStartUnverifiable
         ? "this launch did not start one here"
-        : "Kiro Crew is set not to start a gateway on this machine";
+        : "Aj Crew is set not to start a gateway on this machine";
       const reachTheCrew = `Nothing is answering at ${target} and ${startedHere}. `
         + `Start the gateway on `
         + `${failure.remoteHost}, or re-establish the tunnel or port-forward that `
@@ -197,8 +197,8 @@ function describeGatewayFailure(failure) {
           + "program holds that port, so it stopped the one it had started rather "
           + "than hand over to something it could not identify. Choosing Start "
           + "Local Gateway again reaches the same check."
-          + "\n\nTo run one here, quit Kiro Crew and start it from a terminal with "
-          + "the environment variable KIROCREW_PORT set to a port number that has "
+          + "\n\nTo run one here, quit Aj Crew and start it from a terminal with "
+          + "the environment variable AJCREW_PORT set to a port number that has "
           + `no remote host configured.\n\n${reachTheCrew}`;
       }
       if (failure.localStartFailed) {
@@ -228,7 +228,7 @@ function describeGatewayFailure(failure) {
         return `Starting a local gateway here did not begin: port `
           + `${failure.localStartPortBusy} on this computer is already served by `
           + "something else, so restarting would not have produced a gateway this "
-          + `app can tell apart from it. That is usually another Kiro Crew `
+          + `app can tell apart from it. That is usually another Aj Crew `
           + `started from a terminal, so quit that one. Then choose Start Local `
           + `Gateway again. `
           + `The "Run a local gateway" setting stays on.\n\n${reachTheCrew}`;
@@ -256,11 +256,11 @@ function describeGatewayFailure(failure) {
           ? "To run one here instead, choose Start Local Gateway, which starts "
             + "one on a free port."
           : "Restarting the app to pick a free port is not available here, so to "
-            + "run one here instead, quit Kiro Crew and start it from a terminal "
-            + "with the environment variable KIROCREW_PORT set to a port number "
+            + "run one here instead, quit Aj Crew and start it from a terminal "
+            + "with the environment variable AJCREW_PORT set to a port number "
             + "that has no remote host configured.";
         return `${reachTheCrew}\n\nPort ${failure.port} is reserved for reaching `
-          + `${failure.remoteHost}, so Kiro Crew did not start a local gateway on `
+          + `${failure.remoteHost}, so Aj Crew did not start a local gateway on `
           + `it. ${remedy} Your sessions on ${failure.remoteHost} stay there. `
           + `The "Run a local gateway" setting stays on.`;
       }
@@ -272,9 +272,9 @@ function describeGatewayFailure(failure) {
           + "can turn that setting back off in Settings.";
       }
       return `${reachTheCrew}\n\nRestarting the app to pick a local port is not `
-        + "available here, so to run one on this machine instead, quit Kiro Crew "
+        + "available here, so to run one on this machine instead, quit Aj Crew "
         + "and start it from a terminal with the environment variable "
-        + "KIROCREW_PORT set to a port number that has no remote host configured.";
+        + "AJCREW_PORT set to a port number that has no remote host configured.";
     }
     if (failure.localStartBlocked === "foreign-holder") {
       // Something answers there and this app can attribute it neither to itself
@@ -283,7 +283,7 @@ function describeGatewayFailure(failure) {
       // loopback origin and a tunnel's local end is one.
       //
       // Worded as what this app knows rather than as what the holder is: it may
-      // well BE a Kiro Crew gateway, reached over a tunnel from another machine.
+      // well BE an Aj Crew gateway, reached over a tunnel from another machine.
       // That is why recording it as a crew is the first remedy -- doing so makes
       // the same port adoptable on the next launch -- and quitting the program is
       // the other. Both controls are in this dialog.
@@ -304,7 +304,7 @@ function describeGatewayFailure(failure) {
           + `then retry:\n${endCommand}`
         : "";
       return `Port ${failure.port} on this computer is served by a program this `
-        + "app did not start, and Kiro Crew has no remote crew saved for that "
+        + "app did not start, and Aj Crew has no remote crew saved for that "
         + "port, so this launch did not use it."
         + (named.length ? ` It is held by ${named.join("; ")}.` : "")
         + "\n\nIf that program is how you "
@@ -315,7 +315,7 @@ function describeGatewayFailure(failure) {
         + "connection, for example across a VPN reconnect, can hold the port "
         + `this way.${endIt}`;
     }
-    return `No gateway is answering on port ${failure.port}, and Kiro Crew is set `
+    return `No gateway is answering on port ${failure.port}, and Aj Crew is set `
       + "not to start one on this machine. Start the gateway you connect to (or "
       + "the connection that reaches it) and retry, or start one here. If your "
       + "crew runs on another machine, choose Add Remote Crew to name it.";
@@ -329,7 +329,7 @@ function describeGatewayFailure(failure) {
   if (failure.signal === "SIGKILL") {
     return "The gateway was killed on launch (SIGKILL). On macOS this usually "
       + "means Gatekeeper blocked an unsigned or quarantined executable — try: "
-      + "xattr -cr <path to KiroCrew.app>";
+      + "xattr -cr <path to AjCrew.app>";
   }
   if (failure.signal) {
     return `The gateway exited on launch (signal ${failure.signal}).`;
@@ -465,7 +465,7 @@ function rotateLaunchLog(logPath, { fs, capBytes = DEFAULT_LAUNCH_LOG_CAP_BYTES,
 
 /**
  * True if the log text indicates the gateway could not bind its port because
- * something already holds it (a wedged or other KiroCrew gateway). This is a
+ * something already holds it (a wedged or other Aj Crew gateway). This is a
  * distinct, recoverable failure from a crash: a plain retry can't help while
  * the holder is still there, but force-stopping it can. Pure (no fs/network).
  *

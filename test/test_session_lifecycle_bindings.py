@@ -1,6 +1,6 @@
 """``SessionLifecycleService`` keeps every member it had, and each is bound from the module that owns it.
 
-The lifecycle service's behaviour lives in the ``kiro_crew.session_lifecycle_parts`` owner
+The lifecycle service's behaviour lives in the ``aj_crew.session_lifecycle_parts`` owner
 modules: each member's body is a module-level function there whose first parameter is
 ``self``, and the class binds it by name (``m = _owner.m``, or ``staticmethod(_owner.f)``).
 The service state stays on the instance, so ``SessionManager``'s delegation, instance patches
@@ -19,7 +19,7 @@ binds every module-level name it bound before the split. This file pins that con
   keeps the facade as its ``__module__``;
 * the facade's namespace and ``__all__`` are BASE's, and a read through the facade sees
   the live value of a counter its owner rebinds;
-* a write through ``kiro_crew.session_lifecycle`` reaches every owner that reads the name, for
+* a write through ``aj_crew.session_lifecycle`` reaches every owner that reads the name, for
   every name the test trees patch there (the facade's mirror, ``_facade_mirror``).
 """
 
@@ -41,8 +41,8 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import session_lifecycle
-from kiro_crew.session_lifecycle import SessionLifecycleService
+from aj_crew import session_lifecycle
+from aj_crew.session_lifecycle import SessionLifecycleService
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_session_lifecycle_bindings")
 
@@ -155,7 +155,7 @@ _BASE_ALL = [
     "StopOutcome",
 ]
 
-_PACKAGE = "kiro_crew.session_lifecycle_parts"
+_PACKAGE = "aj_crew.session_lifecycle_parts"
 _STOP_DECLINE = f"{_PACKAGE}.stop_decline"
 _PARKED_QUEUE = f"{_PACKAGE}.parked_queue"
 
@@ -333,13 +333,12 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
         if id(node) in guarded:
             continue
         if isinstance(node, ast.ImportFrom):
-            if node.module == "kiro_crew.session_lifecycle" or (
-                node.module == "kiro_crew"
-                and any(a.name == "session_lifecycle" for a in node.names)
+            if node.module == "aj_crew.session_lifecycle" or (
+                node.module == "aj_crew" and any(a.name == "session_lifecycle" for a in node.names)
             ):
                 lines.append(node.lineno)
         elif isinstance(node, ast.Import):
-            if any(a.name == "kiro_crew.session_lifecycle" for a in node.names):
+            if any(a.name == "aj_crew.session_lifecycle" for a in node.names):
                 lines.append(node.lineno)
     return lines
 
@@ -347,10 +346,10 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
 def test_the_facade_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n    from kiro_crew.session_lifecycle import SessionLifecycleService\n"
-        "def f():\n    from kiro_crew.session_lifecycle import x\n"
-        "import kiro_crew.session_lifecycle\n"
-        "from kiro_crew import session_lifecycle\n"
+        "if TYPE_CHECKING:\n    from aj_crew.session_lifecycle import SessionLifecycleService\n"
+        "def f():\n    from aj_crew.session_lifecycle import x\n"
+        "import aj_crew.session_lifecycle\n"
+        "from aj_crew import session_lifecycle\n"
     )
     assert sorted(_runtime_facade_imports(tree)) == [5, 6, 7]
 
@@ -375,14 +374,14 @@ def _owner_imports(tree: ast.Module) -> set[str]:
 
 def test_the_owner_import_scan_can_fail() -> None:
     tree = ast.parse(
-        "from kiro_crew.session_lifecycle_parts.teardown import X\n"
-        "from kiro_crew.session_lifecycle_parts import fleet as _f\n"
-        "import kiro_crew.session_lifecycle_parts.turn_stop\n"
+        "from aj_crew.session_lifecycle_parts.teardown import X\n"
+        "from aj_crew.session_lifecycle_parts import fleet as _f\n"
+        "import aj_crew.session_lifecycle_parts.turn_stop\n"
     )
     assert _owner_imports(tree) == {
-        "kiro_crew.session_lifecycle_parts.teardown",
-        "kiro_crew.session_lifecycle_parts.fleet",
-        "kiro_crew.session_lifecycle_parts.turn_stop",
+        "aj_crew.session_lifecycle_parts.teardown",
+        "aj_crew.session_lifecycle_parts.fleet",
+        "aj_crew.session_lifecycle_parts.turn_stop",
     }
 
 
@@ -464,7 +463,7 @@ def test_each_owner_names_the_fields_it_writes_and_reads(owner: str) -> None:
 
 @pytest.mark.parametrize("owner", session_lifecycle._OWNERS)
 def test_owners_log_under_the_facade_logger(owner: str) -> None:
-    """The moved module helpers log as ``kiro_crew.session_lifecycle``; the members log
+    """The moved module helpers log as ``aj_crew.session_lifecycle``; the members log
     through the facade's ``self._deps.logger`` and bind no logger of their own."""
     module = sys.modules[owner]
     assert getattr(module, "_logger", session_lifecycle._logger) is session_lifecycle._logger
@@ -553,7 +552,7 @@ def test_a_read_through_the_facade_sees_the_counter_its_owner_rebinds(
 
 def _test_tree_texts() -> list[tuple[str, str]]:
     root = source_corpus.repo_root()
-    paths = [*(root / "test").rglob("*.py"), *(root / "src" / "kiro_crew" / "apps").rglob("*.py")]
+    paths = [*(root / "test").rglob("*.py"), *(root / "src" / "aj_crew" / "apps").rglob("*.py")]
     out = []
     for path in sorted(paths):
         rel = path.relative_to(root).as_posix()
@@ -602,7 +601,7 @@ def _reach_gaps(patched: set[str], index: Any) -> list[str]:
 
 
 def _index() -> Any:
-    from kiro_crew import _facade_mirror
+    from aj_crew import _facade_mirror
 
     return vars(session_lifecycle)[_facade_mirror.INDEX_ATTRIBUTE]
 

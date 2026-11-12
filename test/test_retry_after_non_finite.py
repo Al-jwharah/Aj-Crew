@@ -17,9 +17,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.teams.client import TeamsClient
-from kiro_crew.webex import client as webex_client
-from kiro_crew.webex.client import WebexClient
+from aj_crew.teams.client import TeamsClient
+from aj_crew.webex import client as webex_client
+from aj_crew.webex.client import WebexClient
 
 _NON_FINITE = ["nan", "NaN", "inf", "-inf", "Infinity"]
 
@@ -107,7 +107,7 @@ async def test_webex_api_429_waits_a_finite_delay(
 async def test_wakatime_429_waits_a_finite_delay(
     raw: str, expected: float, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.wakatime.client import WakaTimeClient
+    from aj_crew.wakatime.client import WakaTimeClient
 
     slept = _record_sleeps(monkeypatch)
     client = WakaTimeClient(api_key="waka_fake_0123456789abcdef")
@@ -126,7 +126,7 @@ async def test_wakatime_429_waits_a_finite_delay(
 async def test_telegram_429_waits_a_finite_delay(
     raw: float, expected: float, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    import kiro_crew.telegram.client as client_mod
+    import aj_crew.telegram.client as client_mod
 
     monkeypatch.delenv("TELEGRAM_API_BASE_URL", raising=False)
     slept = _record_sleeps(monkeypatch)

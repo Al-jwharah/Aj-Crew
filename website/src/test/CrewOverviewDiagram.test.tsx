@@ -20,7 +20,7 @@ const INPUTS: CrewWireNode[] = [
   { key: 'webhook', icon: Webhook, label: 'Webhook', value: 'Not bound to a crew', ghost: true },
 ]
 const OUTPUTS: CrewWireNode[] = [
-  { key: 'template', icon: Boxes, label: 'Agent Template', value: 'kirocrew', mono: true },
+  { key: 'template', icon: Boxes, label: 'Agent Template', value: 'ajcrew', mono: true },
   { key: 'workspace', icon: FolderOpen, label: 'Workspace', value: 'oncall', mono: true },
   { key: 'memory', icon: Database, label: 'Memory Store', value: 'oncall-mem', mono: true },
   { key: 'model', icon: Cpu, label: 'Model', value: 'Inherited', muted: true },

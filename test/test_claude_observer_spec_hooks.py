@@ -23,23 +23,23 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew
-import kiro_crew.config.paths as paths_mod
-import kiro_crew.hooks as hooks_mod
-from kiro_crew.acp import _dispatch
-from kiro_crew.acp.types import EVENT_TOOL_CALL, EVENT_TOOL_RESULT
-from kiro_crew.agent_files import AGENT_FILENAME
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.agent_sdk.backends import (
+import aj_crew
+import aj_crew.config.paths as paths_mod
+import aj_crew.hooks as hooks_mod
+from aj_crew.acp import _dispatch
+from aj_crew.acp.types import EVENT_TOOL_CALL, EVENT_TOOL_RESULT
+from aj_crew.agent_files import AGENT_FILENAME
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KIRO,
     ACP_BACKENDS_CREW_FIRES_SPEC_HOOKS,
     ACP_BACKENDS_CREW_FIRES_SPEC_OBSERVER_HOOKS,
 )
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.hooks import (
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard import chat_runner
+from aj_crew.hooks import (
     HOOK_EVENT_AGENT_SPAWN,
     HOOK_EVENT_POST_TOOL_USE,
     HOOK_EVENT_PRE_TOOL_USE,
@@ -268,7 +268,7 @@ def test_the_default_agents_audit_hook_fires_on_a_claude_bash_call(
 ):
     """The bundled ``postToolUse`` hook that appends each shell call to ``audit.log``."""
     defaults = json.loads(
-        (Path(kiro_crew.__file__).parent / "config" / "defaults.json").read_text(encoding="utf-8")
+        (Path(aj_crew.__file__).parent / "config" / "defaults.json").read_text(encoding="utf-8")
     )
     (audit,) = defaults["hooks"]["postToolUse"]
     assert audit["matcher"] == "execute_bash" and "audit.log" in audit["command"]

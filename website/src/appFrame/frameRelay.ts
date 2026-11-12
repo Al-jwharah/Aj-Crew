@@ -33,7 +33,7 @@ export const RELAY_FETCH_METHODS: ReadonlySet<string> = new Set(['GET', 'POST', 
  *  (`_CORS_ALLOW_HEADERS`), plus the CORS-safelisted ones a request never preflights. */
 export const RELAY_REQUEST_HEADERS: ReadonlySet<string> = new Set([
   'content-type',
-  'x-kirocrew-capability',
+  'x-ajcrew-capability',
   'accept',
   'accept-language',
   'content-language',

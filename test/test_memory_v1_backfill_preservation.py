@@ -6,9 +6,9 @@ from contextlib import closing
 
 from member_memory_helpers import forget_declared_stores, write_member_home
 
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.config import loader
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.config import loader
+from aj_crew.vector_memory import VectorMemoryStore
 
 # The existing V1 schema after migrations 1, 2 and 3, before record metadata.
 # Keep this fixture independent of the current initializer and its DDL.
@@ -69,7 +69,7 @@ def _revision_rows(db):
 
 
 def test_original_v1_rows_survive_first_backfill_and_reopen(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     write_member_home(tmp_path)
     forget_declared_stores(monkeypatch)
     path = tmp_path / "memory.db"

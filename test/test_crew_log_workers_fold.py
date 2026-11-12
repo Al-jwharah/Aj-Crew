@@ -20,17 +20,17 @@ from typing import Any
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import projection_workers as pw
-from kiro_crew.crew_log import schema as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import projection_workers as pw
+from aj_crew.crew_log import schema as lg
 
 MATE = "member-dm:tide"
 
 
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     crew_log.forget_slot_folds()
     yield
     crew_log.forget_slot_folds()
@@ -43,9 +43,9 @@ _slot_of: dict[str, str] = {}
 
 def _unit(slot: str, entries: list[tuple[str, dict[str, Any]]], *, parent: str = "") -> str:
     unit = f"s-workers-{next(_n)}"
-    handle = CrewLog.create(lg.KIND_SESSION, unit, owner="raymond", agent="kirocrew", slot=slot)
+    handle = CrewLog.create(lg.KIND_SESSION, unit, owner="raymond", agent="ajcrew", slot=slot)
     opened: dict[str, Any] = {
-        "agent": "kirocrew-worker" if parent else "kirocrew",
+        "agent": "ajcrew-worker" if parent else "ajcrew",
         "slot": slot,
         "model": "",
         "cwd": "/tmp",
@@ -110,7 +110,7 @@ def test_a_created_worker_is_a_row_and_its_own_log_moves_it():
     (row,) = _fold([mate, worker])["items"]
     assert (row["slot"], row["state"], row["turns"]) == ("w-tests", "running", 1)
     assert row["task"] == "Fix the two failing tests."
-    assert row["agent"] == "kirocrew-worker"
+    assert row["agent"] == "ajcrew-worker"
     assert row["started_at"] and row["last_activity_at"]
 
 
@@ -146,8 +146,8 @@ def test_a_progress_report_takes_back_an_earlier_done_or_blocked(before, turn_en
 def test_an_unseeded_tree_names_no_creator_and_no_children(_floor_monkeypatch):
     """Before the session tree is seeded for this store it is not evidence: no creator,
     no children, and no worker reads as let go."""
-    from kiro_crew.crew_log import session_tree as st
-    from kiro_crew.crew_log import session_tree_projection as stp
+    from aj_crew.crew_log import session_tree as st
+    from aj_crew.crew_log import session_tree_projection as stp
 
     tree = stp.SessionTreeProjection()
     tree.apply(st.OpenedRecord(sid="u1", slot="w1", created_at=1, parent_slot=MATE))
@@ -350,7 +350,7 @@ class _Tree:
 
 
 def test_the_creates_are_read_from_the_crewmates_own_units_only(_floor_monkeypatch):
-    from kiro_crew.crew_log import store
+    from aj_crew.crew_log import store
 
     listing = {MATE: ("m1",), "w1": ("a", "b", "c")}
     _floor_monkeypatch.setattr(
@@ -375,7 +375,7 @@ def test_a_workers_units_follow_succession_not_the_header_clock(_floor_monkeypat
     """A clock that stepped back lists the replacement before the retired session; the
     reader hands the worker's units over in succession order, so the retired one is
     not folded last."""
-    from kiro_crew.crew_log import store
+    from aj_crew.crew_log import store
 
     _floor_monkeypatch.setattr(store, "session_units_for_slot", lambda _s, **_kw: ("new", "old"))
     _floor_monkeypatch.setattr(crew_log, "units_in_succession", lambda _s: ("old", "new"))
@@ -388,7 +388,7 @@ class _Nodes:
     seeded_for_current_store = True
 
     def __init__(self, parents: dict[str, "str | None"], created: dict[str, str]) -> None:
-        from kiro_crew.crew_log.session_tree import TreeNode
+        from aj_crew.crew_log.session_tree import TreeNode
 
         self._nodes = {s: TreeNode(slot=s, parent_slot=p, cycle=False) for s, p in parents.items()}
         self._created = {s: (c, 1) for s, c in created.items()}
@@ -401,7 +401,7 @@ class _Nodes:
 
 
 def test_a_worker_is_let_go_when_its_tree_parent_is_not_its_creator(_floor_monkeypatch):
-    from kiro_crew.crew_log import session_tree_projection as stp
+    from aj_crew.crew_log import session_tree_projection as stp
 
     tree = _Nodes(
         {"held": MATE, "released": None, "adopted": "member-dm:quill"},
@@ -417,7 +417,7 @@ def test_a_worker_is_let_go_when_its_tree_parent_is_not_its_creator(_floor_monke
 def test_the_children_are_the_newest_the_tree_names_a_released_one_included(_floor_monkeypatch):
     """Children come from creation records, newest first, so a worker the crewmate
     let go (no parent edge any more) is still read, and the oldest fall past the cap."""
-    from kiro_crew.crew_log import session_tree_projection
+    from aj_crew.crew_log import session_tree_projection
 
     cap = pw.WORKERS_LIMIT * 2
     created = {f"w{n:02d}": (MATE, n) for n in range(cap + 2)}
@@ -434,7 +434,7 @@ def test_a_release_older_than_the_window_is_still_read(_floor_monkeypatch, now):
     the tree's decision for that unit is the adoption -- that ran two newer sessions
     since: every unit is read, so the row stays released and the later sessions are
     not drawn as this crewmate's."""
-    from kiro_crew.crew_log import session_tree_projection as stp
+    from aj_crew.crew_log import session_tree_projection as stp
 
     mate = _unit(MATE, [_spawned("w1")])
     first = _unit("w1", [_asked("go"), _turn(1), ("session/released", {})], parent=MATE)
@@ -449,8 +449,8 @@ def test_a_release_older_than_the_window_is_still_read(_floor_monkeypatch, now):
 def _live_unit(slot: str, entries: list, *, parent: str = "") -> tuple[str, Any]:
     """A unit whose handle the test keeps, to append to it later."""
     unit = f"s-workers-{next(_n)}"
-    handle = CrewLog.create(lg.KIND_SESSION, unit, owner="raymond", agent="kirocrew", slot=slot)
-    opened: dict[str, Any] = {"agent": "kirocrew-worker", "slot": slot, "model": "", "cwd": "/tmp"}
+    handle = CrewLog.create(lg.KIND_SESSION, unit, owner="raymond", agent="ajcrew", slot=slot)
+    opened: dict[str, Any] = {"agent": "ajcrew-worker", "slot": slot, "model": "", "cwd": "/tmp"}
     opened.update({"owner": "raymond", "resumed": False})
     if parent:
         opened["parent"] = {"slot": parent}
@@ -462,8 +462,8 @@ def _live_unit(slot: str, entries: list, *, parent: str = "") -> tuple[str, Any]
 
 
 def _reader_env(_floor_monkeypatch, listing: dict[str, tuple[str, ...]]) -> None:
-    from kiro_crew.crew_log import session_tree_projection as stp
-    from kiro_crew.crew_log import store
+    from aj_crew.crew_log import session_tree_projection as stp
+    from aj_crew.crew_log import store
 
     children = tuple(slot for slot in listing if slot != MATE)
     _floor_monkeypatch.setattr(stp, "created_children", lambda slot: children)
@@ -499,7 +499,7 @@ def test_the_read_merges_the_creates_with_each_workers_row(_floor_monkeypatch):
 def test_one_worker_growing_does_not_refold_the_others(_floor_monkeypatch):
     """Each worker is a cell of its own: when one writes, its cell continues and every
     other part answers from the cell it holds, and the merged revision moves."""
-    from kiro_crew.crew_log import projection_slot_memo as memo
+    from aj_crew.crew_log import projection_slot_memo as memo
 
     mate = _unit(MATE, [_spawned("w1"), _spawned("w2")])
     w1, w1_log = _live_unit("w1", [_asked("one"), _turn(1)], parent=MATE)
@@ -532,8 +532,8 @@ def test_a_released_worker_stays_released_through_the_read(_floor_monkeypatch):
 def test_an_adoption_after_a_release_still_reads_as_let_go():
     """The real tree: a release and then an adoption in ONE unit leave the adoption as
     that unit's decision, and the slot's parent is the adopter, not its creator."""
-    from kiro_crew.crew_log import session_tree as st
-    from kiro_crew.crew_log import session_tree_projection as stp
+    from aj_crew.crew_log import session_tree as st
+    from aj_crew.crew_log import session_tree_projection as stp
 
     tree = stp.SessionTreeProjection()
     tree.apply(st.OpenedRecord(sid="u1", slot="w1", created_at=1, parent_slot=MATE))
@@ -547,8 +547,8 @@ def test_the_whole_merged_read_runs_under_its_crewmates_lock(_floor_monkeypatch)
     """A read that captured older parts must not be handed a revision above one that
     read newer parts and finished first, so the lock covers the parts, not only the
     revision."""
-    from kiro_crew.config.paths import data_home
-    from kiro_crew.crew_log import projection_readers
+    from aj_crew.config.paths import data_home
+    from aj_crew.crew_log import projection_readers
 
     mate = _unit(MATE, [_spawned("w1")])
     w1 = _unit("w1", [_asked("go"), _turn(1)], parent=MATE)
@@ -570,12 +570,12 @@ def test_the_whole_merged_read_runs_under_its_crewmates_lock(_floor_monkeypatch)
 def test_the_lifecycle_emitters_wake_the_eager_folder(_floor_monkeypatch):
     """A create, an adoption and a release each reach ``note_commit`` once they are on
     disk, so the creator's open page hears about them without a reload."""
-    from kiro_crew.crew_log import eager, emit
-    from kiro_crew.crew_log import session_tree_projection as stp
+    from aj_crew.crew_log import eager, emit
+    from aj_crew.crew_log import session_tree_projection as stp
 
     _floor_monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     _floor_monkeypatch.setattr(
-        "kiro_crew.executors.maintenance_executor",
+        "aj_crew.executors.maintenance_executor",
         lambda: type("_NoPool", (), {"submit": staticmethod(lambda *a, **k: None)}),
     )
     stp.reset_for_tests()
@@ -585,7 +585,7 @@ def test_the_lifecycle_emitters_wake_the_eager_folder(_floor_monkeypatch):
     )
     for sid, slot in (("s-mate", MATE), ("s-w1", "w1"), ("s-w2", "w2")):
         emit.on_session_opened(
-            sid, agent="kirocrew", slot=slot, model="opus", cwd="/w", owner="raymond"
+            sid, agent="ajcrew", slot=slot, model="opus", cwd="/w", owner="raymond"
         )
     try:
         emit.on_session_spawned("s-mate", creator_slot=MATE, child_slot="w9")
@@ -613,8 +613,8 @@ def test_the_lifecycle_emitters_wake_the_eager_folder(_floor_monkeypatch):
 
 
 def test_the_tree_names_creators_from_creation_records_a_release_kept():
-    from kiro_crew.crew_log import session_tree as st
-    from kiro_crew.crew_log import session_tree_projection as stp
+    from aj_crew.crew_log import session_tree as st
+    from aj_crew.crew_log import session_tree_projection as stp
 
     proj = stp.SessionTreeProjection()
     proj.apply_spawned(st.EdgeRecord(slot="w1", parent_slot=MATE, at=5, sid="u-m"))
@@ -626,7 +626,7 @@ def test_the_tree_names_creators_from_creation_records_a_release_kept():
 
 
 def test_a_workers_entry_wakes_its_creators_cell(_floor_monkeypatch):
-    from kiro_crew.crew_log import eager, session_tree_projection
+    from aj_crew.crew_log import eager, session_tree_projection
 
     tree = _Tree({"w1": (MATE, 1)})
     _floor_monkeypatch.setattr(session_tree_projection, "projection", lambda: tree)
@@ -647,7 +647,7 @@ def test_a_workers_entry_wakes_its_creators_cell(_floor_monkeypatch):
 def test_a_report_and_a_close_wake_the_workers_creator(_floor_monkeypatch):
     """A report names its conductor's board, and a closer skips the routing: both
     still move the cell of the crewmate that created the worker."""
-    from kiro_crew.crew_log import eager, session_tree_projection
+    from aj_crew.crew_log import eager, session_tree_projection
 
     tree = _Tree({"w1": (MATE, 1), "board-x": ("member-dm:quill", 1)})
     _floor_monkeypatch.setattr(session_tree_projection, "projection", lambda: tree)

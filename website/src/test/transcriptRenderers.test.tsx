@@ -74,7 +74,7 @@ const workflowLaunch = msg('tool', {
 })
 const subagentLaunch = msg('tool', {
   content: '🔧 spawn_run',
-  meta: { output: 'Spawned 2 subagent(s).\n  1a2b3c4d (kirocrew): read specs\n  5e6f7a8b (kirocrew): read code' },
+  meta: { output: 'Spawned 2 subagent(s).\n  1a2b3c4d (ajcrew): read specs\n  5e6f7a8b (ajcrew): read code' },
 })
 
 describe('fixtures match the shared launch predicates', () => {
@@ -201,7 +201,7 @@ describe('shape still beats role after the defaults are replaced', () => {
 
   it('keeps the sub-agent completion card ahead of the role rows', () => {
     const completion = msg('subagent', {
-      content: '[Subagent completion event]\nAgent `1a2b3c4d` (kirocrew) ✅ completed\nTask: read specs\n',
+      content: '[Subagent completion event]\nAgent `1a2b3c4d` (ajcrew) ✅ completed\nTask: read specs\n',
     })
     expect(isSubagentCompletionMessage(completion)).toBe(true)
     expect(idFor(completion)).toBe('subagent_completion')
@@ -402,7 +402,7 @@ describe('a missing kiro-cli under the seeded feature-request turn offers the is
   // row offers the same form the usage-limit refusal does.
   const seedRow = msg('user', { content: 'I’d like to request a feature!', meta: { sendId: 's-fr-seed', mid: 'u-1', [FEATURE_REQUEST_ROW_META_KEY]: true } })
   const missingRow = msg('error', {
-    content: '❌ kiro-cli not found (searched 3 directories: /a, /b, /c). Install it from https://kiro.dev/cli/, or point KIROCREW_KIRO_BIN at the binary.',
+    content: '❌ kiro-cli not found (searched 3 directories: /a, /b, /c). Install it from https://kiro.dev/cli/, or point AJCREW_KIRO_BIN at the binary.',
     meta: { kind: 'kiro_cli_missing' },
   })
   const rows = [seedRow, missingRow]

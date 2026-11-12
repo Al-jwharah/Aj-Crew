@@ -13,9 +13,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from subagent_helpers import _mock_ctx_builder_auto_spawn, _mock_sessions
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
-from kiro_crew.execution_context import execution_for_store
-from kiro_crew.hook_runtime.script_hooks import ScriptHookResult
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+from aj_crew.execution_context import execution_for_store
+from aj_crew.hook_runtime.script_hooks import ScriptHookResult
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -36,7 +36,7 @@ async def _run_child(
     *on_fire*, when given, is called with (manager, info) inside every prompt-hook
     fire (AgentSpawn, UserPromptSubmit). The Stop fire after the prompt ends is not
     a prompt hook, so it is left out."""
-    from kiro_crew.subagent import SubagentInfo, SubagentManager
+    from aj_crew.subagent import SubagentInfo, SubagentManager
 
     prompts: list[str] = []
 
@@ -72,7 +72,7 @@ async def _run_child(
         parent_session_key="dashboard:parent",
     )
     manager._log_spawned(info)
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         await manager._run_inner(info, "subagent:s01")
     calls = [
         c
@@ -158,7 +158,7 @@ async def test_hook_time_is_not_charged_to_the_first_prompt_watchdog() -> None:
 
 
 def test_hook_time_is_off_the_startup_clock() -> None:
-    from kiro_crew.subagent import SubagentInfo, SubagentManager
+    from aj_crew.subagent import SubagentInfo, SubagentManager
 
     manager = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx_builder_auto_spawn())
     deadline = manager._monitor._stamped_startup_deadline
@@ -184,7 +184,7 @@ async def test_a_cancelled_hook_still_restarts_the_clock_and_clears_the_flag() -
         marks.append(info.last_activity)
         raise asyncio.CancelledError
 
-    from kiro_crew.subagent import SubagentInfo
+    from aj_crew.subagent import SubagentInfo
 
     captured: list[SubagentInfo] = []
 

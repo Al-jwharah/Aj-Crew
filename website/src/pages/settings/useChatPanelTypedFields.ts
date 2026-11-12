@@ -19,7 +19,7 @@ import { apiErrorCode } from '../../api/apiError'
 import { reportForError, type ErrorReport } from '../../utils/errorReport'
 import {
   TURN_LIMIT_DEFAULT, type CompletionKeepMode, COMPLETION_KEEP_CHARS_DEFAULT, type ClampNotice,
-  type KirocrewConfigShape, COMPACT_CUSTOM, compactSelectValue, clampAutocompactPct,
+  type AjcrewConfigShape, COMPACT_CUSTOM, compactSelectValue, clampAutocompactPct,
   AUTOCOMPACT_PCT_MIN, AUTOCOMPACT_PCT_MAX, AUTOCOMPACT_PCT_DEFAULT,
 } from './chatPanelOptions'
 
@@ -37,7 +37,7 @@ export function useChatPanelTypedFields({
   setPathSaveError: (path: string, msg: string) => void
   clearOwnPathError: (path: string) => void
   dashQ: UseQueryResult<DashboardConfig>
-  mcQ: UseQueryResult<KirocrewConfigShape>
+  mcQ: UseQueryResult<AjcrewConfigShape>
 }) {
   const [localKeepChars, setLocalKeepChars] = useState('')
   // Seeded ONCE, in the render that first has the served config: setting state
@@ -56,7 +56,7 @@ export function useChatPanelTypedFields({
     mutationFn: (n: number) => api.patchConfig(KEEP_CHARS_PATH, n),
     // The failure banner is scoped to this row's path, so a retry clears it.
     onMutate: () => clearOwnPathError(KEEP_CHARS_PATH),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }),
     // A failed save keeps the typed number on screen beside the failure, so it
     // can be retried rather than retyped, as the folder field below does.
     onError: () => {
@@ -79,7 +79,7 @@ export function useChatPanelTypedFields({
   const turnLimitMut = useMutation({
     mutationFn: (n: number) => api.patchConfig(TURN_LIMIT_PATH, n),
     onMutate: () => clearOwnPathError(TURN_LIMIT_PATH),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }),
     // Put back on screen (a refetch while the save was pending may have
     // replaced it) and still marked edited, so the next blur retries it.
     onError: (_err, n) => {
@@ -169,7 +169,7 @@ export function useChatPanelTypedFields({
       } else {
         setWaitClampNotice('')
       }
-      return qc.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+      return qc.invalidateQueries({ queryKey: ['ajcrewConfig'] })
     },
     // Kept on screen and still marked edited, as the turn time limit above.
     onError: (_err, n) => {
@@ -225,7 +225,7 @@ export function useChatPanelTypedFields({
     onSuccess: (_data, { n, typed }) => {
       clearOwnPathError(AUTOCOMPACT_PATH)
       setCompactClampNotice(clampNoticeFor(typed, n))
-      return qc.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+      return qc.invalidateQueries({ queryKey: ['ajcrewConfig'] })
     },
     // A failed typed save keeps its value on screen and marked edited, as the
     // fields above; a failed preset pick has no typed value to keep.
@@ -273,7 +273,7 @@ export function useChatPanelTypedFields({
 
   const keepModeMut = useMutation({
     mutationFn: (v: CompletionKeepMode) => api.patchConfig('agent.completion_keep', v),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }),
     onError: () => setSaveError(i18nT('pages.settings.chatPanel.failed_to_save_completion_keep_mode')),
   })
   return {

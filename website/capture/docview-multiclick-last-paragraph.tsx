@@ -27,7 +27,7 @@ const params = new URLSearchParams(location.search)
 const lang = params.get('lang') || 'en'
 const theme = params.get('theme') || 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const DOC = [
   'The gateway separates where the agent runs from where you work with it.',

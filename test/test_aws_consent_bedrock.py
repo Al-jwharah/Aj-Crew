@@ -14,14 +14,14 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from test_aws_consent import _consent_request, _grant, _kb_source_row, _wire_kb_sources
 
-from kiro_crew import aws_consent
+from aj_crew import aws_consent
 
 
 @pytest.fixture()
 def home(tmp_path, monkeypatch):
     """Isolated data home so the keystone file never touches the real one."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    from kiro_crew.config.loader import config_dir
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    from aj_crew.config.loader import config_dir
 
     config_dir().mkdir(parents=True, exist_ok=True)
     aws_consent._probe_cache.clear()
@@ -34,7 +34,7 @@ class TestBedrockTargetedGet:
 
     @pytest.mark.asyncio
     async def test_probing_a_second_target_does_not_revoke_the_first_grant(self):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         _grant(
             aws_consent.SERVICE_BEDROCK_KB,
@@ -59,7 +59,7 @@ class TestBedrockTargetedGet:
         """Race: a SAME-target re-confirmation lands while the
         GET's probe runs. The target match alone would judge it; the
         pre-probe grant_id pin must spare it."""
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         _grant(
             aws_consent.SERVICE_BEDROCK_KB,
@@ -92,7 +92,7 @@ class TestBedrockTargetedGet:
 
     @pytest.mark.asyncio
     async def test_probing_the_grants_own_target_still_reconciles_drift(self):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         _grant(
             aws_consent.SERVICE_BEDROCK_KB,
@@ -118,7 +118,7 @@ class TestBedrockConfirmConflict:
 
     @pytest.mark.asyncio
     async def test_confirming_a_different_target_is_refused_and_grant_survives(self):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         _grant(
             aws_consent.SERVICE_BEDROCK_KB,
@@ -158,7 +158,7 @@ class TestBedrockConfirmConflict:
         an agent-writable row the knowledge handler's bound never saw, so a
         planted credential or exfil URL reaches the operator as the redaction
         tag, not the value; the target itself stays readable. Found in review."""
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         _grant(
             aws_consent.SERVICE_BEDROCK_KB,
@@ -202,7 +202,7 @@ class TestBedrockConfirmConflict:
     async def test_lookup_failure_fails_closed(self):
         """A broken sources table refuses the confirmation (503) instead of
         reading as no-conflict."""
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         req = _consent_request(
             body={
@@ -231,9 +231,9 @@ class TestBedrockConfirmConflict:
         must serialize on the SAME object."""
         import inspect
 
-        from kiro_crew.dashboard.handlers import aws_consent as consent_handler
-        from kiro_crew.dashboard.handlers import knowledge as knowledge_handler
-        from kiro_crew.knowledge.connectors import bedrock_kb
+        from aj_crew.dashboard.handlers import aws_consent as consent_handler
+        from aj_crew.dashboard.handlers import knowledge as knowledge_handler
+        from aj_crew.knowledge.connectors import bedrock_kb
 
         assert bedrock_kb.target_change_lock is not None
         # add_source hands its bedrock_kb insert to _insert_bedrock_source,
@@ -254,7 +254,7 @@ class TestBedrockConfirmConflict:
 
     @pytest.mark.asyncio
     async def test_same_target_reconfirmation_passes_the_guard(self):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         _grant(
             aws_consent.SERVICE_BEDROCK_KB,
@@ -284,7 +284,7 @@ class TestBedrockConfirmConflict:
 
     @pytest.mark.asyncio
     async def test_first_grant_with_no_registered_sources_flows(self):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         req = _consent_request(
             body={
@@ -537,7 +537,7 @@ class TestCompareAndDeleteIsBedrockOnly:
 
     @pytest.mark.asyncio
     async def test_the_get_pins_the_drift_check_for_bedrock_only(self, home):
-        from kiro_crew.dashboard.handlers import aws_consent as handler
+        from aj_crew.dashboard.handlers import aws_consent as handler
 
         _grant(profile="voice", region="us-east-1", account="111122223333")
         _grant(

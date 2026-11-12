@@ -21,10 +21,9 @@ import pytest
 from test_acp_liveness import FakeProc, _Clock
 from test_acp_stale_recovery import _SilentQueue
 
-from conftest import requires_symlinks
-from kiro_crew import platform_compat
-from kiro_crew.acp import liveness
-from kiro_crew.acp.liveness import (
+from aj_crew import platform_compat
+from aj_crew.acp import liveness
+from aj_crew.acp.liveness import (
     EVIDENCE_ESTABLISHED_FLAT,
     EVIDENCE_REMOTE_FLAT,
     VERDICT_UNKNOWN,
@@ -34,8 +33,8 @@ from kiro_crew.acp.liveness import (
     ToolCallState,
     launch_matches,
 )
-from kiro_crew.acp.mcp_session_report import BUCKET_CAP, NAME_CAP
-from kiro_crew.acp.session_handle import (
+from aj_crew.acp.mcp_session_report import BUCKET_CAP, NAME_CAP
+from aj_crew.acp.session_handle import (
     _LAUNCH_MAX_ARGS,
     _LAUNCH_MAX_TOKEN,
     _LAUNCHES_PER_SERVER,
@@ -44,9 +43,10 @@ from kiro_crew.acp.session_handle import (
     _watchdog_evidence_class,
     mcp_launch_roster,
 )
-from kiro_crew.acp.types import STOP_REASON_TOOL_STALL
-from kiro_crew.config.loader import WatchdogConfig
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.acp.types import STOP_REASON_TOOL_STALL
+from aj_crew.config.loader import WatchdogConfig
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from conftest import requires_symlinks
 
 # ── Oracle: /proc ────────────────────────────────────────────────────────────
 
@@ -506,7 +506,7 @@ def test_recording_a_refused_entry_is_logged_once(caplog):
     handle = AcpSessionHandle("sA", asyncio.Queue(), MagicMock(), watchdog=WatchdogSettings())
     spec = {"mcpServers": {f"s{i}": {"command": f"c{i}"} for i in range(BUCKET_CAP + 3)}}
 
-    with caplog.at_level("WARNING", logger="kiro_crew.acp.session_handle"):
+    with caplog.at_level("WARNING", logger="aj_crew.acp.session_handle"):
         handle.record_mcp_launches(spec, None)
 
     warnings = [r for r in caplog.records if "past the roster bounds" in r.getMessage()]
@@ -553,7 +553,7 @@ def test_handle_declares_no_roster_while_the_window_is_off():
 def test_recording_the_roster_never_raises(monkeypatch):
     """The runtime calls this on session establishment: a failure must cost the
     narrowing, never the session."""
-    from kiro_crew.acp import session_handle as session_handle_mod
+    from aj_crew.acp import session_handle as session_handle_mod
 
     def _boom(*_a):
         raise RuntimeError("unreadable")
@@ -582,7 +582,7 @@ def test_every_runtime_roster_handoff_records_the_launches():
     were launched, from the same spec and the same array the guard reads."""
     import inspect
 
-    from kiro_crew.acp import runtime as runtime_mod
+    from aj_crew.acp import runtime as runtime_mod
 
     # runtime.py's owner modules (runtime_*.py) hold code that was its own.
     lines = "".join(
@@ -606,8 +606,8 @@ async def test_a_runtime_session_records_the_spec_and_wire_launches():
     from contextlib import ExitStack
     from unittest.mock import patch
 
-    from kiro_crew.acp.runtime import AcpRuntime, _MirroredSessionMcp
-    from kiro_crew.acp.types import ACP_BACKEND_CODEX
+    from aj_crew.acp.runtime import AcpRuntime, _MirroredSessionMcp
+    from aj_crew.acp.types import ACP_BACKEND_CODEX
 
     rt = AcpRuntime(work_dir="/tmp", acp_backend=ACP_BACKEND_CODEX, expect_mcp_reports=False)
     proc = MagicMock()
@@ -657,24 +657,24 @@ async def test_a_runtime_session_records_the_spec_and_wire_launches():
             patch.object(AcpSessionHandle, "_wait_for_response", _wait_for_response)
         )
         stack.enter_context(patch.object(rt, "_mirrored_session_mcp", _mirrored))
-        handle = await rt.create_session(cwd="/w", agent="kirocrew")
+        handle = await rt.create_session(cwd="/w", agent="ajcrew")
 
     assert handle._mcp_launches == {"own": (("node", "own.js"),), "kept": (("x", "serve"),)}
 
 
 @requires_symlinks
 def test_loopback_peer_is_not_a_remote_call(tmp_path):
-    """An MCP server talking to a local service (the Kiro Crew gateway) is not
+    """An MCP server talking to a local service (the Aj Crew gateway) is not
     waiting on a remote peer, so the full window holds."""
     clock = _Clock()
     fake = FakeProc(tmp_path / "proc")
     fake.add_pid(100, children=[300], io_bytes=1000)
     fake.add_socket_fd(100, 7, "111")  # the root's own socket: pid 300 is tool side
     fake.set_net_tcp(100, ["111"])
-    fake.add_pid(300, cmdline="python -m kiro_crew.mcp_core", io_bytes=2000)
+    fake.add_pid(300, cmdline="python -m aj_crew.mcp_core", io_bytes=2000)
     fake.add_socket_fd(300, 9, "555")
     _set_tcp(fake, 300, ["555"], peer=_LOOPBACK_PEER)
-    roster = {_SERVER: (("python", "-m", "kiro_crew.mcp_core"),)}
+    roster = {_SERVER: (("python", "-m", "aj_crew.mcp_core"),)}
     oracle = _oracle(fake, clock, sample_min=1.0, launches=lambda: roster)
 
     _, (_, evidence) = _two_ticks(oracle, clock, 100, _mcp_tool(clock))

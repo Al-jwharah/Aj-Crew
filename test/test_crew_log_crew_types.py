@@ -25,9 +25,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, CrewLogError, Ref
-from kiro_crew.crew_log.entry_types import (
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, CrewLogError, Ref
+from aj_crew.crew_log.entry_types import (
     CREW_ENTRY_TYPES,
     CREW_REPORT_STATUSES,
     CREW_TARGET_KINDS,
@@ -37,8 +37,8 @@ from kiro_crew.crew_log.entry_types import (
     render_markdown,
     validate_data,
 )
-from kiro_crew.crew_log.schema import KIND_CREW, KIND_SESSION, TYPE_OWNERSHIP, check_ownership
-from kiro_crew.work_vocab import WORK_WORKER_STATUSES
+from aj_crew.crew_log.schema import KIND_CREW, KIND_SESSION, TYPE_OWNERSHIP, check_ownership
+from aj_crew.work_vocab import WORK_WORKER_STATUSES
 
 CREW = "qa"
 SESSION = "s-7f3a"
@@ -50,7 +50,7 @@ REPORT = "crew/report"
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 
@@ -59,7 +59,7 @@ def _crew(unit_id: str = CREW) -> CrewLog:
 
 
 def _session(unit_id: str = SESSION) -> CrewLog:
-    return CrewLog.create(KIND_SESSION, unit_id, owner=CREW, agent="kirocrew")
+    return CrewLog.create(KIND_SESSION, unit_id, owner=CREW, agent="ajcrew")
 
 
 def _code(excinfo) -> str:

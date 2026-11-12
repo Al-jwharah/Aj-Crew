@@ -27,7 +27,7 @@ import pytest
 from markdown_it import MarkdownIt
 from named_cases_helpers import named_cases
 
-from kiro_crew.dashboard import session_markdown as sm
+from aj_crew.dashboard import session_markdown as sm
 
 _MARKDOWN = MarkdownIt("commonmark")
 _MARKDOWN_HTML = MarkdownIt("commonmark", {"html": True})
@@ -1000,14 +1000,14 @@ def test_provenance_rows_are_rendered_and_absent_ones_skipped():
             source={
                 "model": "claude-opus-5",
                 "exported_at": "2026-09-09T08:33:00+00:00",
-                "producer": "kirocrew/0.8.0",
+                "producer": "ajcrew/0.8.0",
                 "workspace": "",
             },
         )
     )
     assert "| Model | claude-opus-5 |" in out
     assert "| Exported | 2026-09-09T08:33:00+00:00 |" in out
-    assert "| Produced by | kirocrew/0.8.0 |" in out
+    assert "| Produced by | ajcrew/0.8.0 |" in out
     assert "| Messages | 2 |" in out
     assert "| Agent | default |" in out
     # Not reported by the source gateway, so not claimed here.

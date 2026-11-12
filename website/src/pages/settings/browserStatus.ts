@@ -47,7 +47,7 @@ export type PrimaryState =
 
 /**
  * Whether the browser cannot start until an install: the engine is missing, or
- * the browser is Kiro's Chromium and it is not downloaded (a Connect could only
+ * the browser is Aj's Chromium and it is not downloaded (a Connect could only
  * fail). While this holds, Install and its failures belong to the main card.
  */
 export function needsInstall(status: BrowserStatusData): boolean {
@@ -97,11 +97,11 @@ export const BROWSER_KIND_LABEL_KEY: Record<BrowserKind, string> = {
  * The config key keeps its four values (`auto`, `user_chrome`, `kiro_chromium`,
  * `headless`) and the CLI still writes any of them. The page splits it in two:
  * the "Which browser" picker offers three, and "Run with no window" under More
- * is the fourth. `headless` IS Kiro's Chromium without a window, so:
+ * is the fourth. `headless` IS Aj's Chromium without a window, so:
  *
  *   - the picker reads `headless` as `kiro_chromium`;
  *   - picking `kiro_chromium` while `headless` writes nothing (it is already
- *     Kiro's Chromium); picking anything else writes that value, which turns
+ *     Aj's Chromium); picking anything else writes that value, which turns
  *     the switch off;
  *   - the switch on writes `headless`; off writes `kiro_chromium` -- the same
  *     browser, now with a window. It never guesses the user's earlier pick.
@@ -130,7 +130,7 @@ export function choiceFromHeadless(on: boolean): string {
   return on ? 'headless' : 'kiro_chromium'
 }
 
-/* ── sign-in for Kiro's Chromium (`browser.credentials`) ── */
+/* ── sign-in for Aj's Chromium (`browser.credentials`) ── */
 
 /** The gateway's `CREDENTIAL_DOMAIN_PATTERN`: two or more lowercase DNS labels. */
 const CREDENTIAL_DOMAIN_RE = /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,63}$/

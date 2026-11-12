@@ -17,15 +17,15 @@ from __future__ import annotations
 import pytest
 from test_slack_handler import FakeProvider, FakeSessionManager
 
-from conftest import MockSlackClient
-from kiro_crew.messaging.renderer import credential_redaction_notice, redaction_notice
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack.handler import (
+from aj_crew.messaging.renderer import credential_redaction_notice, redaction_notice
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack.handler import (
     _pending_approvals,
     _thread_agents,
     _trusted_sessions,
     handle_message,
 )
+from conftest import MockSlackClient
 
 _SECRET_URI = "postgresql://user:SuperSecret123@db.example.com:5432/prod"
 # Trips ``redact_exfiltration_urls`` (long opaque query payload to an unknown
@@ -50,9 +50,9 @@ def _clean_state():
 def _ensure_reactions_enabled(monkeypatch):
     import dataclasses
 
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    _real_load = KiroCrewConfig.load
+    _real_load = AjCrewConfig.load
 
     def _patched_load():
         cfg = _real_load()
@@ -60,15 +60,15 @@ def _ensure_reactions_enabled(monkeypatch):
             cfg, slack=dataclasses.replace(cfg.slack, reactions_enabled=True)
         )
 
-    monkeypatch.setattr(KiroCrewConfig, "load", _patched_load)
+    monkeypatch.setattr(AjCrewConfig, "load", _patched_load)
 
 
 def _force_show_thinking(monkeypatch):
     import dataclasses
 
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    _real_load = KiroCrewConfig.load
+    _real_load = AjCrewConfig.load
 
     def _patched():
         cfg = _real_load()
@@ -77,7 +77,7 @@ def _force_show_thinking(monkeypatch):
             slack=dataclasses.replace(cfg.slack, reactions_enabled=True, show_thinking=True),
         )
 
-    monkeypatch.setattr(KiroCrewConfig, "load", _patched)
+    monkeypatch.setattr(AjCrewConfig, "load", _patched)
 
 
 def _wire_text(slack: MockSlackClient) -> str:
@@ -317,8 +317,8 @@ class TestCountRedactionTags:
     """The shared two-kind tally every notice surface counts through."""
 
     def test_counts_both_kinds_in_order(self):
-        from kiro_crew.messaging.renderer import count_redaction_tags
-        from kiro_crew.security import (
+        from aj_crew.messaging.renderer import count_redaction_tags
+        from aj_crew.security import (
             CREDENTIAL_REDACTION_TAGS,
             EXFILTRATION_REDACTION_TAG_PREFIX,
         )
@@ -330,21 +330,21 @@ class TestCountRedactionTags:
         assert count_redaction_tags(text) == (2, 1)
 
     def test_url_tag_is_counted_by_prefix_never_equality(self):
-        from kiro_crew.messaging.renderer import count_redaction_tags
-        from kiro_crew.security import EXFILTRATION_REDACTION_TAG_PREFIX
+        from aj_crew.messaging.renderer import count_redaction_tags
+        from aj_crew.security import EXFILTRATION_REDACTION_TAG_PREFIX
 
         # The URL tag interpolates the redacted domain, so no constant form
         # exists to compare equal against — the prefix is the identity.
         assert count_redaction_tags(f"{EXFILTRATION_REDACTION_TAG_PREFIX}a.example]") == (0, 1)
 
     def test_clean_text_counts_zero_zero(self):
-        from kiro_crew.messaging.renderer import count_redaction_tags
+        from aj_crew.messaging.renderer import count_redaction_tags
 
         assert count_redaction_tags("All green, deploy finished.") == (0, 0)
 
     def test_matches_what_the_redactors_actually_emit(self):
-        from kiro_crew.messaging.renderer import count_redaction_tags
-        from kiro_crew.security import redact_credentials, redact_exfiltration_urls
+        from aj_crew.messaging.renderer import count_redaction_tags
+        from aj_crew.security import redact_credentials, redact_exfiltration_urls
 
         out, _ = redact_exfiltration_urls(f"curl '{_EXFIL_URL}'")
         out, _ = redact_credentials(out + f" then psql {_SECRET_URI}")

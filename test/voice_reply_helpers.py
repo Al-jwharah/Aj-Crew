@@ -42,7 +42,7 @@ def _capture_mkstemp(monkeypatch) -> list[str]:
         allocated.append(path)
         return fd, path
 
-    monkeypatch.setattr("kiro_crew.voice_reply.tempfile.mkstemp", recording_mkstemp)
+    monkeypatch.setattr("aj_crew.voice_reply.tempfile.mkstemp", recording_mkstemp)
     return allocated
 
 
@@ -57,14 +57,14 @@ _FAKE_AWS_CLI = "aws.exe" if os.name == "nt" else "/usr/bin/aws"
 def _patch_aws_on_path(monkeypatch) -> None:
     """Make ``shutil.which`` report the ``aws`` CLI present, others absent."""
     monkeypatch.setattr(
-        "kiro_crew.voice_reply.shutil.which",
+        "aj_crew.voice_reply.shutil.which",
         lambda name, *a, **k: _FAKE_AWS_CLI if name == "aws" else None,
     )
     # The which stub above is name-sensitive ("aws" only), but the shared
     # deploy-engine resolver would feed it a PATH-hit absolute path.
     # Pin the resolver to the bare name so this fixture keeps meaning exactly
     # "the aws CLI is present" regardless of the host.
-    monkeypatch.setattr("kiro_crew.voice_reply.resolve_aws_bin", lambda: "aws")
+    monkeypatch.setattr("aj_crew.voice_reply.resolve_aws_bin", lambda: "aws")
 
 
 @pytest.fixture(autouse=True)
@@ -85,9 +85,9 @@ def _no_argv_prefixers(_floor_monkeypatch):
     the same host dependence. A test specifically about resource limits or cgroup
     scoping should patch the real function back.
     """
-    _floor_monkeypatch.setattr("kiro_crew.voice_reply.cgroup_scope_argv", lambda argv: list(argv))
+    _floor_monkeypatch.setattr("aj_crew.voice_reply.cgroup_scope_argv", lambda argv: list(argv))
     _floor_monkeypatch.setattr(
-        "kiro_crew.voice_reply.create_subprocess_limited",
+        "aj_crew.voice_reply.create_subprocess_limited",
         lambda *argv, **kw: asyncio.create_subprocess_exec(*argv, **kw),
     )
 
@@ -125,9 +125,9 @@ def _polly_consented_fixture(tmp_path_factory, monkeypatch):
     itself deliberately do not use this fixture (see ``test_aws_consent.py``).
     """
     home = tmp_path_factory.mktemp("consent-home")
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    from kiro_crew import aws_consent
-    from kiro_crew.config.loader import config_dir
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    from aj_crew import aws_consent
+    from aj_crew.config.loader import config_dir
 
     config_dir().mkdir(parents=True, exist_ok=True)
     aws_consent.record_grant(

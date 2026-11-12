@@ -18,17 +18,17 @@ import pytest
 from _hot_reload_helpers import change as _change
 from _hot_reload_helpers import write_config as _write
 
-from kiro_crew.config import live
-from kiro_crew.config.live import ConfigWatch
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.session import SessionManager, _watchdog_handle_of
-from kiro_crew.session_cleanup import SessionCleanup
-from kiro_crew.testing.wait import finished
+from aj_crew.config import live
+from aj_crew.config.live import ConfigWatch
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.session import SessionManager, _watchdog_handle_of
+from aj_crew.session_cleanup import SessionCleanup
+from aj_crew.testing.wait import finished
 
 
 def _make_cfg(
     pool_size: int = 2,
-    pool_agent: str = "kirocrew",
+    pool_agent: str = "ajcrew",
     pool_ttl_secs: int = 1800,
     timeout_secs: int = 3600,
     rss_max_mb: int = 0,
@@ -73,7 +73,7 @@ def _factory_for(cfg) -> MagicMock:
 def _make_manager(**cfg_kwargs) -> tuple[SessionManager, MagicMock]:
     cfg = _make_cfg(**cfg_kwargs)
     factory = MagicMock(side_effect=lambda *a, **kw: _make_provider())
-    with patch("kiro_crew.session.default_project_dir", return_value="/ws"):
+    with patch("aj_crew.session.default_project_dir", return_value="/ws"):
         mgr = SessionManager(cfg, provider_factory=factory)
     return mgr, factory
 
@@ -131,7 +131,7 @@ class TestAdoptOnChange:
         rebuild the factory on the default model and backend and drain the warm
         pool. The applier raises ``ConfigDeferred`` and keeps what is in force,
         like the owned appliers; the watcher retries each tick."""
-        from kiro_crew.config.live import ConfigDeferred
+        from aj_crew.config.live import ConfigDeferred
 
         mgr, _ = _make_manager()
         mgr.refresh_defaults = AsyncMock()  # type: ignore[method-assign]
@@ -187,9 +187,9 @@ class TestAdoptOnChange:
         new_cfg = _make_cfg()
         with (
             patch.object(mgr, "refresh_defaults", wraps=mgr.refresh_defaults) as refresh,
-            patch("kiro_crew.session.KiroCrewConfig.load"),
-            patch("kiro_crew.session.default_project_dir", return_value="/ws"),
-            patch("kiro_crew.session.build_provider_factory", side_effect=_factory_for),
+            patch("aj_crew.session.AjCrewConfig.load"),
+            patch("aj_crew.session.default_project_dir", return_value="/ws"),
+            patch("aj_crew.session.build_provider_factory", side_effect=_factory_for),
             patch.object(mgr, "start_pool", AsyncMock()),
             patch.object(mgr, "_retire_stale_backend_bg_runtime", AsyncMock()),
         ):
@@ -217,9 +217,9 @@ class TestAdoptOnChange:
         mgr, old_factory = _make_manager()
         with (
             patch.object(mgr, "refresh_defaults", wraps=mgr.refresh_defaults) as refresh,
-            patch("kiro_crew.session.KiroCrewConfig.load"),
-            patch("kiro_crew.session.default_project_dir", return_value="/ws"),
-            patch("kiro_crew.session.build_provider_factory", side_effect=_factory_for),
+            patch("aj_crew.session.AjCrewConfig.load"),
+            patch("aj_crew.session.default_project_dir", return_value="/ws"),
+            patch("aj_crew.session.build_provider_factory", side_effect=_factory_for),
             patch.object(mgr, "start_pool", AsyncMock()),
             patch.object(mgr, "_retire_stale_backend_bg_runtime", AsyncMock()),
         ):
@@ -231,12 +231,12 @@ class TestAdoptOnChange:
 class TestRefreshDefaultsRederivesThePool:
     @pytest.mark.asyncio
     async def test_pool_shape_follows_the_handed_in_config_without_a_load(self) -> None:
-        mgr, old_factory = _make_manager(pool_size=2, pool_agent="kirocrew", pool_ttl_secs=1800)
+        mgr, old_factory = _make_manager(pool_size=2, pool_agent="ajcrew", pool_ttl_secs=1800)
         new_cfg = _make_cfg(pool_size=3, pool_agent="reviewer", pool_ttl_secs=60)
         with (
-            patch("kiro_crew.session.KiroCrewConfig.load") as load,
-            patch("kiro_crew.session.default_project_dir", return_value="/new-ws"),
-            patch("kiro_crew.session.build_provider_factory", side_effect=_factory_for) as build,
+            patch("aj_crew.session.AjCrewConfig.load") as load,
+            patch("aj_crew.session.default_project_dir", return_value="/new-ws"),
+            patch("aj_crew.session.build_provider_factory", side_effect=_factory_for) as build,
             patch.object(mgr, "start_pool", AsyncMock()),
             patch.object(mgr, "_retire_stale_backend_bg_runtime", AsyncMock()),
         ):
@@ -256,12 +256,12 @@ class TestRefreshDefaultsRederivesThePool:
         """The reset handler's path re-adopts the pool shape too, TTL included: a
         disk-edited ``pool_ttl_secs`` it loads must not keep evicting the warm pool
         at the old TTL until the watcher's next ``refresh_defaults``."""
-        mgr, old_factory = _make_manager(pool_size=2, pool_agent="kirocrew", pool_ttl_secs=1800)
+        mgr, old_factory = _make_manager(pool_size=2, pool_agent="ajcrew", pool_ttl_secs=1800)
         new_cfg = _make_cfg(pool_size=3, pool_agent="reviewer", pool_ttl_secs=60)
         with (
-            patch("kiro_crew.session.KiroCrewConfig.load") as load,
-            patch("kiro_crew.session.default_project_dir", return_value="/new-ws"),
-            patch("kiro_crew.session.build_provider_factory", side_effect=_factory_for),
+            patch("aj_crew.session.AjCrewConfig.load") as load,
+            patch("aj_crew.session.default_project_dir", return_value="/new-ws"),
+            patch("aj_crew.session.build_provider_factory", side_effect=_factory_for),
             patch.object(mgr, "start_pool", AsyncMock()),
             patch.object(mgr, "_retire_stale_backend_bg_runtime", AsyncMock()),
         ):
@@ -280,8 +280,8 @@ class TestRefreshDefaultsRederivesThePool:
         mgr, _ = _make_manager()
         assert mgr._pool_cwd == "/ws"
         with (
-            patch("kiro_crew.session.default_project_dir", return_value="/moved"),
-            patch("kiro_crew.session.build_provider_factory", side_effect=_factory_for),
+            patch("aj_crew.session.default_project_dir", return_value="/moved"),
+            patch("aj_crew.session.build_provider_factory", side_effect=_factory_for),
             patch.object(mgr, "start_pool", AsyncMock()),
             patch.object(mgr, "_retire_stale_backend_bg_runtime", AsyncMock()),
         ):
@@ -304,8 +304,8 @@ class TestRefreshDefaultsRederivesThePool:
             return "/threaded"
 
         with (
-            patch("kiro_crew.session.default_project_dir", side_effect=resolve),
-            patch("kiro_crew.session.build_provider_factory", side_effect=_factory_for),
+            patch("aj_crew.session.default_project_dir", side_effect=resolve),
+            patch("aj_crew.session.build_provider_factory", side_effect=_factory_for),
             patch.object(mgr, "start_pool", AsyncMock()),
             patch.object(mgr, "_retire_stale_backend_bg_runtime", AsyncMock()),
         ):
@@ -319,7 +319,7 @@ class TestRefreshDefaultsRederivesThePool:
         new_cfg = _make_cfg(pool_size=10_000, pool_agent="", pool_ttl_secs=-5)
         new_cfg.agent.default_agent = "fallback"
         with (
-            patch("kiro_crew.session.build_provider_factory", side_effect=_factory_for),
+            patch("aj_crew.session.build_provider_factory", side_effect=_factory_for),
             patch.object(mgr, "start_pool", AsyncMock()),
             patch.object(mgr, "_retire_stale_backend_bg_runtime", AsyncMock()),
         ):
@@ -334,11 +334,11 @@ class TestRefreshDefaultsRederivesThePool:
         mgr, _ = _make_manager(pool_size=0)
         new_cfg = _make_cfg(pool_size=0, pool_ttl_secs=7)
         with (
-            patch("kiro_crew.session.KiroCrewConfig.load", return_value=new_cfg) as load,
+            patch("aj_crew.session.AjCrewConfig.load", return_value=new_cfg) as load,
             # The pool cwd resolves through the workspace table, which reads config
             # on its own; pinning it keeps the count below the lifecycle's one read.
-            patch("kiro_crew.session.default_project_dir", return_value="/ws"),
-            patch("kiro_crew.session.build_provider_factory", side_effect=_factory_for),
+            patch("aj_crew.session.default_project_dir", return_value="/ws"),
+            patch("aj_crew.session.build_provider_factory", side_effect=_factory_for),
             patch.object(mgr, "start_pool", AsyncMock()),
             patch.object(mgr, "_retire_stale_backend_bg_runtime", AsyncMock()),
         ):
@@ -353,7 +353,7 @@ class TestRefreshDefaultsRederivesThePool:
         a raising builder must leave the previous (cfg, factory) pair intact so
         a watcher retry re-enters against a consistent state, not a half-swapped
         one."""
-        mgr, old_factory = _make_manager(pool_size=2, pool_agent="kirocrew", pool_ttl_secs=1800)
+        mgr, old_factory = _make_manager(pool_size=2, pool_agent="ajcrew", pool_ttl_secs=1800)
         old_cfg = mgr._cfg
         new_cfg = _make_cfg(pool_size=3, pool_agent="reviewer", pool_ttl_secs=60)
 
@@ -361,8 +361,8 @@ class TestRefreshDefaultsRederivesThePool:
             raise RuntimeError("factory build failed")
 
         with (
-            patch("kiro_crew.session.default_project_dir", return_value="/new-ws"),
-            patch("kiro_crew.session.build_provider_factory", side_effect=boom),
+            patch("aj_crew.session.default_project_dir", return_value="/new-ws"),
+            patch("aj_crew.session.build_provider_factory", side_effect=boom),
             patch.object(mgr, "start_pool", AsyncMock()),
             patch.object(mgr, "_retire_stale_backend_bg_runtime", AsyncMock()),
         ):
@@ -372,7 +372,7 @@ class TestRefreshDefaultsRederivesThePool:
         assert mgr._cfg is old_cfg
         assert mgr._provider_factory is old_factory
         assert mgr._pool_size == 2
-        assert mgr._pool_agent == "kirocrew"
+        assert mgr._pool_agent == "ajcrew"
         assert mgr._pool_ttl_secs == 1800
 
 
@@ -472,7 +472,7 @@ class TestCleanupLoopRereadsPolicy:
         quiet = {name: AsyncMock() for name in _TICK_SWEEPS}
         mgr._watchdog = MagicMock(tick=AsyncMock())
         with (
-            patch("kiro_crew.session.shutdown_event", signal),
+            patch("aj_crew.session.shutdown_event", signal),
             patch.object(SessionCleanup, "_adopt_idle_policy", side_effect=adopt),
             patch.multiple(SessionCleanup, **quiet),
         ):
@@ -521,7 +521,7 @@ class TestCleanupLoopRereadsPolicy:
         )
         try:
             with (
-                patch("kiro_crew.session.shutdown_event", signal),
+                patch("aj_crew.session.shutdown_event", signal),
                 patch.object(SessionCleanup, "_adopt_idle_policy", side_effect=adopt),
                 patch.multiple(SessionCleanup, **quiet),
             ):
@@ -577,7 +577,7 @@ class TestCleanupLoopRereadsPolicy:
         )
         try:
             with (
-                patch("kiro_crew.session.shutdown_event", signal),
+                patch("aj_crew.session.shutdown_event", signal),
                 patch.object(SessionCleanup, "_adopt_idle_policy", side_effect=adopt),
                 patch.multiple(SessionCleanup, **quiet),
             ):
@@ -618,7 +618,7 @@ class TestWatchdogFanOut:
             provider=SimpleNamespace(_client=SimpleNamespace(_handle=b))
         )
         mgr._sessions["fake:3"] = SimpleNamespace(provider=_make_provider())
-        new_cfg = KiroCrewConfig()
+        new_cfg = AjCrewConfig()
         new_cfg.watchdog.stale_window_secs = 111.0
         settings_for = {}
 
@@ -626,7 +626,7 @@ class TestWatchdogFanOut:
             settings_for[crew] = cfg
             return f"settings:{crew}"
 
-        with patch("kiro_crew.session._load_allocation_watchdog_settings", side_effect=fake_load):
+        with patch("aj_crew.session._load_allocation_watchdog_settings", side_effect=fake_load):
             await mgr._on_config_change(_change(new_cfg, "watchdog.stale_window_secs"))
 
         assert a.rebinds == [("", "settings:")]
@@ -639,7 +639,7 @@ class TestWatchdogFanOut:
         mgr, _ = _make_manager()
         h = _FakeHandle("reviewer")
         mgr._sessions["k"] = SimpleNamespace(provider=SimpleNamespace(_handle=h))
-        with patch("kiro_crew.session._load_allocation_watchdog_settings", return_value="s"):
+        with patch("aj_crew.session._load_allocation_watchdog_settings", return_value="s"):
             await mgr._on_config_change(
                 _change(_make_cfg(), "agents.reviewer.watchdog_tool_stall_suspect_secs")
             )
@@ -649,11 +649,11 @@ class TestWatchdogFanOut:
 
     @pytest.mark.asyncio
     async def test_real_settings_loader_reclamps_from_the_given_config(self) -> None:
-        from kiro_crew.acp.session_handle import _load_watchdog_settings
+        from aj_crew.acp.session_handle import _load_watchdog_settings
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.watchdog.stale_window_secs = 123.0
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load") as load:
+        with patch("aj_crew.config.loader.AjCrewConfig.load") as load:
             settings = _load_watchdog_settings("", cfg=cfg)
         load.assert_not_called()
         assert settings.stale_window_secs == 123.0
@@ -662,29 +662,29 @@ class TestWatchdogFanOut:
 class TestSessionStartBudgetFollowsTheSnapshot:
     @pytest.mark.asyncio
     async def test_snapshot_wins_over_the_runtime_memo(self) -> None:
-        from kiro_crew.acp import runtime as rt
+        from aj_crew.acp import runtime as rt
 
         runtime = rt.AcpRuntime.__new__(rt.AcpRuntime)
         runtime._session_start_timeout = 5.0
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.session_start_timeout_secs = 900
         live.watch().prime(cfg)
         assert await runtime._session_start_budget() == 900.0
 
     @pytest.mark.asyncio
     async def test_snapshot_keeps_the_builtin_floor(self) -> None:
-        from kiro_crew.acp import runtime as rt
+        from aj_crew.acp import runtime as rt
 
         runtime = rt.AcpRuntime.__new__(rt.AcpRuntime)
         runtime._session_start_timeout = None
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.session_start_timeout_secs = 1
         live.watch().prime(cfg)
         assert await runtime._session_start_budget() == rt._SESSION_NEW_TIMEOUT
 
     @pytest.mark.asyncio
     async def test_without_a_snapshot_the_memo_is_used(self) -> None:
-        from kiro_crew.acp import runtime as rt
+        from aj_crew.acp import runtime as rt
 
         runtime = rt.AcpRuntime.__new__(rt.AcpRuntime)
         runtime._session_start_timeout = None
@@ -696,20 +696,20 @@ class TestSessionStartBudgetFollowsTheSnapshot:
 
 class TestBotNameFollowsTheSnapshot:
     def _builder(self, bot_name: str):
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         b = ContextBuilder.__new__(ContextBuilder)
         b._bot_name = bot_name
         return b
 
     def test_snapshot_name_is_substituted(self) -> None:
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.bot_name = "Hermes"
         live.watch().prime(cfg)
         assert self._builder("Kiro")._substitute_bot_name("I am {bot_name}.") == "I am Hermes."
 
     def test_empty_snapshot_name_falls_back_to_the_captured_one(self) -> None:
-        live.watch().prime(KiroCrewConfig())
+        live.watch().prime(AjCrewConfig())
         assert self._builder("Kiro")._substitute_bot_name("{bot_name}") == "Kiro"
 
     def test_no_snapshot_falls_back_to_the_captured_one(self) -> None:
@@ -725,13 +725,13 @@ class TestEndToEndThroughConfigWatch:
         local = tmp_path / "config.local.json"
         _write(cfg_file, {"session": {"timeout_secs": 3600, "pool_size": 0}})
         with (
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
-            patch("kiro_crew.config.loader.config_local_path", return_value=local),
-            patch("kiro_crew.config.live._WATCH", ConfigWatch(poll_interval_secs=0.05)),
-            patch("kiro_crew.session.default_project_dir", return_value="/ws"),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_file),
+            patch("aj_crew.config.loader.config_local_path", return_value=local),
+            patch("aj_crew.config.live._WATCH", ConfigWatch(poll_interval_secs=0.05)),
+            patch("aj_crew.session.default_project_dir", return_value="/ws"),
         ):
             watch = live.watch()
-            boot = KiroCrewConfig.load()
+            boot = AjCrewConfig.load()
             mgr = SessionManager(boot, provider_factory=MagicMock())
             watch.prime(boot)
             _write(

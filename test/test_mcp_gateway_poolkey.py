@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.mcp_gateway.pool import PoolKey
+from aj_crew.mcp_gateway.pool import PoolKey
 
 _VALID = {
     "server_name": "slack-mcp",
@@ -38,7 +38,7 @@ def test_pool_key_field_set_is_exactly_the_six_dimensions() -> None:
     """The key's field set is asserted EXPLICITLY so adding or removing a
     pool dimension has to be a deliberate test change, never a silent one.
 
-    Absent on purpose: ``user_identity`` (``KIROCREW_PRINCIPAL`` is never set, so it is
+    Absent on purpose: ``user_identity`` (``AJCREW_PRINCIPAL`` is never set, so it is
     always the OS user), the approval/sandbox fields (see the ``pool`` docstring),
     ``agent_name`` and ``config_snapshot_hash`` (the stub sends 64 zeros).
     """
@@ -163,7 +163,7 @@ class TestChannelIsNotAPoolDimension:
     """A channel does not partition the pool.
 
     A channel is not a trust boundary (a Slack channel is shared by many people). It
-    reaches backends per call via ``_meta.kirocrew.caller`` instead.
+    reaches backends per call via ``_meta.ajcrew.caller`` instead.
     """
 
     def test_two_channels_share_one_backend(self) -> None:
@@ -198,7 +198,7 @@ class TestChannelIsNotAPoolDimension:
     def test_legacy_user_identity_is_not_a_pool_dimension(self) -> None:
         """An older stub still sends ``user_identity`` in its register
         payload. The field was deleted from the key (it never isolated
-        anything — nothing populated ``KIROCREW_PRINCIPAL``, so it always
+        anything — nothing populated ``AJCREW_PRINCIPAL``, so it always
         collapsed to the OS user), so the payload key must be ignored, not
         rejected, and must not partition the pool."""
         base = PoolKey.from_register(dict(_VALID))
@@ -230,7 +230,7 @@ class TestAgentIsNotAPoolDimension:
 
     def test_two_agents_with_identical_config_share_one_backend(self) -> None:
         a = PoolKey.from_register({**_VALID, "agent_name": "gpu-dev"})
-        b = PoolKey.from_register({**_VALID, "agent_name": "kirocrew"})
+        b = PoolKey.from_register({**_VALID, "agent_name": "ajcrew"})
         assert a.stable_hash() == b.stable_hash()
         assert a == b
 
@@ -263,7 +263,7 @@ class TestAgentIsNotAPoolDimension:
             ("binary_version", "2.0"),
             ("os_uid", 1001),
         ):
-            variant = PoolKey.from_register({**_VALID, "agent_name": "kirocrew", field: other})
+            variant = PoolKey.from_register({**_VALID, "agent_name": "ajcrew", field: other})
             assert variant.stable_hash() != base.stable_hash(), field
 
 

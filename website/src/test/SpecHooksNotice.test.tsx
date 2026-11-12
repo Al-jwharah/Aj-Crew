@@ -11,9 +11,9 @@ import { DURABLE_PREF_KEYS } from '../lib/uiPrefs'
 import { SPEC_HOOKS_RUN_NOWHERE_DISMISSED_KEY, isSpecHooksRunNowhereNotice } from '../pages/chat/SpecHooksNotice'
 import type { ChatMessage } from '../types'
 
-const KEY = 'kirocrew:spec-hooks-run-nowhere-notice-dismissed'
+const KEY = 'ajcrew:spec-hooks-run-nowhere-notice-dismissed'
 const RUN_NOWHERE_TEXT =
-  "\u2139\uFE0F Agent kirocrew has hooks on postToolUse. This backend does not run an agent's hooks, so they have no effect in this session."
+  "\u2139\uFE0F Agent ajcrew has hooks on postToolUse. This backend does not run an agent's hooks, so they have no effect in this session."
 
 function runNowhere(ts = '2026-11-06T00:00:00.000Z'): ChatMessage {
   return {
@@ -30,13 +30,13 @@ function runNowhere(ts = '2026-11-06T00:00:00.000Z'): ChatMessage {
 const OTHERS: ChatMessage[] = [
   {
     role: 'notice',
-    content: "\u2139\uFE0F Agent kirocrew has hooks on preToolUse. This backend does not run an agent's preToolUse hooks, so they have no effect in this session. Its other hooks run.",
+    content: "\u2139\uFE0F Agent ajcrew has hooks on preToolUse. This backend does not run an agent's preToolUse hooks, so they have no effect in this session. Its other hooks run.",
     ts: '2026-11-06T00:00:01.000Z',
     meta: { kind: 'spec_hooks' },
   },
   {
     role: 'notice',
-    content: '\u2139 Project hooks for agent kirocrew do not run in this session: Crew does not run commands from a project checkout.',
+    content: '\u2139 Project hooks for agent ajcrew do not run in this session: Crew does not run commands from a project checkout.',
     ts: '2026-11-06T00:00:02.000Z',
     meta: { kind: 'spec_hooks' },
   },

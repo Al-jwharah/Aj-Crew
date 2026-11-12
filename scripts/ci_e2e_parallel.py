@@ -155,7 +155,7 @@ def main() -> int:
         root.mkdir(parents=True, exist_ok=True)
         os.environ["TMPDIR"] = str(root)
         if lane == "memory-ui":
-            os.environ["KIROCREW_E2E"] = "1"
+            os.environ["AJCREW_E2E"] = "1"
         return _supervise(
             {lane: COMMANDS[lane]},
             timeout=MEMORY_UI_TIMEOUT if lane == "memory-ui" else None,

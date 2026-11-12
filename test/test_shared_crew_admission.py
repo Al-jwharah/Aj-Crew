@@ -14,31 +14,31 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.config import sections_shared_crew
-from kiro_crew.config.sections_shared_crew import (
+from aj_crew.config import sections_shared_crew
+from aj_crew.config.sections_shared_crew import (
     SharedCrewConfig,
     effective_limits,
     shared_crew_config_from,
 )
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew.admission import (
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew.admission import (
     Liveness,
     OperationKind,
     OperationState,
     ReasonCode,
     RuntimeOwnershipRef,
 )
-from kiro_crew.shared_crew.containment import ContainmentReport, SliceManager
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew.containment import ContainmentReport, SliceManager
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     ActorContext,
     EnforcementLevel,
     Principal,
     Transport,
 )
-from kiro_crew.shared_crew.work_store import WorkStore
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.shared_crew.work_store import WorkStore
+from aj_crew.taskq.store import TaskStore
+from aj_crew.testing.clock import ManualClock
 
 S = OperationState
 A = Principal.system("alice-test").id
@@ -425,7 +425,7 @@ async def test_crash_reconciliation_never_replays_and_holds_live_runtime(tmp_pat
     ran = queued_hold[1]
     ran_alive = queued_hold[2]
     w_ran = store.advance_sync(ran.work, S.RUNNING, runtime=RuntimeOwnershipRef(ran.work.work_id))
-    alive_ref = RuntimeOwnershipRef(ran_alive.work.work_id, containment_unit="kirocrew-rt-x.scope")
+    alive_ref = RuntimeOwnershipRef(ran_alive.work.work_id, containment_unit="ajcrew-rt-x.scope")
     store.advance_sync(ran_alive.work, S.RUNNING, runtime=alive_ref)
     store.tasks.close()
     # -- the gateway restarts --

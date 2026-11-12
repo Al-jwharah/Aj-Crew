@@ -19,7 +19,7 @@ import json
 
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
 
 def _register_slot(state, key="dashboard:chat-1", **kw):

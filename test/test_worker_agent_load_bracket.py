@@ -1,4 +1,4 @@
-"""The ``kirocrew-worker`` agent: the bracket around a load this process cannot lock.
+"""The ``ajcrew-worker`` agent: the bracket around a load this process cannot lock.
 
 What the gate returns and the post-load check that closes it, a benign concurrent
 write that re-derives and respawns once while a revocation still ends the session,
@@ -14,8 +14,8 @@ import pytest
 from worker_agent_helpers import _accepting_kiro_cli  # noqa: F401
 from worker_agent_helpers import _DEFAULT_SPEC_ON_DISK, _package_sources, _stale_worker_spec
 
-from kiro_crew import agent
-from kiro_crew.agent_files import AGENT_FILENAME, WORKER_AGENT_FILENAME
+from aj_crew import agent
+from aj_crew.agent_files import AGENT_FILENAME, WORKER_AGENT_FILENAME
 
 # One xdist worker for the whole module: the enumeration gate below streams src/
 # (~1,700 files) through ``test/source_corpus.py``, which memoises only the file list.
@@ -35,11 +35,11 @@ def test_the_gate_returns_what_it_verified(tmp_path, monkeypatch):
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(_DEFAULT_SPEC_ON_DISK), encoding="utf-8")
     agent._install_worker_agent()
 
-    snap = agent.require_fresh_derived_spec("kirocrew-worker", None)
+    snap = agent.require_fresh_derived_spec("ajcrew-worker", None)
     assert snap is not None
     assert snap.identity == agent.default_spec_identity()
     assert snap.fingerprint == agent.default_spec_fingerprint()
-    assert agent.require_fresh_derived_spec("kirocrew", None) is None
+    assert agent.require_fresh_derived_spec("ajcrew", None) is None
 
 
 def test_a_default_changed_during_the_load_ends_the_session(tmp_path, monkeypatch):
@@ -50,7 +50,7 @@ def test_a_default_changed_during_the_load_ends_the_session(tmp_path, monkeypatc
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(_DEFAULT_SPEC_ON_DISK), encoding="utf-8")
     agent._install_worker_agent()
-    snap = agent.require_fresh_derived_spec("kirocrew-worker", None)
+    snap = agent.require_fresh_derived_spec("ajcrew-worker", None)
 
     spec = json.loads(json.dumps(_DEFAULT_SPEC_ON_DISK))
     spec["mcpServers"].pop("builder-mcp")
@@ -69,7 +69,7 @@ def test_an_unchanged_default_passes_the_post_load_check(tmp_path, monkeypatch):
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(_DEFAULT_SPEC_ON_DISK), encoding="utf-8")
     agent._install_worker_agent()
-    snap = agent.require_fresh_derived_spec("kirocrew-worker", None)
+    snap = agent.require_fresh_derived_spec("ajcrew-worker", None)
     agent.require_unchanged_derived_spec(snap)
 
 
@@ -80,7 +80,7 @@ def test_a_post_load_check_that_cannot_read_ends_the_session(tmp_path, monkeypat
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(_DEFAULT_SPEC_ON_DISK), encoding="utf-8")
     agent._install_worker_agent()
-    snap = agent.require_fresh_derived_spec("kirocrew-worker", None)
+    snap = agent.require_fresh_derived_spec("ajcrew-worker", None)
 
     (tmp_path / AGENT_FILENAME).write_text("{ not json", encoding="utf-8")
     with pytest.raises(agent.DerivedSpecStale) as excinfo:
@@ -102,7 +102,7 @@ def test_the_runtime_closes_the_bracket_after_the_handshake():
     import inspect
     import sys
 
-    from kiro_crew.acp import runtime
+    from aj_crew.acp import runtime
 
     # The spawn, its handshake and its failed-start cleanup live in the owner that binds
     # _spawn_admitted, in the order the class held them.
@@ -122,7 +122,7 @@ def test_the_snapshot_is_a_coherent_pair_from_one_observation(tmp_path, monkeypa
     OLD content's hash -- and the post-load check then accepts the new default while the
     subprocess loaded the old spec. Here the default moves during the verification, and the
     pair that comes back describes ONE generation of the file, whichever one it settled on."""
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent_state, "config_dir", lambda: tmp_path)
@@ -146,7 +146,7 @@ def test_the_snapshot_is_a_coherent_pair_from_one_observation(tmp_path, monkeypa
         return spec
 
     monkeypatch.setattr(agent, "_installed_default_spec", _read_then_move)
-    snap = agent.require_fresh_derived_spec("kirocrew-worker", None)
+    snap = agent.require_fresh_derived_spec("ajcrew-worker", None)
     assert moved, "the reader never fired, so this test proved nothing"
     assert snap is not None
 
@@ -183,7 +183,7 @@ def test_a_default_spec_that_never_settles_refuses_the_spawn(tmp_path, monkeypat
     """Bounded, and fail-closed at the bound. The loop's exit condition is another process
     leaving the file alone, so unbounded it would spin on a host rewriting the spec in a
     loop -- and a spawn that never returns is worse than one that refuses."""
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent_state, "config_dir", lambda: tmp_path)
@@ -198,7 +198,7 @@ def test_a_default_spec_that_never_settles_refuses_the_spawn(tmp_path, monkeypat
 
     monkeypatch.setattr(agent, "default_spec_identity", _never_the_same)
     with pytest.raises(agent.DerivedSpecStale) as excinfo:
-        agent.require_fresh_derived_spec("kirocrew-worker", None)
+        agent.require_fresh_derived_spec("ajcrew-worker", None)
     assert "kept changing" in str(excinfo.value)
     assert str(agent._DEFAULT_SPEC_OBSERVATION_ATTEMPTS) in str(excinfo.value)
     # It gave up rather than looping forever.
@@ -209,7 +209,7 @@ def test_the_derive_time_pair_is_also_one_observation(tmp_path, monkeypatch):
     """The same property at the WRITE end, because a torn pair recorded here is what a
     later identity match would accept: the fingerprint is of the bytes this derivation
     mirrored, and the identity is recorded only when a re-stat proves the file held still."""
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent_state, "config_dir", lambda: tmp_path)
@@ -231,23 +231,21 @@ def test_the_derive_time_pair_is_also_one_observation(tmp_path, monkeypatch):
     agent._install_worker_agent()
 
     # The fingerprint names what was actually mirrored, not what the file now holds.
-    assert agent_state.get_mirrored_from("kirocrew-worker") == agent._spec_fingerprint(
-        mirrored_bytes
-    )
+    assert agent_state.get_mirrored_from("ajcrew-worker") == agent._spec_fingerprint(mirrored_bytes)
     # And no identity is claimed at all, because none of them describes those bytes.
-    assert agent_state.get_mirrored_stat("kirocrew-worker") is None
+    assert agent_state.get_mirrored_stat("ajcrew-worker") is None
 
     # Which leaves the next check in the pessimistic direction: no fast path, and the
     # truthful fingerprint does not match the file, so the mirror is re-derived.
     monkeypatch.setattr(agent, "_installed_default_spec", real_read)
-    assert agent._derived_spec_matches_default("kirocrew-worker") is False
+    assert agent._derived_spec_matches_default("ajcrew-worker") is False
 
 
 def test_the_identity_fast_path_re_stats_after_reading_the_sidecar(tmp_path, monkeypatch):
     """Reading the sidecar is itself a window. The recorded value is evidence about the file
     the FIRST stat described, so without a second stat the fast path can answer "provably
     current" about a default that has already been replaced."""
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent_state, "config_dir", lambda: tmp_path)
@@ -264,13 +262,13 @@ def test_the_identity_fast_path_re_stats_after_reading_the_sidecar(tmp_path, mon
         return answer
 
     monkeypatch.setattr(agent, "default_spec_identity", _counting)
-    assert agent._derived_spec_matches_default("kirocrew-worker") is True
+    assert agent._derived_spec_matches_default("ajcrew-worker") is True
     assert len(calls) == 2, f"the fast path must stat before AND after the sidecar read: {calls}"
 
     # And a replacement landing during that read is caught rather than accepted.
     edited = json.loads(json.dumps(_DEFAULT_SPEC_ON_DISK))
     edited["mcpServers"].pop("builder-mcp")
-    recorded = agent_state.get_mirrored_stat("kirocrew-worker")
+    recorded = agent_state.get_mirrored_stat("ajcrew-worker")
 
     def _read_sidecar_then_move(name):
         default.write_text(json.dumps(edited), encoding="utf-8")
@@ -278,7 +276,7 @@ def test_the_identity_fast_path_re_stats_after_reading_the_sidecar(tmp_path, mon
 
     monkeypatch.setattr(agent, "default_spec_identity", real_identity)
     monkeypatch.setattr(agent_state, "get_mirrored_stat", _read_sidecar_then_move)
-    assert agent._derived_spec_matches_default("kirocrew-worker") is False
+    assert agent._derived_spec_matches_default("ajcrew-worker") is False
 
 
 def test_the_client_closes_the_bracket_after_the_handshake(tmp_path):
@@ -291,8 +289,8 @@ def test_the_client_closes_the_bracket_after_the_handshake(tmp_path):
 
     import acp_launch_capture as capture_mod
 
-    from kiro_crew.acp import client
-    from kiro_crew.acp_backends import ACP_BACKEND_KIRO
+    from aj_crew.acp import client
+    from aj_crew.acp_backends import ACP_BACKEND_KIRO
 
     # The capture half, observed on a real kiro-cli launch: what the gate returned
     # is what the spawn left on the client for the handshake to verify.
@@ -365,7 +363,7 @@ def _client_at_the_handshake(snapshot):
     were moved BELOW would need attributes this stub does not have, so a test that
     passes here is a test that ran the check early.
     """
-    from kiro_crew.acp import client as client_mod
+    from aj_crew.acp import client as client_mod
 
     c = client_mod.AcpClient.__new__(client_mod.AcpClient)
     c._derived_spec_snapshot = snapshot
@@ -395,14 +393,14 @@ def test_the_client_bracket_aborts_before_a_session_is_created(tmp_path, monkeyp
     session state -- with no session/load or session/new sent."""
     import asyncio
 
-    from kiro_crew import agent_state
-    from kiro_crew.acp import client as client_mod
+    from aj_crew import agent_state
+    from aj_crew.acp import client as client_mod
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent_state, "config_dir", lambda: tmp_path)
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(_DEFAULT_SPEC_ON_DISK), encoding="utf-8")
     agent._install_worker_agent()
-    snap = agent.require_fresh_derived_spec("kirocrew-worker", None)
+    snap = agent.require_fresh_derived_spec("ajcrew-worker", None)
 
     spec = json.loads(json.dumps(_DEFAULT_SPEC_ON_DISK))
     spec["mcpServers"].pop("builder-mcp")
@@ -425,7 +423,7 @@ def test_the_client_bracket_judges_the_snapshot_its_own_spawn_captured(monkeypat
     would compare the spec against itself and always pass."""
     import asyncio
 
-    from kiro_crew.acp import client as client_mod
+    from aj_crew.acp import client as client_mod
 
     class _Reached(Exception):
         pass
@@ -459,7 +457,7 @@ def test_every_set_mode_send_goes_through_the_one_bracketed_helper():
     import inspect
     import textwrap
 
-    from kiro_crew.acp import runtime as runtime_mod
+    from aj_crew.acp import runtime as runtime_mod
 
     def _tree(fn):
         return ast.parse(textwrap.dedent(inspect.getsource(fn)))
@@ -538,7 +536,7 @@ def test_the_bracketed_helper_orders_gate_send_and_check_by_consumption_point():
     import inspect
     import textwrap
 
-    from kiro_crew.acp import runtime as runtime_mod
+    from aj_crew.acp import runtime as runtime_mod
 
     tree = ast.parse(
         textwrap.dedent(inspect.getsource(runtime_mod.AcpRuntime._activate_mode_bracketed))
@@ -576,10 +574,10 @@ def test_a_revocation_between_the_payload_build_and_activation_is_caught(tmp_pat
     Comparing against the payload's own snapshot catches it."""
     import asyncio
 
-    from kiro_crew import agent_state
-    from kiro_crew.acp.harness import SessionExtras
-    from kiro_crew.acp.session_handle import AcpRuntimeError
-    from kiro_crew.acp.types import METHOD_SET_MODE
+    from aj_crew import agent_state
+    from aj_crew.acp.harness import SessionExtras
+    from aj_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew.acp.types import METHOD_SET_MODE
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent_state, "config_dir", lambda: tmp_path)
@@ -606,7 +604,7 @@ def test_a_revocation_between_the_payload_build_and_activation_is_caught(tmp_pat
     rt._kas_custom_agents = _payload  # type: ignore[method-assign]
 
     with pytest.raises(AcpRuntimeError) as excinfo:
-        asyncio.run(rt.create_session(cwd=tmp_path / "ws", agent="kirocrew-worker", mcp_servers=[]))
+        asyncio.run(rt.create_session(cwd=tmp_path / "ws", agent="ajcrew-worker", mcp_servers=[]))
 
     assert METHOD_SET_MODE in sent, "the activation must have been attempted"
     assert terminated == ["sid-1"], "a session holding a revoked definition must end"
@@ -629,9 +627,9 @@ def _runtime_for_spawn(monkeypatch, attempts_outcomes):
     cannot pass here. Any other raised outcome stands for a refusal before a child
     exists, which leaves nothing to reap.
     """
-    from kiro_crew.acp import runtime as runtime_mod
-    from kiro_crew.acp.session_handle import AcpRuntimeDead
-    from kiro_crew.acp.types import ACP_BACKEND_KIRO
+    from aj_crew.acp import runtime as runtime_mod
+    from aj_crew.acp.session_handle import AcpRuntimeDead
+    from aj_crew.acp.types import ACP_BACKEND_KIRO
 
     rt = object.__new__(runtime_mod.AcpRuntime)
     rt._acp_backend = ACP_BACKEND_KIRO
@@ -700,7 +698,7 @@ def test_a_default_that_keeps_moving_across_two_spawns_is_refused(monkeypatch):
     ``RuntimeError`` no caller of ``spawn()`` catches."""
     import asyncio
 
-    from kiro_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew.acp.session_handle import AcpRuntimeError
 
     rt, calls = _runtime_for_spawn(
         monkeypatch,
@@ -718,7 +716,7 @@ def test_a_mirror_that_cannot_be_re_derived_is_not_retried(monkeypatch):
     post-handshake bracket only."""
     import asyncio
 
-    from kiro_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew.acp.session_handle import AcpRuntimeError
 
     rt, calls = _runtime_for_spawn(monkeypatch, [AcpRuntimeError("could not be re-derived")])
     with pytest.raises(AcpRuntimeError):
@@ -774,14 +772,14 @@ def _runtime_for_create_session(monkeypatch, tmp_path, sent, terminated):
     ordering, the teardown -- which is what makes these tests fail when the bracket is
     removed from the product.
     """
-    from kiro_crew.acp import runtime as runtime_mod
-    from kiro_crew.acp.types import ACP_BACKEND_KIRO
+    from aj_crew.acp import runtime as runtime_mod
+    from aj_crew.acp.types import ACP_BACKEND_KIRO
 
     rt = object.__new__(runtime_mod.AcpRuntime)
     rt._initialized = True
     rt._acp_backend = ACP_BACKEND_KIRO
-    rt._agent = "kirocrew"
-    rt._crew_agent = "kirocrew"
+    rt._agent = "ajcrew"
+    rt._crew_agent = "ajcrew"
     rt._work_dir = tmp_path / "wd"
     rt._member_context = False
     rt._remote_workspace = None
@@ -798,8 +796,8 @@ def _runtime_for_create_session(monkeypatch, tmp_path, sent, terminated):
     resp = {
         "sessionId": "sid-1",
         "modes": {
-            "currentModeId": "kirocrew",
-            "availableModes": [{"id": "kirocrew"}, {"id": "kirocrew-worker"}],
+            "currentModeId": "ajcrew",
+            "availableModes": [{"id": "ajcrew"}, {"id": "ajcrew-worker"}],
         },
     }
 
@@ -812,7 +810,7 @@ def _runtime_for_create_session(monkeypatch, tmp_path, sent, terminated):
     ):
         # The kiro backend builds no wire surface, so it carries no payload and no payload
         # snapshot -- which is what makes the set_mode line itself the consumed load.
-        from kiro_crew.acp.harness import SessionExtras
+        from aj_crew.acp.harness import SessionExtras
 
         return SessionExtras()
 
@@ -851,9 +849,9 @@ def test_activating_the_worker_on_an_unrepairable_mirror_never_sends_set_mode(
     grants the default agent does not have."""
     import asyncio
 
-    from kiro_crew import agent_state
-    from kiro_crew.acp.session_handle import AcpRuntimeError
-    from kiro_crew.acp.types import METHOD_SESSION_NEW
+    from aj_crew import agent_state
+    from aj_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew.acp.types import METHOD_SESSION_NEW
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent_state, "config_dir", lambda: tmp_path)
@@ -863,8 +861,8 @@ def test_activating_the_worker_on_an_unrepairable_mirror_never_sends_set_mode(
     (tmp_path / WORKER_AGENT_FILENAME).write_text(
         json.dumps(_stale_worker_spec()), encoding="utf-8"
     )
-    agent_state.set_mirrored_from("kirocrew-worker", "stale-fingerprint")
-    agent_state.set_mirrored_stat("kirocrew-worker", None)
+    agent_state.set_mirrored_from("ajcrew-worker", "stale-fingerprint")
+    agent_state.set_mirrored_stat("ajcrew-worker", None)
     monkeypatch.setattr(agent, "rederive_worker_agent", lambda reason: False)
 
     sent: list[str] = []
@@ -872,7 +870,7 @@ def test_activating_the_worker_on_an_unrepairable_mirror_never_sends_set_mode(
     rt = _runtime_for_create_session(monkeypatch, tmp_path, sent, terminated)
 
     with pytest.raises(AcpRuntimeError) as excinfo:
-        asyncio.run(rt.create_session(cwd=tmp_path / "ws", agent="kirocrew-worker", mcp_servers=[]))
+        asyncio.run(rt.create_session(cwd=tmp_path / "ws", agent="ajcrew-worker", mcp_servers=[]))
 
     assert sent == [METHOD_SESSION_NEW], f"set_mode was sent on an unverified spec: {sent}"
     assert terminated == ["sid-1"], "the session must not be left half-registered"
@@ -885,9 +883,9 @@ def test_a_default_changed_during_set_mode_tears_the_session_down(tmp_path, monk
     spec nobody verified, so it is ended rather than left running."""
     import asyncio
 
-    from kiro_crew import agent_state
-    from kiro_crew.acp.session_handle import AcpRuntimeError
-    from kiro_crew.acp.types import METHOD_SET_MODE
+    from aj_crew import agent_state
+    from aj_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew.acp.types import METHOD_SET_MODE
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent_state, "config_dir", lambda: tmp_path)
@@ -913,7 +911,7 @@ def test_a_default_changed_during_set_mode_tears_the_session_down(tmp_path, monk
     rt._send_and_await = _send_then_revoke  # type: ignore[method-assign]
 
     with pytest.raises(AcpRuntimeError) as excinfo:
-        asyncio.run(rt.create_session(cwd=tmp_path / "ws", agent="kirocrew-worker", mcp_servers=[]))
+        asyncio.run(rt.create_session(cwd=tmp_path / "ws", agent="ajcrew-worker", mcp_servers=[]))
 
     assert METHOD_SET_MODE in sent, "the send must have happened -- this is the POST-load half"
     assert terminated == ["sid-1"], "a session that may hold an unverified spec must end"
@@ -926,7 +924,7 @@ def test_activating_a_non_derived_agent_costs_no_check(tmp_path, monkeypatch):
     without reading the default spec, let alone hashing it."""
     import asyncio
 
-    from kiro_crew.acp.types import METHOD_SET_MODE
+    from aj_crew.acp.types import METHOD_SET_MODE
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(_DEFAULT_SPEC_ON_DISK), encoding="utf-8")
@@ -940,7 +938,7 @@ def test_activating_a_non_derived_agent_costs_no_check(tmp_path, monkeypatch):
     terminated: list[str] = []
     rt = _runtime_for_create_session(monkeypatch, tmp_path, sent, terminated)
 
-    asyncio.run(rt.create_session(cwd=tmp_path / "ws", agent="kirocrew", mcp_servers=[]))
+    asyncio.run(rt.create_session(cwd=tmp_path / "ws", agent="ajcrew", mcp_servers=[]))
 
     assert METHOD_SET_MODE in sent, "a non-derived agent must still be activated"
     assert terminated == []
@@ -955,8 +953,8 @@ def test_the_array_projection_carries_the_snapshot_it_was_built_from(tmp_path, m
     where they consume the derived spec. So the projection has to hand back the snapshot
     those elements were built from, or the client has a gate and a payload but nothing to
     re-verify once the host has taken it."""
-    from kiro_crew import agent_state
-    from kiro_crew.acp import session_mcp
+    from aj_crew import agent_state
+    from aj_crew.acp import session_mcp
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent_state, "config_dir", lambda: tmp_path)
@@ -965,20 +963,16 @@ def test_the_array_projection_carries_the_snapshot_it_was_built_from(tmp_path, m
     monkeypatch.setattr(session_mcp, "ensure_agent_materialized", lambda _a: None)
     monkeypatch.setattr(session_mcp, "_global_settings", lambda: {})
 
-    projection = session_mcp.session_mcp_projection(
-        "kirocrew-worker", work_dir=str(tmp_path / "wd")
-    )
+    projection = session_mcp.session_mcp_projection("ajcrew-worker", work_dir=str(tmp_path / "wd"))
     snap = projection.derived_spec_snapshot
     assert snap is not None
     assert snap.identity == agent.default_spec_identity()
     assert snap.fingerprint == agent.default_spec_fingerprint()
     # The elements were built from THAT snapshot's bytes, not from a second read.
-    assert {e["name"] for e in projection.servers} >= {"kirocrew-work"}
+    assert {e["name"] for e in projection.servers} >= {"ajcrew-work"}
 
     # An agent that mirrors nothing has no generation to be stale against.
-    assert (
-        session_mcp.session_mcp_projection("kirocrew", work_dir=None).derived_spec_snapshot is None
-    )
+    assert session_mcp.session_mcp_projection("ajcrew", work_dir=None).derived_spec_snapshot is None
 
 
 def test_every_array_mirror_passes_the_snapshot_through(monkeypatch):
@@ -987,7 +981,7 @@ def test_every_array_mirror_passes_the_snapshot_through(monkeypatch):
     leave its host family with no post-consume check while the others had one."""
     import inspect
 
-    from kiro_crew.providers.mirrors import claude_code, codex, opencode
+    from aj_crew.providers.mirrors import claude_code, codex, opencode
 
     for module in (claude_code, codex, opencode):
         source = inspect.getsource(module)
@@ -1001,11 +995,11 @@ def _claude_client_at_session_new(tmp_path, snapshot):
     with a pre-warmed array and the snapshot it was built from."""
     from unittest.mock import AsyncMock
 
-    from kiro_crew.acp import client as client_mod
-    from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
+    from aj_crew.acp import client as client_mod
+    from aj_crew.acp.types import ACP_BACKEND_CLAUDE
 
     c = client_mod.AcpClient(
-        work_dir=tmp_path, agent="kirocrew-worker", acp_backend=ACP_BACKEND_CLAUDE
+        work_dir=tmp_path, agent="ajcrew-worker", acp_backend=ACP_BACKEND_CLAUDE
     )
     c._resume_session_id = None
     c._session_mcp_cache = []  # warmed on the spawn path; the array itself is not under test
@@ -1035,16 +1029,16 @@ def test_a_revocation_between_the_array_build_and_session_new_ends_the_session(
     registered the revoked server with nothing to catch it."""
     import asyncio
 
-    from kiro_crew import agent_state
-    from kiro_crew.acp.client import AcpError
-    from kiro_crew.acp.types import METHOD_INITIALIZE, METHOD_SESSION_NEW
+    from aj_crew import agent_state
+    from aj_crew.acp.client import AcpError
+    from aj_crew.acp.types import METHOD_INITIALIZE, METHOD_SESSION_NEW
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent_state, "config_dir", lambda: tmp_path)
     default = tmp_path / AGENT_FILENAME
     default.write_text(json.dumps(_DEFAULT_SPEC_ON_DISK), encoding="utf-8")
     agent._install_worker_agent()
-    snap = agent.require_fresh_derived_spec("kirocrew-worker", None)
+    snap = agent.require_fresh_derived_spec("ajcrew-worker", None)
 
     c, sent = _claude_client_at_session_new(tmp_path, snap)
     real_wait = c._wait_for_response
@@ -1071,16 +1065,16 @@ def test_post_check_uses_snapshot_sent_not_the_reseeded_one(tmp_path, monkeypatc
     invalidates the instance projection for the next composition."""
     import asyncio
 
-    from kiro_crew import agent_state
-    from kiro_crew.acp.client import AcpError
-    from kiro_crew.acp.types import METHOD_SESSION_NEW
+    from aj_crew import agent_state
+    from aj_crew.acp.client import AcpError
+    from aj_crew.acp.types import METHOD_SESSION_NEW
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent_state, "config_dir", lambda: tmp_path)
     default = tmp_path / AGENT_FILENAME
     default.write_text(json.dumps(_DEFAULT_SPEC_ON_DISK), encoding="utf-8")
     agent._install_worker_agent()
-    sent_snapshot = agent.require_fresh_derived_spec("kirocrew-worker", None)
+    sent_snapshot = agent.require_fresh_derived_spec("ajcrew-worker", None)
 
     c, _sent = _claude_client_at_session_new(tmp_path, sent_snapshot)
     real_wait = c._wait_for_response
@@ -1112,13 +1106,13 @@ def test_an_unchanged_default_lets_the_array_backed_session_proceed(tmp_path, mo
     """The ordinary case pays one stat and says nothing."""
     import asyncio
 
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent_state, "config_dir", lambda: tmp_path)
     (tmp_path / AGENT_FILENAME).write_text(json.dumps(_DEFAULT_SPEC_ON_DISK), encoding="utf-8")
     agent._install_worker_agent()
-    snap = agent.require_fresh_derived_spec("kirocrew-worker", None)
+    snap = agent.require_fresh_derived_spec("ajcrew-worker", None)
 
     c, sent = _claude_client_at_session_new(tmp_path, snap)
     asyncio.run(c._initialize_session())
@@ -1128,9 +1122,9 @@ def test_an_unchanged_default_lets_the_array_backed_session_proceed(tmp_path, mo
 def test_the_array_snapshot_is_dropped_with_the_array_on_reset(tmp_path):
     """Per-spawn freshness, same as the array: a replacement process must judge its own
     array against its own snapshot, never inherit this one's."""
-    from kiro_crew.acp import client as client_mod
+    from aj_crew.acp import client as client_mod
 
-    c = client_mod.AcpClient(work_dir=tmp_path, agent="kirocrew-worker")
+    c = client_mod.AcpClient(work_dir=tmp_path, agent="ajcrew-worker")
     c._session_mcp_cache = [{"name": "x"}]
     c._session_mcp_snapshot = object()
     c._reset_state()
@@ -1144,8 +1138,8 @@ def test_the_session_mcp_projection_reads_nothing_after_the_gate(tmp_path, monke
     looks -- and a revocation landing between the two becomes the session's MCP surface as
     though it had been checked. The gate reads and verifies those bytes, so the projection
     is handed the object rather than the path."""
-    from kiro_crew import agent_state
-    from kiro_crew.acp import session_mcp
+    from aj_crew import agent_state
+    from aj_crew.acp import session_mcp
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent_state, "config_dir", lambda: tmp_path)
@@ -1162,20 +1156,20 @@ def test_the_session_mcp_projection_reads_nothing_after_the_gate(tmp_path, monke
     monkeypatch.setattr(session_mcp, "_read_agent_spec", _counting)
     monkeypatch.setattr(session_mcp, "ensure_agent_materialized", lambda _a: None)
 
-    spec = session_mcp._agent_spec_for("kirocrew-worker", str(tmp_path / "wd"))
+    spec = session_mcp._agent_spec_for("ajcrew-worker", str(tmp_path / "wd"))
 
     assert spec is not None
     assert reads == [], f"the projection re-read the spec after the gate: {reads}"
     # And it is the gate's own object, so the bytes verified and the bytes projected
     # cannot drift apart.
-    snap = agent.require_fresh_derived_spec("kirocrew-worker", str(tmp_path / "wd"))
+    snap = agent.require_fresh_derived_spec("ajcrew-worker", str(tmp_path / "wd"))
     assert snap is not None and snap.spec == spec
 
     # Every other agent mirrors nothing, has no snapshot, and is read here as before --
     # otherwise this branch would silently stop serving them.
     reads.clear()
-    (tmp_path / "kirocrew.json").exists()
-    session_mcp._agent_spec_for("kirocrew", str(tmp_path / "wd"))
+    (tmp_path / "ajcrew.json").exists()
+    session_mcp._agent_spec_for("ajcrew", str(tmp_path / "wd"))
     assert reads, "a non-derived agent must still be read from disk"
 
 
@@ -1184,7 +1178,7 @@ def test_the_snapshot_reader_takes_no_read_of_its_own(monkeypatch):
     resolve a different spec than the projection ran on."""
     import inspect
 
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     snapshot_src = inspect.getsource(session_mcp.agent_spec_snapshot)
     assert "_agent_spec_for(" in snapshot_src

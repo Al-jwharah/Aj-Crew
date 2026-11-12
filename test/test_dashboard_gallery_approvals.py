@@ -27,12 +27,12 @@ from typing import Any
 import pytest
 from skill_script_helpers import load_skill_script
 
-from kiro_crew import crew_log as lg
-from kiro_crew import dashboard_frame
-from kiro_crew.artifact_store import dashboard_package as dp
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+from aj_crew import crew_log as lg
+from aj_crew import dashboard_frame
+from aj_crew.artifact_store import dashboard_package as dp
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
 GALLERY = (
     Path(mdf.__file__).resolve().parents[2]
@@ -50,7 +50,7 @@ GATEWAY = "gateway"
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path: Any, _floor_monkeypatch: Any) -> Any:
     """The planted session logs go into a data home of their own."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 
@@ -66,7 +66,7 @@ _UNITS = itertools.count()
 def _folded(*asks: str, answered: tuple[str, ...] = ()) -> dict[str, Any]:
     """The approvals fold over real entries: each id in *asks* asked, each in *answered* allowed."""
     unit = f"s-approvals-{next(_UNITS)}"
-    handle = CrewLog.create(lg.KIND_SESSION, unit, owner="raymond", agent="kirocrew")
+    handle = CrewLog.create(lg.KIND_SESSION, unit, owner="raymond", agent="ajcrew")
     for turn, approval_id in enumerate(asks, start=1):
         data = {"turn": turn, "approval_id": approval_id, "tool": f"tool-{approval_id}"}
         handle.append("approval/requested", {**data, "reason": f"why {approval_id}"}, src=GATEWAY)
@@ -138,7 +138,7 @@ const island = { textContent: ISLAND };
 globalThis.document = {
   readyState: 'loading',
   documentElement: { setAttribute() {}, lang: '' },
-  getElementById: (id) => (id === 'kirocrew-dashboard-data' ? island : byId[id] || null),
+  getElementById: (id) => (id === 'ajcrew-dashboard-data' ? island : byId[id] || null),
   querySelectorAll: (selector) => (selector === '[data-dashboard-field]'
     ? Object.values(byId).filter((el) => el.getAttribute('data-dashboard-field') !== null)
     : []),
@@ -516,7 +516,7 @@ def test_the_offline_check_dashboard_save_runs_finds_no_script_error(
     page: dict[str, Any], monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Run where this host has a browser the check may start, as the save would."""
-    from kiro_crew import dashboard_verify, platform_compat
+    from aj_crew import dashboard_verify, platform_compat
 
     if not platform_compat.IS_LINUX:
         pytest.skip("the page check runs on Linux only")

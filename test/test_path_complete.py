@@ -14,7 +14,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import api_path_complete
+from aj_crew.dashboard.handlers import api_path_complete
 
 
 class _Slot:
@@ -36,7 +36,7 @@ def _make_app(*known: str) -> web.Application:
 
 @pytest.fixture()
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.sel") as m:
+    with patch("aj_crew.dashboard.handlers.sel") as m:
         m.return_value = MagicMock()
         yield m.return_value
 
@@ -163,7 +163,7 @@ class TestPathComplete:
         dir is resolved at all, and the resolver is replaced with a tripwire that
         fails if it is ever handed such a path.
         """
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         real = files_mod.os.path.realpath
         base = real(str(project))
@@ -186,7 +186,7 @@ class TestPathComplete:
 
     def test_the_lexical_resolver_decides_containment_without_the_filesystem(self):
         """`_completion_segments` IS the containment decision, and it touches nothing."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         root = "/work/proj"
         assert files_mod._completion_segments(root, "./") == []
@@ -222,7 +222,7 @@ class TestPathComplete:
         module seam rather than through `os.name`, which would make pathlib build
         WindowsPath objects on Linux.
         """
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         root = "/work/proj"
         monkeypatch.setattr(files_mod.platform_compat, "IS_WINDOWS", True)
@@ -289,7 +289,7 @@ class TestPathComplete:
         deterministically here at the moment the root is opened, which is before
         the segment below it is reached.
         """
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -360,7 +360,7 @@ class TestPathComplete:
         what this endpoint uses, asserted by leaving the resolving one armed as a
         tripwire.
         """
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         def _tripwire(*args, **kwargs):
             raise AssertionError("the resolving sensitive-path fence was used")
@@ -382,7 +382,7 @@ class TestPathComplete:
         name that cannot be spelled around -- simulated here by having the witness
         report the aliased directory's real name.
         """
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         alias = project / "SSH~1"
         alias.mkdir()
@@ -398,7 +398,7 @@ class TestPathComplete:
     @pytest.mark.asyncio
     async def test_an_unreadable_descriptor_name_fails_closed(self, project, mock_sel, monkeypatch):
         """No witness means nothing to validate, so the request is refused."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod.pinned_fs, "fd_real_path", lambda fd: None)
         status, data = await _get(str(project), path=str(project), dir="./")
@@ -419,7 +419,7 @@ class TestPathComplete:
         The lexical pass judged the string the caller typed; only this judges the
         directory it turned out to name.
         """
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -444,7 +444,7 @@ class TestPathComplete:
 
     @pytest.mark.asyncio
     async def test_a_sensitive_project_root_is_403(self, project, mock_sel):
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         with patch.object(files_mod, "is_sensitive_resolved_path", lambda p: True):
             status, data = await _get(str(project), path=str(project), dir="./")
@@ -453,7 +453,7 @@ class TestPathComplete:
 
     @pytest.mark.asyncio
     async def test_a_sensitive_entry_is_not_offered(self, project, mock_sel):
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         secret = os.path.realpath(str(project / "readme.md"))
         with patch.object(files_mod, "is_sensitive_resolved_path", lambda p: p == secret):
@@ -463,7 +463,7 @@ class TestPathComplete:
 
     @pytest.mark.asyncio
     async def test_the_result_set_is_capped(self, tmp_path, mock_sel):
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         root = tmp_path / "many"
         root.mkdir()

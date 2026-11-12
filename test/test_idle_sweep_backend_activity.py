@@ -22,15 +22,15 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew.acp import runtime as acp_runtime
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION, METHOD_SESSION_UPDATE
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.session import SessionManager
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.acp import runtime as acp_runtime
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.types import METHOD_REQUEST_PERMISSION, METHOD_SESSION_UPDATE
+from aj_crew.config import AjCrewConfig
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.session import SessionManager
+from aj_crew.testing.wait import async_wait_until
 
 
 def _runtime(tmp_path: Path) -> tuple[AcpRuntime, asyncio.StreamReader]:
@@ -141,7 +141,7 @@ class TestRuntimeActivityClock:
     async def test_looping_child_permissions_still_have_a_bounded_idle_clock(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.session_cleanup import _last_activity
+        from aj_crew.session_cleanup import _last_activity
 
         rt, reader = _runtime(tmp_path)
         rt._session_queues["owner"] = asyncio.Queue()
@@ -203,7 +203,7 @@ def providers():
 
 @pytest.fixture
 def manager(providers):
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.timeout_secs = 2
 
     def factory(session_key=None, **kwargs):

@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import credential_patterns as cp
-from kiro_crew import security
-from kiro_crew.security import redaction
+from aj_crew import credential_patterns as cp
+from aj_crew import security
+from aj_crew.security import redaction
 
 SECURITY_DIR = Path(redaction.__file__).resolve().parent
 

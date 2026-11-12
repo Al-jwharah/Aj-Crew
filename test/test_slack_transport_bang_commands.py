@@ -26,10 +26,10 @@ from slack_transport_dispatch_helpers import (
     make_event,
 )
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
-from kiro_crew.messaging.link import canonical_key
-from kiro_crew.slack import handler as _handler
-from kiro_crew.slack import transport_dispatch
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
+from aj_crew.messaging.link import canonical_key
+from aj_crew.slack import handler as _handler
+from aj_crew.slack import transport_dispatch
 
 _OWNER = "U_OWNER"
 _MEMBER = "U_MEMBER"
@@ -52,7 +52,7 @@ def audit(monkeypatch):
     """The owner, an isolated hydration guard, and a recorder in place of the SEL."""
     monkeypatch.setattr(_handler, "_owner_id", _OWNER)
     monkeypatch.setattr(_handler, "_hydrated_sessions", set())
-    monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+    monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
     monkeypatch.setattr(
         transport_dispatch, "_hydrate_thread_overrides", AsyncMock(return_value=None)
     )
@@ -141,7 +141,7 @@ def test_an_owner_command_from_a_non_owner_is_refused_and_audited(audit):
 def test_a_plain_message_still_runs_the_turn(audit):
     _slack, sessions = _run("hello there")
 
-    assert sessions.agents == ["kirocrew"]
+    assert sessions.agents == ["ajcrew"]
 
 
 def test_voice_on_opts_the_thread_in_as_on_the_native_path(audit, monkeypatch):

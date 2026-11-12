@@ -27,8 +27,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.config.loader import KiroCrewAgentConfig
-from kiro_crew.dashboard.handlers.core import _SENSITIVE_MASK
+from aj_crew.config.loader import AjCrewAgentConfig
+from aj_crew.dashboard.handlers.core import _SENSITIVE_MASK
 
 #: Credential-shaped, and short enough to fit the 32-char avatar trait cap, so
 #: one planted value exercises both the plain-string fields and the avatar.
@@ -42,13 +42,13 @@ EXFIL = "https://evil.example/collect?k=" + CRED
 @pytest.fixture(autouse=True)
 def _owner_caller(monkeypatch):
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
 
 def _members_app(state) -> web.Application:
-    from kiro_crew.dashboard.handlers.members import api_members
+    from aj_crew.dashboard.handlers.members import api_members
 
     @web.middleware
     async def _auth(request: web.Request, handler):
@@ -71,7 +71,7 @@ async def _roster(tmp_path, agents, memory_stores=None):
         degraded_sections=frozenset(),
     )
     state = _make_state(tmp_path)
-    with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=fake):
+    with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=fake):
         async with TestClient(TestServer(_members_app(state))) as client:
             resp = await client.get("/api/members")
             assert resp.status == 200
@@ -97,8 +97,8 @@ class TestRecordStringsAreMasked:
     async def test_credential_shaped_value_reaches_the_wire_as_the_mask(
         self, tmp_path, field, planted
     ):
-        record = {"kiro_agent": "kirocrew", field: planted}
-        agents = {"leaky": KiroCrewAgentConfig(**record)}
+        record = {"kiro_agent": "ajcrew", field: planted}
+        agents = {"leaky": AjCrewAgentConfig(**record)}
         rows, body = await _roster(tmp_path, agents)
         assert rows["leaky"][field] == _SENSITIVE_MASK
         # Not just the named field: the value must not survive anywhere in the
@@ -109,7 +109,7 @@ class TestRecordStringsAreMasked:
     async def test_memory_owner_is_masked(self, tmp_path):
         """``memory_owner`` is read off the memory-store record, not the crew,
         so it is a second writer reaching the same row."""
-        agents = {"leaky": KiroCrewAgentConfig(kiro_agent="kirocrew", memory_store="shared")}
+        agents = {"leaky": AjCrewAgentConfig(kiro_agent="ajcrew", memory_store="shared")}
         stores = {"shared": SimpleNamespace(owner_member=CRED, memory_version=2)}
         rows, body = await _roster(tmp_path, agents, stores)
         assert rows["leaky"]["memory_owner"] == _SENSITIVE_MASK
@@ -120,8 +120,8 @@ class TestRecordStringsAreMasked:
         """``_safe_avatar`` pins the SHAPE; trait values are free text within
         it, so the roster must mask the leaf and keep the face renderable."""
         agents = {
-            "leaky": KiroCrewAgentConfig(
-                kiro_agent="kirocrew",
+            "leaky": AjCrewAgentConfig(
+                kiro_agent="ajcrew",
                 avatar={"kind": "ghost", "traits": {"eyes": CRED, "mouth": "smile"}},
             )
         }
@@ -142,8 +142,8 @@ class TestRecordStringsAreMasked:
         it. A masked pose degrades to the default face at render (``resolvePose``
         gates on ``Object.hasOwn``) rather than leaking the stored value."""
         agents = {
-            "leaky": KiroCrewAgentConfig(
-                kiro_agent="kirocrew",
+            "leaky": AjCrewAgentConfig(
+                kiro_agent="ajcrew",
                 avatar={"kind": "icon", "pose": CRED, "bg": "#25679d"},
             )
         }
@@ -160,8 +160,8 @@ class TestBenignRowsAreUntouched:
     @pytest.mark.asyncio
     async def test_ordinary_values_are_byte_identical(self, tmp_path):
         agents = {
-            "writer": KiroCrewAgentConfig(
-                kiro_agent="kirocrew",
+            "writer": AjCrewAgentConfig(
+                kiro_agent="ajcrew",
                 workspace="default",
                 memory_store="default",
                 model="sonnet",
@@ -172,7 +172,7 @@ class TestBenignRowsAreUntouched:
         }
         rows, _ = await _roster(tmp_path, agents)
         row = rows["writer"]
-        assert row["kiro_agent"] == "kirocrew"
+        assert row["kiro_agent"] == "ajcrew"
         assert row["workspace"] == "default"
         assert row["memory_store"] == "default"
         assert row["model"] == "sonnet"
@@ -186,7 +186,7 @@ class TestBenignRowsAreUntouched:
         and a credential-shaped name is refused at creation. Masking them would
         break the roster rather than narrow a disclosure, so this asserts they
         are NOT swept along."""
-        agents = {"writer": KiroCrewAgentConfig(kiro_agent="kirocrew", description=CRED)}
+        agents = {"writer": AjCrewAgentConfig(kiro_agent="ajcrew", description=CRED)}
         rows, _ = await _roster(tmp_path, agents)
         row = next(iter(rows.values()))
         assert row["name"] == "writer"

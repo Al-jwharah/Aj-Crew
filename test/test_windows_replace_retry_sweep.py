@@ -23,10 +23,10 @@ from pathlib import Path
 import pytest
 from windows_sim import replace_sharing_violation
 
-from kiro_crew import atomic_write as aw
-from kiro_crew import platform_compat
+from aj_crew import atomic_write as aw
+from aj_crew import platform_compat
 
-_SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+_SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 
 @pytest.fixture(autouse=True)
@@ -40,7 +40,7 @@ def _temps(directory: Path) -> list[str]:
 
 
 def test_mochi_queue_write_survives_a_contended_rename(tmp_path: Path) -> None:
-    from kiro_crew.apps.builtins.mochi import queue_file as qf
+    from aj_crew.apps.builtins.mochi import queue_file as qf
 
     path = tmp_path / "queue.json"
     with replace_sharing_violation(match="queue.json", times=2) as sim:
@@ -54,7 +54,7 @@ def test_mochi_queue_write_survives_a_contended_rename(tmp_path: Path) -> None:
 def test_mochi_queue_write_removes_its_temp_when_the_hold_outlasts_the_retry(
     tmp_path: Path,
 ) -> None:
-    from kiro_crew.apps.builtins.mochi import queue_file as qf
+    from aj_crew.apps.builtins.mochi import queue_file as qf
 
     path = tmp_path / "queue.json"
     path.write_text('{"tasks": ["old"]}', encoding="utf-8")
@@ -69,7 +69,7 @@ def test_mochi_queue_write_removes_its_temp_when_the_hold_outlasts_the_retry(
 
 
 def test_weixin_state_write_survives_a_contended_rename(tmp_path: Path) -> None:
-    from kiro_crew.weixin import client
+    from aj_crew.weixin import client
 
     path = tmp_path / "context.json"
     with replace_sharing_violation(match="context.json", times=2) as sim:
@@ -83,7 +83,7 @@ def test_weixin_state_write_survives_a_contended_rename(tmp_path: Path) -> None:
 def test_weixin_state_write_removes_its_temp_when_the_hold_outlasts_the_retry(
     tmp_path: Path,
 ) -> None:
-    from kiro_crew.weixin import client
+    from aj_crew.weixin import client
 
     path = tmp_path / "context.json"
     with (
@@ -97,7 +97,7 @@ def test_weixin_state_write_removes_its_temp_when_the_hold_outlasts_the_retry(
 
 
 def test_mochi_activity_log_write_survives_a_contended_rename(tmp_path: Path) -> None:
-    from kiro_crew.apps.builtins.mochi import activity_log as al
+    from aj_crew.apps.builtins.mochi import activity_log as al
 
     path = tmp_path / "activity.json"
     store = {"date": "2026-11-02", "entries": []}
@@ -110,7 +110,7 @@ def test_mochi_activity_log_write_survives_a_contended_rename(tmp_path: Path) ->
 
 
 def test_auto_improvement_json_write_survives_a_contended_rename(tmp_path: Path) -> None:
-    from kiro_crew.apps.builtins.auto_improvement.backend import store
+    from aj_crew.apps.builtins.auto_improvement.backend import store
 
     path = tmp_path / "ruler.json"
     with replace_sharing_violation(match="ruler.json", times=2) as sim:
@@ -122,7 +122,7 @@ def test_auto_improvement_json_write_survives_a_contended_rename(tmp_path: Path)
 
 
 def test_resolved_launch_record_survives_a_contended_rename(tmp_path: Path) -> None:
-    from kiro_crew.mcp_gateway import resolve_once
+    from aj_crew.mcp_gateway import resolve_once
 
     record = resolve_once.ResolvedRecord(
         package="pkg", entrypoint="/x/index.js", resolved_at=1.0, pinned=True
@@ -138,7 +138,7 @@ def test_resolved_launch_record_survives_a_contended_rename(tmp_path: Path) -> N
 def test_session_pulse_count_survives_a_contended_rename(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.dashboard import session_pulse_counter as spc
+    from aj_crew.dashboard import session_pulse_counter as spc
 
     path = tmp_path / "pulse.json"
     monkeypatch.setattr(spc, "_path", lambda: path)
@@ -153,8 +153,8 @@ def test_session_pulse_count_survives_a_contended_rename(
 def test_token_revocation_bump_survives_a_contended_rename(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.config import loader
-    from kiro_crew.dashboard import revocation_gen as rg
+    from aj_crew.config import loader
+    from aj_crew.dashboard import revocation_gen as rg
 
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(rg, "_gen", None, raising=False)
@@ -169,7 +169,7 @@ def test_token_revocation_bump_survives_a_contended_rename(
 def test_pinned_source_write_by_name_survives_a_contended_rename(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     src = tmp_path / "prompt.md"
     src.write_text("old", encoding="utf-8")
@@ -206,7 +206,7 @@ def test_pinned_write_does_not_overwrite_a_save_landing_during_the_retry(
 ) -> None:
     import hashlib
 
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     src = tmp_path / "prompt.md"
     src.write_text("old", encoding="utf-8")
@@ -228,7 +228,7 @@ def test_pinned_write_does_not_overwrite_a_save_landing_during_the_retry(
 def test_transcript_repair_does_not_overwrite_an_append_landing_during_the_retry(
     tmp_path: Path,
 ) -> None:
-    from kiro_crew import session_image_repair as sir
+    from aj_crew import session_image_repair as sir
 
     path = tmp_path / "s.jsonl"
     path.write_text('{"kind": "Prompt"}\n', encoding="utf-8")
@@ -266,7 +266,7 @@ def test_before_each_runs_before_every_attempt_and_its_raise_stops_the_rename(
     assert src.exists() and not dst.exists()
 
 
-# Every converted writer: (file under src/kiro_crew, the function that publishes).
+# Every converted writer: (file under src/aj_crew, the function that publishes).
 _CONVERTED: list[tuple[str, str]] = [
     ("session_image_repair.py", "apply_repair"),
     ("dashboard/part_stream.py", "commit"),
@@ -345,7 +345,7 @@ def test_converted_writer_renames_through_the_retry(rel: str, function: str) -> 
 
 
 def test_crewmate_stage_write_survives_a_contended_rename(tmp_path: Path) -> None:
-    from kiro_crew import crewmate_stage
+    from aj_crew import crewmate_stage
 
     target = tmp_path / "abc.crewmate"
     target.write_bytes(b"old")
@@ -360,7 +360,7 @@ def test_crewmate_stage_write_survives_a_contended_rename(tmp_path: Path) -> Non
 def _archive_pin(tmp_path: Path, body: bytes):  # type: ignore[no-untyped-def]
     import hashlib
 
-    from kiro_crew.apps.builtin_adoption_pins import AdoptionPin
+    from aj_crew.apps.builtin_adoption_pins import AdoptionPin
 
     source = tmp_path / "source.tar.gz"
     source.write_bytes(body)
@@ -379,7 +379,7 @@ def _archive_pin(tmp_path: Path, body: bytes):  # type: ignore[no-untyped-def]
 
 
 def test_adoption_archive_publish_survives_a_contended_rename(tmp_path: Path) -> None:
-    from kiro_crew.apps import builtin_adoption_fetch as fetch
+    from aj_crew.apps import builtin_adoption_fetch as fetch
 
     pin = _archive_pin(tmp_path, b"archive-bytes")
     dest = tmp_path / "out" / "demo.tar.gz"
@@ -393,7 +393,7 @@ def test_adoption_archive_publish_survives_a_contended_rename(tmp_path: Path) ->
 
 
 def test_a_held_adoption_archive_is_a_local_failure_not_a_network_one(tmp_path: Path) -> None:
-    from kiro_crew.apps import builtin_adoption_fetch as fetch
+    from aj_crew.apps import builtin_adoption_fetch as fetch
 
     pin = _archive_pin(tmp_path, b"archive-bytes")
     dest = tmp_path / "out" / "demo.tar.gz"

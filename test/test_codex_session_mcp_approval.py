@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 from test_codex_session_mcp import _ENTRY, _require_codex_acp, _run_driver_reaping_group
 
-from kiro_crew.acp.harness.codex import CodexHarness
+from aj_crew.acp.harness.codex import CodexHarness
 
 # ── command approval with clientCapabilities.elicitation declared ────────────
 
@@ -89,10 +89,10 @@ with open(os.path.join(root, "codex_home", "config.toml"), "w") as fh:
     fh.write('model = "gpt-5-codex"\nmodel_provider = "stub"\n'
              '[model_providers.stub]\nname = "stub"\n'
              'base_url = "http://127.0.0.1:%d/v1"\nwire_api = "responses"\n'
-             'env_key = "KIROCREW_STUB_MODEL_KEY"\n'
+             'env_key = "AJCREW_STUB_MODEL_KEY"\n'
              'request_max_retries = 0\nstream_max_retries = 0\n' % server.server_address[1])
 env = dict(os.environ, CODEX_HOME=os.path.join(root, "codex_home"), NO_BROWSER="1",
-           KIROCREW_STUB_MODEL_KEY="stub-key")
+           AJCREW_STUB_MODEL_KEY="stub-key")
 
 p = subprocess.Popen([node, entry], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                      stderr=subprocess.DEVNULL, cwd=work, env=env, text=True, bufsize=1)
@@ -180,7 +180,7 @@ print(json.dumps(out))
 @pytest.fixture(scope="module")
 def codex_approval() -> dict:
     """One driven run: Crew's own ``initialize`` params, then a turn that must ask."""
-    from kiro_crew.acp.client_start import CLIENT_NAME, CLIENT_VERSION
+    from aj_crew.acp.client_start import CLIENT_NAME, CLIENT_VERSION
 
     _require_codex_acp(with_node=True)
     # The handshake the shared runtime sends a codex session

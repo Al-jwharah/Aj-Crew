@@ -14,7 +14,7 @@ type ChatState = RootState['chat']
 
 const SINGLE = [
   '[Subagent completion event]',
-  'Agent `53e3e5eb` (kirocrew) completed ✅',
+  'Agent `53e3e5eb` (ajcrew) completed ✅',
   'Task: Add TWO short UI labels to the GERMAN (de) catalog',
   '',
   'Added both keys and ran the parity check.',
@@ -51,7 +51,7 @@ describe('subagentCompletion parsing/detection', () => {
     expect(p.kind).toBe('single')
     if (p.kind !== 'single') return
     expect(p.agentId).toBe('53e3e5eb')
-    expect(p.agentName).toBe('kirocrew')
+    expect(p.agentName).toBe('ajcrew')
     expect(p.outcome).toBe('ok')
     expect(p.task).toBe('Add TWO short UI labels to the GERMAN (de) catalog')
     expect(p.body).toBe('Added both keys and ran the parity check.')
@@ -61,7 +61,7 @@ describe('subagentCompletion parsing/detection', () => {
     const failed = SINGLE.replace('completed ✅', 'failed ❌')
     const stopped = SINGLE.replace('completed ✅', 'stopped by user ⏹')
     // The delivery-timeout variant carries no status word at all.
-    const bare = SINGLE.replace('Agent `53e3e5eb` (kirocrew) completed ✅', 'Agent `53e3e5eb` ❌')
+    const bare = SINGLE.replace('Agent `53e3e5eb` (ajcrew) completed ✅', 'Agent `53e3e5eb` ❌')
     expect((parseSubagentCompletion(failed) as { outcome: string }).outcome).toBe('failed')
     expect((parseSubagentCompletion(stopped) as { outcome: string }).outcome).toBe('stopped')
     expect((parseSubagentCompletion(bare) as { outcome: string }).outcome).toBe('failed')
@@ -334,7 +334,7 @@ describe('structured meta path (the #1792 fix)', () => {
     subagentCompletion: {
       kind: 'single',
       agentId: '53e3e5eb',
-      agentName: 'kirocrew',
+      agentName: 'ajcrew',
       outcome: 'ok',
       task: 'Add TWO short UI labels to the GERMAN (de) catalog',
       note: '',
@@ -358,7 +358,7 @@ describe('structured meta path (the #1792 fix)', () => {
     expect(p.kind).toBe('single')
     if (p.kind !== 'single') return
     expect(p.agentId).toBe('53e3e5eb')
-    expect(p.agentName).toBe('kirocrew')
+    expect(p.agentName).toBe('ajcrew')
     expect(p.outcome).toBe('ok')
     expect(p.task).toBe('Add TWO short UI labels to the GERMAN (de) catalog')
     // Body still comes from the structural blank-line split, not the header prose.
@@ -535,7 +535,7 @@ describe('model provenance on the completion card (#3582)', () => {
     subagentCompletion: {
       kind: 'single',
       agentId: '53e3e5eb',
-      agentName: 'kirocrew',
+      agentName: 'ajcrew',
       outcome: 'ok',
       task: 'review the diff',
       note: '',
@@ -760,7 +760,7 @@ describe('downgrade is visible, not hover-only (UX review on #3582)', () => {
   const store = () => createTestStore({ chat: {} as unknown as ChatState })
   const meta = (req: string, res: string) => ({
     subagentCompletion: {
-      kind: 'single', agentId: '53e3e5eb', agentName: 'kirocrew', outcome: 'ok',
+      kind: 'single', agentId: '53e3e5eb', agentName: 'ajcrew', outcome: 'ok',
       task: 'review', note: '', requestedModel: req, resolvedModel: res,
     },
   })

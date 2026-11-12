@@ -30,9 +30,9 @@ from test_warm_task_brief import (
     _thread,
 )
 
-from kiro_crew.dashboard import warm_task_brief
-from kiro_crew.dashboard import warm_task_brief_inputs as inputs
-from kiro_crew.session_summary import TranscriptTurn
+from aj_crew.dashboard import warm_task_brief
+from aj_crew.dashboard import warm_task_brief_inputs as inputs
+from aj_crew.session_summary import TranscriptTurn
 
 _ASK = (
     "Two PRs wait on you.\n"
@@ -255,7 +255,7 @@ async def test_a_plain_chat_is_never_briefed_even_with_pending_choices(monkeypat
     slot.mode = "chat"
     log.rows.append({"role": "assistant", "content": _ASK, "ts": _iso(time.time() - 60)})
     monkeypatch.setattr(
-        warm_task_brief.KiroCrewConfig,
+        warm_task_brief.AjCrewConfig,
         "load",
         lambda: SimpleNamespace(agent=SimpleNamespace(resolve_model=lambda role: "background")),
     )
@@ -332,9 +332,7 @@ def test_the_quiet_line_claims_only_nothing_new_and_dates_an_older_time(monkeypa
 
     # A frozen "now", in UTC, so the same-day test never straddles midnight.
     monkeypatch.setattr(inputs, "datetime", _Frozen)
-    monkeypatch.setattr(
-        "kiro_crew.cron_service.schedule.get_local_tz", lambda: ("UTC", timezone.utc)
-    )
+    monkeypatch.setattr("aj_crew.cron_service.schedule.get_local_tz", lambda: ("UTC", timezone.utc))
     assert all("waiting" not in text for text in warm_task_brief._QUIET_TEXT.values())
     assert inputs.clock(noon.timestamp() - 3600) == "11:00"
     assert inputs.clock(noon.timestamp() - 26 * 3600) == "2026-10-30 10:00"
@@ -407,7 +405,7 @@ class _WaitState:
 
 
 async def _waiting_of(monkeypatch, rows, *, cards=(), questions=None):
-    from kiro_crew.dashboard import change_cards
+    from aj_crew.dashboard import change_cards
 
     monkeypatch.setattr(change_cards, "card_store_for", lambda _s: _Cards(list(cards)))
     slot = _WaitSlot(rows, questions)
@@ -445,7 +443,7 @@ async def test_waiting_a_pending_change_card_is_an_item(monkeypatch):
 async def test_a_card_declined_during_the_threaded_read_is_not_listed(monkeypatch):
     # The owner declines the card while the snapshot is read off the loop.
     # The waiting list is read after that hop, so the declined card is gone.
-    from kiro_crew.dashboard import change_cards
+    from aj_crew.dashboard import change_cards
 
     card = {"status": "pending", "title": "Set the milestones", "created_at": ASKED_S}
     store = _Cards([card])
@@ -512,7 +510,7 @@ async def test_the_quiet_line_shows_only_when_nothing_waits(monkeypatch, waiting
 
 
 def _records():
-    from kiro_crew.work_ledger_records import ConductorRecord, WorkItem
+    from aj_crew.work_ledger_records import ConductorRecord, WorkItem
 
     conductor = ConductorRecord(goal="Ship it", round=1, goal_version=1)
     item = WorkItem(
@@ -854,11 +852,11 @@ async def test_rc4_a_pr_number_the_input_never_named_drops_the_model_fields(monk
 
 
 def test_rc4_the_providers_own_response_type_is_read_not_dropped():
-    from kiro_crew.monitoring.github_pull_request import (
+    from aj_crew.monitoring.github_pull_request import (
         GitHubPullRequestResponse,
         parse_github_pull_request_target,
     )
-    from kiro_crew.monitoring.pull_request import PullRequestCheck
+    from aj_crew.monitoring.pull_request import PullRequestCheck
 
     response = GitHubPullRequestResponse(
         target=parse_github_pull_request_target("https://github.com/o/r/pull/7"),
@@ -962,7 +960,7 @@ async def test_rc4_a_hex_colour_in_the_widget_is_not_an_invented_pr(monkeypatch)
 
 @pytest.mark.asyncio
 async def test_rc4_an_unfinished_check_read_reaches_the_model_as_not_read(monkeypatch):
-    from kiro_crew.monitoring.github_pull_request import (
+    from aj_crew.monitoring.github_pull_request import (
         GitHubPullRequestResponse,
         parse_github_pull_request_target,
     )

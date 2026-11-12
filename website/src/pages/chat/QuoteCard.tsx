@@ -45,7 +45,7 @@ export default function QuoteCard({ quote, variant, onJump, onRemove }: {
   )
   // `--accent` bar + `--muted` excerpt on a `--bg-hover` / `--bg` fill: tokens
   // only, and the box carries its own edge (border or fill step) so it stays
-  // visible in kiro-light where `--card` equals `--bg`.
+  // visible in aj-light where `--card` equals `--bg`.
   if (variant === 'composer') {
     return (
       <div data-testid="quote-card-composer" className="flex items-center gap-2.5 mx-3 mt-2.5 px-2.5 py-1.5 rounded-lg bg-bg-hover">

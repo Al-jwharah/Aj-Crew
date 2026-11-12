@@ -20,8 +20,8 @@ from apps_registry_helpers import _install_script_runs_on_this_host  # noqa: F40
 from apps_registry_helpers import unsandboxed_spawn  # noqa: F401 - fixture
 from apps_registry_helpers import _identity_harness
 
-from kiro_crew import platform_compat
-from kiro_crew.apps import registry
+from aj_crew import platform_compat
+from aj_crew.apps import registry
 
 
 # Identity-refusal cleanup + provenance-signer freshness
@@ -123,7 +123,7 @@ async def test_install_persists_credential_free_source_provenance(monkeypatch, t
         # The manager callable contract remains one positional argument; the
         # safe server-resolved coordinate crosses the to_thread boundary in a
         # task-local context rather than in app-controlled manifest data.
-        from kiro_crew.apps.manager import _effective_source_repository
+        from aj_crew.apps.manager import _effective_source_repository
 
         installed["source_repository"] = _effective_source_repository("")
         return MagicMock(ok=True, name="demoapp", message="done", error="")
@@ -154,7 +154,7 @@ async def test_registry_fresh_reinstall_checks_retained_startup_before_clone(mon
     )
     monkeypatch.setattr(registry, "get_app", lambda _name: None)
 
-    from kiro_crew.apps import hooks_integration
+    from aj_crew.apps import hooks_integration
 
     cleanup_calls: list[tuple[str, bool]] = []
 
@@ -190,7 +190,7 @@ async def test_registry_fresh_reinstall_rechecks_retained_startup_before_replace
     )
     monkeypatch.setattr(registry, "get_app", lambda _name: None)
 
-    from kiro_crew.apps import hooks_integration
+    from aj_crew.apps import hooks_integration
 
     cleanup_calls: list[tuple[str, bool]] = []
 
@@ -227,7 +227,7 @@ async def test_registry_reinstall_rechecks_retained_startup_before_replacement(
     )
     monkeypatch.setattr(registry, "get_app", lambda _name: {"name": "demoapp"})
 
-    from kiro_crew.apps import hooks_integration
+    from aj_crew.apps import hooks_integration
 
     cleanup_calls: list[tuple[str, bool]] = []
 
@@ -281,7 +281,7 @@ async def test_an_update_takes_the_app_down_only_to_copy_its_files(monkeypatch, 
 
     monkeypatch.setattr(registry, "_clone_build_app", _build)
 
-    from kiro_crew.apps import admission, hooks_integration, manager
+    from aj_crew.apps import admission, hooks_integration, manager
 
     async def _recheck(app_name: str, *, bounded: bool) -> bool:
         calls.append("recheck")
@@ -321,7 +321,7 @@ async def test_an_empty_streaming_log_is_the_list_the_install_writes_to(monkeypa
     _identity_harness(monkeypatch, src, cloned_manifest={"name": "demoapp"})
     monkeypatch.setattr(registry, "get_app", lambda _name: None)
 
-    from kiro_crew.apps import hooks_integration
+    from aj_crew.apps import hooks_integration
 
     async def _still_running(app_name: str, *, bounded: bool) -> bool:
         return False
@@ -350,7 +350,7 @@ async def test_a_replacement_boundary_refusal_is_stamped_by_the_finally(monkeypa
     monkeypatch.setattr(registry, "_resolved_clone_commit", lambda root: "a" * 40)
     monkeypatch.setattr(registry, "verified_signer", lambda manifest: "")
 
-    from kiro_crew.apps import hooks_integration
+    from aj_crew.apps import hooks_integration
 
     calls: list[str] = []
 

@@ -13,7 +13,7 @@ import type { ComposerDraftStore } from '../../../chat-core/composer/draftStore'
 import type { QuoteFlight } from '../../../chat-core/composer/selectionActions'
 import type { UseMessageQuote } from '../../../chat-core/composer/useMessageQuote'
 import AgentDropdownList, { isCrewmateChat, DefaultAgentRow, defaultWriteKind, ManageAgentsFooter, type DefaultWriteFailure } from '../../../components/AgentDropdownList'
-import type { KiroCrewAgent } from '../../../components/AgentSelector'
+import type { AjCrewAgent } from '../../../components/AgentSelector'
 import { MemoryModeChip, type MemoryMode } from '../../../components/MemoryModeChip'
 import { CrewModeChip } from '../../../components/CrewModeChip'
 import type { PromptHistoryItem } from '../../../components/composerPromptHistory'
@@ -123,9 +123,9 @@ interface ComposerDockViewProps {
   agentInputRef: RefObject<HTMLInputElement>
   defaultAgent: string
   defaultAgentFailed: false | DefaultWriteFailure
-  effectiveAgents: KiroCrewAgent[]
-  filteredAgents: KiroCrewAgent[]
-  installedAgents: KiroCrewAgent[]
+  effectiveAgents: AjCrewAgent[]
+  filteredAgents: AjCrewAgent[]
+  installedAgents: AjCrewAgent[]
   setAgentDropdown: Dispatch<SetStateAction<boolean>>
   setAgentFilter: Dispatch<SetStateAction<string>>
   toggleDefaultAgent: (name: string, kind?: 'member' | 'template') => void

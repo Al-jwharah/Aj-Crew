@@ -16,8 +16,8 @@ import hashlib
 
 import pytest
 
-from kiro_crew.stt import engine as engine_mod
-from kiro_crew.stt import models
+from aj_crew.stt import engine as engine_mod
+from aj_crew.stt import models
 
 # ── Test doubles ──
 

@@ -53,7 +53,7 @@ const CONSENT = (service) => ({
   grant: { account: ACCOUNT, region: 'us-west-2', profile: 'personal', granted_at: '2026-08-28T00:00:00+00:00' },
 })
 const DRIVE = {
-  exists: true, bucket: 'kirocrew-drive-7f3a91c4', region: 'us-west-2',
+  exists: true, bucket: 'ajcrew-drive-7f3a91c4', region: 'us-west-2',
   usage: {
     bytes: 44677427, objects: 12,
     sections: { drive: { objects: 2, bytes: 32715570 }, library: { objects: 6, bytes: 11157402 }, backup: { objects: 4, bytes: 804455 } },
@@ -135,7 +135,7 @@ const CSV = `month,service,objects,cost_usd
 2026-08,transfer,17,1.09
 `
 const JSON_DOC = `{
-  "bucket": "kirocrew-drive-7f3a91c4",
+  "bucket": "ajcrew-drive-7f3a91c4",
   "region": "us-west-2",
   "versioning": true,
   "sections": { "drive": 2, "library": 6, "backup": 4 },

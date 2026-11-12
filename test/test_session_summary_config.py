@@ -10,8 +10,8 @@ from __future__ import annotations
 import json
 from dataclasses import asdict
 
-from kiro_crew.config import loader as L
-from kiro_crew.config.loader import KiroCrewConfig, SessionSummaryConfig
+from aj_crew.config import loader as L
+from aj_crew.config.loader import AjCrewConfig, SessionSummaryConfig
 
 # Sentinel for "the section is absent from config.json entirely", which is a
 # different case from an empty dict.
@@ -21,7 +21,7 @@ _ABSENT = object()
 class TestSessionSummaryDefaults:
     def test_disabled_on_a_fresh_config(self):
         """Merging PR 1 must change nothing for anyone until the flag flips."""
-        assert KiroCrewConfig().session_summary.enabled is False
+        assert AjCrewConfig().session_summary.enabled is False
 
     def test_documented_defaults(self):
         cfg = SessionSummaryConfig()
@@ -76,7 +76,7 @@ class TestSessionSummaryClamping:
 
 
 class TestSessionSummaryParsing:
-    """The section is parsed by ``KiroCrewConfig.load()``, which reads config.json."""
+    """The section is parsed by ``AjCrewConfig.load()``, which reads config.json."""
 
     @staticmethod
     def _load(tmp_path, monkeypatch, section):
@@ -88,7 +88,7 @@ class TestSessionSummaryParsing:
         monkeypatch.setattr(L, "config_path", lambda: cfgp)
         monkeypatch.setattr(L, "config_dir", lambda: tmp_path)
         monkeypatch.setattr(L, "config_local_path", lambda: tmp_path / "config.local.json")
-        return KiroCrewConfig.load()
+        return AjCrewConfig.load()
 
     def test_load_reads_the_section(self, tmp_path, monkeypatch):
         cfg = self._load(tmp_path, monkeypatch, {"enabled": True, "max_intents": 3})
@@ -118,7 +118,7 @@ class TestSessionSummaryParsing:
         assert cfg.session_summary.min_user_turns == 1
 
     def test_section_is_serialized_so_save_round_trips(self):
-        assert "session_summary" in KiroCrewConfig().to_dict()
+        assert "session_summary" in AjCrewConfig().to_dict()
 
     def test_round_trips_through_to_dict(self, tmp_path, monkeypatch):
         cfg = self._load(tmp_path, monkeypatch, {"enabled": True, "regenerate_after_turns": 5})
@@ -132,7 +132,7 @@ class TestSessionSummaryParsing:
 
     def test_section_is_registered_in_the_config_schema(self):
         """Config surfaces (CLI, baseline) enumerate SCHEMA_REGISTRY."""
-        from kiro_crew.config import schema
+        from aj_crew.config import schema
 
         paths = {e.path for e in schema.SCHEMA_REGISTRY}
         assert "session_summary" in paths

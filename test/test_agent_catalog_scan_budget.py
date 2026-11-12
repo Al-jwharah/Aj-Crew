@@ -10,10 +10,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent_discovery
-from kiro_crew.agent_discovery_parts import dir_revision
-from kiro_crew.config import loader
-from kiro_crew.dashboard.handlers import agent_catalog
+from aj_crew import agent_discovery
+from aj_crew.agent_discovery_parts import dir_revision
+from aj_crew.config import loader
+from aj_crew.dashboard.handlers import agent_catalog
 
 _BOUND = 30
 

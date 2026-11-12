@@ -1,6 +1,6 @@
 """The agent's pod lifecycle path: gateway routes, their guards, and the tools.
 
-An agent session cannot reach the systemd user bus, so ``kirocrew pod up`` in one
+An agent session cannot reach the systemd user bus, so ``ajcrew pod up`` in one
 of its shells fails with ``Permission denied``. These routes are the gateway doing
 that part on the agent's behalf, and the ``pod_*`` tools Dev Fleet declares in its
 manifest (``agent_tools.py``, served from the gateway through the ``agentTools``
@@ -22,8 +22,8 @@ from typing import Any
 import pytest
 from aiohttp import web
 
-from kiro_crew.apps.builtins.dev_fleet import agent_pod_api, agent_tools
-from kiro_crew.apps.manifest import AppManifest
+from aj_crew.apps.builtins.dev_fleet import agent_pod_api, agent_tools
+from aj_crew.apps.manifest import AppManifest
 
 _POD_TOOLS = ("pod_up", "pod_restart", "pod_down", "pod_status", "pod_ls")
 
@@ -69,7 +69,7 @@ def test_package_reexports_register_routes() -> None:
     call through the package mounts every pod route — identity with this module's
     function alone would leave the other family unmounted.
     """
-    import kiro_crew.apps.builtins.dev_fleet as pkg
+    import aj_crew.apps.builtins.dev_fleet as pkg
 
     app = web.Application()
     pkg.register_routes(app)
@@ -84,7 +84,7 @@ def test_every_route_is_named_in_the_strict_internal_table() -> None:
     ``/pod`` prefix is not -- Dev Fleet's neighbourhood includes worktree prune and
     the Make Live cutover, which must never inherit an internal-secret grant.
     """
-    from kiro_crew.dashboard.server import (
+    from aj_crew.dashboard.server import (
         _MIXED_INTERNAL_API_PATHS,
         _STRICT_INTERNAL_API_PATHS,
     )
@@ -135,20 +135,20 @@ async def test_non_git_source_install_discovers_checkout_before_pod_op(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
     """Agent routes must run the executor-backed discovery tiers before the op."""
-    from kiro_crew.apps.builtins.dev_fleet import repository, runtime
+    from aj_crew.apps.builtins.dev_fleet import repository, runtime
 
     installed_source = tmp_path / "installed-source"
-    (installed_source / "src" / "kiro_crew").mkdir(parents=True)
-    (installed_source / "pyproject.toml").write_text("[project]\nname = 'kiro-crew'\n")
+    (installed_source / "src" / "aj_crew").mkdir(parents=True)
+    (installed_source / "pyproject.toml").write_text("[project]\nname = 'aj-crew'\n")
     assert not (installed_source / ".git").exists()
 
-    checkout = tmp_path / "home" / "workplace" / "kirocrew"
+    checkout = tmp_path / "home" / "workplace" / "ajcrew"
     (checkout / ".git").mkdir(parents=True)
-    (checkout / "src" / "kiro_crew").mkdir(parents=True)
-    (checkout / "pyproject.toml").write_text("[project]\nname = 'kiro-crew'\n")
+    (checkout / "src" / "aj_crew").mkdir(parents=True)
+    (checkout / "pyproject.toml").write_text("[project]\nname = 'aj-crew'\n")
 
-    monkeypatch.delenv("KIROCREW_DEVFLEET_REPO", raising=False)
-    monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+    monkeypatch.delenv("AJCREW_DEVFLEET_REPO", raising=False)
+    monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
     monkeypatch.setattr(repository, "_own_source_checkout", lambda: str(installed_source))
     monkeypatch.setattr(repository, "_candidate_checkouts", lambda: [str(checkout)])
     monkeypatch.setattr(repository, "_configured_main_repo_checked", lambda failed=None: ("", True))
@@ -182,7 +182,7 @@ async def test_non_git_source_install_discovers_checkout_before_pod_op(
 def granted(monkeypatch: pytest.MonkeyPatch) -> None:
     """The default posture for the tests below: the Dev Fleet app is enabled."""
     monkeypatch.setattr(
-        "kiro_crew.apps.builtins.dev_fleet.agent_pod_api.host_exec_granted", lambda _n: True
+        "aj_crew.apps.builtins.dev_fleet.agent_pod_api.host_exec_granted", lambda _n: True
     )
 
 
@@ -196,7 +196,7 @@ async def test_the_unix_socket_transport_is_admitted(
     platform where systemd --user pods exist -- so this pins the union the
     middleware itself uses (`_unix_sock is not None or is_loopback(...)`).
     """
-    monkeypatch.setattr("kiro_crew.dashboard.origin.request_is_unix_socket", lambda _r: True)
+    monkeypatch.setattr("aj_crew.dashboard.origin.request_is_unix_socket", lambda _r: True)
     monkeypatch.setattr(
         agent_pod_api, "_ops", lambda: type("Ops", (), {"_pod_ls": staticmethod(_ok_ls)})
     )
@@ -228,7 +228,7 @@ async def test_cookie_only_caller_is_refused(granted: None) -> None:
 async def test_disabled_app_is_not_callable(monkeypatch: pytest.MonkeyPatch) -> None:
     """Routes are registered at startup, before any app is known to be enabled."""
     monkeypatch.setattr(
-        "kiro_crew.apps.builtins.dev_fleet.agent_pod_api.host_exec_granted", lambda _n: False
+        "aj_crew.apps.builtins.dev_fleet.agent_pod_api.host_exec_granted", lambda _n: False
     )
     resp = await agent_pod_api.handle_pod_list(_Req())  # type: ignore[arg-type]
     assert resp.status == 403
@@ -245,7 +245,7 @@ def test_the_capability_is_not_gated_on_an_operator_grant() -> None:
     assert not hasattr(agent_pod_api, "_operator_granted")
     assert not hasattr(agent_pod_api, "_require_operator_grant")
 
-    from kiro_crew.config.sections import AgentConfig
+    from aj_crew.config.sections import AgentConfig
 
     assert not hasattr(AgentConfig(), "allow_agent_pod_control")
 
@@ -317,10 +317,10 @@ async def test_every_verb_answers_an_unusable_checkout(
     ``_pod_checkout_guard``, so this asserts on every verb rather than on raise sites.
     """
     monkeypatch.setattr(agent_pod_api.platform_compat, "IS_WINDOWS", False)
-    from kiro_crew.apps.builtins.dev_fleet import repository
+    from aj_crew.apps.builtins.dev_fleet import repository
 
     async def _aboom(*_a: Any, **_k: Any) -> Any:
-        raise repository.RepoNotConfigured("no Kiro Crew checkout found to manage")
+        raise repository.RepoNotConfigured("no Aj Crew checkout found to manage")
 
     class _Ops:
         _pod_up = staticmethod(_aboom)
@@ -405,7 +405,7 @@ async def test_each_verb_reports_its_own_refusal_code(
 
 def test_ops_resolves_the_real_worktree_ops_module() -> None:
     """The lazy import is the seam every handler depends on; a typo there is silent."""
-    from kiro_crew.apps.builtins.dev_fleet import worktree_ops
+    from aj_crew.apps.builtins.dev_fleet import worktree_ops
 
     assert agent_pod_api._ops() is worktree_ops
     assert callable(worktree_ops._pod_status)
@@ -445,8 +445,8 @@ def test_pod_tools_are_declared_with_a_verb_each() -> None:
 
 def test_pod_tools_keep_the_core_validation_bounds() -> None:
     """The bounds the core tool held are the declaration's, so the same calls are refused."""
-    from kiro_crew.apps import app_agent_tools
-    from kiro_crew.validation_parts.field_engine import ValidationError, validate_tool_args
+    from aj_crew.apps import app_agent_tools
+    from aj_crew.validation_parts.field_engine import ValidationError, validate_tool_args
 
     for name in _POD_TOOLS:
         decl = _declared()[name]["_decl"]
@@ -507,7 +507,7 @@ async def test_pod_up_tool_returns_the_token_verbatim(monkeypatch: pytest.Monkey
 
 def _mint_link_token() -> str:
     """A link token minted the way a pod mints one: a 2h session."""
-    from kiro_crew.dashboard.token_auth import generate_token
+    from aj_crew.dashboard.token_auth import generate_token
 
     return generate_token("local-app", ttl_seconds=7200, register_nonce=False)
 
@@ -541,7 +541,7 @@ def test_the_core_relays_a_pod_up_reply_byte_for_byte() -> None:
     A real link token is what the redactor would otherwise rewrite (``token=...`` and
     the token itself), so the reply is built around a minted one.
     """
-    from kiro_crew.mcp_tools import app_tools
+    from aj_crew.mcp_tools import app_tools
 
     token = _mint_link_token()
     resp = {
@@ -579,7 +579,7 @@ def test_the_core_relays_a_pod_up_reply_byte_for_byte() -> None:
     ],
 )
 def test_the_core_relays_every_other_pod_reply_unchanged(text: str) -> None:
-    from kiro_crew.mcp_tools import app_tools
+    from aj_crew.mcp_tools import app_tools
 
     assert app_tools._text_answer("pod_ls", {"text": text}) == text
 
@@ -676,8 +676,8 @@ async def test_pod_up_route_reports_the_windows_of_the_minted_token(
     """
     from unittest.mock import AsyncMock
 
-    from kiro_crew.apps.builtins.dev_fleet import repository, runtime, worktree_ops
-    from kiro_crew.dashboard.token_auth import LINK_WINDOW_SECS
+    from aj_crew.apps.builtins.dev_fleet import repository, runtime, worktree_ops
+    from aj_crew.dashboard.token_auth import LINK_WINDOW_SECS
 
     token = _mint_link_token()
     handle = {"name": "kc-wt-1", "status": "up", "port": 7913, "token": token, "ttl": "2h"}
@@ -685,7 +685,7 @@ async def test_pod_up_route_reports_the_windows_of_the_minted_token(
     monkeypatch.setattr(worktree_ops, "_pod_env", lambda: {})
     monkeypatch.setattr(runtime, "_warm_build_path", AsyncMock(return_value=None))
     monkeypatch.setattr(runtime, "_load_cfg", lambda: None)
-    monkeypatch.setattr(runtime, "_find_cli", lambda: ["kirocrew"])
+    monkeypatch.setattr(runtime, "_find_cli", lambda: ["ajcrew"])
     monkeypatch.setattr(runtime, "_POD_AVAILABLE", False)
     monkeypatch.setattr(repository, "_repo", lambda: "/nonexistent-repo")
     monkeypatch.setattr(runtime, "_run_cmd", AsyncMock(return_value=(0, json.dumps(handle), "")))
@@ -710,7 +710,7 @@ async def test_pod_up_route_reports_the_windows_of_the_minted_token(
 )
 def test_token_windows_reports_nothing_for_a_malformed_token(token: str) -> None:
     """A token the route cannot read yields no window rather than a wrong one."""
-    from kiro_crew.apps.builtins.dev_fleet import worktree_ops
+    from aj_crew.apps.builtins.dev_fleet import worktree_ops
 
     assert worktree_ops._token_windows(token) == {}
 
@@ -861,7 +861,7 @@ async def test_the_tool_route_refuses_without_the_grant_in_the_tools_own_words(
 ) -> None:
     """The refusal reads exactly as the core tool rendered the route's 403."""
     monkeypatch.setattr(
-        "kiro_crew.apps.builtins.dev_fleet.agent_pod_api.host_exec_granted", lambda _n: False
+        "aj_crew.apps.builtins.dev_fleet.agent_pod_api.host_exec_granted", lambda _n: False
     )
     monkeypatch.setattr(agent_pod_api, "pod_up_response", lambda _b: pytest.fail("no pod work"))
     resp = await agent_tools.handle_agent_tool(
@@ -1007,7 +1007,7 @@ async def test_pod_restart_route_refuses_on_windows_before_any_pod_work(
 
 def test_the_shipped_declaration_is_read_as_first_party() -> None:
     """The reader takes the block from the shipped ``app.json``, for a first-party slot only."""
-    from kiro_crew.apps import app_agent_tools
+    from aj_crew.apps import app_agent_tools
 
     rows = ("apps", ("dev-fleet", 0, 0))
     tools = app_agent_tools._scan(rows, frozenset({"dev-fleet"}))
@@ -1018,9 +1018,9 @@ def test_the_shipped_declaration_is_read_as_first_party() -> None:
 
 
 def test_the_pod_tools_keep_their_names_in_the_core_listing() -> None:
-    """The names an agent, a skill or a policy knows stay ``pod_*``, under ``kirocrew-core``."""
-    from kiro_crew.apps import app_agent_tools
-    from kiro_crew.mcp_tools import app_tools, build_tool_names
+    """The names an agent, a skill or a policy knows stay ``pod_*``, under ``ajcrew-core``."""
+    from aj_crew.apps import app_agent_tools
+    from aj_crew.mcp_tools import app_tools, build_tool_names
 
     shipped = {t.name for t in app_agent_tools.shipped_tools.__wrapped__() if t.app == "dev-fleet"}
     assert shipped == set(_POD_TOOLS)
@@ -1032,7 +1032,7 @@ def test_the_pod_tools_keep_their_names_in_the_core_listing() -> None:
 
 def test_adoption_no_longer_refuses_dev_fleet_on_a_core_tool_table() -> None:
     """E10 refused a pin for an app a core table keys a capability on."""
-    from kiro_crew.apps.builtin_adoption_checks import core_named_apps
+    from aj_crew.apps.builtin_adoption_checks import core_named_apps
 
     assert "dev-fleet" not in core_named_apps()
 
@@ -1052,10 +1052,10 @@ async def test_a_pod_tool_call_is_served_by_the_gateway_route_not_the_backend(
 
     from aiohttp.test_utils import make_mocked_request
 
-    from kiro_crew.apps import app_agent_tools, hooks_integration
-    from kiro_crew.apps import routes as app_routes
-    from kiro_crew.apps.route_registry import RouteRegistry
-    from kiro_crew.dashboard.handlers import app_agent_tools as handler_mod
+    from aj_crew.apps import app_agent_tools, hooks_integration
+    from aj_crew.apps import routes as app_routes
+    from aj_crew.apps.route_registry import RouteRegistry
+    from aj_crew.dashboard.handlers import app_agent_tools as handler_mod
 
     root = Path(agent_pod_api.__file__).parent
     manifest = json.loads((root / "app.json").read_text(encoding="utf-8"))
@@ -1075,7 +1075,7 @@ async def test_a_pod_tool_call_is_served_by_the_gateway_route_not_the_backend(
         monkeypatch.setattr(
             app_routes, "handle_app_api_proxy", lambda *_a, **_k: pytest.fail("proxied")
         )
-        monkeypatch.setattr("kiro_crew.dashboard.origin.request_is_unix_socket", lambda _r: True)
+        monkeypatch.setattr("aj_crew.dashboard.origin.request_is_unix_socket", lambda _r: True)
         _verb(monkeypatch, "pod_list_response", {"ok": True, "pods": []})
         req = make_mocked_request("POST", "/api/app-tools/call")
         req["internal_auth"] = True

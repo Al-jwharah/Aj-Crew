@@ -256,7 +256,7 @@ def test_prior_head_record_still_blocks_after_the_fix_push(capsys) -> None:
 
 
 def test_disposition_gate_reports_a_blanket_record_as_a_violation(capsys) -> None:
-    """The gap this closes: a writer skipping the kirocrew-prepare-pr loop posts a
+    """The gap this closes: a writer skipping the ajcrew-prepare-pr loop posts a
     single-rationale record naming a lane but claiming no span, and the
     adjudication ledger admits it with full downgrade power. The gate must name
     it so the required status can fail."""

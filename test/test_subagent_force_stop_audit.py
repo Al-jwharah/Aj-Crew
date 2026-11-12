@@ -34,13 +34,13 @@ from subagent_force_stop_audit_helpers import (
     _session_with_pid,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.process_identity import ProcessHandle, process_handle_of
-from kiro_crew.session import SessionManager
-from kiro_crew.session_lifecycle import TornDown, _TeardownScope
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import await_until
+from aj_crew import platform_compat
+from aj_crew.config import AjCrewConfig
+from aj_crew.process_identity import ProcessHandle, process_handle_of
+from aj_crew.session import SessionManager
+from aj_crew.session_lifecycle import TornDown, _TeardownScope
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.wait import await_until
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _kill_seam = subagent_force_stop_audit_helpers._kill_seam
@@ -74,13 +74,13 @@ class TestForceStopActsAfterAResetHang:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("popped1", info, 7200.0)
 
@@ -109,13 +109,13 @@ class TestForceStopActsAfterAResetHang:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("succ1", info, 7200.0)
 
@@ -133,12 +133,12 @@ class TestForceStopActsAfterAResetHang:
         manager, _info, key = _overdue_run("root1", pid=5353)
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
-            patch("kiro_crew.acp.client._is_our_child", return_value=False) as child_verifier,
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID),
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._is_our_child", return_value=False) as child_verifier,
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID),
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             assert await manager._sigkill_session(key, _handle_of(manager, "root1")) is None
 
@@ -152,12 +152,12 @@ class TestForceStopActsAfterAResetHang:
         manager._sessions._sessions[key].provider._client._child_pids = {6161: ("111", b"node")}
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[7171]) as probe,
-            patch("kiro_crew.acp.client._kill_escaped_children") as sweep,
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="9999999"),
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
+            patch("aj_crew.acp.client._get_child_pids", return_value=[7171]) as probe,
+            patch("aj_crew.acp.client._kill_escaped_children") as sweep,
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="9999999"),
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
         ):
             assert await manager._sigkill_session(key, _handle_of(manager, "recycled1")) is None
 
@@ -189,12 +189,12 @@ class TestForceStopActsAfterAResetHang:
             return "9999999" if walked.called else _START_ID
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[7272]),
-            patch("kiro_crew.acp.client._capture_child_records", walked),
-            patch("kiro_crew.acp.client._kill_escaped_children") as sweep,
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=_start_id),
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.acp.client._get_child_pids", return_value=[7272]),
+            patch("aj_crew.acp.client._capture_child_records", walked),
+            patch("aj_crew.acp.client._kill_escaped_children") as sweep,
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=_start_id),
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             failure = await manager._sigkill_session(key, _handle_of(manager, "walk1"))
 
@@ -219,17 +219,17 @@ class TestForceStopActsAfterAResetHang:
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID),
             patch(
-                "kiro_crew.platform_compat.windows_tree_cleanup_pending", return_value=False
+                "aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=False
             ) as pin,
             patch(
-                "kiro_crew.platform_compat.kill_process_tree_pinned", return_value=False
+                "aj_crew.platform_compat.kill_process_tree_pinned", return_value=False
             ) as pinned_kill,
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
         ):
             assert await manager._sigkill_session(key, _handle_of(manager, "walk2")) is None
 
@@ -243,13 +243,13 @@ class TestForceStopActsAfterAResetHang:
         manager, _info, key = _overdue_run("unverified1", pid=5656)
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
-            with patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID):
+            with patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID):
                 handle = _handle_of(manager, "unverified1")
             failure = await manager._sigkill_session(key, handle)
 
@@ -262,7 +262,7 @@ class TestForceStopActsAfterAResetHang:
         manager, _info, key = _overdue_run("nopid1", pid=None)
         _session_with_pid(manager, key, None)
 
-        with patch("kiro_crew.platform_compat.kill_process_group") as group_kill:
+        with patch("aj_crew.platform_compat.kill_process_group") as group_kill:
             assert manager._retain_process_handles("nopid1", key) == []
             assert await manager._sigkill_session("subagent:absent", None) is None
             assert await manager._sigkill_sessions(key, []) is None
@@ -288,13 +288,13 @@ class TestACompletedResetIsNotProofOfDeath:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("survived1", info, 7200.0)
 
@@ -310,14 +310,14 @@ class TestACompletedResetIsNotProofOfDeath:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
             children,
             alive,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 MagicMock(side_effect=_REFUSAL),
             ),
         ):
@@ -333,11 +333,11 @@ class TestACompletedResetIsNotProofOfDeath:
         manager._sessions.reset = AsyncMock(return_value=True)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("gone2", info, 7200.0)
 
@@ -359,12 +359,12 @@ class TestACompletedResetIsNotProofOfDeath:
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False) as alive,
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID),
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
-            patch("kiro_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.platform_compat.pid_exists", return_value=False) as alive,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID),
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_pid_async", AsyncMock()) as pid_kill,
         ):
             await manager._force_reap("exited1", info, 7200.0)
 
@@ -381,11 +381,11 @@ class TestACompletedResetIsNotProofOfDeath:
         manager._sessions.reset = AsyncMock(return_value=True)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="9999999"),
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="9999999"),
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("recycled2", info, 7200.0)
 
@@ -399,13 +399,13 @@ class TestACompletedResetIsNotProofOfDeath:
         manager._sessions.reset = AsyncMock(return_value=True)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("unread1", info, 7200.0)
 
@@ -430,13 +430,13 @@ class TestACompletedResetIsNotProofOfDeath:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("unmapped1", info, 7200.0)
 
@@ -450,9 +450,9 @@ class TestACompletedResetIsNotProofOfDeath:
         manager._sessions.reset = AsyncMock(return_value=False)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("nosess1", info, 7200.0)
 
@@ -483,7 +483,7 @@ class TestEqualHandlesMergeTheirEvidence:
     """
 
     def test_the_kill_set_keeps_the_popped_readings_children(self) -> None:
-        from kiro_crew.process_identity import kill_set
+        from aj_crew.process_identity import kill_set
 
         snapshot = _handle(9901, pgid=9901)
         popped = _handle(9901, children={9905: ("start-9905", "node")})
@@ -499,7 +499,7 @@ class TestEqualHandlesMergeTheirEvidence:
         assert targets[0].pgid == 9901, "the captured group was lost in the merge"
 
     def test_a_reading_that_adds_nothing_keeps_the_handle_object(self) -> None:
-        from kiro_crew.process_identity import absorb_handle, add_handle
+        from aj_crew.process_identity import absorb_handle, add_handle
 
         kept = _handle(9901, pgid=9901, children={9905: ("start-9905", "node")})
         assert absorb_handle(kept, _handle(9901)) is kept
@@ -509,7 +509,7 @@ class TestEqualHandlesMergeTheirEvidence:
 
     def test_a_recycled_child_pid_keeps_its_newer_record(self) -> None:
         """One child pid, two readings: the kernel reused the number, and the later record is the identity."""
-        from kiro_crew.process_identity import absorb_handle
+        from aj_crew.process_identity import absorb_handle
 
         kept = _handle(9901, pgid=9901, children={9905: ("start-9905", "node")})
         merged = absorb_handle(kept, _handle(9901, children={9905: ("start-9950", "sh")}))
@@ -518,7 +518,7 @@ class TestEqualHandlesMergeTheirEvidence:
         assert merged.pgid == 9901 and merged == kept
 
     def test_the_same_pid_under_another_start_id_stays_two_handles(self) -> None:
-        from kiro_crew.process_identity import add_handle
+        from aj_crew.process_identity import add_handle
 
         handles: list[ProcessHandle] = []
         add_handle(handles, _handle(9901, "start-a"))
@@ -537,7 +537,7 @@ class TestEqualHandlesMergeTheirEvidence:
             9907: ("start-9907", "node")
         }
 
-        with patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID):
+        with patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID):
             handles = manager._retain_process_handles("merge1", key)
 
         assert len(handles) == 1, f"one incarnation became {len(handles)} handles"
@@ -581,13 +581,13 @@ class TestTheRetainedHandleOutlivesThePop:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             teardown = asyncio.create_task(manager._teardown_run_session(info, key))
             manager._tasks["race1"] = teardown
@@ -637,13 +637,13 @@ class TestTheRetainedHandleOutlivesThePop:
             return None if group_kill.call_count else _START_ID
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
-            patch("kiro_crew.platform_compat.pid_exists", side_effect=_alive),
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=_start_id),
-            patch("kiro_crew.platform_compat.kill_process_group", group_kill),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.platform_compat.pid_exists", side_effect=_alive),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=_start_id),
+            patch("aj_crew.platform_compat.kill_process_group", group_kill),
         ):
             reap = asyncio.create_task(manager._force_reap("race2", info, 7200.0))
             await await_until(popped, what="the pop landing")
@@ -708,13 +708,13 @@ class TestEveryCandidateUnderTheKeyIsKilledOnItsOwnHandle:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             teardown = asyncio.create_task(manager._teardown_run_session(info, key))
             manager._tasks["shared1"] = teardown
@@ -748,13 +748,13 @@ class TestEveryCandidateUnderTheKeyIsKilledOnItsOwnHandle:
                 )
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", side_effect=_kill) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", side_effect=_kill) as group_kill,
         ):
             teardown = asyncio.create_task(manager._teardown_run_session(info, key))
             manager._tasks["shared2"] = teardown
@@ -783,14 +783,14 @@ class TestEveryCandidateUnderTheKeyIsKilledOnItsOwnHandle:
         _hanging_reset(manager)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.sel") as mock_sel,
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("shared3", info, 7200.0)
 
@@ -838,21 +838,21 @@ class TestEveryCandidateUnderTheKeyIsKilledOnItsOwnHandle:
         _hanging_reset(manager)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="2222"),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="2222"),
             patch(
-                "kiro_crew.platform_compat.windows_tree_cleanup_pending",
+                "aj_crew.platform_compat.windows_tree_cleanup_pending",
                 side_effect=lambda pid, start_id: start_id == "1111",
             ),
             patch(
-                "kiro_crew.platform_compat.kill_process_tree_pinned", return_value=True
+                "aj_crew.platform_compat.kill_process_tree_pinned", return_value=True
             ) as pinned_drain,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("recycled6", info, 7200.0)
 
@@ -890,7 +890,7 @@ class TestEveryCandidateUnderTheKeyIsKilledOnItsOwnHandle:
         """
         manager, info, key = _overdue_run("shared4", pid=9696)
         torn = manager._sessions._sessions.pop(key)
-        with patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID):
+        with patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID):
             entry = TornDown(session=torn, handle=process_handle_of(torn))
         manager._sessions.tearing_down = MagicMock(
             side_effect=lambda session_key: [entry] if session_key == key else []
@@ -899,14 +899,14 @@ class TestEveryCandidateUnderTheKeyIsKilledOnItsOwnHandle:
         _hanging_reset(manager)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.sel") as mock_sel,
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("shared4", info, 7200.0)
 
@@ -928,7 +928,7 @@ class TestEveryCandidateUnderTheKeyIsKilledOnItsOwnHandle:
         successor.provider._client._start_time = "start-9798"
         successor.provider._client._child_pids = {}
         with patch(
-            "kiro_crew.platform_compat.get_process_start_id",
+            "aj_crew.platform_compat.get_process_start_id",
             side_effect=lambda pid: {9797: _START_ID, 9798: "start-9798"}[pid],
         ):
             entries = [
@@ -942,17 +942,17 @@ class TestEveryCandidateUnderTheKeyIsKilledOnItsOwnHandle:
         _hanging_reset(manager)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.sel") as mock_sel,
             children,
             alive,
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=lambda pid: {9797: _START_ID, 9798: "start-9798"}[pid],
             ),
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("shared5", info, 7200.0)
 
@@ -971,7 +971,7 @@ class TestEveryCandidateUnderTheKeyIsKilledOnItsOwnHandle:
         """
         manager, _info, key = _overdue_run("shared6", pid=9696)
         torn = manager._sessions._sessions.pop(key)
-        with patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID):
+        with patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID):
             captured = process_handle_of(torn)  # read at the pop, the process alive
         # The hung teardown's own awaits cleared the wrapper's pid; the process
         # it named at the pop is still standing.
@@ -999,7 +999,7 @@ class TestEveryCandidateUnderTheKeyIsKilledOnItsOwnHandle:
         """
         manager, info, key = _overdue_run("shared7", pid=9696)
         torn = manager._sessions._sessions.pop(key)
-        with patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID):
+        with patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID):
             captured = process_handle_of(torn)  # read at the pop, the process alive
         torn.provider._client._pid = None
         torn.provider._client._start_time = None
@@ -1012,14 +1012,14 @@ class TestEveryCandidateUnderTheKeyIsKilledOnItsOwnHandle:
         _hanging_reset(manager)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.sel") as mock_sel,
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("shared7", info, 7200.0)
 
@@ -1038,7 +1038,7 @@ class TestEveryCandidateUnderTheKeyIsKilledOnItsOwnHandle:
         The reads treat a missing ``_sessions`` or ``tearing_down`` as a miss, so a rename
         there would turn every reap into "nothing to stop" without a test going red.
         """
-        real = SessionManager(KiroCrewConfig(), provider_factory=MagicMock())
+        real = SessionManager(AjCrewConfig(), provider_factory=MagicMock())
 
         assert isinstance(real._sessions, Mapping)
         assert real._sessions.get("never-registered") is None
@@ -1116,17 +1116,17 @@ class TestTheSessionTheResetPopsIsKilledToo:
         children, alive, _start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
             children,
             alive,
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=lambda pid: {9901: _START_ID, 9902: "start-9902"}[pid],
             ),
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("late1", info, 7200.0)
 
@@ -1148,16 +1148,16 @@ class TestTheSessionTheResetPopsIsKilledToo:
         children, alive, _start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
             children,
             alive,
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=lambda pid: {9903: _START_ID, 9904: "start-9904"}[pid],
             ),
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._teardown_run_session(info, key)
 
@@ -1178,14 +1178,14 @@ class TestTheSessionTheResetPopsIsKilledToo:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("late3", info, 7200.0)
 
@@ -1206,7 +1206,7 @@ class TestTheSessionTheResetPopsIsKilledToo:
         _session_with_pid(manager, key, None)
         _reset_pops_the_live_session(manager)
 
-        with patch("kiro_crew.subagent.sel") as mock_sel:
+        with patch("aj_crew.subagent.sel") as mock_sel:
             await manager._teardown_run_session(info, key)
 
         assert not [
@@ -1223,9 +1223,9 @@ class TestTheSessionTheResetPopsIsKilledToo:
         _reset_pops_the_live_session(manager)
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("seen2", info, 7200.0)
 
@@ -1239,7 +1239,7 @@ class TestTheSessionTheResetPopsIsKilledToo:
         A double's ``reset`` may take one positional argument only, so ``scope=`` would fail
         it and leave the key live (``test_member_continuation_identity.py``).
         """
-        from kiro_crew.process_identity import teardown_capture
+        from aj_crew.process_identity import teardown_capture
 
         plain = MagicMock()
         assert teardown_capture(plain, "subagent:plain") == ({}, [])
@@ -1260,14 +1260,14 @@ class TestTheSessionTheResetPopsIsKilledToo:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("late4", info, 7200.0)
 
@@ -1313,14 +1313,14 @@ class TestTeardownRefreshesTheTreeBeforeTheHandle:
             patch.object(
                 manager, "_retain_process_handles", wraps=manager._retain_process_handles
             ) as spy,
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group"),
+            patch("aj_crew.platform_compat.kill_process_group"),
         ):
             await manager._force_reap("late-reap", info, 7200.0)
 
@@ -1341,13 +1341,13 @@ class TestTeardownRefreshesTheTreeBeforeTheHandle:
             patch.object(
                 manager, "_retain_process_handles", wraps=manager._retain_process_handles
             ) as spy,
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group"),
+            patch("aj_crew.platform_compat.kill_process_group"),
         ):
             await manager._teardown_run_session(info, key)
 
@@ -1370,15 +1370,15 @@ class TestTeardownRefreshesTheTreeBeforeTheHandle:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.process_identity.TREE_REFRESH_TIMEOUT", 0.05),
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as mock_sel,
-            patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05),
+            patch("aj_crew.process_identity.TREE_REFRESH_TIMEOUT", 0.05),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as mock_sel,
+            patch("aj_crew.subagent._RESET_TIMEOUT", 0.05),
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group") as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group") as group_kill,
         ):
             await manager._force_reap("late-hang", info, 7200.0)
 
@@ -1397,7 +1397,7 @@ class TestTeardownRefreshesTheTreeBeforeTheHandle:
 
         client.refresh_process_tree = AsyncMock(side_effect=_hang)
 
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             task = asyncio.ensure_future(manager._teardown_run_session(info, key))
             await await_until(entered, what="the refresh to start")
             task.cancel()
@@ -1425,12 +1425,12 @@ class TestTeardownRefreshesTheTreeBeforeTheHandle:
         children, alive, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.subagent.sel"),
+            patch("aj_crew.subagent.sel"),
             children,
             alive,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group"),
+            patch("aj_crew.platform_compat.kill_process_group"),
         ):
             await manager._teardown_run_session(info, key)
 

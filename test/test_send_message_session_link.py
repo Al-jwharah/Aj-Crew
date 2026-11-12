@@ -28,21 +28,21 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-# Importable stub so api_send_message's inline `from kiro_crew.slack.handler
+# Importable stub so api_send_message's inline `from aj_crew.slack.handler
 # import ...` resolves even without the heavy transitive deps installed, exactly
 # as test_send_message_targeted.py does.
-if "kiro_crew.slack.handler" not in sys.modules:
-    _stub = types.ModuleType("kiro_crew.slack.handler")
+if "aj_crew.slack.handler" not in sys.modules:
+    _stub = types.ModuleType("aj_crew.slack.handler")
     _stub.is_allowed_user = lambda uid: False  # type: ignore[attr-defined]
     _stub.is_tracked_channel = lambda cid: False  # type: ignore[attr-defined]
-    sys.modules["kiro_crew.slack.handler"] = _stub
+    sys.modules["aj_crew.slack.handler"] = _stub
 
-from kiro_crew.dashboard.handlers import api_send_message  # noqa: E402
-from kiro_crew.dashboard.handlers.messaging import _resolve_session_link_url  # noqa: E402
-from kiro_crew.mcp_core import _call_tool  # noqa: E402
-from kiro_crew.mcp_tools.messaging import schemas  # noqa: E402
-from kiro_crew.session_surface import set_dashboard_surfaced  # noqa: E402
-from kiro_crew.validation import SEND_MESSAGE_SCHEMA, validate_tool_args  # noqa: E402
+from aj_crew.dashboard.handlers import api_send_message  # noqa: E402
+from aj_crew.dashboard.handlers.messaging import _resolve_session_link_url  # noqa: E402
+from aj_crew.mcp_core import _call_tool  # noqa: E402
+from aj_crew.mcp_tools.messaging import schemas  # noqa: E402
+from aj_crew.session_surface import set_dashboard_surfaced  # noqa: E402
+from aj_crew.validation import SEND_MESSAGE_SCHEMA, validate_tool_args  # noqa: E402
 
 _SESSION_KEY = "dashboard:chat-7-1"
 _BARE_KEY = "chat-7-1"
@@ -87,21 +87,21 @@ def test_a_plain_send_still_validates_without_the_flag() -> None:
 @pytest.fixture
 def cron_caller():
     """Run the MCP tool as a cron, whose bare sends default to Slack."""
-    with patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "cron:abc123"}):
+    with patch.dict("os.environ", {"AJCREW_SESSION_KEY": "cron:abc123"}):
         yield
 
 
 def _bypass_governance():
     return (
-        patch("kiro_crew.mcp_core._vet_messaging_governance", return_value=""),
-        patch("kiro_crew.mcp_core._vet_channel_governance", return_value=""),
-        patch("kiro_crew.mcp_core._deny_channel_agent_messaging", return_value=""),
+        patch("aj_crew.mcp_core._vet_messaging_governance", return_value=""),
+        patch("aj_crew.mcp_core._vet_channel_governance", return_value=""),
+        patch("aj_crew.mcp_core._deny_channel_agent_messaging", return_value=""),
     )
 
 
 def test_handler_forwards_include_session_link(cron_caller) -> None:
     gov_msg, gov_chan, chan_deny = _bypass_governance()
-    with patch("kiro_crew.mcp_core._post") as post, gov_msg, gov_chan, chan_deny:
+    with patch("aj_crew.mcp_core._post") as post, gov_msg, gov_chan, chan_deny:
         post.return_value = {"ok": True, "delivered_to": "slack", "ts": "1.1"}
         _call_tool(
             "send_message",
@@ -114,7 +114,7 @@ def test_handler_forwards_include_session_link(cron_caller) -> None:
 
 def test_flag_absent_by_default(cron_caller) -> None:
     gov_msg, gov_chan, chan_deny = _bypass_governance()
-    with patch("kiro_crew.mcp_core._post") as post, gov_msg, gov_chan, chan_deny:
+    with patch("aj_crew.mcp_core._post") as post, gov_msg, gov_chan, chan_deny:
         post.return_value = {"ok": True, "delivered_to": "slack", "ts": "1.1"}
         _call_tool("send_message", {"text": "hi", "session": "slack"})
     assert "include_session_link" not in post.call_args[0][1]
@@ -154,7 +154,7 @@ def _cfg(*, use_tunnel_url=False, url=_DASH_ORIGIN):
 
 @pytest.fixture
 def mock_sel():
-    with patch("kiro_crew.sel.sel") as m:
+    with patch("aj_crew.sel.sel") as m:
         m.return_value = MagicMock()
         yield m.return_value
 
@@ -162,7 +162,7 @@ def mock_sel():
 @pytest.fixture
 def fixed_token():
     """Pin the minted click token so the deep link is deterministic."""
-    with patch("kiro_crew.dashboard.handlers.messaging.generate_token", return_value=_TOKEN):
+    with patch("aj_crew.dashboard.handlers.messaging.generate_token", return_value=_TOKEN):
         yield _TOKEN
 
 
@@ -188,7 +188,7 @@ async def test_button_appended_on_slack_send_using_dashboard_origin(mock_sel, fi
     slack = _mock_slack()
     state = _mock_state(slack)
     app = _make_app(state)
-    with patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls:
+    with patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls:
         cfg_cls.load.return_value = _cfg(use_tunnel_url=False)
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
@@ -222,8 +222,8 @@ async def test_button_uses_tunnel_url_when_opted_in(mock_sel, fixed_token) -> No
     state = _mock_state(slack)
     app = _make_app(state)
     with (
-        patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls,
-        patch("kiro_crew.tunnel.get_tunnel_url", return_value="https://tun.example.com/"),
+        patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls,
+        patch("aj_crew.tunnel.get_tunnel_url", return_value="https://tun.example.com/"),
     ):
         cfg_cls.load.return_value = _cfg(use_tunnel_url=True)
         async with TestClient(TestServer(app)) as client:
@@ -244,7 +244,7 @@ async def test_no_button_without_a_resolvable_session(mock_sel) -> None:
     slack = _mock_slack()
     state = _mock_state(slack)
     app = _make_app(state)
-    with patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls:
+    with patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls:
         cfg_cls.load.return_value = _cfg()
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
@@ -265,7 +265,7 @@ async def test_string_false_does_not_opt_in(mock_sel) -> None:
     slack = _mock_slack()
     state = _mock_state(slack)
     app = _make_app(state)
-    with patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls:
+    with patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls:
         cfg_cls.load.return_value = _cfg()
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
@@ -310,7 +310,7 @@ async def test_button_failure_never_fails_the_send(mock_sel, fixed_token) -> Non
     )
     state = _mock_state(slack)
     app = _make_app(state)
-    with patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls:
+    with patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls:
         cfg_cls.load.return_value = _cfg()
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
@@ -339,7 +339,7 @@ async def test_ambiguous_combined_post_failure_never_posts_twice(mock_sel, fixed
     slack.post_blocks = AsyncMock(side_effect=TimeoutError("slack timed out"))
     state = _mock_state(slack)
     app = _make_app(state)
-    with patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls:
+    with patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls:
         cfg_cls.load.return_value = _cfg()
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
@@ -363,7 +363,7 @@ async def test_an_unknown_outcome_tells_the_caller_the_message_may_be_there(
     slack.post_blocks = AsyncMock(side_effect=TimeoutError("slack timed out"))
     state = _mock_state(slack)
     app = _make_app(state)
-    with patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls:
+    with patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls:
         cfg_cls.load.return_value = _cfg()
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
@@ -389,7 +389,7 @@ async def test_a_refused_post_is_still_reported_as_failed(mock_sel) -> None:
     )
     state = _mock_state(slack)
     app = _make_app(state)
-    with patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls:
+    with patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls:
         cfg_cls.load.return_value = _cfg()
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
@@ -484,8 +484,8 @@ class _SlackHttpSession:
 async def _send_through_the_real_sdk(first_answer: str, *, caller_blocks: bool):
     from slack_sdk.web.async_client import AsyncWebClient
 
-    from kiro_crew.dashboard.messaging_api import proactive_send
-    from kiro_crew.slack.client import RealSlackClient
+    from aj_crew.dashboard.messaging_api import proactive_send
+    from aj_crew.slack.client import RealSlackClient
 
     http = _SlackHttpSession(first_answer)
     client = RealSlackClient("test-token")
@@ -546,7 +546,7 @@ async def test_a_refused_combined_post_falls_back_once_without_the_button(caller
 async def test_a_rate_limited_post_is_not_posted_again_and_says_why(caller_blocks) -> None:
     """A 429 is a refusal, so nothing was posted: the message is not posted again
     without the button, and the caller is told the rate limit stopped it."""
-    from kiro_crew.dashboard.messaging_api import proactive_send
+    from aj_crew.dashboard.messaging_api import proactive_send
 
     http, outcome, copies = await _send_through_the_real_sdk(
         "rate_limited", caller_blocks=caller_blocks
@@ -582,7 +582,7 @@ def _link_state():
 @pytest.mark.asyncio
 async def test_resolver_dashboard_key_uses_bare_slot_key_with_token(fixed_token) -> None:
     """A dashboard-origin session key -> the bare slot key plus a presigned token."""
-    with patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls:
+    with patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls:
         cfg_cls.load.return_value = _cfg()
         url = await _resolve_session_link_url(_link_state(), "", _SESSION_KEY)
     assert url == f"{_DASH_ORIGIN}/chat?sid={_BARE_KEY}&token={_TOKEN}"
@@ -597,7 +597,7 @@ async def test_resolver_slack_origin_key_uses_surfaced_slot_key(fixed_token, sur
     """
     key = "slack:1712793600.000001"
     surfaced({key})
-    with patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls:
+    with patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls:
         cfg_cls.load.return_value = _cfg()
         url = await _resolve_session_link_url(_link_state(), "", key)
     assert url == f"{_DASH_ORIGIN}/chat?sid=slack_1712793600.000001&token={_TOKEN}"
@@ -608,7 +608,7 @@ async def test_resolver_slack_origin_key_uses_surfaced_slot_key(fixed_token, sur
 async def test_resolver_omits_link_for_unsurfaced_channel_key(fixed_token, surfaced) -> None:
     """A channel key with no open dashboard tab -> no link, rather than a ?sid=
     the SPA cannot resolve."""
-    with patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls:
+    with patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls:
         cfg_cls.load.return_value = _cfg()
         url = await _resolve_session_link_url(_link_state(), "", "slack:1712793600.000002")
     assert url == ""
@@ -623,7 +623,7 @@ async def test_resolver_channel_origin_cron_omits_link(fixed_token, surfaced) ->
     state.crons.list_jobs.return_value = [
         SimpleNamespace(id="abc123", session_key="slack:1712793600.000009", name="watch")
     ]
-    with patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls:
+    with patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls:
         cfg_cls.load.return_value = _cfg()
         url = await _resolve_session_link_url(state, "cron:abc123", "")
     assert url == ""
@@ -634,7 +634,7 @@ async def test_resolver_mints_no_token_without_owner(fixed_token) -> None:
     """No owner id means no owner DM to post to, so no token is minted."""
     state = MagicMock()
     state.owner_id = ""
-    with patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls:
+    with patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls:
         cfg_cls.load.return_value = _cfg()
         url = await _resolve_session_link_url(state, "", _SESSION_KEY)
     assert url == f"{_DASH_ORIGIN}/chat?sid={_BARE_KEY}"
@@ -648,9 +648,9 @@ async def test_no_button_to_a_named_channel(mock_sel, fixed_token) -> None:
     slack = _mock_slack()
     state = _mock_state(slack)
     app = _make_app(state)
-    stub = sys.modules["kiro_crew.slack.handler"]
+    stub = sys.modules["aj_crew.slack.handler"]
     with (
-        patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls,
+        patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls,
         patch.object(stub, "is_tracked_channel", lambda cid: True),
     ):
         cfg_cls.load.return_value = _cfg()
@@ -679,7 +679,7 @@ async def test_resolver_omits_link_for_closed_dashboard_tab(fixed_token) -> None
     not -- no button that opens "Session not found." (GPT F1)."""
     state = _link_state()
     state.get_slot = MagicMock(return_value=None)  # tab closed / slot gone
-    with patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls:
+    with patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls:
         cfg_cls.load.return_value = _cfg()
         url = await _resolve_session_link_url(state, "", _SESSION_KEY)
     assert url == ""
@@ -695,7 +695,7 @@ async def test_button_rides_caller_blocks_as_one_message(mock_sel, fixed_token) 
     state = _mock_state(slack)
     app = _make_app(state)
     caller_blocks = [{"type": "section", "text": {"type": "mrkdwn", "text": "rich body"}}]
-    with patch("kiro_crew.dashboard.handlers.messaging.KiroCrewConfig") as cfg_cls:
+    with patch("aj_crew.dashboard.handlers.messaging.AjCrewConfig") as cfg_cls:
         cfg_cls.load.return_value = _cfg()
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
@@ -725,16 +725,16 @@ async def test_button_rides_caller_blocks_as_one_message(mock_sel, fixed_token) 
 
 def test_tunnel_origin_if_opted_in_returns_tunnel_when_opted_in() -> None:
     """Opted in -> the live tunnel URL (shared fold, one place for the decision)."""
-    from kiro_crew.dashboard.urls import tunnel_origin_if_opted_in
+    from aj_crew.dashboard.urls import tunnel_origin_if_opted_in
 
-    with patch("kiro_crew.tunnel.get_tunnel_url", return_value="https://tun.example.com/"):
+    with patch("aj_crew.tunnel.get_tunnel_url", return_value="https://tun.example.com/"):
         assert tunnel_origin_if_opted_in(True) == "https://tun.example.com/"
 
 
 def test_tunnel_origin_if_opted_in_empty_and_silent_when_opted_out() -> None:
     """Opted out -> "" WITHOUT even consulting the tunnel manager."""
-    from kiro_crew.dashboard.urls import tunnel_origin_if_opted_in
+    from aj_crew.dashboard.urls import tunnel_origin_if_opted_in
 
-    with patch("kiro_crew.tunnel.get_tunnel_url") as get_url:
+    with patch("aj_crew.tunnel.get_tunnel_url") as get_url:
         assert tunnel_origin_if_opted_in(False) == ""
         get_url.assert_not_called()

@@ -15,11 +15,10 @@ from typing import Any
 
 import pytest
 
-from conftest import requires_symlinks
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, CrewLogError, session_tree
-from kiro_crew.crew_log import store as crew_store
-from kiro_crew.crew_log.session_tree import (
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, CrewLogError, session_tree
+from aj_crew.crew_log import store as crew_store
+from aj_crew.crew_log.session_tree import (
     CHAIN_END_CAP,
     CHAIN_END_CYCLE,
     CHAIN_END_FIRST,
@@ -34,8 +33,9 @@ from kiro_crew.crew_log.session_tree import (
     fold_tree,
     parent_payload,
 )
-from kiro_crew.session_ledger import _store_name
-from kiro_crew.validation import MAX_ACP_SESSION_ID_LEN
+from aj_crew.session_ledger import _store_name
+from aj_crew.validation import MAX_ACP_SESSION_ID_LEN
+from conftest import requires_symlinks
 
 GATEWAY = "gateway"
 
@@ -43,7 +43,7 @@ GATEWAY = "gateway"
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 
@@ -72,7 +72,7 @@ def _rec(
 
 
 def _log(sid: str, slot: str) -> CrewLog:
-    return CrewLog.create(lg.KIND_SESSION, sid, owner="raymond", agent="kirocrew", slot=slot)
+    return CrewLog.create(lg.KIND_SESSION, sid, owner="raymond", agent="ajcrew", slot=slot)
 
 
 def _opened(
@@ -86,7 +86,7 @@ def _opened(
     previous_undecided: bool = False,
 ) -> None:
     data = {
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "slot": slot,
         "model": "opus",
         "cwd": "/w",
@@ -323,7 +323,7 @@ def test_a_retained_string_past_its_bound_refuses_the_whole_record() -> None:
     # Every string the scanner keeps is bounded by the constant its writer
     # shares; an oversize one is not something the gateway wrote, so the unit
     # contributes nothing rather than a truncated key that matches nothing.
-    from kiro_crew.validation import MAX_ACP_SESSION_ID_LEN, MAX_SHORT_STRING
+    from aj_crew.validation import MAX_ACP_SESSION_ID_LEN, MAX_SHORT_STRING
 
     directory = Path("/units") / _store_name("c-sid")
     header = {"type": "session", "id": "c-sid", "slot": "chat-2", "createdAt": 5}
@@ -334,7 +334,7 @@ def test_a_retained_string_past_its_bound_refuses_the_whole_record() -> None:
         "src": GATEWAY,
         "data": {"slot": "chat-2", "parent": {"slot": "chat-1", "sid": "p-sid"}},
     }
-    from kiro_crew.crew_log.schema import Entry
+    from aj_crew.crew_log.schema import Entry
 
     entry = Entry.from_dict(opened)
     assert entry is not None
@@ -386,7 +386,7 @@ def test_a_shorter_file_under_the_same_name_and_inode_is_re_read() -> None:
         "time": 1,
         "src": GATEWAY,
         "data": {
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "slot": "chat-2",
             "model": "opus",
             "cwd": "/w",
@@ -1137,7 +1137,7 @@ def test_an_announce_that_states_no_predecessor_is_not_a_legacy_silence() -> Non
     handle.append(
         "session/opened",
         {
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "slot": "chat-1",
             "model": "opus",
             "cwd": "/w",
@@ -1215,7 +1215,7 @@ def test_a_previous_that_is_not_a_mapping_contributes_no_edge() -> None:
     header, entry, _ = crew_store.read_head(crew_store.oldest_segment(directory))
     assert entry is not None
 
-    from kiro_crew.crew_log.schema import Entry
+    from aj_crew.crew_log.schema import Entry
 
     with pytest.raises(CrewLogError):
         # The premise of this test: the emitter cannot write it.

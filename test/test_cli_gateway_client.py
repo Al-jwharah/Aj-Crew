@@ -1,6 +1,6 @@
 """How CLI commands find, verify and call the running gateway.
 
-The client port lookup (flag, ``KIROCREW_PORT``, ``dashboard.url``, the run marker), the identity
+The client port lookup (flag, ``AJCREW_PORT``, ``dashboard.url``, the run marker), the identity
 gate that guards the local secret, the loopback address secret-bearing requests use, and the
 commands that call the gateway with it: ``logout``, ``status``, ``spawn`` and ``artifact``.
 """
@@ -33,8 +33,8 @@ class TestLogout:
         # through the stubbed loopback_urlopen so the send works without a real
         # unix socket; the transport's own proof is covered in
         # test_cli_server_more_coverage_client.
-        _floor_monkeypatch.setattr("kiro_crew.cli_server.platform_compat.IS_POSIX", True)
-        import kiro_crew.cli_server as _cs
+        _floor_monkeypatch.setattr("aj_crew.cli_server.platform_compat.IS_POSIX", True)
+        import aj_crew.cli_server as _cs
 
         _floor_monkeypatch.setattr(
             _cs,
@@ -45,17 +45,17 @@ class TestLogout:
     def test_logout_success(self, tmp_path, monkeypatch, capsys):
         """Successful logout POSTs the secret to /api/logout and prints success."""
         monkeypatch.setattr(
-            "kiro_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
+            "aj_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
         )
 
-        from kiro_crew.cli_server import _logout
+        from aj_crew.cli_server import _logout
 
         mock_resp = MagicMock()
         mock_resp.read.return_value = b'{"ok": true}'
         mock_resp.__enter__ = MagicMock(return_value=mock_resp)
         mock_resp.__exit__ = MagicMock(return_value=False)
 
-        with patch("kiro_crew.cli_server.loopback_urlopen", return_value=mock_resp) as opener:
+        with patch("aj_crew.cli_server.loopback_urlopen", return_value=mock_resp) as opener:
             _logout(5476)
         req = opener.call_args.args[0]
         assert req.get_method() == "POST"
@@ -65,9 +65,9 @@ class TestLogout:
 
     def test_logout_gateway_not_running(self, tmp_path, monkeypatch):
         """Missing secret file means gateway not running."""
-        monkeypatch.setattr("kiro_crew.cli_server.read_local_secret", lambda _port, **_kw: "")
+        monkeypatch.setattr("aj_crew.cli_server.read_local_secret", lambda _port, **_kw: "")
 
-        from kiro_crew.cli_server import _logout
+        from aj_crew.cli_server import _logout
 
         try:
             _logout(5476)
@@ -80,13 +80,13 @@ class TestLogout:
         secret_file = tmp_path / ".local_secret"
         secret_file.write_text("test-secret")
         monkeypatch.setattr(
-            "kiro_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
+            "aj_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
         )
 
-        from kiro_crew.cli_server import _logout
+        from aj_crew.cli_server import _logout
 
         with patch(
-            "kiro_crew.cli_server.loopback_urlopen",
+            "aj_crew.cli_server.loopback_urlopen",
             side_effect=urllib.error.HTTPError(None, 403, "Forbidden", {}, None),
         ):
             try:
@@ -98,7 +98,7 @@ class TestLogout:
 
     @staticmethod
     async def _logout_against_the_real_route(monkeypatch, *, server_secret, cli_secret):
-        """Serve the real ``api_logout`` on loopback and run ``kirocrew logout`` at it.
+        """Serve the real ``api_logout`` on loopback and run ``ajcrew logout`` at it.
 
         ``_logout`` blocks, so it runs on a worker thread while this loop serves
         the request; its ``SystemExit`` comes back through the await.
@@ -106,13 +106,11 @@ class TestLogout:
         from aiohttp import web
         from aiohttp.test_utils import TestServer
 
-        from kiro_crew.cli_server import _logout
-        from kiro_crew.dashboard.handlers import core
+        from aj_crew.cli_server import _logout
+        from aj_crew.dashboard.handlers import core
 
         monkeypatch.setattr(core, "_sel", MagicMock)
-        monkeypatch.setattr(
-            "kiro_crew.cli_server.read_local_secret", lambda _port, **_kw: cli_secret
-        )
+        monkeypatch.setattr("aj_crew.cli_server.read_local_secret", lambda _port, **_kw: cli_secret)
         app = web.Application()
         app["local_secret"] = server_secret
         app.router.add_post("/api/logout", core.api_logout)
@@ -130,7 +128,7 @@ class TestLogout:
         def _cannot_persist():
             raise OSError("disk full")
 
-        monkeypatch.setattr("kiro_crew.dashboard.token_auth.revoke_all_sessions", _cannot_persist)
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.revoke_all_sessions", _cannot_persist)
         code = await self._logout_against_the_real_route(
             monkeypatch, server_secret="the-secret", cli_secret="the-secret"
         )
@@ -144,7 +142,7 @@ class TestLogout:
     async def test_a_stale_secret_is_named(self, monkeypatch, capsys):
         """A refused secret prints the gateway's reason after the status."""
         revoke = MagicMock()
-        monkeypatch.setattr("kiro_crew.dashboard.token_auth.revoke_all_sessions", revoke)
+        monkeypatch.setattr("aj_crew.dashboard.token_auth.revoke_all_sessions", revoke)
         code = await self._logout_against_the_real_route(
             monkeypatch, server_secret="the-real-one", cli_secret="a-stale-one"
         )
@@ -154,18 +152,18 @@ class TestLogout:
 
     def test_logout_connection_error(self, tmp_path, monkeypatch):
         """Connection error means gateway not running."""
-        secret_file = tmp_path / ".kirocrew" / ".local_secret"
+        secret_file = tmp_path / ".ajcrew" / ".local_secret"
         secret_file.parent.mkdir(parents=True, exist_ok=True)
         secret_file.write_text("test-secret")
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
+            "aj_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
         )
 
-        from kiro_crew.cli_server import _logout
+        from aj_crew.cli_server import _logout
 
         with patch(
-            "kiro_crew.cli_server.loopback_urlopen",
+            "aj_crew.cli_server.loopback_urlopen",
             side_effect=urllib.error.URLError("Connection refused"),
         ):
             try:
@@ -176,19 +174,19 @@ class TestLogout:
 
     def test_logout_error_response(self, tmp_path, monkeypatch):
         """Error response from gateway is handled."""
-        secret_file = tmp_path / ".kirocrew" / ".local_secret"
+        secret_file = tmp_path / ".ajcrew" / ".local_secret"
         secret_file.parent.mkdir(parents=True, exist_ok=True)
         secret_file.write_text("test-secret")
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
 
-        from kiro_crew.cli_server import _logout
+        from aj_crew.cli_server import _logout
 
         mock_resp = MagicMock()
         mock_resp.read.return_value = b'{"ok": false, "error": "test error"}'
         mock_resp.__enter__ = MagicMock(return_value=mock_resp)
         mock_resp.__exit__ = MagicMock(return_value=False)
 
-        with patch("kiro_crew.cli_server.loopback_urlopen", return_value=mock_resp):
+        with patch("aj_crew.cli_server.loopback_urlopen", return_value=mock_resp):
             try:
                 _logout(5476)
                 assert False, "should have exited"
@@ -204,10 +202,10 @@ class TestStatus:
 
     def test_status_auth_required(self, capsys):
         """401/403 should report gateway as running with token auth."""
-        from kiro_crew.cli_server import _status
+        from aj_crew.cli_server import _status
 
         with patch(
-            "kiro_crew.cli_server.loopback_urlopen",
+            "aj_crew.cli_server.loopback_urlopen",
             side_effect=urllib.error.HTTPError(
                 "http://127.0.0.1:5476/api/status", 403, "Forbidden", {}, None
             ),
@@ -219,7 +217,7 @@ class TestStatus:
 
     def test_status_reads_the_stats_as_the_owner_on_a_token_auth_gateway(self, monkeypatch, capsys):
         """A refused bare read is retried with a minted owner token through the peer proof."""
-        import kiro_crew.cli_server as cs
+        import aj_crew.cli_server as cs
 
         answers = [{"token": "tok"}, {"gateway_rss_mb": 241, "watchdog_rss_max_mb": 4096}]
         sent = []
@@ -231,7 +229,7 @@ class TestStatus:
         monkeypatch.setattr(cs, "read_local_secret", lambda _port, **_kw: "s3cret")
         monkeypatch.setattr(cs, "_owner_verified_secret_urlopen", _proven)
         with patch(
-            "kiro_crew.cli_server.loopback_urlopen",
+            "aj_crew.cli_server.loopback_urlopen",
             side_effect=urllib.error.HTTPError(
                 "http://127.0.0.1:5476/api/status", 403, "Forbidden", {}, None
             ),
@@ -250,8 +248,8 @@ class TestStatus:
         self, monkeypatch, capsys, refusal
     ):
         """An agent's shell or an unproven peer gets no stats, and the command still exits 0."""
-        import kiro_crew.cli_server as cs
-        from kiro_crew.cli_server_peer import _GatewayPeerRefused
+        import aj_crew.cli_server as cs
+        from aj_crew.cli_server_peer import _GatewayPeerRefused
 
         def _refuse(req, port, timeout, *, operation):
             if refusal == "peer-refused":
@@ -261,22 +259,22 @@ class TestStatus:
         monkeypatch.setattr(cs, "read_local_secret", lambda _port, **_kw: "s3cret")
         monkeypatch.setattr(cs, "_owner_verified_secret_urlopen", _refuse)
         with patch(
-            "kiro_crew.cli_server.loopback_urlopen",
+            "aj_crew.cli_server.loopback_urlopen",
             side_effect=urllib.error.HTTPError(
                 "http://127.0.0.1:5476/api/status", 403, "Forbidden", {}, None
             ),
         ):
             assert cs._status(self._make_args()) is None
         out = capsys.readouterr().out
-        assert "Kiro Crew gateway is running (token auth enabled)." in out
+        assert "Aj Crew gateway is running (token auth enabled)." in out
         assert "Memory:" not in out
 
     def test_status_other_http_error(self, capsys):
         """Non-auth HTTP errors should report gateway as running with code."""
-        from kiro_crew.cli_server import _status
+        from aj_crew.cli_server import _status
 
         with patch(
-            "kiro_crew.cli_server.loopback_urlopen",
+            "aj_crew.cli_server.loopback_urlopen",
             side_effect=urllib.error.HTTPError(
                 "http://127.0.0.1:5476/api/status", 500, "Internal Server Error", {}, None
             ),
@@ -288,17 +286,17 @@ class TestStatus:
 
     def test_status_connection_refused(self, capsys):
         """Connection refused should report gateway as not running."""
-        from kiro_crew.cli_server import _status
+        from aj_crew.cli_server import _status
 
         with patch(
-            "kiro_crew.cli_server.loopback_urlopen",
+            "aj_crew.cli_server.loopback_urlopen",
             side_effect=urllib.error.URLError("Connection refused"),
         ):
             with pytest.raises(SystemExit) as exc:
                 _status(self._make_args())
         assert exc.value.code == 1
         out = capsys.readouterr().out
-        assert out == "Kiro Crew gateway is not running.\n  Start it with: kirocrew gateway\n"
+        assert out == "Aj Crew gateway is not running.\n  Start it with: ajcrew gateway\n"
 
     @pytest.mark.parametrize(
         "side_effect",
@@ -313,17 +311,17 @@ class TestStatus:
     )
     def test_status_exits_zero_when_a_gateway_answers(self, side_effect):
         """Every state in which something answers the port returns without exiting."""
-        from kiro_crew.cli_server import _status
+        from aj_crew.cli_server import _status
 
-        with patch("kiro_crew.cli_server.loopback_urlopen", side_effect=side_effect):
+        with patch("aj_crew.cli_server.loopback_urlopen", side_effect=side_effect):
             assert _status(self._make_args()) is None
 
     def test_status_timeout_reports_busy_not_down(self, capsys):
         """A URLError-wrapped timeout reads as busy through the shared classifier."""
-        from kiro_crew.cli_server import _status
+        from aj_crew.cli_server import _status
 
         with patch(
-            "kiro_crew.cli_server.loopback_urlopen",
+            "aj_crew.cli_server.loopback_urlopen",
             side_effect=urllib.error.URLError(TimeoutError("timed out")),
         ):
             _status(self._make_args())
@@ -333,10 +331,10 @@ class TestStatus:
 
     def test_status_read_timeout_reports_busy_not_down(self, capsys):
         """A bare TimeoutError (socket read timeout) also reads as busy."""
-        from kiro_crew.cli_server import _status
+        from aj_crew.cli_server import _status
 
         with patch(
-            "kiro_crew.cli_server.loopback_urlopen",
+            "aj_crew.cli_server.loopback_urlopen",
             side_effect=TimeoutError("timed out"),
         ):
             _status(self._make_args())
@@ -346,7 +344,7 @@ class TestStatus:
 
     def test_status_success(self, capsys):
         """200 OK should display stats."""
-        from kiro_crew.cli_server import _status
+        from aj_crew.cli_server import _status
 
         mock_resp = MagicMock()
         mock_resp.read.return_value = json.dumps(
@@ -363,7 +361,7 @@ class TestStatus:
         mock_resp.__enter__ = MagicMock(return_value=mock_resp)
         mock_resp.__exit__ = MagicMock(return_value=False)
 
-        with patch("kiro_crew.cli_server.loopback_urlopen", return_value=mock_resp):
+        with patch("aj_crew.cli_server.loopback_urlopen", return_value=mock_resp):
             _status(self._make_args())
         out = capsys.readouterr().out
         assert "1h 0m" in out
@@ -371,9 +369,9 @@ class TestStatus:
 
     def test_status_unexpected_exception(self, capsys):
         """Non-network exceptions should report gateway as running with unexpected response."""
-        from kiro_crew.cli_server import _status
+        from aj_crew.cli_server import _status
 
-        with patch("kiro_crew.cli_server.loopback_urlopen", side_effect=RuntimeError("unexpected")):
+        with patch("aj_crew.cli_server.loopback_urlopen", side_effect=RuntimeError("unexpected")):
             _status(self._make_args())
         out = capsys.readouterr().out
         assert "running" in out
@@ -381,7 +379,7 @@ class TestStatus:
 
 
 class TestStatusAgainstAClosedPort:
-    """``kirocrew status`` against a port nothing listens on, with a REAL probe.
+    """``ajcrew status`` against a port nothing listens on, with a REAL probe.
 
     A closed port must refuse inside ``_status``'s 3 s deadline, or
     ``loopback_http.deadline_expired`` reads it as busy. Windows SYN-retries ~2 s before
@@ -395,24 +393,24 @@ class TestStatusAgainstAClosedPort:
             return int(sock.getsockname()[1])
 
     def test_stopped_gateway_reads_not_running(self, capsys):
-        from kiro_crew.cli_server import _status
+        from aj_crew.cli_server import _status
 
         port = self._closed_port()
         with pytest.raises(SystemExit) as exc:
             _status(argparse.Namespace(port=port))
         assert exc.value.code == 1
         out = capsys.readouterr().out
-        assert "Kiro Crew gateway is not running." in out
+        assert "Aj Crew gateway is not running." in out
         assert "busy" not in out
 
 
 class TestResolveClientPort:
     """Tests for `resolve_client_port` — the port-resolution order used by
-    `kirocrew token` / `status` / `logout` / `stop` to find the gateway.
+    `ajcrew token` / `status` / `logout` / `stop` to find the gateway.
 
     Resolution order (see cli.resolve_client_port):
       1. explicit --port CLI arg (cli_port != None)
-      2. KIROCREW_PORT env var
+      2. AJCREW_PORT env var
       3. port explicitly named in dashboard.url in config
       4. the sole live gateway run-marker (see TestResolveClientPortRunMarker)
       5. default 5476
@@ -420,55 +418,55 @@ class TestResolveClientPort:
 
     def test_cli_flag_wins(self, monkeypatch, tmp_path):
         """An explicit --port flag must override env and config."""
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
-        monkeypatch.setenv("KIROCREW_PORT", "9999")
+        monkeypatch.setenv("AJCREW_PORT", "9999")
         mock_cfg = MagicMock()
         mock_cfg.dashboard.url = "http://localhost:8888"
-        with patch("kiro_crew.cli_server.KiroCrewConfig.load", return_value=mock_cfg):
+        with patch("aj_crew.cli_server.AjCrewConfig.load", return_value=mock_cfg):
             assert resolve_client_port(12345) == 12345
 
     def test_env_var_used_when_no_cli(self, monkeypatch):
-        """KIROCREW_PORT env var wins over config when no --port passed."""
-        from kiro_crew.cli_server import resolve_client_port
+        """AJCREW_PORT env var wins over config when no --port passed."""
+        from aj_crew.cli_server import resolve_client_port
 
-        monkeypatch.setenv("KIROCREW_PORT", "6777")
+        monkeypatch.setenv("AJCREW_PORT", "6777")
         mock_cfg = MagicMock()
         mock_cfg.dashboard.url = "http://localhost:8888"
-        with patch("kiro_crew.cli_server.KiroCrewConfig.load", return_value=mock_cfg):
+        with patch("aj_crew.cli_server.AjCrewConfig.load", return_value=mock_cfg):
             assert resolve_client_port(None) == 6777
 
     def test_invalid_env_var_falls_through_to_config(self, monkeypatch):
-        """A garbage KIROCREW_PORT must not crash; the helper falls through."""
-        from kiro_crew.cli_server import resolve_client_port
+        """A garbage AJCREW_PORT must not crash; the helper falls through."""
+        from aj_crew.cli_server import resolve_client_port
 
-        monkeypatch.setenv("KIROCREW_PORT", "not-a-number")
+        monkeypatch.setenv("AJCREW_PORT", "not-a-number")
         mock_cfg = MagicMock()
         mock_cfg.dashboard.url = "http://localhost:7778"
-        with patch("kiro_crew.cli_server.KiroCrewConfig.load", return_value=mock_cfg):
+        with patch("aj_crew.cli_server.AjCrewConfig.load", return_value=mock_cfg):
             assert resolve_client_port(None) == 7778
 
     def test_config_url_used_when_no_cli_no_env(self, monkeypatch):
         """The port in dashboard.url must be honoured when env is unset."""
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
-        monkeypatch.delenv("KIROCREW_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_PORT", raising=False)
         mock_cfg = MagicMock()
         mock_cfg.dashboard.url = "http://localhost:7778"
-        with patch("kiro_crew.cli_server.KiroCrewConfig.load", return_value=mock_cfg):
+        with patch("aj_crew.cli_server.AjCrewConfig.load", return_value=mock_cfg):
             assert resolve_client_port(None) == 7778
 
     def test_config_url_hostname_only_falls_through_to_default(self, monkeypatch):
         """A dashboard.url without an explicit port must fall through to 5476."""
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
-        monkeypatch.delenv("KIROCREW_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_PORT", raising=False)
         mock_cfg = MagicMock()
         mock_cfg.dashboard.url = "http://my.host.example"
         with (
-            patch("kiro_crew.cli_server.KiroCrewConfig.load", return_value=mock_cfg),
+            patch("aj_crew.cli_server.AjCrewConfig.load", return_value=mock_cfg),
             # No gateway advertising itself — isolate from the dev box's markers.
-            patch("kiro_crew.cli_server.run_marker.marker_ports", return_value=[]),
+            patch("aj_crew.cli_server.run_marker.marker_ports", return_value=[]),
         ):
             # A portless URL is not a port choice, so we continue past it; with no
             # live run-marker either, we land on the documented default.
@@ -476,27 +474,27 @@ class TestResolveClientPort:
 
     def test_empty_config_falls_through_to_default(self, monkeypatch):
         """No env, empty dashboard.url → 5476."""
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
-        monkeypatch.delenv("KIROCREW_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_PORT", raising=False)
         mock_cfg = MagicMock()
         mock_cfg.dashboard.url = ""
-        with patch("kiro_crew.cli_server.KiroCrewConfig.load", return_value=mock_cfg):
+        with patch("aj_crew.cli_server.AjCrewConfig.load", return_value=mock_cfg):
             assert resolve_client_port(None) == 5476
 
     def test_config_load_failure_falls_through_to_default(self, monkeypatch):
         """If config loading raises, the helper must still return a usable port."""
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
-        monkeypatch.delenv("KIROCREW_PORT", raising=False)
-        with patch("kiro_crew.cli_server.KiroCrewConfig.load", side_effect=RuntimeError("boom")):
+        monkeypatch.delenv("AJCREW_PORT", raising=False)
+        with patch("aj_crew.cli_server.AjCrewConfig.load", side_effect=RuntimeError("boom")):
             assert resolve_client_port(None) == 5476
 
     def test_cli_flag_zero_is_respected(self, monkeypatch):
         """Port 0 is weird but valid; it must not be coerced to None/default."""
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
-        monkeypatch.setenv("KIROCREW_PORT", "9999")
+        monkeypatch.setenv("AJCREW_PORT", "9999")
         # cli_port=0 is explicit; the helper uses 'is not None' not truthiness.
         assert resolve_client_port(0) == 0
 
@@ -507,30 +505,28 @@ class TestResolveClientPortRunMarker:
     A gateway on a non-default port advertises itself by writing
     `<data-home>/run/gateway-<port>.bin`. With nothing configured, a client must
     read that marker instead of assuming 5476 — but only when a verified
-    Kiro Crew gateway process holds the port, and only when exactly one does.
+    Aj Crew gateway process holds the port, and only when exactly one does.
     """
 
     @pytest.fixture(autouse=True)
     def _no_env(self, _floor_monkeypatch):
-        _floor_monkeypatch.delenv("KIROCREW_PORT", raising=False)
+        _floor_monkeypatch.delenv("AJCREW_PORT", raising=False)
 
     def _cfg(self, url):
         mock_cfg = MagicMock()
         mock_cfg.dashboard.url = url
-        return patch("kiro_crew.cli_server.KiroCrewConfig.load", return_value=mock_cfg)
+        return patch("aj_crew.cli_server.AjCrewConfig.load", return_value=mock_cfg)
 
     def _markers(self, ports):
-        return patch("kiro_crew.cli_server.run_marker.marker_ports", return_value=ports)
+        return patch("aj_crew.cli_server.run_marker.marker_ports", return_value=ports)
 
     def _owned(self, ports):
-        """Pretend a verified Kiro Crew gateway listens on each of *ports*."""
-        return patch(
-            "kiro_crew.cli_server._gateway_owns_port", side_effect=lambda p: p in set(ports)
-        )
+        """Pretend a verified Aj Crew gateway listens on each of *ports*."""
+        return patch("aj_crew.cli_server._gateway_owns_port", side_effect=lambda p: p in set(ports))
 
     def test_sole_owned_marker_used_when_nothing_configured(self):
         """The bug: one gateway on 6776, no config → must not return 5476."""
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
         with self._cfg(""), self._markers([6776]), self._owned([6776]):
             assert resolve_client_port(None) == 6776
@@ -541,27 +537,27 @@ class TestResolveClientPortRunMarker:
         parse_dashboard_url() substitutes 5476 for a portless URL, which would
         otherwise short-circuit discovery with a value the user never wrote down.
         """
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
         with self._cfg("http://my.host.example"), self._markers([6776]), self._owned([6776]):
             assert resolve_client_port(None) == 6776
 
     def test_explicit_config_port_beats_marker(self):
         """An explicitly configured port is a user decision; discovery yields."""
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
         with self._cfg("http://localhost:7778"), self._markers([6776]), self._owned([6776]):
             assert resolve_client_port(None) == 7778
 
     def test_env_var_beats_marker(self, monkeypatch):
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
-        monkeypatch.setenv("KIROCREW_PORT", "6777")
+        monkeypatch.setenv("AJCREW_PORT", "6777")
         with self._cfg(""), self._markers([6776]), self._owned([6776]):
             assert resolve_client_port(None) == 6777
 
     def test_cli_flag_beats_marker(self):
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
         with self._markers([6776]) as markers:
             assert resolve_client_port(12345) == 12345
@@ -574,7 +570,7 @@ class TestResolveClientPortRunMarker:
         urlparse raises TypeError (NOT ValueError) on a non-str, which would
         otherwise escape and kill every client command.
         """
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
         for bad in (123, ["http://localhost:7778"], {"url": 1}, True):
             with self._cfg(bad), self._markers([6776]), self._owned([6776]):
@@ -584,7 +580,7 @@ class TestResolveClientPortRunMarker:
             assert resolve_client_port(None) == 5476
 
     def test_no_marker_falls_through_to_default(self):
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
         with self._cfg(""), self._markers([]):
             assert resolve_client_port(None) == 5476
@@ -593,7 +589,7 @@ class TestResolveClientPortRunMarker:
         """A crashed gateway leaves its marker behind, and an unrelated process
         may since have bound that port. Trusting it would hand the local secret
         to that process, so the port must be discarded."""
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
         with self._cfg(""), self._markers([6776]), self._owned([]):
             assert resolve_client_port(None) == 5476
@@ -601,7 +597,7 @@ class TestResolveClientPortRunMarker:
     def test_multiple_owned_markers_refuses_to_guess(self, capsys):
         """Two gateways up → no basis to pick; fall back to the documented
         default and tell the user how to disambiguate."""
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
         with self._cfg(""), self._markers([6776, 6777]), self._owned([6776, 6777]):
             assert resolve_client_port(None) == 5476
@@ -611,12 +607,12 @@ class TestResolveClientPortRunMarker:
 
     def test_discovery_failure_falls_through_to_default(self):
         """A broken data home must not break client commands."""
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
         with (
             self._cfg(""),
             patch(
-                "kiro_crew.cli_server.run_marker.marker_ports",
+                "aj_crew.cli_server.run_marker.marker_ports",
                 side_effect=OSError("boom"),
             ),
         ):
@@ -624,7 +620,7 @@ class TestResolveClientPortRunMarker:
 
     def test_malformed_config_url_still_reaches_marker(self):
         """A typo'd `dashboard.url` must not swallow the discovery step."""
-        from kiro_crew.cli_server import resolve_client_port
+        from aj_crew.cli_server import resolve_client_port
 
         with self._cfg("http://[::1"), self._markers([6776]), self._owned([6776]):
             assert resolve_client_port(None) == 6776
@@ -636,34 +632,34 @@ class TestGatewayOwnsPort:
     Three parts, none sufficient alone: the pid recorded in the owner-only
     sidecar, that pid holding the port, and that pid being owned by the calling
     user. An argv-only check would be spoofable by launching a listener as
-    `/tmp/kirocrew gateway`.
+    `/tmp/ajcrew gateway`.
     """
 
     def _sidecar(self, pid):
-        return patch("kiro_crew.cli_server.run_marker.read_pid", return_value=pid)
+        return patch("aj_crew.cli_server.run_marker.read_pid", return_value=pid)
 
     def _listeners(self, pids):
-        return patch("kiro_crew.cli_server.platform_compat.find_listening_pids", return_value=pids)
+        return patch("aj_crew.cli_server.platform_compat.find_listening_pids", return_value=pids)
 
     def _owner(self, uid):
-        return patch("kiro_crew.cli_server.platform_compat.process_owner_uid", return_value=uid)
+        return patch("aj_crew.cli_server.platform_compat.process_owner_uid", return_value=uid)
 
     def _me(self):
         return os.getuid() if hasattr(os, "getuid") else 0
 
     def _posix(self, value=True):
-        return patch("kiro_crew.cli_server.platform_compat.IS_POSIX", value)
+        return patch("aj_crew.cli_server.platform_compat.IS_POSIX", value)
 
     def test_true_when_recorded_pid_holds_the_port_and_is_ours(self):
-        from kiro_crew.cli_server import _gateway_owns_port
+        from aj_crew.cli_server import _gateway_owns_port
 
         with (
             self._posix(),
             self._sidecar(4242),
             self._listeners([4242]),
             self._owner(self._me()),
-            patch("kiro_crew.cli_server._is_kirocrew_process", return_value=True),
-            patch("kiro_crew.cli_server.os.getuid", return_value=self._me(), create=True),
+            patch("aj_crew.cli_server._is_ajcrew_process", return_value=True),
+            patch("aj_crew.cli_server.os.getuid", return_value=self._me(), create=True),
         ):
             assert _gateway_owns_port(6776) is True
 
@@ -671,9 +667,9 @@ class TestGatewayOwnsPort:
         """Windows cannot report a process owner, and a home writable by another
         user would let them forge both the marker and the sidecar — so the step
         is skipped rather than trusted on partial evidence. Windows keeps --port
-        / KIROCREW_PORT, which is where it was before this fallback existed.
+        / AJCREW_PORT, which is where it was before this fallback existed.
         """
-        from kiro_crew.cli_server import _gateway_owns_port
+        from aj_crew.cli_server import _gateway_owns_port
 
         # Every OTHER precondition is satisfied, so the non-POSIX guard is the
         # only thing that can deny — otherwise this test would pass for the
@@ -683,22 +679,22 @@ class TestGatewayOwnsPort:
             self._sidecar(4242),
             self._listeners([4242]),
             self._owner(self._me()),
-            patch("kiro_crew.cli_server._is_kirocrew_process", return_value=True),
-            patch("kiro_crew.cli_server.os.getuid", return_value=self._me(), create=True),
+            patch("aj_crew.cli_server._is_ajcrew_process", return_value=True),
+            patch("aj_crew.cli_server.os.getuid", return_value=self._me(), create=True),
         ):
             assert _gateway_owns_port(6776) is False
 
     def test_false_when_listener_is_not_the_recorded_pid(self):
         """The spoofing case: an unrelated process holds the port and can name
         itself anything, but it is not the pid our own sidecar records."""
-        from kiro_crew.cli_server import _gateway_owns_port
+        from aj_crew.cli_server import _gateway_owns_port
 
         with (
             self._sidecar(4242),
             self._listeners([9999]),
             self._owner(self._me()),
             # Even if its argv is a perfect forgery of a gateway command line.
-            patch("kiro_crew.cli_server._is_kirocrew_process", return_value=True),
+            patch("aj_crew.cli_server._is_ajcrew_process", return_value=True),
         ):
             assert _gateway_owns_port(6776) is False
 
@@ -706,63 +702,63 @@ class TestGatewayOwnsPort:
     def test_false_when_pid_is_owned_by_another_user(self):
         """Pid recycling into a *foreign* user's process must not be trusted,
         even though that pid does hold the port."""
-        from kiro_crew.cli_server import _gateway_owns_port
+        from aj_crew.cli_server import _gateway_owns_port
 
         with (
             self._sidecar(4242),
             self._listeners([4242]),
             self._owner(os.getuid() + 1),
-            patch("kiro_crew.cli_server._is_kirocrew_process", return_value=True),
+            patch("aj_crew.cli_server._is_ajcrew_process", return_value=True),
         ):
             assert _gateway_owns_port(6776) is False
 
     @pytest.mark.skipif(not hasattr(os, "getuid"), reason="POSIX uid gate only")
     def test_false_when_owner_uid_is_unknown_on_posix(self):
         """Cannot determine ownership → deny (fail closed), do not assume ours."""
-        from kiro_crew.cli_server import _gateway_owns_port
+        from aj_crew.cli_server import _gateway_owns_port
 
         with (
             self._sidecar(4242),
             self._listeners([4242]),
             self._owner(None),
-            patch("kiro_crew.cli_server._is_kirocrew_process", return_value=True),
+            patch("aj_crew.cli_server._is_ajcrew_process", return_value=True),
         ):
             assert _gateway_owns_port(6776) is False
 
     def test_false_when_no_pid_recorded(self):
         """No sidecar / unparseable pid → nothing to prove identity with."""
-        from kiro_crew.cli_server import _gateway_owns_port
+        from aj_crew.cli_server import _gateway_owns_port
 
         with self._sidecar(None), self._listeners([4242]):
             assert _gateway_owns_port(6776) is False
 
-    def test_false_when_pid_is_not_a_kirocrew_process(self):
+    def test_false_when_pid_is_not_a_ajcrew_process(self):
         """Defense in depth kept as the last step, never as the only one."""
-        from kiro_crew.cli_server import _gateway_owns_port
+        from aj_crew.cli_server import _gateway_owns_port
 
         with (
             self._sidecar(4242),
             self._listeners([4242]),
             self._owner(self._me()),
-            patch("kiro_crew.cli_server._is_kirocrew_process", return_value=False),
+            patch("aj_crew.cli_server._is_ajcrew_process", return_value=False),
         ):
             assert _gateway_owns_port(6776) is False
 
     def test_fails_closed_when_no_listener_or_lookup_tool(self):
         """find_listening_pids folds a missing lsof/netstat into an empty list,
         so both 'nothing there' and 'cannot tell' must deny."""
-        from kiro_crew.cli_server import _gateway_owns_port
+        from aj_crew.cli_server import _gateway_owns_port
 
         with self._sidecar(4242), self._listeners([]):
             assert _gateway_owns_port(6776) is False
 
     def test_fails_closed_when_lookup_raises(self):
-        from kiro_crew.cli_server import _gateway_owns_port
+        from aj_crew.cli_server import _gateway_owns_port
 
         with (
             self._sidecar(4242),
             patch(
-                "kiro_crew.cli_server.platform_compat.find_listening_pids",
+                "aj_crew.cli_server.platform_compat.find_listening_pids",
                 side_effect=OSError("lsof exploded"),
             ),
         ):
@@ -781,11 +777,11 @@ class TestCliLoopbackAddress:
     def test_cli_requests_use_the_ipv4_literal(self):
         import inspect
 
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         assert cli_server._CLI_LOOPBACK == "127.0.0.1"
         src = "".join(
-            inspect.getsource(sys.modules[m]) for m in ("kiro_crew.cli_server", *cli_server._OWNERS)
+            inspect.getsource(sys.modules[m]) for m in ("aj_crew.cli_server", *cli_server._OWNERS)
         )
         # No CLI->gateway request may be built from the hostname.
         assert "http://localhost:{port}" not in src
@@ -799,7 +795,7 @@ class TestCliLoopbackAddress:
         the SPA's per-origin localStorage is keyed on `localhost`."""
         import inspect
 
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         # The URL printing lives in _emit_session_urls, which _token calls. Inspect the
         # function that actually owns the invariant, and assert the call still happens,
@@ -811,31 +807,29 @@ class TestCliLoopbackAddress:
 
 
 class TestSpawnCliAuth:
-    """``kirocrew spawn`` attaches X-Internal-Secret on every gateway call.
+    """``ajcrew spawn`` attaches X-Internal-Secret on every gateway call.
 
     Without it a non-loopback ``dashboard.url`` makes token_auth_middleware answer 403,
     which reads as ``"gateway not running"``.
     """
 
     def test_internal_secret_reads_local_secret_file(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(
-            "kiro_crew.cli_commands.read_local_secret", lambda _port, **_kw: "abc123"
-        )
+        monkeypatch.setattr("aj_crew.cli_commands.read_local_secret", lambda _port, **_kw: "abc123")
 
-        from kiro_crew.cli_commands import _internal_secret
+        from aj_crew.cli_commands import _internal_secret
 
         assert _internal_secret(5476) == "abc123"
 
     def test_internal_secret_returns_empty_when_missing(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.cli_commands.read_local_secret", lambda _port, **_kw: "")
+        monkeypatch.setattr("aj_crew.cli_commands.read_local_secret", lambda _port, **_kw: "")
 
-        from kiro_crew.cli_commands import _internal_secret
+        from aj_crew.cli_commands import _internal_secret
 
         assert _internal_secret(5476) == ""
 
     def test_spawn_list_sends_internal_secret_header(self, tmp_path, monkeypatch, capsys):
         monkeypatch.setattr(
-            "kiro_crew.cli_commands.read_local_secret", lambda _port, **_kw: "test-secret-xyz"
+            "aj_crew.cli_commands.read_local_secret", lambda _port, **_kw: "test-secret-xyz"
         )
 
         captured: list[urllib.request.Request] = []
@@ -848,9 +842,9 @@ class TestSpawnCliAuth:
             captured.append(req)
             return mock_resp
 
-        monkeypatch.setattr("kiro_crew.cli_commands._gateway_send", fake_urlopen)
+        monkeypatch.setattr("aj_crew.cli_commands._gateway_send", fake_urlopen)
 
-        from kiro_crew.cli_commands import _spawn
+        from aj_crew.cli_commands import _spawn
 
         args = argparse.Namespace(spawn_action="list", port=5476)
         _spawn(args)
@@ -863,7 +857,7 @@ class TestSpawnCliAuth:
 
     def test_spawn_run_sends_internal_secret_header(self, tmp_path, monkeypatch, capsys):
         monkeypatch.setattr(
-            "kiro_crew.cli_commands.read_local_secret", lambda _port, **_kw: "run-secret-abc"
+            "aj_crew.cli_commands.read_local_secret", lambda _port, **_kw: "run-secret-abc"
         )
 
         captured: list[urllib.request.Request] = []
@@ -876,9 +870,9 @@ class TestSpawnCliAuth:
             captured.append(req)
             return mock_resp
 
-        monkeypatch.setattr("kiro_crew.cli_commands._gateway_send", fake_urlopen)
+        monkeypatch.setattr("aj_crew.cli_commands._gateway_send", fake_urlopen)
 
-        from kiro_crew.cli_commands import _spawn_run
+        from aj_crew.cli_commands import _spawn_run
 
         args = argparse.Namespace(task="do thing", fire_and_forget=True, port=5476)
         _spawn_run(args, "http://localhost:5476")
@@ -893,7 +887,7 @@ class TestSpawnCliAuth:
 
     def test_spawn_list_403_prints_token_required(self, tmp_path, monkeypatch, capsys):
         """A bare 403 from the gateway is reported, not masked as 'not running'."""
-        monkeypatch.setattr("kiro_crew.cli_commands.read_local_secret", lambda _port, **_kw: "")
+        monkeypatch.setattr("aj_crew.cli_commands.read_local_secret", lambda _port, **_kw: "")
 
         def fake_urlopen(*_args: object, **_kwargs: object) -> None:
             raise urllib.error.HTTPError(
@@ -904,9 +898,9 @@ class TestSpawnCliAuth:
                 fp=None,
             )
 
-        monkeypatch.setattr("kiro_crew.cli_commands._gateway_send", fake_urlopen)
+        monkeypatch.setattr("aj_crew.cli_commands._gateway_send", fake_urlopen)
 
-        from kiro_crew.cli_commands import _spawn
+        from aj_crew.cli_commands import _spawn
 
         args = argparse.Namespace(spawn_action="list", port=5476)
         with pytest.raises(SystemExit) as excinfo:
@@ -918,13 +912,13 @@ class TestSpawnCliAuth:
 
     def test_spawn_list_timeout_reports_busy(self, monkeypatch, capsys):
         """A read timeout on spawn list reads as busy, not 'not running'."""
-        monkeypatch.setattr("kiro_crew.cli_commands.read_local_secret", lambda _port, **_kw: "s")
+        monkeypatch.setattr("aj_crew.cli_commands.read_local_secret", lambda _port, **_kw: "s")
         monkeypatch.setattr(
-            "kiro_crew.cli_commands._gateway_send",
+            "aj_crew.cli_commands._gateway_send",
             lambda *_a, **_k: (_ for _ in ()).throw(TimeoutError("timed out")),
         )
 
-        from kiro_crew.cli_commands import _spawn
+        from aj_crew.cli_commands import _spawn
 
         with pytest.raises(SystemExit) as excinfo:
             _spawn(argparse.Namespace(spawn_action="list", port=5476))
@@ -935,15 +929,15 @@ class TestSpawnCliAuth:
 
     def test_spawn_run_timeout_reports_busy_and_points_at_list(self, monkeypatch, capsys):
         """A spawn-run timeout reports busy and points at `spawn list`, not a blind re-run."""
-        monkeypatch.setattr("kiro_crew.cli_commands.read_local_secret", lambda _port, **_kw: "s")
+        monkeypatch.setattr("aj_crew.cli_commands.read_local_secret", lambda _port, **_kw: "s")
         monkeypatch.setattr(
-            "kiro_crew.cli_commands._gateway_send",
+            "aj_crew.cli_commands._gateway_send",
             lambda *_a, **_k: (_ for _ in ()).throw(
                 urllib.error.URLError(TimeoutError("timed out"))
             ),
         )
 
-        from kiro_crew.cli_commands import _spawn_run
+        from aj_crew.cli_commands import _spawn_run
 
         args = argparse.Namespace(task="do thing", fire_and_forget=True, port=5476)
         with pytest.raises(SystemExit) as excinfo:
@@ -956,8 +950,8 @@ class TestSpawnCliAuth:
 
     def test_spawn_run_poll_timeout_reports_busy(self, monkeypatch, capsys):
         """A result poll that times out reads as busy, not as a lost gateway."""
-        monkeypatch.setattr("kiro_crew.cli_commands.read_local_secret", lambda _port, **_kw: "s")
-        monkeypatch.setattr("kiro_crew.cli_commands._time", SimpleNamespace(sleep=lambda _s: None))
+        monkeypatch.setattr("aj_crew.cli_commands.read_local_secret", lambda _port, **_kw: "s")
+        monkeypatch.setattr("aj_crew.cli_commands._time", SimpleNamespace(sleep=lambda _s: None))
         started = MagicMock()
         started.read.return_value = b'{"id": "agent-1", "task": "hi"}'
         started.__enter__ = MagicMock(return_value=started)
@@ -968,9 +962,9 @@ class TestSpawnCliAuth:
                 return started
             raise TimeoutError("timed out")
 
-        monkeypatch.setattr("kiro_crew.cli_commands._gateway_send", fake_send)
+        monkeypatch.setattr("aj_crew.cli_commands._gateway_send", fake_send)
 
-        from kiro_crew.cli_commands import _spawn_run
+        from aj_crew.cli_commands import _spawn_run
 
         args = argparse.Namespace(task="do thing", fire_and_forget=False, port=5476)
         with pytest.raises(SystemExit) as excinfo:
@@ -983,14 +977,14 @@ class TestSpawnCliAuth:
 
     def _list_rows(self, monkeypatch, capsys, payload: dict) -> str:
         """Run ``spawn list`` against a canned gateway answer and return stdout."""
-        monkeypatch.setattr("kiro_crew.cli_commands.read_local_secret", lambda _port, **_kw: "s")
+        monkeypatch.setattr("aj_crew.cli_commands.read_local_secret", lambda _port, **_kw: "s")
         mock_resp = MagicMock()
         mock_resp.read.return_value = json.dumps(payload).encode()
         mock_resp.__enter__ = MagicMock(return_value=mock_resp)
         mock_resp.__exit__ = MagicMock(return_value=False)
-        monkeypatch.setattr("kiro_crew.cli_commands._gateway_send", lambda _req, *_a: mock_resp)
+        monkeypatch.setattr("aj_crew.cli_commands._gateway_send", lambda _req, *_a: mock_resp)
 
-        from kiro_crew.cli_commands import _spawn
+        from aj_crew.cli_commands import _spawn
 
         _spawn(argparse.Namespace(spawn_action="list", port=5476))
         return capsys.readouterr().out
@@ -1148,19 +1142,19 @@ class TestGatewayApiClientPort:
         env_port: str | None = None,
     ) -> list:
         """Run *argv* with one gateway on 6776 and return each call as ``"<port> <url>"``."""
-        monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
         if env_port is None:
-            monkeypatch.delenv("KIROCREW_PORT", raising=False)
+            monkeypatch.delenv("AJCREW_PORT", raising=False)
         else:
-            monkeypatch.setenv("KIROCREW_PORT", env_port)
+            monkeypatch.setenv("AJCREW_PORT", env_port)
         mock_cfg = MagicMock()
         mock_cfg.dashboard.url = config_url
         monkeypatch.setattr(
-            "kiro_crew.cli_server.KiroCrewConfig.load", MagicMock(return_value=mock_cfg)
+            "aj_crew.cli_server.AjCrewConfig.load", MagicMock(return_value=mock_cfg)
         )
-        monkeypatch.setattr("kiro_crew.cli_server.run_marker.marker_ports", lambda: [6776])
-        monkeypatch.setattr("kiro_crew.cli_server._gateway_owns_port", lambda p: p == 6776)
-        monkeypatch.setattr("kiro_crew.cli_commands.read_local_secret", lambda _p, **_kw: "s")
+        monkeypatch.setattr("aj_crew.cli_server.run_marker.marker_ports", lambda: [6776])
+        monkeypatch.setattr("aj_crew.cli_server._gateway_owns_port", lambda p: p == 6776)
+        monkeypatch.setattr("aj_crew.cli_commands.read_local_secret", lambda _p, **_kw: "s")
         urls: list[str] = []
         resp = MagicMock()
         resp.read.return_value = body
@@ -1171,9 +1165,9 @@ class TestGatewayApiClientPort:
             urls.append(f"{port} {req.full_url}")
             return resp
 
-        monkeypatch.setattr("kiro_crew.cli_commands._gateway_send", fake_send)
-        monkeypatch.setattr(sys, "argv", ["kirocrew", *argv])
-        from kiro_crew import cli
+        monkeypatch.setattr("aj_crew.cli_commands._gateway_send", fake_send)
+        monkeypatch.setattr(sys, "argv", ["ajcrew", *argv])
+        from aj_crew import cli
 
         cli.main()
         return urls
@@ -1200,7 +1194,7 @@ class TestGatewayApiClientPort:
         urls = self._called_urls(monkeypatch, ["artifact", "list"], b'{"artifacts": []}')
         assert urls == ["6776 http://127.0.0.1:6776/api/artifacts"]
 
-    def test_artifact_honours_kirocrew_port(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_artifact_honours_ajcrew_port(self, monkeypatch: pytest.MonkeyPatch) -> None:
         urls = self._called_urls(
             monkeypatch, ["artifact", "list"], b'{"artifacts": []}', env_port="6900"
         )
@@ -1220,17 +1214,17 @@ class TestArtifactCli:
         # pins the whole argv -> namespace -> command hop rather than the
         # forwarding alone.
         seen: dict[str, object] = {}
-        from kiro_crew import cli
+        from aj_crew import cli
 
         monkeypatch.setattr(
-            "kiro_crew.cli_commands._artifact",
+            "aj_crew.cli_commands._artifact",
             lambda args: seen.update(slug=args.slug, name=args.name),
         )
         monkeypatch.setattr(
             sys,
             "argv",
             [
-                "kirocrew",
+                "ajcrew",
                 "artifact",
                 "save",
                 "--name",
@@ -1250,13 +1244,13 @@ class TestArtifactCli:
         # AUTOSDE security-controls: --content-file must be gated by
         # is_sensitive_path() before Path.read_text(encoding="utf-8") so a user (or script)
         # cannot exfiltrate ~/.aws/credentials by piping it into an artifact.
-        from kiro_crew.cli_commands import _artifact
+        from aj_crew.cli_commands import _artifact
 
-        monkeypatch.setattr("kiro_crew.cli_commands.is_sensitive_path", lambda _p: True)
+        monkeypatch.setattr("aj_crew.cli_commands.is_sensitive_path", lambda _p: True)
         # Surface any HTTP call as a fatal so we can prove the function exited
         # at the security check, not at the network layer.
         monkeypatch.setattr(
-            "kiro_crew.cli_commands._gateway_send",
+            "aj_crew.cli_commands._gateway_send",
             lambda *_a, **_kw: pytest.fail("_artifact must refuse before opening any HTTP request"),
         )
 
@@ -1317,12 +1311,12 @@ class TestArtifactCli:
         monkeypatch: pytest.MonkeyPatch,
     ) -> str:
         """Run ``artifact <action>`` against a send that raises *exc*; return stderr."""
-        from kiro_crew.cli_commands import _artifact
+        from aj_crew.cli_commands import _artifact
 
-        monkeypatch.setattr("kiro_crew.cli_commands._client_port", lambda _p: 5476)
-        monkeypatch.setattr("kiro_crew.cli_commands.read_local_secret", lambda _p, **_kw: "s")
+        monkeypatch.setattr("aj_crew.cli_commands._client_port", lambda _p: 5476)
+        monkeypatch.setattr("aj_crew.cli_commands.read_local_secret", lambda _p, **_kw: "s")
         monkeypatch.setattr(
-            "kiro_crew.cli_commands._gateway_send", lambda *_a, **_k: (_ for _ in ()).throw(exc)
+            "aj_crew.cli_commands._gateway_send", lambda *_a, **_k: (_ for _ in ()).throw(exc)
         )
         args = argparse.Namespace(
             artifact_action=action,
@@ -1342,11 +1336,11 @@ class TestArtifactCli:
     def test_update_refuses_sensitive_content_file(
         self, capsys: pytest.CaptureFixture, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.cli_commands import _artifact
+        from aj_crew.cli_commands import _artifact
 
-        monkeypatch.setattr("kiro_crew.cli_commands.is_sensitive_path", lambda _p: True)
+        monkeypatch.setattr("aj_crew.cli_commands.is_sensitive_path", lambda _p: True)
         monkeypatch.setattr(
-            "kiro_crew.cli_commands._gateway_send",
+            "aj_crew.cli_commands._gateway_send",
             lambda *_a, **_kw: pytest.fail("_artifact must refuse before opening any HTTP request"),
         )
 

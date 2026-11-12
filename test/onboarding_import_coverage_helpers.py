@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import onboarding_scan, onboarding_sources
+from aj_crew import onboarding_scan, onboarding_sources
 
 # These cases encode POSIX filesystem semantics: which directory names the OS
 # refuses, and how a path renders inside a returned mapping. Windows disagrees on

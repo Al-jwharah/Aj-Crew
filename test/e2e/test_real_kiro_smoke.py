@@ -20,21 +20,21 @@ from typing import Iterator, NoReturn
 
 import pytest
 
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 
 def _required() -> bool:
-    return os.environ.get("KIROCREW_E2E_REAL_KIRO_REQUIRE", "") == "1"
+    return os.environ.get("AJCREW_E2E_REAL_KIRO_REQUIRE", "") == "1"
 
 
 def _enabled() -> bool:
-    return os.environ.get("KIROCREW_E2E_REAL_KIRO", "") == "1" or _required()
+    return os.environ.get("AJCREW_E2E_REAL_KIRO", "") == "1" or _required()
 
 
 pytestmark = pytest.mark.skipif(
     not _enabled(),
     reason=(
-        "Real-kiro-cli smoke. Set KIROCREW_E2E_REAL_KIRO=1 to run "
+        "Real-kiro-cli smoke. Set AJCREW_E2E_REAL_KIRO=1 to run "
         "(needs a signed-in host kiro-cli)."
     ),
 )
@@ -43,7 +43,7 @@ _TURN_TIMEOUT = 120.0
 _READY_TIMEOUT = 90.0
 #: How often a slot is re-read over HTTP while a real kiro-cli turn is awaited.
 _SLOT_POLL_SECS = 1.0
-_HOST_PROBE_PREFIX = "KIROCREW_REAL_SMOKE_HOST_PROBE:"
+_HOST_PROBE_PREFIX = "AJCREW_REAL_SMOKE_HOST_PROBE:"
 _PROMPT_TEMPLATE = (
     "This is an automated smoke test. Use your file-reading tool to read the "
     "exact contents of {path} and reply with ONLY that file's contents, nothing else."
@@ -63,17 +63,17 @@ def _real_kiro_home() -> Path:
 
 def _resolve_real_kiro_cli(real_kiro_home: Path) -> str:
     """Resolve once without accepting a test backend inherited via the override."""
-    from kiro_crew.acp.client import _KiroExecutableTrustError, _resolve_kiro_bin
+    from aj_crew.acp.client import _KiroExecutableTrustError, _resolve_kiro_bin
 
     env = dict(os.environ)
-    env.pop("KIROCREW_KIRO_BIN", None)
+    env.pop("AJCREW_KIRO_BIN", None)
     try:
         resolved = _resolve_kiro_bin(environ=env, home=real_kiro_home.parent)
     except _KiroExecutableTrustError as exc:
         _unresolved(f"host kiro-cli failed executable validation: {exc}")
     if not resolved:
         _unresolved(
-            "no real host kiro-cli found after excluding KIROCREW_KIRO_BIN; "
+            "no real host kiro-cli found after excluding AJCREW_KIRO_BIN; "
             "install it and run `kiro-cli login`"
         )
     return resolved
@@ -81,7 +81,7 @@ def _resolve_real_kiro_cli(real_kiro_home: Path) -> str:
 
 def _probe_signed_in(kiro_bin: str, env: dict[str, str], cwd: Path) -> None:
     """Use the final child environment; never copy credentials or fall back home."""
-    assert env.get("KIROCREW_KIRO_BIN") == kiro_bin, "native binary pin changed"
+    assert env.get("AJCREW_KIRO_BIN") == kiro_bin, "native binary pin changed"
     try:
         completed = subprocess.run(
             [kiro_bin, "whoami"],
@@ -104,11 +104,11 @@ def _probe_signed_in(kiro_bin: str, env: dict[str, str], cwd: Path) -> None:
 
 def _private_probe_payload() -> dict:
     """Fresh-process path and launcher verdict; never inspect the host's files."""
-    from kiro_crew import agent
-    from kiro_crew.config import paths
+    from aj_crew import agent
+    from aj_crew.config import paths
 
-    launcher = Path(agent._resolve_kirocrew_bin())
-    reachable = shutil.which("kirocrew")
+    launcher = Path(agent._resolve_ajcrew_bin())
+    reachable = shutil.which("ajcrew")
     blockers = []
     if (
         not launcher.is_absolute()
@@ -116,7 +116,7 @@ def _private_probe_payload() -> dict:
         or not reachable
         or Path(reachable).resolve() != launcher.resolve()
     ):
-        blockers.append("existing kirocrew launcher must be reachable on child PATH before boot")
+        blockers.append("existing ajcrew launcher must be reachable on child PATH before boot")
     return {
         "actual_home": str(paths.kiro_home().resolve()),
         "target": str(agent.kiro_agents_dir_path().resolve()),
@@ -175,7 +175,7 @@ def _native_transcript_count(home: Path) -> int:
 
 @contextlib.contextmanager
 def _booted_with_real_kiro(kiro_bin: str) -> Iterator[tuple[object, "_Client"]]:
-    from kiro_crew.testing.harness import spawn_feature_gateway
+    from aj_crew.testing.harness import spawn_feature_gateway
 
     private_home = None
     handle = None
@@ -183,7 +183,7 @@ def _booted_with_real_kiro(kiro_bin: str) -> Iterator[tuple[object, "_Client"]]:
     def _preflight(env: dict[str, str], cwd: Path) -> None:
         nonlocal private_home
         # This is the harness-owned default, not a transcript-reader override.
-        data_home = Path(env["KIROCREW_HOME"]).resolve()
+        data_home = Path(env["AJCREW_HOME"]).resolve()
         expected = data_home / "kiro"
         if not env.get("KIRO_HOME") or Path(env["KIRO_HOME"]).resolve() != expected:
             _unresolved("real smoke requires the harness-private KIRO_HOME; no host fallback")
@@ -227,7 +227,7 @@ class _Client:
         import http.cookiejar
         import urllib.request
 
-        from kiro_crew.loopback_http import build_loopback_opener
+        from aj_crew.loopback_http import build_loopback_opener
 
         self._port = port
         self.diagnostics = lambda: ""
@@ -482,8 +482,8 @@ def _await_completed_turn(
 
 def _confined_read(name: str, params: dict) -> str:
     """Execution-side gate: native MCP pre-approval cannot bypass this check."""
-    from kiro_crew.hooks import TOOL_DENY, HookManager
-    from kiro_crew.platform.context import current_context
+    from aj_crew.hooks import TOOL_DENY, HookManager
+    from aj_crew.platform.context import current_context
 
     ceiling = current_context().governance
     if ceiling is None or ceiling.get("filesystem.read") is None:
@@ -502,18 +502,18 @@ def _confined_read(name: str, params: dict) -> str:
     if verdict.action == TOOL_DENY:
         return f"Blocked before read: {verdict.reason}"
     content = Path(params["path"]).read_text(encoding="utf-8")
-    receipt = Path(os.environ["KIROCREW_SECURITY_POLICY"]).parent / "read-effects.jsonl"
+    receipt = Path(os.environ["AJCREW_SECURITY_POLICY"]).parent / "read-effects.jsonl"
     with receipt.open("a", encoding="utf-8") as stream:
         stream.write(json.dumps({"path": params["path"]}) + "\n")
     return content
 
 
 def _serve_confined_read() -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.mcp_shared import run_mcp_stdio_loop
-    from kiro_crew.platform.bootstrap import bootstrap_context
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.mcp_shared import run_mcp_stdio_loop
+    from aj_crew.platform.bootstrap import bootstrap_context
 
-    bootstrap_context(KiroCrewConfig.load())
+    bootstrap_context(AjCrewConfig.load())
     run_mcp_stdio_loop(
         "real-smoke",
         "1",
@@ -536,8 +536,8 @@ def _serve_confined_read() -> None:
 
 def _confined_project(project: Path, nonce_path: Path) -> tuple[str, Path]:
     """One private MCP read tool; no native filesystem, shell, or network tools."""
-    from kiro_crew.dashboard.side_readonly_spec import derive_readonly_spec
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.dashboard.side_readonly_spec import derive_readonly_spec
+    from aj_crew.platform.governance import parse_policy
 
     policy_path = project / "security_policy.json"
     spec = derive_readonly_spec(
@@ -551,7 +551,7 @@ def _confined_project(project: Path, nonce_path: Path) -> tuple[str, Path]:
                         "import runpy,sys; runpy.run_path(sys.argv[1])['_serve_confined_read']()",
                         str(Path(__file__).resolve()),
                     ],
-                    "env": {"KIROCREW_SECURITY_POLICY": str(policy_path)},
+                    "env": {"AJCREW_SECURITY_POLICY": str(policy_path)},
                 }
             },
             "resources": [],
@@ -579,7 +579,7 @@ def _confined_project(project: Path, nonce_path: Path) -> tuple[str, Path]:
 
 def _set_smoke_project(handle, project: Path) -> None:
     """Configure only the harness-owned home, before creating any test slot."""
-    from kiro_crew.config.loader import update_config_locked
+    from aj_crew.config.loader import update_config_locked
 
     def configure(data: dict) -> dict:
         data.setdefault("session", {})["eager_spawn"] = False
@@ -630,14 +630,14 @@ def test_real_kiro_completes_one_approved_nonce_read(
     real_kiro_home = _real_kiro_home()
     kiro_bin = _resolve_real_kiro_cli(real_kiro_home)
 
-    nonce = f"kirocrew-real-smoke-{uuid.uuid4().hex}"
+    nonce = f"ajcrew-real-smoke-{uuid.uuid4().hex}"
     nonce_path = tmp_path / "real-kiro-smoke-nonce.txt"
     nonce_path.write_text(nonce, encoding="utf-8")
     denied_marker = f"must-not-read-{uuid.uuid4().hex}"
     denied_path = tmp_path / "denied.txt"
     denied_path.write_text(denied_marker, encoding="utf-8")
     agent_name, policy_path = _confined_project(tmp_path, nonce_path)
-    monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(policy_path))
+    monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(policy_path))
 
     with _booted_with_real_kiro(kiro_bin) as (handle, client):
         _set_smoke_project(handle, tmp_path)

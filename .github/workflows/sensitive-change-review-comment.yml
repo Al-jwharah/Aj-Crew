@@ -51,7 +51,7 @@ jobs:
     # a GitHub-hosted Ubuntu VM dispatched by GitHub rather than the AWS
     # webhook, so no actor allowlist applies and that reason is untouched; it
     # buys queue position on the lane that re-runs a gate blocking a merge.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 5
     # Job-level, so only a run that passed the `if` joins the group: anyone
     # else's comment is skipped before it can cancel the author's re-run.

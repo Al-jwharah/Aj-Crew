@@ -14,8 +14,8 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import slot_projection
-from kiro_crew.session_lifecycle import STOP_DECLINED_ESCALATION_SECS
+from aj_crew.dashboard import slot_projection
+from aj_crew.session_lifecycle import STOP_DECLINED_ESCALATION_SECS
 
 
 async def _detail(state, slot_key: str) -> dict:
@@ -28,7 +28,7 @@ async def _detail(state, slot_key: str) -> dict:
 @pytest.mark.asyncio
 @pytest.mark.parametrize("phase", ["idle", "soft_pending", "killing"])
 async def test_detail_reports_stop_state(tmp_path, monkeypatch, phase):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("s1")
     slot._stop_state = phase
@@ -54,7 +54,7 @@ _NOW = 1000.0
     ids=["armed", "expired", "clear"],
 )
 async def test_detail_reports_stop_declined(tmp_path, monkeypatch, declined_at, armed):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(slot_projection, "time", SimpleNamespace(monotonic=lambda: _NOW))
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("s1")

@@ -17,10 +17,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.acp import seed_provenance as sp
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.acp import seed_provenance as sp
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 _SERVED = [
     "global.anthropic.claude-opus-5[1m]",
@@ -41,7 +41,7 @@ def _pinned_kiro_cli_version(_floor_monkeypatch):
     ``test_agent.py``.
     """
     _floor_monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
 
@@ -52,7 +52,7 @@ def isolated_records(_floor_monkeypatch):
 
     ``_RECORDS`` and ``_LIVE`` are process-wide runtime state (like
     ``model_registry._ADVERTISED_MODELS``); the sidecar itself already lands in a
-    per-test ``KIROCREW_HOME``.
+    per-test ``AJCREW_HOME``.
     """
     _floor_monkeypatch.setattr(sp, "_RECORDS", {})
     _floor_monkeypatch.setattr(sp, "_LIVE", {})

@@ -3,7 +3,7 @@ import { i18nT } from '../i18n/t'
 /** Folder color palette — the identity mark a user picks for a folder in
  *  the config modal. Shares the Artifacts page's FOLDER_COLORS hues so the
  *  two folder systems speak one visual language. KEEP IN SYNC with
- *  `_FOLDER_COLOR_PALETTE` in src/kiro_crew/dashboard/chat_folders.py.
+ *  `_FOLDER_COLOR_PALETTE` in src/aj_crew/dashboard/chat_folders.py.
  *  Labels are thunks with literal keys (not `i18nT(`…${name}`)`) so every
  *  reference stays statically resolvable by the i18n key checker. */
 export const FOLDER_COLOR_PALETTE: { value: string; label: () => string }[] = [

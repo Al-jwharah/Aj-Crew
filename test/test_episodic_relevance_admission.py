@@ -18,7 +18,7 @@ import struct
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from kiro_crew.vector_memory import _EPISODIC_LONG_TEXT_CHARS, VectorMemoryStore
+from aj_crew.vector_memory import _EPISODIC_LONG_TEXT_CHARS, VectorMemoryStore
 
 # Query embedding. Stored vectors are unit vectors, so their dot product with this
 # is exactly their cosine similarity (the search path normalises the query).

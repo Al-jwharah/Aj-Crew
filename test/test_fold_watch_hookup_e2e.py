@@ -23,18 +23,18 @@ from test_fold_watch_e2e import (  # noqa: F401 -- fixtures register by import
     e2e_state,
 )
 
-from kiro_crew.crew_log import session_tree_projection
-from kiro_crew.dashboard import token_auth
-from kiro_crew.dashboard.handlers.crew_log import CrewLogPublisher
-from kiro_crew.dashboard.websocket_hub import FOLD_DELTA_CAPABILITY, FOLD_HELLO_FRAME
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew.crew_log import session_tree_projection
+from aj_crew.dashboard import token_auth
+from aj_crew.dashboard.handlers.crew_log import CrewLogPublisher
+from aj_crew.dashboard.websocket_hub import FOLD_DELTA_CAPABILITY, FOLD_HELLO_FRAME
+from aj_crew.testing.wait import async_wait_until, finished
 
 
 @pytest.mark.asyncio
 async def test_two_watchers_get_their_own_boards_and_a_legacy_tab_gets_every_board(
     e2e_state, monkeypatch  # noqa: F811 -- the fixture imported above
 ):
-    from kiro_crew.dashboard.ws import api_ws
+    from aj_crew.dashboard.ws import api_ws
 
     monkeypatch.setattr(
         session_tree_projection,

@@ -14,19 +14,19 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, app_data_dir, install_app
-from kiro_crew.apps.routes import register_app_routes
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME, app_data_dir, install_app
+from aj_crew.apps.routes import register_app_routes
 
 
 def _setup_env(tmp_path, monkeypatch):
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     kiro_agents = tmp_path / "kiro-agents"
     kiro_agents.mkdir()
-    import kiro_crew.apps.bridges as bridges_mod
+    import aj_crew.apps.bridges as bridges_mod
     monkeypatch.setattr(bridges_mod, "KIRO_AGENTS_DIR", kiro_agents)
-    import kiro_crew.apps.backend as bmod
+    import aj_crew.apps.backend as bmod
     bmod._processes.clear()
     bmod._allocated_ports.clear()
     return home
@@ -96,8 +96,8 @@ async def test_config_put_then_get(tmp_path, monkeypatch):
 
 
 def _record_threads(monkeypatch, attr):
-    """Wrap ``kiro_crew.apps.routes.<attr>`` to record the thread each call runs on."""
-    import kiro_crew.apps.routes as routes_mod
+    """Wrap ``aj_crew.apps.routes.<attr>`` to record the thread each call runs on."""
+    import aj_crew.apps.routes as routes_mod
 
     real = getattr(routes_mod, attr)
     seen: list[int] = []

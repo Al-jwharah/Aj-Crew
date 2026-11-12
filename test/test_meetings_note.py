@@ -29,8 +29,8 @@ from meetings_helpers import (  # noqa: F401 — fixtures are used by name
     root_fixture,
 )
 
-from kiro_crew.apps.builtins.meetings.backend import constants as k
-from kiro_crew.apps.builtins.meetings.backend import store
+from aj_crew.apps.builtins.meetings.backend import constants as k
+from aj_crew.apps.builtins.meetings.backend import store
 
 
 @pytest.fixture(name="_seed_meetings", autouse=True)
@@ -72,9 +72,9 @@ class TestTheNoteIsOutsideTheAgentWritableTree:
         (the way ``edits/`` is) would answer 403 for every image. The write denial is
         what answers the finding -- an agent rewriting the user's note.
         """
-        from kiro_crew.security import is_sensitive_path, is_sensitive_write_path
+        from aj_crew.security import is_sensitive_path, is_sensitive_write_path
 
-        for prefix in (".kiro/crew", ".kirocrew"):
+        for prefix in (".kiro/crew", ".ajcrew"):
             note = f"~/{prefix}/apps/meetings/data/{k.NOTES_DIR}/m1/{k.NOTE_FILE}"
             image = f"~/{prefix}/apps/meetings/data/{k.NOTES_DIR}/m1/{k.NOTE_IMAGES_DIR}/ab.png"
             assert is_sensitive_write_path(note) is True
@@ -437,7 +437,7 @@ class TestAMutationCannotCreateOrRecreateAMeeting:
         """
         import inspect
 
-        from kiro_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle as ml
+        from aj_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle as ml
 
         for helper in (ml._save_note, ml._save_note_image):
             src = inspect.getsource(helper)
@@ -463,14 +463,14 @@ class TestBodyCaps:
         assert len(payload) <= k.MAX_NOTE_BODY_BYTES
 
     def test_the_route_raises_the_cap_above_the_shared_default(self):
-        from kiro_crew.apps.builtins.meetings.backend.routes import _common
+        from aj_crew.apps.builtins.meetings.backend.routes import _common
 
         assert k.MAX_NOTE_BODY_BYTES > _common.MAX_BODY_BYTES
 
     @pytest.mark.asyncio
     async def test_a_cjk_note_at_the_character_cap_is_accepted(self, app):
         """Functional half: this body is exactly the one the shared default 413'd."""
-        from kiro_crew.apps.builtins.meetings.backend.routes import _common
+        from aj_crew.apps.builtins.meetings.backend.routes import _common
 
         content = "議" * k.MAX_NOTE_CHARS
         payload = json.dumps({"content": content})

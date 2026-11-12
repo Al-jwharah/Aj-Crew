@@ -41,8 +41,8 @@ from push_guard_helpers import (
 )
 from spawn_test_helpers import process_group_report, unblocked_signals
 
-from kiro_crew import platform_compat
-from kiro_crew.testing.wait import default_timeout, wait_until
+from aj_crew import platform_compat
+from aj_crew.testing.wait import default_timeout, wait_until
 
 # pytest resolves a fixture in the requesting test's module, so each shared
 # fixture this module uses is bound here by name.

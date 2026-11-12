@@ -7,18 +7,18 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.types import (
+from aj_crew.acp import client as client_mod
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     METHOD_SESSION_LOAD,
     METHOD_SESSION_NEW,
 )
-from kiro_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
-from kiro_crew.testing.wait import finished
+from aj_crew.mcp_gateway.rewriter import _WRAPPER_MARKER
+from aj_crew.testing.wait import finished
 
 
 class _RequestCaptured(Exception):
@@ -29,7 +29,7 @@ class _RequestCaptured(Exception):
 def broker_overlay(tmp_path):
     overlay = tmp_path / "mcp-gateway" / "agents"
     overlay.mkdir(parents=True)
-    for agent in ("kirocrew", "another-agent"):
+    for agent in ("ajcrew", "another-agent"):
         (overlay / f"{agent}.json").write_text(
             json.dumps(
                 {
@@ -62,7 +62,7 @@ async def test_client_session_requests_preserve_ordinary_broker_routing(
     socket = broker_overlay.parent / "gateway.sock"
     client = AcpClient(
         work_dir=tmp_path,
-        agent="kirocrew",
+        agent="ajcrew",
         acp_backend=backend,
         mcp_gateway_overlay=broker_overlay,
         mcp_gateway_socket=socket,
@@ -134,7 +134,7 @@ async def test_runtime_session_requests_preserve_broker_routing(
 ):
     runtime = AcpRuntime(
         work_dir=tmp_path,
-        agent="kirocrew",
+        agent="ajcrew",
         mcp_gateway_overlay=broker_overlay,
         mcp_gateway_socket=broker_overlay.parent / "gateway.sock",
     )
@@ -168,10 +168,10 @@ async def test_kas_projection_preserves_direct_or_pooled_tools(
 ):
     agents = tmp_path / "original-agents"
     agents.mkdir()
-    (agents / "kirocrew.json").write_text(
+    (agents / "ajcrew.json").write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "prompt": "Test agent",
                 "tools": ["@builder"],
                 "mcpServers": {
@@ -181,10 +181,10 @@ async def test_kas_projection_preserves_direct_or_pooled_tools(
         ),
         encoding="utf-8",
     )
-    import kiro_crew.config.paths as paths_mod
+    import aj_crew.config.paths as paths_mod
 
     monkeypatch.setattr(paths_mod, "kiro_agents_dir", lambda: agents)
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     monkeypatch.setattr(agent_mod, "ensure_agent_materialized", lambda _agent: True)
     runtime = AcpRuntime(
@@ -193,7 +193,7 @@ async def test_kas_projection_preserves_direct_or_pooled_tools(
         mcp_gateway_overlay=broker_overlay if pooled else None,
         member_context=True,
     )
-    extras = await finished(runtime._kas_custom_agents("kirocrew"), "the custom-agent projection")
+    extras = await finished(runtime._kas_custom_agents("ajcrew"), "the custom-agent projection")
     projected = extras.custom_agents
     assert projected
     server = projected[0].get("mcpServers", {}).get("builder")
@@ -202,7 +202,7 @@ async def test_kas_projection_preserves_direct_or_pooled_tools(
         # KAS keeps credential-bearing env off the wire: the server starts through
         # Crew's local launcher, which holds the value on this machine, even with
         # no session key yet.
-        from kiro_crew.kas_env_shim import SHIM_MODULE
+        from aj_crew.kas_env_shim import SHIM_MODULE
 
         assert SHIM_MODULE in server["args"]
         assert "V" not in server.get("env", {}).values()

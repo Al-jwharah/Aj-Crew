@@ -265,11 +265,11 @@ describe('useWebSocket artifact_update frame', () => {
     const removeSpy = vi.spyOn(qc, 'removeQueries')
     const invalidateSpy = vi.spyOn(qc, 'invalidateQueries')
     const onDeleted = vi.fn()
-    window.addEventListener('kirocrew:artifact-deleted', onDeleted)
+    window.addEventListener('ajcrew:artifact-deleted', onDeleted)
     try {
       send({ slug: 'cr-queue', version: 7, deleted: true })
     } finally {
-      window.removeEventListener('kirocrew:artifact-deleted', onDeleted)
+      window.removeEventListener('ajcrew:artifact-deleted', onDeleted)
     }
     expect(removeSpy).not.toHaveBeenCalled()
     expect(onDeleted).toHaveBeenCalledTimes(1)
@@ -306,11 +306,11 @@ describe('useWebSocket artifact_update frame', () => {
   it('ignores a frame with no slug', () => {
     const spy = vi.spyOn(qc, 'invalidateQueries')
     const onDeleted = vi.fn()
-    window.addEventListener('kirocrew:artifact-deleted', onDeleted)
+    window.addEventListener('ajcrew:artifact-deleted', onDeleted)
     try {
       send({ version: 7 })
     } finally {
-      window.removeEventListener('kirocrew:artifact-deleted', onDeleted)
+      window.removeEventListener('ajcrew:artifact-deleted', onDeleted)
     }
     const keys = spy.mock.calls.map(c => JSON.stringify(c[0]?.queryKey))
     expect(keys).not.toContain(JSON.stringify(['artifacts']))

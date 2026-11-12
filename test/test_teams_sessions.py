@@ -25,13 +25,13 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.history import transcript_stem
-from kiro_crew.messaging import session_resume as core
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.session_map import ConversationOwnershipConflict
-from kiro_crew.teams.cards import KIND_SESSION
-from kiro_crew.teams.client import TeamsInbound, TeamsSendError
-from kiro_crew.teams.transport_dispatch import TeamsDispatcher
+from aj_crew.history import transcript_stem
+from aj_crew.messaging import session_resume as core
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.session_map import ConversationOwnershipConflict
+from aj_crew.teams.cards import KIND_SESSION
+from aj_crew.teams.client import TeamsInbound, TeamsSendError
+from aj_crew.teams.transport_dispatch import TeamsDispatcher
 
 _SVC = "https://smba.trafficmanager.net/teams"
 _OWNER = "owner@example.com"
@@ -233,7 +233,7 @@ def _dispatcher(
             messaging=SimpleNamespace(
                 queue_mode="steer", dm_scope="per_user", idle_reset_minutes=0, daily_reset_hour=-1
             ),
-            agent=SimpleNamespace(default_agent="kirocrew", approval_mode="interactive"),
+            agent=SimpleNamespace(default_agent="ajcrew", approval_mode="interactive"),
             teams=SimpleNamespace(soft_threshold_pct=80, hard_threshold_pct=95),
         ),
         conv_log=log,
@@ -257,7 +257,7 @@ def _press(card: dict, index: int) -> dict:
 @pytest.fixture(autouse=True)
 def _isolate(monkeypatch, tmp_path):
     """Each test gets its own expectation store; the file is process-global otherwise."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
 
 class TestOwnerOnly:
@@ -298,7 +298,7 @@ class TestOwnerOnly:
     async def test_a_non_owner_is_refused_and_audited(self, monkeypatch) -> None:
         events: list[dict] = []
         monkeypatch.setattr(
-            "kiro_crew.messaging.session_resume.sel",
+            "aj_crew.messaging.session_resume.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
         )
         client = _Client()
@@ -335,8 +335,8 @@ class TestThePicker:
 
     @pytest.mark.asyncio
     async def test_it_offers_only_this_identity_native_generations(self) -> None:
-        prior_key = "teams:kirocrew:direct:owner@example.com:gen4"
-        other_key = "teams:kirocrew:direct:other@example.com:gen4"
+        prior_key = "teams:ajcrew:direct:owner@example.com:gen4"
+        other_key = "teams:ajcrew:direct:other@example.com:gen4"
         rows = _rows("Launch plan") + [
             {
                 "key": transcript_stem(prior_key),
@@ -572,7 +572,7 @@ class TestRoutingComesFirst:
         async def _drive(turn, **_kw):
             seen.append(turn.session_key)
 
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", _drive)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", _drive)
         sessions = _Sessions()
         sessions.set_mirror_link(
             "dashboard:chat-1", ChannelLink("teams", "CONV"), accepts_inbound=True
@@ -598,7 +598,7 @@ class TestRoutingComesFirst:
             stopped.append(key)
             return "Stopped."
 
-        import kiro_crew.teams.transport_dispatch as mod
+        import aj_crew.teams.transport_dispatch as mod
 
         real = mod.stop_running_turn
         try:
@@ -707,8 +707,8 @@ class TestAClickInAResumedConversation:
 
     @pytest.mark.asyncio
     async def test_approving_resolves_the_resumed_sessions_prompt(self) -> None:
-        from kiro_crew.teams.approvals import TeamsApprovalDecider
-        from kiro_crew.teams.cards import DECISION_APPROVE, KIND_APPROVAL
+        from aj_crew.teams.approvals import TeamsApprovalDecider
+        from aj_crew.teams.cards import DECISION_APPROVE, KIND_APPROVAL
 
         client = _Client()
         d, _ = self._resumed(client, _ConversationLog(_rows("Launch plan")))
@@ -737,16 +737,16 @@ class TestAClickInAResumedConversation:
 
     @pytest.mark.asyncio
     async def test_a_chip_runs_the_label_the_resumed_turn_offered(self, monkeypatch) -> None:
-        from kiro_crew.teams.cards import KIND_OPTION
-        from kiro_crew.teams.renderer import TeamsRenderer
-        from kiro_crew.teams.transport import TEAMS_CAPABILITIES
+        from aj_crew.teams.cards import KIND_OPTION
+        from aj_crew.teams.renderer import TeamsRenderer
+        from aj_crew.teams.transport import TEAMS_CAPABILITIES
 
         seen: list[tuple[str, str]] = []
 
         async def _drive(turn, **_kw):
             seen.append((turn.session_key, turn.user_text))
 
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", _drive)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", _drive)
         client = _Client()
         d, _ = self._resumed(client, _ConversationLog(_rows("Launch plan")))
 
@@ -773,8 +773,8 @@ class TestAClickInAResumedConversation:
         The in-flight turn keeps running under the key it started with, so BOTH keys
         have to be tried -- resolving only the resumed one would strand it.
         """
-        from kiro_crew.teams.approvals import TeamsApprovalDecider
-        from kiro_crew.teams.cards import DECISION_DENY, KIND_APPROVAL
+        from aj_crew.teams.approvals import TeamsApprovalDecider
+        from aj_crew.teams.cards import DECISION_DENY, KIND_APPROVAL
 
         client = _Client()
         d, _ = self._resumed(client, _ConversationLog(_rows("Launch plan")))
@@ -812,8 +812,8 @@ class TestAChipRunsOnlyWhereItWasPosted:
 
     @staticmethod
     def _chip(client: Any, session_key: str) -> Any:
-        from kiro_crew.teams.renderer import TeamsRenderer
-        from kiro_crew.teams.transport import TEAMS_CAPABILITIES
+        from aj_crew.teams.renderer import TeamsRenderer
+        from aj_crew.teams.transport import TEAMS_CAPABILITIES
 
         renderer = TeamsRenderer(client, "CONV", _SVC, TEAMS_CAPABILITIES, session_key=session_key)
         renderer._option_nonce = "n9"
@@ -822,7 +822,7 @@ class TestAChipRunsOnlyWhereItWasPosted:
 
     @staticmethod
     def _press_value() -> dict:
-        from kiro_crew.teams.cards import KIND_OPTION
+        from aj_crew.teams.cards import KIND_OPTION
 
         return {"kc": KIND_OPTION, "nonce": "n9", "index": "0", "label": "ship it"}
 
@@ -833,7 +833,7 @@ class TestAChipRunsOnlyWhereItWasPosted:
         async def _drive(turn, **_kw):
             seen.append((turn.session_key, turn.user_text))
 
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", _drive)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", _drive)
         return seen
 
     @pytest.mark.asyncio
@@ -936,7 +936,7 @@ class TestAChipRunsOnlyWhereItWasPosted:
         monkeypatch.setattr(d, "_live_cfg", lambda: d.cfg)
         now = 1_000_000.0
         monkeypatch.setattr(
-            "kiro_crew.teams.transport_dispatch.time", SimpleNamespace(time=lambda: now)
+            "aj_crew.teams.transport_dispatch.time", SimpleNamespace(time=lambda: now)
         )
         d._conv.maybe_rotate(_OWNER, now - idle_gap_minutes * 60, idle_minutes=30)
         native = d._session_key(_OWNER)
@@ -1119,13 +1119,13 @@ class TestSharedWithDiscord:
         One shared file would let one channel's row answer for the other's
         conversation -- a mis-route of somebody's transcript.
         """
-        from kiro_crew.messaging.resume_expectation import store_filename
+        from aj_crew.messaging.resume_expectation import store_filename
 
         assert store_filename("teams") != store_filename("discord")
 
     def test_teams_and_discord_use_one_picker_bind_controller(self) -> None:
-        from kiro_crew.discord.session_resume import DiscordSessionResume
-        from kiro_crew.teams.session_resume import TeamsSessionResume
+        from aj_crew.discord.session_resume import DiscordSessionResume
+        from aj_crew.teams.session_resume import TeamsSessionResume
 
         sessions = _Sessions()
         log = _ConversationLog(_rows("Launch plan"))
@@ -1144,7 +1144,7 @@ class TestSharedWithDiscord:
         Telegram forum Topics are the motivating shape: recording only chat_id
         would let every Topic in one supergroup overwrite the same expectation.
         """
-        from kiro_crew.teams.session_resume import TeamsSessionResume, _TeamsResumeSurface
+        from aj_crew.teams.session_resume import TeamsSessionResume, _TeamsResumeSurface
 
         client = _Client()
         sessions = _Sessions()
@@ -1173,7 +1173,7 @@ class TestSharedWithDiscord:
 
     def test_the_teams_card_kind_is_distinct_from_the_other_two(self) -> None:
         """So an approval press and a session press can never be confused."""
-        from kiro_crew.teams.cards import KIND_APPROVAL, KIND_OPTION
+        from aj_crew.teams.cards import KIND_APPROVAL, KIND_OPTION
 
         assert len({KIND_SESSION, KIND_APPROVAL, KIND_OPTION}) == 3
 
@@ -1216,7 +1216,7 @@ async def test_an_empty_allow_list_lists_nothing() -> None:
 @pytest.mark.asyncio
 async def test_sessions_is_in_the_command_table_and_help() -> None:
     """One table drives the parser AND /help, so the two cannot drift."""
-    from kiro_crew.teams.commands import COMMAND_SPEC, build_help_text, parse_command
+    from aj_crew.teams.commands import COMMAND_SPEC, build_help_text, parse_command
 
     assert parse_command("/sessions") == "sessions"
     assert any(canonical == "sessions" for canonical, _a, _d in COMMAND_SPEC)
@@ -1249,7 +1249,7 @@ class TestWhenListingCannotHappen:
         client = _Client()
         d = _dispatcher(_Sessions(), client, _Log(_rows("Launch plan")))
         monkeypatch.setattr(
-            "kiro_crew.messaging.session_resume.sel",
+            "aj_crew.messaging.session_resume.sel",
             lambda: SimpleNamespace(
                 log_api_access=lambda **kw: rows.append((kw["operation"], kw["outcome"]))
             ),
@@ -1314,7 +1314,7 @@ class TestWhenAPressCannotTakeEffect:
     @pytest.mark.asyncio
     async def test_a_binding_that_could_not_be_recorded_binds_nothing(self) -> None:
         """The record is written BEFORE the banner, so a failed write must refuse."""
-        from kiro_crew.messaging.resume_expectation import ExpectationStoreError
+        from aj_crew.messaging.resume_expectation import ExpectationStoreError
 
         client, sessions = _Client(), _Sessions()
         d = _dispatcher(sessions, client, TestPressing._log())
@@ -1498,7 +1498,7 @@ class TestAReplayThatFindsTheLeaseFree:
         async def _drive(turn, **_kw):
             seen.append((turn.session_key, turn.user_text))
 
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", _drive)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", _drive)
         client = _Client()
         sessions = _Sessions()
         busy = {"held": True}

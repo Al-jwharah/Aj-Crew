@@ -19,8 +19,8 @@ import work_ledger_helpers
 from windows_sim import read_sharing_violation
 from work_ledger_helpers import CONDUCTOR, WORKER, _bytes_on_disk, _lift_goal_cap, _new_item
 
-from kiro_crew import atomic_write, platform_compat
-from kiro_crew import work_ledger as wl
+from aj_crew import atomic_write, platform_compat
+from aj_crew import work_ledger as wl
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _isolated_home = work_ledger_helpers._isolated_home
@@ -211,7 +211,7 @@ def test_the_guards_tolerate_a_prefixed_leaf_resolve(monkeypatch):
     simulates it where it arises: ``Path.resolve`` returning the
     extended-length form of the correct answer.
     """
-    import kiro_crew.session_ledger as sl
+    import aj_crew.session_ledger as sl
 
     original_resolve = Path.resolve
 
@@ -285,7 +285,7 @@ def test_the_guards_share_one_containment_helper(monkeypatch):
     and watching both guards refuse is what makes the routing itself a tested
     property rather than a convention.
     """
-    import kiro_crew.work_ledger as wl_module
+    import aj_crew.work_ledger as wl_module
 
     monkeypatch.setattr(wl_module, "resolved_within", lambda base, name: None)
     with pytest.raises(wl.WorkLedgerError) as excinfo:

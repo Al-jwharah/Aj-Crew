@@ -21,8 +21,8 @@ import tempfile
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew import windows_acl
+from aj_crew import platform_compat as pc
+from aj_crew import windows_acl
 
 # Each test starts with the macOS libc and libproc handle caches unbuilt and puts them
 # back after, as every test of the test_platform_compat family does (see conftest.py).
@@ -375,7 +375,7 @@ class TestOwnerOnlyDaclPredicate:
 
 
 class TestRestrictToOwner:
-    """Fail-loud owner-only lockdown used by every ~/.kirocrew secret writer.
+    """Fail-loud owner-only lockdown used by every ~/.ajcrew secret writer.
 
     A bare ``if IS_POSIX: os.chmod(...)`` guard would leave Windows with NO per-file
     owner-only restriction on the token signing key, per-app secrets, refresh-token

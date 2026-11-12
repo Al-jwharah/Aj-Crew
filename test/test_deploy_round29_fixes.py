@@ -17,8 +17,8 @@ import pytest
 import yaml
 from yaml_helpers import load_with
 
+from aj_crew.deploy import handlers
 from conftest import _find_posix_test_shell
-from kiro_crew.deploy import handlers
 
 
 def _bash():
@@ -30,7 +30,7 @@ def _bash():
 SCRIPTS_DIR = (
     Path(__file__).parent.parent
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "deploy"
     / "skills"
     / "artifact-deploy"
@@ -39,7 +39,7 @@ SCRIPTS_DIR = (
 TEMPLATES_DIR = (
     Path(__file__).parent.parent
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "deploy"
     / "skills"
     / "artifact-deploy"
@@ -48,7 +48,7 @@ TEMPLATES_DIR = (
 SKILL_MD = (
     Path(__file__).parent.parent
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "deploy"
     / "skills"
     / "artifact-deploy"
@@ -64,11 +64,11 @@ class TestF1AllowedLocalRoots:
 
     def test_config_dir_workspace_is_included(self, tmp_path, monkeypatch):
         """config_dir()/workspace is in allowed roots when it exists."""
-        fake_config = tmp_path / "fake_kirocrew"
+        fake_config = tmp_path / "fake_ajcrew"
         ws_dir = fake_config / "workspace"
         ws_dir.mkdir(parents=True)
 
-        monkeypatch.setenv("KIROCREW_HOME", str(fake_config))
+        monkeypatch.setenv("AJCREW_HOME", str(fake_config))
         # Clear any cache on the config loader
         roots = handlers._allowed_local_roots()
         resolved = [r.resolve() for r in roots]
@@ -76,9 +76,9 @@ class TestF1AllowedLocalRoots:
 
     def test_registered_workspace_dirs_are_included(self, tmp_path, monkeypatch):
         """Workspace dirs from cfg.workspaces are in allowed roots."""
-        fake_config = tmp_path / "fake_kirocrew"
+        fake_config = tmp_path / "fake_ajcrew"
         fake_config.mkdir(parents=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(fake_config))
+        monkeypatch.setenv("AJCREW_HOME", str(fake_config))
 
         custom_ws = tmp_path / "my-workspace"
         custom_ws.mkdir()
@@ -96,9 +96,9 @@ class TestF1AllowedLocalRoots:
 
     def test_unregistered_path_still_rejected(self, tmp_path, monkeypatch):
         """An arbitrary path not in any root set is rejected."""
-        fake_config = tmp_path / "fake_kirocrew"
+        fake_config = tmp_path / "fake_ajcrew"
         fake_config.mkdir(parents=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(fake_config))
+        monkeypatch.setenv("AJCREW_HOME", str(fake_config))
 
         rogue = tmp_path / "rogue" / "dir"
         rogue.mkdir(parents=True)
@@ -127,7 +127,7 @@ class TestF2BoundaryPreflight:
         boundary_idx = None
         first_deploy_idx = None
         for i, line in enumerate(lines):
-            if "kirocrew-deploy-app-boundary" in line and boundary_idx is None:
+            if "ajcrew-deploy-app-boundary" in line and boundary_idx is None:
                 boundary_idx = i
             if "cloudformation deploy" in line and first_deploy_idx is None:
                 first_deploy_idx = i

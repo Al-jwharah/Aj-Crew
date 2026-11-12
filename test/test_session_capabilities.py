@@ -19,9 +19,9 @@ from chat_test_helpers import (
 )
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew import agent, agent_discovery, agent_state
-from kiro_crew.acp.mcp_session_report import McpSessionReport
-from kiro_crew.acp.types import (
+from aj_crew import agent, agent_discovery, agent_state
+from aj_crew.acp.mcp_session_report import McpSessionReport
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_DEEPSEEK,
@@ -33,37 +33,37 @@ from kiro_crew.acp.types import (
     EVENT_MCP_SERVER_INIT_FAILURE,
     EVENT_MCP_SERVER_INITIALIZED,
 )
-from kiro_crew.agent_capabilities import CapabilityService, prepare_member_capabilities
-from kiro_crew.config import loader as config_loader
-from kiro_crew.config.loader import (
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+from aj_crew.agent_capabilities import CapabilityService, prepare_member_capabilities
+from aj_crew.config import loader as config_loader
+from aj_crew.config.loader import (
+    AjCrewAgentConfig,
+    AjCrewConfig,
     WorkspaceConfig,
     refresh_materialized_agents,
 )
-from kiro_crew.context import ContextBuilder
-from kiro_crew.dashboard import chat_handlers, chat_runner
-from kiro_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
-from kiro_crew.dashboard.handlers.agent_capabilities import _SERVICE
-from kiro_crew.dashboard.routes.agents import register
-from kiro_crew.history import ConversationLog
-from kiro_crew.member_memory_auth import (
+from aj_crew.context import ContextBuilder
+from aj_crew.dashboard import chat_handlers, chat_runner
+from aj_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
+from aj_crew.dashboard.handlers.agent_capabilities import _SERVICE
+from aj_crew.dashboard.routes.agents import register
+from aj_crew.history import ConversationLog
+from aj_crew.member_memory_auth import (
     bind_private_session_store,
     read_private_session_store,
 )
-from kiro_crew.memory import MemoryStore
-from kiro_crew.memory_stores import provision_member_memory
-from kiro_crew.providers.base import (
+from aj_crew.memory import MemoryStore
+from aj_crew.memory_stores import provision_member_memory
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     LLMEvent,
     LLMProvider,
 )
-from kiro_crew.session import SessionManager
-from kiro_crew.session_agent_selection import session_agent_selection_kind
-from kiro_crew.session_capabilities import CapabilityStartupError, runtime_view
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.wait import await_until
+from aj_crew.session import SessionManager
+from aj_crew.session_agent_selection import session_agent_selection_kind
+from aj_crew.session_capabilities import CapabilityStartupError, runtime_view
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.wait import await_until
 
 
 class FakeProvider(LLMProvider):
@@ -177,16 +177,16 @@ def world(tmp_path, monkeypatch):
     home, specs, project = tmp_path / "home", tmp_path / "agents", tmp_path / "project"
     for path in (home, specs, project):
         path.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setenv("KIRO_HOME", str(tmp_path / "kiro"))
     monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", specs)
     monkeypatch.setattr(agent_state, "_state_path", lambda: home / "agent_model_state.json")
     pass  # Member routing does not depend on OS isolation.
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.workspaces[cfg.default_workspace] = WorkspaceConfig(dir=str(project))
     stores = {}
     for name in ("A", "B"):
-        cfg.agents[name] = KiroCrewAgentConfig(kiro_agent="parent")
+        cfg.agents[name] = AjCrewAgentConfig(kiro_agent="parent")
         stores[name] = provision_member_memory(cfg, name)
     cfg.session.pool_size = 1
     cfg.save()
@@ -206,7 +206,7 @@ def world(tmp_path, monkeypatch):
         made.append(provider)
         return provider
 
-    return service, KiroCrewConfig.load(), factory, made, project, stores, log
+    return service, AjCrewConfig.load(), factory, made, project, stores, log
 
 
 @pytest.fixture
@@ -228,7 +228,7 @@ def dashboard_capability_world(world, tmp_path, monkeypatch):
     cfg.session.eager_spawn = True
     cfg.save()
     save(service, enroll=True)
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     prepared = prepare_member_capabilities("A", str(project))
     template = "separate-template"
     specs = tmp_path / "agents"
@@ -240,7 +240,7 @@ def dashboard_capability_world(world, tmp_path, monkeypatch):
     )
     # Discovery reads the same real temporary specs as the capability service.
     monkeypatch.setattr(agent_discovery, "_KIRO_AGENTS_DIR", specs)
-    monkeypatch.setattr("kiro_crew.config.loader.kiro_agents_dir", lambda: specs)
+    monkeypatch.setattr("aj_crew.config.loader.kiro_agents_dir", lambda: specs)
     refresh_materialized_agents()
     monkeypatch.setattr(chat_handlers, "schedule_eager_spawn", lambda *a, **kw: None)
     monkeypatch.setattr(chat_runner, "title_then_refresh", AsyncMock())
@@ -693,7 +693,7 @@ async def test_private_task_uses_dedicated_provider_and_same_store(world):
 
 @pytest.mark.asyncio
 async def test_governance_change_during_startup_is_not_applied(world):
-    from kiro_crew.platform.context import _install, current_context
+    from aj_crew.platform.context import _install, current_context
 
     service, cfg, factory, _, project, _, _ = world
     await asyncio.to_thread(save, service, enroll=True)
@@ -718,7 +718,7 @@ async def test_governance_change_during_startup_is_not_applied(world):
 
 @pytest.mark.parametrize("backend", sorted(ACP_BACKENDS_KNOWN))
 def test_real_provider_support_is_explicit_and_unstarted_is_unverified(tmp_path, backend):
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     provider = AcpProvider(work_dir=tmp_path, acp_backend=backend)
     assert provider.member_capabilities_supported is (backend in ACP_BACKENDS_MEMBER_CAPABILITIES)
@@ -727,9 +727,9 @@ def test_real_provider_support_is_explicit_and_unstarted_is_unverified(tmp_path,
 
 @pytest.mark.parametrize("backend", sorted(ACP_BACKENDS_KNOWN) + ["byo-harness"])
 def test_real_session_provider_member_support_is_explicit(tmp_path, backend):
-    from kiro_crew.acp.runtime import AcpRuntime
-    from kiro_crew.acp.session_handle import AcpSessionHandle, WatchdogSettings
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.session_handle import AcpSessionHandle, WatchdogSettings
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     runtime = AcpRuntime(work_dir=tmp_path, acp_backend=backend)
     handle = AcpSessionHandle("member", asyncio.Queue(), runtime, watchdog=WatchdogSettings())
@@ -746,9 +746,9 @@ async def test_real_acp_mode_ack_is_required_for_loaded_template(
 ):
     from unittest.mock import AsyncMock, MagicMock, Mock
 
-    from kiro_crew.acp.runtime import AcpRuntime, AcpRuntimeError
-    from kiro_crew.acp.session_handle import AcpSessionHandle
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.runtime import AcpRuntime, AcpRuntimeError
+    from aj_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     handles = []
 
@@ -757,7 +757,7 @@ async def test_real_acp_mode_ack_is_required_for_loaded_template(
         handles.append(handle)
         return handle
 
-    monkeypatch.setattr("kiro_crew.acp.runtime.AcpSessionHandle", capture_handle)
+    monkeypatch.setattr("aj_crew.acp.runtime.AcpSessionHandle", capture_handle)
     pre = Mock(wraps=agent.require_fresh_derived_spec)
     post = Mock(wraps=agent.require_unchanged_derived_spec)
     if fault == "pre":
@@ -858,7 +858,7 @@ async def test_warm_process_is_not_claimed_for_enrolled_member(world):
 
 @pytest.mark.asyncio
 async def test_saved_bytes_changed_during_start_never_get_a_stamp(world):
-    from kiro_crew.agent_capabilities import CapabilityError
+    from aj_crew.agent_capabilities import CapabilityError
 
     service, cfg, factory, made, project, _, _ = world
     await asyncio.to_thread(save, service, enroll=True)
@@ -1008,7 +1008,7 @@ async def test_http_reports_observed_runtime_without_applying_preview(world):
 @pytest.mark.parametrize("honoured", [True, False], ids=["kiro_like", "kas_like"])
 async def test_saved_per_tool_switch_off_is_refused_before_spawn_where_dropped(world, honoured):
     """A saved ``disabledTools`` never runs wider: refused pre-spawn where unsupported."""
-    from kiro_crew.dashboard.chat_runner import _is_pre_spawn_refusal
+    from aj_crew.dashboard.chat_runner import _is_pre_spawn_refusal
 
     service, cfg, factory, made, project, _, _ = world
 
@@ -1115,7 +1115,7 @@ async def test_cold_start_never_publishes_malformed_persisted_transport(world, f
         parent["mcpServers"] = {"search": {"command": "search", "args": []}}
         parent_path.write_text(json.dumps(parent))
         save(service, enroll=True)
-        current = KiroCrewConfig.load().agents["A"].kiro_agent
+        current = AjCrewConfig.load().agents["A"].kiro_agent
         path = agent_state._state_path()
         state = json.loads(path.read_text())
         broken = {"command": []}
@@ -1153,7 +1153,7 @@ async def test_cold_start_never_publishes_malformed_persisted_transport(world, f
 
 
 def test_capability_runtime_facade_projects_owned_state_without_exporting_it():
-    from kiro_crew.session_allocation import SessionRegistryState
+    from aj_crew.session_allocation import SessionRegistryState
 
     state = SessionRegistryState()
     attempt = {
@@ -1193,9 +1193,9 @@ def test_capability_runtime_facade_projects_owned_state_without_exporting_it():
 async def test_claude_saved_projection_requires_consumed_matching_spec(
     world, monkeypatch, resume, fault
 ):
-    from kiro_crew.acp.client import AcpError
-    from kiro_crew.providers.acp import AcpProvider
-    from kiro_crew.session_capabilities import (
+    from aj_crew.acp.client import AcpError
+    from aj_crew.providers.acp import AcpProvider
+    from aj_crew.session_capabilities import (
         loaded_stamp,
         prepare_runtime,
         verify_saved,
@@ -1290,7 +1290,7 @@ def _codex_session_provider(template: str, consumed_spec, *, alive: bool = True)
     defaults, the way a fresh ``AcpSessionHandle`` does before the mirrored arm
     confirms anything.
     """
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     runtime = MagicMock()
     runtime.acp_backend = ACP_BACKEND_CODEX
@@ -1306,7 +1306,7 @@ def _codex_session_provider(template: str, consumed_spec, *, alive: bool = True)
 
 def _codex_runtime():
     """An AcpRuntime shaped like a member's codex runtime, without spawning it."""
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
     runtime = AcpRuntime.__new__(AcpRuntime)
     runtime._member_context = True
@@ -1330,7 +1330,7 @@ async def test_codex_member_confirms_on_the_shared_runtime(monkeypatch):
     consumed spec on the mirrored arm, and records the saved template and its
     projection gaps on the session handle; before confirmation the handle reports
     none, so loaded_stamp() refuses."""
-    from kiro_crew.agent_capabilities import _digest
+    from aj_crew.agent_capabilities import _digest
 
     spec = {"name": "saved-member", "tools": ["*"], "hooks": {"x": 1}}
     monkeypatch.setattr(agent_state, "get_capabilities", lambda _: {"materialized": _digest(spec)})
@@ -1346,7 +1346,7 @@ def test_codex_provider_reports_the_handle_confirmation(monkeypatch):
     confirmed, so the confirmation belongs to the session it checked: a warm
     worker's fresh conversation, built from a spec edited in between, does not
     inherit the old session's result."""
-    from kiro_crew.agent_capabilities import _digest
+    from aj_crew.agent_capabilities import _digest
 
     spec = {"name": "saved-member", "tools": ["*"], "hooks": {"x": 1}}
     monkeypatch.setattr(agent_state, "get_capabilities", lambda _: {"materialized": _digest(spec)})
@@ -1362,9 +1362,9 @@ def test_kiro_member_start_takes_no_projection_step():
     """Member confirmation belongs behind the existing adapter-only routing gate (H13)."""
     import inspect
 
-    from kiro_crew.acp.runtime import AcpRuntime
-    from kiro_crew.acp.session_handle import AcpSessionHandle
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.providers.acp import AcpProvider
 
     for method in (
         AcpProvider._start_kiro_runtime_impl,
@@ -1394,8 +1394,8 @@ def test_the_kiro_construction_path_carries_no_member_confirmation():
     import inspect
     import textwrap
 
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.providers.acp import AcpProvider
 
     init = inspect.getsource(AcpClient._initialize_session)
     assert "_check_consumed_session_spec" not in init
@@ -1485,7 +1485,7 @@ async def test_the_member_confirmation_covers_only_a_live_member_session(
     member (which loads its spec natively, with no array to confirm) and a session
     that was never created all reach no confirmation. Claude and deepseek are the
     projecting harnesses this client drives, so they do."""
-    from kiro_crew.acp.client import AcpClient
+    from aj_crew.acp.client import AcpClient
 
     client = AcpClient(work_dir=tmp_path, acp_backend=backend)
     client.member_context = member
@@ -1512,7 +1512,7 @@ async def test_the_provider_confirms_from_its_client_arm_only(
     client arm of ``AcpProvider.start`` -- AFTER the session exists, so the caller's
     post-start ``loaded_stamp`` read sees it -- and the runtime arm (kiro, KAS, codex)
     never reaches the call at all."""
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     provider = AcpProvider(
         work_dir=tmp_path, agent="saved-member", acp_backend=backend, member_context=True
@@ -1537,7 +1537,7 @@ async def test_a_confirmed_session_is_not_judged_again(tmp_path):
     """A start that re-enters on the same live session must not re-judge it: the saved
     intent can move after the session was created, and that cannot retroactively
     unmake what the host already consumed."""
-    from kiro_crew.acp.client import AcpClient
+    from aj_crew.acp.client import AcpClient
 
     client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE)
     client.member_context = True
@@ -1563,8 +1563,8 @@ async def test_a_confirmed_session_is_not_judged_again(tmp_path):
 async def test_member_confirmation_uses_adapter_routing_seam(
     monkeypatch, backend, mirror_used, member_context
 ):
-    from kiro_crew import acp_tool_gate, agent_capabilities_consumed
-    from kiro_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew import acp_tool_gate, agent_capabilities_consumed
+    from aj_crew.acp.session_handle import AcpSessionHandle
 
     runtime = _codex_runtime()
     runtime._acp_backend = backend
@@ -1600,9 +1600,9 @@ async def test_non_derived_member_is_confirmed_and_starts(world):
     template. The confirmation follows the ARRAY's origin, so this member is
     confirmed and its start stamps cleanly; gating it on the derived snapshot left
     ``confirmed_projection_template`` empty and ``loaded_stamp`` refused the start."""
-    from kiro_crew.agent import require_fresh_derived_spec
-    from kiro_crew.providers.mirrors.registry import mirror_for
-    from kiro_crew.session_capabilities import loaded_stamp, prepare_runtime
+    from aj_crew.agent import require_fresh_derived_spec
+    from aj_crew.providers.mirrors.registry import mirror_for
+    from aj_crew.session_capabilities import loaded_stamp, prepare_runtime
 
     service, _, _, _, project, _, _ = world
     await asyncio.to_thread(save, service, enroll=True)
@@ -1640,8 +1640,8 @@ async def test_codex_member_refused_when_consumed_spec_differs(monkeypatch, cons
     """No consumed spec (array not built from a mirror) or a different one (the file
     changed after the intent was saved) both refuse: the session never reports the
     saved template, so the member cannot be claimed as running on codex."""
-    from kiro_crew.acp.client import AcpError
-    from kiro_crew.agent_capabilities import _digest
+    from aj_crew.acp.client import AcpError
+    from aj_crew.agent_capabilities import _digest
 
     saved = {"name": "saved-member", "tools": ["*"]}
     monkeypatch.setattr(agent_state, "get_capabilities", lambda _: {"materialized": _digest(saved)})
@@ -1655,7 +1655,7 @@ async def test_codex_member_refused_when_consumed_spec_differs(monkeypatch, cons
 
 
 def test_codex_member_template_not_reported_from_dead_runtime(monkeypatch):
-    from kiro_crew.agent_capabilities import _digest
+    from aj_crew.agent_capabilities import _digest
 
     spec = {"name": "saved-member", "tools": ["*"]}
     monkeypatch.setattr(agent_state, "get_capabilities", lambda _: {"materialized": _digest(spec)})
@@ -1668,9 +1668,9 @@ def test_deepseek_member_confirms_on_the_spec_its_array_was_built_from(tmp_path,
     """deepseek confirms on the AcpClient path like claude. The mirror must hand back
     the spec it parsed: a projection that drops it leaves nothing to confirm, and every
     deepseek member session would be refused."""
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.agent_capabilities import _digest
-    from kiro_crew.providers.mirrors.registry import mirror_for
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.agent_capabilities import _digest
+    from aj_crew.providers.mirrors.registry import mirror_for
 
     agents = tmp_path / "agents"
     agents.mkdir()
@@ -1696,7 +1696,7 @@ def test_deepseek_member_confirms_on_the_spec_its_array_was_built_from(tmp_path,
 def test_deepseek_member_spec_reaches_its_session_array():
     """deepseek confirms on the AcpClient path like claude, which needs a mirror that
     carries the spec it parsed; without one there is nothing to confirm."""
-    from kiro_crew.providers.mirrors.registry import has_mirror
+    from aj_crew.providers.mirrors.registry import has_mirror
 
     assert has_mirror(ACP_BACKEND_DEEPSEEK)
     assert ACP_BACKEND_DEEPSEEK in ACP_BACKENDS_MEMBER_CAPABILITIES
@@ -1726,8 +1726,8 @@ async def test_projection_gaps_keep_saved_runtime_unverified(world, monkeypatch)
     "field", [None, "hooks", "toolsSettings", "excludedTools", "allowedTools", "per_tool_mounts"]
 )
 def test_claude_projection_gaps_are_explicit(tmp_path, monkeypatch, field):
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.agent_capabilities import _digest
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.agent_capabilities import _digest
 
     spec = {"name": "saved-member", "tools": ["*"]}
     if field == "per_tool_mounts":
@@ -1746,7 +1746,7 @@ def test_claude_projection_gaps_are_explicit(tmp_path, monkeypatch, field):
 
 @pytest.mark.asyncio
 async def test_saved_claude_member_uses_existing_essentials_path(world, monkeypatch):
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew.member_essential_context import documents_for_member
 
     service, _, _, _, project, _, _ = world
     # A file:// resource must sit under the home directory; keep the project
@@ -1777,7 +1777,7 @@ async def test_saved_claude_member_uses_existing_essentials_path(world, monkeypa
 
 
 def test_nonmember_claude_does_not_read_member_capability_state(tmp_path, monkeypatch):
-    from kiro_crew.acp.client import AcpClient
+    from aj_crew.acp.client import AcpClient
 
     read = MagicMock(side_effect=ValueError("unreadable member state"))
     monkeypatch.setattr(agent_state, "get_capabilities", read)
@@ -1801,7 +1801,7 @@ def test_the_member_saved_agent_line_follows_the_confirming_backends(backend, av
     """The card line a user reads to learn whether an enrolled member runs with its
     saved spec is on for every backend that loads or confirms that spec at spawn. It is
     a detail line, so it is read from the card's details rather than its core lines."""
-    from kiro_crew.agent_sdk.backend_cards import LINE_MEMBER_SAVED_AGENT, card_for
+    from aj_crew.agent_sdk.backend_cards import LINE_MEMBER_SAVED_AGENT, card_for
 
     card = card_for(backend)
     lines = {line.id: line for line in (*card.capabilities, *card.details)}

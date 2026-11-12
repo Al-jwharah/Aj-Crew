@@ -1,4 +1,4 @@
-"""Tests for the credit-usage helpers in kiro_crew.dashboard.handlers.sessions.
+"""Tests for the credit-usage helpers in aj_crew.dashboard.handlers.sessions.
 
 Covers the parsers, the failure cache, redaction, the scrape path, the refresh deadline,
 the API path and the identity coupling rule. The account proof, scrape scheduling and
@@ -24,20 +24,20 @@ from session_usage_helpers import (
     _reset_usage_globals,
 )
 
-import kiro_crew.dashboard.handlers.sessions as sessions_mod
-from kiro_crew.dashboard.handlers.sessions import (
+import aj_crew.dashboard.handlers.sessions as sessions_mod
+from aj_crew.dashboard.handlers.sessions import (
     _normalize_text_usage,
     _parse_usage,
     _redact_strings,
     _text_scrape_regresses_api_value,
 )
-from kiro_crew.testing.wait import finished
+from aj_crew.testing.wait import finished
 
 SAMPLE_USAGE_WITH_BONUS = (
     "Estimated Usage | resets on 2026-08-01 | KIRO PRO+\n"
     "Bonus Credits:\n"
     "   Welcome bonus - 500.00/500 used (13 days left)\n"
-    "   Amb-Kiro-crew-test - 185.84/2000 used (153 days left)\n"
+    "   Amb-Aj-crew-test - 185.84/2000 used (153 days left)\n"
     "Credits (635.58 of 2000 covered in plan)\n"
     "Overages: Disabled\n"
 )
@@ -98,7 +98,7 @@ class TestParseUsage:
         assert _parse_usage(SAMPLE_USAGE_WITH_BONUS)["bonus_credits"] == [
             {"name": "Welcome bonus", "used": 500.0, "total": 500.0, "days_left": 13},
             {
-                "name": "Amb-Kiro-crew-test",
+                "name": "Amb-Aj-crew-test",
                 "used": 185.84,
                 "total": 2000.0,
                 "days_left": 153,
@@ -190,7 +190,7 @@ class TestFetchUsageBg:
         # raises before the subprocess is spawned, making proc=None and skipping
         # the reap path that several tests assert on.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.sessions.wrap_argv",
+            "aj_crew.dashboard.handlers.sessions.wrap_argv",
             lambda argv, **k: (list(argv), None),
         )
         # A proven, unchanging account: the scrape branch publishes only when the
@@ -237,7 +237,7 @@ class TestFetchUsageBg:
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "FAKE-secret")
         monkeypatch.setenv("PYTHONHOME", "/gateway/pythonhome")
         monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "0000:FAKE")
-        monkeypatch.setenv("KIROCREW_UNRELATED_KEEPME", "keep-this-value")
+        monkeypatch.setenv("AJCREW_UNRELATED_KEEPME", "keep-this-value")
         with (
             patch.object(sessions_mod, "_resolve_kiro_bin_for_spawn", return_value=resolved),
             patch("asyncio.create_subprocess_exec", spawn),
@@ -256,7 +256,7 @@ class TestFetchUsageBg:
         assert "AWS_SECRET_ACCESS_KEY" not in env
         assert "PYTHONHOME" not in env
         assert "TELEGRAM_BOT_TOKEN" not in env
-        assert env["KIROCREW_UNRELATED_KEEPME"] == "keep-this-value"
+        assert env["AJCREW_UNRELATED_KEEPME"] == "keep-this-value"
 
     @pytest.mark.asyncio
     async def test_unparseable_usage_caches_unavailable(self):
@@ -536,7 +536,7 @@ class TestFetchUsageDeadline:
     def _reset(self, monkeypatch):
         _reset_usage_globals()
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.sessions.wrap_argv",
+            "aj_crew.dashboard.handlers.sessions.wrap_argv",
             lambda argv, **k: (list(argv), None),
         )
         yield
@@ -784,7 +784,7 @@ class TestFetchUsageBgApi:
     def _reset(self, monkeypatch):
         _reset_usage_globals()
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.sessions.wrap_argv",
+            "aj_crew.dashboard.handlers.sessions.wrap_argv",
             lambda argv, **k: (list(argv), None),
         )
         yield
@@ -890,7 +890,7 @@ class TestApiKeyAuthUsesScrape:
     def _reset(self, monkeypatch):
         _reset_usage_globals()
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.sessions.wrap_argv",
+            "aj_crew.dashboard.handlers.sessions.wrap_argv",
             lambda argv, **k: (list(argv), None),
         )
         yield
@@ -1124,7 +1124,7 @@ class TestFetchWhoami:
         monkeypatch.setenv("SSH_AUTH_SOCK", "/tmp/fake-agent.sock")
         monkeypatch.setenv("PYTHONPYCACHEPREFIX", "/gateway/pycache")
         monkeypatch.setenv("WECOM_SECRET", "FAKE-wecom-secret")
-        monkeypatch.setenv("KIROCREW_UNRELATED_KEEPME", "keep-this-value")
+        monkeypatch.setenv("AJCREW_UNRELATED_KEEPME", "keep-this-value")
         proc = MagicMock()
         proc.communicate = AsyncMock(return_value=(b'{"email":"me@corp.com"}', b""))
         proc.returncode = 0
@@ -1145,7 +1145,7 @@ class TestFetchWhoami:
             "WECOM_SECRET",
         ):
             assert key not in env
-        assert env["KIROCREW_UNRELATED_KEEPME"] == "keep-this-value"
+        assert env["AJCREW_UNRELATED_KEEPME"] == "keep-this-value"
 
 
 class TestIdentityAccountCoupling:

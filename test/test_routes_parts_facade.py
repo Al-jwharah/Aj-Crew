@@ -1,7 +1,7 @@
 """The AWS Control routes facade keeps the patch seams the one module had.
 
-``kiro_crew.apps.builtins.aws_control.backend.routes`` is a mirror facade
-(:mod:`kiro_crew._facade_mirror`) over the ``routes_parts`` owners. Callers, tests and the
+``aj_crew.apps.builtins.aws_control.backend.routes`` is a mirror facade
+(:mod:`aj_crew._facade_mirror`) over the ``routes_parts`` owners. Callers, tests and the
 app manifest still reach every name as ``...backend.routes.<name>``, and the moved
 handlers read their names as plain module globals, so a patch through the facade
 reaches them only because the mirror writes it into every module holding the name.
@@ -27,8 +27,8 @@ import pytest
 import source_corpus
 from facade_mirror_scan import names_by_target, needs_syntax_tree, patch_events, text_patched_names
 
-from kiro_crew import _facade_mirror
-from kiro_crew.apps.builtins.aws_control.backend import routes
+from aj_crew import _facade_mirror
+from aj_crew.apps.builtins.aws_control.backend import routes
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_routes_parts_facade")
 
@@ -36,8 +36,8 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_routes_parts_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.apps.builtins.aws_control.backend.routes"
-PACKAGE = "kiro_crew.apps.builtins.aws_control.backend.routes_parts"
+FACADE = "aj_crew.apps.builtins.aws_control.backend.routes"
+PACKAGE = "aj_crew.apps.builtins.aws_control.backend.routes_parts"
 PACKAGE_DIR = Path(routes.__file__).resolve().parent / "routes_parts"
 
 #: Names the test trees are known to patch through the facade, from every kind of seam
@@ -202,7 +202,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for path in _owner_paths().values():
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     found.setdefault(alias.asname or alias.name, (node.module, alias.name))

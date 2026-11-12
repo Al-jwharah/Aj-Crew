@@ -1,7 +1,7 @@
 """Contracts the agent-materialization split must carry across unchanged.
 
-``kiro_crew.agent`` is the import path everyone uses; the code lives under
-``kiro_crew.agent_materialization``. Pinned: the module surface, the
+``aj_crew.agent`` is the import path everyone uses; the code lives under
+``aj_crew.agent_materialization``. Pinned: the module surface, the
 ``toolsSettings.subagent.availableAgents`` allowlist (read by
 ``subagent_parts/agent_policy.py``) byte-for-byte on every path, the guest spec, and the
 conductor prompts and grants. ``test_agent_refactor_spec_bytes.py`` freezes whole output.
@@ -22,23 +22,23 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import agent, agent_state, platform_compat
-from kiro_crew.agent_files import GUEST_AGENT_FILENAME, LITE_AGENT_FILENAME
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew import agent, agent_state, platform_compat
+from aj_crew.agent_files import GUEST_AGENT_FILENAME, LITE_AGENT_FILENAME
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 # ── the surface ─────────────────────────────────────────────────────────────
 
-#: Every name ``kiro_crew.agent`` bound before the split, described the way
+#: Every name ``aj_crew.agent`` bound before the split, described the way
 #: :func:`_describe` describes it now. A value is compared by the digest of its JSON
 #: rendering; a name whose value depends on the host (a home-derived path, the logger)
 #: is compared by type only, and process state the module keeps across calls (a
 #: warned-once set, a pending count) by name only, because earlier tests set it.
 BASE_SURFACE: dict[str, str] = {
-    "AGENT_FILENAME": "value str a05e57cdc5411e1d",
+    "AGENT_FILENAME": "value str 040d7fdb757babae",
     "AmbiguousAgentSpecError": "class AmbiguousAgentSpecError",
-    "CU_MCP_SERVER": "value str a7edc1bcf90cb13f",
-    "DEPRECATED_AGENT_SPECS": "value dict 3c349bf8ac509967",
-    "DERIVED_KEY": "value str 0c56dd87b525dbd3",
+    "CU_MCP_SERVER": "value str b36a38140ed2c6a5",
+    "DEPRECATED_AGENT_SPECS": "value dict 5c0cf995d596051e",
+    "DERIVED_KEY": "value str 5a1e0712bc42d9b1",
     "DerivedSpecSnapshot": "class DerivedSpecSnapshot fields=identity,fingerprint,spec,agent",
     "DerivedSpecStale": "class DerivedSpecStale",
     "FileTooLargeError": "class FileTooLargeError",
@@ -47,25 +47,25 @@ BASE_SURFACE: dict[str, str] = {
     "GUEST_AGENT_PROMPT": "value str 9f07b9e7c179fff5",
     "KIRO_AGENTS_DIR": "value host",
     "MCP_PATH_HINT": "value str 2c0b855124e13185",
-    "OWNED_KIRO_AGENT_FILES": "value tuple dd392f80c6781ad5",
+    "OWNED_KIRO_AGENT_FILES": "value tuple 1839836eb452df93",
     "Path": "class Path",
-    "REQUIRED_KIRO_AGENT_FILES": "value tuple d3a5d201c05d5c9b",
+    "REQUIRED_KIRO_AGENT_FILES": "value tuple a0230b0fc83cc68f",
     "SecurityEvent": "class SecurityEvent",
     "_BACKGROUND_CC_MODEL": "value str e5710d6b1810296f",
     "_BUNDLED_CFG_DIR": "value host",
     "_CC_MCP_JSON": "value host",
-    "_CONDUCTOR_AGENT_FILENAME": "value str 923f5ca0627d569f",
-    "_CONDUCTOR_CORE_GRANTS": "value tuple 7152a6eb169c7c40",
-    "_CONDUCTOR_DASHBOARD_GRANTS": "value tuple 41cf09029e05ee1b",
-    "_CONDUCTOR_SYSTEM_PROMPT": "value str d714a0daf1b1d044",
+    "_CONDUCTOR_AGENT_FILENAME": "value str c80a94eafed908b7",
+    "_CONDUCTOR_CORE_GRANTS": "value tuple 3ce0fc6679a0521b",
+    "_CONDUCTOR_DASHBOARD_GRANTS": "value tuple 025f2d5b6c7469ae",
+    "_CONDUCTOR_SYSTEM_PROMPT": "value str 501996ed12a3dc56",
     "_CREW_ONLY_HOOK_EVENTS": "value frozenset 9d900cfb866f983a",
     "_DEFAULT_KIRO_HOOKS_DIR": "value host",
     "_DEFAULT_SPEC_OBSERVATION_ATTEMPTS": "value int 4e07408562bedb8b",
     "_FILENAME_EVENT_SUFFIXES": "value tuple acdc79623b2f3e65",
     "_FORK_REFRESH_WAIT_SECS": "value float db58b6c40698d737",
-    "_GUEST_AGENT_FILENAME": "value str b1766e070226dc68",
-    "_HEARTBEAT_AGENT_FILENAME": "value str 42387f9e3eabbf0e",
-    "_HEARTBEAT_SYSTEM_PROMPT": "value str 63259f9ea08bdf5e",
+    "_GUEST_AGENT_FILENAME": "value str c04f4bfc435ab076",
+    "_HEARTBEAT_AGENT_FILENAME": "value str 0c1e1c9814a7debe",
+    "_HEARTBEAT_SYSTEM_PROMPT": "value str ad4a73262ded0616",
     "_HOME_DERIVING_ENV_KEYS": "value frozenset 816c277fc333b3e0",
     "_HOOK_EVENT_CANONICAL": "value dict a09f334fa63b1a4f",
     "_HOOK_HEADER_RE": "value Pattern 905320879920c153",
@@ -79,20 +79,20 @@ BASE_SURFACE: dict[str, str] = {
     "_KAS_DOCUMENT_FIELD_TYPES": "value tuple 87ad0f01d8e8353c",
     "_KAS_TRIGGER_CANONICAL": "value dict cc814336d72dc4c9",
     "_KAS_TRIGGER_TO_EVENT": "value dict 16182f505da03cae",
-    "_KIROCREW_BIN": "value host",
+    "_AJCREW_BIN": "value host",
     "_KIRO_MCP_JSON": "value host",
-    "_KNOWLEDGE_AGENT_FILENAME": "value str 85e4346dff762496",
-    "_KNOWLEDGE_SYSTEM_PROMPT": "value str 23af593eebd8222f",
+    "_KNOWLEDGE_AGENT_FILENAME": "value str ba6e507f2b9f919e",
+    "_KNOWLEDGE_SYSTEM_PROMPT": "value str 7437d8a23718ca03",
     "_LAUNCHER_EXEC_ENV_KEYS": "value frozenset 8c69b5e74a77bb5d",
-    "_LEDGER_CONDUCTOR_AGENT_FILENAME": "value str a87e496fff7c15e0",
-    "_LEDGER_CONDUCTOR_WORK_GRANTS": "value tuple f34c6f243c0fc463",
-    "_LEGACY_KIROCREW_HOOK_KEYS": "value frozenset 41cb57ce40df86b2",
-    "_LITE_AGENT_FILENAME": "value str 55e6029e6c753857",
-    "_MAIN_AGENT_NAME": "value str 153b868d134ec50e",
+    "_LEDGER_CONDUCTOR_AGENT_FILENAME": "value str 920608dce83625e7",
+    "_LEDGER_CONDUCTOR_WORK_GRANTS": "value tuple cbe796e21d61baf7",
+    "_LEGACY_AJCREW_HOOK_KEYS": "value frozenset 41cb57ce40df86b2",
+    "_LITE_AGENT_FILENAME": "value str adc06a7b82cc6eb4",
+    "_MAIN_AGENT_NAME": "value str a9d3ed34cddc6844",
     "_MANAGED_MCP_ENTRY_ITEM_TYPES": "value dict b743f9c4b68215c4",
     "_MANAGED_MCP_ENTRY_KEYS": "value frozenset 5b8554ac36b42722",
     "_MANAGED_MCP_ENTRY_VALUE_TYPES": "value dict adfab10cc996c8fe",
-    "_MANAGED_MCP_SERVERS": 'value dict {"gates": {"kirocrew-computer": "_computer_use_spec_gate", "kirocrew-core": null, "kirocrew-crew-log": null, "kirocrew-cron": null, "kirocrew-dashboard": null, "kirocrew-debug": null, "kirocrew-guide": null, "kirocrew-mate": null, "kirocrew-panel": null, "kirocrew-secrets": null, "kirocrew-work": null}, "opt_in": {"kirocrew-computer": false, "kirocrew-core": false, "kirocrew-crew-log": true, "kirocrew-cron": false, "kirocrew-dashboard": true, "kirocrew-debug": true, "kirocrew-guide": false, "kirocrew-mate": false, "kirocrew-panel": true, "kirocrew-secrets": true, "kirocrew-work": true}, "shape": {"kirocrew-computer": ["invocation_fn", "spec_gate"], "kirocrew-core": ["invocation_fn"], "kirocrew-crew-log": ["invocation_fn", "opt_in"], "kirocrew-cron": ["invocation_fn"], "kirocrew-dashboard": ["invocation_fn", "opt_in"], "kirocrew-debug": ["invocation_fn", "opt_in"], "kirocrew-guide": ["invocation_fn"], "kirocrew-mate": ["invocation_fn"], "kirocrew-panel": ["invocation_fn", "opt_in"], "kirocrew-secrets": ["invocation_fn", "opt_in"], "kirocrew-work": ["invocation_fn", "opt_in"]}}',
+    "_MANAGED_MCP_SERVERS": 'value dict {"gates": {"ajcrew-computer": "_computer_use_spec_gate", "ajcrew-core": null, "ajcrew-crew-log": null, "ajcrew-cron": null, "ajcrew-dashboard": null, "ajcrew-debug": null, "ajcrew-guide": null, "ajcrew-mate": null, "ajcrew-panel": null, "ajcrew-secrets": null, "ajcrew-work": null}, "opt_in": {"ajcrew-computer": false, "ajcrew-core": false, "ajcrew-crew-log": true, "ajcrew-cron": false, "ajcrew-dashboard": true, "ajcrew-debug": true, "ajcrew-guide": false, "ajcrew-mate": false, "ajcrew-panel": true, "ajcrew-secrets": true, "ajcrew-work": true}, "shape": {"ajcrew-computer": ["invocation_fn", "spec_gate"], "ajcrew-core": ["invocation_fn"], "ajcrew-crew-log": ["invocation_fn", "opt_in"], "ajcrew-cron": ["invocation_fn"], "ajcrew-dashboard": ["invocation_fn", "opt_in"], "ajcrew-debug": ["invocation_fn", "opt_in"], "ajcrew-guide": ["invocation_fn"], "ajcrew-mate": ["invocation_fn"], "ajcrew-panel": ["invocation_fn", "opt_in"], "ajcrew-secrets": ["invocation_fn", "opt_in"], "ajcrew-work": ["invocation_fn", "opt_in"]}}',
     "_MAX_HOOK_DESCRIPTION_LEN": "value int 40510175845988f1",
     "_MAX_HOOK_NAME_LEN": "value int 27badc983df1780b",
     "_MAX_HOOK_PAYLOAD_LEN": "value int 8b926d75599a618e",
@@ -101,36 +101,36 @@ BASE_SURFACE: dict[str, str] = {
     "_MAX_TOTAL_USER_HOOKS": "value int f5ca38f748a1d6ea",
     "_MAX_USER_HOOKS_PER_EVENT": "value int 4a44dc15364204a8",
     "_MCP_REGISTRY_TYPE": "value str 06c63899e16a32c5",
-    "_MEMBER_DASHBOARD_GRANTS": "value tuple efcd95e405400991",
-    # Moved for ``@kirocrew-panel/dashboard_types``, the dynamic dashboard's data-type
+    "_MEMBER_DASHBOARD_GRANTS": "value tuple fbf9416cc8884ce8",
+    # Moved for ``@ajcrew-panel/dashboard_types``, the dynamic dashboard's data-type
     # catalog. The readable pin for this tuple is
     # ``test_the_member_grants_extend_the_conductor_grants_in_order``, which spells the
     # whole set out; this digest is the byte-level half and moves with it.
-    "_MEMBER_PANEL_GRANTS": "value tuple 5d490a048710e572",
-    "_NATIVE_PROMPT_STUB": "value str cf6d81ff1d0b3797",
-    "_PIPELINE_CONDUCTOR_AGENT_FILENAME": "value str 3b5e111de6d1d305",
-    "_PIPELINE_CONDUCTOR_CORE_GRANTS": "value tuple 1ad9ce711e266082",
-    "_PIPELINE_CONDUCTOR_DASHBOARD_GRANTS": "value tuple 41cf09029e05ee1b",
-    "_PIPELINE_CONDUCTOR_SYSTEM_PROMPT": "value str 9f0c6ca6e49331af",
+    "_MEMBER_PANEL_GRANTS": "value tuple 7e6915b69e8b2af2",
+    "_NATIVE_PROMPT_STUB": "value str 850b9c707ab2bcd7",
+    "_PIPELINE_CONDUCTOR_AGENT_FILENAME": "value str 2e5613898ce9a551",
+    "_PIPELINE_CONDUCTOR_CORE_GRANTS": "value tuple a94664ea40e57e1a",
+    "_PIPELINE_CONDUCTOR_DASHBOARD_GRANTS": "value tuple 025f2d5b6c7469ae",
+    "_PIPELINE_CONDUCTOR_SYSTEM_PROMPT": "value str fcb27b1d777a49b0",
     "_PROVENANCE_SPEC_CAP_BYTES": "value int 54faea9b3eeffce2",
     "_PROVENANCE_TOTAL_BUDGET_BYTES": "value int 107f41ed92e01eb5",
-    "_RESEARCH_AGENT_FILENAME": "value str 5cec351bc572af00",
-    "_RESEARCH_SYSTEM_PROMPT": "value str b99ba1f3e040be31",
+    "_RESEARCH_AGENT_FILENAME": "value str 97c1f954a637fa44",
+    "_RESEARCH_SYSTEM_PROMPT": "value str bfec5bc591de8b8c",
     "_SAFE_MATCHER_RE": "value Pattern ac8a0d6bfee13169",
     "_SAFE_PATH_RE": "value platform",
-    "_SECURITY_CONDUCTOR_AGENT_FILENAME": "value str ea0f45466289114a",
-    "_SECURITY_CONDUCTOR_DASHBOARD_GRANTS": "value tuple 41cf09029e05ee1b",
-    "_SECURITY_CONDUCTOR_SYSTEM_PROMPT": "value str 40ca7692611062ec",
-    "_TEAM_LEAD_AGENT_FILENAME": "value str ef870cb7d4ed6640",
-    "_TEAM_LEAD_SYSTEM_PROMPT": "value str a50f6cd36ae3cad0",
+    "_SECURITY_CONDUCTOR_AGENT_FILENAME": "value str 4db22b111618fecf",
+    "_SECURITY_CONDUCTOR_DASHBOARD_GRANTS": "value tuple 025f2d5b6c7469ae",
+    "_SECURITY_CONDUCTOR_SYSTEM_PROMPT": "value str 6656c4e9cdf5d70b",
+    "_TEAM_LEAD_AGENT_FILENAME": "value str b6003cc9e933fddc",
+    "_TEAM_LEAD_SYSTEM_PROMPT": "value str 634a4cb48553afa4",
     "_SOURCE_OWNED_MCP_KEYS": "value tuple b13c0a56645cc511",
     "_VALID_HOOK_EVENTS": "value frozenset 2b7aa96bff704c33",
-    "_WORKER_AGENT_FILENAME": "value str e6d5cee102d8cbdf",
-    "_WORKER_EXCLUDED_GRANTS": "value frozenset 1a2756dd420ed333",
+    "_WORKER_AGENT_FILENAME": "value str ccfd2274971cae92",
+    "_WORKER_EXCLUDED_GRANTS": "value frozenset 6a34f282eae20481",
     "_WORKER_MIRRORED_KEYS": "value tuple 27234a2a963813c9",
     "_WORKER_MIRRORED_SHAPES": "value dict 245618c04df2519f",
-    "_WORKER_SYSTEM_PROMPT": "value str d562e5012e77bb37",
-    "_WORKER_WORK_GRANTS": "value tuple 2617544a8ba41753",
+    "_WORKER_SYSTEM_PROMPT": "value str 02de0693c7111558",
+    "_WORKER_WORK_GRANTS": "value tuple 421ee85832639e09",
     "_agent_identity_enabled": "callable _agent_identity_enabled() -> 'bool'",
     "_agentcore_capability_permitted": "callable _agentcore_capability_permitted() -> 'bool'",
     "_aim_skill_paths": "callable _all_skill_paths() -> 'list[str]'",
@@ -209,8 +209,8 @@ BASE_SURFACE: dict[str, str] = {
     "_is_alias_family": "callable _is_alias_family(key: 'str', base: 'str') -> 'bool'",
     "_is_managed_prompt_pointer": "callable _is_managed_prompt_pointer(prompt: 'str') -> 'bool'",
     "_kiro_hooks_only": "callable _kiro_hooks_only(hooks: 'dict') -> 'dict'",
-    "_kirocrew_bin_subpath": "callable _kirocrew_bin_subpath(root: 'Path') -> 'Path'",
-    "_kirocrew_mcp_invocation": "callable _kirocrew_mcp_invocation(subcommand: 'str') -> 'tuple[str, list[str]]'",
+    "_ajcrew_bin_subpath": "callable _ajcrew_bin_subpath(root: 'Path') -> 'Path'",
+    "_ajcrew_mcp_invocation": "callable _ajcrew_mcp_invocation(subcommand: 'str') -> 'tuple[str, list[str]]'",
     "_launcher_works": "callable _launcher_works(path: 'Path') -> 'bool'",
     "_lineage_unreadable_refusal": "callable _lineage_unreadable_refusal(agent: 'str', exc: 'BaseException') -> 'str'",
     "_load_existing_config": "callable _load_existing_config(path: 'Path', *, gated_off: \"'frozenset[str] | None'\" = None) -> 'tuple[dict, bool]'",
@@ -243,7 +243,7 @@ BASE_SURFACE: dict[str, str] = {
     "_refresh_forked_templates_locked": "callable _refresh_forked_templates_locked(*, gated_off: \"'frozenset[str] | None'\" = None) -> 'None'",
     "_refuse_foreign_worker_spec": "callable _refuse_foreign_worker_spec(path: 'Path', spec: 'dict[str, Any] | None') -> 'None'",
     "_require_fresh_worker_spec": "callable _require_fresh_worker_spec(work_dir: 'str | Path | None') -> 'None'",
-    "_resolve_kirocrew_bin": "callable _resolve_kirocrew_bin() -> 'str'",
+    "_resolve_ajcrew_bin": "callable _resolve_ajcrew_bin() -> 'str'",
     "_resolved_hook_command": "callable _resolved_hook_command(command: 'object') -> 'str | None'",
     "_sanitize_agent_hooks": "callable _sanitize_agent_hooks() -> 'None'",
     "_seed_kas_permissions": "callable _seed_kas_permissions(config: 'dict[str, Any]') -> 'None'",
@@ -273,7 +273,7 @@ BASE_SURFACE: dict[str, str] = {
     "_write_worker_spec": "callable _write_worker_spec(config: 'dict', path: 'Path', *, template_grants: 'list[str]') -> 'None'",
     "agent_spec_candidates": "callable agent_spec_candidates(directory: 'Path', name: 'str') -> 'list[Path]'",
     "agent_spec_path": "callable agent_spec_path(name: 'str', *, agents_dir: 'Path | None' = None) -> 'Path | None'",
-    "agent_state": "module kiro_crew.agent_state",
+    "agent_state": "module aj_crew.agent_state",
     "agentcore_posture": "callable agentcore_posture(ceiling: 'Optional[GovernanceCeiling]') -> 'Optional[str]'",
     "agents_spec_lock": "callable agents_spec_lock(agents_dir: 'Path') -> 'Iterator[None]'",
     "ambient_agents_dir": "callable ambient_agents_dir() -> 'Path'",
@@ -291,7 +291,7 @@ BASE_SURFACE: dict[str, str] = {
     "emission_eligible_mcp_servers": "callable emission_eligible_mcp_servers() -> 'frozenset[str]'",
     "emit_env": "callable emit_env(env: 'dict') -> 'dict'",
     "ensure_agent_materialized": "callable ensure_agent_materialized(agent: 'str | None') -> 'bool'",
-    "ensure_kirocrew_on_path": "callable ensure_kirocrew_on_path(bin_dir: 'Path | None' = None, *, claim_existing: 'bool' = False) -> 'str | None'",
+    "ensure_ajcrew_on_path": "callable ensure_ajcrew_on_path(bin_dir: 'Path | None' = None, *, claim_existing: 'bool' = False) -> 'str | None'",
     "get_shipped_tools": "callable get_shipped_tools() -> 'dict[str, list[str]]'",
     "governance_permits": "callable governance_permits(scope: 'str', item: 'str', *, session_key: 'str' = '', agent: 'str' = '', app: 'str' = '', log_warning: 'bool' = True, fail_closed: 'bool' = False) -> \"'object'\"",
     "hook_documents_suppressed_commands": "callable hook_documents_suppressed_commands(hooks: 'object') -> 'dict[str, str]'",
@@ -319,7 +319,7 @@ BASE_SURFACE: dict[str, str] = {
     "migrate_agent_specs": "callable migrate_agent_specs() -> 'int'",
     "missing_required_agent_specs": "callable missing_required_agent_specs() -> 'list[str]'",
     "normalize_spec_hooks": "callable normalize_spec_hooks(value: 'object', *, matcher_ok: 'Callable[[object], bool]' = <function _hook_matcher_ok at 0x>) -> 'list[dict]'",
-    "platform_compat": "module kiro_crew.platform_compat",
+    "platform_compat": "module aj_crew.platform_compat",
     "present_required_agent_specs": "callable present_required_agent_specs() -> 'list[tuple[str, Path]]'",
     "prime_ceiling_projection": "callable prime_ceiling_projection() -> 'None'",
     "project_agent_files": "callable project_agent_files(project_dir: 'str | Path | None', include_legacy: 'bool' = False, *, operation: 'str' = 'project_agent_files', source: 'str' = 'project_agent_files') -> 'list[Path]'",
@@ -357,94 +357,94 @@ BASE_SURFACE: dict[str, str] = {
     "without_marker": "callable without_marker(entry: 'object') -> 'dict[str, Any]'",
 }
 
-#: Every ``kiro_crew`` collaborator the pre-split module imported, by (module, attribute).
+#: Every ``aj_crew`` collaborator the pre-split module imported, by (module, attribute).
 BASE_COLLABORATORS: dict[str, tuple[str, str]] = {
-    "AGENT_FILENAME": ("kiro_crew.agent_files", "AGENT_FILENAME"),
-    "AmbiguousAgentSpecError": ("kiro_crew.agent_discovery", "AmbiguousAgentSpecError"),
-    "CU_MCP_SERVER": ("kiro_crew.platform.governance", "CU_MCP_SERVER"),
-    "DERIVED_KEY": ("kiro_crew.mcp_provenance", "DERIVED_KEY"),
-    "FileTooLargeError": ("kiro_crew.hooks", "FileTooLargeError"),
-    "MCP_PATH_HINT": ("kiro_crew.env", "MCP_PATH_HINT"),
-    "OWNED_KIRO_AGENT_FILES": ("kiro_crew.agent_files", "OWNED_KIRO_AGENT_FILES"),
-    "REQUIRED_KIRO_AGENT_FILES": ("kiro_crew.agent_files", "REQUIRED_KIRO_AGENT_FILES"),
-    "SecurityEvent": ("kiro_crew.sel", "SecurityEvent"),
-    "_CONDUCTOR_AGENT_FILENAME": ("kiro_crew.agent_files", "CONDUCTOR_AGENT_FILENAME"),
-    "_GUEST_AGENT_FILENAME": ("kiro_crew.agent_files", "GUEST_AGENT_FILENAME"),
-    "_HEARTBEAT_AGENT_FILENAME": ("kiro_crew.agent_files", "HEARTBEAT_AGENT_FILENAME"),
-    "_KNOWLEDGE_AGENT_FILENAME": ("kiro_crew.agent_files", "KNOWLEDGE_AGENT_FILENAME"),
+    "AGENT_FILENAME": ("aj_crew.agent_files", "AGENT_FILENAME"),
+    "AmbiguousAgentSpecError": ("aj_crew.agent_discovery", "AmbiguousAgentSpecError"),
+    "CU_MCP_SERVER": ("aj_crew.platform.governance", "CU_MCP_SERVER"),
+    "DERIVED_KEY": ("aj_crew.mcp_provenance", "DERIVED_KEY"),
+    "FileTooLargeError": ("aj_crew.hooks", "FileTooLargeError"),
+    "MCP_PATH_HINT": ("aj_crew.env", "MCP_PATH_HINT"),
+    "OWNED_KIRO_AGENT_FILES": ("aj_crew.agent_files", "OWNED_KIRO_AGENT_FILES"),
+    "REQUIRED_KIRO_AGENT_FILES": ("aj_crew.agent_files", "REQUIRED_KIRO_AGENT_FILES"),
+    "SecurityEvent": ("aj_crew.sel", "SecurityEvent"),
+    "_CONDUCTOR_AGENT_FILENAME": ("aj_crew.agent_files", "CONDUCTOR_AGENT_FILENAME"),
+    "_GUEST_AGENT_FILENAME": ("aj_crew.agent_files", "GUEST_AGENT_FILENAME"),
+    "_HEARTBEAT_AGENT_FILENAME": ("aj_crew.agent_files", "HEARTBEAT_AGENT_FILENAME"),
+    "_KNOWLEDGE_AGENT_FILENAME": ("aj_crew.agent_files", "KNOWLEDGE_AGENT_FILENAME"),
     "_LEDGER_CONDUCTOR_AGENT_FILENAME": (
-        "kiro_crew.agent_files",
+        "aj_crew.agent_files",
         "LEDGER_CONDUCTOR_AGENT_FILENAME",
     ),
-    "_LITE_AGENT_FILENAME": ("kiro_crew.agent_files", "LITE_AGENT_FILENAME"),
+    "_LITE_AGENT_FILENAME": ("aj_crew.agent_files", "LITE_AGENT_FILENAME"),
     "_PIPELINE_CONDUCTOR_AGENT_FILENAME": (
-        "kiro_crew.agent_files",
+        "aj_crew.agent_files",
         "PIPELINE_CONDUCTOR_AGENT_FILENAME",
     ),
-    "_RESEARCH_AGENT_FILENAME": ("kiro_crew.agent_files", "RESEARCH_AGENT_FILENAME"),
+    "_RESEARCH_AGENT_FILENAME": ("aj_crew.agent_files", "RESEARCH_AGENT_FILENAME"),
     "_SECURITY_CONDUCTOR_AGENT_FILENAME": (
-        "kiro_crew.agent_files",
+        "aj_crew.agent_files",
         "SECURITY_CONDUCTOR_AGENT_FILENAME",
     ),
-    "_TEAM_LEAD_AGENT_FILENAME": ("kiro_crew.agent_files", "TEAM_LEAD_AGENT_FILENAME"),
-    "_WORKER_AGENT_FILENAME": ("kiro_crew.agent_files", "WORKER_AGENT_FILENAME"),
-    "_declared_project_agent_name": ("kiro_crew.agent_discovery", "_declared_project_agent_name"),
-    "_in_ephemeral_tree": ("kiro_crew.config.paths", "_in_ephemeral_tree"),
-    "_in_linked_git_worktree": ("kiro_crew.config.paths", "_in_linked_git_worktree"),
-    "_mc_config_path": ("kiro_crew.config", "config_path"),
-    "_read_agent_spec": ("kiro_crew.agent_discovery", "_read_agent_spec"),
-    "_under_system_tmp": ("kiro_crew.config.paths", "_under_system_tmp"),
-    "_valid_override_home": ("kiro_crew.config.paths", "_valid_override_home"),
-    "agent_spec_candidates": ("kiro_crew.agent_spec_format", "agent_spec_candidates"),
-    "agent_state": ("kiro_crew", "agent_state"),
-    "agentcore_posture": ("kiro_crew.platform.governance", "agentcore_posture"),
-    "ambient_agents_dir": ("kiro_crew.config.paths", "ambient_agents_dir"),
-    "command_is_ours": ("kiro_crew.mcp_provenance", "command_is_ours"),
-    "config_dir": ("kiro_crew.config", "config_dir"),
-    "current_context": ("kiro_crew.platform", "current_context"),
-    "dedup_path": ("kiro_crew.env", "dedup_path"),
-    "describe_search_path": ("kiro_crew.env", "describe_search_path"),
-    "emit_env": ("kiro_crew.env", "emit_env"),
-    "governance_permits": ("kiro_crew.platform.governance_profiles", "governance_permits"),
-    "invalid_disabled_flag": ("kiro_crew.mcp_cleanup", "invalid_disabled_flag"),
-    "is_markdown_spec": ("kiro_crew.agent_spec_format", "is_markdown_spec"),
-    "is_registered_agent_name": ("kiro_crew.validation", "is_registered_agent_name"),
-    "is_sensitive_path": ("kiro_crew.security", "is_sensitive_path"),
-    "is_unc_shape": ("kiro_crew.hooks", "is_unc_shape"),
-    "isolated_agents_dir": ("kiro_crew.config.paths", "isolated_agents_dir"),
-    "iter_agent_spec_files": ("kiro_crew.agent_spec_format", "iter_agent_spec_files"),
-    "kiro_agents_dir": ("kiro_crew.config.paths", "kiro_agents_dir"),
-    "kiro_oauth_wire_entry": ("kiro_crew.mcp_utils", "kiro_oauth_wire_entry"),
-    "may_skip_gate_now": ("kiro_crew.platform.governance", "may_skip_gate_now"),
-    "mcp_entries_muted": ("kiro_crew.mcp_cleanup", "mcp_entries_muted"),
-    "mcp_entry_is_muted": ("kiro_crew.mcp_cleanup", "mcp_entry_is_muted"),
-    "mcp_search_path": ("kiro_crew.env", "mcp_search_path"),
-    "mcp_server_alias": ("kiro_crew.mcp_utils", "mcp_server_alias"),
-    "platform_compat": ("kiro_crew", "platform_compat"),
-    "project_agent_files": ("kiro_crew.agent_discovery", "project_agent_files"),
-    "project_agent_name": ("kiro_crew.agent_discovery", "project_agent_name"),
-    "project_agent_names": ("kiro_crew.agent_discovery", "project_agent_names"),
-    "prune_dangling_tool_refs": ("kiro_crew.mcp_cleanup", "prune_dangling_tool_refs"),
-    "purge_deleted_proxy_from_config": ("kiro_crew.mcp_cleanup", "purge_deleted_proxy_from_config"),
-    "record_derived": ("kiro_crew.mcp_provenance", "record_derived"),
-    "recorded_source": ("kiro_crew.mcp_provenance", "recorded_source"),
-    "redact": ("kiro_crew.platform", "redact_via_context"),
-    "redact_log": ("kiro_crew.platform", "redact_log_via_context"),
-    "replace_with_retry": ("kiro_crew.atomic_write", "replace_with_retry"),
-    "safe_context_call": ("kiro_crew.platform", "safe_context_call"),
-    "safe_read_file_bytes_nolink": ("kiro_crew.hooks", "safe_read_file_bytes_nolink"),
-    "sanitize_spec_env": ("kiro_crew.env", "sanitize_spec_env"),
-    "sel": ("kiro_crew.sel", "sel"),
-    "shared_kiro_agents_writable": ("kiro_crew.config.paths", "shared_kiro_agents_writable"),
-    "source_view": ("kiro_crew.mcp_provenance", "source_view"),
-    "spec_path_key": ("kiro_crew.env", "spec_path_key"),
+    "_TEAM_LEAD_AGENT_FILENAME": ("aj_crew.agent_files", "TEAM_LEAD_AGENT_FILENAME"),
+    "_WORKER_AGENT_FILENAME": ("aj_crew.agent_files", "WORKER_AGENT_FILENAME"),
+    "_declared_project_agent_name": ("aj_crew.agent_discovery", "_declared_project_agent_name"),
+    "_in_ephemeral_tree": ("aj_crew.config.paths", "_in_ephemeral_tree"),
+    "_in_linked_git_worktree": ("aj_crew.config.paths", "_in_linked_git_worktree"),
+    "_mc_config_path": ("aj_crew.config", "config_path"),
+    "_read_agent_spec": ("aj_crew.agent_discovery", "_read_agent_spec"),
+    "_under_system_tmp": ("aj_crew.config.paths", "_under_system_tmp"),
+    "_valid_override_home": ("aj_crew.config.paths", "_valid_override_home"),
+    "agent_spec_candidates": ("aj_crew.agent_spec_format", "agent_spec_candidates"),
+    "agent_state": ("aj_crew", "agent_state"),
+    "agentcore_posture": ("aj_crew.platform.governance", "agentcore_posture"),
+    "ambient_agents_dir": ("aj_crew.config.paths", "ambient_agents_dir"),
+    "command_is_ours": ("aj_crew.mcp_provenance", "command_is_ours"),
+    "config_dir": ("aj_crew.config", "config_dir"),
+    "current_context": ("aj_crew.platform", "current_context"),
+    "dedup_path": ("aj_crew.env", "dedup_path"),
+    "describe_search_path": ("aj_crew.env", "describe_search_path"),
+    "emit_env": ("aj_crew.env", "emit_env"),
+    "governance_permits": ("aj_crew.platform.governance_profiles", "governance_permits"),
+    "invalid_disabled_flag": ("aj_crew.mcp_cleanup", "invalid_disabled_flag"),
+    "is_markdown_spec": ("aj_crew.agent_spec_format", "is_markdown_spec"),
+    "is_registered_agent_name": ("aj_crew.validation", "is_registered_agent_name"),
+    "is_sensitive_path": ("aj_crew.security", "is_sensitive_path"),
+    "is_unc_shape": ("aj_crew.hooks", "is_unc_shape"),
+    "isolated_agents_dir": ("aj_crew.config.paths", "isolated_agents_dir"),
+    "iter_agent_spec_files": ("aj_crew.agent_spec_format", "iter_agent_spec_files"),
+    "kiro_agents_dir": ("aj_crew.config.paths", "kiro_agents_dir"),
+    "kiro_oauth_wire_entry": ("aj_crew.mcp_utils", "kiro_oauth_wire_entry"),
+    "may_skip_gate_now": ("aj_crew.platform.governance", "may_skip_gate_now"),
+    "mcp_entries_muted": ("aj_crew.mcp_cleanup", "mcp_entries_muted"),
+    "mcp_entry_is_muted": ("aj_crew.mcp_cleanup", "mcp_entry_is_muted"),
+    "mcp_search_path": ("aj_crew.env", "mcp_search_path"),
+    "mcp_server_alias": ("aj_crew.mcp_utils", "mcp_server_alias"),
+    "platform_compat": ("aj_crew", "platform_compat"),
+    "project_agent_files": ("aj_crew.agent_discovery", "project_agent_files"),
+    "project_agent_name": ("aj_crew.agent_discovery", "project_agent_name"),
+    "project_agent_names": ("aj_crew.agent_discovery", "project_agent_names"),
+    "prune_dangling_tool_refs": ("aj_crew.mcp_cleanup", "prune_dangling_tool_refs"),
+    "purge_deleted_proxy_from_config": ("aj_crew.mcp_cleanup", "purge_deleted_proxy_from_config"),
+    "record_derived": ("aj_crew.mcp_provenance", "record_derived"),
+    "recorded_source": ("aj_crew.mcp_provenance", "recorded_source"),
+    "redact": ("aj_crew.platform", "redact_via_context"),
+    "redact_log": ("aj_crew.platform", "redact_log_via_context"),
+    "replace_with_retry": ("aj_crew.atomic_write", "replace_with_retry"),
+    "safe_context_call": ("aj_crew.platform", "safe_context_call"),
+    "safe_read_file_bytes_nolink": ("aj_crew.hooks", "safe_read_file_bytes_nolink"),
+    "sanitize_spec_env": ("aj_crew.env", "sanitize_spec_env"),
+    "sel": ("aj_crew.sel", "sel"),
+    "shared_kiro_agents_writable": ("aj_crew.config.paths", "shared_kiro_agents_writable"),
+    "source_view": ("aj_crew.mcp_provenance", "source_view"),
+    "spec_path_key": ("aj_crew.env", "spec_path_key"),
     "strip_ungoverned_auto_approve": (
-        "kiro_crew.platform.governance",
+        "aj_crew.platform.governance",
         "strip_ungoverned_auto_approve",
     ),
-    "unc_probe_allowed": ("kiro_crew.hooks", "unc_probe_allowed"),
-    "warn_invalid_disabled": ("kiro_crew.mcp_cleanup", "warn_invalid_disabled"),
-    "without_marker": ("kiro_crew.mcp_provenance", "without_marker"),
+    "unc_probe_allowed": ("aj_crew.hooks", "unc_probe_allowed"),
+    "warn_invalid_disabled": ("aj_crew.mcp_cleanup", "warn_invalid_disabled"),
+    "without_marker": ("aj_crew.mcp_provenance", "without_marker"),
 }
 
 #: Standard-library and typing names the pre-split module imported for its own use.
@@ -486,7 +486,7 @@ _HOST_DEPENDENT = frozenset(
         "_DEFAULT_KIRO_HOOKS_DIR",
         "_BUNDLED_CFG_DIR",
         "KIRO_AGENTS_DIR",
-        "_KIROCREW_BIN",
+        "_AJCREW_BIN",
         "logger",
     }
 )
@@ -571,7 +571,7 @@ def test_every_pre_split_name_resolves_with_its_pre_split_shape() -> None:
     """
     drifted = {}
     for name, expected in BASE_SURFACE.items():
-        assert hasattr(agent, name), f"kiro_crew.agent.{name} no longer resolves"
+        assert hasattr(agent, name), f"aj_crew.agent.{name} no longer resolves"
         actual = _describe(name, getattr(agent, name))
         if name in _PER_PLATFORM:
             actual = _describe_value(getattr(agent, name))
@@ -617,7 +617,7 @@ def test_every_collaborator_is_still_the_source_object() -> None:
     """An imported collaborator the facade re-offers is the object its own module holds."""
     for name, (module, attribute) in BASE_COLLABORATORS.items():
         source = getattr(importlib.import_module(module), attribute)
-        assert getattr(agent, name) is source, f"kiro_crew.agent.{name} is not {module}.{attribute}"
+        assert getattr(agent, name) is source, f"aj_crew.agent.{name} is not {module}.{attribute}"
 
 
 def test_the_surface_inventory_covers_every_pre_split_binding() -> None:
@@ -644,12 +644,12 @@ def test_the_legacy_skill_path_alias_is_the_discovery_itself() -> None:
 #: one to disk exactly as it read it.
 SUBAGENT_SHAPES: dict[str, dict[str, Any] | None] = {
     "omitted": None,
-    "declared_list": {"availableAgents": ["kirocrew-worker", "review-*"]},
-    "non_list": {"availableAgents": "kirocrew-*"},
+    "declared_list": {"availableAgents": ["ajcrew-worker", "review-*"]},
+    "non_list": {"availableAgents": "ajcrew-*"},
     "malformed_list": {"availableAgents": [1, None, "ok-*", {"x": 1}]},
     "empty_list": {"availableAgents": []},
     "with_trusted": {"availableAgents": ["a-*"], "trustedAgents": ["a-1"]},
-    "trusted_only": {"trustedAgents": ["kirocrew-worker"]},
+    "trusted_only": {"trustedAgents": ["ajcrew-worker"]},
     "unrelated_keys": {"availableAgents": ["x"], "futureKey": {"n": 1}},
 }
 
@@ -707,20 +707,20 @@ class _Rig:
     def __init__(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         self.agents = tmp_path / "agents"
         self.agents.mkdir()
-        binary = tmp_path / "bin" / "kirocrew"
+        binary = tmp_path / "bin" / "ajcrew"
         binary.parent.mkdir()
         binary.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
         binary.chmod(0o755)
-        self.home = Path(os.environ["KIROCREW_HOME"])
+        self.home = Path(os.environ["AJCREW_HOME"])
         monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", self.agents)
-        monkeypatch.setattr(agent, "_KIROCREW_BIN", str(binary))
+        monkeypatch.setattr(agent, "_AJCREW_BIN", str(binary))
         monkeypatch.setattr(agent, "_KIRO_MCP_JSON", tmp_path / "kiro-global-mcp.json")
         monkeypatch.setattr(agent, "_DEFAULT_KIRO_HOOKS_DIR", tmp_path / "no-hooks")
         monkeypatch.setattr(
-            "kiro_crew.apps.bridges._mcp_json_path", lambda: self.agents / "kirocrew.json"
+            "aj_crew.apps.bridges._mcp_json_path", lambda: self.agents / "ajcrew.json"
         )
         monkeypatch.setattr(
-            "kiro_crew.kiro_cli.installed_kiro_cli_version",
+            "aj_crew.kiro_cli.installed_kiro_cli_version",
             lambda: SPEC_PERMISSIONS_MIN_VERSION,
         )
 
@@ -734,10 +734,10 @@ def test_a_rebuild_over_an_existing_spec_keeps_the_shape(
 ) -> None:
     """The refresh path owns hooks and managed servers, never the user's settings."""
     rig = _Rig(tmp_path, monkeypatch)
-    spec = {"name": "kirocrew", "toolsSettings": _tools_settings(SUBAGENT_SHAPES[shape])}
-    (rig.agents / "kirocrew.json").write_text(json.dumps(spec), encoding="utf-8")
+    spec = {"name": "ajcrew", "toolsSettings": _tools_settings(SUBAGENT_SHAPES[shape])}
+    (rig.agents / "ajcrew.json").write_text(json.dumps(spec), encoding="utf-8")
     agent.rebuild_agent_config()
-    assert rig.read("kirocrew.json")["toolsSettings"] == _expected_after_normalize(
+    assert rig.read("ajcrew.json")["toolsSettings"] == _expected_after_normalize(
         SUBAGENT_SHAPES[shape]
     )
 
@@ -755,22 +755,22 @@ def test_derived_specs_inherit_the_shape_from_the_template(
     override = {"toolsSettings": {"subagent": SUBAGENT_SHAPES[shape] or {}}}
     rig.home.mkdir(parents=True, exist_ok=True)
     (rig.home / "agent.json").write_text(json.dumps(override), encoding="utf-8")
-    on_disk = {"name": "kirocrew", "toolsSettings": {"subagent": {"availableAgents": ["disk"]}}}
-    (rig.agents / "kirocrew.json").write_text(json.dumps(on_disk), encoding="utf-8")
+    on_disk = {"name": "ajcrew", "toolsSettings": {"subagent": {"availableAgents": ["disk"]}}}
+    (rig.agents / "ajcrew.json").write_text(json.dumps(on_disk), encoding="utf-8")
     built = agent.build_agent_config()
     assert built["toolsSettings"]["subagent"] == (SUBAGENT_SHAPES[shape] or {})
     agent.rebuild_agent_config()
     for derived in (
-        "kirocrew-conductor.json",
-        "kirocrew-ledger-conductor.json",
-        "kirocrew-pipeline-conductor.json",
-        "kirocrew-security-conductor.json",
-        "kirocrew-research.json",
-        "kirocrew-team-lead.json",
-        "kirocrew-worker.json",
+        "ajcrew-conductor.json",
+        "ajcrew-ledger-conductor.json",
+        "ajcrew-pipeline-conductor.json",
+        "ajcrew-security-conductor.json",
+        "ajcrew-research.json",
+        "ajcrew-team-lead.json",
+        "ajcrew-worker.json",
     ):
         assert rig.read(derived)["toolsSettings"] == built["toolsSettings"], derived
-    assert rig.read("kirocrew.json")["toolsSettings"]["subagent"] == {"availableAgents": ["disk"]}
+    assert rig.read("ajcrew.json")["toolsSettings"]["subagent"] == {"availableAgents": ["disk"]}
 
 
 @pytest.mark.parametrize("shape", sorted(SUBAGENT_SHAPES))
@@ -778,16 +778,16 @@ def test_a_fork_refresh_keeps_the_shape(
     shape: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A private template copy keeps its settings through the governance refresh."""
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
     rig = _Rig(tmp_path, monkeypatch)
-    cfg = KiroCrewConfig()
-    cfg.agents = {"my-crew": KiroCrewAgentConfig(kiro_agent="my-crew")}
+    cfg = AjCrewConfig()
+    cfg.agents = {"my-crew": AjCrewAgentConfig(kiro_agent="my-crew")}
     cfg.save()
     settings = _tools_settings(SUBAGENT_SHAPES[shape])
     fork = {"name": "my-crew", "toolsSettings": settings, "mcpServers": {}}
     (rig.agents / "my-crew.json").write_text(json.dumps(fork), encoding="utf-8")
-    agent_state.set_fork_info("my-crew", forked_from="kirocrew", private_to="my-crew")
+    agent_state.set_fork_info("my-crew", forked_from="ajcrew", private_to="my-crew")
     agent._refresh_forked_templates(gated_off=frozenset())
     assert rig.read("my-crew.json")["toolsSettings"] == settings
     assert "my-crew" not in agent._fork_refresh_failed
@@ -798,7 +798,7 @@ def test_a_fork_refresh_keeps_the_shape(
 
 def _guest_bytes(model: str) -> str:
     spec = {
-        "name": "kirocrew-guest",
+        "name": "ajcrew-guest",
         "model": model,
         "tools": [],
         "mcpServers": {},
@@ -825,10 +825,10 @@ def test_the_guest_prompt_is_frozen() -> None:
 def test_the_guest_spec_follows_the_operator_model(
     configured: str, expected: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", tmp_path)
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.model = configured
     cfg.save()
     agent._install_guest_agent()
@@ -838,13 +838,13 @@ def test_the_guest_spec_follows_the_operator_model(
 def test_an_unreadable_config_gives_the_guest_auto(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     def _broken() -> None:
         raise RuntimeError("unreadable")
 
     monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", tmp_path)
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", staticmethod(_broken))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", staticmethod(_broken))
     agent._install_guest_agent()
     assert (tmp_path / GUEST_AGENT_FILENAME).read_text(encoding="utf-8") == _guest_bytes("auto")
 
@@ -864,14 +864,14 @@ def test_the_lite_spec_is_the_bare_background_agent(
     monkeypatch.setattr(agent, "_background_agent_model", lambda: "auto")
     agent._install_lite_agent_fallback()
     assert json.loads((tmp_path / LITE_AGENT_FILENAME).read_text(encoding="utf-8")) == {
-        "name": "kirocrew-lite",
+        "name": "ajcrew-lite",
         "model": "auto",
         "tools": [],
         "mcpServers": {},
         "prompt": "",
         "includeMcpJson": False,
     }
-    assert agent_state.get_cc_model("kirocrew-lite") == agent._BACKGROUND_CC_MODEL
+    assert agent_state.get_cc_model("ajcrew-lite") == agent._BACKGROUND_CC_MODEL
 
 
 # ── prompts and grants are spec bytes ───────────────────────────────────────
@@ -897,37 +897,37 @@ def test_every_conductor_prompt_carries_the_patrol_receipt_rule(prompt: str) -> 
 
 def test_the_member_grants_extend_the_conductor_grants_in_order() -> None:
     assert agent._CONDUCTOR_DASHBOARD_GRANTS == (
-        "@kirocrew-dashboard/session_create",
-        "@kirocrew-dashboard/session_read_message",
-        "@kirocrew-dashboard/session_status",
+        "@ajcrew-dashboard/session_create",
+        "@ajcrew-dashboard/session_read_message",
+        "@ajcrew-dashboard/session_status",
     )
     assert agent._MEMBER_DASHBOARD_GRANTS == agent._CONDUCTOR_DASHBOARD_GRANTS + (
-        "@kirocrew-dashboard/session_send",
-        "@kirocrew-dashboard/session_broadcast",
-        "@kirocrew-dashboard/session_stop",
-        "@kirocrew-dashboard/session_retry",
-        "@kirocrew-dashboard/session_close",
+        "@ajcrew-dashboard/session_send",
+        "@ajcrew-dashboard/session_broadcast",
+        "@ajcrew-dashboard/session_stop",
+        "@ajcrew-dashboard/session_retry",
+        "@ajcrew-dashboard/session_close",
     )
     assert agent._MEMBER_PANEL_GRANTS == (
-        "@kirocrew-panel/panel_templates",
-        "@kirocrew-panel/panel_publish",
-        "@kirocrew-panel/dashboard_fields",
-        "@kirocrew-panel/dashboard_types",
-        "@kirocrew-panel/dashboard_write",
-        "@kirocrew-panel/dashboard_save",
-        "@kirocrew-panel/dashboard_templates",
-        "@kirocrew-panel/dashboard_preview",
-        "@kirocrew-panel/dashboard_apply",
-        "@kirocrew-panel/dashboard_rollback",
-        "@kirocrew-panel/dashboard_snapshot",
+        "@ajcrew-panel/panel_templates",
+        "@ajcrew-panel/panel_publish",
+        "@ajcrew-panel/dashboard_fields",
+        "@ajcrew-panel/dashboard_types",
+        "@ajcrew-panel/dashboard_write",
+        "@ajcrew-panel/dashboard_save",
+        "@ajcrew-panel/dashboard_templates",
+        "@ajcrew-panel/dashboard_preview",
+        "@ajcrew-panel/dashboard_apply",
+        "@ajcrew-panel/dashboard_rollback",
+        "@ajcrew-panel/dashboard_snapshot",
     )
 
 
 def test_the_security_grants_extend_the_pipeline_grants() -> None:
     assert agent._PIPELINE_CONDUCTOR_DASHBOARD_GRANTS == (
-        "@kirocrew-dashboard/session_create",
-        "@kirocrew-dashboard/session_read_message",
-        "@kirocrew-dashboard/session_status",
+        "@ajcrew-dashboard/session_create",
+        "@ajcrew-dashboard/session_read_message",
+        "@ajcrew-dashboard/session_status",
     )
     assert agent._SECURITY_CONDUCTOR_DASHBOARD_GRANTS == agent._PIPELINE_CONDUCTOR_DASHBOARD_GRANTS
 
@@ -946,10 +946,10 @@ def test_no_dispatcher_grant_names_a_folder_verb() -> None:
 
 
 def test_ordinary_agents_keep_the_folder_tools() -> None:
-    """The folder verbs stay on ``kirocrew-dashboard`` for any agent that mounts it,
+    """The folder verbs stay on ``ajcrew-dashboard`` for any agent that mounts it,
     behind an approval; only ``chat_folder_file_self``, which no one but a conductor
     used, is gone."""
-    from kiro_crew import mcp_dashboard
+    from aj_crew import mcp_dashboard
 
     names = {t["name"] for t in mcp_dashboard._tool_definitions()}
     assert {
@@ -977,7 +977,7 @@ def test_no_conductor_is_granted_a_fleet_write_or_a_model_switch() -> None:
             "session_retry",
             "session_set_model",
         ):
-            assert f"@kirocrew-dashboard/{verb}" not in grants
+            assert f"@ajcrew-dashboard/{verb}" not in grants
     every = conductor_tuples + (agent._MEMBER_DASHBOARD_GRANTS, agent._MEMBER_PANEL_GRANTS)
-    assert all("@kirocrew-dashboard/session_set_model" not in grants for grants in every)
-    assert all("@kirocrew-dashboard/session_reload" not in grants for grants in every)
+    assert all("@ajcrew-dashboard/session_set_model" not in grants for grants in every)
+    assert all("@ajcrew-dashboard/session_reload" not in grants for grants in every)

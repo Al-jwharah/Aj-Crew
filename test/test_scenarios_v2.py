@@ -10,12 +10,12 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_git
-from kiro_crew import git_coord
-from kiro_crew.taskrunner import (
+from aj_crew import git_coord
+from aj_crew.taskrunner import (
     Step,
     TaskRun,
 )
+from conftest import requires_git
 
 pytestmark = requires_git
 
@@ -81,7 +81,7 @@ class TestScenarioMultiStepCodeTask:
         await git_coord.init_workspace(run)
         assert run.worktree_path != ""
         assert Path(run.work_dir).exists()
-        assert run.branch_name == "kirocrew/task/rest_api_task"
+        assert run.branch_name == "ajcrew/task/rest_api_task"
         # Original repo should be untouched
         assert (repo / "README.md").read_text(encoding="utf-8") == "# My Project"
 
@@ -120,13 +120,13 @@ class TestScenarioMultiStepCodeTask:
 
         # Finalize — worktree removed, branch name returned
         branch = await git_coord.finalize(run)
-        assert branch == "kirocrew/task/rest_api_task"
+        assert branch == "ajcrew/task/rest_api_task"
         # Worktree dir should be gone
         assert not Path(run.worktree_path).exists()
 
         # Branch should exist in original repo
         branches = await git_coord._git(str(repo), "branch", "--list")
-        assert "kirocrew/task/rest_api_task" in branches
+        assert "ajcrew/task/rest_api_task" in branches
 
     @pytest.mark.asyncio
     async def test_user_workdir_untouched_during_task(self, tmp_path: Path) -> None:
@@ -625,18 +625,18 @@ class TestScenarioEdgeCases:
     async def test_finalize_without_worktree(self, tmp_path: Path) -> None:
         """finalize on non-worktree run → just returns branch name."""
         run = TaskRun(spec_path="/s.md", spec_content="s")
-        run.branch_name = "kirocrew/task/test"
+        run.branch_name = "ajcrew/task/test"
         run.worktree_path = ""
 
         branch = await git_coord.finalize(run)
-        assert branch == "kirocrew/task/test"
+        assert branch == "ajcrew/task/test"
 
     @pytest.mark.asyncio
     async def test_finalize_already_cleaned(self, tmp_path: Path) -> None:
         """finalize when worktree dir already deleted → no error."""
         run = TaskRun(spec_path="/s.md", spec_content="s")
-        run.branch_name = "kirocrew/task/test"
+        run.branch_name = "ajcrew/task/test"
         run.worktree_path = str(tmp_path / "nonexistent_worktree")
 
         branch = await git_coord.finalize(run)
-        assert branch == "kirocrew/task/test"  # graceful
+        assert branch == "ajcrew/task/test"  # graceful

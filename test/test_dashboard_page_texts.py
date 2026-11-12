@@ -13,12 +13,12 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from kiro_crew import mcp_panel
-from kiro_crew.dashboard.goal_reminder import DASHBOARD_BUILD_LINE
-from kiro_crew.dashboard.handlers import dashboard_page_checks as checks
-from kiro_crew.dashboard_templates.page_look import PAGE_LOOK
+from aj_crew import mcp_panel
+from aj_crew.dashboard.goal_reminder import DASHBOARD_BUILD_LINE
+from aj_crew.dashboard.handlers import dashboard_page_checks as checks
+from aj_crew.dashboard_templates.page_look import PAGE_LOOK
 
-SKILL = Path(__file__).resolve().parents[1] / "src/kiro_crew/builtin_skills/dashboard/SKILL.md"
+SKILL = Path(__file__).resolve().parents[1] / "src/aj_crew/builtin_skills/dashboard/SKILL.md"
 
 
 def _skill() -> str:

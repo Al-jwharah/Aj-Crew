@@ -2,7 +2,7 @@
 
 Every path each ADVERTISED session fold renders, with the type its empty
 state carries. Produced by calling each fold's own `start()` and `render()`
-(`kiro_crew.crew_log.projection._FOLDS`), so it is the shape the routes
+(`aj_crew.crew_log.projection._FOLDS`), so it is the shape the routes
 `/api/sessions/{id}/crew-log/projection/{name}` actually serve rather than a
 reading of them.
 

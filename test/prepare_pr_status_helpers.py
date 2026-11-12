@@ -1,4 +1,4 @@
-"""Shared loaders and fakes for the kirocrew-prepare-pr ``pr_status.py`` suites."""
+"""Shared loaders and fakes for the ajcrew-prepare-pr ``pr_status.py`` suites."""
 
 from __future__ import annotations
 
@@ -12,10 +12,10 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = (
     ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "scripts"
     / "pr_status.py"
 )

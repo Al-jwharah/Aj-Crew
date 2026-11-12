@@ -11,7 +11,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.apps.manager import (
+from aj_crew.apps.manager import (
     APP_MANIFEST_FILENAME,
     _read_installed,
     _write_installed,
@@ -28,9 +28,9 @@ def _install_test_app(
     origin: str = "registry",
     manifest_extra: dict[str, Any] | None = None,
 ) -> Any:
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir(exist_ok=True)
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     source = tmp_path / "source" / name
     source.mkdir(parents=True)
     manifest = {
@@ -52,7 +52,7 @@ def _install_test_app(
 
 
 def _route_app() -> web.Application:
-    from kiro_crew.apps.routes import register_app_routes
+    from aj_crew.apps.routes import register_app_routes
 
     app = web.Application()
     register_app_routes(app)
@@ -61,19 +61,19 @@ def _route_app() -> web.Application:
 
 class TestExecutionDecision:
     def test_absent_config_defaults_to_denied(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.apps.execution import third_party_execution_allowed
+        from aj_crew.apps.execution import third_party_execution_allowed
 
         home = tmp_path / "home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         assert third_party_execution_allowed() is False
 
     def test_explicit_boolean_true_admits(self, monkeypatch) -> None:
-        from kiro_crew.apps import execution
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution
+        from aj_crew.config.loader import AjCrewConfig
 
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(agent=SimpleNamespace(apps_allow_third_party=True))
@@ -83,11 +83,11 @@ class TestExecutionDecision:
 
     @pytest.mark.parametrize("value", ["true", "1", 1, object()])
     def test_truthy_non_boolean_values_do_not_admit(self, monkeypatch, value) -> None:
-        from kiro_crew.apps import execution
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution
+        from aj_crew.config.loader import AjCrewConfig
 
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(agent=SimpleNamespace(apps_allow_third_party=value))
@@ -98,22 +98,22 @@ class TestExecutionDecision:
     def test_environment_variable_cannot_override_absent_policy(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.apps.execution import third_party_execution_allowed
+        from aj_crew.apps.execution import third_party_execution_allowed
 
         home = tmp_path / "home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
-        monkeypatch.setenv("KIROCREW_APPS_ALLOW_THIRD_PARTY", "true")
+        monkeypatch.setenv("AJCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_APPS_ALLOW_THIRD_PARTY", "true")
         assert third_party_execution_allowed() is False
 
     def test_config_load_failure_fails_closed(self, monkeypatch) -> None:
-        from kiro_crew.apps import execution
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution
+        from aj_crew.config.loader import AjCrewConfig
 
         def _raise(cls):
             raise OSError("unreadable config")
 
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_raise))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(_raise))
         assert execution.third_party_execution_allowed() is False
         assert execution.app_execution_denied(
             "untrusted-app", action="module_load"
@@ -122,7 +122,7 @@ class TestExecutionDecision:
     def test_shipped_builtin_name_and_path_are_both_required(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.apps import execution
+        from aj_crew.apps import execution
 
         monkeypatch.setattr(execution, "third_party_execution_allowed", lambda: False)
         shipped_root = execution.shipped_builtin_app_root("file-explorer")
@@ -153,8 +153,8 @@ class TestExecutionDecision:
     def test_edition_manifest_source_builtin_is_admitted_with_containment(
         self, tmp_path, monkeypatch
     ) -> None:
-        import kiro_crew.platform as platform_mod
-        from kiro_crew.apps import execution
+        import aj_crew.platform as platform_mod
+        from aj_crew.apps import execution
 
         source = tmp_path / "edition-builtins"
         shipped_root = source / "edition-app"
@@ -187,8 +187,8 @@ class TestExecutionDecision:
     def test_shipped_builtin_name_is_read_from_the_root_holding_a_path(
         self, tmp_path, monkeypatch
     ) -> None:
-        import kiro_crew.platform as platform_mod
-        from kiro_crew.apps import execution
+        import aj_crew.platform as platform_mod
+        from aj_crew.apps import execution
 
         source = tmp_path / "edition-builtins"
         shipped_root = source / "edition_app"
@@ -217,13 +217,13 @@ class TestExecutionDecision:
         # set only when its active installed record is builtin-owned. Both a
         # core builtin and an edition/companion-contributed builtin count, so
         # long as the builtin actually occupies the slot.
-        import kiro_crew.platform as platform_mod
-        from kiro_crew.apps import execution
-        from kiro_crew.apps.manager import InstalledApp, _write_installed
+        import aj_crew.platform as platform_mod
+        from aj_crew.apps import execution
+        from aj_crew.apps.manager import InstalledApp, _write_installed
 
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         source = tmp_path / "edition-builtins"
         shipped_root = source / "edition-app"
@@ -252,13 +252,13 @@ class TestExecutionDecision:
         # shipped manifest still exists, but the name must NOT be trusted as
         # first-party — otherwise the shadowing app's own-server MCP calls would
         # be auto-approved without a prompt.
-        import kiro_crew.platform as platform_mod
-        from kiro_crew.apps import execution
-        from kiro_crew.apps.manager import InstalledApp, _write_installed
+        import aj_crew.platform as platform_mod
+        from aj_crew.apps import execution
+        from aj_crew.apps.manager import InstalledApp, _write_installed
 
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         source = tmp_path / "edition-builtins"
         shipped_root = source / "shadowed-app"
@@ -282,12 +282,12 @@ class TestExecutionDecision:
         # A shipped manifest with NO installed record at all (registration has
         # not run, or the record is unreadable) fails closed: the name is not
         # trusted until a builtin-owned install proves it occupies the slot.
-        import kiro_crew.platform as platform_mod
-        from kiro_crew.apps import execution
+        import aj_crew.platform as platform_mod
+        from aj_crew.apps import execution
 
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         source = tmp_path / "edition-builtins"
         shipped_root = source / "unregistered-app"
@@ -304,13 +304,13 @@ class TestExecutionDecision:
         # builtin_app_mcp_servers emits <app>:<server> for every mcpServers key a
         # builtin-owned shipped manifest declares; a shadowing user app (install
         # not builtin-owned) contributes nothing.
-        import kiro_crew.platform as platform_mod
-        from kiro_crew.apps import execution
-        from kiro_crew.apps.manager import InstalledApp, _write_installed
+        import aj_crew.platform as platform_mod
+        from aj_crew.apps import execution
+        from aj_crew.apps.manager import InstalledApp, _write_installed
 
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         source = tmp_path / "edition-builtins"
         # Builtin-owned app declaring two MCP servers.
@@ -351,13 +351,13 @@ class TestExecutionDecision:
         # declares to its app, under both the bare and `app--agent` spellings. A
         # shadowing user app contributes nothing, and a name two apps both
         # declare is dropped entirely (ambiguous provenance must grant neither).
-        import kiro_crew.platform as platform_mod
-        from kiro_crew.apps import execution
-        from kiro_crew.apps.manager import InstalledApp, _write_installed
+        import aj_crew.platform as platform_mod
+        from aj_crew.apps import execution
+        from aj_crew.apps.manager import InstalledApp, _write_installed
 
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         source = tmp_path / "edition-builtins"
 
@@ -400,7 +400,7 @@ class TestExecutionDecision:
     def test_denial_audit_uses_action_without_untrusted_app_name(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.apps import execution
+        from aj_crew.apps import execution
 
         events: list[dict[str, Any]] = []
         fake_sel = SimpleNamespace(log_api_access=lambda **kwargs: events.append(kwargs))
@@ -420,7 +420,7 @@ class TestExecutionDecision:
         assert "action='open_command'" in events[0]["resources"]
 
     def test_allowed_with_working_audit_emits_event(self, monkeypatch) -> None:
-        from kiro_crew.apps import execution
+        from aj_crew.apps import execution
 
         events: list[dict[str, Any]] = []
         fake_sel = SimpleNamespace(log_api_access=lambda **kwargs: events.append(kwargs))
@@ -442,7 +442,7 @@ class TestExecutionDecision:
         ]
 
     def test_allowed_with_broken_audit_still_executes(self, monkeypatch) -> None:
-        from kiro_crew.apps import execution
+        from aj_crew.apps import execution
 
         def _audit_failure(**kwargs) -> None:
             raise OSError("audit unavailable")
@@ -458,7 +458,7 @@ class TestExecutionDecision:
         assert reason is None
 
     def test_denial_with_broken_audit_stays_denied(self, monkeypatch) -> None:
-        from kiro_crew.apps import execution
+        from aj_crew.apps import execution
 
         def _audit_failure(**kwargs) -> None:
             raise OSError("audit unavailable")
@@ -478,7 +478,7 @@ class TestExecutionDecision:
         """The per-app grant is made by the App Store's Enable prompt; the Settings
         panel only lists and revokes grants, so the reason must not send a CLI
         user there to make one."""
-        from kiro_crew.apps import execution
+        from aj_crew.apps import execution
 
         monkeypatch.setattr(execution, "third_party_execution_allowed", lambda: False)
         quiet_sel = SimpleNamespace(log_api_access=lambda **_: None)
@@ -498,8 +498,8 @@ class TestLaunchAndLifecycleBoundary:
     async def test_disabled_app_cannot_open_even_when_execution_is_admitted(
         self, tmp_path, monkeypatch
     ) -> None:
-        import kiro_crew.apps.routes as routes
-        from kiro_crew.apps import execution
+        import aj_crew.apps.routes as routes
+        from aj_crew.apps import execution
 
         _install_test_app(
             tmp_path,
@@ -521,7 +521,7 @@ class TestLaunchAndLifecycleBoundary:
 
     @pytest.mark.asyncio
     async def test_default_off_refuses_open_before_spawn(self, tmp_path, monkeypatch) -> None:
-        import kiro_crew.apps.routes as routes
+        import aj_crew.apps.routes as routes
 
         _install_test_app(
             tmp_path,
@@ -544,8 +544,8 @@ class TestLaunchAndLifecycleBoundary:
 
     @pytest.mark.asyncio
     async def test_explicit_admission_allows_open(self, tmp_path, monkeypatch) -> None:
-        import kiro_crew.apps.routes as routes
-        from kiro_crew.apps import execution
+        import aj_crew.apps.routes as routes
+        from aj_crew.apps import execution
 
         _install_test_app(
             tmp_path,
@@ -576,7 +576,7 @@ class TestLaunchAndLifecycleBoundary:
     async def test_forged_builtin_origin_does_not_exempt_mutable_open_command(
         self, tmp_path, monkeypatch, name
     ) -> None:
-        import kiro_crew.apps.routes as routes
+        import aj_crew.apps.routes as routes
 
         _install_test_app(
             tmp_path,
@@ -601,8 +601,8 @@ class TestLaunchAndLifecycleBoundary:
     async def test_lifecycle_script_default_off_has_no_process_side_effect(
         self, tmp_path, monkeypatch
     ) -> None:
-        import kiro_crew.apps.routes as routes
-        from kiro_crew.apps import lifecycle_scripts
+        import aj_crew.apps.routes as routes
+        from aj_crew.apps import lifecycle_scripts
 
         _install_test_app(tmp_path, monkeypatch)
 
@@ -626,14 +626,14 @@ class TestLaunchAndLifecycleBoundary:
     async def test_lifecycle_script_runs_after_explicit_admission(
         self, tmp_path, monkeypatch
     ) -> None:
-        import kiro_crew.apps.routes as routes
+        import aj_crew.apps.routes as routes
 
         # Patched on `lifecycle_scripts`, not `routes`: the runner moved there so
         # that `teardown.py` can run `onDisable` without importing `routes` back
         # (a cycle). `routes._run_lifecycle_script` is still the same function by
         # alias, but its module globals now resolve in its new home — patching
         # `routes.wrap_argv` here would silently miss and run the real sandbox.
-        from kiro_crew.apps import execution, lifecycle_scripts
+        from aj_crew.apps import execution, lifecycle_scripts
 
         _install_test_app(tmp_path, monkeypatch)
         monkeypatch.setattr(execution, "third_party_execution_allowed", lambda: True)
@@ -665,7 +665,7 @@ class TestLaunchAndLifecycleBoundary:
     async def test_enable_denial_rolls_back_before_any_side_effect(
         self, tmp_path, monkeypatch
     ) -> None:
-        import kiro_crew.apps.routes as routes
+        import aj_crew.apps.routes as routes
 
         _install_test_app(
             tmp_path,
@@ -712,13 +712,13 @@ class TestTrustedGrantBounds:
     def _seed(tmp_path, monkeypatch, entries: list) -> None:
         home = tmp_path / "home"
         home.mkdir(exist_ok=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         (home / "config.json").write_text(
             json.dumps({"agent": {"apps_trusted": entries}}), encoding="utf-8"
         )
 
     def test_name_at_the_cap_is_still_a_grant(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.apps.execution import _MAX_GRANT_NAME_LEN, trusted_app_names
+        from aj_crew.apps.execution import _MAX_GRANT_NAME_LEN, trusted_app_names
 
         at_cap = "a" * _MAX_GRANT_NAME_LEN
         self._seed(tmp_path, monkeypatch, [at_cap])
@@ -727,7 +727,7 @@ class TestTrustedGrantBounds:
         assert at_cap in trusted_app_names()
 
     def test_over_long_name_is_not_a_grant(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.apps.execution import (
+        from aj_crew.apps.execution import (
             _MAX_GRANT_NAME_LEN,
             app_execution_denied,
             trusted_app_names,
@@ -742,7 +742,7 @@ class TestTrustedGrantBounds:
     def test_over_long_list_is_truncated_not_honoured_whole(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.apps.execution import _MAX_GRANT_ENTRIES, trusted_app_names
+        from aj_crew.apps.execution import _MAX_GRANT_ENTRIES, trusted_app_names
 
         entries = [f"app-{i:04d}" for i in range(_MAX_GRANT_ENTRIES + 50)]
         self._seed(tmp_path, monkeypatch, entries)
@@ -759,7 +759,7 @@ class TestTrustedGrantBounds:
     def test_over_long_list_still_admits_a_grant_at_the_front(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.apps.execution import (
+        from aj_crew.apps.execution import (
             _MAX_GRANT_ENTRIES,
             app_execution_denied,
         )
@@ -779,11 +779,11 @@ class TestTrustedGrantBounds:
         assert app_execution_denied(padding[-1], action="module_load") is not None
 
     def test_repository_binding_is_inert_without_the_name_grant(self, monkeypatch) -> None:
-        from kiro_crew.apps import execution
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution
+        from aj_crew.config.loader import AjCrewConfig
 
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(
@@ -800,11 +800,11 @@ class TestTrustedGrantBounds:
         assert execution.trusted_app_repository("stale-app") == ""
 
     def test_local_binding_is_inert_without_the_name_grant(self, monkeypatch) -> None:
-        from kiro_crew.apps import execution
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution
+        from aj_crew.config.loader import AjCrewConfig
 
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(
@@ -819,12 +819,12 @@ class TestTrustedGrantBounds:
         assert "stale-app" not in execution.trusted_local_app_names()
 
     def test_active_grant_exposes_its_repository_binding(self, monkeypatch) -> None:
-        from kiro_crew.apps import execution
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution
+        from aj_crew.config.loader import AjCrewConfig
 
         repository = "https://example.test/Owner/Repo"
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(
@@ -841,12 +841,12 @@ class TestTrustedGrantBounds:
     def test_bound_grant_admits_only_the_repository_that_was_reviewed(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.apps import execution
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution
+        from aj_crew.config.loader import AjCrewConfig
 
         repository = "https://example.test/Owner/Repo"
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(
@@ -880,11 +880,11 @@ class TestTrustedGrantBounds:
     def test_bound_grant_does_not_admit_an_unidentified_local_source(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.apps import execution
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution
+        from aj_crew.config.loader import AjCrewConfig
 
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(
@@ -913,11 +913,11 @@ class TestTrustedGrantBounds:
     def test_legacy_name_grant_requires_reconsent_for_any_repository(
         self, monkeypatch, repository: str
     ) -> None:
-        from kiro_crew.apps import execution
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution
+        from aj_crew.config.loader import AjCrewConfig
 
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(
@@ -944,11 +944,11 @@ class TestTrustedGrantBounds:
     def test_explicit_local_grant_covers_only_local_source(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.apps import execution
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution
+        from aj_crew.config.loader import AjCrewConfig
 
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(
@@ -980,11 +980,11 @@ class TestTrustedGrantBounds:
     def test_unknown_legacy_name_grant_cannot_claim_fresh_local_source(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.apps import execution
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution
+        from aj_crew.config.loader import AjCrewConfig
 
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(
@@ -997,7 +997,7 @@ class TestTrustedGrantBounds:
                 )
             ),
         )
-        monkeypatch.setattr("kiro_crew.apps.manager.get_app", lambda name: None)
+        monkeypatch.setattr("aj_crew.apps.manager.get_app", lambda name: None)
 
         denied = execution.app_execution_denied(
             "legacy-app", action="local_install", repository=""
@@ -1009,11 +1009,11 @@ class TestTrustedGrantBounds:
     def test_installed_legacy_local_grant_remains_migration_compatible(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.apps import execution
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution
+        from aj_crew.config.loader import AjCrewConfig
 
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(
@@ -1027,7 +1027,7 @@ class TestTrustedGrantBounds:
             ),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.get_app",
+            "aj_crew.apps.manager.get_app",
             lambda name: {"name": name, "source": "C:/reviewed/local", "sourceUrl": ""},
         )
 
@@ -1041,11 +1041,11 @@ class TestTrustedGrantBounds:
     def test_runtime_rejects_installed_legacy_repository_grant(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.apps import execution
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution
+        from aj_crew.config.loader import AjCrewConfig
 
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(
@@ -1059,7 +1059,7 @@ class TestTrustedGrantBounds:
             ),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.get_app",
+            "aj_crew.apps.manager.get_app",
             lambda name: {
                 "name": name,
                 "source": f"registry:{name}",
@@ -1082,11 +1082,11 @@ class TestTrustedGrantBounds:
     def test_runtime_legacy_repository_never_consults_catalog(
         self, monkeypatch, binding: str
     ) -> None:
-        from kiro_crew.apps import execution, registry
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution, registry
+        from aj_crew.config.loader import AjCrewConfig
 
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(
@@ -1102,7 +1102,7 @@ class TestTrustedGrantBounds:
             ),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.get_app",
+            "aj_crew.apps.manager.get_app",
             lambda name: {
                 "name": name,
                 "source": f"registry:{name}",
@@ -1137,12 +1137,12 @@ class TestTrustedGrantBounds:
     def test_runtime_rejects_legacy_unsupported_repository(
         self, monkeypatch, source_url: str
     ) -> None:
-        from kiro_crew.apps import execution
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution
+        from aj_crew.config.loader import AjCrewConfig
 
         safe_repository = "https://example.test/owner/repository"
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(
@@ -1158,7 +1158,7 @@ class TestTrustedGrantBounds:
             ),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.get_app",
+            "aj_crew.apps.manager.get_app",
             lambda name: {
                 "name": name,
                 "source": f"registry:{name}",
@@ -1184,12 +1184,12 @@ class TestTrustedGrantBounds:
     def test_runtime_rejects_legacy_unsupported_config_binding(
         self, monkeypatch, binding: str
     ) -> None:
-        from kiro_crew.apps import execution
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.apps import execution
+        from aj_crew.config.loader import AjCrewConfig
 
         safe_repository = "https://example.test/owner/repository"
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(
@@ -1205,7 +1205,7 @@ class TestTrustedGrantBounds:
             ),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.get_app",
+            "aj_crew.apps.manager.get_app",
             lambda name: {
                 "name": name,
                 "source": f"registry:{name}",
@@ -1223,7 +1223,7 @@ class TestTrustedGrantBounds:
     def test_config_derived_grant_name_never_enters_failure_logs(
         self, monkeypatch, caplog
     ) -> None:
-        from kiro_crew.apps import execution, manager, registry
+        from aj_crew.apps import execution, manager, registry
 
         secret_shaped_name = "secrettoken123"
 
@@ -1263,11 +1263,11 @@ class TestRegistryAndProvenanceBoundary:
     async def test_registry_install_script_is_denied_before_clone_or_build(
         self, tmp_path, monkeypatch
     ) -> None:
-        import kiro_crew.apps.registry as registry
+        import aj_crew.apps.registry as registry
 
         home = tmp_path / "home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         entry = {
             "name": "registry-app",
             "repo": "https://github.com/example/registry-app.git",
@@ -1301,7 +1301,7 @@ class TestRegistryAndProvenanceBoundary:
     async def test_registry_detect_script_default_off_has_no_process_side_effect(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.apps import execution, registry
+        from aj_crew.apps import execution, registry
 
         entry = {
             "name": "registry-detect-app",
@@ -1336,11 +1336,11 @@ class TestRegistryAndProvenanceBoundary:
     def test_external_registration_cannot_claim_builtin_provenance(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.apps.manager import register_external_app
+        from aj_crew.apps.manager import register_external_app
 
         home = tmp_path / "home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         result = register_external_app(
             "spoofed-builtin",
             "1.0.0",

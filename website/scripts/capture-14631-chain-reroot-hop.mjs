@@ -61,7 +61,7 @@ const SLOTS = [{
   running: false,
   last_message: 'Connected the GPU crew.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   folder_id: '',
   modified: Math.floor(Date.now() / 1000),

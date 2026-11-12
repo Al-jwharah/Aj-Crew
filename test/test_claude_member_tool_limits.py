@@ -20,16 +20,16 @@ from acp_session_mcp_helpers import agents_dir_fixture  # noqa: F401
 from acp_session_mcp_helpers import isolated_seed_provenance  # noqa: F401
 from acp_session_mcp_helpers import _by_name, _write_spec
 
-from kiro_crew.acp import session_mcp
-from kiro_crew.acp.claude_mcp_names import claude_mcp_tool_name
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp_backends import (
+from aj_crew.acp import session_mcp
+from aj_crew.acp.claude_mcp_names import claude_mcp_tool_name
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_PI,
     ACP_BACKENDS_MEMBER_TOOL_LIMITS,
 )
-from kiro_crew.agent_capabilities import member_backend_gap
+from aj_crew.agent_capabilities import member_backend_gap
 
 FIXTURES = Path(__file__).parent / "fixtures" / "acp_frames" / "claude"
 
@@ -118,7 +118,7 @@ def test_names_that_fold_together_yield_one_rule(agents_dir):
         },
         tools=["*"],
     )
-    assert session_mcp.session_mcp_deny_rules("kirocrew") == ["mcp__dot_probe__t"]
+    assert session_mcp.session_mcp_deny_rules("ajcrew") == ["mcp__dot_probe__t"]
 
 
 def test_the_start_gate_lets_a_limited_spec_start_on_claude_only_among_mirrors():

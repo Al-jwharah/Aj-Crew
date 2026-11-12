@@ -28,7 +28,7 @@ mkdirSync(OUT, { recursive: true })
 
 const { srv, base } = await serveDist(DIST)
 
-const REASON = "App 'build-watch' has an exec (shell launcher) backend, which is not supported on native Windows. Run Kiro Crew under WSL to use it."
+const REASON = "App 'build-watch' has an exec (shell launcher) backend, which is not supported on native Windows. Run Aj Crew under WSL to use it."
 const status = { sessions: 4, messages: 812, cron_jobs: 1, subagents: 0, lessons: 12, uptime: 91200, version: '0.1.0' }
 const json = (route, body, s = 200) => route.fulfill({ status: s, contentType: 'application/json', body: JSON.stringify(body) })
 
@@ -81,7 +81,7 @@ async function run(mode, viewport) {
     if (path === '/api/themes') return json(route, { themes: [], installed: [] })
     if (path === '/api/status') return json(route, status)
     if (path === '/api/system') return json(route, { hostname: 'dev-host' })
-    if (path === '/api/dashboard/branding') return json(route, { bot_name: 'Kiro Crew', avatar: '' })
+    if (path === '/api/dashboard/branding') return json(route, { bot_name: 'Aj Crew', avatar: '' })
     if (path === '/api/theme/boot') return json(route, { mode, theme: '' })
     if (path === '/api/notifications') return json(route, { notifications: [], unread: 0 })
     if (path === '/api/chat/slots') return json(route, [])

@@ -1,4 +1,4 @@
-"""Coverage for ``kiro_crew.sso_status`` — the OSS no-op SSO stubs.
+"""Coverage for ``aj_crew.sso_status`` — the OSS no-op SSO stubs.
 
 The public distribution ships inert stubs so dashboard/Slack callers keep
 importing and awaiting the same symbols. These tests pin the stub CONTRACT
@@ -13,7 +13,7 @@ import inspect
 
 import pytest
 
-from kiro_crew import sso_status as mod
+from aj_crew import sso_status as mod
 
 pytestmark = pytest.mark.asyncio
 

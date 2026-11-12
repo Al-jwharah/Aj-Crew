@@ -34,17 +34,17 @@ from github_pull_request_monitor_helpers import (
     _threads,
 )
 
-from kiro_crew.github_runner import SetupError
-from kiro_crew.monitoring.decision import decide_monitor
-from kiro_crew.monitoring.github_pull_request import GitHubPullRequestProvider
-from kiro_crew.monitoring.models import (
+from aj_crew.github_runner import SetupError
+from aj_crew.monitoring.decision import decide_monitor
+from aj_crew.monitoring.github_pull_request import GitHubPullRequestProvider
+from aj_crew.monitoring.models import (
     MonitorDecision,
     MonitorObservationStatus,
     MonitorState,
     ProviderErrorKind,
     monitor_state_to_dict,
 )
-from kiro_crew.monitoring.shadow import run_shadow_probe
+from aj_crew.monitoring.shadow import run_shadow_probe
 
 
 @pytest.mark.parametrize(

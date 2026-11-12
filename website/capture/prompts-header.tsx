@@ -39,7 +39,7 @@ const params = new URLSearchParams(location.search)
 const packageSop = params.get('source') === 'package'
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 /** A writable user prompt and a read-only package SOP: the two shapes the
  *  header renders differently, since only the first carries a scope. */
@@ -107,7 +107,7 @@ await initI18n('en')
 store.dispatch(sseSlots([
   { key: 'dashboard:1', title: 'PR #4634 review', agent: 'meshclaw', running: true },
   { key: 'dashboard:2', title: 'Prompt authoring', agent: 'meshclaw', running: false },
-  { key: 'dashboard:3', title: 'Windows shard triage', agent: 'kirocrew', running: false },
+  { key: 'dashboard:3', title: 'Windows shard triage', agent: 'ajcrew', running: false },
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- ChatSlot carries
 // ~40 fields the picker never reads; the four it does read are what the scene needs.
 ] as any))

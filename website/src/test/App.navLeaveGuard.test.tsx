@@ -35,7 +35,7 @@ vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page
 vi.mock('../pages/SystemPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => null }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 vi.mock('../pages/NotificationsPage', () => ({ default: () => null }))
 vi.mock('../pages/SchedulePage', () => ({ default: () => null }))
 vi.mock('../pages/AppDetailPage', () => ({ default: () => <div data-testid="app-detail-page">AppDetailPage</div> }))
@@ -102,7 +102,7 @@ vi.mock('../utils/appPopout', async (importOriginal) => {
     },
   }
 })
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
 vi.mock('../api/client', () => ({
@@ -522,7 +522,7 @@ describe('native app-menu navigation leave guard', () => {
   })
 
   it('brings the local Crew forward over a Remote Crew pane for an app detail link', async () => {
-    // `kirocrew://apps/detail/<name>` names an app in the local Crew. A bare
+    // `ajcrew://apps/detail/<name>` names an app in the local Crew. A bare
     // navigate would route the local pane while it stays hidden behind the
     // Remote Crew, so the link would appear to open nothing.
     const store = createTestStore()
@@ -566,7 +566,7 @@ describe('native app-menu navigation leave guard', () => {
     await waitFor(() => expect(screen.queryByLabelText('draft')).toBeNull())
   })
 
-  // `kirocrew://remote-crew/add` arrives as the route the desktop resolver
+  // `ajcrew://remote-crew/add` arrives as the route the desktop resolver
   // built. Its values go to the add form through the store, never into the
   // dashboard's own URL, and Remote Crew is the local Crew's page.
   const addLinkRoute = '/settings/instances?host=me%40devbox.example.com&port=5476&name=Dev%20box'

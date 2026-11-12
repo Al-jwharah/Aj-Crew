@@ -41,7 +41,7 @@ const slot = (key, title, extra = {}) => ({
   title,
   running: false,
   messages: 0,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   folder_id: '',
   modified: now,

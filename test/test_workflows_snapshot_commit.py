@@ -8,12 +8,12 @@ from unittest.mock import AsyncMock
 import pytest
 from test_workflows_private_execution import world as _world
 
-from kiro_crew import atomic_write as atomic
-from kiro_crew.task_models import Project
-from kiro_crew.taskrunner import TaskRunner
-from kiro_crew.testing.wait import await_until
-from kiro_crew.workflow_memory import TaskSnapshotError, WorkflowScope
-from kiro_crew.workflows.store import WorkflowRunStore
+from aj_crew import atomic_write as atomic
+from aj_crew.task_models import Project
+from aj_crew.taskrunner import TaskRunner
+from aj_crew.testing.wait import await_until
+from aj_crew.workflow_memory import TaskSnapshotError, WorkflowScope
+from aj_crew.workflows.store import WorkflowRunStore
 
 world = _world
 
@@ -158,7 +158,7 @@ async def test_failed_delete_remains_retryable(world, tmp_path, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_unreadable_row_blocks_snapshot_replacement(world, tmp_path):
-    from kiro_crew.workflow_memory import write_task_snapshot
+    from aj_crew.workflow_memory import write_task_snapshot
 
     runner = _runner(world, tmp_path / "tasks")
     member = await _private(world, "bad")
@@ -219,8 +219,8 @@ async def test_cancelled_write_drains_before_new_snapshot(world, tmp_path, monke
 async def test_completion_write_failure_never_publishes_success(
     world, tmp_path, monkeypatch, caplog
 ):
-    from kiro_crew import taskrunner as task_module
-    from kiro_crew.task_models import Task
+    from aj_crew import taskrunner as task_module
+    from aj_crew.task_models import Task
 
     runner = _runner(world, tmp_path / "tasks")
     private = await _private(world, "terminal")
@@ -301,7 +301,7 @@ async def test_late_older_snapshot_cannot_overwrite_failed_newer_attempt(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("phase", ["write", "replace"])
 async def test_plan_admission_failure_rolls_back(world, tmp_path, monkeypatch, phase):
-    from kiro_crew.task_models import Task
+    from aj_crew.task_models import Task
 
     runner = _runner(world, tmp_path / "tasks")
     monkeypatch.setattr(
@@ -341,7 +341,7 @@ async def test_unreadable_snapshot_cannot_be_overwritten(world, tmp_path, monkey
     runner._runs[member.task_id] = member
     await runner._apersist_runs()
     before = runner._runs_path().read_bytes()
-    from kiro_crew import workflow_memory
+    from aj_crew import workflow_memory
 
     with monkeypatch.context() as patch:
         patch.setattr(
@@ -359,7 +359,7 @@ async def test_unreadable_snapshot_cannot_be_overwritten(world, tmp_path, monkey
 @pytest.mark.asyncio
 @pytest.mark.parametrize("outcome", ["success", "failure", "cancelled"])
 async def test_background_completion_observer_preserves_await_outcome(caplog, outcome):
-    from kiro_crew.taskrunner import _observe_background_completion
+    from aj_crew.taskrunner import _observe_background_completion
 
     async def complete():
         if outcome == "failure":

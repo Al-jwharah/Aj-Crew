@@ -44,9 +44,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.builtins.dev_fleet import gateway_service
-from kiro_crew.dashboard.handlers import themes as themes_mod
-from kiro_crew.service import macos as svc_macos
+from aj_crew.apps.builtins.dev_fleet import gateway_service
+from aj_crew.dashboard.handlers import themes as themes_mod
+from aj_crew.service import macos as svc_macos
 
 POSIX_ONLY = pytest.mark.skipif(os.name == "nt", reason="POSIX permission bits only")
 
@@ -128,7 +128,7 @@ class TestDevFleetDropInWrite:
         ``Path.write_text`` raised ``FileNotFoundError`` and the rollback
         reported failure to the dashboard.
         """
-        target = tmp_path / "kirocrew.service.d" / "make-live.conf"
+        target = tmp_path / "ajcrew.service.d" / "make-live.conf"
         assert not target.parent.exists()
 
         gateway_service.atomic_write_text(target, "prior\n")
@@ -200,7 +200,7 @@ class TestDevFleetDropInWrite:
         dropin.write_text("staged\n", encoding="utf-8")
         backend = gateway_service.SystemdBackend(
             AsyncMock(return_value=(0, "", "")),
-            lambda: "kirocrew.service",
+            lambda: "ajcrew.service",
             platform="linux",
             which=lambda _name: "/usr/bin/systemctl",
             dropin_path=lambda: dropin,
@@ -290,7 +290,7 @@ class TestLaunchdPlistWrite:
     def _isolated_plist(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         self._dir = tmp_path / "LaunchAgents"
         self._dir.mkdir()
-        self._path = self._dir / "dev.kirocrew.gateway.plist"
+        self._path = self._dir / "dev.ajcrew.gateway.plist"
         monkeypatch.setattr(svc_macos, "PLIST_DIR", self._dir)
         monkeypatch.setattr(svc_macos, "PLIST_PATH", self._path)
 
@@ -317,7 +317,7 @@ class TestLaunchdPlistWrite:
 
         The hand-rolled clause did not catch ``KeyboardInterrupt``, so an
         operator pressing Ctrl-C during ``service install`` left a
-        ``dev.kirocrew.gateway.plist.*.tmp`` file directly in the directory
+        ``dev.ajcrew.gateway.plist.*.tmp`` file directly in the directory
         launchd scans.
         """
         _interrupt_the_rename_of(monkeypatch, self._path)

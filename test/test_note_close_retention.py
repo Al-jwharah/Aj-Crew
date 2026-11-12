@@ -16,8 +16,8 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard.chat import api_chat_slot_note
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.chat import api_chat_slot_note
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 @asynccontextmanager
@@ -146,8 +146,8 @@ class TestDeferredNoteLostOnClose:
     async def test_a_completed_close_retires_a_hold_the_closing_window_kept(self, tmp_path: Path):
         """A turn's own teardown flush during the close keeps the note held; the committing save
         must still retire it, or nothing delivers it and it outlives the session."""
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-        from kiro_crew.dashboard.chat_utils import slot_history_key
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_utils import slot_history_key
 
         state, slot = _state_and_slot(tmp_path)
         slot.task = asyncio.get_running_loop().create_future()
@@ -168,7 +168,7 @@ class TestDeferredNoteLostOnClose:
         assert not hold, "a committed close left its hold on disk"
 
     def test_a_restore_delivers_a_row_committed_hold_as_context_only(self):
-        from kiro_crew.dashboard.slot_buffers import drop_committed_restored_notes
+        from aj_crew.dashboard.slot_buffers import drop_committed_restored_notes
 
         entry = {
             "id": "held00000009",
@@ -215,7 +215,7 @@ class TestDeferredNoteLostOnClose:
         """A merge card's entry already outlives its row until its context is consumed, so a
         closing flush gives it the row its readers need (``noteId`` and ``mergedFrom``) and its
         queue seat now, while the plain note beside it still takes the ``noteRowFor`` path."""
-        from kiro_crew.dashboard.slot_buffers import MERGED_FROM_META_KEY
+        from aj_crew.dashboard.slot_buffers import MERGED_FROM_META_KEY
 
         merged_from = {"session": "dashboard:fork", "slot": "fork", "through": "m1"}
         slot = _ChatSlot("s1")
@@ -271,7 +271,7 @@ class TestDeferredNoteLostOnClose:
     async def test_an_aborted_close_keeps_the_held_context_deliverable(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ):
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         state, slot = _state_and_slot(tmp_path)
         slot.task = asyncio.get_running_loop().create_future()
@@ -314,7 +314,7 @@ class TestDeferredNoteLostOnClose:
         reaches the close's own archival flush. The replacement is minted at the pop under a
         different transcript, so the archive path runs rather than the hand-over exit.
         """
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         state, slot = _state_and_slot(tmp_path)
         slot.task = asyncio.get_running_loop().create_future()
@@ -362,7 +362,7 @@ class TestDeferredNoteLostOnClose:
             _slot_with_committed_and_uncommitted_rows,
         )
 
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         state = _make_state(tmp_path)
         original = await _slot_with_committed_and_uncommitted_rows(state)
@@ -410,8 +410,8 @@ class TestDeferredNoteLostOnClose:
             _slot_with_committed_and_uncommitted_rows,
         )
 
-        from kiro_crew.dashboard import chat_handlers
-        from kiro_crew.dashboard.slot_buffers import drop_committed_restored_notes
+        from aj_crew.dashboard import chat_handlers
+        from aj_crew.dashboard.slot_buffers import drop_committed_restored_notes
 
         state = _make_state(tmp_path)
         original = await _slot_with_committed_and_uncommitted_rows(state)
@@ -452,7 +452,7 @@ class TestDeferredNoteLostOnClose:
     async def test_a_restored_slot_shows_the_rows_its_archival_flush_appended(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ):
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         state, slot = _state_and_slot(tmp_path)
         slot.task = asyncio.get_running_loop().create_future()
@@ -486,9 +486,9 @@ class TestDeferredNoteLostOnClose:
     ):
         from slot_close_recreation_race_helpers import _Req
 
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
-        monkeypatch.setattr("kiro_crew.autonudge._INSTANCE", None)
+        monkeypatch.setattr("aj_crew.autonudge._INSTANCE", None)
         state, slot = _state_and_slot(tmp_path)
         assert await chat_handlers.save_slot_off_loop(state, slot, force=True)
         slot._deferred_notes.append(
@@ -528,8 +528,8 @@ class TestCloseWindowNoteEvidence:
     async def test_a_failed_hold_write_after_a_closing_flush_keeps_the_note(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ):
-        from kiro_crew.dashboard.chat_handlers import _persist_deferred_note_hold
-        from kiro_crew.dashboard.chat_utils import effective_session_key, slot_history_key
+        from aj_crew.dashboard.chat_handlers import _persist_deferred_note_hold
+        from aj_crew.dashboard.chat_utils import effective_session_key, slot_history_key
 
         state, slot = _state_and_slot(tmp_path)
         note = {
@@ -551,7 +551,7 @@ class TestCloseWindowNoteEvidence:
             raise TimeoutError("history lock")
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.persist_deferred_notes_sync", _lock_timeout
+            "aj_crew.dashboard.chat_handlers.persist_deferred_notes_sync", _lock_timeout
         )
         resp = await _persist_deferred_note_hold(state, slot, note, slot_history_key(slot))
 
@@ -560,7 +560,7 @@ class TestCloseWindowNoteEvidence:
         assert note["context"]["content"] == "CLOSING-WINDOW-NOTE"
 
     def test_a_committed_close_window_row_counts_as_committed(self, tmp_path: Path):
-        from kiro_crew.dashboard.slot_buffers import _note_row_committed
+        from aj_crew.dashboard.slot_buffers import _note_row_committed
 
         class _Log:
             def _path(self, _key: str) -> Path:

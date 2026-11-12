@@ -18,13 +18,13 @@ import json
 
 import pytest
 
-import kiro_crew.mcp_shared as mcp_shared
-from kiro_crew.testing.wait import wait_until
+import aj_crew.mcp_shared as mcp_shared
+from aj_crew.testing.wait import wait_until
 
 
 @pytest.fixture(autouse=True)
 # flake-ok: pre-existing autouse reset of one mcp_shared global through monkeypatch, moved verbatim; no importing module calls monkeypatch.undo()
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture, moved verbatim; no test in a module that imports it calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture, moved verbatim; no test in a module that imports it calls monkeypatch.undo()
 def _framing_undetected(monkeypatch):
     """Every test starts on a stream whose framing is not yet detected.
 
@@ -67,7 +67,7 @@ class _LoopHarness:
             lambda *a, **k: mcp_shared.ToolPolicy(frozenset(), ""),
         )
         # The test's handlers stand in for a managed server's own code, so the
-        # tool policy applies to them as it does to Kiro Crew's servers.
+        # tool policy applies to them as it does to Aj Crew's servers.
         # ``managed=False`` keeps the real classifier, for a handler the test
         # deliberately places outside the package.
         if managed:
@@ -152,7 +152,7 @@ def _initialize(req_id) -> dict:
 
 
 def _tools_call_with_caller(req_id, tool_name: str, session_key: str) -> dict:
-    from kiro_crew.mcp_caller import CallerContext, build_caller_meta
+    from aj_crew.mcp_caller import CallerContext, build_caller_meta
 
     msg = _tools_call(req_id, tool_name)
     msg["params"]["_meta"] = build_caller_meta(

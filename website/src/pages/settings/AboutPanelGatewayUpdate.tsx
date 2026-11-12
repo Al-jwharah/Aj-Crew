@@ -388,7 +388,7 @@ export function AboutPanelGatewayUpdates({
           <p className="text-sm text-muted">
             {lastCheckedAt
               ? i18nT('pages.settings.aboutPanel.checks_for_updates_with_timing', {
-                  name: botName || 'Kiro Crew',
+                  name: botName || 'Aj Crew',
                   timing: i18nT('pages.settings.aboutPanel.last_checked_ago_next_check_in', {
                     ago: fmtRelative(lastCheckedAt * 1000),
                     // Clamp: after machine sleep the scheduled check can be
@@ -397,7 +397,7 @@ export function AboutPanelGatewayUpdates({
                     next: fmtRelative(Math.max((lastCheckedAt + checkIntervalSecs) * 1000, Date.now())),
                   }),
                 })
-              : <>{botName || 'Kiro Crew'} {i18nT('pages.settings.aboutPanel.checks_for_updates_automatically_you_can_also_ch')}</>}
+              : <>{botName || 'Aj Crew'} {i18nT('pages.settings.aboutPanel.checks_for_updates_automatically_you_can_also_ch')}</>}
           </p>
           <div>
             <Btn onClick={() => gwCheck.mutate()} disabled={gwCheck.isPending}>
@@ -560,7 +560,7 @@ export function AboutPanelUpdateConfirm({
         <ErrorNotice className="mb-3" message={applyError} askAgent testId="update-apply-error" />
         {applyDirty && applyError && (
           <div className="mb-3" data-testid="update-dirty-stash-command">
-            <CopyCommand><code>git stash push -u -m "before kirocrew update"</code></CopyCommand>
+            <CopyCommand><code>git stash push -u -m "before ajcrew update"</code></CopyCommand>
           </div>
         )}
         {restarting ? (

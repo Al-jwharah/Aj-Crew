@@ -21,18 +21,18 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_KIRO,
     ACP_BACKENDS_CREW_FIRES_SPEC_OBSERVER_HOOKS,
 )
-from kiro_crew.dashboard.handlers.steering import (
+from aj_crew.dashboard.handlers.steering import (
     STEERING_FILE_MAX_BYTES,
     STEERING_INCLUSION_DEFAULT,
     STEERING_INCLUSION_MODES,
     STEERING_MAX_FILES,
     STEERING_SOURCES,
 )
-from kiro_crew.hooks import (
+from aj_crew.hooks import (
     _SKILLS_ONLY_EVENTS,
     HOOK_EVENT_POST_TOOL_USE,
     HOOK_EVENT_PRE_TOOL_USE,
@@ -42,11 +42,11 @@ from kiro_crew.hooks import (
     HOOK_TIMEOUT_MIN,
     ScriptHook,
 )
-from kiro_crew.platform.bootstrap import KAS_CLI_FLOOR_KIRO_NOTICE
-from kiro_crew.validation import REGISTER_HOOK_SCHEMA
+from aj_crew.platform.bootstrap import KAS_CLI_FLOOR_KIRO_NOTICE
+from aj_crew.validation import REGISTER_HOOK_SCHEMA
 
 REPO = Path(__file__).resolve().parent.parent
-DOC = REPO / "src" / "kiro_crew" / "docs" / "steering-and-hooks.md"
+DOC = REPO / "src" / "aj_crew" / "docs" / "steering-and-hooks.md"
 
 
 @pytest.fixture(scope="module")
@@ -142,7 +142,7 @@ class TestHookFields:
             f"matcher_mode row names {set(_backticked(row)[1:])}; "
             f"hooks.HOOK_MATCHER_MODES accepts {modes}. "
             "Changing the modes means updating the matcher_mode row "
-            "in src/kiro_crew/docs/steering-and-hooks.md."
+            "in src/aj_crew/docs/steering-and-hooks.md."
         )
 
     def test_the_matcher_split_names_both_tool_events(self, doc_text: str) -> None:
@@ -219,11 +219,11 @@ class TestKiroCliV2PromptHook:
     """Where a hook's ``prompt`` is the user's message, and where it is the model's.
 
     In a dashboard chat and on a channel turn that runs the Hooks page's hooks it
-    is the user's message, never the prompt Kiro Crew builds for the model, though
-    a dashboard turn can put Kiro Crew text before the typed text (queued
+    is the user's message, never the prompt Aj Crew builds for the model, though
+    a dashboard turn can put Aj Crew text before the typed text (queued
     background context, a sender line, a cancelled turn), and the page promises no
     size for that text. It is the prompt the backend receives on the other
-    channel turns, where Kiro Crew fires an agent spec's hooks alone, and on
+    channel turns, where Aj Crew fires an agent spec's hooks alone, and on
     kiro-cli's v2 engine, which runs an agent spec's ``userPromptSubmit`` itself.
     That prompt carries the whole session-start context only on a session's first
     message, and part of it again on the first message after a compaction. The
@@ -251,7 +251,7 @@ class TestKiroCliV2PromptHook:
         )
         assert (
             "The first message after a compaction carries part of it again (the agent "
-            "prompt, the memory index, skills and lessons), and later messages carry Kiro "
+            "prompt, the memory index, skills and lessons), and later messages carry Aj "
             "Crew's per-turn context instead." in para
         )
         assert "the first after a compaction, carries the full" not in para, (
@@ -264,10 +264,10 @@ class TestKiroCliV2PromptHook:
             "A Hooks-tab `UserPromptSubmit` hook never gets the agent prompt, rules or "
             "memory, wherever it runs. Nor does the agent spec's hook on KAS" in para
         )
-        assert "never Kiro Crew's context" not in para, (
-            "a dashboard turn can put Kiro Crew text before the typed text "
+        assert "never Aj Crew's context" not in para, (
+            "a dashboard turn can put Aj Crew text before the typed text "
             "(take_turn_context, sender_line, the cancelled-turn preamble), so a hook "
-            "Kiro Crew fires is not free of every Kiro Crew word"
+            "Aj Crew fires is not free of every Aj Crew word"
         )
         assert "`kiro-cli update`" in para
         assert "in a dashboard chat and on a channel turn that runs the Hooks page's hooks" in para
@@ -284,7 +284,7 @@ class TestKiroCliV2PromptHook:
         )
 
     def test_kiro_cli_is_still_the_one_running_the_spec_hook(self, doc_text: str) -> None:
-        """The paragraph is true only while Kiro Crew does not fire the spec's
+        """The paragraph is true only while Aj Crew does not fire the spec's
         observer events on kiro-cli; a change that makes it fire them must
         rewrite the paragraph."""
         assert self._CLAIM in doc_text
@@ -295,16 +295,16 @@ class TestKiroCliV2PromptHook:
         assert (
             "In a dashboard chat, and on a channel turn that runs the Hooks page's hooks "
             "(your own conversation, such as a Slack 1:1 DM), `prompt` is your message, not "
-            "the prompt Kiro Crew builds for the model: it has none of the agent prompt, "
+            "the prompt Aj Crew builds for the model: it has none of the agent prompt, "
             "rules, memory or session context." in body
         )
         assert (
-            "A dashboard turn can still put Kiro Crew text before yours, and that text can "
+            "A dashboard turn can still put Aj Crew text before yours, and that text can "
             "be long. It can be background context an app queued for the chat, a "
             "`[from: ...]` line in a shared chat, or the request a Stop cut off and the "
             "reply so far." in body
         )
-        assert "short Kiro Crew block" not in body, (
+        assert "short Aj Crew block" not in body, (
             "a context entry an app queues (POST /api/chat/slots/{slot}/context) is "
             "bounded only by that endpoint's own cap, and take_turn_context drains every "
             "queued entry into turn.message before the UserPromptSubmit fire"

@@ -13,7 +13,7 @@ import { resolveByApprovalId } from '../../store/chatSlice'
 
 /**
  * One field of an elicitation form, as the gateway normalised it
- * (`kiro_crew.acp.elicitation.ElicitationField.as_dict`). The kinds are the
+ * (`aj_crew.acp.elicitation.ElicitationField.as_dict`). The kinds are the
  * only shapes MCP's elicitation schema allows a client to render, so the
  * card draws exactly these and nothing else.
  */
@@ -314,7 +314,7 @@ function answerErrorText(err: unknown): string {
 /**
  * An MCP server's own question to the person, raised in the middle of a tool
  * call: either a small form built from the schema the server sent, or a link
- * the person is asked to visit. Neither is Kiro Crew's tool approval -- the
+ * the person is asked to visit. Neither is Aj Crew's tool approval -- the
  * server declared that a human must answer, so no trust setting answers it --
  * which is why this card has no Trust tier and its wording names the tool,
  * not the agent. Answering posts to the slot's `elicitation` endpoint; the

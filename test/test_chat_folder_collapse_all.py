@@ -13,10 +13,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat_folders import api_chat_folders_collapse_all
-from kiro_crew.dashboard.folder_repository import FolderRepository
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.loop_lock import LoopBoundLock
+from aj_crew.dashboard.chat_folders import api_chat_folders_collapse_all
+from aj_crew.dashboard.folder_repository import FolderRepository
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.loop_lock import LoopBoundLock
 
 
 def _folders() -> list[dict[str, Any]]:

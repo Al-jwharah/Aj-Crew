@@ -26,7 +26,7 @@ superseded-by: []
 ## 1. Problem and threat
 
 In a source-checkout install, the agent's workspace is the install checkout
-(`KIROCREW_PROJECT_DIR`), and the agent can write its `.git`. The gateway runs
+(`AJCREW_PROJECT_DIR`), and the agent can write its `.git`. The gateway runs
 git in that checkout outside the sandbox (the update check, Dev Fleet), and so
 does the person at the machine. Git runs programs that its control files name:
 `config` (`core.fsmonitor`, `core.sshCommand`, filter and diff drivers),
@@ -56,7 +56,7 @@ files in the first place.
 
 Inside the agent sandbox, the git control files of the gateway's own
 checkouts are read-only. "The gateway's own checkouts" is exactly
-`gateway_checkout_roots()` in `sandbox_git_control.py`: `KIROCREW_PROJECT_DIR`
+`gateway_checkout_roots()` in `sandbox_git_control.py`: `AJCREW_PROJECT_DIR`
 and the source checkout the gateway imports from, when each has a `.git`.
 
 - Sealed read-only: `config`, `config.worktree`, `hooks/`, `info/`,
@@ -69,9 +69,9 @@ and the source checkout the gateway imports from, when each has a `.git`.
   `commit`, `branch`, `status` and `worktree add --no-track` keep working.
 - The file-tool write gate (`security/paths.py`) refuses the same paths, in
   those checkouts only.
-- The shipped dev skills stop writing the sealed config: `kirocrew-worktree-dev`
+- The shipped dev skills stop writing the sealed config: `ajcrew-worktree-dev`
   and `live_checkout_guard.py` use `git worktree add --no-track`, and
-  `kirocrew-prepare-pr` pushes with `git push origin <branch>` (no `-u`).
+  `ajcrew-prepare-pr` pushes with `git push origin <branch>` (no `-u`).
 
 There is no opt-out switch. Turning the sandbox off (`agent.sandbox = off`)
 removes the seal along with every other sandbox control.
@@ -93,10 +93,10 @@ Where it applies:
 | Place | Affected? | Why |
 |---|---|---|
 | The gateway checkout | Yes | It is a gateway checkout root |
-| A linked worktree of it (`git worktree add`, e.g. `../kirocrew-wt-*`) | Yes, for the commands above | It shares the main clone's `config` and `hooks/`, which are sealed |
+| A linked worktree of it (`git worktree add`, e.g. `../ajcrew-wt-*`) | Yes, for the commands above | It shares the main clone's `config` and `hooks/`, which are sealed |
 | A separate clone with its own `.git` | No | Not a gateway root; its `.git/config` stays writable |
 | Any other repository or workspace | No | Not a gateway root; only today's file-tool rules apply |
-| Packaged (non-source) installs | No new loss | No source checkout; `KIROCREW_PROJECT_DIR` only if it is itself a git checkout |
+| Packaged (non-source) installs | No new loss | No source checkout; `AJCREW_PROJECT_DIR` only if it is itself a git checkout |
 
 Ordinary commits, branches and status keep working everywhere.
 
@@ -106,7 +106,7 @@ For work that needs an upstream, a new remote, `gh pr checkout` or installed
 hooks, use a separate clone, not a linked worktree:
 
 ```bash
-git clone https://github.com/kirodotdev/KiroCrew.git ../kirocrew-clone-<name>
+git clone https://github.com/Al-jwharah/Aj-Crew.git ../ajcrew-clone-<name>
 ```
 
 In a linked worktree of the gateway checkout, create branches with
@@ -120,7 +120,7 @@ git.
 | OS | Shell writes | File tools | Gap |
 |---|---|---|---|
 | Linux (namespace sandbox) | Bind mounts: writes fail with EROFS, renames with EBUSY. A `rename(2)` between two pinned directories fails with EXDEV; `mv` falls back to copying | Refused in gateway checkouts | A shell can still create a missing `.git/commondir`, or a missing include / `hooksPath` target: a bind mount needs an existing file, and a stand-in breaks git and libgit2. The host-side guards cover only the gateway's own git calls; a person's terminal git stays exposed (section 6) |
-| macOS (Kiro Crew Seatbelt profile) | Write denies plus rename guards on the pins and every ancestor of the checkout | Refused in gateway checkouts | None known; Seatbelt also denies creating the missing files |
+| macOS (Aj Crew Seatbelt profile) | Write denies plus rename guards on the pins and every ancestor of the checkout | Refused in gateway checkouts | None known; Seatbelt also denies creating the missing files |
 | Windows | No OS sandbox exists, so no seal | Refused in gateway checkouts | Shell writes are unconfined, as today |
 
 ## 6. Known limits

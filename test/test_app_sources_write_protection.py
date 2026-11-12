@@ -12,15 +12,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.registry import app_source_dir
-from kiro_crew.security import (
+from aj_crew.apps.registry import app_source_dir
+from aj_crew.security import (
     is_sensitive_bash_command,
     is_sensitive_path,
     is_sensitive_write_path,
     write_protected_home_paths,
 )
 
-_PREFIXES = ("~/.kiro/crew", "~/.kirocrew")
+_PREFIXES = ("~/.kiro/crew", "~/.ajcrew")
 
 
 class TestAppSourcesWriteProtection:

@@ -4,8 +4,8 @@
  * The row holding "Star us · Report issue" drew its divider with
  * `border-border-strong` (--border-strong) while every other separator in the
  * rail — including the hairline directly above it, under the brand mark — uses
- * `border-border` (--border). At the default kiro-dark values that is #4a464f
- * against #352f3d: one contrast step apart, and visible as a mismatched pair of
+ * `border-border` (--border). At the default aj-dark values that is #4a464f
+ * against #272a31: one contrast step apart, and visible as a mismatched pair of
  * lines in the same card.
  *
  * The subject is a single border-top-color, so each theme is photographed twice
@@ -32,12 +32,12 @@ import { logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 const OUT = process.argv[2] || '../temp-screenshots/leftnav-footer-border'
 
 const SCENES = [
-  { name: 'dark', theme: 'dark', attr: 'kiro-dark' },
-  { name: 'light', theme: 'light', attr: 'kiro-light' },
+  { name: 'dark', theme: 'dark', attr: 'aj-dark' },
+  { name: 'light', theme: 'light', attr: 'aj-light' },
 ]
 
 const slots = [
-  { key: 's1', title: 'Rail footer divider', messages: 4, running: false, agent: 'kirocrew', mode: '', created: '2026-08-11T01:00:00Z', last_ts: '2026-08-11T04:00:00Z', folder_id: '' },
+  { key: 's1', title: 'Rail footer divider', messages: 4, running: false, agent: 'ajcrew', mode: '', created: '2026-08-11T01:00:00Z', last_ts: '2026-08-11T04:00:00Z', folder_id: '' },
 ]
 
 mkdirSync(OUT, { recursive: true })
@@ -79,7 +79,7 @@ async function main() {
       // carries no role or test id of its own. The hook is `border-t` — the
       // side utility, which this change leaves alone — never the colour token
       // being compared, so the locator cannot drift with the thing under test.
-      const row = page.locator('a[href="https://github.com/kirodotdev/KiroCrew"]')
+      const row = page.locator('a[href="https://github.com/Al-jwharah/Aj-Crew"]')
         .locator('xpath=ancestor::div[contains(@class,"border-t")][1]')
       await row.waitFor({ state: 'visible', timeout: 15000 })
 

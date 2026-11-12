@@ -662,7 +662,7 @@ describe('ChatSidebar – remote crew sessions in the live list', () => {
     await waitFor(() => expect(remoteRow().getAttribute('aria-current')).toBe('true'))
     expect(vi.mocked(api.createChatSlot)).not.toHaveBeenCalled()
     expect(selectInstanceMock).not.toHaveBeenCalled()
-    expect(JSON.parse(sessionStorage.getItem('kirocrew.crewWindow') || 'null')).toEqual({ instanceId: 'inst-a', key: 'chat-9' })
+    expect(JSON.parse(sessionStorage.getItem('ajcrew.crewWindow') || 'null')).toEqual({ instanceId: 'inst-a', key: 'chat-9' })
     act(() => { closeCrewWindow() })
   })
 
@@ -678,7 +678,7 @@ describe('ChatSidebar – remote crew sessions in the live list', () => {
     fireEvent.click(Array.from(container.querySelectorAll('[data-session-row]'))
       .find(row => row.textContent?.includes('REMOTE middle row'))!)
     expect(onOpenPeerSession).toHaveBeenCalledWith('inst-a', 'chat-9')
-    expect(sessionStorage.getItem('kirocrew.crewWindow') || null).toBeNull()
+    expect(sessionStorage.getItem('ajcrew.crewWindow') || null).toBeNull()
   })
 
   it('keeps the PEER identity on the adopted row, so it is one row and not two', async () => {

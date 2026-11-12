@@ -22,8 +22,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from external_registry_helpers import cache_dir_fixture  # noqa: F401
 
-from kiro_crew.apps import registry, routes
-from kiro_crew.apps.registry import (
+from aj_crew.apps import registry, routes
+from aj_crew.apps.registry import (
     _EXTERNAL_REGISTRY_CACHE_TTL,
     _EXTERNAL_REGISTRY_FAILURE_CLOCK_SLACK,
     _EXTERNAL_REGISTRY_FAILURE_TTL,
@@ -191,7 +191,7 @@ def unreachable(cache_dir, monkeypatch):
     """
     reg = _registry()
     monkeypatch.setattr(
-        "kiro_crew.config.loader.KiroCrewConfig.load", lambda: SimpleNamespace(registries=[reg])
+        "aj_crew.config.loader.AjCrewConfig.load", lambda: SimpleNamespace(registries=[reg])
     )
 
     async def _unwrapped(argv, **_kwargs):

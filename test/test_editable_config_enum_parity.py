@@ -18,8 +18,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.config.schema import SCHEMA_REGISTRY
-from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+from aj_crew.config.schema import SCHEMA_REGISTRY
+from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
 # Editable enum keys whose schema entry has no ``enum`` to compare against.
 _SCHEMA_DECLARES_NO_ENUM: dict[str, str] = {

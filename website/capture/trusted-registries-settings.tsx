@@ -39,7 +39,7 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const scene = params.get('scene') || 'rows'
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // example.test throughout: these strings are baked into a committed PNG, where
 // no text scanner can see them.
@@ -205,7 +205,7 @@ qc.setQueryData(['denied-commands'], {
   effective_count: 1,
   governance_locked: false,
 })
-qc.setQueryData(['kirocrewConfig'], { agent: { yolo_duration: '6h', apps_allow_third_party: false } })
+qc.setQueryData(['ajcrewConfig'], { agent: { yolo_duration: '6h', apps_allow_third_party: false } })
 qc.setQueryData(['tailnet-status'], {
   enabled: false,
   governance_pinned: false,

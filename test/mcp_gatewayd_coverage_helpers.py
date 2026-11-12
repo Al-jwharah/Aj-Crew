@@ -20,9 +20,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.mcp_gateway.backend import Backend
-from kiro_crew.mcp_gateway.pool import PoolKey
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway.backend import Backend
+from aj_crew.mcp_gateway.pool import PoolKey
 
 # --- doubles -----------------------------------------------------------------
 

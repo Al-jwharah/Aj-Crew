@@ -16,7 +16,7 @@ import { screen, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 
 const themeState = {
-  colorTheme: 'kiro',
+  colorTheme: 'aj',
   theme: 'light' as const,
   mode: 'light' as const,
   // First run NOT finished: outside the frame this opens the Customize tour.
@@ -26,7 +26,7 @@ const themeState = {
   themeBootReady: true,
   themes: [],
   // What the Pick your look step itself reads once it opens (the control case).
-  allThemes: [{ value: 'kiro', label: 'Kiro' }],
+  allThemes: [{ value: 'aj', label: 'Aj' }],
   preference: 'light' as const,
   setTheme: vi.fn(),
   markOnboarded: vi.fn(),
@@ -53,7 +53,7 @@ vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page
 vi.mock('../pages/SystemPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => null }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 
 import { renderWithProviders } from './helpers'
 import App from '../App'

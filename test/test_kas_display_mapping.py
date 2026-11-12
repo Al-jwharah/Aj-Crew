@@ -13,8 +13,8 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     EVENT_AGENT_SWITCHED,
@@ -48,8 +48,8 @@ def test_current_mode_update_emits_on_first_and_on_change() -> None:
     handle = _handle(ACP_BACKEND_KAS)
     # The session's initial current_mode_update is drained pre-prompt, so the
     # first frame reaching the handler is a real switch and MUST emit.
-    events = _update(handle, {"sessionUpdate": "current_mode_update", "currentModeId": "kirocrew"})
-    assert len(events) == 1 and events[0].kind == EVENT_AGENT_SWITCHED and events[0].text == "kirocrew"
+    events = _update(handle, {"sessionUpdate": "current_mode_update", "currentModeId": "ajcrew"})
+    assert len(events) == 1 and events[0].kind == EVENT_AGENT_SWITCHED and events[0].text == "ajcrew"
     # A change to a different mode emits again.
     events = _update(handle, {"sessionUpdate": "current_mode_update", "currentModeId": "researcher"})
     assert len(events) == 1 and events[0].text == "researcher"
@@ -57,10 +57,10 @@ def test_current_mode_update_emits_on_first_and_on_change() -> None:
 
 def test_current_mode_update_reassert_is_noop() -> None:
     handle = _handle(ACP_BACKEND_KAS)
-    first = _update(handle, {"sessionUpdate": "current_mode_update", "currentModeId": "kirocrew"})
+    first = _update(handle, {"sessionUpdate": "current_mode_update", "currentModeId": "ajcrew"})
     assert len(first) == 1  # first frame emits
     # A re-assert of the already-current mode must not echo a spurious switch.
-    assert _update(handle, {"sessionUpdate": "current_mode_update", "currentModeId": "kirocrew"}) == []
+    assert _update(handle, {"sessionUpdate": "current_mode_update", "currentModeId": "ajcrew"}) == []
 
 
 def test_current_mode_update_missing_id_emits_nothing() -> None:
@@ -86,7 +86,7 @@ def test_a_built_in_of_the_crewmates_name_is_a_separate_mode() -> None:
     # Crewmate ``vibe`` runs as ``vibe-crewmate``; the engine's own ``vibe`` is a
     # different mode, so the switch to it is not swallowed as a repeat and does
     # not inherit the crewmate's approvals.
-    from kiro_crew.acp.kas_permissions import HOOK_GATEABLE_CAPABILITIES
+    from aj_crew.acp.kas_permissions import HOOK_GATEABLE_CAPABILITIES
 
     handle = _handle(ACP_BACKEND_KAS)
     # The crewmate's batch asks for the shell, so it lets KAS decide less alone
@@ -114,7 +114,7 @@ def test_current_mode_update_maps_only_an_alias_the_batch_registered() -> None:
     # Unregistered, the same string is just a mode id (a user agent may be
     # literally named ``default-crewmate``), so it is passed through unchanged.
     handle = _handle(ACP_BACKEND_KAS)
-    handle.kas_registered_agents = [{"id": "kirocrew", "prompt": "p"}]
+    handle.kas_registered_agents = [{"id": "ajcrew", "prompt": "p"}]
     events = _update(
         handle, {"sessionUpdate": "current_mode_update", "currentModeId": "default-crewmate"}
     )
@@ -441,7 +441,7 @@ def test_current_mode_update_not_routed_on_kiro_backend() -> None:
     handle = _handle(ACP_BACKEND_KIRO)
     # kiro-cli never emits current_mode_update; the shared parser has no branch
     # for it, so it is dropped (no agent_switched event) — proving the gate.
-    assert _update(handle, {"sessionUpdate": "current_mode_update", "currentModeId": "kirocrew"}) == []
+    assert _update(handle, {"sessionUpdate": "current_mode_update", "currentModeId": "ajcrew"}) == []
 
 
 def test_context_usage_not_applied_on_kiro_backend() -> None:

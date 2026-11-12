@@ -33,7 +33,7 @@ const AT_RE = /(?<![\p{L}\p{N}])@/gu
  *  (`skills._DOLLAR_SKILL_PATTERN`, `(?<![\w$])\$[a-z0-9]`) is narrower. */
 const DOLLAR_RE = /\$[a-z0-9]/giu
 /** A path separator followed on the same line by an image suffix. Every path the
- *  gateway's image upgrade matches (`kiro_crew.image_refs._PATH_RE`, POSIX or
+ *  gateway's image upgrade matches (`aj_crew.image_refs._PATH_RE`, POSIX or
  *  Windows) starts with a separator and ends in one of these suffixes on one line. */
 /** Markdown image syntax, any raw HTML tag, and any attachment or folder marker,
  *  however spaced or encoded: the transcript renderer passes raw HTML through

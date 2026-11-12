@@ -53,8 +53,8 @@ beforeEach(() => {
   writes = []
   stored = { session_environments: { coder_url: 'https://coder.example.test', profiles: [{ ...profile }] } }
   server.use(
-    http.get('*/api/config/kirocrew', () => { reads++; return HttpResponse.json(stored) }),
-    http.patch('*/api/config/kirocrew', async ({ request }) => {
+    http.get('*/api/config/ajcrew', () => { reads++; return HttpResponse.json(stored) }),
+    http.patch('*/api/config/ajcrew', async ({ request }) => {
       const body = await request.json() as { path: string; value: Section }
       writes.push(body)
       stored = { session_environments: body.value }
@@ -88,7 +88,7 @@ const SAVED = 'Settings saved.'
 const LOAD_ERROR = 'Could not load environment settings.'
 const check = () => screen.getByRole('button', { name: 'Check Coder connection' })
 const savedSection = (value: object) => expect(writes).toEqual([{ path: 'session_environments', value }])
-const configReads = (fail: boolean) => server.use(http.get('*/api/config/kirocrew', () =>
+const configReads = (fail: boolean) => server.use(http.get('*/api/config/ajcrew', () =>
   fail ? HttpResponse.json({ error: 'offline' }, { status: 500 }) : HttpResponse.json(stored)))
 const checkAnswers = (body: object, status = 200) =>
   server.use(http.post('*/api/session-environments/check', () => HttpResponse.json(body, { status })))
@@ -196,7 +196,7 @@ describe('Session Environments configuration preview', () => {
   it('keeps edits across refetch and discards explicitly', async () => {
     await mounted()
     typeUrl('https://draft.example.test')
-    act(() => qc.setQueryData(['kirocrewConfig'], { session_environments: { coder_url: 'https://other.example.test', profiles: [] } }))
+    act(() => qc.setQueryData(['ajcrewConfig'], { session_environments: { coder_url: 'https://other.example.test', profiles: [] } }))
     expect(url()).toHaveValue('https://draft.example.test')
     fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }))
     expect(url()).toHaveValue('https://other.example.test')
@@ -345,7 +345,7 @@ describe('Session Environments configuration preview', () => {
   })
 
   it('retains a rejected draft and shows the backend validation detail', async () => {
-    server.use(http.patch('*/api/config/kirocrew', () => HttpResponse.json({ error: 'profiles[0].id is a duplicate' }, { status: 400 })))
+    server.use(http.patch('*/api/config/ajcrew', () => HttpResponse.json({ error: 'profiles[0].id is a duplicate' }, { status: 400 })))
     await mounted()
     typeUrl('https://draft.example.test')
     fireEvent.click(save())
@@ -356,7 +356,7 @@ describe('Session Environments configuration preview', () => {
   })
 
   it('marks the Coder URL box when the gateway refuses the URL, and only then', async () => {
-    server.use(http.patch('*/api/config/kirocrew', () => HttpResponse.json({ error: 'coder_url must include a hostname' }, { status: 400 })))
+    server.use(http.patch('*/api/config/ajcrew', () => HttpResponse.json({ error: 'coder_url must include a hostname' }, { status: 400 })))
     await mounted()
     expect(url()).not.toHaveAttribute('aria-invalid')
     typeUrl('https://')
@@ -379,7 +379,7 @@ describe('Session Environments configuration preview', () => {
   it('does not fabricate settings support on an older gateway', async () => {
     stored = {}
     mount()
-    expect(await screen.findByText(/This version of Kiro Crew does not support Session Environments settings/)).toBeVisible()
+    expect(await screen.findByText(/This version of Aj Crew does not support Session Environments settings/)).toBeVisible()
     expect(screen.queryByLabelText('Coder URL')).not.toBeInTheDocument()
     expect(writes).toEqual([])
   })
@@ -419,7 +419,7 @@ describe('Session Environments configuration preview', () => {
     const value = draft ? 'https://draft.example.test' : stored.session_environments!.coder_url
     if (draft) fireEvent.change(url(), { target: { value } })
     configReads(true)
-    await act(async () => { await qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }) })
+    await act(async () => { await qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }) })
     const notice = await screen.findByText(LOAD_ERROR)
     expect(notice).toBeVisible()
     expect(url()).toHaveValue(value)
@@ -440,7 +440,7 @@ describe('Session Environments configuration preview', () => {
   it('freezes editing during a save and does not submit twice', async () => {
     let finish!: () => void
     const pending = new Promise<void>(resolve => { finish = resolve })
-    server.use(http.patch('*/api/config/kirocrew', async ({ request }) => {
+    server.use(http.patch('*/api/config/ajcrew', async ({ request }) => {
       writes.push(await request.json())
       await pending
       return HttpResponse.json(stored)
@@ -622,7 +622,7 @@ describe('Coder setup and saved profile management', () => {
   it('keeps the shutdown switch off and locked until a profile exists', async () => {
     stored = { session_environments: { coder_url: 'https://coder.example.test', profiles: [], default_profile: '', stop_on_shutdown: false } as Section }
     await mounted()
-    const stop = () => screen.getByRole('switch', { name: 'Stop workspaces when Kiro Crew shuts down' })
+    const stop = () => screen.getByRole('switch', { name: 'Stop workspaces when Aj Crew shuts down' })
     expect(stop()).toHaveAttribute('aria-disabled', 'true')
     expect(screen.getAllByText('Save a profile above to turn this on.')).toHaveLength(2)
     fireEvent.click(stop())
@@ -639,7 +639,7 @@ describe('Coder setup and saved profile management', () => {
     // drawn off here would hide that the next restart acts on them.
     stored = { session_environments: { coder_url: 'https://coder.example.test', profiles: [], default_profile: '', stop_on_shutdown: true } as Section }
     await mounted()
-    const stop = () => screen.getByRole('switch', { name: 'Stop workspaces when Kiro Crew shuts down' })
+    const stop = () => screen.getByRole('switch', { name: 'Stop workspaces when Aj Crew shuts down' })
     expect(stop()).toBeChecked()
     expect(stop()).not.toHaveAttribute('aria-disabled', 'true')
     expect(screen.getByText(/Off: they keep running, so chats reconnect faster/)).toBeInTheDocument()
@@ -836,7 +836,7 @@ describe('Session Environments readiness and workspaces', () => {
     expect(within(after).queryByRole('button', { name: /Ask the agent/ })).toBeNull()
   })
 
-  it('lists the workspaces Kiro Crew owns, with when an archived one is deleted', async () => {
+  it('lists the workspaces Aj Crew owns, with when an archived one is deleted', async () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2026-10-12T10:00:00Z'))
     const gone = { slot: 'chat-4', state: 'stopped', template: 't', created_at: '2026-10-01T12:00:00Z' }
@@ -1069,9 +1069,9 @@ describe('Sprites and boxd providers', () => {
     stored = { session_environments: { coder_url: 'https://coder.example.test', profiles: [{ ...profile }], boxd_profiles: [box], stop_on_shutdown: true } }
     mount()
     await screen.findByLabelText('Coder URL')
-    const shutdown = () => screen.getByRole('switch', { name: 'Stop workspaces when Kiro Crew shuts down' })
-    const coder = /^On: Kiro Crew stops your workspaces when it shuts down\..*Coder's own auto-stop still applies\.$/
-    const sprites = 'Sprites are not stopped when Kiro Crew shuts down: a sprite hibernates on its own when idle and keeps its files.'
+    const shutdown = () => screen.getByRole('switch', { name: 'Stop workspaces when Aj Crew shuts down' })
+    const coder = /^On: Aj Crew stops your workspaces when it shuts down\..*Coder's own auto-stop still applies\.$/
+    const sprites = 'Sprites are not stopped when Aj Crew shuts down: a sprite hibernates on its own when idle and keeps its files.'
     const boxd = 'boxd: when this is on, the machines this computer created are hibernated, so they keep their files.'
     for (const tab of ['Coder', 'Fly.io Sprites', 'boxd']) {
       fireEvent.click(screen.getByRole('radio', { name: tab, exact: true }))
@@ -1325,7 +1325,7 @@ describe('Sprites and boxd providers', () => {
     stored = { session_environments: { coder_url: '', profiles: [], sprites_profiles: [good] } }
     server.use(
       http.get('*/api/secrets', () => HttpResponse.json({ names: ['SPRITES_TOKEN'], managed: [] })),
-      http.patch('*/api/config/kirocrew', () => HttpResponse.json({ error: 'sprites_profiles[0].id is invalid' }, { status: 400 })),
+      http.patch('*/api/config/ajcrew', () => HttpResponse.json({ error: 'sprites_profiles[0].id is invalid' }, { status: 400 })),
     )
     const saveToken = vi.spyOn(api, 'secretsSave')
     mount()
@@ -1585,7 +1585,7 @@ describe('Profile draft identity', () => {
     expect(vault).toEqual([{ name: newProfile ? 'SPRITES_TOKEN' : 'TOKEN', value: 'unsaved-token' }])
     expect(writes).toHaveLength(1)
     expect(JSON.stringify(writes)).not.toContain('unsaved-token')
-    expect(JSON.stringify(qc.getQueryData(['kirocrewConfig']))).not.toContain('unsaved-token')
+    expect(JSON.stringify(qc.getQueryData(['ajcrewConfig']))).not.toContain('unsaved-token')
     expand('Renamed Fly')
     // The same editor row survives the save, now empty.
     expect(screen.getByLabelText(TOKEN_LABEL)).toBe(token)
@@ -1606,7 +1606,7 @@ describe('Profile draft identity', () => {
         vault.set(name, value)
         return HttpResponse.json({ ok: true })
       }),
-      http.patch('*/api/config/kirocrew', async ({ request }) => {
+      http.patch('*/api/config/ajcrew', async ({ request }) => {
         const body = await request.json() as { path: string; value: Section }
         writes.push(body)
         stored = { session_environments: { ...body.value, sprites_profiles: [...body.value.sprites_profiles!].reverse() } }
@@ -1679,7 +1679,7 @@ describe('Profile draft identity', () => {
     const token = screen.getByLabelText(TOKEN_LABEL)
     fireEvent.change(token, { target: { value: 'unsaved-token' } })
     stored.session_environments!.sprites_profiles = [{ ...fly, name: 'Updated Fly' }]
-    await act(async () => { await qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }) })
+    await act(async () => { await qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }) })
     await waitFor(() => expect(screen.getByLabelText('Profile name')).toHaveValue('Updated Fly'))
     expect(screen.getByLabelText(TOKEN_LABEL)).toBe(token)
     expect(token).toHaveValue('unsaved-token')
@@ -1705,7 +1705,7 @@ describe('Profile draft identity', () => {
     fireEvent.change(screen.getByLabelText(TOKEN_LABEL), { target: { value: 'typed-for-a' } })
     // Another window rebinds the profile to TOKEN_B while the token is typed.
     stored.session_environments!.sprites_profiles = [{ ...fly, token_secret: 'TOKEN_B' }]
-    await act(async () => { await qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }) })
+    await act(async () => { await qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }) })
     await waitFor(() => expect(screen.getByLabelText(/Secret name for the token/)).toHaveValue('TOKEN_B'))
     fireEvent.click(save())
     await findShown(/The secret name changed to TOKEN_B after you typed the token/)

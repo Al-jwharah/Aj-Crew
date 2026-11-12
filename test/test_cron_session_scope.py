@@ -6,8 +6,8 @@ import uuid
 
 import pytest
 
-from kiro_crew.cron import CronService
-from kiro_crew.mcp_cron import _call_tool_inner
+from aj_crew.cron import CronService
+from aj_crew.mcp_cron import _call_tool_inner
 
 
 def _unique_name() -> str:
@@ -17,15 +17,15 @@ def _unique_name() -> str:
 @pytest.fixture(autouse=True)
 def _isolate_cron_store(monkeypatch, tmp_path):
     """Route all CronService() instances to tmp_path for test isolation."""
-    monkeypatch.setattr("kiro_crew.cron._DEFAULT_DIR", tmp_path)
-    monkeypatch.setattr("kiro_crew.mcp_cron.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.cron._DEFAULT_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.mcp_cron.config_dir", lambda: tmp_path)
 
 
 class TestCronAddSessionKey:
     def test_captures_session_key_from_env(self, monkeypatch):
-        """cron_add tags job with KIROCREW_SESSION_KEY."""
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "sess-abc")
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        """cron_add tags job with AJCREW_SESSION_KEY."""
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "sess-abc")
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = _unique_name()
         result = _call_tool_inner("cron_add", {"name": name, "message": "hi", "every": 120})
         assert "Added job" in result
@@ -40,10 +40,10 @@ class TestCronAddSessionKey:
         On a pooled backend no identity resolves, so ownerless rows would be EVERY row.
         Full rule: ``test/test_mcp_cron_caller_identity.py``.
         """
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
-        monkeypatch.delenv("KIROCREW_CLI", raising=False)
-        monkeypatch.setattr("kiro_crew.mcp_cron._authz_session_key", lambda: "")
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
+        monkeypatch.delenv("AJCREW_CLI", raising=False)
+        monkeypatch.setattr("aj_crew.mcp_cron._authz_session_key", lambda: "")
         name = _unique_name()
         result = _call_tool_inner("cron_add", {"name": name, "message": "hi", "every": 120})
 
@@ -55,18 +55,18 @@ class TestCronAddSessionKey:
 class TestCronRemoveAllScoped:
     def test_removes_only_own_session_jobs(self, monkeypatch):
         """With session key, cron_remove_all only removes jobs from that session."""
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
-        monkeypatch.delenv("KIROCREW_CLI", raising=False)
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
+        monkeypatch.delenv("AJCREW_CLI", raising=False)
         n1, n2 = _unique_name(), _unique_name()
 
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "sess-A")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "sess-A")
         _call_tool_inner("cron_add", {"name": n1, "message": "a", "every": 120})
 
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "sess-B")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "sess-B")
         _call_tool_inner("cron_add", {"name": n2, "message": "b", "every": 120})
 
         # Remove all as session A — should only remove n1
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "sess-A")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "sess-A")
         result = _call_tool_inner("cron_remove_all", {})
         assert "Removed 1 job(s)" in result
 
@@ -76,21 +76,21 @@ class TestCronRemoveAllScoped:
         assert remaining[0].name == n2
 
     def test_the_cli_flag_does_not_widen_the_sweep(self, monkeypatch):
-        """``KIROCREW_CLI=1`` must not make this remove EVERY session's jobs.
+        """``AJCREW_CLI=1`` must not make this remove EVERY session's jobs.
 
         The caller IS named, so the sweep runs and must stop at its own rows; any
         environment can spell the flag, so it is no scope.
         """
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         n1, n2 = _unique_name(), _unique_name()
 
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "sess-X")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "sess-X")
         _call_tool_inner("cron_add", {"name": n1, "message": "a", "every": 120})
 
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "sess-Y")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "sess-Y")
         _call_tool_inner("cron_add", {"name": n2, "message": "b", "every": 120})
 
-        monkeypatch.setenv("KIROCREW_CLI", "1")
+        monkeypatch.setenv("AJCREW_CLI", "1")
         result = _call_tool_inner("cron_remove_all", {})
 
         assert "Removed 1 job(s)" in result
@@ -104,31 +104,31 @@ class TestCronRemoveAllScoped:
         Still an error, now the shared one every mutating tool gives an
         unidentifiable caller rather than a message unique to this tool.
         """
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.delenv("KIROCREW_CLI", raising=False)
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.delenv("AJCREW_CLI", raising=False)
         name = _unique_name()
 
         # Create a job as an ordinary identified session so it exists
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "sess-owner")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "sess-owner")
         _call_tool_inner("cron_add", {"name": name, "message": "a", "every": 120})
 
         # Try to remove with no identity the gateway can name
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.setattr("kiro_crew.mcp_cron._authz_session_key", lambda: "")
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.setattr("aj_crew.mcp_cron._authz_session_key", lambda: "")
         result = _call_tool_inner("cron_remove_all", {})
         assert "cannot determine which session is calling" in result
 
     def test_no_matching_jobs_returns_message(self, monkeypatch):
         """Session with no owned jobs gets appropriate message."""
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
-        monkeypatch.delenv("KIROCREW_CLI", raising=False)
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
+        monkeypatch.delenv("AJCREW_CLI", raising=False)
         name = _unique_name()
 
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "sess-owner")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "sess-owner")
         _call_tool_inner("cron_add", {"name": name, "message": "a", "every": 120})
 
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "sess-other")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "sess-other")
         result = _call_tool_inner("cron_remove_all", {})
         assert "No cron jobs owned by this session" in result
 

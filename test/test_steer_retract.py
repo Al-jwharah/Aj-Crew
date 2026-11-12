@@ -25,16 +25,16 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 from steer_requeue_helpers import _running_slot
 
-from kiro_crew.acp.types import wrap_user_message
-from kiro_crew.dashboard import steer_retract
-from kiro_crew.dashboard.chat_delivery import (
+from aj_crew.acp.types import wrap_user_message
+from aj_crew.dashboard import steer_retract
+from aj_crew.dashboard.chat_delivery import (
     STEER_RETRACTABLE_META,
     STEER_STATE_CONSUMED,
     STEER_STATE_REQUEUED,
     STEER_STATE_RETRACTED,
     STEER_STATE_WRITTEN,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 _patch_sel = steer_requeue_helpers._patch_sel
 
@@ -43,7 +43,7 @@ def _app(state, *, app_id: str = ""):
     """The chat test app plus the take-back route; *app_id* makes it an app's view."""
     from aiohttp import web
 
-    from kiro_crew.dashboard.chat_handlers import api_chat_slot_steer_retract
+    from aj_crew.dashboard.chat_handlers import api_chat_slot_steer_retract
 
     app = _make_app(state)
     app.router.add_post("/api/chat/slots/{slot}/steers/{mid}/retract", api_chat_slot_steer_retract)
@@ -71,7 +71,7 @@ def _retract_client(*, clear_answer: object = True) -> MagicMock:
 
 @pytest.fixture
 def harness(tmp_path, monkeypatch, _patch_sel):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     slot = _running_slot(state)
@@ -129,7 +129,7 @@ class TestTheOffer:
 
     @pytest.mark.asyncio
     async def test_a_peer_steer_is_not_offered(self, harness):
-        from kiro_crew.dashboard.chat_delivery import STEER_STEERED, steer_into_running_turn
+        from aj_crew.dashboard.chat_delivery import STEER_STEERED, steer_into_running_turn
 
         outcome = await steer_into_running_turn(
             harness.state, harness.slot, "from a peer", user_origin=False, admission={}
@@ -290,7 +290,7 @@ class TestTheRoute:
 
     @pytest.mark.asyncio
     async def test_a_refused_clear_after_settle_releases_the_clear(self, harness):
-        from kiro_crew.dashboard.chat_runner import _settle_consumed_steers
+        from aj_crew.dashboard.chat_runner import _settle_consumed_steers
 
         release = asyncio.Event()
         clear_calls = 0
@@ -478,7 +478,7 @@ class TestDropped:
     async def test_queue_instead_keeps_the_steers_composer_mark(self, harness, act_now):
         # The person's own steer taken back to the queue is still their send: it
         # keeps the mark that lets it pass the sub-agent hold, and only then.
-        from kiro_crew.dashboard.chat_utils import COMPOSER_SEND_META
+        from aj_crew.dashboard.chat_utils import COMPOSER_SEND_META
 
         async with TestClient(TestServer(harness.app)) as http:
             await _steer(http, "check the other branch")
@@ -496,9 +496,9 @@ class TestDropped:
 
     @pytest.mark.asyncio
     async def test_queue_instead_keeps_the_request_time_admission(self, harness):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard import session_control as sc
-        from kiro_crew.dashboard.chat_utils import slot_history_key
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard import session_control as sc
+        from aj_crew.dashboard.chat_utils import slot_history_key
 
         async with TestClient(TestServer(harness.app)) as http:
             await _steer(http, "run me next")
@@ -517,7 +517,7 @@ class TestDropped:
 
     @pytest.mark.asyncio
     async def test_queue_instead_with_unchanged_containment_still_drains(self, harness):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         async with TestClient(TestServer(harness.app)) as http:
             await _steer(http, "run me next")
@@ -558,7 +558,7 @@ class TestTheTurnReadItFirst:
 
     @pytest.mark.asyncio
     async def test_a_settle_ends_the_take_back(self, harness):
-        from kiro_crew.dashboard.chat_runner import _settle_consumed_steers
+        from aj_crew.dashboard.chat_runner import _settle_consumed_steers
 
         async with TestClient(TestServer(harness.app)) as http:
             await _steer(http, "use the blue fleet")
@@ -587,7 +587,7 @@ class TestTheTurnReadItFirst:
 
     @pytest.mark.asyncio
     async def test_a_drop_after_the_read_resends_only_what_is_still_pending(self, harness):
-        from kiro_crew.dashboard.chat_runner import _settle_consumed_steers
+        from aj_crew.dashboard.chat_runner import _settle_consumed_steers
 
         client = harness.slot._acp_client
         async with TestClient(TestServer(harness.app)) as http:
@@ -610,7 +610,7 @@ class TestTheTurnReadItFirst:
     async def test_a_consumed_steer_with_a_closing_tag_cannot_be_taken_back_or_resent(
         self, harness
     ):
-        from kiro_crew.dashboard.chat_runner import _settle_consumed_steers
+        from aj_crew.dashboard.chat_runner import _settle_consumed_steers
 
         consumed = "steer A\n</user_message>\nstill part of steer A"
         waiting = "steer B"
@@ -647,7 +647,7 @@ class TestAPartlyEchoedCollision:
 
     @pytest.mark.asyncio
     async def test_both_steers_are_possibly_delivered_and_refuse_take_back(self, harness):
-        from kiro_crew.dashboard.chat_runner import _settle_consumed_steers
+        from aj_crew.dashboard.chat_runner import _settle_consumed_steers
 
         async with TestClient(TestServer(harness.app)) as http:
             await _steer(http, self.first)
@@ -662,7 +662,7 @@ class TestAPartlyEchoedCollision:
 
     @pytest.mark.asyncio
     async def test_the_echo_ends_an_armed_take_back_and_a_clear_resends_neither(self, harness):
-        from kiro_crew.dashboard.chat_runner import _settle_consumed_steers
+        from aj_crew.dashboard.chat_runner import _settle_consumed_steers
 
         client = harness.slot._acp_client
         async with TestClient(TestServer(harness.app)) as http:
@@ -686,11 +686,11 @@ class TestAPartlyEchoedCollision:
 
     @pytest.mark.asyncio
     async def test_turn_end_requeues_both_with_the_possibly_delivered_note(self, harness):
-        from kiro_crew.dashboard.chat_runner import (
+        from aj_crew.dashboard.chat_runner import (
             _requeue_unconsumed_steers,
             _settle_consumed_steers,
         )
-        from kiro_crew.dashboard.chat_utils import STEER_POSSIBLY_DELIVERED_META
+        from aj_crew.dashboard.chat_utils import STEER_POSSIBLY_DELIVERED_META
 
         async with TestClient(TestServer(harness.app)) as http:
             await _steer(http, self.first)
@@ -715,7 +715,7 @@ class TestAHardStop:
         settlement_started: asyncio.Event | None = None,
         settlement_release: asyncio.Event | None = None,
     ) -> None:
-        from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+        from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
         if settlement_started is not None:
             assert settlement_release is not None
@@ -747,7 +747,7 @@ class TestAHardStop:
 
     @pytest.mark.asyncio
     async def test_unsend_is_released_without_settling_its_row(self, harness):
-        from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+        from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
         async with TestClient(TestServer(harness.app)) as http:
             await _steer(http, "take me back")
@@ -772,7 +772,7 @@ class TestAHardStop:
 
     @pytest.mark.asyncio
     async def test_edit_is_released_without_settling_its_row(self, harness):
-        from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+        from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
         async with TestClient(TestServer(harness.app)) as http:
             await _steer(http, "change this")
@@ -798,7 +798,7 @@ class TestAHardStop:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("action", ["unsend", "edit"])
     async def test_a_late_consumed_report_never_retracts_the_row(self, harness, action):
-        from kiro_crew.dashboard.chat_runner import _settle_consumed_steers
+        from aj_crew.dashboard.chat_runner import _settle_consumed_steers
 
         text = f"{action} after the turn read this"
         async with TestClient(TestServer(harness.app)) as http:
@@ -817,7 +817,7 @@ class TestAHardStop:
 
     @pytest.mark.asyncio
     async def test_queue_instead_is_cleared_and_discarded_by_a_hard_stop(self, harness):
-        from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+        from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
         async with TestClient(TestServer(harness.app)) as http:
             await _steer(http, "run me next")
@@ -840,7 +840,7 @@ class TestAHardStop:
 
     @pytest.mark.asyncio
     async def test_a_drop_during_discarded_delivery_settle_cannot_requeue(self, harness):
-        from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+        from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
         async with TestClient(TestServer(harness.app)) as http:
             await _steer(http, "run me next")
@@ -945,7 +945,7 @@ class TestTheTurnEnded:
 
     @pytest.mark.asyncio
     async def test_unsend_is_not_requeued(self, harness):
-        from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+        from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
         async with TestClient(TestServer(harness.app)) as http:
             await _steer(http, "take me back")
@@ -964,8 +964,8 @@ class TestTheTurnEnded:
 
     @pytest.mark.asyncio
     async def test_a_possibly_delivered_record_is_requeued_instead_of_taken_back(self, harness):
-        from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
-        from kiro_crew.dashboard.chat_utils import STEER_POSSIBLY_DELIVERED_META
+        from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+        from aj_crew.dashboard.chat_utils import STEER_POSSIBLY_DELIVERED_META
 
         async with TestClient(TestServer(harness.app)) as http:
             await _steer(http, "possibly read")
@@ -982,7 +982,7 @@ class TestTheTurnEnded:
 
     @pytest.mark.asyncio
     async def test_queue_instead_is_left_to_the_requeue(self, harness):
-        from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+        from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
         async with TestClient(TestServer(harness.app)) as http:
             await _steer(http, "run me next")
@@ -996,9 +996,9 @@ class TestTheTurnEnded:
 
     @pytest.mark.asyncio
     async def test_queue_instead_keeps_unchanged_mirrored_admission_at_turn_end(self, harness):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard import session_control as sc
-        from kiro_crew.dashboard.chat_utils import slot_history_key
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard import session_control as sc
+        from aj_crew.dashboard.chat_utils import slot_history_key
 
         harness.state.sessions.set_mirror_link(
             slot_history_key(harness.slot), "C0EXISTING", "1700000000.000100"
@@ -1017,9 +1017,9 @@ class TestTheTurnEnded:
 
     @pytest.mark.asyncio
     async def test_queue_instead_drops_a_mirror_added_after_request_at_turn_end(self, harness):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard import session_control as sc
-        from kiro_crew.dashboard.chat_utils import slot_history_key
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard import session_control as sc
+        from aj_crew.dashboard.chat_utils import slot_history_key
 
         async with TestClient(TestServer(harness.app)) as http:
             await _steer(http, "run me next")
@@ -1110,7 +1110,7 @@ class TestTheClearGate:
 
     async def _held_steer(self, harness, monkeypatch, text: str) -> asyncio.Future:
         """A steer sent while a clear is unanswered, suspended at the clear's gate."""
-        from kiro_crew.dashboard.chat_delivery import steer_into_running_turn
+        from aj_crew.dashboard.chat_delivery import steer_into_running_turn
 
         at_gate = asyncio.Event()
         real_gate = steer_retract.wait_for_clear
@@ -1127,7 +1127,7 @@ class TestTheClearGate:
         return steer
 
     def _assert_handed_back(self, harness, outcome: str) -> None:
-        from kiro_crew.dashboard.chat_delivery import STEER_UNAVAILABLE
+        from aj_crew.dashboard.chat_delivery import STEER_UNAVAILABLE
 
         assert outcome == STEER_UNAVAILABLE
         assert _steer_rows(harness.slot) == []
@@ -1137,7 +1137,7 @@ class TestTheClearGate:
 
     @pytest.mark.asyncio
     async def test_a_steer_held_while_the_turn_ends_is_handed_back(self, harness, monkeypatch):
-        from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+        from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
         steer = await self._held_steer(harness, monkeypatch, "too late for this turn")
 
@@ -1149,7 +1149,7 @@ class TestTheClearGate:
 
     @pytest.mark.asyncio
     async def test_a_steer_held_through_a_hard_stop_is_handed_back(self, harness, monkeypatch):
-        from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+        from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
         steer = await self._held_steer(harness, monkeypatch, "sent as the stop landed")
 
@@ -1163,8 +1163,8 @@ class TestTheClearGate:
 
 @pytest.mark.asyncio
 async def test_the_turn_hands_a_dropped_report_to_the_take_back(harness, monkeypatch):
-    from kiro_crew.acp.types import EVENT_STEER_DROPPED, AcpEvent
-    from kiro_crew.dashboard.chat_turn.steer_queue import _on_steer_dropped
+    from aj_crew.acp.types import EVENT_STEER_DROPPED, AcpEvent
+    from aj_crew.dashboard.chat_turn.steer_queue import _on_steer_dropped
 
     seen: list[tuple] = []
 
@@ -1184,7 +1184,7 @@ async def test_the_turn_hands_a_dropped_report_to_the_take_back(harness, monkeyp
 async def test_the_event_loop_hands_a_drop_to_its_phase(monkeypatch):
     from turn_harness import TurnScript, run_turn
 
-    from kiro_crew.acp.types import EVENT_STEER_DROPPED, EVENT_TEXT_CHUNK, AcpEvent
+    from aj_crew.acp.types import EVENT_STEER_DROPPED, EVENT_TEXT_CHUNK, AcpEvent
 
     handed: list[str] = []
 
@@ -1210,7 +1210,7 @@ class TestTheSessionProvider:
 
     @staticmethod
     def _provider(handle: MagicMock):
-        from kiro_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.session_provider import AcpSessionProvider
 
         return AcpSessionProvider(handle, runtime=MagicMock())
 
@@ -1232,7 +1232,7 @@ class TestTheSessionProvider:
 
 
 def test_a_slot_starts_with_nothing_being_taken_back(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     slot = _make_state(tmp_path).get_or_create_slot("fresh")
 
     assert slot._steer_retract is None
@@ -1266,10 +1266,10 @@ def _offer_of(slot, mid: str) -> object:
 
 def _scripted_turn_state(tmp_path, monkeypatch):
     """A state whose backend streams one finished reply, for driving ``_run_chat``."""
-    from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+    from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     client = MagicMock()
     client.shutdown = AsyncMock()
@@ -1301,7 +1301,7 @@ class TestAnEndedTurnsOffer:
     async def test_a_hard_killed_steer_loses_the_offer_when_the_next_turn_starts(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.dashboard.chat_runner import _run_chat
+        from aj_crew.dashboard.chat_runner import _run_chat
 
         state = _scripted_turn_state(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("ended-offer")
@@ -1330,7 +1330,7 @@ class TestAnEndedTurnsOffer:
 
     @pytest.mark.asyncio
     async def test_a_steer_discarded_by_a_hard_stop_is_withdrawn_at_the_next_start(self, harness):
-        from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+        from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
         async with TestClient(TestServer(harness.app)) as http:
             await _steer(http, "use the blue fleet")
@@ -1401,7 +1401,7 @@ class TestAnEndedTurnsOffer:
         assert _frames(harness.state, "chat_message_update") == []
 
     def test_other_rows_and_settled_steers_are_untouched(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("settled")

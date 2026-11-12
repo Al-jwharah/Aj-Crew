@@ -1,6 +1,6 @@
-"""No test patches a name ``kiro_crew.cli_doctor`` forwards with ``create=True``.
+"""No test patches a name ``aj_crew.cli_doctor`` forwards with ``create=True``.
 
-``kiro_crew.cli_doctor`` forwards a delete of a moved name to the family that owns
+``aj_crew.cli_doctor`` forwards a delete of a moved name to the family that owns
 it. ``mock.patch`` restores a name the facade does not hold by deleting it and then,
 finding it gone, writing its original back -- unless ``create`` is true, in which case
 it skips that write and the family loses the name for every later caller in the
@@ -29,12 +29,12 @@ from unittest import mock
 import pytest
 from stale_package_attribute import package_attribute_replaced
 
-from kiro_crew import cli_doctor
+from aj_crew import cli_doctor
 
 _FACADE = cli_doctor.__name__
 _DYNAMIC = "<dynamic>"
 _REPO = Path(__file__).resolve().parents[1]
-_SRC = _REPO / "src" / "kiro_crew"
+_SRC = _REPO / "src" / "aj_crew"
 
 #: What a ``mock.patch`` callable resolves to, per module that provides one: the
 #: standard library, its PyPI backport, and pytest-mock's ``mocker`` fixture.
@@ -272,7 +272,7 @@ def _create_patches(tree: ast.Module) -> list[tuple[int, str, str]]:
     return found
 
 
-_IMPORT_CD = "from kiro_crew import cli_doctor as cd\n"
+_IMPORT_CD = "from aj_crew import cli_doctor as cd\n"
 _FROM_MOCK = "from unittest import mock\n"
 
 
@@ -331,7 +331,7 @@ _FROM_MOCK = "from unittest import mock\n"
         ),
         (
             _FROM_MOCK
-            + '_MOD = "kiro_crew.other"\nmock.patch(f"{_MOD}._doctor_sandbox", create=True)',
+            + '_MOD = "aj_crew.other"\nmock.patch(f"{_MOD}._doctor_sandbox", create=True)',
             [],
         ),
         (_FROM_MOCK + 'import os\nmock.patch(f"{os.__name__}._doctor_sandbox", create=True)', []),
@@ -400,18 +400,18 @@ _FROM_MOCK = "from unittest import mock\n"
         ),
         # the facade reached as the ``cli_doctor`` a family binds it to
         (
-            "from kiro_crew.doctor_checks import agents\n"
+            "from aj_crew.doctor_checks import agents\n"
             + _FROM_MOCK
             + 'mock.patch.object(agents.cli_doctor, "_doctor_sandbox", create=True)',
             ["_doctor_sandbox"],
         ),
         (
             _FROM_MOCK
-            + 'mock.patch("kiro_crew.doctor_checks.agents.cli_doctor._doctor_sandbox", create=True)',
+            + 'mock.patch("aj_crew.doctor_checks.agents.cli_doctor._doctor_sandbox", create=True)',
             ["_doctor_sandbox"],
         ),
         (
-            "from kiro_crew.doctor_checks import agents\n"
+            "from aj_crew.doctor_checks import agents\n"
             + _FROM_MOCK
             + 'mock.patch.object(agents, "_doctor_sandbox", create=True)',
             [],
@@ -424,7 +424,7 @@ def test_the_detector_answers_both_ways(source: str, expected: list[str]) -> Non
 
 def test_the_facade_is_found_under_every_name_src_binds_it_to() -> None:
     families = {
-        f"kiro_crew.doctor_checks.{family}.cli_doctor"
+        f"aj_crew.doctor_checks.{family}.cli_doctor"
         for family in ("agents", "confinement", "install", "resources", "services")
     }
     assert {_FACADE} | families <= _FACADE_PATHS
@@ -438,7 +438,7 @@ def test_the_premise_create_true_through_the_facade_unbinds_the_family(split: bo
     attribute can name another copy once an earlier test in the worker imports it
     fresh, so reading the attribute would make this check depend on test order.
     """
-    owner = "kiro_crew.doctor_checks.render"
+    owner = "aj_crew.doctor_checks.render"
     with package_attribute_replaced(owner) if split else nullcontext():
         render = importlib.import_module(owner)
         original = vars(render)["_safe_display"]

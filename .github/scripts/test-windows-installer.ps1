@@ -18,7 +18,7 @@ Set-StrictMode -Version Latest
 $MaxInstallSeconds = 200
 # Healthy boot on the runner is ~12-24 s (observed 2026-09-29). /api/ready does not await
 # the Kiro CLI probe, but a tolerated probe timeout (_PROBE_TIMEOUT_SECS = 10 s in
-# src/kiro_crew/kiro_prerequisite.py) still slowed one boot from 12.8 s to 30.1 s on the
+# src/aj_crew/kiro_prerequisite.py) still slowed one boot from 12.8 s to 30.1 s on the
 # same sha (issue #11810). 24 s plus that ~17 s is ~41 s, rounded up to 50.
 $MaxGatewayReadySeconds = 50
 
@@ -330,7 +330,7 @@ if ($SkipGatewayValidation) {
 # import closure; this catches either those files being filtered out of the
 # artifact or the launcher accidentally redirecting imports into an empty user
 # cache again.
-$backendRoot = Join-Path $installLocation "resources\backend-dist\kirocrew-backend"
+$backendRoot = Join-Path $installLocation "resources\backend-dist\ajcrew-backend"
 $bundledPython = Join-Path $backendRoot "python.exe"
 if (-not (Test-Path -LiteralPath $bundledPython -PathType Leaf)) {
   throw "The installed bundled Python is missing: $bundledPython"
@@ -353,28 +353,28 @@ New-Item -ItemType Directory -Path $gatewayHome -Force | Out-Null
 
 # Point the ACP backend at the fake one that ships INSIDE the payload under test,
 # so readiness needs no real model, no network and no sign-in. It must be a .cmd:
-# KIROCREW_KIRO_BIN names something CreateProcess can run, and a .py would rely
+# AJCREW_KIRO_BIN names something CreateProcess can run, and a .py would rely
 # on a shebang, which Windows has no equivalent for. The shim runs the INSTALLED
 # interpreter, so nothing outside the artifact is involved. `-B`: the gateway
 # spawns its agent backend with the Python bytecode variables stripped
 # (`sandbox._PYTHON_ENV_PREFIXES`, by design, so a foreign interpreter never
 # inherits our cache settings), so the PYTHONPYCACHEPREFIX set below does not
 # reach this shim; without `-B` its interpreter writes `__pycache__` beside the
-# `kiro_crew.testing` sources, which ship without precompiled bytecode, and
+# `aj_crew.testing` sources, which ship without precompiled bytecode, and
 # those files survive the uninstall as residue this script created.
 $fakeBackend = Join-Path $evidence "kiro-backend.cmd"
 Set-Content -Encoding ascii -LiteralPath $fakeBackend -Value @(
   '@echo off',
-  "`"$bundledPython`" -s -B -m kiro_crew.testing.fake_acp_backend %*"
+  "`"$bundledPython`" -s -B -m aj_crew.testing.fake_acp_backend %*"
 )
 
 $savedGatewayEnv = @{
-  KIROCREW_HOME = $env:KIROCREW_HOME
-  KIROCREW_PROJECT_DIR = $env:KIROCREW_PROJECT_DIR
+  AJCREW_HOME = $env:AJCREW_HOME
+  AJCREW_PROJECT_DIR = $env:AJCREW_PROJECT_DIR
   KIRO_HOME = $env:KIRO_HOME
-  KIROCREW_KIRO_BIN = $env:KIROCREW_KIRO_BIN
-  KIROCREW_FAKE_ACP_TEST_MODE = $env:KIROCREW_FAKE_ACP_TEST_MODE
-  KIROCREW_SKIP_MODEL_DOWNLOAD = $env:KIROCREW_SKIP_MODEL_DOWNLOAD
+  AJCREW_KIRO_BIN = $env:AJCREW_KIRO_BIN
+  AJCREW_FAKE_ACP_TEST_MODE = $env:AJCREW_FAKE_ACP_TEST_MODE
+  AJCREW_SKIP_MODEL_DOWNLOAD = $env:AJCREW_SKIP_MODEL_DOWNLOAD
   PYTHONPYCACHEPREFIX = $env:PYTHONPYCACHEPREFIX
   PYTHONPATH = $env:PYTHONPATH
   PYTHONNOUSERSITE = $env:PYTHONNOUSERSITE
@@ -385,16 +385,16 @@ $gatewayProcess = $null
 $gatewayReady = $false
 $gatewayTimer = [System.Diagnostics.Stopwatch]::StartNew()
 try {
-  $env:KIROCREW_HOME = $gatewayHome
-  $env:KIROCREW_PROJECT_DIR = $installLocation
+  $env:AJCREW_HOME = $gatewayHome
+  $env:AJCREW_PROJECT_DIR = $installLocation
   $env:KIRO_HOME = Join-Path $gatewayHome "kiro"
-  $env:KIROCREW_KIRO_BIN = $fakeBackend
+  $env:AJCREW_KIRO_BIN = $fakeBackend
   # Marks this as a test rig. It grants no launch privilege: the shim above is
   # exec'd by the ordinary in-place path like any other runnable file.
-  $env:KIROCREW_FAKE_ACP_TEST_MODE = "1"
+  $env:AJCREW_FAKE_ACP_TEST_MODE = "1"
   # Embeddings are default-on; a ~610MB download inside a 50-second readiness
   # ceiling would fail the gate for a reason unrelated to the artifact.
-  $env:KIROCREW_SKIP_MODEL_DOWNLOAD = "1"
+  $env:AJCREW_SKIP_MODEL_DOWNLOAD = "1"
   # Bytecode this boot compiles goes OUTSIDE the installed tree, which is what the
   # shipped desktop app does (it exports the same variable at
   # `<data home>/cache/pycache` to keep bytecode out of the codesigned bundle).
@@ -411,7 +411,7 @@ try {
   $env:PYTHONUTF8 = "1"
   $env:PYTHONIOENCODING = "utf-8:backslashreplace"
   $gatewayProcess = Start-Process -FilePath $bundledPython -ArgumentList @(
-    "-s", "-P", "-m", "kiro_crew", "gateway", "--no-open", "--port", "$gatewayPort"
+    "-s", "-P", "-m", "aj_crew", "gateway", "--no-open", "--port", "$gatewayPort"
   ) -WorkingDirectory $installLocation -RedirectStandardOutput $gatewayStdout `
     -RedirectStandardError $gatewayStderr -WindowStyle Hidden -PassThru
 
@@ -478,9 +478,9 @@ if ($env:GITHUB_STEP_SUMMARY) {
 # Windows PowerShell 5.1, PowerShell 7 and cmd.exe each deliver a padded Unicode token to
 # the CLI as ONE argument (5.1 drops a separate empty argument before a `.cmd` shim, which
 # is why the value rides attached as `--value-base64=<token>`).
-$expectedLauncher = Join-Path $installLocation "resources\backend-dist\kirocrew-backend\bin\kirocrew.cmd"
+$expectedLauncher = Join-Path $installLocation "resources\backend-dist\ajcrew-backend\bin\ajcrew.cmd"
 if (-not (Test-Path -LiteralPath $expectedLauncher -PathType Leaf)) {
-  throw "The installed kirocrew launcher is missing: $expectedLauncher"
+  throw "The installed ajcrew launcher is missing: $expectedLauncher"
 }
 foreach ($shellName in @("powershell.exe", "pwsh.exe")) {
   if (-not (Get-Command $shellName -CommandType Application -ErrorAction SilentlyContinue)) {
@@ -493,20 +493,20 @@ if ($windowsPowerShellMajor -ne "5") {
 }
 
 $savedConfigProofEnv = @{
-  KIROCREW_HOME = $env:KIROCREW_HOME
+  AJCREW_HOME = $env:AJCREW_HOME
   PYTHONNOUSERSITE = $env:PYTHONNOUSERSITE
   PYTHONUTF8 = $env:PYTHONUTF8
   PYTHONPYCACHEPREFIX = $env:PYTHONPYCACHEPREFIX
 }
 $cmdDriver = Join-Path $gatewayHome "config-set-proof.cmd"
 try {
-  $env:KIROCREW_HOME = $gatewayHome
+  $env:AJCREW_HOME = $gatewayHome
   $env:PYTHONNOUSERSITE = "1"
   $env:PYTHONUTF8 = "1"
   $env:PYTHONPYCACHEPREFIX = Join-Path $gatewayHome "pycache"
 
   # Ask the gateway's resolver, from the bundled interpreter, which launcher it hands out.
-  $resolverCode = "from kiro_crew.agent import _resolve_kirocrew_bin; print(_resolve_kirocrew_bin())"
+  $resolverCode = "from aj_crew.agent import _resolve_ajcrew_bin; print(_resolve_ajcrew_bin())"
   $resolvedLauncher = (& $bundledPython -s -P -c $resolverCode | Select-Object -Last 1).Trim()
   if ($LASTEXITCODE -ne 0) {
     throw "The bundled launcher resolver exited with code $LASTEXITCODE."
@@ -516,7 +516,7 @@ try {
   }
 
   # Feed that same resolved value to the production formatter.
-  $helperCode = "import json, sys; from kiro_crew.kiro_prerequisite_status import config_set_hints_for_launcher as hints; print(json.dumps(hints(sys.argv[1], sys.argv[2])))"
+  $helperCode = "import json, sys; from aj_crew.kiro_prerequisite_status import config_set_hints_for_launcher as hints; print(json.dumps(hints(sys.argv[1], sys.argv[2])))"
   $hintJson = (& $bundledPython -s -P -c $helperCode $resolvedLauncher win32 | Select-Object -Last 1)
   if ($LASTEXITCODE -ne 0) {
     throw "The config-set hint formatter exited with code $LASTEXITCODE."
@@ -550,7 +550,7 @@ try {
   function Reset-ExtraPaths {
     # Directly through the bundled CLI, before EACH shell: a value left by an earlier
     # shell must not let a later, broken shell look green.
-    & $bundledPython -s -P -m kiro_crew config set skills.extra_paths --value-base64=W10= | Out-Null
+    & $bundledPython -s -P -m aj_crew config set skills.extra_paths --value-base64=W10= | Out-Null
     if ($LASTEXITCODE -ne 0) {
       throw "Resetting skills.extra_paths exited with code $LASTEXITCODE."
     }
@@ -680,7 +680,7 @@ if (Test-Path -LiteralPath $installLocation) {
     Select-Object -First 40 -ExpandProperty FullName |
     ForEach-Object { Write-Host "  left: $_" }
   # The bytecode residue too, by module: which interpreter wrote it is what the
-  # names tell (a `kiro_crew\testing` pyc is the fake backend shim's).
+  # names tell (an `aj_crew\testing` pyc is the fake backend shim's).
   $files |
     Where-Object { $_.FullName -match '__pycache__' } |
     Select-Object -First 20 -ExpandProperty FullName |

@@ -1,6 +1,6 @@
 """Characterization contract for the Research Lab campaign engine.
 
-These tests pin what callers of ``kiro_crew.apps.builtins.auto_research.handlers``
+These tests pin what callers of ``aj_crew.apps.builtins.auto_research.handlers``
 observe -- the names the module exposes, the patch seams tests and tools rely
 on, the route table, the SQLite schema and payload shapes, and the concurrency
 rules that keep one campaign's transitions ordered -- independently of which
@@ -37,11 +37,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.apps.builtins.auto_research import handlers as h
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.apps.builtins.auto_research import handlers as h
+from aj_crew.testing.wait import async_wait_until, await_until
 
 BASE = "/api/apps/auto-research"
-_HANDLERS_LOGGER = "kiro_crew.apps.builtins.auto_research.handlers"
+_HANDLERS_LOGGER = "aj_crew.apps.builtins.auto_research.handlers"
 
 # Every name ``handlers`` exposes to importers and patches, minus the stdlib
 # modules and typing helpers imported only for its own use.
@@ -90,29 +90,29 @@ _handle_grill_tree register_routes
 # Collaborators ``handlers`` imported: (defining module, attribute) whose object
 # ``handlers.<name>`` must still be, so a patch of either spelling is one patch.
 _IMPORTED_IDENTITIES = {
-    "_sq": ("kiro_crew.apps.builtins.auto_research", "subquestion_queue"),
-    "AUTO_RESEARCH_APP": ("kiro_crew.apps.builtins.auto_research.session_keys", None),
-    "is_campaign_id": ("kiro_crew.apps.builtins.auto_research.session_keys", None),
-    "is_research_slot_key": ("kiro_crew.apps.builtins.auto_research.session_keys", None),
-    "research_slot_key": ("kiro_crew.apps.builtins.auto_research.session_keys", None),
-    "RESEARCH_WORKFLOW_SOURCE": ("kiro_crew.apps.builtins.auto_research.workflow_template", None),
-    "build_workflow_args": ("kiro_crew.apps.builtins.auto_research.workflow_template", None),
-    "is_app_enabled": ("kiro_crew.apps.manager", None),
-    "AUTONUDGE_STOP_REASON": ("kiro_crew.autonudge", None),
-    "_autonudge_instance": ("kiro_crew.autonudge", "get_instance"),
-    "data_home": ("kiro_crew.config.paths", None),
-    "slot_history_key": ("kiro_crew.dashboard.chat_utils", None),
-    "ImportChunkBudgetError": ("kiro_crew.knowledge.ingestion", None),
-    "LLMPool": ("kiro_crew.knowledge.llm_pool", None),
-    "_extract_json_of_type": ("kiro_crew.llm_helpers", None),
-    "OnLoopDBGuard": ("kiro_crew.on_loop_db", None),
-    "is_link_or_junction": ("kiro_crew.platform_compat", None),
-    "unlink_link_or_junction": ("kiro_crew.platform_compat", None),
-    "ArtifactNotFoundError": ("kiro_crew.artifacts", None),
-    "ArtifactStore": ("kiro_crew.artifacts", None),
-    "redact_credentials": ("kiro_crew.security", None),
-    "redact_exfiltration_urls": ("kiro_crew.security", None),
-    "sel": ("kiro_crew.sel", None),
+    "_sq": ("aj_crew.apps.builtins.auto_research", "subquestion_queue"),
+    "AUTO_RESEARCH_APP": ("aj_crew.apps.builtins.auto_research.session_keys", None),
+    "is_campaign_id": ("aj_crew.apps.builtins.auto_research.session_keys", None),
+    "is_research_slot_key": ("aj_crew.apps.builtins.auto_research.session_keys", None),
+    "research_slot_key": ("aj_crew.apps.builtins.auto_research.session_keys", None),
+    "RESEARCH_WORKFLOW_SOURCE": ("aj_crew.apps.builtins.auto_research.workflow_template", None),
+    "build_workflow_args": ("aj_crew.apps.builtins.auto_research.workflow_template", None),
+    "is_app_enabled": ("aj_crew.apps.manager", None),
+    "AUTONUDGE_STOP_REASON": ("aj_crew.autonudge", None),
+    "_autonudge_instance": ("aj_crew.autonudge", "get_instance"),
+    "data_home": ("aj_crew.config.paths", None),
+    "slot_history_key": ("aj_crew.dashboard.chat_utils", None),
+    "ImportChunkBudgetError": ("aj_crew.knowledge.ingestion", None),
+    "LLMPool": ("aj_crew.knowledge.llm_pool", None),
+    "_extract_json_of_type": ("aj_crew.llm_helpers", None),
+    "OnLoopDBGuard": ("aj_crew.on_loop_db", None),
+    "is_link_or_junction": ("aj_crew.platform_compat", None),
+    "unlink_link_or_junction": ("aj_crew.platform_compat", None),
+    "ArtifactNotFoundError": ("aj_crew.artifacts", None),
+    "ArtifactStore": ("aj_crew.artifacts", None),
+    "redact_credentials": ("aj_crew.security", None),
+    "redact_exfiltration_urls": ("aj_crew.security", None),
+    "sel": ("aj_crew.sel", None),
     "web": ("aiohttp", "web"),
     "asyncio": ("asyncio", ""),
 }
@@ -319,7 +319,7 @@ class TestHistoricNamespace:
 
     def test_dir_and_the_package_still_expose_the_route_entry_point(self):
         assert "register_routes" in dir(h)
-        package = importlib.import_module("kiro_crew.apps.builtins.auto_research")
+        package = importlib.import_module("aj_crew.apps.builtins.auto_research")
         assert package.register_routes is h.register_routes
 
     def test_a_star_import_binds_every_public_historic_name(self):
@@ -374,7 +374,7 @@ class TestHistoricNamespace:
             "emergent_questions.json",
             "finalize.flag",
         )
-        assert h._RESEARCH_AGENT == "kirocrew-research"
+        assert h._RESEARCH_AGENT == "ajcrew-research"
 
 
 # --- route table and registration --------------------------------------------
@@ -580,7 +580,7 @@ class TestPatchReach:
     async def test_autonudge_patch_reaches_loop_control(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ):
-        from kiro_crew.autonudge import AutoNudgeService
+        from aj_crew.autonudge import AutoNudgeService
 
         svc = AutoNudgeService(base_dir=tmp_path / "autonudge")
         await svc.start()
@@ -1135,7 +1135,7 @@ class TestLoopStopReasons:
     async def test_stop_loop_hands_the_reason_to_the_removal(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ):
-        from kiro_crew.autonudge import AutoNudgeService
+        from aj_crew.autonudge import AutoNudgeService
 
         svc = AutoNudgeService(base_dir=tmp_path / "autonudge")
         await svc.start()

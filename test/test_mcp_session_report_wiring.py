@@ -13,23 +13,23 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.mcp_session_report import McpSessionReport
-from kiro_crew.acp.types import (
+from aj_crew.acp import client as acp_client
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.mcp_session_report import McpSessionReport
+from aj_crew.acp.types import (
     EVENT_MCP_SERVER_INIT_FAILURE,
     EVENT_MCP_SERVER_INITIALIZED,
     METHOD_MCP_SERVER_INIT_FAILURE,
     METHOD_MCP_SERVER_INITIALIZED,
     JsonRpcMessage,
 )
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew.dashboard.chat_runner import (
     _publish_session_mcp_report,
     _record_session_mcp_event,
     _session_mcp_report,
 )
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.testing.clock import ManualClock
 
 
 def _ready_frame(name: str) -> JsonRpcMessage:
@@ -63,7 +63,7 @@ class TestAcpClientCapture:
         # so afterwards.
         client = AcpClient(work_dir=tmp_path)
         client._mcp_notifications = [
-            _ready_frame("kirocrew-core"),
+            _ready_frame("ajcrew-core"),
             _failed_frame("slack-mcp", "spawn ENOENT"),
         ]
         client._read_message = AsyncMock(return_value=None)
@@ -72,7 +72,7 @@ class TestAcpClientCapture:
 
         payload = client.mcp_session_report().payload()
         assert payload is not None
-        assert payload["ready"] == ["kirocrew-core"]
+        assert payload["ready"] == ["ajcrew-core"]
         assert payload["failed"] == ["slack-mcp"]
         assert payload["failures"] == {"slack-mcp": "spawn ENOENT"}
 
@@ -176,8 +176,8 @@ class TestPublish:
         slot = _ChatSlot("s1")
         state = MagicMock()
         report = McpSessionReport()
-        report.begin_session([{"name": "kirocrew-core"}])
-        report.record_frame(_ready_frame("kirocrew-core"), owned=True)
+        report.begin_session([{"name": "ajcrew-core"}])
+        report.record_frame(_ready_frame("ajcrew-core"), owned=True)
         acp = MagicMock()
         acp.mcp_session_report.return_value = report
 
@@ -185,7 +185,7 @@ class TestPublish:
 
         payload = slot.mcp_report_payload()
         assert payload is not None
-        assert payload["ready"] == ["kirocrew-core"]
+        assert payload["ready"] == ["ajcrew-core"]
         state.broadcast_ws.assert_called_once_with(
             "mcp_report_update", {"slot": "s1", "mcp_report": payload}
         )
@@ -322,13 +322,13 @@ class TestResetInvalidation:
 
     @pytest.mark.asyncio
     async def test_reset_drops_the_report_and_broadcasts(self):
-        from kiro_crew.dashboard.chat_handlers import _reset_slot_session
+        from aj_crew.dashboard.chat_handlers import _reset_slot_session
 
         slot = _ChatSlot("s1")
         slot.set_mcp_report({"ready": ["a"]})
         state = self._state(True)
 
-        with patch("kiro_crew.dashboard.chat_handlers._unblock_pending_waits"):
+        with patch("aj_crew.dashboard.chat_handlers._unblock_pending_waits"):
             assert await _reset_slot_session(state, slot, "dashboard:s1") is True
 
         assert slot.mcp_report_payload() is None
@@ -338,13 +338,13 @@ class TestResetInvalidation:
     async def test_declined_reset_keeps_the_report(self):
         # skip_if_busy declined the reset, so the session described by the report
         # is still the live one. Clearing it here would blank a true answer.
-        from kiro_crew.dashboard.chat_handlers import _reset_slot_session
+        from aj_crew.dashboard.chat_handlers import _reset_slot_session
 
         slot = _ChatSlot("s1")
         slot.set_mcp_report({"ready": ["a"]})
         state = self._state(False)
 
-        with patch("kiro_crew.dashboard.chat_handlers._unblock_pending_waits"):
+        with patch("aj_crew.dashboard.chat_handlers._unblock_pending_waits"):
             assert await _reset_slot_session(state, slot, "dashboard:s1") is False
 
         assert slot.mcp_report_payload() == {"ready": ["a"]}
@@ -361,7 +361,7 @@ class TestLiveEventOwnershipIsWired:
 
     @staticmethod
     def _slot_with_report():
-        from kiro_crew.acp.mcp_session_report import McpSessionReport
+        from aj_crew.acp.mcp_session_report import McpSessionReport
 
         report = McpSessionReport()
         slot = _ChatSlot("s1")
@@ -373,8 +373,8 @@ class TestLiveEventOwnershipIsWired:
         return slot, provider, report
 
     def test_an_ownerless_event_does_not_reach_the_report(self):
-        from kiro_crew.acp.types import EVENT_MCP_SERVER_INITIALIZED
-        from kiro_crew.dashboard.chat_runner import _record_session_mcp_event
+        from aj_crew.acp.types import EVENT_MCP_SERVER_INITIALIZED
+        from aj_crew.dashboard.chat_runner import _record_session_mcp_event
 
         slot, provider, report = self._slot_with_report()
         state = MagicMock()
@@ -385,8 +385,8 @@ class TestLiveEventOwnershipIsWired:
         state.broadcast_ws.assert_not_called()
 
     def test_an_owned_event_does(self):
-        from kiro_crew.acp.types import EVENT_MCP_SERVER_INITIALIZED
-        from kiro_crew.dashboard.chat_runner import _record_session_mcp_event
+        from aj_crew.acp.types import EVENT_MCP_SERVER_INITIALIZED
+        from aj_crew.dashboard.chat_runner import _record_session_mcp_event
 
         slot, provider, report = self._slot_with_report()
         _record_session_mcp_event(MagicMock(), slot, provider, EVENT_MCP_SERVER_INITIALIZED, "mine")
@@ -405,7 +405,7 @@ class TestLiveEventOwnershipIsWired:
         import inspect
         import sys
 
-        from kiro_crew.acp import session_handle as handle_mod
+        from aj_crew.acp import session_handle as handle_mod
 
         # The facade and every owner its code moved to, as one text, the event loop's
         # owner first: the roster window pinned here is the loop's, and the KAS sub-agent
@@ -443,8 +443,8 @@ class TestBothTransportsAreReached:
         # Shape of AcpSessionProvider: the accessor is on the provider itself and
         # there is deliberately no `.client` to reach through.
         report = self._report()
-        report.begin_session([{"name": "kirocrew-core"}])
-        report.record_frame(_ready_frame("kirocrew-core"), owned=True)
+        report.begin_session([{"name": "ajcrew-core"}])
+        report.record_frame(_ready_frame("ajcrew-core"), owned=True)
         provider = SimpleNamespace(mcp_session_report=lambda: report)
         assert not hasattr(provider, "client")
 
@@ -454,13 +454,13 @@ class TestBothTransportsAreReached:
 
         payload = slot.mcp_report_payload()
         assert payload is not None, "the shared runtime's provider must be reachable"
-        assert payload["ready"] == ["kirocrew-core"]
+        assert payload["ready"] == ["ajcrew-core"]
 
     def test_a_provider_with_an_inner_client_reports_too(self):
         # Shape of AcpProvider: it also answers the call itself, by delegating.
         report = self._report()
-        report.begin_session([{"name": "kirocrew-core"}])
-        report.record_frame(_ready_frame("kirocrew-core"), owned=True)
+        report.begin_session([{"name": "ajcrew-core"}])
+        report.record_frame(_ready_frame("ajcrew-core"), owned=True)
         inner = SimpleNamespace(mcp_session_report=lambda: report)
         provider = SimpleNamespace(client=inner, mcp_session_report=lambda: report)
 
@@ -468,7 +468,7 @@ class TestBothTransportsAreReached:
         _publish_session_mcp_report(MagicMock(), slot, provider)
 
         payload = slot.mcp_report_payload()
-        assert payload is not None and payload["ready"] == ["kirocrew-core"]
+        assert payload is not None and payload["ready"] == ["ajcrew-core"]
 
 
 class TestReportFrameFloor:
@@ -505,7 +505,7 @@ class TestReportFrameFloor:
         import inspect
         import sys
 
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         src = "".join(
             inspect.getsource(sys.modules[name])
@@ -531,7 +531,7 @@ class TestSerializerDropsOrphanedReport:
 
     @staticmethod
     def _state_with_slot(live_id: str | None, *, stamped: str = "sid-1"):
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         state = DashboardState.__new__(DashboardState)
         slot = _ChatSlot("s1")
@@ -570,7 +570,7 @@ class TestSerializerDropsOrphanedReport:
         # different provider (or none), mismatches, and clears a live session's
         # report mid-turn. The turn's own key must win — the same rule turn
         # cancellation follows.
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         state = DashboardState.__new__(DashboardState)
         slot = _ChatSlot("s1")
@@ -590,11 +590,11 @@ class TestSerializerDropsOrphanedReport:
         # publish must record the identity the serializer will ask for. Stamping
         # nothing there makes the serializer drop the report on EVERY snapshot —
         # the feature silently gone while both halves look correct in isolation.
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         report = McpSessionReport()
-        report.begin_session([{"name": "kirocrew-core"}])
-        report.record_frame(_ready_frame("kirocrew-core"), owned=True)
+        report.begin_session([{"name": "ajcrew-core"}])
+        report.record_frame(_ready_frame("ajcrew-core"), owned=True)
         provider = SimpleNamespace(session_id="sid-live", mcp_session_report=lambda: report)
 
         slot = _ChatSlot("s1")
@@ -610,7 +610,7 @@ class TestSerializerDropsOrphanedReport:
             "publish did not stamp the identity the serializer asks for, so the "
             "report is dropped on every snapshot"
         )
-        assert payloads[0]["mcp_report"]["ready"] == ["kirocrew-core"]
+        assert payloads[0]["mcp_report"]["ready"] == ["ajcrew-core"]
 
     def test_a_channel_slot_is_checked_on_its_linked_key(self):
         # A channel-born slot's turns run on the channel's own session, so

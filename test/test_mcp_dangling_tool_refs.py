@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import logging
 
-from kiro_crew.config.sections import AgentConfig
-from kiro_crew.mcp_cleanup import prune_dangling_tool_refs
+from aj_crew.config.sections import AgentConfig
+from aj_crew.mcp_cleanup import prune_dangling_tool_refs
 
 
 def _config(**over):
@@ -210,7 +210,7 @@ def test_an_unmounted_ref_is_recorded_where_the_shipped_log_level_shows_it(caplo
     # record going quietly invisible to the operator who has to debug it.
     shipped = getattr(logging, AgentConfig().log_level.upper())
     cfg = _config()
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.mcp_cleanup"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.mcp_cleanup"):
         prune_dangling_tool_refs(cfg)
     records = [r for r in caplog.records if "@gone" in r.getMessage()]
     assert len(records) == 1
@@ -227,7 +227,7 @@ def test_a_grant_only_removal_stays_at_info_because_sel_already_carries_it(caplo
         tools=["fs_read", "@live", "@unsure"],
         allowedTools=["fs_read", "@live", "@unsure"],
     )
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.mcp_cleanup"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.mcp_cleanup"):
         prune_dangling_tool_refs(cfg, declared=["unsure"], declared_grants=[])
     records = [r for r in caplog.records if "@unsure" in r.getMessage()]
     assert len(records) == 1

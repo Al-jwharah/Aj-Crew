@@ -24,18 +24,18 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import pin_harness_choice
 
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_selection_capabilities
-from kiro_crew.dashboard.handlers import agents
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.chat_handlers import api_chat_slot_selection_capabilities
+from aj_crew.dashboard.handlers import agents
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.providers.acp import AcpProvider
 
 # ── GET /api/models?backend= ──
 
 
 def _models_app(monkeypatch, *, configured: str) -> web.Application:
     monkeypatch.setattr(
-        agents.KiroCrewConfig,
+        agents.AjCrewConfig,
         "load",
         staticmethod(
             lambda: SimpleNamespace(agent=SimpleNamespace(acp_backend=configured, model=""))
@@ -85,7 +85,7 @@ async def test_backend_param_takes_the_bundle_route_of_the_requested_backend(
     """The KAS bundle route is decided for the backend the list is FOR: a kas session
     under a claude default runs the bundle, a kiro-cli one under a kas default does not."""
     monkeypatch.setattr(
-        agents.KiroCrewConfig,
+        agents.AjCrewConfig,
         "load",
         staticmethod(
             lambda: SimpleNamespace(
@@ -134,7 +134,7 @@ def _state(slot: _ChatSlot, provider: object = None) -> DashboardState:
 
 def _config(monkeypatch, *, default: str, member: str) -> None:
     monkeypatch.setattr(
-        chat_handlers.KiroCrewConfig,
+        chat_handlers.AjCrewConfig,
         "load",
         lambda: SimpleNamespace(
             agent=SimpleNamespace(acp_backend=default, member_acp_backend=member), agents={}
@@ -188,27 +188,27 @@ async def test_a_kas_thread_keeps_the_configured_kiro_list(monkeypatch):
 @pytest.fixture()
 def crew():
     """One stored crew, through the real config API (the conftest redirects the home)."""
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
-    cfg = KiroCrewConfig.load()
-    cfg.agents["writer"] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew", workspace="default", memory_store="default"
+    cfg = AjCrewConfig.load()
+    cfg.agents["writer"] = AjCrewAgentConfig(
+        kiro_agent="ajcrew", workspace="default", memory_store="default"
     )
     cfg.save()
     return "writer"
 
 
 async def _resolved(crew_name: str, *, default: str, member: str, state: object = None) -> dict:
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard.handlers import api_kirocrew_agent_resolved_model
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard.handlers import api_ajcrew_agent_resolved_model
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.save()
     # save() keeps the harness fields as stored, so the choice goes on disk.
     pin_harness_choice(acp_backend=default, member_acp_backend=member)
     app = web.Application()
     app["state"] = state
-    app.router.add_get("/api/agents/resolved-model", api_kirocrew_agent_resolved_model)
+    app.router.add_get("/api/agents/resolved-model", api_ajcrew_agent_resolved_model)
     async with TestClient(TestServer(app)) as client:
         resp = await client.get("/api/agents/resolved-model", params={"agent": crew_name})
         assert resp.status == 200
@@ -230,15 +230,15 @@ async def test_the_crew_editor_reads_the_list_of_the_crews_own_harness_pin(
 ):
     """A crewmate that pins a harness runs there, so that harness's list is the one offered;
     the pin is the owner's to read, so another caller gets the member route's answer."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.crewmate_harness import CrewBackendPin
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.crewmate_harness import CrewBackendPin
 
     monkeypatch.setattr(CrewBackendPin, "resolve", lambda self: self.stored)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda _request: owner,
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents[crew].acp_backend = "claude"
     cfg.save()
 
@@ -277,9 +277,9 @@ def _claude_session(*advertised: str) -> SimpleNamespace:
     ids=["served-as-another-id", "not-offered", "unknown"],
 )
 async def test_the_crew_editor_learns_what_the_harness_serves_its_pin_as(crew, live, served):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents[crew].model = "claude-opus-5.5"
     cfg.save()
     state = SimpleNamespace(sessions=SimpleNamespace(active_providers=lambda: live))

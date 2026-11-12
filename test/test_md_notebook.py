@@ -34,10 +34,10 @@ from md_notebook_helpers import fixtures_fixture  # noqa: F401 - fixture
 from md_notebook_helpers import SECRET, _clone, _git, signed_client
 from windows_sim import replace_sharing_violation
 
+from aj_crew import atomic_write as atomic_write_mod
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.md_notebook import git_ops
 from conftest import requires_symlinks
-from kiro_crew import atomic_write as atomic_write_mod
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.md_notebook import git_ops
 
 
 def test_the_seed_template_keeps_auto_maintenance_off(
@@ -108,7 +108,7 @@ async def test_tampered_signature_is_rejected(fixtures) -> None:
     app = server_mod.create_app()
     async with TestClient(TestServer(app)) as raw:
         resp = await raw.get(
-            "/api/vaults", headers={"X-KiroCrew-Proxy": f"{int(time.time())}:deadbeef"}
+            "/api/vaults", headers={"X-AjCrew-Proxy": f"{int(time.time())}:deadbeef"}
         )
         assert resp.status == 401
 
@@ -120,7 +120,7 @@ def _sign_wire_target(method: str, wire_target: str, body: bytes = b"") -> dict[
     digest = hashlib.sha256(body).hexdigest()
     msg = f"{ts}:{method}:{wire_target}:{digest}"
     sig = hmac.new(SECRET.encode(), msg.encode(), hashlib.sha256).hexdigest()
-    return {"X-KiroCrew-Proxy": f"{ts}:{sig}"}
+    return {"X-AjCrew-Proxy": f"{ts}:{sig}"}
 
 
 @pytest.mark.asyncio
@@ -499,7 +499,7 @@ async def test_reveal_pins_path_so_a_planted_helper_cannot_run(monkeypatch) -> N
     """
     if os.name != "posix":
         pytest.skip("PATH is deliberately left inherited on Windows")
-    from kiro_crew.apps.builtins.md_notebook import server as server_mod
+    from aj_crew.apps.builtins.md_notebook import server as server_mod
 
     captured: dict[str, Any] = {}
 
@@ -531,7 +531,7 @@ def test_every_spawn_in_this_module_pins_path() -> None:
     `subprocess.run` added without `env=_trusted_env()` would silently reopen the
     hole, so the count is asserted rather than left to review.
     """
-    from kiro_crew.apps.builtins.md_notebook import server as server_mod
+    from aj_crew.apps.builtins.md_notebook import server as server_mod
 
     facade = Path(server_mod.__file__)
     source = "".join(
@@ -552,7 +552,7 @@ def test_a_failed_gh_token_mint_is_logged_without_the_output(
     monkeypatch, caplog, outcome, level, needle
 ) -> None:
     """A gh that cannot run, times out or exits non-zero leaves a record."""
-    from kiro_crew.apps.builtins.md_notebook import server as server_mod
+    from aj_crew.apps.builtins.md_notebook import server as server_mod
 
     def fake_run(*_args: Any, **_kwargs: Any) -> Any:
         if isinstance(outcome, BaseException):
@@ -885,14 +885,14 @@ def test_path_contains_sensitive_flags_ancestors_of_credentials(
     """The reverse-direction gate flags the home directory (it contains
     ``~/.ssh``) and any ancestor of a protected location — WITHOUT needing the
     credential paths to exist on disk, and without walking the tree."""
-    from kiro_crew import security
+    from aj_crew import security
 
     home = tmp_path / "home"
     home.mkdir()
     # Path.home() reads HOME on POSIX and USERPROFILE on Windows.
     monkeypatch.setenv("HOME", str(home))
     monkeypatch.setenv("USERPROFILE", str(home))
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     # The home dir itself: not sensitive, but it CONTAINS ~/.ssh et al.
     assert security.is_sensitive_path(str(home)) is False
     assert security.path_contains_sensitive(str(home)) is True
@@ -902,10 +902,10 @@ def test_path_contains_sensitive_flags_ancestors_of_credentials(
     benign = tmp_path / "elsewhere" / "notes"
     benign.mkdir(parents=True)
     assert security.path_contains_sensitive(str(benign)) is False
-    # A custom KIROCREW_HOME re-anchors the crew secret leaves — a folder
+    # A custom AJCREW_HOME re-anchors the crew secret leaves — a folder
     # containing THAT must be refused as well (the Notes PAT lives there).
     crew = tmp_path / "elsewhere" / "notes" / "crew"
-    monkeypatch.setenv("KIROCREW_HOME", str(crew))
+    monkeypatch.setenv("AJCREW_HOME", str(crew))
     assert security.path_contains_sensitive(str(benign)) is True
 
 
@@ -949,10 +949,10 @@ def test_pat_stays_under_crew_home_ignoring_md_notebook_home(monkeypatch, tmp_pa
     stray = tmp_path / "stray"
     # Imported before the env moves and never reloaded: the property is that a change
     # AFTER import is honoured, so no path may be captured when the module loads.
-    from kiro_crew.apps.builtins.md_notebook import server as server_mod
+    from aj_crew.apps.builtins.md_notebook import server as server_mod
 
     monkeypatch.setattr(server_mod, "_HOME", None)
-    monkeypatch.setenv("KIROCREW_HOME", str(crew))
+    monkeypatch.setenv("AJCREW_HOME", str(crew))
     monkeypatch.setenv("MD_NOTEBOOK_HOME", str(stray))
     pat = server_mod._pat_file()
     # The PAT is under the crew data home, NOT the stray MD_NOTEBOOK_HOME.
@@ -978,17 +978,17 @@ def test_pat_stays_under_crew_home_ignoring_md_notebook_home(monkeypatch, tmp_pa
     assert str(stray) in str(server_mod._clone_root())
 
 
-def test_default_home_follows_kirocrew_home(monkeypatch, tmp_path: Path) -> None:
+def test_default_home_follows_ajcrew_home(monkeypatch, tmp_path: Path) -> None:
     """An isolated instance keeps its own vaults instead of the production ones.
 
-    Deriving the data root from ``Path.home()`` ignored ``KIROCREW_HOME``, so a
-    dev gateway (``KIROCREW_HOME=.kirocrew-dev``) would load and edit the real
+    Deriving the data root from ``Path.home()`` ignored ``AJCREW_HOME``, so a
+    dev gateway (``AJCREW_HOME=.ajcrew-dev``) would load and edit the real
     ~/.kiro/crew notes. ``_default_home`` now routes through ``config_dir()``.
     """
-    from kiro_crew.apps.builtins.md_notebook import server as server_mod
+    from aj_crew.apps.builtins.md_notebook import server as server_mod
 
     iso = tmp_path / "iso-home"
-    monkeypatch.setenv("KIROCREW_HOME", str(iso))
+    monkeypatch.setenv("AJCREW_HOME", str(iso))
     home = server_mod._default_home()
     assert str(home).startswith(str(iso.resolve()))
     assert home.name == server_mod.APP_NAME
@@ -1468,7 +1468,7 @@ class TestMdNotebookErrorRedaction:
     def test_absolute_paths_are_stripped(self):
         """The dominant leak shape here. redact_credentials alone does NOT match
         this, so a fix that only chains the credential/URL passes is cosmetic."""
-        from kiro_crew.apps.builtins.md_notebook import server as md_server
+        from aj_crew.apps.builtins.md_notebook import server as md_server
 
         exc = FileNotFoundError(
             "[Errno 2] No such file or directory: '/home/alice/.kiro/crew/vaults/v1'"
@@ -1479,14 +1479,14 @@ class TestMdNotebookErrorRedaction:
         assert "No such file or directory" in out
 
     def test_credentials_are_stripped(self):
-        from kiro_crew.apps.builtins.md_notebook import server as md_server
+        from aj_crew.apps.builtins.md_notebook import server as md_server
 
         token = "sk-" + "abcdefghijklmnopqrstuvwxyz" + "012345"
         exc = RuntimeError("Authorization: Bearer " + token)
         assert token not in md_server._safe_error(exc)
 
     def test_plain_message_survives(self):
-        from kiro_crew.apps.builtins.md_notebook import server as md_server
+        from aj_crew.apps.builtins.md_notebook import server as md_server
 
         assert md_server._safe_error(ValueError("vault not found")) == "vault not found"
 
@@ -1496,7 +1496,7 @@ class TestMdNotebookErrorRedaction:
         may return raw exception text."""
         from aiohttp import web
 
-        from kiro_crew.apps.builtins.md_notebook import server_http
+        from aj_crew.apps.builtins.md_notebook import server_http
 
         leak = "/home/alice/.kiro/crew/vaults/v1"
 

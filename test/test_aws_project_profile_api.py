@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import aws_consent
+from aj_crew import aws_consent
 
 
 @pytest.fixture(autouse=True)
@@ -27,7 +27,7 @@ def _no_real_aws_cli(_floor_monkeypatch: pytest.MonkeyPatch):
     needs the probe stubs it (or ``_profile_status``) itself, which replaces these.
     Patched through ``_floor_monkeypatch`` so a test's ``monkeypatch.undo()`` cannot lift it.
     """
-    from kiro_crew.apps.builtins.aws_control.backend import accounts
+    from aj_crew.apps.builtins.aws_control.backend import accounts
 
     reached: list[str] = []
 
@@ -47,8 +47,8 @@ def _no_real_aws_cli(_floor_monkeypatch: pytest.MonkeyPatch):
 
 @pytest.fixture()
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    from kiro_crew.config.loader import config_dir
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    from aj_crew.config.loader import config_dir
 
     config_dir().mkdir(parents=True, exist_ok=True)
     aws_consent._probe_cache.clear()
@@ -79,7 +79,7 @@ def _request(
 
 
 def _stored(home: Path) -> dict:
-    from kiro_crew.config.loader import config_path
+    from aj_crew.config.loader import config_path
 
     path = config_path()
     if not path.exists():
@@ -94,13 +94,13 @@ def _project(home: Path, name: str = "proj") -> Path:
 
 
 def _put(body: object, **kw):
-    from kiro_crew.dashboard.handlers import aws_project_profile as handler
+    from aj_crew.dashboard.handlers import aws_project_profile as handler
 
     return asyncio.run(handler.api_aws_project_profile_put(_request(body=body, **kw)))
 
 
 def _get(path: str, **kw):
-    from kiro_crew.dashboard.handlers import aws_project_profile as handler
+    from aj_crew.dashboard.handlers import aws_project_profile as handler
 
     return asyncio.run(handler.api_aws_project_profile_get(_request(query={"path": path}, **kw)))
 
@@ -110,7 +110,7 @@ class TestOwnerOnly:
     def test_a_non_owner_cannot_read_or_bind(
         self, home: Path, monkeypatch: pytest.MonkeyPatch, app: str, user: str
     ) -> None:
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         audited: list[dict] = []
 
@@ -134,7 +134,7 @@ class TestOwnerOnly:
 
 class TestBind:
     def test_bind_then_read_back(self, home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.dashboard.handlers import aws_project_profile as handler
+        from aj_crew.dashboard.handlers import aws_project_profile as handler
 
         monkeypatch.setattr(handler, "_profile_status", AsyncMock(return_value="ok"))
         proj = _project(home)
@@ -189,7 +189,7 @@ class TestBind:
     def test_binding_through_a_symlink_target_replaces_the_alias(
         self, home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.dashboard.handlers import aws_project_profile as handler
+        from aj_crew.dashboard.handlers import aws_project_profile as handler
 
         monkeypatch.setattr(handler, "_profile_status", AsyncMock(return_value="ok"))
         proj = _project(home)
@@ -204,7 +204,7 @@ class TestBind:
         assert json.loads(_get(str(proj)).text)["profile"] == "new"
 
     def test_a_hand_edited_key_with_a_nul_is_not_a_crash(self, home: Path) -> None:
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         proj = _project(home)
         bad = str(proj.parent / "x\x00y")
@@ -227,7 +227,7 @@ class TestHealthIsNamesOnly:
     def test_an_expired_sso_profile_reads_expired_with_no_account_or_arn(
         self, home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.apps.builtins.aws_control.backend import accounts
+        from aj_crew.apps.builtins.aws_control.backend import accounts
 
         probe = AsyncMock(
             return_value=aws_consent.Identity(
@@ -253,7 +253,7 @@ class TestHealthIsNamesOnly:
     def test_a_non_sso_profile_that_does_not_resolve_reads_unavailable(
         self, home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.apps.builtins.aws_control.backend import accounts
+        from aj_crew.apps.builtins.aws_control.backend import accounts
 
         monkeypatch.setattr(
             aws_consent, "probe_identity", AsyncMock(return_value=aws_consent.Identity(ok=False))

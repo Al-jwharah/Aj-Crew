@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.skills import SkillsLoader
+from aj_crew.skills import SkillsLoader
 
 
 def _write(root: Path, name: str, *, inject: str | None = None, body: str = "body") -> Path:
@@ -112,14 +112,14 @@ class TestSetInjectOnTrigger:
         d.mkdir(parents=True)
         (d / "SKILL.md").write_text(
             "---\nname: scoped\ndescription: d\ntriggers: zebra\n"
-            "repo_scope: src/kiro_crew\nalways: false\n---\n# Body\nkeep me\n"
+            "repo_scope: src/aj_crew\nalways: false\n---\n# Body\nkeep me\n"
         )
         loader = SkillsLoader(skills_path=skills, install_builtins=False)
 
         loader.set_inject_on_trigger("scoped", False)
 
         text = (d / "SKILL.md").read_text()
-        assert "repo_scope: src/kiro_crew" in text
+        assert "repo_scope: src/aj_crew" in text
         assert "always: false" in text
         assert "# Body\nkeep me" in text
 
@@ -183,7 +183,7 @@ class TestSetInjectOnTrigger:
     def test_the_listing_marks_a_foreign_skill_unowned(self, tmp_path: Path) -> None:
         """So the UI cannot offer a toggle the writer will refuse.
 
-        A `skills.extra_paths` skill still reports `source: kirocrew`, so source
+        A `skills.extra_paths` skill still reports `source: ajcrew`, so source
         alone cannot gate the control. The listing carries the writer's own
         ownership predicate instead, and the two must agree.
         """

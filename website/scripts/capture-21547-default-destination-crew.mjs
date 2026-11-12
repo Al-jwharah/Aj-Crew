@@ -15,7 +15,7 @@
  *                       the override) first, then every registered crew.
  *  6. not-registered    A stored global default that names no registered crew
  *                       stays selected as "{id} (not registered)".
- *  7. save-failed       The global save refused (PATCH /api/config/kirocrew
+ *  7. save-failed       The global save refused (PATCH /api/config/ajcrew
  *                       stubbed to fail): the catalog sentence leads, the
  *                       gateway's reason follows, the hint returns on dismiss.
  *  8. folder-crews-failed  GET /api/instances failing: Folder settings keeps the
@@ -50,7 +50,7 @@ const SSO = { state: 'ok', seconds_remaining: 72000, expires_at: null, reason: '
 const SLOT = 'chat-ledger'
 const FOLDERS = [{ id: 'f-led', name: 'Ledger', order: 0, collapsed: false, default_destination_crew: 'nobita' }]
 const SLOTS = [{
-  key: SLOT, title: 'Month-end close', messages: 4, running: false, agent: 'kirocrew', mode: '',
+  key: SLOT, title: 'Month-end close', messages: 4, running: false, agent: 'ajcrew', mode: '',
   memory_mode: 'persistent', folder_id: 'f-led', last_message: '', source_links: [], source_links_total: 0,
   created: '2026-10-19T08:00:00Z', last_ts: '2026-10-19T09:00:00Z', modified: Math.floor(Date.now() / 1000),
 }]
@@ -67,7 +67,7 @@ const extra = async (path, route) => {
     await json(route, { active: true, instances: CREWS, warm_set_cap: 5, sso: SSO, default_destination: stub.globalDefault ?? 'devdesk' })
     return true
   }
-  if (path === '/api/config/kirocrew' && route.request().method() === 'PATCH') {
+  if (path === '/api/config/ajcrew' && route.request().method() === 'PATCH') {
     if (stub.patchFails) {
       await route.fulfill({ status: 400, contentType: 'application/json', body: JSON.stringify({ error: 'config.json is read-only on this host' }) })
     } else {

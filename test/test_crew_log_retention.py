@@ -23,11 +23,11 @@ from crew_log_drain import assert_drained
 from crew_log_type_helpers import minimal_data
 from off_loop_helpers import off_loop
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, store
-from kiro_crew.crew_log.lease import LEASE_FILE
-from kiro_crew.session_ledger import _store_name
-from kiro_crew.testing.wait import wait_until
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, store
+from aj_crew.crew_log.lease import LEASE_FILE
+from aj_crew.session_ledger import _store_name
+from aj_crew.testing.wait import wait_until
 
 SESSION = "s-retain"
 CREW = "qa"
@@ -54,7 +54,7 @@ def _opened(*, resumed: bool) -> dict:
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 
@@ -68,7 +68,7 @@ def _closed_session(
     mapping, so a fixture with an invented reason would be a unit the sweep must
     refuse -- which the non-terminal tests below use it for deliberately.
     """
-    log = CrewLog.create(lg.KIND_SESSION, unit_id, owner=CREW, agent="kirocrew")
+    log = CrewLog.create(lg.KIND_SESSION, unit_id, owner=CREW, agent="ajcrew")
     closed_at = store.now_ms() - int(closed_days_ago * DAY_MS)
     log.append("session/opened", _opened(resumed=False), src="gateway")
     _append_at(log, "session/closed", {"reason": reason}, closed_at)
@@ -83,7 +83,7 @@ def _open_session(unit_id: str = SESSION, *, age_days: float = 90.0) -> CrewLog:
     a fixture whose lifecycle entry is fresh would let an entry-time rule keep it
     for the wrong reason.
     """
-    log = CrewLog.create(lg.KIND_SESSION, unit_id, owner=CREW, agent="kirocrew")
+    log = CrewLog.create(lg.KIND_SESSION, unit_id, owner=CREW, agent="ajcrew")
     _append_at(
         log, "session/opened", _opened(resumed=False), store.now_ms() - int(age_days * DAY_MS)
     )
@@ -202,7 +202,7 @@ def test_remove_unit_refuses_while_another_process_owns_the_unit():
 def _hold_lease(lease_path: str, ready, done) -> None:  # pragma: no cover - child process
     from pathlib import Path
 
-    from kiro_crew.platform_compat import file_lock
+    from aj_crew.platform_compat import file_lock
 
     path = Path(lease_path)
     path.touch(exist_ok=True)
@@ -469,7 +469,7 @@ def test_sweep_reads_the_newest_close_when_a_resumed_session_closed_twice():
     So a file can hold more than one close, and only the newest describes the
     life that ended. Reading the first would expire a session that came back.
     """
-    log = CrewLog.create(lg.KIND_SESSION, SESSION, owner=CREW, agent="kirocrew")
+    log = CrewLog.create(lg.KIND_SESSION, SESSION, owner=CREW, agent="ajcrew")
     _append_at(log, "session/closed", {"reason": "destroyed"}, store.now_ms() - 90 * DAY_MS)
     log.append("session/opened", _opened(resumed=True), src="gateway")
     _append_at(log, "session/closed", {"reason": "destroyed"}, store.now_ms() - 1 * DAY_MS)
@@ -485,7 +485,7 @@ def test_sweep_never_expires_a_session_that_was_REOPENED_after_its_close():
     A resumed session appends to its old log, so ``... closed ... opened ...`` is a live
     session. Both entries are aged past the cutoff: only their order says it is live.
     """
-    log = CrewLog.create(lg.KIND_SESSION, SESSION, owner=CREW, agent="kirocrew")
+    log = CrewLog.create(lg.KIND_SESSION, SESSION, owner=CREW, agent="ajcrew")
     _append_at(log, _CLOSED, {"reason": "destroyed"}, store.now_ms() - 400 * DAY_MS)
     _append_at(log, "session/opened", _opened(resumed=True), store.now_ms() - 399 * DAY_MS)
     _append_at(
@@ -509,7 +509,7 @@ def test_an_in_flight_closer_after_the_teardown_still_reads_as_closed():
     so a scan that treated any later entry as a revival would never collect a
     normally-closed unit.
     """
-    log = CrewLog.create(lg.KIND_SESSION, SESSION, owner=CREW, agent="kirocrew")
+    log = CrewLog.create(lg.KIND_SESSION, SESSION, owner=CREW, agent="ajcrew")
     _append_at(log, _CLOSED, {"reason": "destroyed"}, store.now_ms() - 90 * DAY_MS)
     log.append(
         "tool/completed",
@@ -776,7 +776,7 @@ def test_sweep_writes_nothing_into_a_log_it_keeps():
 
 def test_history_archive_cleanup_expires_logs_on_the_same_setting(monkeypatch):
     """``session.archive_retention_days`` governs both halves, in one pass."""
-    from kiro_crew import history
+    from aj_crew import history
 
     log = _closed_session(closed_days_ago=90)
     del log
@@ -787,7 +787,7 @@ def test_history_archive_cleanup_expires_logs_on_the_same_setting(monkeypatch):
 
 
 def test_history_archive_cleanup_honours_the_disable_for_logs_too(monkeypatch):
-    from kiro_crew import history
+    from aj_crew import history
 
     log = _closed_session(closed_days_ago=4000)
     del log
@@ -804,7 +804,7 @@ def test_history_archive_cleanup_sweeps_logs_with_no_archive_directory(monkeypat
     so an early return there would leave that half uncollected until the first
     archive was ever written.
     """
-    from kiro_crew import history
+    from aj_crew import history
 
     log = _closed_session(closed_days_ago=90)
     del log
@@ -821,7 +821,7 @@ def test_a_failing_log_sweep_never_breaks_the_transcript_archive(monkeypatch):
     Retaining too much is a disk-space problem; failing to archive the transcript
     loses the record, so the crew log half is contained.
     """
-    from kiro_crew import history
+    from aj_crew import history
 
     monkeypatch.setattr(history, "_last_cleanup", 0.0)
 
@@ -867,8 +867,8 @@ def test_a_partial_removal_keeps_lineage_whose_opening_record_still_reads(monkey
     A refusal on a later segment can leave the opening entry readable, so the disk is
     asked. A decision may sit in a removed later segment, so it is still re-read.
     """
-    from kiro_crew.crew_log import session_tree
-    from kiro_crew.crew_log import session_tree_projection as stp
+    from aj_crew.crew_log import session_tree
+    from aj_crew.crew_log import session_tree_projection as stp
 
     forgotten: list[str] = []
     retracted: list[str] = []
@@ -917,8 +917,8 @@ def test_a_partial_removal_downgrades_to_parentless_when_the_creating_segment_we
     A fresh scan gives the slot no parent. Dropping the record would orphan the children
     that cite this slot, making it read as a creator that never existed.
     """
-    from kiro_crew.crew_log import session_tree
-    from kiro_crew.crew_log import session_tree_projection as stp
+    from aj_crew.crew_log import session_tree
+    from aj_crew.crew_log import session_tree_projection as stp
 
     forgotten: list[str] = []
     retracted: list[str] = []
@@ -959,12 +959,12 @@ def test_a_partial_removal_drops_lineage_once_the_opening_record_is_unreadable(m
     Left held, the projection serves an edge into a log nobody can read and writes it to
     the checkpoint, so a restart reads it back as fact.
     """
-    from kiro_crew.crew_log import session_tree_projection as stp
+    from aj_crew.crew_log import session_tree_projection as stp
 
     forgotten: list[str] = []
     monkeypatch.setattr(stp, "forget_unit", lambda sid: forgotten.append(sid))
     # Whatever survives the pass, the disk cannot prove an opening record.
-    monkeypatch.setattr("kiro_crew.crew_log.session_tree.opened_record", lambda *a, **k: None)
+    monkeypatch.setattr("aj_crew.crew_log.session_tree.opened_record", lambda *a, **k: None)
 
     log = _closed_session()
     del log
@@ -1048,8 +1048,8 @@ def drained_emitter(monkeypatch):
     On the way out the session tree's debounced checkpoint is cancelled and waited out;
     left alone it would run during the next test.
     """
-    from kiro_crew.crew_log import emit
-    from kiro_crew.crew_log import session_tree_projection as stp
+    from aj_crew.crew_log import emit
+    from aj_crew.crew_log import session_tree_projection as stp
 
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     emit.reset_caches()
@@ -1076,16 +1076,16 @@ async def test_destroying_a_session_records_the_teardown_in_its_log():
     close the sweep reads the unit as open. Driven through the real ``destroy``: logs
     built with ``CrewLog.create`` have no holder and would pass regardless.
     """
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.crew_log import emit
-    from kiro_crew.session import SessionManager
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.crew_log import emit
+    from aj_crew.session import SessionManager
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.timeout_secs = 2
     manager = SessionManager(cfg, provider_factory=_provider_factory_reporting("acp-torn-down"))
     await manager.get_or_create("thread-doomed")
 
-    emit.on_session_opened("acp-torn-down", agent="kirocrew", slot="thread-doomed")
+    emit.on_session_opened("acp-torn-down", agent="ajcrew", slot="thread-doomed")
     assert_drained()
     assert _newest_lifecycle_type("acp-torn-down") == "session/opened"
 
@@ -1107,15 +1107,15 @@ async def test_a_destroyed_sessions_log_is_then_collectable_by_the_sweep():
     refused by a lease nobody released, and the sweep skipping a unit that reads
     as open. A test on the entry's presence would prove neither.
     """
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.crew_log import emit
-    from kiro_crew.session import SessionManager
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.crew_log import emit
+    from aj_crew.session import SessionManager
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.timeout_secs = 2
     manager = SessionManager(cfg, provider_factory=_provider_factory_reporting("acp-aged"))
     await manager.get_or_create("thread-aged")
-    emit.on_session_opened("acp-aged", agent="kirocrew", slot="thread-aged")
+    emit.on_session_opened("acp-aged", agent="ajcrew", slot="thread-aged")
     assert_drained()
     assert await manager.destroy("thread-aged") is None
     assert_drained()
@@ -1150,7 +1150,7 @@ def test_the_header_slot_reader_refuses_a_unit_whose_id_does_not_fold_back():
     slot and defeat the check it exists for.
     """
     log = CrewLog.create(
-        lg.KIND_SESSION, "s-real", owner=CREW, agent="kirocrew", slot="dashboard_chat-1"
+        lg.KIND_SESSION, "s-real", owner=CREW, agent="ajcrew", slot="dashboard_chat-1"
     )
     del log
     assert store.unit_header_slot(lg.KIND_SESSION, "s-real") == "dashboard_chat-1"
@@ -1209,8 +1209,8 @@ def test_a_valid_empty_session_map_cannot_authorize_collecting_a_reset_closed_un
     valid empty map would read as "nothing is revivable". The unit is protected only
     because its close reason does not prove the id is dead.
     """
-    from kiro_crew.config.loader import config_dir
-    from kiro_crew.session_map import SESSION_MAP_FILENAME
+    from aj_crew.config.loader import config_dir
+    from aj_crew.session_map import SESSION_MAP_FILENAME
 
     path = config_dir() / SESSION_MAP_FILENAME
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -1224,7 +1224,7 @@ def test_a_valid_empty_session_map_cannot_authorize_collecting_a_reset_closed_un
 
 def test_a_close_with_no_reason_field_at_all_is_never_collected():
     """Absent proof is not proof. The unit stays and the next pass sees it again."""
-    log = CrewLog.create(lg.KIND_SESSION, SESSION, owner=CREW, agent="kirocrew")
+    log = CrewLog.create(lg.KIND_SESSION, SESSION, owner=CREW, agent="ajcrew")
     log.append("session/opened", _opened(resumed=False), src="gateway")
     _append_at(log, _CLOSED, {"reason": "reset"}, store.now_ms() - 400 * DAY_MS, plant={})
     del log
@@ -1235,7 +1235,7 @@ def test_a_close_with_no_reason_field_at_all_is_never_collected():
 
 def test_a_non_string_reason_is_read_as_absent_rather_than_matched():
     """The reason decides an irreversible deletion, so it is type-checked."""
-    log = CrewLog.create(lg.KIND_SESSION, SESSION, owner=CREW, agent="kirocrew")
+    log = CrewLog.create(lg.KIND_SESSION, SESSION, owner=CREW, agent="ajcrew")
     log.append("session/opened", _opened(resumed=False), src="gateway")
     _append_at(
         log,
@@ -1305,15 +1305,15 @@ async def test_a_destroy_that_leaves_another_mapping_writes_a_NON_terminal_reaso
     withheld here and the unit stays uncollectable -- retention prefers keeping a
     log it cannot prove is dead.
     """
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.crew_log import emit
-    from kiro_crew.session import SessionManager
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.crew_log import emit
+    from aj_crew.session import SessionManager
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.timeout_secs = 2
     manager = SessionManager(cfg, provider_factory=_provider_factory_reporting("acp-shared"))
     await manager.get_or_create("thread-shared")
-    emit.on_session_opened("acp-shared", agent="kirocrew", slot="thread-shared")
+    emit.on_session_opened("acp-shared", agent="ajcrew", slot="thread-shared")
     assert_drained()
 
     # A surviving holder of the same sid, exactly as a repeated transfer import
@@ -1334,15 +1334,15 @@ async def test_a_destroy_that_leaves_another_mapping_writes_a_NON_terminal_reaso
 @pytest.mark.usefixtures("drained_emitter")
 async def test_an_unreadable_map_also_withholds_the_terminal_reason(monkeypatch):
     """An unreadable map is not evidence of revocation, so the claim is withheld."""
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.crew_log import emit
-    from kiro_crew.session import SessionManager
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.crew_log import emit
+    from aj_crew.session import SessionManager
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.timeout_secs = 2
     manager = SessionManager(cfg, provider_factory=_provider_factory_reporting("acp-nomap"))
     await manager.get_or_create("thread-nomap")
-    emit.on_session_opened("acp-nomap", agent="kirocrew", slot="thread-nomap")
+    emit.on_session_opened("acp-nomap", agent="ajcrew", slot="thread-nomap")
     assert_drained()
 
     def _raise(_sid):
@@ -1364,15 +1364,15 @@ async def test_a_session_opened_after_a_destroy_makes_the_unit_uncollectable_aga
     as a live conversation whatever the close said. Anyone who plants a mapping and
     resumes therefore causes the log to be KEPT, not deleted.
     """
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.crew_log import emit
-    from kiro_crew.session import SessionManager
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.crew_log import emit
+    from aj_crew.session import SessionManager
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.timeout_secs = 2
     manager = SessionManager(cfg, provider_factory=_provider_factory_reporting("acp-revived"))
     await manager.get_or_create("thread-revived")
-    emit.on_session_opened("acp-revived", agent="kirocrew", slot="thread-revived")
+    emit.on_session_opened("acp-revived", agent="ajcrew", slot="thread-revived")
     assert_drained()
     monkeypatch.setattr(manager._session_map, "find_key_by_sid", lambda _sid: None)
     await manager.destroy("thread-revived")
@@ -1380,7 +1380,7 @@ async def test_a_session_opened_after_a_destroy_makes_the_unit_uncollectable_aga
     assert _newest_close_reason("acp-revived") == "destroyed"
 
     _age_close_entry("acp-revived", days=400)
-    emit.on_session_opened("acp-revived", agent="kirocrew", slot="thread-revived", resumed=True)
+    emit.on_session_opened("acp-revived", agent="ajcrew", slot="thread-revived", resumed=True)
     assert_drained()
     emit.reset_caches()
 
@@ -1396,7 +1396,7 @@ def _stage_target(unit_id: str):
 
 def test_staging_syncs_both_parents_after_the_rename(monkeypatch):
     """A rename is not a move until both directories are on disk."""
-    from kiro_crew import atomic_write
+    from aj_crew import atomic_write
 
     log = _closed_session(unit_id="s-stage")
     del log
@@ -1413,7 +1413,7 @@ def test_staging_syncs_both_parents_after_the_rename(monkeypatch):
 
 
 def test_a_sync_that_fails_after_the_rename_puts_the_unit_back(monkeypatch):
-    from kiro_crew import atomic_write
+    from aj_crew import atomic_write
 
     log = _closed_session(unit_id="s-unsynced")
     del log

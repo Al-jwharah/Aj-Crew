@@ -76,7 +76,7 @@ async function capture(theme) {
     slots: [],
     // `return json(...), true` -- the comma marks the request handled.
     extra: async (path, route) => {
-      if (path === '/api/config/kirocrew') return json(route, { connections_ui: true }), true
+      if (path === '/api/config/ajcrew') return json(route, { connections_ui: true }), true
       if (path === '/api/theme/boot') return json(route, { mode: theme, theme: '' }), true
       if (path === '/api/mcp' || path === '/api/mcp/probe') return json(route, []), true
       if (path === '/api/connections/status') {
@@ -150,7 +150,7 @@ async function capture(theme) {
   //    disabled and names the variable, the secret stays dashboard-editable.
   CLIENTS[0].client_id_source = 'env'
   await page.reload({ waitUntil: 'domcontentloaded' })
-  await page.getByText(/Set by the environment variable KIROCREW_CONNECTIONS_GITHUB_CLIENT_ID/)
+  await page.getByText(/Set by the environment variable AJCREW_CONNECTIONS_GITHUB_CLIENT_ID/)
     .first().waitFor({ state: 'visible', timeout: 20000 })
   const envInput = page.locator('#connection-github, [data-setting-id="connections-oauth-client-github"]')
     .getByLabel('Client ID')

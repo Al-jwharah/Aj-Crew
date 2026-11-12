@@ -18,23 +18,23 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, checkpoint
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import read_budget
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, checkpoint
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import read_budget
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 SLOT = "chat-readbudget"
 FOLD = "ledger"
-SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     _floor_monkeypatch.delenv(read_budget.MODE_ENV, raising=False)
     _floor_monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     crew_log_emit.reset_caches()
@@ -204,7 +204,7 @@ def test_a_child_process_backfill_is_not_counted(tmp_path):
     read_budget.mark_gateway_process()
     child = (
         "import json\n"
-        "from kiro_crew.crew_log import projection, read_budget\n"
+        "from aj_crew.crew_log import projection, read_budget\n"
         f"cp = projection.fold_slot_warm_revised({FOLD!r}, ['acp-big'], slot={SLOT!r})[0]\n"
         "print(json.dumps({'seq': cp.last_seq, 'counts': read_budget.snapshot()}))\n"
     )

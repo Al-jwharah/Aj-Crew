@@ -233,7 +233,7 @@ export default function AgentSkillsEditor({ agentName, skills, unmanaged = [], o
   // EMPTY package set with a normal 200 on timeout (no completeness signal reaches the
   // client). Marking a package mapping dead on that partial response is a false positive,
   // and the count line below then instructs the user to remove a live mapping. The other
-  // sources (kirocrew, kiro-workspace) do not silently drop to empty, so a NON-package key
+  // sources (ajcrew, kiro-workspace) do not silently drop to empty, so a NON-package key
   // absent from a loaded catalog is a genuine dead mapping and is still flagged.
   const isPackageKey = (k: string) => k.startsWith('package/')
   const unresolvedKeys = useMemo(

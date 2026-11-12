@@ -36,7 +36,7 @@ superseded-by: []
 
 ## 1. Summary
 
-Kiro Crew already has an authenticated inbound webhook: `POST /api/hooks/agent`
+Aj Crew already has an authenticated inbound webhook: `POST /api/hooks/agent`
 takes a caller-shaped `{message, sessionKey}` and runs one agent turn in a
 `hook:*`-keyed session, behind named tokens, optional request signing, a
 per-source throttle, a body cap, a concurrency semaphore, an operator kill
@@ -86,7 +86,7 @@ useful. Both spend most of their turns discovering that nothing changed. A
 timer cannot know whether anything happened; only the turn can, and the turn is
 the expensive part.
 
-The pull side has already been made cheap. `irq.py` — Kiro Crew's interrupt
+The pull side has already been made cheap. `irq.py` — Aj Crew's interrupt
 controller for script crons — states the thesis in its first line, "cheap
 polling, expensive wakes", and implements it: a probe polls one subject with no
 model call and raises a wake only on an unexpected observation, with
@@ -124,7 +124,7 @@ sampling. Those three numbers are the baseline every later phase reports against
 
 ## 3. What exists today, and what each piece becomes
 
-Verified at `6163d9a9ca`. Paths are relative to `src/kiro_crew/`.
+Verified at `6163d9a9ca`. Paths are relative to `src/aj_crew/`.
 
 | Piece | What it does today | In this RFC |
 |---|---|---|
@@ -141,7 +141,7 @@ Verified at `6163d9a9ca`. Paths are relative to `src/kiro_crew/`.
 | `autonudge.py` | Timer loop re-injecting an instruction into the same session | The mechanism this RFC retires for signal-driven work. |
 | `subagent_parts/manager.py` `SubagentManager` | Spawn with admission queue, concurrency cap, completion events delivered to the parent session | The `spawn` consumer's execution path. |
 | `apps/builtins/ops_mission_control/backend/dispatch.py` | Deterministic cron cycle: poll signal sources, claim unowned signals atomically, release idle claims | Closest in-tree precedent for "signal → claim → agent"; the claim-and-release shape reappears as the buffer's lease. |
-| `kiro_crew.crew_log` (the per-unit crew log) | The one structured record of what happened; the planned global `kiro_crew.events` stream was retired unwritten ([crew-log-core.md](../system-specs/modules/crew-log-core.md)) | Where the dispatcher's lifecycle facts are emitted; the buffer defines its own record fields. |
+| `aj_crew.crew_log` (the per-unit crew log) | The one structured record of what happened; the planned global `aj_crew.events` stream was retired unwritten ([crew-log-core.md](../system-specs/modules/crew-log-core.md)) | Where the dispatcher's lifecycle facts are emitted; the buffer defines its own record fields. |
 | `notifications/bus.py` `SYSTEM_CHANNELS["system.hook"]` | Outbound notification channel for webhook activity | Reports accepted/dead counts and auto-pauses. |
 | `dashboard/tailnet_serve.py` | Publishes the dashboard on the tailnet with `tailscale serve` | **Tailnet-only** today; Funnel appears once, in a status-parsing comment. GitHub cannot reach it. §7.1 adds the opt-in. |
 
@@ -177,7 +177,7 @@ A source is a token-store entry, generalized:
 
 ```json
 {
-  "id": "src_github_kirocrew",
+  "id": "src_github_ajcrew",
   "label": "GitHub: kirodotdev/KiroCrew",
   "slug": "7f3a…",
   "scheme": "github-hmac",
@@ -222,7 +222,7 @@ half.
   },
 
   "id": "evt_01J…",
-  "source_id": "src_github_kirocrew",
+  "source_id": "src_github_ajcrew",
   "dedupe_key": "gh-delivery:5f6c…",
   "received_ms": 1789000000412,
   "epoch": null,
@@ -267,7 +267,7 @@ coupling, and it gates neither PR 1 nor PR 2.
 {
   "id": "sub_issues_conductor",
   "name": "new issues → pipeline conductor",
-  "source_id": "src_github_kirocrew",
+  "source_id": "src_github_ajcrew",
   "filter": {
     "kind": ["github/issues.opened", "github/issues.reopened"],
     "data.actor": {"not_in": ["dependabot[bot]"]}
@@ -404,7 +404,7 @@ about and enqueues anything the push path missed, deduped against what was
 received. Quiet turns go to zero; a sweep is a script, not a turn.
 
 **Lifecycle facts.** The dispatcher emits `webhook/received`,
-`webhook/coalesced`, `webhook/woke`, `webhook/dead` into `kiro_crew.crew_log`,
+`webhook/coalesced`, `webhook/woke`, `webhook/dead` into `aj_crew.crew_log`,
 and accepted/dead counts to the `system.hook`
 notification channel. Every accepted, rejected and dead event is an SEL entry,
 as every run is today.
@@ -548,10 +548,10 @@ it never decides what is allowed.
   pause; secret shown once), **Subscriptions** (create, edit instruction,
   pause, budget), **Events** (state, ingress latency, the dead list with a
   **replay** action).
-- **CLI.** `kirocrew webhook source add|list|rotate|remove`,
-  `kirocrew webhook sub add|list|pause|resume|remove`,
-  `kirocrew webhook events [--dead] [--since]`,
-  `kirocrew webhook replay <event-id>`.
+- **CLI.** `ajcrew webhook source add|list|rotate|remove`,
+  `ajcrew webhook sub add|list|pause|resume|remove`,
+  `ajcrew webhook events [--dead] [--since]`,
+  `ajcrew webhook replay <event-id>`.
 - **MCP tools.** `webhook_subscribe`, `webhook_list`, `webhook_pause`,
   `webhook_resume`, `webhook_events`. Stateless; every call carries the
   session key; a session may create or change subscriptions targeting
@@ -569,7 +569,7 @@ it never decides what is allowed.
 | 0 | this RFC only. The Phase 0 baseline (§2.3) is a measurement taken before PR 2, not a deliverable of any PR | — |
 | 1 | **Trust boundary.** The `hook:` prefix lift on `/api/hooks/agent`: a valid caller may name an existing dashboard session, the delivery queues when that session is busy, and it is wrapped in the redacted, untrusted-framed `[Webhook wake]` envelope (§4, §5.5) with the prefix constant in `dashboard/state_parts/injected_turns.py` and its `injected-messages.md` section. Small and reviewable as a security change on its own; nothing else moves | — |
 | 2 | **Core.** `webhooks.py` → `webhooks/` package: source entries gain `scheme`/`slug`/`mapping`; event buffer and subscription store; dispatcher task; `session` consumer over the queued-inject path; generic JSON and peer-session sources at `POST /api/hooks/in?src=<slug>` together with its one exact-path, POST-only `_BYPASS_EXACT_METHODS` entry (the entry lands with the route it protects, so that security review reads both); `docs/system-specs/modules/webhooks.md`. Reachable through the HTTP API only; no UI, CLI or MCP surface yet | — |
-| 3 | **Surfaces.** Webhooks page tabs (Sources, Subscriptions, Events with replay), `kirocrew webhook` CLI, `webhook_*` MCP tools (§9); spec section for each | — |
+| 3 | **Surfaces.** Webhooks page tabs (Sources, Subscriptions, Events with replay), `ajcrew webhook` CLI, `webhook_*` MCP tools (§9); spec section for each | — |
 | 4 | `github-hmac` scheme, GitHub mapping and reconcile probe; Funnel opt-in for the path `/api/hooks/in` in `tailnet_serve.py`; IP allowlist; migrate the operator's two 30-minute sessions to subscriptions and report against the Phase 0 baseline | the two cron jobs, once the baseline shows the subscriptions cover them |
 | 5 | `spawn` consumer over the admission path, preflight contract, lease expiry, retry backoff | — |
 | 6 | Slack channel-watch source | — |
@@ -634,6 +634,6 @@ tracker for the work a wake starts.
 4. Whether the GitHub reconcile probe authenticates with the `gh` CLI the
    existing probes use, or with a GitHub App installation token when the
    source is an App.
-5. Closed as moot: `kiro_crew.events` was retired unwritten in favour of the crew
+5. Closed as moot: `aj_crew.events` was retired unwritten in favour of the crew
    log ([crew-log-core.md](../system-specs/modules/crew-log-core.md)), so there is
    no competing sequence definition. The buffer defines its own fields (§5.2).

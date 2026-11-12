@@ -13,8 +13,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import autonudge_authz as authz
-from kiro_crew.autonudge import AutoNudgeService, AutoNudgeStaleBaseline
+from aj_crew import autonudge_authz as authz
+from aj_crew.autonudge import AutoNudgeService, AutoNudgeStaleBaseline
 
 
 class TestTheRedactedProjectionCannotOverwriteTheStoredMessage:
@@ -158,8 +158,8 @@ class TestAnEchoedBannerDoesNotOverwriteTheStoredOne:
 
     @pytest.mark.asyncio
     async def test_the_served_projection_is_not_written_back(self) -> None:
-        from kiro_crew.autonudge import scrub_loop_text
-        from kiro_crew.autonudge_authz import authorize_and_update_nudge
+        from aj_crew.autonudge import scrub_loop_text
+        from aj_crew.autonudge_authz import authorize_and_update_nudge
 
         stored = "watching " + self.SECRET
         served = scrub_loop_text(stored)
@@ -178,7 +178,7 @@ class TestAnEchoedBannerDoesNotOverwriteTheStoredOne:
 
     @pytest.mark.asyncio
     async def test_a_genuinely_edited_banner_is_still_stored(self) -> None:
-        from kiro_crew.autonudge_authz import authorize_and_update_nudge
+        from aj_crew.autonudge_authz import authorize_and_update_nudge
 
         svc = self._Svc(self._row("watching " + self.SECRET))
 
@@ -192,7 +192,7 @@ class TestAnEchoedBannerDoesNotOverwriteTheStoredOne:
     @pytest.mark.asyncio
     async def test_an_unedited_raw_banner_is_not_redacted_over(self) -> None:
         """The banner twin of the message arm: an unedited resubmit must not be applied."""
-        from kiro_crew.autonudge_authz import authorize_and_update_nudge
+        from aj_crew.autonudge_authz import authorize_and_update_nudge
 
         stored = "watching " + self.SECRET
         svc = self._Svc(self._row(stored))
@@ -210,7 +210,7 @@ class TestAnEchoedBannerDoesNotOverwriteTheStoredOne:
     @pytest.mark.asyncio
     async def test_re_sending_an_unscrubbed_banner_unchanged_still_writes_it(self) -> None:
         """A clean banner's projection IS the stored text, so an equal value is no echo."""
-        from kiro_crew.autonudge_authz import authorize_and_update_nudge
+        from aj_crew.autonudge_authz import authorize_and_update_nudge
 
         svc = self._Svc(self._row("cycle ran"))
 

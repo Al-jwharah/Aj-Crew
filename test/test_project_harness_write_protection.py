@@ -10,8 +10,8 @@ from pathlib import Path, PurePosixPath
 
 import pytest
 
-from kiro_crew.hooks import TOOL_DENY, HookManager, HooksConfig
-from kiro_crew.security import is_sensitive_path, is_sensitive_write_path
+from aj_crew.hooks import TOOL_DENY, HookManager, HooksConfig
+from aj_crew.security import is_sensitive_path, is_sensitive_write_path
 
 _REFUSED = (
     "opencode.json",

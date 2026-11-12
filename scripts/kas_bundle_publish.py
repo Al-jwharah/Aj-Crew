@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Publish a KAS engine release the way ``kirocrew kas install`` consumes it.
+"""Publish a KAS engine release the way ``ajcrew kas install`` consumes it.
 
 Takes the engine tarballs a KAS build produced (``kas-<platform>.tar.zst`` for
 each of ``linux-x64``, ``linux-arm64``, ``darwin-universal``, ``win32-x64``),
 adds one official Node build per host architecture from nodejs.org -- verified
 against that release's ``SHASUMS256.txt`` -- and writes the manifest
-:mod:`kiro_crew.acp.kas_bundle` reads::
+:mod:`aj_crew.acp.kas_bundle` reads::
 
     <out>/kas/<version>/kas-*.tar.xz         (recompressed from the build's .tar.zst)
     <out>/kas/<version>/node-v<N>-*.{tar.xz,zip}
@@ -13,7 +13,7 @@ against that release's ``SHASUMS256.txt`` -- and writes the manifest
 
 With ``--s3 s3://<bucket>`` the same tree is uploaded with the ``aws`` CLI. The
 script never reads a credential itself; the CLI resolves its own. Nothing points
-at a "current" release: each Kiro Crew release pins the one version it runs.
+at a "current" release: each Aj Crew release pins the one version it runs.
 
 Why a Node per architecture when the engine's Mac build is universal: Node
 ships no universal binary, so ``node.builds`` is keyed by ``<os>-<arch>`` and
@@ -25,7 +25,7 @@ Example::
     python3 scripts/kas_bundle_publish.py \\
         --kas-dir ~/kas-build/0.66.33 --version 0.66.33 \\
         --node-version 22.23.3 --out ./publish \\
-        --s3 s3://kirocrew-kas
+        --s3 s3://ajcrew-kas
 """
 
 from __future__ import annotations
@@ -42,7 +42,7 @@ import urllib.request
 from pathlib import Path
 
 NODE_DIST = "https://nodejs.org/dist"
-#: ``kirocrew`` host key -> nodejs.org archive name suffix.
+#: ``ajcrew`` host key -> nodejs.org archive name suffix.
 NODE_BUILDS = {
     "linux-x64": "linux-x64.tar.xz",
     "linux-arm64": "linux-arm64.tar.xz",
@@ -250,7 +250,7 @@ def main() -> None:
     }
     (release / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(f"Wrote {release / 'manifest.json'}")
-    print("Pin it in src/kiro_crew/acp/kas_pin.py (after testing):")
+    print("Pin it in src/aj_crew/acp/kas_pin.py (after testing):")
     print(f'  KAS_PIN_VERSION = "{args.version}"')
     print(f'  KAS_PIN_MANIFEST_SHA256 = "{sha256_of(release / "manifest.json")}"')
     if args.s3:

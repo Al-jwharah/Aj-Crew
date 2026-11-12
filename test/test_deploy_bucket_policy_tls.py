@@ -8,9 +8,9 @@ existing site carries the current statements.
 import json
 from unittest import mock
 
-from kiro_crew.deploy import engine
+from aj_crew.deploy import engine
 
-BUCKET = "kirocrew-web-example"
+BUCKET = "ajcrew-web-example"
 DIST_ARN = "arn:aws:cloudfront::123:distribution/EX1"
 
 
@@ -30,7 +30,7 @@ def test_policy_has_exact_tls_deny_statement():
     tls = [s for s in policy["Statement"] if s.get("Sid") == engine.DENY_INSECURE_TRANSPORT_SID]
     assert tls == [
         {
-            "Sid": "KiroCrewDenyInsecureTransport",
+            "Sid": "AjCrewDenyInsecureTransport",
             "Effect": "Deny",
             "Principal": "*",
             "Action": "s3:*",
@@ -43,7 +43,7 @@ def test_policy_has_exact_tls_deny_statement():
     assert sids == [
         "AllowCloudFrontOAC",
         "DenyCloudFrontControlManifests",
-        "KiroCrewDenyInsecureTransport",
+        "AjCrewDenyInsecureTransport",
     ]
 
 

@@ -18,7 +18,7 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state, _make_tags_app
 from handlers_messaging_coverage_helpers import _payload, _Req, _run, _state
 
-import kiro_crew.dashboard.handlers.messaging as messaging
+import aj_crew.dashboard.handlers.messaging as messaging
 
 #: JSON values that are not strings: none of them has a ``.strip()``.
 _NOT_STRINGS = [5, 1.5, True, [], ["a"], {}, {"a": "b"}, None]
@@ -29,7 +29,7 @@ def _refusal(field: str) -> dict[str, str]:
 
 
 def test_the_helper_passes_a_string_and_refuses_the_rest() -> None:
-    from kiro_crew.dashboard.handlers._shared import string_field_error
+    from aj_crew.dashboard.handlers._shared import string_field_error
 
     assert string_field_error("f", "") is None
     assert string_field_error("f", "  text ") is None
@@ -106,7 +106,7 @@ def test_send_message_refuses_a_non_string_slack_target(field: str, value: Any) 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("value", _NOT_STRINGS, ids=repr)
 async def test_chat_send_refuses_a_non_string_message(tmp_path, monkeypatch, value: Any) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     async with TestClient(TestServer(_make_app(state))) as client:
         resp = await client.post("/api/chat", json={"slot": "s1", "message": value})
@@ -120,7 +120,7 @@ async def test_chat_send_refuses_a_non_string_message(tmp_path, monkeypatch, val
 async def test_chat_send_keeps_its_answer_for_blank_or_missing_message(
     tmp_path, monkeypatch, body: dict
 ) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     async with TestClient(TestServer(_make_app(state))) as client:
         resp = await client.post("/api/chat", json=body)
@@ -134,7 +134,7 @@ async def test_chat_send_keeps_its_answer_for_blank_or_missing_message(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("value", [5, 1.5, True, ["a"], {"a": "b"}], ids=repr)
 async def test_tag_create_refuses_a_non_string_name(tmp_path, monkeypatch, value: Any) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     async with TestClient(TestServer(_make_tags_app(state))) as client:
         resp = await client.post("/api/chat/tags", json={"name": value})
@@ -154,7 +154,7 @@ async def test_tag_create_refuses_a_non_string_name(tmp_path, monkeypatch, value
 async def test_tag_create_keeps_name_required_for_blank_or_missing_name(
     tmp_path, monkeypatch, body: dict
 ) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     async with TestClient(TestServer(_make_tags_app(state))) as client:
         resp = await client.post("/api/chat/tags", json=body)
@@ -164,7 +164,7 @@ async def test_tag_create_keeps_name_required_for_blank_or_missing_name(
 
 @pytest.mark.asyncio
 async def test_tag_create_still_creates_from_a_padded_string(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     async with TestClient(TestServer(_make_tags_app(state))) as client:
         resp = await client.post("/api/chat/tags", json={"name": "  Review  "})

@@ -72,7 +72,7 @@ import pytest
 #: rather than once per worker the suite's loadgroup distribution picks.
 pytestmark = pytest.mark.xdist_group("tree_scan_pid_reader_ratchet")
 
-_SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+_SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 #: Each needle names one way code gets from a session to a process, spelled as an
 #: attribute or a call. Fragments are concatenated so a scan of this tree cannot
@@ -137,7 +137,7 @@ _RETIRED_READERS: dict[str, str] = {
 }
 
 #: Test support and in-tree test modules are not product surface.
-_EXCLUDED_PARTS = ("kiro_crew/testing/", "container_tests/")
+_EXCLUDED_PARTS = ("aj_crew/testing/", "container_tests/")
 
 #: A site the pool itself owns carries this marker as a comment on one of the
 #: lines the site spans, and is counted separately instead of against the total.
@@ -458,7 +458,7 @@ def test_every_needle_finds_a_site() -> None:
     """A needle that matches nothing makes the ratchet pass for the wrong reason."""
     dead = sorted(name for name, files in _scan().witnesses if not files)
     assert not dead, (
-        "these pid-reader needles match nothing in src/kiro_crew: "
+        "these pid-reader needles match nothing in src/aj_crew: "
         + ", ".join(dead)
         + ". Either the surface is genuinely gone -- then remove the needle and "
         "lower the baseline in the same change -- or the spelling drifted and the "
@@ -480,7 +480,7 @@ def test_a_retired_reader_spelling_stays_retired() -> None:
     """
     offenders = list(_scan().retired)
     assert not offenders, (
-        "a retired pid-reader spelling is back in src/kiro_crew: "
+        "a retired pid-reader spelling is back in src/aj_crew: "
         + ", ".join(offenders)
         + ". Take the opaque handle the owning module mints instead. If the name "
         "is genuinely wanted for something unrelated to reading a process, drop it "
@@ -516,7 +516,7 @@ def test_both_spellings_of_a_retired_reader_are_refused(tmp_path: Path) -> None:
 
     # The same three shapes through the real tree scan, which is what the ratchet
     # asserts on: both readings are reported with their line, the prose is not.
-    fixture = tmp_path / "kiro_crew"
+    fixture = tmp_path / "aj_crew"
     fixture.mkdir()
     (fixture / "attribute.py").write_text(attribute_form, encoding="utf-8")
     (fixture / "m.py").write_text(reflective_form, encoding="utf-8")

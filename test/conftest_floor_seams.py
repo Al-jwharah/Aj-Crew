@@ -39,7 +39,7 @@ def _isolate_xdg_config_home(_xdg_config_root, _floor_monkeypatch):
     """Point ``$XDG_CONFIG_HOME`` at a tmp dir so no test writes a real unit file.
 
     ``dev_fleet._dropin_path()`` resolves the make-live systemd drop-in as
-    ``$XDG_CONFIG_HOME/systemd/user/kirocrew-gateway.service.d/make-live.conf``,
+    ``$XDG_CONFIG_HOME/systemd/user/ajcrew-gateway.service.d/make-live.conf``,
     falling back to ``~/.config`` when the variable is unset — which is the
     default on most developer machines and in CI. So a test that reaches the
     cutover path without stubbing ``_dropin_path`` writes the operator's real
@@ -68,7 +68,7 @@ def _isolate_kiro_cli_sign_in_store(_xdg_config_root, _floor_monkeypatch):
     sign-in. A test that wants a kiro-cli sign-in points this at its own store.
     """
     _floor_monkeypatch.setattr(
-        "kiro_crew.lts_sign_in._kiro_cli_store",
+        "aj_crew.lts_sign_in._kiro_cli_store",
         lambda: _xdg_config_root / "no-kiro-cli" / "data.sqlite3",
     )
 
@@ -81,7 +81,7 @@ def _isolate_launchd_paths(_xdg_config_root, _floor_monkeypatch):
     module globals bound at IMPORT time from ``Path.home()``::
 
         PLIST_DIR    = ~/Library/LaunchAgents
-        PLIST_PATH   = PLIST_DIR / "dev.kirocrew.gateway.plist"
+        PLIST_PATH   = PLIST_DIR / "dev.ajcrew.gateway.plist"
         LOG_DIR      = ~/Library/Logs/...        (+ STDOUT_LOG, STDERR_LOG)
         LIVE_PROGRAM = launchd_live_program()    (under ~/Library/Application Support)
 
@@ -90,7 +90,7 @@ def _isolate_launchd_paths(_xdg_config_root, _floor_monkeypatch):
     redirect above leaves the launchd side wide open.
 
     It is reachable today, not hypothetically. ``macos.install()`` calls
-    ``write_live_program(render_live_program(kirocrew_bin()))`` with no path
+    ``write_live_program(render_live_program(ajcrew_bin()))`` with no path
     argument, so the launcher lands on the real ``LIVE_PROGRAM`` even in a test that
     carefully pinned every ``PLIST_*`` constant — which
     ``test_install_writes_plist_and_loads`` does. Raised in review of the drop-in fix.
@@ -114,11 +114,11 @@ def _isolate_launchd_paths(_xdg_config_root, _floor_monkeypatch):
     root = pathlib.Path(_xdg_config_root) / "launchd"
     launcher = root / "live-gateway"
     plist_dir = root / "LaunchAgents"
-    plist_path = plist_dir / "dev.kirocrew.gateway.plist"
+    plist_path = plist_dir / "dev.ajcrew.gateway.plist"
     log_dir = root / "Logs"
 
     eager: dict[str, dict[str, object]] = {
-        "kiro_crew.service.macos": {
+        "aj_crew.service.macos": {
             "PLIST_DIR": plist_dir,
             "PLIST_PATH": plist_path,
             "LOG_DIR": log_dir,
@@ -126,10 +126,10 @@ def _isolate_launchd_paths(_xdg_config_root, _floor_monkeypatch):
             "STDERR_LOG": log_dir / "gateway.err",
             "LIVE_PROGRAM": launcher,
         },
-        "kiro_crew.service.common": {"launchd_live_program": lambda: launcher},
+        "aj_crew.service.common": {"launchd_live_program": lambda: launcher},
     }
     lazy: dict[str, dict[str, object]] = {
-        "kiro_crew.apps.builtins.dev_fleet.gateway_service": {
+        "aj_crew.apps.builtins.dev_fleet.gateway_service": {
             "PLIST_PATH": plist_path,
             "launchd_live_program": lambda: launcher,
         },
@@ -206,7 +206,7 @@ def _isolate_sandbox_mount_source_roots(_sandbox_mount_source_root, _floor_monke
     """
     monkeypatch = _floor_monkeypatch
     try:
-        sandbox_mod = importlib.import_module("kiro_crew.sandbox")
+        sandbox_mod = importlib.import_module("aj_crew.sandbox")
     except Exception:  # pragma: no cover - a partial checkout must not break collection
         return
     _SANDBOX_SWEEP_ORIGINALS.setdefault(
@@ -237,7 +237,7 @@ def _isolate_sandbox_mount_source_roots(_sandbox_mount_source_root, _floor_monke
     # resolves its own narrower root chain -- the launcher's two tmpfs roots,
     # deliberately excluding the redirected system tempdir -- so without this it
     # would scan the developer's real /run/user/$UID and /dev/shm, and there it
-    # matches names no current Kiro Crew build creates: an unpinned test
+    # matches names no current Aj Crew build creates: an unpinned test
     # could delete a stranger's temp entry on the host. The bind scan is
     # defaulted fail-closed for the same reason as the pin scan above: a test
     # that forgets to fix its answer gets an INERT sweep (coverage unproven ->
@@ -296,7 +296,7 @@ def _pin_kill_and_reap_group_probe(_floor_monkeypatch):
     """
     monkeypatch = _floor_monkeypatch
     try:
-        platform_compat = importlib.import_module("kiro_crew.platform_compat")
+        platform_compat = importlib.import_module("aj_crew.platform_compat")
     except Exception:  # pragma: no cover - a partial checkout must not break collection
         return
     monkeypatch.setattr(platform_compat, "_shares_own_process_group", lambda _pid: False)
@@ -306,7 +306,7 @@ def _pin_kill_and_reap_group_probe(_floor_monkeypatch):
 def _no_credential_env_residue():
     """Restore the credential env vars a test may have had INJECTED into it.
 
-    ``KiroCrewConfig.load_credentials()`` deliberately propagates every credential
+    ``AjCrewConfig.load_credentials()`` deliberately propagates every credential
     it reads into ``os.environ`` with ``setdefault``, so a spawned child (sandboxed
     agent, MCP server, cron subprocess) inherits it through ``Popen``'s default
     ``env=os.environ.copy()``. Any test that points ``env_path()`` at a fabricated
@@ -328,7 +328,7 @@ def _no_credential_env_residue():
     shape. Two linear environment scans per test also catch a dynamic key that
     did not exist at setup, without masking an unrelated environment change.
     """
-    from kiro_crew.config.loader import _JIRA_TOKEN_RE, CREDENTIAL_KEYS
+    from aj_crew.config.loader import _JIRA_TOKEN_RE, CREDENTIAL_KEYS
 
     fixed = frozenset(CREDENTIAL_KEYS)
 
@@ -366,23 +366,23 @@ def _no_model_download(_floor_monkeypatch, _isolation_dirs):
     Ollama-era embeddings.
 
     The same floor covers hosted feature-video media
-    (``KIROCREW_SKIP_FEATURE_VIDEO_DOWNLOAD``), honored by
+    (``AJCREW_SKIP_FEATURE_VIDEO_DOWNLOAD``), honored by
     ``feature_videos_cache.ensure_all`` and
     ``start_background_feature_video_download``: the gateway boot path kicks that
     transfer too, and a test that stands up the server must not reach a CDN.
     """
     monkeypatch = _floor_monkeypatch
-    monkeypatch.setenv("KIROCREW_SKIP_MODEL_DOWNLOAD", "1")
-    monkeypatch.setenv("KIROCREW_SKIP_FEATURE_VIDEO_DOWNLOAD", "1")
+    monkeypatch.setenv("AJCREW_SKIP_MODEL_DOWNLOAD", "1")
+    monkeypatch.setenv("AJCREW_SKIP_FEATURE_VIDEO_DOWNLOAD", "1")
     monkeypatch.setenv("OLLAMA_MODELS", str(_isolation_dirs("ollama-models")))
     # Force telemetry OFF for every test. `_consent_enabled` reads this env var BEFORE
     # the config flag, which is what makes it a reliable gate: ~15 tests patch
-    # `KiroCrewConfig.load` with a bare MagicMock, whose `telemetry.enabled` is TRUTHY,
+    # `AjCrewConfig.load` with a bare MagicMock, whose `telemetry.enabled` is TRUTHY,
     # so a real recorder starts and `Path(cfg.local_dir)` resolves the mock to the
     # RELATIVE path `MagicMock/load().telemetry.local_dir/...` -- writing metrics and a
     # lock file into the repo root, plus a background reader thread that outlives the
     # test. Tests that exercise telemetry delete this var themselves (test/metrics/).
-    monkeypatch.setenv("KIROCREW_TELEMETRY", "0")
+    monkeypatch.setenv("AJCREW_TELEMETRY", "0")
     # A developer's ambient DO_NOT_TRACK would outrank every per-test opt-in
     # (off wins), so tests that turn recording on would fail only on their machine.
     monkeypatch.delenv("DO_NOT_TRACK", raising=False)
@@ -421,7 +421,7 @@ def _no_default_builtin_skills_sync(request, _floor_monkeypatch):
     if request.node.get_closest_marker("real_builtin_skills_sync") is not None:
         return
 
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.skills import SkillsLoader
 
     original_init = SkillsLoader.__init__
 
@@ -443,10 +443,10 @@ def _no_central_policy_fetch(_floor_monkeypatch):
 
     Two independent hazards, both of which have to be closed here rather than in
     ``test/conftest.py``: the ~108 test modules under
-    ``src/kiro_crew/apps/builtins/*/tests/`` never see that file, and several of them
+    ``src/aj_crew/apps/builtins/*/tests/`` never see that file, and several of them
     call ``boot_platform``.
 
-    **The environment.** ``KIROCREW_POLICY_URL`` and its siblings make
+    **The environment.** ``AJCREW_POLICY_URL`` and its siblings make
     ``load_security_policy`` fetch a ceiling over the network. A developer running
     the suite on a centrally-governed machine would otherwise have every boot-path
     test hit their own fleet endpoint — and, with the fail-closed default, watch
@@ -467,13 +467,13 @@ def _no_central_policy_fetch(_floor_monkeypatch):
     # the exact hazard this fixture exists to close — and this fixture must not import
     # the policy module at setup to read its canonical tuple, because that would put
     # the governance evaluator on every test's import path.
-    for var in [k for k in os.environ if k.startswith("KIROCREW_POLICY_")]:
+    for var in [k for k in os.environ if k.startswith("AJCREW_POLICY_")]:
         monkeypatch.delenv(var, raising=False)
     yield
     # Imported at teardown, not at setup: the module pulls in the governance
     # evaluator, and an autouse fixture must not add that to every test's import
     # cost. If it was never imported, no refresher can be running.
-    module = sys.modules.get("kiro_crew.platform.policy_distribution")
+    module = sys.modules.get("aj_crew.platform.policy_distribution")
     if module is not None:
         with contextlib.suppress(Exception):
             module.stop_refresher(0.5)
@@ -493,10 +493,10 @@ def _reset_platform_context(_floor_monkeypatch):
     must not leak it into the next test.  ``current_context()`` lazily rebuilds
     the standalone default on next access.
 
-    Also pins ``KIROCREW_PROFILE=standalone`` so the profile a test boots under
+    Also pins ``AJCREW_PROFILE=standalone`` so the profile a test boots under
     comes from the test, never from the operator's shell: a dev box with a real
     SSO-marker directory, or a shell whose parent process exported
-    ``KIROCREW_PROFILE`` set to the enterprise profile (a Kiro Crew agent session
+    ``AJCREW_PROFILE`` set to the enterprise profile (an Aj Crew agent session
     does exactly that for every child it spawns), would otherwise make
     ``boot_platform`` resolve the enterprise profile and fail CLOSED (no companion installed) for every test
     that drives ``run_gateway`` / boot / the governance hook.  A test that wants
@@ -504,17 +504,17 @@ def _reset_platform_context(_floor_monkeypatch):
     runs after this autouse fixture), or composes the context directly via
     ``set_context`` without booting.
 
-    Lives HERE, at the rootdir, for the same reason ``_isolate_kirocrew_home`` does:
-    the ~108 test modules under ``src/kiro_crew/apps/builtins/*/tests/`` never see
+    Lives HERE, at the rootdir, for the same reason ``_isolate_ajcrew_home`` does:
+    the ~108 test modules under ``src/aj_crew/apps/builtins/*/tests/`` never see
     ``test/conftest.py``.  With the pin only there, an inherited
-    ``KIROCREW_PROFILE=enterprise`` reddens 150+ builtin-app tests (every governance-gated
+    ``AJCREW_PROFILE=enterprise`` reddens 150+ builtin-app tests (every governance-gated
     route answers 500, every gated notification is dropped) while ``test/`` stays
     green.
     """
-    from kiro_crew.platform.bootstrap import _reset_boot_state
-    from kiro_crew.platform.context import reset_context
+    from aj_crew.platform.bootstrap import _reset_boot_state
+    from aj_crew.platform.context import reset_context
 
-    _floor_monkeypatch.setenv("KIROCREW_PROFILE", "standalone")
+    _floor_monkeypatch.setenv("AJCREW_PROFILE", "standalone")
     reset_context()
     _reset_boot_state()
     yield
@@ -526,12 +526,12 @@ def _reset_platform_context(_floor_monkeypatch):
 def _isolate_pre_exec_stops(_floor_monkeypatch):
     """Give every test its own registry of pre-exec stops.
 
-    ``kiro_crew.pre_exec_stops`` keeps one process-wide registry, filled by a
+    ``aj_crew.pre_exec_stops`` keeps one process-wide registry, filled by a
     startup hook (the instance tunnels) and emptied by its cleanup hook. A test
     that runs the startup hook without the cleanup would leave its stop behind,
     and a later test's restart in the same worker would call it.
     """
-    from kiro_crew import pre_exec_stops
+    from aj_crew import pre_exec_stops
 
     _floor_monkeypatch.setattr(pre_exec_stops, "_stops", {})
 
@@ -540,25 +540,25 @@ def _isolate_pre_exec_stops(_floor_monkeypatch):
 def _isolate_agent_state_sidecar(_isolation_dirs, _floor_monkeypatch):
     """Pin the agent_state sidecar to a tmp dir for the whole suite.
 
-    ``kiro_crew.agent_state`` stores per-agent bookkeeping (model_managed,
-    cc_model) in ``~/.kirocrew/agent_model_state.json`` via ``config_dir()``.
+    ``aj_crew.agent_state`` stores per-agent bookkeeping (model_managed,
+    cc_model) in ``~/.ajcrew/agent_model_state.json`` via ``config_dir()``.
     Tests that exercise the install / refresh / migration / PATCH paths would
     otherwise read and write the operator's real sidecar. Redirect
     ``config_dir`` — referenced as a module attribute at call time — to a fresh
     tmp dir so every test starts from empty state.
 
     The module is taken from ``sys.modules`` (``import_module``), never through the
-    dotted string ``"kiro_crew.agent_state.config_dir"``: that string resolves each
+    dotted string ``"aj_crew.agent_state.config_dir"``: that string resolves each
     component as an ATTRIBUTE of its parent package, so a test that evicted
-    ``kiro_crew.agent_state`` and re-imported it without restoring
-    ``kiro_crew``'s attribute made this setup raise ``AttributeError`` for every
+    ``aj_crew.agent_state`` and re-imported it without restoring
+    ``aj_crew``'s attribute made this setup raise ``AttributeError`` for every
     later test on the worker (2,167 setup errors on one Windows worker).
     """
     _pin_agent_state_sidecar(_floor_monkeypatch, _isolation_dirs("agent-state"))
 
 
 def _pin_agent_state_sidecar(monkeypatch, sidecar_root) -> None:
-    agent_state = importlib.import_module("kiro_crew.agent_state")
+    agent_state = importlib.import_module("aj_crew.agent_state")
     monkeypatch.setattr(agent_state, "config_dir", lambda: sidecar_root)
 
 
@@ -569,12 +569,12 @@ _MEMBER_EVENTLOG_DRAIN_SECONDS = 30.0
 
 
 @pytest.fixture(autouse=True)
-def _reset_member_eventlog_singleton(_isolate_kirocrew_home):
+def _reset_member_eventlog_singleton(_isolate_ajcrew_home):
     """Drain the member event-log queue a test filled, and reset the service singleton.
 
     ``get_service()`` memoises one ``MemberEventLogService`` for the process,
     rebuilding it only when the crew-log root changes. The root is derived from
-    ``KIROCREW_HOME``, which the floor points at a fresh per-test directory -- so a
+    ``AJCREW_HOME``, which the floor points at a fresh per-test directory -- so a
     test that touches the service (directly, or through a dashboard handler /
     ``members.record_activity``) leaves a live singleton BOUND TO THAT TEST'S HOME,
     and the next test on the same xdist worker inherits it after that home has been
@@ -590,26 +590,26 @@ def _reset_member_eventlog_singleton(_isolate_kirocrew_home):
     that member's log inside the NEXT test's home, and holds its lock there; a test
     that then touches the same member from the event-loop thread meets the held lock
     and ``record_activity(...)`` answers ``False``. This fixture depends on
-    ``_isolate_kirocrew_home``, so its teardown runs while the home pin still holds:
+    ``_isolate_ajcrew_home``, so its teardown runs while the home pin still holds:
     every queued write lands in the home of the test that queued it, and a queue
     that does not drain in time fails the test that filled it.
 
     It lives in the rootdir conftest because the in-package app suites
-    (``src/kiro_crew/apps/builtins/**/tests``) reach the same queue and see no other
+    (``src/aj_crew/apps/builtins/**/tests``) reach the same queue and see no other
     conftest. Both modules are looked up in ``sys.modules`` rather than imported, so
     a test that never loads them pays nothing; the drain is bound at setup when the
     module is already loaded, so a test that replaces ``drain_for_shutdown`` with a
     wedged stand-in does not wedge this teardown. Reset at both ends, so a test that
     runs after a leak still starts on a clean singleton.
     """
-    hooks = sys.modules.get("kiro_crew.eventlog_hooks")
+    hooks = sys.modules.get("aj_crew.eventlog_hooks")
     drain = getattr(hooks, "drain_for_shutdown", None)
     _reset_member_eventlog_service()
     try:
         yield
     finally:
         if drain is None:
-            hooks = sys.modules.get("kiro_crew.eventlog_hooks")
+            hooks = sys.modules.get("aj_crew.eventlog_hooks")
             drain = getattr(hooks, "drain_for_shutdown", None)
         drained = drain(_MEMBER_EVENTLOG_DRAIN_SECONDS) if drain is not None else True
         _reset_member_eventlog_service()
@@ -621,6 +621,6 @@ def _reset_member_eventlog_singleton(_isolate_kirocrew_home):
 
 
 def _reset_member_eventlog_service() -> None:
-    service = sys.modules.get("kiro_crew.eventlog.service")
+    service = sys.modules.get("aj_crew.eventlog.service")
     if service is not None:
         service.set_service(None)

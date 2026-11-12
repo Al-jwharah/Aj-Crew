@@ -28,7 +28,7 @@ import '../src/index.css'
 
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // The shape a real "Ask the agent" click produces: translated lead line, the
 // untrusted-data note, then the fenced fact block carrying one long message.
@@ -37,7 +37,7 @@ const PROMPT = buildErrorPrompt(
     message:
       "[Errno 16] Device or resource busy: '/home/user/.kiro/crew/scratch/runtime-9796a4b0/remote-default-main-baseline'",
   },
-  'This error just came up in the Kiro Crew dashboard. Diagnose the root cause and fix it.',
+  'This error just came up in the Aj Crew dashboard. Diagnose the root cause and fix it.',
 )
 
 const renderContent = (content: string, meta: Record<string, unknown> | undefined) =>

@@ -18,7 +18,7 @@ from channel_folders_helpers import (  # noqa: F401 -- the fixture is requested 
     dashboard_state_fixture,
 )
 
-from kiro_crew.dashboard import channel_folders, channel_slots
+from aj_crew.dashboard import channel_folders, channel_slots
 
 
 class _ModifiedLog(_FakeLog):
@@ -98,7 +98,7 @@ class TestBackfillChannelFolder:
     def test_files_a_conversation_that_predates_the_setting(self, dashboard_state: Any) -> None:
         """The defect this fixes: switching the setting on left these behind."""
         fid = self._folder(dashboard_state)
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         log = _ModifiedLog([key], {key: {"channel_origin": True, "title": "Standup"}})
         dashboard_state.conversation_log = log
 
@@ -116,7 +116,7 @@ class TestBackfillChannelFolder:
 
     def test_leaves_a_conversation_the_user_filed_where_it_is(self, dashboard_state: Any) -> None:
         self._folder(dashboard_state)
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         log = _ModifiedLog([key], {key: {"folder_id": "user-choice"}})
         dashboard_state.conversation_log = log
 
@@ -130,7 +130,7 @@ class TestBackfillChannelFolder:
     ) -> None:
         """Filed once, then dragged out. The click must not drag it back."""
         self._folder(dashboard_state)
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         log = _ModifiedLog([key], {key: {"channel_folder_filed": True}})
         dashboard_state.conversation_log = log
 
@@ -142,7 +142,7 @@ class TestBackfillChannelFolder:
     def test_an_ephemeral_conversation_is_never_given_a_folder(self, dashboard_state: Any) -> None:
         """Incognito asked for no trace; a durable placement contradicts that."""
         self._folder(dashboard_state)
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         log = _ModifiedLog([key], {key: {}}, modes={key: "incognito"})
         dashboard_state.conversation_log = log
 
@@ -153,8 +153,8 @@ class TestBackfillChannelFolder:
 
     def test_another_channels_conversations_are_untouched(self, dashboard_state: Any) -> None:
         self._folder(dashboard_state)
-        mine = "discord:kirocrew:direct:U1"
-        theirs = "telegram:kirocrew:direct:U2"
+        mine = "discord:ajcrew:direct:U1"
+        theirs = "telegram:ajcrew:direct:U2"
         log = _ModifiedLog([mine, theirs], {mine: {}, theirs: {}})
         dashboard_state.conversation_log = log
 
@@ -165,7 +165,7 @@ class TestBackfillChannelFolder:
 
     def test_the_setting_being_off_is_reported_as_such(self, dashboard_state: Any) -> None:
         """Distinguishable from "nothing to do", which the panel words differently."""
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         dashboard_state.conversation_log = _ModifiedLog([key], {key: {}})
 
         report = asyncio.run(channel_slots.backfill_channel_folder(dashboard_state, "discord"))
@@ -175,7 +175,7 @@ class TestBackfillChannelFolder:
 
     def test_a_configured_but_absent_folder_is_reported_as_such(self, dashboard_state: Any) -> None:
         _write_config("discord", "Discord")
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         dashboard_state.conversation_log = _ModifiedLog([key], {key: {}})
 
         report = asyncio.run(channel_slots.backfill_channel_folder(dashboard_state, "discord"))
@@ -198,7 +198,7 @@ class TestBackfillChannelFolder:
         """The cap is reportable rather than silent, so a second click continues."""
         monkeypatch.setattr(channel_slots, "BACKFILL_MOVE_LIMIT", 2)
         self._folder(dashboard_state)
-        keys = [f"discord:kirocrew:direct:U{i}" for i in range(5)]
+        keys = [f"discord:ajcrew:direct:U{i}" for i in range(5)]
         log = _ModifiedLog(keys, {k: {} for k in keys})
         dashboard_state.conversation_log = log
 
@@ -222,8 +222,8 @@ class TestBackfillChannelFolder:
         """A capped run must file what the user is most likely looking for."""
         monkeypatch.setattr(channel_slots, "BACKFILL_MOVE_LIMIT", 1)
         self._folder(dashboard_state)
-        old = "discord:kirocrew:direct:OLD"
-        new = "discord:kirocrew:direct:NEW"
+        old = "discord:ajcrew:direct:OLD"
+        new = "discord:ajcrew:direct:NEW"
         log = _ModifiedLog([old, new], {old: {}, new: {}}, modified={old: 100.0, new: 900.0})
         dashboard_state.conversation_log = log
 
@@ -234,7 +234,7 @@ class TestBackfillChannelFolder:
     def test_an_open_tab_is_re_placed_without_a_restart(self, dashboard_state: Any) -> None:
         """Otherwise the button looks inert for the conversations on screen."""
         fid = self._folder(dashboard_state)
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         log = _ModifiedLog([key], {key: {"channel_origin": True}})
         dashboard_state.conversation_log = log
         slot = channel_slots.surface_channel_session(
@@ -258,7 +258,7 @@ class TestBackfillChannelFolder:
         conversation the user placed a second earlier.
         """
         self._folder(dashboard_state)
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         log = _ModifiedLog([key], {key: {"channel_origin": True}})
         dashboard_state.conversation_log = log
         slot = channel_slots.surface_channel_session(
@@ -276,7 +276,7 @@ class TestBackfillChannelFolder:
     def test_a_placement_landing_mid_pass_is_not_overwritten(self, dashboard_state: Any) -> None:
         """The guard re-decides under the store's lock, not at scan time."""
         self._folder(dashboard_state)
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         log = _ModifiedLog([key], {key: {"channel_origin": True}})
         dashboard_state.conversation_log = log
         original = log.update_metadata_if
@@ -301,7 +301,7 @@ class TestBackfillChannelFolder:
             dashboard_state.mutate_folders(lambda fs: (True, fs[0].__setitem__("tags", ["t1"])))
         )
         dashboard_state._tags = [{"id": "t1", "label": "t1"}]
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         log = _ModifiedLog([key], {key: {"channel_origin": True}})
         dashboard_state.conversation_log = log
 
@@ -314,7 +314,7 @@ class TestBackfillChannelFolder:
     def test_a_reported_title_is_redacted(self, dashboard_state: Any) -> None:
         """Titles are generated from channel content, so they are untrusted here."""
         self._folder(dashboard_state)
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         secret = "ghp_" + "a" * 36
         log = _ModifiedLog([key], {key: {"channel_origin": True, "title": secret}})
         dashboard_state.conversation_log = log
@@ -330,8 +330,8 @@ class TestBackfillChannelFolder:
 
     def test_one_failing_conversation_does_not_abandon_the_rest(self, dashboard_state: Any) -> None:
         self._folder(dashboard_state)
-        bad = "discord:kirocrew:direct:BAD"
-        good = "discord:kirocrew:direct:GOOD"
+        bad = "discord:ajcrew:direct:BAD"
+        good = "discord:ajcrew:direct:GOOD"
         log = _ModifiedLog([bad, good], {bad: {}, good: {}}, modified={bad: 900.0, good: 100.0})
         dashboard_state.conversation_log = log
         original = log.update_metadata_if
@@ -354,7 +354,7 @@ class TestBackfillChannelFolder:
         conversation for good; empty tags cannot tell "no tags" from "gone".
         """
         self._folder(dashboard_state)
-        keys = [f"discord:kirocrew:direct:U{i}" for i in range(3)]
+        keys = [f"discord:ajcrew:direct:U{i}" for i in range(3)]
         log = _ModifiedLog(keys, {k: {} for k in keys})
         dashboard_state.conversation_log = log
         # Delete the folder the moment the first write is attempted.
@@ -397,7 +397,7 @@ class TestBackfillChannelFolder:
         catch it, because it reads the record their save has not reached yet.
         """
         self._folder(dashboard_state)
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         log = _ModifiedLog([key], {key: {"channel_origin": True}})
         dashboard_state.conversation_log = log
         slot = channel_slots.surface_channel_session(
@@ -423,7 +423,7 @@ class TestBackfillChannelFolder:
     ) -> None:
         """A swallowed failure must not render as "nothing needed moving"."""
         self._folder(dashboard_state)
-        keys = [f"discord:kirocrew:direct:U{i}" for i in range(2)]
+        keys = [f"discord:ajcrew:direct:U{i}" for i in range(2)]
         log = _ModifiedLog(keys, {k: {} for k in keys})
         dashboard_state.conversation_log = log
 
@@ -458,7 +458,7 @@ class TestBackfillChannelFolder:
         race does not fire.
         """
         self._folder(dashboard_state, name="Alpha")
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         log = _ModifiedLog([key], {key: {}})
         dashboard_state.conversation_log = log
 
@@ -499,7 +499,7 @@ class TestBackfillChannelFolder:
         """
         # Deleted WHILE the pass runs, with a write failing on the way.
         self._folder(dashboard_state)
-        keys = [f"discord:kirocrew:direct:U{i}" for i in range(3)]
+        keys = [f"discord:ajcrew:direct:U{i}" for i in range(3)]
         log = _ModifiedLog(keys, {k: {} for k in keys})
         dashboard_state.conversation_log = log
 
@@ -518,7 +518,7 @@ class TestBackfillChannelFolder:
         # Never created: configured, but no folder answers to the name.
         _write_config("discord", "Discord")
         dashboard_state._folders.clear()
-        fresh = [f"discord:kirocrew:direct:N{i}" for i in range(2)]
+        fresh = [f"discord:ajcrew:direct:N{i}" for i in range(2)]
         dashboard_state.conversation_log = _ModifiedLog(fresh, {k: {} for k in fresh})
 
         never = asyncio.run(channel_slots.backfill_channel_folder(dashboard_state, "discord"))
@@ -546,7 +546,7 @@ class TestBackfillChannelFolder:
             {"id": "folder-tag", "label": "folder-tag"},
             {"id": "important", "label": "important"},
         ]
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         log = _ModifiedLog([key], {key: {"channel_origin": True, "tags": ["important"]}})
         dashboard_state.conversation_log = log
         # No live slot: History-only is the case with no in-memory union to fall
@@ -569,7 +569,7 @@ class TestBackfillChannelFolder:
             )
         )
         dashboard_state._tags = [{"id": "folder-tag", "label": "folder-tag"}]
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         log = _ModifiedLog([key], {key: {"channel_origin": True}})
         dashboard_state.conversation_log = log
         calls: list[str] = []
@@ -602,7 +602,7 @@ class TestBackfillChannelFolder:
             dashboard_state.mutate_folders(lambda fs: (True, fs[0].__setitem__("tags", ["shared"])))
         )
         dashboard_state._tags = [{"id": "shared", "label": "shared"}]
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         log = _ModifiedLog([key], {key: {"channel_origin": True, "tags": ["shared"]}})
         dashboard_state.conversation_log = log
         written: list[dict[str, Any]] = []
@@ -657,7 +657,7 @@ class TestBackfillYieldsToADeletion:
 
     def test_a_conversation_deleted_mid_pass_is_not_recreated(self, dashboard_state: Any) -> None:
         self._folder(dashboard_state)
-        key = "discord:kirocrew:direct:U1"
+        key = "discord:ajcrew:direct:U1"
         log = _ModifiedLog([key], {key: {"channel_origin": True}})
         dashboard_state.conversation_log = log
         self._delete_at_write(log, key)
@@ -678,8 +678,8 @@ class TestBackfillYieldsToADeletion:
     ) -> None:
         """A refusal is a decision about one conversation, not about the pass."""
         fid = self._folder(dashboard_state)
-        gone = "discord:kirocrew:direct:GONE"
-        kept = "discord:kirocrew:direct:KEPT"
+        gone = "discord:ajcrew:direct:GONE"
+        kept = "discord:ajcrew:direct:KEPT"
         log = _ModifiedLog(
             [gone, kept],
             {gone: {"channel_origin": True}, kept: {"channel_origin": True}},

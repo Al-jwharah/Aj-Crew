@@ -11,7 +11,7 @@ should this PR be touching the file at all?), and
 `scripts/check_changelog_history.py` enforces what needs no reading: every section the
 base documents as shipped survives byte-identical, and the file contains **only**
 shipped sections. The parser that renders it into the dashboard is
-`src/kiro_crew/changelog.py`.
+`src/aj_crew/changelog.py`.
 
 ## When it is written
 
@@ -83,7 +83,7 @@ The `[0.6.0]` section is the reference.
 
 Name the page, panel and control, the composer button, the CLI command or the config
 key in the same sentence ("under Developer → Agent Backend", "the composer's + menu
-gains a Sketch row", "`kirocrew config defaults --adopt`"), and name the gate when
+gains a Sketch row", "`ajcrew config defaults --adopt`"), and name the gate when
 there is one (Developer Mode, Feature Previews, a default-off setting, a required
 binary).
 

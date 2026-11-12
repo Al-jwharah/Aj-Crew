@@ -2,7 +2,7 @@
 
 An idle tab queues the completion and asks the queue drain to start it
 (``subagent_injection._route_subagent_to_tab``). These tests stub the parent's turn
-by patching ``kiro_crew.dashboard.chat_runner._run_chat``, the name the drain reads, and many of them use a
+by patching ``aj_crew.dashboard.chat_runner._run_chat``, the name the drain reads, and many of them use a
 ``MagicMock`` tab. The real drain lives in ``dashboard.chat_turn.queue_drain`` and
 reads far more slot state than such a tab has, so the autouse fixture here swaps it
 for :func:`drain_head_as_turn`: it starts the queue's head as a turn
@@ -47,7 +47,7 @@ def open_idle_tab(slot: Any) -> Any:
 
 async def drain_head_as_turn(state: Any, slot: Any, **_kw: Any) -> bool:
     """Start the queue's head as the tab's turn, the way the drain does."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     if not slot._queue:
         return False
@@ -77,7 +77,7 @@ async def drain_head_as_turn(state: Any, slot: Any, **_kw: Any) -> bool:
 
 @pytest.fixture(autouse=True)
 def _idle_tab_drains_head_as_turn(_floor_monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     _floor_monkeypatch.setattr(gateway, "_start_next_queued_turn", drain_head_as_turn)
     yield

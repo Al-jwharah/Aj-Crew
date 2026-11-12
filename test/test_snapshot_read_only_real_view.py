@@ -1,4 +1,4 @@
-"""``kirocrew snapshot`` inside the product's own sandbox, where ``memory_stores/`` is sealed.
+"""``ajcrew snapshot`` inside the product's own sandbox, where ``memory_stores/`` is sealed.
 
 The standard sandbox seals the stores tree: on Linux the namespace launcher binds it over
 itself and remounts that bind read-only, and on macOS the Seatbelt profile denies every
@@ -25,11 +25,11 @@ from contextlib import closing, contextmanager
 from pathlib import Path
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from kiro_crew import member_memory_backup, platform_compat, sandbox, sandbox_plan
-from kiro_crew.memory_stores import MEMORY_DB_FILE, MEMORY_STORES_DIR_NAME
-from kiro_crew.sandbox import userns_available
+from aj_crew import member_memory_backup, platform_compat, sandbox, sandbox_plan
+from aj_crew.memory_stores import MEMORY_DB_FILE, MEMORY_STORES_DIR_NAME
+from aj_crew.sandbox import userns_available
 
 pytestmark = pytest.mark.skipif(
     not platform_compat.IS_POSIX, reason="the sandbox backends are POSIX-only"
@@ -50,7 +50,7 @@ REFUSED_WRITE = {"linux": "EROFS", "darwin": "EPERM"}
 
 @pytest.fixture(autouse=True)
 def _no_gateway(_floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "0")
+    _floor_monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "0")
 
 
 @pytest.fixture
@@ -59,8 +59,8 @@ def home(tmp_path, monkeypatch) -> Path:
     # here too, and every path the tests compare is spelled the way the plan spells it.
     home = (tmp_path / "home").resolve()
     home.mkdir()
-    _setup_fake_kirocrew(home)
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    _setup_fake_ajcrew(home)
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     sandbox.reset_backend()
     yield home
     sandbox.reset_backend()
@@ -96,7 +96,7 @@ import errno, json, os, sys
 
 home, stores, out, pause = sys.argv[1:5]
 extra = sys.argv[5:]
-if os.environ.get("KIROCREW_HOME") != home:
+if os.environ.get("AJCREW_HOME") != home:
     sys.exit(97)
 probe = os.path.join(stores, ".write-probe")
 try:
@@ -112,7 +112,7 @@ if refused is None:
     sys.exit(98)
 
 import sqlite3
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 if pause == "pause":
     store_db = os.path.join(stores, "acme", "memory.db")
@@ -345,7 +345,7 @@ def _writer(db: Path) -> Iterator[Writer]:
 
 def _archive(out: Path, tmp_path: Path) -> tuple[str, list[str]]:
     """The archived store's integrity verdict and its keys."""
-    (tarball,) = out.glob("kirocrew-snapshot-*.tar.gz")
+    (tarball,) = out.glob("ajcrew-snapshot-*.tar.gz")
     extract = tmp_path / "extract"
     with tarfile.open(tarball) as tar:
         tar.extractall(extract, filter="data")
@@ -480,7 +480,7 @@ def test_a_writer_arriving_during_the_reader_lock_copy_is_not_blocked(home, tmp_
     assert rc == 1, reader.output
     _assert_sealed(reader)
     assert "changed while it was being copied" in reader.output
-    assert not list((tmp_path / "out").glob("kirocrew-snapshot-*"))
+    assert not list((tmp_path / "out").glob("ajcrew-snapshot-*"))
     assert busy == 0
     # The writer's close removed its -wal and -shm, and the reader left nothing behind.
     assert _tree(stores) == before
@@ -502,7 +502,7 @@ def test_writers_still_refuse_inside_the_sandbox(home, tmp_path):
     program = (
         "import sys\n"
         "from pathlib import Path\n"
-        "from kiro_crew import member_memory_backup\n"
+        "from aj_crew import member_memory_backup\n"
         "try:\n"
         "    with member_memory_backup.hold_stores_for_replace(Path(sys.argv[1]), [sys.argv[2]]):\n"
         "        pass\n"

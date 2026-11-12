@@ -25,8 +25,8 @@ from types import SimpleNamespace
 import acp_launch_capture as capture_mod
 import pytest
 
-from kiro_crew.acp import client as client_mod
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.acp import client as client_mod
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_DEEPSEEK,
@@ -65,14 +65,14 @@ def _child_env_default_patches() -> tuple:
     here, and hand ``agent.child_env_defaults`` the two values above."""
     from unittest.mock import patch
 
-    from kiro_crew.acp import child_env_defaults as child_env_mod
+    from aj_crew.acp import child_env_defaults as child_env_mod
 
     return (
         patch.object(client_mod, "_resolve_spawn_env", new=client_mod._resolve_spawn_env),
         patch.object(client_mod, "_resolve_ssh_auth_sock", new=lambda env: None),
         patch.object(client_mod, "resolve_krb5_ccname", new=lambda env: None),
-        patch("kiro_crew.config.loader.inject_kiro_cli_api_key", new=lambda env: None),
-        patch("kiro_crew.config.loader.strip_kiro_cli_api_key", new=lambda env: None),
+        patch("aj_crew.config.loader.inject_kiro_cli_api_key", new=lambda env: None),
+        patch("aj_crew.config.loader.strip_kiro_cli_api_key", new=lambda env: None),
         patch.object(child_env_mod, "_configured_defaults", new=lambda: dict(_CHILD_ENV_DEFAULTS)),
     )
 
@@ -84,8 +84,8 @@ def _kiro_family_runtime_gate_patches(tmp_path: Path) -> tuple:
     freshness checks, skill projection and voice workspace guards."""
     from unittest.mock import AsyncMock, patch
 
-    from kiro_crew.acp import runtime as runtime_mod
-    from kiro_crew.acp.skill_projection import NativeSkillProjection
+    from aj_crew.acp import runtime as runtime_mod
+    from aj_crew.acp.skill_projection import NativeSkillProjection
 
     return (
         patch.object(
@@ -93,14 +93,14 @@ def _kiro_family_runtime_gate_patches(tmp_path: Path) -> tuple:
             "_resolve_kiro_bin_for_spawn",
             new=AsyncMock(return_value=capture_mod._KIRO_BIN),
         ),
-        patch("kiro_crew.agent.ensure_agent_materialized", return_value=None),
+        patch("aj_crew.agent.ensure_agent_materialized", return_value=None),
         patch.object(runtime_mod, "ensure_agent_materialized", return_value=None),
-        patch("kiro_crew.agent.require_fork_governance", return_value=None),
-        patch("kiro_crew.agent.require_fresh_derived_spec", return_value=None),
-        patch("kiro_crew.sandbox.delegated_workspace_exposes_sealed_target", return_value=None),
+        patch("aj_crew.agent.require_fork_governance", return_value=None),
+        patch("aj_crew.agent.require_fresh_derived_spec", return_value=None),
+        patch("aj_crew.sandbox.delegated_workspace_exposes_sealed_target", return_value=None),
         patch(
-            "kiro_crew.acp.skill_projection.prepare_native_skill_projection",
-            return_value=NativeSkillProjection({"kirocrew": "kirocrew-skill-view-golden"}),
+            "aj_crew.acp.skill_projection.prepare_native_skill_projection",
+            return_value=NativeSkillProjection({"ajcrew": "ajcrew-skill-view-golden"}),
         ),
         patch.object(
             runtime_mod, "assert_voice_runtime_outside_agent_workspace", return_value=None
@@ -222,20 +222,20 @@ def test_the_default_home_stays_pinned_while_the_capture_environment_is_installe
 ) -> None:
     """No instant has the cleared environment installed and the real resolver live.
 
-    The fixed parent has no ``KIROCREW_HOME``, so a leftover thread calling
+    The fixed parent has no ``AJCREW_HOME``, so a leftover thread calling
     ``config_dir()`` in that gap would resolve the real ``~/.kiro/crew``. Both edges of
     the env patch are probed.
     """
     from unittest import mock
 
-    from kiro_crew.config import paths as config_paths
+    from aj_crew.config import paths as config_paths
 
     assert (backend in capture_mod.RUNTIME_ONLY_BACKENDS) == (backend == ACP_BACKEND_CODEX)
     real_resolver = config_paths._resolve_default_home
     exposed: list[str] = []
 
     def _probe(edge: str) -> None:
-        if "KIROCREW_HOME" not in os.environ and (
+        if "AJCREW_HOME" not in os.environ and (
             config_paths._resolve_default_home is real_resolver
         ):
             exposed.append(edge)
@@ -261,7 +261,7 @@ def test_the_default_home_stays_pinned_while_the_capture_environment_is_installe
 
     assert (
         exposed == []
-    ), f"the real default-home resolver was live with KIROCREW_HOME absent: {exposed}"
+    ), f"the real default-home resolver was live with AJCREW_HOME absent: {exposed}"
 
 
 def test_the_deepseek_capture_writes_its_scratch_windows_only_under_tmp_path(
@@ -305,13 +305,13 @@ def test_the_deepseek_capture_writes_its_scratch_windows_only_under_tmp_path(
 def test_the_env_delta_does_not_depend_on_the_recording_environment(monkeypatch, tmp_path) -> None:
     """The fixture must record what _spawn CONTRIBUTES, not what this host lacked.
 
-    Against the ambient env, a host already exporting ``KIROCREW_SPAWNED`` (any agent)
+    Against the ambient env, a host already exporting ``AJCREW_SPAWNED`` (any agent)
     records no key. Run with the vars absent and present; only a pinned parent agrees.
     """
     marker_keys = {
-        "KIROCREW_SPAWNED": "1",
-        "KIROCREW_SESSION_KEY": "golden-session",
-        "KIROCREW_RUNTIME_PYTHON": sys.executable,
+        "AJCREW_SPAWNED": "1",
+        "AJCREW_SESSION_KEY": "golden-session",
+        "AJCREW_RUNTIME_PYTHON": sys.executable,
     }
 
     for key in marker_keys:
@@ -329,7 +329,7 @@ def test_the_env_delta_does_not_depend_on_the_recording_environment(monkeypatch,
     # And the key that caused the real failure is present in BOTH, rather than only in
     # the run where the ambient environment happened to lack it.
     for answer in (absent_ambient, present_ambient):
-        assert answer["env_added"].get("KIROCREW_SPAWNED") == "1"
+        assert answer["env_added"].get("AJCREW_SPAWNED") == "1"
 
 
 def test_the_fixed_parent_never_carries_a_variable_spawn_sets() -> None:
@@ -339,14 +339,14 @@ def test_the_fixed_parent_never_carries_a_variable_spawn_sets() -> None:
     nothing ``_spawn`` writes, or it masks a contribution.
     """
     contributed = {
-        "KIROCREW_SPAWNED",
-        "KIROCREW_SPAWN_INSTANCE",
-        "KIROCREW_RUNTIME_AGENT",
-        "KIROCREW_SESSION_KEY",
-        "KIROCREW_CHANNEL_ID",
-        "KIROCREW_RUNTIME_PYTHON",
+        "AJCREW_SPAWNED",
+        "AJCREW_SPAWN_INSTANCE",
+        "AJCREW_RUNTIME_AGENT",
+        "AJCREW_SESSION_KEY",
+        "AJCREW_CHANNEL_ID",
+        "AJCREW_RUNTIME_PYTHON",
         "PI_ACP_PI_COMMAND",
-        "KIROCREW_PI_GATE_SESSION",
+        "AJCREW_PI_GATE_SESSION",
         "OPENCODE_CONFIG_CONTENT",
         "GOOSE_MODE",
         "DSH_PERMISSION_MODE",
@@ -496,9 +496,9 @@ _KNOWN_IDS = (
 #: Variables the tail itself writes on the child, cleared from the test's environment so
 #: a host that already exported one (an agent's own shell does) cannot mask its write.
 _TAIL_WRITTEN_ENV = (
-    "KIROCREW_SPAWNED",
-    "KIROCREW_RUNTIME_PYTHON",
-    "KIROCREW_SCRATCH",
+    "AJCREW_SPAWNED",
+    "AJCREW_RUNTIME_PYTHON",
+    "AJCREW_SCRATCH",
     "PYTEST_XDIST_AUTO_NUM_WORKERS",
     "AGENT_BROWSER_SESSION",
 )
@@ -569,7 +569,7 @@ class _Scratch:
         return path
 
     def scratch_env(self, path: Path, shared: Path | None = None) -> dict[str, str]:
-        return {"KIROCREW_SCRATCH": str(path), "TMPDIR": str(path)}
+        return {"AJCREW_SCRATCH": str(path), "TMPDIR": str(path)}
 
     def drop_inherited_scratch_env(self, env: dict[str, str]) -> tuple[str, ...]:
         self.dropped_from = dict(env)
@@ -596,7 +596,7 @@ def _launch_tools(
     spawn_error: BaseException | None = None,
     retrying=None,
 ):
-    from kiro_crew.acp.launch import LaunchTools
+    from aj_crew.acp.launch import LaunchTools
 
     platform = SimpleNamespace(
         IS_POSIX=True,
@@ -650,7 +650,7 @@ def _launch_tools(
         return SimpleNamespace(pid=99_999_999_999)
 
     return LaunchTools(
-        logger=logging.getLogger("kiro_crew.acp.client"),
+        logger=logging.getLogger("aj_crew.acp.client"),
         platform_compat=platform,
         agent_scratch=scratch,
         apply_pod_bundle_spawn=_pod_bundle,
@@ -670,7 +670,7 @@ def _launch_tools(
 
 
 def _request(**overrides):
-    from kiro_crew.acp.launch import LaunchRequest
+    from aj_crew.acp.launch import LaunchRequest
 
     async def _before(env, spawned_binary):
         env["BEFORE_SCRUB"] = spawned_binary or ""
@@ -689,7 +689,7 @@ def _request(**overrides):
 
 
 def _run_launch(host, request, tools):
-    from kiro_crew.acp.launch import launch
+    from aj_crew.acp.launch import launch
 
     return asyncio.run(launch(host, request, tools))
 
@@ -814,12 +814,12 @@ def test_the_child_environment_is_built_in_one_fixed_order(monkeypatch, tmp_path
     assert before["SECRET_TOKEN"] == "x", "the driver step runs before the scrub"
     after_scrub = seen["after_scrub"]
     assert "SECRET_TOKEN" not in after_scrub and after_scrub["REPAIRED"] == "/opt/bin/host"
-    assert after_scrub["KIROCREW_RUNTIME_PYTHON"] == sys.executable
-    assert "POD_REMAP" not in after_scrub and "KIROCREW_SPAWNED" not in after_scrub
+    assert after_scrub["AJCREW_RUNTIME_PYTHON"] == sys.executable
+    assert "POD_REMAP" not in after_scrub and "AJCREW_SPAWNED" not in after_scrub
     after_marker = seen["after_marker"]
-    assert after_marker["POD_REMAP"] == "True" and after_marker["KIROCREW_SPAWNED"] == "1"
+    assert after_marker["POD_REMAP"] == "True" and after_marker["AJCREW_SPAWNED"] == "1"
     after_scratch = seen["after_scratch"]
-    assert after_scratch["KIROCREW_SCRATCH"] == str(tmp_path / "scratch")
+    assert after_scratch["AJCREW_SCRATCH"] == str(tmp_path / "scratch")
     assert "PYTEST_XDIST_AUTO_NUM_WORKERS" not in after_scratch
     child = rec.factory_kwargs["env"]
     assert child["PYTEST_XDIST_AUTO_NUM_WORKERS"] == "2"
@@ -885,11 +885,11 @@ def test_a_scratch_that_cannot_be_allocated_spawns_with_the_inherited_temp(
     _launch_env(monkeypatch)
     host = _FakeHost(tmp_path)
     rec = _Recording()
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
         _run_launch(host, _request(), _launch_tools(rec, scratch=_Scratch(None, fail=True)))
     assert host._scratch_dir is None
     assert rec.wrap_kwargs["extra_private_dirs"] == ()
-    assert "KIROCREW_SCRATCH" not in rec.factory_kwargs["env"]
+    assert "AJCREW_SCRATCH" not in rec.factory_kwargs["env"]
     assert any("could not allocate" in r.getMessage() for r in caplog.records)
 
 
@@ -945,11 +945,11 @@ def test_the_driver_names_the_scope_and_the_launch_reports_it(monkeypatch, tmp_p
     rec = _Recording()
     launched = _run_launch(
         _FakeHost(tmp_path),
-        _request(scope_argv=lambda argv: (["named", *argv], "kirocrew-x.scope")),
+        _request(scope_argv=lambda argv: (["named", *argv], "ajcrew-x.scope")),
         _launch_tools(rec, scratch=_Scratch(None)),
     )
     assert rec.factory_argv[:2] == ["named", "scope"]
-    assert launched.scope_unit == "kirocrew-x.scope"
+    assert launched.scope_unit == "ajcrew-x.scope"
 
 
 def test_only_a_driver_that_brings_a_retry_retries_the_spawn(monkeypatch, tmp_path) -> None:
@@ -971,7 +971,7 @@ def test_only_a_driver_that_brings_a_retry_retries_the_spawn(monkeypatch, tmp_pa
 
 def _per_process_hosts() -> frozenset[str]:
     """The backend ids the client launches through an adapter, read off the sets."""
-    from kiro_crew.agent_sdk.backends import ACP_BACKENDS_ACP_RUNTIME
+    from aj_crew.agent_sdk.backends import ACP_BACKENDS_ACP_RUNTIME
 
     return frozenset(ACP_BACKENDS_KNOWN - ACP_BACKENDS_ACP_RUNTIME)
 
@@ -1021,8 +1021,8 @@ def test_the_shared_launch_code_names_no_per_process_host() -> None:
     A source read: ``if self.backend == "deepseek":`` is inert on kiro, so the golden
     stays green. Host needs belong in ``acp/harness/<host>.py``.
     """
-    from kiro_crew.acp import launch as launch_mod
-    from kiro_crew.acp import runtime as runtime_mod
+    from aj_crew.acp import launch as launch_mod
+    from aj_crew.acp import runtime as runtime_mod
 
     shared = {
         "launch.launch": launch_mod.launch,
@@ -1052,7 +1052,7 @@ def test_the_host_token_scan_can_fail() -> None:
         "x = 'opencode'\n",
         "if self.is_deepseek:\n    pass\n",
         "ok = plan.is_pi\n",
-        "from kiro_crew.acp.harness import deepseek\n",
+        "from aj_crew.acp.harness import deepseek\n",
         "adapter = deepseek.DeepseekLaunch()\n",
         "adapter = OpencodeLaunch()\n",
         'if self.backend == f"deepseek":\n    pass\n',

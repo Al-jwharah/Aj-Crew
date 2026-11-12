@@ -33,12 +33,12 @@ from queue_depth_reconcile_helpers import (
     _warned,
 )
 
-import kiro_crew.subagent_manager.run as run_mod
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
-from kiro_crew.subagent_manager.run import _QUEUE_DEPTH_RETRIES
-from kiro_crew.testing.wait import await_until
-from kiro_crew.testing.wait import finished as _finished
+import aj_crew.subagent_manager.run as run_mod
+from aj_crew.subagent import SubagentManager
+from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+from aj_crew.subagent_manager.run import _QUEUE_DEPTH_RETRIES
+from aj_crew.testing.wait import await_until
+from aj_crew.testing.wait import finished as _finished
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 

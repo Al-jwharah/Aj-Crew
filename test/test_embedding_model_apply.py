@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.embeddings as embeddings_mod
-from kiro_crew.embeddings import ReembedProgress, reembed_progress, validate_custom_model_path
-from kiro_crew.vector_memory import VectorMemoryStore
+import aj_crew.embeddings as embeddings_mod
+from aj_crew.embeddings import ReembedProgress, reembed_progress, validate_custom_model_path
+from aj_crew.vector_memory import VectorMemoryStore
 
 # Wider than the production floor so the file is not read as a truncated
 # placeholder.
@@ -43,7 +43,7 @@ class TestGatedCandidateLifecycle:
     """
 
     def test_candidate_is_built_gated_and_adopts_its_width(self, tmp_path) -> None:
-        from kiro_crew.embeddings import build_gated_candidate
+        from aj_crew.embeddings import build_gated_candidate
 
         model = _write_model(tmp_path / "bge.gguf")
         cand = build_gated_candidate(model)
@@ -53,7 +53,7 @@ class TestGatedCandidateLifecycle:
 
     def test_a_gated_candidate_hands_out_no_vectors(self, tmp_path) -> None:
         """The window between load and reconcile is the corruption window."""
-        from kiro_crew.embeddings import build_gated_candidate
+        from aj_crew.embeddings import build_gated_candidate
 
         cand = build_gated_candidate(_write_model(tmp_path / "m.gguf"))
         cand._llm = object()  # pretend the load landed
@@ -61,7 +61,7 @@ class TestGatedCandidateLifecycle:
         assert cand.embed("hello") is None
 
     def test_activation_opens_the_gate(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.embeddings import build_gated_candidate
+        from aj_crew.embeddings import build_gated_candidate
 
         cand = build_gated_candidate(_write_model(tmp_path / "m.gguf"))
         cand.activate()
@@ -69,7 +69,7 @@ class TestGatedCandidateLifecycle:
 
     def test_is_ready_reports_load_state_not_serving_state(self, tmp_path) -> None:
         """Reconcile must be able to confirm the model loaded while still gated."""
-        from kiro_crew.embeddings import build_gated_candidate
+        from aj_crew.embeddings import build_gated_candidate
 
         cand = build_gated_candidate(_write_model(tmp_path / "m.gguf"))
         cand._llm = object()
@@ -83,7 +83,7 @@ class TestGatedCandidateLifecycle:
         terminal form is retire() — used only when the embedder leaves the
         singleton.
         """
-        from kiro_crew.embeddings import LlamaCppEmbedder
+        from aj_crew.embeddings import LlamaCppEmbedder
 
         emb = LlamaCppEmbedder(model_path=_write_model(tmp_path / "m.gguf"), dim=8)
         emb.retire()
@@ -92,7 +92,7 @@ class TestGatedCandidateLifecycle:
 
     def test_close_stays_reusable_for_every_other_caller(self, tmp_path) -> None:
         """Terminality must not leak into plain close(): tests + callers rely on it."""
-        from kiro_crew.embeddings import LlamaCppEmbedder
+        from aj_crew.embeddings import LlamaCppEmbedder
 
         emb = LlamaCppEmbedder(model_path=_write_model(tmp_path / "m.gguf"), dim=8)
         emb.close()
@@ -100,7 +100,7 @@ class TestGatedCandidateLifecycle:
 
     def test_adopt_mode_refuses_an_unreadable_width(self, tmp_path, monkeypatch) -> None:
         """dim=0 must never be published: every produced vector would be rejected."""
-        import kiro_crew.embeddings as emb
+        import aj_crew.embeddings as emb
 
         class _NoWidth:
             def __init__(self, **kwargs: object) -> None:
@@ -118,7 +118,7 @@ class TestGatedCandidateLifecycle:
         assert cand.dim == 0
 
     def test_adopt_mode_accepts_a_positive_width(self, tmp_path, monkeypatch) -> None:
-        import kiro_crew.embeddings as emb
+        import aj_crew.embeddings as emb
 
         class _Wide:
             def __init__(self, **kwargs: object) -> None:
@@ -142,7 +142,7 @@ class TestGatedCandidateLifecycle:
         self, tmp_path, monkeypatch
     ) -> None:
         """#961's loud refusal must still fire for a concrete configured dim."""
-        import kiro_crew.embeddings as emb
+        import aj_crew.embeddings as emb
 
         class _Wide:
             def __init__(self, **kwargs: object) -> None:
@@ -161,7 +161,7 @@ class TestGatedCandidateLifecycle:
         self, tmp_path, monkeypatch
     ) -> None:
         """A timed-out apply retires the candidate; its loader must not publish."""
-        import kiro_crew.embeddings as emb
+        import aj_crew.embeddings as emb
 
         freed: list[bool] = []
 
@@ -186,7 +186,7 @@ class TestGatedCandidateLifecycle:
 
     def test_install_closes_the_outgoing_model(self, monkeypatch) -> None:
         """Closing the outgoing model is what keeps peak residency at one."""
-        import kiro_crew.embeddings as emb
+        import aj_crew.embeddings as emb
 
         closed: list[str] = []
 
@@ -204,7 +204,7 @@ class TestGatedCandidateLifecycle:
         assert emb.get_shared_embedder() is new
 
     def test_install_is_idempotent_for_the_same_object(self, monkeypatch) -> None:
-        import kiro_crew.embeddings as emb
+        import aj_crew.embeddings as emb
 
         closed: list[str] = []
 
@@ -219,7 +219,7 @@ class TestGatedCandidateLifecycle:
 
     def test_serving_accessor_distinguishes_candidate_from_live(self, monkeypatch) -> None:
         """The rollback branch needs to tell pre- from post-activation failure."""
-        import kiro_crew.embeddings as emb
+        import aj_crew.embeddings as emb
 
         class _Cand:
             _serving = False
@@ -231,7 +231,7 @@ class TestGatedCandidateLifecycle:
 
 
 class TestEnvOverrideRefusal:
-    """With KIROCREW_EMBED_MODEL_PATH set, applying from the dashboard is refused.
+    """With AJCREW_EMBED_MODEL_PATH set, applying from the dashboard is refused.
 
     ``resolve_custom_model`` takes the PATH from the env var but always reads
     ``memory.embedding_dim`` from CONFIG. Persisting a model's width here while the
@@ -244,10 +244,10 @@ class TestEnvOverrideRefusal:
     def test_handler_checks_the_env_var_before_arming_progress(self) -> None:
         import inspect
 
-        from kiro_crew.dashboard.handlers import memory as mem
+        from aj_crew.dashboard.handlers import memory as mem
 
         src = inspect.getsource(mem.api_memory_embedding_model)
-        env_at = src.find("KIROCREW_EMBED_MODEL_PATH")
+        env_at = src.find("AJCREW_EMBED_MODEL_PATH")
         arm_at = src.find("prog.begin_apply()")
         assert -1 not in (env_at, arm_at)
         assert env_at < arm_at, "refuse before arming, or the tracker wedges at applying"
@@ -255,10 +255,10 @@ class TestEnvOverrideRefusal:
 
     def test_resolve_takes_path_from_env_but_dim_from_config(self, monkeypatch, tmp_path) -> None:
         """Pin the precedence asymmetry that makes the write destructive."""
-        import kiro_crew.embeddings as emb
+        import aj_crew.embeddings as emb
 
         model = _write_model(tmp_path / "env-model.gguf")
-        monkeypatch.setenv("KIROCREW_EMBED_MODEL_PATH", str(model))
+        monkeypatch.setenv("AJCREW_EMBED_MODEL_PATH", str(model))
         monkeypatch.setattr(
             emb, "_read_memory_config",
             lambda: {"embed_model_path": "/models/config-model.gguf", "embedding_dim": 768},
@@ -324,7 +324,7 @@ class TestSpaceGenerationGuard:
         """The bump must precede the load, or the in-flight window is unguarded."""
         import inspect
 
-        from kiro_crew.dashboard.handlers import memory as mem
+        from aj_crew.dashboard.handlers import memory as mem
 
         src = inspect.getsource(mem._apply_embedding_model)
         bump_at = src.find("begin_space_change()")
@@ -352,7 +352,7 @@ class TestKnowledgeIngestSignatureBinding:
     def test_signature_is_captured_before_the_embed(self) -> None:
         import inspect
 
-        from kiro_crew.knowledge.ingestion import IngestionPipeline
+        from aj_crew.knowledge.ingestion import IngestionPipeline
 
         src = inspect.getsource(IngestionPipeline._embed_item)
         cap = src.find("sig = embedder_signature(self.embedder)")
@@ -372,7 +372,7 @@ class TestKnowledgeIngestSignatureBinding:
         """_write_item_embedding already took sig as a parameter — keep it that way."""
         import inspect
 
-        from kiro_crew.knowledge.ingestion import _write_item_embedding
+        from aj_crew.knowledge.ingestion import _write_item_embedding
 
         assert "sig" in inspect.signature(_write_item_embedding).parameters
 
@@ -411,7 +411,7 @@ class TestNonObjectJsonBody:
     def test_non_object_bodies_return_400_not_500(self, payload, monkeypatch) -> None:
         import asyncio as _asyncio
 
-        from kiro_crew.dashboard.handlers import memory as mem
+        from aj_crew.dashboard.handlers import memory as mem
 
         # The restricted-session gate runs first; let it through so the body
         # check is what we exercise.
@@ -440,8 +440,8 @@ class TestNonObjectJsonBody:
         """
         import inspect
 
-        from kiro_crew.dashboard.handlers._shared import body_not_object_error, read_bounded_json
-        from kiro_crew.dashboard.handlers.memory import api_memory_embedding_model
+        from aj_crew.dashboard.handlers._shared import body_not_object_error, read_bounded_json
+        from aj_crew.dashboard.handlers.memory import api_memory_embedding_model
 
         src = inspect.getsource(api_memory_embedding_model)
         assert "read_bounded_json(" in src
@@ -462,7 +462,7 @@ class TestApplyIsAudited:
     def test_handler_audits_both_outcomes(self) -> None:
         import inspect
 
-        from kiro_crew.dashboard.handlers.memory import api_memory_embedding_model
+        from aj_crew.dashboard.handlers.memory import api_memory_embedding_model
 
         src = inspect.getsource(api_memory_embedding_model)
         assert 'outcome="denied"' in src, "the restricted-session denial must stay audited"
@@ -479,7 +479,7 @@ class TestApplyIsAudited:
         """Both outcomes must share the operation name so the log filters cleanly."""
         import inspect
 
-        from kiro_crew.dashboard.handlers.memory import api_memory_embedding_model
+        from aj_crew.dashboard.handlers.memory import api_memory_embedding_model
 
         src = inspect.getsource(api_memory_embedding_model)
         assert src.count('operation="memory.embedding_model"') >= 2
@@ -498,7 +498,7 @@ class TestWidthIsRestoredOnRollback:
     def test_every_rollback_branch_restores_the_width(self) -> None:
         import inspect
 
-        from kiro_crew.dashboard.handlers.memory import _apply_embedding_model
+        from aj_crew.dashboard.handlers.memory import _apply_embedding_model
 
         src = inspect.getsource(_apply_embedding_model)
         resets = src.count("reset_shared_embedder()")
@@ -514,7 +514,7 @@ class TestWidthIsRestoredOnRollback:
         """The catch-all handler calls it, so it must exist on every failure path."""
         import inspect
 
-        from kiro_crew.dashboard.handlers.memory import _apply_embedding_model
+        from aj_crew.dashboard.handlers.memory import _apply_embedding_model
 
         src = inspect.getsource(_apply_embedding_model)
         assert src.index("def _restore_dim()") < src.index("    try:"), (
@@ -816,7 +816,7 @@ class TestRevertToBundledIsGatedToo:
     """
 
     def test_bundled_candidate_is_gated_with_a_known_width(self) -> None:
-        from kiro_crew.embeddings import build_gated_bundled, bundled_embedding_dim
+        from aj_crew.embeddings import build_gated_bundled, bundled_embedding_dim
 
         cand = build_gated_bundled()
         assert cand._serving is False
@@ -832,7 +832,7 @@ class TestRevertToBundledIsGatedToo:
         bundled model_id — stamping custom vectors as bundled and keeping them
         across restarts. Every argument must be explicit.
         """
-        import kiro_crew.embeddings as emb
+        import aj_crew.embeddings as emb
 
         custom = _write_model(tmp_path / "custom.gguf")
         monkeypatch.setattr(
@@ -854,7 +854,7 @@ class TestRevertToBundledIsGatedToo:
     def test_both_branches_install_a_gated_candidate(self) -> None:
         import inspect
 
-        from kiro_crew.dashboard.handlers import memory as mem
+        from aj_crew.dashboard.handlers import memory as mem
 
         src = inspect.getsource(mem._apply_embedding_model)
         assert "build_gated_candidate(candidate)" in src
@@ -864,7 +864,7 @@ class TestRevertToBundledIsGatedToo:
         """Neither branch may persist ahead of readiness (bundled GGUF can be absent)."""
         import inspect
 
-        from kiro_crew.dashboard.handlers import memory as mem
+        from aj_crew.dashboard.handlers import memory as mem
 
         src = inspect.getsource(mem._apply_embedding_model)
         first_write = src.find("_write_embed_model_config(")
@@ -888,7 +888,7 @@ class TestReconcileOutcomeIsChecked:
     def test_apply_compares_recorded_space_before_activating(self) -> None:
         import inspect
 
-        from kiro_crew.dashboard.handlers import memory as mem
+        from aj_crew.dashboard.handlers import memory as mem
 
         src = inspect.getsource(mem._apply_embedding_model)
         check_at = src.find("recorded_embedding_space()")
@@ -922,7 +922,7 @@ class TestApplyOrdering:
     def _src(self) -> str:
         import inspect
 
-        from kiro_crew.dashboard.handlers import memory as mem
+        from aj_crew.dashboard.handlers import memory as mem
 
         return inspect.getsource(mem._apply_embedding_model)
 
@@ -969,7 +969,7 @@ class TestApplyOrdering:
         """maintenance_executor is 4 workers reserved for the fast sweeps."""
         import inspect
 
-        from kiro_crew.dashboard.handlers import memory as mem
+        from aj_crew.dashboard.handlers import memory as mem
 
         src = inspect.getsource(mem.api_memory_embedding_model)
         assert "embed_executor()" in src
@@ -990,7 +990,7 @@ class TestConfigWriteHasNoOrphanWindow:
         """A bounded wait here is the bug, so assert the unbounded form is kept."""
         import inspect
 
-        from kiro_crew.dashboard.handlers import memory as mem
+        from aj_crew.dashboard.handlers import memory as mem
 
         src = inspect.getsource(mem._apply_embedding_model)
         assert "fut.result()" in src, "the config write must be awaited unbounded"
@@ -1003,12 +1003,12 @@ class TestConfigWriteHasNoOrphanWindow:
         self, tmp_path, monkeypatch
     ) -> None:
         """Even when the write is delayed, path and dim land together or not at all."""
-        from kiro_crew.dashboard.handlers.memory import _write_embed_model_config
+        from aj_crew.dashboard.handlers.memory import _write_embed_model_config
 
         cfg = tmp_path / "config.json"
         cfg.write_text("{}", encoding="utf-8")
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.memory.config_path", lambda: cfg, raising=False
+            "aj_crew.dashboard.handlers.memory.config_path", lambda: cfg, raising=False
         )
         model = _write_model(tmp_path / "bge.gguf")
         await _write_embed_model_config(str(model), 1024)
@@ -1034,7 +1034,7 @@ class TestStaleModelIdIsCleared:
     async def test_changing_the_path_drops_a_pinned_model_id(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.dashboard.handlers.memory import _write_embed_model_config
+        from aj_crew.dashboard.handlers.memory import _write_embed_model_config
 
         cfg = tmp_path / "config.json"
         cfg.write_text(
@@ -1046,7 +1046,7 @@ class TestStaleModelIdIsCleared:
             encoding="utf-8",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.memory.config_path", lambda: cfg, raising=False
+            "aj_crew.dashboard.handlers.memory.config_path", lambda: cfg, raising=False
         )
         model = _write_model(tmp_path / "new-same-dim.gguf")
         await _write_embed_model_config(str(model), 1024)
@@ -1059,7 +1059,7 @@ class TestStaleModelIdIsCleared:
     async def test_reverting_to_bundled_also_drops_the_pinned_id(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.dashboard.handlers.memory import _write_embed_model_config
+        from aj_crew.dashboard.handlers.memory import _write_embed_model_config
 
         cfg = tmp_path / "config.json"
         cfg.write_text(
@@ -1070,7 +1070,7 @@ class TestStaleModelIdIsCleared:
             encoding="utf-8",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.memory.config_path", lambda: cfg, raising=False
+            "aj_crew.dashboard.handlers.memory.config_path", lambda: cfg, raising=False
         )
         await _write_embed_model_config("", 1024)
         mem_cfg = json.loads(cfg.read_text(encoding="utf-8"))["memory"]
@@ -1089,7 +1089,7 @@ class TestPathIsValidatedAtPointOfUse:
     def test_worker_revalidates_before_loading(self) -> None:
         import inspect
 
-        from kiro_crew.dashboard.handlers import memory as mem
+        from aj_crew.dashboard.handlers import memory as mem
 
         src = inspect.getsource(mem._apply_embedding_model)
         assert "validate_custom_model_path(" in src, (
@@ -1141,7 +1141,7 @@ class TestValidateCustomModelPath:
     def test_rejects_protected_location(self, tmp_path: Path, monkeypatch) -> None:
         secret = _write_model(tmp_path / "credentials")
         monkeypatch.setattr(
-            "kiro_crew.embeddings.is_sensitive_path", lambda p, base_dir=None: True
+            "aj_crew.embeddings.is_sensitive_path", lambda p, base_dir=None: True
         )
         _, error, code = validate_custom_model_path(str(secret))
         assert "protected location" in error
@@ -1337,11 +1337,11 @@ class TestConfigWrite:
 
     @pytest.mark.asyncio
     async def test_writes_path_into_the_memory_section(self, tmp_path: Path, monkeypatch) -> None:
-        from kiro_crew.dashboard.handlers.memory import _write_embed_model_config
+        from aj_crew.dashboard.handlers.memory import _write_embed_model_config
 
         cfg = tmp_path / "config.json"
         cfg.write_text(json.dumps({"memory": {"episodic_max_results": 8}}), encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.memory.config_path", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.memory.config_path", lambda: cfg)
 
         model = _write_model(tmp_path / "m.gguf")
         await _write_embed_model_config(str(model), 0)
@@ -1353,13 +1353,13 @@ class TestConfigWrite:
     async def test_empty_path_reverts_to_the_bundled_model(
         self, tmp_path: Path, monkeypatch
     ) -> None:
-        from kiro_crew.dashboard.handlers.memory import _write_embed_model_config
+        from aj_crew.dashboard.handlers.memory import _write_embed_model_config
 
         cfg = tmp_path / "config.json"
         cfg.write_text(
             json.dumps({"memory": {"embed_model_path": "/models/old.gguf"}}), encoding="utf-8"
         )
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.memory.config_path", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.memory.config_path", lambda: cfg)
 
         await _write_embed_model_config("", 0)
         data = json.loads(cfg.read_text(encoding="utf-8"))
@@ -1367,11 +1367,11 @@ class TestConfigWrite:
 
     @pytest.mark.asyncio
     async def test_unparseable_config_is_not_clobbered(self, tmp_path: Path, monkeypatch) -> None:
-        from kiro_crew.dashboard.handlers.memory import _write_embed_model_config
+        from aj_crew.dashboard.handlers.memory import _write_embed_model_config
 
         cfg = tmp_path / "config.json"
         cfg.write_text("{ this is not json", encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.memory.config_path", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.memory.config_path", lambda: cfg)
 
         model = _write_model(tmp_path / "m.gguf")
         with pytest.raises(ValueError):
@@ -1383,12 +1383,12 @@ class TestConfigWrite:
     async def test_a_memory_section_that_is_not_an_object_is_refused_and_kept(
         self, tmp_path: Path, monkeypatch, section: object
     ) -> None:
-        from kiro_crew.dashboard.handlers.memory import _write_embed_model_config
+        from aj_crew.dashboard.handlers.memory import _write_embed_model_config
 
         cfg = tmp_path / "config.json"
-        original = json.dumps({"memory": section, "agent": {"default_agent": "kirocrew"}})
+        original = json.dumps({"memory": section, "agent": {"default_agent": "ajcrew"}})
         cfg.write_text(original, encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.memory.config_path", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.memory.config_path", lambda: cfg)
 
         model = _write_model(tmp_path / "m.gguf")
         # A clear refusal, not a TypeError/AttributeError the model card would show.

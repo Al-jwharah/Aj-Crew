@@ -1,7 +1,7 @@
 // ErrorDetails — the collapsed half of a two-audience error (issue #12816).
 //
 // Deploy refusals used to put everything in one red sentence: "Finite-TTL
-// deploys require the reaper base stack (kirocrew-deploy-base). Use ttl_hours=0
+// deploys require the reaper base stack (ajcrew-deploy-base). Use ttl_hours=0
 // for persistent or install the reaper (install-reaper.sh)." Three product nouns
 // and a parameter name, in the one place a user cannot avoid reading, none of it
 // meaning anything to someone who just clicked Deploy.

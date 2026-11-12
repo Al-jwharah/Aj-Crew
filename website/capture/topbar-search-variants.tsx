@@ -111,7 +111,7 @@ if (budget === 'off' || budget === 'nonowrap') {
   document.head.appendChild(s)
 }
 const hasUpdateClass = update && budget !== 'off' && budget !== 'norungs'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 initI18n('zh-CN')
 
 // The retired cue: an alpha mask over the row's last 18px. Injected verbatim so

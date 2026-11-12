@@ -29,7 +29,7 @@ vi.mock('../pages/SessionArchive', () => ({ default: () => <div /> }))
 vi.mock('../pages/LocalStorageDebug', () => ({ default: () => <div /> }))
 vi.mock('../pages/settings/McpManagement', () => ({ McpManagement: () => <div /> }))
 vi.mock('../pages/overview', () => ({
-  KiroCrewCfgTab: () => <div />,
+  AjCrewCfgTab: () => <div />,
   AgentCfgTab: () => <div />,
 }))
 

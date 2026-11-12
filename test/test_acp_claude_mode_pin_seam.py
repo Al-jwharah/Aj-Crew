@@ -3,7 +3,7 @@
 With nothing requested such a session's seed names no ``defaultMode``, so the adapter
 starts it in the mode the user's own settings name, or a resumed one in its
 transcript's. By default the session keeps that mode. With
-``KIROCREW_CC_PIN_INHERITED_MODE`` on, ``_pin_claude_starting_mode`` reads it back: it
+``AJCREW_CC_PIN_INHERITED_MODE`` on, ``_pin_claude_starting_mode`` reads it back: it
 moves ``auto``, ``bypassPermissions`` or an unreported mode to ``default``, keeps a mode
 that asks and the mode Crew requested, and stops the session when the move fails. The
 exclusion path, Side Chat and the adapter-version floor are in
@@ -29,14 +29,14 @@ from acp_session_mcp_helpers import (
     _write_spec,
 )
 
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.agent_sdk import backends
+from aj_crew.acp import client as client_mod
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.agent_sdk import backends
 
 
 class TestUnrequestedModePin:
-    """The pin with ``KIROCREW_CC_PIN_INHERITED_MODE`` on."""
+    """The pin with ``AJCREW_CC_PIN_INHERITED_MODE`` on."""
 
     _pin_harness = staticmethod(_pin_harness)
     _adapter_transport = staticmethod(_adapter_transport)
@@ -72,7 +72,7 @@ class TestUnrequestedModePin:
         ``default`` before the first prompt, and the session keeps Crew's array.
         """
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         seeded = json.loads((tmp_path / ".claude" / "settings.local.json").read_text())
         assert "permissions" not in seeded
         if path == "load":
@@ -96,7 +96,7 @@ class TestUnrequestedModePin:
     ):
         """Only an approving mode is moved: a stricter or narrower one is kept."""
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         if path == "load":
             client._resume_session_id = "s-old"
         sent, killed = self._adapter_transport(client, monkeypatch, started_mode=started_mode)
@@ -111,7 +111,7 @@ class TestUnrequestedModePin:
     ):
         """A response that names no mode is pinned, as on the exclusion path."""
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         self._record_sent_array(client)
         sent, killed = self._pin_harness(client, monkeypatch)
         await client._pin_claude_starting_mode({"sessionId": "s-1"})
@@ -124,7 +124,7 @@ class TestUnrequestedModePin:
     ):
         """The read-back fails closed on a session whose file Crew wrote too."""
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         self._record_sent_array(client)
         _sent, killed = self._pin_harness(client, monkeypatch, fail=True)
         with pytest.raises(client_mod.AcpError, match="pin the asking permission mode"):
@@ -143,7 +143,7 @@ class TestUnrequestedModePin:
         replaces it is, so the pin is sent once, on the new id.
         """
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._resume_session_id = "s-old"
         sent, killed = self._adapter_transport(client, monkeypatch, started_mode="auto")
         answer = client._wait_for_response
@@ -173,7 +173,7 @@ class TestUnrequestedModePin:
         stops the harness; it does not fall through to ``session/new``.
         """
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._resume_session_id = "s-old"
         sent, killed = self._adapter_transport(client, monkeypatch, started_mode="auto")
         answer = client._wait_for_response
@@ -205,7 +205,7 @@ class TestUnrequestedModePin:
             json.dumps({"permissions": {"deny": ["Bash(rm:*)"]}}), encoding="utf-8"
         )
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         assert client._claude_session_excludes_local() is False
         sent, killed = self._adapter_transport(client, monkeypatch, started_mode="auto")
         await client._initialize_session()
@@ -227,7 +227,7 @@ class TestUnrequestedModePin:
         """
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         client = self._seeded(
-            tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE, permission_mode="auto"
+            tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE, permission_mode="auto"
         )
         if path == "load":
             client._resume_session_id = "s-old"
@@ -249,7 +249,7 @@ class TestUnrequestedModePin:
         """The documented ``auto`` opt-in keeps the mode Crew asked for."""
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         client = self._seeded(
-            tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE, permission_mode="auto"
+            tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE, permission_mode="auto"
         )
         if path == "load":
             client._resume_session_id = "s-old"
@@ -271,7 +271,7 @@ class TestUnrequestedModePin:
         event loop.
         """
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         await client._prepare_session_mcp()
         if path == "load":
             client._resume_session_id = "s-old"
@@ -316,7 +316,7 @@ class TestUnrequestedModePin:
         session already holds Crew's servers, so its mode is still pinned.
         """
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         await client._prepare_session_mcp()
         monkeypatch.setattr(client, "_resolve_session_mcp_servers", lambda: [])
         if path == "load":
@@ -352,7 +352,7 @@ class TestUnrequestedModeKeptByDefault:
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
         work = tmp_path / "work"
         work.mkdir()
-        client = self._seeded(work, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(work, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         assert client._permission_mode is None
         assert "permissions" not in json.loads(
             (work / ".claude" / "settings.local.json").read_text()
@@ -386,7 +386,7 @@ class TestUnrequestedModeKeptByDefault:
         """The pin reads the env var at the start: a truthy spelling turns it on."""
         monkeypatch.setenv(_PIN_SETTING_ENV, value)
         _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-        client = self._seeded(tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = self._seeded(tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         sent, killed = self._adapter_transport(client, monkeypatch, started_mode="auto")
         await client._initialize_session()
         assert client._session_id == "s-new"

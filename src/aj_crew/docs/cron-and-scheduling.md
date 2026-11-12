@@ -1,0 +1,342 @@
+# Cron Jobs & Scheduling
+
+Aj Crew can run tasks on a schedule — recurring checks, daily briefings, periodic monitoring, or one-shot reminders.
+
+## Creating Cron Jobs
+
+### Via Chat (Natural Language)
+
+Just ask naturally:
+- "Check my pipeline health every 30 minutes"
+- "Remind me to review CRs every day at 9am"
+- "Run a status check every 5 minutes"
+- "Send me a briefing tomorrow at 8am"
+- "Check that the build log has no errors every hour. Schedule this as a script job" (runs a Python script without the model; see [Script and Command Crons](#script-and-command-crons))
+
+Aj Crew uses the `cron_add` MCP tool to create the job.
+
+### Via Dashboard
+
+Schedule page → fill in the form:
+- **Name**: descriptive label
+- **Message**: the prompt the agent will execute
+- **Schedule**: interval in seconds, or cron expression
+- **Agent**: optionally pick a specific agent for this job
+
+### Via CLI
+
+```bash
+ajcrew cron add "pipeline-check" "check pipeline health" --every 1800
+ajcrew cron add "weekday-9am" "check tickets" --cron "0 9 * * MON-FRI" --approval-mode auto
+ajcrew cron add "reminder" "call the vet" --at "tomorrow 9am"          # one-shot, deletes itself after firing
+ajcrew cron add "version-check" "" --every 3600 \
+  --script ~/.kiro/crew/crons/check.py:run --no-persistent-session --minimal-context   # zero-token script job
+ajcrew cron add "disk" "" --every 600 --command "df -h /" --timeout 30 --timeout-secs 60  # zero-token command job
+ajcrew cron add "digest" "summarize the news" --every 86400 --folder "Veille"  # filed in a Schedule-page folder
+ajcrew cron update <job-id> --name "new name" --message "new prompt" --approval-mode auto
+ajcrew cron update <job-id> --folder "Reports"   # move to a folder; --folder "" moves it out
+ajcrew cron list
+ajcrew cron list --folder "Veille"                # only that folder; --folder - lists ungrouped jobs
+ajcrew cron remove <id>
+```
+
+`--folder` takes a Schedule-page folder name or id, as the `cron_add` and `cron_update` tools do. A missing name is created, then the job is filed in it; an unknown id and a name several folders share are refused. The folder is created through the running gateway (the dashboard owns the folder list), so with no gateway running only an existing folder can be named. `cron list` shows each job's folder, and its `--folder` filter only reads: it never creates one. The `cron_list` tool's `json` output carries the same `folder` field (`{id, name}`, or `null` when ungrouped).
+
+A `--script` file must already live under `~/.kiro/crew/crons/`; the CLI registers it, it does not copy it. `--script`/`--command` and `--agent` are mutually exclusive, as are `--every`/`--cron`/`--at`. Every refusal prints on stderr and exits non-zero with nothing written (2 for a flag-combination error, 1 for a validation, security or store refusal), so an installer can register a job headlessly.
+
+### Via Slack
+
+```
+cron list
+cron remove <id>
+cron pause <id>
+cron resume <id>
+```
+
+## Schedule Types
+
+| Type | Syntax | Example |
+|------|--------|---------|
+| Interval | MCP `every=<seconds>` or CLI `--every <seconds>` | `every=300` (5 min, minimum 60s) |
+| One-shot | MCP or `POST /api/crons` `at=<Unix timestamp>`, `delay=<seconds>`, or `at_time=<human time>`; CLI `--at <timestamp or time string>` | `at_time="tomorrow 9am"` |
+| Cron expression | MCP `cron_expr=<5-field expression>` or CLI `--cron <expression>` | `cron_expr="0 9 * * 1-5"` (weekdays 9am) |
+
+`cron_expr` uses five fields: `min hour dom month dow`; the MCP schema documents numeric day-of-week values `0=Sun` through `6=Sat`.
+
+A job's `timezone` (CLI `--timezone`) is the zone its wall clock is read in: a `cron_expr`'s hour and minute fields, and a clock time given as `at_time` / `--at` such as `"9am"` or `"tomorrow 17:30"`. Without one, both are read in the global config timezone, and with no config timezone in `local`. `cron_add(at_time="9am", timezone="America/Los_Angeles")` therefore fires at 9am in Los Angeles even on a gateway whose config timezone is UTC.
+
+`local` is the time zone of the computer Aj Crew runs on, as it is now. A laptop that travels switches its system zone, and a `local` job follows it: a daily `0 9 * * *` job runs at 09:00 in Shanghai, and at 09:00 in San Francisco after the flight. The gateway re-reads the zone at least every 30 seconds while it runs; `TZ` in the gateway's environment wins over the system setting. Two rules cover the trip itself. Flying west, a time that already ran is not run again on the same date: 09:00 on the 3rd in Shanghai is not followed by 09:00 on the 3rd in San Francisco. Flying east, a time the clock jumped over is not caught up, as a time the laptop slept through is not. A one-shot `at_time` in `local` is read in the zone you are in when you create it and then stays at that instant. Pick a named zone instead when a job belongs to a place rather than to you, such as a report for an office.
+
+Jobs saved by an earlier version without a timezone, on an install with no config timezone, ran in UTC. On the first load after the upgrade those jobs are given the timezone `UTC`, so they keep running when they did; edit one to `local` to have it follow you. A clock time the zone skips (such as the hour lost when daylight saving time starts) is refused rather than moved. A relative `at_time` in seconds, minutes or hours (`"in 2 hours"`, `"in 90 mins"`), a Unix `at` and a `delay` name an instant already, so the timezone only changes how the job is displayed. A relative day or week count (`"in 3 days"`, `"in 1 week"`, `"in 2d"`) is counted in calendar days in that zone, so it keeps the clock time across a daylight saving change, like `"tomorrow"`.
+
+A zone's rules come from the timezone data the gateway's Python finds: the operating system's zoneinfo where it has one (macOS and most Linux hosts), otherwise the `tzdata` package Aj Crew installs (Windows, and Linux hosts without the system `tzdata` package). Out-of-date data still resolves every zone name, so a job in a zone whose rules changed runs at the old rule's hour (with data older than IANA tzdb 2026b, a 9am job in `America/Vancouver` runs at 10am from 2026-11-01). `ajcrew doctor` reports such data on its `tz data` row and names the update; restart the gateway afterwards, since it keeps every zone it already loaded.
+
+## How It Works
+
+1. The cron timer fires at the scheduled time.
+2. An agent cron sends its message to an LLM session; by default, that session is reused across runs.
+3. A script or command cron bypasses the LLM and executes its configured callable or shell command.
+4. Results follow the job's delivery and `silent` settings.
+
+The default per-wake execution budget is 30 minutes. Script and command subprocesses have separate defaults of 30 seconds and 300 seconds respectively.
+
+## The Chat Tab a Cron Writes Into
+
+A `persistent_session` job (the default) has ONE dashboard chat tab, `Cron: <name>`, for its whole life — every run appends to the same conversation rather than opening a new tab per run. Replying in that tab is a normal follow-up turn against the job's accumulated session.
+
+Each run appends a pair of rows so the runs stay distinguishable inside that one tab:
+
+| Row | Header | Content |
+|-----|--------|---------|
+| `user` | `# Cron Run: <name> \| <date time tz>` | the job's `message` — what this run was asked to do, or, for a long unchanged instruction, a reference to the row that holds it (below) |
+| `assistant` | `# Cron Job Result: <name> \| <date time tz>` | what the run produced |
+
+The timestamp is the moment the run produced its result, to the second, rendered in the job's `timezone` (then the config timezone, then `local`). It is what lets a follow-up turn tell which run it is answering, so when you reply to a daily job, answer the newest pair. Rows written before this behaviour shipped carry no timestamp.
+
+The stamp is rendered ONCE, when the result is recorded, and stored with it — later edits to the job's `timezone` do not respell an existing row. That matters because a row is recognised as already-written by its exact text, so a re-render under changed settings would append a second copy of a run instead of recognising the first.
+
+Each row's header also carries an invisible identity marker, `<!-- cron-run:<job-id>:<epoch> -->`, holding the run's timestamp at full precision. It does not render, and it is what keeps two runs distinct: the visible stamp is written for a person to read, so its resolution must not decide whether two fast runs collapse into one row. It sits ahead of the body rather than after it because a prompt or result can end inside an unclosed code fence, and everything after such a fence renders as code — which would print the marker instead of hiding it.
+
+### A repeated instruction is referenced, not stored again
+
+A persistent job runs the same `message` every time, and each row carries a per-run marker that deliberately stops runs collapsing — so writing the instruction verbatim on every run would store one unchanged text once per run. For a job with a large prompt that is self-defeating: the transcript rotates (10MB, ~200 lines) and the replay a follow-up turn reads is character-budgeted, so copies of one instruction crowd out the distinct runs the pair exists to separate.
+
+So a **long** instruction is written verbatim only when it is new to the run above it — the first run, the first run after someone edits the message on a live job, and periodically thereafter. Otherwise the row still appears, with the same header, stamp and marker, and its body says the instruction is unchanged and points at the nearest `# Cron Run` row above that carries the text.
+
+Four consequences worth knowing:
+
+- **Short instructions are never referenced.** The row keeps its header, stamp and marker either way, so replacing the text costs the length of the placeholder and saves the length of the prompt — below break-even that makes the transcript *bigger* and loses the instruction. Anything under 500 characters, which is most crons in the wild ("check pipeline health"), is stored verbatim every run exactly as before.
+- **"Unchanged" is decided by reading the rows**, not by tracking edits on the job, and it is the *latest* instruction-bearing row that is compared rather than any row in reach. Runs that write no row at all — `hide_in_chat`, or `persistent_session: false` — therefore cannot affect it; a remembered "the message changed" signal would be spent by such a run, and the next visible run would reference a surviving row still holding the previous instruction. Comparing the latest row also means an edit that is later reverted (A, then B, then A again) stores A again rather than pointing past B at the older copy.
+- **The reference points into the transcript**, never at the job's current `message`. A pointer to live configuration would resolve to whatever the instruction is now, which is the same misattribution that makes `/to-chat` omit the prompt row entirely.
+- **A reference reaches back at most 40 rows (~20 runs), so the text re-anchors periodically.** Three windows disagree about what "still here" means: the tab's live window holds 10,000 rows, the durable transcript keeps ~200 lines, and the replay a follow-up turn reads is character-budgeted and tail-heavy. An unbounded search would read the largest of the three and keep matching a copy that rotation has already dropped from disk — the instruction stored once and referenced forever, with the text nowhere a reader can reach. Bounding it re-writes the instruction in full every ~20 runs instead, which is inside the two windows counted in ROWS. It does not promise the same for the replay, which is counted in characters: ~20 runs whose results are long can exhaust that budget before it reaches the antecedent, so the text is still on disk but may sit outside what a single replay shows. No write-time row count can close that, because the replay budget is scaled at read time by the active model's context window — closing it belongs on the reading side. A referenced row does **not** count as a copy: it shares the `# Cron Run:` header because it is still a run boundary, but holds no instruction text, so treating it as one would let references chain off each other with nothing at the end. Which rows are references is marked by an invisible tag in the header, not inferred from the body wording — so a job whose message is *itself* the "unchanged" sentence is still stored and compared as an ordinary instruction, never mistaken for a pointer.
+
+Re-opening the last result from the Schedule page (`/to-chat`) reuses that stored stamp, so it never duplicates a run the executor already wrote. It shows the result row only: the prompt behind a stored result is not recoverable from the job's current `message`, which may have been edited since, so only the run that produced a result writes the `user` row.
+
+## Per-Agent Cron
+
+Jobs can specify an agent — useful for running specialized agents on a schedule (e.g., a code-reviewer agent checking for open CRs).
+
+## Script and Command Crons
+
+`cron_add` supports three execution modes:
+- **Agent cron**: omit `script` and `command`; the message is sent to the selected LLM agent.
+- **Script cron**: set `script` to `~/.kiro/crew/crons/file.py:function`; it bypasses the LLM and cannot be combined with `command`.
+- **Command cron**: set `command` to a shell command; it bypasses the LLM and cannot be combined with `script`.
+
+A command cron runs under `sh -c` and is vetted when it is added and again each time it fires. The vet refuses:
+
+- command substitution: `$(...)`, backticks, `$((...))`;
+- any `${...}` other than a plain `${NAME}` (no `${X:-default}`, `${X#prefix}`, `${#X}`);
+- `$'...'` ANSI-C quoting;
+- brace expansion such as `{a,b}` or `{1..9}`, including a quoted regex interval like `'[0-9]{1,3}'`. A spaceless jq object such as `jq '{id,name}'` is accepted once a plain space follows the comma inside the same quotes (`jq '{id, name}'`). For a basic-regex tool, escape the braces inside double quotes (`grep "[0-9]\{1,3\}"`);
+- positional and special parameters: `$1`, `$@`, `$*`, `$#`;
+- loops and compound commands: `for`, `while`, `until`, `case`;
+- a variable reference (`A=x; cmd $A`, `A=x cmd $A`, `A=x && cmd $A`): the check does not model how the shell scopes or rewrites a value, so any `$NAME` or `${NAME}` read anywhere in the text is refused, comments, quoted values and nested shells included, assigned or not. Only `$HOME` may be read, and `HOME` may appear only as `$HOME` or `${HOME}` (so `read HOME`, `HOME=x` and `export HOME` are refused);
+- a `$` followed by a quote, a backslash or another character that is not an expansion: allowed only at the end of the command or before whitespace or one of `/ | . , : )`, so `sed 's/x$/y/'` passes and `grep "x$" f` does not; `$!`, `$-`, `$?` and `$$` are refused too, because `$!` is empty before a background job and no other rule owns them.
+
+The `command` field is capped at 5000 characters. A command cron needs a working POSIX `/bin/sh` that passes the gateway's probe, so it never runs on Windows. For any of these, use a script cron instead: its body is scanned in full.
+
+For script crons, `message` is available as `ctx.message`. Import the context helpers and flow-control exceptions from `aj_crew.cron_script`:
+
+```python
+from aj_crew.cron_script import Done, Report, Skip
+
+def run(ctx):
+    result = ctx.call_tool("server-name", "tool-name", {"key": "value"})
+    ctx.notify(result)
+    raise Report("Result recorded; keep this cron scheduled")
+```
+
+`ctx.notify(text, **kwargs)` sends a gateway message and `ctx.call_tool(server, tool, args)` invokes an MCP tool and returns every text block of its result, in order, joined by newlines (a tool that puts a notice ahead of its JSON returns both, the notice first). `call_tool` keeps one server per name for the whole run: a call the server answers, with a result or a tool error, leaves it running for the next call; a call that fails any other way stops it, and the next call starts a fresh one. `ajcrew cron preview` uses the same lifecycle. Arguments are scanned for credentials before they are sent: a credential-shaped span inside a longer string is replaced by a `[REDACTED: ...]` placeholder, and when a whole argument is a credential (a long opaque id can look like one) the call is not sent: it raises `ValueError` naming the argument's path, never its value. `ajcrew cron preview` refuses it the same way. `raise Skip()` ends this tick silently, `raise Done()` completes and removes the job, and `raise Report(message)` delivers a message while keeping the job scheduled.
+
+`call_tool` starts only a local server that is switched on in **Customize → Connections → MCP Servers**: a disabled server, a remote (URL) server or a tool you switched off raises an error that names it instead of running, and `${VAR}` in the server's `env` is filled in from the environment as kiro-cli fills it in for a chat session. A vault secret granted to the job is never filled in, so it stays as written, and neither are a few cloud and SSH credential variables (`AWS_SECRET*`, `AWS_SESSION*`, `AWS_ACCESS*`, `OAUTH*`, `SSH_AUTH_SOCK`, `GNUPGHOME`, `GIT_ASKPASS`). Any other variable in Aj Crew's environment, a `GITHUB_TOKEN` say, is filled in, so reference only what you mean the server to have.
+
+On Linux and macOS the script body runs in a sandbox that hides credential directories such as `~/.aws` and `~/.kube`, and every process it starts runs inside that same sandbox, including an MCP server it calls with `ctx.call_tool`. A vault secret granted to the job (`secret_env`) reaches the script as an environment variable, never as a file. So a program that reads its credential from a file the sandbox hides cannot read it from a script cron. `ajcrew cron preview` runs the script outside this sandbox, so a preview can read a file the scheduled run cannot. Run that job as an agent cron instead, whose commands run at the `agent.sandbox` [tier](configuration.md#sandbox), or [outside Aj Crew](#a-long-job-that-must-outlive-the-chat).
+
+A script can also drive dashboard sessions. Each method raises `RuntimeError` carrying the gateway's reason when the gateway refuses or cannot be reached:
+
+- `ctx.list_session_folders()` returns the dashboard's session folders. Each folder carries its `id` and `parent_id` (empty for a top-level folder), so a script can find an existing child folder before creating one.
+- `ctx.create_session_folder(name, parent_id=...)` creates a folder and returns it. With a non-empty `parent_id` the folder is created inside that folder, so a script can build a nested layout such as `Project/<run>`; without it the folder is created at the top level. A name already used under the same parent is refused with `folder_name_exists`, so reuse the existing folder from `list_session_folders()` instead.
+- `ctx.open_session(name, folder_id=..., agent=..., model=...)` opens a session and returns its slot key. Omitted arguments take the gateway's defaults. A non-empty `name` is also the session's title, so the sidebar shows it instead of an auto-generated one. The title is set only when the session is created; reopening the same name keeps its current title, including one you renamed.
+- `ctx.send_to_session(slot, message)` queues the message as that slot's next turn and returns at once: `{"ok": True, "slot": <key>}` when the slot was idle, or `{"ok": True, "queued": True, "queue_id": <id>}` when it was busy.
+- `ctx.set_session_mode(slot, mode)` sets that session's tool approval mode to `trust` or `trust_reads` and returns `{"ok": True, "mode": <mode>}`. Any other mode is refused with `mode_not_allowed` and an unnamed slot with `slot_required`.
+
+Folder names, session names and messages are redacted like `notify()` text. With `agent.session_control` off, `open_session`, `send_to_session` and `set_session_mode` are refused with `session_control_disabled`; `send_to_session` or `set_session_mode` on a slot another creator made is refused with `not_creator`. A cron bound to a Bot is refused on `open_session` and `send_to_session`. These calls use the cron's own internal credential: do not shell out to `ajcrew token` for a dashboard token.
+
+Preview a script cron locally with real MCP tools. Notifications are printed instead of delivered. The session calls above and `ctx.crew_log_append()` are printed instead of made, and each returns a stand-in of the shape the real call returns: `list_session_folders()` returns no folders, and the gateway's refusals are not simulated:
+
+```bash
+ajcrew cron preview ~/.kiro/crew/crons/my.py:run --message "arguments for ctx.message"
+```
+
+### A long job that must outlive the chat
+
+A process the agent starts from its shell, `nohup`, `&`, `setsid` and `disown` included, belongs to the agent's runtime. That runtime can be recycled between turns while nobody is watching, and the process stops with it without any notice. A job that fits in an hour can run as a one-shot command cron instead:
+
+```bash
+ajcrew cron add "train" "" --at "in 1 minute" --command "cd ~/proj && python train.py > train.log 2>&1" --timeout 3600 --timeout-secs 3660
+```
+
+It runs from the gateway, not from the agent's runtime, so a recycled runtime does not stop it. Its `timeout` still does (at most 3600 seconds, and `--timeout-secs` must be at least 5 seconds more), and a gateway restart can interrupt it. A longer job, or one that needs more than the cron sandbox allows, belongs outside Aj Crew, for example in a `systemd-run --user` unit you start yourself.
+
+## Approval Mode
+
+Jobs can override the global tool approval mode. Set `approval_mode` to `"auto"` to auto-approve all tools without prompting, or leave empty to use the default hook-based approval.
+
+```bash
+ajcrew cron add "auto-check" "check pipeline" --every 300 --approval-mode auto
+```
+
+Or turn it on for a job from the Schedule page. Only the owner can turn `"auto"` on: the MCP tools `cron_add` and `cron_update` refuse `approval_mode="auto"` (they still accept `""`, which turns it off), so an agent creates the job and the user switches it to auto on the Schedule page. If `cron_update` later changes what an auto job does (message, agent, model, schedule, channel or thread), auto-approve turns off and the user turns it back on there; a rename keeps it.
+
+## Next Run Display
+
+The dashboard and Slack `cron list` command show the next scheduled run time for each job, making it easy to see when jobs will fire next.
+
+## Silent Mode
+
+Jobs with `silent: true` suppress auto-delivery to Slack and dashboard. The agent decides when to notify using the `send_message` MCP tool. Useful for monitoring jobs that should only alert when something changes.
+
+## Stateless Cron (Ephemeral Sessions)
+
+By default, each agent cron reuses the same session across runs — context accumulates and the agent can reference previous results. For polling or scanner-style jobs where context accumulation causes OOM or LLM slowdown, set `persistent_session: false`:
+
+```
+cron_add(
+    name="pipeline-scanner",
+    message="check pipeline health",
+    every=300,
+    persistent_session=false
+)
+```
+
+| Mode | Session Key | Context | Use Case |
+|------|-------------|---------|----------|
+| `persistent_session: true` (default) | `cron:{id}` (stable) | Accumulates across runs; `last_result` is carried as fenced reference data ahead of the request | Digests, trend tracking |
+| `persistent_session: false` | `cron:{id}:{uuid}` (fresh each run) | Clean slate, no `last_result` | Polling, scanners, alerting |
+
+The reaper tracks per-run session keys so it can still SIGKILL stuck ephemeral sessions.
+
+### A New Chat per Run (`new_chat_per_run`)
+
+A stateless job has no chat tab: its result reaches the bell, Slack and the job's History, but there is no conversation to reply in. Set `new_chat_per_run: true` to give every run its own tab, `Cron: <name> | <run time>`, on that run's own fresh session. Open it and reply like any other chat, for example to approve a draft the run wrote; the next run starts clean in a tab of its own.
+
+```
+cron_add(
+    name="monthly-status",
+    message="draft this month's status update; do not post it",
+    cron="0 9 8 * *",
+    new_chat_per_run=true
+)
+```
+
+It implies `persistent_session: false` when that is omitted, and `persistent_session: true` turns it off. It applies to a single-agent (message) job; a script, command or multi-agent job refuses it. `hide_in_chat` still wins, and a run whose result is a duplicate or that is `silent` opens no tab. A run's tab is kept like any other chat; a run that opened none is removed with the other stateless run transcripts after 7 days. It is for infrequent jobs, because every run keeps a tab: a schedule that can run twice within 24 hours is refused, on create and on an update that turns the switch on or changes the schedule.
+
+## Skipping Dates
+
+Jobs can skip specific dates — useful for holidays, vacation, or one-off exceptions. Two optional fields control this:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `skip_dates` | `list[str]` | ISO dates to skip: `["2026-04-06", "2026-12-25"]` |
+| `timezone` | `str` | IANA timezone for date evaluation (e.g. `"Europe/Luxembourg"`) |
+
+When a job is due but the current local date is in `skip_dates`, the job is silently not fired. `last_run_ts` is not updated, so the next run naturally covers the skipped period — agents using "since last run" logic handle gaps automatically.
+
+The `timezone` field determines what "today" means. Without it, the global config timezone is used, falling back to `local` (this computer's zone). This matters when a UTC date boundary differs from the user's local date.
+
+### Examples
+
+Skip Luxembourg holidays on a morning digest:
+
+```
+cron_add(
+    name="morning-digest",
+    message="Summarize what happened since your last run",
+    cron_expr="0 7 * * 1-5",
+    timezone="Europe/Luxembourg",
+    skip_dates=["2026-04-06", "2026-05-01", "2026-05-14"]
+)
+```
+
+Add skip dates to an existing job:
+
+```
+cron_update(job_id="abc123", skip_dates=["2026-12-25", "2026-12-26"])
+```
+
+Remove every skip date, so the job fires on all its scheduled days again:
+
+```
+cron_update(job_id="abc123", clear_skip_dates=true)
+```
+
+`skip_dates=[]` means the same, but some clients drop an empty list before it reaches the server, and then the skip dates stay. `clear_skip_dates` is refused beside a non-empty `skip_dates`.
+
+## Execution Jitter
+
+To avoid traffic spikes from thousands of users' jobs all firing at the same instant, Aj Crew adds a small random delay before executing scheduled jobs:
+
+| Schedule frequency | Jitter range |
+|--------------------|-------------|
+| Hourly (every 1–23h, or hourly cron) | 0–5 minutes |
+| Daily/weekly (every ≥24h, or daily cron like `0 9 * * *`) | 0–59 minutes |
+| Sub-hourly (every <1h, or `*/5 * * * *`) | None |
+| One-shot (`at`) | None |
+
+### Opting out: strict schedule
+
+If your workflow requires exact timing or depends on job ordering, set `strict_schedule: true` to disable jitter entirely.
+
+Via MCP: `cron_add(name="standup-prep", message="...", cron_expr="0 9 * * 1-5", strict_schedule=true)`
+
+Via Dashboard: toggle "Strict schedule" when creating or editing a job.
+
+The CLI has no flag for this. `ajcrew cron add` leaves `strict_schedule` at its default of `false`, so a job created there takes the jitter for its frequency; use MCP or the dashboard when you need exact firing.
+
+## Managing Jobs
+
+| Action | Dashboard | Slack | CLI |
+|--------|-----------|-------|-----|
+| List | Schedule page | `cron list` | `ajcrew cron list` |
+| Pause | Pause button | `cron pause <id>` | `ajcrew cron pause <id>` |
+| Resume | Resume button | `cron resume <id>` | `ajcrew cron resume <id>` |
+| Run now | Run button | — | `ajcrew cron trigger <id>` |
+| Delete | Delete button | `cron remove <id>` | `ajcrew cron remove <id>` |
+| Delete an installer's job | Delete button | — | `ajcrew cron remove --managed-by <key>` |
+| Adopt / release | — | — | `ajcrew cron adopt <id> --session-of <slot>` / `--release` |
+
+`ajcrew cron add --managed-by <key>` registers a job for an external installer. The key is unique across the store: a second add with the same key is refused, so a re-install runs `ajcrew cron remove --managed-by <key>` first and then adds again. `ajcrew cron list` prints the key as `managed by: <key>`.
+
+### Which chat session owns a job
+
+A job's `session_key` names the chat session it belongs to, and that one field carries one meaning: it is also where the job's output is delivered (`session="origin"` sends and script results both resolve a slot from it). A job created outside a chat — `ajcrew cron add`, the dashboard Schedule page, an onboarding import — therefore has no owning session, which is truthful rather than a defect: there is no chat to deliver into.
+
+The consequence is worth stating plainly, because it is easy to read as a job that disappeared. A job with no owning session is outside every chat session's scope: `cron_list` from chat does not list it, and the mutating cron tools answer a deliberately vague `job not found` so the reply cannot be used to enumerate jobs the caller may not see. Those jobs are managed from the operator surfaces instead: `ajcrew cron list` and the dashboard Schedule page. Both list and manage every job regardless of owner and show who owns it: the Schedule page prints the owning `session_key` under the job's name, or says the job has no owning session.
+
+`ajcrew cron adopt` is the way across that line, in both directions:
+
+```
+ajcrew cron adopt <id> --session-of chat-3-1712793600   # hand it to a session
+ajcrew cron adopt <id> --session-of dashboard:chat-3-1712793600
+ajcrew cron adopt <id> --release                        # back to operator-only
+```
+
+`--session-of` takes either a bare dashboard slot name or a fully-qualified session key; a bare name gets the `dashboard:` namespace added. There is no separate flag for the qualified form, because a key carrying no namespace at all could never match any session's own key and so could only ever produce a job nobody can own.
+
+Adopting makes that session able to manage the job **and** the destination for its results — for this field those are the same fact. Ownership is asserted by the operator, so the CLI is deliberately the only surface that can write it: the MCP `cron_update` tool and the dashboard `PATCH` cannot, or a session could repoint where another job's output lands.
+
+Because an agent can reach the CLI through bash, that restriction is enforced rather than assumed: `cron adopt` is covered by the `self-protection-cron-adopt` denied-command rule, so a session cannot claim a job for itself by shelling out. Like every built-in rule it is default-ON and can be turned off in Settings → Security.
+
+That rule is **best-effort against a shell-capable agent, not an invariant**. It guards the command; it does not guard the store. `crons.json` is not among the protected leaves, so a direct edit of the file sets the same field without the rule ever matching, and the regex tier cannot see a spelling the shell has yet to expand (`$K cron adopt`) any more than it can for the rest of the catalog. The control that does not depend on spelling is the structural one: `session_key` is not writable through MCP `cron_update` or the dashboard `PATCH` at all.
+
+Ownership and delivery do not have the same reach. A job can be owned by any session namespace -- a Slack or Telegram session can own and manage one -- but only a `dashboard:` key resolves to a slot results are injected into, so adopting into another namespace transfers management without delivery, and the command says so.
+
+If the key names no recorded session the command still succeeds but warns: a brand-new tab that has logged nothing yet is a legitimate target (delivery resolves a live slot first), so the unknown case cannot be refused — but a typo would otherwise leave the job delivering to nobody, which is the state this command exists to undo.
+
+## Reliability
+
+- **Failure alerts** — a failed run delivers its REASON to the dashboard bell and (when Slack is configured) to the job's channel or the owner's DM, not only to the gateway log. Covers all three job kinds and a fire-time policy denial, which is otherwise invisible.
+- **Failure dedup** — a repeat of the same reason withholds the Slack DM and marks the bell as suppressed; a different reason alerts in full, and the DM returns after an hour. A `silent: true` job alerts nowhere. Both still count toward auto-pause: dedup silences the DM, never the evidence. Success clears the failure state, so a relapse alerts fresh.
+- **Alert threshold** — `alert_after_failures` (default 1) is how many failed runs in a row it takes before the failure message is sent; earlier failures only ring the dashboard bell. A policy denial and the run that auto-pauses the job always alert. Set to 2, a 10-minute watcher with a one-off failure pages nobody; `silent` is not the tool for that, since it also hides the job's results.
+- **Zombie reaper** — a periodic sweep (every 60s) force-kills a cron execution that runs past its deadline. The deadline is per job: its `timeout_secs`, capped at 24 hours and never below 30 minutes, and for a `script` or `command` job also the time it may spend in the run queue, the fire-time gate and the claim-time vet before its own code starts. Prevents resource leaks from stuck jobs. When the kill cannot be delivered or confirmed, the run's `last_error` ends `; kill failed: <reason>` and its audit outcome is `failed`. Cancelling a run behaves the same.

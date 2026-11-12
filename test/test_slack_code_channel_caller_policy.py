@@ -15,8 +15,8 @@ from slack_code_channel_surface_helpers import (  # noqa: F401 - fixtures by nam
     env_fixture,
 )
 
-from kiro_crew.platform import governance_profiles
-from kiro_crew.slack.code_channels import tools
+from aj_crew.platform import governance_profiles
+from aj_crew.slack.code_channels import tools
 
 
 @pytest.fixture(name="denied")

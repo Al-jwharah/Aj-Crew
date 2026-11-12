@@ -13,9 +13,9 @@ from contextlib import ExitStack, asynccontextmanager
 from typing import Any, AsyncIterator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.cron import CronJob
-from kiro_crew.slack import gateway as gw
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.cron import CronJob
+from aj_crew.slack import gateway as gw
 
 
 def _make_orchestrator(**kwargs: Any) -> Any:
@@ -24,8 +24,8 @@ def _make_orchestrator(**kwargs: Any) -> Any:
     Returned as ``Any`` on purpose: every test below swaps real collaborators
     for mocks, which do not satisfy the declared attribute types.
     """
-    cfg = KiroCrewConfig()
-    creds = {"KIROCREW_OWNER_ID": "U_OWNER"}
+    cfg = AjCrewConfig()
+    creds = {"AJCREW_OWNER_ID": "U_OWNER"}
     with patch.object(cfg, "load_credentials", return_value=creds):
         return gw.GatewayOrchestrator(
             cfg,
@@ -140,7 +140,7 @@ async def _cron_cb(
             patch.object(
                 gw, "build_cron_session_context", lambda job: (f"cron:{job.id}", job.message)
             ),
-            patch("kiro_crew.apps.bridges.reconcile_app_crons_for_execution", AsyncMock()),
+            patch("aj_crew.apps.bridges.reconcile_app_crons_for_execution", AsyncMock()),
         ):
             stack.enter_context(patcher)
         if queue_hook is not None:

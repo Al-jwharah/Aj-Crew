@@ -3,7 +3,7 @@
 The channel endpoint answers "no destination here" as
 ``{"ok": true, "delivered": false, "skipped": "<reason>"}`` — a closed reason
 vocabulary it computes, audits and serializes
-(:mod:`kiro_crew.dashboard.upload_destination`). Reading only ``delivered`` and
+(:mod:`aj_crew.dashboard.upload_destination`). Reading only ``delivered`` and
 ``error`` returns a bare ``File sent:`` for every skip, so the
 caller cannot tell a delivery from a dashboard-only copy.
 
@@ -17,8 +17,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import mcp_core
-from kiro_crew.mcp_tools.messaging import file_send
+from aj_crew import mcp_core
+from aj_crew.mcp_tools.messaging import file_send
 
 #: The reason codes ``upload_destination`` can return, as the tool sees them.
 #: Only a missing DESTINATION earns the inline-route remedy.
@@ -46,7 +46,7 @@ def _describe() -> object:
     production change is reverted — an import error proves nothing, while a
     failing assertion proves the tests catch the regression.
     """
-    from kiro_crew.mcp_tools.messaging import _describe_channel_skip
+    from aj_crew.mcp_tools.messaging import _describe_channel_skip
 
     return _describe_channel_skip
 
@@ -113,13 +113,13 @@ class TestFileSendSurfacesTheSkip:
 
         ``file_send`` really copies the file to ``outbox_dir()``, which resolves
         through ``workspace_root()`` and falls back to
-        ``Path.home() / "workplace"`` when ``KIROCREW_WORKSPACE`` is unset — no
+        ``Path.home() / "workplace"`` when ``AJCREW_WORKSPACE`` is unset — no
         conftest fixture isolates that one. Unpinned, every run of this file drops
         an accumulating copy into the operator's real outbox, because
         ``dest.open("xb")`` uniquifies on collision instead of overwriting.
         Autouse rather than per-test so a case added later cannot forget it.
         """
-        monkeypatch.setenv("KIROCREW_WORKSPACE", str(tmp_path / "ws"))
+        monkeypatch.setenv("AJCREW_WORKSPACE", str(tmp_path / "ws"))
         self._outbox = tmp_path / "ws" / "outbox"
 
     def _call(self, tmp_path, channel_response):
@@ -196,7 +196,7 @@ class TestSlackLegSurfacesItsSkipToo:
 
     @pytest.fixture(autouse=True)
     def _isolated_workspace(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_WORKSPACE", str(tmp_path / "ws"))
+        monkeypatch.setenv("AJCREW_WORKSPACE", str(tmp_path / "ws"))
 
     def _call(self, tmp_path, slack_response, *, channel_response=None, identity=("owner", None)):
         src = tmp_path / "chart.txt"
@@ -283,7 +283,7 @@ class TestToolDescriptionMatchesBehaviour:
         """The description is the only thing a fresh caller reads before
         choosing this tool, so it must name the inline route and the fact that
         native delivery can be skipped."""
-        from kiro_crew.mcp_tools.messaging import schemas
+        from aj_crew.mcp_tools.messaging import schemas
 
         spec = next(s for s in schemas() if s["name"] == "file_send")
         desc = spec["description"]
@@ -295,8 +295,8 @@ class TestToolDescriptionMatchesBehaviour:
         description must not promise "any file" and must name every category
         the allowlist admits -- otherwise a caller builds a zip and only learns
         from the refusal that it cannot be sent."""
-        from kiro_crew.mcp_tools.messaging import schemas
-        from kiro_crew.security import BINARY_MIME_ALLOWLIST
+        from aj_crew.mcp_tools.messaging import schemas
+        from aj_crew.security import BINARY_MIME_ALLOWLIST
 
         desc = next(s for s in schemas() if s["name"] == "file_send")["description"]
         assert "any file" not in desc
@@ -307,7 +307,7 @@ class TestToolDescriptionMatchesBehaviour:
             assert category.lower() in desc.lower(), mime
 
     def test_the_description_does_not_claim_slack_delivery_is_dashboard_only(self) -> None:
-        from kiro_crew.mcp_tools.messaging import schemas
+        from aj_crew.mcp_tools.messaging import schemas
 
         desc = next(s for s in schemas() if s["name"] == "file_send")["description"]
         assert "only from the dashboard" not in desc

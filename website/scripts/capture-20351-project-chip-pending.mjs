@@ -22,7 +22,7 @@ import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 const OUT = process.argv[2] || '../temp-screenshots/20351-project-chip-pending'
 const LABEL = process.argv[3] || 'after'
 const SLOT = 'chat-project-pending'
-const START = '/home/user/workspace/KiroCrew'
+const START = '/home/user/workspace/AjCrew'
 const NEXT = '/home/user/workspace/website-docs'
 const FAIL = '/home/user/workspace/old-notes'
 
@@ -35,7 +35,7 @@ async function run(base, width, height, tag) {
   let project = START
   const held = []
   const slots = () => [{
-    key: SLOT, title: 'Tidy the docs folder', running: false, messages: 2, agent: 'kirocrew',
+    key: SLOT, title: 'Tidy the docs folder', running: false, messages: 2, agent: 'ajcrew',
     memory_mode: 'persistent', project, modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
   }]
   const detail = () => ({

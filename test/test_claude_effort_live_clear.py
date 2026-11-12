@@ -17,8 +17,8 @@ from acp_frame_replay_harness import read_fixture
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.acp.types import (
+from aj_crew.acp.client import AcpError
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KIRO,
@@ -26,16 +26,16 @@ from kiro_crew.acp.types import (
     ACP_BACKENDS_KNOWN,
     effort_config_option_clear_value,
 )
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.agent_sdk.backends import (
     EFFORT_CONFIG_OPTION_CLEAR_VALUES,
     EFFORT_CONFIG_OPTION_NO_OVERRIDE_VALUES,
     effort_config_option_id,
     effort_config_option_levels,
 )
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.dashboard.chat import api_chat_slot_reasoning_effort
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.config import AjCrewConfig
+from aj_crew.dashboard.chat import api_chat_slot_reasoning_effort
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.providers.acp import AcpProvider
 
 _CAPTURE = Path(__file__).parent / "fixtures" / "acp_frames" / "claude" / "effort-clear-live.jsonl"
 _MODEL = "claude-opus-4.7"
@@ -62,7 +62,7 @@ def _captured_levels() -> list[str]:
 
 
 def _provider(backend: str, levels: list[str]) -> AcpProvider:
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider(acp_backend=backend)
     provider._client = MagicMock()
     provider._client.backend = backend
@@ -181,11 +181,11 @@ async def test_a_refused_slot_clear_puts_every_model_level_back():
 def test_the_factory_hands_the_inherited_level_only_to_a_clear_value_harness(
     tmp_path, backend, expected
 ):
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.provider = "acp"
     cfg.agent.acp_backend = backend
     cfg.agent.reasoning_effort = "low"
-    with patch("kiro_crew.providers.acp.AcpProvider") as mock_provider:
+    with patch("aj_crew.providers.acp.AcpProvider") as mock_provider:
         mock_provider.return_value = MagicMock()
         cfg.create_provider_factory()(
             cwd=str(tmp_path),

@@ -27,8 +27,8 @@ from builtin_adoption_helpers import (
     write_tree,
 )
 
-from kiro_crew.apps.builtin_adoption_mcp import adopted_mcp_servers_refusal, tree_owned_launch
-from kiro_crew.apps.manifest import AppManifest
+from aj_crew.apps.builtin_adoption_mcp import adopted_mcp_servers_refusal, tree_owned_launch
+from aj_crew.apps.manifest import AppManifest
 
 LAUNCHER = "backend/mcp_launch.py"
 SERVER = "srv"
@@ -37,7 +37,7 @@ TOOLS = ["get_status", "list_items"]
 #: The wheel built-in's declaration: its server runs the wheel package by module.
 WHEEL_SERVER = {
     "command": "python3",
-    "args": ["-m", f"kiro_crew.apps.builtins.{PACKAGE}.backend.mcp_server"],
+    "args": ["-m", f"aj_crew.apps.builtins.{PACKAGE}.backend.mcp_server"],
     "autoApprove": TOOLS,
 }
 #: The repository copy's: the same server, started from the app's own launcher.
@@ -152,7 +152,7 @@ def test_without_a_wheel_declaration_every_server_is_refused(tmp_path, wheel):
 
 #: Launches that run code the pinned tree does not hold, each refused.
 _FOREIGN_LAUNCHES = [
-    {"command": "python3", "args": ["-m", "kiro_crew.apps.builtins.x.mcp_server"]},
+    {"command": "python3", "args": ["-m", "aj_crew.apps.builtins.x.mcp_server"]},
     {"command": "python3", "args": ["-mserver"]},
     {"command": "python3", "args": ["-c", "import server"]},
     {"command": "python3", "args": ["../outside.py"]},
@@ -161,7 +161,7 @@ _FOREIGN_LAUNCHES = [
     {"command": "python3", "args": ["backend/mcp_launch.sh"]},
     {"command": "python3", "args": []},
     {"command": "node", "args": [LAUNCHER]},
-    {"command": "kirocrew", "args": ["mcp-server"]},
+    {"command": "ajcrew", "args": ["mcp-server"]},
     {"command": "./bin/python3", "args": [LAUNCHER]},
     {"command": "python3", "args": "backend/mcp_launch.py"},
 ]
@@ -205,7 +205,7 @@ def test_the_check_accepts_exactly_what_registration_anchors_in_the_root(
     tmp_path, launch, accepted
 ):
     """One predicate: an accepted launch registers inside the root, a refused one does not."""
-    from kiro_crew.apps.bridges import resolve_stdio_command
+    from aj_crew.apps.bridges import resolve_stdio_command
 
     _manifest, root = _tree(tmp_path, {}, files=(LAUNCHER, "backend/mcp_launch.sh"))
     (tmp_path / "outside.py").write_text("print('not the app')\n", encoding="utf-8")
@@ -229,8 +229,8 @@ def test_pinned_tree_refusal_reads_the_wheel_declaration(tmp_path):
     """E10 is wired through the tree check STAGE and APPLY both run."""
     from builtin_adoption_helpers import pin_row, repository_manifest
 
-    from kiro_crew.apps.builtin_adoption_checks import pinned_tree_refusal
-    from kiro_crew.apps.builtin_adoption_pins import parse_adoption_pins
+    from aj_crew.apps.builtin_adoption_checks import pinned_tree_refusal
+    from aj_crew.apps.builtin_adoption_pins import parse_adoption_pins
 
     pin = parse_adoption_pins(
         {"schemaVersion": 1, "pins": [pin_row("a" * 40, "b" * 64, "c" * 64)]}
@@ -254,11 +254,11 @@ def test_pinned_tree_refusal_reads_the_wheel_declaration(tmp_path):
 @requires_git
 @pytest.mark.asyncio
 async def test_an_adopted_record_registers_its_server_from_the_adopted_tree(tmp_path, monkeypatch):
-    import kiro_crew.apps.bridges as bridges
-    import kiro_crew.sel as sel_mod
-    from kiro_crew.apps import builtin_adoption as adoption
-    from kiro_crew.apps import manager
-    from kiro_crew.config.loader import _invalidate_config_cache
+    import aj_crew.apps.bridges as bridges
+    import aj_crew.sel as sel_mod
+    from aj_crew.apps import builtin_adoption as adoption
+    from aj_crew.apps import manager
+    from aj_crew.config.loader import _invalidate_config_cache
 
     monkeypatch.setattr(
         sel_mod, "sel", lambda: types.SimpleNamespace(log_api_access=lambda **_kw: None)
@@ -273,7 +273,7 @@ async def test_an_adopted_record_registers_its_server_from_the_adopted_tree(tmp_
     )
     write_builtin_record(manifest=wheel)
     _invalidate_config_cache()
-    mcp_path = tmp_path / "kirocrew.json"
+    mcp_path = tmp_path / "ajcrew.json"
     monkeypatch.setattr(bridges, "_mcp_json_path", lambda: mcp_path)
 
     key = f"{NAME}:{SERVER}"
@@ -283,7 +283,7 @@ async def test_an_adopted_record_registers_its_server_from_the_adopted_tree(tmp_
         return json.loads(mcp_path.read_text(encoding="utf-8"))["mcpServers"][key]
 
     before = registered()
-    assert f"kiro_crew.apps.builtins.{PACKAGE}.backend.mcp_server" in before["args"], before
+    assert f"aj_crew.apps.builtins.{PACKAGE}.backend.mcp_server" in before["args"], before
 
     now = datetime(2026, 1, 1, tzinfo=timezone.utc)
     assert await adoption.run_staging_pass(now=lambda: now) == {NAME: "staged"}
@@ -292,7 +292,7 @@ async def test_an_adopted_record_registers_its_server_from_the_adopted_tree(tmp_
     after = registered()
     launcher = os.path.realpath(manager.app_dir(NAME) / LAUNCHER)
     assert launcher in after["args"], after
-    assert not any("kiro_crew.apps.builtins" in str(arg) for arg in after["args"]), after
+    assert not any("aj_crew.apps.builtins" in str(arg) for arg in after["args"]), after
     assert after["command"] == before["command"], "the gateway's own interpreter, as before"
     assert after.get("autoApprove") == before.get("autoApprove")
     assert after.get("env") == before.get("env")

@@ -2,10 +2,10 @@
 
 Two symptoms, one cause. ``_trusted_bin`` fails closed on anything under
 ``$HOME`` — correct for ``git``/``gh``, which run in the credential-bearing
-tier — but Kiro Crew's own installer puts node under ``$HOME``, so:
+tier — but Aj Crew's own installer puts node under ``$HOME``, so:
 
 * Dev Fleet "Pull + build main" answered ``no trusted executable for 'npm'``;
-* ``kirocrew pod provision`` raised an unhandled ``FileNotFoundError: 'npm'``.
+* ``ajcrew pod provision`` raised an unhandled ``FileNotFoundError: 'npm'``.
 
 The fix gives the node toolchain its own resolution tier. These tests pin the
 security boundary that makes that safe: the toolchain dirs reach the
@@ -23,7 +23,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.apps.builtins.dev_fleet import (
+from aj_crew.apps.builtins.dev_fleet import (
     fleet_state,
     http_api,
     live,
@@ -38,7 +38,7 @@ from kiro_crew.apps.builtins.dev_fleet import (
     worktree_ops_removal,
     worktree_ops_sync,
 )
-from kiro_crew.pod import provision as prov
+from aj_crew.pod import provision as prov
 
 _DEV_FLEET_MODULES = (
     runtime,
@@ -240,7 +240,7 @@ def test_npm_not_found_message_separates_the_two_remedies():
 
 # --- npm resolution for Pull + build ---
 def test_toolchain_bin_finds_a_home_resident_npm(node_dir):
-    """The exact case _trusted_bin rejects, and the one Kiro Crew's own
+    """The exact case _trusted_bin rejects, and the one Aj Crew's own
     installer creates."""
     with (
         patch.object(runtime, "find_node_tool", return_value=str(node_dir / "npm")),
@@ -296,7 +296,7 @@ def test_toolchain_bin_searches_the_trusted_path_as_its_base(tmp_path, monkeypat
     trusted = tmp_path / "trusted"
     trusted.mkdir()
     monkeypatch.setenv("PATH", str(planted))
-    monkeypatch.setattr("kiro_crew.env.node_bin_dirs", lambda: [])
+    monkeypatch.setattr("aj_crew.env.node_bin_dirs", lambda: [])
     with (
         patch.object(runtime, "_TRUSTED_PATH", str(trusted)),
         patch.object(runtime, "_trusted_bin", return_value=None),
@@ -357,7 +357,7 @@ def test_provision_reports_a_remedy_instead_of_raising(tmp_path, monkeypatch, ca
     err = capsys.readouterr().err
     assert "npm not found" in err
     assert "ensure-node.sh" in err
-    assert "KIROCREW_NODE_BIN_DIR" in err
+    assert "AJCREW_NODE_BIN_DIR" in err
 
 
 def test_build_dist_bails_out_when_npm_is_unresolvable(tmp_path, monkeypatch):

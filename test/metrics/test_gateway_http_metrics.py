@@ -1,9 +1,9 @@
 """Tests for the privacy-safe, bounded-cardinality gateway HTTP metrics (rec #1).
 
-Covers ``kiro_crew.metrics.http_metrics``:
+Covers ``aj_crew.metrics.http_metrics``:
 
-* ``kirocrew.gateway.boot.duration``   — boot-to-ready histogram
-* ``kirocrew.gateway.request.duration`` — per-route latency histogram
+* ``ajcrew.gateway.boot.duration``   — boot-to-ready histogram
+* ``ajcrew.gateway.request.duration`` — per-route latency histogram
 
 The headline guarantee under test is BOUNDED CARDINALITY: no concrete path,
 id, query string, or body ever becomes a metric label. The per-route label is
@@ -22,7 +22,7 @@ import pytest
 from aiohttp import ClientPayloadError, web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.metrics.http_metrics import (
+from aj_crew.metrics.http_metrics import (
     BOOT_METRIC,
     REQUEST_METRIC,
     UNKNOWN_ROUTE,
@@ -162,7 +162,7 @@ class TestBootToReady:
     def test_emits_histogram_with_privacy_safe_labels(self):
         rec = _CapturingRecorder()
         with patch(
-            "kiro_crew.metrics.http_metrics.get_recorder", return_value=rec
+            "aj_crew.metrics.http_metrics.get_recorder", return_value=rec
         ):
             record_boot_to_ready(1234.5, server="dashboard")
         assert rec.histograms == [
@@ -172,7 +172,7 @@ class TestBootToReady:
     def test_api_server_label(self):
         rec = _CapturingRecorder()
         with patch(
-            "kiro_crew.metrics.http_metrics.get_recorder", return_value=rec
+            "aj_crew.metrics.http_metrics.get_recorder", return_value=rec
         ):
             record_boot_to_ready(50.0, server="api", outcome="ready")
         assert rec.histograms[0][3]["server"] == "api"
@@ -180,7 +180,7 @@ class TestBootToReady:
     def test_negative_and_none_skip(self):
         rec = _CapturingRecorder()
         with patch(
-            "kiro_crew.metrics.http_metrics.get_recorder", return_value=rec
+            "aj_crew.metrics.http_metrics.get_recorder", return_value=rec
         ):
             record_boot_to_ready(-1.0, server="dashboard")
             record_boot_to_ready(None, server="dashboard")  # type: ignore[arg-type]
@@ -190,12 +190,12 @@ class TestBootToReady:
         boom = MagicMock()
         boom.histogram.side_effect = RuntimeError("telemetry down")
         with patch(
-            "kiro_crew.metrics.http_metrics.get_recorder", return_value=boom
-        ), caplog.at_level(logging.DEBUG, logger="kiro_crew.metrics.http_metrics"):
+            "aj_crew.metrics.http_metrics.get_recorder", return_value=boom
+        ), caplog.at_level(logging.DEBUG, logger="aj_crew.metrics.http_metrics"):
             # Must not raise.
             record_boot_to_ready(10.0, server="dashboard")
         logged = [
-            r.getMessage() for r in caplog.records if r.name == "kiro_crew.metrics.http_metrics"
+            r.getMessage() for r in caplog.records if r.name == "aj_crew.metrics.http_metrics"
         ]
         assert logged == ["record_boot_to_ready failed"]
 
@@ -262,7 +262,7 @@ def _build_app(rec):
 @pytest.mark.asyncio
 async def test_middleware_records_template_not_concrete_path():
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.http_metrics.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.http_metrics.get_recorder", return_value=rec):
         app = _build_app(rec)
         async with TestClient(TestServer(app)) as client:
             resp = await client.get("/api/items/abc123")
@@ -284,7 +284,7 @@ async def test_middleware_records_template_not_concrete_path():
 @pytest.mark.asyncio
 async def test_middleware_unmatched_path_is_sentinel():
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.http_metrics.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.http_metrics.get_recorder", return_value=rec):
         app = _build_app(rec)
         async with TestClient(TestServer(app)) as client:
             resp = await client.get("/totally/unknown/42")
@@ -299,7 +299,7 @@ async def test_middleware_unmatched_path_is_sentinel():
 @pytest.mark.asyncio
 async def test_middleware_handler_error_records_5xx_and_propagates():
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.http_metrics.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.http_metrics.get_recorder", return_value=rec):
         app = _build_app(rec)
         async with TestClient(TestServer(app)) as client:
             resp = await client.get("/api/boom")
@@ -315,7 +315,7 @@ async def test_middleware_handler_error_records_5xx_and_propagates():
 @pytest.mark.asyncio
 async def test_middleware_excludes_websocket_connection_lifetime():
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.http_metrics.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.http_metrics.get_recorder", return_value=rec):
         app = _build_app(rec)
         async with TestClient(TestServer(app)) as client:
             websocket = await client.ws_connect("/api/ws")
@@ -327,7 +327,7 @@ async def test_middleware_excludes_websocket_connection_lifetime():
 @pytest.mark.asyncio
 async def test_middleware_excludes_sse_stream_lifetime():
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.http_metrics.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.http_metrics.get_recorder", return_value=rec):
         app = _build_app(rec)
         async with TestClient(TestServer(app)) as client:
             response = await client.get("/api/events")
@@ -341,7 +341,7 @@ async def test_middleware_excludes_sse_stream_lifetime():
 @pytest.mark.asyncio
 async def test_middleware_excludes_sse_lifetime_when_handler_raises():
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.http_metrics.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.http_metrics.get_recorder", return_value=rec):
         app = _build_app(rec)
         async with TestClient(TestServer(app)) as client:
             response = await client.get("/api/events-error")
@@ -357,7 +357,7 @@ async def test_middleware_excludes_sse_lifetime_when_handler_raises():
 async def test_telemetry_failure_never_breaks_request():
     boom = MagicMock()
     boom.histogram.side_effect = RuntimeError("telemetry down")
-    with patch("kiro_crew.metrics.http_metrics.get_recorder", return_value=boom):
+    with patch("aj_crew.metrics.http_metrics.get_recorder", return_value=boom):
         app = _build_app(None)
         async with TestClient(TestServer(app)) as client:
             resp = await client.get("/api/health")
@@ -379,14 +379,14 @@ async def test_bounded_cardinality_under_many_distinct_ids():
     from opentelemetry.sdk.metrics import MeterProvider
     from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
-    from kiro_crew.metrics.recorder import MetricsRecorder
+    from aj_crew.metrics.recorder import MetricsRecorder
 
     reader = InMemoryMetricReader()
     provider = MeterProvider(metric_readers=[reader])
     real_recorder = MetricsRecorder(provider.get_meter("test"))
 
     with patch(
-        "kiro_crew.metrics.http_metrics.get_recorder", return_value=real_recorder
+        "aj_crew.metrics.http_metrics.get_recorder", return_value=real_recorder
     ):
         app = _build_app(None)
         async with TestClient(TestServer(app)) as client:
@@ -425,7 +425,7 @@ async def test_bounded_cardinality_under_many_distinct_ids():
 def test_server_module_wires_http_metrics():
     """Regression guard: server.py must import both helpers so the middleware
     and boot metric stay wired into the gateway."""
-    import kiro_crew.dashboard.server as srv
+    import aj_crew.dashboard.server as srv
 
     assert hasattr(srv, "make_route_latency_middleware")
     assert hasattr(srv, "record_boot_to_ready")

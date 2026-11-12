@@ -21,9 +21,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from source_corpus import parsed_candidates, src_root
 
-from kiro_crew import model_registry as mr
-from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX, ACP_BACKEND_KIRO
-from kiro_crew.config.loader import AgentConfig, KiroCrewConfig, resolve_effective_model
+from aj_crew import model_registry as mr
+from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX, ACP_BACKEND_KIRO
+from aj_crew.config.loader import AgentConfig, AjCrewConfig, resolve_effective_model
 
 CLAUDE_SERVES = ["claude-opus-5[1m]", "claude-sonnet-4-6[1m]"]
 CODEX_SERVES = ["openai.gpt-5.6-sol[low]", "openai.gpt-5.4[xhigh]"]
@@ -41,14 +41,14 @@ def both_warm(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-def _cfg(backend: str, model: str) -> KiroCrewConfig:
+def _cfg(backend: str, model: str) -> AjCrewConfig:
     """A config resolved without reading the installed agents dir.
 
     ``model`` is written straight onto ``AgentConfig`` so the global is already
     collapsed: ``_resolve_agent_model`` (which reads ``~/.kiro/agents``) is only
     consulted for the ``auto`` sentinel.
     """
-    return KiroCrewConfig(agent=AgentConfig(acp_backend=backend, model=model))
+    return AjCrewConfig(agent=AgentConfig(acp_backend=backend, model=model))
 
 
 class TestTheFactorySelection:
@@ -93,8 +93,8 @@ class TestTheFactorySelection:
         namespace resolved empty would reintroduce the ambiguity, so it must be
         given a namespace rather than left to default.
         """
-        from kiro_crew.acp_backends import ACP_BACKENDS_KNOWN
-        from kiro_crew.agent_sdk.capabilities import capabilities_for
+        from aj_crew.acp_backends import ACP_BACKENDS_KNOWN
+        from aj_crew.agent_sdk.capabilities import capabilities_for
 
         candidates = sorted(set(ACP_BACKENDS_KNOWN) | {""})
         empty = [b for b in candidates if not capabilities_for(b).model_id_namespace]
@@ -107,7 +107,7 @@ class TestTheFactorySelection:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A member session may run kiro while configuration selects Claude Code."""
-        from kiro_crew import model_scope
+        from aj_crew import model_scope
 
         observed: list[str] = []
 
@@ -186,10 +186,10 @@ class TestTheDisplayResolver:
     def test_the_chip_scopes_a_foreign_pin_at_debug(
         self, both_warm: None, caplog: pytest.LogCaptureFixture
     ) -> None:
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.model_scope"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.model_scope"):
             assert resolve_effective_model(_cfg(ACP_BACKEND_CODEX, CLAUDE_PIN), None) == ""
 
-        records = [r for r in caplog.records if r.name == "kiro_crew.model_scope"]
+        records = [r for r in caplog.records if r.name == "aj_crew.model_scope"]
         assert records and all(r.levelno == logging.DEBUG for r in records)
 
     def test_the_chip_and_the_factory_agree(self, both_warm: None) -> None:
@@ -211,7 +211,7 @@ class TestTheClientHandshake:
 
     @staticmethod
     def _client(backend: str, model: str, advertised: list[str]):
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = AcpClient()
         client._session_id = "sess-1"
@@ -245,7 +245,7 @@ class TestTheClientHandshake:
         would leave that line in place, so the absence of a WARNING is asserted
         as directly as the absence of a request.
         """
-        from kiro_crew.acp.client import DEFAULT_MODEL
+        from aj_crew.acp.client import DEFAULT_MODEL
 
         client = self._client(ACP_BACKEND_CODEX, CLAUDE_PIN, CODEX_SERVES)
         client._resolved_model_id = "openai.gpt-5.6-sol[low]"
@@ -274,7 +274,7 @@ class TestTheClientHandshake:
     async def test_an_alias_pin_is_scoped_before_wire_translation(
         self, caplog: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.acp.client import DEFAULT_MODEL
+        from aj_crew.acp.client import DEFAULT_MODEL
 
         alias = "claude-haiku-4.5"
         substitute = "claude-sonnet-4-6[1m]"
@@ -291,7 +291,7 @@ class TestTheClientHandshake:
 
         with (
             patch(
-                "kiro_crew.acp.client.model_registry.resolve_wire_model_id", return_value=substitute
+                "aj_crew.acp.client.model_registry.resolve_wire_model_id", return_value=substitute
             ),
             caplog.at_level(logging.DEBUG),
         ):
@@ -306,7 +306,7 @@ class TestTheClientHandshake:
     async def test_a_foreign_pin_entering_kiro_uses_the_live_list(
         self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.acp.client import DEFAULT_MODEL
+        from aj_crew.acp.client import DEFAULT_MODEL
 
         monkeypatch.setattr(mr, "_ADVERTISED_MODELS", {"codex": list(CODEX_SERVES)})
         kiro_serves = ["claude-opus-4.8"]
@@ -353,11 +353,11 @@ class TestTheClientHandshake:
 class TestTheProviderRuntimeScope:
     @staticmethod
     def _provider(model: str):
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = AcpProvider(model=model, acp_backend=ACP_BACKEND_CODEX)
         provider._client._work_dir = "/tmp/ws"
-        provider._client._agent = "kirocrew"
+        provider._client._agent = "ajcrew"
         provider._client._resume_session_id = ""
         return provider
 
@@ -376,9 +376,9 @@ class TestTheProviderRuntimeScope:
         runtime.create_session = AsyncMock(return_value=handle)
 
         with (
-            patch("kiro_crew.providers.acp.AcpRuntime", return_value=runtime),
+            patch("aj_crew.providers.acp.AcpRuntime", return_value=runtime),
             patch(
-                "kiro_crew.providers.acp.AcpSessionProvider",
+                "aj_crew.providers.acp.AcpSessionProvider",
                 side_effect=lambda h, r, **kw: MagicMock(_handle=h, _runtime=r, resumed=False),
             ),
             patch("pathlib.Path.exists", return_value=False),
@@ -403,12 +403,12 @@ class TestTheWarmPoolClaim:
     async def test_a_foreign_pin_logs_info_without_an_entitlement_warning(
         self, both_warm: None, caplog: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.providers.acp import AcpProvider
-        from kiro_crew.session import SessionManager
+        from aj_crew.providers.acp import AcpProvider
+        from aj_crew.session import SessionManager
 
         cfg = MagicMock()
         cfg.session.pool_size = 2
-        cfg.session.pool_agent = "kirocrew"
+        cfg.session.pool_agent = "ajcrew"
         cfg.session.pool_ttl_secs = 1800
         cfg.session.timeout_secs = 3600
         cfg.agent.default_agent = ""
@@ -449,12 +449,12 @@ class TestTheWarmPoolClaim:
     async def test_an_alias_pin_is_not_translated_before_scoping(
         self, both_warm: None, caplog: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.providers.acp import AcpProvider
-        from kiro_crew.session import SessionManager
+        from aj_crew.providers.acp import AcpProvider
+        from aj_crew.session import SessionManager
 
         cfg = MagicMock()
         cfg.session.pool_size = 2
-        cfg.session.pool_agent = "kirocrew"
+        cfg.session.pool_agent = "ajcrew"
         cfg.session.pool_ttl_secs = 1800
         cfg.session.timeout_secs = 3600
         cfg.agent.default_agent = ""
@@ -634,7 +634,7 @@ class TestScopeSeesTheUntranslatedPin:
         )
 
     def test_attribute_flow_is_detected(self, tmp_path: Path) -> None:
-        source_root = tmp_path / "src" / "kiro_crew"
+        source_root = tmp_path / "src" / "aj_crew"
         source_root.mkdir(parents=True)
         (source_root / "example.py").write_text(
             "class Client:\n"
@@ -645,7 +645,7 @@ class TestScopeSeesTheUntranslatedPin:
         )
 
         assert _translated_pin_sites(source_root) == [
-            ("src/kiro_crew/example.py", "Client.apply", "self.model")
+            ("src/aj_crew/example.py", "Client.apply", "self.model")
         ]
 
 
@@ -654,13 +654,13 @@ class TestThePickerDefault:
 
     def test_a_foreign_pin_is_not_offered_as_this_harness_default(self, both_warm: None) -> None:
         """Marking it would put an id the returned list omits into the selected slot."""
-        from kiro_crew.dashboard.handlers.agents import _scoped_default
+        from aj_crew.dashboard.handlers.agents import _scoped_default
 
         cfg = _cfg(ACP_BACKEND_CODEX, CLAUDE_PIN)
         assert _scoped_default(cfg, ACP_BACKEND_CODEX) == ""
 
     def test_the_harness_own_pin_is_offered(self, both_warm: None) -> None:
-        from kiro_crew.dashboard.handlers.agents import _scoped_default
+        from aj_crew.dashboard.handlers.agents import _scoped_default
 
         cfg = _cfg(ACP_BACKEND_CLAUDE, CLAUDE_PIN)
         assert _scoped_default(cfg, ACP_BACKEND_CLAUDE) == CLAUDE_PIN
@@ -668,12 +668,12 @@ class TestThePickerDefault:
     def test_the_picker_scopes_a_foreign_pin_at_debug(
         self, both_warm: None, caplog: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.dashboard.handlers.agents import _scoped_default
+        from aj_crew.dashboard.handlers.agents import _scoped_default
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.model_scope"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.model_scope"):
             assert _scoped_default(_cfg(ACP_BACKEND_CODEX, CLAUDE_PIN), ACP_BACKEND_CODEX) == ""
 
-        records = [r for r in caplog.records if r.name == "kiro_crew.model_scope"]
+        records = [r for r in caplog.records if r.name == "aj_crew.model_scope"]
         assert records and all(r.levelno == logging.DEBUG for r in records)
 
     def test_a_config_without_the_field_answers_empty(self, both_warm: None) -> None:
@@ -685,7 +685,7 @@ class TestThePickerDefault:
         """
         import types
 
-        from kiro_crew.dashboard.handlers.agents import _scoped_default
+        from aj_crew.dashboard.handlers.agents import _scoped_default
 
         cfg = types.SimpleNamespace(agent=types.SimpleNamespace(acp_backend=ACP_BACKEND_CODEX))
         assert _scoped_default(cfg, ACP_BACKEND_CODEX) == ""

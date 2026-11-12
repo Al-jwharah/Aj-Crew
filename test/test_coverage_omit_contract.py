@@ -58,7 +58,7 @@ SETUP_CFG = REPO_ROOT / "setup.cfg"
 #: ``test_agent_home_isolation.py`` fabricates under the system TMPDIR. Nothing real is
 #: ever measured from one, and a shard that recorded such a phantom path would otherwise
 #: trip ``coverage xml`` with "No source for code".
-_FIXTURE_ESCAPES = {"*/pytest-of-*/*", "*/kirocrew-wt-example/*", "*/.mount_*/*"}
+_FIXTURE_ESCAPES = {"*/pytest-of-*/*", "*/ajcrew-wt-example/*", "*/.mount_*/*"}
 
 #: The predicate a test file must carry to earn an omit: the guard that makes its tests
 #: skip where the capability is absent. Matched as source text so the check needs no
@@ -69,7 +69,7 @@ _CAPABILITY_GUARD = "userns_available"
 #: `test_sandbox_backend_cache.py` call `userns_available()` as the function under test,
 #: which is not the same thing as deferring to it.
 #: `.*?` and not `[^)]*`: the real guards read
-#: `skipif(not __import__('kiro_crew.sandbox', fromlist=['userns_available']).userns_available()`,
+#: `skipif(not __import__('aj_crew.sandbox', fromlist=['userns_available']).userns_available()`,
 #: whose argument list contains a `)` of its own. A character class that stopped there
 #: matched NONE of the six files and made the drift gate below silently vacuous -- caught
 #: by removing a suite from the job and watching the gate stay green.
@@ -280,7 +280,7 @@ def test_each_omit_pattern_resolves_to_exactly_one_file() -> None:
 def test_omit_patterns_do_not_swallow_product_code() -> None:
     """Fail-safe: no pattern may match a non-test source file.
 
-    A pattern like ``*/kiro_crew/*`` would omit all real source and turn the coverage
+    A pattern like ``*/aj_crew/*`` would omit all real source and turn the coverage
     gate green by measuring almost nothing. Assert every committed pattern is either a
     pytest-tmp fixture escape or targets a test file.
     """
@@ -296,7 +296,7 @@ def test_omit_patterns_do_not_swallow_product_code() -> None:
 
 def _capability_guarded_test_files() -> set[str]:
     """Repo-relative paths of every test file that DEFERS to the capability guard."""
-    roots = [REPO_ROOT / "test", REPO_ROOT / "src" / "kiro_crew" / "apps" / "builtins"]
+    roots = [REPO_ROOT / "test", REPO_ROOT / "src" / "aj_crew" / "apps" / "builtins"]
     found: set[str] = set()
     for root in roots:
         for path in root.rglob("test_*.py"):

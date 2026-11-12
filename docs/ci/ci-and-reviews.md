@@ -4,8 +4,8 @@ What runs on a pull request, what each gate is for, and how they fold into one
 verdict. The source of truth is `.github/workflows/`; this doc explains the
 shape and the rationale.
 
-The `kirocrew-prepare-pr` skill
-(`src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/SKILL.md`) is the agent
+The `ajcrew-prepare-pr` skill
+(`src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/SKILL.md`) is the agent
 side of this: it drives a working tree to review-ready by working with these
 gates. Its phase flow, exit-code contract and PR-description contract live in
 that skill, not here. Its portability design is
@@ -14,13 +14,13 @@ is [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ### Agent repair routing
 
-For Kiro Crew PR CI AI comments, agents MUST load and execute
-[kirocrew-prepare-pr's Review repair routing](../../src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/SKILL.md#review-repair-routing).
+For Aj Crew PR CI AI comments, agents MUST load and execute
+[ajcrew-prepare-pr's Review repair routing](../../src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/SKILL.md#review-repair-routing).
 That section is the one canonical contract, and its table is the only place the
 repair-family preference order is written; this doc does not restate it, and
 `test/test_review_repair_routing_skill.py` pins that table on purpose because it
 records a requested execution policy. The reason for the policy lives in
-kirocrew-prepare-pr's `references/rationale.md`.
+ajcrew-prepare-pr's `references/rationale.md`.
 
 The boundaries that matter here: the preferences are prose, not CI models, config
 defaults or profile fields; the delegate implements, tests and self-reviews the
@@ -30,7 +30,7 @@ parent self-fix presented as delegation; a catalogue entry or accepted pin is no
 proof of service, so an unverified served model is reported as such. The CI
 workflows and the base-ref profile's read-only local reviewer semantics stay
 unchanged. Worktree-dev and babysit point to this contract; general monitoring
-does not depend on the Kiro Crew repository or on kirocrew-prepare-pr being installed.
+does not depend on the Aj Crew repository or on ajcrew-prepare-pr being installed.
 
 ### Runner and service failures are not code failures
 
@@ -523,7 +523,7 @@ The pin selects the minor series, not one patch release. Stdlib-only gates still
 need the project's supported grammar: Comment History, Loop-Bound Locks and Memory
 Store Seam parse repository source, including Python 3.12 f-strings. An older
 parser can reject valid source or silently miss findings. The repository-owned
-kirocrew-prepare-pr profile starts its repeated checks with a pure runtime preflight that
+ajcrew-prepare-pr profile starts its repeated checks with a pure runtime preflight that
 prints the active Python version and executable and rejects versions below the
 project's `>=3.12` floor. It does not install or replace an interpreter; activate a
 supported environment before running the checks. Local checks do not establish
@@ -553,7 +553,7 @@ See [oss-fork-boundaries](../system-specs/oss-fork-boundaries.md).
 |---|---|
 | `source-gates` | The fourteen stdlib-only gates in the step table below, run as consecutive steps of one job: one checkout, one pinned Python setup, and a few seconds of work per gate. One job rather than fourteen because, as separate jobs, ~70% of their job-seconds went to runner acquisition and checkout while each held a runner slot of its own on every push, and the two ratchet jobs beside it are the long pole of the run, so the sequence adds no wall clock to the verdict `await-fast-gate` and the fork reviewers wait on. Every gate step carries `if: ${{ !cancelled() }}`, so a red gate does not hide the gates after it: the job fails, and every failing gate is named in the same run |
 | `static-ratchets` | The seven source-only exact-set / exact-count ratchets (error codes, crew-log `exc_info` sites, PID readers, fleet-routing parity, security posture, backend cards, fold catalogue), run with `-n 4 --no-cov`. They also stay in the backend shards; this job only returns the verdict in about a minute instead of after a 20-40 min shard |
-| `flake-pattern-ratchet` | `test/test_flake_pattern_ratchet.py`, its detector and base-resolver self-tests first. Holds every test file a change touches to its own count of flake-shaped sites at the change's merge-base (see the [Determinism contract](../system-specs/common/testing-conventions.md#determinism-contract-read-this-first)). The ratchet also runs in the backend shards (depth-2 checkout), but that verdict arrives after a 20-40 min shard and a shard with an unreadable base warns `compared nothing` and passes. This job checks out depth 2 so the merge commit's first parent, the base this tree was merged onto, is readable to the ratchet's own resolver, answers in about a minute ahead of the matrix, and turns a `compared nothing` run into a red: a gate that compared nothing is not a pass. The job's last step, `scripts/net_strict_changed.py`, runs only the test files the change adds or changes with `KIROCREW_NET_STRICT=1` and writes any that reach past loopback to a report file under `$RUNNER_TEMP` (the step runs as the unprivileged user, which cannot write `$GITHUB_STEP_SUMMARY`); the next step publishes the file to the job summary under the runner identity. It is warn-only (`continue-on-error`), skips when no test file changed, ignores deleted files, and hands the file names to pytest as an argument list |
+| `flake-pattern-ratchet` | `test/test_flake_pattern_ratchet.py`, its detector and base-resolver self-tests first. Holds every test file a change touches to its own count of flake-shaped sites at the change's merge-base (see the [Determinism contract](../system-specs/common/testing-conventions.md#determinism-contract-read-this-first)). The ratchet also runs in the backend shards (depth-2 checkout), but that verdict arrives after a 20-40 min shard and a shard with an unreadable base warns `compared nothing` and passes. This job checks out depth 2 so the merge commit's first parent, the base this tree was merged onto, is readable to the ratchet's own resolver, answers in about a minute ahead of the matrix, and turns a `compared nothing` run into a red: a gate that compared nothing is not a pass. The job's last step, `scripts/net_strict_changed.py`, runs only the test files the change adds or changes with `AJCREW_NET_STRICT=1` and writes any that reach past loopback to a report file under `$RUNNER_TEMP` (the step runs as the unprivileged user, which cannot write `$GITHUB_STEP_SUMMARY`); the next step publishes the file to the job summary under the runner identity. It is warn-only (`continue-on-error`), skips when no test file changed, ignores deleted files, and hands the file names to pytest as an argument list |
 
 The gates `source-gates` runs, in step order. Each row names the script the step
 runs and what a red means; the step name in the run log is the gate's check
@@ -561,20 +561,20 @@ description.
 
 | Gate step | What it enforces |
 |---|---|
-| `vendor-manifest` | `scripts/verify_vendor_manifest.py`. Hashes every file under `src/kiro_crew/_vendor` against the committed `scripts/vendor_manifest.sha256` — the tree is excluded from semgrep and the AI reviewers' diff, so this checksum is its only content review. Hashing the ~26MB tree takes seconds, so it is always-on like every step of this job |
+| `vendor-manifest` | `scripts/verify_vendor_manifest.py`. Hashes every file under `src/aj_crew/_vendor` against the committed `scripts/vendor_manifest.sha256` — the tree is excluded from semgrep and the AI reviewers' diff, so this checksum is its only content review. Hashing the ~26MB tree takes seconds, so it is always-on like every step of this job |
 | `brand-lint` | `scripts/check_brand_name.py`, self-test first. Fails on a newly added line that joins the two words of the product name. Diff-scoped: the tree still carries thousands of pre-convention prose lines, so a whole-tree gate would charge that backlog to whoever pushed next; the whole-tree count is still printed as a non-failing report |
 | `comment-history-lint` | `scripts/check_comment_history.py`, self-test first. Fails when an added Python comment or docstring narrates change history (PR/issue ids, commit SHAs, dated incidents, review rounds, or past-tense change markers) instead of explaining current behavior. Diff-scoped; whole-tree runs report the backlog without enforcing it |
 | `focus-cue-lint` | `scripts/check_focus_cue.py`, self-test first. Fails when a change writes the `className` of an element that then has no visible focus cue. Diff-scoped for the same reason as `brand-lint`, and reports whole-tree |
-| `feature-map-lint` | `scripts/check_feature_map.py`, self-test first. Fails when a file is ADDED or DELETED under `website/src/pages/` or `src/kiro_crew/dashboard/handlers/`, or a `<Route>` entry arrives or leaves `website/src/App.tsx`, while `docs/feature-map/README.md` stays untouched. The blocking root AUTOSDE rule `feature-map-correctness` is the semantic half: it verifies changed rows against the code, rejects unrelated or cosmetic map churn, and checks that the map's net diff matches the PR's stated scope. Structural on purpose: an edit to an existing page changes a feature's behavior, which the map does not describe, so an edit-only diff never fires — a gate demanding a map review on every UI fix produces a map nobody reads. Fails OPEN on an unreadable diff, unlike the other gates here: this one guards a documentation habit, not an invariant a bad line carries into `main` forever |
+| `feature-map-lint` | `scripts/check_feature_map.py`, self-test first. Fails when a file is ADDED or DELETED under `website/src/pages/` or `src/aj_crew/dashboard/handlers/`, or a `<Route>` entry arrives or leaves `website/src/App.tsx`, while `docs/feature-map/README.md` stays untouched. The blocking root AUTOSDE rule `feature-map-correctness` is the semantic half: it verifies changed rows against the code, rejects unrelated or cosmetic map churn, and checks that the map's net diff matches the PR's stated scope. Structural on purpose: an edit to an existing page changes a feature's behavior, which the map does not describe, so an edit-only diff never fires — a gate demanding a map review on every UI fix produces a map nobody reads. Fails OPEN on an unreadable diff, unlike the other gates here: this one guards a documentation habit, not an invariant a bad line carries into `main` forever |
 | `changelog-history` | `scripts/check_changelog_history.py`, self-test first. Fails when a shipped `CHANGELOG.md` section loses lines. Every section already in that file describes software a user has installed, and it has been silently truncated once already — a commit titled "docs: add 0.3.0-insider.9 changelog" REPLACED the file (53 insertions, 322 deletions) and nothing noticed until the Releases page had gone nearly empty. One exemption: a release's section ported to `main` passes when `CHANGELOG.md` is the only changed path and the section is byte-identical to the one on `origin` at tag `vX.Y.Z`, or at `release/X.Y.0` while that tag does not exist yet (`docs/build/release.md` § Changelog) |
 | `decision-ledger-history` | `scripts/check_decisions_history.py`, self-test first. Fails when a file under `docs/decisions/` other than its README is deleted, renamed or edited: each file there records a decision a person on the team made, so a change to one silently rewrites what was decided. A change of mind is a new entry naming the one it supersedes, so the only legal diff in that directory is additions. The blocking root AUTOSDE rule `recorded-decisions-are-not-regressions` is the judgment half: it blocks a change to a label, placement or behaviour an entry records unless a superseding entry quoting a maintainer arrives with it |
-| `builtin-skill-scope` | `scripts/check_builtin_skill_scope.py`, self-test first. Fails on a marker for THIS repository (its GitHub slug, a `src/` checkout path, a test or workflow file) inside a skill body under `src/kiro_crew/builtin_skills/`, because those install on every machine and resolve for exactly one of them. The `kirocrew-dev/` family is exempt by directory, since this repository is its subject matter |
-| `loop-bound-locks` | `scripts/check_loop_bound_locks.py`, self-test first. Fails on any module-global `asyncio.Lock()`/`Event()`/`Queue()` declaration — those bind to the import-time (or first-use) event loop and raise `RuntimeError` when acquired from another loop (Python 3.10+). #4800 converted the tree to `kiro_crew.loop_lock.LoopBoundLock`; whole-tree, since the backlog is zero |
+| `builtin-skill-scope` | `scripts/check_builtin_skill_scope.py`, self-test first. Fails on a marker for THIS repository (its GitHub slug, a `src/` checkout path, a test or workflow file) inside a skill body under `src/aj_crew/builtin_skills/`, because those install on every machine and resolve for exactly one of them. The `ajcrew-dev/` family is exempt by directory, since this repository is its subject matter |
+| `loop-bound-locks` | `scripts/check_loop_bound_locks.py`, self-test first. Fails on any module-global `asyncio.Lock()`/`Event()`/`Queue()` declaration — those bind to the import-time (or first-use) event loop and raise `RuntimeError` when acquired from another loop (Python 3.10+). #4800 converted the tree to `aj_crew.loop_lock.LoopBoundLock`; whole-tree, since the backlog is zero |
 | `testpaths-coverage` | `scripts/check_testpaths_coverage.py`, self-test first. Fails on a `test_*.py` file outside the roots `setup.cfg` pins in `testpaths` — such a file is never collected, so it is green by omission and rots against the code it claims to cover (#6577 found twelve). Whole-tree, since the backlog is zero |
 | `cwd-relative-repo-reads` | `scripts/check_cwd_relative_repo_reads.py`, self-test first. Fails when a test reaches the repository through a bare relative literal: the read resolves against whatever directory the process started in, so launched from anywhere but the root it raises FileNotFoundError before a single assertion runs -- a failure that says nothing about the behaviour the test pins. Whole-tree, not diff-scoped: the backlog is zero, so there is nothing to charge to whoever pushes next. A file that changes directory itself is skipped, and a single access can carry a `# cwd-ok:` reason |
 | `harness-parity` | `scripts/check_harness_parity.py`, self-test first. Fails on a newly added line that expresses "this is the Kiro harness" as the absence of another one — a shape that fails toward the permissive answer, so nothing else goes red. Diff-scoped; the whole-tree backlog is a non-failing report |
-| `memory-store-seam` | `scripts/check_memory_store_seam.py`, self-test first, with `MEMSTORE_BASE_REF` resolved to the diff base. Enforces explicit store selection on added memory-context calls. The kirocrew-prepare-pr floor runs both commands; the main ratchet lane classifies this as a diff-only gate because its whole-tree backlog is a non-failing report |
-| `docs-lint` | `scripts/docs_lint.py --test` then `scripts/docs-lint.sh`. Every internal link resolves, every doc is reachable from its directory index, every directory holding docs has one, no code comment cites a doc that does not exist, no doc cites a source LINE past the end of the file it names, no module spec names a source file that exists nowhere, every bare harness `H<n>` ID in a source comment names a row in `docs/system-specs/modules/harness-parity.md`, and no doc whose filename is hardcoded in code has been renamed out from under its consumer. Four trees are walked: `docs/`, the packaged `src/kiro_crew/docs/`, `website/docs/`, and the markdown a builtin app ships under `src/kiro_crew/apps/builtins/`. Plus the fact checks below, behind a shrink-only baseline |
+| `memory-store-seam` | `scripts/check_memory_store_seam.py`, self-test first, with `MEMSTORE_BASE_REF` resolved to the diff base. Enforces explicit store selection on added memory-context calls. The ajcrew-prepare-pr floor runs both commands; the main ratchet lane classifies this as a diff-only gate because its whole-tree backlog is a non-failing report |
+| `docs-lint` | `scripts/docs_lint.py --test` then `scripts/docs-lint.sh`. Every internal link resolves, every doc is reachable from its directory index, every directory holding docs has one, no code comment cites a doc that does not exist, no doc cites a source LINE past the end of the file it names, no module spec names a source file that exists nowhere, every bare harness `H<n>` ID in a source comment names a row in `docs/system-specs/modules/harness-parity.md`, and no doc whose filename is hardcoded in code has been renamed out from under its consumer. Four trees are walked: `docs/`, the packaged `src/aj_crew/docs/`, `website/docs/`, and the markdown a builtin app ships under `src/aj_crew/apps/builtins/`. Plus the fact checks below, behind a shrink-only baseline |
 
 Each of these runs its own self-test in the same step, ahead of the real check. A
 gate that has silently stopped matching reads as a green signal, which is worse than
@@ -592,7 +592,7 @@ A listed triple passes; an unlisted one fails.
 |---|---|
 | `path-exists` | A backticked repo-anchored source path (`src/**.py`, `scripts/*.py\|.sh`, `website/src/**.ts\|.tsx`, `.github/workflows/*.yml`, `docs/**/*.md`) that names no file. Written from the repo root, so it resolves or the doc is wrong — the suffix index is still a fallback, because a skill's own `scripts/` is one root down. A `path::Symbol` coordinate stays checked, since this repo addresses its own code that way too; only the docs describing a run against another repository are exempt |
 | `line-ref` | A `file.py:NNN` citation anywhere in prose. The beyond-EOF check catches the citation that already rotted; this catches the one that rots on the next refactor with nothing going red. Cite a symbol name instead |
-| `fenced-path` | A `docs/task-specs/**/*.md` path or a `kirocrew run` argument inside a fenced block that names no file. A fence is a sample everywhere else, but a reader PASTES these two |
+| `fenced-path` | A `docs/task-specs/**/*.md` path or an `ajcrew run` argument inside a fenced block that names no file. A fence is a sample everywhere else, but a reader PASTES these two |
 | `table-row-merge` | Two index rows glued onto one physical line. Both links resolve, so every link-graph check stays green while the table renders one row short and a file loses its entry |
 | `code-coupled-completeness` | A packaged doc named in a string literal under `website/src` and absent from `CODE_COUPLED_DOCS`. An unrecorded coupling can be renamed apart silently |
 | `dead-identifier` | A backticked identifier absent from every first-party code tree. **Report-only** unless `--strict-identifiers`, because the class mixes real rot with names the repo cannot adjudicate |
@@ -602,7 +602,7 @@ Three checks skip a doc whose genre names things that do not exist yet
 (`docs/request-for-change/`, which carries the plans, and `docs/task-specs/`):
 `path-exists`, `fenced-path` and `dead-identifier`. A proposal
 names a file or a symbol precisely BECAUSE it is not there yet. `fenced-path` also
-skips the packaged user docs under `src/kiro_crew/docs/`, where a task-spec path is
+skips the packaged user docs under `src/aj_crew/docs/`, where a task-spec path is
 a template for the reader's own project rather than a file in this checkout.
 
 The builtin app tree is the mirror image of that exemption: it keeps every fact
@@ -705,30 +705,30 @@ yet decided: install from a committed constraints file, or set
 | `backend-test` | 8 whole-file shards on Python 3.12, assigned before import, an explicit xdist worker count within each (`-n "$WORKERS"`: one per 2 GiB after 2 GiB for the host, capped at the core count, so 6 on the 15 GiB fleet runner; the memory budget behind `-n auto` reserves 5 GiB a worker for a full-suite collection (it granted a file shard 4 when it reserved 3); the job logs its peak memory); 60-minute job budget on CodeBuild, 70 off the fleet where the shards run four-wide, both including coverage upload, with the 120-second per-test timeout retained. A test still running at 150 seconds has every thread's stack dumped to the log (`-o faulthandler_timeout=150`) without being failed, so a hang that timeout's `SIGALRM` could not end names its frame; a test allowed a longer timeout dumps too, and one whose earlier phase already failed does not. Large CodeBuild compute with the non-root boundary for eligible actors; hosted fallback |
 | `backend-test-windows` | All 8 whole-file shards use large CodeBuild compute for eligible actors, windows-latest otherwise; `--no-cov`, 180s per-test timeout. On a fork pull request it runs only when the `changes` job finds a Windows path (including `.github/actions/setup-windows-tests/**`, `**/*.ps1`, `**/conftest.py` and the platform shims), an added or removed `*.py` line that branches on Windows, the `ci:windows` label or `ci-full-run` (the label takes effect on the next push); main's own CI always runs it. See the migration contract below |
 | `backend-test-ipv6` | Five native IPv6 cases on hosted Linux and Windows; fail-closed report check, Linux full-run coverage merged with the ordinary shards |
-| `backend-test-kernel-lock-owner` | Runs the two strict live-holder/orphan flock cases on an uncontainerized hosted VM (the `kirocrew-runners` group here, `ubuntu-latest` in a fork) with `KIROCREW_LOCK_OWNER_STRICT=1`; full-scope coverage is merged with the shard and IPv6 artifacts. **Skipped on a frontend-only diff** (`only_frontend`); Coverage Gate accepts `skipped` in that case |
+| `backend-test-kernel-lock-owner` | Runs the two strict live-holder/orphan flock cases on an uncontainerized hosted VM (the `ajcrew-runners` group here, `ubuntu-latest` in a fork) with `AJCREW_LOCK_OWNER_STRICT=1`; full-scope coverage is merged with the shard and IPv6 artifacts. **Skipped on a frontend-only diff** (`only_frontend`); Coverage Gate accepts `skipped` in that case |
 | `pod-boot-windows` | Boots a real worktree Pod under Windows Task Scheduler and pins three canary tests. A PR carrying `ci:pod-scenarios` before its next push also runs the 55-test Pod scenario suite against a built SPA |
 | `backend-test-windows-fail-closed` | Same actor-gated Windows routing, single `-n0` run of `test/test_windows_fail_closed_optin.py` BY NODE ID with the pass count grepped, so a silent skip cannot go green. It boots a real gateway and drives one ACP prompt turn on Windows against real filesystem state |
-| `new-test-stability` | Two matrix jobs on GitHub-hosted Linux (the `kirocrew-runners` group here, `ubuntu-latest` in a fork) and `windows-latest` (never CodeBuild). On a pull request where `changes.outputs.leaf_tests` is not already `true` (leaf PRs are already covered by `backend-test`'s LEAF_REPEAT loop), selects `test_*.py` files directly under `test/` that the PR adds or modifies (`scripts/new_test_stability_scope.py`), excluding corpus-scanning gates and — on Windows — `test/windows-collect-ignore.txt` via `platform_ignore_names("win32")`. Scope uses `HEAD^1..HEAD` on a merge-commit checkout (where `HEAD^1` is the base-branch tip and `HEAD` is the merge commit), so main-branch commits landing after the PR was opened do not inflate the scope. Runs the file list `LEAF_REPEAT` (= 3) times with `-q -n auto --timeout=120` (Linux) / `--timeout=180` (Windows) `--no-cov -m "not ipv6_required" --max-worker-restart=0`. Exits 0 immediately when the filtered list is empty. A failure fails the CI workflow, which PR Readiness reads as blocking |
+| `new-test-stability` | Two matrix jobs on GitHub-hosted Linux (the `ajcrew-runners` group here, `ubuntu-latest` in a fork) and `windows-latest` (never CodeBuild). On a pull request where `changes.outputs.leaf_tests` is not already `true` (leaf PRs are already covered by `backend-test`'s LEAF_REPEAT loop), selects `test_*.py` files directly under `test/` that the PR adds or modifies (`scripts/new_test_stability_scope.py`), excluding corpus-scanning gates and — on Windows — `test/windows-collect-ignore.txt` via `platform_ignore_names("win32")`. Scope uses `HEAD^1..HEAD` on a merge-commit checkout (where `HEAD^1` is the base-branch tip and `HEAD` is the merge commit), so main-branch commits landing after the PR was opened do not inflate the scope. Runs the file list `LEAF_REPEAT` (= 3) times with `-q -n auto --timeout=120` (Linux) / `--timeout=180` (Windows) `--no-cov -m "not ipv6_required" --max-worker-restart=0`. Exits 0 immediately when the filtered list is empty. A failure fails the CI workflow, which PR Readiness reads as blocking |
 | `backend-test-sandbox` | The one job that clears the AppArmor userns restriction, so the tests guarded by `skipif(not userns_available())` EXECUTE instead of skipping. Runs all eleven sandbox-dependent suites. The shards collect the same files — nothing is deselected — but there the sandbox-guarded tests skip, so this is the only lane where those assertions (the `~/.kiro/crew` keystone among them) actually execute. **Skipped on a frontend-only diff** (`only_frontend`) |
 | `backend-test-crew-container` | "Backend Tests (crew container)". The only lane that runs the crew container image's suite (`aws_control/crew/runtime/container_tests/`). It is separate from the shards because it installs the image's own runtime pins (`container/requirements.txt`: fastapi, uvicorn, httpx, boto3), which that file's header forbids becoming dependencies of the application, and the shards' environment IS the application's, so there the suite's conftest collects nothing. Sets `CREW_CONTAINER_TESTS_REQUIRED=1`, which turns every reason that conftest would decline to collect into a hard error and checks the collection against the tree: every module and every named test the source declares must yield an item, and the total must be at or above `_MIN_COLLECTED` and no more than `_FLOOR_MARGIN` above it. A declared module or test name that stops yielding an item reds on its own name, with no number involved; the count is what catches a test whose parametrize cases drain while its name is still collected. `_MIN_COLLECTED`'s own comment states what that does and does not catch, and is the only place that bound is spelled out. **Skipped on a frontend-only diff** (`only_frontend`) |
-| `real-adapter-contract` | "Real Adapter Contract Tests". The one lane that INSTALLS the adapters the codex and opencode projections were measured against — `@agentclientprotocol/codex-acp` and `opencode-ai`, `npm ci` from the locked manifest in `test/real_adapters/` (its own manifest, not the product's; Dependabot bumps it weekly so drift shows up in the bump PR) — so the four contract tests that drive a real adapter execute instead of skipping. Everywhere else they skip, which left the element shape, the child environment, the refused transports and the eviction verb resting on one local run. Selects them by the `real_adapter` marker, so one added later is included rather than left out of a list. Sets `KIROCREW_E2E_REQUIRE=1` — the repository's existing "this job declared its preconditions must hold" switch, shared with the E2E suites — which turns an absent adapter into a failure, and then asserts on the junit report that at least the known contracts ran and none was skipped, so a broken install cannot report a green lane that measured nothing. The codex inner-sandbox tests decide which result to require from an up-front host probe, never from the step's output: Crew's own userns probe, then codex's bubblewrap preflight (`bwrap --unshare-user --unshare-net --ro-bind / / /bin/true`). A runner that refuses bubblewrap's loopback or uid-map setup, as `kirocrew-linux-4-core` does, must show codex's fail-closed `bwrap:` refusal; any other runner must run the step |
+| `real-adapter-contract` | "Real Adapter Contract Tests". The one lane that INSTALLS the adapters the codex and opencode projections were measured against — `@agentclientprotocol/codex-acp` and `opencode-ai`, `npm ci` from the locked manifest in `test/real_adapters/` (its own manifest, not the product's; Dependabot bumps it weekly so drift shows up in the bump PR) — so the four contract tests that drive a real adapter execute instead of skipping. Everywhere else they skip, which left the element shape, the child environment, the refused transports and the eviction verb resting on one local run. Selects them by the `real_adapter` marker, so one added later is included rather than left out of a list. Sets `AJCREW_E2E_REQUIRE=1` — the repository's existing "this job declared its preconditions must hold" switch, shared with the E2E suites — which turns an absent adapter into a failure, and then asserts on the junit report that at least the known contracts ran and none was skipped, so a broken install cannot report a green lane that measured nothing. The codex inner-sandbox tests decide which result to require from an up-front host probe, never from the step's output: Crew's own userns probe, then codex's bubblewrap preflight (`bwrap --unshare-user --unshare-net --ro-bind / / /bin/true`). A runner that refuses bubblewrap's loopback or uid-map setup, as `ajcrew-linux-4-core` does, must show codex's fail-closed `bwrap:` refusal; any other runner must run the step |
 | `coverage-combine` then `coverage-gate` | Combines the 3.12 shard data, then enforces the project line-rate floors, plus a per-file floor with a shrink-only baseline (all floors live in the job's `env:` block). **CodeBuild-hosted runner** (pilot, below) except for forks |
 | `frontend-lint` | `tsc -p tsconfig.app.json` and `eslint` under a hard-zero warning ceiling. These two are the whole job: a type error or a lint failure makes a test result meaningless, so they are what `lint-gate` waits on. The frontend ratchets run in `frontend-ratchets` |
 | `frontend-ratchets` | "Frontend Ratchets & i18n". `jscpd`, `npm run i18n:check`, the find_ui index freshness check and the find_ui goldens that need the real generator, the phantom-classes and `ui/` restyle ratchets, and `scripts/check_file_line_cap.py` on a full-history checkout (its only home on a frontend-only diff, where `backend-ratchets` is skipped). Carries `frontend-lint`'s surface condition verbatim and is NOT in `lint-gate`'s `needs:` — a failure here reds the pull request alongside the heavy matrix rather than skipping it |
-| `backend-ratchets` | "Backend Ratchets & Boundaries". The baselined ratchets that judge a CHANGE rather than a build: `scripts/check_subprocess_encoding.py` (self-test first) — no text-mode subprocess call without an explicit `encoding=`, `**UTF8_TEXT`, or a `# subprocess-encoding: locale` marker, outside `.github/subprocess-encoding-baseline.txt`, which can only shrink — and `scripts/check_sync_io_in_async.py` (self-test first) — no blocking db / subprocess / http / `time.sleep` call inside an `async def` under `src/`, outside `.github/sync-io-in-async-baseline.txt`, and no blocking fs call there (`os.stat` / `listdir` / `walk`, `os.path.realpath` / `exists`, bare `open()`, zero-argument `.resolve()` / `.stat()` / `.exists()` and kin, zero-argument `.read_text()` / `.read_bytes()` / `.open()`, one-argument `.write_text()` / `.write_bytes()`) outside `.github/sync-io-in-async-fs-baseline.txt`; each ledger can only shrink. A stall past `dashboard.loop_stall_exit_after_secs` (25s) makes the watchdog kill the gateway and drop every in-flight turn (#3057, #1572); the escape is an offload (`await asyncio.to_thread(...)`, or a named lane from `src/kiro_crew/executors.py`) or a `# on-loop-io-ok: <why it cannot block>` marker whose reason is mandatory — and `scripts/check_file_line_cap.py` (self-test first) — no tracked code file over 2,000 lines outside `.github/file-line-cap-baseline.txt`, which can only shrink; a file the change does not touch is reported as main drift, not failed; plus `scripts/check_acp_frame_host_data.py`, `scripts/check_agent_sdk_boundary.py` and `scripts/check_lockdown_before_publish.py`. Full-history checkout, because four of them scope themselves by ancestry through `scripts/ratchet_scope.py`. Stdlib only, so no dependency install. Carries `backend-lint`'s surface condition verbatim and is likewise NOT in `lint-gate`'s `needs:` |
-| `electron-test` | The Electron shell's own node:test suite (`website/electron`). NOT diff-gated: the test suite reads `packaging/` paths and `src/kiro_crew/` files classified as backend by the catch-all filter, so any `only_backend` gate would skip it on exactly the backend-only diffs that can break it |
+| `backend-ratchets` | "Backend Ratchets & Boundaries". The baselined ratchets that judge a CHANGE rather than a build: `scripts/check_subprocess_encoding.py` (self-test first) — no text-mode subprocess call without an explicit `encoding=`, `**UTF8_TEXT`, or a `# subprocess-encoding: locale` marker, outside `.github/subprocess-encoding-baseline.txt`, which can only shrink — and `scripts/check_sync_io_in_async.py` (self-test first) — no blocking db / subprocess / http / `time.sleep` call inside an `async def` under `src/`, outside `.github/sync-io-in-async-baseline.txt`, and no blocking fs call there (`os.stat` / `listdir` / `walk`, `os.path.realpath` / `exists`, bare `open()`, zero-argument `.resolve()` / `.stat()` / `.exists()` and kin, zero-argument `.read_text()` / `.read_bytes()` / `.open()`, one-argument `.write_text()` / `.write_bytes()`) outside `.github/sync-io-in-async-fs-baseline.txt`; each ledger can only shrink. A stall past `dashboard.loop_stall_exit_after_secs` (25s) makes the watchdog kill the gateway and drop every in-flight turn (#3057, #1572); the escape is an offload (`await asyncio.to_thread(...)`, or a named lane from `src/aj_crew/executors.py`) or a `# on-loop-io-ok: <why it cannot block>` marker whose reason is mandatory — and `scripts/check_file_line_cap.py` (self-test first) — no tracked code file over 2,000 lines outside `.github/file-line-cap-baseline.txt`, which can only shrink; a file the change does not touch is reported as main drift, not failed; plus `scripts/check_acp_frame_host_data.py`, `scripts/check_agent_sdk_boundary.py` and `scripts/check_lockdown_before_publish.py`. Full-history checkout, because four of them scope themselves by ancestry through `scripts/ratchet_scope.py`. Stdlib only, so no dependency install. Carries `backend-lint`'s surface condition verbatim and is likewise NOT in `lint-gate`'s `needs:` |
+| `electron-test` | The Electron shell's own node:test suite (`website/electron`). NOT diff-gated: the test suite reads `packaging/` paths and `src/aj_crew/` files classified as backend by the catch-all filter, so any `only_backend` gate would skip it on exactly the backend-only diffs that can break it |
 | `electron-test-windows` | Runs the native Windows port-owner identity tests against real NTFS junction and `Win32_Process` behavior, and `find-bin-real-ssh.test.js`, which resolves the in-box OpenSSH client through the kernel's real `\SystemRoot` link; no npm install is needed because the tested modules use Node's standard library only. NOT diff-gated for the same reason as `electron-test` |
 | `frontend-test` | `vitest run --coverage`. **CodeBuild-hosted runner, `instance-size:large`** (pilot, below) except for forks. A test file a dead fork never started is run once on its own and must pass; its blob joins the merge, and only then are the worker-exit errors dropped from the shard blob. Any other failure, or a failing re-run, stays red (procedure and limits: [website/docs/testing.md, CI gates](../../website/docs/testing.md#ci-gates)). A failed or recovered shard also prints `free -m` and any kernel OOM-kill line ("Kernel log on a failed or recovered shard"), because Vitest 4's "Worker exited unexpectedly" names no signal (#23640). A clean kernel log does not rule out a native crash: Node re-raises SIGSEGV from its own handler, so the kernel logs no `segfault at` line for it |
 | `frontend-coverage-merge` | Merges the frontend coverage shards so the gate reads one report. **CodeBuild-hosted runner** (pilot, below) except for forks. Skipped on a backend-only diff (`only_backend`) |
 | `cfn-lint` | Lints the artifact-deploy templates with a pinned `cfn-lint`. **Runs on the CodeBuild-hosted runner** (pilot, below) except for fork PRs |
 | `linux-packaging` | "Linux Packaging (build + smoke-install)". Builds all three Linux desktop formats from one backend tree through `packaging/build-desktop.sh`, then installs them in their target distros with `scripts/smoke-linux-packages.sh`. Path-filtered on the packaging surface |
-| `wheel-closure` | "Install Requires Wheel Closure (x86_64 / aarch64)". Resolves `setup.cfg`'s `install_requires` as wheels only at the manylinux2014 / `manylinux_2_17` floor for CPython 3.12 (`scripts/ci/install_requires_closure.py` evaluates each environment marker for the target arch, since pip evaluates markers against the runner, then `pip download --only-binary=:all:`), so a sdist-only dependency that the wheel-only installers (`cli.sh`, `install.sh`, the self-update venv) would refuse on old glibc fails here instead of only on users' hosts. Path-filtered on `setup.cfg`, `pyproject.toml` and that script. **Runs on the CodeBuild-hosted runner** at default compute, through the `changes` resolver, so a run the fleet does not admit takes the `kirocrew-runners` group here and `ubuntu-latest` in a fork. Advisory: not a required check |
+| `wheel-closure` | "Install Requires Wheel Closure (x86_64 / aarch64)". Resolves `setup.cfg`'s `install_requires` as wheels only at the manylinux2014 / `manylinux_2_17` floor for CPython 3.12 (`scripts/ci/install_requires_closure.py` evaluates each environment marker for the target arch, since pip evaluates markers against the runner, then `pip download --only-binary=:all:`), so a sdist-only dependency that the wheel-only installers (`cli.sh`, `install.sh`, the self-update venv) would refuse on old glibc fails here instead of only on users' hosts. Path-filtered on `setup.cfg`, `pyproject.toml` and that script. **Runs on the CodeBuild-hosted runner** at default compute, through the `changes` resolver, so a run the fleet does not admit takes the `ajcrew-runners` group here and `ubuntu-latest` in a fork. Advisory: not a required check |
 | `lockfile-engines-floor` | "Lockfile Installs On Declared Node Floor". Runs a real `npm ci` in `website/` on the LOWEST Node version `engines.node` declares, so a lockfile that only resolves under the newer npm major cannot land. The version is a literal pinned to that floor by `test_the_engines_floor_job_pins_the_declared_floor` rather than a range, because resolving a range picks the newest match and makes the job vacuous |
 | `bundle-size` | "Bundle Size Gate". Builds the frontend with `--mode analyze` (which is the only build that emits `dist/bundle-report.json`) and then runs TWO checks over that one build: per-chunk ceilings from `website/scripts/check-bundle-size.mjs`, with a 500 KB default for any chunk not named there, and an acyclic-graph check from `website/scripts/check-chunk-cycles.mjs`. The job name is narrower than its scope on purpose — it is a required check, so renaming it would silently stop satisfying branch protection. **An acyclic chunk graph is a deliberate invariant and the cycle check has no allowlist**, unlike the size ceilings: a chunk cycle has no valid initialization order, so a body can run against a binding that is still uninitialized and blank the page before React mounts, and whether a given cycle does that is not decidable from the chunk graph. Fix the chunking rather than waiving it. Skipped on a backend-only diff, which cannot change the bundle |
 | `i18n-render` | "i18n Render Gate (en-XA, head vs base)". Runs `npm run i18n:render` in `website/`: builds the SPA in DEV mode for HEAD and for the base commit, renders every surface under the `en-XA` pseudolocale in Chromium and fails on any per-surface increase. No gateway, no token, no backend. Default-size Linux runner, skipped on a backend-only diff. Its own job because the ~13 minutes of CPU it takes on a hosted 4-vCPU runner starved the `e2e` Playwright suite past its ceiling on fork PRs. Details: [i18n-gates.md](i18n-gates.md) |
 | `e2e` | Runs `python scripts/ci_e2e_parallel.py`, which awaits `python setup.py test_e2e` and the dedicated Memory UI pytest command in parallel. **CodeBuild-hosted large runner where eligible**, behind the same `run-as-runner` boundary as the backend shards. The suite's disposable gateway takes `agent.sandbox_allow_unsandboxed_exec` (seeded in `test/test_playwright_e2e.py`) because the fleet container refuses `CLONE_NEWUSER` at the runtime policy level and the agent binary is a stdlib echo stub; a sandboxed spawn doing real work stays proven by `e2e-private-namespace` and `e2e-boot-matrix`. Details: [e2e-gate.md](e2e-gate.md) |
-| `e2e-private-namespace` | "E2E (private member namespace, hosted)". The one E2E step the fleet cannot host: `test/e2e/test_private_workflow_memory.py` runs a Crew Member's private workflow MCP inside the member sandbox, which needs `unshare --map-root-user`. Hosted off the fleet (the `kirocrew-runners` group here, `ubuntu-latest` in a fork), clears the AppArmor userns restriction first, no SPA or browser |
-| `integration` | "Integration (in-process gateway)". The middle layer: `test/integration/` boots the real `GatewayOrchestrator.run()` inside the pytest process on a scratch `KIROCREW_HOME` with the packaged fake ACP backend and talks HTTP to the port it bound, so one test can assert across a restart, across two concurrent requests on one event loop, or on a file the boot itself wrote. Opt-in by `KIROCREW_INTEGRATION=1`, so the unit shards collect and skip it; Linux only. Gated on ROUTE coverage -- `scripts/check_integration_route_coverage.py` reports the share of registered dashboard routes the suite requested (`--min` is a ratchet kept a little under what `main` measures) and the report is uploaded as the `integration-route-coverage` artifact. Details: `docs/system-specs/common/testing-conventions.md`, "The integration layer" |
+| `e2e-private-namespace` | "E2E (private member namespace, hosted)". The one E2E step the fleet cannot host: `test/e2e/test_private_workflow_memory.py` runs a Crew Member's private workflow MCP inside the member sandbox, which needs `unshare --map-root-user`. Hosted off the fleet (the `ajcrew-runners` group here, `ubuntu-latest` in a fork), clears the AppArmor userns restriction first, no SPA or browser |
+| `integration` | "Integration (in-process gateway)". The middle layer: `test/integration/` boots the real `GatewayOrchestrator.run()` inside the pytest process on a scratch `AJCREW_HOME` with the packaged fake ACP backend and talks HTTP to the port it bound, so one test can assert across a restart, across two concurrent requests on one event loop, or on a file the boot itself wrote. Opt-in by `AJCREW_INTEGRATION=1`, so the unit shards collect and skip it; Linux only. Gated on ROUTE coverage -- `scripts/check_integration_route_coverage.py` reports the share of registered dashboard routes the suite requested (`--min` is a ratchet kept a little under what `main` measures) and the report is uploaded as the `integration-route-coverage` artifact. Details: `docs/system-specs/common/testing-conventions.md`, "The integration layer" |
 | `e2e-boot-matrix` | Boots a real fake-backed gateway and pins seven tests on Linux and Windows for PRs; push-to-main runs add `macos-15`. Every leg is fail-closed on missing prerequisites or a collapsed pass count |
 
 `backend-lint` also runs `scripts/check_python_audit.py` (report-only findings,
@@ -740,7 +740,7 @@ baseline gate, beside the subprocess-encoding, sync-IO and file line cap gates.
 
 ### The find_ui index is strict only where the PR caused it, and at release
 
-`src/kiro_crew/docs/ui-index.generated.json` and
+`src/aj_crew/docs/ui-index.generated.json` and
 `website/src/uiLocations/guidePlans.gen.ts` are committed and regenerated by
 `npm run gen:ui`. They are generated from every input, the 12 catalogs
 included, and their `input_digest` is a digest of the index's own content, so
@@ -835,12 +835,12 @@ Full-suite throughput and the five-minute goal require remote evidence, not an
 extrapolation from shard count. Full-run coverage combines ordinary shards with
 the required hosted IPv6 artifact.
 
-The Linux coverage command retains the `kiro_crew` and `sage_lib` package-name
+The Linux coverage command retains the `aj_crew` and `sage_lib` package-name
 boundary. It additionally selects only the AWS Control crew packaging directory
 and the Sage tests directory: both contain source already included in that
 boundary's reports, but synthetic builder module names and app-local fixture
 imports can otherwise lose executed lines depending on import order. Selecting
-all of `src/kiro_crew` instead also admits vendored libraries, standalone skill
+all of `src/aj_crew` instead also admits vendored libraries, standalone skill
 scripts and container code outside the package-name boundary. No new exclusions
 or baseline entries are needed; omit rules, branch measurement and floors stay
 unchanged. Sage's path alias remains in place. Combined data can contain both
@@ -925,7 +925,7 @@ local macOS and Windows retain recycling without that Linux-only ceiling. Incomp
 reports, cancellation, worker failures and launcher exceptions return 123, never
 a partial formatting verdict. Per-process limits do not bound the whole job's
 cgroup usage or guarantee that every future input fits. The repository-owned
-kirocrew-prepare-pr profile keeps the bounded local path and diagnostic command. Ratchet
+ajcrew-prepare-pr profile keeps the bounded local path and diagnostic command. Ratchet
 scope, graduates and prune-only baseline refresh remain unchanged.
 `bundle-size` uses large for its 6 GiB heap.
 Shard ownership, coverage selectors and floors stay unchanged. Five stale Windows
@@ -948,7 +948,7 @@ A `merge_group` run's actor is the person who queued the pull request, so the
 same list admits it without a new entry.
 Other PR activities (reopens, ready-for-review, labels and edits) stay off the
 fleet even for an admitted actor, and the `changes` resolver sends their Linux
-consumers to the `kirocrew-runners` group instead. The check reads
+consumers to the `ajcrew-runners` group instead. The check reads
 `github.actor_id`, which names the
 account that triggered the event, never the accounts that pushed the commits
 on the head, so the gate does not prove who supplied the head code. On
@@ -964,7 +964,7 @@ admitted scope stops at those two events so that reopening, marking ready,
 labelling or editing, which a listed account can do on any same-repository
 pull request it never pushed or opened, does not also start that head on the
 fleet. The cost of the exclusion is that `ci.yml`'s Linux matrix runs those
-activities on the `kirocrew-runners` group, whose minutes are billed. Fork pull
+activities on the `ajcrew-runners` group, whose minutes are billed. Fork pull
 requests never reach the fleet either way, and take that same group. The
 same restriction applies to every inline PR route and both platform resolvers.
 The same actor check covers the existing inline routes, including every
@@ -973,7 +973,7 @@ runs from listed actors. The four non-agentic code-review checks
 (`autosde-rules`, `inclusive-language` and `sast` in `code-review.yml`,
 `pr-hygiene` in `pr-hygiene.yml`) use the PR route; the merge-conflict label job
 and the reusable wheel/dependency-audit jobs use the fleet only for push events, keeping scheduled and manual callers
-off it -- on the `kirocrew-runners` group in this repository, and on
+off it -- on the `ajcrew-runners` group in this repository, and on
 `ubuntu-latest` in a fork, which cannot reach that group.
 Their permissions and triggers are unchanged. `sast` alone changed its steps:
 it dropped its job container and installs the pinned Semgrep on the runner.
@@ -1040,7 +1040,7 @@ records fail; a production lookup returning `None` alone never selects that bran
 
 The permanent hosted exception `backend-test-kernel-lock-owner` runs the same live-
 holder and orphan cases on an uncontainerized hosted runner, with no designated
-lock root and `KIROCREW_LOCK_OWNER_STRICT=1`. It requires the exact dead acquirer, rejects
+lock root and `AJCREW_LOCK_OWNER_STRICT=1`. It requires the exact dead acquirer, rejects
 environmental returns, and validates both JUnit identities with zero skips or failures.
 The ordinary fleet still runs both cases. Full-scope coverage uses the same four
 selectors, uploads `coverage-kernel-lock-owner`, and requires
@@ -1111,7 +1111,7 @@ its timeout starts; diagnose or roll back rather than raising that timeout.
 
 ### Larger runners for the review lanes and CodeQL
 
-Some `runs-on` sites draw on the `kirocrew-runners` larger-runner group by
+Some `runs-on` sites draw on the `ajcrew-runners` larger-runner group by
 `group:` rather than `ubuntu-latest`, and others reach it conditionally by label
 (the label-route sections below name them, along with the matrix legs in
 `denial-differential.yml` and both scope lanes covered with
@@ -1275,29 +1275,29 @@ step rather than on a `runs-on` line; see **One site cannot use the group**
 below.
 
 **Nothing gets faster.** A public-repository `ubuntu-latest` is already 4 vCPU
-and 16 GB, and `kirocrew-linux-4-core` is the same CPU and memory with roughly
+and 16 GB, and `ajcrew-linux-4-core` is the same CPU and memory with roughly
 ten times the disk, so job durations should not move; only queue position does.
 Larger-runner minutes are billed even on a public repository, where standard
 runners are free and unlimited, so this trades a free-but-queued resource for a
 paid-but-unqueued one drawing on a separate ceiling.
 
-Each site targets the **group**, not the `kirocrew-linux-4-core` workflow label.
+Each site targets the **group**, not the `ajcrew-linux-4-core` workflow label.
 Both forms work, since a larger runner is automatically assigned a label
 matching its name, but this definition has already been renamed once (from
-`kirocrew-release-4-core`) and a group reference survives a rename where every
+`ajcrew-release-4-core`) and a group reference survives a rename where every
 label reference would break simultaneously. The group must stay Linux-only:
 group targeting dispatches to any available runner in the group, so adding a
-Windows definition to `kirocrew-runners` would make every one of these jobs
+Windows definition to `ajcrew-runners` would make every one of these jobs
 eligible to land on Windows. A Windows definition belongs in its own group,
-which is where `kirocrew-runners-windows` holds the one below.
+which is where `ajcrew-runners-windows` holds the one below.
 
 **Three cross-platform matrix jobs reach these runners by LABEL instead.**
 `denial-differential.yml`'s `denial-differential` and the `adjudicate` job of
 both scope lanes -- `fork-security-scope-review.yml`'s and
 `security-scope-review.yml`'s -- each run one Linux, one macOS
 and one Windows leg off `os: [ubuntu-latest, macos-latest, windows-latest]`.
-Their Linux and Windows legs now resolve to `kirocrew-linux-4-core` and
-`kirocrew-windows-4-core`, dispatched on `matrix.os` in a single `runs-on`
+Their Linux and Windows legs now resolve to `ajcrew-linux-4-core` and
+`ajcrew-windows-4-core`, dispatched on `matrix.os` in a single `runs-on`
 expression -- the shape `ci.yml`'s `e2e-boot-matrix` already uses. `matrix.os`
 itself is unchanged, so each job's `name:` renders the same check names and
 branch protection is unaffected; `adjudicate`'s per-leg
@@ -1305,7 +1305,7 @@ branch protection is unaffected; `adjudicate`'s per-leg
 unchanged for the same reason.
 
 The macOS legs stay on `macos-latest`. A macOS definition does exist
-(`kirocrew-macos-m1-3-core`, in its own `kirocrew-runners-macos` group) but no
+(`ajcrew-macos-m1-3-core`, in its own `ajcrew-runners-macos` group) but no
 site in this repository uses it, and it is not the same-hardware swap the Linux
 and Windows definitions are: it is a 3-core arm64 runner capped at
 `maximum_runners: 8`, so whether a macOS leg runs unchanged on it has to be
@@ -1333,7 +1333,7 @@ AWS role and no App credential, and `fork-opus-review` already pairs
 `harden-runner` `egress-policy: block` with this same Linux definition, so the
 egress block that contains the fork matcher is unaffected.
 
-**The Windows group has a tighter cap.** `kirocrew-windows-4-core` is capped at
+**The Windows group has a tighter cap.** `ajcrew-windows-4-core` is capped at
 `maximum_runners: 32`, against the Linux definition's 200, so the Windows legs
 have far less headroom to spend. Nothing gets faster on either: both definitions
 are 4 vCPU and 16 GB, so the **Nothing gets faster** paragraph above applies
@@ -1414,7 +1414,7 @@ alone counts every `labeled` and `edited` run as fleet-admitted and understates
 this leg.
 
 `main-ratchet-audit.yml` also fires on no pull request, and its four jobs take
-the same label form: the fleet when it admits the run, `kirocrew-linux-4-core`
+the same label form: the fleet when it admits the run, `ajcrew-linux-4-core`
 otherwise, and `ubuntu-latest` only in a fork. It is the one site with a
 merge-path hazard of its own. It admits `merge_group`, and
 `merge-queue-readiness.yml` polls it on every merge group, treating a queued run
@@ -1489,7 +1489,7 @@ expression, so the revert has to edit the expectation on purpose.
 **The PR-time sites reach the group by LABEL instead, because they can execute
 somewhere the group does not exist.** `client-py.yml`'s `test`,
 `crew-image-build.yml`'s `build` and `fork-pr-label.yml`'s `label` use
-`runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}`
+`runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}`
 rather than `group:`. A fork running its own copy of one of these files on
 `push`, `schedule` or `workflow_dispatch` cannot reach an organization runner
 group; a job asking for a label no runner it can see carries waits out
@@ -1536,7 +1536,7 @@ preserve: restore `runs-on: ubuntu-latest` on the affected line.
 
 **The `ci.yml` lanes reach the group by LABEL too, for the same reason.** Jobs
 in `ci.yml` that were pinned to a default hosted runner now reach the
-group through its `kirocrew-linux-4-core` label instead of through group
+group through its `ajcrew-linux-4-core` label instead of through group
 targeting: `backend-test-kernel-lock-owner`, `backend-test-sandbox`,
 `e2e-private-namespace`, and the Linux leg of each of the two matrix lanes
 `backend-test-ipv6` and `new-test-stability`. `wheel-closure` and
@@ -1553,13 +1553,13 @@ repository** -- a push to the fork's `main`, or a pull request opened inside the
 fork -- so the three single-OS lanes take the same expression as the four above:
 
 ```yaml
-runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
 ```
 
 As above, this is about a fork running its own copy, not about a fork pull
 request against this repository: that `pull_request` run executes in the base
 repository, so `github.repository` matches and all five lanes do land on the
-group, against `kirocrew-linux-4-core`'s `maximum_runners: 200`. A
+group, against `ajcrew-linux-4-core`'s `maximum_runners: 200`. A
 `merge_group` run does the same.
 
 The rename exposure the group form avoids is real and accepted here: renaming
@@ -1573,10 +1573,10 @@ sees no new or missing context. The destination is resolved per leg in
 `runs-on`, the shape `e2e-boot-matrix` already uses:
 
 ```yaml
-runs-on: ${{ matrix.os == 'ubuntu-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest') || matrix.os == 'windows-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-windows-4-core' || 'windows-latest') || matrix.os }}
+runs-on: ${{ matrix.os == 'ubuntu-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest') || matrix.os == 'windows-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-windows-4-core' || 'windows-latest') || matrix.os }}
 ```
 
-The Windows leg reaches `kirocrew-windows-4-core` the same way, and any other
+The Windows leg reaches `ajcrew-windows-4-core` the same way, and any other
 `matrix.os` value falls through to itself.
 
 **These five can hold merges.** They are `ci.yml` jobs on the `pull_request`
@@ -1702,8 +1702,8 @@ without changing the pin and the gate reds with
 
 ### The Windows larger-runner group
 
-Three `runs-on` sites take `kirocrew-runners-windows`, a second group holding one
-Windows definition (`kirocrew-windows-4-core`), through `group:`: `ci.yml`'s
+Three `runs-on` sites take `ajcrew-runners-windows`, a second group holding one
+Windows definition (`ajcrew-windows-4-core`), through `group:`: `ci.yml`'s
 `pod-boot-windows`, `build.yml`'s `build-windows-installer` and
 `build-ffmpeg-decoder.yml`'s `verify-windows`. Two more reach the same
 definition through its LABEL, the way the three cross-platform matrix jobs above
@@ -1744,7 +1744,7 @@ reachability that puts the three cross-platform matrix jobs above on a label. A
 ever claim, until the 24-hour queue timeout. So each site reads
 
 ```yaml
-runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-windows-4-core' || 'windows-latest' }}
+runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-windows-4-core' || 'windows-latest' }}
 ```
 
 which puts this repository on the group and leaves every fork on the shared
@@ -1761,7 +1761,7 @@ runner is an uncontainerized VM on the same Windows Server 2025 image family as
 the destination it was measured against.
 
 **Nothing gets faster here either.** A public-repository `windows-latest` is
-already 4 vCPU and 16 GB, and `kirocrew-windows-4-core` is the same CPU and
+already 4 vCPU and 16 GB, and `ajcrew-windows-4-core` is the same CPU and
 memory with roughly ten times the disk, so only queue position moves. Unlike
 Linux, these runs leave a free pool for a billed one with no fleet alternative to
 fall back to, so what bounds the spend is how often each job executes rather than
@@ -1824,7 +1824,7 @@ Details worth knowing:
 
 - **CodeBuild-hosted runner (pilot).** `cfn-lint` is the first job whose
   `runs-on` is not a GitHub-hosted label but
-  `codebuild-kirocrew-gha-linux-${{ github.run_id }}-${{ github.run_attempt }}`:
+  `codebuild-ajcrew-gha-linux-${{ github.run_id }}-${{ github.run_attempt }}`:
   an AWS CodeBuild project subscribed to this repository's `workflow_job` webhook
   starts one ephemeral self-hosted runner per queued job, runs that single job,
   and terminates. Why: at peak the repository's `ubuntu-latest` queue holds a
@@ -1885,7 +1885,7 @@ Details worth knowing:
     gets `ubuntu-latest`, because an organization runner group is not reachable
     from a fork and a label it cannot serve would leave every consumer queued.
     A `pull_request` whose head repository is not this one EXECUTES here, so it
-    gets `kirocrew-linux-4-core`, the `kirocrew-runners` group's own runner
+    gets `ajcrew-linux-4-core`, the `ajcrew-runners` group's own runner
     label, keeping this matrix off the enterprise-shared standard pool. Every
     other run still needs the event and actor checks
     in [the migration contract](#linux-and-windows-codebuild-migration) before
@@ -1936,7 +1936,7 @@ Details worth knowing:
     [#2809](https://github.com/actions/runner/issues/2809)), so the repository
     carries a watchdog rather than waiting for it:
     `.github/workflows/ci-runner-watchdog.yml` runs `scripts/ci/runner_watchdog.py`
-    every ten minutes on the `kirocrew-runners` larger-runner group, targeted
+    every ten minutes on the `ajcrew-runners` larger-runner group, targeted
     by `group:` (never on CodeBuild — a watchdog for a path cannot depend on
     that path), and again whenever a `fast-gate.yml` run
     completes (`workflow_run`, any conclusion). The second trigger is the kick:
@@ -2512,9 +2512,9 @@ Details worth knowing:
   a moving target measured at step time while the checked-out tree is a snapshot
   from job start, so anything landing on `main` in between would appear only on the
   base side and be charged to every PR in that window.
-- **The e2e gateway boots with `KIROCREW_STRICT_ON_LOOP_PERSIST=1`**, so an
+- **The e2e gateway boots with `AJCREW_STRICT_ON_LOOP_PERSIST=1`**, so an
   un-offloaded session-JSONL mutator that enters the lock on the event loop raises
-  and fails the gate at PR time. `KIROCREW_E2E_REQUIRE=1` turns an
+  and fails the gate at PR time. `AJCREW_E2E_REQUIRE=1` turns an
   environment-resolution miss into a hard failure, since a skipped suite would
   otherwise count as a pass having run zero browser specs. Details:
   [e2e-gate.md](e2e-gate.md).
@@ -2544,11 +2544,11 @@ expansion instead of reasoning about reachability.
 PR-time proof only, no publishing.
 
 - **`build-wheel`** builds the frontend, stages it into the package, builds the
-  wheel, then `pip install dist/*.whl` and `kirocrew --version` as a smoke test.
+  wheel, then `pip install dist/*.whl` and `ajcrew --version` as a smoke test.
   Bare `--version` is a pre-dispatch fast-path (see
   `docs/system-specs/modules/cli.md`), so it proves the console script exists
-  and exits 0 — not that `kiro_crew.cli`'s import chain resolves. An
-  `import kiro_crew.cli` probe is what carries that meaning; the wheel lane
+  and exits 0 — not that `aj_crew.cli`'s import chain resolves. An
+  `import aj_crew.cli` probe is what carries that meaning; the wheel lane
   does not run one, so an undeclared runtime dependency reaches gateway boot
   before any pip-install lane fails.
 - **`desktop-matrix`** resolves the `build-desktop` matrix: `macos-15` joins
@@ -2568,8 +2568,8 @@ PR-time proof only, no publishing.
 - **`smoke-install-macos`** runs when the matrix includes `macos-15`: it
   installs the DMG with `scripts/smoke-macos-install.sh`, launches the app,
   checks that the packaged gateway answers `/api/health` with the bundled KAS
-  engine handed to it (`KIROCREW_BUNDLED_KAS_DIR` read off the gateway child,
-  and the installed `kirocrew kas status` reporting `(built into the app)` from
+  engine handed to it (`AJCREW_BUNDLED_KAS_DIR` read off the gateway child,
+  and the installed `ajcrew kas status` reporting `(built into the app)` from
   that root; `BUNDLE_KAS=0` skips the KAS part with a logged line), and refuses
   a tree that carries a bundled kiro-cli the build was not asked for
   (`BUNDLE_KIRO_CLI=1` turns the bundled assertions on instead).
@@ -2586,13 +2586,13 @@ PR-time proof only, no publishing.
   covered per PR by `backend-test-windows` and proven installed at merge.
 
 **Only the smoked legs RUN the bundled backend.** `build-desktop` here and
-`build-desktop.yml` in the release lane both build the real `kirocrew-backend`
+`build-desktop.yml` in the release lane both build the real `ajcrew-backend`
 tree via `packaging/build-desktop.sh` — which provisions a
 python-build-standalone interpreter and pip-installs the project into it. The
 macOS leg is then installed and booted by `smoke-install-macos`, and `ci.yml`'s
 `linux-packaging` job builds and smoke-installs the Linux packages in their
 target distros on a packaging-path change. The Linux `build-desktop` legs here
-only upload the artifact, and the wheel lane runs `kirocrew --version`, which
+only upload the artifact, and the wheel lane runs `ajcrew --version`, which
 proves startup only because the `--version` fast-path lands before dispatch.
 So on a PR that does not select the macOS leg or `linux-packaging`, a packaging
 change that breaks the packaged app (a layout change, a launcher rename, a
@@ -2629,7 +2629,7 @@ verdict already included this lane.
 
 **Who writes the triage state.** Not a workflow in this repository.
 `issue-triage.yml` writes only `channel:`, the fixed type set, `area:` and
-`platform:`. The Captain -- the maintainer-operated Kiro Crew triage crew (the
+`platform:`. The Captain -- the maintainer-operated Aj Crew triage crew (the
 Issue Radar crews running against this repository) -- scans issues that carry no
 tier and writes one of `tier:T1` .. `tier:T4`. It also marks the issue
 `pending-triage`. `tier:T1` and `tier:T2` issues are handed to everyone and need
@@ -2646,9 +2646,9 @@ the crew itself, so a change to the label set is a change in both places.
 
 **One grammar.** Which issues a body declares is decided by
 `.github/scripts/issue_gate_refs.py`, an adapter onto the declaration grammar
-`kirocrew-prepare-pr/scripts/pr_status.py` exports as its one public entry point
+`ajcrew-prepare-pr/scripts/pr_status.py` exports as its one public entry point
 `declared_issue_numbers(body, repo)` -- the masking and the issue targets the
-local kirocrew-prepare-pr loop uses too, so a change there reaches the gate and nothing is
+local ajcrew-prepare-pr loop uses too, so a change there reaches the gate and nothing is
 re-derived in the workflow (a hand-rolled grep there, or an adapter rewrapping a
 private pattern, drifts unnoticed). By reference to that grammar: a line that
 starts (three columns of indent at most, an optional bullet) with a closing verb
@@ -2925,8 +2925,8 @@ workflows ran it. Off the default branch (a release branch cut earlier) such a
 run came from a `code-review.yml` that still hears `edited`, so it counts.
 
 - **`autosde-rules`** blocks unambiguous frontend violations on added lines: an
-  inline `<svg viewBox>` outside brand-mark components (`KiroGhost.tsx`, `*Logo.tsx`,
-  `*Ghost.tsx`), a `<div>`/`<span>` with `onClick` and no `role`, `.innerHTML =`,
+  inline `<svg viewBox>` in any `.tsx` file (brand marks are image assets, so no
+  file is exempt), a `<div>`/`<span>` with `onClick` and no `role`, `.innerHTML =`,
   Mermaid `securityLevel: 'loose'`, and an oversized `max-w-[>=900px]` page wrapper.
   It also blocks three backend keystones: a sensitive credential or keystone path
   read that does not go through `is_sensitive_path()`, `denied_commands.json`
@@ -2975,7 +2975,7 @@ run came from a `code-review.yml` that still hears `edited`, so it counts.
   summary. Next, on the merge-base diff, it requires a reader list on take-away
   diffs (`.github/scripts/take_away_check.py`, skipped for dependabot); see
   [take-away-changes.md](../system-specs/common/take-away-changes.md). A change to
-the wheel copy of an app `src/kiro_crew/apps/adoption-pins.json` pins
+the wheel copy of an app `src/aj_crew/apps/adoption-pins.json` pins
 (`apps/builtins/<dir>/`, `website/src/apps/<name>/`; deletions and test files exempt)
 must carry an `App repo: <owner>/<repo>@<sha>` or `App repo: <owner>/<repo>#<PR>`
 line naming the app repository's matching change, because adopted hosts never run
@@ -3018,11 +3018,11 @@ the source files the container contract spans: the bind override in
 from `dashboard/server_runtime/security_middleware.py`, the dashboard's in
 `dashboard/server.py` and the headless one in
 `dashboard/server_runtime/api_entrypoint.py` (the filter takes
-`src/kiro_crew/dashboard/server_runtime/**` and `src/kiro_crew/dashboard/server_*.py`
+`src/aj_crew/dashboard/server_runtime/**` and `src/aj_crew/dashboard/server_*.py`
 with `server.py`),
 and the liveness payload in `dashboard/handlers/core.py`). It builds the image from
 a locally-built wheel and proves, across a real container boundary, that
-`KIROCREW_BIND=0.0.0.0` makes the gateway reachable from the host, that token auth
+`AJCREW_BIND=0.0.0.0` makes the gateway reachable from the host, that token auth
 still guards the API on that non-loopback path, that `/api/health` works (the image
 HEALTHCHECK depends on it), that kiro-cli runs inside the image, and that channel
 credentials passed as container env are moved into the data home's `.env` and
@@ -3035,7 +3035,7 @@ that was not in the tree and every check stayed green — the image could not be
 a clean checkout, and no gate said so.
 
 It does not name the two recipes. The planner,
-`src/kiro_crew/apps/builtins/aws_control/crew/scripts/crew_image_build_plan.py`, asks
+`src/aj_crew/apps/builtins/aws_control/crew/scripts/crew_image_build_plan.py`, asks
 the tree which `Dockerfile*` exist under the crew runtime directory and derives each
 one's role and producer from the recipe's own text — a pre-`FROM` `ARG` interpolated by
 the `FROM` is a digest-pinned layer, a concrete `FROM` is a base, and the producer is the
@@ -3056,7 +3056,7 @@ image. Like `docker-smoke.yml` it is absent from `pr-readiness.yml`'s lane list:
 resolves lanes by workflow file and a lane reading "(not started)" freezes the verdict at
 pending, which a paths-filtered lane would do on most PRs. Everything the lane builds and
 runs belongs to the aws-control app, so the workflow leaves the repository with that app;
-Kiro Crew core does not depend on it.
+Aj Crew core does not depend on it.
 
 ## The AI review ladder
 
@@ -3290,10 +3290,10 @@ most three bullets, never read by the gate) and -- on `BLOCK` only --
 `### Blockers`. Every Blocker carries a `Trigger:`
 line (the situation that occurs in practice), an `Outcome:` line (the observable
 cost carried), a `Subtraction:` line where one exists and its own `Clears when:`
-line last (the kirocrew-prepare-pr extractor reads from `Clears when:` to the end
+line last (the ajcrew-prepare-pr extractor reads from `Clears when:` to the end
 of the item as the clearance). There is no `### Watch`, `### Suggestions` or
 `### Not justified as shipped`: a second restatement of the same items buries the
-finding under the text around it. The kirocrew-prepare-pr extractor reads
+finding under the text around it. The ajcrew-prepare-pr extractor reads
 `Blockers` as the only item-bearing section.
 
 Two mechanical guards back the contract in all six whole-design lanes (both First
@@ -3309,7 +3309,7 @@ cap is a readability contract, not a correctness one. The Design and UX reasons
 follow the same problem-first rule as First Principles: for `BLOCK` the sentence
 opens with the problem, never `<what is sound>, but <problem>`; for `PASS` it is
 `Nothing to check.` or a few words on why nothing blocks.
-kirocrew-prepare-pr's `pr_findings.py` and `pr_status.py` print that sentence under
+ajcrew-prepare-pr's `pr_findings.py` and `pr_status.py` print that sentence under
 each lane stamped for the head and skip `Nothing to check.` (`lane_punchline` in
 `_review_contract.py`). No item section carries it.
 
@@ -3346,7 +3346,7 @@ so the lanes cannot drift apart on them (#5852). The same-repo lane's remaining
 inline chunks (its system rules, repo context, and round-convergence sections)
 moved into that directory too (#3697), so its whole prompt is now assembled by
 splicing staged prompt files in a fixed order — which is also what lets the
-kirocrew-prepare-pr skill's `local_review.py` mirror the contract by reading the same
+ajcrew-prepare-pr skill's `local_review.py` mirror the contract by reading the same
 files instead of scraping shell heredocs. The same-repo lane stages them
 from the PR's **base** commit like the Opus lanes; unlike those lanes it falls
 back to the checked-out copy (with a warning) when a block is absent on the base,
@@ -3926,7 +3926,7 @@ file over its size ceiling, and the guidance asks for two or three shots. The
 evidence stays readable at the squash commit
 (`https://github.com/<owner>/<repo>/blob/<sha>/temp-screenshots/...`) after the
 removal, so the removal PR names that SHA. The why lives with the rule it excepts, in
-kirocrew-prepare-pr's `references/rationale.md`.
+ajcrew-prepare-pr's `references/rationale.md`.
 
 The PR identity (number, repository, shas, data-file paths) is passed to both passes
 in `--append-system-prompt`, not in `prompt:`. GitHub rejects a workflow file
@@ -3946,7 +3946,7 @@ silently (zero jobs, nothing on the PR) when any expression-bearing string excee
 checks. The table and what the handler records are in
 [Risk release records](#risk-release-records).
 
-A writer's agent running the `kirocrew-prepare-pr` loop may post this command for
+A writer's agent running the `ajcrew-prepare-pr` loop may post this command for
 a finding it judged a false positive or over-engineering, and must report it
 afterwards; it never posts one for a security, data-loss, corruption, crash or
 removed-guard finding, which goes to a person. Its reason starts with `agent:`, so
@@ -4111,9 +4111,9 @@ posts under the same check name so branch protection is satisfied on either path
 ### Scope
 
 The lane runs only when the change touches the security surface: the deny
-composite's own modules (`src/kiro_crew/security/`, `src/kiro_crew/hooks.py`,
-`src/kiro_crew/hook_runtime/`, `src/kiro_crew/deny_guidance.py`,
-`src/kiro_crew/platform/security_authority.py`), the security-conductor's
+composite's own modules (`src/aj_crew/security/`, `src/aj_crew/hooks.py`,
+`src/aj_crew/hook_runtime/`, `src/aj_crew/deny_guidance.py`,
+`src/aj_crew/platform/security_authority.py`), the security-conductor's
 `rules-of-engagement.json` and `golden-paths.json`, and the lane's own harness
 (`scripts/deny_diff.py`, `scripts/scope_candidates.py`, `scripts/scope_redact.py`,
 `.github/review-prompts/security-scope.md`), which the lane reads from the base
@@ -4145,7 +4145,7 @@ The model is `us.anthropic.claude-opus-5-5`, with `us.anthropic.claude-sonnet-5-
 the overload fallback. `generate` mints the credential but runs no repository
 Python, so a prompt injection reaches no product code. `validate` and `adjudicate`
 execute the change's own harness — `adjudicate` materializes each ref's own
-`kiro_crew.security` into its own directory and classifies against it in a child
+`aj_crew.security` into its own directory and classifies against it in a child
 process — but hold no credential and no write token, so a judge supplied by the
 change under judgement decides nothing worth stealing. `publish` holds the only
 write token and reads every program it runs out of a committed base-commit blob,
@@ -4238,7 +4238,7 @@ to a file and append it to the committed corpus:
 
 ```
 python3 scripts/scope_candidates.py harvest --rows rows.json --surface gh-read \
-    --corpus src/kiro_crew/builtin_skills/security-conductor/golden-paths.json
+    --corpus src/aj_crew/builtin_skills/security-conductor/golden-paths.json
 ```
 
 Commit the result in its own pull request. The rules:
@@ -4404,7 +4404,7 @@ status plus one `readiness:` label**.
   from the PR head — this workflow is `pull_request_target` and holds write
   tokens) and folds each violation of the one-lane / one-rationale-per-finding
   rule into its blocking list. That is the only enforcement point that binds a
-  writer who never runs the kirocrew-prepare-pr loop, which is what a blanket
+  writer who never runs the ajcrew-prepare-pr loop, which is what a blanket
   single-rationale record used to escape through (#6658). The rule keeps ONE
   implementation: the readiness step calls the same script the local gate does
   rather than re-reading the marker grammar in shell. A record set it cannot read
@@ -5418,7 +5418,7 @@ while a genuine `BLOCK` fails the lane and blocks
 readiness; same-repository model execution failures also remain blocking until a
 successful re-run or authorized override. Mergeability and behind-base state
 are not part of this event-driven aggregate because they can change without an
-aggregate refresh event; branch protection and the `kirocrew-prepare-pr`
+aggregate refresh event; branch protection and the `ajcrew-prepare-pr`
 skill's live `pr_status.py` read own them. Human reviews change without such an
 event too, but the sweep's scan carries their newest timestamp, so a
 changes-requested review of the head is part of the aggregate (see "A
@@ -5438,14 +5438,14 @@ lane cannot be listed there, and its `pull_request_target` types include no
 `labeled` or `unlabeled`, so a readiness label change starts no evaluation. See
 [the aggregator section](#pr-readinessyml-the-aggregator).
 
-The bundled `kirocrew-prepare-pr` skill owns the local pre-push procedure. It resolves
+The bundled `ajcrew-prepare-pr` skill owns the local pre-push procedure. It resolves
 read-only reviewers and gates from the base-ref profile, extracts each reviewer's
 own CI contract, and binds publication to the verifier-cleared SHA. AI-comment
 repair delegation follows [Agent repair routing](#agent-repair-routing), not a
 replacement of that profile. Dispositions retain the prior judged SHA, finding
 identity and evidence; they never carry a human override onto a new head.
 
-`kirocrew-prepare-pr/scripts/pr_status.py` folds the aggregate status in as one signal,
+`ajcrew-prepare-pr/scripts/pr_status.py` folds the aggregate status in as one signal,
 never an override of the rows: its FAILURE blocks and its PENDING waits, but its
 green does not clear an observed failing or pending duplicate check in GitHub's
 rollup, because the aggregate's `context` is a forgeable display string a status
@@ -5485,7 +5485,7 @@ resists this:
   `### Notes` with a `Subtraction:` line that shrinks or removes
   it. It clears when the mechanism is removed or a human amends the Goal (see
   [`first-principles.md`](../../.github/review-prompts/first-principles.md)).
-- **`kirocrew-prepare-pr`'s severity gate closes the loop:** validate each finding's
+- **`ajcrew-prepare-pr`'s severity gate closes the loop:** validate each finding's
   legitimacy first, fix the true Critical and High ones, **rebut a false positive with
   evidence rather than appeasing it by changing correct code**, and defer the low ones.
   Combined with the single-commit rule and description reconciliation, that keeps a PR

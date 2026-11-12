@@ -41,11 +41,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard.server import (
+from aj_crew.dashboard.server import (
     _MIXED_INTERNAL_API_PATHS,
     _STRICT_INTERNAL_API_PATHS,
 )
-from kiro_crew.dashboard.token_auth import (
+from aj_crew.dashboard.token_auth import (
     _BYPASS_EXACT,
     _BYPASS_EXACT_METHODS,
     internal_path_matches,
@@ -57,7 +57,7 @@ from kiro_crew.dashboard.token_auth import (
 # per full run for this file alone. Grouping keeps the cache single-copy per run.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_mcp_call_site_auth_coverage")
 
-_SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+_SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 _CORE = _SRC / "mcp_core.py"
 
 # The helpers that carry X-Internal-Secret. Defined in mcp_core; called either
@@ -438,7 +438,7 @@ def _call_method(call: ast.Call, called: str) -> str:
 # reach is their rows' declared routes, which ``_scan`` resolves the loopback
 # client's sites to; no other module may build a loopback client
 # (``test_only_a_table_server_builds_a_loopback_client``).
-_TABLE_SERVERS = {"mcp_dashboard.py": "kiro_crew.mcp_dashboard"}
+_TABLE_SERVERS = {"mcp_dashboard.py": "aj_crew.mcp_dashboard"}
 
 # The loopback client's own module. Its verbs forward a path, so they are
 # wrappers, but their callers are table rows (resolved from the rows' declared
@@ -537,7 +537,7 @@ def _scan() -> tuple[dict[str, set[str]], set[str]]:
                             except _TooManyCandidates:
                                 cands = []
                             # A Request built from the URL alone carries no header, so a
-                            # dashboard-token read of that shape (``kirocrew status``'s
+                            # dashboard-token read of that shape (``ajcrew status``'s
                             # owner read) sends no internal secret: out of scope. One that
                             # passes headers may send it, so its path is checked.
                             url_only = (
@@ -759,12 +759,12 @@ class TestDeclaredDashboardRoutes:
     def test_the_loopback_detector_sees_every_spelling(self):
         """Non-vacuity for ``test_only_a_table_server_builds_a_loopback_client``."""
         for flagged in (
-            "from kiro_crew.mcp_tools.dashboard_client import LoopbackDashboardClient",
-            "from kiro_crew.mcp_tools import dashboard_client as dc\nc = dc.LoopbackDashboardClient()",
-            "ctx = ToolContext.for_frame('kirocrew-x')",
+            "from aj_crew.mcp_tools.dashboard_client import LoopbackDashboardClient",
+            "from aj_crew.mcp_tools import dashboard_client as dc\nc = dc.LoopbackDashboardClient()",
+            "ctx = ToolContext.for_frame('ajcrew-x')",
         ):
             assert _builds_loopback_client(ast.parse(flagged)), flagged
-        for ignored in ("client.post('/api/x', {})", "from kiro_crew.mcp_tools.table import Tool"):
+        for ignored in ("client.post('/api/x', {})", "from aj_crew.mcp_tools.table import Tool"):
             assert not _builds_loopback_client(ast.parse(ignored)), ignored
         for rel in _TABLE_SERVERS:
             tree = ast.parse((_SRC / rel).read_text(encoding="utf-8"))
@@ -892,7 +892,7 @@ class TestMcpCallSiteAuthCoverage:
         """
         mod = tmp_path / "kwshape.py"
         mod.write_text(
-            "from kiro_crew.mcp_core import _post\n"
+            "from aj_crew.mcp_core import _post\n"
             "def go():\n"
             '    return _post(path="/api/kw-walker-probe", body={})\n',
             encoding="utf-8",
@@ -907,7 +907,7 @@ class TestMcpCallSiteAuthCoverage:
     def test_a_token_url_skips_only_a_request_built_from_the_url_alone(self, monkeypatch, tmp_path):
         """A dashboard-token URL must not hide a Request that can carry the secret.
 
-        ``kirocrew status``'s owner read is ``Request(<url>)`` with a token query and
+        ``ajcrew status``'s owner read is ``Request(<url>)`` with a token query and
         nothing else. A Request with the same URL and headers may send
         ``X-Internal-Secret``, so its path is checked like every other call.
         """

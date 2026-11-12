@@ -1,7 +1,7 @@
 """The per-chat steering list says which steering files one chat receives.
 
 ``GET /api/chat/slots/{slot}/steering`` and its plan
-(``kiro_crew.steering_plan``): the verdict per harness, the parity with the
+(``aj_crew.steering_plan``): the verdict per harness, the parity with the
 Claude Code loader, and the route itself.
 """
 
@@ -16,12 +16,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import steering_plan as plan
-from kiro_crew.agent_sdk.provider_identity import PROVIDER_ACP, PROVIDER_CLAUDE_CODE
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.handlers import chat_steering
-from kiro_crew.dashboard.handlers.steering import list_steering_blocking
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew import steering_plan as plan
+from aj_crew.agent_sdk.provider_identity import PROVIDER_ACP, PROVIDER_CLAUDE_CODE
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.handlers import chat_steering
+from aj_crew.dashboard.handlers.steering import list_steering_blocking
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 ALWAYS_RULE = "ALWAYS-RULE-5b1e"
 MANUAL_RULE = "MANUAL-RULE-9c3a"
@@ -43,8 +43,8 @@ def home(tmp_path, monkeypatch):
         f"---\ninclusion: manual\n---\n# Manual\n{MANUAL_RULE}\n",
     )
     _write(
-        home / ".kiro" / "agents" / "kirocrew.json",
-        json.dumps({"name": "kirocrew", "resources": ["file://.kiro/steering/**/*.md"]}),
+        home / ".kiro" / "agents" / "ajcrew.json",
+        json.dumps({"name": "ajcrew", "resources": ["file://.kiro/steering/**/*.md"]}),
     )
     monkeypatch.setenv("HOME", str(home))
     monkeypatch.setenv("USERPROFILE", str(home))
@@ -109,7 +109,7 @@ def test_each_gate_gives_its_verdict(overrides, expected):
 
 @pytest.mark.parametrize(("inherits", "reaches"), [(True, "harness"), (False, "no")])
 def test_kiro_cli_follows_the_inheritance_answer(monkeypatch, inherits, reaches):
-    from kiro_crew import context as ctx
+    from aj_crew import context as ctx
 
     monkeypatch.setattr(ctx.acp_driver, "inherits_default_resources", lambda _p: inherits)
     assert _verdict(provider_type=PROVIDER_ACP, declared=frozenset())[0] == reaches
@@ -119,7 +119,7 @@ def test_kiro_cli_without_inheritance_still_loads_what_the_agent_declares(
     home, tmp_path, monkeypatch
 ):
     """The shipped agent declares the project tree, so it loads with inheritance off."""
-    from kiro_crew import context as ctx
+    from aj_crew import context as ctx
 
     monkeypatch.setattr(ctx.acp_driver, "inherits_default_resources", lambda _p: False)
     project = tmp_path / "project"
@@ -130,7 +130,7 @@ def test_kiro_cli_without_inheritance_still_loads_what_the_agent_declares(
         provider_type=PROVIDER_ACP,
         native_steering=False,
         project=str(project),
-        agent="kirocrew",
+        agent="ajcrew",
         is_member=False,
     )
     by_name = {row["name"]: (row["reaches"], row["reason"]) for row in rows}
@@ -140,19 +140,19 @@ def test_kiro_cli_without_inheritance_still_loads_what_the_agent_declares(
 
 def test_a_project_agent_spec_makes_kiro_cli_verdicts_unknown(home, tmp_path, monkeypatch):
     """kiro-cli serves the project's spec of that name, which this plan does not read."""
-    from kiro_crew import context as ctx
+    from aj_crew import context as ctx
 
     monkeypatch.setattr(ctx.acp_driver, "inherits_default_resources", lambda _p: False)
     project = tmp_path / "project"
     _write(project / ".kiro" / "steering" / "team.md", "# Team\n")
-    _write(project / ".kiro" / "agents" / "kirocrew.json", json.dumps({"name": "kirocrew"}))
+    _write(project / ".kiro" / "agents" / "ajcrew.json", json.dumps({"name": "ajcrew"}))
     rows = plan.chat_steering_plan(
         listed=list_steering_blocking(project)["files"],
         folder_documents=(),
         provider_type=PROVIDER_ACP,
         native_steering=False,
         project=str(project),
-        agent="kirocrew",
+        agent="ajcrew",
         is_member=False,
     )
     assert {(r["reaches"], r["reason"]) for r in rows} == {
@@ -162,7 +162,7 @@ def test_a_project_agent_spec_makes_kiro_cli_verdicts_unknown(home, tmp_path, mo
 
 def _claude_rows(project: Path | None) -> list[dict[str, str]]:
     """The rows a default-agent Claude Code chat gets, fed as the route feeds them."""
-    from kiro_crew.context_assembly.agent_spec import steering_resource_documents
+    from aj_crew.context_assembly.agent_spec import steering_resource_documents
 
     key = str(project) if project else None
     return plan.chat_steering_plan(
@@ -182,7 +182,7 @@ def _claude_rows(project: Path | None) -> list[dict[str, str]]:
 
 def test_claude_code_verdicts_match_what_its_loader_sends(home):
     """Parity: every ``yes`` file's body is in the load, and no other file's is."""
-    from kiro_crew.context import _load_steering_resources
+    from aj_crew.context import _load_steering_resources
 
     loaded = _load_steering_resources(None)
     by_name = {row["name"]: row for row in _claude_rows(None)}
@@ -194,7 +194,7 @@ def test_claude_code_verdicts_match_what_its_loader_sends(home):
 
 def test_claude_code_lists_a_project_agents_md_it_loads(home, tmp_path):
     """The load reads the project's ``AGENTS.md`` too, outside the steering trees."""
-    from kiro_crew.context import _load_steering_resources
+    from aj_crew.context import _load_steering_resources
 
     project = tmp_path / "project"
     _write(project / "AGENTS.md", "# Repo rules\nAGENTS-RULE-2c4d\n")
@@ -205,7 +205,7 @@ def test_claude_code_lists_a_project_agents_md_it_loads(home, tmp_path):
 
 def test_claude_code_judges_a_project_link_as_its_loader_does(home, tmp_path):
     """A link the Steering tab will not read still gets the loader's own answer."""
-    from kiro_crew.context import _load_steering_resources
+    from aj_crew.context import _load_steering_resources
 
     project = tmp_path / "project"
     steering = project / ".kiro" / "steering"
@@ -245,10 +245,10 @@ def test_a_folder_document_is_listed_once_as_delivered():
 
 def test_a_folder_document_the_section_cap_leaves_out_is_not_included(home, tmp_path, monkeypatch):
     """The verdicts follow the bounded section the turn renders, not the collection."""
-    from kiro_crew import context as ctx
-    from kiro_crew.folder_steering import SteeringCollection
+    from aj_crew import context as ctx
+    from aj_crew.folder_steering import SteeringCollection
 
-    monkeypatch.setattr(chat_steering, "_resolved_agent", lambda *_a: "kirocrew")
+    monkeypatch.setattr(chat_steering, "_resolved_agent", lambda *_a: "ajcrew")
     root = tmp_path / "standards"
     cap = ctx._resolve_caps(None).steering
     # The collection is stubbed: this pins the section-cap verdicts, not the collector.
@@ -266,8 +266,8 @@ def test_a_folder_document_the_section_cap_leaves_out_is_not_included(home, tmp_
 
 def test_a_member_chat_leaves_its_folder_guides_to_the_briefing(home, tmp_path, monkeypatch):
     """The member envelope decides folder guides, so no row claims the section cap."""
-    from kiro_crew import context as ctx
-    from kiro_crew.folder_steering import SteeringCollection
+    from aj_crew import context as ctx
+    from aj_crew.folder_steering import SteeringCollection
 
     root = tmp_path / "standards"
     cap = ctx._resolve_caps(None).steering
@@ -285,8 +285,8 @@ def test_a_member_chat_leaves_its_folder_guides_to_the_briefing(home, tmp_path, 
 
 def test_the_folder_skips_what_the_launch_record_delivers(home, tmp_path, monkeypatch):
     """A kiro-cli chat with inheritance off skips its launch record's guides, as the turn does."""
-    from kiro_crew import context as ctx
-    from kiro_crew.folder_steering import SteeringCollection
+    from aj_crew import context as ctx
+    from aj_crew.folder_steering import SteeringCollection
 
     seen: dict = {}
 
@@ -296,7 +296,7 @@ def test_the_folder_skips_what_the_launch_record_delivers(home, tmp_path, monkey
 
     monkeypatch.setattr(ctx.acp_driver, "inherits_default_resources", lambda _p: False)
     monkeypatch.setattr(ctx, "collect_folder_steering", collect)
-    monkeypatch.setattr(chat_steering, "_resolved_agent", lambda *_a: "kirocrew")
+    monkeypatch.setattr(chat_steering, "_resolved_agent", lambda *_a: "ajcrew")
     launched = (str(tmp_path / "standards" / "a.md"),)
     chat_steering._plan_blocking(
         _ChatSlot("main"), "main", None, (str(tmp_path),), PROVIDER_ACP, False, launched
@@ -306,7 +306,7 @@ def test_the_folder_skips_what_the_launch_record_delivers(home, tmp_path, monkey
 
 def test_a_chat_with_no_project_reads_the_provider_working_directory(monkeypatch):
     """The turn builds context in the provider's cwd; the agent keeps the slot's project."""
-    import kiro_crew.agent_sdk as agent_sdk
+    import aj_crew.agent_sdk as agent_sdk
 
     live = SimpleNamespace(native_context_documents={"/w/guide.md": ""}, cwd="/w")
     monkeypatch.setattr(agent_sdk, "context_provider_of", lambda value: value)
@@ -340,12 +340,12 @@ def test_a_tree_file_the_folder_cap_cuts_says_so():
     ]
 
 
-def _config(monkeypatch, backend: str, kiro_agent: str = "kirocrew") -> None:
+def _config(monkeypatch, backend: str, kiro_agent: str = "ajcrew") -> None:
     """A cold slot on *backend* whose turns resolve to *kiro_agent*."""
-    import kiro_crew.session_agent_selection as selection
+    import aj_crew.session_agent_selection as selection
 
     monkeypatch.setattr(
-        chat_handlers.KiroCrewConfig,
+        chat_handlers.AjCrewConfig,
         "load",
         lambda: SimpleNamespace(
             agent=SimpleNamespace(acp_backend=backend, member_acp_backend=""), agents={}

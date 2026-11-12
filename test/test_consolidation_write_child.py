@@ -22,18 +22,18 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.consolidation_write_child as cwc
-import kiro_crew.consolidation_write_offload as offload
-from kiro_crew.consolidation_write_child import ChildUnavailable, WriteChild
-from kiro_crew.history import ConversationLog, HistoryConsolidator
-from kiro_crew.history_consolidation_span import (
+import aj_crew.consolidation_write_child as cwc
+import aj_crew.consolidation_write_offload as offload
+from aj_crew.consolidation_write_child import ChildUnavailable, WriteChild
+from aj_crew.history import ConversationLog, HistoryConsolidator
+from aj_crew.history_consolidation_span import (
     _LeaseLostMidRun,
     _PersistenceDisabledMidRun,
     _RunCommitState,
 )
-from kiro_crew.history_derivation import TranscriptWithheld
-from kiro_crew.testing.wait import wait_until
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.history_derivation import TranscriptWithheld
+from aj_crew.testing.wait import wait_until
+from aj_crew.vector_memory import VectorMemoryStore
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="POSIX signals and /proc")
 
@@ -63,7 +63,7 @@ class _Embedder:
 @pytest.fixture
 def config_file():
     """Write ``config.json`` under the test home and remove it afterwards."""
-    from kiro_crew.config.loader import config_path
+    from aj_crew.config.loader import config_path
 
     path = config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -136,7 +136,7 @@ def test_the_child_writes_semantic_and_episodic_rows_and_the_gateway_embeds(worl
     result = {
         "semantic": [
             {"key": "user.editor", "value": "neovim", "confidence": 0.9},
-            {"key": "project.name", "value": "Kiro Crew", "confidence": 0.8},
+            {"key": "project.name", "value": "Aj Crew", "confidence": 0.8},
         ],
         "episodic": [{"text": "Mingwei fixed the consolidation writes", "importance": 0.6}],
     }
@@ -148,7 +148,7 @@ def test_the_child_writes_semantic_and_episodic_rows_and_the_gateway_embeds(worl
     assert here["structured"] == 0, "the job ran in the gateway"
     assert client.spawns == 1 and client.pid() not in (None, os.getpid())
     assert json.loads(store.get_semantic("user.editor")["value_json"]) == "neovim"
-    assert json.loads(store.get_semantic("project.name")["value_json"]) == "Kiro Crew"
+    assert json.loads(store.get_semantic("project.name")["value_json"]) == "Aj Crew"
     assert store.get_semantic("user.editor")["source"] == f"consolidation:{_KEY}"
     episodes = _episodic_rows(store)
     assert [r["text"] for r in episodes] == ["Mingwei fixed the consolidation writes"]
@@ -244,7 +244,7 @@ def test_lessons_are_written_by_the_child(world, client) -> None:
 @pytest.fixture
 def lesson_frames():
     """Every ``lessons.changed`` signal the gateway raises while the test runs."""
-    from kiro_crew import lesson_events
+    from aj_crew import lesson_events
 
     seen: list[dict] = []
     lesson_events.set_lessons_changed_hook(seen.append)
@@ -274,8 +274,8 @@ def test_lessons_the_child_wrote_are_announced_by_the_gateway(world, client, les
 def test_a_lesson_the_child_retired_is_announced_by_the_gateway(
     world, client, lesson_frames
 ) -> None:
-    from kiro_crew.lesson_validation import LESSON_APPLIES_ON_TOPIC
-    from kiro_crew.vector_memory import _lesson_key
+    from aj_crew.lesson_validation import LESSON_APPLIES_ON_TOPIC
+    from aj_crew.vector_memory import _lesson_key
 
     store, consolidator, _embedder, here = world
     rule = "in repo foo the flaky timing test needs a wider bound"
@@ -466,7 +466,7 @@ def test_stopping_the_handle_stops_the_child(world, client) -> None:
 def test_a_kept_store_follows_the_config_and_the_gateways_writes(
     tmp_path, config_file, monkeypatch
 ) -> None:
-    import kiro_crew.vector_memory as vm
+    import aj_crew.vector_memory as vm
 
     db = tmp_path / "memory.db"
     seed = VectorMemoryStore(db_path=db, embedding_dim=_DIM)

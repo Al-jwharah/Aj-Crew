@@ -16,11 +16,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from guide_route_helpers import in_dashboard_turn
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew.dashboard import change_cards as cards
-from kiro_crew.dashboard.change_cards import CardStore
-from kiro_crew.dashboard.handlers import change_cards as routes
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew import change_card_catalog as catalog
+from aj_crew.dashboard import change_cards as cards
+from aj_crew.dashboard.change_cards import CardStore
+from aj_crew.dashboard.handlers import change_cards as routes
+from aj_crew.dashboard.state import _ChatSlot
 
 REPO = Path(__file__).resolve().parents[1]
 SECRET_VALUE = "sk-live-DO-NOT-STORE-0123456789"
@@ -148,7 +148,7 @@ def world(monkeypatch):
         def append_history(self, entry: str) -> None:
             w.memory.append(entry)
 
-    from kiro_crew import context
+    from aj_crew import context
 
     monkeypatch.setattr(
         context.ContextBuilder, "get_memory_for", staticmethod(lambda *a, **k: _Mem())
@@ -159,7 +159,7 @@ def world(monkeypatch):
 def _app(world: World, store: CardStore) -> web.Application:
     async def patch_config(request):
         body = await request.json()
-        world.calls.append(("PATCH", "/api/config/kirocrew"))
+        world.calls.append(("PATCH", "/api/config/ajcrew"))
         world.config[body["path"]] = body["value"]
         if world.after_write is not None:
             await world.after_write(request)
@@ -179,7 +179,7 @@ def _app(world: World, store: CardStore) -> web.Application:
     app = web.Application(middlewares=[_fake_auth, routes.change_card_middleware])
     app["state"] = FakeState(store)
     routes.register_change_card_routes(app)
-    app.router.add_patch("/api/config/kirocrew", patch_config)
+    app.router.add_patch("/api/config/ajcrew", patch_config)
     app.router.add_post("/api/secrets", save_secret)
     app.router.add_delete("/api/secrets/{name}", delete_secret)
     return app

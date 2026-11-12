@@ -48,15 +48,15 @@
         "is_shell": true,
         "kind": "tool_call_update",
         "raw_tool_params": {
-          "command": "echo kirocrew-opencode-live",
+          "command": "echo ajcrew-opencode-live",
           "timeout": "null",
           "workdir": "null"
         },
-        "title": "echo kirocrew-opencode-live",
+        "title": "echo ajcrew-opencode-live",
         "tool_call_id": "call_wfvrm3ls",
-        "tool_input": "{\n  \"command\": \"echo kirocrew-opencode-live\",\n  \"timeout\": \"null\",\n  \"workdir\": \"null\"\n}",
+        "tool_input": "{\n  \"command\": \"echo ajcrew-opencode-live\",\n  \"timeout\": \"null\",\n  \"workdir\": \"null\"\n}",
         "tool_kind": "execute",
-        "wire_title": "echo kirocrew-opencode-live"
+        "wire_title": "echo ajcrew-opencode-live"
       }
     ],
     "frame": "session/update",
@@ -77,15 +77,15 @@
         "is_shell": true,
         "kind": "tool_call_update",
         "raw_tool_params": {
-          "command": "echo kirocrew-opencode-live",
+          "command": "echo ajcrew-opencode-live",
           "timeout": "null",
           "workdir": "null"
         },
-        "title": "echo kirocrew-opencode-live",
+        "title": "echo ajcrew-opencode-live",
         "tool_call_id": "call_wfvrm3ls",
-        "tool_input": "{\n  \"command\": \"echo kirocrew-opencode-live\",\n  \"timeout\": \"null\",\n  \"workdir\": \"null\"\n}",
+        "tool_input": "{\n  \"command\": \"echo ajcrew-opencode-live\",\n  \"timeout\": \"null\",\n  \"workdir\": \"null\"\n}",
         "tool_kind": "execute",
-        "wire_title": "echo kirocrew-opencode-live"
+        "wire_title": "echo ajcrew-opencode-live"
       }
     ],
     "frame": "session/update",

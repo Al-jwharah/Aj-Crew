@@ -35,7 +35,7 @@ const slots = [{
   running: false,
   last_message: 'Reading the repository.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   modified: now,
   source_links: [],

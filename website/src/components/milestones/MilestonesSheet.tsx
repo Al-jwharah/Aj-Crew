@@ -144,7 +144,7 @@ function FeatureRow({ item, focused, onError, title, completesOnArrival = false 
  * bar, full screen on a phone. Its header bar holds the title and the close for
  * the whole panel and stays put while the body scrolls. The body's sections
  * are divided by rules inside that panel, so no close in the body can be read
- * as closing Explore. Top to bottom: the "Kiro Crew in 15 seconds" inset,
+ * as closing Explore. Top to bottom: the "Aj Crew in 15 seconds" inset,
  * "Try today" (up to three untried features, `tryToday`), and "Your progress": the Getting started pair
  * in the first days, the streak, a bar per achievement toward its next tier,
  * and the badge wall. Fixed layout and i18n text only.

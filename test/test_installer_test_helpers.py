@@ -21,7 +21,7 @@ import time
 import pytest
 from installer_test_helpers import _POST_KILL_DRAIN_TIMEOUT, run_bounded
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 #: Long enough that only the kill path (never the child exiting on its own)
 #: can end the run before the assertion; well above the elapsed bound below

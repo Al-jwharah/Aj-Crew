@@ -1,7 +1,7 @@
-"""One streamed read of the ``kiro_crew`` source tree, shared by every AST ratchet.
+"""One streamed read of the ``aj_crew`` source tree, shared by every AST ratchet.
 
 Several gates in this suite pin a structural property of the whole package by
-walking ``src/kiro_crew/**/*.py`` and ``ast.parse``-ing each file. Independently
+walking ``src/aj_crew/**/*.py`` and ``ast.parse``-ing each file. Independently
 they each paid the same costs, and the suite paid them once per gate:
 
 * the ``rglob`` walk and the read of ~62 MB of source (0.2 s), and
@@ -62,18 +62,18 @@ from pathlib import Path
 
 
 def src_root() -> Path:
-    """Locate the ``kiro_crew`` package.
+    """Locate the ``aj_crew`` package.
 
     Prefer the importable package (correct regardless of CWD / install layout);
     fall back to the in-repo path so a gate also runs standalone under a bare
     ``python3`` with no deps installed.
     """
     try:
-        import kiro_crew  # noqa: PLC0415
+        import aj_crew  # noqa: PLC0415
 
-        return Path(kiro_crew.__file__).resolve().parent
+        return Path(aj_crew.__file__).resolve().parent
     except Exception:
-        return Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+        return Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 
 @functools.lru_cache(maxsize=1)
@@ -286,7 +286,7 @@ def repo_files() -> tuple[Path, ...]:
     Not ``rglob``/``os.walk``, which is the answer a repo-wide gate reaches for
     and the one that fails while staying green. Both descend gitignored trees and
     nested checkouts, so a worktree under ``.claude/worktrees/`` (the Claude Code
-    harness creates them there), a local ``.kirocrew-dev/`` data home or any
+    harness creates them there), a local ``.ajcrew-dev/`` data home or any
     scratch clone puts a SECOND copy of every shipped file in front of the gate.
     Where the gate reports offenders that is a false positive naming a path the
     author cannot edit; where it asserts ``any(...)`` over the matches it is

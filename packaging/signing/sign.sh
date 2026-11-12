@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Sign a KiroCrew .app bundle via the enterprise signing service.
+# Sign an Aj Crew .app bundle via the enterprise signing service.
 #
 # Usage:
 #   bash packaging/signing/sign.sh <app-path> <channel> <version>
 #
 # Example:
-#   bash packaging/signing/sign.sh website/electron/dist/mac-arm64/KiroCrew.app nightly 0.2.0-nightly.20260708
+#   bash packaging/signing/sign.sh website/electron/dist/mac-arm64/AjCrew.app nightly 0.2.0-nightly.20260708
 #
 # Environment variables (required):
 #   AWS_SIGNING_BUCKET     — S3 bucket for signing artifacts
@@ -70,7 +70,7 @@ fi
 : "${CDSIGNER_API_ENDPOINT:?Set CDSIGNER_API_ENDPOINT}"
 
 APP_NAME="$(basename "$APP_PATH" .app)"
-# Space-free slug for bucket keys: the nightly bundle is "KiroCrew Nightly.app"
+# Space-free slug for bucket keys: the nightly bundle is "AjCrew Nightly.app"
 # and these keys flow into the CDSigner request JSON and URL paths.
 APP_SLUG="${APP_NAME// /-}${SIGN_KEY_SUFFIX:-}"
 WORK_DIR="$(mktemp -d)"

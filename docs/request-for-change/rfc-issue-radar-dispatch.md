@@ -152,7 +152,7 @@ the tree they have open, and `/tmp`, where an attempt would not survive a reboot
 that happens mid-run.
 
 Creation goes through the dashboard's worktree handler
-(`src/kiro_crew/dashboard/handlers/worktree.py`), which already carries the
+(`src/aj_crew/dashboard/handlers/worktree.py`), which already carries the
 hardening this needs, including not letting the repository's own hooks run during
 `worktree add`. Spec Builder is the in-repo precedent for an app driving it
 (`_create_worktree`, `_remove_worktree`, `_rollback_worktree_if_ours`), including

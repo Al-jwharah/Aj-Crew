@@ -98,12 +98,12 @@ const DEMOTED = path => ({
   turn_budget_chars: TURN_BUDGET,
 })
 const FILE_CHANGES = [
-  { path: 'src/kiro_crew/dashboard/chat_runner.py', before: KEPT_BEFORE, after: KEPT_AFTER },
-  DEMOTED('src/kiro_crew/dashboard/chat_utils.py'),
+  { path: 'src/aj_crew/dashboard/chat_runner.py', before: KEPT_BEFORE, after: KEPT_AFTER },
+  DEMOTED('src/aj_crew/dashboard/chat_utils.py'),
   DEMOTED('website/src/store/chatSlice.ts'),
   DEMOTED('test/test_file_change_snapshots.py'),
 ]
-const DEMOTED_ROW = 'src/kiro_crew/dashboard/chat_utils.py'
+const DEMOTED_ROW = 'src/aj_crew/dashboard/chat_utils.py'
 const KEPT = FILE_CHANGES[0]
 const TURN_SENTENCE = /too large to keep every file's diff/
 const OMITTED_NOTICE = /12 more files changed in this turn are not listed\./
@@ -138,7 +138,7 @@ const slots = [{
   running: false,
   last_message: SURFACE.title,
   messages: SURFACE.messages.length,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

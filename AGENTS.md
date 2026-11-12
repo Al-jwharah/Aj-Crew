@@ -8,20 +8,20 @@ open before touching that subsystem: see
 
 ## What this is
 
-Kiro Crew is an open-source personal AI agent: chat from the web dashboard, the
+Aj Crew is an open-source personal AI agent: chat from the web dashboard, the
 CLI, or a messaging channel like Slack and Discord; run multi-step tasks
 unattended; schedule cron jobs; keep memory across sessions.
 
-Kiro Crew's sole LLM provider speaks ACP. With no `agent.acp_backend` choice it
-runs KAS, Kiro's agent engine, through `kiro-cli acp --agent-engine v3` or Kiro
+Aj Crew's sole LLM provider speaks ACP. With no `agent.acp_backend` choice it
+runs KAS, Kiro's agent engine, through `kiro-cli acp --agent-engine v3` or Aj
 Crew's own bundled copy of that engine (`acp/kas_route.py`), over ACP JSON-RPC;
 Kiro CLI and the other verified ACP harnesses are selected with
 `agent.acp_backend`. MCP tools supply the agent's host capabilities.
 
-- **Backend:** Python package `kiro_crew` in `src/kiro_crew/`. **Frontend:** React
-  + TS + Vite SPA in `website/`, built into `src/kiro_crew/static/dist/` and served
+- **Backend:** Python package `aj_crew` in `src/aj_crew/`. **Frontend:** React
+  + TS + Vite SPA in `website/`, built into `src/aj_crew/static/dist/` and served
   by the backend.
-- **Data home:** `~/.kiro/crew`, overridden with `KIROCREW_HOME`.
+- **Data home:** `~/.kiro/crew`, overridden with `AJCREW_HOME`.
 - **Distribution:** public GitHub, plain setuptools, public PyPI / public npm.
 
 Full map: [overview](docs/architecture/overview.md). This repo is the de-Amazoned
@@ -47,7 +47,7 @@ in the **same commit** when you change what it documents.
 | `acp/`, kiro-cli transport, providers | [acp-client](docs/system-specs/modules/acp-client.md) + [providers](docs/system-specs/modules/providers.md) |
 | picking or defaulting a model anywhere | [model-selection](docs/system-specs/common/model-selection.md) + [model-fallback](docs/system-specs/modules/model-fallback.md) |
 | adding or adapting an agent harness (BYO, KAS, claude) | [harness-parity](docs/system-specs/modules/harness-parity.md) (invariants) + [harness-parity-gate](docs/ci/harness-parity-gate.md) (CI) |
-| an agent spec: `agent_discovery.py` and its `agent_discovery_parts/` owners, `agent_spec_format.py`, `agent.py`'s spec writers, its `agent_parts/` owners and `agent_materialization/`, `acp/kas_agents.py`, or any field a spec carries | [agent-spec-fields](src/kiro_crew/docs/agent-spec-fields.md) (what each field does, per backend) + [agent-host-contract](docs/system-specs/modules/agent-host-contract.md) (the per-harness table) |
+| an agent spec: `agent_discovery.py` and its `agent_discovery_parts/` owners, `agent_spec_format.py`, `agent.py`'s spec writers, its `agent_parts/` owners and `agent_materialization/`, `acp/kas_agents.py`, or any field a spec carries | [agent-spec-fields](src/aj_crew/docs/agent-spec-fields.md) (what each field does, per backend) + [agent-host-contract](docs/system-specs/modules/agent-host-contract.md) (the per-harness table) |
 | the publicly selectable Claude backend | [claude-code-provider](docs/system-specs/modules/claude-code-provider.md) |
 | sessions, slots, session keys, PIDs | [session](docs/system-specs/modules/session.md) + [history](docs/system-specs/modules/history.md) |
 | `shared_crew/`, attributing work to a person, per-person fair admission, presence, shared approvals | [shared-crew](docs/system-specs/modules/shared-crew.md) |
@@ -70,7 +70,7 @@ in the **same commit** when you change what it documents.
 | themes | [themes](docs/system-specs/modules/themes.md) + [theming-contract](website/docs/theming-contract.md) |
 | anything under `website/` | [`website/AGENTS.md`](website/AGENTS.md) |
 | user-facing strings, dates, numbers, sort order | [i18n-catalog](website/docs/i18n-catalog.md) (authoring) + [i18n-gates](docs/ci/i18n-gates.md) (CI) |
-| tests: flakes, hangs, speed, memory, fixtures, sharding, side effects, host state (`~/.kiro`, `Path.home()`, the systemd user manager), conftest isolation, `monkeypatch.undo()`, env-var leaks, host-dependent tests (Windows, Python 3.13, per-user tools, version-manager shims), spawning a real child or reaping one, `.worktrees/` in a repo-wide scan, what `TMPDIR` must not be, what a worker costs, collection-time probes that build a singleton, a `MagicMock` the code converts with `int()`, sizing a ReDoS / complexity guard, clocks and time, sleeps, ordering and timestamp ties, ports, timezone and locale, randomness, repeat and shuffle proof, a flaky CI red | [testing-conventions](docs/system-specs/common/testing-conventions.md) + the [writing-tests](src/kiro_crew/builtin_skills/kirocrew-dev/writing-tests/SKILL.md) skill; frontend and Electron tests: [website/docs/testing.md](website/docs/testing.md) |
+| tests: flakes, hangs, speed, memory, fixtures, sharding, side effects, host state (`~/.kiro`, `Path.home()`, the systemd user manager), conftest isolation, `monkeypatch.undo()`, env-var leaks, host-dependent tests (Windows, Python 3.13, per-user tools, version-manager shims), spawning a real child or reaping one, `.worktrees/` in a repo-wide scan, what `TMPDIR` must not be, what a worker costs, collection-time probes that build a singleton, a `MagicMock` the code converts with `int()`, sizing a ReDoS / complexity guard, clocks and time, sleeps, ordering and timestamp ties, ports, timezone and locale, randomness, repeat and shuffle proof, a flaky CI red | [testing-conventions](docs/system-specs/common/testing-conventions.md) + the [writing-tests](src/aj_crew/builtin_skills/ajcrew-dev/writing-tests/SKILL.md) skill; frontend and Electron tests: [website/docs/testing.md](website/docs/testing.md) |
 | browser E2E | [e2e-gate](docs/ci/e2e-gate.md) |
 | proving a worktree change against an isolated running gateway | [worktree-verification-recipes](docs/guides/worktree-verification-recipes.md) |
 | CI, PR flow, review gates (a lane says PASS or BLOCK, with a Trigger and an Outcome), commit messages | [ci-and-reviews](docs/ci/ci-and-reviews.md) + [CONTRIBUTING.md](CONTRIBUTING.md) |
@@ -92,8 +92,8 @@ in the **same commit** when you change what it documents.
 | any doc: moving, renaming, indexing it | [docs/README.md](docs/README.md) |
 
 The whole doc tree is indexed from [`docs/README.md`](docs/README.md). User-facing
-docs that ship in the package live in `src/kiro_crew/docs/` and are indexed by
-[its README](src/kiro_crew/docs/README.md).
+docs that ship in the package live in `src/aj_crew/docs/` and are indexed by
+[its README](src/aj_crew/docs/README.md).
 
 ## Security invariants (do NOT weaken)
 
@@ -126,7 +126,7 @@ Detail and rationale: [security](docs/system-specs/modules/security.md),
   leaf, and the other credential-bearing crew leaves, from a foreign child
   (`sandbox._CREW_CHILD_WITHHELD_LEAVES`), which is why the features whose
   in-sandbox readers need them do not work there.
-- **Governance is `POLICY ∩ PROFILE`, tightest-wins**, enforced at Kiro Crew's OWN
+- **Governance is `POLICY ∩ PROFILE`, tightest-wins**, enforced at Aj Crew's OWN
   PreToolUse gate even when the kiro agent config granted the call. The evaluator
   is scope-name-agnostic, so adding a scope is a `SCOPE_CATALOG` data change, never
   an evaluator edit.
@@ -164,7 +164,7 @@ Detail and rationale: [security](docs/system-specs/modules/security.md),
   you are the REVIEWER: asking for a wider fence is outside what review decides.
   An added invariant ships with its own data in the SAME commit, and an
   import-time one silences its own witness — #11556 asserted over five sealed
-  leaves carrying wording for two, which made `import kiro_crew.sandbox` raise on
+  leaves carrying wording for two, which made `import aj_crew.sandbox` raise on
   main and failed every backend test at COLLECTION, including
   `test_every_strict_leaf_of_either_shape_is_covered_by_the_delegated_guard`,
   the test written to catch exactly that gap.
@@ -217,8 +217,8 @@ gate locally with
 
 ## No built-in apps
 
-Kiro Crew accepts no new built-in app. Never add an app under
-`src/kiro_crew/apps/builtins/`, an `app.json` outside `docs/app-kit/examples/` and
+Aj Crew accepts no new built-in app. Never add an app under
+`src/aj_crew/apps/builtins/`, an `app.json` outside `docs/app-kit/examples/` and
 test fixtures, a per-app page under `website/src/apps/<app>/`, a per-app row in a
 core built-in table (`BUILTIN_NAMES`, `apps/manager_builtins.py`, the
 `website/src/apps/` registries), or an app-specific MCP tool (`mcp_tools/apps.py`)
@@ -229,11 +229,11 @@ The built-ins that still ship are being moved out under #26967; fixing one in pl
 until it leaves is fine, but once `apps/adoption-pins.json` pins it the fix lands in its
 app repository first and the PR names it (`App repo: <owner>/<repo>@<sha>`, PR Hygiene). An app moves out COMPLETELY: no part of it (backend, UI,
 scripts, CI, specs) stays in core, and core never imports or hard-codes a specific
-app (`kiro_crew.apps.builtins.<app>`, an app id) outside the built-in tables being
+app (`aj_crew.apps.builtins.<app>`, an app id) outside the built-in tables being
 emptied. A capability an app cannot get from outside core is an App Kit seam gap:
 fix it with a generic, app-agnostic seam, never put the app in core. Rule:
 `no-new-builtin-apps` in `AUTOSDE.yaml`; decision:
-[2026-11-01](docs/decisions/2026-11-01-kiro-crew-accepts-no-new-built-in-apps.md);
+[2026-11-01](docs/decisions/2026-11-01-aj-crew-accepts-no-new-built-in-apps.md);
 seams: [app-kit-platform](docs/system-specs/modules/app-kit-platform.md).
 
 ## Specs and docs
@@ -257,7 +257,7 @@ seams: [app-kit-platform](docs/system-specs/modules/app-kit-platform.md).
   [CONTRIBUTING.md](CONTRIBUTING.md).
 - Never `git stash` (every worktree shares one stash list) and never overlay a
   whole tree with `git checkout <ref> -- .`. To bring the main clone current,
-  follow the `kirocrew-worktree-dev` skill.
+  follow the `ajcrew-worktree-dev` skill.
 
 ```
 <type>: <summary — max 72 chars, imperative, lowercase, no period>
@@ -298,7 +298,7 @@ pinning test. On the fifth fix only narrowing or deferral remain. Two or more PR
 that need the same new helper module share one owner PR; the others import it, name
 the merge order in their body, and carry no copy. Keep going; no
 one needs to approve that. Details:
-[kirocrew-prepare-pr](src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/SKILL.md).
+[ajcrew-prepare-pr](src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/SKILL.md).
 
 ## CHANGELOG.md
 
@@ -316,8 +316,8 @@ from the suffix rule: [release](docs/build/release.md).
 ## The gate before you commit
 
 ```bash
-python3 scripts/check_black_formatting.py && python3 scripts/check_subprocess_encoding.py && isort src/kiro_crew test conftest.py xdist_budget.py
-flake8 src/kiro_crew test conftest.py xdist_budget.py && mypy src/kiro_crew
+python3 scripts/check_black_formatting.py && python3 scripts/check_subprocess_encoding.py && isort src/aj_crew test conftest.py xdist_budget.py
+flake8 src/aj_crew test conftest.py xdist_budget.py && mypy src/aj_crew
 BASE="$(git merge-base HEAD origin/main)" && COMMENT_HISTORY_BASE_REF="$BASE" python3 scripts/check_comment_history.py && BRAND_BASE_REF="$BASE" python3 scripts/check_brand_name.py
 python3 scripts/local-gate.py
 ```
@@ -331,16 +331,16 @@ black-clean (formatting what you touched does that), run it with
 `local-gate.py` runs the tests related to your diff on both surfaces with a
 bounded worker count; the full suite is CI's job and never runs locally unless a
 human passes `--full`. See
-[kirocrew-prepare-pr](src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/references/gate-floor.md).
+[ajcrew-prepare-pr](src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/references/gate-floor.md).
 
 To run the cheap CI gates in one go and record that you did, use the optional
-[pre-push gate](src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/references/pre-push-gate.md).
+[pre-push gate](src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/references/pre-push-gate.md).
 It is advisory: nothing refuses a push without it.
 
-- **On macOS, run `mypy --platform linux src/kiro_crew`.** Without it a local run
+- **On macOS, run `mypy --platform linux src/aj_crew`.** Without it a local run
   reports errors you did not cause and MISSES the Linux-only errors CI fails on, so
   a clean local run is a false green.
-- **Never run bare `black src/kiro_crew test`.** It reformats every baselined file
+- **Never run bare `black src/aj_crew test`.** It reformats every baselined file
   and buries your diff. Format only what you touched:
   `black --target-version py310 <the files you changed>`.
 - Frontend: `cd website && npm run build && npm run test`.
@@ -392,7 +392,7 @@ signal, file-lock and metrics changes on macOS + Linux.
 
 A new LLM-facing CLI command MUST also ship as an MCP tool, MCP tools MUST be
 stateless (no module global holds per-caller data), and a skill any shipped
-feature, tool or doc references MUST live in `src/kiro_crew/builtin_skills/` — the
+feature, tool or doc references MUST live in `src/aj_crew/builtin_skills/` — the
 only tree bundled into the package. Why, plus the session-key gate:
 [mcp](docs/architecture/mcp.md) +
 [memory-skills-hooks](docs/system-specs/modules/memory-skills-hooks.md).
@@ -406,6 +406,6 @@ if a human typed them — the user may not be present. Envelopes:
 
 ## Harness safety
 
-`kirocrew gateway --approval yolo` auto-approves ALL tools and refuses to start
-unless `KIROCREW_HOME` is explicitly set to a non-default path. Never point it at
+`ajcrew gateway --approval yolo` auto-approves ALL tools and refuses to start
+unless `AJCREW_HOME` is explicitly set to a non-default path. Never point it at
 `~/.kiro/crew`. All harness flags: [cli](docs/system-specs/modules/cli.md).

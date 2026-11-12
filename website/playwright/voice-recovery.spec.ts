@@ -53,7 +53,7 @@ async function openChat(page: Page, baseURL: string) {
     // Seed inside the helper's own init script, after its localStorage.clear().
     localStorageEntries: { 'mc-lang': 'en', 'mc-active-slot': slot, 'mc-active-slot-chat': slot },
     slots: [{ key: slot, title: 'Read aloud recovery', running: false, messages: 2,
-      agent: 'kirocrew', memory_mode: 'persistent', project: '', folder_id: '',
+      agent: 'ajcrew', memory_mode: 'persistent', project: '', folder_id: '',
       modified: 1788780000, source_links: [], source_links_total: 0 }],
     extra: async (path: string, route: Route) => {
       if (path === '/api/dashboard/config') {

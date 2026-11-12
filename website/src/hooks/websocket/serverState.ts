@@ -94,7 +94,7 @@ const TEMPLATES_TARGET: RefreshTarget = { queryKey: ['agent-templates'], exact: 
 // Prefix match on purpose: the Crew Members roster, its member projections and
 // briefings live under this key (api/membersQuery.ts) and refresh with the
 // registry.
-const CREW_TARGET: RefreshTarget = { queryKey: ['kirocrew-agents'] }
+const CREW_TARGET: RefreshTarget = { queryKey: ['ajcrew-agents'] }
 
 // Prefix match on purpose: covers the filtered library list
 // (['artifacts', {tag, kind}]) and the tag-options read
@@ -115,7 +115,7 @@ const ALL_TARGETS: readonly RefreshTarget[] = [
   { queryKey: ['default-agent'] },
   TEMPLATES_TARGET,
   { queryKey: ['workspaces'] },
-  { queryKey: ['kirocrewConfig'] },
+  { queryKey: ['ajcrewConfig'] },
   // These answers derive from the config AND, for an `auto` default, the
   // installed agent spec rebuilt by the server's config applier. A refresh
   // frame is emitted only after that applier completes, so invalidate the
@@ -273,7 +273,7 @@ export function refreshServerStateAfterReconnect(queryClient: QueryClient): void
   // A config `refresh` frame sent while the socket was down (a save from
   // another tab, which is how the update switches learn of it) was never
   // delivered either. Only observed readers refetch.
-  queryClient.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+  queryClient.invalidateQueries({ queryKey: ['ajcrewConfig'] })
   // The runtime monitor contract is fetched once with no staleTime, so a
   // gateway restart that registered a contributed monitor kind while the
   // socket was down would otherwise never refresh: its monitors would read as

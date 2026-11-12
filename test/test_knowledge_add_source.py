@@ -12,15 +12,15 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard.handlers.knowledge import (
+from aj_crew.dashboard.handlers.knowledge import (
     _folder_picker_available,
     _run_folder_dialog,
     add_source,
     get_config,
     pick_folder,
 )
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.fixture()
@@ -267,7 +267,7 @@ class TestAddSourceKeepsLocalNames:
         """``MarkdownPanel.tsx`` posts the file's basename as ``name``. The file on
         disk keeps a short name: the server never compares ``name`` with the
         path, and a stock Windows host refuses a path over 260 characters."""
-        from kiro_crew.dashboard.handlers.knowledge import _MAX_SOURCE_NAME_LEN
+        from aj_crew.dashboard.handlers.knowledge import _MAX_SOURCE_NAME_LEN
 
         basename = "n" * (_MAX_SOURCE_NAME_LEN + 37) + ".md"
         test_file = tmp_path / "long.md"
@@ -286,7 +286,7 @@ class TestAddSourceKeepsLocalNames:
         """``SourcesList.tsx`` posts ``addName || addUri``: the typed name, or the
         folder path when the name field is blank. Either can pass 200
         characters; the folder on disk stays short for the reason above."""
-        from kiro_crew.dashboard.handlers.knowledge import _MAX_SOURCE_NAME_LEN
+        from aj_crew.dashboard.handlers.knowledge import _MAX_SOURCE_NAME_LEN
 
         long_name = "d" * (_MAX_SOURCE_NAME_LEN + 40)
         folder = tmp_path / "docs"
@@ -301,7 +301,7 @@ class TestAddSourceKeepsLocalNames:
     @pytest.mark.asyncio
     async def test_md_notebook_vault_add_keeps_a_long_vault_name(self, store, tmp_path):
         """md-notebook's ``knowledgeRegister`` posts the vault's own name."""
-        from kiro_crew.dashboard.handlers.knowledge import _MAX_SOURCE_NAME_LEN
+        from aj_crew.dashboard.handlers.knowledge import _MAX_SOURCE_NAME_LEN
 
         vault = tmp_path / "vault"
         vault.mkdir()
@@ -349,14 +349,14 @@ def _trusted(monkeypatch, path="/usr/bin/osascript"):
     Pass ``None`` to exercise that arm deliberately.
     """
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.knowledge.platform_compat.trusted_system_bin",
+        "aj_crew.dashboard.handlers.knowledge.platform_compat.trusted_system_bin",
         lambda name: path,
     )
 
 
 class TestFolderPickerAvailable:
     def test_available_on_mac_local(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
         _trusted(monkeypatch)
         assert _folder_picker_available(_fake_request(local_only=True)) is True
 
@@ -364,20 +364,20 @@ class TestFolderPickerAvailable:
         """A macOS host whose osascript does not resolve out of the system
         directories offers no picker, so the UI hides the button instead of
         showing one whose only possible answer is a refusal."""
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
         _trusted(monkeypatch, None)
         assert _folder_picker_available(_fake_request(local_only=True)) is False
 
     def test_unavailable_off_mac(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.knowledge.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.dashboard.handlers.knowledge.sys.platform", "linux")
         assert _folder_picker_available(_fake_request(local_only=True)) is False
 
     def test_unavailable_when_remote(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
         assert _folder_picker_available(_fake_request(local_only=False)) is False
 
     def test_fail_closed_when_local_only_unset(self, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
         assert _folder_picker_available(SimpleNamespace(app={})) is False
 
     def test_unavailable_when_a_proxy_forwarded_the_request(self, monkeypatch):
@@ -390,7 +390,7 @@ class TestFolderPickerAvailable:
         requester's -- and hold it there for up to ``_FOLDER_DIALOG_TIMEOUT``,
         driven by someone else entirely.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
         _trusted(monkeypatch)
         proxied = _fake_request(local_only=True, headers={"X-Forwarded-For": "203.0.113.7"})
 
@@ -398,7 +398,7 @@ class TestFolderPickerAvailable:
 
     def test_unavailable_when_the_peer_is_not_loopback(self, monkeypatch):
         """A directly-bound non-loopback peer is remote however `local_only` reads."""
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
         _trusted(monkeypatch)
 
         assert _folder_picker_available(_fake_request(remote="203.0.113.7")) is False
@@ -410,7 +410,7 @@ class TestFolderPickerAvailable:
         could be passing because the fixture is malformed rather than because
         the gate noticed the proxy.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
         _trusted(monkeypatch)
 
         assert _folder_picker_available(_fake_request(local_only=True)) is True
@@ -432,7 +432,7 @@ class TestRunFolderDialog:
             return completed
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.knowledge.subprocess.run", run,
+            "aj_crew.dashboard.handlers.knowledge.subprocess.run", run,
         )
         _trusted(monkeypatch)
         assert _run_folder_dialog() == "/home/user/notes"
@@ -446,7 +446,7 @@ class TestRunFolderDialog:
             raise AssertionError("spawned a dialog with an untrusted binary")
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.knowledge.subprocess.run", boom,
+            "aj_crew.dashboard.handlers.knowledge.subprocess.run", boom,
         )
         _trusted(monkeypatch, None)
         assert _run_folder_dialog() is None
@@ -454,7 +454,7 @@ class TestRunFolderDialog:
     def test_cancel_returns_none(self, monkeypatch):
         completed = MagicMock(returncode=1, stdout="")
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.knowledge.subprocess.run",
+            "aj_crew.dashboard.handlers.knowledge.subprocess.run",
             lambda *a, **k: completed,
         )
         _trusted(monkeypatch)
@@ -464,7 +464,7 @@ class TestRunFolderDialog:
         def boom(*a, **k):
             raise FileNotFoundError()
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.knowledge.subprocess.run", boom,
+            "aj_crew.dashboard.handlers.knowledge.subprocess.run", boom,
         )
         _trusted(monkeypatch)
         assert _run_folder_dialog() is None
@@ -473,21 +473,21 @@ class TestRunFolderDialog:
 class TestPickFolderHandler:
     @pytest.mark.asyncio
     async def test_blocked_when_not_local_only(self, store, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
         async with TestClient(TestServer(_make_pick_app(store, local_only=False))) as client:
             resp = await client.post("/api/knowledge/pick-folder")
             assert resp.status == 403
 
     @pytest.mark.asyncio
     async def test_blocked_when_not_mac(self, store, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.knowledge.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.dashboard.handlers.knowledge.sys.platform", "linux")
         async with TestClient(TestServer(_make_pick_app(store, local_only=True))) as client:
             resp = await client.post("/api/knowledge/pick-folder")
             assert resp.status == 403
 
     @pytest.mark.asyncio
     async def test_blocked_when_osascript_is_not_trusted(self, store, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
         _trusted(monkeypatch, None)
         async with TestClient(TestServer(_make_pick_app(store, local_only=True))) as client:
             resp = await client.post("/api/knowledge/pick-folder")
@@ -495,10 +495,10 @@ class TestPickFolderHandler:
 
     @pytest.mark.asyncio
     async def test_returns_picked_path(self, store, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
         _trusted(monkeypatch)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.knowledge._run_folder_dialog",
+            "aj_crew.dashboard.handlers.knowledge._run_folder_dialog",
             lambda: "/home/user/notes",
         )
         async with TestClient(TestServer(_make_pick_app(store))) as client:
@@ -508,10 +508,10 @@ class TestPickFolderHandler:
 
     @pytest.mark.asyncio
     async def test_returns_null_on_cancel(self, store, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
         _trusted(monkeypatch)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.knowledge._run_folder_dialog",
+            "aj_crew.dashboard.handlers.knowledge._run_folder_dialog",
             lambda: None,
         )
         async with TestClient(TestServer(_make_pick_app(store))) as client:
@@ -523,7 +523,7 @@ class TestPickFolderHandler:
 class TestConfigFolderPickerFlag:
     @pytest.mark.asyncio
     async def test_reports_true_on_mac_local(self, store, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.dashboard.handlers.knowledge.sys.platform", "darwin")
         _trusted(monkeypatch)
         async with TestClient(TestServer(_make_pick_app(store, local_only=True))) as client:
             resp = await client.get("/api/knowledge/config")
@@ -531,7 +531,7 @@ class TestConfigFolderPickerFlag:
 
     @pytest.mark.asyncio
     async def test_reports_false_off_mac(self, store, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.knowledge.sys.platform", "win32")
+        monkeypatch.setattr("aj_crew.dashboard.handlers.knowledge.sys.platform", "win32")
         async with TestClient(TestServer(_make_pick_app(store, local_only=True))) as client:
             resp = await client.get("/api/knowledge/config")
             assert (await resp.json())["folder_picker"] is False
@@ -546,7 +546,7 @@ def _grant_bedrock(
     the bedrock_kb tests need a readable grant, not only a stubbed
     ``is_granted``; the real ``is_granted`` then passes for the body's target.
     """
-    from kiro_crew import aws_consent
+    from aj_crew import aws_consent
 
     return aws_consent.record_grant(
         aws_consent.SERVICE_BEDROCK_KB,
@@ -591,7 +591,7 @@ class TestAddSourceBedrockGrantRecheck:
         def _validated_in_the_live_account(config):
             # Real validation verifies the credentials against the grant it
             # reads after its STS call, and reports that grant's account.
-            from kiro_crew import aws_consent
+            from aj_crew import aws_consent
 
             grant = aws_consent.read_grant(aws_consent.SERVICE_BEDROCK_KB)
             return True, "", grant.account if grant is not None else ""
@@ -605,7 +605,7 @@ class TestAddSourceBedrockGrantRecheck:
 
     @staticmethod
     def _seed_registration(store, kb_id: str) -> tuple[str, str]:
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         uri = f"bedrock-kb://us-east-1/{kb_id}"
         properties = {"kb_ids": kb_id, "region": "us-east-1", "profile": "team-a"}
@@ -627,8 +627,8 @@ class TestAddSourceBedrockGrantRecheck:
     async def test_source_limit_refuses_new_registration_without_either_write(
         self, store, monkeypatch
     ):
-        from kiro_crew import aws_consent
-        from kiro_crew.knowledge.connectors import bedrock_kb
+        from aj_crew import aws_consent
+        from aj_crew.knowledge.connectors import bedrock_kb
 
         monkeypatch.setattr(bedrock_kb, "MAX_BEDROCK_KB_SOURCES", 2)
         self._seed_registration(store, "KB00000001")
@@ -651,9 +651,9 @@ class TestAddSourceBedrockGrantRecheck:
 
     @pytest.mark.asyncio
     async def test_removing_a_registered_source_frees_one_slot(self, store, monkeypatch):
-        from kiro_crew import aws_consent
-        from kiro_crew.dashboard.handlers.knowledge import delete_source
-        from kiro_crew.knowledge.connectors import bedrock_kb
+        from aj_crew import aws_consent
+        from aj_crew.dashboard.handlers.knowledge import delete_source
+        from aj_crew.knowledge.connectors import bedrock_kb
 
         monkeypatch.setattr(bedrock_kb, "MAX_BEDROCK_KB_SOURCES", 2)
         removed_sid, _ = self._seed_registration(store, "KB00000001")
@@ -687,8 +687,8 @@ class TestAddSourceBedrockGrantRecheck:
         # delete route, which answers 404 for a missing row and so can never
         # revoke that row's attestation. Unreclaimed, the attestation would
         # hold one of the limited slots for good.
-        from kiro_crew import aws_consent
-        from kiro_crew.knowledge.connectors import bedrock_kb
+        from aj_crew import aws_consent
+        from aj_crew.knowledge.connectors import bedrock_kb
 
         monkeypatch.setattr(bedrock_kb, "MAX_BEDROCK_KB_SOURCES", 2)
         gone_sid, _ = self._seed_registration(store, "KB00000001")
@@ -707,7 +707,7 @@ class TestAddSourceBedrockGrantRecheck:
     async def test_racing_readd_at_the_limit_still_answers_source_exists(
         self, store, monkeypatch
     ):
-        from kiro_crew.knowledge.connectors import bedrock_kb
+        from aj_crew.knowledge.connectors import bedrock_kb
 
         monkeypatch.setattr(bedrock_kb, "MAX_BEDROCK_KB_SOURCES", 2)
         expected_sid, _ = self._seed_registration(store, "ABCDEFGHIJ")
@@ -737,7 +737,7 @@ class TestAddSourceBedrockGrantRecheck:
 
     @pytest.mark.asyncio
     async def test_no_grant_for_the_target_refuses_and_persists_nothing(self, store, monkeypatch):
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         monkeypatch.setattr(aws_consent, "read_grant", lambda service: None)
         async with TestClient(TestServer(self._app(store))) as client:
@@ -754,7 +754,7 @@ class TestAddSourceBedrockGrantRecheck:
 
     @pytest.mark.asyncio
     async def test_matching_grant_lets_the_insert_through(self, store, monkeypatch):
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         monkeypatch.setattr(
             aws_consent, "is_granted", lambda service, *, profile, region: (True, "")
@@ -770,7 +770,7 @@ class TestAddSourceBedrockGrantRecheck:
         from an agent-writable row the handler's own bound never saw. A
         planted credential or exfil URL in it reaches the operator as the
         redaction tag, not the value. Found in review."""
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         monkeypatch.setattr(
             aws_consent, "is_granted", lambda service, *, profile, region: (True, "")
@@ -830,7 +830,7 @@ class TestAddSourceBedrockGrantRecheck:
         another account with the same (profile, region) passes the target
         equality check, and the attestation would pin the new account -- a KB
         never validated there. Refused with nothing persisted. Found in review."""
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         app = self._app_reconfirming_during_validation(store, account="999988887777")
         async with TestClient(TestServer(app)) as client:
@@ -850,7 +850,7 @@ class TestAddSourceBedrockGrantRecheck:
         grant identity. A fresh grant for the same target AND the same account
         is the account validation ran under, so the insert goes through and
         the attestation pins that account."""
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         app = self._app_reconfirming_during_validation(store, account="111122223333")
         async with TestClient(TestServer(app)) as client:
@@ -869,7 +869,7 @@ class TestAddSourceBedrockGrantRecheck:
         before the insert. A read taken before validation names A and matches
         the final grant, so the row would be attested in A for a KB proven
         only in B. Refused with nothing persisted. Found in review."""
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         app = self._app(store)
 
@@ -898,8 +898,8 @@ class TestAddSourceBedrockGrantRecheck:
         consent store, pinned to the values it stored; the paid enumeration
         searches only such rows. Deleting the row drops the attestation, so a
         later row minted under the same id cannot inherit it."""
-        from kiro_crew import aws_consent
-        from kiro_crew.dashboard.handlers.knowledge import delete_source
+        from aj_crew import aws_consent
+        from aj_crew.dashboard.handlers.knowledge import delete_source
 
         monkeypatch.setattr(
             aws_consent, "is_granted", lambda service, *, profile, region: (True, "")
@@ -938,8 +938,8 @@ class TestAddSourceBedrockGrantRecheck:
         re-minted under the same id and values to inherit. The revoke raises,
         the route answers its coded 500, the row and the file's bytes stay.
         Found in review."""
-        from kiro_crew import aws_consent
-        from kiro_crew.dashboard.handlers.knowledge import delete_source
+        from aj_crew import aws_consent
+        from aj_crew.dashboard.handlers.knowledge import delete_source
 
         monkeypatch.setattr(
             aws_consent, "is_granted", lambda service, *, profile, region: (True, "")
@@ -967,7 +967,7 @@ class TestAddSourceBedrockGrantRecheck:
         """``properties`` is retained and re-parsed at every search, so the
         insert projects it onto the read set: extra fields in the body, flat
         or nested, never reach the row."""
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         monkeypatch.setattr(
             aws_consent, "is_granted", lambda service, *, profile, region: (True, "")
@@ -998,7 +998,7 @@ class TestAddSourceBedrockGrantRecheck:
         values the gates checked -- stripped region/profile, canonical bare
         ids -- so its size follows the gates' bounds instead of the request
         body cap, and its spelling is the one every later compare uses."""
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         seen: list[tuple[str, str]] = []
 
@@ -1042,7 +1042,7 @@ class TestAddSourceBedrockGrantRecheck:
         simply unique per request) never reaches the row, and a second add of
         the same knowledge base under another handle dedupes against the first
         instead of minting a row -- the row count is one per real KB."""
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         monkeypatch.setattr(
             aws_consent, "is_granted", lambda service, *, profile, region: (True, "")
@@ -1070,8 +1070,8 @@ class TestAddSourceBedrockGrantRecheck:
         which cuts ``name`` to ``_MAX_RESULT_SOURCE_NAME_CHARS``, so the add path
         stores no more than that. A longer name is cut, not refused, so no
         caller gets a 400 for a name it can see shortened."""
-        from kiro_crew import aws_consent
-        from kiro_crew.knowledge.connectors.bedrock_kb import (
+        from aj_crew import aws_consent
+        from aj_crew.knowledge.connectors.bedrock_kb import (
             _MAX_RESULT_SOURCE_NAME_CHARS,
         )
 
@@ -1095,8 +1095,8 @@ class TestAddSourceBedrockGrantRecheck:
         redactor is replaced by one that only recognizes the full secret, so
         the test proves the order, not any redaction pattern.
         """
-        from kiro_crew import aws_consent, platform
-        from kiro_crew.knowledge.connectors.bedrock_kb import (
+        from aj_crew import aws_consent, platform
+        from aj_crew.knowledge.connectors.bedrock_kb import (
             _MAX_RESULT_SOURCE_NAME_CHARS,
         )
 
@@ -1138,7 +1138,7 @@ class TestAddSourceBedrockGrantRecheck:
         attests is dark for good (the enumeration skips it every search), so
         when the attestation write fails the insert is undone and the add
         reports the failure instead of a half-registered success."""
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         def boom(source_id, uri, properties):
             raise OSError("consent store not writable")
@@ -1157,8 +1157,8 @@ class TestAddSourceBedrockGrantRecheck:
         between them leaves a dark row (skipped, audited, removable by a
         retry), never an attestation without a row that a later row minted
         under the same id could inherit. A failed revoke deletes nothing."""
-        from kiro_crew import aws_consent
-        from kiro_crew.dashboard.handlers.knowledge import delete_source
+        from aj_crew import aws_consent
+        from aj_crew.dashboard.handlers.knowledge import delete_source
 
         app = self._app(store)
         app.router.add_delete("/api/knowledge/sources/{id}", delete_source)
@@ -1211,7 +1211,7 @@ class TestAddSourceBedrockGrantRecheck:
         The 409 keeps the code and id every source type answers with, but its
         text names the recovery that does work -- remove the row, then add it
         again -- and the consent store is not written. Found in review."""
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         async with TestClient(TestServer(self._app(store))) as client:
             resp = await client.post("/api/knowledge/sources", json=self._BODY)
@@ -1240,8 +1240,8 @@ class TestAddSourceBedrockGrantRecheck:
         the stale attestation (any account) with the row; the fresh add then
         validates, inserts and attests under the account the grant confirms
         now, so the new row is the one the paid enumeration searches."""
-        from kiro_crew import aws_consent
-        from kiro_crew.dashboard.handlers.knowledge import delete_source
+        from aj_crew import aws_consent
+        from aj_crew.dashboard.handlers.knowledge import delete_source
 
         app = self._app(store)
         app.router.add_delete("/api/knowledge/sources/{id}", delete_source)
@@ -1311,7 +1311,7 @@ class TestAddSourceBedrockIsOwnerOnly:
 
     @pytest.mark.asyncio
     async def test_non_owner_messaging_user_is_refused(self, store, monkeypatch):
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         monkeypatch.setattr(
             aws_consent, "is_granted", lambda service, *, profile, region: (True, "")
@@ -1327,7 +1327,7 @@ class TestAddSourceBedrockIsOwnerOnly:
 
     @pytest.mark.asyncio
     async def test_app_token_is_refused(self, store, monkeypatch):
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         monkeypatch.setattr(
             aws_consent, "is_granted", lambda service, *, profile, region: (True, "")
@@ -1343,7 +1343,7 @@ class TestAddSourceBedrockIsOwnerOnly:
 
     @pytest.mark.asyncio
     async def test_the_owner_still_gets_through(self, store, monkeypatch):
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         monkeypatch.setattr(
             aws_consent, "is_granted", lambda service, *, profile, region: (True, "")
@@ -1365,8 +1365,8 @@ class TestAddSourceBedrockIsOwnerOnly:
         DELETE is refused before either write, so the row stays attested, and
         so is an app token, which the knowledge owner gate admits; that app
         token still removes a local folder row."""
-        from kiro_crew import aws_consent
-        from kiro_crew.dashboard.handlers.knowledge import delete_source
+        from aj_crew import aws_consent
+        from aj_crew.dashboard.handlers.knowledge import delete_source
 
         app_caller = {"X-Test-User": "owner-1", "X-Test-App": "some-app"}
         folder = tmp_path / "notes"
@@ -1419,8 +1419,8 @@ class TestAddSourceBedrockIsOwnerOnly:
         revoke, leaving the attestation for a row re-minted under the same id
         and values to inherit. Re-labelled, the row still
         refuses a non-owner, and the owner's delete still revokes."""
-        from kiro_crew import aws_consent
-        from kiro_crew.dashboard.handlers.knowledge import delete_source
+        from aj_crew import aws_consent
+        from aj_crew.dashboard.handlers.knowledge import delete_source
 
         app = self._app(store)
         app.router.add_delete("/api/knowledge/sources/{id}", delete_source)
@@ -1471,13 +1471,13 @@ class TestAddSourceKeepsBoto3OffTheLoop:
     def test_add_source_imports_the_connector_only_on_a_worker_thread(self):
         import inspect
 
-        from kiro_crew.dashboard.handlers import knowledge as kh
+        from aj_crew.dashboard.handlers import knowledge as kh
 
         assert "connectors.bedrock_kb import" not in inspect.getsource(kh.add_source)
         assert "_bedrock_registration_identity" in inspect.getsource(kh.add_source)
 
     def test_the_identity_helper_derives_uri_and_name_cap(self):
-        from kiro_crew.dashboard.handlers import knowledge as kh
+        from aj_crew.dashboard.handlers import knowledge as kh
 
         retained, uri, cap = kh._bedrock_registration_identity(
             {"kb_ids": "KBTEST1234", "region": "us-east-1", "profile": ""}
@@ -1508,7 +1508,7 @@ class TestAddSourceBodyShapeGate:
 
     @pytest.mark.asyncio
     async def test_non_string_uri_is_a_400_before_validation(self, store, monkeypatch):
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         monkeypatch.setattr(
             aws_consent, "is_granted", lambda service, *, profile, region: (True, "")
@@ -1556,7 +1556,7 @@ class TestAddSourceBodyShapeGate:
     async def test_null_text_fields_read_as_absent(self, store, monkeypatch):
         """``null`` is not a shape violation: each text field has a default,
         so a client that serializes an unset field as null keeps working."""
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         monkeypatch.setattr(
             aws_consent, "is_granted", lambda service, *, profile, region: (True, "")

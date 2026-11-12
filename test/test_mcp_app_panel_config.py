@@ -20,32 +20,32 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config.loader import AjCrewConfig
 
 
 @pytest.fixture()
 def cfg_file(tmp_path):
     p = tmp_path / "config.json"
     p.write_text("{}", encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=p):
+    with patch("aj_crew.config.loader.config_path", return_value=p):
         yield p
 
 
 def test_mcp_app_panel_default_false():
     # Opt-in: an existing install must keep rendering inline until asked.
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     assert cfg.dashboard.mcp_app_panel is False
 
 
 def test_mcp_app_panel_save_load(cfg_file):
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.dashboard.mcp_app_panel = True
     cfg.save()
 
     raw = json.loads(cfg_file.read_text(encoding="utf-8"))
     assert raw["dashboard"]["mcp_app_panel"] is True
 
-    cfg2 = KiroCrewConfig.load()
+    cfg2 = AjCrewConfig.load()
     assert cfg2.dashboard.mcp_app_panel is True
 
 
@@ -53,14 +53,14 @@ def test_mcp_app_panel_load_from_existing(cfg_file):
     cfg_file.write_text(
         json.dumps({"dashboard": {"mcp_app_panel": True}}), encoding="utf-8"
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.dashboard.mcp_app_panel is True
 
 
 def test_mcp_app_panel_in_generated_schema():
     # The settings UI is driven by the generated schema, so the field must carry
     # its label/help through to /api/config/schema without a manual edit.
-    from kiro_crew.config.schema import JSON_SCHEMA
+    from aj_crew.config.schema import JSON_SCHEMA
 
     node = JSON_SCHEMA["properties"]["dashboard"]["properties"]["mcp_app_panel"]
     assert node["type"] == "boolean"
@@ -72,18 +72,18 @@ def test_mcp_app_panel_in_generated_schema():
 @pytest.fixture()
 def mock_sel():
     try:
-        import kiro_crew.dashboard.handlers  # noqa: F401
+        import aj_crew.dashboard.handlers  # noqa: F401
     except ImportError:
         pytest.skip("dashboard handler deps not available locally")
     m = MagicMock()
     m.log_tool_invocation = MagicMock()
-    with patch("kiro_crew.dashboard.handlers.sel", return_value=m):
+    with patch("aj_crew.dashboard.handlers.sel", return_value=m):
         yield m
 
 
 @pytest.fixture()
 def handler_app(cfg_file, mock_sel):
-    from kiro_crew.dashboard.handlers.files import api_dashboard_config
+    from aj_crew.dashboard.handlers.files import api_dashboard_config
     app = web.Application()
     app.router.add_put("/api/dashboard/config", api_dashboard_config)
     app.router.add_get("/api/dashboard/config", api_dashboard_config)
@@ -96,7 +96,7 @@ async def test_handler_put_mcp_app_panel_true(handler_app, cfg_file):
     async with TestClient(TestServer(handler_app)) as client:
         resp = await client.put("/api/dashboard/config", json={"mcp_app_panel": True})
         assert resp.status == 200
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg.dashboard.mcp_app_panel is True
 
 

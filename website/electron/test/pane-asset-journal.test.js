@@ -63,7 +63,7 @@ describe("classifyUrl", () => {
       path: "/assets/main-abc.js",
     });
     assert.deepEqual(classifyUrl("http://127.0.0.1:7779/assets/a.css").origin, "http://127.0.0.1:7779");
-    assert.equal(classifyUrl("http://kirocrew.localhost:7780/assets/a.js").origin, "http://kirocrew.localhost:7780");
+    assert.equal(classifyUrl("http://ajcrew.localhost:7780/assets/a.js").origin, "http://ajcrew.localhost:7780");
   });
 
   it("rejects non-asset paths, non-loopback hosts and non-http schemes", () => {

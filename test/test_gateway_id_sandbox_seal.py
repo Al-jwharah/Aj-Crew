@@ -15,11 +15,11 @@ import sys
 import pytest
 from test_sandbox_launcher_program import RecordingLibc, launch, refusal
 
-from kiro_crew import gateway_identity, sandbox, sandbox_launcher_program, sandbox_plan, security
+from aj_crew import gateway_identity, sandbox, sandbox_launcher_program, sandbox_plan, security
 
 _LEAF = gateway_identity.GATEWAY_ID_FILE
 _MODES = ("standard", "cc", "strict")
-_CREW_PREFIXES = (".kiro/crew", ".kirocrew")
+_CREW_PREFIXES = (".kiro/crew", ".ajcrew")
 _LINUX_ONLY = pytest.mark.skipif(
     not sys.platform.startswith("linux"), reason="the namespace launcher is Linux-only"
 )
@@ -122,14 +122,14 @@ class TestTheSpawnMintsTheIdBeforeSealing:
         assert _LEAF not in sandbox._CREW_PRECREATE_READONLY_FILE_LEAVES
 
     def test_the_spawn_mints_the_real_id_before_sealing(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         sandbox._materialize_sealable_ceilings()
         minted = (tmp_path / _LEAF).read_text(encoding="utf-8")
         assert gateway_identity._ID_RE.match(minted)
         assert gateway_identity.gateway_id(create=False) == minted
 
     def test_an_existing_id_is_never_overwritten(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / _LEAF).write_text("a" * 32, encoding="utf-8")
         sandbox._materialize_sealable_ceilings()
         assert (tmp_path / _LEAF).read_text(encoding="utf-8") == "a" * 32

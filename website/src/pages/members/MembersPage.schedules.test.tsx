@@ -46,7 +46,7 @@ vi.mock('../../api/client', () => ({
     autonudgeForSlot: vi.fn(() => Promise.resolve({ enabled: true, loop: null })),
     monitorForSlot: vi.fn(() => Promise.resolve({ enabled: true, monitor: null })),
     // The card's description comes from the crew registry; none of these cases need one.
-    kirocrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
+    ajcrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
     // The card's list and the pushed section read one cron list and filter it per
     // crewmate. Each case sets its own jobs.
     crons: vi.fn(() => Promise.resolve({ jobs: [] })),
@@ -59,16 +59,16 @@ vi.mock('../../api/client', () => ({
     // The create the draft-guard cases drive; each one controls its own resolution.
     createCron: vi.fn(() => Promise.resolve({ ok: true, id: 'j-new' })),
     updateCron: vi.fn(() => Promise.resolve({ ok: true })),
-    defaultAgent: vi.fn(() => Promise.resolve({ default_agent: 'kirocrew' })),
+    defaultAgent: vi.fn(() => Promise.resolve({ default_agent: 'ajcrew' })),
     // Reached by the pushed section's row controls via `useCronActions`.
     toggleCron: vi.fn(() => Promise.resolve({})),
     runCron: vi.fn(() => Promise.resolve({})),
     cancelCron: vi.fn(() => Promise.resolve({})),
     cronToChat: vi.fn(() => Promise.resolve({})),
     models: vi.fn(() => Promise.resolve([])),
-    agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
+    agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
     workspaces: vi.fn(() => Promise.resolve({ workspaces: [] })),
-    kirocrewConfig: vi.fn(() => Promise.resolve({ agents: {} })),
+    ajcrewConfig: vi.fn(() => Promise.resolve({ agents: {} })),
     // The goal record. The Schedules tab's Heartbeat row reads it too
     // (`schedules.heartbeat`), so the quiet default is a whole record with no
     // goal, not a bare `{ goals: [] }`.
@@ -146,7 +146,7 @@ const NARROW_WINDOW = 900
 function row(overrides: Record<string, unknown> = {}) {
   return {
     name: 'oncall', slug: 'oncall', bound: true, slot_key: 'member-oncall', running: false,
-    kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', model: '',
+    kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', model: '',
     ...overrides,
   }
 }
@@ -163,7 +163,7 @@ function setWindowWidth(px: number) {
 }
 
 function mockRoster(members: Array<Record<string, unknown>>) {
-  ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members, default_agent: 'kirocrew' })
+  ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members, default_agent: 'ajcrew' })
   // Echo the requested slug: a fixed answer would report `member: <first>` for every
   // crewmate, which the page reads as a slug collision and renders instead of the thread.
   ;(api.memberThread as ReturnType<typeof vi.fn>).mockImplementation((slug: string) =>
@@ -252,11 +252,11 @@ const askToLeave = () => {
 beforeEach(() => {
   vi.clearAllMocks()
   localStorage.clear()
-  delete (window as unknown as { __kirocrewPluginHandlesFiles?: boolean }).__kirocrewPluginHandlesFiles
+  delete (window as unknown as { __ajcrewPluginHandlesFiles?: boolean }).__ajcrewPluginHandlesFiles
   __resetPanelTabs()
   setWindowWidth(WIDE_WINDOW)
   vi.mocked(api.crons).mockResolvedValue({ jobs: JOBS } as never)
-  vi.mocked(api.defaultAgent).mockResolvedValue({ default_agent: 'kirocrew' } as never)
+  vi.mocked(api.defaultAgent).mockResolvedValue({ default_agent: 'ajcrew' } as never)
 })
 
 describe('MembersPage Profile card Schedules tab', () => {
@@ -307,10 +307,10 @@ describe('MembersPage Profile card Schedules tab', () => {
   })
 
   it('does not hand the default mate a job that belongs to nobody', async () => {
-    // `kirocrew` IS the default crew, and the crew editor's pane WOULD list the
+    // `ajcrew` IS the default crew, and the crew editor's pane WOULD list the
     // ownerless job there (`wakesCrew`'s last fallback). The card does not: it answers
     // what wakes this crewmate, and a schedule with no crewmate is nobody's.
-    await openCrewmate('kirocrew')
+    await openCrewmate('ajcrew')
     const list = await openSchedulesTab()
     await within(list).findByTestId('crew-schedule-empty')
     expect(list).not.toHaveTextContent('nightly backup')
@@ -422,7 +422,7 @@ describe('MembersPage Profile card — New schedule', () => {
     // `/schedule` labels the job by. `member_id` is the roster row's NAME, never a
     // derived id: slugification is lossy and a derived id can collide.
     mockRoster([row({
-      name: 'radar', slug: 'radar', slot_key: 'member-radar', kiro_agent: 'kirocrew-worker',
+      name: 'radar', slug: 'radar', slot_key: 'member-radar', kiro_agent: 'ajcrew-worker',
       memory_version: 2, memory_owner: 'radar',
     })])
     renderWithProviders(<NavigationLeaveGuardProvider><MembersPage /><LeaveProbe /></NavigationLeaveGuardProvider>)
@@ -436,11 +436,11 @@ describe('MembersPage Profile card — New schedule', () => {
 
     await waitFor(() => expect(api.createCron).toHaveBeenCalled())
     const submitted = vi.mocked(api.createCron).mock.calls[0][0] as { agent?: string; member_id?: string }
-    expect(submitted.agent).toBe('kirocrew-worker')
+    expect(submitted.agent).toBe('ajcrew-worker')
     expect(submitted.member_id).toBe('radar')
     // And the record the server would keep is listed back under this crewmate.
     expect(wakesCrew(
-      { id: 'j-new', name: 'Check the board', member_id: 'radar', agent: 'kirocrew-worker' } as never,
+      { id: 'j-new', name: 'Check the board', member_id: 'radar', agent: 'ajcrew-worker' } as never,
       'radar', false, 'radar',
     )).toBe(true)
   })
@@ -451,7 +451,7 @@ describe('MembersPage Profile card — New schedule', () => {
     // display name. Writing the provider template there matched neither field.
     mockRoster([row({
       name: 'Radar One', slug: 'radar-one', slot_key: 'member-radar-one',
-      kiro_agent: 'kirocrew-worker', memory_version: 1, memory_owner: '',
+      kiro_agent: 'ajcrew-worker', memory_version: 1, memory_owner: '',
     })])
     renderWithProviders(<NavigationLeaveGuardProvider><MembersPage /><LeaveProbe /></NavigationLeaveGuardProvider>)
     fireEvent.click(await screen.findByText('Radar One'))
@@ -703,16 +703,16 @@ describe('MembersPage Profile card — unsaved schedule draft', () => {
     // A transcript file link likewise stays inside this page. The optional IDE
     // bridge makes the callback observable without performing a file read.
     const opened = vi.fn()
-    window.addEventListener('kirocrew-file-open', opened)
-    ;(window as unknown as { __kirocrewPluginHandlesFiles?: boolean }).__kirocrewPluginHandlesFiles = true
+    window.addEventListener('ajcrew-file-open', opened)
+    ;(window as unknown as { __ajcrewPluginHandlesFiles?: boolean }).__ajcrewPluginHandlesFiles = true
     try {
       fireEvent.click(screen.getByRole('button', { name: 'Open file' }))
       expect(opened).toHaveBeenCalledTimes(1)
       expect(screen.queryByRole('dialog')).toBeNull()
       expect(screen.getByDisplayValue('Check the board')).toBeInTheDocument()
     } finally {
-      window.removeEventListener('kirocrew-file-open', opened)
-      delete (window as unknown as { __kirocrewPluginHandlesFiles?: boolean }).__kirocrewPluginHandlesFiles
+      window.removeEventListener('ajcrew-file-open', opened)
+      delete (window as unknown as { __ajcrewPluginHandlesFiles?: boolean }).__ajcrewPluginHandlesFiles
     }
   })
 

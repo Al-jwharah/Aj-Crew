@@ -48,7 +48,7 @@ const folders = [
 const TAG = 'cccccccc-cccc-cccc-cccc-cccccccccccc'
 const slots = [{
   key: 's1', title: 'Worker - #7627 Settings Display toggle for user', messages: 12,
-  running: false, agent: 'kirocrew', created: '2026-09-07T01:00:00Z',
+  running: false, agent: 'ajcrew', created: '2026-09-07T01:00:00Z',
   last_ts: '2026-09-07T21:14:00Z', folder_id: 'dashboard', tags: [TAG],
 }]
 const tags = [{ id: TAG, name: 'Working', color: '#1a1', order: 0, status: true }]

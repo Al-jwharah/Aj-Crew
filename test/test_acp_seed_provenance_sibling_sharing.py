@@ -1,7 +1,7 @@
 """Which sibling may share a ``settings.local.json`` seed, and the create race for one.
 
 A sibling of the same agent in the same ``work_dir`` whose payload matches the durable
-record and the bytes on disk shares the seed instead of running without Kiro Crew's MCP
+record and the bytes on disk shares the seed instead of running without Aj Crew's MCP
 tools. These pin who may share and the share-validation lease that follows, and the
 create race: a loser shares only on a durable record of the winner's bytes, a vacant path
 is re-created only with the recorded bytes, and a refused record withdraws its file.
@@ -33,13 +33,13 @@ from acp_seed_provenance_helpers import (
     _write_durable_holder,
 )
 
-from kiro_crew import model_registry as mr
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp import seed_provenance as sp
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import default_timeout
+from aj_crew import model_registry as mr
+from aj_crew.acp import client as acp_client
+from aj_crew.acp import seed_provenance as sp
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import default_timeout
 
 
 class _HalfSecondPolls(ManualClock):
@@ -107,7 +107,7 @@ class TestSharedPermissionSurfaceEligibility:
     def test_a_model_pinned_sibling_shares_a_modelless_seed(self, tmp_path, monkeypatch):
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         monkeypatch.setattr(mr, "_ADVERTISED_MODELS", {"claude_code": list(_SERVED)})
@@ -121,10 +121,10 @@ class TestSharedPermissionSurfaceEligibility:
 
         assert sibling._claude_settings_shared is True
         assert sibling._permission_surface_governed is True
-        stub = {"name": "kirocrew-core", "command": "/stub", "args": [], "env": [], "type": "stdio"}
+        stub = {"name": "ajcrew-core", "command": "/stub", "args": [], "env": [], "type": "stdio"}
         projection = acp_client.mirror_for(ACP_BACKEND_CLAUDE).session_projection(
             sibling._agent,
-            stub_server_names=("kirocrew-core",),
+            stub_server_names=("ajcrew-core",),
             stub_elements=[stub],
             permission_surface_owned=sibling._permission_surface_governed,
         )
@@ -133,7 +133,7 @@ class TestSharedPermissionSurfaceEligibility:
     def test_a_sibling_pinned_to_another_model_shares_the_seed(self, tmp_path, monkeypatch):
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         monkeypatch.setattr(mr, "_ADVERTISED_MODELS", {"claude_code": list(_SERVED)})
@@ -155,7 +155,7 @@ class TestSharedPermissionSurfaceEligibility:
         # and no list. Each session still runs its own pinned model, and the model key
         # alone does not narrow the alias, so the second session may share the seed.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: False,
         )
         monkeypatch.setattr(mr, "_ADVERTISED_MODELS", {"claude_code": list(_SERVED)})
@@ -172,7 +172,7 @@ class TestSharedPermissionSurfaceEligibility:
     def test_a_sibling_offered_another_model_list_shares_the_seed(self, tmp_path, monkeypatch):
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         monkeypatch.setattr(mr, "_ADVERTISED_MODELS", {"claude_code": list(_SERVED)})
@@ -195,7 +195,7 @@ class TestSharedPermissionSurfaceEligibility:
     ):
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         monkeypatch.setattr(mr, "_ADVERTISED_MODELS", {"claude_code": list(_SERVED)})
@@ -217,7 +217,7 @@ class TestSharedPermissionSurfaceEligibility:
     def test_a_sibling_whose_model_the_seed_does_not_list_is_refused(self, tmp_path, monkeypatch):
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         # The adapter takes a pushed model only from the seed's availableModels, so
@@ -273,7 +273,7 @@ class TestSharedPermissionSurfaceEligibility:
     def test_an_auto_sibling_is_refused_a_pinned_seed(self, tmp_path, monkeypatch):
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         # An unpinned session pushes no model, so it would start on the owner's pin.

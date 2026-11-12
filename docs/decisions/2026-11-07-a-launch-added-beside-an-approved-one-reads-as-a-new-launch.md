@@ -1,13 +1,13 @@
 # A launch added beside an approved one reads as a new launch, not a changed command
 
-Decided by: Bolin Chen (bolichen97), Kiro Crew maintainer
+Decided by: Bolin Chen (bolichen97), Aj Crew maintainer
 Date: 2026-11-07
 
 ## Decision
 
 On MCP Management, a `changed_needs_reapproval` row whose approved launches all
 still run beside one that is not approved reads **Paused · new launch to
-approve**, and `kirocrew doctor` names it `new launch not approved yet`; a row
+approve**, and `ajcrew doctor` names it `new launch not approved yet`; a row
 whose approved launch changed keeps **Paused · command changed**. Both read the
 refusal's own displays, with no new reason code, store field or status field.
 

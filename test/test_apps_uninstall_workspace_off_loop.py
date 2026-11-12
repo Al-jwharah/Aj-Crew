@@ -12,10 +12,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from dashboard_owner_helpers import owner_claims
 
-import kiro_crew.apps.routes as routes_mod
-from kiro_crew import platform_compat
-from kiro_crew.apps import registry
-from kiro_crew.apps.manager import app_lifecycle_lock
+import aj_crew.apps.routes as routes_mod
+from aj_crew import platform_compat
+from aj_crew.apps import registry
+from aj_crew.apps.manager import app_lifecycle_lock
 
 _FAKE_APP = {
     "name": "demo",
@@ -66,11 +66,11 @@ async def test_registry_workspace_removal_runs_off_the_loop_thread(tmp_path: Pat
         patch.object(routes_mod, "get_app", return_value=_FAKE_APP),
         patch.object(routes_mod, "is_registry_source", return_value=True),
         patch.object(routes_mod, "registry_name_from_source", return_value="demo"),
-        patch("kiro_crew.apps.registry.app_source_dir", return_value=ws_dir),
+        patch("aj_crew.apps.registry.app_source_dir", return_value=ws_dir),
         patch.object(routes_mod, "uninstall_app", return_value=result),
         patch.object(routes_mod, "stop_app_backend", return_value=None),
         patch.object(routes_mod, "deregister_app", return_value=None),
-        patch("kiro_crew.apps.teardown.on_app_disable", new_callable=AsyncMock),
+        patch("aj_crew.apps.teardown.on_app_disable", new_callable=AsyncMock),
         patch.object(routes_mod, "sel", return_value=MagicMock()),
         patch.object(routes_mod, "classify_and_clean_for_uninstall", return_value=_NO_DEPS),
         patch.object(routes_mod, "clean_dependencies", new_callable=AsyncMock, return_value=[]),
@@ -113,7 +113,7 @@ async def _uninstall_demo_recorded_with(source: str) -> tuple[Any, MagicMock]:
         patch.object(routes_mod, "uninstall_app", return_value=result) as uninstall,
         patch.object(routes_mod, "stop_app_backend", return_value=None),
         patch.object(routes_mod, "deregister_app", return_value=None),
-        patch("kiro_crew.apps.teardown.on_app_disable", new_callable=AsyncMock),
+        patch("aj_crew.apps.teardown.on_app_disable", new_callable=AsyncMock),
         patch.object(routes_mod, "sel", return_value=MagicMock()),
         patch.object(routes_mod, "classify_and_clean_for_uninstall", return_value=_NO_DEPS),
         patch.object(routes_mod, "clean_dependencies", new_callable=AsyncMock, return_value=[]),

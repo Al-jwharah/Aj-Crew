@@ -30,9 +30,9 @@ from artifacts_handlers_helpers import (  # noqa: F401 -- fixtures are requested
 )
 from body_stream_helpers import attach_json_body
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew import mcp_core
-from kiro_crew.dashboard.handlers.artifacts import (
+from aj_crew import artifacts as art_mod
+from aj_crew import mcp_core
+from aj_crew.dashboard.handlers.artifacts import (
     api_artifact_delete,
     api_artifact_detail,
     api_artifact_events,
@@ -85,7 +85,7 @@ class TestJsonBodyGate:
     async def test_an_oversize_chunked_body_stops_streaming_at_the_cap(
         self, isolated_store, patch_restricted, monkeypatch
     ) -> None:
-        from kiro_crew.dashboard.handlers import artifacts as art_handlers
+        from aj_crew.dashboard.handlers import artifacts as art_handlers
 
         cap = 1024
         monkeypatch.setattr(art_handlers, "_MAX_BODY_BYTES", cap)
@@ -228,7 +228,7 @@ class TestUpdate:
         # store.update() raising the base ArtifactError (e.g. a sensitive-path
         # refusal from _write_text) must be caught explicitly and audited as an
         # error, not escape the handler as an unhandled 500 with no audit trail.
-        from kiro_crew.artifacts import ArtifactError
+        from aj_crew.artifacts import ArtifactError
 
         isolated_store.create(name="x", content="v1", slug="x")
 
@@ -691,10 +691,10 @@ def roster(monkeypatch):
     """
     from types import SimpleNamespace
 
-    from kiro_crew.config import loader as loader_mod
+    from aj_crew.config import loader as loader_mod
 
     cfg = SimpleNamespace(agents={"Atlas": SimpleNamespace(member_id="")})
-    monkeypatch.setattr(loader_mod.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    monkeypatch.setattr(loader_mod.AjCrewConfig, "load", staticmethod(lambda: cfg))
     return cfg
 
 
@@ -741,7 +741,7 @@ class TestDashboardBindingTargets:
     async def test_a_rebind_to_a_dispatched_session_is_refused(
         self, isolated_store, bound, monkeypatch
     ) -> None:
-        from kiro_crew.dashboard import card_lifecycle
+        from aj_crew.dashboard import card_lifecycle
 
         monkeypatch.setattr(card_lifecycle, "is_root_session", lambda slot: False)
         resp = await api_artifact_update(
@@ -760,7 +760,7 @@ class TestDashboardBindingTargets:
         # and picking one of the two hands a crewmate the other's page.
         from types import SimpleNamespace
 
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         cfg = SimpleNamespace(
             agents={
@@ -768,7 +768,7 @@ class TestDashboardBindingTargets:
                 "atlas": SimpleNamespace(member_id=""),
             }
         )
-        monkeypatch.setattr(loader_mod.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        monkeypatch.setattr(loader_mod.AjCrewConfig, "load", staticmethod(lambda: cfg))
         # Stored bound ELSEWHERE, so this write really changes the binding: a write
         # that keeps the binding it had is deliberately never re-asked.
         isolated_store.create(
@@ -793,7 +793,7 @@ class TestDashboardBindingTargets:
     async def test_a_rebind_to_a_root_session_is_accepted(
         self, isolated_store, bound, monkeypatch
     ) -> None:
-        from kiro_crew.dashboard import card_lifecycle
+        from aj_crew.dashboard import card_lifecycle
 
         monkeypatch.setattr(card_lifecycle, "is_root_session", lambda slot: True)
         resp = await api_artifact_update(
@@ -926,7 +926,7 @@ class TestDashboardBindingTargets:
     async def test_the_probe_reads_no_binding_out_of_unparseable_depth(self) -> None:
         # The unit behind the route case above, so the regression is pinned at the
         # function too: the answer is "no binding here", not an exception.
-        from kiro_crew.dashboard.handlers.artifacts import _package_binding
+        from aj_crew.dashboard.handlers.artifacts import _package_binding
 
         assert _package_binding("[" * 10000 + "0" + "]" * 10000) is None
 
@@ -974,7 +974,7 @@ class TestDashboardBindingTargets:
         # gate refuses it before the store is reached. Pinned here rather than argued,
         # so adding `dashboard` to that set turns THIS test red and whoever does it
         # sees that the binding check needs the no-prior-binding case first.
-        from kiro_crew.artifacts import USER_SELECTABLE_KINDS
+        from aj_crew.artifacts import USER_SELECTABLE_KINDS
 
         assert "dashboard" not in USER_SELECTABLE_KINDS
         isolated_store.create(name="Prose", slug="prose", kind="markdown", content="# notes")

@@ -20,8 +20,8 @@ from contextlib import suppress
 
 import pytest
 
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.testing.wait import async_wait_until, await_until, default_timeout, until_parked
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.testing.wait import async_wait_until, await_until, default_timeout, until_parked
 
 
 class TestACycleIsClaimedBeforeTheTurnItClaims:

@@ -178,7 +178,7 @@ export interface ChatInputProps {
    * Display label for the agent chip when it must differ from the raw alias.
    * The chip shows this; everything else keyed on the agent (the skills query,
    * the `agent` prop, the switch title) keeps using `agentName`, the real
-   * alias. It carries the inherited-default marker (`kirocrew · default`) so an
+   * alias. It carries the inherited-default marker (`ajcrew · default`) so an
    * agent-less slot that resolves to the current default is distinguishable
    * from one explicitly pinned to that same alias (#8770). Falls back to
    * `agentName` when unset. */

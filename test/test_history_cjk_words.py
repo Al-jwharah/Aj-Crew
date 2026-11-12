@@ -27,11 +27,11 @@ import time
 
 import pytest
 
-from kiro_crew import history_search, history_words, mcp_core
-from kiro_crew._sqlite_compat import fts5_available
-from kiro_crew.history import ConversationLog
-from kiro_crew.history_index import SessionSearchIndex
-from kiro_crew.history_search import SearchNeedle, needles_match_text, parse_search_query
+from aj_crew import history_search, history_words, mcp_core
+from aj_crew._sqlite_compat import fts5_available
+from aj_crew.history import ConversationLog
+from aj_crew.history_index import SessionSearchIndex
+from aj_crew.history_search import SearchNeedle, needles_match_text, parse_search_query
 
 
 class _Dictionary:
@@ -135,7 +135,7 @@ class TestParse:
 
     @pytest.mark.parametrize(
         "query",
-        ["テスト内存", "ひらがな", "한글 검색", "deploy timeout", "kirocrew 部"],
+        ["テスト内存", "ひらがな", "한글 검색", "deploy timeout", "ajcrew 部"],
     )
     def test_other_scripts_never_reach_the_segmenter(self, fake, query):
         expected = _character_path(query)

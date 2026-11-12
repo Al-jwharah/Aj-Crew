@@ -15,7 +15,7 @@ superseded-by: []
 
 # RFC: Shared Dependency Cache for Worktrees
 
-Every Kiro Crew worktree carries its own copy of the same dependencies. On a
+Every Aj Crew worktree carries its own copy of the same dependencies. On a
 host that develops the way the repo's own skills recommend — one worktree per
 change, one pod per worktree — that copy is the dominant cost of a worktree,
 and it is paid in full for the twentieth worktree as for the first. This RFC
@@ -30,12 +30,12 @@ that rebases onto it. The opt-in path needs no such record and ships first.
 
 Status: draft (no maintainer acceptance recorded). Phase 1, the opt-in, is on main
 ([#10259](https://github.com/kirodotdev/KiroCrew/pull/10259)): `resolve_uv` in
-`src/kiro_crew/env.py` and `KIROCREW_PROVISION_USE_UV` in
-`src/kiro_crew/pod/provision.py`. Phases 2–4 are proposals.
+`src/aj_crew/env.py` and `AJCREW_PROVISION_USE_UV` in
+`src/aj_crew/pod/provision.py`. Phases 2–4 are proposals.
 
 ## Problem
 
-Measured on one contributor host with 27 Kiro Crew worktrees under one XFS
+Measured on one contributor host with 27 Aj Crew worktrees under one XFS
 volume (2026-09-11, main at `dbae53485`):
 
 | Per worktree | Size | Notes |
@@ -52,7 +52,7 @@ across worktrees on the same lockfile, and most of their files are identical
 even across lockfile versions, because a lockfile bump changes a handful of
 packages.
 
-`kirocrew pod provision` and `pod up` build the venv with `python -m venv` and
+`ajcrew pod provision` and `pod up` build the venv with `python -m venv` and
 pip, which copies every wheel into every venv. The install also takes about a
 minute, which is long enough that the module docstring calls it out as the
 reason `pod up` auto-builds the venv but not the dist.
@@ -85,9 +85,9 @@ reason `pod up` auto-builds the venv but not the dist.
 ### Phase 1 — `uv` for pod provisioning, opt-in ([#10259](https://github.com/kirodotdev/KiroCrew/pull/10259), merged)
 
 `pod/provision.py::ensure_venv` keeps `python -m venv` + pip as its default.
-When `KIROCREW_PROVISION_USE_UV` is truthy (`1`/`true`/`yes`/`on`, read through
+When `AJCREW_PROVISION_USE_UV` is truthy (`1`/`true`/`yes`/`on`, read through
 the repo's `env_flag_enabled`, so `0` and `false` do not opt in) it tries `uv`
-first. The resolution ladder lives once, in `kiro_crew/env.py::resolve_uv`, and
+first. The resolution ladder lives once, in `aj_crew/env.py::resolve_uv`, and
 both consumers — pod provisioning and the pptx-maker engine — call it:
 `uv.find_uv_bin()` first (`uv` is a declared dependency shipped as a wheel, so
 the binary is in the venv's scripts dir even when a systemd/launchd gateway runs
@@ -141,7 +141,7 @@ Dev Fleet view are untouched.
 Measured on the same host: about 10 s instead of ~60 s, and ~10 MiB instead
 of ~400 MB of unique disk per additional worktree.
 
-**Exit criteria.** `KIROCREW_PROVISION_USE_UV=1 kirocrew pod provision <wt>`
+**Exit criteria.** `AJCREW_PROVISION_USE_UV=1 ajcrew pod provision <wt>`
 on a host with the wheel produces a venv `has_venv` accepts, with `pip` inside
 it, and on a reflink filesystem a `df` delta far below the venv's apparent
 size; unset, the command is byte-for-byte today's pip path.
@@ -150,7 +150,7 @@ size; unset, the command is byte-for-byte today's pip path.
 
 `pod/provision.py::_find_uv` (the pod-side wrapper that applies the switch to
 `resolve_uv`'s answer) returns the resolved `uv` unless the switch is *off*
-(`KIROCREW_PROVISION_USE_UV=0`, or a renamed `KIROCREW_PROVISION_PIP_ONLY=1`;
+(`AJCREW_PROVISION_USE_UV=0`, or a renamed `AJCREW_PROVISION_PIP_ONLY=1`;
 the PR picks one and documents it). Everything else in Phase 1 is unchanged:
 the fallback and the flags. This is the product-shape change: a fresh
 worktree provisioned by `pod up` on a stock install gets uv and copy-on-write
@@ -168,7 +168,7 @@ Entry conditions, in order:
    that has it.
 
 **Exit criteria.** A fresh `pod up` on a stock install builds the venv with uv
-(provisioning output names the path taken); `KIROCREW_PROVISION_USE_UV=0`
+(provisioning output names the path taken); `AJCREW_PROVISION_USE_UV=0`
 restores the pip path; the Phase 1 tests are re-pinned to the new default and
 the old opt-in test becomes the opt-out test.
 
@@ -293,6 +293,6 @@ the next `pod up` costs.
 ## Open questions
 
 - Whether the repo wants a Python lockfile at all is a separate RFC.
-- Whether the link-mode log line (Phase 2 entry condition 3) should also be a
-  `kirocrew doctor` check, so a host that lost the disk saving to a non-reflink
+- Whether the link-mode log line (Phase 2 entry condition 3) should also be an
+  `ajcrew doctor` check, so a host that lost the disk saving to a non-reflink
   filesystem is told outside provisioning output.

@@ -23,9 +23,9 @@ from relay_client_helpers import (
     ready_frame,
 )
 
-from kiro_crew import edition
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.platform import (
+from aj_crew import edition
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.platform import (
     PROFILE_ENTERPRISE,
     bootstrap,
     bootstrap_context,
@@ -33,22 +33,22 @@ from kiro_crew.platform import (
     current_context,
     set_context,
 )
-from kiro_crew.platform.defaults import DefaultTunnelProvider
-from kiro_crew.relay_client.ingress import LoopbackIngress
-from kiro_crew.relay_client.protocol import WS_MESSAGE_MAX_BYTES
-from kiro_crew.relay_client.provider import (
+from aj_crew.platform.defaults import DefaultTunnelProvider
+from aj_crew.relay_client.ingress import LoopbackIngress
+from aj_crew.relay_client.protocol import WS_MESSAGE_MAX_BYTES
+from aj_crew.relay_client.provider import (
     RelaySettings,
     RelaySettingsError,
     RelayTunnelProvider,
     gateway_listener,
     public_tunnel_provider,
 )
-from kiro_crew.relay_client.token_source import HostCredential
-from kiro_crew.testing.wait import async_wait_until, until_parked
+from aj_crew.relay_client.token_source import HostCredential
+from aj_crew.testing.wait import async_wait_until, until_parked
 
 
-def _cfg(**tunnel: object) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _cfg(**tunnel: object) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     cfg.tunnel = dataclasses.replace(cfg.tunnel, **tunnel)
     return cfg
 
@@ -74,7 +74,7 @@ class _EditionTunnel(DefaultTunnelProvider):
 
 class TestSelection:
     def test_off_by_default(self) -> None:
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         assert cfg.tunnel.relay_enabled is False
         assert type(build_default_context(cfg).tunnel) is DefaultTunnelProvider
 
@@ -95,14 +95,14 @@ class TestSelection:
         assert type(tunnel) is DefaultTunnelProvider
 
     def test_not_selected_when_an_edition_supplies_its_provider(self, monkeypatch) -> None:
-        from kiro_crew.platform import bootstrap as bootstrap_mod
+        from aj_crew.platform import bootstrap as bootstrap_mod
 
         cfg = _cfg(relay_enabled=True)
         own = _EditionTunnel()
         companion = dataclasses.replace(
             build_default_context(cfg, profile=PROFILE_ENTERPRISE), tunnel=own
         )
-        monkeypatch.setenv("KIROCREW_PROFILE", "enterprise")
+        monkeypatch.setenv("AJCREW_PROFILE", "enterprise")
         monkeypatch.setattr(bootstrap_mod, "plugin_entry_points", lambda: [object()])
         monkeypatch.setattr(
             bootstrap_mod, "discover_companion_context", lambda profile, cfg, **_kw: companion
@@ -112,7 +112,7 @@ class TestSelection:
         assert current_context().tunnel is own
 
     def test_the_relay_enable_is_locked_with_the_tunnel_enable(self) -> None:
-        from kiro_crew.edition_locks import CONFIG_PATH_LOCKS
+        from aj_crew.edition_locks import CONFIG_PATH_LOCKS
 
         assert CONFIG_PATH_LOCKS["tunnel.relay_enabled"] == CONFIG_PATH_LOCKS["tunnel.enabled"]
 
@@ -189,9 +189,9 @@ class TestSettings:
         config_file.write_text(
             json.dumps({"tunnel": {"relay_enabled": True, **lease, **old}}), encoding="utf-8"
         )
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: config_file)
-        with caplog.at_level("WARNING", logger="kiro_crew"):
-            cfg = KiroCrewConfig.load()
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: config_file)
+        with caplog.at_level("WARNING", logger="aj_crew"):
+            cfg = AjCrewConfig.load()
         (key,) = old
         assert not hasattr(cfg.tunnel, key)
         settings = RelaySettings.from_config(cfg)
@@ -204,13 +204,13 @@ class TestSettings:
     def test_a_string_true_does_not_enable_it(self, tmp_path, monkeypatch) -> None:
         config_file = tmp_path / "config.json"
         config_file.write_text(json.dumps({"tunnel": {"relay_enabled": "yes"}}), encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: config_file)
-        assert KiroCrewConfig.load().tunnel.relay_enabled is False
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: config_file)
+        assert AjCrewConfig.load().tunnel.relay_enabled is False
 
     def test_the_lease_credential_setting_is_masked_as_sensitive(self) -> None:
         # The setting names where the credential is, but a credential pasted in by
         # mistake must not show in the settings API or UI.
-        from kiro_crew.config.integration_sections import TunnelConfig
+        from aj_crew.config.integration_sections import TunnelConfig
 
         (spec,) = [
             f for f in dataclasses.fields(TunnelConfig) if f.name == "relay_lease_credential"
@@ -228,8 +228,8 @@ class TestSettings:
             "relay_lease_token_type": "API_KEY",
         }
         config_file.write_text(json.dumps({"tunnel": tunnel}), encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: config_file)
-        provider = public_tunnel_provider(KiroCrewConfig.load())
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: config_file)
+        provider = public_tunnel_provider(AjCrewConfig.load())
         assert provider._tokens._token_type == "API_KEY"
 
     @pytest.mark.parametrize(
@@ -283,17 +283,17 @@ class TestSettings:
         assert closed == ["token source", "ingress"]
 
     def test_the_gateway_listener_comes_from_the_bound_port(self, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "6123")
-        monkeypatch.delenv("KIROCREW_BOUND_HOST", raising=False)
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "6123")
+        monkeypatch.delenv("AJCREW_BOUND_HOST", raising=False)
         assert gateway_listener() == ("127.0.0.1", 6123)
-        monkeypatch.setenv("KIROCREW_BOUND_HOST", "::1")
+        monkeypatch.setenv("AJCREW_BOUND_HOST", "::1")
         assert gateway_listener() == ("::1", 6123)
         # The relay ingress honours a hand-off over loopback only.
-        monkeypatch.setenv("KIROCREW_BOUND_HOST", "10.0.0.5")
+        monkeypatch.setenv("AJCREW_BOUND_HOST", "10.0.0.5")
         with pytest.raises(RelaySettingsError):
             gateway_listener()
-        monkeypatch.delenv("KIROCREW_BOUND_HOST")
-        monkeypatch.delenv("KIROCREW_BOUND_PORT")
+        monkeypatch.delenv("AJCREW_BOUND_HOST")
+        monkeypatch.delenv("AJCREW_BOUND_PORT")
         with pytest.raises(RelaySettingsError):
             gateway_listener()
 
@@ -301,16 +301,16 @@ class TestSettings:
     def test_the_gateway_listener_is_the_address_actually_bound_not_the_one_asked(
         self, monkeypatch, asked
     ) -> None:
-        # The bind policy can refuse KIROCREW_BIND and bind 127.0.0.1 instead. The
+        # The bind policy can refuse AJCREW_BIND and bind 127.0.0.1 instead. The
         # relay hands requests, and the handover credential, to the socket that
         # was bound, never to the address that was asked for.
         import socket
 
-        from kiro_crew.dashboard.server_runtime.listener import _export_reserved_bind_evidence
+        from aj_crew.dashboard.server_runtime.listener import _export_reserved_bind_evidence
 
-        monkeypatch.setenv("KIROCREW_BIND", asked)
-        monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
-        monkeypatch.delenv("KIROCREW_BOUND_HOST", raising=False)
+        monkeypatch.setenv("AJCREW_BIND", asked)
+        monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_BOUND_HOST", raising=False)
         with socket.socket() as bound:
             bound.bind(("127.0.0.1", 0))
             _export_reserved_bind_evidence(bound)
@@ -326,8 +326,8 @@ class TestSettings:
         ],
     )
     def test_the_gateway_listener_uses_address_identity(self, monkeypatch, exported, host) -> None:
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "6123")
-        monkeypatch.setenv("KIROCREW_BOUND_HOST", exported)
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "6123")
+        monkeypatch.setenv("AJCREW_BOUND_HOST", exported)
         assert gateway_listener() == (host, 6123)
 
     @pytest.mark.parametrize(
@@ -335,8 +335,8 @@ class TestSettings:
         ["10.0.0.5", "my-host", "::ffff:127.0.0.1", "127.0.0.1.example", "[::1"],
     )
     def test_the_gateway_listener_refuses_non_loopback_binds(self, monkeypatch, exported) -> None:
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "6123")
-        monkeypatch.setenv("KIROCREW_BOUND_HOST", exported)
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "6123")
+        monkeypatch.setenv("AJCREW_BOUND_HOST", exported)
         with pytest.raises(RelaySettingsError, match="the gateway is bound to"):
             gateway_listener()
 
@@ -363,16 +363,14 @@ def _token_auth() -> MagicMock:
 @pytest.mark.asyncio
 class TestThroughTheTunnelWrapper:
     async def test_connect_adds_the_crew_url_to_the_allowed_origins(self, monkeypatch) -> None:
-        from kiro_crew import tunnel as tunnel_pkg
-        from kiro_crew.tunnel.manager import TunnelState
-        from kiro_crew.tunnel.setup import setup_tunnel
+        from aj_crew import tunnel as tunnel_pkg
+        from aj_crew.tunnel.manager import TunnelState
+        from aj_crew.tunnel.setup import setup_tunnel
 
         monkeypatch.setattr(tunnel_pkg, "_tunnel_public_url", "")
         async with FakeRelay() as relay, FakeCrew() as crew:
             provider = _provider(relay, crew)
-            set_context(
-                dataclasses.replace(build_default_context(KiroCrewConfig()), tunnel=provider)
-            )
+            set_context(dataclasses.replace(build_default_context(AjCrewConfig()), tunnel=provider))
             origins: set = set()
             manager = await setup_tunnel(
                 middlewares=[_token_auth()],
@@ -399,13 +397,11 @@ class TestThroughTheTunnelWrapper:
             assert await leg.wait_closed() == 1001
 
     async def test_no_token_auth_never_starts_it(self) -> None:
-        from kiro_crew.tunnel.setup import setup_tunnel
+        from aj_crew.tunnel.setup import setup_tunnel
 
         async with FakeRelay() as relay, FakeCrew() as crew:
             provider = _provider(relay, crew)
-            set_context(
-                dataclasses.replace(build_default_context(KiroCrewConfig()), tunnel=provider)
-            )
+            set_context(dataclasses.replace(build_default_context(AjCrewConfig()), tunnel=provider))
             manager = await setup_tunnel(
                 middlewares=[],
                 allowed_origins=set(),
@@ -419,15 +415,13 @@ class TestThroughTheTunnelWrapper:
             assert relay.dials == 0
 
     async def test_the_no_tunnel_boot_flag_never_starts_it(self, monkeypatch) -> None:
-        from kiro_crew import tunnel as tunnel_pkg
-        from kiro_crew.tunnel.setup import setup_tunnel
+        from aj_crew import tunnel as tunnel_pkg
+        from aj_crew.tunnel.setup import setup_tunnel
 
         monkeypatch.setattr(tunnel_pkg, "_publish_disabled", True)
         async with FakeRelay() as relay, FakeCrew() as crew:
             provider = _provider(relay, crew)
-            set_context(
-                dataclasses.replace(build_default_context(KiroCrewConfig()), tunnel=provider)
-            )
+            set_context(dataclasses.replace(build_default_context(AjCrewConfig()), tunnel=provider))
             manager = await setup_tunnel(
                 middlewares=[_token_auth()],
                 allowed_origins=set(),
@@ -447,11 +441,11 @@ class TestThroughTheTunnelWrapper:
             assert relay.dials == 0
 
     async def test_without_a_token_source_it_reports_why(self, monkeypatch) -> None:
-        from kiro_crew.dashboard.kiro_relay.ingress import RelayIngress
-        from kiro_crew.relay_client import provider as provider_mod
+        from aj_crew.dashboard.kiro_relay.ingress import RelayIngress
+        from aj_crew.relay_client import provider as provider_mod
 
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "6123")
-        monkeypatch.delenv("KIROCREW_BOUND_HOST", raising=False)
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "6123")
+        monkeypatch.delenv("AJCREW_BOUND_HOST", raising=False)
         monkeypatch.setattr(provider_mod, "_gateway_ingress", RelayIngress(enabled=True))
         provider = RelayTunnelProvider(_named())
         await provider.start()
@@ -484,7 +478,7 @@ class TestThroughTheTunnelWrapper:
         self, tunnel: dict, names: str
     ) -> None:
         """Measured against ``start()``: no client is built, the status names the setting."""
-        from kiro_crew.config.schema import SCHEMA_REGISTRY
+        from aj_crew.config.schema import SCHEMA_REGISTRY
 
         built: list[dict] = []
         provider = RelayTunnelProvider(
@@ -508,9 +502,9 @@ class TestThroughTheTunnelWrapper:
     async def test_without_the_dashboards_relay_ingress_it_starts_nothing(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.relay_client import provider as provider_mod
+        from aj_crew.relay_client import provider as provider_mod
 
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "6123")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "6123")
         monkeypatch.setattr(provider_mod, "_gateway_ingress", None)
         provider = RelayTunnelProvider(_named())
         await provider.start()
@@ -522,9 +516,9 @@ class TestThroughTheTunnelWrapper:
     async def test_the_gateway_publishes_its_relay_ingress_before_the_tunnel(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.dashboard import server
-        from kiro_crew.dashboard.kiro_relay.ingress import RELAY_INGRESS_APP_KEY, RelayIngress
-        from kiro_crew.relay_client import provider as provider_mod
+        from aj_crew.dashboard import server
+        from aj_crew.dashboard.kiro_relay.ingress import RELAY_INGRESS_APP_KEY, RelayIngress
+        from aj_crew.relay_client import provider as provider_mod
 
         monkeypatch.setattr(provider_mod, "_gateway_ingress", None)
         gateway = RelayIngress(enabled=True)
@@ -541,11 +535,11 @@ class TestThroughTheTunnelWrapper:
     ) -> None:
         import sys
 
-        from kiro_crew.dashboard import server
+        from aj_crew.dashboard import server
 
         cfg = _cfg(relay_enabled=relay_enabled)
         set_context(build_default_context(cfg))
-        monkeypatch.setitem(sys.modules, "kiro_crew.relay_client.provider", None)
+        monkeypatch.setitem(sys.modules, "aj_crew.relay_client.provider", None)
         await server._start_aea_tunnel({}, MagicMock(), cfg, 0)
 
 
@@ -553,8 +547,8 @@ def test_composing_with_the_relay_off_never_imports_the_relay_client(monkeypatch
     import sys
 
     # An entry of None makes any import of the module raise ImportError.
-    monkeypatch.setitem(sys.modules, "kiro_crew.relay_client.provider", None)
-    assert type(build_default_context(KiroCrewConfig()).tunnel) is DefaultTunnelProvider
+    monkeypatch.setitem(sys.modules, "aj_crew.relay_client.provider", None)
+    assert type(build_default_context(AjCrewConfig()).tunnel) is DefaultTunnelProvider
     with pytest.raises(ImportError):
         build_default_context(_cfg(relay_enabled=True))
 
@@ -565,7 +559,7 @@ def _lock_tunnel(monkeypatch: pytest.MonkeyPatch) -> None:
     Every reader of the relay switch asks ``edition_locks.local_enable_locked`` at
     call time, so this stands in for the edition without its policy or login boot.
     """
-    from kiro_crew import edition_locks
+    from aj_crew import edition_locks
 
     monkeypatch.setattr(edition_locks, "local_enable_locked", lambda control: control == "tunnel")
 
@@ -574,7 +568,7 @@ class TestTheRelaySwitch:
     """``tunnel.relay_enabled``: the one setting that turns the relay path on."""
 
     def test_only_the_json_boolean_true_turns_it_on(self) -> None:
-        from kiro_crew.config.section_builders import _build_tunnel_config
+        from aj_crew.config.section_builders import _build_tunnel_config
 
         assert _build_tunnel_config({}).relay_enabled is False
         for hand_edit in ("true", 1, "yes", None):
@@ -582,7 +576,7 @@ class TestTheRelaySwitch:
         assert _build_tunnel_config({"relay_enabled": True}).relay_enabled is True
 
     def test_one_predicate_reads_the_switch(self, monkeypatch) -> None:
-        from kiro_crew.edition_locks import relay_selected
+        from aj_crew.edition_locks import relay_selected
 
         assert relay_selected(_cfg(relay_enabled=True)) is True
         assert relay_selected(_cfg()) is False
@@ -594,7 +588,7 @@ class TestTheRelaySwitch:
         assert relay_selected(_cfg(relay_enabled=True)) is False
 
     def test_an_lts_build_locks_the_switch(self, monkeypatch) -> None:
-        from kiro_crew import edition_locks
+        from aj_crew import edition_locks
 
         edition_locks.reset_logged()
         monkeypatch.setattr(edition, "EDITION", "lts")
@@ -610,7 +604,7 @@ class TestTheRelaySwitch:
         import sys
 
         _lock_tunnel(monkeypatch)
-        monkeypatch.setitem(sys.modules, "kiro_crew.relay_client.provider", None)
+        monkeypatch.setitem(sys.modules, "aj_crew.relay_client.provider", None)
         tunnel = build_default_context(_cfg(relay_enabled=True)).tunnel
         assert type(tunnel) is DefaultTunnelProvider
 
@@ -618,10 +612,10 @@ class TestTheRelaySwitch:
     async def test_a_locked_gateway_never_imports_the_relay_client(self, monkeypatch) -> None:
         import sys
 
-        from kiro_crew.dashboard import server
+        from aj_crew.dashboard import server
 
         cfg = _cfg(relay_enabled=True)
-        set_context(build_default_context(KiroCrewConfig()))
+        set_context(build_default_context(AjCrewConfig()))
         _lock_tunnel(monkeypatch)
-        monkeypatch.setitem(sys.modules, "kiro_crew.relay_client.provider", None)
+        monkeypatch.setitem(sys.modules, "aj_crew.relay_client.provider", None)
         await server._start_aea_tunnel({}, MagicMock(), cfg, 0)

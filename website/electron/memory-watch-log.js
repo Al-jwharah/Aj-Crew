@@ -38,7 +38,7 @@
 //
 // Same discipline as the modules it replaces: `glog` is a bare appendFileSync
 // with no rotation, so steady state writes NOTHING and the flush happens once,
-// on death, next to the crash line. An empty flush is informative. KIROCREW_DEBUG
+// on death, next to the crash line. An empty flush is informative. AJCREW_DEBUG
 // additionally logs each sample as it arrives, for watching a live reproduction.
 
 /** 60 samples at the renderer's 5s cadence is five minutes of lead-up for a few
@@ -180,7 +180,7 @@ function createMemoryWatchLog({ capacity = DEFAULT_CAPACITY, now } = {}) {
       return sample;
     },
 
-    /** One line for the most recent sample, for KIROCREW_DEBUG live logging. */
+    /** One line for the most recent sample, for AJCREW_DEBUG live logging. */
     lastLine() {
       if (entries.length === 0) return null;
       return renderSample(entries[entries.length - 1]);

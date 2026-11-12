@@ -1,6 +1,6 @@
 """``Backend`` keeps every member it had, and each is bound from the module that owns it.
 
-The class's behaviour lives in the ``kiro_crew.mcp_gateway.backend_*`` owner modules: each
+The class's behaviour lives in the ``aj_crew.mcp_gateway.backend_*`` owner modules: each
 member's body is a module-level function there whose first parameter is ``self``, and the
 class binds it by name (``m = _owner.m``). The dataclass's fields stay on the class, so
 ``Backend(...)``, tests that build a backend by hand and every caller see the same object
@@ -15,7 +15,7 @@ they always did. This file pins the binding contract:
   only owners listed before it;
 * each owner's docstring names the instance fields its members write and read;
 * owners log under the facade's logger, and a moved class keeps the facade as its module;
-* a write through ``kiro_crew.mcp_gateway.backend`` reaches every owner that reads the name,
+* a write through ``aj_crew.mcp_gateway.backend`` reaches every owner that reads the name,
   for every name the test trees patch there (the facade's mirror, ``_facade_mirror``), and
   a star import binds what it bound before the split.
 """
@@ -36,9 +36,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.mcp_gateway import backend as backend_mod
-from kiro_crew.mcp_gateway.backend import Backend
+from aj_crew import _facade_mirror
+from aj_crew.mcp_gateway import backend as backend_mod
+from aj_crew.mcp_gateway.backend import Backend
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_backend_bindings")
 
@@ -168,17 +168,17 @@ _MEMBERS: dict[str, tuple[str, bool, str, str]] = {
     "touch": ("function", False, "ffb9b3a10afb", "backend"),
 }
 
-_PACKAGE = "kiro_crew.mcp_gateway"
+_PACKAGE = "aj_crew.mcp_gateway"
 _FACADE = backend_mod.__name__
 
-#: What ``from kiro_crew.mcp_gateway.backend import *`` bound before the split: every
+#: What ``from aj_crew.mcp_gateway.backend import *`` bound before the split: every
 #: public name of the unsplit module's namespace.
 _BASE_STAR_NAMES = frozenset("""
     Any Awaitable Backend BackendGone CALLER_CAPABILITY_KEY CALLER_META_KEY
     CANONICAL_TEMP_KEYS CallerContext HARD_WEDGE_CEILING_SECS HEARTBEAT_PING_ID
     HEARTBEAT_TIMEOUT_SECS ID_PROBE_BYTES INFLIGHT_CAPABILITY_KEY INFLIGHT_NOTIFICATION
-    INITIALIZE_DEADLINE_REASON INTERNAL_STUB_PREFIXES KIROCREW_SPAWNED_ENV
-    KIROCREW_SPAWNED_VALUE MCP_APPS_ENV_FALSE MCP_APPS_ENV_FLAG MCP_APPS_ENV_TRUE
+    INITIALIZE_DEADLINE_REASON INTERNAL_STUB_PREFIXES AJCREW_SPAWNED_ENV
+    AJCREW_SPAWNED_VALUE MCP_APPS_ENV_FALSE MCP_APPS_ENV_FLAG MCP_APPS_ENV_TRUE
     MCP_APPS_EXTENSION_KEY MCP_APPS_MIME_TYPE Mapping
     Optional PING_STALE_SECS POOLED_BACKEND_ENV POOLED_BACKEND_VALUE
     POOLED_RESPAWN_COMMAND_ENV PROGRESS_WEDGE_CEILING_SECS Path READ_BUFFER_LIMIT_BYTES
@@ -505,14 +505,14 @@ def _owner_imports(tree: ast.Module) -> set[str]:
 
 def test_the_owner_import_scan_can_fail() -> None:
     tree = ast.parse(
-        "from kiro_crew.mcp_gateway.backend_wire import X\n"
-        "from kiro_crew.mcp_gateway import backend_leases as _l, backend_tmp\n"
-        "import kiro_crew.mcp_gateway.backend_mcp_apps\n"
+        "from aj_crew.mcp_gateway.backend_wire import X\n"
+        "from aj_crew.mcp_gateway import backend_leases as _l, backend_tmp\n"
+        "import aj_crew.mcp_gateway.backend_mcp_apps\n"
     )
     assert _owner_imports(tree) == {
-        "kiro_crew.mcp_gateway.backend_wire",
-        "kiro_crew.mcp_gateway.backend_leases",
-        "kiro_crew.mcp_gateway.backend_mcp_apps",
+        "aj_crew.mcp_gateway.backend_wire",
+        "aj_crew.mcp_gateway.backend_leases",
+        "aj_crew.mcp_gateway.backend_mcp_apps",
     }
 
 
@@ -542,7 +542,7 @@ def _test_tree_texts() -> list[str]:
         if not (
             rel == "conftest.py"
             or rel.startswith("test/")
-            or (rel.startswith("src/kiro_crew/apps/builtins/") and "/tests/" in rel)
+            or (rel.startswith("src/aj_crew/apps/builtins/") and "/tests/" in rel)
         ):
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
@@ -552,7 +552,7 @@ def _test_tree_texts() -> list[str]:
 
 
 def _patched_through_the_facade() -> set[str]:
-    """Every name a test-tree file patches through ``kiro_crew.mcp_gateway.backend``."""
+    """Every name a test-tree file patches through ``aj_crew.mcp_gateway.backend``."""
     spellings = {_FACADE: _FACADE}
     names: set[str] = set()
     for text in _test_tree_texts():
@@ -620,7 +620,7 @@ def test_every_name_patched_through_the_facade_reaches_the_owners_reading_it() -
 
 def test_the_reach_scan_can_fail() -> None:
     index = backend_mod._MIRROR
-    owner = "kiro_crew.mcp_gateway.backend_routing"
+    owner = "aj_crew.mcp_gateway.backend_routing"
     holders = dict(index.holders)
     holders["logger"] = tuple(h for h in holders["logger"] if h != owner)
     blind = dataclasses.replace(index, holders=holders)

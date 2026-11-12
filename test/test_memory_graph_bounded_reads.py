@@ -14,7 +14,7 @@ import pytest
 
 @pytest.fixture
 def store(tmp_path) -> Iterator[Any]:
-    from kiro_crew.vector_memory import VectorMemoryStore
+    from aj_crew.vector_memory import VectorMemoryStore
 
     vs = VectorMemoryStore(db_path=tmp_path / "vm.db")
     vs.init()
@@ -42,7 +42,7 @@ def _meter_rows(vs: Any) -> dict[str, int]:
 
 
 def test_the_memory_graph_reads_a_bounded_number_of_rows(store):
-    from kiro_crew.dashboard.handlers.memory_graph import (
+    from aj_crew.dashboard.handlers.memory_graph import (
         GRAPH_LESSON_LIMIT,
         GRAPH_SEMANTIC_LIMIT,
         _build_memory_graph,
@@ -77,7 +77,7 @@ def test_the_memory_graph_reads_a_bounded_number_of_rows(store):
 
 
 def test_the_consolidation_snapshot_is_the_whole_table_in_bounded_pages(store):
-    from kiro_crew.history_consolidation_memory import (
+    from aj_crew.history_consolidation_memory import (
         _SEMANTIC_SNAPSHOT_PAGE,
         _semantic_snapshot_in_pages,
     )
@@ -95,7 +95,7 @@ def test_the_consolidation_snapshot_is_the_whole_table_in_bounded_pages(store):
 def test_a_store_that_ignores_the_cursor_is_read_once():
     """A fake ``get_all_semantic`` that returns the same rows for every call must not
     loop the snapshot or duplicate its rows."""
-    from kiro_crew.history_consolidation_memory import _semantic_snapshot_in_pages
+    from aj_crew.history_consolidation_memory import _semantic_snapshot_in_pages
 
     rows = [{"key": f"k{i:03d}"} for i in range(5)]
     fake = SimpleNamespace(get_all_semantic=lambda **_kw: list(rows))
@@ -103,7 +103,7 @@ def test_a_store_that_ignores_the_cursor_is_read_once():
 
 
 def _plan_of_bounded_reads(fake_store: Any, db: Any) -> list[list[str]]:
-    from kiro_crew.vector_memory_runtime import semantic
+    from aj_crew.vector_memory_runtime import semantic
 
     issued: list[tuple[str, tuple]] = []
     fake_store._fetch_all_locked = lambda sql, params=(): issued.append((sql, params)) or []
@@ -116,7 +116,7 @@ def _plan_of_bounded_reads(fake_store: Any, db: Any) -> list[list[str]]:
         semantic.get_all_semantic(fake_store, **kwargs)
         return next(pages)
 
-    from kiro_crew.history_consolidation_memory import _semantic_snapshot_in_pages
+    from aj_crew.history_consolidation_memory import _semantic_snapshot_in_pages
 
     _semantic_snapshot_in_pages(SimpleNamespace(get_all_semantic=get_all_semantic), page=2)
     return [
@@ -130,7 +130,7 @@ def test_the_bounded_reads_walk_the_key_index_without_sorting_the_table(store):
     walking the unique key index rather than collecting and sorting every live row."""
     import sqlite3
 
-    from kiro_crew import memory_schema
+    from aj_crew import memory_schema
 
     plans = _plan_of_bounded_reads(
         SimpleNamespace(
@@ -159,7 +159,7 @@ def test_the_bounded_reads_walk_the_key_index_without_sorting_the_table(store):
     plans += _plan_of_bounded_reads(v1_crew, crew_db)
     issued: list[tuple[str, tuple]] = []
     v1_crew._fetch_all_locked = lambda sql, params=(): issued.append((sql, params)) or []
-    from kiro_crew.vector_memory_runtime import semantic
+    from aj_crew.vector_memory_runtime import semantic
 
     semantic.get_all_semantic(v1_crew, 1, exclude_lessons=True)
     view_columns = [c[0] for c in crew_db.execute("SELECT * FROM semantic_memory").description]
@@ -174,7 +174,7 @@ def test_the_bounded_reads_walk_the_key_index_without_sorting_the_table(store):
 def test_the_lesson_fallback_draws_the_newest_lessons():
     """With no vector store, lessons come from the JSONL file, oldest first; the
     graph keeps the newest :data:`GRAPH_LESSON_LIMIT` of them."""
-    from kiro_crew.dashboard.handlers.memory_graph import GRAPH_LESSON_LIMIT, _build_memory_graph
+    from aj_crew.dashboard.handlers.memory_graph import GRAPH_LESSON_LIMIT, _build_memory_graph
 
     lessons = [SimpleNamespace(rule=f"lesson rule number {i:04d}") for i in range(500)]
     mem = SimpleNamespace(
@@ -193,7 +193,7 @@ def test_the_lesson_fallback_draws_the_newest_lessons():
 
 
 def test_a_graph_under_its_caps_is_not_partial(store):
-    from kiro_crew.dashboard.handlers.memory_graph import _build_memory_graph
+    from aj_crew.dashboard.handlers.memory_graph import _build_memory_graph
 
     store.set_semantic("project.small", {"v": 1}, 0.9, "t", defer_embedding=True)
     mem = SimpleNamespace(

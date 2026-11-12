@@ -30,7 +30,7 @@ type PaneState = 'idle' | 'tool_running' | 'preparing'
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 const state = (params.get('state') || 'tool_running') as PaneState
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const SLOT = 'chat-1-loader'
 

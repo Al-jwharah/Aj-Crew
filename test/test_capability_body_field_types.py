@@ -19,8 +19,8 @@ from typing import Any, List
 import pytest
 from aiohttp import web
 
-import kiro_crew.platform.context as platform_context
-from kiro_crew.dashboard.handlers import agents as agents_handler
+import aj_crew.platform.context as platform_context
+from aj_crew.dashboard.handlers import agents as agents_handler
 
 _HANDLERS = {
     "api_capability_mcp_install": "server_id",
@@ -36,7 +36,7 @@ _NON_STRINGS = [1, 0, 1.5, True, None, [], ["a"], {}, {"a": "b"}]
 def _owner_caller(_floor_monkeypatch):
     """Pass the owner gate: the behavior under test is past it."""
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -72,7 +72,7 @@ def ownership_probe(monkeypatch) -> List[Any]:
         seen.append(server_id)
         return None
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.mcp._agent_home_not_owned", _probe)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.mcp._agent_home_not_owned", _probe)
     return seen
 
 

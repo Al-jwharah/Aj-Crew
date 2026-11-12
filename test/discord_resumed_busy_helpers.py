@@ -24,7 +24,7 @@ _TYPED = f"use https://docs.example.com/page?key={_SECRET} for this"
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
 
 
 def _steerable(accepted: bool = True) -> MagicMock:

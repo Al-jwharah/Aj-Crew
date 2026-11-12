@@ -56,7 +56,7 @@ function slots(patch: Partial<ChatSlot> = {}) {
 function harness(mode?: string, opts: { sessionSort?: string } = {}) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   // The saved session sort is read from the shared config cache.
-  if (opts.sessionSort !== undefined) client.setQueryData(['kirocrewConfig'], { dashboard: { session_sort: opts.sessionSort } })
+  if (opts.sessionSort !== undefined) client.setQueryData(['ajcrewConfig'], { dashboard: { session_sort: opts.sessionSort } })
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>
       <Provider store={store}>{children}</Provider>

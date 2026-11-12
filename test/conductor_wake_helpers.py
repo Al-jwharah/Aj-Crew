@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import conductor_wake, work_ledger
+from aj_crew import conductor_wake, work_ledger
 
 CONDUCTOR = "chat-conductor"
 WORKER = "chat-worker"
@@ -21,11 +21,11 @@ LOOP_ID = "loop-1"
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- the conductor wake modules' autouse isolation (own data home, empty wake registry), moved verbatim; none of them calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- the conductor wake modules' autouse isolation (own data home, empty wake registry), moved verbatim; none of them calls monkeypatch.undo()
 def _isolated_home(tmp_path, monkeypatch):
     """Own data home per test, so no binding file outlives its own test; and an empty
     registry, so no board a previous test observed answers this one's lookup."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     conductor_wake.reset_for_tests()
     yield
     conductor_wake.reset_for_tests()
@@ -41,7 +41,7 @@ class _Monitor:
         # The REAL current version, read rather than written: both zero-delay arms refuse a
         # record this gateway cannot interpret, so a stub pinning a literal here would stop
         # exercising that refusal the moment the version moved.
-        from kiro_crew.monitoring.models import MONITOR_STATE_VERSION
+        from aj_crew.monitoring.models import MONITOR_STATE_VERSION
 
         self.version = MONITOR_STATE_VERSION
 
@@ -123,7 +123,7 @@ async def _fire(svc, worker_slot: str) -> str:
     cases are about: the lookup from a conductor slot to its armed loop, and what each
     of ``fire_now``'s answers costs.
     """
-    import kiro_crew.autonudge as autonudge
+    import aj_crew.autonudge as autonudge
 
     original = autonudge.get_instance
     # flake-ok: pre-existing rebind of autonudge.get_instance that the finally below restores, moved verbatim; tracked for a de-flake pass
@@ -138,7 +138,7 @@ async def _fire(svc, worker_slot: str) -> str:
 
 
 def _service(base_dir, **kwargs):
-    from kiro_crew.autonudge import AutoNudgeService
+    from aj_crew.autonudge import AutoNudgeService
 
     return AutoNudgeService(base_dir=base_dir, **kwargs)
 

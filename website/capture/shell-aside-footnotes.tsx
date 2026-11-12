@@ -15,7 +15,7 @@ const lang = params.get('lang') || 'en'
 const key = params.get('key') || 'components.kasLogin.aside_footnote'
 const shellW = Number(params.get('w') || 1150)
 
-document.documentElement.setAttribute('data-theme', 'kiro-dark')
+document.documentElement.setAttribute('data-theme', 'aj-dark')
 initI18n(lang)
 
 createRoot(document.getElementById('root')!).render(

@@ -11,8 +11,8 @@ import os
 
 import pytest
 
-from kiro_crew.chat_attachments import attachments_dir
-from kiro_crew.dashboard.chat_persistence import (
+from aj_crew.chat_attachments import attachments_dir
+from aj_crew.dashboard.chat_persistence import (
     _build_message_entry,
     _build_message_entry_uncached,
 )
@@ -150,7 +150,7 @@ def test_variant_content_is_rewritten_too(sessions, png):
 def test_variants_share_the_primary_content_budget(sessions, png, tmp_path, monkeypatch):
     """Content plus variants are ONE row under ONE lock, so they draw on one
     image cap: a row with many variants cannot copy many times the ceiling."""
-    monkeypatch.setattr("kiro_crew.chat_attachments.MAX_IMAGES_PER_MESSAGE", 2)
+    monkeypatch.setattr("aj_crew.chat_attachments.MAX_IMAGES_PER_MESSAGE", 2)
     others = []
     for i in range(3):
         q = tmp_path / f"v{i}.png"
@@ -193,7 +193,7 @@ def test_a_row_that_moved_on_during_the_copy_is_not_overwritten(sessions, png, m
     A variant switch between the read and the write-back must win: the rewrite
     of the OLD text is persisted for this flush, but the live row keeps the
     reply the user chose, and the next flush rewrites that one."""
-    import kiro_crew.dashboard.chat_persistence as cp
+    import aj_crew.dashboard.chat_persistence as cp
 
     message = {"role": "assistant", "content": f"![shot]({png})", "ts": "t0"}
     real = cp.persist_inline_images
@@ -215,7 +215,7 @@ def test_transient_roles_are_still_not_persisted(sessions):
     role the window holds but the transcript never does (an elicitation card, for
     one) written to disk would come back stripped of its ``cls`` -- a card with no
     request to answer -- and shift every durable row count by one."""
-    from kiro_crew.dashboard.chat_persistence import _TRANSIENT_ROLES
+    from aj_crew.dashboard.chat_persistence import _TRANSIENT_ROLES
 
     assert "elicitation" in _TRANSIENT_ROLES and "permission" in _TRANSIENT_ROLES
     for role in sorted(_TRANSIENT_ROLES):

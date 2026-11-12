@@ -195,7 +195,7 @@ vi.mock('../pages/chat/ChatSettings', () => ({
 }))
 vi.mock('../hooks/useBranding', () => ({ useBranding: () => ({ botName: 'Test', avatar: '' }) }))
 vi.mock('../hooks/useAgents', () => ({
-  useAgents: () => ({ agents: [{ name: 'kirocrew' }, { name: 'reviewer' }], defaultAgent: 'kirocrew' }),
+  useAgents: () => ({ agents: [{ name: 'ajcrew' }, { name: 'reviewer' }], defaultAgent: 'ajcrew' }),
 }))
 vi.mock('../hooks/useVoiceInput', () => ({
   useVoiceInput: () => ({ recording: false, transcribing: false, toggle: vi.fn() }),
@@ -639,14 +639,14 @@ describe('ChatPage default-agent footer row', () => {
     await waitFor(() => expect(defaultAgentRowProps).not.toBeNull())
 
     // An agent-less slot resolves to the configured default agent (the
-    // useAgents mock above returns defaultAgent: 'kirocrew'), not the
+    // useAgents mock above returns defaultAgent: 'ajcrew'), not the
     // literal 'default' placeholder the pre-fix fallback rendered.
-    expect(defaultAgentRowProps!.agentName).toBe('kirocrew')
+    expect(defaultAgentRowProps!.agentName).toBe('ajcrew')
     act(() => { defaultAgentRowProps!.onSetDefault() })
     // The row writes the default for NEW SESSIONS. This slot carries no
     // `agent_kind`, so no namespace is sent and the server routes the name
     // (a non-alias is the template default); a slot stamped `template` sends it.
-    await waitFor(() => expect(setDefault).toHaveBeenCalledWith('kirocrew', undefined))
+    await waitFor(() => expect(setDefault).toHaveBeenCalledWith('ajcrew', undefined))
   })
 })
 
@@ -849,7 +849,7 @@ describe('ChatPage renderMessage — role dispatch', () => {
   it('renders a sub-agent completion event as an outcome row, not a chat bubble', async () => {
     const content = [
       '[Subagent completion event]',
-      'Agent `53e3e5eb` (kirocrew) completed ✅',
+      'Agent `53e3e5eb` (ajcrew) completed ✅',
       'Task: Add two short UI labels to the German catalog',
       '',
       'Added both keys and ran the parity check.',
@@ -1144,7 +1144,7 @@ describe('ChatPage URL prompt hand-off', () => {
    *  soon as it names the active slot, so the WRITE is what these tests read. */
   const prefillWrites = () =>
     setItemSpy.mock.calls
-      .filter(([k]) => k === 'kirocrew_prefill')
+      .filter(([k]) => k === 'ajcrew_prefill')
       .map(([, v]) => JSON.parse(v as string) as { slotKey: string; prompt: string })
 
   it('moves a ?prefill= prompt into session storage and strips it from the URL', async () => {

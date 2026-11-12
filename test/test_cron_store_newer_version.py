@@ -1,4 +1,4 @@
-"""A cron store written by a newer Kiro Crew keeps its newer data through this build's save.
+"""A cron store written by a newer Aj Crew keeps its newer data through this build's save.
 
 The desktop updater allows downgrades, so a store a newer build wrote can be loaded and
 saved by this one. Each test writes a store with the current code, edits it the way a
@@ -12,7 +12,7 @@ import json
 import logging
 import time
 
-from kiro_crew.cron import CronService
+from aj_crew.cron import CronService
 
 
 def _id(job) -> str:
@@ -20,8 +20,8 @@ def _id(job) -> str:
 
 
 def _service(tmp_path, monkeypatch) -> CronService:
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return CronService(base_dir=tmp_path)
 
 
@@ -169,7 +169,7 @@ def test_a_16_mib_field_from_a_newer_build_is_not_kept_in_memory(tmp_path, monke
         tmp_path, monkeypatch, {"huge": huge, "small": {"retry_policy": {"max_attempts": 3}}}
     )
     older = CronService(base_dir=tmp_path)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.cron"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.cron"):
         older.enable_job(ids["small"], enabled=False)  # loads, then one ordinary write
     kept = dict(older._unknown_fields)
     assert (
@@ -178,7 +178,7 @@ def test_a_16_mib_field_from_a_newer_build_is_not_kept_in_memory(tmp_path, monke
     assert kept[ids["small"]].job == {
         "retry_policy": {"max_attempts": 3}
     }, "a job under the cap lost its key"
-    from kiro_crew.cron_service.store import MAX_UNKNOWN_FIELDS_BYTES
+    from aj_crew.cron_service.store import MAX_UNKNOWN_FIELDS_BYTES
 
     assert all(_kept_bytes(u) <= MAX_UNKNOWN_FIELDS_BYTES for u in kept.values())
     assert "over the" in caplog.text, "the refused job was not logged"
@@ -188,7 +188,7 @@ def test_a_16_mib_field_from_a_newer_build_is_not_kept_in_memory(tmp_path, monke
 
 
 def test_the_cap_keeps_a_job_at_the_cap_and_refuses_one_byte_over(tmp_path, monkeypatch):
-    from kiro_crew.cron_service.store import MAX_UNKNOWN_FIELDS_BYTES
+    from aj_crew.cron_service.store import MAX_UNKNOWN_FIELDS_BYTES
 
     fill = MAX_UNKNOWN_FIELDS_BYTES - len(json.dumps({"blob": ""}))
     ids, path = _store_with_newer_fields(
@@ -220,7 +220,7 @@ def test_a_16_mib_top_level_key_from_a_newer_build_is_not_kept(tmp_path, monkeyp
 def test_many_jobs_past_the_store_total_keep_only_what_fits(tmp_path, monkeypatch, caplog):
     """40 jobs of 60 KB each: under the per-job cap one by one, 2.4 MB together."""
     try:
-        from kiro_crew.cron_service.store import MAX_UNKNOWN_FIELDS_STORE_BYTES
+        from aj_crew.cron_service.store import MAX_UNKNOWN_FIELDS_STORE_BYTES
     except ImportError:  # no store total: assert against the intended one
         MAX_UNKNOWN_FIELDS_STORE_BYTES = 1024 * 1024
 
@@ -229,7 +229,7 @@ def test_many_jobs_past_the_store_total_keep_only_what_fits(tmp_path, monkeypatc
         tmp_path, monkeypatch, {name: {"blob": "x" * 60_000} for name in names}
     )
     older = CronService(base_dir=tmp_path)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.cron"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.cron"):
         older.enable_job(ids["j00"], enabled=False)  # loads, then one ordinary write
     kept = dict(older._unknown_fields)
     total = sum(_kept_bytes(u) for u in kept.values())

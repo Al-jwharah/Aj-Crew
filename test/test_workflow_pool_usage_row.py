@@ -19,11 +19,11 @@ from __future__ import annotations
 
 import pytest
 
-import kiro_crew.dashboard.handlers.usage as usage_mod
-import kiro_crew.workflows.agent_exec as agent_exec
-import kiro_crew.workflows.agent_pool as agent_pool
-from kiro_crew.workflows.agent_exec import build_agent_fn
-from kiro_crew.workflows.agent_pool import build_pooled_agent_fn
+import aj_crew.dashboard.handlers.usage as usage_mod
+import aj_crew.workflows.agent_exec as agent_exec
+import aj_crew.workflows.agent_pool as agent_pool
+from aj_crew.workflows.agent_exec import build_agent_fn
+from aj_crew.workflows.agent_pool import build_pooled_agent_fn
 
 pytestmark = pytest.mark.asyncio
 

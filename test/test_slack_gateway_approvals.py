@@ -51,9 +51,9 @@ class TestInteractiveApprovalSlack:
         event.tool_input = ""
         event.tool_purpose = ""
 
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.slack.handler._build_approval_blocks", return_value=[]):
-                with patch("kiro_crew.slack.handler._pending_approvals", {}):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.handler._build_approval_blocks", return_value=[]):
+                with patch("aj_crew.slack.handler._pending_approvals", {}):
                     # Make the pending future resolve immediately
                     async def _fake_wait_for(fut, timeout):
                         return "approved"
@@ -88,9 +88,9 @@ class TestInteractiveApprovalSlack:
         event.tool_input = ""
         event.tool_purpose = ""
 
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.slack.handler._build_approval_blocks", return_value=[]):
-                with patch("kiro_crew.slack.handler._pending_approvals", {}):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.handler._build_approval_blocks", return_value=[]):
+                with patch("aj_crew.slack.handler._pending_approvals", {}):
                     # flake-ok: pre-existing worker-wide wait_for patch inside the test, moved verbatim; tracked for a de-flake pass
                     with patch("asyncio.wait_for", side_effect=asyncio.TimeoutError):
                         result = await callback(event, "")
@@ -118,7 +118,7 @@ class TestInteractiveApprovalSlack:
         event.tool_input = ""
         event.tool_purpose = ""
 
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
             result = await callback(event, "")
 
         assert result is True
@@ -141,7 +141,7 @@ class TestTaskRunnerApproval:
         orch.conv_log = MagicMock()
         orch.consolidator = MagicMock()
         orch.dashboard_state = _mock_dashboard_state()
-        with patch("kiro_crew.slack.gateway.TaskRunner") as mock_tr:
+        with patch("aj_crew.slack.gateway.TaskRunner") as mock_tr:
             mock_tr_inst = MagicMock()
             # Set to None first so MagicMock won't auto-create child mocks on
             # attribute access — otherwise the assertions below are vacuous.
@@ -185,9 +185,9 @@ class TestApprovalThreadContext:
         event.tool_input = ""
         event.tool_purpose = ""
 
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.slack.handler._build_approval_blocks", return_value=[]):
-                with patch("kiro_crew.slack.handler._pending_approvals", {}):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.slack.handler._build_approval_blocks", return_value=[]):
+                with patch("aj_crew.slack.handler._pending_approvals", {}):
                     # flake-ok: pre-existing worker-wide wait_for patch inside the test, moved verbatim; tracked for a de-flake pass
                     with patch("asyncio.wait_for", side_effect=asyncio.TimeoutError):
                         result = await callback(event, "C_CHAN:thread.ts")
@@ -217,8 +217,8 @@ class TestApprovalThreadContext:
         event.title = "cmd"
         event.tool_input = ""
         event.tool_purpose = ""
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.sel.sel") as mock_sel:
                 mock_sel.return_value.log_api_access = MagicMock()
                 result = await callback(event, "")
         assert result is False
@@ -242,7 +242,7 @@ class TestTaskApprovalCallback:
         orch.conv_log = MagicMock()
         orch.consolidator = MagicMock()
         orch.dashboard_state = None
-        with patch("kiro_crew.slack.gateway.TaskRunner") as mock_tr:
+        with patch("aj_crew.slack.gateway.TaskRunner") as mock_tr:
             mock_tr_inst = MagicMock()
             mock_tr.return_value = mock_tr_inst
             orch._init_task_runner()
@@ -250,7 +250,7 @@ class TestTaskApprovalCallback:
         task = MagicMock()
         task.index = 1
         task.title = "Test task"
-        with patch("kiro_crew.slack.gateway.sel") as mock_sel:
+        with patch("aj_crew.slack.gateway.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             result = await approval_cb(task)
         assert result is False
@@ -267,7 +267,7 @@ class TestTaskApprovalCallback:
         ds = _mock_dashboard_state()
         ds.request_approval = AsyncMock(return_value=True)
         orch.dashboard_state = ds
-        with patch("kiro_crew.slack.gateway.TaskRunner") as mock_tr:
+        with patch("aj_crew.slack.gateway.TaskRunner") as mock_tr:
             mock_tr_inst = MagicMock()
             mock_tr.return_value = mock_tr_inst
             orch._init_task_runner()
@@ -275,7 +275,7 @@ class TestTaskApprovalCallback:
         task = MagicMock()
         task.index = 2
         task.title = "Approved task"
-        with patch("kiro_crew.slack.gateway.sel") as mock_sel:
+        with patch("aj_crew.slack.gateway.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             result = await approval_cb(task)
         assert result is True

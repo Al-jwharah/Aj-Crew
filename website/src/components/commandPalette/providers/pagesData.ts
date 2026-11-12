@@ -68,6 +68,6 @@ export const EXTRA_PAGE_TITLE_KEY: Record<string, string> = {
   webhooks: 'pages.settings.webhooksPanel.inbound_webhooks',
   logs: 'components.commandPalette.providers.pagesProvider.logs',
   tasks: 'components.commandPalette.providers.pagesProvider.tasks',
-  'mc-agents': 'components.commandPalette.providers.pagesProvider.kirocrew_agents',
+  'mc-agents': 'components.commandPalette.providers.pagesProvider.ajcrew_agents',
   instances: 'components.commandPalette.providers.pagesProvider.remote_crew',
 }

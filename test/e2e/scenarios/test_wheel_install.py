@@ -3,7 +3,7 @@
 The flow a new user performs: pip install, then run the thing. The failure this
 catches is the one no in-tree test can see, because every other test imports
 from ``src/``: a module, package-data file or entry point that exists in the
-checkout and is missing from the built distribution. ``kirocrew doctor`` is the
+checkout and is missing from the built distribution. ``ajcrew doctor`` is the
 second half -- it exercises the installed package's own self-checks, so a wheel
 that imports but cannot resolve its data files fails here rather than on a
 user's machine.
@@ -79,9 +79,9 @@ def test_built_wheel_installs_and_the_cli_answers(
         tar.extractall(source, filter="data")
     # The built SPA is untracked but is what `pod up` serves; the wheel carries
     # it when present, so copy it beside the sources the same way a release does.
-    dist_src = checkout / "src" / "kiro_crew" / "static" / "dist"
+    dist_src = checkout / "src" / "aj_crew" / "static" / "dist"
     if dist_src.is_dir():
-        shutil.copytree(dist_src, source / "src" / "kiro_crew" / "static" / "dist")
+        shutil.copytree(dist_src, source / "src" / "aj_crew" / "static" / "dist")
 
     build = _run(
         [sys.executable, "-m", "build", "--wheel", "--outdir", str(outdir)],
@@ -109,7 +109,7 @@ def test_built_wheel_installs_and_the_cli_answers(
 
     bin_dir = venv_dir / ("Scripts" if os.name == "nt" else "bin")
     py = bin_dir / ("python.exe" if os.name == "nt" else "python")
-    cli = bin_dir / ("kirocrew.exe" if os.name == "nt" else "kirocrew")
+    cli = bin_dir / ("ajcrew.exe" if os.name == "nt" else "ajcrew")
 
     # The suite's conftest puts the checkout's `src/` on PYTHONPATH for every
     # child, so a child imports the tree under test. This scenario tests the
@@ -129,20 +129,20 @@ def test_built_wheel_installs_and_the_cli_answers(
             f"installing {wheel.name} into a clean venv failed (exit {install.returncode}).\n"
             f"stderr tail: {(install.stderr or '')[-3000:]}"
         )
-    assert cli.is_file(), f"the wheel installed no `kirocrew` entry point in {bin_dir}"
+    assert cli.is_file(), f"the wheel installed no `ajcrew` entry point in {bin_dir}"
 
     # Point the installed CLI at its own throwaway data home, so neither command
     # can read or write the developer's real ~/.kiro/crew.
     env = dict(wheel_env)
-    env["KIROCREW_HOME"] = str(tmp_path / "home")
-    env.pop("KIROCREW_KIRO_BIN", None)
+    env["AJCREW_HOME"] = str(tmp_path / "home")
+    env.pop("AJCREW_KIRO_BIN", None)
 
     version = _run([str(cli), "--version"], cwd=tmp_path, timeout=RUN_TIMEOUT, env=env)
     assert version.returncode == 0, (
-        f"`kirocrew --version` from the installed wheel failed (exit {version.returncode}).\n"
+        f"`ajcrew --version` from the installed wheel failed (exit {version.returncode}).\n"
         f"stderr: {version.stderr}"
     )
-    assert version.stdout.strip(), "`kirocrew --version` printed nothing"
+    assert version.stdout.strip(), "`ajcrew --version` printed nothing"
 
     # `doctor` reports problems by exit code, and a fresh throwaway home has
     # plenty of them (no config, no credentials), so the assertion is that it RAN
@@ -152,5 +152,5 @@ def test_built_wheel_installs_and_the_cli_answers(
     combined = (doctor.stdout or "") + (doctor.stderr or "")
     assert (
         "Traceback (most recent call last)" not in combined
-    ), f"`kirocrew doctor` from the installed wheel raised.\n{combined[-3000:]}"
-    assert combined.strip(), "`kirocrew doctor` produced no output at all"
+    ), f"`ajcrew doctor` from the installed wheel raised.\n{combined[-3000:]}"
+    assert combined.strip(), "`ajcrew doctor` produced no output at all"

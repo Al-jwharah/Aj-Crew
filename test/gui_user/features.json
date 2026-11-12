@@ -364,7 +364,7 @@
       "rationale": "Core chat path, three actions, deterministic on the fake backend.",
       "source": [
         "docs/system-specs/modules/turn-stats-footer.md",
-        "src/kiro_crew/testing/fake_acp_backend.py"
+        "src/aj_crew/testing/fake_acp_backend.py"
       ],
       "priority": "P1",
       "merged_from": [
@@ -444,7 +444,7 @@
       "estimated_steps": 5,
       "rationale": "Seed is built for exactly this assertion and all reads are local; the 'memory tools disabled' claim is not UI-observable on the fake backend, so the test asserts the badge and that History and its search still list the session. Two incognito records merged.",
       "source": [
-        "src/kiro_crew/tests_fixtures/incognito-mix/fixture.yaml",
+        "src/aj_crew/tests_fixtures/incognito-mix/fixture.yaml",
         "docs/system-specs/modules/history.md",
         "website/src/pages/ChatSidebar.tsx",
         "website/src/App.tsx",
@@ -506,7 +506,7 @@
         "website/src/pages/chat/EarlierMessagesBar.tsx",
         "website/src/pages/ChatPage.tsx",
         "website/src/pages/chat/page/ChatTranscriptView.tsx",
-        "src/kiro_crew/tests_fixtures/sessions-long-history/fixture.yaml",
+        "src/aj_crew/tests_fixtures/sessions-long-history/fixture.yaml",
         "docs/system-specs/modules/history.md"
       ],
       "priority": "P2",
@@ -749,7 +749,7 @@
         "website/src/pages/chat/SideChat.tsx",
         "website/src/pages/chat/SidePanel.tsx",
         "docs/system-specs/modules/side.md",
-        "src/kiro_crew/testing/fake_acp_backend.py"
+        "src/aj_crew/testing/fake_acp_backend.py"
       ],
       "priority": "P2",
       "merged_from": [
@@ -857,7 +857,7 @@
       "rationale": "Deterministic via the fake backend's SLOW sentinel; steer/queue cards render in the panel.",
       "source": [
         "docs/system-specs/modules/side.md",
-        "src/kiro_crew/testing/fake_acp_backend.py"
+        "src/aj_crew/testing/fake_acp_backend.py"
       ],
       "priority": "P2",
       "merged_from": [
@@ -885,7 +885,7 @@
       "rationale": "Not reachable on the fake backend/no-network target.",
       "source": [
         "docs/system-specs/modules/mcp-apps.md",
-        "src/kiro_crew/testing/fake_acp_backend.py"
+        "src/aj_crew/testing/fake_acp_backend.py"
       ],
       "priority": "P3",
       "merged_from": [
@@ -932,14 +932,14 @@
           "nova-sky"
         ],
         "feature_flags": [],
-        "notes": "Needs a model that calls the kirocrew-core workflow_run MCP tool; the fake backend cannot."
+        "notes": "Needs a model that calls the ajcrew-core workflow_run MCP tool; the fake backend cannot."
       },
       "runnable": "excluded",
       "estimated_steps": 4,
       "rationale": "Depends on real MCP tool execution by a model, absent on the fake ACP target.",
       "source": [
         "docs/system-specs/modules/workflow-chat-cards.md",
-        "src/kiro_crew/testing/fake_acp_backend.py"
+        "src/aj_crew/testing/fake_acp_backend.py"
       ],
       "priority": "P3",
       "merged_from": [
@@ -1181,8 +1181,8 @@
       "estimated_steps": 3,
       "rationale": "P0: this is the newly merged list-shell sidebar (folders, pinned rows, Older Sessions pane) rendered read-only on the rich seed in ≤5 actions; the seed is designed for it.",
       "source": [
-        "src/kiro_crew/tests_fixtures/rich/README.md",
-        "src/kiro_crew/tests_fixtures/rich/fixture.yaml"
+        "src/aj_crew/tests_fixtures/rich/README.md",
+        "src/aj_crew/tests_fixtures/rich/fixture.yaml"
       ],
       "priority": "P0",
       "merged_from": [
@@ -1515,7 +1515,7 @@
       "estimated_steps": 4,
       "rationale": "Seeded transcript JSONL is the whole input; offline.",
       "source": [
-        "src/kiro_crew/tests_fixtures/sessions-a-few/fixture.yaml",
+        "src/aj_crew/tests_fixtures/sessions-a-few/fixture.yaml",
         "website/src/App.tsx"
       ],
       "priority": "P2",
@@ -1569,8 +1569,8 @@
       "estimated_steps": 4,
       "rationale": "Excluded: no workspace switcher exists on main. Named workspaces are edited in Developer > Config and picked per mate; the sidebar has no control that changes the active workspace.",
       "source": [
-        "src/kiro_crew/tests_fixtures/multi-workspace/fixture.yaml",
-        "src/kiro_crew/tests_fixtures/multi-workspace/config.json"
+        "src/aj_crew/tests_fixtures/multi-workspace/fixture.yaml",
+        "src/aj_crew/tests_fixtures/multi-workspace/config.json"
       ],
       "priority": "P3",
       "merged_from": [
@@ -1936,7 +1936,7 @@
         "website/src/components/QuickSearchSurface.tsx",
         "website/src/hooks/useCommandPalette.ts",
         "docs/system-specs/modules/command-bar.md",
-        "src/kiro_crew/tests_fixtures/rich/fixture.yaml"
+        "src/aj_crew/tests_fixtures/rich/fixture.yaml"
       ],
       "priority": "P0",
       "merged_from": [
@@ -2003,7 +2003,7 @@
         "website/src/pages/members/ThreadPanel.tsx",
         "website/src/pages/chat/ThreadFooter.tsx",
         "website/src/app-sdk/messageRenderers.tsx",
-        "src/kiro_crew/dashboard/chat_threads.py",
+        "src/aj_crew/dashboard/chat_threads.py",
         "docs/system-specs/modules/history.md"
       ],
       "priority": "P1",
@@ -2032,8 +2032,8 @@
       "rationale": "Navigate-away-and-return flow over the DM thread with two model turns; the assertions that matter are pixel-level: the earlier bubble is still on screen after returning and no error bubble replaced the reply.",
       "source": [
         "website/src/pages/members/MembersPage.tsx",
-        "website/src/pages/KiroCrewAgentsPage.tsx",
-        "src/kiro_crew/members.py"
+        "website/src/pages/AjCrewAgentsPage.tsx",
+        "src/aj_crew/members.py"
       ],
       "priority": "P1",
       "merged_from": [
@@ -2103,7 +2103,7 @@
         "seed": "skills-custom",
         "members": [],
         "feature_flags": [],
-        "notes": "Tabs in CapabilitiesPage.tsx; Crews renders KiroCrewAgentsPage embedded, Templates renders AgentsPage embedded; RestartButton in header."
+        "notes": "Tabs in CapabilitiesPage.tsx; Crews renders AjCrewAgentsPage embedded, Templates renders AgentsPage embedded; RestartButton in header."
       },
       "runnable": "smoke",
       "estimated_steps": 3,
@@ -2111,7 +2111,7 @@
       "source": [
         "website/src/App.tsx",
         "website/src/pages/CapabilitiesPage.tsx",
-        "website/src/pages/KiroCrewAgentsPage.tsx",
+        "website/src/pages/AjCrewAgentsPage.tsx",
         "website/src/pages/AgentsPage.tsx",
         "website/src/pages/overview/SkillsTab.tsx"
       ],
@@ -2119,7 +2119,7 @@
       "merged_from": [
         "capabilities-crews-templates-skills-tabs"
       ],
-      "component": "website/src/pages/KiroCrewAgentsPage.tsx"
+      "component": "website/src/pages/AjCrewAgentsPage.tsx"
     },
     {
       "id": "capabilities-agent-templates",
@@ -2402,7 +2402,7 @@
       "estimated_steps": 4,
       "rationale": "Filesystem-backed approve/dismiss with visible list movement; offline.",
       "source": [
-        "src/kiro_crew/tests_fixtures/skills-custom/fixture.yaml",
+        "src/aj_crew/tests_fixtures/skills-custom/fixture.yaml",
         "docs/system-specs/modules/memory-skills-hooks.md"
       ],
       "priority": "P2",
@@ -2460,8 +2460,8 @@
         "website/src/pages/CapabilitiesPage.tsx",
         "website/src/pages/connections/ConnectionsPage.tsx",
         "website/src/pages/connections/registry.ts",
-        "src/kiro_crew/tests_fixtures/connections-two/fixture.yaml",
-        "src/kiro_crew/tests_fixtures/connections-two/mcp.json",
+        "src/aj_crew/tests_fixtures/connections-two/fixture.yaml",
+        "src/aj_crew/tests_fixtures/connections-two/mcp.json",
         "docs/system-specs/modules/connections.md"
       ],
       "priority": "P1",
@@ -2697,14 +2697,14 @@
           "nova-sky"
         ],
         "feature_flags": [],
-        "notes": "Point at <KIROCREW_HOME>/workspace/memory (markdown). Entity extraction runs LLM workers against the fake ACP (canned text), so extraction quality is not asserted; only source rows, counts and FTS visibility. Path must be typed, not chosen via a native dialog (blocked by browser policy)."
+        "notes": "Point at <AJCREW_HOME>/workspace/memory (markdown). Entity extraction runs LLM workers against the fake ACP (canned text), so extraction quality is not asserted; only source rows, counts and FTS visibility. Path must be typed, not chosen via a native dialog (blocked by browser policy)."
       },
       "runnable": "nightly",
       "estimated_steps": 7,
       "rationale": "Ingestion and FTS are local; the LLM step degrades gracefully on the fake backend, so the visible source/count state is deterministic enough for a nightly lane. Seven steps keep it out of smoke despite P0 priority.",
       "source": [
         "docs/system-specs/modules/knowledge.md",
-        "src/kiro_crew/tests_fixtures/memory-populated/fixture.yaml"
+        "src/aj_crew/tests_fixtures/memory-populated/fixture.yaml"
       ],
       "priority": "P0",
       "merged_from": [
@@ -2904,7 +2904,7 @@
         "website/src/surfaces/builtins.tsx",
         "website/src/pages/ArtifactsPage.tsx",
         "docs/system-specs/modules/artifacts.md",
-        "src/kiro_crew/tests_fixtures/artifacts-library/fixture.yaml"
+        "src/aj_crew/tests_fixtures/artifacts-library/fixture.yaml"
       ],
       "priority": "P1",
       "merged_from": [
@@ -2961,7 +2961,7 @@
       "rationale": "Binding, slot creation and the canned reply are observable offline; the real iteration write is out of scope for the fake backend.",
       "source": [
         "docs/system-specs/modules/artifacts.md",
-        "src/kiro_crew/testing/fake_acp_backend.py"
+        "src/aj_crew/testing/fake_acp_backend.py"
       ],
       "priority": "P2",
       "merged_from": [
@@ -2993,7 +2993,7 @@
         "website/src/pages/ArtifactDetailPage.tsx",
         "website/src/pages/RemoteArtifactDetailPage.tsx",
         "docs/system-specs/modules/artifacts.md",
-        "src/kiro_crew/tests_fixtures/artifacts-library/fixture.yaml"
+        "src/aj_crew/tests_fixtures/artifacts-library/fixture.yaml"
       ],
       "priority": "P2",
       "merged_from": [
@@ -3159,7 +3159,7 @@
       "rationale": "Not reachable on the fake backend; requires a model that emits widget markup.",
       "source": [
         "docs/system-specs/modules/artifacts.md",
-        "src/kiro_crew/testing/fake_acp_backend.py"
+        "src/aj_crew/testing/fake_acp_backend.py"
       ],
       "priority": "P3",
       "merged_from": [
@@ -3312,7 +3312,7 @@
         "website/src/pages/AppDetailPage.tsx",
         "website/src/apps/BuiltinAppRoute.tsx",
         "website/src/apps/builtinRegistry.ts",
-        "src/kiro_crew/tests_fixtures/apps-installed/fixture.yaml"
+        "src/aj_crew/tests_fixtures/apps-installed/fixture.yaml"
       ],
       "priority": "P0",
       "merged_from": [
@@ -3339,7 +3339,7 @@
       "estimated_steps": 3,
       "rationale": "Enabled by default, three actions, no backend dependency for the root page; a core daily navigation path.",
       "source": [
-        "src/kiro_crew/apps/builtins/command_bar/app.json",
+        "src/aj_crew/apps/builtins/command_bar/app.json",
         "website/src/apps/command-bar/CommandBarOverlay.tsx",
         "website/src/apps/command-bar/rootIndex.ts",
         "website/src/apps/overlayRegistry.ts"
@@ -3372,7 +3372,7 @@
         "website/src/pages/apps/LibraryPage.tsx",
         "website/src/pages/apps/LaunchpadTile.tsx",
         "website/src/lib/appNavHidden.ts",
-        "src/kiro_crew/tests_fixtures/apps-installed/fixture.yaml"
+        "src/aj_crew/tests_fixtures/apps-installed/fixture.yaml"
       ],
       "priority": "P1",
       "merged_from": [
@@ -3399,8 +3399,8 @@
       "estimated_steps": 6,
       "rationale": "All state is local to the gateway and agents run over the ACP backend, so it runs on Xvfb+Chromium with the fake backend; too many steps and too dependent on agent output for smoke.",
       "source": [
-        "src/kiro_crew/apps/builtins/auto_research/app.json",
-        "src/kiro_crew/apps/builtins/auto_research/handlers.py",
+        "src/aj_crew/apps/builtins/auto_research/app.json",
+        "src/aj_crew/apps/builtins/auto_research/handlers.py",
         "website/src/apps/auto-research/ResearchLabPage.tsx"
       ],
       "priority": "P2",
@@ -3426,7 +3426,7 @@
       "estimated_steps": 5,
       "rationale": "Screenshot flow is fully local (upload + chat slot); runs headless with a fake backend that emits a report, but depends on agent output so not smoke.",
       "source": [
-        "src/kiro_crew/apps/builtins/design_critique/app.json",
+        "src/aj_crew/apps/builtins/design_critique/app.json",
         "website/src/apps/design-critique/DesignCritiquePage.tsx",
         "website/src/apps/design-critique/Composer.tsx"
       ],
@@ -3453,8 +3453,8 @@
       "estimated_steps": 7,
       "rationale": "Works headless on Linux via the manual path field and a loopback preview server; too many steps and needs a served project, so nightly rather than smoke.",
       "source": [
-        "src/kiro_crew/apps/builtins/design_tweak/app.json",
-        "src/kiro_crew/apps/builtins/design_tweak/backend/server.py",
+        "src/aj_crew/apps/builtins/design_tweak/app.json",
+        "src/aj_crew/apps/builtins/design_tweak/backend/server.py",
         "website/src/apps/design-tweak/DesignTweakPage.tsx",
         "website/src/apps/design-tweak/api.ts"
       ],
@@ -3481,8 +3481,8 @@
       "estimated_steps": 4,
       "rationale": "Fully local and read-only; separate backend process and filesystem fixture make it a nightly check rather than smoke.",
       "source": [
-        "src/kiro_crew/apps/builtins/file_explorer/app.json",
-        "src/kiro_crew/apps/builtins/file_explorer/server.py",
+        "src/aj_crew/apps/builtins/file_explorer/app.json",
+        "src/aj_crew/apps/builtins/file_explorer/server.py",
         "website/src/apps/file-explorer/FileExplorerPage.tsx",
         "website/src/apps/file-explorer/PathBar.tsx"
       ],
@@ -3509,8 +3509,8 @@
       "estimated_steps": 6,
       "rationale": "Local folder attach + in-place edit is fully offline and headless-capable, spawning only the app backend and git on a local tree; git clone/push variants would be needs-secret.",
       "source": [
-        "src/kiro_crew/apps/builtins/md_notebook/app.json",
-        "src/kiro_crew/apps/builtins/md_notebook/server.py",
+        "src/aj_crew/apps/builtins/md_notebook/app.json",
+        "src/aj_crew/apps/builtins/md_notebook/server.py",
         "website/src/apps/md-notebook/MdNotebookPage.tsx",
         "website/src/apps/md-notebook/ConnectVault.tsx",
         "docs/system-specs/modules/md-notebook.md"
@@ -3539,7 +3539,7 @@
       "estimated_steps": 4,
       "rationale": "Kept nightly rather than needs-secret: the asserted flow ends at preferences CRUD and slot creation, which are fixture-backed and run against the fake ACP backend; real product research would need network and is explicitly outside the flow.",
       "source": [
-        "src/kiro_crew/apps/builtins/personal_shopper/app.json",
+        "src/aj_crew/apps/builtins/personal_shopper/app.json",
         "website/src/apps/personal-shopper/PersonalShopperPage.tsx",
         "website/src/apps/personal-shopper/PreferencesTab.tsx"
       ],
@@ -3566,7 +3566,7 @@
       "estimated_steps": 5,
       "rationale": "Fully local, native-control UI; needs a fixture project tree on disk, so nightly rather than smoke.",
       "source": [
-        "src/kiro_crew/apps/builtins/project_scaffolder/app.json",
+        "src/aj_crew/apps/builtins/project_scaffolder/app.json",
         "website/src/apps/project-scaffolder/ProjectScaffolderPage.tsx",
         "website/src/apps/project-scaffolder/api.ts"
       ],
@@ -3593,7 +3593,7 @@
       "estimated_steps": 7,
       "rationale": "Local project + embedded chat run headless with a fake backend that returns markdown; multi-stage approval flow is too long for smoke.",
       "source": [
-        "src/kiro_crew/apps/builtins/spec_builder/app.json",
+        "src/aj_crew/apps/builtins/spec_builder/app.json",
         "website/src/apps/spec-builder/SpecBuilderPage.tsx"
       ],
       "priority": "P2",
@@ -3613,14 +3613,14 @@
         "seed": "apps-installed",
         "members": [],
         "feature_flags": [],
-        "notes": "Hidden from the App Store grid; enable via `kirocrew app enable workflows` or the fixture. Backend on auto port proxied at /apps/workflows/api; synchronous /run returns the full event stream. Agent calls go through the ACP backend."
+        "notes": "Hidden from the App Store grid; enable via `ajcrew app enable workflows` or the fixture. Backend on auto port proxied at /apps/workflows/api; synchronous /run returns the full event stream. Agent calls go through the ACP backend."
       },
       "runnable": "nightly",
       "estimated_steps": 5,
       "rationale": "Shipped examples and a sandboxed validator make it deterministic headless with the fake backend; hidden-app enable and separate backend process keep it out of smoke.",
       "source": [
-        "src/kiro_crew/apps/builtins/workflows/app.json",
-        "src/kiro_crew/apps/builtins/workflows/server.py",
+        "src/aj_crew/apps/builtins/workflows/app.json",
+        "src/aj_crew/apps/builtins/workflows/server.py",
         "website/src/apps/workflows/WorkflowsPage.tsx",
         "website/src/apps/workflows/WorkflowsRuns.tsx"
       ],
@@ -3732,7 +3732,7 @@
       "estimated_steps": 7,
       "rationale": "Primary flow depends on an authenticated gh CLI and a real GitHub repo to clone, measure, and draft PRs against; the empty setup panel alone could be checked nightly but is not the primary flow.",
       "source": [
-        "src/kiro_crew/apps/builtins/auto_improvement/app.json",
+        "src/aj_crew/apps/builtins/auto_improvement/app.json",
         "website/src/apps/auto-improvement/AutoImprovementPage.tsx",
         "website/src/apps/auto-improvement/SetupPanel.tsx"
       ],
@@ -3759,7 +3759,7 @@
       "estimated_steps": 5,
       "rationale": "Every meaningful surface (account health, drive listing, share links) requires live AWS credentials and an S3 bucket the user owns; the target has no network and no credentials.",
       "source": [
-        "src/kiro_crew/apps/builtins/aws_control/app.json",
+        "src/aj_crew/apps/builtins/aws_control/app.json",
         "website/src/apps/aws-control/AwsControlPage.tsx",
         "website/src/apps/aws-control/DrivePage.tsx",
         "website/src/apps/aws-control/api.ts"
@@ -3787,7 +3787,7 @@
       "estimated_steps": 6,
       "rationale": "Repository discovery, PR listing, and draft review staging all go through the authenticated gh CLI against GitHub.",
       "source": [
-        "src/kiro_crew/apps/builtins/code_review_sage/app.json",
+        "src/aj_crew/apps/builtins/code_review_sage/app.json",
         "website/src/apps/code-review-sage/CodeReviewSagePage.tsx",
         "website/src/apps/code-review-sage/Workspace.tsx"
       ],
@@ -3803,7 +3803,7 @@
       "title": "Crew Companion: set break interval and add a reminder",
       "user_story": "As a desktop user, I want to configure break nudges and add a plain-language reminder, so that the floating companion paces my day.",
       "start_url": "/crew-companion",
-      "entry_path": "Kiro Crew Desktop > enable Crew Companion > Rail > Crew Companion > Settings section > Reminders section",
+      "entry_path": "Aj Crew Desktop > enable Crew Companion > Rail > Crew Companion > Settings section > Reminders section",
       "preconditions": {
         "seed": "apps-installed",
         "members": [],
@@ -3814,7 +3814,7 @@
       "estimated_steps": 5,
       "rationale": "Requires the Electron desktop app and its companion process; the target has no Electron. Degradable to web-only only for the offline landing state and cached Memories.",
       "source": [
-        "src/kiro_crew/apps/builtins/crew_companion/app.json",
+        "src/aj_crew/apps/builtins/crew_companion/app.json",
         "website/src/apps/crew-companion/CrewCompanionPage.tsx",
         "website/src/lib/electron.ts"
       ],
@@ -3841,7 +3841,7 @@
       "estimated_steps": 6,
       "rationale": "Repository connection, issue caching, and every write go through authenticated provider CLIs; only the welcome carousel is reachable without them.",
       "source": [
-        "src/kiro_crew/apps/builtins/issue_radar/app.json",
+        "src/aj_crew/apps/builtins/issue_radar/app.json",
         "website/src/apps/issue-radar/IssueRadarPage.tsx",
         "website/src/apps/issue-radar/WelcomeCarousel.tsx",
         "website/src/apps/issue-radar/ConnectRepoModal.tsx"
@@ -3863,17 +3863,17 @@
         "seed": "apps-installed",
         "members": [],
         "feature_flags": [],
-        "notes": "Needs browser microphone permission and Kiro Crew's speech-to-text over /api/ws/stt (STT backend dependencies like faster-whisper are optional heavy installs not present in the target image). Calendar via optional .ics path; agents via ACP backend."
+        "notes": "Needs browser microphone permission and Aj Crew's speech-to-text over /api/ws/stt (STT backend dependencies like faster-whisper are optional heavy installs not present in the target image). Calendar via optional .ics path; agents via ACP backend."
       },
       "runnable": "needs-secret",
       "estimated_steps": 7,
       "rationale": "The primary flow needs a working STT backend (an optional heavy install the no-network target cannot fetch) and a calendar/audio source; only the empty meeting list and settings views render from fixtures, and that is not the primary flow.",
       "source": [
-        "src/kiro_crew/apps/builtins/meetings/app.json",
+        "src/aj_crew/apps/builtins/meetings/app.json",
         "website/src/apps/meetings/MeetingsPage.tsx",
         "website/src/apps/meetings/api.ts",
-        "src/kiro_crew/apps/builtins/meetings/backend/routes/settings.py",
-        "src/kiro_crew/apps/builtins/meetings/backend/routes/audio_import.py"
+        "src/aj_crew/apps/builtins/meetings/backend/routes/settings.py",
+        "src/aj_crew/apps/builtins/meetings/backend/routes/audio_import.py"
       ],
       "priority": "P3",
       "merged_from": [
@@ -3887,7 +3887,7 @@
       "title": "Mochi: enable the desktop pet and view activity, watchlist, and plan",
       "user_story": "As a desktop user, I want a pet that floats on my screen and watches pages for me, so that I am tapped only when something changed.",
       "start_url": "/mochi",
-      "entry_path": "Kiro Crew Desktop > enable Mochi > Rail > Mochi > status row > Activity / Watchlist / Plan tabs",
+      "entry_path": "Aj Crew Desktop > enable Mochi > Rail > Mochi > status row > Activity / Watchlist / Plan tabs",
       "preconditions": {
         "seed": "apps-installed",
         "members": [],
@@ -3898,7 +3898,7 @@
       "estimated_steps": 5,
       "rationale": "Pet window, click-through transparency, and panel windows need Electron, which the target lacks; the dashboard data page alone is degradable to web-only.",
       "source": [
-        "src/kiro_crew/apps/builtins/mochi/app.json",
+        "src/aj_crew/apps/builtins/mochi/app.json",
         "website/src/apps/mochi/MochiPage.tsx",
         "website/src/apps/mochi/README.md"
       ],
@@ -3925,7 +3925,7 @@
       "estimated_steps": 7,
       "rationale": "Primary flow needs a real monitoring provider credential; a signed generic webhook could degrade this to nightly but the board is empty without a configured provider.",
       "source": [
-        "src/kiro_crew/apps/builtins/ops_mission_control/app.json",
+        "src/aj_crew/apps/builtins/ops_mission_control/app.json",
         "website/src/apps/ops-mission-control/OpsMissionControlPage.tsx",
         "website/src/apps/ops-mission-control/SettingsPanel.tsx",
         "website/src/apps/ops-mission-control/SignalsPanel.tsx"
@@ -3953,7 +3953,7 @@
       "estimated_steps": 5,
       "rationale": "Excluded: compiling to PDF needs a TeX toolchain the lane's runner image does not install, so the asserted end state is unreachable; a create-and-edit-only scenario without compile could be nightly. Paper creation and editing are local; compile needs a TeX toolchain preinstalled in the nightly image, and git remote flows would be needs-secret.",
       "source": [
-        "src/kiro_crew/apps/builtins/papyrus/app.json",
+        "src/aj_crew/apps/builtins/papyrus/app.json",
         "website/src/apps/papyrus/PapyrusPage.tsx",
         "website/src/apps/papyrus/ProjectList.tsx"
       ],
@@ -3980,7 +3980,7 @@
       "estimated_steps": 6,
       "rationale": "The primary flow (start a deck chat, watch preview) requires the engine download and MCP tools that need network, which the target does not have; the Decks/Library/Settings views render headless but are not the primary flow.",
       "source": [
-        "src/kiro_crew/apps/builtins/pptx_maker/app.json",
+        "src/aj_crew/apps/builtins/pptx_maker/app.json",
         "website/src/apps/pptx-maker/PptxMakerPage.tsx",
         "website/src/apps/pptx-maker/LibraryPanel.tsx"
       ],
@@ -4044,7 +4044,7 @@
         "website/src/pages/aidlc/DagView.tsx",
         "website/src/pages/aidlc/PhasedView.tsx",
         "website/src/pages/aidlc/TaskDetailPanel.tsx",
-        "src/kiro_crew/apps/builtins/projects/app.json"
+        "src/aj_crew/apps/builtins/projects/app.json"
       ],
       "priority": "P1",
       "merged_from": [
@@ -4060,7 +4060,7 @@
       "id": "app-agent-worlds-scene",
       "feature": "worlds",
       "title": "Agent Worlds: open the 3D scene page, switch scene, pop out",
-      "user_story": "As a user running several agents, I want an ambient 3D scene of my crew with switchable themes, so that I can see at a glance how busy Kiro Crew is.",
+      "user_story": "As a user running several agents, I want an ambient 3D scene of my crew with switchable themes, so that I can see at a glance how busy Aj Crew is.",
       "start_url": "/worlds",
       "entry_path": "Enable Agent Worlds in App Store > Rail > Worlds (/worlds via BuiltinAppRoute) > scene picker (office, ghost, panda, underwater, wizard tower, watering hole, neural constellation, mission control) > popout",
       "preconditions": {
@@ -4077,7 +4077,7 @@
         "website/src/pages/WorldsPopout.tsx",
         "website/src/pages/scenes/config.tsx",
         "website/src/App.tsx",
-        "src/kiro_crew/apps/builtins/agent_worlds/app.json",
+        "src/aj_crew/apps/builtins/agent_worlds/app.json",
         "website/src/apps/builtinRegistry.ts"
       ],
       "priority": "P2",
@@ -4104,8 +4104,8 @@
       "estimated_steps": 4,
       "rationale": "The page itself renders from fixture state and is the observable flow; starting a pod needs a container runtime the target lacks, so pod lifecycle stays out of the scenario. Read-only listing is safe on fixture repos; worktree deletion should not be exercised. Local git only, no network.",
       "source": [
-        "src/kiro_crew/apps/builtins/dev_fleet/app.json",
-        "src/kiro_crew/apps/builtins/dev_fleet/server.py",
+        "src/aj_crew/apps/builtins/dev_fleet/app.json",
+        "src/aj_crew/apps/builtins/dev_fleet/server.py",
         "website/src/App.tsx",
         "website/src/apps/dev-fleet/DevFleetPage.tsx",
         "website/src/apps/dev-fleet/devFleetApi.ts"
@@ -4137,8 +4137,8 @@
       "rationale": "Listing and adding a job is THE core daily path of the bucket and stays under five actions; seeded rows make the list assertion deterministic and the create writes only to the throwaway home.",
       "source": [
         "docs/feature-map/README.md",
-        "src/kiro_crew/tests_fixtures/crons-active/fixture.yaml",
-        "src/kiro_crew/tests_fixtures/crons-active/crons.json",
+        "src/aj_crew/tests_fixtures/crons-active/fixture.yaml",
+        "src/aj_crew/tests_fixtures/crons-active/crons.json",
         "scripts/gui-user-test/boot.sh"
       ],
       "priority": "P0",
@@ -4284,7 +4284,7 @@
       "title": "Agent chat egress",
       "user_story": "As an agent, I want to post, edit and delete the bot's own channel messages, so that I can notify and tidy up in Slack.",
       "start_url": "/chat",
-      "entry_path": "Agent-written via kirocrew-core messaging MCP tools; no dashboard page",
+      "entry_path": "Agent-written via ajcrew-core messaging MCP tools; no dashboard page",
       "preconditions": {
         "seed": "minimal",
         "members": [],
@@ -4359,7 +4359,7 @@
       "title": "Work ledger",
       "user_story": "As a conductor agent, I want a shared record of worker status and acceptance batches, so that dispatch decisions are grounded.",
       "start_url": "/chat",
-      "entry_path": "Agent-written via kirocrew-work MCP tools; no dashboard page yet",
+      "entry_path": "Agent-written via ajcrew-work MCP tools; no dashboard page yet",
       "preconditions": {
         "seed": "minimal",
         "members": [],
@@ -4382,7 +4382,7 @@
       "id": "standalone-openai-compatible-api",
       "feature": "api",
       "title": "OpenAI-compatible API",
-      "user_story": "As an external client, I want a chat-completions shim, so that existing OpenAI tooling can talk to Kiro Crew.",
+      "user_story": "As an external client, I want a chat-completions shim, so that existing OpenAI tooling can talk to Aj Crew.",
       "start_url": "/chat",
       "entry_path": "External clients only; POST /v1/chat/completions",
       "preconditions": {
@@ -4510,7 +4510,7 @@
         "seed": "apps-installed",
         "members": [],
         "feature_flags": [],
-        "notes": "App is hidden from the App Store grid; enable via `kirocrew app enable channels` or the fixture. Presets come from GET /api/channels/presets; agents reply through the fake ACP backend."
+        "notes": "App is hidden from the App Store grid; enable via `ajcrew app enable channels` or the fixture. Presets come from GET /api/channels/presets; agents reply through the fake ACP backend."
       },
       "runnable": "nightly",
       "estimated_steps": 6,
@@ -4518,7 +4518,7 @@
       "source": [
         "website/src/pages/ChannelPage.tsx",
         "website/src/App.tsx",
-        "src/kiro_crew/apps/builtins/channels/app.json"
+        "src/aj_crew/apps/builtins/channels/app.json"
       ],
       "priority": "P2",
       "merged_from": [
@@ -5130,7 +5130,7 @@
           "nova-sky"
         ],
         "feature_flags": [],
-        "notes": "Invoke path needs Electron and OS accessibility permissions. | Off by default; ComputerUsePanel.tsx; live view component mounted in App.tsx. | Permission probe spawns 'python -m kiro_crew.computer_use.permission_probe'; on Linux reports unsupported/unknown. | Linux backend is a typed UnsupportedBackend; the spec says when `supported` is false the panel renders the reason and no toggle."
+        "notes": "Invoke path needs Electron and OS accessibility permissions. | Off by default; ComputerUsePanel.tsx; live view component mounted in App.tsx. | Permission probe spawns 'python -m aj_crew.computer_use.permission_probe'; on Linux reports unsupported/unknown. | Linux backend is a typed UnsupportedBackend; the spec says when `supported` is false the panel renders the reason and no toggle."
       },
       "runnable": "nightly",
       "estimated_steps": 2,
@@ -5228,7 +5228,7 @@
       "estimated_steps": 1,
       "rationale": "One action, baseline for every empty-state assertion.",
       "source": [
-        "src/kiro_crew/tests_fixtures/empty/fixture.yaml",
+        "src/aj_crew/tests_fixtures/empty/fixture.yaml",
         "scripts/gui-user-test/seed_home.py"
       ],
       "priority": "P1",
@@ -5268,7 +5268,7 @@
       "id": "settings-instances",
       "feature": "remote-instances",
       "title": "Settings › Remote Crew",
-      "user_story": "As an operator, I want to register remote Kiro Crew instances and see provisioning lanes, so that I can switch crews from the header.",
+      "user_story": "As an operator, I want to register remote Aj Crew instances and see provisioning lanes, so that I can switch crews from the header.",
       "start_url": "/settings/instances",
       "entry_path": "Settings → Remote Crew (/instances redirects)",
       "preconditions": {
@@ -5310,7 +5310,7 @@
       },
       "runnable": "excluded",
       "estimated_steps": 4,
-      "rationale": "This is not a missing credential but a missing second live Kiro Crew instance plus a network tunnel, which the Xvfb+fake-ACP, no-network target cannot provide. Only the flag-gated menu entry is renderable (cover that in a nightly menu assertion if wanted).",
+      "rationale": "This is not a missing credential but a missing second live Aj Crew instance plus a network tunnel, which the Xvfb+fake-ACP, no-network target cannot provide. Only the flag-gated menu entry is renderable (cover that in a nightly menu assertion if wanted).",
       "source": [
         "docs/feature-map/README.md",
         "website/src/utils/previewFlags.ts",
@@ -5358,7 +5358,7 @@
       "id": "standalone-cloud-launch",
       "feature": "remote-instances",
       "title": "Cloud launch",
-      "user_story": "As an operator, I want to provision a remote Kiro Crew instance (EC2 by default) through a lane selector, so that I can run crews in the cloud.",
+      "user_story": "As an operator, I want to provision a remote Aj Crew instance (EC2 by default) through a lane selector, so that I can run crews in the cloud.",
       "start_url": "/settings/instances",
       "entry_path": "Settings → Remote Crew → Set up a new one",
       "preconditions": {
@@ -5550,7 +5550,7 @@
       "id": "kas-auth-sign-in-card-signed-out",
       "feature": "auth",
       "title": "Kiro sign-in card on Settings > Agent Harness (signed-out state)",
-      "user_story": "As an operator, I want to see whether Kiro Crew holds a Kiro identity and how to sign in, so that I can fix a session that cannot start.",
+      "user_story": "As an operator, I want to see whether Aj Crew holds a Kiro identity and how to sign in, so that I can fix a session that cannot start.",
       "start_url": "/settings/agent",
       "entry_path": "Settings > Agent Harness > scroll below the backend switch to the 'Kiro sign-in' card (deep link /settings/agent?highlight=key:kiro-sign-in)",
       "preconditions": {
@@ -5628,7 +5628,7 @@
       "rationale": "Excluded: the fake ACP backend cannot emit the AcpAuthRequired vocabulary (only [[ERROR]]), so the row and its deep link are unreachable on the target. Closing that harness gap (an auth-required sentinel) is the prerequisite for covering the card's four states.",
       "source": [
         "docs/system-specs/modules/kas-auth.md",
-        "src/kiro_crew/testing/fake_acp_backend.py"
+        "src/aj_crew/testing/fake_acp_backend.py"
       ],
       "priority": "P3",
       "merged_from": [
@@ -5683,11 +5683,11 @@
         "website/src/components/OnboardingFlow.tsx",
         "website/src/components/AgentImportFlow.tsx",
         "website/src/components/PrivacyChapter.tsx",
-        "src/kiro_crew/tests_fixtures/onboarding-fresh/fixture.yaml",
+        "src/aj_crew/tests_fixtures/onboarding-fresh/fixture.yaml",
         "scripts/gui-user-test/seed_home.py",
         "docs/system-specs/modules/config.md",
         "docs/system-specs/modules/onboarding-import.md",
-        "src/kiro_crew/testing/fake_acp_backend.py"
+        "src/aj_crew/testing/fake_acp_backend.py"
       ],
       "priority": "P2",
       "merged_from": [
@@ -6827,7 +6827,7 @@
         "seed": "minimal",
         "members": [],
         "feature_flags": [],
-        "notes": "Local provider only. Choices are sized to the gateway's cores; KIROCREW_STT_THREADS overrides the stored value and the panel says so."
+        "notes": "Local provider only. Choices are sized to the gateway's cores; AJCREW_STT_THREADS overrides the stored value and the panel says so."
       },
       "runnable": "nightly",
       "estimated_steps": 3,
@@ -7117,7 +7117,7 @@
           "nova-sky"
         ],
         "feature_flags": [],
-        "notes": "Harness pre-writes a minimal theme.json (formatVersion 1, level 0, variables) under $KIROCREW_SCRATCH; path is typed. Watch for the 'Applying…' indicator."
+        "notes": "Harness pre-writes a minimal theme.json (formatVersion 1, level 0, variables) under $AJCREW_SCRATCH; path is typed. Watch for the 'Applying…' indicator."
       },
       "runnable": "nightly",
       "estimated_steps": 6,
@@ -7473,9 +7473,9 @@
       "source": [
         "docs/feature-map/README.md",
         "website/src/pages/developer/AgentBackendTab.tsx",
-        "src/kiro_crew/agent_sdk/backend_cards.py",
+        "src/aj_crew/agent_sdk/backend_cards.py",
         "website/src/pages/SettingsPage.tsx",
-        "src/kiro_crew/agent_sdk/backend_install.py"
+        "src/aj_crew/agent_sdk/backend_install.py"
       ],
       "priority": "P2",
       "merged_from": [
@@ -7513,7 +7513,7 @@
       "id": "developer-config",
       "feature": "developer",
       "title": "Developer › Config",
-      "user_story": "As a developer, I want raw Kiro Crew and agent config editors, so that I can fix a setting no panel exposes.",
+      "user_story": "As a developer, I want raw Aj Crew and agent config editors, so that I can fix a setting no panel exposes.",
       "start_url": "/settings/developer",
       "entry_path": "Settings → Developer → config (/settings/developer/config)",
       "preconditions": {
@@ -7604,8 +7604,8 @@
       "rationale": "Developer-mode internals view; graph layout is non-deterministic so assertions stay coarse, but the layer text and lesson rows are deterministic local reads.",
       "source": [
         "docs/feature-map/README.md",
-        "src/kiro_crew/tests_fixtures/memory-populated/fixture.yaml",
-        "src/kiro_crew/tests_fixtures/memory-populated/lessons.jsonl",
+        "src/aj_crew/tests_fixtures/memory-populated/fixture.yaml",
+        "src/aj_crew/tests_fixtures/memory-populated/lessons.jsonl",
         "website/src/pages/DeveloperPage.tsx"
       ],
       "priority": "P2",

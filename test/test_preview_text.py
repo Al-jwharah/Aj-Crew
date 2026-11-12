@@ -12,9 +12,9 @@ from __future__ import annotations
 
 import time
 
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.preview_text import strip_markdown_preview
 from conftest import assert_rejected_without_backtracking
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.preview_text import strip_markdown_preview
 
 
 class TestStripMarkdownPreview:
@@ -28,7 +28,7 @@ class TestStripMarkdownPreview:
         )
 
     def test_diff_fence_becomes_placeholder(self):
-        src = "```diff\n--- /Users/user/.kirocrew/workspace/H.tsx\n+++ b\n@@ -1 +1 @@\n```"
+        src = "```diff\n--- /Users/user/.ajcrew/workspace/H.tsx\n+++ b\n@@ -1 +1 @@\n```"
         assert strip_markdown_preview(src) == "(diff)"
 
     def test_code_fence_becomes_placeholder(self):
@@ -190,7 +190,7 @@ class TestStripMarkdownPreview:
         # from what the preview strips.
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.cron_inject import run_marker
+        from aj_crew.dashboard.cron_inject import run_marker
 
         job = SimpleNamespace(id="d50d65be", last_result_ts=1793836357.123456)
         marker = run_marker(job)
@@ -259,7 +259,7 @@ class TestSlotLastMessageStripsMarkdown:
 
     def test_sidebar_preview_replaces_diff_fence(self):
         s = self._slot_with(
-            ("assistant", "```diff\n--- /Users/user/.kirocrew/workspace/H.tsx\n+++ b\n```"),
+            ("assistant", "```diff\n--- /Users/user/.ajcrew/workspace/H.tsx\n+++ b\n```"),
         )
         assert s.to_dict()["last_message"] == "(diff)"
 
@@ -323,7 +323,7 @@ class TestHistoryLastMessagePreviewStripsMarkdown:
     def test_archived_preview_is_plain_text(self, tmp_path):
         import json
 
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog(base_dir=tmp_path)
         log.init()
@@ -338,7 +338,7 @@ class TestHistoryLastMessagePreviewStripsMarkdown:
     def test_cron_result_session_preview_has_no_identity_marker(self, tmp_path):
         import json
 
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog(base_dir=tmp_path)
         log.init()
@@ -360,7 +360,7 @@ class TestHistoryLastMessagePreviewStripsMarkdown:
         import json
         from datetime import datetime
 
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog(base_dir=tmp_path)
         log.init()

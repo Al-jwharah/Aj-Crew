@@ -25,8 +25,8 @@ const LONG_LINE = '        raise SegmentOverflowError(f"flush_segment: buffer {l
 
 const DIFF = [
   '```diff',
-  '--- a/src/kiro_crew/dashboard/chat_runner.py',
-  '+++ b/src/kiro_crew/dashboard/chat_runner.py',
+  '--- a/src/aj_crew/dashboard/chat_runner.py',
+  '+++ b/src/aj_crew/dashboard/chat_runner.py',
   '@@ -140,7 +140,9 @@',
   ' def flush_segment(self, seg):',
   '     if not seg.lines:',
@@ -52,7 +52,7 @@ const slots = [{
   running: false,
   last_message: 'Updated flush_segment.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   modified: Math.floor(Date.now() / 1000),
 }]

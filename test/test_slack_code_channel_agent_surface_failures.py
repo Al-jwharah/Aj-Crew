@@ -45,16 +45,16 @@ from slack_code_channel_surface_helpers import (  # noqa: F401 - fixtures by nam
 )
 from slack_code_channels_helpers import OWNER
 
-from kiro_crew.config.loader import ACTIVATION_OFF
-from kiro_crew.dashboard.handlers import worktree as wt
-from kiro_crew.slack.code_channels import binding as cc_binding
-from kiro_crew.slack.code_channels import commands, status, surface, tools, wrapup
-from kiro_crew.slack.code_channels.surface_store import SurfaceStore
-from kiro_crew.slack.code_channels.surface_store import store as surface_store
-from kiro_crew.slack.code_channels.workspace import git_ops
-from kiro_crew.slack.code_channels.workspace.store import WorkspaceStore
-from kiro_crew.testing.links import make_dir_link
-from kiro_crew.testing.wait import await_until
+from aj_crew.config.loader import ACTIVATION_OFF
+from aj_crew.dashboard.handlers import worktree as wt
+from aj_crew.slack.code_channels import binding as cc_binding
+from aj_crew.slack.code_channels import commands, status, surface, tools, wrapup
+from aj_crew.slack.code_channels.surface_store import SurfaceStore
+from aj_crew.slack.code_channels.surface_store import store as surface_store
+from aj_crew.slack.code_channels.workspace import git_ops
+from aj_crew.slack.code_channels.workspace.store import WorkspaceStore
+from aj_crew.testing.links import make_dir_link
+from aj_crew.testing.wait import await_until
 
 
 class _Delegating:
@@ -79,7 +79,7 @@ class _Delegating:
 def test_a_cancel_after_the_retarget_moves_the_sessions_back_and_carries_on(
     env: Any, worktree: Any, monkeypatch: Any, tmp_path: Path
 ) -> None:
-    from kiro_crew.slack.code_channels import cleanup
+    from aj_crew.slack.code_channels import cleanup
 
     root, tree = worktree
     _bind(env, project=str(root))
@@ -106,7 +106,7 @@ def test_a_cancel_after_the_retarget_moves_the_sessions_back_and_carries_on(
 
 
 def test_a_wrap_up_whose_delivery_raises_is_disarmed(env: Any, monkeypatch: Any) -> None:
-    from kiro_crew.slack.code_channels import routing
+    from aj_crew.slack.code_channels import routing
 
     binding = _bind(env)
 
@@ -145,7 +145,7 @@ def test_a_posted_wrap_up_whose_ts_is_not_stored_loses_its_button(
 def test_a_context_bar_publish_that_raises_puts_the_stored_items_back(
     env: Any, monkeypatch: Any
 ) -> None:
-    from kiro_crew.slack.code_channels.surface_client import SurfaceClient
+    from aj_crew.slack.code_channels.surface_client import SurfaceClient
 
     _bind(env)
     first = [{"key": "tokens", "label": "1k"}]
@@ -163,7 +163,7 @@ def test_a_context_bar_publish_that_raises_puts_the_stored_items_back(
 def test_a_canvas_whose_id_failed_to_store_is_stored_by_the_next_call(
     env: Any, monkeypatch: Any
 ) -> None:
-    from kiro_crew.slack.code_channels import surface_store as ss
+    from aj_crew.slack.code_channels import surface_store as ss
 
     _bind(env)
     env.api.responses["conversations.canvases.create"] = {"ok": True, "canvas_id": "F1"}
@@ -188,7 +188,7 @@ def test_a_canvas_whose_id_failed_to_store_is_stored_by_the_next_call(
 
 
 def test_records_pointing_at_slack_outlast_the_record_cap(tmp_path: Path, monkeypatch: Any) -> None:
-    from kiro_crew.slack.code_channels import surface_store as ss
+    from aj_crew.slack.code_channels import surface_store as ss
 
     monkeypatch.setattr(ss, "MAX_RECORDS", 2)
     st = SurfaceStore(tmp_path / "s.json")
@@ -241,7 +241,7 @@ def test_a_second_cancel_during_the_removal_still_reports_what_git_did(
 ) -> None:
     import threading
 
-    from kiro_crew.slack.code_channels import cleanup
+    from aj_crew.slack.code_channels import cleanup
 
     root, tree = worktree
     _bind(env, project=str(root))
@@ -262,7 +262,7 @@ def test_a_second_cancel_during_the_removal_still_reports_what_git_did(
         task = asyncio.ensure_future(
             cleanup.release_channel_workspace(env.store.get_binding(CH), caller=OWNER)
         )
-        from kiro_crew.testing.wait import async_wait_until
+        from aj_crew.testing.wait import async_wait_until
 
         try:
             # Bounded, and fails at once if the cleanup ended before the removal.
@@ -288,7 +288,7 @@ def test_a_second_cancel_during_the_removal_still_reports_what_git_did(
 def test_a_disarm_whose_write_fails_still_posts_no_stray_wrap_up(
     env: Any, monkeypatch: Any
 ) -> None:
-    from kiro_crew.slack.code_channels import routing
+    from aj_crew.slack.code_channels import routing
 
     binding = _bind(env)
     real = wrapup.update_async
@@ -314,7 +314,7 @@ def test_a_disarm_whose_write_fails_still_posts_no_stray_wrap_up(
 def test_the_record_being_written_survives_a_cap_full_of_pointers(
     tmp_path: Path, monkeypatch: Any
 ) -> None:
-    from kiro_crew.slack.code_channels import surface_store as ss
+    from aj_crew.slack.code_channels import surface_store as ss
 
     monkeypatch.setattr(ss, "MAX_RECORDS", 2)
     st = SurfaceStore(tmp_path / "s.json")
@@ -476,7 +476,7 @@ def test_a_repository_whose_path_has_a_space_is_cleaned(
 def test_a_symlink_planted_at_the_expected_path_does_not_vouch_for_a_forged_root(
     tmp_path: Path,
 ) -> None:
-    from kiro_crew.slack.code_channels import cleanup
+    from aj_crew.slack.code_channels import cleanup
 
     real = tmp_path / "proj-wt-real"
     real.mkdir()
@@ -491,7 +491,7 @@ def test_a_symlink_planted_at_the_expected_path_does_not_vouch_for_a_forged_root
 def test_a_wrap_up_refused_for_a_privacy_modifier_is_disarmed(
     env: Any, monkeypatch: Any, modifier: str
 ) -> None:
-    from kiro_crew.slack.code_channels import routing
+    from aj_crew.slack.code_channels import routing
 
     binding = _bind(env)
     real = routing.deliver_directed
@@ -513,7 +513,7 @@ def test_a_wrap_up_refused_for_a_privacy_modifier_is_disarmed(
 def test_a_failure_after_git_removed_the_tree_never_points_back_at_it(
     env: Any, worktree: Any, monkeypatch: Any, tmp_path: Path, fails: str
 ) -> None:
-    from kiro_crew.slack.code_channels import cleanup
+    from aj_crew.slack.code_channels import cleanup
 
     root, tree = worktree
     _bind(env, project=str(tree))
@@ -548,7 +548,7 @@ def test_a_failure_after_git_removed_the_tree_never_points_back_at_it(
 
 
 def test_an_unreadable_parent_counts_as_still_there(tmp_path: Path, monkeypatch: Any) -> None:
-    from kiro_crew.slack.code_channels import cleanup
+    from aj_crew.slack.code_channels import cleanup
 
     def denied(_p: Any, *_a: Any, **_k: Any) -> Any:
         raise PermissionError("EACCES")
@@ -567,14 +567,14 @@ def test_a_shutdown_cancel_while_git_removes_the_tree_restores_nothing(
     the cleanup must still learn git's real result and move nothing back."""
     import threading
 
-    from kiro_crew.slack.code_channels import cleanup
+    from aj_crew.slack.code_channels import cleanup
 
     root, tree = worktree
     _bind(env, project=str(tree))
     _register_workspace(root, tree)
     events: list[tuple[str, str]] = []
     _retarget_service(monkeypatch, tmp_path, events, applies=True)
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.testing.wait import async_wait_until
 
     real_git = git_ops.run_git
     running, release = threading.Event(), threading.Event()
@@ -612,7 +612,7 @@ def test_a_shutdown_cancel_while_git_removes_the_tree_restores_nothing(
 
 
 def test_a_tree_git_half_deleted_counts_as_gone(tmp_path: Path) -> None:
-    from kiro_crew.slack.code_channels import cleanup
+    from aj_crew.slack.code_channels import cleanup
 
     tree = tmp_path / "half"
     tree.mkdir()
@@ -623,7 +623,7 @@ def test_a_tree_git_half_deleted_counts_as_gone(tmp_path: Path) -> None:
 
 
 def test_agent_text_goes_through_the_installations_own_redactor(env: Any, monkeypatch: Any) -> None:
-    from kiro_crew.platform import context
+    from aj_crew.platform import context
 
     monkeypatch.setattr(
         context, "redact_via_context", lambda text: text.replace("CORPSECRET", "[REDACTED]")
@@ -776,7 +776,7 @@ def test_html_views_and_bar_urls_are_not_mention_defanged(env: Any) -> None:
 
 
 def test_an_unreadable_surface_file_is_never_overwritten(tmp_path: Path, monkeypatch: Any) -> None:
-    from kiro_crew.slack.code_channels import surface_store as ss
+    from aj_crew.slack.code_channels import surface_store as ss
 
     path = tmp_path / "surface.json"
     first = SurfaceStore(path)
@@ -802,7 +802,7 @@ def test_an_unreadable_surface_file_is_never_overwritten(tmp_path: Path, monkeyp
 
 
 def test_a_corrupt_surface_file_is_left_as_is(tmp_path: Path) -> None:
-    from kiro_crew.slack.code_channels import surface_store as ss
+    from aj_crew.slack.code_channels import surface_store as ss
 
     path = tmp_path / "surface.json"
     path.write_text("{not json")
@@ -814,14 +814,14 @@ def test_a_corrupt_surface_file_is_left_as_is(tmp_path: Path) -> None:
 def test_a_failed_bar_publish_never_rolls_back_a_newer_calls_items(
     env: Any, monkeypatch: Any
 ) -> None:
-    from kiro_crew.slack.code_channels.surface_client import SurfaceClient
+    from aj_crew.slack.code_channels.surface_client import SurfaceClient
 
     _bind(env)
     gate = asyncio.Event
     calls: list[str] = []
 
     async def go() -> None:
-        from kiro_crew.testing.wait import async_wait_until
+        from aj_crew.testing.wait import async_wait_until
 
         first_in, first_go = gate(), gate()
         real = SurfaceClient.set_context_bar
@@ -884,7 +884,7 @@ def test_a_failed_bar_publish_never_rolls_back_a_newer_calls_items(
 def test_a_wrap_up_its_session_refused_is_not_left_armed(env: Any) -> None:
     """A refused route was answered in the channel and reached no session: the
     /wrap-up it carried is not delivered, so it is disarmed like an unrouted one."""
-    from kiro_crew.slack.handler import LinkedRoute
+    from aj_crew.slack.handler import LinkedRoute
 
     _bind(env)
     env.route_result = LinkedRoute.REFUSED
@@ -941,7 +941,7 @@ def test_a_folder_changed_mid_archive_keeps_the_tree(
 def test_a_turn_ending_while_wrap_up_is_still_being_delivered_posts_nothing(
     env: Any, monkeypatch: Any
 ) -> None:
-    from kiro_crew.slack.code_channels import routing
+    from aj_crew.slack.code_channels import routing
 
     binding = _bind(env)
     seen: list[int] = []
@@ -984,7 +984,7 @@ def test_a_turn_ending_while_the_request_is_being_stored_posts_nothing(
 def test_a_second_wrap_up_survives_the_first_ones_failed_delivery(
     env: Any, monkeypatch: Any
 ) -> None:
-    from kiro_crew.slack.code_channels import routing
+    from aj_crew.slack.code_channels import routing
 
     binding = _bind(env)
     calls: list[str] = []
@@ -1033,7 +1033,7 @@ def test_a_failed_wrap_up_turn_disarms_only_its_own_request(env: Any) -> None:
 
 
 def test_the_turn_start_notification_carries_the_prompt(env: Any, monkeypatch: Any) -> None:
-    from kiro_crew.slack.code_channels import hooks
+    from aj_crew.slack.code_channels import hooks
 
     binding = _bind(env)
     seen: list[str] = []
@@ -1052,7 +1052,7 @@ def test_the_turn_start_notification_carries_the_prompt(env: Any, monkeypatch: A
 
 
 def test_a_surface_file_of_the_wrong_shape_is_left_as_is(tmp_path: Path) -> None:
-    from kiro_crew.slack.code_channels import surface_store as ss
+    from aj_crew.slack.code_channels import surface_store as ss
 
     for doc in ("[]", '{"records": {}}', '{"records": [{"no_channel": 1}]}'):
         path = tmp_path / "surface.json"
@@ -1081,8 +1081,8 @@ def test_a_cancel_during_the_first_bar_write_rolls_the_items_back(
 ) -> None:
     import threading
 
-    from kiro_crew.slack.code_channels import surface_store as ss
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.slack.code_channels import surface_store as ss
+    from aj_crew.testing.wait import async_wait_until
 
     _bind(env)
     assert _run(env, tools.SET_CONTEXT_BAR, {"items": [{"key": "old", "label": "o"}]}).ok
@@ -1129,12 +1129,12 @@ def test_the_turn_start_reads_the_persons_text_not_the_runners_prepends(
 
     from turn_harness import SlotSpec, TurnContext, TurnScript, run_turn
 
-    import kiro_crew.context as context_mod
-    from kiro_crew.acp.types import EVENT_COMPLETE, STOP_REASON_END_TURN, AcpEvent
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.memory import MemoryStore
-    from kiro_crew.skills import SkillsLoader
-    from kiro_crew.slack.code_channels import hooks
+    import aj_crew.context as context_mod
+    from aj_crew.acp.types import EVENT_COMPLETE, STOP_REASON_END_TURN, AcpEvent
+    from aj_crew.context import ContextBuilder
+    from aj_crew.memory import MemoryStore
+    from aj_crew.skills import SkillsLoader
+    from aj_crew.slack.code_channels import hooks
 
     binding = _bind(env)
     monkeypatch.setattr(
@@ -1199,7 +1199,7 @@ def test_a_wrap_up_posted_in_one_turn_leaves_a_newer_request_live(env: Any) -> N
     ],
 )
 def test_a_surface_file_from_a_newer_build_is_left_as_is(tmp_path: Path, doc: str) -> None:
-    from kiro_crew.slack.code_channels import surface_store as ss
+    from aj_crew.slack.code_channels import surface_store as ss
 
     path = tmp_path / "surface.json"
     path.write_text(doc)
@@ -1213,7 +1213,7 @@ def test_a_surface_file_from_a_newer_build_is_left_as_is(tmp_path: Path, doc: st
 
 @pytest.fixture
 def refused(monkeypatch: Any) -> Any:
-    from kiro_crew.slack import channel_policy
+    from aj_crew.slack import channel_policy
 
     monkeypatch.setattr(
         channel_policy,
@@ -1243,7 +1243,7 @@ def test_a_command_in_a_channel_the_policy_refuses_runs_nothing(
 def test_an_archive_click_in_a_channel_the_policy_refuses_archives_nothing(
     env: Any, monkeypatch: Any
 ) -> None:
-    from kiro_crew.slack import channel_policy
+    from aj_crew.slack import channel_policy
 
     _bind(env)
     _, ts = _wrap(env)  # posted while the channel was still allowed
@@ -1262,7 +1262,7 @@ def test_a_tool_in_a_channel_the_policy_refuses_posts_nothing(env: Any, refused:
 def test_no_fallback_wrap_up_posts_into_a_channel_the_policy_refuses(
     env: Any, monkeypatch: Any
 ) -> None:
-    from kiro_crew.slack import channel_policy
+    from aj_crew.slack import channel_policy
 
     binding = _bind(env)
     tag = asyncio.run(wrapup.request_wrap_up(CH, OWNER))
@@ -1275,7 +1275,7 @@ def test_no_fallback_wrap_up_posts_into_a_channel_the_policy_refuses(
 def refused_mid_await(monkeypatch: Any) -> Any:
     """The channel is admitted at entry; the policy refuses it during the handler's
     last await (the archived read every handler makes just before it acts)."""
-    from kiro_crew.slack import channel_policy
+    from aj_crew.slack import channel_policy
 
     verdict = {"refused": False}
     monkeypatch.setattr(
@@ -1321,7 +1321,7 @@ def test_a_command_refused_after_its_awaits_runs_nothing(
 def test_an_archive_click_refused_after_its_awaits_touches_nothing(
     env: Any, monkeypatch: Any
 ) -> None:
-    from kiro_crew.slack import channel_policy
+    from aj_crew.slack import channel_policy
 
     _bind(env)
     _, ts = _wrap(env)  # posted while the channel was still allowed
@@ -1356,8 +1356,8 @@ def test_a_command_refused_while_its_turn_is_delivered_runs_nothing(
 ) -> None:
     """A replacement session's bind awaits after the command's own checks: the
     policy is read again right before the turn (whose admission cuts the worktree)."""
-    from kiro_crew.slack import channel_policy
-    from kiro_crew.slack.code_channels import routing
+    from aj_crew.slack import channel_policy
+    from aj_crew.slack.code_channels import routing
 
     binding = _bind(env)
     verdict = {"refused": False}
@@ -1387,8 +1387,8 @@ def test_no_session_is_bound_for_a_channel_refused_during_the_creation_wait(
 ) -> None:
     """A replacement session (the old one was closed) or an adopted channel binds a
     worktree and a folder: never once the policy refuses the channel."""
-    from kiro_crew.slack import channel_policy
-    from kiro_crew.slack.code_channels import routing
+    from aj_crew.slack import channel_policy
+    from aj_crew.slack.code_channels import routing
 
     if bind == "replace":
         _bind(env)
@@ -1423,9 +1423,9 @@ def test_a_bind_refused_during_its_own_awaits_cuts_and_binds_nothing(
     session: the policy is read again before each, and a refusal posts nothing."""
     from types import SimpleNamespace
 
-    from kiro_crew.slack import channel_policy
-    from kiro_crew.slack.code_channels import routing
-    from kiro_crew.slack.code_channels.workspace import core as workspace_core
+    from aj_crew.slack import channel_policy
+    from aj_crew.slack.code_channels import routing
+    from aj_crew.slack.code_channels.workspace import core as workspace_core
 
     _bind(env)
     monkeypatch.setattr(routing, "bound_slot", lambda *_a: None)  # the session was closed
@@ -1475,7 +1475,7 @@ def test_a_bind_refused_during_its_own_awaits_cuts_and_binds_nothing(
 def test_an_archive_retry_refused_after_its_awaits_starts_no_recovery(
     env: Any, monkeypatch: Any
 ) -> None:
-    from kiro_crew.slack import channel_policy
+    from aj_crew.slack import channel_policy
 
     _bind(env)
     _, ts = _wrap(env)
@@ -1505,7 +1505,7 @@ def test_an_archive_retry_refused_after_its_awaits_starts_no_recovery(
 def test_a_command_sync_for_a_refused_channel_probes_and_sends_nothing(
     env: Any, monkeypatch: Any, flip_at: str
 ) -> None:
-    from kiro_crew.slack import channel_policy
+    from aj_crew.slack import channel_policy
 
     binding = _bind(env)
     verdict = {"refused": flip_at == "entry"}
@@ -1541,7 +1541,7 @@ def test_every_policy_gated_handler_checks_at_entry_and_at_its_commit_point() ->
     import ast
     import inspect
 
-    from kiro_crew.slack.code_channels import surface_client
+    from aj_crew.slack.code_channels import surface_client
 
     for func, minimum in surface.policy_gated_handlers():
         tree = ast.parse(inspect.getsource(func).lstrip())
@@ -1558,7 +1558,7 @@ def test_every_policy_gated_handler_checks_at_entry_and_at_its_commit_point() ->
         ]
         assert len(calls) >= minimum, f"{func.__qualname__}: {len(calls)} guard call(s)"
     assert "channel_policy_refusal" in inspect.getsource(surface_client.SurfaceClient._call)
-    from kiro_crew.slack.code_channels import routing
+    from aj_crew.slack.code_channels import routing
 
     bind = inspect.getsource(routing._bind_channel)
     assert bind.count("_refuse_bind_if_policy_refuses(channel)") == 2
@@ -1568,8 +1568,8 @@ def test_every_policy_gated_handler_checks_at_entry_and_at_its_commit_point() ->
 
 def test_every_surface_client_call_meets_the_channel_policy(env: Any, refused: Any) -> None:
     """The seam itself: no raw agents.* call reaches Slack for a refused channel."""
-    from kiro_crew.slack.code_channels.models import CodeChannelApiError
-    from kiro_crew.slack.code_channels.surface_client import CHANNEL_REFUSED
+    from aj_crew.slack.code_channels.models import CodeChannelApiError
+    from aj_crew.slack.code_channels.surface_client import CHANNEL_REFUSED
 
     client = surface.client()
     calls = [
@@ -1593,8 +1593,8 @@ def test_every_surface_client_call_meets_the_channel_policy(env: Any, refused: A
 def test_every_surface_client_call_meets_the_outbound_profile(env: Any) -> None:
     """The seam applies the host's outbound profile too, so a background publish
     (the workspace bar on a dashboard turn end) never writes once Slack is denied."""
-    from kiro_crew.slack.code_channels.models import CodeChannelApiError
-    from kiro_crew.slack.code_channels.surface_client import OUTBOUND_REFUSED
+    from aj_crew.slack.code_channels.models import CodeChannelApiError
+    from aj_crew.slack.code_channels.surface_client import OUTBOUND_REFUSED
 
     env.outbound_ok = False
     client = surface.client()
@@ -1612,8 +1612,8 @@ def test_a_channel_withdrawn_during_the_outbound_check_gets_nothing(
     env: Any, monkeypatch: Any
 ) -> None:
     """The policy is read after the outbound check's await, never before it."""
-    from kiro_crew.slack.code_channels.models import CodeChannelApiError
-    from kiro_crew.slack.code_channels.surface_client import CHANNEL_REFUSED
+    from aj_crew.slack.code_channels.models import CodeChannelApiError
+    from aj_crew.slack.code_channels.surface_client import CHANNEL_REFUSED
 
     refusal = {"why": ""}
     monkeypatch.setattr(surface, "channel_policy_refusal", lambda ch, **_k: refusal["why"])
@@ -1686,8 +1686,8 @@ def test_ordinary_character_references_still_publish(env: Any, content: str) -> 
 
 
 def test_the_canvas_creator_read_meets_the_outbound_profile(env: Any) -> None:
-    from kiro_crew.slack.code_channels.models import CodeChannelApiError
-    from kiro_crew.slack.code_channels.surface_client import OUTBOUND_REFUSED
+    from aj_crew.slack.code_channels.models import CodeChannelApiError
+    from aj_crew.slack.code_channels.surface_client import OUTBOUND_REFUSED
 
     env.outbound_ok = False
     with pytest.raises(CodeChannelApiError) as exc:
@@ -1696,7 +1696,7 @@ def test_the_canvas_creator_read_meets_the_outbound_profile(env: Any) -> None:
 
 
 def test_a_refusal_is_audited_with_the_caller(env: Any, refused: Any, monkeypatch: Any) -> None:
-    import kiro_crew.sel as sel_module
+    import aj_crew.sel as sel_module
 
     monkeypatch.setattr(sel_module, "sel", lambda: env.sel)  # the policy seam's own audit
     _bind(env)
@@ -1711,8 +1711,8 @@ def test_the_workspace_service_writes_through_the_policy_checked_client(
 ) -> None:
     """The bar carries the agent's own items: the workspace's own publishes (a
     dashboard turn's, the context-bar tool's) meet the policy at write time."""
-    from kiro_crew.slack.code_channels.surface_client import SurfaceClient
-    from kiro_crew.slack.code_channels.workspace import core as workspace_core
+    from aj_crew.slack.code_channels.surface_client import SurfaceClient
+    from aj_crew.slack.code_channels.workspace import core as workspace_core
 
     monkeypatch.setattr(workspace_core, "_SERVICE", None)
     monkeypatch.setattr(workspace_core, "register", lambda *_a, **_k: None)
@@ -1721,7 +1721,7 @@ def test_the_workspace_service_writes_through_the_policy_checked_client(
 
 
 def test_a_bar_publish_for_a_refused_channel_sends_nothing(env: Any, monkeypatch: Any) -> None:
-    from kiro_crew.slack import channel_policy
+    from aj_crew.slack import channel_policy
 
     _bind(env)
     assert _run(env, tools.SET_CONTEXT_BAR, {"items": [{"key": "a", "label": "a"}]}).ok
@@ -1761,7 +1761,7 @@ def test_an_unreadable_recheck_after_the_stamp_removes_nothing(
 def test_an_archived_channel_takes_no_more_work_and_gets_no_tree_back(
     env: Any, worktree: Any, monkeypatch: Any, tmp_path: Path
 ) -> None:
-    from kiro_crew.slack.code_channels import routing
+    from aj_crew.slack.code_channels import routing
 
     root, tree = worktree
     _bind(env, project=str(tree))
@@ -1776,7 +1776,7 @@ def test_an_archived_channel_takes_no_more_work_and_gets_no_tree_back(
     async def prepare(binding: Any) -> None:
         prepared.append(binding)
 
-    from kiro_crew.slack.code_channels.workspace import core as workspace_core
+    from aj_crew.slack.code_channels.workspace import core as workspace_core
 
     monkeypatch.setattr(workspace_core, "prepare", prepare)
     routed_before = len(env.routed)
@@ -1822,7 +1822,7 @@ def test_an_agent_wrap_up_in_an_ordinary_turn_settles_no_queued_request(env: Any
 def test_a_wrap_up_that_cannot_be_recorded_answers_and_runs_nothing(
     env: Any, monkeypatch: Any
 ) -> None:
-    from kiro_crew.slack.code_channels import surface_store as ss
+    from aj_crew.slack.code_channels import surface_store as ss
 
     _bind(env)
     replies: list[str] = []
@@ -1844,7 +1844,7 @@ def test_a_wrap_up_that_cannot_be_recorded_answers_and_runs_nothing(
     ['{"channel_id": "C1", "summary_ts": {}}', '{"channel_id": "C1", "wrapup_pending_since": "x"}'],
 )
 def test_a_wrong_typed_field_is_an_unreadable_row(tmp_path: Path, row: str) -> None:
-    from kiro_crew.slack.code_channels import surface_store as ss
+    from aj_crew.slack.code_channels import surface_store as ss
 
     path = tmp_path / "surface.json"
     doc = '{"version": 1, "records": [' + row + "]}"
@@ -1855,7 +1855,7 @@ def test_a_wrong_typed_field_is_an_unreadable_row(tmp_path: Path, row: str) -> N
 
 
 def _deliver(env: Any, text: str = "a message") -> bool:
-    from kiro_crew.slack.code_channels import routing
+    from aj_crew.slack.code_channels import routing
 
     return asyncio.run(
         routing.deliver_directed(
@@ -1882,7 +1882,7 @@ def test_an_archive_stamp_is_only_cleared_by_slacks_unarchive_event(
     """Only lifecycle's unarchive event clears the stamp. A message never does,
     whatever a read says: a read lagging an Archive in flight would otherwise
     clear its stamp and cut a worktree no cleanup will ever remove."""
-    from kiro_crew.slack.code_channels.workspace import core as workspace_core
+    from aj_crew.slack.code_channels.workspace import core as workspace_core
 
     async def prepare(_b: Any) -> None:
         raise AssertionError("an archived channel must not prepare a worktree")
@@ -1908,8 +1908,8 @@ def test_no_path_cuts_a_worktree_for_an_archived_channel(
     """The class, at the one seam every path goes through (service.ensure): a
     bind, a message, a resumed request, a turn's start or end. The caller's
     binding copy is stale (not archived); the stored one is."""
-    from kiro_crew.slack.code_channels.workspace import core as workspace_core
-    from kiro_crew.slack.code_channels.workspace import service as ws_service
+    from aj_crew.slack.code_channels.workspace import core as workspace_core
+    from aj_crew.slack.code_channels.workspace import service as ws_service
 
     root, _tree = worktree
     stale = _bind(env, project=str(root))

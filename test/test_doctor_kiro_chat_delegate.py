@@ -1,4 +1,4 @@
-"""``kirocrew doctor`` probes the ``kiro-cli-chat`` delegate, not just the launcher.
+"""``ajcrew doctor`` probes the ``kiro-cli-chat`` delegate, not just the launcher.
 
 The ``kiro-cli`` launcher answers ``--version`` itself, so a stale install whose
 ``~/.local/bin/kiro-cli-chat`` points at a removed release passed doctor while
@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import env
-from kiro_crew.doctor_checks import services
+from aj_crew import env
+from aj_crew.doctor_checks import services
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="POSIX launcher/delegate pair")
 
@@ -340,7 +340,7 @@ def test_mixed_selection_passes_when_both_binaries_launch(
 
 
 def _vault(monkeypatch: pytest.MonkeyPatch, holds: bool) -> None:
-    from kiro_crew.auth import bridge
+    from aj_crew.auth import bridge
 
     monkeypatch.setattr(bridge, "vault_holds_identity", lambda *, warn=True: holds)
 
@@ -349,7 +349,7 @@ def test_relay_entry_is_the_launcher_sibling_when_the_vault_signs_in(
     install: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     sibling = _script(install / "kiro-cli-chat", "echo ok")
-    monkeypatch.delenv("KIROCREW_KIRO_BIN", raising=False)
+    monkeypatch.delenv("AJCREW_KIRO_BIN", raising=False)
     _vault(monkeypatch, True)
     assert services.kas_relay_entry(str(install / "kiro-cli")) == str(sibling)
 
@@ -358,7 +358,7 @@ def test_relay_entry_keeps_the_launcher_without_a_vault_identity(
     install: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _script(install / "kiro-cli-chat", "echo ok")
-    monkeypatch.delenv("KIROCREW_KIRO_BIN", raising=False)
+    monkeypatch.delenv("AJCREW_KIRO_BIN", raising=False)
     _vault(monkeypatch, False)
     assert services.kas_relay_entry(str(install / "kiro-cli")) is None
 
@@ -367,7 +367,7 @@ def test_relay_entry_never_swaps_the_operator_override(
     install: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _script(install / "kiro-cli-chat", "echo ok")
-    monkeypatch.setenv("KIROCREW_KIRO_BIN", str(install / "kiro-cli"))
+    monkeypatch.setenv("AJCREW_KIRO_BIN", str(install / "kiro-cli"))
     _vault(monkeypatch, True)
     assert services.kas_relay_entry(str(install / "kiro-cli")) is None
 
@@ -377,13 +377,13 @@ def test_relay_entry_asks_the_harness_which_binary_is_the_override(
 ) -> None:
     """Doctor uses ``KasHarness``'s own override rule, not a copy that can drift.
 
-    With no ``KIROCREW_KIRO_BIN`` set, a private copy of the rule would swap to
+    With no ``AJCREW_KIRO_BIN`` set, a private copy of the rule would swap to
     the sibling; only a call into the harness's rule sees this verdict.
     """
-    from kiro_crew.acp.harness import kas
+    from aj_crew.acp.harness import kas
 
     _script(install / "kiro-cli-chat", "echo ok")
-    monkeypatch.delenv("KIROCREW_KIRO_BIN", raising=False)
+    monkeypatch.delenv("AJCREW_KIRO_BIN", raising=False)
     _vault(monkeypatch, True)
     seen: list[str] = []
 

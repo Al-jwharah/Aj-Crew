@@ -44,7 +44,7 @@ const now = Math.floor(Date.now() / 1000)
 
 const slots = [{
   key: ACTIVE, title: 'Tidy the weekly reports', running: false, messages: 2,
-  agent: 'kirocrew', modified: now, last_ts: '2026-10-20T00:10:00Z', folder_id: '',
+  agent: 'ajcrew', modified: now, last_ts: '2026-10-20T00:10:00Z', folder_id: '',
   last_message: 'Moved the draft.',
 }]
 
@@ -75,7 +75,7 @@ const extra = (path, route) => {
   }
   if (path === '/api/dashboard/branding') {
     return json(route, {
-      bot_name: 'Kiro Crew', avatar: '/logo.png', direct_local: true, desktop_launcher: launcher,
+      bot_name: 'Aj Crew', avatar: '/logo.png', direct_local: true, desktop_launcher: launcher,
     }), true
   }
   if (path.startsWith('/api/chat/slots/')) return json(route, detail), true

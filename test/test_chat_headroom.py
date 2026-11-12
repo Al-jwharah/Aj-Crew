@@ -17,10 +17,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew import resource_status
-from kiro_crew import subagent as subagent_facade
-from kiro_crew.config.section_builders import _build_work_ledger_config
-from kiro_crew.dashboard import remote_dispatch_headroom as headroom_mod
+from aj_crew import resource_status
+from aj_crew import subagent as subagent_facade
+from aj_crew.config.section_builders import _build_work_ledger_config
+from aj_crew.dashboard import remote_dispatch_headroom as headroom_mod
 
 HEADROOM_FIELDS = {
     "mem_free_gb",
@@ -78,16 +78,16 @@ def _flag(monkeypatch, on: bool, *, memory_gb: float = 2.0, disk_gb: float = 10.
 
 
 def _config_load(monkeypatch, **work_ledger) -> None:
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     section = _build_work_ledger_config(work_ledger)
     monkeypatch.setattr(
-        loader.KiroCrewConfig, "load", staticmethod(lambda: SimpleNamespace(work_ledger=section))
+        loader.AjCrewConfig, "load", staticmethod(lambda: SimpleNamespace(work_ledger=section))
     )
 
 
 def _app(state, *, app_name: str = "", user: str = "local-app") -> web.Application:
-    from kiro_crew.dashboard.chat import api_chat_slot_create
+    from aj_crew.dashboard.chat import api_chat_slot_create
 
     def as_caller(handler):
         async def wrapped(request: web.Request) -> web.Response:
@@ -173,12 +173,12 @@ def test_estimates_and_depth_read_together():
 
 
 def test_an_unloadable_config_reads_as_off(monkeypatch):
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     def boom():
         raise RuntimeError("config broke")
 
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", staticmethod(boom))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", staticmethod(boom))
     assert headroom_mod.remote_dispatch_settings().enabled is False
 
 
@@ -257,7 +257,7 @@ async def test_flag_is_read_on_every_request(tmp_path, monkeypatch, host):
 
 
 def test_route_is_registered_on_the_dashboard():
-    from kiro_crew.dashboard.routes import chat as chat_routes
+    from aj_crew.dashboard.routes import chat as chat_routes
 
     app = web.Application()
     chat_routes.register(app)
@@ -354,7 +354,7 @@ def test_disk_just_under_the_estimate_is_short(monkeypatch, host):
 @pytest.mark.parametrize(("saturating", "short"), [(3, ""), (4, "cpu")])
 def test_the_execution_cap_is_full_at_one_admission_point(monkeypatch, saturating, short):
     """``saturating`` (the busiest point) is compared, not running summed over points."""
-    from kiro_crew.adaptive import controller
+    from aj_crew.adaptive import controller
 
     monkeypatch.setattr(resource_status, "probe", lambda cfg=None: _status())
     monkeypatch.setattr(
@@ -382,7 +382,7 @@ def test_the_execution_cap_is_full_at_one_admission_point(monkeypatch, saturatin
 )
 def test_an_unusable_occupancy_never_refuses(monkeypatch, state):
     """A disabled controller stops sampling, so its last sample is stale."""
-    from kiro_crew.adaptive import controller
+    from aj_crew.adaptive import controller
 
     monkeypatch.setattr(resource_status, "probe", lambda cfg=None: _status())
     monkeypatch.setattr(
@@ -450,7 +450,7 @@ def test_unknown_readings_never_refuse(monkeypatch, host):
 
 
 def test_missing_scratch_root_measures_the_nearest_existing_parent(tmp_path, monkeypatch):
-    from kiro_crew import agent_scratch
+    from aj_crew import agent_scratch
 
     monkeypatch.setattr(agent_scratch, "scratch_root", lambda: tmp_path / "no" / "such" / "dir")
     seen: list = []

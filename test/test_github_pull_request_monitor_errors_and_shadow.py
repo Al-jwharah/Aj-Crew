@@ -36,12 +36,12 @@ from github_pull_request_monitor_helpers import (
     _threads,
 )
 
-from kiro_crew.github_runner import SetupError
-from kiro_crew.monitoring.github_pull_request import (
+from aj_crew.github_runner import SetupError
+from aj_crew.monitoring.github_pull_request import (
     GitHubPullRequestProvider,
     parse_github_pull_request_target,
 )
-from kiro_crew.monitoring.models import (
+from aj_crew.monitoring.models import (
     MonitorBudgets,
     MonitorDecision,
     MonitorObservationStatus,
@@ -50,7 +50,7 @@ from kiro_crew.monitoring.models import (
     ProviderErrorKind,
     monitor_state_to_dict,
 )
-from kiro_crew.monitoring.shadow import ShadowWakeDeliveryRefused, run_shadow_probe
+from aj_crew.monitoring.shadow import ShadowWakeDeliveryRefused, run_shadow_probe
 
 
 class _FailureRunner:

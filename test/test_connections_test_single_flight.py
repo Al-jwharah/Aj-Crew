@@ -17,9 +17,9 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.connections import tool_test
-from kiro_crew.dashboard.handlers import connections
-from kiro_crew.testing.wait import await_until
+from aj_crew.connections import tool_test
+from aj_crew.dashboard.handlers import connections
+from aj_crew.testing.wait import await_until
 
 
 async def _client() -> TestClient:

@@ -23,18 +23,18 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps import app_frame as af
-from kiro_crew.apps import link_open_frame as lof
-from kiro_crew.apps.link_open_grants import LINK_OPEN_GRANT_FAMILIES, link_open_grant_row
-from kiro_crew.apps.manager_records import (
+from aj_crew.apps import app_frame as af
+from aj_crew.apps import link_open_frame as lof
+from aj_crew.apps.link_open_grants import LINK_OPEN_GRANT_FAMILIES, link_open_grant_row
+from aj_crew.apps.manager_records import (
     STAGED_GRANT_FAMILIES,
     _approved_grants_after_manifest_change,
     _declared_grant_entries,
     _held_back_entries,
 )
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.apps.manifest_contributes import Contributes, LinkOpenConfig
-from kiro_crew.apps.point_grants import grant_source, point_grant_families
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.apps.manifest_contributes import Contributes, LinkOpenConfig
+from aj_crew.apps.point_grants import grant_source, point_grant_families
 
 APP = "tickets"
 
@@ -144,7 +144,7 @@ def test_the_grant_row_reports_approved_and_waiting(monkeypatch: pytest.MonkeyPa
     def staged(name: str, family: str, read: Any) -> list[str]:
         return read()[:1] if family == "linkOpenHosts" else []
 
-    monkeypatch.setattr("kiro_crew.apps.manager_records.staged_app_grants", staged)
+    monkeypatch.setattr("aj_crew.apps.manager_records.staged_app_grants", staged)
     row = link_open_grant_row(APP, _manifest(["a.example.com", "b.example.com"], full_url=True))
     assert row["linkOpenGrant"] == {
         "hosts": ["a.example.com"],
@@ -245,8 +245,8 @@ async def _client(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[TestClient]:
         async def dispatch(self, request: web.Request) -> web.Response:
             return web.json_response({"app": request.get("app")})
 
-    monkeypatch.setattr("kiro_crew.apps.hooks_integration.get_route_registry", _Registry)
-    monkeypatch.setattr("kiro_crew.dashboard.server._embed_parent_port", lambda r, a: None)
+    monkeypatch.setattr("aj_crew.apps.hooks_integration.get_route_registry", _Registry)
+    monkeypatch.setattr("aj_crew.dashboard.server._embed_parent_port", lambda r, a: None)
 
     @web.middleware
     async def auth(request: web.Request, handler: Any) -> web.StreamResponse:
@@ -324,7 +324,7 @@ globalThis.document = {
 """
 
 _DRIVER = r"""
-const deliver = (data) => (listeners.message || []).forEach((f) => f({ source: parent, data: { 'kirocrew-app-frame': 1, ...data } }));
+const deliver = (data) => (listeners.message || []).forEach((f) => f({ source: parent, data: { 'ajcrew-app-frame': 1, ...data } }));
 const tick = (ms) => new Promise((r) => setTimeout(r, ms));
 deliver({ type: 'init', capability: 'c' });
 for (let i = 0; i < 50 && !posted.some((m) => m.type === 'ready'); i++) await tick(10);

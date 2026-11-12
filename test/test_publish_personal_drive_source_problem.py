@@ -14,7 +14,7 @@ import pytest
 from publish_personal_drive_helpers import _clean_registry  # noqa: F401 - fixture
 from publish_personal_drive_helpers import ACCOUNT_ID, _stub_profiles
 
-from kiro_crew.publish import personal_drive as pd
+from aj_crew.publish import personal_drive as pd
 
 KEY = "a" * 32
 

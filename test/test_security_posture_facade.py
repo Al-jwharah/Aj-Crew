@@ -1,11 +1,11 @@
-"""``kiro_crew.security_posture`` stays the one import path and patch surface of its owners.
+"""``aj_crew.security_posture`` stays the one import path and patch surface of its owners.
 
-The posture module is a :mod:`kiro_crew._facade_mirror` facade: it keeps
+The posture module is a :mod:`aj_crew._facade_mirror` facade: it keeps
 ``NON_EGRESS_REDACTION_MODULES``, and the rest lives in the ``security_posture_<role>.py``
 owners beside it. ``_REDACTION_SINKS`` is joined, in registry order, from the two sink
 modules (``security_posture_sinks_gateway`` then ``security_posture_sinks_delivery``) in
 ``security_posture_controls``, which builds the controls and the snapshot. Callers, tests and
-documents still reach every name as ``kiro_crew.security_posture.<name>``.
+documents still reach every name as ``aj_crew.security_posture.<name>``.
 
 ``test/test_facade_mirror_guards.py`` holds every mirrored facade to the shared rules. These
 tests pin what is particular to this facade:
@@ -37,17 +37,17 @@ import owner_import_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew import security_posture as facade
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew import security_posture as facade
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
-# Walks the test trees and src/kiro_crew; keep it on one worker.
+# Walks the test trees and src/aj_crew; keep it on one worker.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_security_posture_facade")
 
-FACADE = "kiro_crew.security_posture"
-OWNER_PREFIX = "kiro_crew.security_posture_"
-_SRC = Path(kiro_crew.__file__).resolve().parent
+FACADE = "aj_crew.security_posture"
+OWNER_PREFIX = "aj_crew.security_posture_"
+_SRC = Path(aj_crew.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
 
 #: A name the test trees are known to patch through the facade. The scan below must find
@@ -198,7 +198,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if not isinstance(node, ast.ImportFrom) or not node.module:
                 continue
-            if not node.module.startswith("kiro_crew") or node.module in family:
+            if not node.module.startswith("aj_crew") or node.module in family:
                 continue
             for alias in node.names:
                 if f"{node.module}.{alias.name}" not in family:
@@ -224,7 +224,7 @@ def _facade_source() -> str:
 
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
-    """At BASE the module bound these by import, so ``from kiro_crew.security_posture import
+    """At BASE the module bound these by import, so ``from aj_crew.security_posture import
     security`` type-checked. Where an owner holds one now, the facade names it from its home
     module under ``TYPE_CHECKING``, and nothing else."""
     served = set(_index().exports)
@@ -236,7 +236,7 @@ def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers()
 def test_the_type_checker_census_finds_a_dropped_name() -> None:
     """The census above can fail: a manifest missing one served name differs."""
     source = _facade_source()
-    dropped = source.replace("    from kiro_crew import sel as _sel_mod  # noqa: F401\n", "")
+    dropped = source.replace("    from aj_crew import sel as _sel_mod  # noqa: F401\n", "")
     assert dropped != source
     assert "_sel_mod" not in _home_manifest(dropped)
     assert "_sel_mod" in _home_manifest(source)
@@ -261,13 +261,13 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     sources = {
-        root / "pkg" / "caller.py": "from kiro_crew.security_posture_controls import _CONTROLS\n",
-        root / "other.py": "from kiro_crew import security_posture_sinks_gateway as rows\n",
+        root / "pkg" / "caller.py": "from aj_crew.security_posture_controls import _CONTROLS\n",
+        root / "other.py": "from aj_crew import security_posture_sinks_gateway as rows\n",
         root / "relative.py": "from .security_posture_sinks_delivery import _DELIVERY_SINKS\n",
         root / "deep" / "up.py": "from .. import security_posture_controls\n",
-        root / "facade_user.py": "from kiro_crew.security_posture import posture_counts\n",
+        root / "facade_user.py": "from aj_crew.security_posture import posture_counts\n",
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",
@@ -287,7 +287,7 @@ def test_the_family_logs_under_the_facade_name() -> None:
 
 
 def test_the_facade_runs_as_a_module(tmp_path: Path) -> None:
-    """``python -m kiro_crew.security_posture`` imported cleanly before the split; the
+    """``python -m aj_crew.security_posture`` imported cleanly before the split; the
     mirror installs on ``__main__`` too."""
     env = dict(os.environ)
     src = str(_SRC.parent)

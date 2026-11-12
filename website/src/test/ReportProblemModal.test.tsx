@@ -19,7 +19,7 @@ import { api } from '../api/client'
 const BUNDLE = {
   zip_path: '/home/builder/.kiro/crew/diagnostics/report-2026-08-13.zip',
   download_url: '/api/diagnostics/report-2026-08-13.zip',
-  github_issue_url: 'https://github.com/kirodotdev/KiroCrew/issues/new?title=x',
+  github_issue_url: 'https://github.com/Al-jwharah/Aj-Crew/issues/new?title=x',
   total_redactions: 3,
   included: ['gateway.log', 'kiro-cli.log'],
 }

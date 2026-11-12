@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard import tailnet_localapi
-from kiro_crew.shared_crew import owner, tailscale_sharees
+from aj_crew.dashboard import tailnet_localapi
+from aj_crew.shared_crew import owner, tailscale_sharees
 
 MACHINE_NAME = "Test Machine"
 

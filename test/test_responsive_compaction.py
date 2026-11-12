@@ -10,9 +10,9 @@ import pytest
 from test_chat_runner_coverage import _complete, _runner_state, _slot
 from test_compact_after_turn_notice import KEY, _managed, _provider
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard import responsive_chat as rc
-from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard import responsive_chat as rc
+from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
 
 @pytest.mark.asyncio

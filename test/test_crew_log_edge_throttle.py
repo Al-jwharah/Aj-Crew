@@ -18,16 +18,16 @@ import pytest
 from chat_test_helpers import _make_state
 from crew_log_drain import assert_drained, settle, unsync_appends
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.acp.types import (
+from aj_crew.acp.client import AcpError
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     AcpEvent,
     TurnUsage,
 )
-from kiro_crew.crew_log import crew_log_path, emit
-from kiro_crew.dashboard.chat_runner import _crew_log_model, _run_chat
-from kiro_crew.llm_helpers import TRANSIENT_RETRIES
+from aj_crew.crew_log import crew_log_path, emit
+from aj_crew.dashboard.chat_runner import _crew_log_model, _run_chat
+from aj_crew.llm_helpers import TRANSIENT_RETRIES
 
 SESSION = "acp-throttle-0001"
 
@@ -42,7 +42,7 @@ def _log_home(tmp_path, monkeypatch):
     batch it still holds would otherwise write into the next test's home, and hold the
     single writer thread while that test's own barrier waits.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     unsync_appends(monkeypatch)
     emit.reset_caches()
@@ -157,7 +157,7 @@ def _set_fallback_attrs(slot, monkeypatch):
             object.__setattr__(slot, attr, val)
     # _sync_served_model reads record_served_model — stub the side effect.
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner._sync_served_model",
+        "aj_crew.dashboard.chat_runner._sync_served_model",
         lambda _s, _c: None,
     )
 
@@ -168,9 +168,9 @@ async def test_same_model_retry_success_no_fallback_logged(tmp_path, monkeypatch
 
     The crew log must NOT contain ``model/selected`` with ``source=fallback``.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.transient_retry_delay", lambda _a: 0.0)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.throttle_retry_delay", lambda _a: 0.0)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.transient_retry_delay", lambda _a: 0.0)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.throttle_retry_delay", lambda _a: 0.0)
 
     call_count = 0
 
@@ -210,11 +210,11 @@ async def test_fallback_swap_records_model_selected(tmp_path, monkeypatch):
     the turn ordinal.
     """
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner._agent_fallback_chain",
+        "aj_crew.dashboard.chat_runner._agent_fallback_chain",
         lambda: ("fallback-model-A", "auto"),
     )
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.transient_retry_delay", lambda _a: 0.0)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.throttle_retry_delay", lambda _a: 0.0)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.transient_retry_delay", lambda _a: 0.0)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.throttle_retry_delay", lambda _a: 0.0)
 
     async def _fake_advance(client, fb_state, *, surface="", log_suffix=""):
         if fb_state.pos < len(fb_state.chain):
@@ -224,7 +224,7 @@ async def test_fallback_swap_records_model_selected(tmp_path, monkeypatch):
         return None
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner.advance_fallback_candidate",
+        "aj_crew.dashboard.chat_runner.advance_fallback_candidate",
         _fake_advance,
     )
 
@@ -262,9 +262,9 @@ async def test_empty_fallback_chain_fails_with_no_cost(tmp_path, monkeypatch):
 
     ``tokens`` and ``credits`` must be ABSENT: nothing was measured.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.transient_retry_delay", lambda _a: 0.0)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.throttle_retry_delay", lambda _a: 0.0)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.transient_retry_delay", lambda _a: 0.0)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.throttle_retry_delay", lambda _a: 0.0)
 
     async def _stream():
         raise _transient_error()
@@ -329,11 +329,11 @@ async def test_repeated_fallback_swaps_produce_multiple_model_selected(tmp_path,
     """
     candidates = ("fallback-A", "fallback-B", "auto")
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner._agent_fallback_chain",
+        "aj_crew.dashboard.chat_runner._agent_fallback_chain",
         lambda: candidates,
     )
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.transient_retry_delay", lambda _a: 0.0)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.throttle_retry_delay", lambda _a: 0.0)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.transient_retry_delay", lambda _a: 0.0)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.throttle_retry_delay", lambda _a: 0.0)
 
     async def _fake_advance(client, fb_state, *, surface="", log_suffix=""):
         if fb_state.pos < len(fb_state.chain):
@@ -343,7 +343,7 @@ async def test_repeated_fallback_swaps_produce_multiple_model_selected(tmp_path,
         return None
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner.advance_fallback_candidate",
+        "aj_crew.dashboard.chat_runner.advance_fallback_candidate",
         _fake_advance,
     )
 

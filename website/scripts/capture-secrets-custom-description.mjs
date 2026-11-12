@@ -31,7 +31,7 @@ async function capture(theme) {
   await stubDashboardApi(page, {
     slots: [],
     extra: async (path, route) => {
-      if (path === '/api/config/kirocrew') return json(route, {}), true
+      if (path === '/api/config/ajcrew') return json(route, {}), true
       if (path === '/api/theme/boot') return json(route, { mode: theme, theme: '' }), true
       if (path === '/api/mcp' || path === '/api/mcp/probe') return json(route, []), true
       // One custom secret so the card renders populated (not the empty state),

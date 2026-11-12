@@ -18,8 +18,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard.handlers import plantuml_render as pr
-from kiro_crew.sandbox import SandboxUnavailableError
+from aj_crew.dashboard.handlers import plantuml_render as pr
+from aj_crew.sandbox import SandboxUnavailableError
 
 pytestmark = pytest.mark.asyncio
 
@@ -176,7 +176,7 @@ async def test_a_render_past_its_deadline_is_killed_with_its_tree(
 async def test_only_the_owner_session_may_render(
     spawn: dict[str, Any], caller: dict[str, str]
 ) -> None:
-    with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+    with patch("aj_crew.sel.sel", return_value=MagicMock()):
         status, payload = await _post({"source": SOURCE}, headers=caller)
 
     assert status == 403

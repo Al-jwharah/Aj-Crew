@@ -33,7 +33,7 @@ const slots = [{
   running: true,
   last_message: 'Spawned 1 subagent(s).',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',
@@ -79,7 +79,7 @@ async function main() {
 
   // A snapshot frame carries the real start time, as on a reconnect mid-run.
   wsServer.send(JSON.stringify({ type: 'subagent_snapshot', data: {
-    slot: SLOT, id: AGENT_ID, agent: 'kirocrew', task: 'audit the retry ladder in the uploader',
+    slot: SLOT, id: AGENT_ID, agent: 'ajcrew', task: 'audit the retry ladder in the uploader',
     last_tool: 'Reading: src/uploader/retry.py', started: Date.now() / 1000 - RUN_MS / 1000,
     streaming: 'Reading retry.py...\n', tool_count: 27,
   } }))

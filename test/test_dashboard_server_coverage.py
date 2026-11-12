@@ -1,4 +1,4 @@
-"""Coverage tests for the residual branches of ``kiro_crew.dashboard.server``.
+"""Coverage tests for the residual branches of ``aj_crew.dashboard.server``.
 
 Route wiring is pinned elsewhere (``test_api_server.py`` and others); these are the
 failure paths that keep a config hiccup, hostile symlink, unreachable SSH host or raising
@@ -22,12 +22,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 
+from aj_crew.dashboard import server as srv
+from aj_crew.platform_compat import unlink_link_or_junction
+from aj_crew.testing import wait
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import async_wait_until
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew.dashboard import server as srv
-from kiro_crew.platform_compat import unlink_link_or_junction
-from kiro_crew.testing import wait
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import async_wait_until
 
 # ── helpers ─────────────────────────────────────────────────────────────
 
@@ -55,7 +55,7 @@ async def _sweep_once_released(path: Path, *, timeout: float | None = None) -> N
 
 @pytest.fixture
 def virtual_wait_clock(monkeypatch):
-    """Drive ``kiro_crew.testing.wait``'s deadline and evaluation bound in the test.
+    """Drive ``aj_crew.testing.wait``'s deadline and evaluation bound in the test.
 
     The deadline runs on a :class:`ManualClock`; the real-clock per-evaluation bound is
     replaced with a plain await, so the verdict never depends on runner speed.
@@ -122,7 +122,7 @@ class TestShouldPreventSleep:
     async def test_config_read_failure_allows_sleep(self, monkeypatch) -> None:
         loader = MagicMock()
         loader.load.side_effect = RuntimeError("corrupt config")
-        monkeypatch.setattr(srv, "KiroCrewConfig", loader)
+        monkeypatch.setattr(srv, "AjCrewConfig", loader)
 
         assert await srv._should_prevent_sleep(_state(sessions=MagicMock()), 0) is False
 
@@ -130,7 +130,7 @@ class TestShouldPreventSleep:
     async def test_opt_out_allows_sleep_without_consulting_sessions(self, monkeypatch) -> None:
         loader = MagicMock()
         loader.load.return_value = _cfg(prevent_sleep=False)
-        monkeypatch.setattr(srv, "KiroCrewConfig", loader)
+        monkeypatch.setattr(srv, "AjCrewConfig", loader)
         sessions = MagicMock()
 
         assert await srv._should_prevent_sleep(_state(sessions=sessions), 0) is False
@@ -140,7 +140,7 @@ class TestShouldPreventSleep:
     async def test_missing_session_manager_allows_sleep(self, monkeypatch) -> None:
         loader = MagicMock()
         loader.load.return_value = _cfg(prevent_sleep=True)
-        monkeypatch.setattr(srv, "KiroCrewConfig", loader)
+        monkeypatch.setattr(srv, "AjCrewConfig", loader)
 
         assert await srv._should_prevent_sleep(_state(sessions=None), 0) is False
 
@@ -148,7 +148,7 @@ class TestShouldPreventSleep:
     async def test_active_turn_blocks_sleep(self, monkeypatch) -> None:
         loader = MagicMock()
         loader.load.return_value = _cfg(prevent_sleep=True)
-        monkeypatch.setattr(srv, "KiroCrewConfig", loader)
+        monkeypatch.setattr(srv, "AjCrewConfig", loader)
         sessions = MagicMock(any_active_turn=MagicMock(return_value=True))
 
         assert await srv._should_prevent_sleep(_state(sessions=sessions), 0) is True
@@ -157,7 +157,7 @@ class TestShouldPreventSleep:
     async def test_active_turn_probe_failure_allows_sleep(self, monkeypatch) -> None:
         loader = MagicMock()
         loader.load.return_value = _cfg(prevent_sleep=True)
-        monkeypatch.setattr(srv, "KiroCrewConfig", loader)
+        monkeypatch.setattr(srv, "AjCrewConfig", loader)
         sessions = MagicMock(any_active_turn=MagicMock(side_effect=RuntimeError("map busy")))
 
         assert await srv._should_prevent_sleep(_state(sessions=sessions), 0) is False
@@ -349,7 +349,7 @@ class TestPrecomputeTelemetry:
     """Telemetry is best-effort: no individual failure may abort startup."""
 
     def test_every_stage_failure_is_swallowed(self, monkeypatch, caplog) -> None:
-        import kiro_crew.dashboard.handlers_system as hs
+        import aj_crew.dashboard.handlers_system as hs
 
         monkeypatch.setattr(hs, "_get_owner_hash", MagicMock(side_effect=RuntimeError("no owner")))
         monkeypatch.setattr(
@@ -373,7 +373,7 @@ class TestPrecomputeTelemetry:
         ]
 
     def test_gateway_start_event_carries_the_precomputed_fields(self, monkeypatch) -> None:
-        import kiro_crew.dashboard.handlers_system as hs
+        import aj_crew.dashboard.handlers_system as hs
 
         monkeypatch.setattr(hs, "_get_owner_hash", MagicMock(return_value="hash-1"))
         monkeypatch.setattr(
@@ -421,7 +421,7 @@ class TestWriteSecretFileDescriptorCleanup:
             closed.append(fd)
             real_close(fd)
 
-        with patch("kiro_crew.dashboard.server.os.close", _spy):
+        with patch("aj_crew.dashboard.server.os.close", _spy):
             with pytest.raises(OSError, match="chmod denied"):
                 srv._write_secret_file(secret_path, "s")
 
@@ -441,7 +441,7 @@ class TestWriteSecretFileDescriptorCleanup:
             real_close(fd)  # keep the descriptor from leaking in-process
             raise OSError("close failed")
 
-        with patch("kiro_crew.dashboard.server.os.close", _close_then_fail):
+        with patch("aj_crew.dashboard.server.os.close", _close_then_fail):
             with pytest.raises(OSError, match="chmod denied"):
                 srv._write_secret_file(secret_path, "s")
 
@@ -575,7 +575,7 @@ class TestConnectionsWarmLifecycle:
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        from kiro_crew.connections import endpoint_migration, warm
+        from aj_crew.connections import endpoint_migration, warm
 
         calls: list[str] = []
         scavenge_started = asyncio.Event()
@@ -802,8 +802,8 @@ async def _start_api(tmp_path: Path, monkeypatch, **kwargs: Any) -> Any:
     Only ``_start_site`` is stubbed: AUTOSDE `no-test-side-effects` forbids starting a
     service even on ``port=0``, and every other path (e.g. ``runner.cleanup()``) still runs.
     """
-    import kiro_crew.config.loader as _loader
-    import kiro_crew.dashboard.state as _st
+    import aj_crew.config.loader as _loader
+    import aj_crew.dashboard.state as _st
 
     monkeypatch.setattr(srv, "data_home", lambda: tmp_path)
     monkeypatch.setattr(_st, "config_dir", lambda: tmp_path)
@@ -869,7 +869,7 @@ class TestStartApiServerResidualPaths:
         monkeypatch.setattr(srv, "sel", MagicMock(return_value=audit))
         subagents = MagicMock()
         subagents.spawn.side_effect = RuntimeError("spawn exploded")
-        from kiro_crew.execution_context import bind_session_execution, execution_for_store
+        from aj_crew.execution_context import bind_session_execution, execution_for_store
 
         # Admit a real captured caller so the identity and privacy gates reach
         # the crashing spawn; the body must claim that same authenticated caller.
@@ -878,7 +878,7 @@ class TestStartApiServerResidualPaths:
         # The caller also has to PROVE the key it declares, the way its production
         # counterpart does, or the identity gate answers ahead of the spawn and the
         # crash under test never happens.
-        from kiro_crew import member_memory_auth
+        from aj_crew import member_memory_auth
 
         monkeypatch.setattr(
             member_memory_auth,
@@ -994,9 +994,9 @@ class TestSttHooks:
         assert {"_stt_startup", "_stt_shutdown"} <= names, names
 
         # No sweep task was ever created, and nothing imported the engine.
-        monkeypatch.delitem(sys.modules, "kiro_crew.stt.engine", raising=False)
+        monkeypatch.delitem(sys.modules, "aj_crew.stt.engine", raising=False)
         for hook in app.on_cleanup:
             await hook(app)
         assert (
-            "kiro_crew.stt.engine" not in sys.modules
+            "aj_crew.stt.engine" not in sys.modules
         ), "shutdown imported the recogniser to release a model that cannot exist"

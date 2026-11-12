@@ -185,7 +185,7 @@ function createManagedLane({
     // needs and so IS passed through. Rather than reason per platform about
     // which variable leads to `site-packages`, tell the interpreter directly
     // that no user site exists. Harmless to every non-Python command.
-    // KIROCREW_MANAGED_ARGV0 is DERIVED, not inherited: process.execPath is
+    // AJCREW_MANAGED_ARGV0 is DERIVED, not inherited: process.execPath is
     // the running executable's absolute path from the kernel command line,
     // never read from process.env. It is the one fact a relaunch-verifying
     // wrapper needs (which binary launched the app it is about to replace)
@@ -194,7 +194,7 @@ function createManagedLane({
     const e = {
       PATH: managedPath(),
       PYTHONNOUSERSITE: "1",
-      KIROCREW_MANAGED_ARGV0: process.execPath,
+      AJCREW_MANAGED_ARGV0: process.execPath,
     };
     const keys = process.platform === "win32"
       ? [...MANAGED_ENV_PASSTHROUGH, ...MANAGED_ENV_PASSTHROUGH_WIN32]
@@ -423,8 +423,8 @@ function createManagedLane({
     if (!stillOn) return;
     try {
       new Notification({
-        title: "Kiro Crew update ready",
-        body: `An update (version ${foundVersion}) was found but not installed, because Windows was closing. Quit Kiro Crew from the tray to install it.`,
+        title: "Aj Crew update ready",
+        body: `An update (version ${foundVersion}) was found but not installed, because Windows was closing. Quit Aj Crew from the tray to install it.`,
       }).show();
     } catch { /* notifications optional */ }
     log.info("[update] managed session-end — notified user of pending update (install on next quit)");

@@ -12,15 +12,15 @@ import re
 
 import pytest
 
-from kiro_crew import deny_guidance as dg
-from kiro_crew import security
-from kiro_crew.dashboard.state import (
+from aj_crew import deny_guidance as dg
+from aj_crew import security
+from aj_crew.dashboard.state import (
     DENY_CAUSE_HOOK_ERROR,
     DENY_CAUSE_POLICY,
     build_refusal_recovery_prompt,
     build_refusal_steer_notice,
 )
-from kiro_crew.hooks import TOOL_DENY, HookManager
+from aj_crew.hooks import TOOL_DENY, HookManager
 
 _RULE = security.DeniedCommandRule(
     id="example-token-dir-path",
@@ -118,7 +118,7 @@ def test_a_refused_chained_command_is_reported_as_none_of_it_ran():
     result = HookManager().on_tool_call(title, command=command, is_shell=True)
     assert result.action == TOOL_DENY
     notice = build_refusal_steer_notice(title, result.reason, cause=DENY_CAUSE_POLICY)
-    assert "blocked by a Kiro Crew safety policy before any of it ran" in notice
+    assert "blocked by an Aj Crew safety policy before any of it ran" in notice
     assert "none of them ran, the earlier ones included" in notice
     assert f"{title}: blocked by rule git-publish-push-bare. " in notice
     # The fallback a harness without steer gets says the same.

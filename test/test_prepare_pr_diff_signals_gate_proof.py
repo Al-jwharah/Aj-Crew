@@ -17,17 +17,11 @@ import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 from skill_script_helpers import load_skill_script
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = (
-    ROOT
-    / "src"
-    / "kiro_crew"
-    / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
-    / "scripts"
+    ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr" / "scripts"
 )
 SCRIPT = SCRIPTS / "diff_signals.py"
 ds = load_skill_script("prepare_pr_diff_signals_gate_proof_under_test", SCRIPT)

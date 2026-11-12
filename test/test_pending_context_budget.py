@@ -16,8 +16,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_note
-from kiro_crew.dashboard.state import (
+from aj_crew.dashboard.chat_handlers import api_chat_slot_note
+from aj_crew.dashboard.state import (
     _MAX_PENDING_CONTEXT,
     _ChatSlot,
     context_entry_expired,
@@ -139,7 +139,7 @@ def test_the_flush_warns_when_the_held_context_has_no_seat(caplog):
         assert slot.append_pending_context(_entry(f"e{i}", source=f"s{i}")) is True
     slot._deferred_notes.append(_held_note(_entry("held"), content="delivered without context"))
 
-    with caplog.at_level("WARNING", logger="kiro_crew.dashboard.slot_buffers"):
+    with caplog.at_level("WARNING", logger="aj_crew.dashboard.slot_buffers"):
         assert slot.flush_deferred_notes() == 1
     row = [m for m in slot.messages if m.get("role") == "inject"][-1]
     assert row["content"] == "delivered without context"
@@ -154,7 +154,7 @@ def test_the_flush_is_silent_when_the_context_seats(caplog):
     slot.linked_session_key = "dashboard_chat-flush-seat"
     slot._deferred_notes.append(_held_note(_entry("held"), content="delivered with context"))
 
-    with caplog.at_level("WARNING", logger="kiro_crew.dashboard.slot_buffers"):
+    with caplog.at_level("WARNING", logger="aj_crew.dashboard.slot_buffers"):
         assert slot.flush_deferred_notes() == 1
     row = [m for m in slot.messages if m.get("role") == "inject"][-1]
     assert "contextDropped" not in row["meta"]
@@ -182,7 +182,7 @@ class TestImmediateNoteReportsRefusal:
 
     @pytest.mark.asyncio
     async def test_a_full_queue_answers_context_skipped(self, tmp_path: Path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = self._seeded(state, "s-note-full")
         for i in range(_MAX_PENDING_CONTEXT):
@@ -205,7 +205,7 @@ class TestImmediateNoteReportsRefusal:
     @pytest.mark.asyncio
     async def test_room_for_the_context_answers_not_skipped(self, tmp_path: Path, monkeypatch):
         """Control: the same call with a seat free must report the context queued."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = self._seeded(state, "s-note-room")
 
@@ -246,7 +246,7 @@ class TestDeferredNoteReportsRefusal:
     async def test_a_full_queue_answers_context_skipped_on_the_held_path(
         self, tmp_path: Path, monkeypatch
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = self._seeded(state, "s-note-held-full")
         # 50 live entries spread 10-per-source over 5 sources, none of them the
@@ -290,7 +290,7 @@ class TestDeferredNoteReportsRefusal:
     ):
         """Control: with a seat free, the held note keeps its context half and
         reports it queued (reserved for the flush)."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = self._seeded(state, "s-note-held-room")
         monkeypatch.setattr(type(slot), "running", property(lambda self: True))

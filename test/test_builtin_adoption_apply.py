@@ -22,12 +22,12 @@ from builtin_adoption_helpers import (
     write_builtin_record,
 )
 
-from kiro_crew.apps import builtin_adoption as adoption
-from kiro_crew.apps import builtin_adoption_apply as apply_mod
-from kiro_crew.apps import manager
-from kiro_crew.apps.builtin_adoption_state import read_adoption_markers, read_ledger
-from kiro_crew.config.loader import _invalidate_config_cache, config_local_path
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.apps import builtin_adoption as adoption
+from aj_crew.apps import builtin_adoption_apply as apply_mod
+from aj_crew.apps import manager
+from aj_crew.apps.builtin_adoption_state import read_adoption_markers, read_ledger
+from aj_crew.config.loader import _invalidate_config_cache, config_local_path
+from aj_crew.testing.ids import UNALLOCATABLE_PID
 
 pytestmark = [requires_git, pytest.mark.asyncio]
 
@@ -52,7 +52,7 @@ class _Audit:
 @pytest.fixture
 def audit(monkeypatch):
     recorder = _Audit()
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     monkeypatch.setattr(sel_mod, "sel", lambda: recorder)
     return recorder
@@ -127,7 +127,7 @@ async def test_apply_records_the_legacy_nav_beside_the_marker(world, tmp_path, m
 def _drop_recorded_nav(home) -> None:
     # Through the gateway's own writer: where the sandbox seals config.json, a plain
     # write is a hand edit held for review, and the base read would not see it.
-    from kiro_crew.config.loader import write_config_atomically
+    from aj_crew.config.loader import write_config_atomically
 
     path = home / "config.json"
     raw = json.loads(path.read_text(encoding="utf-8"))
@@ -195,7 +195,7 @@ async def test_adoption_preserves_data_secret_grants_and_the_enabled_flag(world)
     assert _record().enabled is False
     grants = manager._read_approved_grants(NAME)
     assert grants is not None and sorted(grants["api"]) == sorted(approved)
-    from kiro_crew.apps.point_grants import grant_source
+    from aj_crew.apps.point_grants import grant_source
 
     held = manager._held_back_entries(grants, grant_source(manager.get_app_manifest(NAME)))
     assert not any(held.values())
@@ -249,7 +249,7 @@ async def test_a_widening_manifest_is_refused_with_nothing_mutated(
 
 async def test_the_grant_writes_three_keys_and_the_marker_in_one_write(world, monkeypatch):
     seed_agent(world.home, {"apps_trusted_local": [NAME, "other"]})
-    from kiro_crew.apps import agent_config_writer
+    from aj_crew.apps import agent_config_writer
 
     trust_writes = []
     real = agent_config_writer.mutate_trust_settings
@@ -288,7 +288,7 @@ async def test_a_same_repository_grant_is_reused_without_a_trust_write(world, mo
     seed_agent(
         world.home, {"apps_trusted": [NAME], "apps_trusted_repositories": {NAME: REPOSITORY}}
     )
-    from kiro_crew.apps import agent_config_writer
+    from aj_crew.apps import agent_config_writer
 
     async def refuse(_mutate):
         raise AssertionError("no trust write expected")
@@ -405,7 +405,7 @@ async def test_an_admission_policy_blocks_visibly_then_adopts_once_relaxed(world
 
 
 async def test_a_transient_config_failure_at_apply_is_retried_at_the_next_boot(world, monkeypatch):
-    from kiro_crew.dashboard.handlers.security_audit import ConfigCorruptError
+    from aj_crew.dashboard.handlers.security_audit import ConfigCorruptError
 
     real = apply_mod.write_grant_and_marker
     calls = []
@@ -495,7 +495,7 @@ async def test_a_staged_tree_tampered_before_apply_is_never_swapped_in(world):
 
 
 async def test_apply_reads_the_artifact_where_the_pin_puts_it_never_where_the_ledger_says(world):
-    from kiro_crew.apps.builtin_adoption_state import write_ledger
+    from aj_crew.apps.builtin_adoption_state import write_ledger
 
     await _stage()
     ledger = read_ledger(NAME)
@@ -576,7 +576,7 @@ async def test_a_crash_surviving_grant_is_rolled_back_by_a_refusal_before_the_sw
 ):
     from builtin_adoption_helpers import host_with_seams
 
-    from kiro_crew.apps.builtin_adoption_state import write_ledger
+    from aj_crew.apps.builtin_adoption_state import write_ledger
 
     await _stage()
     await _crash_after_the_grant(monkeypatch)
@@ -600,7 +600,7 @@ async def test_a_binding_the_operator_re_pointed_after_the_crash_survives_the_ro
     world, monkeypatch, refusal
 ):
     """The undo is decided from the file: a binding to another repository is the operator's."""
-    from kiro_crew.apps.builtin_adoption_state import write_ledger
+    from aj_crew.apps.builtin_adoption_state import write_ledger
 
     await _stage()
     await _crash_after_the_grant(monkeypatch)
@@ -625,7 +625,7 @@ async def test_a_binding_the_operator_re_pointed_after_the_crash_survives_the_ro
 
 async def test_a_grant_the_operator_withdrew_after_the_crash_is_not_restored(world, monkeypatch):
     """With the binding gone, the rollback never puts back the local marker it removed."""
-    from kiro_crew.apps.builtin_adoption_state import write_ledger
+    from aj_crew.apps.builtin_adoption_state import write_ledger
 
     seed_agent(world.home, {"apps_trusted_local": [NAME]})
     await _stage()
@@ -683,7 +683,7 @@ async def test_a_crash_after_the_grant_rolls_back_on_a_refusal(world, monkeypatc
 
 async def test_a_crash_after_the_swap_finalizes_without_a_second_swap(world, monkeypatch, audit):
     await _stage()
-    from kiro_crew.apps import builtin_adoption_state as state_mod
+    from aj_crew.apps import builtin_adoption_state as state_mod
 
     async def killed(*_a, **_k):
         raise _HardKill
@@ -704,7 +704,7 @@ async def test_a_crash_after_the_swap_finalizes_without_a_second_swap(world, mon
 
 async def test_a_kill_before_the_retired_tree_goes_finalizes_and_is_swept_after(world, monkeypatch):
     """The record is durable, the old tree and the update marker are not yet gone."""
-    from kiro_crew.apps import manager_adopt, manager_records
+    from aj_crew.apps import manager_adopt, manager_records
 
     await _stage()
     real_remove = manager._remove_any_shape
@@ -746,7 +746,7 @@ async def test_a_kill_before_the_retired_tree_goes_finalizes_and_is_swept_after(
 
 async def test_an_uninstall_after_a_killed_update_is_released_at_the_next_boot(world, monkeypatch):
     """Only the marker is left, and no record: APPLY's own pass clears it first."""
-    from kiro_crew.apps import manager_adopt
+    from aj_crew.apps import manager_adopt
 
     await _stage()
     assert await _boot() == {NAME: "applied"}
@@ -783,8 +783,8 @@ def _simulate_kill_mid_swap(world, *, partial: bool) -> None:
 @pytest.mark.parametrize("partial", [False, True])
 async def test_a_kill_mid_swap_is_recovered_then_adopted(world, partial):
     await _stage()
-    from kiro_crew.apps.builtin_adoption_pins import adoption_pin
-    from kiro_crew.apps.builtin_adoption_state import GrantPlan, write_grant_and_marker
+    from aj_crew.apps.builtin_adoption_pins import adoption_pin
+    from aj_crew.apps.builtin_adoption_state import GrantPlan, write_grant_and_marker
 
     await write_grant_and_marker(NAME, adoption_pin(NAME), plan=GrantPlan(write=True))
     _simulate_kill_mid_swap(world, partial=partial)
@@ -801,8 +801,8 @@ async def test_an_ambiguous_mid_swap_state_is_left_untouched_and_nothing_registe
     world, monkeypatch
 ):
     await _stage()
-    from kiro_crew.apps.builtin_adoption_pins import adoption_pin
-    from kiro_crew.apps.builtin_adoption_state import GrantPlan, write_grant_and_marker
+    from aj_crew.apps.builtin_adoption_pins import adoption_pin
+    from aj_crew.apps.builtin_adoption_state import GrantPlan, write_grant_and_marker
 
     await write_grant_and_marker(NAME, adoption_pin(NAME), plan=GrantPlan(write=True))
     _simulate_kill_mid_swap(world, partial=False)
@@ -850,7 +850,7 @@ async def test_uninstall_after_adoption_sticks_across_a_reboot(world, monkeypatc
     assert result.ok, result.error
     assert manager._read_installed(NAME) is None
     assert read_adoption_markers()[NAME]["state"] == "adopted"
-    from kiro_crew.apps import agent_config_writer
+    from aj_crew.apps import agent_config_writer
 
     async def no_trust(_mutate):
         raise AssertionError("no re-grant after uninstall")
@@ -895,7 +895,7 @@ async def test_apply_twice_swaps_once_and_audits_once(world, audit, monkeypatch)
 
 
 async def test_apply_scans_no_app_config_keys_and_registration_publishes_them(world, monkeypatch):
-    from kiro_crew.apps import manager_records
+    from aj_crew.apps import manager_records
 
     scans: list[object] = []
     real_scan = manager_records._scan_installed_app_config_keys

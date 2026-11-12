@@ -22,8 +22,8 @@ path configured (which the background task honours by not downloading), and the
 path is removed from config only after boot, exactly as an operator would edit
 it. See docs/ci/e2e-gate.md.
 
-Gated like the rest of the browser gate: ``KIROCREW_E2E`` collects it,
-``KIROCREW_E2E_REQUIRE`` turns an unresolved toolchain into a failure.
+Gated like the rest of the browser gate: ``AJCREW_E2E`` collects it,
+``AJCREW_E2E_REQUIRE`` turns an unresolved toolchain into a failure.
 """
 
 from __future__ import annotations
@@ -40,15 +40,15 @@ from typing import Callable, Iterator, NoReturn
 
 import pytest
 
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 pytestmark = pytest.mark.skipif(
-    not os.environ.get("KIROCREW_E2E"),
-    reason="Set KIROCREW_E2E=1 for the memory UI evidence gateways",
+    not os.environ.get("AJCREW_E2E"),
+    reason="Set AJCREW_E2E=1 for the memory UI evidence gateways",
 )
 
 SPEC = "playwright/memory-embedding-evidence.spec.ts"
-EVIDENCE_DIR_ENV = "KIROCREW_MEMORY_UI_EVIDENCE_DIR"
+EVIDENCE_DIR_ENV = "AJCREW_MEMORY_UI_EVIDENCE_DIR"
 
 # Title fragments passed to ``--grep``; one test per scenario in the spec.
 # Each fragment must select exactly one spec title (``--grep`` is a regex over
@@ -64,7 +64,7 @@ SCENARIOS: dict[str, str] = {
 
 
 def _unresolved(msg: str) -> NoReturn:
-    if os.environ.get("KIROCREW_E2E_REQUIRE"):
+    if os.environ.get("AJCREW_E2E_REQUIRE"):
         pytest.fail(msg)
     pytest.skip(msg)
 
@@ -170,8 +170,8 @@ def _run_scenario(scenario: str, gw, website: Path, node_dir: str, tmp: Path) ->
             "PLAYWRIGHT_RUN_MEMORY_EVIDENCE": "1",
             # Playwright clears this directory per run; keep scenarios separate.
             "PLAYWRIGHT_MEMORY_EVIDENCE_OUTPUT_DIR": str(out_dir),
-            "KIROCREW_E2E_MEMORY_SCENARIO": scenario,
-            "KIROCREW_E2E_EPHEMERAL": "1",
+            "AJCREW_E2E_MEMORY_SCENARIO": scenario,
+            "AJCREW_E2E_EPHEMERAL": "1",
             "CI": "1",
             "PLAYWRIGHT_JSON_OUTPUT_NAME": str(report),
         }
@@ -235,20 +235,20 @@ def toolchain() -> tuple[Path, str]:
 
 @pytest.fixture()
 def fake_backend(monkeypatch) -> Iterator[None]:
-    from kiro_crew.testing import fake_acp_backend
+    from aj_crew.testing import fake_acp_backend
 
-    monkeypatch.setenv("KIROCREW_KIRO_BIN", str(fake_acp_backend.__file__))
+    monkeypatch.setenv("AJCREW_KIRO_BIN", str(fake_acp_backend.__file__))
     yield
 
 
 def _patch_config(home: Path, mutate: Callable[[dict], dict]) -> None:
-    from kiro_crew.config.loader import update_config_locked
+    from aj_crew.config.loader import update_config_locked
 
     update_config_locked(home / "config.json", mutate=mutate)
 
 
 def test_missing_custom_model_with_legacy_vectors(toolchain, fake_backend, tmp_path) -> None:
-    from kiro_crew.testing.harness import spawn_feature_gateway
+    from aj_crew.testing.harness import spawn_feature_gateway
 
     website, node_dir = toolchain
     with spawn_feature_gateway(fixture="minimal", approval="reads") as gw:
@@ -275,7 +275,7 @@ def test_missing_custom_model_with_legacy_vectors(toolchain, fake_backend, tmp_p
 
 
 def test_missing_custom_model_without_legacy_vectors(toolchain, fake_backend, tmp_path) -> None:
-    from kiro_crew.testing.harness import spawn_feature_gateway
+    from aj_crew.testing.harness import spawn_feature_gateway
 
     website, node_dir = toolchain
     with spawn_feature_gateway(fixture="minimal", approval="reads") as gw:
@@ -301,7 +301,7 @@ def test_missing_custom_model_without_legacy_vectors(toolchain, fake_backend, tm
 
 
 def test_known_model_configured_but_not_serving(toolchain, fake_backend, tmp_path) -> None:
-    from kiro_crew.testing.harness import spawn_feature_gateway
+    from aj_crew.testing.harness import spawn_feature_gateway
 
     website, node_dir = toolchain
     with spawn_feature_gateway(fixture="minimal", approval="reads") as gw:
@@ -328,7 +328,7 @@ def test_known_model_configured_but_not_serving(toolchain, fake_backend, tmp_pat
 
 
 def test_deferred_repair_reports_three_units(toolchain, fake_backend, tmp_path) -> None:
-    from kiro_crew.testing.harness import spawn_feature_gateway
+    from aj_crew.testing.harness import spawn_feature_gateway
 
     website, node_dir = toolchain
     with spawn_feature_gateway(fixture="minimal", approval="reads") as gw:
@@ -364,7 +364,7 @@ def test_deferred_repair_reports_three_units(toolchain, fake_backend, tmp_path) 
 def test_bundled_download_exhausts_retries(
     toolchain, fake_backend, tmp_path, monkeypatch, closed_loopback_port
 ) -> None:
-    from kiro_crew.testing.harness import spawn_feature_gateway
+    from aj_crew.testing.harness import spawn_feature_gateway
 
     website, node_dir = toolchain
     port = closed_loopback_port
@@ -374,7 +374,7 @@ def test_bundled_download_exhausts_retries(
     # the mirror override (https only) at a loopback port nothing serves, and
     # an empty Ollama blob store so the legacy-salvage path finds nothing on
     # the runner. No packet leaves the host and no real model is fetched.
-    monkeypatch.setenv("KIROCREW_EMBED_MODEL_URL", f"https://127.0.0.1:{port}/never-served.gguf")
+    monkeypatch.setenv("AJCREW_EMBED_MODEL_URL", f"https://127.0.0.1:{port}/never-served.gguf")
     monkeypatch.setenv("OLLAMA_MODELS", str(tmp_path / "no-ollama-blobs"))
 
     with spawn_feature_gateway(fixture="minimal", approval="reads") as first:

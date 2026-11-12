@@ -11,16 +11,16 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew
-from kiro_crew import crashpad_inherit
-from kiro_crew.crashpad_inherit import (
+import aj_crew
+from aj_crew import crashpad_inherit
+from aj_crew.crashpad_inherit import (
     CRASHPAD_MASKS,
     EXC_MASK_CRASH,
     EXC_MASK_RESOURCE,
     MACH_PORT_NULL,
     detach_inherited_crash_handler,
 )
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 # This file replaces ctypes.CDLL, find_library or a cached libc handle for a test,
 # so the shared macOS handle caches are put back after each one (see conftest.py).
@@ -100,7 +100,7 @@ def test_reports_failure_without_raising(monkeypatch: pytest.MonkeyPatch) -> Non
 # -- the grandchild is the shape the fix exists for (kiro-cli, MCP servers).
 _CHILD_SCRIPT = """\
 import ctypes, json, subprocess, sys
-from kiro_crew.crashpad_inherit import CRASHPAD_MASKS, detach_inherited_crash_handler
+from aj_crew.crashpad_inherit import CRASHPAD_MASKS, detach_inherited_crash_handler
 
 
 def read_crashpad_ports():
@@ -140,7 +140,7 @@ def _assert_crashpad_ports_null(report: dict) -> None:
 def test_child_task_and_its_children_read_null_ports_afterwards(tmp_path: Path) -> None:
     script = tmp_path / "detach_probe.py"
     script.write_text(_CHILD_SCRIPT, encoding="utf-8")
-    src_root = str(Path(kiro_crew.__file__).resolve().parent.parent)
+    src_root = str(Path(aj_crew.__file__).resolve().parent.parent)
     env = dict(os.environ)
     env["PYTHONPATH"] = os.pathsep.join(p for p in (src_root, env.get("PYTHONPATH")) if p)
     proc = subprocess.run(

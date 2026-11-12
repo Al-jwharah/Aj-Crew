@@ -19,11 +19,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_continue
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.subagent_manager.admission.types import QueuedRun, QueuedRunListing
-from kiro_crew.taskq import model
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.chat_handlers import api_chat_slot_continue
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.subagent_manager.admission.types import QueuedRun, QueuedRunListing
+from aj_crew.taskq import model
 
 _TASK_TEXT = "summarize the quarterly notes for the team"
 
@@ -71,8 +71,8 @@ def _patched():
     mock_sel = MagicMock()
     started = AsyncMock(return_value=True)
     with (
-        patch("kiro_crew.dashboard.chat_handlers.sel", return_value=mock_sel),
-        patch("kiro_crew.dashboard.chat_handlers._start_next_queued_turn", started),
+        patch("aj_crew.dashboard.chat_handlers.sel", return_value=mock_sel),
+        patch("aj_crew.dashboard.chat_handlers._start_next_queued_turn", started),
     ):
         yield started
 
@@ -178,7 +178,7 @@ class TestAgainstARealStore:
 
     @staticmethod
     async def _manager() -> Any:
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         sessions = MagicMock()
         sessions.get_pid = MagicMock(return_value=None)

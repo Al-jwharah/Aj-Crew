@@ -18,12 +18,12 @@ from recovery_l1_chat_runner_helpers import (
     _transient_error,
 )
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat import _run_chat
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.client import AcpError
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat import _run_chat
+from aj_crew.providers.base import LLMEvent
+from aj_crew.testing.wait import await_until
 
 
 class _DurableFirstTurnDebt:
@@ -127,7 +127,7 @@ class TestAFreshFirstTurnThatFailsPreOutputStillRebuildsHistory:
 
         slot = _RecordingSlot("chat-1-freshretry")
         with patch.object(chat_runner, "_recovery_delay", _no_wait):
-            with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+            with patch("aj_crew.dashboard.chat.sel") as mock_sel:
                 mock_sel.return_value = MagicMock()
                 await _run_chat(state, slot, "Resume now please")
                 if slot.task:
@@ -180,7 +180,7 @@ class TestAFreshFirstTurnThatFailsPreOutputStillRebuildsHistory:
 
         client.stream = MagicMock(side_effect=_clean_stream)
         slot = _RecordingSlot("chat-1-freshland")
-        with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             await _run_chat(state, slot, "hello")
             assert debt.owed is False, "a first turn that emitted must settle the debt"
@@ -242,7 +242,7 @@ class TestAFreshFirstTurnThatFailsPreOutputStillRebuildsHistory:
 
         client.stream = MagicMock(side_effect=_stream)
         slot = _RecordingSlot("chat-1-outputcancel")
-        with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             await _run_chat(state, slot, "hello")
             assert debt.owed is True, (
@@ -289,7 +289,7 @@ class TestAFreshFirstTurnThatFailsPreOutputStillRebuildsHistory:
             return _gen()
 
         client.stream = MagicMock(side_effect=_clean_stream)
-        with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             await _run_chat(state, _RecordingSlot("chat-1-resumed"), "hello")
 
@@ -334,7 +334,7 @@ class TestAFreshFirstTurnThatFailsPreOutputStillRebuildsHistory:
         client.stream_command = MagicMock(side_effect=_stream_command)
         # stream must not be used on a slash turn; make it fail loudly if it is.
         client.stream = MagicMock(side_effect=AssertionError("slash turn used stream()"))
-        with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             await _run_chat(state, _RecordingSlot("chat-1-slashfirst"), "/help")
 
@@ -386,7 +386,7 @@ class TestAFreshFirstTurnThatFailsPreOutputStillRebuildsHistory:
 
         client.stream = MagicMock(side_effect=_empty_then_clean)
         slot = _RecordingSlot("chat-1-emptyfirst")
-        with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             await _run_chat(state, slot, "hello")
             assert debt.owed is True, (
@@ -447,7 +447,7 @@ class TestAFreshFirstTurnThatFailsPreOutputStillRebuildsHistory:
             return None
 
         with patch.object(chat_runner, "_recovery_delay", _no_wait):
-            with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+            with patch("aj_crew.dashboard.chat.sel") as mock_sel:
                 mock_sel.return_value = MagicMock()
                 await _run_chat(state, slot, "hello")
                 if slot.task:
@@ -515,7 +515,7 @@ class TestAFreshFirstTurnThatFailsPreOutputStillRebuildsHistory:
             slot.queue_insert(0, "never mind — summarise what you have")
 
         with patch.object(chat_runner, "_recovery_delay", _seam_queue_followup):
-            with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+            with patch("aj_crew.dashboard.chat.sel") as mock_sel:
                 mock_sel.return_value = MagicMock()
                 await _run_chat(state, slot, "hello")
                 if slot.task:
@@ -564,7 +564,7 @@ class TestAFreshFirstTurnThatFailsPreOutputStillRebuildsHistory:
         client.stream = MagicMock(side_effect=_stream)
         slot = _RecordingSlot("chat-1-promiseonly")
         with (
-            patch("kiro_crew.dashboard.chat.sel") as mock_sel,
+            patch("aj_crew.dashboard.chat.sel") as mock_sel,
             patch.object(chat_runner, "should_recover_promise_only", return_value=True),
         ):
             mock_sel.return_value = MagicMock()
@@ -585,7 +585,7 @@ class TestAFreshFirstTurnThatFailsPreOutputStillRebuildsHistory:
         ``_recovering_compaction`` blocks ``_turn_landed``, so the compaction clause
         must settle it, or the continuation re-prepends the pre-compaction replay.
         """
-        from kiro_crew.acp.types import EVENT_COMPACTION_STATUS
+        from aj_crew.acp.types import EVENT_COMPACTION_STATUS
 
         state, client = _l1_state(tmp_path)
         client.last_infra_error = None
@@ -625,7 +625,7 @@ class TestAFreshFirstTurnThatFailsPreOutputStillRebuildsHistory:
         client.stream = MagicMock(side_effect=_stream)
         slot = _RecordingSlot("chat-1-compaction")
         with patch.object(chat_runner, "_recovery_delay", _no_wait):
-            with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+            with patch("aj_crew.dashboard.chat.sel") as mock_sel:
                 mock_sel.return_value = MagicMock()
                 await _run_chat(state, slot, "a long first turn")
                 if slot.task:
@@ -688,7 +688,7 @@ class TestAFreshFirstTurnThatFailsPreOutputStillRebuildsHistory:
 
         client.stream = MagicMock(side_effect=_stream)
         slot = _RecordingSlot("chat-1-outputerror")
-        with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             await _run_chat(state, slot, "hello")
             if slot.task:
@@ -758,7 +758,7 @@ class TestAFreshFirstTurnThatFailsPreOutputStillRebuildsHistory:
 
         client.stream = MagicMock(side_effect=_stream)
         slot = _RecordingSlot("chat-1-barecancel")
-        with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             await _run_chat(state, slot, "hello")
             if slot.task:

@@ -127,8 +127,8 @@ class TestTheForkWindowsScopeWiring:
             "'.github/actions/setup-windows-tests/**'",
             "'**/*.ps1'",
             "'**/conftest.py'",
-            "'src/kiro_crew/platform_compat.py'",
-            "'src/kiro_crew/flock_compat.py'",
+            "'src/aj_crew/platform_compat.py'",
+            "'src/aj_crew/flock_compat.py'",
             "'pyproject.toml'",
         ):
             assert pattern in filt

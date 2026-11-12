@@ -35,6 +35,7 @@ from __future__ import annotations
 import os
 import re
 import subprocess
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -227,16 +228,23 @@ def added_lines(scope_label: str) -> dict[str, set[int]] | None:
     base branch's own later commits as this change's added lines. The two merge
     labels are CI checkout shapes with a clean tree and keep their committed
     endpoints; ``merge parents`` has no working-tree form at all.
+
+    ``-M -l0`` asks for rename detection with git's rename limit lifted. Past
+    that limit git drops inexact rename detection (a warning on stderr) and
+    prints a moved file as a new one, every line of it added, so a change that
+    moves a directory would have each line a baseline already records in it
+    read as added by this change. A moved file adds the lines it changed.
     """
+    diff = ["diff", "--unified=0", "-M", "-l0"]
     if scope_label == "merge HEAD^1..HEAD":
-        args = ["diff", "--unified=0", "HEAD^1", "HEAD"]
+        args = [*diff, "HEAD^1", "HEAD"]
     elif scope_label == "merge parents":
-        args = ["diff", "--unified=0", "HEAD^1", "HEAD^2"]
+        args = [*diff, "HEAD^1", "HEAD^2"]
     elif scope_label.endswith("...HEAD"):
         base = base_ref(scope_label)
         if base is None:
             return None
-        args = ["diff", "--unified=0", base]
+        args = [*diff, base]
     else:
         return None
     proc = subprocess.run(
@@ -533,11 +541,20 @@ def change_files(
 
     The counterpart of :func:`changed_paths_at` for a change-shaped
     comparison: a new file has no base path, a deleted one no current path,
-    git's rename detection pairs the two, and a copy (``--find-copies``) is
-    reported as a new file. Untracked files are included so a run before a
-    commit sees what the commit will hold.
+    git's rename detection pairs the two, and a copy is reported as a new
+    file. Untracked files are included so a run before a commit sees what the
+    commit will hold.
+
+    ``-l0`` lifts git's rename limit. Past it git drops inexact rename
+    detection with a warning on stderr and reports each moved file as a
+    deletion plus a new file, so a change that moves a directory would have
+    every file in it start from nothing. Copy detection (``-C``) is not asked
+    for: it adds every modified file as a candidate source and turns off git's
+    pairing by basename, which is what made a tree-wide move reach the limit,
+    and a copy is a new file here either way (``C`` is still read as one, for a
+    checkout whose ``diff.renames`` is ``copies``).
     """
-    code, out = _git_result("diff", "--name-status", "-M", "-C", "-z", base, "--", cwd=cwd)
+    code, out = _git_result("diff", "--name-status", "-M", "-l0", "-z", base, "--", cwd=cwd)
     if code != 0:
         raise RuntimeError(f"git diff against {base} failed")
     fields = out.split("\0")
@@ -564,3 +581,55 @@ def show_at(base: str, path: str, *, cwd: Path | None = None) -> str | None:
     """``path``'s text at *base*, or ``None`` if the file was absent there."""
     code, out = _git_result("show", f"{base}:{path}", cwd=cwd)
     return out if code == 0 else None
+
+
+#: ``git cat-file --batch`` answers a found object with ``<oid> <type> <size>``.
+_BATCH_HEADER_RE = re.compile(rb"[0-9a-f]{40,64} (\w+) (\d+)")
+
+#: Paths handed to one ``git cat-file --batch``; bounds what one answer holds in memory.
+_SHOW_BATCH = 256
+
+
+def show_each_at(
+    base: str, paths: Sequence[str], *, cwd: Path | None = None
+) -> Iterator[str | None]:
+    """:func:`show_at` for each of *paths*, in order, without one process per path.
+
+    A change that moves a directory asks for thousands of files at the base, and one
+    ``git show`` each is thousands of processes. This reads them ``_SHOW_BATCH`` at a
+    time from one ``git cat-file --batch`` and decodes each as :func:`show_at` does
+    (UTF-8 with replacement, universal newlines). A path the batch protocol cannot
+    name (it holds a newline), an answer that is not a blob and a batch git refuses
+    or cuts short all go back to :func:`show_at`, so the two never disagree about a file.
+    """
+    for start in range(0, len(paths), _SHOW_BATCH):
+        chunk = paths[start : start + _SHOW_BATCH]
+        yield from _show_chunk_at(base, chunk, cwd=cwd)
+
+
+def _show_chunk_at(base: str, chunk: Sequence[str], *, cwd: Path | None) -> list[str | None]:
+    asked = [path for path in chunk if "\n" not in path]
+    proc = subprocess.run(
+        ["git", "cat-file", "--batch"],
+        cwd=cwd or ROOT,
+        input="".join(f"{base}:{path}\n" for path in asked).encode("utf-8"),
+        capture_output=True,
+    )
+    answered: dict[str, str | None] = {}
+    out, offset = proc.stdout, 0
+    for path in asked if proc.returncode == 0 else ():
+        end = out.find(b"\n", offset)
+        if end < 0:
+            break
+        header = _BATCH_HEADER_RE.fullmatch(out, offset, end)
+        offset = end + 1
+        if header is None:
+            if out.endswith(b" missing", 0, end):
+                answered[path] = None
+            continue
+        size = int(header.group(2))
+        if header.group(1) == b"blob" and offset + size < len(out):
+            text = out[offset : offset + size].decode("utf-8", errors="replace")
+            answered[path] = text.replace("\r\n", "\n").replace("\r", "\n")
+        offset += size + 1
+    return [answered[path] if path in answered else show_at(base, path, cwd=cwd) for path in chunk]

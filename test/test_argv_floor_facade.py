@@ -1,13 +1,13 @@
 """The argv floor facade keeps the patch seams the one module had.
 
-``kiro_crew.security.argv_floor`` is a mirror facade (:mod:`kiro_crew._facade_mirror`)
+``aj_crew.security.argv_floor`` is a mirror facade (:mod:`aj_crew._facade_mirror`)
 over the owners ``argv_floor_self``, ``argv_floor_hosts``, ``argv_floor_ssh`` and
 ``argv_floor_git``. The moved code reads its names as plain module globals, so a patch
 reaches it only because the mirror writes the patch into every module holding the name.
-Two spellings reach the facade: a write on ``kiro_crew.security.argv_floor`` itself, and
-a write on the package ``kiro_crew.security`` of an argv floor name its ``_EXPORTS`` table
+Two spellings reach the facade: a write on ``aj_crew.security.argv_floor`` itself, and
+a write on the package ``aj_crew.security`` of an argv floor name its ``_EXPORTS`` table
 lists (each row naming ``argv_floor``), which the package forwards here. Every other
-owner-defined name is reached through ``kiro_crew.security.argv_floor`` only.
+owner-defined name is reached through ``aj_crew.security.argv_floor`` only.
 
 ``test/test_facade_mirror_guards.py`` holds every mirrored facade to the shared rules, and
 its corpus counts patches spelled through the facade's own name only. These tests pin what
@@ -32,9 +32,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-import kiro_crew.security as security
-from kiro_crew import _facade_mirror
-from kiro_crew.security import argv_floor
+import aj_crew.security as security
+from aj_crew import _facade_mirror
+from aj_crew.security import argv_floor
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_argv_floor_facade")
 
@@ -48,8 +48,8 @@ SHARED_FACADE_CHECKS = (
     "reach_problems",
 )
 
-FACADE = "kiro_crew.security.argv_floor"
-PACKAGE = "kiro_crew.security"
+FACADE = "aj_crew.security.argv_floor"
+PACKAGE = "aj_crew.security"
 LEAF = "argv_floor"
 SECURITY_DIR = Path(argv_floor.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
@@ -102,7 +102,7 @@ def _family_sources() -> dict[str, str]:
 
 def _test_tree_files() -> list[Path]:
     """Every file pytest collects tests or fixtures from: the root conftest, ``test/``,
-    and the test modules and conftests under ``src/kiro_crew/apps/builtins`` -- the same
+    and the test modules and conftests under ``src/aj_crew/apps/builtins`` -- the same
     walk as ``test_facade_mirror_guards._test_tree_files``."""
     root = source_corpus.repo_root()
     test_root = source_corpus.repo_root() / "test"
@@ -112,7 +112,7 @@ def _test_tree_files() -> list[Path]:
         name = path.name
         if rel == "conftest.py" or path.is_relative_to(test_root):
             out.append(path)
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and (
+        elif rel.startswith("src/aj_crew/apps/builtins/") and (
             "/tests/" in rel
             or name.startswith("test_")
             or name.endswith("_test.py")
@@ -130,7 +130,7 @@ def _module_aliases(tree: ast.Module) -> dict[str, str]:
             for alias in node.names:
                 if alias.name in (FACADE, PACKAGE) and alias.asname:
                     aliases[alias.asname] = alias.name
-        elif isinstance(node, ast.ImportFrom) and node.module in ("kiro_crew", PACKAGE):
+        elif isinstance(node, ast.ImportFrom) and node.module in ("aj_crew", PACKAGE):
             for alias in node.names:
                 dotted = f"{node.module}.{alias.name}"
                 if dotted in (FACADE, PACKAGE):
@@ -224,7 +224,7 @@ def _corpus_patched_names() -> dict[str, frozenset[str]]:
 #: Each spelling the patch scan must read, and each it must skip, keyed by case id.
 _SPELLING_CASES = {
     "alias-setattr": (
-        "from kiro_crew.security import argv_floor as af\n"
+        "from aj_crew.security import argv_floor as af\n"
         "def test(monkeypatch):\n"
         "    monkeypatch.setattr(af, '_OWN_HOST_NAMES_CACHE', None)\n",
         {FACADE: {"_OWN_HOST_NAMES_CACHE"}},
@@ -232,26 +232,26 @@ _SPELLING_CASES = {
     "dotted-string": (
         "from unittest import mock\n"
         "def test():\n"
-        "    with mock.patch('kiro_crew.security.argv_floor._hosts_file_paths'):\n"
+        "    with mock.patch('aj_crew.security.argv_floor._hosts_file_paths'):\n"
         "        pass\n",
         {FACADE: {"_hosts_file_paths"}},
     ),
     "package": (
-        "import kiro_crew.security as security\n"
+        "import aj_crew.security as security\n"
         "def test(monkeypatch):\n"
         "    monkeypatch.setattr(security, '_self_token_frames', None)\n"
         "    monkeypatch.setattr(security, 'is_denied', None)\n",
         {PACKAGE: {"_self_token_frames", "is_denied"}},
     ),
     "loop": (
-        "from kiro_crew.security import argv_floor\n"
+        "from aj_crew.security import argv_floor\n"
         "def test(monkeypatch):\n"
         "    for name in ('_HOST_VERDICT_CACHE', '_HOST_VERDICT_PENDING'):\n"
         "        monkeypatch.setattr(argv_floor, name, {})\n",
         {FACADE: {"_HOST_VERDICT_CACHE", "_HOST_VERDICT_PENDING"}},
     ),
     "owner-not-facade": (
-        "from kiro_crew.security import argv_floor_hosts\n"
+        "from aj_crew.security import argv_floor_hosts\n"
         "def test(monkeypatch):\n"
         "    monkeypatch.setattr(argv_floor_hosts, '_OWN_HOST_NAMES_CACHE', None)\n",
         {},
@@ -429,7 +429,7 @@ def _outside_imports() -> dict[str, tuple[str, str]]:
                 continue
             if node.level == 1:
                 home = f"{PACKAGE}.{node.module}" if node.module else PACKAGE
-            elif node.module and node.module.startswith("kiro_crew"):
+            elif node.module and node.module.startswith("aj_crew"):
                 home = node.module
             else:
                 continue
@@ -455,7 +455,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
-    """At BASE the module bound these by import, so ``from kiro_crew.security.argv_floor
+    """At BASE the module bound these by import, so ``from aj_crew.security.argv_floor
     import _dequote_token`` type-checked. Now an owner holds them, so the facade names each
     one from its home module under ``TYPE_CHECKING``, and exactly those."""
     served = set(_index().exports)

@@ -73,7 +73,7 @@ mkdirSync(OUT, { recursive: true })
 // ── Fixtures ────────────────────────────────────────────────────────────────
 
 /** The block list `format=blocks` returns for a .docx. Shape and field names
- *  come from `kiro_crew.doc_blocks.extract_blocks`; this is one real document's
+ *  come from `aj_crew.doc_blocks.extract_blocks`; this is one real document's
  *  worth of every block type the renderer handles. */
 const DOCX_BLOCKS = [
   { type: 'heading', level: 1, text: 'Q3 platform review' },
@@ -142,7 +142,7 @@ const slots = [{
   running: false,
   last_message: 'Q3 platform review',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),
@@ -309,7 +309,7 @@ async function main() {
         // whose getter is `v === '1'`.
         'mc-files-rail-open': '0',
         'mc-side-panel-width': '860',
-        'kirocrew:comment-hint-dismissed': '1',
+        'ajcrew:comment-hint-dismissed': '1',
         [`mc-git-panel-opened:${SLOT}:${PROJECT}`]: '1',
         'mc-chat-config': JSON.stringify({ pinLastPrompt: false, streamMode: 'immediate' }),
       },

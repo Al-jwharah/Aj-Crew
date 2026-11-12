@@ -11,9 +11,9 @@ import json
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.context import CONTRACT_VERSION, PlatformCompositionError
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.context import CONTRACT_VERSION, PlatformCompositionError
 
 
 def test_contract_version_current():
@@ -25,10 +25,10 @@ def test_contract_version_current():
 
 
 def test_standalone_no_policy_is_none(monkeypatch, tmp_path):
-    monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
+    monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
     _nope = tmp_path / "nope.json"
-    monkeypatch.setattr("kiro_crew.platform.governance._policy_home_path", lambda: _nope)
-    ctx = build_default_context(KiroCrewConfig.load())
+    monkeypatch.setattr("aj_crew.platform.governance._policy_home_path", lambda: _nope)
+    ctx = build_default_context(AjCrewConfig.load())
     assert ctx.governance is None
     assert ctx.contract_version == CONTRACT_VERSION
 
@@ -45,8 +45,8 @@ def test_env_policy_composes_onto_context(monkeypatch, tmp_path):
         ),
         encoding="utf-8",
     )
-    monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
-    ctx = build_default_context(KiroCrewConfig.load())
+    monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
+    ctx = build_default_context(AjCrewConfig.load())
     assert ctx.governance is not None
     assert "commands" in ctx.governance.controls
 
@@ -54,14 +54,14 @@ def test_env_policy_composes_onto_context(monkeypatch, tmp_path):
 def test_unreadable_policy_aborts_boot(monkeypatch, tmp_path):
     bad = tmp_path / "policy.json"
     bad.write_text("{ not json", encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(bad))
+    monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(bad))
     with pytest.raises(PlatformCompositionError):
-        build_default_context(KiroCrewConfig.load())
+        build_default_context(AjCrewConfig.load())
 
 
 def test_looser_profile_ordinal_aborts_boot(monkeypatch, tmp_path):
     """Validation rules 3 & 7: a profile looser than the ceiling aborts boot."""
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.platform import governance_profiles as gp
 
     # Ceiling requires sandbox >= cc; a profile that sets sandbox off is looser.
     profiles = tmp_path / "profiles"
@@ -83,18 +83,18 @@ def test_looser_profile_ordinal_aborts_boot(monkeypatch, tmp_path):
         json.dumps({"version": 1, "boot": {"fail_closed": True}, "sandbox": {"min_level": "cc"}}),
         encoding="utf-8",
     )
-    monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+    monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
     try:
-        from kiro_crew.platform import bootstrap
+        from aj_crew.platform import bootstrap
 
         with pytest.raises(PlatformCompositionError):
-            bootstrap.bootstrap_context(KiroCrewConfig.load())
+            bootstrap.bootstrap_context(AjCrewConfig.load())
     finally:
         gp.reset_store()
 
 
 def test_profile_within_ceiling_boots(monkeypatch, tmp_path):
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.platform import governance_profiles as gp
 
     profiles = tmp_path / "profiles"
     profiles.mkdir()
@@ -115,11 +115,11 @@ def test_profile_within_ceiling_boots(monkeypatch, tmp_path):
         json.dumps({"version": 1, "boot": {"fail_closed": True}, "sandbox": {"min_level": "cc"}}),
         encoding="utf-8",
     )
-    monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+    monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
     try:
-        from kiro_crew.platform import bootstrap
+        from aj_crew.platform import bootstrap
 
-        ctx = bootstrap.bootstrap_context(KiroCrewConfig.load())
+        ctx = bootstrap.bootstrap_context(AjCrewConfig.load())
         assert ctx.governance is not None
         assert ctx.governance.controls["sandbox.min_level"].value == "cc"
     finally:
@@ -128,16 +128,16 @@ def test_profile_within_ceiling_boots(monkeypatch, tmp_path):
 
 def test_lazy_default_carries_ceiling(monkeypatch, tmp_path):
     """The lazy current_context() path (stray subprocess) also gets the ceiling."""
-    from kiro_crew.platform import context as ctx_mod
+    from aj_crew.platform import context as ctx_mod
 
     p = tmp_path / "policy.json"
     p.write_text(json.dumps({"version": 1, "boot": {"fail_closed": True}}), encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+    monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
     # Pin standalone: this exercises the standalone lazy-default path. With the
     # companion co-installed in the same venv (the combined-build test setup), an
     # unset profile would auto-resolve ``amazon`` via the entry-point signal and
     # fail closed — unrelated to what this test covers.
-    monkeypatch.setenv("KIROCREW_PROFILE", "standalone")
+    monkeypatch.setenv("AJCREW_PROFILE", "standalone")
     ctx_mod.reset_context()
     try:
         ctx = ctx_mod.current_context()

@@ -25,9 +25,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import kiro_crew.sandbox as sandbox_mod
-from kiro_crew.config import loader as loader_mod
-from kiro_crew.sandbox import (
+import aj_crew.sandbox as sandbox_mod
+from aj_crew.config import loader as loader_mod
+from aj_crew.sandbox import (
     UNSANDBOXED_BY_OPERATOR,
     UNSANDBOXED_BY_PLATFORM,
     SandboxUnavailableError,
@@ -35,7 +35,7 @@ from kiro_crew.sandbox import (
     wrap_argv,
 )
 
-_ARGV = ["kirocrew-test-binary", "--flag"]
+_ARGV = ["ajcrew-test-binary", "--flag"]
 
 
 @pytest.fixture(autouse=True)
@@ -46,12 +46,12 @@ def clean_state(monkeypatch):
     delegation branch never preempts the policy under test, and the one-shot
     warning latch is cleared so each test sees its own warning.
     """
-    monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
-    monkeypatch.delenv("KIROCREW_ALLOW_UNSANDBOXED", raising=False)
+    monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
+    monkeypatch.delenv("AJCREW_ALLOW_UNSANDBOXED", raising=False)
     monkeypatch.setattr(
         sandbox_mod,
         "_KIRO_INTERNAL_SETTINGS_PATH",
-        "/nonexistent/kirocrew-test/amazon-internal.json",
+        "/nonexistent/ajcrew-test/amazon-internal.json",
     )
     for attr in ("_warned", "_nested_passthrough_logged"):
         if hasattr(sandbox_mod.wrap_argv, attr):
@@ -69,12 +69,12 @@ def _pin_config(monkeypatch, *, value: bool, declared: bool) -> None:
 
     ``value`` is the RESOLVED policy the dataclass carries — the loader has already
     folded the platform default into it, so there is no platform seam here — and
-    ``declared`` only labels the audit event. Stubbing ``KiroCrewConfig.load`` keeps
+    ``declared`` only labels the audit event. Stubbing ``AjCrewConfig.load`` keeps
     this focused on the spawn path rather than the loader's validation machinery;
     the platform resolution itself is covered in ``test_config_loader_agent_section.py``.
     """
     monkeypatch.setattr(
-        loader_mod.KiroCrewConfig,
+        loader_mod.AjCrewConfig,
         "load",
         classmethod(
             lambda cls: SimpleNamespace(agent=SimpleNamespace(sandbox_allow_unsandboxed_exec=value))
@@ -153,13 +153,13 @@ class TestUnsandboxedExecDeclaredReadsPresenceNotValue:
         monkeypatch.setattr("sys.platform", "win32")
         main, _ = cfg
         main.write_text(json.dumps({"agent": {"approval_mode": "auto"}}), encoding="utf-8")
-        loaded = loader_mod.KiroCrewConfig.load()
+        loaded = loader_mod.AjCrewConfig.load()
         assert loaded.agent.sandbox_allow_unsandboxed_exec is True
         loaded.save()
         written = json.loads(main.read_text(encoding="utf-8"))["agent"]
         assert "sandbox_allow_unsandboxed_exec" not in written
         assert loader_mod.unsandboxed_exec_declared() is False
-        assert loader_mod.KiroCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is True
+        assert loader_mod.AjCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is True
 
 
 class TestTheGateReadsTheResolvedValue:
@@ -167,7 +167,7 @@ class TestTheGateReadsTheResolvedValue:
 
     The platform default is folded into the field by the loader (its matrix lives in
     ``test_config_loader_agent_section.py``), so nothing here re-derives policy from whether the
-    key was declared. A full-document ``KiroCrewConfig.save()`` builds its snapshot
+    key was declared. A full-document ``AjCrewConfig.save()`` builds its snapshot
     through ``asdict(self.agent)`` but strips this key unless
     ``unsandboxed_exec_declared()`` says the operator recorded it, so writing the
     snapshot back leaves "never decided" undecided; the gate stays a read of the
@@ -199,7 +199,7 @@ class TestTheGateReadsTheResolvedValue:
         def _boom(cls):
             raise OSError("config unreadable")
 
-        monkeypatch.setattr(loader_mod.KiroCrewConfig, "load", classmethod(_boom))
+        monkeypatch.setattr(loader_mod.AjCrewConfig, "load", classmethod(_boom))
         assert sandbox_mod._allow_unsandboxed_exec() is False
 
 
@@ -240,7 +240,7 @@ class TestWrapArgvOnABackendlessHost:
     ) -> None:
         _pin_config(monkeypatch, value=True, declared=False)
         sel_instance = MagicMock()
-        with patch("kiro_crew.sel.sel", return_value=sel_instance):
+        with patch("aj_crew.sel.sel", return_value=sel_instance):
             wrapped, cleanup = wrap_argv(list(_ARGV), mode="standard")
         assert wrapped == _ARGV
         assert cleanup is None
@@ -251,7 +251,7 @@ class TestWrapArgvOnABackendlessHost:
     def test_operator_grant_audits_its_own_source(self, no_backend, monkeypatch) -> None:
         _pin_config(monkeypatch, value=True, declared=True)
         sel_instance = MagicMock()
-        with patch("kiro_crew.sel.sel", return_value=sel_instance):
+        with patch("aj_crew.sel.sel", return_value=sel_instance):
             wrap_argv(list(_ARGV), mode="standard")
         event = sel_instance.log_tool_invocation.call_args_list[0].kwargs
         assert event["outcome"] == "unconfined"
@@ -263,7 +263,7 @@ class TestWrapArgvOnABackendlessHost:
         _pin_config(monkeypatch, value=True, declared=False)
         failing = MagicMock()
         failing.log_tool_invocation.side_effect = OSError("audit log unwritable")
-        with patch("kiro_crew.sel.sel", return_value=failing):
+        with patch("aj_crew.sel.sel", return_value=failing):
             wrapped, _ = wrap_argv(list(_ARGV), mode="standard")
         assert wrapped == _ARGV
 
@@ -271,7 +271,7 @@ class TestWrapArgvOnABackendlessHost:
         """The refusal must name the operator's own decision, not tell them to set a
         key they already set."""
         _pin_config(monkeypatch, value=False, declared=True)
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             with pytest.raises(SandboxUnavailableError) as excinfo:
                 wrap_argv(list(_ARGV), mode="standard")
         assert "is set to false" in str(excinfo.value)
@@ -282,7 +282,7 @@ class TestWrapArgvOnABackendlessHost:
         fleet keeps fail-closing on Windows too."""
         _pin_config(monkeypatch, value=True, declared=False)
         monkeypatch.setattr(sandbox_mod, "_governance_sandbox_floor", lambda: "strict")
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             with pytest.raises(SandboxUnavailableError):
                 wrap_argv(list(_ARGV), mode="standard")
 
@@ -303,12 +303,12 @@ class TestWrapArgvOnABackendlessHost:
         """
         _pin_config(monkeypatch, value=True, declared=False)
         monkeypatch.setattr(sandbox_mod, "_last_unshare_failure", (True, "fork EAGAIN", "retry"))
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             platform_wrapped, _ = wrap_argv(list(_ARGV), mode="standard")
 
         delattr(sandbox_mod.wrap_argv, "_warned")
         _pin_config(monkeypatch, value=True, declared=True)
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             operator_wrapped, _ = wrap_argv(list(_ARGV), mode="standard")
 
         assert platform_wrapped == operator_wrapped == _ARGV
@@ -318,7 +318,7 @@ class TestWrapArgvOnABackendlessHost:
         REFUSAL path, where it picks the guidance and gates the carve-out."""
         _pin_config(monkeypatch, value=False, declared=False)
         monkeypatch.setattr(sandbox_mod, "_last_unshare_failure", (True, "fork EAGAIN", "retry"))
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             with pytest.raises(SandboxUnavailableError) as excinfo:
                 wrap_argv(list(_ARGV), mode="standard")
         assert excinfo.value.kind == "transient"
@@ -331,7 +331,7 @@ class TestWrapArgvOnABackendlessHost:
         platform where a foreign Seatbelt can be detected."""
         _pin_config(monkeypatch, value=False, declared=False)
         monkeypatch.setattr(sandbox_mod, "_inside_macos_sandbox", lambda: True)
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             with pytest.raises(SandboxUnavailableError) as excinfo:
                 wrap_argv(list(_ARGV), mode="standard")
         assert excinfo.value.kind == "foreign_sandbox"
@@ -343,7 +343,7 @@ class TestWrapArgvOnABackendlessHost:
         warning whose only suggestion is impossible trains readers to ignore it."""
         _pin_config(monkeypatch, value=True, declared=False)
         with caplog.at_level("WARNING"):
-            with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+            with patch("aj_crew.sel.sel", return_value=MagicMock()):
                 wrap_argv(list(_ARGV), mode="standard")
         security = [r.getMessage() for r in caplog.records if "SECURITY" in r.getMessage()]
         assert len(security) == 1

@@ -23,7 +23,7 @@ import { useKiroUsageReadout } from '../shell/topbar/kiroUsageReadout'
 vi.mock('../api/client', () => ({
   api: {
     sessionsUsage: vi.fn(),
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
   },
 }))
 
@@ -55,7 +55,7 @@ describe('the credit pill polls at the warming cadence', () => {
 
   it('polls fast while the cache is still warming', async () => {
     const { api } = await import('../api/client')
-    vi.mocked(api).kirocrewConfig.mockResolvedValue({ is_kiro_backend: true } as never)
+    vi.mocked(api).ajcrewConfig.mockResolvedValue({ is_kiro_backend: true } as never)
     // An empty usage payload parses to `null`: the gateway's cache has not warmed.
     vi.mocked(api).sessionsUsage.mockResolvedValue({ usage: {} } as never)
     const { queryClient, result } = mount()
@@ -71,7 +71,7 @@ describe('the credit pill polls at the warming cadence', () => {
 
   it('polls fast while the read fails before kiro-cli is ready', async () => {
     const { api } = await import('../api/client')
-    vi.mocked(api).kirocrewConfig.mockResolvedValue({ is_kiro_backend: true } as never)
+    vi.mocked(api).ajcrewConfig.mockResolvedValue({ is_kiro_backend: true } as never)
     vi.mocked(api).sessionsUsage.mockRejectedValue(new Error('503 kiro_prerequisite_required'))
     const { queryClient, result } = mount()
 
@@ -82,7 +82,7 @@ describe('the credit pill polls at the warming cadence', () => {
 
   it('drops to the steady cadence once a reading lands', async () => {
     const { api } = await import('../api/client')
-    vi.mocked(api).kirocrewConfig.mockResolvedValue({ is_kiro_backend: true } as never)
+    vi.mocked(api).ajcrewConfig.mockResolvedValue({ is_kiro_backend: true } as never)
     vi.mocked(api).sessionsUsage.mockResolvedValue({
       usage: { credits_plan: 10_000, credits_used: 100 },
     } as never)

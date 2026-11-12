@@ -1,4 +1,4 @@
-"""Unit tests for the ``kirocrew agent`` CLI subcommand group.
+"""Unit tests for the ``ajcrew agent`` CLI subcommand group.
 
 Tests cover list output format, create with defaults, create duplicate,
 update non-existent, and delete default agent.
@@ -13,9 +13,9 @@ from pathlib import Path
 import pytest
 from model_registry_row_helpers import add_claude_only_row
 
-from kiro_crew.cli import main
-from kiro_crew.config.paths import data_home
-from kiro_crew.validation import (
+from aj_crew.cli import main
+from aj_crew.config.paths import data_home
+from aj_crew.validation import (
     _MODEL_NAME_RE,
     MAX_SHORT_STRING,
     MODEL_NAME_HINT,
@@ -36,7 +36,7 @@ def _base_config() -> dict:
     return {
         "agents": {
             "default": {
-                "kiro_agent": "kirocrew",
+                "kiro_agent": "ajcrew",
                 "workspace": "default",
                 "memory_store": "default",
             },
@@ -48,14 +48,14 @@ def _base_config() -> dict:
 
 
 class TestAgentList:
-    """Test ``kirocrew agent list`` output format."""
+    """Test ``ajcrew agent list`` output format."""
 
     def test_list_output_format(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
         cfg_path = _write_config(tmp_path, _base_config())
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("sys.argv", ["kirocrew", "agent", "list"]),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("sys.argv", ["ajcrew", "agent", "list"]),
         ):
             main()
 
@@ -78,8 +78,8 @@ class TestAgentList:
         cfg_path = _write_config(tmp_path, data)
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("sys.argv", ["kirocrew", "agent", "list"]),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("sys.argv", ["ajcrew", "agent", "list"]),
         ):
             main()
 
@@ -96,13 +96,13 @@ class TestAgentList:
             "kiro_agent": "oncall\nagent",
             "workspace": "on\x07call-ws",
             "memory_store": "oncall-mem",
-            "source": "kiro\ncrew",
+            "source": "aj\ncrew",
         }
         cfg_path = _write_config(tmp_path, data)
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("sys.argv", ["kirocrew", "agent", "list"]),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("sys.argv", ["ajcrew", "agent", "list"]),
         ):
             main()
 
@@ -112,21 +112,21 @@ class TestAgentList:
         row = next(line for line in lines if line.startswith("oncall "))
         assert "oncall\\x0aagent" in row
         assert "oncall-ws" in row
-        assert "kiro\\x0acrew" in row
+        assert "aj\\x0acrew" in row
         assert "\x07" not in row
 
 
 class TestAgentCreate:
-    """Test ``kirocrew agent create``."""
+    """Test ``ajcrew agent create``."""
 
     def test_create_with_defaults(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
         cfg_path = _write_config(tmp_path, _base_config())
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "agent", "create", "--name", "research"],
+                ["ajcrew", "agent", "create", "--name", "research"],
             ),
         ):
             main()
@@ -153,12 +153,12 @@ class TestAgentCreate:
     ) -> None:
         """A headless CLI create gets the same name-seeded ICON the UI posts for
         the name, never an empty override (which renders the trait ghost)."""
-        from kiro_crew.crew_avatar_seed import default_icon_avatar
+        from aj_crew.crew_avatar_seed import default_icon_avatar
 
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("sys.argv", ["kirocrew", "agent", "create", "--name", "research"]),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("sys.argv", ["ajcrew", "agent", "create", "--name", "research"]),
         ):
             main()
         saved = json.loads(cfg_path.read_text(encoding="utf-8"))
@@ -171,13 +171,13 @@ class TestAgentCreate:
     ) -> None:
         """A free-form name is kept as the display label; its icon seeds from that
         shown label, matching the UI preview and the API create path."""
-        from kiro_crew.crew_avatar_seed import default_icon_avatar
+        from aj_crew.crew_avatar_seed import default_icon_avatar
 
         cfg_path = _write_config(tmp_path, _base_config())
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
-                "sys.argv", ["kirocrew", "agent", "create", "--name", "Release Writer"]
+                "sys.argv", ["ajcrew", "agent", "create", "--name", "Release Writer"]
             ),
         ):
             main()
@@ -192,10 +192,10 @@ class TestAgentCreate:
         cfg_path = _write_config(tmp_path, _base_config())
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "agent", "create", "--name", "research", "--workspace", "default"],
+                ["ajcrew", "agent", "create", "--name", "research", "--workspace", "default"],
             ),
         ):
             main()
@@ -211,10 +211,10 @@ class TestAgentCreate:
         cfg_path = _write_config(tmp_path, _base_config())
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "agent", "create", "--name", "research", "--workspace", "oncall"],
+                ["ajcrew", "agent", "create", "--name", "research", "--workspace", "oncall"],
             ),
         ):
             main()
@@ -231,10 +231,10 @@ class TestAgentCreate:
         cfg_path = _write_config(tmp_path, _base_config())
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "agent", "create", "--name", "default"],
+                ["ajcrew", "agent", "create", "--name", "default"],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -250,10 +250,10 @@ class TestAgentCreate:
         cfg_path = _write_config(tmp_path, _base_config())
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "agent", "create", "--name", "Release Writer"],
+                ["ajcrew", "agent", "create", "--name", "Release Writer"],
             ),
         ):
             main()
@@ -271,10 +271,10 @@ class TestAgentCreate:
         cfg_path = _write_config(tmp_path, _base_config())
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "agent", "create", "--name", "scribe", "--display-name", "Scribe"],
+                ["ajcrew", "agent", "create", "--name", "scribe", "--display-name", "Scribe"],
             ),
         ):
             main()
@@ -288,11 +288,11 @@ class TestAgentCreate:
         cfg_path = _write_config(tmp_path, _base_config())
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
                 [
-                    "kirocrew",
+                    "ajcrew",
                     "agent",
                     "create",
                     "--name",
@@ -330,7 +330,7 @@ class TestAgentCreate:
     ) -> None:
         cfg_path = _write_config(tmp_path, _base_config())
 
-        _run_agent_cli(cfg_path, "create", "--name", "research", "--kiro-agent", "kirocrew")
+        _run_agent_cli(cfg_path, "create", "--name", "research", "--kiro-agent", "ajcrew")
 
         assert "Created agent: research" in capsys.readouterr().out
         saved = json.loads(cfg_path.read_text(encoding="utf-8"))
@@ -358,17 +358,17 @@ class TestAgentCreate:
         cfg_path = _write_config(tmp_path, _base_config())
         name = "https://user:password@example.com"
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
                 [
-                    "kirocrew",
+                    "ajcrew",
                     "agent",
                     "create",
                     "--name",
                     name,
                     "--kiro-agent",
-                    "kirocrew",
+                    "ajcrew",
                 ],
             ),
             pytest.raises(SystemExit) as exc_info,
@@ -382,15 +382,15 @@ class TestAgentCreate:
 
 
 class TestAgentUpdate:
-    """Test ``kirocrew agent update``."""
+    """Test ``ajcrew agent update``."""
 
     def test_template_update_retains_a_concurrent_workspace_edit(self, tmp_path: Path) -> None:
-        from kiro_crew.config.loader import update_config_locked
-        from kiro_crew.memory_stores import persist_member_config
+        from aj_crew.config.loader import update_config_locked
+        from aj_crew.memory_stores import persist_member_config
 
         data = _base_config()
         data["agents"]["research"] = {
-            "kiro_agent": "kirocrew",
+            "kiro_agent": "ajcrew",
             "workspace": "default",
             "memory_store": "default",
         }
@@ -405,14 +405,14 @@ class TestAgentUpdate:
             return persist_member_config(*args, **kwargs)
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
-                "kiro_crew.cli_commands.persist_member_config",
+                "aj_crew.cli_commands.persist_member_config",
                 side_effect=publish_after_concurrent_edit,
             ),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "agent", "update", "research", "--kiro-agent", "new-template"],
+                ["ajcrew", "agent", "update", "research", "--kiro-agent", "new-template"],
             ),
         ):
             main()
@@ -428,10 +428,10 @@ class TestAgentUpdate:
         cfg_path = _write_config(tmp_path, _base_config())
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "agent", "update", "nonexistent", "--kiro-agent", "x"],
+                ["ajcrew", "agent", "update", "nonexistent", "--kiro-agent", "x"],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -446,17 +446,17 @@ class TestAgentUpdate:
     ) -> None:
         data = _base_config()
         data["agents"]["research"] = {
-            "kiro_agent": "kirocrew",
+            "kiro_agent": "ajcrew",
             "workspace": "default",
             "memory_store": "default",
         }
         cfg_path = _write_config(tmp_path, data)
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "agent", "update", "research", "--kiro-agent", "dr. eggbot"],
+                ["ajcrew", "agent", "update", "research", "--kiro-agent", "dr. eggbot"],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -468,8 +468,8 @@ class TestAgentUpdate:
 
 def _run_agent_cli(cfg_path: Path, *argv: str) -> None:
     with (
-        unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-        unittest.mock.patch("sys.argv", ["kirocrew", "agent", *argv]),
+        unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+        unittest.mock.patch("sys.argv", ["ajcrew", "agent", *argv]),
     ):
         main()
 
@@ -477,12 +477,12 @@ def _run_agent_cli(cfg_path: Path, *argv: str) -> None:
 def _labelled_config() -> dict:
     data = _base_config()
     data["agents"]["research"] = {
-        "kiro_agent": "kirocrew",
+        "kiro_agent": "ajcrew",
         "workspace": "default",
         "memory_store": "default",
     }
     data["agents"]["scribe"] = {
-        "kiro_agent": "kirocrew",
+        "kiro_agent": "ajcrew",
         "workspace": "default",
         "memory_store": "default",
         "display_name": "Release Writer",
@@ -491,7 +491,7 @@ def _labelled_config() -> dict:
 
 
 class TestAgentUpdateDisplayName:
-    """``kirocrew agent update <name> --display-name``: relabel, never re-key."""
+    """``ajcrew agent update <name> --display-name``: relabel, never re-key."""
 
     def test_relabel_round_trips_through_agent_list(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
@@ -521,8 +521,8 @@ class TestAgentUpdateDisplayName:
         assert saved["agents"]["scribe"]["display_name"] == ""
 
     def test_a_relabel_keeps_a_concurrent_workspace_edit(self, tmp_path: Path) -> None:
-        from kiro_crew.config.loader import update_config_locked
-        from kiro_crew.memory_stores import persist_member_config
+        from aj_crew.config.loader import update_config_locked
+        from aj_crew.memory_stores import persist_member_config
 
         cfg_path = _write_config(tmp_path, _labelled_config())
 
@@ -537,7 +537,7 @@ class TestAgentUpdateDisplayName:
             return persist_member_config(*args, **kwargs)
 
         with unittest.mock.patch(
-            "kiro_crew.cli_commands.persist_member_config",
+            "aj_crew.cli_commands.persist_member_config",
             side_effect=publish_after_concurrent_edit,
         ):
             _run_agent_cli(cfg_path, "update", "research", "--display-name", "Researcher")
@@ -674,7 +674,7 @@ class TestAgentListLabel:
 
 
 class TestAgentDelete:
-    """Test ``kirocrew agent delete``."""
+    """Test ``ajcrew agent delete``."""
 
     def test_delete_default_agent_exits_nonzero(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
@@ -682,10 +682,10 @@ class TestAgentDelete:
         cfg_path = _write_config(tmp_path, _base_config())
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch(
                 "sys.argv",
-                ["kirocrew", "agent", "delete", "default"],
+                ["ajcrew", "agent", "delete", "default"],
             ),
             pytest.raises(SystemExit) as exc_info,
         ):
@@ -697,7 +697,7 @@ class TestAgentDelete:
 
 
 class TestAgentResetModel:
-    """``kirocrew agent reset-model`` -- the explicit way back to the default.
+    """``ajcrew agent reset-model`` -- the explicit way back to the default.
 
     Goes through ``main()``: a second ``agent`` subparser group raises
     ``conflicting subparser: agent`` and breaks the whole CLI while a handler-level
@@ -711,34 +711,34 @@ class TestAgentResetModel:
         only ``KIRO_HOME`` would be ignored. The containment assert stops a lapse from
         writing into a real agents directory.
         """
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents_dir = tmp_path / "kiro-agents"
         agents_dir.mkdir(parents=True, exist_ok=True)
         monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", agents_dir)
         resolved = agent_mod.kiro_agents_dir_path()
         assert resolved.is_relative_to(tmp_path), f"{resolved} escaped {tmp_path}"
-        body: dict = {"name": "kirocrew", "tools": ["fs_read"]}
+        body: dict = {"name": "ajcrew", "tools": ["fs_read"]}
         if model is not None:
             body["model"] = model
-        spec = agents_dir / "kirocrew.json"
+        spec = agents_dir / "ajcrew.json"
         spec.write_text(json.dumps(body), encoding="utf-8")
         return spec
 
     def test_reset_clears_the_pin_and_keeps_the_rest_of_the_spec(
         self, tmp_path: Path, monkeypatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        from kiro_crew import agent_state
+        from aj_crew import agent_state
 
         spec = self._isolated_spec(tmp_path, monkeypatch, "claude-opus-4.8")
 
-        with unittest.mock.patch("sys.argv", ["kirocrew", "agent", "reset-model"]):
+        with unittest.mock.patch("sys.argv", ["ajcrew", "agent", "reset-model"]):
             main()
 
         written = json.loads(spec.read_text(encoding="utf-8"))
         assert "model" not in written
         assert written["tools"] == ["fs_read"], "reset must not regenerate the whole spec"
-        assert agent_state.get_model_managed("kirocrew") is True
+        assert agent_state.get_model_managed("ajcrew") is True
         out = capsys.readouterr().out
         assert "claude-opus-4.8" in out, "the cleared value is reported so it can be re-pinned"
 
@@ -747,7 +747,7 @@ class TestAgentResetModel:
     ) -> None:
         self._isolated_spec(tmp_path, monkeypatch, None)
 
-        with unittest.mock.patch("sys.argv", ["kirocrew", "agent", "reset-model"]):
+        with unittest.mock.patch("sys.argv", ["ajcrew", "agent", "reset-model"]):
             main()
 
         assert "had no pinned model" in capsys.readouterr().out
@@ -755,9 +755,7 @@ class TestAgentResetModel:
     def test_reset_exits_nonzero_for_an_unknown_agent(self, tmp_path: Path, monkeypatch) -> None:
         self._isolated_spec(tmp_path, monkeypatch, "claude-opus-4.8")
 
-        with unittest.mock.patch(
-            "sys.argv", ["kirocrew", "agent", "reset-model", "--agent", "nope"]
-        ):
+        with unittest.mock.patch("sys.argv", ["ajcrew", "agent", "reset-model", "--agent", "nope"]):
             with pytest.raises(SystemExit) as exc:
                 main()
         assert exc.value.code == 1
@@ -770,8 +768,8 @@ class TestAgentResetModel:
         cfg_path = _write_config(tmp_path, _base_config())
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("sys.argv", ["kirocrew", "agent", "list"]),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("sys.argv", ["ajcrew", "agent", "list"]),
         ):
             main()
 
@@ -780,7 +778,7 @@ class TestAgentResetModel:
 
 def _wrong_flavour_spelling() -> tuple[str, str]:
     """A registry spelling kiro-cli does not serve, and the id it maps to."""
-    from kiro_crew import model_registry
+    from aj_crew import model_registry
 
     for entry in model_registry._REGISTRY.values():
         for alias in entry.get("aliases", []):
@@ -861,8 +859,8 @@ class TestAgentModel:
         assert "Model: (inherit)" in capsys.readouterr().out
 
     def test_a_model_update_keeps_a_concurrent_workspace_edit(self, tmp_path: Path) -> None:
-        from kiro_crew.config.loader import update_config_locked
-        from kiro_crew.memory_stores import persist_member_config
+        from aj_crew.config.loader import update_config_locked
+        from aj_crew.memory_stores import persist_member_config
 
         cfg_path = _write_config(tmp_path, _labelled_config())
 
@@ -877,7 +875,7 @@ class TestAgentModel:
             return persist_member_config(*args, **kwargs)
 
         with unittest.mock.patch(
-            "kiro_crew.cli_commands.persist_member_config",
+            "aj_crew.cli_commands.persist_member_config",
             side_effect=publish_after_concurrent_edit,
         ):
             _run_agent_cli(cfg_path, "update", "research", "--model", "test-model-1")
@@ -1003,7 +1001,7 @@ class TestAgentModel:
     def test_a_display_only_canonical_key_is_refused(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch
     ) -> None:
-        from kiro_crew import model_registry
+        from aj_crew import model_registry
 
         # Every registered key also has a wrong-flavour mapping today, which is
         # checked first; take it away to reach the display-only refusal.
@@ -1025,7 +1023,7 @@ class TestAgentModel:
         # The display-only refusal is the crew editor's backend-aware gate, not a
         # bare registry lookup: on a harness whose namespace carries an id for the
         # key (claude maps fable-5-1m), the crew editor accepts it, so the CLI must.
-        from kiro_crew import model_registry
+        from aj_crew import model_registry
 
         monkeypatch.setattr(model_registry, "acp_id_correction", lambda _model: None)
         config = _base_config()
@@ -1074,7 +1072,7 @@ class TestRefusalHintsMatchTheirGrammar:
 
 
 class TestAgentUpdateWorkspace:
-    """``kirocrew agent update <name> --workspace``: blank keeps, unknown warns."""
+    """``ajcrew agent update <name> --workspace``: blank keeps, unknown warns."""
 
     @pytest.mark.parametrize("blank", ["", "   "])
     def test_blank_keeps_the_current_workspace(
@@ -1097,7 +1095,7 @@ class TestAgentUpdateWorkspace:
         assert "nothing to update" in captured.err
 
     def test_blank_beside_another_field_saves_only_that_field(self, tmp_path: Path) -> None:
-        from kiro_crew.memory_stores import persist_member_config
+        from aj_crew.memory_stores import persist_member_config
 
         data = _labelled_config()
         data["workspaces"]["research-ws"] = {"dir": "research"}
@@ -1108,9 +1106,7 @@ class TestAgentUpdateWorkspace:
             assert kwargs["changed_fields"] == {"model"}
             return persist_member_config(*args, **kwargs)
 
-        with unittest.mock.patch(
-            "kiro_crew.cli_commands.persist_member_config", side_effect=publish
-        ):
+        with unittest.mock.patch("aj_crew.cli_commands.persist_member_config", side_effect=publish):
             _run_agent_cli(
                 cfg_path, "update", "research", "--workspace", "", "--model", "test-model-1"
             )

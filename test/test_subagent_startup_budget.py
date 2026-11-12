@@ -16,8 +16,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.config import live
-from kiro_crew.subagent import (
+from aj_crew.config import live
+from aj_crew.subagent import (
     _STARTUP_COLLECT_GRACE_SECS,
     _STARTUP_LAUNCH_MARGIN_SECS,
     SubagentInfo,
@@ -58,7 +58,7 @@ def _one_clock(budget: float, collect: int = COLLECT) -> float:
     the spawn's own ``initialize`` handshake and ``session/new``, the late-start
     collector's wait and the margin. The clock pauses only in a start QUEUE, so
     each of these counts."""
-    from kiro_crew.constants import INITIALIZE_TIMEOUT_SECS
+    from aj_crew.constants import INITIALIZE_TIMEOUT_SECS
 
     return (
         2 * (budget + INITIALIZE_TIMEOUT_SECS)
@@ -92,7 +92,7 @@ def test_a_retried_start_spending_two_full_handshake_rounds_is_not_reaped(monkey
     """A retried start (a dead-runtime retry, a re-derive, a resume whose runtime
     died, a re-projected claim) runs ``initialize`` and ``session/new`` twice on one
     clock; with the collector wait at its floor, two full rounds still fit."""
-    from kiro_crew.constants import INITIALIZE_TIMEOUT_SECS
+    from aj_crew.constants import INITIALIZE_TIMEOUT_SECS
 
     _budget(monkeypatch, budget, collect=10)
     two_rounds = 2 * (budget + INITIALIZE_TIMEOUT_SECS)

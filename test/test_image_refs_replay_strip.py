@@ -5,13 +5,13 @@ carry bytes, so the reference is the only thing that would arrive. Both readings
 of an arriving reference are wrong, and both are pinned below:
 
 * the file is still readable -- ``build_prompt_blocks`` inlines it, so a picture
-  Kiro Crew's compaction already dropped rides along at full byte cost on every
+  Aj Crew's compaction already dropped rides along at full byte cost on every
   cold start, and the markdown is mangled into ``![alt]([image: name])``;
 * the file is absent -- no image block is emitted and the PATH sits in the prose,
   next to the assistant's own description of what the picture showed. That
   dangling reference is what makes a model narrate a screenshot it cannot see.
 
-Kiro Crew's replay is the path an auto-compaction reaches. A failing in-place
+Aj Crew's replay is the path an auto-compaction reaches. A failing in-place
 ``/compact`` sends ``CompactionCoordinator._recycle_held``, which pops the
 session while leaving ``_suppress_replay`` alone -- ``reset(clear_conversation=
 True)`` arms that flag, a recycle deliberately does not, because a recycle
@@ -45,11 +45,11 @@ import time
 import pytest
 from named_cases_helpers import named_cases
 
-import kiro_crew
-from kiro_crew.acp.prompt_blocks import build_prompt_blocks
-from kiro_crew.context import _recall_rows, build_session_replay
-from kiro_crew.image_refs import STRIPPED_IMAGE_MARKER, strip_image_refs
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew
+from aj_crew.acp.prompt_blocks import build_prompt_blocks
+from aj_crew.context import _recall_rows, build_session_replay
+from aj_crew.image_refs import STRIPPED_IMAGE_MARKER, strip_image_refs
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 # Smallest valid 1x1 PNG.
 _PNG = base64.b64decode(
@@ -178,7 +178,7 @@ class TestStripImageRefs:
         # Same contract under the Windows grammar: the second path's drive
         # colon must not split the token, or the first picture is scrubbed
         # alone and the second path survives the replay.
-        from kiro_crew import image_refs
+        from aj_crew import image_refs
 
         monkeypatch.setattr(image_refs, "_PATH_RE", image_refs._WINDOWS_PATH_RE)
 
@@ -227,7 +227,7 @@ class TestStripImageRefs:
     def test_windows_glued_pairs_follow_the_same_rules(self, monkeypatch, glue, expected):
         # Punctuation separates; a symbol hides both; a backslash is a Windows
         # path character, so that pair is one token and one marker.
-        from kiro_crew import image_refs
+        from aj_crew import image_refs
 
         monkeypatch.setattr(image_refs, "_PATH_RE", image_refs._WINDOWS_PATH_RE)
 
@@ -236,7 +236,7 @@ class TestStripImageRefs:
     def test_a_url_after_a_windows_path_is_not_part_of_it(self, monkeypatch):
         # A URL scheme's colon is not a drive colon, so a row naming a document
         # and then a web image keeps every word and the working URL.
-        from kiro_crew import image_refs
+        from aj_crew import image_refs
 
         monkeypatch.setattr(image_refs, "_PATH_RE", image_refs._WINDOWS_PATH_RE)
         prose = r"C:\Users\me\report.md and the banner is at https://example.com/logo.png"
@@ -248,7 +248,7 @@ class TestStripImageRefs:
         )
 
     def test_a_url_after_a_posix_path_is_not_part_of_it(self, monkeypatch):
-        from kiro_crew import image_refs
+        from aj_crew import image_refs
 
         monkeypatch.setattr(image_refs, "_PATH_RE", image_refs._POSIX_PATH_RE)
         prose = "/home/me/report.md and the banner is at https://example.com/logo.png"
@@ -445,11 +445,11 @@ class TestBarePathPassAgreesWithTheUncPredicate:
 
     @pytest.fixture
     def windows_with_a_unc_data_home(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.messaging import outbound_files as module
+        from aj_crew.messaging import outbound_files as module
 
         monkeypatch.setattr(module, "os", type("OS", (), {"name": "nt"})(), raising=False)
         monkeypatch.setattr(
-            "kiro_crew.config.paths.peek_data_home", lambda: pathlib.Path(self._UNC_HOME)
+            "aj_crew.config.paths.peek_data_home", lambda: pathlib.Path(self._UNC_HOME)
         )
 
     def test_a_stored_unc_attachment_is_stripped_by_both_passes(
@@ -617,7 +617,7 @@ class TestBarePathPassKeepsProse:
         # greedy lead does not reach is settled by one comparison -- so the
         # work is counted (fullmatch calls), and the clock is thread CPU read
         # once, with a bound a wall-clock stall cannot reach.
-        import kiro_crew.image_refs as image_refs
+        import aj_crew.image_refs as image_refs
 
         class _CountingLead:
             def __init__(self, real):
@@ -690,7 +690,7 @@ class TestBarePathPassKeepsProse:
         # The writer and the scrubber agree by test, not by a shared constant:
         # a real channel ingest temp file, under a temp directory holding a
         # space, is stripped from the line the channel appends it on.
-        from kiro_crew.messaging.attachments import (
+        from aj_crew.messaging.attachments import (
             IngestResult,
             _make_temp,
             append_attachment_context,
@@ -728,7 +728,7 @@ class TestTheTitlePromptKeepsItsOwnImageHandling:
         # `![x](...)` readable in a title prompt and strips markdown images and
         # attachment markers its own way. A channel's bare path is neither, and
         # stays in the title prompt as text.
-        from kiro_crew.dashboard.chat_title import _build_title_prompt
+        from aj_crew.dashboard.chat_title import _build_title_prompt
 
         prompt = _build_title_prompt([{"role": "user", "content": self._ROW}])
 
@@ -826,7 +826,7 @@ class TestReplayedHistoryCarriesNoImage:
 
 
 class TestImportSafety:
-    """``kiro_crew.image_refs`` must import with nothing else loaded.
+    """``aj_crew.image_refs`` must import with nothing else loaded.
 
     ``acp.prompt_blocks`` imports it at module scope, so anything it reaches that
     leads back to the ACP package closes a cycle -- and the order that breaks is
@@ -838,12 +838,12 @@ class TestImportSafety:
     @pytest.mark.parametrize(
         "statement",
         [
-            "import kiro_crew.image_refs",
-            "from kiro_crew.image_refs import strip_image_refs",
+            "import aj_crew.image_refs",
+            "from aj_crew.image_refs import strip_image_refs",
         ],
     )
     def test_cold_import_of_the_leaf_succeeds(self, statement):
-        src = str(pathlib.Path(kiro_crew.__file__).resolve().parent.parent)
+        src = str(pathlib.Path(aj_crew.__file__).resolve().parent.parent)
         code = f"import sys; sys.path.insert(0, {src!r})\n{statement}\n"
         done = subprocess.run(
             [sys.executable, "-c", code], capture_output=True, timeout=120, **UTF8_TEXT
@@ -852,11 +852,11 @@ class TestImportSafety:
         assert done.returncode == 0, done.stderr[-800:]
 
     def test_module_scope_reaches_no_acp_module(self):
-        src = str(pathlib.Path(kiro_crew.__file__).resolve().parent.parent)
+        src = str(pathlib.Path(aj_crew.__file__).resolve().parent.parent)
         code = (
             f"import sys; sys.path.insert(0, {src!r})\n"
-            "import kiro_crew.image_refs\n"
-            "bad = sorted(m for m in sys.modules if m.startswith('kiro_crew.acp'))\n"
+            "import aj_crew.image_refs\n"
+            "bad = sorted(m for m in sys.modules if m.startswith('aj_crew.acp'))\n"
             "print('\\n'.join(bad))\n"
         )
         done = subprocess.run(

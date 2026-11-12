@@ -14,14 +14,14 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import agent
-from kiro_crew.agent_materialization import (
+from aj_crew import agent
+from aj_crew.agent_materialization import (
     conductor_agents,
     service_agents,
     worker_agent,
 )
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-from kiro_crew.platform import PlatformCompositionError
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.platform import PlatformCompositionError
 
 # Each entry: the installer's name as a user reads it, the module object that owns
 # the attribute ``rebuild_agent_config`` calls, and the attribute name on it. The
@@ -56,20 +56,20 @@ class _Rig:
     def __init__(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         self.agents = tmp_path / "agents"
         self.agents.mkdir()
-        binary = tmp_path / "bin" / "kirocrew"
+        binary = tmp_path / "bin" / "ajcrew"
         binary.parent.mkdir()
         binary.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
         binary.chmod(0o755)
-        self.home = Path(os.environ["KIROCREW_HOME"])
+        self.home = Path(os.environ["AJCREW_HOME"])
         monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", self.agents)
-        monkeypatch.setattr(agent, "_KIROCREW_BIN", str(binary))
+        monkeypatch.setattr(agent, "_AJCREW_BIN", str(binary))
         monkeypatch.setattr(agent, "_KIRO_MCP_JSON", tmp_path / "kiro-global-mcp.json")
         monkeypatch.setattr(agent, "_DEFAULT_KIRO_HOOKS_DIR", tmp_path / "no-hooks")
         monkeypatch.setattr(
-            "kiro_crew.apps.bridges._mcp_json_path", lambda: self.agents / "kirocrew.json"
+            "aj_crew.apps.bridges._mcp_json_path", lambda: self.agents / "ajcrew.json"
         )
         monkeypatch.setattr(
-            "kiro_crew.kiro_cli.installed_kiro_cli_version",
+            "aj_crew.kiro_cli.installed_kiro_cli_version",
             lambda: SPEC_PERMISSIONS_MIN_VERSION,
         )
 
@@ -148,7 +148,7 @@ def test_rebuild_still_swallows_other_errors_from_each_installer(
     path = agent.rebuild_agent_config()
     assert Path(path).exists()
     main_spec = json.loads(Path(path).read_text(encoding="utf-8"))
-    assert main_spec.get("name") == "kirocrew"
+    assert main_spec.get("name") == "ajcrew"
 
 
 def test_the_independent_repairs_run_before_the_composition_error_raises(

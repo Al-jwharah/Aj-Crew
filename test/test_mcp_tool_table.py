@@ -1,7 +1,7 @@
 """The MCP tool table and the dashboard port, tested through their interfaces.
 
 ``ToolTable`` is the whole tool surface of a table-built server (today
-``kirocrew-dashboard``): ``list()`` answers ``tools/list`` and ``call()`` is one
+``ajcrew-dashboard``): ``list()`` answers ``tools/list`` and ``call()`` is one
 ``tools/call`` frame. ``DashboardClient`` is the port a tool reaches the gateway
 through, with a loopback adapter (``mcp_core``'s request helpers) and an
 in-memory one. Each test drives one of those interfaces and asserts what comes
@@ -15,8 +15,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import mcp_core, mcp_shared
-from kiro_crew.mcp_tools.dashboard_client import (
+from aj_crew import mcp_core, mcp_shared
+from aj_crew.mcp_tools.dashboard_client import (
     DashboardError,
     DashboardRequest,
     InMemoryDashboardClient,
@@ -25,10 +25,10 @@ from kiro_crew.mcp_tools.dashboard_client import (
     UnroutedRequest,
     restrict_routes,
 )
-from kiro_crew.mcp_tools.table import Caller, GatewayCaller, Tool, ToolContext, ToolTable
-from kiro_crew.validation import FieldSpec, ToolSchema
+from aj_crew.mcp_tools.table import Caller, GatewayCaller, Tool, ToolContext, ToolTable
+from aj_crew.validation import FieldSpec, ToolSchema
 
-_SERVER = "kirocrew-test-table"
+_SERVER = "ajcrew-test-table"
 _SCHEMA = ToolSchema(
     tool_name="needs_name",
     fields=[FieldSpec(name="name", type=str, required=True, max_len=10)],
@@ -253,7 +253,7 @@ class TestList:
 
     def test_a_declared_title_is_added(self) -> None:
         table = ToolTable(
-            "kirocrew-dashboard",
+            "ajcrew-dashboard",
             (Tool("chat_folder_tree", "d", {"type": "object"}, _echo, "attribution"),),
         )
         (listed,) = table.list()
@@ -275,24 +275,24 @@ class TestCaller:
     def test_the_gateway_caller_asks_mcp_core_at_call_time(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        caller = GatewayCaller("kirocrew-dashboard")
+        caller = GatewayCaller("ajcrew-dashboard")
         monkeypatch.setattr(mcp_core, "_resolve_session_key_strict", lambda: "dashboard:chat-9")
         monkeypatch.setattr(mcp_core, "_resolve_session_key", lambda: "dashboard:walked")
         assert caller.require_strict_session_key("Error: no") == ("dashboard:chat-9", "")
         assert caller.attribution() == "dashboard:walked"
         monkeypatch.setattr(mcp_core, "_resolve_session_key_strict", lambda: "")
         monkeypatch.setattr(
-            mcp_core, "strict_identity_diagnosis", lambda server="kirocrew-core": f" [{server}]"
+            mcp_core, "strict_identity_diagnosis", lambda server="ajcrew-core": f" [{server}]"
         )
         assert caller.require_strict_session_key("Error: no") == (
             "",
-            "Error: no [kirocrew-dashboard]",
+            "Error: no [ajcrew-dashboard]",
         )
 
     def test_the_production_frame_context(self) -> None:
-        ctx = ToolContext.for_frame("kirocrew-dashboard")
+        ctx = ToolContext.for_frame("ajcrew-dashboard")
         assert isinstance(ctx.client, LoopbackDashboardClient)
-        assert isinstance(ctx.caller, GatewayCaller) and ctx.caller.server == "kirocrew-dashboard"
+        assert isinstance(ctx.caller, GatewayCaller) and ctx.caller.server == "ajcrew-dashboard"
         assert ctx.caller_key == ""
 
 

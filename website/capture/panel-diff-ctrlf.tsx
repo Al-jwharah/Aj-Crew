@@ -25,7 +25,7 @@ initI18n()
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 localStorage.setItem('mc-theme', theme)
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const ORIGINAL = ['def total(items):', '    s = 0', '    for i in items:', '        s += i', '    return s', ''].join('\n')
 const CURRENT = ['def total(items):', '    return sum(items)', ''].join('\n')

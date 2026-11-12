@@ -62,7 +62,7 @@ async function main() {
   await stubDashboardApi(page, {
     slots: [{
       key: 's1', title: 'Slash menu demo', messages: 0, running: false,
-      agent: 'kirocrew', mode: '', created: '2026-08-01T01:00:00Z',
+      agent: 'ajcrew', mode: '', created: '2026-08-01T01:00:00Z',
       last_ts: '2026-08-04T20:00:00Z', folder_id: '',
     }],
   })

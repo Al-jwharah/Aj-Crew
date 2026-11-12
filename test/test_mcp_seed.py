@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.config.sections import _resolve_stub_servers
-from kiro_crew.mcp_gateway import verdict_cache as vc
-from kiro_crew.mcp_gateway.seed import apply_seed, plan_seed
+from aj_crew.config.sections import _resolve_stub_servers
+from aj_crew.mcp_gateway import verdict_cache as vc
+from aj_crew.mcp_gateway.seed import apply_seed, plan_seed
 
 
 @pytest.fixture

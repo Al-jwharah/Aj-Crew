@@ -2,7 +2,7 @@
  * Types for the Crew page's work-item board (`GET /api/crew-board`).
  *
  * These mirror the server's MASKED projection in
- * `kiro_crew/dashboard/handlers/work_ledger_board.py`, not the conductor's own
+ * `aj_crew/dashboard/handlers/work_ledger_board.py`, not the conductor's own
  * `work_ledger_read` shape. The difference is deliberate and is the point of the
  * endpoint: `worker_session_key` is absent from every row, and the text of a
  * `bind` event — which IS a session key — arrives blanked. So there is no field

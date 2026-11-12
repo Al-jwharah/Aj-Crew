@@ -17,7 +17,7 @@ from native_skill_projection_helpers import (
     _end_projections_started_since,
 )
 
-from kiro_crew.acp import skill_projection as projection
+from aj_crew.acp import skill_projection as projection
 
 native_tree = native_skill_projection_helpers.native_tree
 

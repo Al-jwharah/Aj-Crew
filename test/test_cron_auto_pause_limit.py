@@ -18,18 +18,18 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import cron as cron_facade
-from kiro_crew.cron import _AUTO_PAUSE_THRESHOLD, CronJob, CronSchedule, CronService
-from kiro_crew.cron_service.execution import close_run
-from kiro_crew.cron_service.model import (
+from aj_crew import cron as cron_facade
+from aj_crew.cron import _AUTO_PAUSE_THRESHOLD, CronJob, CronSchedule, CronService
+from aj_crew.cron_service.execution import close_run
+from aj_crew.cron_service.model import (
     _AUTO_PAUSE_MAX,
     _NEVER_PAUSE_BACKOFF_BASE_SECS,
     _NEVER_PAUSE_BACKOFF_MAX_SECS,
     validate_auto_pause_after_failures,
 )
-from kiro_crew.cron_service.schedule import compute_next_run_ts, is_due, next_wake_secs
-from kiro_crew.mcp_cron import _call_tool_inner, _call_tool_locally, _list_tools
-from kiro_crew.validation import MCP_CRON_SCHEMAS, ValidationError, validate_tool_args
+from aj_crew.cron_service.schedule import compute_next_run_ts, is_due, next_wake_secs
+from aj_crew.mcp_cron import _call_tool_inner, _call_tool_locally, _list_tools
+from aj_crew.validation import MCP_CRON_SCHEMAS, ValidationError, validate_tool_args
 
 
 def _job(**kwargs: object) -> CronJob:
@@ -344,7 +344,7 @@ def test_the_cli_spec_names_the_flag_on_add_and_update() -> None:
     spec = (
         Path(__file__).resolve().parents[1] / "docs" / "system-specs" / "modules" / "cli.md"
     ).read_text(encoding="utf-8")
-    row = next(line for line in spec.splitlines() if line.startswith("| `kirocrew cron add/"))
+    row = next(line for line in spec.splitlines() if line.startswith("| `ajcrew cron add/"))
 
     assert "`--auto-pause-after N`" in row
     assert "`0` = never" in row
@@ -586,8 +586,8 @@ class TestMcpTools:
         return matching[0]
 
     def test_cron_add_and_update_set_the_limit(self, monkeypatch, tmp_path) -> None:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"lim-{uuid.uuid4().hex[:8]}"
         result = _call_tool_locally(
             "cron_add",
@@ -609,8 +609,8 @@ class TestMcpTools:
         # 0 is agent-settable like any other limit: the backoff bounds the spend
         # of a never-pause job the same way it bounds a limit of 10000, and the
         # SEL row records who turned the pause off.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         rows: list[dict] = []
 
         class _Sel:
@@ -619,7 +619,7 @@ class TestMcpTools:
 
         monkeypatch.setattr(cron_facade.sel, "sel", lambda: _Sel())
         # The update rows must name the session that made the write, not the job.
-        import kiro_crew.mcp_cron as mcp_cron_mod
+        import aj_crew.mcp_cron as mcp_cron_mod
 
         monkeypatch.setattr(mcp_cron_mod, "_authz_session_key", lambda: "dashboard:chat-writer")
         name = f"lim-{uuid.uuid4().hex[:8]}"
@@ -648,8 +648,8 @@ class TestMcpTools:
             assert row["metadata"]["actor_session_key"] == "dashboard:chat-writer"
 
     def test_cron_update_out_of_range_is_an_error(self, monkeypatch, tmp_path) -> None:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"lim-{uuid.uuid4().hex[:8]}"
         _call_tool_inner("cron_add", {"name": name, "message": "go", "every": 300})
         jid = self._reload(tmp_path, name).id

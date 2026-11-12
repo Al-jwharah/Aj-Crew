@@ -4,7 +4,7 @@ The companion file (``test_crew_log_worktree_fold.py``) drives the fold's rules 
 hand-built entries. This file builds a real three-board fleet through the crew-log
 writer, with the gateway's relay (``work_relay``) copying each nested board's records
 up into its parent's log, and reads the tree through
-:func:`~kiro_crew.crew_log.projection.read_tree_projection`.
+:func:`~aj_crew.crew_log.projection.read_tree_projection`.
 
 The tree is folded from the ROOT board's own units only. A nested board reaches it as
 the relayed copies in the root's log, so no bind is walked and no other board's log is
@@ -17,10 +17,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, eager, emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import work_relay
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, eager, emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import work_relay
 
 FOLD = crew_log.WORKTREE_FOLD_NAME
 
@@ -39,8 +39,8 @@ def _live_crew_log(tmp_path, _floor_monkeypatch):
     Through the isolation floor's OWN ``MonkeyPatch``, so a test that undoes its own
     patches cannot drop the data-home pin.
     """
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     bindings = {MID: ROOT, LEAF: MID}
     _floor_monkeypatch.setattr(work_relay, "_bound_board", lambda worker: bindings.get(worker, ""))
     _reset()
@@ -58,7 +58,7 @@ def _reset() -> None:
 
 def _log(unit_id: str, slot: str) -> CrewLog:
     """A session log whose HEADER names *slot*."""
-    return CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="kirocrew", slot=slot)
+    return CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew", slot=slot)
 
 
 def _settle() -> None:
@@ -227,7 +227,7 @@ def test_the_read_does_not_steal_the_workstreams_folds_refused_count() -> None:
 
 
 def test_units_past_the_limit_are_reported_as_dropped(monkeypatch) -> None:
-    from kiro_crew.crew_log import projection_workstreams
+    from aj_crew.crew_log import projection_workstreams
 
     _three_board_fleet()
     _log("s-root-2", ROOT)
@@ -242,8 +242,8 @@ def test_the_bound_path_of_a_validated_block_resolves_against_the_folded_value()
     """END TO END: a package field validates, and the same path walked over the value
     this fold produced comes back with the rows."""
     _three_board_fleet()
-    from kiro_crew.artifact_store import dashboard_package as dp
-    from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+    from aj_crew.artifact_store import dashboard_package as dp
+    from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
     package = dp.validate_package(
         {

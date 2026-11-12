@@ -22,13 +22,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp._dispatch import build_permission_event
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import ACP_BACKEND_KAS, AcpEvent, JsonRpcMessage
-from kiro_crew.acp_backends import ACP_BACKEND_STRANDS
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.acp._dispatch import build_permission_event
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import ACP_BACKEND_KAS, AcpEvent, JsonRpcMessage
+from aj_crew.acp_backends import ACP_BACKEND_STRANDS
+from aj_crew.testing.wait import async_wait_until, await_until
 
-_LOGGER = "kiro_crew.acp.session_handle"
+_LOGGER = "aj_crew.acp.session_handle"
 _REFUSAL = "refusing a permission request whose MCP identity is unreadable"
 
 _TOOL_CALL = {
@@ -147,14 +147,14 @@ async def test_the_refusal_steers_the_reason_before_the_reject_and_names_the_che
     _kind, method, params = trace[0]
     assert method == "_session/steer" and params["sessionId"] == "s-1"
     notice = params["message"]
-    assert "[Kiro Crew host notice]" in notice
-    assert "refused by the Kiro Crew gateway" in notice
+    assert "[Aj Crew host notice]" in notice
+    assert "refused by the Aj Crew gateway" in notice
     assert "NOT a user action" in notice
     assert "Do not retry it unchanged" in notice
     assert trace[1] == ("response", 61, _REJECT)
 
     # The operator's log and the audit name the check that fired.
-    from kiro_crew.acp._dispatch import UNREADABLE_IDENTITY_REASONS
+    from aj_crew.acp._dispatch import UNREADABLE_IDENTITY_REASONS
 
     reason = _SCENARIOS[scenario][2]
     assert event.mcp_identity_unreadable_reason == reason
@@ -244,8 +244,8 @@ def test_a_readable_identity_carries_no_reason() -> None:
 def test_every_reason_the_builder_sets_has_a_clause() -> None:
     """The codes are written as literals where each check fires; every one of
     them must name its clause, and no clause may be left without a writer."""
-    from kiro_crew.acp._dispatch import UNREADABLE_IDENTITY_REASONS
-    from kiro_crew.acp._dispatch_parts import permission_requests
+    from aj_crew.acp._dispatch import UNREADABLE_IDENTITY_REASONS
+    from aj_crew.acp._dispatch_parts import permission_requests
 
     tree = ast.parse(Path(permission_requests.__file__).read_text(encoding="utf-8"))
     written: set[str] = set()

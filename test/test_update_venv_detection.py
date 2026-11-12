@@ -11,7 +11,7 @@ from unittest.mock import DEFAULT, AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state import DashboardState
 
 
 def _as_owner(req: MagicMock) -> None:
@@ -91,13 +91,13 @@ def _pin_probe_git(monkeypatch, tmp_path):
         )
         fake.chmod(0o755)
     monkeypatch.setattr(
-        "kiro_crew.platform.update_capability.trusted_system_bin", lambda _name: str(fake)
+        "aj_crew.platform.update_capability.trusted_system_bin", lambda _name: str(fake)
     )
     return fake
 
 
 def _make_state(monkeypatch, tmp_path) -> DashboardState:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),
@@ -141,8 +141,8 @@ class TestVenvPipInstall:
     @pytest.mark.asyncio
     async def test_returns_true_on_success(self, monkeypatch, tmp_path) -> None:
         proj = _make_pip_proj(tmp_path)
-        from kiro_crew import dep_sync
-        from kiro_crew.dashboard.handlers.updates import _venv_pip_install
+        from aj_crew import dep_sync
+        from aj_crew.dashboard.handlers.updates import _venv_pip_install
 
         state = _make_state(monkeypatch, tmp_path)
         seen: dict = {}
@@ -162,8 +162,8 @@ class TestVenvPipInstall:
     @pytest.mark.asyncio
     async def test_returns_false_on_nonzero_exit(self, monkeypatch, tmp_path) -> None:
         proj = _make_pip_proj(tmp_path)
-        from kiro_crew import dep_sync
-        from kiro_crew.dashboard.handlers.updates import _venv_pip_install
+        from aj_crew import dep_sync
+        from aj_crew.dashboard.handlers.updates import _venv_pip_install
 
         state = _make_state(monkeypatch, tmp_path)
         errors = _track_errors(state)
@@ -186,14 +186,14 @@ class TestVenvPipInstall:
         would surface a red step on a sync that went on to succeed.
         """
         proj = _make_pip_proj(tmp_path)
-        from kiro_crew import dep_sync
-        from kiro_crew.dashboard.handlers.updates import _venv_pip_install
+        from aj_crew import dep_sync
+        from aj_crew.dashboard.handlers.updates import _venv_pip_install
 
         state = _make_state(monkeypatch, tmp_path)
         errors = _track_errors(state)
 
         def fake_sync(repo, target_py, emit=None, timeout=None, **_kw):
-            emit(r"dep-sync: C:\v\kirocrew.exe locked; substituting", False)
+            emit(r"dep-sync: C:\v\ajcrew.exe locked; substituting", False)
             return 0
 
         monkeypatch.setattr(dep_sync, "sync_or_reinstall", fake_sync)
@@ -215,8 +215,8 @@ class TestVenvPipInstall:
         import threading
 
         proj = _make_pip_proj(tmp_path)
-        from kiro_crew import dep_sync
-        from kiro_crew.dashboard.handlers.updates import _venv_pip_install
+        from aj_crew import dep_sync
+        from aj_crew.dashboard.handlers.updates import _venv_pip_install
 
         state = _make_state(monkeypatch, tmp_path)
         loop_thread = threading.get_ident()
@@ -250,8 +250,8 @@ class TestVenvPipInstall:
         caller publishes it — so redaction belongs here, at the publishing edge.
         """
         proj = _make_pip_proj(tmp_path)
-        from kiro_crew import dep_sync
-        from kiro_crew.dashboard.handlers.updates import _venv_pip_install
+        from aj_crew import dep_sync
+        from aj_crew.dashboard.handlers.updates import _venv_pip_install
 
         state = _make_state(monkeypatch, tmp_path)
         errors = _track_errors(state)
@@ -275,7 +275,7 @@ class TestRestartGateway:
         self, monkeypatch, tmp_path
     ) -> None:
         """If sys.executable is missing or not executable, error is reported."""
-        from kiro_crew.dashboard.handlers.updates import _restart_gateway
+        from aj_crew.dashboard.handlers.updates import _restart_gateway
 
         state = _make_state(monkeypatch, tmp_path)
         errors = _track_errors(state)
@@ -293,7 +293,7 @@ class TestRestartGateway:
     @pytest.mark.asyncio
     async def test_success_path_invokes_execv(self, monkeypatch, tmp_path) -> None:
         """Happy path: history saved, sessions closed, os.execv invoked."""
-        from kiro_crew.dashboard.handlers.updates import _restart_gateway
+        from aj_crew.dashboard.handlers.updates import _restart_gateway
 
         state = _make_state(monkeypatch, tmp_path)
         state.sessions = MagicMock()
@@ -303,7 +303,7 @@ class TestRestartGateway:
         execv_called: list[tuple] = []
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat.save_all_slots_to_history",
+            "aj_crew.dashboard.chat.save_all_slots_to_history",
             lambda s: save_called.append(True),
         )
         monkeypatch.setattr("os.execv", lambda *a, **k: execv_called.append(a))
@@ -322,7 +322,7 @@ class TestRestartGateway:
         self, monkeypatch, tmp_path
     ) -> None:
         """If save_all_slots_to_history raises, restart still proceeds."""
-        from kiro_crew.dashboard.handlers.updates import _restart_gateway
+        from aj_crew.dashboard.handlers.updates import _restart_gateway
 
         state = _make_state(monkeypatch, tmp_path)
         state.sessions = MagicMock()
@@ -334,7 +334,7 @@ class TestRestartGateway:
             raise RuntimeError("boom")
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat.save_all_slots_to_history", raising_save
+            "aj_crew.dashboard.chat.save_all_slots_to_history", raising_save
         )
         monkeypatch.setattr("os.execv", lambda *a, **k: execv_called.append(a))
         monkeypatch.setattr(
@@ -349,7 +349,7 @@ class TestRestartGateway:
         self, monkeypatch, tmp_path
     ) -> None:
         """If sessions.close_all raises, restart still proceeds."""
-        from kiro_crew.dashboard.handlers.updates import _restart_gateway
+        from aj_crew.dashboard.handlers.updates import _restart_gateway
 
         state = _make_state(monkeypatch, tmp_path)
         state.sessions = MagicMock()
@@ -358,7 +358,7 @@ class TestRestartGateway:
         execv_called: list[tuple] = []
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat.save_all_slots_to_history", lambda s: None
+            "aj_crew.dashboard.chat.save_all_slots_to_history", lambda s: None
         )
         monkeypatch.setattr("os.execv", lambda *a, **k: execv_called.append(a))
         monkeypatch.setattr(
@@ -373,7 +373,7 @@ class TestRestartGateway:
         self, monkeypatch, tmp_path
     ) -> None:
         """Only one caller may drain and exec a gateway process at a time."""
-        from kiro_crew.dashboard.handlers.updates import _restart_gateway
+        from aj_crew.dashboard.handlers.updates import _restart_gateway
 
         state = _make_state(monkeypatch, tmp_path)
         entered = asyncio.Event()
@@ -386,7 +386,7 @@ class TestRestartGateway:
 
         state.sessions = MagicMock()
         state.sessions.close_all = blocking_close
-        monkeypatch.setattr("kiro_crew.dashboard.chat.save_all_slots_to_history", lambda s: None)
+        monkeypatch.setattr("aj_crew.dashboard.chat.save_all_slots_to_history", lambda s: None)
         monkeypatch.setattr("os.execv", lambda *a, **k: execv_called.append(a))
         monkeypatch.setattr("asyncio.sleep", AsyncMock(return_value=None))
 
@@ -407,12 +407,12 @@ class TestApiUpdateApplyVenvDispatch:
     ) -> None:
         proj = _make_pip_proj(tmp_path)
         _pin_probe_git(monkeypatch, tmp_path)
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(proj))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(proj))
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability.running_from_checkout",
+            "aj_crew.platform.update_capability.running_from_checkout",
             lambda root, **kw: True,
         )
-        monkeypatch.setattr("kiro_crew.env.is_toolbox_install", lambda: False)
+        monkeypatch.setattr("aj_crew.env.is_toolbox_install", lambda: False)
 
         pip_called: list[bool] = []
         restart_called: list[bool] = []
@@ -422,16 +422,16 @@ class TestApiUpdateApplyVenvDispatch:
             return True
 
         async def fake_restart(s, *, resolver):
-            from kiro_crew.platform.wheel_engine import respawn_executable
+            from aj_crew.platform.wheel_engine import respawn_executable
 
             assert resolver is respawn_executable
             restart_called.append(True)
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.updates._venv_pip_install", fake_pip
+            "aj_crew.dashboard.handlers.updates._venv_pip_install", fake_pip
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.updates._restart_gateway", fake_restart
+            "aj_crew.dashboard.handlers.updates._restart_gateway", fake_restart
         )
 
         # Stub git pull so it succeeds.
@@ -453,7 +453,7 @@ class TestApiUpdateApplyVenvDispatch:
 
         monkeypatch.setattr("asyncio.create_subprocess_exec", fake_exec)
 
-        from kiro_crew.dashboard.handlers.updates import api_update_apply
+        from aj_crew.dashboard.handlers.updates import api_update_apply
 
         state = _make_state(monkeypatch, tmp_path)
         app = web.Application()
@@ -477,12 +477,12 @@ class TestApiUpdateApplyVenvDispatch:
     ) -> None:
         proj = _make_pip_proj(tmp_path)
         _pin_probe_git(monkeypatch, tmp_path)
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(proj))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(proj))
         monkeypatch.setattr(
-            "kiro_crew.platform.update_capability.running_from_checkout",
+            "aj_crew.platform.update_capability.running_from_checkout",
             lambda root, **kw: True,
         )
-        monkeypatch.setattr("kiro_crew.env.is_toolbox_install", lambda: False)
+        monkeypatch.setattr("aj_crew.env.is_toolbox_install", lambda: False)
 
         restart_called: list[bool] = []
 
@@ -493,10 +493,10 @@ class TestApiUpdateApplyVenvDispatch:
             restart_called.append(True)
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.updates._venv_pip_install", fake_pip
+            "aj_crew.dashboard.handlers.updates._venv_pip_install", fake_pip
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.updates._restart_gateway", fake_restart
+            "aj_crew.dashboard.handlers.updates._restart_gateway", fake_restart
         )
 
         async def fake_exec(*args, **kwargs):
@@ -517,7 +517,7 @@ class TestApiUpdateApplyVenvDispatch:
 
         monkeypatch.setattr("asyncio.create_subprocess_exec", fake_exec)
 
-        from kiro_crew.dashboard.handlers.updates import api_update_apply
+        from aj_crew.dashboard.handlers.updates import api_update_apply
 
         state = _make_state(monkeypatch, tmp_path)
         app = web.Application()

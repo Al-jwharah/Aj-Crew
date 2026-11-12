@@ -27,15 +27,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.mcp_apps_render import find_marker, load_spool
-from kiro_crew.mcp_caller import CallerContext
-from kiro_crew.mcp_gateway import apps
-from kiro_crew.mcp_gateway.backend import (
+from aj_crew.mcp_apps_render import find_marker, load_spool
+from aj_crew.mcp_caller import CallerContext
+from aj_crew.mcp_gateway import apps
+from aj_crew.mcp_gateway.backend import (
     MCP_APPS_ENV_FLAG,
     Backend,
 )
-from kiro_crew.mcp_gateway.pool import PoolKey
-from kiro_crew.testing.wait import finished
+from aj_crew.mcp_gateway.pool import PoolKey
+from aj_crew.testing.wait import finished
 
 SERVER_PATH = Path(__file__).parent / "fake_mcp_app_server.py"
 
@@ -221,7 +221,7 @@ async def test_two_agents_sharing_one_backend_stamp_their_own_renders(
             live, stub_uuid="s-gpu", agent="gpu-dev", session_key="dashboard:a"
         )
         second = await _handshake_and_draw(
-            live, stub_uuid="s-kc", agent="kirocrew", session_key="dashboard:b"
+            live, stub_uuid="s-kc", agent="ajcrew", session_key="dashboard:b"
         )
         got = {}
         for reply in (first, second):
@@ -230,7 +230,7 @@ async def test_two_agents_sharing_one_backend_stamp_their_own_renders(
             record = load_spool(spool_id)
             assert record is not None
             got[record["session_key"]] = record["agent"]
-        assert got == {"dashboard:a": "gpu-dev", "dashboard:b": "kirocrew"}
+        assert got == {"dashboard:a": "gpu-dev", "dashboard:b": "ajcrew"}
     finally:
         await live.aclose()
 

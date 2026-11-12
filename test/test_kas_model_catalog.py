@@ -17,10 +17,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import model_registry
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import ACP_BACKEND_CODEX, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk import kas_model_catalog as catalog
+from aj_crew import model_registry
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import ACP_BACKEND_CODEX, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.agent_sdk import kas_model_catalog as catalog
 
 _FIXTURE = Path(__file__).parent / "fixtures" / "acp_frames" / "kas" / "bundle-session-live.jsonl"
 
@@ -244,7 +244,7 @@ class TestTheVaultIdentity:
     """The rows are served only to the account the vault named when they were asked.
 
     The fingerprint is read from the vault itself, so the fence holds whichever
-    process changed the account -- the dashboard's sign-in card or ``kirocrew kas
+    process changed the account -- the dashboard's sign-in card or ``ajcrew kas
     login`` / ``kas logout`` in a shell -- without any notice from the writer.
     """
 
@@ -303,8 +303,8 @@ class TestTheVaultIdentity:
     ):
         """The stamp is read by the KAS harness as it builds the session payload,
         so the Kiro construction path gains no step (harness-parity H13)."""
-        from kiro_crew.acp.harness.kas import KasHarness
-        from kiro_crew.acp.harness.kiro import KiroHarness
+        from aj_crew.acp.harness.kas import KasHarness
+        from aj_crew.acp.harness.kiro import KiroHarness
 
         reads: list[str] = []
 

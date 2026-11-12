@@ -16,14 +16,14 @@ import pytest
 from compaction_stop_declined_helpers import _clear_channel_decline_markers  # noqa: F401
 from compaction_stop_declined_helpers import KEY, _setup
 
-from kiro_crew.acp_backends import ACP_BACKEND_DEEPSEEK
-from kiro_crew.session_compaction import (
+from aj_crew.acp_backends import ACP_BACKEND_DEEPSEEK
+from aj_crew.session_compaction import (
     COMPACT_OUTCOME_CANCELLED,
     COMPACT_OUTCOME_RESTARTED_UNCOMPACTABLE,
     COMPACT_OUTCOME_WAITING_FOR_SUBAGENTS,
 )
-from kiro_crew.session_lifecycle import compaction_in_flight
-from kiro_crew.testing.wait import async_wait_until, await_until, finished, until_parked
+from aj_crew.session_lifecycle import compaction_in_flight
+from aj_crew.testing.wait import async_wait_until, await_until, finished, until_parked
 
 
 class _ArrivalSemaphore(asyncio.BoundedSemaphore):

@@ -13,12 +13,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 from chat_test_helpers import _make_ready_kiro_prerequisite
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.dashboard.chat_utils import SYNTHETIC_RECOVERY_KIND
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.history import ConversationLog
-from kiro_crew.hooks import ToolHookResult
-from kiro_crew.recovery import ladder as lad
+from aj_crew.acp.client import AcpError
+from aj_crew.dashboard.chat_utils import SYNTHETIC_RECOVERY_KIND
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.history import ConversationLog
+from aj_crew.hooks import ToolHookResult
+from aj_crew.recovery import ladder as lad
 
 
 class _RecordingSlot(_ChatSlot):

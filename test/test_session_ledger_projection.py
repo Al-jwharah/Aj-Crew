@@ -23,12 +23,12 @@ from session_ledger_projection_helpers import (  # noqa: F401 -- the autouse fix
     _unit,
 )
 
-from kiro_crew import crew_log as lg
-from kiro_crew import session_ledger as sl
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import store
+from aj_crew import crew_log as lg
+from aj_crew import session_ledger as sl
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import store
 
 # --------------------------------------------------------------------------- #
 # record -> fold
@@ -226,7 +226,7 @@ def test_units_of_another_slot_are_not_folded_in():
 
 def test_a_unit_whose_header_names_no_slot_is_not_attributed_to_one():
     """A session that never ran on a slot cannot be folded into any slot's record."""
-    CrewLog.create(lg.KIND_SESSION, "acp-orphan", owner="owner", agent="kirocrew")
+    CrewLog.create(lg.KIND_SESSION, "acp-orphan", owner="owner", agent="ajcrew")
     assert store.session_units_for_slot(SLOT) == ()
 
 
@@ -326,8 +326,8 @@ def test_record_refuses_when_the_session_has_no_crew_log():
 
 def test_record_refuses_when_the_crew_log_is_switched_off(monkeypatch):
     _unit()
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "0")
-    with pytest.raises(sl.LedgerUnavailable, match="KIROCREW_CREW_LOG"):
+    monkeypatch.setenv("AJCREW_CREW_LOG", "0")
+    with pytest.raises(sl.LedgerUnavailable, match="AJCREW_CREW_LOG"):
         sl.record(SLOT, session_id=SESSION, goal="g")
 
 
@@ -433,7 +433,7 @@ def test_a_subagent_entry_does_not_stop_the_fold(caplog):
         SESSION,
         3,
         agent_id="sub-9",
-        agent="kirocrew-worker",
+        agent="ajcrew-worker",
         model="claude",
         scope={"memory": True, "lessons": True, "project": False},
     )
@@ -446,7 +446,7 @@ def test_a_subagent_entry_does_not_stop_the_fold(caplog):
     assert types.index("subagent/spawned") > types.index(sl.LEDGER_ENTRY_TYPE)
 
     crew_log.forget_slot_folds()
-    with caplog.at_level("WARNING", logger="kiro_crew.session_ledger"):
+    with caplog.at_level("WARNING", logger="aj_crew.session_ledger"):
         state = sl.read_state(SLOT)
     assert state.get("goal") == "ship the declared types"
     assert "folding this slot's crew logs failed" not in caplog.text
@@ -474,7 +474,7 @@ def test_the_synthetic_entry_carries_the_src_the_emitter_writes():
 
 
 def test_the_declared_event_kinds_are_the_writers_own():
-    from kiro_crew.crew_log.entry_types import SESSION_ENTRY_TYPES
+    from aj_crew.crew_log.entry_types import SESSION_ENTRY_TYPES
 
     declared = SESSION_ENTRY_TYPES[sl.LEDGER_ENTRY_TYPE]
     (kind_field,) = [f for f in declared.fields if f.name == "event_kind"]

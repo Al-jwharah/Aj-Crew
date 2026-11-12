@@ -1,12 +1,12 @@
 """Script crons must carry a gateway-vouched identity into their MCP spawns.
 
 ``mcp_core._resolve_session_key_strict`` accepts only the gateway caller block,
-``KIROCREW_SESSION_KEY``, or ``KIROCREW_HOST_PID`` plus its signed sidecar.
+``AJCREW_SESSION_KEY``, or ``AJCREW_HOST_PID`` plus its signed sidecar.
 Without one, a mutating ``ctx.call_tool`` returns ``_unidentified_caller_refusal``,
 a plain string most scripts swallow, so the job reports ``ok`` while writing nothing.
 
 As ``acp/client.py`` does for agent subprocesses, the launcher injects
-``KIROCREW_SESSION_KEY=cron:<job>`` and the MCP bridge hard-pins it on the server
+``AJCREW_SESSION_KEY=cron:<job>`` and the MCP bridge hard-pins it on the server
 spawn so script code cannot swap in another session's key.
 
 Must be runnable with ``--noconftest`` (no hypothesis dependency).
@@ -21,7 +21,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.cron_script import McpToolClient, ScriptContext, run_script_sandboxed
+from aj_crew.cron_script import McpToolClient, ScriptContext, run_script_sandboxed
 
 JOB_ID = "job-8b1f"
 EXPECTED_KEY = f"cron:{JOB_ID}"
@@ -55,11 +55,11 @@ def _capture_launcher_env(
         return proc
 
     with (
-        patch("kiro_crew.cron_script._new_envelope_tag", return_value="__t__:"),
-        patch("kiro_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
-        patch("kiro_crew.cron_script.wrap_argv", return_value=(["true"], None)),
-        patch("kiro_crew.cron_script._resolve_internal_secret", return_value="s"),
-        patch("kiro_crew.cron_script.popen_limited", side_effect=fake_popen),
+        patch("aj_crew.cron_script._new_envelope_tag", return_value="__t__:"),
+        patch("aj_crew.cron_script.resolve_script_path", return_value=("/f.py", "run")),
+        patch("aj_crew.cron_script.wrap_argv", return_value=(["true"], None)),
+        patch("aj_crew.cron_script._resolve_internal_secret", return_value="s"),
+        patch("aj_crew.cron_script.popen_limited", side_effect=fake_popen),
     ):
         result = run_script_sandboxed("/f.py:run", job_id, "", timeout=30)
 
@@ -91,7 +91,7 @@ def _sent_request(ctx: ScriptContext, path: str) -> urllib.request.Request:
         captured["req"] = req
         return _Resp()
 
-    with patch("kiro_crew.cron_script.loopback_urlopen", side_effect=fake_urlopen):
+    with patch("aj_crew.cron_script.loopback_urlopen", side_effect=fake_urlopen):
         ctx._post(path, {})
     return captured["req"]
 
@@ -126,20 +126,20 @@ def _no_ambient_identity(request, tmp_path):
     It uses its OWN ``MonkeyPatch`` so ``monkeypatch.undo()`` cannot lift these pins;
     ``_floor_monkeypatch`` does that job but is absent under ``--noconftest``.
     """
-    from kiro_crew import cron_script, session_token_sig
+    from aj_crew import cron_script, session_token_sig
 
     with pytest.MonkeyPatch.context() as mp:
         if "_isolate_sel_default_dir" not in request.fixturenames:
             audit = MagicMock()
             mp.setattr(cron_script, "sel", lambda: audit)
         for key in (
-            "KIROCREW_SESSION_KEY",
-            "KIROCREW_HOST_PID",
-            "KIROCREW_CLI",
-            "KIROCREW_STUB_SESSION_TOKEN",
+            "AJCREW_SESSION_KEY",
+            "AJCREW_HOST_PID",
+            "AJCREW_CLI",
+            "AJCREW_STUB_SESSION_TOKEN",
         ):
             mp.delenv(key, raising=False)
-        mp.setenv("KIROCREW_HOME", str(tmp_path))
+        mp.setenv("AJCREW_HOME", str(tmp_path))
         mp.setattr(session_token_sig, "config_dir", lambda: tmp_path)
         yield
 
@@ -147,7 +147,7 @@ def _no_ambient_identity(request, tmp_path):
 class TestLauncherInjectsIdentity:
     def test_child_env_carries_the_jobs_session_key(self):
         env = _capture_launcher_env(JOB_ID)
-        assert env.get("KIROCREW_SESSION_KEY") == EXPECTED_KEY
+        assert env.get("AJCREW_SESSION_KEY") == EXPECTED_KEY
 
     def test_key_is_the_one_scriptcontext_presents_over_http(self):
         """One principal per job: the MCP identity must equal the HTTP identity.
@@ -158,7 +158,7 @@ class TestLauncherInjectsIdentity:
         """
         env = _capture_launcher_env(JOB_ID)
         job = MagicMock(id=JOB_ID, message="")
-        with patch.dict(os.environ, {"_KIROCREW_DIAL_PORT": "5476"}):
+        with patch.dict(os.environ, {"_AJCREW_DIAL_PORT": "5476"}):
             ctx = ScriptContext(job=job)
         captured: dict[str, str] = {}
 
@@ -176,15 +176,15 @@ class TestLauncherInjectsIdentity:
             captured["key"] = req.get_header("X-session-key")
             return _Resp()
 
-        with patch("kiro_crew.cron_script.loopback_urlopen", side_effect=fake_urlopen):
+        with patch("aj_crew.cron_script.loopback_urlopen", side_effect=fake_urlopen):
             ctx._post("/api/send-message", {"text": "x"})
-        assert captured["key"] == env["KIROCREW_SESSION_KEY"]
+        assert captured["key"] == env["AJCREW_SESSION_KEY"]
 
     def test_a_forged_inherited_key_is_overwritten_not_kept(self, monkeypatch):
         """Hard-assign, not setdefault: the gateway's env must not leak a key in."""
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:someone-else")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:someone-else")
         env = _capture_launcher_env(JOB_ID)
-        assert env["KIROCREW_SESSION_KEY"] == EXPECTED_KEY
+        assert env["AJCREW_SESSION_KEY"] == EXPECTED_KEY
 
 
 class TestLauncherPublishesAVerifiableToken:
@@ -205,7 +205,7 @@ class TestLauncherPublishesAVerifiableToken:
         the protocol SHARES its key loader with ``session_pid_sig``, so patching
         one module's view of the trust root leaves the loader reading the real one.
         """
-        from kiro_crew import session_pid_sig, session_token_sig
+        from aj_crew import session_pid_sig, session_token_sig
 
         key_path = tmp_path / "sel_hmac.key"
         key_path.write_bytes(b"\x02" * 32)
@@ -218,8 +218,8 @@ class TestLauncherPublishesAVerifiableToken:
             yield tmp_path
 
     def _capture_verified_env(self, signing_root, job_id):
-        from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
-        from kiro_crew.session_token_sig import verify_session_token
+        from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+        from aj_crew.session_token_sig import verify_session_token
 
         def verify_during_run(env):
             token = env[STUB_SESSION_TOKEN_ENV]
@@ -236,7 +236,7 @@ class TestLauncherPublishesAVerifiableToken:
         self._capture_verified_env(signing_root, JOB_ID)
 
     def test_the_token_names_this_job_and_not_a_neighbour(self, signing_root):
-        from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+        from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
         mine = self._capture_verified_env(signing_root, JOB_ID)[STUB_SESSION_TOKEN_ENV]
         theirs = self._capture_verified_env(signing_root, "job-other")[STUB_SESSION_TOKEN_ENV]
@@ -244,7 +244,7 @@ class TestLauncherPublishesAVerifiableToken:
         assert mine != theirs
 
     def test_two_runs_have_different_tokens_and_leave_no_mappings(self, signing_root):
-        from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+        from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
         first = self._capture_verified_env(signing_root, JOB_ID)[STUB_SESSION_TOKEN_ENV]
         second = self._capture_verified_env(signing_root, JOB_ID)[STUB_SESSION_TOKEN_ENV]
@@ -252,8 +252,8 @@ class TestLauncherPublishesAVerifiableToken:
         assert second != first
 
     def test_spawn_exception_retracts_the_mapping(self, signing_root):
-        from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
-        from kiro_crew.session_token_sig import verify_session_token
+        from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+        from aj_crew.session_token_sig import verify_session_token
 
         def fail_spawn(env):
             assert verify_session_token(env[STUB_SESSION_TOKEN_ENV]) == EXPECTED_KEY
@@ -269,7 +269,7 @@ class TestLauncherPublishesAVerifiableToken:
             assert len(list(signing_root.glob("session_token_*.sig"))) == 1
             return False
 
-        with patch("kiro_crew.cron_script._begin_spawn", side_effect=refuse_spawn):
+        with patch("aj_crew.cron_script._begin_spawn", side_effect=refuse_spawn):
             _capture_launcher_env(
                 JOB_ID,
                 expected_result={
@@ -280,7 +280,7 @@ class TestLauncherPublishesAVerifiableToken:
         assert not list(signing_root.glob("session_token_*.sig"))
 
     def test_an_inherited_token_is_overwritten_not_kept(self, signing_root, monkeypatch):
-        from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+        from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
         monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, "f" * 64)
 
@@ -297,10 +297,10 @@ class TestLauncherPublishesAVerifiableToken:
         route such as ``POST /api/crons/{id}/run`` asks before it trusts a
         declared ``X-Session-Key``.
         """
-        from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
-        from kiro_crew.member_memory_auth import session_key_is_attested
+        from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+        from aj_crew.member_memory_auth import session_key_is_attested
 
-        child_env = {"_KIROCREW_DIAL_PORT": "5476"}
+        child_env = {"_AJCREW_DIAL_PORT": "5476"}
         if keep_token:
             child_env[STUB_SESSION_TOKEN_ENV] = env[STUB_SESSION_TOKEN_ENV]
         with patch.dict(os.environ, child_env):
@@ -353,21 +353,21 @@ class TestLauncherPublishesAVerifiableToken:
 
 class TestBridgePinsIdentityOnTheServerSpawn:
     def _spawn_env(self, session_key: str, spec_env: dict[str, str] | None = None):
-        from kiro_crew.cron_script import _resolve_mcp_server
+        from aj_crew.cron_script import _resolve_mcp_server
 
         _resolve_mcp_server.cache_clear()
         with (
             patch(
-                "kiro_crew.cron_script._resolve_mcp_server",
+                "aj_crew.cron_script._resolve_mcp_server",
                 return_value=(("some-mcp",), spec_env or {}),
             ),
-            patch("kiro_crew.cron_script.wrap_argv", return_value=(["some-mcp"], None)),
-            patch("kiro_crew.cron_script.cgroup_scope_argv", side_effect=lambda argv: list(argv)),
+            patch("aj_crew.cron_script.wrap_argv", return_value=(["some-mcp"], None)),
+            patch("aj_crew.cron_script.cgroup_scope_argv", side_effect=lambda argv: list(argv)),
             patch(
-                "kiro_crew.cron_script.popen_limited", return_value=_handshake_proc()
+                "aj_crew.cron_script.popen_limited", return_value=_handshake_proc()
             ) as mock_popen,
         ):
-            client = McpToolClient("kirocrew-cron", session_key=session_key)
+            client = McpToolClient("ajcrew-cron", session_key=session_key)
             client.close()
         return mock_popen.call_args.kwargs["env"]
 
@@ -375,35 +375,35 @@ class TestBridgePinsIdentityOnTheServerSpawn:
         """The threat ``ScriptContext.notify`` already hard-assigns against.
 
         The bridge builds its env from the script child's ``os.environ``, which
-        user code owns. A script that rewrites ``KIROCREW_SESSION_KEY`` before
+        user code owns. A script that rewrites ``AJCREW_SESSION_KEY`` before
         ``ctx.call_tool`` must still spawn the server as ITS job.
         """
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:victim")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:victim")
         env = self._spawn_env(EXPECTED_KEY)
-        assert env["KIROCREW_SESSION_KEY"] == EXPECTED_KEY
+        assert env["AJCREW_SESSION_KEY"] == EXPECTED_KEY
 
     def test_spec_env_block_still_cannot_supply_the_key(self):
         """The pin lands AFTER the spec overlay; the reserved-namespace deny holds."""
-        env = self._spawn_env(EXPECTED_KEY, {"KIROCREW_SESSION_KEY": "dashboard:victim"})
-        assert env["KIROCREW_SESSION_KEY"] == EXPECTED_KEY
+        env = self._spawn_env(EXPECTED_KEY, {"AJCREW_SESSION_KEY": "dashboard:victim"})
+        assert env["AJCREW_SESSION_KEY"] == EXPECTED_KEY
 
     def test_no_session_key_means_no_key_is_invented(self):
         """The CLI preview path constructs the bridge bare; it must stay bare."""
         env = self._spawn_env("")
-        assert "KIROCREW_SESSION_KEY" not in env
+        assert "AJCREW_SESSION_KEY" not in env
 
     def test_call_tool_passes_the_jobs_key_to_the_bridge(self, request):
-        from kiro_crew.sel import SecurityEventLog
+        from aj_crew.sel import SecurityEventLog
 
         singleton_before = SecurityEventLog._instance
         job = MagicMock(id=JOB_ID, message="")
-        with patch.dict(os.environ, {"_KIROCREW_DIAL_PORT": "5476"}):
+        with patch.dict(os.environ, {"_AJCREW_DIAL_PORT": "5476"}):
             ctx = ScriptContext(job=job)
         fake_client = MagicMock()
         fake_client.call_tool.return_value = "ok"
-        with patch("kiro_crew.cron_script.McpToolClient", return_value=fake_client) as ctor:
-            ctx.call_tool("kirocrew-cron", "cron_list", {})
-        ctor.assert_called_once_with("kirocrew-cron", session_key=EXPECTED_KEY)
+        with patch("aj_crew.cron_script.McpToolClient", return_value=fake_client) as ctor:
+            ctx.call_tool("ajcrew-cron", "cron_list", {})
+        ctor.assert_called_once_with("ajcrew-cron", session_key=EXPECTED_KEY)
         if "_isolate_sel_default_dir" not in request.fixturenames:
             assert SecurityEventLog._instance is singleton_before
 
@@ -418,14 +418,14 @@ class TestTheRealConsumerAcceptsIt:
     """
 
     def test_strict_resolver_identifies_the_job(self):
-        from kiro_crew.mcp_core import _resolve_session_key_strict
+        from aj_crew.mcp_core import _resolve_session_key_strict
 
         env = _capture_launcher_env(JOB_ID)
         with patch.dict(os.environ, env, clear=True):
             assert _resolve_session_key_strict() == EXPECTED_KEY
 
     def test_cron_authz_gate_sees_the_job_not_an_unidentified_caller(self):
-        from kiro_crew.mcp_cron import _authz_session_key
+        from aj_crew.mcp_cron import _authz_session_key
 
         env = _capture_launcher_env(JOB_ID)
         with patch.dict(os.environ, env, clear=True):
@@ -438,11 +438,11 @@ class TestTheRealConsumerAcceptsIt:
         reads either, so the baseline has to strip both. Dropping only the env key
         would leave the signed token answering and measure nothing.
         """
-        from kiro_crew.mcp_core import _resolve_session_key_strict
-        from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+        from aj_crew.mcp_core import _resolve_session_key_strict
+        from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
         env = _capture_launcher_env(JOB_ID)
-        env.pop("KIROCREW_SESSION_KEY")
+        env.pop("AJCREW_SESSION_KEY")
         env.pop(STUB_SESSION_TOKEN_ENV, None)
         with patch.dict(os.environ, env, clear=True):
             assert _resolve_session_key_strict() == ""

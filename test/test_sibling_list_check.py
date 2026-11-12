@@ -23,7 +23,7 @@ from git_maintenance_helpers import git_maintenance_off_entries
 from named_cases_helpers import named_cases
 from skill_script_helpers import load_skill_script
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / ".github" / "scripts" / "sibling_list_check.py"

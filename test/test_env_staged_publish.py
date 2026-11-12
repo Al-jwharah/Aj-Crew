@@ -21,10 +21,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import atomic_write as aw
-from kiro_crew import hidden_leaf_staging
-from kiro_crew.config import loader
-from kiro_crew.sandbox_leaves import _AUTH_STORE_STAGING_LEAF, _CREW_HIDDEN_LEAVES
+from aj_crew import atomic_write as aw
+from aj_crew import hidden_leaf_staging
+from aj_crew.config import loader
+from aj_crew.sandbox_leaves import _AUTH_STORE_STAGING_LEAF, _CREW_HIDDEN_LEAVES
 
 _SEED = "WEIXIN_TOKEN=old-value\nJIRA_API_TOKEN=plaintext-jira\nNOTE=keep\n"
 
@@ -33,14 +33,14 @@ _SEED = "WEIXIN_TOKEN=old-value\nJIRA_API_TOKEN=plaintext-jira\nNOTE=keep\n"
 def crew_home(tmp_path, monkeypatch):
     home = tmp_path / "crew-home"
     home.mkdir(mode=0o700)
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     ep = home / ".env"
     ep.write_text(_SEED, encoding="utf-8")
     ep.chmod(0o600)
 
-    from kiro_crew import cli_setup
-    from kiro_crew.dashboard.handlers import weixin_qr
-    from kiro_crew.secrets import migrate
+    from aj_crew import cli_setup
+    from aj_crew.dashboard.handlers import weixin_qr
+    from aj_crew.secrets import migrate
 
     for mod in (loader, cli_setup, weixin_qr, migrate):
         monkeypatch.setattr(mod, "env_path", lambda: ep, raising=False)
@@ -64,28 +64,28 @@ def env_temps(monkeypatch, crew_home):
 
 
 def _dashboard_write():
-    from kiro_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.handlers import messaging
 
-    messaging._write_env_updates({"KIROCREW_OWNER_ID": "U0DASHBOARD1"})
-    return "KIROCREW_OWNER_ID=U0DASHBOARD1"
+    messaging._write_env_updates({"AJCREW_OWNER_ID": "U0DASHBOARD1"})
+    return "AJCREW_OWNER_ID=U0DASHBOARD1"
 
 
 def _weixin_upsert():
-    from kiro_crew.dashboard.handlers import weixin_qr
+    from aj_crew.dashboard.handlers import weixin_qr
 
     weixin_qr._write_env_secret("WEIXIN_TOKEN", "new-weixin-value")
     return "new-weixin-value"
 
 
 def _weixin_delete():
-    from kiro_crew.dashboard.handlers import weixin_qr
+    from aj_crew.dashboard.handlers import weixin_qr
 
     weixin_qr._delete_env_key("WEIXIN_TOKEN")
     return None
 
 
 def _setup_wizard(monkeypatch):
-    from kiro_crew import cli_setup
+    from aj_crew import cli_setup
 
     answers = ["y", "xapp-ok", "xoxb-ok", "U03T18B4Y23"]
     monkeypatch.setattr("builtins.input", lambda _p="": answers.pop(0))
@@ -96,7 +96,7 @@ def _setup_wizard(monkeypatch):
 
 
 def _secrets_import():
-    from kiro_crew.secrets import migrate
+    from aj_crew.secrets import migrate
 
     report = migrate.migrate_env_secrets(dry_run=False)
     assert "JIRA_API_TOKEN" in report.migrated
@@ -169,7 +169,7 @@ def test_unusable_staging_refuses_rather_than_writing_beside_env(crew_home, env_
     ep = crew_home / ".env"
     before = ep.read_bytes()
 
-    from kiro_crew.dashboard.handlers import weixin_qr
+    from aj_crew.dashboard.handlers import weixin_qr
 
     with pytest.raises(OSError):
         weixin_qr._write_env_secret("WEIXIN_TOKEN", "never-written")
@@ -187,7 +187,7 @@ def test_dashboard_save_keeps_its_warn_lockdown_policy(crew_home, env_temps, mon
 
     monkeypatch.setattr(hidden_leaf_staging, "atomic_write", _fake_publish)
     _dashboard_write()
-    assert "KIROCREW_OWNER_ID=U0DASHBOARD1" in (crew_home / ".env").read_text(encoding="utf-8")
+    assert "AJCREW_OWNER_ID=U0DASHBOARD1" in (crew_home / ".env").read_text(encoding="utf-8")
     assert crew_home not in env_temps
 
 
@@ -235,13 +235,13 @@ def test_dashboard_save_answers_409_with_the_fix_when_staging_is_unusable(crew_h
 
     from aiohttp import web
 
-    from kiro_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.handlers import messaging
 
     _plant_unusable_staging(crew_home)
     before = (crew_home / ".env").read_bytes()
 
     async def _save():
-        await messaging._write_env_off_loop({"KIROCREW_OWNER_ID": "U0DASHBOARD1"})
+        await messaging._write_env_off_loop({"AJCREW_OWNER_ID": "U0DASHBOARD1"})
 
     with pytest.raises(web.HTTPConflict) as info:
         asyncio.run(_save())
@@ -259,7 +259,7 @@ def test_publish_env_names_the_refusal_with_one_type(crew_home):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX mode bits")
 def test_a_foreign_writable_staging_directory_refuses_with_the_same_type(crew_home, monkeypatch):
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     staging = crew_home / _AUTH_STORE_STAGING_LEAF
     staging.mkdir(mode=0o700)
@@ -289,7 +289,7 @@ def test_secrets_import_cli_names_the_staging_directory_not_the_vault(
 ):
     import argparse
 
-    from kiro_crew import cli_commands
+    from aj_crew import cli_commands
 
     _plant_unusable_staging(crew_home)
     monkeypatch.setattr(
@@ -309,7 +309,7 @@ def test_a_windows_lock_refusal_names_a_fix_that_works_there(crew_home, monkeypa
     """On Windows removing the directory cannot help, so the message must not offer it."""
     import os
 
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     class _NtOs:
         """The real ``os`` module, reporting ``name == "nt"`` to this module only."""

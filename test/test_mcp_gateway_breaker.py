@@ -7,7 +7,7 @@ not accumulate for the daemon's lifetime.
 
 from __future__ import annotations
 
-from kiro_crew.mcp_gateway.breaker import MAX_TRACKED_KEYS, CircuitBreaker
+from aj_crew.mcp_gateway.breaker import MAX_TRACKED_KEYS, CircuitBreaker
 
 
 class _Clock:

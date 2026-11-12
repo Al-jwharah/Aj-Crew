@@ -21,11 +21,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import task_executor
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.task_models import MAX_RETRIES
-from kiro_crew.task_reporter import build_status, format_completion_summary
-from kiro_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
+from aj_crew import task_executor
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.task_models import MAX_RETRIES
+from aj_crew.task_reporter import build_status, format_completion_summary
+from aj_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
 
 
 @pytest.fixture(autouse=True)
@@ -40,7 +40,7 @@ def _unwrapped_spawn(_floor_monkeypatch):
 
 
 def _event(kind: str, text: str = ""):
-    from kiro_crew.providers.base import LLMEvent
+    from aj_crew.providers.base import LLMEvent
 
     return LLMEvent(kind=kind, text=text)
 
@@ -142,13 +142,13 @@ class TestWiring:
             encoding="utf-8",
         )
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file),
             unittest.mock.patch(
-                "kiro_crew.config.loader.config_local_path",
+                "aj_crew.config.loader.config_local_path",
                 return_value=tmp_path / "config.local.json",
             ),
         ):
-            cfg = KiroCrewConfig.load()
+            cfg = AjCrewConfig.load()
         assert cfg.taskrunner.test_command == argv
         assert cfg.taskrunner.require_verification is True
 
@@ -157,13 +157,13 @@ class TestWiring:
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(json.dumps({"taskrunner": {"test_command": raw}}), encoding="utf-8")
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file),
             unittest.mock.patch(
-                "kiro_crew.config.loader.config_local_path",
+                "aj_crew.config.loader.config_local_path",
                 return_value=tmp_path / "config.local.json",
             ),
         ):
-            cfg = KiroCrewConfig.load()
+            cfg = AjCrewConfig.load()
         assert cfg.taskrunner.test_command == []
 
     @pytest.mark.asyncio

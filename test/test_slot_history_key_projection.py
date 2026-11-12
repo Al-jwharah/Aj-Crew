@@ -14,9 +14,9 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.history import ConversationLog
 
 
 def test_dashboard_slot_history_key_is_its_dashboard_transcript_key():
@@ -40,7 +40,7 @@ def test_unbound_channel_slot_history_key_is_the_channel_transcript_key():
 
 @pytest.mark.asyncio
 async def test_fresh_resume_returns_the_projected_history_key(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.conversation_log.append("dashboard:fresh", "user", "hello")
 
@@ -54,7 +54,7 @@ async def test_fresh_resume_returns_the_projected_history_key(tmp_path, monkeypa
 
 @pytest.mark.asyncio
 async def test_already_live_resume_returns_the_projected_history_key(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("live")
     slot.linked_session_key = "slack:C0ABC:1790411186.442029"
@@ -94,7 +94,7 @@ def test_legacy_slack_thread_history_key_resolves_to_its_legacy_transcript(tmp_p
 async def test_reopen_by_history_key_restores_a_legacy_slack_transcript(tmp_path, monkeypatch):
     # End to end through the resume route the shortcut calls
     # (``resumeChatSlot``: the key is both the URL slot and the body key).
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     ts = "1790411186.442029"

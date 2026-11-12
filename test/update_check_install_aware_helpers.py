@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.platform import update_capability, update_layout
+from aj_crew.dashboard.handlers import updates
+from aj_crew.platform import update_capability, update_layout
 
 
 @pytest.fixture(autouse=True)
@@ -21,8 +21,8 @@ def _wheel_install(_floor_monkeypatch, tmp_path):
     A git checkout is opt-in per test (``_git_install``), because the interesting
     layout is the one skipped entirely without that checkout.
     """
-    _floor_monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
-    _floor_monkeypatch.delenv("KIROCREW_CDN_BASE", raising=False)
+    _floor_monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
+    _floor_monkeypatch.delenv("AJCREW_CDN_BASE", raising=False)
     (tmp_path / "channel").write_text("insider\n")
     _floor_monkeypatch.setattr(update_layout, "data_home", lambda: tmp_path)
     # Pin the packaging stamp rather than inheriting the ambient one: a checkout

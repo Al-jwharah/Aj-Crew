@@ -6,7 +6,7 @@ name: Issue Gate
 # PAUSED. `GATE_ENFORCED` below is "false", so this job logs a notice and
 # passes before it reads anything. The rule below is written out and ready; it
 # is not enforced until the maintainers switch it on. WHY PAUSED: the rule
-# reads labels the Captain (the maintainer-operated Kiro Crew triage crew)
+# reads labels the Captain (the maintainer-operated Aj Crew triage crew)
 # writes, and the Captain's scheduled scan is not running yet. With no labels
 # arriving, every PR -- forks first -- would sit red on an issue nobody can
 # label. Switching it on is a one-line change: `GATE_ENFORCED: "true"`.
@@ -39,8 +39,8 @@ name: Issue Gate
 #
 # ONE GRAMMAR. Which issues a body declares is decided by
 # `.github/scripts/issue_gate_refs.py`, an adapter onto the declaration
-# grammar `kirocrew-prepare-pr/scripts/pr_status.py` exports as
-# `declared_issue_numbers()` -- the masking and targets the local kirocrew-prepare-pr
+# grammar `ajcrew-prepare-pr/scripts/pr_status.py` exports as
+# `declared_issue_numbers()` -- the masking and targets the local ajcrew-prepare-pr
 # loop uses too. By reference to that grammar: a line that STARTS (<=3
 # columns, optional bullet) with a closing verb
 # (`close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved`, the issue
@@ -146,7 +146,7 @@ jobs:
     # the merge button for. The move buys queue position, not capacity. The
     # group is a GitHub-hosted Ubuntu VM carrying no fleet credentials, so the
     # default-branch checkout below keeps the same isolation contract.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 5
     steps:
       # The DEFAULT branch, not the PR's merge ref and not its base: this
@@ -284,7 +284,7 @@ jobs:
             0|3|4) ;;
             *)
               cat grammar-err.txt >&2
-              echo "::error::The reference grammar (default branch's .github/scripts/issue_gate_refs.py -> kirocrew-prepare-pr/scripts/pr_status.py) exited $rc, so this check cannot judge the PR. This is an environment failure, not a missing issue -- see the step log."
+              echo "::error::The reference grammar (default branch's .github/scripts/issue_gate_refs.py -> ajcrew-prepare-pr/scripts/pr_status.py) exited $rc, so this check cannot judge the PR. This is an environment failure, not a missing issue -- see the step log."
               exit 1
               ;;
           esac

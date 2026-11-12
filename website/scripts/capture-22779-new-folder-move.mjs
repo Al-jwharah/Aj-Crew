@@ -50,12 +50,12 @@ const folders = [
 const slots = [
   {
     key: SLOT, title: 'Storyboard the launch video', running: false, messages: 2,
-    agent: 'kirocrew', modified: now, last_ts: '2026-10-23T09:00:00Z', folder_id: 'f-video',
+    agent: 'ajcrew', modified: now, last_ts: '2026-10-23T09:00:00Z', folder_id: 'f-video',
     last_message: 'Six scenes, thirty seconds.',
   },
   {
     key: 's2', title: 'Draft the release notes', running: false, messages: 2,
-    agent: 'kirocrew', modified: now - 600, last_ts: '2026-10-23T08:50:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now - 600, last_ts: '2026-10-23T08:50:00Z', folder_id: '',
     last_message: 'Grouped the entries by area.',
   },
 ]

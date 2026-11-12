@@ -15,14 +15,14 @@ import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from kiro_crew.dashboard.stall_enrichment import (
+from aj_crew.dashboard.stall_enrichment import (
     _callable_name,
     _decode_proc_addr,
     _established_lines,
     collect_stall_enrichment,
     describe_loop_thread,
 )
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 
 def test_decode_proc_addr_ipv4() -> None:
@@ -210,7 +210,7 @@ class _DumpFile:
 
 
 def _lag_watchdog(caplog):
-    from kiro_crew.dashboard.loop_watchdog import LoopStallWatchdog
+    from aj_crew.dashboard.loop_watchdog import LoopStallWatchdog
 
     calls: list[float] = []
     dump_file = _DumpFile()
@@ -227,7 +227,7 @@ def _lag_watchdog(caplog):
         arm_later=lambda _t: None,
         cancel_later=lambda: None,
     )
-    caplog.set_level("WARNING", logger="kiro_crew.dashboard.loop_watchdog")
+    caplog.set_level("WARNING", logger="aj_crew.dashboard.loop_watchdog")
     return wd, calls, dump_file, clock
 
 

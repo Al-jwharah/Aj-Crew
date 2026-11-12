@@ -55,10 +55,10 @@ async function newPage() {
     const path = new URL(route.request().url()).pathname
     const json = (body) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
     if (/^\/api\/chat\/slots\/[^/]+$/.test(path)) {
-      return json({ key: 'slot-a', title: 'scroll-shell fixture', running: false, has_more: false, total: MESSAGES.length, messages: MESSAGES, agent: 'kirocrew', model: 'claude-opus-5', project: '/home/user/proj-x' })
+      return json({ key: 'slot-a', title: 'scroll-shell fixture', running: false, has_more: false, total: MESSAGES.length, messages: MESSAGES, agent: 'ajcrew', model: 'claude-opus-5', project: '/home/user/proj-x' })
     }
-    if (path === '/api/chat/slots') return json([{ key: 'slot-a', title: 'scroll-shell fixture', messages: MESSAGES.length, running: false, mode: '', agent: 'kirocrew', model: 'claude-opus-5', project: '/home/user/proj-x' }])
-    if (path === '/api/agents') return json({ agents: [{ name: 'kirocrew' }, { name: 'reviewer' }], default_agent: 'kirocrew' })
+    if (path === '/api/chat/slots') return json([{ key: 'slot-a', title: 'scroll-shell fixture', messages: MESSAGES.length, running: false, mode: '', agent: 'ajcrew', model: 'claude-opus-5', project: '/home/user/proj-x' }])
+    if (path === '/api/agents') return json({ agents: [{ name: 'ajcrew' }, { name: 'reviewer' }], default_agent: 'ajcrew' })
     if (path === '/api/models') return json([{ model_name: 'auto', description: 'Models chosen by task' }, { model_name: 'claude-opus-5', description: 'Claude Opus 5' }])
     if (path === '/api/recent-projects') return json({ dirs: ['/home/user/proj-x', '/home/user/proj-y'] })
     if (path === '/api/browse-dirs') return json({ path: '/home/user', parent: '/home', dirs: [] })

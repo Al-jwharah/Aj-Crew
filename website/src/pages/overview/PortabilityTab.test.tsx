@@ -124,7 +124,7 @@ describe('PortabilityTab template warnings', () => {
   it('names the templates an export leaves out, and still downloads', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(new Blob(['PK']), {
       status: 200,
-      headers: { 'X-Kirocrew-Unbundled-Templates': '["reviewer", "writer", "+3"]' },
+      headers: { 'X-Ajcrew-Unbundled-Templates': '["reviewer", "writer", "+3"]' },
     })))
     vi.stubGlobal('URL', class extends URL {
       static createObjectURL = () => 'blob:x'
@@ -493,16 +493,16 @@ describe('PortabilityTab chat history', () => {
   }
 
   it('says how many older chats an export with chats left out for size', async () => {
-    const fetchMock = await exportWith({ 'X-Kirocrew-Sessions-Skipped-Size': '3' }, true)
+    const fetchMock = await exportWith({ 'X-Ajcrew-Sessions-Skipped-Size': '3' }, true)
     expect(String(fetchMock.mock.calls[0][0])).toContain('include_sessions=true')
     expect(screen.getByTestId('portability-export-chats-skipped').textContent)
       .toBe("Older chats left out because they didn't fit in this archive: 3.")
   })
 
   it.each([
-    ['nothing was left out', { 'X-Kirocrew-Sessions-Skipped-Size': '0' }, true],
-    ['the header is not a bare integer', { 'X-Kirocrew-Sessions-Skipped-Size': '3; x' }, true],
-    ['the export carried no chats', { 'X-Kirocrew-Sessions-Skipped-Size': '3' }, false],
+    ['nothing was left out', { 'X-Ajcrew-Sessions-Skipped-Size': '0' }, true],
+    ['the header is not a bare integer', { 'X-Ajcrew-Sessions-Skipped-Size': '3; x' }, true],
+    ['the export carried no chats', { 'X-Ajcrew-Sessions-Skipped-Size': '3' }, false],
   ])('shows no left-out line when %s', async (_why, headers, tickChats) => {
     await exportWith(headers, tickChats)
     expect(screen.queryByTestId('portability-export-chats-skipped')).toBeNull()

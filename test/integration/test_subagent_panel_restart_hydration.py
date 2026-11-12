@@ -38,7 +38,7 @@ it green -- so a regression in the slot gating is observed, not papered over.
 
 The integration layer is the right home for it: ``gateway_boot`` boots the real
 ``GatewayOrchestrator.run()`` in this process, ``restart()`` is a genuine second
-boot on the SAME ``KIROCREW_HOME`` with every home-bound global reset between
+boot on the SAME ``AJCREW_HOME`` with every home-bound global reset between
 them exactly as a new process starts without them, and the live
 ``DashboardState`` is reachable for a direct assertion that the slot really was
 seeded. The subprocess E2E route proves the same thing across a process
@@ -69,7 +69,7 @@ seeded slot is planted as a replay-completion beacon, so the control reads until
 the replay is observably finished before asserting the unseeded run is absent --
 the withholding is proven, never an idle socket mistaken for an empty panel.
 
-Both tests turn ``KIROCREW_CREW_LOG`` off so the replay's durable source is the
+Both tests turn ``AJCREW_CREW_LOG`` off so the replay's durable source is the
 run-folder reader, which enumerates every run folder in the registry and then
 runs the per-record slot gates. The crew-log fold is instead keyed off the LIVE
 slot names, so an unseeded run would never be a candidate and the slot gate
@@ -91,13 +91,13 @@ import aiohttp
 import pytest
 from integration.conftest import booted_gateway
 
-from kiro_crew.history import _safe_key
-from kiro_crew.subagent_persistence import _subagents_dir
+from aj_crew.history import _safe_key
+from aj_crew.subagent_persistence import _subagents_dir
 
 _PLANTED_RUN_ID = "restart-hydration-run"
 _BEACON_RUN_ID = "restart-hydration-beacon"
 _PLANTED_TASK = "audit the restart recovery order"
-_PLANTED_AGENT = "kirocrew-worker"
+_PLANTED_AGENT = "ajcrew-worker"
 # A dashboard slot the test owns end to end. Its transcript stem is
 # ``dashboard_<slot>`` and its session key is ``dashboard:<slot>``; the planted
 # run is owned by that session, and ``open_slots.json`` lists the slot key.
@@ -194,7 +194,7 @@ def _plant_slot_transcript(home: Path, slot: str) -> None:
     -- the same shape the ``rich`` fixture ships for its seeded sessions. Written
     straight to disk (one metadata line, one user message) rather than through
     the store API: a store mutation on the event loop is refused under the
-    integration layer's ``KIROCREW_STRICT_ON_LOOP_PERSIST`` guard, and the slot
+    integration layer's ``AJCREW_STRICT_ON_LOOP_PERSIST`` guard, and the slot
     only has to exist on disk for the restart's restore to find it.
     """
     sessions = home / "sessions"
@@ -300,7 +300,7 @@ async def test_a_persisted_run_replays_after_its_slot_is_seeded_on_a_restart(
     run's ``subagent_done`` frame under a deadline, so a dropped or slow frame
     fails the test rather than passing on an idle socket.
 
-    ``KIROCREW_CREW_LOG`` is turned off so the replay's durable source is the run
+    ``AJCREW_CREW_LOG`` is turned off so the replay's durable source is the run
     FOLDER reader (``read_panel_records``), which enumerates every run folder in
     the registry and then applies the per-record slot gates -- the exact gates
     the negative control relies on firing. With the crew log on, the durable fold
@@ -308,7 +308,7 @@ async def test_a_persisted_run_replays_after_its_slot_is_seeded_on_a_restart(
     those gates are never reached; pinning the folder reader is what lets both
     tests exercise the one admission path that depends on the slot being seeded.
     """
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "0")
+    monkeypatch.setenv("AJCREW_CREW_LOG", "0")
     _plant_slot_transcript(integration_home, _SEEDED_SLOT)
     _plant_open_slots(integration_home, [_SEEDED_SLOT])
     _plant_persisted_run(
@@ -357,7 +357,7 @@ async def test_a_persisted_run_whose_slot_is_absent_is_withheld_on_a_restart(
 
     Two properties make the control able to FAIL if that gating regresses:
 
-    * ``KIROCREW_CREW_LOG`` is off, so the durable source is the folder reader,
+    * ``AJCREW_CREW_LOG`` is off, so the durable source is the folder reader,
       which enumerates EVERY run folder regardless of which slots are live. The
       audited run is therefore a real candidate that reaches the per-record slot
       gates -- with the crew log on it would never be enumerated (the fold is
@@ -370,7 +370,7 @@ async def test_a_persisted_run_whose_slot_is_absent_is_withheld_on_a_restart(
       the audited run has been offered to the gate, so a gate that leaked the
       audited run would be observed here rather than skipped past.
     """
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "0")
+    monkeypatch.setenv("AJCREW_CREW_LOG", "0")
     _plant_slot_transcript(integration_home, _SEEDED_SLOT)
     _plant_open_slots(integration_home, [_SEEDED_SLOT])
     # Audited run: newer (folds first), owned by the UNSEEDED slot -- the gate

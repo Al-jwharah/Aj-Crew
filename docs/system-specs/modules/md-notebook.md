@@ -2,10 +2,10 @@
 
 ## Overview
 
-Notes is a builtin App Store app (`kiro_crew/apps/builtins/md_notebook/`) for keeping a
+Notes is a builtin App Store app (`aj_crew/apps/builtins/md_notebook/`) for keeping a
 markdown notebook inside a git repository. It runs as a managed app backend SUBPROCESS: an
 aiohttp server on the backend-assigned port, reached only through the gateway proxy. Every
-proxied request carries an HMAC signature (`X-KiroCrew-Proxy: <ts>:<hmac>` over
+proxied request carries an HMAC signature (`X-AjCrew-Proxy: <ts>:<hmac>` over
 `<ts>:<METHOD>:<path>[?q]:<sha256(body)>`, +/-60s window) verified fail-closed by
 `proxy_auth.verify_proxy_request` in the backend's middleware. A failed verification is
 SEL-audited before the 401 goes out (`operation=proxy_auth_failed`, `outcome=denied`,
@@ -19,7 +19,7 @@ appears in the Apps library ready to be switched on rather than enabling itself.
 
 **Where the backend's code lives.** `server.py` is the backend's entry point (`app.json`
 `entryPoint`; the gateway runs it as `__main__`, and `syncer.py` imports it) and a mirror
-facade (`kiro_crew._facade_mirror`): every name stays reachable as `server.<name>`, and a
+facade (`aj_crew._facade_mirror`): every name stays reachable as `server.<name>`, and a
 patch through it reaches the owner modules beside it. It keeps the per-process state -- the
 save, vault-write, vaults and settings locks, the note caches and change watches, the
 self-write marks and the gh token memo -- with every function that reaches it, every route
@@ -69,7 +69,7 @@ so a temp or crash orphan holding PAT bytes is always covered. It is top-level b
 mask covers the leaf and not its ancestors: under the agent-writable `workspace/md-notebook`
 it could be renamed out from under its own mask.
 
-**Legacy move.** `kiro_crew.md_notebook_state.migrate_legacy_state` moves real state from the
+**Legacy move.** `aj_crew.md_notebook_state.migrate_legacy_state` moves real state from the
 old bare names into this directory, in one pass. Sandbox spawn prep runs it first, and the
 Notes backend spawn runs it for a host with no sandbox wrap. A failed pass in spawn prep is
 logged and the spawn goes on: the stubs planted right after keep every bare name masked, so
@@ -627,9 +627,9 @@ including the conflict path. The suite is split by topic: `test/test_md_notebook
 auto-sync loop), with shared fixtures in `test/md_notebook_helpers.py`.
 `test/test_md_notebook_git_ops.py` pins Git subprocess lifecycle,
 `test/test_sandbox_md_notebook_carveout.py` pins the state-file carve-out and orphan sweep,
-and `src/kiro_crew/apps/builtins/md_notebook/tests/test_md_notebook_windows.py` covers the
+and `src/aj_crew/apps/builtins/md_notebook/tests/test_md_notebook_windows.py` covers the
 native Windows branches. All are collected because `setup.cfg` includes both `test` and
-`src/kiro_crew/apps/builtins` in `testpaths`.
+`src/aj_crew/apps/builtins` in `testpaths`.
 
 Frontend coverage lives in `website/src/test/Frontend5MdNotebook.cov80.test.tsx`,
 `MdNotebookApiCoverage.test.tsx`, `MdNotebookPage.coverage.test.tsx`, and

@@ -1,4 +1,4 @@
-"""Audit-chain hardening tests for kiro_crew.sel: the HMAC key and the chain tail.
+"""Audit-chain hardening tests for aj_crew.sel: the HMAC key and the chain tail.
 
 Pins HMAC key length validation, permission enforcement on load, atomic key creation,
 the key's home under ``trust/`` with its migration and per-call path re-resolution, and
@@ -24,10 +24,10 @@ from sel_helpers import (  # noqa: F401 -- the autouse fixture registers by impo
     reset_singleton,
 )
 
-import kiro_crew.sel as sel_mod
+import aj_crew.sel as sel_mod
+from aj_crew import platform_compat
+from aj_crew.sel import SecurityEventLog, sel_hmac_key_path
 from conftest import requires_symlinks
-from kiro_crew import platform_compat
-from kiro_crew.sel import SecurityEventLog, sel_hmac_key_path
 
 # ─────────────────────────────────────────────────────────────────────────
 # Audit-chain hardening regression tests (Track B):
@@ -98,7 +98,7 @@ class TestHmacKeyPermissionEnforcement:
         def _boom(*a, **kw):
             raise OSError("chmod denied")
 
-        monkeypatch.setattr("kiro_crew.platform_compat.os.chmod", _boom)
+        monkeypatch.setattr("aj_crew.platform_compat.os.chmod", _boom)
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
         assert log._hmac_key == key
 
@@ -406,7 +406,7 @@ class TestHmacKeyTrustDirMigration:
         (tmp_path / "trust" / "sel_hmac.key").write_bytes(planted_key)
         (tmp_path / "sel_hmac.key").write_bytes(legacy_key)
 
-        with caplog.at_level("WARNING", logger="kiro_crew.sel"):
+        with caplog.at_level("WARNING", logger="aj_crew.sel"):
             log = SecurityEventLog(base_dir=tmp_path, sync=True)
         assert log._hmac_key == legacy_key
         assert (tmp_path / "trust" / "sel_hmac.key").read_bytes() == legacy_key
@@ -637,7 +637,7 @@ class TestHmacKeyTrustDirMigration:
         """Without a live singleton the accessor falls back to the same
         trust/ default the singleton would use."""
         self._reset()
-        monkeypatch.setattr("kiro_crew.sel._default_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.sel._default_dir", lambda: tmp_path)
         assert sel_hmac_key_path() == tmp_path / "trust" / "sel_hmac.key"
 
     def test_readonly_config_dir_with_legacy_key_still_boots(
@@ -729,7 +729,7 @@ class TestHmacKeyTrustDirMigration:
         def _deny_unlink(path):
             raise PermissionError(30, "Read-only file system", str(path))
 
-        monkeypatch.setattr("kiro_crew.platform_compat.unlink_link_or_junction", _deny_unlink)
+        monkeypatch.setattr("aj_crew.platform_compat.unlink_link_or_junction", _deny_unlink)
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
         assert log._hmac_key == legacy_key
         assert sel_hmac_key_path() == tmp_path / "sel_hmac.key"
@@ -761,7 +761,7 @@ class TestHmacKeyTrustDirMigration:
         def _deny_unlink(path):
             raise PermissionError(30, "Read-only file system", str(path))
 
-        monkeypatch.setattr("kiro_crew.platform_compat.unlink_link_or_junction", _deny_unlink)
+        monkeypatch.setattr("aj_crew.platform_compat.unlink_link_or_junction", _deny_unlink)
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
         assert log._hmac_key == legacy_key
 
@@ -850,7 +850,7 @@ class TestHmacKeyTrustDirMigration:
         """The recovery path for the dependent protocol: SEL caches the
         validated bytes at init, so they stay available when the file behind the
         frozen resolved path fails to load."""
-        from kiro_crew.sel import _sel_hmac_key_bytes
+        from aj_crew.sel import _sel_hmac_key_bytes
 
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
         assert _sel_hmac_key_bytes() == log._hmac_key
@@ -861,7 +861,7 @@ class TestHmacKeyTrustDirMigration:
     def test_key_bytes_accessor_is_none_without_a_live_singleton(self) -> None:
         """The verifying MCP process has no singleton; it must get None rather
         than a partially-constructed instance's attribute."""
-        from kiro_crew.sel import _sel_hmac_key_bytes
+        from aj_crew.sel import _sel_hmac_key_bytes
 
         self._reset()
         assert _sel_hmac_key_bytes() is None
@@ -871,8 +871,8 @@ class TestHmacKeyTrustDirMigration:
         loads the key, so a concurrent reader can see an instance whose
         ``_hmac_key`` does not exist yet. ``_initialized`` is the barrier that
         makes that window return None instead of raising or yielding garbage."""
-        from kiro_crew.sel import SecurityEventLog as _SEL
-        from kiro_crew.sel import _sel_hmac_key_bytes
+        from aj_crew.sel import SecurityEventLog as _SEL
+        from aj_crew.sel import _sel_hmac_key_bytes
 
         self._reset()
         try:
@@ -887,7 +887,7 @@ class TestHmacKeyTrustDirMigration:
         """Handing out raw trust-root bytes is safe only under the file-first
         ordering its ONE caller enforces; a second caller would inherit none of
         it. Pin the caller set rather than trusting the underscore."""
-        root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        root = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         callers = {
             path
             for path in root.rglob("*.py")
@@ -920,7 +920,7 @@ class TestHmacKeyTrustDirMigration:
             # Widen the window a real race would need, so an unlocked body
             # reliably interleaves instead of passing by luck.
             # flake-ok: pre-existing 50 ms window that widens a construction race -- moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing race-widening sleep moved verbatim
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing race-widening sleep moved verbatim
             time.sleep(0.05)
             return real(inst)
 

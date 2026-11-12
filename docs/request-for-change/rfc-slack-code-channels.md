@@ -1,5 +1,5 @@
 ---
-title: Slack Code — agent sessions and code channels for Kiro Crew
+title: Slack Code — agent sessions and code channels for Aj Crew
 status: in-progress
 author: kseam
 created: 2026-10-16
@@ -12,7 +12,7 @@ supersedes: []
 superseded-by: []
 ---
 
-# RFC: Slack Code — agent sessions and code channels for Kiro Crew
+# RFC: Slack Code — agent sessions and code channels for Aj Crew
 
 - Status: in-progress. Phase 1 (the switch registry, the manifest built from the
   switches, the update flow, the capability latch and the scope probe, plus the
@@ -47,7 +47,7 @@ Slack Code is Slack's surface for coding agents. It has two parts:
   HTML, Block Kit, a canvas, a PR), channel commands and an archive step that
   posts a summary back to the message the work started from.
 
-This RFC brings both to Kiro Crew behind two switches and one block of defaults
+This RFC brings both to Aj Crew behind two switches and one block of defaults
 (each setting ships with the phase that reads it: `agent_sessions` in Phase 1,
 `code_channels` and `code_channel_defaults` in Phase 2):
 
@@ -68,7 +68,7 @@ change and whether their installed app already carries them.
 ## Motivation
 
 Today a Slack thread is a plain thread. A long coding turn shows a reaction and a
-streaming message, and Stop is a Kiro Crew button. Code work, which spans many
+streaming message, and Stop is an Aj Crew button. Code work, which spans many
 turns, a worktree, a diff and a PR, has nowhere in Slack to live except a thread
 that scrolls away.
 
@@ -95,7 +95,7 @@ before the switch silently lacks `code_channels:manage` and every call fails.
 
 * Pushing a manifest into the user's Slack app programmatically (see
   "Alternatives considered").
-* HTTP (Events API over a public URL) transport. Kiro Crew is Socket Mode only,
+* HTTP (Events API over a public URL) transport. Aj Crew is Socket Mode only,
   and the reference implementation refuses code channels over HTTP for the same
   reasons: cross-worker Stop and slash routing.
 * Multi-user Slack. Slack stays owner-only; a code channel inherits the
@@ -146,7 +146,7 @@ AND the installed app can use it:
   the manifest renders. The manifest follows the toggle, never the capability,
   because the manifest is how an install gains the capability.
 
-**One read path.** `kiro_crew/slack/features.py` is what every consumer reads:
+**One read path.** `aj_crew/slack/features.py` is what every consumer reads:
 `enabled(cfg, feature)` / `agent_sessions_enabled(cfg)` (toggle AND capability;
 what the runtimes call), the two layers above, and `manifest_features`. Phase 2
 adds the code-channels readers to the same module (§3).
@@ -169,7 +169,7 @@ registers:
 
 `channels:read`, `groups:read`, `groups:history` and `message.groups` are already
 in the base manifest. No `slash_command_url` is set: Socket Mode delivers channel
-commands. `kirocrew manifest`, `GET /api/slack/manifest` and the exfil
+commands. `ajcrew manifest`, `GET /api/slack/manifest` and the exfil
 redactor's own-link exemption all render from the saved switches; the exemption
 rebuilds one exact pattern per switch combination (two in Phase 1, four once
 Phase 2 registers its switch), so the carve-out does not widen. Phase 2 extends
@@ -213,10 +213,10 @@ that every switch ships with its reader. It runs behind
 `agent_sessions_enabled(cfg)` (`enabled(cfg, "agent_sessions")`).
 
 * **Irreversibility.** Slack cannot switch an app from `agent_view` back to
-  `assistant_view`. Kiro Crew's manifest has never declared `assistant_view`, but
+  `assistant_view`. Aj Crew's manifest has never declared `assistant_view`, but
   saving the agent-view manifest in Slack is still one-way. The switch only
   changes the generated manifest, so the warning sits at the update steps, before
-  the manifest is saved in Slack. Turning the Kiro Crew switch off
+  the manifest is saved in Slack. Turning the Aj Crew switch off
   again only stops the gateway using agent sessions; the Slack app stays an agent.
 
 * On a turn's start the thread session is `agents.sessions.setStatus(processing,
@@ -267,14 +267,14 @@ so a person who touches no setting gets a working channel. The resolver stays
 pure: when no top-level `Code channels` folder exists (exactly one matches,
 case-insensitively, or none counts) it returns `folder_id=None`,
 `folder_path="Code channels"` and `folder_auto_create=True`, and resolves the
-agent as if the folder had `default_agent = kirocrew-conductor`
+agent as if the folder had `default_agent = ajcrew-conductor`
 (`features.AUTO_FOLDER_AGENT`). The Phase 2 runtime creates that folder the
 first time a channel needs it, through the sidebar's own folder-create path
 (`create_folder_record`, mkdir -p semantics, SEL-audited like the sidebar),
 with that `default_agent`, then files the session into its id. Once it exists
 its own settings apply, so a person can change or clear its agent. The
 settings page shows it as the default folder row, "Code channels (created
-automatically · kirocrew-conductor)", and its "New folder…" row opens the
+automatically · ajcrew-conductor)", and its "New folder…" row opens the
 sidebar's folder-create modal and selects the new folder.
 
 A folder deleted after it was saved is reported (`folder_missing`) and ignored:
@@ -285,11 +285,11 @@ resolver falls through.
 
 **Which agents.** The default-agent picker and the `PUT` check offer the same
 list (`code_channel_agents` in the `GET`): the chat picker's template choices
-(`agent_catalog._choosable_templates`, so `kirocrew-conductor`,
-`kirocrew-team-lead` and every other shipped agent a person can run), minus the
-agents that are not for a conversation: `kirocrew-lite` (titles, compaction and
-the routing classifier; no tools), `kirocrew-guest` (a trust boundary), the
-dashboard manager, `kirocrew-heartbeat` (unattended polling), Kiro Crew's
+(`agent_catalog._choosable_templates`, so `ajcrew-conductor`,
+`ajcrew-team-lead` and every other shipped agent a person can run), minus the
+agents that are not for a conversation: `ajcrew-lite` (titles, compaction and
+the routing classifier; no tools), `ajcrew-guest` (a trust boundary), the
+dashboard manager, `ajcrew-heartbeat` (unattended polling), Aj Crew's
 generated specs (the side-turn read-only spec, skill-view aliases) and
 crewmates' private copies.
 
@@ -338,7 +338,7 @@ crewmates' private copies.
   resolved project directory.
 * **Authorization.** A code channel's authority is the origin conversation's,
   restored from the durable origin binding even with a cold cache; a channel
-  Kiro Crew did not create is recognised through `conversations.info`
+  Aj Crew did not create is recognised through `conversations.info`
   (`record_type == "agent_channel"` and this bot among its agents), re-checked on
   every message.
 * **Worktree, diff and context bar.** When the project is a git repository the
@@ -376,7 +376,7 @@ switch off.
 
 Every switch defaults off. With all of them off, the rendered manifest and the deep-link
 payload are byte-identical to before (pinned by a test), so an existing app needs
-no change and `kirocrew manifest` prints what it always printed. With a switch on
+no change and `ajcrew manifest` prints what it always printed. With a switch on
 but its scope not yet granted, or Slack answering `feature_disabled`, the runtime
 behaves exactly as with the switch off and the settings page says why (also
 pinned). The
@@ -385,7 +385,7 @@ is private to the security package.
 
 ## Security considerations
 
-* **No new credential.** The drift probe uses the bot token Kiro Crew already
+* **No new credential.** The drift probe uses the bot token Aj Crew already
   holds, only for `auth.test`, `bots.info` and, from Phase 2, a read-only
   `listViews`. The token
   is never logged or returned; the cache keys on its digest.
@@ -414,8 +414,8 @@ is private to the security package.
 needs an app configuration token, which is minted per *workspace and user*,
 expires every 12 hours and rotates through a single-use refresh token
 (`tooling.tokens.rotate`). That token can rewrite every app the user can manage in
-the workspace, not only Kiro Crew's, so storing it, even in `.env` behind the
-vault, adds a credential far broader than anything Kiro Crew holds today, plus a
+the workspace, not only Aj Crew's, so storing it, even in `.env` behind the
+vault, adds a credential far broader than anything Aj Crew holds today, plus a
 rotation writer that must never lose the refresh token. The method also
 **replaces the whole app configuration**, so a push would silently drop anything
 the user added by hand (an extra scope, a shortcut, a renamed bot), and it would
@@ -428,7 +428,7 @@ changes, and the panel says so before they do: it warns that replacing the YAML
 drops hand-made additions and offers adding only the listed lines instead. The
 copied manifest also keeps the app's own slash command and name (the alias is
 derived from the saved `slack.command`), so pasting it does not rename an
-existing app's `/kirocrew-<alias>` command.
+existing app's `/ajcrew-<alias>` command.
 A future revision could revisit this with `apps.manifest.export` → merge →
 update and a short-lived token the user pastes per push, never stored.
 

@@ -13,11 +13,11 @@ from sqlite3.dump import _iterdump as iter_sql_dump
 
 import pytest
 
-from kiro_crew import memory_record_metadata, memory_stores
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.hooks import FileTooLargeError
-from kiro_crew.memory import MemoryStore
-from kiro_crew.vector_memory import (
+from aj_crew import memory_record_metadata, memory_stores
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.hooks import FileTooLargeError
+from aj_crew.memory import MemoryStore
+from aj_crew.vector_memory import (
     VectorMemoryStore,
     create_member_database,
     open_member_database,
@@ -35,15 +35,15 @@ def test_empty_pysqlite_package_admission_uses_reader_fallback(tmp_path):
         from types import ModuleType, SimpleNamespace
 
         sys.modules['pysqlite3'] = ModuleType('pysqlite3')
-        from kiro_crew import execution_context, memory_stores, vector_memory
-        from kiro_crew.config.sections import KiroCrewAgentConfig, MemoryStoreConfig
+        from aj_crew import execution_context, memory_stores, vector_memory
+        from aj_crew.config.sections import AjCrewAgentConfig, MemoryStoreConfig
 
         assert not hasattr(sys.modules['pysqlite3'], 'connect')
         assert vector_memory.sqlite3 is sqlite3
         path = Path.cwd() / 'memory_stores' / 'alice-store' / 'memory.db'
         vector_memory.create_member_database(path, member_id='alice-id', store_id='alice-store')
         config = SimpleNamespace(
-            agents={'alice': KiroCrewAgentConfig(member_id='alice-id', memory_store='alice-store')},
+            agents={'alice': AjCrewAgentConfig(member_id='alice-id', memory_store='alice-store')},
             memory_stores={'alice-store': MemoryStoreConfig(
                 owner_member='alice', owner_member_id='alice-id', memory_version=2)},
         )
@@ -73,7 +73,7 @@ def test_empty_pysqlite_package_admission_uses_reader_fallback(tmp_path):
                 else:
                     assert not path.exists()
         """)
-    env = dict(os.environ, KIROCREW_HOME=str(tmp_path), KIRO_HOME=str(tmp_path / "kiro"))
+    env = dict(os.environ, AJCREW_HOME=str(tmp_path), KIRO_HOME=str(tmp_path / "kiro"))
     env.update(TMPDIR=str(tmp_path), TMP=str(tmp_path), TEMP=str(tmp_path))
     result = subprocess.run(
         [sys.executable, "-c", script],
@@ -89,7 +89,7 @@ def test_empty_pysqlite_package_admission_uses_reader_fallback(tmp_path):
 
 @pytest.fixture
 def member_db(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(memory_stores, "memory_stores_root", lambda: tmp_path / "memory_stores")
     path = tmp_path / "memory_stores" / "alice-store" / "memory.db"
     create_member_database(path, member_id="alice-id", store_id="alice-store")
@@ -101,7 +101,7 @@ def member_db(tmp_path, monkeypatch):
 
 
 def test_open_refuses_missing_corrupt_and_mismatched_without_overwriting(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     directory = tmp_path / "memory_stores" / "alice-store"
     directory.mkdir(parents=True)
     path = directory / "memory.db"
@@ -151,7 +151,7 @@ def test_history_search_and_edits_share_database_without_learned_files(member_db
 
 
 def test_obsolete_full_transcript_receipt_schema_refuses_without_repair(member_db):
-    from kiro_crew.vector_memory import sqlite3 as reader_sqlite
+    from aj_crew.vector_memory import sqlite3 as reader_sqlite
 
     path = member_db._db_path
     member_db.db.execute("DROP TABLE memory_consolidations")
@@ -319,7 +319,7 @@ def test_consolidation_persists_the_authored_lesson_tier(member_db, caplog):
     must carry the tier the model stated: both literals round-trip, an omitted
     key lands unstated (absent, not ``null``), and a misspelling is logged and
     still lands unstated rather than dropping the correction."""
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.vector_memory"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.vector_memory"):
         receipt = consolidate(
             member_db,
             result={
@@ -375,7 +375,7 @@ def test_consolidation_drops_an_unknown_metadata_field_and_lands_the_span(member
         "confidence": 0.9,
         "metadata": {**_WORK_EMAIL, "evidence": "UNSTORED_EVIDENCE_VALUE"},
     }
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.vector_memory"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.vector_memory"):
         receipt = consolidate(member_db, result=_span_with(fact))
     assert receipt == {
         "source_id": "span-1",
@@ -445,7 +445,7 @@ def test_consolidation_skips_only_the_fact_whose_known_metadata_is_invalid(
     but SQLite cannot encode: each would otherwise fail later, inside the
     span's transaction."""
     fact = {"key": "user.work_email", "value": "a@example.com", "confidence": 0.9}
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.vector_memory"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.vector_memory"):
         receipt = consolidate(member_db, result=_span_with({**fact, "metadata": metadata}))
     assert receipt == {
         "source_id": "span-1",
@@ -505,8 +505,8 @@ async def test_unknown_metadata_field_commits_the_span_on_its_one_billed_extract
 
     from consolidation_lease_helpers import lease_aware_log
 
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.history_consolidation import HistoryConsolidator
+    from aj_crew.context import ContextBuilder
+    from aj_crew.history_consolidation import HistoryConsolidator
 
     first = {"role": "user", "content": "My work email is a@example.com."}
     second = {"role": "assistant", "content": "Noted your work email."}
@@ -530,7 +530,7 @@ async def test_unknown_metadata_field_commits_the_span_on_its_one_billed_extract
     }
     writer._call_llm = AsyncMock(return_value=extraction)
     writer._note_failed_attempt = AsyncMock()
-    monkeypatch.setattr("kiro_crew.context.store_of_session", lambda *_: "alice-store")
+    monkeypatch.setattr("aj_crew.context.store_of_session", lambda *_: "alice-store")
     monkeypatch.setattr(memory_stores, "memory_store_version", lambda *_: 2)
     monkeypatch.setattr(ContextBuilder, "ensure_store", AsyncMock(return_value=member_db))
     monkeypatch.setattr(ContextBuilder, "get_memory_for", lambda **_: memory)
@@ -614,7 +614,7 @@ def test_recall_has_no_database_writes_and_fts_tracks_revision_mutations(member_
     member_db.write_episodic("Aurora release notes are ready for review.", defer_embedding=True)
     before = list(iter_sql_dump(member_db.db))
     changes = member_db.db.total_changes
-    with caplog.at_level("DEBUG", logger="kiro_crew.vector_memory"):
+    with caplog.at_level("DEBUG", logger="aj_crew.vector_memory"):
         member_db.recall("aurora release")
     assert "aurora release" not in caplog.text
     member_db.search_memory("aurora")
@@ -630,7 +630,7 @@ def test_legacy_recall_diagnostics_do_not_record_query(tmp_path, caplog, query_e
     store.init()
     try:
         store.write_episodic("Release notes are ready", defer_embedding=True)
-        with caplog.at_level("DEBUG", logger="kiro_crew.vector_memory"):
+        with caplog.at_level("DEBUG", logger="aj_crew.vector_memory"):
             store.search_episodic(query_embedding, query_text="private aurora release")
         assert "Episodic" in caplog.text
         assert "private aurora release" not in caplog.text
@@ -648,8 +648,8 @@ async def test_lost_transcript_ack_recovers_committed_prefix_without_another_mod
 
     from consolidation_lease_helpers import lease_aware_log
 
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.history_consolidation import HistoryConsolidator
+    from aj_crew.context import ContextBuilder
+    from aj_crew.history_consolidation import HistoryConsolidator
 
     log = lease_aware_log()
     first = {"role": "user", "content": "The release codename is aurora 中文."}
@@ -662,7 +662,7 @@ async def test_lost_transcript_ack_recovers_committed_prefix_without_another_mod
     writer = HistoryConsolidator(log, memory, vector_store=member_db, migrated=True)
     writer._call_llm = AsyncMock(return_value={"history_entry": "Approved aurora."})
     writer._note_failed_attempt = AsyncMock()
-    monkeypatch.setattr("kiro_crew.context.store_of_session", lambda *_: "alice-store")
+    monkeypatch.setattr("aj_crew.context.store_of_session", lambda *_: "alice-store")
     monkeypatch.setattr(memory_stores, "memory_store_version", lambda *_: 2)
     monkeypatch.setattr(ContextBuilder, "ensure_store", AsyncMock(return_value=member_db))
     monkeypatch.setattr(ContextBuilder, "get_memory_for", lambda **_: memory)
@@ -722,9 +722,9 @@ async def test_v2_member_memory_extracts_an_over_budget_head_slice_by_slice(memb
 
     from consolidation_lease_helpers import lease_aware_log
 
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.history import _CONSOLIDATION_PROMPT_BUDGET_CHARS
-    from kiro_crew.history_consolidation import HistoryConsolidator
+    from aj_crew.context import ContextBuilder
+    from aj_crew.history import _CONSOLIDATION_PROMPT_BUDGET_CHARS
+    from aj_crew.history_consolidation import HistoryConsolidator
 
     head = {"role": "user", "content": "h" * (_CONSOLIDATION_PROMPT_BUDGET_CHARS * 2)}
     # last_consolidated == 0: the over-budget head is the first unconsolidated
@@ -752,7 +752,7 @@ async def test_v2_member_memory_extracts_an_over_budget_head_slice_by_slice(memb
     writer = HistoryConsolidator(log, memory, vector_store=member_db, migrated=True)
     writer._call_llm = AsyncMock(return_value={"history_entry": "Extracted a slice."})
     writer._note_failed_attempt = AsyncMock()
-    monkeypatch.setattr("kiro_crew.context.store_of_session", lambda *_: "alice-store")
+    monkeypatch.setattr("aj_crew.context.store_of_session", lambda *_: "alice-store")
     monkeypatch.setattr(memory_stores, "memory_store_version", lambda *_: 2)
     monkeypatch.setattr(ContextBuilder, "ensure_store", AsyncMock(return_value=member_db))
     monkeypatch.setattr(ContextBuilder, "get_memory_for", lambda **_: memory)
@@ -784,7 +784,7 @@ def test_member_database_cannot_open_a_separate_index_or_migrate_global_files(me
 @pytest.mark.parametrize("kind", ["fact", "directive", "episode"])
 @pytest.mark.parametrize("change", ["content", "space"])
 def test_member_backfill_rejects_late_content_or_model_space(member_db, monkeypatch, kind, change):
-    from kiro_crew import memory_edit
+    from aj_crew import memory_edit
 
     if kind == "fact":
         member_db.set_semantic("project.name", "aurora", 1, "user_explicit")
@@ -844,13 +844,13 @@ async def test_restricted_consolidation_never_reads_transcript_or_opens_memory(
 ):
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-    from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED, HistoryConsolidator
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED, HistoryConsolidator
 
     execution = ExecutionContext(
-        "alice-id", MemoryStoreRef("alice-store", "alice-id"), "member", "kirocrew", mode
+        "alice-id", MemoryStoreRef("alice-store", "alice-id"), "member", "ajcrew", mode
     )
-    monkeypatch.setattr("kiro_crew.execution_context.read_session_execution", lambda _: execution)
+    monkeypatch.setattr("aj_crew.execution_context.read_session_execution", lambda _: execution)
     log = MagicMock()
     writer = HistoryConsolidator(log, MagicMock(), vector_store=member_db)
     writer._call_llm = AsyncMock()

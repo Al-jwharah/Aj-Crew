@@ -9,7 +9,7 @@ the corpus does and does not prove.
 | `tool-call-live.jsonl` | live | `tool_call`, and two `tool_call_update` frames (`in_progress`, then a terminal `failed`) -- a call the harness rejected against its own argument schema |
 | `permission-request-live.jsonl` | live | `tool_call`, `session/request_permission`, and the `tool_call_update` frames through to `completed` with the command's real output |
 | `session-load-live.jsonl` | live | a `session/load` from a second process: the replayed `user_message_chunk` / `agent_message_chunk` updates and the load result, which carries `configOptions` and no `modes` |
-| `mcp-directive-call-live.jsonl` | live | a Crew MCP `tool_call`, its `in_progress` refinement and its terminal `tool_call_update` -- the single-underscore `kirocrew-core_<tool>` title, an empty-then-refined `rawInput`, and a result carrying a directive marker |
+| `mcp-directive-call-live.jsonl` | live | a Crew MCP `tool_call`, its `in_progress` refinement and its terminal `tool_call_update` -- the single-underscore `ajcrew-core_<tool>` title, an empty-then-refined `rawInput`, and a result carrying a directive marker |
 | `compact-live.jsonl` | live | a MANUAL `/compact`: an ordinary turn's `usage_update` and `stopReason`, then the `/compact` turn's summary `agent_message_chunk`, its far smaller `usage_update`, and its `stopReason: end_turn` with NO compaction status frame |
 | `effort-live.jsonl` | live | `session/set_config_option` results for the per-model `effort` select (low, medium, high and default on a reasoning model, absent on a plain one), a `-32602` refusal of an unoffered level, and the reset to the first level after a model switch |
 | `crew-oauth-bridge-args-live.jsonl` | live (1.19.1) | `permission: ask`: an MCP `tool_call` and its `session/request_permission`, both with `rawInput` `{}`, then the in-progress update that carries the arguments the stub server received; the evidence opencode stays out of `ACP_BACKENDS_CREW_OAUTH_BRIDGE` |
@@ -18,7 +18,7 @@ Re-captured off `opencode acp` 1.19.1, the release the Real Adapter Contract lan
 
 ## What the permission capture establishes
 
-The permission frame is the one the enforcement story rests on. Kiro Crew's tool
+The permission frame is the one the enforcement story rests on. Aj Crew's tool
 gate runs only when a harness sends `session/request_permission` for a tool call,
 and OpenCode sends it only while its own `permission` setting says to ask. The
 session's read-back (`acp.harness.opencode._verify_opencode_routing`) proves that setting is in
@@ -40,11 +40,11 @@ facts about the same harness.
 
 `mcp-directive-call-live.jsonl` is a turn whose ONLY tool is a Crew MCP directive
 tool. The server rode the `session/new` `mcpServers` array as a stdio element named
-`kirocrew-core` exposing `monitor_start`; the model was a local OpenAI-compatible
+`ajcrew-core` exposing `monitor_start`; the model was a local OpenAI-compatible
 stub with no credential and no network, driven to call that tool once. Three facts
 come out of it, none of them inferred:
 
-- the tool reaches the model as `kirocrew-core_monitor_start` -- server and tool
+- the tool reaches the model as `ajcrew-core_monitor_start` -- server and tool
   joined by ONE underscore, where kiro-cli reports `<server>___<tool>` and the
   canonical MCP prefix form is `mcp__<server>__<tool>`;
 - no `_meta.kiro` block appears anywhere in the turn, so `title` is the only

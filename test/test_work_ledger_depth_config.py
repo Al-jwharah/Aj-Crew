@@ -18,9 +18,9 @@ import test_work_ledger_tools as tools
 import work_ledger_helpers
 from work_ledger_helpers import CONDUCTOR
 
-from kiro_crew import work_ledger as wl
-from kiro_crew.config.loader import KiroCrewConfig, _invalidate_config_cache
-from kiro_crew.work_vocab import (
+from aj_crew import work_ledger as wl
+from aj_crew.config.loader import AjCrewConfig, _invalidate_config_cache
+from aj_crew.work_vocab import (
     WORK_MAX_DEPTH_DEFAULT,
     WORK_MAX_DEPTH_MAX,
     WORK_MAX_DEPTH_MIN,
@@ -51,13 +51,13 @@ def test_the_default_cap_is_two_and_the_range_is_two_to_ten():
     assert (WORK_MAX_DEPTH_DEFAULT, WORK_MAX_DEPTH_MIN, WORK_MAX_DEPTH_MAX) == (2, 2, 10)
     assert wl.MAX_DEPTH == WORK_MAX_DEPTH_DEFAULT
     assert wl.max_depth() == 2
-    assert KiroCrewConfig.load().work_ledger.max_depth == 2
+    assert AjCrewConfig.load().work_ledger.max_depth == 2
 
 
 @pytest.mark.parametrize("depth", [2, 3, 7, 10])
 def test_config_accepts_every_value_in_range(tmp_path: Path, depth: int):
     _write_config(tmp_path, {"max_depth": depth})
-    assert KiroCrewConfig.load().work_ledger.max_depth == depth
+    assert AjCrewConfig.load().work_ledger.max_depth == depth
     assert wl.max_depth() == depth
 
 
@@ -67,8 +67,8 @@ def test_config_refuses_an_out_of_range_value_and_keeps_the_default(
 ):
     """Refused, not clamped: 11 does not become 10 and 1 does not become 2."""
     _write_config(tmp_path, {"max_depth": bad})
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-        loaded = KiroCrewConfig.load().work_ledger.max_depth
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+        loaded = AjCrewConfig.load().work_ledger.max_depth
     assert loaded == WORK_MAX_DEPTH_DEFAULT
     assert wl.max_depth() == WORK_MAX_DEPTH_DEFAULT
     assert any("work_ledger.max_depth" in record.getMessage() for record in caplog.records)
@@ -76,7 +76,7 @@ def test_config_refuses_an_out_of_range_value_and_keeps_the_default(
 
 def test_the_setting_round_trips_through_to_dict(tmp_path: Path):
     _write_config(tmp_path, {"max_depth": 4})
-    assert KiroCrewConfig.load().to_dict()["work_ledger"] == {
+    assert AjCrewConfig.load().to_dict()["work_ledger"] == {
         "max_depth": 4,
         "remote_dispatch": False,
         "remote_dispatch_memory_gb": 5.0,
@@ -91,7 +91,7 @@ def test_the_setting_round_trips_through_to_dict(tmp_path: Path):
 def test_the_environment_does_not_move_the_cap(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """The setting lives in config only; a stray variable changes nothing."""
     _set_cap(tmp_path, 4)
-    monkeypatch.setenv("KIROCREW_WORK_LEDGER_MAX_DEPTH", "6")
+    monkeypatch.setenv("AJCREW_WORK_LEDGER_MAX_DEPTH", "6")
     assert wl.max_depth() == 4
 
 
@@ -126,7 +126,7 @@ def test_a_refusal_names_the_setting_and_the_value_in_force(tmp_path: Path):
     message = str(caught.value)
     assert caught.value.code == wl.CODE_DEPTH_EXCEEDED
     assert "work_ledger.max_depth" in message
-    assert "KIROCREW" not in message
+    assert "AJCREW" not in message
     assert "the cap is 3 levels" in message
 
 
@@ -307,8 +307,8 @@ def test_an_unreadable_config_falls_back_to_the_default_with_a_warning(
     def boom(cls):
         raise RuntimeError("config exploded")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(boom))
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.work_ledger"):
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(boom))
+    with caplog.at_level(logging.WARNING, logger="aj_crew.work_ledger"):
         assert wl.max_depth() == WORK_MAX_DEPTH_DEFAULT
         assert wl.max_depth() == WORK_MAX_DEPTH_DEFAULT
     warnings = [r for r in caplog.records if r.levelno == logging.WARNING]

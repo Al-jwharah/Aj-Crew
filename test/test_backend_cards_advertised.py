@@ -17,13 +17,13 @@ from typing import Dict, FrozenSet, Iterator, Mapping, Optional, Tuple
 
 import pytest
 
-from kiro_crew.agent_sdk.backend_cards import (
+from aj_crew.agent_sdk.backend_cards import (
     ADVERTISED_FIELD_BY_LINE,
     DETAIL_LINES,
     USER_FACING_LINES,
 )
 
-SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 SPECS = {spec.id: spec for spec in USER_FACING_LINES + DETAIL_LINES}
 
 #: Handshake fields with no card line, and the sets that decide them in their place.
@@ -243,7 +243,7 @@ def test_no_new_runtime_site_gates_a_field_backed_line_on_a_set() -> None:
 
 
 _HELPER_HOME = '''
-from kiro_crew.agent_sdk.backends_turns import ACP_BACKENDS_STEER
+from aj_crew.agent_sdk.backends_turns import ACP_BACKENDS_STEER
 
 def steers(backend):
     """One membership test."""

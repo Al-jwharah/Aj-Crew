@@ -16,7 +16,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.fixture(autouse=True)
@@ -62,7 +62,7 @@ class _TestSpawnAdmissionGateHarness:
     """
 
     def _mgr(self):
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         sessions = MagicMock()
         sessions.get_agent_selection.return_value = ("template", "")
@@ -110,10 +110,10 @@ class _TestSpawnAdmissionGateHarness:
             with contextlib.ExitStack() as stack:
                 if memory is not None:
                     stack.enter_context(
-                        patch("kiro_crew.subagent.check_memory_available", return_value=memory)
+                        patch("aj_crew.subagent.check_memory_available", return_value=memory)
                     )
-                mock_cfg = stack.enter_context(patch("kiro_crew.subagent.KiroCrewConfig"))
-                mock_sel = stack.enter_context(patch("kiro_crew.subagent.sel"))
+                mock_cfg = stack.enter_context(patch("aj_crew.subagent.AjCrewConfig"))
+                mock_sel = stack.enter_context(patch("aj_crew.subagent.sel"))
                 mock_cfg.load.return_value.agent.spawn_min_memory_gb = floor_gb
                 mock_cfg.load.return_value.agent.subagent_cost_gb = 0.5
                 mock_sel.return_value.log_tool_invocation = MagicMock()

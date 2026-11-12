@@ -20,8 +20,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.dashboard.handlers.cron import (
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.dashboard.handlers.cron import (
     _SCRIPT_SOURCE_MAX_BYTES,
     api_cron_script_source,
 )
@@ -72,8 +72,8 @@ def _make_state(job: CronJob | None):
 def crons_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Point both config_dir seams (resolver + handler) at a temp home."""
     (tmp_path / "crons").mkdir()
-    monkeypatch.setattr("kiro_crew.cron_script.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.cron.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.cron_script.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.cron.config_dir", lambda: tmp_path)
     return tmp_path
 
 
@@ -85,7 +85,7 @@ def stub_sel():
     refused read, so every test in this file crosses the SEL seam. Exposed
     so the audit-event tests can assert on the recorded calls.
     """
-    with patch("kiro_crew.dashboard.handlers.cron._sel") as sel_fn:
+    with patch("aj_crew.dashboard.handlers.cron._sel") as sel_fn:
         recorder = MagicMock()
         sel_fn.return_value = recorder
         yield recorder

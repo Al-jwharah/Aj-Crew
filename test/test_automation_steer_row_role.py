@@ -20,13 +20,13 @@ from chat_runner_coverage_helpers import _slot, _state
 from chat_test_helpers import _make_state
 from steer_requeue_helpers import _running_slot
 
-from kiro_crew.context_assembly.replay import build_interrupted_turn_preamble
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_delivery import STEER_STEERED, steer_into_running_turn
-from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
-from kiro_crew.dashboard.chat_utils import _dequeue_next_message
-from kiro_crew.dashboard.chat_utils_injected_rows import AUTOMATION_STEER_META
-from kiro_crew.history import HUMAN_TURN_META_KEY
+from aj_crew.context_assembly.replay import build_interrupted_turn_preamble
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_delivery import STEER_STEERED, steer_into_running_turn
+from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+from aj_crew.dashboard.chat_utils import _dequeue_next_message
+from aj_crew.dashboard.chat_utils_injected_rows import AUTOMATION_STEER_META
+from aj_crew.history import HUMAN_TURN_META_KEY
 
 WAKE = "[work-ledger wake] item=it_1 status=question\n[work-ledger] read the ledger"
 NUDGE = {"cycle": 4, "loop_id": "loop-1"}
@@ -42,7 +42,7 @@ def _steer_client(on_steer=None):
 class TestSteeredRow:
     @pytest.mark.asyncio
     async def test_an_automation_steer_is_a_nudge_row_not_a_user_row(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -75,7 +75,7 @@ class TestSteeredRow:
         self, tmp_path, monkeypatch
     ):
         """An SSE reader suppresses the append's own broadcast; the row still goes out."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -94,9 +94,9 @@ class TestSteeredRow:
     @pytest.mark.asyncio
     async def test_the_steered_row_comes_from_the_wake_origin(self, tmp_path, monkeypatch):
         """One origin-to-row mapping: the steer and the idle fire share it."""
-        from kiro_crew.dashboard import session_deliver
+        from aj_crew.dashboard import session_deliver
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -116,7 +116,7 @@ class TestSteeredRow:
 
     @pytest.mark.asyncio
     async def test_a_peer_steer_still_writes_a_user_row(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -131,7 +131,7 @@ class TestSteeredRow:
 
 class TestRequeuedAutomationSteer:
     def _requeue_with_human_message(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("test")
@@ -160,7 +160,7 @@ class TestRequeuedAutomationSteer:
         assert (second, len(second_items)) == ("please also fix the login bug", 1)
 
     def test_a_merge_run_stops_before_it(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         slot = _make_state(tmp_path).get_or_create_slot("test")
         slot.queue_append("first")
         slot.queue_append(WAKE, meta={AUTOMATION_STEER_META: dict(NUDGE)})

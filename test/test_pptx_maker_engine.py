@@ -2,7 +2,7 @@
 
 Lives in the repo-level ``test/`` tree (not the app's in-package ``tests/``)
 because ``setup.cfg`` sets ``testpaths = test transfer`` — a test under
-``src/kiro_crew/apps/builtins/...`` is never collected by CI.
+``src/aj_crew/apps/builtins/...`` is never collected by CI.
 
 This module is the ONLY place that talks to the vendored presentation engine, and
 it talks by SPAWNING it: a separately versioned third-party checkout, driven with
@@ -38,9 +38,9 @@ from unittest import mock
 import pytest
 from fake_child_helpers import read_child_records, reap_recorded_children, write_recording_child
 
-from kiro_crew import sandbox
-from kiro_crew.apps.builtins.pptx_maker.backend import engine, engine_source, paths
-from kiro_crew.testing.wait import default_timeout
+from aj_crew import sandbox
+from aj_crew.apps.builtins.pptx_maker.backend import engine, engine_source, paths
+from aj_crew.testing.wait import default_timeout
 
 
 def _verified_tree(root: Path, monkeypatch: pytest.MonkeyPatch) -> None:

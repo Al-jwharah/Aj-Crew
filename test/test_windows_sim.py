@@ -28,9 +28,9 @@ from windows_sim import (
 
 class TestCollidingClock:
     def test_now_is_frozen(self):
-        import kiro_crew.history as h
+        import aj_crew.history as h
 
-        with colliding_clock("kiro_crew.history") as at:
+        with colliding_clock("aj_crew.history") as at:
             a = h.datetime.now()
             b = h.datetime.now()
         assert a == b == at
@@ -39,26 +39,26 @@ class TestCollidingClock:
     def test_inherited_classmethods_still_work(self):
         # The stub subclasses real datetime, so fromisoformat/strptime keep
         # working for code under test that uses them next to now().
-        import kiro_crew.history as h
+        import aj_crew.history as h
 
-        with colliding_clock("kiro_crew.history"):
+        with colliding_clock("aj_crew.history"):
             parsed = h.datetime.fromisoformat("2020-05-01T12:00:00+00:00")
         assert (parsed.year, parsed.month) == (2020, 5)
 
     def test_tz_aware_now_respects_tz(self):
         import datetime as dt
 
-        import kiro_crew.history as h
+        import aj_crew.history as h
 
-        with colliding_clock("kiro_crew.history"):
+        with colliding_clock("aj_crew.history"):
             aware = h.datetime.now(dt.timezone.utc)
         assert aware.tzinfo is not None
 
     def test_real_appends_survive_the_collision(self, tmp_path):
-        from kiro_crew.history import ConversationLog, transcript_sort_key
+        from aj_crew.history import ConversationLog, transcript_sort_key
 
         log = ConversationLog(base_dir=tmp_path)
-        with colliding_clock("kiro_crew.history"):
+        with colliding_clock("aj_crew.history"):
             log.append("t", "user", "a")
             log.append("t", "user", "b")
             log.append("t", "user", "c")
@@ -74,18 +74,18 @@ class TestCollidingClock:
 
 class TestIncreasingClock:
     def test_now_strictly_increases(self):
-        import kiro_crew.history as h
+        import aj_crew.history as h
 
-        with increasing_clock("kiro_crew.history"):
+        with increasing_clock("aj_crew.history"):
             first = h.datetime.now()
             second = h.datetime.now()
         assert second > first
 
     def test_real_appends_are_distinct_and_ordered(self, tmp_path):
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog(base_dir=tmp_path)
-        with increasing_clock("kiro_crew.history"):
+        with increasing_clock("aj_crew.history"):
             log.append("t", "user", "a")
             log.append("t", "user", "b")
         ts = [m["ts"] for m in log.read_messages("t")]
@@ -277,7 +277,7 @@ class TestReadonlyUnlinkRefused:
         assert blob.exists()
 
     def test_is_posix_is_restored_on_exit(self):
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         before = platform_compat.IS_POSIX
         with readonly_unlink_refused():

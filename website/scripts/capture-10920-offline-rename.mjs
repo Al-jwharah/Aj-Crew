@@ -48,12 +48,12 @@ const now = Math.floor(Date.now() / 1000)
 const slots = [
   {
     key: SLOT, title: 'Draft the release notes', running: false, messages: 2,
-    agent: 'kirocrew', modified: now, last_ts: new Date().toISOString(), folder_id: '',
+    agent: 'ajcrew', modified: now, last_ts: new Date().toISOString(), folder_id: '',
     last_message: 'Noted.', source_links: [], source_links_total: 0,
   },
   {
     key: 'chat-triage', title: 'Triage the overnight pages', running: false, messages: 5,
-    agent: 'kirocrew', modified: now - 600, last_ts: new Date(Date.now() - 600_000).toISOString(),
+    agent: 'ajcrew', modified: now - 600, last_ts: new Date(Date.now() - 600_000).toISOString(),
     folder_id: '', last_message: 'Two left.', source_links: [], source_links_total: 0,
   },
 ]

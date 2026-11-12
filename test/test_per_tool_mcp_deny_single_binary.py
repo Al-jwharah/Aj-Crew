@@ -28,19 +28,19 @@ import pytest
 from loopback_servers import LoopbackThreadingHTTPServer
 from real_adapter_gate import MEASURED_OPENCODE_VERSION, require_real_adapter
 
-from kiro_crew import acp_tool_gate
-from kiro_crew import agent as agent_mod
-from kiro_crew import platform_compat
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp import session_mcp
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.harness import opencode as oc_harness
-from kiro_crew.acp_backends import ACP_BACKEND_OPENCODE
-from kiro_crew.providers.mirrors import opencode as opencode_mod
-from kiro_crew.providers.mirrors.goose import goose_projection
+from aj_crew import acp_tool_gate
+from aj_crew import agent as agent_mod
+from aj_crew import platform_compat
+from aj_crew.acp import client as client_mod
+from aj_crew.acp import session_mcp
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.harness import opencode as oc_harness
+from aj_crew.acp_backends import ACP_BACKEND_OPENCODE
+from aj_crew.providers.mirrors import opencode as opencode_mod
+from aj_crew.providers.mirrors.goose import goose_projection
 
-_CORE = {"command": "/opt/kirocrew", "args": ["mcp-core"]}
-_CRON = {"command": "/opt/kirocrew", "args": ["mcp-cron"]}
+_CORE = {"command": "/opt/ajcrew", "args": ["mcp-core"]}
+_CRON = {"command": "/opt/ajcrew", "args": ["mcp-cron"]}
 
 
 @pytest.fixture
@@ -52,7 +52,7 @@ def agents_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", d)
     monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", tmp_path / "settings-mcp.json")
     monkeypatch.setattr(session_mcp, "ensure_agent_materialized", lambda _a: True)
-    managed = {"kirocrew-core": dict(_CORE), "kirocrew-cron": dict(_CRON)}
+    managed = {"ajcrew-core": dict(_CORE), "ajcrew-cron": dict(_CRON)}
     monkeypatch.setattr(
         session_mcp,
         "managed_mcp_spec_entry",
@@ -63,8 +63,8 @@ def agents_dir(tmp_path, monkeypatch):
 
 
 def _write_spec(agents_dir: Path, servers: dict, tools: list) -> None:
-    spec = {"name": "kirocrew", "mcpServers": servers, "tools": tools}
-    (agents_dir / "kirocrew.json").write_text(json.dumps(spec), encoding="utf-8")
+    spec = {"name": "ajcrew", "mcpServers": servers, "tools": tools}
+    (agents_dir / "ajcrew.json").write_text(json.dumps(spec), encoding="utf-8")
 
 
 def _names(projection) -> list[str]:
@@ -516,21 +516,21 @@ class TestOpencodeDeniesInForce:
             agents_dir,
             {
                 "narrowed": {"command": "/bin/x", "disabledTools": ["danger"]},
-                "kirocrew-core": {"command": "/x", "disabledTools": ["spawn_run"]},
+                "ajcrew-core": {"command": "/x", "disabledTools": ["spawn_run"]},
                 "plain": {"command": "/bin/y"},
             },
-            ["@narrowed", "@kirocrew-core", "@kirocrew-cron", "@plain"],
+            ["@narrowed", "@ajcrew-core", "@ajcrew-cron", "@plain"],
         )
-        projection = goose_projection("kirocrew")
-        assert set(_names(projection)) == {"plain", "kirocrew-cron"}
+        projection = goose_projection("ajcrew")
+        assert set(_names(projection)) == {"plain", "ajcrew-cron"}
         assert projection.denied_tools == frozenset()
-        assert projection.unhonoured_servers == {"narrowed", "kirocrew-core"}
+        assert projection.unhonoured_servers == {"narrowed", "ajcrew-core"}
 
     def test_a_zero_tools_spec_carries_the_total_ban(self, agents_dir):
         """``"tools": []`` must reach the client on goose too, as it does on opencode."""
         _write_spec(agents_dir, {"plain": {"command": "/bin/y"}}, [])
-        assert session_mcp.session_mcp_projection("kirocrew").zero_tools is True
-        assert goose_projection("kirocrew").zero_tools is True
+        assert session_mcp.session_mcp_projection("ajcrew").zero_tools is True
+        assert goose_projection("ajcrew").zero_tools is True
 
     def test_a_stub_of_a_narrowed_server_is_not_re_added(self, agents_dir):
         _write_spec(
@@ -540,7 +540,7 @@ class TestOpencodeDeniesInForce:
         )
         stub = {"name": "narrowed", "command": "/opt/stub", "args": [], "env": []}
         projection = goose_projection(
-            "kirocrew", stub_server_names=("narrowed",), stub_elements=[stub]
+            "ajcrew", stub_server_names=("narrowed",), stub_elements=[stub]
         )
         assert _names(projection) == []
 
@@ -563,9 +563,9 @@ class TestTheClientWiring:
 
     def test_a_member_mount_never_re_adds_an_unhonoured_server(self, tmp_path):
         c = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_OPENCODE)
-        c._session_mcp_unhonoured = frozenset({"kirocrew-dashboard"})
+        c._session_mcp_unhonoured = frozenset({"ajcrew-dashboard"})
         assert c._member_mount_withheld(
-            "kirocrew-dashboard", "dispatch", frozenset({"kirocrew-dashboard"}), frozenset()
+            "ajcrew-dashboard", "dispatch", frozenset({"ajcrew-dashboard"}), frozenset()
         )
 
 

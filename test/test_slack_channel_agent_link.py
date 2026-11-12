@@ -27,7 +27,7 @@ OPEN = "C0OPEN"
 def _no_execution_record(_floor_monkeypatch):
     """No session in these tests has an execution record unless one sets it."""
     _floor_monkeypatch.setattr(
-        "kiro_crew.execution_context.read_session_execution", lambda *_a, **_k: None
+        "aj_crew.execution_context.read_session_execution", lambda *_a, **_k: None
     )
 
 
@@ -38,12 +38,12 @@ def _cfg(agent_for_pinned: str = "restricted-agent"):
     return SimpleNamespace(channel_config=channel_config)
 
 
-def _patches(cfg=None, aliases=(), default_template="kirocrew", ready=True):
+def _patches(cfg=None, aliases=(), default_template="ajcrew", ready=True):
     """Patch the channel config and the published crewmate alias table."""
     return (
-        patch("kiro_crew.slack.handler_runtime.access.slack_cfg", return_value=cfg or _cfg()),
+        patch("aj_crew.slack.handler_runtime.access.slack_cfg", return_value=cfg or _cfg()),
         patch(
-            "kiro_crew.config.loader_snapshots.agent_alias_snapshot",
+            "aj_crew.config.loader_snapshots.agent_alias_snapshot",
             return_value=(frozenset(aliases), default_template, ready),
         ),
     )
@@ -51,12 +51,12 @@ def _patches(cfg=None, aliases=(), default_template="kirocrew", ready=True):
 
 class TestChannelAgentMismatch:
     def test_cases(self):
-        from kiro_crew.slack.handler import channel_agent_mismatch
+        from aj_crew.slack.handler import channel_agent_mismatch
 
         a, b = _patches()
         with a, b:
             assert channel_agent_mismatch(PINNED, "") == "restricted-agent"
-            assert channel_agent_mismatch(PINNED, "kirocrew") == "restricted-agent"
+            assert channel_agent_mismatch(PINNED, "ajcrew") == "restricted-agent"
             assert channel_agent_mismatch(PINNED, "restricted-agent") is None
             assert channel_agent_mismatch(PINNED, "restricted-agent", "template") is None
             assert channel_agent_mismatch(OPEN, "") is None
@@ -65,24 +65,24 @@ class TestChannelAgentMismatch:
             assert channel_agent_mismatch("", "") is None
 
     def test_unnamed_slot_resolves_to_the_default_template(self):
-        from kiro_crew.slack.handler import channel_agent_mismatch
+        from aj_crew.slack.handler import channel_agent_mismatch
 
-        a, b = _patches(cfg=_cfg("kirocrew"), default_template="kirocrew")
+        a, b = _patches(cfg=_cfg("ajcrew"), default_template="ajcrew")
         with a, b:
             assert channel_agent_mismatch(PINNED, "") is None
 
     def test_template_and_crewmate_of_one_name_are_different_agents(self):
-        from kiro_crew.slack.handler import channel_agent_mismatch
+        from aj_crew.slack.handler import channel_agent_mismatch
 
         # The channel names a crewmate; a slot that picked the same name as a
         # template runs the template, so it is not the channel's agent.
-        a, b = _patches(cfg=_cfg("kirocrew"), aliases={"kirocrew"})
+        a, b = _patches(cfg=_cfg("ajcrew"), aliases={"ajcrew"})
         with a, b:
-            assert channel_agent_mismatch(PINNED, "kirocrew", "template") == "kirocrew"
-            assert channel_agent_mismatch(PINNED, "kirocrew", "member") is None
-            assert channel_agent_mismatch(PINNED, "kirocrew", "") is None
+            assert channel_agent_mismatch(PINNED, "ajcrew", "template") == "ajcrew"
+            assert channel_agent_mismatch(PINNED, "ajcrew", "member") is None
+            assert channel_agent_mismatch(PINNED, "ajcrew", "") is None
             # An unnamed slot is the default template, never the crewmate.
-            assert channel_agent_mismatch(PINNED, "") == "kirocrew"
+            assert channel_agent_mismatch(PINNED, "") == "ajcrew"
         # The channel names a template; a crewmate pick of that name is not it.
         a, b = _patches(cfg=_cfg("tpl"), aliases=set())
         with a, b:
@@ -90,15 +90,13 @@ class TestChannelAgentMismatch:
             assert channel_agent_mismatch(PINNED, "tpl", "template") is None
 
     def test_config_error_fails_closed(self):
-        from kiro_crew.slack.handler import channel_agent_mismatch
+        from aj_crew.slack.handler import channel_agent_mismatch
 
-        with patch(
-            "kiro_crew.slack.handler_runtime.access.slack_cfg", side_effect=RuntimeError("x")
-        ):
+        with patch("aj_crew.slack.handler_runtime.access.slack_cfg", side_effect=RuntimeError("x")):
             assert channel_agent_mismatch(PINNED, "restricted-agent") is not None
 
     def test_unpublished_alias_table_fails_closed(self):
-        from kiro_crew.slack.handler import channel_agent_mismatch
+        from aj_crew.slack.handler import channel_agent_mismatch
 
         a, b = _patches(ready=False)
         with a, b:
@@ -107,7 +105,7 @@ class TestChannelAgentMismatch:
 
 
 def _make_slack_app(state):
-    from kiro_crew.dashboard.chat_slack import api_chat_slot_slack_link
+    from aj_crew.dashboard.chat_slack import api_chat_slot_slack_link
 
     app = web.Application()
     app["state"] = state
@@ -116,7 +114,7 @@ def _make_slack_app(state):
 
 
 def _linkable_state(tmp_path, monkeypatch, agent: str = ""):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("s1")
     slot.agent = agent
@@ -180,7 +178,7 @@ class TestSlackLinkRefusesMismatchedAgent:
     ):
         state = _linkable_state(tmp_path, monkeypatch)
         audit = MagicMock()
-        monkeypatch.setattr("kiro_crew.dashboard.chat_slack.sel", lambda: audit)
+        monkeypatch.setattr("aj_crew.dashboard.chat_slack.sel", lambda: audit)
         a, b = _patches()
         with a, b:
             async with TestClient(TestServer(_make_slack_app(state))) as client:
@@ -216,7 +214,7 @@ def _linked_ds(agent: str):
 class TestLinkedThreadRouting:
     @pytest.mark.asyncio
     async def test_mismatched_linked_slot_does_not_capture_thread(self):
-        from kiro_crew.slack import handler
+        from aj_crew.slack import handler
 
         slack = MagicMock()
         slack.post_message = AsyncMock()
@@ -227,7 +225,7 @@ class TestLinkedThreadRouting:
             b,
             patch.object(handler, "_dashboard_state", ds),
             patch.object(handler, "is_allowed_user", return_value=True),
-            patch("kiro_crew.dashboard.chat._run_chat", new_callable=AsyncMock) as run_chat,
+            patch("aj_crew.dashboard.chat._run_chat", new_callable=AsyncMock) as run_chat,
         ):
             result = await handler.maybe_route_linked_thread(
                 "do the thing", "slack:t1", "U1", PINNED, slack, "t1"
@@ -240,7 +238,7 @@ class TestLinkedThreadRouting:
 
     @pytest.mark.asyncio
     async def test_matching_linked_slot_still_routes(self):
-        from kiro_crew.slack import handler
+        from aj_crew.slack import handler
 
         slack = MagicMock()
         slack.post_message = AsyncMock()
@@ -251,7 +249,7 @@ class TestLinkedThreadRouting:
             b,
             patch.object(handler, "_dashboard_state", ds),
             patch.object(handler, "is_allowed_user", return_value=True),
-            patch("kiro_crew.dashboard.chat._run_chat", new_callable=AsyncMock),
+            patch("aj_crew.dashboard.chat._run_chat", new_callable=AsyncMock),
         ):
             result = await handler.maybe_route_linked_thread(
                 "do the thing", "slack:t1", "U1", PINNED, slack, "t1"
@@ -270,7 +268,7 @@ def _import_ds(existing=None):
 class TestThreadImportRefusesMismatchedAgent:
     @pytest.mark.asyncio
     async def test_import_into_default_slot_is_refused_in_pinned_channel(self):
-        from kiro_crew.slack.interactions_options import (
+        from aj_crew.slack.interactions_options import (
             ChannelAgentMismatchError,
             _import_thread_to_slot,
         )
@@ -287,7 +285,7 @@ class TestThreadImportRefusesMismatchedAgent:
 
     @pytest.mark.asyncio
     async def test_existing_link_on_channel_agent_is_returned(self):
-        from kiro_crew.slack.interactions_options import _import_thread_to_slot
+        from aj_crew.slack.interactions_options import _import_thread_to_slot
 
         existing = SimpleNamespace(agent="restricted-agent", key="slot1")
         ds = _import_ds(existing)
@@ -298,7 +296,7 @@ class TestThreadImportRefusesMismatchedAgent:
 
     @pytest.mark.asyncio
     async def test_import_in_unpinned_channel_still_links(self):
-        from kiro_crew.slack.interactions_options import _import_thread_to_slot
+        from aj_crew.slack.interactions_options import _import_thread_to_slot
 
         slack = MagicMock()
         slack.fetch_thread_replies = AsyncMock(return_value=[{"text": "hi", "user": "U1"}])
@@ -307,9 +305,7 @@ class TestThreadImportRefusesMismatchedAgent:
         with (
             a,
             b,
-            patch(
-                "kiro_crew.dashboard.chat_persistence.save_slot_off_loop", new_callable=AsyncMock
-            ),
+            patch("aj_crew.dashboard.chat_persistence.save_slot_off_loop", new_callable=AsyncMock),
         ):
             slot = await _import_thread_to_slot(slack, ds, OPEN, "t1")
         assert slot is ds.get_or_create_slot.return_value
@@ -319,10 +315,10 @@ class TestThreadImportRefusesMismatchedAgent:
     async def test_bang_link_to_dashboard_tells_the_sender(self):
         # Import the interactions facade before patching handler names: its
         # import-time family check would read a patched name as a mismatch.
-        import kiro_crew.slack.interactions  # noqa: F401
-        from kiro_crew.slack import handler
-        from kiro_crew.slack.handler_runtime import commands
-        from kiro_crew.slack.interactions_options import IMPORT_AGENT_MISMATCH_NOTICE
+        import aj_crew.slack.interactions  # noqa: F401
+        from aj_crew.slack import handler
+        from aj_crew.slack.handler_runtime import commands
+        from aj_crew.slack.interactions_options import IMPORT_AGENT_MISMATCH_NOTICE
 
         slack = MagicMock()
         slack.post_message = AsyncMock()
@@ -343,7 +339,7 @@ class TestThreadImportRefusesMismatchedAgent:
 
 
 async def _route(text, agent="", route_pinned=False, switch_target=None):
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     slack = MagicMock()
     slack.post_message = AsyncMock()
@@ -355,7 +351,7 @@ async def _route(text, agent="", route_pinned=False, switch_target=None):
         patch.object(handler, "_dashboard_state", ds),
         patch.object(handler, "is_allowed_user", return_value=True),
         patch.object(handler, "agent_switch_target", return_value=switch_target),
-        patch("kiro_crew.dashboard.chat._run_chat", new_callable=AsyncMock) as run_chat,
+        patch("aj_crew.dashboard.chat._run_chat", new_callable=AsyncMock) as run_chat,
     ):
         result = await handler.maybe_route_linked_thread(
             text,
@@ -405,7 +401,7 @@ class TestMismatchedThreadControls:
 class TestResumeInPinnedChannelThread:
     @staticmethod
     def _orch(monkeypatch, tmp_path, slot_agent: str):
-        from kiro_crew.slack import interactions as ix
+        from aj_crew.slack import interactions as ix
 
         o = MagicMock()
         o.slack.post_message = AsyncMock(return_value="ts1")
@@ -420,7 +416,7 @@ class TestResumeInPinnedChannelThread:
         monkeypatch.setattr(ix, "is_owner", lambda uid: True)
         monkeypatch.setattr(ix, "channel_inbound_permitted", AsyncMock(return_value=True))
         monkeypatch.setattr(ix, "channel_refusal", lambda *a, **k: None)
-        monkeypatch.setattr("kiro_crew.config.loader.data_home", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.config.loader.data_home", lambda: tmp_path)
         monkeypatch.setattr(ix, "_resume_locks", {})
         return o
 
@@ -428,7 +424,7 @@ class TestResumeInPinnedChannelThread:
     async def _resume():
         import json
 
-        from kiro_crew.slack import interactions as ix
+        from aj_crew.slack import interactions as ix
 
         payload = {"user": {"id": "U1"}, "channel": {"id": "C1"}, "message": {"ts": "m1"}}
         action = {
@@ -494,7 +490,7 @@ class TestResumeInPinnedChannelThread:
 class TestLinkedSessionKeepsTheChannelAgent:
     @staticmethod
     def _linked_slot(tmp_path, monkeypatch, agent="restricted-agent"):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.agent = agent
@@ -568,8 +564,8 @@ def _pinned_linked_namespace(agent="restricted-agent"):
 class TestProviderSwitchWhileLinked:
     @pytest.mark.asyncio
     async def test_provider_switch_off_the_channel_agent_is_vetoed(self, monkeypatch):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat_turn.turn_locals import _Flow
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat_turn.turn_locals import _Flow
 
         audit = MagicMock()
         monkeypatch.setattr(chat_runner, "sel", lambda: audit)
@@ -586,7 +582,7 @@ class TestProviderSwitchWhileLinked:
         assert audit.log_api_access.call_args.kwargs["source"] == "channel_agent_pinned"
 
     def test_provider_switch_onto_the_channel_agent_is_not_vetoed(self):
-        from kiro_crew.dashboard.chat_turn.session_events import _channel_pin_blocks
+        from aj_crew.dashboard.chat_turn.session_events import _channel_pin_blocks
 
         slot, _ = _pinned_linked_namespace(agent="")
         a, b = _patches()
@@ -604,7 +600,7 @@ class TestQueuedReplyKeptWhenTheDefaultChanges:
     the channel's agent."""
 
     def test_containment_snapshot_does_not_judge_the_agent(self, tmp_path):
-        from kiro_crew.dashboard.session_control import (
+        from aj_crew.dashboard.session_control import (
             containment_meta,
             containment_snapshot,
             newly_held_constraints,
@@ -621,7 +617,7 @@ class TestQueuedReplyKeptWhenTheDefaultChanges:
         with a, b:
             admitted = containment_meta(state, slot)
         # The default moves off the channel's agent while the reply waits.
-        a, b = _patches(default_template="kirocrew")
+        a, b = _patches(default_template="ajcrew")
         with a, b:
             now = containment_snapshot(state, slot, on_probe_failure=True)
             assert "channel_agent_mismatch" not in now
@@ -629,15 +625,15 @@ class TestQueuedReplyKeptWhenTheDefaultChanges:
 
     @pytest.mark.asyncio
     async def test_admission_runs_a_reply_whose_record_is_the_channels(self, monkeypatch):
-        from kiro_crew.dashboard import chat_runner  # noqa: F401
-        from kiro_crew.dashboard.chat_turn.turn_admission import _source_channel_mismatch
+        from aj_crew.dashboard import chat_runner  # noqa: F401
+        from aj_crew.dashboard.chat_turn.turn_admission import _source_channel_mismatch
 
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution",
+            "aj_crew.execution_context.read_session_execution",
             lambda *_a, **_k: _recorded(name="restricted-agent", template_id="restricted-agent"),
         )
         slot = SimpleNamespace(agent="", agent_kind="")
-        a, b = _patches(default_template="kirocrew")
+        a, b = _patches(default_template="ajcrew")
         with a, b:
             assert await _source_channel_mismatch((PINNED,), slot, "dashboard:s1") is None
 
@@ -652,9 +648,9 @@ class TestCheckThenCommitWindow:
         # agent resolution. The commit-window check must refuse it.
         from chat_test_helpers import _make_app_with_agent_routes
 
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.agent = "restricted-agent"
@@ -675,7 +671,7 @@ class TestCheckThenCommitWindow:
         with a, b:
             async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
                 resp = await client.post(
-                    "/api/chat/slots/s1/agent", json={"agent": "kirocrew", "agent_kind": "template"}
+                    "/api/chat/slots/s1/agent", json={"agent": "ajcrew", "agent_kind": "template"}
                 )
                 assert resp.status == 409, await resp.text()
                 assert (await resp.json())["code"] == "channel_agent_pinned"
@@ -704,9 +700,9 @@ class TestCheckThenCommitWindow:
 class TestLateLinkDuringProviderSwitch:
     @pytest.mark.asyncio
     async def test_link_landing_while_the_switch_is_written_vetoes_the_commit(self, monkeypatch):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat_turn import session_events
-        from kiro_crew.dashboard.chat_turn.turn_locals import _Flow
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat_turn import session_events
+        from aj_crew.dashboard.chat_turn.turn_locals import _Flow
 
         audit = MagicMock()
         monkeypatch.setattr(chat_runner, "sel", lambda: audit)
@@ -724,7 +720,7 @@ class TestLateLinkDuringProviderSwitch:
 
         monkeypatch.setattr(chat_runner, "record_provider_agent_switch", _record, raising=False)
         monkeypatch.setattr(
-            chat_runner.KiroCrewConfig, "load", classmethod(lambda cls: object()), raising=False
+            chat_runner.AjCrewConfig, "load", classmethod(lambda cls: object()), raising=False
         )
         turn = _provider_turn(slot)
         a, b = _patches()
@@ -739,7 +735,7 @@ class TestLateLinkDuringProviderSwitch:
 class TestFirstSendAdoptionWhileLinked:
     @pytest.mark.asyncio
     async def test_imported_slot_is_bound_to_the_channel_template(self):
-        from kiro_crew.slack.interactions_options import _import_thread_to_slot
+        from aj_crew.slack.interactions_options import _import_thread_to_slot
 
         slack = MagicMock()
         slack.fetch_thread_replies = AsyncMock(return_value=[{"text": "hi", "user": "U1"}])
@@ -747,20 +743,18 @@ class TestFirstSendAdoptionWhileLinked:
         new_slot = SimpleNamespace(key="s9", agent="", agent_kind="", title="")
         new_slot.append = lambda *a, **k: None
         ds.get_or_create_slot = MagicMock(return_value=new_slot)
-        a, b = _patches(cfg=_cfg("kirocrew"), default_template="kirocrew")
+        a, b = _patches(cfg=_cfg("ajcrew"), default_template="ajcrew")
         with (
             a,
             b,
-            patch(
-                "kiro_crew.dashboard.chat_persistence.save_slot_off_loop", new_callable=AsyncMock
-            ),
+            patch("aj_crew.dashboard.chat_persistence.save_slot_off_loop", new_callable=AsyncMock),
         ):
             slot = await _import_thread_to_slot(slack, ds, PINNED, "t1")
         assert slot is new_slot
-        assert (slot.agent, slot.agent_kind) == ("kirocrew", "template")
+        assert (slot.agent, slot.agent_kind) == ("ajcrew", "template")
 
     def test_channel_pin_refusal_blocks_adopting_another_agent(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         slot = SimpleNamespace(key="s1", agent="", _slack_linked=True, _slack_channel=PINNED)
         a, b = _patches()
@@ -796,9 +790,9 @@ class TestChannelMessageAdmittedUnderTheDispatchLock:
 
     @pytest.mark.asyncio
     async def test_channel_message_on_a_moved_slot_is_not_run(self, monkeypatch):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat_turn.turn_admission import _turn_admit
-        from kiro_crew.dashboard.chat_turn.turn_locals import _Flow
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat_turn.turn_admission import _turn_admit
+        from aj_crew.dashboard.chat_turn.turn_locals import _Flow
 
         class _Lock:
             async def acquire(self):
@@ -811,7 +805,7 @@ class TestChannelMessageAdmittedUnderTheDispatchLock:
         monkeypatch.setattr(chat_runner, "_local_turn_generation_for", lambda _s: 1)
         monkeypatch.setattr(chat_runner, "_current_binding", lambda _t: ("other", "", ""))
         monkeypatch.setattr(
-            "kiro_crew.memory_startup.wait_for_memory_preparation", AsyncMock(return_value=None)
+            "aj_crew.memory_startup.wait_for_memory_preparation", AsyncMock(return_value=None)
         )
         slot, notices = _pinned_linked_namespace(agent="other")
         slot._active_turn_session_key = ""
@@ -826,9 +820,9 @@ class TestChannelMessageAdmittedUnderTheDispatchLock:
 
     @pytest.mark.asyncio
     async def test_channel_message_on_a_recorded_other_template_is_not_run(self, monkeypatch):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat_turn.turn_admission import _turn_admit
-        from kiro_crew.dashboard.chat_turn.turn_locals import _Flow
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat_turn.turn_admission import _turn_admit
+        from aj_crew.dashboard.chat_turn.turn_locals import _Flow
 
         class _Lock:
             async def acquire(self):
@@ -841,10 +835,10 @@ class TestChannelMessageAdmittedUnderTheDispatchLock:
         monkeypatch.setattr(chat_runner, "_local_turn_generation_for", lambda _s: 1)
         monkeypatch.setattr(chat_runner, "_current_binding", lambda _t: ("other", "", ""))
         monkeypatch.setattr(
-            "kiro_crew.memory_startup.wait_for_memory_preparation", AsyncMock(return_value=None)
+            "aj_crew.memory_startup.wait_for_memory_preparation", AsyncMock(return_value=None)
         )
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution", lambda *_a, **_k: _recorded()
+            "aj_crew.execution_context.read_session_execution", lambda *_a, **_k: _recorded()
         )
         slot, notices = _pinned_linked_namespace(agent="restricted-agent")
         slot._active_turn_session_key = ""
@@ -866,7 +860,7 @@ class TestRecordedExecutionDecides:
     """A turn runs on its recorded selection, so that is what the channel is checked against."""
 
     def test_unnamed_slot_on_a_recorded_template_is_not_the_new_default(self):
-        from kiro_crew.slack.handler import channel_agent_mismatch
+        from aj_crew.slack.handler import channel_agent_mismatch
 
         # The default template and the channel's agent are both B now, but the
         # session recorded A when it first ran.
@@ -886,7 +880,7 @@ class TestRecordedExecutionDecides:
             )
 
     def test_recorded_crewmate_is_compared_in_the_member_namespace(self):
-        from kiro_crew.slack.handler import channel_agent_mismatch
+        from aj_crew.slack.handler import channel_agent_mismatch
 
         a, b = _patches(cfg=_cfg("crew"), aliases={"crew"})
         with a, b:
@@ -906,12 +900,12 @@ class TestRecordedExecutionDecides:
 
     @pytest.mark.asyncio
     async def test_unreadable_record_fails_closed(self, monkeypatch):
-        from kiro_crew.slack.handler import linked_slot_channel_mismatch
+        from aj_crew.slack.handler import linked_slot_channel_mismatch
 
         def _boom(*_a, **_k):
             raise RuntimeError("unreadable")
 
-        monkeypatch.setattr("kiro_crew.execution_context.read_session_execution", _boom)
+        monkeypatch.setattr("aj_crew.execution_context.read_session_execution", _boom)
         slot = SimpleNamespace(agent="restricted-agent", agent_kind="")
         a, b = _patches()
         with a, b:
@@ -923,7 +917,7 @@ class TestRecordedExecutionDecides:
         self, monkeypatch
     ):
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution", lambda *_a, **_k: _recorded()
+            "aj_crew.execution_context.read_session_execution", lambda *_a, **_k: _recorded()
         )
         result, slack, run_chat = await _route("do the thing", agent="restricted-agent")
         assert result is True
@@ -933,51 +927,51 @@ class TestRecordedExecutionDecides:
 
 class TestRecordedSelectionResolvesLikeTheBinder:
     def test_crewmate_record_uses_the_current_alias_of_its_member_id(self, monkeypatch):
-        from kiro_crew.slack.handler_runtime import inbound
+        from aj_crew.slack.handler_runtime import inbound
 
         execution = SimpleNamespace(
             selection_kind="member", selection_name="old-name", member_id="m1", template_id=""
         )
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution", lambda *_a, **_k: execution
+            "aj_crew.execution_context.read_session_execution", lambda *_a, **_k: execution
         )
         monkeypatch.setattr(
-            "kiro_crew.execution_context.member_config_for_id",
+            "aj_crew.execution_context.member_config_for_id",
             lambda _cfg, member_id: ("crew", object()),
         )
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load", classmethod(lambda cls: object())
+            "aj_crew.config.loader.AjCrewConfig.load", classmethod(lambda cls: object())
         )
         sel_ = inbound._recorded_selection("dashboard:s1")
         assert (sel_.selection_kind, sel_.selection_name) == ("member", "crew")
 
     def test_template_record_maps_a_skill_view_back_to_its_source(self, monkeypatch):
-        from kiro_crew.slack.handler_runtime import inbound
+        from aj_crew.slack.handler_runtime import inbound
 
         execution = SimpleNamespace(
             selection_kind="template",
             selection_name="",
             member_id=None,
-            template_id="kirocrew-skill-view-abc",
+            template_id="ajcrew-skill-view-abc",
         )
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution", lambda *_a, **_k: execution
+            "aj_crew.execution_context.read_session_execution", lambda *_a, **_k: execution
         )
         monkeypatch.setattr(
-            "kiro_crew.session_agent_selection._source_of_view",
-            lambda name: "restricted-agent" if name.startswith("kirocrew-skill-view-") else name,
+            "aj_crew.session_agent_selection._source_of_view",
+            lambda name: "restricted-agent" if name.startswith("ajcrew-skill-view-") else name,
         )
         sel_ = inbound._recorded_selection("dashboard:s1")
         assert (sel_.selection_kind, sel_.selection_name) == ("template", "restricted-agent")
         a, b = _patches()
         with a, b:
-            from kiro_crew.slack.handler import channel_agent_mismatch
+            from aj_crew.slack.handler import channel_agent_mismatch
 
             assert channel_agent_mismatch(PINNED, "", "", recorded=sel_) is None
 
     def test_template_record_is_judged_by_the_template_it_runs(self, monkeypatch):
-        from kiro_crew.slack.handler import channel_agent_mismatch
-        from kiro_crew.slack.handler_runtime import inbound
+        from aj_crew.slack.handler import channel_agent_mismatch
+        from aj_crew.slack.handler_runtime import inbound
 
         # The label names the channel's agent; the record runs another template.
         execution = SimpleNamespace(
@@ -987,7 +981,7 @@ class TestRecordedSelectionResolvesLikeTheBinder:
             template_id="other",
         )
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution", lambda *_a, **_k: execution
+            "aj_crew.execution_context.read_session_execution", lambda *_a, **_k: execution
         )
         sel_ = inbound._recorded_selection("dashboard:s1")
         a, b = _patches()
@@ -1003,7 +997,7 @@ class TestRecordedSelectionResolvesLikeTheBinder:
 
 async def _route_closed_tab(text, owner, recorded, channel=PINNED):
     """A reply in a thread whose dashboard owner has no live slot (tab closed)."""
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     slack = MagicMock()
     slack.post_message = AsyncMock()
@@ -1016,7 +1010,7 @@ async def _route_closed_tab(text, owner, recorded, channel=PINNED):
         b,
         patch.object(handler, "_dashboard_state", ds),
         patch.object(handler, "is_allowed_user", return_value=True),
-        patch("kiro_crew.execution_context.read_session_execution", lambda *_a, **_k: recorded),
+        patch("aj_crew.execution_context.read_session_execution", lambda *_a, **_k: recorded),
     ):
         result = await handler.maybe_route_linked_thread(
             text, "slack:t1", "U1", channel, slack, "t1"
@@ -1065,7 +1059,7 @@ class TestClosedDashboardTabOwner:
 
     @pytest.mark.asyncio
     async def test_pinned_answer_to_a_closed_tab_on_another_agent_is_stopped(self):
-        from kiro_crew.slack import handler
+        from aj_crew.slack import handler
 
         slack = MagicMock()
         slack.post_message = AsyncMock()
@@ -1078,7 +1072,7 @@ class TestClosedDashboardTabOwner:
             patch.object(handler, "_dashboard_state", ds),
             patch.object(handler, "is_allowed_user", return_value=True),
             patch(
-                "kiro_crew.execution_context.read_session_execution",
+                "aj_crew.execution_context.read_session_execution",
                 lambda *_a, **_k: _execution(),
             ),
         ):
@@ -1094,7 +1088,7 @@ class TestClosedDashboardTabOwner:
     def test_dispatch_checks_a_pinned_answer_before_the_linked_route(self):
         import inspect
 
-        from kiro_crew.slack.handler_runtime import dispatch
+        from aj_crew.slack.handler_runtime import dispatch
 
         source = inspect.getsource(dispatch)
         body = source.split("closed_dashboard_owner_refused(", 1)[1]
@@ -1104,7 +1098,7 @@ class TestClosedDashboardTabOwner:
 class TestTabClosedWhileTheWindowLoads:
     @pytest.mark.asyncio
     async def test_reply_for_a_tab_closed_during_the_window_load_is_stopped(self):
-        from kiro_crew.slack import handler
+        from aj_crew.slack import handler
 
         slack = MagicMock()
         slack.post_message = AsyncMock()
@@ -1123,10 +1117,10 @@ class TestTabClosedWhileTheWindowLoads:
             patch.object(handler, "is_allowed_user", return_value=True),
             patch.object(handler, "load_window_off_loop", _close_tab),
             patch(
-                "kiro_crew.execution_context.read_session_execution",
+                "aj_crew.execution_context.read_session_execution",
                 lambda *_a, **_k: _execution(),
             ),
-            patch("kiro_crew.dashboard.chat._run_chat", new_callable=AsyncMock) as run_chat,
+            patch("aj_crew.dashboard.chat._run_chat", new_callable=AsyncMock) as run_chat,
         ):
             result = await handler.maybe_route_linked_thread(
                 "do the thing", "slack:t1", "U1", PINNED, slack, "t1"
@@ -1140,7 +1134,7 @@ class TestTabClosedWhileTheWindowLoads:
         def _boom(*_a, **_k):
             raise RuntimeError("unreadable")
 
-        from kiro_crew.slack import handler
+        from aj_crew.slack import handler
 
         slack = MagicMock()
         slack.post_message = AsyncMock()
@@ -1149,7 +1143,7 @@ class TestTabClosedWhileTheWindowLoads:
             a,
             b,
             patch.object(handler, "is_allowed_user", return_value=True),
-            patch("kiro_crew.execution_context.read_session_execution", _boom),
+            patch("aj_crew.execution_context.read_session_execution", _boom),
         ):
             refused = await handler.closed_dashboard_owner_refused(
                 "do it", "slack:t1", "U1", PINNED, slack, "t1", owner="dashboard:chat-1"
@@ -1164,7 +1158,7 @@ class TestAdmissionJudgesTheSourceChannel:
 
     @staticmethod
     def _admit_patches(monkeypatch, audit):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         class _Lock:
             async def acquire(self):
@@ -1176,7 +1170,7 @@ class TestAdmissionJudgesTheSourceChannel:
         monkeypatch.setattr(chat_runner, "_local_turn_generation_for", lambda _s: 1)
         monkeypatch.setattr(chat_runner, "_current_binding", lambda _t: ("other", "", ""))
         monkeypatch.setattr(
-            "kiro_crew.memory_startup.wait_for_memory_preparation", AsyncMock(return_value=None)
+            "aj_crew.memory_startup.wait_for_memory_preparation", AsyncMock(return_value=None)
         )
 
     @pytest.mark.asyncio
@@ -1185,10 +1179,10 @@ class TestAdmissionJudgesTheSourceChannel:
         check read the record, the slot was unlinked and moved to another agent.
         The turn the route scheduled carries the channel and is refused."""
         # The runner first: importing it composes the turn owners it serves.
-        from kiro_crew.dashboard import chat_runner  # noqa: F401
-        from kiro_crew.dashboard.chat_turn.turn_admission import _turn_admit
-        from kiro_crew.dashboard.chat_turn.turn_locals import _Flow
-        from kiro_crew.slack import handler
+        from aj_crew.dashboard import chat_runner  # noqa: F401
+        from aj_crew.dashboard.chat_turn.turn_admission import _turn_admit
+        from aj_crew.dashboard.chat_turn.turn_locals import _Flow
+        from aj_crew.slack import handler
 
         slack = MagicMock()
         slack.post_message = AsyncMock()
@@ -1208,7 +1202,7 @@ class TestAdmissionJudgesTheSourceChannel:
             patch.object(handler, "_dashboard_state", ds),
             patch.object(handler, "is_allowed_user", return_value=True),
             patch.object(handler, "linked_slot_channel_mismatch", _check_then_unlink_and_switch),
-            patch("kiro_crew.dashboard.chat._run_chat", new_callable=AsyncMock) as run_chat,
+            patch("aj_crew.dashboard.chat._run_chat", new_callable=AsyncMock) as run_chat,
         ):
             routed = await handler.maybe_route_linked_thread(
                 "do the thing", "slack:t1", "U1", PINNED, slack, "t1"
@@ -1234,7 +1228,7 @@ class TestAdmissionJudgesTheSourceChannel:
         assert audit.log_api_access.call_args.kwargs["source"] == "channel_agent_pinned"
 
     def test_a_queued_reply_carries_its_channel_to_the_drain(self):
-        from kiro_crew.dashboard.slot_queue_repository import (
+        from aj_crew.dashboard.slot_queue_repository import (
             source_channels_of,
             stamp_source_channels,
         )
@@ -1248,8 +1242,8 @@ class TestAdmissionJudgesTheSourceChannel:
 
     @pytest.mark.asyncio
     async def test_queue_drain_hands_the_entry_channels_to_the_turn(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import chat_runner as cr
-        from kiro_crew.dashboard.slot_queue_repository import stamp_source_channels
+        from aj_crew.dashboard import chat_runner as cr
+        from aj_crew.dashboard.slot_queue_repository import stamp_source_channels
 
         state = _make_state(tmp_path)
         state.subagents = None
@@ -1280,8 +1274,8 @@ class TestAdmissionJudgesTheSourceChannel:
         assert captured["_directive_source_channels"] == (PINNED,)
 
     def test_stamped_channel_wins_over_the_current_link(self):
-        from kiro_crew.dashboard import chat_runner  # noqa: F401
-        from kiro_crew.dashboard.chat_turn.turn_admission import _channels_judging_turn
+        from aj_crew.dashboard import chat_runner  # noqa: F401
+        from aj_crew.dashboard.chat_turn.turn_admission import _channels_judging_turn
 
         relinked = SimpleNamespace(_slack_linked=True, _slack_channel=OPEN)
         unlinked = SimpleNamespace(_slack_linked=False, _slack_channel="")
@@ -1296,8 +1290,8 @@ class TestAdmissionJudgesTheSourceChannel:
         assert _channels_judging_turn(unstamped, unlinked) == ()
 
     def test_dashboard_and_dm_turns_are_not_judged_by_a_channel(self):
-        from kiro_crew.dashboard import chat_runner  # noqa: F401
-        from kiro_crew.dashboard.chat_turn.turn_admission import _channels_judging_turn
+        from aj_crew.dashboard import chat_runner  # noqa: F401
+        from aj_crew.dashboard.chat_turn.turn_admission import _channels_judging_turn
 
         linked = SimpleNamespace(_slack_linked=True, _slack_channel=PINNED)
         typed_here = SimpleNamespace(_directive_channel_origin=False, _directive_source_channels=())
@@ -1305,7 +1299,7 @@ class TestAdmissionJudgesTheSourceChannel:
 
     @pytest.mark.asyncio
     async def test_unpinned_source_channel_is_not_refused(self, monkeypatch):
-        from kiro_crew.slack.handler import linked_slot_channel_mismatch
+        from aj_crew.slack.handler import linked_slot_channel_mismatch
 
         slot = SimpleNamespace(agent="other", agent_kind="")
         a, b = _patches()
@@ -1321,7 +1315,7 @@ class TestQueuedReplySurvivesARestartAsARestriction:
     def _round_trip(item):
         import json
 
-        from kiro_crew.dashboard.slot_queue_repository import (
+        from aj_crew.dashboard.slot_queue_repository import (
             durable_queue_entries,
             sanitize_restored_queue,
         )
@@ -1330,7 +1324,7 @@ class TestQueuedReplySurvivesARestartAsARestriction:
         return written, sanitize_restored_queue(written)
 
     def test_the_source_channel_survives_and_authority_does_not(self):
-        from kiro_crew.dashboard.slot_queue_repository import source_channels_of
+        from aj_crew.dashboard.slot_queue_repository import source_channels_of
 
         item = {
             "id": "q1",
@@ -1353,7 +1347,7 @@ class TestQueuedReplySurvivesARestartAsARestriction:
 
     @pytest.mark.parametrize("bad", ["C0PINNED", [], [""], [3], [PINNED] * 9, ["x" * 65], None])
     def test_an_unreadable_saved_channel_fails_closed(self, bad):
-        from kiro_crew.dashboard.slot_queue_repository import (
+        from aj_crew.dashboard.slot_queue_repository import (
             UNREADABLE_SOURCE_CHANNEL,
             sanitize_restored_queue,
             source_channels_of,
@@ -1363,8 +1357,8 @@ class TestQueuedReplySurvivesARestartAsARestriction:
         assert source_channels_of(restored[0]) == (UNREADABLE_SOURCE_CHANNEL,)
 
     def test_a_restored_turn_without_the_origin_flag_is_still_judged(self):
-        from kiro_crew.dashboard import chat_runner  # noqa: F401
-        from kiro_crew.dashboard.chat_turn.turn_admission import _channels_judging_turn
+        from aj_crew.dashboard import chat_runner  # noqa: F401
+        from aj_crew.dashboard.chat_turn.turn_admission import _channels_judging_turn
 
         unlinked = SimpleNamespace(_slack_linked=False, _slack_channel="")
         restored = SimpleNamespace(
@@ -1379,10 +1373,10 @@ class TestQueuedReplySurvivesARestartAsARestriction:
         """Queued while linked, then unlinked, restarted and switched: the
         restored reply, once the user sends its card, drains into a turn that
         admission refuses. A restored entry never drains on its own."""
-        from kiro_crew.dashboard import chat_runner as cr
-        from kiro_crew.dashboard.chat_turn.turn_admission import _turn_admit
-        from kiro_crew.dashboard.chat_turn.turn_locals import _Flow
-        from kiro_crew.dashboard.slot_queue_repository import stamp_source_channels
+        from aj_crew.dashboard import chat_runner as cr
+        from aj_crew.dashboard.chat_turn.turn_admission import _turn_admit
+        from aj_crew.dashboard.chat_turn.turn_locals import _Flow
+        from aj_crew.dashboard.slot_queue_repository import stamp_source_channels
 
         state = _make_state(tmp_path)
         state.subagents = None
@@ -1434,10 +1428,10 @@ class TestQueuedReplySurvivesARestartAsARestriction:
 
     @pytest.mark.asyncio
     async def test_an_unreadable_restored_channel_is_refused_with_the_notice(self, monkeypatch):
-        from kiro_crew.dashboard import chat_runner  # noqa: F401
-        from kiro_crew.dashboard.chat_turn.turn_admission import _turn_admit
-        from kiro_crew.dashboard.chat_turn.turn_locals import _Flow
-        from kiro_crew.dashboard.slot_queue_repository import UNREADABLE_SOURCE_CHANNEL
+        from aj_crew.dashboard import chat_runner  # noqa: F401
+        from aj_crew.dashboard.chat_turn.turn_admission import _turn_admit
+        from aj_crew.dashboard.chat_turn.turn_locals import _Flow
+        from aj_crew.dashboard.slot_queue_repository import UNREADABLE_SOURCE_CHANNEL
 
         audit = MagicMock()
         TestAdmissionJudgesTheSourceChannel._admit_patches(monkeypatch, audit)
@@ -1479,9 +1473,9 @@ class TestSourceChannelHoldsPastAdmission:
 
     @pytest.mark.asyncio
     async def test_a_restored_local_command_on_a_switched_slot_is_not_run(self, monkeypatch):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat_turn.slash_commands import _turn_slash_gate
-        from kiro_crew.dashboard.chat_turn.turn_locals import _Flow
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat_turn.slash_commands import _turn_slash_gate
+        from aj_crew.dashboard.chat_turn.turn_locals import _Flow
 
         audit = MagicMock()
         monkeypatch.setattr(chat_runner, "sel", lambda: audit)
@@ -1498,10 +1492,10 @@ class TestSourceChannelHoldsPastAdmission:
 
     @pytest.mark.asyncio
     async def test_an_unreadable_source_channel_refuses_a_local_command(self, monkeypatch):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat_turn.slash_commands import _turn_slash_gate
-        from kiro_crew.dashboard.chat_turn.turn_locals import _Flow
-        from kiro_crew.dashboard.slot_queue_repository import UNREADABLE_SOURCE_CHANNEL
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat_turn.slash_commands import _turn_slash_gate
+        from aj_crew.dashboard.chat_turn.turn_locals import _Flow
+        from aj_crew.dashboard.slot_queue_repository import UNREADABLE_SOURCE_CHANNEL
 
         monkeypatch.setattr(chat_runner, "sel", lambda: MagicMock())
         slot, notices = _pinned_linked_namespace(agent="restricted-agent")
@@ -1513,7 +1507,7 @@ class TestSourceChannelHoldsPastAdmission:
 
     @pytest.mark.asyncio
     async def test_switching_onto_the_channel_agent_is_not_refused_here(self, monkeypatch):
-        from kiro_crew.dashboard.chat_turn import slash_commands, turn_admission
+        from aj_crew.dashboard.chat_turn import slash_commands, turn_admission
 
         refused = MagicMock()
         monkeypatch.setattr(turn_admission, "_refuse_channel_turn", refused)
@@ -1530,8 +1524,8 @@ class TestSourceChannelHoldsPastAdmission:
         refused.assert_not_called()
 
     def test_provider_switch_on_an_unlinked_slot_holds_the_source_channel(self):
-        from kiro_crew.dashboard.chat_turn.session_events import _channel_pin_blocks
-        from kiro_crew.dashboard.slot_queue_repository import UNREADABLE_SOURCE_CHANNEL
+        from aj_crew.dashboard.chat_turn.session_events import _channel_pin_blocks
+        from aj_crew.dashboard.slot_queue_repository import UNREADABLE_SOURCE_CHANNEL
 
         unlinked = SimpleNamespace(_slack_linked=False, _slack_channel="")
         a, b = _patches()
@@ -1547,8 +1541,8 @@ class TestSourceChannelHoldsPastAdmission:
 
     @pytest.mark.asyncio
     async def test_a_provider_switch_on_an_unlinked_slot_is_vetoed(self, monkeypatch):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat_turn.turn_locals import _Flow
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat_turn.turn_locals import _Flow
 
         monkeypatch.setattr(chat_runner, "sel", lambda: MagicMock())
         slot, notices = _pinned_linked_namespace()
@@ -1565,9 +1559,9 @@ class TestSourceChannelHoldsPastAdmission:
 
     @pytest.mark.asyncio
     async def test_the_commit_time_check_reads_the_turn_channels(self, monkeypatch):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat_turn import session_events
-        from kiro_crew.dashboard.chat_turn.turn_locals import _Flow
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat_turn import session_events
+        from aj_crew.dashboard.chat_turn.turn_locals import _Flow
 
         monkeypatch.setattr(chat_runner, "sel", lambda: MagicMock())
         monkeypatch.setattr(chat_runner, "refuse_stale_switch", AsyncMock(), raising=False)
@@ -1587,7 +1581,7 @@ class TestSourceChannelHoldsPastAdmission:
 
         monkeypatch.setattr(chat_runner, "record_provider_agent_switch", _record, raising=False)
         monkeypatch.setattr(
-            chat_runner.KiroCrewConfig, "load", classmethod(lambda cls: object()), raising=False
+            chat_runner.AjCrewConfig, "load", classmethod(lambda cls: object()), raising=False
         )
         a, b = _patches()
         with a, b:
@@ -1604,7 +1598,7 @@ class TestFileStemAndDeclaredNameAreOneAgent:
 
     @staticmethod
     def _stems(monkeypatch, ready=True):
-        from kiro_crew.config import loader_snapshots
+        from aj_crew.config import loader_snapshots
 
         monkeypatch.setattr(loader_snapshots, "_MATERIALIZED_AGENTS", frozenset({"captain"}))
         monkeypatch.setattr(loader_snapshots, "_MATERIALIZED_STEMS", {"KiroPkg-captain": "captain"})
@@ -1612,7 +1606,7 @@ class TestFileStemAndDeclaredNameAreOneAgent:
         monkeypatch.setattr(loader_snapshots, "_edition_agent_names", lambda: frozenset())
 
     def test_a_stem_default_matches_a_channel_on_the_declared_name(self, monkeypatch):
-        from kiro_crew.slack.handler import channel_agent_mismatch
+        from aj_crew.slack.handler import channel_agent_mismatch
 
         self._stems(monkeypatch)
         a, b = _patches(cfg=_cfg("captain"), default_template="KiroPkg-captain")
@@ -1624,10 +1618,10 @@ class TestFileStemAndDeclaredNameAreOneAgent:
         """Only the unnamed default is mapped, as the runtime does: a named
         session runs its name verbatim, so a built-in whose stem a user file
         maps to the channel's agent is still another agent."""
-        from kiro_crew.slack.handler import channel_agent_mismatch
+        from aj_crew.slack.handler import channel_agent_mismatch
 
         self._stems(monkeypatch)
-        from kiro_crew.config import loader_snapshots
+        from aj_crew.config import loader_snapshots
 
         monkeypatch.setattr(
             loader_snapshots,
@@ -1647,8 +1641,8 @@ class TestFileStemAndDeclaredNameAreOneAgent:
             assert channel_agent_mismatch(PINNED, "captain", "template") is None
 
     def test_an_unready_snapshot_is_not_refreshed_from_disk(self, monkeypatch):
-        from kiro_crew.config import loader_snapshots
-        from kiro_crew.slack.handler import channel_agent_mismatch
+        from aj_crew.config import loader_snapshots
+        from aj_crew.slack.handler import channel_agent_mismatch
 
         self._stems(monkeypatch, ready=False)
         refresh = MagicMock()
@@ -1661,7 +1655,7 @@ class TestFileStemAndDeclaredNameAreOneAgent:
 
     @pytest.mark.asyncio
     async def test_a_stem_default_import_links_in_a_channel_on_the_declared_name(self, monkeypatch):
-        from kiro_crew.slack.interactions_options import _import_thread_to_slot
+        from aj_crew.slack.interactions_options import _import_thread_to_slot
 
         self._stems(monkeypatch)
         slack = MagicMock()
@@ -1671,9 +1665,7 @@ class TestFileStemAndDeclaredNameAreOneAgent:
         with (
             a,
             b,
-            patch(
-                "kiro_crew.dashboard.chat_persistence.save_slot_off_loop", new_callable=AsyncMock
-            ),
+            patch("aj_crew.dashboard.chat_persistence.save_slot_off_loop", new_callable=AsyncMock),
         ):
             slot = await _import_thread_to_slot(slack, ds, PINNED, "t1")
         assert slot is ds.get_or_create_slot.return_value
@@ -1686,7 +1678,7 @@ class TestMergedQueueKeepsSourceChannelsApart:
 
     @staticmethod
     def _slot(*channels):
-        from kiro_crew.dashboard.slot_queue_repository import SOURCE_CHANNELS_KEY
+        from aj_crew.dashboard.slot_queue_repository import SOURCE_CHANNELS_KEY
 
         queue = []
         for i, ch in enumerate(channels):
@@ -1701,7 +1693,7 @@ class TestMergedQueueKeepsSourceChannelsApart:
         return SimpleNamespace(_queue=queue, queue_pop=_pop)
 
     def test_a_channel_reply_and_a_dashboard_message_are_not_merged(self):
-        from kiro_crew.dashboard.chat_utils_injected_rows import _dequeue_next_message
+        from aj_crew.dashboard.chat_utils_injected_rows import _dequeue_next_message
 
         slot = self._slot(PINNED, "")
         _content, consumed = _dequeue_next_message(slot, True)
@@ -1709,14 +1701,14 @@ class TestMergedQueueKeepsSourceChannelsApart:
         assert [i["id"] for i in slot._queue] == ["q1"]
 
     def test_replies_from_two_channels_are_not_merged(self):
-        from kiro_crew.dashboard.chat_utils_injected_rows import _dequeue_next_message
+        from aj_crew.dashboard.chat_utils_injected_rows import _dequeue_next_message
 
         slot = self._slot(PINNED, OPEN)
         _content, consumed = _dequeue_next_message(slot, True)
         assert [i["id"] for i in consumed] == ["q0"]
 
     def test_entries_of_one_channel_still_merge(self):
-        from kiro_crew.dashboard.chat_utils_injected_rows import _dequeue_next_message
+        from aj_crew.dashboard.chat_utils_injected_rows import _dequeue_next_message
 
         slot = self._slot(PINNED, PINNED)
         content, consumed = _dequeue_next_message(slot, True)
@@ -1735,10 +1727,10 @@ class TestLinkWritersJudgeTheRecordedAgent:
     async def test_dashboard_link_reads_the_record(self, tmp_path, monkeypatch):
         state = _linkable_state(tmp_path, monkeypatch)
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution",
+            "aj_crew.execution_context.read_session_execution",
             lambda *_a, **_k: _recorded(name="A", template_id="A"),
         )
-        a, b = _patches(cfg=_cfg("kirocrew"))
+        a, b = _patches(cfg=_cfg("ajcrew"))
         with a, b:
             async with TestClient(TestServer(_make_slack_app(state))) as client:
                 resp = await client.post(
@@ -1756,10 +1748,10 @@ class TestLinkWritersJudgeTheRecordedAgent:
     ):
         state = _linkable_state(tmp_path, monkeypatch)
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution",
-            lambda *_a, **_k: _recorded(name="kirocrew", template_id="kirocrew"),
+            "aj_crew.execution_context.read_session_execution",
+            lambda *_a, **_k: _recorded(name="ajcrew", template_id="ajcrew"),
         )
-        a, b = _patches(cfg=_cfg("kirocrew"))
+        a, b = _patches(cfg=_cfg("ajcrew"))
         with a, b:
             async with TestClient(TestServer(_make_slack_app(state))) as client:
                 resp = await client.post(
@@ -1770,29 +1762,29 @@ class TestLinkWritersJudgeTheRecordedAgent:
 
     @pytest.mark.asyncio
     async def test_an_existing_link_is_judged_by_its_record(self, monkeypatch):
-        from kiro_crew.slack.interactions_options import (
+        from aj_crew.slack.interactions_options import (
             ChannelAgentMismatchError,
             _import_thread_to_slot,
         )
 
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution",
+            "aj_crew.execution_context.read_session_execution",
             lambda *_a, **_k: _recorded(name="A", template_id="A"),
         )
         existing = SimpleNamespace(agent="", agent_kind="", key="slot1", linked_session_key="")
         ds = _import_ds(existing)
-        a, b = _patches(cfg=_cfg("kirocrew"))
+        a, b = _patches(cfg=_cfg("ajcrew"))
         with a, b, pytest.raises(ChannelAgentMismatchError):
             await _import_thread_to_slot(MagicMock(), ds, PINNED, "t1")
 
     @pytest.mark.asyncio
     async def test_thread_resume_reads_the_record(self, monkeypatch, tmp_path):
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution",
+            "aj_crew.execution_context.read_session_execution",
             lambda *_a, **_k: _recorded(name="A", template_id="A"),
         )
         o = TestResumeInPinnedChannelThread._orch(monkeypatch, tmp_path, slot_agent="")
-        a, b = _patches(cfg=_cfg("kirocrew"))
+        a, b = _patches(cfg=_cfg("ajcrew"))
         with a, b:
             await TestResumeInPinnedChannelThread._resume()
         o.slack.post_message.assert_not_awaited()
@@ -1802,14 +1794,14 @@ class TestLinkWritersJudgeTheRecordedAgent:
 
     @pytest.mark.asyncio
     async def test_an_unreadable_record_fails_closed(self, monkeypatch):
-        from kiro_crew.slack.handler import channel_agent_mismatch, read_link_record
+        from aj_crew.slack.handler import channel_agent_mismatch, read_link_record
 
         def _boom(*_a, **_k):
             raise RuntimeError("unreadable")
 
-        monkeypatch.setattr("kiro_crew.execution_context.read_session_execution", _boom)
+        monkeypatch.setattr("aj_crew.execution_context.read_session_execution", _boom)
         record = await read_link_record("dashboard:s1")
-        a, b = _patches(cfg=_cfg("kirocrew"))
+        a, b = _patches(cfg=_cfg("ajcrew"))
         with a, b:
             assert channel_agent_mismatch(PINNED, "", "", recorded=record) == "<unknown>"
 
@@ -1825,7 +1817,7 @@ class TestLateLinkCheckSeesASwitchDuringThePost:
     ):
         state = _linkable_state(tmp_path, monkeypatch, agent="restricted-agent")
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution",
+            "aj_crew.execution_context.read_session_execution",
             lambda *_a, **_k: _recorded(name="restricted-agent", template_id="restricted-agent"),
         )
         slot = state.get_or_create_slot("s1")
@@ -1847,7 +1839,7 @@ class TestLateLinkCheckSeesASwitchDuringThePost:
         self, monkeypatch, tmp_path
     ):
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution",
+            "aj_crew.execution_context.read_session_execution",
             lambda *_a, **_k: _recorded(name="restricted-agent", template_id="restricted-agent"),
         )
         o = TestResumeInPinnedChannelThread._orch(
@@ -1878,7 +1870,7 @@ class TestLinkRefusedDuringAHalfCommittedSwitch:
     ):
         state = _linkable_state(tmp_path, monkeypatch, agent="other")
         monkeypatch.setattr(
-            "kiro_crew.execution_context.read_session_execution",
+            "aj_crew.execution_context.read_session_execution",
             lambda *_a, **_k: _recorded(name="restricted-agent", template_id="restricted-agent"),
         )
         a, b = _patches()
@@ -1893,7 +1885,7 @@ class TestLinkRefusedDuringAHalfCommittedSwitch:
         assert state.slack_client.post_message.await_count == 0
 
     def test_record_and_field_both_on_the_channel_agent_link(self):
-        from kiro_crew.slack.handler import link_agent_mismatch
+        from aj_crew.slack.handler import link_agent_mismatch
 
         on = SimpleNamespace(agent="restricted-agent", agent_kind="")
         unnamed = SimpleNamespace(agent="", agent_kind="")

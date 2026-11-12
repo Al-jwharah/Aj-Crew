@@ -31,8 +31,7 @@ from typing import Any
 
 import pytest
 
-from conftest import make_dir_link
-from kiro_crew.project_scan import (
+from aj_crew.project_scan import (
     Candidate,
     CandidateTree,
     RootChangedError,
@@ -41,6 +40,7 @@ from kiro_crew.project_scan import (
     root_identity,
     scan,
 )
+from conftest import make_dir_link
 
 _IS_WINDOWS = sys.platform == "win32"
 # A root user reads a mode-000 directory regardless, so the unreadable-subtree
@@ -497,7 +497,7 @@ class TestDirectorySwapRace:
         which is False for a junction.
         """
 
-        from kiro_crew import project_scan
+        from aj_crew import project_scan
 
         original = project_scan._read_dir
 
@@ -549,7 +549,7 @@ class TestDirectorySwapRace:
         # The property is narrow on purpose: the identity refuses a swap it can
         # SEE, meaning one whose inode differs from the recorded one — which is
         # why the swap is staged so the inode is guaranteed to differ.
-        from kiro_crew import project_scan
+        from aj_crew import project_scan
 
         monkeypatch.setattr(project_scan, "_PINNED_SCANDIR", False)
         outside = tmp_path / "outside"
@@ -578,7 +578,7 @@ class TestDirectorySwapRace:
         # left — and ``realpath`` treats the POSIX symlink staged here exactly
         # as it treats the junction this platform cannot stage, so the property
         # proved is the one Windows relies on.
-        from kiro_crew import project_scan
+        from aj_crew import project_scan
 
         monkeypatch.setattr(project_scan, "_PINNED_SCANDIR", False)
         monkeypatch.setattr(project_scan, "_entry_identity", lambda entry: None)
@@ -608,7 +608,7 @@ class TestDirectorySwapRace:
         # the shape that makes that work: the hold is taken before the identity
         # and resolution checks, and released only once the listing has been
         # consumed — never between them.
-        from kiro_crew import project_scan
+        from aj_crew import project_scan
 
         monkeypatch.setattr(project_scan, "_PINNED_SCANDIR", False)
         root = tmp_path / "root"
@@ -649,7 +649,7 @@ class TestDirectorySwapRace:
     ) -> None:
         # No hold, no read: the directory is reported unread rather than listed
         # through the unpinned path the hold exists to replace.
-        from kiro_crew import project_scan
+        from aj_crew import project_scan
 
         monkeypatch.setattr(project_scan, "_PINNED_SCANDIR", False)
         root = tmp_path / "root"
@@ -685,7 +685,7 @@ class TestDirectorySwapRace:
         # shape — the swapped component is an ANCESTOR, so the final component
         # of the root path is still a real directory; only the recorded inode
         # differing from the one actually opened can refuse it.
-        from kiro_crew import project_scan
+        from aj_crew import project_scan
 
         outside = tmp_path / "outside"
         _make(outside, "parent/root/leaked/package.json")
@@ -735,7 +735,7 @@ class TestIdentityUnavailable:
     """
 
     def test_a_zero_inode_is_recorded_as_no_identity(self) -> None:
-        from kiro_crew import project_scan
+        from aj_crew import project_scan
 
         class _ZeroStat:
             st_dev = 0
@@ -749,7 +749,7 @@ class TestIdentityUnavailable:
 
     def test_a_nonzero_inode_is_still_recorded(self) -> None:
         # The zero rule must not swallow genuine identities.
-        from kiro_crew import project_scan
+        from aj_crew import project_scan
 
         class _RealStat:
             st_dev = 7
@@ -766,7 +766,7 @@ class TestIdentityUnavailable:
         # platforms whose DirEntry.stat() populates one. The guard asks the
         # production helper itself rather than reading stat() separately, so the
         # skip condition cannot drift from what the code under test decides.
-        from kiro_crew import project_scan
+        from aj_crew import project_scan
 
         _make(tmp_path, "pkg/")
         with os.scandir(tmp_path) as entries:
@@ -781,7 +781,7 @@ class TestIdentityUnavailable:
     ) -> None:
         # End-to-end in the Windows shape: no descriptor pinning available AND
         # every recorded identity zeroed. Every candidate must still be reported.
-        from kiro_crew import project_scan
+        from aj_crew import project_scan
 
         monkeypatch.setattr(project_scan, "_PINNED_SCANDIR", False)
         monkeypatch.setattr(project_scan, "_entry_identity", lambda entry: (0, 0))
@@ -829,13 +829,13 @@ class TestRedirectingEntries:
     _TAG_SYMLINK = 0xA000000C  # IO_REPARSE_TAG_SYMLINK
 
     def test_a_junction_tagged_entry_is_refused(self) -> None:
-        from kiro_crew import project_scan
+        from aj_crew import project_scan
 
         entry = self._Entry(attrs=self._REPARSE, tag=self._TAG_MOUNT_POINT)
         assert project_scan._entry_redirects(entry) is True  # type: ignore[arg-type]
 
     def test_a_symlink_tagged_entry_is_refused(self) -> None:
-        from kiro_crew import project_scan
+        from aj_crew import project_scan
 
         entry = self._Entry(attrs=self._REPARSE, tag=self._TAG_SYMLINK)
         assert project_scan._entry_redirects(entry) is True  # type: ignore[arg-type]
@@ -845,14 +845,14 @@ class TestRedirectingEntries:
         # whose tag has NO name-surrogate bit: it is a real local directory
         # decorated in place, and refusing it would silently skip a user's
         # OneDrive-backed tree.
-        from kiro_crew import project_scan
+        from aj_crew import project_scan
 
         entry = self._Entry(attrs=self._REPARSE, tag=0x9000_001A)
         assert project_scan._entry_redirects(entry) is False  # type: ignore[arg-type]
 
     def test_a_plain_directory_still_scans(self) -> None:
         # The POSIX shape: no st_file_attributes at all resolves to 0.
-        from kiro_crew import project_scan
+        from aj_crew import project_scan
 
         assert project_scan._entry_redirects(self._Entry()) is False  # type: ignore[arg-type]
 
@@ -860,7 +860,7 @@ class TestRedirectingEntries:
         # Classification settles nothing on a failed stat; the descent-time
         # guards (O_NOFOLLOW, identity, leaf resolution) own that case, the
         # same split ``_entry_identity`` applies.
-        from kiro_crew import project_scan
+        from aj_crew import project_scan
 
         assert project_scan._entry_redirects(self._Entry(fail=True)) is False  # type: ignore[arg-type]
 

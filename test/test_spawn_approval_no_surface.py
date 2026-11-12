@@ -18,7 +18,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.subagent import SpawnApprovalUnreachable, SubagentManager
+from aj_crew.subagent import SpawnApprovalUnreachable, SubagentManager
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -190,7 +190,7 @@ class TestUnansweredablePromptIsRefusedNow:
         ``outcome`` keeps its existing value on purpose — this IS a rejection —
         so the distinguishing fact has to be in the metadata.
         """
-        import kiro_crew.subagent as subagent_mod
+        import aj_crew.subagent as subagent_mod
 
         calls: list[dict] = []
         recorder = MagicMock()
@@ -211,7 +211,7 @@ class TestUnansweredablePromptIsRefusedNow:
         """An operator grepping for the run id finds the cause, not just the effect.
 
         Captured at the root logger: the coordinators are rebound onto
-        ``kiro_crew.subagent``'s namespace (``bind_component_globals``), so the
+        ``aj_crew.subagent``'s namespace (``bind_component_globals``), so the
         record is emitted under that name rather than under ``admission``.
         """
         mgr = _manager(_unreachable)
@@ -318,7 +318,7 @@ class TestTheOtherTwoOutcomesAreUnchanged:
 
 def _probe(state: object, *, slack: object = MagicMock()) -> bool:
     """Run ``_dashboard_client_attached`` against a hand-built gateway."""
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     fake = SimpleNamespace(slack=slack, _owner_id="U123", dashboard_state=state)
     return GatewayOrchestrator._dashboard_client_attached(fake)  # type: ignore[arg-type]
@@ -326,7 +326,7 @@ def _probe(state: object, *, slack: object = MagicMock()) -> bool:
 
 def _hub_count(sockets: list[dict]) -> int:
     """Run the real ``dashboard_user_ws_count`` over hand-built sockets."""
-    from kiro_crew.dashboard.websocket_hub import WebSocketHub
+    from aj_crew.dashboard.websocket_hub import WebSocketHub
 
     class _Sock:
         def __init__(self, *, closed: bool, dashboard_user: bool) -> None:
@@ -429,7 +429,7 @@ def _callback(  # type: ignore[no-untyped-def]
     on_host_decision=None,
 ):
     """Build one real ``_interactive_approval`` closure over a fake gateway."""
-    from kiro_crew.slack import gateway as gateway_mod
+    from aj_crew.slack import gateway as gateway_mod
 
     monkeypatch.setattr(
         gateway_mod, "safety_override", lambda: SimpleNamespace(is_active=lambda: yolo)
@@ -462,7 +462,7 @@ def _callback(  # type: ignore[no-untyped-def]
 
 
 def _event():  # type: ignore[no-untyped-def]
-    from kiro_crew.providers.base import LLMEvent
+    from aj_crew.providers.base import LLMEvent
 
     return LLMEvent(kind="permission_request", request_id="spawn:abc123", title="spawn_run(x)")
 
@@ -521,7 +521,7 @@ class TestOnlyTheSpawnGateRaises:
         """
         from pathlib import Path
 
-        import kiro_crew.slack.gateway as gateway_mod
+        import aj_crew.slack.gateway as gateway_mod
 
         # The facade and the owners it composes (``_init_subagents`` and its
         # closures live in gateway_runtime/subagent_wiring.py), read as one.
@@ -563,8 +563,8 @@ class TestHostDecisionsAreReported:
 
     @pytest.mark.asyncio
     async def test_an_unanswered_slack_prompt_is_a_host_decline(self, monkeypatch) -> None:  # type: ignore[no-untyped-def]
-        from kiro_crew.constants import DENY_CAUSE_APPROVAL_TIMEOUT
-        from kiro_crew.slack import gateway as gateway_mod
+        from aj_crew.constants import DENY_CAUSE_APPROVAL_TIMEOUT
+        from aj_crew.slack import gateway as gateway_mod
 
         monkeypatch.setattr(gateway_mod.DashboardState, "_APPROVAL_TIMEOUT", 0)
         slack = MagicMock()

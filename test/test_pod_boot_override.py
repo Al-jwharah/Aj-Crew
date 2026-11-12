@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
+from aj_crew.platform_compat import IS_POSIX
+from aj_crew.pod import cli as pod_cli
+from aj_crew.pod import runtime as rt
+from aj_crew.pod import unit as unit_mod
+from aj_crew.pod.config import PodConfig
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew.platform_compat import IS_POSIX
-from kiro_crew.pod import cli as pod_cli
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod import unit as unit_mod
-from kiro_crew.pod.config import PodConfig
 
 pytestmark = pytest.mark.skipif(
     not IS_POSIX,
@@ -25,8 +25,8 @@ def pod_plane(tmp_path: Path, monkeypatch) -> PodConfig:
     """A pod plane rooted in ``tmp_path``, with systemd's unit dir redirected."""
     monkeypatch.setattr(rt, "IS_MACOS", False)
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "envs"))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "envs"))
     unit_root = tmp_path / "systemd-user"
     monkeypatch.setattr(
         unit_mod,
@@ -73,7 +73,7 @@ class TestDropInRendering:
         # `override.conf` is the conventional operator-owned filename created by
         # `systemctl edit`. Claiming it would overwrite the operator on up and
         # delete their configuration on down.
-        assert path.name == "50-kirocrew-pod.conf"
+        assert path.name == "50-ajcrew-pod.conf"
 
     def test_operator_override_conf_survives_install_and_remove(self, pod_plane: PodConfig) -> None:
         directory = unit_mod.dropin_dir(pod_plane, "wt")
@@ -106,7 +106,7 @@ class TestDropInRendering:
 
         with pytest.raises(OSError, match=r"(?:symbolic link|symlink or junction)"):
             unit_mod.install_dropin(pod_plane, "wt", Path("/checkouts/wt"))
-        assert not (outside / "50-kirocrew-pod.conf").exists()
+        assert not (outside / "50-ajcrew-pod.conf").exists()
 
     def test_install_then_remove_leaves_no_directory(self, pod_plane: PodConfig) -> None:
         unit_mod.install_dropin(pod_plane, "wt", Path("/checkouts/wt"))
@@ -336,7 +336,7 @@ class TestUpVerifiesTheSeedLanded:
         assert excinfo.value.code == 1
         err = capsys.readouterr().err
         assert "was NOT applied" in err
-        assert "kirocrew pod down wt" in err
+        assert "ajcrew pod down wt" in err
         assert (home / "sessions").is_dir()
 
     def test_home_state_probe_reads_an_empty_home_as_empty(self, pod_plane: PodConfig) -> None:

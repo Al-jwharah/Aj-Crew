@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import _llama_lib_path as llama_lib_path
+from aj_crew import _llama_lib_path as llama_lib_path
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _BUNDLED_PLATFORMS = (
@@ -21,9 +21,9 @@ _BUNDLED_PLATFORMS = (
     "win_amd64",
 )
 _ENTRYPOINTS = (
-    _REPO_ROOT / "src" / "kiro_crew" / "__main__.py",
-    _REPO_ROOT / "src" / "kiro_crew" / "cli.py",
-    _REPO_ROOT / "src" / "kiro_crew" / "mcp_gateway" / "gatewayd.py",
+    _REPO_ROOT / "src" / "aj_crew" / "__main__.py",
+    _REPO_ROOT / "src" / "aj_crew" / "cli.py",
+    _REPO_ROOT / "src" / "aj_crew" / "mcp_gateway" / "gatewayd.py",
 )
 
 
@@ -45,10 +45,10 @@ class TestOperatorLibPathOverride:
         [
             "/opt/my-gpu-llama",
             "/srv/llama.cpp/build/bin",
-            "/srv/kiro_crew/_vendor/llama_cpp_libs",
-            "/srv/kiro_crew/_vendor/llama_cpp_libs/ppc64le",
+            "/srv/aj_crew/_vendor/llama_cpp_libs",
+            "/srv/aj_crew/_vendor/llama_cpp_libs/ppc64le",
             "/srv/other_pkg/_vendor/llama_cpp_libs/linux_x86_64",
-            "/srv/kiro_crew/vendor/llama_cpp_libs/linux_x86_64",
+            "/srv/aj_crew/vendor/llama_cpp_libs/linux_x86_64",
         ],
     )
     def test_an_operator_directory_is_an_override(
@@ -62,8 +62,8 @@ class TestOperatorLibPathOverride:
         self, monkeypatch: pytest.MonkeyPatch, platform_name: str
     ) -> None:
         elsewhere = (
-            Path("/srv/kirocrew/0.7.9/lib/python3.12/site-packages")
-            / "kiro_crew"
+            Path("/srv/ajcrew/0.7.9/lib/python3.12/site-packages")
+            / "aj_crew"
             / "_vendor"
             / llama_lib_path._LIBS_DIR_NAME
             / platform_name
@@ -87,7 +87,7 @@ class TestDropInheritedLibPath:
         "value",
         [
             "",
-            "/srv/kirocrew/site-packages/kiro_crew/_vendor/" "llama_cpp_libs/linux_x86_64",
+            "/srv/ajcrew/site-packages/aj_crew/_vendor/" "llama_cpp_libs/linux_x86_64",
         ],
     )
     def test_bundled_and_empty_values_are_removed_and_recorded(
@@ -118,7 +118,7 @@ class TestDropInheritedLibPath:
     def test_repeated_drop_is_a_noop_and_preserves_the_record(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        inherited = "/srv/kirocrew/site-packages/kiro_crew/_vendor/" "llama_cpp_libs/macos_arm64"
+        inherited = "/srv/ajcrew/site-packages/aj_crew/_vendor/" "llama_cpp_libs/macos_arm64"
         monkeypatch.setenv(llama_lib_path._LIB_PATH_ENV, inherited)
 
         assert llama_lib_path.drop_inherited_lib_path() == inherited
@@ -130,7 +130,7 @@ class TestConsumeDroppedInheritedLibPath:
     """The hand-over that turns a silent record into exactly one line."""
 
     def test_the_record_is_handed_over_exactly_once(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        inherited = "/srv/kirocrew/site-packages/kiro_crew/_vendor/" "llama_cpp_libs/win_amd64"
+        inherited = "/srv/ajcrew/site-packages/aj_crew/_vendor/" "llama_cpp_libs/win_amd64"
         monkeypatch.setenv(llama_lib_path._LIB_PATH_ENV, inherited)
         llama_lib_path.drop_inherited_lib_path()
 
@@ -188,7 +188,7 @@ class TestTheRemovalIsReportedByTheLoader:
         the second run and hide whether the guard is the thing stopping the
         line from repeating.
         """
-        import kiro_crew.embeddings as emb
+        import aj_crew.embeddings as emb
 
         monkeypatch.setattr(emb, "_platform_libs_dirname", lambda: None)
         emb._load_llama_class.cache_clear()
@@ -200,10 +200,10 @@ class TestTheRemovalIsReportedByTheLoader:
     def test_the_loader_logs_the_removed_value_once_and_not_again(
         self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
     ) -> None:
-        import kiro_crew.embeddings  # noqa: F401  (import noise before capture)
+        import aj_crew.embeddings  # noqa: F401  (import noise before capture)
 
         inherited = (
-            "/srv/kirocrew/0.7.9/lib/python3.12/site-packages/kiro_crew/_vendor/"
+            "/srv/ajcrew/0.7.9/lib/python3.12/site-packages/aj_crew/_vendor/"
             "llama_cpp_libs/linux_x86_64"
         )
         monkeypatch.setenv(llama_lib_path._LIB_PATH_ENV, inherited)
@@ -217,10 +217,10 @@ class TestTheRemovalIsReportedByTheLoader:
 
         assert len(reported) == 1
         assert reported[0].levelno == logging.INFO
-        assert reported[0].name == "kiro_crew.embeddings"
+        assert reported[0].name == "aj_crew.embeddings"
         assert llama_lib_path._LIB_PATH_ENV in reported[0].getMessage()
         assert inherited in reported[0].getMessage()
-        # Still there for `kirocrew doctor`, which reads it after the line.
+        # Still there for `ajcrew doctor`, which reads it after the line.
         assert llama_lib_path.dropped_inherited_lib_path() == inherited
 
         caplog.clear()
@@ -232,7 +232,7 @@ class TestTheRemovalIsReportedByTheLoader:
     def test_a_removed_empty_value_is_reported_too(
         self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
     ) -> None:
-        import kiro_crew.embeddings  # noqa: F401  (import noise before capture)
+        import aj_crew.embeddings  # noqa: F401  (import noise before capture)
 
         monkeypatch.setenv(llama_lib_path._LIB_PATH_ENV, "")
         assert llama_lib_path.drop_inherited_lib_path() == ""
@@ -247,7 +247,7 @@ class TestTheRemovalIsReportedByTheLoader:
     def test_an_untouched_environment_reports_nothing(
         self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
     ) -> None:
-        import kiro_crew.embeddings  # noqa: F401  (import noise before capture)
+        import aj_crew.embeddings  # noqa: F401  (import noise before capture)
 
         monkeypatch.delenv(llama_lib_path._LIB_PATH_ENV, raising=False)
         assert llama_lib_path.drop_inherited_lib_path() is None

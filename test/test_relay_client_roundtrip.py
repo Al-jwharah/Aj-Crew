@@ -28,15 +28,15 @@ from relay_client_helpers import (
     valid_message,
 )
 
-from kiro_crew.dashboard.kiro_relay.caller import RELAY_USER_HEADER
-from kiro_crew.dashboard.relay_headers import is_relay_header
-from kiro_crew.relay_client import connection as connection_module
-from kiro_crew.relay_client.client import STATE_CONNECTED
-from kiro_crew.relay_client.connection import HostConnection, RelayTimings
-from kiro_crew.relay_client.protocol import DRAIN_BACKSTOP_SECONDS
-from kiro_crew.relay_client.streams import HttpStream
-from kiro_crew.relay_client.token_source import HostCredential
-from kiro_crew.testing.wait import async_wait_until, await_until, until_parked
+from aj_crew.dashboard.kiro_relay.caller import RELAY_USER_HEADER
+from aj_crew.dashboard.relay_headers import is_relay_header
+from aj_crew.relay_client import connection as connection_module
+from aj_crew.relay_client.client import STATE_CONNECTED
+from aj_crew.relay_client.connection import HostConnection, RelayTimings
+from aj_crew.relay_client.protocol import DRAIN_BACKSTOP_SECONDS
+from aj_crew.relay_client.streams import HttpStream
+from aj_crew.relay_client.token_source import HostCredential
+from aj_crew.testing.wait import async_wait_until, await_until, until_parked
 
 pytestmark = pytest.mark.asyncio
 
@@ -74,7 +74,7 @@ async def test_handshake_sends_hello_with_the_host_token_and_connects_on_ready()
                 "move-done",
             }
             assert leg.token == TOKEN
-            assert leg.user_agent.startswith("kiro-crew/")
+            assert leg.user_agent.startswith("aj-crew/")
 
             ready = ready_frame()
             await leg.send(ready)
@@ -457,7 +457,7 @@ async def test_a_crew_that_drops_the_request_reports_crew_unreachable() -> None:
 
 
 async def test_streams_past_the_connection_cap_are_refused(monkeypatch) -> None:
-    from kiro_crew.relay_client import connection as connection_mod
+    from aj_crew.relay_client import connection as connection_mod
 
     monkeypatch.setattr(connection_mod, "MAX_STREAMS_PER_CONNECTION", 2)
     async with FakeRelay() as relay, FakeCrew() as crew:
@@ -591,7 +591,7 @@ async def test_a_request_cancel_stops_the_stream_and_sends_nothing_more() -> Non
 
 
 async def test_a_new_host_token_goes_down_the_connection() -> None:
-    from kiro_crew.relay_client.token_source import HostCredential
+    from aj_crew.relay_client.token_source import HostCredential
 
     async with FakeRelay() as relay, FakeCrew() as crew:
         client, source, ingress = make_client(relay, crew)
@@ -1131,7 +1131,7 @@ async def test_stop_while_dialling_returns() -> None:
 async def test_stop_ends_within_its_budget_when_a_close_handshake_never_finishes(
     monkeypatch,
 ) -> None:
-    from kiro_crew.relay_client import client as client_module
+    from aj_crew.relay_client import client as client_module
 
     handshake = asyncio.Event()
 
@@ -1181,7 +1181,7 @@ async def test_an_unreachable_crew_sends_the_relay_no_port_or_os_error_text() ->
 
 
 async def test_empty_partial_frames_end_only_the_overflowing_stream(monkeypatch) -> None:
-    from kiro_crew.relay_client import streams
+    from aj_crew.relay_client import streams
 
     monkeypatch.setattr(streams, "WS_REASSEMBLY_MAX_PIECES", 4, raising=False)
     async with FakeRelay() as relay, FakeCrew() as crew:
@@ -1291,7 +1291,7 @@ async def test_websocket_redirect_is_refused_without_contacting_target(monkeypat
 async def test_ten_mib_binary_message_is_delivered_to_the_crew(monkeypatch) -> None:
     from aiohttp import WSMsgType, web
 
-    from kiro_crew.relay_client.protocol import WS_MESSAGE_MAX_BYTES, split_ws_data
+    from aj_crew.relay_client.protocol import WS_MESSAGE_MAX_BYTES, split_ws_data
 
     payload = b"x" * WS_MESSAGE_MAX_BYTES
     received = []
@@ -1404,7 +1404,7 @@ async def test_a_body_shorter_than_its_content_length_ends_the_stream() -> None:
 async def test_bad_frames_do_not_stop_the_live_connection(monkeypatch, caplog, case) -> None:
     import gc
 
-    from kiro_crew.relay_client.connection import HostConnection
+    from aj_crew.relay_client.connection import HostConnection
 
     async def broken_ping(self, frame):
         raise RuntimeError("handler failed")
@@ -1440,7 +1440,7 @@ async def test_bad_frames_do_not_stop_the_live_connection(monkeypatch, caplog, c
                 if case == "handler":
                     assert error["message"] == "the relay client could not handle this frame"
                     assert any(
-                        rec.name == "kiro_crew.relay_client.connection" and rec.exc_info
+                        rec.name == "aj_crew.relay_client.connection" and rec.exc_info
                         for rec in caplog.records
                     )
                 head = valid_message("frames/request")
@@ -1464,7 +1464,7 @@ async def test_bad_frames_do_not_stop_the_live_connection(monkeypatch, caplog, c
 
 @pytest.mark.parametrize("error_type", [asyncio.CancelledError, ConnectionError])
 async def test_dispatch_preserves_cancellation_and_connection_errors(monkeypatch, error_type):
-    from kiro_crew.relay_client.connection import HostConnection
+    from aj_crew.relay_client.connection import HostConnection
 
     async def broken_ping(self, frame):
         raise error_type("propagate")

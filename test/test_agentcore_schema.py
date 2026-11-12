@@ -1,7 +1,7 @@
 """Direct coverage of AWS-free AgentCore policy-field validators.
 
 Governance parse re-exports these; later stack PRs import them from the AWS
-extra. A host that never installed ``kirocrew[agentcore]`` still has to reject
+extra. A host that never installed ``ajcrew[agentcore]`` still has to reject
 a credentialed, fragmented, over-long, or whitespace-bearing Gateway URL
 before it can land in Policy.json or a systemd Environment= line.
 """
@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.platform.agentcore_schema import (
+from aj_crew.platform.agentcore_schema import (
     AGENTCORE_GATEWAY_URL_MAX,
     WORKLOAD_NAME_MAX,
     WORKLOAD_NAME_MIN,

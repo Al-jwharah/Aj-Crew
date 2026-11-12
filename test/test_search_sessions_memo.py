@@ -14,10 +14,10 @@ import zlib
 
 import pytest
 
-from kiro_crew import history_index, history_search
-from kiro_crew._sqlite_compat import fts5_available
-from kiro_crew.history import ConversationLog
-from kiro_crew.history_index import SessionSearchIndex
+from aj_crew import history_index, history_search
+from aj_crew._sqlite_compat import fts5_available
+from aj_crew.history import ConversationLog
+from aj_crew.history_index import SessionSearchIndex
 
 pytestmark = pytest.mark.skipif(not fts5_available(), reason="SQLite built without FTS5")
 

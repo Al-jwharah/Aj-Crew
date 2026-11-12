@@ -24,7 +24,7 @@ import { serveDist } from './lib/serve-dist.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/pinned-prompt'
 const SLOT = 'chat-pinned'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -35,7 +35,7 @@ const PNG_B64 =
 
 const LONG_PROMPT = [
   'Clean up leftover local infrastructure from a finished profiling task in the',
-  'KiroCrew workspace: stop the demo server on :8931, stop the Vite dev server on',
+  'Aj Crew workspace: stop the demo server on :8931, stop the Vite dev server on',
   ':3000, and remove the worktrees whose PRs already merged. Leave anything that',
   'still holds uncommitted work, and do not touch the primary checkout — it is 773',
   'commits behind main and I want it that way for now.',
@@ -47,7 +47,7 @@ const slots = [{
   running: false,
   last_message: 'Two complaints now, and they share a cause in the preview helper.',
   messages: 6,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

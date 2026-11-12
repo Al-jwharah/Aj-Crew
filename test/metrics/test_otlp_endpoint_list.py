@@ -28,12 +28,12 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig, TelemetryConfig
-from kiro_crew.metrics import otlp_endpoints as oe
-from kiro_crew.metrics import provider as pm
-from kiro_crew.metrics.product_metrics import PRODUCT_METRICS
-from kiro_crew.platform.defaults import DefaultTelemetryProvider
-from kiro_crew.platform.interfaces import OtlpDestination
+from aj_crew.config.loader import AjCrewConfig, TelemetryConfig
+from aj_crew.metrics import otlp_endpoints as oe
+from aj_crew.metrics import provider as pm
+from aj_crew.metrics.product_metrics import PRODUCT_METRICS
+from aj_crew.platform.defaults import DefaultTelemetryProvider
+from aj_crew.platform.interfaces import OtlpDestination
 
 OPS = "https://collector.example.com/v1/metrics"
 EDITION = "https://telemetry.example.net/v1/metrics"
@@ -54,7 +54,7 @@ BUILD_DEST = OtlpDestination(
 def _fresh(_floor_monkeypatch):
     oe.reset_warnings()
     pm.reset_for_testing()
-    _floor_monkeypatch.delenv("KIROCREW_TELEMETRY", raising=False)
+    _floor_monkeypatch.delenv("AJCREW_TELEMETRY", raising=False)
     yield
     pm.reset_for_testing()
     oe.reset_warnings()
@@ -121,7 +121,7 @@ class TestEntries:
                     "endpoint": OPS,
                     "headers_env": {"Authorization": "OPS_OTLP_AUTH"},
                     "temporality": "cumulative",
-                    "allow": ["kirocrew.session.started"],
+                    "allow": ["ajcrew.session.started"],
                     "point_attributes": {"ClientType": "cli"},
                     "resource_allow": ["service.name"],
                 }
@@ -132,7 +132,7 @@ class TestEntries:
         assert dict(dest.headers_env) == {"Authorization": "OPS_OTLP_AUTH"}
         assert dest.process_env_credentials is False
         assert dest.temporality == "cumulative"
-        assert dest.allow == frozenset({"kirocrew.session.started"})
+        assert dest.allow == frozenset({"ajcrew.session.started"})
         assert dict(dest.point_attributes) == {"ClientType": "cli"}
         assert dest.resource_allow == frozenset({"service.name"})
         assert dest.session is None
@@ -178,7 +178,7 @@ class TestEntries:
                 {"name": "ops\nx", "endpoint": OPS},
                 {"name": "\nops", "endpoint": OPS},
                 {"endpoint": OPS, "headers_env": {"X\nScope": "OPS_SCOPE"}},
-                {"endpoint": OPS, "allow": ["kirocrew.session\n.started"]},
+                {"endpoint": OPS, "allow": ["ajcrew.session\n.started"]},
             ],
         ),
     )
@@ -248,7 +248,7 @@ class TestEntries:
         assert len(dests) == oe.MAX_ENTRIES
 
     def test_the_loader_keeps_every_row_so_each_is_warned_under_its_index(self, caplog):
-        from kiro_crew.config.loader_builders import _build_telemetry_config
+        from aj_crew.config.loader_builders import _build_telemetry_config
 
         tel = _build_telemetry_config({"otlp_endpoints": ["junk", {"endpoint": OPS}, 3]})
         assert tel.otlp_endpoints == ["junk", {"endpoint": OPS}, 3]
@@ -261,7 +261,7 @@ class TestEntries:
         assert "junk" not in text
 
     def test_the_loader_reads_a_non_list_as_empty(self):
-        from kiro_crew.config.loader_builders import _build_telemetry_config
+        from aj_crew.config.loader_builders import _build_telemetry_config
 
         assert _build_telemetry_config({"otlp_endpoints": "http://x"}).otlp_endpoints == []
         assert _build_telemetry_config({}).otlp_endpoints == []
@@ -298,12 +298,12 @@ class TestTrailingWhitespace:
             {
                 "name": "ops",
                 "endpoint": OPS,
-                "allow": ["kirocrew.session.started\n"],
+                "allow": ["ajcrew.session.started\n"],
                 "point_attributes": {"ClientType": "cli\n"},
                 "resource_allow": ["service.name \n"],
             }
         )
-        assert dest.allow == frozenset({"kirocrew.session.started"})
+        assert dest.allow == frozenset({"ajcrew.session.started"})
         assert dict(dest.point_attributes) == {"ClientType": "cli"}
         assert dest.resource_allow == frozenset({"service.name"})
 
@@ -312,7 +312,7 @@ class TestTrailingWhitespace:
             "name": "ops",
             "endpoint": OPS,
             "headers_env": {"X-Scope": "S3CRET_HOLDER\n"},
-            "allow": ["kirocrew.session.started\n"],
+            "allow": ["ajcrew.session.started\n"],
         }
         # Resolved twice, as every recorder build and Privacy panel read does.
         self._only(raw)
@@ -323,7 +323,7 @@ class TestTrailingWhitespace:
         assert "S3CRET_HOLDER" not in caplog.text
 
     def test_a_clean_entry_logs_no_trim_warning(self, caplog):
-        self._only({"name": "ops", "endpoint": OPS, "allow": ["kirocrew.session.started"]})
+        self._only({"name": "ops", "endpoint": OPS, "allow": ["ajcrew.session.started"]})
         assert "trailing whitespace" not in caplog.text
 
     def test_two_keys_that_meet_once_trimmed_refuse_the_entry(self, caplog):
@@ -344,7 +344,7 @@ class TestTrailingWhitespace:
             (oe._HEADER_RE, "X-Scope"),
             (oe._ENV_RE, "OPS_SCOPE"),
             (oe._POINT_VALUE_RE, "cli"),
-            (oe._METRIC_RE, "kirocrew.session.started"),
+            (oe._METRIC_RE, "ajcrew.session.started"),
             (oe._RESOURCE_KEY_RE, "service.name"),
         ]:
             assert pattern.fullmatch(value)
@@ -411,7 +411,7 @@ class TestBuildShippedDestinations:
 
 class TestGates:
     def test_the_policy_host_check_applies_to_a_build_shipped_destination(self, monkeypatch):
-        from kiro_crew.platform.governance import parse_policy
+        from aj_crew.platform.governance import parse_policy
 
         _provider(monkeypatch, [BUILD_DEST])
         ceiling = parse_policy(
@@ -429,15 +429,15 @@ class TestGates:
         )
         monkeypatch.setattr(pm, "_policy_ceiling", lambda: ceiling)
         cfg = TelemetryConfig(otlp_endpoints=[{"name": "mine", "endpoint": OPS}])
-        with patch("kiro_crew.sel.sel"):
+        with patch("aj_crew.sel.sel"):
             assert [d.name for d in pm._otlp_destinations(cfg)] == ["mine"]
 
     def test_consent_off_builds_no_reader_even_for_a_locked_one(self, monkeypatch, tmp_path):
         _provider(monkeypatch, [BUILD_DEST])
         built: list = []
         monkeypatch.setattr(pm, "_build_otlp_reader", lambda d, c: built.append(d) or None)
-        cfg = KiroCrewConfig(telemetry=TelemetryConfig(enabled=False))
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+        cfg = AjCrewConfig(telemetry=TelemetryConfig(enabled=False))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
         with patch.object(pm, "_default_metrics_dir", return_value=tmp_path):
             assert pm.get_recorder().enabled is False
         assert built == []
@@ -446,19 +446,19 @@ class TestGates:
         _provider(monkeypatch, [BUILD_DEST])
         built: list = []
         monkeypatch.setattr(pm, "_build_otlp_reader", lambda d, c: built.append(d) or None)
-        cfg = KiroCrewConfig(telemetry=TelemetryConfig(enabled=True))
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
-        monkeypatch.setenv("KIROCREW_TELEMETRY", "0")
+        cfg = AjCrewConfig(telemetry=TelemetryConfig(enabled=True))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
+        monkeypatch.setenv("AJCREW_TELEMETRY", "0")
         with patch.object(pm, "_default_metrics_dir", return_value=tmp_path):
             assert pm.get_recorder().enabled is False
         assert built == []
 
     def test_an_lts_build_ignores_the_local_list_but_keeps_the_build_one(self, monkeypatch):
-        from kiro_crew import edition_locks
+        from aj_crew import edition_locks
 
-        monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+        monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
         edition_locks.reset_logged()
-        from kiro_crew.platform.governance import parse_policy
+        from aj_crew.platform.governance import parse_policy
 
         _provider(monkeypatch, [BUILD_DEST])
         cfg = TelemetryConfig(otlp_endpoint=OPS, otlp_endpoints=[{"name": "mine", "endpoint": OPS}])
@@ -466,7 +466,7 @@ class TestGates:
         assert edition_locks.config_path_locked("telemetry.otlp_endpoints")
         # The build's destination still needs the policy: with none, the LTS
         # baseline refuses every host; a policy that names it lets it through.
-        with patch("kiro_crew.sel.sel"):
+        with patch("aj_crew.sel.sel"):
             assert pm._otlp_destinations(cfg) == ()
             ceiling = parse_policy(
                 {
@@ -519,7 +519,7 @@ def _otlp_available() -> bool:
 
 requires_otlp = pytest.mark.skipif(
     not _otlp_available(),
-    reason='needs the optional extra: pip install "kirocrew[otlp]"',
+    reason='needs the optional extra: pip install "ajcrew[otlp]"',
 )
 
 
@@ -582,7 +582,7 @@ class TestReaderBuild:
         from opentelemetry.sdk.metrics import Counter, Histogram, UpDownCounter
         from opentelemetry.sdk.metrics.export import AggregationTemporality as T
 
-        from kiro_crew.metrics.temporality import TEMPORALITY_ENV_VAR
+        from aj_crew.metrics.temporality import TEMPORALITY_ENV_VAR
 
         monkeypatch.setenv(TEMPORALITY_ENV_VAR, env)
         captured = _capture_exporter(monkeypatch)
@@ -598,7 +598,7 @@ class TestReaderBuild:
         assert set(captured["preferred_temporality"].values()) == {T.CUMULATIVE}
 
     def test_no_temporality_keeps_the_core_default(self, monkeypatch):
-        from kiro_crew.metrics.temporality import TEMPORALITY_ENV_VAR, delta_preference
+        from aj_crew.metrics.temporality import TEMPORALITY_ENV_VAR, delta_preference
 
         monkeypatch.delenv(TEMPORALITY_ENV_VAR, raising=False)
         captured = _capture_exporter(monkeypatch)
@@ -629,17 +629,17 @@ class TestDisclosure:
         assert pm.otlp_egress_active(cfg) is True
 
     def test_the_panel_lists_every_destination_by_name_only(self, monkeypatch):
-        from kiro_crew.dashboard.handlers import telemetry as h
+        from aj_crew.dashboard.handlers import telemetry as h
 
         _provider(monkeypatch, [BUILD_DEST])
-        cfg = KiroCrewConfig(
+        cfg = AjCrewConfig(
             telemetry=TelemetryConfig(
                 enabled=True,
                 otlp_endpoint="https://user:pw@legacy.example/v1/metrics",
                 otlp_endpoints=[{"name": "mine", "endpoint": OPS}],
             )
         )
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
         state = h._telemetry_cfg()
         assert state.otlp_configured is True
         assert list(state.otlp_destinations) == [
@@ -652,15 +652,15 @@ class TestDisclosure:
             assert leaked not in text
 
     def test_an_unresolvable_posture_reports_egress_with_no_names(self, monkeypatch):
-        from kiro_crew.dashboard.handlers import telemetry as h
+        from aj_crew.dashboard.handlers import telemetry as h
 
         def boom(cfg):
             raise RuntimeError("provider exploded")
 
         prov = _provider(monkeypatch)
         prov.otlp_destinations = boom
-        cfg = KiroCrewConfig(telemetry=TelemetryConfig(enabled=True))
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+        cfg = AjCrewConfig(telemetry=TelemetryConfig(enabled=True))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
         state = h._telemetry_cfg()
         assert (state.otlp_configured, state.otlp_destinations) == (True, ())
 
@@ -699,7 +699,7 @@ class TestRecheckFollowsTheList:
         holder = {}
 
         def set_entries(rows):
-            holder["cfg"] = KiroCrewConfig(
+            holder["cfg"] = AjCrewConfig(
                 telemetry=TelemetryConfig(
                     enabled=True,
                     local_dir=str(tmp_path),
@@ -709,7 +709,7 @@ class TestRecheckFollowsTheList:
             )
 
         set_entries(entries)
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: holder["cfg"]))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: holder["cfg"]))
 
         def live_names():
             return sorted(r.dest_name for r in live)
@@ -786,7 +786,7 @@ def test_two_entries_reach_their_own_collectors_with_their_own_narrowing(monkeyp
     environment. Both through the live build."""
     from opentelemetry.proto.collector.metrics.v1 import metrics_service_pb2
 
-    from kiro_crew.metrics import inventory_gauges as ig
+    from aj_crew.metrics import inventory_gauges as ig
 
     # Loopback only: these listen for our own export.
     server = _LoopbackServer(("127.0.0.1", 0), _Handler)
@@ -807,8 +807,8 @@ def test_two_entries_reach_their_own_collectors_with_their_own_narrowing(monkeyp
             ],
         )
         monkeypatch.setenv("EDITION_OTLP_AUTH", "Bearer edition-token")
-        monkeypatch.setenv("KIROCREW_TELEMETRY", "1")
-        cfg = KiroCrewConfig()
+        monkeypatch.setenv("AJCREW_TELEMETRY", "1")
+        cfg = AjCrewConfig()
         cfg.telemetry = dataclasses.replace(
             cfg.telemetry,
             enabled=True,
@@ -817,7 +817,7 @@ def test_two_entries_reach_their_own_collectors_with_their_own_narrowing(monkeyp
         )
         ig.reset_for_testing()
         ig.mark_install_reporter()
-        with patch.object(KiroCrewConfig, "load", return_value=cfg):
+        with patch.object(AjCrewConfig, "load", return_value=cfg):
             with patch.object(pm, "_default_metrics_dir", return_value=tmp_path):
                 recorder = pm.get_recorder()
                 assert recorder.enabled
@@ -884,8 +884,8 @@ def test_a_list_entry_never_sends_the_process_wide_otel_headers(monkeypatch, tmp
         monkeypatch.delenv("OTEL_EXPORTER_OTLP_METRICS_HEADERS", raising=False)
         monkeypatch.setenv(env_var, "x-env-auth=env-secret")
         monkeypatch.setenv("OWN_OTLP_AUTH", "own-secret")
-        monkeypatch.setenv("KIROCREW_TELEMETRY", "1")
-        cfg = KiroCrewConfig()
+        monkeypatch.setenv("AJCREW_TELEMETRY", "1")
+        cfg = AjCrewConfig()
         cfg.telemetry = dataclasses.replace(
             cfg.telemetry,
             enabled=True,
@@ -900,7 +900,7 @@ def test_a_list_entry_never_sends_the_process_wide_otel_headers(monkeypatch, tmp
                 },
             ],
         )
-        with patch.object(KiroCrewConfig, "load", return_value=cfg):
+        with patch.object(AjCrewConfig, "load", return_value=cfg):
             with patch.object(pm, "_default_metrics_dir", return_value=tmp_path):
                 assert pm.get_recorder().enabled
                 assert pm._provider is not None

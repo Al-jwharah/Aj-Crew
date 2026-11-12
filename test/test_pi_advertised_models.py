@@ -8,16 +8,16 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import model_registry
-from kiro_crew.acp_backends import (
+from aj_crew import model_registry
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_KIRO,
     ACP_BACKEND_PI,
     ACP_BACKENDS_ADVERTISED_MODEL_SELECTION,
     model_registry_namespace,
 )
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard.handlers import agents
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard.handlers import agents
 
 
 @pytest.fixture(autouse=True)
@@ -90,7 +90,7 @@ async def test_api_models_routes_advertised_backends_without_spawning_kiro(
     monkeypatch, backend, source
 ):
     monkeypatch.setattr(
-        agents.KiroCrewConfig,
+        agents.AjCrewConfig,
         "load",
         staticmethod(lambda: SimpleNamespace(agent=SimpleNamespace(acp_backend=backend, model=""))),
     )

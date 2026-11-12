@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.store import KnowledgeStore
 
 
 @pytest.fixture(name="store")

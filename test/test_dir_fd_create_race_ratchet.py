@@ -25,7 +25,7 @@ from source_corpus import parsed_candidates, src_root
 
 SRC = src_root()
 
-#: (path under src/kiro_crew, enclosing function) -> why it cannot race.
+#: (path under src/aj_crew, enclosing function) -> why it cannot race.
 ALLOWED = {
     ("diag/recorder.py", "_append"): "one recorder per gateway, appends under its own thread lock",
     ("acp/_frame_record.py", "_open_private_append"): (
@@ -107,7 +107,7 @@ def test_every_allowed_site_still_exists():
 
 
 #: By-name opens on a lock-named path that may keep a nonexclusive ``O_CREAT``:
-#: (path under src/kiro_crew, enclosing function) -> why it cannot race.
+#: (path under src/aj_crew, enclosing function) -> why it cannot race.
 LOCK_ALLOWED = {
     ("sel_append.py", "_append_lines_locked"): (
         "opens the SEL log itself, a data file appended while the chain lock is held"

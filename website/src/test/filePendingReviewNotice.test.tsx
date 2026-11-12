@@ -16,7 +16,7 @@ import {
   filePendingReviewMessage,
 } from '../api/apiError'
 
-const GATEWAY_SENTENCE = 'This settings file was changed outside Kiro Crew, so this save was not made.'
+const GATEWAY_SENTENCE = 'This settings file was changed outside Aj Crew, so this save was not made.'
 
 const refusal = () =>
   JSON.stringify({ error: GATEWAY_SENTENCE, code: FILE_PENDING_REVIEW_CODE })

@@ -16,8 +16,8 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import (
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     METHOD_COMPACTION_STATUS,
     METHOD_METADATA,

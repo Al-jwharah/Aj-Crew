@@ -37,7 +37,7 @@
         "kas_bundle_url": "https://kas.crew.kiro.dev",
         "native_skill_projection": true,
         "default_agent": "",
-        "crew_mode_agent": "kirocrew-team-lead",
+        "crew_mode_agent": "ajcrew-team-lead",
         "deepseek_env": {},
         "strands_env": {},
         "strands_project": "",
@@ -271,7 +271,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Agent spec pins",
-      "help": "Which file an agent name runs when two or more specs in the agents directory declare it, as {\"<agent name>\": \"<file name>\"}, for example {\"helper\": \"PkgA-helper.json\"}. A bare .json or .md file name, never a path, so a pin survives the package's updates. Set it with 'kirocrew agent pin <name> <file>' or the chat's chooser. With no pin, differing specs under one name are refused; a pin naming none of them is refused too and never falls back to another file. New sessions run the pinned file; a running session's later spec reads follow the current pin.",
+      "help": "Which file an agent name runs when two or more specs in the agents directory declare it, as {\"<agent name>\": \"<file name>\"}, for example {\"helper\": \"PkgA-helper.json\"}. A bare .json or .md file name, never a path, so a pin survives the package's updates. Set it with 'ajcrew agent pin <name> <file>' or the chat's chooser. With no pin, differing specs under one name are refused; a pin naming none of them is refused too and never falls back to another file. New sessions run the pinned file; a running session's later spec reads follow the current pin.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": {}
@@ -364,7 +364,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Enterprise MCP Registry Mode",
-      "help": "Set true when this Kiro account is governed by an enterprise MCP registry (Kiro console -> Shared settings -> MCP Registry URL, which applies to IAM Identity Center and API-key sign-ins). In registry mode the client connects ONLY to mcpServers entries carrying 'type': \"registry\" that resolve to a catalog entry of the same name, so Kiro Crew stamps that marker on the servers it manages. Leave false on a personal account: with no registry configured the filter inverts and registry-marked entries are the ones dropped. The administrator must also allow-list, by those exact names, every managed kirocrew-* server Kiro Crew mounts: kirocrew-core, kirocrew-cron and kirocrew-computer by default, plus any opt-in server (e.g. kirocrew-dashboard, kirocrew-work) an agent is granted.",
+      "help": "Set true when this Kiro account is governed by an enterprise MCP registry (Kiro console -> Shared settings -> MCP Registry URL, which applies to IAM Identity Center and API-key sign-ins). In registry mode the client connects ONLY to mcpServers entries carrying 'type': \"registry\" that resolve to a catalog entry of the same name, so Aj Crew stamps that marker on the servers it manages. Leave false on a personal account: with no registry configured the filter inverts and registry-marked entries are the ones dropped. The administrator must also allow-list, by those exact names, every managed ajcrew-* server Aj Crew mounts: ajcrew-core, ajcrew-cron and ajcrew-computer by default, plus any opt-in server (e.g. ajcrew-dashboard, ajcrew-work) an agent is granted.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": false
@@ -433,8 +433,8 @@
       "deprecated": false,
       "sensitive": false,
       "tags": [],
-      "label": "KAS: run Kiro Crew's own engine bundle",
-      "help": "When true, the 'kas' backend spawns the @kiro/agent build that 'kirocrew kas install' laid down under the data home (engines/kas/) with its own Node runtime, instead of reaching the engine through kiro-cli's ACP relay. kiro-cli is not needed on this route, and the engine always takes its credential from Kiro Crew's own sign-in (the dashboard's Sign in), never from kiro-cli's store. With nothing installed the gateway installs the pinned engine at the first spawn. With false, KAS still takes this route when kiro-cli's relay cannot run on the host (no kiro-cli, or one that is not signed in). When unset, a Nightly build turns it on and every other build leaves it off (config.loader_document.kas_bundle_build_default(), read from the build's own stamp, not the update channel). A saved value always wins, and save() leaves the key off disk until it is set. This dataclass default stays false so the committed config-schema snapshot is the same for every build.",
+      "label": "KAS: run Aj Crew's own engine bundle",
+      "help": "When true, the 'kas' backend spawns the @kiro/agent build that 'ajcrew kas install' laid down under the data home (engines/kas/) with its own Node runtime, instead of reaching the engine through kiro-cli's ACP relay. kiro-cli is not needed on this route, and the engine always takes its credential from Aj Crew's own sign-in (the dashboard's Sign in), never from kiro-cli's store. With nothing installed the gateway installs the pinned engine at the first spawn. With false, KAS still takes this route when kiro-cli's relay cannot run on the host (no kiro-cli, or one that is not signed in). When unset, a Nightly build turns it on and every other build leaves it off (config.loader_document.kas_bundle_build_default(), read from the build's own stamp, not the update channel). A saved value always wins, and save() leaves the key off disk until it is set. This dataclass default stays false so the committed config-schema snapshot is the same for every build.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": false,
@@ -449,7 +449,7 @@
       "sensitive": false,
       "tags": [],
       "label": "KAS: keep remote MCP sign-ins across sessions",
-      "help": "When true (the default), the 'kas' backend lets Kiro Crew keep a remote MCP server's OAuth sign-in (client registration and tokens) in a dedicated encrypted vault under the data home (kas/mcp-grants/), so new sessions, subagents and crons reuse it until the refresh token expires or is revoked, as the 'kiro' backend does with its own sign-in cache. The vault is not the Secrets vault: it is not listed there and cannot be granted to a cron, and the agent cannot read it. When false, the engine keeps each sign-in in memory and a new session asks again. Only a JSON true turns it on: any other stored value, or a config file that cannot be read, keeps sign-ins in memory.",
+      "help": "When true (the default), the 'kas' backend lets Aj Crew keep a remote MCP server's OAuth sign-in (client registration and tokens) in a dedicated encrypted vault under the data home (kas/mcp-grants/), so new sessions, subagents and crons reuse it until the refresh token expires or is revoked, as the 'kiro' backend does with its own sign-in cache. The vault is not the Secrets vault: it is not listed there and cannot be granted to a cron, and the agent cannot read it. When false, the engine keeps each sign-in in memory and a new session asks again. Only a JSON true turns it on: any other stored value, or a config file that cannot be read, keeps sign-ins in memory.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": true,
@@ -464,7 +464,7 @@
       "sensitive": false,
       "tags": [],
       "label": "KAS: repair kiro-cli's broken engine copy",
-      "help": "When true (the default) and a KAS start through kiro-cli's relay exits with 'failed to canonicalize KAS server path', Kiro Crew moves kiro-cli's incomplete unpacked engine (kas/<version> under kiro-cli's data directory, never anything else) out of kas/ to '<version>.kas-broken-<UTC time>' beside it, and starts once more, so kiro-cli unpacks a fresh copy. Nothing is deleted. When false, or when the second start fails the same way, the start fails with one message naming the directory and the mv command, and the warm pool stops respawning until the directory is moved.",
+      "help": "When true (the default) and a KAS start through kiro-cli's relay exits with 'failed to canonicalize KAS server path', Aj Crew moves kiro-cli's incomplete unpacked engine (kas/<version> under kiro-cli's data directory, never anything else) out of kas/ to '<version>.kas-broken-<UTC time>' beside it, and starts once more, so kiro-cli unpacks a fresh copy. Nothing is deleted. When false, or when the second start fails the same way, the start fails with one message naming the directory and the mv command, and the warm pool stops respawning until the directory is moved.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": true
@@ -478,7 +478,7 @@
       "sensitive": false,
       "tags": [],
       "label": "KAS: refuse MCP headers over plain http",
-      "help": "When true, the 'kas' backend no longer relays an MCP server's headers to a plain http:// url on another host, so they are never sent unencrypted; the server does not run and the session notice names it. When false (the default), Kiro Crew's local bridge sends the headers to that url as before. Only a JSON true turns it on. Read when a session starts.",
+      "help": "When true, the 'kas' backend no longer relays an MCP server's headers to a plain http:// url on another host, so they are never sent unencrypted; the server does not run and the session notice names it. When false (the default), Aj Crew's local bridge sends the headers to that url as before. Only a JSON true turns it on. Read when a session starts.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": false
@@ -506,7 +506,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Native skill views for kiro-cli",
-      "help": "When true (the default), the 'kiro' backend launches each agent under a Kiro Crew managed view (kirocrew-skill-view-*.json in the kiro agents directory) that serves skills through Kiro Crew's skill search, and overlays the workspace's .kiro/settings/cli.json while it runs. When false, agents launch under their authored names, no view is written, the workspace overlay is rolled back, and kiro-cli loads skill metadata natively again. Same effect as KIROCREW_NATIVE_SKILL_PROJECTION=0, which still disables projection whatever this says.",
+      "help": "When true (the default), the 'kiro' backend launches each agent under an Aj Crew managed view (ajcrew-skill-view-*.json in the kiro agents directory) that serves skills through Aj Crew's skill search, and overlays the workspace's .kiro/settings/cli.json while it runs. When false, agents launch under their authored names, no view is written, the workspace overlay is rolled back, and kiro-cli loads skill metadata natively again. Same effect as AJCREW_NATIVE_SKILL_PROJECTION=0, which still disables projection whatever this says.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": true,
@@ -538,7 +538,7 @@
       "help": "The agent template a chat runs when Ultra Mode is turned on. Empty falls back to the default. Takes effect live for new chats; no gateway restart.",
       "hasChildren": false,
       "enumValues": null,
-      "defaultValue": "kirocrew-team-lead"
+      "defaultValue": "ajcrew-team-lead"
     },
     {
       "path": "agent.deepseek_env",
@@ -549,7 +549,7 @@
       "sensitive": false,
       "tags": [],
       "label": "DeepSeek Harness provider keys",
-      "help": "Provider keys handed to the DeepSeek Harness ('deepseek' backend) as environment variables at spawn, mapping an environment-variable NAME to a 'secret://<vault name>' reference. The harness resolves a provider credential from its inherited environment above its own credential files, so this is how it reaches a hosted model without Kiro Crew leaving those files readable inside the sandbox. Store the key under Settings > Secrets, then map it here, e.g. {\"DEEPSEEK_API_KEY\": \"secret://my-dsh-key\"}. Any provider name the harness knows works (ANTHROPIC_API_KEY, OPENAI_API_KEY, ...). A plaintext value is REFUSED at write time -- the config write itself fails, so no credential is ever stored in config.json -- and so, at spawn, is a name the harness would forward to its own shell children, a name Kiro Crew owns, or one Kiro Crew's agent environment scrub strips; the DeepSeek session is refused before it starts with a message naming the offending key. Empty means no key: a model served locally on this machine needs none. Ignored by every other backend.",
+      "help": "Provider keys handed to the DeepSeek Harness ('deepseek' backend) as environment variables at spawn, mapping an environment-variable NAME to a 'secret://<vault name>' reference. The harness resolves a provider credential from its inherited environment above its own credential files, so this is how it reaches a hosted model without Aj Crew leaving those files readable inside the sandbox. Store the key under Settings > Secrets, then map it here, e.g. {\"DEEPSEEK_API_KEY\": \"secret://my-dsh-key\"}. Any provider name the harness knows works (ANTHROPIC_API_KEY, OPENAI_API_KEY, ...). A plaintext value is REFUSED at write time -- the config write itself fails, so no credential is ever stored in config.json -- and so, at spawn, is a name the harness would forward to its own shell children, a name Aj Crew owns, or one Aj Crew's agent environment scrub strips; the DeepSeek session is refused before it starts with a message naming the offending key. Empty means no key: a model served locally on this machine needs none. Ignored by every other backend.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": {}
@@ -577,7 +577,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Strands provider keys",
-      "help": "Model-provider settings handed to the Strands harness ('strands' backend) as environment variables at spawn, mapping an environment-variable NAME to a 'secret://<vault name>' reference, the same shape as agent.deepseek_env. Store the value under Settings > Secrets, then map it here, e.g. {\"ANTHROPIC_API_KEY\": \"secret://my-anthropic-key\"}. Only the names the Strands CLI reads for its providers are accepted: AWS_REGION, AWS_DEFAULT_REGION and AWS_BEARER_TOKEN_BEDROCK (Bedrock and Bedrock Mantle), ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, OLLAMA_HOST, OLLAMA_MODEL, LITELLM_BASE_URL, LITELLM_API_KEY and LITELLM_MODEL. Kiro Crew withholds every mapped name from the shells and code the Strands agent runs. A plaintext value is REFUSED at write time, and any other name refuses the Strands session before it starts with a message naming the key. The harness runs sandboxed and cannot read ~/.aws, so Bedrock needs AWS_BEARER_TOKEN_BEDROCK (a Bedrock API key) and AWS_REGION mapped here. Ignored by every other backend.",
+      "help": "Model-provider settings handed to the Strands harness ('strands' backend) as environment variables at spawn, mapping an environment-variable NAME to a 'secret://<vault name>' reference, the same shape as agent.deepseek_env. Store the value under Settings > Secrets, then map it here, e.g. {\"ANTHROPIC_API_KEY\": \"secret://my-anthropic-key\"}. Only the names the Strands CLI reads for its providers are accepted: AWS_REGION, AWS_DEFAULT_REGION and AWS_BEARER_TOKEN_BEDROCK (Bedrock and Bedrock Mantle), ANTHROPIC_API_KEY, OPENAI_API_KEY, GEMINI_API_KEY, OLLAMA_HOST, OLLAMA_MODEL, LITELLM_BASE_URL, LITELLM_API_KEY and LITELLM_MODEL. Aj Crew withholds every mapped name from the shells and code the Strands agent runs. A plaintext value is REFUSED at write time, and any other name refuses the Strands session before it starts with a message naming the key. The harness runs sandboxed and cannot read ~/.aws, so Bedrock needs AWS_BEARER_TOKEN_BEDROCK (a Bedrock API key) and AWS_REGION mapped here. Ignored by every other backend.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": {}
@@ -605,7 +605,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Strands project",
-      "help": "The Strands Python project the 'strands' backend runs: the path of its agent.py, or of a folder holding one. Empty runs Kiro Crew's bundled minimal project. Either way Kiro Crew loads it through its own gate module, which makes every Strands Agent the project builds ask Kiro Crew before each tool call, so a project needs no change of its own. Its imports must be installed in the Python environment Kiro Crew runs Strands with. A project of yours runs only as the version recorded in agent.strands_project_sha256. Takes effect for new Strands sessions. Ignored by every other backend.",
+      "help": "The Strands Python project the 'strands' backend runs: the path of its agent.py, or of a folder holding one. Empty runs Aj Crew's bundled minimal project. Either way Aj Crew loads it through its own gate module, which makes every Strands Agent the project builds ask Aj Crew before each tool call, so a project needs no change of its own. Its imports must be installed in the Python environment Aj Crew runs Strands with. A project of yours runs only as the version recorded in agent.strands_project_sha256. Takes effect for new Strands sessions. Ignored by every other backend.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": ""
@@ -619,7 +619,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Strands project fingerprint",
-      "help": "The fingerprint of the agent.strands_project version you confirmed: a sha256 over every file in the project's folder. The project's code runs with your provider keys and outside the tool gate, so a Strands session on your project starts only when the folder still matches it; a refused session prints the current value and the command that records it. Set it yourself after reviewing the files (kirocrew config set agent.strands_project_sha256 <value>); Kiro Crew never records it on its own. Packages the project imports from outside its folder are not covered. Ignored for the bundled project and by every other backend.",
+      "help": "The fingerprint of the agent.strands_project version you confirmed: a sha256 over every file in the project's folder. The project's code runs with your provider keys and outside the tool gate, so a Strands session on your project starts only when the folder still matches it; a refused session prints the current value and the command that records it. Set it yourself after reviewing the files (ajcrew config set agent.strands_project_sha256 <value>); Aj Crew never records it on its own. Packages the project imports from outside its folder are not covered. Ignored for the bundled project and by every other backend.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": ""
@@ -655,7 +655,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Strands model",
-      "help": "The model a new Strands session runs when the chat picks none, as an id for agent.strands_provider: Kiro Crew launches the Strands CLI with --model '<provider>/<model>'. 'auto' (or empty) passes no --model, so the provider's CLI default runs. Ignored by every other backend.",
+      "help": "The model a new Strands session runs when the chat picks none, as an id for agent.strands_provider: Aj Crew launches the Strands CLI with --model '<provider>/<model>'. 'auto' (or empty) passes no --model, so the provider's CLI default runs. Ignored by every other backend.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": "auto"
@@ -669,7 +669,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Sweep foreign agent backups",
-      "help": "When true, the agents-directory janitor also deletes aged backup files (*.bak-<digits> / *.json.bak.<digits>, older than 14 days) from the shared kiro agents directory. OFF by default: Kiro Crew does not author those backups, so every one it would delete belongs to another tool whose retention policy is not ours to decide. The orphaned atomic-write TEMP sweep (24h) always runs and reclaims most of the growth at near-zero risk; enable this only if you also want foreign backups in that directory reaped.",
+      "help": "When true, the agents-directory janitor also deletes aged backup files (*.bak-<digits> / *.json.bak.<digits>, older than 14 days) from the shared kiro agents directory. OFF by default: Aj Crew does not author those backups, so every one it would delete belongs to another tool whose retention policy is not ours to decide. The orphaned atomic-write TEMP sweep (24h) always runs and reclaims most of the growth at near-zero risk; enable this only if you also want foreign backups in that directory reaped.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": false
@@ -683,7 +683,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Sandbox",
-      "help": "Sandbox mode for ACP provider. Default 'auto' engages OS-level isolation (namespace on Linux, sandbox-exec on macOS) at the standard tier and automatically defers to kiro-cli's internal sandbox on macOS when it is enabled (kiro-cli >= 2.13; nested seatbelt causes EPERM). The standard tier deliberately leaves ~/.aws, ~/.ssh and ~/.kube visible to the agent's shell so the aws CLI, boto3 credential_process, git-over-SSH and kubectl keep working; the file tools still refuse those paths. Set to 'strict' to also hide ~/.aws (including ~/.aws/sso/cache, kiro-cli's grant store for OAuth-connected remote MCP servers), ~/.ssh (except known_hosts), ~/.kube and ~/.config/gh, plus the credential files ~/.npmrc, ~/.pypirc, ~/.netrc and ~/.git-credentials, from every agent subprocess -- opt-in, and inside the agent it breaks the aws CLI, boto3, git-over-SSH, gh, kubectl, npm/pip registry auth, .netrc HTTPS auth, the git credential store and remote-MCP OAuth for the same reason. Like every value of this key, a change applies to sessions started after it; a session already running keeps the tier it was spawned with until it ends. 'strict' changes nothing where Kiro Crew applies no sandbox of its own: Windows has no OS backend, and a macOS spawn delegated to kiro-cli's internal sandbox is confined by that profile instead. Set to 'off' to skip Kiro Crew's own OS-level sandbox -- delegation to kiro-cli's internal sandbox still fires on macOS if it is enabled, and a SECURITY warning is logged when neither layer is active.",
+      "help": "Sandbox mode for ACP provider. Default 'auto' engages OS-level isolation (namespace on Linux, sandbox-exec on macOS) at the standard tier and automatically defers to kiro-cli's internal sandbox on macOS when it is enabled (kiro-cli >= 2.13; nested seatbelt causes EPERM). The standard tier deliberately leaves ~/.aws, ~/.ssh and ~/.kube visible to the agent's shell so the aws CLI, boto3 credential_process, git-over-SSH and kubectl keep working; the file tools still refuse those paths. Set to 'strict' to also hide ~/.aws (including ~/.aws/sso/cache, kiro-cli's grant store for OAuth-connected remote MCP servers), ~/.ssh (except known_hosts), ~/.kube and ~/.config/gh, plus the credential files ~/.npmrc, ~/.pypirc, ~/.netrc and ~/.git-credentials, from every agent subprocess -- opt-in, and inside the agent it breaks the aws CLI, boto3, git-over-SSH, gh, kubectl, npm/pip registry auth, .netrc HTTPS auth, the git credential store and remote-MCP OAuth for the same reason. Like every value of this key, a change applies to sessions started after it; a session already running keeps the tier it was spawned with until it ends. 'strict' changes nothing where Aj Crew applies no sandbox of its own: Windows has no OS backend, and a macOS spawn delegated to kiro-cli's internal sandbox is confined by that profile instead. Set to 'off' to skip Aj Crew's own OS-level sandbox -- delegation to kiro-cli's internal sandbox still fires on macOS if it is enabled, and a SECURITY warning is logged when neither layer is active.",
       "hasChildren": false,
       "enumValues": [
         "auto",
@@ -715,7 +715,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Allow Unsandboxed Execution",
-      "help": "When true, allow agent subprocesses to execute without any sandbox backend (fail-open). When false, wrap_argv raises if no sandbox backend is available and mode is not 'off', preventing unsandboxed execution entirely (fail-closed). This is distinct from sandbox_allow_no_isolation which only controls warning severity — this field controls whether execution proceeds at all. A LOADED config carries the effective policy: the loader resolves an undeclared key through config.loader.unsandboxed_exec_platform_default() — allow on Windows, which has no backend that any operator action could install, and fail-closed everywhere else, where a missing backend is broken or one profile away from working. A declared value always wins in both directions, and a governance sandbox.min_level floor outranks the declaration. save() omits the key unless the operator declared it, so a 'never decided' host stays undeclared on disk. This dataclass default stays platform-independent so the committed config-schema snapshot is identical on every platform. `kirocrew setup` surfaces the decision on a backend-less host, offering the opt-in where the default is fail-closed and stating the exposure plus offering the opt-out where it is allow, and writes nothing unless the operator answers yes.",
+      "help": "When true, allow agent subprocesses to execute without any sandbox backend (fail-open). When false, wrap_argv raises if no sandbox backend is available and mode is not 'off', preventing unsandboxed execution entirely (fail-closed). This is distinct from sandbox_allow_no_isolation which only controls warning severity — this field controls whether execution proceeds at all. A LOADED config carries the effective policy: the loader resolves an undeclared key through config.loader.unsandboxed_exec_platform_default() — allow on Windows, which has no backend that any operator action could install, and fail-closed everywhere else, where a missing backend is broken or one profile away from working. A declared value always wins in both directions, and a governance sandbox.min_level floor outranks the declaration. save() omits the key unless the operator declared it, so a 'never decided' host stays undeclared on disk. This dataclass default stays platform-independent so the committed config-schema snapshot is identical on every platform. `ajcrew setup` surfaces the decision on a backend-less host, offering the opt-in where the default is fail-closed and stating the exposure plus offering the opt-out where it is allow, and writes nothing unless the operator answers yes.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": false
@@ -925,7 +925,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Jail",
-      "help": "Process-isolation jail mode for agent-bearing commands. 'auto' uses a jail when the active edition supplies a working backend (the public edition has none, so 'auto' and 'on' are no-ops there); 'off' disables it. Disable per-invocation with --no-jail or KIROCREW_NO_JAIL=1.",
+      "help": "Process-isolation jail mode for agent-bearing commands. 'auto' uses a jail when the active edition supplies a working backend (the public edition has none, so 'auto' and 'on' are no-ops there); 'off' disables it. Disable per-invocation with --no-jail or AJCREW_NO_JAIL=1.",
       "hasChildren": false,
       "enumValues": [
         "auto",
@@ -959,7 +959,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Ad-hoc Auto-approve Duration",
-      "help": "How long auto-approve (YOLO) lasts when it is enabled AD HOC — from the dashboard picker, Slack, or the API. Every one of those surfaces uses this same duration. Accepts 30m / 1h / 6h / 12h / 24h, or until_shutdown to keep it on with no timed expiry until Kiro Crew restarts. Timed values are capped at 24h. Does NOT apply to a grant declared via 'dangerously_skip_permissions' above, which persists.",
+      "help": "How long auto-approve (YOLO) lasts when it is enabled AD HOC — from the dashboard picker, Slack, or the API. Every one of those surfaces uses this same duration. Accepts 30m / 1h / 6h / 12h / 24h, or until_shutdown to keep it on with no timed expiry until Aj Crew restarts. Timed values are capped at 24h. Does NOT apply to a grant declared via 'dangerously_skip_permissions' above, which persists.",
       "hasChildren": false,
       "enumValues": [
         "30m",
@@ -1008,7 +1008,7 @@
       "sensitive": false,
       "tags": [],
       "label": "MCP Tool Search",
-      "help": "Load MCP tool specs on demand (search-and-call) instead of sending every tool definition each turn, keeping the context window clear when many MCP servers are configured. kiro-cli applies it through the agent overlay; KAS receives it in the ACP initialize request, enabled only when the spawn agent's spec grants the tool_search loader. Deferral only starts once the specs cross tool_search_min_pct or tool_search_min_tokens; disabling reverts to sending full tool specs. Crew's servers defer only when the spawn runs the pinned kiro-cli install or its kiro-cli-chat, and both are >= 2.27.0; any other executable, an older or unknown version keeps them resident. On Kiro Crew's own KAS engine bundle they always defer: that engine keeps its tools array fixed when a tool loads. To override the never-defer list, set ASBX_KIRO_MANDATORY_MCPS (comma-separated server names) in the gateway's environment. No effect on any other ACP backend.",
+      "help": "Load MCP tool specs on demand (search-and-call) instead of sending every tool definition each turn, keeping the context window clear when many MCP servers are configured. kiro-cli applies it through the agent overlay; KAS receives it in the ACP initialize request, enabled only when the spawn agent's spec grants the tool_search loader. Deferral only starts once the specs cross tool_search_min_pct or tool_search_min_tokens; disabling reverts to sending full tool specs. Crew's servers defer only when the spawn runs the pinned kiro-cli install or its kiro-cli-chat, and both are >= 2.27.0; any other executable, an older or unknown version keeps them resident. On Aj Crew's own KAS engine bundle they always defer: that engine keeps its tools array fixed when a tool loads. To override the never-defer list, set ASBX_KIRO_MANDATORY_MCPS (comma-separated server names) in the gateway's environment. No effect on any other ACP backend.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": true
@@ -1162,7 +1162,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Durable Task Queue",
-      "help": "Persist every accepted subagent spawn to $KIROCREW_HOME/tasks/tasks.db before its id is returned, so accepted work survives a gateway crash and memory pressure defers a spawn instead of refusing it. Set false to fall back to the in-memory spawn queue for one release; tasks.db is left in place and unread.",
+      "help": "Persist every accepted subagent spawn to $AJCREW_HOME/tasks/tasks.db before its id is returned, so accepted work survives a gateway crash and memory pressure defers a spawn instead of refusing it. Set false to fall back to the in-memory spawn queue for one release; tasks.db is left in place and unread.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": true
@@ -1326,7 +1326,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Session Start Concurrency",
-      "help": "How many ACP session/new requests may be outstanding at once per gateway event loop (the SessionStartGate). session/new blocks while the backend initializes the session's MCP servers, so a burst of subagent starts on one shared runtime slows every start until the budget is hit; queued starts a person is waiting on are served first, except that a waiting background start is let through after a bounded run of them so it is never starved, and FIFO within each class. Queue time is not charged to the start budget or the startup deadline, but a subagent start that stays queued past the start-queue cap ends as never started, unless its subagent timeout ends it first. A fixed bound, not adaptive: the adaptive loop is the MCP gateway spawn gate and the execution-cap controller. \"auto\" (the default) sizes it once at gateway start as min(cpus // 4, available GB // 3) clamped to 2..16, with cpus the affinity count capped by a cgroup cpu.max quota; the gateway logs the value in force at boot, and kirocrew doctor shows what auto picks for the host now. An integer sets it explicitly, clamped to 1..64.",
+      "help": "How many ACP session/new requests may be outstanding at once per gateway event loop (the SessionStartGate). session/new blocks while the backend initializes the session's MCP servers, so a burst of subagent starts on one shared runtime slows every start until the budget is hit; queued starts a person is waiting on are served first, except that a waiting background start is let through after a bounded run of them so it is never starved, and FIFO within each class. Queue time is not charged to the start budget or the startup deadline, but a subagent start that stays queued past the start-queue cap ends as never started, unless its subagent timeout ends it first. A fixed bound, not adaptive: the adaptive loop is the MCP gateway spawn gate and the execution-cap controller. \"auto\" (the default) sizes it once at gateway start as min(cpus // 4, available GB // 3) clamped to 2..16, with cpus the affinity count capped by a cgroup cpu.max quota; the gateway logs the value in force at boot, and ajcrew doctor shows what auto picks for the host now. An integer sets it explicitly, clamped to 1..64.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": "auto",
@@ -1341,7 +1341,7 @@
       "sensitive": false,
       "tags": [],
       "label": "kiro-cli Child Env Defaults",
-      "help": "Environment variables given to every spawned kiro-cli process (chat sessions, background sessions and subagents) ONLY when the variable is not already set in the environment it inherits. kiro-cli sizes its thread pools by core count, and every thread counts against the agent slice's task ceiling, so where that ceiling is in force (Linux with the agents slice) a name left out of this map defaults to min(cpus, 4) for TOKIO_WORKER_THREADS and RAYON_NUM_THREADS; on other hosts no default is set. kirocrew doctor shows the value in force. A value set here wins, e.g. {\"TOKIO_WORKER_THREADS\": \"8\"}. Only TOKIO_WORKER_THREADS and RAYON_NUM_THREADS are accepted, each a decimal integer string from 1 to 1024; any other entry is ignored with a warning. Kiro Crew's own agent environment scrub still applies. Every process the agent runs (tools, MCP servers, your own programs) inherits these variables too. Takes effect on the next spawn.",
+      "help": "Environment variables given to every spawned kiro-cli process (chat sessions, background sessions and subagents) ONLY when the variable is not already set in the environment it inherits. kiro-cli sizes its thread pools by core count, and every thread counts against the agent slice's task ceiling, so where that ceiling is in force (Linux with the agents slice) a name left out of this map defaults to min(cpus, 4) for TOKIO_WORKER_THREADS and RAYON_NUM_THREADS; on other hosts no default is set. ajcrew doctor shows the value in force. A value set here wins, e.g. {\"TOKIO_WORKER_THREADS\": \"8\"}. Only TOKIO_WORKER_THREADS and RAYON_NUM_THREADS are accepted, each a decimal integer string from 1 to 1024; any other entry is ignored with a warning. Aj Crew's own agent environment scrub still applies. Every process the agent runs (tools, MCP servers, your own programs) inherits these variables too. Takes effect on the next spawn.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": {}
@@ -1369,7 +1369,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Agent Environment Variables",
-      "help": "Environment variables set on every agent process Kiro Crew starts for a chat session, background session or subagent, on every backend, and therefore inherited by everything that agent runs: shell tool calls, the MCP servers the agent itself starts, and their children. Not the gateway, MCP servers the gateway hosts, or Kiro Crew's own one-shot helper commands. For non-sensitive configuration such as a proxy, a CA bundle, an AWS profile or a package registry, e.g. {\"HTTPS_PROXY\": \"http://proxy.example:3128\", \"NO_PROXY\": \"localhost,127.0.0.1\", \"AWS_PROFILE\": \"dev\"}. A value set here wins over the same variable in the gateway's own environment; variables Kiro Crew sets for the session itself still win over this map, except defaults it fills in only when a name is unset (agent.child_env_defaults, the pytest-xdist worker cap), which this map overrides. A name this map refuses is rejected when the setting is saved (kirocrew config set or a dashboard write fails and names the key and the reason), and dropped with a warning naming the key if a hand edit puts it in config.json. Values are stored in plaintext, so a name that looks like a credential, with a name segment that is or ends in KEY, TOKEN, SECRET, PASSWORD, PASSWD or CREDENTIAL (API_KEY, GITHUB_TOKEN, APIKEY), is refused: keep credentials under Settings > Secrets. GOPRIVATE and TOKENIZERS_PARALLELISM are not credential names. Also refused: names Kiro Crew or the sandbox owns (PATH, HOME, TMPDIR, DBUS_*_BUS_ADDRESS, KIROCREW_*, KIRO_*, OPENCODE_*, ...); names known to make a shell, the loader, a runtime or a tool run code the command did not name (LD_*, DYLD_*, PYTHON*, NODE_OPTIONS, BASH*, SHELLOPTS, PS4, ZDOTDIR, IFS, SSH_*, GIT_* except GIT_TERMINAL_PROMPT and GIT_SSL_CAINFO, and any name ending in PATH, LIB, OPT, OPTS, OPTIONS, FLAGS, COMMAND, SHELL, EXECUTABLE, EDITOR, PAGER, ASKPASS, BROWSER, ...), including the location of a config file a tool may read a program from (KUBECONFIG, AWS_CONFIG_FILE, any name ending in CONFIG, CONFIG_DIR, CONFIG_FILE or CONFIG_HOME); the variables that move a harness's sign-in directory (CLAUDE_CONFIG_DIR, CODEX_HOME, XDG_CONFIG_HOME, XDG_DATA_HOME, ...); and names the agent environment scrub removes. Takes effect for agent processes started after the change: warm pooled processes and the shared background process are replaced, while a session that is already running, and subagents sharing its process, keep the environment that process started with.",
+      "help": "Environment variables set on every agent process Aj Crew starts for a chat session, background session or subagent, on every backend, and therefore inherited by everything that agent runs: shell tool calls, the MCP servers the agent itself starts, and their children. Not the gateway, MCP servers the gateway hosts, or Aj Crew's own one-shot helper commands. For non-sensitive configuration such as a proxy, a CA bundle, an AWS profile or a package registry, e.g. {\"HTTPS_PROXY\": \"http://proxy.example:3128\", \"NO_PROXY\": \"localhost,127.0.0.1\", \"AWS_PROFILE\": \"dev\"}. A value set here wins over the same variable in the gateway's own environment; variables Aj Crew sets for the session itself still win over this map, except defaults it fills in only when a name is unset (agent.child_env_defaults, the pytest-xdist worker cap), which this map overrides. A name this map refuses is rejected when the setting is saved (ajcrew config set or a dashboard write fails and names the key and the reason), and dropped with a warning naming the key if a hand edit puts it in config.json. Values are stored in plaintext, so a name that looks like a credential, with a name segment that is or ends in KEY, TOKEN, SECRET, PASSWORD, PASSWD or CREDENTIAL (API_KEY, GITHUB_TOKEN, APIKEY), is refused: keep credentials under Settings > Secrets. GOPRIVATE and TOKENIZERS_PARALLELISM are not credential names. Also refused: names Aj Crew or the sandbox owns (PATH, HOME, TMPDIR, DBUS_*_BUS_ADDRESS, AJCREW_*, KIRO_*, OPENCODE_*, ...); names known to make a shell, the loader, a runtime or a tool run code the command did not name (LD_*, DYLD_*, PYTHON*, NODE_OPTIONS, BASH*, SHELLOPTS, PS4, ZDOTDIR, IFS, SSH_*, GIT_* except GIT_TERMINAL_PROMPT and GIT_SSL_CAINFO, and any name ending in PATH, LIB, OPT, OPTS, OPTIONS, FLAGS, COMMAND, SHELL, EXECUTABLE, EDITOR, PAGER, ASKPASS, BROWSER, ...), including the location of a config file a tool may read a program from (KUBECONFIG, AWS_CONFIG_FILE, any name ending in CONFIG, CONFIG_DIR, CONFIG_FILE or CONFIG_HOME); the variables that move a harness's sign-in directory (CLAUDE_CONFIG_DIR, CODEX_HOME, XDG_CONFIG_HOME, XDG_DATA_HOME, ...); and names the agent environment scrub removes. Takes effect for agent processes started after the change: warm pooled processes and the shared background process are replaced, while a session that is already running, and subagents sharing its process, keep the environment that process started with.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": {}
@@ -1671,7 +1671,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Session Control",
-      "help": "Let one chat session open a new session, and stop, read or send to another session of yours. Reading returns a transcript tail, stopping cancels an in-flight turn, a created session starts empty for you to type into, and a send runs text as the target's next turn. On by default, because the grant that decides who can do this is the agent config: the tools come from the kirocrew-dashboard MCP server, so an agent that does not mount it never has them, exactly like any other MCP server. Turn this off to withdraw the capability from every agent at once without editing each spec, except Bot DM sessions and the Conductor in your own dashboard tab, which keep dispatching workers unless Member Dispatch is also off. Sessions can only reach peers in the same workspace; incognito, app-scoped and scheduled sessions are never addressable, and a Bot, a scheduled run, or a Conductor admitted with this off reaches only sessions it created itself.",
+      "help": "Let one chat session open a new session, and stop, read or send to another session of yours. Reading returns a transcript tail, stopping cancels an in-flight turn, a created session starts empty for you to type into, and a send runs text as the target's next turn. On by default, because the grant that decides who can do this is the agent config: the tools come from the ajcrew-dashboard MCP server, so an agent that does not mount it never has them, exactly like any other MCP server. Turn this off to withdraw the capability from every agent at once without editing each spec, except Bot DM sessions and the Conductor in your own dashboard tab, which keep dispatching workers unless Member Dispatch is also off. Sessions can only reach peers in the same workspace; incognito, app-scoped and scheduled sessions are never addressable, and a Bot, a scheduled run, or a Conductor admitted with this off reaches only sessions it created itself.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": true
@@ -1741,7 +1741,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Crew Dashboard",
-      "help": "Let a Bot publish its own webview, shown in that member's drawer on the Crew page. A member sends a JSON object and names a template that renders it, so a long-running crew can say what it is holding, which worker is stuck and what needs a decision, to someone who is not reading its transcript. On by default, because a crew that cannot be watched is the thing this surface exists to fix. The tools come from the kirocrew-panel MCP server, so the grant follows the same rule as every other MCP server: an agent that does not mount it never has them. Turn this off to withdraw the capability from every member at once without editing each spec, and the withdrawal is immediate: the publish route reads this switch on every call, so a member whose session was already running loses the panel too. A member writes only its OWN panel: the server resolves the publishing crew from the calling session and takes no crew or session argument, and a subagent has no panel to write.",
+      "help": "Let a Bot publish its own webview, shown in that member's drawer on the Crew page. A member sends a JSON object and names a template that renders it, so a long-running crew can say what it is holding, which worker is stuck and what needs a decision, to someone who is not reading its transcript. On by default, because a crew that cannot be watched is the thing this surface exists to fix. The tools come from the ajcrew-panel MCP server, so the grant follows the same rule as every other MCP server: an agent that does not mount it never has them. Turn this off to withdraw the capability from every member at once without editing each spec, and the withdrawal is immediate: the publish route reads this switch on every call, so a member whose session was already running loses the panel too. A member writes only its OWN panel: the server resolves the publishing crew from the calling session and takes no crew or session argument, and a subagent has no panel to write.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": true
@@ -1960,7 +1960,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Log Level",
-      "help": "Persistent log level for the kiro_crew logger. Applied at startup; overridden by --verbose CLI flag.",
+      "help": "Persistent log level for the aj_crew logger. Applied at startup; overridden by --verbose CLI flag.",
       "hasChildren": false,
       "enumValues": [
         "DEBUG",
@@ -2043,7 +2043,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Idle-Exempt Sessions",
-      "help": "Session keys the idle timeout never ends, for a chat that automation wakes hours apart. A dashboard chat's key is dashboard: followed by the sid in its URL, e.g. dashboard:chat-12-1790000000, unless the tab is linked to a cron job or a channel thread, which uses that link's key instead, e.g. cron:<job id>. Closing a dashboard or cron tab still ends its process; a channel thread's session belongs to the channel, so closing its viewer does not. The Watchdog RSS Limit, when set, still applies. A listed session with no tab, such as a cron job that runs without one, keeps running even after its job is deleted, so take a deleted job's key off the list. The RSS limit or a gateway restart still ends it. On the kiro-cli or KAS backend, a Kiro sign-out from the dashboard ends it at once, whatever account it signed in with. After any other switch or sign-out of the Kiro account it signed in with, the next dashboard chat turn ends it, and so does the next session start or reuse elsewhere, such as an agent cron run, a channel reply or a task step, unless Kiro Crew then cannot tell which account is signed in, as with a social login. A session that is mid-turn then ends later instead, when its next turn starts or at a later dashboard chat turn or session start. At most 10 keys are kept.",
+      "help": "Session keys the idle timeout never ends, for a chat that automation wakes hours apart. A dashboard chat's key is dashboard: followed by the sid in its URL, e.g. dashboard:chat-12-1790000000, unless the tab is linked to a cron job or a channel thread, which uses that link's key instead, e.g. cron:<job id>. Closing a dashboard or cron tab still ends its process; a channel thread's session belongs to the channel, so closing its viewer does not. The Watchdog RSS Limit, when set, still applies. A listed session with no tab, such as a cron job that runs without one, keeps running even after its job is deleted, so take a deleted job's key off the list. The RSS limit or a gateway restart still ends it. On the kiro-cli or KAS backend, a Kiro sign-out from the dashboard ends it at once, whatever account it signed in with. After any other switch or sign-out of the Kiro account it signed in with, the next dashboard chat turn ends it, and so does the next session start or reuse elsewhere, such as an agent cron run, a channel reply or a task step, unless Aj Crew then cannot tell which account is signed in, as with a social login. A session that is mid-turn then ends later instead, when its next turn starts or at a later dashboard chat turn or session start. At most 10 keys are kept.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": []
@@ -2254,7 +2254,7 @@
       "sensitive": false,
       "tags": [],
       "label": "KAS Session Record Delete Delay (seconds)",
-      "help": "On the kas backend, seconds a task-runner session's record, and a reused workflow worker's previous conversation, stay on disk after the session ends before Kiro Crew deletes them. The session leaves the engine's memory when it ends either way. 0 (the default) deletes the record when the session ends. Incognito and temporary sessions are deleted when they end whatever this says. A record that comes due while another backend is selected waits until kas is selected again. Other backends ignore it.",
+      "help": "On the kas backend, seconds a task-runner session's record, and a reused workflow worker's previous conversation, stay on disk after the session ends before Aj Crew deletes them. The session leaves the engine's memory when it ends either way. 0 (the default) deletes the record when the session ends. Incognito and temporary sessions are deleted when they end whatever this says. A record that comes due while another backend is selected waits until kas is selected again. Other backends ignore it.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": 0
@@ -2449,7 +2449,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Use Transport",
-      "help": "Route inbound Slack messages through the SlackTransport → TurnDriver → SlackRenderer channel-neutral path instead of the native handle_message monolith. Default ON in Kiro Crew (the transport abstraction is the canonical path, shared with future channels). Set to false to fall back to the legacy native handler.",
+      "help": "Route inbound Slack messages through the SlackTransport → TurnDriver → SlackRenderer channel-neutral path instead of the native handle_message monolith. Default ON in Aj Crew (the transport abstraction is the canonical path, shared with future channels). Set to false to fall back to the legacy native handler.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": true
@@ -2862,7 +2862,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Embedding Model URL",
-      "help": "Override HTTPS URL for the embedding model GGUF download (mirrored/airgapped deployments). Empty uses the public Kiro Crew CDN default; the KIROCREW_EMBED_MODEL_URL env var wins over both. The download is sha256-verified regardless of source.",
+      "help": "Override HTTPS URL for the embedding model GGUF download (mirrored/airgapped deployments). Empty uses the public Aj Crew CDN default; the AJCREW_EMBED_MODEL_URL env var wins over both. The download is sha256-verified regardless of source.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": ""
@@ -2876,7 +2876,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Embedding Model Path",
-      "help": "Absolute path to a local GGUF embedding model to use INSTEAD of the bundled Qwen3-Embedding-0.6B. When set, the default model is never downloaded or installed, so a custom model survives a default-model version change. Set embedding_dim to the model's output width. Changing the model changes the vector space, so stored embeddings are regenerated automatically. The KIROCREW_EMBED_MODEL_PATH env var wins over this.",
+      "help": "Absolute path to a local GGUF embedding model to use INSTEAD of the bundled Qwen3-Embedding-0.6B. When set, the default model is never downloaded or installed, so a custom model survives a default-model version change. Set embedding_dim to the model's output width. Changing the model changes the vector space, so stored embeddings are regenerated automatically. The AJCREW_EMBED_MODEL_PATH env var wins over this.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": "",
@@ -3455,7 +3455,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Auto-Add Documents",
-      "help": "Let the agent add documents it comes across during normal work to the Knowledge Library, so they become searchable later. The agent reads the document with its own tools, under your approval, and hands over the text -- Kiro Crew fetches nothing itself, so the doc-ingest host allowlist below does not apply. Added documents appear in a single aggregate 'Auto-added' source you can remove in one click. Off by default: the Library should only hold what you asked it to hold. Renamed from auto_ingest_doc_links, which is still accepted.",
+      "help": "Let the agent add documents it comes across during normal work to the Knowledge Library, so they become searchable later. The agent reads the document with its own tools, under your approval, and hands over the text -- Aj Crew fetches nothing itself, so the doc-ingest host allowlist below does not apply. Added documents appear in a single aggregate 'Auto-added' source you can remove in one click. Off by default: the Library should only hold what you asked it to hold. Renamed from auto_ingest_doc_links, which is still accepted.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": false
@@ -3497,7 +3497,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Doc-Ingest Host Allowlist",
-      "help": "Exact hostnames whose pages Kiro Crew ITSELF may fetch and ingest: a web-page source added under Knowledge -> Add Source. https only, port 443, no subdomain matching; the host must resolve to public addresses and a redirect may not leave it. Empty = fetch nothing (SSRF-safe deny-by-default). This governs only that server-fetch path -- it does NOT gate 'Auto-Add Documents' above, where the agent has already fetched the content under its own approval and Kiro Crew fetches nothing. Applying it there would make the feature ingest nothing on a default config while its toggle reads on.",
+      "help": "Exact hostnames whose pages Aj Crew ITSELF may fetch and ingest: a web-page source added under Knowledge -> Add Source. https only, port 443, no subdomain matching; the host must resolve to public addresses and a redirect may not leave it. Empty = fetch nothing (SSRF-safe deny-by-default). This governs only that server-fetch path -- it does NOT gate 'Auto-Add Documents' above, where the agent has already fetched the content under its own approval and Aj Crew fetches nothing. Applying it there would make the feature ingest nothing on a default config while its toggle reads on.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": []
@@ -4096,7 +4096,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Files Survive A Stop",
-      "help": "Whether the template's workspace storage survives a workspace stop. Turn it off for a template whose stop destroys the compute and its files (such as MicroVM): Kiro Crew then never stops that workspace itself, and its session is not recoverable after a stop.",
+      "help": "Whether the template's workspace storage survives a workspace stop. Turn it off for a template whose stop destroys the compute and its files (such as MicroVM): Aj Crew then never stops that workspace itself, and its session is not recoverable after a stop.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": true
@@ -4166,7 +4166,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Kiro Cloud Sessions Profiles",
-      "help": "Named Kiro Cloud Sessions profiles (at most 20), each {id, name, repositories}. The session runs in a Kiro Cloud Sessions sandbox through Kiro Agent, without Kiro Crew's tools, MCP servers or governance gate; the gateway's Kiro sign-in authenticates.",
+      "help": "Named Kiro Cloud Sessions profiles (at most 20), each {id, name, repositories}. The session runs in a Kiro Cloud Sessions sandbox through Kiro Agent, without Aj Crew's tools, MCP servers or governance gate; the gateway's Kiro sign-in authenticates.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": []
@@ -4233,8 +4233,8 @@
         "max_total_mb": 0,
         "otlp_endpoint": "",
         "otlp_endpoints": [],
-        "beacon_enabled": true,
-        "beacon_endpoint": "https://d175o3ylxqum0e.cloudfront.net"
+        "beacon_enabled": false,
+        "beacon_endpoint": ""
       }
     },
     {
@@ -4246,7 +4246,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Enabled",
-      "help": "Main switch for Kiro Crew metrics telemetry. Off by default: metric call sites are no-ops and nothing is written. When on, a local-first JSONL sink under ~/.kiro/crew/metrics is enabled (no network egress).",
+      "help": "Main switch for Aj Crew metrics telemetry. Off by default: metric call sites are no-ops and nothing is written. When on, a local-first JSONL sink under ~/.kiro/crew/metrics is enabled (no network egress).",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": false
@@ -4358,10 +4358,10 @@
       "sensitive": false,
       "tags": [],
       "label": "Anonymous Usage Beacon",
-      "help": "Anonymous daily heartbeat so maintainers can see how many copies are actively running, which versions are in use, and which distribution channels they came from. Sends EXACTLY five fields, at most once per day: a random installation id, app release (major.minor.patch only — build stamps are stripped), Python minor version, distribution channel, and a first-run bit. NEVER sends prompts, model output, file contents, paths, repo names, credentials, hostname, username, IP address, operating system, CPU architecture, release channel, or governance posture. Automatically suppressed in CI and for a non-default KIROCREW_HOME. Opt out with KIROCREW_TELEMETRY_DISABLED=1 or by turning this off; an enterprise policy can also pin it off via the capabilities.telemetry governance scope, which this switch cannot override. Independent of the 'enabled' switch above, which is local-only metrics collection and still never egresses.",
+      "help": "Anonymous daily heartbeat so whoever runs the Beacon Endpoint below can see how many copies are actively running, which versions are in use, and which distribution channels they came from. Off by default, and nothing is sent while that endpoint is empty. Sends EXACTLY five fields, at most once per day: a random installation id, app release (major.minor.patch only — build stamps are stripped), Python minor version, distribution channel, and a first-run bit. NEVER sends prompts, model output, file contents, paths, repo names, credentials, hostname, username, IP address, operating system, CPU architecture, release channel, or governance posture. Automatically suppressed in CI and for a non-default AJCREW_HOME. Opt out with AJCREW_TELEMETRY_DISABLED=1 or by turning this off; an enterprise policy can also pin it off via the capabilities.telemetry governance scope, which this switch cannot override. Independent of the 'enabled' switch above, which is local-only metrics collection and still never egresses.",
       "hasChildren": false,
       "enumValues": null,
-      "defaultValue": true
+      "defaultValue": false
     },
     {
       "path": "telemetry.beacon_endpoint",
@@ -4375,7 +4375,7 @@
       "help": "HTTPS base URL that receives the anonymous heartbeat. EMPTY = no beacon is ever sent, regardless of the toggle above. Must be https:// (a plaintext heartbeat would reveal which hosts run this software to any on-path observer); a non-https value is cleared.",
       "hasChildren": false,
       "enumValues": null,
-      "defaultValue": "https://d175o3ylxqum0e.cloudfront.net"
+      "defaultValue": ""
     },
     {
       "path": "stt",
@@ -4477,7 +4477,7 @@
       "sensitive": true,
       "tags": [],
       "label": "Custom Model File",
-      "help": "The file name of a whisper.cpp ggml model (`.bin`) to run INSTEAD of a catalog model, used when `model` is `custom`. Put the file in the speech models folder (`models/whisper` under the Kiro Crew home) first: the path must resolve to a regular file inside that folder, so `..`, an absolute path elsewhere, and a symlink pointing out of it are refused. Nothing is downloaded. Both this and the digest must be set; otherwise `custom` degrades to the default model with a warning.",
+      "help": "The file name of a whisper.cpp ggml model (`.bin`) to run INSTEAD of a catalog model, used when `model` is `custom`. Put the file in the speech models folder (`models/whisper` under the Aj Crew home) first: the path must resolve to a regular file inside that folder, so `..`, an absolute path elsewhere, and a symlink pointing out of it are refused. Nothing is downloaded. Both this and the digest must be set; otherwise `custom` degrades to the default model with a warning.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": ""
@@ -4589,7 +4589,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Decode threads",
-      "help": "How many CPU threads the local model uses to recognise speech. 0 (or `auto`) uses half this machine's cores, at most 16, which stays steady on a busy host. A larger machine can set more: on a 128-core host the largest model took 4 s on an 11-second clip at 16 threads and 1.25 s at 64. A number above the cores this process may use is lowered to that count. The KIROCREW_STT_THREADS environment variable overrides this. A change applies at the next dictation, which reloads the model once.",
+      "help": "How many CPU threads the local model uses to recognise speech. 0 (or `auto`) uses half this machine's cores, at most 16, which stays steady on a busy host. A larger machine can set more: on a 128-core host the largest model took 4 s on an 11-second clip at 16 threads and 1.25 s at 64. A number above the cores this process may use is lowered to that count. The AJCREW_STT_THREADS environment variable overrides this. A change applies at the next dictation, which reloads the model once.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": 0
@@ -4974,7 +4974,7 @@
       "sensitive": false,
       "tags": [],
       "label": "MCP Apps (retired, opt-out still honoured)",
-      "help": "RETIRED GOING FORWARD, but a stored `false` KEEPS ITS OPT-OUT. Nothing writes this key any more and MCP Management does not surface it: MCP Apps capability follows whether a server gets a stub, because the stub is what carries the render and callback path, so a preference cannot grant it. It can still WITHHOLD it — a released version treated `false` here as a trustworthy opt-out, so an operator who turned MCP Apps off stays off (tightest-wins: it beats KIROCREW_MCP_APPS=1, and an unreadable config fails closed). Absent defaults True, so 'not configured' is not an opt-out. To GET server-authored UI, turn on the server's stub in MCP Management — and clear a stored `false` here if you have one. The only other MCP Apps preference is where it renders (dashboard.mcp_app_panel). See docs/architecture/design-notes/mcp-stub-decoupling.md.",
+      "help": "RETIRED GOING FORWARD, but a stored `false` KEEPS ITS OPT-OUT. Nothing writes this key any more and MCP Management does not surface it: MCP Apps capability follows whether a server gets a stub, because the stub is what carries the render and callback path, so a preference cannot grant it. It can still WITHHOLD it — a released version treated `false` here as a trustworthy opt-out, so an operator who turned MCP Apps off stays off (tightest-wins: it beats AJCREW_MCP_APPS=1, and an unreadable config fails closed). Absent defaults True, so 'not configured' is not an opt-out. To GET server-authored UI, turn on the server's stub in MCP Management — and clear a stored `false` here if you have one. The only other MCP Apps preference is where it renders (dashboard.mcp_app_panel). See docs/architecture/design-notes/mcp-stub-decoupling.md.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": true
@@ -5003,7 +5003,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Socket Path",
-      "help": "Local endpoint for the broker. Empty -> $KIROCREW_HOME/mcp-gateway/gateway.sock. A unix socket at this path on POSIX; on Windows the path is not created, it only derives the named-pipe name and locates the lock file beside it.",
+      "help": "Local endpoint for the broker. Empty -> $AJCREW_HOME/mcp-gateway/gateway.sock. A unix socket at this path on POSIX; on Windows the path is not created, it only derives the named-pipe name and locates the lock file beside it.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": "",
@@ -5018,7 +5018,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Overlay Dir",
-      "help": "Directory of rewritten agent JSON. Broker stubs from these specs are injected into each kiro-cli session via ACP session/new. Empty -> $KIROCREW_HOME/mcp-gateway/agents.",
+      "help": "Directory of rewritten agent JSON. Broker stubs from these specs are injected into each kiro-cli session via ACP session/new. Empty -> $AJCREW_HOME/mcp-gateway/agents.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": "",
@@ -5357,7 +5357,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Read Buffer Limit",
-      "help": "Maximum bytes for a single MCP response line before asyncio drops it. Default 64 MiB. Responses exceeding this are fast-failed with -32000. Env override: KIROCREW_MCP_READ_LIMIT.",
+      "help": "Maximum bytes for a single MCP response line before asyncio drops it. Default 64 MiB. Responses exceeding this are fast-failed with -32000. Env override: AJCREW_MCP_READ_LIMIT.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": 67108864,
@@ -5372,7 +5372,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Response Spill Threshold",
-      "help": "Tool-call responses larger than this (bytes) have their text content written to $KIROCREW_HOME/mcp_spill/ and truncated inline to 16 KiB + a file path marker. Default 256 KiB. Set 0 to disable spilling. Env override: KIROCREW_MCP_SPILL_THRESHOLD. Read by the MCP broker when it starts, like every other field of this section.",
+      "help": "Tool-call responses larger than this (bytes) have their text content written to $AJCREW_HOME/mcp_spill/ and truncated inline to 16 KiB + a file path marker. Default 256 KiB. Set 0 to disable spilling. Env override: AJCREW_MCP_SPILL_THRESHOLD. Read by the MCP broker when it starts, like every other field of this section.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": 262144,
@@ -5404,7 +5404,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Extra MCP Binary Directories",
-      "help": "Additional directories to search for MCP server binaries, ahead of the built-in locations. Add one when a package manager installs its MCP launchers somewhere Kiro Crew does not know about: a server declared by bare name that resolves nowhere never starts, and the session just comes up short of tools. Each entry must be a single absolute directory (``~`` is expanded); anything else is ignored with a warning. These directories are prepended to the search path used by the MCP probe, the agent-config command resolver, and the broker's rewriter alike, so a binary found here is found everywhere. They also join the PATH of the broker daemon and every pooled MCP backend it spawns, so a wrapper script found here can exec a bare tool name; the daemon reads this when it starts, so a change reaches it only once it is replaced. They do NOT join the search for the agent runtime itself, which must not be shadowable by a configured directory.",
+      "help": "Additional directories to search for MCP server binaries, ahead of the built-in locations. Add one when a package manager installs its MCP launchers somewhere Aj Crew does not know about: a server declared by bare name that resolves nowhere never starts, and the session just comes up short of tools. Each entry must be a single absolute directory (``~`` is expanded); anything else is ignored with a warning. These directories are prepended to the search path used by the MCP probe, the agent-config command resolver, and the broker's rewriter alike, so a binary found here is found everywhere. They also join the PATH of the broker daemon and every pooled MCP backend it spawns, so a wrapper script found here can exec a bare tool name; the daemon reads this when it starts, so a change reaches it only once it is replaced. They do NOT join the search for the agent runtime itself, which must not be shadowable by a configured directory.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": [],
@@ -5433,7 +5433,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Honour MCP autoApprove",
-      "help": "Keep an ``autoApprove`` list in ``mcp.json`` or in an agent file when Kiro Crew writes the agent config, so those verbs run without an approval card. On by default. Kiro Crew does not check who wrote a list: one the agent wrote into ``mcp.json`` is honoured the same as yours. An app's own ``autoApprove`` lists are never kept. Know what it costs: the agent runtime approves such a call locally and emits no permission request, so Kiro Crew's own tool gate never runs for it. Turn this OFF to drop every verb no server spec declares, which puts those tools back through the gate. A governance ceiling strips the key whatever this says, and a verb a spec declares is kept either way. Applies at restart, when the spec is rebuilt, so a change does not retract or restore a grant already in the file.",
+      "help": "Keep an ``autoApprove`` list in ``mcp.json`` or in an agent file when Aj Crew writes the agent config, so those verbs run without an approval card. On by default. Aj Crew does not check who wrote a list: one the agent wrote into ``mcp.json`` is honoured the same as yours. An app's own ``autoApprove`` lists are never kept. Know what it costs: the agent runtime approves such a call locally and emits no permission request, so Aj Crew's own tool gate never runs for it. Turn this OFF to drop every verb no server spec declares, which puts those tools back through the gate. A governance ceiling strips the key whatever this says, and a verb a spec declares is kept either way. Applies at restart, when the spec is rebuilt, so a change does not retract or restore a grant already in the file.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": true,
@@ -5448,7 +5448,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Instances",
-      "help": "Multi-instance management — manage/switch remote Kiro Crews over SSH.",
+      "help": "Multi-instance management — manage/switch remote Aj Crews over SSH.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": {
@@ -5474,7 +5474,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Enabled",
-      "help": "Enable multi-instance management — lets this gateway open SSH tunnels to remote Kiro Crews and embed their dashboards. Default off (opt-in). Enabling also scopes a CSP frame-src relaxation to active tunnel ports.",
+      "help": "Enable multi-instance management — lets this gateway open SSH tunnels to remote Aj Crews and embed their dashboards. Default off (opt-in). Enabling also scopes a CSP frame-src relaxation to active tunnel ports.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": false,
@@ -5575,7 +5575,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Mint Timeout (secs)",
-      "help": "How long to wait for the remote `kirocrew token` mint to return before failing a connect. When unset, SSH uses 30s and SSM uses 90s (its dispatch latency is higher). The mint runs over the same ssh transport as the tunnel, so a host behind a ProxyCommand or jump host pays the proxy handshake here too. An explicit value applies to both transports, so size it for the slowest transport you use. A value below 10, or one that is not a number, is discarded with a warning and the transport default is used; a value above 120 is clamped to 120.",
+      "help": "How long to wait for the remote `ajcrew token` mint to return before failing a connect. When unset, SSH uses 30s and SSM uses 90s (its dispatch latency is higher). The mint runs over the same ssh transport as the tunnel, so a host behind a ProxyCommand or jump host pays the proxy handshake here too. An explicit value applies to both transports, so size it for the slowest transport you use. A value below 10, or one that is not a number, is discarded with a warning and the transport default is used; a value above 120 is clamped to 120.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": null,
@@ -5741,7 +5741,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Browser",
-      "help": "Which browser the agent drives. `auto` picks your Chrome (with your logins, once you allow remote debugging in it), then Edge on Windows, then Kiro's own Chromium without a window on a machine with no display. `user_chrome` and `kiro_chromium` pin one of those; `headless` runs Kiro's Chromium without a window even on a desktop.",
+      "help": "Which browser the agent drives. `auto` picks your Chrome (with your logins, once you allow remote debugging in it), then Edge on Windows, then Aj's own Chromium without a window on a machine with no display. `user_chrome` and `kiro_chromium` pin one of those; `headless` runs Aj's Chromium without a window even on a desktop.",
       "hasChildren": false,
       "enumValues": [
         "auto",
@@ -5843,8 +5843,8 @@
       "deprecated": false,
       "sensitive": false,
       "tags": [],
-      "label": "Sign-in for Kiro's Chromium",
-      "help": "Whether the edition's sign-in is put into Kiro's own Chromium, and for which domains.",
+      "label": "Sign-in for Aj's Chromium",
+      "help": "Whether the edition's sign-in is put into Aj's own Chromium, and for which domains.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": {
@@ -5861,7 +5861,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Use your organisation's sign-in",
-      "help": "Let Kiro's own Chromium start signed in to the sites below, using the sign-in your edition of Kiro Crew provides. Unset follows the edition's default; with no edition provider it does nothing. Your own Chrome is never changed.",
+      "help": "Let Aj's own Chromium start signed in to the sites below, using the sign-in your edition of Aj Crew provides. Unset follows the edition's default; with no edition provider it does nothing. Your own Chrome is never changed.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": null,
@@ -6598,7 +6598,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Max total processes",
-      "help": "cgroup TasksMax for the whole agents SLICE, counting tasks (threads) across every agent tree. 0 or unset sizes it from the host: 512 tasks for every 512 MB of the slice's memory ceiling plus one scope ceiling, so legitimate load reaches max_total_memory_mb first. Capped at half the tightest of kernel.pid_max, kernel.threads-max and the user slice's TasksMax, but never below 32768 unless that tightest limit is itself lower; kirocrew doctor shows the value and its inputs. The aggregate ceiling is never left unset where a systemd user manager is available (Linux); not enforced on Windows/macOS.",
+      "help": "cgroup TasksMax for the whole agents SLICE, counting tasks (threads) across every agent tree. 0 or unset sizes it from the host: 512 tasks for every 512 MB of the slice's memory ceiling plus one scope ceiling, so legitimate load reaches max_total_memory_mb first. Capped at half the tightest of kernel.pid_max, kernel.threads-max and the user slice's TasksMax, but never below 32768 unless that tightest limit is itself lower; ajcrew doctor shows the value and its inputs. The aggregate ceiling is never left unset where a systemd user manager is available (Linux); not enforced on Windows/macOS.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": null,
@@ -6667,7 +6667,7 @@
         "allowed_users": [],
         "tracking_channels": [],
         "open_channels": [],
-        "command": "kirocrew",
+        "command": "ajcrew",
         "forward_to_agent_callback": "",
         "trusted_bot_ids": [],
         "trusted_bot_turn_limit": 5,
@@ -6787,7 +6787,7 @@
       "help": "Slack slash command trigger word.",
       "hasChildren": false,
       "enumValues": null,
-      "defaultValue": "kirocrew",
+      "defaultValue": "ajcrew",
       "requiresRestart": true
     },
     {
@@ -6990,7 +6990,7 @@
         "slack"
       ],
       "label": "Use Tunnel URL in Slack",
-      "help": "When true, dashboard links posted to Slack (e.g. via /kirocrew dashboard) use the tunnel URL if one is active. When false (default), Slack links always use the configured dashboard origin or host:port. Disabled by default until the tunnel mechanism is scaled for general use.",
+      "help": "When true, dashboard links posted to Slack (e.g. via /ajcrew dashboard) use the tunnel URL if one is active. When false (default), Slack links always use the configured dashboard origin or host:port. Disabled by default until the tunnel mechanism is scaled for general use.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": false
@@ -8802,7 +8802,7 @@
         "wakatime"
       ],
       "label": "Send coding-activity heartbeats",
-      "help": "Send a heartbeat to WakaTime after each agent turn that edited files or ran a command, so your Kiro Crew coding time shows up in WakaTime alongside your editor. Off by default: sending activity outward is a separate opt-in from reading your own stats. Requires the WakaTime integration to be enabled. Covers dashboard chat and dashboard-linked Slack threads; the other messaging channels (Telegram, Discord, Teams, WhatsApp and the rest), the task runner, subagents, installed apps, and the standalone kirocrew chat CLI each run their own turn loop and do not emit heartbeats yet. Incognito and temporary sessions never send one: they keep no record of the chat, and a heartbeat is an external record of it.",
+      "help": "Send a heartbeat to WakaTime after each agent turn that edited files or ran a command, so your Aj Crew coding time shows up in WakaTime alongside your editor. Off by default: sending activity outward is a separate opt-in from reading your own stats. Requires the WakaTime integration to be enabled. Covers dashboard chat and dashboard-linked Slack threads; the other messaging channels (Telegram, Discord, Teams, WhatsApp and the rest), the task runner, subagents, installed apps, and the standalone ajcrew chat CLI each run their own turn loop and do not emit heartbeats yet. Incognito and temporary sessions never send one: they keep no record of the chat, and a heartbeat is an external record of it.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": false
@@ -9320,7 +9320,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Allowed Tailnet Logins",
-      "help": "Tailscale logins permitted when trust_identity is on. Mandatory: a shared tailnet can have hundreds of members, so identity trust without an allowlist would hand each of them the dashboard. A verified peer whose login is not listed is denied. Under the Shared Crew preview (requires KIROCREW_SHARED_CREW_PREVIEW=1) this list only seeds, at the first start, who may get in alongside you and accepted Crew invites; after that adding a login admits nobody, and removing one removes that person at the next start.",
+      "help": "Tailscale logins permitted when trust_identity is on. Mandatory: a shared tailnet can have hundreds of members, so identity trust without an allowlist would hand each of them the dashboard. A verified peer whose login is not listed is denied. Under the Shared Crew preview (requires AJCREW_SHARED_CREW_PREVIEW=1) this list only seeds, at the first start, who may get in alongside you and accepted Crew invites; after that adding a login admits nobody, and removing one removes that person at the next start.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": [],
@@ -9815,7 +9815,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Phone Sign-In Lasts Until Restart",
-      "help": "Keep a phone signed in for as long as this gateway process runs. The QR code still has to be scanned within its short window; after that the phone is not signed out for being idle in ordinary use, and a gateway restart signs it out. The one remaining idle limit is the refresh credential's own 30-day lifetime, which each visit renews, so a phone that goes untouched for 30 days re-scans. Turn this OFF to go back to a timed session that expires on a clock whether or not the gateway is still running. Either way `kirocrew logout` ends the session immediately, and the session stays pinned to the peer it was established from.",
+      "help": "Keep a phone signed in for as long as this gateway process runs. The QR code still has to be scanned within its short window; after that the phone is not signed out for being idle in ordinary use, and a gateway restart signs it out. The one remaining idle limit is the refresh credential's own 30-day lifetime, which each visit renews, so a phone that goes untouched for 30 days re-scans. Turn this OFF to go back to a timed session that expires on a clock whether or not the gateway is still running. Either way `ajcrew logout` ends the session immediately, and the session stays pinned to the peer it was established from.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": true
@@ -10639,7 +10639,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Theme Color",
-      "help": "Dashboard color theme slug (e.g. 'kiro', 'emerald', 'monokai'). Empty = unset (frontend falls back to localStorage or 'kiro').",
+      "help": "Dashboard color theme slug (e.g. 'aj', 'emerald', 'monokai'). Empty = unset (frontend falls back to localStorage or 'kiro').",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": ""
@@ -10809,7 +10809,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Privacy Notice Version Acknowledged",
-      "help": "The version of the Privacy chapter text, the one saying local metric recording is on, that the user last acknowledged (0 = none). When the dashboard's notice version is higher, the chapter is shown once more at the next dashboard load, but only while local recording is on. Written by the Privacy chapter and by kirocrew telemetry enable.",
+      "help": "The version of the Privacy chapter text, the one saying local metric recording is on, that the user last acknowledged (0 = none). When the dashboard's notice version is higher, the chapter is shown once more at the next dashboard load, but only while local recording is on. Written by the Privacy chapter and by ajcrew telemetry enable.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": 0
@@ -11327,7 +11327,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Name Mode",
-      "help": "Tunnel naming: 'username' uses 'kirocrew', 'hash' uses 'kirocrew-<hostHash>' for multi-host disambiguation.",
+      "help": "Tunnel naming: 'username' uses 'ajcrew', 'hash' uses 'ajcrew-<hostHash>' for multi-host disambiguation.",
       "hasChildren": false,
       "enumValues": [
         "username",
@@ -11680,7 +11680,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Agents",
-      "help": "Named Kiro Crew agent definitions.",
+      "help": "Named Aj Crew agent definitions.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": {}
@@ -11904,10 +11904,10 @@
       "sensitive": false,
       "tags": [],
       "label": "Source",
-      "help": "Agent origin: kirocrew or builtin.",
+      "help": "Agent origin: ajcrew or builtin.",
       "hasChildren": false,
       "enumValues": null,
-      "defaultValue": "kirocrew"
+      "defaultValue": "ajcrew"
     },
     {
       "path": "agents.*.starred",
@@ -12030,7 +12030,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Avatar",
-      "help": "Per-crew avatar override. Empty means the face is derived from the crew's name. {'kind': 'ghost', 'traits': {...}} pins explicit ghost traits chosen in the avatar builder; {'kind': 'image'} means an uploaded picture served from the per-crew avatar endpoint.",
+      "help": "Per-crew avatar override. Empty means the face is derived from the crew's name. {'kind': 'ghost', 'traits': {...}} pins explicit face traits chosen in the avatar builder; {'kind': 'image'} means an uploaded picture served from the per-crew avatar endpoint.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": {}
@@ -12044,7 +12044,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Imported",
-      "help": "Provenance stamp of a Bot imported from a .kirobot file: {'format_version', 'sender_label', 'sha256', 'imported_at'}. Empty for a Bot made here. The sender label is self-declared; nothing reads the stamp to reach the sender.",
+      "help": "Provenance stamp of a Bot imported from a .ajbot file: {'format_version', 'sender_label', 'sha256', 'imported_at'}. Empty for a Bot made here. The sender label is self-declared; nothing reads the stamp to reach the sender.",
       "hasChildren": true,
       "enumValues": null,
       "defaultValue": {}
@@ -12058,7 +12058,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Default Agent",
-      "help": "Active Kiro Crew agent name from the agents section.",
+      "help": "Active Aj Crew agent name from the agents section.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": ""
@@ -12341,7 +12341,7 @@
       "sensitive": false,
       "tags": [],
       "label": "Snapshot Directory",
-      "help": "Directory for kirocrew snapshot output. Defaults to ~/.kiro/crew/snapshots if empty.",
+      "help": "Directory for ajcrew snapshot output. Defaults to ~/.kiro/crew/snapshots if empty.",
       "hasChildren": false,
       "enumValues": null,
       "defaultValue": ""

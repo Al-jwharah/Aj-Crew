@@ -8,10 +8,10 @@ import pytest
 from slack_handler_helpers import _clean_approval_state  # noqa: F401
 from slack_handler_helpers import FakeProvider, FakeSessionManager
 
+from aj_crew.messaging import auto_title
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack.handler import handle_message, set_allowed_users, set_owner_id
 from conftest import MockSlackClient
-from kiro_crew.messaging import auto_title
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack.handler import handle_message, set_allowed_users, set_owner_id
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
@@ -184,7 +184,7 @@ class TestThreadTitle:
 
     @pytest.fixture(autouse=True)
     def _clean_titled_threads(self):
-        from kiro_crew.slack.handler import _titled_threads
+        from aj_crew.slack.handler import _titled_threads
 
         _titled_threads.clear()
         yield
@@ -193,7 +193,7 @@ class TestThreadTitle:
     @pytest.mark.asyncio
     async def test_title_sets_thread_title(self):
         """!title <text> calls set_thread_title and reacts."""
-        from kiro_crew.slack.handler import _titled_threads
+        from aj_crew.slack.handler import _titled_threads
 
         set_owner_id("U_OWNER")
         set_allowed_users({"U_OWNER"})
@@ -269,7 +269,7 @@ class TestAutoTitleSlack:
         # The claim LRU and its lock live in `messaging.auto_title`; `reset()` does
         # both halves, which matters because a test that crashed mid-title leaves
         # the claim marked AND the permit held.
-        from kiro_crew.messaging import auto_title
+        from aj_crew.messaging import auto_title
 
         auto_title.reset()
         yield
@@ -278,7 +278,7 @@ class TestAutoTitleSlack:
     @pytest.mark.asyncio
     async def test_auto_title_happy_path(self):
         """Valid LLM title → set_thread_title called, session_key stays in _titled_threads."""
-        from kiro_crew.slack.handler import _mark_titled, _maybe_auto_title_slack, _titled_threads
+        from aj_crew.slack.handler import _mark_titled, _maybe_auto_title_slack, _titled_threads
 
         slack = MockSlackClient()
         sessions = FakeSessionManager()
@@ -310,7 +310,7 @@ class TestAutoTitleSlack:
         """
         import logging
 
-        from kiro_crew.slack.handler import _mark_titled, _maybe_auto_title_slack, _titled_threads
+        from aj_crew.slack.handler import _mark_titled, _maybe_auto_title_slack, _titled_threads
 
         class ExplodingSessionManager(FakeSessionManager):
             async def get_or_create(self, key, agent=None, channel_id=None, start_priority=None):
@@ -322,7 +322,7 @@ class TestAutoTitleSlack:
         # `messaging.auto_title` now, and naming the wrong logger is not a harmless
         # miss — `at_level` also SETS the level, so a DEBUG assertion against a
         # logger that emits nothing passes vacuously (its sibling below did).
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.messaging.auto_title"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.messaging.auto_title"):
             await _maybe_auto_title_slack(
                 slack,
                 ExplodingSessionManager(),
@@ -354,7 +354,7 @@ class TestAutoTitleSlack:
         model would be log spam), while still releasing the claim for retry."""
         import logging
 
-        from kiro_crew.slack.handler import _mark_titled, _maybe_auto_title_slack, _titled_threads
+        from aj_crew.slack.handler import _mark_titled, _maybe_auto_title_slack, _titled_threads
 
         class TimingOutSessionManager(FakeSessionManager):
             async def get_or_create(self, key, agent=None, channel_id=None, start_priority=None):
@@ -362,7 +362,7 @@ class TestAutoTitleSlack:
 
         slack = MockSlackClient()
         _mark_titled("sk-slow")
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.messaging.auto_title"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.messaging.auto_title"):
             await _maybe_auto_title_slack(
                 slack,
                 TimingOutSessionManager(),
@@ -387,7 +387,7 @@ class TestAutoTitleSlack:
     @pytest.mark.asyncio
     async def test_auto_title_skip_removes_claim(self):
         """LLM returns SKIP → no title set, session_key removed from _titled_threads."""
-        from kiro_crew.slack.handler import _mark_titled, _maybe_auto_title_slack, _titled_threads
+        from aj_crew.slack.handler import _mark_titled, _maybe_auto_title_slack, _titled_threads
 
         slack = MockSlackClient()
         sessions = FakeSessionManager()
@@ -410,7 +410,7 @@ class TestAutoTitleSlack:
     @pytest.mark.asyncio
     async def test_auto_title_error_removes_claim(self):
         """Exception during streaming → session_key removed from _titled_threads for retry."""
-        from kiro_crew.slack.handler import _mark_titled, _maybe_auto_title_slack, _titled_threads
+        from aj_crew.slack.handler import _mark_titled, _maybe_auto_title_slack, _titled_threads
 
         slack = MockSlackClient()
         sessions = FakeSessionManager()
@@ -431,7 +431,7 @@ class TestAutoTitleSlack:
     @pytest.mark.asyncio
     async def test_auto_title_with_curly_braces(self):
         """User text with curly braces doesn't crash or skip title."""
-        from kiro_crew.slack.handler import _mark_titled, _maybe_auto_title_slack
+        from aj_crew.slack.handler import _mark_titled, _maybe_auto_title_slack
 
         slack = MockSlackClient()
         sessions = FakeSessionManager()
@@ -456,7 +456,7 @@ class TestAutoTitleSlack:
         """!title persists to conversation_log when available."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.slack.handler import _handle_slash_command
+        from aj_crew.slack.handler import _handle_slash_command
 
         mock_log = MagicMock()
         slack = MockSlackClient()

@@ -20,9 +20,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import cron_script
-from kiro_crew import member_memory_auth as auth
-from kiro_crew import platform_compat
+from aj_crew import cron_script
+from aj_crew import member_memory_auth as auth
+from aj_crew import platform_compat
 
 _ROOT = 4101
 _LAUNCHER_CHILD = 4102

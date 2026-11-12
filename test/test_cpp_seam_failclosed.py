@@ -20,9 +20,9 @@ from typing import Any, List, Optional
 
 import pytest
 
-from kiro_crew import cli
-from kiro_crew.config.loader import KiroCrewConfig, build_provider_factory
-from kiro_crew.platform import (
+from aj_crew import cli
+from aj_crew.config.loader import AjCrewConfig, build_provider_factory
+from aj_crew.platform import (
     PROFILE_ENTERPRISE,
     PlatformCompositionError,
     async_safe_context_call,
@@ -33,11 +33,11 @@ from kiro_crew.platform import (
 
 
 @pytest.fixture
-def cfg() -> KiroCrewConfig:
-    return KiroCrewConfig()
+def cfg() -> AjCrewConfig:
+    return AjCrewConfig()
 
 
-# Context isolation (reset before+after every test, KIROCREW_PROFILE=standalone)
+# Context isolation (reset before+after every test, AJCREW_PROFILE=standalone)
 # is provided by conftest.py's autouse ``_reset_platform_context`` fixture.
 
 
@@ -45,8 +45,8 @@ def cfg() -> KiroCrewConfig:
 def _jail_env_isolation(monkeypatch):
     """Clear the jail env markers so a prior test (or the ambient shell) cannot
     flip the re-entry guard / off-switch for this one."""
-    monkeypatch.delenv("KIROCREW_JAILED", raising=False)
-    monkeypatch.delenv("KIROCREW_NO_JAIL", raising=False)
+    monkeypatch.delenv("AJCREW_JAILED", raising=False)
+    monkeypatch.delenv("AJCREW_NO_JAIL", raising=False)
 
 
 @pytest.fixture
@@ -54,8 +54,8 @@ def stub_child_argv(monkeypatch):
     """Pin ``_child_argv`` to a fixed list so a gate test exercises the on-mode
     floor / re-exec wiring, not live ``sys.argv`` / binary resolution.  Opt-in
     (the ``_child_argv`` tests need the REAL implementation)."""
-    monkeypatch.setattr(cli, "_child_argv", lambda: ["kirocrew", "chat"])
-    return ["kirocrew", "chat"]
+    monkeypatch.setattr(cli, "_child_argv", lambda: ["ajcrew", "chat"])
+    return ["ajcrew", "chat"]
 
 
 # ── inline jail backends (test doubles, not in the core) ──
@@ -149,7 +149,7 @@ class _CompositionErrorJail:
         raise PlatformCompositionError("companion jail backend could not compose")
 
 
-def _install_jail(cfg: KiroCrewConfig, jail: Any, *, jail_mode: str = "auto") -> None:
+def _install_jail(cfg: AjCrewConfig, jail: Any, *, jail_mode: str = "auto") -> None:
     """Compose + install a context whose JailProvider is *jail* and agent.jail=*jail_mode*.
 
     Deep-copies the nested ``agent`` dataclass (``dataclasses.replace`` is a
@@ -164,7 +164,7 @@ def _install_jail(cfg: KiroCrewConfig, jail: Any, *, jail_mode: str = "auto") ->
 # ── R1: public Default + jail='on' must be a NO-OP, not a brick ──
 
 
-def test_public_default_jail_on_runs_in_process(cfg: KiroCrewConfig) -> None:
+def test_public_default_jail_on_runs_in_process(cfg: AjCrewConfig) -> None:
     """available()==False + mode='on' → gate returns (no sys.exit), runs in-process.
 
     This is the rank-1 blocking regression: the DefaultJailProvider returns None,
@@ -175,7 +175,7 @@ def test_public_default_jail_on_runs_in_process(cfg: KiroCrewConfig) -> None:
     cli._jail_reexec_gate("chat", no_jail_flag=False)
 
 
-def test_public_default_jail_auto_runs_in_process(cfg: KiroCrewConfig) -> None:
+def test_public_default_jail_auto_runs_in_process(cfg: AjCrewConfig) -> None:
     _install_jail(cfg, _NoJail(), jail_mode="auto")
     cli._jail_reexec_gate("run", no_jail_flag=False)
 
@@ -183,7 +183,7 @@ def test_public_default_jail_auto_runs_in_process(cfg: KiroCrewConfig) -> None:
 # ── R1/R8: a present backend under mode='on' must fail closed ──
 
 
-def test_backend_returns_none_on_mode_fails_closed(cfg: KiroCrewConfig) -> None:
+def test_backend_returns_none_on_mode_fails_closed(cfg: AjCrewConfig) -> None:
     """available()==True + None return + mode='on' → SystemExit(2)."""
     _install_jail(cfg, _RealJailReturnsNone(), jail_mode="on")
     with pytest.raises(SystemExit) as ei:
@@ -191,7 +191,7 @@ def test_backend_returns_none_on_mode_fails_closed(cfg: KiroCrewConfig) -> None:
     assert ei.value.code == 2
 
 
-def test_backend_raises_on_mode_fails_closed(cfg: KiroCrewConfig) -> None:
+def test_backend_raises_on_mode_fails_closed(cfg: AjCrewConfig) -> None:
     """available()==True + backend raises + mode='on' → SystemExit(2) (same as None)."""
     _install_jail(cfg, _RealJailRaises(), jail_mode="on")
     with pytest.raises(SystemExit) as ei:
@@ -199,24 +199,24 @@ def test_backend_raises_on_mode_fails_closed(cfg: KiroCrewConfig) -> None:
     assert ei.value.code == 2
 
 
-def test_backend_raises_auto_mode_degrades(cfg: KiroCrewConfig) -> None:
+def test_backend_raises_auto_mode_degrades(cfg: AjCrewConfig) -> None:
     """available()==True + backend raises + mode='auto' → run in-process (no exit)."""
     _install_jail(cfg, _RealJailRaises(), jail_mode="auto")
     cli._jail_reexec_gate("chat", no_jail_flag=False)  # no SystemExit
     # A degraded run stays in this process, so it must not keep the jailed marker.
-    assert "KIROCREW_JAILED" not in os.environ
+    assert "AJCREW_JAILED" not in os.environ
 
 
-def test_backend_returns_none_auto_mode_degrades(cfg: KiroCrewConfig) -> None:
+def test_backend_returns_none_auto_mode_degrades(cfg: AjCrewConfig) -> None:
     _install_jail(cfg, _RealJailReturnsNone(), jail_mode="auto")
     cli._jail_reexec_gate("chat", no_jail_flag=False)  # no SystemExit
-    assert "KIROCREW_JAILED" not in os.environ
+    assert "AJCREW_JAILED" not in os.environ
 
 
 # ── availability-probe failure: fail closed under on, degrade under auto ──
 
 
-def test_flaky_available_on_mode_fails_closed(cfg: KiroCrewConfig) -> None:
+def test_flaky_available_on_mode_fails_closed(cfg: AjCrewConfig) -> None:
     """available() raises a transient error + mode='on' → SystemExit(2).
 
     'availability unknown' must NOT be conflated with 'no backend' under on-mode:
@@ -228,7 +228,7 @@ def test_flaky_available_on_mode_fails_closed(cfg: KiroCrewConfig) -> None:
     assert ei.value.code == 2
 
 
-def test_flaky_available_auto_mode_degrades(cfg: KiroCrewConfig) -> None:
+def test_flaky_available_auto_mode_degrades(cfg: AjCrewConfig) -> None:
     """available() raises + mode='auto' → run in-process (no exit)."""
     _install_jail(cfg, _FlakyAvailable(), jail_mode="auto")
     cli._jail_reexec_gate("chat", no_jail_flag=False)  # no SystemExit
@@ -237,10 +237,10 @@ def test_flaky_available_auto_mode_degrades(cfg: KiroCrewConfig) -> None:
 # ── PlatformCompositionError MUST propagate through the gate (fail-closed) ──
 
 
-def test_composition_error_propagates_through_gate(cfg: KiroCrewConfig, monkeypatch) -> None:
+def test_composition_error_propagates_through_gate(cfg: AjCrewConfig, monkeypatch) -> None:
     """A PlatformCompositionError from maybe_reexec_into_jail is never swallowed."""
     _install_jail(cfg, _CompositionErrorJail(), jail_mode="on")
-    monkeypatch.setattr(cli, "_child_argv", lambda: ["kirocrew", "chat"])
+    monkeypatch.setattr(cli, "_child_argv", lambda: ["ajcrew", "chat"])
     with pytest.raises(PlatformCompositionError):
         cli._jail_reexec_gate("chat", no_jail_flag=False)
 
@@ -248,40 +248,40 @@ def test_composition_error_propagates_through_gate(cfg: KiroCrewConfig, monkeypa
 # ── successful re-exec propagates the child's exit code ──
 
 
-def test_successful_reexec_propagates_rc(cfg: KiroCrewConfig, monkeypatch) -> None:
+def test_successful_reexec_propagates_rc(cfg: AjCrewConfig, monkeypatch) -> None:
     jail = _RealJailReturns(7)
     _install_jail(cfg, jail, jail_mode="on")
-    monkeypatch.setattr(cli, "_child_argv", lambda: ["kirocrew", "chat"])
+    monkeypatch.setattr(cli, "_child_argv", lambda: ["ajcrew", "chat"])
     with pytest.raises(SystemExit) as ei:
         cli._jail_reexec_gate("chat", no_jail_flag=False)
     assert ei.value.code == 7
     assert jail.calls and jail.calls[0][1] == "on"
     # The gate must pass the _child_argv() result through to the backend verbatim.
-    assert jail.calls[0][0] == ("kirocrew", "chat")
+    assert jail.calls[0][0] == ("ajcrew", "chat")
 
 
-# ── R2: --no-jail and KIROCREW_NO_JAIL both force off (skip a present backend) ──
+# ── R2: --no-jail and AJCREW_NO_JAIL both force off (skip a present backend) ──
 
 
-def test_no_jail_flag_skips_present_backend(cfg: KiroCrewConfig) -> None:
+def test_no_jail_flag_skips_present_backend(cfg: AjCrewConfig) -> None:
     jail = _RealJailReturns(0)
     _install_jail(cfg, jail, jail_mode="on")
     cli._jail_reexec_gate("chat", no_jail_flag=True)  # no SystemExit
     assert jail.calls == []  # backend never invoked
 
 
-def test_env_no_jail_skips_present_backend(cfg: KiroCrewConfig, monkeypatch) -> None:
-    """KIROCREW_NO_JAIL=1 is the documented env-only bypass and IS read at the gate."""
+def test_env_no_jail_skips_present_backend(cfg: AjCrewConfig, monkeypatch) -> None:
+    """AJCREW_NO_JAIL=1 is the documented env-only bypass and IS read at the gate."""
     jail = _RealJailReturns(0)
     _install_jail(cfg, jail, jail_mode="on")
-    monkeypatch.setenv("KIROCREW_NO_JAIL", "1")
+    monkeypatch.setenv("AJCREW_NO_JAIL", "1")
     cli._jail_reexec_gate("chat", no_jail_flag=False)  # no SystemExit
     assert jail.calls == []
 
 
 @pytest.mark.parametrize("falsey", ["0", "false", "no", "", " "])
-def test_env_no_jail_falsey_does_not_disable(cfg: KiroCrewConfig, monkeypatch, falsey) -> None:
-    """KIROCREW_NO_JAIL=0/false/no must NOT disable the jail (truthy-set, not bool()).
+def test_env_no_jail_falsey_does_not_disable(cfg: AjCrewConfig, monkeypatch, falsey) -> None:
+    """AJCREW_NO_JAIL=0/false/no must NOT disable the jail (truthy-set, not bool()).
 
     A bare ``bool(os.environ.get(...))`` would treat '0' as truthy and silently
     bypass isolation — the regression this guards against.  With jail='on' and a
@@ -289,18 +289,18 @@ def test_env_no_jail_falsey_does_not_disable(cfg: KiroCrewConfig, monkeypatch, f
     floor (exit 2), proving the env value did NOT force mode=off.
     """
     _install_jail(cfg, _RealJailReturnsNone(), jail_mode="on")
-    monkeypatch.setenv("KIROCREW_NO_JAIL", falsey)
+    monkeypatch.setenv("AJCREW_NO_JAIL", falsey)
     with pytest.raises(SystemExit) as ei:
         cli._jail_reexec_gate("chat", no_jail_flag=False)
     assert ei.value.code == 2
 
 
 @pytest.mark.parametrize("truthy", ["1", "true", "TRUE", "On", "YES", " on ", "yes"])
-def test_env_no_jail_truthy_variants_disable(cfg: KiroCrewConfig, monkeypatch, truthy) -> None:
+def test_env_no_jail_truthy_variants_disable(cfg: AjCrewConfig, monkeypatch, truthy) -> None:
     """Case/space-insensitive truthy values DO disable the jail (the .strip().lower() path)."""
     jail = _RealJailReturns(0)
     _install_jail(cfg, jail, jail_mode="on")
-    monkeypatch.setenv("KIROCREW_NO_JAIL", truthy)
+    monkeypatch.setenv("AJCREW_NO_JAIL", truthy)
     cli._jail_reexec_gate("chat", no_jail_flag=False)  # no SystemExit
     assert jail.calls == []  # backend never invoked
 
@@ -308,7 +308,7 @@ def test_env_no_jail_truthy_variants_disable(cfg: KiroCrewConfig, monkeypatch, t
 # ── off-mode + re-entry guard + normalize ──
 
 
-def test_off_mode_skips_present_backend(cfg: KiroCrewConfig) -> None:
+def test_off_mode_skips_present_backend(cfg: AjCrewConfig) -> None:
     """A persisted agent.jail='off' returns before the probe even with a backend."""
     jail = _RealJailReturns(0)
     _install_jail(cfg, jail, jail_mode="off")
@@ -316,7 +316,7 @@ def test_off_mode_skips_present_backend(cfg: KiroCrewConfig) -> None:
     assert jail.calls == []  # never probed/jailed
 
 
-def test_garbage_mode_normalizes_to_auto(cfg: KiroCrewConfig) -> None:
+def test_garbage_mode_normalizes_to_auto(cfg: AjCrewConfig) -> None:
     """An off-spec persisted mode is re-normalized to 'auto' at the gate (deny-by-default).
 
     Non-vacuous: the backend records the mode it was handed.  If the gate passed
@@ -332,8 +332,8 @@ def test_garbage_mode_normalizes_to_auto(cfg: KiroCrewConfig) -> None:
 
 
 @pytest.mark.parametrize("marker", ["1", "jailed", "ns-42", "true", "0", "false"])
-def test_reentry_marker_short_circuits(cfg: KiroCrewConfig, monkeypatch, marker) -> None:
-    """KIROCREW_JAILED PRESENT (any non-empty value) → gate returns without re-jailing,
+def test_reentry_marker_short_circuits(cfg: AjCrewConfig, monkeypatch, marker) -> None:
+    """AJCREW_JAILED PRESENT (any non-empty value) → gate returns without re-jailing,
     even under jail='on' with a None-returning backend (otherwise the child deadlocks).
 
     Parametrized across truthy AND non-truthy values: re-entry is detected by
@@ -348,8 +348,8 @@ def test_reentry_marker_short_circuits(cfg: KiroCrewConfig, monkeypatch, marker)
     assert jail.calls == []  # never re-probed/re-jailed the child
 
 
-def test_empty_marker_does_not_short_circuit(cfg: KiroCrewConfig, monkeypatch) -> None:
-    """An EMPTY KIROCREW_JAILED is NOT 'already jailed' (presence = non-empty), so the
+def test_empty_marker_does_not_short_circuit(cfg: AjCrewConfig, monkeypatch) -> None:
+    """An EMPTY AJCREW_JAILED is NOT 'already jailed' (presence = non-empty), so the
     gate still runs — proving the presence check ignores a blank value."""
     jail = _RealJailReturns(5)
     _install_jail(cfg, jail, jail_mode="on")
@@ -360,8 +360,8 @@ def test_empty_marker_does_not_short_circuit(cfg: KiroCrewConfig, monkeypatch) -
     assert jail.calls  # backend WAS invoked
 
 
-def test_marker_restored_after_degrade(cfg: KiroCrewConfig, monkeypatch) -> None:
-    """try/finally invariant: the gate must NOT leak KIROCREW_JAILED after the backend
+def test_marker_restored_after_degrade(cfg: AjCrewConfig, monkeypatch) -> None:
+    """try/finally invariant: the gate must NOT leak AJCREW_JAILED after the backend
     RETURNS (no re-exec).  A prior value is restored; an unset stays unset."""
     import os
 
@@ -383,7 +383,7 @@ def test_marker_restored_after_degrade(cfg: KiroCrewConfig, monkeypatch) -> None
     assert os.environ.get(cli._JAILED_ENV_MARKER) == ""
 
 
-def test_marker_restored_before_on_mode_exit(cfg: KiroCrewConfig, monkeypatch) -> None:
+def test_marker_restored_before_on_mode_exit(cfg: AjCrewConfig, monkeypatch) -> None:
     """finally runs before the on-mode sys.exit(2), so the marker is restored even on
     the fail-closed path (no leak into a parent that catches SystemExit)."""
     import os
@@ -397,7 +397,7 @@ def test_marker_restored_before_on_mode_exit(cfg: KiroCrewConfig, monkeypatch) -
 
 def test_normalize_jail_unit() -> None:
     """_normalize_jail: valid modes pass through; anything else → 'auto' (deny-by-default)."""
-    from kiro_crew.config.loader import _normalize_jail
+    from aj_crew.config.loader import _normalize_jail
 
     assert _normalize_jail("on") == "on"
     assert _normalize_jail("off") == "off"
@@ -418,25 +418,25 @@ def test_jailed_commands_cover_agent_bearing_set() -> None:
     assert "tui" not in cli._JAILED_COMMANDS  # removed: TUI command surface hidden
 
 
-# ── R5: _child_argv reuses _resolve_kirocrew_bin incl. the sentinel branch ──
+# ── R5: _child_argv reuses _resolve_ajcrew_bin incl. the sentinel branch ──
 
 
 def test_child_argv_sentinel_falls_back_to_module(
     monkeypatch, nonbundled_python_without_user_site
 ) -> None:
-    """When _resolve_kirocrew_bin returns the bare 'kirocrew' sentinel (no usable
-    binary), _child_argv falls back to ``python -s -P -m kiro_crew`` with
+    """When _resolve_ajcrew_bin returns the bare 'ajcrew' sentinel (no usable
+    binary), _child_argv falls back to ``python -s -P -m aj_crew`` with
     sys.argv[1:] -- ``-P`` keeps the jailed child's cwd off sys.path."""
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
-    monkeypatch.setattr(agent_mod, "_resolve_kirocrew_bin", lambda: "kirocrew")
-    monkeypatch.setattr(cli.sys, "argv", ["kirocrew", "chat", "--model", "x"])
+    monkeypatch.setattr(agent_mod, "_resolve_ajcrew_bin", lambda: "ajcrew")
+    monkeypatch.setattr(cli.sys, "argv", ["ajcrew", "chat", "--model", "x"])
     assert cli._child_argv() == [
         cli.sys.executable,
         "-s",
         "-P",
         "-m",
-        "kiro_crew",
+        "aj_crew",
         "chat",
         "--model",
         "x",
@@ -445,11 +445,11 @@ def test_child_argv_sentinel_falls_back_to_module(
 
 def test_child_argv_resolved_path_used(monkeypatch) -> None:
     """A resolved absolute path is used verbatim as argv[0], with sys.argv[1:]."""
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
-    monkeypatch.setattr(agent_mod, "_resolve_kirocrew_bin", lambda: "/opt/venv/bin/kirocrew")
-    monkeypatch.setattr(cli.sys, "argv", ["kirocrew", "run", "TASK.md"])
-    assert cli._child_argv() == ["/opt/venv/bin/kirocrew", "run", "TASK.md"]
+    monkeypatch.setattr(agent_mod, "_resolve_ajcrew_bin", lambda: "/opt/venv/bin/ajcrew")
+    monkeypatch.setattr(cli.sys, "argv", ["ajcrew", "run", "TASK.md"])
+    assert cli._child_argv() == ["/opt/venv/bin/ajcrew", "run", "TASK.md"]
 
 
 # ── R6/R3: --no-jail argparse plumbing (parent-parser + SUPPRESS, both orderings) ──
@@ -469,7 +469,7 @@ def test_child_argv_resolved_path_used(monkeypatch) -> None:
     ],
 )
 def test_no_jail_flag_accepted_in_both_orderings(monkeypatch, argv) -> None:
-    """`kirocrew --no-jail <cmd>` AND `kirocrew <cmd> --no-jail` both set no_jail=True
+    """`ajcrew --no-jail <cmd>` AND `ajcrew <cmd> --no-jail` both set no_jail=True
     for every jailed command, and the gate is invoked with that flag.
 
     Drives the REAL ``cli.main`` parser (so it guards the parent-parser +
@@ -485,7 +485,7 @@ def test_no_jail_flag_accepted_in_both_orderings(monkeypatch, argv) -> None:
 
     monkeypatch.setattr(cli, "boot_platform", lambda *a, **k: None)
     monkeypatch.setattr(cli, "_jail_reexec_gate", _fake_gate)
-    monkeypatch.setattr(cli.sys, "argv", ["kirocrew", *argv])
+    monkeypatch.setattr(cli.sys, "argv", ["ajcrew", *argv])
     with pytest.raises(SystemExit) as ei:
         cli.main()
     assert ei.value.code == 0
@@ -503,7 +503,7 @@ def test_no_jail_default_false_when_absent(monkeypatch) -> None:
 
     monkeypatch.setattr(cli, "boot_platform", lambda *a, **k: None)
     monkeypatch.setattr(cli, "_jail_reexec_gate", _fake_gate)
-    monkeypatch.setattr(cli.sys, "argv", ["kirocrew", "chat"])
+    monkeypatch.setattr(cli.sys, "argv", ["ajcrew", "chat"])
     with pytest.raises(SystemExit):
         cli.main()
     assert captured.get("no_jail") is False
@@ -530,7 +530,7 @@ class _CompositionErrorProviders:
         return None
 
 
-def test_build_provider_factory_degrades_to_public(cfg: KiroCrewConfig) -> None:
+def test_build_provider_factory_degrades_to_public(cfg: AjCrewConfig) -> None:
     """A transient providers.create_factory error degrades to cfg.create_provider_factory(),
     and the LAZY fallback_factory is invoked exactly once (no eager double-build)."""
     sentinel = object()
@@ -549,7 +549,7 @@ def test_build_provider_factory_degrades_to_public(cfg: KiroCrewConfig) -> None:
     assert calls["n"] == 1
 
 
-def test_build_provider_factory_reraises_composition_error(cfg: KiroCrewConfig) -> None:
+def test_build_provider_factory_reraises_composition_error(cfg: AjCrewConfig) -> None:
     """A PlatformCompositionError from the seam MUST propagate (fail-closed)."""
     base = build_default_context(cfg, profile=PROFILE_ENTERPRISE)
     set_context(dataclasses.replace(base, providers=_CompositionErrorProviders()))
@@ -557,7 +557,7 @@ def test_build_provider_factory_reraises_composition_error(cfg: KiroCrewConfig) 
         build_provider_factory(cfg)
 
 
-def test_build_provider_factory_default_delegates_to_cfg(cfg: KiroCrewConfig) -> None:
+def test_build_provider_factory_default_delegates_to_cfg(cfg: AjCrewConfig) -> None:
     """Public Default registry delegates to cfg.create_provider_factory() (identity).
 
     create_provider_factory returns a FRESH closure each call, so object identity
@@ -748,8 +748,8 @@ async def test_async_safe_context_call_requires_a_fallback() -> None:
 # ── DashboardContributor / Jail Default no-op identity ──
 
 
-def test_default_dashboard_contributor_is_noop(cfg: KiroCrewConfig) -> None:
-    from kiro_crew.platform.defaults import DefaultDashboardContributor
+def test_default_dashboard_contributor_is_noop(cfg: AjCrewConfig) -> None:
+    from aj_crew.platform.defaults import DefaultDashboardContributor
 
     d = DefaultDashboardContributor()
     assert d.contribute_routes(object()) is None
@@ -757,9 +757,9 @@ def test_default_dashboard_contributor_is_noop(cfg: KiroCrewConfig) -> None:
 
 
 @pytest.mark.asyncio
-async def test_default_dashboard_services_symmetric_app(cfg: KiroCrewConfig) -> None:
+async def test_default_dashboard_services_symmetric_app(cfg: AjCrewConfig) -> None:
     """stop_services takes the same app handle as start_services (symmetric)."""
-    from kiro_crew.platform.defaults import DefaultDashboardContributor
+    from aj_crew.platform.defaults import DefaultDashboardContributor
 
     d = DefaultDashboardContributor()
     sentinel = object()
@@ -768,11 +768,11 @@ async def test_default_dashboard_services_symmetric_app(cfg: KiroCrewConfig) -> 
 
 
 def test_default_jail_provider_noop() -> None:
-    from kiro_crew.platform.defaults import DefaultJailProvider
+    from aj_crew.platform.defaults import DefaultJailProvider
 
     j = DefaultJailProvider()
     assert j.available() is False
-    assert j.maybe_reexec_into_jail(["kirocrew", "chat"], "on") is None
+    assert j.maybe_reexec_into_jail(["ajcrew", "chat"], "on") is None
     assert isinstance(j.status_detail(), str)
 
 
@@ -802,9 +802,9 @@ class _RaisingKnowledge:
         raise self._exc
 
 
-def _merge_connectors(cfg: KiroCrewConfig):
+def _merge_connectors(cfg: AjCrewConfig):
     """Mirror of the production connector-merge (built-ins first, then the seam)."""
-    from kiro_crew.platform import current_context, safe_context_call
+    from aj_crew.platform import current_context, safe_context_call
 
     connectors = {"local_folder": object(), "obsidian_vault": object()}
 
@@ -816,7 +816,7 @@ def _merge_connectors(cfg: KiroCrewConfig):
     return connectors
 
 
-def test_knowledge_extra_connectors_merges_after_builtins(cfg: KiroCrewConfig) -> None:
+def test_knowledge_extra_connectors_merges_after_builtins(cfg: AjCrewConfig) -> None:
     base = build_default_context(cfg, profile=PROFILE_ENTERPRISE)
     extra = {"quip": object()}
     set_context(dataclasses.replace(base, knowledge=_ExtraConnectorsProvider(extra)))
@@ -824,14 +824,14 @@ def test_knowledge_extra_connectors_merges_after_builtins(cfg: KiroCrewConfig) -
     assert set(merged) == {"local_folder", "obsidian_vault", "quip"}
 
 
-def test_knowledge_extra_connectors_degrades_to_builtins(cfg: KiroCrewConfig) -> None:
+def test_knowledge_extra_connectors_degrades_to_builtins(cfg: AjCrewConfig) -> None:
     base = build_default_context(cfg, profile=PROFILE_ENTERPRISE)
     set_context(dataclasses.replace(base, knowledge=_RaisingKnowledge(RuntimeError("boom"))))
     merged = _merge_connectors(cfg)
     assert set(merged) == {"local_folder", "obsidian_vault"}  # built-ins only
 
 
-def test_knowledge_extra_connectors_reraises_composition_error(cfg: KiroCrewConfig) -> None:
+def test_knowledge_extra_connectors_reraises_composition_error(cfg: AjCrewConfig) -> None:
     base = build_default_context(cfg, profile=PROFILE_ENTERPRISE)
     set_context(
         dataclasses.replace(base, knowledge=_RaisingKnowledge(PlatformCompositionError("x")))
@@ -840,8 +840,8 @@ def test_knowledge_extra_connectors_reraises_composition_error(cfg: KiroCrewConf
         _merge_connectors(cfg)
 
 
-def test_default_knowledge_provider_empty(cfg: KiroCrewConfig) -> None:
-    from kiro_crew.platform.defaults import DefaultKnowledgeProvider
+def test_default_knowledge_provider_empty(cfg: AjCrewConfig) -> None:
+    from aj_crew.platform.defaults import DefaultKnowledgeProvider
 
     assert DefaultKnowledgeProvider().extra_connectors(cfg) == {}
 
@@ -871,8 +871,8 @@ class _RaisingDashboard:
         raise self._exc
 
 
-def test_dashboard_sso_login_handler_degrades_to_stub(cfg: KiroCrewConfig) -> None:
-    from kiro_crew.platform import current_context, safe_context_call
+def test_dashboard_sso_login_handler_degrades_to_stub(cfg: AjCrewConfig) -> None:
+    from aj_crew.platform import current_context, safe_context_call
 
     base = build_default_context(cfg, profile=PROFILE_ENTERPRISE)
     set_context(dataclasses.replace(base, dashboard=_RaisingDashboard(RuntimeError("boom"))))
@@ -888,8 +888,8 @@ def test_dashboard_sso_login_handler_degrades_to_stub(cfg: KiroCrewConfig) -> No
     assert handler is stub  # transient error → keep the built-in stub
 
 
-def test_dashboard_contribute_routes_reraises_composition_error(cfg: KiroCrewConfig) -> None:
-    from kiro_crew.platform import current_context, safe_context_call
+def test_dashboard_contribute_routes_reraises_composition_error(cfg: AjCrewConfig) -> None:
+    from aj_crew.platform import current_context, safe_context_call
 
     base = build_default_context(cfg, profile=PROFILE_ENTERPRISE)
     set_context(
@@ -904,8 +904,8 @@ def test_dashboard_contribute_routes_reraises_composition_error(cfg: KiroCrewCon
 
 
 @pytest.mark.asyncio
-async def test_dashboard_start_services_degrades(cfg: KiroCrewConfig) -> None:
-    from kiro_crew.platform import async_safe_context_call, current_context
+async def test_dashboard_start_services_degrades(cfg: AjCrewConfig) -> None:
+    from aj_crew.platform import async_safe_context_call, current_context
 
     base = build_default_context(cfg, profile=PROFILE_ENTERPRISE)
     set_context(dataclasses.replace(base, dashboard=_RaisingDashboard(RuntimeError("boom"))))
@@ -919,8 +919,8 @@ async def test_dashboard_start_services_degrades(cfg: KiroCrewConfig) -> None:
 
 
 @pytest.mark.asyncio
-async def test_dashboard_start_services_reraises_composition_error(cfg: KiroCrewConfig) -> None:
-    from kiro_crew.platform import async_safe_context_call, current_context
+async def test_dashboard_start_services_reraises_composition_error(cfg: AjCrewConfig) -> None:
+    from aj_crew.platform import async_safe_context_call, current_context
 
     base = build_default_context(cfg, profile=PROFILE_ENTERPRISE)
     set_context(
@@ -951,7 +951,7 @@ def _read_source(modpath: str) -> str:
 def test_knowledge_extra_connectors_site_uses_safe_context_call() -> None:
     """dashboard/handlers/knowledge_lifecycle.py must route extra_connectors through the
     fail-closed shim (not a bare except that would swallow composition errors)."""
-    src = _read_source("kiro_crew.dashboard.handlers.knowledge_lifecycle")
+    src = _read_source("aj_crew.dashboard.handlers.knowledge_lifecycle")
     assert "extra_connectors" in src
     assert "safe_context_call" in src
     # The merge must NOT have regressed to swallowing everything.
@@ -962,10 +962,10 @@ def test_dashboard_contributor_sites_use_safe_context_call() -> None:
     """dashboard/server.py must wrap the DashboardContributor seam calls in the
     fail-closed shims: sync ``safe_context_call`` for sso_login_handler /
     contribute_routes, async ``async_safe_context_call`` for start/stop_services."""
-    src = _read_source("kiro_crew.dashboard.server")
+    src = _read_source("aj_crew.dashboard.server")
     # The sso_login_handler seam is resolved where its route is registered, which
     # is the connections slice of the route table rather than server.py itself.
-    src += _read_source("kiro_crew.dashboard.routes.connections")
+    src += _read_source("aj_crew.dashboard.routes.connections")
     for sym in ("sso_login_handler", "contribute_routes", "start_services", "stop_services"):
         assert sym in src, f"production site for {sym} disappeared"
     assert "safe_context_call(" in src

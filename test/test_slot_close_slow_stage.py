@@ -13,8 +13,8 @@ from unittest.mock import AsyncMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_handlers as handlers
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.dashboard import chat_handlers as handlers
+from aj_crew.testing.clock import ManualClock
 
 
 @pytest.mark.asyncio

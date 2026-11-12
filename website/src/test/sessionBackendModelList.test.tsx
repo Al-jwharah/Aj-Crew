@@ -14,7 +14,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 vi.mock('../api/client', () => ({
   api: {
     models: vi.fn(),
-    kirocrewConfig: vi.fn().mockResolvedValue({}),
+    ajcrewConfig: vi.fn().mockResolvedValue({}),
     agentCatalog: vi.fn().mockResolvedValue({ agents: [], choices: [] }),
     setDefaultAgent: vi.fn(),
   },

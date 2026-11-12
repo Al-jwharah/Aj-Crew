@@ -16,15 +16,15 @@ import json
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.handlers._shared import admits_registry as _admits
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.defaults import DefaultExternalAccessPolicy
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.handlers._shared import admits_registry as _admits
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.defaults import DefaultExternalAccessPolicy
 
 
 def _base_context():
-    return build_default_context(KiroCrewConfig())
+    return build_default_context(AjCrewConfig())
 
 
 class _FakeRequest:
@@ -79,7 +79,7 @@ class _Boom:
 @pytest.fixture
 def _reset_registries():
     """Both provider registries are module-level singletons."""
-    from kiro_crew.dashboard.handlers import discover, mcp_discover
+    from aj_crew.dashboard.handlers import discover, mcp_discover
 
     discover._registry = None
     mcp_discover._registry = None
@@ -107,13 +107,13 @@ class TestDefaultAdmitsEverything:
 
 class TestSkillProviderGating:
     def test_denied_provider_is_not_registered(self, monkeypatch, _reset_registries):
-        from kiro_crew.dashboard.handlers import discover
+        from aj_crew.dashboard.handlers import discover
 
         _with_policy(monkeypatch, _DenyAll())
         assert discover._build_registry().provider_names == []
 
     def test_admitted_provider_is_registered(self, monkeypatch, _reset_registries):
-        from kiro_crew.dashboard.handlers import discover
+        from aj_crew.dashboard.handlers import discover
 
         _with_policy(monkeypatch, DefaultExternalAccessPolicy())
         assert "skillsh" in discover._build_registry().provider_names
@@ -121,7 +121,7 @@ class TestSkillProviderGating:
 
 class TestMcpProviderGating:
     def test_denied_official_registry_is_not_registered(self, monkeypatch, _reset_registries):
-        from kiro_crew.dashboard.handlers import mcp_discover
+        from aj_crew.dashboard.handlers import mcp_discover
 
         _with_policy(monkeypatch, _DenyAll())
         assert "official" not in mcp_discover._build_registry().provider_names
@@ -134,7 +134,7 @@ class TestMcpProviderGating:
         Allowing only an internal base URL must drop the public MCP registry while
         the decision is made on the URL, not the provider's self-chosen name.
         """
-        from kiro_crew.dashboard.handlers import mcp_discover
+        from aj_crew.dashboard.handlers import mcp_discover
 
         pol = _AllowOnly("https://internal.example.invalid/")
         _with_policy(monkeypatch, pol)
@@ -150,7 +150,7 @@ class TestCloudDeploymentGating:
         assert DefaultExternalAccessPolicy().admits_cloud_deployment("aws") is True
 
     def test_denied_policy_refuses(self, monkeypatch):
-        from kiro_crew.dashboard.handlers._shared import admits_cloud_deployment
+        from aj_crew.dashboard.handlers._shared import admits_cloud_deployment
 
         _with_policy(monkeypatch, _NoCloud())
         assert admits_cloud_deployment("aws") is False
@@ -159,7 +159,7 @@ class TestCloudDeploymentGating:
         """The frontend needs this to hide the surface rather than 403 every button."""
         import asyncio as _asyncio
 
-        from kiro_crew.deploy import handlers as dh
+        from aj_crew.deploy import handlers as dh
 
         _with_policy(monkeypatch, _NoCloud())
         monkeypatch.setattr(dh, "_load_config", lambda: {"profile": "p", "region": "r"})
@@ -173,7 +173,7 @@ class TestCloudDeploymentGating:
         """A 403 here would leave the page unable to explain why deploy is gone."""
         import asyncio as _asyncio
 
-        from kiro_crew.deploy import handlers as dh
+        from aj_crew.deploy import handlers as dh
 
         _with_policy(monkeypatch, _NoCloud())
         monkeypatch.setattr(dh, "_load_config", lambda: {"profile": "p"})
@@ -191,7 +191,7 @@ class TestCloudDeploymentGating:
         """
         from aiohttp import web as _web
 
-        from kiro_crew.deploy import handlers as dh
+        from aj_crew.deploy import handlers as dh
 
         app = _web.Application()
         dh.register_routes(app)
@@ -219,7 +219,7 @@ class TestCloudDeploymentGating:
     def test_a_gated_route_returns_403_with_a_machine_readable_code(self, monkeypatch):
         import asyncio as _asyncio
 
-        from kiro_crew.deploy import handlers as dh
+        from aj_crew.deploy import handlers as dh
 
         _with_policy(monkeypatch, _NoCloud())
 
@@ -232,7 +232,7 @@ class TestCloudDeploymentGating:
         assert json.loads(resp.text)["code"] == "cloud_deployment_denied"
 
     def test_a_raising_policy_denies_deployment(self, monkeypatch):
-        from kiro_crew.dashboard.handlers._shared import admits_cloud_deployment
+        from aj_crew.dashboard.handlers._shared import admits_cloud_deployment
 
         _with_policy(monkeypatch, _Boom())
         assert admits_cloud_deployment("aws") is False
@@ -242,7 +242,7 @@ class TestAdmissionIsAudited:
     """GPT review: an admission decision that is not logged cannot be proven."""
 
     def _events(self, monkeypatch):
-        from kiro_crew.dashboard.handlers import _shared
+        from aj_crew.dashboard.handlers import _shared
 
         seen: list[dict] = []
 
@@ -250,7 +250,7 @@ class TestAdmissionIsAudited:
             def log_api_access(self, **kw):
                 seen.append(kw)
 
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: _Sel())
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: _Sel())
         return seen, _shared
 
     def test_denial_is_audited(self, monkeypatch):
@@ -292,12 +292,12 @@ class TestAdmissionIsAudited:
         browser or a deploy button and gets a logged error, instead of silently
         gaining unaudited egress.
         """
-        from kiro_crew.dashboard.handlers import _shared
+        from aj_crew.dashboard.handlers import _shared
 
         def _boom():
             raise RuntimeError("sel key unwritable")
 
-        monkeypatch.setattr("kiro_crew.sel.sel", _boom)
+        monkeypatch.setattr("aj_crew.sel.sel", _boom)
         _with_policy(monkeypatch, DefaultExternalAccessPolicy())
 
         assert _shared.admits_cloud_deployment("aws") is False

@@ -52,7 +52,7 @@ def test_the_lane_is_a_hosted_vm_running_exactly_the_two_strict_cases(jobs, run_
     # are pinned: dropping the fork one leaves fork runs queued forever.
     assert job["runs-on"] == (
         "${{ github.repository == 'kirodotdev/KiroCrew' "
-        "&& 'kirocrew-linux-4-core' || 'ubuntu-latest' }}"
+        "&& 'ajcrew-linux-4-core' || 'ubuntu-latest' }}"
     )
     assert job["needs"] == ["changes", "await-fast-gate", "lint-gate"]
     # Skipped on a frontend-only diff: backend flock tests cannot be affected
@@ -71,7 +71,7 @@ def test_the_lane_is_a_hosted_vm_running_exactly_the_two_strict_cases(jobs, run_
         assert step.get("uses", "") != "./.github/actions/run-as-runner"
     run = _step(jobs, JOB, "Run strict")
     assert run["env"][_STRICT_ENV] == "1"
-    assert 'test -z "${KIROCREW_LOCK_TEST_ROOT:-}"' in run_body
+    assert 'test -z "${AJCREW_LOCK_TEST_ROOT:-}"' in run_body
     assert 'test "$(stat -f -c %T /proc)" = proc' in run_body
     body = run_body.replace("\\\n", " ")
     commands = re.findall(r"^\s*python -m pytest .+$", body, re.MULTILINE)
@@ -241,7 +241,7 @@ def coverage_root():
 
 
 def test_combine_requires_the_strict_lane_data_before_producing_a_report(jobs, coverage_root):
-    source = coverage_root / "src" / "kiro_crew" / "probe.py"
+    source = coverage_root / "src" / "aj_crew" / "probe.py"
     source.parent.mkdir(parents=True)
     source.write_text("VALUE = 1\nOTHER = 2\n", encoding="utf-8")
     (coverage_root / "setup.cfg").write_text(
@@ -251,7 +251,7 @@ def test_combine_requires_the_strict_lane_data_before_producing_a_report(jobs, c
     staged.mkdir()
     for name, lines in ((".coverage.1", {1}), (".coverage.ipv6", {2}), (DATA_FILE, {1, 2})):
         data = CoverageData(basename=str(staged / name))
-        data.add_lines({"src/kiro_crew/probe.py": lines})
+        data.add_lines({"src/aj_crew/probe.py": lines})
         data.write()
     env = _env(coverage_root)
     env["PATH"] = str(Path(sys.executable).parent) + os.pathsep + env["PATH"]

@@ -109,7 +109,7 @@ describe('ShareMessageModal', () => {
     const caption = screen.getByRole('textbox', { name: 'Post text' }) as HTMLTextAreaElement
     expect(caption.value).toContain(SHARE_REPO_URL)
     // The template interpolates {{productName}} rather than hardcoding it.
-    expect(caption.value).toMatch(/^Kiro Crew /)
+    expect(caption.value).toMatch(/^Aj Crew /)
   })
 
   it('seeds the post text from a host caption and hands THAT to the composer', async () => {

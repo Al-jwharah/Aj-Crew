@@ -1,7 +1,7 @@
 ---
 title: Wake on a stop signal -- only a worker's explicit report wakes its conductor, and a turn end or a close wakes nobody
 status: in-progress
-author: Raymond Chen, with kirocrew-worker
+author: Raymond Chen, with ajcrew-worker
 created: 2026-10-10
 last-audited: 2026-10-10
 audited-at: d32c084921
@@ -102,7 +102,7 @@ subscription per watched board, diffs each item's report stamp as before, and
 fires only for an item whose status is in a new shared set:
 
 ```python
-# kiro_crew/work_vocab.py
+# aj_crew/work_vocab.py
 WORK_WAKE_STATUSES: tuple[str, ...] = ("done", "blocked", "question")
 ```
 
@@ -179,7 +179,7 @@ on every ordinary turn end of every bound worker.
 A worker is told the rule it has to act on, because the rule is only honest if
 the worker knows it: the report is the only thing that wakes its conductor, so
 before it stops it says where it is. A pause it expects to be resumed from is a
-`progress` report. The `kirocrew-worker` prompt, the conductor charter's patrol
+`progress` report. The `ajcrew-worker` prompt, the conductor charter's patrol
 section, the `goal-conductor` skill, `work_report`'s own tool description, the
 `monitor_start` and `monitor_update` `watch` field descriptions and
 `docs/work-ledger.md` all state it the same way.

@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.log_redaction."""
+"""Tests for aj_crew.log_redaction."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import sys
 
 import pytest
 
-from kiro_crew.log_redaction import (
+from aj_crew.log_redaction import (
     SecretRedactionFilter,
     install_log_redaction,
     uninstall_log_redaction,
@@ -57,7 +57,7 @@ class TestSecretRedactionFilter:
     def test_no_vault_io_at_construction(self) -> None:
         """Filter construction does ZERO vault I/O — just compiles patterns."""
         # This test exists to verify the architectural contract: no imports
-        # of kiro_crew.secrets happen inside SecretRedactionFilter.
+        # of aj_crew.secrets happen inside SecretRedactionFilter.
         filt = SecretRedactionFilter(["my-secret-value"])
         assert filt.redact("my-secret-value") == "[REDACTED]"
 
@@ -124,7 +124,7 @@ class TestSecretRedactionFilter:
 
 def _make_record(msg: str, exc_info: object = None) -> logging.LogRecord:
     """Create a record through the LIVE factory — how ``logging`` itself does it."""
-    return logging.getLogRecordFactory()("kiro_crew.test", logging.INFO, "", 0, msg, None, exc_info)
+    return logging.getLogRecordFactory()("aj_crew.test", logging.INFO, "", 0, msg, None, exc_info)
 
 
 class TestInstallLogRedaction:
@@ -174,13 +174,13 @@ class TestInstallLogRedaction:
 
         The reload runs on a private copy of the module, re-executed in its own
         namespace the way ``importlib.reload`` does. Reloading the shared
-        ``kiro_crew.log_redaction`` would rebind its classes for the rest of the
+        ``aj_crew.log_redaction`` would rebind its classes for the rest of the
         worker, and every later ``isinstance`` against the ``SecretRedactionFilter``
         imported above would then fail.
         """
-        import kiro_crew.log_redaction as shared
+        import aj_crew.log_redaction as shared
 
-        name = "_kirocrew_test_log_redaction_reload_copy"
+        name = "_ajcrew_test_log_redaction_reload_copy"
         spec = importlib.util.spec_from_file_location(name, shared.__file__)
         assert spec is not None and spec.loader is not None
         mod = importlib.util.module_from_spec(spec)
@@ -536,7 +536,7 @@ class TestInstallLogRedaction:
         """
         install_log_redaction([])
         record = logging.getLogRecordFactory()(
-            "kiro_crew.test",
+            "aj_crew.test",
             logging.INFO,
             "",
             0,
@@ -562,16 +562,16 @@ class TestInstallLogRedaction:
         assert "Bearer [REDACTED]" in record.exc_text
 
     def test_zero_vault_imports(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """log_redaction module does NOT import kiro_crew.secrets."""
-        import kiro_crew
+        """log_redaction module does NOT import aj_crew.secrets."""
+        import aj_crew
 
-        mod_name = "kiro_crew.log_redaction"
+        mod_name = "aj_crew.log_redaction"
         # A fresh import is the only way to observe what the module pulls in, and it
         # rebinds BOTH sys.modules and the parent package attribute — so undo covers
-        # both, or `kiro_crew.log_redaction` keeps pointing at the duplicate and one
+        # both, or `aj_crew.log_redaction` keeps pointing at the duplicate and one
         # process-global chokepoint has two module objects. monkeypatch reverts even
         # when the assertion below fails.
-        monkeypatch.setattr(kiro_crew, "log_redaction", sys.modules[mod_name])
+        monkeypatch.setattr(aj_crew, "log_redaction", sys.modules[mod_name])
         monkeypatch.delitem(sys.modules, mod_name)
 
         imported_before = set(sys.modules.keys())
@@ -579,5 +579,5 @@ class TestInstallLogRedaction:
         imported_after = set(sys.modules.keys())
 
         new_imports = imported_after - imported_before
-        vault_imports = [m for m in new_imports if "secrets" in m and "kiro_crew" in m]
+        vault_imports = [m for m in new_imports if "secrets" in m and "aj_crew" in m]
         assert vault_imports == [], f"log_redaction imported vault modules: {vault_imports}"

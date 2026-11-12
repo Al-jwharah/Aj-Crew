@@ -2,7 +2,7 @@
 
 Every test drives the REAL ``SubagentManager.spawn -> _run -> _run_inner``
 path with only the ACP provider faked (a stream factory), a real durable task
-store under ``$KIROCREW_HOME`` and the real admission pump, so the assertions
+store under ``$AJCREW_HOME`` and the real admission pump, so the assertions
 are about the production event handling, not about a rebuilt model of it.
 
 What is pinned here:
@@ -39,7 +39,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from overload_fakes import backoff, settle_store_writes
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     STATUS_ORIGIN_LIVENESS_ORACLE,
     STOP_REASON_END_TURN,
     STOP_REASON_TOOL_STALL,
@@ -47,22 +47,22 @@ from kiro_crew.acp.types import (
     WAIT_REASON_INPUT,
     StructuredStatus,
 )
-from kiro_crew.dashboard.state import REFUSAL_RECOVERY_PREFIX, TOOL_STALL_RECOVERY_PREFIX
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.recovery import ladder as ladder_mod
-from kiro_crew.recovery.ladder import (
+from aj_crew.dashboard.state import REFUSAL_RECOVERY_PREFIX, TOOL_STALL_RECOVERY_PREFIX
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.recovery import ladder as ladder_mod
+from aj_crew.recovery.ladder import (
     L1_TOOL_CALL,
     L2_BACKEND,
     SESSION_RECOVERY_MAX_ATTEMPTS,
     InfraError,
     default_ladder,
 )
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_manager.monitoring import OrphanStallMonitor
-from kiro_crew.taskq import RUNNING, STARTING, WAITING_DEPENDENCY, WAITING_INPUT
-from kiro_crew.taskq import dependency as dep_mod
-from kiro_crew.taskq.dependency import DependencyCoordinator
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_manager.monitoring import OrphanStallMonitor
+from aj_crew.taskq import RUNNING, STARTING, WAITING_DEPENDENCY, WAITING_INPUT
+from aj_crew.taskq import dependency as dep_mod
+from aj_crew.taskq.dependency import DependencyCoordinator
+from aj_crew.testing.wait import async_wait_until, await_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -96,7 +96,7 @@ def _complete(stop_reason: str, text: str = "", status: Any = None) -> SimpleNam
 
 
 def _status_event(status: StructuredStatus) -> SimpleNamespace:
-    from kiro_crew.acp.types import EVENT_STRUCTURED_STATUS
+    from aj_crew.acp.types import EVENT_STRUCTURED_STATUS
 
     return SimpleNamespace(
         kind=EVENT_STRUCTURED_STATUS,
@@ -185,7 +185,7 @@ def _spy_events(mgr: SubagentManager) -> list[tuple[str, dict]]:
 
 
 async def _spawn_and_wait(mgr: SubagentManager, task: str = "do work") -> SubagentInfo:
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn(task)
         assert info is not None
         await await_until(mgr._tasks[info.id], what=f"subagent {info.id} finishes")
@@ -446,7 +446,7 @@ def test_stop_recovery_never_polls_the_running_count():
     """Source pin: the yield asks admission for the slot, never a sleep-poll."""
     import inspect
 
-    from kiro_crew.subagent_manager import run as run_mod
+    from aj_crew.subagent_manager import run as run_mod
 
     src = inspect.getsource(run_mod.RunEventCoordinator._yield_for_stop_recovery_impl)
     assert "asyncio.sleep(0.25)" not in src
@@ -501,7 +501,7 @@ async def test_a_wait_in_the_first_frame_batch_lands_behind_the_running_mark(mon
     the wait. An INLINE wait write reaches a still-``starting`` row, is refused,
     and the late mark leaves the row ``running`` with no durable wait reason.
     """
-    from kiro_crew.subagent_manager import admission as admission_mod
+    from aj_crew.subagent_manager import admission as admission_mod
 
     monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
     status = StructuredStatus(
@@ -621,10 +621,10 @@ async def test_throttle_parks_two_runs_on_one_scope_and_wakes_by_capacity(monkey
     )
     coordinator_ref["c"] = coordinator
     controller = _FakeController()
-    monkeypatch.setattr("kiro_crew.adaptive.controller.current", lambda: controller)
+    monkeypatch.setattr("aj_crew.adaptive.controller.current", lambda: controller)
     events = _spy_events(mgr)
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         a = mgr.spawn("throttled A")
         b = mgr.spawn("throttled B")
         assert a is not None and b is not None
@@ -675,7 +675,7 @@ async def test_a_throttle_before_the_first_frame_waits_under_the_run_lease(monke
     nor ``done`` -- and the completed run's ``done`` write is refused too,
     leaving the row claimable for the dispatcher to re-run finished work.
     """
-    from kiro_crew.subagent_manager import admission as admission_mod
+    from aj_crew.subagent_manager import admission as admission_mod
 
     monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
     calls: list[str] = []
@@ -738,7 +738,7 @@ async def test_a_throttle_before_the_first_frame_ends_startup_at_the_park():
     coordinator = _fast_coordinator(mgr, backoff=backoff(_HELD_PARK_SECS, _HELD_PARK_SECS))
     progress = MagicMock(wraps=mgr._note_startup_progress)
     mgr._note_startup_progress = progress
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("throttled start")
         assert info is not None
         await _await_parked(mgr, coordinator, "provider:acp", info.id)
@@ -767,8 +767,8 @@ async def test_the_throttle_park_and_wake_cycle_never_touches_the_store_on_the_l
     guard raises on a loop-thread connection take, so a site that slips back
     reds here instead of costing an operator a 25 s watchdog kill.
     """
-    from kiro_crew.subagent_manager import admission as admission_mod
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.subagent_manager import admission as admission_mod
+    from aj_crew.taskq import store as store_mod
 
     monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
     calls: list[str] = []
@@ -793,7 +793,7 @@ async def test_the_throttle_park_and_wake_cycle_never_touches_the_store_on_the_l
         # ``spawn_async`` -- the gateway's own entry point -- not the sync
         # ``spawn`` API, whose accept is inline by design for a caller with no
         # loop to offload onto.
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             info = await mgr.spawn_async("throttled")
             assert info is not None
             await await_until(mgr._tasks[info.id], what="the throttled run finishes")
@@ -877,9 +877,9 @@ async def test_a_refused_resume_grant_asks_the_pump_for_the_slot_again(monkeypat
     RESIDENT run with no slot and nothing asking for one, until the wait
     deadline cancels a healthy run.
     """
-    from kiro_crew import taskq as _taskq
-    from kiro_crew.subagent_manager import admission as admission_mod
-    from kiro_crew.subagent_manager.admission import waits as waits_mod
+    from aj_crew import taskq as _taskq
+    from aj_crew.subagent_manager import admission as admission_mod
+    from aj_crew.subagent_manager.admission import waits as waits_mod
 
     monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
     monkeypatch.setattr(waits_mod, "_RESUME_REARM_SECS", 0.05)
@@ -922,14 +922,14 @@ async def test_a_queued_stop_reposts_a_row_cancel_the_store_refused(monkeypatch)
     the next incarnation, which would run work the user was already told had
     stopped.
     """
-    from kiro_crew import taskq as _taskq
+    from aj_crew import taskq as _taskq
 
     mgr = await _ready_manager(_mock_sessions(lambda *a, **k: None))
     store = mgr._admission.taskq_store()
     # No slot free, stagger 0: the spawn is accepted as a row and joins the
     # in-memory window without any drain starting it.
     mgr._running_count = mgr._max_concurrent
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         queued = mgr.spawn("work the user then stops")
     assert queued is not None and queued.queued is True
     assert [p.get("_preassigned_id") for p in mgr._queue] == [queued.id]
@@ -1008,7 +1008,7 @@ async def test_unclassified_transient_keeps_the_in_turn_ladder():
     mgr = await _ready_manager(_mock_sessions(factory))
     coordinator = _fast_coordinator(mgr)
     events = _spy_events(mgr)
-    with patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0):
+    with patch("aj_crew.subagent.transient_retry_delay", return_value=0.0):
         info = await _spawn_and_wait(mgr)
     assert info.outcome == "completed"
     assert len(calls) == 2 and calls[0] == calls[1]  # same prompt replayed
@@ -1372,7 +1372,7 @@ def _yielded_with_admission_closed(mgr: SubagentManager) -> SubagentInfo:
     anything, and the wait is not persisted, so none of the pins below depends on
     a row: what is under test is the handle the refusal leaves behind.
     """
-    from kiro_crew import taskq as _taskq
+    from aj_crew import taskq as _taskq
 
     store = mgr._admission.taskq_store()
     info = SubagentInfo(id="parked-for-a-rearm", task="t")
@@ -1427,8 +1427,8 @@ async def test_a_rearm_outliving_its_bounded_waiter_grants_nothing(monkeypatch):
     lands first, the pump finds no entry to refuse, and the pin fails having
     never reached the handle it is about.
     """
-    from kiro_crew.subagent_manager import admission as admission_mod
-    from kiro_crew.subagent_manager.admission import waits as waits_mod
+    from aj_crew.subagent_manager import admission as admission_mod
+    from aj_crew.subagent_manager.admission import waits as waits_mod
 
     monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
     monkeypatch.setattr(waits_mod, "_RESUME_REARM_SECS", 30.0)
@@ -1477,8 +1477,8 @@ async def test_a_rearm_still_grants_the_waiter_that_is_still_parked(monkeypatch)
     run with nothing asking for its slot until the wait deadline cancels a
     healthy run.
     """
-    from kiro_crew.subagent_manager import admission as admission_mod
-    from kiro_crew.subagent_manager.admission import waits as waits_mod
+    from aj_crew.subagent_manager import admission as admission_mod
+    from aj_crew.subagent_manager.admission import waits as waits_mod
 
     monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
     monkeypatch.setattr(waits_mod, "_RESUME_REARM_SECS", 30.0)
@@ -1513,8 +1513,8 @@ async def test_a_rearm_grants_a_holder_that_arrived_after_the_refusal(monkeypatc
     the holder here arrives only AFTER the refusal, which is the order that tells
     the two readings apart.
     """
-    from kiro_crew.subagent_manager import admission as admission_mod
-    from kiro_crew.subagent_manager.admission import waits as waits_mod
+    from aj_crew.subagent_manager import admission as admission_mod
+    from aj_crew.subagent_manager.admission import waits as waits_mod
 
     monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
     monkeypatch.setattr(waits_mod, "_RESUME_REARM_SECS", 30.0)
@@ -1540,10 +1540,10 @@ async def test_a_rearm_grants_a_holder_that_arrived_after_the_refusal(monkeypatc
 
 
 def test_chat_runner_floors_transient_delay_by_the_shared_scope_schedule(monkeypatch):
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     controller = _FakeController()
-    monkeypatch.setattr("kiro_crew.adaptive.controller.current", lambda: controller)
+    monkeypatch.setattr("aj_crew.adaptive.controller.current", lambda: controller)
     coordinator = DependencyCoordinator(None, backoff=backoff(5.0, 5.0))
     dep_mod.register_coordinator(coordinator)
     # A server-stated retry_at is honoured exactly (the ladder's equal-jitter
@@ -1580,7 +1580,7 @@ def test_pipe_death_and_stop_recovery_budgets_share_the_ladder_constant():
     import ast
     from pathlib import Path
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     src = "\n".join(
         turn_file.read_text(encoding="utf-8")
@@ -1641,7 +1641,7 @@ def test_pipe_death_and_stop_recovery_budgets_share_the_ladder_constant():
 
 @pytest.mark.asyncio
 async def test_backend_respawn_is_the_ladder_l2_rung(monkeypatch):
-    from kiro_crew.mcp_gateway import gatewayd as gw
+    from aj_crew.mcp_gateway import gatewayd as gw
 
     key = SimpleNamespace(server_name="fake-server", human_readable=lambda: "fake")
     args = (
@@ -1665,10 +1665,10 @@ async def test_backend_respawn_is_the_ladder_l2_rung(monkeypatch):
 
 
 def test_session_start_outcomes_reach_the_controller(monkeypatch):
-    from kiro_crew.acp import runtime as rt
+    from aj_crew.acp import runtime as rt
 
     controller = _FakeController()
-    monkeypatch.setattr("kiro_crew.adaptive.controller.current", lambda: controller)
+    monkeypatch.setattr("aj_crew.adaptive.controller.current", lambda: controller)
     t0 = time.monotonic() - 0.2
     rt._record_session_start(t0, ok=True)
     rt._record_session_start(t0, ok=False, attributable_timeout=True)
@@ -1684,6 +1684,6 @@ def test_session_start_outcomes_reach_the_controller(monkeypatch):
     # return the same float, leaving exactly 0.2 s round-tripped through a
     # subtraction -- 199.999... at some uptimes, which is not about the unit.
     assert all(100.0 <= s["duration_ms"] <= span_ms for s in controller.starts)
-    monkeypatch.setattr("kiro_crew.adaptive.controller.current", lambda: None)
+    monkeypatch.setattr("aj_crew.adaptive.controller.current", lambda: None)
     rt._record_session_start(t0, ok=True)  # no controller: silent no-op
     assert len(controller.starts) == 3

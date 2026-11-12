@@ -31,7 +31,7 @@ const slots = [{
   running: false,
   last_message: 'Ready when you are.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',

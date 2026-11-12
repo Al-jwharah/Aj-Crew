@@ -183,14 +183,14 @@ export default function MemoryTab({ refreshTrigger, selectedStore, onStoreNaviga
               ? `/capabilities?tab=crews&crew=${encodeURIComponent(selected.owner_member)}`
               : '/capabilities?tab=crews'
             leave(() => navigate(destination), destination)
-          }}>{i18nT('pages.kiroCrewAgentsPage.open_crew_manager')}</Btn>
+          }}>{i18nT('pages.ajCrewAgentsPage.open_crew_manager')}</Btn>
         </div>
       </>}
     </Card> : <GlobalMemoryTab refreshTrigger={refreshTrigger} onDirtyChange={setDirty} focusLessons={focus === MEMORY_FOCUS_LESSONS} />}
     {pendingStore !== null && <Modal open title={i18nT('memoryV2.discard_title')} onClose={() => setPendingStore(null)}><div className="flex flex-col gap-3">
       <p className="text-[13px]">{i18nT('memoryV2.discard_explanation')}</p>
       <div className="flex flex-wrap gap-2">
-        <Btn onClick={() => setPendingStore(null)}>{i18nT('pages.kiroCrewAgentsPage.keep_editing')}</Btn>
+        <Btn onClick={() => setPendingStore(null)}>{i18nT('pages.ajCrewAgentsPage.keep_editing')}</Btn>
         <Btn danger onClick={() => { applyStore(pendingStore); setPendingStore(null); setDirty(false) }}>{i18nT('memoryV2.discard_title')}</Btn>
       </div>
     </div></Modal>}

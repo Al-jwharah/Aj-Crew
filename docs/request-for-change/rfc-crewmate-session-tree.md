@@ -36,16 +36,16 @@ The Crewmates page does not change. The crewmate shows as an ordinary crewmate. 
 
 | Part | Today | Where | Gap |
 |---|---|---|---|
-| Session tree | `fold_tree(records, edges)` folds `session/opened.parent` edges and applies `session/adopted` / `session/released` moves per slot | `src/kiro_crew/crew_log/session_tree.py` `fold_tree` | Membership must honour the move edges, not the opened edge alone |
-| Crew-log folds | Named folds served from the projection | `src/kiro_crew/crew_log/projection_catalogue.py` `FOLD_NAMES` (served from `projection.py`) | No fold rooted at a session |
-| Entries the fold sums | `session/opened`, `session/closed`; `turn/completed`, `subagent/completed`, `subagent/failed` and `background/completed` (each carries `credits`); `approval/requested`, `approval/decided` (a host auto-decline is `approval/decided` with `by: "host"` and a `cause`); `crew/report` / `work/recorded` (worker `status`, including `question` and `blocked`) | `src/kiro_crew/crew_log/entry_types.py` | Already logged |
-| Crewmate and team routes for apps | Every route calls `_deny_app_caller`; an app token gets 404 | `src/kiro_crew/dashboard/handlers/members.py` `_deny_app_caller`, `handlers/teams.py` | An app cannot see any crewmate |
-| Work ledger board | `require_owner_dashboard_request` | `src/kiro_crew/dashboard/handlers/work_ledger_board.py` | An app cannot read goals |
-| App-shipped agents | Manifest `agents` installed as `<app>--<agent>.json` | `src/kiro_crew/apps/bridges_agents.py` `_register_agents` | The owner can create a crewmate on one; nothing links the two for reads |
-| App backend context | `cron`, `events`, `storage`, `spawn`, `job`, `audit`, … — no crewmate handle | `src/kiro_crew/apps/context.py` `AppContext` | No read handle |
-| `permissions.sessionApproval` | Lets an app act on the user's own sessions after a consent re-prompt | `src/kiro_crew/apps/manifest_sections.py` `Permissions`, `apps/manager_records.py`, `apps/manager_activation.py`, `apps/manager_install.py`, `apps/manager_external.py` | Must not reach this tree; narrowed in § 4.5 |
+| Session tree | `fold_tree(records, edges)` folds `session/opened.parent` edges and applies `session/adopted` / `session/released` moves per slot | `src/aj_crew/crew_log/session_tree.py` `fold_tree` | Membership must honour the move edges, not the opened edge alone |
+| Crew-log folds | Named folds served from the projection | `src/aj_crew/crew_log/projection_catalogue.py` `FOLD_NAMES` (served from `projection.py`) | No fold rooted at a session |
+| Entries the fold sums | `session/opened`, `session/closed`; `turn/completed`, `subagent/completed`, `subagent/failed` and `background/completed` (each carries `credits`); `approval/requested`, `approval/decided` (a host auto-decline is `approval/decided` with `by: "host"` and a `cause`); `crew/report` / `work/recorded` (worker `status`, including `question` and `blocked`) | `src/aj_crew/crew_log/entry_types.py` | Already logged |
+| Crewmate and team routes for apps | Every route calls `_deny_app_caller`; an app token gets 404 | `src/aj_crew/dashboard/handlers/members.py` `_deny_app_caller`, `handlers/teams.py` | An app cannot see any crewmate |
+| Work ledger board | `require_owner_dashboard_request` | `src/aj_crew/dashboard/handlers/work_ledger_board.py` | An app cannot read goals |
+| App-shipped agents | Manifest `agents` installed as `<app>--<agent>.json` | `src/aj_crew/apps/bridges_agents.py` `_register_agents` | The owner can create a crewmate on one; nothing links the two for reads |
+| App backend context | `cron`, `events`, `storage`, `spawn`, `job`, `audit`, … — no crewmate handle | `src/aj_crew/apps/context.py` `AppContext` | No read handle |
+| `permissions.sessionApproval` | Lets an app act on the user's own sessions after a consent re-prompt | `src/aj_crew/apps/manifest_sections.py` `Permissions`, `apps/manager_records.py`, `apps/manager_activation.py`, `apps/manager_install.py`, `apps/manager_external.py` | Must not reach this tree; narrowed in § 4.5 |
 
-Built-in apps reach the crew log by importing `kiro_crew` in the gateway process. An external app cannot, and core code written for one app is what [rfc-everything-is-an-app.md](rfc-everything-is-an-app.md) rules out.
+Built-in apps reach the crew log by importing `aj_crew` in the gateway process. An external app cannot, and core code written for one app is what [rfc-everything-is-an-app.md](rfc-everything-is-an-app.md) rules out.
 
 ## 3. Goals and non-goals
 

@@ -15,10 +15,10 @@ import types
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import mcp_discovery, mcp_grant
-from kiro_crew.connections import ownership, warm
-from kiro_crew.dashboard.handlers import mcp as mcp_handlers
+from aj_crew import agent as agent_mod
+from aj_crew import mcp_discovery, mcp_grant
+from aj_crew.connections import ownership, warm
+from aj_crew.dashboard.handlers import mcp as mcp_handlers
 
 _V1 = "https://mcp.atlassian.com/v1/mcp/authv2"
 _V2 = "https://mcp.atlassian.com/v2/mcp"
@@ -45,7 +45,7 @@ def _wire(monkeypatch: pytest.MonkeyPatch, raw_specs: dict, revoked: list[str]) 
 
     inventory = [
         types.SimpleNamespace(name=name, url=spec["url"])
-        for name, spec in raw_specs.get("kirocrew", {}).items()
+        for name, spec in raw_specs.get("ajcrew", {}).items()
     ]
     monkeypatch.setattr(mcp_grant, "revoke_local_grant", _revoke)
     monkeypatch.setattr(mcp_grant, "surviving_grant_artifacts", lambda _url: [])
@@ -62,7 +62,7 @@ async def test_disconnect_removes_the_retired_v1_sign_in_too(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     revoked: list[str] = []
-    _wire(monkeypatch, {"kirocrew": {"atlassian": {"url": _V2}}}, revoked)
+    _wire(monkeypatch, {"ajcrew": {"atlassian": {"url": _V2}}}, revoked)
 
     scope = await ownership.remove_provider_entry("atlassian", _V2, ())
 
@@ -80,7 +80,7 @@ async def test_disconnect_keeps_the_v1_sign_in_another_entry_still_names(
     _wire(
         monkeypatch,
         {
-            "kirocrew": {"atlassian": {"url": _V2}},
+            "ajcrew": {"atlassian": {"url": _V2}},
             "agent:mine.json": {"jira-old": {"url": _V1}},
         },
         revoked,
@@ -97,7 +97,7 @@ async def test_another_provider_disconnect_is_not_widened(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     revoked: list[str] = []
-    _wire(monkeypatch, {"kirocrew": {"notion": {"url": _NOTION}}}, revoked)
+    _wire(monkeypatch, {"ajcrew": {"notion": {"url": _NOTION}}}, revoked)
 
     await ownership.remove_provider_entry("notion", _NOTION, ())
 

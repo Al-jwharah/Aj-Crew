@@ -6,8 +6,8 @@ from textwrap import indent
 
 import pytest
 
-from kiro_crew.workflows.runner import WorkflowRunner
-from kiro_crew.workflows.validate import CORE_CTX_SURFACE, check_ctx_surface, validate
+from aj_crew.workflows.runner import WorkflowRunner
+from aj_crew.workflows.validate import CORE_CTX_SURFACE, check_ctx_surface, validate
 
 NOW = "2026-01-01T00:00:00Z"
 

@@ -13,19 +13,19 @@ from typing import Any, Iterator
 import pytest
 from aiohttp import web
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import tailnet, tailnet_direct
-from kiro_crew.dashboard import tailnet_direct_listener as listener
-from kiro_crew.dashboard import tailnet_live_allowlist
-from kiro_crew.dashboard.tailnet import TailnetTrust
-from kiro_crew.dashboard.tailnet_direct import DirectGate, DirectResolution, SelfNode
-from kiro_crew.shared_crew import access, access_set
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import tailnet, tailnet_direct
+from aj_crew.dashboard import tailnet_direct_listener as listener
+from aj_crew.dashboard import tailnet_live_allowlist
+from aj_crew.dashboard.tailnet import TailnetTrust
+from aj_crew.dashboard.tailnet_direct import DirectGate, DirectResolution, SelfNode
+from aj_crew.shared_crew import access, access_set
 
 
 @pytest.fixture(autouse=True)
 def _shared_crew_preview_on(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
     """These tests cover the preview's behaviour; the gate itself has its own tests."""
-    _floor_monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    _floor_monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
 
 
 PORT = 5476
@@ -37,8 +37,8 @@ OWNER = SelfNode(
 )
 
 
-def _cfg(direct: bool, *, tailscale: bool = False) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _cfg(direct: bool, *, tailscale: bool = False) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     shared = dataclasses.replace(cfg.dashboard.shared_crew, tailnet_direct=direct)
     ts = dataclasses.replace(cfg.dashboard.tailscale, enabled=tailscale)
     dashboard = dataclasses.replace(cfg.dashboard, shared_crew=shared, tailscale=ts)
@@ -68,7 +68,7 @@ async def test_the_default_config_never_asks_the_daemon_or_installs_the_set(
 ) -> None:
     monkeypatch.setattr(tailnet_direct.tailnet_localapi, "status", pytest.fail)
     monkeypatch.setattr(access_set, "install", pytest.fail)
-    resolution = await listener.resolve(KiroCrewConfig(), PORT, True)
+    resolution = await listener.resolve(AjCrewConfig(), PORT, True)
     assert (resolution.state, resolution.reason) == (
         tailnet_direct.STATE_OFF,
         tailnet_direct.REASON_DISABLED,

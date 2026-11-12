@@ -34,14 +34,14 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.acp.client import (
+from aj_crew.acp.client import (
     AcpError,
     _format_acp_error,
     _is_transient_raw_error,
     _raise_acp_error,
     is_auth_failure_output,
 )
-from kiro_crew.llm_helpers import acp_error_is_transient, is_transient_backend_error
+from aj_crew.llm_helpers import acp_error_is_transient, is_transient_backend_error
 
 # The real rejection, as it arrives in a JSON-RPC error frame.
 _NOT_YET_VALID = {

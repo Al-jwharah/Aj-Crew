@@ -31,8 +31,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard import session_health, ws_event_scope
-from kiro_crew.dashboard.handlers import sessions
+from aj_crew.dashboard import session_health, ws_event_scope
+from aj_crew.dashboard.handlers import sessions
 
 
 @pytest.fixture(autouse=True)
@@ -511,7 +511,7 @@ class TestRefreshSeamSignals:
 
         state = _RecordingState()
         with patch(
-            "kiro_crew.dashboard.session_health.compute_session_health", side_effect=fake_compute
+            "aj_crew.dashboard.session_health.compute_session_health", side_effect=fake_compute
         ):
             for _ in range(3):
                 sessions._health_cache_ts = 0.0  # expire the TTL between ticks
@@ -524,7 +524,7 @@ class TestRefreshSeamSignals:
     async def test_the_endpoint_still_serves_the_full_payload(self):
         """The refactor must not change what /api/sessions/health returns."""
         with patch(
-            "kiro_crew.dashboard.session_health.compute_session_health",
+            "aj_crew.dashboard.session_health.compute_session_health",
             return_value={"stalled": {"sess-1": {"reason": "tool_stall"}}},
         ):
             resp = await sessions.api_sessions_health(
@@ -657,8 +657,8 @@ class TestDriverGateIsFunctional:
         self, monkeypatch, *, declared: list[str], interval: float = 0.01
     ) -> list[object]:
         """Connect an app token declaring *declared*; return the refresh calls."""
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard.handlers import source_providers
 
         monkeypatch.setattr(ws_event_scope, "is_app_enabled", lambda _n: True)
         monkeypatch.setattr(ws_event_scope, "get_app_manifest", lambda _n: self._manifest(declared))

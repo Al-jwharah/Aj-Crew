@@ -2,7 +2,7 @@
 
 A facade whose rules moved into owner modules stays the import path callers, tests and
 docs use, so a public name it bound before the split -- one it defined, or one it
-imported from the rest of ``kiro_crew`` -- is part of its surface even when no in-repo
+imported from the rest of ``aj_crew`` -- is part of its surface even when no in-repo
 caller reads it today. Standard-library, typing and third-party imports and private
 names are not surface. Each facade's inventory is frozen at its split in its own file,
 ``campaign_facade_inventories/<facade>.json``, so a split adds a file and edits no shared
@@ -27,8 +27,8 @@ from typing import Any
 
 import pytest
 
-import kiro_crew
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 #: One ``<facade>.json`` per split facade, named by the facade's dotted module path.
 _INVENTORY_DIR = Path(__file__).resolve().parent / "campaign_facade_inventories"
@@ -106,25 +106,25 @@ _REBOUND: dict[str, dict[str, str]] = {
 #: own file. A split that changes one of these inventories updates that facade's row. A blank
 #: line between rows lets two splits of neighbouring facades each change their own row.
 _MOVE_DIGESTS: dict[str, str] = dict(row.split() for row in """
-    kiro_crew.acp.client                                        e97dd3942cd81110
+    aj_crew.acp.client                                        951d713171faa17e
 
-    kiro_crew.apps.builtins.issue_radar.backend.routes          e42a59c7e96875b3
+    aj_crew.apps.builtins.issue_radar.backend.routes          ea59835483f9b2eb
 
-    kiro_crew.apps.builtins.ops_mission_control.backend.routes  4676b23fcf6c0cce
+    aj_crew.apps.builtins.ops_mission_control.backend.routes  3ee7d764ff8f3164
 
-    kiro_crew.autonudge                                         57a726a2ffc0bbaa
+    aj_crew.autonudge                                         f8ce0af62654f590
 
-    kiro_crew.crew_log.projection                               aa5a632cc0ca0c51
+    aj_crew.crew_log.projection                               ce3821aaa113ad88
 
-    kiro_crew.cron                                              b6a4481b56885fac
+    aj_crew.cron                                              4d876c859b1034a3
 
-    kiro_crew.mcp_gateway.gatewayd                              290c22d9c2d9df84
+    aj_crew.mcp_gateway.gatewayd                              2a4b7dfa520b6b2b
 
-    kiro_crew.providers.acp                                     f3d54671b53ceb28
+    aj_crew.providers.acp                                     3532be7dc1efe12f
 
-    kiro_crew.sandbox                                           c9e1858832fcd0e4
+    aj_crew.sandbox                                           f53c254b2a264ec3
 
-    kiro_crew.slack.gateway                                     90d815f8e6349017
+    aj_crew.slack.gateway                                     18d55dbc90ce3631
     """.splitlines() if row.strip())
 
 #: Reads the rebound map from stdin, not argv: one argv string holding every facade's map
@@ -160,7 +160,7 @@ def test_a_rebound_name_is_the_object_its_home_module_holds(tmp_path: Path) -> N
     can make a copy look like the original, or the original look like a copy. The child
     runs in ``tmp_path``, so anything an import writes by a relative path stays there."""
     env = dict(os.environ)
-    src = str(Path(kiro_crew.__file__).resolve().parents[1])
+    src = str(Path(aj_crew.__file__).resolve().parents[1])
     env["PYTHONPATH"] = src + os.pathsep + env.get("PYTHONPATH", "")
     command = [sys.executable, "-c", _PROBE]
     assert sum(map(len, command)) < 8192, "the probe's command line must not carry the inventories"
@@ -224,7 +224,7 @@ def test_every_pinned_inventory_keeps_its_digest() -> None:
     assert _digest_mismatches(_INVENTORIES) == []
 
 
-_PLANTED = {"base_public_names": ["x"], "rebound": {"x": "kiro_crew"}}
+_PLANTED = {"base_public_names": ["x"], "rebound": {"x": "aj_crew"}}
 
 #: A bogus file to plant, its contents, and words from the problem it must be reported with.
 _PLANTED_FILES: dict[str, tuple[str | bytes, str]] = {
@@ -270,7 +270,7 @@ def test_a_changed_or_missing_frozen_inventory_misses_its_digest() -> None:
     facade = min(_MOVE_DIGESTS)
     inventory = _INVENTORIES[facade]
     shrunk = {**inventory, "base_public_names": inventory["base_public_names"][1:]}
-    rehomed = {**inventory, "rebound": {name: "kiro_crew" for name in inventory["rebound"]}}
+    rehomed = {**inventory, "rebound": {name: "aj_crew" for name in inventory["rebound"]}}
     noted = {**inventory, _NOTE_KEY: "Prose stays out of the digest."}
     assert _digest_mismatches({**_INVENTORIES, facade: shrunk}) == [facade]
     assert _digest_mismatches({**_INVENTORIES, facade: rehomed}) == [facade]

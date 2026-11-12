@@ -1,4 +1,4 @@
-"""Kiro Crew's pi gate extension, run under Node against a stand-in for pi's extension API.
+"""Aj Crew's pi gate extension, run under Node against a stand-in for pi's extension API.
 
 The extension carries Crew's MCP servers into a pi session (pi-acp drops the ACP
 array) and refuses any call to a Crew server name that pi resolved to a different
@@ -23,8 +23,8 @@ from pathlib import Path
 import pytest
 from real_adapter_gate import require_real_adapter
 
-from kiro_crew.acp.harness.pi import pi_gate_extension_path, pi_mcp_handoff_payload
-from kiro_crew.mcp_instructions import BY_SERVER
+from aj_crew.acp.harness.pi import pi_gate_extension_path, pi_mcp_handoff_payload
+from aj_crew.mcp_instructions import BY_SERVER
 
 pytestmark = pytest.mark.real_adapter
 
@@ -32,10 +32,10 @@ _NONCE = "0123456789abcdef0123456789abcdef"
 _KEY = bytes(range(32))
 
 _ELEMENT = {
-    "name": "kirocrew-core",
-    "command": "/opt/kirocrew/bin/python",
-    "args": ["-m", "kiro_crew.mcp_gateway.stub"],
-    "env": [{"name": "KIROCREW_STUB", "value": "1"}],
+    "name": "ajcrew-core",
+    "command": "/opt/ajcrew/bin/python",
+    "args": ["-m", "aj_crew.mcp_gateway.stub"],
+    "env": [{"name": "AJCREW_STUB", "value": "1"}],
     "type": "stdio",
 }
 
@@ -129,21 +129,21 @@ def _run(
     harness.write_text(_HARNESS, encoding="utf-8")
     # A copy beside the harness, so Node resolves the type-only import it erases
     # without walking into the package tree.
-    extension = tmp_path / "kiro_crew_tool_gate.ts"
+    extension = tmp_path / "aj_crew_tool_gate.ts"
     extension.write_bytes(Path(pi_gate_extension_path()).read_bytes())
     # The host's environment (Windows Node will not start without its system
     # variables), with the home and every variable the extension reads pinned here.
     home = tmp_path / "home"
     env = {
-        **{k: v for k, v in os.environ.items() if not k.startswith(("PI_", "KIROCREW_PI_"))},
+        **{k: v for k, v in os.environ.items() if not k.startswith(("PI_", "AJCREW_PI_"))},
         "HOME": str(home),
         "USERPROFILE": str(home),
         "PI_CODING_AGENT_DIR": str(agent_dir),
-        "KIROCREW_PI_GATE_SESSION": _NONCE,
-        "KIROCREW_PI_MCP_HANDOFF": str(handoff),
-        "KIROCREW_PI_MCP_KEY": (key if key is not None else _KEY).hex(),
+        "AJCREW_PI_GATE_SESSION": _NONCE,
+        "AJCREW_PI_MCP_HANDOFF": str(handoff),
+        "AJCREW_PI_MCP_KEY": (key if key is not None else _KEY).hex(),
         "GATE_BASE_PROMPT": base_prompt,
-        "KIROCREW_PI_MCP_RECEIPT": str(receipt),
+        "AJCREW_PI_MCP_RECEIPT": str(receipt),
         **({"GATE_DROP_MCP": "1"} if drop_registration else {}),
     }
     completed = subprocess.run(
@@ -162,24 +162,24 @@ def _run(
     return result
 
 
-_REFUSED = "not the server Kiro Crew placed"
+_REFUSED = "not the server Aj Crew placed"
 
 
 def test_the_handoff_servers_are_registered_for_direct_use(node, tmp_path) -> None:
-    out = _run(node, tmp_path, mcp_json=None, calls=["mcp__kirocrew_core__send_message"])
-    assert [r["name"] for r in out["registered"]] == ["kirocrew-core"]
+    out = _run(node, tmp_path, mcp_json=None, calls=["mcp__ajcrew_core__send_message"])
+    assert [r["name"] for r in out["registered"]] == ["ajcrew-core"]
     config = out["registered"][0]["config"]
-    assert config["command"] == "/opt/kirocrew/bin/python"
-    assert config["env"] == {"KIROCREW_STUB": "1"}
+    assert config["command"] == "/opt/ajcrew/bin/python"
+    assert config["env"] == {"AJCREW_STUB": "1"}
     assert config["exposure"] == "direct"
-    assert out["results"] == {"mcp__kirocrew_core__send_message": "allowed"}
+    assert out["results"] == {"mcp__ajcrew_core__send_message": "allowed"}
     # Removed once read where the directory allows it.
     assert out["handoff_left"] is False
     assert out["receipt"] == {
-        "kiro-crew-mcp-registration": 1,
+        "aj-crew-mcp-registration": 1,
         "nonce": _NONCE,
         "handoff": "loaded",
-        "registered": ["kirocrew-core"],
+        "registered": ["ajcrew-core"],
         "unregistered": {},
     }
 
@@ -191,11 +191,11 @@ def test_the_envelope_names_the_registered_server_of_an_mcp_call(node, tmp_path)
         node,
         tmp_path,
         mcp_json=None,
-        calls=["mcp__kirocrew_core__send_message", "mcp__other__tool", "read"],
+        calls=["mcp__ajcrew_core__send_message", "mcp__other__tool", "read"],
     )
     by_tool = {c["tool"]: c.get("mcp") for c in out["confirms"]}
     assert by_tool == {
-        "mcp__kirocrew_core__send_message": {"server": "kirocrew-core", "tool": "send_message"},
+        "mcp__ajcrew_core__send_message": {"server": "ajcrew-core", "tool": "send_message"},
         "mcp__other__tool": None,
         "read": None,
     }
@@ -203,41 +203,41 @@ def test_the_envelope_names_the_registered_server_of_an_mcp_call(node, tmp_path)
 
 def test_a_same_named_server_in_pi_mcp_json_is_refused(node, tmp_path) -> None:
     """pi's own ``~/.pi/agent/mcp.json`` outranks an extension's registration."""
-    shadow = json.dumps({"mcpServers": {"kirocrew-core": {"command": "/tmp/not-crew"}}})
+    shadow = json.dumps({"mcpServers": {"ajcrew-core": {"command": "/tmp/not-crew"}}})
     out = _run(
         node,
         tmp_path,
         mcp_json=shadow,
-        calls=["mcp__kirocrew_core__send_message", "mcp__other__tool", "read"],
+        calls=["mcp__ajcrew_core__send_message", "mcp__other__tool", "read"],
     )
-    assert _REFUSED in out["results"]["mcp__kirocrew_core__send_message"]
+    assert _REFUSED in out["results"]["mcp__ajcrew_core__send_message"]
     assert out["results"]["mcp__other__tool"] == "allowed"
     assert out["results"]["read"] == "allowed"
-    assert any("kirocrew-core" in n["message"] for n in out["notes"])
+    assert any("ajcrew-core" in n["message"] for n in out["notes"])
     assert out["receipt"]["handoff"] == "loaded"
     assert out["receipt"]["registered"] == []
-    assert out["receipt"]["unregistered"] == {"kirocrew-core": "mcp_json"}
+    assert out["receipt"]["unregistered"] == {"ajcrew-core": "mcp_json"}
 
 
 def test_a_tool_name_that_keeps_the_dash_is_refused_too(node, tmp_path) -> None:
-    """A release that keeps ``-`` in the server part (``mcp__kirocrew-core__x``) is matched."""
-    shadow = json.dumps({"mcpServers": {"kirocrew-core": {"command": "/tmp/not-crew"}}})
-    out = _run(node, tmp_path, mcp_json=shadow, calls=["mcp__kirocrew-core__send_message"])
-    assert _REFUSED in out["results"]["mcp__kirocrew-core__send_message"]
+    """A release that keeps ``-`` in the server part (``mcp__ajcrew-core__x``) is matched."""
+    shadow = json.dumps({"mcpServers": {"ajcrew-core": {"command": "/tmp/not-crew"}}})
+    out = _run(node, tmp_path, mcp_json=shadow, calls=["mcp__ajcrew-core__send_message"])
+    assert _REFUSED in out["results"]["mcp__ajcrew-core__send_message"]
 
 
 def test_a_name_differing_only_in_dash_and_underscore_is_the_same_server(node, tmp_path) -> None:
-    """pi counts ``kirocrew_core`` and ``kirocrew-core`` as one server."""
-    shadow = json.dumps({"mcpServers": {"kirocrew_core": {"command": "/tmp/not-crew"}}})
-    out = _run(node, tmp_path, mcp_json=shadow, calls=["mcp__kirocrew_core__send_message"])
-    assert _REFUSED in out["results"]["mcp__kirocrew_core__send_message"]
+    """pi counts ``ajcrew_core`` and ``ajcrew-core`` as one server."""
+    shadow = json.dumps({"mcpServers": {"ajcrew_core": {"command": "/tmp/not-crew"}}})
+    out = _run(node, tmp_path, mcp_json=shadow, calls=["mcp__ajcrew_core__send_message"])
+    assert _REFUSED in out["results"]["mcp__ajcrew_core__send_message"]
 
 
 def test_an_unreadable_mcp_json_refuses_every_crew_server(node, tmp_path) -> None:
     """What a broken file declares is unknown, so none of Crew's names is trusted."""
-    out = _run(node, tmp_path, mcp_json="{not json", calls=["mcp__kirocrew_core__x"])
-    assert _REFUSED in out["results"]["mcp__kirocrew_core__x"]
-    assert out["receipt"]["unregistered"] == {"kirocrew-core": "mcp_json_unreadable"}
+    out = _run(node, tmp_path, mcp_json="{not json", calls=["mcp__ajcrew_core__x"])
+    assert _REFUSED in out["results"]["mcp__ajcrew_core__x"]
+    assert out["receipt"]["unregistered"] == {"ajcrew-core": "mcp_json_unreadable"}
 
 
 def test_a_handoff_under_another_key_registers_nothing(node, tmp_path) -> None:
@@ -261,7 +261,7 @@ def test_a_handoff_for_another_nonce_registers_nothing(node, tmp_path) -> None:
 def test_a_registration_pi_does_not_list_is_named_refused(node, tmp_path) -> None:
     """pi accepted the call but holds nothing under the name: not "replaced"."""
     out = _run(node, tmp_path, mcp_json=None, calls=[], drop_registration=True)
-    assert out["receipt"]["unregistered"] == {"kirocrew-core": "refused"}
+    assert out["receipt"]["unregistered"] == {"ajcrew-core": "refused"}
 
 
 def test_a_handoff_that_is_not_a_handoff_file_is_named_malformed(node, tmp_path) -> None:
@@ -271,7 +271,7 @@ def test_a_handoff_that_is_not_a_handoff_file_is_named_malformed(node, tmp_path)
     assert out["receipt"]["unregistered"] == {}
 
 
-_CRON_ELEMENT = {**_ELEMENT, "name": "kirocrew-cron"}
+_CRON_ELEMENT = {**_ELEMENT, "name": "ajcrew-cron"}
 
 
 def test_crew_server_instructions_reach_the_system_prompt_once(node, tmp_path) -> None:
@@ -279,18 +279,18 @@ def test_crew_server_instructions_reach_the_system_prompt_once(node, tmp_path) -
     out = _run(node, tmp_path, mcp_json=None, calls=[], elements=[_ELEMENT, _CRON_ELEMENT])
     prompt = out["prompt"]
     assert prompt.startswith(
-        "BASE PROMPT\n\n<!-- kiro-crew:mcp-instructions -->\n# MCP Server Instructions\n\n## kirocrew-cron\n"
+        "BASE PROMPT\n\n<!-- aj-crew:mcp-instructions -->\n# MCP Server Instructions\n\n## ajcrew-cron\n"
     )
-    assert BY_SERVER["kirocrew-cron"] in prompt
-    # kirocrew-core has no instructions of Crew's in this phase.
-    assert "## kirocrew-core" not in prompt
+    assert BY_SERVER["ajcrew-cron"] in prompt
+    # ajcrew-core has no instructions of Crew's in this phase.
+    assert "## ajcrew-core" not in prompt
     # A prompt that already carries the section is left as it is.
     assert out["second"] is None
 
 
 def test_a_shadowed_server_contributes_no_instructions(node, tmp_path) -> None:
     """A same-named server in pi's mcp.json is not Crew's, so neither is its text."""
-    shadow = json.dumps({"mcpServers": {"kirocrew-cron": {"command": "/tmp/not-crew"}}})
+    shadow = json.dumps({"mcpServers": {"ajcrew-cron": {"command": "/tmp/not-crew"}}})
     out = _run(node, tmp_path, mcp_json=shadow, calls=[], elements=[_CRON_ELEMENT])
     assert out["prompt"] == "BASE PROMPT"
 
@@ -310,4 +310,4 @@ def test_an_agent_prompt_with_the_heading_still_gets_crew_instructions(node, tmp
         elements=[_CRON_ELEMENT],
         base_prompt="# MCP Server Instructions\nmine",
     )
-    assert BY_SERVER["kirocrew-cron"] in out["prompt"]
+    assert BY_SERVER["ajcrew-cron"] in out["prompt"]

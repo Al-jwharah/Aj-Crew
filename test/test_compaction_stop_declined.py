@@ -46,11 +46,11 @@ from compaction_stop_declined_helpers import (
     _setup,
 )
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import SessionManager
-from kiro_crew.session_compaction import COMPACT_OUTCOME_CANCELLED, COMPACT_OUTCOME_RECYCLED
-from kiro_crew.session_lifecycle import compaction_in_flight
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import SessionManager
+from aj_crew.session_compaction import COMPACT_OUTCOME_CANCELLED, COMPACT_OUTCOME_RECYCLED
+from aj_crew.session_lifecycle import compaction_in_flight
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # -- 1. a cooperative Stop is declined while compacting --
 
@@ -533,7 +533,7 @@ async def test_a_stop_before_the_semaphore_is_held_is_not_this_compactions_cance
 async def test_channel_decline_markers_die_with_the_compaction_that_armed_them():
     """Compaction A declines a channel Stop and ends; compaction B starts inside
     the window. B's first press must be a first press, not A's forcing second."""
-    from kiro_crew import session_lifecycle as sl
+    from aj_crew import session_lifecycle as sl
 
     mgr, key, compact, order, notices = await _setup()
     provider = mgr._sessions[key].provider
@@ -559,7 +559,7 @@ async def test_channel_decline_markers_die_with_the_compaction_that_armed_them()
 
 
 def test_clear_stop_declined_drops_only_that_keys_markers():
-    from kiro_crew import session_lifecycle as sl
+    from aj_crew import session_lifecycle as sl
 
     sl.note_stop_declined("k", "a", now=100.0)
     sl.note_stop_declined("k", "b", now=100.0)
@@ -649,7 +649,7 @@ def test_the_dashboard_stop_is_declined_while_the_session_compacts(tmp_path, mon
     """The route-level pre-check: no cancel is sent and the press still leaves a card."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
     state = _dashboard_state(tmp_path)
     slot = state.get_or_create_slot("chat-14841")
@@ -658,7 +658,7 @@ def test_the_dashboard_stop_is_declined_while_the_session_compacts(tmp_path, mon
     slot.task = task
     state.sessions.stop_turn = AsyncMock(return_value="soft")
     state.sessions.is_compacting = MagicMock(return_value=True)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
 
     reply = asyncio.run(stop_slot_turn(state, slot))
 
@@ -679,7 +679,7 @@ def test_a_mock_shaped_manager_does_not_decline_every_stop(tmp_path, monkeypatch
     """The probe is ``is True``: a truthy Mock answer must read as not compacting."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
     state = _dashboard_state(tmp_path)
     slot = state.get_or_create_slot("chat-14841")
@@ -688,7 +688,7 @@ def test_a_mock_shaped_manager_does_not_decline_every_stop(tmp_path, monkeypatch
     slot.task = task
     state.sessions.stop_turn = AsyncMock(return_value="soft")
     assert callable(state.sessions.is_compacting)  # a bare MagicMock attribute
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
 
     asyncio.run(stop_slot_turn(state, slot))
 
@@ -699,7 +699,7 @@ def test_the_race_outcome_settles_the_card_and_undoes_the_soft_stop(tmp_path, mo
     """``stop_turn`` answering ``compacting`` after the pre-check passed."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
     state = _dashboard_state(tmp_path)
     slot = state.get_or_create_slot("chat-14841")
@@ -708,7 +708,7 @@ def test_the_race_outcome_settles_the_card_and_undoes_the_soft_stop(tmp_path, mo
     slot.task = task
     state.sessions.is_compacting = MagicMock(return_value=False)
     state.sessions.stop_turn = AsyncMock(return_value="compacting")
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
 
     reply = asyncio.run(stop_slot_turn(state, slot))
 
@@ -725,7 +725,7 @@ def test_a_second_press_during_compaction_escalates_to_the_force_stop(tmp_path, 
     """The escape hatch: the decline arms ``soft_pending``, so press #2 hard-stops."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
     state = _dashboard_state(tmp_path)
     slot = state.get_or_create_slot("chat-14841")
@@ -734,7 +734,7 @@ def test_a_second_press_during_compaction_escalates_to_the_force_stop(tmp_path, 
     slot.task = task
     state.sessions.is_compacting = MagicMock(return_value=True)
     state.sessions.stop_turn = AsyncMock(return_value="hard")
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
 
     asyncio.run(stop_slot_turn(state, slot))
     state.sessions.stop_turn.assert_not_awaited()
@@ -754,7 +754,7 @@ def test_the_second_press_after_a_decline_gets_its_own_stop_card(tmp_path, monke
     own, or the last stop row reads "nothing was stopped" for a reset session."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
     state = _dashboard_state(tmp_path)
     slot = state.get_or_create_slot("chat-14841")
@@ -763,7 +763,7 @@ def test_the_second_press_after_a_decline_gets_its_own_stop_card(tmp_path, monke
     slot.task = task
     state.sessions.is_compacting = MagicMock(return_value=True)
     state.sessions.stop_turn = AsyncMock(return_value="hard")
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
 
     asyncio.run(stop_slot_turn(state, slot))
     asyncio.run(stop_slot_turn(state, slot))
@@ -781,7 +781,7 @@ def test_a_caller_that_withholds_escalation_is_not_hard_killed_by_a_decline_mark
     turn it into a hard kill that clears the queue and pending steers."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
     state = _dashboard_state(tmp_path)
     slot = state.get_or_create_slot("chat-14841")
@@ -793,7 +793,7 @@ def test_a_caller_that_withholds_escalation_is_not_hard_killed_by_a_decline_mark
     # real second press, and must not escalate this one.
     state.sessions.is_compacting = MagicMock(return_value=True)
     state.sessions.stop_turn = AsyncMock(return_value="soft")
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
 
     asyncio.run(stop_slot_turn(state, slot))  # declined, marker armed
     asyncio.run(stop_slot_turn(state, slot, escalate=False))
@@ -809,7 +809,7 @@ def test_a_decline_marker_is_dropped_once_the_compaction_has_ended(tmp_path, mon
     refusal stopped applying."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
     state = _dashboard_state(tmp_path)
     slot = state.get_or_create_slot("chat-14841")
@@ -820,7 +820,7 @@ def test_a_decline_marker_is_dropped_once_the_compaction_has_ended(tmp_path, mon
     # Declined once, then the compaction finished before the second press.
     state.sessions.is_compacting = MagicMock(side_effect=[True, False, False])
     state.sessions.stop_turn = AsyncMock(return_value="soft")
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
 
     asyncio.run(stop_slot_turn(state, slot))
     assert slot._stop_declined_at > 0.0
@@ -835,7 +835,7 @@ def test_a_decline_marker_is_dropped_once_the_compaction_has_ended(tmp_path, mon
 def test_a_non_escalating_decline_does_not_arm_the_marker(tmp_path, monkeypatch):
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
     state = _dashboard_state(tmp_path)
     slot = state.get_or_create_slot("chat-14841")
@@ -844,7 +844,7 @@ def test_a_non_escalating_decline_does_not_arm_the_marker(tmp_path, monkeypatch)
     slot.task = task
     state.sessions.is_compacting = MagicMock(return_value=True)
     state.sessions.stop_turn = AsyncMock()
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
 
     asyncio.run(stop_slot_turn(state, slot, escalate=False))
 
@@ -857,7 +857,7 @@ def test_a_non_escalating_press_does_not_spend_the_users_armed_hatch(tmp_path, m
     decline and the user's second press must leave the marker for that press."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
     state = _dashboard_state(tmp_path)
     slot = state.get_or_create_slot("chat-14841")
@@ -866,7 +866,7 @@ def test_a_non_escalating_press_does_not_spend_the_users_armed_hatch(tmp_path, m
     slot.task = task
     state.sessions.is_compacting = MagicMock(return_value=True)
     state.sessions.stop_turn = AsyncMock(return_value="hard")
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
 
     asyncio.run(stop_slot_turn(state, slot))  # declined, armed
     armed_at = slot._stop_declined_at
@@ -886,7 +886,7 @@ def test_the_shared_channel_stop_forces_on_a_repeat_within_the_window():
     compaction still holds the session is the escape hatch."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.messaging.commands import STOP_REPLY_COMPACTING, stop_running_turn
+    from aj_crew.messaging.commands import STOP_REPLY_COMPACTING, stop_running_turn
 
     sessions = MagicMock()
     sessions.is_compacting = MagicMock(return_value=True)
@@ -927,7 +927,7 @@ def test_the_shared_channel_stop_forces_on_a_repeat_within_the_window():
 
 
 def test_a_stale_channel_decline_is_dropped_not_forced():
-    from kiro_crew.session_lifecycle import consume_stop_declined, note_stop_declined
+    from aj_crew.session_lifecycle import consume_stop_declined, note_stop_declined
 
     note_stop_declined("k", "u1", now=100.0)
     assert consume_stop_declined("k", "u1", now=200.0) is False
@@ -939,7 +939,7 @@ def test_a_stale_channel_decline_is_dropped_not_forced():
 def test_one_pressers_decline_does_not_arm_another_pressers_first_stop():
     """A group route and a unified DM scope share one session key between people.
     The marker is theirs, not the session's: B's first press stays a first press."""
-    from kiro_crew.session_lifecycle import consume_stop_declined, note_stop_declined
+    from aj_crew.session_lifecycle import consume_stop_declined, note_stop_declined
 
     note_stop_declined("unified:agent", "alice", now=100.0)
     assert consume_stop_declined("unified:agent", "bob", now=110.0) is False
@@ -950,7 +950,7 @@ def test_one_pressers_decline_does_not_arm_another_pressers_first_stop():
 def test_the_shared_channel_stop_is_not_forced_by_another_persons_decline():
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.messaging.commands import STOP_REPLY_COMPACTING, stop_running_turn
+    from aj_crew.messaging.commands import STOP_REPLY_COMPACTING, stop_running_turn
 
     sessions = MagicMock()
     sessions.is_compacting = MagicMock(return_value=True)
@@ -980,8 +980,8 @@ def test_the_shared_channel_force_stop_goes_through_the_queue_keeping_helper():
     it is the ordinary one."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.messaging.commands import stop_running_turn
-    from kiro_crew.messaging.queue_drain import QUEUED_OWNER_KEY
+    from aj_crew.messaging.commands import stop_running_turn
+    from aj_crew.messaging.queue_drain import QUEUED_OWNER_KEY
 
     sessions = MagicMock()
     sessions.is_compacting = MagicMock(return_value=True)
@@ -1014,8 +1014,8 @@ async def test_force_stop_keeping_others_carries_other_peoples_entries_to_the_su
     """Against the real manager: the hard stop pops the session and its queue;
     bob's entry (and its staged file) must reach the successor, alice's must be
     dropped and its file unlinked."""
-    from kiro_crew.messaging.queue_drain import QUEUED_OWNER_KEY, entries_queued_by
-    from kiro_crew.session_lifecycle import force_stop_keeping_others
+    from aj_crew.messaging.queue_drain import QUEUED_OWNER_KEY, entries_queued_by
+    from aj_crew.session_lifecycle import force_stop_keeping_others
 
     mgr, key, compact, order, notices = await _setup()
     tmp_a = tmp_path / "a.png"
@@ -1052,8 +1052,8 @@ async def test_a_failed_successor_start_parks_other_peoples_entries_for_the_retr
     """The successor's provider does not start: bob's entry and its file are kept,
     parked, and delivered by the next start that succeeds (the hard stop's own
     respawn path), not deleted."""
-    from kiro_crew import session_lifecycle as sl
-    from kiro_crew.messaging.queue_drain import QUEUED_OWNER_KEY
+    from aj_crew import session_lifecycle as sl
+    from aj_crew.messaging.queue_drain import QUEUED_OWNER_KEY
 
     mgr, key, compact, order, notices = await _setup()
     tmp_b = tmp_path / "b.png"
@@ -1084,7 +1084,7 @@ async def test_a_failed_successor_start_parks_other_peoples_entries_for_the_retr
 def test_the_parked_queue_is_count_bounded_and_the_overflow_is_logged(caplog):
     from unittest.mock import MagicMock
 
-    from kiro_crew import session_lifecycle as sl
+    from aj_crew import session_lifecycle as sl
 
     sessions = MagicMock()
     entries = tuple((f"ts-{i}", "x", {}) for i in range(sl.PARKED_QUEUE_MAX + 2))
@@ -1100,7 +1100,7 @@ def test_the_parked_queue_is_count_bounded_and_the_overflow_is_logged(caplog):
 def test_the_parked_queue_is_bounded_across_keys_and_refuses_an_oversized_key(caplog):
     from unittest.mock import MagicMock
 
-    from kiro_crew import session_lifecycle as sl
+    from aj_crew import session_lifecycle as sl
 
     sessions = MagicMock()
     per_key = sl.PARKED_QUEUE_MAX
@@ -1125,8 +1125,8 @@ async def test_a_message_admitted_after_the_detach_is_carried_to_the_successor_t
     """Between the caller's detach and the hard reset's pop, a message can still
     land on the old session. ``stop_turn(preserve_queue=True)`` parks it right
     before the pop, so the successor gets it instead of the reset unlinking it."""
-    from kiro_crew.messaging.queue_drain import QUEUED_OWNER_KEY, entries_queued_by
-    from kiro_crew.session_lifecycle import force_stop_keeping_others
+    from aj_crew.messaging.queue_drain import QUEUED_OWNER_KEY, entries_queued_by
+    from aj_crew.session_lifecycle import force_stop_keeping_others
 
     mgr, key, compact, order, notices = await _setup()
     tmp_late = tmp_path / "late.png"
@@ -1159,7 +1159,7 @@ async def test_a_message_admitted_after_the_detach_is_carried_to_the_successor_t
 async def test_parked_entries_are_adopted_by_the_next_ordinary_allocation(tmp_path):
     """Both respawn attempts fail; the parked entry must not strand. The next
     ordinary ``get_or_create`` that registers a session under the key adopts it."""
-    from kiro_crew import session_lifecycle as sl
+    from aj_crew import session_lifecycle as sl
 
     mgr, key, compact, order, notices = await _setup()
     # A session already lives under the key (registered before anything was
@@ -1206,7 +1206,7 @@ async def test_a_failure_path_reset_carries_queued_follow_ups_to_a_successor(tmp
     handler's plain ``reset`` pops the session. The follow-ups and their staged
     files must reach a successor started for them, ahead of nothing, in order;
     an entry a mid-turn cancel marked is still dropped and its file unlinked."""
-    from kiro_crew import session_lifecycle as sl
+    from aj_crew import session_lifecycle as sl
 
     mgr, key, compact, order, notices = await _setup()
     files = {name: tmp_path / f"{name}.png" for name in ("m2", "gone", "m3")}
@@ -1242,7 +1242,7 @@ async def test_the_reset_successor_keeps_the_popped_sessions_identity():
         calls.append({"agent": agent, "channel_id": channel_id, **kwargs})
         return inner(session_key=session_key, agent=agent, channel_id=channel_id, **kwargs)
 
-    mgr = SessionManager(KiroCrewConfig(), provider_factory=factory)
+    mgr = SessionManager(AjCrewConfig(), provider_factory=factory)
     await mgr.get_or_create(KEY, agent="research-agent", approval_policy="auto")
     key = mgr._fold_key(KEY)
     mgr.release(key)
@@ -1269,7 +1269,7 @@ async def test_the_reset_successor_keeps_the_popped_sessions_identity():
 
 @pytest.mark.asyncio
 async def test_a_conversation_ending_reset_still_drops_the_queue(tmp_path):
-    from kiro_crew import session_lifecycle as sl
+    from aj_crew import session_lifecycle as sl
 
     mgr, key, compact, order, notices = await _setup()
     staged = tmp_path / "m2.png"
@@ -1290,8 +1290,8 @@ async def test_a_registration_cancelled_before_it_commits_keeps_the_parked_entri
     """The start record is the one suspension point between registering and
     returning; a cancellation there rolls the registration back. The parked
     entries must not have been adopted by the session that rollback removes."""
-    from kiro_crew import session_allocation as sa
-    from kiro_crew import session_lifecycle as sl
+    from aj_crew import session_allocation as sa
+    from aj_crew import session_lifecycle as sl
 
     mgr, key, compact, order, notices = await _setup()
     await mgr.reset(KEY)
@@ -1324,8 +1324,8 @@ async def test_the_release_after_an_adopting_claim_wakes_the_adopted_entries_dra
     """Adoption inside get_or_create lands the entries on the queue; nothing
     starts them until a turn ends, so the release that frees the lease wakes
     their channels' drains."""
-    from kiro_crew import session_allocation as sa
-    from kiro_crew import session_lifecycle as sl
+    from aj_crew import session_allocation as sa
+    from aj_crew import session_lifecycle as sl
 
     mgr, key, compact, order, notices = await _setup()
     woke: list[tuple[str, list[str]]] = []

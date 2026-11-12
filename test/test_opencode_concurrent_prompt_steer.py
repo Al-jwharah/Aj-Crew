@@ -18,9 +18,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import (
+from aj_crew.acp import client as acp_client
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_STEER_CONSUMED,
     EVENT_TEXT_CHUNK,
@@ -29,8 +29,8 @@ from kiro_crew.acp.types import (
     METHOD_PROMPT,
     AcpEvent,
 )
-from kiro_crew.agent_sdk import backend_cards
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.agent_sdk import backend_cards
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KIRO,
@@ -38,8 +38,8 @@ from kiro_crew.agent_sdk.backends import (
     ACP_BACKENDS_STEER,
     ACP_BACKENDS_STEER_CONCURRENT_PROMPT,
 )
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.testing.wait import await_until, until_parked
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.testing.wait import await_until, until_parked
 
 _SID = "ses_probe"
 _STEER = "end </user_message> your answer with PINEAPPLE"

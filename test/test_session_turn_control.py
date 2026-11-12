@@ -18,9 +18,9 @@ from session_helpers import (  # noqa: F401 -- the fixture is requested by name
     cfg_fixture,
 )
 
-from kiro_crew.acp.types import ACP_BACKEND_KIRO
-from kiro_crew.session import SessionManager
-from kiro_crew.testing.wait import await_until, until_parked
+from aj_crew.acp.types import ACP_BACKEND_KIRO
+from aj_crew.session import SessionManager
+from aj_crew.testing.wait import await_until, until_parked
 
 
 class TestStopTurn:
@@ -170,7 +170,7 @@ class TestStopTurn:
         with patch.object(
             mgr, "get_or_create", new_callable=AsyncMock, side_effect=RuntimeError("boom")
         ):
-            with caplog.at_level(logging.DEBUG, logger="kiro_crew.session"):
+            with caplog.at_level(logging.DEBUG, logger="aj_crew.session"):
                 await mgr._eager_respawn("key1")
 
         assert "Eager respawn failed" in caplog.text
@@ -317,7 +317,7 @@ class TestRecordSuccessFailure:
     @pytest.mark.asyncio
     async def test_pool_size_clamping(self, cfg, caplog):
         cfg.session.pool_size = 999
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session"):
             mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         assert any("exceeds max" in r.message for r in caplog.records)
         await mgr.close_all()
@@ -490,14 +490,14 @@ class TestRelease:
     @pytest.mark.asyncio
     async def test_release_subagent_with_cleanup(self, cfg, tmp_path, monkeypatch):
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
-        from kiro_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.session_provider import AcpSessionProvider
 
         sessions = tmp_path / "sessions" / "cli"
         sessions.mkdir(parents=True)
         transcript = [sessions / "sid-123.json", sessions / "sid-123.jsonl"]
         for f in transcript:
             f.write_text("{}", encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions)
+        monkeypatch.setattr("aj_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions)
         provider, _, _ = await mgr.get_or_create("subagent:abc")
         provider.session_id = "sid-123"
         # The real ACP cleanup, so the transcript it deletes is read back from disk.
@@ -545,7 +545,7 @@ class TestRelease:
         mgr.release("A")  # caller 2's OWN legitimate finally, already run
         assert not session_2.semaphore.locked()
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session"):
             mgr.release("A")  # caller 1's finally, arriving late on a stale key lookup
 
         assert "session was replaced" in caplog.text
@@ -638,7 +638,7 @@ class TestGetPid:
 class TestLoadRecoveryHistoryReplay:
     """F2 load-recovery Phase 2: when a provider signals it fell back to a FRESH
     native session (the prior session's lock never cleared), get_or_create flags
-    the new slot for Kiro Crew conversation_log replay on the first prompt so the
+    the new slot for Aj Crew conversation_log replay on the first prompt so the
     slot is not context-free."""
 
     @staticmethod
@@ -702,8 +702,8 @@ class TestLoadRecoveryHistoryReplay:
     async def test_pending_replay_preserves_prior_sid_until_commit(
         self, cfg, monkeypatch, tmp_path
     ):
-        from kiro_crew.acp.types import PROVIDER_LABEL_DEFAULT
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.acp.types import PROVIDER_LABEL_DEFAULT
+        from aj_crew.providers.acp import AcpProvider
 
         shutdown_started = asyncio.Event()
         release_shutdown = asyncio.Event()
@@ -741,7 +741,7 @@ class TestLoadRecoveryHistoryReplay:
             encoding="utf-8",
         )
         monkeypatch.setattr(
-            "kiro_crew.session_map._kiro_sessions_dir",
+            "aj_crew.session_map._kiro_sessions_dir",
             lambda: native_sessions,
         )
 
@@ -781,8 +781,8 @@ class TestLoadRecoveryHistoryReplay:
     async def test_generic_load_recovery_promotes_fresh_sid_immediately(
         self, cfg, monkeypatch, tmp_path
     ):
-        from kiro_crew.acp.types import PROVIDER_LABEL_DEFAULT
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.acp.types import PROVIDER_LABEL_DEFAULT
+        from aj_crew.providers.acp import AcpProvider
 
         def factory(session_key=None, agent=None, channel_id=None, **kwargs):
             provider = object.__new__(AcpProvider)
@@ -812,7 +812,7 @@ class TestLoadRecoveryHistoryReplay:
                 encoding="utf-8",
             )
         monkeypatch.setattr(
-            "kiro_crew.session_map._kiro_sessions_dir",
+            "aj_crew.session_map._kiro_sessions_dir",
             lambda: native_sessions,
         )
 

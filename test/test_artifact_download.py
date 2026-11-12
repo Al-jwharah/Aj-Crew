@@ -19,9 +19,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.constants import ARTIFACT_MAX_CONTENT_BYTES
-from kiro_crew.dashboard.handlers import artifact_download
-from kiro_crew.dashboard.token_auth import token_auth_middleware
+from aj_crew.constants import ARTIFACT_MAX_CONTENT_BYTES
+from aj_crew.dashboard.handlers import artifact_download
+from aj_crew.dashboard.token_auth import token_auth_middleware
 
 
 @pytest.fixture(autouse=True)

@@ -19,7 +19,7 @@ from pathlib import Path
 
 def _handler_source() -> str:
     """chat_handlers.py and the chat_api owners it composes, as one text."""
-    dashboard = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard"
+    dashboard = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard"
     owners = sorted((dashboard / "chat_api").glob("[!_]*.py"))
     assert owners, "no chat_api owner found beside chat_handlers.py"
     return "\n".join(

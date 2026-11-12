@@ -12,9 +12,9 @@ import pathlib
 
 import pytest
 
-from kiro_crew import acp_tool_gate as gate
-from kiro_crew import platform_compat
-from kiro_crew.acp_backends import (
+from aj_crew import acp_tool_gate as gate
+from aj_crew import platform_compat
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_DEEPSEEK,
@@ -28,14 +28,14 @@ from kiro_crew.acp_backends import (
     permission_config_for,
     routing_for,
 )
-from kiro_crew.agent_sdk.tool_gate import PI_GATE_ARTIFACT_LEAF
-from kiro_crew.sandbox import (
+from aj_crew.agent_sdk.tool_gate import PI_GATE_ARTIFACT_LEAF
+from aj_crew.sandbox import (
     _CREW_CHILD_WITHHELD_LEAVES,
     _CREW_READONLY_LEAVES,
     _CREW_SANDBOX_VISIBLE_LEAVES,
     crew_host_runtime_leaves,
 )
-from kiro_crew.security import crew_home_prefixes, sensitive_home_dirs
+from aj_crew.security import crew_home_prefixes, sensitive_home_dirs
 
 AGENT_SPEC_BACKENDS = (ACP_BACKEND_KIRO, ACP_BACKEND_KAS)
 
@@ -197,7 +197,7 @@ def test_indeterminate_refuses_alongside_bypassed() -> None:
 def _deepseek_marker(approval: object = None, *, include_approval: bool = True) -> dict:
     """A valid DeepSeek marker with one caller-selected approval snapshot."""
     marker: dict = {
-        "plugin": "kiro-crew-tool-gate",
+        "plugin": "aj-crew-tool-gate",
         "nonce": "n1",
         "module": "/sealed/gate.mjs",
         # The composed tool presentation and the child-env proof, both clean, so
@@ -479,7 +479,7 @@ def test_every_session_config_harness_names_its_option() -> None:
     never perform, so the verdict degrades to INDETERMINATE instead. This pins that
     no shipped harness is in that state.
     """
-    from kiro_crew.acp_backends import ACP_BACKEND_ROUTING
+    from aj_crew.acp_backends import ACP_BACKEND_ROUTING
 
     for backend, routing in ACP_BACKEND_ROUTING.items():
         if routing is not Routing.SESSION_CONFIG:
@@ -499,8 +499,8 @@ def test_every_enforced_harness_declares_its_own_credential() -> None:
     ``ENTITLEMENT_HOST_VAULT`` harness gets its key by env var and must name no leaf,
     or its whole process tree could read the file the vault route keeps masked.
     """
-    from kiro_crew.acp_backends import ACP_BACKEND_ROUTING
-    from kiro_crew.agent_sdk import host_auth
+    from aj_crew.acp_backends import ACP_BACKEND_ROUTING
+    from aj_crew.agent_sdk import host_auth
 
     for backend, routing in ACP_BACKEND_ROUTING.items():
         if routing not in gate.ENFORCED_ROUTINGS:
@@ -533,11 +533,11 @@ def test_every_enforced_harness_reaches_the_spawn_preflight(tmp_path: pathlib.Pa
 
     import acp_launch_capture as capture_mod
 
-    from kiro_crew.acp import client as client_mod
-    from kiro_crew.acp import launch as launch_mod
-    from kiro_crew.acp import runtime as runtime_mod
-    from kiro_crew.acp.harness import codex as codex_mod
-    from kiro_crew.acp_backends import ACP_BACKEND_ROUTING, ACP_BACKENDS_ACP_RUNTIME
+    from aj_crew.acp import client as client_mod
+    from aj_crew.acp import launch as launch_mod
+    from aj_crew.acp import runtime as runtime_mod
+    from aj_crew.acp.harness import codex as codex_mod
+    from aj_crew.acp_backends import ACP_BACKEND_ROUTING, ACP_BACKENDS_ACP_RUNTIME
 
     enforced = {
         backend
@@ -595,7 +595,7 @@ def test_mask_reanchors_a_relocated_credential(
     """A credential moved by an env override is still denied to the child.
 
     The mask shares the read gate's anchor rules, so a store moved with
-    ``CLAUDE_CONFIG_DIR`` (or ``KIROCREW_HOME``) is masked at its real path, not
+    ``CLAUDE_CONFIG_DIR`` (or ``AJCREW_HOME``) is masked at its real path, not
     under ``Path.home()``.
     """
     # tmp_path, not a hardcoded POSIX path: the assertion is about the OVERRIDE
@@ -644,7 +644,7 @@ def test_sandbox_off_refuses_an_enforced_adapter(monkeypatch: pytest.MonkeyPatch
     ``wrap_argv`` returns from its ``mode == "off"`` branch before it applies
     ``extra_hidden_dirs``, and ACP v1 cannot prompt for a passive read.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: None)
     with pytest.raises(gate.ToolGateUnroutable):
@@ -660,10 +660,10 @@ def test_sandbox_off_is_allowed_for_an_unenforced_harness(
     attempted the guarantee, so refusing would break the Kiro path over a promise
     it does not make.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: None)
-    monkeypatch.setattr(sandbox, "_inside_kirocrew_sandbox", lambda: False)
+    monkeypatch.setattr(sandbox, "_inside_ajcrew_sandbox", lambda: False)
     gate.enforce_sandbox_floor(ACP_BACKEND_KIRO, "off")
     # Positive control: the same host refuses an enforced adapter at "off".
     with pytest.raises(gate.ToolGateUnroutable):
@@ -679,10 +679,10 @@ def test_governed_floor_keeps_an_enforced_adapter_startable(
     config value still starts. ``detect_backend`` is pinned to a present backend:
     with none, ``test_no_backend_refuses_under_a_governance_floor_too`` applies.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: "standard")
-    monkeypatch.setattr(sandbox, "_inside_kirocrew_sandbox", lambda: False)
+    monkeypatch.setattr(sandbox, "_inside_ajcrew_sandbox", lambda: False)
     monkeypatch.setattr(sandbox, "detect_backend", lambda **_: "namespace")
     # The floor lifts "off" to a tier that carries the mask; that is what admits it.
     assert sandbox.credential_mask_applies("off") is True
@@ -697,10 +697,10 @@ def test_no_backend_refuses_under_a_governance_floor_too(
     The floor is mutable config and can loosen between preflight and spawn, and with
     no backend nothing can carry the mask, so the verdict must not come from policy.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: "strict")
-    monkeypatch.setattr(sandbox, "_inside_kirocrew_sandbox", lambda: False)
+    monkeypatch.setattr(sandbox, "_inside_ajcrew_sandbox", lambda: False)
     monkeypatch.setattr(sandbox, "detect_backend", lambda **_: "none")
     monkeypatch.setattr(sandbox, "_allow_unsandboxed_exec", lambda: True)
     with pytest.raises(gate.ToolGateUnroutable):
@@ -712,21 +712,21 @@ def test_env_root_override_is_read_verbatim(
 ) -> None:
     """A trailing space is a legal path character and must not be stripped.
 
-    ``config_dir`` mkdirs ``KIROCREW_HOME`` raw, so a stripped anchor would point at
+    ``config_dir`` mkdirs ``AJCREW_HOME`` raw, so a stripped anchor would point at
     ``<root>`` while the real ``.env`` and keys live under ``"<root> "``.
     """
-    from kiro_crew import security
+    from aj_crew import security
 
     # Compare against the SAME resolution the helper performs on the raw value,
     # rather than a POSIX literal: the contract under test is "the value is not
     # stripped", and asserting an absolute spelling instead tests the platform's
     # path semantics (Windows resolves a bare "/tmp/..." onto the current drive).
     raw = str(tmp_path / "crew-home") + " "
-    monkeypatch.setenv("KIROCREW_HOME", raw)
+    monkeypatch.setenv("AJCREW_HOME", raw)
     expected = str(pathlib.Path(raw).expanduser().resolve())
-    assert security._resolved_env_root("KIROCREW_HOME") == expected
-    monkeypatch.setenv("KIROCREW_HOME", "")
-    assert security._resolved_env_root("KIROCREW_HOME") is None
+    assert security._resolved_env_root("AJCREW_HOME") == expected
+    monkeypatch.setenv("AJCREW_HOME", "")
+    assert security._resolved_env_root("AJCREW_HOME") is None
 
 
 def test_no_backend_with_opt_in_refuses_an_enforced_adapter(
@@ -738,7 +738,7 @@ def test_no_backend_with_opt_in_refuses_an_enforced_adapter(
     blocked) and ``sandbox_allow_unsandboxed_exec`` opted in, ``wrap_argv`` returns the
     argv unwrapped, so ``extra_hidden_dirs`` never lands and the guard must refuse.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: None)
     monkeypatch.setattr(sandbox, "detect_backend", lambda **_: "none")
@@ -755,12 +755,12 @@ def test_no_backend_refuses_even_without_the_opt_in(
     ``_allow_unsandboxed_exec()`` is mutable config read at preflight and acted on at
     spawn; flipping it between the two would start a passed session unmasked.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: None)
     monkeypatch.setattr(sandbox, "detect_backend", lambda **_: "none")
     monkeypatch.setattr(sandbox, "_allow_unsandboxed_exec", lambda: False)
-    monkeypatch.setattr(sandbox, "_inside_kirocrew_sandbox", lambda: False)
+    monkeypatch.setattr(sandbox, "_inside_ajcrew_sandbox", lambda: False)
     with pytest.raises(gate.ToolGateUnroutable):
         gate.enforce_sandbox_floor(ACP_BACKEND_CODEX, "standard")
 
@@ -774,14 +774,14 @@ def test_no_backend_verdict_ignores_the_mutable_opt_in() -> None:
     """
     import unittest.mock as _mock
 
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     verdicts = set()
     for opted_in in (True, False):
         with (
             _mock.patch.object(sandbox, "_governance_sandbox_floor", lambda: None),
             _mock.patch.object(sandbox, "detect_backend", lambda **_: "none"),
-            _mock.patch.object(sandbox, "_inside_kirocrew_sandbox", lambda: False),
+            _mock.patch.object(sandbox, "_inside_ajcrew_sandbox", lambda: False),
             _mock.patch.object(sandbox, "_allow_unsandboxed_exec", lambda: opted_in),
         ):
             verdicts.add(sandbox.credential_mask_applies("standard"))
@@ -794,17 +794,17 @@ def test_no_backend_verdict_ignores_the_mutable_opt_in() -> None:
 def test_nested_sandbox_passthrough_refuses_an_enforced_adapter(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Inside an existing Kiro Crew sandbox the mask is never applied either.
+    """Inside an existing Aj Crew sandbox the mask is never applied either.
 
     A nested re-wrap is impossible by design (Linux seccomp denies the unshare, macOS
     Seatbelt refuses sandbox_apply), so wrap_argv passes the argv through and
     ``extra_hidden_dirs`` never lands. The outer standard tier leaves ``~/.aws`` /
     ``~/.ssh`` / ``~/.kube`` readable for kiro-cli, so it is no substitute.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: None)
-    monkeypatch.setattr(sandbox, "_inside_kirocrew_sandbox", lambda: True)
+    monkeypatch.setattr(sandbox, "_inside_ajcrew_sandbox", lambda: True)
     monkeypatch.setattr(sandbox, "_macos_sandbox_state", lambda: None)
     with pytest.raises(gate.ToolGateUnroutable):
         gate.enforce_sandbox_floor(ACP_BACKEND_CODEX, "standard")
@@ -812,11 +812,11 @@ def test_nested_sandbox_passthrough_refuses_an_enforced_adapter(
 
 def _pin_no_sandbox_backend(monkeypatch: pytest.MonkeyPatch, *, opted_in: bool = False) -> None:
     """Pin the probes ``credential_mask_applies`` reads; never the operator config."""
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: None)
     monkeypatch.setattr(sandbox, "detect_backend", lambda **_: "none")
-    monkeypatch.setattr(sandbox, "_inside_kirocrew_sandbox", lambda: False)
+    monkeypatch.setattr(sandbox, "_inside_ajcrew_sandbox", lambda: False)
     monkeypatch.setattr(sandbox, "_allow_unsandboxed_exec", lambda: opted_in)
 
 
@@ -889,11 +889,11 @@ def test_windows_still_passes_when_the_mask_applies(
     A working backend whose governance floor raises ``off`` still starts on a
     simulated Windows host, matching the non-Windows governed-floor path.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
     monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: "standard")
-    monkeypatch.setattr(sandbox, "_inside_kirocrew_sandbox", lambda: False)
+    monkeypatch.setattr(sandbox, "_inside_ajcrew_sandbox", lambda: False)
     monkeypatch.setattr(sandbox, "detect_backend", lambda **_: "namespace")
     assert sandbox.credential_mask_applies("off") is True
     gate.enforce_sandbox_floor(ACP_BACKEND_OPENCODE, "off")
@@ -904,12 +904,12 @@ def test_non_windows_keeps_the_generic_sandbox_refusal(
     monkeypatch: pytest.MonkeyPatch, mode: str, detect: str
 ) -> None:
     """A host that CAN have a backend still gets the set-standard-or-strict remedy."""
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
     monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: None)
     monkeypatch.setattr(sandbox, "detect_backend", lambda **_: detect)
-    monkeypatch.setattr(sandbox, "_inside_kirocrew_sandbox", lambda: False)
+    monkeypatch.setattr(sandbox, "_inside_ajcrew_sandbox", lambda: False)
     monkeypatch.setattr(sandbox, "_allow_unsandboxed_exec", lambda: False)
     with pytest.raises(gate.ToolGateUnroutable) as excinfo:
         gate.enforce_sandbox_floor(ACP_BACKEND_OPENCODE, mode)
@@ -929,8 +929,8 @@ def test_sandbox_preflight_retains_the_windows_remedy(
     the operator back to the generic sandbox advice that cannot succeed on
     native Windows. Uses the real preflight; does not start a child.
     """
-    from kiro_crew.acp import client as acp_client
-    from kiro_crew.acp.client import AcpToolGateUnroutable
+    from aj_crew.acp import client as acp_client
+    from aj_crew.acp.client import AcpToolGateUnroutable
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
     _pin_no_sandbox_backend(monkeypatch)
@@ -1049,9 +1049,9 @@ def test_named_child_reachable_leaves_stay_out_of_every_enforced_mask(backend, l
         ".kiro/crew/.env",
         ".kiro/crew/token_signing.key",
         ".kiro/crew/.vault",
-        ".kirocrew/.env",
-        ".kirocrew/token_signing.key",
-        ".kirocrew/.vault",
+        ".ajcrew/.env",
+        ".ajcrew/token_signing.key",
+        ".ajcrew/.vault",
     ),
 )
 def test_the_exclusion_does_not_widen_into_a_credential(backend, leaf) -> None:
@@ -1069,13 +1069,13 @@ def test_the_exclusion_does_not_widen_into_a_credential(backend, leaf) -> None:
 def test_the_child_reachable_set_survives_a_relocated_data_home(
     monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path
 ) -> None:
-    """``KIROCREW_HOME`` moves the artifacts, and the exclusion has to move with them.
+    """``AJCREW_HOME`` moves the artifacts, and the exclusion has to move with them.
 
     Both directions on one mask: runtime artifacts absent under the relocated root
     and a crew secret still present, so a re-anchor that stops entirely fails too.
     """
     relocated = tmp_path / "relocated-crew"
-    monkeypatch.setenv("KIROCREW_HOME", str(relocated))
+    monkeypatch.setenv("AJCREW_HOME", str(relocated))
     masked = set(gate.adapter_hidden_credential_dirs(ACP_BACKEND_CODEX))
 
     assert any(

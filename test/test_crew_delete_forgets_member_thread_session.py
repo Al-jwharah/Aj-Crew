@@ -9,7 +9,7 @@ process for the thread goes with it. The two prunes run the same step
 
 Pinned beside the removal: a sibling whose slug only shares a prefix, an
 unrelated chat, a slug another live crew still derives, and a delete with no
-dashboard state (``kirocrew agent delete``), which touches no session.
+dashboard state (``ajcrew agent delete``), which touches no session.
 """
 
 from __future__ import annotations
@@ -21,10 +21,10 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard.handlers import agents as agents_mod
-from kiro_crew.dashboard.handlers.agents import api_kirocrew_agent_delete
-from kiro_crew.session_map import SESSION_MAP_FILENAME, SessionMap
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard.handlers import agents as agents_mod
+from aj_crew.dashboard.handlers.agents import api_ajcrew_agent_delete
+from aj_crew.session_map import SESSION_MAP_FILENAME, SessionMap
 
 GONE_V2 = "dashboard:member-mate.memory-member-mate-2b2eef2a151f4deba9af8ecae7da93e8"
 GONE_V1 = "dashboard:member-mate"
@@ -35,7 +35,7 @@ UNRELATED = "dashboard:chat-1-1790000000"
 @pytest.fixture(autouse=True)
 def _owner_caller(_floor_monkeypatch):
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -56,15 +56,15 @@ class _Sessions:
 
 
 def _seed() -> None:
-    from kiro_crew.config import config_dir
+    from aj_crew.config import config_dir
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        "kirocrew": KiroCrewAgentConfig(kiro_agent="kirocrew"),
-        "mate": KiroCrewAgentConfig(kiro_agent="kirocrew", member_id="mate"),
-        "mate2": KiroCrewAgentConfig(kiro_agent="kirocrew", member_id="mate-0a2620b15f41"),
+        "ajcrew": AjCrewAgentConfig(kiro_agent="ajcrew"),
+        "mate": AjCrewAgentConfig(kiro_agent="ajcrew", member_id="mate"),
+        "mate2": AjCrewAgentConfig(kiro_agent="ajcrew", member_id="mate-0a2620b15f41"),
     }
-    cfg.default_agent = "kirocrew"
+    cfg.default_agent = "ajcrew"
     cfg.save()
     keys = (GONE_V1, GONE_V2, SIBLING, UNRELATED)
     entries = {key: {"sid": f"sid-{n}"} for n, key in enumerate(keys)}
@@ -87,7 +87,7 @@ async def test_delete_destroys_the_departed_crewmates_thread_entries():
     sessions = _Sessions()
     state = SimpleNamespace(sessions=sessions, crons=None)
 
-    resp = await api_kirocrew_agent_delete(_delete_request("mate", state))
+    resp = await api_ajcrew_agent_delete(_delete_request("mate", state))
 
     assert resp.status == 200
     assert sorted(sessions.destroyed) == sorted([GONE_V1, GONE_V2])
@@ -105,7 +105,7 @@ async def test_an_entry_a_fresh_start_left_without_a_sid_goes_too():
     assert GONE_V1 not in sessions._session_map.mapped_sids_by_key()
     state = SimpleNamespace(sessions=sessions, crons=None)
 
-    resp = await api_kirocrew_agent_delete(_delete_request("mate", state))
+    resp = await api_ajcrew_agent_delete(_delete_request("mate", state))
 
     assert resp.status == 200
     assert GONE_V1 in sessions.destroyed
@@ -119,7 +119,7 @@ async def test_a_slug_another_live_crew_still_derives_keeps_its_entries(monkeypa
     sessions = _Sessions()
     state = SimpleNamespace(sessions=sessions, crons=None)
 
-    resp = await api_kirocrew_agent_delete(_delete_request("mate", state))
+    resp = await api_ajcrew_agent_delete(_delete_request("mate", state))
 
     assert resp.status == 200
     assert sessions.destroyed == []
@@ -137,21 +137,21 @@ async def test_a_failed_destroy_does_not_fail_the_committed_delete():
     sessions = _Failing()
     state = SimpleNamespace(sessions=sessions, crons=None)
 
-    resp = await api_kirocrew_agent_delete(_delete_request("mate", state))
+    resp = await api_ajcrew_agent_delete(_delete_request("mate", state))
 
     assert resp.status == 200
-    assert "mate" not in KiroCrewConfig.load().agents
+    assert "mate" not in AjCrewConfig.load().agents
 
 
 @pytest.mark.asyncio
 async def test_leftovers_without_a_session_manager_touch_no_session():
     """The CLI delete passes no manager: the map file is left as it was."""
-    from kiro_crew.config import config_dir
+    from aj_crew.config import config_dir
 
     _seed()
     path = config_dir() / SESSION_MAP_FILENAME
     before = path.read_bytes()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     report = await agents_mod._remove_member_leftovers("mate", cfg, "", None, "cli")
 

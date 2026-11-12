@@ -6,7 +6,7 @@
 // owns the page load and the port probe.
 //
 // PROBLEM: when the app cannot mint a dashboard token it shows a "Token
-// Required" page telling the user to run `kirocrew token` "on your dev
+// Required" page telling the user to run `ajcrew token` "on your dev
 // desktop". That instruction is CORRECT for the case it was written for — an
 // `ssh -L <port>:localhost:<port>` forward, where the gateway lives on another
 // machine, so the CLI must run THERE (it authenticates with that host's own
@@ -39,7 +39,7 @@
  * purely-local user looking for another machine.
  *
  * @param {object} [facts]
- * @param {"kirocrew"|"foreign"|"none"|"unknown"} [facts.localOwner="unknown"]
+ * @param {"ajcrew"|"foreign"|"none"|"unknown"} [facts.localOwner="unknown"]
  *        who owns the port's LISTEN socket locally
  * @param {string} [facts.remoteHost=""] a remote host configured for this port
  * @returns {"local"|"foreign"|"unknown"}
@@ -53,7 +53,7 @@ function classifyAuthBlock({ localOwner = "unknown", remoteHost = "" } = {}) {
   // An explicitly configured remote host is the least ambiguous signal there
   // is: the user already told us the gateway lives elsewhere.
   if (typeof remoteHost === "string" && remoteHost !== "") return "foreign";
-  if (localOwner === "kirocrew") return "local";
+  if (localOwner === "ajcrew") return "local";
   if (localOwner === "foreign") return "foreign";
   // "none" (nothing listening locally, yet something answered) and "unknown"
   // (the probe could not run) both mean unconfirmed. Do not guess.
@@ -97,16 +97,16 @@ function portIsSchemeDefault(rawUrl) {
 }
 
 /**
- * The bundled `kirocrew` launcher path to show on the token page, but ONLY when
+ * The bundled `ajcrew` launcher path to show on the token page, but ONLY when
  * this shell is a packaged AppImage whose launcher is a real absolute bundled
  * path. Returns "" otherwise — a normal install, a dev run, or a build whose
- * resolver fell back to a bare `kirocrew` name — so the page keeps its on-PATH
+ * resolver fell back to a bare `ajcrew` name — so the page keeps its on-PATH
  * wording for every non-AppImage caller.
  *
  * The AppImage runtime exports `$APPIMAGE` (the image's own path); its absence
  * means we are not an AppImage and must not claim a bundled launcher. The
  * resolved launcher must be absolute (an AppImage mount path begins with "/"),
- * because a bare `kirocrew` would be the very on-PATH assumption this is meant
+ * because a bare `ajcrew` would be the very on-PATH assumption this is meant
  * to avoid.
  *
  * This is the one new value the token page needs: the shell passes the result
@@ -126,7 +126,7 @@ function appImageBundledCliPath(env, resolveBin) {
   try { bin = resolveBin(); } catch { return ""; }
   if (typeof bin !== "string") return "";
   bin = bin.trim();
-  // Absolute only: a bare `kirocrew` (the PATH fallback) is exactly what the
+  // Absolute only: a bare `ajcrew` (the PATH fallback) is exactly what the
   // AppImage user does not have, so forwarding it would reintroduce the defect.
   if (!bin.startsWith("/")) return "";
   return bin;

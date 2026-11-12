@@ -14,9 +14,9 @@ from typing import Any, Awaitable, Callable
 import aiohttp
 import pytest
 
-from kiro_crew.slack.client import RealSlackClient
-from kiro_crew.slack.interactions_approvals import _post_review_auth_error
-from kiro_crew.slack.interactions_context import ack_button
+from aj_crew.slack.client import RealSlackClient
+from aj_crew.slack.interactions_approvals import _post_review_auth_error
+from aj_crew.slack.interactions_context import ack_button
 
 #: Every variable ``urllib.request.getproxies`` reads, cleared so the host's own cannot leak in.
 _PROXY_VARS = (

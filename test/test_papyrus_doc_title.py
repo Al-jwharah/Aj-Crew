@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.apps.builtins.papyrus.backend.doc_title import document_title
+from aj_crew.apps.builtins.papyrus.backend.doc_title import document_title
 
 
 @pytest.mark.parametrize(

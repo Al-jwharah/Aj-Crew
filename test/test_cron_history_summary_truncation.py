@@ -18,7 +18,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.cron_history import (
+from aj_crew.cron_history import (
     _SUMMARY_CAP,
     CronHistoryStore,
     CronRunRecord,
@@ -372,13 +372,13 @@ def test_the_module_spec_states_the_current_default() -> None:
 
 
 def test_config_default_matches_module_default() -> None:
-    from kiro_crew.config.sections import CronHistoryConfig
+    from aj_crew.config.sections import CronHistoryConfig
 
     assert CronHistoryConfig().cron_summary_cap == _SUMMARY_CAP
 
 
 def test_loader_default_matches_module_default() -> None:
-    from kiro_crew.config.loader import _build_cron_history_config
+    from aj_crew.config.loader import _build_cron_history_config
 
     assert _build_cron_history_config({}).cron_summary_cap == _SUMMARY_CAP
 
@@ -434,10 +434,10 @@ class TestAppendAppliesTheConfiguredCap:
 
     @pytest.mark.asyncio
     async def test_reconfigured_cap_is_what_append_applies(self, tmp_path: Path) -> None:
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         store = CronHistoryStore(base_dir=tmp_path, cron_summary_cap=500)
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.cron_history.cron_summary_cap = 120
         store.reconfigure(cfg)
 
@@ -544,7 +544,7 @@ class TestUrlsAreReservedFirst:
 
 
 def _job(**kw):
-    from kiro_crew.cron import CronJob, CronSchedule
+    from aj_crew.cron import CronJob, CronSchedule
 
     return CronJob(
         id=kw.pop("id", "j1"),
@@ -565,7 +565,7 @@ class TestRunPathDoesNotPreTruncate:
         own literal on the way in, so a wider configured cap could never take
         effect and the trailing URL would never reach history.
         """
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         result = "Reviewed the sweep. " + "x" * (300 - 20 - len(_PR_URL) - 8) + f"\nPR: {_PR_URL}"
         assert 280 <= len(result) <= 320
@@ -589,7 +589,7 @@ class TestRunPathDoesNotPreTruncate:
 
     def test_result_over_the_cap_is_cut_by_append_not_by_the_run_path(self, tmp_path: Path) -> None:
         """A result past the cap keeps its URL — the cut is append's."""
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         result = "Swept the backlog. " + "detail " * 120 + f"\nOpened {_PR_URL}"
         assert len(result) > 500

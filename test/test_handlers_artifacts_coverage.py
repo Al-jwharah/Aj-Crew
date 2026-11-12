@@ -1,4 +1,4 @@
-"""Coverage-focused tests for :mod:`kiro_crew.dashboard.handlers.artifacts`.
+"""Coverage-focused tests for :mod:`aj_crew.dashboard.handlers.artifacts`.
 
 Targets the error/validation/not-found branches that the existing suites
 (``test_artifacts_handlers.py``, ``test_remote_artifacts.py``) leave uncovered:
@@ -29,17 +29,17 @@ from unittest.mock import MagicMock
 import pytest
 from body_stream_helpers import attach_json_body
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew import publish_provider
-from kiro_crew.artifacts import (
+from aj_crew import artifacts as art_mod
+from aj_crew import publish_provider
+from aj_crew.artifacts import (
     ArtifactError,
     ArtifactFolderStore,
     ArtifactNotFoundError,
     ArtifactStore,
     ArtifactValidationError,
 )
-from kiro_crew.dashboard.handlers import artifacts as art_handlers
-from kiro_crew.dashboard.handlers.artifacts import (
+from aj_crew.dashboard.handlers import artifacts as art_handlers
+from aj_crew.dashboard.handlers.artifacts import (
     _id_embeds_hard_credential,
     _redact_remote_response,
     _remote_cache_put,
@@ -61,7 +61,7 @@ from kiro_crew.dashboard.handlers.artifacts import (
     api_remote_artifact_post_comment,
     api_remote_artifact_reply_comment,
 )
-from kiro_crew.publish_provider import Capability, CommentAnchor, PublishProvider, RemoteComment
+from aj_crew.publish_provider import Capability, CommentAnchor, PublishProvider, RemoteComment
 
 # ── Harness ─────────────────────────────────────────────────────────────────
 

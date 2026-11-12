@@ -13,10 +13,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew import consolidation_gate
-from kiro_crew import history as history_mod
-from kiro_crew.consolidation_gate import consolidation_pass_gate
-from kiro_crew.history import ConversationLog, HistoryConsolidator
+from aj_crew import consolidation_gate
+from aj_crew import history as history_mod
+from aj_crew.consolidation_gate import consolidation_pass_gate
+from aj_crew.history import ConversationLog, HistoryConsolidator
 
 KEYS = ("dashboard:chat-gate-a", "dashboard:chat-gate-b")
 

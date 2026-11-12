@@ -27,9 +27,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard.handlers import discover as h
-from kiro_crew.skill_providers.base import ProviderRegistry, SkillSearchResult
-from kiro_crew.skills import SkillsLoader
+from aj_crew.dashboard.handlers import discover as h
+from aj_crew.skill_providers.base import ProviderRegistry, SkillSearchResult
+from aj_crew.skills import SkillsLoader
 
 _SKILL_MD = "---\nname: code-skill\ndescription: d\n---\n# body\n"
 _TOO_BIG = 5 * 1024 * 1024 + 1

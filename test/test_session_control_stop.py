@@ -23,10 +23,10 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _slot,
 )
 
-from kiro_crew.dashboard import chat_delivery as cd
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard import stop_retry
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.dashboard import chat_delivery as cd
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard import stop_retry
+from aj_crew.dashboard.handlers import session_control as handlers_sc
 
 # ── Stopping ─────────────────────────────────────────────────────────────────
 
@@ -83,7 +83,7 @@ def test_nothing_suspends_between_the_stop_gate_and_the_stop(tmp_path, monkeypat
 
     monkeypatch.setattr(sc, "sel", _sel)
     monkeypatch.setattr(sc, "authorize_target", _authorize)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
 
     asyncio.run(sc.stop_target(state, caller_session_key=_key(caller), target=target.key))
 
@@ -98,7 +98,7 @@ def test_nothing_suspends_between_the_stop_gate_and_the_stop(tmp_path, monkeypat
 def test_the_config_warm_is_the_last_suspension_before_the_stop_gate(tmp_path, monkeypatch):
     """A warm with an `await` after it is no warm at all.
 
-    The warm makes the gate's synchronous `KiroCrewConfig.load()` a cache hit; a config
+    The warm makes the gate's synchronous `AjCrewConfig.load()` a cache hit; a config
     edit in any suspension between them misses the cache. So the warm sits right after
     the SEL prewarm await, not in the handler.
     """
@@ -128,7 +128,7 @@ def test_the_config_warm_is_the_last_suspension_before_the_stop_gate(tmp_path, m
     monkeypatch.setattr(sc, "sel", _sel)
     monkeypatch.setattr(sc, "authorize_target", _authorize)
     monkeypatch.setattr(sc, "session_control_enabled", _enabled)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
 
     asyncio.run(sc.stop_target(state, caller_session_key=_key(caller), target=target.key))
 
@@ -181,7 +181,7 @@ def test_stop_constructs_the_sel_off_loop_before_stopping(tmp_path, monkeypatch)
     async def _fake_stop(_state, slot, *, source, escalate=True):
         return {"ok": True}
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
 
     async def _drive() -> int:
         await sc.stop_target(state, caller_session_key=_key(caller), target=target.key)
@@ -209,7 +209,7 @@ def test_stop_goes_through_the_same_path_as_the_stop_button(tmp_path, monkeypatc
         seen["escalate"] = escalate
         return {"ok": True}
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.stop_slot_turn", _fake_stop)
 
     out = asyncio.run(sc.stop_target(state, caller_session_key=_key(caller), target="chat-2"))
 
@@ -253,7 +253,7 @@ def test_a_retried_stop_keeps_the_queue_instead_of_escalating(tmp_path, monkeypa
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
     target = _stoppable(state, _peer_target(state, "chat-2", caller))
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
 
     first = asyncio.run(sc.stop_target(state, caller_session_key=_key(caller), target="chat-2"))
     assert target._stop_state == "soft_pending", "fixture must leave a stop pending"
@@ -276,7 +276,7 @@ def test_a_repeat_still_stops_a_target_that_started_running_again(tmp_path, monk
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
     target = _stoppable(state, _peer_target(state, "chat-2", caller))
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
 
     asyncio.run(sc.stop_target(state, caller_session_key=_key(caller), target="chat-2"))
     # The first stop lands and the target drains its queue into a new turn.
@@ -299,7 +299,7 @@ def test_a_stop_after_the_window_still_escalates(tmp_path, monkeypatch):
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
     target = _stoppable(state, _peer_target(state, "chat-2", caller))
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
 
     asyncio.run(sc.stop_target(state, caller_session_key=_key(caller), target="chat-2"))
     # The window closes, so the next stop is a decision rather than a retry.
@@ -319,7 +319,7 @@ def test_a_withheld_escalation_is_recorded(tmp_path, monkeypatch):
     logged: list[dict] = []
     fake_sel = MagicMock()
     fake_sel.log_tool_invocation = lambda **kw: logged.append(kw)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: fake_sel)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: fake_sel)
 
     asyncio.run(sc.stop_target(state, caller_session_key=_key(caller), target="chat-2"))
     asyncio.run(sc.stop_target(state, caller_session_key=_key(caller), target="chat-2"))
@@ -335,11 +335,11 @@ def test_the_stop_button_still_escalates_on_a_second_press(tmp_path, monkeypatch
     A second press is a decision. Only the RPC, which cannot tell a decision from a
     re-sent request, gives that up.
     """
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
     state = _make_state(tmp_path)
     slot = _stoppable(state, _slot(state, "chat-1"))
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
 
     asyncio.run(stop_slot_turn(state, slot))
     assert slot._stop_state == "soft_pending"
@@ -352,7 +352,7 @@ def test_the_stop_button_still_escalates_on_a_second_press(tmp_path, monkeypatch
 
 def _owed_completion(slot, text: str = "[Subagent completion event] a1 finished") -> str:
     """Queue a sub-agent completion that is owed to the parent's next turn."""
-    from kiro_crew.subagent import SubagentDelivery
+    from aj_crew.subagent import SubagentDelivery
 
     slot._queue.append({"id": "q-owed", "content": text})
     slot.note_pending_subagent_delivery(
@@ -399,7 +399,7 @@ def _slots_window_always_open(monkeypatch):
     import itertools
 
     ticks = itertools.count(1000.0, 60.0)
-    monkeypatch.setattr("kiro_crew.dashboard.state._slots_broadcast_clock", lambda: next(ticks))
+    monkeypatch.setattr("aj_crew.dashboard.state._slots_broadcast_clock", lambda: next(ticks))
 
 
 @pytest.mark.usefixtures("_slots_window_always_open")
@@ -408,13 +408,13 @@ def test_a_send_that_lands_while_a_hard_stop_settles_stays_queued(tmp_path, monk
 
     The kill discards only what was queued when it was pressed.
     """
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
     state = _make_state(tmp_path)
     slot = _busy(_slot(state, "chat-1"))
     _owed_completion(slot)
     state.sessions.stop_turn = AsyncMock(return_value="cancelled")
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
     sent: list[str] = []
 
     def _send() -> None:
@@ -440,14 +440,14 @@ def test_a_send_that_lands_while_a_hard_stop_settles_stays_queued(tmp_path, monk
 def test_a_hard_stop_still_discards_and_settles_what_was_queued_before_it(tmp_path, monkeypatch):
     """Control: the first press keeps the queue, and the hard kill clears what was
     queued before it and settles the sub-agent delivery the cleared entry owed."""
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
     state = _make_state(tmp_path)
     slot = _busy(_slot(state, "chat-1"))
     owed_text = _owed_completion(slot)
     slot._queue.append({"id": "q2", "content": "the next thing"})
     state.sessions.stop_turn = AsyncMock(return_value="cancelled")
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
     manager = _SettlingManager()
     state.subagents = manager
 
@@ -469,10 +469,10 @@ def test_the_no_op_reply_says_which_of_its_two_facts_it_hit(tmp_path, monkeypatc
     The de-duplicated retry routinely lands on the second, so `already_stopping`
     tells them apart.
     """
-    from kiro_crew.dashboard.chat_handlers import stop_slot_turn
+    from aj_crew.dashboard.chat_handlers import stop_slot_turn
 
     state = _make_state(tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
 
     stopping = _stoppable(state, _slot(state, "chat-1"))
     asyncio.run(stop_slot_turn(state, stopping))

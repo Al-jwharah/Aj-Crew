@@ -40,8 +40,8 @@ from computer_use_snapshot_macos_helpers import (  # noqa: F401 -- the fixture i
 # so the bare module name is the form that always resolves.
 from test_computer_use_ffi import _Fakes
 
-from kiro_crew.computer_use import macos_driver, macos_ffi, snapshot_macos
-from kiro_crew.computer_use.types import (
+from aj_crew.computer_use import macos_driver, macos_ffi, snapshot_macos
+from aj_crew.computer_use.types import (
     CLICK_METHOD_ACCESSIBILITY,
     MAX_ANCESTOR_PRESS_HOPS,
     MOUSE_BUTTON_RIGHT,

@@ -19,12 +19,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.cli_commands import _cron
-from kiro_crew.config.loader import config_dir
-from kiro_crew.cron import CronJob, CronSchedule, CronService, compute_next_run_ts
-from kiro_crew.cron_service import schedule
-from kiro_crew.dashboard.handlers.cron import api_cron_update, api_crons_create
-from kiro_crew.mcp_cron import _call_tool_inner
+from aj_crew.cli_commands import _cron
+from aj_crew.config.loader import config_dir
+from aj_crew.cron import CronJob, CronSchedule, CronService, compute_next_run_ts
+from aj_crew.cron_service import schedule
+from aj_crew.dashboard.handlers.cron import api_cron_update, api_crons_create
+from aj_crew.mcp_cron import _call_tool_inner
 
 _NEVER = "0 0 31 2 *"
 
@@ -63,9 +63,9 @@ def test_never_fires_warning_is_empty_for_a_schedule_that_fires(sched: CronSched
 def test_next_run_for_a_dateless_cron_logs_one_plain_line(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    caplog.set_level(logging.WARNING, logger="kiro_crew.cron")
+    caplog.set_level(logging.WARNING, logger="aj_crew.cron")
     assert compute_next_run_ts(_cron_job(_NEVER)) is None
-    (record,) = [r for r in caplog.records if r.name == "kiro_crew.cron"]
+    (record,) = [r for r in caplog.records if r.name == "aj_crew.cron"]
     assert record.exc_info is None
     assert "never-job" in record.getMessage()
     assert _NEVER in record.getMessage()
@@ -88,10 +88,10 @@ def test_service_still_saves_a_dateless_cron_on_add_and_update(tmp_path) -> None
 
 @pytest.fixture
 def _mcp_store(monkeypatch, tmp_path):
-    monkeypatch.setattr("kiro_crew.cron._DEFAULT_DIR", tmp_path)
-    monkeypatch.setattr("kiro_crew.mcp_cron.config_dir", lambda: tmp_path)
-    monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:never-fires-slot")
+    monkeypatch.setattr("aj_crew.cron._DEFAULT_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.mcp_cron.config_dir", lambda: tmp_path)
+    monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:never-fires-slot")
     return tmp_path
 
 
@@ -141,13 +141,13 @@ def _add_ns(cron_expr: str) -> argparse.Namespace:
 
 @pytest.fixture
 def _cli_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     (config_dir() / "crons").mkdir(parents=True)
 
 
 @pytest.mark.usefixtures("_cli_home")
 def test_cli_add_and_update_print_a_stderr_warning_and_save(capsys) -> None:
-    with patch("kiro_crew.cli_commands.sel"):
+    with patch("aj_crew.cli_commands.sel"):
         _cron(_add_ns(_NEVER))
     out, err = capsys.readouterr()
     assert out.startswith("Added job: ")
@@ -164,7 +164,7 @@ def test_cli_add_and_update_print_a_stderr_warning_and_save(capsys) -> None:
         cron_expr="0 0 30 2 *",
         channel=None,
     )
-    with patch("kiro_crew.cli_commands.sel"):
+    with patch("aj_crew.cli_commands.sel"):
         _cron(update)
     out, err = capsys.readouterr()
     assert out.startswith("Updated job: ")
@@ -173,7 +173,7 @@ def test_cli_add_and_update_print_a_stderr_warning_and_save(capsys) -> None:
 
 @pytest.mark.usefixtures("_cli_home")
 def test_cli_add_of_a_firing_cron_prints_no_warning(capsys) -> None:
-    with patch("kiro_crew.cli_commands.sel"):
+    with patch("aj_crew.cli_commands.sel"):
         _cron(_add_ns("*/5 * * * *"))
     _out, err = capsys.readouterr()
     assert "Warning" not in err

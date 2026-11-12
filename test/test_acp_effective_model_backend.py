@@ -12,8 +12,8 @@ exists. These pin that the two paths agree.
 
 from __future__ import annotations
 
-from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.config.loader import AgentConfig, KiroCrewConfig
+from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.config.loader import AgentConfig, AjCrewConfig
 
 # A canonical registry key whose kiro id and claude provider id differ — the
 # whole point of the fix. Kept as data so the assertions below read as "which
@@ -22,15 +22,15 @@ PINNED = "opus-4.8-1m"
 KIRO_ID = "claude-opus-4.8"
 
 
-def _cfg(backend: str, model: str) -> KiroCrewConfig:
+def _cfg(backend: str, model: str) -> AjCrewConfig:
     """A config resolved without reading the installed agents dir.
 
     ``model`` is written straight onto ``AgentConfig`` so the global is already
     collapsed — ``_resolve_agent_model`` (which reads
-    ``~/.kiro/agents/kirocrew.json``) is only consulted for the ``auto``
+    ``~/.kiro/agents/ajcrew.json``) is only consulted for the ``auto``
     sentinel, and the auto case below wants exactly that skipped.
     """
-    return KiroCrewConfig(agent=AgentConfig(acp_backend=backend, model=model))
+    return AjCrewConfig(agent=AgentConfig(acp_backend=backend, model=model))
 
 
 def test_claude_backend_gets_a_claude_provider_id() -> None:

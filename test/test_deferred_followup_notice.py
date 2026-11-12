@@ -22,7 +22,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_utils
+from aj_crew.dashboard import chat_utils
 
 
 def _promise(text: str) -> bool:
@@ -108,9 +108,9 @@ def test_non_promises_are_not_detected(text: str) -> None:
         "workflow_run",
         "register_hook",
         # Server-qualified spellings different backends use.
-        "mcp__kirocrew-core__monitor_start",
-        "kirocrew-cron/cron_add",
-        "@kirocrew-core/spawn_run",
+        "mcp__ajcrew-core__monitor_start",
+        "ajcrew-cron/cron_add",
+        "@ajcrew-core/spawn_run",
     ),
 )
 def test_wake_arming_tool_counts(tool_name: str) -> None:
@@ -133,7 +133,7 @@ def test_unnamed_tool_call_fails_toward_armed() -> None:
     # claude-agent-acp and opencode frames carry no tool name, so a ``task_run``
     # there reaches this check as ``""``: it must not read as "nothing armed".
     assert chat_utils.turn_armed_a_wake((("tc-1", "", "", False),))
-    assert chat_utils.turn_armed_a_wake((("tc-1", "", "kirocrew-core/", False),))
+    assert chat_utils.turn_armed_a_wake((("tc-1", "", "ajcrew-core/", False),))
 
 
 # --- the runtime probe -------------------------------------------------------
@@ -160,8 +160,8 @@ def _probe_slot(key: str = "chat-77"):
 def _absent(state, slot, *, loop=None) -> bool:
     service = SimpleNamespace(get_by_slot=lambda _k: loop)
     with (
-        patch("kiro_crew.autonudge.get_instance", return_value=service),
-        patch("kiro_crew.dashboard.chat_utils.effective_session_key", lambda s: s.key),
+        patch("aj_crew.autonudge.get_instance", return_value=service),
+        patch("aj_crew.dashboard.chat_utils.effective_session_key", lambda s: s.key),
     ):
         return asyncio.run(chat_utils.background_wake_absent(state, slot))
 
@@ -186,9 +186,9 @@ def test_probe_sees_the_cron_job_whose_runs_land_in_this_tab() -> None:
     # A ``cron-<id>`` tab is linked to ``cron:<id>``; the job was created elsewhere.
     job = SimpleNamespace(id="abc123", session_key="dashboard:chat-1")
     tab = _probe_slot("cron-abc123")
-    with patch("kiro_crew.dashboard.chat_utils.effective_session_key", lambda _s: "cron:abc123"):
+    with patch("aj_crew.dashboard.chat_utils.effective_session_key", lambda _s: "cron:abc123"):
         service = SimpleNamespace(get_by_slot=lambda _k: None)
-        with patch("kiro_crew.autonudge.get_instance", return_value=service):
+        with patch("aj_crew.autonudge.get_instance", return_value=service):
             assert not asyncio.run(chat_utils.background_wake_absent(_probe_state(jobs=[job]), tab))
 
 
@@ -213,7 +213,7 @@ def test_probe_sees_a_pending_follow_up_watcher() -> None:
 def test_probe_sees_a_sub_agent_result_waiting_in_the_slot_queue() -> None:
     # The child finished and left the registry; its completion event waits in
     # the slot queue and starts the next turn once this one ends.
-    from kiro_crew.dashboard.chat_utils_injected_rows import SUBAGENT_COMPLETION_KIND
+    from aj_crew.dashboard.chat_utils_injected_rows import SUBAGENT_COMPLETION_KIND
 
     slot = _probe_slot()
     slot._queue = [{"kind": SUBAGENT_COMPLETION_KIND}]
@@ -241,7 +241,7 @@ def test_probe_failure_never_claims_nothing_is_scheduled() -> None:
 
 
 def _stop_check(*, store_hooks=(), spec_hooks=(), store=True) -> bool:
-    from kiro_crew.dashboard.chat_turn.turn_ending import _stop_hook_configured
+    from aj_crew.dashboard.chat_turn.turn_ending import _stop_hook_configured
 
     hook_store = MagicMock(list_all=MagicMock(return_value=list(store_hooks))) if store else None
     turn = SimpleNamespace(
@@ -251,7 +251,7 @@ def _stop_check(*, store_hooks=(), spec_hooks=(), store=True) -> bool:
 
 
 def test_stop_hook_check_counts_stored_and_spec_stop_hooks() -> None:
-    from kiro_crew.hooks import HOOK_EVENT_PRE_TOOL_USE, HOOK_EVENT_STOP
+    from aj_crew.hooks import HOOK_EVENT_PRE_TOOL_USE, HOOK_EVENT_STOP
 
     stop = SimpleNamespace(enabled=True, event=HOOK_EVENT_STOP)
     off = SimpleNamespace(enabled=False, event=HOOK_EVENT_STOP)
@@ -264,7 +264,7 @@ def test_stop_hook_check_counts_stored_and_spec_stop_hooks() -> None:
 
 
 def test_unreadable_hook_store_counts_as_a_stop_hook() -> None:
-    from kiro_crew.dashboard.chat_turn.turn_ending import _stop_hook_configured
+    from aj_crew.dashboard.chat_turn.turn_ending import _stop_hook_configured
 
     store = MagicMock(list_all=MagicMock(side_effect=OSError("unreadable")))
     turn = SimpleNamespace(state=SimpleNamespace(_hook_store=store), _spec_hooks=[])
@@ -278,7 +278,7 @@ class TestRunnerNotice:
     """The runner appends the notice only when the promise is real and unbacked."""
 
     def _state_and_slot(self, tmp_path):
-        from kiro_crew.dashboard.chat_runner import _run_chat
+        from aj_crew.dashboard.chat_runner import _run_chat
 
         state = _make_state(tmp_path)
         state.sessions.get_or_create = AsyncMock(return_value=(MagicMock(), False, False))
@@ -309,8 +309,8 @@ class TestRunnerNotice:
         absent: bool = True,
         stop_hook: bool = False,
     ):
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -320,7 +320,7 @@ class TestRunnerNotice:
 
         state, slot, client, _run_chat = self._state_and_slot(tmp_path)
         if stop_hook:
-            from kiro_crew.hooks import HOOK_EVENT_STOP
+            from aj_crew.hooks import HOOK_EVENT_STOP
 
             # An enabled Stop hook that does not continue: the chain cannot
             # know that yet when it decides the notice.
@@ -339,7 +339,7 @@ class TestRunnerNotice:
                     tool_input="{}",
                     tool_call_id="tc-1",
                     tool_name=tool_name,
-                    mcp_server_name="kirocrew-core",
+                    mcp_server_name="ajcrew-core",
                     tool_identity_trusted=True,
                 )
                 yield LLMEvent(
@@ -352,11 +352,11 @@ class TestRunnerNotice:
         client.stream_command = _stream
         with (
             patch(
-                "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+                "aj_crew.dashboard.chat_runner._start_next_queued_turn",
                 new=AsyncMock(return_value=False),
             ),
             patch(
-                "kiro_crew.dashboard.chat_runner.background_wake_absent",
+                "aj_crew.dashboard.chat_runner.background_wake_absent",
                 new=AsyncMock(return_value=absent),
             ),
         ):

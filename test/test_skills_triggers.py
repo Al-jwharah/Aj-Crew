@@ -1,4 +1,4 @@
-"""Which skills a message triggers (``kiro_crew.skills``).
+"""Which skills a message triggers (``aj_crew.skills``).
 
 This file pins fuzzy and word-overlap trigger matching, negative triggers and the
 ``max_triggered`` cap, what a trigger scan costs per message and audits, and the
@@ -17,8 +17,8 @@ from skills_helpers import (  # noqa: F401 -- the autouse fixtures register by i
     _settled,
 )
 
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.skills import SkillsLoader
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.skills import SkillsLoader
 
 
 class TestRepoScope:
@@ -46,7 +46,7 @@ class TestRepoScope:
 
     def _repo(self, tmp_path: Path, name: str = "checkout") -> Path:
         repo = tmp_path / name
-        (repo / "src" / "kiro_crew").mkdir(parents=True)
+        (repo / "src" / "aj_crew").mkdir(parents=True)
         # A real checkout carries a .git entry, and the gate reads it as the
         # boundary the ancestor walk stops at, so the fixture needs one to model a
         # repository rather than a bare directory tree.
@@ -58,7 +58,7 @@ class TestRepoScope:
 
         The gate walks a project's ancestors up to the first ``.git``. A bare
         directory under ``tmp_path`` has no boundary of its own, so whether the
-        walk finds ``src/kiro_crew`` above it is decided by the host: a harness that
+        walk finds ``src/aj_crew`` above it is decided by the host: a harness that
         pins ``TMPDIR`` under this checkout puts the real one in every ancestor
         chain. Giving the project its own ``.git`` models what "outside the repo"
         means to the gate -- a different repository -- and stops the walk there.
@@ -72,25 +72,25 @@ class TestRepoScope:
         # No project named at all -> fail closed. An un-scoped surface (eval
         # harness, a session with no project set) never inherits repo rules.
         skills = tmp_path / "skills"
-        self._write_skill(skills, "repo-only", "src/kiro_crew")
+        self._write_skill(skills, "repo-only", "src/aj_crew")
         loader = SkillsLoader(skills_path=skills, install_builtins=False)
         assert loader.get_triggered_skills("zebra quokka") == []
 
     def test_scoped_skill_suppressed_outside_repo(self, tmp_path: Path) -> None:
         skills = tmp_path / "skills"
-        self._write_skill(skills, "repo-only", "src/kiro_crew")
+        self._write_skill(skills, "repo-only", "src/aj_crew")
         loader = SkillsLoader(skills_path=skills, install_builtins=False)
         outside = self._other_repo(tmp_path, "elsewhere")
         assert loader.get_triggered_skills("zebra quokka", project_dir=str(outside)) == []
 
     def test_scoped_skill_eligible_inside_repo(self, tmp_path: Path) -> None:
         skills = tmp_path / "skills"
-        self._write_skill(skills, "repo-only", "src/kiro_crew")
-        cfg = KiroCrewConfig(skills=SkillsConfig(max_triggered=3))
+        self._write_skill(skills, "repo-only", "src/aj_crew")
+        cfg = AjCrewConfig(skills=SkillsConfig(max_triggered=3))
         loader = _settled(SkillsLoader(skills_path=skills, install_builtins=False, config=cfg))
         subdir = self._repo(tmp_path) / "website"
         subdir.mkdir()
-        # ancestor of the project dir contains src/kiro_crew
+        # ancestor of the project dir contains src/aj_crew
         assert loader.get_triggered_skills("zebra quokka", project_dir=str(subdir)) == ["repo-only"]
 
     def test_process_cwd_does_not_admit_the_skill(
@@ -100,8 +100,8 @@ class TestRepoScope:
         # scoped checkout admitted the skill into every session, whatever the
         # session was working on. Standing in the repo must decide nothing.
         skills = tmp_path / "skills"
-        self._write_skill(skills, "repo-only", "src/kiro_crew")
-        cfg = KiroCrewConfig(skills=SkillsConfig(max_triggered=3))
+        self._write_skill(skills, "repo-only", "src/aj_crew")
+        cfg = AjCrewConfig(skills=SkillsConfig(max_triggered=3))
         loader = _settled(SkillsLoader(skills_path=skills, install_builtins=False, config=cfg))
         monkeypatch.chdir(self._repo(tmp_path))
         other = self._other_repo(tmp_path, "some-rust-project")
@@ -112,7 +112,7 @@ class TestRepoScope:
         # Both injection paths share one helper; a pinned skill must not be a
         # way around the gate.
         skills = tmp_path / "skills"
-        self._write_skill(skills, "repo-only", "src/kiro_crew", always=True)
+        self._write_skill(skills, "repo-only", "src/aj_crew", always=True)
         loader = _settled(SkillsLoader(skills_path=skills, install_builtins=False))
         other = self._other_repo(tmp_path, "some-rust-project")
         assert loader.get_always_skills() == []
@@ -122,7 +122,7 @@ class TestRepoScope:
     def test_unscoped_skill_unaffected(self, tmp_path: Path) -> None:
         skills = tmp_path / "skills"
         self._write_skill(skills, "anywhere", None)
-        cfg = KiroCrewConfig(skills=SkillsConfig(max_triggered=3))
+        cfg = AjCrewConfig(skills=SkillsConfig(max_triggered=3))
         loader = _settled(SkillsLoader(skills_path=skills, install_builtins=False, config=cfg))
         assert loader.get_triggered_skills("zebra quokka") == ["anywhere"]
 
@@ -138,9 +138,9 @@ class TestRepoScope:
         # the index tells the agent to read the full file for anything related -
         # so the repo-specific procedure stays one `cat` away.
         skills = tmp_path / "skills"
-        self._write_skill(skills, "repo-only", "src/kiro_crew")
+        self._write_skill(skills, "repo-only", "src/aj_crew")
         self._write_skill(skills, "anywhere", None)
-        cfg = KiroCrewConfig(skills=SkillsConfig(max_triggered=3))
+        cfg = AjCrewConfig(skills=SkillsConfig(max_triggered=3))
         loader = _settled(SkillsLoader(skills_path=skills, install_builtins=False, config=cfg))
         other = self._other_repo(tmp_path, "some-rust-project")
         for block in (
@@ -154,12 +154,12 @@ class TestRepoScope:
         inside = loader.get_context(project_dir=str(self._repo(tmp_path)))
         assert "repo-only" in inside
 
-    def test_kiro_crew_dev_skills_load_globally_and_say_so(self) -> None:
-        # Maintainer decision: the Kiro Crew developer skills load in
-        # every session like any other skill, so a Kiro Crew PR written from any
+    def test_aj_crew_dev_skills_load_globally_and_say_so(self) -> None:
+        # Maintainer decision: the Aj Crew developer skills load in
+        # every session like any other skill, so an Aj Crew PR written from any
         # folder still gets them. The description is what keeps them out of other
         # repositories, so each one must state that it is for this repository.
-        from kiro_crew import skills as skills_mod
+        from aj_crew import skills as skills_mod
 
         pkg = Path(skills_mod.__file__).parent
         expected = {
@@ -168,14 +168,14 @@ class TestRepoScope:
             / "builtins"
             / "dev_fleet"
             / "skills"
-            / "pod-e2e": "ONLY for developing Kiro Crew itself",
-            pkg / "builtin_skills" / "kirocrew-dev" / "kirocrew-prepare-pr": "Kiro Crew repo only",
+            / "pod-e2e": "ONLY for developing Aj Crew itself",
+            pkg / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr": "Aj Crew repo only",
             pkg
             / "builtin_skills"
-            / "kirocrew-dev"
-            / "kirocrew-worktree-dev": "Kiro Crew source repo ITSELF",
-            pkg / "builtin_skills" / "kirocrew-dev" / "writing-tests": "Kiro Crew repo only",
-            pkg / "builtin_skills" / "kirocrew-dev" / "dashboard-template": "Kiro Crew repo only",
+            / "ajcrew-dev"
+            / "ajcrew-worktree-dev": "Aj Crew source repo ITSELF",
+            pkg / "builtin_skills" / "ajcrew-dev" / "writing-tests": "Aj Crew repo only",
+            pkg / "builtin_skills" / "ajcrew-dev" / "dashboard-template": "Aj Crew repo only",
         }
         for skill_dir, statement in expected.items():
             head = (skill_dir / "SKILL.md").read_text(encoding="utf-8")[:2048]
@@ -194,12 +194,12 @@ class TestTriggeredSkills:
             "tiny-url",
             f"---\nname: tiny-url\ndescription: Shorten URLs\ntriggers: {triggers}\n---\n# Tiny URL\n",
         )
-        cfg = KiroCrewConfig(skills=SkillsConfig(max_triggered=3))
+        cfg = AjCrewConfig(skills=SkillsConfig(max_triggered=3))
         loader = _settled(SkillsLoader(skills_path=skills_dir, install_builtins=False, config=cfg))
         if monkeypatch is not None:
             from unittest.mock import MagicMock
 
-            monkeypatch.setattr("kiro_crew.skills.sel", lambda: MagicMock())
+            monkeypatch.setattr("aj_crew.skills.sel", lambda: MagicMock())
         return loader
 
     def test_exact_trigger_match(self, tmp_path, monkeypatch):
@@ -233,7 +233,7 @@ class TestTriggeredSkills:
         loader = SkillsLoader(skills_path=skills_dir, install_builtins=False)
         from unittest.mock import MagicMock
 
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: MagicMock())
         assert loader.get_triggered_skills("hello world") == []
 
     def test_case_insensitive(self, tmp_path, monkeypatch):
@@ -255,7 +255,7 @@ class TestTriggeredSkills:
         loader = SkillsLoader(skills_path=skills_dir, install_builtins=False)
         from unittest.mock import MagicMock
 
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: MagicMock())
         assert loader.get_triggered_skills("anything") == []
 
     def test_trigger_match_does_not_record_usage(self, tmp_path, monkeypatch):
@@ -294,10 +294,10 @@ class TestTriggerMatching:
             "weather",
             "---\nname: weather\ndescription: Get weather info\ntriggers: weather forecast\n---\n",
         )
-        cfg = KiroCrewConfig(skills=SkillsConfig(max_triggered=3))
+        cfg = AjCrewConfig(skills=SkillsConfig(max_triggered=3))
         loader = _settled(SkillsLoader(skills_path=skills_dir, install_builtins=False, config=cfg))
 
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: MagicMock())
 
         result = loader.get_triggered_skills("what's the weather forecast today")
         assert "weather" in result
@@ -312,10 +312,10 @@ class TestTriggerMatching:
             "code-search",
             "---\nname: code-search\ndescription: Search code\ntriggers: search code, !search examples\n---\n",
         )
-        cfg = KiroCrewConfig(skills=SkillsConfig(max_triggered=3))
+        cfg = AjCrewConfig(skills=SkillsConfig(max_triggered=3))
         loader = _settled(SkillsLoader(skills_path=skills_dir, install_builtins=False, config=cfg))
 
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: MagicMock())
 
         # Positive match without negative words
         assert "code-search" in loader.get_triggered_skills("search code repositories")
@@ -333,10 +333,10 @@ class TestTriggerMatching:
                 f"---\nname: skill{i}\ndescription: Skill {i}\ntriggers: test\n---\n",
             )
         # max_triggered is snapshotted at construction, so inject via config=.
-        cfg = KiroCrewConfig(skills=SkillsConfig(max_triggered=2))
+        cfg = AjCrewConfig(skills=SkillsConfig(max_triggered=2))
         loader = _settled(SkillsLoader(skills_path=skills_dir, install_builtins=False, config=cfg))
 
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: MagicMock())
 
         result = loader.get_triggered_skills("test")
         assert len(result) == 2
@@ -358,10 +358,10 @@ class TestTriggerMatching:
             "better",
             "---\nname: better\ndescription: Better\ntriggers: alpha beta gamma\n---\n",
         )
-        cfg = KiroCrewConfig(skills=SkillsConfig(max_triggered=5))
+        cfg = AjCrewConfig(skills=SkillsConfig(max_triggered=5))
         loader = _settled(SkillsLoader(skills_path=skills_dir, install_builtins=False, config=cfg))
 
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: MagicMock())
 
         result = loader.get_triggered_skills("alpha beta gamma")
         assert len(result) == 2
@@ -376,10 +376,10 @@ class TestTriggerMatching:
             skills_dir, "always", "---\nname: always\nalways: true\ntriggers: test\n---\n"
         )
         _create_skill(skills_dir, "normal", "---\nname: normal\ntriggers: test\n---\n")
-        cfg = KiroCrewConfig(skills=SkillsConfig(max_triggered=5))
+        cfg = AjCrewConfig(skills=SkillsConfig(max_triggered=5))
         loader = _settled(SkillsLoader(skills_path=skills_dir, install_builtins=False, config=cfg))
 
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: MagicMock())
 
         result = loader.get_triggered_skills("test")
         assert "always" not in result
@@ -395,10 +395,10 @@ class TestTriggerMatching:
             "tiny-url",
             "---\nname: tiny-url\ndescription: Shorten URLs\ntriggers: shorten url, create tiny link, make short url\n---\n",
         )
-        cfg = KiroCrewConfig(skills=SkillsConfig(max_triggered=3))
+        cfg = AjCrewConfig(skills=SkillsConfig(max_triggered=3))
         loader = _settled(SkillsLoader(skills_path=skills_dir, install_builtins=False, config=cfg))
 
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: MagicMock())
 
         assert "tiny-url" in loader.get_triggered_skills("please shorten this url")
         assert "tiny-url" in loader.get_triggered_skills("create a tiny link for me")
@@ -434,12 +434,12 @@ class TestTriggerPerformance:
             SkillsLoader(
                 skills_path=skills_dir,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
 
         fake_sel = MagicMock()
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: fake_sel)
         triggered = loader.get_triggered_skills("please shorten this url")
 
         assert "tiny-url" in triggered
@@ -459,7 +459,7 @@ class TestTriggerPerformance:
         loader = SkillsLoader(skills_path=skills_dir, install_builtins=False)
 
         fake_sel = MagicMock()
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: fake_sel)
         assert loader.get_triggered_skills("hello there friend") == []
         assert fake_sel.log_tool_invocation.call_count == 0
 
@@ -489,12 +489,12 @@ class TestTriggerPerformance:
             SkillsLoader(
                 skills_path=skills_dir,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
 
         fake_sel = MagicMock()
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: fake_sel)
         # "shorten url" matches the positive trigger, but "test" fires the
         # negative trigger → excluded.
         triggered = loader.get_triggered_skills("shorten url for this test")
@@ -521,9 +521,9 @@ class TestTriggerPerformance:
         loader = SkillsLoader(
             skills_path=skills_dir,
             install_builtins=False,
-            config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+            config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
         )
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: MagicMock())
 
         calls = {"n": 0}
         orig = loader._iter_uncached
@@ -555,19 +555,19 @@ class TestTriggerPerformance:
             SkillsLoader(
                 skills_path=skills_dir,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: MagicMock())
 
         calls = {"n": 0}
-        real_load = KiroCrewConfig.load
+        real_load = AjCrewConfig.load
 
         def _counting_load():
             calls["n"] += 1
             return real_load()
 
-        monkeypatch.setattr("kiro_crew.config.loader.KiroCrewConfig.load", _counting_load)
+        monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", _counting_load)
         for _ in range(5):
             loader.get_triggered_skills("shorten this url")
         # Zero config loads across 5 messages — the cap was snapshotted in __init__.
@@ -584,10 +584,10 @@ class TestTriggerPerformance:
                 f"s{i}",
                 f"---\nname: s{i}\ndescription: d\ntriggers: shorten url\n---\n# x\n",
             )
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.skills.max_triggered = 2
         loader = _settled(SkillsLoader(skills_path=skills_dir, install_builtins=False, config=cfg))
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: MagicMock())
 
         triggered = loader.get_triggered_skills("shorten url")
         assert len(triggered) == 2
@@ -607,10 +607,10 @@ class TestTriggerPerformance:
         loader = SkillsLoader(
             skills_path=skills_dir,
             install_builtins=False,
-            config=KiroCrewConfig(skills=SkillsConfig(max_triggered=0)),
+            config=AjCrewConfig(skills=SkillsConfig(max_triggered=0)),
         )
         fake_sel = MagicMock()
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: fake_sel)
         walk = MagicMock(return_value=[])
         monkeypatch.setattr(loader, "_iter_visible", walk)
         read = MagicMock(return_value={})
@@ -636,10 +636,10 @@ class TestTriggerPerformance:
         loader = SkillsLoader(
             skills_path=skills_dir,
             install_builtins=False,
-            config=KiroCrewConfig(skills=SkillsConfig(max_triggered=0)),
+            config=AjCrewConfig(skills=SkillsConfig(max_triggered=0)),
         )
         fake_sel = MagicMock()
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: fake_sel)
 
         assert loader.get_triggered_skills("shorten url for this test") == []
         assert fake_sel.log_tool_invocation.call_count == 0
@@ -660,11 +660,11 @@ class TestTriggerPerformance:
             SkillsLoader(
                 skills_path=skills_dir,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=0)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=0)),
             )
         )
         fake_sel = MagicMock()
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: fake_sel)
         select = MagicMock(return_value=["tiny-url"])
 
         assert loader.get_triggered_skills("hello there friend", select=select) == ["tiny-url"]
@@ -678,12 +678,12 @@ class TestTriggerPerformance:
     def test_zero_cap_is_read_live_so_raising_it_turns_the_scan_back_on(
         self, tmp_path, monkeypatch
     ):
-        """The skip reads the cap from the live snapshot, so ``kirocrew config set
+        """The skip reads the cap from the live snapshot, so ``ajcrew config set
         skills.max_triggered 3`` re-enables the scan for the very next message
         without rebuilding the loader."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.config import live
+        from aj_crew.config import live
 
         skills_dir = tmp_path / "skills"
         _create_skill(
@@ -695,13 +695,13 @@ class TestTriggerPerformance:
             SkillsLoader(
                 skills_path=skills_dir,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=0)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=0)),
             )
         )
-        monkeypatch.setattr("kiro_crew.skills.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.skills.sel", lambda: MagicMock())
 
         assert loader.get_triggered_skills("shorten this url") == []
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.skills.max_triggered = 3
         live.watch().prime(cfg)
         assert loader.get_triggered_skills("shorten this url") == ["tiny-url"]

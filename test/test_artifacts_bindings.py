@@ -1,6 +1,6 @@
 """``ArtifactStore`` keeps every member it had, and each is bound from the module that owns it.
 
-The store's code lives in the ``kiro_crew.artifacts_*`` owner modules: a moved member's
+The store's code lives in the ``aj_crew.artifacts_*`` owner modules: a moved member's
 body is a module-level function there whose first parameter is ``self``, and the class
 binds it by name (``m = _owner.m``, or ``staticmethod(_owner.f)``). The instance state
 stays on the instance, so tests and callers see the same object they always did. This
@@ -16,7 +16,7 @@ file pins that contract:
 * each owner's docstring names the instance fields its members read, and each owner
   logs under the facade's logger;
 * the facade's mirror (``_facade_mirror``): one object per indexed name, the forwarding
-  table unchanged, and a write through ``kiro_crew.artifacts`` reaching every owner that
+  table unchanged, and a write through ``aj_crew.artifacts`` reaching every owner that
   reads the name, for every name the test trees patch there;
 * the forwarding a read, write, delete, ``hasattr`` or ``dir()`` of a forwarded name
   gets through the facade.
@@ -36,9 +36,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import _facade_mirror
-from kiro_crew import artifacts as art_mod
-from kiro_crew.artifacts import ArtifactStore
+from aj_crew import _facade_mirror
+from aj_crew import artifacts as art_mod
+from aj_crew.artifacts import ArtifactStore
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_artifacts_bindings")
 
@@ -154,7 +154,7 @@ def _self_functions(tree: ast.Module, owner: str = "") -> list[ast.FunctionDef]:
     statics = {
         name
         for name, (kind, _, home) in _MEMBERS.items()
-        if kind == "staticmethod" and f"kiro_crew.{home}" == owner
+        if kind == "staticmethod" and f"aj_crew.{home}" == owner
     }
     return [
         node
@@ -193,16 +193,14 @@ def test_each_member_keeps_its_kind_signature_and_owner(name: str) -> None:
     fn = _member_function(name)
     assert not inspect.iscoroutinefunction(fn)
     assert _signature_digest(fn) == digest, f"{name}{inspect.signature(fn)} changed signature"
-    assert fn.__module__ == f"kiro_crew.{owner}"
+    assert fn.__module__ == f"aj_crew.{owner}"
     if owner.startswith("artifacts_"):
-        assert vars(sys.modules[f"kiro_crew.{owner}"])[name] is fn
+        assert vars(sys.modules[f"aj_crew.{owner}"])[name] is fn
 
 
 def test_every_owner_holding_a_member_is_listed_in_the_facade() -> None:
     homes = {
-        f"kiro_crew.{home}"
-        for _kind, _d, home in _MEMBERS.values()
-        if home.startswith("artifacts_")
+        f"aj_crew.{home}" for _kind, _d, home in _MEMBERS.values() if home.startswith("artifacts_")
     }
     assert homes == set(art_mod._OWNERS)
 
@@ -241,7 +239,7 @@ def test_no_bound_function_needs_its_class_body(owner: str) -> None:
 
 
 def _runtime_facade_imports(tree: ast.Module) -> list[int]:
-    """Lines that import ``kiro_crew.artifacts`` outside a ``TYPE_CHECKING`` block."""
+    """Lines that import ``aj_crew.artifacts`` outside a ``TYPE_CHECKING`` block."""
     guarded: set[int] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.If) and ast.unparse(node.test) == "TYPE_CHECKING":
@@ -252,7 +250,7 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
             continue
         if isinstance(node, ast.ImportFrom):
             if node.module == art_mod.__name__ or (
-                node.module == "kiro_crew" and any(a.name == "artifacts" for a in node.names)
+                node.module == "aj_crew" and any(a.name == "artifacts" for a in node.names)
             ):
                 lines.append(node.lineno)
         elif isinstance(node, ast.Import):
@@ -264,10 +262,10 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
 def test_the_facade_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n    from kiro_crew.artifacts import ArtifactStore\n"
-        "def f():\n    from kiro_crew.artifacts import x\n"
-        "import kiro_crew.artifacts\n"
-        "from kiro_crew import artifacts\n"
+        "if TYPE_CHECKING:\n    from aj_crew.artifacts import ArtifactStore\n"
+        "def f():\n    from aj_crew.artifacts import x\n"
+        "import aj_crew.artifacts\n"
+        "from aj_crew import artifacts\n"
     )
     assert sorted(_runtime_facade_imports(tree)) == [5, 6, 7]
 
@@ -282,27 +280,27 @@ def _owner_imports(tree: ast.Module) -> set[str]:
     found: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.module:
-            if node.module.startswith("kiro_crew.artifacts_"):
+            if node.module.startswith("aj_crew.artifacts_"):
                 found.add(node.module)
-            elif node.module == "kiro_crew":
+            elif node.module == "aj_crew":
                 found.update(
-                    f"kiro_crew.{a.name}" for a in node.names if a.name.startswith("artifacts_")
+                    f"aj_crew.{a.name}" for a in node.names if a.name.startswith("artifacts_")
                 )
         elif isinstance(node, ast.Import):
-            found.update(a.name for a in node.names if a.name.startswith("kiro_crew.artifacts_"))
+            found.update(a.name for a in node.names if a.name.startswith("aj_crew.artifacts_"))
     return found
 
 
 def test_the_owner_import_scan_can_fail() -> None:
     tree = ast.parse(
-        "from kiro_crew.artifacts_disk import X\n"
-        "from kiro_crew import artifacts_scans as _s, hooks\n"
-        "import kiro_crew.artifacts_writes\n"
+        "from aj_crew.artifacts_disk import X\n"
+        "from aj_crew import artifacts_scans as _s, hooks\n"
+        "import aj_crew.artifacts_writes\n"
     )
     assert _owner_imports(tree) == {
-        "kiro_crew.artifacts_disk",
-        "kiro_crew.artifacts_scans",
-        "kiro_crew.artifacts_writes",
+        "aj_crew.artifacts_disk",
+        "aj_crew.artifacts_scans",
+        "aj_crew.artifacts_writes",
     }
 
 
@@ -407,7 +405,7 @@ def test_every_name_patched_through_the_facade_reaches_the_owners_reading_it() -
 
 def test_the_reach_scan_can_fail() -> None:
     index = art_mod._MIRROR
-    owner = "kiro_crew.artifacts_writes"
+    owner = "aj_crew.artifacts_writes"
     holders = dict(index.holders)
     holders["_now_iso"] = tuple(h for h in holders["_now_iso"] if h != owner)
     blind = dataclasses.replace(index, holders=holders)
@@ -471,7 +469,7 @@ def test_a_forwarded_read_answers_from_the_owner_when_it_runs(
 def test_a_read_of_an_unknown_name_raises_the_plain_module_error() -> None:
     with pytest.raises(AttributeError) as raised:
         getattr(art_mod, "_not_a_store_name")
-    assert str(raised.value) == "module 'kiro_crew.artifacts' has no attribute '_not_a_store_name'"
+    assert str(raised.value) == "module 'aj_crew.artifacts' has no attribute '_not_a_store_name'"
     assert getattr(art_mod, "_not_a_store_name", None) is None
     assert not hasattr(art_mod, "_not_a_store_name")
 
@@ -487,7 +485,7 @@ def test_a_forwarded_name_deleted_from_its_owner_reads_as_missing_on_the_facade(
     assert getattr(art_mod, name, None) is None
     with pytest.raises(AttributeError) as raised:
         getattr(art_mod, name)
-    assert str(raised.value) == f"module 'kiro_crew.artifacts' has no attribute '{name}'"
+    assert str(raised.value) == f"module 'aj_crew.artifacts' has no attribute '{name}'"
 
 
 @pytest.mark.parametrize("name", sorted(art_mod._EXPORTS))

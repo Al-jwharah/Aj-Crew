@@ -14,11 +14,11 @@ from dev_fleet_app_helpers import _reset_shutdown_admission_state  # noqa: F401 
 from dev_fleet_app_helpers import _sweep_staged_sync_tempdirs  # noqa: F401 - fixture
 from dev_fleet_app_helpers import _venv_maps_to_the_synced_checkout  # noqa: F401 - fixture
 
-from kiro_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
-from kiro_crew.apps.builtins.dev_fleet import live as live_mod
-from kiro_crew.apps.builtins.dev_fleet import repository as repository_mod
-from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
+from aj_crew.apps.builtins.dev_fleet import live as live_mod
+from aj_crew.apps.builtins.dev_fleet import repository as repository_mod
+from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod
+from aj_crew.testing.wait import async_wait_until
 
 # --- Worktree teardown guard tests ---
 
@@ -27,7 +27,7 @@ from kiro_crew.testing.wait import async_wait_until
 async def test_force_remove_refuses_dirty_unmerged_worktree():
     """force=True must NOT destroy a dirty tree whose PR
     is unmerged — that combination is unrecoverable data loss."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -63,7 +63,7 @@ async def test_force_remove_refuses_dirty_merged_worktree():
     even when the PR IS merged — containment proves commits are shipped but
     says nothing about working-tree edits. --force bypasses git's dirty check
     and would irrecoverably destroy uncommitted edits."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -111,7 +111,7 @@ async def test_ancestry_gate_skips_ref_delete_when_not_ancestor():
     """When cached PR status wrongly says MERGED but the branch OID is NOT an
     ancestor of the base branch AND containment also fails at the ref-delete
     gate, the ref must survive (fail-closed gate)."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     git_calls: list[tuple] = []
 
@@ -174,7 +174,7 @@ async def test_ancestry_gate_skips_ref_delete_when_not_ancestor():
 @pytest.mark.asyncio
 async def test_ancestry_gate_allows_ref_delete_when_ancestor():
     """When PR is merged and branch OID IS an ancestor of base, ref IS deleted."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     git_calls: list[tuple] = []
     deleted_refs: list[str] = []
@@ -238,7 +238,7 @@ async def test_empty_branch_ref_survives_when_pr_not_merged():
     merged: an empty branch may simply not have been pushed yet, and the ref
     is the only local pointer to those commits (recoverable > irrecoverable).
     Regression test for kirodotdev#1554."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     deleted_refs: list[str] = []
 
@@ -290,7 +290,7 @@ async def test_removal_audit_log_emitted(caplog):
     """Successful removal emits a structured audit line with verdict fields."""
     import logging
 
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -322,7 +322,7 @@ async def test_removal_audit_log_emitted(caplog):
         patch.object(
             repository_mod, "_upstream_remote", new_callable=AsyncMock, return_value="origin"
         ),
-        caplog.at_level(logging.INFO, logger="kiro_crew.apps.builtins.dev_fleet.server"),
+        caplog.at_level(logging.INFO, logger="aj_crew.apps.builtins.dev_fleet.server"),
     ):
         result = await mod._worktree_remove("feat-x", force=False)
 
@@ -346,7 +346,7 @@ async def test_removal_invalidates_disk_cache():
     cache alongside evicting the fleet row, so the next poll re-aggregates
     instead of serving pre-removal totals for the rest of the TTL.
     """
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -389,7 +389,7 @@ async def test_removal_invalidates_disk_cache():
 @pytest.mark.asyncio
 async def test_start_run_invokes_on_finish_at_terminal_state():
     """_start_run's on_finish fires once when the run finishes."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     calls: list[int] = []
     rid = await mod._start_run("finish-test", ["true"], on_finish=lambda: calls.append(1))
@@ -408,7 +408,7 @@ async def test_start_run_invokes_on_finish_at_terminal_state():
 async def test_pod_provision_registers_disk_invalidation(monkeypatch):
     """Provisioning builds .venv/dist inside the measured worktree, so the
     provision run must carry the disk-cache invalidation hook."""
-    import kiro_crew.apps.builtins.dev_fleet.worktree_ops as wt_ops
+    import aj_crew.apps.builtins.dev_fleet.worktree_ops as wt_ops
 
     captured: dict = {}
 
@@ -420,13 +420,13 @@ async def test_pod_provision_registers_disk_invalidation(monkeypatch):
     monkeypatch.setattr(fleet_state_mod, "_PROVISION_INFLIGHT", {})
     monkeypatch.setattr(runtime_mod, "_warm_build_path", AsyncMock())
     monkeypatch.setattr(runtime_mod, "_start_run", fake_start_run)
-    monkeypatch.setattr(runtime_mod, "_find_cli", lambda: ["kirocrew"])
+    monkeypatch.setattr(runtime_mod, "_find_cli", lambda: ["ajcrew"])
     monkeypatch.setattr(repository_mod, "_repo", lambda: "/fake/repo")
     monkeypatch.setattr(wt_ops, "_pod_env", lambda: {})
     monkeypatch.setattr(
         wt_ops,
         "shielded_prepare_off_loop",
-        AsyncMock(return_value=(["kirocrew", "pod", "provision", "feat-x"], {}, None)),
+        AsyncMock(return_value=(["ajcrew", "pod", "provision", "feat-x"], {}, None)),
     )
 
     result = await wt_ops._pod_provision("feat-x")
@@ -439,7 +439,7 @@ async def test_force_refuse_audit_log_emitted(caplog):
     """The dirty+unmerged force refusal also emits an audit line."""
     import logging
 
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -461,7 +461,7 @@ async def test_force_refuse_audit_log_emitted(caplog):
         patch.object(
             repository_mod, "_upstream_remote", new_callable=AsyncMock, return_value="origin"
         ),
-        caplog.at_level(logging.INFO, logger="kiro_crew.apps.builtins.dev_fleet.server"),
+        caplog.at_level(logging.INFO, logger="aj_crew.apps.builtins.dev_fleet.server"),
     ):
         result = await mod._worktree_remove("feat-x", force=True)
 
@@ -483,7 +483,7 @@ async def test_force_remove_refuses_unknown_dirty_state(caplog):
     Without the guard it falls through (fail-open)."""
     import logging
 
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -505,7 +505,7 @@ async def test_force_remove_refuses_unknown_dirty_state(caplog):
         patch.object(
             repository_mod, "_upstream_remote", new_callable=AsyncMock, return_value="origin"
         ),
-        caplog.at_level(logging.INFO, logger="kiro_crew.apps.builtins.dev_fleet.server"),
+        caplog.at_level(logging.INFO, logger="aj_crew.apps.builtins.dev_fleet.server"),
     ):
         result = await mod._worktree_remove("feat-x", force=True)
 
@@ -527,7 +527,7 @@ async def test_force_remove_refuses_stale_merged_cache(caplog):
     — must refuse. Without this fix the guard is bypassed entirely."""
     import logging
 
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -557,7 +557,7 @@ async def test_force_remove_refuses_stale_merged_cache(caplog):
         patch.object(
             repository_mod, "_upstream_remote", new_callable=AsyncMock, return_value="origin"
         ),
-        caplog.at_level(logging.INFO, logger="kiro_crew.apps.builtins.dev_fleet.server"),
+        caplog.at_level(logging.INFO, logger="aj_crew.apps.builtins.dev_fleet.server"),
     ):
         result = await mod._worktree_remove("feat-x", force=True)
 
@@ -577,7 +577,7 @@ async def test_force_remove_fresh_merged_refuses_dirty(caplog):
     says nothing about working-tree edits."""
     import logging
 
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -612,7 +612,7 @@ async def test_force_remove_fresh_merged_refuses_dirty(caplog):
         patch.object(
             repository_mod, "_upstream_remote", new_callable=AsyncMock, return_value="origin"
         ),
-        caplog.at_level(logging.INFO, logger="kiro_crew.apps.builtins.dev_fleet.server"),
+        caplog.at_level(logging.INFO, logger="aj_crew.apps.builtins.dev_fleet.server"),
     ):
         result = await mod._worktree_remove("feat-x", force=True)
 
@@ -634,7 +634,7 @@ async def test_force_remove_fresh_merged_refuses_unknown_dirty(caplog):
     action=refused_unverifiable_merged."""
     import logging
 
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -669,7 +669,7 @@ async def test_force_remove_fresh_merged_refuses_unknown_dirty(caplog):
         patch.object(
             repository_mod, "_upstream_remote", new_callable=AsyncMock, return_value="origin"
         ),
-        caplog.at_level(logging.INFO, logger="kiro_crew.apps.builtins.dev_fleet.server"),
+        caplog.at_level(logging.INFO, logger="aj_crew.apps.builtins.dev_fleet.server"),
     ):
         result = await mod._worktree_remove("feat-x", force=True)
 
@@ -689,7 +689,7 @@ async def test_force_remove_clean_merged_proceeds():
     """Control: force=True + dirty=False + MERGED → removal proceeds WITHOUT --force.
     Clean-tree force removals on merged branches proceed but drop --force so git's
     own dirty check guards the TOCTOU window (round-6 fix)."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     run_cmd_calls: list[list[str]] = []
 
@@ -749,7 +749,7 @@ async def test_squash_merge_ref_deletion():
     """Squash-merge regression: PR merged, ancestry check fails (squash merge),
     containment check passes → ref IS deleted. Without this, squash-merged refs
     accumulated forever because ancestry is the only gate that passed."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     deleted_refs: list[str] = []
 
@@ -830,7 +830,7 @@ async def test_toctou_clean_unmerged_force_omits_git_force(caplog):
     'unmerged_clean_no_git_force' is emitted."""
     import logging
 
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     captured_cmds: list[list[str]] = []
 
@@ -900,7 +900,7 @@ async def test_toctou_git_refusal_returns_error_with_audit(caplog):
     and emits the refused_dirty_at_removal audit line."""
     import logging
 
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     async def _failing_run_cmd(cmd, **kwargs):
         if "worktree" in cmd and "remove" in cmd:
@@ -932,7 +932,7 @@ async def test_toctou_git_refusal_returns_error_with_audit(caplog):
         patch.object(
             repository_mod, "_upstream_remote", new_callable=AsyncMock, return_value="origin"
         ),
-        caplog.at_level(logging.INFO, logger="kiro_crew.apps.builtins.dev_fleet.server"),
+        caplog.at_level(logging.INFO, logger="aj_crew.apps.builtins.dev_fleet.server"),
     ):
         result = await mod._worktree_remove("feat-x", force=True)
 
@@ -954,7 +954,7 @@ async def test_containment_refuses_uncontained_fresh_head(caplog):
     force removal must be refused with refused_uncontained_fresh_head audit."""
     import logging
 
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -992,7 +992,7 @@ async def test_containment_refuses_uncontained_fresh_head(caplog):
         patch.object(
             repository_mod, "_upstream_remote", new_callable=AsyncMock, return_value="origin"
         ),
-        caplog.at_level(logging.INFO, logger="kiro_crew.apps.builtins.dev_fleet.server"),
+        caplog.at_level(logging.INFO, logger="aj_crew.apps.builtins.dev_fleet.server"),
     ):
         result = await mod._worktree_remove("feat-x", force=True)
 
@@ -1014,7 +1014,7 @@ async def test_containment_allows_when_contained():
 
     Pre-round-5 behavior was to allow this removal — the current contract
     refuses it to prevent irrecoverable loss of uncommitted edits."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -1070,7 +1070,7 @@ async def test_containment_pin_falsy_refuses_unpinnable(caplog):
     a falsy pinned_oid must not skip the containment check."""
     import logging
 
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -1094,7 +1094,7 @@ async def test_containment_pin_falsy_refuses_unpinnable(caplog):
         patch.object(
             repository_mod, "_upstream_remote", new_callable=AsyncMock, return_value="origin"
         ),
-        caplog.at_level(logging.INFO, logger="kiro_crew.apps.builtins.dev_fleet.server"),
+        caplog.at_level(logging.INFO, logger="aj_crew.apps.builtins.dev_fleet.server"),
     ):
         result = await mod._worktree_remove("feat-x", force=True)
 
@@ -1112,7 +1112,7 @@ async def test_containment_pin_empty_string_refuses_unpinnable(caplog):
     """Same as above but rev-parse returns empty string (another falsy form)."""
     import logging
 
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(
@@ -1136,7 +1136,7 @@ async def test_containment_pin_empty_string_refuses_unpinnable(caplog):
         patch.object(
             repository_mod, "_upstream_remote", new_callable=AsyncMock, return_value="origin"
         ),
-        caplog.at_level(logging.INFO, logger="kiro_crew.apps.builtins.dev_fleet.server"),
+        caplog.at_level(logging.INFO, logger="aj_crew.apps.builtins.dev_fleet.server"),
     ):
         result = await mod._worktree_remove("feat-x", force=True)
 
@@ -1151,7 +1151,7 @@ async def test_containment_pin_empty_string_refuses_unpinnable(caplog):
 async def test_dirty_unmerged_message_does_not_promise_force_override():
     """Message regression: the non-forced dirty refusal does not say
     'use force to override' since force is also refused for dirty+unmerged."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(

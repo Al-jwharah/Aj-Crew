@@ -34,7 +34,7 @@ rate for a file that is in fact covered.
   `load_skill_script("fleet_probe", SKILL_DIR / "scripts" / "fleet_probe.py")` —
   `test/test_pipeline_conductor_agent.py:181`
 - `SKILL_DIR` is defined at `test/test_pipeline_conductor_agent.py:26` and resolves to
-  `src/kiro_crew/builtin_skills/pipeline-conductor`.
+  `src/aj_crew/builtin_skills/pipeline-conductor`.
 
 The class holds **20** `test_*` methods (between lines 179 and 453), most of which
 drive the script end to end through `mod.main([...])`. (The issue thread's
@@ -58,7 +58,7 @@ surfaces the issue body nominates as "the cheap coverage":
   - `test_symlink_out_of_the_store_reads_gone`
   - `test_traversal_session_keys_are_malformed_config`
 
-`git log -- src/kiro_crew/builtin_skills/pipeline-conductor/scripts/fleet_probe.py`
+`git log -- src/aj_crew/builtin_skills/pipeline-conductor/scripts/fleet_probe.py`
 shows a single commit, `c0dca4a8b`, and `TestFleetProbe` arrived in that same commit.
 So the body's premise "No commit since has added tests for it" does not hold — the
 tests landed with the script.
@@ -85,7 +85,7 @@ through the importlib loader is measured normally. Not registering in `sys.modul
 does not change which *file* the executed lines belong to.
 
 Control case (this is the decisive point): `credit_spend.py` lives in the **same**
-`src/kiro_crew/builtin_skills/pipeline-conductor/scripts/` directory, is loaded by the
+`src/aj_crew/builtin_skills/pipeline-conductor/scripts/` directory, is loaded by the
 **same** `load_skill_script` in the **same** test file:
 
 - `class TestCreditSpend:` — `test/test_pipeline_conductor_agent.py:453`
@@ -147,7 +147,7 @@ exist and drive the function bodies.
 The truncation path is visible in `.github/workflows/ci.yml`:
 
 - Backend coverage runs **only on the 3.12 shards** — the pytest invocation passes
-  `--cov=kiro_crew --cov=sage_lib` on 3.12 and `--no-cov` otherwise
+  `--cov=aj_crew --cov=sage_lib` on 3.12 and `--no-cov` otherwise
   (`ci.yml:692`); the 3.10 arm is trace-free by design (`ci.yml:655-657`).
 - The suite is **sharded 4 ways** via pytest-split (`group: [1, 2, 3, 4]`,
   `ci.yml:595` in the `backend-test` matrix). Each 3.12 shard folds the parallel data
@@ -258,7 +258,7 @@ $ python3 -c "import pytest_cov"   -> ModuleNotFoundError: No module named 'pyte
 ```
 
 The normal empirical check would be
-`pytest --cov=kiro_crew test/test_pipeline_conductor_agent.py` followed by
+`pytest --cov=aj_crew test/test_pipeline_conductor_agent.py` followed by
 `coverage xml` and inspecting the `fleet_probe.py` line-rate — which requires exactly
 the packages that are unavailable here.
 

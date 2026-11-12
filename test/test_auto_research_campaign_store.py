@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 from auto_research_helpers import isolate_fixture  # noqa: F401 - fixture
 
-from kiro_crew.apps.builtins.auto_research.handlers import (
+from aj_crew.apps.builtins.auto_research.handlers import (
     CampaignStatus,
     create_campaign,
     get_campaign,
@@ -52,7 +52,7 @@ class TestAutoApprovePersist:
 
 class TestClarificationQuestions:
     def test_pending_question_surfaced(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import _campaign_dir
+        from aj_crew.apps.builtins.auto_research.handlers import _campaign_dir
 
         c = create_campaign(
             {"question": "Research question about something here", "sources": ["web"]}
@@ -63,7 +63,7 @@ class TestClarificationQuestions:
         assert get_campaign(c["id"])["pending_question"] == "Which framework should I assume?"
 
     def test_brief_question_mode(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import (
+        from aj_crew.apps.builtins.auto_research.handlers import (
             _campaign_dir,
             _get_db,
             _write_brief,
@@ -95,7 +95,7 @@ class TestUnattendedQuestionEnforcement:
     """Code-enforced guarantee: unattended campaigns never pause for input."""
 
     def _seed(self, tmp_path: Path):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         d = tmp_path / "a1b2c3d4"
         d.mkdir()
@@ -115,7 +115,7 @@ class TestUnattendedQuestionEnforcement:
             assert (d / "questions.json").exists()  # preserved for the user
 
     def test_no_question_no_pause(self, tmp_path: Path):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         (tmp_path / "a1b2c3d4").mkdir()
         with patch.object(h, "RESEARCH_DIR", tmp_path):
@@ -131,7 +131,7 @@ class TestSqliteIsolation:
         isolation the first connection's implicit transaction would leak the
         lock and the second connection's write would block/raise.
         """
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         camp = h.create_campaign(
             {
@@ -185,7 +185,7 @@ class TestSqliteIsolation:
 
     def test_isolation_level_is_none(self, tmp_path: Path):
         """Verify _get_db returns a connection with isolation_level=None."""
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         db = h._get_db()
         assert db.isolation_level is None

@@ -22,9 +22,9 @@ from publish_personal_drive_helpers import (
     _stub_profiles,
 )
 
-from kiro_crew import publish_provider as pp
-from kiro_crew.publish import personal_drive as pd
-from kiro_crew.publish_provider import PublishError
+from aj_crew import publish_provider as pp
+from aj_crew.publish import personal_drive as pd
+from aj_crew.publish_provider import PublishError
 
 # ── view_url ─────────────────────────────────────────────────────────────────
 

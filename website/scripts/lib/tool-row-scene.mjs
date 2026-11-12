@@ -40,7 +40,7 @@ export function makeToolRowScene(slotKey) {
     running: true,
     last_message: 'The shared node_modules is largely root-owned.',
     messages: 5,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     memory_mode: 'persistent',
     project: TOOL_ROW_PROJECT,
     modified: now,

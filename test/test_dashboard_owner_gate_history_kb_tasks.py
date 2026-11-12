@@ -36,19 +36,19 @@ from chat_test_helpers import _make_state
 from off_loop_helpers import off_loop
 from overload_fakes import Clock
 
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.dashboard import revocation_gen, token_auth
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.dashboard.handlers import tasks as tasks_mod
-from kiro_crew.dashboard.handlers._shared import require_owner_for_dashboard_caller
-from kiro_crew.dashboard.handlers.sessions import _app_transcript_refusal
-from kiro_crew.dashboard.handlers.source_providers import is_owner_dashboard_request
-from kiro_crew.dashboard.routes import register_all
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.taskq import model
-from kiro_crew.taskq.adapters import runner as runner_mod
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.taskq.waits import WaitRecord
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.dashboard import revocation_gen, token_auth
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.dashboard.handlers import tasks as tasks_mod
+from aj_crew.dashboard.handlers._shared import require_owner_for_dashboard_caller
+from aj_crew.dashboard.handlers.sessions import _app_transcript_refusal
+from aj_crew.dashboard.handlers.source_providers import is_owner_dashboard_request
+from aj_crew.dashboard.routes import register_all
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.taskq import model
+from aj_crew.taskq.adapters import runner as runner_mod
+from aj_crew.taskq.store import TaskStore
+from aj_crew.taskq.waits import WaitRecord
 
 OWNER = "U0OWNER"
 #: The subject a channel allowlist mint puts in the token.
@@ -123,16 +123,16 @@ _MANIFESTS = {APP: _manifest(APP), OTHER_APP: _manifest(OTHER_APP)}
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(token_auth, "_get_secret", lambda: b"owner-gate-history-key")
     monkeypatch.setattr(token_auth, "_state", token_auth.TokenStateManager())
     monkeypatch.setattr(token_auth, "_app_perms_cache", {})
     monkeypatch.setattr(token_auth, "_revoked_store_singleton", None)
     monkeypatch.setattr(revocation_gen, "_gen", 0)
-    monkeypatch.setattr("kiro_crew.apps.manager.get_app_manifest", _MANIFESTS.get)
-    monkeypatch.setattr("kiro_crew.apps.permissions.get_app_manifest", _MANIFESTS.get)
-    monkeypatch.setattr("kiro_crew.apps.permissions.is_app_enabled", _MANIFESTS.__contains__)
+    monkeypatch.setattr("aj_crew.apps.manager.get_app_manifest", _MANIFESTS.get)
+    monkeypatch.setattr("aj_crew.apps.permissions.get_app_manifest", _MANIFESTS.get)
+    monkeypatch.setattr("aj_crew.apps.permissions.is_app_enabled", _MANIFESTS.__contains__)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()
@@ -272,7 +272,7 @@ async def test_the_owner_clears_history(state):
 @pytest.fixture
 def summarizer(monkeypatch):
     """Stub the model call behind ``POST /api/sessions/summarize``; record each call."""
-    from kiro_crew.dashboard.handlers.sessions_parts import summaries
+    from aj_crew.dashboard.handlers.sessions_parts import summaries
 
     calls: list[str] = []
 
@@ -374,7 +374,7 @@ async def test_an_app_token_is_not_answered_by_the_owner_gate(state, path):
     ],
 )
 async def test_the_dashboard_owner_surface_guard_on_each_caller_class(tmp_path, identity, refused):
-    from kiro_crew.dashboard.handlers._shared import dashboard_owner_surface_guard
+    from aj_crew.dashboard.handlers._shared import dashboard_owner_surface_guard
 
     state = _make_state(tmp_path)
     state.owner_id = OWNER

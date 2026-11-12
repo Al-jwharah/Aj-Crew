@@ -20,8 +20,8 @@ from unittest.mock import MagicMock
 import pytest
 from source_corpus import parsed_candidates, src_root
 
-from kiro_crew.knowledge.folder_watcher import FolderWatcher
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.folder_watcher import FolderWatcher
+from aj_crew.knowledge.store import KnowledgeStore
 
 # A nested def / lambda is a separate execution frame -- a sync helper or a thread
 # target -- so a call inside one is not running on the loop. Mirrors the scoping the
@@ -197,7 +197,7 @@ async def test_duplicate_skip_runs_the_delete_off_the_loop_thread(tmp_path):
     """
     from unittest.mock import AsyncMock
 
-    from kiro_crew.knowledge.ingestion import IngestionPipeline
+    from aj_crew.knowledge.ingestion import IngestionPipeline
 
     store = KnowledgeStore(str(tmp_path / "knowledge.db"))
     try:
@@ -260,7 +260,7 @@ async def test_run_to_completion_forwards_the_return_value():
     delete from the job id it returns, across an await -- the exact shape that
     strands committed data.
     """
-    from kiro_crew.knowledge.ingestion import run_to_completion
+    from aj_crew.knowledge.ingestion import run_to_completion
 
     assert await run_to_completion(lambda: "job-1234") == "job-1234"
     assert await run_to_completion(lambda: None) is None
@@ -276,7 +276,7 @@ async def test_finalizer_runs_even_when_cancelled_while_queued():
     import asyncio
     from concurrent.futures import ThreadPoolExecutor
 
-    from kiro_crew.knowledge.ingestion import run_to_completion
+    from aj_crew.knowledge.ingestion import run_to_completion
 
     loop = asyncio.get_running_loop()
     pool = ThreadPoolExecutor(max_workers=1)
@@ -314,7 +314,7 @@ async def test_duplicate_gate_reingests_when_the_holder_vanishes_before_the_lock
     """
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.knowledge.ingestion import IngestionPipeline
+    from aj_crew.knowledge.ingestion import IngestionPipeline
 
     store = KnowledgeStore(str(tmp_path / "knowledge.db"))
     try:
@@ -384,7 +384,7 @@ async def test_deduped_state_write_is_off_loop_and_keeps_a_late_adoption(tmp_pat
     """
     from unittest.mock import AsyncMock
 
-    from kiro_crew.knowledge.ingestion import IngestionPipeline
+    from aj_crew.knowledge.ingestion import IngestionPipeline
 
     store = KnowledgeStore(str(tmp_path / "knowledge.db"))
     try:
@@ -585,7 +585,7 @@ async def test_deduped_state_write_recovers_a_transformed_files_reassigned_item(
     """
     from unittest.mock import AsyncMock
 
-    from kiro_crew.knowledge.ingestion import IngestionPipeline
+    from aj_crew.knowledge.ingestion import IngestionPipeline
 
     store = KnowledgeStore(str(tmp_path / "knowledge.db"))
     try:
@@ -705,7 +705,7 @@ def test_artifact_deduped_state_write_keeps_a_late_adoption(tmp_path):
     Same window as the folder path, in ``artifact_item_state``: predicting an empty
     group would leave the last copy owned but named by no row.
     """
-    from kiro_crew.knowledge.artifact_ingest import _record_deduped_state
+    from aj_crew.knowledge.artifact_ingest import _record_deduped_state
 
     store = KnowledgeStore(str(tmp_path / "knowledge.db"))
     try:
@@ -740,7 +740,7 @@ def test_artifact_deduped_state_write_keeps_a_late_adoption(tmp_path):
 
 def test_agent_deduped_state_write_keeps_a_late_adoption(tmp_path):
     """Same for the agent aggregate: an adopted group survives the terminal write."""
-    from kiro_crew.knowledge.agent_source import _record_deduped_state
+    from aj_crew.knowledge.agent_source import _record_deduped_state
 
     store = KnowledgeStore(str(tmp_path / "knowledge.db"))
     try:
@@ -778,7 +778,7 @@ def test_aggregate_deduped_state_write_records_an_empty_group_when_nothing_adopt
     refused and nothing was reassigned, and that row has to stay ``deduped`` so
     the owning sync does not re-attempt a write the gate will refuse again.
     """
-    from kiro_crew.knowledge.agent_source import _record_deduped_state
+    from aj_crew.knowledge.agent_source import _record_deduped_state
 
     store = KnowledgeStore(str(tmp_path / "knowledge.db"))
     try:
@@ -814,7 +814,7 @@ async def test_duplicate_gate_records_terminal_state_even_when_cancelled(tmp_pat
     """
     from unittest.mock import AsyncMock
 
-    from kiro_crew.knowledge.ingestion import IngestionPipeline
+    from aj_crew.knowledge.ingestion import IngestionPipeline
 
     store = KnowledgeStore(str(tmp_path / "knowledge.db"))
     try:
@@ -890,7 +890,7 @@ async def test_duplicate_gate_and_terminal_state_are_one_transaction(tmp_path):
     """
     from unittest.mock import AsyncMock
 
-    from kiro_crew.knowledge.ingestion import IngestionPipeline
+    from aj_crew.knowledge.ingestion import IngestionPipeline
 
     store = KnowledgeStore(str(tmp_path / "knowledge.db"))
     try:

@@ -18,8 +18,8 @@ from pathlib import Path
 import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew.platform import update_governance
-from kiro_crew.platform.update_governance import git_command_env
+from aj_crew.platform import update_governance
+from aj_crew.platform.update_governance import git_command_env
 
 pytestmark = pytest.mark.skipif(os.name != "posix", reason="planted programs are sh scripts")
 
@@ -389,16 +389,16 @@ class TestSafeDirectoryIsCarriedOver:
 class TestThePinJudgesTheUrlEachFetchUses:
     """Each update path checks the pin against the URL its own fetch connects to.
 
-    ``fetch_env=None`` is ``kirocrew update`` and the dashboard update, whose
+    ``fetch_env=None`` is ``ajcrew update`` and the dashboard update, whose
     fetch inherits the process env and so reads ``~/.gitconfig``.
     ``fetch_env=git_command_env()`` is the gateway's isolated auto-update.
     """
 
     def _pin(self, monkeypatch: pytest.MonkeyPatch, source: str) -> None:
-        from kiro_crew.platform.governance import UpdatePins
+        from aj_crew.platform.governance import UpdatePins
 
         monkeypatch.setattr(
-            "kiro_crew.platform.governance.active_update_pins",
+            "aj_crew.platform.governance.active_update_pins",
             lambda: UpdatePins(source=source),
         )
 

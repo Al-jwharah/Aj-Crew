@@ -85,7 +85,7 @@ export default function ResizeHandle({
       style={{ touchAction: 'none' }}
     >
       {/* Visual bar only — the strip above stays the full-height hit area.
-          `resize-accent` lets a theme retint the hover colour (the Kiro dark
+          `resize-accent` lets a theme retint the hover colour (the Aj dark
           theme does) without reaching into this component. */}
       <div
         aria-hidden="true"

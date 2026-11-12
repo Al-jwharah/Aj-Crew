@@ -115,7 +115,7 @@ for (const theme of ['light', 'dark']) {
     // The palette is asserted, not assumed: a filename claiming a theme the
     // frame does not carry is exactly the failure this catches.
     const applied = await page.evaluate(() => document.documentElement.getAttribute('data-theme'))
-    const themeOk = applied === (theme === 'light' ? 'kiro-light' : 'kiro-dark')
+    const themeOk = applied === (theme === 'light' ? 'aj-light' : 'aj-dark')
     await page.screenshot({ path: `${OUT}/${theme}-${name}.png` })
 
     // The badges are the point of the document pass, so their presence is

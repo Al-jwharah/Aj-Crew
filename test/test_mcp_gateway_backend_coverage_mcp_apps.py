@@ -29,13 +29,13 @@ import pytest
 from mcp_gateway_backend_coverage_helpers import _no_real_metrics_file  # noqa: F401 -- autouse
 from mcp_gateway_backend_coverage_helpers import _frames, _line, _make_backend
 
-from kiro_crew.mcp_gateway.backend import (
+from aj_crew.mcp_gateway.backend import (
     MCP_APPS_ENV_FLAG,
     MCP_APPS_MIME_TYPE,
     Backend,
     _PendingRequest,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # --- MCP Apps helpers -------------------------------------------------------
 

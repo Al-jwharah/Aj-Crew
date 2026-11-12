@@ -18,12 +18,12 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.chat_handlers import (
+from aj_crew.dashboard.chat_handlers import (
     _enqueue_pending_context,
     api_chat_slot_context,
     api_chat_slot_note,
 )
-from kiro_crew.dashboard.chat_turn.turn_context import drain_pending_context
+from aj_crew.dashboard.chat_turn.turn_context import drain_pending_context
 
 # Fixture values are assembled at runtime so no literal credential shape sits
 # in the source file.
@@ -110,7 +110,7 @@ class TestContextEndpoint:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("content", SECRET_SHAPED)
     async def test_secret_shaped_content_is_refused(self, tmp_path: Path, monkeypatch, content):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded(state, "s-ctx-secret")
         before = list(slot._pending_context)
@@ -135,7 +135,7 @@ class TestContextEndpoint:
     async def test_ordinary_content_is_accepted_and_drains_verbatim(
         self, tmp_path: Path, monkeypatch, content
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded(state, "s-ctx-ok")
 
@@ -155,7 +155,7 @@ class TestEnqueueChokepoint:
 
     @pytest.mark.parametrize("content", SECRET_SHAPED)
     def test_direct_enqueue_refuses(self, tmp_path: Path, monkeypatch, content):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded(state, "s-direct")
 
@@ -167,7 +167,7 @@ class TestEnqueueChokepoint:
         assert slot._pending_context == []
 
     def test_direct_enqueue_accepts_ordinary_content(self, tmp_path: Path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded(state, "s-direct-ok")
 
@@ -181,7 +181,7 @@ class TestNoteEndpoint:
     async def test_secret_shaped_note_seats_no_context_half(
         self, tmp_path: Path, monkeypatch, content
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded(state, "s-note-secret")
 
@@ -202,7 +202,7 @@ class TestNoteEndpoint:
 
     @pytest.mark.asyncio
     async def test_held_note_carries_no_context_half(self, tmp_path: Path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded(state, "s-note-running")
         monkeypatch.setattr(type(slot), "running", property(lambda self: True))
@@ -224,7 +224,7 @@ class TestNoteEndpoint:
 
     @pytest.mark.asyncio
     async def test_ordinary_note_is_still_accepted(self, tmp_path: Path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = _seeded(state, "s-note-ok")
 

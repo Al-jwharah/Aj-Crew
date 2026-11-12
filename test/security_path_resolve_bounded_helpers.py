@@ -14,9 +14,9 @@ from collections.abc import Iterator
 
 import pytest
 
-import kiro_crew.executors as ex
-from kiro_crew import security
-from kiro_crew.subprocess_pool import SubprocessPoolTimeout
+import aj_crew.executors as ex
+from aj_crew import security
+from aj_crew.subprocess_pool import SubprocessPoolTimeout
 
 # Captured BEFORE the autouse fixture below can stub it.  The fixture replaces this
 # helper for every test in the files that import it, so a test that wants to exercise
@@ -34,7 +34,7 @@ _REAL_WAIT_CAP = security.paths._PATH_RESOLVE_WAIT_CAP_SECS
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing module autouse fixture, moved verbatim; the two tests that call monkeypatch.undo() do so to drop exactly these stubs and read the shipped values
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing module autouse fixture, moved verbatim; the two tests that call monkeypatch.undo() do so to drop exactly these stubs and read the shipped values
 def _fresh_resolver_state(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     monkeypatch.setattr(security, "_path_resolve_degraded", {})
     # Short budgets keep the stall tests fast; the production values are pinned

@@ -17,8 +17,8 @@ const C = {
   text: '#3f3f46',
   muted: '#a1a1aa',
   mutedSoft: '#c4c4cc',
-  accent: '#7c3aed',
-  accentBg: '#f1ecfe',
+  accent: '#0f766e',
+  accentBg: '#e6f6f3',
   pill: '#f6f6f8',
 };
 
@@ -88,9 +88,9 @@ export function AppPreview() {
         <div className="flex items-center justify-between h-[46px] px-3" style={{ background: C.bg, borderBottom: `1px solid ${C.border}` }}>
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-md flex items-center justify-center" style={{ background: '#18181b' }}>
-              <span style={{ color: '#f59e0b', fontSize: 13 }}>👻</span>
+              <span style={{ color: '#f59e0b', fontSize: 13 }}>💎</span>
             </div>
-            <span className="text-[13px] font-bold tracking-[.08em]" style={{ color: C.textStrong }}>KIRO CREW</span>
+            <span className="text-[13px] font-bold tracking-[.08em]" style={{ color: C.textStrong }}>AJ CREW</span>
           </div>
           <div className="hidden lg:flex items-center gap-1.5">
             <Pill>Request a Feature</Pill>
@@ -231,7 +231,7 @@ export function AppPreview() {
                   <div style={{ color: C.mutedSoft }}>@@ -0,0 +1,210 @@</div>
                   <div style={{ color: '#16a34a' }}>+ // Self-contained light 1:1 replica of the dashboard</div>
                   <div style={{ color: '#16a34a' }}>+ // flat rail · bordered session sidebar · folder counts</div>
-                  <div style={{ color: '#16a34a' }}>+ // two-line session cards · violet accent</div>
+                  <div style={{ color: '#16a34a' }}>+ // two-line session cards · teal accent</div>
                 </div>
               </div>
             </div>
@@ -239,7 +239,7 @@ export function AppPreview() {
             {/* Input bar */}
             <div className="px-4 pb-2 shrink-0">
               <div className="rounded-2xl px-3 py-2.5" style={{ background: C.bg, border: `1px solid ${C.border}` }}>
-                <div className="text-[12px] mb-2.5" style={{ color: C.mutedSoft }}>Message Kiro Crew... <span style={{ color: C.mutedSoft }}>(/command · @file · $skill)</span></div>
+                <div className="text-[12px] mb-2.5" style={{ color: C.mutedSoft }}>Message Aj Crew... <span style={{ color: C.mutedSoft }}>(/command · @file · $skill)</span></div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2" style={{ color: C.muted }}>
                     <Plus size={14} />

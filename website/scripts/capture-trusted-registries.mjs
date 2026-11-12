@@ -22,7 +22,7 @@
  *
  * Usage:
  *   node scripts/capture-trusted-registries.mjs [outDir]
- * Default outDir: $KIROCREW_SCRATCH/shots-14970
+ * Default outDir: $AJCREW_SCRATCH/shots-14970
  */
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -33,7 +33,7 @@ import { createServer } from 'vite'
 import { chromiumExecutable } from './lib/chromium-executable.mjs'
 
 const OUT = process.argv[2]
-  || join(process.env.KIROCREW_SCRATCH || '/tmp', 'shots-14970')
+  || join(process.env.AJCREW_SCRATCH || '/tmp', 'shots-14970')
 mkdirSync(OUT, { recursive: true })
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url))

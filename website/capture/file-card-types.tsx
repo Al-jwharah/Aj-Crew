@@ -14,7 +14,7 @@ import '../src/index.css'
 
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const FILES: FileData[] = [
   { filename: 'q3-report.pdf', content_type: 'application/pdf', size: 248320, description: 'Q3 cost breakdown' },
@@ -29,7 +29,7 @@ const FILES: FileData[] = [
   { filename: 'gateway.log', size: 1048576 },
   { filename: 'site-backup.tar.gz', content_type: 'application/gzip', size: 73400320 },
   { filename: 'deploy-key.pem', content_type: 'application/octet-stream', size: 1704 },
-  { filename: 'KiroCrew-1.4.0.dmg', size: 182000000 },
+  { filename: 'AjCrew-1.4.0.dmg', size: 182000000 },
   { filename: 'cache.sqlite', size: 5242880 },
   { filename: 'fix-race.patch', size: 2210 },
   { filename: 'Inter.woff2', content_type: 'font/woff2', size: 98000 },

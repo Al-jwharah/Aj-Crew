@@ -18,10 +18,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from body_stream_helpers import attach_body
 
-from kiro_crew.history import ConversationLog
-from kiro_crew.learn import Lesson, LessonStore
-from kiro_crew.shared_crew import audit, memory_changes
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.history import ConversationLog
+from aj_crew.learn import Lesson, LessonStore
+from aj_crew.shared_crew import audit, memory_changes
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     MESSAGE_AUTHOR_META_KEY,
     ActorContext,
@@ -29,8 +29,8 @@ from kiro_crew.shared_crew.contracts import (
     Provenance,
     Transport,
 )
-from kiro_crew.shared_crew.identity import tailnet_principal
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.shared_crew.identity import tailnet_principal
+from aj_crew.vector_memory import VectorMemoryStore
 
 ALICE = tailnet_principal(
     "alice@example.com", "a", Provenance.TAILSCALE_SERVE, display_name="Alice"
@@ -115,7 +115,7 @@ async def _post(
     jsonl_store: LessonStore | None = None,
     memory_store: str = "",
 ) -> dict[str, Any]:
-    from kiro_crew.dashboard.handlers import cron
+    from aj_crew.dashboard.handlers import cron
 
     published: dict[str, Any] = {}
     if principal is not None:
@@ -423,14 +423,14 @@ def test_stamp_reads_back_only_well_formed_values():
 
 
 def test_a_crew_with_only_its_operator_is_personal(monkeypatch):
-    from kiro_crew.shared_crew import access, people
+    from aj_crew.shared_crew import access, people
 
     monkeypatch.setattr(access, "setup_paths_dict", lambda: {})
     monkeypatch.setattr(people, "registry", lambda: MagicMock(snapshot=lambda: []))
     assert (
         memory_changes.crew_is_shared(MagicMock(owner_id=""), ALICE) is True
     ), "a writer who came in over the tailnet means a team path exists"
-    from kiro_crew.shared_crew.identity import local_operator_principal
+    from aj_crew.shared_crew.identity import local_operator_principal
 
     operator = local_operator_principal("owner")
     assert memory_changes.crew_is_shared(MagicMock(owner_id=""), operator) is False
@@ -445,7 +445,7 @@ async def test_replacement_notice_matches_store_read_audience(
     tmp_path, audit_events, memory_store, _floor_monkeypatch
 ):
     # The collaborator audience exists only with the preview on (``shared_crew.preview``).
-    _floor_monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    _floor_monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
     store = _store(tmp_path)
     slot = _Slot()
     state = _state(slot)
@@ -477,7 +477,7 @@ async def test_replacement_notice_matches_store_read_audience(
 @pytest.mark.parametrize("memory_store", ["", "owner-notes"])
 @pytest.mark.parametrize("owner", [False, True])
 async def test_lesson_store_audience_uses_existing_owner_gate(monkeypatch, memory_store, owner):
-    from kiro_crew.dashboard.handlers import _shared
+    from aj_crew.dashboard.handlers import _shared
 
     state = _state(_Slot())
     state.owner_id = "owner"

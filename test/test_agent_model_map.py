@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from unittest.mock import MagicMock
 
+from aj_crew.agent_discovery import agent_model_map
 from conftest import requires_symlinks
-from kiro_crew.agent_discovery import agent_model_map
 
 
 def _scan(agents_dir):
@@ -41,7 +41,7 @@ def test_maps_declared_name_and_stem_with_model_coercion(tmp_path):
 
 
 def test_refused_specs_are_skipped_and_scan_continues(tmp_path, monkeypatch):
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
@@ -78,7 +78,7 @@ def test_all_refused_specs_emit_one_systematic_warning(tmp_path, caplog):
 
 @requires_symlinks
 def test_sensitive_denial_preserves_caller_attribution(tmp_path, monkeypatch):
-    from kiro_crew import agent_discovery
+    from aj_crew import agent_discovery
 
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
@@ -111,7 +111,7 @@ def test_sensitive_denial_preserves_caller_attribution(tmp_path, monkeypatch):
 
 
 def test_chat_restore_supplies_its_directory_and_attribution(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat_persistence
+    from aj_crew.dashboard import chat_persistence
 
     seen = {}
 
@@ -131,7 +131,7 @@ def test_chat_restore_supplies_its_directory_and_attribution(tmp_path, monkeypat
 
 
 def test_chat_restore_keeps_a_model_less_spec_unpinned(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat_persistence
+    from aj_crew.dashboard import chat_persistence
 
     spec = tmp_path / "bot-file.json"
     spec.write_text(json.dumps({"name": "bot"}), encoding="utf-8")
@@ -145,7 +145,7 @@ def test_chat_restore_keeps_a_model_less_spec_unpinned(tmp_path, monkeypatch):
 
 
 def test_session_resolver_stops_at_first_match_and_preserves_glob_order(tmp_path, monkeypatch):
-    from kiro_crew import session
+    from aj_crew import session
 
     first = tmp_path / "z-first.json"
     first.write_text(json.dumps({"name": "bot", "model": "m1"}), encoding="utf-8")
@@ -173,7 +173,7 @@ def test_session_resolver_stops_at_first_match_and_preserves_glob_order(tmp_path
 
 
 def test_chat_restore_degrades_an_unexpected_scan_failure(monkeypatch):
-    from kiro_crew.dashboard import chat_persistence
+    from aj_crew.dashboard import chat_persistence
 
     monkeypatch.setattr(
         chat_persistence,

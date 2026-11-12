@@ -7,25 +7,25 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 
-const { kirocrewConfigMock, kirocrewAgentsMock, agentResolvedModelMock, updateKirocrewAgentMock, patchConfigMock } = vi.hoisted(() => ({
-  kirocrewConfigMock: vi.fn(() =>
+const { ajcrewConfigMock, ajcrewAgentsMock, agentResolvedModelMock, updateAjcrewAgentMock, patchConfigMock } = vi.hoisted(() => ({
+  ajcrewConfigMock: vi.fn(() =>
     Promise.resolve({ agent: { model: 'claude-opus-5.5', reasoning_effort: 'medium' } })
   ),
-  kirocrewAgentsMock: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'default' })),
+  ajcrewAgentsMock: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'default' })),
   agentResolvedModelMock: vi.fn(() => Promise.resolve({
     model: 'claude-opus-5.5', pinned: false, reasoning_effort: 'medium', effort_pinned: false,
   })),
-  updateKirocrewAgentMock: vi.fn(() => Promise.resolve({ ok: true })),
+  updateAjcrewAgentMock: vi.fn(() => Promise.resolve({ ok: true })),
   patchConfigMock: vi.fn(() => Promise.resolve({})),
 }))
 
 vi.mock('../api/client', () => ({
   api: {
     dashboardConfig: () => Promise.resolve({ restore_sessions: false, restore_window_minutes: 30, merge_queued_messages: false, widget_density: 'more' }),
-    kirocrewConfig: kirocrewConfigMock,
-    kirocrewAgents: kirocrewAgentsMock,
+    ajcrewConfig: ajcrewConfigMock,
+    ajcrewAgents: ajcrewAgentsMock,
     agentResolvedModel: agentResolvedModelMock,
-    updateKirocrewAgent: updateKirocrewAgentMock,
+    updateAjcrewAgent: updateAjcrewAgentMock,
     models: () => Promise.resolve([
       { model_name: 'auto', description: 'Default' },
       { model_name: 'claude-opus-5.5', description: 'Opus 5.5' },
@@ -56,7 +56,7 @@ function wrap() {
 
 /** The roster's view of the default agent: its own effort pin, if any. */
 const seedAgent = (reasoning_effort: string, name = 'default') =>
-  kirocrewAgentsMock.mockImplementation(() => Promise.resolve({
+  ajcrewAgentsMock.mockImplementation(() => Promise.resolve({
     agents: [{ name, model: '', reasoning_effort }],
     default_agent: name,
   }) as never)
@@ -83,7 +83,7 @@ const CHAIN = { timeout: 5000 }
 async function settled() {
   const trigger = await screen.findByRole('combobox', { name: 'Default Reasoning Effort' }, CHAIN)
   await waitFor(() => expect(trigger).not.toHaveAttribute('data-disabled'), CHAIN)
-  await waitFor(() => expect(kirocrewAgentsMock).toHaveBeenCalled(), CHAIN)
+  await waitFor(() => expect(ajcrewAgentsMock).toHaveBeenCalled(), CHAIN)
   // Chain: roster success -> resolver read. Wait for the call, then for its
   // answer, so an absent notice below is the verdict, not a read in flight.
   await waitFor(() => expect(agentResolvedModelMock).toHaveBeenCalled(), CHAIN)
@@ -98,11 +98,11 @@ async function settled() {
  */
 describe('ChatPanel — default agent reasoning-effort pin notice', () => {
   beforeEach(() => {
-    updateKirocrewAgentMock.mockClear()
-    updateKirocrewAgentMock.mockImplementation(() => Promise.resolve({ ok: true }) as never)
+    updateAjcrewAgentMock.mockClear()
+    updateAjcrewAgentMock.mockImplementation(() => Promise.resolve({ ok: true }) as never)
     patchConfigMock.mockClear()
     patchConfigMock.mockImplementation(() => Promise.resolve({}) as never)
-    kirocrewAgentsMock.mockClear()
+    ajcrewAgentsMock.mockClear()
     agentResolvedModelMock.mockClear()
     seedAgent('')
     seedResolved('medium')
@@ -132,18 +132,18 @@ describe('ChatPanel — default agent reasoning-effort pin notice', () => {
     const before = agentResolvedModelMock.mock.calls.length
     fireEvent.click(await screen.findByRole('button', CLEAR_BUTTON, CHAIN))
     await waitFor(
-      () => expect(updateKirocrewAgentMock).toHaveBeenCalledWith('oncall', { reasoning_effort: '' }),
+      () => expect(updateAjcrewAgentMock).toHaveBeenCalledWith('oncall', { reasoning_effort: '' }),
       CHAIN,
     )
     // The model pin is not touched, and the resolver is asked again.
-    expect(updateKirocrewAgentMock).not.toHaveBeenCalledWith('oncall', expect.objectContaining({ model: '' }))
+    expect(updateAjcrewAgentMock).not.toHaveBeenCalledWith('oncall', expect.objectContaining({ model: '' }))
     await waitFor(() => expect(agentResolvedModelMock.mock.calls.length).toBeGreaterThan(before), CHAIN)
   })
 
   it('names the Background Effort row, with no button, when the agent pins nothing', async () => {
     // An unpinned agent bound to a background worker takes the Background role
     // effort, which this page sets a few rows down.
-    kirocrewConfigMock.mockImplementationOnce(() => Promise.resolve({
+    ajcrewConfigMock.mockImplementationOnce(() => Promise.resolve({
       agent: { model: 'claude-opus-5.5', reasoning_effort: 'medium', role_efforts: { background: 'low' } },
     }) as never)
     seedResolved('low', false)
@@ -158,7 +158,7 @@ describe('ChatPanel — default agent reasoning-effort pin notice', () => {
 
   it('names a pin that replaces Model default too', async () => {
     // '' is a real choice ("Model default"), unlike the model's Auto.
-    kirocrewConfigMock.mockImplementationOnce(() =>
+    ajcrewConfigMock.mockImplementationOnce(() =>
       Promise.resolve({ agent: { model: 'claude-opus-5.5', reasoning_effort: '' } }) as never
     )
     seedAgent('high')
@@ -232,7 +232,7 @@ describe('ChatPanel — default agent reasoning-effort pin notice', () => {
     fireEvent.click(screen.getAllByRole('option', { name: 'High' }).filter(o => !o.closest('nav'))[0])
     await waitFor(() => expect(patchConfigMock).toHaveBeenCalledWith('agent.reasoning_effort', 'high'), CHAIN)
     await waitFor(() => expect(screen.getByRole('button', CLEAR_BUTTON)).toBeDisabled(), CHAIN)
-    expect(updateKirocrewAgentMock).not.toHaveBeenCalled()
+    expect(updateAjcrewAgentMock).not.toHaveBeenCalled()
     release()
     await waitFor(() => expect(screen.getByRole('button', CLEAR_BUTTON)).toBeEnabled(), CHAIN)
   })
@@ -257,7 +257,7 @@ describe('ChatPanel — default agent reasoning-effort pin notice', () => {
   })
 
   it('reports a rejected clear beside the button and clears it on retry', async () => {
-    updateKirocrewAgentMock.mockImplementationOnce(() => Promise.reject(new Error('agent is read-only')) as never)
+    updateAjcrewAgentMock.mockImplementationOnce(() => Promise.reject(new Error('agent is read-only')) as never)
     seedAgent('max')
     seedResolved('max', true)
     wrap()
@@ -269,7 +269,7 @@ describe('ChatPanel — default agent reasoning-effort pin notice', () => {
     expect(err).toHaveTextContent("Couldn't clear the agent's pinned reasoning effort (agent is read-only). Try again.")
     expect(notice).toContainElement(err)
     fireEvent.click(screen.getByRole('button', CLEAR_BUTTON))
-    await waitFor(() => expect(updateKirocrewAgentMock).toHaveBeenCalledTimes(2), CHAIN)
+    await waitFor(() => expect(updateAjcrewAgentMock).toHaveBeenCalledTimes(2), CHAIN)
     await waitFor(() => expect(screen.queryByTestId('agent-effort-pin-clear-error')).toBeNull(), CHAIN)
   })
 

@@ -110,7 +110,7 @@ try {
     if (!text.includes('Past runs and workflows adapted from it keep working.')) {
       throw new Error(`confirm body missing: ${text}`)
     }
-    if (!text.includes("Kiro Crew can't undo this.")) {
+    if (!text.includes("Aj Crew can't undo this.")) {
       throw new Error(`confirm permanence missing: ${text}`)
     }
     if (

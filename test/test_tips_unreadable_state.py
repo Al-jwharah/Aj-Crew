@@ -19,8 +19,8 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.tips as tips_mod
-from kiro_crew.tips import _load_state, _save_state, get_tips_cache
+import aj_crew.tips as tips_mod
+from aj_crew.tips import _load_state, _save_state, get_tips_cache
 
 _SEED = {
     "dismissed": ["user-dismissed-tip"],
@@ -34,7 +34,7 @@ def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
     monkeypatch.setattr(tips_mod, "_resolve_pool", lambda: None)
     monkeypatch.setattr(tips_mod, "_load_bundled_catalog", lambda: [])
     monkeypatch.setattr(tips_mod, "_load_curated_tips", lambda: [])
-    with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+    with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
         yield tmp_path
 
 
@@ -72,7 +72,7 @@ async def test_a_read_error_at_cache_build_keeps_the_saved_intent(
     before = path.read_bytes()
     state = types.SimpleNamespace()
 
-    with _hold(path), caplog.at_level(logging.WARNING, logger="kiro_crew.tips"):
+    with _hold(path), caplog.at_level(logging.WARNING, logger="aj_crew.tips"):
         cache = await get_tips_cache(state)
     assert cache.state.opted_out is False
     assert any(
@@ -156,8 +156,8 @@ async def test_while_unreadable_next_serves_nothing_and_starts_no_generation(hom
     state = types.SimpleNamespace()
     with (
         _hold(path),
-        patch("kiro_crew.tips.KiroCrewConfig") as mock_cfg,
-        patch("kiro_crew.tips.maybe_refresh") as refresh,
+        patch("aj_crew.tips.AjCrewConfig") as mock_cfg,
+        patch("aj_crew.tips.maybe_refresh") as refresh,
     ):
         mock_cfg.load.return_value = cfg
         resp = await tips_mod.api_tips_next(_request("GET", "/api/tips/next", state))

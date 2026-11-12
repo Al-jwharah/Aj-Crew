@@ -37,8 +37,8 @@ const theme = params.get('theme') || 'dark'
 // so setting the attribute alone is overridden on mount. Both keys are pinned because
 // the colour theme drifts between runs when only the light/dark one is.
 localStorage.setItem('mc-theme', theme === 'light' ? 'light' : 'dark')
-localStorage.setItem('mc-color-theme', 'kiro')
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+localStorage.setItem('mc-color-theme', 'aj')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // The conductor lane, opened directly: the recording is of the lane, not of finding it.
 localStorage.setItem('mc-sidebar-lane', 'conductor')
@@ -81,7 +81,7 @@ interface Row {
 /** The four fields every row states for itself; the rest carry a default. */
 type RowSeed = Partial<Row> & Pick<Row, 'key' | 'title' | 'last_ts' | 'last_message'>
 
-const row = (over: RowSeed): Row => ({ messages: 12, running: false, agent: 'kirocrew', ...over })
+const row = (over: RowSeed): Row => ({ messages: 12, running: false, agent: 'ajcrew', ...over })
 
 /**
  * The shape this feature exists for: a conductor that already has a branch on screen,
@@ -111,7 +111,7 @@ const ROWS: Row[] = [
   row({
     key: 'chat-fold',
     title: 'worker: fold parity',
-    agent: 'kirocrew-worker',
+    agent: 'ajcrew-worker',
     running: true,
     last_ts: at(30_000),
     last_message: 'Edge layer applies over the citation.',
@@ -123,7 +123,7 @@ const ROWS: Row[] = [
   row({
     key: 'chat-verbs',
     title: 'worker: adopt + release',
-    agent: 'kirocrew-worker',
+    agent: 'ajcrew-worker',
     last_ts: at(9 * MIN),
     last_message: 'Both verbs refuse an unseeded tree.',
     parent: { slot: LANE, key: LANE },
@@ -131,7 +131,7 @@ const ROWS: Row[] = [
   row({
     key: 'chat-cold',
     title: 'worker: cold-scan parity',
-    agent: 'kirocrew-worker',
+    agent: 'ajcrew-worker',
     needs_input: true,
     last_ts: at(16 * MIN),
     last_message: 'Waiting on the tail-window decision.',
@@ -169,8 +169,8 @@ function Harness() {
         unreadSlots={[]}
         history={[]}
         historyHasMore={false}
-        defaultAgent="kirocrew"
-        installedAgents={[{ name: 'kirocrew', source: 'builtin' }, { name: 'kirocrew-worker', source: 'builtin' }]}
+        defaultAgent="ajcrew"
+        installedAgents={[{ name: 'ajcrew', source: 'builtin' }, { name: 'ajcrew-worker', source: 'builtin' }]}
       />
     </div>
   )

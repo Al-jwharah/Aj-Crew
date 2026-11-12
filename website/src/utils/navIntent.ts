@@ -12,7 +12,7 @@ import type { ChatLaunchOptions } from '../app-sdk'
  * popout nav-intent applier below) can write it without importing a page
  * component. ChatPage re-exports it for its existing importers.
  */
-export const PREFILL_STORAGE_KEY = 'kirocrew_prefill'
+export const PREFILL_STORAGE_KEY = 'ajcrew_prefill'
 
 /** Seed the composer prefill for a slot. Returns whether sessionStorage accepted it. */
 export function writePrefill(slotKey: string, prompt: string): boolean {
@@ -134,7 +134,7 @@ export function chatDeepLinkSlot(path: string): string {
 /**
  * Does a dashboard path name one app's detail page (`/apps/detail/<name>`)?
  *
- * The desktop app's `kirocrew://apps/detail/<name>` link resolves to this route.
+ * The desktop app's `ajcrew://apps/detail/<name>` link resolves to this route.
  * Apps are installed in the local Crew, so like a session deep link it must
  * bring the local Crew forward rather than navigate a pane hidden behind a
  * Remote Crew.

@@ -20,13 +20,13 @@ import pytest
 import work_ledger_projection_helpers as helpers
 from work_ledger_projection_helpers import _SLOTS, ACCEPTANCE, CONDUCTOR, _record
 
-import kiro_crew
-from kiro_crew import work_ledger
-from kiro_crew.dashboard.handlers import remote_dispatch_routes as routes
-from kiro_crew.dashboard.handlers import remote_placement as placement
-from kiro_crew.dashboard.remote_dispatch_headroom import RemoteDispatchSettings
-from kiro_crew.testing.wait import await_until
-from kiro_crew.work_ledger import open_remote_bindings
+import aj_crew
+from aj_crew import work_ledger
+from aj_crew.dashboard.handlers import remote_dispatch_routes as routes
+from aj_crew.dashboard.handlers import remote_placement as placement
+from aj_crew.dashboard.remote_dispatch_headroom import RemoteDispatchSettings
+from aj_crew.testing.wait import await_until
+from aj_crew.work_ledger import open_remote_bindings
 
 _isolated = helpers._isolated
 recorded = helpers.recorded
@@ -55,7 +55,7 @@ class Crews:
 
     def add(self, iid: str, mem: float = 50.0, disk: float = 200.0, **over: Any) -> None:
         room = {"mem_free_gb": mem, "disk_free_gb": disk, "load_per_cpu": 0.2}
-        self.crews[iid] = {"state": "connected", "version": kiro_crew.__version__, **over}
+        self.crews[iid] = {"state": "connected", "version": aj_crew.__version__, **over}
         self.crews[iid].setdefault("headroom", room)
 
     def status(self, iid: str):
@@ -158,9 +158,9 @@ async def _refused(state: Any, item_id: str) -> routes.CrewCallError:
 
 @pytest.mark.parametrize("enabled", [False, True])
 def test_the_tool_places_only_with_the_switch_on(monkeypatch, enabled):
-    from kiro_crew.mcp_dashboard_session_runs import _run_session_create
+    from aj_crew.mcp_dashboard_session_runs import _run_session_create
 
-    monkeypatch.setattr("kiro_crew.remote_dispatch.remote_dispatch_enabled", lambda: enabled)
+    monkeypatch.setattr("aj_crew.remote_dispatch.remote_dispatch_enabled", lambda: enabled)
     ctx = MagicMock()
     ctx.client.post.return_value = {
         "target": "c",

@@ -1,6 +1,6 @@
 """Tests for the ``title:`` scope of session search.
 
-Covers :func:`kiro_crew.history_search_query.split_title_scope`, the prefix parse,
+Covers :func:`aj_crew.history_search_query.split_title_scope`, the prefix parse,
 and what ``ConversationLog.search_sessions`` does with it: a title-only query is
 answered from titles alone (no transcript read, not held to the scan window), and
 text after the term is searched as usual among the sessions whose title matches.
@@ -18,12 +18,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import history, mcp_core
-from kiro_crew._sqlite_compat import fts5_available
-from kiro_crew.dashboard.handlers import api_sessions_search
-from kiro_crew.history import ConversationLog
-from kiro_crew.history_search import SessionCatalogProjection
-from kiro_crew.history_search_query import TitleScope, split_title_scope
+from aj_crew import history, mcp_core
+from aj_crew._sqlite_compat import fts5_available
+from aj_crew.dashboard.handlers import api_sessions_search
+from aj_crew.history import ConversationLog
+from aj_crew.history_search import SessionCatalogProjection
+from aj_crew.history_search_query import TitleScope, split_title_scope
 
 
 def _session(base: Path, key: str, title: str, content: str, mtime: int) -> None:
@@ -201,8 +201,8 @@ def test_the_chat_history_tool_excerpts_the_text_after_the_term(
     message that merely repeats the title's words must not take the excerpt from
     the message holding the text after the term.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:global-v1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:global-v1")
     log = ConversationLog(base_dir=tmp_path / "sessions")
     log.append("dashboard_chat-1", "user", "修复 the cache first")
     log.append("dashboard_chat-1", "assistant", "the deploy failed on step two")

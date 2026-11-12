@@ -15,18 +15,18 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.dashboard.chat_compaction_notice import notice_text
-from kiro_crew.messaging.queue_drain import (
+from aj_crew.config import AjCrewConfig
+from aj_crew.dashboard.chat_compaction_notice import notice_text
+from aj_crew.messaging.queue_drain import (
     QUEUED_CHANNEL_KEY,
     QUEUED_OWNER_KEY,
     entries_queued_by,
     register_drain,
     reset_drains,
 )
-from kiro_crew.session import SessionManager
-from kiro_crew.session_compaction import COMPACT_OUTCOME_WAITING_FOR_SUBAGENTS
-from kiro_crew.testing.wait import async_wait_until, await_until, until_parked
+from aj_crew.session import SessionManager
+from aj_crew.session_compaction import COMPACT_OUTCOME_WAITING_FOR_SUBAGENTS
+from aj_crew.testing.wait import async_wait_until, await_until, until_parked
 
 
 async def _no_events(_command: str):
@@ -108,7 +108,7 @@ async def _setup(
     wait_secs: float = 30.0, *, shared: bool = True, starts: list[dict] | None = None, **alloc
 ):
     order: list[str] = []
-    mgr = SessionManager(KiroCrewConfig(), provider_factory=_factory(order, starts))
+    mgr = SessionManager(AjCrewConfig(), provider_factory=_factory(order, starts))
     await mgr.get_or_create("dashboard:chat-1", **alloc)
     key = mgr._fold_key("dashboard:chat-1")
     mgr.release(key)
@@ -394,7 +394,7 @@ async def test_a_successor_that_fails_to_start_keeps_the_old_session(slack_drain
 @pytest.mark.asyncio
 async def test_a_restart_records_one_recycled_end(monkeypatch, fail_start):
     """The old session's end is recorded once; a failed start re-opens its record."""
-    import kiro_crew.session_compaction as sc
+    import aj_crew.session_compaction as sc
 
     mgr, key, runs, order, _notices = await _setup()
     calls: list[tuple[str, str]] = []
@@ -481,10 +481,10 @@ async def test_an_uncompactable_hold_does_not_say_a_compaction_failed(monkeypatc
 
     The dashboard leg runs its own callback, so its text is the one the outcome picks.
     """
-    from kiro_crew.dashboard.state import DashboardState
-    from kiro_crew.testing.wait import await_until
+    from aj_crew.dashboard.state import DashboardState
+    from aj_crew.testing.wait import await_until
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = DashboardState(
         sessions=MagicMock(count=0), crons=MagicMock(), lessons=MagicMock(), start_time=0.0
     )

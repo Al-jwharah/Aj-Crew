@@ -36,13 +36,13 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
-import kiro_crew.agent_discovery as agent_discovery
-import kiro_crew.skills as skills_mod
-from kiro_crew import security
-from kiro_crew.agent_discovery import clear_list_agents_cache
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.skills import _iter_skill_files
-from kiro_crew.testing.wait import default_timeout
+import aj_crew.agent_discovery as agent_discovery
+import aj_crew.skills as skills_mod
+from aj_crew import security
+from aj_crew.agent_discovery import clear_list_agents_cache
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.skills import _iter_skill_files
+from aj_crew.testing.wait import default_timeout
 
 
 def _refuse_candidate_resolution(expanded: str) -> set[str]:
@@ -56,7 +56,7 @@ class TestIsSensitiveResolvedPath:
     """The pre-resolved gate: same verdicts as ``is_sensitive_path``, no pool hop."""
 
     def test_duplicate_override_leaves_resolve_once_per_fresh_build(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
         roots = security.paths._resolve_root_anchors(str(tmp_path))
         calls = []
         generation = ["one"]
@@ -66,7 +66,7 @@ class TestIsSensitiveResolvedPath:
             return [path + generation[0] for path in paths]
 
         monkeypatch.setattr(security.paths, "_realpaths_or_none", resolve)
-        leaves = [".kiro/crew/token_signing.key", ".kirocrew/token_signing.key"]
+        leaves = [".kiro/crew/token_signing.key", ".ajcrew/token_signing.key"]
         first = security.paths._home_dir_targets_uncached(leaves, roots)
         target = os.path.join(roots.crew_home, "token_signing.key")
         assert calls.count(target) == 1
@@ -161,7 +161,7 @@ class TestIsSensitiveResolvedPath:
         # add a missing LEAF, which ntpath resolves the same either way.
         home = tmp_path / "crew"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         resolved: dict[str, str | None] = {}
         security.paths._anchor_targets(
             security.paths._SENSITIVE_HOME_DIRS, security.paths._resolved_root_key(), resolved
@@ -180,7 +180,7 @@ class TestIsSensitiveResolvedPath:
         assert len(security.paths._home_targets_cache) == 1
 
     def test_the_gate_is_exported_on_the_facade(self) -> None:
-        from kiro_crew.security import _exports
+        from aj_crew.security import _exports
 
         assert "is_sensitive_resolved_path" in _exports.EXPORTED_NAMES
         assert security.is_sensitive_resolved_path is security.paths.is_sensitive_resolved_path
@@ -216,7 +216,7 @@ class TestIsSensitiveResolvedPath:
 _EXPECTED_GATE_CALL_SITES: dict[str, int] = {
     # ``_iter_skill_files``: one check per directory (prune) and per SKILL.md
     # (skip), each against the ``realpath`` the walk computed for loop detection.
-    "kiro_crew/skills_discovery.py": 2,
+    "aj_crew/skills_discovery.py": 2,
     # ``_complete_path_listing`` / ``_scan_completion_dir``: the project root, the
     # directory a `./` completion token named, and every entry that directory
     # offers. Both halves of the contract hold. The argument is canonical without a
@@ -227,7 +227,7 @@ _EXPECTED_GATE_CALL_SITES: dict[str, int] = {
     # on the dashboard's path-probe pool worker, never the event loop -- resolving
     # the candidate there is what this endpoint must not do at all, since on Windows
     # it would follow a junction aimed at a share.
-    "kiro_crew/dashboard/file_api/path_complete.py": 3,
+    "aj_crew/dashboard/file_api/path_complete.py": 3,
     # ``_project_tree_fence``: the walk's own directory, and every entry of
     # that directory the directory-level answers do not settle -- a link, or any
     # entry when a store sits at or beneath the directory. Each is handed the
@@ -236,7 +236,7 @@ _EXPECTED_GATE_CALL_SITES: dict[str, int] = {
     # ``_project_tree_ignored_dotfiles`` (``hidden=1``): each git-ignored dot-file
     # it would add, on the ``os.path.realpath`` computed on the same line, in the
     # same worker.
-    "kiro_crew/dashboard/file_api/project_tree.py": 3,
+    "aj_crew/dashboard/file_api/project_tree.py": 3,
     # ``_validate_spec_path``: ``validate_file_path`` has already rejected the
     # candidate without following a UNC/link-laundered target.  This call only
     # recovers the 403 classification for a lexically named sensitive path; an
@@ -245,7 +245,7 @@ _EXPECTED_GATE_CALL_SITES: dict[str, int] = {
     # the candidate lexical (input + ``normpath``) and resolves only its trusted
     # anchors.  Both handler call sites run this helper via ``asyncio.to_thread``,
     # so those inline anchor resolutions never block the event loop.
-    "kiro_crew/dashboard/handlers/taskrunner.py": 1,
+    "aj_crew/dashboard/handlers/taskrunner.py": 1,
     # ``security.is_sensitive_canonical_path``: the shared entry point for a
     # reader that canonicalised its path itself. It picks the gate by thread --
     # this pre-resolved gate off the event loop, the bounded gate on it -- so
@@ -276,7 +276,7 @@ _EXPECTED_GATE_CALL_SITES: dict[str, int] = {
     # root check and ``source_path`` pointers, and the reader module's project
     # root and cache key checks, stay on ``is_sensitive_path``: none of those
     # values is canonicalised first.
-    "kiro_crew/security/paths.py": 1,
+    "aj_crew/security/paths.py": 1,
 }
 
 # path relative to ``src`` -> number of ``pre_resolved=True`` containment claims.
@@ -286,7 +286,7 @@ _EXPECTED_CONTAINMENT_CALL_SITES: dict[str, int] = {
     # lets the walk settle a whole directory of entries without a gate call per
     # entry, and it runs inside ``api_project_tree``'s ``asyncio.to_thread``
     # worker, never the event loop.
-    "kiro_crew/dashboard/file_api/project_tree.py": 1,
+    "aj_crew/dashboard/file_api/project_tree.py": 1,
 }
 
 
@@ -471,8 +471,8 @@ _GLOBAL = "global-chat-model"
 
 
 def _lite_spec(agents_dir: Path, model: str = _PIN) -> Path:
-    spec = agents_dir / "kirocrew-lite.json"
-    spec.write_text(json.dumps({"name": "kirocrew-lite", "model": model}))
+    spec = agents_dir / "ajcrew-lite.json"
+    spec.write_text(json.dumps({"name": "ajcrew-lite", "model": model}))
     return spec
 
 
@@ -506,27 +506,27 @@ class TestNamedAgentModelReadsTheSnapshot:
                 json.dumps({"name": f"agent-{i}", "model": f"m{i}"})
             )
         counter = _ReadCounter(monkeypatch)
-        assert KiroCrewConfig._resolve_named_agent_model("agent-2", agents_dir=tmp_path) == "m2"
+        assert AjCrewConfig._resolve_named_agent_model("agent-2", agents_dir=tmp_path) == "m2"
         cold = counter.n
         assert cold == 4  # one parse per spec, once
-        assert KiroCrewConfig._resolve_named_agent_model("agent-3", agents_dir=tmp_path) == "m3"
-        assert KiroCrewConfig._resolve_named_agent_model("agent-0", agents_dir=tmp_path) == "m0"
+        assert AjCrewConfig._resolve_named_agent_model("agent-3", agents_dir=tmp_path) == "m3"
+        assert AjCrewConfig._resolve_named_agent_model("agent-0", agents_dir=tmp_path) == "m0"
         assert counter.n == cold, "a warm resolve re-read the agents directory"
 
     def test_a_warm_call_submits_nothing_to_the_pool(self, tmp_path, monkeypatch) -> None:
         # The dumps' exact frame: the loop parked in the candidate resolution
         # under _read_agent_spec. Warm, that frame is never entered.
         (tmp_path / "bot.json").write_text(json.dumps({"name": "bot", "model": "m"}))
-        assert KiroCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == "m"
+        assert AjCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == "m"
         monkeypatch.setattr(security, "_resolved_forms_bounded", _refuse_candidate_resolution)
-        assert KiroCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == "m"
-        assert KiroCrewConfig._resolve_named_agent_model("nobody", agents_dir=tmp_path) == ""
+        assert AjCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == "m"
+        assert AjCrewConfig._resolve_named_agent_model("nobody", agents_dir=tmp_path) == ""
 
     def test_a_changed_directory_is_seen(self, tmp_path) -> None:
         (tmp_path / "bot.json").write_text(json.dumps({"name": "bot", "model": "m"}))
-        assert KiroCrewConfig._resolve_named_agent_model("late", agents_dir=tmp_path) == ""
+        assert AjCrewConfig._resolve_named_agent_model("late", agents_dir=tmp_path) == ""
         (tmp_path / "late.json").write_text(json.dumps({"name": "late", "model": "m-late"}))
-        assert KiroCrewConfig._resolve_named_agent_model("late", agents_dir=tmp_path) == "m-late"
+        assert AjCrewConfig._resolve_named_agent_model("late", agents_dir=tmp_path) == "m-late"
 
     @pytest.mark.parametrize("state", ["cold", "stale", "cleared"])
     def test_on_loop_refresh_parses_only_on_the_worker(
@@ -535,7 +535,7 @@ class TestNamedAgentModelReadsTheSnapshot:
         spec = tmp_path / "bot.json"
         spec.write_text(json.dumps({"name": "bot", "model": "old"}))
         if state != "cold":
-            assert KiroCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == "old"
+            assert AjCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == "old"
         previous_mtime = spec.stat().st_mtime_ns
         spec.write_text(json.dumps({"name": "bot", "model": "new"}))
         # No sleep or filesystem timestamp-resolution assumption.
@@ -547,7 +547,7 @@ class TestNamedAgentModelReadsTheSnapshot:
         log = _SpecReadLog(monkeypatch)
 
         async def resolve():
-            return KiroCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path)
+            return AjCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path)
 
         # Stale rows are served as they stand; an empty snapshot is "no pin". Neither
         # answer costs a read on the loop thread.
@@ -580,7 +580,7 @@ class TestNamedAgentModelReadsTheSnapshot:
         log = _SpecReadLog(monkeypatch)
 
         async def resolve():
-            return KiroCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path)
+            return AjCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path)
 
         _, futures = _discovery_pool
         cold = asyncio.run(resolve())
@@ -608,10 +608,10 @@ class TestNamedAgentModelReadsTheSnapshot:
         counter = _ReadCounter(monkeypatch)
 
         async def resolve_twice():
-            assert KiroCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == ""
-            assert KiroCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == ""
+            assert AjCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == ""
+            assert AjCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == ""
             clear_list_agents_cache()
-            assert KiroCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == ""
+            assert AjCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == ""
 
         try:
             asyncio.run(resolve_twice())
@@ -623,7 +623,7 @@ class TestNamedAgentModelReadsTheSnapshot:
             for call in queued.submit.call_args_list:
                 pool.submit(*call.args, **call.kwargs).result(timeout=default_timeout())
         assert str(tmp_path) not in agent_discovery._PARSED_SPECS_REFRESHING
-        assert KiroCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == "m"
+        assert AjCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == "m"
 
     def test_failed_refresh_releases_the_inflight_mark(
         self, tmp_path, monkeypatch, caplog, _discovery_pool
@@ -640,7 +640,7 @@ class TestNamedAgentModelReadsTheSnapshot:
 
         _, futures = _discovery_pool
         for attempt in range(2):
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.agent_discovery"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.agent_discovery"):
                 assert asyncio.run(lookup()) == []
                 assert len(futures) == attempt + 1
                 # The worker swallows the failure so the fire-and-forget future
@@ -671,16 +671,14 @@ class TestNamedAgentModelReadsTheSnapshot:
         # is filename-sorted, so the precedence is restated explicitly.
         (tmp_path / "aaa.md").write_text("---\nname: shared\nmodel: from-md\n---\nprompt\n")
         (tmp_path / "zzz.json").write_text(json.dumps({"name": "shared", "model": "from-json"}))
-        assert (
-            KiroCrewConfig._resolve_named_agent_model("shared", agents_dir=tmp_path) == "from-json"
-        )
+        assert AjCrewConfig._resolve_named_agent_model("shared", agents_dir=tmp_path) == "from-json"
 
     def test_a_snapshot_failure_is_no_pin_not_an_exception(self, tmp_path, monkeypatch) -> None:
         def boom(*a, **k):
             raise RuntimeError("snapshot unavailable")
 
         monkeypatch.setattr(agent_discovery, "parsed_agent_specs", boom)
-        assert KiroCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == ""
+        assert AjCrewConfig._resolve_named_agent_model("bot", agents_dir=tmp_path) == ""
 
 
 def _recording_provider_class(constructed: list[dict]) -> type:
@@ -724,10 +722,10 @@ class TestBackgroundSessionWarmsTheSnapshotFirst:
     """
 
     def _create_background(self, tmp_path, monkeypatch, _discovery_pool):
-        import kiro_crew.providers.acp as acp_mod
-        from kiro_crew.config import loader
-        from kiro_crew.config import paths as config_paths
-        from kiro_crew.session import BACKGROUND_KEY, SessionManager
+        import aj_crew.providers.acp as acp_mod
+        from aj_crew.config import loader
+        from aj_crew.config import paths as config_paths
+        from aj_crew.session import BACKGROUND_KEY, SessionManager
 
         # Both agents-dir hooks at ONE directory, as the suite's isolation floor
         # pins them: the lookup resolves ``kiro_agents_dir()`` and the snapshot
@@ -736,7 +734,7 @@ class TestBackgroundSessionWarmsTheSnapshotFirst:
         monkeypatch.setattr(agent_discovery, "_KIRO_AGENTS_DIR", tmp_path)
         constructed: list[dict] = []
         monkeypatch.setattr(acp_mod, "AcpProvider", _recording_provider_class(constructed))
-        cfg = KiroCrewConfig(agent=loader.AgentConfig(model=_GLOBAL))
+        cfg = AjCrewConfig(agent=loader.AgentConfig(model=_GLOBAL))
         mgr = SessionManager(cfg, provider_factory=cfg.create_provider_factory())
 
         async def create():
@@ -782,7 +780,7 @@ class TestBackgroundSessionWarmsTheSnapshotFirst:
 
         # The factory built ``_bg`` on the agent's own pin, not the chat model.
         assert [(kwargs["agent"], kwargs["model"]) for kwargs in constructed] == [
-            ("kirocrew-lite", expected)
+            ("ajcrew-lite", expected)
         ]
         _, futures = _discovery_pool
         assert futures and all(future.exception() is None for future in futures)
@@ -805,7 +803,7 @@ class TestBackgroundSessionWarmsTheSnapshotFirst:
             raise RuntimeError("snapshot unavailable")
 
         monkeypatch.setattr(agent_discovery, "parsed_agent_specs", fail)
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.agent_discovery"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.agent_discovery"):
             constructed = self._create_background(tmp_path, monkeypatch, _discovery_pool)
         # Best-effort: the warm-up swallows the failure and the session is still
         # created, on the cold answer.

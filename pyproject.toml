@@ -3,7 +3,7 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "kirocrew"
+name = "ajcrew"
 version = "0.13.0"
 description = "Personal AI agent that runs locally — chat via CLI, dashboard, desktop app, or messaging channels like Slack and Discord"
 readme = "README.md"
@@ -20,10 +20,10 @@ requires-python = ">=3.12"
 dynamic = ["dependencies", "optional-dependencies"]
 
 [project.urls]
-Homepage = "https://github.com/kirodotdev/KiroCrew"
+Homepage = "https://github.com/Al-jwharah/Aj-Crew"
 
 [project.scripts]
-kirocrew = "kiro_crew._bootstrap:main"
+ajcrew = "aj_crew._bootstrap:main"
 
 [dependency-groups]
 # Pinned dev tool versions for reproducible CI. Bump as needed.
@@ -122,11 +122,11 @@ force-exclude = "/_vendor/|/test/workflows/malicious/"
 
 [tool.isort]
 # `tests` covers the builtin apps' own test packages (e.g.
-# src/kiro_crew/apps/builtins/code_review_sage/tests), imported as
+# src/aj_crew/apps/builtins/code_review_sage/tests), imported as
 # `from tests.fixtures import ...` with the app dir as the sys.path root.
 # isort used to infer first-party from the repo-root tests/ directory; that
 # directory was removed in #6577, so the classification is pinned explicitly.
-known_first_party = ["kiro_crew", "tests"]
+known_first_party = ["aj_crew", "tests"]
 
 # required for compatibility with black:
 profile = "black"
@@ -135,7 +135,7 @@ profile = "black"
 line_length = 100
 # skip + skip_glob: isort's skip_glob alone is not honored when a formatter
 # hook passes explicit file paths with --filter-files unset; filter both ways.
-skip_glob = ["**/_vendor/*", "src/kiro_crew/_vendor/*"]
+skip_glob = ["**/_vendor/*", "src/aj_crew/_vendor/*"]
 extend_skip = ["_vendor"]
 
 [tool.mypy]
@@ -172,9 +172,9 @@ exclude = ['/_vendor/', 'goal-ledger-conductor/scripts/accept_eval[.]py$']
 
 [[tool.mypy.overrides]]
 # _vendor has no __init__.py (it is a sys.path root), so mypy may resolve the
-# vendored files as either kiro_crew._vendor.* or top-level llama_cpp.* /
+# vendored files as either aj_crew._vendor.* or top-level llama_cpp.* /
 # diskcache depending on invocation — suppress both spellings.
-module = ["kiro_crew._vendor.*", "llama_cpp", "llama_cpp.*", "diskcache"]
+module = ["aj_crew._vendor.*", "llama_cpp", "llama_cpp.*", "diskcache"]
 ignore_errors = true
 follow_imports = "skip"
 

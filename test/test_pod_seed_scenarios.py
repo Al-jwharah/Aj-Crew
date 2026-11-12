@@ -13,13 +13,13 @@ from pathlib import Path
 import pytest
 import yaml  # type: ignore[import-untyped]
 
+from aj_crew import seed as seed_mod
+from aj_crew.platform_compat import IS_POSIX
+from aj_crew.pod import cli as pod_cli
+from aj_crew.pod import runtime as rt
+from aj_crew.pod.config import PodConfig
+from aj_crew.testing.fixtures import seeded_home
 from conftest import requires_symlinks
-from kiro_crew import seed as seed_mod
-from kiro_crew.platform_compat import IS_POSIX
-from kiro_crew.pod import cli as pod_cli
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod.config import PodConfig
-from kiro_crew.testing.fixtures import seeded_home
 
 # Credential shapes that must never ship inside a fixture. The fixtures land in
 # the wheel and the sdist, so a placeholder that merely LOOKS like a secret is
@@ -143,14 +143,14 @@ class TestScenarioClassification:
 @pytest.mark.skipif(not IS_POSIX, reason="pods require POSIX descriptor traversal")
 class TestSeedHomeFromScenario:
     def test_populates_an_absent_home(self, tmp_path: Path, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         assert rt.seed_home_from_scenario(cfg, "wt", "minimal") is True
         assert (cfg.home_dir("wt") / "crons.json").is_file()
 
     def test_leaves_a_completed_matching_home_alone(self, tmp_path: Path, monkeypatch) -> None:
         """A restart of the same scenario must preserve state created after seed."""
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         home = cfg.home_dir("wt")
         assert rt.seed_home_from_scenario(cfg, "wt", "minimal") is True
@@ -169,7 +169,7 @@ class TestSeedHomeFromScenario:
         the supervisor reads as a crash and restart-loops the pod every few
         seconds — with the real cause buried in a traceback.
         """
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         home = cfg.home_dir("wt")
         home.parent.mkdir(parents=True, exist_ok=True)
@@ -180,7 +180,7 @@ class TestSeedHomeFromScenario:
     def test_pod_root_creation_errors_refuse_in_the_pod_vocabulary(
         self, tmp_path: Path, monkeypatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
 
         def _refuse(*args, **kwargs):
@@ -194,7 +194,7 @@ class TestSeedHomeFromScenario:
     def test_raced_home_symlink_cannot_redirect_fixture_writes(
         self, tmp_path: Path, monkeypatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         home = cfg.home_dir("wt")
         held = tmp_path / "held-home"
@@ -217,15 +217,15 @@ class TestSeedHomeFromScenario:
         assert not (outside / "proof.txt").exists()
 
     def test_restores_the_callers_home_env(self, tmp_path: Path, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "callers-home"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "callers-home"))
         rt.seed_home_from_scenario(PodConfig.load(), "wt", "empty")
-        assert os.environ["KIROCREW_HOME"] == str(tmp_path / "callers-home")
+        assert os.environ["AJCREW_HOME"] == str(tmp_path / "callers-home")
 
     def test_unknown_scenario_raises_in_the_pod_vocabulary(
         self, tmp_path: Path, monkeypatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         with pytest.raises(rt.PodError):
             rt.seed_home_from_scenario(PodConfig.load(), "wt", "no-such-fixture")
 
@@ -239,7 +239,7 @@ class TestSeedHomeFromScenario:
         the same silent success the loud refusal exists to prevent, only harder to
         see, because the operator is told the home was already fine.
         """
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         home = cfg.home_dir("wt")
         home.mkdir(parents=True)
@@ -388,7 +388,7 @@ class TestSeedCreateThenOpenRemovalWindow:
         self, tmp_path: Path, monkeypatch
     ) -> None:
         """The same window at the home's own creation, driven through the seed."""
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         home = cfg.home_dir("wt")
         removals: list[int] = []
@@ -411,7 +411,7 @@ class TestSeedCreateThenOpenRemovalWindow:
         and sends the operator after a file nothing planted. A met home holds a
         prior seed's state, so it is also never re-created empty.
         """
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         home = cfg.home_dir("wt")
         assert rt.seed_home_from_scenario(cfg, "wt", "minimal") is True
@@ -442,7 +442,7 @@ class TestSeedCreateThenOpenRemovalWindow:
         self, tmp_path: Path, monkeypatch
     ) -> None:
         """The other end of the same sequence: the root goes, so the mkdir has nowhere."""
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         home = cfg.home_dir("wt")
         real_mkdir = os.mkdir
@@ -467,7 +467,7 @@ class TestSeededScenarioInHome:
     the env file records what was asked for, which is the thing under test."""
 
     def test_names_the_scenario_a_seeded_home_holds(self, tmp_path: Path, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         rt.seed_home_from_scenario(cfg, "wt", "minimal")
         assert rt.seeded_scenario_in_home(cfg, "wt") == "minimal"
@@ -479,14 +479,14 @@ class TestSeededScenarioInHome:
         a lazy import merely hid the undeclared dependency until an installed
         build tried to verify a seed and reported an empty marker.
         """
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         rt.seed_home_from_scenario(cfg, "wt", "minimal")
         monkeypatch.setitem(sys.modules, "yaml", None)
         assert rt.seeded_scenario_in_home(cfg, "wt") == "minimal"
 
     def test_a_blank_home_names_nothing(self, tmp_path: Path, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         cfg.home_dir("wt").mkdir(parents=True)
         assert rt.seeded_scenario_in_home(cfg, "wt") is None
@@ -495,7 +495,7 @@ class TestSeededScenarioInHome:
         # A manifest that is present but unparseable still proves the home was
         # seeded from SOMETHING, which is the distinction the caller needs;
         # returning None would have it report a seeded home as blank.
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         home = cfg.home_dir("wt")
         home.mkdir(parents=True)
@@ -503,7 +503,7 @@ class TestSeededScenarioInHome:
         assert rt.seeded_scenario_in_home(cfg, "wt") == ""
 
     def test_a_manifest_directory_reports_no_marker(self, tmp_path: Path, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         cfg = PodConfig.load()
         home = cfg.home_dir("wt")
         (home / seed_mod.FIXTURE_MANIFEST).mkdir(parents=True)
@@ -574,7 +574,7 @@ class TestBootAppliesTheScenario:
         ``Path.home()`` (read by ``identity_stores.store_mappings`` and
         ``resolve_kiro_cli``), ``HOME`` (copied by ``build_pod_env``),
         ``XDG_DATA_HOME`` (a source-side override in ``_source_root``),
-        ``KIROCREW_KIRO_BIN`` (honoured before any directory search) and ``PATH``
+        ``AJCREW_KIRO_BIN`` (honoured before any directory search) and ``PATH``
         (kept verbatim by ``known_kiro_cli_dirs``), set to an empty directory.
         """
         monkeypatch.setattr(rt, "IS_MACOS", False)
@@ -586,29 +586,29 @@ class TestBootAppliesTheScenario:
         monkeypatch.setenv("HOME", str(fake_host_home))
         monkeypatch.setenv("PATH", str(empty_path_dir))
         monkeypatch.delenv("XDG_DATA_HOME", raising=False)
-        monkeypatch.delenv("KIROCREW_KIRO_BIN", raising=False)
+        monkeypatch.delenv("AJCREW_KIRO_BIN", raising=False)
         # `known_kiro_cli_dirs` keys on the REAL `sys.platform`, not on the
         # patched `rt.IS_MACOS`, and on darwin it appends the fixed install
         # prefixes (`/opt/homebrew/bin`, `/usr/local/bin`) that derive from
         # neither the pinned home nor the emptied PATH -- so a brew-installed
         # kiro-cli on a macOS developer host would still resolve and be spawned.
         # Confine the search to the fake home so the resolver has nothing to find.
-        from kiro_crew import kiro_cli
+        from aj_crew import kiro_cli
 
         monkeypatch.setattr(
             kiro_cli,
             "known_kiro_cli_dirs",
             lambda platform_name, home, environ, **_kw: [str(home / ".local" / "bin")],
         )
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "envs"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "envs"))
         checkout = tmp_path / "co"
         binary = rt.prov.venv_bin(checkout)
         binary.parent.mkdir(parents=True)
         binary.write_text("#!/bin/sh\n")
         binary.chmod(0o755)
-        (checkout / "src" / "kiro_crew" / "static" / "dist").mkdir(parents=True)
-        cli_src = checkout / "src" / "kiro_crew" / "cli.py"
+        (checkout / "src" / "aj_crew" / "static" / "dist").mkdir(parents=True)
+        cli_src = checkout / "src" / "aj_crew" / "cli.py"
         cli_src.write_text('gw.add_argument("--no-crons")\ngw.add_argument("--no-tunnel")\n')
         captured: dict[str, object] = {}
 
@@ -646,10 +646,10 @@ class TestBootAppliesTheScenario:
         assert len(crons["jobs"]) == 2
         # ...and the gateway was exec'd afterwards, pointed at that home. The name
         # is compared against the resolver rather than a literal: a Windows venv's
-        # entry point is `kirocrew.exe`, so a bare `endswith("kirocrew")` asserts
+        # entry point is `ajcrew.exe`, so a bare `endswith("ajcrew")` asserts
         # the POSIX layout on every platform.
         assert captured["argv"][0].endswith(rt.prov.venv_bin(Path(".")).name)
-        assert captured["env"]["KIROCREW_HOME"] == str(home)
+        assert captured["env"]["AJCREW_HOME"] == str(home)
         assert "seeded home from scenario 'minimal'" in capsys.readouterr().out
 
     def test_the_child_probe_finds_no_real_host_kiro_cli(self, booted) -> None:
@@ -658,10 +658,10 @@ class TestBootAppliesTheScenario:
         ``resolve_kiro_cli`` finds nothing, so the boot reaches ``rc == 0`` via
         ``PROBE_UNAVAILABLE`` without launching the operator's real binary.
         """
-        from kiro_crew import kiro_cli as kiro_cli_mod
+        from aj_crew import kiro_cli as kiro_cli_mod
 
         # Confirms the premise directly: nothing under the fake host home (or
-        # any directory a real KIROCREW_KIRO_BIN would point at) resolves to
+        # any directory a real AJCREW_KIRO_BIN would point at) resolves to
         # an executable, so a passing boot below is not silently spawning the
         # operator's real CLI.
         assert kiro_cli_mod.resolve_kiro_cli() is None

@@ -15,9 +15,9 @@ import pytest
 from test_slack_agent_session_status import _caps  # noqa: F401 - autouse fixture
 from test_slack_agent_session_stop import FakeSessions, Orch, _env, stop_event  # noqa: F401
 
-from kiro_crew.slack import features
-from kiro_crew.slack.agent_sessions import fence, session_events
-from kiro_crew.slack.agent_sessions.status import (
+from aj_crew.slack import features
+from aj_crew.slack.agent_sessions import fence, session_events
+from aj_crew.slack.agent_sessions.status import (
     SESSION_STATUS_ACTIVE,
     SESSION_STATUS_PROCESSING,
     SESSION_STATUS_SUSPENDED,
@@ -143,7 +143,7 @@ async def test_a_failed_active_keeps_the_thread_owed(disruption: str) -> None:
 def test_eviction_never_drops_a_thread_still_owed_its_active(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.slack.agent_sessions import status as status_mod
+    from aj_crew.slack.agent_sessions import status as status_mod
 
     monkeypatch.setattr(status_mod, "_MAX_TRACKED_SESSIONS", 3)
     orch = _orch()

@@ -1,6 +1,6 @@
 """Pin packaged-doc claims that the agent reads at runtime to the code they describe.
 
-``src/kiro_crew/docs`` ships with the package and is read by running agents, so a
+``src/aj_crew/docs`` ships with the package and is read by running agents, so a
 claim there that drifts from the code misleads an agent, not only a human. Each test
 here pairs one sentence or table cell with the code fact it states.
 """
@@ -9,20 +9,20 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_STRANDS,
 )
-from kiro_crew.computer_use.backend import UnsupportedBackend
-from kiro_crew.computer_use.linux_driver import LinuxBackend
-from kiro_crew.dashboard.upload_destination import DOCUMENT_CHANNELS
-from kiro_crew.providers.mirrors import mirror_for
-from kiro_crew.providers.mirrors.base import Concern, Disposition
+from aj_crew.computer_use.backend import UnsupportedBackend
+from aj_crew.computer_use.linux_driver import LinuxBackend
+from aj_crew.dashboard.upload_destination import DOCUMENT_CHANNELS
+from aj_crew.providers.mirrors import mirror_for
+from aj_crew.providers.mirrors.base import Concern, Disposition
 
-DOCS = Path(__file__).parent.parent / "src" / "kiro_crew" / "docs"
+DOCS = Path(__file__).parent.parent / "src" / "aj_crew" / "docs"
 
 
 def _read(name: str) -> str:

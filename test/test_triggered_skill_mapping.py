@@ -14,10 +14,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import context
-from kiro_crew.agent_files import AGENT_FILENAME
-from kiro_crew.context import ContextBuilder
-from kiro_crew.memory import MemoryStore
+from aj_crew import context
+from aj_crew.agent_files import AGENT_FILENAME
+from aj_crew.context import ContextBuilder
+from aj_crew.memory import MemoryStore
 
 _DEFAULT_AGENT = AGENT_FILENAME.removesuffix(".json")
 

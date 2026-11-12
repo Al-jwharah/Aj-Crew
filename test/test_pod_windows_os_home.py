@@ -16,11 +16,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import pinned_fs, platform_compat
-from kiro_crew.identity_stores import Product, StoreMapping
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod import windows as win
-from kiro_crew.pod.config import PodConfig
+from aj_crew import pinned_fs, platform_compat
+from aj_crew.identity_stores import Product, StoreMapping
+from aj_crew.pod import runtime as rt
+from aj_crew.pod import windows as win
+from aj_crew.pod.config import PodConfig
 
 
 def _cp(stdout: str = "", returncode: int = 0, stderr: str = "") -> subprocess.CompletedProcess:
@@ -31,9 +31,9 @@ def _cp(stdout: str = "", returncode: int = 0, stderr: str = "") -> subprocess.C
 def cfg(tmp_path, monkeypatch) -> PodConfig:
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
-    monkeypatch.setenv("KIROCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
+    monkeypatch.setenv("AJCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
     c = PodConfig.load()
     c.pods_dir.mkdir(parents=True, exist_ok=True)
     return c
@@ -372,10 +372,10 @@ def test_pod_up_boots_end_to_end_under_the_windows_branches(cfg, tmp_path, monke
     checkout = tmp_path / "worktree"
     bin_dir = checkout / ".venv" / "Scripts"
     bin_dir.mkdir(parents=True)
-    binary = bin_dir / "kirocrew.exe"
+    binary = bin_dir / "ajcrew.exe"
     binary.write_text("stub")
     binary.chmod(0o700)
-    (checkout / "src" / "kiro_crew" / "static" / "dist").mkdir(parents=True)
+    (checkout / "src" / "aj_crew" / "static" / "dist").mkdir(parents=True)
     rt.pin_checkout(cfg, "demo", checkout)
 
     monkeypatch.setattr(rt, "resolve_checkout", lambda c, n: checkout)
@@ -388,8 +388,8 @@ def test_pod_up_boots_end_to_end_under_the_windows_branches(cfg, tmp_path, monke
     def fake_supervise(c, name, bin_path, argv, env, *, gateway_pid_record=None):
         spawned["bin"] = str(bin_path)
         spawned["argv"] = list(argv)
-        spawned["home"] = env.get("KIROCREW_HOME")
-        spawned["os_home"] = env.get("KIROCREW_OS_HOME")
+        spawned["home"] = env.get("AJCREW_HOME")
+        spawned["os_home"] = env.get("AJCREW_OS_HOME")
         # Captured, not merely tolerated: the supervisor cannot adopt a restart
         # successor without the pod's own gateway pid sidecar, so a boot that
         # stopped passing it would silently lose restart tracking. Asserted below.
@@ -438,10 +438,10 @@ def test_pod_up_boots_end_to_end_with_a_seeded_scenario(cfg, tmp_path, monkeypat
     checkout = tmp_path / "worktree"
     bin_dir = checkout / ".venv" / "Scripts"
     bin_dir.mkdir(parents=True)
-    binary = bin_dir / "kirocrew.exe"
+    binary = bin_dir / "ajcrew.exe"
     binary.write_text("stub")
     binary.chmod(0o700)
-    (checkout / "src" / "kiro_crew" / "static" / "dist").mkdir(parents=True)
+    (checkout / "src" / "aj_crew" / "static" / "dist").mkdir(parents=True)
     rt.pin_checkout(cfg, "demo", checkout)
     rt.write_env_file(cfg, "demo", {"SEED": "minimal"})
 

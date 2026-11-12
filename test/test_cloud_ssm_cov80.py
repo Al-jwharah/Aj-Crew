@@ -21,8 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.cloud import aws, ssm
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.cloud import aws, ssm
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 
 def _stub_bin(name: str) -> str:

@@ -25,7 +25,7 @@ import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 const OUT = process.argv[2] || '../temp-screenshots/15926-chips-mid-turn'
 const LABEL = process.argv[3] || 'after'
 const SLOT = 'chat-chips-mid-turn'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 const TOOL_CALL_ID = 'tc-15926-read'
 
 mkdirSync(OUT, { recursive: true })
@@ -36,7 +36,7 @@ const slots = [{
   running: true,
   last_message: 'Please log in again.',
   messages: 1,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

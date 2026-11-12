@@ -18,19 +18,19 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     EVENT_TOOL_RESULT,
     AcpEvent,
 )
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew.config import AjCrewConfig
+from aj_crew.dashboard.chat_runner import (
     COMPACT_AFTER_TURN_NOTICE_KIND,
     _run_chat,
 )
-from kiro_crew.session import SessionManager
+from aj_crew.session import SessionManager
 
 KEY = "dashboard:compact-after-turn"
 
@@ -175,7 +175,7 @@ async def test_each_turn_gets_its_own_notice(tmp_path):
 
 @contextlib.asynccontextmanager
 async def _managed(provider: Any):
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.timeout_secs = 2
     cfg.session.autocompact_pct = 40.0
     mgr = SessionManager(cfg, provider_factory=lambda *_a, **_kw: provider)

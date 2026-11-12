@@ -11,18 +11,18 @@ import tarfile
 from pathlib import Path
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
+from aj_crew import snapshot as snap_mod
+from aj_crew.snapshot import restore_main, snapshot_main
 from conftest import make_dir_link
-from kiro_crew import snapshot as snap_mod
-from kiro_crew.snapshot import restore_main, snapshot_main
 
 
 @pytest.fixture
 def src(tmp_path, monkeypatch):
     d = tmp_path / "src"
-    _setup_fake_kirocrew(d)
-    monkeypatch.setenv("KIROCREW_HOME", str(d))
+    _setup_fake_ajcrew(d)
+    monkeypatch.setenv("AJCREW_HOME", str(d))
     return d
 
 
@@ -36,14 +36,14 @@ class TestReplaceKeepsARecoverableRollback:
         (src / "workspace/memory/preferences.md").write_text("incoming prefs\n")
         out = tmp_path / "out"
         assert snapshot_main([str(out)] + unpinnable_argv()) == 0
-        tars = sorted(out.glob("kirocrew-snapshot-*.tar.gz"))
+        tars = sorted(out.glob("ajcrew-snapshot-*.tar.gz"))
         assert tars
 
         # Destination holds DIFFERENT, original content.
         dest = tmp_path / "dest"
         (dest / "workspace/memory").mkdir(parents=True)
         (dest / "workspace/memory/preferences.md").write_text("ORIGINAL prefs\n")
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
 
         assert (
             restore_main([str(tars[-1]), "--mode", "replace", "--force"] + unpinnable_argv()) == 0
@@ -65,7 +65,7 @@ class TestLiveDatabasesAreStagedConsistently:
 
     def _stage(self, src: Path, out: Path) -> Path:
         assert snapshot_main([str(out), "--components", "memory"] + unpinnable_argv()) == 0
-        tar = sorted(out.glob("kirocrew-snapshot-*.tar.gz"))[-1]
+        tar = sorted(out.glob("ajcrew-snapshot-*.tar.gz"))[-1]
         extract = out / "x"
         extract.mkdir(exist_ok=True)
         with tarfile.open(str(tar)) as t:
@@ -73,7 +73,7 @@ class TestLiveDatabasesAreStagedConsistently:
         return next(
             d
             for d in extract.iterdir()
-            if d.name.startswith(("kirocrew-snapshot-", "kirocrew-partial-"))
+            if d.name.startswith(("ajcrew-snapshot-", "ajcrew-partial-"))
         )
 
     def test_a_knowledge_database_survives_with_its_rows(self, src, tmp_path):
@@ -215,15 +215,15 @@ class TestADestinationRootSwappedAfterPreflightRefuses:
         (outside / "victim" / "precious.txt").write_text("survives\n", encoding="utf-8")
 
         source = tmp_path / "source"
-        _setup_fake_kirocrew(source)
-        monkeypatch.setenv("KIROCREW_HOME", str(source))
+        _setup_fake_ajcrew(source)
+        monkeypatch.setenv("AJCREW_HOME", str(source))
         outdir = tmp_path / "snaps"
         assert snapshot_main([str(outdir), "--components", "memory"] + unpinnable_argv()) == 0
         bundle = sorted(outdir.glob("*.tar.gz"))[0]
 
         home = tmp_path / "home"
-        _setup_fake_kirocrew(home)
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        _setup_fake_ajcrew(home)
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         real = snap_mod._refuse_unsafe_destination_roots
         fired: list[bool] = []
@@ -263,7 +263,7 @@ class TestRollbackWillNotDeleteWhatItNeverSaved:
 
     def test_a_pre_existing_directory_at_a_core_file_name_is_kept_and_reported(self, tmp_path):
         home = tmp_path / "home"
-        _setup_fake_kirocrew(home)
+        _setup_fake_ajcrew(home)
         backup = tmp_path / "pre-restore"
         backup.mkdir()
 
@@ -315,15 +315,15 @@ class TestMergeRefusesADestinationRootSwappedAfterPreflight:
         (outside / "victim" / "precious.txt").write_text("survives\n", encoding="utf-8")
 
         source = tmp_path / "source"
-        _setup_fake_kirocrew(source)
-        monkeypatch.setenv("KIROCREW_HOME", str(source))
+        _setup_fake_ajcrew(source)
+        monkeypatch.setenv("AJCREW_HOME", str(source))
         outdir = tmp_path / "snaps"
         assert snapshot_main([str(outdir), "--components", "memory"] + unpinnable_argv()) == 0
         bundle = sorted(outdir.glob("*.tar.gz"))[0]
 
         home = tmp_path / "home"
-        _setup_fake_kirocrew(home)
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        _setup_fake_ajcrew(home)
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         real = snap_mod._refuse_unsafe_destination_roots
         fired: list[bool] = []
@@ -430,7 +430,7 @@ class TestReplaceDoesNotKeepAnIndexTheArchiveOmits:
         duplicated rather than imported. A divergence would mean the redaction pass drops an
         index that replace then leaves stale -- silently. This fails instead.
         """
-        from kiro_crew import snapshot_redact
+        from aj_crew import snapshot_redact
 
         assert snap_mod._DERIVED_INDEXES == snapshot_redact._DERIVED_INDEXES
 
@@ -499,7 +499,7 @@ class TestABundleDeclaringAComponentItDoesNotCarryIsRefused:
 
         out = tmp_path / "out"
         assert snapshot_main([str(out)] + unpinnable_argv()) == 0
-        tars = sorted(out.glob("kirocrew-snapshot-*.tar.gz"))
+        tars = sorted(out.glob("ajcrew-snapshot-*.tar.gz"))
         assert tars
 
         # A destination that DOES have memory, so a partial erasure would be observable.
@@ -508,7 +508,7 @@ class TestABundleDeclaringAComponentItDoesNotCarryIsRefused:
         (dest / "workspace" / "memory" / "note.md").write_text("the operator's note\n")
         (dest / "memory.db").write_bytes(b"LIVE-MEMORY")
         (dest / "memory_index.db").write_bytes(b"LIVE-INDEX")
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
 
         rc = restore_main([str(tars[-1]), "--mode", "replace", "--force"] + unpinnable_argv())
         assert rc == 1, "a bundle carrying no memory payload was accepted"
@@ -536,7 +536,7 @@ class TestABundleDeclaringAComponentItDoesNotCarryIsRefused:
 
         out = tmp_path / "out"
         assert snapshot_main([str(out)] + unpinnable_argv()) == 0
-        tars = sorted(out.glob("kirocrew-snapshot-*.tar.gz"))
+        tars = sorted(out.glob("ajcrew-snapshot-*.tar.gz"))
 
         dest = tmp_path / "dest3"
         (dest / "workspace" / "memory").mkdir(parents=True)
@@ -545,7 +545,7 @@ class TestABundleDeclaringAComponentItDoesNotCarryIsRefused:
         conn.execute("CREATE TABLE t(id INTEGER PRIMARY KEY, body TEXT)")
         conn.commit()
         conn.close()
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
 
         rc = restore_main(
             [str(tars[-1]), "--mode", "replace", "--force", "--components", "memory"]
@@ -563,11 +563,11 @@ class TestABundleDeclaringAComponentItDoesNotCarryIsRefused:
         (src / "workspace/memory/preferences.md").write_text("incoming prefs\n")
         out = tmp_path / "out"
         assert snapshot_main([str(out)] + unpinnable_argv()) == 0
-        tars = sorted(out.glob("kirocrew-snapshot-*.tar.gz"))
+        tars = sorted(out.glob("ajcrew-snapshot-*.tar.gz"))
 
         dest = tmp_path / "dest2"
         (dest / "workspace" / "memory").mkdir(parents=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
         assert (
             restore_main([str(tars[-1]), "--mode", "replace", "--force"] + unpinnable_argv()) == 0
         )

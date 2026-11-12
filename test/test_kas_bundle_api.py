@@ -15,10 +15,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.agent_sdk import kas_bundle
-from kiro_crew.agent_sdk.kas_bundle import KAS_PIN_VERSION
-from kiro_crew.dashboard.handlers import kas_bundle as handler
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.agent_sdk import kas_bundle
+from aj_crew.agent_sdk.kas_bundle import KAS_PIN_VERSION
+from aj_crew.dashboard.handlers import kas_bundle as handler
+from aj_crew.testing.wait import async_wait_until
 
 
 class _FakeState:
@@ -49,7 +49,7 @@ def _body(resp):
 def cfg(monkeypatch):
     agent = SimpleNamespace(kas_bundle=False, kas_bundle_url="https://h.test")
     monkeypatch.setattr(
-        "kiro_crew.config.loader.KiroCrewConfig.load",
+        "aj_crew.config.loader.AjCrewConfig.load",
         classmethod(lambda cls: SimpleNamespace(agent=agent)),
     )
     monkeypatch.setattr(handler, "sel", lambda: SimpleNamespace(log_api_access=lambda **k: None))
@@ -57,9 +57,9 @@ def cfg(monkeypatch):
 
 
 def test_the_switch_is_patchable_as_a_bool():
-    """The card saves through PATCH /api/config/kirocrew; a path missing from the
+    """The card saves through PATCH /api/config/ajcrew; a path missing from the
     allowlist is a 400 "field not editable", and the switch could never turn on."""
-    from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+    from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
     assert _EDITABLE_CONFIG["agent.kas_bundle"] == {"type": "bool"}
 
@@ -82,7 +82,7 @@ async def test_status_reports_the_pin_and_nothing_installed(cfg, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_status_names_the_route_the_last_spawn_took(cfg, monkeypatch):
-    from kiro_crew.acp import kas_route
+    from aj_crew.acp import kas_route
 
     monkeypatch.setattr(kas_bundle, "installed_bundle", lambda **k: None)
     monkeypatch.setattr(
@@ -95,14 +95,14 @@ async def test_status_names_the_route_the_last_spawn_took(cfg, monkeypatch):
         "route": "bundle",
         "automatic": True,
         "reason": "no_kiro_cli",
-        "summary": "KAS runs on Kiro Crew's own engine because kiro-cli is not installed",
+        "summary": "KAS runs on Aj Crew's own engine because kiro-cli is not installed",
     }
 
 
 @pytest.mark.asyncio
 async def test_status_shows_an_install_a_spawn_started(cfg, monkeypatch):
     """The download a KAS spawn started is the dashboard's to show too."""
-    from kiro_crew.acp import kas_engine_install
+    from aj_crew.acp import kas_engine_install
 
     monkeypatch.setattr(kas_bundle, "installed_bundle", lambda **k: None)
     monkeypatch.setattr(
@@ -194,14 +194,14 @@ async def test_a_failed_install_surfaces_the_remedy(cfg, monkeypatch):
     await app[handler._STATE_KEY]["task"]
     body = _body(await handler.api_kas_bundle_status(_FakeRequest(app)))
     assert "KAS 0.66.33 publishes no Node runtime for linux-riscv64" in body["error"]
-    assert "`kirocrew kas install`" in body["error"]
+    assert "`ajcrew kas install`" in body["error"]
     assert body["installing"] is False
 
 
 def test_the_routes_are_registered():
     from aiohttp import web
 
-    from kiro_crew.dashboard.routes import realtime
+    from aj_crew.dashboard.routes import realtime
 
     app = web.Application()
     try:

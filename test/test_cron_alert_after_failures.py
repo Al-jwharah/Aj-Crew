@@ -19,16 +19,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.cron import CronJob, CronSchedule, CronService
-from kiro_crew.cron_service.model import (
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.cron import CronJob, CronSchedule, CronService
+from aj_crew.cron_service.model import (
     _AUTO_PAUSE_MAX,
     validate_alert_after_failures,
 )
-from kiro_crew.mcp_cron import _call_tool_inner, _call_tool_locally, _list_tools
-from kiro_crew.sel import SecurityEventLog
-from kiro_crew.slack import gateway as gw
-from kiro_crew.validation import MCP_CRON_SCHEMAS, ValidationError, validate_tool_args
+from aj_crew.mcp_cron import _call_tool_inner, _call_tool_locally, _list_tools
+from aj_crew.sel import SecurityEventLog
+from aj_crew.slack import gateway as gw
+from aj_crew.validation import MCP_CRON_SCHEMAS, ValidationError, validate_tool_args
 
 
 def _job(**kwargs: object) -> CronJob:
@@ -131,8 +131,8 @@ class TestMcpTools:
         return matching[0]
 
     def test_cron_add_and_update_set_the_threshold(self, monkeypatch, tmp_path) -> None:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"aaf-{uuid.uuid4().hex[:8]}"
         result = _call_tool_locally(
             "cron_add", {"name": name, "message": "go", "every": 600, "alert_after_failures": 2}
@@ -146,8 +146,8 @@ class TestMcpTools:
         assert self._reload(tmp_path, name).alert_after_failures == 5
 
     def test_cron_update_out_of_range_is_an_error(self, monkeypatch, tmp_path) -> None:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = f"aaf-{uuid.uuid4().hex[:8]}"
         _call_tool_inner("cron_add", {"name": name, "message": "go", "every": 600})
         jid = self._reload(tmp_path, name).id
@@ -182,8 +182,8 @@ class TestMcpTools:
 
 def _orchestrator() -> Any:
     """A GatewayOrchestrator whose only alert surfaces are the bell and Slack."""
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U_OWNER"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U_OWNER"}):
         orch: Any = gw.GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
     orch.slack = MagicMock()
     orch.slack.post_message = AsyncMock(return_value="111.1")

@@ -3,7 +3,7 @@
 The agent runner's tool-request gate, activity-feed shaping and fix authoring live in the
 ``spine/agent_runner_*`` owner modules beside it. ``AgentRunner``, ``SessionAgentRunner``
 and the helpers only they call stay in ``agent_runner.py``, which is the import path
-callers use and serves a ``kiro_crew._facade_mirror`` mirror over the owners. This file
+callers use and serves an ``aj_crew._facade_mirror`` mirror over the owners. This file
 pins that contract:
 
 * the owner set is exactly the ``agent_runner_*`` modules beside the facade, and each owner
@@ -37,16 +37,16 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew.apps.builtins.auto_improvement.spine import agent_runner as facade
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew.apps.builtins.auto_improvement.spine import agent_runner as facade
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_agent_runner_owner_bindings")
 
 SHARED_BINDINGS_CHECKS = ("leaf_test_scope_derives_this_file_as_a_corpus_gate",)
 
-_PACKAGE = "kiro_crew.apps.builtins.auto_improvement.spine"
+_PACKAGE = "aj_crew.apps.builtins.auto_improvement.spine"
 _FACADE = f"{_PACKAGE}.agent_runner"
 _THIS_FILE = Path(__file__).resolve()
 
@@ -119,7 +119,7 @@ _IMPORTED_BY_THE_FACADE = frozenset(
 #: They are why the facade mirrors; the scan must find them, so a scanner that stops
 #: matching goes red instead of passing over nothing.
 _OWNER_READ_SEAMS = frozenset(
-    {"HookManager", "KiroCrewConfig", "hooks_config_from_config_dict", "require_pinned"}
+    {"HookManager", "AjCrewConfig", "hooks_config_from_config_dict", "require_pinned"}
 )
 
 
@@ -284,17 +284,17 @@ def test_only_the_family_imports_an_owner_in_production_code() -> None:
 
 def test_the_owner_import_scan_finds_an_outside_importer() -> None:
     planted = {
-        "kiro_crew.planted_a": f"from {_PACKAGE}.agent_runner_gate import _refusal\n",
-        "kiro_crew.planted_b": f"from {_PACKAGE} import agent_runner_feed\n",
-        "kiro_crew.planted_c": f"import {_PACKAGE}.agent_runner_authoring\n",
+        "aj_crew.planted_a": f"from {_PACKAGE}.agent_runner_gate import _refusal\n",
+        "aj_crew.planted_b": f"from {_PACKAGE} import agent_runner_feed\n",
+        "aj_crew.planted_c": f"import {_PACKAGE}.agent_runner_authoring\n",
         f"{_PACKAGE.rpartition('.')[0]}.backend.planted": "from ..spine import agent_runner_gate\n",
         f"{_PACKAGE}.planted_d": "from .agent_runner_feed import _LineBuffer\n",
         f"{_PACKAGE}.agent_runner_authoring": "from .agent_runner_gate import _refusal\n",
     }
     assert _owner_importers(planted) == {
-        "kiro_crew.planted_a": ["agent_runner_gate"],
-        "kiro_crew.planted_b": ["agent_runner_feed"],
-        "kiro_crew.planted_c": ["agent_runner_authoring"],
+        "aj_crew.planted_a": ["agent_runner_gate"],
+        "aj_crew.planted_b": ["agent_runner_feed"],
+        "aj_crew.planted_c": ["agent_runner_authoring"],
         f"{_PACKAGE.rpartition('.')[0]}.backend.planted": ["agent_runner_gate"],
         f"{_PACKAGE}.planted_d": ["agent_runner_feed"],
     }
@@ -335,7 +335,7 @@ def _test_tree_texts() -> list[tuple[str, str]]:
     for path in source_corpus.repo_files_named(".py"):
         rel = path.relative_to(root).as_posix()
         in_tree = rel == "conftest.py" or path.is_relative_to(test_root)
-        in_tree = in_tree or (rel.startswith("src/kiro_crew/apps/builtins/") and "/tests/" in rel)
+        in_tree = in_tree or (rel.startswith("src/aj_crew/apps/builtins/") and "/tests/" in rel)
         if not in_tree or path.resolve() == _THIS_FILE:
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
@@ -385,7 +385,7 @@ def test_the_reach_scan_can_fail() -> None:
 
 @pytest.mark.parametrize(
     "name",
-    ["HookManager", "KiroCrewConfig", "require_pinned", "logger", "_governance_denial"]
+    ["HookManager", "AjCrewConfig", "require_pinned", "logger", "_governance_denial"]
     + ["author_bug_fix"],
 )
 def test_a_patch_through_the_facade_lands_on_every_owner_and_is_undone(
@@ -412,9 +412,9 @@ def test_a_patch_through_the_facade_lands_on_every_owner_and_is_undone(
 _APP_LOADER_PROBE = """
 import json, sys
 from pathlib import Path
-import kiro_crew.apps.builtins
-from kiro_crew.apps.module_loader import load_app_module
-root = Path(kiro_crew.apps.builtins.__file__).resolve().parent / "auto_improvement"
+import aj_crew.apps.builtins
+from aj_crew.apps.module_loader import load_app_module
+root = Path(aj_crew.apps.builtins.__file__).resolve().parent / "auto_improvement"
 runner = load_app_module("auto-improvement", root, "spine.agent_runner:SessionAgentRunner")
 facade = sys.modules[runner.__module__]
 owners = [sys.modules[name] for name in facade._OWNERS]
@@ -430,7 +430,7 @@ def test_the_runner_loads_under_the_app_loader_name(tmp_path: Path) -> None:
     owners and the logger are named from ``__package__``, not from the canonical dotted path.
     Checked in a fresh interpreter, so this worker's ``sys.modules`` gains no app copy."""
     env = dict(os.environ)
-    src = str(Path(kiro_crew.__file__).resolve().parents[1])
+    src = str(Path(aj_crew.__file__).resolve().parents[1])
     env["PYTHONPATH"] = src + os.pathsep + env.get("PYTHONPATH", "")
     out = subprocess.run(
         [sys.executable, "-c", _APP_LOADER_PROBE],

@@ -14,7 +14,7 @@ import pytest
 import work_ledger_helpers
 from work_ledger_helpers import CONDUCTOR, WORKER, _new_item
 
-from kiro_crew import work_ledger as wl
+from aj_crew import work_ledger as wl
 
 _isolated_home = work_ledger_helpers._isolated_home
 
@@ -57,7 +57,7 @@ def test_a_steer_on_a_closed_item_writes_nothing():
 
 
 def test_the_fold_keeps_a_person_steer_as_an_event_only():
-    from kiro_crew.crew_log.projection_work import _work_apply
+    from aj_crew.crew_log.projection_work import _work_apply
 
     item: dict[str, Any] = {"item_id": "it_1", "events": [], "status": "progress"}
     _work_apply(
@@ -77,7 +77,7 @@ def test_the_fold_keeps_a_person_steer_as_an_event_only():
 
 
 def test_the_entry_type_admits_the_person_and_the_steer():
-    from kiro_crew.work_vocab import WORK_ACTIONS, WORK_ACTORS, WORK_EVENT_KINDS
+    from aj_crew.work_vocab import WORK_ACTIONS, WORK_ACTORS, WORK_EVENT_KINDS
 
     assert "person" in WORK_ACTORS
     assert "steer" in WORK_ACTIONS and "steer" in WORK_EVENT_KINDS
@@ -89,10 +89,10 @@ def test_the_entry_type_admits_the_person_and_the_steer():
 @pytest.fixture
 def _route(monkeypatch):
     """``person_steer`` with the ledger read and the crew log stubbed."""
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.dashboard.handlers import crew_workers
-    from kiro_crew.dashboard.handlers import work_ledger as wlh
-    from kiro_crew.dashboard.handlers import work_ledger_worker as wlw
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import work_ledger as wlh
+    from aj_crew.dashboard.handlers import work_ledger_worker as wlw
 
     entries: list[dict[str, Any]] = []
     for mod in (wlh, wlw):
@@ -134,7 +134,7 @@ async def test_a_worker_with_no_item_gets_the_steer_and_nothing_is_written(_rout
 
 @pytest.mark.asyncio
 async def test_an_unrecorded_steer_is_undone(_route):
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     item_id = _bound_item()
     facts = _route.cw.LedgerFacts(item_id, "", "")
@@ -146,7 +146,7 @@ async def test_an_unrecorded_steer_is_undone(_route):
 
 
 def test_the_steer_route_writes_the_event_after_delivery():
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     source = open(crew_workers.__file__, encoding="utf-8").read()
     body = source.split("async def api_crew_worker_steer", 1)[1]
@@ -156,7 +156,7 @@ def test_the_steer_route_writes_the_event_after_delivery():
 def test_the_conductor_guidance_reads_steers_before_deciding_and_never_overrules():
     from pathlib import Path
 
-    from kiro_crew import agent
+    from aj_crew import agent
 
     prompt = agent._CONDUCTOR_SYSTEM_PROMPT
     assert "A person's steer outranks your decision" in prompt

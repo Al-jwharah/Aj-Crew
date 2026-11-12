@@ -367,8 +367,8 @@ function ChatSidebar({
 
   // Ranks up to the configured count of sessions by settled recency for the sidebar tint —
   // see ../utils/recencyTint. Count = server-side dashboard.recent_tint_count (shared
-  // kirocrewConfig query); recomputes when the slots or the configured count change.
-  const { data: mcCfg, status: mcCfgStatus, error: mcCfgError, errorUpdatedAt: mcCfgErrorUpdatedAt } = useQuery({ queryKey: ['kirocrewConfig'], queryFn: () => api.kirocrewConfig() })
+  // ajcrewConfig query); recomputes when the slots or the configured count change.
+  const { data: mcCfg, status: mcCfgStatus, error: mcCfgError, errorUpdatedAt: mcCfgErrorUpdatedAt } = useQuery({ queryKey: ['ajcrewConfig'], queryFn: () => api.ajcrewConfig() })
   const recentTintCount = clampTintCount(mcCfg?.dashboard?.recent_tint_count)
   const recentRank = useMemo(() => computeRecentRank(localSlots, recentTintCount), [localSlots, recentTintCount])
   // Settings → Display → Sidebar. Only a literal `false` hides the per-row dot.

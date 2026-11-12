@@ -25,9 +25,9 @@ import stat
 
 import pytest
 
-from kiro_crew import platform_compat, security
-from kiro_crew.computer_use import enable_state
-from kiro_crew.computer_use.types import (
+from aj_crew import platform_compat, security
+from aj_crew.computer_use import enable_state
+from aj_crew.computer_use.types import (
     STATE_FILE_NAME,
     STATE_KEY_ALLOWED_APPS,
     STATE_KEY_ENABLED,
@@ -35,7 +35,7 @@ from kiro_crew.computer_use.types import (
     PolicyConfig,
     PolicyStateError,
 )
-from kiro_crew.config import loader as config_loader
+from aj_crew.config import loader as config_loader
 
 
 @pytest.fixture
@@ -215,15 +215,15 @@ class TestPolicyConfig:
     def test_extra_denied_can_only_add(self):
         # There is deliberately no mechanism to REMOVE a built-in denylist entry, so
         # the floor cannot be edited away from the dashboard.
-        from kiro_crew.computer_use import policy
-        from kiro_crew.computer_use.types import AppRef
+        from aj_crew.computer_use import policy
+        from aj_crew.computer_use.types import AppRef
 
-        # Retargeted onto ``kirocrew_self`` — the ONE entry the floor still carries
+        # Retargeted onto ``ajcrew_self`` — the ONE entry the floor still carries
         # (driving our own Settings UI would route around the keystone that holds
         # the primary enable). The terminal / password-manager / system-settings
         # entries were removed by product decision.
-        ours = AppRef(name="Kiro Crew", pid=1, bundle_id="dev.kiro.crew")
-        cfg = PolicyConfig(allowed_apps=("dev.kiro.crew",), extra_denied_apps=())
+        ours = AppRef(name="Aj Crew", pid=1, bundle_id="io.github.al-jwharah.ajcrew")
+        cfg = PolicyConfig(allowed_apps=("io.github.al-jwharah.ajcrew",), extra_denied_apps=())
         # Even an explicit operator allow-list entry cannot lift the built-in floor.
         assert policy.check_app(ours, cfg) is not None
 
@@ -297,7 +297,7 @@ class TestKeystoneProtection:
         "path",
         [
             "~/.kiro/crew/computer_use.json",
-            "~/.kirocrew/computer_use.json",
+            "~/.ajcrew/computer_use.json",
         ],
     )
     def test_agent_cannot_read_or_write_it_on_the_tool_path(self, path):
@@ -312,7 +312,7 @@ class TestKeystoneProtection:
         # control on a shell write (a redirect, ``tee``, ``cp``, a ``tar -C`` drop or
         # a runtime-constructed spelling alike) is the kernel: the leaf is sealed
         # read-only in every sandbox mode.
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert "computer_use.json" in sandbox._CREW_READONLY_LEAVES
         assert "computer_use.json" in sandbox._CREW_PRECREATE_READONLY_FILE_LEAVES
@@ -325,14 +325,14 @@ class TestKeystoneProtection:
         WRITE-protected; putting ``enabled`` there would make the ceiling readable
         and would add a second place the feature can be turned on.
         """
-        from kiro_crew.config.loader import ComputerUseConfig
+        from aj_crew.config.loader import ComputerUseConfig
 
         fields = {f.name for f in __import__("dataclasses").fields(ComputerUseConfig)}
         assert "enabled" not in fields
 
     def test_state_path_honors_the_data_home_override(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.config.paths._resolved_home", None)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.setattr("aj_crew.config.paths._resolved_home", None)
         assert str(tmp_path) in str(enable_state.computer_use_state_path())
 
     def test_state_path_delegates_to_the_single_canonical_definition(self):

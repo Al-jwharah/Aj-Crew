@@ -1,4 +1,4 @@
-"""Host-sized task and thread-pool ceilings (``kiro_crew.host_task_sizing``).
+"""Host-sized task and thread-pool ceilings (``aj_crew.host_task_sizing``).
 
 The formulas are pure over :class:`HostTaskFacts`, so each row states a host and
 the value it must get. The wiring rows pin that an unset config key takes the
@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import host_task_sizing as hts
-from kiro_crew.host_task_sizing import HostTaskFacts
+from aj_crew import host_task_sizing as hts
+from aj_crew.host_task_sizing import HostTaskFacts
 
 GiB = 2**30
 
@@ -64,12 +64,12 @@ class TestSliceTasks:
         assert hts.size_slice_tasks(facts) == 102 * 512 + 8192
 
     def test_scope_room_matches_the_per_scope_default(self):
-        from kiro_crew import sandbox_cgroup
+        from aj_crew import sandbox_cgroup
 
         assert hts.SCOPE_TASKS == sandbox_cgroup._CGROUP_DEFAULT_MAX_PROCESSES
 
     def test_memory_share_matches_the_slice_memory_default(self):
-        from kiro_crew import sandbox_slice
+        from aj_crew import sandbox_slice
 
         assert hts.SLICE_MEMORY_SHARE == sandbox_slice._CGROUP_TOTAL_MEMORY_FRACTION
 
@@ -95,18 +95,18 @@ class TestThreadPool:
 
     @pytest.mark.parametrize("available", [True, False])
     def test_the_default_follows_the_cgroup_scope_probe(self, monkeypatch, available):
-        monkeypatch.setattr("kiro_crew.sandbox._probe_cgroup_scope", lambda: (available, "test"))
+        monkeypatch.setattr("aj_crew.sandbox._probe_cgroup_scope", lambda: (available, "test"))
         assert bool(hts.thread_pool_env_defaults(BIG)) is available
 
     def test_a_failing_probe_means_no_ceiling(self, monkeypatch):
         def boom() -> tuple[bool, str]:
             raise RuntimeError("probe failed")
 
-        monkeypatch.setattr("kiro_crew.sandbox._probe_cgroup_scope", boom)
+        monkeypatch.setattr("aj_crew.sandbox._probe_cgroup_scope", boom)
         assert hts.thread_pool_env_defaults(BIG) == {}
 
     def test_every_name_is_accepted_by_the_config_allowlist(self):
-        from kiro_crew.config.sections_agent_env import CHILD_ENV_DEFAULT_NAMES
+        from aj_crew.config.sections_agent_env import CHILD_ENV_DEFAULT_NAMES
 
         assert set(hts.THREAD_POOL_ENV) <= CHILD_ENV_DEFAULT_NAMES
 
@@ -136,8 +136,8 @@ class TestProbe:
         """A pod gateway runs under CPUQuota=200%, but its agent scopes do not, and
         their runtimes size pools by the affinity count. Reading the quota sized a
         128-core host's scopes as if it had 2 cores."""
-        import kiro_crew.cpu_affinity as aff
-        import kiro_crew.session_start_sizing as sss
+        import aj_crew.cpu_affinity as aff
+        import aj_crew.session_start_sizing as sss
 
         monkeypatch.setattr(aff, "affinity_cpu_count", lambda: 128)
         monkeypatch.setattr(sss, "cgroup_cpu_quota", lambda roots=None: 2.0)
@@ -153,18 +153,18 @@ class TestProbe:
 def _with_facts(monkeypatch, facts: HostTaskFacts, *, ceiling: bool = True) -> None:
     """Pin the host reading, and whether the agents slice's task ceiling is in force."""
     monkeypatch.setattr(hts, "host_task_facts", lambda: facts)
-    monkeypatch.setattr("kiro_crew.sandbox._probe_cgroup_scope", lambda: (ceiling, "test"))
+    monkeypatch.setattr("aj_crew.sandbox._probe_cgroup_scope", lambda: (ceiling, "test"))
 
 
 class TestWiring:
     @staticmethod
     def _raw(raw: dict):
         return unittest.mock.patch(
-            "kiro_crew.config.loader._raw_config", return_value={"resource_limits": raw}
+            "aj_crew.config.loader._raw_config", return_value={"resource_limits": raw}
         )
 
     def test_unset_slice_tasks_take_the_host_value(self, monkeypatch):
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         _with_facts(monkeypatch, BIG)
         with self._raw({}):
@@ -173,7 +173,7 @@ class TestWiring:
         assert tasks == hts.size_slice_tasks(BIG, mem)
 
     def test_slice_tasks_follow_a_configured_memory_ceiling(self, monkeypatch):
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         _with_facts(monkeypatch, BIG)
         with self._raw({"max_total_memory_mb": 100_000}):
@@ -181,7 +181,7 @@ class TestWiring:
         assert tasks == 195 * 512 + 8192
 
     def test_configured_slice_tasks_win(self, monkeypatch):
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         _with_facts(monkeypatch, BIG)
         with self._raw({"max_total_processes": 131072}):
@@ -189,7 +189,7 @@ class TestWiring:
         assert tasks == 131072
 
     def test_a_failed_host_reading_falls_back_to_the_fixed_values(self, monkeypatch):
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         def boom() -> HostTaskFacts:
             raise OSError("no procfs")
@@ -205,7 +205,7 @@ class TestWiring:
 class TestChildEnvDefaults:
     @staticmethod
     def _apply(monkeypatch, configured: dict[str, str], env: dict[str, str]) -> dict[str, str]:
-        from kiro_crew.acp import child_env_defaults as ced
+        from aj_crew.acp import child_env_defaults as ced
 
         monkeypatch.setattr(ced, "_configured_defaults", lambda: dict(configured))
         ced.apply_child_env_defaults(env)
@@ -262,8 +262,8 @@ class TestChildEnvDefaults:
 class TestDoctorRow:
     @staticmethod
     def _slice(tmp_path: Path, current: int, maximum: int, scopes: list[int]) -> Path:
-        root = tmp_path / "kirocrew-agents.slice"
-        inst = root / "kirocrew-agents-abc.slice"
+        root = tmp_path / "ajcrew-agents.slice"
+        inst = root / "ajcrew-agents-abc.slice"
         inst.mkdir(parents=True)
         (root / "pids.current").write_text(f"{current}\n")
         (root / "pids.max").write_text(f"{maximum}\n")
@@ -283,16 +283,16 @@ class TestDoctorRow:
         child_env: dict[str, str] | None = None,
         ceiling: bool = True,
     ) -> str:
-        from kiro_crew import cli_doctor
-        from kiro_crew.config.sections_limits import ResourceLimitsConfig
-        from kiro_crew.doctor_checks import resources
+        from aj_crew import cli_doctor
+        from aj_crew.config.sections_limits import ResourceLimitsConfig
+        from aj_crew.doctor_checks import resources
 
         _with_facts(monkeypatch, BIG, ceiling=ceiling)
         cfg = unittest.mock.MagicMock()
         cfg.resource_limits = ResourceLimitsConfig.from_raw(raw_limits)
         cfg.agent.child_env_defaults = dict(child_env or {})
         cfg.agent.env = dict(agent_env or {})
-        monkeypatch.setattr(cli_doctor.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        monkeypatch.setattr(cli_doctor.AjCrewConfig, "load", staticmethod(lambda: cfg))
         monkeypatch.setattr(cli_doctor.sandbox, "_agents_slice_cgroup_dir", lambda: slice_dir)
         return "\n".join(resources._task_ceiling_lines())
 
@@ -344,7 +344,7 @@ class TestDoctorRow:
         """The slice is shared by every gateway under the user, so its live state
         is host context, not a fault in this install: a full slice warns but
         leaves the doctor verdict alone."""
-        from kiro_crew.doctor_checks import resources
+        from aj_crew.doctor_checks import resources
 
         slice_dir = self._slice(tmp_path, 30000, 32768, [800] * 37)
         self._run(monkeypatch, slice_dir, {"max_total_processes": 131072})

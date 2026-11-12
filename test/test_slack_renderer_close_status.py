@@ -18,7 +18,7 @@ import asyncio
 
 from test_slack_renderer import _RecSlack
 
-from kiro_crew.slack.renderer import _STATUS_WORKING, SlackRenderer
+from aj_crew.slack.renderer import _STATUS_WORKING, SlackRenderer
 
 
 class TestRendererCloseClearsStuckStatus:

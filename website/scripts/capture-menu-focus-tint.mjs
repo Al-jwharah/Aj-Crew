@@ -54,7 +54,7 @@ const slots = [{
   title: 'Release notes review',
   running: false,
   messages: 4,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   modified: Math.floor(Date.now() / 1000),
   folder_id: '',
 }]

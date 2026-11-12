@@ -18,10 +18,10 @@ import pytest
 from autonudge_wake_judge_helpers import _restore_judge_process_globals  # noqa: F401 - fixture
 from autonudge_wake_judge_helpers import answers
 
-from kiro_crew import autonudge_judge as judge
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.decisions.points import nudge_wake as point
-from kiro_crew.irq import Outcome
+from aj_crew import autonudge_judge as judge
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.decisions.points import nudge_wake as point
+from aj_crew.irq import Outcome
 
 
 def _refused_row(first_seen: bool | None) -> dict[str, object]:
@@ -695,7 +695,7 @@ class TestStateBounds:
         of reach, so its judge state has to wait with it: a rollback restores the prior
         and forgets the replacement, a commit forgets the prior.
         """
-        from kiro_crew.monitoring.models import MonitorBudgets, MonitorCreationSurface
+        from aj_crew.monitoring.models import MonitorBudgets, MonitorCreationSurface
 
         async def replace(svc: AutoNudgeService, prior: NudgeLoop, loop_id: str) -> NudgeLoop:
             assert prior.monitor is not None
@@ -1336,7 +1336,7 @@ class TestJudgeTickFallsOpen:
         evidence = [
             {"source": "s", "kind": point.KIND_PR_CHECKS, "age_s": 1.0, "text": "checks pending"}
         ]
-        with patch("kiro_crew.decisions.decide", refuse):
+        with patch("aj_crew.decisions.decide", refuse):
             verdict = asyncio.run(point.judge_tick("watch", evidence=evidence))
         assert verdict.outcome is Outcome.FALLBACK
 
@@ -1347,6 +1347,6 @@ class TestJudgeTickFallsOpen:
         evidence = [
             {"source": "s", "kind": point.KIND_PR_CHECKS, "age_s": 1.0, "text": "checks pending"}
         ]
-        with patch("kiro_crew.decisions.decide", boom):
+        with patch("aj_crew.decisions.decide", boom):
             verdict = asyncio.run(point.judge_tick("watch", evidence=evidence))
         assert verdict.outcome is Outcome.FALLBACK

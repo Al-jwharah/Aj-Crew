@@ -28,11 +28,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.agent_sdk.drivers.acp_turn_vocab import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.config.sections import DecisionsConfig, NudgeWakeConfig
-from kiro_crew.decisions import gate, impl_llm
-from kiro_crew.decisions.types import Choice, Noul, Score
-from kiro_crew.testing.wait import await_until
+from aj_crew.agent_sdk.drivers.acp_turn_vocab import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.config.sections import DecisionsConfig, NudgeWakeConfig
+from aj_crew.decisions import gate, impl_llm
+from aj_crew.decisions.types import Choice, Noul, Score
+from aj_crew.testing.wait import await_until
 
 #: The judge's own questions. Every one is a ``Choice``: the RFC's three questions
 #: are a two-option one, a six-option one and an ordered level set. (The wire maps
@@ -515,7 +515,7 @@ def _record_oneliner(monkeypatch: pytest.MonkeyPatch) -> list[dict]:
         calls.append({"prompt": prompt, **kwargs})
         return _body()
 
-    monkeypatch.setattr("kiro_crew.llm_helpers.run_bg_oneliner", _fake)
+    monkeypatch.setattr("aj_crew.llm_helpers.run_bg_oneliner", _fake)
     return calls
 
 
@@ -577,7 +577,7 @@ class _OwnSessionBackend:
 def _background_role(monkeypatch: pytest.MonkeyPatch, model: str) -> None:
     """Make the live snapshot's background role resolve to *model*."""
     agent = SimpleNamespace(resolve_model=lambda role: model if role == "background" else "auto")
-    monkeypatch.setattr("kiro_crew.config.live.snapshot", lambda: SimpleNamespace(agent=agent))
+    monkeypatch.setattr("aj_crew.config.live.snapshot", lambda: SimpleNamespace(agent=agent))
 
 
 class _FakeBgHandle:
@@ -657,7 +657,7 @@ class TestRunnerSeam:
         async def _fake_collect(provider, prompt, **kwargs):
             return _body()
 
-        monkeypatch.setattr("kiro_crew.llm_helpers.stream_and_collect", _fake_collect)
+        monkeypatch.setattr("aj_crew.llm_helpers.stream_and_collect", _fake_collect)
         own = _OwnSessionBackend()
         asyncio.run(impl_llm.build_session_runner(own, model="not a model id; rm -rf /")("p"))
         assert own.asked == [(impl_llm.JUDGE_AGENT_NAME, None)]
@@ -675,7 +675,7 @@ class TestRunnerSeam:
             _RuntimeBackend(), model=impl_llm.JUDGE_MODEL_DEFAULT
         )
         asyncio.run(runner("prompt"))
-        monkeypatch.setattr("kiro_crew.config.live.snapshot", lambda: None)
+        monkeypatch.setattr("aj_crew.config.live.snapshot", lambda: None)
         asyncio.run(runner("prompt"))
         assert [call["model"] for call in calls] == ["claude-haiku-4.5", None]
 
@@ -732,7 +732,7 @@ class TestRunnerSeam:
         A refused judge answers FALLBACK, and FALLBACK fires the full wake turn the
         judge exists to suppress: more load on the host, not less.
         """
-        import kiro_crew.resource_status as resource_status
+        import aj_crew.resource_status as resource_status
 
         monkeypatch.setattr(resource_status, "_read_available_gb", lambda: 0.5)
         sessions = _BgSessions(_FakeBgHandle([_body()]))
@@ -784,8 +784,8 @@ class TestRunnerSeam:
             asked.append({"prompt": prompt, "policy": approval_policy})
             return _body()
 
-        monkeypatch.setattr("kiro_crew.llm_helpers.stream_and_collect", _fake_collect)
-        from kiro_crew.llm_helpers import ToolApprovalPolicy
+        monkeypatch.setattr("aj_crew.llm_helpers.stream_and_collect", _fake_collect)
+        from aj_crew.llm_helpers import ToolApprovalPolicy
 
         own = _OwnSessionBackend()
         text = asyncio.run(impl_llm.build_session_runner(own, model="claude-haiku-4.5")("p"))
@@ -802,10 +802,10 @@ class TestRunnerSeam:
         each judge call back to a per-call session without a word. Asked of the real
         manager, a rename fails here instead.
         """
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.acp_backend = backend
         manager = SessionManager(cfg, provider_factory=lambda *args, **kwargs: object())
         assert impl_llm._has_shared_runtime(manager) is shared
@@ -831,7 +831,7 @@ class TestRunnerSeam:
                 on_chunk(chunk)
             return chunk
 
-        monkeypatch.setattr("kiro_crew.llm_helpers.stream_and_collect", _fake_collect)
+        monkeypatch.setattr("aj_crew.llm_helpers.stream_and_collect", _fake_collect)
         own = _OwnSessionBackend()
         with pytest.raises(impl_llm.LlmProtocolError) as caught:
             asyncio.run(impl_llm.build_session_runner(own, model="")("p"))
@@ -852,7 +852,7 @@ class TestTheRunnerIsWiredAtBoot:
     def test_constructing_the_dashboard_state_registers_a_runner(self) -> None:
         from unittest.mock import MagicMock
 
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         impl_llm.set_runner(None)
         try:
@@ -877,7 +877,7 @@ def handlers_mod():
     dashboard handler pulls in the whole route layer, and only the row-projection
     tests below need it.
     """
-    from kiro_crew.dashboard.handlers import decisions as handlers
+    from aj_crew.dashboard.handlers import decisions as handlers
 
     return handlers
 
@@ -899,7 +899,7 @@ class TestTheCardsRowForTheJudge:
         permits: bool,
         oracle: bool = True,
     ) -> dict:
-        from kiro_crew.dashboard.handlers import decisions as handlers
+        from aj_crew.dashboard.handlers import decisions as handlers
 
         monkeypatch.setattr(handlers, "_sampling_admits_anybody", lambda: True)
         # Patch the READER, not the rule: it delegates to the real ``gate.judge_lane``
@@ -993,7 +993,7 @@ class TestTheCardsRowForTheJudge:
         against the table rather than against this branch's absence of an entry: with
         the scope registered and recorded, the pinned lane is armed and the row says so.
         """
-        from kiro_crew.decisions import consent
+        from aj_crew.decisions import consent
 
         handlers = handlers_mod()
         monkeypatch.setitem(gate.POINT_SCOPE_KEYS, gate.JUDGE_POINT, "nudge_evidence")
@@ -1029,7 +1029,7 @@ class TestTheCardsRowForTheJudge:
         projection separately from ``permits`` because this lane needs the denial
         WITHOUT the consent.
         """
-        from kiro_crew.dashboard.handlers import decisions as handlers
+        from aj_crew.dashboard.handlers import decisions as handlers
 
         monkeypatch.setattr(handlers, "_sampling_admits_anybody", lambda: True)
         monkeypatch.setattr(handlers, "_llm_lane_available", lambda: True)
@@ -1278,14 +1278,14 @@ class TestEditableConfig:
     """Both keys are writable through the config route, and nothing else is added."""
 
     def test_provider_is_a_closed_enum(self) -> None:
-        from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+        from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
         spec = _EDITABLE_CONFIG["decisions.nudge_wake.provider"]
         assert spec["type"] == "enum"
         assert set(spec["values"]) == {"auto", "jev", "llm"}
 
     def test_llm_model_takes_the_role_model_grammar(self) -> None:
-        from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+        from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
         spec = _EDITABLE_CONFIG["decisions.nudge_wake.llm_model"]
         assert spec["type"] == "str"
@@ -1293,7 +1293,7 @@ class TestEditableConfig:
 
     def test_the_endpoint_and_key_stay_uneditable(self) -> None:
         """This PR must not make the egress destination writable by the config route."""
-        from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+        from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
         assert "decisions.provider.endpoint" not in _EDITABLE_CONFIG
         assert "decisions.provider.api_key" not in _EDITABLE_CONFIG
@@ -1374,8 +1374,8 @@ class TestDecideThroughTheLlmLane:
 
     def test_one_provider_error_then_a_quiet_answer_is_quiet(self) -> None:
         """The retry: a single failed call does not cost a full wake turn."""
-        from kiro_crew import irq
-        from kiro_crew.decisions.points import nudge_wake
+        from aj_crew import irq
+        from aj_crew.decisions.points import nudge_wake
 
         quiet = _body(
             needs_owner={"choice": "quiet", "probabilities": {"quiet": 0.9, "wake": 0.1}},
@@ -1390,8 +1390,8 @@ class TestDecideThroughTheLlmLane:
     def test_two_provider_errors_still_fall_back(self) -> None:
         """No second retry, and no dropped wake: FALLBACK fires the turn
         (``test_autonudge_wake_judge_tick.test_a_fallback_marks_it_too``)."""
-        from kiro_crew import irq
-        from kiro_crew.decisions.points import nudge_wake
+        from aj_crew import irq
+        from aj_crew.decisions.points import nudge_wake
 
         runner, calls = self._flaky(2, _body())
         answers = self._decide(_config(NudgeWakeConfig(provider="llm")), runner)

@@ -24,10 +24,10 @@ from apps_registry_helpers import _catalog_absent  # noqa: F401 - fixture
 from apps_registry_helpers import _explicit_registry_execution_admission  # noqa: F401 - fixture
 from apps_routes_coverage_helpers import APP, _install, _make_app, _setup_env
 
-import kiro_crew.apps.routes as routes_mod
-from kiro_crew import platform_compat
-from kiro_crew.apps import registry
-from kiro_crew.apps.manager import enable_app
+import aj_crew.apps.routes as routes_mod
+from aj_crew import platform_compat
+from aj_crew.apps import registry
+from aj_crew.apps.manager import enable_app
 
 
 def _refuse_spawns(monkeypatch: pytest.MonkeyPatch, *modules: Any) -> list[tuple[Any, ...]]:

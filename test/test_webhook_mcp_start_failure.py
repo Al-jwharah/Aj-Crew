@@ -15,15 +15,15 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import webhooks
-from kiro_crew.acp.mcp_session_report import McpSessionReport
-from kiro_crew.acp.types import (
+from aj_crew import webhooks
+from aj_crew.acp.mcp_session_report import McpSessionReport
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_MCP_SERVER_INIT_FAILURE,
     EVENT_TEXT_CHUNK,
     AcpEvent,
 )
-from kiro_crew.dashboard.handlers import hooks as H
+from aj_crew.dashboard.handlers import hooks as H
 
 _SESSION_KEY = f"{H._HOOK_SESSION_PREFIX}mcp-start"
 
@@ -32,7 +32,7 @@ class _FakeClient:
     def __init__(self, report: McpSessionReport, *, crash: bool = False) -> None:
         self._report = report
         self._crash = crash
-        self._agent = "kirocrew"
+        self._agent = "ajcrew"
         self._model = "test-model"
 
     def mcp_session_report(self) -> McpSessionReport:
@@ -77,7 +77,7 @@ def wired(tmp_path, monkeypatch):
     monkeypatch.setattr(H, "_HOOK_STORE_PATH", Path(tmp_path) / "hooks.json")
     monkeypatch.setattr(H, "_sel", lambda: MagicMock())
     # The usage row is not this test's subject; keep it off disk.
-    from kiro_crew.dashboard.handlers import usage
+    from aj_crew.dashboard.handlers import usage
 
     monkeypatch.setattr(usage, "_write_token_record", lambda *_a, **_k: None)
     H._reset_hook_inflight()

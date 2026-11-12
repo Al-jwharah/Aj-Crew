@@ -48,8 +48,8 @@ vi.mock('./api', () => ({ issueRadarApi: mockApi }))
    `oncall` — the stored crew's agent below — is deliberately ABSENT from the
    roster, so the pre-fill assertion doubles as the stale-value case. */
 const AGENTS = [
-  { name: 'kirocrew', source: 'kiro', description: 'The default agent' },
-  { name: 'kirocrew-crew', source: 'kiro', description: 'Issue worker' },
+  { name: 'ajcrew', source: 'kiro', description: 'The default agent' },
+  { name: 'ajcrew-crew', source: 'kiro', description: 'Issue worker' },
 ]
 const MODELS = [
   { name: 'auto', description: '' },
@@ -58,7 +58,7 @@ const MODELS = [
 ]
 
 vi.mock('../../hooks/useAgents', () => ({
-  useAgents: () => ({ agents: AGENTS, defaultAgent: 'kirocrew' }),
+  useAgents: () => ({ agents: AGENTS, defaultAgent: 'ajcrew' }),
 }))
 vi.mock('../../hooks/useAvailableModels', () => ({
   useAvailableModels: () => MODELS,
@@ -152,7 +152,7 @@ vi.mock('../../components/SimpleSelect', () => ({
   },
 }))
 
-const ACTIVE = { owner: 'kirodotdev', repo: 'KiroCrew' } // brand-ok: the repository name
+const ACTIVE = { owner: 'kirodotdev', repo: 'AjCrew' } // brand-ok: the repository name
 
 vi.mock('./context', () => ({
   useIssueRadar: () => ({ active: ACTIVE }),
@@ -262,7 +262,7 @@ describe('CrewEditor — create mode', () => {
 
     // Touch one control per section, so a payload that drops a whole section
     // (rather than one key) is caught too.
-    pick('crew-editor-agent', 'kirocrew-crew')
+    pick('crew-editor-agent', 'ajcrew-crew')
     pick('crew-editor-model', 'claude-opus-5')
     pick('crew-editor-triage-model', 'gpt-5.6-sol')
     fireEvent.change(screen.getByTestId('crew-editor-prompt'), {
@@ -283,7 +283,7 @@ describe('CrewEditor — create mode', () => {
     expect(mockApi.createCrew).toHaveBeenCalledWith(ACTIVE, {
       name: 'Sombrero',
       avatar_variant: null,
-      agent: 'kirocrew-crew',
+      agent: 'ajcrew-crew',
       model: 'claude-opus-5',
       triage_model: 'gpt-5.6-sol',
       extra_prompt: 'stay off the release branch',
@@ -450,7 +450,7 @@ describe('CrewEditor — the agent and model pickers', () => {
     expect(field('crew-editor-agent').queryByRole('textbox')).toBeNull()
     expect(field('crew-editor-model').queryByRole('textbox')).toBeNull()
 
-    expect(optionsOf('crew-editor-agent')).toEqual(['kirocrew', 'kirocrew-crew'])
+    expect(optionsOf('crew-editor-agent')).toEqual(['ajcrew', 'ajcrew-crew'])
   })
 
   it('leads the model list with one explicit Auto row that means "inherit"', async () => {
@@ -487,8 +487,8 @@ describe('CrewEditor — the agent and model pickers', () => {
 
     expect(optionsOf('crew-editor-agent')).toEqual([
       'retired-agent',
-      'kirocrew',
-      'kirocrew-crew',
+      'ajcrew',
+      'ajcrew-crew',
     ])
     expect(optionsOf('crew-editor-model')).toEqual([
       i18nT(`${K}.model_auto`),
@@ -752,7 +752,7 @@ describe('CrewEditor — the idle wake shows the interval crews really use', () 
     const src = readFileSync(
       join(
         __dirname, '..', '..', '..', '..',
-        'src', 'kiro_crew', 'apps', 'builtins', 'issue_radar', 'backend',
+        'src', 'aj_crew', 'apps', 'builtins', 'issue_radar', 'backend',
         'crew_runtime_session.py',
       ),
       'utf8',

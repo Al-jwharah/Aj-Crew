@@ -41,7 +41,7 @@ name: Sign and Notarize macOS (reusable)
 #     ARTIFACT_BASENAME -> notarized/, desktop/ and the latest-DMG alias), so
 #     three legs signing the same channel+version cannot overwrite each
 #     other's request or read back another leg's bytes;
-#   - the gated artifact is KiroCrew-notarized-<channel>-<version>-<arch>, and
+#   - the gated artifact is AjCrew-notarized-<channel>-<version>-<arch>, and
 #     the zip INSIDE it is notarized-<arch>.zip (NOTARIZED_ZIP): the stable
 #     promotion bundle holds all three legs' files in ONE directory, so the
 #     zip has to carry its arch in its own name, and a promote-mode leg then
@@ -73,7 +73,7 @@ name: Sign and Notarize macOS (reusable)
 #   - The signed_zip_key handoff is internal (sign job output -> notarize
 #     job), no longer plumbed through every caller.
 #   - The Apple credential is fetched from AWS Secrets Manager at runtime
-#     (kirocrew/signing/apple-notary) via the same OIDC role used for
+#     (ajcrew/signing/apple-notary) via the same OIDC role used for
 #     signing. The password is masked and scoped to single steps in the
 #     notarize job only; it is never persisted to GITHUB_ENV, files, or
 #     logs, and the publish job never touches it.
@@ -167,7 +167,7 @@ jobs:
   sign:
     name: Sign with signing service (${{ inputs.channel }})
     if: ${{ !inputs.promote }}
-    # `kirocrew-runners` larger-runner group, reached by LABEL inside a
+    # `ajcrew-runners` larger-runner group, reached by LABEL inside a
     # repository conditional rather than by `group:`; see "Larger runners for
     # the review lanes and CodeQL" in docs/ci/ci-and-reviews.md. This is a
     # reusable workflow, so `runs-on` resolves in the CALLER's context, and
@@ -178,7 +178,7 @@ jobs:
     # running. The `||` leg degrades to the hosted image wherever the group
     # cannot be reached, which is what keeps a fork's nightly working the way
     # it does today.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     # Upload of a ~1 GB zip plus sign.sh's 45-minute poll window (MAX_WAIT)
     # must both fit; the notarize job keeps its own budget.
     timeout-minutes: 60
@@ -223,7 +223,7 @@ jobs:
         # release/. So the two single-arch build artifacts (build-desktop.yml's
         # `build-desktop-mac-single-arch` job) stay OUT, and so does any gated
         # artifact a single-arch leg running IN PARALLEL may already have
-        # attached to this run (KiroCrew-notarized-<channel>-<version>-<arch>,
+        # attached to this run (AjCrew-notarized-<channel>-<version>-<arch>,
         # holding a notarized.zip and a second DMG). Excluding by artifact
         # name, not by file name, keeps the universal path byte-identical.
         # On a single-arch leg the one named artifact lands directly under
@@ -234,7 +234,7 @@ jobs:
           find artifacts -type f \
             -not -path "artifacts/unsigned-build-darwin-arm64/*" \
             -not -path "artifacts/unsigned-build-darwin-x64/*" \
-            -not -path "artifacts/KiroCrew-notarized-*/*" \
+            -not -path "artifacts/AjCrew-notarized-*/*" \
             \( -name "*.whl" -o -name "*.tar.gz" -o -name "*.dmg" -o -name "*.zip" -o -name "*.AppImage" \) -exec cp {} release/ \;
           ls -la release/
 
@@ -319,7 +319,7 @@ jobs:
         run: |
           bash packaging/signing/sign.sh "$APP_PATH" "$CHANNEL" "$VERSION"
           # MUST mirror sign.sh's OUTPUT_KEY: bucket keys use the space-free
-          # slug of the bundle name ("KiroCrew Nightly" -> "KiroCrew-Nightly").
+          # slug of the bundle name ("AjCrew Nightly" -> "AjCrew-Nightly").
           APP_SLUG="$(basename "$APP_PATH" .app)"
           APP_SLUG="${APP_SLUG// /-}"
           # Same key sign.sh wrote: slug + SIGN_KEY_SUFFIX (empty on universal).
@@ -389,14 +389,14 @@ jobs:
       # and DMG). See the timeout-minutes note above for why it is 60m.
       NOTARIZE_BUDGET_SECS: "3600"
       # Published FILENAMES are pinned to this basename on every channel even
-      # though the nightly BUNDLE is "KiroCrew Nightly.app": CDN keys and the
-      # latest-DMG permalink (desktop/<channel>/latest/KiroCrew.dmg) are a
+      # though the nightly BUNDLE is "AjCrew Nightly.app": CDN keys and the
+      # latest-DMG permalink (desktop/<channel>/latest/AjCrew.dmg) are a
       # public contract, and deriving filenames from the bundle name would
       # silently rename the keys and break the permalink. A single-arch leg
-      # appends its arch (KiroCrew-arm64 / KiroCrew-x64): the stem of the
+      # appends its arch (AjCrew-arm64 / AjCrew-x64): the stem of the
       # notarized/ and desktop/ keys, the shipping DMG and the latest-DMG
       # alias, so three legs of one channel+version never share a key.
-      ARTIFACT_BASENAME: ${{ format('KiroCrew{0}{1}', inputs.channel == 'lts' && '-LTS' || '', inputs.mac_variant != '' && format('-{0}', inputs.mac_variant) || '') }} # brand-ok
+      ARTIFACT_BASENAME: ${{ format('AjCrew{0}{1}', inputs.channel == 'lts' && '-LTS' || '', inputs.mac_variant != '' && format('-{0}', inputs.mac_variant) || '') }} # brand-ok
       # The stapled app zip as it travels in the gated artifact and in the
       # stable promotion bundle: notarized.zip on the universal leg,
       # notarized-<arch>.zip on a single-arch one. The bundle holds every
@@ -446,7 +446,7 @@ jobs:
         run: |
           set -euo pipefail
           SECRET_JSON=$(aws secretsmanager get-secret-value \
-            --secret-id kirocrew/signing/apple-notary \
+            --secret-id ajcrew/signing/apple-notary \
             --query SecretString --output text)
           APPLE_ID=$(printf '%s' "$SECRET_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['apple_id'])")
           APPLE_PW=$(printf '%s' "$SECRET_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['password'])")
@@ -579,7 +579,7 @@ jobs:
           set -euo pipefail
           # The DMG signs under the app's own bundle identifier, read from
           # the stapled bundle rather than hardcoded (all channels currently
-          # share the onboarded com.amazon.kiro.crew -- CDSigner authz is
+          # share the onboarded io.github.al-jwharah.ajcrew -- CDSigner authz is
           # per-identifier, so any future distinct id needs onboarding first).
           DMG_IDENTIFIER="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "work/stapled/${APP_NAME}.app/Contents/Info.plist")"
           export DMG_IDENTIFIER
@@ -591,7 +591,7 @@ jobs:
         run: |
           set -euo pipefail
           SECRET_JSON=$(aws secretsmanager get-secret-value \
-            --secret-id kirocrew/signing/apple-notary \
+            --secret-id ajcrew/signing/apple-notary \
             --query SecretString --output text)
           APPLE_ID=$(printf '%s' "$SECRET_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['apple_id'])")
           APPLE_PW=$(printf '%s' "$SECRET_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin)['password'])")
@@ -667,7 +667,7 @@ jobs:
         if: env.HAS_SIGNING_SECRETS
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ${{ format('KiroCrew-notarized-{0}-{1}{2}', inputs.channel, inputs.version, inputs.mac_variant != '' && format('-{0}', inputs.mac_variant) || '') }}
+          name: ${{ format('AjCrew-notarized-{0}-{1}{2}', inputs.channel, inputs.version, inputs.mac_variant != '' && format('-{0}', inputs.mac_variant) || '') }}
           path: |
             work/${{ env.NOTARIZED_ZIP }}
             work/*.dmg
@@ -698,7 +698,7 @@ jobs:
            (inputs.promote && needs.notarize.result == 'skipped')) }}
     # Same group, same label spelling, and the same reason for it, as `sign`
     # above.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 15
     # Same OIDC subject alignment as the jobs above (S3 writes assume the
     # signing role). No Secrets Manager access here -- the Apple credential
@@ -710,7 +710,7 @@ jobs:
       CHANNEL: ${{ inputs.channel }}
       VERSION: ${{ inputs.version }}
       # Pinned published basename -- see the notarize job's env comment.
-      ARTIFACT_BASENAME: ${{ format('KiroCrew{0}{1}', inputs.channel == 'lts' && '-LTS' || '', inputs.mac_variant != '' && format('-{0}', inputs.mac_variant) || '') }} # brand-ok
+      ARTIFACT_BASENAME: ${{ format('AjCrew{0}{1}', inputs.channel == 'lts' && '-LTS' || '', inputs.mac_variant != '' && format('-{0}', inputs.mac_variant) || '') }} # brand-ok
       # Directory the channel file lives in: feed/<channel> for the universal
       # DMG, feed/<channel>/<arch> for a single-arch one. The file name inside
       # it is always latest-mac.yml -- electron-updater derives that from the
@@ -750,7 +750,7 @@ jobs:
         if: env.HAS_SIGNING_SECRETS
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: ${{ inputs.promote && inputs.promotion_artifact || format('KiroCrew-notarized-{0}-{1}{2}', inputs.channel, inputs.version, inputs.mac_variant != '' && format('-{0}', inputs.mac_variant) || '') }}
+          name: ${{ inputs.promote && inputs.promotion_artifact || format('AjCrew-notarized-{0}-{1}{2}', inputs.channel, inputs.version, inputs.mac_variant != '' && format('-{0}', inputs.mac_variant) || '') }}
           path: work
 
       - name: Verify immutable promotion bundle
@@ -847,7 +847,7 @@ jobs:
       # (feed-before-artifact would hand clients a 403/404). The feed key is
       # mutable, so overwriting is safe -- but ONLY because the object itself
       # carries an explicit Cache-Control (set below). The feed/* CloudFront
-      # behavior is CACHING_DISABLED (see KiroCrewPublishCDK
+      # behavior is CACHING_DISABLED (see AjCrewPublishCDK
       # distribution-stack.ts), so the EDGE never caches the feed -- but a
       # cache policy governs CloudFront's own storage, it does NOT add a
       # Cache-Control response header, and nothing else in the distribution
@@ -1019,7 +1019,7 @@ jobs:
           # field cannot be given a header fix retroactively.
           #
           # NOT `s3api head-object`: the publish role is Put-only on feed/*
-          # (KiroCrewPublishCDK distribution-stack.ts grants s3:GetObject on
+          # (AjCrewPublishCDK distribution-stack.ts grants s3:GetObject on
           # cli/* alone), so a read-back would AccessDenied and abort this step
           # under `set -euo pipefail` AFTER the feed was already published --
           # a guard that fails on permissions instead of on the condition it
@@ -1073,7 +1073,7 @@ jobs:
           echo "Legacy feed written: ${FEED_PREFIX}/latest-mac.json (transition bridge)"
           # Verify the header CLIENTS actually receive, through the public CDN.
           # NOT `s3api head-object`: the publish role is Put-only on feed/*
-          # (KiroCrewPublishCDK distribution-stack.ts grants s3:GetObject on
+          # (AjCrewPublishCDK distribution-stack.ts grants s3:GetObject on
           # cli/* alone), so a read-back would AccessDenied and abort this step
           # under `set -euo pipefail` AFTER the feed was already published --
           # a guard that fails on permissions instead of on the condition it
@@ -1092,7 +1092,7 @@ jobs:
           echo "Feed Cache-Control verified via CDN: ${FEED_CC}"
 
       # Human-clickable permalink to the current DMG:
-      #   <CDN>/desktop/<channel>/latest/KiroCrew.dmg
+      #   <CDN>/desktop/<channel>/latest/AjCrew.dmg
       # The feed remains the canonical pointer for machines; this alias is a
       # convenience mirror of the feed's dmg field for download buttons and
       # docs, so it is written AFTER the feed (never points ahead of the

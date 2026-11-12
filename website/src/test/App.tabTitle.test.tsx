@@ -23,7 +23,7 @@ import type { ChatSlot } from '../types'
 vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page">ChatPage</div> }))
 vi.mock('../pages/SchedulePage', () => ({ default: () => <div data-testid="schedule-page">SchedulePage</div> }))
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {}, subscribeSubagents: () => {}, forceReconnect: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../hooks/useDashboardHealthProbe', () => ({ useDashboardHealthProbe: () => {} }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
@@ -80,7 +80,7 @@ function renderAt(path: string) {
   return store
 }
 
-const slot = (key: string, title: string) => ({ key, title, agent: 'kirocrew' }) as unknown as ChatSlot
+const slot = (key: string, title: string) => ({ key, title, agent: 'ajcrew' }) as unknown as ChatSlot
 
 describe('main window tab title', () => {
   it('names the active session, then Chat, then the product', async () => {
@@ -89,17 +89,17 @@ describe('main window tab title', () => {
       store.dispatch(addSlotOptimistic(slot('s1', 'Fix the login page')))
       store.dispatch(setActiveSlot('s1'))
     })
-    await waitFor(() => expect(document.title).toBe('Fix the login page — Chat — Kiro Crew'))
+    await waitFor(() => expect(document.title).toBe('Fix the login page — Chat — Aj Crew'))
   })
 
   it('names Chat alone when no session is selected', async () => {
     renderAt('/chat')
-    await waitFor(() => expect(document.title).toBe('Chat — Kiro Crew'))
+    await waitFor(() => expect(document.title).toBe('Chat — Aj Crew'))
   })
 
   it('names the panel on any other page', async () => {
     renderAt('/schedule')
-    await waitFor(() => expect(document.title).toBe('Schedule — Kiro Crew'))
+    await waitFor(() => expect(document.title).toBe('Schedule — Aj Crew'))
   })
 
   it('keeps the attention count first', async () => {
@@ -110,7 +110,7 @@ describe('main window tab title', () => {
       store.dispatch(setActiveSlot('s1'))
       store.dispatch(markSlotUnread('s2'))
     })
-    await waitFor(() => expect(document.title).toMatch(/^\(\d+\) Fix the login page — Chat — Kiro Crew$/))
+    await waitFor(() => expect(document.title).toMatch(/^\(\d+\) Fix the login page — Chat — Aj Crew$/))
   })
 
   it('names the remote crew whose pane fills the page, and the local page again on Local', async () => {
@@ -119,8 +119,8 @@ describe('main window tab title', () => {
     onTestFinished(() => { vi.mocked(api.listInstances).mockResolvedValue(noCrews as never) })
     const store = renderAt('/schedule')
     act(() => { store.dispatch(setActiveId('lab-1')) })
-    await waitFor(() => expect(document.title).toBe('Lab box — Kiro Crew'))
+    await waitFor(() => expect(document.title).toBe('Lab box — Aj Crew'))
     act(() => { store.dispatch(setActiveId(null)) })
-    await waitFor(() => expect(document.title).toBe('Schedule — Kiro Crew'))
+    await waitFor(() => expect(document.title).toBe('Schedule — Aj Crew'))
   })
 })

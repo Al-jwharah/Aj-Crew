@@ -19,10 +19,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, CrewLogError
-from kiro_crew.crew_log.lease import LEASE_FILE
-from kiro_crew.platform_compat import file_lock
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, CrewLogError
+from aj_crew.crew_log.lease import LEASE_FILE
+from aj_crew.platform_compat import file_lock
 
 CHILD = Path(__file__).parent / "fixtures" / "crew_log_lease_child.py"
 SESSION = "lease-owner-session"
@@ -49,12 +49,12 @@ locked_lease_swap_unavailable = pytest.mark.skipif(
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 
 def _session(unit_id: str = SESSION) -> CrewLog:
-    return CrewLog.create(lg.KIND_SESSION, unit_id, owner="qa", agent="kirocrew")
+    return CrewLog.create(lg.KIND_SESSION, unit_id, owner="qa", agent="ajcrew")
 
 
 def _types(unit_id: str = SESSION) -> "list[str]":
@@ -194,7 +194,7 @@ def test_a_release_fired_by_the_collector_inside_an_acquire_does_not_deadlock(mo
     The collector is run by hand inside ``_take`` with automatic collection off, on a real
     ``CrewLog`` parked in a cycle. The bounded wait reports a hang.
     """
-    from kiro_crew.crew_log import lease
+    from aj_crew.crew_log import lease
 
     class Cycle:
         pass
@@ -357,13 +357,13 @@ def _child(home: Path, tmp_path: Path) -> "subprocess.Popen[str]":
     """Start the owner child under a DECLARED environment, and wait for its claim.
 
     Inheriting ``os.environ`` wholesale would make the child depend on whatever
-    else the shard it landed in exported -- another test's ``KIROCREW_*``, a
+    else the shard it landed in exported -- another test's ``AJCREW_*``, a
     proxy, a ``TMPDIR`` -- so the same test could pass in one shard and fail in
     another for reasons unrelated to what it asserts.
     """
     env = {
-        "KIROCREW_HOME": str(home),
-        "KIROCREW_CREW_LOG": "1",
+        "AJCREW_HOME": str(home),
+        "AJCREW_CREW_LOG": "1",
         "PYTHONPATH": str(Path(__file__).resolve().parents[1] / "src"),
         "PATH": os.environ.get("PATH", ""),
         "TMPDIR": str(tmp_path),

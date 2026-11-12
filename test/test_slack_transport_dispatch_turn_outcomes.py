@@ -27,7 +27,7 @@ from slack_transport_dispatch_helpers import (
     make_event,
 )
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     STOP_REASON_CANCELLED,
@@ -35,10 +35,10 @@ from kiro_crew.acp.types import (
     STOP_REASON_STALE_RECOVER,
     STOP_REASON_TIMEOUT,
 )
-from kiro_crew.messaging.link import canonical_key
-from kiro_crew.slack import handler as _handler
-from kiro_crew.slack import transport_dispatch
-from kiro_crew.testing.wait import await_until
+from aj_crew.messaging.link import canonical_key
+from aj_crew.slack import handler as _handler
+from aj_crew.slack import transport_dispatch
+from aj_crew.testing.wait import await_until
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
@@ -53,7 +53,7 @@ class TestConversationLogAgentMetadata:
     shows "default" for Slack sessions)."""
 
     def test_transport_turn_records_agent_in_session_metadata(self, monkeypatch, tmp_path):
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "sales-agent")
         monkeypatch.setattr(
@@ -101,7 +101,7 @@ class TestConversationLogAgentMetadata:
         """The options-stamp fallback write is file-creating exactly when the
         user-turn receipt write failed — it must supply the agent for the same
         reason the receipt write does, or the session is pinned to "default"."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "sales-agent")
         monkeypatch.setattr(
@@ -161,8 +161,8 @@ class TestConversationLogAgentMetadata:
         file — it runs before session acquisition, so the agent must be
         resolved early (native handler parity) or the session is pinned to
         "default" forever."""
-        from kiro_crew.history import ConversationLog
-        from kiro_crew.hooks import HookResult
+        from aj_crew.history import ConversationLog
+        from aj_crew.hooks import HookResult
 
         monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "sales-agent")
         monkeypatch.setattr(
@@ -252,7 +252,7 @@ class _TitleSessions(_CapturingSessions):
 
 def _run_transport_titling(monkeypatch, *, restricted=False, conversation_log=None):
     """Drive one successful transport turn and drain the fire-and-forget tasks."""
-    monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+    monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
     monkeypatch.setattr(
         transport_dispatch,
         "_hydrate_thread_overrides",
@@ -377,7 +377,7 @@ class TestTransportAutoTitle:
             async def record_failure(self, key):
                 calls["failure"] += 1
 
-        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
         monkeypatch.setattr(
             transport_dispatch,
             "_hydrate_thread_overrides",
@@ -496,7 +496,7 @@ class TestTransportPartialProgressRescue:
         break_user_row_after_write: bool = False,
         finish_first: bool = False,
     ):
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "sales-agent")
         monkeypatch.setattr(
@@ -591,7 +591,7 @@ class TestTransportPartialProgressRescue:
         return rows, slack
 
     def test_partial_reply_is_persisted_with_continue_marker(self, monkeypatch, tmp_path):
-        from kiro_crew.slack.renderer import PARTIAL_TURN_MARKER
+        from aj_crew.slack.renderer import PARTIAL_TURN_MARKER
 
         rows, slack = self._run_dying_turn(
             monkeypatch, tmp_path, streamed="Analysis so far: the first two checks passed."
@@ -679,7 +679,7 @@ class TestTransportPartialProgressRescue:
         A later failure (a footer post that 4xxs) still unwinds through the rescue.
         The marker tells the next turn to resume, so it would redo finished work.
         """
-        from kiro_crew.slack.renderer import PARTIAL_TURN_MARKER
+        from aj_crew.slack.renderer import PARTIAL_TURN_MARKER
 
         rows, _ = self._run_dying_turn(
             monkeypatch,
@@ -746,7 +746,7 @@ class _VerdictSessions(FakeSessions):
 
 
 def _run_verdict_turn(monkeypatch, slack, sessions):
-    monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+    monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
     monkeypatch.setattr(
         transport_dispatch, "_hydrate_thread_overrides", AsyncMock(return_value=None)
     )
@@ -1008,9 +1008,9 @@ def _run_transport_voice(
     was asked to speak and where, then uploads a clip through the real Slack
     uploader, so the recorded transcript shows whether a clip reached Slack.
     """
-    from kiro_crew import voice_reply as vr
+    from aj_crew import voice_reply as vr
 
-    monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+    monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
     monkeypatch.setattr(
         transport_dispatch,
         "_hydrate_thread_overrides",
@@ -1185,10 +1185,10 @@ class TestTransportVoiceReply:
 
         # Resolved here, not at module top, so a missing module fails this test
         # alone instead of the whole file's collection.
-        from kiro_crew.slack import transport_voice
+        from aj_crew.slack import transport_voice
 
         monkeypatch.setattr(transport_voice, "_reply_by_voice", _boom)
-        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+        monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
         monkeypatch.setattr(
             transport_dispatch,
             "_hydrate_thread_overrides",

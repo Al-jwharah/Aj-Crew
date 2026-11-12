@@ -94,7 +94,7 @@ export function useChatStream({ dispatch, queryClient, buffers, voice, reconnect
           postNativeNotification(slotTitle, {
             body: i18nT('hooks.useWebSocket.approval_waiting', { name: data.content || i18nT('hooks.useWebSocket.unknown') }),
             silent: true,
-            tag: `kirocrew-approval:${data.slot}:${requestId}`,
+            tag: `ajcrew-approval:${data.slot}:${requestId}`,
           })
         }
       }
@@ -140,7 +140,7 @@ export function useChatStream({ dispatch, queryClient, buffers, voice, reconnect
         // half of the two automatic markSlotUnread sites; turnCompletion.ts has
         // the other. A terminal error row is exempt: the worker has stopped, and a
         // silenced failure stalls it unseen just as a silenced approval would.
-        if (marks && (!isSlotMuted(slots, slot, appsMutingSessions(queryClient.getQueryData(['kirocrewConfig']))) || isTerminalErrorRow(data))) {
+        if (marks && (!isSlotMuted(slots, slot, appsMutingSessions(queryClient.getQueryData(['ajcrewConfig']))) || isTerminalErrorRow(data))) {
           dispatch(batchedUnlessOpen(slot, markSlotUnread({ slot, ts: unreadWatermarkTs(data.role, data.ts), localTs: data.ts || undefined })))
         }
       })

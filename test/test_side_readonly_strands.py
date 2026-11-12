@@ -16,14 +16,14 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.acp import _dispatch
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.acp_backends import ACP_BACKEND_STRANDS, ACP_BACKENDS_SIDE_READONLY
-from kiro_crew.dashboard.chat_threads import THREAD_BOUNDARY_PROMPT_FILE_READS, build_thread_message
-from kiro_crew.dashboard.side_prompts import SIDE_BOUNDARY_PROMPT_FILE_READS, side_boundary_prompt
-from kiro_crew.llm_helpers import ToolApprovalPolicy, stream_and_collect
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.acp import _dispatch
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.acp_backends import ACP_BACKEND_STRANDS, ACP_BACKENDS_SIDE_READONLY
+from aj_crew.dashboard.chat_threads import THREAD_BOUNDARY_PROMPT_FILE_READS, build_thread_message
+from aj_crew.dashboard.side_prompts import SIDE_BOUNDARY_PROMPT_FILE_READS, side_boundary_prompt
+from aj_crew.llm_helpers import ToolApprovalPolicy, stream_and_collect
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
 NONCE = "b" * 32
 TOOL_USE_ID = "tooluse_side1"
@@ -48,7 +48,7 @@ _REFUSED = [
 
 def _frame(tool: str, owner: str | None, raw: dict[str, Any], **extra: Any) -> JsonRpcMessage:
     body: dict[str, Any] = {
-        "kiro-crew-gate": 1,
+        "aj-crew-gate": 1,
         "nonce": NONCE,
         "tool": tool,
         "toolCallId": TOOL_USE_ID,
@@ -115,7 +115,7 @@ class _ScriptedProvider:
 
 
 async def _gate(acp_event, policy: ToolApprovalPolicy) -> _ScriptedProvider:
-    from kiro_crew.hooks import HookManager, HooksConfig
+    from aj_crew.hooks import HookManager, HooksConfig
 
     provider = _ScriptedProvider(AcpProvider._to_llm_event(acp_event))
     await stream_and_collect(
@@ -232,7 +232,7 @@ class _LaunchSession:
 
 @pytest.mark.asyncio
 async def test_a_side_session_launches_with_no_mcp_server(monkeypatch):
-    from kiro_crew.acp.harness import strands as strands_mod
+    from aj_crew.acp.harness import strands as strands_mod
 
     monkeypatch.setattr(strands_mod, "prune_unstartable", lambda servers: (list(servers), []))
     side = _LaunchSession(side_read_only=True)
@@ -249,7 +249,7 @@ def test_every_strands_launch_reads_the_spec_before_choosing_what_to_mount():
     server is mounted."""
     import inspect
 
-    from kiro_crew.acp.harness import strands as strands_mod
+    from aj_crew.acp.harness import strands as strands_mod
 
     source = inspect.getsource(strands_mod.StrandsLaunch.resolve_spawn)
     read = source.index("await session._prepare_session_mcp()")
@@ -311,8 +311,8 @@ def test_the_live_capture_shows_the_read_ran_and_the_shell_and_write_did_not():
     """What the CLI answered: the read's text came back, the other two were DENIED."""
     text = _LIVE.read_text(encoding="utf-8")
     assert "kumquat-6" in text
-    assert "DENIED: Kiro Crew did not approve 'shell'" in text
-    assert "DENIED: Kiro Crew did not approve 'write'" in text
+    assert "DENIED: Aj Crew did not approve 'shell'" in text
+    assert "DENIED: Aj Crew did not approve 'write'" in text
 
 
 @pytest.mark.asyncio

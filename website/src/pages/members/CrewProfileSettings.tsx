@@ -250,7 +250,7 @@ export default function CrewProfileSettings({ member, slotKey, waiting = false }
   // fills the chat box. This is a preview, off by default: absent (an older gateway,
   // or a crewmate that never opted in) reads as off.
   const cardSendFlip = useMutation({
-    mutationFn: (want: boolean) => api.updateKirocrewAgent(member.name, { dashboard_card_send: want }),
+    mutationFn: (want: boolean) => api.updateAjcrewAgent(member.name, { dashboard_card_send: want }),
     onSuccess: (_data, want) => {
       queryClient.setQueryData<MemberRosterRow[]>(MEMBERS_ROSTER_QUERY_KEY, (rows) =>
         rows?.map((r) => (r.name === member.name ? { ...r, dashboard_card_send: want } : r)))
@@ -262,10 +262,10 @@ export default function CrewProfileSettings({ member, slotKey, waiting = false }
   const displayCardSend = cardSendFlip.isPending ? (cardSendFlip.variables ?? cardSendOn) : cardSendOn
 
   // Dynamic capabilities: a per-crewmate preview, off by default, stored on the
-  // crewmate's own record (`kiro_crew/crewmate_dynamic_capabilities.py`). On, the
+  // crewmate's own record (`aj_crew/crewmate_dynamic_capabilities.py`). On, the
   // crewmate may find skills or tools for its worker and ask for them on a card.
   const dynFlip = useMutation({
-    mutationFn: (want: boolean) => api.updateKirocrewAgent(member.name, { dynamic_capabilities: want }),
+    mutationFn: (want: boolean) => api.updateAjcrewAgent(member.name, { dynamic_capabilities: want }),
     // The saved value lands in the roster cache, so `member` carries it; a later
     // change from elsewhere (an applied card) reaches the switch the same way.
     onSuccess: (_r, want) => {
@@ -309,7 +309,7 @@ export default function CrewProfileSettings({ member, slotKey, waiting = false }
         ? { approval_mode: wire, expected_approval_mode: String(member.approval_mode ?? '') }
         : { [key]: wire, ...resetModels }
       try {
-        await api.updateKirocrewAgent(member.name, body)
+        await api.updateAjcrewAgent(member.name, body)
       } catch (e) {
         const current = conflictValue(e)
         if (current === undefined) throw e
@@ -353,7 +353,7 @@ export default function CrewProfileSettings({ member, slotKey, waiting = false }
       setSaving(false)
       void queryClient.invalidateQueries({ queryKey: MEMBERS_ROSTER_QUERY_KEY })
       void queryClient.invalidateQueries({ queryKey: ['agent-resolved-model', member.name] })
-      void queryClient.invalidateQueries({ queryKey: ['kirocrew-agents'] })
+      void queryClient.invalidateQueries({ queryKey: ['ajcrew-agents'] })
     }
   }
 
@@ -362,8 +362,8 @@ export default function CrewProfileSettings({ member, slotKey, waiting = false }
     : m === 'trust_reads'
       ? t('components.approvalModePicker.reads_label')
       : t('components.approvalModePicker.trust_label')
-  const modelLabel = (m: string) => (m === INHERIT_MODEL ? t('pages.kiroCrewAgentsPage.inherited') : m)
-  const harnessLabel = (h: string) => (h === INHERIT_HARNESS ? t('pages.kiroCrewAgentsPage.inherited') : acpBackendName({ id: h }))
+  const modelLabel = (m: string) => (m === INHERIT_MODEL ? t('pages.ajCrewAgentsPage.inherited') : m)
+  const harnessLabel = (h: string) => (h === INHERIT_HARNESS ? t('pages.ajCrewAgentsPage.inherited') : acpBackendName({ id: h }))
   const workerHarnesses = resolved?.worker_harnesses
   // The server's one list (`crewmate_harnesses`): the picker never adds its own.
   const offeredHarnesses = resolved?.harnesses || []
@@ -467,7 +467,7 @@ export default function CrewProfileSettings({ member, slotKey, waiting = false }
     },
     {
       key: 'model',
-      label: t('pages.kiroCrewAgentsPage.model'),
+      label: t('pages.ajCrewAgentsPage.model'),
       icon: <Sparkles size={16} />, tone: 'accent',
       value: model, valueLabel: modelLabel(model),
       // The inherit option must NOT read as "auto": here it means "pin nothing,
@@ -481,15 +481,15 @@ export default function CrewProfileSettings({ member, slotKey, waiting = false }
     },
     ...(effortCapable || !!value('reasoning_effort') ? [{
       key: 'reasoning_effort' as const,
-      label: t('pages.kiroCrewAgentsPage.reasoning_effort'),
+      label: t('pages.ajCrewAgentsPage.reasoning_effort'),
       icon: <Gauge size={16} />, tone: 'accent' as const,
       value: value('reasoning_effort'),
-      valueLabel: value('reasoning_effort') === '' ? t('pages.kiroCrewAgentsPage.inherited') : effortLabel(value('reasoning_effort')),
+      valueLabel: value('reasoning_effort') === '' ? t('pages.ajCrewAgentsPage.inherited') : effortLabel(value('reasoning_effort')),
       // The inherit option says what level it resolves to; the caption says
       // what a level trades.
       options: EFFORT_LEVELS.map((l) => ({
-        value: l, label: l === '' ? t('pages.kiroCrewAgentsPage.inherited') : effortLabel(l),
-        desc: l === '' && resolved?.reasoning_effort ? t('pages.kiroCrewAgentsPage.effort_resolves_to', { effort: effortLabel(resolved.reasoning_effort) }) : undefined,
+        value: l, label: l === '' ? t('pages.ajCrewAgentsPage.inherited') : effortLabel(l),
+        desc: l === '' && resolved?.reasoning_effort ? t('pages.ajCrewAgentsPage.effort_resolves_to', { effort: effortLabel(resolved.reasoning_effort) }) : undefined,
       })),
       caption: t('pages.membersPage.profile_effort_hint'),
     }] : []),

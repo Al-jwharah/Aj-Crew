@@ -86,7 +86,7 @@ half that actually failed.
 ## One source of truth for folding
 
 ``0.3.0-insider.9``, ``0.3.0-rc.2`` and ``0.3.0`` are one release. The renderer
-(``src/kiro_crew/changelog.py``) owns that folding, and this gate **loads it from
+(``src/aj_crew/changelog.py``) owns that folding, and this gate **loads it from
 there** by path rather than re-implementing it. ``changelog.py`` imports only
 ``re`` and ``typing``, so it loads in a CI job that checked the tree out without
 installing the package. A second copy of the regex was the earlier design and it
@@ -129,9 +129,9 @@ CHANGELOG = "CHANGELOG.md"
 
 #: The renderer, loaded by path so this gate cannot drift from it. Kept as a
 #: by-path load rather than a package import because CI checks the tree out
-#: without installing ``kiro_crew``; ``changelog.py`` has no third-party imports,
+#: without installing ``aj_crew``; ``changelog.py`` has no third-party imports,
 #: so the module loads standalone.
-RENDERER_PATH = "src/kiro_crew/changelog.py"
+RENDERER_PATH = "src/aj_crew/changelog.py"
 _RENDERER = Path(__file__).resolve().parents[1] / RENDERER_PATH
 
 

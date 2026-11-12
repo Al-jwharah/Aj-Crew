@@ -498,7 +498,7 @@ class TokenSaveError extends Error {
 /** A typed token and the secret name it was typed for. */
 type PendingToken = { token: string; secret: string }
 
-/** The workspaces Kiro Crew owns for one provider, from the gateway's registries
+/** The workspaces Aj Crew owns for one provider, from the gateway's registries
  * (no remote call). ``handoff``: off while the card holds an unsaved draft,
  * which leaving would lose. */
 function WorkspaceList({ provider, handoff, profiles }: {
@@ -583,8 +583,8 @@ export function SessionEnvironmentsCard() {
   const qc = useQueryClient()
   const controlId = useId()
   const query = useQuery<ConfigResponse>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
   const section = query.data?.session_environments
   const [savedRows, setSavedRows] = useState<{
@@ -668,7 +668,7 @@ export function SessionEnvironmentsCard() {
       }
       return response
     },
-    onMutate: () => qc.cancelQueries({ queryKey: ['kirocrewConfig'] }),
+    onMutate: () => qc.cancelQueries({ queryKey: ['ajcrewConfig'] }),
     onError: error => {
       if (!(error instanceof TokenSaveError)) return
       if (error.saved) {
@@ -710,7 +710,7 @@ export function SessionEnvironmentsCard() {
   })
   function applySaved(response: ConfigResponse | null, submitted: EnvironmentDraft | null) {
     if (!response || !submitted) return
-    const cached = qc.setQueryData<ConfigResponse>(['kirocrewConfig'], response)
+    const cached = qc.setQueryData<ConfigResponse>(['ajcrewConfig'], response)
     // Chats read their profile's folder from placement; a cached one would hand
     // new file drafts the old folder. Open drafts keep the folder they began in.
     void qc.invalidateQueries({ queryKey: ['slot-environment'] })
@@ -1256,7 +1256,7 @@ export function SessionEnvironmentsCard() {
               : provider === 'boxd' ? t('sessionEnvironments.managementHintBoxd')
                 : t('sessionEnvironments.managementHintKiroCloud')}
         </p>
-        {/* Kiro Crew keeps no registry of cloud sandboxes: Kiro Web lists them. */}
+        {/* Aj Crew keeps no registry of cloud sandboxes: Kiro Web lists them. */}
         {providerSaved && provider !== 'kiro_cloud' && <WorkspaceList provider={provider} handoff={!dirty}
           profiles={provider === 'coder' ? savedProfiles : provider === 'sprites' ? savedSpritesProfiles : savedBoxdProfiles} />}
         {provider === 'coder' && savedCoderUrl && (

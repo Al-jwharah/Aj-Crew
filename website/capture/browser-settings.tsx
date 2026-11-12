@@ -85,7 +85,7 @@ const config = {
 // No gateway here: every call the panel makes answers from the fixtures.
 const stub = api as unknown as Record<string, unknown>
 stub.getBrowserStatus = async () => status
-stub.kirocrewConfig = async () => config
+stub.ajcrewConfig = async () => config
 stub.patchConfig = async () => ({ ok: true })
 stub.installBrowserHarness = async () => status
 stub.testBrowser = async () => ({ ok: true, connection: status.connection, detail: null })

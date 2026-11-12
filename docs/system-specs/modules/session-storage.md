@@ -2,10 +2,10 @@
 
 ## Overview
 
-`src/kiro_crew/session_storage.py` measures what conversations cost on disk and
+`src/aj_crew/session_storage.py` measures what conversations cost on disk and
 reclaims that space when a user asks; its code lives in the owners listed under
-[Module layout](#module-layout). `src/kiro_crew/session_digest.py` reads a
-single session's content for the detail view. `src/kiro_crew/dashboard/handlers/session_storage.py`
+[Module layout](#module-layout). `src/aj_crew/session_digest.py` reads a
+single session's content for the detail view. `src/aj_crew/dashboard/handlers/session_storage.py`
 exposes both over HTTP. Reclaiming stages files under `<data home>/trash/sessions/`
 rather than unlinking them; emptying that trash is the only irreversible step and
 the only one that returns space to the filesystem.
@@ -15,16 +15,16 @@ move is initiated by a user action.
 
 ## Module layout
 
-`kiro_crew.session_storage` is the module every caller imports, and every name it bound
+`aj_crew.session_storage` is the module every caller imports, and every name it bound
 before its owners moved out is still reached there. It is a mirror facade
-(`kiro_crew._facade_mirror`) over the owners in `src/kiro_crew/session_storage_parts/`: it
+(`aj_crew._facade_mirror`) over the owners in `src/aj_crew/session_storage_parts/`: it
 binds each name an owner defines, so its namespace holds the definitions the unsplit module
 held, and it serves the names the owners import from the owner holding them. A patch of
 `session_storage.<name>` therefore reaches every owner holding the name, and the moved code
 reads its names as plain module globals. Owners never import the facade, each imports only
 the owners listed before it below, and new work goes to the owner of its responsibility
 rather than back into the facade. Every owner that logs does so under
-`kiro_crew.session_storage`, and `SessionStorageError` and `_OversizedManifestRecord` keep
+`aj_crew.session_storage`, and `SessionStorageError` and `_OversizedManifestRecord` keep
 that module name in a traceback. The scan and co-tenant caches
 (`_scan_cache`, `_cotenant_cache`) are the two owner names the facade serves instead of
 binding: `store_inventory.py` rebinds them, so a copy on the facade would go stale.
@@ -118,7 +118,7 @@ rollback is removed.
 A session's kiro-cli files are **enumerated, not assumed**. A session is identified
 by its `.json` / `.jsonl` pair, but reclaiming takes every file whose stem matches
 the session id, so a lock file or a sidecar a future kiro-cli version adds follows
-its session instead of being orphaned. Kiro Crew is a co-owner of that directory's
+its session instead of being orphaned. Aj Crew is a co-owner of that directory's
 layout here, and this is what keeps an unrecognised file from becoming a partial
 removal.
 
@@ -155,7 +155,7 @@ the legacy stem fails instead of agreeing with itself.
 
 `cotenant_sids()` handles discoverable pod candidates differently. A pod with its own replay store cannot own files in this store. A candidate that claims sessions but has no own store, or whose map cannot be read or parsed, makes `move_to_trash()` refuse because it can resume a session after the pre-move snapshot. A dev gateway at an arbitrary data home is not discoverable and remains a Known Limitation.
 
-The freshness floor narrows the window but does not establish ownership, so the report exposes `reclaim_blocked_reason` for a client to explain rather than offering an action that `move_to_trash()` must refuse. Tests that inspect this host state isolate `KIROCREW_POD_ROOT` with the homes.
+The freshness floor narrows the window but does not establish ownership, so the report exposes `reclaim_blocked_reason` for a client to explain rather than offering an action that `move_to_trash()` must refuse. Tests that inspect this host state isolate `AJCREW_POD_ROOT` with the homes.
 
 ### The index is re-read after the scan, and again per session
 
@@ -985,7 +985,7 @@ sorting heterogeneous dicts does not type-check.
 
 The collection GETs are not HTTP-cached and are not polling endpoints, but `measure()` and `list_units()` may reuse a short-lived process-local filesystem scan. `select_reclaimable()`, `move_to_trash()`, and the handler's `_classify()` pass an uncached read because a stale scan or co-tenant map must never decide a refusal. `invalidate_scan_cache()` runs after every mutation. `test_a_reclaim_does_not_select_against_a_cached_pass` and `test_the_pre_classification_never_reads_a_cached_cotenant_pass` pin that boundary.
 
-The dashboard handlers offload every store-accessing path with `asyncio.to_thread`; `kiro_crew.session_storage` itself is synchronous, so any other async caller must do the same. `GET .../empty` is the exception that can run on the event loop because it reads only process-local job counters and touches no store.
+The dashboard handlers offload every store-accessing path with `asyncio.to_thread`; `aj_crew.session_storage` itself is synchronous, so any other async caller must do the same. `GET .../empty` is the exception that can run on the event loop because it reads only process-local job counters and touches no store.
 
 Error codes: `restricted_session` (403), `unknown` (404, no such uid on the detail
 route), `invalid_body`, `invalid_threshold`, `cleanup_refused`, `invalid_batch`,
@@ -1264,7 +1264,7 @@ no longer addressing.
 
 ## Constants
 
-`kiro_crew.session_storage` owns the trash layout, manifest schema, age policy, and mutation-lock constants (defined in `src/kiro_crew/session_storage_parts/store_layout.py`); `kiro_crew.dashboard.handlers.session_storage` owns the request selection bound. Callers import those constants rather than duplicating their literals, so code and tests remain the source of truth when the policy changes.
+`aj_crew.session_storage` owns the trash layout, manifest schema, age policy, and mutation-lock constants (defined in `src/aj_crew/session_storage_parts/store_layout.py`); `aj_crew.dashboard.handlers.session_storage` owns the request selection bound. Callers import those constants rather than duplicating their literals, so code and tests remain the source of truth when the policy changes.
 
 ## Known Limitations
 

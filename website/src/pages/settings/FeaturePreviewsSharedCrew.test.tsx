@@ -26,7 +26,7 @@ vi.mock('../../api/client', async importOriginal => {
       sharedCrewSetPreview: vi.fn(),
       restartGateway: vi.fn(),
       dashboardConfig: vi.fn(),
-      kirocrewConfig: vi.fn(),
+      ajcrewConfig: vi.fn(),
       getDecisionsConsent: vi.fn(),
     },
   }
@@ -53,7 +53,7 @@ const toggle = () => screen.findByRole('switch', { name: 'Shared Crew' })
 beforeEach(() => {
   vi.resetAllMocks()
   vi.mocked(api.dashboardConfig).mockResolvedValue({ decisions_enabled: false } as never)
-  vi.mocked(api.kirocrewConfig).mockResolvedValue({} as never)
+  vi.mocked(api.ajcrewConfig).mockResolvedValue({} as never)
   vi.mocked(api.getDecisionsConsent).mockResolvedValue({ enabled: false, endpoint: '', configured_endpoint: '', permits: false })
 })
 

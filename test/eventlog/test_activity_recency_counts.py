@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.eventlog import members_projections as mp
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.eventlog import members_projections as mp
+from aj_crew.testing.clock import ManualClock
 
 NOW = 1_800_000_000.0
 DAY = 86400.0

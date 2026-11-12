@@ -1,7 +1,7 @@
 """Coverage tests for dashboard messaging handlers.
 
 Focus: the request-validation, delivery-failure and status-code branches of
-``kiro_crew.dashboard.handlers.messaging`` that the existing per-channel test
+``aj_crew.dashboard.handlers.messaging`` that the existing per-channel test
 files (slack/webex/wecom/telegram/discord config, send-message, notifications
 phase 5) never reach -- the subagent lifecycle routes, the notification
 ack/unack/channel routes, the Slack pins/reactions proxies, the browser
@@ -39,9 +39,9 @@ from handlers_messaging_coverage_helpers import (
     _state,
 )
 
-import kiro_crew.config.loader as loader
-import kiro_crew.dashboard.handlers.messaging as mod
-from kiro_crew.subagent import AGENT_NOT_FOUND_CODE
+import aj_crew.config.loader as loader
+import aj_crew.dashboard.handlers.messaging as mod
+from aj_crew.subagent import AGENT_NOT_FOUND_CODE
 
 
 def _run_view(req: _Req, text: str) -> tuple[str, dict]:
@@ -66,7 +66,7 @@ def _info(**kw: Any) -> Any:
         "turns": 2,
         "last_tool": "fs_read",
         "parent_session_key": "dashboard:chat-1",
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         # The retry path reuses this alongside the context triple: a retry must
         # not widen a delegated run to the global store.
         "memory_store": "",
@@ -273,12 +273,12 @@ class TestApiSpawn:
     def test_execution_record_lookup_runs_off_loop_before_spawn(
         self, monkeypatch, source: str, unavailable: bool
     ) -> None:
-        from kiro_crew.execution_context import read_session_execution
-        from kiro_crew.memory_stores import UnknownMemoryStore, provision_member_memory
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.execution_context import read_session_execution
+        from aj_crew.memory_stores import UnknownMemoryStore, provision_member_memory
+        from aj_crew.subagent_persistence import create_agent_folder
 
-        cfg = loader.KiroCrewConfig.load()
-        cfg.agents["worker"] = loader.KiroCrewAgentConfig(kiro_agent="kirocrew", triggers="work")
+        cfg = loader.AjCrewConfig.load()
+        cfg.agents["worker"] = loader.AjCrewAgentConfig(kiro_agent="ajcrew", triggers="work")
         store = provision_member_memory(cfg, "worker")
         cfg.save()
         mgr = _mgr()
@@ -297,7 +297,7 @@ class TestApiSpawn:
                     raise UnknownMemoryStore("member memory cannot be read")
                 return cfg
 
-            monkeypatch.setattr(loader.KiroCrewConfig, "load", load_config)
+            monkeypatch.setattr(loader.AjCrewConfig, "load", load_config)
         else:
             run_id = "offloop-parent"
             create_agent_folder(run_id, memory_store=store)
@@ -310,12 +310,12 @@ class TestApiSpawn:
                     raise UnknownMemoryStore("member memory cannot be read")
                 return read_session_execution(session_key)
 
-            monkeypatch.setattr("kiro_crew.execution_context.read_session_execution", inherited)
+            monkeypatch.setattr("aj_crew.execution_context.read_session_execution", inherited)
 
         # Shared Crew fair admission reads its own config off-loop too; this test
         # counts only the memory lookups, so admission answers pass-through.
-        from kiro_crew.shared_crew import admission_entry
-        from kiro_crew.shared_crew.admission_gate import Admission
+        from aj_crew.shared_crew import admission_entry
+        from aj_crew.shared_crew.admission_gate import Admission
 
         async def _passthrough(*_a, **_kw):
             return Admission(None, "passthrough")
@@ -585,7 +585,7 @@ class TestApiSpawnMarkCollected:
         assert _payload(_run(mod.api_spawn_mark_collected, req)) == {"status": "no_slot"}
 
     def test_records_ids_bounded_and_skips_non_strings(self) -> None:
-        from kiro_crew.parent_turns import ParentTurnLedger
+        from aj_crew.parent_turns import ParentTurnLedger
 
         slot = SimpleNamespace(_subagents_inline_collected=set(), _queue=[])
         ledger = ParentTurnLedger()
@@ -923,12 +923,12 @@ class TestApiSpawnList:
 
 class TestApiSpawnRetry:
     def _req(self, mgr: Any, agent_id: str = "a1") -> _Req:
-        from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+        from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
         old = mgr.get.return_value
         if isinstance(old, SimpleNamespace):
             old.execution_context = ExecutionContext(
-                None, MemoryStoreRef("default"), "template", "kirocrew"
+                None, MemoryStoreRef("default"), "template", "ajcrew"
             )
         return _Req(_state(subagents=mgr), None, match_info={"agent_id": agent_id})
 
@@ -1037,7 +1037,7 @@ class TestApiSpawnRetry:
 
     def test_an_admission_that_raises_releases_the_claim(self) -> None:
         """An unreadable task store during admission started nothing."""
-        from kiro_crew.shared_crew import admission_entry
+        from aj_crew.shared_crew import admission_entry
 
         mgr = _mgr()
         old = _info(done=True, outcome="failed", _raw_task="t")

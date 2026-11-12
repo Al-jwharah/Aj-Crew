@@ -12,7 +12,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_app_with_agent_routes, _make_state
 
-from kiro_crew.dashboard.slot_buffers import (
+from aj_crew.dashboard.slot_buffers import (
     MAX_FORK_PARENT_KEY_CHARS,
     MERGED_FROM_MAX_CREATED_AT_CHARS,
 )
@@ -58,7 +58,7 @@ class TestForkSlot:
         empty newborn, and a client seeing that frame under the same revision as
         the inherited list would take it as the next toggle base and erase the
         inherited tags on its first write."""
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("src")
@@ -178,7 +178,7 @@ class TestForkSlot:
         failing_save = AsyncMock(side_effect=RuntimeError("lock timeout"))
         app = _make_app(state)
         async with TestClient(TestServer(app)) as client:
-            with patch("kiro_crew.dashboard.chat_fork.save_slot_off_loop", failing_save):
+            with patch("aj_crew.dashboard.chat_fork.save_slot_off_loop", failing_save):
                 resp = await client.post("/api/chat/slots/src/fork", json={})
                 assert resp.status == 503
 
@@ -615,7 +615,7 @@ class TestForkSlot:
             new_key = data["key"]
 
         # Simulate a gateway restart by reading messages + metadata from disk
-        from kiro_crew.dashboard.chat import _history_key_for
+        from aj_crew.dashboard.chat import _history_key_for
 
         hk = _history_key_for(new_key)
         meta = state.conversation_log.get_metadata(hk)
@@ -638,7 +638,7 @@ class TestForkSlot:
             resp = await client.post("/api/chat/slots/src/fork", json={})
             new_key = (await resp.json())["key"]
 
-        from kiro_crew.dashboard.chat import _history_key_for
+        from aj_crew.dashboard.chat import _history_key_for
 
         identity = state.conversation_log.get_metadata(_history_key_for("src")).get("created_at")
         assert identity, "the fork saves its parent first, so the parent has a created_at"
@@ -661,7 +661,7 @@ class TestForkSlot:
         )
         state._slots.pop("src")
 
-        from kiro_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
+        from aj_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
 
         restored = _rehydrate_slot_from_history(state, "src")
         assert restored is not None
@@ -684,8 +684,8 @@ class TestForkSlot:
         slot.linked_session_key = _OVER_LONG_FORK_PARENT
 
         with (
-            patch("kiro_crew.dashboard.chat_fork.slot_history_key", return_value="dashboard:src"),
-            patch("kiro_crew.dashboard.chat_fork.session_was_deleted", return_value=False),
+            patch("aj_crew.dashboard.chat_fork.slot_history_key", return_value="dashboard:src"),
+            patch("aj_crew.dashboard.chat_fork.session_was_deleted", return_value=False),
         ):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post("/api/chat/slots/src/fork", json={})
@@ -701,8 +701,8 @@ class TestForkSlot:
     async def test_every_restore_path_brings_back_the_forks_parent_identity(
         self, tmp_path, monkeypatch, restore
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:leaf", "user", "hello")
@@ -720,11 +720,11 @@ class TestForkSlot:
                 )
                 assert resp.status == 200
         elif restore == "recent":
-            from kiro_crew.dashboard.chat import restore_recent_sessions
+            from aj_crew.dashboard.chat import restore_recent_sessions
 
             restore_recent_sessions(state, window_minutes=9999)
         else:
-            from kiro_crew.dashboard.chat_persistence import restore_open_slots
+            from aj_crew.dashboard.chat_persistence import restore_open_slots
 
             (tmp_path / "open_slots.json").write_text(json.dumps({"keys": ["leaf"], "ts": 0.0}))
             assert restore_open_slots(state) == 1
@@ -748,8 +748,8 @@ class TestForkSlot:
     async def test_every_restore_path_discards_invalid_fork_lineage(
         self, tmp_path, monkeypatch, caplog, restore, forked_from, logged
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:leaf", "user", "hello")
@@ -762,7 +762,7 @@ class TestForkSlot:
             },
         )
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.chat_persistence"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.chat_persistence"):
             if restore == "resume":
                 async with TestClient(TestServer(_make_app(state))) as client:
                     resp = await client.post(
@@ -770,11 +770,11 @@ class TestForkSlot:
                     )
                     assert resp.status == 200
             elif restore == "recent":
-                from kiro_crew.dashboard.chat import restore_recent_sessions
+                from aj_crew.dashboard.chat import restore_recent_sessions
 
                 restore_recent_sessions(state, window_minutes=9999)
             else:
-                from kiro_crew.dashboard.chat_persistence import restore_open_slots
+                from aj_crew.dashboard.chat_persistence import restore_open_slots
 
                 (tmp_path / "open_slots.json").write_text(json.dumps({"keys": ["leaf"], "ts": 0.0}))
                 assert restore_open_slots(state) == 1
@@ -800,8 +800,8 @@ class TestForkSlot:
     async def test_every_restore_path_discards_invalid_fork_parent_identity(
         self, tmp_path, monkeypatch, restore, forked_from_created_at
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:leaf", "user", "hello")
@@ -821,11 +821,11 @@ class TestForkSlot:
                 )
                 assert resp.status == 200
         elif restore == "recent":
-            from kiro_crew.dashboard.chat import restore_recent_sessions
+            from aj_crew.dashboard.chat import restore_recent_sessions
 
             restore_recent_sessions(state, window_minutes=9999)
         else:
-            from kiro_crew.dashboard.chat_persistence import restore_open_slots
+            from aj_crew.dashboard.chat_persistence import restore_open_slots
 
             (tmp_path / "open_slots.json").write_text(json.dumps({"keys": ["leaf"], "ts": 0.0}))
             assert restore_open_slots(state) == 1
@@ -890,7 +890,7 @@ class TestForkSlot:
         from unittest.mock import MagicMock
 
         mock_sel = MagicMock()
-        monkeypatch.setattr("kiro_crew.dashboard.chat_fork.sel", lambda: mock_sel)
+        monkeypatch.setattr("aj_crew.dashboard.chat_fork.sel", lambda: mock_sel)
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("src")
@@ -967,8 +967,8 @@ class TestForkSlot:
         assert child.blocks_reads is True
         assert f"dashboard:{data['key']}" in state._restricted_keys
 
-        from kiro_crew.context import build_session_replay
-        from kiro_crew.dashboard.chat import _history_key_for
+        from aj_crew.context import build_session_replay
+        from aj_crew.dashboard.chat import _history_key_for
 
         history_key = _history_key_for(data["key"])
         visible = [m["content"] for m in child.messages if m.get("role") in ("user", "assistant")]
@@ -1009,7 +1009,7 @@ class TestForkSlot:
 
         # conversation_log.recent(forked_key) is what ContextBuilder.build_session_context
         # calls to assemble the thread-history section for the new kiro process.
-        from kiro_crew.dashboard.chat import _history_key_for
+        from aj_crew.dashboard.chat import _history_key_for
 
         recent = state.conversation_log.recent(_history_key_for(new_key))
         visible = [m for m in recent if m.get("role") in ("user", "assistant")]
@@ -1026,9 +1026,9 @@ class TestForkSlot:
         corrupt each other's view. Fork creates a FRESH kiro session on first
         prompt by leaving session_map unset for the new key.
         """
-        from kiro_crew.session import SessionMap
+        from aj_crew.session import SessionMap
 
-        monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
         session_map = SessionMap()
         session_map.set("dashboard:src", "parent-kiro-sid-abc123")
         # A loop-side mutation defers its disk write; the fresh-instance
@@ -1100,7 +1100,7 @@ class TestForkSlot:
         for i in range(250):
             slot.append("user" if i % 2 == 0 else "assistant", f"m{i}", "msg")
         slot.drain()
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         _save_slot_to_history(state, slot)
         # Simulate restore cap: keep only last 50 in memory.
@@ -1131,7 +1131,7 @@ class TestForkSlot:
         for i in range(250):
             slot.append("user" if i % 2 == 0 else "assistant", f"m{i}", "msg")
         slot.drain()
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
         _save_slot_to_history(state, slot)
         # Simulate restore with cap: real path caps messages then sets
@@ -1202,7 +1202,7 @@ class TestForkSlot:
         from unittest.mock import MagicMock
 
         mock_sel = MagicMock()
-        monkeypatch.setattr("kiro_crew.dashboard.chat_fork.sel", lambda: mock_sel)
+        monkeypatch.setattr("aj_crew.dashboard.chat_fork.sel", lambda: mock_sel)
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("src", memory_mode="incognito")
@@ -1229,7 +1229,7 @@ class TestForkSlot:
 
         mock_sel = MagicMock()
         # The refusal is the per-slot checkpoint's, so its row is written there.
-        monkeypatch.setattr("kiro_crew.dashboard.slot_ownership.sel", lambda: mock_sel)
+        monkeypatch.setattr("aj_crew.dashboard.slot_ownership.sel", lambda: mock_sel)
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("src", app="app-B")
@@ -1293,9 +1293,9 @@ class TestForkSlot:
         from unittest.mock import MagicMock
 
         mock_sel = MagicMock()
-        monkeypatch.setattr("kiro_crew.dashboard.chat_fork.sel", lambda: mock_sel)
+        monkeypatch.setattr("aj_crew.dashboard.chat_fork.sel", lambda: mock_sel)
         # Lower the cap so we don't need to create hundreds of slots.
-        monkeypatch.setattr("kiro_crew.dashboard.chat_fork.MAX_LIVE_SLOTS", 3)
+        monkeypatch.setattr("aj_crew.dashboard.chat_fork.MAX_LIVE_SLOTS", 3)
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("src")
@@ -1326,7 +1326,7 @@ class TestForkSlot:
         The frontend indexes fork buttons against ``read_messages_chained`` (all files
         sharing the slot's ``tab_id``), so an index past the current file must be accepted.
         """
-        from kiro_crew.dashboard.chat_utils import _history_key_for
+        from aj_crew.dashboard.chat_utils import _history_key_for
 
         state = _make_state(tmp_path)
         tab_id = "tab12345abcd"

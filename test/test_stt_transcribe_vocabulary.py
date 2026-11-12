@@ -12,7 +12,7 @@ Three contracts, each with its own failure if broken:
 * **Every page up to the bounded cap is read**, truncation is exposed, and a
   refusal is reported with the code whose fix applies.
 
-Per-test config isolation comes from the autouse ``KIROCREW_HOME`` fixture in
+Per-test config isolation comes from the autouse ``AJCREW_HOME`` fixture in
 conftest, so these do not take ``tmp_path`` for the config themselves.
 """
 
@@ -30,11 +30,11 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-import kiro_crew.dashboard.handlers.core as core
-from kiro_crew import aws_consent
-from kiro_crew import transcribe as tr
-from kiro_crew.config import sections
-from kiro_crew.config.loader import KiroCrewConfig, config_path
+import aj_crew.dashboard.handlers.core as core
+from aj_crew import aws_consent
+from aj_crew import transcribe as tr
+from aj_crew.config import sections
+from aj_crew.config.loader import AjCrewConfig, config_path
 
 # ── helpers ──────────────────────────────────────────────────────────────
 
@@ -201,12 +201,12 @@ def test_unusable_names_are_refused(value: object) -> None:
 
 
 def test_defaults_to_no_vocabulary() -> None:
-    assert KiroCrewConfig.load().stt.transcribe_vocabulary == ""
+    assert AjCrewConfig.load().stt.transcribe_vocabulary == ""
 
 
 def test_a_stored_name_is_loaded() -> None:
     _write_stt(provider="transcribe", transcribe_vocabulary=" team-terms ")
-    assert KiroCrewConfig.load().stt.transcribe_vocabulary == "team-terms"
+    assert AjCrewConfig.load().stt.transcribe_vocabulary == "team-terms"
 
 
 @pytest.mark.parametrize("stored", ["team terms", 7, ["team-terms"], {"name": "x"}, None])
@@ -216,27 +216,27 @@ def test_an_unusable_stored_name_degrades_to_none(stored: object, monkeypatch, c
     monkeypatch.setattr(sections, "_LAST_WARNED_TRANSCRIBE_VOCABULARY", None)
     _write_stt(provider="transcribe", transcribe_vocabulary=stored)
     with caplog.at_level(logging.WARNING):
-        assert KiroCrewConfig.load().stt.transcribe_vocabulary == ""
+        assert AjCrewConfig.load().stt.transcribe_vocabulary == ""
     if stored is not None:
         assert any("transcribe_vocabulary" in r.getMessage() for r in caplog.records)
 
 
 def test_the_degrade_notice_deduplicates_the_last_value(monkeypatch, caplog) -> None:
     monkeypatch.setattr(sections, "_LAST_WARNED_TRANSCRIBE_VOCABULARY", None)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.sections"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.sections"):
         _write_stt(transcribe_vocabulary="not valid")
-        KiroCrewConfig.load()
-        KiroCrewConfig.load()
+        AjCrewConfig.load()
+        AjCrewConfig.load()
         _write_stt(transcribe_vocabulary="also invalid")
-        KiroCrewConfig.load()
-        KiroCrewConfig.load()
+        AjCrewConfig.load()
+        AjCrewConfig.load()
     notices = [r for r in caplog.records if "transcribe_vocabulary" in r.getMessage()]
     assert len(notices) == 2
 
 
 def test_the_degrade_notice_memory_is_bounded(monkeypatch, caplog) -> None:
     monkeypatch.setattr(sections, "_LAST_WARNED_TRANSCRIBE_VOCABULARY", None)
-    with caplog.at_level(logging.CRITICAL, logger="kiro_crew.config.sections"):
+    with caplog.at_level(logging.CRITICAL, logger="aj_crew.config.sections"):
         for index in range(1000):
             assert sections._validated_transcribe_vocabulary(f"not valid {index}") == ""
 
@@ -325,7 +325,7 @@ def test_stops_after_the_page_cap(monkeypatch, caplog) -> None:
     _ensure_botocore(monkeypatch)
     endless = [{"Vocabularies": [_vocab(f"v{i}")], "NextToken": "more"} for i in range(50)]
     fake = _FakeTranscribe(pages=endless).install(monkeypatch)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.transcribe"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.transcribe"):
         listing = tr.list_custom_vocabularies("", "us-east-1")
     assert len(fake.requests) == tr._VOCABULARY_MAX_PAGES
     assert len(listing.vocabularies) == tr._VOCABULARY_MAX_PAGES

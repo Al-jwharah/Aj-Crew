@@ -23,15 +23,15 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
+from aj_crew import platform_compat
 from conftest import make_dir_link
-from kiro_crew import platform_compat
 
 
 @pytest.fixture
 def fake_home(tmp_path, monkeypatch):
     """Pin $HOME to tmp_path so SkillsLoader/skills_dir resolve to a sandbox."""
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     return tmp_path
 
@@ -71,7 +71,7 @@ class FakeProvider:
 
 
 def _state_with_skills_loader(fake_home: Path):
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.skills import SkillsLoader
 
     skills_dir = fake_home / ".kiro" / "crew" / "skills"
     skills_dir.mkdir(parents=True, exist_ok=True)
@@ -83,8 +83,8 @@ def _state_with_skills_loader(fake_home: Path):
 
 
 def _make_app(state, provider):
-    from kiro_crew.dashboard.handlers import discover as discover_mod
-    from kiro_crew.skill_providers.base import ProviderRegistry
+    from aj_crew.dashboard.handlers import discover as discover_mod
+    from aj_crew.skill_providers.base import ProviderRegistry
 
     registry = ProviderRegistry()
     registry.register(provider)
@@ -109,7 +109,7 @@ def _make_app(state, provider):
 @pytest.fixture
 def reset_registry():
     """Restore the module-level registry singleton after each test."""
-    from kiro_crew.dashboard.handlers import discover as discover_mod
+    from aj_crew.dashboard.handlers import discover as discover_mod
 
     old = discover_mod._registry
     yield
@@ -409,7 +409,7 @@ class TestDiscoverInstallStagedSwap:
         self, fake_home, reset_registry, monkeypatch
     ):
         # A Windows directory rename can fail under AV or an open handle.
-        from kiro_crew.dashboard.handlers import discover as discover_mod
+        from aj_crew.dashboard.handlers import discover as discover_mod
 
         client, provider, skill_dir = await self._installed(fake_home)
 
@@ -463,7 +463,7 @@ class TestDiscoverPreview:
         The expectation is derived from the loader itself, not hardcoded,
         so a future loader-dialect change breaks this pin instead of
         silently reopening the preview/install divergence."""
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         skill_md = (
             "---\n"
@@ -503,7 +503,7 @@ class TestDiscoverPreview:
         universal-newline mode collapses them before parsing). The preview
         must mirror that translation, or a CRLF SKILL.md previews as empty
         metadata while installing fine."""
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         skill_md = "---\r\nname: crlf-skill\r\ndescription: from windows\r\n---\r\n# Fake"
         oracle_path = tmp_path / "SKILL.md"
@@ -562,7 +562,7 @@ class TestDiscoverPreview:
 @pytest.mark.asyncio
 class TestDiscoverSearch:
     async def test_search_includes_installs(self, fake_home, reset_registry):
-        from kiro_crew.skill_providers.base import SkillSearchResult
+        from aj_crew.skill_providers.base import SkillSearchResult
 
         provider = FakeProvider(results=[
             SkillSearchResult(
@@ -680,7 +680,7 @@ class TestDiscoverInstallHumanOnly:
     async def test_read_paths_are_admitted_for_internal_callers(self):
         """The two READ routes must be on the mixed-internal list, or the MCP
         tools 403 with 'Token required' (the artifact-folders bug class)."""
-        from kiro_crew.dashboard.server import (
+        from aj_crew.dashboard.server import (
             _MIXED_INTERNAL_API_PATHS,
             _STRICT_INTERNAL_API_PATHS,
         )
@@ -699,8 +699,8 @@ class TestDiscoverInstallHumanOnly:
         """
         from unittest.mock import MagicMock
 
-        from kiro_crew.dashboard.server import _MIXED_INTERNAL_API_PATHS
-        from kiro_crew.dashboard.token_auth import token_auth_middleware
+        from aj_crew.dashboard.server import _MIXED_INTERNAL_API_PATHS
+        from aj_crew.dashboard.token_auth import token_auth_middleware
 
         secret = "test-secret-123"
         mw = token_auth_middleware(
@@ -741,7 +741,7 @@ class TestDiscoverInstallLogSanitization:
     the real handler with a provider that raises.
     """
 
-    _LOGGER = "kiro_crew.dashboard.handlers.discover"
+    _LOGGER = "aj_crew.dashboard.handlers.discover"
 
     async def _client(self, fake_home, provider):
         state, skills_dir = _state_with_skills_loader(fake_home)

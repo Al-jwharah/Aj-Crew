@@ -11,8 +11,8 @@ from typing import Any
 import pytest
 from stray_line_helpers import cyclic_gc_quiesced  # noqa: F401 - fixture
 
-from kiro_crew.acp._dispatch import build_permission_event, parse_session_update
-from kiro_crew.acp.types import JsonRpcMessage
+from aj_crew.acp._dispatch import build_permission_event, parse_session_update
+from aj_crew.acp.types import JsonRpcMessage
 
 
 class TestTheProvenanceCachesShareOneBound:
@@ -41,7 +41,7 @@ class TestTheProvenanceCachesShareOneBound:
     @staticmethod
     def _over(*scopes: str) -> set[str]:
         """The overflow record for *scopes*: fixed-size digests, never the text."""
-        from kiro_crew.acp._dispatch import overflow_scope_key
+        from aj_crew.acp._dispatch import overflow_scope_key
 
         return {overflow_scope_key(sc) for sc in scopes}
 
@@ -65,7 +65,7 @@ class TestTheProvenanceCachesShareOneBound:
     def test_the_count_cap_is_one_constant_over_the_union_of_sibling_keys(self, caplog) -> None:
         import logging
 
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_ENTRIES
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_ENTRIES
 
         caches = self._caches()
         for i in range(TOOL_CALL_CACHE_MAX_ENTRIES):
@@ -75,7 +75,7 @@ class TestTheProvenanceCachesShareOneBound:
             keys.update(c.keys())
         assert len(keys) == TOOL_CALL_CACHE_MAX_ENTRIES
         assert caches["cache_overflow"] == set()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp._dispatch"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp._dispatch"):
             parse_session_update(self._call(TOOL_CALL_CACHE_MAX_ENTRIES), cache_scope="s", **caches)
             parse_session_update(
                 self._call(TOOL_CALL_CACHE_MAX_ENTRIES + 1), cache_scope="s", **caches
@@ -94,7 +94,7 @@ class TestTheProvenanceCachesShareOneBound:
         admitted frame's row is there, and the handle releases it at the terminal
         with its siblings. Without this the store grew with turn length on KAS
         outside the count bound, under keys the key bound had refused."""
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_KEY_CHARS
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_KEY_CHARS
 
         caches = self._caches()
         parse_session_update(self._call(0), cache_scope="s", **caches)
@@ -125,11 +125,11 @@ class TestTheProvenanceCachesShareOneBound:
         is said out loud on both; within one snapshot it is said once."""
         import logging
 
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_ENTRIES
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_ENTRIES
 
         def overflow_once(caches: dict[str, Any]) -> int:
             caplog.clear()
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.acp._dispatch"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.acp._dispatch"):
                 for i in range(TOOL_CALL_CACHE_MAX_ENTRIES + 2):
                     parse_session_update(self._call(i), cache_scope="s", **caches)
             return sum("refused a frame" in r.getMessage() for r in caplog.records)
@@ -148,7 +148,7 @@ class TestTheProvenanceCachesShareOneBound:
         assert caches["cache_overflow"] == self._over("s")
 
     def test_an_oversized_payload_is_refused_whether_the_id_is_new_or_held(self) -> None:
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS
 
         caches = self._caches()
         big = "x" * (TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS + 1)
@@ -186,7 +186,7 @@ class TestTheProvenanceCachesShareOneBound:
         placeholder (the degrade is for the reader; only the retained provenance
         is withheld). A payload that is deep but still renders is measured on its
         real size and admitted."""
-        from kiro_crew.acp._dispatch import (
+        from aj_crew.acp._dispatch import (
             TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS,
             UNSERIALISABLE_SIBLING_VALUE,
         )
@@ -227,7 +227,7 @@ class TestTheProvenanceCachesShareOneBound:
         A near-limit ``rawInput`` beside a tiny diff must be refused on the
         params' size, on the initial frame and on a refinement of a held id;
         otherwise 256 such frames retain gigabytes the gate never measured."""
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS
 
         big = {"path": "/tmp/f1", "text": "x" * (TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS + 1)}
         tiny = [{"type": "diff", "path": "/tmp/f1", "oldText": "a", "newText": "b"}]
@@ -264,7 +264,7 @@ class TestTheProvenanceCachesShareOneBound:
         the params' size and then retain the diff unmeasured: the bound is
         applied to the string the cache retains, after diff rendering and
         redaction, in both builders."""
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS
 
         big = "x\n" * (TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS // 2 + 1)
         # Derived diff: an ``insert`` renders its body line-by-line without the
@@ -313,7 +313,7 @@ class TestTheProvenanceCachesShareOneBound:
         the unified-diff renderer's own cap, the only way the frame is refused
         is if the gate measured the FINAL string; a gate that measured the
         params rendering admits it and retains the diff unmeasured."""
-        from kiro_crew.acp import _dispatch
+        from aj_crew.acp import _dispatch
 
         monkeypatch.setattr(_dispatch, "TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS", 2_000)
         new_text = "line\n" * 1_000  # renders to ~6 KiB of diff, under the 64 KiB cap
@@ -350,7 +350,7 @@ class TestTheProvenanceCachesShareOneBound:
     def test_every_retained_rendering_is_within_the_size_bound(self) -> None:
         """Property over the retained display strings: nothing in
         ``tool_input_cache`` ever exceeds the bound, whatever the frame shape."""
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS
 
         big = "y" * (TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS + 5)
         caches = self._caches()
@@ -383,7 +383,7 @@ class TestTheProvenanceCachesShareOneBound:
         )
 
     def test_a_refinement_of_a_held_id_is_admitted_past_the_count_cap(self) -> None:
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_ENTRIES
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_ENTRIES
 
         caches = self._caches()
         for i in range(TOOL_CALL_CACHE_MAX_ENTRIES):
@@ -404,7 +404,7 @@ class TestTheProvenanceCachesShareOneBound:
         bound is written nowhere and its scope is recorded, while one exactly at
         the bound is admitted. Otherwise a stream of near-limit ids spends the
         count cap on key bytes the size bound never measured."""
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_KEY_CHARS
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_KEY_CHARS
 
         caches = self._caches()
         at_bound = "k" * TOOL_CALL_CACHE_MAX_KEY_CHARS
@@ -449,7 +449,7 @@ class TestTheProvenanceCachesShareOneBound:
         so a path past the path bound refuses the frame -- initial and
         refinement alike -- rather than being retained or cut; a path at the
         bound is retained whole, and a non-string path is no path."""
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PATH_CHARS
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PATH_CHARS
 
         def _diff(path: object) -> list[dict]:
             return [{"type": "diff", "path": path, "oldText": "a", "newText": "b"}]
@@ -487,7 +487,7 @@ class TestTheProvenanceCachesShareOneBound:
         """Property over the retained keys and diff paths, beside the payload
         property: whatever the frames carried, no key exceeds the key bound and
         no retained path exceeds the path bound."""
-        from kiro_crew.acp._dispatch import (
+        from aj_crew.acp._dispatch import (
             TOOL_CALL_CACHE_MAX_KEY_CHARS,
             TOOL_CALL_CACHE_MAX_PATH_CHARS,
         )
@@ -524,7 +524,7 @@ class TestTheProvenanceCachesShareOneBound:
         assert caches["cache_overflow"] == self._over("scope")
 
     def test_a_refused_id_s_permission_event_carries_no_provenance(self) -> None:
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_ENTRIES
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_ENTRIES
 
         caches = self._caches()
         for i in range(TOOL_CALL_CACHE_MAX_ENTRIES + 1):
@@ -551,8 +551,8 @@ class TestTheProvenanceCachesShareOneBound:
         import asyncio
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.acp.session_handle import AcpSessionHandle
-        from kiro_crew.acp.types import ACP_BACKEND_KAS
+        from aj_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.types import ACP_BACKEND_KAS
 
         rt = MagicMock()
         rt.acp_backend = ACP_BACKEND_KAS
@@ -606,7 +606,7 @@ class TestTheProvenanceCachesShareOneBound:
         which limit the call can meet."""
         import logging
 
-        from kiro_crew.acp._dispatch import (
+        from aj_crew.acp._dispatch import (
             TOOL_CALL_CACHE_MAX_ENTRIES,
             TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS,
         )
@@ -618,7 +618,7 @@ class TestTheProvenanceCachesShareOneBound:
         msg = self._perm(21, over)
         event = handle._build_permission_event(msg)
         assert event is not None and event.raw_params_trusted is False
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.session_handle"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.session_handle"):
             assert await handle._refuse_unretained_provenance(msg, event) is True
         assert sent == [(21, {"outcome": {"outcome": "selected", "optionId": "reject"}})]
         refusal = [r.getMessage() for r in caplog.records if "did not retain" in r.getMessage()]
@@ -691,7 +691,7 @@ class TestTheProvenanceCachesShareOneBound:
         import asyncio
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.session_handle import AcpSessionHandle
 
         rt = MagicMock()
         rt.acp_backend = "kiro"
@@ -714,7 +714,7 @@ class TestTheProvenanceCachesShareOneBound:
         each settled by its terminal frame before the next, never overflow -- the
         population is one call in flight -- so the 300th call's permission
         request is admitted with full provenance, not refused."""
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_ENTRIES
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_ENTRIES
 
         handle, sent = self._handle()
         rt = handle._runtime
@@ -762,7 +762,7 @@ class TestTheProvenanceCachesShareOneBound:
         import inspect
         import sys
 
-        from kiro_crew.acp import session_handle
+        from aj_crew.acp import session_handle
 
         src = inspect.getsource(session_handle.AcpSessionHandle._dispatch_events)
         trip = src.index("self._tripwire_spec_disabled_tool(ev, msg)")
@@ -781,7 +781,7 @@ class TestTheProvenanceCachesShareOneBound:
         """A child-routed frame writes the shared stores under the child's scope
         and re-tags only calls and text, so its terminal never reaches the main
         route's release: the child arm releases itself, and only its own row."""
-        from kiro_crew.acp.types import EVENT_SUBAGENT_ACTIVITY
+        from aj_crew.acp.types import EVENT_SUBAGENT_ACTIVITY
 
         handle, _ = self._handle()
         handle._handle_update(self._frame(self._call(0, rawInput={"targetFile": "/tmp/a"})))
@@ -818,7 +818,7 @@ class TestTheProvenanceCachesShareOneBound:
         import inspect
         import sys
 
-        from kiro_crew.acp import session_handle
+        from aj_crew.acp import session_handle
 
         # The facade and every owner its code moved to, parsed as one module.
         tree = ast.parse(
@@ -852,14 +852,14 @@ class TestTheProvenanceCachesShareOneBound:
         was, and the once-per-snapshot warning carries the digest's head only."""
         import logging
 
-        from kiro_crew.acp import _dispatch
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_KEY_CHARS, overflow_scope_key
+        from aj_crew.acp import _dispatch
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_KEY_CHARS, overflow_scope_key
 
         huge_scope = "s" * (10 * 1024 * 1024)
         caches = self._caches()
         # A scope that pushes any key over the key bound is refused; the scope is
         # what the key was refused FOR, and it must not be what the record keeps.
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp._dispatch"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp._dispatch"):
             parse_session_update(self._call(1), cache_scope=huge_scope, **caches)
         assert all(not c for c in self._dicts(caches))
         assert caches["cache_overflow"] == {overflow_scope_key(huge_scope)}
@@ -879,7 +879,7 @@ class TestTheProvenanceCachesShareOneBound:
         record takes the ``OVERFLOW_EVERY_SCOPE`` marker instead, so it never
         exceeds ``MAX_ENTRIES + 1`` entries, and every scope -- recorded or not
         -- then reads as overflowed (the fail-safe direction)."""
-        from kiro_crew.acp._dispatch import (
+        from aj_crew.acp._dispatch import (
             OVERFLOW_EVERY_SCOPE,
             TOOL_CALL_CACHE_MAX_ENTRIES,
             TOOL_CALL_CACHE_MAX_KEY_CHARS,
@@ -914,7 +914,7 @@ class TestTheProvenanceCachesShareOneBound:
         place -- the permission request would be judged against the SUPERSEDED
         target and marked trusted. The refusal evicts the id from every sibling
         store, the ones a refinement writes and the ones it does not."""
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS
 
         caches = self._caches()
         first = self._call(
@@ -963,7 +963,7 @@ class TestTheProvenanceCachesShareOneBound:
         """GPT's scenario end to end: a benign cached KAS write, then an
         oversized same-id refinement that changes the target. The handle must
         refuse the permission request rather than trust the stale target."""
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS
 
         handle, sent = self._handle()
         handle._handle_update(

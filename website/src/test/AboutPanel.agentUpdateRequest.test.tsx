@@ -174,7 +174,7 @@ describe('AboutPanel with a pending agent request', () => {
   it('does not show the card for a managed-venv arm', async () => {
     // That lane is approved with a host command; an in-app Install here would
     // drive the wrong updater.
-    setup({ ...REQUEST, managed_by: 'kirocrew', approve_command: 'kirocrew update approve' })
+    setup({ ...REQUEST, managed_by: 'ajcrew', approve_command: 'ajcrew update approve' })
     await waitFor(() => expect(api.armStatus).toHaveBeenCalled())
     expect(screen.queryByTestId('agent-update-request')).toBeNull()
   })
@@ -376,7 +376,7 @@ describe('AboutPanel with a pending agent request', () => {
     // The managed lane reports `downloaded` straight after `found`, with no
     // `downloading` between, whatever the auto-download preference says.
     vi.spyOn(api, 'dismissUpdateArm').mockResolvedValue({ ok: true, armed: false, dismissed: true })
-    const { bridge, client } = await clickWithNothingFound({ autoDownload: false, updateCommand: 'pkg upgrade kiro-crew' })
+    const { bridge, client } = await clickWithNothingFound({ autoDownload: false, updateCommand: 'pkg upgrade aj-crew' })
     await pushUpdateState(client, { state: 'found', version: '0.6.0' })
     expect(screen.getByTestId('agent-update-request-install')).toBeDisabled()
     await pushUpdateState(client, { state: 'downloaded', version: '0.6.0' })

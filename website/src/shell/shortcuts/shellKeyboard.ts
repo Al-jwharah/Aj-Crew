@@ -156,10 +156,13 @@ export function useShellKeyboard({ toggleFocusMode, toggleNav, terminalEnabled, 
       else window.dispatchEvent(new CustomEvent<TerminalTabCommand>(TERMINAL_TAB_COMMAND_EVENT, { detail: command }))
     }
     : undefined
-  useKeyboardShortcuts({ onToggleShortcutsModal: toggleShortcutsModal, onNewChat: () => {
+  // One create for the new-chat chord and the Simple sidebar's New chat row,
+  // so the two cannot place a chat differently.
+  const startNewChat = () => {
     const s = appStore.getState()
     newChatMutation.mutate(newChatShortcutArgs(s.dashboard.slots, s.chat.activeSlot, queryClient.getQueryData<ChatFolder[]>(['chat-folders'])))
-  }, disabled: shortcutsOpen,
+  }
+  useKeyboardShortcuts({ onToggleShortcutsModal: toggleShortcutsModal, onNewChat: startNewChat, disabled: shortcutsOpen,
     onToggleFocusMode: toggleFocusMode,
     onCycleAgent: () => {
       const slots = store.getState().dashboard.slots
@@ -386,5 +389,5 @@ export function useShellKeyboard({ toggleFocusMode, toggleNav, terminalEnabled, 
   // (behind the default-on mc-auto-connect setting), so a crew is live without
   // a manual switcher click. Registered here once, like useInstanceShortcuts.
   useAutoConnectInstances()
-  return { shortcutsOpen, setShortcutsOpen, toggleShortcutsModal, commandPalette, agentSwitchNotice }
+  return { shortcutsOpen, setShortcutsOpen, toggleShortcutsModal, commandPalette, agentSwitchNotice, startNewChat, newChatPending: newChatMutation.isPending }
 }

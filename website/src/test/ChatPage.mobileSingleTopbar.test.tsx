@@ -74,7 +74,7 @@ vi.mock('../api/client', () => ({
       'resolveApproval', 'screenshot', 'slackChannels', 'slackLink', 'spawnList',
       'stopChatSlot', 'uploadFiles', 'voiceSynthesize', 'workspaces', 'chatSlots',
       'notifications', 'status', 'generateTitle', 'dashboardConfig', 'projectGit',
-      'mcpActive', 'mcpServers', 'kirocrewConfig'].map(k => [k, vi.fn().mockResolvedValue(
+      'mcpActive', 'mcpServers', 'ajcrewConfig'].map(k => [k, vi.fn().mockResolvedValue(
       k === 'chatSlotDetail' ? { messages: [], has_more: false, total: 0 } : {},
     )]),
   ),

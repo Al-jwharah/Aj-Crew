@@ -8,14 +8,14 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import history_projection
-from kiro_crew.history import ConversationLog
-from kiro_crew.jsonl_util import (
+from aj_crew import history_projection
+from aj_crew.history import ConversationLog
+from aj_crew.jsonl_util import (
     OversizedRecord,
     SplitlinesBoundaryRecord,
     strict_raw_records_with_offsets,
 )
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 
 def _write_transcript(

@@ -95,11 +95,11 @@ jobs:
   publish-windows:
     name: Publish Windows installer (${{ inputs.channel }} · x64)
     if: ${{ inputs.publish && vars.CLI_DIST_BUCKET != '' && vars.CLI_CDN_BASE != '' }}
-    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # `ajcrew-runners` larger-runner group, targeted by GROUP not label; see
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     timeout-minutes: 15
     environment: prod
     env:
@@ -113,7 +113,7 @@ jobs:
       # The published basename is a PUBLIC CONTRACT: the `latest/` alias URL is
       # what manualDownloadUrl() hands a user whose in-app update failed, so it
       # can carry neither the version nor electron-builder's spaces.
-      PUBLISHED_BASENAME: ${{ inputs.channel == 'lts' && 'KiroCrew-LTS-Setup' || 'KiroCrew-Setup' }} # brand-ok
+      PUBLISHED_BASENAME: ${{ inputs.channel == 'lts' && 'AjCrew-LTS-Setup' || 'AjCrew-Setup' }} # brand-ok
       # The leaf certificate the signing profile issues. Pinned as the expected
       # publisher so a misconfigured signing profile is caught here rather than
       # by every client's fail-closed update check.
@@ -137,7 +137,7 @@ jobs:
       # second Windows arch therefore adds an entry to THIS file rather than a
       # feed of its own, and must also deal with Provider.findFile()
       # disambiguating entries by matching process.arch against the url path --
-      # which `KiroCrew-Setup.exe` does not contain. That is a change to this
+      # which `AjCrew-Setup.exe` does not contain. That is a change to this
       # workflow either way, which is why no input anticipates it.
       - name: Resolve published names
         run: |
@@ -220,7 +220,7 @@ jobs:
             --expected-base-version "${PROMOTION_BASE_VERSION}"
 
       # electron-builder names the installer after the product and version
-      # ("KiroCrew Nightly Setup <version>.exe"), which differs per channel, so
+      # ("AjCrew Nightly Setup <version>.exe"), which differs per channel, so
       # it is located by glob and copied to the pinned public basename. The
       # blockmap must travel with it: without a blockmap beside the installer,
       # electron-updater falls back to a full download for every update.

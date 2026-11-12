@@ -1,22 +1,22 @@
-"""``kiro_crew.sandbox`` stays the sandbox's import and patch surface after the split.
+"""``aj_crew.sandbox`` stays the sandbox's import and patch surface after the split.
 
 The Linux launcher renderer, the macOS Seatbelt renderer and the stale mount-source sweep
 are defined in ``sandbox_launcher``, ``sandbox_seatbelt`` and ``sandbox_mount_sweep``.
 The facade keeps every name moved to those owners readable under its old path, and
 FORWARDS every one of them, so a patch through the facade lands on the owner, where the
 owner's own callers read it -- whether or not a scan could read the patched name off the
-test. The path rules moved to ``kiro_crew.sandbox_plan`` are bound on the facade as plain
+test. The path rules moved to ``aj_crew.sandbox_plan`` are bound on the facade as plain
 compatibility aliases instead, pinned by identity below; a patch of one does not reach
 the planner. The two
 builders live in ``sandbox_argv``: they gather the live host (``_live_plan_host``), plan the
-spawn (``kiro_crew.sandbox_plan``) and hand the plan to the owner's renderer, so a test that
+spawn (``aj_crew.sandbox_plan``) and hand the plan to the owner's renderer, so a test that
 rebinds a tier list or a host-fact helper through the facade reaches the plan through the
 mirror, and no owner imports the facade at all.
 
 The rest of what sandbox.py defined is carved into the owners in ``_CARVED``, which import
 each other lowest layer first (``_CARVED_IMPORTS``) and never the facade. Their code read
 one namespace before the carve, so the facade MIRRORS a write through it
-(``kiro_crew._facade_mirror``): it lands on every carved owner that binds the same object,
+(``aj_crew._facade_mirror``): it lands on every carved owner that binds the same object,
 and on the facade when the facade binds the name too. The rows below pin that the mirror
 indexes exactly the carved owners, that a patch reaches every holder and is undone on each,
 and that the renderers and the mount sweep stay out of it. ``test/test_facade_mirror_guards.py``
@@ -24,8 +24,8 @@ holds every mirrored facade, this one included, to the mirror's own rules: one o
 indexed name, no owner reading an indexed name it does not hold, no member rebinding a
 shared global.
 
-This file also holds what both facades share -- ``kiro_crew.sandbox`` and
-``kiro_crew.platform_compat`` -- so ``test_platform_compat_refactor_facade`` runs the same
+This file also holds what both facades share -- ``aj_crew.sandbox`` and
+``aj_crew.platform_compat`` -- so ``test_platform_compat_refactor_facade`` runs the same
 checks on its facade: the static shape of a facade module, the owner-import scan, and the
 census of every facade patch in the test trees, which is read once for both facades, in
 ``CENSUS_PARTS`` size-balanced parts so that no single test walks the whole tree.
@@ -57,7 +57,7 @@ from unittest import mock
 import pytest
 import test_sandbox_refactor_create_guard as create_guard
 
-from kiro_crew import (
+from aj_crew import (
     _facade_mirror,
     platform_compat,
     sandbox,
@@ -125,9 +125,9 @@ _OWNERS: dict[str, ModuleType] = {
 #: builders that plan a spawn and hand the plan to the renderers live in
 #: ``sandbox_argv``.
 _MOVED: dict[str, tuple[str, ...]] = {
-    "kiro_crew.sandbox_launcher": (),
-    "kiro_crew.sandbox_seatbelt": ("_SEATBELT_PROFILE",),
-    "kiro_crew.sandbox_mount_sweep": (
+    "aj_crew.sandbox_launcher": (),
+    "aj_crew.sandbox_seatbelt": ("_SEATBELT_PROFILE",),
+    "aj_crew.sandbox_mount_sweep": (
         "_MOUNT_SOURCE_PREFIX",
         "_MOUNT_SOURCE_MAX_AGE_SECONDS",
         "_PIN_SCAN_MAX_PASSES",
@@ -151,7 +151,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         "_cleanup_legacy_mount_source_residue",
         "_cleanup_retired_acp_snapshot_dir",
     ),
-    "kiro_crew.sandbox_leaves": tuple("""
+    "aj_crew.sandbox_leaves": tuple("""
         _POLICY_CACHE_LEAF _VOICE_RUNTIME_LEAF _CREW_HOME_DEFAULT _CREW_HOME_PREFIXES
         _LIVE_TARGET_LEAF _LIVE_TARGET_STAGING_LEAF _AUTH_STORE_STAGING_LEAF
         _SECRET_REQUEST_POLICY_LEAF MD_NOTEBOOK_APP_NAME
@@ -161,7 +161,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         _CREW_SANDBOX_VISIBLE_LEAVES _crew_home_entries _CREW_HIDDEN_DIRS _CREW_READONLY_TARGETS
         _CREW_CHILD_WITHHELD_LEAVES _CREW_CHILD_READABLE_LEAVES crew_host_runtime_leaves
         """.split()),
-    "kiro_crew.sandbox_tiers": tuple("""
+    "aj_crew.sandbox_tiers": tuple("""
         _resolved_kiro_agents_targets _PACKAGED_INSTALL_DIR_NAMES install_root_targets_for
         _install_root_targets_with _install_root_targets_cached _resolved_install_root_targets
         _bundled_kas_targets_cached _bundled_kiro_cli_targets_cached _bundled_root_spellings
@@ -180,14 +180,14 @@ _MOVED: dict[str, tuple[str, ...]] = {
         effective_sandbox_mode _governance_sandbox_floor _clamp_sandbox_mode _floor_mandates_sandbox
         _clamp_sandbox_mode_to_floor
         """.split()),
-    "kiro_crew.sandbox_precreate": tuple("""
+    "aj_crew.sandbox_precreate": tuple("""
         _CREW_PRECREATE_READONLY_DIR_LEAVES _CREW_NOFOLLOW_READONLY_DIR_LEAVES
         _CREW_NOFOLLOW_READONLY_FILE_LEAVES _DELEGATED_OVERLAP_LEAF_REASONS
         _CREW_PRECREATE_READONLY_FILE_LEAVES _CREW_PRECREATE_HIDDEN_DIR_LEAVES
         _MD_NOTEBOOK_PRECREATE_CONTENT _LIVE_TARGET_PRECREATE_CONTENT _EMPTY_CEILING_DOCUMENT
         _CEILING_TEMP_PREFIX
         """.split()),
-    "kiro_crew.sandbox_seals": tuple("""
+    "aj_crew.sandbox_seals": tuple("""
         _sealable_absent_ceilings SandboxCeilingUnsealable _warn_unsealed_ceiling
         _CREW_NO_ALIAS_LEAVES _symlink_target_display _refuse_if_aliased_protected_leaf
         _warn_unsealed_ceiling_parent_missing _warn_if_alias_backed _refuse_if_dangling_symlink
@@ -198,7 +198,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         require_unaliased_cloud_config _delete_file_command require_unaliased_launch_state
         require_unaliased_model_file
         """.split()),
-    "kiro_crew.sandbox_aliases": tuple("""
+    "aj_crew.sandbox_aliases": tuple("""
         _CREW_ALIAS_TOLERATED_LEAVES _CREW_ALIAS_CHAIN_DEGRADE_LEAVES _CREW_HARDLINK_REFUSED_LEAVES
         _first_linked_component_below _masked_crew_home_roots _ALIAS_WALK_MAX_ENTRIES _AliasMask
         _InodeAliases _inode_aliases_under _refuse_multilinked_credential_leaves _referent_identity
@@ -206,7 +206,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         _masked_leaf_multilink_detail _masked_leaf_alias_search_hint masked_credential_leaf_aliases
         _app_declared_leaves _hidden_leaves _hardlink_refused_leaves
         """.split()),
-    "kiro_crew.sandbox_staging": tuple("""
+    "aj_crew.sandbox_staging": tuple("""
         _materialize_maskable_dirs _materialize_live_target_mask_target
         _refuse_if_live_target_symlink LiveTargetUnfitness _live_target_irregular_detail
         _live_target_multilink_detail _live_target_symlink_detail _refuse_unless_sole_regular_link
@@ -219,7 +219,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         _materialize_refresh_chains_mask_target _create_absent_mask_target
         _sweep_one_md_notebook_state_dir _materialize_md_notebook_mask_targets
         """.split()),
-    "kiro_crew.sandbox_workspace": tuple("""
+    "aj_crew.sandbox_workspace": tuple("""
         _voice_runtime_paths_lock _voice_runtime_paths_cache _ensure_voice_runtime_directory
         _literal_ancestor_guards _caller_can_rename _renameable_ancestor_guards
         _MAX_LINK_HOPS _resolution_entries prime_voice_runtime_sandbox_paths
@@ -236,7 +236,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         _bound_agent_workspace_matches bound_agent_workspace_target BoundWorkspaceMismatch
         resolve_bound_session_workspace
         """.split()),
-    "kiro_crew.sandbox_argv": tuple("""
+    "aj_crew.sandbox_argv": tuple("""
         _LAUNCHER_MAX_AGE_SECONDS _SANDBOX_ARTIFACT_PREFIX _LAUNCHER_SCRIPT_SUFFIX
         _SEATBELT_PROFILE_SUFFIX _PI_GATE_ARTIFACT_PREFIX _PI_GATE_ARTIFACT_SUFFIXES
         _RUN_DIR_ARTIFACTS _DSH_GATE_ARTIFACT_PREFIX _DSH_PATCH_ARTIFACT_PREFIX
@@ -249,7 +249,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         _sandbox_env_scrub_keys _sandbox_env_unset_args cleanup_stale_sandbox_profiles
         _ENV_BINARY_CANDIDATES _unset_env_argv
         """.split()),
-    "kiro_crew.sandbox_delegation": tuple("""
+    "aj_crew.sandbox_delegation": tuple("""
         _KIRO_INTERNAL_SETTINGS_PATH _KIRO_INTERNAL_SANDBOX_KEY _kiro_delegation_warned
         kiro_internal_sandbox_enabled kiro_internal_sandbox_switch SANDBOX_LAYER_CREW
         SANDBOX_LAYER_HARNESS wrapped_by_crew_sandbox sandbox_init_remediation
@@ -257,7 +257,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         _delegate_to_kiro_internal_sandbox _command_log_label _first_json_value
         _kiro_settings_concat_warned
         """.split()),
-    "kiro_crew.sandbox_probe": tuple("""
+    "aj_crew.sandbox_probe": tuple("""
         _CLONE_NEWUSER _CLONE_NEWNS _PROBE_MS_REC _PROBE_MS_PRIVATE _TRANSIENT_PROBE_ERRNOS
         _PROBE_TRANSIENT_RETRY_DELAY_SECS _WARM_JOIN_TIMEOUT_SECS _PROBE_STEP_NEWUSER
         _PROBE_STEP_NEWNS _PROBE_STEP_MOUNT_PRIVATE _PROBE_STEP_MULTITHREADED
@@ -273,23 +273,23 @@ _MOVED: dict[str, tuple[str, ...]] = {
         _probe_parent_sequence _probe_unshare_once _PROBE_SHIM_CODE
         _PROBE_SPAWN_TIMEOUT_SECONDS _probe_spawn_unavailable_logged _probe_spawned_death
         _probe_unshare_via_spawn _probe_unshare_via_fork is_wsl is_docker_container
-        _probe_sandbox_exec _inside_kirocrew_sandbox _macos_sandbox_state
+        _probe_sandbox_exec _inside_ajcrew_sandbox _macos_sandbox_state
         _inside_macos_sandbox
         """.split()),
-    "kiro_crew.sandbox_unavailable": tuple("""
+    "aj_crew.sandbox_unavailable": tuple("""
         _allow_no_isolation UNSANDBOXED_BY_OPERATOR UNSANDBOXED_BY_PLATFORM
         _allow_unsandboxed_exec _unsandboxed_grant_source _unsandboxed_exec_key_declared
         _SSH_VISIBLE_TIERS _ssh_dir_masked _tier_lists_ssh _forward_ssh_auth_sock
         _forward_for_effective_tier _forwards_without_consent ssh_auth_sock_consent_notice
         unsandboxed_exec_permitted_by _bundled_cli_invocation
         _apparmor_userns_restricted _no_backend_guidance _classify_unavailable
-        agent_confinement_evidence agent_confinement_is_kirocrew_own _warn_mode_off_unconfined
+        agent_confinement_evidence agent_confinement_is_ajcrew_own _warn_mode_off_unconfined
         _warn_first_party_unconfined_once _first_party_no_backend_passthrough
         CRON_SCRIPT_CHILD_ENV UnauditedSpawnRefused refuse_unaudited_on_dead_fs
         SandboxUnavailableError LAUNCHER_EXIT_PREFIXES _LAUNCHER_REFUSAL_RE launcher_refusal
         _TRUSTED_LAUNCHER_TIMEOUT_SECS LAUNCHER_EXEC_FAILURE_RE
         """.split()),
-    "kiro_crew.sandbox_wrap": tuple("""
+    "aj_crew.sandbox_wrap": tuple("""
         _INHERITED_USERNS_FAILURE_ENV _read_inherited_userns_failure
         _set_inherited_userns_failure _inherited_unshare_failure
         _last_unshare_failure unavailable_remedy unavailable_reason remedy_guidance
@@ -298,7 +298,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         prewarm_backend warm_backend _probe_unshare userns_available _backend
         unavailable_kind _warn_no_isolation detect_backend reset_backend wrap_argv
         """.split()),
-    "kiro_crew.sandbox_cgroup": tuple("""
+    "aj_crew.sandbox_cgroup": tuple("""
         _CGROUP_DEFAULT_MAX_PROCESSES _CGROUP_DEFAULT_CPU_WEIGHT _CGROUP_MEMORY_FRACTION
         _CGROUP_FALLBACK_MAX_MEMORY_MB _instance_slice_token
         _agents_slice_name _default_max_memory_mb _CGROUP_SCOPE_PROBE
@@ -312,7 +312,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         _CGROUP_DEFAULT_SCOPE_MEMORY_HIGH_PCT _scope_memory_high_mb _read_resource_limits
         _CGROUP_SCOPE_EPOCH _cgroup_scope_epoch
         """.split()),
-    "kiro_crew.sandbox_slice": tuple("""
+    "aj_crew.sandbox_slice": tuple("""
         _SLICE_MEMORY_HIGH_FRACTION _SLICE_FALLBACK_MEMORY_HIGH_MB _SLICE_MEMHIGH_APPLIED
         _SLICE_MEMHIGH_DISABLED _default_slice_memory_high_mb
         _ensure_agent_slice_memory_high _SLICE_MEMHIGH_EVENTS_SEEN
@@ -343,7 +343,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         _SLICE_MEMHIGH_EPOCH _slice_memory_high_is_stale _forget_stale_slice_memory_high
         _SLICE_LIMITS_EPOCH _reapply_slice_limits_for_new_session
         """.split()),
-    "kiro_crew.sandbox_rlimit": tuple("""
+    "aj_crew.sandbox_rlimit": tuple("""
         _UNSET _RESOURCE_PREEXEC resource_limit_preexec _EXTRACTOR_PREEXEC
         extractor_resource_limit_preexec _RESOURCE_SUPERVISOR_ARGV
         resource_limit_supervisor_argv _SESSION_HOST_PREEXEC session_host_preexec
@@ -358,7 +358,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         _INTERPRETER_ENOENT_DELAYS _is_transient_interpreter_enoent
         _retry_interpreter_enoent popen_limited
         """.split()),
-    "kiro_crew.sandbox_spawn": tuple("""
+    "aj_crew.sandbox_spawn": tuple("""
         corroborate_launcher_refusal credential_mask_applies spawn_delegates_masking
         unconfined_live_agent_pid wrap_argv_async _SPAWN_SCRUB_ENV_PREFIXES scrub_env
         agent_env_scrub_prefixes scrub_agent_denied_env scrub_agent_subprocess_env
@@ -378,73 +378,73 @@ _BOUND_HERE: frozenset[str] = frozenset()
 #: decision; each edge points to an owner earlier in ``sandbox._CARVED_OWNERS`` (so the
 #: graph has no cycle) and is one the owner really uses, both pinned below.
 _CARVED_IMPORTS: dict[str, frozenset[str]] = {
-    "kiro_crew.sandbox_tiers": frozenset({"kiro_crew.sandbox_leaves"}),
-    "kiro_crew.sandbox_precreate": frozenset({"kiro_crew.sandbox_leaves"}),
-    "kiro_crew.sandbox_seals": frozenset({"kiro_crew.sandbox_precreate"}),
-    "kiro_crew.sandbox_aliases": frozenset({"kiro_crew.sandbox_leaves", "kiro_crew.sandbox_seals"}),
-    "kiro_crew.sandbox_staging": frozenset(
+    "aj_crew.sandbox_tiers": frozenset({"aj_crew.sandbox_leaves"}),
+    "aj_crew.sandbox_precreate": frozenset({"aj_crew.sandbox_leaves"}),
+    "aj_crew.sandbox_seals": frozenset({"aj_crew.sandbox_precreate"}),
+    "aj_crew.sandbox_aliases": frozenset({"aj_crew.sandbox_leaves", "aj_crew.sandbox_seals"}),
+    "aj_crew.sandbox_staging": frozenset(
         {
-            "kiro_crew.sandbox_aliases",
-            "kiro_crew.sandbox_leaves",
-            "kiro_crew.sandbox_precreate",
-            "kiro_crew.sandbox_seals",
-            "kiro_crew.sandbox_tiers",
+            "aj_crew.sandbox_aliases",
+            "aj_crew.sandbox_leaves",
+            "aj_crew.sandbox_precreate",
+            "aj_crew.sandbox_seals",
+            "aj_crew.sandbox_tiers",
         }
     ),
-    "kiro_crew.sandbox_workspace": frozenset({"kiro_crew.sandbox_leaves"}),
-    "kiro_crew.sandbox_argv": frozenset(
+    "aj_crew.sandbox_workspace": frozenset({"aj_crew.sandbox_leaves"}),
+    "aj_crew.sandbox_argv": frozenset(
         {
-            "kiro_crew.sandbox_aliases",
-            "kiro_crew.sandbox_launcher",
-            "kiro_crew.sandbox_leaves",
-            "kiro_crew.sandbox_mount_sweep",
-            "kiro_crew.sandbox_seals",
-            "kiro_crew.sandbox_seatbelt",
-            "kiro_crew.sandbox_staging",
-            "kiro_crew.sandbox_tiers",
-            "kiro_crew.sandbox_workspace",
+            "aj_crew.sandbox_aliases",
+            "aj_crew.sandbox_launcher",
+            "aj_crew.sandbox_leaves",
+            "aj_crew.sandbox_mount_sweep",
+            "aj_crew.sandbox_seals",
+            "aj_crew.sandbox_seatbelt",
+            "aj_crew.sandbox_staging",
+            "aj_crew.sandbox_tiers",
+            "aj_crew.sandbox_workspace",
         }
     ),
-    "kiro_crew.sandbox_delegation": frozenset(
+    "aj_crew.sandbox_delegation": frozenset(
         {
-            "kiro_crew.sandbox_argv",
-            "kiro_crew.sandbox_precreate",
-            "kiro_crew.sandbox_tiers",
+            "aj_crew.sandbox_argv",
+            "aj_crew.sandbox_precreate",
+            "aj_crew.sandbox_tiers",
         }
     ),
-    "kiro_crew.sandbox_probe": frozenset({"kiro_crew.sandbox_tiers"}),
-    "kiro_crew.sandbox_unavailable": frozenset(
+    "aj_crew.sandbox_probe": frozenset({"aj_crew.sandbox_tiers"}),
+    "aj_crew.sandbox_unavailable": frozenset(
         {
-            "kiro_crew.sandbox_argv",
-            "kiro_crew.sandbox_delegation",
-            "kiro_crew.sandbox_probe",
-            "kiro_crew.sandbox_tiers",
+            "aj_crew.sandbox_argv",
+            "aj_crew.sandbox_delegation",
+            "aj_crew.sandbox_probe",
+            "aj_crew.sandbox_tiers",
         }
     ),
-    "kiro_crew.sandbox_wrap": frozenset(
+    "aj_crew.sandbox_wrap": frozenset(
         {
-            "kiro_crew.sandbox_argv",
-            "kiro_crew.sandbox_delegation",
-            "kiro_crew.sandbox_probe",
-            "kiro_crew.sandbox_seals",
-            "kiro_crew.sandbox_tiers",
-            "kiro_crew.sandbox_unavailable",
+            "aj_crew.sandbox_argv",
+            "aj_crew.sandbox_delegation",
+            "aj_crew.sandbox_probe",
+            "aj_crew.sandbox_seals",
+            "aj_crew.sandbox_tiers",
+            "aj_crew.sandbox_unavailable",
         }
     ),
-    "kiro_crew.sandbox_slice": frozenset({"kiro_crew.sandbox_cgroup"}),
-    "kiro_crew.sandbox_cgroup": frozenset({"kiro_crew.sandbox_tiers"}),
-    "kiro_crew.sandbox_rlimit": frozenset({"kiro_crew.sandbox_workspace"}),
-    "kiro_crew.sandbox_spawn": frozenset(
+    "aj_crew.sandbox_slice": frozenset({"aj_crew.sandbox_cgroup"}),
+    "aj_crew.sandbox_cgroup": frozenset({"aj_crew.sandbox_tiers"}),
+    "aj_crew.sandbox_rlimit": frozenset({"aj_crew.sandbox_workspace"}),
+    "aj_crew.sandbox_spawn": frozenset(
         {
-            "kiro_crew.sandbox_argv",
-            "kiro_crew.sandbox_cgroup",
-            "kiro_crew.sandbox_delegation",
-            "kiro_crew.sandbox_probe",
-            "kiro_crew.sandbox_rlimit",
-            "kiro_crew.sandbox_slice",
-            "kiro_crew.sandbox_tiers",
-            "kiro_crew.sandbox_unavailable",
-            "kiro_crew.sandbox_wrap",
+            "aj_crew.sandbox_argv",
+            "aj_crew.sandbox_cgroup",
+            "aj_crew.sandbox_delegation",
+            "aj_crew.sandbox_probe",
+            "aj_crew.sandbox_rlimit",
+            "aj_crew.sandbox_slice",
+            "aj_crew.sandbox_tiers",
+            "aj_crew.sandbox_unavailable",
+            "aj_crew.sandbox_wrap",
         }
     ),
 }
@@ -653,7 +653,7 @@ def check_static_shape(facade: ModuleType, owners: dict[str, ModuleType]) -> Non
     """No bare read of a forwarded name anywhere in the facade, ``__getattr__`` hidden
     from type checkers, and the ``TYPE_CHECKING`` imports exactly the forwarded names.
 
-    A facade that serves through ``kiro_crew._facade_mirror`` defines no module-level
+    A facade that serves through ``aj_crew._facade_mirror`` defines no module-level
     ``__getattr__`` at all: the mirror's module class answers every forwarded name, and a
     resolver of the facade's own would answer first and shadow it."""
     tree = tree_of(facade)
@@ -747,7 +747,7 @@ def owner_seams(
 #: module does (the mount sweep probes pids through ``platform_compat``), but never its own
 #: or a higher one. A module carved out of a facade sits on its facade's layer, so an owner
 #: of a lower facade cannot reach into it either.
-_LAYER = {"kiro_crew.platform_compat": 0, "kiro_crew.sandbox": 1, **dict.fromkeys(_CARVED, 1)}
+_LAYER = {"aj_crew.platform_compat": 0, "aj_crew.sandbox": 1, **dict.fromkeys(_CARVED, 1)}
 
 
 def owner_imports(module: ModuleType, owners: Mapping[str, ModuleType]) -> set[str]:
@@ -839,7 +839,7 @@ register_owners({name: m for name, m in _OWNERS.items() if name not in _CARVED})
 register_owners(
     {
         name: importlib.import_module(name)
-        for name in ("kiro_crew.platform_lock_compat", "kiro_crew.platform_owner_compat")
+        for name in ("aj_crew.platform_lock_compat", "aj_crew.platform_owner_compat")
     }
 )
 
@@ -1076,7 +1076,7 @@ def census_parts() -> tuple[tuple[Path, ...], ...]:
     source size: each file, largest first, joins the lightest part so far. Only the
     paths are kept; the text is read again by the part that parses it, so nothing here
     retains the tree's source for the process lifetime."""
-    roots = [_REPO / "test", *sorted((_REPO / "src" / "kiro_crew").rglob("tests"))]
+    roots = [_REPO / "test", *sorted((_REPO / "src" / "aj_crew").rglob("tests"))]
     paths = [_REPO / "conftest.py", *(p for root in roots for p in sorted(root.rglob("*.py")))]
     sizes: list[tuple[int, Path]] = []
     for path in paths:
@@ -1182,7 +1182,7 @@ def check_listed_bindings_are_patched(
 
 
 # --------------------------------------------------------------------------- #
-# kiro_crew.sandbox
+# aj_crew.sandbox
 # --------------------------------------------------------------------------- #
 
 
@@ -1275,23 +1275,23 @@ def test_the_bare_global_scan_can_fail() -> None:
 def test_the_facade_import_scan_reads_every_spelling() -> None:
     source = (
         "from typing import TYPE_CHECKING\n"
-        "from kiro_crew import sandbox\n"
-        "import kiro_crew.platform_compat\n"
+        "from aj_crew import sandbox\n"
+        "import aj_crew.platform_compat\n"
         "from . import sandbox as sb\n"
         "if TYPE_CHECKING:\n"
-        "    from kiro_crew.sandbox import _STANDARD_DIRS\n"
+        "    from aj_crew.sandbox import _STANDARD_DIRS\n"
         "def f():\n"
-        "    from kiro_crew.sandbox import _STANDARD_DIRS, _CC_FILES\n"
+        "    from aj_crew.sandbox import _STANDARD_DIRS, _CC_FILES\n"
         "class C:\n"
         "    def m(self):\n"
-        "        from kiro_crew.platform_compat import IS_POSIX\n"
+        "        from aj_crew.platform_compat import IS_POSIX\n"
     )
-    assert facade_imports(ast.parse(source), "kiro_crew", _FACADE_NAMES) == [
-        ("<module>", "kiro_crew.sandbox", ("<module>",)),
-        ("<module>", "kiro_crew.platform_compat", ("<module>",)),
-        ("<module>", "kiro_crew.sandbox", ("<module>",)),
-        ("f", "kiro_crew.sandbox", ("_STANDARD_DIRS", "_CC_FILES")),
-        ("C.m", "kiro_crew.platform_compat", ("IS_POSIX",)),
+    assert facade_imports(ast.parse(source), "aj_crew", _FACADE_NAMES) == [
+        ("<module>", "aj_crew.sandbox", ("<module>",)),
+        ("<module>", "aj_crew.platform_compat", ("<module>",)),
+        ("<module>", "aj_crew.sandbox", ("<module>",)),
+        ("f", "aj_crew.sandbox", ("_STANDARD_DIRS", "_CC_FILES")),
+        ("C.m", "aj_crew.platform_compat", ("IS_POSIX",)),
     ]
 
 
@@ -1322,19 +1322,19 @@ def test_the_carved_import_table_has_no_cycle_and_no_unused_edge() -> None:
 def test_the_owner_import_check_refuses_an_unlisted_edge(tmp_path: Path) -> None:
     probe = tmp_path / "probe_carved_owner.py"
     probe.write_text(
-        "from kiro_crew.sandbox_leaves import _CREW_HIDDEN_LEAVES\n"
-        "from kiro_crew import sandbox_tiers\n",
+        "from aj_crew.sandbox_leaves import _CREW_HIDDEN_LEAVES\n"
+        "from aj_crew import sandbox_tiers\n",
         encoding="utf-8",
     )
     module = ModuleType("probe_carved_owner")
     module.__file__ = str(probe)
     owners = {**_CARVED, module.__name__: module}
-    leaves_only = {**_CARVED_IMPORTS, module.__name__: frozenset({"kiro_crew.sandbox_leaves"})}
+    leaves_only = {**_CARVED_IMPORTS, module.__name__: frozenset({"aj_crew.sandbox_leaves"})}
     with pytest.raises(AssertionError, match="sandbox_leaves"):
         check_owner_dependency_direction(owners, sandbox, _CARVED_IMPORTS)
     with pytest.raises(AssertionError, match="sandbox_tiers"):
         check_owner_dependency_direction(owners, sandbox, leaves_only)
-    both = frozenset({"kiro_crew.sandbox_leaves", "kiro_crew.sandbox_tiers"})
+    both = frozenset({"aj_crew.sandbox_leaves", "aj_crew.sandbox_tiers"})
     check_owner_dependency_direction(owners, sandbox, {**_CARVED_IMPORTS, module.__name__: both})
 
 
@@ -1343,25 +1343,25 @@ def test_the_owner_import_check_refuses_an_unlisted_edge(tmp_path: Path) -> None
     [
         "from . import sandbox_seals\n",
         "from .sandbox_seals import SandboxCeilingUnsealable\n",
-        "import kiro_crew.sandbox_seals\n",
+        "import aj_crew.sandbox_seals\n",
     ],
 )
 def test_the_owner_import_scan_reads_every_spelling(tmp_path: Path, spelling: str) -> None:
     probe = tmp_path / "probe_spelling.py"
     probe.write_text(spelling, encoding="utf-8")
-    module = ModuleType("kiro_crew.probe_spelling")
+    module = ModuleType("aj_crew.probe_spelling")
     module.__file__ = str(probe)
-    assert owner_imports(module, _CARVED) == {"kiro_crew.sandbox_seals"}
+    assert owner_imports(module, _CARVED) == {"aj_crew.sandbox_seals"}
 
 
 def test_a_lower_facade_s_owner_cannot_reach_into_a_carved_owner(tmp_path: Path) -> None:
     """A carved owner sits on its facade's layer: an owner of ``platform_compat`` may no
-    more import ``kiro_crew.sandbox_seals`` than ``kiro_crew.sandbox`` itself."""
+    more import ``aj_crew.sandbox_seals`` than ``aj_crew.sandbox`` itself."""
     probe = tmp_path / "probe_lower_owner.py"
     probe.write_text(
-        "from kiro_crew.sandbox_seals import SandboxCeilingUnsealable\n", encoding="utf-8"
+        "from aj_crew.sandbox_seals import SandboxCeilingUnsealable\n", encoding="utf-8"
     )
-    module = ModuleType("kiro_crew.probe_lower_owner")
+    module = ModuleType("aj_crew.probe_lower_owner")
     module.__file__ = str(probe)
     with pytest.raises(AssertionError, match="sandbox_seals"):
         check_owner_dependency_direction({module.__name__: module}, platform_compat)
@@ -1392,11 +1392,11 @@ def test_a_moved_exception_class_keeps_the_facade_module(name: str) -> None:
 
 
 def test_an_error_chain_names_the_class_by_the_facade_path() -> None:
-    from kiro_crew.subagent import _describe_exception
+    from aj_crew.subagent import _describe_exception
 
     error = sandbox.SandboxUnavailableError("no backend confines", "none", "detail")
     rendered = _describe_exception(error)
-    assert rendered == "kiro_crew.sandbox.SandboxUnavailableError: no backend confines"
+    assert rendered == "aj_crew.sandbox.SandboxUnavailableError: no backend confines"
 
 
 def _imported_modules(module: ModuleType) -> set[str]:
@@ -1415,33 +1415,29 @@ def _imported_modules(module: ModuleType) -> set[str]:
 #: program text it renders, each part imports at most that module (for the type checker),
 #: and the two renderers import the plan and nothing else of the package. So the plan
 #: stays pure, the program stays runnable as a stdlib script, and neither renderer can
-#: reach back into ``kiro_crew.sandbox`` for a rule.
+#: reach back into ``aj_crew.sandbox`` for a rule.
 _LAYERED: dict[str, frozenset[str]] = {
-    "kiro_crew.sandbox_plan": frozenset(),
-    "kiro_crew.sandbox_launcher_program": frozenset(
+    "aj_crew.sandbox_plan": frozenset(),
+    "aj_crew.sandbox_launcher_program": frozenset(
         {
-            "kiro_crew._facade_compose",
-            "kiro_crew.sandbox_launcher_parts.exec_lockdown",
-            "kiro_crew.sandbox_launcher_parts.mask_stages",
-            "kiro_crew.sandbox_launcher_parts.pinned_mounts",
+            "aj_crew._facade_compose",
+            "aj_crew.sandbox_launcher_parts.exec_lockdown",
+            "aj_crew.sandbox_launcher_parts.mask_stages",
+            "aj_crew.sandbox_launcher_parts.pinned_mounts",
         }
     ),
-    "kiro_crew.sandbox_launcher_parts.pinned_mounts": frozenset(
-        {"kiro_crew.sandbox_launcher_program"}
-    ),
-    "kiro_crew.sandbox_launcher_parts.mask_stages": frozenset(
-        {"kiro_crew.sandbox_launcher_program"}
-    ),
-    "kiro_crew.sandbox_launcher_parts.exec_lockdown": frozenset(),
-    "kiro_crew.sandbox_launcher": frozenset({"kiro_crew.sandbox_plan"}),
-    "kiro_crew.sandbox_seatbelt": frozenset({"kiro_crew.sandbox_plan"}),
+    "aj_crew.sandbox_launcher_parts.pinned_mounts": frozenset({"aj_crew.sandbox_launcher_program"}),
+    "aj_crew.sandbox_launcher_parts.mask_stages": frozenset({"aj_crew.sandbox_launcher_program"}),
+    "aj_crew.sandbox_launcher_parts.exec_lockdown": frozenset(),
+    "aj_crew.sandbox_launcher": frozenset({"aj_crew.sandbox_plan"}),
+    "aj_crew.sandbox_seatbelt": frozenset({"aj_crew.sandbox_plan"}),
 }
 
 
 @pytest.mark.parametrize("name", sorted(_LAYERED))
 def test_the_plan_layers_import_nothing_above_them(name: str) -> None:
     imported = _imported_modules(importlib.import_module(name))
-    package = {m for m in imported if m.split(".")[0] == "kiro_crew"}
+    package = {m for m in imported if m.split(".")[0] == "aj_crew"}
     assert package == _LAYERED[name], name
     foreign = {
         m
@@ -1453,13 +1449,13 @@ def test_the_plan_layers_import_nothing_above_them(name: str) -> None:
 
 def test_the_layer_check_flags_an_import_of_the_facade(tmp_path: Path) -> None:
     probe = tmp_path / "probe_layer.py"
-    probe.write_text("import os\nfrom kiro_crew import sandbox\nimport yaml\n", encoding="utf-8")
+    probe.write_text("import os\nfrom aj_crew import sandbox\nimport yaml\n", encoding="utf-8")
     module = ModuleType("probe_layer")
     module.__file__ = str(probe)
-    assert _imported_modules(module) == {"os", "kiro_crew", "yaml"}
+    assert _imported_modules(module) == {"os", "aj_crew", "yaml"}
 
 
-#: The path rules that moved to ``kiro_crew.sandbox_plan`` and are still bound on the
+#: The path rules that moved to ``aj_crew.sandbox_plan`` and are still bound on the
 #: facade under their old names, for the callers and tests that read them there. They
 #: are compatibility ALIASES, not forwards: a patch of one does not reach the planner,
 #: which calls its own functions -- patch ``sandbox_plan.<rule>`` instead. A moved rule
@@ -1491,7 +1487,7 @@ def test_every_plan_object_the_facade_binds_is_a_listed_alias() -> None:
     assert bound == set(_PLAN_ALIASES)
 
 
-#: Names a test patches through ``kiro_crew.sandbox`` that the facade AND an unmirrored
+#: Names a test patches through ``aj_crew.sandbox`` that the facade AND an unmirrored
 #: owner both bind, each importing its own, so the patch misses that owner. ``time`` is
 #: rebound for the agents-slice throttling probe in ``sandbox_slice``, which the mirror
 #: reaches; it is listed because ``sandbox_mount_sweep`` binds its own ``time``, and the
@@ -1525,10 +1521,10 @@ def test_every_listed_shared_binding_is_still_patched() -> None:
 def test_the_patch_scan_reads_every_binding_of_a_patch_site() -> None:
     source = (
         "from unittest import mock\n"
-        "from kiro_crew import platform_compat, sandbox\n"
+        "from aj_crew import platform_compat, sandbox\n"
         "def test_x(monkeypatch, attr):\n"
         '    monkeypatch.setattr(sandbox, "_overflow_uid", 1)\n'
-        '    monkeypatch.setattr("kiro_crew.platform_compat.file_lock", 1)\n'
+        '    monkeypatch.setattr("aj_crew.platform_compat.file_lock", 1)\n'
         '    monkeypatch.setattr(other, "_overflow_uid", 1)\n'
         "    for module in (platform_compat, sandbox, other):\n"
         '        monkeypatch.setattr(module, "IS_WINDOWS", 1)\n'
@@ -1540,19 +1536,19 @@ def test_the_patch_scan_reads_every_binding_of_a_patch_site() -> None:
         '    monkeypatch.setattr(discover.platform_compat, "file_lock", 1)\n'
         "def _helper(monkeypatch, module):\n"
         '    monkeypatch.setattr(module, "IS_WINDOWS", 1)\n'
-        "from kiro_crew.dashboard.handlers import discover\n"
+        "from aj_crew.dashboard.handlers import discover\n"
     )
     assert monkeypatch_targets(ast.parse(source)) == [
-        (4, "test_x", "kiro_crew.sandbox", "_overflow_uid"),
-        (5, "test_x", "kiro_crew.platform_compat", "file_lock"),
+        (4, "test_x", "aj_crew.sandbox", "_overflow_uid"),
+        (5, "test_x", "aj_crew.platform_compat", "file_lock"),
         (8, "test_x", "<dynamic>", "<dynamic>"),
-        (8, "test_x", "kiro_crew.platform_compat", "IS_WINDOWS"),
-        (8, "test_x", "kiro_crew.sandbox", "IS_WINDOWS"),
+        (8, "test_x", "aj_crew.platform_compat", "IS_WINDOWS"),
+        (8, "test_x", "aj_crew.sandbox", "IS_WINDOWS"),
         (10, "test_x", "<dynamic>", "<dynamic>"),
-        (12, "test_x", "kiro_crew.platform_compat", "sys"),
-        (12, "test_x", "kiro_crew.platform_compat", "time"),
-        (13, "test_x", "kiro_crew.sandbox", "<dynamic>"),
-        (14, "test_x", "kiro_crew.platform_compat", "file_lock"),
+        (12, "test_x", "aj_crew.platform_compat", "sys"),
+        (12, "test_x", "aj_crew.platform_compat", "time"),
+        (13, "test_x", "aj_crew.sandbox", "<dynamic>"),
+        (14, "test_x", "aj_crew.platform_compat", "file_lock"),
         (16, "_helper", "<dynamic>", "<dynamic>"),
     ]
 
@@ -1674,7 +1670,7 @@ def test_the_sweep_s_pin_scan_coverage_class_is_one_class() -> None:
 def test_the_forwarding_is_live_for_any_module_that_imported_a_name_early() -> None:
     """``cli_doctor`` imports ``_MOUNT_SOURCE_PREFIX`` from the facade at load: the
     import resolves through ``__getattr__`` to the owner's object."""
-    from kiro_crew import cli_doctor
+    from aj_crew import cli_doctor
 
     assert cli_doctor._MOUNT_SOURCE_PREFIX is sandbox_mount_sweep._MOUNT_SOURCE_PREFIX
 

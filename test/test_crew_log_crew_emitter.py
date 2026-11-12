@@ -30,11 +30,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, emit
-from kiro_crew.crew_log import schema as crew_schema
-from kiro_crew.crew_log.store import REMOVE_REMOVED, remove_unit
-from kiro_crew.dashboard.handlers import work_ledger as routes
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, emit
+from aj_crew.crew_log import schema as crew_schema
+from aj_crew.crew_log.store import REMOVE_REMOVED, remove_unit
+from aj_crew.dashboard.handlers import work_ledger as routes
 
 CREW = "qa"
 #: A member DM slot key, which is what a conductor slot looks like when the board
@@ -49,7 +49,7 @@ ACCEPTANCE = {"kind": "human_approval"}
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, monkeypatch):
     """An isolated data home, the flag on, and the emitter's caches cleared."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     emit.reset_caches()
     yield
@@ -75,7 +75,7 @@ def _crew_header() -> dict[str, Any]:
 
 def _seed_session(unit_id: str = WORKER_UNIT, entries: int = 3) -> CrewLog:
     """A session unit with *entries* lines, so a report has something to cite."""
-    log = CrewLog.create(lg.KIND_SESSION, unit_id, owner=CREW, agent="kirocrew")
+    log = CrewLog.create(lg.KIND_SESSION, unit_id, owner=CREW, agent="ajcrew")
     for turn in range(1, entries + 1):
         log.append("turn/started", {"turn": turn, "actor": "user", "depth": 0}, src="gateway")
     return log

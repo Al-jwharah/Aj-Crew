@@ -20,8 +20,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.apps.install_receipt import _valid_slug
-from kiro_crew.apps.manifest import KEBAB_RE, NotificationsConfig
+from aj_crew.apps.install_receipt import _valid_slug
+from aj_crew.apps.manifest import KEBAB_RE, NotificationsConfig
 
 #: Values whose only defect is a trailing newline: `$` lets them through `match`.
 NEWLINE_VALUES = ["alerts\n", "build-done\n", "a\n"]
@@ -74,7 +74,7 @@ class TestRegistryEntryNames:
     def test_a_cached_entry_with_a_trailing_newline_is_dropped(
         self, bad_name, tmp_path, monkeypatch
     ):
-        from kiro_crew.apps import registry
+        from aj_crew.apps import registry
 
         monkeypatch.setattr(registry, "_manifest_cache_dir", lambda: tmp_path)
         registry._write_external_registry_cache("acme", [self._entry(bad_name)])
@@ -85,7 +85,7 @@ class TestRegistryEntryNames:
 
     def test_an_ordinary_cached_entry_is_kept(self, tmp_path, monkeypatch):
         """Preservation: the gate refuses a malformed name, not entries."""
-        from kiro_crew.apps import registry
+        from aj_crew.apps import registry
 
         monkeypatch.setattr(registry, "_manifest_cache_dir", lambda: tmp_path)
         registry._write_external_registry_cache("acme", [self._entry("good-app")])
@@ -104,7 +104,7 @@ class TestRegistryEntryNames:
         """
         import inspect
 
-        from kiro_crew.apps import registry
+        from aj_crew.apps import registry
 
         src = inspect.getsource(registry)
         assert "KEBAB_RE.match(" not in src, "a registry name gate still uses bare match()"

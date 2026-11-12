@@ -1,4 +1,4 @@
-"""``kiro_crew.pod.provision`` names a failed step from its stderr, not its stdout tail.
+"""``aj_crew.pod.provision`` names a failed step from its stderr, not its stdout tail.
 
 The Dev Fleet gateway spawns ``pod provision`` with ``stderr=STDOUT``, so a step
 writing straight to the inherited descriptors lands its stdout and stderr in ONE
@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.pod import provision as prov
+from aj_crew.pod import provision as prov
 
 
 def _script_step(script: str) -> list[str]:
@@ -47,7 +47,7 @@ class TestRunRelaysBothStreams:
             " file=sys.stderr);"
             "print('  [Errno 13] Permission denied: site-packages', file=sys.stderr);"
             "sys.stderr.flush();"
-            "print('Collecting kiro-crew');"
+            "print('Collecting aj-crew');"
             "sys.exit(1)"
         )
 
@@ -68,8 +68,8 @@ class TestRunRelaysBothStreams:
         # label the tail, they do not replace the transcript.
         assert "  [Errno 13] Permission denied: site-packages" in lines
         # The stdout progress line stays in the log, and is NOT in a marker.
-        assert "Collecting kiro-crew" in lines
-        assert not any("Collecting kiro-crew" in m for m in markers)
+        assert "Collecting aj-crew" in lines
+        assert not any("Collecting aj-crew" in m for m in markers)
 
     def test_a_multibyte_blob_stays_under_the_gateway_byte_limit(
         self, tmp_path: Path, capfd: pytest.CaptureFixture[str]

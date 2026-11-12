@@ -15,8 +15,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.subagent import SubagentInfo, SubagentManager
 
 
 @pytest.fixture(autouse=True)
@@ -35,7 +35,7 @@ class _FatalError(Exception):
 
 
 def _context_overflow_error():
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
     error = AcpError("The agent context exceeded the model window", transient=False)
     error.structural_terminal = True
@@ -95,7 +95,7 @@ def _manager(sessions: MagicMock) -> SubagentManager:
 
 
 async def _spawn_and_wait(mgr: SubagentManager, task: str = "do work") -> SubagentInfo:
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn(task)
         assert info is not None
         # flake-ok: pre-existing unbounded await of a run's task, moved verbatim

@@ -24,11 +24,11 @@ never by anything read out of the result -- see
 
 import json
 
-from kiro_crew import session_directive as sd
-from kiro_crew.acp._dispatch import _build_tool_result_event, _mcp_content_text
-from kiro_crew.mcp_apps_render import find_marker
-from kiro_crew.mcp_gateway.apps import append_marker
-from kiro_crew.validation import build_tool_response, strip_hidden_unicode
+from aj_crew import session_directive as sd
+from aj_crew.acp._dispatch import _build_tool_result_event, _mcp_content_text
+from aj_crew.mcp_apps_render import find_marker
+from aj_crew.mcp_gateway.apps import append_marker
+from aj_crew.validation import build_tool_response, strip_hidden_unicode
 
 DIRECTIVE_ARGS = {"items": [{"title": "pick one", "description": "d", "prompt": "p"}]}
 
@@ -53,7 +53,7 @@ class TestSurvivesMcpResponseExit:
     def test_sentinel_is_pure_ascii(self):
         # A machine-facing framing token must not depend on characters that
         # sanitizers, Unicode normalizers or transports legitimately rewrite.
-        assert _encoded().isascii() or "[[KIROCREW_SESSION_DIRECTIVE]]" in _encoded()
+        assert _encoded().isascii() or "[[AJCREW_SESSION_DIRECTIVE]]" in _encoded()
         assert strip_hidden_unicode(_encoded()) == _encoded()
 
 
@@ -199,7 +199,7 @@ class TestMcpAppMarkerSurvivesResultCuts:
 
     def _marker(self) -> str:
         # A valid marker carries a 32-lowercase-hex spool id.
-        return "[kirocrew-mcp-app:" + "a" * 32 + "]"
+        return "[ajcrew-mcp-app:" + "a" * 32 + "]"
 
     def _id(self) -> str:
         return "a" * 32

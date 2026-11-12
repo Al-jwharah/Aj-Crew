@@ -25,7 +25,7 @@ from voice_reply_helpers import (
     _prepared,
 )
 
-from kiro_crew.voice_reply import (
+from aj_crew.voice_reply import (
     SYSTEM_ENGINE_ESPEAK,
     SYSTEM_ENGINE_SAPI,
     SYSTEM_ENGINE_SAY,
@@ -76,13 +76,13 @@ def _passthrough_wrap():
     async def identity(cmd, *_a, **_kw):
         return list(cmd), {}, None
 
-    return patch("kiro_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=identity)
+    return patch("aj_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=identity)
 
 
 class TestSynthesizeSystem:
     @pytest.mark.asyncio
     async def test_no_engine_returns_none(self) -> None:
-        with patch("kiro_crew.voice_reply.resolve_system_tts", return_value=None):
+        with patch("aj_crew.voice_reply.resolve_system_tts", return_value=None):
             assert await _synthesize_system("hi") is None
 
     @pytest.mark.asyncio
@@ -90,7 +90,7 @@ class TestSynthesizeSystem:
         fake_exec, captured = _writing_exec("-o")
         with (
             patch(
-                "kiro_crew.voice_reply.resolve_system_tts",
+                "aj_crew.voice_reply.resolve_system_tts",
                 return_value=(SYSTEM_ENGINE_SAY, "/usr/bin/say"),
             ),
             patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
@@ -121,7 +121,7 @@ class TestSynthesizeSystem:
             fake_exec, captured = _writing_exec("-o")
             with (
                 patch(
-                    "kiro_crew.voice_reply.resolve_system_tts",
+                    "aj_crew.voice_reply.resolve_system_tts",
                     return_value=(SYSTEM_ENGINE_SAY, "/usr/bin/say"),
                 ),
                 patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
@@ -137,7 +137,7 @@ class TestSynthesizeSystem:
         fake_exec, captured = _writing_exec("-o")
         with (
             patch(
-                "kiro_crew.voice_reply.resolve_system_tts",
+                "aj_crew.voice_reply.resolve_system_tts",
                 return_value=(SYSTEM_ENGINE_SAY, "/usr/bin/say"),
             ),
             patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
@@ -153,7 +153,7 @@ class TestSynthesizeSystem:
         fake_exec, captured = _writing_exec("-w")
         with (
             patch(
-                "kiro_crew.voice_reply.resolve_system_tts",
+                "aj_crew.voice_reply.resolve_system_tts",
                 return_value=(SYSTEM_ENGINE_ESPEAK, "/usr/bin/espeak-ng"),
             ),
             patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
@@ -188,10 +188,10 @@ class TestSynthesizeSystem:
 
         with (
             patch(
-                "kiro_crew.voice_reply.resolve_system_tts",
+                "aj_crew.voice_reply.resolve_system_tts",
                 return_value=(SYSTEM_ENGINE_SAPI, "powershell.exe"),
             ),
-            patch("kiro_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=_prepared()),
+            patch("aj_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=_prepared()),
             patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
         ):
             result = await _synthesize_system("你好 world", rate="100%")
@@ -226,9 +226,9 @@ class TestSynthesizeSystem:
             seen.clear()
             fake_exec, _captured = _writing_exec(flag)
             with (
-                patch("kiro_crew.voice_reply.resolve_system_tts", return_value=(engine, binp)),
+                patch("aj_crew.voice_reply.resolve_system_tts", return_value=(engine, binp)),
                 patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
-                patch("kiro_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=identity),
+                patch("aj_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=identity),
             ):
                 result = await _synthesize_system("hello", voice="Zira")
             assert result is not None, f"{engine} produced no audio"
@@ -253,11 +253,11 @@ class TestSynthesizeSystem:
         fake_exec, captured = _writing_exec("-o")
         with (
             patch(
-                "kiro_crew.voice_reply.resolve_system_tts",
+                "aj_crew.voice_reply.resolve_system_tts",
                 return_value=(SYSTEM_ENGINE_SAY, "/usr/bin/say"),
             ),
             patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
-            patch("kiro_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=prepare),
+            patch("aj_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=prepare),
         ):
             result = await _synthesize_system("hello", voice="Alex")
         assert result is not None
@@ -288,16 +288,16 @@ class TestSynthesizeSystem:
             threads["output"] = threading.get_ident()
             return _produced_audio(path)
 
-        monkeypatch.setattr("kiro_crew.voice_reply.cgroup_scope_argv", record_cgroup)
-        monkeypatch.setattr("kiro_crew.voice_reply._produced_audio", record_output)
+        monkeypatch.setattr("aj_crew.voice_reply.cgroup_scope_argv", record_cgroup)
+        monkeypatch.setattr("aj_crew.voice_reply._produced_audio", record_output)
         fake_exec, _captured = _writing_exec("-o")
         with (
             patch(
-                "kiro_crew.voice_reply.resolve_system_tts",
+                "aj_crew.voice_reply.resolve_system_tts",
                 return_value=(SYSTEM_ENGINE_SAY, "/usr/bin/say"),
             ),
             patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
-            patch("kiro_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=_prepared()),
+            patch("aj_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=_prepared()),
         ):
             result = await _synthesize_system("hello", voice="Alex")
         assert result is not None
@@ -332,11 +332,11 @@ class TestSynthesizeSystem:
 
         with (
             patch(
-                "kiro_crew.voice_reply.resolve_system_tts",
+                "aj_crew.voice_reply.resolve_system_tts",
                 return_value=(SYSTEM_ENGINE_SAPI, "powershell.exe"),
             ),
             patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
-            patch("kiro_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=identity),
+            patch("aj_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=identity),
         ):
             result = await _synthesize_system("hello", voice="Zira")
         assert result is not None
@@ -365,10 +365,10 @@ class TestSynthesizeSystem:
 
         with (
             patch(
-                "kiro_crew.voice_reply.resolve_system_tts",
+                "aj_crew.voice_reply.resolve_system_tts",
                 return_value=(SYSTEM_ENGINE_SAY, "/usr/bin/say"),
             ),
-            patch("kiro_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=_prepared()),
+            patch("aj_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=_prepared()),
             patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
         ):
             assert await _synthesize_system("hello") is None
@@ -381,10 +381,10 @@ class TestSynthesizeSystem:
 
         with (
             patch(
-                "kiro_crew.voice_reply.resolve_system_tts",
+                "aj_crew.voice_reply.resolve_system_tts",
                 return_value=(SYSTEM_ENGINE_SAY, "/usr/bin/say"),
             ),
-            patch("kiro_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=_prepared()),
+            patch("aj_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=_prepared()),
             patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
         ):
             assert await _synthesize_system("hello") is None
@@ -408,10 +408,10 @@ class TestSynthesizeSystem:
 
         with (
             patch(
-                "kiro_crew.voice_reply.resolve_system_tts",
+                "aj_crew.voice_reply.resolve_system_tts",
                 return_value=(SYSTEM_ENGINE_SAY, "/usr/bin/say"),
             ),
-            patch("kiro_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=_prepared()),
+            patch("aj_crew.voice_reply.sandboxed_spawn_argv_async", side_effect=_prepared()),
             patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
         ):
             assert await _synthesize_system("hello") is None
@@ -443,11 +443,11 @@ class TestSystemSubprocessOwnership:
 
         with (
             patch(
-                "kiro_crew.voice_reply.resolve_system_tts",
+                "aj_crew.voice_reply.resolve_system_tts",
                 return_value=(SYSTEM_ENGINE_ESPEAK, "/usr/bin/espeak-ng"),
             ),
             patch(
-                "kiro_crew.voice_reply.sandboxed_spawn_argv_async",
+                "aj_crew.voice_reply.sandboxed_spawn_argv_async",
                 side_effect=_prepared(),
             ),
             patch(
@@ -475,11 +475,11 @@ class TestSystemSubprocessOwnership:
 
         with (
             patch(
-                "kiro_crew.voice_reply.resolve_system_tts",
+                "aj_crew.voice_reply.resolve_system_tts",
                 return_value=(SYSTEM_ENGINE_ESPEAK, "/usr/bin/espeak-ng"),
             ),
             patch(
-                "kiro_crew.voice_reply.sandboxed_spawn_argv_async",
+                "aj_crew.voice_reply.sandboxed_spawn_argv_async",
                 side_effect=_prepared(),
             ),
             patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
@@ -510,11 +510,11 @@ class TestSystemSubprocessOwnership:
 
         with (
             patch(
-                "kiro_crew.voice_reply.resolve_system_tts",
+                "aj_crew.voice_reply.resolve_system_tts",
                 return_value=(SYSTEM_ENGINE_ESPEAK, "/usr/bin/espeak-ng"),
             ),
             patch(
-                "kiro_crew.voice_reply.sandboxed_spawn_argv_async",
+                "aj_crew.voice_reply.sandboxed_spawn_argv_async",
                 side_effect=_prepared(),
             ),
             patch("asyncio.create_subprocess_exec", side_effect=cancelled_exec),
@@ -530,11 +530,11 @@ class TestSystemSubprocessOwnership:
 
         with (
             patch(
-                "kiro_crew.voice_reply.resolve_system_tts",
+                "aj_crew.voice_reply.resolve_system_tts",
                 return_value=(SYSTEM_ENGINE_ESPEAK, "/usr/bin/espeak-ng"),
             ),
             patch(
-                "kiro_crew.voice_reply.sandboxed_spawn_argv_async",
+                "aj_crew.voice_reply.sandboxed_spawn_argv_async",
                 side_effect=_prepared(),
             ),
             patch(
@@ -559,7 +559,7 @@ class TestSystemSubprocessOwnership:
         remedy prose rather than logging a stack trace that reads as an
         engine fault.
         """
-        from kiro_crew.sandbox import SandboxUnavailableError
+        from aj_crew.sandbox import SandboxUnavailableError
 
         created: list[str] = []
         real_mkstemp = tempfile.mkstemp
@@ -569,18 +569,18 @@ class TestSystemSubprocessOwnership:
             created.append(p)
             return fd, p
 
-        monkeypatch.setattr("kiro_crew.voice_reply.tempfile.mkstemp", tracking_mkstemp)
+        monkeypatch.setattr("aj_crew.voice_reply.tempfile.mkstemp", tracking_mkstemp)
 
         async def refuse(cmd, *_a, **_kw):
             raise SandboxUnavailableError(_SANDBOX_REMEDY, "no_backend", "not Linux")
 
-        monkeypatch.setattr("kiro_crew.voice_reply.sandboxed_spawn_argv_async", refuse)
+        monkeypatch.setattr("aj_crew.voice_reply.sandboxed_spawn_argv_async", refuse)
         monkeypatch.setattr(
-            "kiro_crew.voice_reply.resolve_system_tts",
+            "aj_crew.voice_reply.resolve_system_tts",
             lambda: (SYSTEM_ENGINE_ESPEAK, "/usr/bin/espeak-ng"),
         )
 
-        with caplog.at_level("ERROR", logger="kiro_crew.voice_reply"):
+        with caplog.at_level("ERROR", logger="aj_crew.voice_reply"):
             with pytest.raises(SandboxUnavailableError):
                 await _synthesize_system("hello")
 
@@ -606,11 +606,11 @@ class TestSystemSubprocessOwnership:
 
         with (
             patch(
-                "kiro_crew.voice_reply.resolve_system_tts",
+                "aj_crew.voice_reply.resolve_system_tts",
                 return_value=(SYSTEM_ENGINE_ESPEAK, "/usr/bin/espeak-ng"),
             ),
             patch(
-                "kiro_crew.voice_reply.sandboxed_spawn_argv_async",
+                "aj_crew.voice_reply.sandboxed_spawn_argv_async",
                 side_effect=_prepared(cleanup=str(cleanup_path)),
             ),
             patch(
@@ -636,7 +636,7 @@ class TestSynthesizePolly:
         # every Windows host), which is caught and returns None. Patch to
         # passthrough so the existing create_subprocess_exec mocks run.
         _floor_monkeypatch.setattr(
-            "kiro_crew.voice_reply.wrap_argv", lambda argv, **k: (list(argv), None)
+            "aj_crew.voice_reply.wrap_argv", lambda argv, **k: (list(argv), None)
         )
         # cgroup_scope_argv is neutralized module-wide by _no_cgroup_scope.
         _patch_aws_on_path(_floor_monkeypatch)
@@ -699,7 +699,7 @@ class TestSynthesizePolly:
         # is keyed on both -- so this case has to consent for the pair it
         # actually uses. That is the gate working: consent for one account does
         # not silently transfer to another profile or region.
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         aws_consent.record_grant(
             aws_consent.SERVICE_POLLY,
@@ -833,7 +833,7 @@ class TestSynthesizePolly:
 
         with (
             patch(
-                "kiro_crew.voice_reply.wrap_argv",
+                "aj_crew.voice_reply.wrap_argv",
                 side_effect=fake_wrap,
             ),
             patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
@@ -856,7 +856,7 @@ class TestSynthesizePolly:
 
         with (
             patch(
-                "kiro_crew.voice_reply.wrap_argv",
+                "aj_crew.voice_reply.wrap_argv",
                 side_effect=lambda c, mode: (c, None),
             ),
             patch(
@@ -887,7 +887,7 @@ class TestSynthesizePolly:
 
         with (
             patch(
-                "kiro_crew.voice_reply.wrap_argv",
+                "aj_crew.voice_reply.wrap_argv",
                 side_effect=lambda c, mode: (c, None),
             ),
             patch(
@@ -958,7 +958,7 @@ class TestSynthesizePolly:
 
         with (
             patch(
-                "kiro_crew.voice_reply.wrap_argv",
+                "aj_crew.voice_reply.wrap_argv",
                 side_effect=lambda c, mode: (c, str(cleanup_path)),
             ),
             patch("asyncio.create_subprocess_exec", side_effect=fake_exec),
@@ -975,7 +975,7 @@ class TestSynthesizePolly:
         The guard must run BEFORE create_subprocess_exec: reaching the spawn
         would raise FileNotFoundError instead of degrading gracefully.
         """
-        monkeypatch.setattr("kiro_crew.voice_reply.shutil.which", lambda name, *a, **k: None)
+        monkeypatch.setattr("aj_crew.voice_reply.shutil.which", lambda name, *a, **k: None)
         spawned = {"n": 0}
 
         async def fake_exec(*cmd, **kwargs):
@@ -1000,7 +1000,7 @@ class TestSynthesizePolly:
         generic handler's "Polly synthesis error" stack trace misattributes this to
         Polly or AWS credentials.
         """
-        from kiro_crew.sandbox import SandboxUnavailableError
+        from aj_crew.sandbox import SandboxUnavailableError
 
         created: list[str] = []
         real_mkstemp = tempfile.mkstemp
@@ -1010,14 +1010,14 @@ class TestSynthesizePolly:
             created.append(p)
             return fd, p
 
-        monkeypatch.setattr("kiro_crew.voice_reply.tempfile.mkstemp", tracking_mkstemp)
+        monkeypatch.setattr("aj_crew.voice_reply.tempfile.mkstemp", tracking_mkstemp)
 
         def refuse(cmd, mode):
             raise SandboxUnavailableError(_SANDBOX_REMEDY, "no_backend", "not Linux")
 
-        monkeypatch.setattr("kiro_crew.voice_reply.wrap_argv", refuse)
+        monkeypatch.setattr("aj_crew.voice_reply.wrap_argv", refuse)
 
-        with caplog.at_level("ERROR", logger="kiro_crew.voice_reply"):
+        with caplog.at_level("ERROR", logger="aj_crew.voice_reply"):
             with pytest.raises(SandboxUnavailableError):
                 await _synthesize_polly("<speak>hi</speak>")
 
@@ -1042,7 +1042,7 @@ class TestSynthesizePolly:
         operator to permanently drop isolation to work around momentary resource
         pressure, so the handler must relay ``str(exc)`` rather than its own copy.
         """
-        from kiro_crew.sandbox import SandboxUnavailableError
+        from aj_crew.sandbox import SandboxUnavailableError
 
         transient_prose = (
             "This probe failure looks TRANSIENT (momentary resource pressure) "
@@ -1052,9 +1052,9 @@ class TestSynthesizePolly:
         def refuse(cmd, mode):
             raise SandboxUnavailableError(transient_prose, "transient", "fork: EAGAIN")
 
-        monkeypatch.setattr("kiro_crew.voice_reply.wrap_argv", refuse)
+        monkeypatch.setattr("aj_crew.voice_reply.wrap_argv", refuse)
 
-        with caplog.at_level("ERROR", logger="kiro_crew.voice_reply"):
+        with caplog.at_level("ERROR", logger="aj_crew.voice_reply"):
             with pytest.raises(SandboxUnavailableError):
                 await _synthesize_polly("<speak>hi</speak>")
 
@@ -1107,7 +1107,7 @@ def _pin_mkstemp(monkeypatch, owned) -> None:
     def fake_mkstemp(suffix: str = ""):
         return os.open(str(owned), os.O_WRONLY | os.O_CREAT), str(owned)
 
-    monkeypatch.setattr("kiro_crew.voice_reply.tempfile.mkstemp", fake_mkstemp)
+    monkeypatch.setattr("aj_crew.voice_reply.tempfile.mkstemp", fake_mkstemp)
 
 
 def _track_unlink(monkeypatch, owned, events: list[str]) -> None:
@@ -1118,14 +1118,14 @@ def _track_unlink(monkeypatch, owned, events: list[str]) -> None:
             events.append("unlinked")
         return real_unlink(path, *args, **kwargs)
 
-    monkeypatch.setattr("kiro_crew.voice_reply.os.unlink", tracked)
+    monkeypatch.setattr("aj_crew.voice_reply.os.unlink", tracked)
 
 
 def _lock_unlink(monkeypatch, owned, events: list[str]) -> None:
     """Make the unlink of *owned* fail as if the child still held it open.
 
     Every OTHER call reaches the real ``os.unlink`` with its full signature.
-    ``kiro_crew.voice_reply.os`` IS the stdlib module, so this patch is
+    ``aj_crew.voice_reply.os`` IS the stdlib module, so this patch is
     process-global, and it outlives the ``tmp_path`` teardown: the module
     autouse fixture requests ``monkeypatch`` before ``tmp_path`` exists, so
     ``monkeypatch`` is undone last. Under ``tmp_path_retention_policy =
@@ -1147,7 +1147,7 @@ def _lock_unlink(monkeypatch, owned, events: list[str]) -> None:
         ), f"relative unlink {path!r} without dir_fd would touch the CWD"
         return real_unlink(path, *args, **kwargs)
 
-    monkeypatch.setattr("kiro_crew.voice_reply.os.unlink", locked)
+    monkeypatch.setattr("aj_crew.voice_reply.os.unlink", locked)
 
 
 class TestSynthesizePollyCancelOwnership:
@@ -1161,7 +1161,7 @@ class TestSynthesizePollyCancelOwnership:
     @pytest.fixture(autouse=True)
     def _sandbox_and_consent(self, _floor_monkeypatch, _polly_consented):
         _floor_monkeypatch.setattr(
-            "kiro_crew.voice_reply.wrap_argv", lambda argv, **k: (list(argv), None)
+            "aj_crew.voice_reply.wrap_argv", lambda argv, **k: (list(argv), None)
         )
         _patch_aws_on_path(_floor_monkeypatch)
 

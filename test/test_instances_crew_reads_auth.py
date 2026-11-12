@@ -33,7 +33,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         """``instances.crew_reads_enabled`` is a separate opt-in on top of
         ``instances.enabled``: a peer's transcripts enter the agent's context as
         untrusted text, so turning Instances on must not turn this on with it."""
-        from kiro_crew.config.sections import InstancesConfig
+        from aj_crew.config.sections import InstancesConfig
 
         assert InstancesConfig().crew_reads_enabled is False
         assert InstancesConfig(enabled=True).crew_reads_enabled is False
@@ -45,7 +45,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         the refusal is audited, nothing is resolved for the caller and no peer is
         reached. Its own code, so the tool can tell "disabled here" from a refused
         identity."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch, crew_reads=False)
         reg = self._reg(tmp_path)
@@ -55,7 +55,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
             handlers, "_audit", lambda op, outcome, **kw: events.append((outcome, kw.get("error")))
         )
         resolved: list[str] = []
-        from kiro_crew.dashboard.handlers import guide
+        from aj_crew.dashboard.handlers import guide
 
         real_resolve = guide._resolve_agent_caller
 
@@ -92,7 +92,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         tab, answering a message the person sent. If this 403s, the gate has cost
         the capability it exists to confine -- so it is the control for every
         refusal below, pinned per leg because each discloses a different slice."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -113,7 +113,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         to ``dashboard_<slot>``; the attestation speaks for either form, and both
         must resolve to the same live slot rather than one of them reading as a
         slot that does not exist."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -125,7 +125,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
     # ── the door: secret, app claim, attestation ─────────────────────────
 
     def test_crew_read_rejects_app_token_caller(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -152,7 +152,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         The shared caller resolver names the case (``missing_session_key``, 400),
         and the namespace arm deliberately leaves an absent key to it.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -178,7 +178,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         refuses before the slot is ever looked at, even though the slot it names
         is the owner's own tab mid-turn.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -199,8 +199,8 @@ class TestCrewReadAuthorization(CrewReadsCase):
         attestation, so refusing the token branch would refuse every real tool call
         on that deployment. The verifier is stubbed to the one answer under test.
         """
-        from kiro_crew import member_memory_auth
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew import member_memory_auth
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         # The verifier is read by the shared caller resolver, which imports it from
@@ -253,8 +253,8 @@ class TestCrewReadAuthorization(CrewReadsCase):
         and so does a binding that cannot be read, since "unknown" on a cross-crew
         read fails closed. Audited with the reason, as every arm is.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.dashboard import handlers_instances_crew_reads as owner
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances_crew_reads as owner
 
         _enable(tmp_path, monkeypatch)
         monkeypatch.setattr(owner, "private_memory_store_for_session", binding)
@@ -276,8 +276,8 @@ class TestCrewReadAuthorization(CrewReadsCase):
 
     def test_an_ordinary_session_resolves_to_no_store_and_is_admitted(self, tmp_path, monkeypatch):
         """The control: ``""`` is an ordinary session and the fence lets it through."""
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.dashboard import handlers_instances_crew_reads as owner
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances_crew_reads as owner
 
         _enable(tmp_path, monkeypatch)
         seen: list[str] = []
@@ -312,7 +312,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         is created without an ``_app``, so ``derive_caller_app`` returns ``""`` and
         the Slack participant arrives shaped exactly like the owner. One per route,
         since a guard added to one leg is not a guard on the others."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -368,7 +368,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         participant's or a cron's work. The direction of failure for an unknown
         namespace is the same: closed.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -391,7 +391,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         (``no_live_slot``): an audit reader sees a vanished slot rather than a
         rejected identity.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -412,7 +412,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         here: with no registry entry it takes the same refusal, whichever spelling
         arrives -- the shared resolver's ``no_live_slot``, which the guide routes
         answer for the same shape."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -430,7 +430,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         the claim; a slot whose registry row carries ``_app`` is refused from the
         slot itself, so the two cannot disagree about whose tab this is.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -448,7 +448,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         with nothing in flight. Either way nobody the gate can attribute is making
         the call. The same arm the guide routes apply (``no_dashboard_turn``).
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -472,7 +472,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         channel message opened) or at a steer's admission (a channel steer into the
         owner's turn), is what refuses -- the same two flags the guide routes read,
         never the agent-writable metadata line."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -496,7 +496,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         that neither an agent's file tools nor a restart can produce: a slot's
         creator can be cleared or lost, its turn's opener cannot be invented.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -513,7 +513,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
     ):
         """A person at a dashboard tab who is not the OWNER.
 
-        ``/kirocrew dashboard`` mints a dashboard token for a channel user the
+        ``/ajcrew dashboard`` mints a dashboard token for a channel user the
         install allow-lists (Telegram, Teams, Webex), and their sends reach
         ``api_chat`` as a non-app request: ``_turn_user_sent`` is True for their
         turn exactly as for the owner's, because it records that a person sent the
@@ -523,7 +523,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         that dispatched the turn, and a non-owner's turn is refused on it alone,
         with every other field at the owner's-tab value.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -544,7 +544,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         declared in ``X-Session-Key``, so the trail says who was turned away as
         well as who read.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -604,7 +604,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         ``chat_send`` as a non-app sender and is stamped user-sent there; the
         creator arm is what refuses the ordinary worker.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -628,7 +628,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         orphan is refused on ``not_user_turn`` for every turn automation can give
         it, and admitted exactly when the person is in it.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -654,7 +654,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         the refusing defaults hold: ``None`` is the admitted answer and requires
         both fields at the owner's-tab value.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         assert handlers._slot_refusal(self._tab()) is None
         # The owner mark is a positive witness: a slot double that never had the
@@ -688,7 +688,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
         cookie-authenticated subject can arrive here. A PRESENT user claim must
         therefore be the configured owner, not merely authenticated.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -710,7 +710,7 @@ class TestCrewReadAuthorization(CrewReadsCase):
 
     def test_read_admits_the_owner_dashboard_subject(self, tmp_path, monkeypatch):
         """The owner-subject arm is a check, not a blanket refusal of user claims."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)

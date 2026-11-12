@@ -1,4 +1,4 @@
-"""The host-grants seam (``kiro_crew.apps.builtin_host_grants``).
+"""The host-grants seam (``aj_crew.apps.builtin_host_grants``).
 
 The core names no built-in app; what a shipped built-in asks of the host is data in its
 own ``host_grants`` submodule. These tests pin three things: the seam is empty when no
@@ -15,7 +15,7 @@ import types
 
 import pytest
 
-from kiro_crew.apps import builtin_host_grants as seam
+from aj_crew.apps import builtin_host_grants as seam
 
 _DEV_FLEET_STRICT = frozenset(
     {
@@ -38,7 +38,7 @@ def fresh_cache():
 
 
 def test_empty_when_no_builtin_ships_grants(monkeypatch, fresh_cache) -> None:
-    from kiro_crew.apps import builtins
+    from aj_crew.apps import builtins
 
     monkeypatch.setattr(builtins, "BUILTIN_NAMES", ["auto_research", "meetings"])
     assert seam.builtin_host_grants() == ()
@@ -51,7 +51,7 @@ def test_empty_when_no_builtin_ships_grants(monkeypatch, fresh_cache) -> None:
 
 
 def test_a_listed_package_absent_from_the_build_grants_nothing(monkeypatch, fresh_cache) -> None:
-    from kiro_crew.apps import builtins
+    from aj_crew.apps import builtins
 
     monkeypatch.setattr(builtins, "BUILTIN_NAMES", ["no_such_builtin"])
     assert seam.builtin_host_grants() == ()
@@ -59,8 +59,8 @@ def test_a_listed_package_absent_from_the_build_grants_nothing(monkeypatch, fres
 
 def test_dev_fleet_grants_are_what_the_gateway_applies(fresh_cache) -> None:
     assert seam.build_rlimit_apps() == frozenset({"dev-fleet"})
-    assert seam.backend_env_names() == ("KIROCREW_DEVFLEET_REPO",)
-    assert seam.backend_env_prefixes() == ("KIROCREW_DEVFLEET_BIN_",)
+    assert seam.backend_env_names() == ("AJCREW_DEVFLEET_REPO",)
+    assert seam.backend_env_prefixes() == ("AJCREW_DEVFLEET_BIN_",)
     assert seam.config_top_keys() == frozenset({"dev_fleet"})
     assert seam.strict_internal_paths() == _DEV_FLEET_STRICT
     assert seam.relay_credential_paths() == _DEV_FLEET_RELAY
@@ -68,9 +68,9 @@ def test_dev_fleet_grants_are_what_the_gateway_applies(fresh_cache) -> None:
 
 def test_the_core_tables_carry_the_grants() -> None:
     """The three core tables a grant feeds hold it, read at their own import."""
-    from kiro_crew.config import validation
-    from kiro_crew.dashboard import server
-    from kiro_crew.dashboard.kiro_relay import limits
+    from aj_crew.config import validation
+    from aj_crew.dashboard import server
+    from aj_crew.dashboard.kiro_relay import limits
 
     assert _DEV_FLEET_STRICT <= server._STRICT_INTERNAL_API_PATHS
     assert "/api/apps/dev-fleet/pod" not in server._STRICT_INTERNAL_API_PATHS
@@ -84,9 +84,9 @@ def test_loading_grants_does_not_import_the_route_modules() -> None:
     A fresh interpreter, because this worker has long since imported them."""
     probe = (
         "import sys\n"
-        "from kiro_crew.apps import builtin_host_grants as g\n"
+        "from aj_crew.apps import builtin_host_grants as g\n"
         "assert g.build_rlimit_apps() == {'dev-fleet'}\n"
-        "heavy = [m for m in sys.modules if m.startswith('kiro_crew.apps.builtins.dev_fleet.')]\n"
+        "heavy = [m for m in sys.modules if m.startswith('aj_crew.apps.builtins.dev_fleet.')]\n"
         "print(sorted(heavy))\n"
     )
     env = {**os.environ, "PYTHONPATH": os.pathsep.join(p for p in sys.path if p)}
@@ -100,7 +100,7 @@ def test_loading_grants_does_not_import_the_route_modules() -> None:
         check=False,
     )
     assert done.returncode == 0, done.stderr
-    assert done.stdout.strip() == "['kiro_crew.apps.builtins.dev_fleet.host_grants']"
+    assert done.stdout.strip() == "['aj_crew.apps.builtins.dev_fleet.host_grants']"
 
 
 _VALID = {"app": "dev-fleet"}
@@ -114,8 +114,8 @@ _VALID = {"app": "dev-fleet"}
         ({"app": "issue-radar"}, "may grant only itself"),
         ({**_VALID, "build_rlimit": "yes"}, "must be a bool"),
         ({**_VALID, "config_top_keys": "dev_fleet"}, "sequence of non-empty strings"),
-        ({**_VALID, "backend_env_names": ("AWS_SECRET_ACCESS_KEY",)}, "only KIROCREW_"),
-        ({**_VALID, "backend_env_prefixes": ("KIROCREW_",)}, "only KIROCREW_"),
+        ({**_VALID, "backend_env_names": ("AWS_SECRET_ACCESS_KEY",)}, "only AJCREW_"),
+        ({**_VALID, "backend_env_prefixes": ("AJCREW_",)}, "only AJCREW_"),
         ({**_VALID, "strict_internal_paths": ("/api/send-message",)}, "own namespace"),
         (
             {**_VALID, "strict_internal_paths": ("/api/apps/issue-radar/x",)},
@@ -147,7 +147,7 @@ def test_a_grants_module_without_the_mapping_raises(monkeypatch, fresh_cache) ->
 
 def test_the_boot_wave_spawns_every_app_together(monkeypatch) -> None:
     """One wave: no app is held back from the others."""
-    import kiro_crew.apps.backend as bmod
+    import aj_crew.apps.backend as bmod
 
     monkeypatch.setattr(bmod, "_reap_stale_app_backends", lambda: 0)
     monkeypatch.setattr(bmod, "_app_enabled_state", lambda name: True)

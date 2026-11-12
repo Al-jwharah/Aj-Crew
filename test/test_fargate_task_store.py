@@ -19,13 +19,13 @@ import re
 
 import pytest
 
-from kiro_crew.cloud.fargate import taskdef as td
-from kiro_crew.cloud.fargate.identity import DocumentRefused, SecretRef
+from aj_crew.cloud.fargate import taskdef as td
+from aj_crew.cloud.fargate.identity import DocumentRefused, SecretRef
 
 ACCOUNT = "123456789012"
 REGION = "us-east-1"
 DIGEST = "sha256:" + "e" * 64
-IMAGE = f"{ACCOUNT}.dkr.ecr.{REGION}.amazonaws.com/kirocrew-crew@{DIGEST}"
+IMAGE = f"{ACCOUNT}.dkr.ecr.{REGION}.amazonaws.com/ajcrew-crew@{DIGEST}"
 
 #: Both live id lengths, short form and long form.
 SHORT_FS = "fs-abcd1234"
@@ -45,7 +45,7 @@ CONTAINER_SOURCE = (
 
 
 def secret_ref(key: str, *, crew: str = "frontdesk") -> SecretRef:
-    name = f"kirocrew/crew/{crew}/{key}"
+    name = f"ajcrew/crew/{crew}/{key}"
     return SecretRef(
         name=name,
         arn=f"arn:aws:secretsmanager:{REGION}:{ACCOUNT}:secret:{name}-AbCdEf",
@@ -313,7 +313,7 @@ def test_the_data_home_is_the_directory_the_image_actually_uses():
     the resume somewhere else.
     """
     source = CONTAINER_SOURCE.read_text(encoding="utf-8")
-    for variable in ("KIROCREW_HOME", "SMC_DATA_HOME", "SMC_CONFIG_DIR"):
+    for variable in ("AJCREW_HOME", "SMC_DATA_HOME", "SMC_CONFIG_DIR"):
         found = re.search(rf"^\s*{variable}=(\S+)", source, re.MULTILINE)
         assert found, f"{variable} is not set in the container image"
         assert found.group(1) == td.CREW_DATA_HOME

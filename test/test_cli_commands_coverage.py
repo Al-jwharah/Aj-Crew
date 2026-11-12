@@ -1,7 +1,7 @@
-"""Coverage tests for :mod:`kiro_crew.cli_commands` subcommand dispatch.
+"""Coverage tests for :mod:`aj_crew.cli_commands` subcommand dispatch.
 
 Handlers are called directly with an ``argparse.Namespace``. HTTP goes through a patched
-``kiro_crew.cli_commands._gateway_send`` and every write lands in ``tmp_path``.
+``aj_crew.cli_commands._gateway_send`` and every write lands in ``tmp_path``.
 Sibling ``test_cli_commands_coverage_*.py`` files share ``cli_commands_coverage_helpers.py``.
 """
 
@@ -21,10 +21,10 @@ from zoneinfo import ZoneInfo
 import pytest
 from cli_commands_coverage_helpers import _FakeResponse, _http_error, _ns
 
-from kiro_crew import cli_commands as cc
-from kiro_crew.apps.hook_reconcile import POLL_INTERVAL_SECS as HOOK_POLL_SECS
-from kiro_crew.cron import CronSchedule
-from kiro_crew.cron_service.schedule import _TIMER_POLL_SECS as CRON_POLL_SECS
+from aj_crew import cli_commands as cc
+from aj_crew.apps.hook_reconcile import POLL_INTERVAL_SECS as HOOK_POLL_SECS
+from aj_crew.cron import CronSchedule
+from aj_crew.cron_service.schedule import _TIMER_POLL_SECS as CRON_POLL_SECS
 
 
 class _IncompleteResponse(_FakeResponse):
@@ -50,13 +50,13 @@ def _registration(**kw: Any) -> Any:
 class TestSmallHelpers:
     def test_internal_secret_reads_file(self, tmp_path: Path) -> None:
         (tmp_path / ".local_secret").write_text("  s3cr3t\n", encoding="utf-8")
-        with patch("kiro_crew.cli_commands.read_local_secret", return_value="s3cr3t") as read:
+        with patch("aj_crew.cli_commands.read_local_secret", return_value="s3cr3t") as read:
             assert cc._internal_secret(6123) == "s3cr3t"
         read.assert_called_once_with(6123, dial_host="127.0.0.1")
 
     def test_internal_secret_missing_file_is_empty(self, tmp_path: Path) -> None:
         """A missing secret must yield "" so the server answers 403, not a crash."""
-        with patch("kiro_crew.cli_commands.read_local_secret", return_value=""):
+        with patch("aj_crew.cli_commands.read_local_secret", return_value=""):
             assert cc._internal_secret(6123) == ""
 
     def test_format_schedule_non_schedule_falls_back_to_str(self) -> None:
@@ -67,7 +67,7 @@ class TestSmallHelpers:
         # was resolved in), with its zone label, not the host's local time.
         sched = CronSchedule(kind="at", at_ts=1700000000.0)
         with patch(
-            "kiro_crew.cli_commands.get_local_tz",
+            "aj_crew.cli_commands.get_local_tz",
             return_value=("UTC", ZoneInfo("UTC")),
         ):
             out = cc._format_schedule(sched)
@@ -75,7 +75,7 @@ class TestSmallHelpers:
 
     def test_format_schedule_delegates_for_every(self) -> None:
         sched = CronSchedule(kind="every", every_secs=300)
-        with patch("kiro_crew.cli_commands.format_schedule", return_value="every 5m") as fmt:
+        with patch("aj_crew.cli_commands.format_schedule", return_value="every 5m") as fmt:
             assert cc._format_schedule(sched) == "every 5m"
         fmt.assert_called_once_with(sched)
 
@@ -88,34 +88,34 @@ class TestWorkspaceDirGuard:
     """
 
     def test_relative_name_inside_home_is_accepted(self, tmp_path: Path) -> None:
-        with patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path):
+        with patch("aj_crew.cli_commands.config_dir", return_value=tmp_path):
             assert (
                 cc._ws_dir_resolves_inside_home("workspace-demo")
                 == (tmp_path / "workspace-demo").resolve()
             )
 
     def test_home_root_itself_is_refused(self, tmp_path: Path) -> None:
-        with patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path):
+        with patch("aj_crew.cli_commands.config_dir", return_value=tmp_path):
             assert cc._ws_dir_resolves_inside_home(".") is None
 
     def test_escaping_path_is_refused(self, tmp_path: Path) -> None:
-        with patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path):
+        with patch("aj_crew.cli_commands.config_dir", return_value=tmp_path):
             assert cc._ws_dir_resolves_inside_home("../elsewhere") is None
 
     def test_unknown_user_tilde_fails_closed(self, tmp_path: Path) -> None:
         """``expanduser`` raises RuntimeError here -- it must not escape."""
-        with patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path):
+        with patch("aj_crew.cli_commands.config_dir", return_value=tmp_path):
             assert cc._ws_dir_resolves_inside_home("~nosuchuser1234/x") is None
 
     def test_sensitive_target_is_refused(self, tmp_path: Path) -> None:
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_commands.is_sensitive_path", return_value=True),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_commands.is_sensitive_path", return_value=True),
         ):
             assert cc._ws_dir_resolves_inside_home("profiles") is None
 
     def test_error_message_names_boundary_and_value(self, tmp_path: Path) -> None:
-        with patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path):
+        with patch("aj_crew.cli_commands.config_dir", return_value=tmp_path):
             msg = cc._ws_dir_error("/etc")
             assert "data home" in msg and "/etc" in msg and "relative directory name" in msg
 
@@ -131,8 +131,8 @@ class TestSpawnCli:
             "agents": [{"id": "a1", "task": "do x", "done": True}, {"id": "a2", "task": "y"}]
         }
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value="s"),
-            patch("kiro_crew.cli_commands._gateway_send", return_value=_FakeResponse(payload)),
+            patch("aj_crew.cli_commands._internal_secret", return_value="s"),
+            patch("aj_crew.cli_commands._gateway_send", return_value=_FakeResponse(payload)),
         ):
             cc._spawn(_ns(spawn_action="list", port=1234))
         out = capsys.readouterr().out
@@ -140,9 +140,9 @@ class TestSpawnCli:
 
     def test_list_empty_says_so(self, capsys: pytest.CaptureFixture[str]) -> None:
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value=""),
+            patch("aj_crew.cli_commands._internal_secret", return_value=""),
             patch(
-                "kiro_crew.cli_commands._gateway_send",
+                "aj_crew.cli_commands._gateway_send",
                 return_value=_FakeResponse({"agents": []}),
             ),
         ):
@@ -154,8 +154,8 @@ class TestSpawnCli:
     ) -> None:
         err = _http_error(400, json.dumps({"error": "bad spawn"}).encode())
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value=""),
-            patch("kiro_crew.cli_commands._gateway_send", side_effect=err),
+            patch("aj_crew.cli_commands._internal_secret", return_value=""),
+            patch("aj_crew.cli_commands._gateway_send", side_effect=err),
             pytest.raises(SystemExit) as exc,
         ):
             cc._spawn(_ns(spawn_action="list", port=1234))
@@ -166,8 +166,8 @@ class TestSpawnCli:
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value=""),
-            patch("kiro_crew.cli_commands._gateway_send", side_effect=_http_error(503, b"<html>")),
+            patch("aj_crew.cli_commands._internal_secret", return_value=""),
+            patch("aj_crew.cli_commands._gateway_send", side_effect=_http_error(503, b"<html>")),
             pytest.raises(SystemExit),
         ):
             cc._spawn(_ns(spawn_action="list", port=1234))
@@ -177,9 +177,9 @@ class TestSpawnCli:
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value=""),
+            patch("aj_crew.cli_commands._internal_secret", return_value=""),
             patch(
-                "kiro_crew.cli_commands._gateway_send",
+                "aj_crew.cli_commands._gateway_send",
                 side_effect=urllib.error.URLError("refused"),
             ),
             pytest.raises(SystemExit) as exc,
@@ -190,15 +190,15 @@ class TestSpawnCli:
 
     def test_unknown_action_prints_usage(self, capsys: pytest.CaptureFixture[str]) -> None:
         cc._spawn(_ns(spawn_action="bogus", port=1))
-        assert "Usage: kirocrew spawn" in capsys.readouterr().out
+        assert "Usage: ajcrew spawn" in capsys.readouterr().out
 
     def test_run_fire_and_forget_prints_id_and_returns(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value=""),
+            patch("aj_crew.cli_commands._internal_secret", return_value=""),
             patch(
-                "kiro_crew.cli_commands._gateway_send",
+                "aj_crew.cli_commands._gateway_send",
                 return_value=_FakeResponse({"id": "ag1", "task": "t"}),
             ) as uo,
         ):
@@ -212,9 +212,9 @@ class TestSpawnCli:
         """A deferred row is accepted under its id but not running; the CLI
         relays the gateway's ``queued`` answer and reason instead of a start."""
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value=""),
+            patch("aj_crew.cli_commands._internal_secret", return_value=""),
             patch(
-                "kiro_crew.cli_commands._gateway_send",
+                "aj_crew.cli_commands._gateway_send",
                 return_value=_FakeResponse(
                     {
                         "id": "ag1",
@@ -241,9 +241,9 @@ class TestSpawnCli:
             _FakeResponse({"done": True, "result": "final answer"}),
         ]
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value=""),
+            patch("aj_crew.cli_commands._internal_secret", return_value=""),
             patch.object(cc._time, "sleep") as slept,
-            patch("kiro_crew.cli_commands._gateway_send", side_effect=responses),
+            patch("aj_crew.cli_commands._gateway_send", side_effect=responses),
         ):
             cc._spawn(_ns(spawn_action="run", port=1, task="t", fire_and_forget=False))
         assert "final answer" in capsys.readouterr().out
@@ -257,9 +257,9 @@ class TestSpawnCli:
             _FakeResponse({"done": True, "error": "agent blew up"}),
         ]
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value=""),
+            patch("aj_crew.cli_commands._internal_secret", return_value=""),
             patch.object(cc._time, "sleep"),
-            patch("kiro_crew.cli_commands._gateway_send", side_effect=responses),
+            patch("aj_crew.cli_commands._gateway_send", side_effect=responses),
             pytest.raises(SystemExit) as exc,
         ):
             cc._spawn(_ns(spawn_action="run", port=1, task="t", fire_and_forget=False))
@@ -270,10 +270,10 @@ class TestSpawnCli:
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value=""),
+            patch("aj_crew.cli_commands._internal_secret", return_value=""),
             patch.object(cc._time, "sleep"),
             patch(
-                "kiro_crew.cli_commands._gateway_send",
+                "aj_crew.cli_commands._gateway_send",
                 side_effect=[_FakeResponse({"id": "ag4", "task": "t"}), OSError("gone")],
             ),
             pytest.raises(SystemExit),
@@ -284,8 +284,8 @@ class TestSpawnCli:
     def test_run_create_http_error_exits_1(self, capsys: pytest.CaptureFixture[str]) -> None:
         err = _http_error(422, json.dumps({"error": "task too long"}).encode())
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value=""),
-            patch("kiro_crew.cli_commands._gateway_send", side_effect=err),
+            patch("aj_crew.cli_commands._internal_secret", return_value=""),
+            patch("aj_crew.cli_commands._gateway_send", side_effect=err),
             pytest.raises(SystemExit),
         ):
             cc._spawn(_ns(spawn_action="run", port=1, task="t", fire_and_forget=True))
@@ -293,8 +293,8 @@ class TestSpawnCli:
 
     def test_run_unreachable_gateway_exits_1(self, capsys: pytest.CaptureFixture[str]) -> None:
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value=""),
-            patch("kiro_crew.cli_commands._gateway_send", side_effect=OSError("no route")),
+            patch("aj_crew.cli_commands._internal_secret", return_value=""),
+            patch("aj_crew.cli_commands._gateway_send", side_effect=OSError("no route")),
             pytest.raises(SystemExit),
         ):
             cc._spawn(_ns(spawn_action="run", port=9, task="t", fire_and_forget=True))
@@ -309,13 +309,13 @@ class TestAppCli:
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with (
-            patch("kiro_crew.cli_commands.install_app", return_value=_result(True, name="demo")),
+            patch("aj_crew.cli_commands.install_app", return_value=_result(True, name="demo")),
             patch(
-                "kiro_crew.cli_commands.get_app",
+                "aj_crew.cli_commands.get_app",
                 return_value={"name": "demo", "enabled": False},
             ),
             patch(
-                "kiro_crew.cli_commands.register_app",
+                "aj_crew.cli_commands.register_app",
                 return_value=_registration(agents=["a"]),
             ) as register,
         ):
@@ -323,12 +323,12 @@ class TestAppCli:
         register.assert_not_called()
         out = capsys.readouterr().out
         assert "Agents:" not in out
-        assert "kirocrew app enable demo" in out
+        assert "ajcrew app enable demo" in out
 
     def test_install_failure_exits_1(self, capsys: pytest.CaptureFixture[str]) -> None:
         with (
             patch(
-                "kiro_crew.cli_commands.install_app",
+                "aj_crew.cli_commands.install_app",
                 return_value=_result(False, error="not an app"),
             ),
             pytest.raises(SystemExit) as exc,
@@ -338,7 +338,7 @@ class TestAppCli:
         assert "not an app" in capsys.readouterr().err
 
     def test_list_empty(self, capsys: pytest.CaptureFixture[str]) -> None:
-        with patch("kiro_crew.cli_commands.list_apps", return_value=[]):
+        with patch("aj_crew.cli_commands.list_apps", return_value=[]):
             cc._handle_app(_ns(app_action="list"))
         assert "No apps installed." in capsys.readouterr().out
 
@@ -349,7 +349,7 @@ class TestAppCli:
             {"name": "one", "version": "1.0", "enabled": True, "displayName": "One"},
             {"name": "two", "enabled": False},
         ]
-        with patch("kiro_crew.cli_commands.list_apps", return_value=apps):
+        with patch("aj_crew.cli_commands.list_apps", return_value=apps):
             cc._handle_app(_ns(app_action="list"))
         out = capsys.readouterr().out
         assert "one" in out and "enabled" in out and "two" in out and "disabled" in out
@@ -364,7 +364,7 @@ class TestAppCli:
                 "displayName": "One\x07\nApp",
             },
         ]
-        with patch("kiro_crew.cli_commands.list_apps", return_value=apps):
+        with patch("aj_crew.cli_commands.list_apps", return_value=apps):
             cc._handle_app(_ns(app_action="list"))
         lines = capsys.readouterr().out.splitlines()
         # Header plus one line for the app: the newlines did not split the row.
@@ -375,9 +375,9 @@ class TestAppCli:
 
     def test_enable_success_counts_registrations(self, capsys: pytest.CaptureFixture[str]) -> None:
         with (
-            patch("kiro_crew.cli_commands.enable_app", return_value=_result(True, message="on")),
+            patch("aj_crew.cli_commands.enable_app", return_value=_result(True, message="on")),
             patch(
-                "kiro_crew.cli_commands.register_app",
+                "aj_crew.cli_commands.register_app",
                 return_value=_registration(agents=["a", "b"], skills=["s"]),
             ),
         ):
@@ -415,16 +415,14 @@ class TestAppCli:
             )
 
         with (
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
             patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
-            patch(
-                "kiro_crew.app_lifecycle_client.read_local_secret",
+                "aj_crew.app_lifecycle_client.read_local_secret",
                 return_value="port-scoped-secret",
             ) as credential,
-            patch("kiro_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=_open),
-            patch("kiro_crew.cli_commands.enable_app") as local_enable,
-            patch("kiro_crew.cli_commands.register_app") as local_register,
+            patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=_open),
+            patch("aj_crew.cli_commands.enable_app") as local_enable,
+            patch("aj_crew.cli_commands.register_app") as local_register,
         ):
             cc._handle_app(_ns(app_action="enable", name="demo"))
 
@@ -447,7 +445,7 @@ class TestAppCli:
     def test_gateway_output_sanitizes_terminal_control_sequences(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        from kiro_crew import app_lifecycle_client
+        from aj_crew import app_lifecycle_client
 
         app_lifecycle_client.print_result(
             "enable",
@@ -474,7 +472,7 @@ class TestAppCli:
     def test_gateway_output_caps_each_gateway_string(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        from kiro_crew import app_lifecycle_client
+        from aj_crew import app_lifecycle_client
 
         app_lifecycle_client.print_result("disable", "demo", {"message": "x" * 3000})
 
@@ -485,7 +483,7 @@ class TestAppCli:
     def test_gateway_output_cannot_forge_an_unprefixed_result_line(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        from kiro_crew import app_lifecycle_client
+        from aj_crew import app_lifecycle_client
 
         app_lifecycle_client.print_result(
             "enable",
@@ -511,7 +509,7 @@ class TestAppCli:
     def test_gateway_error_message_is_confined_to_one_line(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        from kiro_crew import app_lifecycle_client
+        from aj_crew import app_lifecycle_client
 
         error = app_lifecycle_client.AppGatewayError("denied\n✅ enabled demo")
 
@@ -532,12 +530,10 @@ class TestAppCli:
             raise TimeoutError("timed out")
 
         with (
-            patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
-            patch("kiro_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=_open),
-            patch("kiro_crew.cli_commands.enable_app") as local_enable,
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
+            patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=_open),
+            patch("aj_crew.cli_commands.enable_app") as local_enable,
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_app(_ns(app_action="enable", name="demo"))
@@ -560,12 +556,10 @@ class TestAppCli:
             json.dumps({"error": "busy\x1b]0;evil\x07 now\x1b[2J\x07"}).encode(),
         )
         with (
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
-            patch(
-                "kiro_crew.app_lifecycle_client.unix_socket_urlopen",
+                "aj_crew.app_lifecycle_client.unix_socket_urlopen",
                 side_effect=[_FakeResponse({"token": "dashboard-credential"}), error],
             ),
             pytest.raises(SystemExit),
@@ -599,14 +593,12 @@ class TestAppCli:
             )
 
         with (
-            patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
-            patch("kiro_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=_open),
-            patch("kiro_crew.cli_commands.disable_app") as local_disable,
-            patch("kiro_crew.cli_commands.deregister_app") as local_deregister,
-            patch("kiro_crew.cli_commands._cleanup_app_crons_from_scheduler") as local_cleanup,
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
+            patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=_open),
+            patch("aj_crew.cli_commands.disable_app") as local_disable,
+            patch("aj_crew.cli_commands.deregister_app") as local_deregister,
+            patch("aj_crew.cli_commands._cleanup_app_crons_from_scheduler") as local_cleanup,
         ):
             cc._handle_app(_ns(app_action="disable", name="demo"))
 
@@ -623,22 +615,22 @@ class TestAppCli:
     ) -> None:
         with (
             patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(5476, False)
+                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(5476, False)
             ),
             patch(
-                "kiro_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"
+                "aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"
             ) as credential,
             patch(
-                "kiro_crew.app_lifecycle_client.unix_socket_urlopen",
+                "aj_crew.app_lifecycle_client.unix_socket_urlopen",
                 side_effect=urllib.error.URLError(FileNotFoundError("no socket")),
             ) as urlopen,
-            patch("kiro_crew.cli_commands.enable_app", return_value=_result(True)) as local_enable,
+            patch("aj_crew.cli_commands.enable_app", return_value=_result(True)) as local_enable,
             patch(
-                "kiro_crew.cli_commands.register_app", return_value=_registration()
+                "aj_crew.cli_commands.register_app", return_value=_registration()
             ) as local_register,
-            patch("kiro_crew.cli_commands._register_app_crons_to_scheduler"),
-            patch("kiro_crew.cli_commands._warn_hooks_need_restart"),
-            patch("kiro_crew.cli_commands._app_declares_backend", return_value=True),
+            patch("aj_crew.cli_commands._register_app_crons_to_scheduler"),
+            patch("aj_crew.cli_commands._warn_hooks_need_restart"),
+            patch("aj_crew.cli_commands._app_declares_backend", return_value=True),
         ):
             cc._handle_app(_ns(app_action="enable", name="demo"))
 
@@ -657,7 +649,7 @@ class TestAppCli:
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """An app with no backend process has nothing a restart would start."""
-        with patch("kiro_crew.cli_commands._app_declares_backend", return_value=False):
+        with patch("aj_crew.cli_commands._app_declares_backend", return_value=False):
             cc._print_file_only_app_result("demo", enabled=True)
 
         out = capsys.readouterr().out
@@ -673,17 +665,15 @@ class TestAppCli:
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with (
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value=""),
+            patch("aj_crew.app_lifecycle_client.unix_socket_urlopen") as urlopen,
+            patch("aj_crew.cli_commands.enable_app", return_value=_result(True)) as local_enable,
             patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value=""),
-            patch("kiro_crew.app_lifecycle_client.unix_socket_urlopen") as urlopen,
-            patch("kiro_crew.cli_commands.enable_app", return_value=_result(True)) as local_enable,
-            patch(
-                "kiro_crew.cli_commands.register_app", return_value=_registration()
+                "aj_crew.cli_commands.register_app", return_value=_registration()
             ) as local_register,
-            patch("kiro_crew.cli_commands._register_app_crons_to_scheduler"),
-            patch("kiro_crew.cli_commands._warn_hooks_need_restart"),
+            patch("aj_crew.cli_commands._register_app_crons_to_scheduler"),
+            patch("aj_crew.cli_commands._warn_hooks_need_restart"),
         ):
             cc._handle_app(_ns(app_action="enable", name="demo"))
 
@@ -699,15 +689,13 @@ class TestAppCli:
     ) -> None:
         error = _http_error(409, json.dumps({"error": "app is busy"}).encode())
         with (
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
-            patch(
-                "kiro_crew.app_lifecycle_client.unix_socket_urlopen",
+                "aj_crew.app_lifecycle_client.unix_socket_urlopen",
                 side_effect=[_FakeResponse({"token": "dashboard-credential"}), error],
             ),
-            patch("kiro_crew.cli_commands.enable_app") as local_enable,
+            patch("aj_crew.cli_commands.enable_app") as local_enable,
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_app(_ns(app_action="enable", name="demo"))
@@ -721,12 +709,10 @@ class TestAppCli:
     ) -> None:
         error = _http_error(403, json.dumps({"error": "local credential denied"}).encode())
         with (
-            patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
-            patch("kiro_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=error),
-            patch("kiro_crew.cli_commands.disable_app") as local_disable,
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
+            patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=error),
+            patch("aj_crew.cli_commands.disable_app") as local_disable,
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_app(_ns(app_action="disable", name="demo"))
@@ -767,13 +753,11 @@ class TestAppCli:
             )
 
         with (
-            patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
-            patch("kiro_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=_open),
-            patch("kiro_crew.cli_commands.install_app") as local_install,
-            patch("kiro_crew.cli_commands.register_app") as local_register,
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
+            patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=_open),
+            patch("aj_crew.cli_commands.install_app") as local_install,
+            patch("aj_crew.cli_commands.register_app") as local_register,
         ):
             # A relative path: the gateway's working directory is not this shell's.
             cc._handle_app(_ns(app_action="install", source="demo-app"))
@@ -791,7 +775,7 @@ class TestAppCli:
         assert "Agents: demo-agent" in captured.out
         assert "Skills: demo-skill" in captured.out
         assert "Crons:" not in captured.out
-        assert "Run: kirocrew app enable demo" in captured.out
+        assert "Run: ajcrew app enable demo" in captured.out
         assert "session approval" not in captured.out
         assert "… applying install for" in captured.err
         assert "⚠️  skill registration deferred" in captured.err
@@ -799,7 +783,7 @@ class TestAppCli:
     def test_forwarded_install_pending_consent_names_the_enable_step(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        from kiro_crew import app_lifecycle_client
+        from aj_crew import app_lifecycle_client
 
         app_lifecycle_client.print_result(
             "install",
@@ -816,26 +800,26 @@ class TestAppCli:
         out = capsys.readouterr().out
         assert "✅ Installed demo v1.0.0" in out
         assert "stays off until enabled" in out
-        assert "Run: kirocrew app enable demo" in out
+        assert "Run: ajcrew app enable demo" in out
 
     def test_install_without_reachable_gateway_keeps_file_only_path(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with (
             patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(5476, False)
+                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(5476, False)
             ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch(
-                "kiro_crew.app_lifecycle_client.unix_socket_urlopen",
+                "aj_crew.app_lifecycle_client.unix_socket_urlopen",
                 side_effect=urllib.error.URLError(FileNotFoundError("no socket")),
             ) as urlopen,
             patch(
-                "kiro_crew.cli_commands.install_app", return_value=_result(True, name="demo")
+                "aj_crew.cli_commands.install_app", return_value=_result(True, name="demo")
             ) as local_install,
-            patch("kiro_crew.cli_commands.get_app", return_value={"name": "demo"}),
+            patch("aj_crew.cli_commands.get_app", return_value={"name": "demo"}),
             patch(
-                "kiro_crew.cli_commands.register_app", return_value=_registration(agents=["a"])
+                "aj_crew.cli_commands.register_app", return_value=_registration(agents=["a"])
             ) as local_register,
         ):
             cc._handle_app(_ns(app_action="install", source="/pkg"))
@@ -844,21 +828,19 @@ class TestAppCli:
         local_install.assert_called_once_with("/pkg")
         local_register.assert_not_called()
         out = capsys.readouterr().out
-        assert "kirocrew app enable demo" in out
+        assert "ajcrew app enable demo" in out
 
     def test_install_missing_local_secret_keeps_file_only_path(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with (
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value=""),
+            patch("aj_crew.app_lifecycle_client.unix_socket_urlopen") as urlopen,
             patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value=""),
-            patch("kiro_crew.app_lifecycle_client.unix_socket_urlopen") as urlopen,
-            patch(
-                "kiro_crew.cli_commands.install_app", return_value=_result(True, name="demo")
+                "aj_crew.cli_commands.install_app", return_value=_result(True, name="demo")
             ) as local_install,
-            patch("kiro_crew.cli_commands.register_app", return_value=_registration()),
+            patch("aj_crew.cli_commands.register_app", return_value=_registration()),
         ):
             cc._handle_app(_ns(app_action="install", source="/pkg"))
 
@@ -866,7 +848,7 @@ class TestAppCli:
         local_install.assert_called_once_with("/pkg")
         out = capsys.readouterr().out
         assert out.startswith("✅ done\n")
-        assert "Run: kirocrew app enable demo" in out
+        assert "Run: ajcrew app enable demo" in out
 
     def test_install_gateway_route_error_exits_without_file_edit(
         self, capsys: pytest.CaptureFixture[str]
@@ -875,15 +857,13 @@ class TestAppCli:
             400, json.dumps({"ok": False, "name": "", "error": "no app.json"}).encode()
         )
         with (
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
-            patch(
-                "kiro_crew.app_lifecycle_client.unix_socket_urlopen",
+                "aj_crew.app_lifecycle_client.unix_socket_urlopen",
                 side_effect=[_FakeResponse({"token": "dashboard-credential"}), error],
             ),
-            patch("kiro_crew.cli_commands.install_app") as local_install,
+            patch("aj_crew.cli_commands.install_app") as local_install,
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_app(_ns(app_action="install", source="/pkg"))
@@ -899,12 +879,10 @@ class TestAppCli:
     ) -> None:
         error = _http_error(403, json.dumps({"error": "local credential denied"}).encode())
         with (
-            patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
-            patch("kiro_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=error),
-            patch("kiro_crew.cli_commands.install_app") as local_install,
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
+            patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=error),
+            patch("aj_crew.cli_commands.install_app") as local_install,
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_app(_ns(app_action="install", source="/pkg"))
@@ -961,15 +939,15 @@ class TestAppCli:
     def test_mint_exception_surface_is_classified_by_outcome(
         self, failure: BaseException, expected: str
     ) -> None:
-        from kiro_crew import app_lifecycle_client
+        from aj_crew import app_lifecycle_client
 
         with (
             patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, False)
+                "aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, False)
             ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
-            patch("kiro_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=failure),
-            patch("kiro_crew.cli_commands.enable_app") as local_enable,
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
+            patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=failure),
+            patch("aj_crew.cli_commands.enable_app") as local_enable,
         ):
             if expected == "file-only":
                 assert app_lifecycle_client.toggle_app("demo", "enable") is None
@@ -1027,18 +1005,16 @@ class TestAppCli:
     def test_action_exception_surface_is_classified_by_outcome(
         self, failure: BaseException, expected: str
     ) -> None:
-        from kiro_crew import app_lifecycle_client
+        from aj_crew import app_lifecycle_client
 
         with (
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
-            patch(
-                "kiro_crew.app_lifecycle_client.unix_socket_urlopen",
+                "aj_crew.app_lifecycle_client.unix_socket_urlopen",
                 side_effect=[_FakeResponse({"token": "dashboard-credential"}), failure],
             ),
-            patch("kiro_crew.cli_commands.enable_app") as local_enable,
+            patch("aj_crew.cli_commands.enable_app") as local_enable,
         ):
             if expected == "interrupt":
                 with pytest.raises(KeyboardInterrupt):
@@ -1053,15 +1029,13 @@ class TestAppCli:
     ) -> None:
         failure = urllib.error.URLError(ConnectionRefusedError("gateway restarted"))
         with (
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
             patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
-            patch(
-                "kiro_crew.app_lifecycle_client.unix_socket_urlopen",
+                "aj_crew.app_lifecycle_client.unix_socket_urlopen",
                 side_effect=[_FakeResponse({"token": "dashboard-credential"}), failure],
             ),
-            patch("kiro_crew.cli_commands.enable_app") as local_enable,
+            patch("aj_crew.cli_commands.enable_app") as local_enable,
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_app(_ns(app_action="enable", name="demo"))
@@ -1087,7 +1061,7 @@ class TestAppCli:
     def test_other_transport_failures_are_gateway_errors(
         self, stage: str, failure: OSError
     ) -> None:
-        from kiro_crew import app_lifecycle_client
+        from aj_crew import app_lifecycle_client
 
         side_effect: object
         expected_type: type[Exception] = app_lifecycle_client.AppGatewayError
@@ -1106,11 +1080,9 @@ class TestAppCli:
                     "gateway stopped answering before the action completed; check the dashboard"
                 )
         with (
-            patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
-            patch("kiro_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=side_effect),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
+            patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=side_effect),
             pytest.raises(expected_type, match=expected) as raised,
         ):
             app_lifecycle_client.toggle_app("demo", "enable")
@@ -1126,7 +1098,7 @@ class TestAppCli:
     def test_malformed_or_truncated_gateway_responses_are_gateway_errors(
         self, stage: str, bad_response: _FakeResponse
     ) -> None:
-        from kiro_crew import app_lifecycle_client
+        from aj_crew import app_lifecycle_client
 
         side_effect = (
             [bad_response]
@@ -1134,11 +1106,9 @@ class TestAppCli:
             else [_FakeResponse({"token": "dashboard-credential"}), bad_response]
         )
         with (
-            patch(
-                "kiro_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)
-            ),
-            patch("kiro_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
-            patch("kiro_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=side_effect),
+            patch("aj_crew.app_lifecycle_client.resolve_client_port_ex", return_value=(8123, True)),
+            patch("aj_crew.app_lifecycle_client.read_local_secret", return_value="local-secret"),
+            patch("aj_crew.app_lifecycle_client.unix_socket_urlopen", side_effect=side_effect),
             pytest.raises(
                 app_lifecycle_client.AppGatewayError,
                 match="gateway returned a malformed response",
@@ -1148,7 +1118,7 @@ class TestAppCli:
 
     def test_enable_failure_exits_1(self) -> None:
         with (
-            patch("kiro_crew.cli_commands.enable_app", return_value=_result(False)),
+            patch("aj_crew.cli_commands.enable_app", return_value=_result(False)),
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_app(_ns(app_action="enable", name="demo"))
@@ -1158,9 +1128,9 @@ class TestAppCli:
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with (
-            patch("kiro_crew.cli_commands._cleanup_app_crons_from_scheduler") as cleanup,
-            patch("kiro_crew.cli_commands.deregister_app", return_value=_registration()) as dereg,
-            patch("kiro_crew.cli_commands.disable_app", return_value=_result(True, message="off")),
+            patch("aj_crew.cli_commands._cleanup_app_crons_from_scheduler") as cleanup,
+            patch("aj_crew.cli_commands.deregister_app", return_value=_registration()) as dereg,
+            patch("aj_crew.cli_commands.disable_app", return_value=_result(True, message="off")),
         ):
             cc._handle_app(_ns(app_action="disable", name="demo"))
         cleanup.assert_called_once_with("demo")
@@ -1178,13 +1148,13 @@ class TestAppCli:
         """
         order: list[str] = []
         with (
-            patch("kiro_crew.cli_commands._cleanup_app_crons_from_scheduler"),
+            patch("aj_crew.cli_commands._cleanup_app_crons_from_scheduler"),
             patch(
-                "kiro_crew.cli_commands.deregister_app",
+                "aj_crew.cli_commands.deregister_app",
                 side_effect=lambda n: order.append("deregister") or _registration(),
             ),
             patch(
-                "kiro_crew.cli_commands.disable_app",
+                "aj_crew.cli_commands.disable_app",
                 side_effect=lambda n: order.append("disable") or _result(True, message="off"),
             ),
         ):
@@ -1193,9 +1163,9 @@ class TestAppCli:
 
     def test_disable_failure_exits_1(self) -> None:
         with (
-            patch("kiro_crew.cli_commands._cleanup_app_crons_from_scheduler"),
-            patch("kiro_crew.cli_commands.deregister_app", return_value=_registration()),
-            patch("kiro_crew.cli_commands.disable_app", return_value=_result(False)),
+            patch("aj_crew.cli_commands._cleanup_app_crons_from_scheduler"),
+            patch("aj_crew.cli_commands.deregister_app", return_value=_registration()),
+            patch("aj_crew.cli_commands.disable_app", return_value=_result(False)),
             pytest.raises(SystemExit),
         ):
             cc._handle_app(_ns(app_action="disable", name="demo"))
@@ -1208,9 +1178,9 @@ class TestAppCli:
         self, purge: bool, expect_keep_data: bool, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with (
-            patch("kiro_crew.cli_commands._cleanup_app_crons_from_scheduler"),
-            patch("kiro_crew.cli_commands.deregister_app", return_value=_registration()),
-            patch("kiro_crew.cli_commands.uninstall_app", return_value=_result(True)) as uninstall,
+            patch("aj_crew.cli_commands._cleanup_app_crons_from_scheduler"),
+            patch("aj_crew.cli_commands.deregister_app", return_value=_registration()),
+            patch("aj_crew.cli_commands.uninstall_app", return_value=_result(True)) as uninstall,
         ):
             cc._handle_app(_ns(app_action="uninstall", name="demo", purge_data=purge))
         uninstall.assert_called_once_with("demo", keep_data=expect_keep_data)
@@ -1218,21 +1188,21 @@ class TestAppCli:
 
     def test_uninstall_failure_exits_1(self) -> None:
         with (
-            patch("kiro_crew.cli_commands._cleanup_app_crons_from_scheduler"),
-            patch("kiro_crew.cli_commands.deregister_app", return_value=_registration()),
-            patch("kiro_crew.cli_commands.uninstall_app", return_value=_result(False)),
+            patch("aj_crew.cli_commands._cleanup_app_crons_from_scheduler"),
+            patch("aj_crew.cli_commands.deregister_app", return_value=_registration()),
+            patch("aj_crew.cli_commands.uninstall_app", return_value=_result(False)),
             pytest.raises(SystemExit),
         ):
             cc._handle_app(_ns(app_action="uninstall", name="demo", purge_data=False))
 
     def test_dev_on_prints_live_reload_hint(self, capsys: pytest.CaptureFixture[str]) -> None:
-        with patch("kiro_crew.apps.dev_mode.set_dev_mode", return_value={"ok": True}):
+        with patch("aj_crew.apps.dev_mode.set_dev_mode", return_value={"ok": True}):
             cc._handle_app(_ns(app_action="dev", name="demo", off=False))
         out = capsys.readouterr().out
         assert "dev mode" in out and "--off" in out
 
     def test_dev_off_restores_caching(self, capsys: pytest.CaptureFixture[str]) -> None:
-        with patch("kiro_crew.apps.dev_mode.set_dev_mode", return_value={"ok": True}) as setter:
+        with patch("aj_crew.apps.dev_mode.set_dev_mode", return_value={"ok": True}) as setter:
             cc._handle_app(_ns(app_action="dev", name="demo", off=True))
         setter.assert_called_once_with("demo", False, confirm_out_of_install_root=False)
         assert "dev mode off" in capsys.readouterr().out
@@ -1242,11 +1212,11 @@ class TestAppCli:
     ) -> None:
         """The refusal's own text (which names the CLI flag) is printed as-is."""
         refusal = {
-            "error": "needs confirmation: run `kirocrew app dev demo --confirm-out-of-install-root`",
+            "error": "needs confirmation: run `ajcrew app dev demo --confirm-out-of-install-root`",
             "code": "dev_mode_out_of_install_confirmation_required",
         }
         with (
-            patch("kiro_crew.apps.dev_mode.set_dev_mode", return_value=refusal) as setter,
+            patch("aj_crew.apps.dev_mode.set_dev_mode", return_value=refusal) as setter,
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_app(
@@ -1257,7 +1227,7 @@ class TestAppCli:
         setter.assert_called_once_with("demo", True, confirm_out_of_install_root=False)
 
     def test_dev_confirm_flag_is_forwarded(self, capsys: pytest.CaptureFixture[str]) -> None:
-        with patch("kiro_crew.apps.dev_mode.set_dev_mode", return_value={"ok": True}) as setter:
+        with patch("aj_crew.apps.dev_mode.set_dev_mode", return_value={"ok": True}) as setter:
             cc._handle_app(
                 _ns(app_action="dev", name="demo", off=False, confirm_out_of_install_root=True)
             )
@@ -1269,7 +1239,7 @@ class TestAppCli:
     def test_dev_confirm_flag_with_off_warns(self, capsys: pytest.CaptureFixture[str]) -> None:
         """The flag only applies to enabling — an ignored flag must say so,
         not exit 0 looking like a confirmed grant."""
-        with patch("kiro_crew.apps.dev_mode.set_dev_mode", return_value={"ok": True}) as setter:
+        with patch("aj_crew.apps.dev_mode.set_dev_mode", return_value={"ok": True}) as setter:
             cc._handle_app(
                 _ns(app_action="dev", name="demo", off=True, confirm_out_of_install_root=True)
             )
@@ -1279,7 +1249,7 @@ class TestAppCli:
 
     def test_dev_error_exits_1(self, capsys: pytest.CaptureFixture[str]) -> None:
         with (
-            patch("kiro_crew.apps.dev_mode.set_dev_mode", return_value={"error": "no such app"}),
+            patch("aj_crew.apps.dev_mode.set_dev_mode", return_value={"error": "no such app"}),
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_app(_ns(app_action="dev", name="demo", off=False))
@@ -1287,13 +1257,13 @@ class TestAppCli:
         assert "no such app" in capsys.readouterr().err
 
     def test_info_prints_json(self, capsys: pytest.CaptureFixture[str]) -> None:
-        with patch("kiro_crew.cli_commands.get_app", return_value={"name": "demo", "v": 1}):
+        with patch("aj_crew.cli_commands.get_app", return_value={"name": "demo", "v": 1}):
             cc._handle_app(_ns(app_action="info", name="demo"))
         assert json.loads(capsys.readouterr().out) == {"name": "demo", "v": 1}
 
     def test_info_missing_exits_1(self, capsys: pytest.CaptureFixture[str]) -> None:
         with (
-            patch("kiro_crew.cli_commands.get_app", return_value=None),
+            patch("aj_crew.cli_commands.get_app", return_value=None),
             pytest.raises(SystemExit) as exc,
         ):
             cc._handle_app(_ns(app_action="info", name="ghost"))
@@ -1304,7 +1274,7 @@ class TestAppCli:
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         target = tmp_path / "my-app"
-        with patch("kiro_crew.cli_commands.scaffold_app", return_value=target) as scaffold:
+        with patch("aj_crew.cli_commands.scaffold_app", return_value=target) as scaffold:
             cc._handle_app(
                 _ns(
                     app_action="init",
@@ -1329,7 +1299,7 @@ class TestAppCli:
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         # Windows PowerShell 5.1 rejects `&&`, so no printed step chains.
-        with patch("kiro_crew.cli_commands.scaffold_app", return_value=tmp_path / "a"):
+        with patch("aj_crew.cli_commands.scaffold_app", return_value=tmp_path / "a"):
             cc._handle_app(
                 _ns(app_action="init", name="a", dir=str(tmp_path), backend=False, ui=True)
             )
@@ -1342,7 +1312,7 @@ class TestAppCli:
     def test_init_without_ui_skips_npm_hint(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        with patch("kiro_crew.cli_commands.scaffold_app", return_value=tmp_path / "a"):
+        with patch("aj_crew.cli_commands.scaffold_app", return_value=tmp_path / "a"):
             cc._handle_app(
                 _ns(app_action="init", name="a", dir=str(tmp_path), backend=False, ui=False)
             )
@@ -1351,7 +1321,7 @@ class TestAppCli:
     def test_mcp_action_delegates_to_server_runner(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        with patch("kiro_crew.cli_commands._run_app_mcp_server") as runner:
+        with patch("aj_crew.cli_commands._run_app_mcp_server") as runner:
             cc._handle_app(_ns(app_action="mcp", name="demo"))
         runner.assert_called_once_with("demo")
         # stdout is the MCP stdio channel: the dispatcher must add nothing to it.
@@ -1366,13 +1336,13 @@ class TestAppCli:
         with pytest.raises(SystemExit) as exited:
             cc._handle_app(_ns(app_action=None))
         assert exited.value.code == 2
-        assert "Usage: kirocrew app" in capsys.readouterr().err
+        assert "Usage: ajcrew app" in capsys.readouterr().err
 
 
 class TestRunAppMcpServer:
     def test_missing_module_exits_1_on_stderr(self, capsys: pytest.CaptureFixture[str]) -> None:
         """stdout is the JSON-RPC channel -- diagnostics must go to stderr."""
-        target = "kiro_crew.apps.builtins.my_app.mcp_server"
+        target = "aj_crew.apps.builtins.my_app.mcp_server"
         with (
             patch(
                 "importlib.import_module",
@@ -1389,7 +1359,7 @@ class TestRunAppMcpServer:
     def test_missing_parent_package_exits_1(self, capsys: pytest.CaptureFixture[str]) -> None:
         """A ModuleNotFoundError naming a PARENT package of the target is the
         target being unimportable -- same clean refusal."""
-        parent = "kiro_crew.apps.builtins.my_app"
+        parent = "aj_crew.apps.builtins.my_app"
         with (
             patch(
                 "importlib.import_module",
@@ -1459,10 +1429,10 @@ class TestCleanupAppCrons:
             return 2
 
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_commands.CronService"),
-            patch("kiro_crew.cli_commands.deregister_app_crons_from_service", new=_two),
-            patch("kiro_crew.cli_commands.sel") as sel,
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_commands.CronService"),
+            patch("aj_crew.cli_commands.deregister_app_crons_from_service", new=_two),
+            patch("aj_crew.cli_commands.sel") as sel,
         ):
             assert cc._cleanup_app_crons_from_scheduler("demo") == 2
         assert "removed 2 cron job(s)" in capsys.readouterr().out
@@ -1472,10 +1442,10 @@ class TestCleanupAppCrons:
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_commands.CronService"),
-            patch("kiro_crew.cli_commands.deregister_app_crons_from_service", new=self._zero),
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_commands.CronService"),
+            patch("aj_crew.cli_commands.deregister_app_crons_from_service", new=self._zero),
+            patch("aj_crew.cli_commands.sel"),
         ):
             assert cc._cleanup_app_crons_from_scheduler("demo") == 0
         assert capsys.readouterr().out == ""
@@ -1485,10 +1455,10 @@ class TestCleanupAppCrons:
             raise RuntimeError("scheduler down")
 
         with (
-            patch("kiro_crew.cli_commands.config_dir", return_value=tmp_path),
-            patch("kiro_crew.cli_commands.CronService"),
-            patch("kiro_crew.cli_commands.deregister_app_crons_from_service", new=_boom),
-            patch("kiro_crew.cli_commands.sel") as sel,
+            patch("aj_crew.cli_commands.config_dir", return_value=tmp_path),
+            patch("aj_crew.cli_commands.CronService"),
+            patch("aj_crew.cli_commands.deregister_app_crons_from_service", new=_boom),
+            patch("aj_crew.cli_commands.sel") as sel,
             pytest.raises(RuntimeError, match="scheduler down"),
         ):
             cc._cleanup_app_crons_from_scheduler("demo")
@@ -1508,12 +1478,12 @@ class TestDevConfirmFlagNoAbbreviation:
         from unittest.mock import patch
 
         for abbrev in ("--confirm", "--confirm-out-of-install-roo", "--c"):
-            argv = ["kirocrew", "app", "dev", "demo", abbrev]
+            argv = ["ajcrew", "app", "dev", "demo", abbrev]
             with (
                 patch.object(sys, "argv", argv),
-                patch("kiro_crew.cli_commands._handle_app") as handler,
+                patch("aj_crew.cli_commands._handle_app") as handler,
             ):
-                from kiro_crew.cli import main
+                from aj_crew.cli import main
 
                 with pytest.raises(SystemExit) as exc:
                     main()
@@ -1526,12 +1496,12 @@ class TestDevConfirmFlagNoAbbreviation:
         import sys
         from unittest.mock import patch
 
-        argv = ["kirocrew", "app", "dev", "demo", "--confirm-out-of-install-root"]
+        argv = ["ajcrew", "app", "dev", "demo", "--confirm-out-of-install-root"]
         with (
             patch.object(sys, "argv", argv),
-            patch("kiro_crew.cli_commands._handle_app") as handler,
+            patch("aj_crew.cli_commands._handle_app") as handler,
         ):
-            from kiro_crew.cli import main
+            from aj_crew.cli import main
 
             main()
             ns = handler.call_args[0][0]

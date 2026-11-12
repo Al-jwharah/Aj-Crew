@@ -14,9 +14,9 @@ import re
 
 import pytest
 
-from kiro_crew import connections
-from kiro_crew.connections import control_plane as cp
-from kiro_crew.connections.control_plane import (
+from aj_crew import connections
+from aj_crew.connections import control_plane as cp
+from aj_crew.connections.control_plane import (
     CREDENTIAL_MODES,
     EFFECTS,
     ERROR_CLASSES,
@@ -95,7 +95,7 @@ _RUN01_ERROR_CLASSES = (
 # auth_modes' manifest row lists it by example, not as a closed "One of" clause.
 _CREDENTIAL_MODES = ("oauth_user", "fine_grained_pat", "service_to_service")
 
-# The exact set of names ``kiro_crew.connections.__all__`` published BEFORE this
+# The exact set of names ``aj_crew.connections.__all__`` published BEFORE this
 # slice, frozen here as in-repo data rather than read from a git ref. This slice
 # is additive-only over the connections export face (16 in-repo modules import
 # it), and freezing the baseline as a literal makes that invariant explicit and
@@ -290,7 +290,7 @@ def test_operation_error_never_stores_raw_detail() -> None:
 
 def test_connections_all_is_additive_only_over_the_base() -> None:
     # Every export the base __init__ published must still be published: the 16
-    # in-repo importers of kiro_crew.connections must not break. Baseline is a
+    # in-repo importers of aj_crew.connections must not break. Baseline is a
     # frozen in-repo literal (see _BASE_CONNECTIONS_EXPORTS) -- not a git ref,
     # which a shallow CI checkout cannot resolve.
     now_all = set(connections.__all__)
@@ -300,12 +300,12 @@ def test_connections_all_is_additive_only_over_the_base() -> None:
 
 def test_control_plane_symbols_live_on_the_canonical_subpackage_only() -> None:
     # The control-plane symbols are consumed via the canonical
-    # `kiro_crew.connections.control_plane` path (that is what W02/L02 import),
-    # so they are NOT re-exported as top-level `kiro_crew.connections` aliases:
+    # `aj_crew.connections.control_plane` path (that is what W02/L02 import),
+    # so they are NOT re-exported as top-level `aj_crew.connections` aliases:
     # a second spelling with zero consumers is a rename hazard, not a
     # convenience. The subpackage itself must stay importable (it is a package,
     # not an alias), and every symbol must be reachable through it.
-    from kiro_crew.connections import control_plane
+    from aj_crew.connections import control_plane
 
     canonical_symbols = (
         "CREDENTIAL_MODES",
@@ -340,11 +340,11 @@ def test_registration_mode_api_is_untouched() -> None:
 
 
 def test_container_anchor_is_vendors_not_providers() -> None:
-    import kiro_crew.connections.vendors as vendors
+    import aj_crew.connections.vendors as vendors
 
     assert vendors.__name__.endswith(".vendors")
     with pytest.raises(ModuleNotFoundError):
-        __import__("kiro_crew.connections.providers")
+        __import__("aj_crew.connections.providers")
 
 
 def test_context_fields_are_references_typed_as_str() -> None:

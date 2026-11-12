@@ -12,11 +12,12 @@ interface Req { kind: string; value?: string; location?: string; when?: string; 
 interface Placement { surface_id: string; route: string; parent_ids: string[]; entry_kind: string; requires: Req[] }
 interface Loc { id: string; kind: string; label_key: string; alias_keys?: string[]; terms?: Record<string, string[]>; placements: Placement[] }
 
-const INDEX_FILE = path.resolve(__dirname, '../../../src/kiro_crew/docs/ui-index.generated.json')
+const INDEX_FILE = path.resolve(__dirname, '../../../src/aj_crew/docs/ui-index.generated.json')
 const index = JSON.parse(fs.readFileSync(INDEX_FILE, 'utf-8')) as { locations: Loc[]; labels: Record<string, Record<string, string>> }
 const byId = new Map(index.locations.map(l => [l.id, l]))
 const src = (rel: string) => fs.readFileSync(path.resolve(__dirname, rel), 'utf-8')
-const APP_SRC = ['../App.tsx', '../shell/appShell.tsx', '../shell/topbar/shellHeader.tsx', '../shell/nav/navRail.tsx', '../shell/nav/navRow.tsx'].map(src).join('\n')
+// The Terminal and Connect-phone rows moved to shellRows.tsx, which both rails (Simple and Advanced) render.
+const APP_SRC = ['../App.tsx', '../shell/appShell.tsx', '../shell/topbar/shellHeader.tsx', '../shell/nav/navRail.tsx', '../shell/nav/navRow.tsx', '../shell/nav/shellRows.tsx'].map(src).join('\n')
 const FEED_SRC = src('../components/notifications/NotificationFeed.tsx')
 const DETAIL_SRC = src('../components/notifications/NotificationDetailPanel.tsx')
 const TERMINAL_SRC = src('../components/BottomTerminalPanel.tsx')

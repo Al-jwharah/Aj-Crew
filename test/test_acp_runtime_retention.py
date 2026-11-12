@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient, AcpError
-from kiro_crew.acp.runtime import AcpRuntime, AcpRuntimeDead, AcpRuntimeError
+from aj_crew.acp.client import AcpClient, AcpError
+from aj_crew.acp.runtime import AcpRuntime, AcpRuntimeDead, AcpRuntimeError
 
 CANARY = "RESTRICTED_SESSION_BODY_CANARY"
 

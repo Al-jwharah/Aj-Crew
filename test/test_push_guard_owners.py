@@ -54,11 +54,11 @@ OWNERS = (
     "push_guard_commit",
 )
 OWNER_PATHS = {stem: PUSH_GUARD_DIR / f"{stem}.py" for stem in OWNERS}
-SHARED_REBIND = REPO_ROOT / "src" / "kiro_crew" / "_facade_compose.py"
+SHARED_REBIND = REPO_ROOT / "src" / "aj_crew" / "_facade_compose.py"
 PR_STATUS = PUSH_GUARD_DIR / "pr_status.py"
 #: The loader units push_guard.py carries as a byte-identical twin of pr_status.py's.
 LOADER_TWIN = ("_NoBytecodeSourceLoader", "_load_sibling", "_load_owner")
-#: A dotted load name OUTSIDE ``kiro_crew``: a ``kiro_crew.`` prefix would make a
+#: A dotted load name OUTSIDE ``aj_crew``: an ``aj_crew.`` prefix would make a
 #: coverage run start measuring these files from this module's partial use of them.
 DOTTED = "s56_probe.push_guard"
 
@@ -281,7 +281,7 @@ def rebind_differences(shared_source: str, local_source: str) -> list[tuple[str,
 
 
 def test_the_local_rebind_is_the_shared_helpers_twin():
-    """The local ``rebind`` is ``kiro_crew._facade_compose.rebind``, docstring aside, but
+    """The local ``rebind`` is ``aj_crew._facade_compose.rebind``, docstring aside, but
     for one statement: it reads ``__type_params__`` with a default. Either side drifting
     in any other way fails here."""
     differences = rebind_differences(
@@ -387,7 +387,7 @@ def test_the_owner_shape_check_names_each_kind_of_violation():
         '"""doc"""\n'
         "from __future__ import annotations\n"
         "import os\n"
-        "import kiro_crew\n"
+        "import aj_crew\n"
         "from typing import TYPE_CHECKING\n"
         "if TYPE_CHECKING:\n"
         "    from push_guard import err\n"
@@ -400,7 +400,7 @@ def test_the_owner_shape_check_names_each_kind_of_violation():
         "    return os.sep\n"
     )
     assert owner_shape_violations(planted) == [
-        "import kiro_crew",
+        "import aj_crew",
         "Assign at line 8",
         "ClassDef at line 9",
         "f reads DEFAULT at import",
@@ -693,7 +693,7 @@ def test_the_type_checking_imports_name_what_each_module_defines():
 
 def _copy_scripts(tmp_path: Path) -> Path:
     """Every script of the skill, the way the installed skill holds them."""
-    scripts = tmp_path / "skills" / "kirocrew-prepare-pr" / "scripts"
+    scripts = tmp_path / "skills" / "ajcrew-prepare-pr" / "scripts"
     scripts.mkdir(parents=True)
     for path in PUSH_GUARD_DIR.glob("*.py"):
         (scripts / path.name).write_bytes(path.read_bytes())

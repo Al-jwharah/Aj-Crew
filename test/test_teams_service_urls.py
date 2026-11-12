@@ -14,7 +14,7 @@ import json
 
 import pytest
 
-from kiro_crew.teams.service_urls import ServiceUrlStore
+from aj_crew.teams.service_urls import ServiceUrlStore
 
 _SVC = "https://smba.trafficmanager.net/teams"
 
@@ -159,7 +159,7 @@ class TestBounded:
     @pytest.mark.asyncio
     async def test_the_store_cannot_grow_without_limit(self, tmp_path, monkeypatch) -> None:
         """A long-lived gateway must not accumulate conversations forever."""
-        monkeypatch.setattr("kiro_crew.teams.service_urls._MAX_ENTRIES", 3)
+        monkeypatch.setattr("aj_crew.teams.service_urls._MAX_ENTRIES", 3)
         store = _store(tmp_path)
         await store.ensure_loaded()
 
@@ -181,7 +181,7 @@ class TestBounded:
         event loop, so the cap belongs on the load path too. Keeps the NEWEST
         rows, which are the ones a proactive send is most likely to need.
         """
-        monkeypatch.setattr("kiro_crew.teams.service_urls._MAX_ENTRIES", 2)
+        monkeypatch.setattr("aj_crew.teams.service_urls._MAX_ENTRIES", 2)
         path = tmp_path / "teams_service_urls.json"
         path.write_text(
             json.dumps(
@@ -220,7 +220,7 @@ class TestAFailedWriteStaysRetryable:
 
     @pytest.mark.asyncio
     async def test_a_failed_flush_is_retried_by_the_next_one(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         store = ServiceUrlStore()
         await store.ensure_loaded()
         assert store.remember("conv-1", "https://smba.trafficmanager.net/amer/")
@@ -249,7 +249,7 @@ class TestAFailedWriteStaysRetryable:
     @pytest.mark.asyncio
     async def test_a_successful_flush_does_not_rewrite_forever(self, tmp_path, monkeypatch) -> None:
         """The re-mark is for FAILURE only; a clean flush must settle."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         store = ServiceUrlStore()
         await store.ensure_loaded()
         store.remember("conv-1", "https://smba.trafficmanager.net/amer/")

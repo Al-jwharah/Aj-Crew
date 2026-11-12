@@ -16,9 +16,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from session_usage_helpers import SAMPLE_USAGE, _mock_proc, _reset_usage_globals
 
-import kiro_crew.dashboard.handlers.kiro_usage_api as api
-import kiro_crew.dashboard.handlers.sessions as sessions_mod
-from kiro_crew.dashboard.handlers.sessions_parts.usage_scrape import (
+import aj_crew.dashboard.handlers.kiro_usage_api as api
+import aj_crew.dashboard.handlers.sessions as sessions_mod
+from aj_crew.dashboard.handlers.sessions_parts.usage_scrape import (
     _same_identity,
     _text_scrape_regresses_api_value,
 )

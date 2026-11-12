@@ -39,7 +39,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 const state = params.get('state') || 'ok'
 localStorage.setItem('mc-theme', theme)
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 document.documentElement.setAttribute('data-mode', theme)
 
 const SLOT = 'chat-42-1700000000'
@@ -115,7 +115,7 @@ if (clipFails) document.execCommand = () => false
 if (params.get('storage') === 'fail') {
   const realSet = Storage.prototype.setItem
   Storage.prototype.setItem = function (key: string, value: string) {
-    if (this === sessionStorage && key === 'kirocrew_prefill') throw new DOMException('quota', 'QuotaExceededError')
+    if (this === sessionStorage && key === 'ajcrew_prefill') throw new DOMException('quota', 'QuotaExceededError')
     return realSet.call(this, key, value)
   }
 }
@@ -124,12 +124,12 @@ const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 
 store.dispatch(sseSlots([{
   key: SLOT, title: 'Composer draft investigation', messages: 4, running: false,
-  agent: 'bug-resolve', agent_kind: 'member', folder_id: 'f-kirocrew',
+  agent: 'bug-resolve', agent_kind: 'member', folder_id: 'f-ajcrew',
   // &noproject=1: a session with no project directory (the one-call create).
-  ...(params.get('noproject') ? {} : { project: '/home/dev/KiroCrew' }),
+  ...(params.get('noproject') ? {} : { project: '/home/dev/AjCrew' }),
 } as ChatSlot, ...(params.get('agent') === 'slow'
   // &agent=slow: a second listed session the user can open while the create runs.
-  ? [{ key: OTHER_SLOT, title: 'Release notes draft', messages: 2, running: false, folder_id: 'f-kirocrew' } as ChatSlot]
+  ? [{ key: OTHER_SLOT, title: 'Release notes draft', messages: 2, running: false, folder_id: 'f-ajcrew' } as ChatSlot]
   : [])]))
 store.dispatch(setActiveSlot(SLOT))
 // A live gateway, so each error notice's "Ask the agent" hand-off row renders.

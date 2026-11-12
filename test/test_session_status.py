@@ -21,15 +21,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew import mcp_dashboard
-from kiro_crew.crew_log import emit
-from kiro_crew.crew_log import session_tree_projection as stp
-from kiro_crew.crew_log.session_tree import OpenedRecord
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew import mcp_dashboard
+from aj_crew.crew_log import emit
+from aj_crew.crew_log import session_tree_projection as stp
+from aj_crew.crew_log.session_tree import OpenedRecord
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
 
 
 @pytest.fixture(autouse=True)
@@ -43,10 +43,10 @@ def _tree_on(tmp_path, monkeypatch):
 
     The projection is bound to one store, so it is dropped on both sides.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crewhome"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crewhome"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     monkeypatch.setattr(
-        "kiro_crew.executors.maintenance_executor",
+        "aj_crew.executors.maintenance_executor",
         lambda: type("_NoPool", (), {"submit": staticmethod(lambda *a, **k: None)}),
     )
     stp.reset_for_tests()
@@ -96,11 +96,11 @@ def _emitted(
     a deliberate mid-turn close leaves it once the cancelled task's ``finally`` runs.
     """
     emit.on_session_opened(
-        f"sid-{parent}", agent="kirocrew", slot=parent, model="m", cwd="/w", owner="o"
+        f"sid-{parent}", agent="ajcrew", slot=parent, model="m", cwd="/w", owner="o"
     )
     emit.on_session_opened(
         f"sid-{slot}",
-        agent="kirocrew",
+        agent="ajcrew",
         slot=slot,
         model="m",
         cwd="/w",
@@ -301,7 +301,7 @@ class TestTheDurableRoster:
             raise RuntimeError("fold read fault")
 
         monkeypatch.setattr(sc, "read_slot_projection", _boom, raising=False)
-        monkeypatch.setattr("kiro_crew.crew_log.projection.read_slot_projection", _boom)
+        monkeypatch.setattr("aj_crew.crew_log.projection.read_slot_projection", _boom)
         assert sc._gone_slot_lifecycles(["chat-9"]) == {"chat-9": {"status": "lost"}}
 
     def test_a_closed_lifecycle_missing_its_reason_defaults_to_lost(self, tmp_path):
@@ -393,7 +393,7 @@ class TestThePersistedBirthRoster:
         metadata carries titles, so creator equality must be checked before a row
         is exposed.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
         state = _make_state(tmp_path)
         caller = _slot(state, "chat-1")
@@ -439,7 +439,7 @@ class TestThePersistedBirthRoster:
         Its transcript line names *caller*; no creation record exists, because the
         caller has no ACP session to write one, which is what a forged line looks like.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
         monkeypatch.setattr(sc, "_workspace_name_for_dir", lambda cfg, ws_dir: caller.workspace)
         result = asyncio.run(
@@ -502,7 +502,7 @@ class TestTheDurableReadsQuality:
         _child(state, "chat-2", caller)
         _recorded("chat-7", caller.key)
         monkeypatch.setattr(
-            "kiro_crew.crew_log.session_tree_projection.SessionTreeProjection."
+            "aj_crew.crew_log.session_tree_projection.SessionTreeProjection."
             "seeded_for_current_store",
             property(lambda _self: False),
         )
@@ -525,7 +525,7 @@ class TestTheDurableReadsQuality:
         is what a live-only list looked like before this verb existed. Discarding it
         would throw away every durable (`closed`/`lost`) row over one unreadable unit.
         """
-        from kiro_crew.crew_log.session_tree import TreeReading
+        from aj_crew.crew_log.session_tree import TreeReading
 
         state = _make_state(tmp_path)
         caller = _slot(state, "chat-1")
@@ -895,7 +895,7 @@ class TestTheRoute:
 
 class TestRosterRetentionBounds:
     def test_a_persisted_roster_overflow_is_bounded_and_reported(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
         cap = 3
         monkeypatch.setattr(sc, "MAX_SESSION_STATUS_ROWS", cap, raising=False)
@@ -979,7 +979,7 @@ class TestRosterRetentionBounds:
         assert detail["history_omitted"] == 0
 
     def test_a_persisted_title_is_truncated_when_the_row_is_retained(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
         title_cap = 12
         monkeypatch.setattr(sc, "MAX_SESSION_STATUS_TITLE_CHARS", title_cap, raising=False)

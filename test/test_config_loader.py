@@ -20,10 +20,10 @@ from pathlib import Path
 import pytest
 from config_loader_helpers import _load_from_dict
 
-import kiro_crew.config.loader as loader_module
-from kiro_crew import platform_compat
-from kiro_crew.config.loader import (
-    KiroCrewConfig,
+import aj_crew.config.loader as loader_module
+from aj_crew import platform_compat
+from aj_crew.config.loader import (
+    AjCrewConfig,
     ResolvedBindings,
 )
 
@@ -37,7 +37,7 @@ class TestUpdateConfigLocked:
         """Control: interleaved RMW without the lock loses one update."""
         import threading
 
-        from kiro_crew.config.loader import read_config_for_update, write_config_atomically
+        from aj_crew.config.loader import read_config_for_update, write_config_atomically
 
         cfg = tmp_path / "config.json"
         cfg.write_text(json.dumps({"counter": 0}))
@@ -76,7 +76,7 @@ class TestUpdateConfigLocked:
         """Deterministic interleave through update_config_locked preserves both keys."""
         import threading
 
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew.config.loader import update_config_locked
 
         cfg = tmp_path / "config.json"
         cfg.write_text(json.dumps({"counter": 0}))
@@ -123,7 +123,7 @@ class TestUpdateConfigLocked:
 
     def test_fail_closed_unreadable_config(self, tmp_path: Path) -> None:
         """A mutate over an unreadable config raises ConfigReadError; file untouched."""
-        from kiro_crew.config.loader import ConfigReadError, update_config_locked
+        from aj_crew.config.loader import ConfigReadError, update_config_locked
 
         cfg = tmp_path / "config.json"
         corrupt_content = "not valid json {{{"
@@ -143,7 +143,7 @@ class TestUpdateConfigLocked:
         if platform.system() == "Windows":
             pytest.skip("POSIX mode test")
 
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew.config.loader import update_config_locked
 
         cfg = tmp_path / "config.json"
         cfg.write_text(json.dumps({"x": 1}))
@@ -158,7 +158,7 @@ class TestUpdateConfigLocked:
 
     def test_mutate_returning_none_skips_write(self, tmp_path: Path) -> None:
         """When mutate returns None, the file is not rewritten."""
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew.config.loader import update_config_locked
 
         cfg = tmp_path / "config.json"
         original = json.dumps({"unchanged": True})
@@ -175,7 +175,7 @@ class TestUpdateConfigLocked:
 
     def test_lockfile_is_sidecar(self, tmp_path: Path) -> None:
         """The lockfile is a sidecar (.lock suffix), not the config itself."""
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew.config.loader import update_config_locked
 
         cfg = tmp_path / "config.json"
         cfg.write_text("{}")
@@ -187,7 +187,7 @@ class TestUpdateConfigLocked:
 
     def test_stamp_meta_default(self, tmp_path: Path) -> None:
         """With stamp_meta=True (default), a meta block is added."""
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew.config.loader import update_config_locked
 
         cfg = tmp_path / "config.json"
         cfg.write_text("{}")
@@ -202,7 +202,7 @@ class TestUpdateConfigLocked:
 
     def test_new_file_creation(self, tmp_path: Path) -> None:
         """update_config_locked works when the config file does not yet exist."""
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew.config.loader import update_config_locked
 
         cfg = tmp_path / "config.json"
         # File does not exist yet
@@ -214,7 +214,7 @@ class TestUpdateConfigLocked:
 
     def test_on_corrupt_fail_is_default(self, tmp_path: Path) -> None:
         """Default on_corrupt='fail' raises ConfigReadError; file untouched."""
-        from kiro_crew.config.loader import ConfigReadError, update_config_locked
+        from aj_crew.config.loader import ConfigReadError, update_config_locked
 
         cfg = tmp_path / "config.json"
         corrupt = "not json {{{"
@@ -227,7 +227,7 @@ class TestUpdateConfigLocked:
 
     def test_on_corrupt_reset_writes_from_empty(self, tmp_path: Path) -> None:
         """on_corrupt='reset' invokes mutate with {} and writes the result."""
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew.config.loader import update_config_locked
 
         cfg = tmp_path / "config.json"
         cfg.write_text("broken {{")
@@ -245,7 +245,7 @@ class TestUpdateConfigLocked:
             pytest.skip("POSIX mode test")
         import stat
 
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew.config.loader import update_config_locked
 
         cfg = tmp_path / "config.json"
         cfg.write_text("corrupt!")
@@ -273,7 +273,7 @@ class TestUpdateConfigLocked:
         """
         import threading
 
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew.config.loader import update_config_locked
 
         cfg = tmp_path / "config.json"
         cfg.write_text("corrupt file {{{")
@@ -322,7 +322,7 @@ class TestUpdateConfigLocked:
 
     def test_on_corrupt_reset_non_dict_file(self, tmp_path: Path) -> None:
         """on_corrupt='reset' also handles a file that is valid JSON but not a dict."""
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew.config.loader import update_config_locked
 
         cfg = tmp_path / "config.json"
         cfg.write_text('"just a string"')
@@ -346,12 +346,12 @@ class TestMigrationBackupContainment:
     # load() take the migration write-back branch that writes the backup.
     _LEGACY = {"telegram": {"allow_forum": True}}
 
-    def _load_with(self, home: Path, cfg_file: Path) -> KiroCrewConfig:
+    def _load_with(self, home: Path, cfg_file: Path) -> AjCrewConfig:
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=home),
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=home),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file),
         ):
-            return KiroCrewConfig.load()
+            return AjCrewConfig.load()
 
     def test_no_sibling_left_beside_a_redirected_config(self, tmp_path: Path) -> None:
         """A caller-owned directory gains nothing from a migrating load()."""
@@ -415,7 +415,7 @@ class TestMigrationBackupContainment:
         cfg_file.write_text(original, encoding="utf-8")
 
         with unittest.mock.patch(
-            "kiro_crew.config.loader.shutil.copy2",
+            "aj_crew.config.loader.shutil.copy2",
             side_effect=OSError("backup target is read-only"),
         ):
             cfg = self._load_with(home, cfg_file)
@@ -531,7 +531,7 @@ class TestTransportThresholdConsistency:
         so ``_coerce_legacy_numeric_values`` never runs. With it on, a hand-rolled
         ``int(str(raw))`` that falls back to the default on ``"90.0"`` would pass too.
         """
-        import kiro_crew.config.validation as validation
+        import aj_crew.config.validation as validation
 
         monkeypatch.setattr(validation, "_HAS_JSONSCHEMA", False)
         payload: dict = {"soft_threshold_pct": 90.0}
@@ -582,7 +582,7 @@ class TestWeComSectionSurvivesLoad:
         missing = declared - set(_WECOM_FIELD_SAMPLES)
         assert not missing, (
             f"WeComConfig gained field(s) {sorted(missing)} with no sample here. Add one, "
-            "and check KiroCrewConfig.load() actually reads the key -- it enumerates them "
+            "and check AjCrewConfig.load() actually reads the key -- it enumerates them "
             "by hand, so an omission silently discards the operator's value."
         )
         assert not set(_WECOM_FIELD_SAMPLES) - declared, "sample for a field that no longer exists"
@@ -595,7 +595,7 @@ class TestWeComSectionSurvivesLoad:
         default = getattr(loader_module.WeComConfig(), field_name)
         assert loaded != default, (
             f"wecom.{field_name} loaded as its default {default!r} despite being configured "
-            f"as {sample!r} -- KiroCrewConfig.load() is not reading the key"
+            f"as {sample!r} -- AjCrewConfig.load() is not reading the key"
         )
 
     @pytest.mark.parametrize("junk", [None, 7, "zhangsan", {"a": 1}, True])
@@ -785,7 +785,7 @@ class TestMigrationWriteBackOrdering:
 
     A ``cfg.save()`` re-serializes the whole snapshot, overwriting a write that landed
     after the read. ``load()`` runs in threads (``chat_runner`` awaits
-    ``asyncio.to_thread(KiroCrewConfig.load)``), so the interleave is reachable.
+    ``asyncio.to_thread(AjCrewConfig.load)``), so the interleave is reachable.
     """
 
     #: Bounded so a regression fails the test instead of hanging the suite.
@@ -839,7 +839,7 @@ class TestMigrationWriteBackOrdering:
 
         def _migrating_load() -> None:
             try:
-                KiroCrewConfig.load()
+                AjCrewConfig.load()
             except BaseException as exc:  # pragma: no cover - surfaced below
                 errors.append(exc)
 
@@ -924,7 +924,7 @@ class TestMigrationWriteBackOrdering:
             unittest.mock.patch.object(loader_module, "config_dir", return_value=data_home),
             unittest.mock.patch.object(loader_module, "config_path", return_value=cfg_path),
         ):
-            KiroCrewConfig.load()
+            AjCrewConfig.load()
 
         on_disk = json.loads(cfg_path.read_text(encoding="utf-8"))
         # "meta" is stamped by the shared writer, not by the migration.
@@ -956,7 +956,7 @@ class TestMigrationWriteBackOrdering:
                     loader_module._persist_config_migration(
                         cfg_path,
                         frozenset({loader_module.MIGRATE_AGENTS}),
-                        default_kiro_agent="kirocrew",
+                        default_kiro_agent="ajcrew",
                     )
                 )
 
@@ -1003,7 +1003,7 @@ class TestMigrationWriteBackOrdering:
             wrote = loader_module._persist_config_migration(
                 link,
                 frozenset({loader_module.MIGRATE_AGENTS}),
-                default_kiro_agent="kirocrew",
+                default_kiro_agent="ajcrew",
             )
 
         assert wrote is True, "the migration should still reach the symlinked config"
@@ -1078,7 +1078,7 @@ class TestMigrationWriteBackOrdering:
     def test_the_seeded_agent_takes_its_kiro_agent_from_the_reread(self, tmp_path: Path) -> None:
         """The seed must not carry a value the document has since moved past.
 
-        The snapshot is read before the lock, so a ``kirocrew config set
+        The snapshot is read before the lock, so an ``ajcrew config set
         agent.default_agent`` in between must still decide the seeded crew's agent.
         """
         cfg_path = self._owned_config(tmp_path)
@@ -1135,7 +1135,7 @@ class TestMigrationWriteBackOrdering:
         cfg_path = self._owned_config(tmp_path)
         already_migrated = {
             "workspaces": {"default": {"dir": "workspace"}},
-            "agents": {"default": {"kiro_agent": "kirocrew"}},
+            "agents": {"default": {"kiro_agent": "ajcrew"}},
             "default_agent": "default",
         }
         cfg_path.write_text(json.dumps(already_migrated), encoding="utf-8")
@@ -1144,7 +1144,7 @@ class TestMigrationWriteBackOrdering:
             wrote = loader_module._persist_config_migration(
                 cfg_path,
                 frozenset({loader_module.MIGRATE_AGENTS, loader_module.MIGRATE_DEFAULT_AGENT}),
-                default_kiro_agent="kirocrew",
+                default_kiro_agent="ajcrew",
             )
 
         assert wrote is False

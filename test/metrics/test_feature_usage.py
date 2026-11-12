@@ -14,11 +14,11 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.constants import CHANNEL_SESSION_NAMESPACES
-from kiro_crew.metrics import feature_usage as fu
+from aj_crew.constants import CHANNEL_SESSION_NAMESPACES
+from aj_crew.metrics import feature_usage as fu
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SRC = ROOT / "src" / "kiro_crew"
+SRC = ROOT / "src" / "aj_crew"
 
 
 class _Rec:
@@ -37,7 +37,7 @@ class _Rec:
 @pytest.fixture
 def rec():
     r = _Rec()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=r):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=r):
         yield r
 
 
@@ -67,7 +67,7 @@ def test_value_lists_are_pinned():
 
 
 def test_memory_blocks_are_real_context_block_labels():
-    from kiro_crew.context_blocks import _MARKERS
+    from aj_crew.context_blocks import _MARKERS
 
     labels = {label for label, _ in _MARKERS}
     assert set(fu.MEMORY_BLOCKS) <= labels
@@ -75,7 +75,7 @@ def test_memory_blocks_are_real_context_block_labels():
 
 
 def test_lesson_receipt_kinds_are_real_receipt_kinds():
-    from kiro_crew import injection_receipts
+    from aj_crew import injection_receipts
 
     assert set(fu.LESSON_RECEIPT_KINDS) <= set(injection_receipts.KINDS)
 
@@ -99,7 +99,7 @@ def test_shipped_skill_ids_are_the_shipped_skill_dirs():
 
 def test_a_nested_shipped_skill_is_sent_by_its_nested_id():
     nested = sorted(i for i in fu.SHIPPED_SKILL_IDS if "/" in i)
-    assert nested, "expected the nested kirocrew-dev skills to be shipped"
+    assert nested, "expected the nested ajcrew-dev skills to be shipped"
     for skill_id in nested:
         assert fu.skill_label(skill_id) == skill_id
 
@@ -114,18 +114,18 @@ def test_labelling_reads_no_directory():
     ):
         app = next(iter(fu.OFFICIAL_APP_IDS))
         labels = [
-            fu.skill_label("kirocrew-dev/writing-tests"),
+            fu.skill_label("ajcrew-dev/writing-tests"),
             fu.skill_label("my-own-skill"),
             fu.app_label(app),
         ]
-    assert labels == ["kirocrew-dev/writing-tests", "custom", app]
+    assert labels == ["ajcrew-dev/writing-tests", "custom", app]
     iterdir.assert_not_called()
     rglob.assert_not_called()
     is_file.assert_not_called()
 
 
 def test_official_app_ids_are_builtin_apps_and_cover_every_report():
-    from kiro_crew.apps.builtins import BUILTIN_NAMES
+    from aj_crew.apps.builtins import BUILTIN_NAMES
 
     root = SRC / "apps" / "builtins"
     dirs = {p.name for p in root.iterdir() if p.is_dir() and not p.name.startswith(("_", "."))}
@@ -211,7 +211,7 @@ def test_findings_alone_are_not_a_lesson_tier(rec):
 
 
 def test_composition_counters_never_raise():
-    with patch("kiro_crew.metrics.provider.get_recorder", side_effect=RuntimeError("x")):
+    with patch("aj_crew.metrics.provider.get_recorder", side_effect=RuntimeError("x")):
         fu.record_context_composition({"memory": 1}, {"lessons": {"ids": ["a"]}})
         fu.record_context_composition(object(), object())
 
@@ -234,10 +234,10 @@ def test_skill_label(name, label):
 
 
 def test_the_lazy_load_counter_carries_the_skill_label(rec):
-    from kiro_crew import skills_body_reads
+    from aj_crew import skills_body_reads
 
     # Patched through the skills facade, which every owner in the family reads.
-    with patch("kiro_crew.skills.get_recorder", return_value=rec):
+    with patch("aj_crew.skills.get_recorder", return_value=rec):
         skills_body_reads._emit_lazy_load_metric(0.0, hit=True, skill="widgets")
         skills_body_reads._emit_lazy_load_metric(0.0, hit=False, skill="acme-internal")
     assert [c["attrs"] for c in _named(rec, fu.SKILL_LAZY_LOAD_COUNT)] == [
@@ -300,8 +300,8 @@ def test_ui_control(rec):
 
 
 def _run_channel(monkeypatch, *, admit: bool, automation: bool):
-    from kiro_crew.metrics import usage_attrs
-    from kiro_crew.shared_crew import turn_gate
+    from aj_crew.metrics import usage_attrs
+    from aj_crew.shared_crew import turn_gate
 
     seen: dict = {}
 

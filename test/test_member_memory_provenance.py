@@ -14,8 +14,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from kiro_crew import member_memory_auth as auth
-from kiro_crew import platform_compat as pc
+from aj_crew import member_memory_auth as auth
+from aj_crew import platform_compat as pc
 
 # This file replaces ctypes.CDLL, find_library or a cached libc handle for a test,
 # so the shared macOS handle caches are put back after each one (see conftest.py).
@@ -48,7 +48,7 @@ def test_unowned_host_keeps_v1_and_owner_bootstrap(provenance):
 
 def _register_spawned_backend(monkeypatch, pid, *, name="crew-tunnel", live=True, adopted=False):
     """Make *pid* the gateway's own app-backend record for *name*."""
-    from kiro_crew.apps import backend as apps_backend
+    from aj_crew.apps import backend as apps_backend
 
     record = apps_backend.AppProcess(
         app_name=name,

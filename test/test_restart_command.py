@@ -1,4 +1,4 @@
-"""Tests for /kirocrew restart slash command."""
+"""Tests for /ajcrew restart slash command."""
 
 from __future__ import annotations
 
@@ -10,16 +10,16 @@ import pytest
 from real_dashboard_state import _settle_real_dashboard_states  # noqa: F401
 from real_dashboard_state import drain, open_feed, real_dashboard_state
 
-from kiro_crew.config.loader import ACTIVATION_ALWAYS, ChannelConfig, KiroCrewConfig
-from kiro_crew.sel import SecurityEventLog
-from kiro_crew.slack.events import SeenCache, _route_message
-from kiro_crew.slack.handler import set_owner_id
+from aj_crew.config.loader import ACTIVATION_ALWAYS, AjCrewConfig, ChannelConfig
+from aj_crew.sel import SecurityEventLog
+from aj_crew.slack.events import SeenCache, _route_message
+from aj_crew.slack.handler import set_owner_id
 
 
 @pytest.fixture(autouse=True)
 def _mock_sel():
     _sel = MagicMock()
-    with patch("kiro_crew.slack.events.sel", return_value=_sel):
+    with patch("aj_crew.slack.events.sel", return_value=_sel):
         yield _sel
 
 
@@ -29,7 +29,7 @@ def restart_audit(tmp_path, monkeypatch):
     monkeypatch.setattr(SecurityEventLog, "_instance", None)
     monkeypatch.setattr(SecurityEventLog, "_initialized", False)
     real_sel = SecurityEventLog(base_dir=tmp_path, sync=True)
-    monkeypatch.setattr("kiro_crew.slack.events.sel", lambda: real_sel)
+    monkeypatch.setattr("aj_crew.slack.events.sel", lambda: real_sel)
     path = tmp_path / "security_events.jsonl"
 
     def _rows() -> list[tuple[str, str]]:
@@ -43,7 +43,7 @@ def restart_audit(tmp_path, monkeypatch):
         return [
             (e["outcome"], e["resources"])
             for e in events
-            if e.get("operation") == "/kirocrew restart"
+            if e.get("operation") == "/ajcrew restart"
         ]
 
     return _rows
@@ -55,7 +55,7 @@ def _make_orch(
 ) -> MagicMock:
     """Build a minimal mock GatewayOrchestrator (mirrors test_channel_activation)."""
     orch = MagicMock()
-    cfg = KiroCrewConfig(
+    cfg = AjCrewConfig(
         slack_channels=channels or {},
         slack_dm_activation=dm_activation,
     )
@@ -72,7 +72,7 @@ def _make_orch(
 class TestRestartSlashCommand:
     @pytest.mark.asyncio
     async def test_non_owner_denied(self, restart_audit):
-        from kiro_crew.slack.events import _handle_restart
+        from aj_crew.slack.events import _handle_restart
 
         set_owner_id("U_OWNER")
         orch = MagicMock()
@@ -84,7 +84,7 @@ class TestRestartSlashCommand:
 
     @pytest.mark.asyncio
     async def test_no_supervisor_denied(self, restart_audit, monkeypatch):
-        from kiro_crew.slack.events import _handle_restart
+        from aj_crew.slack.events import _handle_restart
 
         set_owner_id("U_OWNER")
         orch = MagicMock()
@@ -96,7 +96,7 @@ class TestRestartSlashCommand:
 
     @pytest.mark.asyncio
     async def test_owner_with_supervisor_exits(self, _mock_sel, restart_audit, monkeypatch):
-        from kiro_crew.slack.events import _handle_restart
+        from aj_crew.slack.events import _handle_restart
 
         set_owner_id("U_OWNER")
         orch = MagicMock()
@@ -108,7 +108,7 @@ class TestRestartSlashCommand:
         with (
             patch("os._exit") as mock_exit,
             patch(
-                "kiro_crew.sel.flush_audit_queue_before_hard_exit", new_callable=AsyncMock
+                "aj_crew.sel.flush_audit_queue_before_hard_exit", new_callable=AsyncMock
             ) as mock_flush_sel,
         ):
             await _handle_restart(orch, "U_OWNER", "", respond)
@@ -127,8 +127,8 @@ class TestRestartSlashCommand:
         self, _mock_sel, restart_audit, monkeypatch
     ):
         """An owner-asked restart is orderly: its crash dump must not read as unclean."""
-        from kiro_crew.dashboard import crash_dump_store
-        from kiro_crew.slack.events import _handle_restart
+        from aj_crew.dashboard import crash_dump_store
+        from aj_crew.slack.events import _handle_restart
 
         set_owner_id("U_OWNER")
         orch = MagicMock()
@@ -142,7 +142,7 @@ class TestRestartSlashCommand:
         )
         with (
             patch("os._exit", side_effect=lambda _code: order.append("exit")),
-            patch("kiro_crew.sel.flush_audit_queue_before_hard_exit", new_callable=AsyncMock),
+            patch("aj_crew.sel.flush_audit_queue_before_hard_exit", new_callable=AsyncMock),
         ):
             await _handle_restart(orch, "U_OWNER", "", AsyncMock())
         assert order == ["marked", "exit"]
@@ -152,7 +152,7 @@ class TestRestartSlashCommand:
         """A hung session close must not block the restart: close_all is bounded
         by the restart's session-close cap, and a timeout still proceeds to
         flush + os._exit."""
-        from kiro_crew.slack.events import _handle_restart
+        from aj_crew.slack.events import _handle_restart
 
         set_owner_id("U_OWNER")
         orch = MagicMock()
@@ -169,9 +169,9 @@ class TestRestartSlashCommand:
         with (
             patch.dict("os.environ", {"INVOCATION_ID": "abc"}),
             patch("os._exit") as mock_exit,
-            patch("kiro_crew.slack.events._RESTART_SESSION_CLOSE_SECS", 0.05),
+            patch("aj_crew.slack.events._RESTART_SESSION_CLOSE_SECS", 0.05),
             patch(
-                "kiro_crew.sel.flush_audit_queue_before_hard_exit", new_callable=AsyncMock
+                "aj_crew.sel.flush_audit_queue_before_hard_exit", new_callable=AsyncMock
             ) as mock_flush_sel,
         ):
             await asyncio.wait_for(_handle_restart(orch, "U_OWNER", "", respond), timeout=30)
@@ -184,7 +184,7 @@ class TestRestartSlashCommand:
         """The pre-restart slot save (the critical data-preservation step) must
         run when a dashboard_state is present — exercise the save_all_slots_to_history
         path that the None-dashboard_state tests above skip."""
-        from kiro_crew.slack.events import _handle_restart
+        from aj_crew.slack.events import _handle_restart
 
         set_owner_id("U_OWNER")
         orch = MagicMock()
@@ -196,7 +196,7 @@ class TestRestartSlashCommand:
         with (
             patch.dict("os.environ", {"INVOCATION_ID": "abc"}),
             patch("os._exit") as mock_exit,
-            patch("kiro_crew.dashboard.chat.save_all_slots_to_history") as mock_save,
+            patch("aj_crew.dashboard.chat.save_all_slots_to_history") as mock_save,
         ):
             await _handle_restart(orch, "U_OWNER", "", respond)
         mock_save.assert_called_once_with(orch.dashboard_state)
@@ -209,7 +209,7 @@ class TestRestartSlashCommand:
     async def test_restart_proceeds_if_slot_save_raises(self, _mock_sel):
         """A failure in the slot save must NOT block the restart: the save is
         best-effort (try/except), so os._exit() is still reached."""
-        from kiro_crew.slack.events import _handle_restart
+        from aj_crew.slack.events import _handle_restart
 
         set_owner_id("U_OWNER")
         orch = MagicMock()
@@ -221,11 +221,11 @@ class TestRestartSlashCommand:
             patch.dict("os.environ", {"INVOCATION_ID": "abc"}),
             patch("os._exit") as mock_exit,
             patch(
-                "kiro_crew.dashboard.chat.save_all_slots_to_history",
+                "aj_crew.dashboard.chat.save_all_slots_to_history",
                 side_effect=RuntimeError("disk full"),
             ) as mock_save,
             patch(
-                "kiro_crew.sel.flush_audit_queue_before_hard_exit", new_callable=AsyncMock
+                "aj_crew.sel.flush_audit_queue_before_hard_exit", new_callable=AsyncMock
             ) as mock_flush_sel,
         ):
             await _handle_restart(orch, "U_OWNER", "", respond)
@@ -251,10 +251,10 @@ class TestRestartBangAlias:
             "team": "TTEST",
         }
         with (
-            patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_hm,
-            patch("kiro_crew.slack.events._handle_restart", new_callable=AsyncMock) as mock_restart,
-            patch("kiro_crew.slack.events.is_allowed_user", return_value=True),
-            patch("kiro_crew.slack.enterprise.check_message_origin", return_value=True),
+            patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_hm,
+            patch("aj_crew.slack.events._handle_restart", new_callable=AsyncMock) as mock_restart,
+            patch("aj_crew.slack.events.is_allowed_user", return_value=True),
+            patch("aj_crew.slack.enterprise.check_message_origin", return_value=True),
         ):
             await _route_message(orch, event, seen, is_mention=False)
             await asyncio.sleep(0)
@@ -282,9 +282,9 @@ class TestRestartBangAlias:
             "team": "TTEST",
         }
         with (
-            patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_hm,
-            patch("kiro_crew.slack.events.is_allowed_user", return_value=True),
-            patch("kiro_crew.slack.enterprise.check_message_origin", return_value=True),
+            patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_hm,
+            patch("aj_crew.slack.events.is_allowed_user", return_value=True),
+            patch("aj_crew.slack.enterprise.check_message_origin", return_value=True),
             patch("os._exit") as mock_exit,
         ):
             await _route_message(orch, event, seen, is_mention=False)
@@ -300,6 +300,6 @@ class TestRestartBangAlias:
     async def test_bang_restart_in_alias_map(self):
         """`!restart` must be a recognized bang so linked-thread routing lets it
         fall through to command handling instead of swallowing it into a slot."""
-        from kiro_crew.slack.handler import _BANG_TO_SLASH
+        from aj_crew.slack.handler import _BANG_TO_SLASH
 
-        assert _BANG_TO_SLASH.get("!restart") == "/kirocrew restart"
+        assert _BANG_TO_SLASH.get("!restart") == "/ajcrew restart"

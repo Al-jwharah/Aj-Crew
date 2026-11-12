@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest import mock
 
-from kiro_crew.knowledge.embedder import (
+from aj_crew.knowledge.embedder import (
     _EMBED_CONTENT_BUDGET,
     TIMEOUT,
     OllamaEmbedder,

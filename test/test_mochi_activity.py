@@ -15,10 +15,10 @@ import pytest
 from aiohttp.test_utils import make_mocked_request
 from dashboard_owner_helpers import NoConfiguredOwner
 
-from kiro_crew.apps.builtins.mochi import activity_log as al
-from kiro_crew.apps.builtins.mochi import hooks
-from kiro_crew.apps.builtins.mochi.backend import routes
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.apps.builtins.mochi import activity_log as al
+from aj_crew.apps.builtins.mochi import hooks
+from aj_crew.apps.builtins.mochi.backend import routes
+from aj_crew.testing.wait import async_wait_until
 
 
 def _owner_request(*args, **kwargs):
@@ -455,8 +455,8 @@ class TestDashboardRoutes:
     @pytest.mark.asyncio
     async def test_plan_returns_the_queue_including_planner_metadata(self, tmp_path):
         async with _live_runtime(tmp_path):
-            from kiro_crew.apps.builtins.mochi import queue_file as qf
-            from kiro_crew.apps.builtins.mochi.hooks import _QUEUE_FILE
+            from aj_crew.apps.builtins.mochi import queue_file as qf
+            from aj_crew.apps.builtins.mochi.hooks import _QUEUE_FILE
 
             qf.write_queue_atomic(
                 tmp_path / _QUEUE_FILE,
@@ -485,8 +485,8 @@ class TestDashboardRoutes:
         redacted before it reaches the dashboard — mirrors the activity-log sink.
         """
         async with _live_runtime(tmp_path):
-            from kiro_crew.apps.builtins.mochi import queue_file as qf
-            from kiro_crew.apps.builtins.mochi.hooks import _QUEUE_FILE
+            from aj_crew.apps.builtins.mochi import queue_file as qf
+            from aj_crew.apps.builtins.mochi.hooks import _QUEUE_FILE
 
             # A FAKE AWS example key, split into two literals so CodeQL's
             # clear-text-storage source heuristic doesn't flag this

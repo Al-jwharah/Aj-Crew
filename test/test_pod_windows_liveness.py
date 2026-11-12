@@ -9,11 +9,11 @@ import pytest
 from test_pod_windows_run import contained
 from test_pod_windows_run import model as model
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.pod import _windows_run as runs
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod import windows as win
-from kiro_crew.pod.config import EXIT_REFUSED_UNRECOVERABLE
+from aj_crew import platform_compat as pc
+from aj_crew.pod import _windows_run as runs
+from aj_crew.pod import runtime as rt
+from aj_crew.pod import windows as win
+from aj_crew.pod.config import EXIT_REFUSED_UNRECOVERABLE
 
 __all__ = ["model", "supervisor"]
 
@@ -104,7 +104,7 @@ def supervisor(model, monkeypatch, tmp_path):
     state.alive, state.tokens, state.recorded = alive, tokens, []
     state.sidecar, state.stale_reads = None, 0
     state.argv, state.env, state.exit_code = ["gateway"], {}, 0
-    state.binary = tmp_path / "kirocrew"
+    state.binary = tmp_path / "ajcrew"
 
     class Proc:
         pid = 4242

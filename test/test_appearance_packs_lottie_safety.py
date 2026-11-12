@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.appearance_packs.lottie_safety import (
+from aj_crew.appearance_packs.lottie_safety import (
     references_remote_asset,
     text_references_remote_asset,
 )

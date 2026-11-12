@@ -23,12 +23,12 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from crew_log_drain import assert_drained
 
-from kiro_crew.context_blocks import PHASE_PER_TURN, PHASE_SESSION_START, USER_LABEL
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.dashboard.handlers import usage as usage_mod
-from kiro_crew.dashboard.handlers.telemetry import api_context_trace
+from aj_crew.context_blocks import PHASE_PER_TURN, PHASE_SESSION_START, USER_LABEL
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.dashboard.handlers import usage as usage_mod
+from aj_crew.dashboard.handlers.telemetry import api_context_trace
 
 SLOT = "chat-1"
 UNIT = "acp-ctx-trace"
@@ -42,8 +42,8 @@ def _isolated_home(tmp_path, monkeypatch):
     (home, slot, fold), so a cell left by a previous test would answer the next one
     from entries it never wrote.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     crew_log_emit.reset_caches()
     crew_log_eager.stop_for_tests()
@@ -155,11 +155,7 @@ class TestContextTrace:
         import ast
 
         runner = (
-            Path(__file__).resolve().parents[2]
-            / "src"
-            / "kiro_crew"
-            / "dashboard"
-            / "chat_runner.py"
+            Path(__file__).resolve().parents[2] / "src" / "aj_crew" / "dashboard" / "chat_runner.py"
         )
         source = "\n".join(
             turn_file.read_text(encoding="utf-8")
@@ -289,11 +285,7 @@ class TestContextTrace:
         import ast
 
         runner = (
-            Path(__file__).resolve().parents[2]
-            / "src"
-            / "kiro_crew"
-            / "dashboard"
-            / "chat_runner.py"
+            Path(__file__).resolve().parents[2] / "src" / "aj_crew" / "dashboard" / "chat_runner.py"
         )
         source = "\n".join(
             turn_file.read_text(encoding="utf-8")
@@ -517,10 +509,10 @@ class TestContextTrace:
         With the switch on, an empty session fills on its next turn; with it off,
         nothing will ever arrive, and the panel must not promise otherwise.
         """
-        monkeypatch.delenv("KIROCREW_CREW_LOG", raising=False)
+        monkeypatch.delenv("AJCREW_CREW_LOG", raising=False)
         assert usage_mod.context_trace("chat-never", 14)["recording"] is True
         assert "env_file" not in usage_mod.context_trace("chat-never", 14)
-        monkeypatch.setenv("KIROCREW_CREW_LOG", "0")
+        monkeypatch.setenv("AJCREW_CREW_LOG", "0")
         off = usage_mod.context_trace("chat-never", 14)
         assert off["recording"] is False
         # Names the file to edit, the same reading the Crew Log panel's off state uses.
@@ -736,7 +728,7 @@ class TestTheContractTheFrontendDeclares:
         out = usage_mod.context_trace(SLOT, 14)
         # ``env_file`` rides only on a payload with recording off, so the union of
         # both payloads is what the interface must be covered by.
-        monkeypatch.setenv("KIROCREW_CREW_LOG", "0")
+        monkeypatch.setenv("AJCREW_CREW_LOG", "0")
         out = {**out, **usage_mod.context_trace(SLOT, 14)}
         declared = self._declared("ContextTrace")
         # The control: the extraction found a real interface, not an empty string.
@@ -891,7 +883,7 @@ class TestApiContextTraceAppDenial:
 
     @pytest.fixture(autouse=True)
     def _quiet_sel(self, monkeypatch):
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         calls: list[dict] = []
 

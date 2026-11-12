@@ -50,7 +50,7 @@ from pathlib import Path
 
 import pytest
 
-SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 FORK = "require_fork_governance"
 FRESH = "require_fresh_derived_spec"
@@ -61,7 +61,7 @@ AGENT_FLAG = "--agent"
 
 Site = tuple[str, str]
 
-# (module path under src/kiro_crew, dotted enclosing function) -> gates referenced.
+# (module path under src/aj_crew, dotted enclosing function) -> gates referenced.
 ADMISSION_SITES: dict[Site, frozenset[str]] = {
     ("acp/client_start.py", "_spawn"): frozenset({FORK, FRESH}),
     ("acp/harness/kas.py", "KasHarness.session_extras._build"): frozenset({FORK, FRESH}),
@@ -101,7 +101,7 @@ KNOWN_GAPS: dict[Site, tuple[frozenset[str], str]] = {
 # string stating why no admission gate applies.
 AGENT_ARGV_SITES: dict[Site, tuple[Site, ...] | str] = {
     ("acp/harness/strands.py", "StrandsLaunch.resolve_spawn"): (
-        "UNGATED: the Strands CLI's own --agent names Kiro Crew's sealed gate module, a "
+        "UNGATED: the Strands CLI's own --agent names Aj Crew's sealed gate module, a "
         "Python project file, not a Kiro agent spec, so no spec admission applies"
     ),
     ("acp/client_start.py", "_spawn"): (("acp/client_start.py", "_spawn"),),
@@ -115,7 +115,7 @@ AGENT_ARGV_SITES: dict[Site, tuple[Site, ...] | str] = {
         ("acp/runtime_spawn_launch.py", "_resolve_spawn_plan"),
     ),
     ("dashboard/handlers/sessions_parts/usage_scrape.py", "_usage_scrape_argv"): (
-        "UNGATED: a one-shot `/usage` read on the fixed kirocrew-lite service agent, "
+        "UNGATED: a one-shot `/usage` read on the fixed ajcrew-lite service agent, "
         "spawned with no cwd argument, so the child resolves --agent against the "
         "gateway process's own working directory rather than a session checkout"
     ),
@@ -290,13 +290,13 @@ def test_a_governed_argv_site_points_at_real_admission_sites(site):
 
 
 def test_the_scan_sees_every_reference_form(tmp_path):
-    pkg = tmp_path / "kiro_crew"
+    pkg = tmp_path / "aj_crew"
     pkg.mkdir()
     (pkg / "m.py").write_text(
         "import argparse, asyncio\n"
-        "from kiro_crew import agent as agent_mod\n"
-        "from kiro_crew.agent import require_fork_governance\n"
-        "from kiro_crew.agent import require_fresh_derived_spec as fresh\n"
+        "from aj_crew import agent as agent_mod\n"
+        "from aj_crew.agent import require_fork_governance\n"
+        "from aj_crew.agent import require_fresh_derived_spec as fresh\n"
         "async def by_value(a, d):\n"
         "    await asyncio.to_thread(require_fork_governance, a, d)\n"
         "    return ['kiro', 'acp', '--agent', a]\n"

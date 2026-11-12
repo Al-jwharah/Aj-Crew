@@ -3,7 +3,7 @@
 
 ## The problem this replaces
 
-``AGENTS.md`` lists ``black src/kiro_crew test`` as a gate to run before every
+``AGENTS.md`` lists ``black src/aj_crew test`` as a gate to run before every
 commit, and CI does not check it. That combination is worse than having no gate,
 because the instruction is not merely unenforced, it is actively harmful to
 follow: every file in the baseline under ``src/`` and ``test/`` is not

@@ -270,7 +270,7 @@ describe('UpdateModal', () => {
         state: 'error',
         phase: 'install',
         code: 'gateway-still-running',
-        stopCommand: 'kirocrew stop --port 5476',
+        stopCommand: 'ajcrew stop --port 5476',
         version: '9.9.9',
       })
       expect(
@@ -284,7 +284,7 @@ describe('UpdateModal', () => {
       const notice = screen.getByTestId('update-modal-gateway-refusal')
       expect(notice.textContent).toContain(i18nT('pages.settings.aboutPanel.update_error_gateway_still_running'))
       expect(screen.getByRole('button', { name: new RegExp(i18nT('components.askAgent.ask_the_agent'), 'i') })).toBeInTheDocument()
-      expect(screen.getByTestId('update-modal-gateway-stop-command').textContent).toBe('kirocrew stop --port 5476')
+      expect(screen.getByTestId('update-modal-gateway-stop-command').textContent).toBe('ajcrew stop --port 5476')
     })
 
     it('a gateway-still-running refusal without a command keeps the generic failure body', async () => {

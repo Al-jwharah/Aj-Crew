@@ -1,4 +1,4 @@
-# Kiro Crew - Windows build targets (pip + npm/vite + pytest).
+# Aj Crew - Windows build targets (pip + npm/vite + pytest).
 #
 # The Windows counterpart of the Makefile: same target names, same artifacts.
 # It exists because `make` is not part of a Windows install (Git Bash ships no
@@ -51,8 +51,8 @@ function Write-Ok($msg) { Write-Host "  [ok] $msg" -ForegroundColor Green }
 function Write-Err($msg) { Write-Host "  [ERROR] $msg" -ForegroundColor Red }
 
 function Get-DataHome {
-    if ($env:KIROCREW_HOME) { return $env:KIROCREW_HOME }
-    # Never the legacy ~/.kirocrew: the one-time data-home migration deletes it,
+    if ($env:AJCREW_HOME) { return $env:AJCREW_HOME }
+    # Never the legacy ~/.ajcrew: the one-time data-home migration deletes it,
     # so writing there would resurrect it on every build.
     return (Join-Path $env:USERPROFILE ".kiro\crew")
 }
@@ -308,15 +308,15 @@ function Invoke-Frontend {
     Write-Ok "dashboard built into website\dist"
 }
 
-# Stage website\dist as the served src\kiro_crew\static\dist with the
+# Stage website\dist as the served src\aj_crew\static\dist with the
 # package's own stager, as the Makefile does, through the .venv Invoke-Backend
 # just installed it into: it links static\dist to website\dist (a junction),
 # keeps that link, or points it at a fresh copy -- never remove + copy under a
 # running gateway. Separate from Invoke-Frontend so backend-bin, which copies
 # website\dist itself, needs no Python for it.
 function Invoke-StageDashboard {
-    Invoke-Step $VenvPython @("-m", "kiro_crew.frontend", "stage", $RepoRoot) "stage the dashboard"
-    Write-Ok "dashboard staged into src\kiro_crew\static\dist"
+    Invoke-Step $VenvPython @("-m", "aj_crew.frontend", "stage", $RepoRoot) "stage the dashboard"
+    Write-Ok "dashboard staged into src\aj_crew\static\dist"
 }
 
 function Invoke-Backend {
@@ -344,15 +344,15 @@ function Invoke-Backend {
     Invoke-Step $VenvPython @("-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel") `
         "pip install --upgrade pip setuptools wheel"
 
-    # KIROCREW_SKIP_FRONTEND: the frontend target already built the dist (it is
+    # AJCREW_SKIP_FRONTEND: the frontend target already built the dist (it is
     # staged after this install), and the editable install must not rebuild it.
-    $prev = $env:KIROCREW_SKIP_FRONTEND
-    $env:KIROCREW_SKIP_FRONTEND = "1"
+    $prev = $env:AJCREW_SKIP_FRONTEND
+    $env:AJCREW_SKIP_FRONTEND = "1"
     try {
         Invoke-Step $VenvPython @("-m", "pip", "install", "--prefer-binary", "-e", ".[dev]") `
             "pip install -e .[dev]"
     } finally {
-        $env:KIROCREW_SKIP_FRONTEND = $prev
+        $env:AJCREW_SKIP_FRONTEND = $prev
     }
     # CI parity: also install the PEP 735 dev dependency-group (pins jsonschema
     # so the config-validation guard tests actually run). Needs pip >= 25.1 for
@@ -462,7 +462,7 @@ function Remove-PathForce($path) {
 
 function Invoke-Clean {
     Write-Step "removing build artifacts and caches"
-    foreach ($p in @("build", "dist", "src\kiro_crew\static\dist", "website\dist",
+    foreach ($p in @("build", "dist", "src\aj_crew\static\dist", "website\dist",
                      "website\electron\backend-dist", "website\electron\dist",
                      ".pytest_cache", ".mypy_cache")) {
         Remove-PathForce (Join-Path $RepoRoot $p)
@@ -477,8 +477,8 @@ function Invoke-Clean {
                            Where-Object { $_.Name -match '^\.dist.*\.(next|ready|prev)-' })) {
         Remove-PathForce $scratch.FullName
     }
-    # The staged copies src\kiro_crew\static\dist links to (kiro_crew.frontend).
-    foreach ($staged in @(Get-ChildItem -Path (Join-Path $RepoRoot "src\kiro_crew\static") -Filter ".dist.*" `
+    # The staged copies src\aj_crew\static\dist links to (aj_crew.frontend).
+    foreach ($staged in @(Get-ChildItem -Path (Join-Path $RepoRoot "src\aj_crew\static") -Filter ".dist.*" `
                           -Force -ErrorAction SilentlyContinue)) {
         Remove-PathForce $staged.FullName
     }

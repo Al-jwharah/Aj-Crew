@@ -1,4 +1,4 @@
-"""Coverage tests for ``kiro_crew.mcp_core`` helpers and thin tool bodies.
+"""Coverage tests for ``aj_crew.mcp_core`` helpers and thin tool bodies.
 
 Focus areas (the largest coverage gaps):
 
@@ -28,9 +28,9 @@ from urllib.parse import parse_qs, urlsplit
 
 import pytest
 
-from kiro_crew import mcp_core
-from kiro_crew.history import INCOGNITO_MEMORY_MODES
-from kiro_crew.mcp_core import (
+from aj_crew import mcp_core
+from aj_crew.history import INCOGNITO_MEMORY_MODES
+from aj_crew.mcp_core import (
     _call_tool,
     _casefold_match_span,
     _do_select_crew,
@@ -42,7 +42,7 @@ from kiro_crew.mcp_core import (
     _validate_args,
     _ws_bucket,
 )
-from kiro_crew.skill_runtime.search import SkillSearchReport
+from aj_crew.skill_runtime.search import SkillSearchReport
 
 
 class _FakeResponse:
@@ -145,18 +145,18 @@ class TestHttpErrorBody:
 class TestVerbHelpers:
     def test_success_decodes_json_body(self, verb: str):
         fn = getattr(mcp_core, verb)
-        with patch("kiro_crew.mcp_core.loopback_urlopen", return_value=_FakeResponse({"ok": True})):
+        with patch("aj_crew.mcp_core.loopback_urlopen", return_value=_FakeResponse({"ok": True})):
             assert fn("/api/thing") == {"ok": True}
 
     def test_http_error_is_decoded_through_http_error_body(self, verb: str):
         fn = getattr(mcp_core, verb)
         err = _http_error(404, b'{"error": "not found"}')
-        with patch("kiro_crew.mcp_core.loopback_urlopen", side_effect=err):
+        with patch("aj_crew.mcp_core.loopback_urlopen", side_effect=err):
             assert fn("/api/thing") == {"error": "not found"}
 
     def test_generic_exception_becomes_error_dict(self, verb: str):
         fn = getattr(mcp_core, verb)
-        with patch("kiro_crew.mcp_core.loopback_urlopen", side_effect=RuntimeError("boom")):
+        with patch("aj_crew.mcp_core.loopback_urlopen", side_effect=RuntimeError("boom")):
             assert fn("/api/thing") == {"error": "boom"}
 
     def test_non_latin1_session_key_short_circuits(
@@ -165,7 +165,7 @@ class TestVerbHelpers:
         fn = getattr(mcp_core, verb)
         monkeypatch.setattr(mcp_core, "_resolve_session_key", lambda: "dashboard:chat—1")
         with patch(
-            "kiro_crew.mcp_core.loopback_urlopen", side_effect=AssertionError("must not be called")
+            "aj_crew.mcp_core.loopback_urlopen", side_effect=AssertionError("must not be called")
         ):
             out = fn("/api/thing")
         assert "invalid in HTTP headers" in out["error"]
@@ -176,7 +176,7 @@ class TestVerbHelperBodies:
         for verb, method in (("_patch", "PATCH"), ("_put", "PUT")):
             fn = getattr(mcp_core, verb)
             with patch(
-                "kiro_crew.mcp_core.loopback_urlopen", return_value=_FakeResponse({"ok": True})
+                "aj_crew.mcp_core.loopback_urlopen", return_value=_FakeResponse({"ok": True})
             ) as m:
                 fn("/api/thing", {"a": 1})
             req = m.call_args[0][0]
@@ -186,7 +186,7 @@ class TestVerbHelperBodies:
 
     def test_delete_without_body_sends_no_content_type(self):
         with patch(
-            "kiro_crew.mcp_core.loopback_urlopen", return_value=_FakeResponse({"ok": True})
+            "aj_crew.mcp_core.loopback_urlopen", return_value=_FakeResponse({"ok": True})
         ) as m:
             mcp_core._delete("/api/thing")
         req = m.call_args[0][0]
@@ -195,7 +195,7 @@ class TestVerbHelperBodies:
 
     def test_delete_with_body_sends_json(self):
         with patch(
-            "kiro_crew.mcp_core.loopback_urlopen", return_value=_FakeResponse({"ok": True})
+            "aj_crew.mcp_core.loopback_urlopen", return_value=_FakeResponse({"ok": True})
         ) as m:
             mcp_core._delete("/api/thing", {"rule": "x"})
         req = m.call_args[0][0]
@@ -205,25 +205,25 @@ class TestVerbHelperBodies:
 class TestPostTransportClassification:
     def test_connection_refused_is_not_a_transport_error(self):
         err = urllib.error.URLError(ConnectionRefusedError("refused"))
-        with patch("kiro_crew.mcp_core.loopback_urlopen", side_effect=err):
+        with patch("aj_crew.mcp_core.loopback_urlopen", side_effect=err):
             out = mcp_core._post("/api/spawn", {})
         assert "transport_error" not in out
         assert out["error"]
 
     def test_other_urlerror_is_flagged_transport_error(self):
         err = urllib.error.URLError(TimeoutError("timed out"))
-        with patch("kiro_crew.mcp_core.loopback_urlopen", side_effect=err):
+        with patch("aj_crew.mcp_core.loopback_urlopen", side_effect=err):
             out = mcp_core._post("/api/spawn", {})
         assert out["transport_error"] is True
 
     def test_unexpected_exception_is_flagged_transport_error(self):
-        with patch("kiro_crew.mcp_core.loopback_urlopen", side_effect=RuntimeError("read timeout")):
+        with patch("aj_crew.mcp_core.loopback_urlopen", side_effect=RuntimeError("read timeout")):
             out = mcp_core._post("/api/spawn", {})
         assert out == {"error": "read timeout", "transport_error": True}
 
     def test_http_error_is_not_flagged_transport_error(self):
         with patch(
-            "kiro_crew.mcp_core.loopback_urlopen",
+            "aj_crew.mcp_core.loopback_urlopen",
             side_effect=_http_error(400, b'{"error": "nope"}'),
         ):
             out = mcp_core._post("/api/spawn", {})
@@ -354,7 +354,7 @@ def _crew_config(agents: dict[str, Any], default: str) -> SimpleNamespace:
 class TestDoSelectCrew:
     def _patch_cfg(self, monkeypatch: pytest.MonkeyPatch, cfg: SimpleNamespace) -> None:
         monkeypatch.setattr(
-            mcp_core, "KiroCrewConfig", SimpleNamespace(load=staticmethod(lambda: cfg))
+            mcp_core, "AjCrewConfig", SimpleNamespace(load=staticmethod(lambda: cfg))
         )
 
     def test_empty_crew_returns_roster_of_triggered_non_default_crews(
@@ -512,11 +512,11 @@ class TestSpawnRunArgumentHandling:
     ):
         monkeypatch.setattr(mcp_core, "_resolve_session_key", lambda: "")
         with patch.object(mcp_core, "_post", return_value={"id": "ag1"}):
-            out = _call_tool("spawn_run", {"task": "one", "agent": "kirocrew"})
+            out = _call_tool("spawn_run", {"task": "one", "agent": "ajcrew"})
         assert "parent_session UNRESOLVED" in out
         assert "Monitor results via polling" in out
         assert "Do NOT wait for completion events" in out
-        assert "ag1 (kirocrew)" in out
+        assert "ag1 (ajcrew)" in out
 
     def test_errors_plus_unknowns_without_success_keeps_error_prefix(self):
         responses = [
@@ -528,7 +528,7 @@ class TestSpawnRunArgumentHandling:
         assert out.startswith("Error: 1 task(s) failed to start")
 
     def test_approval_mode_env_is_forwarded(self, monkeypatch: pytest.MonkeyPatch):
-        monkeypatch.setenv("KIROCREW_APPROVAL_MODE", "auto")
+        monkeypatch.setenv("AJCREW_APPROVAL_MODE", "auto")
         with patch.object(mcp_core, "_post", return_value={"id": "ag1"}) as m:
             out = _call_tool("spawn_run", {"task": "one", "solo_reason": "bulk_data"})
         assert m.call_args[0][1]["approval_mode"] == "auto"
@@ -543,14 +543,14 @@ class TestSpawnLifecycleTools:
                 {
                     "conversation": "conv1",
                     "task": "keep going",
-                    "agent": "kirocrew",
+                    "agent": "ajcrew",
                     "model": "claude-opus-5",
                     "max_turns": 3,
                 },
             )
         path, body = m.call_args[0][0], m.call_args[0][1]
         assert path == "/api/spawn/conv1/continue"
-        assert body["agent"] == "kirocrew"
+        assert body["agent"] == "ajcrew"
         assert body["model"] == "claude-opus-5"
         assert body["max_turns"] == 3
         assert "run9" in out and "END YOUR TURN" in out
@@ -804,7 +804,7 @@ class TestWorkflowReadIdentity:
     @pytest.mark.parametrize("tool", ["workflow_status", "workflow_result", "workflow_list"])
     @pytest.mark.parametrize("refused", [False, True])
     def test_reads_forward_exact_verified_identity(self, tool, refused):
-        from kiro_crew.mcp_tools.workflows import HANDLERS
+        from aj_crew.mcp_tools.workflows import HANDLERS
 
         response = (
             {"error": "foreign run refused"}
@@ -976,7 +976,7 @@ class TestSkillSearch:
     session-less CLI call falls back to the local loader."""
 
     def test_exact_read_uses_json_and_retains_signed_session(self, monkeypatch):
-        from kiro_crew.validation import MAX_SKILL_KEY_CHARS
+        from aj_crew.validation import MAX_SKILL_KEY_CHARS
 
         key = "nested/" + "x" * (MAX_SKILL_KEY_CHARS - len("nested/"))
         seen = []
@@ -1038,9 +1038,9 @@ class TestSkillSearch:
         matches = [
             {
                 "name": "babysit",
-                "key": "kirocrew-dev/babysit",
+                "key": "ajcrew-dev/babysit",
                 "description": "Monitor  a   PR",
-                "path": "/skills/kirocrew-dev/babysit/SKILL.md",
+                "path": "/skills/ajcrew-dev/babysit/SKILL.md",
             }
         ]
         seen = self._gateway(monkeypatch, matches)
@@ -1048,8 +1048,8 @@ class TestSkillSearch:
         assert "Available skills (search, offset 0, 1 results)" in out
         # Whitespace in the description is collapsed.
         assert "Monitor a PR" in out
-        assert "key='kirocrew-dev/babysit'" in out
-        assert "$kirocrew-dev/babysit" in out
+        assert "key='ajcrew-dev/babysit'" in out
+        assert "$ajcrew-dev/babysit" in out
         self._assert_gateway_query(seen, query="babysit", limit=20)
 
     def test_confined_match_renders_its_body_instead_of_a_path(
@@ -1335,10 +1335,10 @@ class TestFileSend:
         """Pin the workspace root so ``outbox_dir()`` lands inside ``tmp_path``.
 
         ``workspace_root`` falls back to a platform default outside
-        ``KIROCREW_HOME``, so without this the tool would write to the real
+        ``AJCREW_HOME``, so without this the tool would write to the real
         outbox and tests would collide on filenames across runs.
         """
-        monkeypatch.setenv("KIROCREW_WORKSPACE", str(tmp_path / "ws"))
+        monkeypatch.setenv("AJCREW_WORKSPACE", str(tmp_path / "ws"))
         monkeypatch.setattr(mcp_core, "_classify_slack_identity", lambda: ("dashboard", None))
 
     def test_text_file_is_copied_to_the_outbox_and_notified(self, tmp_path):
@@ -1543,7 +1543,7 @@ class TestValidateArgs:
         assert cleaned["run_id"] == "r1"
 
     def test_unknown_field_is_rejected(self):
-        from kiro_crew.validation import ValidationError
+        from aj_crew.validation import ValidationError
 
         with pytest.raises(ValidationError):
             _validate_args("workflow_status", {"run_id": "r1", "junk": "x"})
@@ -1555,7 +1555,7 @@ class TestValidateArgs:
         assert _validate_args("memory_recall", raw) == raw
 
     def test_invalid_run_id_pattern_is_rejected(self):
-        from kiro_crew.validation import ValidationError
+        from aj_crew.validation import ValidationError
 
         with pytest.raises(ValidationError):
             _validate_args("workflow_status", {"run_id": "bad id/../etc"})

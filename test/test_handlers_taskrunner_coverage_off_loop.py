@@ -25,9 +25,9 @@ from handlers_taskrunner_coverage_helpers import (  # noqa: F401 -- the autouse 
     _stub_sel,
 )
 
-from kiro_crew.dashboard.handlers.taskrunner import api_taskrunner_from_chat, api_taskrunner_start
-from kiro_crew.taskrunner import TaskRun
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.handlers.taskrunner import api_taskrunner_from_chat, api_taskrunner_start
+from aj_crew.taskrunner import TaskRun
+from aj_crew.testing.wait import await_until
 
 # ── AUTOSDE no-blocking-call-on-event-loop ──
 
@@ -124,7 +124,7 @@ class TestSpecIoRunsOffTheEventLoop:
     async def test_cancelled_inline_write_does_not_orphan_spec(
         self, tmp_path: Path, monkeypatch
     ) -> None:
-        from kiro_crew.dashboard.handlers import taskrunner as handlers
+        from aj_crew.dashboard.handlers import taskrunner as handlers
 
         started = threading.Event()
         release = threading.Event()
@@ -236,7 +236,7 @@ class TestSpecIoRunsOffTheEventLoop:
     async def test_cancelled_plan_claim_does_not_orphan_directory(
         self, tmp_path: Path, monkeypatch
     ) -> None:
-        from kiro_crew.dashboard.handlers import taskrunner as handlers
+        from aj_crew.dashboard.handlers import taskrunner as handlers
 
         started = threading.Event()
         release = threading.Event()

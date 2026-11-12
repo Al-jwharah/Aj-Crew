@@ -19,10 +19,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_folder_app, _make_state
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_folders import api_chat_slot_pin
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_folders import api_chat_slot_pin
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
 
 
 def _make_app(
@@ -59,7 +59,7 @@ def _app_slot(key: str, app: str) -> _ChatSlot:
 
 
 async def _pin(app: web.Application, slot: str, caller: str, pinned: bool = True) -> Any:
-    with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock(return_value=True)):
+    with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock(return_value=True)):
         async with TestClient(TestServer(app)) as client:
             resp = await client.patch(
                 f"/api/chat/slots/{slot}/pin",
@@ -120,7 +120,7 @@ class TestPinIsAppScoped:
 
 
 class TestPinIsMemberScoped:
-    MEMBER = "member:member-kirocrew-conductor-deadbeef"
+    MEMBER = "member:member-ajcrew-conductor-deadbeef"
 
     @pytest.mark.asyncio
     async def test_a_member_cannot_pin_a_session_it_does_not_own(self, monkeypatch) -> None:
@@ -164,8 +164,8 @@ class TestPinAuditOrigin:
     @pytest.mark.asyncio
     async def test_mcp_pin_is_audited_as_the_declared_caller(self, tmp_path, monkeypatch) -> None:
         rec = _RecordingSel()
-        monkeypatch.setattr("kiro_crew.dashboard.chat_folders.sel", lambda: rec)
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat_folders.sel", lambda: rec)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("myslot")
         async with TestClient(TestServer(_make_folder_app(state))) as client:
@@ -174,20 +174,20 @@ class TestPinAuditOrigin:
                 json={"pinned": True},
                 headers={
                     "X-Internal-Secret": "s3cret",
-                    "X-Internal-Caller": "kirocrew-dashboard",
+                    "X-Internal-Caller": "ajcrew-dashboard",
                 },
             )
             assert resp.status == 200
         event = next(e for e in rec.events if e["operation"] == "chat.slot_pin")
         assert event["outcome"] == "allowed"
         assert event["source"] == "mcp"
-        assert event["caller"] == "kirocrew-dashboard"
+        assert event["caller"] == "ajcrew-dashboard"
 
     @pytest.mark.asyncio
     async def test_browser_pin_is_audited_as_dashboard(self, tmp_path, monkeypatch) -> None:
         rec = _RecordingSel()
-        monkeypatch.setattr("kiro_crew.dashboard.chat_folders.sel", lambda: rec)
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat_folders.sel", lambda: rec)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("myslot")
         async with TestClient(TestServer(_make_folder_app(state))) as client:
@@ -200,7 +200,7 @@ class TestPinAuditOrigin:
 async def _pin_with_generation(
     app: web.Application, slot: str, caller: str, expected_created: str
 ) -> Any:
-    with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock(return_value=True)):
+    with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", AsyncMock(return_value=True)):
         async with TestClient(TestServer(app)) as client:
             resp = await client.patch(
                 f"/api/chat/slots/{slot}/pin",
@@ -258,7 +258,7 @@ class TestPinReportsWhetherItChanged:
         target = _ChatSlot("chat-2-200")
         target.pinned = True
         save = AsyncMock(return_value=True)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", save):
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", save):
             async with TestClient(TestServer(_make_app(_state(caller, target)))) as client:
                 resp = await client.patch(
                     "/api/chat/slots/chat-2-200/pin",

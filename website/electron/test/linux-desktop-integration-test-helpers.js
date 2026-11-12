@@ -111,19 +111,19 @@ function assertPublishDeferred({ result, launcher, statePath, before, runs, logs
   assert.deepEqual(after, before);
   assert.equal(after.launcher.ino, after.anchor.ino);
   const displaced = realFs.readdirSync(realPath.dirname(launcher))
-    .filter((name) => name.includes("kirocrew-displaced"));
+    .filter((name) => name.includes("ajcrew-displaced"));
   assert.deepEqual(displaced, []);
 }
 
 const BUNDLED_DESKTOP = [
   "[Desktop Entry]",
-  "Name=Kiro Crew",
+  "Name=Aj Crew",
   "Exec=AppRun --no-sandbox %U",
   "Terminal=false",
   "Type=Application",
-  "Icon=kirocrew-desktop",
-  "StartupWMClass=kirocrew-desktop",
-  "Comment=Kiro Crew — AI agent desktop app",
+  "Icon=ajcrew-desktop",
+  "StartupWMClass=ajcrew-desktop",
+  "Comment=Aj Crew — AI agent desktop app",
   "Categories=Development;",
   "",
 ].join("\n");
@@ -289,7 +289,7 @@ const fakePath = {
 
 const APPDIR = "/mnt/appimage";
 const HOME = "/home/u";
-const STATE_ROOT = `${HOME}/.config/kirocrew-desktop/linux-desktop-integration`;
+const STATE_ROOT = `${HOME}/.config/ajcrew-desktop/linux-desktop-integration`;
 const STATE_PATH = `${STATE_ROOT}/state.json`;
 // System binaries the refresher resolution should find (kbuildsycoca5 absent on purpose).
 const SYS_BINS = {
@@ -300,24 +300,24 @@ const SYS_BINS = {
 
 function bundleWithIcons(sizes, extra = {}, appDir = APPDIR) {
   const present = {
-    [`${appDir}/kirocrew-desktop.desktop`]: BUNDLED_DESKTOP,
+    [`${appDir}/ajcrew-desktop.desktop`]: BUNDLED_DESKTOP,
     ...SYS_BINS,
     ...extra,
   };
   for (const s of sizes) {
-    const icon = `${appDir}/usr/share/icons/hicolor/${s}/apps/kirocrew-desktop.png`;
+    const icon = `${appDir}/usr/share/icons/hicolor/${s}/apps/ajcrew-desktop.png`;
     present[icon] = `PNG:${s}`;
   }
   return present;
 }
 
 function baseDeps(fs, overrides = {}) {
-  const resourcesPath = "/opt/KiroCrew/resources";
-  const binDir = `${resourcesPath}/backend-dist/kirocrew-backend/bin`;
+  const resourcesPath = "/opt/AjCrew/resources";
+  const binDir = `${resourcesPath}/backend-dist/ajcrew-backend/bin`;
   if (typeof fs._dirs !== "undefined" && !fs._dirs.has(binDir)) {
     fs.mkdirSync(resourcesPath);
     fs.mkdirSync(`${resourcesPath}/backend-dist`);
-    fs.mkdirSync(`${resourcesPath}/backend-dist/kirocrew-backend`);
+    fs.mkdirSync(`${resourcesPath}/backend-dist/ajcrew-backend`);
     fs.mkdirSync(binDir);
     fs.writeFileSync(`${binDir}/python3.12`, "python-stub");
   }
@@ -414,7 +414,7 @@ function baseDeps(fs, overrides = {}) {
     installKind: "appimage",
     env: { APPIMAGE: "/opt/K.AppImage", APPDIR, HOME },
     version: "0.5.0",
-    stateDir: `${HOME}/.config/kirocrew-desktop`,
+    stateDir: `${HOME}/.config/ajcrew-desktop`,
     uid: 1000,
     run: () => {},
     log: () => {},
@@ -430,14 +430,14 @@ function baseDeps(fs, overrides = {}) {
 // provide, and records each helper invocation so its structured outcome can
 // be asserted.
 function wrappedHelperFixture(t, label, patchLines) {
-  const root = realFs.mkdtempSync(realPath.join(realOs.tmpdir(), `kirocrew-ldi-${label}-`));
+  const root = realFs.mkdtempSync(realPath.join(realOs.tmpdir(), `ajcrew-ldi-${label}-`));
   t.after(() => realFs.rmSync(root, { recursive: true, force: true }));
   const home = realPath.join(root, "home");
   const appDir = realPath.join(root, "appdir");
   const dataDir = realPath.join(root, "data");
-  const stateDir = realPath.join(root, "config", "kirocrew-desktop");
+  const stateDir = realPath.join(root, "config", "ajcrew-desktop");
   const resourcesPath = realPath.join(root, "resources");
-  const binDir = realPath.join(resourcesPath, "backend-dist", "kirocrew-backend", "bin");
+  const binDir = realPath.join(resourcesPath, "backend-dist", "ajcrew-backend", "bin");
   realFs.mkdirSync(realPath.join(appDir, "usr", "share", "icons", "hicolor", "16x16", "apps"), {
     recursive: true,
   });
@@ -454,9 +454,9 @@ function wrappedHelperFixture(t, label, patchLines) {
     "exec(compile(script, '<helper>', 'exec'))",
     "",
   ].join("\n"), { mode: 0o755 });
-  realFs.writeFileSync(realPath.join(appDir, "kirocrew-desktop.desktop"), BUNDLED_DESKTOP);
+  realFs.writeFileSync(realPath.join(appDir, "ajcrew-desktop.desktop"), BUNDLED_DESKTOP);
   realFs.writeFileSync(
-    realPath.join(appDir, "usr", "share", "icons", "hicolor", "16x16", "apps", "kirocrew-desktop.png"),
+    realPath.join(appDir, "usr", "share", "icons", "hicolor", "16x16", "apps", "ajcrew-desktop.png"),
     "REAL PNG"
   );
   const helperRuns = [];
@@ -468,7 +468,7 @@ function wrappedHelperFixture(t, label, patchLines) {
   };
   const deps = {
     fs: realFs, path: realPath, os: realOs, platform: "linux", installKind: "appimage",
-    env: { APPIMAGE: realPath.join(root, "KiroCrew.AppImage"), APPDIR: appDir, HOME: home,
+    env: { APPIMAGE: realPath.join(root, "AjCrew.AppImage"), APPDIR: appDir, HOME: home,
       XDG_DATA_HOME: dataDir },
     version: "0.5.0", stateDir,
     uid: typeof process.geteuid === "function" ? process.geteuid() : undefined,
@@ -476,7 +476,7 @@ function wrappedHelperFixture(t, label, patchLines) {
   };
   return {
     root, deps, helperRuns,
-    launcher: realPath.join(dataDir, "applications", "kirocrew-desktop-appimage.desktop"),
+    launcher: realPath.join(dataDir, "applications", "ajcrew-desktop-appimage.desktop"),
     statePath: realPath.join(stateDir, "linux-desktop-integration", "state.json"),
   };
 }
@@ -529,9 +529,9 @@ const WORKER_DEPS = {
   platform: "linux",
   installKind: "appimage",
   version: "0.5.0",
-  stateDir: `${HOME}/.config/kirocrew-desktop`,
+  stateDir: `${HOME}/.config/ajcrew-desktop`,
   uid: 1000,
-  resourcesPath: "/opt/KiroCrew/resources",
+  resourcesPath: "/opt/AjCrew/resources",
 };
 
 module.exports = {

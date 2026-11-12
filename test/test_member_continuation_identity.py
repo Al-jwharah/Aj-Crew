@@ -12,10 +12,10 @@ from member_memory_helpers import env as _member_env
 from member_memory_helpers import make_request
 from test_subagent_continuable import _manager, _mock_sessions, _stop_reason
 
-from kiro_crew import context, member_memory_auth, platform_compat, subagent_persistence
-from kiro_crew.context import ContextBuilder
-from kiro_crew.dashboard.handlers import cron, memory_member
-from kiro_crew.dashboard.token_auth import token_auth_middleware
+from aj_crew import context, member_memory_auth, platform_compat, subagent_persistence
+from aj_crew.context import ContextBuilder
+from aj_crew.dashboard.handlers import cron, memory_member
+from aj_crew.dashboard.token_auth import token_auth_middleware
 
 env = _member_env
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
@@ -60,25 +60,25 @@ async def test_app_continuations_preserve_scope_through_two_runs(monkeypatch, re
 
     from test_internal_secret_app_identity_3690 import _grant
 
-    from kiro_crew.messaging.identity import publish_turn_identity
+    from aj_crew.messaging.identity import publish_turn_identity
 
     monkeypatch.setattr(
-        "kiro_crew.subagent.list_agents",
+        "aj_crew.subagent.list_agents",
         lambda: [SimpleNamespace(name="example-app--worker", filename="example-app--worker.json")],
     )
 
-    monkeypatch.setattr("kiro_crew.subagent._validate_agent", lambda name, cwd: (name, "", ""))
+    monkeypatch.setattr("aj_crew.subagent._validate_agent", lambda name, cwd: (name, "", ""))
     governance = MagicMock(return_value="")
-    monkeypatch.setattr("kiro_crew.subagent._vet_spawn_governance", governance)
+    monkeypatch.setattr("aj_crew.subagent._vet_spawn_governance", governance)
     sessions = _continuation_sessions()
     manager = _manager(sessions)
     manager._spawn_stagger_secs = 0
     manager._memory_mode_for_session = lambda key: "incognito"
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
         patch(
-            "kiro_crew.messaging.identity.publish_turn_identity", wraps=publish_turn_identity
+            "aj_crew.messaging.identity.publish_turn_identity", wraps=publish_turn_identity
         ) as publisher,
     ):
         original = manager.spawn(
@@ -140,9 +140,9 @@ async def test_app_continuations_preserve_scope_through_two_runs(monkeypatch, re
 @pytest.mark.asyncio
 @pytest.mark.parametrize("agent", ["", "explicit-worker"])
 async def test_unknown_app_ownership_cannot_resume_as_the_user(monkeypatch, agent) -> None:
-    from kiro_crew.dashboard.token_auth import caller_record_is_missing
+    from aj_crew.dashboard.token_auth import caller_record_is_missing
 
-    monkeypatch.setattr("kiro_crew.subagent._validate_agent", lambda name, cwd: (name, "", ""))
+    monkeypatch.setattr("aj_crew.subagent._validate_agent", lambda name, cwd: (name, "", ""))
     await asyncio.to_thread(subagent_persistence.create_agent_folder, "legacy-app")
     path = subagent_persistence._agent_dir("legacy-app") / "state.json"
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -153,7 +153,7 @@ async def test_unknown_app_ownership_cannot_resume_as_the_user(monkeypatch, agen
     await asyncio.to_thread(subagent_persistence.update_state, "legacy-app", app="")
     sessions = _continuation_sessions(resumed=True)
     manager = _manager(sessions)
-    with patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.sel"):
         followup = manager.continue_conversation("legacy-app", "follow-up", agent=agent)
     assert followup is not None and followup.done
     assert "malformed execution context" in followup.error
@@ -169,9 +169,9 @@ async def test_native_chained_continuations_record_the_project(
 ) -> None:
     project = tmp_path / "chess"
     project.mkdir()
-    monkeypatch.setattr("kiro_crew.subagent.validate_cwd", lambda cwd, roots: (cwd, ""))
+    monkeypatch.setattr("aj_crew.subagent.validate_cwd", lambda cwd, roots: (cwd, ""))
     previous = None
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         for _ in range(3):
             sessions = _continuation_sessions(resumed=previous is not None)
             sessions._pool_cwd = str(project if previous is None else tmp_path / "other-project")
@@ -205,8 +205,8 @@ async def test_native_chained_continuations_record_the_project(
 async def test_restart_continuation_keeps_canonical_memory_caller(env, monkeypatch) -> None:
     pass  # Member routing does not depend on OS isolation.
     monkeypatch.setattr(platform_compat, "get_process_start_id", lambda pid: f"test-start-{pid}")
-    monkeypatch.setattr("kiro_crew.session_pid_sig._load_hmac_key", lambda: b"test-key" * 4)
-    monkeypatch.setattr("kiro_crew.subagent._validate_agent", lambda name, cwd: (name, "", ""))
+    monkeypatch.setattr("aj_crew.session_pid_sig._load_hmac_key", lambda: b"test-key" * 4)
+    monkeypatch.setattr("aj_crew.subagent._validate_agent", lambda name, cwd: (name, "", ""))
     monkeypatch.setattr(context, "_vector_stores", dict(env.tiers))
     monkeypatch.setattr(context, "_memory_stores", {})
     monkeypatch.setattr(context, "_lesson_stores", {})
@@ -222,7 +222,7 @@ async def test_restart_continuation_keeps_canonical_memory_caller(env, monkeypat
     first._ctx_builder.conversation_log = env.history
     first._ctx_builder.ensure_store = ContextBuilder.ensure_store
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         original = first.spawn(
             "remember the audit",
             agent="worker",
@@ -314,7 +314,7 @@ async def test_restart_continuation_keeps_canonical_memory_caller(env, monkeypat
             yield
 
     provider.stream.side_effect = stream
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         followup = restored.continue_conversation(
             original.id, "verify the audit after restart", parent_session_key="dashboard:owner"
         )

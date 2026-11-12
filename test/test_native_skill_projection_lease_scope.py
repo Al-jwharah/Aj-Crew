@@ -4,7 +4,7 @@ Every projection still publishes a view for every authored agent, but a session
 that runs one agent must not pin the view of every other agent. Before this, an
 edit to N agents while sessions were open left N old views on disk per open
 session, which filled the 128-view ceiling and sent new sessions to their
-authored agents without kirocrew-core.
+authored agents without ajcrew-core.
 """
 
 from __future__ import annotations
@@ -14,8 +14,8 @@ from types import SimpleNamespace
 
 import native_skill_projection_helpers
 
-from kiro_crew.acp import skill_projection as projection
-from kiro_crew.acp.runtime_mode_activation import _leased_agents
+from aj_crew.acp import skill_projection as projection
+from aj_crew.acp.runtime_mode_activation import _leased_agents
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _no_eager_prune = native_skill_projection_helpers._no_eager_prune

@@ -24,38 +24,38 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import agent, template_mcp_additions
-from kiro_crew.agent_files import (
+from aj_crew import agent, template_mcp_additions
+from aj_crew.agent_files import (
     CONDUCTOR_AGENT_FILENAME,
     LEDGER_CONDUCTOR_AGENT_FILENAME,
     PIPELINE_CONDUCTOR_AGENT_FILENAME,
     SECURITY_CONDUCTOR_AGENT_FILENAME,
 )
-from kiro_crew.agent_materialization import conductor_agents
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-from kiro_crew.platform import governance
+from aj_crew.agent_materialization import conductor_agents
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.platform import governance
 
 _INSTALLERS = [
     pytest.param(
-        "kirocrew-conductor",
+        "ajcrew-conductor",
         CONDUCTOR_AGENT_FILENAME,
         "_install_conductor_agent",
         id="conductor",
     ),
     pytest.param(
-        "kirocrew-ledger-conductor",
+        "ajcrew-ledger-conductor",
         LEDGER_CONDUCTOR_AGENT_FILENAME,
         "_install_ledger_conductor_agent",
         id="ledger-alias",
     ),
     pytest.param(
-        "kirocrew-pipeline-conductor",
+        "ajcrew-pipeline-conductor",
         PIPELINE_CONDUCTOR_AGENT_FILENAME,
         "_install_pipeline_conductor_agent",
         id="pipeline",
     ),
     pytest.param(
-        "kirocrew-security-conductor",
+        "ajcrew-security-conductor",
         SECURITY_CONDUCTOR_AGENT_FILENAME,
         "_install_security_conductor_agent",
         id="security",
@@ -73,31 +73,29 @@ def agents_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """A private agents directory and crew home, an ungoverned ceiling, an accepting kiro-cli."""
     agents = tmp_path / "agents"
     agents.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew-home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew-home"))
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: agents)
     monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
     monkeypatch.setattr(
         agent,
         "build_agent_config",
         lambda: {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "prompt": "file://x",
             "mcpServers": {
-                "kirocrew-core": {
-                    "command": "/resolved/kirocrew",
+                "ajcrew-core": {
+                    "command": "/resolved/ajcrew",
                     "args": ["mcp-core"],
                 },
             },
-            "tools": ["fs_write", "@kirocrew-core"],
-            "allowedTools": ["@kirocrew-core"],
+            "tools": ["fs_write", "@ajcrew-core"],
+            "allowedTools": ["@ajcrew-core"],
         },
     )
-    monkeypatch.setattr(
-        agent, "_kirocrew_mcp_invocation", lambda sub: ("/resolved/kirocrew", [sub])
-    )
+    monkeypatch.setattr(agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub]))
     monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: governance.may_skip_gate(ref, None))
     return agents
 

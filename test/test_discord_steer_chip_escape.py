@@ -13,10 +13,10 @@ import pytest
 from discord_helpers import _drop_live_config_snapshot  # noqa: F401
 from discord_helpers import FakeClient
 
-from kiro_crew.discord import renderer_text
-from kiro_crew.discord.renderer import DiscordRenderer, _neutralize_md, _redact_all
-from kiro_crew.discord.transport import DISCORD_CAPABILITIES
-from kiro_crew.telegram.renderer_display import _neutralize_md as telegram_neutralize_md
+from aj_crew.discord import renderer_text
+from aj_crew.discord.renderer import DiscordRenderer, _neutralize_md, _redact_all
+from aj_crew.discord.transport import DISCORD_CAPABILITIES
+from aj_crew.telegram.renderer_display import _neutralize_md as telegram_neutralize_md
 
 # The rotation chip prefix: an arrow plus emoji variation selector U+FE0F.
 ROTATION_CHIP = "> \u21aa\ufe0f "

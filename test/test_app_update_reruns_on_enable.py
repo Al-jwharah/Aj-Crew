@@ -23,9 +23,9 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from apps_routes_coverage_helpers import APP, _make_app, _setup_env
 
-import kiro_crew.apps.routes as routes_mod
-import kiro_crew.dashboard.handlers.template_server_request as tsr
-from kiro_crew.apps.manager import (
+import aj_crew.apps.routes as routes_mod
+import aj_crew.dashboard.handlers.template_server_request as tsr
+from aj_crew.apps.manager import (
     APP_MANIFEST_FILENAME,
     INSTALLED_META_FILENAME,
     app_dir,
@@ -202,7 +202,7 @@ async def test_a_failed_on_enable_after_an_update_keeps_the_app_enabled(
     body = _route_updates_to(
         monkeypatch, rig, how, _source(tmp_path, "2.0.0", mcpServers=_ONE_SERVER)
     )
-    spec = tmp_path / "kiro-agents" / "kirocrew.json"
+    spec = tmp_path / "kiro-agents" / "ajcrew.json"
     notes: list[dict[str, Any]] = []
 
     async def _reach(request: object) -> int:

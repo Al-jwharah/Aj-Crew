@@ -17,9 +17,9 @@ import pytest
 from stray_line_helpers import cyclic_gc_quiesced  # noqa: F401 - fixture
 from stray_line_helpers import too_deep_to_decode
 
-from kiro_crew.diag import recorder as recorder_mod
-from kiro_crew.mcp_gateway import stub_fallback
-from kiro_crew.messaging import inbound_spool
+from aj_crew.diag import recorder as recorder_mod
+from aj_crew.mcp_gateway import stub_fallback
+from aj_crew.messaging import inbound_spool
 
 pytestmark = pytest.mark.usefixtures("cyclic_gc_quiesced")
 

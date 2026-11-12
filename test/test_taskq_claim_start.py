@@ -15,19 +15,19 @@ import pytest
 from overload_fakes import settle_depth_emits, settle_store_writes
 from test_taskq_admission_integration import _STOP_PARENT, _manager
 
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
-from kiro_crew.taskq import model
-from kiro_crew.taskq.store import TaskStore, TaskStoreUnavailable
-from kiro_crew.testing.wait import async_wait_until, await_until
-from kiro_crew.testing.wait import finished as _finished
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+from aj_crew.taskq import model
+from aj_crew.taskq.store import TaskStore, TaskStoreUnavailable
+from aj_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import finished as _finished
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
 
 @pytest.fixture
 def quiet():
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         yield
 
 
@@ -90,7 +90,7 @@ async def test_stop_all_between_claim_and_start_keeps_the_row_stopped(
     accept and reaps the registered run as a running one instead
     (``test_a_row_registered_during_stop_alls_read_is_reaped_not_replaced``).
     """
-    from kiro_crew.taskq import KIND_SUBAGENT
+    from aj_crew.taskq import KIND_SUBAGENT
 
     mgr, params = await _popped_row(monkeypatch)
     store: TaskStore = mgr._taskq
@@ -1197,7 +1197,7 @@ async def test_a_retained_claim_stop_all_cancelled_is_refused_on_retry(
     ``claim_and_start(retained_generation=...)``) then finds the stop's record
     and refuses the start without asking the store: no run, the row stays
     cancelled, the retained slot goes back, and the parent's depth is 0."""
-    from kiro_crew.taskq import KIND_SUBAGENT
+    from aj_crew.taskq import KIND_SUBAGENT
 
     mgr, params = await _popped_row(monkeypatch)
     store: TaskStore = mgr._taskq

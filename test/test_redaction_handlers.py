@@ -14,8 +14,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard.handlers import redaction as handlers
-from kiro_crew.security import redaction_allow
+from aj_crew.dashboard.handlers import redaction as handlers
+from aj_crew.security import redaction_allow
 
 
 class _State:
@@ -145,7 +145,7 @@ async def test_revoke_refuses_an_off_shape_host() -> None:
 
 def test_the_allow_list_adds_no_gateway_startup_work() -> None:
     """The list loads on its first read, off the boot path."""
-    from kiro_crew.dashboard.routes import system
+    from aj_crew.dashboard.routes import system
 
     source = Path(system.__file__).read_text(encoding="utf-8")
     assert "redaction_handlers.preload" not in source

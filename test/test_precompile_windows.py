@@ -9,7 +9,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 SCRIPT = Path(__file__).parents[1] / "packaging" / "precompile_windows.py"
 SPEC = importlib.util.spec_from_file_location("precompile_windows", SCRIPT)

@@ -10,8 +10,8 @@ import logging
 
 import pytest
 
-from kiro_crew.acp import _dispatch
-from kiro_crew.acp._dispatch import parse_metadata
+from aj_crew.acp import _dispatch
+from aj_crew.acp._dispatch import parse_metadata
 
 
 @pytest.fixture(autouse=True)

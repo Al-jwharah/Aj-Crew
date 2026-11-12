@@ -16,7 +16,7 @@ from unittest.mock import DEFAULT, AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-import kiro_crew.dashboard.handlers.memory as mem_mod
+import aj_crew.dashboard.handlers.memory as mem_mod
 
 
 class _BadJSON:
@@ -136,7 +136,7 @@ def _store(**attrs: Any) -> Any:
 @pytest.fixture(autouse=True)
 def _fake_sel(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
     """Never write to the real security event log from a unit test."""
-    _floor_monkeypatch.setattr("kiro_crew.dashboard.handlers.sel", lambda: MagicMock())
+    _floor_monkeypatch.setattr("aj_crew.dashboard.handlers.sel", lambda: MagicMock())
 
 
 @pytest.fixture(autouse=True)

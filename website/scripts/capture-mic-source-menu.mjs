@@ -33,7 +33,7 @@ import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/mic-device-switch'
 const SLOT = 'chat-micsel'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 /** The device the SAVED PREFERENCE points at — deliberately not the live one. */
 const PREFERRED_ID = 'airpods'
@@ -49,7 +49,7 @@ const slots = [{
   running: false,
   last_message: '',
   messages: 0,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

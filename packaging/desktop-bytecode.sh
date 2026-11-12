@@ -38,7 +38,7 @@ if missing:
 COVERAGE
 }
 
-# macOS: ship checked-hash bytecode for the standard library, the kiro_crew
+# macOS: ship checked-hash bytecode for the standard library, the aj_crew
 # package and the traced startup closure of its dependencies, and bar the
 # bundled interpreter from writing any other.
 #   $1 = built backend tree
@@ -59,7 +59,7 @@ COVERAGE
 #     PYTHONDONTWRITEBYTECODE (website/electron/gateway-env.js) reaches only the
 #     gateway's own process tree; the agent runtime starts the MCP stubs and
 #     bridges with this interpreter and the Python variables stripped, and
-#     `kirocrew` run from a terminal never had them. `site` runs the .pth in
+#     `ajcrew` run from a terminal never had them. `site` runs the .pth in
 #     every one of those.
 #   - The standard library is compiled whole. A child started with -I -S (the
 #     sandbox launchers, the rlimit shim, the subprocess pool) skips both the
@@ -70,7 +70,7 @@ COVERAGE
 # The traced entry points are the gateway import (what Windows traces), the
 # CLI, the MCP gateway daemon and stub, and every stdio MCP server the gateway
 # can start, each of which would otherwise compile its imports in memory on
-# every spawn. kiro_crew itself is compiled whole because a trace of an import
+# every spawn. aj_crew itself is compiled whole because a trace of an import
 # misses what runs later: a measured gateway boot lazily imports about 450 of
 # its modules, which cost about 0.7 s per start when compiled in memory.
 # lark_oapi, which Windows also traces, is left out: its ~10.9k modules are
@@ -84,9 +84,9 @@ precompile_macos_backend() {
   py="$out/bin/python3.12"
   sp="$out/lib/python3.12/site-packages"
   servers="$(env PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 PYTHONPATH= "$py" -s -P -c \
-    'from kiro_crew.mcp_entry import SLIM_SERVERS; print("\n".join(m for m, _ in SLIM_SERVERS.values()))')"
-  for module in kiro_crew.cli_server kiro_crew.cli kiro_crew.mcp_gateway.gatewayd \
-      kiro_crew.mcp_gateway.stub kiro_crew.mcp_entry; do
+    'from aj_crew.mcp_entry import SLIM_SERVERS; print("\n".join(m for m, _ in SLIM_SERVERS.values()))')"
+  for module in aj_crew.cli_server aj_crew.cli aj_crew.mcp_gateway.gatewayd \
+      aj_crew.mcp_gateway.stub aj_crew.mcp_entry; do
     trace+=( --module "$module" )
   done
   while IFS= read -r module; do
@@ -98,28 +98,28 @@ precompile_macos_backend() {
     "$py" -s -P "$ROOT/packaging/precompile_windows.py" --root "$out" \
     --invalidation-mode checked-hash "${trace[@]}" --ban-bytecode-writes "$sp"
 
-  # The standard library and the kiro_crew package, whole. `-q -f` and the
+  # The standard library and the aj_crew package, whole. `-q -f` and the
   # tolerated exit code as on the whole-tree path in build_backend; the coverage
   # gate below is what gates.
   for entry in "$out/lib/python3.12"/*; do
     [ "$entry" = "$sp" ] || whole+=( "$entry" )
   done
-  whole+=( "$sp/kiro_crew" )
-  log "Precompiling the standard library and kiro_crew as checked-hash pycs ($(basename "$out"))…"
+  whole+=( "$sp/aj_crew" )
+  log "Precompiling the standard library and aj_crew as checked-hash pycs ($(basename "$out"))…"
   env PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 PYTHONPATH= \
     "$py" -s -m compileall -q -f --invalidation-mode checked-hash "${whole[@]}" \
     || echo "    compileall reported errors (unimportable vendored samples are expected)"
 
   # Coverage gate, in three parts. A fresh process traces the closure again and
   # fails on any module without a valid checked-hash cache; the standard
-  # library and kiro_crew must be covered whole; and an interpreter that never
+  # library and aj_crew must be covered whole; and an interpreter that never
   # saw PYTHONDONTWRITEBYTECODE must still refuse to write.
   env PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 PYTHONPATH= \
     "$py" -s -P "$ROOT/packaging/precompile_windows.py" --root "$out" \
     --invalidation-mode checked-hash "${trace[@]}" --verify \
     || { echo "ERROR: the traced startup closure shipped without valid bytecode caches" >&2; exit 1; }
   bytecode_coverage_gate "$out" "$out/lib" "$sp"
-  bytecode_coverage_gate "$out" "$sp/kiro_crew" ""
+  bytecode_coverage_gate "$out" "$sp/aj_crew" ""
   env -u PYTHONDONTWRITEBYTECODE PYTHONNOUSERSITE=1 PYTHONPATH= "$py" -s -c \
     'import sys; raise SystemExit(0 if sys.dont_write_bytecode else 1)' \
     || { echo "ERROR: the bundled interpreter would write bytecode into the signed bundle" >&2; exit 1; }

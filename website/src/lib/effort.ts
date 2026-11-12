@@ -1,6 +1,6 @@
 /**
  * Reasoning-effort vocabulary for the dashboard — mirrors the backend
- * `kiro_crew/effort.py` so the UI and server agree on levels and per-model
+ * `aj_crew/effort.py` so the UI and server agree on levels and per-model
  * capability. Kept as a standalone module (not inside ChatInput) so it can be
  * imported without pulling in the component — and so test mocks of ChatInput
  * don't have to re-export it.
@@ -57,12 +57,12 @@ export function effortLabel(level: string): string {
  */
 export const EFFORT_LEVELS = ['', 'low', 'medium', 'high', 'xhigh', 'max'] as const
 
-/** Providers whose backend accepts a reasoning-effort level. KiroCrew is
+/** Providers whose backend accepts a reasoning-effort level. Aj Crew is
  *  KiroACP-only, so this is just 'acp'. */
 export const REASONING_EFFORT_PROVIDERS = new Set(['acp'])
 
 /** The first Haiku release that accepts an effort level — mirrors the backend
- *  `HAIKU_EFFORT_MIN_VERSION` (kiro_crew/effort.py). */
+ *  `HAIKU_EFFORT_MIN_VERSION` (aj_crew/effort.py). */
 export const HAIKU_EFFORT_MIN_VERSION: readonly [number, number] = [5, 5]
 
 /** `haiku-5.5`, `haiku-5-5` (Bedrock), `haiku-6`. One or two digits per part,
@@ -86,7 +86,7 @@ export function haikuSupportsEffort(model: string): boolean {
 
 /**
  * Per-model effort capability — mirrors the backend `model_supports_effort`
- * (kiro_crew/effort.py): effort is available on Fable/Opus/Sonnet, Haiku 5.5
+ * (aj_crew/effort.py): effort is available on Fable/Opus/Sonnet, Haiku 5.5
  * and later, and GPT-5.x models; older Haiku, auto/empty and the other
  * third-party models (deepseek, minimax, glm, qwen) cannot use it. Gates the
  * dropdown so a non-capable model never shows a control that would silently

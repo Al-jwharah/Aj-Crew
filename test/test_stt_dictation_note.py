@@ -7,7 +7,7 @@ the gateway's part is the setting: it defaults to OFF so existing behaviour is
 unchanged, it round-trips through the STT config PUT/GET the Voice panel uses,
 and it only ever accepts a real boolean.
 
-Per-test config isolation comes from the autouse KIROCREW_HOME fixture in
+Per-test config isolation comes from the autouse AJCREW_HOME fixture in
 conftest, so these do not take tmp_path themselves.
 """
 
@@ -19,8 +19,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-import kiro_crew.dashboard.handlers.core as core
-from kiro_crew.config.loader import KiroCrewConfig, config_path
+import aj_crew.dashboard.handlers.core as core
+from aj_crew.config.loader import AjCrewConfig, config_path
 
 
 def _req(method: str, body: dict | None = None):
@@ -41,14 +41,14 @@ def _stub_probes(_floor_monkeypatch):
 
 def test_defaults_to_off() -> None:
     """Absent from config.json, nothing is added to anyone's messages."""
-    assert KiroCrewConfig.load().stt.dictation_note is False
+    assert AjCrewConfig.load().stt.dictation_note is False
 
 
 def test_explicit_true_is_honoured() -> None:
     path = config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps({"stt": {"dictation_note": True}}), encoding="utf-8")
-    assert KiroCrewConfig.load().stt.dictation_note is True
+    assert AjCrewConfig.load().stt.dictation_note is True
 
 
 def test_non_bool_in_config_file_falls_back_to_off() -> None:
@@ -58,7 +58,7 @@ def test_non_bool_in_config_file_falls_back_to_off() -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     for bogus in ("true", "false", 1, 0, None, [], {}):
         path.write_text(json.dumps({"stt": {"dictation_note": bogus}}), encoding="utf-8")
-        loaded = KiroCrewConfig.load().stt.dictation_note
+        loaded = AjCrewConfig.load().stt.dictation_note
         assert loaded is False, f"{bogus!r} should fall back to the default, got {loaded!r}"
 
 
@@ -80,7 +80,7 @@ async def test_put_then_get_round_trips() -> None:
 
     resp = await core.api_stt_config(_req("PUT", {"dictation_note": False}))
     assert json.loads(resp.body)["dictation_note"] is False
-    assert KiroCrewConfig.load().stt.dictation_note is False
+    assert AjCrewConfig.load().stt.dictation_note is False
 
 
 @pytest.mark.asyncio

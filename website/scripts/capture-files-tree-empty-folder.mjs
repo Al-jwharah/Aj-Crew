@@ -239,7 +239,7 @@ const slots = [{
   running: false,
   last_message: 'Files tree',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),
@@ -342,7 +342,7 @@ async function main() {
       // The styling hook a PLANNED state row carries (`STATE_ROW_ICON` in
       // `src/pierre/treeStateRows.ts`): the stylesheet keys on this decoration,
       // never on the path's marker suffix, which a real file name can share.
-      stateIcon: !!el.querySelector('[data-item-section="decoration"] [data-icon-name="kirocrew-tree-state-row"]'),
+      stateIcon: !!el.querySelector('[data-item-section="decoration"] [data-icon-name="ajcrew-tree-state-row"]'),
       // The in-row marker of a folder the server could not read: Pierre renders
       // the decoration as a span whose `title` is the accessible label (the
       // glyph itself is aria-hidden). Only that folder's row may carry it.

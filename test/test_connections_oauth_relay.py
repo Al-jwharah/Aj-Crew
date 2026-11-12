@@ -15,7 +15,7 @@ from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 from named_cases_helpers import named_cases
 
-from kiro_crew.dashboard.handlers import connections
+from aj_crew.dashboard.handlers import connections
 
 
 @pytest.mark.parametrize(

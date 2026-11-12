@@ -25,7 +25,7 @@ that impossible, and ``test_fold_catalogue.py`` runs it.
 ## Where the types come from: ONE derivation
 
 This script does not probe the registry. It RENDERS
-:func:`kiro_crew.dashboard_types.catalog`, which is the runtime verb an agent calls for
+:func:`aj_crew.dashboard_types.catalog`, which is the runtime verb an agent calls for
 the same question -- so these two artifacts and that tool cannot answer differently.
 
 A second probe here would be a second source of truth wearing one coat: both walk
@@ -63,13 +63,13 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
 
-from kiro_crew import dashboard_types as dt  # noqa: E402
-from kiro_crew.crew_log import projection as proj  # noqa: E402
-from kiro_crew.platform_compat import is_link_or_junction  # noqa: E402
+from aj_crew import dashboard_types as dt  # noqa: E402
+from aj_crew.crew_log import projection as proj  # noqa: E402
+from aj_crew.platform_compat import is_link_or_junction  # noqa: E402
 
 #: Where the generated artifacts live: beside the skill that consumes them, so they
 #: ship in the same package-data glob the skill already ships under.
-SKILL_DIR = ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev" / "dashboard-template"
+SKILL_DIR = ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "dashboard-template"
 JSON_PATH = SKILL_DIR / "folds.json"
 MARKDOWN_PATH = SKILL_DIR / "FOLDS.md"
 
@@ -169,7 +169,7 @@ class CatalogueError(Exception):
 
 
 def _catalog() -> dict[str, dt.FoldType]:
-    """:func:`kiro_crew.dashboard_types.catalog`, keyed by fold name.
+    """:func:`aj_crew.dashboard_types.catalog`, keyed by fold name.
 
     Called once per document build, because the catalog probes every fold and this
     script asks about each one twice -- for its key kind and for its fields.
@@ -184,7 +184,7 @@ def _manifest_fold_names() -> frozenset[str]:
     checkout, and the manifest module pulls the template loader in with it; the two
     callers below want the set, not the import.
     """
-    from kiro_crew.dashboard_templates.manifest import FOLD_NAMES
+    from aj_crew.dashboard_templates.manifest import FOLD_NAMES
 
     return FOLD_NAMES
 
@@ -199,7 +199,7 @@ def _package_fold_names() -> frozenset[str]:
     and the catalogue has to say which -- dropping it outright would leave a package
     author with no way to learn the fold exists.
     """
-    from kiro_crew.dashboard_templates.manifest import PACKAGE_FOLD_NAMES
+    from aj_crew.dashboard_templates.manifest import PACKAGE_FOLD_NAMES
 
     return PACKAGE_FOLD_NAMES
 

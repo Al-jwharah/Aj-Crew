@@ -1,11 +1,11 @@
-"""The shared hardened gh runner (``kiro_crew.github_runner``).
+"""The shared hardened gh runner (``aj_crew.github_runner``).
 
 One module now owns trusted-binary resolution, the minimal child environment,
 and the SEL-audited spawn chokepoint for every ``gh``-spawning surface (the
 dashboard PR sidebar, Issue Radar, Code Review Sage). These tests lock in the
 properties that would otherwise drift between the three callers:
 
-* resolver precedence (caller override → ``KIROCREW_GH_BIN`` → candidates),
+* resolver precedence (caller override → ``AJCREW_GH_BIN`` → candidates),
   including the fail-loud rule for an override that is SET but empty or wrong
   — silently ignoring a set override was the weaker of the historical
   behaviors and is pinned OUT here;
@@ -42,15 +42,15 @@ pytestmark = pytest.mark.skipif(
     reason="asserts the POSIX branch's messages and fixtures (see test_windows_acl.py)",
 )
 
-from kiro_crew import github_runner as runner  # noqa: E402
+from aj_crew import github_runner as runner  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
 def _clean_runner_state(monkeypatch):
     runner.reset_cache()
-    monkeypatch.delenv("KIROCREW_GH_BIN", raising=False)
-    monkeypatch.delenv("_KIROCREW_GH_PREVALIDATED", raising=False)
-    monkeypatch.delenv("KIROCREW_PROVIDER_BIN_STRICT", raising=False)
+    monkeypatch.delenv("AJCREW_GH_BIN", raising=False)
+    monkeypatch.delenv("_AJCREW_GH_PREVALIDATED", raising=False)
+    monkeypatch.delenv("AJCREW_PROVIDER_BIN_STRICT", raising=False)
     monkeypatch.setattr(runner, "agent_writable_roots", lambda: ())
     yield
     runner.reset_cache()
@@ -91,24 +91,24 @@ class TestResolveGh:
         caller = _fake_gh(tmp_path / "caller-bin")
         generic = _fake_gh(tmp_path / "generic-bin")
         candidate = _fake_gh(tmp_path / "candidate-bin")
-        monkeypatch.setenv("KIROCREW_TEST_GH", caller)
-        monkeypatch.setenv("KIROCREW_GH_BIN", generic)
+        monkeypatch.setenv("AJCREW_TEST_GH", caller)
+        monkeypatch.setenv("AJCREW_GH_BIN", generic)
         monkeypatch.setattr(
             runner, "PROVIDER_EXECUTABLE_CANDIDATES", {"gh": (candidate,), "glab": ()}
         )
 
-        assert runner.resolve_gh(override_env="KIROCREW_TEST_GH") == caller
+        assert runner.resolve_gh(override_env="AJCREW_TEST_GH") == caller
 
     def test_generic_override_wins_when_caller_var_is_unset(self, monkeypatch, tmp_path):
         generic = _fake_gh(tmp_path / "generic-bin")
         candidate = _fake_gh(tmp_path / "candidate-bin")
-        monkeypatch.delenv("KIROCREW_TEST_GH", raising=False)
-        monkeypatch.setenv("KIROCREW_GH_BIN", generic)
+        monkeypatch.delenv("AJCREW_TEST_GH", raising=False)
+        monkeypatch.setenv("AJCREW_GH_BIN", generic)
         monkeypatch.setattr(
             runner, "PROVIDER_EXECUTABLE_CANDIDATES", {"gh": (candidate,), "glab": ()}
         )
 
-        assert runner.resolve_gh(override_env="KIROCREW_TEST_GH") == generic
+        assert runner.resolve_gh(override_env="AJCREW_TEST_GH") == generic
 
     def test_candidates_are_used_without_any_override(self, monkeypatch, tmp_path):
         candidate = _fake_gh(tmp_path / "candidate-bin")
@@ -126,28 +126,28 @@ class TestResolveGh:
         operator was explicitly steering away from.
         """
         candidate = _fake_gh(tmp_path / "candidate-bin")
-        monkeypatch.setenv("KIROCREW_TEST_GH", "")
+        monkeypatch.setenv("AJCREW_TEST_GH", "")
         monkeypatch.setattr(
             runner, "PROVIDER_EXECUTABLE_CANDIDATES", {"gh": (candidate,), "glab": ()}
         )
 
-        with pytest.raises(runner.SetupError, match="KIROCREW_TEST_GH.*path must be absolute"):
-            runner.resolve_gh(override_env="KIROCREW_TEST_GH")
+        with pytest.raises(runner.SetupError, match="AJCREW_TEST_GH.*path must be absolute"):
+            runner.resolve_gh(override_env="AJCREW_TEST_GH")
 
     def test_a_wrong_override_names_the_variable(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_TEST_GH", str(tmp_path / "missing-gh"))
+        monkeypatch.setenv("AJCREW_TEST_GH", str(tmp_path / "missing-gh"))
 
-        with pytest.raises(runner.SetupError, match="KIROCREW_TEST_GH.*failed validation"):
-            runner.resolve_gh(override_env="KIROCREW_TEST_GH")
+        with pytest.raises(runner.SetupError, match="AJCREW_TEST_GH.*failed validation"):
+            runner.resolve_gh(override_env="AJCREW_TEST_GH")
 
     def test_strict_mode_refuses_path_hits(self, monkeypatch, tmp_path):
         planted = _fake_gh(tmp_path / "user-bin")
-        monkeypatch.setenv("KIROCREW_PROVIDER_BIN_STRICT", "1")
+        monkeypatch.setenv("AJCREW_PROVIDER_BIN_STRICT", "1")
         monkeypatch.setenv("PATH", str(tmp_path / "user-bin"))
         monkeypatch.setattr(
             runner,
             "PROVIDER_EXECUTABLE_CANDIDATES",
-            {"gh": ("/nonexistent-kirocrew/gh",), "glab": ()},
+            {"gh": ("/nonexistent-ajcrew/gh",), "glab": ()},
         )
 
         with pytest.raises(runner.SetupError) as excinfo:
@@ -163,16 +163,16 @@ class TestResolveGh:
         monkeypatch.setattr(
             runner,
             "PROVIDER_EXECUTABLE_CANDIDATES",
-            {"gh": ("/nonexistent-kirocrew/gh",), "glab": ()},
+            {"gh": ("/nonexistent-ajcrew/gh",), "glab": ()},
         )
 
         with pytest.raises(runner.SetupError) as excinfo:
-            runner.resolve_gh(override_env="KIROCREW_TEST_GH")
+            runner.resolve_gh(override_env="AJCREW_TEST_GH")
 
         message = str(excinfo.value)
         assert "brew install gh" in message
         assert "gh auth login" in message
-        assert "KIROCREW_TEST_GH" in message
+        assert "AJCREW_TEST_GH" in message
         # "path does not exist" rejections are noise, not guidance.
         assert "does not exist" not in message
 
@@ -182,17 +182,17 @@ class TestResolveGh:
         monkeypatch.setattr(
             runner,
             "PROVIDER_EXECUTABLE_CANDIDATES",
-            {"gh": ("/nonexistent-kirocrew/gh",), "glab": ()},
+            {"gh": ("/nonexistent-ajcrew/gh",), "glab": ()},
         )
         monkeypatch.setattr(runner, "_wellknown_windows_dirs", lambda _executable: ())
 
         with pytest.raises(runner.SetupError) as excinfo:
-            runner.resolve_gh(override_env="KIROCREW_TEST_GH")
+            runner.resolve_gh(override_env="AJCREW_TEST_GH")
 
         message = str(excinfo.value)
         assert "winget install --id GitHub.cli" in message
         assert "gh auth login" in message
-        assert "KIROCREW_TEST_GH" in message
+        assert "AJCREW_TEST_GH" in message
         assert "brew install" not in message
 
     def test_resolution_is_cached_and_reset_clears_it(self, monkeypatch, tmp_path):
@@ -216,10 +216,10 @@ class TestResolveGh:
     def test_a_changed_override_value_is_not_served_from_cache(self, monkeypatch, tmp_path):
         first = _fake_gh(tmp_path / "first-bin")
         second = _fake_gh(tmp_path / "second-bin")
-        monkeypatch.setenv("KIROCREW_TEST_GH", first)
-        assert runner.resolve_gh(override_env="KIROCREW_TEST_GH") == first
-        monkeypatch.setenv("KIROCREW_TEST_GH", second)
-        assert runner.resolve_gh(override_env="KIROCREW_TEST_GH") == second
+        monkeypatch.setenv("AJCREW_TEST_GH", first)
+        assert runner.resolve_gh(override_env="AJCREW_TEST_GH") == first
+        monkeypatch.setenv("AJCREW_TEST_GH", second)
+        assert runner.resolve_gh(override_env="AJCREW_TEST_GH") == second
 
 
 # ── prevalidated handoff (sandboxed children) ────────────────────────────────
@@ -497,7 +497,7 @@ class TestGhEnv:
             "SSH_AUTH_SOCK": "/run/agent.sock",
             "SSH_AGENT_PID": "4242",
             "GIT_SSH_COMMAND": "ssh -i /home/user/.ssh/id_rsa",
-            "KIROCREW_INTERNAL_TOKEN": "internal",
+            "AJCREW_INTERNAL_TOKEN": "internal",
             "GH_TOKEN": "gho_token",
             "GH_ENTERPRISE_TOKEN": "ghe_token",
             "GITHUB_ENTERPRISE_TOKEN": "ghe_token2",
@@ -518,7 +518,7 @@ class TestGhEnv:
             "SSH_AUTH_SOCK",
             "SSH_AGENT_PID",
             "GIT_SSH_COMMAND",
-            "KIROCREW_INTERNAL_TOKEN",
+            "AJCREW_INTERNAL_TOKEN",
         ):
             assert secret_key not in env, secret_key
         for passthrough_key in (
@@ -540,7 +540,7 @@ class TestGhEnv:
         base, the gh passthrough, or one of the fixed pins — nothing else."""
         monkeypatch.setenv("GH_TOKEN", "gho_token")
         monkeypatch.setenv("SOME_RANDOM_SECRET", "boom")
-        from kiro_crew.apps import registry
+        from aj_crew.apps import registry
 
         allowed = (
             set(registry._SAFE_ENV_KEYS)
@@ -733,7 +733,7 @@ class TestRunGh:
             def log_api_access(self, **kwargs):
                 events.append(kwargs)
 
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: _FakeSel())
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: _FakeSel())
         runner._audit_run("core:issue-radar", "gh api repos/o/r", "ok")
 
         assert events == [
@@ -750,7 +750,7 @@ class TestRunGh:
 
     def test_unavailable_audit_refuses_the_spawn(self, monkeypatch):
         """Audit-or-deny: with SEL storage unusable, gh must NOT run unaudited."""
-        monkeypatch.setattr("kiro_crew.sel.sel", mock.Mock(side_effect=RuntimeError("sel down")))
+        monkeypatch.setattr("aj_crew.sel.sel", mock.Mock(side_effect=RuntimeError("sel down")))
         with mock.patch.object(runner.subprocess, "run", return_value=_proc()) as spawn:
             with pytest.raises(runner.SetupError, match="refusing to run gh unaudited"):
                 runner.run_gh(["/usr/bin/gh", "api", "user"], timeout=5, audit_caller="core:test")
@@ -770,7 +770,7 @@ class TestRunGh:
                     raise RuntimeError("sel went away mid-call")
 
         flaky = _FlakySel()
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: flaky)
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: flaky)
         with mock.patch.object(runner.subprocess, "run", return_value=_proc()):
             proc = runner.run_gh(
                 ["/usr/bin/gh", "api", "user"], timeout=5, audit_caller="core:test"
@@ -784,7 +784,7 @@ class TestRunGh:
 
 class TestReExports:
     def test_source_providers_validation_is_the_shared_function(self):
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard.handlers import source_providers
 
         assert source_providers._validate_provider_executable is runner.validate_provider_executable
         assert (
@@ -799,7 +799,7 @@ class TestReExports:
         """D3 lock-in: the sidebar's gh key set cannot drift from the
         app-side passthrough — it derives from the runner's canonical list,
         minus the enterprise tokens its github.com-pinned child can never use."""
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard.handlers import source_providers
 
         assert source_providers._PROVIDER_AUTH_ENV_KEYS["gh"] == frozenset(
             runner.GH_ENV_PASSTHROUGH
@@ -932,6 +932,6 @@ class TestExtendedPrefixContainment:
 
     def test_roots_are_spelled_without_the_prefix(self, monkeypatch, tmp_path):
         plain = tmp_path.resolve()
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         _serve_prefixed_spelling(monkeypatch, resolve_adds_prefix=True)
         assert plain in _REAL_AGENT_WRITABLE_ROOTS()

@@ -41,7 +41,7 @@ vi.mock('../api/client', () => ({
   SEARCH_MIN_CHARS: 2,
 }))
 vi.mock('../hooks/useVoiceInput', () => ({ useVoiceInput: () => ({ recording: false, transcribing: false, toggle: vi.fn() }), voiceInputSupported: false }))
-vi.mock('../hooks/useBranding', () => ({ useBranding: () => ({ botName: 'Kiro Crew', avatar: '' }) }))
+vi.mock('../hooks/useBranding', () => ({ useBranding: () => ({ botName: 'Aj Crew', avatar: '' }) }))
 vi.mock('../hooks/useAgents', () => ({ useAgents: () => ({ agents: [], defaultAgent: 'default' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span> }))
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
@@ -200,8 +200,8 @@ describe("a mate's chat", () => {
 
   it('a nothing_to_do call in flight never names itself: the line reads "Thinking…", same height', async () => {
     const view = renderLive(liveStore(
-      { kind: 'tool', purpose: 'Nothing to report', toolName: '@kirocrew-core/nothing_to_do', toolCallId: 'tc-q' },
-      [{ tool: '@kirocrew-core/nothing_to_do', tool_call_id: 'tc-q', tool_name: 'nothing_to_do', mcp_server: 'kirocrew-core' }],
+      { kind: 'tool', purpose: 'Nothing to report', toolName: '@ajcrew-core/nothing_to_do', toolCallId: 'tc-q' },
+      [{ tool: '@ajcrew-core/nothing_to_do', tool_call_id: 'tc-q', tool_name: 'nothing_to_do', mcp_server: 'ajcrew-core' }],
     ))
     const line = await view.findByTestId('crewmate-live-activity')
     expect(line.dataset.activity).toBe('thinking')
@@ -330,11 +330,11 @@ describe("a mate's chat", () => {
   it('the composer addresses the mate by name, not the product', async () => {
     const view = renderPane()
     await waitFor(() => expect(view.getByPlaceholderText(/Message Radar/)).toBeInTheDocument())
-    expect(view.queryByPlaceholderText(/Message Kiro Crew/)).toBeNull()
+    expect(view.queryByPlaceholderText(/Message Aj Crew/)).toBeNull()
   })
 
   it('an ordinary chat keeps the product placeholder', async () => {
     const view = renderPane({ crewmate: false })
-    await waitFor(() => expect(view.getByPlaceholderText(/Message Kiro Crew/)).toBeInTheDocument())
+    await waitFor(() => expect(view.getByPlaceholderText(/Message Aj Crew/)).toBeInTheDocument())
   })
 })

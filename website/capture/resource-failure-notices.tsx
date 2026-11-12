@@ -23,7 +23,7 @@ import '../src/index.css'
 
 const theme = new URLSearchParams(location.search).get('theme') === 'light' ? 'light' : 'dark'
 document.documentElement.dataset.mode = theme
-document.documentElement.dataset.theme = theme === 'light' ? 'kiro-light' : 'kiro-dark'
+document.documentElement.dataset.theme = theme === 'light' ? 'aj-light' : 'aj-dark'
 initI18n()
 
 window.fetch = () => Promise.reject(new TypeError('Failed to fetch: gateway unreachable'))

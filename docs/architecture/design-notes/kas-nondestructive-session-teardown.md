@@ -1,6 +1,6 @@
 # Asking KAS for a non-destructive session teardown
 
-Kiro Crew can run the KAS engine as an ACP backend, and its shared-runtime model
+Aj Crew can run the KAS engine as an ACP backend, and its shared-runtime model
 needs a verb KAS does not have: **evict a session from memory while keeping its
 persisted record loadable**. KAS today offers only `_kiro/session/delete`, which
 frees the memory *and* removes the record, so a Crew sub-agent session on KAS
@@ -216,8 +216,8 @@ per sub-agent and forgoes continuation.
 
 ## The Crew side, for context
 
-Crew keeps per-backend capability sets behind `src/kiro_crew/agent_sdk/backends.py`,
-and all three named below live in `src/kiro_crew/agent_sdk/backends_sessions.py`. Two of them answer this question
+Crew keeps per-backend capability sets behind `src/aj_crew/agent_sdk/backends.py`,
+and all three named below live in `src/aj_crew/agent_sdk/backends_sessions.py`. Two of them answer this question
 differently, and the pair is the precise statement of the gap:
 
 - `ACP_BACKENDS_SESSION_EVICTION` — **KAS is a member.** Its teardown genuinely
@@ -229,11 +229,11 @@ differently, and the pair is the precise statement of the gap:
   and says it is owned by whoever gives KAS a non-destroying teardown.
 
 Crew sends KAS the delete as its teardown from `KasHarness.teardown`
-(`src/kiro_crew/acp/harness/kas.py`), as
+(`src/aj_crew/acp/harness/kas.py`), as
 `TeardownPolicy(method=METHOD_KAS_SESSION_DELETE, notification=False)`, with the
-method string `METHOD_KAS_SESSION_DELETE` in `src/kiro_crew/acp/types.py`. The
+method string `METHOD_KAS_SESSION_DELETE` in `src/aj_crew/acp/types.py`. The
 user-visible consequence is `spawn_continue` answering `conversation_gone`
-(`src/kiro_crew/subagent_manager/continuation.py`).
+(`src/aj_crew/subagent_manager/continuation.py`).
 
 ### What Crew changes once the verb exists
 

@@ -64,7 +64,7 @@ const AURORA = {
 const BUILTIN = {
   id: BUILTIN_PACK_ID,
   name: 'Kiro',
-  author: 'Kiro Crew',
+  author: 'Aj Crew',
   description: 'The default companion.',
   type: 'builtin',
   format: 'svg',
@@ -149,14 +149,14 @@ describe('avatar builder — Library tier', () => {
   it('offers the Reactions tab only on a ghost crew, with Ghost face no longer reachable from another tier', async () => {
     // A non-ghost crew: neither the Ghost face tab nor its Reactions tab exists.
     const { unmount } = mount({ kind: 'image', v: 3 })
-    expect(screen.queryByRole('radio', { name: 'Ghost face' })).toBeNull()
+    expect(screen.queryByRole('radio', { name: 'Gem face' })).toBeNull()
     expect(screen.queryByRole('radio', { name: 'Reactions' })).toBeNull()
     unmount()
 
     // A crew that already wears a ghost opens on the face tier, so both the
     // Ghost face and Reactions tabs are offered for the pre-existing edit.
     mount({ kind: 'ghost', traits: {} })
-    expect(screen.getByRole('radio', { name: 'Ghost face' })).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'Gem face' })).toBeInTheDocument()
     gotoTier('Reactions')
     expect(
       screen.getByText(
@@ -174,7 +174,7 @@ describe('avatar builder — Library tier', () => {
     // "…so there is no Reactions tab here": a cold reader understood the concept
     // and still asked why the tab was gone, so the line names the tab.
     const NOTE =
-      'Reactions belong to the ghost face, so there is no Reactions tab here. A picture stays still and silent; a pack from the Library plays its own art and sound.'
+      'Reactions belong to the gem face, so there is no Reactions tab here. A picture stays still and silent; a pack from the Library plays its own art and sound.'
     const { unmount } = mount({ kind: 'pack', id: 'aurora' })
     await screen.findByTestId('avatar-library-pane')
     expect(screen.getByTestId('avatar-reactions-absent-pack')).toHaveTextContent(NOTE)
@@ -184,7 +184,7 @@ describe('avatar builder — Library tier', () => {
     expect(screen.getByTestId('avatar-reactions-absent-picture')).toHaveTextContent(NOTE)
     // Ghost face is not reachable from the picture tier for a non-ghost crew,
     // so there is no tab to switch to here.
-    expect(screen.queryByRole('radio', { name: 'Ghost face' })).toBeNull()
+    expect(screen.queryByRole('radio', { name: 'Gem face' })).toBeNull()
   })
 
   it('reset puts a non-ghost crew on the icon tier, not the ghost builder, pack included', async () => {
@@ -212,7 +212,7 @@ describe('avatar builder — Library tier', () => {
     gotoTier('Library')
     fireEvent.click(await screen.findByTestId('avatar-pack-select-aurora'))
 
-    gotoTier('Ghost face')
+    gotoTier('Gem face')
     await waitFor(() => expect(screen.getByTestId('avatar-builder-preview')).toBeInTheDocument())
     gotoTier('Library')
     await screen.findByTestId('avatar-library-pane')
@@ -228,7 +228,7 @@ describe('avatar builder — Library tier', () => {
     const { onSave } = mount({ kind: 'ghost', traits: {} })
     gotoTier('Library')
     fireEvent.click(await screen.findByTestId('avatar-pack-select-aurora'))
-    gotoTier('Ghost face')
+    gotoTier('Gem face')
     fireEvent.click(await screen.findByTestId('avatar-opt-wink'))
     apply()
 

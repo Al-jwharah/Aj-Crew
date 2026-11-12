@@ -6,7 +6,7 @@
  */
 
 declare global {
-  interface KiroCrewBridge {
+  interface AjCrewBridge {
     platform?: string
     isElectron?: boolean
     linuxFrameless?: boolean
@@ -330,7 +330,7 @@ declare global {
   }
 
   interface Window {
-    kirocrew?: KiroCrewBridge
+    ajcrew?: AjCrewBridge
     electronAPI?: ElectronAPI
     localGatewayAPI?: LocalGatewayAPI
     closeActionAPI?: CloseActionAPI

@@ -14,9 +14,9 @@ from typing import Any
 
 import pytest
 
-import kiro_crew.whatsapp.gateway as gw
-from kiro_crew.messaging.driver import APPROVAL_AUTO, APPROVAL_INTERACTIVE
-from kiro_crew.whatsapp.gateway import (
+import aj_crew.whatsapp.gateway as gw
+from aj_crew.messaging.driver import APPROVAL_AUTO, APPROVAL_INTERACTIVE
+from aj_crew.whatsapp.gateway import (
     _check_configured_groups,
     _configured_group_jids,
     _resolve_approval_mode,
@@ -42,7 +42,7 @@ def _cfg(**wa):
         allowed_wa_ids=wa.get("allowed_wa_ids", []),
         groups=wa.get("groups", []),
     )
-    agent = SimpleNamespace(default_agent="kirocrew", approval_mode="auto")
+    agent = SimpleNamespace(default_agent="ajcrew", approval_mode="auto")
     messaging = SimpleNamespace(idle_reset_minutes=0, daily_reset_hour=-1, dm_scope="user")
     return SimpleNamespace(whatsapp=whatsapp, agent=agent, messaging=messaging)
 
@@ -209,8 +209,8 @@ def test_start_pins_the_session_store_to_the_protected_path(monkeypatch, tmp_pat
     that stops a prompt-injected agent reading it, so the setting is inert and the
     path is always the default.
     """
-    from kiro_crew.config.paths import data_home
-    from kiro_crew.whatsapp.client import default_db_path
+    from aj_crew.config.paths import data_home
+    from aj_crew.whatsapp.client import default_db_path
 
     built: list[str] = []
 
@@ -353,7 +353,7 @@ def test_check_names_only_the_unmatched_groups_in_one_warning(caplog):
     client = GroupClient([{"jid": "here@g.us", "name": "Here"}])
     groups = [{"jid": "here@g.us"}, {"jid": "gone@g.us"}, {"jid": "typo@g.us"}]
 
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.whatsapp.gateway"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.whatsapp.gateway"):
         asyncio.run(_check_configured_groups(client, groups))
 
     warned = _warnings(caplog)
@@ -367,7 +367,7 @@ def test_check_names_only_the_unmatched_groups_in_one_warning(caplog):
 def test_check_is_silent_when_every_configured_group_matches(caplog):
     client = GroupClient([{"jid": "a@g.us"}, {"jid": "b@g.us"}])
 
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.whatsapp.gateway"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.whatsapp.gateway"):
         asyncio.run(_check_configured_groups(client, [{"jid": "b@g.us"}]))
 
     assert _warnings(caplog) == []
@@ -379,7 +379,7 @@ def test_check_compares_exactly_so_a_case_variant_is_reported(caplog):
     Normalizing here would call the typo fine and leave the group mute."""
     client = GroupClient([{"jid": "abc@g.us"}])
 
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.whatsapp.gateway"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.whatsapp.gateway"):
         asyncio.run(_check_configured_groups(client, [{"jid": "ABC@g.us"}]))
 
     warned = _warnings(caplog)
@@ -394,7 +394,7 @@ def test_check_stays_quiet_when_no_joined_groups_are_reported(caplog):
     failure is what teaches an operator to ignore the warning."""
     client = GroupClient([])
 
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.whatsapp.gateway"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.whatsapp.gateway"):
         asyncio.run(_check_configured_groups(client, [{"jid": "gone@g.us"}]))
 
     assert _warnings(caplog) == []
@@ -414,7 +414,7 @@ def test_check_survives_a_raising_client(caplog):
     unretrieved task exception at collection time."""
     client = GroupClient(RuntimeError("socket gone"))
 
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.whatsapp.gateway"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.whatsapp.gateway"):
         asyncio.run(_check_configured_groups(client, [{"jid": "a@g.us"}]))
 
     warned = _warnings(caplog)
@@ -462,7 +462,7 @@ async def test_the_connected_transition_schedules_the_check(monkeypatch, caplog)
     orch._cfg.whatsapp.groups = [{"jid": "here@g.us"}, {"jid": "gone@g.us"}]
     client = await maybe_start_whatsapp(orch)
 
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.whatsapp.gateway"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.whatsapp.gateway"):
         client.on_state_change("connected", "")
         await _drain_group_check()
 
@@ -481,7 +481,7 @@ async def test_a_reconnect_does_not_repeat_the_warning(monkeypatch, caplog):
     orch._cfg.whatsapp.groups = [{"jid": "gone@g.us"}]
     client = await maybe_start_whatsapp(orch)
 
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.whatsapp.gateway"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.whatsapp.gateway"):
         client.on_state_change("connected", "")
         await _drain_group_check()
         client.on_state_change("error", "disconnected (auto-reconnecting)")
@@ -520,7 +520,7 @@ async def test_the_check_runs_with_no_dashboard_state(monkeypatch, caplog):
     client = await maybe_start_whatsapp(orch)
 
     assert callable(client.on_state_change)
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.whatsapp.gateway"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.whatsapp.gateway"):
         client.on_state_change("connected", "")
         await _drain_group_check()
 
@@ -538,7 +538,7 @@ def test_a_state_change_after_the_loop_closed_is_not_an_error(monkeypatch, caplo
     orch._cfg.whatsapp.groups = [{"jid": "gone@g.us"}]
     client = asyncio.run(maybe_start_whatsapp(orch))
 
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.whatsapp.gateway"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.whatsapp.gateway"):
         client.on_state_change("connected", "")  # loop from asyncio.run() is closed
 
     assert _warnings(caplog) == []
@@ -593,7 +593,7 @@ class TestNonOperatorTurnsUnservableWarning:
         return cfg
 
     def test_warns_when_a_group_is_configured_on_a_non_spec_backend(self, caplog):
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
 
         cfg = self._cfg(groups=[{"jid": "g@g.us"}], dm_policy="self", backend=ACP_BACKEND_CLAUDE)
         cfg.whatsapp.allowed_wa_ids = ["447700900111"]  # a member IS admitted
@@ -602,7 +602,7 @@ class TestNonOperatorTurnsUnservableWarning:
         assert any("cannot run a tool-less turn" in r.getMessage() for r in caplog.records)
 
     def test_silent_when_only_the_operator_is_admitted(self, caplog):
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
 
         cfg = self._cfg(groups=[], dm_policy="self", backend=ACP_BACKEND_CLAUDE)
         with caplog.at_level(logging.WARNING):
@@ -610,7 +610,7 @@ class TestNonOperatorTurnsUnservableWarning:
         assert not caplog.records
 
     def test_names_a_configured_group_whose_allowlist_is_empty(self, caplog):
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_KIRO
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_KIRO
 
         cfg = self._cfg(groups=[{"jid": "g@g.us"}], dm_policy="self", backend=ACP_BACKEND_KIRO)
         cfg.whatsapp.allowed_wa_ids = []
@@ -622,7 +622,7 @@ class TestNonOperatorTurnsUnservableWarning:
     def test_silent_when_the_policy_admits_nobody_beyond_the_operator(self, caplog, dm_policy):
         """Read the way the transport reads it: normalized, an unknown value
         denies everyone, and ``allowlist`` with no numbers admits nobody."""
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
 
         cfg = self._cfg(groups=[], dm_policy=dm_policy, backend=ACP_BACKEND_CLAUDE)
         cfg.whatsapp.allowed_wa_ids = []
@@ -631,7 +631,7 @@ class TestNonOperatorTurnsUnservableWarning:
         assert not caplog.records
 
     def test_warns_for_an_allowlist_policy_with_numbers_on_a_non_spec_backend(self, caplog):
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
 
         cfg = self._cfg(groups=[], dm_policy="allowlist", backend=ACP_BACKEND_CLAUDE)
         cfg.whatsapp.allowed_wa_ids = ["447700900111"]
@@ -640,7 +640,7 @@ class TestNonOperatorTurnsUnservableWarning:
         assert any("cannot run a tool-less turn" in r.getMessage() for r in caplog.records)
 
     def test_a_muted_group_is_not_counted_as_admitting_anyone(self, caplog):
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
 
         cfg = self._cfg(
             groups=[{"jid": "g@g.us", "mode": "off"}], dm_policy="self", backend=ACP_BACKEND_CLAUDE
@@ -651,7 +651,7 @@ class TestNonOperatorTurnsUnservableWarning:
         assert not caplog.records
 
     def test_silent_for_a_group_with_an_allowlist_on_the_kiro_backend(self, caplog):
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_KIRO
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_KIRO
 
         cfg = self._cfg(groups=[{"jid": "g@g.us"}], dm_policy="self", backend=ACP_BACKEND_KIRO)
         cfg.whatsapp.allowed_wa_ids = ["447700900111"]
@@ -660,7 +660,7 @@ class TestNonOperatorTurnsUnservableWarning:
         assert not caplog.records
 
     def test_silent_on_a_backend_that_mounts_the_spec(self, caplog):
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_KIRO
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_KIRO
 
         cfg = self._cfg(groups=[{"jid": "g@g.us"}], dm_policy="open", backend=ACP_BACKEND_KIRO)
         cfg.whatsapp.allowed_wa_ids = ["447700900111"]
@@ -671,7 +671,7 @@ class TestNonOperatorTurnsUnservableWarning:
     def test_a_groups_own_list_counts_when_the_global_list_is_empty(self, caplog):
         """A group's own ``allowed_wa_ids`` replaces the global list, so a group
         that lists members of its own is not reported as answering only you."""
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_KIRO
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_KIRO
 
         cfg = self._cfg(
             groups=[{"jid": "g@g.us", "allowed_wa_ids": ["447700900111"]}],
@@ -686,7 +686,7 @@ class TestNonOperatorTurnsUnservableWarning:
     def test_a_groups_own_empty_list_is_reported_despite_a_global_list(self, caplog):
         """An empty list on the group admits nobody there, whatever the global
         list holds, so only that group is named."""
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_KIRO
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_KIRO
 
         cfg = self._cfg(
             groups=[{"jid": "a@g.us", "allowed_wa_ids": []}, {"jid": "b@g.us"}],

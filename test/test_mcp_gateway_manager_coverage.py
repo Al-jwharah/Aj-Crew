@@ -17,9 +17,9 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from kiro_crew.code_fingerprint import code_fingerprint
-from kiro_crew.mcp_gateway import manager as mgr
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.code_fingerprint import code_fingerprint
+from aj_crew.mcp_gateway import manager as mgr
+from aj_crew.testing.ids import UNALLOCATABLE_PID
 
 
 def _manager(tmp_path, **spec):
@@ -335,7 +335,7 @@ def test_host_memory_is_reported_in_mib_and_anything_unusable_is_minus_one(
             raise sample
         return SimpleNamespace(available_gb=sample)
 
-    monkeypatch.setattr("kiro_crew.resource_status.probe", probe)
+    monkeypatch.setattr("aj_crew.resource_status.probe", probe)
 
     assert mgr.GatewayManager._host_available_mb() == expected
 

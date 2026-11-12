@@ -17,8 +17,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.dashboard.session_directive_apply import apply_session_directive
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.dashboard.session_directive_apply import apply_session_directive
 
 
 @pytest.mark.asyncio
@@ -45,8 +45,8 @@ async def test_stale_wake_stop_preserves_pause_landing_before_remove(tmp_path, k
     monkeypatch.setattr(service, "_acquire_mutation_lock", _pause_before_stop_acquires)
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),
@@ -82,7 +82,7 @@ async def test_remove_unserialized_requires_mutation_lock(tmp_path):
 
 @pytest.mark.asyncio
 async def test_remove_unserialized_requires_lock_owned_by_caller(tmp_path):
-    from kiro_crew import autonudge as an
+    from aj_crew import autonudge as an
 
     service = AutoNudgeService(base_dir=tmp_path)
     loop = await service.add(slot_key="chat-1", message="keep", idle_secs=86400)
@@ -115,7 +115,7 @@ async def test_remove_unserialized_requires_lock_owned_by_caller(tmp_path):
 
 @pytest.mark.asyncio
 async def test_remove_unserialized_requires_service_maintenance_lock(tmp_path):
-    from kiro_crew import autonudge as an
+    from aj_crew import autonudge as an
 
     service = AutoNudgeService(base_dir=tmp_path)
     loop = await service.add(slot_key="chat-1", message="keep", idle_secs=86400)
@@ -158,8 +158,8 @@ async def test_stale_wake_stop_preserves_pause_landing_before_research_update(
     monkeypatch.setattr(service, "_acquire_mutation_lock", _pause_before_stop_acquires)
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),
@@ -209,9 +209,9 @@ async def test_stale_wake_stop_of_row_deleted_before_remove_is_idempotent_succes
     audit = MagicMock()
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=audit),
-            patch("kiro_crew.sel.sel", return_value=audit),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=audit),
+            patch("aj_crew.sel.sel", return_value=audit),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),
@@ -253,9 +253,9 @@ async def test_stale_wake_stop_of_row_deleted_before_research_update_is_idempote
     audit = MagicMock()
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=audit),
-            patch("kiro_crew.sel.sel", return_value=audit),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=audit),
+            patch("aj_crew.sel.sel", return_value=audit),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),
@@ -310,9 +310,9 @@ async def test_stale_wake_stop_of_row_replaced_before_write_is_refused(
     audit = MagicMock()
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=audit),
-            patch("kiro_crew.sel.sel", return_value=audit),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=audit),
+            patch("aj_crew.sel.sel", return_value=audit),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),
@@ -350,9 +350,9 @@ async def test_stale_wake_stop_that_never_took_the_lock_is_not_reported_stopped(
     audit = MagicMock()
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=audit),
-            patch("kiro_crew.sel.sel", return_value=audit),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=audit),
+            patch("aj_crew.sel.sel", return_value=audit),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),
@@ -396,9 +396,9 @@ async def test_user_stop_that_never_took_the_lock_is_not_reported_stopped(
     audit = MagicMock()
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=audit),
-            patch("kiro_crew.sel.sel", return_value=audit),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=audit),
+            patch("aj_crew.sel.sel", return_value=audit),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),
@@ -451,9 +451,9 @@ async def test_user_stop_of_row_replaced_before_write_is_refused(
     audit = MagicMock()
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=audit),
-            patch("kiro_crew.sel.sel", return_value=audit),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=audit),
+            patch("aj_crew.sel.sel", return_value=audit),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),

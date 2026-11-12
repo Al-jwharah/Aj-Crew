@@ -15,14 +15,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import crew_mode
-from kiro_crew.dashboard import session_control
-from kiro_crew.dashboard.handlers import ask_question as aq
+from aj_crew import crew_mode
+from aj_crew.dashboard import session_control
+from aj_crew.dashboard.handlers import ask_question as aq
 
-CONDUCTOR = "kirocrew-conductor"
+CONDUCTOR = "ajcrew-conductor"
 
 
-def _slot(key: str, *, agent: str = "kirocrew", created_by: str = "") -> SimpleNamespace:
+def _slot(key: str, *, agent: str = "ajcrew", created_by: str = "") -> SimpleNamespace:
     return SimpleNamespace(
         key=key,
         agent=agent,

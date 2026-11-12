@@ -56,7 +56,7 @@ export type CrewLogBundle = Record<CrewLogFold, CrewLogProjection>
  *  sent, and whether the writer owed entries as the fold was taken. */
 /** Where `off_body`'s `{{link}}` points: the reference for what the crew log stores. */
 const CREW_LOG_DOCS_URL =
-  'https://github.com/kirodotdev/KiroCrew/blob/main/docs/reference/crew-log/README.md'
+  'https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/reference/crew-log/README.md'
 
 export type CrewLogRead = {
   folds: CrewLogBundle
@@ -66,7 +66,7 @@ export type CrewLogRead = {
   writesDrained: boolean
   /** False when the gateway reports recording switched off. */
   recording: boolean
-  /** The KIROCREW_CREW_LOG value that switched it off; empty when none was sent. */
+  /** The AJCREW_CREW_LOG value that switched it off; empty when none was sent. */
   flagValue: string
   /** False when that value is not one of the switch-off spellings. */
   flagRecognised: boolean
@@ -713,7 +713,7 @@ function SubagentsBody({ value }: { value: Record<string, unknown> }) {
               <tr>
                 {/* Both cells truncate, and a truncated name with no recovery is a name the
                     reader cannot read at all: agent templates and model ids are long and
-                    differ in their TAILS (`kirocrew-worker` / `kirocrew-writer-critic`), so
+                    differ in their TAILS (`ajcrew-worker` / `ajcrew-writer-critic`), so
                     an ellipsis can hide the part that identifies the row. The full value is
                     the element's own `title`, which is where the rest of this panel puts a
                     value it had to shorten. */}

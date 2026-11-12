@@ -31,7 +31,7 @@ from session_usage_helpers import (
     _reset_usage_globals,
 )
 
-import kiro_crew.dashboard.handlers.sessions as sessions_mod
+import aj_crew.dashboard.handlers.sessions as sessions_mod
 
 
 class TestIdentityIsNotStale:
@@ -92,7 +92,7 @@ class TestCredentialSelectionIsAnchored:
     ARN = "arn:aws:codewhisperer:us-east-1:1:profile/A"
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture, moved verbatim; no test of the class calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture, moved verbatim; no test of the class calls monkeypatch.undo()
     def _reset(self, monkeypatch):
         _reset_usage_globals()
         yield
@@ -1150,7 +1150,7 @@ class TestASwitchWithinOneRegistration(_ResetUsageGlobals):
 
     @staticmethod
     def _write_store(home, user: str) -> None:
-        from kiro_crew import identity_stores
+        from aj_crew import identity_stores
 
         db = identity_stores.selected_store(sys.platform, home)
         db.parent.mkdir(parents=True, exist_ok=True)
@@ -1173,7 +1173,7 @@ class TestASwitchWithinOneRegistration(_ResetUsageGlobals):
 
     @pytest.mark.asyncio
     async def test_a_switch_from_a_to_b_does_not_publish_as_b(self, tmp_path, monkeypatch):
-        from kiro_crew import kiro_prerequisite
+        from aj_crew import kiro_prerequisite
 
         for var in ("XDG_DATA_HOME", "LOCALAPPDATA", "APPDATA"):
             monkeypatch.delenv(var, raising=False)
@@ -1189,7 +1189,7 @@ class TestASwitchWithinOneRegistration(_ResetUsageGlobals):
             p[1],
             p[2],
             p[3],
-            patch("kiro_crew.hooks.emit_internal_read_audit", return_value=True),
+            patch("aj_crew.hooks.emit_internal_read_audit", return_value=True),
         ):
             # The switch lands while the refresh runs; a second refresh then
             # reads B's store.

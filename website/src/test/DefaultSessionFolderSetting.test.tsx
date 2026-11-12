@@ -27,7 +27,7 @@ vi.mock('../api/client', () => ({
     dashboardConfig: () => Promise.resolve({ default_session_folder: server.folder }),
     chatFolders: () => (mocks.chatFoldersImpl ? mocks.chatFoldersImpl() : Promise.resolve(server.folders)),
     updateDashboardConfig: mocks.updateDashboardConfig,
-    kirocrewConfig: () => Promise.resolve({ dashboard: { folder_sort: server.folderSort } }),
+    ajcrewConfig: () => Promise.resolve({ dashboard: { folder_sort: server.folderSort } }),
   },
 }))
 

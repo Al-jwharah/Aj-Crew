@@ -20,7 +20,7 @@ from __future__ import annotations
 import pytest
 from chat_test_helpers import _make_state
 
-import kiro_crew.dashboard.chat_handlers as ch
+import aj_crew.dashboard.chat_handlers as ch
 
 
 def _resumed(state, key, meta):
@@ -36,7 +36,7 @@ def _resumed(state, key, meta):
 
 @pytest.mark.parametrize("kind", ["template", "member"])
 def test_resume_restores_the_recorded_agent_kind(tmp_path, monkeypatch, kind):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     key = "dashboard:resume-kind"
 
@@ -57,7 +57,7 @@ def test_resume_ignores_an_unknown_agent_kind(tmp_path, monkeypatch):
     Mirrors the ``in ("member", "template")`` guard both persistence loaders
     apply to the same field.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
 
     slot = _resumed(state, "dashboard:resume-kind-bogus", {"agent": "alice", "agent_kind": "admin"})
@@ -69,7 +69,7 @@ def test_resume_ignores_an_unknown_agent_kind(tmp_path, monkeypatch):
 
 def test_resume_without_a_recorded_kind_leaves_it_empty(tmp_path, monkeypatch):
     """An older transcript recorded no namespace; nothing may be invented for it."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
 
     slot = _resumed(state, "dashboard:resume-kind-absent", {"agent": "alice"})

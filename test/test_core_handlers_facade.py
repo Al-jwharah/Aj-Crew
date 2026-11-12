@@ -1,10 +1,10 @@
 """The core dashboard handlers' facade keeps the patch seams the one module had.
 
-``kiro_crew.dashboard.handlers.core`` is a mirror facade (:mod:`kiro_crew._facade_mirror`)
-over the ``kiro_crew.dashboard.handlers.core_<role>`` owners. It keeps the page, asset,
+``aj_crew.dashboard.handlers.core`` is a mirror facade (:mod:`aj_crew._facade_mirror`)
+over the ``aj_crew.dashboard.handlers.core_<role>`` owners. It keeps the page, asset,
 health and theme routes, the session sub-agent routes, logout, shutdown and the app token,
 and its import header. Callers, tests and documents still reach every name as
-``kiro_crew.dashboard.handlers.core.<name>``, and the moved code reads its names as plain
+``aj_crew.dashboard.handlers.core.<name>``, and the moved code reads its names as plain
 module globals, so a patch through the facade reaches that code only because the mirror
 writes it into every module holding the name.
 
@@ -36,9 +36,9 @@ import owner_import_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard.handlers import core
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew.dashboard.handlers import core
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_core_handlers_facade")
 
@@ -46,10 +46,10 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_core_handlers_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.dashboard.handlers.core"
-OWNER_PREFIX = "kiro_crew.dashboard.handlers.core_"
+FACADE = "aj_crew.dashboard.handlers.core"
+OWNER_PREFIX = "aj_crew.dashboard.handlers.core_"
 HANDLERS_DIR = Path(core.__file__).resolve().parent
-_SRC = Path(kiro_crew.__file__).resolve().parent
+_SRC = Path(aj_crew.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
 
 #: Names the test trees are known to patch through the facade, one of each seam the
@@ -130,7 +130,7 @@ _BASE_IMPORTS = frozenset("""
     DEDUP_EVERY_N_SWEEPS_MAX DashboardState EFFORT_LEVELS EMBED_RATE_LIMIT_MAX
     EXTERNAL_TERMINAL_APPS EXTRACTION_POOL_SIZE_MAX EXTRACTION_POOL_SIZE_MIN
     FOLDER_INGEST_CHUNK_BUDGET_MAX FOLDER_SORT_MODES IMPORT_CHUNK_BUDGET_MAX Iterable
-    JUDGE_PROVIDERS KEBAB_RE KiroCrewConfig MAX_IDLE_EVICT_SECS MAX_INTERVAL_MS
+    JUDGE_PROVIDERS KEBAB_RE AjCrewConfig MAX_IDLE_EVICT_SECS MAX_INTERVAL_MS
     MAX_SESSION_TTL_SECS MAX_SUBAGENTS_FIXED_FLOOR MCP_PROBE_TIMEOUT_MAX
     MCP_PROBE_TIMEOUT_MIN MIN_IDLE_EVICT_SECS MIN_PARTIAL_INTERVAL_MS MIN_SILENCE_MS
     POOL_TTL_SECS_MAX POOL_TTL_SECS_MIN PROVIDER_LOCAL Path PeerCredResult
@@ -149,7 +149,7 @@ _BASE_IMPORTS = frozenset("""
     build_posture_snapshot_async check_host check_peer_is_self coerce_dict_section
     config_path copy difflib discovery_executor drained_to_thread ensure_ffmpeg_in_path
     ffmpeg_source functools gateway_id generate_token guard_owner_surface_routes
-    is_direct_local_request is_valid_id json kiro_crew list_custom_vocabularies logging math
+    is_direct_local_request is_valid_id json aj_crew list_custom_vocabularies logging math
     os owner_surface_guard parse_duration pip_extra_install_command platform platform_compat
     posture_counts_async re require_owner_dashboard_request run_config_write
     selectable_backend_values selectable_stored_backend_values shlex shutil stt
@@ -359,7 +359,7 @@ def test_the_page_cache_is_the_facade_s_own_global() -> None:
 
 
 def test_every_owner_logs_under_the_facade_logger_name() -> None:
-    """Log capture and filters key on ``kiro_crew.dashboard.handlers.core``."""
+    """Log capture and filters key on ``aj_crew.dashboard.handlers.core``."""
     logged = 0
     for owner in _OWNERS:
         for call in ast.walk(_tree(owner)):
@@ -389,12 +389,12 @@ def test_the_inventory_check_reports_a_planted_import() -> None:
     source = Path(core.__file__).read_text(encoding="utf-8")
     planted = source + (
         "\nimport fnmatch\nimport sched\n"
-        "from kiro_crew.dashboard.handlers.core_security import api_stt_config\n"
+        "from aj_crew.dashboard.handlers.core_security import api_stt_config\n"
     )
     family_reads = read_names(*_family_sources(), "_uses = fnmatch.fnmatch\n")
     assert unexpected_imports(planted, _owner_names(), family_reads) == [
         "sched",
-        "kiro_crew.dashboard.handlers.core_security.api_stt_config",
+        "aj_crew.dashboard.handlers.core_security.api_stt_config",
     ]
 
 
@@ -420,13 +420,13 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     sources = {
-        root / "pkg" / "caller.py": "from kiro_crew.dashboard.handlers.core_security import _sel\n",
-        root / "other.py": "from kiro_crew.dashboard.handlers import core_stt_speech as speech\n",
+        root / "pkg" / "caller.py": "from aj_crew.dashboard.handlers.core_security import _sel\n",
+        root / "other.py": "from aj_crew.dashboard.handlers import core_stt_speech as speech\n",
         root / "dashboard" / "handlers" / "rel.py": "from .core_auth_x import a\n",
         root / "dashboard" / "handlers" / "deep" / "up.py": "from .. import core_security\n",
-        root / "facade_user.py": "from kiro_crew.dashboard.handlers.core import _sel\n",
+        root / "facade_user.py": "from aj_crew.dashboard.handlers.core import _sel\n",
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",
@@ -449,8 +449,8 @@ def test_the_pin_validator_reads_the_acp_entitlement_helpers_at_call_time(
     delegation, so a patch of that name on the ACP client still decides the answer, as it did
     when the validator imported the client itself. (``model_is_unusable`` is not a name the
     client facade forwards, so it is pinned structurally below rather than patched here.)"""
-    from kiro_crew.acp import client as acp_client
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.acp import client as acp_client
+    from aj_crew.dashboard import chat_handlers
 
     monkeypatch.setattr(chat_handlers, "_model_rejected_reason", lambda value, backend: "")
     request = _pin_request([{"modelId": "picked"}])
@@ -465,14 +465,14 @@ def test_the_driver_delegations_read_the_acp_client_at_call_time() -> None:
     function inside the call, never at module scope, so a patch of the client's name made
     after import is the one the pin validator runs; and the validator reaches both through
     the driver, function-locally, without naming the ACP layer itself."""
-    from kiro_crew.agent_sdk.drivers import acp as acp_driver
+    from aj_crew.agent_sdk.drivers import acp as acp_driver
 
     driver = ast.parse(Path(acp_driver.__file__).read_text(encoding="utf-8"))
     names = ("advertised_model_ids", "model_is_unusable")
     module_scope = {
         alias.asname or alias.name
         for node in driver.body
-        if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.acp.client"
+        if isinstance(node, ast.ImportFrom) and node.module == "aj_crew.acp.client"
         for alias in node.names
     }
     delegations = {}
@@ -481,25 +481,25 @@ def test_the_driver_delegations_read_the_acp_client_at_call_time() -> None:
             delegations[node.name] = [
                 (alias.name, alias.asname)
                 for stmt in node.body
-                if isinstance(stmt, ast.ImportFrom) and stmt.module == "kiro_crew.acp.client"
+                if isinstance(stmt, ast.ImportFrom) and stmt.module == "aj_crew.acp.client"
                 for alias in stmt.names
             ]
     assert delegations == {name: [(name, "_impl")] for name in names}
     assert not module_scope & {"_impl", *names}
-    validator = _tree("kiro_crew.dashboard.handlers.core_config_models")
+    validator = _tree("aj_crew.dashboard.handlers.core_config_models")
     local = {
         alias.name
         for fn in validator.body
         if isinstance(fn, ast.FunctionDef)
         for stmt in fn.body
-        if isinstance(stmt, ast.ImportFrom) and stmt.module == "kiro_crew.agent_sdk.drivers.acp"
+        if isinstance(stmt, ast.ImportFrom) and stmt.module == "aj_crew.agent_sdk.drivers.acp"
         for alias in stmt.names
     }
     assert set(names) <= local
     assert not [
         node.module
         for node in ast.walk(validator)
-        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("kiro_crew.acp")
+        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("aj_crew.acp")
     ]
 
 

@@ -17,9 +17,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from conftest import requires_symlinks
-from kiro_crew import agent_state
-from kiro_crew.agent_discovery import (
+from aj_crew import agent_state
+from aj_crew.agent_discovery import (
     SCOPE_GLOBAL,
     SCOPE_PROJECT,
     AgentInfo,
@@ -32,12 +31,13 @@ from kiro_crew.agent_discovery import (
     project_agent_names,
     spec_by_declared_name,
 )
+from conftest import requires_symlinks
 
 # caplog collects records from EVERY logger, not just the one at_level() names, so
 # a negative "logged no warning" assertion must filter by logger: an unrelated
 # neighbour's asyncio "Task was destroyed" record otherwise lands in the window
 # and fails the assertion depending on how the suite is sharded.
-_DISCOVERY_LOGGER = "kiro_crew.agent_discovery"
+_DISCOVERY_LOGGER = "aj_crew.agent_discovery"
 
 
 @pytest.fixture
@@ -145,7 +145,7 @@ class TestProjectScopeDiscovery:
     def test_sensitive_project_dir_yields_no_agents(self, tmp_path, monkeypatch):
         """A project path the security gate rejects must not be scanned at all."""
         monkeypatch.setattr(
-            "kiro_crew.agent_discovery.is_sensitive_path",
+            "aj_crew.agent_discovery.is_sensitive_path",
             lambda p: str(p) == str(tmp_path / "secret"),
         )
         proj = tmp_path / "secret"
@@ -161,7 +161,7 @@ class TestProjectScopeDiscovery:
         call. The cache signature must not stat under the refused tree; the user-level
         scope still lists, and the one refusal owes exactly one denial row.
         """
-        import kiro_crew.agent_discovery as ad
+        import aj_crew.agent_discovery as ad
 
         d = _agents_dir(fake_home)
         (d / "user-level.json").write_text(json.dumps({"name": "user-level"}))
@@ -170,7 +170,7 @@ class TestProjectScopeDiscovery:
         protected = tmp_path / "protected"
         (_project_agents_dir(protected) / "a.json").write_text(json.dumps({"name": "a"}))
         monkeypatch.setattr(
-            "kiro_crew.agent_discovery.is_sensitive_path",
+            "aj_crew.agent_discovery.is_sensitive_path",
             lambda p: str(p) == str(protected),
         )
         real_signature = ad._dir_signature
@@ -208,7 +208,7 @@ class TestProjectScopeDiscovery:
         Counted here because the behavioural pin below passes while a redundant guard
         still agrees.
         """
-        import kiro_crew.agent_discovery as ad
+        import aj_crew.agent_discovery as ad
 
         d = _agents_dir(fake_home)
         (d / "user-level.json").write_text(json.dumps({"name": "user-level"}))
@@ -237,7 +237,7 @@ class TestProjectScopeDiscovery:
         Two verdicts on one scope can disagree (a repointed symlink, a resolver stall),
         and a call must never both record a denial for a scope and stat under it.
         """
-        import kiro_crew.agent_discovery as ad
+        import aj_crew.agent_discovery as ad
 
         d = _agents_dir(fake_home)
         (d / "user-level.json").write_text(json.dumps({"name": "user-level"}))
@@ -301,7 +301,7 @@ class TestProjectScopeDiscovery:
             return str(p) == str(secret)
 
         clear_list_agents_cache()
-        import kiro_crew.agent_discovery as ad
+        import aj_crew.agent_discovery as ad
 
         original = ad.is_sensitive_canonical_path
         ad.is_sensitive_canonical_path = _sensitive
@@ -343,14 +343,14 @@ class TestProjectAgentNameCache:
         `_project_signature` stats under the caller-supplied dir, so it must not run
         before the sensitivity check, and the refusal records a SEL denial.
         """
-        import kiro_crew.agent_discovery as ad
+        import aj_crew.agent_discovery as ad
 
         # Named "protected", not "secret": CodeQL treats `secret` as a credential and
         # would report the module's logs of the refused path as leaks.
         protected = tmp_path / "protected"
         (_project_agents_dir(protected) / "a.json").write_text(json.dumps({"name": "a"}))
         monkeypatch.setattr(
-            "kiro_crew.agent_discovery.is_sensitive_path",
+            "aj_crew.agent_discovery.is_sensitive_path",
             lambda p: str(p) == str(protected),
         )
         monkeypatch.setattr(
@@ -377,7 +377,7 @@ class TestProjectAgentNameCache:
         ``project_agent_names`` stats its signature before scanning, so a second verdict
         could deny a tree this call had just statted.
         """
-        import kiro_crew.agent_discovery as ad
+        import aj_crew.agent_discovery as ad
 
         proj = tmp_path / "proj"
         (_project_agents_dir(proj) / "a.json").write_text(json.dumps({"name": "a"}))
@@ -424,7 +424,7 @@ class TestProjectAgentNameCache:
         clear_project_agent_cache()
         assert project_agent_names(str(proj)) == frozenset({"a"})
 
-        import kiro_crew.agent_discovery as ad
+        import aj_crew.agent_discovery as ad
 
         monkeypatch.setattr(
             ad, "_read_agent_spec", lambda p: pytest.fail("re-read a spec on a warm cache")
@@ -467,7 +467,7 @@ class TestListAgentsRobustness:
         The read goes through hooks.safe_read_file_bytes, whose cap keeps a
         multi-gigabyte "agent config" out of memory.
         """
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         monkeypatch.setattr(hooks_mod, "MAX_FILE_BYTES", 64)
         d = _agents_dir(fake_home)
@@ -644,7 +644,7 @@ class TestSpecModelCoercion:
         # Stub the seam at ``safe_context_call``: it is what ``_with_edition_agents``
         # funnels the platform lookup through, so this needs no platform context.
         monkeypatch.setattr(
-            "kiro_crew.platform.context.safe_context_call",
+            "aj_crew.platform.context.safe_context_call",
             lambda *_a, **_kw: [
                 {"name": "edition-foreign", "model": {"id": "anthropic:claude-opus-4-8"}}
             ],
@@ -675,12 +675,12 @@ class TestSpecModelCoercion:
         assert info.package == ""
         # to_dict() is the wire shape the dashboard renders. Non-string fields
         # are excluded by NAME, not skipped silently: the lists render as chips
-        # (one element each), `kirocrew_owned` is the bool provenance flag and
+        # (one element each), `ajcrew_owned` is the bool provenance flag and
         # `markdown_only` the bool backend-compatibility flag — everything else
         # must be a plain string or React error #31 returns.
         assert all(isinstance(v, str) for k, v in info.to_dict().items() if k not in
-                   ("skills", "mcp_servers", "kirocrew_owned", "markdown_only"))
-        assert isinstance(info.to_dict()["kirocrew_owned"], bool)
+                   ("skills", "mcp_servers", "ajcrew_owned", "markdown_only"))
+        assert isinstance(info.to_dict()["ajcrew_owned"], bool)
         assert isinstance(info.to_dict()["markdown_only"], bool)
 
     def test_list_fields_drop_only_the_unusable_elements(self) -> None:
@@ -726,7 +726,7 @@ class TestSpecModelCoercion:
         d = tmp_path / "agents"
         d.mkdir()
         monkeypatch.setattr(
-            "kiro_crew.platform.context.safe_context_call",
+            "aj_crew.platform.context.safe_context_call",
             lambda *_a, **_kw: [
                 {"name": {"id": "nope"}, "model": "auto"},
                 {"name": "usable", "model": "auto"},
@@ -801,11 +801,11 @@ class TestListAgentsDedup:
         assert a.package == "MyPkg"
         assert a.source == "package"
 
-    def test_aim_kirocrew_package_source(self, tmp_path: Path) -> None:
-        """A package-installed agent (e.g. KiroCrewAICapabilities) gets source='package'."""
+    def test_aim_ajcrew_package_source(self, tmp_path: Path) -> None:
+        """A package-installed agent (e.g. AjCrewAICapabilities) gets source='package'."""
         agents_dir = tmp_path / "agents"
         agents_dir.mkdir()
-        (agents_dir / "KiroCrewAICapabilities-myskill.json").write_text(
+        (agents_dir / "AjCrewAICapabilities-myskill.json").write_text(
             json.dumps({"name": "myskill", "model": "auto"}), encoding="utf-8"
         )
         agents = list_agents(agents_dir=agents_dir)
@@ -858,7 +858,7 @@ class TestListAgentsDedup:
         (agents_dir / "local-MyPkg-myagent.json").write_text(
             json.dumps({"name": "myagent", "model": "auto"}), encoding="utf-8"
         )
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.agent_discovery"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.agent_discovery"):
             agents = list_agents(agents_dir=agents_dir)
         dupes = [a for a in agents if a.name == "myagent"]
         assert len(dupes) == 1
@@ -887,7 +887,7 @@ class TestListAgentsDedup:
         (agents_dir / "BbbPkg-myagent.json").write_text(
             json.dumps({"name": "myagent", "model": "auto"}), encoding="utf-8"
         )
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent_discovery"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent_discovery"):
             agents = list_agents(agents_dir=agents_dir)
         dupes = [a for a in agents if a.name == "myagent"]
         assert len(dupes) == 1
@@ -1100,7 +1100,7 @@ class TestSystematicScanFailureWarning:
         """A spec that parses but whose row construction raises still ends in
         "discovery listed nothing" — the warning must cover that path too, so
         the parsed counter means "produced a row", not "JSON loaded"."""
-        import kiro_crew.agent_discovery as mod
+        import aj_crew.agent_discovery as mod
 
         d = _agents_dir(fake_home)
         (d / "parses.json").write_text(json.dumps({"name": "parses"}))
@@ -1120,19 +1120,19 @@ class TestSystematicScanFailureWarning:
 class TestForkLineageEnrichment:
     """list_agents stamps forked_from/private_to onto global-scope rows from the
     agent_state sidecar (global scope only — forks are recorded against
-    user-level templates). The sidecar lives under the isolated KIROCREW_HOME."""
+    user-level templates). The sidecar lives under the isolated AJCREW_HOME."""
 
     def test_forked_row_is_enriched(self, tmp_path):
         d = tmp_path / "agents"
         d.mkdir()
         (d / "design-crew.json").write_text(json.dumps({"name": "design-crew"}))
         (d / "plain.json").write_text(json.dumps({"name": "plain"}))
-        agent_state.set_fork_info("design-crew", forked_from="kirocrew", private_to="design-crew")
+        agent_state.set_fork_info("design-crew", forked_from="ajcrew", private_to="design-crew")
 
         clear_list_agents_cache()
         by_name = {a.name: a for a in list_agents(agents_dir=d)}
 
-        assert by_name["design-crew"].forked_from == "kirocrew"
+        assert by_name["design-crew"].forked_from == "ajcrew"
         assert by_name["design-crew"].private_to == "design-crew"
         # An un-forked sibling keeps the empty defaults.
         assert by_name["plain"].forked_from == ""
@@ -1155,13 +1155,13 @@ class TestSpecByDeclaredName:
     @staticmethod
     def _write(agents_dir: Path, filename: str, **fields: object) -> Path:
         path = agents_dir / filename
-        path.write_text(json.dumps({"name": "kirocrew", **fields}), encoding="utf-8")
+        path.write_text(json.dumps({"name": "ajcrew", **fields}), encoding="utf-8")
         return path
 
     def test_a_namespaced_spec_resolves_by_its_declared_name(self, tmp_path: Path) -> None:
-        self._write(tmp_path, "SomePackage-kirocrew.json", description="namespaced")
+        self._write(tmp_path, "SomePackage-ajcrew.json", description="namespaced")
 
-        spec = spec_by_declared_name(tmp_path, "kirocrew", operation="t", source="test")
+        spec = spec_by_declared_name(tmp_path, "ajcrew", operation="t", source="test")
 
         assert spec is not None and spec["description"] == "namespaced"
 
@@ -1169,21 +1169,21 @@ class TestSpecByDeclaredName:
         self._write(tmp_path, "SomePackage-other.json", name="other")
         (tmp_path / "other.json").write_text(json.dumps({"name": "other"}), encoding="utf-8")
 
-        assert spec_by_declared_name(tmp_path, "kirocrew", operation="t", source="test") is None
+        assert spec_by_declared_name(tmp_path, "ajcrew", operation="t", source="test") is None
 
     def test_two_differing_specs_declaring_one_name_are_refused_naming_both(
         self, tmp_path: Path
     ) -> None:
-        self._write(tmp_path, "Alpha-kirocrew.json", description="alpha")
-        self._write(tmp_path, "Beta-kirocrew.json", description="beta")
+        self._write(tmp_path, "Alpha-ajcrew.json", description="alpha")
+        self._write(tmp_path, "Beta-ajcrew.json", description="beta")
 
         with pytest.raises(AmbiguousAgentSpecError) as exc:
-            spec_by_declared_name(tmp_path, "kirocrew", operation="t", source="test")
+            spec_by_declared_name(tmp_path, "ajcrew", operation="t", source="test")
 
-        assert "Alpha-kirocrew.json" in str(exc.value)
-        assert "Beta-kirocrew.json" in str(exc.value)
+        assert "Alpha-ajcrew.json" in str(exc.value)
+        assert "Beta-ajcrew.json" in str(exc.value)
         assert "differing content" in str(exc.value)
-        assert [p.name for p in exc.value.paths] == ["Alpha-kirocrew.json", "Beta-kirocrew.json"]
+        assert [p.name for p in exc.value.paths] == ["Alpha-ajcrew.json", "Beta-ajcrew.json"]
 
     def test_identical_specs_declaring_one_name_resolve_to_that_one_spec(
         self, tmp_path: Path, caplog: pytest.LogCaptureFixture
@@ -1194,28 +1194,28 @@ class TestSpecByDeclaredName:
         same; the scan answers with that dict and warns naming both files."""
         self._write(
             tmp_path,
-            "Alpha-kirocrew.json",
+            "Alpha-ajcrew.json",
             description="shared",
             managedToolPolicy={"exclude": ["shell"]},
         )
         self._write(
             tmp_path,
-            "Beta-kirocrew.json",
+            "Beta-ajcrew.json",
             description="shared",
             managedToolPolicy={"exclude": ["shell"]},
         )
 
-        with caplog.at_level("WARNING", logger="kiro_crew.agent_discovery"):
-            spec = spec_by_declared_name(tmp_path, "kirocrew", operation="t", source="test")
+        with caplog.at_level("WARNING", logger="aj_crew.agent_discovery"):
+            spec = spec_by_declared_name(tmp_path, "ajcrew", operation="t", source="test")
 
         assert spec == {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "description": "shared",
             "managedToolPolicy": {"exclude": ["shell"]},
         }
         (warning,) = [r for r in caplog.records if "identical specs" in r.getMessage()]
-        assert "Alpha-kirocrew.json" in warning.getMessage()
-        assert "Beta-kirocrew.json" in warning.getMessage()
+        assert "Alpha-ajcrew.json" in warning.getMessage()
+        assert "Beta-ajcrew.json" in warning.getMessage()
 
     def test_the_twin_warning_redacts_a_credential_shaped_name(
         self, tmp_path: Path, caplog: pytest.LogCaptureFixture
@@ -1230,7 +1230,7 @@ class TestSpecByDeclaredName:
                 json.dumps({"name": token, "description": "shared"}), encoding="utf-8"
             )
 
-        with caplog.at_level("WARNING", logger="kiro_crew.agent_discovery"):
+        with caplog.at_level("WARNING", logger="aj_crew.agent_discovery"):
             spec = spec_by_declared_name(tmp_path, token, operation="t", source="test")
 
         assert spec is not None and spec["description"] == "shared"
@@ -1243,26 +1243,26 @@ class TestSpecByDeclaredName:
         caller reads but differ in their tools are two agents, and which one
         is live still decides what the session can do."""
         self._write(
-            tmp_path, "Alpha-kirocrew.json", tools=["read"], managedToolPolicy={"exclude": []}
+            tmp_path, "Alpha-ajcrew.json", tools=["read"], managedToolPolicy={"exclude": []}
         )
         self._write(
-            tmp_path, "Beta-kirocrew.json", tools=["shell"], managedToolPolicy={"exclude": []}
+            tmp_path, "Beta-ajcrew.json", tools=["shell"], managedToolPolicy={"exclude": []}
         )
 
         with pytest.raises(AmbiguousAgentSpecError):
-            spec_by_declared_name(tmp_path, "kirocrew", operation="t", source="test")
+            spec_by_declared_name(tmp_path, "ajcrew", operation="t", source="test")
 
     def test_a_pair_differing_only_in_a_scalar_type_is_refused(self, tmp_path: Path) -> None:
         """``True == 1`` in Python, but ``true`` and ``1`` are two documents to
         a backend that parses the file itself, so they are two specs here too."""
-        self._write(tmp_path, "Alpha-kirocrew.json", includeMcpJson=True)
-        self._write(tmp_path, "Beta-kirocrew.json", includeMcpJson=1)
+        self._write(tmp_path, "Alpha-ajcrew.json", includeMcpJson=True)
+        self._write(tmp_path, "Beta-ajcrew.json", includeMcpJson=1)
 
         with pytest.raises(AmbiguousAgentSpecError):
-            spec_by_declared_name(tmp_path, "kirocrew", operation="t", source="test")
+            spec_by_declared_name(tmp_path, "ajcrew", operation="t", source="test")
 
-        self._write(tmp_path, "Beta-kirocrew.json", includeMcpJson=True)
-        spec = spec_by_declared_name(tmp_path, "kirocrew", operation="t", source="test")
+        self._write(tmp_path, "Beta-ajcrew.json", includeMcpJson=True)
+        spec = spec_by_declared_name(tmp_path, "ajcrew", operation="t", source="test")
         assert spec is not None and spec["includeMcpJson"] is True
 
     def test_a_deeply_nested_identical_pair_resolves_without_a_recursion_error(
@@ -1276,9 +1276,9 @@ class TestSpecByDeclaredName:
         for _ in range(600):
             deep = {"m": [deep]}
         for stem in ("Alpha", "Beta"):
-            self._write(tmp_path, f"{stem}-kirocrew.json", metadata=deep)
+            self._write(tmp_path, f"{stem}-ajcrew.json", metadata=deep)
 
-        spec = spec_by_declared_name(tmp_path, "kirocrew", operation="t", source="test")
+        spec = spec_by_declared_name(tmp_path, "ajcrew", operation="t", source="test")
 
         assert spec is not None and "metadata" in spec
 
@@ -1287,17 +1287,17 @@ class TestSpecByDeclaredName:
     ) -> None:
         """Three claimants, two of them twins: the odd one makes the set
         divergent, so the refusal names all three."""
-        self._write(tmp_path, "Alpha-kirocrew.json", description="shared")
-        self._write(tmp_path, "Beta-kirocrew.json", description="shared")
-        self._write(tmp_path, "Gamma-kirocrew.json", description="odd")
+        self._write(tmp_path, "Alpha-ajcrew.json", description="shared")
+        self._write(tmp_path, "Beta-ajcrew.json", description="shared")
+        self._write(tmp_path, "Gamma-ajcrew.json", description="odd")
 
         with pytest.raises(AmbiguousAgentSpecError) as exc:
-            spec_by_declared_name(tmp_path, "kirocrew", operation="t", source="test")
+            spec_by_declared_name(tmp_path, "ajcrew", operation="t", source="test")
 
         assert [p.name for p in exc.value.paths] == [
-            "Alpha-kirocrew.json",
-            "Beta-kirocrew.json",
-            "Gamma-kirocrew.json",
+            "Alpha-ajcrew.json",
+            "Beta-ajcrew.json",
+            "Gamma-ajcrew.json",
         ]
 
     def test_only_the_first_matching_parse_is_held(self, tmp_path: Path, monkeypatch) -> None:
@@ -1310,13 +1310,13 @@ class TestSpecByDeclaredName:
         import gc
         import weakref
 
-        from kiro_crew import agent_discovery
+        from aj_crew import agent_discovery
 
         class _Spec(dict):
             """A dict that can be weakly referenced."""
 
         for stem in ("Alpha", "Beta", "Gamma", "Delta"):
-            self._write(tmp_path, f"{stem}-kirocrew.json")
+            self._write(tmp_path, f"{stem}-ajcrew.json")
 
         handed_out: list[weakref.ref] = []
         retained_mid_scan: list[str] = []
@@ -1331,17 +1331,17 @@ class TestSpecByDeclaredName:
                 spec = ref()
                 if spec is not None:
                     retained_mid_scan.append(spec["origin"])
-            spec = _Spec(name="kirocrew", origin=path.name)
+            spec = _Spec(name="ajcrew", origin=path.name)
             handed_out.append(weakref.ref(spec))
             return spec
 
         monkeypatch.setattr(agent_discovery, "_read_agent_spec", _reader)
 
         with pytest.raises(AmbiguousAgentSpecError) as exc:
-            spec_by_declared_name(tmp_path, "kirocrew", operation="t", source="test")
+            spec_by_declared_name(tmp_path, "ajcrew", operation="t", source="test")
 
         assert len(handed_out) == 4, "the scan must have read every candidate"
         assert retained_mid_scan == [], f"parses held past their read: {retained_mid_scan}"
         # The refusal still names every duplicate: paths are kept, parses are not.
         for stem in ("Alpha", "Beta", "Gamma", "Delta"):
-            assert f"{stem}-kirocrew.json" in str(exc.value)
+            assert f"{stem}-ajcrew.json" in str(exc.value)

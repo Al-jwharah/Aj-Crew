@@ -1,7 +1,7 @@
 """The ``stopped_loop_tombstone`` seam, and the stop path that asks it.
 
 A stop of a legacy autonudge loop removes the row, except on a slot whose app reads
-the stopped row back. Core asks through :mod:`kiro_crew.apps.seams` with the slot's
+the stopped row back. Core asks through :mod:`aj_crew.apps.seams` with the slot's
 persisted app provenance, and Research Lab answers from its own ``seams.py`` with the
 verdict its ``session_keys.is_owned_research_slot`` gives.
 
@@ -15,12 +15,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.apps import seams
-from kiro_crew.apps.builtins.auto_research.session_keys import (
+from aj_crew.apps import seams
+from aj_crew.apps.builtins.auto_research.session_keys import (
     AUTO_RESEARCH_APP,
     is_owned_research_slot,
 )
-from kiro_crew.dashboard import session_directive_apply_monitor as monitor
+from aj_crew.dashboard import session_directive_apply_monitor as monitor
 
 SEAM = seams.SEAM_STOPPED_LOOP_TOMBSTONE
 

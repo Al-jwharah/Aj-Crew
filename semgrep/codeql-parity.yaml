@@ -87,7 +87,7 @@ rules:
   # A replace() whose search and replacement are the same value does
   # nothing. It reads like sanitization while removing nothing at all.
 
-  - id: kirocrew.identity-replacement
+  - id: ajcrew.identity-replacement
     patterns:
       - pattern-either:
           - pattern: $S.replace($X, $X)
@@ -123,7 +123,7 @@ rules:
   # that contain HTML/URL-dangerous characters, so ordinary text munging
   # like s.replace("foo", "") is not flagged.
 
-  - id: kirocrew.incomplete-multi-char-sanitization
+  - id: ajcrew.incomplete-multi-char-sanitization
     patterns:
       - pattern-either:
           - patterns:
@@ -180,7 +180,7 @@ rules:
   # A quantified group whose own body ends in a quantifier -- (a+)+,
   # ([\s\S]*)* -- backtracks exponentially on a non-matching suffix.
 
-  - id: kirocrew.redos-nested-quantifier
+  - id: ajcrew.redos-nested-quantifier
     patterns:
       # Matched as an EXPRESSION, not as raw file text. A bare
       # `pattern-regex` scans the whole file, so a code comment or a
@@ -223,7 +223,7 @@ rules:
   # Web storage is readable by any script on the origin and survives the
   # tab. Credentials belong in memory or an httpOnly cookie.
 
-  - id: kirocrew.clear-text-web-storage
+  - id: ajcrew.clear-text-web-storage
     patterns:
       - pattern-either:
           - pattern: localStorage.setItem($KEY, ...)
@@ -261,7 +261,7 @@ rules:
   # legitimately persists its own gateway secret to a 0600 file and that
   # distinction is not visible syntactically.
 
-  - id: kirocrew.clear-text-credential-dump
+  - id: ajcrew.clear-text-credential-dump
     patterns:
       # A stream argument is required. Without one, yaml.[safe_]dump
       # returns a string and nothing is persisted, so firing on it
@@ -277,9 +277,9 @@ rules:
           regex: (?i)^["'](.*_)?(password|passwd|secret|credential|api_key|apikey|private_key|privatekey)(_.*)?["']$
     paths:
       include:
-        - src/kiro_crew/**
+        - src/aj_crew/**
       exclude:
-        - src/kiro_crew/_vendor/**
+        - src/aj_crew/_vendor/**
     message: >
       A credential-named field is serialized to a file in clear text.
       Confirm the destination is created with 0600 permissions inside a

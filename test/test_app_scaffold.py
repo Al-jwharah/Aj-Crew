@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.apps.scaffold — app scaffolding."""
+"""Tests for aj_crew.apps.scaffold — app scaffolding."""
 from __future__ import annotations
 
 import json
@@ -8,15 +8,15 @@ from pathlib import Path
 
 import pytest
 
-from conftest import make_dir_link, requires_symlinks
-from kiro_crew import platform_compat
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.apps.scaffold import (
+from aj_crew import platform_compat
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.apps.scaffold import (
     _placeholder_icon_png,
     _resolve_for_write,
     _write_sites,
     scaffold_app,
 )
+from conftest import make_dir_link, requires_symlinks
 
 
 class TestPlaceholderIcon:
@@ -306,7 +306,7 @@ class TestWriteContainment:
         # write sequence and well before app.json. Failing here stands in for any
         # runtime write failure past what validation can foresee.
         monkeypatch.setattr(
-            "kiro_crew.apps.scaffold._placeholder_icon_png", _boom
+            "aj_crew.apps.scaffold._placeholder_icon_png", _boom
         )
 
         with pytest.raises(OSError):
@@ -333,7 +333,7 @@ class TestWriteContainment:
         def _boom(*args, **kwargs):
             raise OSError(errno.ENOSPC, "No space left on device")
 
-        monkeypatch.setattr("kiro_crew.apps.scaffold.atomic_write", _boom)
+        monkeypatch.setattr("aj_crew.apps.scaffold.atomic_write", _boom)
 
         with pytest.raises(OSError):
             _scaffold_all(out, "myapp")
@@ -354,7 +354,7 @@ class TestWriteContainment:
         """
         import errno
 
-        import kiro_crew.apps.scaffold as scaffold_mod
+        import aj_crew.apps.scaffold as scaffold_mod
 
         out = tmp_path / "out"
         app_dir = out / "victim"
@@ -527,7 +527,7 @@ class TestResolveForWrite:
 class TestAppNameValidation:
     """`scaffold_app` validates the name before it becomes a path OR an identity.
 
-    Without `app_name_error` here a non-kebab name scaffolds fine and `kirocrew app
+    Without `app_name_error` here a non-kebab name scaffolds fine and `ajcrew app
     install` refuses it one command later, naming a file the user never typed.
     """
 
@@ -586,7 +586,7 @@ class TestAppNameValidation:
         # The permit case: the validation must not have narrowed the names that
         # legitimately work, and the manifest it writes must satisfy the very
         # contract that rejects an invalid name at install time.
-        from kiro_crew.apps.manifest import app_name_error
+        from aj_crew.apps.manifest import app_name_error
 
         app_dir = scaffold_app(tmp_path, "my-good-app")
         manifest = json.loads((app_dir / "app.json").read_text(encoding="utf-8"))
@@ -691,28 +691,28 @@ class TestScaffold:
         app_dir = scaffold_app(tmp_path, "readme-check")
         readme = (app_dir / "README.md").read_text(encoding="utf-8")
         assert "readme-check" in readme
-        assert "kirocrew app install" in readme
+        assert "ajcrew app install" in readme
 
     def test_scaffold_installable(self, tmp_path, monkeypatch):
         """Scaffolded app can be installed by the app manager."""
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         app_dir = scaffold_app(tmp_path / "output", "installable-app")
-        from kiro_crew.apps.manager import install_app
+        from aj_crew.apps.manager import install_app
         result = install_app(app_dir)
         assert result.ok, result.error
 
     def test_scaffold_cli_integration(self, tmp_path, monkeypatch, capsys):
         """Test the CLI init command via _handle_app."""
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         import argparse
 
-        from kiro_crew.cli_commands import _handle_app
+        from aj_crew.cli_commands import _handle_app
         ns = argparse.Namespace(app_action="init", name="cli-scaffolded", dir=str(tmp_path), backend=False)
         _handle_app(ns)
         captured = capsys.readouterr()
@@ -722,13 +722,13 @@ class TestScaffold:
     def test_scaffold_cli_refusal_prints_clean_error(self, tmp_path, monkeypatch, capsys):
         """A containment refusal exits 1 with the app actions' clean error
         contract on stderr, not a raw ValueError traceback."""
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         import argparse
 
-        from kiro_crew.cli_commands import _handle_app
+        from aj_crew.cli_commands import _handle_app
         out = tmp_path / "out"
         out.mkdir()
         ns = argparse.Namespace(app_action="init", name="../evil", dir=str(out), backend=False)
@@ -757,8 +757,8 @@ class TestScaffold:
 
         # vite config should externalize shared modules
         vite_cfg = (app_dir / "ui" / "vite.config.ts").read_text(encoding="utf-8")
-        assert "@kirocrew/app-sdk" in vite_cfg
-        assert "@kirocrew/app-sdk/ui" in vite_cfg
+        assert "@ajcrew/app-sdk" in vite_cfg
+        assert "@ajcrew/app-sdk/ui" in vite_cfg
 
         # App.tsx should have a valid component
         app_tsx = (app_dir / "ui" / "src" / "App.tsx").read_text(encoding="utf-8")

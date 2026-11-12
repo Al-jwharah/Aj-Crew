@@ -1,4 +1,4 @@
-"""Refusal, retry and teardown edges of ``kiro_crew.session`` the suites skip.
+"""Refusal, retry and teardown edges of ``aj_crew.session`` the suites skip.
 
 The behavioural session suites drive happy paths: a session is created, used,
 reset. What they leave untested is the half of ``SessionManager`` that exists
@@ -38,22 +38,22 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.messaging.link import UNBIND_REASON_UNSPECIFIED, ChannelLink
-from kiro_crew.session import (
+from aj_crew import platform_compat
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS
+from aj_crew.config import AjCrewConfig
+from aj_crew.messaging.link import UNBIND_REASON_UNSPECIFIED, ChannelLink
+from aj_crew.session import (
     BACKGROUND_KEY,
     FirstTurnState,
     SessionManager,
     _Session,
 )
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.fixture
 def cfg():
-    c = KiroCrewConfig()
+    c = AjCrewConfig()
     c.session.timeout_secs = 60
     c.session.pool_size = 0
     return c
@@ -220,8 +220,8 @@ class TestSessionMapDelegation:
 
     def test_max_generation_returns_the_persisted_high_water_mark(self, mgr, smap) -> None:
         smap.max_generation.return_value = 7
-        assert mgr.max_generation("unified:kirocrew") == 7
-        smap.max_generation.assert_called_once_with("unified:kirocrew")
+        assert mgr.max_generation("unified:ajcrew") == 7
+        smap.max_generation.assert_called_once_with("unified:ajcrew")
 
 
 class TestMirrorOptOut:
@@ -250,7 +250,7 @@ class TestCancelAndCallbacks:
             return None
 
         mgr.set_recycle_callback(cb)
-        with caplog.at_level("WARNING", logger="kiro_crew.session"):
+        with caplog.at_level("WARNING", logger="aj_crew.session"):
             mgr.set_recycle_callback(cb)
         assert "Recycle callback already registered" in caplog.text
         assert mgr._on_recycled is cb
@@ -259,7 +259,7 @@ class TestCancelAndCallbacks:
     async def test_a_raising_recycle_callback_never_escapes(self, mgr, caplog) -> None:
         cb = AsyncMock(side_effect=RuntimeError("boom"))
         mgr.set_recycle_callback(cb)
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.session"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.session"):
             await mgr._fire_recycle_callback("dashboard:a", reason="rss")
         cb.assert_awaited_once_with("dashboard:a", reason="rss")
         assert "Recycle callback failed for dashboard:a" in caplog.messages
@@ -279,7 +279,7 @@ class TestResolveAgentModel:
         """``stat()`` on an absent dir raises OSError; mtime 0.0 must be used as
         the cache stamp rather than the lookup blowing up."""
         missing = tmp_path / "nope"
-        with patch("kiro_crew.session.kiro_agents_dir_path", return_value=missing):
+        with patch("aj_crew.session.kiro_agents_dir_path", return_value=missing):
             assert SessionManager._resolve_agent_model("researcher") == "auto"
         assert SessionManager._agent_model_cache["researcher"][1] == 0.0
 
@@ -300,7 +300,7 @@ class TestResolveAgentModel:
         agents = tmp_path / "agents"
         agents.mkdir()
         (agents / "researcher.json").write_text(file_text, encoding="utf-8")
-        with patch("kiro_crew.session.kiro_agents_dir_path", return_value=agents):
+        with patch("aj_crew.session.kiro_agents_dir_path", return_value=agents):
             assert SessionManager._resolve_agent_model("researcher") == expected
 
     def test_a_raising_spec_reader_falls_back_to_auto(self, tmp_path) -> None:
@@ -308,8 +308,8 @@ class TestResolveAgentModel:
         agents.mkdir()
         (agents / "researcher.json").write_text('{"name": "researcher"}', encoding="utf-8")
         with (
-            patch("kiro_crew.session.kiro_agents_dir_path", return_value=agents),
-            patch("kiro_crew.session._read_agent_spec", side_effect=RuntimeError("bad spec")),
+            patch("aj_crew.session.kiro_agents_dir_path", return_value=agents),
+            patch("aj_crew.session._read_agent_spec", side_effect=RuntimeError("bad spec")),
         ):
             assert SessionManager._resolve_agent_model("researcher") == "auto"
 
@@ -322,7 +322,7 @@ class TestRuntimePidProbes:
         # The id is backend-authored and retained on every Sessions poll, so it is
         # bounded where it is retained: an oversize one is carried as None, never
         # truncated to a string that would name a different crew log unit.
-        from kiro_crew.validation import MAX_ACP_SESSION_ID_LEN
+        from aj_crew.validation import MAX_ACP_SESSION_ID_LEN
 
         _register(
             mgr, "dashboard:fits", provider=_provider(session_id="s" * MAX_ACP_SESSION_ID_LEN)
@@ -370,8 +370,8 @@ class TestRuntimePidProbes:
 class TestWarmPoolQueueRaces:
     def test_claim_loses_the_entry_between_check_and_take(self, mgr) -> None:
         mgr._warm_pool = _RacedQueue()
-        mgr._pool_agent = "kirocrew"
-        assert mgr._claim_from_pool("kirocrew") is None
+        mgr._pool_agent = "ajcrew"
+        assert mgr._claim_from_pool("ajcrew") is None
 
     def test_pool_pid_peek_survives_a_lost_entry(self, mgr) -> None:
         mgr._warm_pool = _RacedQueue()
@@ -389,7 +389,7 @@ class TestWarmPoolQueueRaces:
         mgr._discard_pool_provider = AsyncMock()
         with (
             patch.object(mgr, "start_pool", AsyncMock()) as start_pool,
-            patch("kiro_crew.session.build_provider_factory", return_value=MagicMock()),
+            patch("aj_crew.session.build_provider_factory", return_value=MagicMock()),
         ):
             await mgr.refresh_defaults()
         mgr._discard_pool_provider.assert_not_called()
@@ -402,7 +402,7 @@ class TestWarmPoolQueueRaces:
         stale = _register(mgr, "dashboard:a")
         with (
             patch.object(mgr, "start_pool", AsyncMock()),
-            patch("kiro_crew.session.build_provider_factory", return_value=MagicMock()),
+            patch("aj_crew.session.build_provider_factory", return_value=MagicMock()),
         ):
             await mgr.reload_provider_factory()
         assert mgr._sessions == {}
@@ -467,8 +467,8 @@ class TestPoolHealthLoop:
 
 class TestPoolDecisionMetric:
     def test_a_failing_recorder_never_reaches_the_caller(self, mgr, caplog) -> None:
-        with patch("kiro_crew.session.get_recorder", side_effect=RuntimeError("no otel")):
-            with caplog.at_level(logging.DEBUG, logger="kiro_crew.session"):
+        with patch("aj_crew.session.get_recorder", side_effect=RuntimeError("no otel")):
+            with caplog.at_level(logging.DEBUG, logger="aj_crew.session"):
                 mgr._record_pool_decision("hit", "dashboard:a")
         assert "pool decision metric emit failed" in caplog.messages
 
@@ -486,7 +486,7 @@ class TestDiscardPoolProvider:
             raise _Bang()
 
         provider = _provider(shutdown=shutdown)
-        with patch("kiro_crew.session._sync_kill_provider") as killer:
+        with patch("aj_crew.session._sync_kill_provider") as killer:
             with pytest.raises(_Bang):
                 await mgr._discard_pool_provider(provider, "unit")
         # Dispatched to the executor; wait on the field the assertion reads.
@@ -504,7 +504,7 @@ class TestDiscardPoolProvider:
             raise RuntimeError("wedged")
 
         provider = _provider(is_process_alive=boom)
-        with patch("kiro_crew.session._sync_kill_provider") as killer:
+        with patch("aj_crew.session._sync_kill_provider") as killer:
             await mgr._discard_pool_provider(provider, "unit")
         assert killer.call_count == 0
 
@@ -604,7 +604,7 @@ class TestGetBgSessionRespawn:
 
     @pytest.fixture
     def fake_runtime_cls(self):
-        import kiro_crew.acp.runtime as runtime_mod
+        import aj_crew.acp.runtime as runtime_mod
 
         created: list[object] = []
 
@@ -656,7 +656,7 @@ class TestGetBgSessionRespawn:
     async def test_a_still_live_runtime_that_keeps_failing_gives_up_after_one_retry(
         self, mgr, fake_runtime_cls
     ) -> None:
-        from kiro_crew.acp.runtime import AcpRuntimeDead
+        from aj_crew.acp.runtime import AcpRuntimeDead
 
         create = AsyncMock(side_effect=AcpRuntimeDead("gone"))
         mgr._bg_runtime = SimpleNamespace(
@@ -677,7 +677,7 @@ class TestGetBgSessionRespawn:
     async def test_a_runtime_that_dies_mid_create_is_reaped_and_respawned(
         self, mgr, fake_runtime_cls
     ) -> None:
-        from kiro_crew.acp.runtime import AcpRuntimeDead
+        from aj_crew.acp.runtime import AcpRuntimeDead
 
         alive = [True]
 
@@ -711,9 +711,9 @@ def no_child_scan():
     a naive reset test cannot run on a CI runner.
     """
     with (
-        patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-        patch("kiro_crew.acp.client._capture_child_records", return_value={}),
-        patch("kiro_crew.acp.client._kill_escaped_children") as sweep,
+        patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+        patch("aj_crew.acp.client._capture_child_records", return_value={}),
+        patch("aj_crew.acp.client._kill_escaped_children") as sweep,
     ):
         yield sweep
 
@@ -970,7 +970,7 @@ class TestOpenTaskSession:
 
         dup = _provider(shutdown=AsyncMock(side_effect=RuntimeError("terminate failed")))
         with patch(
-            "kiro_crew.acp.session_provider.AcpSessionProvider",
+            "aj_crew.acp.session_provider.AcpSessionProvider",
             side_effect=lambda handle, rt: dup,
         ):
             provider, is_new, resumed = await mgr.open_task_session("taskrunner:run1", key)

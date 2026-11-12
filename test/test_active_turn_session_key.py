@@ -23,9 +23,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.acp.client import AcpAuthRequired
-from kiro_crew.dashboard.chat_runner import _run_chat
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.client import AcpAuthRequired
+from aj_crew.dashboard.chat_runner import _run_chat
+from aj_crew.testing.wait import await_until
 
 LINKED_KEY = "slack:1730000000.123456"
 
@@ -68,7 +68,7 @@ def _stream_completes(client: MagicMock, on_stream=None) -> None:
     shared state (the session-switch lock) after the first turn returns would
     race that replay. *on_stream* runs inside the live turn.
     """
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     async def _complete(msg):
         if on_stream is not None:
@@ -227,7 +227,7 @@ class TestOneTurnCannotRetireAnother:
             sl._active_turn_session_key = "dashboard:successor"
             return True
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._start_next_queued_turn", _fake_start)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._start_next_queued_turn", _fake_start)
 
         await _run_chat(state, slot, "first message")
 
@@ -257,7 +257,7 @@ class TestThePromptsGetReEntry:
         # chip append stay in the path being measured. An empty chip appends
         # nothing, which keeps this test about the identity and not the message.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._resolve_prompt_mention",
+            "aj_crew.dashboard.chat_runner._resolve_prompt_mention",
             lambda message, project_dir: ("expanded prompt body", "ok", ""),
         )
 
@@ -294,7 +294,7 @@ class TestTheKeyIsPublishedBeforeAdmission:
     async def test_visible_while_admission_is_pending_and_retired_on_refusal(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.memory_startup import MemoryStartupUnavailable
+        from aj_crew.memory_startup import MemoryStartupUnavailable
 
         state, slot, client = _state_and_slot(tmp_path)
         _stream_empty(client)
@@ -311,9 +311,7 @@ class TestTheKeyIsPublishedBeforeAdmission:
             if verdict["admit"] == "refuse":
                 raise MemoryStartupUnavailable("Memory preparation is still running.")
 
-        monkeypatch.setattr(
-            "kiro_crew.memory_startup.wait_for_memory_preparation", _park_then_decide
-        )
+        monkeypatch.setattr("aj_crew.memory_startup.wait_for_memory_preparation", _park_then_decide)
 
         # Phase 1: the key is visible while the turn is parked on admission,
         # and a routing rebind landing in that window does not move it.
@@ -382,7 +380,7 @@ class TestDispatchSerializesWithTheSwitchLock:
             keys_seen.append(key)
             return observed
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.slot_switch_session_lock", _lock_for)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.slot_switch_session_lock", _lock_for)
 
         state, slot, client = _state_and_slot(tmp_path)
         # A cold start: nothing registered for this session yet.
@@ -433,7 +431,7 @@ class TestDispatchNeverWaitsForALeaseUnderTheSwitchLock:
     async def test_busy_session_lease_wait_does_not_hold_the_switch_lock(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.llm_helpers import slot_switch_session_lock
+        from aj_crew.llm_helpers import slot_switch_session_lock
 
         state, slot, client = _state_and_slot(tmp_path)
         slot.linked_session_key = LINKED_KEY

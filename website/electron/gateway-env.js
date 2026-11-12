@@ -2,7 +2,7 @@
 
 // Environment invariants for every gateway the desktop shell owns.
 //
-// CPython chooses the encoding for redirected stdout/stderr before any Kiro
+// CPython chooses the encoding for redirected stdout/stderr before any Aj
 // Crew Python runs.  Reconfiguring sys.stdout later is therefore only a
 // best-effort repair.  Windows defaults redirected files/pipes to its ANSI code
 // page, while every platform permits PYTHONIOENCODING to override an otherwise
@@ -70,7 +70,7 @@ const BUNDLED_KIRO_CLI_PROBE_MS = 10_000;
 // bundle: `backend-dist/kas/` on every build. A universal macOS build stages it
 // once, with a Node binary holding both architectures (`lipo -create`), so the
 // root is the same for an arm64 and an x64 shell. It holds
-// `<version>/{bundle,node,install.json}`, the exact layout `kirocrew kas install`
+// `<version>/{bundle,node,install.json}`, the exact layout `ajcrew kas install`
 // lays down under the data home, so the backend reads it with the same code
 // (acp.kas_bundle.installed_bundle, via the env var below) as a SECOND root
 // after the data home's own install.
@@ -144,7 +144,7 @@ function buildGatewayEnvironment(
  * to a per-user cache the first launch would have to populate. Both ship a
  * traced startup closure (`packaging/precompile_windows.py`), not the whole
  * tree. macOS ships it as CHECKED-hash, together with the whole standard
- * library and the whole kiro_crew package
+ * library and the whole aj_crew package
  * (`precompile_macos_backend` in `packaging/desktop-bytecode.sh`); Windows ships
  * it as UNCHECKED-hash. Both ignore mtime, which is the property that survives
  * extraction restamping; they differ only in whether the loader re-reads and
@@ -164,8 +164,8 @@ function buildGatewayEnvironment(
  * memory and leaves no file behind. This variable reaches only the gateway's
  * own process tree; the bundled interpreter also refuses the write by itself
  * (a `.pth` the build drops into its site-packages), which covers the MCP
- * stubs the agent runtime starts with the Python variables stripped and a
- * `kirocrew` typed into a terminal.
+ * stubs the agent runtime starts with the Python variables stripped and an
+ * `ajcrew` typed into a terminal.
  *
  * Windows is not locked down, deliberately: Authenticode does not seal resource
  * trees, so a write there is harmless, and letting modules outside the traced
@@ -196,8 +196,8 @@ function gatewayBytecodeEnvironment(platform, cachePath, isPackaged) {
  * `packaging/build-desktop.sh` (BUNDLE_KIRO_CLI) stages a pinned, sha256-verified
  * entry under `<resources>/backend-dist/kiro-cli/`: `kiro-cli-chat` on POSIX,
  * or the one `kiro-cli.exe` extracted from the Windows MSI. The backend reads
- * the directory from `KIROCREW_BUNDLED_KIRO_DIR` and ranks it above every
- * system install but below the `KIROCREW_KIRO_BIN` operator override
+ * the directory from `AJCREW_BUNDLED_KIRO_DIR` and ranks it above every
+ * system install but below the `AJCREW_KIRO_BIN` operator override
  * (`kiro_cli.known_kiro_cli_dirs`), so the app runs the exact agent runtime it
  * was built against while an operator can still force a different binary.
  *
@@ -216,7 +216,7 @@ function gatewayBytecodeEnvironment(platform, cachePath, isPackaged) {
  *
  * `KIRO_NO_AUTO_UPDATE=1` rides along, set here ONCE for the whole gateway
  * process tree. Every child that runs the bundled copy -- ACP sessions, the
- * `/api/models` listing, `whoami`, the usage scrape, `kirocrew doctor`, the
+ * `/api/models` listing, `whoami`, the usage scrape, `ajcrew doctor`, the
  * readiness probes -- inherits it by construction, instead of each spawn site
  * remembering to merge it. It is kiro-cli's documented switch for its startup
  * update check (upstream's auto-update guide: "Set to any value to disable
@@ -226,7 +226,7 @@ function gatewayBytecodeEnvironment(platform, cachePath, isPackaged) {
  * the bundled Windows executable from rewriting itself. It is also a
  * guard against upstream's stated "FUTURE: re-enable for all platforms", which
  * would otherwise write into the signed, sealed app bundle. Accepted side
- * effect: a system kiro-cli an operator forces through `KIROCREW_KIRO_BIN` also
+ * effect: a system kiro-cli an operator forces through `AJCREW_KIRO_BIN` also
  * skips the check WHILE RUNNING AS A CHILD OF THE APP; its own terminal use is
  * unaffected, and the user's `app.disableAutoupdates` setting is never written.
  *
@@ -275,7 +275,7 @@ function bundledKiroCliEnvironment(fs, path, resourcesPath, probe) {
       return {};
     }
   }
-  return { KIROCREW_BUNDLED_KIRO_DIR: bundledDir, KIRO_NO_AUTO_UPDATE: "1" };
+  return { AJCREW_BUNDLED_KIRO_DIR: bundledDir, KIRO_NO_AUTO_UPDATE: "1" };
 }
 
 /**
@@ -306,7 +306,7 @@ function staysWithinStagedTree(value, opts) {
 /**
  * Point the gateway at the KAS engine bundle staged into the app's resources.
  *
- * `KIROCREW_BUNDLED_KAS_DIR` names the staged root ONLY when the directory
+ * `AJCREW_BUNDLED_KAS_DIR` names the staged root ONLY when the directory
  * shipped and carries an install record whose `node_bin` stays inside the
  * staged tree. A build without the payload (`BUNDLE_KAS=0`, a source checkout)
  * spreads nothing: the backend then sees only the data home's `engines/kas`,
@@ -323,8 +323,8 @@ function staysWithinStagedTree(value, opts) {
  * both slices, so the kernel picks the one this process runs as.
  *
  * Exports only the directory: the backend owns the version it looks up (its
- * pin, or `KIROCREW_KAS_VERSION`) and the entry names inside, and ranks the data
- * home's own install ahead of this one, so `kirocrew kas install` and a
+ * pin, or `AJCREW_KAS_VERSION`) and the entry names inside, and ranks the data
+ * home's own install ahead of this one, so `ajcrew kas install` and a
  * `--unpinned` test install keep working in the app.
  *
  * @param {Pick<typeof import("fs"), "statSync" | "readFileSync">} fs
@@ -355,7 +355,7 @@ function bundledKasEnvironment(fs, path, resourcesPath, opts) {
     }
     return {};
   }
-  return { KIROCREW_BUNDLED_KAS_DIR: root };
+  return { AJCREW_BUNDLED_KAS_DIR: root };
 }
 
 module.exports = {

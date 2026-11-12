@@ -1,8 +1,8 @@
-"""``kiro_crew.mcp_core`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.mcp_core`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.mcp_core`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the
-owners in ``kiro_crew.mcp_core_parts``. The tool handlers in ``mcp_tools``, the tests and
-the documents still reach every name as ``kiro_crew.mcp_core.<name>``, and the moved code
+``aj_crew.mcp_core`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the
+owners in ``aj_crew.mcp_core_parts``. The tool handlers in ``mcp_tools``, the tests and
+the documents still reach every name as ``aj_crew.mcp_core.<name>``, and the moved code
 reads its names as plain module globals, so a patch through the facade reaches that code
 only because the mirror writes it into every module holding the name.
 
@@ -26,7 +26,7 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror, mcp_core
+from aj_crew import _facade_mirror, mcp_core
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_mcp_core_facade")
 
@@ -34,7 +34,7 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_mcp_core_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams",)
 
-FACADE = "kiro_crew.mcp_core"
+FACADE = "aj_crew.mcp_core"
 PARTS_DIR = Path(mcp_core.__file__).resolve().parent / "mcp_core_parts"
 
 #: Names the test trees are known to patch through the facade, one per kind of seam: a
@@ -66,7 +66,7 @@ _KNOWN_SEAMS = frozenset(
 #: reads one as ``mcp_core.<name>`` keeps type-checking only while the facade binds it.
 _BASE_PROJECT_IMPORTS = frozenset("""
     CORE_MCP_SERVER CallerContext ConversationLog DIRECTIVE_TOOLS DeferredTool
-    HybridRetriever KiroCrewConfig KnowledgeStore MCP_CORE_SCHEMAS SEARCH_SCAN_WINDOW
+    HybridRetriever AjCrewConfig KnowledgeStore MCP_CORE_SCHEMAS SEARCH_SCAN_WINDOW
     SkillsLoader UnknownMemoryStore binding_key_for build_tool_list build_tool_names
     call_tool_with_logging clear_vouch coerce_mcp_tool_args config_dir
     create_embedder_from_config current_caller dashboard_socket_path dedup_sweep
@@ -104,7 +104,7 @@ def _test_tree_files() -> list[Path]:
         rel = path.relative_to(root).as_posix()
         if rel == "conftest.py" or rel.startswith("test/"):
             found.append(path)
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and (
+        elif rel.startswith("src/aj_crew/apps/builtins/") and (
             "/tests/" in rel or path.name.startswith("test_") or path.name == "conftest.py"
         ):
             found.append(path)
@@ -113,13 +113,13 @@ def _test_tree_files() -> list[Path]:
 
 def _spellings() -> dict[str, str]:
     """The facade's own name and every src module's module-level binding of it (each
-    ``mcp_tools`` domain binds ``from kiro_crew import mcp_core``)."""
+    ``mcp_tools`` domain binds ``from aj_crew import mcp_core``)."""
     spellings = {FACADE: FACADE}
     for path, _text, tree in source_corpus.parsed_candidates(require_any=("mcp_core",)):
         rel = path.relative_to(source_corpus.src_root()).with_suffix("")
-        module = ".".join(("kiro_crew", *rel.parts)).removesuffix(".__init__")
+        module = ".".join(("aj_crew", *rel.parts)).removesuffix(".__init__")
         for node in tree.body:
-            if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew":
+            if isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
                 for alias in node.names:
                     if alias.name == "mcp_core" and module != FACADE:
                         spellings[f"{module}.{alias.asname or alias.name}"] = FACADE
@@ -146,7 +146,7 @@ def _corpus_patched_names() -> set[str]:
 def test_the_spelling_table_reads_the_handler_bindings() -> None:
     """The handlers bind the facade at module level; a patch through that binding is a
     patch of the facade, so the scan must spell it."""
-    assert "kiro_crew.mcp_tools.control.mcp_core" in _spellings()
+    assert "aj_crew.mcp_tools.control.mcp_core" in _spellings()
 
 
 def test_a_facade_patch_of_every_scanned_name_reaches_every_module_holding_it() -> None:
@@ -179,7 +179,7 @@ def test_the_owners_are_the_parts_package_in_layer_order() -> None:
     owners listed before it: the order the facade loads them and a read resolves in."""
     owners = list(_index().owners)
     on_disk = {
-        f"kiro_crew.mcp_core_parts.{p.stem}": p
+        f"aj_crew.mcp_core_parts.{p.stem}": p
         for p in PARTS_DIR.glob("*.py")
         if p.name != "__init__.py"
     }
@@ -207,7 +207,7 @@ def test_a_facade_write_of_the_port_cache_moves_the_cache_the_resolver_reads() -
     """``mcp_core._API_PORT = n`` pinned the port every request dialled, and still does,
     wherever ``_api_port`` lives: the cache is the gateway owner's, and the mirror writes
     it there."""
-    gateway = sys.modules["kiro_crew.mcp_core_parts.gateway"]
+    gateway = sys.modules["aj_crew.mcp_core_parts.gateway"]
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(mcp_core, "_API_PORT", 47123)
         assert mcp_core._api_port() == 47123
@@ -232,7 +232,7 @@ def _home(value: object) -> str:
 
 
 def test_every_project_name_the_facade_imported_stays_bound_on_it() -> None:
-    """A name the facade imported from the rest of ``kiro_crew`` is bound on it still,
+    """A name the facade imported from the rest of ``aj_crew`` is bound on it still,
     statically, so a handler reading ``mcp_core.<name>`` type-checks; the one exception,
     ``_SERVED_ONLY``, is served from the identity owner's binding. No other name the
     mirror serves comes from a project module outside the family."""
@@ -243,7 +243,7 @@ def test_every_project_name_the_facade_imported_stays_bound_on_it() -> None:
         _SERVED_ONLY
     )
     for name in _SERVED_ONLY:
-        identity = sys.modules["kiro_crew.mcp_core_parts.identity"]
+        identity = sys.modules["aj_crew.mcp_core_parts.identity"]
         assert getattr(mcp_core, name) is vars(identity)[name], name
     family = {FACADE, *_index().owners}
     defined = {
@@ -258,7 +258,7 @@ def test_every_project_name_the_facade_imported_stays_bound_on_it() -> None:
     served_from_outside = {
         name: _home(getattr(mcp_core, name))
         for name in imported_by_owners
-        if _home(getattr(mcp_core, name)).startswith("kiro_crew")
+        if _home(getattr(mcp_core, name)).startswith("aj_crew")
         and _home(getattr(mcp_core, name)) not in family
     }
-    assert served_from_outside == {name: "kiro_crew.session_pid_sig" for name in _SERVED_ONLY}
+    assert served_from_outside == {name: "aj_crew.session_pid_sig" for name in _SERVED_ONLY}

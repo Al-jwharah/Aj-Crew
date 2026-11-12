@@ -13,11 +13,11 @@ from pathlib import Path
 import pytest
 from test_kas_allowed_commands import _judge, _shell
 
-from kiro_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY
-from kiro_crew.platform import allowed_commands
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.allowed_commands import COMPOSITION_NOTICE
+from aj_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY
+from aj_crew.platform import allowed_commands
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.allowed_commands import COMPOSITION_NOTICE
 
 _PATTERN = "node task-db.js .*"
 

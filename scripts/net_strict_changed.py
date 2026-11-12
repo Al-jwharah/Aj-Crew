@@ -6,7 +6,7 @@
 Testing-conventions D10: a test reaches no host but loopback. The rootdir network
 floor (``test/conftest_floor_determinism.py``) already sees an off-loopback
 connect, send or name lookup, but in CI it only REPORTS it, in a warnings summary
-at the end of a 20-40 minute shard that nobody reads. ``KIROCREW_NET_STRICT=1``
+at the end of a 20-40 minute shard that nobody reads. ``AJCREW_NET_STRICT=1``
 turns the report into a refusal: the call raises ``OffLoopbackNetworkRefused`` at
 the call site, and the test fails at teardown with ``this test reached past
 loopback``. A test marked ``real_network`` is exempt, and a UDP route probe
@@ -52,7 +52,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 #: The environment switch the rootdir conftest reads (``_NET_STRICT_ENV`` there).
-STRICT_ENV = "KIROCREW_NET_STRICT"
+STRICT_ENV = "AJCREW_NET_STRICT"
 
 #: The file the rendered report is written to, when set.
 REPORT_ENV = "NET_STRICT_REPORT"
@@ -70,7 +70,7 @@ _CALL_MARK = "off-loopback network refused in a test: "
 _TEARDOWN_END = ". Stub the network"
 
 #: Roots pytest collects from (``testpaths`` in setup.cfg).
-_TEST_ROOTS = ("test/", "src/kiro_crew/apps/builtins/")
+_TEST_ROOTS = ("test/", "src/aj_crew/apps/builtins/")
 
 
 def _load_scope():

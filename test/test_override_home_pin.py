@@ -1,4 +1,4 @@
-"""``KIROCREW_HOME`` is resolved once per process, keyed on the raw env string.
+"""``AJCREW_HOME`` is resolved once per process, keyed on the raw env string.
 
 ``data_home()`` calls ``_valid_override_home()`` on every call with the override
 set. Without a pin each of those calls would ``realpath`` the override (tens of
@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config import paths
+from aj_crew.config import paths
 
 
 def _count_resolves(monkeypatch: pytest.MonkeyPatch) -> list[Path]:
@@ -33,7 +33,7 @@ def test_data_home_resolves_the_override_once(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     home = tmp_path / "override-home"
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     calls = _count_resolves(monkeypatch)
     for _ in range(200):
         assert paths.data_home() == home.resolve()
@@ -47,9 +47,9 @@ def test_a_changed_override_string_is_resolved_again(
 ) -> None:
     first = tmp_path / "first"
     second = tmp_path / "second"
-    monkeypatch.setenv("KIROCREW_HOME", str(first))
+    monkeypatch.setenv("AJCREW_HOME", str(first))
     assert paths.data_home() == first.resolve()
-    monkeypatch.setenv("KIROCREW_HOME", str(second))
+    monkeypatch.setenv("AJCREW_HOME", str(second))
     assert paths.data_home() == second.resolve()
     assert paths.config_dir() == second.resolve()
 
@@ -59,6 +59,6 @@ def test_a_refused_override_stays_refused_under_the_pin(
 ) -> None:
     # The filesystem/drive root is refused on every platform; the pin must cache
     # the refusal, not turn a repeat call into an accept.
-    monkeypatch.setenv("KIROCREW_HOME", tmp_path.anchor)
+    monkeypatch.setenv("AJCREW_HOME", tmp_path.anchor)
     assert paths._valid_override_home() is None
     assert paths._valid_override_home() is None

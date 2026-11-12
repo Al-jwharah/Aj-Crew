@@ -23,8 +23,8 @@ const openCrewSession = vi.hoisted(() => vi.fn())
 vi.mock('../components/ChatDropOverlay', () => ({
   useChatFileDrop: () => ({ active: false, dropTargetProps: {} }),
 }))
-vi.mock('../components/WebPreviewPanel', () => ({ PREVIEW_SNIP_EVENT: 'kirocrew-web-preview-snip' }))
-vi.mock('../utils/browserAnnotations', () => ({ PREVIEW_ANNOTATE_EVENT: 'kirocrew-preview-annotate' }))
+vi.mock('../components/WebPreviewPanel', () => ({ PREVIEW_SNIP_EVENT: 'ajcrew-web-preview-snip' }))
+vi.mock('../utils/browserAnnotations', () => ({ PREVIEW_ANNOTATE_EVENT: 'ajcrew-preview-annotate' }))
 vi.mock('../hooks/useMessageSearch', () => ({
   useMessageSearch: () => ({ isOpen: false, close: closeSearch }),
 }))

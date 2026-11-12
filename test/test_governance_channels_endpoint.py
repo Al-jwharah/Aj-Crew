@@ -13,11 +13,11 @@ import dataclasses
 
 import pytest
 
-from kiro_crew.dashboard import handlers_system
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.governance import parse_policy
+from aj_crew.dashboard import handlers_system
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.governance import parse_policy
 
 
 @pytest.fixture(autouse=True)
@@ -32,9 +32,9 @@ def _isolate(tmp_path, monkeypatch):
 
 
 def _install(policy_body):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    base = build_default_context(KiroCrewConfig.load())
+    base = build_default_context(AjCrewConfig.load())
     ceiling = parse_policy(policy_body) if policy_body is not None else None
     ctx_mod.set_context(dataclasses.replace(base, governance=ceiling))
 
@@ -120,8 +120,8 @@ class TestPolicyDenies:
         # GOVERNANCE_ERROR_REASON reason, which the collector maps to null. Build the
         # reason from the shared constant so this test can't drift from the prose the
         # evaluator actually emits (the whole point of exporting the constant).
-        from kiro_crew.platform.governance import Decision
-        from kiro_crew.platform.governance_profiles import GOVERNANCE_ERROR_REASON
+        from aj_crew.platform.governance import Decision
+        from aj_crew.platform.governance_profiles import GOVERNANCE_ERROR_REASON
 
         def _degraded(scope, item, *, session_key="", fail_closed=False, **kw):
             # Mirrors governance_permits' fail-closed degrade Decision.
@@ -129,7 +129,7 @@ class TestPolicyDenies:
                 False, f"{GOVERNANCE_ERROR_REASON}; denied (fail-closed)", rule="default"
             )
 
-        monkeypatch.setattr("kiro_crew.platform.governance_profiles.governance_permits", _degraded)
+        monkeypatch.setattr("aj_crew.platform.governance_profiles.governance_permits", _degraded)
         result = handlers_system._collect_channel_governance()
         # Every member reports null (unavailable), never False (a real policy deny).
         assert all(v is None for v in result.values()), result
@@ -140,7 +140,7 @@ class TestSessionKey:
     def test_uses_host_session_key(self, monkeypatch):
         # Every member must be evaluated with session_key=HOST_SESSION_KEY (the
         # host surface, matching the messaging chokepoint + app-activation gate).
-        from kiro_crew.platform.governance import Decision
+        from aj_crew.platform.governance import Decision
 
         seen: list[str] = []
 
@@ -148,7 +148,7 @@ class TestSessionKey:
             seen.append(session_key)
             return Decision(True, "spy", rule="default")
 
-        monkeypatch.setattr("kiro_crew.platform.governance_profiles.governance_permits", _spy)
+        monkeypatch.setattr("aj_crew.platform.governance_profiles.governance_permits", _spy)
         handlers_system._collect_channel_governance()
         assert seen  # called at least once
         assert all(sk == gp.HOST_SESSION_KEY for sk in seen)

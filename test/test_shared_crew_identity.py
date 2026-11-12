@@ -16,11 +16,11 @@ import pytest
 from aiohttp import web
 from multidict import CIMultiDict
 
-from kiro_crew.dashboard import tailnet
-from kiro_crew.dashboard.tailnet import TailnetTrust
-from kiro_crew.dashboard.token_auth import generate_token, token_auth_middleware
-from kiro_crew.shared_crew import identity, people
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.dashboard import tailnet
+from aj_crew.dashboard.tailnet import TailnetTrust
+from aj_crew.dashboard.token_auth import generate_token, token_auth_middleware
+from aj_crew.shared_crew import identity, people
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     ActorContext,
     PrincipalKind,
@@ -45,11 +45,11 @@ ADDRS = {
 
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
-    import kiro_crew.dashboard.revocation_gen as rg
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.dashboard.revocation_gen as rg
+    import aj_crew.dashboard.token_auth as ta
 
     monkeypatch = _floor_monkeypatch
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     monkeypatch.setattr(rg, "_gen", 0)
     monkeypatch.setattr(ta, "_revoked_store_singleton", None)
     monkeypatch.setattr(tailnet, "IS_POSIX", True)
@@ -237,7 +237,7 @@ async def test_tagged_nodes_are_distinct_machines():
 )
 async def test_unattributable_tailnet_forwarding_is_refused_never_a_person(headers, monkeypatch):
     """Under the preview, a forwarded tailnet request that names no allowed person is refused."""
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
     mw = token_auth_middleware(tailnet_trust=TRUST)
     status, actor = await _actor_after(mw, _request(token=_token(), headers=headers))
     assert status == 403
@@ -309,7 +309,7 @@ async def test_a_failing_identity_lookup_publishes_unknown_and_admits_only_what_
 
 @pytest.mark.asyncio
 async def test_an_app_token_is_the_apps_system_principal(monkeypatch):
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.dashboard.token_auth as ta
 
     monkeypatch.setattr(ta, "_enforce_app_scope", lambda *_a, **_k: None)
 

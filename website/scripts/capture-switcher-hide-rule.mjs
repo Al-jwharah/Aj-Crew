@@ -27,15 +27,15 @@ import { json } from './lib/boot-api.mjs'
 import { serveDist, DEFAULT_DIST } from './lib/serve-dist.mjs'
 import { stubDashboardApi, logPageProblems } from './lib/stub-dashboard-api.mjs'
 
-const OUT = process.argv[2] || join(process.env.KIROCREW_SCRATCH || '/tmp', 'switcher-hide-rule')
+const OUT = process.argv[2] || join(process.env.AJCREW_SCRATCH || '/tmp', 'switcher-hide-rule')
 const DIST = process.argv[3] ? resolve(process.argv[3]) : DEFAULT_DIST
 mkdirSync(OUT, { recursive: true })
 
 const now = Math.floor(Date.now() / 1000)
 const member = (name, extra = {}) => ({
   name, slug: name, bound: true, slot_key: `member-${name}`, running: false,
-  kiro_agent: name, workspace: '/srv/repos/kirocrew', memory_store: `member-${name}`,
-  memory_version: 2, memory_owner: name, model: '', source: 'kirocrew', ...extra,
+  kiro_agent: name, workspace: '/srv/repos/ajcrew', memory_store: `member-${name}`,
+  memory_version: 2, memory_owner: name, model: '', source: 'ajcrew', ...extra,
 })
 /** A row the roster LISTS: its DM thread holds a message. */
 const chatted = (name, extra = {}) => member(name, { has_dm_message: true, dashboard_created: true, ...extra })
@@ -48,41 +48,41 @@ const template = (name, extra = {}) =>
  *  templates the column hides. The question was which of the two readings is
  *  right when the chip and the column disagree. */
 const TEAMS_MEMBERS = [
-  chatted('Researcher', { display_name: 'Researcher', kiro_agent: 'kirocrew-research', last_active_ts: now - 120, last_message: "No, you don't need to restart anything. This research is …" }),
-  chatted('kirocrew-competitive-intel', { last_active_ts: now - 900, last_message: 'The brief is done and in the vault at /Users/example/D…' }),
-  chatted('kirocrew-conductor', { starred: true, last_active_ts: now - 1800, last_message: 'Probably not. This Conductor crew member is best whe…' }),
+  chatted('Researcher', { display_name: 'Researcher', kiro_agent: 'ajcrew-research', last_active_ts: now - 120, last_message: "No, you don't need to restart anything. This research is …" }),
+  chatted('ajcrew-competitive-intel', { last_active_ts: now - 900, last_message: 'The brief is done and in the vault at /Users/example/D…' }),
+  chatted('ajcrew-conductor', { starred: true, last_active_ts: now - 1800, last_message: 'Probably not. This Conductor crew member is best whe…' }),
   chatted('crew-manager-conductor', { last_active_ts: now - 3600, last_message: 'Goal: You asked how I (crew-manager-conductor) diffe…' }),
-  chatted('default', { display_name: 'Example Default', kiro_agent: 'kirocrew', last_active_ts: now - 7200, last_message: 'Your vault has a lot on this. Most of it sits in five recent …' }),
+  chatted('default', { display_name: 'Example Default', kiro_agent: 'ajcrew', last_active_ts: now - 7200, last_message: 'Your vault has a lot on this. Most of it sits in five recent …' }),
   chatted('amzn-pipeline-assistant', { last_active_ts: now - 9000, last_message: 'Yes, I\'m here. The earlier "agent spec unreadab…' }),
-  template('kirocrew-heartbeat'),
-  template('kirocrew-knowledge'),
-  template('kirocrew-ledger-conductor'),
-  template('kirocrew-pipeline-conductor'),
-  template('kirocrew-security-conductor'),
-  template('kirocrew-oncall'),
+  template('ajcrew-heartbeat'),
+  template('ajcrew-knowledge'),
+  template('ajcrew-ledger-conductor'),
+  template('ajcrew-pipeline-conductor'),
+  template('ajcrew-security-conductor'),
+  template('ajcrew-oncall'),
 ]
 const TEAMS = [
-  { id: 'team-research', name: 'Research', members: ['Researcher', 'kirocrew-competitive-intel'] },
-  { id: 'team-crew', name: 'CREW', members: ['kirocrew-conductor', 'crew-manager-conductor'] },
+  { id: 'team-research', name: 'Research', members: ['Researcher', 'ajcrew-competitive-intel'] },
+  { id: 'team-crew', name: 'CREW', members: ['ajcrew-conductor', 'crew-manager-conductor'] },
 ]
 
 const DEFAULT_MEMBERS = [
   chatted('crewmate', {
-    display_name: 'Crew Mate', kiro_agent: 'kirocrew', running: true, last_active_ts: now - 45,
+    display_name: 'Crew Mate', kiro_agent: 'ajcrew', running: true, last_active_ts: now - 45,
     last_message: 'Why do I have so many mates all of a sudden?',
   }),
   chatted('amzn-pipeline-assistant', {
     kiro_agent: 'amzn-pipeline-assistant', last_active_ts: now - 2400,
     last_message: 'A: (code) needs the real hash (SHA/commit) before it can answer.',
   }),
-  template('kirocrew-conductor'),
-  template('kirocrew-heartbeat'),
-  template('kirocrew-knowledge'),
-  template('kirocrew-ledger-conductor'),
-  template('kirocrew-pipeline-conductor'),
-  template('kirocrew-research'),
-  template('kirocrew-security-conductor'),
-  template('kirocrew-oncall'),
+  template('ajcrew-conductor'),
+  template('ajcrew-heartbeat'),
+  template('ajcrew-knowledge'),
+  template('ajcrew-ledger-conductor'),
+  template('ajcrew-pipeline-conductor'),
+  template('ajcrew-research'),
+  template('ajcrew-security-conductor'),
+  template('ajcrew-oncall'),
 ]
 
 /** Which roster this run captures, and which crewmate's thread it opens. */
@@ -99,7 +99,7 @@ const iso = (secsAgo) => new Date((now - secsAgo) * 1000).toISOString()
 const SLOTS = MEMBERS.filter((m) => m.has_dm_message).map((m) => ({
   key: m.slot_key, title: m.display_name || m.name, mode: 'member',
   created: iso(86400), last_ts: iso(now - (m.last_active_ts ?? now)), running: !!m.running,
-  project: '/srv/repos/kirocrew', agent: m.name,
+  project: '/srv/repos/ajcrew', agent: m.name,
 }))
 const STORAGE = {
   'mc-lang': 'en', 'mc-crewmates-onboarded': '1', 'mc-crewmates-page-entered': '1', 'mc-nav': '1',

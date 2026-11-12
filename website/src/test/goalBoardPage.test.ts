@@ -9,7 +9,7 @@ import { resolve } from 'node:path'
 
 const TEMPLATE = resolve(
   __dirname,
-  '../../../src/kiro_crew/dashboard_templates/builtin/goal-board/template.html',
+  '../../../src/aj_crew/dashboard_templates/builtin/goal-board/template.html',
 )
 const RAW = readFileSync(TEMPLATE, 'utf-8')
 
@@ -26,7 +26,7 @@ function item(over: Record<string, unknown> = {}) {
 }
 
 function publish(fields: Record<string, unknown>, locale = 'en') {
-  ;(window as unknown as { kirocrew: unknown }).kirocrew = { fields, agentic: [], locale, missing: [], written_at: {} }
+  ;(window as unknown as { ajcrew: unknown }).ajcrew = { fields, agentic: [], locale, missing: [], written_at: {} }
   // The host fills bindings before telling the page that a refill landed.
   for (const node of Array.from(document.querySelectorAll('[data-dashboard-field]'))) {
     const value = fields[node.getAttribute('data-dashboard-field') ?? '']
@@ -44,8 +44,8 @@ function mount(fields: Record<string, unknown>) {
 function refill(fields: Record<string, unknown>, locale = 'en') {
   publish(fields, locale)
   // What the composed frame does on a refill: the posted message, then its event.
-  window.dispatchEvent(new MessageEvent('message', { data: { type: 'kirocrew-dashboard:data' } }))
-  window.dispatchEvent(new Event('kirocrew-dashboard'))
+  window.dispatchEvent(new MessageEvent('message', { data: { type: 'ajcrew-dashboard:data' } }))
+  window.dispatchEvent(new Event('ajcrew-dashboard'))
   vi.runOnlyPendingTimers()
 }
 

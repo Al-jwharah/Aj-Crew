@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.mcp_gateway import rewriter
+from aj_crew.mcp_gateway import rewriter
 
 _APPROVED_CMD = sys.executable
 _ATTACK_CMD = os.environ.get("COMSPEC") or ("cmd.exe" if os.name == "nt" else "/bin/sh")
@@ -34,7 +34,7 @@ def _target_spec(command: str, *args: str) -> str:
 
 def _approval_module():
     try:
-        return importlib.import_module("kiro_crew.mcp_gateway.launch_approval")
+        return importlib.import_module("aj_crew.mcp_gateway.launch_approval")
     except ImportError:
         return None
 
@@ -78,7 +78,7 @@ def _targets_running(target_env: dict[str, str], command: str) -> list[str]:
 
 
 def _pool_key(server: str, command: str = _APPROVED_CMD, args: list[str] | None = None):
-    from kiro_crew.mcp_gateway.pool import PoolKey
+    from aj_crew.mcp_gateway.pool import PoolKey
 
     params = inspect.signature(PoolKey).parameters
     values = {name: "" for name in params}
@@ -107,17 +107,17 @@ def _stub_request(body: dict):
 @pytest.fixture(name="toggle_home")
 def toggle_home_fixture(tmp_path, monkeypatch):
     """A config file, an approval store and an agents dir the toggle and the rewrite share."""
-    import kiro_crew.config.loader as loader_mod
-    import kiro_crew.config.paths as paths_mod
-    from kiro_crew import agent
-    from kiro_crew.config.paths import kiro_agents_dir
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    import aj_crew.config.loader as loader_mod
+    import aj_crew.config.paths as paths_mod
+    from aj_crew import agent
+    from aj_crew.config.paths import kiro_agents_dir
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     cfg = tmp_path / "config.json"
     cfg.write_text("{}")
     monkeypatch.setattr(loader_mod, "config_path", lambda: cfg)
     monkeypatch.setattr(mcp_mod, "_local_overlay_section", lambda: {})
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
     # The agent spec IS the rebuilt config here; rebuilding it would need the
     # whole managed-server install this hermetic home does not carry.
     monkeypatch.setattr(agent, "rebuild_agent_config", lambda *a, **k: None)
@@ -159,7 +159,7 @@ _AUTO_EXPECTED = object()
 
 
 async def _toggle_on(name: str = "srv", *, expected_launch: object = _AUTO_EXPECTED):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     body = {"name": name, "stub": True}
     if expected_launch is _AUTO_EXPECTED:

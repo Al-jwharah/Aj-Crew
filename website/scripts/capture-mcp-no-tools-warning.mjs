@@ -32,14 +32,14 @@ const OUT = process.argv[2] || '../temp-screenshots/mcp-no-tools-warning'
 mkdirSync(OUT, { recursive: true })
 
 const SERVERS = [
-  { name: 'kirocrew-core', enabled: true },
+  { name: 'ajcrew-core', enabled: true },
   { name: 'slack-alpha', enabled: true },
   { name: 'slack-beta', enabled: true },
 ]
 const REPORT_BEFORE = {
   configured: [],
   unresolved_refs: [],
-  ready: ['kirocrew-core', 'slack-alpha', 'slack-beta'],
+  ready: ['ajcrew-core', 'slack-alpha', 'slack-beta'],
   failed: [],
   awaiting_auth: [],
   failures: {},
@@ -56,7 +56,7 @@ const REPORT_EXTRA = {
 }
 
 const slotWith = report => [{
-  key: 's1', title: 'Two Slack workspaces', messages: 2, running: false, agent: 'kirocrew',
+  key: 's1', title: 'Two Slack workspaces', messages: 2, running: false, agent: 'ajcrew',
   created: '2026-10-08T09:00:00Z', last_ts: '2026-10-08T09:05:00Z', mcp_report: report,
 }]
 

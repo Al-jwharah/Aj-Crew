@@ -31,7 +31,7 @@ const scene = params.get('scene') || 'released-preparing'
 const lang = params.get('lang') || 'en'
 const width = Number(params.get('width')) || 760
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 initI18n(lang)
 

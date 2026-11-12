@@ -25,8 +25,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from chat_test_helpers import _make_state, pin_harness_choice
 
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp_backends import (
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_COPILOT,
@@ -39,9 +39,9 @@ from kiro_crew.acp_backends import (
     ACP_BACKENDS_COMPACT,
     ACP_BACKENDS_KNOWN,
 )
-from kiro_crew.dashboard.chat_runner import _run_chat
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import LLMProvider
+from aj_crew.dashboard.chat_runner import _run_chat
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import LLMProvider
 
 
 class TestCompactCapabilitySet:
@@ -195,7 +195,7 @@ class TestDashboardManualCompactGate:
         state, slot = _state_and_slot(tmp_path, client)
         # A live KAS session exists for this slot's key: the gate must peek it
         # (authoritative over config) without creating anything.
-        from kiro_crew.dashboard.chat_runner import effective_session_key
+        from aj_crew.dashboard.chat_runner import effective_session_key
 
         state.sessions._sessions = {effective_session_key(slot): SimpleNamespace(provider=client)}
         state.sessions.get_provider = MagicMock(return_value=client)
@@ -224,13 +224,13 @@ class TestDashboardManualCompactGate:
         successor.manual_compact_unsupported_backend = None
         dispatched = _empty_stream(successor)
         state, slot = _state_and_slot(tmp_path, successor)
-        from kiro_crew.dashboard import chat_runner as cr
+        from aj_crew.dashboard import chat_runner as cr
 
         state.sessions._sessions = {cr.effective_session_key(slot): SimpleNamespace(provider=stale)}
         state.sessions.get_provider = MagicMock(return_value=stale)
         state.sessions.is_provider_alive = AsyncMock(return_value=False)
         _cfg = SimpleNamespace(agent=SimpleNamespace(provider="acp", acp_backend=""))
-        with patch.object(cr.KiroCrewConfig, "load", staticmethod(lambda: _cfg)):
+        with patch.object(cr.AjCrewConfig, "load", staticmethod(lambda: _cfg)):
             await _run_chat(state, slot, "/compact")
 
         dispatched.assert_called_once()
@@ -250,14 +250,14 @@ class TestDashboardManualCompactGate:
         self, tmp_path, default_backend, member_backend, refused
     ) -> None:
         """Dead member DMs use the same member override as their next allocation."""
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-        from kiro_crew.dashboard import chat_runner as cr
-        from kiro_crew.memory_stores import provision_member_memory
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+        from aj_crew.dashboard import chat_runner as cr
+        from aj_crew.memory_stores import provision_member_memory
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agent.acp_backend = default_backend
         cfg.agent.member_acp_backend = member_backend
-        cfg.agents["oncall"] = KiroCrewAgentConfig()
+        cfg.agents["oncall"] = AjCrewAgentConfig()
         provision_member_memory(cfg, "oncall")
         cfg.save()
         # save() keeps the harness fields as stored, so the choice goes on disk.
@@ -297,12 +297,12 @@ class TestDashboardManualCompactGate:
         state, slot = _state_and_slot(tmp_path, client)
         state.sessions._sessions = {}  # real dict, no live session
 
-        from kiro_crew.dashboard import chat_runner as cr
+        from aj_crew.dashboard import chat_runner as cr
 
         _cfg = SimpleNamespace(
             agent=SimpleNamespace(provider="acp", acp_backend=ACP_BACKEND_DEEPSEEK)
         )
-        with patch.object(cr.KiroCrewConfig, "load", staticmethod(lambda: _cfg)):
+        with patch.object(cr.AjCrewConfig, "load", staticmethod(lambda: _cfg)):
             await _run_chat(state, slot, "/compact")
 
         dispatched.assert_not_called()
@@ -320,7 +320,7 @@ class TestDashboardManualCompactGate:
         client.is_process_alive.return_value = True
         dispatched = _empty_stream(client)
         state, slot = _state_and_slot(tmp_path, client)
-        from kiro_crew.dashboard.chat_runner import effective_session_key
+        from aj_crew.dashboard.chat_runner import effective_session_key
 
         state.sessions._sessions = {effective_session_key(slot): SimpleNamespace(provider=client)}
         state.sessions.get_provider = MagicMock(return_value=client)
@@ -342,7 +342,7 @@ class TestDashboardManualCompactGate:
         client.wait_for_compaction = AsyncMock(return_value={"type": "completed", "summary": ""})
         client.is_process_alive.return_value = True
         state, slot = _state_and_slot(tmp_path, client)
-        from kiro_crew.dashboard.chat_runner import effective_session_key
+        from aj_crew.dashboard.chat_runner import effective_session_key
 
         state.sessions._sessions = {effective_session_key(slot): SimpleNamespace(provider=client)}
         state.sessions.get_provider = MagicMock(return_value=client)

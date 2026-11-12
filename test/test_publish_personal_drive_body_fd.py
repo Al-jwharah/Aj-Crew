@@ -21,8 +21,8 @@ from publish_personal_drive_helpers import _clean_registry  # noqa: F401 - fixtu
 from publish_personal_drive_helpers import payload_fixture  # noqa: F401 - fixture
 from publish_personal_drive_helpers import _EngineSpy, _publish, _stub_profiles
 
-from kiro_crew import platform_compat
-from kiro_crew.publish import personal_drive as pd
+from aj_crew import platform_compat
+from aj_crew.publish import personal_drive as pd
 
 _posix_only = pytest.mark.skipif(
     not platform_compat.IS_POSIX,
@@ -127,6 +127,6 @@ def test_windows_pins_the_named_body_with_a_checksum(monkeypatch, tmp_path):
     # path, and it carries the checksum pin computed from the payload we read.
     body = spy.arg("put-object", "--body")
     assert body != "/dev/stdin"
-    assert "kirocrew-drive-body-" in body
+    assert "ajcrew-drive-body-" in body
     expected = base64.b64encode(hashlib.sha256(original).digest()).decode("ascii")
     assert spy.arg("put-object", "--checksum-sha256") == expected

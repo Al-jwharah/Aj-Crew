@@ -388,7 +388,7 @@ class TestFileShards(unittest.TestCase):
             + hooks
             + "\n_pin_telemetry_off_for_the_process()\n"
             "def pytest_collection_finish(session):\n"
-            "    from kiro_crew.metrics import provider\n"
+            "    from aj_crew.metrics import provider\n"
             "    worker = getattr(session.config, 'workerinput', {}).get('workerid', 'main')\n"
             "    data = [IMPORT_TIME_METRIC_EMITTERS, provider._ever_built,\n"
             "            [i.nodeid for i in session.items]]\n"
@@ -406,7 +406,7 @@ class TestFileShards(unittest.TestCase):
         ][:2]
         self.assertEqual(len(targets), 2)
         clean = (
-            "from kiro_crew.metrics import provider\n"
+            "from aj_crew.metrics import provider\n"
             "def test_runtime_emission():\n"
             "    assert not provider._ever_built\n"
             "    try:\n"
@@ -570,9 +570,9 @@ class TestFileShards(unittest.TestCase):
             )
 
     def test_source_directory_measures_exec_variants_without_import_priming(self):
-        self.write("src/kiro_crew/__init__.py", "")
+        self.write("src/aj_crew/__init__.py", "")
         self.write(
-            "src/kiro_crew/builder.py",
+            "src/aj_crew/builder.py",
             "def choose(value):\n    if value:\n        return 'yes'\n    return 'no'\n",
         )
         probe = (
@@ -580,11 +580,11 @@ class TestFileShards(unittest.TestCase):
             "from pathlib import Path\n"
             "from coverage import Coverage\n"
             "sys.path.insert(0, str(Path('src').resolve()))\n"
-            "path = Path('src/kiro_crew/builder.py').resolve()\n"
+            "path = Path('src/aj_crew/builder.py').resolve()\n"
             "cov = Coverage(source=[sys.argv[1]], branch=True, config_file=False)\n"
             "cov.start()\n"
             "if sys.argv[2] == 'prime':\n"
-            "    importlib.import_module('kiro_crew.builder')\n"
+            "    importlib.import_module('aj_crew.builder')\n"
             "mod = types.ModuleType('smc_build_v1')\n"
             "mod.__file__ = str(path)\n"
             "exec(compile(path.read_text(encoding='utf-8'), str(path), 'exec'), mod.__dict__)\n"
@@ -593,10 +593,10 @@ class TestFileShards(unittest.TestCase):
             "print(json.dumps(sorted(cov.get_data().lines(str(path)) or [])))\n"
         )
         for source, priming, expected in (
-            ("kiro_crew", "none", []),
-            ("kiro_crew", "prime", [1, 2, 3, 4]),
-            ("src/kiro_crew", "none", [1, 2, 3, 4]),
-            ("src/kiro_crew", "prime", [1, 2, 3, 4]),
+            ("aj_crew", "none", []),
+            ("aj_crew", "prime", [1, 2, 3, 4]),
+            ("src/aj_crew", "none", [1, 2, 3, 4]),
+            ("src/aj_crew", "prime", [1, 2, 3, 4]),
         ):
             with self.subTest(source=source, priming=priming):
                 result = self.run_python("-c", probe, source, priming)
@@ -615,24 +615,24 @@ class TestFileShards(unittest.TestCase):
         )
         selectors = tuple(word for word in command.split() if word.startswith("--cov="))
         self.assertTrue(selectors)
-        self.write("src/kiro_crew/__init__.py", "")
-        sage = "src/kiro_crew/apps/builtins/code_review_sage/sage_lib"
+        self.write("src/aj_crew/__init__.py", "")
+        sage = "src/aj_crew/apps/builtins/code_review_sage/sage_lib"
         for package in ("apps", "apps/builtins", "apps/builtins/code_review_sage"):
-            self.write(f"src/kiro_crew/{package}/__init__.py", "")
+            self.write(f"src/aj_crew/{package}/__init__.py", "")
         self.write(f"{sage}/__init__.py", "")
         code = "def choose(value):\n    if value:\n        return 'yes'\n    return 'no'\n"
-        builder_name = "src/kiro_crew/apps/builtins/aws_control/crew/packaging/build.py"
+        builder_name = "src/aj_crew/apps/builtins/aws_control/crew/packaging/build.py"
         builder = self.write(builder_name, code)
         self.write(f"{sage}/logic.py", code)
-        fixture_name = "src/kiro_crew/apps/builtins/code_review_sage/tests/fixtures.py"
-        self.write("src/kiro_crew/apps/builtins/code_review_sage/tests/__init__.py", "")
+        fixture_name = "src/aj_crew/apps/builtins/code_review_sage/tests/fixtures.py"
+        self.write("src/aj_crew/apps/builtins/code_review_sage/tests/__init__.py", "")
         self.write(fixture_name, code)
-        outside_name = "src/kiro_crew/builtin_skills/standalone/probe.py"
+        outside_name = "src/aj_crew/builtin_skills/standalone/probe.py"
         outside = self.write(outside_name, "VALUE = 7\n")
         self.write(
             "pytest.ini",
             "[pytest]\ntestpaths = test apps\n"
-            "pythonpath = src src/kiro_crew/apps/builtins/code_review_sage\n",
+            "pythonpath = src src/aj_crew/apps/builtins/code_review_sage\n",
         )
         # Keep the real path aliases, relative-file setting and every omit pattern.
         self.write("setup.cfg", (ROOT / "setup.cfg").read_text(encoding="utf-8"))
@@ -648,7 +648,7 @@ class TestFileShards(unittest.TestCase):
                 name,
                 "import types\nfrom pathlib import Path\n"
                 "from sage_lib import logic as alias\n"
-                "from kiro_crew.apps.builtins.code_review_sage.sage_lib import logic as canonical\n"
+                "from aj_crew.apps.builtins.code_review_sage.sage_lib import logic as canonical\n"
                 "from tests import fixtures\n"
                 "def test_value():\n"
                 f"    outside = Path({str(outside)!r})\n"
@@ -702,8 +702,8 @@ class TestFileShards(unittest.TestCase):
     def test_coverage_data_mixed_keys_preserve_presence_lines_arcs_and_uniqueness(self):
         from coverage import CoverageData
 
-        builder = "src/kiro_crew/builder.py"
-        sage = "src/kiro_crew/apps/builtins/code_review_sage/sage_lib/logic.py"
+        builder = "src/aj_crew/builder.py"
+        sage = "src/aj_crew/apps/builtins/code_review_sage/sage_lib/logic.py"
         # A Windows run remaps Sage to POSIX paths but leaves builder keys native.
         data = CoverageData(no_disk=True)
         native_builder = str(PureWindowsPath(builder))
@@ -714,7 +714,7 @@ class TestFileShards(unittest.TestCase):
         self.assertEqual(sorted(data.arcs(native_builder)), sorted(arcs))
         self.assertEqual(sorted(data.arcs(sage)), sorted(arcs))
         with self.assertRaises(AssertionError):
-            self.assert_covered_sources(data, ("src/kiro_crew/missing.py",))
+            self.assert_covered_sources(data, ("src/aj_crew/missing.py",))
         data.add_arcs({builder: arcs})
         with self.assertRaisesRegex(AssertionError, "duplicate source identity"):
             self.assert_covered_sources(data, (builder, sage))
@@ -766,10 +766,10 @@ class TestFileShards(unittest.TestCase):
                 self.assertCountEqual(
                     [word for word in command.split() if word.startswith("--cov=")],
                     [
-                        "--cov=kiro_crew",
+                        "--cov=aj_crew",
                         "--cov=sage_lib",
-                        "--cov=src/kiro_crew/apps/builtins/aws_control/crew/packaging",
-                        "--cov=src/kiro_crew/apps/builtins/code_review_sage/tests",
+                        "--cov=src/aj_crew/apps/builtins/aws_control/crew/packaging",
+                        "--cov=src/aj_crew/apps/builtins/code_review_sage/tests",
                     ],
                 )
             else:

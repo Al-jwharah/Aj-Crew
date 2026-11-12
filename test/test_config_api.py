@@ -18,11 +18,11 @@ from aiohttp.test_utils import TestClient, TestServer
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from kiro_crew.config.schema import (
+from aj_crew.config.schema import (
     SCHEMA_REGISTRY,
     config_entry_to_dict,
 )
-from kiro_crew.members import is_crew_id, is_valid_member_name
+from aj_crew.members import is_crew_id, is_valid_member_name
 
 
 @pytest.fixture(autouse=True)
@@ -32,7 +32,7 @@ def _owner_caller(monkeypatch):
     its own enumerate-the-invariant coverage in
     test_agents_endpoints_owner_auth.py."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
     pass  # Member routing does not depend on OS isolation.
@@ -43,7 +43,7 @@ def _owner_caller(monkeypatch):
 
 def _make_app() -> web.Application:
     """Minimal aiohttp app with the schema endpoint."""
-    from kiro_crew.dashboard.handlers import api_config_schema
+    from aj_crew.dashboard.handlers import api_config_schema
 
     app = web.Application()
     app.router.add_get("/api/config/schema", api_config_schema)
@@ -201,23 +201,23 @@ class TestSchemaApiEndpoint:
             assert len(data["entries"]) == len(SCHEMA_REGISTRY)
 
 
-# KiroCrew Agent CRUD API tests (Tasks 5.3 + 5.4)
+# Aj Crew Agent CRUD API tests (Tasks 5.3 + 5.4)
 
 
 def _make_crud_app() -> web.Application:
-    """Minimal aiohttp app with KiroCrew Agent CRUD endpoints."""
-    from kiro_crew.dashboard.handlers import (
-        api_kirocrew_agent_delete,
-        api_kirocrew_agent_update,
-        api_kirocrew_agents,
-        api_kirocrew_agents_create,
+    """Minimal aiohttp app with Aj Crew Agent CRUD endpoints."""
+    from aj_crew.dashboard.handlers import (
+        api_ajcrew_agent_delete,
+        api_ajcrew_agent_update,
+        api_ajcrew_agents,
+        api_ajcrew_agents_create,
     )
 
     app = web.Application()
-    app.router.add_get("/api/agents", api_kirocrew_agents)
-    app.router.add_post("/api/agents", api_kirocrew_agents_create)
-    app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
-    app.router.add_delete("/api/agents/{name}", api_kirocrew_agent_delete)
+    app.router.add_get("/api/agents", api_ajcrew_agents)
+    app.router.add_post("/api/agents", api_ajcrew_agents_create)
+    app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
+    app.router.add_delete("/api/agents/{name}", api_ajcrew_agent_delete)
     return app
 
 
@@ -232,7 +232,7 @@ def _seed_config() -> dict:
     return {
         "agents": {
             "default": {
-                "kiro_agent": "kirocrew",
+                "kiro_agent": "ajcrew",
                 "workspace": "default",
                 "memory_store": "default",
             },
@@ -246,7 +246,7 @@ def _seed_config() -> dict:
 
 
 class TestAgentCrudProperties:
-    """Property-based tests for KiroCrew Agent CRUD round-trips."""
+    """Property-based tests for Aj Crew Agent CRUD round-trips."""
 
     # Feature: multi-agent-orchestration, Property 8: CRUD create round-trip
     # **Validates: Requirements 4.1, 4.2**
@@ -257,7 +257,7 @@ class TestAgentCrudProperties:
             min_size=1,
             max_size=30,
         ),
-        kiro_agent=st.sampled_from(["kirocrew", "oncall", "research", "coding"]),
+        kiro_agent=st.sampled_from(["ajcrew", "oncall", "research", "coding"]),
         workspace=st.sampled_from(["default", "oncall", "research"]),
         memory_store=st.sampled_from(["default", "", "oncall-kb", "research-mem"]),
     )
@@ -279,7 +279,7 @@ class TestAgentCrudProperties:
             tmp = Path(f.name)
 
         try:
-            with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+            with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
                 async with TestClient(TestServer(_make_crud_app())) as client:
                     # Create
                     resp = await client.post(
@@ -308,7 +308,7 @@ class TestAgentCrudProperties:
                         assert create_data["code"] == "member_memory_required"
                         assert json.loads(tmp.read_text()) == _seed_config()
                         return
-                    if kiro_agent != "kirocrew":
+                    if kiro_agent != "ajcrew":
                         # A crewmate starts as the built-in worker: another
                         # template is refused, and one named after the crew's
                         # key is answered by the same-name rule.
@@ -370,7 +370,7 @@ class TestAgentCrudProperties:
         if not (update_kiro or update_ws or update_ms):
             update_kiro = True  # ensure at least one field updated
 
-        new_kiro = data.draw(st.sampled_from(["kirocrew", "oncall", "research"]))
+        new_kiro = data.draw(st.sampled_from(["ajcrew", "oncall", "research"]))
         new_ws = data.draw(st.sampled_from(["default", "oncall"]))
         seed = _seed_config()
 
@@ -379,11 +379,11 @@ class TestAgentCrudProperties:
             tmp = Path(f.name)
 
         try:
-            with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+            with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
                 async with TestClient(TestServer(_make_crud_app())) as client:
                     resp = await client.post(
                         "/api/agents",
-                        json={"name": "test-agent", "kiro_agent": "kirocrew"},
+                        json={"name": "test-agent", "kiro_agent": "ajcrew"},
                     )
                     assert resp.status == 200
                     private_store = (await resp.json())["memory_store"]
@@ -451,7 +451,7 @@ class TestAgentCrudProperties:
 
         seed = _seed_config()
         seed["agents"][name] = {
-            "kiro_agent": "kirocrew",
+            "kiro_agent": "ajcrew",
             "workspace": "default",
             "memory_store": "default",
         }
@@ -461,7 +461,7 @@ class TestAgentCrudProperties:
             tmp = Path(f.name)
 
         try:
-            with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+            with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
                 async with TestClient(TestServer(_make_crud_app())) as client:
                     resp = await client.delete(f"/api/agents/{name}")
                     assert resp.status == 200
@@ -479,7 +479,7 @@ class TestAgentCrudProperties:
 
 
 class TestAgentCrudEdgeCases:
-    """Unit tests for KiroCrew Agent CRUD error handling."""
+    """Unit tests for Aj Crew Agent CRUD error handling."""
 
     @pytest.mark.asyncio
     async def test_create_duplicate_returns_409(self, tmp_path: Path) -> None:
@@ -487,11 +487,11 @@ class TestAgentCrudEdgeCases:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
 
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(_make_crud_app())) as client:
                 resp = await client.post(
                     "/api/agents",
-                    json={"name": "default", "kiro_agent": "kirocrew"},
+                    json={"name": "default", "kiro_agent": "ajcrew"},
                 )
                 assert resp.status == 409
                 data = await resp.json()
@@ -504,7 +504,7 @@ class TestAgentCrudEdgeCases:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
 
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(_make_crud_app())) as client:
                 resp = await client.put(
                     "/api/agents/nonexistent",
@@ -519,7 +519,7 @@ class TestAgentCrudEdgeCases:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
 
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(_make_crud_app())) as client:
                 resp = await client.put(
                     "/api/agents/default",
@@ -533,10 +533,10 @@ class TestAgentCrudEdgeCases:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
 
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(_make_crud_app())) as client:
                 response = await client.post(
-                    "/api/agents", json={"name": ["not", "text"], "kiro_agent": "kirocrew"}
+                    "/api/agents", json={"name": ["not", "text"], "kiro_agent": "ajcrew"}
                 )
                 assert response.status == 400
                 assert (await response.json())["code"] == "invalid_member_name"
@@ -551,7 +551,7 @@ class TestAgentCrudEdgeCases:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(data), encoding="utf-8")
 
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(_make_crud_app())) as client:
                 response = await client.put("/api/agents/default", json={"kiro_agent": target})
                 assert response.status == 200, await response.text()
@@ -561,7 +561,7 @@ class TestAgentCrudEdgeCases:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
 
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(_make_crud_app())) as client:
                 response = await client.put("/api/agents/default", json={"kiro_agent": ""})
                 assert response.status == 400
@@ -577,7 +577,7 @@ class TestAgentCrudEdgeCases:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(data), encoding="utf-8")
 
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(_make_crud_app())) as client:
                 response = await client.put(
                     "/api/agents/default",
@@ -591,7 +591,7 @@ class TestAgentCrudEdgeCases:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
 
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(_make_crud_app())) as client:
                 resp = await client.delete("/api/agents/default")
                 assert resp.status == 409
@@ -604,7 +604,7 @@ class TestAgentCrudEdgeCases:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
 
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(_make_crud_app())) as client:
                 resp = await client.delete("/api/agents/nonexistent")
                 assert resp.status == 404
@@ -617,11 +617,11 @@ class TestAgentCrudEdgeCases:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
 
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(_make_crud_app())) as client:
                 resp = await client.post(
                     "/api/agents",
-                    json={"name": "", "kiro_agent": "kirocrew"},
+                    json={"name": "", "kiro_agent": "ajcrew"},
                 )
                 assert resp.status == 400
                 data = await resp.json()
@@ -633,11 +633,11 @@ class TestAgentCrudEdgeCases:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
 
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(_make_crud_app())) as client:
                 resp = await client.post(
                     "/api/agents",
-                    json={"name": name, "kiro_agent": "kirocrew"},
+                    json={"name": name, "kiro_agent": "ajcrew"},
                 )
                 assert resp.status == 400
                 assert (await resp.json())["code"] == "invalid_member_name"
@@ -648,14 +648,14 @@ async def test_crud_triggers_create_and_update_round_trip(tmp_path: Path) -> Non
     """`triggers` persists through create + update and appears in the agents list."""
     tmp = tmp_path / "config.json"
     tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
-    with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+    with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
         async with TestClient(TestServer(_make_crud_app())) as client:
             # Create carrying triggers
             resp = await client.post(
                 "/api/agents",
                 json={
                     "name": "oncall",
-                    "kiro_agent": "kirocrew",
+                    "kiro_agent": "ajcrew",
                     "triggers": "incident, prod outage, pager escalation",
                 },
             )
@@ -685,12 +685,12 @@ class TestDefaultAgentGuard:
     @pytest.fixture(autouse=True)
     def _agents_lock_root(self, monkeypatch, tmp_path: Path) -> None:
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.agents.kiro_agents_dir_path",
+            "aj_crew.dashboard.handlers.agents.kiro_agents_dir_path",
             lambda: tmp_path,
         )
 
     def _default_agent_app(self) -> web.Application:
-        from kiro_crew.dashboard.handlers import api_default_agent
+        from aj_crew.dashboard.handlers import api_default_agent
 
         app = web.Application()
         app.router.add_put("/api/config/default-agent", api_default_agent)
@@ -699,7 +699,7 @@ class TestDefaultAgentGuard:
 
     @staticmethod
     def _installed(**kw):
-        from kiro_crew.agent_discovery import AgentInfo
+        from aj_crew.agent_discovery import AgentInfo
 
         fields = {"name": "atlas", "filename": "atlas.json", "description": "d", "model": "auto"}
         fields.update(kw)
@@ -712,12 +712,12 @@ class TestDefaultAgentGuard:
                     events.append(kw)
 
         return (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp),
-            unittest.mock.patch("kiro_crew.dashboard.handlers.config_path", return_value=tmp),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp),
+            unittest.mock.patch("aj_crew.dashboard.handlers.config_path", return_value=tmp),
             unittest.mock.patch(
-                "kiro_crew.dashboard.handlers.agents.list_agents", return_value=found
+                "aj_crew.dashboard.handlers.agents.list_agents", return_value=found
             ),
-            unittest.mock.patch("kiro_crew.dashboard.handlers.agents._sel", lambda: _Sel()),
+            unittest.mock.patch("aj_crew.dashboard.handlers.agents._sel", lambda: _Sel()),
         )
 
     @pytest.mark.asyncio
@@ -740,7 +740,7 @@ class TestDefaultAgentGuard:
     async def test_non_string_name_is_rejected_not_500(self, tmp_path: Path) -> None:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(self._default_agent_app())) as client:
                 for bad in (["a"], {"a": 1}, 1):
                     resp = await client.put("/api/config/default-agent", json={"agent": bad})
@@ -759,9 +759,9 @@ class TestDefaultAgentGuard:
         and the refusal says the config is the problem, not the name."""
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             with unittest.mock.patch(
-                "kiro_crew.dashboard.handlers.agents.KiroCrewConfig.load",
+                "aj_crew.dashboard.handlers.agents.AjCrewConfig.load",
                 side_effect=RuntimeError("boom"),
             ):
                 async with TestClient(TestServer(self._default_agent_app())) as client:
@@ -772,7 +772,7 @@ class TestDefaultAgentGuard:
     @pytest.mark.asyncio
     async def test_alias_name_sets_the_roster_default_crewmate(self, tmp_path: Path) -> None:
         cfg = _seed_config()
-        cfg["agents"]["other"] = {"kiro_agent": "kirocrew"}
+        cfg["agents"]["other"] = {"kiro_agent": "ajcrew"}
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(cfg), encoding="utf-8")
         events: list[dict] = []
@@ -795,7 +795,7 @@ class TestDefaultAgentGuard:
         """A template the picker offers is written to `agent.default_agent`: no
         crewmate is enrolled, the roster's default crewmate is untouched, and a
         session created without a crewmate now runs it."""
-        from kiro_crew.config.loader import KiroCrewConfig, default_template
+        from aj_crew.config.loader import AjCrewConfig, default_template
 
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
@@ -815,7 +815,7 @@ class TestDefaultAgentGuard:
                     "default_template": "atlas",
                     "overridden": False,
                 }
-            assert default_template(KiroCrewConfig.load()) == "atlas"
+            assert default_template(AjCrewConfig.load()) == "atlas"
         saved = json.loads(tmp.read_text())
         assert saved["agent"]["default_agent"] == "atlas"
         assert saved["default_agent"] == "default"
@@ -834,13 +834,13 @@ class TestDefaultAgentGuard:
         local = tmp_path / "config.local.json"
         local.write_text(json.dumps({"agent": {"default_agent": "pinned"}}), encoding="utf-8")
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp),
-            unittest.mock.patch("kiro_crew.config.loader.config_local_path", return_value=local),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp),
+            unittest.mock.patch("aj_crew.config.loader.config_local_path", return_value=local),
             unittest.mock.patch(
-                "kiro_crew.dashboard.handlers.agents.config_local_path", return_value=local
+                "aj_crew.dashboard.handlers.agents.config_local_path", return_value=local
             ),
             unittest.mock.patch(
-                "kiro_crew.dashboard.handlers.agents.owner_view_for_request",
+                "aj_crew.dashboard.handlers.agents.owner_view_for_request",
                 return_value=owner,
             ),
         ):
@@ -867,13 +867,13 @@ class TestDefaultAgentGuard:
         local = tmp_path / "config.local.json"
         local.write_text(overlay_text, encoding="utf-8")
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp),
-            unittest.mock.patch("kiro_crew.config.loader.config_local_path", return_value=local),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp),
+            unittest.mock.patch("aj_crew.config.loader.config_local_path", return_value=local),
             unittest.mock.patch(
-                "kiro_crew.dashboard.handlers.agents.config_local_path", return_value=local
+                "aj_crew.dashboard.handlers.agents.config_local_path", return_value=local
             ),
             unittest.mock.patch(
-                "kiro_crew.dashboard.handlers.agents.owner_view_for_request",
+                "aj_crew.dashboard.handlers.agents.owner_view_for_request",
                 return_value=True,
             ),
         ):
@@ -881,7 +881,7 @@ class TestDefaultAgentGuard:
                 body = await (await client.get("/api/config/default-agent")).json()
         assert body == {
             "default_agent": "default",
-            "default_template": "kirocrew",
+            "default_template": "ajcrew",
             "overridden": False,
         }
 
@@ -936,12 +936,12 @@ class TestDefaultAgentGuard:
             ({"scope": "project"}, "atlas"),
             (
                 {
-                    "name": "kirocrew-lite",
-                    "filename": "kirocrew-lite.json",
-                    "kirocrew_owned": True,
-                    "source": "kirocrew",
+                    "name": "ajcrew-lite",
+                    "filename": "ajcrew-lite.json",
+                    "ajcrew_owned": True,
+                    "source": "ajcrew",
                 },
-                "kirocrew-lite",
+                "ajcrew-lite",
             ),
             ({"name": "other"}, "atlas"),
         ],
@@ -954,7 +954,7 @@ class TestDefaultAgentGuard:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
         p1, p2, p3, p4 = self._patched(tmp, [self._installed(**info_kw)])
-        background_only = info_kw.get("filename") == "kirocrew-lite.json"
+        background_only = info_kw.get("filename") == "ajcrew-lite.json"
         with p1, p2, p3, p4:
             async with TestClient(TestServer(self._default_agent_app())) as client:
                 resp = await client.put("/api/config/default-agent", json={"agent": name})
@@ -979,7 +979,7 @@ class TestDefaultAgentGuard:
             p3,
             p4,
             unittest.mock.patch(
-                "kiro_crew.dashboard.handlers.agents._foreign_private_copy_owner",
+                "aj_crew.dashboard.handlers.agents._foreign_private_copy_owner",
                 return_value="scribe",
             ),
         ):
@@ -991,7 +991,7 @@ class TestDefaultAgentGuard:
 
     @pytest.mark.asyncio
     async def test_unverifiable_lineage_refuses_the_write(self, tmp_path: Path) -> None:
-        from kiro_crew.dashboard.handlers import agents as agents_mod
+        from aj_crew.dashboard.handlers import agents as agents_mod
 
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
@@ -1028,7 +1028,7 @@ class TestDefaultAgentGuard:
             p2,
             p3,
             p4,
-            unittest.mock.patch("kiro_crew.config.loader.config_local_path", return_value=local),
+            unittest.mock.patch("aj_crew.config.loader.config_local_path", return_value=local),
         ):
             async with TestClient(TestServer(self._default_agent_app())) as client:
                 resp = await client.put("/api/config/default-agent", json={"agent": "atlas"})
@@ -1054,7 +1054,7 @@ class TestDefaultAgentGuard:
             p2,
             p3,
             p4,
-            unittest.mock.patch("kiro_crew.config.loader.config_local_path", return_value=local),
+            unittest.mock.patch("aj_crew.config.loader.config_local_path", return_value=local),
         ):
             async with TestClient(TestServer(self._default_agent_app())) as client:
                 resp = await client.put("/api/config/default-agent", json={"agent": "atlas"})
@@ -1095,7 +1095,7 @@ class TestDefaultAgentGuard:
         real_open = os.open
 
         def _read_only_lock_file(path, *a, **kw):
-            if str(path).endswith(".kirocrew-agents.lock"):
+            if str(path).endswith(".ajcrew-agents.lock"):
                 raise OSError(30, "Read-only file system")
             return real_open(path, *a, **kw)
 
@@ -1105,7 +1105,7 @@ class TestDefaultAgentGuard:
             p3,
             p4,
             unittest.mock.patch(
-                "kiro_crew.dashboard.agent_admin.default_agent.os.open", _read_only_lock_file
+                "aj_crew.dashboard.agent_admin.default_agent.os.open", _read_only_lock_file
             ),
         ):
             async with TestClient(TestServer(self._default_agent_app())) as client:
@@ -1129,7 +1129,7 @@ class TestDefaultAgentGuard:
             p3,
             p4,
             unittest.mock.patch(
-                "kiro_crew.dashboard.handlers.agents.agents_spec_lock",
+                "aj_crew.dashboard.handlers.agents.agents_spec_lock",
                 side_effect=OSError("lock not acquired within 300s"),
             ),
         ):
@@ -1157,7 +1157,7 @@ class TestDefaultAgentGuard:
             p2,
             p4,
             unittest.mock.patch(
-                "kiro_crew.dashboard.handlers.agents.list_agents",
+                "aj_crew.dashboard.handlers.agents.list_agents",
                 side_effect=lambda *a, **kw: next(scans, []),
             ),
         ):
@@ -1176,7 +1176,7 @@ class TestAgentMutationNonObjectBody:
     async def test_create_rejects_non_object_body(self, bad_body, tmp_path: Path) -> None:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(_make_crud_app())) as client:
                 resp = await client.post("/api/agents", json=bad_body)
                 assert resp.status == 400
@@ -1188,7 +1188,7 @@ class TestAgentMutationNonObjectBody:
     async def test_update_rejects_non_object_body(self, bad_body, tmp_path: Path) -> None:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config()), encoding="utf-8")
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(_make_crud_app())) as client:
                 resp = await client.put("/api/agents/default", json=bad_body)
                 assert resp.status == 400
@@ -1203,13 +1203,13 @@ async def test_binding_only_update_is_stale_checked_and_merge_safe(tmp_path: Pat
     the write never rewrites fields it did not carry."""
     seed = _seed_config()
     seed["agents"]["test-agent"] = {
-        "kiro_agent": "kirocrew",
+        "kiro_agent": "ajcrew",
         "workspace": "custom-ws",
         "memory_store": "default",
     }
     tmp = tmp_path / "config.json"
     tmp.write_text(json.dumps(seed), encoding="utf-8")
-    with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+    with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
         async with TestClient(TestServer(_make_crud_app())) as client:
             # Stale expectation -> 409, binding untouched.
             resp = await client.put(
@@ -1219,12 +1219,12 @@ async def test_binding_only_update_is_stale_checked_and_merge_safe(tmp_path: Pat
             assert resp.status == 409
             assert (await resp.json())["code"] == "stale_binding"
             on_disk = json.loads(tmp.read_text(encoding="utf-8"))
-            assert on_disk["agents"]["test-agent"]["kiro_agent"] == "kirocrew"
+            assert on_disk["agents"]["test-agent"]["kiro_agent"] == "ajcrew"
 
             # Matching expectation commits the delta...
             resp = await client.put(
                 "/api/agents/test-agent",
-                json={"kiro_agent": "oncall", "expected_kiro_agent": "kirocrew"},
+                json={"kiro_agent": "oncall", "expected_kiro_agent": "ajcrew"},
             )
             assert resp.status == 200
             on_disk = json.loads(tmp.read_text(encoding="utf-8"))
@@ -1235,17 +1235,17 @@ async def test_binding_only_update_is_stale_checked_and_merge_safe(tmp_path: Pat
 
 @pytest.mark.asyncio
 async def test_binding_only_unchanged_value_refuses_a_concurrent_rebind(tmp_path: Path) -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     seed = _seed_config()
     seed["agents"]["test-agent"] = {
-        "kiro_agent": "kirocrew",
+        "kiro_agent": "ajcrew",
         "workspace": "default",
         "memory_store": "default",
     }
     tmp = tmp_path / "config.json"
     tmp.write_text(json.dumps(seed), encoding="utf-8")
-    real_load = KiroCrewConfig.load
+    real_load = AjCrewConfig.load
 
     def load_before_concurrent_rebind():
         loaded = real_load()
@@ -1255,13 +1255,11 @@ async def test_binding_only_unchanged_value_refuses_a_concurrent_rebind(tmp_path
         return loaded
 
     with (
-        unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp),
-        unittest.mock.patch.object(
-            KiroCrewConfig, "load", side_effect=load_before_concurrent_rebind
-        ),
+        unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp),
+        unittest.mock.patch.object(AjCrewConfig, "load", side_effect=load_before_concurrent_rebind),
     ):
         async with TestClient(TestServer(_make_crud_app())) as client:
-            response = await client.put("/api/agents/test-agent", json={"kiro_agent": "kirocrew"})
+            response = await client.put("/api/agents/test-agent", json={"kiro_agent": "ajcrew"})
             assert response.status == 409
             assert (await response.json())["code"] == "stale_binding"
 
@@ -1279,16 +1277,16 @@ async def test_binding_only_update_serializes_against_generic_snapshot_save(tmp_
     import asyncio
     import concurrent.futures
 
-    from kiro_crew.dashboard.handlers import agents as handlers
+    from aj_crew.dashboard.handlers import agents as handlers
 
     seed = _seed_config()
-    seed["agents"]["crew-a"] = {"kiro_agent": "kirocrew", "workspace": "ws-a"}
-    seed["agents"]["crew-b"] = {"kiro_agent": "kirocrew", "workspace": "ws-b"}
+    seed["agents"]["crew-a"] = {"kiro_agent": "ajcrew", "workspace": "ws-a"}
+    seed["agents"]["crew-b"] = {"kiro_agent": "ajcrew", "workspace": "ws-b"}
     tmp = tmp_path / "config.json"
     tmp.write_text(json.dumps(seed), encoding="utf-8")
     real_owner = handlers._foreign_private_copy_owner
     fired: dict[str, object] = {}
-    with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+    with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
         async with TestClient(TestServer(_make_crud_app())) as client:
             loop = asyncio.get_running_loop()
 
@@ -1341,14 +1339,14 @@ async def test_binding_update_rejects_unverifiable_lineage(tmp_path: Path) -> No
     the spawn gate validates governance, not ownership, so a bind that slipped
     through would have another crew executing the private definition once the
     sidecar recovered. Unverifiable lineage 409s."""
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     seed = _seed_config()
-    seed["agents"]["test-agent"] = {"kiro_agent": "kirocrew"}
+    seed["agents"]["test-agent"] = {"kiro_agent": "ajcrew"}
     tmp = tmp_path / "config.json"
     tmp.write_text(json.dumps(seed), encoding="utf-8")
     with (
-        unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp),
+        unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp),
         unittest.mock.patch.object(
             agent_state, "get_fork_info", side_effect=OSError("sidecar unreadable")
         ),
@@ -1361,7 +1359,7 @@ async def test_binding_update_rejects_unverifiable_lineage(tmp_path: Path) -> No
             assert resp.status == 409
             assert (await resp.json())["code"] == "lineage_unverifiable"
             on_disk = json.loads(tmp.read_text(encoding="utf-8"))
-            assert on_disk["agents"]["test-agent"]["kiro_agent"] == "kirocrew"
+            assert on_disk["agents"]["test-agent"]["kiro_agent"] == "ajcrew"
 
 
 @pytest.mark.asyncio
@@ -1369,15 +1367,15 @@ async def test_binding_update_rejects_foreign_private_copy(tmp_path: Path) -> No
     """binding a crew to ANOTHER crew's private copy is refused —
     the owner's publish/reset cleanup would delete the template out from under
     the second crew. Binding the owner itself stays allowed."""
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     seed = _seed_config()
-    seed["agents"]["test-agent"] = {"kiro_agent": "kirocrew"}
+    seed["agents"]["test-agent"] = {"kiro_agent": "ajcrew"}
     seed["agents"]["owner-crew"] = {"kiro_agent": "owner-copy"}
     tmp = tmp_path / "config.json"
     tmp.write_text(json.dumps(seed), encoding="utf-8")
-    agent_state.set_fork_info("owner-copy", forked_from="kirocrew", private_to="owner-crew")
-    with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+    agent_state.set_fork_info("owner-copy", forked_from="ajcrew", private_to="owner-crew")
+    with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
         async with TestClient(TestServer(_make_crud_app())) as client:
             resp = await client.put(
                 "/api/agents/test-agent",
@@ -1386,7 +1384,7 @@ async def test_binding_update_rejects_foreign_private_copy(tmp_path: Path) -> No
             assert resp.status == 409
             assert (await resp.json())["code"] == "foreign_private_copy"
             on_disk = json.loads(tmp.read_text(encoding="utf-8"))
-            assert on_disk["agents"]["test-agent"]["kiro_agent"] == "kirocrew"
+            assert on_disk["agents"]["test-agent"]["kiro_agent"] == "ajcrew"
 
             # The owning crew itself may (re)bind to its own copy.
             resp = await client.put(
@@ -1401,14 +1399,14 @@ async def test_create_rejects_foreign_private_copy(tmp_path: Path) -> None:
     """crew creation re-checks private-copy ownership INSIDE the
     config lock, immediately before the binding is added — a fork recording
     lineage after a pre-lock validation cannot slip through."""
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     seed = _seed_config()
     seed["agents"]["owner-crew"] = {"kiro_agent": "owner-copy"}
     tmp = tmp_path / "config.json"
     tmp.write_text(json.dumps(seed), encoding="utf-8")
-    agent_state.set_fork_info("owner-copy", forked_from="kirocrew", private_to="owner-crew")
-    with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+    agent_state.set_fork_info("owner-copy", forked_from="ajcrew", private_to="owner-crew")
+    with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
         async with TestClient(TestServer(_make_crud_app())) as client:
             # Named after the copy: the one non-default template a create
             # admits, so the private-copy check is what answers it.
@@ -1427,8 +1425,8 @@ async def test_binding_update_rejects_foreign_copy_via_stem(tmp_path: Path) -> N
     """lineage is keyed by declared name, but a binding can name
     the file STEM — the guard must resolve the stem to the declared name
     before concluding the target is not a private copy."""
-    from kiro_crew import agent_state
-    from kiro_crew.config.paths import kiro_agents_dir
+    from aj_crew import agent_state
+    from aj_crew.config.paths import kiro_agents_dir
 
     agents_dir = kiro_agents_dir()
     agents_dir.mkdir(parents=True, exist_ok=True)
@@ -1437,14 +1435,14 @@ async def test_binding_update_rejects_foreign_copy_via_stem(tmp_path: Path) -> N
     (agents_dir / "owner-copy-file.json").write_text(
         json.dumps({"name": "owner-copy"}), encoding="utf-8"
     )
-    agent_state.set_fork_info("owner-copy", forked_from="kirocrew", private_to="owner-crew")
+    agent_state.set_fork_info("owner-copy", forked_from="ajcrew", private_to="owner-crew")
 
     seed = _seed_config()
-    seed["agents"]["test-agent"] = {"kiro_agent": "kirocrew"}
+    seed["agents"]["test-agent"] = {"kiro_agent": "ajcrew"}
     tmp = tmp_path / "config.json"
     tmp.write_text(json.dumps(seed), encoding="utf-8")
     try:
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(_make_crud_app())) as client:
                 resp = await client.put(
                     "/api/agents/test-agent",
@@ -1453,6 +1451,6 @@ async def test_binding_update_rejects_foreign_copy_via_stem(tmp_path: Path) -> N
                 assert resp.status == 409
                 assert (await resp.json())["code"] == "foreign_private_copy"
                 on_disk = json.loads(tmp.read_text(encoding="utf-8"))
-                assert on_disk["agents"]["test-agent"]["kiro_agent"] == "kirocrew"
+                assert on_disk["agents"]["test-agent"]["kiro_agent"] == "ajcrew"
     finally:
         (agents_dir / "owner-copy-file.json").unlink(missing_ok=True)

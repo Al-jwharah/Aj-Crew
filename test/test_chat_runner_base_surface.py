@@ -21,7 +21,7 @@ from test_chat_runner_composition_contract import (
     _owner_functions,
 )
 
-import kiro_crew.dashboard.chat_runner as cr
+import aj_crew.dashboard.chat_runner as cr
 
 #: Each moved name, the owner that holds it, and its kind and signature in the
 #: one-module runner (captured from it before the split).
@@ -877,13 +877,13 @@ _BASE_SURFACE: dict[str, tuple[tuple[str, str, str], ...]] = {
         (
             "_recover_app_agent_binding",
             "async function",
-            "(cfg: \"'KiroCrewConfig'\", slot: \"'_ChatSlot'\", *, project: 'str | None') -> 'ResolvedBindings'",
+            "(cfg: \"'AjCrewConfig'\", slot: \"'_ChatSlot'\", *, project: 'str | None') -> 'ResolvedBindings'",
         ),
         ("_app_agent_host_allowed", "function", "(provider: 'Any') -> 'bool'"),
         (
             "_app_agent_turn_backend",
             "async function",
-            "(state: \"'DashboardState'\", session_key: 'str', cfg: \"'KiroCrewConfig | None'\") -> 'str | None'",
+            "(state: \"'DashboardState'\", session_key: 'str', cfg: \"'AjCrewConfig | None'\") -> 'str | None'",
         ),
     ),
     "queue_cycle": (

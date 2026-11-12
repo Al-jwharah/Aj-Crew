@@ -17,18 +17,18 @@ from typing import Any, Callable
 
 import pytest
 
-import kiro_crew.embeddings as emb
-from kiro_crew import embeddings_download, embeddings_ollama
-from kiro_crew.config.memory_sections import _coerce_embedding_provider
-from kiro_crew.config.section_builders import _build_memory_config
-from kiro_crew.embeddings_ollama import (
+import aj_crew.embeddings as emb
+from aj_crew import embeddings_download, embeddings_ollama
+from aj_crew.config.memory_sections import _coerce_embedding_provider
+from aj_crew.config.section_builders import _build_memory_config
+from aj_crew.embeddings_ollama import (
     OllamaHttpEmbedder,
     OllamaSettings,
     _build_opener,
     _RefuseRedirects,
     resolve_ollama_settings,
 )
-from kiro_crew.embeddings_settings import _MAX_EMBED_CHARS, EmbeddingWork, embedding_work
+from aj_crew.embeddings_settings import _MAX_EMBED_CHARS, EmbeddingWork, embedding_work
 
 _DIM = 4
 _MODEL = "nomic-embed-text"
@@ -275,7 +275,7 @@ class TestEmbed:
     def test_a_width_mismatch_names_the_width_and_stops_the_backend(self, caplog) -> None:
         opener = _FakeOpener(embed=lambda body: {"embeddings": [[0.5] * 768]})
         embedder = _embedder(opener)
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.embeddings"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.embeddings"):
             assert embedder.embed("x") is None
             assert embedder.embed("y") is None
         errors = [r for r in caplog.records if "memory.embedding_dim" in r.getMessage()]
@@ -292,7 +292,7 @@ class TestEmbed:
         opener = _FakeOpener(error=urllib.error.URLError("connection refused"))
         probes = _CapturedProbes()
         embedder = _embedder(opener, probes)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.embeddings"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.embeddings"):
             assert embedder.embed("x") is None
             assert embedder.embed("y") is None
         warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
@@ -406,7 +406,7 @@ class TestTransport:
 class TestSelection:
     @pytest.fixture(autouse=True)
     def _no_env_model(self, _floor_monkeypatch) -> None:
-        _floor_monkeypatch.delenv("KIROCREW_EMBED_MODEL_PATH", raising=False)
+        _floor_monkeypatch.delenv("AJCREW_EMBED_MODEL_PATH", raising=False)
 
     def test_the_provider_selects_the_server_backend(self, monkeypatch) -> None:
         memory = {"embedding_provider": "ollama_http", "ollama_model": _MODEL, "embedding_dim": 768}
@@ -428,7 +428,7 @@ class TestSelection:
         monkeypatch.setattr(
             emb, "_read_memory_config", lambda: {"embedding_provider": "ollama_http"}
         )
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.embeddings"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.embeddings"):
             backend = emb.default_embedding_backend()
         assert isinstance(backend, OllamaHttpEmbedder)
         assert backend.is_ready() is False

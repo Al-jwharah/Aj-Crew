@@ -28,7 +28,7 @@ Lists ``queued``, ``in_progress`` and ``pending`` runs REPO-WIDE -- one paginate
 ``GET /repos/{repo}/actions/runs?status=…`` per status returns runs of every
 workflow at once -- and keeps only those whose ``path`` names a workflow that
 routes jobs to the CodeBuild fleet (``WATCHED_WORKFLOWS`` -- the label
-``codebuild-kirocrew-gha`` reaches ``ci.yml``, ``fast-gate.yml``,
+``codebuild-ajcrew-gha`` reaches ``ci.yml``, ``fast-gate.yml``,
 ``main-ratchet-audit.yml``, ``build.yml`` and eleven others). One listing per
 status covers the whole watched set, and covers strictly more than a
 per-workflow loop would: a fleet-routed workflow nobody registered is still
@@ -228,7 +228,7 @@ from typing import Any, Callable, Protocol
 CODEBUILD_LABEL_PREFIX = "codebuild-"
 # Every workflow whose `runs-on` routes at least one job to the CodeBuild
 # fleet at this repository. The watchdog lists and heals runs of each. The
-# fleet label (`codebuild-kirocrew-gha-…`) is the membership signal; a test
+# fleet label (`codebuild-ajcrew-gha-…`) is the membership signal; a test
 # pins this tuple to the set of workflows whose `runs-on` actually carries it.
 # `ci-runner-watchdog.yml` is deliberately absent: the label appears only in
 # its own explanatory comment, and a watchdog must never cancel or re-run

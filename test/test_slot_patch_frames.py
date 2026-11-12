@@ -17,11 +17,11 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import revocation_gen, token_auth
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.dashboard.state import DashboardState, SlotOrigin
-from kiro_crew.dashboard.websocket_hub import SLOT_PATCH_WS_FLAG
-from kiro_crew.testing.wait import finished
+from aj_crew.dashboard import revocation_gen, token_auth
+from aj_crew.dashboard.handlers import updates
+from aj_crew.dashboard.state import DashboardState, SlotOrigin
+from aj_crew.dashboard.websocket_hub import SLOT_PATCH_WS_FLAG
+from aj_crew.testing.wait import finished
 
 
 @pytest.fixture(autouse=True)
@@ -54,7 +54,7 @@ class _WS:
 
 @pytest.fixture
 def state(monkeypatch, tmp_path):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),
@@ -217,7 +217,7 @@ class TestSlotRemoved:
                     {"slot": "conductor", "key": None} if row["key"] == "worker" else None
                 )
 
-        monkeypatch.setattr("kiro_crew.dashboard.state._attach_slot_parents", fake_attach)
+        monkeypatch.setattr("aj_crew.dashboard.state._attach_slot_parents", fake_attach)
 
         state.push_slot_removed("conductor")
 
@@ -237,10 +237,10 @@ class TestSlotRemoved:
         """Decision 5: closing a Crew Mode root's tab keeps its workers out of the
         person's lists (the root is a known root, persisted in its metadata), so
         the removal patch never restates them as ordinary rows."""
-        from kiro_crew import crew_mode
+        from aj_crew import crew_mode
 
         root = _slot(state, "root")
-        root.agent = "kirocrew-conductor"
+        root.agent = "ajcrew-conductor"
         worker = _slot(state, "worker")
         worker._created_by = "root"
         [row] = [r for r in state.serialize_slots() if r["key"] == "worker"]
@@ -331,7 +331,7 @@ class TestSubagentPatch:
         del state._slots["gone"]
         capable = _WS(patch_capable=True)
         state.register_ws(capable)  # type: ignore[arg-type]
-        monkeypatch.setattr("kiro_crew.dashboard.chat_utils.effective_session_key", lambda s: s.key)
+        monkeypatch.setattr("aj_crew.dashboard.chat_utils.effective_session_key", lambda s: s.key)
         subs = _Subs(running={"chat-a"}, queued={"chat-a": 2})
         state.subagents = subs  # type: ignore[assignment]
         serialize = MagicMock(wraps=state.serialize_slot_views)
@@ -367,7 +367,7 @@ class TestSubagentPatch:
         state.register_ws(legacy)  # type: ignore[arg-type]
         queue: asyncio.Queue = asyncio.Queue()
         state._sse_queues.append(queue)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_utils.effective_session_key", lambda s: s.key)
+        monkeypatch.setattr("aj_crew.dashboard.chat_utils.effective_session_key", lambda s: s.key)
         state.subagents = _Subs(running={"chat-a"}, queued={"chat-a": 3})  # type: ignore[assignment]
         if full_baseline:
             state.push_slots_update()
@@ -402,7 +402,7 @@ class TestSubagentPatch:
         legacy = _WS(patch_capable=False)
         state.register_ws(capable)  # type: ignore[arg-type]
         state.register_ws(legacy)  # type: ignore[arg-type]
-        monkeypatch.setattr("kiro_crew.dashboard.chat_utils.effective_session_key", lambda s: s.key)
+        monkeypatch.setattr("aj_crew.dashboard.chat_utils.effective_session_key", lambda s: s.key)
         subs = _Subs(running=set(), queued={"chat-a": 3})
         state.subagents = subs  # type: ignore[assignment]
         state.push_subagent_patch()
@@ -438,7 +438,7 @@ class TestSubagentPatch:
         _slot(state, "chat-a")
         existing = _WS(patch_capable=True)
         state.register_ws(existing)  # type: ignore[arg-type]
-        monkeypatch.setattr("kiro_crew.dashboard.chat_utils.effective_session_key", lambda s: s.key)
+        monkeypatch.setattr("aj_crew.dashboard.chat_utils.effective_session_key", lambda s: s.key)
         subs = _Subs(running=set(), queued={})
         state.subagents = subs  # type: ignore[assignment]
         state.push_slots_update()
@@ -467,7 +467,7 @@ class TestSubagentPatch:
         self, state: DashboardState, monkeypatch
     ) -> None:
         _slot(state, "chat-a")
-        monkeypatch.setattr("kiro_crew.dashboard.chat_utils.effective_session_key", lambda s: s.key)
+        monkeypatch.setattr("aj_crew.dashboard.chat_utils.effective_session_key", lambda s: s.key)
         state.subagents = _Subs(running={"chat-a"}, queued={"chat-a": 2})  # type: ignore[assignment]
         queue: asyncio.Queue = asyncio.Queue(maxsize=1)
         state._sse_queues.append(queue)
@@ -495,8 +495,8 @@ _FENCE = "slot-patch-fence"
 
 @pytest.fixture
 def e2e_state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(token_auth, "_get_secret", lambda: b"slot-patch-test-signing-key")
     monkeypatch.setattr(token_auth, "_state", token_auth.TokenStateManager())
     monkeypatch.setattr(token_auth, "_app_perms_cache", {})
@@ -504,7 +504,7 @@ def e2e_state(tmp_path, monkeypatch):
     monkeypatch.setattr(revocation_gen, "_gen", 0)
     stopped = asyncio.Event()
     monkeypatch.setattr(updates, "shutdown_event", stopped)
-    monkeypatch.setattr("kiro_crew.dashboard.ws.shutdown_event", stopped)
+    monkeypatch.setattr("aj_crew.dashboard.ws.shutdown_event", stopped)
     st = _make_state(tmp_path)
     st.get_or_create_slot(_SLOT, origin=SlotOrigin.USER)
     monkeypatch.setattr(st, "status_snapshot", lambda **_kwargs: {})
@@ -535,11 +535,11 @@ async def _frames_until_fence(socket) -> list[dict]:
 async def test_pin_reaches_a_capable_tab_as_a_patch_and_an_old_tab_as_a_list(
     e2e_state, monkeypatch
 ):
-    from kiro_crew.dashboard.chat import api_chat_slot_pin
-    from kiro_crew.dashboard.ws import api_ws
+    from aj_crew.dashboard.chat import api_chat_slot_pin
+    from aj_crew.dashboard.ws import api_ws
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.ws.load_declared_events_for_connect",
+        "aj_crew.dashboard.ws.load_declared_events_for_connect",
         lambda _app: (True, frozenset()),
     )
 
@@ -623,8 +623,8 @@ async def test_pin_reaches_a_capable_tab_as_a_patch_and_an_old_tab_as_a_list(
 
 @pytest.mark.asyncio
 async def test_folder_move_uses_a_full_list_only_when_it_unhides_the_folder(e2e_state):
-    from kiro_crew.dashboard.chat_folders import api_chat_slot_folder
-    from kiro_crew.dashboard.ws import api_ws
+    from aj_crew.dashboard.chat_folders import api_chat_slot_folder
+    from aj_crew.dashboard.ws import api_ws
 
     hidden_folder = "hidden-folder"
     visible_folder = "visible-folder"

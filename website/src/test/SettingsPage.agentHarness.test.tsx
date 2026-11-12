@@ -44,7 +44,7 @@ vi.mock('../pages/developer/AgentBackendTab', () => ({
 
 // Subagent Settings + Warm Pool: their editors are pinned in CfgTabCoverage.test.tsx;
 // only their placement on this tab is tested here.
-vi.mock('../pages/overview/KiroCrewCfgTab', () => ({
+vi.mock('../pages/overview/AjCrewCfgTab', () => ({
   AgentRunSettings: () => <div data-testid="agent-run-settings" />,
 }))
 
@@ -72,7 +72,7 @@ vi.mock('../pages/SessionArchive', () => ({ default: () => <div /> }))
 vi.mock('../pages/LocalStorageDebug', () => ({ default: () => <div /> }))
 vi.mock('../pages/settings/McpManagement', () => ({ McpManagement: () => <div /> }))
 vi.mock('../pages/overview', () => ({
-  KiroCrewCfgTab: () => <div />,
+  AjCrewCfgTab: () => <div />,
   AgentCfgTab: () => <div />,
 }))
 

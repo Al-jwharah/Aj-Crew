@@ -26,13 +26,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.acp.session_handle import AcpSessionHandle, WatchdogSettings
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.agent_sdk import backends as sdk_backends
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.llm_helpers import ToolApprovalPolicy
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.acp.client import AcpError
+from aj_crew.acp.session_handle import AcpSessionHandle, WatchdogSettings
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.agent_sdk import backends as sdk_backends
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.llm_helpers import ToolApprovalPolicy
+from aj_crew.providers.acp import AcpProvider
 
 _REPLY = "Agent response here"
 
@@ -102,7 +102,7 @@ _CASES = [
 
 
 def _make_gw():
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gw = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gw.sessions = MagicMock()
@@ -144,15 +144,15 @@ async def _run_cron(gw, job, get_or_create):
     persist = AsyncMock()
 
     with (
-        patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
+        patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
         patch(
-            "kiro_crew.slack.gateway.run_in_embed_pool",
+            "aj_crew.slack.gateway.run_in_embed_pool",
             AsyncMock(return_value=("full prompt", None)),
         ),
-        patch("kiro_crew.slack.gateway.stream_and_collect", stream),
-        patch("kiro_crew.slack.gateway.persist_token_record_async", persist),
-        patch("kiro_crew.slack.gateway.sel"),
-        patch("kiro_crew.slack.gateway.build_cron_session_context") as mock_ctx,
+        patch("aj_crew.slack.gateway.stream_and_collect", stream),
+        patch("aj_crew.slack.gateway.persist_token_record_async", persist),
+        patch("aj_crew.slack.gateway.sel"),
+        patch("aj_crew.slack.gateway.build_cron_session_context") as mock_ctx,
     ):
         mock_ctx.return_value = (f"cron:{job.id}", job.message)
 
@@ -297,7 +297,7 @@ async def test_a_half_applied_pair_pin_bills_the_bare_model(build, tmp_path):
 
 def _plain_provider():
     """An LLMProvider subclass that overrides nothing about model pins."""
-    from kiro_crew.providers.base import LLMProvider
+    from aj_crew.providers.base import LLMProvider
 
     stubs = {name: (lambda *_a, **_k: None) for name in LLMProvider.__abstractmethods__}
     return type("PlainProvider", (LLMProvider,), stubs)()
@@ -309,7 +309,7 @@ def test_the_model_pin_contract_is_declared_on_the_base_provider():
     The cron path reads these off any provider. A provider that only inherits
     the base must read as "pin ran", never raise AttributeError.
     """
-    from kiro_crew.llm_helpers import provider_model_pin_partial, provider_model_pin_refused
+    from aj_crew.llm_helpers import provider_model_pin_partial, provider_model_pin_refused
 
     provider = _plain_provider()
     assert provider.model_pin_refused == ""

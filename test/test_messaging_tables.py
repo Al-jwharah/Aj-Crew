@@ -1,4 +1,4 @@
-"""Tests for ``kiro_crew.messaging.tables`` -- the pure outbound table renderer.
+"""Tests for ``aj_crew.messaging.tables`` -- the pure outbound table renderer.
 
 Everything here is a pure-function test: no channel, no client, no event loop.
 The renderer-integration half (which channel converts, and that the canonical
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.messaging.tables import (
+from aj_crew.messaging.tables import (
     GRID_MAX_DISPLAY_COLUMNS,
     TABLE_POLICIES,
     TABLE_POLICY_AUTO,

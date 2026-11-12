@@ -17,18 +17,18 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import skill_trust
-from kiro_crew.config import paths
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew import skill_trust
+from aj_crew.config import paths
+from aj_crew.config.loader import AjCrewConfig
 
 
 @pytest.fixture
 def data_home(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[Path]:
     home = tmp_path / "data-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setattr(paths, "_resolved_home", None, raising=False)
-    from kiro_crew.config import load_memo
+    from aj_crew.config import load_memo
 
     load_memo.forget()
     yield home
@@ -48,13 +48,13 @@ def _count_rebuilds(monkeypatch: pytest.MonkeyPatch) -> list[int]:
     """Count full config rebuilds, leaving the real ``load`` bound (the memo only
     answers for the real loader; a replaced one is called every time)."""
     rebuilds: list[int] = []
-    real = KiroCrewConfig._load_resolved.__func__
+    real = AjCrewConfig._load_resolved.__func__
 
     def counting(cls):
         rebuilds.append(1)
         return real(cls)
 
-    monkeypatch.setattr(KiroCrewConfig, "_load_resolved", classmethod(counting))
+    monkeypatch.setattr(AjCrewConfig, "_load_resolved", classmethod(counting))
     return rebuilds
 
 
@@ -74,11 +74,11 @@ class TestProjectSkillsSwitch:
 
         def double(cls):
             calls.append(1)
-            config = KiroCrewConfig()
+            config = AjCrewConfig()
             config.skills.project_skills_enabled = len(calls) % 2 == 1
             return config
 
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(double))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(double))
         assert [skill_trust._project_skills_enabled() for _ in range(3)] == [True, False, True]
 
     def test_an_edited_config_is_read_again(self, data_home):
@@ -94,7 +94,7 @@ class TestProjectSkillsSwitch:
             raise OSError("unreadable")
 
         with monkeypatch.context() as mp:
-            mp.setattr(KiroCrewConfig, "load", classmethod(broken))
+            mp.setattr(AjCrewConfig, "load", classmethod(broken))
             assert skill_trust._project_skills_enabled() is False
         assert skill_trust._project_skills_enabled() is True
 
@@ -103,8 +103,8 @@ class TestProjectSkillsSwitch:
         an unchanged stat fingerprint; that answer must not outlive the fault."""
         _write_switch(data_home, True)
         assert skill_trust._project_skills_enabled() is True
-        from kiro_crew.config import load_memo, loader
-        from kiro_crew.config.validation import _CONFIG_CACHE
+        from aj_crew.config import load_memo, loader
+        from aj_crew.config.validation import _CONFIG_CACHE
 
         load_memo.forget()
         _CONFIG_CACHE.clear()
@@ -135,8 +135,8 @@ class TestTurnTimeouts:
     """The three config reads every turn dispatch makes, two of them on the loop."""
 
     def test_repeated_dispatch_reads_do_not_rebuild_the_config(self, data_home, monkeypatch):
-        from kiro_crew.acp.client_timeouts import resolve_prompt_timeout
-        from kiro_crew.dashboard import turn_dispatch
+        from aj_crew.acp.client_timeouts import resolve_prompt_timeout
+        from aj_crew.dashboard import turn_dispatch
 
         _write_agent(data_home, chat_turn_timeout_secs=3600, soft_stop_budget_secs=5)
         # The first load may write normalized fields back (a change to the file);
@@ -158,7 +158,7 @@ class TestTurnTimeouts:
         assert first[:2] == (3600.0, 5.0)
 
     def test_an_edited_turn_ceiling_is_read_again(self, data_home):
-        from kiro_crew.dashboard import turn_dispatch
+        from aj_crew.dashboard import turn_dispatch
 
         _write_agent(data_home, chat_turn_timeout_secs=3600)
         assert turn_dispatch.chat_turn_timeout_secs() == 3600.0
@@ -166,13 +166,13 @@ class TestTurnTimeouts:
         assert turn_dispatch.chat_turn_timeout_secs() == 1800.0
 
     def test_an_unreadable_config_falls_back_every_time(self, data_home, monkeypatch):
-        from kiro_crew.constants import CHAT_TURN_TIMEOUT
-        from kiro_crew.dashboard import turn_dispatch
+        from aj_crew.constants import CHAT_TURN_TIMEOUT
+        from aj_crew.dashboard import turn_dispatch
 
         def broken(cls):
             raise OSError("unreadable")
 
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(broken))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(broken))
         assert turn_dispatch.chat_turn_timeout_secs() == CHAT_TURN_TIMEOUT
         assert turn_dispatch.chat_turn_timeout_secs() == CHAT_TURN_TIMEOUT
 
@@ -185,7 +185,7 @@ def _skill(root: Path, key: str) -> None:
 
 class TestVisibleRows:
     def _loader(self, tmp_path, monkeypatch, opened):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         root = tmp_path / "skills"
         _skill(root, "app-one/kept")
@@ -232,7 +232,7 @@ class TestVisibleRows:
         assert [entry[0] for entry in loader._visible_memo.values()] == [new]
 
     def test_an_oversized_catalog_is_filtered_uncached(self, tmp_path, monkeypatch, opened):
-        from kiro_crew.skill_runtime import catalog
+        from aj_crew.skill_runtime import catalog
 
         loader, resolved = self._loader(tmp_path, monkeypatch, opened)
         monkeypatch.setattr(catalog, "_VISIBLE_MEMO_MAX_ROWS", 1)
@@ -250,8 +250,8 @@ class TestVisibleRows:
         assert loader._visible_memo == {}
 
     def test_the_apps_root_is_resolved_once_for_many_skills(self, tmp_path, monkeypatch, opened):
-        from kiro_crew.apps import manager
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.apps import manager
+        from aj_crew.skills import SkillsLoader
 
         apps_root = tmp_path / "apps"
         monkeypatch.setattr(manager, "apps_dir", lambda: apps_root)
@@ -282,14 +282,14 @@ class TestVisibleRows:
 class TestLastMessagePreview:
     @pytest.fixture(autouse=True)
     def _clean(self):
-        from kiro_crew.dashboard import chat_utils_display as cud
+        from aj_crew.dashboard import chat_utils_display as cud
 
         cud._clear_display_redaction_cache()
         yield
         cud._clear_display_redaction_cache()
 
     def test_the_same_message_object_is_not_hashed_again(self, monkeypatch):
-        from kiro_crew.dashboard import chat_utils_display as cud
+        from aj_crew.dashboard import chat_utils_display as cud
 
         text = "a reply that is long enough to be cut " * 20
         first = cud._redacted_preview(text, 80)
@@ -302,7 +302,7 @@ class TestLastMessagePreview:
         assert keys == []
 
     def test_an_equal_string_in_another_object_answers_the_same(self):
-        from kiro_crew.dashboard import chat_utils_display as cud
+        from aj_crew.dashboard import chat_utils_display as cud
 
         text = "token AKIAIOSFODNN7EXAMPLE in a message " * 3
         twin = "".join(list(text))
@@ -311,7 +311,7 @@ class TestLastMessagePreview:
         assert "AKIAIOSFODNN7EXAMPLE" not in cud._redacted_preview(twin, 80)
 
     def test_a_changed_exempt_host_set_is_seen(self, monkeypatch):
-        from kiro_crew.dashboard import chat_utils_display as cud
+        from aj_crew.dashboard import chat_utils_display as cud
 
         text = "see https://tenant.example.com/view and more"
         cud._redacted_preview(text, 80)
@@ -325,7 +325,7 @@ class TestLastMessagePreview:
         assert keys, "a new exempt-host set must miss the object memo"
 
     def test_retained_text_is_bounded_by_characters(self, monkeypatch):
-        from kiro_crew.dashboard import chat_utils_display as cud
+        from aj_crew.dashboard import chat_utils_display as cud
 
         monkeypatch.setattr(cud, "_DISPLAY_PREVIEW_BY_OBJECT_MAX_CHARS", 1_000)
         oversized = "x" * 1_001
@@ -341,7 +341,7 @@ class TestLastMessagePreview:
         assert id(held[-1]) in cud._display_preview_by_object
 
     def test_the_redaction_context_is_held_once(self, monkeypatch):
-        from kiro_crew.dashboard import chat_utils_display as cud
+        from aj_crew.dashboard import chat_utils_display as cud
 
         # A fresh host set per call, as the policy reader builds one.
         monkeypatch.setattr(cud, "_exempt_exact_hosts", lambda: frozenset({"a.example.com"}))
@@ -360,7 +360,7 @@ class TestLastMessagePreview:
         assert len(cud._display_preview_by_object) == 1, "a new context empties the map"
 
     def test_a_different_limit_is_its_own_answer(self):
-        from kiro_crew.dashboard import chat_utils_display as cud
+        from aj_crew.dashboard import chat_utils_display as cud
 
         text = "word " * 100
         assert len(cud._redacted_preview(text, 10)) == 11

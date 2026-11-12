@@ -1,4 +1,4 @@
-"""Coverage tests for ``kiro_crew.dashboard.chat_runner``: what a turn emits and records.
+"""Coverage tests for ``aj_crew.dashboard.chat_runner``: what a turn emits and records.
 
 Covers the turn and time-to-first-token metrics, file snapshots and file-change
 records, turn stats, ACP string redaction, the MCP OAuth URL gate and banners, the
@@ -22,13 +22,13 @@ from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from slack_wire_helpers import slack_wire
 
-from kiro_crew import widget_artifacts
-from kiro_crew.artifacts import ArtifactStore
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.metrics import turns as turns_mod
-from kiro_crew.metrics.recorder import MetricsRecorder
-from kiro_crew.security import oauth_url_contains_credential
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import widget_artifacts
+from aj_crew.artifacts import ArtifactStore
+from aj_crew.dashboard import chat_runner
+from aj_crew.metrics import turns as turns_mod
+from aj_crew.metrics.recorder import MetricsRecorder
+from aj_crew.security import oauth_url_contains_credential
+from aj_crew.testing.wait import async_wait_until
 
 #: The logger every ``dashboard/chat_turn`` owner writes through.
 _RUNNER_LOGGER = chat_runner.__name__
@@ -362,14 +362,12 @@ class TestEmitMcpOauthRequest:
 
 class TestConnectionsManagedNames:
     def test_failure_fails_open_to_the_empty_set(self):
-        with patch.object(chat_runner, "kirocrew_managed_names", side_effect=RuntimeError("io")):
+        with patch.object(chat_runner, "ajcrew_managed_names", side_effect=RuntimeError("io")):
             assert chat_runner._connections_managed_mcp_names() == frozenset()
 
     def test_intersection_of_managed_and_carded(self):
         with (
-            patch.object(
-                chat_runner, "kirocrew_managed_names", return_value={"github", "handmade"}
-            ),
+            patch.object(chat_runner, "ajcrew_managed_names", return_value={"github", "handmade"}),
             patch.object(
                 chat_runner,
                 "get_visible_providers",
@@ -498,7 +496,7 @@ class TestChannelTargetLadder:
     def test_governance_denial_skips_the_mirror(self, tmp_path):
         link = MagicMock(channel_type="telegram", channel_id="123", thread_id=None)
         with patch(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             return_value=MagicMock(permitted=False),
         ):
             assert (
@@ -511,7 +509,7 @@ class TestChannelTargetLadder:
         link = MagicMock(channel_type="telegram", channel_id="123", thread_id=None)
 
         with patch(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             return_value=MagicMock(permitted=True),
         ):
             assert chat_runner._resolve_channel_target(state, "dashboard:x", link) is None
@@ -524,7 +522,7 @@ class TestChannelTargetLadder:
         link = MagicMock(channel_type="wecom", channel_id="123", thread_id=None)
 
         with patch(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             return_value=MagicMock(permitted=True),
         ):
             assert chat_runner._resolve_channel_target(state, "dashboard:x", link) is None
@@ -537,7 +535,7 @@ class TestChannelTargetLadder:
         link = MagicMock(channel_type="telegram", channel_id="123", thread_id=None)
 
         with patch(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             return_value=MagicMock(permitted=True),
         ):
             got = chat_runner._resolve_channel_target(state, "dashboard:x", link)
@@ -714,7 +712,7 @@ class TestFlushSegment:
     def test_a_redacted_credential_is_described_not_noticed(self, tmp_path):
         """The lock tag replaces the grey notice: the row carries one record per
         placeholder and no notice row is appended."""
-        from kiro_crew.security import REDACTED_CREDENTIAL_TAG
+        from aj_crew.security import REDACTED_CREDENTIAL_TAG
 
         state, slot = _state(tmp_path), _slot()
         command = "echo 'DATABASE_URL=postgresql://user:pass@host:5432/db' >> .env"
@@ -750,7 +748,7 @@ class TestFlushSegment:
     def test_an_encoded_credential_is_described(self, tmp_path):
         import base64
 
-        from kiro_crew.security import _REDACTED_ENCODED_CREDENTIAL_TAG
+        from aj_crew.security import _REDACTED_ENCODED_CREDENTIAL_TAG
 
         state, slot = _state(tmp_path), _slot()
         blob = base64.b64encode(b"postgresql://user:pass@host:5432/db").decode()
@@ -764,7 +762,7 @@ class TestFlushSegment:
     def test_the_two_credential_tags_do_not_overlap(self):
         """Ordinals count every tag in the text; that is only unambiguous while
         no tag contains another."""
-        from kiro_crew.security import CREDENTIAL_REDACTION_TAGS
+        from aj_crew.security import CREDENTIAL_REDACTION_TAGS
 
         for outer in CREDENTIAL_REDACTION_TAGS:
             for inner in CREDENTIAL_REDACTION_TAGS:
@@ -774,7 +772,7 @@ class TestFlushSegment:
         assert len(set(CREDENTIAL_REDACTION_TAGS)) == len(CREDENTIAL_REDACTION_TAGS)
 
     def test_a_redacted_url_is_described_not_noticed(self, tmp_path):
-        from kiro_crew.security import EXFILTRATION_REDACTION_TAG_PREFIX
+        from aj_crew.security import EXFILTRATION_REDACTION_TAG_PREFIX
 
         state, slot = _state(tmp_path), _slot()
         url = "https://evil.example.com/steal?data=" + "A" * 250
@@ -788,7 +786,7 @@ class TestFlushSegment:
 
     def test_a_value_whole_in_one_delta_is_still_described(self, tmp_path):
         """The run loop redacts each delta; the raw segment copy keeps the record."""
-        from kiro_crew.security import redact_credentials
+        from aj_crew.security import redact_credentials
 
         state, slot = _state(tmp_path), _slot()
         raw = "connect with postgresql://user:pass@host:5432/db now"
@@ -816,7 +814,7 @@ class TestFlushSegment:
     def test_records_come_from_the_one_whole_text_pass(self, tmp_path):
         """A delta cut through a link and a key: the saved row is the raw copy
         redacted once, and its records describe the placeholders it holds."""
-        from kiro_crew.security import redact_credentials, redact_exfiltration_urls
+        from aj_crew.security import redact_credentials, redact_exfiltration_urls
 
         state, slot = _state(tmp_path), _slot()
         url = "https://collector.example-sink.net/v1/ingest?d=" + "eyJhIjoiYiJ9" * 30
@@ -922,7 +920,7 @@ class TestTtftMetric:
     def test_emission_failure_is_swallowed(self, caplog):
         with (
             patch(
-                "kiro_crew.metrics.provider.get_recorder", side_effect=RuntimeError("down")
+                "aj_crew.metrics.provider.get_recorder", side_effect=RuntimeError("down")
             ) as get_recorder,
             caplog.at_level(logging.DEBUG, logger=_RUNNER_LOGGER),
         ):
@@ -933,7 +931,7 @@ class TestTtftMetric:
 
     def test_attributes_split_cold_and_resumed_populations(self):
         recorder = MagicMock()
-        with patch("kiro_crew.metrics.provider.get_recorder", return_value=recorder):
+        with patch("aj_crew.metrics.provider.get_recorder", return_value=recorder):
             chat_runner._emit_ttft_metric(0.0, "dashboard:x", is_new=True, resumed=True)
 
         attrs = recorder.histogram.call_args.kwargs["attrs"]

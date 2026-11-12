@@ -20,21 +20,21 @@ from real_dashboard_state import (  # noqa: F401
     real_dashboard_state,
 )
 
-from kiro_crew.constants import CHANNEL_OWNER_DM_NAMESPACES
-from kiro_crew.dashboard.handlers import messaging
-from kiro_crew.notifications import bridge_transport
-from kiro_crew.notifications.bridge_transport import (
+from aj_crew.constants import CHANNEL_OWNER_DM_NAMESPACES
+from aj_crew.dashboard.handlers import messaging
+from aj_crew.notifications import bridge_transport
+from aj_crew.notifications.bridge_transport import (
     TRANSPORT_SINKS,
     TransportBridgeSink,
     render_transport_text,
 )
-from kiro_crew.notifications.bus import NotificationPayload
+from aj_crew.notifications.bus import NotificationPayload
 
 _SECRET = "AKIAIOSFODNN7EXAMPLE"
 
 
 def _discord(owners: list[str]) -> tuple[Any, AsyncMock]:
-    from kiro_crew.discord.transport import DiscordTransport
+    from aj_crew.discord.transport import DiscordTransport
 
     client = MagicMock()
     client.create_dm_channel = AsyncMock(return_value="999000111222333444")
@@ -43,7 +43,7 @@ def _discord(owners: list[str]) -> tuple[Any, AsyncMock]:
 
 
 def _telegram(owners: list[str]) -> tuple[Any, AsyncMock]:
-    from kiro_crew.telegram.transport import TelegramTransport
+    from aj_crew.telegram.transport import TelegramTransport
 
     client = MagicMock()
     client.send_message = AsyncMock(return_value=7)
@@ -51,7 +51,7 @@ def _telegram(owners: list[str]) -> tuple[Any, AsyncMock]:
 
 
 def _webex(owners: list[str]) -> tuple[Any, AsyncMock]:
-    from kiro_crew.webex.transport import WebexTransport
+    from aj_crew.webex.transport import WebexTransport
 
     client = MagicMock()
     client.send_message = AsyncMock(return_value="m-1")
@@ -80,14 +80,14 @@ class _Sel:
 @pytest.fixture()
 def sel_log(monkeypatch) -> _Sel:
     log = _Sel()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: log)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.sel", lambda: log)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: log)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.sel", lambda: log)
     return log
 
 
 def _routed_state(tmp_path, monkeypatch, transport_id: str, transport: Any = None):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
     state = real_dashboard_state(tmp_path)
     if transport is not None:
         state.register_channel_transport(transport)

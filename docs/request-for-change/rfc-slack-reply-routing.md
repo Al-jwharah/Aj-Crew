@@ -194,23 +194,23 @@ code beyond not finding a binding.
 Opt-in and backward compatible throughout; the only behavior that changes is a
 flagged page's threaded reply.
 
-- `src/kiro_crew/mcp_tools/messaging.py` (`send_message` schema and handler):
+- `src/aj_crew/mcp_tools/messaging.py` (`send_message` schema and handler):
   add `reply_to_sender`, forward it on the Slack leg only, require a strict
   session key when set, and surface the binding in the result string.
-- `src/kiro_crew/dashboard/messaging_api/proactive_send.py`
+- `src/aj_crew/dashboard/messaging_api/proactive_send.py`
   (`_read_send_message`, `_post_send_message_to_slack`,
   `_send_message_response`): accept the flag, record the `reply_binding` against
   the posted `ts` after a successful owner-DM post, and report it in the response
   beside `ts`.
-- `src/kiro_crew/session_map.py` (`SessionMap`): add a `reply_binding` entry
+- `src/aj_crew/session_map.py` (`SessionMap`): add a `reply_binding` entry
   field (owner user id, channel id, thread root `ts`, created-at, TTL) and its
   accessors, written without touching `slack_thread_ts` or any `mirror` row;
   rebuild a dedicated `_reply_thread_to_session` reverse index from it on load,
   beside `_rebuild_thread_index`; reuse the `_evict_rival_claimants` discipline
   keyed on the new index for single-owner-per-thread, and add a TTL-expiry read
-  and an eviction accessor. `src/kiro_crew/session_parts/links.py` forwards the new
+  and an eviction accessor. `src/aj_crew/session_parts/links.py` forwards the new
   accessors.
-- `src/kiro_crew/slack/handler.py` and `slack/handler_runtime/inbound.py`:
+- `src/aj_crew/slack/handler.py` and `slack/handler_runtime/inbound.py`:
   before the thread-owner resolution and the `slack:<ts>` fallback, check the
   `reply_binding` reverse index bounded by the bound user id and the TTL, and on
   a live match deliver the reply into the sending session's dashboard slot

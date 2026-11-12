@@ -504,7 +504,7 @@ def test_the_watchdog_never_watches_its_own_workflow() -> None:
     assert wd.WATCHDOG_WORKFLOW not in wd.WATCHED_WORKFLOWS
     text = (WORKFLOWS_DIR / wd.WATCHDOG_WORKFLOW).read_text(encoding="utf-8")
     # A naive whole-file grep WOULD pull it in; the runs-on rule keeps it out.
-    assert "codebuild-kirocrew-gha" in text
+    assert "codebuild-ajcrew-gha" in text
     assert wd.WATCHDOG_WORKFLOW not in _fleet_routed_workflow_files()
 
 

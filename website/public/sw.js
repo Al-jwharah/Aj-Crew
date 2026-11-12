@@ -13,7 +13,7 @@
 // name keeps the literal placeholder — still a valid, stable cache name,
 // just without per-deploy busting.
 const CACHE_VERSION = '%%SW_BUILD_HASH%%'
-const CACHE = 'kirocrew-shell-' + CACHE_VERSION
+const CACHE = 'ajcrew-shell-' + CACHE_VERSION
 const SHELL = ['/', '/index.html']
 
 self.addEventListener('install', e => {
@@ -171,7 +171,7 @@ self.addEventListener('push', e => {
       // tab used, so this banner replaces it rather than adding a second one.
       const options = {
         body: n.body || '',
-        tag: n.tag || 'kirocrew-notif',
+        tag: n.tag || 'ajcrew-notif',
         data: n.data || { url: n.navigate || '/' },
         icon: '/icon-192.png',
         badge: '/icon-192.png',
@@ -211,7 +211,7 @@ self.addEventListener('fetch', e => {
   // Cross-origin (CDN scripts, analytics, RUM)
   if (url.origin !== self.location.origin) return
   // A URL carrying a `token` query parameter is a sign-in link (the owner's
-  // `kirocrew token` link, `/?token=...`). Only the gateway's auth middleware can
+  // `ajcrew token` link, `/?token=...`). Only the gateway's auth middleware can
   // honour it: it exchanges the link token for a session cookie and redirects. If
   // the worker answers instead, the exchange never happens — the cached shell
   // boots with no session, /api/status answers 403 and the page reads "Session

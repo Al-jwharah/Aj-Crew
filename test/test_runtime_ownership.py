@@ -10,7 +10,7 @@ import logging
 
 import pytest
 
-from kiro_crew import runtime_ownership as ro
+from aj_crew import runtime_ownership as ro
 
 
 class _FakeRuntime:
@@ -66,7 +66,7 @@ def test_the_protected_pid_shield_is_reference_counted() -> None:
     """Two pools shielding one process. ``session_pid``'s registry is the one
     every app worker pool and the knowledge LLM pool register with, and each
     pairs its own register with its own unregister."""
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     pid = 999_001
     session_pid.register_protected_pid(pid)
@@ -87,7 +87,7 @@ def test_the_protected_pid_shield_is_reference_counted() -> None:
 def test_the_starting_pid_shield_is_reference_counted() -> None:
     """Two concurrent starts of one session legitimately shield one pid: the
     allocator carries a race budget for starting the same session twice."""
-    from kiro_crew.session_allocation import SessionRegistryState
+    from aj_crew.session_allocation import SessionRegistryState
 
     state = SessionRegistryState()
     state.starting_pids.add(4242)
@@ -101,7 +101,7 @@ def test_the_starting_pid_shield_is_reference_counted() -> None:
 def test_the_starting_pid_shield_still_reads_as_a_set_for_the_sweep() -> None:
     """The orphan sweep unions it with other pid sources, so it has to keep
     answering ``in``, iteration and ``set(...)``."""
-    from kiro_crew.session_allocation import SessionRegistryState
+    from aj_crew.session_allocation import SessionRegistryState
 
     state = SessionRegistryState()
     state.starting_pids.add(101)
@@ -116,7 +116,7 @@ def test_the_starting_pid_shield_still_reads_as_a_set_for_the_sweep() -> None:
 def test_the_kill_line_names_pid_caller_and_reason(caplog) -> None:
     """The line the field could not get: a death log written where the process
     is reaped says a process died, never who decided it should."""
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.runtime_ownership"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.runtime_ownership"):
         ro.note_runtime_kill(909, reason="dashboard reset all", caller="reset handler")
     line = "\n".join(r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING)
     assert "909" in line and "reset handler" in line and "dashboard reset all" in line
@@ -125,14 +125,14 @@ def test_the_kill_line_names_pid_caller_and_reason(caplog) -> None:
 def test_the_kill_line_is_warning_not_info(caplog) -> None:
     """The gateway runs at WARNING, so INFO would omit the one line naming who
     fired from the log of every deployment that has the problem."""
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.runtime_ownership"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.runtime_ownership"):
         ro.note_runtime_kill(4242, reason="teardown", caller="test")
     levels = {r.levelno for r in caplog.records}
     assert levels == {logging.WARNING}, f"expected one WARNING record, got levels {levels}"
 
 
 def test_the_kill_line_reads_a_pid_off_an_object(caplog) -> None:
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.runtime_ownership"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.runtime_ownership"):
         ro.note_runtime_kill(_FakeRuntime(pid=5150), reason="teardown", caller="test")
     assert "5150" in "\n".join(r.getMessage() for r in caplog.records)
 
@@ -143,7 +143,7 @@ def test_an_unsignalable_target_is_still_attributed_without_a_pid(caplog) -> Non
     pid is reported as absent rather than as 1, and the line is still written."""
     for target in (None, 0, 1, -1, True, "4242", object()):
         caplog.clear()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.runtime_ownership"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.runtime_ownership"):
             ro.note_runtime_kill(target, reason="teardown", caller="test")
         line = "\n".join(r.getMessage() for r in caplog.records)
         assert "pid=None" in line, f"{target!r} should report no pid, got: {line}"
@@ -269,7 +269,7 @@ async def test_the_refusal_names_the_pid_the_caller_and_the_reason() -> None:
     runtime = _FakeRuntime(pid=5154)
     holder = _FakeLeaseHolder(runtime)
     await holder.acquire_runtime_lease()
-    logger = logging.getLogger("kiro_crew.runtime_ownership")
+    logger = logging.getLogger("aj_crew.runtime_ownership")
     records: list[logging.LogRecord] = []
     handler = logging.Handler()
     handler.emit = records.append  # type: ignore[method-assign]
@@ -732,7 +732,7 @@ def test_the_tenancy_refusal_names_its_holders(caplog) -> None:
     ro._reset_for_tests()
     runtime = _FakeSharedRuntime(pid=6008)
     ro.claim_runtime_tenancy(runtime, holder="subagent:chat-7")
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.runtime_ownership"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.runtime_ownership"):
         assert ro.authorize_runtime_kill(runtime, reason="reset all", caller="dash") is False
     line = "\n".join(r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING)
     assert "subagent:chat-7" in line and "6008" in line and "dash" in line
@@ -788,7 +788,7 @@ def test_a_claim_on_a_client_shaped_target_is_answerable_by_bare_pid() -> None:
 
 
 def _shared_provider(runtime: object, *, owns: bool) -> object:
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     return AcpSessionProvider(
         object(),  # type: ignore[arg-type]
@@ -872,7 +872,7 @@ async def test_a_turn_on_a_committed_teardown_is_told_the_process_is_gone() -> N
     it is translated into the same error a dead runtime raises, which callers
     already handle by getting another runtime.
     """
-    from kiro_crew.acp.client import AcpProcessDied
+    from aj_crew.acp.client import AcpProcessDied
 
     ro._reset_for_tests()
     runtime = _FakeSharedRuntime(pid=6206)
@@ -895,8 +895,8 @@ async def test_a_claim_that_cannot_be_recorded_ends_the_turn(monkeypatch, caplog
     """
     import logging
 
-    from kiro_crew.acp import session_provider as sp
-    from kiro_crew.acp.client import AcpProcessDied
+    from aj_crew.acp import session_provider as sp
+    from aj_crew.acp.client import AcpProcessDied
 
     ro._reset_for_tests()
     runtime = _FakeSharedRuntime(pid=6207)
@@ -917,7 +917,7 @@ async def test_a_claim_that_cannot_be_recorded_ends_the_turn(monkeypatch, caplog
 def test_a_provider_without_a_runtime_stays_inert() -> None:
     """Assembled without ``__init__`` (as the translation unit tests do): nothing to
     claim, so no error is raised into the caller."""
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     provider = object.__new__(AcpSessionProvider)
     assert provider._claim_shared_turn() is None  # type: ignore[attr-defined]
@@ -949,7 +949,7 @@ async def test_a_provider_assembled_without_init_is_inert_in_the_turn_bookkeepin
     into the caller's turn, which is a crash where the worst honest outcome is
     simply not claiming.
     """
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     ro._reset_for_tests()
     partial = AcpSessionProvider.__new__(AcpSessionProvider)
@@ -966,12 +966,12 @@ def test_the_mint_child_is_defended_from_the_provider_drain() -> None:
     reaches ``_sync_kill_provider`` and can SIGTERM the mint child that same click
     spawned -- ~3s in, before the token exchange persists the grant, after which
     Connect waits out its whole TTL for a grant file that never appears."""
-    from kiro_crew.connections.mint import _claim_mint_pid
+    from aj_crew.connections.mint import _claim_mint_pid
 
     ro._reset_for_tests()
     holdings: dict[str, object] = {}
     client = _FakeMintClient(pid=6300)
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     try:
         assert _claim_mint_pid(client, holdings) is True  # type: ignore[arg-type]
@@ -994,10 +994,10 @@ def test_the_mint_child_is_defended_from_the_provider_drain() -> None:
 def test_the_mint_claim_is_idempotent_across_poll_rounds() -> None:
     """``_claim_mint_pid_when_spawned`` polls until a pid appears, so a second
     round must not take a second claim that the single release cannot pay off."""
-    from kiro_crew.connections.mint import _claim_mint_pid
+    from aj_crew.connections.mint import _claim_mint_pid
 
     ro._reset_for_tests()
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     holdings: dict[str, object] = {}
     client = _FakeMintClient(pid=6301)
@@ -1021,10 +1021,10 @@ def test_a_respawned_mint_child_is_reshielded_and_the_dead_pid_released() -> Non
     A write-once claim would hold the dead first number and leave the replacement
     naked for the whole mint TTL, reachable by the orphan sweep and by the drain's
     kill gate alike, with no re-claim anywhere in the flow to correct it."""
-    from kiro_crew.connections.mint import _claim_mint_pid
+    from aj_crew.connections.mint import _claim_mint_pid
 
     ro._reset_for_tests()
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     holdings: dict[str, object] = {}
     client = _FakeMintClient(pid=6302)
@@ -1063,10 +1063,10 @@ def test_a_mint_client_that_has_not_spawned_keeps_an_existing_holding() -> None:
     """The reconcile reads the client FIRST, so a pid cleared by a teardown must
     not be read as "nothing is held" -- the recorded holding is what
     ``_dispose_mint`` releases, and dropping it would leak both shields."""
-    from kiro_crew.connections.mint import _claim_mint_pid
+    from aj_crew.connections.mint import _claim_mint_pid
 
     ro._reset_for_tests()
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     holdings: dict[str, object] = {}
     client = _FakeMintClient(pid=6304)
@@ -1089,10 +1089,10 @@ def test_a_mint_claim_on_a_committed_teardown_records_no_tenancy_and_says_so() -
     failing with. It records no tenancy, keeps the sweep shield -- a different
     reaper, which the teardown in progress does not consult -- and names the reason.
     """
-    from kiro_crew.connections.mint import _claim_mint_pid
+    from aj_crew.connections.mint import _claim_mint_pid
 
     ro._reset_for_tests()
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     holdings: dict[str, object] = {}
     client = _FakeMintClient(pid=6305)
@@ -1112,7 +1112,7 @@ def test_a_mint_claim_on_a_committed_teardown_records_no_tenancy_and_says_so() -
 def test_an_unspawned_mint_client_claims_nothing_and_keeps_polling() -> None:
     """The poller's exit condition. A client with no pid yet must answer False so
     ``_claim_mint_pid_when_spawned`` keeps polling rather than returning early."""
-    from kiro_crew.connections.mint import _claim_mint_pid
+    from aj_crew.connections.mint import _claim_mint_pid
 
     ro._reset_for_tests()
     holdings: dict[str, object] = {}
@@ -1126,7 +1126,7 @@ def test_the_provider_killer_commits_once_the_turn_that_came_and_went_has_left()
     so a refusal on the epoch alone has no later drain to revisit it. With no
     tenant on the pid, the killer's second ask against the current epoch commits.
     """
-    from kiro_crew.session_pid_provider_kill import _commit_teardown
+    from aj_crew.session_pid_provider_kill import _commit_teardown
 
     ro._reset_for_tests()
     runtime = _FakeSharedRuntime(pid=6420)
@@ -1143,7 +1143,7 @@ def test_the_provider_killer_commits_once_the_turn_that_came_and_went_has_left()
 def test_the_provider_killer_still_yields_to_a_tenant_on_its_second_ask() -> None:
     """The second ask is no bypass: a turn on the pid now refuses it, and the debt
     lands on that claim so its release hands the runtime back."""
-    from kiro_crew.session_pid_provider_kill import _commit_teardown
+    from aj_crew.session_pid_provider_kill import _commit_teardown
 
     ro._reset_for_tests()
     runtime = _FakeSharedRuntime(pid=6421)

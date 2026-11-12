@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.hooks import (
+from aj_crew.hooks import (
     HOOK_EVENT_SESSION_LANE_CHANGED,
     HOOK_EVENTS,
     HOOK_EVENTS_ALL,

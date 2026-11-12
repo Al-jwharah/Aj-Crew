@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.workflows import store as store_mod
-from kiro_crew.workflows.store import WorkflowRunStore
+from aj_crew.workflows import store as store_mod
+from aj_crew.workflows.store import WorkflowRunStore
 
 
 @pytest.fixture

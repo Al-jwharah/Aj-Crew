@@ -236,7 +236,7 @@ class TestHandlerOffload1947:
     ``run_in_embed_pool``.
 
     The method set is derived from the AST (public methods reaching
-    ``with <store>._db_lock:`` transitively), and the scan covers all of ``kiro_crew``.
+    ``with <store>._db_lock:`` transitively), and the scan covers all of ``aj_crew``.
     """
 
     #: Lock-reaching methods exempt from this name-only scan. ``init`` is the
@@ -247,9 +247,9 @@ class TestHandlerOffload1947:
 
     @staticmethod
     def _package_root() -> Path:
-        import kiro_crew
+        import aj_crew
 
-        return Path(kiro_crew.__file__).resolve().parent
+        return Path(aj_crew.__file__).resolve().parent
 
     #: A floor, not the list the scan enforces: the public lock-reaching set as
     #: it stood before the store delegated to ``vector_memory_runtime``. The
@@ -289,7 +289,7 @@ class TestHandlerOffload1947:
             if path.stem != "__init__"
         }
         for node in ast.parse(facade).body:
-            if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew":
+            if isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
                 for alias in node.names:
                     if alias.name.startswith("vector_memory_"):
                         path = root / f"{alias.name}.py"
@@ -313,13 +313,13 @@ class TestHandlerOffload1947:
         function bound as a member (its first parameter is ``self``), and ``store``
         in a runtime function; a member bound to an owner function (``m = _x.f``)
         has that function as its one callee. A call to an owner function is resolved
-        through the importing module's own ``from kiro_crew.vector_memory_runtime import
-        mod`` and ``from kiro_crew import vector_memory_<x>`` aliases and
-        ``from kiro_crew.vector_memory_runtime.mod import name`` names.
+        through the importing module's own ``from aj_crew.vector_memory_runtime import
+        mod`` and ``from aj_crew import vector_memory_<x>`` aliases and
+        ``from aj_crew.vector_memory_runtime.mod import name`` names.
         """
         import ast
 
-        package = "kiro_crew.vector_memory_runtime"
+        package = "aj_crew.vector_memory_runtime"
 
         def aliases(tree: ast.Module) -> tuple[dict[str, str], dict[str, str]]:
             modules: dict[str, str] = {}
@@ -328,7 +328,7 @@ class TestHandlerOffload1947:
                 if isinstance(node, ast.ImportFrom) and node.module == package:
                     for alias in node.names:
                         modules[alias.asname or alias.name] = alias.name
-                elif isinstance(node, ast.ImportFrom) and node.module == "kiro_crew":
+                elif isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
                     for alias in node.names:
                         if alias.name in runtime:
                             modules[alias.asname or alias.name] = alias.name
@@ -506,7 +506,7 @@ class TestHandlerOffload1947:
         import textwrap
 
         facade = textwrap.dedent("""
-            from kiro_crew.vector_memory_runtime import reads as _reads
+            from aj_crew.vector_memory_runtime import reads as _reads
 
             class VectorMemoryStore:
                 def _fetch(self):
@@ -524,7 +524,7 @@ class TestHandlerOffload1947:
             """)
         runtime = {
             "reads": textwrap.dedent("""
-                from kiro_crew.vector_memory_runtime.other import helper
+                from aj_crew.vector_memory_runtime.other import helper
 
                 def fetch_rows(store):
                     with store._db_lock:
@@ -549,7 +549,7 @@ class TestHandlerOffload1947:
         # package, is lock-reaching when that function (receiver ``self``) is.
         bound_facade = facade.replace(
             "class VectorMemoryStore:",
-            "from kiro_crew import vector_memory_owner as _owner\n\n"
+            "from aj_crew import vector_memory_owner as _owner\n\n"
             "class VectorMemoryStore:\n"
             "    bound_owner = _owner.locked\n"
             "    bound_static = staticmethod(_owner.pure)\n"

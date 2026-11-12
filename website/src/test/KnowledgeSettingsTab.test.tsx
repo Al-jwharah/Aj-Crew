@@ -17,9 +17,9 @@ import { render, screen, fireEvent, waitFor, within } from '@testing-library/rea
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 
-const { patchConfigMock, kirocrewConfigMock } = vi.hoisted(() => ({
+const { patchConfigMock, ajcrewConfigMock } = vi.hoisted(() => ({
   patchConfigMock: vi.fn(() => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(() => Promise.resolve({
+  ajcrewConfigMock: vi.fn(() => Promise.resolve({
     agent: { model: 'claude-opus-4.8' },
     knowledge: {
       embed_rate_limit: 120,
@@ -32,7 +32,7 @@ const { patchConfigMock, kirocrewConfigMock } = vi.hoisted(() => ({
 
 vi.mock('../api/client', () => ({
   api: {
-    kirocrewConfig: kirocrewConfigMock,
+    ajcrewConfig: ajcrewConfigMock,
     patchConfig: patchConfigMock,
   },
 }))
@@ -62,7 +62,7 @@ function wrap(opts: { onCommit?: () => void } = {}) {
 
 /** Seed the config query with a deep-merged override of the default fixture. */
 function seedCfg(knowledge: Record<string, unknown>, agentModel = 'claude-opus-4.8') {
-  kirocrewConfigMock.mockImplementation(() =>
+  ajcrewConfigMock.mockImplementation(() =>
     Promise.resolve({
       agent: { model: agentModel },
       knowledge: {
@@ -82,7 +82,7 @@ function rejectOnce(mock: ReturnType<typeof vi.fn>) {
 
 beforeEach(() => {
   patchConfigMock.mockClear()
-  kirocrewConfigMock.mockClear()
+  ajcrewConfigMock.mockClear()
   // The effort row's shared SchemaRestartBadge fetches GET /api/config/schema;
   // without a schema response the badge would honestly render an error notice
   // instead of the pill. Serve the two boot-only knowledge fields as the

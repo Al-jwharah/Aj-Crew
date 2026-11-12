@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.deploy import pending
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.deploy import pending
+from aj_crew.testing.clock import ManualClock
 
 _NOW = datetime(2026, 11, 8, 12, 0, 0, tzinfo=timezone.utc).timestamp()
 

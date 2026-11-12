@@ -12,10 +12,10 @@ import json
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew.agent_files import MATE_SERVICE_AGENT_NAMES
+import aj_crew.config.paths as paths_mod
+from aj_crew.agent_files import MATE_SERVICE_AGENT_NAMES
 
-CONDUCTOR = "kirocrew-mate-conductor"
+CONDUCTOR = "ajcrew-mate-conductor"
 
 
 @pytest.fixture
@@ -31,7 +31,7 @@ def mates(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("name", sorted(MATE_SERVICE_AGENT_NAMES))
 def test_a_crewmate_file_by_a_service_name_is_refused(mates, name):
-    from kiro_crew.mate_config import MateConfigError, has_mate_config, write_mate_spec
+    from aj_crew.mate_config import MateConfigError, has_mate_config, write_mate_spec
 
     generated = {"name": name, "prompt": "generated"}
     (mates / f"{name}.json").write_text(json.dumps(generated), "utf-8")
@@ -43,7 +43,7 @@ def test_a_crewmate_file_by_a_service_name_is_refused(mates, name):
 
 def test_a_crewmate_created_on_the_conductor_copies_it_from_the_crewmate_folder(mates):
     """The first crewmate is created on the conductor; its copy reads the moved spec."""
-    from kiro_crew.mate_config import _resolved_source_spec
+    from aj_crew.mate_config import _resolved_source_spec
 
     (mates / f"{CONDUCTOR}.json").write_text(
         json.dumps({"name": CONDUCTOR, "prompt": "c"}), "utf-8"

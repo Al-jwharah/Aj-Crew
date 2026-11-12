@@ -24,8 +24,8 @@ import chatReducer, { createSlot } from './chatSlice'
 import { resetCrewModeCatalog, setCrewModeCatalog } from '../lib/crewMode'
 import { PREVIEW_CREW_MODE, setPreviewFlag } from '../utils/previewFlags'
 
-const CONDUCTOR = 'kirocrew-conductor'
-const CATALOG = { agents: [], default_agent: 'kirocrew', crew_mode_agent: CONDUCTOR, conductor_agents: [CONDUCTOR] }
+const CONDUCTOR = 'ajcrew-conductor'
+const CATALOG = { agents: [], default_agent: 'ajcrew', crew_mode_agent: CONDUCTOR, conductor_agents: [CONDUCTOR] }
 
 const makeStore = () => configureStore({
   reducer: { chat: chatReducer, dashboard: dashboardReducer },
@@ -34,7 +34,7 @@ const makeStore = () => configureStore({
 
 /** The slot the create resolves with, as the thunk publishes it. */
 const created = async (opts: Parameters<typeof createSlot>[0], row: Record<string, unknown> = {}) => {
-  api.createChatSlot.mockResolvedValue({ key: 'NEW', title: 'New', agent: 'kirocrew', agent_kind: 'template', memory_mode: 'persistent', ...row })
+  api.createChatSlot.mockResolvedValue({ key: 'NEW', title: 'New', agent: 'ajcrew', agent_kind: 'template', memory_mode: 'persistent', ...row })
   return makeStore().dispatch(createSlot(opts)).unwrap()
 }
 
@@ -48,7 +48,7 @@ describe('createSlot new chat Ultra Mode default', () => {
     api.dashboardConfig.mockReset()
     api.dashboardConfig.mockResolvedValue({ default_memory_mode: 'persistent', new_chat_crew_mode: true })
     setPreviewFlag(PREVIEW_CREW_MODE, true)
-    setCrewModeCatalog(CONDUCTOR, [CONDUCTOR], 'kirocrew')
+    setCrewModeCatalog(CONDUCTOR, [CONDUCTOR], 'ajcrew')
   })
   afterEach(() => {
     resetCrewModeCatalog()
@@ -99,7 +99,7 @@ describe('createSlot new chat Ultra Mode default', () => {
   })
 
   it('leaves the chat plain on a gateway without Crew Mode', async () => {
-    setCrewModeCatalog(undefined, undefined, 'kirocrew')
+    setCrewModeCatalog(undefined, undefined, 'ajcrew')
     await created({ crewModeDefault: true })
     expect(api.chatSlotAgent).not.toHaveBeenCalled()
   })
@@ -112,7 +112,7 @@ describe('createSlot new chat Ultra Mode default', () => {
 
   it('puts the switch on a row the create broadcast already listed plain', async () => {
     const store = makeStore()
-    const plain = { key: 'NEW', title: 'New', agent: 'kirocrew', agent_kind: 'template' as const, memory_mode: 'persistent', messages: 0, running: false }
+    const plain = { key: 'NEW', title: 'New', agent: 'ajcrew', agent_kind: 'template' as const, memory_mode: 'persistent', messages: 0, running: false }
     // The slots frame lists the plain row before the create answers; no switch
     // broadcast follows (the socket dropped), so only the thunk can fix the row.
     api.createChatSlot.mockImplementation(async () => {
@@ -129,6 +129,6 @@ describe('createSlot new chat Ultra Mode default', () => {
     api.chatSlotAgent.mockRejectedValue(new Error('409'))
     const slot = await created({ crewModeDefault: true })
     expect(slot.key).toBe('NEW')
-    expect(slot.agent).toBe('kirocrew')
+    expect(slot.agent).toBe('ajcrew')
   })
 })

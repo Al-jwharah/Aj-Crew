@@ -12,9 +12,9 @@ from source_providers_helpers import _clear_shared_fetch_state  # noqa: F401
 from source_providers_helpers import _mock_source_sel_fixture  # noqa: F401
 from source_providers_helpers import _no_visibility_refresh_side_task  # noqa: F401
 
-from kiro_crew import github_runner
-from kiro_crew.dashboard.handlers import source_providers as source
-from kiro_crew.testing.wait import await_until, default_timeout
+from aj_crew import github_runner
+from aj_crew.dashboard.handlers import source_providers as source
+from aj_crew.testing.wait import await_until, default_timeout
 
 
 @pytest.mark.asyncio
@@ -135,7 +135,7 @@ async def test_gitlab_chip_state_precedence(monkeypatch, state, draft, expected)
 
 @pytest.mark.asyncio
 async def test_gitlab_allowlist_never_reads_config_on_the_event_loop(monkeypatch) -> None:
-    """KiroCrewConfig.load() stats/reads/parses config files, so it must only run
+    """AjCrewConfig.load() stats/reads/parses config files, so it must only run
     in a worker thread; the sync accessor every URL parse uses is cache-only."""
     calls: list[str] = []
 

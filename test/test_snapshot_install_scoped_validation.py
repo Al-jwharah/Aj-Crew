@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 from test_snapshot import unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 def _real_db(path: Path) -> bytes:
@@ -39,7 +39,7 @@ def home(tmp_path, monkeypatch):
 
 
 def _bundle(tmp_path, memory_bytes: bytes, *, knowledge: bytes | None = None) -> Path:
-    payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+    payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
     payload.mkdir(parents=True, exist_ok=True)
     (payload / "memory.db").write_bytes(memory_bytes)
     if knowledge is not None:
@@ -162,11 +162,11 @@ class TestTheArchiveBoundCoversALocalBundle:
         monkeypatch.setattr(snap, "_MAX_ARCHIVE_MEMBERS", 12)
         bundle = tmp_path / "many.tar.gz"
         with tarfile.open(bundle, "w:gz") as tf:
-            root = tarfile.TarInfo("kirocrew-snapshot-20260101T000000Z")
+            root = tarfile.TarInfo("ajcrew-snapshot-20260101T000000Z")
             root.type = tarfile.DIRTYPE
             tf.addfile(root)
             for i in range(40):
-                info = tarfile.TarInfo(f"kirocrew-snapshot-20260101T000000Z/f{i}.txt")
+                info = tarfile.TarInfo(f"ajcrew-snapshot-20260101T000000Z/f{i}.txt")
                 info.size = 0
                 tf.addfile(info)
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Drive a harness through ``/compact`` and MEASURE whether its context shrank.
 
-``ACP_BACKENDS_COMPACT`` in ``src/kiro_crew/agent_sdk/backends_turns.py`` admits a harness
+``ACP_BACKENDS_COMPACT`` in ``src/aj_crew/agent_sdk/backends_turns.py`` admits a harness
 on a DRIVEN capture rather than on its source: the bar opencode and goose met is a live
 session whose ``usage_update.used`` was seen to fall below its pre-compact peak. pi
 finishes a compaction inline according to its own code and is not a member, because
@@ -73,15 +73,15 @@ from typing import Any, Iterable, Sequence
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-# The parsers are not driven here, but importing ``kiro_crew`` pulls the metrics
+# The parsers are not driven here, but importing ``aj_crew`` pulls the metrics
 # provider, which resolves consent on its first build. Pinned before the import for the
 # reason ``update_acp_frame_snapshots.py`` pins it: a script is not pytest, so nothing
 # else sets it, and a host with telemetry enabled would otherwise record this drive.
-os.environ["KIROCREW_TELEMETRY"] = "0"
+os.environ["AJCREW_TELEMETRY"] = "0"
 
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from kiro_crew.acp._dispatch import redact_text  # noqa: E402
+from aj_crew.acp._dispatch import redact_text  # noqa: E402
 
 #: The harness ids this script can spawn, and nothing else. kiro-cli, KAS, claude and
 #: codex are absent deliberately: their argv is bespoke (an agent spec, a relay, a
@@ -172,10 +172,10 @@ class Spawn:
 def _acp_client():
     """Crew's own spawn module, or a CaptureError naming what could not be imported."""
     try:
-        from kiro_crew.acp import client as acp_client
+        from aj_crew.acp import client as acp_client
     except Exception as exc:  # pragma: no cover - exercised only on a broken checkout
         raise CaptureError(
-            f"cannot import kiro_crew.acp.client from {REPO_ROOT / 'src'}: {exc}. "
+            f"cannot import aj_crew.acp.client from {REPO_ROOT / 'src'}: {exc}. "
             "Run this from a checkout with the package importable (a venv with "
             "`pip install -e .`, or just the repo root on a host with the deps)."
         ) from exc
@@ -190,7 +190,7 @@ def supported_harnesses() -> tuple[str, ...]:
     keeps this script from being the thing that decides which harnesses can be
     measured.
     """
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_LAUNCH
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_LAUNCH
 
     return tuple(sorted(set(ACP_BACKEND_LAUNCH) | {PI}))
 
@@ -205,12 +205,12 @@ def resolve_spawn(backend: str) -> Spawn:
     a PATH before; this script needs the path itself, not the boolean the public driver
     seam answers.
     """
-    from kiro_crew.agent_sdk.backends import (
+    from aj_crew.agent_sdk.backends import (
         ACP_BACKEND_LAUNCH,
         ACP_BACKEND_PERMISSION_SETTING,
         launch_for,
     )
-    from kiro_crew.env import describe_search_path
+    from aj_crew.env import describe_search_path
 
     acp_client = _acp_client()
     env = dict(os.environ)
@@ -285,7 +285,7 @@ def sign_in_remedy(backend: str) -> str:
     the same thing, and a second copy is a second thing to keep true.
     """
     try:
-        from kiro_crew.agent_sdk.host_auth import declaration_for
+        from aj_crew.agent_sdk.host_auth import declaration_for
 
         declaration = declaration_for(backend)
     except Exception:

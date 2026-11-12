@@ -10,7 +10,7 @@ from typing import Any
 import pytest
 from test_discord import FakeClient
 
-from kiro_crew.discord.client import (
+from aj_crew.discord.client import (
     DISCORD_MAX_FILE_BYTES,
     DISCORD_MAX_FILES_PER_MESSAGE,
     DISCORD_MAX_TEXT,
@@ -18,10 +18,10 @@ from kiro_crew.discord.client import (
     _build_upload_form,
     upload_filename,
 )
-from kiro_crew.discord.renderer import _UPLOAD_LIMITS, DiscordRenderer
-from kiro_crew.discord.transport import DISCORD_CAPABILITIES, DiscordTransport
-from kiro_crew.messaging import outbound_files as outbound
-from kiro_crew.messaging.display_safety import canonicalize_display
+from aj_crew.discord.renderer import _UPLOAD_LIMITS, DiscordRenderer
+from aj_crew.discord.transport import DISCORD_CAPABILITIES, DiscordTransport
+from aj_crew.messaging import outbound_files as outbound
+from aj_crew.messaging.display_safety import canonicalize_display
 
 _PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
 _JPEG = b"\xff\xd8\xff" + b"\x11" * 64
@@ -78,7 +78,7 @@ def _client(monkeypatch: Any, reply: dict) -> tuple[Any, list[dict]]:
     """A DiscordClient whose session records the multipart body it was handed."""
     from contextlib import asynccontextmanager
 
-    from kiro_crew.discord.client import DiscordClient
+    from aj_crew.discord.client import DiscordClient
 
     seen: list[dict] = []
 
@@ -115,7 +115,7 @@ def _restricted(key: str, slot: Any = None) -> bool:
     Injects the STATE rather than stubbing the slot lookup, so the real
     ``get_slot`` path in ``messaging/upload_gate.py`` is what answers.
     """
-    from kiro_crew.discord.transport_dispatch import DiscordDispatcher
+    from aj_crew.discord.transport_dispatch import DiscordDispatcher
 
     state = SimpleNamespace(get_slot=lambda _name: slot)
     dispatcher = SimpleNamespace(_session_resume=SimpleNamespace(dashboard_state=state))
@@ -123,7 +123,7 @@ def _restricted(key: str, slot: Any = None) -> bool:
 
 
 def _stage_sessions(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, **modes: str) -> None:
-    from kiro_crew.dashboard.handlers import _shared
+    from aj_crew.dashboard.handlers import _shared
 
     sessions = tmp_path / "sessions"
     sessions.mkdir(exist_ok=True)
@@ -133,7 +133,7 @@ def _stage_sessions(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, **modes: st
 
 
 def _shrink_file_cap(monkeypatch: pytest.MonkeyPatch, cap: int = 64) -> None:
-    monkeypatch.setattr("kiro_crew.discord.renderer._UPLOAD_LIMITS", replace(_UPLOAD_LIMITS, max_file_bytes=cap))
+    monkeypatch.setattr("aj_crew.discord.renderer._UPLOAD_LIMITS", replace(_UPLOAD_LIMITS, max_file_bytes=cap))
 
 
 class TestSealTimeExtraction:
@@ -216,7 +216,7 @@ class TestSealTimeExtraction:
     @pytest.mark.parametrize("case", ["fenced", "sensitive", "restricted", "no_capability", "oversize", "near_cap"])
     @pytest.mark.asyncio
     async def test_markup_stays_when_nothing_can_be_uploaded(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, case: str) -> None:
-        from kiro_crew.discord import renderer as renderer_module
+        from aj_crew.discord import renderer as renderer_module
 
         events: list[dict] = []
         monkeypatch.setattr(renderer_module, "sel", lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)))
@@ -284,7 +284,7 @@ class TestRestrictedGate:
 
     @pytest.mark.parametrize("restricted,events", [(True, 1), (False, 0)])
     def test_only_a_denied_upload_is_sel_audited(self, monkeypatch: pytest.MonkeyPatch, restricted: bool, events: int) -> None:
-        from kiro_crew.messaging import upload_gate as ug
+        from aj_crew.messaging import upload_gate as ug
         seen: list[dict] = []
         monkeypatch.setattr(ug, "sel", lambda: SimpleNamespace(log_api_access=lambda **kw: seen.append(kw)))
         assert _restricted("dashboard:abc", _slot(restricted)) is restricted
@@ -294,7 +294,7 @@ class TestRestrictedGate:
             assert tuple(seen[0][key] for key in keys) == ("denied", "discord", "restricted_session", "dashboard:abc")
 
     def test_no_live_slot_falls_through_to_the_persisted_mode(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.messaging import upload_gate as ug
+        from aj_crew.messaging import upload_gate as ug
         monkeypatch.setattr(
             ug,
             "_persisted_mode_is_restricted",
@@ -305,8 +305,8 @@ class TestRestrictedGate:
 
     @pytest.mark.parametrize("mode,restricted", [("incognito", True), ("temporary", True), ("persistent", False), (None, True)])
     def test_the_persisted_mode_decides(self, monkeypatch: pytest.MonkeyPatch, mode: Any, restricted: bool) -> None:
-        from kiro_crew.dashboard.handlers import _shared
-        from kiro_crew.messaging import upload_gate as ug
+        from aj_crew.dashboard.handlers import _shared
+        from aj_crew.messaging import upload_gate as ug
 
         # Injected, not imported: `messaging` may not reach `dashboard`, so the
         # probe travels as an argument and the test supplies it directly.
@@ -316,8 +316,8 @@ class TestRestrictedGate:
         assert probe is not None
 
     def test_an_ambiguous_stem_denies_instead_of_taking_the_first_match(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-        from kiro_crew.dashboard.handlers import _shared
-        from kiro_crew.messaging import upload_gate as ug
+        from aj_crew.dashboard.handlers import _shared
+        from aj_crew.messaging import upload_gate as ug
         _stage_sessions(monkeypatch, tmp_path, abc="persistent", dashboard_abc="incognito")
         assert _shared._persisted_session_memory_mode("abc") == "persistent"
         assert _shared._probe_persisted_session("abc") == (True, None)
@@ -329,8 +329,8 @@ class TestRestrictedGate:
         )
 
     def test_a_single_unambiguous_persistent_transcript_still_allows(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-        from kiro_crew.dashboard.handlers import _shared
-        from kiro_crew.messaging import upload_gate as ug
+        from aj_crew.dashboard.handlers import _shared
+        from aj_crew.messaging import upload_gate as ug
 
         _stage_sessions(monkeypatch, tmp_path, dashboard_solo="persistent")
         assert (
@@ -341,8 +341,8 @@ class TestRestrictedGate:
         )
 
     def test_an_unreadable_probe_denies(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.dashboard.handlers import _shared
-        from kiro_crew.messaging import upload_gate as ug
+        from aj_crew.dashboard.handlers import _shared
+        from aj_crew.messaging import upload_gate as ug
 
         def _boom(name: str) -> Any:
             raise OSError("sessions dir gone")
@@ -354,15 +354,15 @@ class TestRestrictedGate:
 class TestDescriptionRedaction:
     @pytest.mark.parametrize("streamed", [f"key AKIA\\{_KEY[4:]} here", f"https://x.example.com/u?k=AKIA\\{_KEY[4:]}", f"{_KEY[:4]}\u200b{_KEY[4:]}"])
     def test_a_display_reassembled_credential_is_redacted(self, streamed: str) -> None:
-        from kiro_crew.messaging.outbound_files import unescape_md
-        from kiro_crew.security import redact_credentials
+        from aj_crew.messaging.outbound_files import unescape_md
+        from aj_crew.security import redact_credentials
         assert redact_credentials(streamed)[0] == streamed
         alt = unescape_md(streamed)
         assert _KEY in canonicalize_display(alt)
         assert _KEY not in canonicalize_display(_description(alt))
 
     def test_redaction_runs_before_the_length_cap(self) -> None:
-        from kiro_crew.discord.client import _safe_description
+        from aj_crew.discord.client import _safe_description
         out = _safe_description("x" * 1010 + _KEY)
         assert len(out) <= 1024
         assert _KEY not in out
@@ -439,7 +439,7 @@ class TestMultipartWire:
     def test_a_429_retry_rebuilds_the_body(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from contextlib import asynccontextmanager
 
-        from kiro_crew.discord.client import DiscordClient
+        from aj_crew.discord.client import DiscordClient
         bodies: list[Any] = []
         statuses = iter((429, 200))
 
@@ -461,7 +461,7 @@ class TestMultipartWire:
             assert any(_PNG == value for _o, _h, value in body._fields)
 
     def test_bodyless_2xx_is_still_success(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.discord.client import DiscordClient
+        from aj_crew.discord.client import DiscordClient
         client = DiscordClient(token="t")
         monkeypatch.setattr(client, "_api_multipart", lambda *a, **kw: _done({}))
         assert asyncio.run(client.send_message_with_files("c1", "hi", [_file()])) == ""

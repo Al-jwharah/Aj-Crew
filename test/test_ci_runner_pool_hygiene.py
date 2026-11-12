@@ -126,7 +126,7 @@ def test_pages_deploy_is_never_cancelled_in_flight() -> None:
 def test_client_py_only_cancels_superseded_pr_runs() -> None:
     # Pushes to main share the `github.ref` group key, so a bare
     # cancel-in-progress would let a second push kill the first one's in-flight
-    # run -- and this suite is the only coverage the kirocrew-client
+    # run -- and this suite is the only coverage the ajcrew-client
     # distribution has. Merge-group entries are unaffected either way: their
     # `github.ref` is a unique gh-readonly-queue ref.
     concurrency = _load("client-py.yml")["concurrency"]

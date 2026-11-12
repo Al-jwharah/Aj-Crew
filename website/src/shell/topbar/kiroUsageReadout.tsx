@@ -55,19 +55,19 @@ export function useKiroUsageReadout() {
   // no Kiro account runs agents here, so there is no balance to read and the
   // segment stays hidden. Read POSITIVELY off the selected backend, never as
   // "not claude": an unloaded config renders no dash.
-  const kirocrewCfgQuery = useQuery<AcpBackendConfig>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+  const ajcrewCfgQuery = useQuery<AcpBackendConfig>({
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
-  const { data: kirocrewCfg, isSuccess: kirocrewCfgLoaded } = kirocrewCfgQuery
-  const kiroCreditSurface = isKiroHarness(kirocrewCfg)
+  const { data: ajcrewCfg, isSuccess: ajcrewCfgLoaded } = ajcrewCfgQuery
+  const kiroCreditSurface = isKiroHarness(ajcrewCfg)
   // "The config read failed" must survive its own retry: a data-less errored
   // query goes back to `pending` (error cleared) for the whole refetch, and
   // reading `isError` alone would drop the segment to the hidden non-Kiro shape
   // for that second, then bring it back. The last SETTLED outcome is what
   // counts: no data ever arrived and an error has -- so until data lands, the
   // read is failed, in flight or not.
-  const kirocrewCfgFailed = failedWithNoData(kirocrewCfgQuery)
+  const ajcrewCfgFailed = failedWithNoData(ajcrewCfgQuery)
   // `config-unreadable`: the gateway holds no reading AND the config read that
   // decides whether this is a Kiro harness FAILED. Neither "no plan" nor "not
   // a Kiro harness" is established, so the segment must not collapse into the
@@ -75,7 +75,7 @@ export function useKiroUsageReadout() {
   // its own dash, and the modal behind it retries the config read.
   const kiroUsageState: KiroAccountUsage = kiroUsageFailed && !kiroUsage
     ? 'failed'
-    : kiroUsage === 'none' && kirocrewCfgFailed
+    : kiroUsage === 'none' && ajcrewCfgFailed
       ? 'config-unreadable'
       : (kiroUsage ?? null)
   // The states with NOTHING TRUE TO SHOW: a usage read that produced no
@@ -103,13 +103,13 @@ export function useKiroUsageReadout() {
   const usageSegmentHidden = kiroUsageState === 'none'
     ? !kiroCreditSurface
     : kiroUsageState === 'failed'
-      ? kirocrewCfgLoaded && !kiroCreditSurface
+      ? ajcrewCfgLoaded && !kiroCreditSurface
       : false
   // The modal only CLOSES on a settled verdict. A modal opened while the cache
   // was warming would otherwise be left over a pill that has just disappeared,
   // with nothing under it to refresh -- but an unloaded config is a pending
   // state, not a verdict, so it hides the dash without closing the modal.
-  const pillHidden = kirocrewCfgLoaded && usageSegmentHidden
+  const pillHidden = ajcrewCfgLoaded && usageSegmentHidden
   useEffect(() => {
     if (pillHidden) setKiroUsageOpen(false)
   }, [pillHidden])
@@ -124,6 +124,20 @@ export function useKiroUsageReadout() {
   // settles on `none`, which for a nav row would be a row blinking in and out.
   const kiroAccountEntry = kiroCreditSurface || (kiroUsageState !== null && !pillHidden)
   return { kiroUsageOpen, setKiroUsageOpen, kiroUsageState, usageSegmentHidden, kiroAccountEntry }
+}
+
+/**
+ * Whether the credits reading asks for the person: sign-in is needed, the read
+ * failed, or the allowance (bonus grants included) is spent. The Simple layout
+ * keeps the readouts folded behind the connection glyph and shows this segment
+ * anyway while this holds, so a limit or a lost sign-in is never folded away.
+ */
+export function usageNeedsAttention(state: KiroAccountUsage): boolean {
+  if (state === 'signin-required' || state === 'failed' || state === 'config-unreadable') return true
+  if (!state || state === 'none' || isAccountOnly(state)) return false
+  const limit = state.limit + state.bonusCredits.reduce((sum, grant) => sum + grant.total, 0)
+  const used = state.used + state.bonusCredits.reduce((sum, grant) => sum + grant.used, 0)
+  return limit > 0 && used >= limit
 }
 
 /** The capsule's credits segment for the current reading, or nothing on a harness with no balance. */
@@ -141,7 +155,7 @@ export function kiroUsageSegment({ kiroUsageState, usageSegmentHidden, setKiroUs
   // One predicate gates the whole chain rather than being re-stated per
   // branch: the branches below are states of a segment that EXISTS.
   if (usageSegmentHidden) return null
-  // Usage segment — Kiro credit plan from Kiro Crew's own usage
+  // Usage segment — Kiro credit plan from Aj Crew's own usage
   // cache. Spinner while the cache warms, a dash when the fetch
   // failed or when the gateway holds no reading. On a Kiro
   // harness every state keeps the segment on screen: the account

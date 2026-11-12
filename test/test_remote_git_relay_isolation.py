@@ -24,8 +24,8 @@ from test_remote_git_proxy import (
     _stop,
 )
 
-from kiro_crew.remote_session import git_gateway
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.remote_session import git_gateway
+from aj_crew.testing.wait import async_wait_until
 
 
 @_POSIX_GUEST

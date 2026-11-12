@@ -28,7 +28,7 @@ jobs:
     # Use the larger-runner label upstream; forks cannot reach the org group.
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     # 10 min for the audit, plus the 20 min the gh wrapper may spend in total
     # waiting out a spent API rate limit.
     timeout-minutes: 30

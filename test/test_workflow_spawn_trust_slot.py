@@ -15,8 +15,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.slack import gateway as gw
-from kiro_crew.workflows.registry import RunHandle, RunRegistry
+from aj_crew.slack import gateway as gw
+from aj_crew.workflows.registry import RunHandle, RunRegistry
 
 
 def _service(*handles: RunHandle) -> SimpleNamespace:

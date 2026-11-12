@@ -27,7 +27,7 @@ from test_cli_manifest_signature import (  # noqa: F401  (fixtures are looked up
 )
 from test_installer_binary_only import _existing_managed_venv, _prepare_installer
 
-WARNING = "WARNING: a Kiro Crew gateway is running and still has the previous version loaded."
+WARNING = "WARNING: an Aj Crew gateway is running and still has the previous version loaded."
 
 # Each stub records its argv and answers from the environment.
 # FAKE_SYSTEM_ACTIVE / FAKE_USER_ACTIVE: 1 = our unit is active; "alias" =
@@ -36,14 +36,14 @@ WARNING = "WARNING: a Kiro Crew gateway is running and still has the previous ve
 _SYSTEMCTL = """#!/bin/sh
 printf 'systemctl %s\\n' "$*" >> "$FAKE_SVC_LOG"
 case "$*" in
-  "show -p Id -p ActiveState kirocrew.service") state="${FAKE_SYSTEM_ACTIVE:-0}" ;;
-  "--user show -p Id -p ActiveState kirocrew.service") state="${FAKE_USER_ACTIVE:-0}" ;;
+  "show -p Id -p ActiveState ajcrew.service") state="${FAKE_SYSTEM_ACTIVE:-0}" ;;
+  "--user show -p Id -p ActiveState ajcrew.service") state="${FAKE_USER_ACTIVE:-0}" ;;
   *) exit 1 ;;
 esac
 case "$state" in
-  1) printf 'Id=kirocrew.service\\nActiveState=active\\n' ;;
+  1) printf 'Id=ajcrew.service\\nActiveState=active\\n' ;;
   alias) printf 'Id=shared.service\\nActiveState=active\\n' ;;
-  *) printf 'Id=kirocrew.service\\nActiveState=inactive\\n' ;;
+  *) printf 'Id=ajcrew.service\\nActiveState=inactive\\n' ;;
 esac
 exit 0
 """
@@ -62,9 +62,9 @@ exit 0
 
 # The only argv shapes the probes may send: every one is a read.
 _READ_ONLY_CALLS = {
-    "systemctl show -p Id -p ActiveState kirocrew.service",
-    "systemctl --user show -p Id -p ActiveState kirocrew.service",
-    f"launchctl print gui/{getattr(os, 'getuid', lambda: 0)()}/dev.kirocrew.gateway",
+    "systemctl show -p Id -p ActiveState ajcrew.service",
+    "systemctl --user show -p Id -p ActiveState ajcrew.service",
+    f"launchctl print gui/{getattr(os, 'getuid', lambda: 0)()}/dev.ajcrew.gateway",
 }
 
 
@@ -99,7 +99,7 @@ def _run(
     env["PATH"] = os.pathsep.join([str(stubs), env["PATH"]])
     env["FAKE_SVC_LOG"] = str(log)
     if lock_pid is not None:
-        data_home = Path(env["KIROCREW_HOME"])
+        data_home = Path(env["AJCREW_HOME"])
         data_home.mkdir(parents=True, exist_ok=True)
         (data_home / "gateway.lock").write_text(f"{lock_pid}\n", encoding="utf-8")
     if env_extra:
@@ -115,10 +115,10 @@ def _assert_only_reads(calls: list[str]) -> None:
 
 
 _EXPECTED = {
-    "systemd-user": "systemctl --user restart kirocrew",
-    "systemd-system": "sudo systemctl restart kirocrew",
-    "systemd-both": "kirocrew restart",
-    "launchd": "launchctl kickstart -k gui/{uid}/dev.kirocrew.gateway",
+    "systemd-user": "systemctl --user restart ajcrew",
+    "systemd-system": "sudo systemctl restart ajcrew",
+    "systemd-both": "ajcrew restart",
+    "launchd": "launchctl kickstart -k gui/{uid}/dev.ajcrew.gateway",
 }
 
 
@@ -140,14 +140,14 @@ def test_rerun_under_a_running_service_names_its_restart_command(
 ) -> None:
     expected = _EXPECTED[setup].format(uid=os.getuid())
     if setup == "systemd-system" and os.getuid() == 0:
-        expected = "systemctl restart kirocrew"
+        expected = "systemctl restart ajcrew"
     result, calls = _run(tmp_path / "case", signing_key, env_extra=env_extra)
 
     assert result.returncode == 0, result.stderr
     assert WARNING in result.stderr
     assert f"  {expected}\n" in result.stderr
     # The hint closes the run, after the install summary.
-    assert "Installed kirocrew" in result.stdout
+    assert "Installed ajcrew" in result.stdout
     _assert_only_reads(calls)
 
 
@@ -160,20 +160,20 @@ def test_rerun_of_the_managed_venv_names_the_restart_command(
 
     assert result.returncode == 0, result.stderr
     assert WARNING in result.stderr
-    assert "  systemctl --user restart kirocrew\n" in result.stderr
+    assert "  systemctl --user restart ajcrew\n" in result.stderr
     _assert_only_reads(calls)
 
 
 @pytest.mark.parametrize(
     "ps_args",
     [
-        "/srv/kc/.local/bin/kirocrew gateway",
-        "/srv/kc/.local/bin/kirocrew -v gateway --no-open",
-        "/srv/kc/venv/bin/python -m kiro_crew --verbose gateway",
+        "/srv/kc/.local/bin/ajcrew gateway",
+        "/srv/kc/.local/bin/ajcrew -v gateway --no-open",
+        "/srv/kc/venv/bin/python -m aj_crew --verbose gateway",
     ],
     ids=["plain", "global-flag", "module"],
 )
-def test_rerun_under_a_foreground_gateway_names_kirocrew_restart(
+def test_rerun_under_a_foreground_gateway_names_ajcrew_restart(
     tmp_path: Path, signing_key: SigningKey, ps_args: str
 ) -> None:
     result, calls = _run(
@@ -185,7 +185,7 @@ def test_rerun_under_a_foreground_gateway_names_kirocrew_restart(
 
     assert result.returncode == 0, result.stderr
     assert WARNING in result.stderr
-    assert "  kirocrew restart\n" in result.stderr
+    assert "  ajcrew restart\n" in result.stderr
     assert "ps -p 4242 -o args=" in calls
     _assert_only_reads(calls)
 
@@ -198,8 +198,8 @@ def test_rerun_under_a_foreground_gateway_names_kirocrew_restart(
 def test_an_alias_of_another_unit_gets_no_restart_command(
     tmp_path: Path, signing_key: SigningKey, env_extra: dict[str, str]
 ) -> None:
-    """``kirocrew.service`` aliasing another active unit is not this gateway: a
-    command naming kirocrew would restart that other unit."""
+    """``ajcrew.service`` aliasing another active unit is not this gateway: a
+    command naming ajcrew would restart that other unit."""
     result, calls = _run(tmp_path / "case", signing_key, env_extra=env_extra)
 
     assert result.returncode == 0, result.stderr
@@ -212,9 +212,9 @@ def test_an_alias_of_another_unit_gets_no_restart_command(
     ("lock_pid", "ps_args"),
     [
         ("4242", "/usr/bin/sleep 100"),
-        ("4242", "vim /srv/kc/kirocrew-gateway.log"),
+        ("4242", "vim /srv/kc/ajcrew-gateway.log"),
         ("4242", ""),
-        ("not-a-pid", "kirocrew gateway"),
+        ("not-a-pid", "ajcrew gateway"),
         (None, ""),
     ],
     ids=[
@@ -246,7 +246,7 @@ def test_retiring_the_legacy_in_data_home_venv_names_the_restart_command(
     legacy = case / "run" / "data-home" / "venv"
     (legacy / "bin").mkdir(parents=True)
     (legacy / "pyvenv.cfg").write_text("home = /legacy\n", encoding="utf-8")
-    (legacy / "bin" / "kirocrew").write_text("#!/bin/sh\necho legacy\n", encoding="utf-8")
+    (legacy / "bin" / "ajcrew").write_text("#!/bin/sh\necho legacy\n", encoding="utf-8")
     result, calls = _run(
         case, signing_key, with_pipx=False, existing=False, env_extra={"FAKE_USER_ACTIVE": "1"}
     )
@@ -254,7 +254,7 @@ def test_retiring_the_legacy_in_data_home_venv_names_the_restart_command(
     assert result.returncode == 0, result.stderr
     assert not legacy.exists()
     assert WARNING in result.stderr
-    assert "  systemctl --user restart kirocrew\n" in result.stderr
+    assert "  systemctl --user restart ajcrew\n" in result.stderr
     _assert_only_reads(calls)
 
 

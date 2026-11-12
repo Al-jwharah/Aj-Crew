@@ -21,15 +21,15 @@ from pathlib import Path
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import emit
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import emit
 
 SESSION = "reconnect-edge-001"
 
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
     emit.reset_caches()
@@ -57,7 +57,7 @@ def _body(session_id: str = SESSION) -> list[dict]:
 def _open_session(session_id: str = SESSION) -> None:
     emit.on_session_opened(
         session_id,
-        agent="kirocrew",
+        agent="ajcrew",
         slot="chat-7",
         model="claude-opus-5",
         cwd="/home/dev/project",
@@ -151,7 +151,7 @@ def test_resume_with_repair_while_writer_still_live_produces_closers():
     # A second process resumes the same session, believing the writer is gone.
     # This is the only code path that passes repair=True.
     emit.reset_caches()
-    emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-7", resumed=True)
+    emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-7", resumed=True)
     assert_drained()
 
     # The repair DID close the open turn and the open tool call.
@@ -319,7 +319,7 @@ def test_reconnect_after_resume_repair_produces_coherent_new_turn():
 
     # Resume: repairs the interrupted turn.
     emit.reset_caches()
-    emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-7", resumed=True)
+    emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-7", resumed=True)
     assert_drained()
 
     # The repair wrote closers.
@@ -383,7 +383,7 @@ def test_reconnect_after_resume_repair_live_writer_continues_old_turn():
 
     # Resume repairs the open turn.
     emit.reset_caches()
-    emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-7", resumed=True)
+    emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-7", resumed=True)
     assert_drained()
 
     # Live writer continues its turn (it never stopped), then gets evicted.

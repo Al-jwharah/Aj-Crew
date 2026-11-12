@@ -32,7 +32,7 @@ const FAILED = {
   id: 'b4e1d7a0-31c2',
   name: 'Nightly database backup',
   schedule: '0 2 * * *',
-  command: 'pg_dump --format=custom kirocrew > /backups/nightly.dump',
+  command: 'pg_dump --format=custom ajcrew > /backups/nightly.dump',
   message: '',
   enabled: true,
   last_status: 'error',
@@ -43,12 +43,12 @@ const FAILED = {
 }
 
 /** Same shape on a succeeded job: the Last Output `<pre>` carries the same cap. */
-const OUTPUT = Array.from({ length: 60 }, (_, i) => `rotating pattern: set ${i}, log /var/log/kirocrew/service-${i}.log rotated, ${120 + i} MB reclaimed`).join('\n')
+const OUTPUT = Array.from({ length: 60 }, (_, i) => `rotating pattern: set ${i}, log /var/log/ajcrew/service-${i}.log rotated, ${120 + i} MB reclaimed`).join('\n')
 const SUCCEEDED = {
   id: 'f09c2b56-8ad4',
   name: 'Log rotation and prune',
   schedule: 'every 6h',
-  command: 'logrotate -f /etc/logrotate.d/kirocrew',
+  command: 'logrotate -f /etc/logrotate.d/ajcrew',
   message: '',
   enabled: true,
   last_status: 'ok',
@@ -81,7 +81,7 @@ async function schedulePage(browser, jobs, viewport) {
       if (path === '/api/crons') { await json(route, { jobs }); return true }
       if (path === '/api/cron-folders') { await json(route, []); return true }
       if (path === '/api/crons/history') { await json(route, { runs: [] }); return true }
-      if (path === '/api/agents') { await json(route, { agents: [{ name: 'kirocrew' }], default_agent: 'kirocrew' }); return true }
+      if (path === '/api/agents') { await json(route, { agents: [{ name: 'ajcrew' }], default_agent: 'ajcrew' }); return true }
       if (path === '/api/models') { await json(route, []); return true }
       return false
     },

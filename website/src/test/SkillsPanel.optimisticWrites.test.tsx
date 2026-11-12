@@ -6,7 +6,7 @@ import React from 'react'
 
 /**
  * Settings → Skills: optimistic toggle writes through the per-path overlay
- * (#6890). The panel PATCHes sibling paths of the shared ['kirocrewConfig']
+ * (#6890). The panel PATCHes sibling paths of the shared ['ajcrewConfig']
  * object; the whole-object onMutate snapshot it used to take could restore
  * another save's in-flight value on failure. Pinned here: the toggle flips
  * immediately without a cache write, a failure rolls back only its own path
@@ -14,15 +14,15 @@ import React from 'react'
  * banner.
  */
 
-const { patchConfigMock, kirocrewConfigMock } = vi.hoisted(() => ({
+const { patchConfigMock, ajcrewConfigMock } = vi.hoisted(() => ({
   patchConfigMock: vi.fn((_path: string, _value: unknown) => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(() =>
+  ajcrewConfigMock: vi.fn(() =>
     Promise.resolve({ skills: { auto_create_from_sessions: false, approval_required: true } }),
   ),
 }))
 
 vi.mock('../api/client', () => ({
-  api: { kirocrewConfig: kirocrewConfigMock, patchConfig: patchConfigMock },
+  api: { ajcrewConfig: ajcrewConfigMock, patchConfig: patchConfigMock },
 }))
 
 import { SkillsPanel } from '../pages/settings/SkillsPanel'
@@ -55,8 +55,8 @@ describe('SkillsPanel — optimistic toggle via the per-path overlay', () => {
   beforeEach(() => {
     patchConfigMock.mockReset()
     patchConfigMock.mockImplementation(() => Promise.resolve({}))
-    kirocrewConfigMock.mockClear()
-    kirocrewConfigMock.mockImplementation(() =>
+    ajcrewConfigMock.mockClear()
+    ajcrewConfigMock.mockImplementation(() =>
       Promise.resolve({ skills: { auto_create_from_sessions: false, approval_required: true } }),
     )
   })
@@ -65,20 +65,20 @@ describe('SkillsPanel — optimistic toggle via the per-path overlay', () => {
     const { resolve } = deferPatch()
     wrap(<SkillsPanel />)
     const label = await screen.findByText('Auto-generate skills from sessions')
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalledTimes(1))
     fireEvent.click(label)
 
     // Pre-settle: the toggle already reads ON while only the initial config
     // fetch has run — the display comes from the overlay, not a cache write.
     await waitFor(() => expect(autoToggle()).toBeChecked())
     expect(patchConfigMock).toHaveBeenCalledWith(AUTO_PATH, true)
-    expect(kirocrewConfigMock).toHaveBeenCalledTimes(1)
+    expect(ajcrewConfigMock).toHaveBeenCalledTimes(1)
 
-    kirocrewConfigMock.mockImplementation(() =>
+    ajcrewConfigMock.mockImplementation(() =>
       Promise.resolve({ skills: { auto_create_from_sessions: true, approval_required: true } }),
     )
     resolve({})
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalledTimes(2))
     expect(autoToggle()).toBeChecked()
   })
 
@@ -86,7 +86,7 @@ describe('SkillsPanel — optimistic toggle via the per-path overlay', () => {
     const { reject } = deferPatch()
     wrap(<SkillsPanel />)
     const label = await screen.findByText('Auto-generate skills from sessions')
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalledTimes(1))
     fireEvent.click(label)
     await waitFor(() => expect(autoToggle()).toBeChecked())
 
@@ -96,7 +96,7 @@ describe('SkillsPanel — optimistic toggle via the per-path overlay', () => {
 
     // A fresh attempt on the SAME path supersedes its stale failure banner.
     patchConfigMock.mockImplementation(() => Promise.resolve({}))
-    kirocrewConfigMock.mockImplementation(() =>
+    ajcrewConfigMock.mockImplementation(() =>
       Promise.resolve({ skills: { auto_create_from_sessions: true, approval_required: true } }),
     )
     fireEvent.click(label)
@@ -137,8 +137,8 @@ describe('SkillsPanel — extra skill paths draft', () => {
   beforeEach(() => {
     patchConfigMock.mockReset()
     patchConfigMock.mockImplementation(() => Promise.resolve({}))
-    kirocrewConfigMock.mockClear()
-    kirocrewConfigMock.mockImplementation(() => Promise.resolve(storedWith(['/a'])))
+    ajcrewConfigMock.mockClear()
+    ajcrewConfigMock.mockImplementation(() => Promise.resolve(storedWith(['/a'])))
   })
 
   it('a refetch does not clobber a draft the user has not saved', async () => {
@@ -146,9 +146,9 @@ describe('SkillsPanel — extra skill paths draft', () => {
     const field = await loadedField('/a')
     fireEvent.change(field, { target: { value: '/a\n/typing' } })
 
-    kirocrewConfigMock.mockImplementation(() => Promise.resolve(storedWith(['/from-server'])))
-    await qc.invalidateQueries({ queryKey: ['kirocrewConfig'] })
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalledTimes(2))
+    ajcrewConfigMock.mockImplementation(() => Promise.resolve(storedWith(['/from-server'])))
+    await qc.invalidateQueries({ queryKey: ['ajcrewConfig'] })
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalledTimes(2))
 
     expect(field).toHaveValue('/a\n/typing')
     expect(patchConfigMock).not.toHaveBeenCalled()
@@ -158,8 +158,8 @@ describe('SkillsPanel — extra skill paths draft', () => {
     const qc = wrapWithClient(<SkillsPanel />)
     const field = await loadedField('/a')
 
-    kirocrewConfigMock.mockImplementation(() => Promise.resolve(storedWith(['/from-server', '/b'])))
-    await qc.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+    ajcrewConfigMock.mockImplementation(() => Promise.resolve(storedWith(['/from-server', '/b'])))
+    await qc.invalidateQueries({ queryKey: ['ajcrewConfig'] })
 
     await waitFor(() => expect(field).toHaveValue('/from-server\n/b'))
   })
@@ -173,7 +173,7 @@ describe('SkillsPanel — extra skill paths draft', () => {
     await waitFor(() => expect(patchConfigMock).toHaveBeenCalledWith(PATHS_KEY, ['/new']))
     await waitFor(() => expect(field).toBeDisabled()) // locked for the round trip
 
-    kirocrewConfigMock.mockImplementation(() => Promise.resolve(storedWith(['/new'])))
+    ajcrewConfigMock.mockImplementation(() => Promise.resolve(storedWith(['/new'])))
     resolve({})
 
     await waitFor(() => expect(field).toHaveValue('/new')) // the canonical joined value, not '  /new  '
@@ -192,9 +192,9 @@ describe('SkillsPanel — extra skill paths draft', () => {
     // so this is the guard behind the lock, not a path a person takes).
     fireEvent.change(field, { target: { value: '/new\n/later' } })
 
-    kirocrewConfigMock.mockImplementation(() => Promise.resolve(storedWith(['/new'])))
+    ajcrewConfigMock.mockImplementation(() => Promise.resolve(storedWith(['/new'])))
     resolve({})
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalledTimes(2))
     await waitFor(() => expect(field).not.toBeDisabled())
 
     expect(field).toHaveValue('/new\n/later')
@@ -219,7 +219,7 @@ describe('SkillsPanel — extra skill paths draft', () => {
 
     // A fresh attempt supersedes the stale failure.
     patchConfigMock.mockImplementation(() => Promise.resolve({}))
-    kirocrewConfigMock.mockImplementation(() => Promise.resolve(storedWith(['/a', '/b'])))
+    ajcrewConfigMock.mockImplementation(() => Promise.resolve(storedWith(['/a', '/b'])))
     fireEvent.blur(field)
     await waitFor(() =>
       expect(screen.queryByText(/Failed to save the extra skill paths/)).not.toBeInTheDocument(),

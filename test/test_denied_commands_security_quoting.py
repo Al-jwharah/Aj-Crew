@@ -10,8 +10,8 @@ from __future__ import annotations
 import pytest
 from denied_commands_security_helpers import _own_address_probe_stays_local  # noqa: F401
 
-from kiro_crew import security
-from kiro_crew.security import is_denied
+from aj_crew import security
+from aj_crew.security import is_denied
 
 # Each test starts with the macOS libc and libproc handle caches unbuilt and puts them
 # back after, as every test of the test_denied_commands_security family does (see conftest.py).
@@ -65,8 +65,8 @@ class TestDenyMatchingIsQuoteNormalized:
         its own, this test fails loudly and the cross above stops proving
         anything.
         """
-        from kiro_crew import security
-        from kiro_crew.security import rm_floor
+        from aj_crew import security
+        from aj_crew.security import rm_floor
 
         monkeypatch.setattr(
             security, "_deny_segment_views", lambda segment, emit_self=True: (segment.lower(),)
@@ -170,7 +170,7 @@ class TestDenyMatchingIsQuoteNormalized:
         already in ``operation``, so what the extra field adds is WHICH segment
         normalized into the match.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         events: list[dict] = []
         monkeypatch.setattr(
@@ -212,7 +212,7 @@ class TestDenyMatchingIsQuoteNormalized:
         and pinned here so the gap is findable instead of implied.  When it is
         closed, this test is the one that must flip.
         """
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         target = hooks._search_deny_target(
             {
@@ -255,7 +255,7 @@ class TestDenyMatchingIsQuoteNormalized:
         descended into rather than skipped -- deciding from one recovered index
         would not be sound, because a short synthesized payload can also be a
         coincidental substring of an unrelated token."""
-        from kiro_crew import security
+        from aj_crew import security
 
         # Synthesized payload, no token position: the destructive one is still
         # denied rather than exempted away.
@@ -272,7 +272,7 @@ class TestDenyMatchingIsQuoteNormalized:
         guard, and the raw view is already present before any of them runs -- so a
         failure costs the extra match and nothing else.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         def _boom(*_a: object, **_k: object) -> object:
             raise RuntimeError("payload walk exploded")
@@ -288,7 +288,7 @@ class TestDenyMatchingIsQuoteNormalized:
             # ...and the raw tier still decides, so the deny stands.
             assert security.is_denied("rm -rf /") is not None
             assert security.is_denied("ls -la && rm -rf /") is not None
-            # nosemgrep: kirocrew.test-bare-monkeypatch-undo -- pre-existing per-target undo inside the loop, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-bare-monkeypatch-undo -- pre-existing per-target undo inside the loop, moved verbatim; tracked for a de-flake pass
             monkeypatch.undo()
 
     def test_ansi_c_and_locale_quoting_are_resolved(self):
@@ -322,7 +322,7 @@ class TestDenyMatchingIsQuoteNormalized:
         """
         import os
 
-        from kiro_crew import security
+        from aj_crew import security
 
         home = os.path.expanduser("~")
         assert security.normalize_shell_command("cat $HOME/x") == ["cat", f"{home}/x"]
@@ -338,7 +338,7 @@ class TestDenyMatchingIsQuoteNormalized:
         the SHARED escape decoder rather than in this view, so it also closes a
         live bypass of the credential-mint floor -- see the sibling test below.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._decode_printf_escapes(r"\u002d\u0072\u0066") == "-rf"
         assert security._decode_printf_escapes(r"\U0000002d\U00000072") == "-r"
@@ -356,7 +356,7 @@ class TestDenyMatchingIsQuoteNormalized:
         character replaces the two the shell passes, and ``rm -$'\\u0072f' /``
         escaped the rule that way (BLOCKING from the GPT 5.6 lane).
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._decode_printf_escapes(r"\u0072f") == "rf"
         assert security._decode_printf_escapes(r"\u002d1234") == "-1234"
@@ -371,7 +371,7 @@ class TestDenyMatchingIsQuoteNormalized:
         mapping produces a separator, and the ordinary case-insensitive matching
         must still work.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         # Splitting commutes with lowercasing.
         mixed = "LS -la && RM -RF / ; Echo Done"
@@ -393,12 +393,12 @@ class TestDenyMatchingIsQuoteNormalized:
         walked past an un-disableable rule while its ``\\x`` twin was refused.  Both
         spellings must read as the same word.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         for spelling in (
-            "kirocrew $'\\u0074\\u006f\\u006b\\u0065\\u006e'",
-            "kirocrew $'\\x74\\x6f\\x6b\\x65\\x6e'",
-            "kirocrew token",
+            "ajcrew $'\\u0074\\u006f\\u006b\\u0065\\u006e'",
+            "ajcrew $'\\x74\\x6f\\x6b\\x65\\x6e'",
+            "ajcrew token",
         ):
             assert security._is_credential_mint(spelling.lower()), spelling
             assert security.is_denied(spelling) is not None, spelling
@@ -407,7 +407,7 @@ class TestDenyMatchingIsQuoteNormalized:
         """A decoded lone surrogate is not a character bash can pass either, and it
         would travel into the SEL audit record whose JSON encoder raises on it --
         turning a denial into a crash.  Left encoded, like NUL."""
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._decode_printf_escapes(r"\ud800") == r"\ud800"
         assert security._decode_printf_escapes(r"\u0000") == r"\u0000"
@@ -426,7 +426,7 @@ class TestDenyMatchingIsQuoteNormalized:
         So the fold applies unquoted and inside double quotes, and preserves
         single-quoted and ANSI-C spans.  ``$"..."`` follows the double-quote rule.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         fold = security._fold_line_continuations
         assert fold("A\\\nA BB") == "AA BB"
@@ -478,7 +478,7 @@ class TestDenyMatchingIsQuoteNormalized:
         These assertions document what reusing it here would have done, so the
         one-line shortcut is not reached for again.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         blunt = security._shell_join_continuations
         assert blunt('"r\\\nm" -rf /') == '"rm" -rf /'  # agrees with bash here...
@@ -510,7 +510,7 @@ class TestDenyMatchingIsQuoteNormalized:
         collapses it to whitespace and invents a separator bash never passed.  One
         left-to-right pass makes that impossible.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         decode = security._decode_ansi_c_body
         assert decode(r"\\n") == "\\n"  # backslash + n, NOT whitespace
@@ -541,7 +541,7 @@ class TestDenyMatchingIsQuoteNormalized:
     def test_the_whole_command_walk_emits_no_view_of_itself(self):
         """``emit_self=False`` is what keeps the whole-command walk from fabricating
         a command across separators -- it contributes payload views only."""
-        from kiro_crew import security
+        from aj_crew import security
 
         cmd = "echo one\ntrue && bash -c 'rm -rf \"/\"'"
         views = security._deny_segment_views(cmd, False)
@@ -563,7 +563,7 @@ class TestDenyMatchingIsQuoteNormalized:
         and runs the destructive command (measured: ``bash -c $"\\r\\mAA"`` executes
         ``rmAA``).
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         decode = security._decode_shell_quoted_literals
         # Locale: the $ goes, the double-quoted text is left for shlex.
@@ -588,7 +588,7 @@ class TestDenyMatchingIsQuoteNormalized:
         with ``?`` special-cased to 0x7F.  An XOR-0x40 guess gets ``\\c0`` wrong --
         bash yields 0x10, not the letter ``p``.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         decode = security._decode_ansi_c_body
         # Every control result takes the same normalization to a space as the named
@@ -627,7 +627,7 @@ class TestDenyMatchingIsQuoteNormalized:
         """
         import time
 
-        from kiro_crew import security
+        from aj_crew import security
 
         pattern = security._ANSI_C_QUOTE_RE.pattern
         assert "[^'\\\\]" in pattern and '[^\\"\\\\]' in pattern, pattern
@@ -648,7 +648,7 @@ class TestDenyMatchingIsQuoteNormalized:
         dashboard-readable log.  BLOCKING from the GPT 5.6 lane on the new
         ``raw_segment`` field; the older ``segment`` field carried the same hazard.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         captured: list[object] = []
 
@@ -679,7 +679,7 @@ class TestDenyMatchingIsQuoteNormalized:
         bash passes ``m``, so ``$'r\\555' -rf /`` ran while the view matched nothing
         (BLOCKING from the GPT 5.6 lane).
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         decode = security._decode_ansi_c_body
         assert decode(r"\555") == "m"
@@ -700,7 +700,7 @@ class TestDenyMatchingIsQuoteNormalized:
         normalized to a one-byte argument instead of ``chmod 777 /tmp/x`` and a
         rule on the decoded spelling missed (BLOCKING from the GPT 5.6 lane).
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         decode = security._decode_ansi_c_body
         assert decode(r"\06777") == "777"
@@ -717,7 +717,7 @@ class TestDenyMatchingIsQuoteNormalized:
         non-ASCII target keeps both characters, as bash does for an undefined
         spelling.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._decode_ansi_c_body("\\c\u00df") == "\\c\u00df"
         assert is_denied("echo $'\\c\u00df'") is None
@@ -738,7 +738,7 @@ class TestDenyMatchingIsQuoteNormalized:
         ``$'dd\\0junk' if=/dev/zero of=/dev/sda`` ran while the view held
         ``dd\\0junk if=`` and matched nothing (BLOCKING from the GPT 5.6 lane).
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         decode = security._decode_ansi_c_body
         for body in (r"AA\0junk", r"AA\400junk", r"AA\x00junk", r"AA\u0000j", r"AA\c@junk"):
@@ -759,7 +759,7 @@ class TestDenyMatchingIsQuoteNormalized:
         view makes the pattern match. The recursive-force argv floor reads the flags
         wherever they sit, so both spellings are refused.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         assert is_denied("rm -rf --no-preserve-root /") is not None
         assert is_denied(r"$'rm\0junk' -rf --no-preserve-root /") is not None
@@ -802,7 +802,7 @@ class TestDenyMatchingIsQuoteNormalized:
         Raised as a stall risk by the GPT 5.6 lane; measured, skipping the duplicate
         halves the cost on a command padded with interpreter tokens.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         calls: list[tuple[str, bool]] = []
         real = security._deny_segment_views
@@ -841,7 +841,7 @@ class TestDenyMatchingIsQuoteNormalized:
     ):
         """Fail-closed: the raw view is matched FIRST and independently, so a
         tokenizer that raises loses only the extra match."""
-        from kiro_crew import security
+        from aj_crew import security
 
         def _boom(cmd: str) -> list[str]:
             raise RuntimeError("tokenizer exploded")
@@ -880,7 +880,7 @@ class TestDenyMatchingIsQuoteNormalized:
     def test_views_are_deduplicated_when_normalization_changes_nothing(self):
         """A command with no quoting/escaping/padding must not pay a second
         140-rule pass."""
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._deny_segment_views("ls -la") == ("ls -la",)
         assert security._deny_segment_views('rm -rf "/"') == ('rm -rf "/"', "rm -rf /")
@@ -899,7 +899,7 @@ class TestDenyMatchingIsQuoteNormalized:
         the sensitive-path normalizer pass silently stops resolving spellings."""
         import os
 
-        from kiro_crew import security
+        from aj_crew import security
 
         home = os.path.expanduser("~")
         assert security.normalize_shell_command('cat "$HOME"/.ssh/id_rsa') == [
@@ -959,7 +959,7 @@ class TestEmptyArgvElementDoesNotBreakTheDenyView:
         normalized view removed, every cell above is ALLOWED -- so the assertion
         above is a property of the view's render and not an incidental raw match.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         monkeypatch.setattr(
             security, "_deny_segment_views", lambda segment, emit_self=True: (segment.lower(),)
@@ -1010,7 +1010,7 @@ class TestEmptyArgvElementDoesNotBreakTheDenyView:
         the ~19 path-normalizer consumers see unchanged tokens.  Only the view
         gains a render without it.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         assert security._shell_tokens('rm -rf "" /home/x') == ["rm", "-rf", "", "/home/x"]
         assert security.normalize_shell_command('rm -rf "" /home/x') == [
@@ -1105,7 +1105,7 @@ class TestEmptyArgvElementDoesNotBreakTheDenyView:
         per-rule sweep would also need a command synthesized from each of the ~140
         rule regexes, which is not mechanical; this is.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         for base in self.PROPERTY_BASES:
             expected = security._deny_segment_views(base)[-1]
@@ -1123,7 +1123,7 @@ class TestEmptyArgvElementDoesNotBreakTheDenyView:
         has no empty-word gap (an interposed word denies at
         every boundary -- via the protected-branch rule where the parse holds,
         via the ungated anti-obfuscation branch where it does not)."""
-        from kiro_crew import security
+        from aj_crew import security
 
         for base in self.PROPERTY_BASES:
             expected_denied = security.is_denied(base) is not None
@@ -1154,7 +1154,7 @@ class TestEmptyArgvElementDoesNotBreakTheDenyView:
         ``_is_push_to_protected_branch`` -- the right treatment for a spelling
         git itself cannot run.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         assert is_denied("git push origin main") is not None, (
             "the protected-branch floor no longer fires on the plain spelling -- this "
@@ -1215,7 +1215,7 @@ class TestEmptyArgvElementDoesNotBreakTheDenyView:
         two-word filename into two operands, so a token that carries any
         non-whitespace character is kept whole -- the last assertion pins that.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         for cmd in (
             'rm -rf " " /home/x',
@@ -1240,14 +1240,14 @@ class TestEmptyArgvElementDoesNotBreakTheDenyView:
         those floors onto the rendered view and inherit this class of escape.
 
         The frame keeps the empty element as the operand it is, and that is the
-        RIGHT reading: ``kirocrew "" restart`` hands argparse an empty subcommand,
+        RIGHT reading: ``ajcrew "" restart`` hands argparse an empty subcommand,
         which it rejects (``invalid choice: ''``), so nothing restarts and the
         command is allowed. The earlier form of this test asserted a denial for
-        that spelling -- a denial the deleted ``.*kiro.?crew ... restart.*`` row
+        that spelling -- a denial the deleted ``.*aj.?crew ... restart.*`` row
         produced from the elided VIEW, not the floor, so the floor's own verdict
         was never being tested. Only the bare spelling is a restart.
         """
-        prog = "kiro" + "crew"
+        prog = "aj" + "crew"
         assert is_denied(f"{prog} restart") is not None
         for cmd in (f'{prog} "" restart', f'{prog} -v "" restart'):
             assert not security._is_self_restart(cmd), cmd

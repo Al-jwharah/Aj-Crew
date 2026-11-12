@@ -37,7 +37,7 @@ const contentWidth = (params.get('width') || 'compact') as ContentWidth
 const layout = (params.get('layout') || 'multiline') as 'multiline' | 'scroll'
 const fixOn = params.get('fix') !== 'off'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 document.documentElement.setAttribute('data-fix', fixOn ? 'on' : 'off')
 
 /**
@@ -85,7 +85,7 @@ function Scene() {
         {/* The composer box itself, for scale: the bar's cost is vertical space
             taken from the transcript directly above it. */}
         <div className="mt-1 rounded-2xl border border-border bg-bg-elevated px-3 py-3 text-[13px] text-muted">
-          Message Kiro Crew… (/command · @file · $skill)
+          Message Aj Crew… (/command · @file · $skill)
         </div>
       </div>
     </div>

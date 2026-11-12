@@ -20,15 +20,15 @@ import sys
 
 import pytest
 
-import kiro_crew
+import aj_crew
 
 
 def test_shutdown_event_importable_without_running_loop() -> None:
     """Importing the module must not require a running event loop."""
-    assert hasattr(kiro_crew, "shutdown_event")
-    assert callable(kiro_crew.shutdown_event.set)
-    assert callable(kiro_crew.shutdown_event.clear)
-    assert callable(kiro_crew.shutdown_event.is_set)
+    assert hasattr(aj_crew, "shutdown_event")
+    assert callable(aj_crew.shutdown_event.set)
+    assert callable(aj_crew.shutdown_event.clear)
+    assert callable(aj_crew.shutdown_event.is_set)
 
 
 def test_shutdown_event_survives_fresh_asyncio_run() -> None:
@@ -38,19 +38,19 @@ def test_shutdown_event_survives_fresh_asyncio_run() -> None:
     imported at top level, then ``asyncio.run()`` creates a new loop and the
     gateway coroutine awaits ``shutdown_event.wait()``.
     """
-    kiro_crew.shutdown_event.clear()
+    aj_crew.shutdown_event.clear()
 
     async def main() -> None:
         async def setter() -> None:
             await asyncio.sleep(0.01)
-            kiro_crew.shutdown_event.set()
+            aj_crew.shutdown_event.set()
 
         asyncio.create_task(setter())
-        await kiro_crew.shutdown_event.wait()
+        await aj_crew.shutdown_event.wait()
 
     asyncio.run(main())
-    assert kiro_crew.shutdown_event.is_set()
-    kiro_crew.shutdown_event.clear()
+    assert aj_crew.shutdown_event.is_set()
+    aj_crew.shutdown_event.clear()
 
 
 def test_shutdown_event_survives_multiple_asyncio_runs() -> None:
@@ -60,16 +60,16 @@ def test_shutdown_event_survives_multiple_asyncio_runs() -> None:
         async def main() -> None:
             async def setter() -> None:
                 await asyncio.sleep(0.01)
-                kiro_crew.shutdown_event.set()
+                aj_crew.shutdown_event.set()
 
             asyncio.create_task(setter())
-            await kiro_crew.shutdown_event.wait()
+            await aj_crew.shutdown_event.wait()
 
-        kiro_crew.shutdown_event.clear()
+        aj_crew.shutdown_event.clear()
         asyncio.run(main())
-        assert kiro_crew.shutdown_event.is_set()
+        assert aj_crew.shutdown_event.is_set()
 
-    kiro_crew.shutdown_event.clear()
+    aj_crew.shutdown_event.clear()
 
 
 def test_shutdown_event_wait_for_timeout() -> None:
@@ -78,14 +78,14 @@ def test_shutdown_event_wait_for_timeout() -> None:
     The timeout IS the assertion: the event is never set, so the proxy's ``wait()``
     must be a real awaitable that ``wait_for`` can abandon at its deadline.
     """
-    kiro_crew.shutdown_event.clear()
+    aj_crew.shutdown_event.clear()
 
     async def main() -> None:
         with pytest.raises(asyncio.TimeoutError):
-            await asyncio.wait_for(kiro_crew.shutdown_event.wait(), timeout=0.05)
+            await asyncio.wait_for(aj_crew.shutdown_event.wait(), timeout=0.05)
 
     asyncio.run(main())
-    assert not kiro_crew.shutdown_event.is_set()
+    assert not aj_crew.shutdown_event.is_set()
 
 
 def test_shutdown_event_does_not_bind_to_default_loop_via_get_event_loop() -> None:
@@ -102,62 +102,62 @@ def test_shutdown_event_does_not_bind_to_default_loop_via_get_event_loop() -> No
     assert default_loop is not None
 
     # Step 2: reset the proxy's cached Event so it has to rebuild
-    kiro_crew.shutdown_event.clear()
-    kiro_crew.shutdown_event._event = None  # type: ignore[attr-defined]
-    kiro_crew.shutdown_event._loop = None  # type: ignore[attr-defined]
+    aj_crew.shutdown_event.clear()
+    aj_crew.shutdown_event._event = None  # type: ignore[attr-defined]
+    aj_crew.shutdown_event._loop = None  # type: ignore[attr-defined]
 
     # Step 3 + 4: fresh loop via asyncio.run, must not cross-loop
     async def main() -> None:
         async def setter() -> None:
             await asyncio.sleep(0.01)
-            kiro_crew.shutdown_event.set()
+            aj_crew.shutdown_event.set()
 
         asyncio.create_task(setter())
-        await kiro_crew.shutdown_event.wait()
+        await aj_crew.shutdown_event.wait()
 
     asyncio.run(main())
-    assert kiro_crew.shutdown_event.is_set()
-    kiro_crew.shutdown_event.clear()
+    assert aj_crew.shutdown_event.is_set()
+    aj_crew.shutdown_event.clear()
 
 
 def test_shutdown_event_pending_set_preserved_across_loops() -> None:
     """A ``set()`` call without a running loop must survive until one starts."""
     # Reset
-    kiro_crew.shutdown_event.clear()
-    kiro_crew.shutdown_event._event = None  # type: ignore[attr-defined]
-    kiro_crew.shutdown_event._loop = None  # type: ignore[attr-defined]
+    aj_crew.shutdown_event.clear()
+    aj_crew.shutdown_event._event = None  # type: ignore[attr-defined]
+    aj_crew.shutdown_event._loop = None  # type: ignore[attr-defined]
 
     # Sync set() before any loop runs
-    kiro_crew.shutdown_event.set()
-    assert kiro_crew.shutdown_event.is_set()
+    aj_crew.shutdown_event.set()
+    assert aj_crew.shutdown_event.is_set()
 
     async def main() -> bool:
-        return kiro_crew.shutdown_event.is_set()
+        return aj_crew.shutdown_event.is_set()
 
     assert asyncio.run(main()) is True
-    kiro_crew.shutdown_event.clear()
+    aj_crew.shutdown_event.clear()
 
 
 def test_shutdown_event_get_raises_without_loop() -> None:
     """``_get()`` must raise RuntimeError when no loop is running."""
-    kiro_crew.shutdown_event._event = None  # type: ignore[attr-defined]
-    kiro_crew.shutdown_event._loop = None  # type: ignore[attr-defined]
+    aj_crew.shutdown_event._event = None  # type: ignore[attr-defined]
+    aj_crew.shutdown_event._loop = None  # type: ignore[attr-defined]
     try:
-        kiro_crew.shutdown_event._get()  # type: ignore[attr-defined]
+        aj_crew.shutdown_event._get()  # type: ignore[attr-defined]
         assert False, "Expected RuntimeError"
     except RuntimeError as e:
         assert "without a running event loop" in str(e)
     finally:
-        kiro_crew.shutdown_event.clear()
+        aj_crew.shutdown_event.clear()
 
 
 def test_a_reload_keeps_the_event_earlier_importers_hold(monkeypatch: pytest.MonkeyPatch) -> None:
-    """``importlib.reload(kiro_crew)`` (the auto-update) must not split the signal.
+    """``importlib.reload(aj_crew)`` (the auto-update) must not split the signal.
 
     Re-runs a private copy of the package body in its own namespace, which is what
-    a reload does, so the shared ``kiro_crew`` module is never rebound.
+    a reload does, so the shared ``aj_crew`` module is never rebound.
     """
-    spec = importlib.util.spec_from_file_location("_kiro_crew_reload_probe", kiro_crew.__file__)
+    spec = importlib.util.spec_from_file_location("_aj_crew_reload_probe", aj_crew.__file__)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     monkeypatch.setitem(sys.modules, spec.name, module)

@@ -51,11 +51,11 @@ const TOKENS = [
 
 const AGENTS = [
   {
-    name: 'code-reviewer', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default',
+    name: 'code-reviewer', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default',
     model: '', description: 'Reviews pull requests and reports findings', source: 'user',
   },
   {
-    name: 'oncall', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default',
+    name: 'oncall', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default',
     model: '', description: 'Handles deployment and incident callbacks', source: 'user',
   },
 ]
@@ -65,7 +65,7 @@ const CONTEXTS = [
     hook_id: 'review:pr-123', session_key: 'hook:review:pr-123', registered_at: NOW - 480,
     age_seconds: 480, freshness: 'fresh',
     context_summary:
-      'Reviewing PR #123 (fix: dedupe check-runs) in worktree kirocrew-wt-check-dedupe. '
+      'Reviewing PR #123 (fix: dedupe check-runs) in worktree ajcrew-wt-check-dedupe. '
       + 'Round 2 findings addressed: identity collision between legacy commit statuses and '
       + 'check-runs, discriminator bug in the dedupe helper. Awaiting the static-analysis '
       + "bot's next pass; when it reports, triage each finding, fix legitimate Critical/High, "

@@ -18,17 +18,17 @@ import pytest
 from aiohttp import web
 from remove_slot_for_history_key_helpers import _make_state
 
-from kiro_crew import cron as cron_module
-from kiro_crew.cron import CronService, CronStoreBusy, CronStoreUnreadable
-from kiro_crew.dashboard.handlers import api_session_delete, api_sessions_clear
-from kiro_crew.dashboard.handlers import sessions as sessions_module
-from kiro_crew.dashboard.handlers.sessions import (
+from aj_crew import cron as cron_module
+from aj_crew.cron import CronService, CronStoreBusy, CronStoreUnreadable
+from aj_crew.dashboard.handlers import api_session_delete, api_sessions_clear
+from aj_crew.dashboard.handlers import sessions as sessions_module
+from aj_crew.dashboard.handlers.sessions import (
     _CRON_RELEASE_ATTEMPTS,
     CRON_OWNERSHIP_UNKNOWN_CODE,
     CRON_STORE_BUSY_CODE,
     CRON_STORE_UNREADABLE_CODE,
 )
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state import DashboardState
 
 
 class TestAJobBornDuringTheDeleteIsNotStranded:
@@ -127,7 +127,7 @@ class TestAJobBornDuringTheDeleteIsNotStranded:
         assert json.loads(resp.body.decode("utf-8")) == {"ok": True}
         assert calls["n"] == 2
         assert "post-delete owner scan could not read" in caplog.text
-        assert "kirocrew cron adopt" in caplog.text
+        assert "ajcrew cron adopt" in caplog.text
 
     @pytest.mark.asyncio
     async def test_the_bulk_clear_catches_an_add_between_its_sweep_and_the_unlink(
@@ -380,8 +380,8 @@ class TestALinkedKeyMustNameItsOwnTranscript:
             ),
             pytest.param("cron_76ef369f", "cron:76ef369f", id="cron-born-tab"),
             pytest.param(
-                "discord_kirocrew_direct_123",
-                "discord:kirocrew:direct:123",
+                "discord_ajcrew_direct_123",
+                "discord:ajcrew:direct:123",
                 id="multi-colon-channel-key",
             ),
             pytest.param(
@@ -601,12 +601,12 @@ class TestAnUnrecordedChannelOwnerIsFoundFromTheStore:
         assert CronService(base_dir=tmp_path).get_job(job.id).session_key == ""
         """The stem cannot be un-folded, so the exact key must come off the job.
 
-        ``_safe_key`` maps EVERY ``:`` to ``_``, so ``discord_kirocrew_direct_123``
+        ``_safe_key`` maps EVERY ``:`` to ``_``, so ``discord_ajcrew_direct_123``
         has several possible session keys and the funnel cannot reconstruct the
         right one. The store already holds it.
         """
-        channel_key = "discord:kirocrew:direct:123"
-        history_key = "discord_kirocrew_direct_123"
+        channel_key = "discord:ajcrew:direct:123"
+        history_key = "discord_ajcrew_direct_123"
         crons = CronService(base_dir=tmp_path)
         job = crons.add_job("dm", "ping", every_secs=3600, session_key=channel_key)
         log = _FakeTranscriptStore(history_key, "")
@@ -740,7 +740,7 @@ class TestAStrippedNameCannotReleaseAnotherSessionsJobs:
 
     Provenance for a destructive cross-session action must come from outside
     agent-writable storage. The cost is a stranded job, recoverable with
-    ``kirocrew cron adopt <id> --release``; a forged release is not recoverable.
+    ``ajcrew cron adopt <id> --release``; a forged release is not recoverable.
     """
 
     def _request(self, state) -> MagicMock:
@@ -855,7 +855,7 @@ class TestAStrippedNameCannotReleaseAnotherSessionsJobs:
         assert CronService(base_dir=tmp_path).get_job(job.id).session_key == channel_key
         assert channel_key in caplog.text
         assert job.id in caplog.text
-        assert "kirocrew cron adopt" in caplog.text
+        assert "ajcrew cron adopt" in caplog.text
 
     @pytest.mark.asyncio
     async def test_a_present_link_cannot_release_the_session_it_resembles(self, tmp_path):
@@ -979,7 +979,7 @@ class TestTheOwnerSweepFailsByCause:
         loud = [w for w in warnings if "owner sweep failed unexpectedly" in w]
         assert loud, warnings
         assert history_key in loud[0] and "OSError" in loud[0]
-        assert "kirocrew cron adopt <id> --release" in loud[0]
+        assert "ajcrew cron adopt <id> --release" in loud[0]
 
     @pytest.mark.asyncio
     async def test_a_busy_store_refuses_with_its_own_code(self, tmp_path):
@@ -1029,7 +1029,7 @@ class TestTheOwnerSweepFailsByCause:
         assert (resp.status, body["ok"], body["code"]) == (409, False, CRON_OWNERSHIP_UNKNOWN_CODE)
         # Here the remedy IS the CLI, and the store-side sweep already bound the
         # row to its owner, so the refusal can name the job to release.
-        assert "kirocrew cron adopt <id> --release" in body["error"]
+        assert "ajcrew cron adopt <id> --release" in body["error"]
         assert job.id in body["error"]
         assert f"delete_session:{history_key}" not in log.calls
         assert CronService(base_dir=tmp_path).get_job(job.id).session_key == channel_key
@@ -1080,7 +1080,7 @@ class TestTheOwnerSweepFailsByCause:
         assert f"delete_session:{history_key}" in log.calls
         assert CronService(base_dir=tmp_path).get_job(job.id).session_key == channel_key
         assert "owner sweep failed unexpectedly" in caplog.text
-        assert "kirocrew cron adopt <id> --release" in caplog.text
+        assert "ajcrew cron adopt <id> --release" in caplog.text
 
 
 class TestTheOwnerSweepMustReadTheStoreStrictly:
@@ -1116,7 +1116,7 @@ class TestTheOwnerSweepMustReadTheStoreStrictly:
         cross-process contention a CLI ``cron adopt`` or a large atomic save
         produces, not a patched-out lock.
         """
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         holder = (base_dir / ".crons.lock").open("w")
         platform_compat.acquire_lock(holder.fileno(), exclusive=True)
@@ -1376,8 +1376,8 @@ class TestUnreadableMetadataAbortsTheDelete:
         assert body["code"] == CRON_OWNERSHIP_UNKNOWN_CODE
         # The refusal has to say what to do about it: an operator cannot release
         # ownership by hand from a bare "ok": false.
-        assert "kirocrew cron adopt" in body["error"]
-        assert history_key in caplog.text and "kirocrew cron adopt" in caplog.text
+        assert "ajcrew cron adopt" in body["error"]
+        assert history_key in caplog.text and "ajcrew cron adopt" in caplog.text
         # NOT unlinked -- the row still holds the only copy of the owner key, so
         # the ownership is recoverable rather than stranded.
         assert f"delete_session:{history_key}" not in log.calls
@@ -1466,7 +1466,7 @@ class TestUnreadableMetadataAbortsTheDelete:
         assert body["ok"] is False
         assert resp.status == 409
         assert body["code"] == CRON_OWNERSHIP_UNKNOWN_CODE
-        assert "kirocrew cron adopt" in body["error"]
+        assert "ajcrew cron adopt" in body["error"]
         assert f"delete_session:{history_key}" not in log.calls
         assert CronService(base_dir=tmp_path).get_job(job.id).session_key == channel_key
 

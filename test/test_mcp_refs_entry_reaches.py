@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.agent_sdk.mcp_refs import entry_grants, entry_reaches
+from aj_crew.agent_sdk.mcp_refs import entry_grants, entry_reaches
 
 
 @pytest.mark.parametrize(
@@ -38,7 +38,7 @@ def test_entry_reaches_whole_server_selectors(entry, ref):
     assert entry_reaches(entry, ref)
 
 
-_SEND = "@kirocrew-dashboard/session_send"
+_SEND = "@ajcrew-dashboard/session_send"
 
 
 @pytest.mark.parametrize(
@@ -46,11 +46,11 @@ _SEND = "@kirocrew-dashboard/session_send"
     [
         _SEND,
         "*",
-        "@kirocrew-dashboard",
-        "@kirocrew-dashboard/*",
-        "@kirocrew-dashboard/session_*",
-        "@kirocrew-dashboard/*_send",
-        "@kirocrew-dashboard/session_sen?",
+        "@ajcrew-dashboard",
+        "@ajcrew-dashboard/*",
+        "@ajcrew-dashboard/session_*",
+        "@ajcrew-dashboard/*_send",
+        "@ajcrew-dashboard/session_sen?",
     ],
 )
 def test_entry_grants_only_kiro_cli_grant_shapes(entry):
@@ -64,13 +64,13 @@ def test_entry_grants_only_kiro_cli_grant_shapes(entry):
         "*_send",
         "@*",
         "@*/session_send",
-        "@kirocrew-*/session_send",
-        "@kirocrew-dashboar?",
-        "@KIROCREW-DASHBOARD/SESSION_SEND",
-        "@kirocrew-dashboard/SESSION_*",
-        "@kirocrew-dashboard/",
-        "@kirocrew-dashboard/session_create",
-        "@kirocrew-dashboard/session_[s]end",
+        "@ajcrew-*/session_send",
+        "@ajcrew-dashboar?",
+        "@AJCREW-DASHBOARD/SESSION_SEND",
+        "@ajcrew-dashboard/SESSION_*",
+        "@ajcrew-dashboard/",
+        "@ajcrew-dashboard/session_create",
+        "@ajcrew-dashboard/session_[s]end",
         "@other/session_send",
         "@",
         "",
@@ -85,7 +85,7 @@ def test_entry_reaches_keeps_its_over_match(entry):
     assert entry_reaches(entry, _SEND)
 
 
-@pytest.mark.parametrize("ref", ["@kirocrew-dashboard", "@kirocrew-dashboard/*", "@srv/a?", ""])
+@pytest.mark.parametrize("ref", ["@ajcrew-dashboard", "@ajcrew-dashboard/*", "@srv/a?", ""])
 def test_entry_grants_never_grants_a_pattern_ref(ref):
     assert not entry_grants("*", ref)
 

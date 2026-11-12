@@ -21,7 +21,7 @@ from typing import Callable
 
 import pytest
 
-from kiro_crew.testing.fake_acp_backend import (
+from aj_crew.testing.fake_acp_backend import (
     SLOW_CHUNKS,
     SLOW_HOLD_AFTER_CHUNKS,
     SLOW_HOLD_DIR_ENV,

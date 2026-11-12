@@ -17,10 +17,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import hooks as hooks_mod
-from kiro_crew.acp._dispatch import build_permission_event, parse_session_update
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.hooks import (
+from aj_crew import hooks as hooks_mod
+from aj_crew.acp._dispatch import build_permission_event, parse_session_update
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.hooks import (
     TOOL_ALLOW,
     TOOL_AUTO_APPROVE,
     TOOL_DENY,

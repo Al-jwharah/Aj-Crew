@@ -18,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.cli_bench import bench_cmd
-from kiro_crew.eval.bench.kb_retrieval import (
+from aj_crew.cli_bench import bench_cmd
+from aj_crew.eval.bench.kb_retrieval import (
     KB_QUERY_CLASSES,
     KBGoldenSet,
     KBGoldenSetError,
@@ -560,7 +560,7 @@ class TestGoldenSet:
     def test_control_bearing_filename_is_escaped_in_errors(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.eval.bench.kb_retrieval as kbr
+        import aj_crew.eval.bench.kb_retrieval as kbr
 
         malicious = tmp_path / "bad\x1b]0;title\x07.json"
         monkeypatch.setattr(kbr, "read_text_nofollow", lambda *_a, **_kw: "{")
@@ -704,7 +704,7 @@ class TestGoldenSet:
         # guard consults, rather than relocating HOME/USERPROFILE -- moving the real
         # protection boundary is a test side effect and does not exercise the gate
         # against the operator's actual home.
-        import kiro_crew.security as security
+        import aj_crew.security as security
 
         secret = tmp_path / "looks_ok.json"
         secret.write_text('{"docs": [], "queries": []}')
@@ -796,7 +796,7 @@ class TestRunKbRetrieval:
     def test_report_header_differs_between_revisions_of_one_name(self) -> None:
         """Two reports on the same corpus name but different label revisions must
         print different identity lines -- that difference IS the guard."""
-        from kiro_crew.eval.bench.kb_retrieval import KBRetrievalReport
+        from aj_crew.eval.bench.kb_retrieval import KBRetrievalReport
 
         a = KBRetrievalReport(golden_set="same", embedder_id="e", k_values=(3,))
         b = KBRetrievalReport(golden_set="same", embedder_id="e", k_values=(3,), label_revision=1)
@@ -910,7 +910,7 @@ class TestCli:
     def test_real_embedder_refuses_when_warmup_times_out(
         self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.knowledge.embedder as emb
+        import aj_crew.knowledge.embedder as emb
 
         timeouts: list[float | None] = []
 
@@ -941,8 +941,8 @@ class TestCli:
         non-blocking availability probe, then report the model actually serving
         the run rather than a hardcoded Qwen3 label.
         """
-        import kiro_crew.knowledge.embedder as emb
-        from kiro_crew.eval.bench.toy_embedder import toy_embed_fn
+        import aj_crew.knowledge.embedder as emb
+        from aj_crew.eval.bench.toy_embedder import toy_embed_fn
 
         fake_model = "custom-embedding:test-9b"
         deterministic = toy_embed_fn()
@@ -1011,8 +1011,8 @@ class TestRound7Fixes:
 
     def test_recall_micro_is_fractional_for_partial_hit(self) -> None:
         """A two-gold query with one hit scores 0.5 micro, not the 1/0 of any/all."""
-        from kiro_crew.eval.bench.kb_retrieval import KBQueryResult, KBRetrievalReport
-        from kiro_crew.eval.bench.retrieval import recall_micro_at_k
+        from aj_crew.eval.bench.kb_retrieval import KBQueryResult, KBRetrievalReport
+        from aj_crew.eval.bench.retrieval import recall_micro_at_k
 
         ranked, gold = ("g1", "z1", "z2"), ("g1", "g2")
         micro = recall_micro_at_k(ranked, gold, 3)
@@ -1045,15 +1045,15 @@ class TestRound7Fixes:
         traceback instead of the deliberate-refusal message every other failure
         path in ``_kb_retrieval`` produces.
         """
-        import kiro_crew.eval.bench.kb_retrieval as kbr
-        from kiro_crew._sqlite_compat import sqlite3
+        import aj_crew.eval.bench.kb_retrieval as kbr
+        from aj_crew._sqlite_compat import sqlite3
 
         def _boom(*_a: object, **_k: object) -> None:
             raise sqlite3.OperationalError("database or disk is full")
 
         monkeypatch.setattr(kbr, "run_kb_retrieval", _boom)
         # Route the CLI through the patched module attribute.
-        import kiro_crew.cli_bench as cb
+        import aj_crew.cli_bench as cb
 
         rc = cb.bench_cmd(
             _Args(

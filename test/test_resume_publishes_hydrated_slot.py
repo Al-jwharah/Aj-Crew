@@ -16,7 +16,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 def _app_scoped(state, declared_app: str) -> web.Application:
@@ -40,7 +40,7 @@ async def test_slot_is_never_reachable_unhydrated_during_the_threaded_read(tmp_p
     name, which is what any concurrent request does. Seeing the slot present but
     empty there is the defect: whatever it appends lands ahead of the history.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     log.append("dashboard:race1", "user", "history-1")
@@ -102,7 +102,7 @@ async def test_a_slot_published_during_the_read_still_faces_the_ownership_gate(
     name and applies no ownership check of its own, so without a re-check a
     foreign app is handed a slot it does not own.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     log.append("dashboard:race2", "user", "history-1")
@@ -154,7 +154,7 @@ async def test_slot_is_not_reachable_unhydrated_during_the_folder_unhide(tmp_pat
     a folder therefore still published an empty slot across a suspension point, and
     a concurrent append there lands ahead of the restored history.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     log.append("dashboard:race3", "user", "history-1")
@@ -169,7 +169,7 @@ async def test_slot_is_not_reachable_unhydrated_during_the_folder_unhide(tmp_pat
         await may_finish.wait()
         return True
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._unhide_folder", slow_unhide)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._unhide_folder", slow_unhide)
 
     observed = {}
 
@@ -217,7 +217,7 @@ async def test_a_delete_during_the_read_does_not_republish_the_transcript(tmp_pa
     The probe is ``get_metadata_status``: ``get_metadata`` returns ``{}`` for both
     "deleted" and "unreadable", and an unreadable line is not a deletion.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:del1"
@@ -277,7 +277,7 @@ async def test_a_delete_then_recreate_during_the_read_does_not_overwrite_the_rep
     them: every new metadata line stamps ``created_at`` and
     ``_rewrite_session_locked`` preserves it, so a differing value means a recreate.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:recreate1"
@@ -362,7 +362,7 @@ async def test_a_benign_metadata_rewrite_during_the_read_still_publishes(tmp_pat
     A title/agent update keeps ``created_at``; a guard comparing the whole metadata
     dict would turn an ordinary concurrent rename into a failed resume.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:benign1"
@@ -419,7 +419,7 @@ async def test_a_folder_filed_during_the_read_is_not_erased_by_a_stale_existence
     the old folder's verdict would erase the new filing. A verdict is only about the
     folder it was computed for.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:folderrace1"
@@ -502,7 +502,7 @@ async def test_a_dangling_folder_id_unchanged_across_the_read_is_still_dropped(
     since it was last saved still has to resume plainly unfiled rather than
     pointing at nothing.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:folderdangle1"
@@ -538,7 +538,7 @@ async def test_a_close_landing_during_the_read_is_not_cleared_by_the_stale_snaps
     ``stamp_closed_at=True`` is the app close path; ``False`` is a flag with no stamp,
     where the file's mtime stands in for the close instant.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:closerace1"
@@ -644,7 +644,7 @@ async def test_a_session_closed_before_the_resume_still_has_its_flag_cleared(tmp
     import json
     from types import SimpleNamespace
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:closenormal1"
@@ -661,7 +661,7 @@ async def test_a_session_closed_before_the_resume_still_has_its_flag_cleared(tmp
     # tick on Windows, and compare-and-clear intentionally preserves ties.
     # Pin only the handler's clock, not process-wide time or the real writer.
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_handlers.time",
+        "aj_crew.dashboard.chat_handlers.time",
         SimpleNamespace(time=lambda: closed_at + 1),
     )
     async with TestClient(TestServer(app)) as client:
@@ -691,7 +691,7 @@ async def test_a_metadata_only_session_removed_during_the_read_is_not_republishe
     existence instead; an empty live session still resumes because ``not
     post_read_meta`` stays false and the identity arm needs two differing ``created_at``.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:mdonly1"
@@ -773,7 +773,7 @@ async def test_a_legitimately_empty_session_that_still_exists_still_resumes(tmp_
     A widened existence witness must not make every empty session answer 409
     ``resume_session_deleted``.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:mdonly2"
@@ -797,7 +797,7 @@ async def test_a_failing_slots_broadcast_does_not_500_a_committed_resume(
 ):
     """Every slots broadcast fails on a leading edge (a poisoned other slot): the
     resume has committed, so it answers 200 and the failures go to the log."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     key = "dashboard:poisoned1"
     state.conversation_log.update_metadata(key, {"title": "still here"})
@@ -808,7 +808,7 @@ async def test_a_failing_slots_broadcast_does_not_500_a_committed_resume(
     monkeypatch.setattr(state, "_do_slots_broadcast", _fail)
     state._slots_broadcast_interval = 0.0  # every push lands on a leading edge
 
-    with caplog.at_level("ERROR", logger="kiro_crew.dashboard.state"):
+    with caplog.at_level("ERROR", logger="aj_crew.dashboard.state"):
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post("/api/chat/slots/poisoned1/resume", json={"key": key})
 
@@ -825,7 +825,7 @@ async def test_resuming_a_session_that_never_existed_is_not_refused(tmp_path, mo
     the case the widened witness could plausibly catch by accident, since both
     guards read ``meta_readable`` and an absent file is readable-and-empty.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:neverexisted1"
@@ -848,7 +848,7 @@ async def test_resume_does_not_apply_the_remote_binding_from_disk(tmp_path, monk
     rehydration is ``_rehydrate_slot_from_history``'s job (RFC 7.1b). This pins the
     negative, which a snapshot of the field list would not.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:remotebound1"
@@ -901,7 +901,7 @@ async def test_resume_still_windows_a_long_transcript_to_500(tmp_path, monkeypat
     ``window_limit`` lets import opt out, but resume still loads the newest 500 of 600
     rows and reports 100 older-on-disk.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:longresume1"
@@ -927,9 +927,9 @@ def test_serialize_slots_omits_a_slot_under_construction(tmp_path, monkeypatch):
     The slot stays in ``_slots`` for identity, but a client must not see a half-built
     session whose Layer B join is not yet written.
     """
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = _ChatSlot("dashboard:underconstruction1")
     state._slots[slot.key] = slot
@@ -959,9 +959,9 @@ async def test_materialise_never_makes_the_slot_visible_before_it_is_ready(tmp_p
     ``suspend_slots_push`` block. Driven on a REAL DashboardState, because a stub that
     omits the broadcast would pass vacuously.
     """
-    import kiro_crew.dashboard.chat_handlers as ch
+    import aj_crew.dashboard.chat_handlers as ch
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     key = "dashboard:materialise-vis1"
 
@@ -1013,9 +1013,9 @@ def test_background_flush_and_open_slots_skip_an_under_construction_slot(tmp_pat
     A periodic ``_flush_dirty_slots`` would write a half-built transcript, and the
     open-slots set could let a crash resurrect it half-built.
     """
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = _ChatSlot("dashboard:flush1")
     state._slots[slot.key] = slot
@@ -1057,7 +1057,7 @@ def test_live_slot_count_counts_an_under_construction_slot_once(tmp_path):
     sum of the two lengths would charge it twice and refuse admissible
     imports/forks/creates near ``MAX_LIVE_SLOTS`` with fewer real slots than that.
     """
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.dashboard.slot_registry import SlotRegistry
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("count-uc")
@@ -1103,7 +1103,7 @@ def test_raw_acquirer_mutators_refuse_an_under_construction_slot(tmp_path):
     an under-construction slot, so a crafted request against the predictable
     minted key cannot truncate+persist during the import Layer B async tail.
     """
-    from kiro_crew.dashboard.chat_utils import reject_if_slot_under_construction
+    from aj_crew.dashboard.chat_utils import reject_if_slot_under_construction
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("raw-uc")
@@ -1121,7 +1121,7 @@ def test_redact_history_rows_only_touches_the_window_not_the_frozen_prefix():
     scrubbing it would only put regex work on the loop. ``window_limit=None`` (import)
     redacts everything.
     """
-    from kiro_crew.dashboard.chat_handlers import _redact_history_rows
+    from aj_crew.dashboard.chat_handlers import _redact_history_rows
 
     secret = "ghp_" + "a" * 36  # a token-shaped string the credential scanner redacts
     rows = [{"role": "assistant", "content": f"p{i} {secret}", "ts": ""} for i in range(5)]
@@ -1145,8 +1145,8 @@ def test_redact_history_rows_normalises_structured_content_to_a_redacted_string(
     save/display paths crash on non-string ``content``. This checks a token as both a
     value and a key does not survive, and that the row is still saveable.
     """
-    from kiro_crew.dashboard.chat_handlers import _redact_history_rows
-    from kiro_crew.dashboard.chat_persistence import _build_message_entry_uncached
+    from aj_crew.dashboard.chat_handlers import _redact_history_rows
+    from aj_crew.dashboard.chat_persistence import _build_message_entry_uncached
 
     secret = "ghp_" + "b" * 36  # token-shaped; the credential scanner redacts it
     key_secret = "ghp_" + "d" * 36  # a credential sitting in a dict KEY
@@ -1181,7 +1181,7 @@ def test_normalise_structured_content_is_bounded_and_never_raises():
     collapses to a fixed placeholder (fail-closed) rather than leaking or
     crashing.
     """
-    from kiro_crew.dashboard.chat_handlers import (
+    from aj_crew.dashboard.chat_handlers import (
         _STRUCTURED_CONTENT_PLACEHOLDER,
         _normalise_structured_content,
     )
@@ -1241,7 +1241,7 @@ def test_failed_hydration_does_not_leave_a_stale_restricted_marker(tmp_path, mon
     Otherwise a later session at that key would be wrongly blocked from memory
     operations. The raise is forced after ``dashboard:{key}`` joins ``_restricted_keys``.
     """
-    import kiro_crew.dashboard.chat_handlers as ch
+    import aj_crew.dashboard.chat_handlers as ch
 
     state = _make_state(tmp_path)
 
@@ -1302,7 +1302,7 @@ def test_flush_failure_at_construction_does_not_leak_the_reservation(tmp_path, m
     monkeypatch.setattr(state, "begin_slot_construction", _begin)
     monkeypatch.setattr(state, "push_slots_update", _push)
 
-    import kiro_crew.dashboard.chat_handlers as ch
+    import aj_crew.dashboard.chat_handlers as ch
 
     before = state.live_slot_count()
     with pytest.raises(_FlushAborted, match="poisoned broadcast"):
@@ -1333,9 +1333,9 @@ def test_a_failing_exit_flush_does_not_fail_materialisation(tmp_path, monkeypatc
 
     monkeypatch.setattr(state, "_do_slots_broadcast", _broadcast)
 
-    import kiro_crew.dashboard.chat_handlers as ch
+    import aj_crew.dashboard.chat_handlers as ch
 
-    with caplog.at_level("ERROR", logger="kiro_crew.dashboard.state"):
+    with caplog.at_level("ERROR", logger="aj_crew.dashboard.state"):
         slot = ch._materialise_slot_from_history(
             state,
             name="flush-leak-1",
@@ -1355,7 +1355,7 @@ async def test_resuming_a_closed_session_refreshes_the_older_sessions_listing(
 ):
     """A resume moves the session out of Older Sessions, which every tab re-reads
     only on a ``history`` frame: publishing the slot pushes exactly one listing refresh."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:listed1"
@@ -1376,7 +1376,7 @@ async def test_resuming_a_closed_session_refreshes_the_older_sessions_listing(
 async def test_resuming_an_already_live_session_pushes_no_history_refresh(tmp_path, monkeypatch):
     """A resume answered by the open slot publishes nothing new, so the listing
     has not changed and no ``history`` frame is sent."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     live = state.get_or_create_slot("open1")
     push_listing_refresh = MagicMock()
@@ -1399,10 +1399,10 @@ async def test_a_listing_during_the_resume_tail_is_corrected_on_publish(tmp_path
     """A reserved resume takes its slot out of ``_slots`` until its tail passes, after
     the creation sync already pushed ``history``. A listing served in that tail shows
     the session as an Older Sessions row, so publishing the slot pushes again."""
-    from kiro_crew.dashboard.chat_handlers import resume_slot_from_history
-    from kiro_crew.dashboard.chat_utils import listing_slot_snapshot
+    from aj_crew.dashboard.chat_handlers import resume_slot_from_history
+    from aj_crew.dashboard.chat_utils import listing_slot_snapshot
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     log = state.conversation_log
     key = "dashboard:tail1"
@@ -1433,10 +1433,10 @@ async def test_a_raise_after_materialise_releases_the_construction_mark(tmp_path
     app, link) work on a slot that is registered and under construction. A raise
     there must drop the slot, its restricted marker and its mark, or the key stays
     reserved and counted against the live-slot cap for the process lifetime."""
-    from kiro_crew.dashboard import chat_handlers as ch
-    from kiro_crew.dashboard.chat_api import resume as resume_mod
+    from aj_crew.dashboard import chat_handlers as ch
+    from aj_crew.dashboard.chat_api import resume as resume_mod
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     key = "dashboard:markleak1"
     state.conversation_log.append(key, "user", "history-1")

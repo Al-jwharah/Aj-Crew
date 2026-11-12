@@ -11,8 +11,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import mcp_core
-from kiro_crew.mcp_tools import sessions as s
+from aj_crew import mcp_core
+from aj_crew.mcp_tools import sessions as s
 
 #: The already-verified caller key the three helpers now REQUIRE. Real callers get
 #: it from each tool's own ``require_strict_session_key`` at entry; a test supplies
@@ -201,7 +201,7 @@ def test_list_renders_every_metadata_bit_when_a_row_carries_them_all(get):
                 {
                     "key": "dashboard:1",
                     "title": "Rollout",
-                    "agent": "kirocrew",
+                    "agent": "ajcrew",
                     "messages": 12,
                     "created": "2026-09-16T10:00:00+00:00",
                     "preview": "first line",
@@ -211,7 +211,7 @@ def test_list_renders_every_metadata_bit_when_a_row_carries_them_all(get):
     )
     out = s._crew_list_sessions("chick", 10, KEY)
     assert "Rollout" in out
-    assert "agent=kirocrew" in out
+    assert "agent=ajcrew" in out
     assert "~12 msgs" in out
     assert "2026-09-16T10:00" in out
     assert "first line" in out
@@ -294,7 +294,7 @@ def test_an_unreadable_private_binding_refuses_the_crew_read(monkeypatch: pytest
     ``_caller_private_store`` returns ``("", refusal)`` on failure, and ``""`` is also
     what an ordinary session yields, so the refusal must be checked first.
     """
-    import kiro_crew.member_memory_auth as mma
+    import aj_crew.member_memory_auth as mma
 
     def _raise(_key):
         raise boom
@@ -437,7 +437,7 @@ def test_each_private_memory_crew_refusal_is_audited_once_and_allowed_reads_are_
     monkeypatch: pytest.MonkeyPatch, tool, args, helper_name
 ):
     """Private-memory denials are visible without adding noise to allowed reads."""
-    import kiro_crew.member_memory_auth as mma
+    import aj_crew.member_memory_auth as mma
 
     store = ["member-store-x"]
     audit = _SelRecorder()

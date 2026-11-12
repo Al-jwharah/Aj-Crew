@@ -10,7 +10,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 class TestSlotProbeWrapsSharedRestoreBody:
@@ -40,14 +40,14 @@ class TestSlotProbeWrapsSharedRestoreBody:
 
     @pytest.mark.asyncio
     async def test_delegates_slot_state_to_the_shared_body(self):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.llm_helpers import TURN_FALLBACK_ATTR
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.llm_helpers import TURN_FALLBACK_ATTR
 
         slot = self._slot()
         client = MagicMock()
         setattr(client, TURN_FALLBACK_ATTR, ("primary-m", "fb-1"))
         with patch(
-            "kiro_crew.dashboard.chat_runner.probe_fallback_restore", new_callable=AsyncMock
+            "aj_crew.dashboard.chat_runner.probe_fallback_restore", new_callable=AsyncMock
         ) as probe:
             await chat_runner._probe_fallback_restore_for_slot(slot, client)
 
@@ -66,7 +66,7 @@ class TestSlotProbeWrapsSharedRestoreBody:
 
     @pytest.mark.asyncio
     async def test_explicit_pick_generation_bump_rides_in_as_stale(self):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         slot = self._slot(_model_pick_gen=4)  # picked after the swap
         # A restore attempt fails, which would keep the fallback record; only the
@@ -77,11 +77,11 @@ class TestSlotProbeWrapsSharedRestoreBody:
 
     @pytest.mark.asyncio
     async def test_heal_hook_restores_the_activation_snapshot(self):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         slot = self._slot(model="fb-1", _fallback_slot_model="")  # backfilled pin
         with patch(
-            "kiro_crew.dashboard.chat_runner.probe_fallback_restore", new_callable=AsyncMock
+            "aj_crew.dashboard.chat_runner.probe_fallback_restore", new_callable=AsyncMock
         ) as probe:
             await chat_runner._probe_fallback_restore_for_slot(slot, MagicMock())
         probe.await_args.kwargs["on_restored"]()
@@ -89,19 +89,19 @@ class TestSlotProbeWrapsSharedRestoreBody:
 
     @pytest.mark.asyncio
     async def test_no_active_fallback_never_reaches_the_shared_body(self):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         slot = self._slot(_active_fallback_model="")
         with patch(
-            "kiro_crew.dashboard.chat_runner.probe_fallback_restore", new_callable=AsyncMock
+            "aj_crew.dashboard.chat_runner.probe_fallback_restore", new_callable=AsyncMock
         ) as probe:
             await chat_runner._probe_fallback_restore_for_slot(slot, MagicMock())
         probe.assert_not_awaited()
         assert (slot.model, slot._fallback_primary_model) == ("", "primary-m")
 
     def test_sticky_clear_drops_marker_and_slot_fields(self):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.llm_helpers import TURN_FALLBACK_ATTR
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.llm_helpers import TURN_FALLBACK_ATTR
 
         slot = self._slot()
         client = MagicMock()
@@ -117,8 +117,8 @@ class TestSlotProbeWrapsSharedRestoreBody:
         blank the slot fields — the slot probe keys on _active_fallback_model,
         so keeping the record is what makes the clear retryable next turn.
         Blanking the fields around a surviving marker would orphan it."""
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.llm_helpers import TURN_FALLBACK_ATTR
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.llm_helpers import TURN_FALLBACK_ATTR
 
         class _HostileClient:
             @property
@@ -140,7 +140,7 @@ class TestBulkModelSwitch:
 
     @staticmethod
     def _app(state: DashboardState) -> web.Application:
-        from kiro_crew.dashboard.chat import api_chat_slots_model
+        from aj_crew.dashboard.chat import api_chat_slots_model
 
         # Mirror production: token_auth middleware sets request["app"] on
         # every authenticated path ("" = dashboard user). Tests that model an
@@ -305,7 +305,7 @@ class TestBulkModelSwitch:
         state.sessions.reset = AsyncMock()
         state.get_or_create_slot("a", model="claude-opus-4.6")
 
-        from kiro_crew.dashboard.chat import api_chat_slots_model
+        from aj_crew.dashboard.chat import api_chat_slots_model
 
         bare_app = web.Application()  # deliberately NO auth-marker middleware
         bare_app["state"] = state
@@ -327,7 +327,7 @@ class TestBulkModelSwitch:
         state.sessions.reset = AsyncMock()
         state.get_or_create_slot("a", model="claude-opus-4.6")
 
-        from kiro_crew.dashboard.chat import api_chat_slots_model
+        from aj_crew.dashboard.chat import api_chat_slots_model
 
         @web.middleware
         async def buggy_auth_marker(request, handler):
@@ -385,7 +385,7 @@ class TestSlotModelGuard:
 
     @staticmethod
     def _app(state: DashboardState) -> web.Application:
-        from kiro_crew.dashboard.chat import api_chat_slot_model
+        from aj_crew.dashboard.chat import api_chat_slot_model
 
         app = web.Application()
         app["state"] = state

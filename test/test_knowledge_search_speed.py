@@ -17,10 +17,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.knowledge import retrieval
-from kiro_crew.knowledge.embedder import floats_to_bytes
-from kiro_crew.knowledge.retrieval import ANY_EMBEDDING_SPACE, HybridRetriever
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge import retrieval
+from aj_crew.knowledge.embedder import floats_to_bytes
+from aj_crew.knowledge.retrieval import ANY_EMBEDDING_SPACE, HybridRetriever
+from aj_crew.knowledge.store import KnowledgeStore
 
 pytest.importorskip("numpy")
 

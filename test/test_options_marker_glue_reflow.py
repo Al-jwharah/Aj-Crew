@@ -7,11 +7,11 @@ reads::
     Pick a path.
     [OPTIONS: A | B]Anytime.
 
-The render grammar (:data:`kiro_crew.constants.OPTIONS_RE_LINE`) anchors the closer
+The render grammar (:data:`aj_crew.constants.OPTIONS_RE_LINE`) anchors the closer
 to end-of-line, so the glued line matches nothing, the marker leaks as literal
 text and its pills are lost.
 
-:func:`kiro_crew.constants.reflow_and_label_glued_option_marker` repairs this at the single
+:func:`aj_crew.constants.reflow_and_label_glued_option_marker` repairs this at the single
 backend persistence seam (``_flush_segment``) by inserting the missing ``\\n`` --
 never deleting a character. It is deliberately narrow, and this is where that
 narrowness is pinned, because a broader reflow was the exact defect a prior
@@ -30,7 +30,7 @@ render-layer attempt hit:
   to decline.
 """
 
-from kiro_crew.constants import (
+from aj_crew.constants import (
     GLUED_FOOTER_TEXT_LABEL,
     OPTIONS_RE_LINE,
     reflow_and_label_glued_option_marker,
@@ -266,7 +266,7 @@ def test_fence_state_at_each_candidate_matches_the_single_position_walker() -> N
     # The reflow advances ONE walker across the text; its answer at every candidate
     # must equal the per-position ``_in_open_fence`` it replaces. Fences open, close,
     # stay open, and turn ambiguous across this text, with candidates in each zone.
-    from kiro_crew.constants import _in_open_fence
+    from aj_crew.constants import _in_open_fence
 
     text = (
         "[OPTIONS: A | B]g1\n"  # outside
@@ -348,7 +348,7 @@ def test_labelling_variant_reports_nothing_when_nothing_is_glued() -> None:
 
 
 def test_label_is_plain_prose_no_grammar_recognises() -> None:
-    from kiro_crew.constants import GLUED_FOOTER_TEXT_LABEL, OPTIONS_RE_TRAILER
+    from aj_crew.constants import GLUED_FOOTER_TEXT_LABEL, OPTIONS_RE_TRAILER
 
     assert not _parses_to_a_marker(GLUED_FOOTER_TEXT_LABEL)
     assert OPTIONS_RE_TRAILER.search(GLUED_FOOTER_TEXT_LABEL) is None

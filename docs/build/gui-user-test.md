@@ -22,8 +22,8 @@ while the code holding credentials is not. `pr-readiness.yml` does not read this
 | Path | Role |
 |---|---|
 | `.github/workflows/gui-user-test.yml` | Triggers, boot, run, artifact, run summary, nightly issue, lane status. |
-| `scripts/gui-user-test/boot.sh` | Xvfb -> `seed_home.py` -> `python -m kiro_crew gateway --test-mode --approval yolo --no-crons` on the packaged fake ACP backend -> Chromium at the dashboard URL. Writes `target.env` (origin, one-time token and the gateway session cookie, mode 0600) and `pids`. Also stages the sample notes folder and the sample project at a fixed path (see "Seeds" below). |
-| `scripts/gui-user-test/seed_home.py` | Copies a fixture into `$KIROCREW_HOME` through `kiro_crew.seed`, marks the install onboarded (including `dashboard.crewmates_onboarded`), writes `config.agents.default` and then `config.agents.<slug>` for each `--member` so the Bots page has a roster, and with `--project` gives the pinned starter session (`dashboard_starter.jsonl`) the staged sample project. |
+| `scripts/gui-user-test/boot.sh` | Xvfb -> `seed_home.py` -> `python -m aj_crew gateway --test-mode --approval yolo --no-crons` on the packaged fake ACP backend -> Chromium at the dashboard URL. Writes `target.env` (origin, one-time token and the gateway session cookie, mode 0600) and `pids`. Also stages the sample notes folder and the sample project at a fixed path (see "Seeds" below). |
+| `scripts/gui-user-test/seed_home.py` | Copies a fixture into `$AJCREW_HOME` through `aj_crew.seed`, marks the install onboarded (including `dashboard.crewmates_onboarded`), writes `config.agents.default` and then `config.agents.<slug>` for each `--member` so the Bots page has a roster, and with `--project` gives the pinned starter session (`dashboard_starter.jsonl`) the staged sample project. |
 | `scripts/gui-user-test/teardown.sh` | Kills the three process groups and removes the scratch home, the browser profile and the staged sample folders. |
 | `test/gui_user/harness.py` | The screenshot -> Bedrock Messages API -> action loop with the step, time and budget gates. |
 | `test/gui_user/x11.py` | Screenshots (Pillow `ImageGrab`) and input (`xdotool`); coordinate scaling, key aliases and argv building are pure and unit-tested. |
@@ -38,18 +38,18 @@ need no display and never call Bedrock.
 ## How a run works
 
 1. The runner installs `xvfb`, `xdotool`, `x11-utils`, the backend (`pip install -e .`
-   plus `boto3`), builds the frontend and stages it into `src/kiro_crew/static/dist`
+   plus `boto3`), builds the frontend and stages it into `src/aj_crew/static/dist`
    exactly as the E2E job does, and lifts Ubuntu's AppArmor user-namespace restriction
    (`sysctl kernel.apparmor_restrict_unprivileged_userns=0`, as the namespace-sandbox
    test job does) so the gateway's sandbox can actually run the fake backend -- without
    it every chat turn renders a sandbox error, and the tester reports that as the UI.
-2. `boot.sh` starts Xvfb `:99` at 1600x1000, seeds a throwaway `KIROCREW_HOME`, starts
-   the gateway with `KIROCREW_KIRO_BIN` pointed at
-   `kiro_crew.testing.fake_acp_backend` (so chat replies without kiro-cli or a
+2. `boot.sh` starts Xvfb `:99` at 1600x1000, seeds a throwaway `AJCREW_HOME`, starts
+   the gateway with `AJCREW_KIRO_BIN` pointed at
+   `aj_crew.testing.fake_acp_backend` (so chat replies without kiro-cli or a
    login; spawned as the KAS relay -- which is how crew-member DMs run by default --
    the fake also reports every managed MCP server `connected`, since the KAS
    harness holds a session's first prompt behind that readiness barrier), reads
-   the `KIROCREW_READY:{port, token}` line, opens Chromium
+   the `AJCREW_READY:{port, token}` line, opens Chromium
    (`--no-sandbox --test-type`, full-screen window, omnibox kept) at
    `http://127.0.0.1:<port>/?token=...`, waits for its window and focuses it. The
    window wait is bounded by the browser process rather than a stopwatch: a browser
@@ -109,7 +109,7 @@ user_story: >-              # one sentence a person can read: who wants what, an
 docs_url: docs/system-specs/modules/themes.md   # optional: where the feature is specified
 summary: Switch the dashboard theme in Settings and confirm the colours change
 preconditions:
-  seed: rich                # KIROCREW_HOME fixture (kirocrew gateway --seed NAME)
+  seed: rich                # AJCREW_HOME fixture (ajcrew gateway --seed NAME)
   members: []               # crew member slugs boot.sh adds to config.agents
   start_url: /settings      # path the harness navigates to first (no query string)
   fresh_target: false       # optional; true = reads the target as boot left it (see Seeds)
@@ -209,7 +209,7 @@ The home is a `mktemp` directory, so no scenario can spell its path. Where a flo
 the tester to TYPE a path -- the Knowledge "Add Source > Add folder by path" form, whose
 native picker is macOS-only -- `boot.sh` stages the three markdown files under
 `scripts/gui-user-test/knowledge-notes/` at the fixed path
-`/tmp/kirocrew-gui-user-test/team-notes`: mode 0700, recorded in `target.paths` as
+`/tmp/ajcrew-gui-user-test/team-notes`: mode 0700, recorded in `target.paths` as
 `notes=` and removed by `teardown.sh`. Because the path is fixed under a shared `/tmp`,
 neither script deletes anything it cannot prove is its own: `boot.sh` writes a marker
 file (`.owned-by-gui-user-test`) into the tree it creates, and both scripts remove the
@@ -284,7 +284,7 @@ logged, or fail with none.
 - **Persona.** The tester runs as `scenarios.PERSONAS["new-user"]` unless the YAML sets
   `persona: none` (the bare tester, no friction tool -- for a scenario about the expert
   path, or to measure the channel's own cost). The persona text is spliced into the
-  harness system prompt: first time using Kiro Crew, no documentation, used ordinary
+  harness system prompt: first time using Aj Crew, no documentation, used ordinary
   chat apps and an editor before; and a standing instruction to call `report_friction`
   the moment it pauses for more than a glance, cannot find a control, clicks the wrong
   thing, does not understand a label / icon / message, does not know what is
@@ -394,7 +394,7 @@ role. On a machine with those:
 ```bash
 sudo apt-get install -y xvfb xdotool x11-utils           # Debian/Ubuntu
 pip install -e . "boto3>=1.34,<2"
-(cd website && npm ci && npm run build) && PYTHONPATH=src python -m kiro_crew.frontend stage .
+(cd website && npm ci && npm run build) && PYTHONPATH=src python -m aj_crew.frontend stage .
 export GUI_OUT="$(mktemp -d)"
 bash scripts/gui-user-test/boot.sh                       # Xvfb :99, gateway, Chromium
 . "$GUI_OUT/target.env"

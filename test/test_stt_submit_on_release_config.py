@@ -17,8 +17,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_handlers_core_coverage_helpers import seeded_config_fixture  # noqa: F401
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.dashboard.handlers import core as core_mod
+from aj_crew.config import AjCrewConfig
+from aj_crew.dashboard.handlers import core as core_mod
 
 # Browser-only voice toggles, each off by default.
 KEYS = ["submit_on_release", "slide_to_send"]
@@ -41,7 +41,7 @@ def quiet_probes(monkeypatch):
 
 @pytest.mark.parametrize("key", KEYS)
 def test_default_is_off(key: str) -> None:
-    assert getattr(KiroCrewConfig().stt, key) is False
+    assert getattr(AjCrewConfig().stt, key) is False
 
 
 @pytest.mark.asyncio

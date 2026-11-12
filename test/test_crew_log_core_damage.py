@@ -16,8 +16,8 @@ import crew_log_core_helpers
 import pytest
 from crew_log_core_helpers import CREW, SESSION, _code, _crew, _log_bytes, _raises, _session
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, store
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, store
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _isolated_home = crew_log_core_helpers._isolated_home
@@ -77,7 +77,7 @@ def _signal_on_lock_entry(monkeypatch, reached):
     A spy that still takes the real lock: it only reports the entry, so a negative
     window that follows waits on the reader being at the lock, not on a clock.
     """
-    from kiro_crew.crew_log import store_paths
+    from aj_crew.crew_log import store_paths
 
     real_lock = store_paths.file_lock
 
@@ -227,14 +227,14 @@ def test_a_line_nested_past_the_stack_limit_is_skipped_like_any_damage():
 
 
 def test_a_listing_reads_a_header_nested_past_the_stack_limit_as_no_unit(tmp_path):
-    from kiro_crew.crew_log import read
+    from aj_crew.crew_log import read
 
     (tmp_path / store.LOG_FILE).write_bytes(b"[" * 20000 + b"]" * 20000 + b"\n")
     assert read._unit_id_in(tmp_path) == ""
 
 
 def test_a_holds_scan_reads_a_record_nested_past_the_stack_limit_as_none():
-    from kiro_crew.crew_log import holders
+    from aj_crew.crew_log import holders
 
     assert holders._object(b"[" * 20000 + b"]" * 20000) is None
 
@@ -579,7 +579,7 @@ def test_repair_refuses_to_close_past_a_damaged_real_completion(caplog):
     path.write_bytes(b"".join(lines))
     before = path.read_bytes()
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.crew_log.store"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.crew_log.store"):
         CrewLog.open(lg.KIND_SESSION, SESSION, repair=True)
 
     assert (

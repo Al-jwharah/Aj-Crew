@@ -17,8 +17,8 @@ import pytest
 from aiohttp import web
 from dashboard_chat_pins_helpers import _client, _make_state, _pin, _raise_os_error
 
-from kiro_crew.dashboard import chat_pins as chat_pins_module
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard import chat_pins as chat_pins_module
+from aj_crew.dashboard.state import DashboardState
 
 # ── Create ──
 
@@ -363,7 +363,7 @@ async def test_delete_pin_unknown_id(tmp_path):
 @pytest.mark.asyncio
 async def test_persistence_roundtrip(tmp_path, monkeypatch):
     """Pins survive save + fresh load."""
-    from kiro_crew.dashboard import state as state_module
+    from aj_crew.dashboard import state as state_module
 
     monkeypatch.setattr(state_module, "config_dir", lambda: tmp_path)
 
@@ -392,10 +392,10 @@ async def test_persistence_roundtrip(tmp_path, monkeypatch):
 @pytest.mark.asyncio
 async def test_corrupt_file_tolerance(tmp_path, monkeypatch):
     """Corrupt JSON file results in empty list, not a crash."""
-    from kiro_crew.dashboard import state as state_module
+    from aj_crew.dashboard import state as state_module
 
     # state.py binds config_dir by direct import, so patch the module-level
-    # name it actually calls (patching kiro_crew.config.loader is a no-op).
+    # name it actually calls (patching aj_crew.config.loader is a no-op).
     monkeypatch.setattr(state_module, "config_dir", lambda: tmp_path)
 
     (tmp_path / "chat_pins.json").write_text("NOT VALID JSON {{{", encoding="utf-8")
@@ -417,10 +417,10 @@ async def test_corrupt_file_tolerance(tmp_path, monkeypatch):
 async def test_load_ignores_non_list_json(tmp_path, monkeypatch, content):
     """Valid JSON that is not a list (null, object, scalar) is ignored on
     load -- assigning it verbatim would make every pin API 500 after restart."""
-    from kiro_crew.dashboard import state as state_module
+    from aj_crew.dashboard import state as state_module
 
     # state.py binds config_dir by direct import, so patch the module-level
-    # name it actually calls (patching kiro_crew.config.loader is a no-op).
+    # name it actually calls (patching aj_crew.config.loader is a no-op).
     monkeypatch.setattr(state_module, "config_dir", lambda: tmp_path)
 
     (tmp_path / "chat_pins.json").write_text(content, encoding="utf-8")
@@ -435,7 +435,7 @@ async def test_load_drops_malformed_records_keeps_valid(tmp_path, monkeypatch):
     (id/slot_key and at least one of mid/message_ts) are dropped on load."""
     import json as _json
 
-    from kiro_crew.dashboard import state as state_module
+    from aj_crew.dashboard import state as state_module
 
     monkeypatch.setattr(state_module, "config_dir", lambda: tmp_path)
 
@@ -614,7 +614,7 @@ async def test_create_pin_non_object_body_returns_400(tmp_path):
 @pytest.mark.asyncio
 async def test_create_pin_body_error_with_none_text(tmp_path, monkeypatch):
     """body_error.text being None must not raise TypeError in json.loads."""
-    from kiro_crew.dashboard import chat_pins as _pins_mod
+    from aj_crew.dashboard import chat_pins as _pins_mod
 
     async def _patched_read(request, max_bytes=65536):
         # Simulate a response with text=None (edge case from aiohttp)
@@ -631,7 +631,7 @@ async def test_create_pin_body_error_with_none_text(tmp_path, monkeypatch):
 @pytest.mark.asyncio
 async def test_create_pin_body_error_with_malformed_text(tmp_path, monkeypatch):
     """body_error.text containing non-JSON must not raise in the error rewrite path."""
-    from kiro_crew.dashboard import chat_pins as _pins_mod
+    from aj_crew.dashboard import chat_pins as _pins_mod
 
     async def _patched_read(request, max_bytes=65536):
         # Simulate a response whose text is not valid JSON
@@ -802,7 +802,7 @@ async def test_owned_app_pin_operations_are_sel_audited(tmp_path, monkeypatch):
     state = _make_state(tmp_path)
     state.get_or_create_slot("slot-own", app="app-a")
     audit = MagicMock()
-    monkeypatch.setattr("kiro_crew.dashboard.chat_pins.sel", lambda: audit)
+    monkeypatch.setattr("aj_crew.dashboard.chat_pins.sel", lambda: audit)
 
     async with _client(tmp_path, state=state, app_name="app-a") as client:
         listed = await client.get("/api/chat/pins?slot=slot-own")
@@ -889,7 +889,7 @@ async def test_load_drops_pins_with_malformed_pinned_at(
     load — they must not crash the list endpoint's sort-by-pinned_at."""
     import json as _json
 
-    from kiro_crew.dashboard import state as state_module
+    from aj_crew.dashboard import state as state_module
 
     monkeypatch.setattr(state_module, "config_dir", lambda: tmp_path)
 
@@ -916,7 +916,7 @@ async def test_load_preserves_valid_pins_alongside_malformed_pinned_at(tmp_path,
     """Valid pins survive alongside dropped pins with bad pinned_at."""
     import json as _json
 
-    from kiro_crew.dashboard import state as state_module
+    from aj_crew.dashboard import state as state_module
 
     monkeypatch.setattr(state_module, "config_dir", lambda: tmp_path)
 

@@ -181,7 +181,7 @@ describe('message font size scales the conversation surface', () => {
       // `.mc-message-font-scope.msg-content :not(pre) > code` (0,2,1) beats the
       // chip's Tailwind `text-sm` (0,1,0), so the chip scales with inline code
       // without carrying a class of its own; outside the scope it stays 14px.
-      const { container } = render(<MarkdownRenderer content={'see `/Volumes/workplace/KiroCrew/README.md` for details'} />)
+      const { container } = render(<MarkdownRenderer content={'see `/Volumes/workplace/AjCrew/README.md` for details'} />)
       const code = await waitFor(() => {
         const el = container.querySelector('code')
         expect(el).not.toBeNull()

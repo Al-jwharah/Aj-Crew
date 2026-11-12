@@ -19,9 +19,9 @@ from test_idle_compaction import (  # noqa: F401 - _no_inherited_cache_tier is a
     _turn,
 )
 
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CODEX
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CODEX
+from aj_crew.config import AjCrewConfig
+from aj_crew.testing.clock import ManualClock
 
 
 @pytest.fixture
@@ -30,8 +30,8 @@ def clock() -> ManualClock:
 
 
 @pytest.fixture
-def cfg() -> KiroCrewConfig:
-    c = KiroCrewConfig()
+def cfg() -> AjCrewConfig:
+    c = AjCrewConfig()
     c.session.idle_compaction = True
     c.session.idle_compaction_min_context_pct = 40.0
     c.session.autocompact_pct = 70.0
@@ -39,7 +39,7 @@ def cfg() -> KiroCrewConfig:
 
 
 def _owed_status(status_type: str) -> Any:
-    from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+    from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
     return JsonRpcMessage(
         method=METHOD_COMPACTION_STATUS, params={"status": {"type": status_type}, "summary": ""}
@@ -53,7 +53,7 @@ class TestReinjectionWhileAStatusIsOwed:
     async def test_every_prompt_reinjects_while_owed_and_once_after_the_drop(
         self, cfg, clock, tmp_path
     ):
-        from kiro_crew.acp import stale_compaction
+        from aj_crew.acp import stale_compaction
 
         async with _managed(cfg, clock, _provider_factory()) as mgr:
             provider = await _turn(mgr)
@@ -80,7 +80,7 @@ class TestReinjectionWhileAStatusIsOwed:
     async def test_a_dropped_failed_reinjects_once_only_while_it_was_owed(
         self, cfg, clock, tmp_path
     ):
-        from kiro_crew.acp import stale_compaction
+        from aj_crew.acp import stale_compaction
 
         async with _managed(cfg, clock, _provider_factory()) as mgr:
             provider = await _turn(mgr)

@@ -30,9 +30,9 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.dashboard import chat_folders, chat_handlers, session_folders
-from kiro_crew.dashboard.session_folders import (
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.dashboard import chat_folders, chat_handlers, session_folders
+from aj_crew.dashboard.session_folders import (
     SessionFolderError,
     create_session_folder,
     validate_session_folder_root,
@@ -210,9 +210,9 @@ def test_data_home_overlap_is_refused(tmp_path, monkeypatch):
 def test_config_reads_a_non_string_root_as_off(tmp_path):
     p = tmp_path / "config.json"
     p.write_text(json.dumps({"dashboard": {"session_folder_root": ["/tmp"]}}), encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=p):
-        assert KiroCrewConfig.load().dashboard.session_folder_root == ""
-    assert KiroCrewConfig().dashboard.session_folder_root == ""
+    with patch("aj_crew.config.loader.config_path", return_value=p):
+        assert AjCrewConfig.load().dashboard.session_folder_root == ""
+    assert AjCrewConfig().dashboard.session_folder_root == ""
 
 
 # ── POST /api/chat/slots ──
@@ -220,11 +220,11 @@ def test_config_reads_a_non_string_root_as_off(tmp_path):
 
 @pytest.fixture
 def owner_cfg(tmp_path, monkeypatch):
-    cfg = KiroCrewConfig()
-    cfg.agents = {"default": KiroCrewAgentConfig(kiro_agent="kirocrew")}
+    cfg = AjCrewConfig()
+    cfg.agents = {"default": AjCrewAgentConfig(kiro_agent="ajcrew")}
     cfg.default_agent = "default"
     cfg.save()
-    monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+    monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
     monkeypatch.setattr(chat_handlers, "schedule_eager_spawn", lambda *a, **k: None)
     default_dir = tmp_path / "default-project"
     default_dir.mkdir()
@@ -380,16 +380,16 @@ async def test_a_hand_edited_nul_root_falls_back_with_a_notice(tmp_path, owner_c
 def cfg_file(tmp_path):
     p = tmp_path / "config.json"
     p.write_text("{}", encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=p):
+    with patch("aj_crew.config.loader.config_path", return_value=p):
         yield p
 
 
 @pytest.fixture()
 def config_app(cfg_file):
-    from kiro_crew.dashboard.handlers.files import api_dashboard_config
+    from aj_crew.dashboard.handlers.files import api_dashboard_config
 
     m = MagicMock()
-    with patch("kiro_crew.dashboard.handlers.sel", return_value=m):
+    with patch("aj_crew.dashboard.handlers.sel", return_value=m):
         app = web.Application()
         app.router.add_put("/api/dashboard/config", api_dashboard_config)
         app.router.add_get("/api/dashboard/config", api_dashboard_config)
@@ -403,7 +403,7 @@ async def test_put_stores_the_resolved_root_and_get_echoes_it(config_app, folder
             "/api/dashboard/config", json={"session_folder_root": f"  {folder_root}  "}
         )
         assert resp.status == 200, await resp.text()
-        assert KiroCrewConfig.load().dashboard.session_folder_root == _real(folder_root)
+        assert AjCrewConfig.load().dashboard.session_folder_root == _real(folder_root)
         body = await (await client.get("/api/dashboard/config")).json()
         assert body["session_folder_root"] == _real(folder_root)
 
@@ -416,7 +416,7 @@ async def test_put_empty_turns_it_off(config_app, cfg_file, folder_root):
     async with TestClient(TestServer(config_app)) as client:
         resp = await client.put("/api/dashboard/config", json={"session_folder_root": ""})
         assert resp.status == 200, await resp.text()
-    assert KiroCrewConfig.load().dashboard.session_folder_root == ""
+    assert AjCrewConfig.load().dashboard.session_folder_root == ""
 
 
 @pytest.mark.asyncio
@@ -442,7 +442,7 @@ async def test_put_refuses_a_root_that_is_not_a_usable_project_dir(
         resp = await client.put("/api/dashboard/config", json={"session_folder_root": value})
         assert resp.status == 400
         assert (await resp.json())["code"] == "invalid_session_folder_root"
-    assert KiroCrewConfig.load().dashboard.session_folder_root == ""
+    assert AjCrewConfig.load().dashboard.session_folder_root == ""
 
 
 @pytest.mark.asyncio
@@ -455,6 +455,6 @@ async def test_an_unchanged_stale_root_does_not_block_other_saves(config_app, cf
             json={"session_folder_root": stale, "auto_open_git_panel": True},
         )
         assert resp.status == 200, await resp.text()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.dashboard.auto_open_git_panel is True
     assert cfg.dashboard.session_folder_root == stale

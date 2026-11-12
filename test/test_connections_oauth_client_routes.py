@@ -4,7 +4,7 @@ One record per pre-registered provider, two halves with different custody: the
 PUBLIC client id lives in ``config.json`` and is echoed back, the SECRET lives in
 the vault and is reported only as ``client_secret_set``. GET is readable by any
 dashboard user; PUT and DELETE are owner-only. Everything runs against a scratch
-``KIROCREW_HOME`` so neither the operator's config nor their vault is touched.
+``AJCREW_HOME`` so neither the operator's config nor their vault is touched.
 """
 
 from __future__ import annotations
@@ -18,17 +18,17 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.connections.oauth_clients import client_id_env_name, client_secret_env_name
-from kiro_crew.connections.registry import get_preregistered_providers
-from kiro_crew.dashboard.handlers import connections
-from kiro_crew.platform import PlatformCompositionError
-from kiro_crew.secrets import SecretVault
+from aj_crew.connections.oauth_clients import client_id_env_name, client_secret_env_name
+from aj_crew.connections.registry import get_preregistered_providers
+from aj_crew.dashboard.handlers import connections
+from aj_crew.platform import PlatformCompositionError
+from aj_crew.secrets import SecretVault
 
 BASE = "/api/connections/oauth-clients"
 GITHUB_VAULT_NAME = "CONNECTIONS_GITHUB_CLIENT_SECRET"
 ASANA_VAULT_NAME = "CONNECTIONS_ASANA_CLIENT_SECRET"
-GITHUB_ENV_ID = "KIROCREW_CONNECTIONS_GITHUB_CLIENT_ID"
-GITHUB_ENV_SECRET = "KIROCREW_CONNECTIONS_GITHUB_CLIENT_SECRET"
+GITHUB_ENV_ID = "AJCREW_CONNECTIONS_GITHUB_CLIENT_ID"
+GITHUB_ENV_SECRET = "AJCREW_CONNECTIONS_GITHUB_CLIENT_SECRET"
 NON_OWNER = {"X-Test-User": "someone-else"}
 SECRET = "s3cr3t-value-that-must-never-be-echoed"
 
@@ -42,7 +42,7 @@ def home(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     """A scratch config dir + vault; no operator env values leak in."""
     scratch = tmp_path / "home"
     scratch.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(scratch))
+    monkeypatch.setenv("AJCREW_HOME", str(scratch))
     # Every pre-registered provider, so an operator's own override for any of
     # them (Gmail, Drive, ...) cannot turn an "unconfigured" record configured.
     for provider in get_preregistered_providers():
@@ -57,7 +57,7 @@ def refreshed(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     """Record projection refreshes instead of rebuilding a real agent spec.
 
     The handler's ``_refresh_client_projections`` cancels the slug's in-flight
-    mint and rebuilds ``~/.kiro/agents/kirocrew.json``; neither belongs in a route
+    mint and rebuilds ``~/.kiro/agents/ajcrew.json``; neither belongs in a route
     test's scratch home. The recorded slugs let a test assert that a mutation DID
     ask for the refresh, which is the contract the review pinned (a rotated or
     deleted client must not keep authorizing through a stale projection).
@@ -586,7 +586,7 @@ async def test_a_failed_client_id_write_rolls_the_secret_back(home, monkeypatch)
     async def _boom(*_args, **_kwargs):
         raise OSError("disk full")
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_utils.run_config_write", _boom)
+    monkeypatch.setattr("aj_crew.dashboard.chat_utils.run_config_write", _boom)
 
     client = await _client()
     try:
@@ -614,7 +614,7 @@ async def test_a_failed_client_id_write_removes_a_secret_that_did_not_exist_befo
     async def _boom(*_args, **_kwargs):
         raise OSError("disk full")
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_utils.run_config_write", _boom)
+    monkeypatch.setattr("aj_crew.dashboard.chat_utils.run_config_write", _boom)
 
     client = await _client()
     try:
@@ -714,7 +714,7 @@ async def test_delete_restores_the_secret_when_the_config_drop_fails(home, monke
     async def _boom(*_args, **_kwargs):
         raise OSError("disk full")
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_utils.run_config_write", _boom)
+    monkeypatch.setattr("aj_crew.dashboard.chat_utils.run_config_write", _boom)
 
     client = await _client()
     try:
@@ -742,7 +742,7 @@ async def test_rollback_leaves_a_secret_someone_else_wrote_in_between(home, monk
         vault.set_sync(GITHUB_VAULT_NAME, "newer-from-elsewhere")
         raise OSError("disk full")
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_utils.run_config_write", _boom_after_side_write)
+    monkeypatch.setattr("aj_crew.dashboard.chat_utils.run_config_write", _boom_after_side_write)
 
     client = await _client()
     try:
@@ -783,8 +783,8 @@ async def test_rollback_leaves_a_secret_someone_else_wrote_in_between(home, monk
 async def test_the_projection_refresh_tells_a_decline_from_a_failure(
     monkeypatch, rebuild, expected
 ):
-    import kiro_crew.agent as agent_mod
-    import kiro_crew.connections.mint as mint_mod
+    import aj_crew.agent as agent_mod
+    import aj_crew.connections.mint as mint_mod
 
     async def _no_mint(slug: str) -> None:
         return None

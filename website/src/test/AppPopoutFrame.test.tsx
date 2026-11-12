@@ -265,7 +265,7 @@ describe('AppPopoutFrame', () => {
 
   it('titles the window after the app, from the installed-apps list', () => {
     renderFrame('/dev-fleet', '/dev-fleet')
-    expect(document.title).toBe('Dev Fleet — Kiro Crew')
+    expect(document.title).toBe('Dev Fleet — Aj Crew')
   })
 
   it('lets the app navigate its own sub-paths in place', () => {
@@ -561,7 +561,7 @@ describe('AppPopoutFrame', () => {
   it('mounts a builtin that ships a UI bundle through the AppHost page, as the dashboard does', () => {
     renderFrame('/apps/bundled-tool', '/apps/bundled-tool')
     expect(screen.getByTestId('app-page')).toBeInTheDocument()
-    expect(document.title).toBe('Bundled Tool — Kiro Crew')
+    expect(document.title).toBe('Bundled Tool — Aj Crew')
   })
 
   it('mounts a disabled installed app: AppHost shows its disabled notice, as in the dashboard', () => {
@@ -695,7 +695,7 @@ describe('AppPopoutFrame', () => {
     expect(screen.getByRole('button', { name: RETURN })).toBeInTheDocument()
     // Nothing to forward: this window IS at its (bogus) route.
     expect(popout.forwardToMain).not.toHaveBeenCalled()
-    expect(document.title).toBe('App — Kiro Crew')
+    expect(document.title).toBe('App — Aj Crew')
     // The title bar names the window the same way when no app does.
     expect(screen.getByTestId('app-popout-title-bar')).toHaveTextContent('App')
   })

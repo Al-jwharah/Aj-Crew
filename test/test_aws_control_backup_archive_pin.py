@@ -21,8 +21,8 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.aws_control.backend import backup, storage
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.aws_control.backend import backup, storage
 
 ACCOUNT = "111122223333"
 
@@ -463,7 +463,7 @@ class TestBackupRunsWithoutASealedMemfd:
         monkeypatch.setattr(backup.storage, "list_object_versions", lambda *a, **k: [])
 
         def fake_snapshot(argv):
-            out = Path(argv[0]) / "kirocrew-snapshot-20260101T000000Z.tar.gz"
+            out = Path(argv[0]) / "ajcrew-snapshot-20260101T000000Z.tar.gz"
             with tarfile.open(out, "w:gz") as tar:
                 blob = Path(argv[0]) / "m"
                 blob.write_bytes(b"snap")

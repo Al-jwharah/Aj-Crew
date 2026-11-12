@@ -33,14 +33,14 @@ from subagent_turn_resilience_helpers import (  # noqa: F401 -- the autouse fixt
     _text_event,
 )
 
-from kiro_crew import session_surface
-from kiro_crew import subagent_persistence as sp
-from kiro_crew.acp.transport_errors import AcpProcessDied
-from kiro_crew.providers.base import EVENT_COMPLETE
-from kiro_crew.session_allocation import SessionClosingError
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+from aj_crew import session_surface
+from aj_crew import subagent_persistence as sp
+from aj_crew.acp.transport_errors import AcpProcessDied
+from aj_crew.providers.base import EVENT_COMPLETE
+from aj_crew.session_allocation import SessionClosingError
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import async_wait_until, await_until, finished
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -92,10 +92,10 @@ class _DedicatedFleet:
     session double per run, registered in its ``_sessions`` at claim time."""
 
     def __init__(self, *, drain_answer: str | None) -> None:
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
-        self.smap = SessionManager(KiroCrewConfig())
+        self.smap = SessionManager(AjCrewConfig())
         self.drain_answer = drain_answer
         # Set before a spawn: that run's session start stays in flight until the
         # manager begins closing, and is then refused.
@@ -121,7 +121,7 @@ class _DedicatedFleet:
         return self._streaming.setdefault(session_key, asyncio.Event())
 
     async def _get_or_create(self, session_key: str, **_kwargs):
-        from kiro_crew.session import _Session
+        from aj_crew.session import _Session
 
         if self.hold_next_start:
             self.hold_next_start = False
@@ -234,7 +234,7 @@ async def _outcome(info: SubagentInfo, on_done: AsyncMock) -> dict:
     notify = AsyncMock(return_value=True)
     next_start = SubagentManager(sessions=MagicMock(), ctx_builder=None, on_orphan_notify=notify)
     next_start._is_pid_alive = MagicMock(return_value=False)
-    with patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.sel"):
         await next_start._reconcile_orphans()
     announced = any(
         call.args[:1] == (info.parent_session_key,) and f"Agent `{info.id}`" in call.args[1]
@@ -273,7 +273,7 @@ async def _shut_down(
     # The dedicated-process arm: the run's session lives in SessionManager._sessions.
     mgr._should_use_session_sharing = MagicMock(return_value=False)
     observed: dict = {}
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         fleet.hold_next_start = victim_starting
         victim = mgr.spawn("job at shutdown", parent_session_key=parent)
         assert victim is not None
@@ -534,8 +534,8 @@ async def test_a_deadline_the_run_reaches_while_cancel_all_waits_keeps_its_tombs
 
     with (
         patch.object(mgr, "_run_inner", turn_past_its_deadline),
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
     ):
         victim = mgr.spawn("job at shutdown", parent_session_key=_DASHBOARD_PARENT)
         assert victim is not None
@@ -618,7 +618,7 @@ def test_shared_turn_tenancy_refuses_the_shutdown_kill_of_its_runtime():
     (``AcpSessionProvider._claim_shared_turn``), so ``close_all``'s kill of that
     runtime (``release_subagent_runtime`` or the parent's ``shutdown``) is refused by
     ``authorize_runtime_kill`` before ``_mark_dead`` can poison the turn's queue."""
-    from kiro_crew.runtime_ownership import (
+    from aj_crew.runtime_ownership import (
         authorize_runtime_kill,
         claim_runtime_tenancy,
         release_runtime_tenancy,

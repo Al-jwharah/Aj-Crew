@@ -1310,7 +1310,7 @@ describe('ChatInput', () => {
           providerId="acp"
           modelName="claude-opus-4.7"
           onModelClick={onModelClick}
-          agentName="kirocrew"
+          agentName="ajcrew"
           onAgentClick={onAgentClick}
         />
       )
@@ -1320,7 +1320,7 @@ describe('ChatInput', () => {
       fireEvent.click(model, { detail: 1 })
       expect(onModelClick).toHaveBeenCalledOnce()
 
-      const agent = screen.getByRole('button', { name: 'Agent: kirocrew' })
+      const agent = screen.getByRole('button', { name: 'Agent: ajcrew' })
       fireEvent.pointerDown(agent, { pointerType: 'mouse', button: 0 })
       expect(onAgentClick).toHaveBeenCalledOnce()
       fireEvent.click(agent, { detail: 1 })

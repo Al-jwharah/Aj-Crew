@@ -16,9 +16,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import _BG_BLIND_RECYCLE_PROMPTS, BACKGROUND_KEY, SessionManager
-from kiro_crew.session_background import BACKGROUND_RSS_FALLBACK_MB
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import _BG_BLIND_RECYCLE_PROMPTS, BACKGROUND_KEY, SessionManager
+from aj_crew.session_background import BACKGROUND_RSS_FALLBACK_MB
 
 _CEILING_MB = 1536
 _BG_PID = 4242
@@ -26,7 +26,7 @@ _BG_PID = 4242
 
 @pytest.fixture
 def cfg():
-    c = KiroCrewConfig()
+    c = AjCrewConfig()
     c.session.timeout_secs = 2
     c.session.watchdog_rss_max_mb = _CEILING_MB
     return c
@@ -77,8 +77,8 @@ class TestTreeRssRecyclesTheBackgroundSession:
         mgr = await _started_manager(cfg)
         provider = mgr._sessions[BACKGROUND_KEY].provider
 
-        with patch("kiro_crew.session.get_session_rss_mb", return_value=_CEILING_MB) as measure:
-            with caplog.at_level("INFO", logger="kiro_crew.session"):
+        with patch("aj_crew.session.get_session_rss_mb", return_value=_CEILING_MB) as measure:
+            with caplog.at_level("INFO", logger="aj_crew.session"):
                 await mgr.recycle_background()
 
         measure.assert_called_once_with(_BG_PID)
@@ -94,8 +94,8 @@ class TestTreeRssRecyclesTheBackgroundSession:
         mgr = await _started_manager(cfg)
         provider = mgr._sessions[BACKGROUND_KEY].provider
 
-        with patch("kiro_crew.session.get_session_rss_mb", return_value=1890):
-            with caplog.at_level("INFO", logger="kiro_crew.session"):
+        with patch("aj_crew.session.get_session_rss_mb", return_value=1890):
+            with caplog.at_level("INFO", logger="aj_crew.session"):
                 await mgr.recycle_background()
 
         provider.shutdown.assert_awaited_once()
@@ -108,7 +108,7 @@ class TestTreeRssRecyclesTheBackgroundSession:
         mgr = await _started_manager(cfg)
         provider = mgr._sessions[BACKGROUND_KEY].provider
 
-        with patch("kiro_crew.session.get_session_rss_mb", return_value=_CEILING_MB - 1):
+        with patch("aj_crew.session.get_session_rss_mb", return_value=_CEILING_MB - 1):
             await mgr.recycle_background()
 
         provider.shutdown.assert_not_awaited()
@@ -127,8 +127,8 @@ class TestZeroFallsBackToTheBackgroundCeiling:
         mgr = await _started_manager(cfg)
         provider = mgr._sessions[BACKGROUND_KEY].provider
 
-        with patch("kiro_crew.session.get_session_rss_mb", return_value=1890):
-            with caplog.at_level("INFO", logger="kiro_crew.session"):
+        with patch("aj_crew.session.get_session_rss_mb", return_value=1890):
+            with caplog.at_level("INFO", logger="aj_crew.session"):
                 await mgr.recycle_background()
 
         provider.shutdown.assert_awaited_once()
@@ -142,7 +142,7 @@ class TestZeroFallsBackToTheBackgroundCeiling:
         provider = mgr._sessions[BACKGROUND_KEY].provider
 
         with patch(
-            "kiro_crew.session.get_session_rss_mb",
+            "aj_crew.session.get_session_rss_mb",
             return_value=BACKGROUND_RSS_FALLBACK_MB - 1,
         ):
             await mgr.recycle_background()
@@ -155,14 +155,14 @@ class TestZeroFallsBackToTheBackgroundCeiling:
     async def test_the_shipped_default_keeps_the_lower_background_ceiling(self, caplog):
         """The chat-session default sits above the background fallback; the
         background runtime still recycles at the fallback."""
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.session.timeout_secs = 2
         assert cfg.session.watchdog_rss_max_mb > BACKGROUND_RSS_FALLBACK_MB
         mgr = await _started_manager(cfg)
         provider = mgr._sessions[BACKGROUND_KEY].provider
 
-        with patch("kiro_crew.session.get_session_rss_mb", return_value=1890):
-            with caplog.at_level("INFO", logger="kiro_crew.session"):
+        with patch("aj_crew.session.get_session_rss_mb", return_value=1890):
+            with caplog.at_level("INFO", logger="aj_crew.session"):
                 await mgr.recycle_background()
 
         provider.shutdown.assert_awaited_once()
@@ -178,7 +178,7 @@ class TestAnUnreadableTreeFallsThrough:
         mgr = await _started_manager(cfg)
         provider = mgr._sessions[BACKGROUND_KEY].provider
 
-        with patch("kiro_crew.session.get_session_rss_mb", return_value=None):
+        with patch("aj_crew.session.get_session_rss_mb", return_value=None):
             await mgr.recycle_background()
 
         provider.shutdown.assert_not_awaited()
@@ -192,8 +192,8 @@ class TestAnUnreadableTreeFallsThrough:
         provider = mgr._sessions[BACKGROUND_KEY].provider
         mgr._sessions[BACKGROUND_KEY].prompt_count = _BG_BLIND_RECYCLE_PROMPTS - 1
 
-        with patch("kiro_crew.session.get_session_rss_mb", return_value=None):
-            with caplog.at_level("INFO", logger="kiro_crew.session"):
+        with patch("aj_crew.session.get_session_rss_mb", return_value=None):
+            with caplog.at_level("INFO", logger="aj_crew.session"):
                 await mgr.recycle_background()
 
         provider.shutdown.assert_awaited_once()
@@ -206,7 +206,7 @@ class TestAnUnreadableTreeFallsThrough:
         mgr = await _started_manager(cfg)
         provider = mgr._sessions[BACKGROUND_KEY].provider
 
-        with patch("kiro_crew.session.get_session_rss_mb", side_effect=OSError("boom")):
+        with patch("aj_crew.session.get_session_rss_mb", side_effect=OSError("boom")):
             await mgr.recycle_background()
 
         provider.shutdown.assert_not_awaited()
@@ -220,7 +220,7 @@ class TestAnUnreadableTreeFallsThrough:
         provider = mgr._sessions[BACKGROUND_KEY].provider
 
         with patch.object(SessionManager, "get_pid", return_value=None):
-            with patch("kiro_crew.session.get_session_rss_mb", return_value=99_999) as measure:
+            with patch("aj_crew.session.get_session_rss_mb", return_value=99_999) as measure:
                 await mgr.recycle_background()
 
         assert mgr._sessions[BACKGROUND_KEY].provider is provider
@@ -252,7 +252,7 @@ async def test_a_teardown_while_the_recycle_holds_the_permit_does_not_over_relea
 
     mgr._provider_factory = factory
     try:
-        with patch("kiro_crew.session.get_session_rss_mb", return_value=_CEILING_MB):
+        with patch("aj_crew.session.get_session_rss_mb", return_value=_CEILING_MB):
             await mgr.recycle_background()
         assert BACKGROUND_KEY not in mgr._sessions
         assert not popped.semaphore.locked()

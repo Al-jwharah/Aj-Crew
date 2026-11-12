@@ -58,7 +58,7 @@ describe('SettingRef file-mode with useConfigSchema hook', () => {
     const button = screen.getByRole('button')
     await user.click(button)
     // After click, popover should show the CLI command with boolean placeholder
-    expect(await screen.findByText(/kirocrew config set instances\.enabled true/)).toBeTruthy()
+    expect(await screen.findByText(/ajcrew config set instances\.enabled true/)).toBeTruthy()
   })
 
   it('instances.warm_set_cap resolves to file mode (not unknown)', () => {
@@ -78,7 +78,7 @@ describe('SettingRef file-mode with useConfigSchema hook', () => {
   })
 })
 
-const WIN_LAUNCHER = 'C:\\Kiro Crew\\resources\\bin\\kirocrew.cmd'
+const WIN_LAUNCHER = 'C:\\Aj Crew\\resources\\bin\\ajcrew.cmd'
 const V1_STATUS = {
   platform: 'Windows',
   config_set_hints: {
@@ -148,9 +148,9 @@ describe('SettingRef file-mode with no launcher hints', () => {
     renderRefWithStatus('instances.enabled', { platform: 'Windows' })
     await user.click(screen.getByRole('button'))
 
-    expect(await screen.findByText(/kirocrew config set instances\.enabled true/)).toBeTruthy()
+    expect(await screen.findByText(/ajcrew config set instances\.enabled true/)).toBeTruthy()
     expect(screen.getByText('This command may need quoting changes in some shells.')).toBeTruthy()
-    expect(document.body.textContent).not.toMatch(/Update Kiro Crew/)
+    expect(document.body.textContent).not.toMatch(/Update Aj Crew/)
     expect(document.body.textContent).not.toContain('--value-base64')
   })
 
@@ -158,11 +158,11 @@ describe('SettingRef file-mode with no launcher hints', () => {
     const user = userEvent.setup()
     renderRefWithStatus('instances.enabled', {
       platform: 'Windows',
-      config_set_hints: { version: 1, encoding: 'utf-8-base64', shells: [{ id: 'fish', prefix: 'kirocrew' }] },
+      config_set_hints: { version: 1, encoding: 'utf-8-base64', shells: [{ id: 'fish', prefix: 'ajcrew' }] },
     })
     await user.click(screen.getByRole('button'))
 
-    expect(await screen.findByText(/kirocrew config set instances\.enabled true/)).toBeTruthy()
+    expect(await screen.findByText(/ajcrew config set instances\.enabled true/)).toBeTruthy()
     expect(document.body.textContent).not.toContain('--value-base64')
   })
 })

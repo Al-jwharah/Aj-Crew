@@ -178,14 +178,14 @@ describe('SettingRef component', () => {
 
   describe('kind: env (set mode - default)', () => {
     it('renders a button (popover trigger) with env var name', () => {
-      const { container } = renderRef({ configKey: 'KIROCREW_EMBED_MODEL_PATH', kind: 'env' })
+      const { container } = renderRef({ configKey: 'AJCREW_EMBED_MODEL_PATH', kind: 'env' })
       const button = container.querySelector('button')
       expect(button).not.toBeNull()
-      expect(container.textContent).toContain('KIROCREW_EMBED_MODEL_PATH')
+      expect(container.textContent).toContain('AJCREW_EMBED_MODEL_PATH')
     })
 
     it('does not render a Link', () => {
-      const { container } = renderRef({ configKey: 'KIROCREW_DEBUG', kind: 'env' })
+      const { container } = renderRef({ configKey: 'AJCREW_DEBUG', kind: 'env' })
       const link = container.querySelector('a')
       expect(link).toBeNull()
     })
@@ -209,7 +209,7 @@ describe('SettingRef component', () => {
     it('shows set description text', () => {
       const { container } = renderRef({ configKey: 'MY_VAR', kind: 'env' })
       const bodyText = openPopover(container)
-      expect(bodyText).toContain('Set this environment variable before starting Kiro Crew.')
+      expect(bodyText).toContain('Set this environment variable before starting Aj Crew.')
     })
   })
 
@@ -231,7 +231,7 @@ describe('SettingRef component', () => {
     it('shows unset description text', () => {
       const { container } = renderRef({ configKey: 'MY_VAR', kind: 'env', envIntent: 'unset' })
       const bodyText = openPopover(container)
-      expect(bodyText).toContain('Unset this environment variable before starting Kiro Crew.')
+      expect(bodyText).toContain('Unset this environment variable before starting Aj Crew.')
     })
   })
 

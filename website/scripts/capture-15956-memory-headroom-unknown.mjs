@@ -32,7 +32,7 @@ const slots = [{
   running: true,
   last_message: 'Spawned 3 subagent(s).',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',
@@ -91,7 +91,7 @@ async function main() {
         await page.waitForTimeout(2500)
         if (!wsServer) throw new Error('websocket route never bound')
         const send = (type, data) => wsServer.send(JSON.stringify({ type, data }))
-        send('subagent_spawn', { slot: SLOT, id: RUNNING_ID, task: 'audit the retry ladder in the uploader', agent: 'kirocrew' })
+        send('subagent_spawn', { slot: SLOT, id: RUNNING_ID, task: 'audit the retry ladder in the uploader', agent: 'ajcrew' })
         send('subagent_queued', { slot: SLOT, queued: 2, ...scene.frame })
         const line = page.getByTestId('subagent-wait-reason').first()
         await line.waitFor({ state: 'visible', timeout: 10_000 })

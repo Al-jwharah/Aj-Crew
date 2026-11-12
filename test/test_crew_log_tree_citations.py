@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.crew_log.session_tree import (
+from aj_crew.crew_log.session_tree import (
     EdgeRecord,
     OpenedRecord,
     TreePlacement,

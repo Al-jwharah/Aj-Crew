@@ -19,7 +19,7 @@ case IS reachable and is what makes the guard load-bearing today.
 
 from __future__ import annotations
 
-from kiro_crew.history import (
+from aj_crew.history import (
     _TAB_ID_INDEX_GLOB,
     ConversationLog,
     can_hold_tab_id_index_entry,

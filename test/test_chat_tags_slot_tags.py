@@ -14,9 +14,9 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state, _make_tags_app
 
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.dashboard.state_parts import slot_sidebar
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state_parts import slot_sidebar
+from aj_crew.testing.clock import ManualClock
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _hermetic_signing_secret = chat_tags_helpers._hermetic_signing_secret
@@ -28,7 +28,7 @@ _hermetic_signing_secret = chat_tags_helpers._hermetic_signing_secret
 class TestSlotTags:
     @pytest.mark.asyncio
     async def test_assign_filters_unknown_and_dedupes(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -37,7 +37,7 @@ class TestSlotTags:
             slot = _ChatSlot("s1")
             original_revision = slot.tags_revision
             state._slots["s1"] = slot
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put(
                     "/api/chat/slots/s1/tags",
                     json={"tags": [t1["id"], "ghost", t1["id"], t2["id"], 7]},
@@ -72,7 +72,7 @@ class TestSlotTags:
         server compares under the tag lock, refuses without touching the slot,
         and returns the current list + revision so A can rebase its delta. The
         same list sent with the CURRENT revision (or no base at all) commits."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -81,7 +81,7 @@ class TestSlotTags:
             slot = _ChatSlot("s1")
             state._slots["s1"] = slot
             stale_base = slot.tags_revision
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop") as save:
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop") as save:
                 # Client B commits t2 (unconditional legacy write).
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": [t2["id"]]})
                 assert resp.status == 200
@@ -123,9 +123,9 @@ class TestSlotTags:
         agent mutation that landed in between must rotate that revision, so the
         human's save is refused as ``stale_base`` and shown the agent's tags --
         not applied over them without a word."""
-        from kiro_crew.dashboard.session_directive_apply import apply_session_directive
+        from aj_crew.dashboard.session_directive_apply import apply_session_directive
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -140,7 +140,7 @@ class TestSlotTags:
             async def _saved(state, slot, force=False, expected_history_key=None):
                 return True
 
-            with patch("kiro_crew.dashboard.chat_persistence.save_slot_off_loop", _saved):
+            with patch("aj_crew.dashboard.chat_persistence.save_slot_off_loop", _saved):
                 result = await apply_session_directive(
                     state,
                     slot,
@@ -154,7 +154,7 @@ class TestSlotTags:
             agent_revision = slot.tags_revision
             assert agent_revision != human_base
 
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop") as save:
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop") as save:
                 resp = await client.put(
                     "/api/chat/slots/s1/tags",
                     json={"tags": [plain["id"]], "base_tags_revision": human_base},
@@ -178,7 +178,7 @@ class TestSlotTags:
 
     @pytest.mark.asyncio
     async def test_assign_refusal_restores_tags_and_revision(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -192,7 +192,7 @@ class TestSlotTags:
                 return False
 
             state.push_slots_update = MagicMock()
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop", _refuse):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop", _refuse):
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": [tag["id"]]})
 
             assert resp.status == 409
@@ -220,9 +220,9 @@ class TestSlotTags:
         """A restarted process claims a higher epoch from the persisted counter,
         so every revision it mints sorts after every revision of the previous
         process — however far the old process's sequence had advanced."""
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         # Process 1: fresh data home, seeds the counter and mints many revisions.
         monkeypatch.setattr(state_module, "_TAGS_REVISION_EPOCH", None)
         monkeypatch.setattr(state_module, "_TAGS_REVISION_SEQ", 0)
@@ -254,9 +254,9 @@ class TestSlotTags:
         orderable minting resumes."""
         import re as _re
 
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         epoch_file = tmp_path / state_module._TAGS_REVISION_EPOCH_FILE
         epoch_file.write_text("41\n")
         real_atomic_write = state_module.atomic_write
@@ -289,9 +289,9 @@ class TestSlotTags:
         directory (the rename's entry) before any revision is minted from it;
         otherwise a power loss inside the flush window followed by a backward
         clock step re-claims an epoch that connected clients already hold."""
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         calls: list[tuple[str, object]] = []
         real_atomic_write = state_module.atomic_write
 
@@ -327,9 +327,9 @@ class TestSlotTags:
         the file alone rather than assert an order it cannot prove."""
         import re as _re
 
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         epoch_file = tmp_path / state_module._TAGS_REVISION_EPOCH_FILE
         epoch_file.write_text("garbage\n")
         # Backward clock: far below any epoch a healthy process would have claimed.
@@ -342,7 +342,7 @@ class TestSlotTags:
 
     @pytest.mark.asyncio
     async def test_assign_slot_not_found(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -351,7 +351,7 @@ class TestSlotTags:
 
     @pytest.mark.asyncio
     async def test_assign_invalid_json_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state._slots["s1"] = _ChatSlot("s1")
         app = _make_tags_app(state)
@@ -365,7 +365,7 @@ class TestSlotTags:
 
     @pytest.mark.asyncio
     async def test_assign_non_array_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state._slots["s1"] = _ChatSlot("s1")
         app = _make_tags_app(state)
@@ -381,7 +381,7 @@ class TestSlotTags:
         UNSCOPED slot and another app's slot both answer ``slot_not_found``, so the route
         is no existence oracle.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         unscoped = _ChatSlot("s1")
         foreign = _ChatSlot("s2")
@@ -403,7 +403,7 @@ class TestSlotTags:
             # test_create_refuses_an_app_caller), and this test is about the PUT.
             tag = {"id": "t1", "name": "T1", "color": "#000000", "order": 0, "status": False}
             state._tags.append(tag)
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop") as save:
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop") as save:
                 for key in ("s1", "s2"):
                     resp = await client.put(
                         f"/api/chat/slots/{key}/tags", json={"tags": [tag["id"]]}
@@ -423,7 +423,7 @@ class TestSlotTags:
         session would pass an ``_app`` check and persist the app's tags into a
         conversation it does not own. Both identities must resolve to the app.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         mine = _ChatSlot("s1")
         mine._app = "my-app"
@@ -447,7 +447,7 @@ class TestSlotTags:
 
         app.middlewares.append(_as_app)
         async with TestClient(TestServer(app)) as client:
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop") as save:
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop") as save:
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": ["t1"]})
             assert resp.status == 404
             assert (await resp.json())["code"] == "slot_not_found"
@@ -456,7 +456,7 @@ class TestSlotTags:
 
     def test_app_owns_transcript_is_unanimous_and_fails_closed(self):
         """Own file and own linked session pass; shared, foreign, unclaimed or empty keys do not."""
-        from kiro_crew.dashboard.token_auth import app_owns_transcript
+        from aj_crew.dashboard.token_auth import app_owns_transcript
 
         mine = _ChatSlot("s1")
         mine._app = "my-app"
@@ -487,7 +487,7 @@ class TestSlotTags:
         A foreign slot binds to the transcript while the body is read; the under-lock
         re-check must refuse with nothing saved.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         mine = _ChatSlot("s1")
         mine._app = "my-app"
@@ -503,7 +503,7 @@ class TestSlotTags:
 
         from aiohttp import web as _web
 
-        from kiro_crew.dashboard import chat_tags as _ct
+        from aj_crew.dashboard import chat_tags as _ct
 
         real_read = _ct.read_bounded_json
 
@@ -519,10 +519,8 @@ class TestSlotTags:
         app.middlewares.append(_as_app)
         async with TestClient(TestServer(app)) as client:
             with (
-                patch(
-                    "kiro_crew.dashboard.chat_tags.read_bounded_json", side_effect=_bind_then_read
-                ),
-                patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop") as save,
+                patch("aj_crew.dashboard.chat_tags.read_bounded_json", side_effect=_bind_then_read),
+                patch("aj_crew.dashboard.chat_tags.save_slot_off_loop") as save,
             ):
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": ["t1"]})
             assert resp.status == 409
@@ -537,7 +535,7 @@ class TestSlotTags:
         A ``dashboard:`` key naming a popped slot derives app "" and would read
         as the person, passing both ownership checks. Refused before either.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         target = _ChatSlot("s1")
         state._slots["s1"] = target
@@ -546,7 +544,7 @@ class TestSlotTags:
         )
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop") as save:
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop") as save:
                 resp = await client.put(
                     "/api/chat/slots/s1/tags",
                     json={"tags": ["t1"]},
@@ -561,7 +559,7 @@ class TestSlotTags:
     async def test_assign_app_token_allowed_on_its_own_linked_transcript(
         self, tmp_path, monkeypatch
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         own = _ChatSlot("s1")
         own._app = "my-app"
@@ -581,14 +579,14 @@ class TestSlotTags:
 
         app.middlewares.append(_as_app)
         async with TestClient(TestServer(app)) as client:
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": ["t1"]})
             assert resp.status == 200
         assert own.tags == ["t1"]
 
     @pytest.mark.asyncio
     async def test_assign_app_token_allowed_on_own_slot(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         own = _ChatSlot("s1")
         own._app = "my-app"
@@ -606,7 +604,7 @@ class TestSlotTags:
         async with TestClient(TestServer(app)) as client:
             tag = {"id": "t1", "name": "T1", "color": "#000000", "order": 0, "status": False}
             state._tags.append(tag)
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": [tag["id"]]})
             assert resp.status == 200
         assert own.tags == [tag["id"]]
@@ -618,14 +616,14 @@ class TestSlotTags:
     # route, so the same policy applies to the add/remove it implies. An
     # INTERNAL (MCP) caller presents ``X-Internal-Secret`` (validated upstream
     # by the token-auth middleware); the browser does not and is never gated.
-    _INTERNAL = {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "kirocrew-dashboard"}
+    _INTERNAL = {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "ajcrew-dashboard"}
 
     @pytest.mark.asyncio
     async def test_internal_caller_cannot_add_a_person_reserved_tag(self, tmp_path, monkeypatch):
         """An agent adding a ``none``-policy (person-reserved) tag is refused;
         nothing is written."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard import chat_tag_grants
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard import chat_tag_grants
 
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
@@ -635,7 +633,7 @@ class TestSlotTags:
             chat_tag_grants.refresh_cache()
             slot = _ChatSlot("s1")
             state._slots["s1"] = slot
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop") as save:
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop") as save:
                 resp = await client.put(
                     "/api/chat/slots/s1/tags",
                     json={"tags": [tag["id"]]},
@@ -652,8 +650,8 @@ class TestSlotTags:
     async def test_internal_caller_cannot_strip_an_add_only_tag(self, tmp_path, monkeypatch):
         """Removing needs ``add-remove``: an agent stripping an ``add-only`` tag
         the person placed is refused, leaving the tag on the slot."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard import chat_tag_grants
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard import chat_tag_grants
 
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
@@ -664,7 +662,7 @@ class TestSlotTags:
             slot = _ChatSlot("s1")
             slot.tags = [tag["id"]]
             state._slots["s1"] = slot
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop") as save:
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop") as save:
                 resp = await client.put(
                     "/api/chat/slots/s1/tags", json={"tags": []}, headers=self._INTERNAL
                 )
@@ -677,8 +675,8 @@ class TestSlotTags:
     async def test_internal_caller_can_change_an_add_remove_tag(self, tmp_path, monkeypatch):
         """The gate is a policy check, not a blanket agent ban: an ``add-remove``
         tag the person opened to the agent is still assignable."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard import chat_tag_grants
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard import chat_tag_grants
 
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
@@ -688,7 +686,7 @@ class TestSlotTags:
             chat_tag_grants.refresh_cache()
             slot = _ChatSlot("s1")
             state._slots["s1"] = slot
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put(
                     "/api/chat/slots/s1/tags",
                     json={"tags": [tag["id"]]},
@@ -701,8 +699,8 @@ class TestSlotTags:
     async def test_browser_is_never_gated_by_the_grants_policy(self, tmp_path, monkeypatch):
         """The person (no ``X-Internal-Secret``) may set a person-reserved tag;
         the whole policy constrains agents, not the owner."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard import chat_tag_grants
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard import chat_tag_grants
 
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
@@ -712,7 +710,7 @@ class TestSlotTags:
             chat_tag_grants.refresh_cache()
             slot = _ChatSlot("s1")
             state._slots["s1"] = slot
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put(
                     "/api/chat/slots/s1/tags", json={"tags": [tag["id"]]}
                 )  # no internal-secret header -> browser
@@ -724,8 +722,8 @@ class TestSlotTags:
         """Only the DIFF is gated: an agent write that leaves a person-reserved
         tag already on the slot in place (adding an open tag beside it) is
         allowed — the reserved tag is neither added nor removed."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard import chat_tag_grants
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard import chat_tag_grants
 
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
@@ -738,7 +736,7 @@ class TestSlotTags:
             slot = _ChatSlot("s1")
             slot.tags = [reserved["id"]]
             state._slots["s1"] = slot
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put(
                     "/api/chat/slots/s1/tags",
                     json={"tags": [reserved["id"], open_tag["id"]]},
@@ -752,10 +750,10 @@ class TestSlotTags:
         """Deny-by-default on identity: an app token (no internal secret, but a
         resolved app claim) is a non-person principal and is gated too, so it
         cannot strip a row-backed person-reserved tag."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from aiohttp import web as _web
 
-        from kiro_crew.dashboard import chat_tag_grants
+        from aj_crew.dashboard import chat_tag_grants
 
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
@@ -781,7 +779,7 @@ class TestSlotTags:
             slot._app = "my-app"
             slot.tags = [tag["id"]]
             state._slots["s1"] = slot
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop") as save:
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop") as save:
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": []})
             assert resp.status == 403
             assert (await resp.json())["code"] in (
@@ -798,8 +796,8 @@ class TestSlotTags:
         carries two row-backed status tags is refused — the agent must use
         ``chat_tag`` ``set_state`` (which strips peers). Swapping one status for
         another (its peer removed in the same diff) is allowed."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard import chat_tag_grants
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard import chat_tag_grants
 
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
@@ -813,7 +811,7 @@ class TestSlotTags:
             slot.tags = [review["id"]]
             state._slots["s1"] = slot
             # Stacking Done beside Review -> two status tags -> refused.
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop") as save:
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop") as save:
                 resp = await client.put(
                     "/api/chat/slots/s1/tags",
                     json={"tags": [review["id"], done["id"]]},
@@ -824,7 +822,7 @@ class TestSlotTags:
             assert slot.tags == [review["id"]]
             assert save.call_count == 0
             # Swapping Review -> Done (Review removed in the same diff) is fine.
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put(
                     "/api/chat/slots/s1/tags",
                     json={"tags": [done["id"]]},
@@ -839,7 +837,7 @@ class TestSlotTags:
         reservation: a non-person caller may still apply it. This is what keeps
         app self-tagging working — the gate bites only tags the owner minted a
         row for."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -847,7 +845,7 @@ class TestSlotTags:
             state._tags.append(tag)  # rowless: resolves to ("none", False)
             slot = _ChatSlot("s1")
             state._slots["s1"] = slot
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put(
                     "/api/chat/slots/s1/tags",
                     json={"tags": [tag["id"]]},
@@ -863,7 +861,7 @@ class TestSlotTags:
         peer-strip can never remove (``set_state`` would wedge), so it is refused
         ``status_identity_unprotected`` — a forged status cannot slip the gate by
         being rowless."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -879,7 +877,7 @@ class TestSlotTags:
             state._tags.append(tag)
             slot = _ChatSlot("s1")
             state._slots["s1"] = slot
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop") as save:
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop") as save:
                 resp = await client.put(
                     "/api/chat/slots/s1/tags",
                     json={"tags": [tag["id"]]},
@@ -898,8 +896,8 @@ class TestSlotTags:
         A later agent change that touches neither — a pure remove of its own
         ordinary label — must not be blamed for that pre-existing state: the
         exclusivity refusal fires only when THIS diff adds a status tag."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard import chat_tag_grants
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard import chat_tag_grants
 
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
@@ -918,7 +916,7 @@ class TestSlotTags:
             state._slots["s1"] = slot
             # Agent removes only its own ordinary label; the two status tags are
             # untouched -> allowed, not blamed for the pre-existing stack.
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put(
                     "/api/chat/slots/s1/tags",
                     json={"tags": [review["id"], done["id"]]},
@@ -937,9 +935,9 @@ class TestSlotTags:
         possibly-reserved tag through as rowless. The health and the rows come
         from ONE atomic snapshot, so a refresh cannot flip health between the
         check and a row lookup."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard import chat_tags as ct
-        from kiro_crew.dashboard.chat_tag_grants import GrantsSnapshot
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard import chat_tags as ct
+        from aj_crew.dashboard.chat_tag_grants import GrantsSnapshot
 
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
@@ -954,7 +952,7 @@ class TestSlotTags:
             state._tags.append(tag)
             slot = _ChatSlot("s1")
             state._slots["s1"] = slot
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop") as save:
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop") as save:
                 resp = await client.put(
                     "/api/chat/slots/s1/tags",
                     json={"tags": [tag["id"]]},
@@ -972,9 +970,9 @@ class TestSlotTags:
         were discarded. A tag that is now rowless might be a lost reservation, so
         it is failed closed ``tag_grants_unavailable`` — but a ROW-BACKED tag (a
         reseeded default state) resolves normally and stays assignable."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard import chat_tags as ct
-        from kiro_crew.dashboard.chat_tag_grants import GrantsSnapshot
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard import chat_tags as ct
+        from aj_crew.dashboard.chat_tag_grants import GrantsSnapshot
 
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
@@ -1006,7 +1004,7 @@ class TestSlotTags:
             # A formerly-reserved (now rowless) label is failed closed.
             slot = _ChatSlot("s1")
             state._slots["s1"] = slot
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop") as save:
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop") as save:
                 resp = await client.put(
                     "/api/chat/slots/s1/tags",
                     json={"tags": [lost["id"]]},
@@ -1017,7 +1015,7 @@ class TestSlotTags:
             assert slot.tags == []
             assert save.call_count == 0
             # A reseeded default state (row-backed add-remove) still assigns.
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put(
                     "/api/chat/slots/s1/tags",
                     json={"tags": [review["id"]]},
@@ -1036,7 +1034,7 @@ class TestSlotTags:
         vocabulary would silently omit its removal and persist it with no grants
         check. The route fails closed ``tag_grants_unavailable`` for a removal it
         cannot resolve while the vocabulary is non-authoritative."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         # Simulate an unreadable tags.json: empty, non-authoritative vocabulary.
@@ -1046,7 +1044,7 @@ class TestSlotTags:
             slot = _ChatSlot("s1")
             slot.tags = ["review"]  # a reserved status id not present in the (empty) vocab
             state._slots["s1"] = slot
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop") as save:
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop") as save:
                 resp = await client.put(
                     "/api/chat/slots/s1/tags", json={"tags": []}, headers=self._INTERNAL
                 )
@@ -1060,7 +1058,7 @@ class TestSlotTags:
         """With an AUTHORITATIVE vocabulary, a slot id absent from it is a
         dangling reference to a deleted tag — benign for an agent to drop. The
         non-authoritative fail-closed does not fire here."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         state._tags = []  # authoritative-and-empty: the id really was deleted
@@ -1069,7 +1067,7 @@ class TestSlotTags:
             slot = _ChatSlot("s1")
             slot.tags = ["ghost"]
             state._slots["s1"] = slot
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put(
                     "/api/chat/slots/s1/tags", json={"tags": []}, headers=self._INTERNAL
                 )
@@ -1083,12 +1081,12 @@ class TestSlotTags:
         The signals are internal-secret transport, an app claim and a ``member:`` principal.
         A new auth representation must be added to the enumeration AND to this test.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from aiohttp import web as _web
 
-        from kiro_crew.dashboard import chat_tag_grants
-        from kiro_crew.dashboard.chat_utils import effective_session_key
-        from kiro_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
+        from aj_crew.dashboard import chat_tag_grants
+        from aj_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
 
         async def _put(request_markers, slot_setup=None):
             state = _make_state(tmp_path)
@@ -1110,7 +1108,7 @@ class TestSlotTags:
 
             app.middlewares.append(_mark)
             async with TestClient(TestServer(app)) as client:
-                with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+                with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                     resp = await client.put(
                         "/api/chat/slots/s1/tags",
                         json={"tags": [tag["id"]]},
@@ -1165,10 +1163,10 @@ class TestSlotTags:
         ``caller=origin_caller`` would file every denial under ``dashboard`` and
         corrupt the append-only SEL attribution. Pin that the app leg's denial
         records the app id."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from aiohttp import web as _web
 
-        from kiro_crew.dashboard import chat_tag_grants
+        from aj_crew.dashboard import chat_tag_grants
 
         captured: list[dict] = []
 
@@ -1176,7 +1174,7 @@ class TestSlotTags:
             def log_api_access(self, **kwargs):
                 captured.append(kwargs)
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_tags.sel", lambda: _CapturingSel())
+        monkeypatch.setattr("aj_crew.dashboard.chat_tags.sel", lambda: _CapturingSel())
 
         state = _make_state(tmp_path)
         tag = {"id": "resv", "name": "Resv", "color": "#000000", "order": 0, "status": False}
@@ -1195,7 +1193,7 @@ class TestSlotTags:
 
         app.middlewares.append(_mark)
         async with TestClient(TestServer(app)) as client:
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": [tag["id"]]})
         assert resp.status == 403
         denials = [c for c in captured if c.get("outcome") == "denied"]

@@ -23,8 +23,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import atomic_write as atomic_write_module
-from kiro_crew.history import ConversationLog
+from aj_crew import atomic_write as atomic_write_module
+from aj_crew.history import ConversationLog
 
 _POINTS = ["close", "fsync", "write"]
 

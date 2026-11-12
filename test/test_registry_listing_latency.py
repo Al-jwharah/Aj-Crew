@@ -15,8 +15,8 @@ from unittest.mock import AsyncMock
 import pytest
 from external_registry_helpers import cache_dir_fixture  # noqa: F401
 
-from kiro_crew.apps import registry
-from kiro_crew.apps.registry import (
+from aj_crew.apps import registry
+from aj_crew.apps.registry import (
     _EXTERNAL_REGISTRY_CACHE_TTL,
     _EXTERNAL_REGISTRY_FAILURE_TTL,
     _external_registry_cache_identity,
@@ -28,8 +28,8 @@ from kiro_crew.apps.registry import (
     _write_external_registry_failure,
     refresh_registries,
 )
-from kiro_crew.apps.registry_pipeline import caches as caches_module
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.apps.registry_pipeline import caches as caches_module
+from aj_crew.testing.clock import ManualClock
 
 _STALE_ROWS = [{"name": "cool-app", "repo": "https://git.example.com/labs/cool", "branch": "main"}]
 

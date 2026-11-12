@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "src" / "kiro_crew"
+SRC = ROOT / "src" / "aj_crew"
 
 #: The raw hold flag, and the only functions that may read it.
 _HOLD_FLAG = "_conductor_spec_held"

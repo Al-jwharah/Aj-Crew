@@ -23,7 +23,7 @@ import { serveDist } from './lib/serve-dist.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/model-multiplier'
 const SLOT = 'chat-model-multiplier'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -83,7 +83,7 @@ async function main() {
 
     await page.route('**/api/**', async route => {
       const path = new URL(route.request().url()).pathname
-      if (path === '/api/config/kirocrew') {
+      if (path === '/api/config/ajcrew') {
         return json(route, {
           agent: { model: 'claude-opus-5', reasoning_effort: 'high', provider: 'acp' },
           session: { autocompact_pct: 90 },
@@ -101,11 +101,11 @@ async function main() {
       if (path.startsWith('/api/effort-levels')) return json(route, ['low', 'medium', 'high', 'xhigh', 'max'])
       if (path === '/api/agents') {
         return json(route, {
-          agents: [{ name: 'default', kiro_agent: 'kirocrew', description: 'Default crew agent' }],
+          agents: [{ name: 'default', kiro_agent: 'ajcrew', description: 'Default crew agent' }],
           default_agent: 'default',
         })
       }
-      if (path.startsWith('/api/agents/detail/')) return json(route, { name: 'kirocrew', model: 'claude-opus-5', skills: [] })
+      if (path.startsWith('/api/agents/detail/')) return json(route, { name: 'ajcrew', model: 'claude-opus-5', skills: [] })
       if (path === '/api/agents/installed') return json(route, [])
       if (path === '/api/kiro-prerequisite') {
         return json(route, {
@@ -123,7 +123,7 @@ async function main() {
       if (path === '/api/auth/me') return json(route, { user: 'owner', app: '' })
       if (path === '/api/themes') return json(route, { themes: [], installed: [] })
       if (path === '/api/theme/boot') return json(route, { mode: theme === 'unpriced' ? 'dark' : theme, theme: '' })
-      if (path === '/api/dashboard/branding') return json(route, { bot_name: 'Kiro Crew', avatar: '' })
+      if (path === '/api/dashboard/branding') return json(route, { bot_name: 'Aj Crew', avatar: '' })
       if (path === '/api/recent-projects') return json(route, { dirs: [PROJECT] })
       if (path === '/api/chat/nav/resolve-links') return json(route, { summaries: [] })
       if (path === '/api/dashboard/config') {

@@ -9,10 +9,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.heartbeat as hb_mod
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.cron import CronJob, CronService
-from kiro_crew.heartbeat import _HEADER, HeartbeatService
+import aj_crew.heartbeat as hb_mod
+from aj_crew.acp.client import AcpClient
+from aj_crew.cron import CronJob, CronService
+from aj_crew.heartbeat import _HEADER, HeartbeatService
 
 #: These tests fire cron jobs through the due-scan, which defers firings while
 #: the host's memory posture is critical (see ``ample_host_free_memory``).

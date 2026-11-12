@@ -58,7 +58,7 @@ test("reusing a surviving gateway does not rotate the launch log", async () => {
   // resolveGatewayConflict adopts it and start() returns before spawnGateway.
   const httpState = {
     status: 200,
-    body: JSON.stringify({ ok: true, app: "kirocrew", version: "0.6.0" }),
+    body: JSON.stringify({ ok: true, app: "ajcrew", version: "0.6.0" }),
   };
   const { supervisor, spawnCalls } = harness({
     fsMod,

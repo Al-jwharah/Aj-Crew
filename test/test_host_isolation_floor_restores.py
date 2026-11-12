@@ -24,8 +24,8 @@ from host_isolation_floor_helpers import (
     _root,
 )
 
-from kiro_crew import cli
-from kiro_crew.log_redaction import install_log_redaction
+from aj_crew import cli
+from aj_crew.log_redaction import install_log_redaction
 
 # ── driving the floor's own between-test restores ─────────────────────────
 
@@ -242,11 +242,11 @@ class TestLoggerLevelsAreRestored:
     """A logger's level is PROCESS-GLOBAL, per worker, and HIERARCHICAL.
 
     Together those are what make this leak class so hard to attribute. ``Logger.debug``
-    gates on the EFFECTIVE level, so an explicit level left on ``kiro_crew`` decides what
-    every ``kiro_crew.*`` logger in the worker may emit, and it outranks the root level
+    gates on the EFFECTIVE level, so an explicit level left on ``aj_crew`` decides what
+    every ``aj_crew.*`` logger in the worker may emit, and it outranks the root level
     ``caplog.at_level()`` sets -- the victim gets ``caplog.text == ""``, nothing at all
     rather than the wrong text, from a test that passes alone. The suite reaches this
-    through ``cli._setup_cli_logging``, which pins ``kiro_crew`` at WARNING, and which
+    through ``cli._setup_cli_logging``, which pins ``aj_crew`` at WARNING, and which
     test modules across the suite run for real by driving ``cli.main()`` in process.
 
     ``conftest._restore_logger_levels`` is what removes the class; without a test, an edit
@@ -255,30 +255,30 @@ class TestLoggerLevelsAreRestored:
     proof needs no adjacent observer test.
     """
 
-    def test_this_test_starts_with_an_unconfigured_kiro_crew_logger(self) -> None:
+    def test_this_test_starts_with_an_unconfigured_aj_crew_logger(self) -> None:
         """Which is only true if no earlier test on this worker left a level on it."""
-        assert logging.getLogger("kiro_crew").level == logging.NOTSET
+        assert logging.getLogger("aj_crew").level == logging.NOTSET
 
     def test_a_leaked_level_is_removed_by_the_floors_own_teardown(self) -> None:
         """One full cycle of the real fixture: snapshot, pin a level and leave it, restore.
 
         The pin is exactly the leak the floor absorbs in the wild — ``_setup_cli_logging``
-        sets ``kiro_crew`` to WARNING once per process and never undoes it. A failure
+        sets ``aj_crew`` to WARNING once per process and never undoes it. A failure
         part-way cannot leak the level past this test: the live autouse instance of the
         same fixture wraps this test too, and its snapshot predates the pin.
         """
         cycle = _autouse_floor_generator("_restore_logger_levels")()
         next(cycle)  # the floor's setup: snapshot, taken while the level is NOTSET
 
-        logging.getLogger("kiro_crew").setLevel(logging.WARNING)
-        assert logging.getLogger("kiro_crew").level == logging.WARNING
+        logging.getLogger("aj_crew").setLevel(logging.WARNING)
+        assert logging.getLogger("aj_crew").level == logging.WARNING
 
         with pytest.raises(StopIteration):
             next(cycle)  # the floor's teardown: the restore under test
-        level = logging.getLogger("kiro_crew").level
+        level = logging.getLogger("aj_crew").level
         assert level == logging.NOTSET, (
-            f"kiro_crew is still pinned at {logging.getLevelName(level)} -- every "
-            "kiro_crew.* record below that level would be dropped before it reaches "
+            f"aj_crew is still pinned at {logging.getLevelName(level)} -- every "
+            "aj_crew.* record below that level would be dropped before it reaches "
             "the root handler caplog captures through"
         )
 
@@ -289,7 +289,7 @@ class TestLoggerLevelsAreRestored:
         ``(NOTSET, enabled)`` state rather than passing over it, and this is the only
         place that behaviour is exercised with a genuinely fresh name.
         """
-        name = "kiro_crew._floor_probe_6351"
+        name = "aj_crew._floor_probe_6351"
         assert name not in logging.Logger.manager.loggerDict
 
         cycle = _autouse_floor_generator("_restore_logger_levels")()
@@ -306,16 +306,16 @@ class TestLoggerLevelsAreRestored:
             "missing-from-snapshot branch no longer restores to pristine"
         )
 
-    def test_a_debug_record_from_a_kiro_crew_logger_still_reaches_caplog(self, caplog) -> None:
+    def test_a_debug_record_from_a_aj_crew_logger_still_reaches_caplog(self, caplog) -> None:
         """The capability the level restore exists to protect, asserted directly.
 
         The level assertion above pins the mechanism; this pins the OUTCOME, in the exact
         shape the victim test uses -- ``at_level`` on the root logger, a ``debug`` call on
-        a ``kiro_crew.*`` child -- so a future floor that restores something subtly
+        an ``aj_crew.*`` child -- so a future floor that restores something subtly
         different still has to keep this working.
         """
         with caplog.at_level("DEBUG"):
-            logging.getLogger("kiro_crew.slack.gateway").debug("floor canary")
+            logging.getLogger("aj_crew.slack.gateway").debug("floor canary")
         assert "floor canary" in caplog.text
 
 
@@ -354,8 +354,8 @@ class TestTheLogQueueListenerIsRestored:
         a setup-phase list back during teardown would drop the one it is capturing
         through.
         """
-        _floor_monkeypatch.setattr("kiro_crew.cli._fd_targets_file", lambda fd, path: False)
-        loggers = (logging.getLogger(), logging.getLogger("kiro_crew"))
+        _floor_monkeypatch.setattr("aj_crew.cli._fd_targets_file", lambda fd, path: False)
+        loggers = (logging.getLogger(), logging.getLogger("aj_crew"))
         saved = [(lgr, lgr.handlers[:]) for lgr in loggers]
         yield
         for lgr, handlers in saved:
@@ -453,8 +453,8 @@ class TestCliProcessEnvironmentIsRestored:
     )
     def test_real_cli_mutations_are_restored_exactly(self, initial, monkeypatch, tmp_path):
         names = (
-            "KIROCREW_SANDBOX_ACTIVE",
-            "KIROCREW_SANDBOX_LEVEL",
+            "AJCREW_SANDBOX_ACTIVE",
+            "AJCREW_SANDBOX_LEVEL",
             "PYTHONUTF8",
             "PYTHONIOENCODING",
         )
@@ -475,8 +475,8 @@ class TestCliProcessEnvironmentIsRestored:
         stderr = io.TextIOWrapper(io.BytesIO(), encoding="utf-8", errors="strict")
         monkeypatch.setattr(sys, "stdout", stdout)
         monkeypatch.setattr(sys, "stderr", stderr)
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "--help"])
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "--help"])
 
         definition = _root._floor_monkeypatch
         cycle = getattr(definition, "__wrapped__", definition)()
@@ -485,8 +485,8 @@ class TestCliProcessEnvironmentIsRestored:
             with pytest.raises(SystemExit) as exit_info:
                 cli.main()
             assert exit_info.value.code == 0
-            assert "KIROCREW_SANDBOX_ACTIVE" not in os.environ
-            assert "KIROCREW_SANDBOX_LEVEL" not in os.environ
+            assert "AJCREW_SANDBOX_ACTIVE" not in os.environ
+            assert "AJCREW_SANDBOX_LEVEL" not in os.environ
             assert os.environ["PYTHONUTF8"] == "1"
             assert os.environ["PYTHONIOENCODING"] == "utf-8:backslashreplace"
             expected_errors = "backslashreplace" if cli.platform_compat.IS_WINDOWS else "strict"
@@ -517,7 +517,7 @@ class TestTheHooksDispatcherIsRestored:
 
     @staticmethod
     def _hi():
-        from kiro_crew.apps import hooks_integration
+        from aj_crew.apps import hooks_integration
 
         return hooks_integration
 

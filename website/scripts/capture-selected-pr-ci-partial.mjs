@@ -42,7 +42,7 @@ const slots = () => [{
   running: false,
   last_message: 'Opened the fix for the Changes panel CI glyph…',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   modified: Math.floor(Date.now() / 1000),
   source_links: [
@@ -77,7 +77,7 @@ const source = partialSections => ({
   headBranch: 'fix/selected-pr-ci-partial-5127',
   baseBranch: 'main',
   headSha: 'abc1234',
-  author: 'kirocrew',
+  author: 'ajcrew',
   additions: 12,
   deletions: 2,
   changedFiles: 1,
@@ -85,7 +85,7 @@ const source = partialSections => ({
   mergeStateStatus: 'blocked',
   commits: [{
     sha: 'abc1234', message: 'fix(dashboard): keep the selected tab CI glyph',
-    author: 'kirocrew', committedAt: new Date().toISOString(), url: PR_URL,
+    author: 'ajcrew', committedAt: new Date().toISOString(), url: PR_URL,
   }],
   // Degraded: the provider's checks read failed, so the list is EMPTY while
   // `partialSections` names it. The chip cache below still knows ci: failed.
@@ -110,7 +110,7 @@ const FIXED_ROUTES = {
   '/api/status': { sessions: 1, crons: 0, lessons: 0, uptime: 120, version: 'dev' },
   '/api/notifications': { notifications: [], unread: 0 },
   '/api/config': {},
-  '/api/kirocrew-config': {},
+  '/api/ajcrew-config': {},
   '/api/dashboard/branding': { bot_name: 'Kiro', avatar: '' },
   '/api/auth/me': { user: 'owner', app: '' },
   '/api/models': { models: [], default: 'auto' },

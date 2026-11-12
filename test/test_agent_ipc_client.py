@@ -15,13 +15,13 @@ import urllib.request
 
 import pytest
 
-from kiro_crew import agent_ipc_client
-from kiro_crew.acp import ipc_pickup
-from kiro_crew.agent_ipc_wire import CAPABILITY_HEADER, GATEWAY_PID_ENV, PICKUP_ENV
-from kiro_crew.dashboard import agent_ipc
-from kiro_crew.mcp_gateway import STUB_MODULE
-from kiro_crew.mcp_gateway.hashing import STUB_FLAGS_FLAG, encode_target_args
-from kiro_crew.testing.ids import unallocatable_pids
+from aj_crew import agent_ipc_client
+from aj_crew.acp import ipc_pickup
+from aj_crew.agent_ipc_wire import CAPABILITY_HEADER, GATEWAY_PID_ENV, PICKUP_ENV
+from aj_crew.dashboard import agent_ipc
+from aj_crew.mcp_gateway import STUB_MODULE
+from aj_crew.mcp_gateway.hashing import STUB_FLAGS_FLAG, encode_target_args
+from aj_crew.testing.ids import unallocatable_pids
 
 # Pids no live process can own, so nothing here can reach a real process.
 _ROOT_PID, _RESPAWNED_PID = unallocatable_pids(2)
@@ -36,7 +36,7 @@ class _Runtime:
 
 def _array() -> list[dict]:
     return [
-        {"name": "kirocrew-core", "command": "kirocrew", "args": ["mcp-core"], "env": []},
+        {"name": "ajcrew-core", "command": "ajcrew", "args": ["mcp-core"], "env": []},
         {"name": "third-party", "command": "x", "args": [], "env": []},
     ]
 
@@ -65,7 +65,7 @@ def _issue(array, backend="codex", token="tok", runtime=None):
 
 
 @pytest.mark.parametrize("backend", ["codex", "opencode", "goose", "pi"])
-def test_an_enforced_harness_gets_a_pickup_on_kirocrew_core_only(bound, backend):
+def test_an_enforced_harness_gets_a_pickup_on_ajcrew_core_only(bound, backend):
     runtime = _Runtime()
     core, other = _issue(_array(), backend=backend, runtime=runtime)
     env = _env(core)
@@ -75,7 +75,7 @@ def test_an_enforced_harness_gets_a_pickup_on_kirocrew_core_only(bound, backend)
     assert PICKUP_ENV not in _env(other) and GATEWAY_PID_ENV not in _env(other)
     # The pickup is bound to the session's token and the runtime's live root pid.
     entry = next(iter(bound._pickups.values()))
-    assert entry.session_token == "tok" and entry.server == "kirocrew-core"
+    assert entry.session_token == "tok" and entry.server == "ajcrew-core"
     assert entry.runtime_pid() == _ROOT_PID
     runtime.pid = _RESPAWNED_PID
     assert entry.runtime_pid() == _RESPAWNED_PID
@@ -84,20 +84,20 @@ def test_an_enforced_harness_gets_a_pickup_on_kirocrew_core_only(bound, backend)
 @pytest.mark.parametrize(
     "args",
     [
-        ["-m", STUB_MODULE, "--server", "kirocrew-core", "--agent", "kirocrew"],
+        ["-m", STUB_MODULE, "--server", "ajcrew-core", "--agent", "ajcrew"],
         [
             "-m",
             STUB_MODULE,
-            f"{STUB_FLAGS_FLAG}={encode_target_args(['--server', 'kirocrew-core'])}",
+            f"{STUB_FLAGS_FLAG}={encode_target_args(['--server', 'ajcrew-core'])}",
         ],
         ["-m", STUB_MODULE, f"{STUB_FLAGS_FLAG}=!not-base64!"],
     ],
     ids=["plain", "enveloped", "unreadable"],
 )
-def test_a_broker_stub_for_kirocrew_core_gets_no_pickup(bound, args):
+def test_a_broker_stub_for_ajcrew_core_gets_no_pickup(bound, args):
     # A stub never takes the pickup out of its environment, so a same-uid shell in
     # the session could read it from /proc/<stub>/environ and redeem it.
-    stub = {"name": "kirocrew-core", "command": sys.executable, "args": args, "env": []}
+    stub = {"name": "ajcrew-core", "command": sys.executable, "args": args, "env": []}
     (out,) = _issue([stub])
     assert PICKUP_ENV not in _env(out) and GATEWAY_PID_ENV not in _env(out)
     assert not bound._pickups
@@ -128,7 +128,7 @@ def test_the_runtime_session_path_issues_the_pickup():
     """Sessions are built by the runtime's mirrored projection, so issuance is there."""
     import inspect
 
-    from kiro_crew.acp import runtime_session_setup
+    from aj_crew.acp import runtime_session_setup
 
     source = inspect.getsource(runtime_session_setup._mirrored_session_mcp)
     assert "with_ipc_pickups(" in source and "session_token=stub_token" in source
@@ -234,7 +234,7 @@ def test_a_capability_request_carries_no_secret():
 
 
 def test_a_held_capability_sends_only_to_the_agent_socket(monkeypatch):
-    from kiro_crew.mcp_core_parts import gateway
+    from aj_crew.mcp_core_parts import gateway
 
     sent = {}
 
@@ -252,7 +252,7 @@ def test_a_held_capability_sends_only_to_the_agent_socket(monkeypatch):
     monkeypatch.setattr(agent_ipc_client, "_gateway_pid", 777)
     monkeypatch.setattr(agent_ipc_client, "unix_socket_urlopen", fake_unix)
     # Through the facade: it is the patch surface every owner that binds the name reads.
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     monkeypatch.setattr(mcp_core, "loopback_urlopen", no_tcp)
     req = urllib.request.Request("http://127.0.0.1:1/api/x", headers={"X-Internal-Secret": "s"})
@@ -265,8 +265,8 @@ def test_a_held_capability_sends_only_to_the_agent_socket(monkeypatch):
 
 def test_the_session_comes_from_the_gateway_when_the_mapping_is_masked(monkeypatch):
     """Under the mask the trust root is hidden; a capability holder asks the gateway."""
-    from kiro_crew import session_token_sig
-    from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+    from aj_crew import session_token_sig
+    from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
     monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, "tok")
     monkeypatch.setattr(session_token_sig, "verify_session_token", lambda tok: "")
@@ -287,7 +287,7 @@ def test_no_capability_means_no_session_query(monkeypatch):
 
 
 def test_a_capability_refusal_reads_as_a_session_restart():
-    from kiro_crew.mcp_core_parts import gateway
+    from aj_crew.mcp_core_parts import gateway
 
     exc = urllib.error.HTTPError(
         "http://127.0.0.1/api/x",
@@ -305,7 +305,7 @@ def test_the_client_session_path_issues_the_pickup_too():
     """opencode and goose sessions are driven by an AcpClient, whose array is built here."""
     import inspect
 
-    from kiro_crew.acp import client_mcp_array
+    from aj_crew.acp import client_mcp_array
 
     source = inspect.getsource(client_mcp_array._resolve_session_mcp_servers)
     assert source.count("_with_own_ipc_pickups(") == 2
@@ -315,7 +315,7 @@ def test_a_capability_holder_reads_its_tool_policy_by_capability(monkeypatch):
     """Under the mask the secret is empty; the exclusion must still be read and applied."""
     import json as _json
 
-    from kiro_crew import mcp_shared, mcp_shared_policy
+    from aj_crew import mcp_shared, mcp_shared_policy
 
     sent = {}
 

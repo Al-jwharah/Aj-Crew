@@ -8,8 +8,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.shared_crew import admission_settle as settle
-from kiro_crew.shared_crew.admission import (
+from aj_crew.shared_crew import admission_settle as settle
+from aj_crew.shared_crew.admission import (
     InvalidTransition,
     OperationState,
     ReasonCode,

@@ -22,7 +22,7 @@ import sys
 from types import ModuleType
 
 #: Value written onto the freshly imported owner, then looked for through the mirror.
-SENTINEL = "kiro-crew-fresh-owner-sentinel"
+SENTINEL = "aj-crew-fresh-owner-sentinel"
 
 _ABSENT = object()
 

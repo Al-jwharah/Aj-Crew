@@ -10,7 +10,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard.handlers import api_file_read
+from aj_crew.dashboard.handlers import api_file_read
 
 
 def _make_app() -> web.Application:
@@ -21,7 +21,7 @@ def _make_app() -> web.Application:
 
 @pytest.fixture()
 def mock_sel():
-    with patch("kiro_crew.sel.sel") as m:
+    with patch("aj_crew.sel.sel") as m:
         instance = MagicMock()
         m.return_value = instance
         yield instance
@@ -49,7 +49,7 @@ class TestFileReadResolve:
         f.parent.mkdir(parents=True)
         f.write_text("print('hello')")
 
-        with patch.dict(os.environ, {"KIROCREW_PROJECT_DIR": str(proj)}):
+        with patch.dict(os.environ, {"AJCREW_PROJECT_DIR": str(proj)}):
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get("/api/file-read?path=src/app.py&resolve=1")
                 assert resp.status == 200
@@ -61,7 +61,7 @@ class TestFileReadResolve:
         f = tmp_path / "abs.py"
         f.write_text("absolute")
 
-        with patch.dict(os.environ, {"KIROCREW_PROJECT_DIR": "/wrong/dir"}):
+        with patch.dict(os.environ, {"AJCREW_PROJECT_DIR": "/wrong/dir"}):
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get(f"/api/file-read?path={f}&resolve=1")
                 assert resp.status == 200
@@ -71,7 +71,7 @@ class TestFileReadResolve:
     @pytest.mark.asyncio
     async def test_resolve_without_project_dir_denies(self, mock_sel, home_patch):
         with patch.dict(os.environ, {}, clear=True):
-            os.environ.pop("KIROCREW_PROJECT_DIR", None)
+            os.environ.pop("AJCREW_PROJECT_DIR", None)
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get("/api/file-read?path=src/app.py&resolve=1")
                 assert resp.status == 400
@@ -85,7 +85,7 @@ class TestFileReadResolve:
         f = proj / "test.txt"
         f.write_text("content")
 
-        with patch.dict(os.environ, {"KIROCREW_PROJECT_DIR": str(proj)}):
+        with patch.dict(os.environ, {"AJCREW_PROJECT_DIR": str(proj)}):
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get("/api/file-read?path=test.txt&resolve=1")
                 assert resp.status == 200
@@ -97,7 +97,7 @@ class TestFileReadResolve:
     async def test_resolve_rejects_traversal(self, tmp_path, mock_sel, home_patch):
         proj = tmp_path / "project"
         proj.mkdir()
-        with patch.dict(os.environ, {"KIROCREW_PROJECT_DIR": str(proj)}):
+        with patch.dict(os.environ, {"AJCREW_PROJECT_DIR": str(proj)}):
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get("/api/file-read?path=../../etc/passwd&resolve=1")
                 assert resp.status == 400

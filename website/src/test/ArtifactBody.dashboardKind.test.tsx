@@ -8,7 +8,7 @@ import type { Artifact } from '../types'
 /**
  * A `kind="dashboard"` artifact must not reach the prose renderer.
  *
- * Its content is a layout PACKAGE, not a document: `src/kiro_crew/artifact_store/
+ * Its content is a layout PACKAGE, not a document: `src/aj_crew/artifact_store/
  * dashboard_package.py` canonicalises every dashboard write into a JSON object
  * holding `bound_to` / `model` / `view` / `theme`, so the stored bytes are
  * always JSON. `fileTypeForKind` had no case for it, and the default branch

@@ -12,7 +12,7 @@
 import { useCallback, useMemo, useRef, type Dispatch, type SetStateAction } from 'react'
 import { type SetURLSearchParams } from 'react-router-dom'
 import { api } from '../../api/client'
-import { type KiroCrewAgent } from '../../components/AgentSelector'
+import { type AjCrewAgent } from '../../components/AgentSelector'
 import { useCrewEditor } from '../../components/crew/useCrewEditor'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
 import { useGuardedLeave } from '../../components/NavigationLeaveGuard'
@@ -39,17 +39,17 @@ export function useMembersPageCrewEditor({
   // manager share — a save anywhere reaches the card. Display-only: the card
   // never writes, so a retained copy here is fine (the editor keeps its own
   // staleTime:0 observer below).
-  const profileRegistryQuery = useQuery<{ agents: KiroCrewAgent[]; default_agent?: string }>({
-    queryKey: ['kirocrew-agents'],
-    queryFn: () => api.kirocrewAgents(),
+  const profileRegistryQuery = useQuery<{ agents: AjCrewAgent[]; default_agent?: string }>({
+    queryKey: ['ajcrew-agents'],
+    queryFn: () => api.ajcrewAgents(),
     enabled: !!activeName,
   })
-  // The crew editor needs the KiroCrewAgent roster (not the member roster):
-  // same query key KiroCrewAgentsPage uses, so the cache is shared and a write
+  // The crew editor needs the AjCrewAgent roster (not the member roster):
+  // same query key AjCrewAgentsPage uses, so the cache is shared and a write
   // here reaches both. Only fetched while the editor is open.
   const crewAgentsQuery = useQuery({
-    queryKey: ['kirocrew-agents'],
-    queryFn: () => api.kirocrewAgents(),
+    queryKey: ['ajcrew-agents'],
+    queryFn: () => api.ajcrewAgents(),
     enabled: !!editingCrew,
     // Always refetch when the editor opens — never serve a cached roster as
     // "fresh" without a network read. The editor saves the WHOLE snapshot, so a
@@ -83,18 +83,18 @@ export function useMembersPageCrewEditor({
     rosterAdmittedRef.current = editingCrew
   }
   const rosterAdmitted = !!editingCrew && rosterAdmittedRef.current === editingCrew
-  const crewAgents = useMemo<KiroCrewAgent[]>(
+  const crewAgents = useMemo<AjCrewAgent[]>(
     () => (rosterAdmitted ? crewAgentsQuery.data?.agents || [] : []),
     [rosterAdmitted, crewAgentsQuery.data],
   )
   const crewDefaultAgent = rosterAdmitted ? crewAgentsQuery.data?.default_agent || '' : ''
-  // The same prefix invalidation KiroCrewAgentsPage uses: it refreshes the
+  // The same prefix invalidation AjCrewAgentsPage uses: it refreshes the
   // member roster (a projection under the same prefix) AND the config the
   // memory row reads, so an edit here updates the open thread's row without a
   // manual refetch.
   const refetchCrewAgents = useCallback(() => {
-    void queryClient.invalidateQueries({ queryKey: ['kirocrew-agents'] })
-    void queryClient.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+    void queryClient.invalidateQueries({ queryKey: ['ajcrew-agents'] })
+    void queryClient.invalidateQueries({ queryKey: ['ajcrewConfig'] })
   }, [queryClient])
   const closeCrewEditor = useCallback(() => setEditingCrew(''), [setEditingCrew])
   // Points at `releaseSchedRetention` (defined in MembersPageProfile.tsx with the

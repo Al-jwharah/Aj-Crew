@@ -10,17 +10,17 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
-from kiro_crew.shared_crew import admission_entry as entry
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew.admission import Liveness, OperationKind, OperationState, ReasonCode
-from kiro_crew.shared_crew.containment import ContainmentReport, SliceManager
-from kiro_crew.shared_crew.contracts import EnforcementLevel
-from kiro_crew.shared_crew.work_store import WorkStore
-from kiro_crew.taskq import lanes
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
+from aj_crew.shared_crew import admission_entry as entry
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew.admission import Liveness, OperationKind, OperationState, ReasonCode
+from aj_crew.shared_crew.containment import ContainmentReport, SliceManager
+from aj_crew.shared_crew.contracts import EnforcementLevel
+from aj_crew.shared_crew.work_store import WorkStore
+from aj_crew.taskq import lanes
+from aj_crew.taskq.store import TaskStore
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import async_wait_until
 
 S = OperationState
 BOUND = 30.0
@@ -230,7 +230,7 @@ async def test_lane_resolver_makes_one_lane_per_person(service):
 async def test_cron_retry_reuses_running_reservation(service, outcome):
     from dataclasses import replace
 
-    from kiro_crew.shared_crew.turn_gate import admitted_work
+    from aj_crew.shared_crew.turn_gate import admitted_work
 
     await service.set_limits(replace(service.limits, crew_active=1))
     job = SimpleNamespace(id="retry", created_by_principal="", last_status="", last_error="")

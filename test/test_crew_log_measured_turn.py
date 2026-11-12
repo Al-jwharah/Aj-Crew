@@ -16,9 +16,9 @@ import pytest
 from chat_test_helpers import _make_state
 from crew_log_drain import assert_drained
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent, AcpPromptStats
-from kiro_crew.crew_log import crew_log_path, emit
-from kiro_crew.dashboard.chat_runner import _run_chat
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent, AcpPromptStats
+from aj_crew.crew_log import crew_log_path, emit
+from aj_crew.dashboard.chat_runner import _run_chat
 
 SESSION = "acp-measured-0001"
 
@@ -37,7 +37,7 @@ PROFILE = {
 
 @pytest.fixture(autouse=True)
 def _log_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _floor_monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     emit.reset_caches()
     yield

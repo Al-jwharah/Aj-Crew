@@ -36,11 +36,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew import _facade_mirror
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, config_dir
-from kiro_crew.cron import CronService
-from kiro_crew.dashboard.handlers.cron import api_crons_create
-from kiro_crew.memory_stores import provision_member_memory
+from aj_crew import _facade_mirror
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, config_dir
+from aj_crew.cron import CronService
+from aj_crew.dashboard.handlers.cron import api_crons_create
+from aj_crew.memory_stores import provision_member_memory
 
 _CRON_ROUTE_PREFIX = "api_cron"
 _NESTED_SCOPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)
@@ -49,10 +49,10 @@ _NESTED_SCOPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDe
 @pytest.fixture
 def member_home(tmp_path, monkeypatch):
     """A data home holding one crew member whose name is not a provider template."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     (config_dir() / "crons").mkdir(parents=True)
-    cfg = KiroCrewConfig.load()
-    cfg.agents["SampleMemberAgent"] = KiroCrewAgentConfig(
+    cfg = AjCrewConfig.load()
+    cfg.agents["SampleMemberAgent"] = AjCrewAgentConfig(
         kiro_agent="sample-template-agent", triggers="sample"
     )
     provision_member_memory(cfg, "SampleMemberAgent")
@@ -79,14 +79,14 @@ async def test_create_naming_a_member_reads_the_configuration_off_the_loop_threa
     app = _dashboard_app(CronService(base_dir=config_dir()).add_job_async)
     loop_thread = threading.current_thread()
     readers: list[threading.Thread] = []
-    real_load = KiroCrewConfig.load.__func__
+    real_load = AjCrewConfig.load.__func__
 
-    def recording_load(cls: type[KiroCrewConfig]) -> KiroCrewConfig:
+    def recording_load(cls: type[AjCrewConfig]) -> AjCrewConfig:
         readers.append(threading.current_thread())
         return real_load(cls)
 
     with monkeypatch.context() as scoped:
-        scoped.setattr(KiroCrewConfig, "load", classmethod(recording_load))
+        scoped.setattr(AjCrewConfig, "load", classmethod(recording_load))
         async with TestClient(TestServer(app)) as client:
             resp = await asyncio.wait_for(
                 client.post(
@@ -113,7 +113,7 @@ async def test_create_naming_a_member_reads_the_configuration_off_the_loop_threa
 
 
 def _is_config_read(func: ast.expr) -> bool:
-    """A call to ``KiroCrewConfig.load`` or to the member split that calls it."""
+    """A call to ``AjCrewConfig.load`` or to the member split that calls it."""
     if isinstance(func, ast.Name):
         return func.id == "split_cron_agent_member"
     if isinstance(func, ast.Attribute):
@@ -122,7 +122,7 @@ def _is_config_read(func: ast.expr) -> bool:
         return (
             func.attr == "load"
             and isinstance(func.value, ast.Name)
-            and func.value.id == "KiroCrewConfig"
+            and func.value.id == "AjCrewConfig"
         )
     return False
 
@@ -152,7 +152,7 @@ def config_reads_on_the_loop(source: str) -> list[str]:
     """``<route>:<line>`` for each direct config read in an ``async def api_cron*``.
 
     A function handed to ``asyncio.to_thread`` is a reference, not a call, so
-    ``await asyncio.to_thread(KiroCrewConfig.load)`` is not a finding.
+    ``await asyncio.to_thread(AjCrewConfig.load)`` is not a finding.
     """
     found: list[tuple[int, str]] = []
     for route in cron_routes(source):
@@ -163,7 +163,7 @@ def config_reads_on_the_loop(source: str) -> list[str]:
 
 
 def test_no_cron_route_reads_the_configuration_on_the_loop():
-    facade = sys.modules["kiro_crew.dashboard.handlers.cron"]
+    facade = sys.modules["aj_crew.dashboard.handlers.cron"]
     family = (facade.__name__, *vars(facade)[_facade_mirror.INDEX_ATTRIBUTE].owners)
     source = "\n".join(inspect.getsource(sys.modules[name]) for name in family)
     routes = {route.name for route in cron_routes(source)}
@@ -176,13 +176,13 @@ def test_the_rule_tells_a_direct_read_from_a_handed_off_one():
         route = "async def api_cron_probe(request):\n" + textwrap.indent(body, "    ")
         return config_reads_on_the_loop(route)
 
-    assert reads("cfg = KiroCrewConfig.load()\n") == ["api_cron_probe:2"]
+    assert reads("cfg = AjCrewConfig.load()\n") == ["api_cron_probe:2"]
     assert reads("agent, member = split_cron_agent_member(agent, member)\n") == ["api_cron_probe:2"]
     assert reads("agent, member = identity.split_cron_agent_member(agent, member)\n") == [
         "api_cron_probe:2"
     ]
-    assert reads("cfg = await asyncio.to_thread(KiroCrewConfig.load)\n") == []
+    assert reads("cfg = await asyncio.to_thread(AjCrewConfig.load)\n") == []
     assert reads("agent, member = await asyncio.to_thread(split_cron_agent_member, a, m)\n") == []
     # A nested def or lambda is another frame, run wherever it is handed.
-    assert reads("def worker():\n    return KiroCrewConfig.load()\n") == []
-    assert reads("cfg = await asyncio.to_thread(lambda: KiroCrewConfig.load())\n") == []
+    assert reads("def worker():\n    return AjCrewConfig.load()\n") == []
+    assert reads("cfg = await asyncio.to_thread(lambda: AjCrewConfig.load())\n") == []

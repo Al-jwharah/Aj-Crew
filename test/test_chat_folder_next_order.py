@@ -15,8 +15,8 @@ from typing import Any
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import arrival_folders, channel_folders, mate_folders
-from kiro_crew.dashboard.chat_folders_records import create_folder_record
+from aj_crew.dashboard import arrival_folders, channel_folders, mate_folders
+from aj_crew.dashboard.chat_folders_records import create_folder_record
 
 # The two survivors of deleting the first two of four folders ordered 0..3.
 _SURVIVORS = (("C", 2), ("D", 3))

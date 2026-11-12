@@ -25,7 +25,7 @@ vi.mock('../utils/errorReport', async (importOriginal) => ({
   sendErrorToChat: (...args: unknown[]) => sendErrorToChat(...(args as [])),
 }))
 
-const kirocrewConfig = vi.fn()
+const ajcrewConfig = vi.fn()
 const patchConfig = vi.fn()
 vi.mock('../api/client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api/client')>()
@@ -33,7 +33,7 @@ vi.mock('../api/client', async (importOriginal) => {
     ...actual,
     api: {
       ...actual.api,
-      kirocrewConfig: () => kirocrewConfig(),
+      ajcrewConfig: () => ajcrewConfig(),
       patchConfig: (path: string, value: unknown) => patchConfig(path, value),
     },
   }
@@ -48,7 +48,7 @@ async function renderPanel(ui: React.ReactElement) {
 }
 
 beforeEach(() => {
-  kirocrewConfig.mockReset().mockResolvedValue({ dashboard: { browser_local_origins: ORIGINS } })
+  ajcrewConfig.mockReset().mockResolvedValue({ dashboard: { browser_local_origins: ORIGINS } })
   patchConfig.mockReset().mockResolvedValue({ ok: true })
   sendErrorToChat.mockClear()
 })
@@ -100,13 +100,13 @@ describe('isolatePreviewHost', () => {
     expect(isolatePreviewHost('http://localhost:5173/', 'localhost')).toBe('http://127.0.0.1:5173/')
     expect(isolatePreviewHost('http://127.0.0.1:5173/', '127.0.0.1')).toBe('http://localhost:5173/')
   })
-  it('isolates a same-host *.localhost dashboard (e.g. kirocrew.localhost) to 127.0.0.1', async () => {
-    expect(isolatePreviewHost('http://kirocrew.localhost:5173/', 'kirocrew.localhost'))
+  it('isolates a same-host *.localhost dashboard (e.g. ajcrew.localhost) to 127.0.0.1', async () => {
+    expect(isolatePreviewHost('http://ajcrew.localhost:5173/', 'ajcrew.localhost'))
       .toBe('http://127.0.0.1:5173/')
   })
   it('leaves a preview host that already differs from the dashboard host', async () => {
     expect(isolatePreviewHost('http://127.0.0.1:5173/', 'localhost')).toBe('http://127.0.0.1:5173/')
-    expect(isolatePreviewHost('http://localhost:5173/', 'kirocrew.localhost')).toBe('http://localhost:5173/')
+    expect(isolatePreviewHost('http://localhost:5173/', 'ajcrew.localhost')).toBe('http://localhost:5173/')
   })
   it('leaves non-loopback hosts untouched', async () => {
     expect(isolatePreviewHost('https://example.com/', 'localhost')).toBe('https://example.com/')
@@ -137,7 +137,7 @@ describe('isDashboardOrigin', () => {
     // both are the same listening server — which refuses to be framed.
     expect(isDashboardOrigin('http://127.0.0.1:6776/api/hooks/agent', 'http://localhost:6776/')).toBe(true)
     expect(isDashboardOrigin('http://localhost:6776/', 'http://127.0.0.1:6776/chat')).toBe(true)
-    expect(isDashboardOrigin('http://127.0.0.1:6776/', 'http://kirocrew.localhost:6776/')).toBe(true)
+    expect(isDashboardOrigin('http://127.0.0.1:6776/', 'http://ajcrew.localhost:6776/')).toBe(true)
   })
   it('does not match a dev server on a different port', async () => {
     expect(isDashboardOrigin('http://localhost:5173/', 'http://localhost:6776/')).toBe(false)
@@ -426,7 +426,7 @@ describe('WebPreviewPanel', () => {
   // A public http:// host never reaches the frame on this transport at all: it is
   // handed to the gateway host's browser. Pinned so the relaxed guard is not read
   // as having opened the iframe to non-loopback plaintext.
-  it('answers an outside URL with "open it in your Chrome, or ask Kiro" instead of framing it', async () => {
+  it('answers an outside URL with "open it in your Chrome, or ask Aj" instead of framing it', async () => {
     await renderPanel(<WebPreviewPanel sessionKey="sess-1" />)
     const input = screen.getByLabelText('Preview URL')
     fireEvent.change(input, { target: { value: 'http://example.com/' } })
@@ -462,7 +462,7 @@ describe('WebPreviewPanel', () => {
   })
 
   it('offers a one-click Allow for a loopback address outside the list, and writes the whole list back', async () => {
-    kirocrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: ['localhost:5173'] } })
+    ajcrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: ['localhost:5173'] } })
     await renderPanel(<WebPreviewPanel sessionKey="sess-1" />)
     const input = screen.getByLabelText('Preview URL')
     fireEvent.change(input, { target: { value: 'http://127.0.0.1:4200/app' } })
@@ -471,7 +471,7 @@ describe('WebPreviewPanel', () => {
     expect(screen.queryByTitle('Web preview')).toBeNull()
     expect(screen.queryByTestId('web-preview-outside-refused')).toBeNull()
     // The write lands on the gateway; the re-read after it carries the new entry.
-    kirocrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: ['localhost:5173', '127.0.0.1:4200'] } })
+    ajcrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: ['localhost:5173', '127.0.0.1:4200'] } })
     fireEvent.click(screen.getByTestId('web-preview-allow-origin'))
     await waitFor(() => expect(patchConfig).toHaveBeenCalledWith('dashboard.browser_local_origins', ['localhost:5173', '127.0.0.1:4200']))
     await waitFor(() => expect(screen.getByTitle('Web preview')).toBeInTheDocument())
@@ -484,7 +484,7 @@ describe('WebPreviewPanel', () => {
     // be judged on the host the user chose, not the rewritten one: judging the
     // rewrite refused the one origin they configured and offered to add a second.
     const typedHost = window.location.hostname === '127.0.0.1' ? '127.0.0.1' : 'localhost'
-    kirocrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: [`${typedHost}:5173`] } })
+    ajcrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: [`${typedHost}:5173`] } })
     await renderPanel(<WebPreviewPanel sessionKey="sess-1" />)
     const input = screen.getByLabelText('Preview URL')
     fireEvent.change(input, { target: { value: `http://${typedHost}:5173/` } })
@@ -498,20 +498,20 @@ describe('WebPreviewPanel', () => {
   })
 
   it('with no origins configured, the empty state points at Settings instead of offering picks', async () => {
-    kirocrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: [] } })
+    ajcrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: [] } })
     await renderPanel(<WebPreviewPanel sessionKey="sess-1" />)
     expect(screen.getByTestId('web-preview-no-origins')).toBeInTheDocument()
     expect(screen.queryByTestId('web-preview-origin-picks')).toBeNull()
   })
 
   it('a failed origins read says it failed, not that none are configured', async () => {
-    kirocrewConfig.mockRejectedValue(new Error('503'))
+    ajcrewConfig.mockRejectedValue(new Error('503'))
     await renderPanel(<WebPreviewPanel sessionKey="sess-1" />)
     expect(await screen.findByText(/Could not read the local preview list/)).toBeInTheDocument()
     expect(screen.queryByTestId('web-preview-no-origins')).toBeNull()
   })
 
-  it('Ask Kiro stages a prompt naming the outside address', async () => {
+  it('Ask Aj stages a prompt naming the outside address', async () => {
     await renderPanel(<WebPreviewPanel sessionKey="sess-1" />)
     const input = screen.getByLabelText('Preview URL')
     fireEvent.change(input, { target: { value: 'https://news.example.org/' } })
@@ -713,20 +713,20 @@ describe('WebPreviewPanel', () => {
   it('dispatches a snip request when the crop button is clicked', async () => {
     let fired = false
     const handler = () => { fired = true }
-    window.addEventListener('kirocrew-web-preview-snip', handler)
+    window.addEventListener('ajcrew-web-preview-snip', handler)
     try {
       await renderPanel(<WebPreviewPanel sessionKey="sess-1" />)
       fireEvent.click(screen.getByLabelText('Screenshot an area into the chat'))
       expect(fired).toBe(true)
     } finally {
-      window.removeEventListener('kirocrew-web-preview-snip', handler)
+      window.removeEventListener('ajcrew-web-preview-snip', handler)
     }
   })
 
   it('broadcasts preview-expand true/false as the expand button toggles', async () => {
     const seen: boolean[] = []
     const handler = (e: Event) => seen.push(!!(e as CustomEvent<{ expanded?: boolean }>).detail?.expanded)
-    window.addEventListener('kirocrew-preview-expand', handler)
+    window.addEventListener('ajcrew-preview-expand', handler)
     try {
       await renderPanel(<WebPreviewPanel sessionKey="sess-1" />)
       fireEvent.click(screen.getByLabelText('Expand preview'))
@@ -734,7 +734,7 @@ describe('WebPreviewPanel', () => {
       fireEvent.click(screen.getByLabelText('Collapse'))
       expect(seen).toContain(false)
     } finally {
-      window.removeEventListener('kirocrew-preview-expand', handler)
+      window.removeEventListener('ajcrew-preview-expand', handler)
     }
   })
 })
@@ -822,8 +822,8 @@ describe('WebPreviewPanel — native browser transport (desktop app)', () => {
     await waitFor(() => expect(api.getState).toHaveBeenCalled())
     expect(api.close).not.toHaveBeenCalled()
     // Another window removes the origin; the config watcher refreshes the list.
-    kirocrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: ORIGINS.filter(o => o !== 'localhost:5173') } })
-    await act(async () => { await queryClient.invalidateQueries({ queryKey: ['kirocrewConfig'] }) })
+    ajcrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: ORIGINS.filter(o => o !== 'localhost:5173') } })
+    await act(async () => { await queryClient.invalidateQueries({ queryKey: ['ajcrewConfig'] }) })
     await waitFor(() => expect(api.close).toHaveBeenCalledWith('sess-1'))
   })
 
@@ -840,13 +840,13 @@ describe('WebPreviewPanel — native browser transport (desktop app)', () => {
     fireEvent.submit(bar.closest('form') as HTMLFormElement)
     await waitFor(() => expect(api.navigate).toHaveBeenCalledWith('sess-1', 'http://127.0.0.1:3000/app'))
     // Removing the ORIGINAL origin leaves the page the user is on untouched.
-    kirocrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: ORIGINS.filter(o => o !== 'localhost:5173') } })
-    await act(async () => { await queryClient.invalidateQueries({ queryKey: ['kirocrewConfig'] }) })
+    ajcrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: ORIGINS.filter(o => o !== 'localhost:5173') } })
+    await act(async () => { await queryClient.invalidateQueries({ queryKey: ['ajcrewConfig'] }) })
     await waitFor(() => expect(api.getState).toHaveBeenCalled())
     expect(api.close).not.toHaveBeenCalled()
     // Removing the origin it is on closes it.
-    kirocrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: ORIGINS.filter(o => o !== 'localhost:5173' && o !== '127.0.0.1:3000') } })
-    await act(async () => { await queryClient.invalidateQueries({ queryKey: ['kirocrewConfig'] }) })
+    ajcrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: ORIGINS.filter(o => o !== 'localhost:5173' && o !== '127.0.0.1:3000') } })
+    await act(async () => { await queryClient.invalidateQueries({ queryKey: ['ajcrewConfig'] }) })
     await waitFor(() => expect(api.close).toHaveBeenCalledWith('sess-1'))
   })
 
@@ -861,13 +861,13 @@ describe('WebPreviewPanel — native browser transport (desktop app)', () => {
     await act(async () => { onNav?.() })
     const without = (...gone: string[]) => ({ dashboard: { browser_local_origins: ORIGINS.filter(o => !gone.includes(o)) } })
     // Revoking the origin it opened on leaves the page it is on untouched.
-    kirocrewConfig.mockResolvedValue(without('localhost:5173'))
-    await act(async () => { await queryClient.invalidateQueries({ queryKey: ['kirocrewConfig'] }) })
-    await waitFor(() => expect(kirocrewConfig).toHaveBeenCalled())
+    ajcrewConfig.mockResolvedValue(without('localhost:5173'))
+    await act(async () => { await queryClient.invalidateQueries({ queryKey: ['ajcrewConfig'] }) })
+    await waitFor(() => expect(ajcrewConfig).toHaveBeenCalled())
     expect(api.close).not.toHaveBeenCalled()
     // Revoking the origin it is on closes it.
-    kirocrewConfig.mockResolvedValue(without('localhost:5173', 'localhost:4000'))
-    await act(async () => { await queryClient.invalidateQueries({ queryKey: ['kirocrewConfig'] }) })
+    ajcrewConfig.mockResolvedValue(without('localhost:5173', 'localhost:4000'))
+    await act(async () => { await queryClient.invalidateQueries({ queryKey: ['ajcrewConfig'] }) })
     await waitFor(() => expect(api.close).toHaveBeenCalledWith('sess-1'))
   })
 
@@ -875,8 +875,8 @@ describe('WebPreviewPanel — native browser transport (desktop app)', () => {
     setSessionPreviewUrl('sess-1', 'http://localhost:5173/')
     const api = installNativeBridge(true, 'http://localhost:5173/')
     const { queryClient } = await renderPanel(<WebPreviewPanel sessionKey="sess-1" />)
-    kirocrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: ORIGINS.filter(o => o !== 'localhost:4000') } })
-    await act(async () => { await queryClient.invalidateQueries({ queryKey: ['kirocrewConfig'] }) })
+    ajcrewConfig.mockResolvedValue({ dashboard: { browser_local_origins: ORIGINS.filter(o => o !== 'localhost:4000') } })
+    await act(async () => { await queryClient.invalidateQueries({ queryKey: ['ajcrewConfig'] }) })
     await waitFor(() => expect(api.getState).toHaveBeenCalled())
     expect(api.close).not.toHaveBeenCalled()
   })
@@ -1106,7 +1106,7 @@ describe('WebPreviewPanel — native browser transport (desktop app)', () => {
     const { annotate, state } = installAnnotateBridge()
     const seen: CustomEvent[] = []
     const onEv = (e: Event) => { seen.push(e as CustomEvent) }
-    window.addEventListener('kirocrew-web-preview-annotate', onEv)
+    window.addEventListener('ajcrew-web-preview-annotate', onEv)
     try {
       await renderPanel(<WebPreviewPanel sessionKey="sess-1" active />)
       fireEvent.click(await screen.findByTestId('browser-annotate'))
@@ -1134,7 +1134,7 @@ describe('WebPreviewPanel — native browser transport (desktop app)', () => {
       await waitFor(() => expect(annotate).toHaveBeenCalledWith('sess-1', 'stop', undefined))
       expect(screen.getByTestId('browser-annotations')).toHaveTextContent('too far right')
     } finally {
-      window.removeEventListener('kirocrew-web-preview-annotate', onEv)
+      window.removeEventListener('ajcrew-web-preview-annotate', onEv)
     }
   })
 
@@ -1142,7 +1142,7 @@ describe('WebPreviewPanel — native browser transport (desktop app)', () => {
     const { annotate, state } = installAnnotateBridge()
     const seen: CustomEvent[] = []
     const onEv = (e: Event) => { seen.push(e as CustomEvent) }
-    window.addEventListener('kirocrew-web-preview-annotate', onEv)
+    window.addEventListener('ajcrew-web-preview-annotate', onEv)
     try {
       await renderPanel(<WebPreviewPanel sessionKey="sess-1" active />)
       fireEvent.click(await screen.findByTestId('browser-annotate'))
@@ -1174,7 +1174,7 @@ describe('WebPreviewPanel — native browser transport (desktop app)', () => {
       await waitFor(() => expect(annotate.mock.calls.filter(c => c[1] === 'poll').length).toBeGreaterThan(pollsBefore + 1))
       expect(screen.getByTestId('browser-annotations')).toHaveTextContent('too far right')
     } finally {
-      window.removeEventListener('kirocrew-web-preview-annotate', onEv)
+      window.removeEventListener('ajcrew-web-preview-annotate', onEv)
     }
   })
 
@@ -1416,7 +1416,7 @@ describe('WebPreviewPanel — native browser transport (desktop app)', () => {
       ? { ok: false, code: 'timeout', error: 'annotate stop timed out after 8000ms' }
       : impl(p, op, args))
     const seen: Event[] = []
-    window.addEventListener('kirocrew-web-preview-annotate', e => seen.push(e))
+    window.addEventListener('ajcrew-web-preview-annotate', e => seen.push(e))
     fireEvent.click(screen.getByTestId('browser-annotations-send'))
     await waitFor(() => expect(seen).toHaveLength(1))
     await waitFor(() => expect(screen.getByText('annotate stop timed out after 8000ms')).toBeInTheDocument())
@@ -1442,7 +1442,7 @@ describe('WebPreviewPanel — native browser transport (desktop app)', () => {
     const { state } = installAnnotateBridge()
     const seen: CustomEvent[] = []
     const onEv = (e: Event) => { seen.push(e as CustomEvent) }
-    window.addEventListener('kirocrew-web-preview-annotate', onEv)
+    window.addEventListener('ajcrew-web-preview-annotate', onEv)
     try {
       await renderPanel(<WebPreviewPanel sessionKey="sess-1" active />)
       fireEvent.click(await screen.findByTestId('browser-annotate'))
@@ -1458,7 +1458,7 @@ describe('WebPreviewPanel — native browser transport (desktop app)', () => {
       expect(d.draft).not.toContain('too far right')
       expect(screen.getByTestId('browser-annotations')).toHaveTextContent('actually too far LEFT')
     } finally {
-      window.removeEventListener('kirocrew-web-preview-annotate', onEv)
+      window.removeEventListener('ajcrew-web-preview-annotate', onEv)
     }
   })
 

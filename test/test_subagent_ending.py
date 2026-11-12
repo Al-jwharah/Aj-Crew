@@ -15,9 +15,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.subagent import SubagentInfo
-from kiro_crew.subagent_ending import SubagentEnding
-from kiro_crew.subagent_manager.terminal import TerminalCoordinator
+from aj_crew.subagent import SubagentInfo
+from aj_crew.subagent_ending import SubagentEnding
+from aj_crew.subagent_manager.terminal import TerminalCoordinator
 
 # (record fields, fine ending, coarse outcome the record had before SubagentEnding)
 _SHAPES = [
@@ -51,7 +51,7 @@ def test_each_record_shape_has_one_ending_and_keeps_its_three_way_outcome(fields
 
 
 def test_every_ending_folds_onto_the_panel_vocabulary():
-    from kiro_crew.subagent_persistence import _PANEL_OUTCOMES
+    from aj_crew.subagent_persistence import _PANEL_OUTCOMES
 
     assert {o.coarse for o in SubagentEnding} == set(_PANEL_OUTCOMES)
     assert [o.value for o in SubagentEnding] == [
@@ -71,8 +71,8 @@ def test_a_reaped_run_without_an_error_is_not_called_reaped():
 
 def test_the_reap_ending_names_the_reaper_only_when_it_writes_the_error(monkeypatch):
     """``_record_reap_ending`` marks the error as the reaper's only when it wrote it."""
-    from kiro_crew import subagent
-    from kiro_crew.subagent_manager.run import RunEventCoordinator
+    from aj_crew import subagent
+    from aj_crew.subagent_manager.run import RunEventCoordinator
 
     _record_reap_ending_impl = RunEventCoordinator._record_reap_ending_impl
     monkeypatch.setattr(
@@ -162,7 +162,7 @@ def test_the_report_finishes_once_before_it_broadcasts():
     ],
 )
 def test_the_parent_s_announce_names_a_deadline_reap_apart_from_a_failure(fields, status):
-    from kiro_crew.slack.gateway import _compose_subagent_completion
+    from aj_crew.slack.gateway import _compose_subagent_completion
 
     info = SubagentInfo(id="c0ffee", task="t", **fields)
     assert _compose_subagent_completion(info, _flush_only=False).status == status

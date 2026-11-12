@@ -23,7 +23,7 @@ export type BrowserKind = 'user_chrome' | 'edge' | 'kiro_chromium'
  */
 export type BrowserConnection = 'connected' | 'waiting_allow' | 'disconnected' | 'error'
 
-/** Kiro's own Chromium, the fallback for a machine with no display or no Chrome. */
+/** Aj's own Chromium, the fallback for a machine with no display or no Chrome. */
 export interface KiroChromiumState {
   downloaded: boolean
   /** Major version as downloaded (`"156"`), or null until it is. */
@@ -45,7 +45,7 @@ export interface BrowserInstallJob {
 }
 
 /**
- * The `credentials` block of `GET /api/browser/status`: who signs Kiro's Chromium
+ * The `credentials` block of `GET /api/browser/status`: who signs Aj's Chromium
  * in, and how the last apply went. Counts, codes and domain names only, never a
  * cookie value. `provider` is the edition provider's display name, `null` when
  * the edition supplies none (then Settings shows no sign-in control).

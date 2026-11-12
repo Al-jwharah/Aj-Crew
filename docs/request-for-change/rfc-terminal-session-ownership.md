@@ -16,7 +16,7 @@ superseded-by: []
 
 Status: draft (no maintainer acceptance recorded). Phase 1 is on main
 ([#8863](https://github.com/kirodotdev/KiroCrew/pull/8863)): every terminal route
-in `src/kiro_crew/dashboard/handlers/terminal.py` requires the dashboard owner
+in `src/aj_crew/dashboard/handlers/terminal.py` requires the dashboard owner
 (`require_owner_dashboard_request`), and displaced handlers are fenced. Phases 2
 and 3 are not built.
 
@@ -34,7 +34,7 @@ only harmless panel preferences in `localStorage`. A popout receives ownership
 through an explicit, acknowledged, single-use transfer instead of learning live
 terminal IDs from an app-wide storage event.
 
-This preserves the Kiro Crew behaviors that a smaller terminal design omits:
+This preserves the Aj Crew behaviors that a smaller terminal design omits:
 
 - reload in the owning tab reconnects to a retained PTY;
 - backend scrollback is replayed after reconnect;
@@ -55,7 +55,7 @@ handling, observability, and cleanup.
 
 ## Decision
 
-Kiro Crew will enforce this invariant:
+Aj Crew will enforce this invariant:
 
 > A terminal session has exactly one active browser owner and one current
 > connection generation.
@@ -76,7 +76,7 @@ typed, non-retryable outcome when retrying the same request cannot succeed.
 
 The reconnect policy remains bounded exponential backoff for transport failure.
 It does not retry ownership conflict, session expiry, terminal disablement, or
-spawn failure. Kiro Crew never replays keyboard input. Backend scrollback replay
+spawn failure. Aj Crew never replays keyboard input. Backend scrollback replay
 remains safe.
 
 ## Motivation
@@ -122,7 +122,7 @@ the popout the only other window that knows the IDs.
 ### Current backend replacement is asymmetric
 
 The backend replays scrollback and then assigns `existing.ws = ws` in
-`api_terminal_ws` (`src/kiro_crew/dashboard/handlers/terminal.py`). PTY output is
+`api_terminal_ws` (`src/aj_crew/dashboard/handlers/terminal.py`). PTY output is
 sent only to the socket currently stored in `sess.ws`.
 
 Disconnect cleanup correctly checks identity before clearing the current socket.
@@ -500,9 +500,9 @@ Metrics count concurrent owners rejected, resumes, transfers, recovery
 attempts, and protocol outcomes. Terminal ID and `client_id` are forbidden as
 metric labels.
 
-## Comparison with current Kiro Crew and T3 Code
+## Comparison with current Aj Crew and T3 Code
 
-| Concern | Current Kiro Crew | T3 Code reference | Proposed Kiro Crew |
+| Concern | Current Aj Crew | T3 Code reference | Proposed Aj Crew |
 |---|---|---|---|
 | Session identity | Live IDs copied to every window | Unique per mounted surface | Unique to an owning browser tab |
 | Live-state storage | `localStorage` | Component memory | `sessionStorage` |
@@ -518,7 +518,7 @@ metric labels.
 | Complexity | High and incorrect | Lowest | Moderate and explicit |
 
 T3 Code is simpler because it does not promise that a browser reload or separate
-popout reclaims the same PTY. Kiro Crew copies its ownership invariant without
+popout reclaims the same PTY. Aj Crew copies its ownership invariant without
 copying its full lifecycle tradeoff. Dropping all recovery reduces implementation
 cost and regresses established terminal behavior.
 
@@ -734,7 +734,7 @@ session.
 
 Give every mounted surface a new terminal and abandon reload and popout
 continuity. This has the smallest implementation and the strongest local
-ownership rule. It regresses behaviors Kiro Crew already exposes, so this RFC
+ownership rule. It regresses behaviors Aj Crew already exposes, so this RFC
 uses the invariant without adopting the lifecycle limitation.
 
 ### Keep latest-connection-wins and add more browser timing

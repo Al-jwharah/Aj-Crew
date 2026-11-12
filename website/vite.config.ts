@@ -48,7 +48,7 @@ function reactCompilerPlugins() {
 }
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'))
-const backendPort = process.env.KIROCREW_PORT || 5476
+const backendPort = process.env.AJCREW_PORT || 5476
 
 /**
  * Dev-only plugin: when the browser hits `/?token=xxx`, proxy that request
@@ -57,7 +57,7 @@ const backendPort = process.env.KIROCREW_PORT || 5476
  */
 function tokenProxyPlugin(): Plugin {
   return {
-    name: 'kirocrew-token-proxy',
+    name: 'ajcrew-token-proxy',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = new URL(req.url || '/', `http://localhost:3000`)
@@ -91,14 +91,14 @@ function tokenProxyPlugin(): Plugin {
  * that maps bare module specifiers to vendor stubs in /vendor/*.mjs.
  *
  * The stubs are hand-written files in public/vendor/ that read from
- * window.__kirocrew_modules (registered by shared-modules.ts at startup).
+ * window.__ajcrew_modules (registered by shared-modules.ts at startup).
  * This approach is bundler-agnostic — stubs never go through Rollup,
  * so exports are never renamed or tree-shaken.
  */
 function appImportMapPlugin(): Plugin {
   let base = '/'
   return {
-    name: 'kirocrew-app-importmap',
+    name: 'ajcrew-app-importmap',
     enforce: 'post',
     configResolved(config) {
       base = config.base
@@ -138,7 +138,7 @@ function vendorRuntimePlugin(): Plugin {
     { servePath: MERMAID_RUNTIME_PATH, src: MERMAID_RUNTIME_SRC },
   ]
   return {
-    name: 'kirocrew-vendor-runtimes',
+    name: 'ajcrew-vendor-runtimes',
     // Dev: the build output doesn't exist, so serve straight from node_modules.
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
@@ -191,7 +191,7 @@ function vendorRuntimePlugin(): Plugin {
  * Deployment-time size choice (issue #8091): the Xiaolai CJK handwriting family
  * is 12.67 MB of the 13.11 MB emitted here (96.6%); everything else combined is
  * 0.44 MB. A size-sensitive deployment can opt OUT of shipping it by setting
- * `KIROCREW_PRUNE_SKETCH_CJK_FONT=1` at build time. The DEFAULT is unset, which
+ * `AJCREW_PRUNE_SKETCH_CJK_FONT=1` at build time. The DEFAULT is unset, which
  * ships every family exactly as before, so no existing build changes and no user
  * is affected unless a deployer deliberately opts in. When engaged, a pruned build
  * emits a loud build-time warning rather than silently changing what a user sees:
@@ -210,7 +210,7 @@ function excalidrawFontsPlugin(): Plugin {
   const SERVE_PREFIX = '/vendor/excalidraw/fonts/'
   // Default OFF: unset ships everything (today's behaviour). Only an explicit
   // opt-in prunes. Evaluated once so the warning fires once per build/serve.
-  const pruneCjk = process.env.KIROCREW_PRUNE_SKETCH_CJK_FONT === '1'
+  const pruneCjk = process.env.AJCREW_PRUNE_SKETCH_CJK_FONT === '1'
   // familyOf('Xiaolai/Xiaolai-Regular-....woff2') === 'Xiaolai'
   const familyOf = (rel: string): string => rel.split('/')[0]
   const isPruned = (rel: string): boolean => pruneCjk && PRUNABLE_CJK_FONT_FAMILIES.has(familyOf(rel))
@@ -219,7 +219,7 @@ function excalidrawFontsPlugin(): Plugin {
     // an inherited env var would otherwise SILENTLY ship a build with degraded
     // CJK sketching, which is the one thing #8091's direction forbids.
     console.warn(
-      `\n[kirocrew-excalidraw-fonts] KIROCREW_PRUNE_SKETCH_CJK_FONT=1: pruning ` +
+      `\n[ajcrew-excalidraw-fonts] AJCREW_PRUNE_SKETCH_CJK_FONT=1: pruning ` +
         `${[...PRUNABLE_CJK_FONT_FAMILIES].join(', ')} (~12.67 MB) from the sketch-pad fonts. ` +
         `zh/ja/ko sketch text will fall back to a system font (no hand-drawn style). ` +
         `Unset the variable to ship every family.\n`,
@@ -237,7 +237,7 @@ function excalidrawFontsPlugin(): Plugin {
     return out
   }
   return {
-    name: 'kirocrew-excalidraw-fonts',
+    name: 'ajcrew-excalidraw-fonts',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const url = (req.url || '').split('?')[0]
@@ -270,7 +270,7 @@ function swVersionPlugin(): Plugin {
   // the live dist and publishes it afterwards (scripts/publish-dist.mjs).
   let swPath = ''
   return {
-    name: 'kirocrew-sw-version',
+    name: 'ajcrew-sw-version',
     apply: 'build',
     configResolved(config) {
       swPath = path.resolve(config.root, config.build.outDir, 'sw.js')
@@ -331,7 +331,7 @@ function swVersionPlugin(): Plugin {
  * did not rebuild/copy the frontend serves an OLD bundle silently. The backend
  * reads this stamp at startup and warns (never shuts down) when the dist was
  * built from a different website/ tree than the running backend — see
- * src/kiro_crew/dashboard/stale_bundle_guard.py.
+ * src/aj_crew/dashboard/stale_bundle_guard.py.
  *
  * `buildId` reuses the exact identity swVersionPlugin computes
  * (`${pkg.version}-${gitShortSha}`) for display; `websiteTree` is the compared
@@ -350,7 +350,7 @@ function buildIdPlugin(): Plugin {
   let outDir = ''
   let configRoot = ''
   return {
-    name: 'kirocrew-build-id',
+    name: 'ajcrew-build-id',
     apply: 'build',
     configResolved(config) {
       configRoot = config.root
@@ -387,15 +387,15 @@ function buildIdPlugin(): Plugin {
 }
 
 /**
- * Edition-extension seam: resolves the virtual module `virtual:kirocrew-edition`
+ * Edition-extension seam: resolves the virtual module `virtual:ajcrew-edition`
  * — imported once by `src/extensions.ts` — to a downstream edition's own
  * composition-root module, WITHOUT the edition having to overlay/shadow any core
  * file.
  *
- * - `KIROCREW_EDITION_DIR` unset (the stock OSS build): resolves to an INERT
+ * - `AJCREW_EDITION_DIR` unset (the stock OSS build): resolves to an INERT
  *   empty module (`export {}`), so the stock build registers nothing and is
  *   byte-identical to having no seam at all.
- * - `KIROCREW_EDITION_DIR=<abs path>` set (a downstream edition build): resolves
+ * - `AJCREW_EDITION_DIR=<abs path>` set (a downstream edition build): resolves
  *   to `<dir>/extensions.tsx` (or `.ts`) — the edition's own file, living in the
  *   edition's own repo. Its `register*()` calls + component imports compile into
  *   the SPA through the SAME vite/rollup pass as the core, so the edition never
@@ -407,30 +407,30 @@ function buildIdPlugin(): Plugin {
  * build time, never by shadowing `main.tsx`/`extensions.ts`.
  */
 /** The comment in src/index.css that the edition seam swaps for an `@source`. */
-const EDITION_SOURCE_MARKER = '/* @kirocrew-edition-source */'
+const EDITION_SOURCE_MARKER = '/* @ajcrew-edition-source */'
 /** The stylesheet carrying that marker (module id may carry a `?query`). */
 const EDITION_CSS_ENTRY = /[\\/]src[\\/]index\.css(?:\?|$)/
 
 function editionExtensionPlugin(): Plugin {
-  const VIRTUAL_ID = 'virtual:kirocrew-edition'
+  const VIRTUAL_ID = 'virtual:ajcrew-edition'
   const RESOLVED_ID = '\0' + VIRTUAL_ID
-  const editionDir = process.env.KIROCREW_EDITION_DIR
+  const editionDir = process.env.AJCREW_EDITION_DIR
   // FAIL-CLOSED by default: composing a downstream edition (which compiles that
   // edition's proprietary sources into website/dist — the dist staged into the
-  // public OSS wheel) requires an EXPLICIT opt-in, KIROCREW_ALLOW_EDITION=1.
+  // public OSS wheel) requires an EXPLICIT opt-in, AJCREW_ALLOW_EDITION=1.
   // Every pipeline — including release/publish — is therefore protected by
   // default with NO "remember to set a guard var" dependency: an inherited
-  // KIROCREW_EDITION_DIR without the opt-in FAILS THE BUILD rather than
+  // AJCREW_EDITION_DIR without the opt-in FAILS THE BUILD rather than
   // silently contaminating a public artifact (a one-way door — a published
   // release cannot be unpublished). Only the edition's own build.sh sets the
   // opt-in. Unsetting the opt-in can never weaken this; forgetting to set it
   // only ever fails safe (stock).
-  if (editionDir && process.env.KIROCREW_ALLOW_EDITION !== '1') {
+  if (editionDir && process.env.AJCREW_ALLOW_EDITION !== '1') {
     throw new Error(
-      `KIROCREW_EDITION_DIR is set to '${editionDir}' but KIROCREW_ALLOW_EDITION=1 is not. ` +
+      `AJCREW_EDITION_DIR is set to '${editionDir}' but AJCREW_ALLOW_EDITION=1 is not. ` +
         'Edition composition is opt-in (fail-closed) so a stray env var cannot contaminate a ' +
-        'stock/release build. Set KIROCREW_ALLOW_EDITION=1 in the edition build, or unset ' +
-        'KIROCREW_EDITION_DIR for a stock build.'
+        'stock/release build. Set AJCREW_ALLOW_EDITION=1 in the edition build, or unset ' +
+        'AJCREW_EDITION_DIR for a stock build.'
     )
   }
   // Resolve the edition's composition root eagerly so a MISCONFIGURED dir
@@ -443,20 +443,20 @@ function editionExtensionPlugin(): Plugin {
     const candidate = ['extensions.tsx', 'extensions.ts'].map((f) => path.join(abs, f)).find(existsSync)
     if (!candidate) {
       throw new Error(
-        `KIROCREW_EDITION_DIR is set to '${editionDir}' but no extensions.tsx/.ts exists there. ` +
+        `AJCREW_EDITION_DIR is set to '${editionDir}' but no extensions.tsx/.ts exists there. ` +
           'Unset it for the stock build, or point it at the edition composition root.'
       )
     }
     editionEntry = candidate
-    // Loud, unmissable self-identification: an inherited KIROCREW_EDITION_DIR
+    // Loud, unmissable self-identification: an inherited AJCREW_EDITION_DIR
     // would otherwise SILENTLY compile a downstream edition's (proprietary)
     // sources into website/dist — which is staged into the Python package. In
     // this public OSS repo that is an IP-contamination hazard with no trace, so
     // every edition-mode build/test run must announce itself in local + CI logs.
     console.warn(
-      `\n[kirocrew-edition] ⚠ BUILDING WITH EDITION COMPOSITION ROOT: ${editionEntry}\n` +
-        '[kirocrew-edition] the resulting dist is EDITION-composed, NOT a stock OSS build. ' +
-        'Unset KIROCREW_EDITION_DIR for a stock build.\n'
+      `\n[ajcrew-edition] ⚠ BUILDING WITH EDITION COMPOSITION ROOT: ${editionEntry}\n` +
+        '[ajcrew-edition] the resulting dist is EDITION-composed, NOT a stock OSS build. ' +
+        'Unset AJCREW_EDITION_DIR for a stock build.\n'
     )
   }
   // Pre-boot shell branding, resolved eagerly like the composition root so a
@@ -473,7 +473,7 @@ function editionExtensionPlugin(): Plugin {
       try {
         branding = parseBrandingConfig(readFileSync(brandingPath, 'utf-8'))
       } catch (e: unknown) {
-        throw new Error(`[kirocrew-edition] ${brandingPath}: ${(e as Error).message}`)
+        throw new Error(`[ajcrew-edition] ${brandingPath}: ${(e as Error).message}`)
       }
     }
     // Only allowlisted shell assets overlay the stock public/ copies; anything
@@ -493,7 +493,7 @@ function editionExtensionPlugin(): Plugin {
       )
       if (strays.length > 0) {
         throw new Error(
-          `[kirocrew-edition] ${publicDir} contains entries outside the shell-overlay allowlist ` +
+          `[ajcrew-edition] ${publicDir} contains entries outside the shell-overlay allowlist ` +
             `(${SHELL_OVERLAY_ALLOWLIST.join(', ')}), or non-files: ` +
             `${strays.map((d) => d.name).join(', ')}. ` +
             'The allowlist is what keeps an edition from overwriting index.html, sw.js, or vendor/*.'
@@ -503,7 +503,7 @@ function editionExtensionPlugin(): Plugin {
     }
   }
   return {
-    name: 'kirocrew-edition-extension',
+    name: 'ajcrew-edition-extension',
     enforce: 'pre',
     // Patch the pre-boot shell (<title>, <meta name="theme-color">, the
     // boot-failure issues links) from the edition's branding.json.
@@ -583,13 +583,13 @@ function editionExtensionPlugin(): Plugin {
     // edition UI renders unstyled with no build error. This runs before
     // `@tailwindcss/vite` compiles the file: both plugins are `enforce: 'pre'`
     // and this one is registered first. Gated on `editionEntry`, which is only
-    // set once the KIROCREW_ALLOW_EDITION opt-in above has passed, so a stray
+    // set once the AJCREW_ALLOW_EDITION opt-in above has passed, so a stray
     // env var can never widen the scan of a stock build.
     transform(code, id) {
       if (!editionEntry || !EDITION_CSS_ENTRY.test(id)) return null
       if (!code.includes(EDITION_SOURCE_MARKER)) {
         throw new Error(
-          `[kirocrew-edition] ${id} no longer carries the '${EDITION_SOURCE_MARKER}' marker, ` +
+          `[ajcrew-edition] ${id} no longer carries the '${EDITION_SOURCE_MARKER}' marker, ` +
             'so the edition sources cannot be added to the Tailwind content scan.'
         )
       }
@@ -618,9 +618,9 @@ function editionExtensionPlugin(): Plugin {
 }
 
 /**
- * Edition syntax-highlighting languages: resolves `virtual:kirocrew-edition-languages`
+ * Edition syntax-highlighting languages: resolves `virtual:ajcrew-edition-languages`
  * — imported by `src/utils/highlightLanguages.ts` — to the edition's optional
- * `$KIROCREW_EDITION_DIR/languages.ts` data module, or to an empty list in the
+ * `$AJCREW_EDITION_DIR/languages.ts` data module, or to an empty list in the
  * stock build.
  *
  * This is a separate plugin from `editionExtensionPlugin` because it must also
@@ -630,20 +630,20 @@ function editionExtensionPlugin(): Plugin {
  * bundle changes nothing else there.
  *
  * It composes only behind the same fail-closed opt-in as the composition root
- * (`KIROCREW_ALLOW_EDITION=1`); without it, `editionExtensionPlugin` has already
+ * (`AJCREW_ALLOW_EDITION=1`); without it, `editionExtensionPlugin` has already
  * failed the build. The file is optional: an edition without `languages.ts`
  * contributes no languages.
  */
 function editionLanguagesPlugin(): Plugin {
-  const VIRTUAL_ID = 'virtual:kirocrew-edition-languages'
+  const VIRTUAL_ID = 'virtual:ajcrew-edition-languages'
   const RESOLVED_ID = '\0' + VIRTUAL_ID
-  const editionDir = process.env.KIROCREW_EDITION_DIR
+  const editionDir = process.env.AJCREW_EDITION_DIR
   const entry =
-    editionDir && process.env.KIROCREW_ALLOW_EDITION === '1'
+    editionDir && process.env.AJCREW_ALLOW_EDITION === '1'
       ? ['languages.ts'].map((f) => path.join(path.resolve(editionDir), f)).find(existsSync) ?? null
       : null
   return {
-    name: 'kirocrew-edition-languages',
+    name: 'ajcrew-edition-languages',
     enforce: 'pre',
     resolveId(id) {
       return id === VIRTUAL_ID ? RESOLVED_ID : null
@@ -677,7 +677,7 @@ function bundleReportPlugin(): Plugin {
   const REPORT_MODE = 'analyze'
   let active = false
   return {
-    name: 'kirocrew-bundle-report',
+    name: 'ajcrew-bundle-report',
     apply: 'build',
     configResolved(resolved) {
       active = resolved.mode === REPORT_MODE
@@ -765,8 +765,8 @@ function appWindowUrls(): Plugin {
 
 export default defineConfig({
   // Sub-path deployments (behind a reverse proxy) are a separate build:
-  // `KIROCREW_BASE_PATH=/proxy/kirocrew npm run build`. Unset builds for `/`.
-  base: resolveBuildBase(process.env.KIROCREW_BASE_PATH),
+  // `AJCREW_BASE_PATH=/proxy/ajcrew npm run build`. Unset builds for `/`.
+  base: resolveBuildBase(process.env.AJCREW_BASE_PATH),
   // `editionExtensionPlugin()` precedes `tailwindcss()` on purpose: both run
   // `enforce: 'pre'` transforms, and the edition `@source` must be spliced into
   // index.css before Tailwind compiles it (see the plugin's `transform`).
@@ -992,7 +992,7 @@ export default defineConfig({
       // in dev mode, Vite serves them directly from src/vendor/ via the
       // multi-entry input config, so no proxy needed.
       '/logo.png': `http://localhost:${backendPort}`,
-      '/static/kirocrew-logo.png': `http://localhost:${backendPort}`,
+      '/static/ajcrew-logo.png': `http://localhost:${backendPort}`,
     },
   },
   build: {

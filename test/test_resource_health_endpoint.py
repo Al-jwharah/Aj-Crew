@@ -6,8 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.dashboard import handlers_system as hs
-from kiro_crew.resource_status import ResourceStatus
+from aj_crew.dashboard import handlers_system as hs
+from aj_crew.resource_status import ResourceStatus
 
 
 @pytest.fixture(autouse=True)
@@ -41,7 +41,7 @@ async def test_api_system_includes_resource_posture(monkeypatch):
     """The /api/system response must include resource posture fields."""
     with (
         patch(
-            "kiro_crew.dashboard.handlers_system._resource_probe",
+            "aj_crew.dashboard.handlers_system._resource_probe",
             return_value=_MOCK_STATUS,
             create=True,
         ),
@@ -51,10 +51,10 @@ async def test_api_system_includes_resource_posture(monkeypatch):
     ):
         # Patch at the module level where the lazy import will resolve
         monkeypatch.setattr(
-            "kiro_crew.resource_status.probe", lambda cfg=None: _MOCK_STATUS
+            "aj_crew.resource_status.probe", lambda cfg=None: _MOCK_STATUS
         )
         monkeypatch.setattr(
-            "kiro_crew.subagent.resolve_max_subagents", lambda cfg: 7
+            "aj_crew.subagent.resolve_max_subagents", lambda cfg: 7
         )
         resp = await hs.api_system(_Req())
 
@@ -75,7 +75,7 @@ async def test_api_system_resource_posture_fallback_on_probe_failure(monkeypatch
     def _failing_probe(cfg=None):
         raise RuntimeError("probe unavailable")
 
-    monkeypatch.setattr("kiro_crew.resource_status.probe", _failing_probe)
+    monkeypatch.setattr("aj_crew.resource_status.probe", _failing_probe)
     monkeypatch.setattr(hs, "_local_ip", lambda: "127.0.0.1")
 
     resp = await hs.api_system(_Req())
@@ -102,10 +102,10 @@ async def test_api_system_resource_posture_ample(monkeypatch):
         critical_gb=2.0,
     )
     monkeypatch.setattr(
-        "kiro_crew.resource_status.probe", lambda cfg=None: ample_status
+        "aj_crew.resource_status.probe", lambda cfg=None: ample_status
     )
     monkeypatch.setattr(
-        "kiro_crew.subagent.resolve_max_subagents", lambda cfg: 11
+        "aj_crew.subagent.resolve_max_subagents", lambda cfg: 11
     )
     monkeypatch.setattr(hs, "_local_ip", lambda: "127.0.0.1")
 

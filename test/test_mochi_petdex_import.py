@@ -20,7 +20,7 @@ import re
 
 import pytest
 
-from kiro_crew.apps.builtins.mochi import petdex_import as pdx
+from aj_crew.apps.builtins.mochi import petdex_import as pdx
 
 # A minimal valid WebP header: RIFF<size>WEBP, which is what petdex serves.
 _WEBP = b"RIFF\x24\x00\x00\x00WEBPVP8L" + b"\x00" * 16
@@ -360,7 +360,7 @@ class TestRedirectRefusal:
         reopen the redirect hole."""
         import inspect
 
-        from kiro_crew.apps.builtins.mochi import petdex_import as mod
+        from aj_crew.apps.builtins.mochi import petdex_import as mod
 
         src = inspect.getsource(mod)
         gets = re.findall(r"session\.get\([^)]*\)", src)

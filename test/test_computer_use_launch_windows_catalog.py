@@ -16,8 +16,8 @@ import os
 
 import pytest
 
-from kiro_crew.computer_use.types import ComputerUseError
-from kiro_crew.platform_compat import IS_WINDOWS
+from aj_crew.computer_use.types import ComputerUseError
+from aj_crew.platform_compat import IS_WINDOWS
 
 pytestmark = pytest.mark.xdist_group("computer_use_launch")
 
@@ -62,7 +62,7 @@ class TestWindowsHostCatalog:
         :class:`TestLaunchResolutionTrust`; what this adds is that they are satisfiable on a
         real unelevated desktop.
         """
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         catalog = launch_windows.installed_apps()
         assert catalog, "the host reported no installed applications at all"
@@ -81,7 +81,7 @@ class TestWindowsHostCatalog:
         # user cannot write. A failure here means the protected-root list is missing
         # a root that real applications use, which would be a genuine finding rather
         # than a test to relax.
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         for app in launch_windows.installed_apps():
             try:
@@ -94,7 +94,7 @@ class TestWindowsHostCatalog:
         # Measured: %LOCALAPPDATA%\Microsoft\WindowsApps is ON PATH and writable, and
         # it is what shutil.which("mspaint") returns. Nothing that resolves may come
         # from there — that is the specific hole the protected-root rule closes.
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         alias_dir = os.path.join(os.environ.get("LOCALAPPDATA", ""), "Microsoft", "WindowsApps")
         if not alias_dir or not os.path.isdir(alias_dir):

@@ -21,7 +21,7 @@ callable in isolation, so it is covered by code review + this shared-shape test
 rather than driven directly here.
 
 Assertions read the real usage shard written under the per-test isolated
-``KIROCREW_HOME`` (the autouse ``_isolate_kirocrew_home`` conftest fixture), so
+``AJCREW_HOME`` (the autouse ``_isolate_ajcrew_home`` conftest fixture), so
 they exercise the full chain gateway -> persist -> ``_build_token_record``
 precedence, not a mock of it.
 """
@@ -36,17 +36,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.types import STOP_REASON_CANCELLED, STOP_REASON_END_TURN, TurnUsage
-from kiro_crew.autonudge import NudgeLoop
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.handlers.usage import _token_usage_dir
-from kiro_crew.monitoring.models import (
+from aj_crew.acp.types import STOP_REASON_CANCELLED, STOP_REASON_END_TURN, TurnUsage
+from aj_crew.autonudge import NudgeLoop
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.handlers.usage import _token_usage_dir
+from aj_crew.monitoring.models import (
     MonitorActionCompletion,
     MonitorActionDisposition,
     MonitorState,
 )
-from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
-from kiro_crew.slack import gateway as gw
+from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
+from aj_crew.slack import gateway as gw
 
 
 class _StepClock:
@@ -86,7 +86,7 @@ def _fake_client() -> SimpleNamespace:
     return SimpleNamespace(
         context_used_tokens=lambda: 4096,
         context_window_tokens=lambda: 200000,
-        _agent="kirocrew-monitor",
+        _agent="ajcrew-monitor",
     )
 
 
@@ -104,8 +104,8 @@ def _fake_sessions(client: object) -> MagicMock:
 def _build_orchestrator(client: object) -> gw.GatewayOrchestrator:
     """Construct a real orchestrator, then swap in the collaborators the
     monitor nudge path touches."""
-    cfg = KiroCrewConfig()
-    creds = {"KIROCREW_OWNER_ID": "U_OWNER"}
+    cfg = AjCrewConfig()
+    creds = {"AJCREW_OWNER_ID": "U_OWNER"}
     with patch.object(cfg, "load_credentials", return_value=creds):
         orch = gw.GatewayOrchestrator(
             cfg, no_dashboard=True, no_crons=True, no_open=True

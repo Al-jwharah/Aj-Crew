@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { screen, fireEvent, within } from '@testing-library/react'
 import { renderWithProviders } from './helpers'
 import JobForm from '../components/JobForm'
-import type { KiroCrewAgent } from '../components/AgentSelector'
+import type { AjCrewAgent } from '../components/AgentSelector'
 import type { CronJob } from '../types'
 
 vi.mock('../api/client', () => ({
@@ -10,7 +10,7 @@ vi.mock('../api/client', () => ({
     updateCron: vi.fn(),
     createCron: vi.fn(),
     models: vi.fn().mockResolvedValue({ models: [] }),
-    kirocrewAgents: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
+    ajcrewAgents: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
     agentCatalog: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
   },
 }))
@@ -20,8 +20,8 @@ vi.mock('../api/client', () => ({
  * default-only regression and an accidental `[agents[0]]` truncation are
  * different bugs, and this shape fails on either.
  */
-const roster: KiroCrewAgent[] = [
-  { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'built-in', source: 'kirocrew' },
+const roster: AjCrewAgent[] = [
+  { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'built-in', source: 'ajcrew' },
   { name: 'gpu-research', kiro_agent: 'gpu-research', workspace: 'research', memory_store: 'research', description: 'internal research', source: 'package' },
   { name: 'oncall', kiro_agent: 'oncall-agent', workspace: 'oncall', memory_store: 'oncall-kb', description: 'paging', source: 'package' },
   { name: 'wiki', kiro_agent: 'gpu-wiki', workspace: 'wiki', memory_store: 'wiki', description: 'wiki edits', source: 'package' },
@@ -44,7 +44,7 @@ function openRosterOptions(): string[] {
 describe('cron JobForm agent selector roster (#5990)', () => {
   it('offers the WHOLE roster in the side-panel (vertical) edit form, not just the default', () => {
     renderWithProviders(
-      <JobForm job={messageJob()} agents={roster} defaultAgent="kirocrew" onSaved={() => {}} layout="vertical" />,
+      <JobForm job={messageJob()} agents={roster} defaultAgent="ajcrew" onSaved={() => {}} layout="vertical" />,
     )
     const options = openRosterOptions()
     expect(options).toHaveLength(roster.length)
@@ -55,7 +55,7 @@ describe('cron JobForm agent selector roster (#5990)', () => {
 
   it('offers the WHOLE roster in the inline (horizontal) create form', () => {
     renderWithProviders(
-      <JobForm agents={roster} defaultAgent="kirocrew" onSaved={() => {}} layout="horizontal" />,
+      <JobForm agents={roster} defaultAgent="ajcrew" onSaved={() => {}} layout="horizontal" />,
     )
     const options = openRosterOptions()
     expect(options).toHaveLength(roster.length)
@@ -66,7 +66,7 @@ describe('cron JobForm agent selector roster (#5990)', () => {
 
   it('honours a stored NON-default agent and still offers the rest of the roster', () => {
     renderWithProviders(
-      <JobForm job={messageJob({ agent: 'oncall' })} agents={roster} defaultAgent="kirocrew" onSaved={() => {}} layout="vertical" />,
+      <JobForm job={messageJob({ agent: 'oncall' })} agents={roster} defaultAgent="ajcrew" onSaved={() => {}} layout="vertical" />,
     )
     const trigger = screen.getByLabelText('Switch agent')
     // The job's stored agent survives into the form — a default-only regression
@@ -94,7 +94,7 @@ describe('cron JobForm agent selector roster (#5990)', () => {
 describe('cron JobForm agent selector roster failure (#5990)', () => {
   it('says the roster failed to load, rather than claiming there are no matches', () => {
     renderWithProviders(
-      <JobForm job={messageJob()} agents={[]} defaultAgent="kirocrew" rosterFailure={{ reloading: false, onReload: () => {} }} onSaved={() => {}} layout="vertical" />,
+      <JobForm job={messageJob()} agents={[]} defaultAgent="ajcrew" rosterFailure={{ reloading: false, onReload: () => {} }} onSaved={() => {}} layout="vertical" />,
     )
     fireEvent.click(screen.getByLabelText('Switch agent'))
 
@@ -106,7 +106,7 @@ describe('cron JobForm agent selector roster failure (#5990)', () => {
   it('offers a retry that re-runs the roster fetch', () => {
     const onReloadRoster = vi.fn()
     renderWithProviders(
-      <JobForm job={messageJob()} agents={[]} defaultAgent="kirocrew" rosterFailure={{ reloading: false, onReload: onReloadRoster }} onSaved={() => {}} layout="vertical" />,
+      <JobForm job={messageJob()} agents={[]} defaultAgent="ajcrew" rosterFailure={{ reloading: false, onReload: onReloadRoster }} onSaved={() => {}} layout="vertical" />,
     )
     fireEvent.click(screen.getByLabelText('Switch agent'))
 
@@ -116,7 +116,7 @@ describe('cron JobForm agent selector roster failure (#5990)', () => {
 
   it('reports the failure on the inline create form too', () => {
     renderWithProviders(
-      <JobForm agents={[]} defaultAgent="kirocrew" rosterFailure={{ reloading: false, onReload: () => {} }} onSaved={() => {}} layout="horizontal" />,
+      <JobForm agents={[]} defaultAgent="ajcrew" rosterFailure={{ reloading: false, onReload: () => {} }} onSaved={() => {}} layout="horizontal" />,
     )
     fireEvent.click(screen.getByLabelText('Switch agent'))
 
@@ -125,7 +125,7 @@ describe('cron JobForm agent selector roster failure (#5990)', () => {
 
   it('keeps a roster it still holds usable when a later refresh failed', () => {
     renderWithProviders(
-      <JobForm job={messageJob()} agents={roster} defaultAgent="kirocrew" rosterFailure={{ reloading: false, onReload: () => {} }} onSaved={() => {}} layout="vertical" />,
+      <JobForm job={messageJob()} agents={roster} defaultAgent="ajcrew" rosterFailure={{ reloading: false, onReload: () => {} }} onSaved={() => {}} layout="vertical" />,
     )
     const options = openRosterOptions()
 
@@ -136,7 +136,7 @@ describe('cron JobForm agent selector roster failure (#5990)', () => {
 
   it('still says "No matches" when a filter — not a failure — empties the list', () => {
     renderWithProviders(
-      <JobForm job={messageJob()} agents={roster} defaultAgent="kirocrew" onSaved={() => {}} layout="vertical" />,
+      <JobForm job={messageJob()} agents={roster} defaultAgent="ajcrew" onSaved={() => {}} layout="vertical" />,
     )
     fireEvent.click(screen.getByLabelText('Switch agent'))
     fireEvent.change(screen.getByLabelText('Filter agents'), { target: { value: 'nobody' } })
@@ -147,7 +147,7 @@ describe('cron JobForm agent selector roster failure (#5990)', () => {
 
   it('shows the retry as in flight, so a retry that fails again is not silent', () => {
     renderWithProviders(
-      <JobForm job={messageJob()} agents={[]} defaultAgent="kirocrew" rosterFailure={{ reloading: true, onReload: () => {} }} onSaved={() => {}} layout="vertical" />,
+      <JobForm job={messageJob()} agents={[]} defaultAgent="ajcrew" rosterFailure={{ reloading: true, onReload: () => {} }} onSaved={() => {}} layout="vertical" />,
     )
     fireEvent.click(screen.getByLabelText('Switch agent'))
 
@@ -159,7 +159,7 @@ describe('cron JobForm agent selector roster failure (#5990)', () => {
 
   it('withholds the filter box while the roster is unavailable', () => {
     renderWithProviders(
-      <JobForm job={messageJob()} agents={[]} defaultAgent="kirocrew" rosterFailure={{ reloading: false, onReload: () => {} }} onSaved={() => {}} layout="vertical" />,
+      <JobForm job={messageJob()} agents={[]} defaultAgent="ajcrew" rosterFailure={{ reloading: false, onReload: () => {} }} onSaved={() => {}} layout="vertical" />,
     )
     fireEvent.click(screen.getByLabelText('Switch agent'))
 
@@ -169,7 +169,7 @@ describe('cron JobForm agent selector roster failure (#5990)', () => {
 
   it('keeps the filter box when a roster is present despite a failed refresh', () => {
     renderWithProviders(
-      <JobForm job={messageJob()} agents={roster} defaultAgent="kirocrew" rosterFailure={{ reloading: false, onReload: () => {} }} onSaved={() => {}} layout="vertical" />,
+      <JobForm job={messageJob()} agents={roster} defaultAgent="ajcrew" rosterFailure={{ reloading: false, onReload: () => {} }} onSaved={() => {}} layout="vertical" />,
     )
     fireEvent.click(screen.getByLabelText('Switch agent'))
 

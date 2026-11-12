@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.skills import SkillsLoader
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.skills import SkillsLoader
 
 
 def test_crystallize_builtin_present_and_triggers(tmp_path):
@@ -12,7 +12,7 @@ def test_crystallize_builtin_present_and_triggers(tmp_path):
     loader = SkillsLoader(
         skills_path=tmp_path / "skills",
         install_builtins=True,
-        config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+        config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
     )
     keys = {s["key"] for s in loader.list_skills()}
     assert "crystallize" in keys
@@ -38,10 +38,10 @@ def test_crystallize_gates_on_recurrence_like_the_auto_pass():
     """
     from pathlib import Path
 
-    import kiro_crew
+    import aj_crew
 
     body = (
-        Path(kiro_crew.__file__).parent / "builtin_skills" / "crystallize" / "SKILL.md"
+        Path(aj_crew.__file__).parent / "builtin_skills" / "crystallize" / "SKILL.md"
     ).read_text(encoding="utf-8")
     text = " ".join(body.split())
 

@@ -16,9 +16,9 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.constants import MAX_BANNER_CHARS
-from kiro_crew.dashboard.chat_delivery import banner_meta, queue_entry_view
-from kiro_crew.dashboard.chat_utils_display import _redact_meta_for_role
+from aj_crew.constants import MAX_BANNER_CHARS
+from aj_crew.dashboard.chat_delivery import banner_meta, queue_entry_view
+from aj_crew.dashboard.chat_utils_display import _redact_meta_for_role
 
 _SLOT = "banner-chat"
 _ORDER = "Work order: rebase CR-1 onto mainline, rerun the build, report the result.\n" * 40
@@ -32,7 +32,7 @@ def _user_rows(slot) -> list[dict]:
 
 @pytest.fixture
 def idle_state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.get_or_create_slot(_SLOT)
@@ -42,7 +42,7 @@ def idle_state(tmp_path, monkeypatch):
         received.append(message)
         slot.append("done", "", "done", broadcast=False)
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", run_chat)
     return state, received
 
 
@@ -108,14 +108,14 @@ async def test_banner_credential_is_masked_on_the_row(idle_state):
 
 @pytest.mark.asyncio
 async def test_queued_send_keeps_its_label_and_drains_alone(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     slot = state.get_or_create_slot(_SLOT)
     slot.task = MagicMock(done=MagicMock(return_value=False))
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", MagicMock())
     async with TestClient(TestServer(_make_app(state))) as client:
         for body in ({"message": "first order", "banner": "First"}, {"message": "plain"}):
             resp = await client.post("/api/chat", json={"slot": _SLOT, **body})
@@ -144,7 +144,7 @@ async def test_queued_send_keeps_its_label_and_drains_alone(tmp_path, monkeypatc
 
 @pytest.mark.asyncio
 async def test_steered_send_keeps_its_label_on_the_row_and_the_requeue(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     slot = state.get_or_create_slot(_SLOT)
@@ -156,7 +156,7 @@ async def test_steered_send_keeps_its_label_on_the_row_and_the_requeue(tmp_path,
         return True
 
     slot._acp_client = MagicMock(supports_steer=True, steer=AsyncMock(side_effect=steer))
-    with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
+    with patch("aj_crew.dashboard.chat_handlers.sel", return_value=MagicMock()):
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(
                 "/api/chat",

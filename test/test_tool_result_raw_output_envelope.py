@@ -14,8 +14,8 @@ object Crew does not recognise is NOT evidence the tool produced no output.
 
 from typing import Any
 
-from kiro_crew.acp._dispatch import parse_session_update
-from kiro_crew.acp.types import EVENT_TOOL_RESULT
+from aj_crew.acp._dispatch import parse_session_update
+from aj_crew.acp.types import EVENT_TOOL_RESULT
 
 
 def _results(update: dict[str, Any]) -> list:

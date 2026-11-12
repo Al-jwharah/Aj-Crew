@@ -1,4 +1,4 @@
-"""``kirocrew chat``'s ``o`` (other) permission answer: refuse the call and send the
+"""``ajcrew chat``'s ``o`` (other) permission answer: refuse the call and send the
 person's typed reply to the agent instead of a bare approve or deny.
 
 Runs on ``_TestChatPermissionRequestHarness`` from ``cli_helpers.py``: the real
@@ -42,7 +42,7 @@ class TestChatPermissionOtherReply(_TestChatPermissionRequestHarness):
             self.messages = []
 
         async def stream(self, message):
-            from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+            from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
             self.messages.append(message)
             if len(self.messages) > 1:
@@ -54,7 +54,7 @@ class TestChatPermissionOtherReply(_TestChatPermissionRequestHarness):
                 yield ev
 
     async def _run(self, monkeypatch, provider_cls, answer, **provider_kw):
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         trace: list = []
         provider = provider_cls(self._event(), trace, **provider_kw)
@@ -92,7 +92,7 @@ class TestChatPermissionOtherReply(_TestChatPermissionRequestHarness):
         assert _REPLY in notice
         assert "did not run" in notice
         # This IS a user action: the host notice's "NOT a user action" would lie.
-        assert "[Kiro Crew host notice]" not in notice
+        assert "[Aj Crew host notice]" not in notice
         assert "NOT a user action" not in notice
         assert reads["n"] == 2
         assert "reply" in reads["prompts"][1].lower()
@@ -113,7 +113,7 @@ class TestChatPermissionOtherReply(_TestChatPermissionRequestHarness):
 
     @pytest.mark.asyncio
     async def test_the_model_authored_title_is_redacted_in_the_reply_notice(self, monkeypatch):
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         secret = "AKIAIOSFODNN7EXAMPLE"
         notice = cli_chat._user_reply_notice(f"upload with {secret}", _REPLY)

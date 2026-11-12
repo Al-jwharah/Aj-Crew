@@ -1,4 +1,4 @@
-"""``kiro_crew.platform_compat`` stays the compatibility layer's import and patch surface.
+"""``aj_crew.platform_compat`` stays the compatibility layer's import and patch surface.
 
 The cross-process file locks and the owner-only access helpers are defined in
 ``platform_lock_compat`` and ``platform_owner_compat``. Every name that moved there stays
@@ -10,7 +10,7 @@ run, so a test that rebinds one of those there still reaches them.
 The rest of what platform_compat.py defined is carved into the owners in ``_CARVED``, which
 import each other lowest layer first (``_CARVED_IMPORTS``) and never the facade. Their code
 read one namespace before the carve, so the facade MIRRORS a write through it
-(``kiro_crew._facade_mirror``): it lands on every carved owner that binds the same object,
+(``aj_crew._facade_mirror``): it lands on every carved owner that binds the same object,
 and on the facade when the facade binds the name too. The checks shared with the sandbox
 facade, and the one census of facade patches both run on, live in
 ``test_sandbox_refactor_facade``.
@@ -29,7 +29,7 @@ from typing import Any
 import pytest
 import test_sandbox_refactor_facade as shared
 
-from kiro_crew import (
+from aj_crew import (
     platform_compat,
     platform_compat_descendants,
     platform_compat_files,
@@ -85,7 +85,7 @@ _OWNERS: dict[str, ModuleType] = {
 #: files owner's two libc temporaries are not listed: they exist only where the C library
 #: loaded, and the facade binds them under the same condition.
 _MOVED: dict[str, tuple[str, ...]] = {
-    "kiro_crew.platform_lock_compat": (
+    "aj_crew.platform_lock_compat": (
         "_LOCK_POLL_SECS",
         "_LOCK_POLL_MAX_SECS",
         "_LOCK_TIMEOUT_SECS",
@@ -106,7 +106,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         "probe_file_persistence",
         "tempfile",
     ),
-    "kiro_crew.platform_owner_compat": (
+    "aj_crew.platform_owner_compat": (
         "_OWNER_RIGHTS_SID",
         "_TOKEN_QUERY",
         "_TOKEN_USER_CLASS",
@@ -124,7 +124,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         "restrict_dir_to_owner",
         "_apply_owner_only_dacl",
     ),
-    "kiro_crew.platform_compat_native": tuple("""
+    "aj_crew.platform_compat_native": tuple("""
         IS_WINDOWS IS_POSIX IS_LINUX IS_MACOS _WINDOWS_PID_MAX SIGKILL _OWN_PGID SIGTERM SIGHUP
         CREATE_NEW_PROCESS_GROUP DETACHED_PROCESS CREATE_SUSPENDED _SUBPROCESS_NO_WINDOW
         _FileBasicInfo _FileId128 _FileIdInfo _ByHandleFileInformation
@@ -133,7 +133,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         _ThreadEntry32 _windows_last_error _open_process_query_handle _close_process_handle
         _PROCESS_QUERY_LIMITED_INFORMATION _ACCESS_HONOURS_EFFECTIVE_IDS
         """.split()),
-    "kiro_crew.platform_compat_proctable": tuple("""
+    "aj_crew.platform_compat_proctable": tuple("""
         _DARWIN_PROC_PIDVNODEPATHINFO _DARWIN_VNODE_INFO_SIZE _DARWIN_MAXPATHLEN
         _DARWIN_VNODE_INFO_PATH_SIZE _DARWIN_PROC_VNODEPATHINFO_SIZE _DARWIN_PROC_PIDTBSDINFO
         _DARWIN_PROC_BSDINFO_SIZE _DARWIN_PBI_PPID_OFFSET _DARWIN_PBI_START_TVSEC_OFFSET
@@ -175,7 +175,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         read_proc_status_int proc_child_map proc_cpu_jiffies_for_pids _proc_children
         _parse_cpu_jiffies _proc_cpu_jiffies
         """.split()),
-    "kiro_crew.platform_compat_runtime": tuple("""
+    "aj_crew.platform_compat_runtime": tuple("""
         _UTF8_PROCESS_ENV _ensure_utf8_process_environment _KEPT_FOR_REEXEC keep_for_reexec
         kept_for_reexec _WHEEL_APPLY_MODULE cancel_wheel_applies_in_flight hard_exit
         _disarm_process_alarm_before_exec _rearm_process_alarm_after_failed_exec
@@ -189,7 +189,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         process_alarm_available arm_process_alarm boottime_now awake_now process_start_boot_secs
         process_age_secs strftime raise_nofile_soft_limit nofile_soft_limit python_launcher_hops
         """.split()),
-    "kiro_crew.platform_compat_links": tuple("""
+    "aj_crew.platform_compat_links": tuple("""
         symlink_or_junction _ISJUNCTION _FILE_ATTRIBUTE_REPARSE_POINT
         _IO_REPARSE_TAG_MOUNT_POINT _is_junction_fallback _IO_REPARSE_TAG_NAME_SURROGATE
         lstat_is_name_surrogate _StrOrPath strip_extended_length_prefix is_link_or_junction
@@ -207,7 +207,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         win_open_no_reparse open_create_no_reparse names_a_verbatim_only_file
         _win_check_within _win_final_path _win_unlink_within _WIN_FILE_READ_ATTRIBUTES
         """.split()),
-    "kiro_crew.platform_compat_files": tuple("""
+    "aj_crew.platform_compat_files": tuple("""
         _RENAME_NOREPLACE_FN _RENAME_NOREPLACE_FLAG _SYS_RENAMEAT2_BY_MACHINE
         _build_renameat2_via_syscall RENAME_NOREPLACE_AVAILABLE TCC_PROTECTED_HOME_DIRS
         TCC_LIBRARY_WALKABLE_CHILDREN _LIBRARY_DIR rename_noreplace publish_dir_noreplace
@@ -222,7 +222,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         ensure_owner_rwx_dirs _SYS_STATX_BY_MACHINE _AT_FDCWD _AT_EMPTY_PATH _STATX_INO
         _STATX_MNT_ID _STATX_SIZE _statx_mnt_id_unreported _statx_call mount_identity
         """.split()),
-    "kiro_crew.platform_compat_trust": tuple("""
+    "aj_crew.platform_compat_trust": tuple("""
         _folded_env_allowlist env_key_allowed _TRUSTED_SYSTEM_BIN_DIRS _WINDOWS_BIN_SUFFIXES
         _windows_system_dirs _FOLDERID_DOCUMENTS _POWERSHELL_USER_PROFILES windows_documents_dir
         windows_powershell_profile_paths _UNPINNED_TOOL_PROBED _log_tool_outside_trusted_dirs
@@ -242,11 +242,11 @@ _MOVED: dict[str, tuple[str, ...]] = {
         _live_desktop_session _x11_display_is_live _wayland_display_is_live reveal_in_file_manager
         open_with_default_app _reveal_env tool_outside_trusted_dirs short_path_name
         """.split()),
-    "kiro_crew.platform_compat_liveness": tuple("""
+    "aj_crew.platform_compat_liveness": tuple("""
         PID_DEAD PID_ALIVE PID_UNSIGNALABLE live_thread_group_leaders is_thread_group_leader
         pid_liveness pgroup_of pgroup_of_leader pid_exists pid_is_zombie process_thread_count
         """.split()),
-    "kiro_crew.platform_compat_identity": tuple("""
+    "aj_crew.platform_compat_identity": tuple("""
         process_cwd get_ppid _ANCESTRY_MAX_DEPTH _PYTHON_INTERPRETER_NAME
         process_executable_path _is_python_interpreter_path is_exec_supervisor_of_this_process
         get_process_start_identity get_process_start_id process_namespaces_match
@@ -259,7 +259,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         process_start_id_for_source _OWN_START_TIME _linux_boot_id _own_identity_token
         process_incarnation_id own_process_start_time
         """.split()),
-    "kiro_crew.platform_compat_ports": tuple("""
+    "aj_crew.platform_compat_ports": tuple("""
         _normalized_tcp_endpoint _linux_tcp_peer_pid _macos_tcp_peer_pid _WindowsTcpOwnerRow
         _WINDOWS_TCP_TABLE_OWNER_PID_LISTENER _WINDOWS_TCP_TABLE_OWNER_PID_CONNECTIONS
         _WINDOWS_TCP_STATE_LISTEN _WINDOWS_TCP_STATE_ESTABLISHED _WINDOWS_TCP_TABLE_MAX_BYTES
@@ -270,7 +270,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         _linux_loopback_listener_inodes _windows_loopback_listener_owner_pids
         process_owns_loopback_listener find_port_listeners find_listening_pids
         """.split()),
-    "kiro_crew.platform_compat_descendants": tuple("""
+    "aj_crew.platform_compat_descendants": tuple("""
         _descendants_from_parent_map _posix_process_parent_map ProcessDescendantIdentity
         _ProcessStartOrder _process_start_order _PosixProcessSnapshotRow
         _linux_direct_child_pids _direct_child_pids_for_identity_walk
@@ -281,7 +281,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         _WINDOWS_CLEANUP_ROOT_LIMIT _WINDOWS_CLEANUP_IDENTITY_LIMIT
         _WINDOWS_CLEANUP_SNAPSHOT_LIMIT WindowsCleanupCapacityError _WindowsTreeOverflow
         """.split()),
-    "kiro_crew.platform_compat_winproc": tuple("""
+    "aj_crew.platform_compat_winproc": tuple("""
         _open_process_termination_handle open_process_termination_handle
         duplicate_asyncio_process_handle _windows_lineage_matches_lifetimes
         _windows_process_query_diagnostic _windows_descendant_failure_details
@@ -292,7 +292,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         _THREAD_SUSPEND_RESUME _INVALID_HANDLE_VALUE _RESUME_THREAD_FAILED
         resume_process_main_thread _adopt_job
         """.split()),
-    "kiro_crew.platform_compat_wintree": tuple("""
+    "aj_crew.platform_compat_wintree": tuple("""
         _WINDOWS_TERMINATE_REFUSAL_WAIT_MS terminate_process_handle process_handle_active
         _WINDOWS_TREE_REAP_TIMEOUT_SECS _WINDOWS_TREE_REAP_POLL_SECS
         _PENDING_WINDOWS_TREE_RETRY_LIMIT _WINDOWS_CAPTURE_MEASURED_VERSIONS
@@ -306,7 +306,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         retry_pending_windows_process_trees terminate_windows_asyncio_tree
         windows_tree_cleanup_pending _create_windows_subprocess_owned
         """.split()),
-    "kiro_crew.platform_compat_kill": tuple("""
+    "aj_crew.platform_compat_kill": tuple("""
         pgroup_exists _raise_taskkill_error kill_pid kill_process_group _killpg kill_process_tree
         kill_process_tree_pinned kill_pid_pinned terminate_pids_pinned kill_pid_async
         kill_process_tree_async
@@ -315,7 +315,7 @@ _MOVED: dict[str, tuple[str, ...]] = {
         terminate_and_reap terminate_and_reap_sync
         _POST_KILL_DRAIN_SECS _STDLIB_RUN run_killing_tree_on_timeout
         """.split()),
-    "kiro_crew.platform_compat_metrics": tuple("""
+    "aj_crew.platform_compat_metrics": tuple("""
         _MACH_TASK_BASIC_INFO _MachTimeValue _MachTaskBasicInfo _MACH_TASK_BASIC_INFO_COUNT
         _scale_ru_maxrss _ru_maxrss_bytes _LINUX_STATUS_PATH _LINUX_PEAK_RSS_FIELD
         _LINUX_PEAK_RSS_FLOOR _peak_rss_from_status _linux_peak_rss_bytes _posix_peak_rss_bytes
@@ -355,91 +355,91 @@ _BOUND_HERE: frozenset[str] = frozenset("""
 #: decision; each edge points to an owner earlier in ``platform_compat._CARVED_OWNERS`` (so
 #: the graph has no cycle) or to a lock or owner-only module.
 _CARVED_IMPORTS: dict[str, frozenset[str]] = {
-    "kiro_crew.platform_compat_proctable": frozenset({"kiro_crew.platform_compat_native"}),
-    "kiro_crew.platform_compat_runtime": frozenset({"kiro_crew.platform_compat_native"}),
-    "kiro_crew.platform_compat_links": frozenset(
+    "aj_crew.platform_compat_proctable": frozenset({"aj_crew.platform_compat_native"}),
+    "aj_crew.platform_compat_runtime": frozenset({"aj_crew.platform_compat_native"}),
+    "aj_crew.platform_compat_links": frozenset(
         {
-            "kiro_crew.platform_compat_native",
-            "kiro_crew.platform_lock_compat",
+            "aj_crew.platform_compat_native",
+            "aj_crew.platform_lock_compat",
         }
     ),
-    "kiro_crew.platform_compat_files": frozenset(
+    "aj_crew.platform_compat_files": frozenset(
         {
-            "kiro_crew.platform_compat_links",
-            "kiro_crew.platform_compat_native",
+            "aj_crew.platform_compat_links",
+            "aj_crew.platform_compat_native",
         }
     ),
-    "kiro_crew.platform_compat_trust": frozenset({"kiro_crew.platform_compat_native"}),
-    "kiro_crew.platform_compat_liveness": frozenset(
+    "aj_crew.platform_compat_trust": frozenset({"aj_crew.platform_compat_native"}),
+    "aj_crew.platform_compat_liveness": frozenset(
         {
-            "kiro_crew.platform_compat_native",
-            "kiro_crew.platform_compat_proctable",
+            "aj_crew.platform_compat_native",
+            "aj_crew.platform_compat_proctable",
         }
     ),
-    "kiro_crew.platform_compat_identity": frozenset(
+    "aj_crew.platform_compat_identity": frozenset(
         {
-            "kiro_crew.platform_compat_native",
-            "kiro_crew.platform_compat_proctable",
-            "kiro_crew.platform_compat_trust",
+            "aj_crew.platform_compat_native",
+            "aj_crew.platform_compat_proctable",
+            "aj_crew.platform_compat_trust",
         }
     ),
-    "kiro_crew.platform_compat_ports": frozenset(
+    "aj_crew.platform_compat_ports": frozenset(
         {
-            "kiro_crew.platform_compat_native",
-            "kiro_crew.platform_compat_trust",
+            "aj_crew.platform_compat_native",
+            "aj_crew.platform_compat_trust",
         }
     ),
-    "kiro_crew.platform_compat_descendants": frozenset(
+    "aj_crew.platform_compat_descendants": frozenset(
         {
-            "kiro_crew.platform_compat_identity",
-            "kiro_crew.platform_compat_native",
-            "kiro_crew.platform_compat_proctable",
-            "kiro_crew.platform_compat_trust",
+            "aj_crew.platform_compat_identity",
+            "aj_crew.platform_compat_native",
+            "aj_crew.platform_compat_proctable",
+            "aj_crew.platform_compat_trust",
         }
     ),
-    "kiro_crew.platform_compat_winproc": frozenset(
+    "aj_crew.platform_compat_winproc": frozenset(
         {
-            "kiro_crew.platform_compat_descendants",
-            "kiro_crew.platform_compat_identity",
-            "kiro_crew.platform_compat_native",
+            "aj_crew.platform_compat_descendants",
+            "aj_crew.platform_compat_identity",
+            "aj_crew.platform_compat_native",
         }
     ),
-    "kiro_crew.platform_compat_wintree": frozenset(
+    "aj_crew.platform_compat_wintree": frozenset(
         {
-            "kiro_crew.platform_compat_descendants",
-            "kiro_crew.platform_compat_identity",
-            "kiro_crew.platform_compat_native",
-            "kiro_crew.platform_compat_winproc",
-            "kiro_crew.platform_lock_compat",
+            "aj_crew.platform_compat_descendants",
+            "aj_crew.platform_compat_identity",
+            "aj_crew.platform_compat_native",
+            "aj_crew.platform_compat_winproc",
+            "aj_crew.platform_lock_compat",
         }
     ),
-    "kiro_crew.platform_compat_kill": frozenset(
+    "aj_crew.platform_compat_kill": frozenset(
         {
-            "kiro_crew.platform_compat_identity",
-            "kiro_crew.platform_compat_liveness",
-            "kiro_crew.platform_compat_native",
+            "aj_crew.platform_compat_identity",
+            "aj_crew.platform_compat_liveness",
+            "aj_crew.platform_compat_native",
             # darwin_pgroup_members settles macOS's EPERM for pgroup_exists and for an
             # all-zombie group's killpg.
-            "kiro_crew.platform_compat_proctable",
-            "kiro_crew.platform_compat_trust",
-            "kiro_crew.platform_compat_winproc",
-            "kiro_crew.platform_compat_wintree",
+            "aj_crew.platform_compat_proctable",
+            "aj_crew.platform_compat_trust",
+            "aj_crew.platform_compat_winproc",
+            "aj_crew.platform_compat_wintree",
         }
     ),
-    "kiro_crew.platform_compat_metrics": frozenset(
+    "aj_crew.platform_compat_metrics": frozenset(
         {
-            "kiro_crew.platform_compat_identity",
-            "kiro_crew.platform_compat_liveness",
-            "kiro_crew.platform_compat_native",
-            "kiro_crew.platform_compat_proctable",
-            "kiro_crew.platform_compat_winproc",
+            "aj_crew.platform_compat_identity",
+            "aj_crew.platform_compat_liveness",
+            "aj_crew.platform_compat_native",
+            "aj_crew.platform_compat_proctable",
+            "aj_crew.platform_compat_winproc",
         }
     ),
 }
 
-_LOCK = "kiro_crew.platform_lock_compat"
-_OWNER = "kiro_crew.platform_owner_compat"
-_PC = "kiro_crew.platform_compat"
+_LOCK = "aj_crew.platform_lock_compat"
+_OWNER = "aj_crew.platform_owner_compat"
+_PC = "aj_crew.platform_compat"
 
 #: Every function in an owner that imports from the facade, and what it reads there.
 #: The lock modules are imported at the point where their branch first uses them,
@@ -556,7 +556,7 @@ def test_the_owners_log_under_the_compatibility_layer_s_name() -> None:
     shared.check_owner_logger(platform_compat, _OWNERS)
 
 
-#: Names a test patches through ``kiro_crew.platform_compat`` that the facade AND an owner
+#: Names a test patches through ``aj_crew.platform_compat`` that the facade AND an owner
 #: both bind, each importing its own, so the patch reaches the facade's and the carved
 #: owners' code (the mirror carries it there) but not the lock or owner-only module's.
 #: ``Path`` is rebound for the process-identity and trusted-binary helpers, in the carved
@@ -768,14 +768,14 @@ def test_a_patched_effective_ids_flag_reaches_the_writability_check(
 #: ``module.qualname`` rendering read their module, so each keeps the facade's: the
 #: rendered path is one callers import, and it resolves to the very class.
 _FACADE_NAMED_CLASSES: dict[str, tuple[str, ...]] = {
-    "kiro_crew.platform_compat_proctable": ("_DarwinLibprocUnavailable",),
-    "kiro_crew.platform_compat_identity": ("ProcessIdentitySource",),
-    "kiro_crew.platform_compat_descendants": (
+    "aj_crew.platform_compat_proctable": ("_DarwinLibprocUnavailable",),
+    "aj_crew.platform_compat_identity": ("ProcessIdentitySource",),
+    "aj_crew.platform_compat_descendants": (
         "_ProcessStartOrder",
         "WindowsCleanupCapacityError",
         "_WindowsTreeOverflow",
     ),
-    "kiro_crew.platform_compat_wintree": ("WindowsTreeDrainPending",),
+    "aj_crew.platform_compat_wintree": ("WindowsTreeDrainPending",),
 }
 
 

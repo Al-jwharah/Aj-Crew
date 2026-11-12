@@ -1,7 +1,7 @@
 /**
  * ProjectsPage's own wiring of the roster failure (#7656, same class as #5990).
  *
- * The page used to call `api.kirocrewAgents()` directly with `.catch(() => {})`
+ * The page used to call `api.ajcrewAgents()` directly with `.catch(() => {})`
  * into local state, so the hook-level fix that gave every `useAgents` consumer a
  * readable `error` never applied here: a failed roster fetch rendered as a
  * legitimately empty agent list. Per the mutation-testing note on the schedule
@@ -22,13 +22,13 @@ vi.mock('../pages/ProjectDetailPage', () => ({ default: () => <div data-testid="
 vi.mock('../api/client', () => ({
   api: {
     taskRunnerStatus: vi.fn().mockResolvedValue({ running: false, available: true, runs: [] }),
-    kirocrewAgents: vi.fn(),
+    ajcrewAgents: vi.fn(),
     agentCatalog: vi.fn(),
   },
 }))
 
 const ROSTER = [
-  { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'built-in', source: 'kirocrew' },
+  { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'built-in', source: 'ajcrew' },
   { name: 'oncall', kiro_agent: 'oncall-agent', workspace: 'oncall', memory_store: 'oncall-kb', description: 'paging', source: 'package' },
 ]
 
@@ -45,7 +45,7 @@ describe('ProjectsPage roster failure wiring (#7656)', () => {
     sessionStorage.clear()
     const { api } = await import('../api/client')
     vi.mocked(api).taskRunnerStatus.mockResolvedValue({ running: false, available: true, runs: [] })
-    vi.mocked(api).kirocrewAgents.mockRejectedValue(new Error('gateway restarting'))
+    vi.mocked(api).ajcrewAgents.mockRejectedValue(new Error('gateway restarting'))
     vi.mocked(api).agentCatalog.mockRejectedValue(new Error('gateway restarting'))
   })
 
@@ -65,9 +65,9 @@ describe('ProjectsPage roster failure wiring (#7656)', () => {
     await openAgentPicker()
     await waitFor(() => expect(screen.getByText('Retry')).toBeInTheDocument())
 
-    vi.mocked(api).kirocrewAgents.mockResolvedValue({ agents: ROSTER, default_agent: 'kirocrew' })
+    vi.mocked(api).ajcrewAgents.mockResolvedValue({ agents: ROSTER, default_agent: 'ajcrew' })
 
-    vi.mocked(api).agentCatalog.mockResolvedValue({ agents: ROSTER, default_agent: 'kirocrew' })
+    vi.mocked(api).agentCatalog.mockResolvedValue({ agents: ROSTER, default_agent: 'ajcrew' })
     fireEvent.click(screen.getByText('Retry'))
 
     await waitFor(() => expect(screen.getByText('oncall')).toBeInTheDocument())
@@ -80,8 +80,8 @@ describe('ProjectsPage roster failure wiring (#7656)', () => {
     await waitFor(() => expect(screen.getByText('Retry')).toBeInTheDocument())
 
     const before = store.getState().dashboard.refreshTrigger
-    vi.mocked(api).kirocrewAgents.mockResolvedValue({ agents: ROSTER, default_agent: 'kirocrew' })
-    vi.mocked(api).agentCatalog.mockResolvedValue({ agents: ROSTER, default_agent: 'kirocrew' })
+    vi.mocked(api).ajcrewAgents.mockResolvedValue({ agents: ROSTER, default_agent: 'ajcrew' })
+    vi.mocked(api).agentCatalog.mockResolvedValue({ agents: ROSTER, default_agent: 'ajcrew' })
     fireEvent.click(screen.getByText('Retry'))
 
     // `useAgents` state is per-instance and the app shell holds its own copy, so

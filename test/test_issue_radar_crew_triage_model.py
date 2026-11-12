@@ -23,10 +23,10 @@ from pathlib import Path
 from typing import Any
 from unittest import mock
 
-import kiro_crew
-from kiro_crew.apps.builtins.issue_radar.backend import crew_model as cm
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
-from kiro_crew.dashboard.chat_utils import session_key_for
+import aj_crew
+from aj_crew.apps.builtins.issue_radar.backend import crew_model as cm
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.dashboard.chat_utils import session_key_for
 
 WORK = "claude-opus-4.5"
 TRIAGE = "claude-haiku-4.5"
@@ -191,7 +191,7 @@ class TestApplyTurnModel(_Isolated):
         state._slots = {"chat-7": other}
         slot = _Slot()
         with mock.patch(
-            "kiro_crew.dashboard.chat_handlers._cancel_target",
+            "aj_crew.dashboard.chat_handlers._cancel_target",
             lambda s: getattr(s, "_turn_key", session_key_for(s.key)),
         ):
             self.assertFalse(cm.apply_turn_model(state, slot, _crew(triage_model=TRIAGE), []))
@@ -553,7 +553,7 @@ class _WriterVisitor(ast.NodeVisitor):
 
 def _pick_gen_writers() -> dict[tuple[str, str], tuple[int, bool]]:
     """(file, innermost function) -> (bumps of ``_model_pick_gen``, stamps the runtime gen)."""
-    root = Path(kiro_crew.__file__).parent
+    root = Path(aj_crew.__file__).parent
     found: dict[tuple[str, str], list[Any]] = {}
     for path in sorted(root.rglob("*.py")):
         text = path.read_text(encoding="utf-8")
@@ -628,8 +628,8 @@ def test_a_session_set_model_pick_survives_the_crews_passes(tmp_path, monkeypatc
     """The real pick path end to end: queued by the verb, committed at turn start."""
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard import session_control as sc
-    from kiro_crew.dashboard.chat_utils import slot_history_key
+    from aj_crew.dashboard import session_control as sc
+    from aj_crew.dashboard.chat_utils import slot_history_key
 
     monkeypatch.setattr(sc, "session_control_enabled", lambda: True)
     for store in (cm._withheld, cm._written, cm._held, cm._hold_seen_at):

@@ -23,10 +23,10 @@ from typing import Dict, List, Optional, Tuple
 import pytest
 from test_sandbox_launcher_program import rendered_payload
 
-from kiro_crew import agent, sandbox
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.hooks import TOOL_DENY, HookManager, HooksConfig
-from kiro_crew.platform import (
+from aj_crew import agent, sandbox
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.hooks import TOOL_DENY, HookManager, HooksConfig
+from aj_crew.platform import (
     BASELINE_DENY,
     PROFILE_ENTERPRISE,
     PlatformCompositionError,
@@ -99,16 +99,16 @@ class _EnterpriseMcpTooling:
 @pytest.fixture
 def enterprise_ctx(monkeypatch):
     """Install an enterprise PlatformContext and return it (companion or inline)."""
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     ctx = _compose_enterprise_context(cfg, monkeypatch)
     set_context(ctx)
     return ctx
 
 
-def _compose_enterprise_context(cfg: KiroCrewConfig, monkeypatch):
+def _compose_enterprise_context(cfg: AjCrewConfig, monkeypatch):
     """Compose via the companion if importable, else build the overlay inline."""
     try:
-        from kiro_crew.platform.discovery import discover_companion_context
+        from aj_crew.platform.discovery import discover_companion_context
 
         companion = discover_companion_context(PROFILE_ENTERPRISE, cfg)
         if companion is not None and companion.profile == PROFILE_ENTERPRISE:
@@ -223,13 +223,13 @@ def test_extra_mcp_server_in_agent_config(enterprise_ctx) -> None:
     servers = cfg.get("mcpServers", {})
     assert _ENT_MCP_NAME in servers
     # Managed servers are still present (ADD-only merge).
-    assert "kirocrew-core" in servers
-    assert "kirocrew-cron" in servers
+    assert "ajcrew-core" in servers
+    assert "ajcrew-cron" in servers
 
 
 def test_extra_mcp_server_on_refresh(enterprise_ctx) -> None:
     """``_refresh_dynamic_fields`` also seeds the edition-contributed server."""
-    existing: dict = {"name": "kirocrew", "mcpServers": {}}
+    existing: dict = {"name": "ajcrew", "mcpServers": {}}
     agent._refresh_dynamic_fields(existing)
     assert _ENT_MCP_NAME in existing["mcpServers"]
 

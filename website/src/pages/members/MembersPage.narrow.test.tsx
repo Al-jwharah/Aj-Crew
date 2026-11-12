@@ -85,7 +85,7 @@ vi.mock('../../api/client', () => ({
     artifacts: vi.fn(() => Promise.resolve({ artifacts: [] })),
     // `dashboard.crewmate_threads` (reply threads) is read from the shared config
     // query; an empty config is the default -- the flag is OFF.
-    kirocrewConfig: vi.fn(() => Promise.resolve({})),
+    ajcrewConfig: vi.fn(() => Promise.resolve({})),
     // The Schedules chip's count and its tab body read the whole cron list and
     // filter it per crewmate (`wakesCrew`). Resolved-and-empty is the state every
     // case not about schedules wants: the chip reads 0/0, which is an ANSWER of
@@ -95,7 +95,7 @@ vi.mock('../../api/client', () => ({
     // `wakesCrew`'s default-crew fallback needs to know which crew is the default,
     // or every unbound job in the install would be attributed to whichever
     // crewmate happens to be open.
-    defaultAgent: vi.fn(() => Promise.resolve({ default_agent: 'kirocrew' })),
+    defaultAgent: vi.fn(() => Promise.resolve({ default_agent: 'ajcrew' })),
     // The schedule row's own controls (pause / run now), reached through
     // `useCronActions` once the Schedules tab is open.
     toggleCron: vi.fn(() => Promise.resolve({})),
@@ -106,13 +106,13 @@ vi.mock('../../api/client', () => ({
     // create write. Quiet defaults — one custom agent list item and one
     // workspace — so the dialog renders without its own options-failed notice
     // in every case that does not open it.
-    agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
-    // The crew editor's roster read (KiroCrewAgent list), fired when the
+    agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
+    // The crew editor's roster read (AjCrewAgent list), fired when the
     // thread-header pencil opens the in-place editor (CREW-18688).
-    kirocrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
+    ajcrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
     workspaces: vi.fn(() => Promise.resolve({ workspaces: [{ name: 'default' }] })),
     createWorkspace: vi.fn(() => Promise.resolve({ name: 'staging' })),
-    createKirocrewAgent: vi.fn(() => Promise.resolve({ ok: true })),
+    createAjcrewAgent: vi.fn(() => Promise.resolve({ ok: true })),
     // The guided (embedded Meet CrewMates) flow's reads and its schedule write.
     agentsInstalled: vi.fn(() => Promise.resolve([])),
     getSlackConfig: vi.fn(() => Promise.resolve({ connected: false })),
@@ -389,7 +389,7 @@ describe('MembersPage default member, memory and URL', () => {
 
     it('a rightward drag over the chat reveals the roster drawer; a leftward one reveals the side panel', async () => {
       setWindowWidth(390)
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=alpha' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=alpha' })
       await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
       drag(120, 330)
       const drawer = await screen.findByTestId('roster-drawer')
@@ -410,7 +410,7 @@ describe('MembersPage default member, memory and URL', () => {
 
     it('a closing drag that lands after the opening settle ran out of time still puts the side panel away', async () => {
       setWindowWidth(390)
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=alpha' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=alpha' })
       await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
       // A busy main thread: each settle's whole duration passes before its first
       // frame, so the closing drag's takeover is what ends the opening settle.
@@ -467,7 +467,7 @@ describe('MembersPage default member, memory and URL', () => {
       // the page root the swipe listens on, so the frame relays its touches
       // (`relayTouches`) and the page replays them onto the frame element.
       setWindowWidth(390)
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=alpha' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=alpha' })
       await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
       fireEvent.click(screen.getByTestId('member-panel-toggle'))
       const host = await screen.findByTestId('member-dashboard')
@@ -488,7 +488,7 @@ describe('MembersPage default member, memory and URL', () => {
     })
 
     it('the header back slides the drawer in on a duplicate entry; a pick spends that entry before switching', async () => {
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=alpha' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=alpha' })
       expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-alpha')
       navigateSpy.mockClear()
       await openRosterDrawer()
@@ -507,7 +507,7 @@ describe('MembersPage default member, memory and URL', () => {
     })
 
     it('Back with the drawer open closes it and stays on the mate; one more Back leaves the page', async () => {
-      ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: alphaBeta(), default_agent: 'kirocrew' })
+      ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: alphaBeta(), default_agent: 'ajcrew' })
       ;(api.memberThread as ReturnType<typeof vi.fn>).mockImplementation(echoThread)
       function Elsewhere() {
         const nav = useNavigate()
@@ -549,7 +549,7 @@ describe('MembersPage default member, memory and URL', () => {
     })
 
     it('a scrim tap closes the drawer and spends its entry without switching', async () => {
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=alpha' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=alpha' })
       await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
       await openRosterDrawer()
       navigateSpy.mockClear()
@@ -561,7 +561,7 @@ describe('MembersPage default member, memory and URL', () => {
 
     it('a team header in the drawer opens the team view, and the view\'s Back slides the roster in again', async () => {
       vi.mocked(api.teams.list).mockResolvedValue({ teams: [{ id: 'abc123abc123', name: 'Triage', members: ['alpha'] }] })
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=alpha' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=alpha' })
       await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
       const drawer = await openRosterDrawer()
       fireEvent.click((await within(drawer).findAllByTestId('team-group-header'))[0])
@@ -577,7 +577,7 @@ describe('MembersPage default member, memory and URL', () => {
       // The team view keeps the roster in the drawer, so a closed drawer is no
       // roster on screen even though no crewmate is open.
       vi.mocked(api.teams.list).mockResolvedValue({ teams: [{ id: 'abc123abc123', name: 'Triage', members: ['alpha'] }] })
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?team=abc123abc123' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?team=abc123abc123' })
       await screen.findByTestId('team-view')
       expect(screen.queryByTestId('roster-drawer')).toBeNull()
       await waitFor(() => expect(scopeOpen('members.roster-phone')).toBe(false))
@@ -587,7 +587,7 @@ describe('MembersPage default member, memory and URL', () => {
     })
 
     it('a New mate card takes the whole screen below md and its close returns to the originating chat', async () => {
-      await renderPage([row({ name: 'alpha', slug: 'alpha' }), defaultRow()], 'kirocrew', { route: '/members?member=alpha' })
+      await renderPage([row({ name: 'alpha', slug: 'alpha' }), defaultRow()], 'ajcrew', { route: '/members?member=alpha' })
       expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-alpha')
       // The roster's "+" lives in the drawer below md.
       await openRosterDrawer()
@@ -608,7 +608,7 @@ describe('MembersPage default member, memory and URL', () => {
     })
 
     it('a guide pushing the create link over the open drawer closes it without popping the guide\'s entry', async () => {
-      await renderPage([row({ name: 'alpha', slug: 'alpha' }), defaultRow()], 'kirocrew', { route: '/members?member=alpha' })
+      await renderPage([row({ name: 'alpha', slug: 'alpha' }), defaultRow()], 'ajcrew', { route: '/members?member=alpha' })
       await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
       await openRosterDrawer()
       navigateSpy.mockClear()
@@ -655,7 +655,7 @@ describe('MembersPage default member, memory and URL', () => {
       // NavigationBackGuard parks a duplicate entry marked as its trap while a
       // draft is unsaved. A drawer entry above it would be popped back onto the
       // trap on close, which the guard reads as a press to carry past.
-      ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: alphaBeta(), default_agent: 'kirocrew' })
+      ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: alphaBeta(), default_agent: 'ajcrew' })
       ;(api.memberThread as ReturnType<typeof vi.fn>).mockImplementation(echoThread)
       renderFromElsewhere({ to: '/members?member=alpha', state: { __navigationLeaveTrap: true } })
       expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-alpha')
@@ -670,7 +670,7 @@ describe('MembersPage default member, memory and URL', () => {
 
     it('the empty roster offers Import from file, so the first mate can be a shared one', async () => {
       const membersMock = api.members as ReturnType<typeof vi.fn>
-      membersMock.mockResolvedValue({ members: [defaultRow()], default_agent: 'kirocrew' })
+      membersMock.mockResolvedValue({ members: [defaultRow()], default_agent: 'ajcrew' })
       renderFromElsewhere({ to: '/members' })
       fireEvent.click((await screen.findAllByTestId('crewmate-empty-import'))[0])
       expect(await screen.findByTestId('crewmate-import-dialog')).toBeTruthy()
@@ -680,13 +680,13 @@ describe('MembersPage default member, memory and URL', () => {
       // A pushed open would leave a bare /members under the chat, and the phone
       // lands a bare /members on a crewmate by itself: Back would bounce back in.
       const membersMock = api.members as ReturnType<typeof vi.fn>
-      membersMock.mockResolvedValue({ members: [defaultRow()], default_agent: 'kirocrew' })
+      membersMock.mockResolvedValue({ members: [defaultRow()], default_agent: 'ajcrew' })
       ;(api.memberThread as ReturnType<typeof vi.fn>).mockImplementation(echoThread)
       renderFromElsewhere({ to: '/members' })
       fireEvent.click((await screen.findAllByTestId('crewmate-empty-advanced'))[0])
       await screen.findByTestId('crewmate-create-form')
       fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'radar' } })
-      membersMock.mockResolvedValue({ members: [defaultRow(), row({ name: 'radar', slug: 'radar' })], default_agent: 'kirocrew' })
+      membersMock.mockResolvedValue({ members: [defaultRow(), row({ name: 'radar', slug: 'radar' })], default_agent: 'ajcrew' })
       fireEvent.click(screen.getByTestId('crewmate-create-submit'))
       await waitFor(() => expect(screen.getByTestId('chat-pane-stub')).toHaveTextContent('member-radar'), PANE_READY)
       expect(currentUrl()).toBe('/members?member=radar')
@@ -695,7 +695,7 @@ describe('MembersPage default member, memory and URL', () => {
     })
 
     it('a stale ?member= opens a stand-in with the notice above the chat, as on a wide window', async () => {
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=ghost' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=ghost' })
       await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
       expect(currentUrl()).not.toBe('/members?member=ghost')
       expect(screen.getByTestId('member-gone-notice')).toHaveTextContent(/^Showing /)
@@ -703,7 +703,7 @@ describe('MembersPage default member, memory and URL', () => {
     })
 
     it('switching from the drawer with Profile open does not carry the card to the next mate', async () => {
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=alpha' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=alpha' })
       await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
       fireEvent.click(await screen.findByTestId('member-identity-pill'))
       await screen.findByTestId('crew-profile-modal')
@@ -722,7 +722,7 @@ describe('MembersPage default member, memory and URL', () => {
       slot.id = 'mobile-topbar-slot'
       document.body.appendChild(slot)
       try {
-        await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=alpha' })
+        await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=alpha' })
         await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
         const header = await screen.findByTestId('member-thread-header')
         expect(slot).toContainElement(header)
@@ -739,7 +739,7 @@ describe('MembersPage default member, memory and URL', () => {
       slot.id = 'mobile-topbar-slot'
       document.body.appendChild(slot)
       try {
-        await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=alpha' })
+        await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=alpha' })
         await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
         const back = await within(slot).findByTestId('member-back')
         const panel = within(slot).getByTestId('member-panel-toggle')
@@ -758,7 +758,7 @@ describe('MembersPage default member, memory and URL', () => {
 
     it('tells the shell which bar it needs: open for a landing, roster only when it can open no one and on unmount', async () => {
       const opening = vi.fn()
-      const first = await renderPage(alphaBeta(), 'kirocrew', { reportRosterBar: opening })
+      const first = await renderPage(alphaBeta(), 'ajcrew', { reportRosterBar: opening })
       await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
       // A landing that opens a crewmate never asks for the regular bar back.
       // A landing reports `pending` while it reads, then `open`, and never asks
@@ -769,7 +769,7 @@ describe('MembersPage default member, memory and URL', () => {
       // Unmounting (an error boundary taking the page down, too) hands it back.
       expect(opening).toHaveBeenLastCalledWith('roster')
       const empty = vi.fn()
-      await renderPage([defaultRow()], 'kirocrew', { reportRosterBar: empty })
+      await renderPage([defaultRow()], 'ajcrew', { reportRosterBar: empty })
       await screen.findAllByTestId('crewmate-empty-hero')
       expect(empty).toHaveBeenLastCalledWith('roster')
     })
@@ -777,7 +777,7 @@ describe('MembersPage default member, memory and URL', () => {
     it('a ?team= link the teams read failed on opens nothing, so it asks for the regular bar', async () => {
       vi.mocked(api.teams.list).mockRejectedValue(new Error('teams unavailable'))
       const report = vi.fn()
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?team=ghost', reportRosterBar: report })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?team=ghost', reportRosterBar: report })
       await waitFor(() => expect(report).toHaveBeenLastCalledWith('roster'), PANE_READY)
     })
 
@@ -803,7 +803,7 @@ describe('MembersPage default member, memory and URL', () => {
         first.remove()
         second.id = 'mobile-topbar-slot'
         document.body.appendChild(second)
-        await act(async () => { release({ members: alphaBeta(), default_agent: 'kirocrew' }) })
+        await act(async () => { release({ members: alphaBeta(), default_agent: 'ajcrew' }) })
         const header = await screen.findByTestId('member-thread-header', undefined, PANE_READY)
         await waitFor(() => expect(second).toContainElement(header))
       } finally {
@@ -822,12 +822,12 @@ describe('MembersPage default member, memory and URL', () => {
       document.body.appendChild(first)
       const second = document.createElement('div')
       try {
-        const utils = await renderPage([defaultRow()], 'kirocrew', { reportRosterBar: () => {} })
+        const utils = await renderPage([defaultRow()], 'ajcrew', { reportRosterBar: () => {} })
         await screen.findAllByTestId('crewmate-empty-hero')
         first.remove()
         second.id = 'mobile-topbar-slot'
         document.body.appendChild(second)
-        ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: alphaBeta(), default_agent: 'kirocrew' })
+        ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: alphaBeta(), default_agent: 'ajcrew' })
         await act(async () => { await utils.queryClient.invalidateQueries({ queryKey: MEMBERS_ROSTER_QUERY_KEY }) })
         const header = await screen.findByTestId('member-thread-header', undefined, PANE_READY)
         await waitFor(() => expect(second).toContainElement(header))
@@ -839,7 +839,7 @@ describe('MembersPage default member, memory and URL', () => {
     })
 
     it('with nothing to open the roster is the page, and the page claims no drag', async () => {
-      await renderPage([defaultRow()], 'kirocrew')
+      await renderPage([defaultRow()], 'ajcrew')
       await screen.findAllByTestId('crewmate-empty-hero')
       expect(screen.queryByTestId('roster-drawer')).toBeNull()
       expect(screen.getByTestId('members-page')).not.toHaveAttribute('data-owns-swipe')
@@ -847,7 +847,7 @@ describe('MembersPage default member, memory and URL', () => {
 
     it('floats Profile instead of adding its fixed-width column on a 320px phone', async () => {
       setWindowWidth(320)
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=beta' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=beta' })
       await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
       fireEvent.click(await screen.findByTestId('member-identity-pill'))
 
@@ -858,7 +858,7 @@ describe('MembersPage default member, memory and URL', () => {
 
     it('the side panel first mounts offscreen, so a non-gesture open never paints it at rest before it slides in', async () => {
       setWindowWidth(390)
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=beta' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=beta' })
       expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-beta')
       // The transform the slide carries at the moment React inserts it, read
       // synchronously inside the commit: before the open effect re-seats the
@@ -896,7 +896,7 @@ describe('MembersPage default member, memory and URL', () => {
       // clamp up to its minimum instead; 390 is above it, so the width the
       // panel carries must be the window's own.
       setWindowWidth(390)
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=beta' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=beta' })
       expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-beta')
       fireEvent.click(screen.getByTestId('member-panel-toggle'))
       const summary = await screen.findByTestId('member-dashboard')
@@ -917,7 +917,7 @@ describe('MembersPage default member, memory and URL', () => {
     it('a phone keeps the overlay per visit: a remembered desktop overlay does not cover the thread (issue #27334)', async () => {
       localStorage.setItem('mc-members-overlay-open', '1')
       setWindowWidth(390)
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=beta' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=beta' })
       await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
       expect(screen.queryByTestId('member-side-panel')).toBeNull()
       // Opening it on the phone writes nothing either way.
@@ -935,7 +935,7 @@ describe('MembersPage default member, memory and URL', () => {
 
     it('the overlay is remembered across visits, under its own key', async () => {
       setWindowWidth(OVERLAY_WINDOW)
-      const first = await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=alpha' })
+      const first = await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=alpha' })
       await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
       expect(screen.queryByTestId('member-side-panel')).toBeNull()
       fireEvent.click(screen.getByTestId('member-panel-toggle'))
@@ -944,7 +944,7 @@ describe('MembersPage default member, memory and URL', () => {
       first.unmount()
 
       // Back on the page: the overlay is up again.
-      const second = await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=alpha' })
+      const second = await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=alpha' })
       expect(await screen.findByTestId('member-side-panel', undefined, PANE_READY)).toHaveAttribute('data-placement', 'overlay')
       // Dismissing it is remembered too, and leaves the docked column's flag alone.
       const dockedBefore = localStorage.getItem('mc-members-panel-open')
@@ -954,7 +954,7 @@ describe('MembersPage default member, memory and URL', () => {
       expect(localStorage.getItem('mc-members-panel-open')).toBe(dockedBefore)
       second.unmount()
 
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=alpha' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=alpha' })
       await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
       expect(screen.queryByTestId('member-side-panel')).toBeNull()
     })
@@ -962,13 +962,13 @@ describe('MembersPage default member, memory and URL', () => {
     it('a visit wide enough to dock clears a remembered overlay', async () => {
       localStorage.setItem('mc-members-overlay-open', '1')
       setWindowWidth(WIDE_WINDOW)
-      const wide = await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=alpha' })
+      const wide = await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=alpha' })
       expect(await screen.findByTestId('member-side-panel', undefined, PANE_READY)).toHaveAttribute('data-placement', 'docked')
       await waitFor(() => expect(localStorage.getItem('mc-members-overlay-open')).toBe('0'))
       wide.unmount()
 
       setWindowWidth(OVERLAY_WINDOW)
-      await renderPage(alphaBeta(), 'kirocrew', { route: '/members?member=alpha' })
+      await renderPage(alphaBeta(), 'ajcrew', { route: '/members?member=alpha' })
       await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)
       expect(screen.queryByTestId('member-side-panel')).toBeNull()
     })

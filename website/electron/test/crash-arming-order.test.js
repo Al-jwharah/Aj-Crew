@@ -153,7 +153,7 @@ describe("early boot guard in main.js", () => {
     // as module-scope declarations. A `try` around them would demote every
     // `const` inside to block scope.
     assert.match(CODE, /^const store = new Store\(/m, "store must be a module-scope const");
-    assert.match(CODE, /^const KIROCREW_HOME = resolveHome\(\);/m);
+    assert.match(CODE, /^const AJCREW_HOME = resolveHome\(\);/m);
     assert.match(CODE, /^const PORT = resolvePort\(\);/m);
     assert.match(CODE, /^const BACKEND_URL = /m);
     assert.doesNotMatch(CODE, /failEarlyBoot\(/, "main.js delegates reporting to the guard module");

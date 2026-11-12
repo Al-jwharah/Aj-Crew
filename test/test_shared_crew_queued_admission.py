@@ -23,14 +23,14 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config import sections_shared_crew
-from kiro_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
-from kiro_crew.shared_crew import admission_entry as entry
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import turn_gate, work_store
-from kiro_crew.shared_crew.admission import Liveness, OperationKind, OperationState, ReasonCode
-from kiro_crew.shared_crew.containment import ContainmentReport, SliceManager
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.config import sections_shared_crew
+from aj_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
+from aj_crew.shared_crew import admission_entry as entry
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import turn_gate, work_store
+from aj_crew.shared_crew.admission import Liveness, OperationKind, OperationState, ReasonCode
+from aj_crew.shared_crew.containment import ContainmentReport, SliceManager
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     ActorContext,
     DisplaySnapshot,
@@ -41,15 +41,15 @@ from kiro_crew.shared_crew.contracts import (
     Transport,
     principal_id_for,
 )
-from kiro_crew.shared_crew.scheduler import (
+from aj_crew.shared_crew.scheduler import (
     Decision,
     FairScheduler,
     SchedulerLimits,
     Ticket,
 )
-from kiro_crew.shared_crew.work_store import WorkStore
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.shared_crew.work_store import WorkStore
+from aj_crew.taskq.store import TaskStore
+from aj_crew.testing.clock import ManualClock
 
 S = OperationState
 BOUND = 30.0
@@ -292,8 +292,8 @@ def _actor_middleware(principal: Principal):
 def dash_state(tmp_path, monkeypatch):
     from chat_test_helpers import _make_state
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.broadcast_ws_owners = MagicMock()
@@ -318,7 +318,7 @@ def installed(tmp_path, clock, monkeypatch):
 
 
 def _client(state, principal: Principal) -> TestClient:
-    from kiro_crew.dashboard.chat_handlers import api_chat
+    from aj_crew.dashboard.chat_handlers import api_chat
 
     app = web.Application(middlewares=[_actor_middleware(principal)])
     app["state"] = state
@@ -336,7 +336,7 @@ async def test_sends_to_a_busy_session_are_bounded_and_deduped(dash_state, insta
     busy = MagicMock()
     busy.done.return_value = False
     slot.task = busy
-    with patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()):
+    with patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()):
         async with _client(dash_state, BOB) as client:
 
             async def send(text: str, key: str):
@@ -369,8 +369,8 @@ async def test_a_finished_send_retried_answers_once_and_ends(dash_state, install
     slot = dash_state.get_or_create_slot("s1")
     run_chat = AsyncMock()
     with (
-        patch("kiro_crew.dashboard.chat_handlers._run_chat", new=run_chat),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers._run_chat", new=run_chat),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
     ):
         async with _client(dash_state, ALICE) as client:
             resp = await client.post(
@@ -415,7 +415,7 @@ async def test_gate_turn_runs_the_parked_work_it_was_handed(installed):
 
     entries = [{"id": "q", "meta": {entry.QUEUED_WORK_META_KEY: parked.work.work_id}}]
     state = SimpleNamespace(push_slots_update=lambda: None)
-    with patch("kiro_crew.dashboard.chat_slack.slot_is_live", lambda _s, _slot: True):
+    with patch("aj_crew.dashboard.chat_slack.slot_is_live", lambda _s, _slot: True):
         with turn_gate.initiated_by(BOB.id), turn_gate.queued_work(entries):
             task = asyncio.ensure_future(turn_gate.gate_turn(state, slot, "hi", {}, run))
         await asyncio.wait_for(task, BOUND)
@@ -439,7 +439,7 @@ async def test_a_drained_turn_unlike_its_parked_work_is_admitted_afresh(installe
     entries = [{"id": "q", "meta": {entry.QUEUED_WORK_META_KEY: parked.work.work_id}}]
     text = "x" * (installed._limits.max_request_bytes + 1) if who else "hi"
     state = SimpleNamespace(push_slots_update=lambda: None)
-    with patch("kiro_crew.dashboard.chat_slack.slot_is_live", lambda _s, _slot: True):
+    with patch("aj_crew.dashboard.chat_slack.slot_is_live", lambda _s, _slot: True):
         with turn_gate.initiated_by(who), turn_gate.queued_work(entries):
             task = asyncio.ensure_future(turn_gate.gate_turn(state, slot, text, {}, run))
         await asyncio.wait_for(task, BOUND)

@@ -14,9 +14,9 @@ from pathlib import Path
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.artifact_store import rules
-from kiro_crew.artifacts import ArtifactStore, ArtifactValidationError, normalize_tag
-from kiro_crew.validation import (
+from aj_crew.artifact_store import rules
+from aj_crew.artifacts import ArtifactStore, ArtifactValidationError, normalize_tag
+from aj_crew.validation import (
     ARTIFACT_LIST_SCHEMA,
     ARTIFACT_SAVE_SCHEMA,
     ARTIFACT_UPDATE_SCHEMA,
@@ -24,7 +24,7 @@ from kiro_crew.validation import (
     strip_hidden_unicode,
     validate_tool_args,
 )
-from kiro_crew.validation_parts import artifact_schemas
+from aj_crew.validation_parts import artifact_schemas
 
 NFD_CAFE = "cafe\u0301"  # e + combining acute: two code points
 NFC_CAFE = "caf\u00e9"  # precomposed e-acute: one code point
@@ -554,7 +554,7 @@ class TestMcpGateReadsTheSameRule:
 
 class TestFacade:
     def test_the_store_reads_the_rule_through_the_facade(self) -> None:
-        import kiro_crew.artifacts as art_mod
+        import aj_crew.artifacts as art_mod
 
         assert art_mod.normalize_tag is rules.normalize_tag
         assert art_mod.MAX_TAG_LEN == rules.MAX_TAG_LEN == 64

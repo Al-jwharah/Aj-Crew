@@ -16,9 +16,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import frontend, pinned_fs
-from kiro_crew.config.paths import config_dir
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import frontend, pinned_fs
+from aj_crew.config.paths import config_dir
+from aj_crew.testing.wait import async_wait_until
 
 #: Without a pinned walk (Windows) no log is opened and the output is discarded,
 #: so only the tests about the log's contents depend on one.
@@ -33,7 +33,7 @@ def website(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     site = tmp_path / "proj" / "website"
     site.mkdir(parents=True)
     (site / "package.json").write_text("{}")
-    monkeypatch.delenv("KIROCREW_EDITION_DIR", raising=False)
+    monkeypatch.delenv("AJCREW_EDITION_DIR", raising=False)
     monkeypatch.setattr(frontend.shutil, "which", lambda _name: "/usr/bin/npm")
     monkeypatch.setattr(frontend, "_stage_dist_locked", lambda *_a, **_k: True)
     return site
@@ -333,7 +333,7 @@ def test_without_a_pinned_walk_the_output_is_discarded(website, monkeypatch):
     So no log is opened by name at all: the build runs and its output is
     discarded, as it was before the log existed.
     """
-    from kiro_crew import pinned_fs
+    from aj_crew import pinned_fs
 
     monkeypatch.setattr(pinned_fs, "supports_pinned_walk", lambda: False)
     monkeypatch.setattr(frontend.subprocess, "Popen", _popen_discarding(website))

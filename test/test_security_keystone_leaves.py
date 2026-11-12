@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.security: keystone leaves and the stores the agent may not write.
+"""Tests for aj_crew.security: keystone leaves and the stores the agent may not write.
 
 A keystone leaf's atomic-write temp and lock sibling, ``~/.kiro/agents`` and
 ``~/.kiro/settings/mcp.json``, the denied-command opt-out file, the cron store, downloaded model
@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cron_inflight, platform_compat, security
-from kiro_crew.security import is_sensitive_bash_command, is_sensitive_path
+from aj_crew import cron_inflight, platform_compat, security
+from aj_crew.security import is_sensitive_bash_command, is_sensitive_path
 
 
 class TestKeystonePublishArtifacts:
@@ -27,12 +27,12 @@ class TestKeystonePublishArtifacts:
 
     # ── the real shapes, on the tool path ──
 
-    @pytest.mark.parametrize("prefix", [".kiro/crew", ".kirocrew"])
+    @pytest.mark.parametrize("prefix", [".kiro/crew", ".ajcrew"])
     def test_mkstemp_temp_in_the_crew_root_is_fenced(self, prefix: str) -> None:
         """The shape atomic_write ACTUALLY produces: a random name, no leaf in it."""
         assert is_sensitive_path(f"~/{prefix}/tmpAB12CD34.tmp") is True
 
-    @pytest.mark.parametrize("prefix", [".kiro/crew", ".kirocrew"])
+    @pytest.mark.parametrize("prefix", [".kiro/crew", ".ajcrew"])
     def test_lock_siblings_in_the_crew_root_are_fenced(self, prefix: str) -> None:
         # .policy.lock guards the ops autonomy ceiling; the *.json.lock form is the
         # ops secrets store's; .crons.lock is the cron store's.
@@ -40,7 +40,7 @@ class TestKeystonePublishArtifacts:
         assert is_sensitive_path(f"~/{prefix}/ops_mission_control_secrets.json.lock") is True
         assert is_sensitive_path(f"~/{prefix}/.crons.lock") is True
 
-    @pytest.mark.parametrize("prefix", [".kiro/crew", ".kirocrew"])
+    @pytest.mark.parametrize("prefix", [".kiro/crew", ".ajcrew"])
     def test_leaf_suffixed_temp_is_fenced(self, prefix: str) -> None:
         """The shape measured earlier, kept even though no writer emits it.
 
@@ -52,14 +52,14 @@ class TestKeystonePublishArtifacts:
         assert is_sensitive_path(f"~/{prefix}/token_signing.key.tmp") is True
         assert is_sensitive_path(f"~/{prefix}/.env.tmp") is True
 
-    @pytest.mark.parametrize("prefix", [".kiro/crew", ".kirocrew"])
+    @pytest.mark.parametrize("prefix", [".kiro/crew", ".ajcrew"])
     def test_artifact_beside_a_nested_leaf_is_fenced(self, prefix: str) -> None:
         """The rule follows the leaf, so a leaf outside the root is covered as well."""
         assert is_sensitive_path(f"~/{prefix}/workspace/md-notebook/One.md.abcd.tmp") is True
 
     def test_the_write_gate_stays_a_superset(self) -> None:
         """is_sensitive_write_path is documented as a superset, so it must agree."""
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         assert is_sensitive_write_path("~/.kiro/crew/tmpAB12CD34.tmp") is True
         assert is_sensitive_write_path("~/.kiro/crew/.policy.lock") is True
@@ -85,7 +85,7 @@ class TestKeystonePublishArtifacts:
 
     # ── it must not over-block ──
 
-    @pytest.mark.parametrize("prefix", [".kiro/crew", ".kirocrew"])
+    @pytest.mark.parametrize("prefix", [".kiro/crew", ".ajcrew"])
     def test_routine_crew_root_reads_still_allowed(self, prefix: str) -> None:
         """The reason the crew root cannot simply be fenced wholesale."""
         assert is_sensitive_path(f"~/{prefix}/config.json") is False
@@ -130,16 +130,16 @@ class TestKeystonePublishArtifacts:
         assert is_sensitive_path("~/.kiro/crew/webhooks/tokens.json") is True
 
     def test_a_relocated_crew_home_is_covered(self, tmp_path, monkeypatch) -> None:
-        """KIROCREW_HOME re-anchoring is inherited, not reimplemented.
+        """AJCREW_HOME re-anchoring is inherited, not reimplemented.
 
-        The keystone leaves live directly under a custom ``KIROCREW_HOME``, so the
+        The keystone leaves live directly under a custom ``AJCREW_HOME``, so the
         artifact rule has to follow them there or the fence is bypassed by setting the
         env var. Covered because a ``<crew-prefix>``-rooted entry hits the
         prefix-stripping arm in ``_home_dir_targets_uncached``.
         """
         relocated = tmp_path / "custom-crew-home"
         relocated.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(relocated))
+        monkeypatch.setenv("AJCREW_HOME", str(relocated))
         assert is_sensitive_path(str(relocated / "tmpAB12CD34.tmp")) is True
         assert is_sensitive_path(str(relocated / ".policy.lock")) is True
         # ...and the over-block guard holds there too.
@@ -193,14 +193,14 @@ class TestKiroAgentsDirWriteProtection:
         # the resolver at a per-test tmp dir, which has no home-relative tail to
         # compare. The claim under test is about the REAL default layout.
         monkeypatch.delenv("KIRO_HOME", raising=False)
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
-        from kiro_crew.config.paths import kiro_agents_dir
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
+        from aj_crew.config.paths import kiro_agents_dir
 
         rel = kiro_agents_dir().relative_to(Path.home()).as_posix()
         assert security._KIRO_AGENTS_DIR == rel
 
     def test_file_edit_write_into_agents_dir_is_denied(self) -> None:
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         home = str(Path.home())
         # Any filename (specs can be named anything), any depth, and the dir itself.
@@ -217,7 +217,7 @@ class TestKiroAgentsDirWriteProtection:
         assert is_sensitive_path("~/.kiro/agents") is False
 
     def test_sibling_dirs_are_not_over_blocked(self) -> None:
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         # ``agents-backup`` shares a prefix but is a different directory.
         assert is_sensitive_write_path("~/.kiro/agents-backup/x.json") is False
@@ -231,7 +231,7 @@ class TestKiroAgentsDirWriteProtection:
         # destination: a relative target that resolves into the fenced dir is
         # refused regardless of spelling, and one that resolves elsewhere is not
         # over-blocked.
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         home = str(Path.home())
         # Relative target anchored at ~/.kiro resolves to ~/.kiro/agents/pwn.json.
@@ -244,9 +244,9 @@ class TestKiroAgentsDirWriteProtection:
     def test_kiro_home_override_is_covered_on_the_tool_gate(self, tmp_path, monkeypatch) -> None:
         # kiro_agents_dir() honours KIRO_HOME; the override moves the specs the
         # gateway execs, so the write gate must follow it (re-anchored the same way
-        # KIROCREW_HOME re-anchors the crew secrets). The default ~/.kiro/agents
+        # AJCREW_HOME re-anchors the crew secrets). The default ~/.kiro/agents
         # stays covered regardless.
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         custom = tmp_path / "customkiro"
         monkeypatch.setenv("KIRO_HOME", str(custom))
@@ -262,7 +262,7 @@ class TestKiroAgentsDirWriteProtection:
         # The re-anchoring is keyed on the resolved KIRO_HOME, so clearing it must
         # invalidate the cached target set — otherwise a stale override would keep
         # fencing an unrelated path.
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         custom = tmp_path / "customkiro"
         monkeypatch.delenv("KIRO_HOME", raising=False)
@@ -275,7 +275,7 @@ class TestKiroSettingsMcpJsonWriteProtection:
 
     An ``autoApprove`` on an entry there is honoured by default
     (``mcp.honour_auto_approve``), and kiro-cli approves an autoApproved MCP tool
-    locally without emitting a permission request — so those verbs skip Kiro Crew's
+    locally without emitting a permission request — so those verbs skip Aj Crew's
     tool gate. ``governance._is_owner_written`` admits an entry on its NAME SHAPE,
     not on who wrote the file, so a plainly-named entry an agent appended is
     honoured exactly like one the owner typed. WRITES are refused; tool-path READS
@@ -284,7 +284,7 @@ class TestKiroSettingsMcpJsonWriteProtection:
     """
 
     def test_file_edit_write_to_the_registry_is_denied(self) -> None:
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         home = str(Path.home())
         assert is_sensitive_write_path("~/.kiro/settings/mcp.json") is True
@@ -296,7 +296,7 @@ class TestKiroSettingsMcpJsonWriteProtection:
         assert is_sensitive_path("~/.kiro/settings/mcp.json") is False
 
     def test_neighbours_are_not_over_blocked(self) -> None:
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         # A LEAF, not the directory: ``settings`` holds other kiro-cli files whose
         # protection this entry has not reasoned about.
@@ -307,7 +307,7 @@ class TestKiroSettingsMcpJsonWriteProtection:
         assert is_sensitive_write_path("~/.kiro/settings-backup/mcp.json") is False
 
     def test_tool_gate_canonicalizes_relative_writes_to_the_registry(self) -> None:
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         home = str(Path.home())
         assert is_sensitive_write_path("mcp.json", base_dir=f"{home}/.kiro/settings") is True
@@ -321,7 +321,7 @@ class TestKiroSettingsMcpJsonWriteProtection:
         # tuple entry and not a third arm. Pinned by adding one, because the failure
         # mode is silent: the leaf would be fenced under $HOME and writable under
         # the override.
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         home = tmp_path / "home"
         override = tmp_path / "kirohome"
@@ -364,7 +364,7 @@ class TestKiroSettingsMcpJsonWriteProtection:
         # one further down the path. Without resolving the ``$HOME``-rooted form the
         # ``~``-spelled path stays fenced while the REAL file is writable, and an
         # agent simply writes the destination instead.
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         home = tmp_path / "home"
         store = tmp_path / "dotfiles" / "kirostore"
@@ -400,7 +400,7 @@ class TestKiroSettingsMcpJsonWriteProtection:
         # ``KIRO_HOME`` moves kiro-cli's whole user directory including ``settings``,
         # so the registry the override makes live must be fenced too. The default
         # ``$HOME``-rooted location stays covered regardless.
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         custom = tmp_path / "customkiro"
         monkeypatch.setenv("KIRO_HOME", str(custom))
@@ -416,7 +416,7 @@ class TestKiroSettingsMcpJsonWriteProtection:
     ) -> None:
         # The re-anchoring is keyed on the resolved override, so clearing it must
         # invalidate the cached target set.
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         custom = tmp_path / "customkiro"
         monkeypatch.delenv("KIRO_HOME", raising=False)
@@ -428,7 +428,7 @@ class TestDeniedCommandsKeystone:
     """The denied-command opt-out file is a KEYSTONE trust root.
 
     The opt-out state (``{disable_all, disabled_ids, user_added}``) lives in
-    ``~/.kirocrew/denied_commands.json`` on ``_SENSITIVE_HOME_DIRS`` — a full
+    ``~/.ajcrew/denied_commands.json`` on ``_SENSITIVE_HOME_DIRS`` — a full
     read+write block — NOT in config.json. So the agent's file tools can neither
     read nor write its own deny ceiling, inheriting the mature
     ``is_sensitive_path`` gate (the same protection level as
@@ -438,9 +438,9 @@ class TestDeniedCommandsKeystone:
     """
 
     def test_keystone_path_is_sensitive(self) -> None:
-        from kiro_crew.security import is_sensitive_path
+        from aj_crew.security import is_sensitive_path
 
-        assert is_sensitive_path("~/.kirocrew/denied_commands.json") is True
+        assert is_sensitive_path("~/.ajcrew/denied_commands.json") is True
 
 
 class TestEndorsedCopiesOfReadFloorLeaves:
@@ -453,13 +453,13 @@ class TestEndorsedCopiesOfReadFloorLeaves:
     ``config.json`` is.
     """
 
-    @pytest.mark.parametrize("prefix", [".kiro/crew", ".kirocrew"])
+    @pytest.mark.parametrize("prefix", [".kiro/crew", ".ajcrew"])
     @pytest.mark.parametrize("leaf", ["denied_commands.json", "computer_use.json"])
     def test_the_copy_is_refused_like_its_original(self, prefix: str, leaf: str) -> None:
         assert is_sensitive_path(f"~/{prefix}/{leaf}") is True
         assert is_sensitive_path(f"~/{prefix}/config-provenance/endorsed/{leaf}") is True
 
-    @pytest.mark.parametrize("prefix", [".kiro/crew", ".kirocrew"])
+    @pytest.mark.parametrize("prefix", [".kiro/crew", ".ajcrew"])
     @pytest.mark.parametrize("leaf", ["config.json", "config.local.json"])
     def test_a_config_copy_stays_readable_like_its_original(self, prefix: str, leaf: str) -> None:
         assert is_sensitive_path(f"~/{prefix}/{leaf}") is False
@@ -467,9 +467,9 @@ class TestEndorsedCopiesOfReadFloorLeaves:
 
     def test_the_copies_the_writer_produces_are_covered(self, tmp_path, monkeypatch) -> None:
         """The real copy paths, under a relocated data home."""
-        from kiro_crew.config import loosening_provenance as lp
+        from aj_crew.config import loosening_provenance as lp
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
         for leaf in (lp.LEAF_DENIED_COMMANDS, lp.LEAF_COMPUTER_USE):
             assert is_sensitive_path(str(lp._endorsed_path(leaf))) is True
         assert is_sensitive_path(str(lp._endorsed_path(lp.LEAF_CONFIG))) is False
@@ -498,7 +498,7 @@ class TestCronStoreProtection:
         # Drift guard: a rename of the store or sidecar dir in cron_service/store.py /
         # cron_history.py without a matching entry here would silently
         # un-fence them.
-        from kiro_crew.security import _CREW_SECRET_LEAVES
+        from aj_crew.security import _CREW_SECRET_LEAVES
 
         assert "crons.json" in _CREW_SECRET_LEAVES
         assert "cron-history" in _CREW_SECRET_LEAVES
@@ -508,9 +508,9 @@ class TestCronStoreProtection:
         # job", and one it could delete disables the breaker.
         assert cron_inflight.RUNNING_DIR_NAME in _CREW_SECRET_LEAVES
 
-    @pytest.mark.parametrize("prefix", [".kiro/crew", ".kirocrew"])
+    @pytest.mark.parametrize("prefix", [".kiro/crew", ".ajcrew"])
     def test_store_and_history_sensitive_under_every_home_prefix(self, prefix: str) -> None:
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         assert is_sensitive_path(f"~/{prefix}/crons.json") is True
         assert is_sensitive_path(f"~/{prefix}/cron-history/_index.jsonl") is True
@@ -527,7 +527,7 @@ class TestCronStoreProtection:
         )
 
     def test_sibling_cron_names_are_not_over_blocked(self) -> None:
-        from kiro_crew.security import is_sensitive_path, is_sensitive_write_path
+        from aj_crew.security import is_sensitive_path, is_sensitive_write_path
 
         # Shared-prefix names a shell might legitimately touch elsewhere.
         assert is_sensitive_path("~/projects/crontab.txt") is False
@@ -546,7 +546,7 @@ class TestModelWeightsAreWriteProtected:
     agent as something they did not say.
 
     Paths are spelled ``~``-relative rather than derived from ``models_dir()``: the
-    conftest pins ``KIROCREW_HOME`` to a per-test temp directory, which is deliberately
+    conftest pins ``AJCREW_HOME`` to a per-test temp directory, which is deliberately
     NOT under the fenced home, so a derived path would test the fixture instead of the
     fence.
     """
@@ -555,7 +555,7 @@ class TestModelWeightsAreWriteProtected:
     MODEL_PATHS = (
         "~/.kiro/crew/models/whisper/ggml-base.bin",
         "~/.kiro/crew/models/qwen3-embedding-0.6b.gguf",
-        "~/.kirocrew/models/whisper/ggml-base.bin",
+        "~/.ajcrew/models/whisper/ggml-base.bin",
     )
 
     @pytest.mark.parametrize("path", MODEL_PATHS)
@@ -565,7 +565,7 @@ class TestModelWeightsAreWriteProtected:
     @pytest.mark.parametrize("path", MODEL_PATHS)
     def test_reads_stay_allowed_at_the_tool_gate(self, path: str) -> None:
         """Write-protected, NOT read+write sensitive: the settings surface and
-        `kirocrew doctor` both read the directory to report what is installed, and the
+        `ajcrew doctor` both read the directory to report what is installed, and the
         weights hold no secret."""
         assert security.is_sensitive_path(path) is False, path
 
@@ -611,16 +611,16 @@ class TestIdentityAuthStoreFence:
     unrelated application database anywhere under the home directory.
     """
 
-    PREFIXES = (".kiro/crew", ".kirocrew")
+    PREFIXES = (".kiro/crew", ".ajcrew")
 
     def test_leaf_membership_uses_the_canonical_filename_constant(self) -> None:
         # Drift guard: the leaf is the constant the identity-store readers resolve,
         # so renaming the store cannot un-fence it while the readers keep working.
-        from kiro_crew.identity_stores import (
+        from aj_crew.identity_stores import (
             AUTH_SQLITE_DB,
             AUTH_SQLITE_SIDECAR_SUFFIXES,
         )
-        from kiro_crew.security import _CREW_SECRET_LEAVES
+        from aj_crew.security import _CREW_SECRET_LEAVES
 
         assert AUTH_SQLITE_DB in _CREW_SECRET_LEAVES
         for suffix in AUTH_SQLITE_SIDECAR_SUFFIXES:
@@ -628,7 +628,7 @@ class TestIdentityAuthStoreFence:
 
     @pytest.mark.parametrize("prefix", PREFIXES)
     def test_store_and_sidecars_sensitive_under_every_home_prefix(self, prefix: str) -> None:
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         for leaf in (
             "data.sqlite3",
@@ -643,7 +643,7 @@ class TestIdentityAuthStoreFence:
 
     def test_unrelated_databases_are_not_over_blocked(self) -> None:
         """The cost of a basename rule, which this fence deliberately does not pay."""
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         assert is_sensitive_path("~/project/data.sqlite3") is False
         assert is_sensitive_write_path("~/project/data.sqlite3") is False

@@ -364,7 +364,7 @@ const slots = Object.values(SURFACES).map(s => ({
   running: false,
   last_message: s.title,
   messages: s.messages.length,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

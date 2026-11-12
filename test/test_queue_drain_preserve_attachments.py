@@ -28,7 +28,7 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard.chat_delivery import (
+from aj_crew.dashboard.chat_delivery import (
     ATTACHMENT_LIST_MAX_ITEMS,
     ATTACHMENT_PATH_MAX_LEN,
     MAX_PENDING_STEERS,
@@ -53,7 +53,7 @@ async def _post_busy(state, slot_key: str, message: str, meta: dict | None):
 
 
 async def _drain_once(state, slot) -> None:
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     with (
         patch.object(chat_runner, "spawn_guarded_turn", return_value=MagicMock()),
@@ -67,12 +67,12 @@ def _user_rows(slot) -> list[dict]:
 
 
 def _busy_state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     slot = state.get_or_create_slot("busy-chat")
     slot.task = _live_turn()  # force the busy queue path
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", MagicMock())
     return state, slot
 
 
@@ -139,7 +139,7 @@ class TestAttachmentMeta:
         whole, not sliced: markers past a cut would resolve through the
         renderer's whitespace-bounded fallback. Said once in the log."""
         over = [f"/tmp/f{i}" for i in range(ATTACHMENT_LIST_MAX_ITEMS + 1)]
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.chat_delivery"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.chat_delivery"):
             assert attachment_meta({"files": over, "dirs": [_DIR]}) == {"dirs": [_DIR]}
         assert sum("over the" in r.getMessage() for r in caplog.records) == 1
 
@@ -147,7 +147,7 @@ class TestAttachmentMeta:
         """A path cut in place is a different path, so one over-long entry
         refuses its list rather than truncating it."""
         too_long = "/" + "x" * ATTACHMENT_PATH_MAX_LEN
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.chat_delivery"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.chat_delivery"):
             assert attachment_meta({"files": [_PATH, too_long], "dirs": [_DIR]}) == {"dirs": [_DIR]}
         assert sum("over the" in r.getMessage() for r in caplog.records) == 1
 
@@ -221,7 +221,7 @@ class TestQueuePushFrameCarriesTheLists:
 
     @pytest.mark.asyncio
     async def test_sub_agent_hold_frame(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state, slot = _busy_state(tmp_path, monkeypatch)
         # The idle-slot hold branch: no turn is running and the only child is
@@ -236,7 +236,7 @@ class TestQueuePushFrameCarriesTheLists:
         monkeypatch.setattr(chat_runner, "spawn_guarded_turn", lambda *a, **k: None)
         load = MagicMock()
         load.return_value.dashboard.merge_queued_messages = False
-        monkeypatch.setattr(chat_runner.KiroCrewConfig, "load", load)
+        monkeypatch.setattr(chat_runner.AjCrewConfig, "load", load)
         receipt = await _post_busy(state, "busy-chat", _WIRE, {"files": [_PATH]})
         (frame,) = _queue_push_frames(state)
         assert frame["queue_id"] == receipt["queue_id"]
@@ -244,7 +244,7 @@ class TestQueuePushFrameCarriesTheLists:
 
     @pytest.mark.asyncio
     async def test_requeued_steer_frame(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+        from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
         state, slot = _busy_state(tmp_path, monkeypatch)
         slot._acp_client = MagicMock(supports_steer=True, steer=AsyncMock(return_value=True))
@@ -285,7 +285,7 @@ class TestDrainedRow:
         meta = rows[-1].get("meta") or {}
         assert meta.get("files") == [_PATH]
         # Queue plumbing must not ride into the persisted row.
-        from kiro_crew.dashboard.session_control import QUEUED_CONTAINMENT_META_KEY
+        from aj_crew.dashboard.session_control import QUEUED_CONTAINMENT_META_KEY
 
         assert QUEUED_CONTAINMENT_META_KEY not in meta
 
@@ -448,7 +448,7 @@ class TestSteeredAttachments:
             c.args[1] for c in state.broadcast_ws.call_args_list if c.args[0] == "steer_push"
         )
         assert echo["meta"] == {"files": [_PATH], "dirs": [_DIR]}
-        from kiro_crew.dashboard.chat_runner import _settle_consumed_steers
+        from aj_crew.dashboard.chat_runner import _settle_consumed_steers
 
         _settle_consumed_steers(slot, f"<user_message>\n{_WIRE}\n</user_message>")
         assert slot._steer_attachment_meta == {}
@@ -489,7 +489,7 @@ class TestSteeredAttachments:
     async def test_unconsumed_steer_keeps_attachments_through_requeue_and_drain(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+        from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
         state, slot = _busy_state(tmp_path, monkeypatch)
         slot._acp_client = MagicMock(supports_steer=True, steer=AsyncMock(return_value=True))
@@ -525,14 +525,14 @@ class TestAttachmentEntriesDrainAlone:
     at the head of the queue, pops alone."""
 
     def _slot(self, entries):
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         slot = _ChatSlot("s1")
         slot._queue = list(entries)
         return slot
 
     def test_carries_attachments_reads_the_two_lists(self):
-        from kiro_crew.dashboard.chat_utils import carries_attachments
+        from aj_crew.dashboard.chat_utils import carries_attachments
 
         assert carries_attachments({"meta": {"files": [_PATH]}}) is True
         assert carries_attachments({"meta": {"dirs": [_DIR]}}) is True
@@ -542,7 +542,7 @@ class TestAttachmentEntriesDrainAlone:
         assert carries_attachments({}) is False
 
     def test_head_entry_with_attachments_pops_alone(self):
-        from kiro_crew.dashboard.chat_utils import _dequeue_next_message
+        from aj_crew.dashboard.chat_utils import _dequeue_next_message
 
         slot = self._slot(
             [
@@ -556,7 +556,7 @@ class TestAttachmentEntriesDrainAlone:
         assert [i["id"] for i in slot._queue] == ["b"]
 
     def test_merge_run_stops_before_an_attachment_entry(self):
-        from kiro_crew.dashboard.chat_utils import _dequeue_next_message
+        from aj_crew.dashboard.chat_utils import _dequeue_next_message
 
         other_wire = "read this\n[attached_file 1] /tmp/other.txt"
         slot = self._slot(
@@ -579,7 +579,7 @@ class TestAttachmentEntriesDrainAlone:
         assert consumed[0]["meta"]["files"] == ["/tmp/other.txt"]
 
     def test_plain_entries_still_merge(self):
-        from kiro_crew.dashboard.chat_utils import _dequeue_next_message
+        from aj_crew.dashboard.chat_utils import _dequeue_next_message
 
         slot = self._slot(
             [
@@ -597,7 +597,7 @@ class TestAttachmentPathsAreRedacted:
     takes the same redaction the message text does."""
 
     def test_credential_in_a_path_is_redacted_before_it_rides_the_entry(self):
-        from kiro_crew.dashboard.chat_utils import redact_credentials
+        from aj_crew.dashboard.chat_utils import redact_credentials
 
         leaky = "/tmp/exports/AKIAIOSFODNN7EXAMPLE-report.pdf"
         expected, changed = redact_credentials(leaky)
@@ -621,7 +621,7 @@ class TestQueueEditPrunesAttachmentMeta:
     truncates a spaced path."""
 
     def _slot_with_entry(self, content, meta):
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         slot = _ChatSlot("s1")
         qid = slot.queue_append(content, meta=dict(meta))
@@ -711,7 +711,7 @@ class TestQueueEditPrunesAttachmentMeta:
         assert entry["meta"]["dirs"] == [d2]
 
     def test_prune_helper_tolerates_missing_or_malformed_meta(self):
-        from kiro_crew.dashboard.slot_queue_repository import prune_attachment_meta
+        from aj_crew.dashboard.slot_queue_repository import prune_attachment_meta
 
         assert prune_attachment_meta(None, "x", "x") == "x"
         meta = {"files": "nope", "dirs": [_DIR]}
@@ -735,7 +735,7 @@ class TestQueueEditPrunesAttachmentMeta:
         not: a credential-bearing path is spelled two ways. The old text never
         carried the list's spelling, so an edit that keeps the text's marker
         must not drop the entry."""
-        from kiro_crew.dashboard.chat_delivery import attachment_meta
+        from aj_crew.dashboard.chat_delivery import attachment_meta
 
         raw = "/tmp/uploads/AKIAIOSFODNN7EXAMPLE-report.pdf"
         lists = attachment_meta({"files": [raw]})
@@ -763,7 +763,7 @@ class TestQueueEditPrunesAttachmentMeta:
         """The row and the ``queue_edit`` frame carry the ENTRY's text (markers
         renumbered), not the request body, so every client shows the text the
         agent will actually receive."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("busy-chat")
@@ -774,12 +774,12 @@ class TestQueueEditPrunesAttachmentMeta:
 
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_queue_edit
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_queue_edit
 
         app = web.Application()
         app["state"] = state
         app.router.add_patch("/api/chat/slots/{slot}/queue/{queue_id}", api_chat_slot_queue_edit)
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             async with TestClient(TestServer(app)) as client:
                 resp = await client.patch(
@@ -810,7 +810,7 @@ class TestQueueEditPrunesAttachmentMeta:
     ):
         """An edit that drops the last marker drops the list; the frame says so
         by carrying no ``meta`` (the client reads absence as "no lists")."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("busy-chat")
@@ -819,12 +819,12 @@ class TestQueueEditPrunesAttachmentMeta:
 
         from aiohttp import web
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_queue_edit
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_queue_edit
 
         app = web.Application()
         app["state"] = state
         app.router.add_patch("/api/chat/slots/{slot}/queue/{queue_id}", api_chat_slot_queue_edit)
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             async with TestClient(TestServer(app)) as client:
                 resp = await client.patch(

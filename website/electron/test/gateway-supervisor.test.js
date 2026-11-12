@@ -91,10 +91,10 @@ test("runtime gateway owners take every host dependency from the supervisor", ()
 
 test("no listener-probe outcome authorises the local secret", async () => {
   // The INVARIANT, not the current state: a port's LISTEN owner cannot authorise
-  // this send at all, because `isKirocrewCommand` matches the basename of the
+  // this send at all, because `isAjcrewCommand` matches the basename of the
   // command line `ps` reports -- any process running as this user can present
-  // itself as ours with `exec -a kirocrew`. So the probe must not be consulted,
-  // and re-introducing a branch that mints on `kirocrew` or `service` reddens
+  // itself as ours with `exec -a ajcrew`. So the probe must not be consulted,
+  // and re-introducing a branch that mints on `ajcrew` or `service` reddens
   // this: every owner verdict, INCLUDING the two that look like ours, is refused
   // when the gateway is not one this process started.
   const attempts = [];
@@ -119,7 +119,7 @@ test("no listener-probe outcome authorises the local secret", async () => {
     readFileSync() { return "a-local-secret\n"; },
   };
 
-  for (const owner of ["kirocrew", "service", "foreign", "none", "unknown"]) {
+  for (const owner of ["ajcrew", "service", "foreign", "none", "unknown"]) {
     attempts.length = 0;
     const execFileFn = owner === "unknown"
       ? (_file, _args, _options, callback) => {
@@ -400,8 +400,8 @@ test("AppImage sandbox advice uses the user-facing warning channel", async () =>
       platform: "linux",
       arch: "x64",
       env: {
-        APPIMAGE: "/virtual/Kiro Crew.AppImage",
-        KIROCREW_HOME: "/virtual/kirocrew-home",
+        APPIMAGE: "/virtual/Aj Crew.AppImage",
+        AJCREW_HOME: "/virtual/ajcrew-home",
       },
       resourcesPath: "/virtual/resources",
       kill() { throw new Error("process kill must not run in this harness"); },
@@ -527,14 +527,14 @@ function stuckHolderHarness({
   owner = OWN_GATEWAY_COMMAND, healthy = false, lockPid = 4242, holdsLock = true,
   response = 0, ppid = 500, stopFails = false, rebinds = false, swapAfterDialog = false,
   replacedBy = 0, pidAfterDialog = 0, lockRealPath = "", exitsDuringDialog = false,
-  refusedForPid = 0, platform = "linux", env = { KIROCREW_PORT: "9999" },
+  refusedForPid = 0, platform = "linux", env = { AJCREW_PORT: "9999" },
   bundledBin = false,
 } = {}) {
-  // The one bundled launcher candidate findKirocrewBin probes first for this
+  // The one bundled launcher candidate findAjcrewBin probes first for this
   // harness's arch (arm64) + resourcesPath. When bundledBin is set, accessSync
   // answers X_OK for it, so resolveGatewayBin returns the bundled binary and
   // both the stop and the follow-on spawn run it (the real stuck-restart flow).
-  const BUNDLED_STUCK_BIN = "/virtual/resources/backend-dist/kirocrew-backend-arm64/bin/kirocrew";
+  const BUNDLED_STUCK_BIN = "/virtual/resources/backend-dist/ajcrew-backend-arm64/bin/ajcrew";
   const execCalls = [];
   const dialogs = [];
   const state = { listening: true, quits: 0 };
@@ -550,7 +550,7 @@ function stuckHolderHarness({
           callback(res);
           res.emit("data", JSON.stringify(url.endsWith("/api/ready")
             ? { ready: true }
-            : { app: "kirocrew", version: "0.6.0" }));
+            : { app: "ajcrew", version: "0.6.0" }));
           res.emit("end");
         });
         return req;
@@ -576,13 +576,13 @@ function stuckHolderHarness({
       openSync() { return 41; },
       closeSync() {},
       readFileSync(file) {
-        if (file === "/virtual/kirocrew-home/gateway.lock") {
+        if (file === "/virtual/ajcrew-home/gateway.lock") {
           return `${state.dialogShown && pidAfterDialog ? pidAfterDialog : lockPid}\n`;
         }
         throw new Error(`unexpected filesystem read: ${file}`);
       },
       realpathSync(file) {
-        if (lockRealPath && file === "/virtual/kirocrew-home/gateway.lock") return lockRealPath;
+        if (lockRealPath && file === "/virtual/ajcrew-home/gateway.lock") return lockRealPath;
         return file;
       },
     },
@@ -598,7 +598,7 @@ function stuckHolderHarness({
       if (String(file).endsWith("lsof") && args.includes("-p")) {
         const ours = holdsLock && !state.swapped;
         const pid = args[args.indexOf("-p") + 1];
-        const lockPath = lockRealPath || "/virtual/kirocrew-home/gateway.lock";
+        const lockPath = lockRealPath || "/virtual/ajcrew-home/gateway.lock";
         callback(null, ours ? `p${pid}\nn${lockPath}\n` : `p${pid}\nn/virtual/other-home/gateway.lock\n`, "");
         return;
       }
@@ -671,13 +671,13 @@ test("a stuck gateway for this data folder is stopped through the CLI, then the 
   assert.deepEqual(built.dialogs[0].buttons, ["Stop and restart", "Quit"]);
   assert.match(built.dialogs[0].detail, /has not answered for at least 15 seconds/);
   assert.match(built.dialogs[0].detail, /Stop and restart stops that gateway and starts a fresh one\. Anything the stuck gateway was still doing is stopped with it\./);
-  assert.doesNotMatch(built.dialogs[0].detail, /kirocrew stop/, "the app runs the stop; the user is not told to type it");
+  assert.doesNotMatch(built.dialogs[0].detail, /ajcrew stop/, "the app runs the stop; the user is not told to type it");
   const stops = built.stopCalls();
   assert.equal(stops.length, 1, "the lock-checked CLI stop ran once");
   assert.deepEqual(stops[0].args.slice(-5), ["stop", "--port", "5476", "--expect-pid", "4242"],
     "the stop is pinned to the pid the grace window proved");
-  assert.equal(stops[0].options.env.KIROCREW_HOME, "/virtual/kirocrew-home");
-  assert.equal(stops[0].options.env.KIROCREW_PORT, undefined);
+  assert.equal(stops[0].options.env.AJCREW_HOME, "/virtual/ajcrew-home");
+  assert.equal(stops[0].options.env.AJCREW_PORT, undefined);
   assert.equal(built.spawnCalls.length, 1, "the bundled backend starts after the stop");
   assert.deepEqual(built.spawnCalls[0][1].slice(0, 4), ["gateway", "--no-open", "--port", "5476"]);
 });
@@ -691,7 +691,7 @@ test("the stuck-gateway stop strips PYTHONPATH/PYTHONHOME from the bundled binar
   const built = stuckHolderHarness({
     bundledBin: true,
     env: {
-      KIROCREW_PORT: "9999",
+      AJCREW_PORT: "9999",
       PYTHONPATH: "/home/dev/checkout/src",
       PYTHONHOME: "/home/dev/other-python",
       PATH: "/usr/bin",
@@ -706,10 +706,10 @@ test("the stuck-gateway stop strips PYTHONPATH/PYTHONHOME from the bundled binar
   const stopEnv = stops[0].options.env;
   assert.equal(stopEnv.PYTHONPATH, undefined, "PYTHONPATH must be stripped for the bundled stop");
   assert.equal(stopEnv.PYTHONHOME, undefined, "PYTHONHOME must be stripped for the bundled stop");
-  // The scrub is narrow: KIROCREW_HOME is still set, KIROCREW_PORT still dropped,
+  // The scrub is narrow: AJCREW_HOME is still set, AJCREW_PORT still dropped,
   // and an unrelated inherited var (PATH) is preserved.
-  assert.equal(stopEnv.KIROCREW_HOME, "/virtual/kirocrew-home");
-  assert.equal(stopEnv.KIROCREW_PORT, undefined);
+  assert.equal(stopEnv.AJCREW_HOME, "/virtual/ajcrew-home");
+  assert.equal(stopEnv.AJCREW_PORT, undefined);
   assert.equal(stopEnv.PATH, "/usr/bin", "an unrelated inherited var is preserved");
 });
 
@@ -725,7 +725,7 @@ test("declining the stuck-gateway restart quits without stopping or spawning", a
 test("a service that brings the stopped gateway back is re-validated, not spawned over", async () => {
   const built = stuckHolderHarness({ ppid: 1, rebinds: true });
   assert.equal(await built.supervisor.start(), true);
-  assert.match(built.dialogs[0].detail, /If a background service restarts it automatically, Kiro Crew connects to it once it answers\./);
+  assert.match(built.dialogs[0].detail, /If a background service restarts it automatically, Aj Crew connects to it once it answers\./);
   assert.equal(built.stopCalls().length, 1);
   assert.equal(built.spawnCalls.length, 0, "no second backend races the service's respawn");
   assert.ok(built.logs.some((line) => line.includes("re-bound after the stop")));
@@ -776,7 +776,7 @@ test("on macOS a stuck gateway gets the manual command and Quit, never a stop", 
   assert.equal(built.dialogs.length, 1);
   assert.equal(built.dialogs[0].message, "The gateway is not responding.");
   assert.deepEqual(built.dialogs[0].buttons, ["Quit"]);
-  assert.match(built.dialogs[0].detail, /Run this command in Terminal:\nkirocrew stop --port 5476\n/);
+  assert.match(built.dialogs[0].detail, /Run this command in Terminal:\najcrew stop --port 5476\n/);
   assert.equal(built.stopCalls().length, 0, "macOS has no pidfd, so the app never runs the stop");
   assert.equal(built.spawnCalls.length, 0);
   assert.equal(built.state.quits, 1);
@@ -790,7 +790,7 @@ test("on macOS a service-owned stuck gateway's manual dialog carries the service
 });
 
 test("a symlinked data folder is matched by the lock file's real path", async () => {
-  const built = stuckHolderHarness({ lockRealPath: "/private/virtual/kirocrew-home/gateway.lock" });
+  const built = stuckHolderHarness({ lockRealPath: "/private/virtual/ajcrew-home/gateway.lock" });
   assert.equal(await built.supervisor.start(), true);
   assert.equal(built.dialogs.length, 1);
   assert.equal(built.stopCalls().length, 1);
@@ -834,5 +834,5 @@ test("a failed CLI stop surfaces a start failure instead of spawning into the he
   assert.equal(await built.supervisor.start(), false);
   assert.equal(built.stopCalls().length, 1);
   assert.equal(built.spawnCalls.length, 0);
-  assert.ok(built.logs.some((line) => line.includes("kirocrew stop --port 5476` failed")));
+  assert.ok(built.logs.some((line) => line.includes("ajcrew stop --port 5476` failed")));
 });

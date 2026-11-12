@@ -4,14 +4,14 @@ import asyncio
 
 import pytest
 
-from kiro_crew import session_ledger
-from kiro_crew.dashboard.handlers import work_ledger as routes
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import session_ledger
+from aj_crew.dashboard.handlers import work_ledger as routes
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _board_entries().clear()
     yield
     _board_entries().clear()

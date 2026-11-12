@@ -14,9 +14,9 @@ import inspect
 
 import pytest
 
-from kiro_crew import hooks as hooks_mod
-from kiro_crew.hooks import TOOL_DENY, HookManager
-from kiro_crew.platform.context import PlatformCompositionError
+from aj_crew import hooks as hooks_mod
+from aj_crew.hooks import TOOL_DENY, HookManager
+from aj_crew.platform.context import PlatformCompositionError
 
 
 def _crash_the_deny_tier(monkeypatch: pytest.MonkeyPatch, exc: BaseException) -> None:
@@ -53,7 +53,7 @@ def test_the_refusal_matches_the_sentence_the_dashboard_keys_on() -> None:
     # "blocked by security policy" line -- the exact claim this sentence disclaims.
     assert hooks_mod.GATE_CRASH_REASON == (
         "Blocked: the safety check crashed while judging this call ({error}), so the "
-        "call was refused and nothing ran. This is a Kiro Crew bug, not a policy rule "
+        "call was refused and nothing ran. This is an Aj Crew bug, not a policy rule "
         "and not a user action."
     )
     assert "Blocked by security policy" not in hooks_mod.GATE_CRASH_REASON

@@ -5,9 +5,9 @@
 const ARCH_DIR_SUFFIX = { arm64: "arm64", x64: "x64" };
 
 /**
- * Locate the kirocrew backend binary by checking well-known paths in order.
+ * Locate the ajcrew backend binary by checking well-known paths in order.
  *
- * Returns the first executable candidate, or bare `"kirocrew"` as a PATH
+ * Returns the first executable candidate, or bare `"ajcrew"` as a PATH
  * fallback. Dependencies are injected so the function is pure and testable
  * without mocking globals.
  *
@@ -20,13 +20,13 @@ const ARCH_DIR_SUFFIX = { arm64: "arm64", x64: "x64" };
  *   bundles (defaults to `process.arch`)
  * @param {boolean} [isWindows] - whether the host is Windows (defaults to
  *   `process.platform === "win32"`). On Windows the backend ships as a real
- *   `kirocrew.exe` console script under `Scripts\` (venv) — Node's `spawn()`
+ *   `ajcrew.exe` console script under `Scripts\` (venv) — Node's `spawn()`
  *   does no PATHEXT resolution for a bare name, so an absolute `.exe` path is
  *   required.
- * @returns {string} Absolute path to the binary, or `"kirocrew"` /
- *   `"kirocrew.exe"` (Windows) as a PATH fallback
+ * @returns {string} Absolute path to the binary, or `"ajcrew"` /
+ *   `"ajcrew.exe"` (Windows) as a PATH fallback
  */
-function findKirocrewBin(
+function findAjcrewBin(
   fs,
   os,
   path,
@@ -43,62 +43,62 @@ function findKirocrewBin(
   //    don't ship these dirs so the probes miss (ENOENT) and fall through.
   const suffix = ARCH_DIR_SUFFIX[arch];
   if (suffix) {
-    const archBackend = `kirocrew-backend-${suffix}`;
+    const archBackend = `ajcrew-backend-${suffix}`;
     candidates.push(
-      path.join(resourcesPath || "", "backend-dist", archBackend, "bin", "kirocrew"),
-      path.resolve(dirname, "backend-dist", archBackend, "bin", "kirocrew")
+      path.join(resourcesPath || "", "backend-dist", archBackend, "bin", "ajcrew"),
+      path.resolve(dirname, "backend-dist", archBackend, "bin", "ajcrew")
     );
   }
-  // 1. Windows SOURCE CHECKOUT: a pip/venv install exposes `kirocrew.exe`
-  //    under `Scripts\` (not the POSIX `bin/kirocrew` launcher). Probed before
+  // 1. Windows SOURCE CHECKOUT: a pip/venv install exposes `ajcrew.exe`
+  //    under `Scripts\` (not the POSIX `bin/ajcrew` launcher). Probed before
   //    the bundled candidates so a developer running from a checkout gets
   //    their own venv, and as an absolute `.exe` that `spawn()` can launch
   //    without a shell. On POSIX these are skipped entirely so mac/Linux
   //    behavior is unchanged.
   //
   //    Only the checkout venvs are ranked here. The BUNDLE's own
-  //    Scripts\kirocrew.exe is ranked further down, below the .cmd shim --
+  //    Scripts\ajcrew.exe is ranked further down, below the .cmd shim --
   //    see the note there.
   if (isWindows) {
     candidates.push(
       // Source checkout: repo-root `.venv` — electron/ is <repo>/website/electron,
       // so the venv is two levels up; one level up covers a <repo>/website venv.
-      path.resolve(dirname, "..", "..", ".venv", "Scripts", "kirocrew.exe"),
-      path.resolve(dirname, "..", ".venv", "Scripts", "kirocrew.exe")
+      path.resolve(dirname, "..", "..", ".venv", "Scripts", "ajcrew.exe"),
+      path.resolve(dirname, "..", ".venv", "Scripts", "ajcrew.exe")
     );
   }
   candidates.push(
     // 2. Windows bundled layout (packaging/build-desktop.sh
     //    build_backend_windows): the PBS interpreter ships python.exe at
-    //    the tree root with a bin\kirocrew.cmd launcher shim. Probed on
+    //    the tree root with a bin\ajcrew.cmd launcher shim. Probed on
     //    every platform (costs one ENOENT elsewhere) so this function
     //    stays platform-agnostic and testable; only a Windows bundle
     //    actually contains the .cmd. Keep in sync with
-    //    build-desktop.sh's bin/kirocrew.cmd.
+    //    build-desktop.sh's bin/ajcrew.cmd.
     //
-    //    This MUST outrank backend-dist/.../Scripts/kirocrew.exe below.
+    //    This MUST outrank backend-dist/.../Scripts/ajcrew.exe below.
     //    `pip install` also drops a console-script .exe in the bundle's
     //    Scripts\ dir, but distlib embeds the ABSOLUTE interpreter path of
     //    the machine that built it, so inside a shipped bundle that .exe
-    //    points at a build-agent path (D:\a\KiroCrew\...) that does not
+    //    points at a build-agent path (D:\a\AjCrew\...) that does not
     //    exist on the user's machine. The .cmd shim resolves the
     //    interpreter via %~dp0 and is the only relocatable launcher of the
     //    two. (Both bundle writers delete that .exe and put a
-    //    Scripts\kirocrew.cmd copy of this shim in its place, but a bundle
+    //    Scripts\ajcrew.cmd copy of this shim in its place, but a bundle
     //    built without that step still carries it.) Ranking them the other
     //    way round both broke the build-time
     //    resolver gate and, had the gate not caught it, would have shipped
     //    an app whose backend could never start.
-    path.join(resourcesPath || "", "backend-dist", "kirocrew-backend", "bin", "kirocrew.cmd"),
-    path.resolve(dirname, "backend-dist", "kirocrew-backend", "bin", "kirocrew.cmd"),
+    path.join(resourcesPath || "", "backend-dist", "ajcrew-backend", "bin", "ajcrew.cmd"),
+    path.resolve(dirname, "backend-dist", "ajcrew-backend", "bin", "ajcrew.cmd"),
     // 3. Bundled POSIX layout (packaging/build-desktop.sh): a
     //    python-build-standalone interpreter copied into backend-dist with a
-    //    `bin/kirocrew` launcher wrapper (exec python3.12 -s -P -m kiro_crew).
+    //    `bin/ajcrew` launcher wrapper (exec python3.12 -s -P -m aj_crew).
     //    This is what a freshly-built .app actually ships. Keep this in sync
-    //    with build-desktop.sh's BACKEND_OUT/bin/kirocrew path.
-    path.join(resourcesPath || "", "backend-dist", "kirocrew-backend", "bin", "kirocrew"),
-    path.resolve(dirname, "backend-dist", "kirocrew-backend", "bin", "kirocrew"),
-    path.resolve(dirname, "..", "bin", "kirocrew")
+    //    with build-desktop.sh's BACKEND_OUT/bin/ajcrew path.
+    path.join(resourcesPath || "", "backend-dist", "ajcrew-backend", "bin", "ajcrew"),
+    path.resolve(dirname, "backend-dist", "ajcrew-backend", "bin", "ajcrew"),
+    path.resolve(dirname, "..", "bin", "ajcrew")
   );
   if (isWindows) {
     // 4. The bundle's pip console-script .exe. Ranked BELOW the .cmd shim
@@ -106,28 +106,28 @@ function findKirocrewBin(
     //    it, so in a shipped bundle it points at a path that does not exist)
     //    but still ABOVE the user-level install paths below: a bundled app
     //    must prefer its own backend over whatever happens to be installed on
-    //    the machine. The bundle writers replace it with Scripts\kirocrew.cmd,
+    //    the machine. The bundle writers replace it with Scripts\ajcrew.cmd,
     //    so it is probed only for a bundle built without that step.
     candidates.push(
-      path.join(resourcesPath || "", "backend-dist", "kirocrew-backend", "Scripts", "kirocrew.exe"),
-      path.resolve(dirname, "backend-dist", "kirocrew-backend", "Scripts", "kirocrew.exe")
+      path.join(resourcesPath || "", "backend-dist", "ajcrew-backend", "Scripts", "ajcrew.exe"),
+      path.resolve(dirname, "backend-dist", "ajcrew-backend", "Scripts", "ajcrew.exe")
     );
   }
   // 5. Well-known install paths (toolbox, installer symlink, and venv). Last,
   //    so a packaged app never prefers a stray user-level install over the
   //    backend it shipped with.
   candidates.push(
-    path.join(home, ".toolbox", "bin", "kirocrew"),
-    path.join(home, ".local", "bin", "kirocrew"),
-    path.join(home, ".kirocrew-app", ".venv", "bin", "kirocrew")
+    path.join(home, ".toolbox", "bin", "ajcrew"),
+    path.join(home, ".local", "bin", "ajcrew"),
+    path.join(home, ".ajcrew-app", ".venv", "bin", "ajcrew")
   );
   if (isWindows) {
     // Windows equivalents of the user-level paths above (one-liner installer
     // venv, toolbox, and local pip Scripts dirs).
     candidates.push(
-      path.join(home, ".kirocrew-app", ".venv", "Scripts", "kirocrew.exe"),
-      path.join(home, ".toolbox", "bin", "kirocrew.exe"),
-      path.join(home, ".local", "bin", "kirocrew.exe")
+      path.join(home, ".ajcrew-app", ".venv", "Scripts", "ajcrew.exe"),
+      path.join(home, ".toolbox", "bin", "ajcrew.exe"),
+      path.join(home, ".local", "bin", "ajcrew.exe")
     );
   }
   for (const bin of candidates) {
@@ -135,21 +135,21 @@ function findKirocrewBin(
       fs.accessSync(bin, fs.constants.X_OK);
       return bin;
     } catch (e) {
-      if (e.code !== "ENOENT") console.warn(`kirocrew candidate ${bin}: ${e.code}`);
+      if (e.code !== "ENOENT") console.warn(`ajcrew candidate ${bin}: ${e.code}`);
     }
   }
   return isWindows ? PATH_FALLBACK_WINDOWS : PATH_FALLBACK; // fall back to PATH
 }
 
-const PATH_FALLBACK = "kirocrew";
-const PATH_FALLBACK_WINDOWS = "kirocrew.exe";
+const PATH_FALLBACK = "ajcrew";
+const PATH_FALLBACK_WINDOWS = "ajcrew.exe";
 
 /**
- * True when `bin` is findKirocrewBin's bare PATH fallback rather than a
+ * True when `bin` is findAjcrewBin's bare PATH fallback rather than a
  * candidate it found on disk: nothing at any probed path was executable, and
  * spawning `bin` runs whatever that name resolves to on PATH.
  *
- * @param {string} bin  a findKirocrewBin result
+ * @param {string} bin  a findAjcrewBin result
  * @returns {boolean}
  */
 function isPathFallback(bin) {
@@ -216,4 +216,4 @@ function findSshBin(fs, path, isWindows = process.platform === "win32") {
   return "/usr/bin/ssh";
 }
 
-module.exports = { findKirocrewBin, isPathFallback, findSshBin };
+module.exports = { findAjcrewBin, isPathFallback, findSshBin };

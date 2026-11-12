@@ -66,7 +66,7 @@ const INSTALLED_APP = {
   description: 'Flag control tower.',
   version: '0.2.0',
   installedVersion: '0.2.0',
-  author: 'kirocrew',
+  author: 'ajcrew',
   installed: true,
   enabled: false,
   manifest: { name: 'launchdarkly', version: '0.2.0', displayName: 'LaunchDarkly' },

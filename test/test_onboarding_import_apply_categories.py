@@ -35,10 +35,10 @@ from onboarding_import_helpers import (  # noqa: F401 -- the autouse fixture reg
     _write_lineage_memory_db,
 )
 
-from kiro_crew import onboarding_apply, onboarding_scan
-from kiro_crew.cron import CronService, CronStoreUnreadable
-from kiro_crew.onboarding_sources import hermes as hermes_source
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import onboarding_apply, onboarding_scan
+from aj_crew.cron import CronService, CronStoreUnreadable
+from aj_crew.onboarding_sources import hermes as hermes_source
+from aj_crew.vector_memory import VectorMemoryStore
 
 # Keep apply_import's MCP sidecar lock off the real ~/.kiro/settings (see the
 # shared fixture in test/conftest.py).
@@ -47,9 +47,9 @@ pytestmark = pytest.mark.usefixtures("isolate_mcp_host_paths")
 
 def _api() -> ModuleType:
     try:
-        return importlib.import_module("kiro_crew.onboarding_import")
+        return importlib.import_module("aj_crew.onboarding_import")
     except ModuleNotFoundError:
-        pytest.fail("kiro_crew.onboarding_import is not implemented")
+        pytest.fail("aj_crew.onboarding_import is not implemented")
 
 
 class TestApply:
@@ -118,7 +118,7 @@ class TestApply:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         api = _api()
-        mcp_handlers = importlib.import_module("kiro_crew.dashboard.handlers.mcp")
+        mcp_handlers = importlib.import_module("aj_crew.dashboard.handlers.mcp")
         entered: list[bool] = []
 
         class Lock:
@@ -178,8 +178,8 @@ class TestApply:
             encoding="utf-8",
         )
         global_path = home / ".kiro" / "settings" / "mcp.json"
-        installed_path = home / ".kiro" / "agents" / "kirocrew.json"
-        mcp_handlers = importlib.import_module("kiro_crew.dashboard.handlers.mcp")
+        installed_path = home / ".kiro" / "agents" / "ajcrew.json"
+        mcp_handlers = importlib.import_module("aj_crew.dashboard.handlers.mcp")
         monkeypatch.setattr(mcp_handlers, "_GLOBAL_MCP_JSON", global_path)
         monkeypatch.setattr(mcp_handlers, "_MCP_LOCK_PATH", global_path.with_suffix(".lock"))
         effective_path = global_path if effective_source == "global" else installed_path
@@ -225,7 +225,7 @@ class TestApply:
         monkeypatch: pytest.MonkeyPatch,
         scope_location: str,
     ) -> None:
-        from kiro_crew.platform.interfaces import McpScope
+        from aj_crew.platform.interfaces import McpScope
 
         home = tmp_path / "home"
         predecessor_root = home / ".predecessor"
@@ -258,14 +258,14 @@ class TestApply:
             ),
             encoding="utf-8",
         )
-        mcp_discovery = importlib.import_module("kiro_crew.mcp_discovery")
+        mcp_discovery = importlib.import_module("aj_crew.mcp_discovery")
         monkeypatch.setattr(
             mcp_discovery,
             "_extra_scopes",
             lambda: [McpScope("provider", scope_global, scope_agent)],
         )
         global_path = home / ".kiro" / "settings" / "mcp.json"
-        mcp_handlers = importlib.import_module("kiro_crew.dashboard.handlers.mcp")
+        mcp_handlers = importlib.import_module("aj_crew.dashboard.handlers.mcp")
         monkeypatch.setattr(mcp_handlers, "_GLOBAL_MCP_JSON", global_path)
         monkeypatch.setattr(mcp_handlers, "_MCP_LOCK_PATH", global_path.with_suffix(".lock"))
         data_home = tmp_path / "destination"
@@ -316,10 +316,10 @@ class TestApply:
             mcp_tooling = McpTooling()
             import_sources = _Provider()
 
-        platform_context = importlib.import_module("kiro_crew.platform.context")
+        platform_context = importlib.import_module("aj_crew.platform.context")
         monkeypatch.setattr(platform_context, "current_context", lambda: Context())
         global_path = home / ".kiro" / "settings" / "mcp.json"
-        mcp_handlers = importlib.import_module("kiro_crew.dashboard.handlers.mcp")
+        mcp_handlers = importlib.import_module("aj_crew.dashboard.handlers.mcp")
         monkeypatch.setattr(mcp_handlers, "_GLOBAL_MCP_JSON", global_path)
         monkeypatch.setattr(mcp_handlers, "_MCP_LOCK_PATH", global_path.with_suffix(".lock"))
         data_home = tmp_path / "destination"
@@ -360,11 +360,11 @@ class TestApply:
             json.dumps({"mcpServers": {"new-server": {"command": "safe-command"}}}),
             encoding="utf-8",
         )
-        installed_path = home / ".kiro" / "agents" / "kirocrew.json"
+        installed_path = home / ".kiro" / "agents" / "ajcrew.json"
         installed_path.parent.mkdir(parents=True)
         installed_path.write_text(json.dumps(installed_config), encoding="utf-8")
         global_path = home / ".kiro" / "settings" / "mcp.json"
-        mcp_handlers = importlib.import_module("kiro_crew.dashboard.handlers.mcp")
+        mcp_handlers = importlib.import_module("aj_crew.dashboard.handlers.mcp")
         monkeypatch.setattr(mcp_handlers, "_GLOBAL_MCP_JSON", global_path)
         monkeypatch.setattr(mcp_handlers, "_MCP_LOCK_PATH", global_path.with_suffix(".lock"))
         data_home = tmp_path / "destination"
@@ -410,7 +410,7 @@ class TestApply:
                             "command": "credential-mcp",
                             "credentials": {"token": secret},
                         },
-                        "kirocrew-core": {"command": "foreign-managed"},
+                        "ajcrew-core": {"command": "foreign-managed"},
                     }
                 }
             ),
@@ -438,7 +438,7 @@ class TestApply:
         assert "env-local" not in written["mcpServers"]
         assert "header-remote" not in written["mcpServers"]
         assert "credential-local" not in written["mcpServers"]
-        assert "kirocrew-core" not in written["mcpServers"]
+        assert "ajcrew-core" not in written["mcpServers"]
         assert "env" not in serialized
         assert "headers" not in serialized
         assert "credentials" not in serialized
@@ -1380,7 +1380,7 @@ class TestApplySkills:
             _api().preview_import(home=home, env={}),
             ("claude_code", "skills"),
         )
-        atomic_write_module = importlib.import_module("kiro_crew.atomic_write")
+        atomic_write_module = importlib.import_module("aj_crew.atomic_write")
         real_fdopen = atomic_write_module.os.fdopen
 
         def windows_fdopen(fd: int, *args: Any, **kwargs: Any):

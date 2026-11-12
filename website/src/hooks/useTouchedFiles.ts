@@ -14,7 +14,7 @@ export interface TouchedFile {
   source: 'history' | 'tool'
 }
 
-const STORAGE_PREFIX = 'kirocrew:touched-files:'
+const STORAGE_PREFIX = 'ajcrew:touched-files:'
 const WATERMARK_SUFFIX = ':toolClearedAt'
 
 /**

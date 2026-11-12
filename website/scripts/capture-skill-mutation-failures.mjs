@@ -37,7 +37,7 @@ const SKILL = {
   key: 'my-notes',
   name: 'my-notes',
   description: 'Personal note-taking conventions',
-  source: 'kirocrew',
+  source: 'ajcrew',
   loaded_by_agents: [],
 }
 // A survivor: frame 4 deletes my-notes while its DELETE hangs, and the
@@ -46,7 +46,7 @@ const OTHER = {
   key: 'meeting-prep',
   name: 'meeting-prep',
   description: 'How to prep the weekly sync',
-  source: 'kirocrew',
+  source: 'ajcrew',
   loaded_by_agents: [],
 }
 const SKILL_MD = '---\nname: my-notes\ndescription: Personal note-taking conventions\n---\nUse dated headers.\n'

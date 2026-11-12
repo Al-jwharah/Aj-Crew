@@ -6,7 +6,7 @@ whose file-size limit (``RLIMIT_FSIZE``) ends partway through the new line, so t
 kernel takes the first part and the next write fails. That is EFBIG rather than
 ENOSPC, with the same short write a full disk makes. The parent then appends with
 no limit, as when space comes back, and reads the file back. All state is under
-``tmp_path``, and the child gets ``KIROCREW_HOME`` pointed there too.
+``tmp_path``, and the child gets ``AJCREW_HOME`` pointed there too.
 """
 
 from __future__ import annotations
@@ -21,9 +21,9 @@ import textwrap
 
 import pytest
 
-import kiro_crew.atomic_write as aw
-from kiro_crew.cron_history import CronHistoryStore, CronRunRecord
-from kiro_crew.history import ConversationLog
+import aj_crew.atomic_write as aw
+from aj_crew.cron_history import CronHistoryStore, CronRunRecord
+from aj_crew.history import ConversationLog
 
 KEY = "chat-1-1790000000"
 
@@ -32,10 +32,10 @@ _CHILD = textwrap.dedent("""
     from pathlib import Path
     kind, base, limit = sys.argv[1], Path(sys.argv[2]), int(sys.argv[3])
     if kind == "transcript":
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
         target = ConversationLog(base_dir=base)
     else:
-        from kiro_crew.cron_history import CronHistoryStore, CronRunRecord
+        from aj_crew.cron_history import CronHistoryStore, CronRunRecord
         target = CronHistoryStore(base_dir=base)
         record = CronRunRecord(job_id="job-full", started_at=1.0, summary="s" * 400)
     signal.signal(signal.SIGXFSZ, signal.SIG_IGN)
@@ -56,7 +56,7 @@ posix_only = pytest.mark.skipif(sys.platform == "win32", reason="RLIMIT_FSIZE is
 
 def _append_with_space_running_out(tmp_path, kind: str, limit: int) -> dict:
     """Run one append in a child whose file-size limit is *limit* bytes."""
-    env = {**os.environ, "KIROCREW_HOME": str(tmp_path), "PYTHONDONTWRITEBYTECODE": "1"}
+    env = {**os.environ, "AJCREW_HOME": str(tmp_path), "PYTHONDONTWRITEBYTECODE": "1"}
     done = subprocess.run(
         [sys.executable, "-c", _CHILD, kind, str(tmp_path / kind), str(limit), KEY],
         cwd=str(tmp_path),
@@ -72,7 +72,7 @@ def _append_with_space_running_out(tmp_path, kind: str, limit: int) -> dict:
 
 @posix_only
 def test_a_failed_transcript_append_does_not_swallow_the_next_message(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     log = ConversationLog(base_dir=tmp_path / "transcript")
     log.append(KEY, "user", "first message")
     transcript = next((tmp_path / "transcript").rglob(f"{KEY}.jsonl"))
@@ -93,7 +93,7 @@ def test_a_failed_transcript_append_does_not_swallow_the_next_message(tmp_path, 
 @posix_only
 @pytest.mark.asyncio
 async def test_a_failed_cron_run_append_does_not_swallow_the_next_run(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     store = CronHistoryStore(base_dir=tmp_path / "cron")
     first = CronRunRecord(job_id="job-full", started_at=0.0, summary="run 0")
     await store.append(first)

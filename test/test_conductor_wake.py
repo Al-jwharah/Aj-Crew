@@ -40,8 +40,8 @@ from conductor_wake_helpers import (
 )
 from crew_log_drain import assert_drained
 
-from kiro_crew import conductor_wake, work_ledger
-from kiro_crew.testing.wait import async_wait_until, default_timeout
+from aj_crew import conductor_wake, work_ledger
+from aj_crew.testing.wait import async_wait_until, default_timeout
 
 # ── the shared lookup ────────────────────────────────────────────────────────
 
@@ -95,7 +95,7 @@ def test_a_monitor_record_from_a_newer_gateway_is_not_pulled_forward():
     watch is a ``gate=True`` prompt loop, so ``_load`` leaves such a row ACTIVE -- so the
     push has to carry the same refusal or it is a way around that one.
     """
-    from kiro_crew.monitoring.models import MONITOR_STATE_VERSION
+    from aj_crew.monitoring.models import MONITOR_STATE_VERSION
 
     _bind()
     loop = _Loop()
@@ -112,8 +112,8 @@ def test_the_startup_resume_refuses_a_newer_gateways_record():
     a False answer sends the row to ``_arm_from_deadline``, which already refuses it and
     logs why, so the refusal lives in one place.
     """
-    from kiro_crew.autonudge import AutoNudgeService
-    from kiro_crew.monitoring.models import MONITOR_STATE_VERSION
+    from aj_crew.autonudge import AutoNudgeService
+    from aj_crew.monitoring.models import MONITOR_STATE_VERSION
 
     current = _Loop()
     assert AutoNudgeService._observes_work_ledger(None, current) is True
@@ -154,7 +154,7 @@ def _rows(*items) -> "list[tuple[str, str, str]]":
 
 def _event(board: str, items: list, *, scope: str = "slot", fold: str = "work"):
     """A ``FoldAdvanced`` as ``eager._publish_fold`` builds one for *board*'s work fold."""
-    from kiro_crew.crew_log import bus
+    from aj_crew.crew_log import bus
 
     value = {
         "conductor": {"slot": board},
@@ -303,8 +303,8 @@ def test_the_statuses_this_trigger_pushes_for_are_the_ones_the_gate_spends_on():
     wasted or news that waits out the whole patrol cadence, so both read
     ``work_vocab.WORK_WAKE_STATUSES`` and this pins them equal.
     """
-    from kiro_crew import ledger_wake
-    from kiro_crew.work_vocab import WORK_WAKE_STATUSES, WORK_WORKER_STATUSES
+    from aj_crew import ledger_wake
+    from aj_crew.work_vocab import WORK_WAKE_STATUSES, WORK_WORKER_STATUSES
 
     assert ledger_wake.WAKE_STATUSES == frozenset(WORK_WAKE_STATUSES)
     assert set(WORK_WAKE_STATUSES) < set(WORK_WORKER_STATUSES)
@@ -391,7 +391,7 @@ def test_a_same_second_report_with_the_same_event_id_still_pushes_on_new_fields(
 
 
 def test_the_report_fields_this_module_digests_are_the_folds():
-    from kiro_crew.crew_log import projection
+    from aj_crew.crew_log import projection
 
     assert conductor_wake._REPORT_FIELDS == projection._WORK_WORKER_FIELDS
 
@@ -444,7 +444,7 @@ def test_the_service_stop_clears_the_registry():
 
 def test_other_scopes_and_folds_are_not_this_subscribers(monkeypatch):
     """A session-scoped event and another slot fold cost one comparison each."""
-    import kiro_crew.autonudge as autonudge
+    import aj_crew.autonudge as autonudge
 
     monkeypatch.setattr(autonudge, "get_instance", lambda: _Svc(_Loop()))
     assert conductor_wake._observe_event(_event(CONDUCTOR, [], scope="session")) is None
@@ -461,7 +461,7 @@ def test_a_work_fold_event_is_handed_to_the_service_loop(monkeypatch):
     """
     import threading
 
-    import kiro_crew.autonudge as autonudge
+    import aj_crew.autonudge as autonudge
 
     fired = _record_fires(monkeypatch)
     loop = asyncio.new_event_loop()
@@ -513,12 +513,12 @@ class _Listing(_Svc):
 @pytest.fixture
 def real_crew_log(monkeypatch):
     """A live crew log with the eager folder running and an empty bus."""
-    from kiro_crew.crew_log import bus
-    from kiro_crew.crew_log import eager as crew_log_eager
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log import bus
+    from aj_crew.crew_log import eager as crew_log_eager
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import projection as crew_log
 
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     crew_log_emit.reset_caches()
     crew_log_eager.stop_for_tests()
     crew_log.forget_slot_folds()
@@ -534,8 +534,8 @@ def real_crew_log(monkeypatch):
 
 
 def _unit(unit: str, slot: str) -> None:
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     CrewLog.create(lg.KIND_SESSION, unit, owner="owner", agent="lead", slot=slot)
 
@@ -543,8 +543,8 @@ def _unit(unit: str, slot: str) -> None:
 def _write(unit: str, **fields) -> None:
     """Append one ``work/recorded`` entry through the real append path, then let the
     eager folder drain it -- one batch, folded and published."""
-    from kiro_crew.crew_log import eager as crew_log_eager
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import eager as crew_log_eager
+    from aj_crew.crew_log import emit as crew_log_emit
 
     assert crew_log_emit.on_work_recorded(unit, dict(fields), timeout=5.0) is True
     assert_drained()
@@ -602,7 +602,7 @@ async def _sync_and_join(svc) -> None:
     # it and its first push is the board's first sight. Wait for that prime, then for the
     # observations it scheduled on this loop, so every case starts from the board's
     # first sight already recorded.
-    from kiro_crew.crew_log import slot_prime
+    from aj_crew.crew_log import slot_prime
 
     assert await asyncio.to_thread(slot_prime.drain, 30.0), "a background prime never finished"
     live = set(conductor_wake._subscriptions.live)
@@ -611,7 +611,7 @@ async def _sync_and_join(svc) -> None:
 
 def _on_this_loop(monkeypatch, svc) -> None:
     """Point the module at *svc* and at the test's own running loop."""
-    import kiro_crew.autonudge as autonudge
+    import aj_crew.autonudge as autonudge
 
     running = asyncio.get_running_loop()
     monkeypatch.setattr(autonudge, "get_instance", lambda: svc)
@@ -718,7 +718,7 @@ def test_only_the_watched_boards_work_fold_reaches_the_subscriber(real_crew_log,
 def test_a_disposed_subscription_wakes_nothing(real_crew_log, monkeypatch):
     """The loop ends, the next loop-table sync disposes the board's subscription, and a
     later report reaches neither the module nor the loop."""
-    from kiro_crew.crew_log import bus
+    from aj_crew.crew_log import bus
 
     seen = _spy_events(monkeypatch)
     _board("acp-c", CONDUCTOR, WORKER)
@@ -745,7 +745,7 @@ def test_a_disposed_subscription_wakes_nothing(real_crew_log, monkeypatch):
 
 
 def test_the_service_stop_disposes_every_subscription(real_crew_log, monkeypatch):
-    from kiro_crew.crew_log import bus
+    from aj_crew.crew_log import bus
 
     _board("acp-c", CONDUCTOR, WORKER)
 
@@ -765,7 +765,7 @@ def test_the_service_stop_disposes_every_subscription(real_crew_log, monkeypatch
 
 def test_a_join_that_lands_after_stop_keeps_nothing(real_crew_log, monkeypatch):
     """A join in flight when the service stops disposes what it gets."""
-    from kiro_crew.crew_log import bus
+    from aj_crew.crew_log import bus
 
     _board("acp-c", CONDUCTOR, WORKER)
 
@@ -789,7 +789,7 @@ def test_the_eager_folder_names_no_conductor():
     import ast
     import inspect
 
-    from kiro_crew.crew_log import eager
+    from aj_crew.crew_log import eager
 
     tree = ast.parse(inspect.getsource(eager))
     named = {
@@ -837,7 +837,7 @@ def test_a_worker_session_closing_reaches_no_wake():
     import importlib
     import pkgutil
 
-    from kiro_crew.dashboard import chat_api, chat_handlers
+    from aj_crew.dashboard import chat_api, chat_handlers
 
     # The handlers facade and every ``chat_api`` owner it composes.
     owners = [
@@ -857,7 +857,7 @@ def test_a_turn_ending_reaches_no_wake():
     reach it identically. A push from there buys a cycle the gate answers quiet, and the
     quiet streak's floor then delivers a turn anyway.
     """
-    from kiro_crew.autonudge_service import timers
+    from aj_crew.autonudge_service import timers
 
     assert "conductor_wake" not in inspect.getsource(timers)
 
@@ -870,9 +870,9 @@ def test_a_turn_end_on_a_bound_workers_slot_fires_nothing(tmp_path, monkeypatch)
     looks for a loop on the slot it is given, and a worker has none, so every branch
     below the lookup is the no-op it always was for a worker.
     """
-    import kiro_crew.autonudge as autonudge
+    import aj_crew.autonudge as autonudge
 
-    monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
     _bind(status="progress")
     arms: list[float | None] = []
 
@@ -942,7 +942,7 @@ def test_a_running_worker_is_never_stale_even_closed():
 
 def test_the_probe_reads_a_closed_worker_through_its_injected_resolver():
     """The probe takes the answer as a value, like liveness, and for the same reason."""
-    from kiro_crew.probes.work_ledger import WorkLedgerProbe
+    from aj_crew.probes.work_ledger import WorkLedgerProbe
 
     probe = WorkLedgerProbe(worker_closed=lambda key: key == WORKER)
     assert probe._worker_closed(WORKER) is True
@@ -952,7 +952,7 @@ def test_the_probe_reads_a_closed_worker_through_its_injected_resolver():
 
 
 def test_build_passes_both_resolvers_to_the_work_ledger_probe():
-    from kiro_crew import probes
+    from aj_crew import probes
 
     probe = probes.build(
         probes.WORK_LEDGER, worker_running=lambda _k: True, worker_closed=lambda _k: True
@@ -964,7 +964,7 @@ def test_build_passes_both_resolvers_to_the_work_ledger_probe():
 
 def test_worker_closed_reads_existence_not_liveness():
     """``ledger_wake``'s binding: a slot that answers is open, whatever it is doing."""
-    from kiro_crew import ledger_wake
+    from aj_crew import ledger_wake
 
     class _Table:
         def __init__(self, keys):
@@ -987,7 +987,7 @@ def test_a_table_that_cannot_answer_existence_reports_no_close():
     It hides a slot still being built, so reading its ``None`` as "gone" is the defect
     this function exists to avoid. A table offering only that door cannot prove a close.
     """
-    from kiro_crew import ledger_wake
+    from aj_crew import ledger_wake
 
     class _AcquireOnly:
         def get_slot(self, _key):
@@ -1004,7 +1004,7 @@ def test_a_reported_worker_under_construction_is_not_closed(tmp_path):
     """
     from chat_test_helpers import _make_state
 
-    from kiro_crew import ledger_wake
+    from aj_crew import ledger_wake
 
     item_id = _bind(status="progress")
     state = _make_state(tmp_path)
@@ -1028,8 +1028,8 @@ def test_a_reported_worker_under_construction_is_not_closed(tmp_path):
 
 def _stall_keys(state) -> "list[str]":
     """The stall observation keys one probe tick over the real ledger produces."""
-    from kiro_crew import ledger_wake
-    from kiro_crew.probes.work_ledger import WorkLedgerProbe
+    from aj_crew import ledger_wake
+    from aj_crew.probes.work_ledger import WorkLedgerProbe
 
     probe = WorkLedgerProbe(worker_closed=lambda key: ledger_wake.worker_closed(state, key))
     probe._conductor = CONDUCTOR
@@ -1047,7 +1047,7 @@ def test_a_reported_worker_whose_restore_read_failed_is_not_closed(tmp_path):
     """
     from chat_test_helpers import _make_state
 
-    from kiro_crew import ledger_wake
+    from aj_crew import ledger_wake
 
     _bind(status="progress")
     state = _make_state(tmp_path)
@@ -1065,7 +1065,7 @@ def test_absence_during_an_in_flight_restore_proves_no_close(tmp_path):
     """A tab the restore has not reached yet has no slot, and is not closed."""
     from chat_test_helpers import _make_state
 
-    from kiro_crew import ledger_wake
+    from aj_crew import ledger_wake
 
     state = _make_state(tmp_path)
     state.restoring_open_slots = True
@@ -1090,8 +1090,8 @@ def _closing_state(tmp_path):
 
 def _record_close(monkeypatch, *, save_fails: bool) -> list[str]:
     """Record the archival save and the wake in the order ``close_slot`` reaches them."""
-    from kiro_crew import autonudge
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew import autonudge
+    from aj_crew.dashboard import chat_handlers
 
     events: list[str] = []
     monkeypatch.setattr(autonudge, "_INSTANCE", None)
@@ -1122,8 +1122,8 @@ def test_a_close_whose_archival_fails_fires_no_wake(tmp_path, monkeypatch):
     would read the popped slot as closed and persist a ``worker_closed`` stall the
     restore cannot retract.
     """
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard.chat_handlers import SlotCloseError
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard.chat_handlers import SlotCloseError
 
     events = _record_close(monkeypatch, save_fails=True)
     state, slot = _closing_state(tmp_path)
@@ -1140,7 +1140,7 @@ def test_a_close_whose_archival_fails_fires_no_wake(tmp_path, monkeypatch):
 
 def test_a_committed_close_saves_and_still_fires_no_wake(tmp_path, monkeypatch):
     """The ordinary close: the slot is archived and gone, and no conductor was pushed."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     events = _record_close(monkeypatch, save_fails=False)
     state, slot = _closing_state(tmp_path)

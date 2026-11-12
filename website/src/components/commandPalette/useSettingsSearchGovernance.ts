@@ -46,15 +46,15 @@ export function useSettingsSearchGovernance(
   // The updater's answer from cache only, on every surface: a search open is no
   // reason for an IPC round trip, and About re-reads it when it is opened.
   const { app, gateway } = useUpdateSwitchesShown({ fetch: false })
-  // The `['kirocrewConfig']` read naming the selected harness. The sign-in card
+  // The `['ajcrewConfig']` read naming the selected harness. The sign-in card
   // signs out Crew's own Kiro sign-in, which agents run as only on KAS; on any
   // other harness the entry would promise a sign-out of an account it does not
   // touch. Withheld only on a successful read that names another harness.
   // From cache only, on every surface: the shell already reads this at boot
   // (the credits pill), so a search adds no request of its own.
   const cfgQ = useQuery<AcpBackendConfig>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
     ...CACHED_ONLY,
   })
   const kiroSignInOffered = !cfgQ.isSuccess || configuredAcpBackend(cfgQ.data) === KIRO_SIGN_IN_BACKEND

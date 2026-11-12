@@ -19,9 +19,9 @@ import pytest
 import snapshot_helpers
 from snapshot_helpers import unpinnable_argv
 
+from aj_crew import snapshot as snapshot_mod
+from aj_crew.jsonl_util import OversizedRecord, UndecodableRecord, UnreadableRecord
 from conftest import requires_o_nofollow, requires_symlinks
-from kiro_crew import snapshot as snapshot_mod
-from kiro_crew.jsonl_util import OversizedRecord, UndecodableRecord, UnreadableRecord
 
 # Fixtures shared with the sibling modules, bound by assignment so pytest registers
 # them for the tests in this module.
@@ -384,7 +384,7 @@ class TestNotificationMergeWriteSideContract:
         the lines above the prompt where the operator decides whether to trust the
         restore.
         """
-        hostile = tmp_path / "kirocrew-snapshot-\x1b[2K\x1b[1Aevil"
+        hostile = tmp_path / "ajcrew-snapshot-\x1b[2K\x1b[1Aevil"
         hostile.mkdir()
         src = hostile / "notifications.jsonl"
         dst = tmp_path / "live.jsonl"
@@ -414,7 +414,7 @@ class TestNotificationMergeWriteSideContract:
                 raise UnreadableRecord("source changed under the merge")
             yield from real(handle, path, **kw)
 
-        hostile = tmp_path / "kirocrew-snapshot-\x1b[2K-forged"
+        hostile = tmp_path / "ajcrew-snapshot-\x1b[2K-forged"
         hostile.mkdir()
         src = hostile / "notifications.jsonl"
         dst = tmp_path / "live.jsonl"

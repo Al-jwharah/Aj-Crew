@@ -24,18 +24,18 @@ import pytest
 from chat_test_helpers import _make_state
 from session_control_helpers import _peer_target
 
-from kiro_crew import autonudge, autonudge_authz, mcp_dashboard_session_runs
-from kiro_crew.dashboard import create_rate_limit
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.validation_parts.field_engine import validate_tool_args
-from kiro_crew.validation_parts.messaging_session_schemas import SESSION_CREATE_SCHEMA
+from aj_crew import autonudge, autonudge_authz, mcp_dashboard_session_runs
+from aj_crew.dashboard import create_rate_limit
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.validation_parts.field_engine import validate_tool_args
+from aj_crew.validation_parts.messaging_session_schemas import SESSION_CREATE_SCHEMA
 
 
 @pytest.fixture(autouse=True)
 def _env(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _floor_monkeypatch.setattr(sc, "session_control_enabled", lambda: True)
     _floor_monkeypatch.setattr(
         autonudge_authz, "sel", lambda: SimpleNamespace(log_tool_invocation=lambda **kw: None)
@@ -59,7 +59,7 @@ def turns(monkeypatch) -> list[tuple[str, str]]:
     async def _fake_run_chat(_state, slot, prompt):
         seen.append((slot.key, prompt))
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._run_chat", _fake_run_chat)
     return seen
 
 
@@ -207,7 +207,7 @@ def test_a_blank_message_is_refused_before_any_create(tmp_path, turns):
 
 
 def test_the_tool_schema_bounds_message_like_session_send():
-    from kiro_crew.validation_parts.messaging_session_schemas import SESSION_SEND_SCHEMA
+    from aj_crew.validation_parts.messaging_session_schemas import SESSION_SEND_SCHEMA
 
     create_max = next(f for f in SESSION_CREATE_SCHEMA.fields if f.name == "message").max_len
     send_max = next(f for f in SESSION_SEND_SCHEMA.fields if f.name == "message").max_len
@@ -241,7 +241,7 @@ def test_the_tool_forwards_message_and_reports_its_fate(resp, expected):
     ctx = SimpleNamespace(client=client, caller_key="chat-1")
 
     out = mcp_dashboard_session_runs._run_session_create(
-        {"title": "w", "agent": "kirocrew-worker", "message": "go"}, ctx
+        {"title": "w", "agent": "ajcrew-worker", "message": "go"}, ctx
     )
 
     assert client.posts[-1]["message"] == "go"
@@ -259,10 +259,10 @@ def test_the_tool_without_message_still_says_the_session_is_empty():
     assert "It is empty and waiting" in out
 
 
-_CREATE = "@kirocrew-dashboard/session_create"
+_CREATE = "@ajcrew-dashboard/session_create"
 # Bound before the autouse fixture stubs it, so a test can read a real spec.
 _REAL_APPROVALS = handlers_sc._caller_auto_approvals
-_SEND = "@kirocrew-dashboard/session_send"
+_SEND = "@ajcrew-dashboard/session_send"
 
 
 @pytest.mark.parametrize(
@@ -305,8 +305,8 @@ def test_a_caller_granted_session_send_delivers_its_first_message(tmp_path, turn
 
 def _real_spec(monkeypatch, spec: dict[str, Any], runtime: str = "conductor") -> None:
     """Run the real grant reader; the caller's bindings resolve to *runtime*'s spec."""
-    from kiro_crew import session_agent_selection
-    from kiro_crew.acp import session_mcp
+    from aj_crew import session_agent_selection
+    from aj_crew.acp import session_mcp
 
     monkeypatch.setattr(handlers_sc, "_caller_auto_approvals", _REAL_APPROVALS)
     monkeypatch.setattr(
@@ -333,7 +333,7 @@ def test_a_conductor_granting_create_through_allowed_tools_cannot_seed(
     tmp_path, turns, monkeypatch, grants
 ):
     """Conductors grant through ``allowedTools``, not ``autoApprove``: the shipped tuples."""
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     granted = list(getattr(agent_mod, grants))
     assert _CREATE in granted and _SEND not in granted
@@ -346,7 +346,7 @@ def test_a_conductor_granting_create_through_allowed_tools_cannot_seed(
     assert task is None and turns == []
 
 
-@pytest.mark.parametrize("entry", ["@kirocrew-dashboard", "@kirocrew-dashboard/session_*", "*"])
+@pytest.mark.parametrize("entry", ["@ajcrew-dashboard", "@ajcrew-dashboard/session_*", "*"])
 def test_a_grant_that_covers_send_too_may_seed(tmp_path, turns, monkeypatch, entry):
     _real_spec(monkeypatch, {"allowedTools": [_CREATE, entry]})
     status, body, _state, _task = _create(tmp_path, {"title": "worker", "message": "go"})
@@ -359,12 +359,12 @@ def test_a_grant_that_covers_send_too_may_seed(tmp_path, turns, monkeypatch, ent
     "entry",
     [
         "*",
-        "@kirocrew-dashboard",
-        "@kirocrew-dashboard/*",
-        "@kirocrew-dashboard/session_*",
+        "@ajcrew-dashboard",
+        "@ajcrew-dashboard/*",
+        "@ajcrew-dashboard/session_*",
         _SEND,
         "@other",
-        "@kirocrew-dashboard/session_create*",
+        "@ajcrew-dashboard/session_create*",
         "session_send",
         "*_send",
         "@*",
@@ -372,7 +372,7 @@ def test_a_grant_that_covers_send_too_may_seed(tmp_path, turns, monkeypatch, ent
 )
 def test_the_guard_decides_send_exactly_as_the_strict_matcher(tmp_path, turns, monkeypatch, entry):
     """Send is judged by ``entry_grants``: a seed is refused exactly when it says send is not granted."""
-    from kiro_crew.agent_sdk.mcp_refs import entry_grants
+    from aj_crew.agent_sdk.mcp_refs import entry_grants
 
     _real_spec(monkeypatch, {"allowedTools": [_CREATE, entry]})
     status, body, _state, _task = _create(tmp_path, {"title": "worker", "message": "go"})
@@ -386,8 +386,8 @@ def test_the_guard_decides_send_exactly_as_the_strict_matcher(tmp_path, turns, m
         "session_send",
         "*_send",
         "@*",
-        "@kirocrew-*",
-        "@KIROCREW-DASHBOARD/session_send",
+        "@ajcrew-*",
+        "@AJCREW-DASHBOARD/session_send",
         " " + _SEND,
     ],
 )
@@ -419,8 +419,8 @@ def test_a_history_key_caller_is_judged_by_its_own_slot_agent_and_project(
     tmp_path, turns, monkeypatch
 ):
     """The header is the history key: the check must still read the slot's agent and project."""
-    from kiro_crew import session_agent_selection
-    from kiro_crew.acp import session_mcp
+    from aj_crew import session_agent_selection
+    from aj_crew.acp import session_mcp
 
     seen: dict[str, Any] = {}
 
@@ -453,7 +453,7 @@ def test_a_planted_project_spec_cannot_grant_session_send(tmp_path, turns, monke
 
     The session runs on the user-level spec, which grants create and withholds send.
     """
-    from kiro_crew import session_agent_selection
+    from aj_crew import session_agent_selection
 
     kiro_home = tmp_path / "kiro-home"
     (kiro_home / "agents").mkdir(parents=True)

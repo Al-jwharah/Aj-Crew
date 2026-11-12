@@ -29,19 +29,19 @@ from dashboard_approval_helpers import (
 )
 from real_session_manager import open_session, real_sessions
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat import _run_chat
-from kiro_crew.dashboard.state import _ChatSlot, parse_cls_meta, row_mid
-from kiro_crew.hooks import (
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat import _run_chat
+from aj_crew.dashboard.state import _ChatSlot, parse_cls_meta, row_mid
+from aj_crew.hooks import (
     HOOK_EVENT_PRE_TOOL_USE,
     TOOL_ALLOW,
     TOOL_AUTO_APPROVE,
     ScriptHookResult,
     ToolHookResult,
 )
-from kiro_crew.name_grant import SHADOWED, Refusal
-from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.name_grant import SHADOWED, Refusal
+from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+from aj_crew.testing.wait import await_until, finished
 
 
 def _tool_messages(slot: _ChatSlot) -> list[dict]:
@@ -357,7 +357,7 @@ class TestApprovalModes:
     @pytest.mark.asyncio
     async def test_auto_approve_still_fires_pretooluse_script_hook(self, tmp_path):
         """Auto-approve must NOT bypass scripted PreToolUse hooks (audit gate)."""
-        from kiro_crew.hooks import HOOK_EVENT_PRE_TOOL_USE
+        from aj_crew.hooks import HOOK_EVENT_PRE_TOOL_USE
 
         cb = _context_builder(ToolHookResult.auto_approve())
         hook_store = _make_hook_store()

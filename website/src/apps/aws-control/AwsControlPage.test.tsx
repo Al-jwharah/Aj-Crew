@@ -166,7 +166,7 @@ function availablePayload(
 
 const driveExists: DriveStatus = {
   exists: true,
-  bucket: 'kirocrew-drive-abc123',
+  bucket: 'ajcrew-drive-abc123',
   region: 'us-west-2',
   usage: {
     bytes: 3_500_000_000,
@@ -266,7 +266,7 @@ describe('AwsControlPage shell', () => {
     expect(screen.getByTestId('rail-shares-count')).toHaveTextContent(fmtNumber(3))
     // The drive's identity at the rail's foot: bucket + region.
     const meta = screen.getByTestId('rail-meta')
-    expect(meta).toHaveTextContent('kirocrew-drive-abc123')
+    expect(meta).toHaveTextContent('ajcrew-drive-abc123')
     expect(meta).toHaveTextContent('us-west-2')
   })
 
@@ -547,7 +547,7 @@ describe('overview pane', () => {
     expect(screen.getByTestId('overview-tile-drive-count')).toHaveTextContent(
       i18nT('apps.awsControl.console.root_section_objects', { count: 30, objects: fmtNumber(30) }),
     )
-    expect(screen.getByTestId('overview-drive-bucket')).toHaveTextContent('kirocrew-drive-abc123')
+    expect(screen.getByTestId('overview-drive-bucket')).toHaveTextContent('ajcrew-drive-abc123')
   })
 })
 

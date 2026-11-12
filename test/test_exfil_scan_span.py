@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
-from kiro_crew.security.exfil import (
+from aj_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
+from aj_crew.security.exfil import (
     EXFILTRATION_REDACTION_TAG_PREFIX,
     redact_exfiltration_urls_with_records,
     restore_allowed_links,
@@ -188,8 +188,8 @@ def test_payload_glued_after_a_presigned_link_is_still_caught() -> None:
 
 
 def test_slack_app_link_in_markdown_bold_is_left_alone() -> None:
-    from kiro_crew import slack_manifest
+    from aj_crew import slack_manifest
 
-    text = f"**[create]({slack_manifest.deep_link('kirocrew')})**"
+    text = f"**[create]({slack_manifest.deep_link('ajcrew')})**"
     assert scan_exfiltration_urls(text) == []
     assert redact_exfiltration_urls(text)[0] == text

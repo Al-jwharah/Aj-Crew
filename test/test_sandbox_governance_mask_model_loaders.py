@@ -17,7 +17,7 @@ import pytest
 from sandbox_governance_mask_helpers import _no_host_ssh_probe  # noqa: F401
 from sandbox_governance_mask_helpers import _POSIX_ONLY
 
-from kiro_crew import sandbox
+from aj_crew import sandbox
 
 
 @_POSIX_ONLY
@@ -34,8 +34,8 @@ class TestModelLoaderPaths:
 
     @pytest.fixture
     def crew(self, tmp_path, monkeypatch):
-        from kiro_crew import embeddings
-        from kiro_crew.stt import models
+        from aj_crew import embeddings
+        from aj_crew.stt import models
 
         root = tmp_path / "crew home"
         root.mkdir()
@@ -46,8 +46,8 @@ class TestModelLoaderPaths:
 
     @pytest.fixture
     def loader_files(self, crew):
-        from kiro_crew import embeddings
-        from kiro_crew.stt import models
+        from aj_crew import embeddings
+        from aj_crew.stt import models
 
         paths = [embeddings.default_model_path()]
         paths.extend(models.model_path(model) for model in models.CATALOG)
@@ -113,7 +113,7 @@ class TestModelLoaderPaths:
                 self._check(crew, loader_files[1])
         assert str(link) in str(exc.value)
         assert str(target) in str(exc.value)
-        assert "KIROCREW_HOME" in str(exc.value)
+        assert "AJCREW_HOME" in str(exc.value)
         assert link.is_symlink()
 
     @pytest.mark.parametrize("component", ("models", "whisper", "weights"))
@@ -156,7 +156,7 @@ class TestModelLoaderPaths:
         message = str(exc.value)
         assert str(linked) in message
         assert "JUNCTION" in message
-        assert "KIROCREW_HOME" in message
+        assert "AJCREW_HOME" in message
         assert "bind mount" not in message
         assert str(linked) in inspected
         assert not any(path.startswith(str(linked) + os.sep) for path in inspected)
@@ -287,7 +287,7 @@ class TestModelLoaderPaths:
         # The GGUF has no digest at load, so a second name in a writable tree is the
         # whole exposure. The embedder refuses to hand llama.cpp the path; a second hard
         # link, a symlinked file and a linked models directory each fail that load.
-        from kiro_crew import embeddings
+        from aj_crew import embeddings
 
         gguf = loader_files[0]
         payload = b"\0" * (embeddings._GGUF_MIN_BYTES + 1)
@@ -331,7 +331,7 @@ class TestModelLoaderPaths:
             sandbox._refuse_linked_models_leaf()
 
     def test_a_lone_gguf_still_reaches_the_loader(self, crew, loader_files, monkeypatch):
-        from kiro_crew import embeddings
+        from aj_crew import embeddings
 
         gguf = loader_files[0]
         gguf.parent.mkdir(parents=True)
@@ -369,7 +369,7 @@ class TestModelLoaderPaths:
         monkeypatch.setattr(sandbox, "_sandbox_env_unset_args", lambda *args: [])
         monkeypatch.setattr(sandbox, "_allow_unsandboxed_exec", lambda: True)
         monkeypatch.setattr(sandbox, "_macos_sandbox_state", lambda: None)
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: MagicMock())
         monkeypatch.setattr(sandbox, "cgroup_scope_argv", lambda argv: argv)
         monkeypatch.setattr(sandbox, "cgroup_scope_bus_env", lambda env: (env, ()))
 
@@ -378,7 +378,7 @@ class TestModelLoaderPaths:
             if branch in ("namespace", "off-linux", "off-nonkiro", "nested", "none"):
                 platform = "linux"
             monkeypatch.setattr(sandbox.sys, "platform", platform)
-            monkeypatch.setattr(sandbox, "_inside_kirocrew_sandbox", lambda: branch == "nested")
+            monkeypatch.setattr(sandbox, "_inside_ajcrew_sandbox", lambda: branch == "nested")
             monkeypatch.setattr(sandbox, "kiro_internal_sandbox_enabled", lambda: True)
             backend = {"namespace": "namespace", "seatbelt": "sandbox-exec"}.get(branch, "none")
             monkeypatch.setattr(sandbox, "detect_backend", lambda **kwargs: backend)
@@ -393,8 +393,8 @@ class TestModelLoaderPaths:
 
         return configure
 
-    # The branches that apply a Kiro Crew seal, and those that apply none (a delegated
-    # Kiro hand-off or an unconfined spawn), where nothing of Kiro Crew's seals models.
+    # The branches that apply an Aj Crew seal, and those that apply none (a delegated
+    # Kiro hand-off or an unconfined spawn), where nothing of Aj Crew's seals models.
     _SEALED_BRANCHES = ("namespace", "seatbelt")
     _DELEGATED_BRANCHES = ("darwin-delegated", "windows-delegated", "darwin-off-delegated")
     _UNSEALED_BRANCHES = ("off-linux", "off-nonkiro", "none", "nested", *_DELEGATED_BRANCHES)
@@ -454,7 +454,7 @@ class TestModelLoaderPaths:
             sandbox.wrap_argv(argv, **options)
 
         assert str(alias) in str(exc.value)
-        assert "KIROCREW_HOME" in str(exc.value)
+        assert "AJCREW_HOME" in str(exc.value)
         assert alias.is_symlink()
 
     @pytest.mark.parametrize("live", (False, True), ids=("non-live", "live"))
@@ -464,7 +464,7 @@ class TestModelLoaderPaths:
         host_home = tmp_path / "host"
         host_home.mkdir()
         monkeypatch.setattr(Path, "home", lambda: host_home)
-        legacy = host_home / ".kirocrew"
+        legacy = host_home / ".ajcrew"
         legacy.mkdir()
         monkeypatch.setattr(sandbox, "_masked_crew_home_roots", lambda: [str(crew), str(legacy)])
         monkeypatch.setattr(sandbox, "_resolve_agent_executable", lambda path: path)
@@ -489,7 +489,7 @@ class TestModelLoaderPaths:
     def test_unsealed_branches_do_not_refuse_a_model_alias(
         self, crew, loader_files, tmp_path, wrap_branch, branch, alias_kind
     ):
-        # No Kiro Crew seal: nothing of Kiro Crew's confines a models write, so an
+        # No Aj Crew seal: nothing of Aj Crew's confines a models write, so an
         # alias must not newly refuse the spawn (that would brick sandbox-off,
         # no-backend and delegated hosts).
         alias = self._plant(crew, loader_files, tmp_path, alias_kind)
@@ -570,7 +570,7 @@ class TestModelLoaderPaths:
         argv, options = wrap_branch("darwin-delegated")
         audit = MagicMock()
         audit.log_tool_invocation.side_effect = RuntimeError("audit unavailable")
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: audit)
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: audit)
         with patch.object(
             sandbox, "_refuse_linked_models_leaf", wraps=sandbox._refuse_linked_models_leaf
         ) as checked:
@@ -584,7 +584,7 @@ class TestModelLoaderPaths:
     def test_failed_windows_delegation_fails_closed_without_a_model_check(
         self, crew, wrap_branch, monkeypatch
     ):
-        # Windows has no Kiro Crew backend, so a failed delegation audit falls
+        # Windows has no Aj Crew backend, so a failed delegation audit falls
         # through to the no-backend policy and fail-closes without a model check.
         from unittest.mock import MagicMock, patch
 
@@ -592,7 +592,7 @@ class TestModelLoaderPaths:
         monkeypatch.setattr(sandbox, "_allow_unsandboxed_exec", lambda: False)
         audit = MagicMock()
         audit.log_tool_invocation.side_effect = RuntimeError("audit unavailable")
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: audit)
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: audit)
         with patch.object(sandbox, "_refuse_linked_models_leaf") as checked:
             with pytest.raises(sandbox.SandboxUnavailableError):
                 sandbox.wrap_argv(argv, **options)
@@ -602,14 +602,14 @@ class TestModelLoaderPaths:
     def test_delegated_hand_off_proceeds_over_a_symlinked_loader_file(
         self, crew, loader_files, tmp_path, wrap_branch, monkeypatch, branch
     ):
-        # A delegated hand-off applies no Kiro Crew seal over models, so a symlinked
+        # A delegated hand-off applies no Aj Crew seal over models, so a symlinked
         # loader file must not refuse it: the hand-off is audited and the link kept.
         from unittest.mock import MagicMock
 
         linked = self._plant(crew, loader_files, tmp_path, "symlink")
         argv, options = wrap_branch(branch)
         audit = MagicMock()
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: audit)
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: audit)
 
         argv_out, cleanup = sandbox.wrap_argv(argv, **options)
 
@@ -642,7 +642,7 @@ class TestTheWhisperLoaderRefusesAnAliasedFile:
         import dataclasses
         import hashlib
 
-        from kiro_crew.stt import models
+        from aj_crew.stt import models
 
         root = tmp_path / "crew home"
         monkeypatch.setattr(models, "config_dir", lambda: root)
@@ -671,7 +671,7 @@ class TestTheWhisperLoaderRefusesAnAliasedFile:
         # ``ensure`` promises None, not an exception into a websocket handler. The
         # refusal surfaces as a failed status the settings page shows, naming the file,
         # and no download replaces the operator's file.
-        from kiro_crew.stt import models
+        from aj_crew.stt import models
 
         store, model, path, payload = pinned
         os.link(path, tmp_path / "alias")
@@ -695,7 +695,7 @@ class TestTheWhisperLoaderRefusesAnAliasedFile:
         # A correct-size symlink passes every following stat, so only the O_NOFOLLOW open
         # sees it. That refusal must come back as the documented refused status rather
         # than an OSError out of a websocket handler, and the link must be left in place.
-        from kiro_crew.stt import models
+        from aj_crew.stt import models
 
         store, model, path, payload = pinned
         target = tmp_path / "shared-cache-weights.bin"
@@ -732,7 +732,7 @@ class TestTheWhisperLoaderRefusesAnAliasedFile:
         # Every following stat passes and the O_NOFOLLOW open sees a real leaf, so only
         # the walk from models down sees the link. It refuses this model's load, with the
         # documented refused status naming the link, and downloads nothing through it.
-        from kiro_crew.stt import models
+        from aj_crew.stt import models
 
         store, model, path, payload = pinned
         linked = path.parent if step == "whisper" else path.parent.parent
@@ -760,7 +760,7 @@ class TestTheWhisperLoaderRefusesAnAliasedFile:
     ):
         # The same link with no file behind it yet: the download would write the weights
         # into a tree the seal does not cover, so the load refuses before it starts.
-        from kiro_crew.stt import models
+        from aj_crew.stt import models
 
         store, model, path, _ = pinned
         path.unlink()
@@ -824,7 +824,7 @@ class TestTheWhisperLoaderRefusesAnAliasedFile:
             seen["judged"] = os.fstat(fd)[:4]
             return real(target, fd=fd)
 
-        from kiro_crew.stt import models
+        from aj_crew.stt import models
 
         with pytest.MonkeyPatch.context() as patcher:
             patcher.setattr(models, "_sha256_file", _unreachable)
@@ -842,7 +842,7 @@ class TestTheWhisperLoaderRefusesAnAliasedFile:
         in a chunk that is ALREADY hashed: the digest of what was read stays the pinned
         one while the file itself changes.
         """
-        from kiro_crew.stt import models
+        from aj_crew.stt import models
 
         monkeypatch.setattr(models, "_CHUNK_BYTES", 4)
         real_read = os.read
@@ -888,7 +888,7 @@ class TestTheWhisperLoaderRefusesAnAliasedFile:
         assert path.read_bytes() == payload
 
     @pytest.mark.skipif(
-        sys.platform == "win32", reason="POSIX change times; Windows has no Kiro Crew seal"
+        sys.platform == "win32", reason="POSIX change times; Windows has no Aj Crew seal"
     )
     @pytest.mark.asyncio
     async def test_a_write_through_a_held_descriptor_mid_hash_refuses_the_load(
@@ -970,8 +970,8 @@ class TestASandboxedChildCannotMintAnAliasOfASealedLoaderFile:
         reason = _sandbox_spawn_unavailable()
         if reason:
             pytest.skip(reason)
-        from kiro_crew import embeddings
-        from kiro_crew.stt import models
+        from aj_crew import embeddings
+        from aj_crew.stt import models
 
         root = tmp_path / "crew home"
         sealed = root / "models" / embeddings._GGUF_FILENAME
@@ -979,7 +979,7 @@ class TestASandboxedChildCannotMintAnAliasOfASealedLoaderFile:
         sealed.write_bytes(b"pinned weights")
         for module in (sandbox, embeddings, models):
             monkeypatch.setattr(module, "config_dir", lambda: root)
-        monkeypatch.setenv("KIROCREW_HOME", str(root))
+        monkeypatch.setenv("AJCREW_HOME", str(root))
         cross = tmp_path / "cross-mount-alias"
         inside = sealed.parent / "inside-seal-alias"
 

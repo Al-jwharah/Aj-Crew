@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.dashboard.handlers.usage_series (the Usage tab's stacked series)."""
+"""Tests for aj_crew.dashboard.handlers.usage_series (the Usage tab's stacked series)."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-import kiro_crew.dashboard.handlers.usage as usage_mod
-import kiro_crew.dashboard.handlers.usage_series as series_mod
-import kiro_crew.sel as sel_mod
-from kiro_crew.dashboard.handlers.usage_series import (
+import aj_crew.dashboard.handlers.usage as usage_mod
+import aj_crew.dashboard.handlers.usage_series as series_mod
+import aj_crew.sel as sel_mod
+from aj_crew.dashboard.handlers.usage_series import (
     OTHER_KEY,
     UNATTRIBUTED_KEY,
     _Row,
@@ -20,7 +20,7 @@ from kiro_crew.dashboard.handlers.usage_series import (
     build_series,
     load_rows,
 )
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.testing.clock import ManualClock
 
 #: The one instant the shard-reading tests run at, as a LOCAL wall time (naive).
 #: The product keys everything on local days -- shard names, the day axis, the
@@ -38,7 +38,7 @@ def _row(
     *,
     slot: str = "chat-1-1700000000",
     channel: str = "dashboard",
-    agent: str = "kirocrew",
+    agent: str = "ajcrew",
     model: str = "m",
     hour: int = 12,
 ) -> _Row:
@@ -268,7 +268,7 @@ def _record(ts: str, **fields) -> dict:
         "provider": "acp",
         "model": "m",
         "surface": "dashboard",
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "input": 0,
         "output": 0,
         "cache_create": 0,

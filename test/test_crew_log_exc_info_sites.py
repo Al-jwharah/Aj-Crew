@@ -13,13 +13,13 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-import kiro_crew
-import kiro_crew.crew_log as crew_log_pkg
+import aj_crew
+import aj_crew.crew_log as crew_log_pkg
 
 PACKAGE = Path(crew_log_pkg.__file__).parent
 # The invariant is process-wide -- a handle dropped anywhere must release its lease -- so the
 # no-handle check walks the whole source tree; only the vetted list is package-scoped.
-SOURCE_ROOT = Path(kiro_crew.__file__).parent
+SOURCE_ROOT = Path(aj_crew.__file__).parent
 
 # The vetted sites: (module, enclosing function), each with no handle in scope. A new site
 # must be added here AND pass the no-handle check, which reads the whole function body.
@@ -100,7 +100,7 @@ def _exc_info_sites(
     return sites
 
 
-def test_no_exc_info_site_anywhere_in_kiro_crew_holds_a_crew_log_handle() -> None:
+def test_no_exc_info_site_anywhere_in_aj_crew_holds_a_crew_log_handle() -> None:
     sites = _exc_info_sites(SOURCE_ROOT, "**/*.py", handle_files_only=True)
     assert any(f.startswith("crew_log/") for f, _fn, _ln, _h in sites), "walk missed crew_log"
     offenders = [(f, fn, ln) for f, fn, ln, holds in sites if holds]

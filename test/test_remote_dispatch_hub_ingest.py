@@ -31,12 +31,12 @@ from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 from work_ledger_projection_helpers import _SLOTS, ACCEPTANCE, CONDUCTOR, _record
 
-import kiro_crew
-from kiro_crew import work_ledger
-from kiro_crew.dashboard.handlers import remote_dispatch_routes as crew_routes
-from kiro_crew.dashboard.handlers import remote_ingest
-from kiro_crew.dashboard.handlers import work_ledger as routes
-from kiro_crew.probes.work_ledger import WorkLedgerProbe
+import aj_crew
+from aj_crew import work_ledger
+from aj_crew.dashboard.handlers import remote_dispatch_routes as crew_routes
+from aj_crew.dashboard.handlers import remote_ingest
+from aj_crew.dashboard.handlers import work_ledger as routes
+from aj_crew.probes.work_ledger import WorkLedgerProbe
 
 _isolated = helpers._isolated
 recorded = helpers.recorded
@@ -63,7 +63,7 @@ class StubCrew:
     def __init__(self) -> None:
         self.calls: list[dict[str, Any]] = []
         self.state = "connected"
-        self.version = kiro_crew.__version__
+        self.version = aj_crew.__version__
         self.slots: list[dict[str, Any]] = [{"key": PEER_SLOT, "running": False}]
         self.work_item: dict[str, Any] = {"item_id": "", "state": "open", "status": None}
         self.events: list[dict[str, Any]] = []
@@ -96,7 +96,7 @@ class StubCrew:
     async def proxy_request(
         self, instance_id, method, path, *, params=None, data=None, content_type=""
     ):
-        from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+        from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
         if self.state != "connected":
             raise ProxyRequestError("proxy_peer_not_connected", "down", http_status=503)
@@ -140,7 +140,7 @@ class StubCrew:
 def _no_background_puller(_floor_monkeypatch):
     """These tests drive the read path's own pull; the background puller has its
     own tests (``test_remote_dispatch_puller``) and must not race these."""
-    from kiro_crew.dashboard.handlers import remote_puller
+    from aj_crew.dashboard.handlers import remote_puller
 
     _floor_monkeypatch.setattr(remote_puller, "ensure_running", lambda state: None)
 
@@ -148,7 +148,7 @@ def _no_background_puller(_floor_monkeypatch):
 @pytest.fixture
 def peer(monkeypatch) -> StubCrew:
     stub = StubCrew()
-    monkeypatch.setattr("kiro_crew.remote_dispatch.remote_dispatch_enabled", lambda: True)
+    monkeypatch.setattr("aj_crew.remote_dispatch.remote_dispatch_enabled", lambda: True)
     return stub
 
 
@@ -236,7 +236,7 @@ def test_an_item_with_no_crew_serializes_exactly_as_before():
 
 
 def test_switch_off_read_and_record_answer_as_before_with_no_peer_call(recorded, monkeypatch):
-    monkeypatch.setattr("kiro_crew.remote_dispatch.remote_dispatch_enabled", lambda: False)
+    monkeypatch.setattr("aj_crew.remote_dispatch.remote_dispatch_enabled", lambda: False)
     stub = StubCrew()
 
     async def go() -> None:
@@ -260,7 +260,7 @@ def test_switch_off_never_pulls_even_a_remote_item(recorded, peer, monkeypatch):
     async def go() -> None:
         item_id = await _remote_item(peer)
         peer.calls.clear()
-        monkeypatch.setattr("kiro_crew.remote_dispatch.remote_dispatch_enabled", lambda: False)
+        monkeypatch.setattr("aj_crew.remote_dispatch.remote_dispatch_enabled", lambda: False)
         peer.report("progress", "half way", "2026-10-29T10:00:00+00:00")
         board = await _read(peer)
         assert _row(board, item_id)["status"] is None
@@ -562,7 +562,7 @@ def test_the_decide_budget_fits_inside_the_record_tools_timeout():
     import ast
     import inspect
 
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     # From the source: the suite stubs ``mcp_core._post`` for every test.
     tree = ast.parse(inspect.getsource(mcp_core))
@@ -576,14 +576,12 @@ def test_the_decide_budget_fits_inside_the_record_tools_timeout():
 
 
 def test_a_rebuild_keeps_the_crew_pair_and_the_ingested_report(peer, monkeypatch):
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog, projection
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog, projection
 
     monkeypatch.setattr(routes.crew_log_emit, "enabled", lambda: True)
     monkeypatch.setattr(routes, "unit_for_session_key", lambda sessions, key: "u-conductor")
-    CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
-    )
+    CrewLog.create(lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR)
 
     def _append(unit: str, data: dict[str, Any]) -> bool:
         projection.open_session_log(unit).append("work/recorded", data, src="gateway")
@@ -626,7 +624,7 @@ def test_a_reason_left_on_a_finished_peer_item_is_dropped_not_refused(recorded, 
 
 
 def test_work_item_without_crew_is_refused_by_the_tool():
-    from kiro_crew.mcp_dashboard_session_runs import _run_session_create
+    from aj_crew.mcp_dashboard_session_runs import _run_session_create
 
     ctx = MagicMock()
     out = _run_session_create({"title": "t", "work_item": "it_0000abcd"}, ctx)
@@ -635,7 +633,7 @@ def test_work_item_without_crew_is_refused_by_the_tool():
 
 
 def test_the_crew_schema_advertises_work_item_on_create_only():
-    from kiro_crew.mcp_session_crew import with_crew_schema
+    from aj_crew.mcp_session_crew import with_crew_schema
 
     tools = [
         {"name": n, "inputSchema": {"properties": {}}} for n in ("session_create", "session_send")
@@ -700,7 +698,7 @@ def test_a_slow_pull_keeps_the_crew_state_and_records_why(recorded, peer, monkey
 
 
 def test_the_crew_board_shows_a_running_remote_worker_as_running(recorded, peer, monkeypatch):
-    from kiro_crew.dashboard.handlers import work_ledger_board as board
+    from aj_crew.dashboard.handlers import work_ledger_board as board
 
     async def _owner(*a: Any, **k: Any) -> None:
         return None
@@ -744,7 +742,7 @@ def test_a_purge_removes_the_boards_remote_records():
 def test_the_pull_budget_fits_inside_the_read_tools_timeout():
     import inspect
 
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     client_timeout = inspect.signature(mcp_core._get).parameters["timeout"].default
     assert remote_ingest.READ_DEADLINE_SECS + 2 < client_timeout
@@ -752,7 +750,7 @@ def test_the_pull_budget_fits_inside_the_read_tools_timeout():
 
 
 def test_a_pull_cancelled_while_filing_still_remembers_what_it_filed(recorded, peer, monkeypatch):
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.testing.wait import async_wait_until
 
     real = remote_ingest._file_one
     reader: list[asyncio.Task] = []
@@ -787,9 +785,9 @@ def test_a_remote_board_never_holds_its_patrol_while_the_probe_reads_the_switch_
 ):
     # The probe reads the switch off: no puller keeps the hub copy fresh. The on side
     # is pinned in test_remote_dispatch_puller.
-    from kiro_crew.probes.work_ledger import person_wait_fingerprint
+    from aj_crew.probes.work_ledger import person_wait_fingerprint
 
-    monkeypatch.setattr("kiro_crew.work_preview.remote_dispatch", lambda: False)
+    monkeypatch.setattr("aj_crew.work_preview.remote_dispatch", lambda: False)
 
     async def go() -> None:
         await _remote_item(peer)
@@ -964,7 +962,7 @@ def test_items_whose_pulls_time_out_do_not_starve_the_rest(recorded, peer, monke
 
 
 def test_the_crew_board_refuses_to_stop_a_remote_worker_locally(recorded, peer, monkeypatch):
-    from kiro_crew.dashboard.handlers import work_ledger_board as board
+    from aj_crew.dashboard.handlers import work_ledger_board as board
 
     async def _owner(*a: Any, **k: Any) -> None:
         return None
@@ -996,7 +994,7 @@ def test_the_crew_board_refuses_to_stop_a_remote_worker_locally(recorded, peer, 
     ],
 )
 def test_the_record_tool_says_whether_a_decide_reached_the_remote_worker(monkeypatch, remote, says):
-    from kiro_crew import mcp_work
+    from aj_crew import mcp_work
 
     monkeypatch.setattr(mcp_work, "_strict_caller", lambda: ("chat-1", ""))
     reply = {
@@ -1046,13 +1044,13 @@ def test_overlapping_decides_leave_the_peer_on_the_latest_decision(recorded, pee
         patches = [c["body"]["decision"] for c in peer.calls if c["method"] == "PATCH"]
         assert patches[-1] == "B"
 
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.testing.wait import async_wait_until
 
     asyncio.run(go())
 
 
 def test_a_forward_never_publishes_a_decision_still_being_recorded(recorded, peer):
-    from kiro_crew.dashboard.handlers.work_ledger import _board_lock
+    from aj_crew.dashboard.handlers.work_ledger import _board_lock
 
     async def go() -> None:
         item_id = await _remote_item(peer)
@@ -1106,7 +1104,7 @@ def test_a_decide_recorded_during_the_create_reaches_the_new_worker(recorded, pe
 
 
 def test_the_post_bind_check_compares_the_settled_decision(recorded, peer):
-    from kiro_crew.dashboard.handlers.work_ledger import _board_lock
+    from aj_crew.dashboard.handlers.work_ledger import _board_lock
 
     async def go() -> None:
         item_id = await _remote_item(peer)
@@ -1136,7 +1134,7 @@ def test_the_post_bind_check_compares_the_settled_decision(recorded, peer):
 
 
 def test_a_bound_create_never_sends_an_acceptance_still_being_recorded(recorded, peer):
-    from kiro_crew.dashboard.handlers.work_ledger import _board_lock
+    from aj_crew.dashboard.handlers.work_ledger import _board_lock
 
     async def go() -> None:
         await _record(CONDUCTOR, {"action": "goal", "goal": "ship it", "round": 1})
@@ -1247,7 +1245,7 @@ def test_a_non_string_peer_event_id_is_never_read(recorded, peer):
 
 
 def _mailbox_request(item_id: str):
-    from kiro_crew import remote_dispatch_mailbox as mailbox
+    from aj_crew import remote_dispatch_mailbox as mailbox
 
     return mailbox.parse_work_item(
         {
@@ -1263,7 +1261,7 @@ def _mailbox_request(item_id: str):
 def test_a_failed_bind_then_a_retry_to_the_same_crew_succeeds():
     """The hub's bind failed, so it closed the peer slot before any report: the
     copy is discarded, and the same item can be dispatched to this crew again."""
-    from kiro_crew import remote_dispatch_mailbox as mailbox
+    from aj_crew import remote_dispatch_mailbox as mailbox
 
     parsed = _mailbox_request("it_0000d00d")
     mailbox.open_mailbox(parsed, "chat-70-peer")
@@ -1275,7 +1273,7 @@ def test_a_failed_bind_then_a_retry_to_the_same_crew_succeeds():
 
 
 def test_a_copy_that_reported_is_still_closed_not_discarded():
-    from kiro_crew import remote_dispatch_mailbox as mailbox
+    from aj_crew import remote_dispatch_mailbox as mailbox
 
     parsed = _mailbox_request("it_0000feed")
     mailbox.open_mailbox(parsed, "chat-72-peer")
@@ -1291,7 +1289,7 @@ def test_a_copy_that_reported_is_still_closed_not_discarded():
 def test_a_discard_that_cannot_delete_the_item_closes_it_instead(monkeypatch):
     from pathlib import Path
 
-    from kiro_crew import remote_dispatch_mailbox as mailbox
+    from aj_crew import remote_dispatch_mailbox as mailbox
 
     parsed = _mailbox_request("it_0000abba")
     mailbox.open_mailbox(parsed, "chat-74-peer")

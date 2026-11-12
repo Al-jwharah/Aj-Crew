@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 
 @pytest.fixture(autouse=True)
@@ -23,14 +23,14 @@ def _pinned_kiro_cli_version(_floor_monkeypatch):
 
     A client start here materialises the agent spec (``ensure_agent_materialized``
     -> ``rebuild_agent_config`` -> ``_write_derived_permissions``), which reads
-    ``installed_kiro_cli_version`` function-locally from ``kiro_crew.kiro_cli``:
+    ``installed_kiro_cli_version`` function-locally from ``aj_crew.kiro_cli``:
     one real ``kiro-cli --version`` spawn per binary identity, process-cached, so
     whichever test in the worker starts a client first pays it against the HOST's
     install with the checkout as the child's cwd. Pinned to the floor release, as
     ``test_agent.py`` and the generated-writer suites pin it.
     """
     _floor_monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
 

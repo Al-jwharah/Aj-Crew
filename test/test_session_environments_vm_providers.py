@@ -11,21 +11,21 @@ from aiohttp.test_utils import TestClient, TestServer
 from test_session_environments_config import _BASE_CONFIG, _profile, _stored
 from test_session_environments_config_api import _api, _app, _patch
 
-from kiro_crew.config import session_environments as se
+from aj_crew.config import session_environments as se
 
 
 @pytest.fixture
 def config_file(tmp_path, monkeypatch):
     path = tmp_path / "config.json"
     path.write_text(json.dumps(_BASE_CONFIG), encoding="utf-8")
-    monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: path)
+    monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: path)
     return path
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 # Cross-provider ids address both the picker and the launch resolver.
@@ -60,7 +60,7 @@ def _provider_section():
 async def test_cross_provider_collision_is_refused_under_write_lock(
     config_file, monkeypatch, changed, existing, whole
 ):
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     section = _provider_section()
     config_file.write_text(json.dumps({**_BASE_CONFIG, "session_environments": section}))
@@ -108,19 +108,17 @@ def test_hand_edited_collision_stays_unavailable_to_picker_and_launch(
 ):
     from types import SimpleNamespace
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.config.sections import SessionEnvironmentsConfig
-    from kiro_crew.dashboard.handlers import session_environments as handlers
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
-    from kiro_crew.session_environments.routing import profile_provider
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.config.sections import SessionEnvironmentsConfig
+    from aj_crew.dashboard.handlers import session_environments as handlers
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew.session_environments.routing import profile_provider
 
     raw = _provider_section()
     raw["coder_url"] = coder_url
     raw[right][0]["id"] = raw[left][0]["id"]
     section = SessionEnvironmentsConfig.from_raw(raw)
-    monkeypatch.setattr(
-        KiroCrewConfig, "load", lambda: SimpleNamespace(session_environments=section)
-    )
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: SimpleNamespace(session_environments=section))
     duplicate = raw[left][0]["id"]
     with pytest.raises(SessionEnvironmentUnavailable, match="more than one provider"):
         profile_provider(section, duplicate)
@@ -138,9 +136,9 @@ def test_choice_and_inherited_rows_record_the_resolved_provider(
 ):
     from types import SimpleNamespace
 
-    from kiro_crew.coder.session_launch import SessionEnvironmentChoices
-    from kiro_crew.config import live
-    from kiro_crew.config.sections import SessionEnvironmentsConfig
+    from aj_crew.coder.session_launch import SessionEnvironmentChoices
+    from aj_crew.config import live
+    from aj_crew.config.sections import SessionEnvironmentsConfig
 
     raw = _provider_section()
     config = SimpleNamespace(session_environments=SessionEnvironmentsConfig.from_raw(raw))
@@ -159,9 +157,9 @@ def _launch_fixture(tmp_path, monkeypatch):
     """A live config of :func:`_provider_section` and an empty data home."""
     from types import SimpleNamespace
 
-    from kiro_crew.coder import session_launch
-    from kiro_crew.config import live, paths
-    from kiro_crew.config.sections import SessionEnvironmentsConfig
+    from aj_crew.coder import session_launch
+    from aj_crew.config import live, paths
+    from aj_crew.config.sections import SessionEnvironmentsConfig
 
     raw = _provider_section()
     config = SimpleNamespace(session_environments=SessionEnvironmentsConfig.from_raw(raw))
@@ -179,9 +177,9 @@ def _launch_fixture(tmp_path, monkeypatch):
 async def test_launch_dispatches_by_id_and_refuses_collisions(tmp_path, monkeypatch):
     from unittest.mock import AsyncMock
 
-    from kiro_crew.coder import session_launch
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
-    from kiro_crew.sprites_session.launch import SpritesSessionEnvironments
+    from aj_crew.coder import session_launch
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew.sprites_session.launch import SpritesSessionEnvironments
 
     raw, choices, reread_config = _launch_fixture(tmp_path, monkeypatch)
     choices.set("session", "sprites-id", "sprites")
@@ -202,9 +200,9 @@ async def test_launch_refuses_a_row_whose_profile_id_moved_to_another_provider(
 ):
     from unittest.mock import AsyncMock
 
-    from kiro_crew.boxd_session.launch import BoxdSessionEnvironments
-    from kiro_crew.coder import session_launch
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew.boxd_session.launch import BoxdSessionEnvironments
+    from aj_crew.coder import session_launch
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
 
     raw, choices, reread_config = _launch_fixture(tmp_path, monkeypatch)
     choices.set("session", "sprites-id", "sprites")
@@ -223,8 +221,8 @@ async def test_launch_refuses_a_row_whose_profile_id_moved_to_another_provider(
 async def test_a_removed_vm_profile_is_refused_rather_than_run_on_coder(tmp_path, monkeypatch):
     from unittest.mock import AsyncMock
 
-    from kiro_crew.coder import session_launch
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew.coder import session_launch
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
 
     raw, choices, reread_config = _launch_fixture(tmp_path, monkeypatch)
     choices.set("session", "sprites-id", "sprites")
@@ -242,9 +240,9 @@ async def test_a_subagent_inherits_its_roots_recorded_provider(tmp_path, monkeyp
     """A root tagged sprites whose id now names boxd: its subagent is refused too."""
     from unittest.mock import AsyncMock
 
-    from kiro_crew.boxd_session.launch import BoxdSessionEnvironments
-    from kiro_crew.coder import session_launch
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew.boxd_session.launch import BoxdSessionEnvironments
+    from aj_crew.coder import session_launch
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
 
     raw, choices, reread_config = _launch_fixture(tmp_path, monkeypatch)
     choices.set("root", "sprites-id", "sprites")
@@ -275,14 +273,14 @@ async def test_a_coder_tagged_session_holding_a_vm_never_moves_to_a_reused_id(
     leave the archived VM's deletion stamp standing and start an empty one."""
     from unittest.mock import AsyncMock
 
-    from kiro_crew.boxd_session.launch import BoxdSessionEnvironments
-    from kiro_crew.coder import session_launch
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
-    from kiro_crew.session_environments.persistent_vm import (
+    from aj_crew.boxd_session.launch import BoxdSessionEnvironments
+    from aj_crew.coder import session_launch
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew.session_environments.persistent_vm import (
         SessionResource,
         SessionResourceRegistry,
     )
-    from kiro_crew.sprites_session.launch import SpritesSessionEnvironments
+    from aj_crew.sprites_session.launch import SpritesSessionEnvironments
 
     classes = {"sprites": SpritesSessionEnvironments, "boxd": BoxdSessionEnvironments}
     raw, choices, reread_config = _launch_fixture(tmp_path, monkeypatch)
@@ -417,8 +415,8 @@ async def test_a_save_omitting_a_vm_list_may_default_to_a_profile_it_keeps(confi
     """A whole save that omits the Sprites or boxd list keeps that list, so its
     default may name a profile only the kept list holds: membership is judged on
     the merged section, by the change card's pre-check and the PATCH alike."""
-    from kiro_crew.dashboard import change_cards_settings as cards
-    from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+    from aj_crew.dashboard import change_cards_settings as cards
+    from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
     section = {**_provider_section(), "default_profile": ""}
     config_file.write_text(json.dumps({**_BASE_CONFIG, "session_environments": section}))
@@ -457,8 +455,8 @@ async def test_a_whole_save_whose_default_names_no_merged_profile_is_refused(con
 def test_every_vm_provider_is_wired_to_launch_and_the_move_guard():
     """One table names the VM providers; launch and the move guard read the same
     wiring, so a provider listed in one but not the other fails here."""
-    from kiro_crew.coder import session_launch
-    from kiro_crew.session_environments import routing
+    from aj_crew.coder import session_launch
+    from aj_crew.session_environments import routing
 
     wired = routing._vm_environments()
     assert set(wired) == {provider for provider, _key, _label in se.VM_PROVIDERS}
@@ -482,9 +480,9 @@ async def test_the_sweep_and_shutdown_cover_every_vm_provider(monkeypatch, tmp_p
     from types import SimpleNamespace
     from unittest.mock import AsyncMock
 
-    from kiro_crew.config import paths
-    from kiro_crew.session_environments import retention as vm_retention
-    from kiro_crew.session_environments import routing
+    from aj_crew.config import paths
+    from aj_crew.session_environments import retention as vm_retention
+    from aj_crew.session_environments import routing
 
     monkeypatch.setattr(vm_retention, "_section", AsyncMock(return_value=SimpleNamespace()))
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path)
@@ -496,26 +494,26 @@ async def test_the_sweep_and_shutdown_cover_every_vm_provider(monkeypatch, tmp_p
 async def test_with_the_developer_flag_off_no_sprites_or_boxd_path_is_reachable(
     tmp_path, monkeypatch
 ):
-    """``KIROCREW_DEV_MODE`` off: with Sprites and boxd profiles saved and a session
+    """``AJCREW_DEV_MODE`` off: with Sprites and boxd profiles saved and a session
     bound to one, the picker offers neither, a start runs locally, retention builds
     no VM provider and boot starts no sweeper. Each half fails if its guard goes."""
     from types import SimpleNamespace
     from unittest.mock import AsyncMock
 
-    from kiro_crew.coder import retention, session_launch
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.config.sections import SessionEnvironmentsConfig
-    from kiro_crew.dashboard.handlers import session_environments as handlers
-    from kiro_crew.session_environments import retention as vm_retention
-    from kiro_crew.slack import gateway
-    from kiro_crew.sprites_session.launch import SpritesSessionEnvironments
+    from aj_crew.coder import retention, session_launch
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.config.sections import SessionEnvironmentsConfig
+    from aj_crew.dashboard.handlers import session_environments as handlers
+    from aj_crew.session_environments import retention as vm_retention
+    from aj_crew.slack import gateway
+    from aj_crew.sprites_session.launch import SpritesSessionEnvironments
 
     raw, choices, _reread_config = _launch_fixture(tmp_path, monkeypatch)
     raw["coder_url"] = ""
     raw["profiles"] = []
     _reread_config()
     config = SimpleNamespace(session_environments=SessionEnvironmentsConfig.from_raw(raw))
-    monkeypatch.setattr(KiroCrewConfig, "load", lambda: config)
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: config)
     section = AsyncMock(return_value=config.session_environments)
     monkeypatch.setattr(retention, "_section", section)
     monkeypatch.setattr(vm_retention, "_section", section)
@@ -530,7 +528,7 @@ async def test_with_the_developer_flag_off_no_sprites_or_boxd_path_is_reachable(
     assert await session_launch.prepare_for_session("dashboard:vm") == "prepared"
     assert len(await vm_retention._persistent_environments()) == 2
 
-    monkeypatch.delenv("KIROCREW_DEV_MODE")
+    monkeypatch.delenv("AJCREW_DEV_MODE")
     assert handlers._profiles() == []
     assert await session_launch.prepare_for_session("dashboard:vm") is None
     assert prepare.await_count == 1

@@ -481,7 +481,7 @@ export default function IssuePanel({
                 title={i18nT('components.issuePanel.cli_login_required', {
                   provider: queryError.loginCommand.startsWith('gh ') ? 'GitHub' : 'GitLab',
                 })}
-                message={i18nT('components.issuePanel.kiro_crew_uses_your_local_provider_cli_to_load_i')}
+                message={i18nT('components.issuePanel.aj_crew_uses_your_local_provider_cli_to_load_i')}
                 footer={<code className="inline-block mt-2 px-2 py-1 rounded bg-bg-hover text-[12px] text-text break-all">{queryError.loginCommand}</code>}
                 actionPlacement="below"
                 askAgent

@@ -21,14 +21,14 @@ from zoneinfo import ZoneInfo
 import pytest
 from body_stream_helpers import attach_body
 
-from kiro_crew.cron import CronService, compute_next_run_ts
-from kiro_crew.dashboard.handlers import api_crons_create
-from kiro_crew.validation import CRON_ADD_SCHEMA, MAX_SHORT_STRING
+from aj_crew.cron import CronService, compute_next_run_ts
+from aj_crew.dashboard.handlers import api_crons_create
+from aj_crew.validation import CRON_ADD_SCHEMA, MAX_SHORT_STRING
 
 
 @pytest.fixture(autouse=True)
 def _isolate_cron_store(monkeypatch, tmp_path):
-    monkeypatch.setattr("kiro_crew.cron._DEFAULT_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.cron._DEFAULT_DIR", tmp_path)
     yield
 
 
@@ -96,7 +96,7 @@ class TestOneShotAccepted:
         The configured zone is UTC and the job's zone is 14 hours ahead, so a
         clock read in the configured zone lands on a different hour in the job's.
         """
-        monkeypatch.setattr("kiro_crew.cron.published_config_timezone", lambda: "UTC")
+        monkeypatch.setattr("aj_crew.cron.published_config_timezone", lambda: "UTC")
         crons = CronService()
         resp = await api_crons_create(
             _create_request(

@@ -34,7 +34,7 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const zoomable = params.get('zoomable') === '1'
 
-document.documentElement.setAttribute('data-theme', 'kiro-light')
+document.documentElement.setAttribute('data-theme', 'aj-light')
 
 /** The shipped viewport meta, verbatim. Throwing rather than falling back is the
  *  point: a silent default would let this capture pass with a meta the app does

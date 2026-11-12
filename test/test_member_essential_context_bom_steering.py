@@ -14,9 +14,9 @@ from pathlib import Path
 import member_essential_context_helpers
 import pytest
 
-from kiro_crew import member_essential_context as _mec
-from kiro_crew.frontmatter import STEERING_LOADER, split_frontmatter
-from kiro_crew.member_essential_context import MemberEssentialContextError
+from aj_crew import member_essential_context as _mec
+from aj_crew.frontmatter import STEERING_LOADER, split_frontmatter
+from aj_crew.member_essential_context import MemberEssentialContextError
 
 _close_skills_loaders = member_essential_context_helpers._close_skills_loaders
 env = member_essential_context_helpers.env

@@ -194,7 +194,7 @@ describe('direct terminal commands', () => {
 
   it('runs a fresh composer terminal while native code blocks offer Copy under the reuse setting', async () => {
     const { queryClient, rerender } = renderWithProviders(<></>)
-    queryClient.setQueryData(['kirocrewConfig'], { dashboard: { terminal: { reuse_current: true } } })
+    queryClient.setQueryData(['ajcrewConfig'], { dashboard: { terminal: { reuse_current: true } } })
     const props = {
       value: '! pwd', onChange: vi.fn(), onSend: vi.fn(), onSteer: vi.fn(),
       terminalCommands: 'local' as const, project: '/work/selected project',

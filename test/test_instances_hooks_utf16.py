@@ -11,12 +11,12 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.hooks as hooks_mod
-from kiro_crew import webhooks
-from kiro_crew.config import loader
-from kiro_crew.hooks import ScriptHookStore
-from kiro_crew.instances.registry import InstancesRegistry, RegistryUnreadableError
-from kiro_crew.portability_vetting import _disable_imported_script_hooks
+import aj_crew.hooks as hooks_mod
+from aj_crew import webhooks
+from aj_crew.config import loader
+from aj_crew.hooks import ScriptHookStore
+from aj_crew.instances.registry import InstancesRegistry, RegistryUnreadableError
+from aj_crew.portability_vetting import _disable_imported_script_hooks
 
 # A cp1252 "é": a legacy code-page byte that json.loads cannot decode as UTF-8.
 _LEGACY_ID = b'"caf\xe9"'

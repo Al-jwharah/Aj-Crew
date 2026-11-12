@@ -29,8 +29,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.knowledge import store as store_module
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge import store as store_module
+from aj_crew.knowledge.store import KnowledgeStore
 
 # The fixture contract, named once so a drifting seed fails as a contract
 # mismatch rather than as an arithmetic surprise in each assertion.
@@ -240,12 +240,12 @@ class TestStoreAggregate:
 
 class TestCliStatsVerb:
     def _run(self, home, as_json: bool = False):
-        from kiro_crew import cli
+        from aj_crew import cli
 
         args = SimpleNamespace(knowledge_action="stats", json=as_json)
         with (
-            patch("kiro_crew.cli.config_dir", return_value=home),
-            patch("kiro_crew.cli.sel", return_value=MagicMock()),
+            patch("aj_crew.cli.config_dir", return_value=home),
+            patch("aj_crew.cli.sel", return_value=MagicMock()),
         ):
             cli._knowledge(args)
 
@@ -283,11 +283,11 @@ class TestCliStatsVerb:
         assert _library_fingerprint(db_path) == before
 
     def test_usage_names_both_verbs_and_nothing_else(self, seeded_home, capsys):
-        from kiro_crew import cli
+        from aj_crew import cli
 
         with (
-            patch("kiro_crew.cli.config_dir", return_value=seeded_home),
-            patch("kiro_crew.cli.sel", return_value=MagicMock()),
+            patch("aj_crew.cli.config_dir", return_value=seeded_home),
+            patch("aj_crew.cli.sel", return_value=MagicMock()),
         ):
             cli._knowledge(SimpleNamespace(knowledge_action=None))
         usage = capsys.readouterr().out
@@ -295,13 +295,13 @@ class TestCliStatsVerb:
 
     @pytest.mark.parametrize("refused", ["flush", "rebuild", "repair", "reindex"])
     def test_a_repair_action_reaches_no_library(self, seeded_home, capsys, refused):
-        from kiro_crew import cli
+        from aj_crew import cli
 
         db_path = seeded_home / "workspace" / "knowledge" / "knowledge.db"
         before = _library_fingerprint(db_path)
         with (
-            patch("kiro_crew.cli.config_dir", return_value=seeded_home),
-            patch("kiro_crew.cli.sel", return_value=MagicMock()),
+            patch("aj_crew.cli.config_dir", return_value=seeded_home),
+            patch("aj_crew.cli.sel", return_value=MagicMock()),
         ):
             cli._knowledge(SimpleNamespace(knowledge_action=refused))
         assert "Usage:" in capsys.readouterr().out
@@ -353,15 +353,15 @@ class TestCliStatsVerb:
 
 
 class TestCliDedupDryRun:
-    """``kirocrew knowledge dedup`` without ``--apply`` previews and writes nothing."""
+    """``ajcrew knowledge dedup`` without ``--apply`` previews and writes nothing."""
 
     def _run(self, home):
-        from kiro_crew import cli
+        from aj_crew import cli
 
         args = SimpleNamespace(knowledge_action="dedup", apply=False)
         with (
-            patch("kiro_crew.cli.config_dir", return_value=home),
-            patch("kiro_crew.cli.sel", return_value=MagicMock()),
+            patch("aj_crew.cli.config_dir", return_value=home),
+            patch("aj_crew.cli.sel", return_value=MagicMock()),
         ):
             cli._knowledge(args)
 
@@ -394,11 +394,11 @@ class TestMcpParity:
     """The MCP twin answers the same question from the same aggregate."""
 
     def _call(self, home):
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         with (
-            patch("kiro_crew.mcp_core.config_dir", return_value=home),
-            patch("kiro_crew.mcp_core.sel", return_value=MagicMock()),
+            patch("aj_crew.mcp_core.config_dir", return_value=home),
+            patch("aj_crew.mcp_core.sel", return_value=MagicMock()),
         ):
             return _call_tool_inner("knowledge_list_sources", {})
 
@@ -410,11 +410,11 @@ class TestMcpParity:
         ) in result
 
     def test_tool_totals_equal_the_cli_json(self, seeded_home, capsys):
-        from kiro_crew import cli
+        from aj_crew import cli
 
         with (
-            patch("kiro_crew.cli.config_dir", return_value=seeded_home),
-            patch("kiro_crew.cli.sel", return_value=MagicMock()),
+            patch("aj_crew.cli.config_dir", return_value=seeded_home),
+            patch("aj_crew.cli.sel", return_value=MagicMock()),
         ):
             cli._knowledge(SimpleNamespace(knowledge_action="stats", json=True))
         payload = json.loads(capsys.readouterr().out)
@@ -431,7 +431,7 @@ class TestMcpParity:
             assert f"- {name} — id: " in result
 
     def test_descriptor_advertises_the_counts_and_the_read_only_boundary(self):
-        from kiro_crew.mcp_tools.knowledge import schemas
+        from aj_crew.mcp_tools.knowledge import schemas
 
         descriptor = next(d for d in schemas() if d["name"] == "knowledge_list_sources")
         description = descriptor["description"]

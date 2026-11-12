@@ -1,6 +1,6 @@
 """Compatibility tests for the GitLab client facade boundaries."""
 
-from kiro_crew.apps.builtins.issue_radar.backend import gitlab_client as gl
+from aj_crew.apps.builtins.issue_radar.backend import gitlab_client as gl
 
 
 def test_api_facade_injects_current_patch_bindings(monkeypatch):

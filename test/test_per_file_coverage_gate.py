@@ -375,7 +375,7 @@ def test_prune_refuses_a_report_from_the_other_lane(tmp_path) -> None:
     )
     before = path.read_text(encoding="utf-8")
 
-    other_lane = [gate.FileCoverage("src/kiro_crew/history.py", 100, 10)]
+    other_lane = [gate.FileCoverage("src/aj_crew/history.py", 100, 10)]
     with pytest.raises(ValueError, match="other lane's coverage report"):
         gate.prune_baseline(path, other_lane, gate.read_baseline_lines(path), floor=80.0)
 
@@ -391,7 +391,7 @@ def test_cli_reports_a_mismatched_lane_report_as_an_annotation(tmp_path) -> None
 
     wrong = _write_line_report(
         tmp_path,
-        [("src/kiro_crew/history.py", [(n, 0) for n in range(1, 11)])],
+        [("src/aj_crew/history.py", [(n, 0) for n in range(1, 11)])],
         name="wrong.xml",
     )
     result = _run(wrong, "--floor", "80", "--baseline", baseline, "--update-baseline")

@@ -9,9 +9,9 @@ import pytest
 from chat_test_helpers import AsyncIterator, _make_state
 from real_session_manager import fake_provider, real_sessions
 
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.history import ConversationLog
 
 
 class TestRuntimeWiringTurn:
@@ -26,7 +26,7 @@ class TestRuntimeWiringTurn:
 
         Requirements: 3.1
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
         # Track calls to build_message
         build_message_calls: list[dict] = []
@@ -35,18 +35,16 @@ class TestRuntimeWiringTurn:
             build_message_calls.append({"text": text, "session_key": session_key, "kwargs": kwargs})
             return text, MagicMock(action=None, text="")
 
-        from kiro_crew.config.loader import (
-            KiroCrewAgentConfig,
-            KiroCrewConfig,
+        from aj_crew.config.loader import (
+            AjCrewAgentConfig,
+            AjCrewConfig,
             WorkspaceConfig,
             resolve_agent_bindings,
         )
-        from kiro_crew.memory_stores import provision_member_memory
+        from aj_crew.memory_stores import provision_member_memory
 
-        mock_cfg = KiroCrewConfig.load()
-        mock_cfg.agents["oncall"] = KiroCrewAgentConfig(
-            kiro_agent="kirocrew", workspace="oncall-ws"
-        )
+        mock_cfg = AjCrewConfig.load()
+        mock_cfg.agents["oncall"] = AjCrewAgentConfig(kiro_agent="ajcrew", workspace="oncall-ws")
         mock_cfg.workspaces["oncall-ws"] = WorkspaceConfig(dir=str(tmp_path / "oncall-ws"))
         private_store = provision_member_memory(mock_cfg, "oncall")
         mock_cfg.save()
@@ -54,20 +52,20 @@ class TestRuntimeWiringTurn:
         # The provider and context are doubles; model a supported runtime while
         # keeping member ownership and persisted conversation metadata real.
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat.KiroCrewConfig.load", lambda: mock_cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat.resolve_agent_bindings",
+            "aj_crew.dashboard.chat.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.KiroCrewConfig.load", lambda: mock_cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.resolve_agent_bindings",
+            "aj_crew.dashboard.chat_runner.resolve_agent_bindings",
             lambda cfg, name, project_dir=None, **kwargs: mock_bindings,
         )
 
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.context import ContextBuilder
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         ctx_builder = ContextBuilder(
             memory=MemoryStore(workspace=tmp_path / "ws"),
@@ -77,15 +75,15 @@ class TestRuntimeWiringTurn:
             ctx_builder, "build_message", lambda *a, **kw: mock_build_message(ctx_builder, *a, **kw)
         )
         monkeypatch.setattr(ctx_builder, "ensure_store", AsyncMock(return_value=object()))
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.title_then_refresh", AsyncMock())
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.generate_session_summary", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.title_then_refresh", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.generate_session_summary", AsyncMock())
 
         state = _make_state(tmp_path, context_builder=ctx_builder)
 
         # Create a slot with retained history, then verify a cold start replays it.
         slot = state.get_or_create_slot("mem-test", agent="oncall")
         if binding_change == "none":
-            from kiro_crew.execution_context import bind_session_execution, resolve_member_execution
+            from aj_crew.execution_context import bind_session_execution, resolve_member_execution
 
             captured_execution = await asyncio.to_thread(
                 resolve_member_execution, mock_cfg, "oncall"
@@ -114,7 +112,7 @@ class TestRuntimeWiringTurn:
         slot.append("user", "test message", "msg msg-u")
 
         # Mock session manager to return a mock client
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         mock_client = MagicMock()
         mock_client.stream = MagicMock(
@@ -131,7 +129,7 @@ class TestRuntimeWiringTurn:
         binding_reads = []
 
         def checked_bindings(cfg, name, project_dir=None, **kwargs):
-            from kiro_crew.memory_stores import UnknownMemoryStore
+            from aj_crew.memory_stores import UnknownMemoryStore
 
             with pytest.raises(RuntimeError, match="no running event loop"):
                 asyncio.get_running_loop()
@@ -147,10 +145,10 @@ class TestRuntimeWiringTurn:
             return resolved
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.resolve_agent_bindings", checked_bindings
+            "aj_crew.dashboard.chat_runner.resolve_agent_bindings", checked_bindings
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "test message")
         await asyncio.gather(*state._background_tasks)
@@ -158,7 +156,7 @@ class TestRuntimeWiringTurn:
         assert len(binding_reads) == 1
         assert binding_reads[0][0] == "oncall"
         if binding_change != "none":
-            from kiro_crew.member_memory_auth import read_private_session_store
+            from aj_crew.member_memory_auth import read_private_session_store
 
             state.sessions.get_or_create.assert_not_awaited()
             state.sessions.record_failure.assert_awaited_once_with("dashboard:mem-test")
@@ -178,7 +176,7 @@ class TestRuntimeWiringTurn:
         metadata = conversation_log.get_metadata("dashboard:mem-test")
         assert metadata["memory_store"] == private_store
         assert metadata["agent"] == "oncall"
-        from kiro_crew.execution_context import read_session_execution
+        from aj_crew.execution_context import read_session_execution
 
         retained_execution = read_session_execution("dashboard:mem-test")
         assert retained_execution.member_id == captured_execution.member_id
@@ -194,7 +192,7 @@ class TestRuntimeWiringTurn:
             ("manual_resume", True, True),
             ("conn_recover", True, True),
             ("busy_recover", True, True),
-            # A cold start that did NOT natively resume carries the Kiro Crew
+            # A cold start that did NOT natively resume carries the Aj Crew
             # replay, which already holds the interrupted turn.
             ("manual_resume", False, False),
             # Continue on a turn that ended normally: kiro-cli logged it.
@@ -212,18 +210,18 @@ class TestRuntimeWiringTurn:
         resumed session gets no replay, so the Resume press on that turn must
         carry the turn itself, or the model is told to finish a request it cannot
         see and answers the one before it (or reports nothing to continue)."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.context import ContextBuilder
+        from aj_crew.dashboard.chat_utils import (
             _BUSY_RECOVER_MSG,
             _CONN_RECOVER_MSG,
             _MANUAL_CONTINUE_MSG,
             _MANUAL_RESUME_MSG,
         )
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.skills import SkillsLoader
 
         resume_text = {
             "manual_resume": _MANUAL_RESUME_MSG,
@@ -244,7 +242,7 @@ class TestRuntimeWiringTurn:
         )
         ctx_builder.conversation_log = MagicMock()
         monkeypatch.setattr(ctx_builder, "build_message", mock_build_message)
-        monkeypatch.setattr("kiro_crew.context.build_session_replay", lambda *a, **k: "")
+        monkeypatch.setattr("aj_crew.context.build_session_replay", lambda *a, **k: "")
 
         state = _make_state(tmp_path, context_builder=ctx_builder)
         hook_store = MagicMock()
@@ -278,7 +276,7 @@ class TestRuntimeWiringTurn:
         state.sessions.get_or_create = AsyncMock(return_value=(mock_client, True, resumed))
         state.sessions.get_pid = MagicMock(return_value=None)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(
             state,
@@ -314,10 +312,10 @@ class TestRuntimeWiringTurn:
         native resume; outbound-only mirrors still run as direct dashboard turns
         and need the Tool Search resume workaround.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
-        from kiro_crew.messaging.link import ChannelLink
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.messaging.link import ChannelLink
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         state = _make_state(tmp_path)
         state.context_builder = None
@@ -341,7 +339,7 @@ class TestRuntimeWiringTurn:
         state.sessions.get_or_create = AsyncMock(return_value=(mock_client, True, False))
         state.sessions.get_pid = MagicMock(return_value=None)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "linked dashboard turn")
 
@@ -364,7 +362,7 @@ class TestRuntimeWiringTurn:
         from chat_test_helpers import pin_kiro_cli_harness
 
         pin_kiro_cli_harness()
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
         build_message_calls: list[dict] = []
         build_behavior = {"stop_during_build": False}
@@ -383,12 +381,12 @@ class TestRuntimeWiringTurn:
                 build_behavior["stop_during_build"] = False
             return text, MagicMock(action=None, text="")
 
-        from kiro_crew.acp.types import STOP_REASON_CANCELLED
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.hooks import HOOK_EVENT_AGENT_SPAWN
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.acp.types import STOP_REASON_CANCELLED
+        from aj_crew.context import ContextBuilder
+        from aj_crew.hooks import HOOK_EVENT_AGENT_SPAWN
+        from aj_crew.memory import MemoryStore
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.skills import SkillsLoader
 
         ctx_builder = ContextBuilder(
             memory=MemoryStore(workspace=tmp_path / "ws"),
@@ -397,7 +395,7 @@ class TestRuntimeWiringTurn:
         ctx_builder.conversation_log = MagicMock()
         monkeypatch.setattr(ctx_builder, "build_message", mock_build_message)
         monkeypatch.setattr(
-            "kiro_crew.context.build_session_replay",
+            "aj_crew.context.build_session_replay",
             lambda *args, **kwargs: "retained conversation replay",
         )
 
@@ -415,7 +413,7 @@ class TestRuntimeWiringTurn:
             return message
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._maybe_inject_persona",
+            "aj_crew.dashboard.chat_runner._maybe_inject_persona",
             inject_persona,
         )
 
@@ -506,7 +504,7 @@ class TestRuntimeWiringTurn:
         state.sessions.mark_provider_switch_replay = MagicMock(side_effect=mark_replay)
         state.sessions.commit_provider_switch_replay_sid = MagicMock(side_effect=commit_replay)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "/tools")
 
@@ -574,7 +572,7 @@ class TestRuntimeWiringTurn:
         stream_behavior["empty_end_turn"] = True
         slot._empty_response_retries = 1
         with patch(
-            "kiro_crew.dashboard.chat_runner._empty_auto_continue_enabled",
+            "aj_crew.dashboard.chat_runner._empty_auto_continue_enabled",
             return_value=False,
         ):
             await _run_chat(state, slot, "real empty replay with continuation off")
@@ -679,7 +677,7 @@ class TestRuntimeWiringTurn:
         client flag) it must still build a full first turn with the replay, not
         the slim resume that claims the history was restored.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
         build_message_calls: list[dict] = []
 
@@ -687,10 +685,10 @@ class TestRuntimeWiringTurn:
             build_message_calls.append({"context_is_new": context_is_new, "kwargs": kwargs})
             return text, MagicMock(action=None, text="")
 
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.context import ContextBuilder
+        from aj_crew.memory import MemoryStore
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.skills import SkillsLoader
 
         ctx_builder = ContextBuilder(
             memory=MemoryStore(workspace=tmp_path / "ws"),
@@ -699,7 +697,7 @@ class TestRuntimeWiringTurn:
         ctx_builder.conversation_log = MagicMock()
         monkeypatch.setattr(ctx_builder, "build_message", mock_build_message)
         monkeypatch.setattr(
-            "kiro_crew.context.build_session_replay",
+            "aj_crew.context.build_session_replay",
             lambda *args, **kwargs: "retained conversation replay",
         )
 
@@ -727,7 +725,7 @@ class TestRuntimeWiringTurn:
         state.sessions.mark_provider_switch_replay = MagicMock(return_value=True)
         state.sessions.commit_provider_switch_replay_sid = MagicMock(return_value=True)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "what were we doing?")
 
@@ -746,7 +744,7 @@ class TestRuntimeWiringTurn:
         Regression guard: without this wiring the flag is set by the compact
         callback and read by nobody, so the whole feature is dead code.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
         build_message_calls: list[dict] = []
 
@@ -754,9 +752,9 @@ class TestRuntimeWiringTurn:
             build_message_calls.append({"text": text, "kwargs": kwargs})
             return text, MagicMock(action=None, text="")
 
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.context import ContextBuilder
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         ctx_builder = ContextBuilder(
             memory=MemoryStore(workspace=tmp_path / "ws"),
@@ -790,7 +788,7 @@ class TestRuntimeWiringTurn:
         state.sessions.consume_needs_reinjection = MagicMock(side_effect=_consume)
         state.sessions.mark_needs_reinjection = MagicMock(side_effect=_mark)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "first turn after compaction")
 
@@ -826,12 +824,12 @@ class TestRuntimeWiringTurn:
         the except arm, so an except-arm-only re-arm leaves the warm session
         running WITHOUT [PERMANENT RULES] for the rest of its life. The re-arm
         must live in the finally, on every exit path."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+        from aj_crew.context import ContextBuilder
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         ctx_builder = ContextBuilder(
             memory=MemoryStore(workspace=tmp_path / "ws"),
@@ -844,10 +842,10 @@ class TestRuntimeWiringTurn:
         )
 
         state = _make_state(tmp_path, context_builder=ctx_builder)
-        cfg = KiroCrewConfig()
-        cfg.agents["rearm-test"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = AjCrewConfig()
+        cfg.agents["rearm-test"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         cfg.default_agent = "rearm-test"
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.AjCrewConfig.load", lambda: cfg)
         slot = state.get_or_create_slot("member-rearm-test", agent="rearm-test", mode="member")
 
         mock_client = fake_provider()
@@ -858,7 +856,7 @@ class TestRuntimeWiringTurn:
         # its compaction flag is OFF, so only the member condition can re-arm.
         state.sessions = real_sessions(mock_client)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "first member turn")
 

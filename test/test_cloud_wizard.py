@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.cloud import aws
-from kiro_crew.cloud import connect as connect_mod
-from kiro_crew.cloud import ec2, iam, login, ssm, wizard
-from kiro_crew.cloud.launch_state import LaunchState
+from aj_crew.cloud import aws
+from aj_crew.cloud import connect as connect_mod
+from aj_crew.cloud import ec2, iam, login, ssm, wizard
+from aj_crew.cloud.launch_state import LaunchState
 
 
 def _patch_post_launch(monkeypatch, *, logged_in: bool = True) -> dict[str, list[str]]:
@@ -166,7 +166,7 @@ class TestLaunchResume:
             lambda tag, *_a, **_k: {
                 "tag": tag,
                 "exists": True,
-                "stack_name": "kirocrew-kc-old",
+                "stack_name": "ajcrew-kc-old",
                 "stack_status": "CREATE_COMPLETE",
                 "instance_id": "i-old",
                 "public_dns": "",
@@ -196,7 +196,7 @@ class TestLaunchResume:
         still opened and the crew registered (the recovery needs both), but a
         launch that did not deliver the identity it was asked for is not 0.
         Contrast: a merely NOT-signed-in box stays a warning and exits 0."""
-        from kiro_crew.cloud.login_target import KiroLoginTarget
+        from aj_crew.cloud.login_target import KiroLoginTarget
 
         target = KiroLoginTarget(
             license="pro", start_url="https://example.awsapps.com/start", region="us-east-1"
@@ -211,7 +211,7 @@ class TestLaunchResume:
             lambda tag, *_a, **_k: {
                 "tag": tag,
                 "exists": True,
-                "stack_name": "kirocrew-kc-old",
+                "stack_name": "ajcrew-kc-old",
                 "stack_status": "CREATE_COMPLETE",
                 "instance_id": "i-old",
                 "public_dns": "",
@@ -233,7 +233,7 @@ class TestLaunchResume:
         assert rc == 1
         assert calls["connect"] == ["i-old"] and calls["register"] == ["i-old"]
         assert started == []  # a login over a live session is not attempted
-        assert "DIFFERENT Kiro identity" in out and "kirocrew cloud logout" in out
+        assert "DIFFERENT Kiro identity" in out and "ajcrew cloud logout" in out
         assert "is live on AWS" not in out
 
         # Same resume, no session at all: a warning, and the launch still succeeds.
@@ -249,7 +249,7 @@ class TestLaunchResume:
         That verdict is recorded like the probe's would have been: the
         operational recheck, still unknown, cannot read it down to an exit-0
         "not signed in" warning."""
-        from kiro_crew.cloud.login_target import KiroLoginTarget
+        from aj_crew.cloud.login_target import KiroLoginTarget
 
         target = KiroLoginTarget(
             license="pro", start_url="https://example.awsapps.com/start", region="us-east-1"
@@ -264,7 +264,7 @@ class TestLaunchResume:
             lambda tag, *_a, **_k: {
                 "tag": tag,
                 "exists": True,
-                "stack_name": "kirocrew-kc-old",
+                "stack_name": "ajcrew-kc-old",
                 "stack_status": "CREATE_COMPLETE",
                 "instance_id": "i-old",
                 "public_dns": "",
@@ -285,7 +285,7 @@ class TestLaunchResume:
         assert rc == 1
         assert started  # the sign-in step did try, and kiro-cli refused
         assert calls["connect"] == ["i-old"] and calls["register"] == ["i-old"]
-        assert "different Kiro identity" in out and "kirocrew cloud logout" in out
+        assert "different Kiro identity" in out and "ajcrew cloud logout" in out
         assert "is live on AWS" not in out
 
     def test_verified_mismatch_survives_a_transient_recheck_failure(self, monkeypatch, capsys):
@@ -294,8 +294,8 @@ class TestLaunchResume:
         check". That does not un-verify the mismatch: the launch still exits 1
         with the logout recovery, instead of degrading to the exit-0 "not signed
         in" warning under the wrong identity."""
-        from kiro_crew.cloud.aws import AWSError
-        from kiro_crew.cloud.login_target import KiroLoginTarget
+        from aj_crew.cloud.aws import AWSError
+        from aj_crew.cloud.login_target import KiroLoginTarget
 
         target = KiroLoginTarget(
             license="pro", start_url="https://example.awsapps.com/start", region="us-east-1"
@@ -310,7 +310,7 @@ class TestLaunchResume:
             lambda tag, *_a, **_k: {
                 "tag": tag,
                 "exists": True,
-                "stack_name": "kirocrew-kc-old",
+                "stack_name": "ajcrew-kc-old",
                 "stack_status": "CREATE_COMPLETE",
                 "instance_id": "i-old",
                 "public_dns": "",
@@ -337,7 +337,7 @@ class TestLaunchResume:
         assert len(probes) == 2
         assert rc == 1
         assert calls["connect"] == ["i-old"] and calls["register"] == ["i-old"]
-        assert "DIFFERENT Kiro identity" in out and "kirocrew cloud logout" in out
+        assert "DIFFERENT Kiro identity" in out and "ajcrew cloud logout" in out
         assert "is live on AWS" not in out
 
     def test_builder_id_launch_onto_an_identity_center_session_is_a_mismatch(
@@ -349,7 +349,7 @@ class TestLaunchResume:
         launch exits 1 with the flagless recovery -- including when the human
         declines the interactive re-login, the path that otherwise reads
         as an exit-0 "not signed in" warning."""
-        from kiro_crew.cloud.login_target import KiroLoginTarget
+        from aj_crew.cloud.login_target import KiroLoginTarget
 
         cfg = LaunchState(profile="dev", region="us-west-2", last_tag="kc-old")
         calls = _patch_post_launch(monkeypatch, logged_in=False)
@@ -361,7 +361,7 @@ class TestLaunchResume:
             lambda tag, *_a, **_k: {
                 "tag": tag,
                 "exists": True,
-                "stack_name": "kirocrew-kc-old",
+                "stack_name": "ajcrew-kc-old",
                 "stack_status": "CREATE_COMPLETE",
                 "instance_id": "i-old",
                 "public_dns": "",
@@ -391,9 +391,9 @@ class TestLaunchResume:
         assert targets and all(t.is_default for t in targets)
         assert calls["connect"] == ["i-old"] and calls["register"] == ["i-old"]
         assert "DIFFERENT Kiro identity than Builder ID" in out
-        recovery = [ln for ln in out.splitlines() if "kirocrew cloud logout && " in ln]
+        recovery = [ln for ln in out.splitlines() if "ajcrew cloud logout && " in ln]
         assert recovery and all(
-            ln.rstrip().endswith("kirocrew cloud login") and "--identity-provider" not in ln
+            ln.rstrip().endswith("ajcrew cloud login") and "--identity-provider" not in ln
             for ln in recovery
         )
         assert "is live on AWS" not in out
@@ -412,7 +412,7 @@ class TestLaunchResume:
                 return {
                     "tag": tag,
                     "exists": True,
-                    "stack_name": "kirocrew-kc-broken",
+                    "stack_name": "ajcrew-kc-broken",
                     "stack_status": "ROLLBACK_COMPLETE",
                     "instance_id": "",
                     "region": "us-west-2",
@@ -421,7 +421,7 @@ class TestLaunchResume:
             return {
                 "tag": tag,
                 "exists": True,
-                "stack_name": f"kirocrew-{tag}",
+                "stack_name": f"ajcrew-{tag}",
                 "stack_status": "CREATE_COMPLETE",
                 "instance_id": "i-fresh",
                 "region": "us-west-2",
@@ -439,7 +439,7 @@ class TestLaunchResume:
             deployed.append(kw["tag"])
             return ec2.DeployResult(
                 tag=kw["tag"],
-                stack_name=f"kirocrew-{kw['tag']}",
+                stack_name=f"ajcrew-{kw['tag']}",
                 region="us-west-2",
                 instance_id="i-fresh",
                 status="CREATE_COMPLETE",
@@ -465,7 +465,7 @@ class TestLaunchResume:
             lambda tag, *_a, **_k: {
                 "tag": tag,
                 "exists": True,
-                "stack_name": "kirocrew-kc-old",
+                "stack_name": "ajcrew-kc-old",
                 "stack_status": "CREATE_COMPLETE",
                 "instance_id": "i-old",
                 "region": "us-west-2",
@@ -500,7 +500,7 @@ class TestLaunchResume:
             lambda tag, *_a, **_k: {
                 "tag": tag,
                 "exists": True,
-                "stack_name": "kirocrew-kc-old",
+                "stack_name": "ajcrew-kc-old",
                 "stack_status": "CREATE_COMPLETE",
                 "instance_id": "i-old",
                 "region": "us-west-2",
@@ -522,7 +522,7 @@ class TestLaunchResume:
         assert "terminated" in capsys.readouterr().out
 
     def test_hold_tunnel_false_closes_and_returns(self, monkeypatch, capsys):
-        # Embedded in `kirocrew setup`, the wizard must NOT block on the
+        # Embedded in `ajcrew setup`, the wizard must NOT block on the
         # tunnel child — it closes it and returns so setup can finish.
         cfg = LaunchState(profile="dev", region="us-west-2", last_tag="kc-old")
         _patch_post_launch(monkeypatch)
@@ -565,7 +565,7 @@ class TestLaunchResume:
             lambda tag, *_a, **_k: {
                 "tag": tag,
                 "exists": True,
-                "stack_name": "kirocrew-kc-old",
+                "stack_name": "ajcrew-kc-old",
                 "stack_status": "CREATE_COMPLETE",
                 "instance_id": "i-old",
                 "public_dns": "",
@@ -603,7 +603,7 @@ class TestLaunchResume:
             deploy_calls.append(tag)
             return ec2.DeployResult(
                 tag=tag,
-                stack_name="kirocrew-kc-new",
+                stack_name="ajcrew-kc-new",
                 region=region,
                 instance_id="i-new",
                 status="CREATE_COMPLETE",
@@ -636,7 +636,7 @@ class TestLaunchResume:
             deploy_calls.append(tag)
             return ec2.DeployResult(
                 tag=tag,
-                stack_name="kirocrew-kc-new",
+                stack_name="ajcrew-kc-new",
                 region=region,
                 instance_id="i-new",
                 status="CREATE_COMPLETE",
@@ -731,7 +731,7 @@ class TestLaunchResume:
         def fake_deploy(**_k):
             return ec2.DeployResult(
                 tag="kc-new",
-                stack_name="kirocrew-kc-new",
+                stack_name="ajcrew-kc-new",
                 region="us-west-2",
                 instance_id="i-abc",
                 status="CREATE_COMPLETE",
@@ -763,7 +763,7 @@ class TestLaunchResume:
             lambda *_a, **_k: [
                 {
                     "tag": "kc-found",
-                    "stack_name": "kirocrew-kc-found",
+                    "stack_name": "ajcrew-kc-found",
                     "stack_status": "CREATE_COMPLETE",
                 }
             ],
@@ -778,7 +778,7 @@ class TestLaunchResume:
         assert wizard.launch(profile="dev", region="us-west-2", assume_yes=True) == 1
         out = capsys.readouterr().out
         assert "this installation has no record of (kc-found)" in out
-        assert "kirocrew cloud launch --new" in out
+        assert "ajcrew cloud launch --new" in out
         assert calls["login"] == []
         assert save_calls == []
 
@@ -790,8 +790,8 @@ class TestLaunchResume:
             return default_index
 
         monkeypatch.setattr(wizard.ui, "choose", fake_choose)
-        found = wizard._ExistingLaunch(tag="kc-found", stack_name="kirocrew-kc-found")
-        saved = wizard._ExistingLaunch(tag="kc-saved", stack_name="kirocrew-kc-saved", saved=True)
+        found = wizard._ExistingLaunch(tag="kc-found", stack_name="ajcrew-kc-found")
+        saved = wizard._ExistingLaunch(tag="kc-saved", stack_name="ajcrew-kc-saved", saved=True)
 
         assert wizard._choose_existing_launch([found]) is None
         assert wizard._choose_existing_launch([found, found]) is None
@@ -800,14 +800,14 @@ class TestLaunchResume:
 
     def test_discovery_offers_only_a_stack_with_a_live_instance(self, monkeypatch, capsys):
         rows = [
-            {"tag": "kc-live", "stack_name": "kirocrew-kc-live", "stack_status": "CREATE_COMPLETE"},
-            {"tag": "kc-gone", "stack_name": "kirocrew-kc-gone", "stack_status": "CREATE_COMPLETE"},
+            {"tag": "kc-live", "stack_name": "ajcrew-kc-live", "stack_status": "CREATE_COMPLETE"},
+            {"tag": "kc-gone", "stack_name": "ajcrew-kc-gone", "stack_status": "CREATE_COMPLETE"},
             {
                 "tag": "kc-new",
-                "stack_name": "kirocrew-kc-new",
+                "stack_name": "ajcrew-kc-new",
                 "stack_status": "CREATE_IN_PROGRESS",
             },
-            {"tag": "kc-bad", "stack_name": "kirocrew-kc-bad", "stack_status": "ROLLBACK_COMPLETE"},
+            {"tag": "kc-bad", "stack_name": "ajcrew-kc-bad", "stack_status": "ROLLBACK_COMPLETE"},
         ]
         live_reads: list[str] = []
 
@@ -822,13 +822,13 @@ class TestLaunchResume:
 
         assert live_reads == ["read"]  # one read for all four stacks
 
-        assert found == [wizard._ExistingLaunch("kc-live", "kirocrew-kc-live", "CREATE_COMPLETE")]
+        assert found == [wizard._ExistingLaunch("kc-live", "ajcrew-kc-live", "CREATE_COMPLETE")]
         out = capsys.readouterr().out
-        assert "Not offered: kirocrew-kc-gone (no live Kiro Crew instance)" in out
-        assert "Not offered: kirocrew-kc-new (CREATE_IN_PROGRESS)" in out
-        assert "Not offered: kirocrew-kc-bad (ROLLBACK_COMPLETE)" in out
-        assert "kirocrew cloud status --tag kc-gone --region us-west-2 --profile dev" in out
-        assert "kirocrew-kc-live" not in out
+        assert "Not offered: ajcrew-kc-gone (no live Aj Crew instance)" in out
+        assert "Not offered: ajcrew-kc-new (CREATE_IN_PROGRESS)" in out
+        assert "Not offered: ajcrew-kc-bad (ROLLBACK_COMPLETE)" in out
+        assert "ajcrew cloud status --tag kc-gone --region us-west-2 --profile dev" in out
+        assert "ajcrew-kc-live" not in out
 
     def test_interactive_existing_stack_can_create_new_installation(self, monkeypatch, capsys):
         cfg = LaunchState(profile="dev", region="us-west-2", last_tag="kc-old")
@@ -854,7 +854,7 @@ class TestLaunchResume:
             lambda tag, *_a, **_k: {
                 "tag": tag,
                 "exists": tag == "kc-old",
-                "stack_name": f"kirocrew-{tag}",
+                "stack_name": f"ajcrew-{tag}",
                 "stack_status": "CREATE_COMPLETE",
                 "instance_id": "i-old",
                 "region": "us-west-2",
@@ -869,7 +869,7 @@ class TestLaunchResume:
             deploy_calls.append(tag)
             return ec2.DeployResult(
                 tag=tag,
-                stack_name="kirocrew-kc-new",
+                stack_name="ajcrew-kc-new",
                 region=region,
                 instance_id="i-new",
                 status="CREATE_COMPLETE",
@@ -886,7 +886,7 @@ class TestLaunchResume:
             x == "i-new" for x in calls["login"]
         )  # sign-in + verify both check i-new
         assert save_calls == [("dev", "us-west-2", "kc-new")]
-        assert choices[0][0] == "Existing Kiro Crew cloud deployment"
+        assert choices[0][0] == "Existing Aj Crew cloud deployment"
         assert choices[0][1][0][0] == "Keep and resume existing"
         assert choices[0][1][1][0] == "Create a new installation"
         assert "existing stack is unchanged" in capsys.readouterr().out
@@ -911,8 +911,8 @@ class TestLaunchResume:
             ec2,
             "list_stacks",
             lambda *_a, **_k: [
-                {"tag": "kc-a", "stack_name": "kirocrew-kc-a"},
-                {"tag": "kc-b", "stack_name": "kirocrew-kc-b"},
+                {"tag": "kc-a", "stack_name": "ajcrew-kc-a"},
+                {"tag": "kc-b", "stack_name": "ajcrew-kc-b"},
             ],
         )
         monkeypatch.setattr(ec2, "live_instance_tags", lambda *_a, **_k: {"kc-a", "kc-b"})
@@ -922,7 +922,7 @@ class TestLaunchResume:
             lambda tag, *_a, **_k: {
                 "tag": tag,
                 "exists": True,
-                "stack_name": f"kirocrew-{tag}",
+                "stack_name": f"ajcrew-{tag}",
                 "stack_status": "CREATE_COMPLETE",
                 "instance_id": f"i-{tag}",
                 "region": "us-west-2",
@@ -947,10 +947,10 @@ class TestLaunchResume:
         assert save_calls == [("dev", "us-west-2", "kc-b")]
         assert choices == [
             (
-                "Existing Kiro Crew cloud deployments",
+                "Existing Aj Crew cloud deployments",
                 [
-                    ("Keep kc-a", "kirocrew-kc-a"),
-                    ("Keep kc-b", "kirocrew-kc-b"),
+                    ("Keep kc-a", "ajcrew-kc-a"),
+                    ("Keep kc-b", "ajcrew-kc-b"),
                     ("Create a new installation", "Leaves existing AWS stacks untouched."),
                 ],
             )
@@ -964,8 +964,8 @@ class TestLaunchResume:
             ec2,
             "list_stacks",
             lambda *_a, **_k: [
-                {"tag": "kc-a", "stack_name": "kirocrew-kc-a"},
-                {"tag": "kc-b", "stack_name": "kirocrew-kc-b"},
+                {"tag": "kc-a", "stack_name": "ajcrew-kc-a"},
+                {"tag": "kc-b", "stack_name": "ajcrew-kc-b"},
             ],
         )
         monkeypatch.setattr(ec2, "live_instance_tags", lambda *_a, **_k: {"kc-a", "kc-b"})
@@ -1146,7 +1146,7 @@ class TestThePriorPointerIsClearedBeforeANewStackExists:
 
     @staticmethod
     def _saved(tmp_path, monkeypatch, tag: str = "kc-old") -> None:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         LaunchState.record(profile="dev", region="us-west-2", last_tag=tag)
         assert LaunchState.load().last_tag == tag, "the fixture did not save a prior pointer"
 
@@ -1154,7 +1154,7 @@ class TestThePriorPointerIsClearedBeforeANewStackExists:
     def _deploy_ok(**_k):
         return ec2.DeployResult(
             tag="kc-new",
-            stack_name="kirocrew-kc-new",
+            stack_name="ajcrew-kc-new",
             region="us-west-2",
             instance_id="i-new",
             status="CREATE_COMPLETE",
@@ -1305,7 +1305,7 @@ class TestThePriorPointerIsClearedBeforeANewStackExists:
             lambda *_a, **_k: {
                 "exists": True,
                 "instance_id": "i-old",
-                "stack_name": "kirocrew-kc-old",
+                "stack_name": "ajcrew-kc-old",
                 "stack_status": "CREATE_COMPLETE",
                 "region": "us-west-2",
             },

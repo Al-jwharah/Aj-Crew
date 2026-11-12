@@ -24,7 +24,7 @@ vi.mock('../pages/SessionArchive', () => ({ default: () => <div /> }))
 vi.mock('../pages/LocalStorageDebug', () => ({ default: () => <div /> }))
 vi.mock('../pages/settings/McpManagement', () => ({ McpManagement: () => <div /> }))
 vi.mock('../pages/overview', () => ({
-  KiroCrewCfgTab: () => <div data-testid="kirocrew-cfg" />,
+  AjCrewCfgTab: () => <div data-testid="ajcrew-cfg" />,
   AgentCfgTab: () => <div />,
 }))
 vi.mock('../pages/overview/MemoryGraphTab', () => ({ default: () => <div /> }))
@@ -338,14 +338,14 @@ describe('Settings > Developer > Feature Previews', () => {
   // than a `previewFlags.ts` key: whether it is drawn at all reads
   // `decisions_enabled` off `['dashboardConfig']` (the `capabilities.decisions`
   // ceiling), its switch reads the consent keystone and its share reads
-  // `['kirocrewConfig']`. All three stubbed here rather than left to reach
+  // `['ajcrewConfig']`. All three stubbed here rather than left to reach
   // the network: every case below is about the four localStorage previews, and a
   // real read cannot succeed under vitest (a failed one would render an
   // ErrorNotice with its own "Ask the agent" link and pollute the link census).
   // `decisionsCard.test.tsx` owns that card's own states.
   beforeEach(() => {
     vi.spyOn(api, 'dashboardConfig').mockResolvedValue({ decisions_enabled: true } as never)
-    vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({} as never)
+    vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({} as never)
     // The Shared Crew card draws only for the owner; a 404 leaves it out of the census.
     vi.spyOn(api, 'sharedCrewPreview').mockResolvedValue(null)
     vi.spyOn(api, 'getDecisionsConsent').mockResolvedValue({
@@ -406,7 +406,7 @@ describe('Settings > Developer > Feature Previews', () => {
       screen.getByRole('switch', { name: /webhooks/i }).click()
     })
     await waitFor(() => expect(screen.getByTestId('feature-previews-save-error').textContent)
-      .toMatch(/only the owner of this Kiro Crew can change feature previews, so “Webhooks” was switched back/i))
+      .toMatch(/only the owner of this Aj Crew can change feature previews, so “Webhooks” was switched back/i))
     act(() => { __resetPreviewFlagServerSyncForTests() })
   })
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from kiro_crew import snapshot_redact as redact
+from aj_crew import snapshot_redact as redact
 
 KEY = "AKIAIOSFODNN7EXAMPLE"
 

@@ -33,16 +33,16 @@ import pytest
 # so the bare module name is the form that always resolves.
 from test_computer_use_ffi import _H_ELEMENT, _Fakes, _in_dll
 
-from kiro_crew import platform_compat
-from kiro_crew.computer_use import macos_ffi, permissions
-from kiro_crew.computer_use.types import AppRef, SnapshotRequest
+from aj_crew import platform_compat
+from aj_crew.computer_use import macos_ffi, permissions
+from aj_crew.computer_use.types import AppRef, SnapshotRequest
 
 # This file replaces ctypes.CDLL, find_library or a cached libc handle for a test,
 # so the shared macOS handle caches are put back after each one (see conftest.py).
 pytestmark = pytest.mark.usefixtures("fresh_darwin_libc_handles")
 
 
-_APP = AppRef(name="Fixture", pid=4242, bundle_id="dev.kirocrew.fixture", window_id=77)
+_APP = AppRef(name="Fixture", pid=4242, bundle_id="dev.ajcrew.fixture", window_id=77)
 
 
 @pytest.fixture(name="fakes")

@@ -18,8 +18,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.acp.mcp_session_report import McpSessionReport, servers_exposing_no_tools
-from kiro_crew.providers import acp as acp_provider
+from aj_crew.acp.mcp_session_report import McpSessionReport, servers_exposing_no_tools
+from aj_crew.providers import acp as acp_provider
 
 
 def _payload(report: McpSessionReport) -> dict[str, Any]:

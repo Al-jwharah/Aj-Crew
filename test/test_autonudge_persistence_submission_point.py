@@ -13,9 +13,9 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-import kiro_crew
+import aj_crew
 
-_PACKAGE = Path(kiro_crew.__file__).resolve().parent
+_PACKAGE = Path(aj_crew.__file__).resolve().parent
 _SOURCES = (_PACKAGE / "autonudge.py", *sorted((_PACKAGE / "autonudge_service").glob("*.py")))
 #: The store writers that fsync, and so must never run unregistered off the loop.
 _WRITERS = frozenset({"_write_state", "_save"})

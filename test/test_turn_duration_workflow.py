@@ -1,6 +1,6 @@
 """Workflow surface: per-turn usage row survives, and carries a real duration.
 
-Guards two independent fixes in ``kiro_crew.workflows.agent_exec.build_agent_fn``:
+Guards two independent fixes in ``aj_crew.workflows.agent_exec.build_agent_fn``:
 
 1. **The swallowed-row bug.** The usage-row block must not wrap the
    function-local import, the context-token read, AND the persist in one wide
@@ -26,10 +26,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.dashboard.handlers.usage as usage_mod
-import kiro_crew.workflows.agent_exec as agent_exec
-from kiro_crew.acp.types import TurnUsage
-from kiro_crew.workflows.agent_exec import build_agent_fn
+import aj_crew.dashboard.handlers.usage as usage_mod
+import aj_crew.workflows.agent_exec as agent_exec
+from aj_crew.acp.types import TurnUsage
+from aj_crew.workflows.agent_exec import build_agent_fn
 
 pytestmark = pytest.mark.asyncio
 

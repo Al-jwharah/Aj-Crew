@@ -1,7 +1,7 @@
 """Tests for sync_source on the aggregate "Auto-added" Knowledge source.
 
 The aggregate source (uri ``agent://``) collects documents the agent hands over
-through ``knowledge_add_document``; Kiro Crew fetches nothing for it. A manual
+through ``knowledge_add_document``; Aj Crew fetches nothing for it. A manual
 Sync must never hand ``agent://`` to the agent URL-fetch path, whose failure
 leaves the row in a sticky 'error'. It is refused with 409
 ``source_not_syncable`` and the row's status is left as it was.
@@ -15,10 +15,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.dashboard.handlers.knowledge import sync_source
-from kiro_crew.knowledge.agent_source import ensure_agent_source
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.dashboard.handlers.knowledge import sync_source
+from aj_crew.knowledge.agent_source import ensure_agent_source
+from aj_crew.knowledge.store import KnowledgeStore
 
 
 @pytest.fixture()

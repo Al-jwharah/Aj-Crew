@@ -36,8 +36,8 @@ from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 from pdf_test_helpers import flate_bomb_pdf, text_pdf
 
-from kiro_crew.dashboard.handlers import api_file_grep
-from kiro_crew.dashboard.handlers import files as f
+from aj_crew.dashboard.handlers import api_file_grep
+from aj_crew.dashboard.handlers import files as f
 
 #: Skips the ripgrep half of a parity pair on a host without the binary.
 #:
@@ -79,7 +79,7 @@ def _make_app() -> web.Application:
 
 @pytest.fixture(autouse=True)
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.sel") as m:
+    with patch("aj_crew.dashboard.handlers.sel") as m:
         m.return_value = MagicMock()
         yield m.return_value
 
@@ -1559,7 +1559,7 @@ class TestHelpers:
 
         Asserted with HOME as the root, because that is the only root the stores
         are actually under -- which is the whole point of the anchoring below."""
-        from kiro_crew.security import sensitive_home_dirs
+        from aj_crew.security import sensitive_home_dirs
 
         home = os.path.expanduser("~")
         args = f._grep_sensitive_globs(home)
@@ -1632,7 +1632,7 @@ class TestHelpers:
         then read the credential stores before the per-hit filter sees them): the
         stall propagates out of the argv build, ``_grep_rg`` catches it as the
         ``RuntimeError`` it is, and the search takes the fail-closed python engine."""
-        from kiro_crew.security import PathResolutionStalled
+        from aj_crew.security import PathResolutionStalled
 
         def _stalled(exclude_leaves=()):
             raise PathResolutionStalled("/home/u", "/home/u")
@@ -1647,7 +1647,7 @@ class TestHelpers:
         """The parity claim stated over the pair rather than over one engine: no
         exclusion the rg argv carries may hide a name the python walk would search
         under the same root."""
-        from kiro_crew.security import is_sensitive_path
+        from aj_crew.security import is_sensitive_path
 
         project = "/srv/checkout"
         argv = f._grep_rg_argv(project)

@@ -34,7 +34,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[1]
-SKILL_FILE = REPO_ROOT / "src" / "kiro_crew" / "builtin_skills" / "explain-for" / "SKILL.md"
+SKILL_FILE = REPO_ROOT / "src" / "aj_crew" / "builtin_skills" / "explain-for" / "SKILL.md"
 CASES_FILE = HERE / "cases.json"
 
 # Crew's own trigger threshold. Imported when the package is importable so the
@@ -53,7 +53,7 @@ DEFAULT_TIMEOUT = 300
 
 def min_trigger_overlap() -> float:
     try:
-        from kiro_crew.skills import _MIN_TRIGGER_OVERLAP  # type: ignore
+        from aj_crew.skills import _MIN_TRIGGER_OVERLAP  # type: ignore
 
         return float(_MIN_TRIGGER_OVERLAP)
     except Exception:

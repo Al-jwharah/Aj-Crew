@@ -45,7 +45,7 @@ import { copyToClipboard, copyCode } from '../utils/clipboard'
 const NOW = Math.floor(Date.now() / 1000)
 const AGENTS = [
   {
-    name: 'reviewer', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default',
+    name: 'reviewer', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default',
     model: '', description: 'Reviews code changes', source: 'user',
   },
 ]

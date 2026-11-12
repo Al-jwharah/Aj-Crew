@@ -21,24 +21,24 @@ from aiohttp.test_utils import TestClient, TestServer
 from config_loader_helpers import _load_from_dict
 from discord_sessions_helpers import _ConversationLog, _dispatcher, _message
 
-from kiro_crew import history, mcp_core
-from kiro_crew.config import live
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.sections import (
+from aj_crew import history, mcp_core
+from aj_crew.config import live
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.sections import (
     DEFAULT_SEARCH_SCAN_WINDOW,
     SEARCH_SCAN_WINDOW_MAX,
     SEARCH_SCAN_WINDOW_MIN,
 )
-from kiro_crew.dashboard.handlers import api_sessions_search
-from kiro_crew.history import ConversationLog
-from kiro_crew.history_search import (
+from aj_crew.dashboard.handlers import api_sessions_search
+from aj_crew.history import ConversationLog
+from aj_crew.history_search import (
     SearchRows,
     configured_search_scan_window,
     search_candidate_cap,
     search_coverage,
     search_coverage_note,
 )
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 _isolated_home = discord_sessions_helpers._isolated_home
 
@@ -87,10 +87,10 @@ class TestTheConfigKey:
     def test_an_unreadable_config_reads_as_the_default(self, monkeypatch) -> None:
         monkeypatch.setattr(live, "snapshot", lambda: None)
 
-        def _boom() -> KiroCrewConfig:
+        def _boom() -> AjCrewConfig:
             raise OSError("torn config")
 
-        monkeypatch.setattr(KiroCrewConfig, "load", staticmethod(_boom))
+        monkeypatch.setattr(AjCrewConfig, "load", staticmethod(_boom))
         assert configured_search_scan_window() == DEFAULT_SEARCH_SCAN_WINDOW
 
     def test_a_process_without_the_watcher_reads_the_config_file(
@@ -99,7 +99,7 @@ class TestTheConfigKey:
         """The MCP server has no config watcher, so it reads the file at each search."""
         monkeypatch.setattr(live, "snapshot", lambda: None)
         path = tmp_path / "config.json"
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: path)
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: path)
         path.write_text(json.dumps({"session": {"search_scan_window": 4321}}), encoding="utf-8")
         assert configured_search_scan_window() == 4321
         path.write_text(json.dumps({"session": {"search_scan_window": 1234}}), encoding="utf-8")
@@ -189,7 +189,7 @@ class TestStatelessCronRunsTakeNoWindowSlot:
     def test_the_backfill_never_indexes_a_run(self, tmp_path: Path, monkeypatch) -> None:
         _chats_behind_stateless_runs(tmp_path)
         _configure_window(monkeypatch, 3)
-        monkeypatch.setattr("kiro_crew.history_search._INDEX_QUIET_WINDOW_SECS", 0.0)
+        monkeypatch.setattr("aj_crew.history_search._INDEX_QUIET_WINDOW_SECS", 0.0)
         log = ConversationLog(base_dir=tmp_path)
         projection = log._catalog_projection
         if not projection.search_index.available:
@@ -205,7 +205,7 @@ class TestStatelessCronRunsTakeNoWindowSlot:
 
 class TestStatelessRunKey:
     def test_matches_what_a_stateless_job_mints_and_nothing_else(self) -> None:
-        from kiro_crew.cron_service.identity import (
+        from aj_crew.cron_service.identity import (
             build_cron_session_context,
             is_stateless_cron_run_key,
         )
@@ -401,8 +401,8 @@ def test_the_candidate_cap_is_the_ceiling_except_for_a_bare_title_query(monkeypa
 def test_search_chat_history_says_when_older_sessions_were_not_searched(
     tmp_path: Path, monkeypatch
 ) -> None:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:global-v1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:global-v1")
     log = ConversationLog(base_dir=tmp_path / "sessions")
     log.append("dashboard_chat-1", "user", "the platypus plan")
     log.append("dashboard_chat-2", "user", "unrelated")
@@ -431,8 +431,8 @@ def test_search_chat_history_reads_the_window_once(tmp_path: Path, monkeypatch) 
     Two reads could disagree when the config changes between them, and a smaller
     first read would cap the candidates below what the backend scanned.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:global-v1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:global-v1")
     log = ConversationLog(base_dir=tmp_path / "sessions")
     log.append("dashboard_chat-1", "user", "the platypus plan")
     monkeypatch.setattr(history, "_SEARCH_SCAN_WINDOW", None)
@@ -457,8 +457,8 @@ def test_a_title_only_chat_history_search_is_capped_by_the_window(
     tmp_path: Path, monkeypatch
 ) -> None:
     """A bare ``title:`` search reads titles only, so the window caps its rows."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:global-v1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:global-v1")
     _configure_window(monkeypatch, 2)
     assert mcp_core._search_history_scan("title:plan") == 2
     seen: list[int] = []

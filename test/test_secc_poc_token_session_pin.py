@@ -23,8 +23,8 @@ import time
 
 import pytest
 
-from kiro_crew.dashboard.token_auth import _state as _token_state
-from kiro_crew.dashboard.token_auth import (
+from aj_crew.dashboard.token_auth import _state as _token_state
+from aj_crew.dashboard.token_auth import (
     bind_token_peer,
     check_token_peer,
     generate_token,
@@ -53,10 +53,10 @@ JUNK_RUN = "!!!!"
 @pytest.fixture
 def isolated_token_state(tmp_path, monkeypatch):
     """Sign and validate against fabricated state only -- never the real home."""
-    import kiro_crew.dashboard.revocation_gen as revocation_gen
-    import kiro_crew.dashboard.token_auth as token_auth
+    import aj_crew.dashboard.revocation_gen as revocation_gen
+    import aj_crew.dashboard.token_auth as token_auth
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     monkeypatch.setattr(token_auth, "_get_secret", lambda: FIXTURE_SECRET)
     monkeypatch.setattr(revocation_gen, "_gen", 0)
     monkeypatch.setattr(token_auth, "_revoked_store_singleton", None)

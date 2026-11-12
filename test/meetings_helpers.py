@@ -2,7 +2,7 @@
 
 Lives in the repo-level ``test/`` tree (not the app's in-package ``tests/``)
 because ``setup.cfg`` sets ``testpaths = test transfer`` — a test under
-``src/kiro_crew/apps/builtins/...`` is never collected by CI.
+``src/aj_crew/apps/builtins/...`` is never collected by CI.
 
 Three things every test needs:
 
@@ -34,11 +34,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.apps.builtins.meetings.backend import store
-from kiro_crew.apps.builtins.meetings.backend.domain import session as sess
-from kiro_crew.apps.builtins.meetings.backend.routes import _common
-from kiro_crew.apps.builtins.meetings.backend.routes import audio_import as _audio_import
-from kiro_crew.apps.builtins.meetings.backend.routes import register_routes
+from aj_crew.apps.builtins.meetings.backend import store
+from aj_crew.apps.builtins.meetings.backend.domain import session as sess
+from aj_crew.apps.builtins.meetings.backend.routes import _common
+from aj_crew.apps.builtins.meetings.backend.routes import audio_import as _audio_import
+from aj_crew.apps.builtins.meetings.backend.routes import register_routes
 
 
 @pytest.fixture(name="root")

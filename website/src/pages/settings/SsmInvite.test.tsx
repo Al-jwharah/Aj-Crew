@@ -34,7 +34,7 @@ const ack = vi.mocked(api.sharedCrewAckFirstShare)
 const capsRead = vi.mocked(api.sharedCrewCapabilities)
 const peopleRead = vi.mocked(api.sharedCrewPeople)
 
-const COMMAND = 'aws ssm start-session --target i-0123456789abcdef0 --document-name Kiro-Crew-Shared-Crew-5477 --parameters localPortNumber=5477'
+const COMMAND = 'aws ssm start-session --target i-0123456789abcdef0 --document-name Aj-Crew-Shared-Crew-5477 --parameters localPortNumber=5477'
 
 function ssmStatus(over: Partial<SsmStatus> = {}): SsmStatus {
   return {
@@ -297,7 +297,7 @@ describe('the Invite dialog and its transports', () => {
     fireEvent.click(screen.getByTestId('ssm-copy-message'))
     await waitFor(() => expect(copy).toHaveBeenCalledTimes(1))
     expect(copy.mock.calls[0][0].split('\n')).toEqual([
-      'Mac Studio invited you to Kiro Crew.',
+      'Mac Studio invited you to Aj Crew.',
       `1. Forward the port: ${COMMAND}`,
       '2. Open Crew: http://localhost:5477/?ssm_invite=abc123.secret',
       expect.stringContaining('#share-one-crew-over-aws-ssm'),

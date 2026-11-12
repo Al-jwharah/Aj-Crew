@@ -61,10 +61,10 @@
     "events": [
       {
         "kind": "tool_call",
-        "title": "kirocrew-dashboard_session_status",
+        "title": "ajcrew-dashboard_session_status",
         "tool_call_id": "call_2",
         "tool_kind": "other",
-        "wire_title": "kirocrew-dashboard_session_status"
+        "wire_title": "ajcrew-dashboard_session_status"
       }
     ],
     "frame": "session/update",
@@ -91,7 +91,7 @@
           }
         ],
         "shell_classified": true,
-        "title": "kirocrew-dashboard_session_status",
+        "title": "ajcrew-dashboard_session_status",
         "tool_call_id": "call_2",
         "tool_kind": "other"
       }
@@ -108,10 +108,10 @@
     "events": [
       {
         "kind": "tool_call_update",
-        "title": "kirocrew-dashboard_session_status",
+        "title": "ajcrew-dashboard_session_status",
         "tool_call_id": "call_2",
         "tool_kind": "other",
-        "wire_title": "kirocrew-dashboard_session_status"
+        "wire_title": "ajcrew-dashboard_session_status"
       }
     ],
     "frame": "session/update",

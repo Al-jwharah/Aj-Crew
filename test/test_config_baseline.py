@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew.config.schema import SCHEMA_REGISTRY
+from aj_crew.config.schema import SCHEMA_REGISTRY
 
 # Each test spawns a real child interpreter (subprocess.run([sys.executable, ...]));
 # pin the module to a dedicated xdist worker so concurrent cold-starts under -n auto
@@ -38,7 +38,7 @@ def _generate_bytes(tmp_path: str) -> bytes:
     """Run the baseline generator and return the raw bytes it wrote."""
     env = os.environ.copy()
     out_path = os.path.join(str(tmp_path), "config-baseline.json")
-    env["KIROCREW_BASELINE_OUTPUT"] = out_path
+    env["AJCREW_BASELINE_OUTPUT"] = out_path
     result = subprocess.run(
         [sys.executable, "-X", "utf8", _SCRIPT_PATH],
         capture_output=True,
@@ -122,7 +122,7 @@ class TestBaselineGenerator:
         """Script is executable via python and produces valid JSON."""
         out_path = os.path.join(str(tmp_path), "config-baseline.json")
         env = os.environ.copy()
-        env["KIROCREW_BASELINE_OUTPUT"] = out_path
+        env["AJCREW_BASELINE_OUTPUT"] = out_path
         result = subprocess.run(
             [sys.executable, "-X", "utf8", _SCRIPT_PATH],
             capture_output=True,
@@ -227,9 +227,9 @@ def _armed_queue_wait(asked: float, ceiling: float) -> float:
     Imported inside the call because ``gatewayd`` is a heavyweight module and
     every other test here needs none of it.
     """
-    from kiro_crew.mcp_gateway import admission as adm
-    from kiro_crew.mcp_gateway import gatewayd as gw
-    from kiro_crew.mcp_gateway import host_budget as hb
+    from aj_crew.mcp_gateway import admission as adm
+    from aj_crew.mcp_gateway import gatewayd as gw
+    from aj_crew.mcp_gateway import host_budget as hb
 
     admission = adm.Admission(
         gate=adm.SpawnGate(1),
@@ -252,8 +252,8 @@ class TestSpawnQueueWaitHelpMatchesTheDaemon:
 
     def test_the_key_is_a_ceiling_the_stub_budget_caps_first(self) -> None:
         """Measured, not read: raising the key past the stub's ask moves nothing."""
-        from kiro_crew.config.sections import McpGatewayConfig
-        from kiro_crew.mcp_gateway import stub as stub_mod
+        from aj_crew.config.sections import McpGatewayConfig
+        from aj_crew.mcp_gateway import stub as stub_mod
 
         asked = float(stub_mod._SPAWN_QUEUE_WAIT_BUDGET_SECS)
         shipped = float(McpGatewayConfig().spawn_queue_wait_secs)
@@ -280,7 +280,7 @@ class TestSpawnQueueWaitHelpMatchesTheDaemon:
         file (`ceiling >= floor`, two sentences along) cannot satisfy a check.
         """
         sites = {
-            "src/kiro_crew/config/integration_sections.py": _schema_help(_SPAWN_QUEUE_WAIT_PATH),
+            "src/aj_crew/config/integration_sections.py": _schema_help(_SPAWN_QUEUE_WAIT_PATH),
             "config-baseline.json": _baseline_help(_SPAWN_QUEUE_WAIT_PATH),
             _SPAWN_QUEUE_WAIT_DOC: _doc_paragraph_about(
                 _SPAWN_QUEUE_WAIT_DOC, "spawn_queue_wait_secs"
@@ -312,13 +312,13 @@ class TestSpawnQueueWaitHelpMatchesTheDaemon:
 
     def test_the_number_the_prose_names_is_the_shipped_default(self) -> None:
         """Both help copies name a figure; it has to be the one that ships."""
-        from kiro_crew.config.sections import McpGatewayConfig
-        from kiro_crew.mcp_gateway import stub as stub_mod
+        from aj_crew.config.sections import McpGatewayConfig
+        from aj_crew.mcp_gateway import stub as stub_mod
 
         shipped = McpGatewayConfig().spawn_queue_wait_secs
         assert float(stub_mod._RECONNECT_TOTAL_BUDGET_SECS) == float(shipped)
         for name, text in (
-            ("src/kiro_crew/config/integration_sections.py", _schema_help(_SPAWN_QUEUE_WAIT_PATH)),
+            ("src/aj_crew/config/integration_sections.py", _schema_help(_SPAWN_QUEUE_WAIT_PATH)),
             ("config-baseline.json", _baseline_help(_SPAWN_QUEUE_WAIT_PATH)),
         ):
             assert f"above {shipped}" in text, (

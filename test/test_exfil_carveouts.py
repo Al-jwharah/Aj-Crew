@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.security import audit_bash_exfiltration as audit
+from aj_crew.security import audit_bash_exfiltration as audit
 
 # A `-d @` flag plus a destination, assembled so the token is a value, not a
 # literal flag written in source.

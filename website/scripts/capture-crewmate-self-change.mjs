@@ -1,7 +1,7 @@
 /**
  * Capture harness for a crewmate's own change (`update_self`) in its DM thread.
  *
- * Shoots a RUNNING pod (`kirocrew pod up <worktree>`), not a fixture server: the
+ * Shoots a RUNNING pod (`ajcrew pod up <worktree>`), not a fixture server: the
  * rows under test are written by the gateway when the real agent calls the real
  * tool, so the frames show the product end to end -- the user's ask, the tool
  * row, one `self` row per change (name only, description only, face) with the
@@ -16,7 +16,7 @@
  * cards rather than rows: approval mode, reasoning effort, tools). This script
  * only opens the thread and shoots. The pod token is a sign-in link the gateway
  * accepts for its first five minutes, so mint a fresh one for each run
- * (`kirocrew pod token <name>`); the script trades it for the session cookie.
+ * (`ajcrew pod token <name>`); the script trades it for the session cookie.
  *
  * Usage:
  *   POD_URL=http://127.0.0.1:7840 POD_TOKEN=<token> \
@@ -30,7 +30,7 @@ const MEMBER = process.argv[3] || 'scout'
 const BASE = process.env.POD_URL
 const TOKEN = process.env.POD_TOKEN
 if (!BASE || !TOKEN) {
-  console.error('POD_URL and POD_TOKEN are required (POD_TOKEN from `kirocrew pod token <name>`)')
+  console.error('POD_URL and POD_TOKEN are required (POD_TOKEN from `ajcrew pod token <name>`)')
   process.exit(2)
 }
 mkdirSync(OUT, { recursive: true })

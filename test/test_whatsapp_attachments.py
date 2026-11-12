@@ -1,8 +1,8 @@
 """WhatsApp inbound media ingestion: the filename, the ceiling, and the offload.
 
 ``neonize`` is the optional ``[whatsapp]`` extra and is not installed here, but
-nothing in :mod:`kiro_crew.whatsapp.attachments` needs it: it takes a
-:class:`~kiro_crew.whatsapp.media.MediaDescription` (already read off the
+nothing in :mod:`aj_crew.whatsapp.attachments` needs it: it takes a
+:class:`~aj_crew.whatsapp.media.MediaDescription` (already read off the
 protobuf) plus any object exposing ``download_media``, so a plain fake is the
 whole test double.
 
@@ -28,16 +28,16 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.messaging.attachments import DOCUMENT, IMAGE, OTHER, classify, cleanup, safe_suffix
-from kiro_crew.whatsapp import attachments as wa_attachments
-from kiro_crew.whatsapp.attachments import (
+from aj_crew.messaging.attachments import DOCUMENT, IMAGE, OTHER, classify, cleanup, safe_suffix
+from aj_crew.whatsapp import attachments as wa_attachments
+from aj_crew.whatsapp.attachments import (
     AUDIO_MIMETYPES,
     MAX_ATTACHMENTS_PER_MESSAGE,
     MAX_MEDIA_BYTES,
     attachment_for,
     ingest_media,
 )
-from kiro_crew.whatsapp.media import (
+from aj_crew.whatsapp.media import (
     KIND_AUDIO,
     KIND_DOCUMENT,
     KIND_IMAGE,
@@ -72,7 +72,7 @@ class _FakeClient:
 def _temp_suffix(desc: MediaDescription) -> str:
     """The suffix the shared layer will put on the downloaded temp file.
 
-    Derived exactly as :func:`kiro_crew.messaging.attachments.ingest_attachments`
+    Derived exactly as :func:`aj_crew.messaging.attachments.ingest_attachments`
     derives it, so a test asserts what the transcription backend will really see
     rather than what the attachment merely hints at.
     """

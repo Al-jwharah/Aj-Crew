@@ -24,11 +24,11 @@ from typing import Any
 
 import pytest
 
-import kiro_crew.agent as agent_mod
-import kiro_crew.config.paths as paths_mod
-from kiro_crew.acp.harness.kas import resolve_projected_spec
-from kiro_crew.acp.kas_agents import build_kas_custom_agents
-from kiro_crew.mate_config import (
+import aj_crew.agent as agent_mod
+import aj_crew.config.paths as paths_mod
+from aj_crew.acp.harness.kas import resolve_projected_spec
+from aj_crew.acp.kas_agents import build_kas_custom_agents
+from aj_crew.mate_config import (
     has_mate_config,
     mate_config_path,
     write_mate_config,
@@ -126,7 +126,7 @@ def test_a_missing_mates_dir_does_not_break_resolution(layout):
 
 
 def test_the_session_agent_picker_does_not_list_a_crewmate(layout):
-    from kiro_crew.agent_discovery import list_agents
+    from aj_crew.agent_discovery import list_agents
 
     user, mates, _checkout = layout
     _write(user, "solo", {"name": "solo", "prompt": "user prompt"})
@@ -161,7 +161,7 @@ def test_write_mate_config_writes_a_minimal_file_and_declares_the_crewmate_id(la
         {
             "name": "builder",
             "prompt": "builder prompt",
-            "tools": ["fs_read", "@kirocrew-core"],
+            "tools": ["fs_read", "@ajcrew-core"],
             "allowedTools": ["fs_read"],
             "mcpServers": {"demo": {"command": "/bin/echo"}},
         },
@@ -205,8 +205,8 @@ def test_write_mate_config_does_not_copy_the_source_mcp_servers(layout):
 def test_a_new_crewmate_reads_no_template_file(layout, monkeypatch):
     """Create writes the minimal file without opening any agent file on disk: a
     template's prompt, servers, skills and limits never reach a new crewmate."""
-    from kiro_crew import mate_config
-    from kiro_crew.agent_sdk import agent_specs
+    from aj_crew import mate_config
+    from aj_crew.agent_sdk import agent_specs
 
     def _no_read(*_a, **_k):
         raise AssertionError("create must not read an agent file")
@@ -242,7 +242,7 @@ def test_write_mate_config_overwrites_an_existing_crewmate_file(layout):
 
 def test_another_instances_crewmate_file_is_never_overwritten(layout, monkeypatch, tmp_path):
     """Two instances share one Kiro home; the same crewmate name names one file."""
-    from kiro_crew.mate_config import MateConfigError
+    from aj_crew.mate_config import MateConfigError
 
     user, _mates, _checkout = layout
     _write(user, "builder", {"name": "builder", "prompt": "first", "tools": ["*"]})
@@ -251,7 +251,7 @@ def test_another_instances_crewmate_file_is_never_overwritten(layout, monkeypatc
 
     _write(user, "builder", {"name": "builder", "prompt": "second", "tools": ["*"]})
     monkeypatch.setattr(paths_mod, "data_home", lambda: tmp_path / "instance-b")
-    with pytest.raises(MateConfigError, match="another Kiro Crew instance"):
+    with pytest.raises(MateConfigError, match="another Aj Crew instance"):
         write_mate_config("ada")
     # The foreign instance's file survives the refused write (minimal files are
     # byte-identical, so the witness is that it still exists and still resolves).
@@ -269,9 +269,9 @@ def test_two_instances_writing_one_name_at_once_never_replace_each_other(
     """The owner check and both writes run under one lock across instances."""
     import threading
 
-    from kiro_crew import mate_config
-    from kiro_crew.mate_config import MateConfigError
-    from kiro_crew.testing.wait import wait_until
+    from aj_crew import mate_config
+    from aj_crew.mate_config import MateConfigError
+    from aj_crew.testing.wait import wait_until
 
     user, _mates, _checkout = layout
     _write(user, "builder", {"name": "builder", "prompt": "second", "tools": ["*"]})
@@ -305,7 +305,7 @@ def test_two_instances_writing_one_name_at_once_never_replace_each_other(
     racer.join(10)
 
     assert isinstance(outcome[0], MateConfigError)
-    assert "another Kiro Crew instance" in str(outcome[0])
+    assert "another Aj Crew instance" in str(outcome[0])
     assert json.loads(path.read_text(encoding="utf-8"))["prompt"] == "first"
 
 
@@ -316,13 +316,13 @@ def test_mate_tools_grant_skips_when_no_owned_file_exists(layout, monkeypatch):
     """The grant does not fork: with no owned mate file it returns mate_file_missing."""
     from types import SimpleNamespace
 
-    from kiro_crew import member_mate_tools
-    from kiro_crew.config import loader
+    from aj_crew import member_mate_tools
+    from aj_crew.config import loader
 
     _user, _mates, _checkout = layout
     # A binding whose kiro_agent is NOT a mate id (eager copy never ran).
     monkeypatch.setattr(
-        loader.KiroCrewConfig,
+        loader.AjCrewConfig,
         "load",
         classmethod(
             lambda cls: SimpleNamespace(
@@ -341,7 +341,7 @@ def test_mate_tools_grant_skips_when_no_owned_file_exists(layout, monkeypatch):
 
 
 def test_a_crewmate_id_is_a_declared_agent_in_the_materialized_index(layout, monkeypatch):
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     user, mates, _checkout = layout
     _write(user, "solo", {"name": "solo", "prompt": "p"})
@@ -362,7 +362,7 @@ def test_a_crewmate_id_is_a_declared_agent_in_the_materialized_index(layout, mon
 
 def _mate_edit_env(layout, monkeypatch, member="qwe", spec=None):
     """A mate owned file on disk plus a stub binding, for the in-place edit path."""
-    import kiro_crew.mate_capabilities as mc
+    import aj_crew.mate_capabilities as mc
 
     _user, mates, _checkout = layout
     spec = spec or {"name": member, "prompt": "hi", "tools": [], "allowedTools": []}
@@ -386,10 +386,10 @@ def test_binding_is_mate_true_only_when_binding_points_at_own_id(layout, monkeyp
             self.agents = {"qwe": _Binding(ka)}
 
     # Binding at its own id + owned file exists -> mate.
-    monkeypatch.setattr(mc.KiroCrewConfig, "load", staticmethod(lambda: _Cfg("qwe")))
+    monkeypatch.setattr(mc.AjCrewConfig, "load", staticmethod(lambda: _Cfg("qwe")))
     assert mc.binding_is_mate("qwe") is True
     # Binding on a shared template -> NOT a mate (ordinary fork path).
-    monkeypatch.setattr(mc.KiroCrewConfig, "load", staticmethod(lambda: _Cfg("kirocrew")))
+    monkeypatch.setattr(mc.AjCrewConfig, "load", staticmethod(lambda: _Cfg("ajcrew")))
     assert mc.binding_is_mate("qwe") is False
 
 
@@ -507,9 +507,9 @@ def test_a_removed_servers_approvals_leave_the_list_a_kept_servers_stay_off(layo
 def test_a_base_approval_the_file_never_listed_can_be_switched_off_and_on(layout, monkeypatch):
     """A migrated file holds only additions; the worker base's own grants are still editable."""
     mc, mates = _mate_edit_env(layout, monkeypatch)
-    (mates / "kirocrew-mate-worker.json").write_text(
+    (mates / "ajcrew-mate-worker.json").write_text(
         json.dumps(
-            {"name": "kirocrew-mate-worker", "tools": ["fs_read"], "allowedTools": ["fs_read"]}
+            {"name": "ajcrew-mate-worker", "tools": ["fs_read"], "allowedTools": ["fs_read"]}
         ),
         encoding="utf-8",
     )
@@ -537,7 +537,7 @@ def test_a_base_approval_the_file_never_listed_can_be_switched_off_and_on(layout
         assert any(i["id"] == "fs_read" for i in mc.preview("qwe", preview_body, {})["impact"])
         return mc.put("qwe", body, {})
 
-    from kiro_crew import mate_approval_revocations as revocations
+    from aj_crew import mate_approval_revocations as revocations
 
     assert _row(_put("remove"))["present"] is False
     assert revocations.revoked("qwe") == ["fs_read"]
@@ -622,7 +622,7 @@ def test_mate_edit_writes_the_owned_file_in_place_no_fork(layout, monkeypatch):
 
 def test_mate_edit_refuses_a_stale_revision(layout, monkeypatch):
     mc, mates = _mate_edit_env(layout, monkeypatch)
-    from kiro_crew.agent_capabilities import CapabilityError
+    from aj_crew.agent_capabilities import CapabilityError
 
     body = {
         "revision": "not-the-current-digest",
@@ -660,7 +660,7 @@ def _seam_kas_resolve_projected_spec(layout) -> None:
 
 
 def _seam_loader_refresh_materialized_agents(layout, monkeypatch) -> None:
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     user, mates, _checkout = layout
     _only_in_mates(layout, "seam_loader")
@@ -671,7 +671,7 @@ def _seam_loader_refresh_materialized_agents(layout, monkeypatch) -> None:
 
 
 def _seam_essential_context_resolve_template_path(layout) -> None:
-    from kiro_crew.member_essential_context import resolve_template_path
+    from aj_crew.member_essential_context import resolve_template_path
 
     _only_in_mates(layout, "seam_essential")
     path = resolve_template_path("seam_essential")
@@ -679,7 +679,7 @@ def _seam_essential_context_resolve_template_path(layout) -> None:
 
 
 def _seam_capability_source(layout) -> None:
-    from kiro_crew.agent_capabilities import _source
+    from aj_crew.agent_capabilities import _source
 
     _only_in_mates(layout, "seam_capability")
     path, spec, _ = _source("seam_capability", "")
@@ -688,7 +688,7 @@ def _seam_capability_source(layout) -> None:
 
 
 def _seam_agent_detail_candidates(layout) -> None:
-    from kiro_crew.dashboard.agent_admin.agent_detail import _agent_detail_candidates
+    from aj_crew.dashboard.agent_admin.agent_detail import _agent_detail_candidates
 
     _only_in_mates(layout, "seam_detail")
     matches = _agent_detail_candidates("seam_detail")

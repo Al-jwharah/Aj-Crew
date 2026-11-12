@@ -10,12 +10,12 @@ joints; drop any of them and the loop goes quiet without a test failing.
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SKILLS = ROOT / "src" / "kiro_crew" / "builtin_skills"
+SKILLS = ROOT / "src" / "aj_crew" / "builtin_skills"
 WEB_VERIFY = SKILLS / "web-verify" / "SKILL.md"
 WEB_BROWSE = SKILLS / "web-browse" / "SKILL.md"
 WEB_PREVIEW = SKILLS / "web-preview" / "SKILL.md"
-PREPARE_PR = SKILLS / "kirocrew-dev" / "kirocrew-prepare-pr" / "SKILL.md"
-PROMPT = ROOT / "src" / "kiro_crew" / "config" / "prompt.md"
+PREPARE_PR = SKILLS / "ajcrew-dev" / "ajcrew-prepare-pr" / "SKILL.md"
+PROMPT = ROOT / "src" / "aj_crew" / "config" / "prompt.md"
 
 
 def test_web_verify_skill_exists_with_frontmatter() -> None:
@@ -42,7 +42,7 @@ def _flat(path: Path) -> str:
 
     These files are hard-wrapped prose, so a multi-word phrase can legitimately
     straddle a newline. Asserting raw substrings against wrapped text fails for
-    a formatting reason rather than a content one (it bit `kirocrew browse
+    a formatting reason rather than a content one (it bit `ajcrew browse
     setup` and `does not flip` during review), so phrase assertions normalize
     whitespace first and stay robust to reflow.
     """
@@ -78,7 +78,7 @@ def test_browser_skills_do_not_point_at_a_toggle_that_no_longer_exists() -> None
             "Browser Mode" not in flat or "no Browser Mode" in flat or ("not the same as" in flat)
         ), f"{skill.name} still presents Browser Mode as something to switch on"
         assert (
-            "kirocrew browse setup" not in flat
+            "ajcrew browse setup" not in flat
         ), f"{skill.name} names a CLI verb this migration removed"
 
 

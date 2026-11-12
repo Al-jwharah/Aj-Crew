@@ -19,12 +19,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew import credential_patterns as _cred
-from kiro_crew import decisions as core
-from kiro_crew.decisions.points import MAX_KEY_CHARS, as_text
-from kiro_crew.decisions.points import skills_select as sel
-from kiro_crew.decisions.types import Answer
-from kiro_crew.testing.wait import wait_until
+from aj_crew import credential_patterns as _cred
+from aj_crew import decisions as core
+from aj_crew.decisions.points import MAX_KEY_CHARS, as_text
+from aj_crew.decisions.points import skills_select as sel
+from aj_crew.decisions.types import Answer
+from aj_crew.testing.wait import wait_until
 
 
 class _FakeLoader:
@@ -125,8 +125,8 @@ def test_a_skill_the_turn_cannot_use_is_neither_offered_nor_in_the_baseline():
 
 def test_a_repo_scope_the_loader_accepts_is_offered():
     loader = _loader(
-        ("scoped", {"triggers": "zebra", "repo_scope": "src/kiro_crew"}),
-        scoped={"src/kiro_crew"},
+        ("scoped", {"triggers": "zebra", "repo_scope": "src/aj_crew"}),
+        scoped={"src/aj_crew"},
     )
     assert [row["key"] for row in sel.candidates_from_loader(loader, "zebra", "/proj")] == [
         "scoped"
@@ -184,14 +184,14 @@ def _generous_append_deadline(monkeypatch):
 
     Raised, not removed: a genuinely stuck lock still fails the test.
     """
-    from kiro_crew import platform_log_append
+    from aj_crew import platform_log_append
 
     monkeypatch.setattr(platform_log_append, "_APPEND_TIMEOUT_SECONDS", 10.0)
 
 
 @pytest.fixture
 def log_home(tmp_path, monkeypatch):
-    from kiro_crew.decisions import log as log_mod
+    from aj_crew.decisions import log as log_mod
 
     directory = tmp_path / "home" / "decisions"
     directory.parent.mkdir()
@@ -251,7 +251,7 @@ def test_the_state_bounds_the_prose_it_sends():
 
 
 def test_the_menu_against_the_real_skills_loader(tmp_path):
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.skills import SkillsLoader
 
     root = tmp_path / "skills"
     _write_skill(root, "matcher", triggers="zebra, giraffe", description="animal work")
@@ -273,7 +273,7 @@ def test_the_none_option_can_never_be_a_skill_key(tmp_path):
     """A skill may be called anything a directory can be called -- so the sentinel
     must be a name no directory can have, or picking that skill would read as
     declining to pick one."""
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.skills import SkillsLoader
 
     assert sel.NONE_OPTION.startswith("/")
     assert not SkillsLoader._safe_name(sel.NONE_OPTION)
@@ -641,7 +641,7 @@ def test_an_install_with_no_consented_ceiling_sends_no_prior_turns(monkeypatch):
     has a ceiling of 0, and the gate takes the smaller of the two, so this install
     sends the current message alone.
     """
-    from kiro_crew.config.sections import DECISION_HISTORY_BUDGET_DEFAULT, DecisionsConfig
+    from aj_crew.config.sections import DECISION_HISTORY_BUDGET_DEFAULT, DecisionsConfig
 
     assert DECISION_HISTORY_BUDGET_DEFAULT == 2000
     assert DecisionsConfig().history_budget_chars == 2000
@@ -835,7 +835,7 @@ def test_a_secret_in_a_prior_turn_refuses_the_whole_request(secret):
     argument, a header -- would be egress the scrub never sees, and this turn's
     own message being clean says nothing about the turn before it.
     """
-    from kiro_crew.decisions import gate
+    from aj_crew.decisions import gate
 
     state = _state_with_prior_turn(f"here it is: {secret}")
     assert state["history"], "the turn under test must actually be in the state"
@@ -844,7 +844,7 @@ def test_a_secret_in_a_prior_turn_refuses_the_whole_request(secret):
 
 def test_a_clean_prior_turn_is_sent():
     """The refusal above must be the secret, not prior turns being refused wholesale."""
-    from kiro_crew.decisions import gate
+    from aj_crew.decisions import gate
 
     assert gate.scrub_reason(_state_with_prior_turn("we were talking about invoices"), []) is None
 
@@ -908,7 +908,7 @@ def test_the_split_menu_vocabulary_is_gone():
 
 def test_the_baseline_arm_is_the_matchers_own_result(tmp_path):
     """Computed from the SAME walk, and equal to what the loader would inject."""
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.skills import SkillsLoader
 
     root = tmp_path / "skills"
     _write_skill(root, "matcher", triggers="zebra, giraffe", description="animal work")
@@ -924,7 +924,7 @@ def test_the_baseline_arm_is_the_matchers_own_result(tmp_path):
 
 
 def test_the_baseline_arm_honours_the_same_cap(tmp_path):
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.skills import SkillsLoader
 
     root = tmp_path / "skills"
     _write_skill(root, "one", triggers="zebra")
@@ -1125,7 +1125,7 @@ def test_a_refused_row_is_not_published(bg_loop, enabled, log_home, monkeypatch)
     import sys
     import types
 
-    from kiro_crew.decisions import log as log_mod
+    from aj_crew.decisions import log as log_mod
 
     seen = []
     module = types.ModuleType(sel.OUTCOMES_MODULE)

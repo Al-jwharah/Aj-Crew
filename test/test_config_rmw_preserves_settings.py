@@ -17,8 +17,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.config.loader import ConfigReadError, read_config_for_update
+from aj_crew import platform_compat
+from aj_crew.config.loader import ConfigReadError, read_config_for_update
 
 
 def _config_path_names(func: ast.AST, is_config_path_call) -> set[str]:
@@ -155,7 +155,7 @@ class TestNoFailOpenConfigWriters:
         import ast
         import pathlib
 
-        root = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        root = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         # The one documented exception: interactive `config set --local`
         # deliberately overwrites a corrupt overlay (see config.md).
         allowed = {("cli_config.py", "d")}
@@ -244,7 +244,7 @@ class TestNoModeWideningConfigWriters:
         import ast
         import pathlib
 
-        root = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        root = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         # loader_document.py IS the implementation; cli_commands.py hand-rolls the same
         # contract (explicit mode= + restrict_to_owner) and predates the helper.
         allowed_files = {"loader_document.py", "cli_commands.py"}
@@ -365,7 +365,7 @@ class TestNoRawOpenWriteOfConfig:
     def test_no_module_opens_a_config_file_for_writing(self):
         import pathlib
 
-        root = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        root = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         offenders: list[str] = []
         for path in root.rglob("*.py"):
             if "_vendor" in path.parts:
@@ -436,7 +436,7 @@ class TestWriteConfigAtomically:
         import os
         import stat
 
-        from kiro_crew.config.loader import write_config_atomically
+        from aj_crew.config.loader import write_config_atomically
 
         path = tmp_path / "config.json"
         path.write_text(json.dumps({"slack": {"bot_token": "xoxb-secret"}}), encoding="utf-8")
@@ -455,7 +455,7 @@ class TestWriteConfigAtomically:
     def test_new_file_is_owner_only(self, tmp_path):
         import stat
 
-        from kiro_crew.config.loader import write_config_atomically
+        from aj_crew.config.loader import write_config_atomically
 
         path = tmp_path / "config.json"
         write_config_atomically(path, {"auto_update": True})
@@ -464,14 +464,14 @@ class TestWriteConfigAtomically:
     def test_does_not_spawn_a_subprocess_on_the_event_loop(self, tmp_path, monkeypatch):
         """No spawn, on either platform.
 
-        It runs inside async handlers and KiroCrewConfig.save(), so a subprocess would
+        It runs inside async handlers and AjCrewConfig.save(), so a subprocess would
         freeze the event loop. The owner-only lockdown was an icacls subprocess, so a
         naive version skips hardening; the DACL is applied in-process, so the ban is
         on spawning, not on hardening, which is asserted below.
         """
         import subprocess
 
-        from kiro_crew.config.loader import write_config_atomically
+        from aj_crew.config.loader import write_config_atomically
 
         def _fail(*a, **k):  # pragma: no cover - must never run
             raise AssertionError("write_config_atomically must not spawn a subprocess")
@@ -492,8 +492,8 @@ class TestWriteConfigAtomically:
         config.json can hold provider tokens, and NTFS reports 0o666 whatever the
         DACL, so the security descriptor itself is checked.
         """
-        from kiro_crew import windows_acl
-        from kiro_crew.config.loader import write_config_atomically
+        from aj_crew import windows_acl
+        from aj_crew.config.loader import write_config_atomically
 
         path = tmp_path / "config.json"
         write_config_atomically(path, {"slack": {"bot_token": "xoxb-secret"}})
@@ -514,7 +514,7 @@ class TestWriteConfigAtomically:
         Driven through :func:`_inline_on_the_loop`: without a running loop the
         classification is skipped.
         """
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         order: list[str] = []
         monkeypatch.setattr(platform_compat, "IS_POSIX", False)
@@ -552,7 +552,7 @@ class TestWriteConfigAtomically:
     def test_a_local_volume_still_gets_the_lockdown(self, tmp_path, monkeypatch):
         # The other half: the gate must not become a blanket opt-out. On a local
         # volume the on-loop write is protected exactly as it is without the gate.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         locked: list[str] = []
         monkeypatch.setattr(platform_compat, "IS_POSIX", False)
@@ -571,7 +571,7 @@ class TestWriteConfigAtomically:
         # A host where the security API cannot be loaded at all must still get its
         # config written: the lockdown would have failed there anyway, so the
         # classifier raising must degrade to "skip", never to a failed save.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         def _boom(_p):
             raise RuntimeError("cannot load the Windows security API")
@@ -590,7 +590,7 @@ class TestWriteConfigAtomically:
         round-trip. The volume is not classified here: the answer could only remove
         protection.
         """
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         locked: list[str] = []
         classified: list[str] = []
@@ -620,10 +620,10 @@ class TestWriteConfigAtomically:
         assert json.loads(path.read_text())["slack"]["bot_token"] == "xoxb-secret"
 
     def test_a_synchronous_caller_gets_the_dacl_on_a_non_local_volume(self, tmp_path, monkeypatch):
-        # The CLI and startup paths (cli_setup, cli_chat, KiroCrewConfig.save from
+        # The CLI and startup paths (cli_setup, cli_chat, AjCrewConfig.save from
         # boot) have no event loop at all, so they were skipping the DACL on a
         # network-homed data home for a reason that never applied to them.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         locked: list[str] = []
         monkeypatch.setattr(platform_compat, "IS_POSIX", False)
@@ -640,7 +640,7 @@ class TestWriteConfigAtomically:
         # restrict_on_error="warn", not "raise": config.json must not become
         # unwritable because a DACL could not be applied. Newly reachable on a
         # non-local volume, so it is pinned there rather than assumed.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         def _boom(_p):
             raise OSError("the SMB share refused the descriptor write")
@@ -664,7 +664,7 @@ class TestWriteConfigAtomically:
         in the ``asyncio.to_thread`` worker. If it inverted, the cases above would still
         pass.
         """
-        from kiro_crew.atomic_write import on_event_loop
+        from aj_crew.atomic_write import on_event_loop
 
         async def _both():
             return on_event_loop(), await asyncio.to_thread(on_event_loop)
@@ -685,7 +685,7 @@ class TestWriteConfigAtomically:
         Symlinking config.json into a dotfiles repo is a normal setup, and the
         write_text this replaced followed the link. Preserve that.
         """
-        from kiro_crew.config.loader import write_config_atomically
+        from aj_crew.config.loader import write_config_atomically
 
         target = tmp_path / "real-config.json"
         link = tmp_path / "config.json"
@@ -698,7 +698,7 @@ class TestWriteConfigAtomically:
         assert json.loads(target.read_text(encoding="utf-8"))["auto_update"] is False
 
     def test_leaves_no_temp_files_behind(self, tmp_path):
-        from kiro_crew.config.loader import write_config_atomically
+        from aj_crew.config.loader import write_config_atomically
 
         path = tmp_path / "config.json"
         write_config_atomically(path, {"auto_update": True})
@@ -710,7 +710,7 @@ class TestAutoUpdateToggleKeepsSettings:
 
     @pytest.mark.asyncio
     async def test_toggle_preserves_all_other_settings(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
         path = tmp_path / "config.json"
         path.write_text(json.dumps(_REAL_SETTINGS, indent=2), encoding="utf-8")
@@ -731,7 +731,7 @@ class TestAutoUpdateToggleKeepsSettings:
 
     @pytest.mark.asyncio
     async def test_unreadable_config_fails_loudly_and_changes_nothing(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
         path = tmp_path / "config.json"
         torn = json.dumps(_REAL_SETTINGS, indent=2)[:-20]
@@ -757,12 +757,12 @@ class TestEveryConfigWriterIsLocked:
 
     Covers only ``write_config_atomically``. The ``_atomic_json_write`` family has its
     own ratchet, :class:`TestTheAtomicJsonWriteConfigFamilyIsRatcheted`, and
-    :meth:`KiroCrewConfig.save` holds the lock (``TestSaveHoldsTheAdvisoryLock`` in
+    :meth:`AjCrewConfig.save` holds the lock (``TestSaveHoldsTheAdvisoryLock`` in
     ``test_config_save_locking.py``).
     """
 
     #: The primitive itself writes through ``write_config_atomically`` by
-    #: definition, and ``KiroCrewConfig.save`` writes under the same sidecar
+    #: definition, and ``AjCrewConfig.save`` writes under the same sidecar
     #: lock via ``_config_write_lock``. They live in ``config/loader_document.py``
     #: and ``config/loader_config.py``, so those modules are exempt as a whole.
     _ALLOWED_FILES = {"loader_config.py", "loader_document.py"}
@@ -774,7 +774,7 @@ class TestEveryConfigWriterIsLocked:
         import ast
         import pathlib
 
-        root = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        root = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         offenders: list[str] = []
 
         def _is_config_path_call(node: ast.AST) -> bool:
@@ -888,7 +888,7 @@ class TestEveryConfigWriterIsLocked:
 class TestTheAtomicJsonWriteConfigFamilyIsRatcheted:
     """The second config-writer family is empty and may not regrow.
 
-    ``kiro_crew.agent._atomic_json_write`` takes no sidecar lock, only the in-process
+    ``aj_crew.agent._atomic_json_write`` takes no sidecar lock, only the in-process
     ``_get_config_lock()``, so it can silently revert a lock holder's write. Each new
     channel saver in ``messaging.py`` is copied, so the unlocked write would spread.
 
@@ -943,7 +943,7 @@ class TestTheAtomicJsonWriteConfigFamilyIsRatcheted:
         import ast
         import pathlib
 
-        root = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        root = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         found: set[str] = set()
         for path in root.rglob("*.py"):
             if "_vendor" in path.parts or path.name in cls._ALLOWED_FILES:
@@ -1089,8 +1089,8 @@ class TestAutoUpdateToggleHoldsBothConfigLocks:
 
     @pytest.mark.asyncio
     async def test_the_loop_side_lock_is_held_across_the_write(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers import updates
-        from kiro_crew.dashboard.handlers.agents import _get_config_lock
+        from aj_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers.agents import _get_config_lock
 
         path = tmp_path / "config.json"
         path.write_text(json.dumps(_REAL_SETTINGS, indent=2), encoding="utf-8")
@@ -1123,8 +1123,8 @@ class TestAutoUpdateToggleHoldsBothConfigLocks:
     @pytest.mark.asyncio
     async def test_the_loop_side_lock_is_released_afterwards(self, tmp_path, monkeypatch):
         """Holding it is only correct if the handler also gives it back."""
-        from kiro_crew.dashboard.handlers import updates
-        from kiro_crew.dashboard.handlers.agents import _get_config_lock
+        from aj_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers.agents import _get_config_lock
 
         path = tmp_path / "config.json"
         path.write_text(json.dumps(_REAL_SETTINGS, indent=2), encoding="utf-8")
@@ -1145,8 +1145,8 @@ class TestAutoUpdateToggleHoldsBothConfigLocks:
         writer exception has to propagate unchanged for the 500 arm to stay
         reachable -- and the lock must not be stranded on that path.
         """
-        from kiro_crew.dashboard.handlers import updates
-        from kiro_crew.dashboard.handlers.agents import _get_config_lock
+        from aj_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers.agents import _get_config_lock
 
         path = tmp_path / "config.json"
         torn = json.dumps(_REAL_SETTINGS, indent=2)[:-20]
@@ -1165,7 +1165,7 @@ class TestAutoUpdateToggleHoldsBothConfigLocks:
         site if the dispatch is ever changed back, and it is written as an AST
         walk rather than a substring search so a reformat cannot defeat it.
         """
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
         home = Path(inspect.getsourcefile(updates)).parent
         source = "\n".join(

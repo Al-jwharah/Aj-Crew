@@ -14,11 +14,11 @@ from acp_deepseek_backend_helpers import (  # noqa: F401 -- fixtures are used by
     _pinned_kiro_cli_version,
 )
 
-from kiro_crew import acp_tool_gate
-from kiro_crew.acp import launch as launch_mod
-from kiro_crew.acp.client import AcpClient, AcpToolGateUnroutable
-from kiro_crew.acp.harness import deepseek as deepseek_mod
-from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_DEEPSEEK
+from aj_crew import acp_tool_gate
+from aj_crew.acp import launch as launch_mod
+from aj_crew.acp.client import AcpClient, AcpToolGateUnroutable
+from aj_crew.acp.harness import deepseek as deepseek_mod
+from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_DEEPSEEK
 
 # ── The restore verb ─────────────────────────────────────────────────────────
 
@@ -164,14 +164,14 @@ def test_a_stalled_restore_keeps_its_mcp_detail() -> None:
 
 def test_the_handshake_is_the_spec_dialect() -> None:
     """Integer ``protocolVersion`` 1, captured off its own wire."""
-    from kiro_crew.acp.client import _PROTOCOL_VERSION_BY_BACKEND
+    from aj_crew.acp.client import _PROTOCOL_VERSION_BY_BACKEND
 
     assert _PROTOCOL_VERSION_BY_BACKEND[ACP_BACKEND_DEEPSEEK] == 1
 
 
 def test_the_argv_is_the_host_binary_plus_the_shipped_profile() -> None:
     """The ACP package is a plugin with no executable; the host binary boots it."""
-    from kiro_crew.agent_sdk.backends import launch_for
+    from aj_crew.agent_sdk.backends import launch_for
 
     # The RECORD is what is pinned, not a line of source: the adapter reads
     # ``acp.launch.resolve_self_served_launch``, which is shared with the sibling harnesses, so
@@ -196,8 +196,8 @@ def test_the_install_pins_the_exact_dsh_build_the_routing_was_measured_on() -> N
     """
     import re
 
-    from kiro_crew.agent_sdk import backends_routing
-    from kiro_crew.agent_sdk.backends import launch_for
+    from aj_crew.agent_sdk import backends_routing
+    from aj_crew.agent_sdk.backends import launch_for
 
     spec = launch_for(ACP_BACKEND_DEEPSEEK).install_command.removeprefix("npm i -g ")
     match = re.fullmatch(r"@deepseek-ai/dsh@(\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)", spec)
@@ -215,7 +215,7 @@ def test_the_resolution_ladder_prefers_the_explicit_override(monkeypatch, tmp_pa
     Executability is stubbed, not staged on disk: Windows needs a recognised
     extension for ``is_executable_file``, and only the order is under test.
     """
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     binary = tmp_path / "dsh"
     binary.write_text("#!/bin/sh\n", encoding="utf-8")
@@ -233,7 +233,7 @@ def test_the_resolution_ladder_prefers_the_explicit_override(monkeypatch, tmp_pa
 
 def test_an_absent_binary_reports_what_was_searched(monkeypatch) -> None:
     """A caller must be able to say where it looked rather than raising from inside."""
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     monkeypatch.delenv("DSH_BIN", raising=False)
     monkeypatch.setattr(client_module, "_mise_which", lambda _name: None)
@@ -252,7 +252,7 @@ def test_the_sandbox_posture_is_pinned_in_the_child_environment() -> None:
     Pinning the confined value keeps an inherited shell variable from selecting
     that end; it does not make a tool call reach Crew's gate.
     """
-    from kiro_crew.acp.client import _ENV_DEEPSEEK_PERMISSION_MODE, DEEPSEEK_PERMISSION_MODE
+    from aj_crew.acp.client import _ENV_DEEPSEEK_PERMISSION_MODE, DEEPSEEK_PERMISSION_MODE
 
     assert _ENV_DEEPSEEK_PERMISSION_MODE == "DSH_PERMISSION_MODE"
     assert DEEPSEEK_PERMISSION_MODE == "workspace-write"

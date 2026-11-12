@@ -11,9 +11,9 @@ from types import SimpleNamespace
 
 import pytest
 
+from aj_crew.mcp_gateway import rewriter
+from aj_crew.mcp_gateway.hashing import expand_stub_flags, hash_command
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew.mcp_gateway import rewriter
-from kiro_crew.mcp_gateway.hashing import expand_stub_flags, hash_command
 
 
 @pytest.mark.parametrize("is_windows", [False, True])
@@ -169,9 +169,9 @@ def test_native_windows_stub_and_daemon_use_on_disk_casing(
     assert flags[flags.index("--target-command") + 1] == expected_command
     targets: dict[str, str] = {}
     rewriter._collect_target_env(result["mcpServers"], targets)
-    key = "KIROCREW_MCP_TARGET_DEMO__" + hash_command(expected_command, ["--stdio"])
+    key = "AJCREW_MCP_TARGET_DEMO__" + hash_command(expected_command, ["--stdio"])
     assert shlex.split(targets[key]) == [expected_command, "--stdio"]
-    assert targets["KIROCREW_MCP_TARGET_DEMO"] == targets[key]
+    assert targets["AJCREW_MCP_TARGET_DEMO"] == targets[key]
     assert list(notes.which_results.values()) == ([] if absolute else [str(exe)])
 
 

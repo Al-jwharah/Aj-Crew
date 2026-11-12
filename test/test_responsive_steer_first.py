@@ -11,8 +11,8 @@ import pytest
 from test_responsive_chat import _busy, _OwnerRequest
 from test_responsive_chat import fixture as responsive_fixture  # noqa: F401  (registers it)
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard import responsive_chat as rc
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard import responsive_chat as rc
 
 
 class _Clock:
@@ -239,7 +239,7 @@ async def test_non_steerable_states_keep_queue_behaviour(
         slot.task.cancel()
         slot.task = None
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._start_next_queued_turn", AsyncMock(return_value=True)
+            "aj_crew.dashboard.chat_runner._start_next_queued_turn", AsyncMock(return_value=True)
         )
     receipt = await _send(request, slot, "plain send")
     assert receipt["responsive"] == expected
@@ -383,8 +383,8 @@ async def _run_original(state, slot):
 async def test_real_turn_steer_first_delivers_exactly_once(tmp_path, monkeypatch, clock, ending):
     from test_chat_runner_coverage import _complete
 
-    from kiro_crew.acp.types import EVENT_STEER_CONSUMED
-    from kiro_crew.providers.base import EVENT_TEXT_CHUNK, EVENT_TOOL_CALL, LLMEvent
+    from aj_crew.acp.types import EVENT_STEER_CONSUMED
+    from aj_crew.providers.base import EVENT_TEXT_CHUNK, EVENT_TOOL_CALL, LLMEvent
 
     entered, steered, proceed = asyncio.Event(), asyncio.Event(), asyncio.Event()
 

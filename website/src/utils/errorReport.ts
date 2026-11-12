@@ -97,9 +97,9 @@ export const MAX_DETAIL = 1200
  */
 export const MAX_MESSAGE = 2000
 /** sessionStorage channel ChatPage drains to seed the composer. */
-export const ERROR_HANDOFF_KEY = 'kirocrew_error_handoff'
+export const ERROR_HANDOFF_KEY = 'ajcrew_error_handoff'
 /** Marks sessionStorage that belongs to an app pop-out window rather than its opener. */
-export const APP_POPOUT_STORAGE_OWNED_KEY = 'kirocrew_app_popout_storage_owned'
+export const APP_POPOUT_STORAGE_OWNED_KEY = 'ajcrew_app_popout_storage_owned'
 /** Hand-off TTL. Long enough to survive a full reload, short enough not to ambush a later visit. */
 export const HANDOFF_TTL_MS = 60_000
 
@@ -502,7 +502,7 @@ type ClaimedChatHandoffEntry = { prompt: string }
  * claimed FIFO under its own key prevents a later diagnostic from consuming
  * the active diagnostic's crash-recovery copy.
  */
-const ERROR_HANDOFF_CLAIMED_KEY = 'kirocrew_error_handoff_claimed'
+const ERROR_HANDOFF_CLAIMED_KEY = 'ajcrew_error_handoff_claimed'
 
 /** Decode both the original single entry and the queued wire shape. */
 function decodeChatHandoffs(raw: string | null): ChatHandoffEntry[] {

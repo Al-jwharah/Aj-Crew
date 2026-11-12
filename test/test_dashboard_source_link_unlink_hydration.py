@@ -18,8 +18,8 @@ from dashboard_source_link_unlink_helpers import (
     _slot,
 )
 
-from kiro_crew.dashboard import channel_slots
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard import channel_slots
+from aj_crew.dashboard.state import _ChatSlot
 
 
 class TestAlternateHydratorsRestoreDismissals:
@@ -34,9 +34,9 @@ class TestAlternateHydratorsRestoreDismissals:
 
         state = _make_state(tmp_path)
         key = _identity_key(PR_A)
-        session_key = "weixin:kirocrew-research:direct:u1"
+        session_key = "weixin:ajcrew-research:direct:u1"
         info = {
-            "key": "weixin_kirocrew-research_direct_u1",
+            "key": "weixin_ajcrew-research_direct_u1",
             "title": "t",
             "modified": 0.0,
         }
@@ -68,7 +68,7 @@ class TestRebindResetsDismissals:
         # Hydration is authoritative: loading a transcript that records NO
         # dismissals must clear a set left over from a previous binding of a
         # reused slot object, not leave it in place.
-        from kiro_crew.dashboard.chat_persistence import _restore_dismissed_source_links
+        from aj_crew.dashboard.chat_persistence import _restore_dismissed_source_links
 
         slot = _slot()
         slot.dismiss_source_link(_identity_key(PR_A))
@@ -77,7 +77,7 @@ class TestRebindResetsDismissals:
         assert slot._dismissed_source_links == set()
 
     def test_hydration_restores_the_new_transcripts_dismissals(self):
-        from kiro_crew.dashboard.chat_persistence import _restore_dismissed_source_links
+        from aj_crew.dashboard.chat_persistence import _restore_dismissed_source_links
 
         slot = _slot()
         slot.dismiss_source_link(_identity_key(PR_A))
@@ -90,7 +90,7 @@ class TestRebindResetsDismissals:
         # the binding change, so the cron transcript's persisted dismissals must
         # be restored from the OFF-LOOP-prefetched value passed in — otherwise
         # the slot's next full save serializes an empty set and erases them.
-        from kiro_crew.dashboard import cron_inject
+        from aj_crew.dashboard import cron_inject
 
         slot = _slot()
         state = MagicMock()
@@ -99,7 +99,7 @@ class TestRebindResetsDismissals:
         job = MagicMock(id="job42", agent_id="")
         with (
             patch.object(cron_inject, "hydrate_slot_from_history"),
-            patch("kiro_crew.dashboard.chat_utils._sync_dashboard_slots"),
+            patch("aj_crew.dashboard.chat_utils._sync_dashboard_slots"),
             patch.object(cron_inject, "_safe_job_name", return_value="job42"),
         ):
             cron_inject._bind_cron_slot(state, job, [], dismissed=[_identity_key(PR_A)])
@@ -110,7 +110,7 @@ class TestRebindResetsDismissals:
         # canonical cron transcript (routing/continuity must not split), but is
         # marked _dismissed_hydrated=False so its full save carries the on-disk
         # dismissed line forward instead of erasing it with an empty set.
-        from kiro_crew.dashboard import cron_inject
+        from aj_crew.dashboard import cron_inject
 
         slot = _slot()
         state = MagicMock()
@@ -119,7 +119,7 @@ class TestRebindResetsDismissals:
         job = MagicMock(id="job42", agent_id="")
         with (
             patch.object(cron_inject, "hydrate_slot_from_history") as hyd,
-            patch("kiro_crew.dashboard.chat_utils._sync_dashboard_slots"),
+            patch("aj_crew.dashboard.chat_utils._sync_dashboard_slots"),
             patch.object(cron_inject, "_safe_job_name", return_value="job42"),
         ):
             cron_inject._bind_cron_slot(state, job, [])  # no dismissed arg -> sentinel
@@ -134,7 +134,7 @@ class TestRebindResetsDismissals:
         # be cleared and marked unhydrated (mirroring the cron bind), or the
         # slot's next union-save folds those foreign tombstones into the newly
         # linked transcript and suppresses unrelated links there.
-        from kiro_crew.dashboard import workflow_inject
+        from aj_crew.dashboard import workflow_inject
 
         slot = _slot()
         slot.dismiss_source_link(_identity_key(PR_A))  # a prior run's tombstone
@@ -145,7 +145,7 @@ class TestRebindResetsDismissals:
         state.get_or_create_slot.return_value = slot
         state.live_slot_count.return_value = 0  # below the live ceiling
         snapshot = {"session_key": "sess-xyz", "name": "demo"}
-        with patch("kiro_crew.dashboard.chat_utils._sync_dashboard_slots"):
+        with patch("aj_crew.dashboard.chat_utils._sync_dashboard_slots"):
             workflow_inject.inject_workflow_result(state, "run77", snapshot)
         assert slot.linked_session_key == "sess-xyz"  # linked to the new transcript
         assert slot._dismissed_source_links == set()  # stale set cleared
@@ -181,10 +181,10 @@ class TestEveryHydrationPathRestoresOrDefers:
         state.conversation_log.update_metadata(hkey, {"dismissed_source_links": [key]})
 
     def test_rehydrate_slot_from_history_restores_the_dismissed_set(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from chat_test_helpers import _make_state
 
-        from kiro_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
+        from aj_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
 
         state = _make_state(tmp_path)
         key = _identity_key(PR_A)
@@ -198,10 +198,10 @@ class TestEveryHydrationPathRestoresOrDefers:
         assert PR_A not in urls and PR_B in urls  # suppressed, sibling intact
 
     def test_apply_recent_session_restores_the_dismissed_set(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from chat_test_helpers import _make_state
 
-        from kiro_crew.dashboard.chat_persistence import _apply_recent_session
+        from aj_crew.dashboard.chat_persistence import _apply_recent_session
 
         state = _make_state(tmp_path)
         key = _identity_key(PR_A)
@@ -228,7 +228,7 @@ class TestEveryHydrationPathRestoresOrDefers:
 
     @pytest.mark.asyncio
     async def test_resume_endpoint_restores_the_dismissed_set(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from aiohttp.test_utils import TestClient, TestServer
         from chat_test_helpers import _make_app, _make_state
 
@@ -257,7 +257,7 @@ class TestEveryHydrationPathRestoresOrDefers:
         import ast
         import pathlib
 
-        import kiro_crew.dashboard as pkg
+        import aj_crew.dashboard as pkg
 
         root = pathlib.Path(pkg.__file__).parent
         found: dict[tuple[str, str], bool] = {}
@@ -326,7 +326,7 @@ class TestEveryHydrationPathRestoresOrDefers:
         )
         # The restore readers' metadata goes through the codec's field table, and
         # its dismissed row must be read by every purpose the table serves.
-        from kiro_crew.dashboard.slot_persistence import metadata_codec
+        from aj_crew.dashboard.slot_persistence import metadata_codec
 
         row = next(r for r in metadata_codec.FIELDS if r.key == "dismissed_source_links")
         assert row.purposes == metadata_codec.PURPOSES, (
@@ -343,10 +343,10 @@ class TestEveryHydrationPathRestoresOrDefers:
         A slot with the default flags (what a forgetful bind path leaves) keeps the
         tombstones on both full-save branches, because each unions with the disk line.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         from chat_test_helpers import _make_state
 
-        from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
+        from aj_crew.dashboard.chat_persistence import save_slot_off_loop
 
         state = _make_state(tmp_path)
         key = _identity_key(PR_A)

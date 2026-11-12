@@ -22,14 +22,14 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import kiro_prerequisite
-from kiro_crew.acp.client import AcpAuthRequired, AcpError
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.transport_errors import _raise_acp_error
-from kiro_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO, AcpEvent
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService, ProcessResult
-from kiro_crew.llm_helpers import acp_error_is_connection_failure, acp_error_is_transient
-from kiro_crew.providers.base import EVENT_TEXT_CHUNK
+from aj_crew import kiro_prerequisite
+from aj_crew.acp.client import AcpAuthRequired, AcpError
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.transport_errors import _raise_acp_error
+from aj_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO, AcpEvent
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService, ProcessResult
+from aj_crew.llm_helpers import acp_error_is_connection_failure, acp_error_is_transient
+from aj_crew.providers.base import EVENT_TEXT_CHUNK
 
 # The exact error a signed-out kiro-cli-chat returns for session/prompt.
 SIGNED_OUT_PROMPT_FRAME = {

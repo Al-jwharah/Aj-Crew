@@ -126,7 +126,7 @@ const S = {
     /**
      * Transparent, not `--header-bg`. With the title bar hidden the header IS the top
      * edge, so it should read as part of the page. It also removes a real risk: the
-     * app's `--header-bg` resolves to `var(--chrome, #211d25)`, and that dark literal
+     * app's `--header-bg` resolves to `var(--chrome, #15171c)`, and that dark literal
      * would paint a dark strip across a light theme if the dashboard does not define
      * `--chrome`. The bottom border still separates it from the grid.
      */
@@ -522,7 +522,7 @@ function AnimThumbnail({ content, format, size = 64, spriteConfig, colorMap, eye
 // ── Helper: built-in ghost thumbnail ───────────────────────────────────────
 
 /**
- * The built-in "Kiro" pack's card art.
+ * The built-in pack's card art.
  *
  * The built-in ghost is NOT a file the backend can serve — its body is bundled with
  * the frontend and its detail payload comes back with empty `animations`, so the

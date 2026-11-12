@@ -1,7 +1,7 @@
 """The pi spawn path: two components, a gate loaded INTO the harness, and its proof.
 
 Pinned: resolution of ``pi-acp`` and ``pi`` separately (the error names the missing
-half); the launcher that loads Kiro Crew's gate extension into pi, which has no gate of
+half); the launcher that loads Aj Crew's gate extension into pi, which has no gate of
 its own, writing nothing to disk; and the read-back of pi's command registry before the
 first prompt. Refusal wording belongs to ``acp_tool_gate.gate_extension_issue``.
 Siblings: ``test_acp_pi_backend_spawn.py``, ``test_acp_pi_backend_session.py``,
@@ -35,11 +35,10 @@ from acp_pi_backend_helpers import (
     _response,
 )
 
-from conftest import make_dir_link
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp import launch as launch_mod
-from kiro_crew.acp._dispatch import GATE_ENVELOPE_MARKER
-from kiro_crew.acp.client import (
+from aj_crew.acp import client as acp_client
+from aj_crew.acp import launch as launch_mod
+from aj_crew.acp._dispatch import GATE_ENVELOPE_MARKER
+from aj_crew.acp.client import (
     _READBACK_FAULT_MAX_SHAPES,
     _READBACK_FAULT_SHAPES,
     _READBACK_STDERR_SCAN_CHARS,
@@ -61,15 +60,16 @@ from kiro_crew.acp.client import (
     _seal_pi_gate_extension,
     pi_gate_extension_path,
 )
-from kiro_crew.acp.harness import pi as pi_mod
-from kiro_crew.acp.transport_errors import AcpError
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.acp_backends import (
+from aj_crew.acp.harness import pi as pi_mod
+from aj_crew.acp.transport_errors import AcpError
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.acp_backends import (
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
 )
-from kiro_crew.acp_tool_gate import gate_extension_issue
-from kiro_crew.agent_sdk.drivers.acp import forget_cached_resolution
+from aj_crew.acp_tool_gate import gate_extension_issue
+from aj_crew.agent_sdk.drivers.acp import forget_cached_resolution
+from conftest import make_dir_link
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _no_ambient_pi_env = acp_pi_backend_helpers._no_ambient_pi_env
@@ -355,7 +355,7 @@ class TestGateLauncher:
         second = _ensure_pi_gate_launcher(str(tmp_path / "pi"), str(tmp_path / "gate.ts"))
         assert first == second
         assert Path(first).parent == run_dir
-        assert Path(first).name.startswith("kirocrew_pi_gate_")
+        assert Path(first).name.startswith("ajcrew_pi_gate_")
         assert str(tmp_path / "gate.ts") in Path(first).read_text(encoding="utf-8")
         # Different inputs are a different launcher, not a stale one.
         other = _ensure_pi_gate_launcher(str(tmp_path / "pi2"), str(tmp_path / "gate.ts"))
@@ -397,7 +397,7 @@ class TestGateLauncher:
         run_dir = self._as_windows(monkeypatch, tmp_path, "cp437")
         with pytest.raises(AcpError, match="cp437") as caught:
             _ensure_pi_gate_launcher(str(tmp_path / "日本" / "pi.cmd"), str(tmp_path / "gate.ts"))
-        assert "KIROCREW_HOME" in str(caught.value)
+        assert "AJCREW_HOME" in str(caught.value)
         assert list(run_dir.iterdir()) == [], "no launcher may be left behind"
         assert pi_mod._pi_gate_launcher_cache == {}
 
@@ -429,11 +429,11 @@ class TestGateLauncher:
         path = Path(pi_gate_extension_path())
         assert path.is_file()
         assert path.suffix == ".ts"
-        rel = path.relative_to(ROOT / "src" / "kiro_crew").as_posix()
+        rel = path.relative_to(ROOT / "src" / "aj_crew").as_posix()
         setup_cfg = (ROOT / "setup.cfg").read_text(encoding="utf-8")
         manifest = (ROOT / "MANIFEST.in").read_text(encoding="utf-8")
         assert "agent_sdk/gate_extensions/*/*.ts" in setup_cfg, rel
-        assert "src/kiro_crew/agent_sdk/gate_extensions *.ts" in manifest, rel
+        assert "src/aj_crew/agent_sdk/gate_extensions *.ts" in manifest, rel
 
     def test_the_extension_and_the_host_agree_on_the_vocabulary(self):
         """The probe name and the envelope marker are spelled once each, on both sides."""
@@ -486,7 +486,7 @@ class TestGateLauncher:
     def test_the_checkout_is_pinned_lf_as_well(self):
         """Belt two: git is told not to translate the file, so the bytes match on every clone."""
         attrs = (ROOT / ".gitattributes").read_text(encoding="utf-8")
-        assert "src/kiro_crew/agent_sdk/gate_extensions/**/*.ts text eol=lf" in attrs
+        assert "src/aj_crew/agent_sdk/gate_extensions/**/*.ts text eol=lf" in attrs
 
     def test_the_extension_never_drops_the_arguments_it_forwards(self):
         """An oversize call is bounded value by value or refused, never sent without its keys.
@@ -525,7 +525,7 @@ class TestSealedExtension:
         self, monkeypatch, tmp_path
     ):
         self._run_dir(monkeypatch, tmp_path)
-        tampered = tmp_path / "kiro_crew_tool_gate.ts"
+        tampered = tmp_path / "aj_crew_tool_gate.ts"
         tampered.write_text("export default function () {}\n", encoding="utf-8")
         monkeypatch.setattr(pi_mod, "pi_gate_extension_path", lambda: str(tampered))
         with pytest.raises(PiGateExtensionTampered):
@@ -628,7 +628,7 @@ class TestAdapterVersionIsNamedAtHandshake:
 
     def test_a_release_is_named_once_per_process(self, tmp_path, caplog):
         """A gateway on a newer adapter is told once, not on every session."""
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
             self._client(tmp_path, "0.0.35")._note_pi_adapter_version()
             self._client(tmp_path, "0.0.35")._note_pi_adapter_version()
             self._client(tmp_path, "0.0.36")._note_pi_adapter_version()
@@ -636,7 +636,7 @@ class TestAdapterVersionIsNamedAtHandshake:
         assert len(hits) == 2
 
     def test_the_verified_release_is_silent(self, tmp_path, caplog):
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
             self._client(tmp_path, acp_client.PI_ACP_VERIFIED_VERSION)._note_pi_adapter_version()
         assert not [r for r in caplog.records if "gate extension contract" in r.getMessage()]
 
@@ -644,7 +644,7 @@ class TestAdapterVersionIsNamedAtHandshake:
     def test_another_or_unknown_release_is_logged_with_both_versions(
         self, tmp_path, caplog, version
     ):
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
             self._client(tmp_path, version)._note_pi_adapter_version()
         hits = [
             r.getMessage() for r in caplog.records if "gate extension contract" in r.getMessage()
@@ -654,7 +654,7 @@ class TestAdapterVersionIsNamedAtHandshake:
         assert (version or "unknown") in hits[0]
 
     def test_other_harnesses_are_untouched(self, tmp_path, caplog):
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
             self._client(tmp_path, "9.9.9", ACP_BACKEND_OPENCODE)._note_pi_adapter_version()
         assert not caplog.records
 
@@ -916,7 +916,7 @@ class TestReadbackParsing:
 class TestTheIssueVocabulary:
     """``gate_extension_issue`` owns what counts as loaded."""
 
-    EXT = "/site/kiro_crew/agent_sdk/gate_extensions/pi/kiro_crew_tool_gate.ts"
+    EXT = "/site/aj_crew/agent_sdk/gate_extensions/pi/aj_crew_tool_gate.ts"
 
     def test_the_probe_from_crews_file_is_no_issue(self):
         assert (
@@ -935,7 +935,7 @@ class TestTheIssueVocabulary:
         issue = gate_extension_issue(
             ACP_BACKEND_PI, _registry((PROBE, "/srv/pi-extensions/mine.ts")), self.EXT
         )
-        assert issue and "not Kiro Crew's" in issue
+        assert issue and "not Aj Crew's" in issue
 
     def test_an_unreadable_registry_is_an_issue(self):
         assert gate_extension_issue(ACP_BACKEND_PI, None, self.EXT)
@@ -951,14 +951,14 @@ class TestTheReadBackComparesFilesNotStrings:
         """Node's realpath through a symlinked install is the same file, not another one."""
         real_dir = tmp_path / "run"
         real_dir.mkdir()
-        sealed = real_dir / "kirocrew_pi_gate_1.ts"
+        sealed = real_dir / "ajcrew_pi_gate_1.ts"
         sealed.write_text("// gate\n", encoding="utf-8")
         alias = tmp_path / "alias"
         try:
             alias.symlink_to(real_dir, target_is_directory=True)
         except (OSError, NotImplementedError):
             pytest.skip("symlinks unavailable here")
-        reported = str(alias / "kirocrew_pi_gate_1.ts")
+        reported = str(alias / "ajcrew_pi_gate_1.ts")
         assert reported != str(sealed)
         # Raw strings: refused. Same-file spelling: passes.
         assert gate_extension_issue(ACP_BACKEND_PI, _registry((PROBE, reported)), str(sealed))
@@ -972,7 +972,7 @@ class TestTheReadBackComparesFilesNotStrings:
         )
 
     def test_another_file_still_fails_after_normalizing(self, tmp_path):
-        sealed = tmp_path / "kirocrew_pi_gate_1.ts"
+        sealed = tmp_path / "ajcrew_pi_gate_1.ts"
         sealed.write_text("// gate\n", encoding="utf-8")
         other = tmp_path / "mine.ts"
         other.write_text("// gate\n", encoding="utf-8")
@@ -998,7 +998,7 @@ class TestTheReadBackComparesFilesNotStrings:
         """
         run_dir = tmp_path / "run"
         run_dir.mkdir()
-        sealed = run_dir / "kirocrew_pi_gate_1.ts"
+        sealed = run_dir / "ajcrew_pi_gate_1.ts"
         sealed.write_text("// gate\n", encoding="utf-8")
         other_spelling = str(run_dir / ".." / "run" / sealed.name)
         assert other_spelling != str(sealed)
@@ -1015,7 +1015,7 @@ class TestTheReadBackComparesFilesNotStrings:
 
         monkeypatch.setattr(pi_mod.subprocess_mod, "run", lambda *_a, **_kw: _Completed())
         client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_PI)
-        argv = ["/opt/run/kirocrew_pi_gate.sh", *acp_client._PI_RPC_ARGS]
+        argv = ["/opt/run/ajcrew_pi_gate.sh", *acp_client._PI_RPC_ARGS]
         assert pi_mod._verify_pi_gate(client, ACP_BACKEND_PI, argv, expected) == ("", "")
 
 
@@ -1223,7 +1223,7 @@ class TestTheReadBackStderrDiagnosis:
 class TestTheReadBackReportsFailureRatherThanAssuming:
     """A read-back that could not run must never read as "loaded"."""
 
-    ARGV = ["/opt/run/kirocrew_pi_gate.sh", "--mode", "rpc", "--no-themes"]
+    ARGV = ["/opt/run/ajcrew_pi_gate.sh", "--mode", "rpc", "--no-themes"]
     EXT = "/site/gate.ts"
 
     def _client(self, tmp_path, **kw):

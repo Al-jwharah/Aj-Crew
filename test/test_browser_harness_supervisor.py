@@ -18,11 +18,11 @@ from typing import Any
 import pytest
 from tmpdir_helpers import SHORT_TMP_PREFIX
 
-from kiro_crew import sandbox_leaves, sandbox_precreate
-from kiro_crew.browser_harness import HARNESS_VERSION, helper_worker, supervisor
-from kiro_crew.browser_harness.supervisor import HarnessSupervisor
-from kiro_crew.security import paths_lists
-from kiro_crew.testing.wait import await_until
+from aj_crew import sandbox_leaves, sandbox_precreate
+from aj_crew.browser_harness import HARNESS_VERSION, helper_worker, supervisor
+from aj_crew.browser_harness.supervisor import HarnessSupervisor
+from aj_crew.security import paths_lists
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture
@@ -133,7 +133,7 @@ async def test_a_data_home_too_deep_for_the_socket_is_refused_not_relocated(
     assert deep.status()["connection"] == supervisor.ERROR
     assert "too deep" in deep.status()["detail"]
     await deep.stop()
-    assert not list(Path(tempfile.gettempdir()).glob("kirocrew-bh-*"))
+    assert not list(Path(tempfile.gettempdir()).glob("ajcrew-bh-*"))
 
 
 @pytest.mark.asyncio
@@ -309,7 +309,7 @@ async def test_kiro_chromium_is_launched_with_a_mock_keystore(
     blocks its network service on a Keychain prompt nobody can answer headless, and
     every http(s) ``Page.navigate`` hangs forever (``data:`` pages still load).
     """
-    from kiro_crew.browser_harness import chromium, discover, install
+    from aj_crew.browser_harness import chromium, discover, install
 
     exe = tmp_path / "chrome"
     exe.write_text("", encoding="utf-8")
@@ -358,11 +358,11 @@ async def test_kiro_chromium_is_launched_with_a_mock_keystore(
 async def test_kiro_chromium_launch_clears_the_tabs_it_would_reopen(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Kiro's profile has no restore setting, so Chromium reopens whatever tabs its
+    """Aj's profile has no restore setting, so Chromium reopens whatever tabs its
     session files hold -- pages from chats already closed. The session files go
     before the browser starts; cookies and preferences stay.
     """
-    from kiro_crew.browser_harness import chromium, discover, install
+    from aj_crew.browser_harness import chromium, discover, install
 
     exe = tmp_path / "chrome"
     exe.write_text("", encoding="utf-8")
@@ -819,7 +819,7 @@ class _Child:
 async def test_a_chromium_missing_a_library_fails_the_start_naming_it(
     short_home: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Kiro's Chromium exits 127 at load when a shared library is missing. The start
+    """Aj's Chromium exits 127 at load when a shared library is missing. The start
     reports that at once with the loader's line, instead of waiting out the daemon's
     deadline for "the Harness daemon did not start in time"."""
     exe = tmp_path / "chrome"
@@ -890,19 +890,19 @@ async def test_a_chromium_missing_a_library_fails_the_start_naming_it(
 def test_a_key_chromium_wrapped_across_lines_withholds_its_stderr(short_home: Path) -> None:
     """A secret split over two stderr lines matches no pattern line by line, so the
     whole tail is withheld rather than published in two halves."""
-    from kiro_crew.acp.stderr_tail import STDERR_WITHHELD
+    from aj_crew.acp.stderr_tail import STDERR_WITHHELD
 
     key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
     sup = HarnessSupervisor(short_home, base_env={}, config_reader=lambda: {})
     sup._chromium_stderr = bytearray(f"auth key={key[:18]}\n{key[18:]} rejected\n".encode())
     detail = sup._chromium_exit_detail(1)
-    assert detail == f"Kiro's Chromium exited with code 1: {STDERR_WITHHELD}"
+    assert detail == f"Aj's Chromium exited with code 1: {STDERR_WITHHELD}"
     sup._chromium_stderr = bytearray(b"one\ntwo\nthree\nfour\n")
-    assert sup._chromium_exit_detail(1) == "Kiro's Chromium exited with code 1: two | three | four"
+    assert sup._chromium_exit_detail(1) == "Aj's Chromium exited with code 1: two | three | four"
     # A full buffer starts mid-line where the cap cut it; that piece is never shown.
     cut = b"x" * (supervisor._CHROMIUM_STDERR_TAIL_BYTES - 4) + b"\nok\n"
     sup._chromium_stderr = bytearray(cut)
-    assert sup._chromium_exit_detail(1) == "Kiro's Chromium exited with code 1: ok"
+    assert sup._chromium_exit_detail(1) == "Aj's Chromium exited with code 1: ok"
 
 
 @pytest.mark.asyncio
@@ -981,7 +981,7 @@ async def test_a_pipe_upstream_that_fails_closes_both_gateway_ends(
 ) -> None:
     import os
 
-    from kiro_crew.browser_harness import relay as relay_mod
+    from aj_crew.browser_harness import relay as relay_mod
 
     to_r, to_w = os.pipe()
     from_r, from_w = os.pipe()
@@ -1028,7 +1028,7 @@ def test_a_headless_shell_build_is_chosen_headless_even_with_a_display(tmp_path,
     assert full is not None and full.headless is False
     shell = sup._choose(state(chromium.BUILD_HEADLESS_SHELL))
     assert shell is not None and shell.kind == "kiro_chromium" and shell.headless is True
-    # Only Kiro's own Chromium is affected: the person's Chrome keeps its window.
+    # Only Aj's own Chromium is affected: the person's Chrome keeps its window.
     chrome = tmp_path / "chrome"
     monkeypatch.setattr(discover, "probe_host", lambda *a, **kw: discover.HostFacts(chrome=chrome))
     sup_auto = HarnessSupervisor(tmp_path, config_reader=lambda: {"choice": "auto"})

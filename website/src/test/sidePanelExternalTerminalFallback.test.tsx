@@ -45,7 +45,7 @@ globalThis.ResizeObserver = class { observe() {} unobserve() {} disconnect() {} 
  *  default. The Files tab opens from an effect. Its "Open in kitty" row sits
  *  behind a chained query: the desktop shell's detection
  *  (`externalTerminalAPI.detect`) must answer "capable" before the config
- *  query (`api.kirocrewConfig`) is enabled, and only that answer's picked app
+ *  query (`api.ajcrewConfig`) is enabled, and only that answer's picked app
  *  renders the row. A click on the row runs a second chain: the grant
  *  request, then the shell's launch, then the fallback note and the terminal
  *  tab; the note's Settings link then navigates. The default is a bet on
@@ -95,7 +95,7 @@ describe('side panel: the external terminal fallback note', () => {
     vi.spyOn(api, 'projectTree').mockResolvedValue({ root: '/repo', paths: [], repo: true })
     vi.spyOn(api, 'projectGitStatus').mockResolvedValue({ repo: true, files: [] })
     vi.spyOn(api, 'chatSlotEnvironment').mockResolvedValue({ profile: null, profiles: [] } as never)
-    vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({ dashboard: { terminal: { external_app: 'kitty' } } } as never)
+    vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({ dashboard: { terminal: { external_app: 'kitty' } } } as never)
     ;(window as { externalTerminalAPI?: unknown }).externalTerminalAPI = {
       detect: vi.fn().mockResolvedValue({ apps: [{ id: 'kitty', label: 'kitty' }], capable: true }),
       open: vi.fn().mockResolvedValue({ ok: false, error: 'launch-failed' }),

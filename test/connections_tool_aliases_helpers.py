@@ -2,7 +2,7 @@
 
 Both fixtures are autouse and module-wide in every file of the family, so each module
 imports them by name: one pins the kiro-cli release the spec ``permissions`` gate
-believes is installed, the other gives each test its own ``KIROCREW_HOME`` so the
+believes is installed, the other gives each test its own ``AJCREW_HOME`` so the
 alias record lands in a tmp dir. The builders are the registry endpoint URLs, the
 record triples and alias maps, ``_gen`` for an ``AliasGeneration``, the real-rebuild
 environment, and the record-write failure injectors.
@@ -12,8 +12,8 @@ import json
 
 import pytest
 
-from kiro_crew.connections.alias_record import AliasGeneration, spec_fingerprint
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.connections.alias_record import AliasGeneration, spec_fingerprint
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 
 @pytest.fixture(autouse=True)
@@ -22,14 +22,14 @@ def _pinned_kiro_cli_version(_floor_monkeypatch):
 
     The real-rebuild tests below drive ``rebuild_agent_config``, which ends in
     ``_write_derived_permissions`` and reads ``installed_kiro_cli_version``
-    function-locally from ``kiro_crew.kiro_cli``: one real ``kiro-cli --version``
+    function-locally from ``aj_crew.kiro_cli``: one real ``kiro-cli --version``
     spawn per binary identity, process-cached, so whichever test in the worker
     rebuilds first pays it against the HOST's install with the checkout as the
     child's cwd. Pinned to the floor release, as ``test_agent.py`` and the
     generated-writer suites pin it.
     """
     _floor_monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
 
@@ -65,19 +65,19 @@ def _raise_read_only(*_args, **_kwargs):
 
 def _rebuild_env(tmp_path, monkeypatch):
     """Point ``rebuild_agent_config`` at a throwaway project, data home and spec."""
-    from kiro_crew import agent as agent_mod
-    from kiro_crew.apps import bridges
+    from aj_crew import agent as agent_mod
+    from aj_crew.apps import bridges
 
     project = tmp_path / "project" / "agents"
     project.mkdir(parents=True)
-    (project / "defaults.json").write_text(json.dumps({"name": "kirocrew"}), encoding="utf-8")
+    (project / "defaults.json").write_text(json.dumps({"name": "ajcrew"}), encoding="utf-8")
     (project / "prompt.md").write_text("prompt", encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path / "project"))
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path / "project"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
 
     kiro_dir = tmp_path / ".kiro" / "agents"
     kiro_dir.mkdir(parents=True)
-    spec_path = kiro_dir / "kirocrew.json"
+    spec_path = kiro_dir / "ajcrew.json"
     monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", kiro_dir)
     monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", tmp_path / "absent-kiro.json")
     monkeypatch.setattr(agent_mod, "_CC_MCP_JSON", tmp_path / "absent-cc.json")
@@ -96,7 +96,7 @@ def _isolated_alias_record(tmp_path, _floor_monkeypatch):
     each test starts with no record at all -- the missing-record case -- and the
     two ``_apply`` calls inside one test share the record the way two rebuilds do.
     """
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
 
 
 def _fail_nth_record_write(n: int):
@@ -106,7 +106,7 @@ def _fail_nth_record_write(n: int):
     patch would fail the pending one first -- which the pass handles by standing down,
     never reaching the boundary under test.
     """
-    from kiro_crew.connections import alias_record
+    from aj_crew.connections import alias_record
 
     real = alias_record.atomic_write
     calls = {"n": 0}

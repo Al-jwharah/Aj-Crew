@@ -41,7 +41,7 @@ vi.mock('../../api/client', () => ({
     securityPosture: vi.fn(),
     // Read + write for the third-party-app execution toggle. Also consumed by
     // YoloDurationCard, which tolerates an unresolved read.
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     patchConfig: vi.fn(),
     // Read by the rail on every mount to summarise the tailnet-origin section.
     // Present here so the rail's own read is a resolved query rather than a
@@ -117,7 +117,7 @@ describe('SecurityPanel — denied commands', () => {
     ;(api.deleteUserDeniedCommand as ReturnType<typeof vi.fn>).mockResolvedValue(snapshot())
     ;(api.governancePolicy as ReturnType<typeof vi.fn>).mockResolvedValue(govNoPolicy())
     ;(api.securityPosture as ReturnType<typeof vi.fn>).mockResolvedValue(posture())
-    ;(api.kirocrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
+    ;(api.ajcrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
     ;(api.tailnetStatus as ReturnType<typeof vi.fn>).mockResolvedValue(TAILNET_OFF)
   })
 
@@ -139,7 +139,7 @@ describe('SecurityPanel — denied commands', () => {
 
     // Ack the warning, then Disable → the mutation fires with enabled=false.
     fireEvent.click(
-      screen.getByLabelText("I understand this weakens Kiro Crew's protection."),
+      screen.getByLabelText("I understand this weakens Aj Crew's protection."),
     )
     fireEvent.click(within(dialog).getByRole('button', { name: 'Disable' }))
     await waitFor(() =>
@@ -204,7 +204,7 @@ describe('SecurityPanel — denied commands', () => {
     fireEvent.click(disableAll)
     const dialog = await screen.findByRole('dialog')
     fireEvent.click(
-      screen.getByLabelText("I understand this weakens Kiro Crew's protection."),
+      screen.getByLabelText("I understand this weakens Aj Crew's protection."),
     )
     fireEvent.click(within(dialog).getByRole('button', { name: 'Disable' }))
     await waitFor(() => expect(api.setDeniedCommandsDisableAll).toHaveBeenCalledWith(true))
@@ -570,7 +570,7 @@ describe('SecurityPanel — rule search', () => {
     ;(api.deniedCommands as ReturnType<typeof vi.fn>).mockResolvedValue(snapshot())
     ;(api.governancePolicy as ReturnType<typeof vi.fn>).mockResolvedValue(govNoPolicy())
     ;(api.securityPosture as ReturnType<typeof vi.fn>).mockResolvedValue(posture())
-    ;(api.kirocrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
+    ;(api.ajcrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
     ;(api.tailnetStatus as ReturnType<typeof vi.fn>).mockResolvedValue(TAILNET_OFF)
   })
 

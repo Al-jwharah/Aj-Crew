@@ -190,7 +190,7 @@ describe('mdnbCall error translation', () => {
   it("does not blame the proxy for the GATEWAY's own denial, which carries X-Auth-Required", async () => {
     // `token_auth._deny` answers an unauthenticated call with `_403_HTML`: a 403,
     // `text/html`, an HTML document — every signal the proxy test reads. Only this
-    // header separates them, and the remedy differs (`kirocrew token`, not the proxy),
+    // header separates them, and the remedy differs (`ajcrew token`, not the proxy),
     // so reporting the proxy here sends the reader to the wrong system entirely.
     reply({
       status: 403,

@@ -18,7 +18,7 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from kiro_crew.adaptive.signals import (
+from aj_crew.adaptive.signals import (
     HEALTH_ACTIVE_SESSIONS,
     HEALTH_CPU,
     HEALTH_CRON_QUEUE,
@@ -229,11 +229,11 @@ class _Manager:
 
 
 def _controller(now: list[float], **over):
-    from kiro_crew.adaptive.controller import AdaptiveController
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.adaptive.controller import AdaptiveController
+    from aj_crew.config.loader import AjCrewConfig
 
     kwargs = dict(
-        cfg=KiroCrewConfig(),
+        cfg=AjCrewConfig(),
         read_active_sessions=lambda: 20,
         read_cron_queue=lambda: 9,
         clock=lambda: now[0],
@@ -243,7 +243,7 @@ def _controller(now: list[float], **over):
 
 
 def test_controller_populates_and_surfaces_live_health_fields() -> None:
-    from kiro_crew.adaptive.controller import HostSample
+    from aj_crew.adaptive.controller import HostSample
 
     now = [1_000.0]
     controller = _controller(now)
@@ -286,10 +286,10 @@ def test_controller_populates_and_surfaces_live_health_fields() -> None:
 
 
 def test_controller_state_derives_the_stale_cutoff_from_its_cadence() -> None:
-    from kiro_crew.adaptive.controller import HostSample
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.adaptive.controller import HostSample
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.controller_sample_secs = 60
     now = [1_000.0]
     controller = _controller(now, cfg=cfg)
@@ -312,9 +312,9 @@ def test_controller_state_derives_the_stale_cutoff_from_its_cadence() -> None:
 
 @pytest.mark.asyncio
 async def test_tick_reports_cpu_pressure_per_core_not_machine_share(monkeypatch) -> None:
-    from kiro_crew.adaptive import controller as ctl_mod
-    from kiro_crew.adaptive.controller import HostSample
-    from kiro_crew.metrics.events import PROCESS_CPU_UTILIZATION
+    from aj_crew.adaptive import controller as ctl_mod
+    from aj_crew.adaptive.controller import HostSample
+    from aj_crew.metrics.events import PROCESS_CPU_UTILIZATION
 
     emitted: list[tuple[str, float]] = []
     monkeypatch.setattr(
@@ -382,7 +382,7 @@ def _rendered_state(**over) -> dict:
 
 
 def test_resource_status_renders_quiet_health_readings() -> None:
-    from kiro_crew import resource_status as rs
+    from aj_crew import resource_status as rs
 
     lines = rs.adaptive_summary_lines(_rendered_state())
     health = [line for line in lines if line.strip().startswith("Health")]
@@ -394,7 +394,7 @@ def test_resource_status_renders_quiet_health_readings() -> None:
 
 
 def test_resource_status_renders_signals_and_suspects() -> None:
-    from kiro_crew import resource_status as rs
+    from aj_crew import resource_status as rs
 
     lines = rs.adaptive_summary_lines(
         _rendered_state(
@@ -420,7 +420,7 @@ def test_resource_status_renders_signals_and_suspects() -> None:
 
 
 def test_resource_status_withholds_readings_from_a_stale_sample() -> None:
-    from kiro_crew import resource_status as rs
+    from aj_crew import resource_status as rs
 
     lines = rs.adaptive_summary_lines(
         _rendered_state(
@@ -438,7 +438,7 @@ def test_resource_status_withholds_readings_from_a_stale_sample() -> None:
 
 
 def test_resource_status_renders_unmeasured_readings_as_a_dash() -> None:
-    from kiro_crew import resource_status as rs
+    from aj_crew import resource_status as rs
 
     lines = rs.adaptive_summary_lines(
         _rendered_state(
@@ -449,7 +449,7 @@ def test_resource_status_renders_unmeasured_readings_as_a_dash() -> None:
 
 
 def test_resource_status_omits_health_lines_without_a_sample() -> None:
-    from kiro_crew import resource_status as rs
+    from aj_crew import resource_status as rs
 
     lines = rs.adaptive_summary_lines(_rendered_state(health=None, last_sample=None))
     assert not any(line.strip().startswith("Health") for line in lines)

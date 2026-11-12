@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-import kiro_crew.dashboard.handlers_channel as handlers
-from kiro_crew.channel import ChannelManager, ChannelMessage
+import aj_crew.dashboard.handlers_channel as handlers
+from aj_crew.channel import ChannelManager, ChannelMessage
 
 pytestmark = pytest.mark.asyncio
 

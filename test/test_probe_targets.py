@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import json
 
-from kiro_crew.probes import GH_PR
-from kiro_crew.probes.targets import infer
+from aj_crew.probes import GH_PR
+from aj_crew.probes.targets import infer
 
 
 def test_a_pr_url_is_inferred():
@@ -88,7 +88,7 @@ def test_a_competing_bare_reference_refuses_inference():
     same = infer("watch PR #42 at https://github.com/acme/widgets/pull/42")
     assert same is not None and same.subject == "acme/widgets#42"
     # A source location is not a pull request reference, so it must not refuse.
-    kept = infer("fix src/kiro_crew/autonudge.py#1751 for https://github.com/acme/widgets/pull/42")
+    kept = infer("fix src/aj_crew/autonudge.py#1751 for https://github.com/acme/widgets/pull/42")
     assert kept is not None and kept.subject == "acme/widgets#42"
 
 
@@ -135,7 +135,7 @@ def test_a_competing_shorthand_refuses_the_url_rather_than_gating_on_it():
     # keeps a cited source location out of it.
     target = infer(
         "Babysit https://github.com/kirodotdev/KiroCrew/pull/7491; the guard lives "
-        "at src/kiro_crew/autonudge.py#1751."
+        "at src/aj_crew/autonudge.py#1751."
     )
     assert target is not None and target.subject == "kirodotdev/KiroCrew#7491"
 
@@ -235,21 +235,21 @@ def test_pr_zero_is_refused():
 
 
 def test_a_source_path_with_a_line_ref_is_not_a_target():
-    """``src/kiro_crew/autonudge.py#1751`` names a code location, not a PR.
+    """``src/aj_crew/autonudge.py#1751`` names a code location, not a PR.
 
     Babysit instructions cite source locations constantly, and this shape reads
     as owner/repo#number to a naive pattern. Inferring it would arm the watch on
     a repository that does not exist, so the loop would go quiet about its own
     subject and every tick would burn a failed gh call.
     """
-    assert infer("fix the guard at src/kiro_crew/autonudge.py#1751") is None
+    assert infer("fix the guard at src/aj_crew/autonudge.py#1751") is None
     assert infer("see website/src/pages/ChatPage.tsx#698") is None
 
 
 def test_a_real_target_still_infers_when_a_path_ref_is_nearby():
     target = infer(
         "Babysit https://github.com/kirodotdev/KiroCrew/pull/7491; the guard lives "
-        "at src/kiro_crew/autonudge.py#1751."
+        "at src/aj_crew/autonudge.py#1751."
     )
     assert target is not None
     assert target.subject == "kirodotdev/KiroCrew#7491"
@@ -264,7 +264,7 @@ def test_a_real_babysit_instruction_infers_its_own_pr():
     """Verbatim shape of a live loop's armed message (trimmed)."""
     text = (
         "BABYSIT PR #7542 (kirodotdev/KiroCrew, branch refactor/delete-dead-fence-"
-        "helpers, worktree /home/u/oss/kirocrew-fix-4919, Closes #4919, follow-up "
+        "helpers, worktree /home/u/oss/ajcrew-fix-4919, Closes #4919, follow-up "
         "#7540).\n\nEXIT: when 0 red checks, PR Readiness passed and MERGEABLE -- "
         "post a final message whose first line is `GREEN: PR #7542 "
         "https://github.com/kirodotdev/KiroCrew/pull/7542`"

@@ -1,16 +1,16 @@
-# Copyright Kiro Crew contributors
+# Copyright Aj Crew contributors
 # SPDX-License-Identifier: Apache-2.0
-"""``kirocrew-team-lead`` ships as a default agent, built like ``kirocrew-research``.
+"""``ajcrew-team-lead`` ships as a default agent, built like ``ajcrew-research``.
 
 Three things are worth a test. The identity the installer swaps in. The dispatch
-surface it mounts on top of ``build_agent_config()``: ``kirocrew-dashboard`` and
-``kirocrew-work`` are ``opt_in`` servers that function skips, so a lead that only
+surface it mounts on top of ``build_agent_config()``: ``ajcrew-dashboard`` and
+``ajcrew-work`` are ``opt_in`` servers that function skips, so a lead that only
 NAMES them can dispatch nothing -- pinned on reachability, not on names. And the
 skill, whose rules each name a mechanism, so each is pinned by that mechanism's name.
 
 There is deliberately no test here for hand-edit detection, ownership digests, a start
 gate or a payload generation. The spec is overwritten on every boot exactly as
-``kirocrew-research`` is, so "is this file ours?" is never asked and there is nothing
+``ajcrew-research`` is, so "is this file ours?" is never asked and there is nothing
 to pin.
 """
 
@@ -22,24 +22,24 @@ import pathlib
 
 import pytest
 
-from kiro_crew import agent
-from kiro_crew.agent_files import OWNED_KIRO_AGENT_FILES, TEAM_LEAD_AGENT_FILENAME
-from kiro_crew.agent_materialization import managed_mcp, service_agents
+from aj_crew import agent
+from aj_crew.agent_files import OWNED_KIRO_AGENT_FILES, TEAM_LEAD_AGENT_FILENAME
+from aj_crew.agent_materialization import managed_mcp, service_agents
 
 _SKILL = (
     pathlib.Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "team-lead"
     / "SKILL.md"
 )
 
-#: The dispatch servers this installer mounts, the ``kirocrew`` subcommand each entry
+#: The dispatch servers this installer mounts, the ``ajcrew`` subcommand each entry
 #: launches, and the module that subcommand serves (``cli.py`` imports it by name).
 _DISPATCH_SERVERS = {
-    "kirocrew-dashboard": ("mcp-dashboard", "kiro_crew.mcp_dashboard"),
-    "kirocrew-work": ("mcp-work", "kiro_crew.mcp_work"),
+    "ajcrew-dashboard": ("mcp-dashboard", "aj_crew.mcp_dashboard"),
+    "ajcrew-work": ("mcp-work", "aj_crew.mcp_work"),
 }
 
 
@@ -72,13 +72,13 @@ class TestTheInstallerWritesADefaultAgent:
     """Mirrors what ``_install_research_agent`` is held to, on the same three fields."""
 
     def test_the_file_carries_this_agent_name_and_charter(self, installed):
-        assert installed["name"] == "kirocrew-team-lead"
+        assert installed["name"] == "ajcrew-team-lead"
         assert installed["prompt"] == agent._TEAM_LEAD_SYSTEM_PROMPT
-        assert installed["prompt"].startswith("# Kiro Crew Team Lead")
+        assert installed["prompt"].startswith("# Aj Crew Team Lead")
         assert installed["description"]
 
     def test_the_filename_is_owned_so_the_boot_sweep_covers_it(self):
-        assert TEAM_LEAD_AGENT_FILENAME == "kirocrew-team-lead.json"
+        assert TEAM_LEAD_AGENT_FILENAME == "ajcrew-team-lead.json"
         assert TEAM_LEAD_AGENT_FILENAME in OWNED_KIRO_AGENT_FILES
 
     def test_beyond_the_dispatch_mount_it_is_the_research_shape(
@@ -108,7 +108,7 @@ class TestTheInstallerWritesADefaultAgent:
     def test_a_file_at_this_path_is_overwritten_like_research(self, tmp_path, monkeypatch):
         """The contract an operator is told in one line: a customized copy belongs under
         another name, because the file at this path is rewritten every boot, exactly as
-        ``kirocrew-research`` and ``kirocrew-knowledge`` are. Nothing in the old file is
+        ``ajcrew-research`` and ``ajcrew-knowledge`` are. Nothing in the old file is
         consulted, and no sibling file is written beside it."""
         monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
         target = tmp_path / TEAM_LEAD_AGENT_FILENAME
@@ -117,7 +117,7 @@ class TestTheInstallerWritesADefaultAgent:
         service_agents._install_team_lead_agent()
 
         installed = json.loads(target.read_text(encoding="utf-8"))
-        assert installed["name"] == "kirocrew-team-lead"
+        assert installed["name"] == "ajcrew-team-lead"
         assert installed["prompt"] == agent._TEAM_LEAD_SYSTEM_PROMPT
         assert sorted(p.name for p in tmp_path.iterdir()) == [TEAM_LEAD_AGENT_FILENAME]
 
@@ -136,10 +136,10 @@ class TestTheLeadReportsToItsParent:
         """The server is mounted whole, so ``work_report`` is served; ``work_brief`` and
         ``work_report`` are both auto-approved, as for a nested conductor
         (rfc-conductor-own-child-verbs.md, section 5.5)."""
-        assert _reachable(installed, "kirocrew-work", "work_report")
-        assert _reachable(installed, "kirocrew-work", "work_brief")
-        assert "@kirocrew-work/work_brief" in installed["allowedTools"]
-        assert "@kirocrew-work/work_report" in installed["allowedTools"]
+        assert _reachable(installed, "ajcrew-work", "work_report")
+        assert _reachable(installed, "ajcrew-work", "work_brief")
+        assert "@ajcrew-work/work_brief" in installed["allowedTools"]
+        assert "@ajcrew-work/work_report" in installed["allowedTools"]
 
 
 class TestTheLeadCanDispatch:
@@ -148,20 +148,20 @@ class TestTheLeadCanDispatch:
     the verbs without configuring the server that serves them."""
 
     def test_session_create_and_work_ledger_record_are_reachable(self, installed):
-        assert _reachable(installed, "kirocrew-dashboard", "session_create")
-        assert _reachable(installed, "kirocrew-work", "work_ledger_record")
+        assert _reachable(installed, "ajcrew-dashboard", "session_create")
+        assert _reachable(installed, "ajcrew-work", "work_ledger_record")
 
     def test_the_reachability_probe_can_see_a_dead_grant(self, installed):
         """Positive control: the probe reports a declared-but-unconfigured server, and
         a tool the server does not serve, as unreachable."""
         dead = json.loads(json.dumps(installed))
-        dead["mcpServers"].pop("kirocrew-work")
-        assert not _reachable(dead, "kirocrew-work", "work_ledger_record")
-        assert not _reachable(installed, "kirocrew-dashboard", "no_such_tool")
+        dead["mcpServers"].pop("ajcrew-work")
+        assert not _reachable(dead, "ajcrew-work", "work_ledger_record")
+        assert not _reachable(installed, "ajcrew-dashboard", "no_such_tool")
 
     def test_each_entry_is_the_managed_opt_in_entry(self, installed):
         """``_managed_opt_in_entry`` is the one helper that carries ``type: registry``
-        and the ``KIROCREW_HOME`` pin; matching it exactly is matching both."""
+        and the ``AJCREW_HOME`` pin; matching it exactly is matching both."""
         for server, (subcommand, _module) in _DISPATCH_SERVERS.items():
             assert installed["mcpServers"][server] == managed_mcp._managed_opt_in_entry(subcommand)
 
@@ -171,14 +171,14 @@ class TestTheLeadCanDispatch:
         monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
         monkeypatch.setattr(managed_mcp, "_mcp_registry_mode", lambda: True)
         monkeypatch.setattr(
-            managed_mcp, "_managed_mcp_env", lambda: {"KIROCREW_HOME": "/pinned/home"}
+            managed_mcp, "_managed_mcp_env", lambda: {"AJCREW_HOME": "/pinned/home"}
         )
         service_agents._install_team_lead_agent()
         spec = json.loads((tmp_path / TEAM_LEAD_AGENT_FILENAME).read_text(encoding="utf-8"))
         for server in _DISPATCH_SERVERS:
             entry = spec["mcpServers"][server]
             assert entry["type"] == managed_mcp._MCP_REGISTRY_TYPE, server
-            assert entry["env"]["KIROCREW_HOME"] == "/pinned/home", server
+            assert entry["env"]["AJCREW_HOME"] == "/pinned/home", server
 
     def test_its_grants_are_the_goal_conductors_tuples_reused(self, installed):
         for ref in (*agent._CONDUCTOR_DASHBOARD_GRANTS, *agent._LEDGER_CONDUCTOR_WORK_GRANTS):
@@ -186,28 +186,28 @@ class TestTheLeadCanDispatch:
         added = {
             r
             for r in installed["allowedTools"]
-            if r.startswith(("@kirocrew-dashboard/", "@kirocrew-work/"))
+            if r.startswith(("@ajcrew-dashboard/", "@ajcrew-work/"))
         }
         assert added == {*agent._CONDUCTOR_DASHBOARD_GRANTS, *agent._LEDGER_CONDUCTOR_WORK_GRANTS}
 
     def test_the_grants_pass_through_the_governance_ceiling(self, tmp_path, monkeypatch):
         """A ceiling that withholds ``session_create`` keeps it off ``allowedTools``
         while the server stays mounted, so the call still reaches the gate."""
-        from kiro_crew.agent_materialization import auto_approve
+        from aj_crew.agent_materialization import auto_approve
 
-        withheld = "@kirocrew-dashboard/session_create"
+        withheld = "@ajcrew-dashboard/session_create"
         monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
         monkeypatch.setattr(auto_approve, "_may_auto_approve", lambda ref: ref != withheld)
         service_agents._install_team_lead_agent()
         spec = json.loads((tmp_path / TEAM_LEAD_AGENT_FILENAME).read_text(encoding="utf-8"))
         assert withheld not in spec["allowedTools"]
-        assert "@kirocrew-dashboard/session_read_message" in spec["allowedTools"]
-        assert _reachable(spec, "kirocrew-dashboard", "session_create")
+        assert "@ajcrew-dashboard/session_read_message" in spec["allowedTools"]
+        assert _reachable(spec, "ajcrew-dashboard", "session_create")
 
     def test_an_inherited_server_auto_approve_passes_the_ceiling(self, tmp_path, monkeypatch):
         """A server inherited from the default spec with its own ``autoApprove`` is
         filtered too, so a legacy client cannot run a verb the ceiling denies."""
-        from kiro_crew.agent_materialization import auto_approve
+        from aj_crew.agent_materialization import auto_approve
 
         base = agent.build_agent_config()
         base.setdefault("mcpServers", {})["srv"] = {"command": "x", "autoApprove": ["delete"]}
@@ -226,7 +226,7 @@ class TestTheLeadCanDispatch:
         service_agents._install_team_lead_agent()
         spec = json.loads((tmp_path / TEAM_LEAD_AGENT_FILENAME).read_text(encoding="utf-8"))
         assert seen, "the governance pass never ran over the team lead's server map"
-        assert {"srv", "kirocrew-dashboard", "kirocrew-work"} <= set(seen[-1])
+        assert {"srv", "ajcrew-dashboard", "ajcrew-work"} <= set(seen[-1])
         assert "autoApprove" not in spec["mcpServers"]["srv"]
 
     def test_the_tool_search_loader_is_auto_approved(self, installed):
@@ -238,7 +238,7 @@ class TestTheLeadCanDispatch:
     def test_the_loader_grant_passes_through_the_governance_ceiling(self, tmp_path, monkeypatch):
         """A ceiling that withholds ``tool_search`` keeps it off ``allowedTools`` while
         it stays mounted, so the load prompts instead of vanishing."""
-        from kiro_crew.agent_materialization import auto_approve
+        from aj_crew.agent_materialization import auto_approve
 
         monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
         monkeypatch.setattr(auto_approve, "_may_auto_approve", lambda ref: ref != "tool_search")
@@ -246,7 +246,7 @@ class TestTheLeadCanDispatch:
         spec = json.loads((tmp_path / TEAM_LEAD_AGENT_FILENAME).read_text(encoding="utf-8"))
         assert "tool_search" in spec["tools"]
         assert "tool_search" not in spec["allowedTools"]
-        assert "@kirocrew-dashboard/session_create" in spec["allowedTools"]
+        assert "@ajcrew-dashboard/session_create" in spec["allowedTools"]
 
     def test_no_loader_grant_when_the_inherited_tools_drop_it(self, tmp_path, monkeypatch):
         """An operator whose tools leave out the loader gets no dead grant for it."""
@@ -260,15 +260,15 @@ class TestTheLeadCanDispatch:
         assert "tool_search" not in spec["allowedTools"]
 
     def test_it_does_not_mount_the_panel_server(self, installed):
-        assert "kirocrew-panel" not in installed["mcpServers"]
-        assert not any("kirocrew-panel" in t for t in installed["tools"])
+        assert "ajcrew-panel" not in installed["mcpServers"]
+        assert not any("ajcrew-panel" in t for t in installed["tools"])
 
     def test_the_charter_points_at_both_skills_and_stays_short(self, installed):
         prompt = installed["prompt"]
         assert "`team-lead` skill" in prompt
         assert "`goal-conductor`" in prompt
         assert "session_create" in prompt
-        from kiro_crew.agent_parts.spec_prompts import _ASK_ONLY_WHEN_NEEDED_RULE
+        from aj_crew.agent_parts.spec_prompts import _ASK_ONLY_WHEN_NEEDED_RULE
 
         shared = _ASK_ONLY_WHEN_NEEDED_RULE.splitlines()
         assert len(prompt.splitlines()) - len(shared) < 40
@@ -341,23 +341,23 @@ class _RebuildRig:
     ``rebuild_agent_config``. Mirrors the dashboard-author test's rig."""
 
     def __init__(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+        from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
         self.agents = tmp_path / "agents"
         self.agents.mkdir()
-        binary = tmp_path / "bin" / "kirocrew"
+        binary = tmp_path / "bin" / "ajcrew"
         binary.parent.mkdir()
         binary.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
         binary.chmod(0o755)
         monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", self.agents)
-        monkeypatch.setattr(agent, "_KIROCREW_BIN", str(binary))
+        monkeypatch.setattr(agent, "_AJCREW_BIN", str(binary))
         monkeypatch.setattr(agent, "_KIRO_MCP_JSON", tmp_path / "kiro-global-mcp.json")
         monkeypatch.setattr(agent, "_DEFAULT_KIRO_HOOKS_DIR", tmp_path / "no-hooks")
         monkeypatch.setattr(
-            "kiro_crew.apps.bridges._mcp_json_path", lambda: self.agents / "kirocrew.json"
+            "aj_crew.apps.bridges._mcp_json_path", lambda: self.agents / "ajcrew.json"
         )
         monkeypatch.setattr(
-            "kiro_crew.kiro_cli.installed_kiro_cli_version",
+            "aj_crew.kiro_cli.installed_kiro_cli_version",
             lambda: SPEC_PERMISSIONS_MIN_VERSION,
         )
 
@@ -428,7 +428,7 @@ def test_a_failed_research_install_holds_the_ceiling_instead_of_syncing(
 def test_both_conductor_charters_carry_the_ask_only_when_needed_rule() -> None:
     """Ultra Mode runs on the team lead, a goal on the conductor: both agent prompts
     (not session context, which ranks below the skill) say when to stop and ask."""
-    from kiro_crew.agent_parts.spec_prompts import _ASK_ONLY_WHEN_NEEDED_RULE
+    from aj_crew.agent_parts.spec_prompts import _ASK_ONLY_WHEN_NEEDED_RULE
 
     rule = _ASK_ONLY_WHEN_NEEDED_RULE.strip()
     assert rule.startswith("**Ask only when you must.**")

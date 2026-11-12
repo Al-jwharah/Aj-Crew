@@ -24,9 +24,9 @@ opposite answers.
 
 from __future__ import annotations
 
-from kiro_crew.mcp_caller import POOLING_REQUIRES_TENANT_NONCE
-from kiro_crew.mcp_gateway.gatewayd import REGISTERED_CAPABILITIES
-from kiro_crew.mcp_gateway.stub import (
+from aj_crew.mcp_caller import POOLING_REQUIRES_TENANT_NONCE
+from aj_crew.mcp_gateway.gatewayd import REGISTERED_CAPABILITIES
+from aj_crew.mcp_gateway.stub import (
     must_degrade_nonce_blind,
     must_degrade_unshareable,
 )
@@ -34,8 +34,8 @@ from kiro_crew.mcp_gateway.stub import (
 #: A server whose unnamed co-tenants are separated by the nonce, and one that is
 #: not. Read from the constant rather than spelled, so the pair cannot name a
 #: server the predicate has stopped scoping itself to.
-_NONCE_SERVER = "kirocrew-computer"
-_PLAIN_SERVER = "kirocrew-core"
+_NONCE_SERVER = "ajcrew-computer"
+_PLAIN_SERVER = "ajcrew-core"
 
 
 def test_current_daemon_advertises_the_attestation() -> None:

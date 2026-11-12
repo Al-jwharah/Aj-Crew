@@ -1,6 +1,6 @@
 """``agent.acp_backend`` is writable from the dashboard, and only to real backends.
 
-The Settings > Agent Harness switch writes it over ``PATCH /api/config/kirocrew``.
+The Settings > Agent Harness switch writes it over ``PATCH /api/config/ajcrew``.
 An edition extends the backend registry at boot (``register_selectable_backend``), so
 each surface must resolve the set per request from ``agent_sdk.backends``.
 """
@@ -9,7 +9,7 @@ from typing import Any, Dict, List
 
 import pytest
 
-from kiro_crew.acp_backends import (
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_COPILOT,
@@ -21,10 +21,10 @@ from kiro_crew.acp_backends import (
     ACP_BACKEND_PI,
     ACP_BACKEND_STRANDS,
 )
-from kiro_crew.agent_sdk import backends as acp_backends
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.handlers.agents import _supply_live_enum
-from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+from aj_crew.agent_sdk import backends as acp_backends
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.handlers.agents import _supply_live_enum
+from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
 FIELD = "agent.acp_backend"
 
@@ -80,7 +80,7 @@ def test_the_allowlist_speaks_the_stored_vocabulary():
 
 def test_the_default_backend_is_accepted_by_its_own_allowlist():
     """The shipped default must be writable, or the switch cannot be reset."""
-    assert KiroCrewConfig().agent.acp_backend in _EDITABLE_CONFIG[FIELD]["values_fn"]()
+    assert AjCrewConfig().agent.acp_backend in _EDITABLE_CONFIG[FIELD]["values_fn"]()
 
 
 def test_a_registered_backend_reaches_the_allowlist(restore_registry):
@@ -139,7 +139,7 @@ def test_a_registered_backend_reaches_the_schema_endpoint(restore_registry):
 
 def test_the_field_declares_no_static_enum():
     """The field metadata carries no static enum either; the set is resolved live."""
-    meta = KiroCrewConfig().agent.__dataclass_fields__["acp_backend"].metadata
+    meta = AjCrewConfig().agent.__dataclass_fields__["acp_backend"].metadata
     assert meta.get("enum") is None
 
 

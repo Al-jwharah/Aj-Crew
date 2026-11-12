@@ -40,8 +40,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard import handlers_system
+from aj_crew import platform_compat
+from aj_crew.dashboard import handlers_system
 
 _GIB_KB = 1024 * 1024
 _MEM_KEYS = ("mem_total_gb", "mem_used_gb", "mem_free_gb")

@@ -28,11 +28,11 @@ from telegram_helpers import _press  # noqa: F401
 from telegram_helpers import _prime_live  # noqa: F401
 from telegram_helpers import FakeClient
 
-from kiro_crew.dashboard.token_auth import parse_duration
-from kiro_crew.messaging.commands import parse_dashboard_ttl
-from kiro_crew.messaging.renderer import session_provenance_tag
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.telegram.client import (
+from aj_crew.dashboard.token_auth import parse_duration
+from aj_crew.messaging.commands import parse_dashboard_ttl
+from aj_crew.messaging.renderer import session_provenance_tag
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.telegram.client import (
     TELEGRAM_CHUNK_LIMIT,
     TELEGRAM_MAX_TEXT,
     TelegramInbound,
@@ -40,7 +40,7 @@ from kiro_crew.telegram.client import (
     _record_api_duration,
     truncate_html_safe,
 )
-from kiro_crew.telegram.commands import (
+from aj_crew.telegram.commands import (
     COMMAND_SPEC,
     ConversationState,
     bot_command_payload,
@@ -51,8 +51,8 @@ from kiro_crew.telegram.commands import (
     parse_dashboard_argument,
     parse_mid_turn_override,
 )
-from kiro_crew.telegram.renderer import TelegramRenderer  # noqa: F401
-from kiro_crew.telegram.renderer import (
+from aj_crew.telegram.renderer import TelegramRenderer  # noqa: F401
+from aj_crew.telegram.renderer import (
     _extract_options,
     _may_exceed_rendered,
     _md_to_telegram_html,
@@ -61,7 +61,7 @@ from kiro_crew.telegram.renderer import (
     _split_markdown_bounded,
     build_inline_keyboard,
 )
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES, TelegramTransport
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES, TelegramTransport
 
 # ── commands.py ──────────────────────────────────────────────────────────
 
@@ -123,22 +123,22 @@ class TestParseCommand:
         assert is_bare_mid_turn_override("hello") is False
 
     def test_dashboard_command(self) -> None:
-        """Dashboard command requires both /kirocrew and the 'dashboard' subcommand."""
-        assert parse_command("/kirocrew dashboard") == "dashboard"
-        assert parse_command("/kirocrew dashboard 2h") == "dashboard"
-        assert parse_command("/KIROCREW DASHBOARD") == "dashboard"
-        assert parse_command("  /kirocrew   dashboard  ") == "dashboard"
+        """Dashboard command requires both /ajcrew and the 'dashboard' subcommand."""
+        assert parse_command("/ajcrew dashboard") == "dashboard"
+        assert parse_command("/ajcrew dashboard 2h") == "dashboard"
+        assert parse_command("/AJCREW DASHBOARD") == "dashboard"
+        assert parse_command("  /ajcrew   dashboard  ") == "dashboard"
 
     def test_dashboard_command_requires_subcommand(self) -> None:
-        """Bare /kirocrew without 'dashboard' is not a command."""
-        assert parse_command("/kirocrew") is None
-        assert parse_command("/kirocrew help") is None
-        assert parse_command("/kirocrew other") is None
+        """Bare /ajcrew without 'dashboard' is not a command."""
+        assert parse_command("/ajcrew") is None
+        assert parse_command("/ajcrew help") is None
+        assert parse_command("/ajcrew other") is None
 
 
 class TestBotMentionSuffix:
     """Telegram's own clients append @BotUsername to a slash command in any
-    chat with more than one participant/bot -- e.g. /new@KiroCrewBot instead
+    chat with more than one participant/bot -- e.g. /new@AjCrewBot instead
     of /new. This is standard Bot API client behavior (triggered by
     registering a command menu via set_my_commands, done at gateway startup),
     not something this codebase's UI controls, and it fires in exactly the
@@ -153,46 +153,46 @@ class TestBotMentionSuffix:
     would let e.g. /yolo@OtherBot execute here instead of being ignored."""
 
     def test_parse_command_strips_bot_mention(self) -> None:
-        assert parse_command("/new@KiroCrewBot", "KiroCrewBot") == "new"
-        assert parse_command("/compact@KiroCrewBot", "KiroCrewBot") == "compact"
-        assert parse_command("/model@KiroCrewBot", "KiroCrewBot") == "model"
-        assert parse_command("/yolo@KiroCrewBot", "KiroCrewBot") == "yolo"
-        assert parse_command("/link@KiroCrewBot", "KiroCrewBot") == "link"
-        assert parse_command("/unlink@KiroCrewBot", "KiroCrewBot") == "unlink"
-        assert parse_command("/stop@KiroCrewBot", "KiroCrewBot") == "stop"
-        assert parse_command("/help@KiroCrewBot", "KiroCrewBot") == "help"
+        assert parse_command("/new@AjCrewBot", "AjCrewBot") == "new"
+        assert parse_command("/compact@AjCrewBot", "AjCrewBot") == "compact"
+        assert parse_command("/model@AjCrewBot", "AjCrewBot") == "model"
+        assert parse_command("/yolo@AjCrewBot", "AjCrewBot") == "yolo"
+        assert parse_command("/link@AjCrewBot", "AjCrewBot") == "link"
+        assert parse_command("/unlink@AjCrewBot", "AjCrewBot") == "unlink"
+        assert parse_command("/stop@AjCrewBot", "AjCrewBot") == "stop"
+        assert parse_command("/help@AjCrewBot", "AjCrewBot") == "help"
 
     def test_parse_command_with_mention_and_trailing_args(self) -> None:
-        assert parse_command("/yolo@KiroCrewBot on", "KiroCrewBot") == "yolo"
-        assert parse_command("/session@KiroCrewBot launch", "KiroCrewBot") == "sessions"
+        assert parse_command("/yolo@AjCrewBot on", "AjCrewBot") == "yolo"
+        assert parse_command("/session@AjCrewBot launch", "AjCrewBot") == "sessions"
 
     def test_parse_command_mention_is_case_insensitive(self) -> None:
-        assert parse_command("/NEW@KiroCrewBot", "kirocrewbot") == "new"
-        assert parse_command("/NEW@KIROCREWBOT", "KiroCrewBot") == "new"
+        assert parse_command("/NEW@AjCrewBot", "ajcrewbot") == "new"
+        assert parse_command("/NEW@AJCREWBOT", "AjCrewBot") == "new"
 
     def test_unknown_command_with_mention_is_still_unknown(self) -> None:
         # The mention strip must not accidentally widen matching -- a
         # nonexistent command stays unrecognised, mention or not.
-        assert parse_command("/frobnicate@KiroCrewBot", "KiroCrewBot") is None
+        assert parse_command("/frobnicate@AjCrewBot", "AjCrewBot") is None
 
     def test_mid_turn_override_strips_bot_mention(self) -> None:
-        assert parse_mid_turn_override("/steer@KiroCrewBot do this instead", "KiroCrewBot") == (
+        assert parse_mid_turn_override("/steer@AjCrewBot do this instead", "AjCrewBot") == (
             "steer",
             "do this instead",
         )
-        assert parse_mid_turn_override("/queue@KiroCrewBot later", "KiroCrewBot") == (
+        assert parse_mid_turn_override("/queue@AjCrewBot later", "AjCrewBot") == (
             "queue",
             "later",
         )
 
     def test_bare_mid_turn_override_strips_bot_mention(self) -> None:
-        assert is_bare_mid_turn_override("/queue@KiroCrewBot", "KiroCrewBot") is True
-        assert is_bare_mid_turn_override("/steer@KiroCrewBot", "KiroCrewBot") is True
+        assert is_bare_mid_turn_override("/queue@AjCrewBot", "AjCrewBot") is True
+        assert is_bare_mid_turn_override("/steer@AjCrewBot", "AjCrewBot") is True
 
     def test_mention_pattern_requires_a_leading_at_sign(self) -> None:
         # A bare word after the command must not be mistaken for a mention
         # suffix and stripped -- only a real @-prefixed suffix is a mention.
-        assert parse_command("/newsomething", "KiroCrewBot") is None
+        assert parse_command("/newsomething", "AjCrewBot") is None
 
     def test_a_command_mentioning_a_different_bot_is_not_executed(self) -> None:
         """Security regression: Telegram fans a command addressed to another
@@ -200,30 +200,30 @@ class TestBotMentionSuffix:
         regardless of whose it is would let it match our own alias and
         execute -- e.g. silently turning on YOLO auto-approval because
         someone else's bot was told to. It must instead stay unrecognised."""
-        assert parse_command("/yolo@OtherBot", "KiroCrewBot") is None
-        assert parse_command("/yolo@OtherBot on", "KiroCrewBot") is None
-        assert parse_command("/stop@OtherBot", "KiroCrewBot") is None
-        assert parse_mid_turn_override("/steer@OtherBot do this", "KiroCrewBot") == (
+        assert parse_command("/yolo@OtherBot", "AjCrewBot") is None
+        assert parse_command("/yolo@OtherBot on", "AjCrewBot") is None
+        assert parse_command("/stop@OtherBot", "AjCrewBot") is None
+        assert parse_mid_turn_override("/steer@OtherBot do this", "AjCrewBot") == (
             None,
             "/steer@OtherBot do this",
         )
-        assert is_bare_mid_turn_override("/queue@OtherBot", "KiroCrewBot") is False
+        assert is_bare_mid_turn_override("/queue@OtherBot", "AjCrewBot") is False
 
     def test_a_mention_is_never_stripped_before_our_username_is_known(self) -> None:
         """Before getMe() resolves at startup, bot_username is "" -- the
         default every caller uses. No mention can be verified as ours yet, so
         none should be treated as ours (fail closed, not open)."""
-        assert parse_command("/new@KiroCrewBot") is None
-        assert parse_command("/yolo@KiroCrewBot") is None
+        assert parse_command("/new@AjCrewBot") is None
+        assert parse_command("/yolo@AjCrewBot") is None
 
     def test_dashboard_command_strips_bot_mention(self) -> None:
-        assert parse_command("/kirocrew@KiroCrewBot dashboard", "KiroCrewBot") == "dashboard"
+        assert parse_command("/ajcrew@AjCrewBot dashboard", "AjCrewBot") == "dashboard"
         # A mention naming a different bot is not ours -- fail closed.
-        assert parse_command("/kirocrew@OtherBot dashboard", "KiroCrewBot") is None
+        assert parse_command("/ajcrew@OtherBot dashboard", "AjCrewBot") is None
 
 
 class TestParseDashboardTtl:
-    """Telegram's half of ``/kirocrew dashboard [<ttl>]`` is the WORD COUNT.
+    """Telegram's half of ``/ajcrew dashboard [<ttl>]`` is the WORD COUNT.
 
     The TTL vocabulary, the default and the formatter are channel-neutral and live
     in ``messaging/commands.py`` (pinned in ``test_messaging_commands.py``); what
@@ -237,30 +237,30 @@ class TestParseDashboardTtl:
 
     def test_default_ttl(self) -> None:
         """Default is 1 hour when no TTL specified."""
-        assert self._ttl("/kirocrew dashboard") == 3600
+        assert self._ttl("/ajcrew dashboard") == 3600
 
     def test_hours(self) -> None:
-        assert self._ttl("/kirocrew dashboard 2h") == 7200
-        assert self._ttl("/kirocrew dashboard 5H") == 18000
+        assert self._ttl("/ajcrew dashboard 2h") == 7200
+        assert self._ttl("/ajcrew dashboard 5H") == 18000
 
     def test_minutes(self) -> None:
-        assert self._ttl("/kirocrew dashboard 30m") == 1800
-        assert self._ttl("/kirocrew dashboard 90M") == 5400
+        assert self._ttl("/ajcrew dashboard 30m") == 1800
+        assert self._ttl("/ajcrew dashboard 90M") == 5400
 
     def test_invalid_ttl_uses_default(self) -> None:
         """Invalid TTL format falls back to 1 hour."""
-        assert self._ttl("/kirocrew dashboard xyz") == 3600
-        assert self._ttl("/kirocrew dashboard") == 3600
+        assert self._ttl("/ajcrew dashboard xyz") == 3600
+        assert self._ttl("/ajcrew dashboard") == 3600
 
     def test_the_argument_starts_after_both_command_tokens(self) -> None:
         # A channel whose dashboard command is ONE token must not inherit this
         # offset, which is why the shared parser takes the argument, not the text.
-        assert parse_dashboard_argument("/kirocrew dashboard 2h") == "2h"
+        assert parse_dashboard_argument("/ajcrew dashboard 2h") == "2h"
         # Telegram's clients append @BotUsername to a slash command in any chat
         # with more than one participant, which must not shift the argument.
-        assert parse_dashboard_argument("/kirocrew@KiroCrewBot dashboard 2h") == "2h"
-        assert parse_dashboard_argument("/kirocrew dashboard") == ""
-        assert parse_dashboard_argument("/kirocrew") == ""
+        assert parse_dashboard_argument("/ajcrew@AjCrewBot dashboard 2h") == "2h"
+        assert parse_dashboard_argument("/ajcrew dashboard") == ""
+        assert parse_dashboard_argument("/ajcrew") == ""
 
 
 class TestCommandCatalogue:
@@ -299,7 +299,7 @@ class TestCommandCatalogue:
     def test_malformed_row_is_dropped_not_sent(self, monkeypatch: Any) -> None:
         # Telegram rejects the WHOLE array on one bad row, so a malformed entry
         # must be skipped rather than cost the user the entire menu.
-        from kiro_crew.telegram import commands as tg_commands
+        from aj_crew.telegram import commands as tg_commands
 
         monkeypatch.setattr(
             tg_commands,
@@ -526,7 +526,7 @@ class TestApiDurationMetric:
 
         # Patch the name in the CLIENT's namespace: get_recorder is imported at
         # module scope there, so patching metrics.provider would not be seen.
-        monkeypatch.setattr("kiro_crew.telegram.client.get_recorder", lambda: _Rec(), raising=True)
+        monkeypatch.setattr("aj_crew.telegram.client.get_recorder", lambda: _Rec(), raising=True)
         return seen
 
     def test_long_poll_is_not_recorded(self, monkeypatch: Any) -> None:
@@ -721,7 +721,7 @@ class TestRenderedBudget:
 
 
 class TestInlineKeyboard:
-    _SESSION_KEY = "telegram:kirocrew:direct:7"
+    _SESSION_KEY = "telegram:ajcrew:direct:7"
 
     def test_none_when_no_options(self) -> None:
         assert build_inline_keyboard([], self._SESSION_KEY) is None

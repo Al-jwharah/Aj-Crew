@@ -52,9 +52,9 @@ from aws_control_routes_helpers import (
     _request,
 )
 
-from kiro_crew.apps.builtins.aws_control.backend import routes as routes_mod
-from kiro_crew.deploy.engine import AWSError
-from kiro_crew.testing.wait import until_parked
+from aj_crew.apps.builtins.aws_control.backend import routes as routes_mod
+from aj_crew.deploy.engine import AWSError
+from aj_crew.testing.wait import until_parked
 
 # ---------------------------------------------------------------------------
 # Shared helpers
@@ -269,7 +269,7 @@ class TestDriveStatus:
                 )
             )
         body = _payload(first)
-        assert body["exists"] is True and body["bucket"] == "kirocrew-drive-abc"
+        assert body["exists"] is True and body["bucket"] == "ajcrew-drive-abc"
         assert body["usage"] == {"bytes": 42}
         assert _payload(second)["usage"] == {"bytes": 42}
         usage.assert_called_once()
@@ -815,7 +815,7 @@ class TestDriveUpload:
     @pytest.fixture(autouse=True)
     def _tls_policy(self, _floor_monkeypatch):
         """Keep the post-upload TLS-policy check off the real AWS CLI."""
-        from kiro_crew.apps.builtins.aws_control.backend.routes_parts import drive_writes
+        from aj_crew.apps.builtins.aws_control.backend.routes_parts import drive_writes
 
         _floor_monkeypatch.setattr(drive_writes, "_TLS_POLICY_CHECKED", set())
         self.ensure_tls = mock.Mock()
@@ -824,11 +824,11 @@ class TestDriveUpload:
         )
 
     def test_an_upload_confirms_the_tls_only_policy_once_per_drive(self):
-        from kiro_crew.apps.builtins.aws_control.backend.routes_parts import drive_writes
+        from aj_crew.apps.builtins.aws_control.backend.routes_parts import drive_writes
 
         self._run([b"one"])
         self._run([b"two"])
-        assert drive_writes._TLS_POLICY_CHECKED == {"kirocrew-drive-abc"}
+        assert drive_writes._TLS_POLICY_CHECKED == {"ajcrew-drive-abc"}
         self.ensure_tls.assert_called_once()
         assert self.ensure_tls.call_args.kwargs == {"account": ACCOUNT}
 
@@ -1538,7 +1538,7 @@ class TestDriveKeyLocks:
                 mock.patch.object(routes_mod.storage_mod, "object_exists", side_effect=probe),
                 mock.patch.object(routes_mod.storage_mod, "copy_object") as copy,
             ):
-                bucket = "kirocrew-drive-abc"  # the name _drive_found answers
+                bucket = "ajcrew-drive-abc"  # the name _drive_found answers
                 async with routes_mod._locked_drive_keys(bucket, "drive", "b.txt"):
                     task = asyncio.create_task(
                         handlers[("POST", "/drive/{account}/move")](req)  # type: ignore[operator]
@@ -1621,7 +1621,7 @@ class TestDriveSectionSweepLock:
                 _drive_found(),
                 mock.patch.object(routes_mod.storage_mod, "delete_prefix", return_value=3) as sweep,
             ):
-                bucket = "kirocrew-drive-abc"
+                bucket = "ajcrew-drive-abc"
                 async with routes_mod._locked_drive_write(bucket, "drive", "docs/x.txt"):
                     task = asyncio.create_task(
                         handlers[("POST", "/drive/{account}/folder/delete")](req)  # type: ignore[operator]

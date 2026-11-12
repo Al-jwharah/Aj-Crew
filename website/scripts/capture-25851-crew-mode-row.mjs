@@ -29,24 +29,24 @@ mkdirSync(OUT, { recursive: true })
 const ROOT = 'chat-root'
 const T0 = '2026-10-28T08:00:00Z'
 const row = (key, title, extra = {}) => ({
-  key, title, messages: 2, running: false, agent: 'kirocrew', agent_kind: 'template', mode: '', origin: 'user',
+  key, title, messages: 2, running: false, agent: 'ajcrew', agent_kind: 'template', mode: '', origin: 'user',
   memory_mode: 'persistent', created: T0, last_ts: T0, folder_id: '', workspace: 'default', ...extra,
 })
 const slots = [
-  row(ROOT, 'Write three haiku about the sea, trees and rain', { agent: 'kirocrew-conductor', crew_mode_root: true, last_ts: '2026-10-28T08:12:00Z' }),
-  row('chat-w1', 'Rain haiku', { agent: 'kirocrew-worker', crew_root: ROOT, created_by: ROOT, last_ts: '2026-10-28T08:11:00Z' }),
-  row('chat-w2', 'Tree haiku', { agent: 'kirocrew-worker', crew_root: ROOT, created_by: ROOT, last_ts: '2026-10-28T08:09:00Z' }),
+  row(ROOT, 'Write three haiku about the sea, trees and rain', { agent: 'ajcrew-conductor', crew_mode_root: true, last_ts: '2026-10-28T08:12:00Z' }),
+  row('chat-w1', 'Rain haiku', { agent: 'ajcrew-worker', crew_root: ROOT, created_by: ROOT, last_ts: '2026-10-28T08:11:00Z' }),
+  row('chat-w2', 'Tree haiku', { agent: 'ajcrew-worker', crew_root: ROOT, created_by: ROOT, last_ts: '2026-10-28T08:09:00Z' }),
   row('chat-plain', 'Plan the release notes', { last_ts: '2026-10-28T07:50:00Z' }),
 ]
 const CATALOG = {
-  agents: ['kirocrew', 'kirocrew-conductor', 'kirocrew-worker'].map(name => ({ name, selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' })),
-  default_agent: 'kirocrew', crew_mode_agent: 'kirocrew-conductor', conductor_agents: ['kirocrew-conductor'],
+  agents: ['ajcrew', 'ajcrew-conductor', 'ajcrew-worker'].map(name => ({ name, selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' })),
+  default_agent: 'ajcrew', crew_mode_agent: 'ajcrew-conductor', conductor_agents: ['ajcrew-conductor'],
 }
 const WORKERS = {
   root: ROOT,
   workers: [
-    { key: 'chat-w1', title: 'Rain haiku', agent: 'kirocrew-worker', status: 'idle', group: 'done', last_activity: '2026-10-28T08:11:00Z', created_by: ROOT, dispatched_by: ROOT },
-    { key: 'chat-w2', title: 'Tree haiku', agent: 'kirocrew-worker', status: 'idle', group: 'done', last_activity: '2026-10-28T08:09:00Z', created_by: ROOT, dispatched_by: ROOT },
+    { key: 'chat-w1', title: 'Rain haiku', agent: 'ajcrew-worker', status: 'idle', group: 'done', last_activity: '2026-10-28T08:11:00Z', created_by: ROOT, dispatched_by: ROOT },
+    { key: 'chat-w2', title: 'Tree haiku', agent: 'ajcrew-worker', status: 'idle', group: 'done', last_activity: '2026-10-28T08:09:00Z', created_by: ROOT, dispatched_by: ROOT },
   ],
 }
 
@@ -86,7 +86,7 @@ async function main() {
     if (PREFIX === 'after') {
       assert(badge === 0, `${theme}: no ghost badge before the title`)
       assert(spacing === '1px', `${theme}: eyebrow tracked a whole pixel`)
-      assert((await card.getByTestId('kiro-ghost-mark').count()) >= 1, `${theme}: inline ghost on the eyebrow line`)
+      assert((await card.getByTestId('aj-mark').count()) >= 1, `${theme}: inline gem on the eyebrow line`)
     }
     // The row and the rows around it: the whole session-list width, a little above and below.
     const box = await card.boundingBox()

@@ -16,9 +16,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import session_storage
-from kiro_crew.config import paths
-from kiro_crew.session_storage import SessionIndex
+from aj_crew import session_storage
+from aj_crew.config import paths
+from aj_crew.session_storage import SessionIndex
 
 _NOW = 1_700_000_000.0
 _DAY = 86400.0
@@ -50,7 +50,7 @@ def stores_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Pat
     kiro_home = crew_home / "kiro"
     (crew_home / "sessions" / "archive").mkdir(parents=True)
     (kiro_home / "sessions" / "cli").mkdir(parents=True)
-    monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+    monkeypatch.setenv("AJCREW_HOME", str(crew_home))
     monkeypatch.setenv("KIRO_HOME", str(kiro_home))
     return crew_home, kiro_home
 
@@ -112,7 +112,7 @@ def _pin_a_fake_default_home(
     host_home.mkdir(exist_ok=True)
     monkeypatch.setenv("HOME", str(host_home))
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: host_home))
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     monkeypatch.delenv("KIRO_HOME", raising=False)
     monkeypatch.setattr(
         paths, "_resolved_home", paths.legacy_home() if legacy else paths._default_home()

@@ -22,17 +22,17 @@ from aiohttp.test_utils import TestClient, TestServer
 from test_chat_runner_coverage import _complete, _drive, _runner_state, _set_stream, _slot
 from test_chat_send_agent_model_default import _allocation_resolves
 
-from kiro_crew.acp.types import EVENT_TEXT_CHUNK
-from kiro_crew.config.loader import (
-    KiroCrewConfig,
+from aj_crew.acp.types import EVENT_TEXT_CHUNK
+from aj_crew.config.loader import (
+    AjCrewConfig,
     app_model_pin,
     resolve_app_spawn_model,
     resolve_effective_model,
 )
-from kiro_crew.config.sections import AppSettingsConfig
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_runner import _eager_spawn
-from kiro_crew.providers.base import LLMEvent
+from aj_crew.config.sections import AppSettingsConfig
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_runner import _eager_spawn
+from aj_crew.providers.base import LLMEvent
 
 pytestmark = pytest.mark.usefixtures("ample_host_free_memory")
 
@@ -44,23 +44,23 @@ TEMPLATE_PIN = "claude-sonnet-4.6"
 SLOT_PIN = "claude-opus-4.8"
 
 
-def _load_config(tmp_path: Path, data: dict) -> KiroCrewConfig:
-    """A real ``KiroCrewConfig`` loaded from *data* (same shape as config.json)."""
+def _load_config(tmp_path: Path, data: dict) -> AjCrewConfig:
+    """A real ``AjCrewConfig`` loaded from *data* (same shape as config.json)."""
     cfg_file = tmp_path / "config.json"
     cfg_file.write_text(json.dumps(data), encoding="utf-8")
-    with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file):
-        return KiroCrewConfig.load()
+    with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file):
+        return AjCrewConfig.load()
 
 
 def _config(
     tmp_path: Path, *, app_model: str | None = APP_PIN, default_crew_model: str = ""
-) -> KiroCrewConfig:
+) -> AjCrewConfig:
     """Global ``agent.model`` set; ``apps.demo-app.model`` set unless *app_model* is None."""
     data: dict = {
         "agent": {"model": GLOBAL_DEFAULT, "provider": "acp"},
         "agents": {
             "default": {
-                "kiro_agent": "kirocrew",
+                "kiro_agent": "ajcrew",
                 "memory_store": "default",
                 "model": default_crew_model,
             },
@@ -128,7 +128,7 @@ def _no_template_pin(monkeypatch):
     """No template pins a model unless a test says so."""
     pins: dict[str, str] = {}
     monkeypatch.setattr(
-        KiroCrewConfig,
+        AjCrewConfig,
         "_resolve_named_agent_model",
         staticmethod(lambda name, agents_dir=None: pins.get(name, "")),
     )
@@ -147,7 +147,7 @@ class TestResolveEffectiveModel:
     def test_unset_with_global_auto_still_defers(self, tmp_path, _no_template_pin):
         cfg = _load_config(tmp_path, {"agent": {"model": "auto"}, "apps": {APP: {"model": ""}}})
         with unittest.mock.patch.object(
-            KiroCrewConfig, "_resolve_agent_model", staticmethod(lambda: "")
+            AjCrewConfig, "_resolve_agent_model", staticmethod(lambda: "")
         ):
             assert resolve_effective_model(cfg, None, app_name=APP) == ""
 
@@ -165,7 +165,7 @@ class TestResolveEffectiveModel:
         cfg = _config(tmp_path)
         _no_template_pin["demo-app--worker"] = TEMPLATE_PIN
         monkeypatch.setattr(
-            "kiro_crew.config.loader._materialized_kiro_agent",
+            "aj_crew.config.loader._materialized_kiro_agent",
             lambda name, project_dir=None: name or "",
         )
         assert resolve_effective_model(cfg, "demo-app--worker", app_name=APP) == TEMPLATE_PIN
@@ -208,10 +208,10 @@ class TestResolveAppSpawnModel:
         default, not on that crew's pin, and with the setting it runs on the app's
         model.
         """
-        from kiro_crew.subagent import _spawn_effective_model
+        from aj_crew.subagent import _spawn_effective_model
 
         cfg = _config(tmp_path, default_crew_model=CREW_PIN)
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
         on_app_pin = cfg.acp_effective_model(None, APP_PIN)
         on_global = cfg.acp_effective_model(None, GLOBAL_DEFAULT)
         assert on_app_pin and on_app_pin != on_global
@@ -230,8 +230,8 @@ class TestResolveAppSpawnModel:
         A spawn of the app's own template ignores the ``default`` crewmate's pin, so the
         crew's tier must not drop the per-app setting.
         """
-        from kiro_crew.config.loader import _agent_tier_model, _model_scope_filter
-        from kiro_crew.session import _session_model
+        from aj_crew.config.loader import _agent_tier_model, _model_scope_filter
+        from aj_crew.session import _session_model
 
         cfg = _config(tmp_path, default_crew_model=CREW_PIN)
         assert _agent_tier_model(cfg, "default", _model_scope_filter(cfg)) == CREW_PIN
@@ -256,7 +256,7 @@ def _turn_state(tmp_path: Path):
     state, client = _runner_state(tmp_path, context_builder=builder)
     _pin_sync_accessors(client)
     _set_stream(client, [LLMEvent(kind=EVENT_TEXT_CHUNK, text="hi"), _complete()])
-    _allocation_resolves(state, chat_runner.KiroCrewConfig.load())
+    _allocation_resolves(state, chat_runner.AjCrewConfig.load())
     return state, client
 
 
@@ -272,9 +272,9 @@ def _session_model(state) -> str | None:
 def _runner_config():
     patchers: list = []
 
-    def _use(cfg: KiroCrewConfig) -> None:
+    def _use(cfg: AjCrewConfig) -> None:
         p = unittest.mock.patch.object(
-            chat_runner.KiroCrewConfig, "load", unittest.mock.MagicMock(return_value=cfg)
+            chat_runner.AjCrewConfig, "load", unittest.mock.MagicMock(return_value=cfg)
         )
         p.start()
         patchers.append(p)
@@ -373,7 +373,7 @@ class TestAppSlotTurn:
         _runner_config(_config(tmp_path))
         state, client = _runner_state(tmp_path)
         _pin_sync_accessors(client)
-        _allocation_resolves(state, chat_runner.KiroCrewConfig.load())
+        _allocation_resolves(state, chat_runner.AjCrewConfig.load())
         slot = _app_slot()
         state._slots[slot.key] = slot
         state.sessions.release = unittest.mock.MagicMock()
@@ -401,7 +401,7 @@ class _FakeManager:
 class TestAppSpawn:
     @pytest.fixture(autouse=True)
     def _known_agent(self, _floor_monkeypatch):
-        import kiro_crew.apps.spawn_sdk as spawn_sdk
+        import aj_crew.apps.spawn_sdk as spawn_sdk
 
         _floor_monkeypatch.setattr(
             spawn_sdk,
@@ -409,11 +409,11 @@ class TestAppSpawn:
             lambda: [types.SimpleNamespace(name="worker", filename=f"{APP}--worker.json")],
         )
 
-    def _spawn(self, cfg: KiroCrewConfig, model: str = "") -> dict:
-        from kiro_crew.apps.spawn_sdk import SpawnSDK, build_spawn_impl
+    def _spawn(self, cfg: AjCrewConfig, model: str = "") -> dict:
+        from aj_crew.apps.spawn_sdk import SpawnSDK, build_spawn_impl
 
         mgr = _FakeManager()
-        with unittest.mock.patch.object(KiroCrewConfig, "load", return_value=cfg):
+        with unittest.mock.patch.object(AjCrewConfig, "load", return_value=cfg):
             asyncio.run(SpawnSDK(APP, build_spawn_impl(mgr)).run("t", "worker", model=model))
         return mgr.calls[0]
 
@@ -432,10 +432,10 @@ class TestAppSpawn:
         assert self._spawn(_config(tmp_path))["model"] is None
 
     def test_an_unreadable_config_leaves_the_spawn_alone(self, tmp_path):
-        from kiro_crew.apps.spawn_sdk import SpawnSDK, build_spawn_impl
+        from aj_crew.apps.spawn_sdk import SpawnSDK, build_spawn_impl
 
         mgr = _FakeManager()
-        with unittest.mock.patch.object(KiroCrewConfig, "load", side_effect=OSError("boom")):
+        with unittest.mock.patch.object(AjCrewConfig, "load", side_effect=OSError("boom")):
             asyncio.run(SpawnSDK(APP, build_spawn_impl(mgr)).run("t", "worker"))
         assert mgr.calls[0]["model"] is None
 
@@ -454,11 +454,11 @@ async def _owner_identity(request, handler):
 
 
 def _patch_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_config_patch
+    from aj_crew.dashboard.handlers import api_ajcrew_config_patch
 
     app = web.Application(middlewares=[_owner_identity])
     app["state"] = unittest.mock.MagicMock()
-    app.router.add_patch("/api/config/kirocrew", api_kirocrew_config_patch)
+    app.router.add_patch("/api/config/ajcrew", api_ajcrew_config_patch)
     return app
 
 
@@ -466,14 +466,14 @@ def _patch_app() -> web.Application:
 def _cfg_file(tmp_path):
     path = tmp_path / "config.json"
     path.write_text(json.dumps({"agent": {"approval_mode": "auto"}}), encoding="utf-8")
-    with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=path):
+    with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=path):
         yield path
 
 
 @pytest.fixture
 def _advertised(monkeypatch):
     """The account serves only ``claude-haiku-5``."""
-    from kiro_crew.dashboard.handlers import core
+    from aj_crew.dashboard.handlers import core
 
     monkeypatch.setattr(
         core, "_active_advertised_ids", lambda request, backend=None: ["claude-haiku-5"]
@@ -482,7 +482,7 @@ def _advertised(monkeypatch):
         core, "_revalidate_role_pin_evidence", unittest.mock.AsyncMock(return_value=None)
     )
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_handlers._model_rejected_reason",
+        "aj_crew.dashboard.chat_handlers._model_rejected_reason",
         lambda m, provider=None: None,
     )
 
@@ -493,7 +493,7 @@ class TestSettingsWrite:
         ["apps.demo-app.model", "apps.a.model", "apps.app-2.model"],
     )
     def test_a_per_app_model_path_is_editable(self, path):
-        from kiro_crew.dashboard.handlers import core
+        from aj_crew.dashboard.handlers import core
 
         spec = core._editable_config_spec(path)
         assert spec is not None
@@ -503,11 +503,11 @@ class TestSettingsWrite:
     async def test_an_apps_session_mute_is_written_under_the_app(self, _cfg_file):
         async with TestClient(TestServer(_patch_app())) as c:
             resp = await c.patch(
-                "/api/config/kirocrew", json={"path": f"apps.{APP}.mute_sessions", "value": True}
+                "/api/config/ajcrew", json={"path": f"apps.{APP}.mute_sessions", "value": True}
             )
             assert resp.status == 200
             refused = await c.patch(
-                "/api/config/kirocrew", json={"path": f"apps.{APP}.mute_sessions", "value": "yes"}
+                "/api/config/ajcrew", json={"path": f"apps.{APP}.mute_sessions", "value": "yes"}
             )
             assert refused.status == 400
         assert (
@@ -531,15 +531,15 @@ class TestSettingsWrite:
         ],
     )
     def test_any_other_apps_path_is_not(self, path):
-        from kiro_crew.dashboard.handlers import core
+        from aj_crew.dashboard.handlers import core
 
         assert core._editable_config_spec(path) is None
 
     def test_the_app_name_grammar_is_the_manifests(self):
         # One spelling of the app-name grammar: the PATCH allowlist reads the
         # manifest's ``KEBAB_RE`` rather than restating it, so the two cannot drift.
-        from kiro_crew.apps import manifest
-        from kiro_crew.dashboard.handlers import core
+        from aj_crew.apps import manifest
+        from aj_crew.dashboard.handlers import core
 
         assert core.KEBAB_RE is manifest.KEBAB_RE
         assert not hasattr(core, "_APP_MODEL_PATH_RE")
@@ -548,7 +548,7 @@ class TestSettingsWrite:
     async def test_a_pick_is_written_under_the_app(self, _cfg_file, _advertised):
         async with TestClient(TestServer(_patch_app())) as c:
             resp = await c.patch(
-                "/api/config/kirocrew", json={"path": f"apps.{APP}.model", "value": APP_PIN}
+                "/api/config/ajcrew", json={"path": f"apps.{APP}.model", "value": APP_PIN}
             )
             assert resp.status == 200
         data = json.loads(_cfg_file.read_text(encoding="utf-8"))
@@ -559,7 +559,7 @@ class TestSettingsWrite:
     async def test_inherit_is_always_accepted(self, _cfg_file, _advertised):
         async with TestClient(TestServer(_patch_app())) as c:
             resp = await c.patch(
-                "/api/config/kirocrew", json={"path": f"apps.{APP}.model", "value": ""}
+                "/api/config/ajcrew", json={"path": f"apps.{APP}.model", "value": ""}
             )
             assert resp.status == 200
 
@@ -567,7 +567,7 @@ class TestSettingsWrite:
     async def test_a_model_the_account_cannot_run_is_refused(self, _cfg_file, _advertised):
         async with TestClient(TestServer(_patch_app())) as c:
             resp = await c.patch(
-                "/api/config/kirocrew",
+                "/api/config/ajcrew",
                 json={"path": f"apps.{APP}.model", "value": "claude-opus-5"},
             )
             assert resp.status == 400
@@ -578,7 +578,7 @@ class TestSettingsWrite:
     async def test_a_malformed_id_is_refused(self, _cfg_file, _advertised):
         async with TestClient(TestServer(_patch_app())) as c:
             resp = await c.patch(
-                "/api/config/kirocrew",
+                "/api/config/ajcrew",
                 json={"path": f"apps.{APP}.model", "value": "bad; rm -rf /"},
             )
             assert resp.status == 400
@@ -590,12 +590,12 @@ class TestSettingsWrite:
 class TestResolvedModelEndpoint:
     """The composer chip reads this endpoint, so it must name the app's model too."""
 
-    async def _get(self, cfg: KiroCrewConfig, params: dict) -> dict:
-        from kiro_crew.dashboard.handlers import api_kirocrew_agent_resolved_model
+    async def _get(self, cfg: AjCrewConfig, params: dict) -> dict:
+        from aj_crew.dashboard.handlers import api_ajcrew_agent_resolved_model
 
         app = web.Application()
-        app.router.add_get("/api/agents/resolved-model", api_kirocrew_agent_resolved_model)
-        with unittest.mock.patch.object(KiroCrewConfig, "load", return_value=cfg):
+        app.router.add_get("/api/agents/resolved-model", api_ajcrew_agent_resolved_model)
+        with unittest.mock.patch.object(AjCrewConfig, "load", return_value=cfg):
             async with TestClient(TestServer(app)) as client:
                 return await (await client.get("/api/agents/resolved-model", params=params)).json()
 

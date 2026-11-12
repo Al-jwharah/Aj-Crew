@@ -1,6 +1,6 @@
 
 REPO CONTEXT:
-Kiro Crew is an open-source AI agent platform (Python backend + React/TS
+Aj Crew is an open-source AI agent platform (Python backend + React/TS
 dashboard). It is a de-Amazoned public fork: do NOT flag the absence of
 Brazil/AUTOSDE build tooling or internal-only infrastructure.
 
@@ -105,9 +105,9 @@ base-branch snapshots before you report anything:
 Patterns in AUTOSDE.yaml are repo-relative. Patterns in
 website-AUTOSDE.yaml are relative to website/: match them against a
 changed path with its leading website/ removed (src/**/*.tsx means
-website/src/**/*.tsx, never src/kiro_crew/). Both files use gitignore-style
-globs: `**` also matches zero directories, so src/kiro_crew/**/*.py covers
-src/kiro_crew/hooks.py.
+website/src/**/*.tsx, never src/aj_crew/). Both files use gitignore-style
+globs: `**` also matches zero directories, so src/aj_crew/**/*.py covers
+src/aj_crew/hooks.py.
 They are the SOURCE OF TRUTH for what this repo considers a defect and
 for whether it blocks. They were built up over months and they OUTRANK
 this prompt: where a rule and anything written here disagree, THE RULE

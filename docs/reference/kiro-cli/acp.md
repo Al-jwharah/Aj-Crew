@@ -5,10 +5,10 @@ Source: https://kiro.dev/docs/cli/acp/ (fetched 2026-09-06)
 > **Carries local additions.** `session/set_config_option`, the snake_case
 > session-update names and everything below them, and the
 > `_kiro.dev/mcp/server_init_failure` and `_kiro.dev/agent/switched` rows have no
-> counterpart in upstream's method table; they are measured here and describe Kiro
+> counterpart in upstream's method table; they are measured here and describe Aj
 > Crew's claude-agent-acp path. A re-fetch must preserve them. Upstream's own
 > table now carries `_session/terminate`, so that row is no longer local-only.
-> Two wire names are corrected locally against what Kiro Crew sends and reads:
+> Two wire names are corrected locally against what Aj Crew sends and reads:
 > session updates arrive as the `session/update` notification, and
 > `session/prompt` carries its content blocks in `params.prompt`.
 
@@ -191,7 +191,7 @@ Kiro CLI spec uses `prompt` for the system prompt field in agent config JSON fil
   "model": "auto",
   "description": "Agent description",
   "prompt": "You are a helpful assistant.",
-  "tools": ["@kirocrew-core"]
+  "tools": ["@ajcrew-core"]
 }
 ```
 
@@ -235,7 +235,7 @@ Sending the wrong shape yields `-32602 Invalid params` or `-32601 Method not fou
 These defaults name ONE file per machine. A process that starts while that
 file is over 10 MiB unlinks it, and every running process keeps writing into
 its own unlinked inode until it exits -- on Linux into a RAM-backed tmpfs.
-On Linux and macOS, Kiro Crew therefore sets `KIRO_CHAT_LOG_FILE` on every
+On Linux and macOS, Aj Crew therefore sets `KIRO_CHAT_LOG_FILE` on every
 kiro-cli it spawns to `<scratch dir>/kiro-log/kiro-chat.log`, the process's
 own scratch directory under `~/.kiro/crew/scratch/` (`mcp.log` and `lsp.log`
 land beside it). The directory is reclaimed with the process by the scratch

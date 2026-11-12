@@ -14,8 +14,8 @@ import typing
 
 import pytest
 
-from kiro_crew.cloud.fargate import identity as ident
-from kiro_crew.cloud.fargate.identity import CrewBinding, DocumentRefused
+from aj_crew.cloud.fargate import identity as ident
+from aj_crew.cloud.fargate.identity import CrewBinding, DocumentRefused
 
 ACCOUNT = "123456789012"
 OTHER_ACCOUNT = "210987654321"
@@ -42,7 +42,7 @@ def binding(crew: str, *, account: str = ACCOUNT, partition: str = "aws") -> Cre
 
 
 def secret_name(crew: str, key: str = "KIRO_API_KEY") -> str:
-    return f"kirocrew/crew/{crew}/{key}"
+    return f"ajcrew/crew/{crew}/{key}"
 
 
 def secret_arn(crew: str, key: str = "KIRO_API_KEY", *, account: str = ACCOUNT) -> str:
@@ -111,16 +111,16 @@ def test_a_name_outside_the_crew_charset_is_refused(crew):
 @pytest.mark.parametrize(
     "arn",
     [
-        f"arn:aws:iam::{ACCOUNT}:role/kirocrew-crew-a-admin",
-        f"arn:aws:iam::{ACCOUNT}:role/kirocrew-crew--exec",
-        f"arn:aws:iam::{ACCOUNT}:role/kirocrew-crew-exec",
+        f"arn:aws:iam::{ACCOUNT}:role/ajcrew-crew-a-admin",
+        f"arn:aws:iam::{ACCOUNT}:role/ajcrew-crew--exec",
+        f"arn:aws:iam::{ACCOUNT}:role/ajcrew-crew-exec",
         f"arn:aws:iam::{ACCOUNT}:role/other-a-exec",
-        f"arn:aws:iam::{ACCOUNT}:user/kirocrew-crew-a-exec",
-        f"arn:aws:iam:{REGION}:{ACCOUNT}:role/kirocrew-crew-a-exec",
-        f"arn:aws:ecs::{ACCOUNT}:role/kirocrew-crew-a-exec",
-        f"arn:notaws:iam::{ACCOUNT}:role/kirocrew-crew-a-exec",
-        "arn:aws:iam::12345:role/kirocrew-crew-a-exec",
-        "kirocrew-crew-a-exec",
+        f"arn:aws:iam::{ACCOUNT}:user/ajcrew-crew-a-exec",
+        f"arn:aws:iam:{REGION}:{ACCOUNT}:role/ajcrew-crew-a-exec",
+        f"arn:aws:ecs::{ACCOUNT}:role/ajcrew-crew-a-exec",
+        f"arn:notaws:iam::{ACCOUNT}:role/ajcrew-crew-a-exec",
+        "arn:aws:iam::12345:role/ajcrew-crew-a-exec",
+        "ajcrew-crew-a-exec",
         "",
     ],
 )
@@ -146,8 +146,8 @@ NOT_A_BINDING = {
 def test_a_binding_that_would_derive_a_name_naming_no_crew_cannot_be_constructed(field, value):
     """Validated in the type, so every derived name is well-formed by construction.
 
-    An unchecked ``crew=""`` derives the role ``kirocrew-crew--exec`` and the
-    family ``kirocrew-crew-``, which name no crew and collide across every crew
+    An unchecked ``crew=""`` derives the role ``ajcrew-crew--exec`` and the
+    family ``ajcrew-crew-``, which name no crew and collide across every crew
     reaching them. Checking in the type rather than in each deriver is what stops
     the guarantee depending on which entry point the caller used.
     """
@@ -203,7 +203,7 @@ def test_the_charset_is_reachable_without_reading_the_pattern():
     That is the failure the package surface exists to stop, and the crew charset is on the
     limb it names: a caller cannot build an acceptable crew name without reading it.
     """
-    from kiro_crew.cloud import fargate as fargate_package
+    from aj_crew.cloud import fargate as fargate_package
 
     assert "validated_crew_name" in fargate_package.__all__
     assert fargate_package.validated_crew_name is ident.validated_crew_name
@@ -212,7 +212,7 @@ def test_the_charset_is_reachable_without_reading_the_pattern():
 #: One table rather than two, because two tables that have to agree is the same
 #: trap as two validators: the looser one is the one an attacker reaches for, and
 #: nothing makes a case added to one appear in the other.
-GOOD_NAME = "kirocrew/crew/a/KIRO_API_KEY"
+GOOD_NAME = "ajcrew/crew/a/KIRO_API_KEY"
 
 
 def _arn(name: str, *, service: str = "secretsmanager", kind: str = "secret", region=None) -> str:
@@ -230,9 +230,9 @@ UNUSABLE_SECRET_REFERENCES = [
     # the module refuses to deliver a secret it cannot name.
     ident.SecretRef(f"{GOOD_NAME}-AbCdEf", _arn(f"{GOOD_NAME}-AbCdEf-XyZ123")),
     # The name and the ARN describe different secrets.
-    ident.SecretRef("kirocrew/crew/a/OTHER_KEY", _arn(f"{GOOD_NAME}-AbCdEf")),
+    ident.SecretRef("ajcrew/crew/a/OTHER_KEY", _arn(f"{GOOD_NAME}-AbCdEf")),
     # The name and the ARN name different crews.
-    ident.SecretRef("kirocrew/crew/b/KIRO_API_KEY", _arn(f"{GOOD_NAME}-AbCdEf")),
+    ident.SecretRef("ajcrew/crew/b/KIRO_API_KEY", _arn(f"{GOOD_NAME}-AbCdEf")),
     # A JSON-key or version tail makes one reference mean part of a secret.
     ident.SecretRef(GOOD_NAME, _arn(f"{GOOD_NAME}-AbCdEf:k::")),
     ident.SecretRef("other/crew/a/KIRO_API_KEY", _arn("other/crew/a/KIRO_API_KEY-AbCdEf")),
@@ -240,14 +240,14 @@ UNUSABLE_SECRET_REFERENCES = [
     # that stops at the crew. The name claiming the namespace is not evidence that
     # the ARN sits in it, so the ARN is checked on its own terms.
     ident.SecretRef(GOOD_NAME, _arn("other/crew/a/KIRO_API_KEY-AbCdEf")),
-    ident.SecretRef(GOOD_NAME, _arn("kirocrew/crew/a")),
-    ident.SecretRef("kirocrew/crew/a", _arn("kirocrew/crew/a-AbCdEf")),
+    ident.SecretRef(GOOD_NAME, _arn("ajcrew/crew/a")),
+    ident.SecretRef("ajcrew/crew/a", _arn("ajcrew/crew/a-AbCdEf")),
     ident.SecretRef(GOOD_NAME, _arn(f"{GOOD_NAME}-AbCdEf", kind="parameter")),
     ident.SecretRef(GOOD_NAME, _arn(f"{GOOD_NAME}-AbCdEf", service="ssm")),
     # An empty region is not a region, and both readers must say so.
     ident.SecretRef(GOOD_NAME, _arn(f"{GOOD_NAME}-AbCdEf", region="")),
     ident.SecretRef(GOOD_NAME, f"arn:aws:secretsmanager:{REGION}:1:secret:{GOOD_NAME}-AbCdEf"),
-    ident.SecretRef(GOOD_NAME, f"arn:aws:iam::{ACCOUNT}:role/kirocrew-crew-a-exec"),
+    ident.SecretRef(GOOD_NAME, f"arn:aws:iam::{ACCOUNT}:role/ajcrew-crew-a-exec"),
     ident.SecretRef(GOOD_NAME, "not-an-arn"),
 ]
 
@@ -395,8 +395,8 @@ def test_a_labelled_value_that_is_not_an_arn_at_all_is_refused(value):
 @pytest.mark.parametrize(
     "malformed",
     [
-        f"arn:aws:iam::{ACCOUNT}:role/kirocrew-crew-a-admin",
-        f"arn:aws:secretsmanager:{REGION}:{ACCOUNT}:secret:kirocrew/crew/a/KIRO_API_KEY",
+        f"arn:aws:iam::{ACCOUNT}:role/ajcrew-crew-a-admin",
+        f"arn:aws:secretsmanager:{REGION}:{ACCOUNT}:secret:ajcrew/crew/a/KIRO_API_KEY",
     ],
 )
 def test_a_string_claiming_the_crew_namespace_must_parse_rather_than_be_skipped(malformed):

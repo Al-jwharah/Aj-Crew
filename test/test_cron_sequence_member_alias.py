@@ -15,11 +15,11 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from member_memory_helpers import write_member_home
 
-from kiro_crew import agent_discovery, subagent
-from kiro_crew.config import loader
-from kiro_crew.config.loader import KiroCrewConfig, config_dir
-from kiro_crew.cron import CronJob
-from kiro_crew.execution_context import (
+from aj_crew import agent_discovery, subagent
+from aj_crew.config import loader
+from aj_crew.config.loader import AjCrewConfig, config_dir
+from aj_crew.cron import CronJob
+from aj_crew.execution_context import (
     ExecutionContext,
     MemoryStoreRef,
     read_session_execution,
@@ -27,7 +27,7 @@ from kiro_crew.execution_context import (
 
 
 async def _cron_callback(monkeypatch, cfg):
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     # Resolution reads ``live.snapshot() or self._cfg``; pin both to the test
     # config so the two crew aliases are visible without a live config watcher.
@@ -64,13 +64,13 @@ async def _cron_callback(monkeypatch, cfg):
 async def test_each_crew_in_a_sequence_is_dispatched_as_itself(monkeypatch, tmp_path):
     write_member_home(config_dir(), "alpha", "beta")  # two crew members, alpha and beta
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     # Give crew beta its own kiro_agent and a mapped workspace so the step's
     # runtime (agent) and tree (cwd) are pinned, not just its crew_agent alias.
     # A regression that put the step back on the captured member's runtime or in
     # the base workspace would then red, not pass silently.
-    from kiro_crew.config.sections import WorkspaceConfig
+    from aj_crew.config.sections import WorkspaceConfig
 
     beta_tree = tmp_path / "beta-tree"
     beta_tree.mkdir()
@@ -107,7 +107,7 @@ async def test_each_crew_in_a_sequence_is_dispatched_as_itself(monkeypatch, tmp_
 async def test_sequence_step_binds_its_spawn_policy_to_the_captured_store(monkeypatch, tmp_path):
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["beta"].kiro_agent = "beta-mode"
 
     agents_dir = tmp_path / "agents"
@@ -154,7 +154,7 @@ async def test_sequence_step_binds_its_spawn_policy_to_the_captured_store(monkey
 async def test_second_sequence_fire_rebinds_a_prior_captured_execution(monkeypatch, tmp_path):
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["beta"].kiro_agent = "beta-mode"
 
     _gw, callback = await _cron_callback(monkeypatch, cfg)
@@ -190,7 +190,7 @@ async def test_second_sequence_fire_rebinds_a_prior_captured_execution(monkeypat
 async def test_first_step_agent_mismatch_defers_the_whole_sequence(monkeypatch):
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["beta"].kiro_agent = "beta-mode"
     cfg.agents["alpha"].kiro_agent = "alpha-mode"
 
@@ -225,7 +225,7 @@ async def test_first_step_agent_mismatch_defers_the_whole_sequence(monkeypatch):
 async def test_later_step_agent_mismatch_defers_before_first_dispatch(monkeypatch):
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["beta"].kiro_agent = "beta-mode"
     cfg.agents["alpha"].kiro_agent = "alpha-mode"
 
@@ -264,7 +264,7 @@ async def test_later_step_agent_mismatch_defers_before_first_dispatch(monkeypatc
 async def test_an_empty_sequence_step_aborts_a_member_captured_cron(monkeypatch):
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     gw, callback = await _cron_callback(monkeypatch, cfg)
     captured = ExecutionContext(
@@ -292,7 +292,7 @@ async def test_an_empty_sequence_step_aborts_a_member_captured_cron(monkeypatch)
 async def test_an_empty_step_does_not_consume_a_delete_after_run_oneshot(monkeypatch):
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     gw, callback = await _cron_callback(monkeypatch, cfg)
     captured = ExecutionContext(
@@ -319,7 +319,7 @@ async def test_an_empty_step_does_not_consume_a_delete_after_run_oneshot(monkeyp
 
 def _let_sequence_complete(monkeypatch, gw):
     """Replace the stop-before-provider seam with one complete sequence turn."""
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     client = MagicMock()
     gw.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
@@ -340,9 +340,9 @@ def _let_sequence_complete(monkeypatch, gw):
 async def test_a_crew_edit_after_the_sweep_does_not_change_the_dispatch(monkeypatch, tmp_path):
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
-    from kiro_crew.config.sections import WorkspaceConfig
+    from aj_crew.config.sections import WorkspaceConfig
 
     beta_tree = tmp_path / "beta-tree"
     edited_tree = tmp_path / "edited-tree"
@@ -393,7 +393,7 @@ async def test_a_crew_edit_after_the_sweep_does_not_change_the_dispatch(monkeypa
 async def test_each_sequence_step_is_resolved_exactly_once_per_fire(monkeypatch):
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["beta"].kiro_agent = "beta-mode"
     cfg.agents["alpha"].kiro_agent = "alpha-mode"
 
@@ -427,7 +427,7 @@ async def test_each_sequence_step_is_resolved_exactly_once_per_fire(monkeypatch)
 async def test_a_sequence_repeating_one_crew_dispatches_it_twice(monkeypatch):
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["beta"].kiro_agent = "beta-mode"
 
     gw, callback = await _cron_callback(monkeypatch, cfg)
@@ -456,7 +456,7 @@ async def test_a_config_write_between_resolve_and_dispatch_keeps_the_dispatched_
 ):
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["beta"].kiro_agent = "stale-beta-mode"
     cfg.agents["alpha"].kiro_agent = "alpha-mode"
 
@@ -504,11 +504,11 @@ async def test_each_sequence_step_streams_under_the_runs_task_and_ends_its_conti
     the interrupted prompt's attempt (``settle_turn`` on its key), so a CONTINUE
     re-prompt's landing never confirms what only the interrupted prompt received.
     The set is empty once the run ends."""
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     gw, callback = await _cron_callback(monkeypatch, cfg)
     _let_sequence_complete(monkeypatch, gw)
     seen = []
@@ -547,11 +547,11 @@ async def test_a_refusal_in_an_earlier_sequence_step_leads_the_runs_result(monke
     """Each step's reply replaces the previous one, so a person-only directive
     refused in step one would vanish with step one's text; the refusals are
     run-scoped and lead the stored result."""
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     gw, callback = await _cron_callback(monkeypatch, cfg)
     _let_sequence_complete(monkeypatch, gw)
 
@@ -585,7 +585,7 @@ async def test_each_sequence_step_marks_its_key_finished_just_before_it_releases
     its next step."""
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     gw, callback = await _cron_callback(monkeypatch, cfg)
     _let_sequence_complete(monkeypatch, gw)
     order = []
@@ -622,7 +622,7 @@ def _context_templates(monkeypatch):
     ``Essential template '<name>': not found`` when no such template exists,
     which is the case for a crew alias whose ``kiro_agent`` differs from it.
     """
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     seen = []
 
@@ -638,7 +638,7 @@ def _context_templates(monkeypatch):
 async def test_sequence_steps_build_context_from_their_dispatched_template(monkeypatch):
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["beta"].kiro_agent = "beta-mode"
     cfg.agents["alpha"].kiro_agent = "alpha-mode"
     gw, callback = await _cron_callback(monkeypatch, cfg)
@@ -664,11 +664,11 @@ async def test_each_sequence_step_hands_the_gate_its_alias_not_its_template(monk
     """The governance gate looks a task profile up by the agent it is given, so
     each step names its alias, as a chat turn on that agent does, not the
     template it dispatches."""
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["beta"].kiro_agent = "beta-mode"
     cfg.agents["alpha"].kiro_agent = "alpha-mode"
     gw, callback = await _cron_callback(monkeypatch, cfg)
@@ -705,20 +705,20 @@ async def test_each_sequence_step_hands_the_gate_its_alias_not_its_template(monk
         ("beta", "beta", "beta-mode"),
         # A plain template name passes through. A name no agent declares is
         # refused before dispatch (test_cron_agent_presence.py).
-        ("kirocrew-lite", None, "kirocrew-lite"),
+        ("ajcrew-lite", None, "ajcrew-lite"),
     ],
 )
 @pytest.mark.asyncio
 async def test_single_agent_cron_builds_context_from_its_dispatched_template(
     monkeypatch, agent_id, member, expected
 ):
-    from kiro_crew.cron_service import agent_presence
+    from aj_crew.cron_service import agent_presence
 
     # The test home holds no spec for the template name.
     monkeypatch.setattr(agent_presence, "cron_agent_missing", lambda *_a: False)
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["beta"].kiro_agent = "beta-mode"
     gw, callback = await _cron_callback(monkeypatch, cfg)
     _let_sequence_complete(monkeypatch, gw)
@@ -754,8 +754,8 @@ async def test_a_sequence_with_a_project_path_runs_every_step_there(monkeypatch,
 
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
-    from kiro_crew.config.sections import WorkspaceConfig
+    cfg = AjCrewConfig.load()
+    from aj_crew.config.sections import WorkspaceConfig
 
     beta_tree = tmp_path / "beta-tree"
     beta_tree.mkdir()

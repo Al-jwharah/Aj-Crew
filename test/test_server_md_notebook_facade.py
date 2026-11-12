@@ -1,6 +1,6 @@
 """Notes' split ``server`` keeps the patch seams and the per-process state it had as one module.
 
-``kiro_crew.apps.builtins.md_notebook.server`` is a mirror facade (:mod:`kiro_crew._facade_mirror`)
+``aj_crew.apps.builtins.md_notebook.server`` is a mirror facade (:mod:`aj_crew._facade_mirror`)
 over the ``server_*`` owners beside it. The gateway runs it, ``syncer`` imports it and the tests
 reach every name as ``server.<name>``; the moved code reads its names as plain module globals, so
 a patch through the facade reaches that code because the mirror writes it into every module
@@ -39,10 +39,10 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew.apps.builtins.md_notebook import server, server_http, server_store
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew.apps.builtins.md_notebook import server, server_http, server_store
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_server_md_notebook_facade")
 
@@ -50,7 +50,7 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_server_md_notebook_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("corpus_gate",)
 
-PKG = "kiro_crew.apps.builtins.md_notebook"
+PKG = "aj_crew.apps.builtins.md_notebook"
 FACADE = f"{PKG}.server"
 _THIS_FILE = Path(__file__).resolve()
 _MISSING = object()
@@ -143,7 +143,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
             home = node.module or ""
             if node.level:
                 home = PKG + (f".{node.module}" if node.module else "")
-            if not home.startswith("kiro_crew") or home in family:
+            if not home.startswith("aj_crew") or home in family:
                 continue
             for alias in node.names:
                 if f"{home}.{alias.name}" not in family:
@@ -219,7 +219,7 @@ def _test_tree_files() -> list[Path]:
         rel = path.relative_to(root).as_posix()
         if rel == "conftest.py" or path.is_relative_to(test_root):
             found.append(path)
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and "/tests/" in rel:
+        elif rel.startswith("src/aj_crew/apps/builtins/") and "/tests/" in rel:
             found.append(path)
     return found
 
@@ -278,8 +278,8 @@ def test_a_patch_through_the_facade_reaches_every_holder_and_its_undo_restores_e
 _LAUNCH = """
 import json, runpy, sys
 import aiohttp.web
-from kiro_crew import _facade_mirror
-FACADE = "kiro_crew.apps.builtins.md_notebook.server"
+from aj_crew import _facade_mirror
+FACADE = "aj_crew.apps.builtins.md_notebook.server"
 seen = {}
 def _run_app(app, **kwargs):
     main = sys.modules["__main__"]
@@ -297,7 +297,7 @@ try:
     runpy.run_module(FACADE, run_name="__main__", alter_sys=True)
 except SystemExit as exc:
     seen["exit"] = exc.code
-from kiro_crew.apps.builtins.md_notebook import server, syncer
+from aj_crew.apps.builtins.md_notebook import server, syncer
 seen["canonical"] = [type(server).__name__, server.logger.name]
 seen["syncer_reads_canonical"] = syncer.server is server
 seen["canonical_is_mirror"] = server is sys.modules[FACADE]
@@ -314,9 +314,9 @@ def test_the_gateway_launch_runs_one_copy_with_the_mirror(tmp_path: Path) -> Non
     env = dict(os.environ)
     env["HOME"] = str(tmp_path / "user")
     env["MD_NOTEBOOK_HOME"] = str(tmp_path / "home")
-    env["KIROCREW_HOME"] = str(tmp_path / "crew")
+    env["AJCREW_HOME"] = str(tmp_path / "crew")
     env["MD_NOTEBOOK_NO_PICKER"] = "1"
-    src = str(Path(kiro_crew.__file__).resolve().parents[1])
+    src = str(Path(aj_crew.__file__).resolve().parents[1])
     env["PYTHONPATH"] = src + os.pathsep + env.get("PYTHONPATH", "")
     out = subprocess.run(
         [sys.executable, "-c", _LAUNCH],

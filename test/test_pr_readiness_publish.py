@@ -513,12 +513,12 @@ def _recheck_runner(
     runner.env.update(
         {
             "FORK": "true" if fork else "false",
-            "HEAD_REPO": "octo/KiroCrew" if fork else "kirodotdev/KiroCrew",
+            "HEAD_REPO": "octo/AjCrew" if fork else "kirodotdev/KiroCrew",
             "HEAD_REF": "feat/x",
             "MONITORED_LANES": job_env["MONITORED_LANES"],
         }
     )
-    head_repo = "octo/KiroCrew" if fork else "kirodotdev/KiroCrew"
+    head_repo = "octo/AjCrew" if fork else "kirodotdev/KiroCrew"
     workflow_runs: list[dict[str, object]] = [
         {
             "id": 5,

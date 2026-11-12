@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import history, history_projection
-from kiro_crew.history import ConversationLog
+from aj_crew import history, history_projection
+from aj_crew.history import ConversationLog
 
 KEY = "dashboard:resume"
 ROW_BYTES = 1_000

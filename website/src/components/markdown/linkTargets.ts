@@ -353,7 +353,7 @@ export function useSessionChip(raw: string | null, actions: SessionActions, labe
  * Two spellings are read, both of which the product itself writes: the `/`-joined
  * human path the folder tools take and return (`goal/worker`), and the ` › `
  * breadcrumb the chat header and the `[FOLDER]` context line show
- * (`kirocrew › oss`). One trailing separator is tolerated -- `goal/worker/` is how
+ * (`ajcrew › oss`). One trailing separator is tolerated -- `goal/worker/` is how
  * a directory-minded author spells a folder. An empty segment anywhere else
  * (`a//b`, a leading `/`) is refused: a leading slash is a filesystem path, which
  * the path chip owns, and a doubled separator names nothing in the tree.

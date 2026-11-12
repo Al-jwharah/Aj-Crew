@@ -26,7 +26,7 @@ from dev_fleet_server_coverage_helpers import (  # noqa: F401 -- the autouse fix
     _sel_capture,
 )
 
-from kiro_crew.apps.builtins.dev_fleet import (
+from aj_crew.apps.builtins.dev_fleet import (
     fleet_state,
     http_api,
     live,
@@ -34,7 +34,7 @@ from kiro_crew.apps.builtins.dev_fleet import (
     runtime,
     worktree_ops,
 )
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 # ==========================================================================
 # Untracked-discard contract: _dirty_split classification, the refusal

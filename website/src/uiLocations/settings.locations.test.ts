@@ -10,7 +10,7 @@ import * as path from 'node:path'
 interface Placement { surface_id: string; route: string; parent_ids: string[]; entry_kind: string; requires: unknown[] }
 interface Loc { id: string; kind: string; label_key: string; alias_keys?: string[]; terms?: Record<string, string[]>; placements: Placement[] }
 
-const INDEX_FILE = path.resolve(__dirname, '../../../src/kiro_crew/docs/ui-index.generated.json')
+const INDEX_FILE = path.resolve(__dirname, '../../../src/aj_crew/docs/ui-index.generated.json')
 const index = JSON.parse(fs.readFileSync(INDEX_FILE, 'utf-8')) as { locations: Loc[]; labels: Record<string, Record<string, string>> }
 const byId = new Map(index.locations.map(l => [l.id, l]))
 const src = (rel: string) => fs.readFileSync(path.resolve(__dirname, rel), 'utf-8')

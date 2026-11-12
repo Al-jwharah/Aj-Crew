@@ -1215,10 +1215,10 @@ class TestLedgerWriterGateFailsClosed:
 _CONTRACT_PATH = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "scripts"
     / "_review_contract.py"
 )

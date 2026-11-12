@@ -11,14 +11,14 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from kiro_crew.auth.login import device
-from kiro_crew.auth.login.device import (
+from aj_crew.auth.login import device
+from aj_crew.auth.login.device import (
     DeviceAuthError,
     DeviceAuthorization,
     initiate_device_authorization,
     poll_device_token,
 )
-from kiro_crew.auth.store import SocialProvider
+from aj_crew.auth.store import SocialProvider
 
 
 class _FakeResp:

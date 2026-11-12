@@ -26,28 +26,28 @@ const READ_ONLY = { bundleWritable: false };
 const WRITABLE = { bundleWritable: true };
 
 test("a mounted volume is 'volume' — the path alone does not condemn it", () => {
-  const p = "/Volumes/KiroCrew Nightly/KiroCrew Nightly.app/Contents/Resources";
+  const p = "/Volumes/AjCrew Nightly/AjCrew Nightly.app/Contents/Resources";
   assert.equal(classifyBundleLocation(p, DARWIN), "volume");
 });
 
 test("Gatekeeper App Translocation is 'translocated'", () => {
-  const p = "/private/var/folders/ab/cd/d/AppTranslocation/DEAD-BEEF/d/KiroCrew.app/Contents/Resources";
+  const p = "/private/var/folders/ab/cd/d/AppTranslocation/DEAD-BEEF/d/AjCrew.app/Contents/Resources";
   assert.equal(classifyBundleLocation(p, DARWIN), "translocated");
 });
 
 test("a normal install is 'applications'", () => {
   assert.equal(
-    classifyBundleLocation("/Applications/KiroCrew Nightly.app/Contents/Resources", DARWIN),
+    classifyBundleLocation("/Applications/AjCrew Nightly.app/Contents/Resources", DARWIN),
     "applications",
   );
   assert.equal(
-    classifyBundleLocation("/Users/someone/Applications/KiroCrew.app/Contents/Resources", DARWIN),
+    classifyBundleLocation("/Users/someone/Applications/AjCrew.app/Contents/Resources", DARWIN),
     "applications",
   );
 });
 
 test("an unusual but writable path is 'other', not a problem", () => {
-  const p = "/Users/someone/Desktop/KiroCrew.app/Contents/Resources";
+  const p = "/Users/someone/Desktop/AjCrew.app/Contents/Resources";
   assert.equal(classifyBundleLocation(p, DARWIN), "other");
   assert.equal(canInstallUpdates("other", READ_ONLY), true);
 });
@@ -55,13 +55,13 @@ test("an unusual but writable path is 'other', not a problem", () => {
 test("translocation wins over the volume prefix", () => {
   // A translocated copy of a volume-launched app carries both markers, and
   // "translocated" is the stricter, more accurate verdict.
-  const p = "/Volumes/x/d/AppTranslocation/UUID/d/KiroCrew.app/Contents/Resources";
+  const p = "/Volumes/x/d/AppTranslocation/UUID/d/AjCrew.app/Contents/Resources";
   assert.equal(classifyBundleLocation(p, DARWIN), "translocated");
 });
 
 test("non-darwin platforms do not get macOS-only verdicts", () => {
-  assert.equal(classifyBundleLocation("C:\\Program Files\\KiroCrew", { platform: "win32" }), "other");
-  assert.equal(classifyBundleLocation("/opt/kirocrew", { platform: "linux" }), "other");
+  assert.equal(classifyBundleLocation("C:\\Program Files\\AjCrew", { platform: "win32" }), "other");
+  assert.equal(classifyBundleLocation("/opt/ajcrew", { platform: "linux" }), "other");
 });
 
 test("a missing path is 'unknown' and stays updatable (fail-safe direction)", () => {
@@ -107,12 +107,12 @@ test("translocation is un-updatable even when writable", () => {
 
 test("containingDirForBundle strips Contents/Resources and the .app", () => {
   assert.equal(
-    containingDirForBundle("/Applications/KiroCrew.app/Contents/Resources"),
+    containingDirForBundle("/Applications/AjCrew.app/Contents/Resources"),
     "/Applications",
   );
   assert.equal(
-    containingDirForBundle("/Volumes/KiroCrew Nightly/KiroCrew Nightly.app/Contents/Resources"),
-    "/Volumes/KiroCrew Nightly",
+    containingDirForBundle("/Volumes/AjCrew Nightly/AjCrew Nightly.app/Contents/Resources"),
+    "/Volumes/AjCrew Nightly",
   );
 });
 
@@ -139,7 +139,7 @@ test("the package-type file identifies a package install", () => {
 
 test("$APPIMAGE identifies an AppImage", () => {
   assert.equal(
-    classifyLinuxInstall({ appImagePath: "/home/u/Applications/KiroCrew-x86_64.AppImage" }),
+    classifyLinuxInstall({ appImagePath: "/home/u/Applications/AjCrew-x86_64.AppImage" }),
     "appimage",
   );
 });
@@ -156,7 +156,7 @@ test("an /opt resourcesPath is a package install even with no other signal", () 
   // and a build whose target had no publish config writes no package-type file.
   // Without this fallback such a launch would classify "unknown" and be handed
   // the AppImage self-replace path, which has no image to replace.
-  assert.equal(classifyLinuxInstall({ resourcesPath: "/opt/KiroCrew/resources" }), "package");
+  assert.equal(classifyLinuxInstall({ resourcesPath: "/opt/AjCrew/resources" }), "package");
 });
 
 test("no signal at all is 'unknown', never a guess", () => {

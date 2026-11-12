@@ -11,16 +11,16 @@ import pytest
 from chat_test_helpers import _make_state
 from dashboard_chat_helpers import _provider_mock
 
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO, TurnUsage
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO, TurnUsage
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.state import _ChatSlot
 
 
 def _stored_token_rows(monkeypatch, tmp_path):
     """Point the usage store at *tmp_path* and return a reader of its rows, so a
     test checks the row the real persist wrote rather than the call into it."""
-    from kiro_crew.dashboard.handlers import usage as usage_mod
+    from aj_crew.dashboard.handlers import usage as usage_mod
 
     shard_dir = tmp_path / "tokens"
     monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", shard_dir)
@@ -65,7 +65,7 @@ class TestTokenPersistenceBackfill:
 
     @staticmethod
     def _make_state_for_run_chat(tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.push_slots_update = MagicMock()
@@ -78,13 +78,13 @@ class TestTokenPersistenceBackfill:
     @pytest.mark.asyncio
     async def test_safe_complete_reports_structured_monitor_usage(self, tmp_path, monkeypatch):
         """Normal runner return is not the accounting boundary; safe evidence is."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.monitoring.completion import MonitorCompletionHook
-        from kiro_crew.monitoring.models import (
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.monitoring.completion import MonitorCompletionHook
+        from aj_crew.monitoring.models import (
             MonitorActionCompletion,
             MonitorActionDisposition,
         )
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         events = [
             LLMEvent(kind=EVENT_TEXT_CHUNK, text="done"),
@@ -101,7 +101,7 @@ class TestTokenPersistenceBackfill:
         client.context_window_tokens = MagicMock(return_value=0)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.generate_session_summary",
+            "aj_crew.dashboard.chat_runner.generate_session_summary",
             AsyncMock(return_value=None),
         )
         completions: list[MonitorActionCompletion] = []
@@ -125,10 +125,10 @@ class TestTokenPersistenceBackfill:
     async def test_synthetic_timeout_complete_does_not_report_monitor_usage(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.monitoring.completion import MonitorCompletionHook
-        from kiro_crew.monitoring.models import MonitorActionCompletion
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.monitoring.completion import MonitorCompletionHook
+        from aj_crew.monitoring.models import MonitorActionCompletion
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         event = LLMEvent(
             kind=EVENT_COMPLETE,
@@ -142,7 +142,7 @@ class TestTokenPersistenceBackfill:
         client.context_window_tokens = MagicMock(return_value=0)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.generate_session_summary",
+            "aj_crew.dashboard.chat_runner.generate_session_summary",
             AsyncMock(return_value=None),
         )
         completions: list[MonitorActionCompletion] = []
@@ -161,10 +161,10 @@ class TestTokenPersistenceBackfill:
 
     @pytest.mark.asyncio
     async def test_synthesized_end_turn_does_not_report_monitor_usage(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.monitoring.completion import MonitorCompletionHook
-        from kiro_crew.monitoring.models import MonitorActionCompletion
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.monitoring.completion import MonitorCompletionHook
+        from aj_crew.monitoring.models import MonitorActionCompletion
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         event = LLMEvent(
             kind=EVENT_COMPLETE,
@@ -179,7 +179,7 @@ class TestTokenPersistenceBackfill:
         client.context_window_tokens = MagicMock(return_value=0)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.generate_session_summary",
+            "aj_crew.dashboard.chat_runner.generate_session_summary",
             AsyncMock(return_value=None),
         )
         completions: list[MonitorActionCompletion] = []
@@ -199,8 +199,8 @@ class TestTokenPersistenceBackfill:
     @pytest.mark.asyncio
     async def test_monitor_reauthorizes_at_provider_entry(self, tmp_path, monkeypatch):
         """A stopped claim cannot cross the runner's final provider boundary."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.monitoring.completion import MonitorCompletionHook
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.monitoring.completion import MonitorCompletionHook
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -227,9 +227,9 @@ class TestTokenPersistenceBackfill:
     @pytest.mark.asyncio
     async def test_monitor_shutdown_gate_precedes_acceptance(self, tmp_path, monkeypatch):
         """A closing session cannot acknowledge a wake that never entered the provider."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.monitoring.completion import MonitorCompletionHook
-        from kiro_crew.session import SessionClosingError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.monitoring.completion import MonitorCompletionHook
+        from aj_crew.session import SessionClosingError
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -260,10 +260,10 @@ class TestTokenPersistenceBackfill:
         self, tmp_path, monkeypatch
     ):
         """Provider completion evidence is durable before cancellable analytics I/O."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.monitoring.completion import MonitorCompletionHook
-        from kiro_crew.monitoring.models import MonitorActionCompletion
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.monitoring.completion import MonitorCompletionHook
+        from aj_crew.monitoring.models import MonitorActionCompletion
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         event = LLMEvent(
             kind=EVENT_COMPLETE,
@@ -277,7 +277,7 @@ class TestTokenPersistenceBackfill:
         client.context_window_tokens = MagicMock(return_value=0)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.generate_session_summary",
+            "aj_crew.dashboard.chat_runner.generate_session_summary",
             AsyncMock(return_value=None),
         )
 
@@ -285,7 +285,7 @@ class TestTokenPersistenceBackfill:
             raise asyncio.CancelledError
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.persist_token_record_async",
+            "aj_crew.dashboard.chat_runner.persist_token_record_async",
             _cancel_persistence,
         )
         completions: list[MonitorActionCompletion] = []
@@ -311,7 +311,7 @@ class TestTokenPersistenceBackfill:
         ``inner._model`` is set only just before EVENT_COMPLETE, so only the late backfill
         can fill the record.
         """
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [
             LLMEvent(
@@ -327,9 +327,9 @@ class TestTokenPersistenceBackfill:
         # The backfill must run as claude_code for canonicalize_for_provider to map 'opus'
         # -> 'opus-4.8-1m'. The label comes from the client's
         # ``SessionCapabilities.provider_seam``: cfg.agent.provider only allows "acp".
-        _cc_cfg = KiroCrewConfig()
+        _cc_cfg = AjCrewConfig()
         _cc_cfg.dashboard.merge_queued_messages = False
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.KiroCrewConfig.load", lambda: _cc_cfg)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.AjCrewConfig.load", lambda: _cc_cfg)
 
         # Build a mock whose inner._model starts EMPTY so the early backfill
         # branch (chat_runner.py:471-476) finds nothing and leaves slot.model
@@ -359,10 +359,10 @@ class TestTokenPersistenceBackfill:
             captured.append((slot_key, model, provider))
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
+            "aj_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -384,7 +384,7 @@ class TestTokenPersistenceBackfill:
         while the client lets the usage recorder distinguish Auto from an
         unavailable model source.
         """
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [
             LLMEvent(kind=EVENT_COMPLETE, usage=TurnUsage(input_tokens=5, output_tokens=7)),
@@ -403,10 +403,10 @@ class TestTokenPersistenceBackfill:
             captured.append((k, m, provider, kwargs["model_source"]))
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
+            "aj_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -420,7 +420,7 @@ class TestTokenPersistenceBackfill:
         """OpenCode resolves model synchronously; slot.model is already set
         when EVENT_COMPLETE arrives. Backfill must not clobber it.
         """
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [
             LLMEvent(kind=EVENT_COMPLETE, usage=TurnUsage(input_tokens=1, output_tokens=2)),
@@ -441,10 +441,10 @@ class TestTokenPersistenceBackfill:
             captured.append((k, m, provider))
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
+            "aj_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -473,7 +473,7 @@ class TestTokenUsageSurface:
         linked_session_key,
         expected,
     ):
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         complete = LLMEvent(
             kind=EVENT_COMPLETE,
@@ -491,7 +491,7 @@ class TestTokenUsageSurface:
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
         rows = _stored_token_rows(monkeypatch, tmp_path)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -500,7 +500,7 @@ class TestTokenUsageSurface:
     @pytest.mark.asyncio
     async def test_completion_keeps_source_of_session_that_ran(self, tmp_path, monkeypatch):
         """A mid-turn rebind must not move the completed turn's attribution."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         complete = LLMEvent(
             kind=EVENT_COMPLETE,
@@ -525,7 +525,7 @@ class TestTokenUsageSurface:
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
         rows = _stored_token_rows(monkeypatch, tmp_path)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -540,11 +540,11 @@ class TestTokenUsageSurface:
         Only the turn's usage row outlives the tab, so the row has to name that
         transcript for the Telemetry card to title the tab once it is closed.
         """
-        from kiro_crew.dashboard.handlers import usage as usage_mod
-        from kiro_crew.dashboard.handlers.telemetry import _with_conversation_titles
-        from kiro_crew.dashboard.slot_ownership import task_review_session_key
-        from kiro_crew.history import ConversationLog
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.handlers import usage as usage_mod
+        from aj_crew.dashboard.handlers.telemetry import _with_conversation_titles
+        from aj_crew.dashboard.slot_ownership import task_review_session_key
+        from aj_crew.history import ConversationLog
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         complete = LLMEvent(
             kind=EVENT_COMPLETE,
@@ -560,7 +560,7 @@ class TestTokenUsageSurface:
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
         _stored_token_rows(monkeypatch, tmp_path)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -587,7 +587,7 @@ class TestCostOnlyTurnPersistGate:
     @pytest.mark.asyncio
     async def test_a_cost_only_turn_persists_its_row(self, tmp_path, monkeypatch):
         """A turn with only ``cost_usd`` set passes the persist gate."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE, usage=TurnUsage(cost_usd=0.42))]
         state = TestTokenPersistenceBackfill._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -596,7 +596,7 @@ class TestCostOnlyTurnPersistGate:
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
         rows = _stored_token_rows(monkeypatch, tmp_path)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -608,7 +608,7 @@ class TestCostOnlyTurnPersistGate:
     async def test_an_all_zero_turn_still_writes_no_row(self, tmp_path, monkeypatch):
         """The widened gate must not have become unconditional: a turn whose
         usage carries no billing dimension at all stays out of the store."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE, usage=TurnUsage())]
         state = TestTokenPersistenceBackfill._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -617,7 +617,7 @@ class TestCostOnlyTurnPersistGate:
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
         rows = _stored_token_rows(monkeypatch, tmp_path)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -633,8 +633,8 @@ class TestTurnRowDelivery:
     async def test_the_turn_row_says_whether_a_reply_was_delivered(
         self, tmp_path, monkeypatch, replied
     ):
-        from kiro_crew.dashboard.handlers.usage import slot_turn_usage
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.handlers.usage import slot_turn_usage
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         events = [LLMEvent(kind=EVENT_TEXT_CHUNK, text="done")] if replied else []
         events.append(
@@ -646,7 +646,7 @@ class TestTurnRowDelivery:
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
         _stored_token_rows(monkeypatch, tmp_path)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -670,7 +670,7 @@ class TestKiroBackfillProfileGuard:
         return client
 
     def test_predicate_flags_bedrock_profile_ids(self):
-        from kiro_crew.dashboard.chat_runner import _is_bedrock_profile_id
+        from aj_crew.dashboard.chat_runner import _is_bedrock_profile_id
 
         assert _is_bedrock_profile_id("global.anthropic.claude-opus-4-8[1m]")
         assert _is_bedrock_profile_id("us.anthropic.claude-opus-4-7")
@@ -694,14 +694,14 @@ class TestKiroBackfillProfileGuard:
         ],
     )
     def test_not_backfilled(self, model, providers):
-        from kiro_crew.dashboard.chat_runner import _backfill_canonical_model
+        from aj_crew.dashboard.chat_runner import _backfill_canonical_model
 
         client = self._client_with_model(model)
         for provider in providers:
             assert _backfill_canonical_model(client, provider) == ""
 
     def test_kiro_portable_alias_is_kept(self):
-        from kiro_crew.dashboard.chat_runner import _backfill_canonical_model
+        from aj_crew.dashboard.chat_runner import _backfill_canonical_model
 
         # A dotted alias is the picker's value and routes with capacity
         # awareness — keep it so the header/dropdown still reflect the model.
@@ -709,7 +709,7 @@ class TestKiroBackfillProfileGuard:
         assert _backfill_canonical_model(client, "acp") == "claude-opus-4.7"
 
     def test_claude_code_profile_id_still_canonicalizes(self):
-        from kiro_crew.dashboard.chat_runner import _backfill_canonical_model
+        from aj_crew.dashboard.chat_runner import _backfill_canonical_model
 
         # claude_code is unaffected: its profile id maps to the dropdown key the
         # user explicitly chose, so the guard must not strip it.
@@ -724,7 +724,7 @@ class TestKiroBackfillProfileGuard:
         id), so the next resume re-resolves rather than re-sending the throttled
         profile as a set_model override.
         """
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE, usage=TurnUsage(input_tokens=3, output_tokens=4))]
 
@@ -755,10 +755,10 @@ class TestKiroBackfillProfileGuard:
             captured.append((k, m, provider))
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
+            "aj_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -873,13 +873,13 @@ class TestPinnedModelWithheld:
         ],
     )
     def test_verdict(self, advertised, pin, provider, verdict):
-        from kiro_crew.dashboard.chat_runner import _pinned_model_verdict
+        from aj_crew.dashboard.chat_runner import _pinned_model_verdict
 
         client = self._client(advertised)
         assert _pinned_model_verdict(client, pin, provider) is verdict
 
     def test_unknown_entitlement_keeps_the_pin(self):
-        from kiro_crew.dashboard.chat_runner import _pinned_model_verdict
+        from aj_crew.dashboard.chat_runner import _pinned_model_verdict
 
         # Advertised nothing (no session yet / backend omits the list) must read
         # as "unknown", never as "nothing is allowed" — and, since the verdict is
@@ -887,20 +887,20 @@ class TestPinnedModelWithheld:
         assert _pinned_model_verdict(self._client([]), "claude-opus-5", "acp") is None
 
     def test_auto_and_empty_are_never_withheld(self):
-        from kiro_crew.dashboard.chat_runner import _pinned_model_verdict
+        from aj_crew.dashboard.chat_runner import _pinned_model_verdict
 
         client = self._client(["claude-sonnet-5"])
         assert _pinned_model_verdict(client, "auto", "acp") is None
         assert _pinned_model_verdict(client, "", "acp") is None
 
     def test_claude_backend_provider_is_exempt(self):
-        from kiro_crew.dashboard.chat_runner import _pinned_model_verdict
+        from aj_crew.dashboard.chat_runner import _pinned_model_verdict
 
         client = self._client(["claude-opus-4-8[1m]"], claude_backend=True)
         assert _pinned_model_verdict(client, "claude-opus-4.8", "acp") is None
 
     def test_provider_without_getter_keeps_the_pin(self):
-        from kiro_crew.dashboard.chat_runner import _pinned_model_verdict
+        from aj_crew.dashboard.chat_runner import _pinned_model_verdict
 
         client = MagicMock()
         del client.available_models
@@ -908,7 +908,7 @@ class TestPinnedModelWithheld:
         assert _pinned_model_verdict(client, "claude-opus-5", "acp") is None
 
     def test_getter_raising_keeps_the_pin(self):
-        from kiro_crew.dashboard.chat_runner import _pinned_model_verdict
+        from aj_crew.dashboard.chat_runner import _pinned_model_verdict
 
         client = MagicMock()
         client.capabilities = capabilities_for(ACP_BACKEND_KIRO)
@@ -988,20 +988,20 @@ class TestPinnedModelWithheld:
         import importlib
         from pathlib import Path
 
-        from kiro_crew.dashboard import chat_handlers, chat_runner
+        from aj_crew.dashboard import chat_handlers, chat_runner
 
         # The handler bodies are split between `chat_handlers` and its
         # `chat_api` owners, so every owner is scanned beside the two facades.
         owner_paths = sorted((Path(chat_handlers.__file__).parent / "chat_api").glob("[!_]*.py"))
         owners = [
-            importlib.import_module(f"kiro_crew.dashboard.chat_api.{path.stem}")
+            importlib.import_module(f"aj_crew.dashboard.chat_api.{path.stem}")
             for path in owner_paths
         ]
         assert owners, "no chat_api owner module found beside chat_handlers"
         # The turn's code is the runner plus the `chat_turn` owners its compose
         # runs, so a runner teardown site may sit in either and both are scanned.
         turn_owners = [
-            importlib.import_module(f"kiro_crew.dashboard.chat_turn.{path.stem}")
+            importlib.import_module(f"aj_crew.dashboard.chat_turn.{path.stem}")
             for path in sorted((Path(chat_runner.__file__).parent / "chat_turn").glob("[!_]*.py"))
         ]
         assert turn_owners, "no chat_turn owner module found beside chat_runner"
@@ -1039,7 +1039,7 @@ class TestPinnedModelWithheld:
     @pytest.mark.asyncio
     async def test_reset_chokepoint_forgets_the_verdict(self):
         """The one reset funnel must drop it, so all its call sites do."""
-        from kiro_crew.dashboard.chat_handlers import _reset_slot_session
+        from aj_crew.dashboard.chat_handlers import _reset_slot_session
 
         state = MagicMock()
 
@@ -1051,7 +1051,7 @@ class TestPinnedModelWithheld:
         slot.model = "claude-opus-5"
         slot.record_model_withheld(True)
 
-        with patch("kiro_crew.dashboard.chat_handlers._unblock_pending_waits"):
+        with patch("aj_crew.dashboard.chat_handlers._unblock_pending_waits"):
             await _reset_slot_session(state, slot, "dashboard:s1")
 
         assert slot.model_withheld is None
@@ -1065,7 +1065,7 @@ class TestPinnedModelWithheld:
         would republish a runnable pin as `auto` -- the defect the verdict exists
         to remove -- for a session that never changed.
         """
-        from kiro_crew.dashboard.chat_handlers import _reset_slot_session
+        from aj_crew.dashboard.chat_handlers import _reset_slot_session
 
         state = MagicMock()
 
@@ -1077,7 +1077,7 @@ class TestPinnedModelWithheld:
         slot.model = "claude-opus-5"
         slot.record_model_withheld(True)
 
-        with patch("kiro_crew.dashboard.chat_handlers._unblock_pending_waits"):
+        with patch("aj_crew.dashboard.chat_handlers._unblock_pending_waits"):
             reloaded = await _reset_slot_session(state, slot, "dashboard:s1", skip_if_busy=True)
 
         assert reloaded is False
@@ -1086,7 +1086,7 @@ class TestPinnedModelWithheld:
     @pytest.mark.asyncio
     async def test_a_reset_that_raises_drops_the_verdict(self):
         """A teardown that raised leaves a session the slot cannot vouch for."""
-        from kiro_crew.dashboard.chat_handlers import _reset_slot_session
+        from aj_crew.dashboard.chat_handlers import _reset_slot_session
 
         state = MagicMock()
 
@@ -1098,7 +1098,7 @@ class TestPinnedModelWithheld:
         slot.model = "claude-opus-5"
         slot.record_model_withheld(True)
 
-        with patch("kiro_crew.dashboard.chat_handlers._unblock_pending_waits"):
+        with patch("aj_crew.dashboard.chat_handlers._unblock_pending_waits"):
             with pytest.raises(RuntimeError):
                 await _reset_slot_session(state, slot, "dashboard:s1")
 
@@ -1109,7 +1109,7 @@ class TestPinnedModelWithheld:
         """End-to-end: a slot pinned to an unentitled model gets an in-chat
         notice, and the pin SURVIVES so a plan re-upgrade self-heals.
         """
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE, usage=TurnUsage(input_tokens=3, output_tokens=4))]
         state = TestTokenPersistenceBackfill._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -1139,10 +1139,10 @@ class TestPinnedModelWithheld:
             del k, m, e, provider, kwargs
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
+            "aj_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -1188,7 +1188,7 @@ class TestPinnedModelWithheld:
         Recorded outside the pinned-verdict branch, through the public `served_model`: the
         AcpProvider wrapper has no `_resolved_model_id`, so a private read stores `""`.
         """
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE, usage=TurnUsage(input_tokens=3, output_tokens=4))]
         state = TestTokenPersistenceBackfill._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -1222,10 +1222,10 @@ class TestPinnedModelWithheld:
             del k, m, e, provider, kwargs
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
+            "aj_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -1240,7 +1240,7 @@ class TestPinnedModelWithheld:
         is used on purpose: `api_models` drops it, but `_normalize_model` rewrites it to the
         replacement the session sees, so it is still reported runnable.
         """
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE, usage=TurnUsage(input_tokens=3, output_tokens=4))]
         state = TestTokenPersistenceBackfill._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -1271,10 +1271,10 @@ class TestPinnedModelWithheld:
             del k, m, e, provider, kwargs
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
+            "aj_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -1294,7 +1294,7 @@ class TestPinnedModelWithheld:
         A replacement can arrive without a teardown this slot saw and advertise nothing;
         that is "not known".
         """
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE, usage=TurnUsage(input_tokens=3, output_tokens=4))]
         state = TestTokenPersistenceBackfill._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -1323,10 +1323,10 @@ class TestPinnedModelWithheld:
             del k, m, e, provider, kwargs
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
+            "aj_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -1345,17 +1345,17 @@ class TestPinnedModelWithheld:
 
         `cfg` is bound in a try whose except only logs, so a later `cfg.agent.provider` read
         would raise UnboundLocalError. Only a PINNED slot reaches that read. The SECOND load
-        fails because an earlier unguarded `KiroCrewConfig.load()` would abort first.
+        fails because an earlier unguarded `AjCrewConfig.load()` would abort first.
         """
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE, usage=TurnUsage(input_tokens=3, output_tokens=4))]
         state = TestTokenPersistenceBackfill._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
         slot.model = "claude-opus-5"
 
-        real_cfg = KiroCrewConfig.load()
+        real_cfg = AjCrewConfig.load()
         seen = {"n": 0}
 
         def load_then_break():
@@ -1366,7 +1366,7 @@ class TestPinnedModelWithheld:
                 raise ValueError("config became unreadable mid-turn")
             return real_cfg
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.KiroCrewConfig.load", load_then_break)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.AjCrewConfig.load", load_then_break)
 
         client = _provider_mock()
         client.context_usage_pct = MagicMock(return_value=10.0)
@@ -1388,10 +1388,10 @@ class TestPinnedModelWithheld:
             del k, m, e, provider, kwargs
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
+            "aj_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         # Completes. Reading cfg.agent.provider here raises UnboundLocalError.
         await _run_chat(state, slot, "hello")
@@ -1405,7 +1405,7 @@ class TestPinnedModelWithheld:
     ):
         """The withheld case reports `auto` on the activity line; the healthy case
         must still report the model the session actually runs on."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE, usage=TurnUsage(input_tokens=3, output_tokens=4))]
         state = TestTokenPersistenceBackfill._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -1435,10 +1435,10 @@ class TestPinnedModelWithheld:
             del k, m, e, provider, kwargs
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
+            "aj_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -1460,7 +1460,7 @@ class TestPinnedModelWithheld:
         """The notice reports the SPAWN-time withhold, so a warm session (neither
         new nor resumed) must not repeat it on every turn.
         """
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE, usage=TurnUsage(input_tokens=3, output_tokens=4))]
         state = TestTokenPersistenceBackfill._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -1488,10 +1488,10 @@ class TestPinnedModelWithheld:
             del k, m, e, provider, kwargs
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
+            "aj_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -1517,7 +1517,7 @@ class TestPinnedModelWithheld:
     @pytest.mark.asyncio
     async def test_run_chat_keeps_an_entitled_pin(self, tmp_path, monkeypatch):
         """Counterpart: an advertised pin is left exactly as the user set it."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE, usage=TurnUsage(input_tokens=3, output_tokens=4))]
         state = TestTokenPersistenceBackfill._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -1546,10 +1546,10 @@ class TestPinnedModelWithheld:
             del k, m, e, provider, kwargs
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
+            "aj_crew.dashboard.chat_runner.persist_token_record_async", _fake_persist
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 

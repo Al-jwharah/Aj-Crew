@@ -1,6 +1,6 @@
 """The harness vocabulary is one import path over a family of owner modules.
 
-``kiro_crew.agent_sdk.backends`` defines the backend identifiers and the selectable
+``aj_crew.agent_sdk.backends`` defines the backend identifiers and the selectable
 registry and re-exports every other vocabulary name from the ``backends_*`` owner that
 defines it. Six properties keep that shape honest, each pinned here:
 
@@ -9,7 +9,7 @@ defines it. Six properties keep that shape honest, each pinned here:
    disposition-row and card tests enumerate -- still sees every set.
 2. **The owners are leaves that read only what the facade binds first.** An owner's
    module-scope imports are the standard library and the identifiers the facade defines
-   above its owner imports; anything else either re-enters ``KiroCrewConfig.load()``
+   above its owner imports; anything else either re-enters ``AjCrewConfig.load()``
    or meets a name the facade has not bound yet.
 3. **The facade is the only way in.** No product module imports an owner directly, so a
    consumer never depends on which owner holds a name.
@@ -33,14 +33,14 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.agent_sdk import backends
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.agent_sdk import backends
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 # One group per tree-scanning file: the patch-reach guard below reads the whole test tree.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_backends_vocabulary_family")
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "src" / "kiro_crew"
+SRC = ROOT / "src" / "aj_crew"
 FACADE = Path(backends.__file__)
 FACADE_NAME = backends.__name__
 OWNER_PREFIX = FACADE_NAME + "_"
@@ -160,8 +160,8 @@ def test_the_owner_import_check_can_fail() -> None:
     early = _bound_before_owners(FACADE_TREE)
     assert "ACP_BACKEND_KIRO" in early and "ACP_BACKENDS_STEER" not in early
     planted = {
-        "from kiro_crew.acp.types import CC_PERMISSION_MODE_AUTO\n": "kiro_crew.acp.types",
-        "import kiro_crew.config\n": "kiro_crew.config",
+        "from aj_crew.acp.types import CC_PERMISSION_MODE_AUTO\n": "aj_crew.acp.types",
+        "import aj_crew.config\n": "aj_crew.config",
         f"from {FACADE_NAME} import ACP_BACKENDS_STEER\n": "ACP_BACKENDS_STEER",
         "from ..config import loader\n": "..config",
         "from .backends import ACP_BACKEND_KIRO\n": ".backends",
@@ -188,7 +188,7 @@ def test_an_owner_imported_first_in_a_fresh_interpreter_loads_the_whole_family()
         f"import {last}\n"
         f"facade = sys.modules[{FACADE_NAME!r}]\n"
         "print(sorted(n for n in sys.modules if n.startswith(facade.__name__ + '_')))\n"
-        "print('acp' if 'kiro_crew.acp' in sys.modules else 'leaf')\n"
+        "print('acp' if 'aj_crew.acp' in sys.modules else 'leaf')\n"
     )
     result = subprocess.run(
         [sys.executable, "-c", probe],
@@ -214,14 +214,14 @@ def _absolute(node: ast.ImportFrom, package: str) -> str:
     return ".".join([*base, node.module] if node.module else base)
 
 
-def _direct_owner_imports(source: str, package: str = "kiro_crew") -> list[str]:
+def _direct_owner_imports(source: str, package: str = "aj_crew") -> list[str]:
     found = []
     for node in ast.walk(ast.parse(source)):
         if isinstance(node, ast.ImportFrom):
             module = _absolute(node, package)
             if module.startswith(OWNER_PREFIX):
                 found.append(module)
-            elif module == "kiro_crew.agent_sdk":
+            elif module == "aj_crew.agent_sdk":
                 found += [a.name for a in node.names if a.name.startswith("backends_")]
         elif isinstance(node, ast.Import):
             found += [a.name for a in node.names if a.name.startswith(OWNER_PREFIX)]
@@ -243,7 +243,7 @@ def test_no_product_module_but_the_facade_imports_an_owner() -> None:
         hits = _direct_owner_imports(text, package)
         if hits:
             offenders[path.relative_to(SRC).as_posix()] = hits
-    assert offenders == {}, "import vocabulary names from kiro_crew.agent_sdk.backends"
+    assert offenders == {}, "import vocabulary names from aj_crew.agent_sdk.backends"
 
 
 def test_the_direct_import_check_can_fail() -> None:
@@ -251,9 +251,9 @@ def test_the_direct_import_check_can_fail() -> None:
     assert _direct_owner_imports(f"from {owner} import X\n") == [owner]
     assert _direct_owner_imports(f"import {owner}\n") == [owner]
     short = owner.rsplit(".", 1)[1]
-    assert _direct_owner_imports(f"from kiro_crew.agent_sdk import {short}\n") == [short]
+    assert _direct_owner_imports(f"from aj_crew.agent_sdk import {short}\n") == [short]
     assert _direct_owner_imports(f"from {FACADE_NAME} import X\n") == []
-    sibling = "kiro_crew.agent_sdk"
+    sibling = "aj_crew.agent_sdk"
     assert _direct_owner_imports(f"from .{short} import X\n", sibling) == [owner]
     assert _direct_owner_imports(f"from . import {short}\n", sibling) == [short]
     assert _direct_owner_imports(f"from ..{short} import X\n", f"{sibling}.drivers") == [owner]
@@ -272,7 +272,7 @@ def _facade_aliases(tree: ast.Module) -> set[str]:
             for alias in node.names:
                 if alias.name == FACADE_NAME and alias.asname:
                     aliases.add(alias.asname)
-        elif isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.agent_sdk":
+        elif isinstance(node, ast.ImportFrom) and node.module == "aj_crew.agent_sdk":
             aliases |= {a.asname or a.name for a in node.names if a.name == "backends"}
     return aliases
 
@@ -342,7 +342,7 @@ def test_no_owner_function_reads_a_name_the_corpus_patches_on_the_facade() -> No
 
 def test_the_patch_reach_check_can_fail() -> None:
     test_source = (
-        "from kiro_crew.agent_sdk import backends as vocab\n"
+        "from aj_crew.agent_sdk import backends as vocab\n"
         "def test_x(monkeypatch):\n"
         "    monkeypatch.setattr(vocab, 'selectable_backends', lambda: set())\n"
         f"    monkeypatch.setattr('{FACADE_NAME}._baseline', set())\n"

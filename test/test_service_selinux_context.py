@@ -17,13 +17,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.service import linux as svc_linux
-from kiro_crew.service import selinux as sel
+from aj_crew.service import linux as svc_linux
+from aj_crew.service import selinux as sel
 
 USER_CTX = "unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023"
 INIT_T = "system_u:system_r:init_t:s0"
 BIN_T = "system_u:object_r:bin_t:s0"
-EXE = "/home/tester/.local/bin/kirocrew"
+EXE = "/home/tester/.local/bin/ajcrew"
 
 # 1-based bit numbers as selinuxfs reports them.
 _BITS = {("process", "transition"): 2, ("file", "entrypoint"): 18}
@@ -79,9 +79,9 @@ def host(tmp_path, monkeypatch):
 def _render(*, user_scope: bool = False) -> str:
     gid = MagicMock(returncode=0, stdout="tester\n", stderr="")
     with (
-        patch("kiro_crew.service.common.shutil.which", return_value=EXE),
-        patch("kiro_crew.service.linux.subprocess.run", return_value=gid),
-        patch("kiro_crew.service.linux.trusted_system_bin", return_value="/usr/bin/id"),
+        patch("aj_crew.service.common.shutil.which", return_value=EXE),
+        patch("aj_crew.service.linux.subprocess.run", return_value=gid),
+        patch("aj_crew.service.linux.trusted_system_bin", return_value="/usr/bin/id"),
     ):
         return svc_linux.render_unit(user_scope=user_scope)
 

@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import data_home_owner
-from kiro_crew.platform_compat import IS_POSIX
+from aj_crew import data_home_owner
+from aj_crew.platform_compat import IS_POSIX
 
 pytestmark = pytest.mark.skipif(not IS_POSIX, reason="ownership by uid is POSIX only")
 
@@ -61,11 +61,11 @@ def test_files_another_account_owns_are_reported_with_their_owner(tmp_path, monk
 
 def test_the_explanation_names_folder_owner_cause_and_docs_but_no_command(tmp_path):
     text = _found(tmp_path).explain()
-    assert f"Some Kiro Crew files in {tmp_path} belong to root" in text
+    assert f"Some Aj Crew files in {tmp_path} belong to root" in text
     assert str(tmp_path / "config.json") in text
     assert "probably started as root once" in text and "Stop running it as root" in text
     assert text.endswith(data_home_owner.HELP_URL)
-    # Kiro Crew offers no line that changes owners as root.
+    # Aj Crew offers no line that changes owners as root.
     assert "chown" not in text and "sudo " not in text
 
 
@@ -124,7 +124,7 @@ def test_root_aimed_at_a_persons_home_is_refused(tmp_path, monkeypatch):
     refusal = data_home_owner.root_run_refusal(home, "gateway", ["gateway", "--port", "auto"])
     assert "running as root" in refusal
     assert str(home) in refusal
-    assert refusal.endswith("Run it without sudo: kirocrew gateway --port auto")
+    assert refusal.endswith("Run it without sudo: ajcrew gateway --port auto")
 
 
 def test_a_normal_account_is_never_refused(tmp_path):
@@ -136,7 +136,7 @@ def test_a_normal_account_is_never_refused(tmp_path):
 def test_root_in_roots_own_home_is_left_alone(monkeypatch):
     monkeypatch.setattr(data_home_owner.os, "geteuid", lambda: 0)
     # The closest existing folder is "/", which root owns.
-    home = Path("/") / "kirocrew-test-absent" / "crew"
+    home = Path("/") / "ajcrew-test-absent" / "crew"
     assert data_home_owner.root_run_refusal(home, "gateway", ["gateway"]) == ""
 
 
@@ -149,23 +149,23 @@ def test_the_documented_root_commands_are_left_alone(tmp_path, monkeypatch, comm
 
 @pytest.mark.parametrize("argv", [["status"], []], ids=["subcommand", "bare"])
 def test_the_cli_refuses_before_it_touches_the_data_home(monkeypatch, capsys, argv):
-    from kiro_crew import cli
+    from aj_crew import cli
 
     def touched():
         raise AssertionError("the data home was resolved before the refusal")
 
-    from kiro_crew.platform import tree_liveness
+    from aj_crew.platform import tree_liveness
 
     monkeypatch.setattr(cli, "ensure_data_home", touched)
     # Project detection's saved-path lookup creates the data home.
-    monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+    monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
     monkeypatch.setattr(cli, "_detect_project_dir", touched)
     # The first step after the refusal for a non-gateway command.
     monkeypatch.setattr(tree_liveness, "hold_running_tree_lock", touched)
     monkeypatch.setattr(
         data_home_owner, "root_run_refusal", lambda home, command, argv: f"refused: {command}"
     )
-    monkeypatch.setattr(sys, "argv", ["kirocrew", *argv])
+    monkeypatch.setattr(sys, "argv", ["ajcrew", *argv])
     with pytest.raises(SystemExit) as exc:
         cli.main()
     assert exc.value.code == 1
@@ -187,7 +187,7 @@ def test_the_gateway_is_quiet_when_this_account_owns_the_home(caplog, tmp_path):
 
 
 def test_doctor_reports_the_files_owner_and_docs(monkeypatch, capsys, tmp_path):
-    from kiro_crew.doctor_checks import install
+    from aj_crew.doctor_checks import install
 
     monkeypatch.setattr(data_home_owner, "check_data_home", lambda home: _found(tmp_path))
     issues: list[str] = []
@@ -201,7 +201,7 @@ def test_doctor_reports_the_files_owner_and_docs(monkeypatch, capsys, tmp_path):
 
 
 def test_doctor_is_quiet_when_this_account_owns_the_home(monkeypatch, capsys, tmp_path):
-    from kiro_crew.doctor_checks import install
+    from aj_crew.doctor_checks import install
 
     monkeypatch.setattr(
         data_home_owner, "check_data_home", lambda home: data_home_owner.DataHomeAccess(str(home))
@@ -216,7 +216,7 @@ def test_doctor_is_quiet_when_this_account_owns_the_home(monkeypatch, capsys, tm
 async def test_api_status_carries_the_data_home_check(monkeypatch, tmp_path):
     from test_handlers_system_meminfo_unavailable import _status_body
 
-    from kiro_crew.dashboard import handlers_system
+    from aj_crew.dashboard import handlers_system
 
     found = _found(tmp_path)
     seen: list[Path] = []

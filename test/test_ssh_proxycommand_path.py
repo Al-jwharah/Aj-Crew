@@ -29,9 +29,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.deploy import engine
-from kiro_crew.instances import diagnostics, token_mint
-from kiro_crew.instances.ssh_tunnel_manager import _SshTunnel
+from aj_crew.deploy import engine
+from aj_crew.instances import diagnostics, token_mint
+from aj_crew.instances.ssh_tunnel_manager import _SshTunnel
 
 _TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4In0.c2ln"
 _NOT_INSTALLED = (
@@ -40,7 +40,7 @@ _NOT_INSTALLED = (
 
 # What OpenSSH does with `ProxyCommand /abs/path/connect-helper %h`: it runs the
 # proxy under its own PATH, and the proxy looks the plugin up by name. On
-# success it prints what a remote `kirocrew token` would, or KC_STANDIN_OUT when
+# success it prints what a remote `ajcrew token` would, or KC_STANDIN_OUT when
 # a test sets it. KC_STANDIN_RC lets a test choose a different outcome.
 _STANDIN = f"""
 import os, shutil, sys
@@ -92,7 +92,7 @@ def gui_gateway(monkeypatch, tmp_path):
     monkeypatch.setenv("PATH", str(sysbin))
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(install),))
     monkeypatch.setattr(engine, "_TRUSTED_AWS_BIN_DIRS", ())
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     monkeypatch.setattr(github_runner, "validate_provider_directory", lambda candidate: candidate)
 
@@ -122,7 +122,7 @@ async def test_token_mint_through_a_proxycommand_finds_the_plugin(gui_gateway):
 @pytest.mark.asyncio
 async def test_remote_restart_through_a_proxycommand_finds_the_plugin(gui_gateway):
     sysbin, _install, heads = gui_gateway
-    rc, err = await token_mint.run_remote_kirocrew("ds-abc", "restart", timeout_secs=10)
+    rc, err = await token_mint.run_remote_ajcrew("ds-abc", "restart", timeout_secs=10)
     assert (rc, err) == (0, "")
     assert _is_resolved_ssh(heads[-1], sysbin)
 
@@ -171,7 +171,7 @@ def test_ssh_env_excludes_a_directory_refused_without_an_aws_walk(monkeypatch, t
     monkeypatch.setenv("PATH", str(sysbin))
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(install),))
     monkeypatch.setattr(engine, "_TRUSTED_AWS_BIN_DIRS", ())
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     def _refuse_directory(_candidate):
         raise ValueError("directory trust refused")
@@ -223,7 +223,7 @@ async def test_mint_does_not_blame_the_proxycommand_for_a_remote_command_not_fou
 ):
     """A remote shell's "command not found" exits 127 and is the remote's problem."""
     monkeypatch.setenv("KC_STANDIN_RC", "127")
-    monkeypatch.setenv("KC_STANDIN_ERR", "bash: line 1: kirocrew: command not found")
+    monkeypatch.setenv("KC_STANDIN_ERR", "bash: line 1: ajcrew: command not found")
     with pytest.raises(token_mint.TokenMintError) as ei:
         await token_mint.mint_remote_token("ds-abc", timeout_secs=10)
     assert "ProxyCommand" not in str(ei.value)

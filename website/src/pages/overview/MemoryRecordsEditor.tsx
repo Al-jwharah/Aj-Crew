@@ -77,7 +77,7 @@ function RecordProvenance({ row }: { row: RecordOrigin }) {
   try { const value = typeof row.derived_from === 'string' ? JSON.parse(row.derived_from) : row.derived_from; if (value && typeof value === 'object' && !Array.isArray(value)) origin = value } catch { /* Older rows carry a plain source reference. */ }
   const source = origin?.store || origin?.source_store
   const summary = stores.data?.stores.find(item => item.name === source)
-  const label = source === 'default' ? t('pages.kiroCrewAgentsPage.global_memory_v1') : summary?.owner_member || source
+  const label = source === 'default' ? t('pages.ajCrewAgentsPage.global_memory_v1') : summary?.owner_member || source
   const reference = origin?.item_id || origin?.source_key || row.metadata?.source_ref || (!origin && row.derived_from)
   // A copied item's key is an identity, even when it resembles a source tag.
   // Only known bare fallback tags share the readable writer labels above.
@@ -158,7 +158,7 @@ function RecordHistory({ store, row, onProposal, onKeepCurrent, onRestore }: { s
 // The applied search and kind filter, kept per store for the browser session.
 // Not the URL: the Settings rail reopens `/settings` with no query string, so a
 // URL filter would not survive the leave-and-return trip it exists for.
-const FILTER_KEY_PREFIX = 'kirocrew:memory-records-filter:'
+const FILTER_KEY_PREFIX = 'ajcrew:memory-records-filter:'
 function loadFilter(store: string): { q: string; kind: MemoryRecordQuery['kind'] } {
   try {
     const saved = JSON.parse(safeGetSessionItem(FILTER_KEY_PREFIX + store) || '{}')

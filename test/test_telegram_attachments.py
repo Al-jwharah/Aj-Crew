@@ -21,17 +21,17 @@ import pytest
 from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
 from telegram_helpers import _dispatcher
 
-from kiro_crew.config import live
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.messaging.attachments import cleanup
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.telegram.attachments import (
+from aj_crew.config import live
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.messaging.attachments import cleanup
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.telegram.attachments import (
     _to_attachment,
     append_attachment_context,
     process_telegram_attachments,
 )
-from kiro_crew.telegram.client import TelegramClient, TelegramInbound
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
+from aj_crew.telegram.client import TelegramClient, TelegramInbound
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
 
 # ── Capability declaration ─────────────────────────────────────────────────────
 
@@ -241,7 +241,7 @@ class TestToAttachment:
         rejected as an unknown format. Assert the SUFFIX the ingestion layer will
         actually put on the temp file, not just the synthesized name.
         """
-        from kiro_crew.messaging.attachments import safe_suffix
+        from aj_crew.messaging.attachments import safe_suffix
 
         cases = {
             "audio/ogg": ".ogg",      # Telegram voice notes
@@ -376,9 +376,9 @@ class TestProcessTelegramAttachments:
             }
         ]
         with (
-            patch("kiro_crew.transcribe.is_available", return_value=True),
-            patch("kiro_crew.transcribe.batch_duration_cap_secs", return_value=None),
-            patch("kiro_crew.transcribe.transcribe_audio", return_value="hello from voice"),
+            patch("aj_crew.transcribe.is_available", return_value=True),
+            patch("aj_crew.transcribe.batch_duration_cap_secs", return_value=None),
+            patch("aj_crew.transcribe.transcribe_audio", return_value="hello from voice"),
         ):
             result = await process_telegram_attachments(client, attachments)
 
@@ -413,7 +413,7 @@ class TestProcessTelegramAttachments:
                 "file_size": len(ogg_data),
             }
         ]
-        with patch("kiro_crew.transcribe.is_available", return_value=False):
+        with patch("aj_crew.transcribe.is_available", return_value=False):
             result = await process_telegram_attachments(client, attachments)
 
         assert len(result.rejections) == 1
@@ -430,7 +430,7 @@ class TestProcessTelegramAttachments:
 
 class TestReExport:
     def test_telegram_exports_shared_function(self):
-        from kiro_crew.messaging.attachments import append_attachment_context as shared_fn
+        from aj_crew.messaging.attachments import append_attachment_context as shared_fn
 
         assert append_attachment_context is shared_fn
 
@@ -445,8 +445,8 @@ class TestReExport:
         """
         import inspect
 
-        from kiro_crew.discord import attachments as discord_att
-        from kiro_crew.telegram import attachments as tg_att
+        from aj_crew.discord import attachments as discord_att
+        from aj_crew.telegram import attachments as tg_att
 
         cases = (
             (discord_att, discord_att.process_discord_attachments),
@@ -490,11 +490,11 @@ class TestTextInjectLimit:
     ) -> None:
         """An 80 KiB CSV is cut at 50 KiB by default, whole at 100, and at the 1 KiB floor for 0."""
         body = ("2026-01-02,BUY,12.50\n" * 4000)[: 80 * 1024]
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "config.json").write_text(json.dumps({"telegram": section}), encoding="utf-8")
         d, cli, _sess = _dispatcher({7})
         live.reset_for_tests()
-        live.watch().prime(KiroCrewConfig.load())
+        live.watch().prime(AjCrewConfig.load())
 
         async def _download(file_id: str, dest: str) -> None:
             Path(dest).write_text(body, encoding="utf-8")

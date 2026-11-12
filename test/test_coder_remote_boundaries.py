@@ -8,14 +8,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.coder import remote_worker
-from kiro_crew.remote_session import relay
+from aj_crew.coder import remote_worker
+from aj_crew.remote_session import relay
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 pytestmark = pytest.mark.asyncio
@@ -54,11 +54,11 @@ async def test_workspace_server_writes_no_token_file(tmp_path, monkeypatch):
 
 @pytest.mark.parametrize("bound", [False, True])
 async def test_cleared_config_does_not_clear_persisted_placement(tmp_path, monkeypatch, bound):
-    from kiro_crew.coder.session_launch import SessionEnvironmentChoices
-    from kiro_crew.config import live, paths
-    from kiro_crew.providers import acp as acp_facade
-    from kiro_crew.providers import acp_runtime_start as start
-    from kiro_crew.session_environment import SessionEnvironmentUnavailable
+    from aj_crew.coder.session_launch import SessionEnvironmentChoices
+    from aj_crew.config import live, paths
+    from aj_crew.providers import acp as acp_facade
+    from aj_crew.providers import acp_runtime_start as start
+    from aj_crew.session_environment import SessionEnvironmentUnavailable
 
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path)
     monkeypatch.setattr(
@@ -88,7 +88,7 @@ async def test_cleared_config_does_not_clear_persisted_placement(tmp_path, monke
 
 @pytest.mark.parametrize("pipe", ["stdout", "stderr"])
 async def test_collect_refuses_overflow_before_eof_and_reaps(tmp_path, monkeypatch, pipe):
-    from kiro_crew.testing.ids import UNALLOCATABLE_PID
+    from aj_crew.testing.ids import UNALLOCATABLE_PID
 
     streams = {name: asyncio.StreamReader() for name in ("stdout", "stderr")}
     streams[pipe].feed_data(b"x" * 9)  # No EOF: refusal must not wait for one.

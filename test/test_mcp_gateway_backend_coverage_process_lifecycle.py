@@ -50,14 +50,14 @@ from mcp_gateway_backend_coverage_helpers import (
     _reader,
 )
 
-from kiro_crew.mcp_gateway import backend as backend_mod
-from kiro_crew.mcp_gateway.backend import (
+from aj_crew.mcp_gateway import backend as backend_mod
+from aj_crew.mcp_gateway.backend import (
     HEARTBEAT_PING_ID,
     _PendingRequest,
     send_initialize,
     spawn_backend,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 # --- Cancellation / recycle / shutdown -------------------------------------
 
@@ -108,7 +108,7 @@ class TestCancelInFlight:
 
 class TestRecycleIfIdle:
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture moved verbatim; no test of the class calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture moved verbatim; no test of the class calls monkeypatch.undo()
     def _no_real_signals(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(backend_mod, "SecurityEventLog", MagicMock())
         monkeypatch.setattr(
@@ -395,7 +395,7 @@ class _FakeProcess:
         with_stderr: bool = True,
         stderr_lines: bytes = b"",
     ) -> None:
-        # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing mock pid moved verbatim; the process double is never signalled
+        # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing mock pid moved verbatim; the process double is never signalled
         self.pid = 5150
         self.returncode: Optional[int] = None
         self.stdin = MagicMock() if with_pipes else None
@@ -449,7 +449,7 @@ class TestSpawnBackend:
         assert fake_spawn["args"] == ["--stdio"]
         env = fake_spawn["kwargs"]["env"]
         assert env["PATH"] == "/usr/bin"
-        assert env[backend_mod.KIROCREW_SPAWNED_ENV] == backend_mod.KIROCREW_SPAWNED_VALUE
+        assert env[backend_mod.AJCREW_SPAWNED_ENV] == backend_mod.AJCREW_SPAWNED_VALUE
         assert env[backend_mod.POOLED_BACKEND_ENV] == backend_mod.POOLED_BACKEND_VALUE
         assert env[backend_mod.POOLED_RESPAWN_COMMAND_ENV] == "/usr/bin/example-mcp"
         assert fake_spawn["kwargs"]["start_new_session"] is True
@@ -523,9 +523,7 @@ class TestSendInitialize:
     @pytest.mark.asyncio
     async def test_success_seeds_cache_and_detects_capability(self) -> None:
         backend = _make_backend()
-        result: dict[str, Any] = {
-            "capabilities": {"experimental": {"kirocrew.caller-identity": {}}}
-        }
+        result: dict[str, Any] = {"capabilities": {"experimental": {"ajcrew.caller-identity": {}}}}
         backend.stdout = cast(
             Any,
             _reader(
@@ -541,7 +539,7 @@ class TestSendInitialize:
         assert backend._init_result == result
         request = _frames(backend)[0]
         assert request["method"] == "initialize"
-        assert request["params"]["clientInfo"]["name"] == "kirocrew-gateway"
+        assert request["params"]["clientInfo"]["name"] == "ajcrew-gateway"
 
     @pytest.mark.asyncio
     async def test_custom_client_info_is_forwarded(self) -> None:
@@ -604,7 +602,7 @@ class TestBackendTmpContainment:
     ) -> None:
         from pathlib import Path
 
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -627,8 +625,8 @@ class TestBackendTmpContainment:
     async def test_unsealed_declaration_is_honored_verbatim(
         self, fake_spawn, monkeypatch, tmp_path
     ) -> None:
-        from kiro_crew import sandbox as sandbox_mod
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew import sandbox as sandbox_mod
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -653,8 +651,8 @@ class TestBackendTmpContainment:
     async def test_sealed_declaration_uses_managed_temp_and_warns(
         self, fake_spawn, monkeypatch, tmp_path, caplog
     ) -> None:
-        from kiro_crew import sandbox as sandbox_mod
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew import sandbox as sandbox_mod
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -669,7 +667,7 @@ class TestBackendTmpContainment:
 
         monkeypatch.setattr(sandbox_mod, "classify_declared_temp_path", _sealed)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_gateway.backend"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_gateway.backend"):
             await spawn_backend(
                 _pool_key(),
                 "/usr/bin/example-mcp",
@@ -698,8 +696,8 @@ class TestBackendTmpContainment:
     async def test_real_classifier_refuses_a_sealed_declaration(
         self, fake_spawn, monkeypatch, tmp_path
     ) -> None:
-        from kiro_crew import sandbox as sandbox_mod
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew import sandbox as sandbox_mod
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         (home / "run").mkdir(parents=True)
@@ -725,8 +723,8 @@ class TestBackendTmpContainment:
     async def test_secret_backed_refusal_never_logs_the_resolved_path(
         self, fake_spawn, monkeypatch, tmp_path, caplog
     ) -> None:
-        from kiro_crew import sandbox as sandbox_mod
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew import sandbox as sandbox_mod
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -734,7 +732,7 @@ class TestBackendTmpContainment:
         resolved_secret = str(home / "run" / "vault-secret-value")
         monkeypatch.setattr(sandbox_mod, "classify_declared_temp_path", lambda _path: "sealed")
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_gateway.backend"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_gateway.backend"):
             await spawn_backend(
                 _pool_key(),
                 "/usr/bin/example-mcp",
@@ -757,8 +755,8 @@ class TestBackendTmpContainment:
     async def test_check_failure_uses_managed_temp_and_warns(
         self, fake_spawn, monkeypatch, tmp_path, caplog
     ) -> None:
-        from kiro_crew import sandbox as sandbox_mod
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew import sandbox as sandbox_mod
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -770,7 +768,7 @@ class TestBackendTmpContainment:
 
         monkeypatch.setattr(sandbox_mod, "classify_declared_temp_path", _raise)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_gateway.backend"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_gateway.backend"):
             await spawn_backend(
                 _pool_key(),
                 "/usr/bin/example-mcp",
@@ -797,7 +795,7 @@ class TestBackendTmpContainment:
     async def test_refusal_allocation_failure_uses_the_platform_default(
         self, fake_spawn, monkeypatch, caplog
     ) -> None:
-        from kiro_crew import sandbox as sandbox_mod
+        from aj_crew import sandbox as sandbox_mod
 
         monkeypatch.setattr(sandbox_mod, "classify_declared_temp_path", lambda _path: "sealed")
         monkeypatch.setattr(
@@ -806,7 +804,7 @@ class TestBackendTmpContainment:
             MagicMock(side_effect=OSError("disk full")),
         )
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_gateway.backend"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_gateway.backend"):
             await spawn_backend(
                 _pool_key(),
                 "/usr/bin/example-mcp",
@@ -835,7 +833,7 @@ class TestBackendTmpContainment:
         # in place would silently defeat the declaration (macOS always
         # exports one). Yield = declared keys kept, undeclared canonical
         # keys pruned.
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -866,7 +864,7 @@ class TestBackendTmpContainment:
         # Ambient keys must be OVERRIDDEN by the managed triple.
         from pathlib import Path
 
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -893,7 +891,7 @@ class TestBackendTmpContainment:
         # allocate step raises when the dir or its owner record cannot be
         # written (ENOSPC / inode exhaustion) -- the spawn proceeds with
         # inherited temp and nothing is left on disk to reclaim.
-        from kiro_crew.mcp_gateway import backend as backend_mod
+        from aj_crew.mcp_gateway import backend as backend_mod
 
         def _boom(_digest: str):
             raise OSError("no space left on device")
@@ -912,7 +910,7 @@ class TestBackendTmpContainment:
         # Unowned-by-a-live-process dirs are never deleted by the sweeps, so
         # the spawn-failure path is the ONLY reclamation point for a dir
         # whose process never existed.
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -939,7 +937,7 @@ class TestBackendTmpContainment:
         # proof its process TREE is gone (a wrapper exits while its server
         # child lives on). The sweep's dual condition (owner dead AND idle)
         # is the single deletion authority.
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()

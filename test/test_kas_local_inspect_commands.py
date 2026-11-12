@@ -18,10 +18,10 @@ import pytest
 from aiohttp import web
 from chat_test_helpers import _make_state
 
-from kiro_crew.acp_backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard.chat_runner import _run_chat, effective_session_key
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.acp_backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard.chat_runner import _run_chat, effective_session_key
+from aj_crew.providers.acp import AcpProvider
 
 _SECRET = "ghp_" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8"
 
@@ -30,16 +30,14 @@ _SECRET = "ghp_" + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4O5p6Q7r8"
 def _no_spec_hooks(_floor_monkeypatch):
     """KAS has Crew fire spec hooks; these doubles carry no projection to refresh."""
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner._prepare_spec_hooks",
+        "aj_crew.dashboard.chat_runner._prepare_spec_hooks",
         AsyncMock(return_value=([], False, None)),
     )
 
     async def _claimed(_sessions, _key, _agent, claimed, _claim):
         return claimed
 
-    _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner.reproject_claimed_session", _claimed
-    )
+    _floor_monkeypatch.setattr("aj_crew.dashboard.chat_runner.reproject_claimed_session", _claimed)
 
 
 def _live(tmp_path, backend: str = ACP_BACKEND_KAS, *, alive: bool = True):
@@ -104,7 +102,7 @@ class TestModel:
     async def test_falls_back_to_the_pickers_catalog(self, tmp_path, _floor_monkeypatch) -> None:
         """On the kiro-cli relay route the picker lists the ``--list-models``
         catalog while the session advertises nothing; ``/model`` lists the same."""
-        from kiro_crew.dashboard.handlers import agents as picker
+        from aj_crew.dashboard.handlers import agents as picker
 
         state, slot, _client, calls = _live(tmp_path)
         _floor_monkeypatch.setattr(
@@ -124,7 +122,7 @@ class TestModel:
     ) -> None:
         """Another live session that advertises only ``auto`` narrows the picker's
         list; ``/model`` lists the same narrowed set, not the raw catalog."""
-        from kiro_crew.dashboard.handlers import agents as picker
+        from aj_crew.dashboard.handlers import agents as picker
 
         state, slot, client, calls = _live(tmp_path, alive=False)
         other = MagicMock(spec=AcpProvider)
@@ -150,7 +148,7 @@ class TestModel:
         state, slot, _client, calls = _live(tmp_path, alive=False)
 
         with patch(
-            "kiro_crew.dashboard.kas_local_commands._inspect_catalog_model_ids",
+            "aj_crew.dashboard.kas_local_commands._inspect_catalog_model_ids",
             return_value=["auto", "m-1"],
         ):
             await _run_chat(state, slot, "/model")
@@ -165,7 +163,7 @@ class TestModel:
             return_value=web.json_response({"ok": True, "model": "m-1", "deferred": True})
         )
 
-        with patch("kiro_crew.dashboard.chat_handlers.switch_slot_model", switch):
+        with patch("aj_crew.dashboard.chat_handlers.switch_slot_model", switch):
             await _run_chat(state, slot, "/model  m-1 ")
 
         _assert_local(state, calls)
@@ -185,7 +183,7 @@ class TestModel:
             )
         )
 
-        with patch("kiro_crew.dashboard.chat_handlers.switch_slot_model", switch):
+        with patch("aj_crew.dashboard.chat_handlers.switch_slot_model", switch):
             await _run_chat(state, slot, "/model m-1")
 
         _assert_local(state, calls)
@@ -197,7 +195,7 @@ class TestSwitchTransaction:
 
     @pytest.mark.asyncio
     async def test_the_command_is_not_busy_on_its_own_turn(self, tmp_path) -> None:
-        from kiro_crew.dashboard.chat_handlers import SlotAgentSwitchCaller, switch_slot_model
+        from aj_crew.dashboard.chat_handlers import SlotAgentSwitchCaller, switch_slot_model
 
         state, slot, _client, _calls = _live(tmp_path)
         state.sessions.get_provider = MagicMock(return_value=None)
@@ -221,12 +219,12 @@ class TestSwitchTransaction:
 
 def _registered_entry() -> dict:
     return {
-        "id": "kirocrew",
-        "tools": ["read_file", "shell", "@kirocrew-core", "@gh"],
+        "id": "ajcrew",
+        "tools": ["read_file", "shell", "@ajcrew-core", "@gh"],
         "excludedTools": ["delete_file"],
         "permissions": {
             "rules": [
-                {"capability": "mcp", "match": ["kirocrew-core/*"], "effect": "allow"},
+                {"capability": "mcp", "match": ["ajcrew-core/*"], "effect": "allow"},
                 {"capability": "web_fetch", "effect": "allow"},
                 {"capability": "fs_write", "effect": "allow"},
                 {"capability": "fs_write", "effect": "ask"},
@@ -250,18 +248,18 @@ class TestTools:
         """RED on main: ``/tools`` only got the "doesn't work with KAS" notice."""
         state, slot, client, calls = _live(tmp_path)
         client.kas_registered_agents = [{"id": "other", "tools": "*"}, _registered_entry()]
-        client.kas_projected_agent = "kirocrew"
+        client.kas_projected_agent = "ajcrew"
         client.kas_active_mode_id = ""
 
         await _run_chat(state, slot, "/tools")
 
         _assert_local(state, calls)
         text = _reply(slot)
-        assert "Tools for agent `kirocrew`" in text, text
-        assert "`read_file`, `shell`, `@kirocrew-core`, `@gh`" in text
+        assert "Tools for agent `ajcrew`" in text, text
+        assert "`read_file`, `shell`, `@ajcrew-core`, `@gh`" in text
         assert "Not offered: `delete_file`" in text
         assert "MCP servers in this agent: `gh`, `web`" in text
-        assert "Runs without asking: `@kirocrew-core/*`, `web_fetch`" in text
+        assert "Runs without asking: `@ajcrew-core/*`, `web_fetch`" in text
         # An unscoped ask cancels the allow, as KAS resolves it.
         assert "fs_write" not in text
         assert "after Crew's checks: `read_file`" in text
@@ -275,11 +273,11 @@ class TestTools:
         The handle sets ``kas_projected_agent`` to the crewmate id behind the
         mode, which is the mode id itself for a mode Crew did not register.
         """
-        from kiro_crew.acp._dispatch import kas_crew_agent_id
+        from aj_crew.acp._dispatch import kas_crew_agent_id
 
         state, slot, client, calls = _live(tmp_path)
         entries = [
-            {"id": "kirocrew", "tools": ["read_file"]},
+            {"id": "ajcrew", "tools": ["read_file"]},
             {"id": "vibe", "tools": ["crewmate_only_tool"]},
         ]
         client.kas_registered_agents = entries
@@ -289,7 +287,7 @@ class TestTools:
 
     @pytest.mark.asyncio
     async def test_a_switch_to_the_crewmate_reads_its_entry(self, tmp_path) -> None:
-        from kiro_crew.agent_files import kas_wire_agent_id
+        from aj_crew.agent_files import kas_wire_agent_id
 
         wire = kas_wire_agent_id("vibe")
         assert wire != "vibe", "the case below needs an id the wire renames"
@@ -312,20 +310,20 @@ class TestTools:
         _assert_local(state, calls)
         text = _reply(slot)
         assert "crewmate_only_tool" not in text, text
-        assert "Kiro Crew did not register" in text
+        assert "Aj Crew did not register" in text
 
     @pytest.mark.asyncio
     async def test_an_unmatched_agent_does_not_borrow_the_first_entry(self, tmp_path) -> None:
         state, slot, client, calls = _live(tmp_path)
         client.kas_registered_agents = [{"id": "other", "tools": ["other_tool"]}]
-        client.kas_projected_agent = "kirocrew"
+        client.kas_projected_agent = "ajcrew"
         client.kas_active_mode_id = ""
 
         await _run_chat(state, slot, "/tools")
 
         _assert_local(state, calls)
         assert "other_tool" not in _reply(slot)
-        assert "Kiro Crew did not register" in _reply(slot)
+        assert "Aj Crew did not register" in _reply(slot)
 
     @pytest.mark.asyncio
     async def test_a_narrowed_grant_is_not_shown_as_unconditional(self, tmp_path) -> None:
@@ -334,7 +332,7 @@ class TestTools:
         state, slot, client, calls = _live(tmp_path)
         client.kas_registered_agents = [
             {
-                "id": "kirocrew",
+                "id": "ajcrew",
                 "tools": ["@srv", "@other"],
                 "permissions": {
                     "rules": [
@@ -345,7 +343,7 @@ class TestTools:
                 },
             }
         ]
-        client.kas_projected_agent = "kirocrew"
+        client.kas_projected_agent = "ajcrew"
         client.kas_active_mode_id = ""
 
         await _run_chat(state, slot, "/tools")
@@ -389,8 +387,8 @@ class TestMcp:
         state, slot, _client, calls = _live(tmp_path)
         slot.set_mcp_report(
             {
-                "configured": ["kirocrew-core", "gh", "jira", "slow"],
-                "ready": ["kirocrew-core", "empty"],
+                "configured": ["ajcrew-core", "gh", "jira", "slow"],
+                "ready": ["ajcrew-core", "empty"],
                 "failed": ["gh"],
                 "awaiting_auth": ["jira"],
                 "failures": {"gh": f"spawn failed token={_SECRET}"},
@@ -404,7 +402,7 @@ class TestMcp:
 
         _assert_local(state, calls)
         text = _reply(slot)
-        assert "`kirocrew-core`: ready" in text, text
+        assert "`ajcrew-core`: ready" in text, text
         assert "`gh`: failed: spawn failed" in text
         assert "`jira`: waiting for sign-in" in text
         assert "`slow`: not reported yet (start a new session to load it)" in text
@@ -417,15 +415,15 @@ class TestMcp:
         ``/mcp`` names every server ``/tools`` names."""
         state, slot, client, calls = _live(tmp_path)
         client.kas_registered_agents = [_registered_entry()]
-        client.kas_projected_agent = "kirocrew"
+        client.kas_projected_agent = "ajcrew"
         client.kas_active_mode_id = ""
-        slot.set_mcp_report({"configured": ["kirocrew-core"], "ready": ["kirocrew-core"]}, "sid-2")
+        slot.set_mcp_report({"configured": ["ajcrew-core"], "ready": ["ajcrew-core"]}, "sid-2")
 
         await _run_chat(state, slot, "/mcp")
 
         _assert_local(state, calls)
         text = _reply(slot)
-        assert "`kirocrew-core`: ready" in text, text
+        assert "`ajcrew-core`: ready" in text, text
         assert "`gh`: not reported yet" in text, text
         assert "`web`: not reported yet" in text, text
         assert _SECRET not in text
@@ -521,7 +519,7 @@ _READING = {
 def usage_cache(_floor_monkeypatch):
     """Set the credit counter's cache, the fingerprint it was published under,
     whether the vault owns usage, and the current sign-in's fingerprint."""
-    from kiro_crew.dashboard.handlers import sessions
+    from aj_crew.dashboard.handlers import sessions
 
     def _set(payload: dict, *, published_fp: str = "", vault_owned: bool = False, current_fp=""):
         _floor_monkeypatch.setattr(sessions, "_usage_cache", payload)
@@ -613,7 +611,7 @@ class TestUsage:
             patch.object(sessions, "_fetch_usage_bg", side_effect=AssertionError("refreshed")),
             patch.object(sessions, "_publish_usage", side_effect=AssertionError("published")),
             patch(
-                "kiro_crew.dashboard.handlers.kiro_usage_api.fetch_usage_limits",
+                "aj_crew.dashboard.handlers.kiro_usage_api.fetch_usage_limits",
                 side_effect=AssertionError("fetched"),
             ),
         ):
@@ -638,8 +636,8 @@ class TestHelp:
     @pytest.mark.asyncio
     async def test_lists_what_the_menu_lists_here(self, tmp_path) -> None:
         """RED on main: ``/help`` only got the "doesn't work with KAS" notice."""
-        from kiro_crew.dashboard.chat_utils import SLASH_COMMAND_DESCRIPTIONS
-        from kiro_crew.dashboard.kas_local_commands import local_harness_menu
+        from aj_crew.dashboard.chat_utils import SLASH_COMMAND_DESCRIPTIONS
+        from aj_crew.dashboard.kas_local_commands import local_harness_menu
 
         state, slot, _client, calls = _live(tmp_path)
 
@@ -662,15 +660,15 @@ class TestAgent:
         slot.agent = "reviewer"
 
         with patch(
-            "kiro_crew.agent_switch_command.pickable_agent_names",
-            return_value=["kirocrew", "reviewer"],
+            "aj_crew.agent_switch_command.pickable_agent_names",
+            return_value=["ajcrew", "reviewer"],
         ):
             await _run_chat(state, slot, message)
 
         _assert_local(state, calls)
         text = _reply(slot)
         assert "Agent: `reviewer`" in text, text
-        assert "- `kirocrew`\n- `reviewer` (current)" in text, text
+        assert "- `ajcrew`\n- `reviewer` (current)" in text, text
         assert "Switch with `/agent <name>`" in text
 
     @pytest.mark.asyncio
@@ -678,7 +676,7 @@ class TestAgent:
         state, slot, _client, calls = _live(tmp_path)
         slot.agent = ""
 
-        with patch("kiro_crew.agent_switch_command.pickable_agent_names", return_value=[]):
+        with patch("aj_crew.agent_switch_command.pickable_agent_names", return_value=[]):
             await _run_chat(state, slot, "/agent")
 
         _assert_local(state, calls)
@@ -735,7 +733,7 @@ class TestKasVerbs:
         assert "at most 60 paths" in _reply(slot), _reply(slot)
 
     def test_a_windows_path_keeps_its_backslashes(self, _floor_monkeypatch) -> None:
-        from kiro_crew.dashboard import kas_local_commands as local
+        from aj_crew.dashboard import kas_local_commands as local
 
         _floor_monkeypatch.setattr(local, "_WINDOWS", True)
         assert local._split_words(r'add C:\work\a.md "C:\my docs\b.md"') == [
@@ -826,13 +824,13 @@ class TestHooks:
         self, tmp_path, _floor_monkeypatch
     ) -> None:
         """RED on main: ``/hooks`` only got the "doesn't work with KAS" notice."""
-        from kiro_crew.agent_sdk.spec_hooks import TurnSpecHooks
-        from kiro_crew.hooks import ScriptHook
+        from aj_crew.agent_sdk.spec_hooks import TurnSpecHooks
+        from aj_crew.hooks import ScriptHook
 
         hook = ScriptHook(id="h1", name="lint", event="PreToolUse", matcher="fs_write")
         hook.command = f"curl -H 'Authorization: {_SECRET}' https://x"
         _floor_monkeypatch.setattr(
-            "kiro_crew.agent_sdk.spec_hooks.turn_spec_hooks",
+            "aj_crew.agent_sdk.spec_hooks.turn_spec_hooks",
             AsyncMock(return_value=TurnSpecHooks([hook], None, False, True)),
         )
         state, slot, _client, calls = _live(tmp_path)
@@ -854,7 +852,7 @@ class TestKasCommandCall:
 
     @staticmethod
     def _handle(methods):
-        from kiro_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.session_handle import AcpSessionHandle
 
         handle = AcpSessionHandle.__new__(AcpSessionHandle)
         handle._session_id = "s-1"

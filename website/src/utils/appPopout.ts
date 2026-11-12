@@ -21,7 +21,7 @@ import { appPopoutPath, appPopoutRouteOf } from './appPopoutRoute'
  * router basename is cut from.
  */
 
-export const APP_POPOUT_CHANNEL = 'kirocrew-app-popout'
+export const APP_POPOUT_CHANNEL = 'ajcrew-app-popout'
 
 /**
  * Stable, filesystem-safe window name for an app route. `window.open` reuses
@@ -34,7 +34,7 @@ export function popoutWindowName(route: string): string {
 
 /**
  * Build the pop-out URL for an app route. Through `withBase`, so a sub-path
- * build (`KIROCREW_BASE_PATH`) opens the window under its mount too.
+ * build (`AJCREW_BASE_PATH`) opens the window under its mount too.
  *
  * `initialPath` is the app-space path and query the window opens at (the page
  * the user is on, `/aws-control/usage?tab=x`); without it the window opens at

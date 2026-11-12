@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 270" fill="none">
-  <rect width="480" height="270" fill="#1a1b26"/>
+  <rect width="480" height="270" fill="#161e1c"/>
   <!-- Subtle grid lines -->
-  <line x1="0" y1="135" x2="480" y2="135" stroke="#2a2b3d" stroke-width="0.5"/>
-  <line x1="240" y1="0" x2="240" y2="270" stroke="#2a2b3d" stroke-width="0.5"/>
+  <line x1="0" y1="135" x2="480" y2="135" stroke="#23302d" stroke-width="0.5"/>
+  <line x1="240" y1="0" x2="240" y2="270" stroke="#23302d" stroke-width="0.5"/>
   <!-- Glow backdrop -->
   <circle cx="240" cy="150" r="95" fill="#059669" opacity="0.08"/>
   <circle cx="240" cy="150" r="60" fill="#10b981" opacity="0.1"/>
@@ -21,12 +21,12 @@
   <rect x="90" y="205" width="30" height="3" rx="1.5" fill="#34d399" opacity="0.6"/>
   <rect x="90" y="213" width="22" height="2.5" rx="1" fill="#34d399" opacity="0.35"/>
   <circle cx="136" cy="197" r="4.5" fill="#fbbf24"/>
-  <path d="M134 197 l1.6 1.6 3-3.2" stroke="#1a1b26" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M134 197 l1.6 1.6 3-3.2" stroke="#161e1c" stroke-width="1.2" stroke-linecap="round"/>
   <path d="M210 194 Q210 189 215 189 L230 189 L236 195 L269 195 Q274 195 274 200 L274 224 Q274 229 269 229 L215 229 Q210 229 210 224 Z" stroke="#10b981" stroke-width="1.2" fill="#059669" fill-opacity="0.12"/>
   <rect x="220" y="205" width="30" height="3" rx="1.5" fill="#34d399" opacity="0.6"/>
   <rect x="220" y="213" width="22" height="2.5" rx="1" fill="#34d399" opacity="0.35"/>
   <circle cx="266" cy="197" r="4.5" fill="#fbbf24"/>
-  <path d="M264 197 l1.6 1.6 3-3.2" stroke="#1a1b26" stroke-width="1.2" stroke-linecap="round"/>
+  <path d="M264 197 l1.6 1.6 3-3.2" stroke="#161e1c" stroke-width="1.2" stroke-linecap="round"/>
   <path d="M340 194 Q340 189 345 189 L360 189 L366 195 L399 195 Q404 195 404 200 L404 224 Q404 229 399 229 L345 229 Q340 229 340 224 Z" stroke="#10b981" stroke-width="1.2" stroke-dasharray="4 3" fill="#059669" fill-opacity="0.08"/>
   <rect x="350" y="205" width="30" height="3" rx="1.5" fill="#34d399" opacity="0.45"/>
   <rect x="350" y="213" width="22" height="2.5" rx="1" fill="#34d399" opacity="0.25"/>

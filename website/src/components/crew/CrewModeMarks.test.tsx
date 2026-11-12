@@ -88,10 +88,10 @@ describe('CrewModeMarks', () => {
     expect(mark.textContent).toBe('Ultra Mode')
   })
 
-  it('marks Ultra Mode with a lightning bolt, not the ghost', () => {
+  it('marks Ultra Mode with a lightning bolt, not the gem', () => {
     render(<CrewModeComposerChip />)
     const chip = screen.getByTestId('crew-mode-composer-chip')
     expect(chip.querySelector('.lucide-zap')).not.toBeNull()
-    expect(chip.querySelector('[data-testid="kiro-ghost-mark"]')).toBeNull()
+    expect(chip.querySelector('[data-testid="aj-mark"]')).toBeNull()
   })
 })

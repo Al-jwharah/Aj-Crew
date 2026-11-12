@@ -20,10 +20,10 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.history import ConversationLog
-from kiro_crew.messaging.link import canonical_key
-from kiro_crew.session import SessionManager
+from aj_crew.config import AjCrewConfig
+from aj_crew.history import ConversationLog
+from aj_crew.messaging.link import canonical_key
+from aj_crew.session import SessionManager
 
 _BARE_TS = "1783733803.877979"
 _CANON = f"slack:{_BARE_TS}"
@@ -46,7 +46,7 @@ def _alive_provider_factory():
 
 @pytest.fixture()
 def cfg():
-    return KiroCrewConfig()
+    return AjCrewConfig()
 
 
 class TestFoldKey:
@@ -91,13 +91,13 @@ class TestFoldKey:
     async def test_fold_covers_read_accessors(self, cfg) -> None:
         """has_session / get_provider / get_pid / get_agent fold aliases."""
         mgr = SessionManager(cfg, provider_factory=_alive_provider_factory())
-        provider, _, _ = await mgr.get_or_create(_BARE_TS, agent="kirocrew")
+        provider, _, _ = await mgr.get_or_create(_BARE_TS, agent="ajcrew")
         mgr.release(_BARE_TS)
 
         assert mgr.has_session(_CANON)
         assert mgr.has_session(_BARE_TS)
         assert mgr.get_provider(_CANON) is provider
-        assert mgr.get_agent(_CANON) == "kirocrew"
+        assert mgr.get_agent(_CANON) == "ajcrew"
         await mgr.close_all()
 
     @pytest.mark.asyncio

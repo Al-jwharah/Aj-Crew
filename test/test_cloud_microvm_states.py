@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.cloud.microvm import states
+from aj_crew.cloud.microvm import states
 
 
 class TestEdgeTable:

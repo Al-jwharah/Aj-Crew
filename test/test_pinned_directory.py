@@ -22,8 +22,8 @@ from pathlib import Path
 
 import pytest
 
+from aj_crew import platform_compat, skills
 from conftest import make_dir_link
-from kiro_crew import platform_compat, skills
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ class TestItDoesNotDivergeFromPinnedFs:
     """
 
     def test_the_posix_open_flags_match_pinned_fs(self) -> None:
-        from kiro_crew import pinned_fs
+        from aj_crew import pinned_fs
 
         assert platform_compat.pinned_dir_flags() == pinned_fs.dir_flags()
 
@@ -65,7 +65,7 @@ class TestItDoesNotDivergeFromPinnedFs:
         through an API. If `pinned_fs` ever adopts it on the read side, this test is
         where the two meet again -- it may then be tightened, never silently dropped.
         """
-        from kiro_crew import pinned_fs
+        from aj_crew import pinned_fs
 
         target = tmp_path / "box" / "aliased.txt"
         target.parent.mkdir(parents=True, exist_ok=True)

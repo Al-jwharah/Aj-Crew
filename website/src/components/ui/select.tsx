@@ -135,7 +135,7 @@ const SelectContent = React.forwardRef<
       // Escape must dismiss ONLY the select, not the surface hosting it. Radix
       // dismisses from a document-level listener, so without this the same
       // keydown keeps bubbling to window-level Escape handlers (e.g. the
-      // workspace modal in KiroCrewAgentsPage) and closes them too. We stop
+      // workspace modal in AjCrewAgentsPage) and closes them too. We stop
       // propagation but never preventDefault, so Radix still closes the select.
       onEscapeKeyDown={e => {
         e.stopPropagation()

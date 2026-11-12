@@ -13,9 +13,9 @@ import tarfile
 from pathlib import Path
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from kiro_crew.snapshot import (
+from aj_crew.snapshot import (
     COMPONENTS,
     ComponentRefused,
     Purpose,
@@ -28,7 +28,7 @@ from kiro_crew.snapshot import (
 
 def _snapshot(out: Path, extra: list[str]) -> Path:
     assert snapshot_main([str(out)] + extra + unpinnable_argv()) == 0
-    tars = sorted(out.glob("kirocrew-snapshot-*.tar.gz"), key=lambda p: p.stat().st_mtime)
+    tars = sorted(out.glob("ajcrew-snapshot-*.tar.gz"), key=lambda p: p.stat().st_mtime)
     assert tars
     return tars[-1]
 
@@ -37,10 +37,10 @@ def _extract(tarball: Path, into: Path) -> Path:
     into.mkdir(parents=True, exist_ok=True)
     with tarfile.open(str(tarball)) as tar:
         tar.extractall(into, filter=lambda t, _d="": t)
-    # A selective bundle's root is `kirocrew-partial-`, which is how released
+    # A selective bundle's root is `ajcrew-partial-`, which is how released
     # restores are made to refuse it; both are valid to this version.
     snaps = [
-        d for d in into.iterdir() if d.name.startswith(("kirocrew-snapshot-", "kirocrew-partial-"))
+        d for d in into.iterdir() if d.name.startswith(("ajcrew-snapshot-", "ajcrew-partial-"))
     ]
     assert snaps
     return snaps[0]
@@ -49,8 +49,8 @@ def _extract(tarball: Path, into: Path) -> Path:
 @pytest.fixture
 def src(tmp_path, monkeypatch):
     d = tmp_path / "src"
-    _setup_fake_kirocrew(d)
-    monkeypatch.setenv("KIROCREW_HOME", str(d))
+    _setup_fake_ajcrew(d)
+    monkeypatch.setenv("AJCREW_HOME", str(d))
     return d
 
 
@@ -66,7 +66,7 @@ class TestPolicyDeclarations:
             assert isinstance(spec.policy, SecretPolicy), name
 
     def test_component_spec_cannot_be_built_without_a_policy(self):
-        from kiro_crew.snapshot import ComponentSpec
+        from aj_crew.snapshot import ComponentSpec
 
         with pytest.raises(TypeError):
             ComponentSpec(help="no policy declared")  # type: ignore[call-arg]
@@ -180,7 +180,7 @@ class TestSelectiveStaging:
         out = tmp_path / "out"
         assert snapshot_main([str(out), "--components", "crons", "--purpose", "share"]) == 1
         assert "crons" in capsys.readouterr().out
-        assert not list(out.glob("kirocrew-snapshot-*.tar.gz"))
+        assert not list(out.glob("ajcrew-snapshot-*.tar.gz"))
 
     def test_a_file_only_component_with_nothing_to_stage_still_produces_a_bundle(
         self, src, tmp_path
@@ -201,7 +201,7 @@ class TestSelectiveStaging:
         out = tmp_path / "out"
         assert snapshot_main([str(out), "--components", "memory", "--purpose", "share"]) == 1
         assert "no share-safe policy" in capsys.readouterr().out
-        assert not list(out.glob("kirocrew-snapshot-*.tar.gz"))
+        assert not list(out.glob("ajcrew-snapshot-*.tar.gz"))
 
     def test_share_of_a_credential_bearing_component_fails_and_writes_nothing(
         self, src, tmp_path, capsys
@@ -210,13 +210,13 @@ class TestSelectiveStaging:
         assert snapshot_main([str(out), "--components", "config", "--purpose", "share"]) == 1
         assert "config" in capsys.readouterr().out
         # A refusal must cost nothing — no partial bundle left behind.
-        assert not list(out.glob("kirocrew-snapshot-*.tar.gz"))
+        assert not list(out.glob("ajcrew-snapshot-*.tar.gz"))
 
     def test_unknown_purpose_is_refused(self, src, tmp_path, capsys):
         out = tmp_path / "out"
         assert snapshot_main([str(out), "--purpose", "sideways"]) == 1
         assert "sideways" in capsys.readouterr().out
-        assert not list(out.glob("kirocrew-snapshot-*.tar.gz"))
+        assert not list(out.glob("ajcrew-snapshot-*.tar.gz"))
 
 
 class TestMemoryRoundTrip:
@@ -234,7 +234,7 @@ class TestMemoryRoundTrip:
 
         dest = tmp_path / "dest"
         dest.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
         assert (
             restore_main(
                 [str(tarball), "--components", "memory", "--mode", "replace", "--force"]
@@ -270,7 +270,7 @@ class TestMemoryRoundTrip:
         (dest / "workspace").mkdir(parents=True)
         keep = dest / "workspace" / "unrelated.md"
         keep.write_text("local work, not in the bundle\n", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
 
         assert (
             restore_main(

@@ -64,8 +64,8 @@ class MockWebSocket {
   }
 }
 
-const rowA: ChatSlot = { key: 'slot-a', title: 'A', agent: 'kirocrew' } as ChatSlot
-const rowB: ChatSlot = { key: 'slot-b', title: 'B', agent: 'kirocrew' } as ChatSlot
+const rowA: ChatSlot = { key: 'slot-a', title: 'A', agent: 'ajcrew' } as ChatSlot
+const rowB: ChatSlot = { key: 'slot-b', title: 'B', agent: 'ajcrew' } as ChatSlot
 const TS = '2026-01-01T00:00:00Z'
 
 const unread = () => globalStore.getState().dashboard.unreadSlots

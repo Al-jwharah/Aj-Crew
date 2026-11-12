@@ -4,7 +4,7 @@ The manifest checks a path's spelling, never its target, so paths are resolved a
 ``sample_workstreams.json`` and ``sample_office.json`` (the pod capture predates the fold).
 
 "Delivered today" (``accepted``) is the conductor's verdict; "Waiting for your review" is
-the worker's own claim. The split is pinned against :mod:`kiro_crew.work_vocab` so a claim
+the worker's own claim. The split is pinned against :mod:`aj_crew.work_vocab` so a claim
 never shows as a delivery. A missing, an unreadable and a proper ``drafts`` / ``steps``
 entry each get their own wording, so a broken write never reads as silence.
 """
@@ -19,12 +19,12 @@ from typing import Any
 import dashboard_template_checks
 import pytest
 
-from kiro_crew.dashboard_templates.manifest import ManifestError, load_template
-from kiro_crew.work_vocab import WORK_ITEM_STATES, WORK_VERDICTS, WORK_WORKER_STATUSES
+from aj_crew.dashboard_templates.manifest import ManifestError, load_template
+from aj_crew.work_vocab import WORK_ITEM_STATES, WORK_VERDICTS, WORK_WORKER_STATUSES
 
 TEMPLATE_ID = "office"
 ROOT = Path(__file__).resolve().parents[1]
-DIRECTORY = ROOT / "src/kiro_crew/dashboard_templates/builtin" / TEMPLATE_ID
+DIRECTORY = ROOT / "src/aj_crew/dashboard_templates/builtin" / TEMPLATE_ID
 FIXTURES = ROOT / "test/fixtures/dashboard_templates"
 POD = FIXTURES / "pod_folds.json"
 WORKSTREAMS = FIXTURES / "sample_workstreams.json"
@@ -34,7 +34,7 @@ SAMPLE = FIXTURES / "sample_office.json"
 #: The fold's own series cap, which the page sums over and must disclose. Read out of the
 #: projection rather than retyped, so a cap change fails here instead of leaving the page
 #: qualifying a figure with a number nobody keeps any more.
-from kiro_crew.crew_log.projection import WORKSTREAMS_SERIES_LIMIT  # noqa: E402
+from aj_crew.crew_log.projection import WORKSTREAMS_SERIES_LIMIT  # noqa: E402
 
 #: The sections the page draws, and what sends a row to each.
 SECTIONS = ("delivered", "review", "progress")
@@ -556,7 +556,7 @@ class TestTheButtonsFillTheChatBox:
         """A review row's buttons are finished answers, so they post ``send``: the host
         sends only when the person turned one-click sends on, and otherwise fills the
         composer exactly as ``act`` does. Fails if a button goes back to ``act``."""
-        assert "type: 'kirocrew-dashboard:send'" in html
+        assert "type: 'ajcrew-dashboard:send'" in html
         handler = html.split("b.addEventListener('click', function () {", 1)[1].split("});", 1)[0]
         assert "send(c.say);" in handler
         assert "act(c.say)" not in handler
@@ -564,7 +564,7 @@ class TestTheButtonsFillTheChatBox:
     def test_the_page_posts_the_hosts_own_act_message(self, html: str) -> None:
         """The host fills the person's composer and the person presses send, so the page
         can offer a reply and can never speak as them."""
-        assert "'kirocrew-dashboard:act'" in html, (
+        assert "'ajcrew-dashboard:act'" in html, (
             "the buttons do not use the host's action path, so either they do nothing or "
             "they reach something this page should not"
         )

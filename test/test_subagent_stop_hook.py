@@ -17,10 +17,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from subagent_helpers import _mock_ctx_builder_auto_spawn, _mock_sessions
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
-from kiro_crew.dashboard.state_parts.injected_turns import HOOK_CONTINUATION_RECOVERY_PREFIX
-from kiro_crew.execution_context import execution_for_store
-from kiro_crew.hook_runtime.script_hooks import ScriptHookResult
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+from aj_crew.dashboard.state_parts.injected_turns import HOOK_CONTINUATION_RECOVERY_PREFIX
+from aj_crew.execution_context import execution_for_store
+from aj_crew.hook_runtime.script_hooks import ScriptHookResult
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -40,7 +40,7 @@ def _block(reason: str) -> list[ScriptHookResult]:
 async def _run_child(replies: list[str], stop_results: list[list[ScriptHookResult]], **cfg):
     """Run one child whose every prompt answers with the next reply, and return
     (the prompts it was sent, the Stop fire calls, the finished info)."""
-    from kiro_crew.subagent import SubagentInfo, SubagentManager
+    from aj_crew.subagent import SubagentInfo, SubagentManager
 
     prompts: list[str] = []
     # How many earlier prompts' streams had run their cleanup when each prompt
@@ -104,11 +104,11 @@ async def _run_child(replies: list[str], stop_results: list[list[ScriptHookResul
         rows.append(ev)
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.config.KiroCrewConfig.load", return_value=_cfg),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.config.AjCrewConfig.load", return_value=_cfg),
         patch(
-            "kiro_crew.dashboard.handlers.usage.persist_token_record_async",
+            "aj_crew.dashboard.handlers.usage.persist_token_record_async",
             new=AsyncMock(side_effect=_row),
         ),
     ):

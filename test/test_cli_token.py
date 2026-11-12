@@ -1,4 +1,4 @@
-"""``kirocrew token``, the post-restart token URL, and the transport secret-bearing sends travel on.
+"""``ajcrew token``, the post-restart token URL, and the transport secret-bearing sends travel on.
 
 The token mint, the post-restart token URL and ``update``'s approve send prefer the gateway's unix
 socket and otherwise go over ``tcp_verified_urlopen``, sending only when the connected peer is
@@ -20,10 +20,8 @@ from cli_helpers import (  # noqa: F401 -- the autouse fixture registers by impo
     _doctor_reads_the_warm_probe_cache,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.cli_server import (
-    _owner_verified_secret_urlopen as _REAL_OWNER_VERIFIED_SECRET_URLOPEN,
-)
+from aj_crew import platform_compat
+from aj_crew.cli_server import _owner_verified_secret_urlopen as _REAL_OWNER_VERIFIED_SECRET_URLOPEN
 
 
 def _route_tcp_send_through_verdict(monkeypatch, verdict):
@@ -33,7 +31,7 @@ def _route_tcp_send_through_verdict(monkeypatch, verdict):
     it did not raise. ``_connected_peer_verdict`` is pinned to *verdict* and SEL is
     captured. Returns ``(sends, sel_calls)``.
     """
-    from kiro_crew import cli_server
+    from aj_crew import cli_server
 
     # The token / restart-poll test classes route the helper to a plain stub via
     # an autouse fixture; this driver asserts on the REAL helper, so restore it.
@@ -41,7 +39,7 @@ def _route_tcp_send_through_verdict(monkeypatch, verdict):
         cli_server, "_owner_verified_secret_urlopen", _REAL_OWNER_VERIFIED_SECRET_URLOPEN
     )
     monkeypatch.setattr(
-        "kiro_crew.cli_server.dashboard_socket_path",
+        "aj_crew.cli_server.dashboard_socket_path",
         lambda _port: (_ for _ in ()).throw(RuntimeError("no socket")),
     )
     monkeypatch.setattr(cli_server, "_connected_peer_verdict", lambda _sock: verdict)
@@ -78,16 +76,16 @@ class TestPrintTokenUrl:
     def _stdout_is_a_terminal(self, _floor_monkeypatch):
         # The link prints to a terminal only, and capsys's stdout is not one.
         # Off a terminal: TestPrintTokenUrlOffATerminal.
-        _floor_monkeypatch.setattr("kiro_crew.dashboard.urls.login_link_may_print", lambda: True)
+        _floor_monkeypatch.setattr("aj_crew.dashboard.urls.login_link_may_print", lambda: True)
 
     @pytest.fixture(autouse=True)
     def _route_secret_transport(self, _floor_monkeypatch):
         # Route the owner-verified secret transport through the stubbed
         # loopback_urlopen so the post-restart token poll works without a real
         # unix socket; the transport's own proof is covered elsewhere.
-        import kiro_crew.cli_server as _cs
+        import aj_crew.cli_server as _cs
 
-        _floor_monkeypatch.setattr("kiro_crew.cli_server.platform_compat.IS_POSIX", True)
+        _floor_monkeypatch.setattr("aj_crew.cli_server.platform_compat.IS_POSIX", True)
         _floor_monkeypatch.setattr(
             _cs,
             "_owner_verified_secret_urlopen",
@@ -95,13 +93,13 @@ class TestPrintTokenUrl:
         )
 
     def test_prints_token_on_success(self, tmp_path, capsys, monkeypatch):
-        from kiro_crew.cli_server import _print_token_url
+        from aj_crew.cli_server import _print_token_url
 
         monkeypatch.setattr(
-            "kiro_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
+            "aj_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
         )
         monkeypatch.setattr(
-            "kiro_crew.cli_server.KiroCrewConfig.load",
+            "aj_crew.cli_server.AjCrewConfig.load",
             lambda: MagicMock(dashboard=MagicMock(url="")),
         )
         # Mock resolve_dashboard_host to an obviously-fake sentinel host (RFC 2606
@@ -110,7 +108,7 @@ class TestPrintTokenUrl:
         # A sentinel distinct from the real default ("localhost") is deliberate: it
         # would catch a regression that hardcodes "localhost" back into the URL.
         monkeypatch.setattr(
-            "kiro_crew.cli_server.resolve_dashboard_host",
+            "aj_crew.cli_server.resolve_dashboard_host",
             lambda local_only=True: "canonical-host.invalid",
         )
 
@@ -119,24 +117,24 @@ class TestPrintTokenUrl:
         mock_resp.__enter__ = lambda s: s
         mock_resp.__exit__ = MagicMock(return_value=False)
 
-        with patch("kiro_crew.cli_server._owner_verified_secret_urlopen", return_value=mock_resp):
+        with patch("aj_crew.cli_server._owner_verified_secret_urlopen", return_value=mock_resp):
             _print_token_url(7777)
 
         out = capsys.readouterr().out
         assert "http://canonical-host.invalid:7777?token=abc123" in out
 
     def test_prints_custom_origin(self, tmp_path, capsys, monkeypatch):
-        from kiro_crew.cli_server import _print_token_url
+        from aj_crew.cli_server import _print_token_url
 
         monkeypatch.setattr(
-            "kiro_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
+            "aj_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
         )
         monkeypatch.setattr(
-            "kiro_crew.cli_server.KiroCrewConfig.load",
-            lambda: MagicMock(dashboard=MagicMock(url="http://kirocrew.dev:7777")),
+            "aj_crew.cli_server.AjCrewConfig.load",
+            lambda: MagicMock(dashboard=MagicMock(url="http://ajcrew.dev:7777")),
         )
         monkeypatch.setattr(
-            "kiro_crew.cli_server.dashboard_origin", lambda u: "http://kirocrew.dev:7777"
+            "aj_crew.cli_server.dashboard_origin", lambda u: "http://ajcrew.dev:7777"
         )
 
         mock_resp = MagicMock()
@@ -144,35 +142,35 @@ class TestPrintTokenUrl:
         mock_resp.__enter__ = lambda s: s
         mock_resp.__exit__ = MagicMock(return_value=False)
 
-        with patch("kiro_crew.cli_server._owner_verified_secret_urlopen", return_value=mock_resp):
+        with patch("aj_crew.cli_server._owner_verified_secret_urlopen", return_value=mock_resp):
             _print_token_url(7777)
 
         out = capsys.readouterr().out
-        assert "http://kirocrew.dev:7777/?token=xyz789" in out
+        assert "http://ajcrew.dev:7777/?token=xyz789" in out
 
     def test_fallback_on_timeout(self, tmp_path, capsys, monkeypatch):
-        from kiro_crew.cli_server import _print_token_url
+        from aj_crew.cli_server import _print_token_url
 
         monkeypatch.setattr(
-            "kiro_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
+            "aj_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
         )
-        monkeypatch.setattr("kiro_crew.cli_server._RESTART_TOKEN_WAIT", 0)
+        monkeypatch.setattr("aj_crew.cli_server._RESTART_TOKEN_WAIT", 0)
 
         _print_token_url(7777)
 
         out = capsys.readouterr().out
-        assert "kirocrew token" in out
+        assert "ajcrew token" in out
 
     def test_token_wait_keeps_its_15s_budget_whatever_the_readiness_override(
         self, capsys, monkeypatch
     ):
         """The readiness override is fork-path only; both paths' token wait stays at 15s."""
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
-        monkeypatch.setenv("KIROCREW_RESTART_READY_TIMEOUT", "180")
+        monkeypatch.setenv("AJCREW_RESTART_READY_TIMEOUT", "180")
         secret_reads: list[int] = []
         monkeypatch.setattr(
-            "kiro_crew.cli_server.read_local_secret",
+            "aj_crew.cli_server.read_local_secret",
             lambda port, **_kw: secret_reads.append(port) or "",
         )
         remaining = [0.0, 14.0, 16.0, 200.0]
@@ -189,19 +187,19 @@ class TestPrintTokenUrl:
         # budget would have read again at 16s.
         assert secret_reads == [7777]
         out = capsys.readouterr().out
-        assert "kirocrew token" in out
+        assert "ajcrew token" in out
         assert "Still starting" not in out
 
     def test_fallback_on_no_secret(self, tmp_path, capsys, monkeypatch):
-        from kiro_crew.cli_server import _print_token_url
+        from aj_crew.cli_server import _print_token_url
 
-        monkeypatch.setattr("kiro_crew.cli_server.read_local_secret", lambda _port, **_kw: "")
-        monkeypatch.setattr("kiro_crew.cli_server._RESTART_TOKEN_WAIT", 0)
+        monkeypatch.setattr("aj_crew.cli_server.read_local_secret", lambda _port, **_kw: "")
+        monkeypatch.setattr("aj_crew.cli_server._RESTART_TOKEN_WAIT", 0)
 
         _print_token_url(7777)
 
         out = capsys.readouterr().out
-        assert "kirocrew token" in out
+        assert "ajcrew token" in out
 
     def test_peer_refusal_falls_into_the_nonfatal_fallback(self, capsys, monkeypatch):
         # A TCP-only gateway whose run-marker write has not landed yet while the
@@ -210,16 +208,16 @@ class TestPrintTokenUrl:
         # retry loop and hit the non-fatal fallback instead of escaping as a
         # traceback. One loop pass runs the refusing send, then the deadline
         # passes so the loop prints the fallback.
-        import kiro_crew.cli_server as _cs
-        from kiro_crew.cli_server import _print_token_url
+        import aj_crew.cli_server as _cs
+        from aj_crew.cli_server import _print_token_url
 
         monkeypatch.setattr(
-            "kiro_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
+            "aj_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
         )
         # Positive wait so the while-guard admits one pass; monotonic steps past
         # the deadline right after that pass, and sleep is a no-op so the test
         # does not block on the loop's trailing sleep(1).
-        monkeypatch.setattr("kiro_crew.cli_server._RESTART_TOKEN_WAIT", 10)
+        monkeypatch.setattr("aj_crew.cli_server._RESTART_TOKEN_WAIT", 10)
         # First two monotonic() reads (deadline anchor + first while-guard) sit
         # before the deadline so one pass runs; every read after jumps past it,
         # so the loop exits after that single swallowed refusal. A plain counter
@@ -265,7 +263,7 @@ class TestPrintTokenUrl:
         # did not name _GatewayPeerRefused this call would have propagated).
         assert calls["n"] == 1
         out = capsys.readouterr().out
-        assert "kirocrew token" in out
+        assert "ajcrew token" in out
 
     @pytest.mark.parametrize("verdict_name", ["MISMATCH"])
     def test_minting_secret_is_withheld_from_an_unproven_listener(
@@ -275,16 +273,16 @@ class TestPrintTokenUrl:
 
         /api/token/local mints owner tokens, so the X-Local-Secret goes only to a
         proven MATCH; the restart loop absorbs ``_GatewayPeerRefused`` and prints the
-        ``kirocrew token`` remedy.
+        ``ajcrew token`` remedy.
 
         The fake clock gives one real loop iteration: ``_RESTART_TOKEN_WAIT=0`` would
         skip the body and make the no-send assertion vacuous.
         """
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         secret_reads: list[int] = []
         monkeypatch.setattr(
-            "kiro_crew.cli_server.read_local_secret",
+            "aj_crew.cli_server.read_local_secret",
             lambda port, **_kw: secret_reads.append(port) or "test-secret",
         )
         sends, _sel_calls = _route_tcp_send_through_verdict(
@@ -304,7 +302,7 @@ class TestPrintTokenUrl:
         assert secret_reads == [7777], "the loop body must run once and read the secret"
         assert sends == [], "the minting secret must not be sent to an unproven listener"
         out = capsys.readouterr().out
-        assert "kirocrew token" in out, "the refusal falls into the non-fatal remedy"
+        assert "ajcrew token" in out, "the refusal falls into the non-fatal remedy"
 
 
 class TestPrintTokenUrlOffATerminal:
@@ -315,7 +313,7 @@ class TestPrintTokenUrlOffATerminal:
     """
 
     def test_a_log_file_stdout_gets_the_hint_and_nothing_is_minted(self, tmp_path, monkeypatch):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         mints: list[str] = []
 
@@ -328,14 +326,14 @@ class TestPrintTokenUrlOffATerminal:
             return resp
 
         monkeypatch.setattr(
-            "kiro_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
+            "aj_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
         )
-        monkeypatch.setattr("kiro_crew.cli_server._owner_verified_secret_urlopen", _mint)
+        monkeypatch.setattr("aj_crew.cli_server._owner_verified_secret_urlopen", _mint)
         monkeypatch.setattr(
-            "kiro_crew.cli_server.resolve_dashboard_host", lambda local_only=True: "localhost"
+            "aj_crew.cli_server.resolve_dashboard_host", lambda local_only=True: "localhost"
         )
         monkeypatch.setattr(
-            "kiro_crew.cli_server.KiroCrewConfig.load",
+            "aj_crew.cli_server.AjCrewConfig.load",
             lambda: MagicMock(dashboard=MagicMock(url="")),
         )
         log_path = tmp_path / "gateway.log"
@@ -344,12 +342,12 @@ class TestPrintTokenUrlOffATerminal:
 
         logged = log_path.read_text(encoding="utf-8")
         assert "token=" not in logged
-        assert "🔑 Sign in: run kirocrew token for a sign-in link\n" in logged
+        assert "🔑 Sign in: run ajcrew token for a sign-in link\n" in logged
         assert mints == []
 
 
 class TestTokenCommand:
-    """Tests for the ``kirocrew token`` command handler (``_token``)."""
+    """Tests for the ``ajcrew token`` command handler (``_token``)."""
 
     @pytest.fixture(autouse=True)
     def _posix_ownership(self, _floor_monkeypatch):
@@ -357,8 +355,8 @@ class TestTokenCommand:
         # uid path; the non-POSIX branch would take the SID path and refuse
         # first. Route the owner-verified secret transport through the stubbed
         # loopback_urlopen so the send works without a real unix socket.
-        _floor_monkeypatch.setattr("kiro_crew.cli_server.platform_compat.IS_POSIX", True)
-        import kiro_crew.cli_server as _cs
+        _floor_monkeypatch.setattr("aj_crew.cli_server.platform_compat.IS_POSIX", True)
+        import aj_crew.cli_server as _cs
 
         _floor_monkeypatch.setattr(
             _cs,
@@ -374,26 +372,26 @@ class TestTokenCommand:
         return mock_resp
 
     def test_prints_loopback_only(self, tmp_path, capsys, monkeypatch):
-        from kiro_crew.cli_server import _token
+        from aj_crew.cli_server import _token
 
         monkeypatch.setattr(
-            "kiro_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
+            "aj_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
         )
         monkeypatch.setattr(
-            "kiro_crew.cli_server.KiroCrewConfig.load",
+            "aj_crew.cli_server.AjCrewConfig.load",
             lambda: MagicMock(dashboard=MagicMock(url="")),
         )
-        monkeypatch.setattr("kiro_crew.cli_server.dashboard_origin", lambda u: "")
+        monkeypatch.setattr("aj_crew.cli_server.dashboard_origin", lambda u: "")
         # Sentinel canonical host (RFC 2606 .invalid) — proves the URL is built
         # from resolve_dashboard_host's output, not a hardcoded host.
         monkeypatch.setattr(
-            "kiro_crew.cli_server.resolve_dashboard_host",
+            "aj_crew.cli_server.resolve_dashboard_host",
             lambda local_only=True: "canonical-host.invalid",
         )
 
         args = argparse.Namespace(ttl="1h", port=7777)
         with patch(
-            "kiro_crew.cli_server._owner_verified_secret_urlopen",
+            "aj_crew.cli_server._owner_verified_secret_urlopen",
             return_value=self._mock_token_response("abc123"),
         ):
             _token(args)
@@ -406,33 +404,33 @@ class TestTokenCommand:
         assert "/?token=abc123" not in out
 
     def test_separates_custom_origin_with_blank_line(self, tmp_path, capsys, monkeypatch):
-        from kiro_crew.cli_server import _token
+        from aj_crew.cli_server import _token
 
         monkeypatch.setattr(
-            "kiro_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
+            "aj_crew.cli_server.read_local_secret", lambda _port, **_kw: "test-secret"
         )
         monkeypatch.setattr(
-            "kiro_crew.cli_server.KiroCrewConfig.load",
-            lambda: MagicMock(dashboard=MagicMock(url="https://kirocrew.dev:7777")),
+            "aj_crew.cli_server.AjCrewConfig.load",
+            lambda: MagicMock(dashboard=MagicMock(url="https://ajcrew.dev:7777")),
         )
         monkeypatch.setattr(
-            "kiro_crew.cli_server.dashboard_origin", lambda u: "https://kirocrew.dev:7777"
+            "aj_crew.cli_server.dashboard_origin", lambda u: "https://ajcrew.dev:7777"
         )
         monkeypatch.setattr(
-            "kiro_crew.cli_server.resolve_dashboard_host",
+            "aj_crew.cli_server.resolve_dashboard_host",
             lambda local_only=True: "canonical-host.invalid",
         )
 
         args = argparse.Namespace(ttl="1h", port=7777)
         with patch(
-            "kiro_crew.cli_server._owner_verified_secret_urlopen",
+            "aj_crew.cli_server._owner_verified_secret_urlopen",
             return_value=self._mock_token_response("xyz789"),
         ):
             _token(args)
 
         out = capsys.readouterr().out
         loopback_line = "http://canonical-host.invalid:7777?token=xyz789"
-        custom_line = "https://kirocrew.dev:7777/?token=xyz789"
+        custom_line = "https://ajcrew.dev:7777/?token=xyz789"
         assert loopback_line in out
         assert custom_line in out
         # The two URLs must be separated by a blank line.
@@ -441,26 +439,26 @@ class TestTokenCommand:
     # ── stdout is a machine interface: failures go to stderr ─────────────────
     #
     # `_token`'s stdout is regex-parsed by the remote-mint path
-    # (kiro_crew.instances.token_mint.mint_remote_token) over SSH. Error prose on
+    # (aj_crew.instances.token_mint.mint_remote_token) over SSH. Error prose on
     # stdout both breaks the Unix convention and hides the reason from a caller
     # that captures stderr — which is how a failed remote mint surfaces as
     # a bare "<no stderr>".
 
     def _stub_token_env(self, tmp_path, monkeypatch, *, secret: bool = True) -> None:
         value = "test-secret" if secret else ""
-        monkeypatch.setattr("kiro_crew.cli_server.read_local_secret", lambda _port, **_kw: value)
+        monkeypatch.setattr("aj_crew.cli_server.read_local_secret", lambda _port, **_kw: value)
         monkeypatch.setattr(
-            "kiro_crew.cli_server.KiroCrewConfig.load",
+            "aj_crew.cli_server.AjCrewConfig.load",
             lambda: MagicMock(dashboard=MagicMock(url="")),
         )
-        monkeypatch.setattr("kiro_crew.cli_server.dashboard_origin", lambda u: "")
+        monkeypatch.setattr("aj_crew.cli_server.dashboard_origin", lambda u: "")
         monkeypatch.setattr(
-            "kiro_crew.cli_server.resolve_dashboard_host",
+            "aj_crew.cli_server.resolve_dashboard_host",
             lambda local_only=True: "canonical-host.invalid",
         )
 
     def test_invalid_ttl_error_goes_to_stderr(self, tmp_path, capsys, monkeypatch):
-        from kiro_crew.cli_server import _token
+        from aj_crew.cli_server import _token
 
         self._stub_token_env(tmp_path, monkeypatch)
         with pytest.raises(SystemExit) as excinfo:
@@ -471,7 +469,7 @@ class TestTokenCommand:
         assert captured.out == ""
 
     def test_missing_secret_error_goes_to_stderr(self, tmp_path, capsys, monkeypatch):
-        from kiro_crew.cli_server import _token
+        from aj_crew.cli_server import _token
 
         self._stub_token_env(tmp_path, monkeypatch, secret=False)
         with pytest.raises(SystemExit) as excinfo:
@@ -482,11 +480,11 @@ class TestTokenCommand:
         assert captured.out == ""
 
     def test_unreachable_gateway_error_goes_to_stderr(self, tmp_path, capsys, monkeypatch):
-        from kiro_crew.cli_server import _token
+        from aj_crew.cli_server import _token
 
         self._stub_token_env(tmp_path, monkeypatch)
         with patch(
-            "kiro_crew.cli_server._owner_verified_secret_urlopen",
+            "aj_crew.cli_server._owner_verified_secret_urlopen",
             side_effect=urllib.error.URLError("refused"),
         ):
             with pytest.raises(SystemExit) as excinfo:
@@ -497,11 +495,11 @@ class TestTokenCommand:
         assert captured.out == ""
 
     def test_empty_token_error_goes_to_stderr(self, tmp_path, capsys, monkeypatch):
-        from kiro_crew.cli_server import _token
+        from aj_crew.cli_server import _token
 
         self._stub_token_env(tmp_path, monkeypatch)
         with patch(
-            "kiro_crew.cli_server._owner_verified_secret_urlopen",
+            "aj_crew.cli_server._owner_verified_secret_urlopen",
             return_value=self._mock_token_response(""),
         ):
             with pytest.raises(SystemExit) as excinfo:
@@ -517,11 +515,11 @@ class TestTokenCommand:
         mint_remote_token regexes this stdout over SSH, so a warning or an `input()`
         prompt on stdout would corrupt it.
         """
-        from kiro_crew.cli_server import _token
+        from aj_crew.cli_server import _token
 
         self._stub_token_env(tmp_path, monkeypatch)
         with patch(
-            "kiro_crew.cli_server._owner_verified_secret_urlopen",
+            "aj_crew.cli_server._owner_verified_secret_urlopen",
             return_value=self._mock_token_response("eyJa.b"),
         ):
             _token(argparse.Namespace(ttl="1h", port=7777))
@@ -548,8 +546,8 @@ class TestTokenCommand:
         ``_token`` reports the refusal (not "could not reach gateway") on stderr with
         the install-lsof remedy, exits 1, and never sends.
         """
-        from kiro_crew import cli_server
-        from kiro_crew.cli_server import _token
+        from aj_crew import cli_server
+        from aj_crew.cli_server import _token
 
         self._stub_token_env(tmp_path, monkeypatch)
         sends, sel_calls = _route_tcp_send_through_verdict(
@@ -582,7 +580,7 @@ class TestOwnerVerifiedSecretTransport:
 
     @pytest.fixture(autouse=True)
     def _sel_calls(self, _floor_monkeypatch):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         calls: list[dict] = []
         _floor_monkeypatch.setattr(
@@ -602,11 +600,11 @@ class TestOwnerVerifiedSecretTransport:
 
     def _capture_unix_verifier(self, monkeypatch, tmp_path, operation="gateway_token"):
         """Run the real helper down its unix branch; return the verify_peer it built."""
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         sock_file = tmp_path / "gw.sock"
         sock_file.write_bytes(b"")  # the file must EXIST to be preferred
-        monkeypatch.setattr("kiro_crew.cli_server.dashboard_socket_path", lambda _p: sock_file)
+        monkeypatch.setattr("aj_crew.cli_server.dashboard_socket_path", lambda _p: sock_file)
         holder: dict = {}
 
         def fake_unix(req, timeout, *, socket_path, verify_peer):
@@ -620,7 +618,7 @@ class TestOwnerVerifiedSecretTransport:
 
     def _capture_tcp_verifier(self, monkeypatch, operation="gateway_token"):
         """Run the real helper down its TCP branch; return the verify_peer it built."""
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         holder: dict = {}
 
@@ -644,7 +642,7 @@ class TestOwnerVerifiedSecretTransport:
     def test_prefers_the_unix_socket_with_a_peer_verifier_when_it_exists(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         tcp_calls: list[object] = []
         monkeypatch.setattr(
@@ -664,8 +662,8 @@ class TestOwnerVerifiedSecretTransport:
     def test_unix_verify_peer_requires_this_account_and_the_recorded_gateway(
         self, monkeypatch, tmp_path, _sel_calls
     ):
-        from kiro_crew import cli_server
-        from kiro_crew.mcp_gateway.socketsec import PeerCredResult
+        from aj_crew import cli_server
+        from aj_crew.mcp_gateway.socketsec import PeerCredResult
 
         # cli_server binds check_peer_is_self at module import, so patch the name
         # there; the verifier closure reads it at call time.
@@ -698,17 +696,17 @@ class TestOwnerVerifiedSecretTransport:
     def test_refusal_is_not_an_oserror(self):
         # urllib's do_open wraps an OSError into URLError, which callers report
         # as "gateway not running"; the refusal must escape that wrap.
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         assert not issubclass(cli_server._GatewayPeerRefused, OSError)
 
     def test_without_a_unix_socket_sends_over_tcp_verified_only_on_match(
         self, monkeypatch, tmp_path, _sel_calls
     ):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         monkeypatch.setattr(
-            "kiro_crew.cli_server.dashboard_socket_path", lambda _p: tmp_path / "absent.sock"
+            "aj_crew.cli_server.dashboard_socket_path", lambda _p: tmp_path / "absent.sock"
         )
         verify = self._capture_tcp_verifier(monkeypatch, operation="gateway_update_approve")
 
@@ -738,7 +736,7 @@ class TestOwnerVerifiedSecretTransport:
     def test_windows_binds_the_proof_to_the_connected_tcp_socket(self, monkeypatch):
         # Native Windows has no AF_UNIX, so the send rides TCP -- but the proof
         # is bound to the connected socket via tcp_verified_urlopen's verifier.
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         monkeypatch.delattr(cli_server.socket, "AF_UNIX", raising=False)
         verify = self._capture_tcp_verifier(monkeypatch)
@@ -759,8 +757,8 @@ class TestOwnerVerifiedSecretTransport:
         # The PEER PID of THIS established 4-tuple (get_tcp_peer_pid, not a port
         # snapshot) must equal the recorded gateway pid, with a matching start
         # token, owned by this account -- uid on POSIX, owner SID on Windows.
-        from kiro_crew import cli_server
-        from kiro_crew.instances import run_marker
+        from aj_crew import cli_server
+        from aj_crew.instances import run_marker
 
         class _Sock:
             def getsockname(self):
@@ -814,8 +812,8 @@ class TestOwnerVerifiedSecretTransport:
         # The gateway is the far end: its endpoint (our getpeername) is the
         # client_endpoint and ours (getsockname) the server_endpoint, so
         # get_tcp_peer_pid resolves the GATEWAY's pid, not our own.
-        from kiro_crew import cli_server
-        from kiro_crew.instances import run_marker
+        from aj_crew import cli_server
+        from aj_crew.instances import run_marker
 
         class _Sock:
             def getsockname(self):
@@ -842,7 +840,7 @@ class TestOwnerVerifiedSecretTransport:
         assert seen["server"] == ("127.0.0.1", 54321)  # our endpoint
 
     def test_unresolvable_peer_is_a_fail_closed_mismatch(self, monkeypatch):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         class _Sock:
             def getsockname(self):
@@ -876,7 +874,7 @@ class TestOwnerVerifiedSecretTransport:
         to ``accept()``. The verdict retries the resolve for a bounded window and
         resolves MATCH once the pid appears, instead of refusing on the first miss.
         """
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         class _Sock:
             def getsockname(self):
@@ -905,7 +903,7 @@ class TestOwnerVerifiedSecretTransport:
     def test_connected_unix_peer_is_recorded_gateway_requires_pid_and_token(self, monkeypatch):
         # The uid check proves only same-account; a same-uid impostor that
         # rebound the socket path passes it. The pid + start-token bind defeats it.
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         monkeypatch.setattr(cli_server.run_marker, "pid_start_token", lambda _pid: "tok-real")
 
@@ -940,7 +938,7 @@ class TestOwnerVerifiedSecretTransport:
     # ── _update_approve shares the same send helper ─────────────────────────
 
     def test_the_duplicate_helper_is_gone(self):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         assert not hasattr(cli_server, "_authenticated_internal_urlopen"), (
             "the duplicate approve-path helper must be deleted; _update_approve "
@@ -949,8 +947,8 @@ class TestOwnerVerifiedSecretTransport:
 
     @staticmethod
     def _arm_pending_update(monkeypatch):
-        from kiro_crew import cli_server
-        from kiro_crew.platform import update_capability, update_stepup
+        from aj_crew import cli_server
+        from aj_crew.platform import update_capability, update_stepup
 
         pending = types.SimpleNamespace(
             version="9.9.9", channel="stable", nonce="nonce-xyz", expires_in=120
@@ -965,7 +963,7 @@ class TestOwnerVerifiedSecretTransport:
         monkeypatch.setattr(cli_server, "read_local_secret", lambda *a, **k: "sek", raising=False)
 
     def test_update_approve_sends_through_the_single_helper(self, monkeypatch):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         self._arm_pending_update(monkeypatch)
         sent: list[object] = []
@@ -982,11 +980,11 @@ class TestOwnerVerifiedSecretTransport:
 
     def test_update_approve_surfaces_the_peer_refusal(self, monkeypatch, capsys):
         """A live gateway whose connected peer is refused is NOT "not running"."""
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         self._arm_pending_update(monkeypatch)
         monkeypatch.setattr(
-            "kiro_crew.cli_server.dashboard_socket_path",
+            "aj_crew.cli_server.dashboard_socket_path",
             lambda _port: (_ for _ in ()).throw(RuntimeError("no socket")),
         )
         monkeypatch.setattr(
@@ -1072,7 +1070,7 @@ class TestTcpVerifiedUrlopen:
             assert not t.is_alive(), "the loopback server thread did not exit"
 
     def test_verify_peer_passes_sends_request(self):
-        from kiro_crew.loopback_http import tcp_verified_urlopen
+        from aj_crew.loopback_http import tcp_verified_urlopen
 
         with self._server() as (port, received):
             seen_sock: list[object] = []
@@ -1090,7 +1088,7 @@ class TestTcpVerifiedUrlopen:
             assert seen_sock, "verify_peer must run on the connected socket"
 
     def test_verify_peer_raises_sends_nothing(self):
-        from kiro_crew.loopback_http import tcp_verified_urlopen
+        from aj_crew.loopback_http import tcp_verified_urlopen
 
         class _Refused(Exception):
             """A NON-OSError refusal, so it propagates unwrapped (not URLError)."""
@@ -1109,7 +1107,7 @@ class TestTcpVerifiedUrlopen:
             assert received == [], "a refused peer must never receive the request"
 
     def test_no_verifier_sends_request(self):
-        from kiro_crew.loopback_http import tcp_verified_urlopen
+        from aj_crew.loopback_http import tcp_verified_urlopen
 
         with self._server() as (port, received):
             with tcp_verified_urlopen(

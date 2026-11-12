@@ -16,12 +16,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state, drain_background_tasks
 
-from kiro_crew.context import ContextBuilder
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.memory import MemoryStore
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.wait import finished
+from aj_crew.context import ContextBuilder
+from aj_crew.dashboard import chat_runner
+from aj_crew.memory import MemoryStore
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.wait import finished
 
 SLOT_NAME = "sign-in-chat"
 TEXT = "Pull the latest frame from Figma."
@@ -161,7 +161,7 @@ async def test_a_composed_prompt_hands_over_nothing(tmp_path, monkeypatch):
 def test_the_openai_compatible_endpoint_marks_its_prompt_as_composed():
     import inspect
 
-    from kiro_crew.dashboard import openai_compat
+    from aj_crew.dashboard import openai_compat
 
     assert "_message_is_typed=False" in inspect.getsource(openai_compat)
 
@@ -181,7 +181,7 @@ def test_every_regenerate_dispatch_replays_as_composed_text():
     import inspect
     import textwrap
 
-    from kiro_crew.dashboard import chat_regenerate
+    from aj_crew.dashboard import chat_regenerate
 
     # Edit-and-resend is not here: it sends the person's freshly edited text.
     source = inspect.getsource(chat_regenerate.api_chat_slot_regenerate)

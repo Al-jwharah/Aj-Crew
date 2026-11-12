@@ -21,7 +21,7 @@ export function isOneShot(card: OneShotCard): boolean {
 }
 
 /** The card's time zone: the gateway's resolved one, else the param. Never 'local',
- *  which names the computer Kiro Crew runs on and is no zone `Intl` can format in. */
+ *  which names the computer Aj Crew runs on and is no zone `Intl` can format in. */
 export function cardTimezone(card: OneShotCard): string | undefined {
   const tz = card.timezone ?? (typeof card.params.timezone === 'string' ? card.params.timezone : undefined)
   return tz && isLocalZone(tz) ? undefined : tz

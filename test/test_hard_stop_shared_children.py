@@ -24,8 +24,8 @@ from session_helpers import (  # noqa: F401 -- the fixture is requested by name
     cfg_fixture,
 )
 
-from kiro_crew.session import SessionManager
-from kiro_crew.testing.wait import await_until
+from aj_crew.session import SessionManager
+from aj_crew.testing.wait import await_until
 
 KEY = "dashboard:chat-b4"
 
@@ -208,7 +208,7 @@ async def test_a_hard_stop_does_not_wait_for_a_reap_that_has_started(cfg, monkey
     responding, so a shared child's teardown on that process can hang. With the cap
     raised past the test's own bound, only the started reap can end the wait.
     """
-    from kiro_crew.session_lifecycle_parts import turn_stop
+    from aj_crew.session_lifecycle_parts import turn_stop
 
     monkeypatch.setattr(turn_stop, "_SHARED_CHILD_STOP_WAIT_SECS", 3600.0)
     events: list = []

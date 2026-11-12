@@ -12,7 +12,7 @@ import asyncio
 
 import pytest
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
@@ -21,9 +21,9 @@ from kiro_crew.acp.types import (
     EVENT_TOOL_RESULT,
     AcpEvent,
 )
-from kiro_crew.messaging import APPROVAL_INTERACTIVE, TurnDriver
-from kiro_crew.slack.client import RealSlackClient
-from kiro_crew.slack.renderer import (
+from aj_crew.messaging import APPROVAL_INTERACTIVE, TurnDriver
+from aj_crew.slack.client import RealSlackClient
+from aj_crew.slack.renderer import (
     _STATUS_WORKING,
     TOOL_APPROVE_ACTION_PREFIX,
     TOOL_DENY_ACTION_PREFIX,
@@ -34,7 +34,7 @@ from kiro_crew.slack.renderer import (
     is_wait_identity,
     split_approval_token,
 )
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 
 class _RecSlack:
@@ -608,7 +608,7 @@ class TestApprovalDecider:
     def test_timeout_denies(self, monkeypatch):
         # If the user never clicks, the decider denies by default after the
         # approval window (patched tiny for the test).
-        monkeypatch.setattr("kiro_crew.slack.renderer._APPROVAL_TIMEOUT", 0.01)
+        monkeypatch.setattr("aj_crew.slack.renderer._APPROVAL_TIMEOUT", 0.01)
         rec = _RecSlack()
         decider = SlackApprovalDecider()
         renderer = SlackRenderer(rec, "C1", "t1", reactions_enabled=False, decider=decider)
@@ -804,7 +804,7 @@ class TestStreamMachinery:
         assert "".join(streamed) == "partial", streamed
 
     def test_append_pieces_cut_at_line_breaks(self):
-        from kiro_crew.slack.renderer import _append_pieces
+        from aj_crew.slack.renderer import _append_pieces
 
         text = "line of text\n" * 50
         pieces = _append_pieces(text, limit=100)
@@ -812,7 +812,7 @@ class TestStreamMachinery:
         assert all(len(p) <= 100 and p.endswith("\n") for p in pieces), pieces
 
     def test_append_pieces_fall_back_to_spaces_then_the_limit(self):
-        from kiro_crew.slack.renderer import _append_pieces
+        from aj_crew.slack.renderer import _append_pieces
 
         words = "word " * 40
         pieces = _append_pieces(words, limit=50)
@@ -822,14 +822,14 @@ class TestStreamMachinery:
         assert _append_pieces("") == []
 
     def test_append_pieces_skip_a_break_too_early_in_the_piece(self):
-        from kiro_crew.slack.renderer import _append_pieces
+        from aj_crew.slack.renderer import _append_pieces
 
         assert _append_pieces("Hi\n" + "x" * 150, limit=100) == ["Hi\n" + "x" * 97, "x" * 53]
         text = "Title\n" + "w" * 40 + " " + "z" * 80
         assert _append_pieces(text, limit=100) == ["Title\n" + "w" * 40 + " ", "z" * 80]
 
     def test_append_pieces_keep_a_break_a_quarter_in(self):
-        from kiro_crew.slack.renderer import _append_pieces
+        from aj_crew.slack.renderer import _append_pieces
 
         assert _append_pieces("a" * 30 + "\n" + "b" * 100, limit=100) == [
             "a" * 30 + "\n",
@@ -1480,7 +1480,7 @@ class TestWaitIdentity:
 
     @pytest.mark.parametrize(
         "tool_name",
-        ["wait", "kirocrew-core___wait", "mcp__kirocrew-core__wait", "  WAIT  "],
+        ["wait", "ajcrew-core___wait", "mcp__ajcrew-core__wait", "  WAIT  "],
     )
     def test_wait_spellings_match(self, tool_name):
         assert is_wait_identity(tool_name) is True
@@ -1490,7 +1490,7 @@ class TestWaitIdentity:
         [
             "wait_for_ci",
             "await",
-            "kirocrew-core___wait_for_ci",
+            "ajcrew-core___wait_for_ci",
             "waiter",
             "",
             "third-party___wait",

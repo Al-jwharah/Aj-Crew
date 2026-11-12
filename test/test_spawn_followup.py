@@ -14,8 +14,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 @pytest.fixture(autouse=True)
@@ -268,7 +268,7 @@ class TestFollowUpDelivery:
         lower manager default installed by live configuration."""
         from types import SimpleNamespace
 
-        import kiro_crew.subagent as subagent_module
+        import aj_crew.subagent as subagent_module
 
         mgr = _manager()
         mgr._default_timeout = 60
@@ -312,7 +312,7 @@ class TestFollowUpDelivery:
         deadline the run captures, not on the manager default seen at queue time."""
         from types import SimpleNamespace
 
-        import kiro_crew.subagent as subagent_module
+        import aj_crew.subagent as subagent_module
 
         mgr = _manager()
         mgr._default_timeout = 60
@@ -605,7 +605,7 @@ class TestFollowUpRestApi:
         from aiohttp import web
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard.handlers.messaging import api_spawn_steer
+        from aj_crew.dashboard.handlers.messaging import api_spawn_steer
 
         subagents = MagicMock()
         subagents.follow_up_run = AsyncMock(return_value=(True, "queued"))

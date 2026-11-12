@@ -28,10 +28,10 @@ from stt_stream_helpers import (
     _wait_for_operation,
 )
 
-from kiro_crew import stt
-from kiro_crew.config.loader import SttConfig
-from kiro_crew.dashboard.ws_heartbeat import LagTolerantWebSocketResponse
-from kiro_crew.testing.wait import await_until, default_timeout
+from aj_crew import stt
+from aj_crew.config.loader import SttConfig
+from aj_crew.dashboard.ws_heartbeat import LagTolerantWebSocketResponse
+from aj_crew.testing.wait import await_until, default_timeout
 
 
 async def _bounded(awaitable):
@@ -47,10 +47,10 @@ class TestGuards:
     @pytest.mark.asyncio
     async def test_rejects_when_streaming_disabled(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg(streaming=False)),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             frame = await _recv_json(ws)
@@ -67,14 +67,14 @@ class TestGuards:
         through to Transcribe, which is the one provider that bills. The guard is
         what makes that unreachable. ``whisper`` stands in for such a value because
         it is a retired name a hand-edited or legacy ``config.json`` can still hold;
-        ``KiroCrewConfig.load`` degrades it to ``local``, which is exactly why the
+        ``AjCrewConfig.load`` degrades it to ``local``, which is exactly why the
         socket needs its own gate rather than trusting the loaded value.
         """
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg(provider="whisper")),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             frame = await _recv_json(ws)
@@ -89,7 +89,7 @@ class TestGuards:
         ``_STREAMING_PROVIDERS`` would 503 every microphone press on a fresh
         install, with the settings panel showing voice input as ready.
         """
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         assert SttConfig().provider in stt_stream._STREAMING_PROVIDERS
         assert SttConfig().streaming is True
@@ -97,10 +97,10 @@ class TestGuards:
     @pytest.mark.asyncio
     async def test_rejects_when_stt_disabled(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg(enabled=False)),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             frame = await _recv_json(ws)
@@ -111,10 +111,10 @@ class TestGuards:
     @pytest.mark.asyncio
     async def test_rejects_bad_origin(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg()),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: False)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: False)
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get("/api/ws/stt")
             assert resp.status == 403
@@ -127,12 +127,12 @@ class TestGuards:
         trace in the audit trail.
         """
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg()),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: False)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: False)
         fake_sel = MagicMock()
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.sel", lambda: fake_sel)
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get("/api/ws/stt")
             assert resp.status == 403
@@ -147,12 +147,12 @@ class TestGuards:
     async def test_disabled_streaming_emits_sel_rejection_audit(self, monkeypatch):
         """503 (streaming not enabled) must emit ``stt_stream_rejected`` SEL event."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg(streaming=False)),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
         fake_sel = MagicMock()
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.sel", lambda: fake_sel)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             frame = await _recv_json(ws)
@@ -177,12 +177,12 @@ class TestGuards:
         utterance and serialises its decodes onto one resident model.
         """
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg()),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream._MAX_CONCURRENT_SESSIONS", 1)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream._active_sessions", 1)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream._MAX_CONCURRENT_SESSIONS", 1)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream._active_sessions", 1)
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get("/api/ws/stt")
             assert resp.status == 503
@@ -194,7 +194,7 @@ async def test_receive_until_takes_its_pending_read_down_with_an_outer_cancellat
 
     That orphan would sit in `receive()` until the close and end unretrieved.
     """
-    from kiro_crew.dashboard import stt_stream
+    from aj_crew.dashboard import stt_stream
 
     started = asyncio.Event()
     released = asyncio.Event()
@@ -253,13 +253,13 @@ class TestAppleStreamingSession:
         path consults to name a start failure. It defaults to a capable host so the
         cases that never fail to start do not depend on the runner's OS.
         """
-        from kiro_crew import apple_speech as real_apple_speech
+        from aj_crew import apple_speech as real_apple_speech
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg(provider="apple", language_code=language_code)),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
 
         events: asyncio.Queue = asyncio.Queue()
         fed: list[bytes] = []
@@ -295,20 +295,20 @@ class TestAppleStreamingSession:
             Availability=real_apple_speech.Availability,
             availability=lambda: avail or real_apple_speech.Availability(True),
         )
-        # BOTH, deliberately. `_run_apple_session` does `from kiro_crew import
+        # BOTH, deliberately. `_run_apple_session` does `from aj_crew import
         # apple_speech`, which resolves the ATTRIBUTE on the already-imported
-        # `kiro_crew` package rather than consulting sys.modules — so patching
+        # `aj_crew` package rather than consulting sys.modules — so patching
         # sys.modules alone works when this file runs alone and is silently
         # bypassed once any other test module has imported the real one.
-        monkeypatch.setitem(sys.modules, "kiro_crew.apple_speech", fake_module)
-        monkeypatch.setattr("kiro_crew.apple_speech", fake_module, raising=False)
+        monkeypatch.setitem(sys.modules, "aj_crew.apple_speech", fake_module)
+        monkeypatch.setattr("aj_crew.apple_speech", fake_module, raising=False)
         return events, fed
 
     @pytest.mark.asyncio
     async def test_ready_advertises_the_connection_cap(self, monkeypatch):
         """Same figure, same field, as the other two providers: one contract."""
         self._install(monkeypatch)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 7)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 7)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             ready = await _recv_json(ws)
@@ -357,7 +357,7 @@ class TestAppleStreamingSession:
         # module attribute (as `test_stream_uses_effective_locale` does) so
         # finish() first enqueues the trailing final the real helper would emit.
         events, _ = self._install(monkeypatch)
-        from kiro_crew import apple_speech
+        from aj_crew import apple_speech
 
         class Finishing(apple_speech.StreamingSession):
             async def finish(self, **kwargs):
@@ -365,7 +365,7 @@ class TestAppleStreamingSession:
                 return await super().finish(**kwargs)
 
         monkeypatch.setattr(apple_speech, "StreamingSession", Finishing)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 0.05)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 0.05)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             assert (await _recv_json(ws))["type"] == "ready"
@@ -393,7 +393,7 @@ class TestAppleStreamingSession:
         whole, in order, and the trailing final still precedes the cap frame.
         """
         events, fed = self._install(monkeypatch)
-        from kiro_crew import apple_speech
+        from aj_crew import apple_speech
 
         fire = _arm_cap(monkeypatch)
         feeding = asyncio.Event()
@@ -438,8 +438,8 @@ class TestAppleStreamingSession:
         the helper is finished, and the cap frame still reaches the client.
         """
         _, fed = self._install(monkeypatch)
-        from kiro_crew import apple_speech
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew import apple_speech
+        from aj_crew.dashboard import stt_stream
 
         fire = _arm_cap(monkeypatch)
         monkeypatch.setattr(stt_stream, "_CAP_READER_GRACE_SECS", 0.05)
@@ -470,7 +470,7 @@ class TestAppleStreamingSession:
     )
     async def test_stream_uses_effective_locale(self, monkeypatch, language, expected_locale):
         self._install(monkeypatch, language_code=language)
-        from kiro_crew import apple_speech
+        from aj_crew import apple_speech
 
         factory = MagicMock(wraps=apple_speech.StreamingSession)
         monkeypatch.setattr(apple_speech, "StreamingSession", factory)
@@ -495,7 +495,7 @@ class TestAppleStreamingSession:
         can key off and an uncoded frame can only ever be shown in English.
         """
         self._install(monkeypatch)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 0.05)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 0.05)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             assert (await ws.receive_json())["type"] == "ready"
@@ -517,10 +517,10 @@ class TestAppleStreamingSession:
         for the same event.
         """
         self._install(monkeypatch)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 0.05)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 0.05)
         outcomes: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream._emit_end_audit",
+            "aj_crew.dashboard.stt_stream._emit_end_audit",
             lambda caller, *, outcome: outcomes.append(outcome),
         )
         async with TestClient(TestServer(_make_app())) as client:
@@ -537,7 +537,7 @@ class TestAppleStreamingSession:
         self._install(monkeypatch)
         outcomes: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream._emit_end_audit",
+            "aj_crew.dashboard.stt_stream._emit_end_audit",
             lambda caller, *, outcome: outcomes.append(outcome),
         )
         async with TestClient(TestServer(_make_app())) as client:
@@ -618,7 +618,7 @@ class TestAppleStreamingSession:
         worth telling this user. The code is the availability probe's own, which is
         what the settings panel already renders for the same condition.
         """
-        from kiro_crew import apple_speech
+        from aj_crew import apple_speech
 
         self._install(
             monkeypatch,
@@ -660,7 +660,7 @@ class TestAppleStreamingSession:
         """
         reason = "no on-device speech model is installed for locale zh-CN"
         self._install(monkeypatch, start_error=reason)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.stt_stream"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.stt_stream"):
             async with TestClient(TestServer(_make_app())) as client:
                 ws = await client.ws_connect("/api/ws/stt")
                 msg = await ws.receive_json()
@@ -669,7 +669,7 @@ class TestAppleStreamingSession:
         logged = [
             r
             for r in caplog.records
-            if r.name == "kiro_crew.dashboard.stt_stream" and r.levelno >= logging.WARNING
+            if r.name == "aj_crew.dashboard.stt_stream" and r.levelno >= logging.WARNING
         ]
         assert any(reason in r.getMessage() for r in logged), [r.getMessage() for r in logged]
 
@@ -701,10 +701,10 @@ class TestAppleStreamingSession:
 
         self._install(monkeypatch, session=HangingSession)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream._emit_end_audit",
+            "aj_crew.dashboard.stt_stream._emit_end_audit",
             lambda caller, *, outcome: outcomes.append(outcome),
         )
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         task = asyncio.create_task(
             stt_stream._run_apple_session(
@@ -743,7 +743,7 @@ class TestStreamLifecycle:
         from amazon_transcribe.handlers import TranscriptResultStreamHandler
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(
                 lambda cls: _cfg(
                     language_code=language_code,
@@ -752,7 +752,7 @@ class TestStreamLifecycle:
                 )
             ),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
 
         # Stub Transcribe client.
         input_stream = MagicMock()
@@ -772,7 +772,7 @@ class TestStreamLifecycle:
         else:
             client.start_stream_transcription = AsyncMock(return_value=stream)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.TranscribeStreamingClient",
+            "aj_crew.dashboard.stt_stream.TranscribeStreamingClient",
             lambda **kw: client,
         )
 
@@ -795,7 +795,7 @@ class TestStreamLifecycle:
     async def test_ready_advertises_the_connection_cap(self, monkeypatch):
         """Same figure, same field, as the other two providers: one contract."""
         self._install_stubs(monkeypatch)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 7)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 7)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             ready = await _recv_json(ws)
@@ -812,10 +812,10 @@ class TestStreamLifecycle:
         and thrown away. The input stream is ended and the handler drained while
         the socket is open; the cap frame follows.
         """
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         _, input_stream = self._install_stubs(monkeypatch)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 0.05)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 0.05)
         order: list[str] = []
         input_stream.end_stream = AsyncMock(side_effect=lambda: order.append("end_stream"))
         original = stt_stream._send_error
@@ -824,7 +824,7 @@ class TestStreamLifecycle:
             order.append(f"error:{code}")
             await original(ws, message, code)
 
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream._send_error", _spy)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream._send_error", _spy)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             assert (await _recv_json(ws))["type"] == "ready"
@@ -940,7 +940,7 @@ class TestStreamLifecycle:
         transcribe_client.start_stream_transcription = start_stream_transcription
         calls: list[dict] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.sel",
+            "aj_crew.dashboard.stt_stream.sel",
             lambda: MagicMock(log_api_access=lambda **kw: calls.append(kw)),
         )
         async with TestClient(TestServer(_make_app())) as client:
@@ -1026,7 +1026,7 @@ class TestStreamLifecycle:
         )
         outcomes: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream._emit_end_audit",
+            "aj_crew.dashboard.stt_stream._emit_end_audit",
             lambda caller, *, outcome: outcomes.append(outcome),
         )
         async with TestClient(TestServer(_make_app())) as client:
@@ -1043,7 +1043,7 @@ class TestStreamLifecycle:
         service refusing it, and with no vocabulary configured nothing is."""
         from amazon_transcribe.exceptions import BadRequestException
 
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         refusal = BadRequestException("The requested vocabulary couldn't be found.")
         assert stt_stream._vocabulary_rejected(refusal, "team-terms") is True
@@ -1086,7 +1086,7 @@ class TestStreamLifecycle:
         """
         from amazon_transcribe.exceptions import BadRequestException, UnknownServiceException
 
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         for exc in (
             UnknownServiceException(403, "UnrecognizedClientException", "token is invalid"),
@@ -1109,7 +1109,7 @@ class TestStreamLifecycle:
         """
         from amazon_transcribe.deserialize import TranscribeStreamingResponseParser
 
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         response = SimpleNamespace(
             status_code=403,
@@ -1136,7 +1136,7 @@ class TestStreamLifecycle:
         calls: list[dict] = []
         fake_sel = MagicMock()
         fake_sel.log_api_access = lambda **kw: calls.append(kw)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.sel", lambda: fake_sel)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             await ws.receive_json()
@@ -1161,15 +1161,15 @@ class TestStreamLifecycle:
         same condition and one localised string serves both.
         """
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg()),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.TranscribeStreamingClient", None)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.TranscribeStreamingClient", None)
         calls: list[dict] = []
         fake_sel = MagicMock()
         fake_sel.log_api_access = lambda **kw: calls.append(kw)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.sel", lambda: fake_sel)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             msg = await ws.receive_json()
@@ -1190,7 +1190,7 @@ class TestStreamLifecycle:
     @pytest.mark.asyncio
     async def test_final_transcript_is_redacted(self, monkeypatch):
         """The real _make_handler must redact credentials before emitting final."""
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         captured: list[dict] = []
 
@@ -1216,7 +1216,7 @@ class TestStreamLifecycle:
     @pytest.mark.asyncio
     async def test_partial_transcript_is_redacted(self, monkeypatch):
         """Partials are now redacted too (security-controls guideline)."""
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         captured: list[dict] = []
 
@@ -1287,8 +1287,8 @@ class TestStreamLifecycle:
         calls: list[dict] = []
         fake_sel = MagicMock()
         fake_sel.log_api_access = lambda **kw: calls.append(kw)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.sel", lambda: fake_sel)
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.stt_stream"):
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.sel", lambda: fake_sel)
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.stt_stream"):
             async with TestClient(TestServer(_make_app())) as client:
                 ws = await client.ws_connect("/api/ws/stt")
                 assert (await _bounded(ws.receive_json()))["type"] == "ready"
@@ -1316,7 +1316,7 @@ class TestStreamLifecycle:
         """
         from amazon_transcribe.handlers import TranscriptResultStreamHandler
 
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         self._install_stubs(monkeypatch)
 
@@ -1365,7 +1365,7 @@ class TestStreamLifecycle:
         calls: list[dict] = []
         fake_sel = MagicMock()
         fake_sel.log_api_access = lambda **kw: calls.append(kw)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.sel", lambda: fake_sel)
 
         async def _frames_until_close(ws) -> list[object]:
             return [msg.data async for msg in ws]
@@ -1393,7 +1393,7 @@ class TestStreamLifecycle:
         condition, one localised string, whichever provider the user is on.
         """
         _, input_stream = self._install_stubs(monkeypatch)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 0.05)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 0.05)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             assert (await ws.receive_json())["type"] == "ready"
@@ -1423,12 +1423,12 @@ class TestStreamLifecycle:
             return False, "AWS Transcribe needs your consent for profile default"
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.aws_consent.authorize", _refuse, raising=True
+            "aj_crew.dashboard.stt_stream.aws_consent.authorize", _refuse, raising=True
         )
         calls: list[dict] = []
         fake_sel = MagicMock()
         fake_sel.log_api_access = lambda **kw: calls.append(kw)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.sel", lambda: fake_sel)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             msg = await ws.receive_json()
@@ -1452,10 +1452,10 @@ class TestStreamLifecycle:
         acknowledgement and reads as not-yet-done.
         """
         _, input_stream = self._install_stubs(monkeypatch)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 0.05)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 0.05)
         outcomes: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream._emit_end_audit",
+            "aj_crew.dashboard.stt_stream._emit_end_audit",
             lambda caller, *, outcome: outcomes.append(outcome),
         )
         async with TestClient(TestServer(_make_app())) as client:

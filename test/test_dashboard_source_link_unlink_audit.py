@@ -24,7 +24,7 @@ from dashboard_source_link_unlink_helpers import (
     _slot,
 )
 
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_source_link_unlink
+from aj_crew.dashboard.chat_handlers import api_chat_slot_source_link_unlink
 
 
 class TestRejectionsAreAudited:
@@ -36,7 +36,7 @@ class TestRejectionsAreAudited:
     @pytest.mark.asyncio
     async def test_invalid_identity_emits_a_failed_sel_audit(self):
         sel_mock = MagicMock()
-        with patch("kiro_crew.dashboard.chat_handlers.sel", new=lambda: sel_mock):
+        with patch("aj_crew.dashboard.chat_handlers.sel", new=lambda: sel_mock):
             resp = await api_chat_slot_source_link_unlink(
                 _request("s1", "not-a-valid-key", {"s1": _slot()})
             )
@@ -51,7 +51,7 @@ class TestRejectionsAreAudited:
         sel_mock = MagicMock()
         # A format-valid but not-derived identity -> source_link_not_found.
         absent = _identity_key("https://github.com/acme/widgets/pull/999")
-        with patch("kiro_crew.dashboard.chat_handlers.sel", new=lambda: sel_mock):
+        with patch("aj_crew.dashboard.chat_handlers.sel", new=lambda: sel_mock):
             resp = await api_chat_slot_source_link_unlink(_request("s1", absent, {"s1": _slot()}))
         assert resp.status == 404
         kwargs = sel_mock.log_tool_invocation.call_args.kwargs
@@ -62,7 +62,7 @@ class TestRejectionsAreAudited:
     @pytest.mark.asyncio
     async def test_missing_slot_emits_a_failed_sel_audit(self):
         sel_mock = MagicMock()
-        with patch("kiro_crew.dashboard.chat_handlers.sel", new=lambda: sel_mock):
+        with patch("aj_crew.dashboard.chat_handlers.sel", new=lambda: sel_mock):
             resp = await api_chat_slot_source_link_unlink(
                 _request("s1", _identity_key(PR_A), {})  # no such slot
             )
@@ -99,9 +99,9 @@ class TestRejectionsAreAudited:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: "shared-history-key",
             ),
         ):
@@ -143,9 +143,9 @@ class TestRejectionsAreAudited:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: "shared-history-key",
             ),
         ):
@@ -209,9 +209,9 @@ class TestRejectionsAreAudited:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: "shared-history-key",
             ),
         ):
@@ -259,9 +259,9 @@ class TestRejectionsAreAudited:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: "shared-history-key",
             ),
         ):
@@ -311,9 +311,9 @@ class TestRejectionsAreAudited:
         req.get = lambda k, d=None: d
         req.app = {"state": state}
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.slot_history_key",
+                "aj_crew.dashboard.chat_handlers.slot_history_key",
                 new=lambda s: "shared-history-key",
             ),
         ):
@@ -343,7 +343,7 @@ class TestRejectionsAreAudited:
         req.rel_url.query = {"expect": _expect_for_req(req)}
         req.get = lambda k, d=None: d
         req.app = {"state": state}
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             resp = await api_chat_slot_source_link_unlink(req)
         assert resp.status == 200
         # It PERSISTED rather than fast-returning: a guarded write landed.
@@ -374,7 +374,7 @@ class TestRejectionsAreAudited:
         req.rel_url.query = {"expect": _expect_for_req(req)}
         req.get = lambda k, d=None: d
         req.app = {"state": state}
-        with patch("kiro_crew.dashboard.chat_handlers.sel"):
+        with patch("aj_crew.dashboard.chat_handlers.sel"):
             resp = await api_chat_slot_source_link_unlink(req)
         assert resp.status == 404  # not authorized against the pinned transcript
         # No durable tombstone was written for the foreign key.
@@ -390,9 +390,9 @@ class TestRejectionsAreAudited:
         sel_mock = MagicMock()
         stale_resp = web.json_response({"code": "session_gone"}, status=409)
         with (
-            patch("kiro_crew.dashboard.chat_handlers.sel", new=lambda: sel_mock),
+            patch("aj_crew.dashboard.chat_handlers.sel", new=lambda: sel_mock),
             patch(
-                "kiro_crew.dashboard.chat_handlers._reauthorize_after_await",
+                "aj_crew.dashboard.chat_handlers._reauthorize_after_await",
                 new=MagicMock(return_value=stale_resp),
             ),
         ):

@@ -21,13 +21,13 @@ from aiohttp.test_utils import TestClient, TestServer
 # resolves to the stdlib `test` and fails with ModuleNotFoundError on CI.
 from chat_test_helpers import _make_ready_kiro_prerequisite
 
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.state import (
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.state import (
     _DEFERRED_SLOTS_FLUSH_DELAY_S,
     _SLOTS_BROADCAST_INTERVAL_S,
     DashboardState,
 )
-from kiro_crew.history import ConversationLog
+from aj_crew.history import ConversationLog
 
 FOLDER_ID = "f-design"
 
@@ -77,7 +77,7 @@ def _make_state(tmp_path):
 
 
 def _make_app(state) -> web.Application:
-    from kiro_crew.dashboard.chat import api_chat_slot_create
+    from aj_crew.dashboard.chat import api_chat_slot_create
 
     app = web.Application()
     app["state"] = state
@@ -92,7 +92,7 @@ def _as_app_handler(app_name: str):
     so the ownership branch is exercised through the real handler.
     """
 
-    from kiro_crew.dashboard.chat import api_chat_slot_create
+    from aj_crew.dashboard.chat import api_chat_slot_create
 
     async def handler(request: web.Request) -> web.Response:
         request["app"] = app_name
@@ -120,7 +120,7 @@ def _record_broadcasts(state) -> list[list[dict]]:
 
 @pytest.fixture(autouse=True)
 def _isolate_config_dir(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
 
 class TestCreateInFolder:
@@ -343,7 +343,7 @@ class TestCreateInFolder:
         monkeypatch.setattr(
             state, "_do_slots_broadcast", lambda: broadcasts.append("published")
         )
-        monkeypatch.setattr("kiro_crew.dashboard.state.time.monotonic", lambda: 100.0)
+        monkeypatch.setattr("aj_crew.dashboard.state.time.monotonic", lambda: 100.0)
 
         def capture_callback(delay, callback, *args, **kwargs):
             scheduled.append((delay, callback, args))
@@ -419,7 +419,7 @@ class TestCreateInFolder:
 
         monkeypatch.setattr(state, "_do_slots_broadcast", fail_broadcast)
         monkeypatch.setattr(loop, "call_later", capture_retry)
-        caplog.set_level("ERROR", logger="kiro_crew.dashboard.state")
+        caplog.set_level("ERROR", logger="aj_crew.dashboard.state")
 
         state._deferred_slots_flush("create slot 's1'", 1)
         assert attempts == 1
@@ -606,8 +606,8 @@ class TestFolderTagInheritance:
 
     @staticmethod
     def _app_with_folder_patch(state) -> web.Application:
-        from kiro_crew.dashboard.chat import api_chat_slot_create
-        from kiro_crew.dashboard.chat_folders import api_chat_slot_folder
+        from aj_crew.dashboard.chat import api_chat_slot_create
+        from aj_crew.dashboard.chat_folders import api_chat_slot_folder
 
         app = web.Application()
         app["state"] = state
@@ -618,7 +618,7 @@ class TestFolderTagInheritance:
     @pytest.mark.asyncio
     async def test_new_slot_in_folder_inherits_the_folders_tags(self, tmp_path):
         """(c) A genuinely new chat filed into a tagged folder copies its tags."""
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         state = self._tagged_state(tmp_path, ["t1", "t2"])
         birth_revisions: list[str] = []
@@ -778,7 +778,7 @@ class TestDurableWriteOrdering:
                 state, pinned, "folder_id", seen
             )
 
-            with caplog.at_level("ERROR", logger="kiro_crew.dashboard.state"):
+            with caplog.at_level("ERROR", logger="aj_crew.dashboard.state"):
                 resp = await client.post(
                     "/api/chat/slots", json={"name": "s1", "folder_id": FOLDER_ID}
                 )
@@ -814,7 +814,7 @@ class TestDurableWriteOrdering:
                 state, pinned, "title", seen
             )
 
-            with caplog.at_level("ERROR", logger="kiro_crew.dashboard.state"):
+            with caplog.at_level("ERROR", logger="aj_crew.dashboard.state"):
                 resp = await client.post("/api/chat/slots", json={"name": "s1", "title": "Pinned"})
 
         assert resp.status == 200
@@ -836,7 +836,7 @@ class TestFreshFolderCreateStaysOffTheExecutor:
 
     @pytest.mark.asyncio
     async def test_fresh_folder_create_makes_no_project_probe(self, tmp_path):
-        from kiro_crew.dashboard import chat_folders
+        from aj_crew.dashboard import chat_folders
 
         state = _make_state(tmp_path)
         real_validate = chat_folders._validate_project_dir
@@ -852,7 +852,7 @@ class TestFreshFolderCreateStaysOffTheExecutor:
     @pytest.mark.asyncio
     async def test_folder_with_a_project_still_validates_it(self, tmp_path):
         """The shortcut only skips folders that declare no project anywhere up the chain."""
-        from kiro_crew.dashboard.chat_folders import _folder_declared_project
+        from aj_crew.dashboard.chat_folders import _folder_declared_project
 
         folders = [
             {"id": "root", "name": "Root", "project_dir": str(tmp_path)},
@@ -875,7 +875,7 @@ class TestFreshFolderCreateStaysOffTheExecutor:
         """One chain walk on the loop; the ``stat`` hops to a thread, and only when there is one."""
         import threading
 
-        from kiro_crew.dashboard import chat_folders as cf
+        from aj_crew.dashboard import chat_folders as cf
 
         target = tmp_path / "repo"
         target.mkdir()
@@ -911,17 +911,17 @@ class TestOwnerFolderCreatePersistsTheFiling:
     async def test_owner_folder_create_writes_folder_id_to_the_metadata_line(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-        from kiro_crew.dashboard.chat import api_chat_slot_create
-        from kiro_crew.history import _sessions_dir
-        from kiro_crew.memory_stores import provision_member_memory
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+        from aj_crew.dashboard.chat import api_chat_slot_create
+        from aj_crew.history import _sessions_dir
+        from aj_crew.memory_stores import provision_member_memory
 
-        config = KiroCrewConfig()
-        config.agents["local-only-crew"] = KiroCrewAgentConfig(kiro_agent="local-only-crew")
+        config = AjCrewConfig()
+        config.agents["local-only-crew"] = AjCrewAgentConfig(kiro_agent="local-only-crew")
         config.default_agent = "local-only-crew"
         provision_member_memory(config, "local-only-crew")
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load",
+            "aj_crew.dashboard.chat_handlers.AjCrewConfig.load",
             staticmethod(lambda: config),
         )
         state = _make_state(tmp_path)

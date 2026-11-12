@@ -17,16 +17,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.acp.types import ACP_BACKEND_CODEX
-from kiro_crew.llm_helpers import (
+from aj_crew.acp.client import AcpError
+from aj_crew.acp.types import ACP_BACKEND_CODEX
+from aj_crew.llm_helpers import (
     FALLBACK_CANDIDATE_ATTEMPTS,
     TURN_FALLBACK_ATTR,
     FallbackState,
     next_fallback_candidate,
     stream_and_collect,
 )
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, EVENT_TOOL_CALL, LLMEvent
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, EVENT_TOOL_CALL, LLMEvent
 
 
 class TestNextFallbackCandidate:
@@ -136,11 +136,11 @@ class TestConfiguredFallbackChain:
     """agent.fallback_model -> walk-order derivation (the one shared derivation)."""
 
     def _chain_for(self, value: str) -> tuple[str, ...]:
-        from kiro_crew.llm_helpers import configured_fallback_chain
+        from aj_crew.llm_helpers import configured_fallback_chain
 
         cfg = MagicMock()
         cfg.agent.fallback_model = value
-        with patch("kiro_crew.llm_helpers.KiroCrewConfig") as kc:
+        with patch("aj_crew.llm_helpers.AjCrewConfig") as kc:
             kc.load.return_value = cfg
             return configured_fallback_chain()
 
@@ -157,9 +157,9 @@ class TestConfiguredFallbackChain:
         assert self._chain_for("claude-opus-4.8") == ("claude-opus-4.8", "auto")
 
     def test_load_failure_disables(self) -> None:
-        from kiro_crew.llm_helpers import configured_fallback_chain
+        from aj_crew.llm_helpers import configured_fallback_chain
 
-        with patch("kiro_crew.llm_helpers.KiroCrewConfig") as kc:
+        with patch("aj_crew.llm_helpers.AjCrewConfig") as kc:
             kc.load.side_effect = RuntimeError("boom")
             assert configured_fallback_chain() == ()
 
@@ -183,7 +183,7 @@ class TestSetModelWitness:
         # set_model("claude-opus-4.8") silently no-ops (resolve collapsed it):
         # the walk must skip the candidate instead of publishing a marker for
         # a model that never took over.
-        from kiro_crew.llm_helpers import FallbackState, advance_fallback_candidate
+        from aj_crew.llm_helpers import FallbackState, advance_fallback_candidate
 
         provider = self._provider("primary-model")
         fb = FallbackState(chain=("claude-opus-4.8",))
@@ -193,7 +193,7 @@ class TestSetModelWitness:
 
     @pytest.mark.asyncio
     async def test_witnessed_swap_is_published(self) -> None:
-        from kiro_crew.llm_helpers import FallbackState, advance_fallback_candidate
+        from aj_crew.llm_helpers import FallbackState, advance_fallback_candidate
 
         provider = self._provider("primary-model")
 
@@ -211,7 +211,7 @@ class TestSetModelWitness:
         # An "auto" primary that resolves to "" restores nothing: the session
         # is still on the fallback, so the marker must survive for the next
         # probe (clearing it re-opens the backfill permanent-pin door).
-        from kiro_crew.llm_helpers import probe_fallback_restore
+        from aj_crew.llm_helpers import probe_fallback_restore
 
         provider = self._provider("fallback-model")
         setattr(provider, TURN_FALLBACK_ATTR, ("auto", "fallback-model"))
@@ -220,7 +220,7 @@ class TestSetModelWitness:
 
     @pytest.mark.asyncio
     async def test_witnessed_restore_clears_the_marker(self) -> None:
-        from kiro_crew.llm_helpers import probe_fallback_restore
+        from aj_crew.llm_helpers import probe_fallback_restore
 
         provider = self._provider("fallback-model")
 
@@ -237,14 +237,14 @@ class TestProviderFallbackActive:
     """The shared usage-attribution guard reads the sticky marker."""
 
     def test_true_while_marker_present(self) -> None:
-        from kiro_crew.llm_helpers import provider_fallback_active
+        from aj_crew.llm_helpers import provider_fallback_active
 
         provider = MagicMock()
         setattr(provider, TURN_FALLBACK_ATTR, ("primary-model", "fallback-model"))
         assert provider_fallback_active(provider) is True
 
     def test_false_without_marker_or_malformed(self) -> None:
-        from kiro_crew.llm_helpers import provider_fallback_active
+        from aj_crew.llm_helpers import provider_fallback_active
 
         provider = MagicMock(spec=[])  # no marker attribute at all
         assert provider_fallback_active(provider) is False
@@ -287,7 +287,7 @@ class TestAdvanceFallbackCandidateAutoPrimary:
         # chain ("auto",) on an auto-routed session: nothing to fall back to —
         # the walk must exhaust (original error surfaces), never "swap" to the
         # model already serving.
-        from kiro_crew.llm_helpers import FallbackState, advance_fallback_candidate
+        from aj_crew.llm_helpers import FallbackState, advance_fallback_candidate
 
         provider = self._provider()
         fb = FallbackState(chain=("auto",))
@@ -300,7 +300,7 @@ class TestAdvanceFallbackCandidateAutoPrimary:
         # chain (id, "auto") on an auto-routed session: the concrete candidate
         # applies, and the recorded primary is "auto" — the restore probe then
         # re-enters auto routing instead of tripping the empty-primary arm.
-        from kiro_crew.llm_helpers import FallbackState, advance_fallback_candidate
+        from aj_crew.llm_helpers import FallbackState, advance_fallback_candidate
 
         provider = self._provider()
         fb = FallbackState(chain=("claude-opus-4.8", "auto"))
@@ -347,7 +347,7 @@ class TestAdvanceFallbackCandidateNamespacedChain:
 
     @pytest.mark.asyncio
     async def test_qualified_entry_applies_under_advertised_spelling(self) -> None:
-        from kiro_crew.llm_helpers import FallbackState, advance_fallback_candidate
+        from aj_crew.llm_helpers import FallbackState, advance_fallback_candidate
 
         provider = self._provider()
         fb = FallbackState(chain=(self._QUALIFIED, "auto"))
@@ -364,7 +364,7 @@ class TestAdvanceFallbackCandidateNamespacedChain:
 
     @pytest.mark.asyncio
     async def test_qualified_entry_peeling_to_failing_model_is_skipped(self) -> None:
-        from kiro_crew.llm_helpers import FallbackState, advance_fallback_candidate
+        from aj_crew.llm_helpers import FallbackState, advance_fallback_candidate
 
         provider = self._provider()
         # The chain names the currently-failing model under a qualifier; the
@@ -425,7 +425,7 @@ class TestStreamAndCollectThrottleFallback:
     async def test_fallback_serves_turn_after_budget_exhaustion(self) -> None:
         """Same-model budget exhausts, the first advertised candidate is set
         and serves the turn; the sticky marker is published on the provider."""
-        from kiro_crew.llm_helpers import _TRANSIENT_RETRIES
+        from aj_crew.llm_helpers import _TRANSIENT_RETRIES
 
         call_count = 0
 
@@ -451,7 +451,7 @@ class TestStreamAndCollectThrottleFallback:
     async def test_two_attempts_per_candidate_then_advance(self) -> None:
         """A failing candidate gets exactly FALLBACK_CANDIDATE_ATTEMPTS
         attempts, then the chain advances to the next candidate."""
-        from kiro_crew.llm_helpers import _TRANSIENT_RETRIES
+        from aj_crew.llm_helpers import _TRANSIENT_RETRIES
 
         call_count = 0
         fail_until = _TRANSIENT_RETRIES + 1 + FALLBACK_CANDIDATE_ATTEMPTS
@@ -479,7 +479,7 @@ class TestStreamAndCollectThrottleFallback:
     async def test_chain_exhaustion_surfaces_original_error_class(self) -> None:
         """Every candidate fails: the ORIGINAL error class propagates, carrying
         the chain's story for the delivering surface."""
-        from kiro_crew.llm_helpers import _TRANSIENT_RETRIES
+        from aj_crew.llm_helpers import _TRANSIENT_RETRIES
 
         call_count = 0
 
@@ -504,7 +504,7 @@ class TestStreamAndCollectThrottleFallback:
     async def test_empty_chain_is_todays_behavior(self) -> None:
         """REGRESSION PIN: with no chain configured, behavior is byte-for-byte
         the pre-feature error surface — same attempt count, no set_model."""
-        from kiro_crew.llm_helpers import _TRANSIENT_RETRIES
+        from aj_crew.llm_helpers import _TRANSIENT_RETRIES
 
         call_count = 0
 
@@ -527,7 +527,7 @@ class TestStreamAndCollectThrottleFallback:
     async def test_non_transient_error_mid_chain_propagates_immediately(self) -> None:
         """An auth/validation error raised by a candidate fails fast — the
         chain is for transient throttles only."""
-        from kiro_crew.llm_helpers import _TRANSIENT_RETRIES
+        from aj_crew.llm_helpers import _TRANSIENT_RETRIES
 
         call_count = 0
 
@@ -570,7 +570,7 @@ class TestStreamAndCollectThrottleFallback:
 
     @pytest.mark.asyncio
     async def test_unadvertised_candidates_are_skipped(self) -> None:
-        from kiro_crew.llm_helpers import _TRANSIENT_RETRIES
+        from aj_crew.llm_helpers import _TRANSIENT_RETRIES
 
         call_count = 0
 
@@ -641,7 +641,7 @@ class TestStreamAndCollectThrottleFallback:
         fallback (marker P->F1, restore failing) that exhausts again must
         keep P as the primary — never record F1 as the primary — and must
         not re-try the currently-failing F1."""
-        from kiro_crew.llm_helpers import _TRANSIENT_RETRIES
+        from aj_crew.llm_helpers import _TRANSIENT_RETRIES
 
         call_count = 0
 

@@ -382,7 +382,7 @@ export function CrewRow({
           </div>
           <div className="text-[11px] text-muted-strong mt-1">
             {isCloud
-              ? i18nT('pages.settings.remoteCrewPanel.launched_by_kiro_crew')
+              ? i18nT('pages.settings.remoteCrewPanel.launched_by_aj_crew')
               : inst.provisioner_id === BUILTIN_PROVISIONER_ID
                 // An EC2-stamped row wears the EC2 badge, whose hint says it WAS
                 // launched by the EC2 launcher — the caption must agree with the

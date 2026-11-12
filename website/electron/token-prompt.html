@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Kiro Crew — Token Required</title>
+  <title>Aj Crew — Token Required</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -47,7 +47,7 @@
 </head>
 <body>
   <div class="container">
-    <div class="logo">👻</div>
+    <div class="logo">💎</div>
     <h2>Token Required</h2>
     <p id="why"></p>
     <input id="url" type="text" placeholder="Paste token URL or raw token…" autofocus>
@@ -61,14 +61,14 @@
     // asserting "not this app" there would be a confident guess. Default to the
     // hedged wording, which is right whenever we are unsure.
     //
-    // A packaged AppImage installs no `kirocrew` on PATH — the launcher ships
+    // A packaged AppImage installs no `ajcrew` on PATH — the launcher ships
     // inside the image — so the shell passes the bundled launcher's absolute
-    // path in ?cli=. When present it replaces the bare `kirocrew` in the LOCAL
+    // path in ?cli=. When present it replaces the bare `ajcrew` in the LOCAL
     // mint command. The command is rendered as a <code> span (not inline prose)
     // so a long bundled path is legible and selectable on its own. A "foreign"
     // gateway's token must be minted on the OTHER machine, where this app's
     // bundled CLI has no standing, so its command stays the plain on-PATH
-    // `kirocrew token`. With no ?cli= every branch renders exactly its prior
+    // `ajcrew token`. With no ?cli= every branch renders exactly its prior
     // text, so a normal install is unchanged.
     (function explain() {
       const q = new URLSearchParams(window.location.search);
@@ -82,7 +82,7 @@
       // quoted so it is one shell token.
       const localMint = cli
         ? (/\s/.test(cli) ? '"' + cli + '"' : cli) + ' token'
-        : 'kirocrew token';
+        : 'ajcrew token';
 
       const why = document.getElementById('why');
       why.textContent = '';
@@ -104,7 +104,7 @@
         say('Port ' + port + ' is held by a gateway this app did not start \u2014 most often an SSH '
           + 'tunnel to another machine. Its access key is its own, so a token has to come from '
           + 'there: run ');
-        cmd('kirocrew token');
+        cmd('ajcrew token');
         say(' on ' + where + ', then paste the URL below.');
       } else if (cli) {
         // Unknown owner on a packaged AppImage: name both paths, the local one
@@ -112,7 +112,7 @@
         say('The gateway on port ' + port + ' would not issue a dashboard token, and this app '
           + 'could not determine which machine it is running on. If you reached it through an SSH '
           + 'tunnel, run ');
-        cmd('kirocrew token');
+        cmd('ajcrew token');
         say(' on ' + where + '; otherwise run ');
         cmd(localMint);
         say(' on this machine. Then paste the URL below.');
@@ -122,7 +122,7 @@
         say('The gateway on port ' + port + ' would not issue a dashboard token, and this app '
           + 'could not determine which machine it is running on. If you reached it through an SSH '
           + 'tunnel, run ');
-        cmd('kirocrew token');
+        cmd('ajcrew token');
         say(' on ' + where + '; otherwise run it on this machine. Then paste the URL below.');
       }
     })();

@@ -12,7 +12,7 @@ from typing import TypeVar
 
 import pytest
 
-from kiro_crew import aws_consent
+from aj_crew import aws_consent
 
 # Not UTF-8: 0xff never starts a UTF-8 sequence.
 _UNDECODABLE = b'\xff\xfe{"polly": {}}'
@@ -23,8 +23,8 @@ T = TypeVar("T")
 @pytest.fixture()
 def store(tmp_path, monkeypatch):
     """Isolated data home holding a consent store that is not UTF-8."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    from kiro_crew.config.loader import aws_consent_path, config_dir
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    from aj_crew.config.loader import aws_consent_path, config_dir
 
     config_dir().mkdir(parents=True, exist_ok=True)
     aws_consent._probe_cache.clear()

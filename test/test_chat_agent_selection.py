@@ -25,38 +25,38 @@ from chat_test_helpers import _make_app_with_agent_routes, drain_background_task
 from dashboard_owner_helpers import as_owner
 from test_members_dm_thread import _make_members_app
 
-from kiro_crew.agent_discovery import AgentInfo
-from kiro_crew.config import live
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, resolve_agent_bindings
-from kiro_crew.dashboard import chat_handlers, chat_runner
-from kiro_crew.dashboard.chat_persistence import _apply_recent_session, _rehydrate_slot_from_history
-from kiro_crew.dashboard.handlers import agents
-from kiro_crew.execution_context import read_session_execution
-from kiro_crew.member_memory_auth import read_private_session_store
-from kiro_crew.memory_stores import UnknownMemoryStore, provision_member_memory
-from kiro_crew.providers.base import EVENT_AGENT_SWITCHED, EVENT_COMPLETE, LLMEvent
-from kiro_crew.session_agent_selection import (
+from aj_crew.agent_discovery import AgentInfo
+from aj_crew.config import live
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, resolve_agent_bindings
+from aj_crew.dashboard import chat_handlers, chat_runner
+from aj_crew.dashboard.chat_persistence import _apply_recent_session, _rehydrate_slot_from_history
+from aj_crew.dashboard.handlers import agents
+from aj_crew.execution_context import read_session_execution
+from aj_crew.member_memory_auth import read_private_session_store
+from aj_crew.memory_stores import UnknownMemoryStore, provision_member_memory
+from aj_crew.providers.base import EVENT_AGENT_SWITCHED, EVENT_COMPLETE, LLMEvent
+from aj_crew.session_agent_selection import (
     record_agent_selection,
     resolve_session_agent_bindings,
     session_agent_selection_kind,
 )
-from kiro_crew.testing.wait import await_until, default_timeout
+from aj_crew.testing.wait import await_until, default_timeout
 
 
 def test_global_session_binding_matches_equivalent_alias(monkeypatch):
-    from kiro_crew import execution_context, session_agent_selection
+    from aj_crew import execution_context, session_agent_selection
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        "original": KiroCrewAgentConfig(kiro_agent="kirocrew"),
-        "equivalent": KiroCrewAgentConfig(kiro_agent="kirocrew"),
+        "original": AjCrewAgentConfig(kiro_agent="ajcrew"),
+        "equivalent": AjCrewAgentConfig(kiro_agent="ajcrew"),
     }
     cfg.default_agent = "original"
     captured = execution_context.ExecutionContext(
         None,
         execution_context.MemoryStoreRef("default"),
         "member",
-        "kirocrew",
+        "ajcrew",
         selection_name="original",
     )
     monkeypatch.setattr(session_agent_selection, "read_session_execution", lambda _: captured)
@@ -74,7 +74,7 @@ def test_global_session_binding_matches_equivalent_alias(monkeypatch):
 @pytest.fixture
 def pruned_marker(monkeypatch):
     monkeypatch.setattr(
-        "kiro_crew.crewmate_prune_migration.removed_crewmate_names",
+        "aj_crew.crewmate_prune_migration.removed_crewmate_names",
         lambda: frozenset({"synced-agent"}),
     )
 
@@ -97,15 +97,15 @@ def test_resume_after_crewmate_prune_resolves_installed_agent(monkeypatch, prune
     selection never takes the installed-agent lookup, so without the fallback
     every resumed turn is refused with "Crew Member ... is unavailable".
     """
-    from kiro_crew import execution_context, session_agent_selection
+    from aj_crew import execution_context, session_agent_selection
 
-    cfg = KiroCrewConfig()
-    cfg.agents = {"kirocrew": KiroCrewAgentConfig(kiro_agent="kirocrew")}
-    cfg.default_agent = "kirocrew"
+    cfg = AjCrewConfig()
+    cfg.agents = {"ajcrew": AjCrewAgentConfig(kiro_agent="ajcrew")}
+    cfg.default_agent = "ajcrew"
     record = _pruned_crewmate_record(execution_context)
     monkeypatch.setattr(session_agent_selection, "read_session_execution", lambda _: record)
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name == "synced-agent" else "",
     )
 
@@ -128,15 +128,15 @@ def test_resume_after_crewmate_prune_keeps_refusing_owned_members(
     monkeypatch, pruned_marker, store, member_id
 ):
     """Only the identity-less, Global-store shape the prune removes falls back."""
-    from kiro_crew import execution_context, session_agent_selection
+    from aj_crew import execution_context, session_agent_selection
 
-    cfg = KiroCrewConfig()
-    cfg.agents = {"kirocrew": KiroCrewAgentConfig(kiro_agent="kirocrew")}
-    cfg.default_agent = "kirocrew"
+    cfg = AjCrewConfig()
+    cfg.agents = {"ajcrew": AjCrewAgentConfig(kiro_agent="ajcrew")}
+    cfg.default_agent = "ajcrew"
     record = _pruned_crewmate_record(execution_context, store=store, member_id=member_id)
     monkeypatch.setattr(session_agent_selection, "read_session_execution", lambda _: record)
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name == "synced-agent" else "",
     )
 
@@ -149,15 +149,15 @@ def test_resume_after_crewmate_prune_keeps_refusing_owned_members(
 
 def test_resume_after_crewmate_prune_refuses_uninstalled_agent(monkeypatch, pruned_marker):
     """The fallback reaches only an agent that is still installed."""
-    from kiro_crew import execution_context, session_agent_selection
+    from aj_crew import execution_context, session_agent_selection
 
-    cfg = KiroCrewConfig()
-    cfg.agents = {"kirocrew": KiroCrewAgentConfig(kiro_agent="kirocrew")}
-    cfg.default_agent = "kirocrew"
+    cfg = AjCrewConfig()
+    cfg.agents = {"ajcrew": AjCrewAgentConfig(kiro_agent="ajcrew")}
+    cfg.default_agent = "ajcrew"
     record = _pruned_crewmate_record(execution_context)
     monkeypatch.setattr(session_agent_selection, "read_session_execution", lambda _: record)
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent", lambda name, project_dir=None: ""
+        "aj_crew.config.loader._materialized_kiro_agent", lambda name, project_dir=None: ""
     )
 
     bindings = resolve_session_agent_bindings(
@@ -169,7 +169,7 @@ def test_resume_after_crewmate_prune_refuses_uninstalled_agent(monkeypatch, prun
 
 def _record_store(monkeypatch, record):
     """Route the session record through one in-memory cell, read and write alike."""
-    from kiro_crew import session_agent_selection
+    from aj_crew import session_agent_selection
 
     cell = {"record": record}
     monkeypatch.setattr(session_agent_selection, "read_session_execution", lambda _: cell["record"])
@@ -187,10 +187,10 @@ def test_provider_agent_switch_on_an_ordinary_chat_resolves_next_turn(monkeypatc
     The chat records kind ``member``, but kiro-cli's switch names a TEMPLATE under
     ``~/.kiro/agents``. Keeping kind ``member`` would resolve it where it does not exist.
     """
-    from kiro_crew import execution_context, session_agent_selection
+    from aj_crew import execution_context, session_agent_selection
 
-    cfg = KiroCrewConfig()
-    cfg.agents = {"default": KiroCrewAgentConfig(kiro_agent="kirocrew")}
+    cfg = AjCrewConfig()
+    cfg.agents = {"default": AjCrewAgentConfig(kiro_agent="ajcrew")}
     cfg.default_agent = "default"
     cell = _record_store(
         monkeypatch,
@@ -198,13 +198,13 @@ def test_provider_agent_switch_on_an_ordinary_chat_resolves_next_turn(monkeypatc
             None,
             execution_context.MemoryStoreRef("default"),
             "member",
-            "kirocrew",
+            "ajcrew",
             selection_name="default",
         ),
     )
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
-        lambda name, project_dir=None: name if name in ("kirocrew", "fable") else "",
+        "aj_crew.config.loader._materialized_kiro_agent",
+        lambda name, project_dir=None: name if name in ("ajcrew", "fable") else "",
     )
 
     session_agent_selection.record_provider_agent_switch(
@@ -231,11 +231,11 @@ def test_provider_agent_switch_to_a_kiro_cli_builtin_resolves_next_turn(monkeypa
     refused while being recorded: kiro-cli had already moved the session, the turn
     errored, and the chat restarted on the agent it had before.
     """
-    from kiro_crew import execution_context, session_agent_selection
-    from kiro_crew.config import loader
+    from aj_crew import execution_context, session_agent_selection
+    from aj_crew.config import loader
 
-    cfg = KiroCrewConfig()
-    cfg.agents = {"default": KiroCrewAgentConfig(kiro_agent="kirocrew")}
+    cfg = AjCrewConfig()
+    cfg.agents = {"default": AjCrewAgentConfig(kiro_agent="ajcrew")}
     cfg.default_agent = "default"
     cell = _record_store(
         monkeypatch,
@@ -243,12 +243,12 @@ def test_provider_agent_switch_to_a_kiro_cli_builtin_resolves_next_turn(monkeypa
             None,
             execution_context.MemoryStoreRef("default"),
             "member",
-            "kirocrew",
+            "ajcrew",
             selection_name="default",
         ),
     )
     # A warm snapshot that lists nothing: no spec file declares a built-in.
-    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"kirocrew"}))
+    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"ajcrew"}))
     monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS_READY", True)
 
     session_agent_selection.record_provider_agent_switch(
@@ -273,12 +273,12 @@ def test_unknown_agent_without_a_spec_is_still_unresolved(monkeypatch, name):
     ``kiro_help`` is a TUI-only built-in: ``kiro-cli acp --agent kiro_help`` starts
     ``kiro_default``, so resolving it would record an agent that never runs.
     """
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
-    cfg = KiroCrewConfig()
-    cfg.agents = {"default": KiroCrewAgentConfig(kiro_agent="kirocrew")}
+    cfg = AjCrewConfig()
+    cfg.agents = {"default": AjCrewAgentConfig(kiro_agent="ajcrew")}
     cfg.default_agent = "default"
-    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"kirocrew"}))
+    monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"ajcrew"}))
     monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS_READY", True)
 
     bindings = resolve_agent_bindings(cfg, name, selection_kind="template")
@@ -291,10 +291,10 @@ def test_provider_agent_switch_keeps_a_members_own_selection(monkeypatch):
 
     Only the template changes; the member, its name and its kind are the owner's.
     """
-    from kiro_crew import execution_context, session_agent_selection
+    from aj_crew import execution_context, session_agent_selection
 
-    cfg = KiroCrewConfig()
-    cfg.agents = {"radar": KiroCrewAgentConfig(kiro_agent="kirocrew")}
+    cfg = AjCrewConfig()
+    cfg.agents = {"radar": AjCrewAgentConfig(kiro_agent="ajcrew")}
     cfg.default_agent = "radar"
     cell = _record_store(
         monkeypatch,
@@ -302,12 +302,12 @@ def test_provider_agent_switch_keeps_a_members_own_selection(monkeypatch):
             "member-1",
             execution_context.MemoryStoreRef("radar-store", "member-1"),
             "member",
-            "kirocrew",
+            "ajcrew",
             selection_name="radar",
         ),
     )
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name == "fable" else "",
     )
 
@@ -324,11 +324,11 @@ def test_provider_agent_switch_keeps_a_members_own_selection(monkeypatch):
 @pytest.mark.asyncio
 async def test_slot_create_cannot_overwrite_later_same_name_member(tmp_path, monkeypatch):
     """A delayed template create cannot replace an explicit member selection."""
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert TEMPLATE not in cfg.agents
     cfg.save()
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: TEMPLATE if name == TEMPLATE else "",
     )
     monkeypatch.setattr(
@@ -346,7 +346,7 @@ async def test_slot_create_cannot_overwrite_later_same_name_member(tmp_path, mon
     )
     state = _turn_state(tmp_path, monkeypatch)
     state.sessions.reset = AsyncMock(return_value=True)
-    monkeypatch.setattr("kiro_crew.llm_helpers._slot_switch_session_locks", {})
+    monkeypatch.setattr("aj_crew.llm_helpers._slot_switch_session_locks", {})
     key = "dashboard:create-owner-race"
     writer_started, release_writer, writer_finished = (threading.Event() for _ in range(3))
     later_lock_attempted = asyncio.Event()
@@ -385,7 +385,7 @@ async def test_slot_create_cannot_overwrite_later_same_name_member(tmp_path, mon
     monkeypatch.setattr(state, "get_or_create_slot", create_with_observed_lock)
     monkeypatch.setattr(chat_handlers, "record_agent_selection", gated_publication)
     app = _make_app_with_agent_routes(state)
-    app.router.add_post("/api/agents/sync", agents.api_kirocrew_agents_sync)
+    app.router.add_post("/api/agents/sync", agents.api_ajcrew_agents_sync)
     async with TestClient(TestServer(as_owner(app))) as client:
         create_task = asyncio.create_task(
             client.post("/api/chat/slots", json={"name": "create-owner-race", "agent": TEMPLATE})
@@ -403,7 +403,7 @@ async def test_slot_create_cannot_overwrite_later_same_name_member(tmp_path, mon
             assert TEMPLATE in (await response.json())["synced"]
 
             def opt_in():
-                cfg = KiroCrewConfig.load()
+                cfg = AjCrewConfig.load()
                 assert cfg.agents[TEMPLATE].memory_store == "default"
                 store = provision_member_memory(cfg, TEMPLATE)
                 cfg.save()
@@ -470,9 +470,9 @@ async def test_slot_create_can_replace_existing_protected_history_selection(tmp_
         _template_chat(tmp_path, monkeypatch), "the template chat setup"
     )
     key = "dashboard:template-chat"
-    later_agent = "kirocrew-worker"
+    later_agent = "ajcrew-worker"
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name in (TEMPLATE, later_agent) else "",
     )
     assert await asyncio.to_thread(session_agent_selection_kind, key, TEMPLATE) == "template"
@@ -508,7 +508,7 @@ async def test_discovery_keeps_existing_template_conversation(tmp_path, monkeypa
                 state.conversation_log._read_messages(key),
                 conv_log=state.conversation_log,
                 kiro_model_map={},
-                restore_cfg=KiroCrewConfig.load(),
+                restore_cfg=AjCrewConfig.load(),
             )
             slot = state._slots["template-chat"]
         else:
@@ -560,9 +560,9 @@ async def test_live_provider_switch_preserves_selection_after_restore(tmp_path, 
         _template_chat(tmp_path, monkeypatch), "the template chat setup"
     )
     key = "dashboard:template-chat"
-    later_agent = "kirocrew-worker"
+    later_agent = "ajcrew-worker"
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name in (TEMPLATE, later_agent) else "",
     )
     provider = state.sessions.get_or_create.return_value[0]
@@ -600,14 +600,14 @@ async def test_project_pick_during_a_provider_switch_is_staged_not_fatal(tmp_pat
     """
     state, slot, _ = await asyncio.wait_for(_template_chat(tmp_path, monkeypatch), 30)
     key = "dashboard:template-chat"
-    later_agent = "kirocrew-worker"
+    later_agent = "ajcrew-worker"
     start = tmp_path / "start-project"
     picked = tmp_path / "picked-mid-turn"
     start.mkdir()
     picked.mkdir()
     slot.project = str(start)
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name in (TEMPLATE, later_agent) else "",
     )
     provider = state.sessions.get_or_create.return_value[0]
@@ -671,9 +671,9 @@ async def test_interrupted_provider_switch_restores_selection(
         _template_chat(tmp_path, monkeypatch), "the template chat setup"
     )
     key = "dashboard:template-chat"
-    later_agent = "kirocrew-worker"
+    later_agent = "ajcrew-worker"
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name in (TEMPLATE, later_agent) else "",
     )
     before = read_session_execution(key).to_record()
@@ -780,9 +780,9 @@ async def test_restored_agent_conflict_cannot_replace_protected_selection(
 ):
     state, _, _ = await _finished(_template_chat(tmp_path, monkeypatch), "the template chat setup")
     key = "dashboard:template-chat"
-    later_agent = "kirocrew-worker"
+    later_agent = "ajcrew-worker"
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name in (TEMPLATE, later_agent) else "",
     )
     protected = read_session_execution(key).to_record()
@@ -802,7 +802,7 @@ async def test_restored_agent_conflict_cannot_replace_protected_selection(
             state.conversation_log._read_messages(key),
             conv_log=state.conversation_log,
             kiro_model_map={},
-            restore_cfg=KiroCrewConfig.load(),
+            restore_cfg=AjCrewConfig.load(),
         )
         slot = state._slots["template-chat"]
     else:
@@ -844,7 +844,7 @@ async def test_malformed_canonical_selection_refuses_before_provider_start(
 ):
     state, slot, _ = await _template_chat(tmp_path, monkeypatch)
     key = "dashboard:template-chat"
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     await asyncio.to_thread(ConversationLog().update_metadata, key, {"execution_context": damage})
     state.sessions.get_or_create.reset_mock()
@@ -905,7 +905,7 @@ async def test_discovery_before_first_allocation_preserves_owner_template_pick(
 async def test_late_template_resolution_cannot_replace_owner_member_pick(tmp_path, monkeypatch):
     await _template_chat(tmp_path, monkeypatch)
     key = "dashboard:template-chat"
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     prior = resolve_session_agent_bindings(resolve_agent_bindings, cfg, key, TEMPLATE)
     selected = resolve_agent_bindings(cfg, TEMPLATE)
     await asyncio.to_thread(record_agent_selection, key, TEMPLATE, selected, replace=True)
@@ -920,10 +920,10 @@ async def test_prewarm_publication_retains_newer_owner_agent_pick(
     tmp_path, monkeypatch, owner_pick
 ):
     state, slot, _ = await _template_chat(tmp_path, monkeypatch, first_turn=False)
-    later_agent = "kirocrew-worker"
+    later_agent = "ajcrew-worker"
     key = "dashboard:template-chat"
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name in (TEMPLATE, later_agent) else "",
     )
     state.sessions.reset = AsyncMock(return_value=True)
@@ -965,13 +965,13 @@ async def test_prewarm_publication_retains_newer_owner_agent_pick(
 @pytest.mark.asyncio
 async def test_cancelled_prewarm_cannot_overwrite_owner_pick(tmp_path, monkeypatch):
     state, slot, _ = await _template_chat(tmp_path, monkeypatch, first_turn=False)
-    later_agent = "kirocrew-worker"
+    later_agent = "ajcrew-worker"
     key = "dashboard:template-chat"
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name in (TEMPLATE, later_agent) else "",
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.session.eager_spawn = True
     cfg.save()
     state.sessions.reset = AsyncMock(return_value=True)
@@ -999,7 +999,7 @@ async def test_cancelled_prewarm_cannot_overwrite_owner_pick(tmp_path, monkeypat
         monkeypatch.setattr(chat_handlers, "schedule_eager_spawn", chat_runner.schedule_eager_spawn)
         # The real scheduler reads the flag from the config watcher's snapshot,
         # which the suite leaves unbuilt; adopt one carrying the default.
-        _snapshot_cfg = KiroCrewConfig()
+        _snapshot_cfg = AjCrewConfig()
         _snapshot_cfg.session.eager_spawn = True
         live.watch().prime(_snapshot_cfg)
         async with TestClient(TestServer(as_owner(_make_app_with_agent_routes(state)))) as client:
@@ -1029,12 +1029,12 @@ async def test_live_agent_change_requires_observed_selection_revision(
 ):
     await _template_chat(tmp_path, monkeypatch, first_turn=False)
     key = "dashboard:template-chat"
-    later_agent = "kirocrew-worker"
+    later_agent = "ajcrew-worker"
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name in (TEMPLATE, later_agent) else "",
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     # A live event carries the previous selection's revision into publication;
     # resolving a different name from history cannot provide this observation.
     prior = resolve_session_agent_bindings(resolve_agent_bindings, cfg, key, TEMPLATE)
@@ -1055,7 +1055,7 @@ async def test_live_agent_change_requires_observed_selection_revision(
 @pytest.mark.asyncio
 async def test_recorded_member_cannot_become_template_after_member_removal(tmp_path, monkeypatch):
     await _template_chat(tmp_path, monkeypatch)
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     key = "dashboard:member-chat"
     binding = resolve_agent_bindings(cfg, TEMPLATE)
     await asyncio.to_thread(record_agent_selection, key, TEMPLATE, binding)
@@ -1071,7 +1071,7 @@ async def test_recorded_member_cannot_become_template_after_member_removal(tmp_p
 @pytest.mark.asyncio
 async def test_default_model_ignores_new_same_name_member_pin(tmp_path, monkeypatch):
     _, slot, _ = await _template_chat(tmp_path, monkeypatch)
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents[TEMPLATE].model = "member-model-pin"
     monkeypatch.setattr(cfg, "_resolve_named_agent_model", lambda *a: "template-model-pin")
     sessions = MagicMock()

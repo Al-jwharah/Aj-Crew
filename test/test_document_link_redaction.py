@@ -7,8 +7,8 @@ import urllib.parse
 
 import pytest
 
-from kiro_crew.security import redact, redact_credentials
-from kiro_crew.security import redaction as _redaction
+from aj_crew.security import redact, redact_credentials
+from aj_crew.security import redaction as _redaction
 
 # The canonical AWS documentation example secret key, never a live credential.
 KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"

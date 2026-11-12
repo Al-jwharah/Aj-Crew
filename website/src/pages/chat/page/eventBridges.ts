@@ -74,7 +74,7 @@ export function useChatEventBridges({
   // "Load preview" card (setSessionPreviewPending) — the GET fires only on the
   // user's explicit Load click, so agent output can never drive the scripted
   // iframe to an arbitrary host without consent.
-  //   • marker (`kirocrew:preview`, explicit agent intent) → also OPEN the tab,
+  //   • marker (`ajcrew:preview`, explicit agent intent) → also OPEN the tab,
   //     once per distinct URL. The applied URL is PERSISTED per slot so a route
   //     remount doesn't reopen a card the user dismissed; an in-memory ref
   //     backstops a failed localStorage write.

@@ -21,7 +21,7 @@ from aws_control_backup_helpers import (
     ARCHIVE_FINGERPRINT,
 )
 
-from kiro_crew.apps.builtins.aws_control.backend import backup
+from aj_crew.apps.builtins.aws_control.backend import backup
 
 # Hard links — a regular file pointing at someone else's inode
 
@@ -236,7 +236,7 @@ class TestListRemoteBackups:
                 return {
                     "files": [
                         {
-                            "key": f"{sub}/kirocrew-snapshot-2026010{i % 10}T000000Z-aaa.tar.gz",
+                            "key": f"{sub}/ajcrew-snapshot-2026010{i % 10}T000000Z-aaa.tar.gz",
                             "modified": f"2026-02-{i + 1:02d}T00:00:00+00:00",
                         }
                         for i in range(25)
@@ -248,7 +248,7 @@ class TestListRemoteBackups:
             return {
                 "files": [
                     {
-                        "key": f"{sub}/kirocrew-snapshot-20250101T00000{i}Z-bbb.tar.gz",
+                        "key": f"{sub}/ajcrew-snapshot-20250101T00000{i}Z-bbb.tar.gz",
                         "modified": f"2025-01-0{i + 1}T00:00:00+00:00",
                     }
                     for i in range(2)
@@ -357,7 +357,7 @@ class TestListRemoteBackups:
         def fake_list(profile, region, bucket, section, sub, *, account):
             if "/" in sub:
                 return {"files": [], "folders": []}
-            return {"files": [{"key": f"{sub}/kirocrew-snapshot-old.tar.gz"}], "folders": []}
+            return {"files": [{"key": f"{sub}/ajcrew-snapshot-old.tar.gz"}], "folders": []}
 
         with mock.patch.object(backup.storage, "list_section", side_effect=fake_list):
             result = backup.list_remote_backups("p", "us-west-2", "bkt", account=ACCOUNT)
@@ -454,7 +454,7 @@ class TestListRemoteBackups:
         # is exactly that shape. If a redactor ever rewrote one, the id would stop
         # matching and another install's archives would read as absent: the drive
         # would look unshared. Pin the property the parse depends on.
-        from kiro_crew.security import redact_credentials, redact_exfiltration_urls
+        from aj_crew.security import redact_credentials, redact_exfiltration_urls
 
         for candidate in (backup.install_identity()["id"], "a" * 32, f"{7:032x}"):
             name, _ = redact_credentials(candidate)
@@ -485,8 +485,8 @@ class TestInstallIdentity:
         # Reusing `beacon.install_id()` would materialise a TELEMETRY identity on
         # a host that opted out of telemetry, because that function creates the
         # file it reads. The technique is worth copying; the value is not.
-        from kiro_crew import beacon
-        from kiro_crew.config.loader import config_dir
+        from aj_crew import beacon
+        from aj_crew.config.loader import config_dir
 
         # Unpatched, minting the backup id leaves no telemetry id file behind.
         identity = backup.install_identity()
@@ -495,7 +495,7 @@ class TestInstallIdentity:
         # A second fresh mint, with the telemetry reader patched to catch any call.
         monkeypatch.setattr(backup, "_state_path", lambda: tmp_path / "second.json")
         backup._fallback_identity.clear()
-        with mock.patch("kiro_crew.beacon.install_id") as beacon_id:
+        with mock.patch("aj_crew.beacon.install_id") as beacon_id:
             backup.install_identity()
         beacon_id.assert_not_called()
 
@@ -622,7 +622,7 @@ class TestLabelIsDisplayOnly:
         # segment to START alphanumeric -- so the object is unreachable through
         # every route that validates a caller-supplied key. That is a rule, not a
         # name comparison somebody has to remember to write.
-        from kiro_crew.apps.builtins.aws_control.backend import storage as storage_mod
+        from aj_crew.apps.builtins.aws_control.backend import storage as storage_mod
 
         assert storage_mod.validate_key(f"snapshots/{'f' * 32}/{backup.LABEL_OBJECT_NAME}")
 
@@ -638,7 +638,7 @@ class TestObjectAuthentication:
     def _isolated_state(self, tmp_path, monkeypatch):
         monkeypatch.setattr(backup, "_state_path", lambda: tmp_path / "backup.json")
         monkeypatch.setattr(
-            "kiro_crew.apps.builtins.aws_control.backend.backup.app_data_dir",
+            "aj_crew.apps.builtins.aws_control.backend.backup.app_data_dir",
             lambda name: tmp_path / "appdata",
         )
         backup._unpersisted_runs.clear()
@@ -738,7 +738,7 @@ class TestClassifyKey:
         # genuinely unknown. Claiming it as this install's would re-create the
         # mistake the namespace prevents; calling it foreign would refuse an
         # operator their own pre-upgrade archive.
-        assert backup.classify_key("snapshots/kirocrew-snapshot-x.tar.gz", mine) == (
+        assert backup.classify_key("snapshots/ajcrew-snapshot-x.tar.gz", mine) == (
             backup.ORIGIN_LEGACY,
             "",
         )
@@ -760,7 +760,7 @@ class TestSelfOwnershipIsProvenNotInferred:
     def _isolated_state(self, tmp_path, monkeypatch):
         monkeypatch.setattr(backup, "_state_path", lambda: tmp_path / "backup.json")
         monkeypatch.setattr(
-            "kiro_crew.apps.builtins.aws_control.backend.backup.app_data_dir",
+            "aj_crew.apps.builtins.aws_control.backend.backup.app_data_dir",
             lambda name: tmp_path / "appdata",
         )
         backup._unpersisted_runs.clear()
@@ -776,7 +776,7 @@ class TestSelfOwnershipIsProvenNotInferred:
 
     def test_a_key_planted_under_our_own_prefix_is_not_treated_as_ours(self):
         mine = backup.install_identity()["id"]
-        planted = f"snapshots/{mine}/kirocrew-snapshot-planted.tar.gz"
+        planted = f"snapshots/{mine}/ajcrew-snapshot-planted.tar.gz"
         # Nothing was ever recorded as uploaded, so the prefix is the ONLY thing
         # claiming this archive is ours -- and a prefix is forgeable.
         assert backup.uploaded_keys(ACCOUNT) == set()
@@ -792,7 +792,7 @@ class TestSelfOwnershipIsProvenNotInferred:
 
     def test_an_archive_this_install_recorded_uploading_is_ours(self):
         mine = backup.install_identity()["id"]
-        key = f"snapshots/{mine}/kirocrew-snapshot-real.tar.gz"
+        key = f"snapshots/{mine}/ajcrew-snapshot-real.tar.gz"
         backup._record_run(ACCOUNT, backup.KIND_SNAPSHOT, key, 10, ARCHIVE_FINGERPRINT)
         assert backup.uploaded_objects(ACCOUNT)[key] == ARCHIVE_FINGERPRINT
         assert self._download(key)["origin"] == backup.ORIGIN_SELF
@@ -801,7 +801,7 @@ class TestSelfOwnershipIsProvenNotInferred:
         # The archive really did reach the bucket; making the operator confirm an
         # archive this process uploaded minutes ago would be a false alarm.
         mine = backup.install_identity()["id"]
-        key = f"snapshots/{mine}/kirocrew-snapshot-held.tar.gz"
+        key = f"snapshots/{mine}/ajcrew-snapshot-held.tar.gz"
         with mock.patch.object(
             backup, "_locked_state_update", side_effect=OSError(errno.ENOSPC, "full")
         ):
@@ -847,7 +847,7 @@ class TestRestoreOwnershipGate:
     def _isolated_state(self, tmp_path, monkeypatch):
         monkeypatch.setattr(backup, "_state_path", lambda: tmp_path / "backup.json")
         monkeypatch.setattr(
-            "kiro_crew.apps.builtins.aws_control.backend.backup.app_data_dir",
+            "aj_crew.apps.builtins.aws_control.backend.backup.app_data_dir",
             lambda name: tmp_path / "appdata",
         )
         yield
@@ -887,9 +887,9 @@ class TestRestoreOwnershipGate:
         # applies. It stays overridable rather than forbidden because a
         # pre-upgrade archive really may be the operator's own.
         with pytest.raises(backup.UnprovenArchive) as caught:
-            self._download("snapshots/kirocrew-snapshot-old.tar.gz")
+            self._download("snapshots/ajcrew-snapshot-old.tar.gz")
         assert caught.value.origin == backup.ORIGIN_LEGACY
-        result = self._download("snapshots/kirocrew-snapshot-old.tar.gz", foreign_ok=True)
+        result = self._download("snapshots/ajcrew-snapshot-old.tar.gz", foreign_ok=True)
         assert result["origin"] == backup.ORIGIN_LEGACY
         assert result["install"] == ""
 
@@ -903,7 +903,7 @@ class TestRestoreOwnershipGate:
         unproven = [
             f"snapshots/{'9' * 32}/theirs.tar.gz",
             f"snapshots/{mine}/not-recorded.tar.gz",
-            "snapshots/kirocrew-snapshot-flat.tar.gz",
+            "snapshots/ajcrew-snapshot-flat.tar.gz",
         ]
         assert self._download(proven)["origin"] == backup.ORIGIN_SELF
         for key in unproven:

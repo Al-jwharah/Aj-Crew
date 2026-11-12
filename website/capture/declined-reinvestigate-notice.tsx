@@ -40,7 +40,7 @@ const params = new URLSearchParams(location.search)
 const declined = params.get('scene') !== 'resting'
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const OWNER = 'kirodotdev'
 const REPO = 'Kiro'

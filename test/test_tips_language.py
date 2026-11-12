@@ -11,9 +11,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import tips
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.tips_pool import CatalogEntry
+from aj_crew import tips
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.tips_pool import CatalogEntry
 
 _REPLY = (
     '[{"id": "cron-tip", "feature": "Cron", "title": "Schedule jobs", '
@@ -32,7 +32,7 @@ def _configure(monkeypatch: pytest.MonkeyPatch, language: object) -> list[int]:
         load_threads.append(threading.get_ident())
         return cfg
 
-    monkeypatch.setattr(KiroCrewConfig, "load", staticmethod(_load))
+    monkeypatch.setattr(AjCrewConfig, "load", staticmethod(_load))
     return load_threads
 
 

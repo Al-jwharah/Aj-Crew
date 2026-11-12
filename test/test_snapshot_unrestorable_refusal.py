@@ -13,7 +13,7 @@ import tarfile
 import pytest
 from test_snapshot import unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 @pytest.fixture
@@ -42,11 +42,11 @@ class TestANewArchiveIsBoundedBeforeSuccessAndPrune:
         out.mkdir()
         # Two older bundles that must survive a refused run.
         for name in (
-            "kirocrew-snapshot-20250101T000000Z.tar.gz",
-            "kirocrew-snapshot-20250102T000000Z.tar.gz",
+            "ajcrew-snapshot-20250101T000000Z.tar.gz",
+            "ajcrew-snapshot-20250102T000000Z.tar.gz",
         ):
             (out / name).write_bytes(b"older bundle")
-        before = sorted(p.name for p in out.glob("kirocrew-snapshot-*.tar.gz"))
+        before = sorted(p.name for p in out.glob("ajcrew-snapshot-*.tar.gz"))
 
         monkeypatch.setattr(snap, "_MAX_ARCHIVE_MEMBERS", 2)
         rc = snap.snapshot_main(
@@ -56,7 +56,7 @@ class TestANewArchiveIsBoundedBeforeSuccessAndPrune:
         assert rc == 1, captured
         assert "nothing was pruned" in captured.lower(), captured
 
-        after = sorted(p.name for p in out.glob("kirocrew-snapshot-*.tar.gz"))
+        after = sorted(p.name for p in out.glob("ajcrew-snapshot-*.tar.gz"))
         assert set(before) <= set(
             after
         ), f"a refused snapshot pruned restorable bundles: {before} -> {after}"
@@ -65,10 +65,10 @@ class TestANewArchiveIsBoundedBeforeSuccessAndPrune:
         out = tmp_path / "out"
         rc = snap.snapshot_main([str(out), "--components", "memory"] + unpinnable_argv())
         assert rc == 0, capsys.readouterr().out
-        # A memory-only (selective) bundle is named `kirocrew-partial-*`; a complete one
-        # keeps `kirocrew-snapshot-*`. Match either — the property is that a bundle was
+        # A memory-only (selective) bundle is named `ajcrew-partial-*`; a complete one
+        # keeps `ajcrew-snapshot-*`. Match either — the property is that a bundle was
         # written, not which prefix it carries.
-        assert list(out.glob("kirocrew-*.tar.gz"))
+        assert list(out.glob("ajcrew-*.tar.gz"))
 
     def test_the_bound_runs_before_the_success_line_and_the_prune(self):
         """Ordering is the property: success and prune both follow the check."""

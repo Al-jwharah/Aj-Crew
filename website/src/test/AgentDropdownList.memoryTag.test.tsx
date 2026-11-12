@@ -21,9 +21,9 @@ beforeAll(() => {
 })
 
 const PAIR: AgentItem[] = [
-  { name: 'reviewer', source: 'kirocrew', selection_kind: 'template', description: 'Reviews code' },
-  { name: 'reviewer', source: 'kirocrew', selection_kind: 'member', memory_store: 'member-reviewer', description: 'Reviews code' },
-  { name: 'writer', source: 'kirocrew', selection_kind: 'template' },
+  { name: 'reviewer', source: 'ajcrew', selection_kind: 'template', description: 'Reviews code' },
+  { name: 'reviewer', source: 'ajcrew', selection_kind: 'member', memory_store: 'member-reviewer', description: 'Reviews code' },
+  { name: 'writer', source: 'ajcrew', selection_kind: 'template' },
 ]
 
 function rowOf(kind: 'member' | 'template', name: string): HTMLElement {
@@ -57,15 +57,15 @@ describe('AgentDropdownList memory tag (#19472)', () => {
 
   it('shows no tag anywhere when no name is shared', () => {
     const agents: AgentItem[] = [
-      { name: 'reviewer', source: 'kirocrew', selection_kind: 'member', memory_store: 'member-reviewer' },
-      { name: 'writer', source: 'kirocrew', selection_kind: 'template' },
+      { name: 'reviewer', source: 'ajcrew', selection_kind: 'member', memory_store: 'member-reviewer' },
+      { name: 'writer', source: 'ajcrew', selection_kind: 'template' },
     ]
     render(<AgentDropdownList agents={agents} activeAgent="" defaultAgent="" onSelect={() => {}} />)
     expect(document.querySelector('[data-testid="agent-row-memory-tag"]')).toBeNull()
   })
 
   it('shows no tag on a flat, name-only roster', () => {
-    const agents: AgentItem[] = [{ name: 'reviewer', source: 'kirocrew' }, { name: 'writer', source: 'builtin' }]
+    const agents: AgentItem[] = [{ name: 'reviewer', source: 'ajcrew' }, { name: 'writer', source: 'builtin' }]
     render(<AgentDropdownList agents={agents} activeAgent="" defaultAgent="" onSelect={() => {}} />)
     expect(document.querySelector('[data-testid="agent-row-memory-tag"]')).toBeNull()
   })

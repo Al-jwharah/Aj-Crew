@@ -14,9 +14,9 @@ import {
 const SHELL = [
   '<html><head>',
   '<meta name="theme-color" content="#0d0f12" />',
-  '<title>Kiro Crew</title>',
+  '<title>Aj Crew</title>',
   '</head><body>',
-  '<a href="https://github.com/kirodotdev/KiroCrew/issues" style="color:#93c5fd">github.com/kirodotdev/KiroCrew/issues</a>',
+  '<a href="https://github.com/Al-jwharah/Aj-Crew/issues" style="color:#93c5fd">github.com/Al-jwharah/Aj-Crew/issues</a>',
   '</body></html>',
 ].join('\n')
 
@@ -80,11 +80,11 @@ describe('applyBrandingToHtml', () => {
   it('patches the title text', () => {
     const out = applyBrandingToHtml(SHELL, { title: 'Acme Crew' })
     expect(out).toContain('<title>Acme Crew</title>')
-    expect(out).not.toContain('<title>Kiro Crew</title>')
+    expect(out).not.toContain('<title>Aj Crew</title>')
   })
 
   it('preserves attributes on a future <title> tag', () => {
-    const out = applyBrandingToHtml('<title lang="en">Kiro Crew</title>', { title: 'Acme Crew' })
+    const out = applyBrandingToHtml('<title lang="en">Aj Crew</title>', { title: 'Acme Crew' })
     expect(out).toBe('<title lang="en">Acme Crew</title>')
   })
 
@@ -140,7 +140,7 @@ describe('applyBrandingToHtml', () => {
     const html = readFileSync(path.resolve(__dirname, '..', '..', 'index.html'), 'utf8')
     const url = 'https://tracker.example.com/issues?q=a&b'
     const out = applyBrandingToHtml(html, { issuesUrl: url })
-    expect(out).not.toContain('github.com/kirodotdev/KiroCrew/issues')
+    expect(out).not.toContain('github.com/Al-jwharah/Aj-Crew/issues')
     const escaped = 'https://tracker.example.com/issues?q=a&amp;b'
     expect(out).toContain(`<a href="${escaped}"`)
     expect(out).toContain(`>${escaped}</a>`)
@@ -214,7 +214,7 @@ describe('verifyOverlayBytes', () => {
     // degrade this check exists to catch.
     const readFile = fakeFs({
       'edition/public/manifest.json': '{"name":"Acme"}',
-      'dist/manifest.json': '{"name":"Kiro Crew"}',
+      'dist/manifest.json': '{"name":"Aj Crew"}',
     })
     expect(() =>
       verifyOverlayBytes({

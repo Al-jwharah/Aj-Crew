@@ -74,7 +74,7 @@ const slots = [{
   title: 'Release notes review',
   running: false,
   messages: 4,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   modified: Math.floor(Date.now() / 1000),
   last_ts: '2026-08-08T05:00:00Z',
   folder_id: '',

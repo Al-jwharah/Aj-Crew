@@ -1,4 +1,4 @@
-"""Redaction tests for kiro_crew.sel: what the writer persists of caller-supplied values.
+"""Redaction tests for aj_crew.sel: what the writer persists of caller-supplied values.
 
 Pins metadata redaction before persistence and the escaping of a control character in an
 audited value.
@@ -20,7 +20,7 @@ from sel_helpers import (  # noqa: F401 -- fixtures are requested by name
     sel_dir_fixture,
 )
 
-from kiro_crew.sel import SecurityEventLog
+from aj_crew.sel import SecurityEventLog
 
 
 def _shutdown_writer(log: SecurityEventLog) -> None:
@@ -161,7 +161,7 @@ class TestMetadataRedaction:
         """Fail-closed containment: if the redactor raises, the event lands
         with placeholder metadata and the raw text never reaches disk."""
         with patch(
-            "kiro_crew.sel._redacted_metadata_copy",
+            "aj_crew.sel._redacted_metadata_copy",
             side_effect=RuntimeError("simulated redactor failure"),
         ):
             log.log(
@@ -186,7 +186,7 @@ class TestMetadataRedaction:
             return {k: v for k, v in metadata.items()}
 
         try:
-            with patch("kiro_crew.sel._redacted_metadata_copy", side_effect=_flaky):
+            with patch("aj_crew.sel._redacted_metadata_copy", side_effect=_flaky):
                 log.log(_make_event(event_id="ok1", metadata={"query": "fine"}))
                 log.log(_make_event(event_id="bad1", metadata={"poison": "x"}))
                 log.log(_make_event(event_id="ok2", metadata={"query": "also fine"}))
@@ -235,12 +235,12 @@ class TestMetadataRedaction:
             _make_event(
                 event_id="ident1",
                 caller_identity="dashboard:slot-AKIA-not-a-key",
-                downstream_service="kirocrew-core",
+                downstream_service="ajcrew-core",
             )
         )
         data = json.loads(self._disk_text(sel_dir).strip())
         assert data["caller_identity"] == "dashboard:slot-AKIA-not-a-key"
-        assert data["downstream_service"] == "kirocrew-core"
+        assert data["downstream_service"] == "ajcrew-core"
 
     def test_lowercased_aws_key_never_reaches_disk(self, log, sel_dir):
         """SEL callers may normalize case before logging (the file-search
@@ -280,7 +280,7 @@ class TestMetadataRedaction:
         would cut a credential in half and leave a prefix that no full-token
         grammar matches, so redaction must run on the whole string BEFORE the
         clip. Place the key so the clip lands mid-token."""
-        from kiro_crew.sel import _MAX_ARG_LEN
+        from aj_crew.sel import _MAX_ARG_LEN
 
         # Key starts 10 chars before the clip point, so a clip-first order would
         # keep its first 10 characters and drop the rest.
@@ -310,7 +310,7 @@ class TestMetadataRedaction:
         assert len(data["error"]) <= _MAX_ARG_LEN
 
     def test_api_access_helper_also_redacts_before_clipping(self, log, sel_dir):
-        from kiro_crew.sel import _MAX_ARG_LEN
+        from aj_crew.sel import _MAX_ARG_LEN
 
         prefix = "path=" + ("y" * (_MAX_ARG_LEN - 15))
         log.log_api_access(
@@ -329,7 +329,7 @@ class TestControlCharacterSerialization:
     """A control character in an audited value is escaped, never written raw.
 
     Audited values include caller-supplied ones -- a requested file path, for
-    instance -- and the record is read back in a terminal (`kirocrew logs`). A
+    instance -- and the record is read back in a terminal (`ajcrew logs`). A
     raw ESC or 8-bit CSI byte in the file would be EXECUTED as a terminal escape
     rather than displayed: screen clears, forged output, hidden lines. The record
     is JSON, so json.dumps escapes those bytes, and this pins that property

@@ -60,7 +60,7 @@ import type { ChatSlot } from '../types'
 import type { RootState } from '../store'
 
 const PR = (n: number) => `https://github.com/kirodotdev/KiroCrew/pull/${n}`
-const ISSUE = (n: number) => `https://github.com/kirodotdev/KiroCrew/issues/${n}`
+const ISSUE = (n: number) => `https://github.com/Al-jwharah/Aj-Crew/issues/${n}`
 
 /** What the slots payload carries: the per-kind budget, three PRs + one issue. */
 const budgeted = [

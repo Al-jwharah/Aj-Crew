@@ -1,5 +1,5 @@
 /**
- * The kiro-light shell rules in index.css select plain hook classes
+ * The aj-light shell rules in index.css select plain hook classes
  * (`.user-bubble`, `.focus-chrome-rail`, ...), not Tailwind utilities, so the
  * phantom-classes gate never sees them: a refactor that drops one of those
  * classes from its component leaves the rule matching nothing, and the surface
@@ -7,8 +7,8 @@
  * back to white-on-white, the rail back to a white card on a white page.
  *
  * This pins each hook to the source file that must carry it, in both
- * directions: every class the kiro-light rules select must appear in its
- * component's markup, and every hook the components advertise for kiro-light
+ * directions: every class the aj-light rules select must appear in its
+ * component's markup, and every hook the components advertise for aj-light
  * must still be selected by a rule -- otherwise a dropped rule leaves a dead
  * class behind that reads as load-bearing.
  */
@@ -48,7 +48,7 @@ const HOOKS: Record<string, { file: string[]; carries: RegExp }> = {
   // the members roster mount (pinned below) — one string, two cards.
   'sidebar-inner': { file: ['components', 'listShell.ts'], carries: /export const LIST_SHELL_CLS = 'sidebar sidebar-inner / },
   'user-bubble': { file: ['pages', 'chat', 'UserMessage.tsx'], carries: /'user-bubble bg-card text-card-fg'/ },
-  // `.tb-capsule` and `.feedback-pill` are no longer kiro-light hooks: both
+  // `.tb-capsule` and `.feedback-pill` are no longer aj-light hooks: both
   // pills are Liquid Glass panes (components/Glass.tsx) that draw their own
   // edge on every canvas, so the inset ring rule that once gave them one on
   // the white chrome is gone.
@@ -62,21 +62,21 @@ const HOOKS: Record<string, { file: string[]; carries: RegExp }> = {
  */
 const KEEP_HOOK = (hook: string, file: string[]) =>
   `\`.${hook}\` must stay on its element in ${file.join('/')} (leading position in the class string): ` +
-  'it is what the kiro-light rules in index.css select. See website/docs/theming-contract.md, ' +
+  'it is what the aj-light rules in index.css select. See website/docs/theming-contract.md, ' +
   '"A card must carry its own edge" -- keep the hook, do not widen this regex.'
 
-/** every `.hook` selected under a kiro-light prefix in index.css */
+/** every `.hook` selected under a aj-light prefix in index.css */
 function kiroLightHooks(): Set<string> {
   const out = new Set<string>()
-  for (const m of css.matchAll(/\[data-theme="kiro-light"\] \.([a-z][a-z0-9-]*)/g)) out.add(m[1])
+  for (const m of css.matchAll(/\[data-theme="aj-light"\] \.([a-z][a-z0-9-]*)/g)) out.add(m[1])
   return out
 }
 
-describe('kiro-light shell hooks', () => {
+describe('aj-light shell hooks', () => {
   const selected = kiroLightHooks()
 
-  it.each(Object.keys(HOOKS))('the kiro-light rules select `.%s`', hook => {
-    expect(selected.has(hook), `index.css lost the kiro-light rule for \`.${hook}\``).toBe(true)
+  it.each(Object.keys(HOOKS))('the aj-light rules select `.%s`', hook => {
+    expect(selected.has(hook), `index.css lost the aj-light rule for \`.${hook}\``).toBe(true)
   })
 
   it.each(Object.entries(HOOKS))('`.%s` is still rendered by its component', (hook, { file, carries }) => {
@@ -86,7 +86,7 @@ describe('kiro-light shell hooks', () => {
   it.each([
     ['pages', 'ChatSidebar.tsx'],
     ['pages', 'members', 'MembersPageRoster.tsx'],
-  ])('%s/%s mounts the shared list shell, so the kiro-light --panel step-back reaches both cards', (...file) => {
+  ])('%s/%s mounts the shared list shell, so the aj-light --panel step-back reaches both cards', (...file) => {
     // The roster once carried its own bg-bg-elevated card and stayed white on
     // the white canvas while the sessions list beside it stepped back to
     // --panel — the hook only reaches a card that mounts LIST_SHELL_CLS.
@@ -101,7 +101,7 @@ describe('kiro-light shell hooks', () => {
     // The steer bubble keeps bg-accent-subtle; tinting it too would erase the
     // one cue that distinguishes a steer from an ordinary turn. Both non-steer
     // tones (#17839: the crewmate chat's accent fill and the default) keep the
-    // hook leading, so the kiro-light tint rule still selects the default one
+    // hook leading, so the aj-light tint rule still selects the default one
     // and the accent rules (keyed on `.user-bubble.user-bubble-accent`) win
     // over it on the other.
     const src = read('pages', 'chat', 'UserMessage.tsx')
@@ -127,10 +127,10 @@ describe('kiro-light shell hooks', () => {
     )
   })
 
-  it('kiro-light gives the borderless bg-card surfaces an edge the white canvas would otherwise erase', () => {
-    expect(css).toMatch(/\[data-theme="kiro-light"\] \.user-bubble\{background-color:var\(--bg-hover\)\}/)
+  it('aj-light gives the borderless bg-card surfaces an edge the white canvas would otherwise erase', () => {
+    expect(css).toMatch(/\[data-theme="aj-light"\] \.user-bubble\{background-color:var\(--bg-hover\)\}/)
     expect(css).toMatch(
-      /\[data-theme="kiro-light"\] \.focus-chrome-rail,\[data-theme="kiro-light"\] \.sidebar-inner\{background-color:var\(--panel\)\}/,
+      /\[data-theme="aj-light"\] \.focus-chrome-rail,\[data-theme="aj-light"\] \.sidebar-inner\{background-color:var\(--panel\)\}/,
     )
   })
 })

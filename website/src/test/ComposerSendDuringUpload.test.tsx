@@ -670,8 +670,8 @@ describe('ChatPage composer: Send waits for a snip in progress', () => {
     await waitFor(() => expect(screen.getByLabelText('Message input')).toBeTruthy())
 
     await act(async () => {
-      window.dispatchEvent(new Event('kirocrew-web-preview-snip'))
-      window.dispatchEvent(new Event('kirocrew-web-preview-snip'))
+      window.dispatchEvent(new Event('ajcrew-web-preview-snip'))
+      window.dispatchEvent(new Event('ajcrew-web-preview-snip'))
     })
     await waitFor(() => expect(snipSeam.captures).toHaveLength(2))
     expect(isComposerSendHeld(slot)).toBe(true)

@@ -16,12 +16,12 @@ from pathlib import PurePosixPath, PureWindowsPath
 import portability_helpers
 import pytest
 
-from kiro_crew import portability
-from kiro_crew.portability import _is_excluded, create_export_zip
+from aj_crew import portability
+from aj_crew.portability import _is_excluded, create_export_zip
 
 # Fixtures shared with the sibling modules, bound by assignment so pytest registers
 # them for the tests in this module.
-fake_kirocrew_home = portability_helpers.fake_kirocrew_home
+fake_ajcrew_home = portability_helpers.fake_ajcrew_home
 patched_config_dir = portability_helpers.patched_config_dir
 
 

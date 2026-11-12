@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from consolidation_lease_helpers import lease_aware_log
 
-from kiro_crew.history import _CONSOLIDATION_THRESHOLD, ConversationLog, HistoryConsolidator
+from aj_crew.history import _CONSOLIDATION_THRESHOLD, ConversationLog, HistoryConsolidator
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
@@ -33,7 +33,7 @@ class TestConsolidationToolPolicy:
 
     @pytest.mark.asyncio
     async def test_call_llm_rejects_tools(self):
-        from kiro_crew.llm_helpers import ToolApprovalPolicy
+        from aj_crew.llm_helpers import ToolApprovalPolicy
 
         provider = MagicMock()
         sessions = MagicMock()
@@ -50,7 +50,7 @@ class TestConsolidationToolPolicy:
             return {"ok": True}
 
         # Patch where it is USED — history.py imports the symbol at module top.
-        with patch("kiro_crew.history.stream_and_collect_json", side_effect=_fake_scj):
+        with patch("aj_crew.history.stream_and_collect_json", side_effect=_fake_scj):
             result = await consolidator._call_llm("some prompt")
 
         assert result == {"ok": True}
@@ -231,7 +231,7 @@ class TestConsolidationDoesNotBlockLoop:
         """The LLM lessons array is capped like semantic/episodic: each
         write_lesson can perform up to 6 blocking embeds, so an uncapped list
         would occupy a worker thread for minutes."""
-        from kiro_crew.vector_memory import _MAX_LESSONS_PER_CONSOLIDATION
+        from aj_crew.vector_memory import _MAX_LESSONS_PER_CONSOLIDATION
 
         vector_store = MagicMock()
         vector_store.write_lesson.return_value = True
@@ -247,7 +247,7 @@ class TestConsolidationDoesNotBlockLoop:
             {"rule": f"lesson number {i}", "category": "tool"}
             for i in range(_MAX_LESSONS_PER_CONSOLIDATION * 3)
         ]
-        with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.history"):
             c._save_lessons(oversized)
 
         cap = _MAX_LESSONS_PER_CONSOLIDATION
@@ -263,7 +263,7 @@ class TestConsolidateSession:
         """Idle expiry calls this on the loop after the parsed-transcript cache
         has expired, so every transcript read it needs must run in a worker
         thread: a full parse there stalls every other gateway task."""
-        from kiro_crew.memory import MemoryStore
+        from aj_crew.memory import MemoryStore
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -308,7 +308,7 @@ class TestConsolidateSession:
         """A second call while the first read is in flight starts no second
         full parse of the same file, so a large transcript is never resident
         twice because of this path."""
-        from kiro_crew.memory import MemoryStore
+        from aj_crew.memory import MemoryStore
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -349,8 +349,8 @@ class TestConsolidateSession:
     @pytest.mark.asyncio
     async def test_consolidate_session_fires_for_eligible(self, tmp_path):
         """consolidate_session triggers consolidation for sessions with messages."""
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -386,7 +386,7 @@ class TestConsolidateSession:
             consolidator.consolidate_session("dashboard:chat-expire")
             # Let the task run
             # flake-ok: pre-existing 100 ms wait for the scheduled consolidation task to run, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 100 ms wait for the scheduled consolidation task to run, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 100 ms wait for the scheduled consolidation task to run, moved verbatim; tracked for a de-flake pass
             await asyncio.sleep(0.1)
             # Drain pending tasks
             for t in list(consolidator._tasks):
@@ -400,7 +400,7 @@ class TestConsolidateSession:
     @pytest.mark.asyncio
     async def test_consolidate_session_skips_empty(self, tmp_path):
         """consolidate_session does nothing for sessions with no messages."""
-        from kiro_crew.memory import MemoryStore
+        from aj_crew.memory import MemoryStore
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -417,7 +417,7 @@ class TestConsolidateSession:
     @pytest.mark.asyncio
     async def test_consolidate_session_skips_already_running(self, tmp_path):
         """consolidate_session doesn't double-trigger for the same session."""
-        from kiro_crew.memory import MemoryStore
+        from aj_crew.memory import MemoryStore
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -436,7 +436,7 @@ class TestConsolidateSession:
     @pytest.mark.asyncio
     async def test_consolidate_session_skips_sensitive(self, tmp_path):
         """consolidate_session skips sessions that touched sensitive paths."""
-        from kiro_crew.memory import MemoryStore
+        from aj_crew.memory import MemoryStore
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -464,7 +464,7 @@ class TestConsolidateSession:
     @pytest.mark.asyncio
     async def test_consolidate_session_on_done_logs_exception(self, tmp_path):
         """_on_done callback logs warning when consolidation task raises."""
-        from kiro_crew.memory import MemoryStore
+        from aj_crew.memory import MemoryStore
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -479,7 +479,7 @@ class TestConsolidateSession:
         ):
             consolidator.consolidate_session("dashboard:chat-fail")
             # flake-ok: pre-existing 100 ms wait for the scheduled consolidation task to run, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 100 ms wait for the scheduled consolidation task to run, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 100 ms wait for the scheduled consolidation task to run, moved verbatim; tracked for a de-flake pass
             await asyncio.sleep(0.1)
             for t in list(consolidator._tasks):
                 try:
@@ -494,7 +494,7 @@ class TestConsolidateSession:
     @pytest.mark.asyncio
     async def test_consolidate_now_skips_sensitive(self, tmp_path, caplog):
         """consolidate_now skips sessions that touched sensitive paths."""
-        from kiro_crew.memory import MemoryStore
+        from aj_crew.memory import MemoryStore
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -508,10 +508,10 @@ class TestConsolidateSession:
 
         with (
             patch.object(consolidator, "_consolidate", new_callable=AsyncMock) as mock_consolidate,
-            caplog.at_level(logging.INFO, logger="kiro_crew.history"),
+            caplog.at_level(logging.INFO, logger="aj_crew.history"),
         ):
             assert await consolidator.consolidate_now("dashboard:chat-sens2") is True
-        messages = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.history"]
+        messages = [r.getMessage() for r in caplog.records if r.name == "aj_crew.history"]
         assert "consolidate_now skipped for dashboard:chat-sens2: sensitive session" in messages
         assert conv_log.unconsolidated_count("dashboard:chat-sens2") == 1
         mock_consolidate.assert_not_called()
@@ -519,7 +519,7 @@ class TestConsolidateSession:
     @pytest.mark.asyncio
     async def test_consolidate_now_happy_path(self, tmp_path):
         """consolidate_now calls _consolidate for eligible sessions."""
-        from kiro_crew.memory import MemoryStore
+        from aj_crew.memory import MemoryStore
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -537,7 +537,7 @@ class TestConsolidateSession:
     @pytest.mark.asyncio
     async def test_consolidate_now_skips_empty(self, tmp_path):
         """consolidate_now does nothing for sessions with no unconsolidated messages."""
-        from kiro_crew.memory import MemoryStore
+        from aj_crew.memory import MemoryStore
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -568,7 +568,7 @@ class TestConsolidationValueGuard:
         )
 
     def _store(self, tmp_path):
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
         store = VectorMemoryStore(db_path=tmp_path / "mem.db")
         store.init()
@@ -608,7 +608,7 @@ class TestConsolidationValueGuard:
         store = self._store(tmp_path)
         c = self._consolidator(store)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.history"):
             c._write_structured_memory(
                 {"semantic": [{"key": "project.alpha.status", "confidence": 1.0}]}, "sess-1"
             )
@@ -659,7 +659,7 @@ class TestConsolidationValueGuard:
         store = self._store(tmp_path)
         c = self._consolidator(store)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.history"):
             c._write_structured_memory(
                 {"semantic": [{"key": "project.alpha.status", "value": "", "confidence": 1.0}]},
                 "sess-1",
@@ -678,7 +678,7 @@ class TestConsolidationValueGuard:
         store = self._store(tmp_path)
         c = self._consolidator(store)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.history"):
             c._write_structured_memory(
                 {"semantic": [{"key": "project.alpha.status", "value": "v", "confidence": 0.1}]},
                 "sess-1",
@@ -709,7 +709,7 @@ class TestConsolidationDoesNotImpersonateUser:
         )
 
     def _store(self, tmp_path):
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
         store = VectorMemoryStore(db_path=tmp_path / "mem.db")
         store.init()
@@ -792,7 +792,7 @@ class TestConsolidationEmbedBreaker:
 
     @staticmethod
     def _store(tmp_path):
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
         store = VectorMemoryStore(db_path=tmp_path / "mem.db")
         store.init()
@@ -815,7 +815,7 @@ class TestConsolidationEmbedBreaker:
         self, tmp_path, caplog, monkeypatch
     ) -> None:
         """N items cost one embed attempt, not N."""
-        from kiro_crew import history_consolidation
+        from aj_crew import history_consolidation
 
         store = self._store(tmp_path)
         calls = []
@@ -823,14 +823,14 @@ class TestConsolidationEmbedBreaker:
         def slow_embed(text):
             calls.append(text)
             # flake-ok: pre-existing 50 ms stall in the slow-embedder stub, past the patched budget, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 50 ms stall in the slow-embedder stub, past the patched budget, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 50 ms stall in the slow-embedder stub, past the patched budget, moved verbatim; tracked for a de-flake pass
             time.sleep(0.05)
             raise TimeoutError("timed out")
 
         store.embed_fn = slow_embed
         monkeypatch.setattr(history_consolidation, "_EMBED_BUDGET_SECS_PER_PASS", 0.01)
         try:
-            with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+            with caplog.at_level(logging.INFO, logger="aj_crew.history"):
                 self._consolidator(store)._write_structured_memory(
                     {"episodic": self._episodes(5)}, "sess-1"
                 )
@@ -887,7 +887,7 @@ class TestConsolidationEmbedBreaker:
         self, tmp_path, monkeypatch
     ) -> None:
         """Every row a pass writes embeds inline, so both tiers latch together."""
-        from kiro_crew import history_consolidation
+        from aj_crew import history_consolidation
 
         store = self._store(tmp_path)
         calls = []
@@ -895,7 +895,7 @@ class TestConsolidationEmbedBreaker:
         def slow_embed(text):
             calls.append(text)
             # flake-ok: pre-existing 50 ms stall in the slow-embedder stub, past the patched budget, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 50 ms stall in the slow-embedder stub, past the patched budget, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 50 ms stall in the slow-embedder stub, past the patched budget, moved verbatim; tracked for a de-flake pass
             time.sleep(0.05)
             raise TimeoutError("timed out")
 
@@ -933,8 +933,8 @@ class TestConsolidationEmbedBreaker:
         A NULL vector skips dedup, so a V1 store at its episodic cap would evict a row
         for a possible paraphrase. Refusing is cheaper: the transcript stays on disk.
         """
-        from kiro_crew import history_consolidation
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew import history_consolidation
+        from aj_crew.vector_memory import VectorMemoryStore
 
         store = VectorMemoryStore(db_path=tmp_path / "mem.db", episodic_max=2)
         store.init()
@@ -948,7 +948,7 @@ class TestConsolidationEmbedBreaker:
         def slow_embed(text):
             calls.append(text)
             # flake-ok: pre-existing 50 ms stall in the slow-embedder stub, past the patched budget, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 50 ms stall in the slow-embedder stub, past the patched budget, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 50 ms stall in the slow-embedder stub, past the patched budget, moved verbatim; tracked for a de-flake pass
             time.sleep(0.05)
             raise TimeoutError("timed out")
 
@@ -1030,7 +1030,7 @@ class TestConsolidationLessonScope:
         )
 
     def _store(self, tmp_path):
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
         store = VectorMemoryStore(db_path=tmp_path / "mem.db")
         store.init()
@@ -1059,14 +1059,14 @@ class TestConsolidationLessonScope:
                     {
                         "rule": "Run the scoped gate before pushing here",
                         "category": "tool",
-                        "repo_scope": "src/kiro_crew",
+                        "repo_scope": "src/aj_crew",
                     }
                 ]
             )
 
             [lesson] = store.get_lessons()
             value = json.loads(lesson["value_json"])
-            assert value["repo_scope"] == "src/kiro_crew"
+            assert value["repo_scope"] == "src/aj_crew"
             assert lesson["source"] == "consolidation"
         finally:
             store.close()
@@ -1089,7 +1089,7 @@ class TestConsolidationLessonScope:
 
     def test_jsonl_fallback_forwards_scope_canonicalised(self, tmp_path) -> None:
         """The no-vector-store path stores the scope too, canonicalised by save()."""
-        from kiro_crew.learn import LessonStore
+        from aj_crew.learn import LessonStore
 
         lesson_store = LessonStore(base_dir=tmp_path)
         c = self._jsonl_consolidator(lesson_store)
@@ -1097,13 +1097,13 @@ class TestConsolidationLessonScope:
         c._save_lessons(
             [
                 # Trailing slash: save() canonicalises before storing.
-                {"rule": "Pin the vitest worker count here", "repo_scope": "src/kiro_crew/"},
+                {"rule": "Pin the vitest worker count here", "repo_scope": "src/aj_crew/"},
                 {"rule": "A rule with no scope stays global"},
             ]
         )
 
         by_rule = {le.rule: le for le in lesson_store.load_all()}
-        assert by_rule["Pin the vitest worker count here"].repo_scope == "src/kiro_crew"
+        assert by_rule["Pin the vitest worker count here"].repo_scope == "src/aj_crew"
         assert by_rule["A rule with no scope stays global"].repo_scope is None
 
     def test_whitespace_only_scope_is_global_not_refused(self, tmp_path) -> None:
@@ -1126,7 +1126,7 @@ class TestConsolidationLessonScope:
         store = self._store(tmp_path)
         try:
             self._consolidator(store)._save_lessons(
-                [{"rule": "Scoped to a list, somehow", "repo_scope": ["src/kiro_crew"]}]
+                [{"rule": "Scoped to a list, somehow", "repo_scope": ["src/aj_crew"]}]
             )
 
             assert store.get_lessons() == []
@@ -1137,7 +1137,7 @@ class TestConsolidationLessonScope:
         """LessonStore.save never checks admissibility, so the consolidation seam
         must -- an absolute path stored as a scope would render nowhere while
         suppressing the store (see project_scope.scope_is_admissible)."""
-        from kiro_crew.learn import LessonStore
+        from aj_crew.learn import LessonStore
 
         lesson_store = LessonStore(base_dir=tmp_path)
         c = self._jsonl_consolidator(lesson_store)
@@ -1149,12 +1149,12 @@ class TestConsolidationLessonScope:
     def test_non_string_scope_refused_on_jsonl_fallback_too(self, tmp_path) -> None:
         """The silent-widening cell on the fallback path: a non-string scope must
         refuse the lesson there too, not canonicalise to a global write."""
-        from kiro_crew.learn import LessonStore
+        from aj_crew.learn import LessonStore
 
         lesson_store = LessonStore(base_dir=tmp_path)
         c = self._jsonl_consolidator(lesson_store)
 
-        c._save_lessons([{"rule": "Scoped to a list, somehow", "repo_scope": ["src/kiro_crew"]}])
+        c._save_lessons([{"rule": "Scoped to a list, somehow", "repo_scope": ["src/aj_crew"]}])
 
         assert lesson_store.load_all() == []
 
@@ -1176,7 +1176,7 @@ class TestConsolidationLessonScope:
         try:
             self._consolidator(store)._save_lessons(
                 [
-                    {"rule": "Scoped to a list, somehow", "repo_scope": ["src/kiro_crew"]},
+                    {"rule": "Scoped to a list, somehow", "repo_scope": ["src/aj_crew"]},
                     {"rule": "A clean global lesson survives the batch"},
                 ]
             )
@@ -1201,7 +1201,7 @@ class TestConsolidationLessonApplies:
     _jsonl_consolidator = staticmethod(TestConsolidationLessonScope._jsonl_consolidator)
 
     def _store(self, tmp_path):
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
         store = VectorMemoryStore(db_path=tmp_path / "mem.db")
         store.init()
@@ -1251,7 +1251,7 @@ class TestConsolidationLessonApplies:
         # each other, or the dedup pass (not the tier seam) decides which lands.
         store.embed_fn = lambda text: [1.0, 0.0] if "Misspelled" in text else [0.0, 1.0]
         try:
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
                 self._consolidator(store)._save_lessons(
                     [
                         {"rule": "Misspelled tier still lands", "applies": "Directive"},
@@ -1269,7 +1269,7 @@ class TestConsolidationLessonApplies:
             store.close()
 
     def test_tier_round_trips_on_jsonl_fallback(self, tmp_path) -> None:
-        from kiro_crew.learn import LessonStore
+        from aj_crew.learn import LessonStore
 
         lesson_store = LessonStore(base_dir=tmp_path)
         c = self._jsonl_consolidator(lesson_store)
@@ -1299,12 +1299,12 @@ class TestConsolidationLessonApplies:
     def test_misspelled_tier_logs_and_lands_unstated_on_jsonl_fallback(
         self, tmp_path, caplog
     ) -> None:
-        from kiro_crew.learn import LessonStore
+        from aj_crew.learn import LessonStore
 
         lesson_store = LessonStore(base_dir=tmp_path)
         c = self._jsonl_consolidator(lesson_store)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             c._save_lessons([{"rule": "Misspelled on the fallback path", "applies": "ALWAYS "}])
         # Case and surrounding whitespace are canonicalised, not refused.
         [lesson] = lesson_store.load_all()
@@ -1312,7 +1312,7 @@ class TestConsolidationLessonApplies:
         assert not any("unrecognized applies tier" in r.getMessage() for r in caplog.records)
 
         caplog.clear()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             c._save_lessons([{"rule": "Truly misspelled on the fallback path", "applies": 7}])
         by_rule = {le.rule: le for le in lesson_store.load_all()}
         assert by_rule["Truly misspelled on the fallback path"].applies is None
@@ -1323,7 +1323,7 @@ class TestConsolidationLessonApplies:
         """The prompt the code actually builds names the field and the two
         literals, tells the model to decide from what the user said, and to omit
         the field when it cannot tell -- the same instruction ``learn_add`` carries."""
-        from kiro_crew.memory import MemoryStore
+        from aj_crew.memory import MemoryStore
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -1342,7 +1342,7 @@ class TestConsolidationLessonApplies:
         with patch.object(consolidator, "_call_llm", side_effect=fake_llm):
             consolidator.consolidate_session("dashboard:chat-tier")
             # flake-ok: pre-existing 50 ms wait for the scheduled consolidation task to run, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 50 ms wait for the scheduled consolidation task to run, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 50 ms wait for the scheduled consolidation task to run, moved verbatim; tracked for a de-flake pass
             await asyncio.sleep(0.05)
             for t in list(consolidator._tasks):
                 # flake-ok: pre-existing unbounded await of the consolidation task, moved verbatim; tracked for a de-flake pass

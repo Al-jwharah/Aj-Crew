@@ -10,7 +10,7 @@ Everywhere a person reads it, the standing teammate agent is a **Mate** (plural 
 ## Why
 
 - "Crewmate" is long, and its first half repeats the product name. "Mate" says the same thing in one syllable.
-- The self-record MCP server was already named `kirocrew-mate`, so the surface and the plumbing disagreed.
+- The self-record MCP server was already named `ajcrew-mate`, so the surface and the plumbing disagreed.
 - Renaming the identifiers would touch about 700 files and persisted `crewmate_*` state for a label change, so the word changes only where a person reads it.
 
 ## Evidence

@@ -20,19 +20,19 @@ import pytest
 from test_discord import _dispatcher as _dc_dispatcher
 from test_telegram import _dispatcher as _tg_dispatcher
 
-from kiro_crew.messaging import queue_drain
-from kiro_crew.messaging.link import build_dm_session_key
-from kiro_crew.messaging.queue_drain import (
+from aj_crew.messaging import queue_drain
+from aj_crew.messaging.link import build_dm_session_key
+from aj_crew.messaging.queue_drain import (
     draining,
     register_drain,
     reset_drains,
     wake_other_drains,
 )
-from kiro_crew.telegram.transport import TelegramInboundMessage
+from aj_crew.telegram.transport import TelegramInboundMessage
 
 #: The key every allow-listed person's DM collapses onto under a unified scope. Derived
 #: rather than spelled, so a change to the key shape moves these tests with it.
-_UNIFIED = build_dm_session_key("telegram", "kirocrew", "7", dm_scope="unified", chat_type="direct")
+_UNIFIED = build_dm_session_key("telegram", "ajcrew", "7", dm_scope="unified", chat_type="direct")
 
 
 @pytest.fixture(autouse=True)
@@ -59,17 +59,17 @@ class TestTheKeyIsGenuinelyShared:
 
     def test_two_transports_resolve_one_session_key_under_a_unified_scope(self) -> None:
         telegram = build_dm_session_key(
-            "telegram", "kirocrew", "7", dm_scope="unified", chat_type="direct"
+            "telegram", "ajcrew", "7", dm_scope="unified", chat_type="direct"
         )
         discord = build_dm_session_key(
-            "discord", "kirocrew", "u1", dm_scope="unified", chat_type="direct"
+            "discord", "ajcrew", "u1", dm_scope="unified", chat_type="direct"
         )
-        assert telegram == discord == "unified:kirocrew", "one key, therefore one queue"
+        assert telegram == discord == "unified:ajcrew", "one key, therefore one queue"
 
     def test_the_default_scope_keeps_them_apart(self) -> None:
         """Without ``unified`` there is no shared queue and nothing to wake."""
-        telegram = build_dm_session_key("telegram", "kirocrew", "7")
-        discord = build_dm_session_key("discord", "kirocrew", "u1")
+        telegram = build_dm_session_key("telegram", "ajcrew", "7")
+        discord = build_dm_session_key("discord", "ajcrew", "u1")
         assert telegram != discord
 
 
@@ -124,7 +124,7 @@ class TestTheRegistry:
         is retired: the channel is then simply absent, which is the same path as one whose
         dispatcher never ran here -- entries wait instead of being consumed.
         """
-        from kiro_crew.messaging import queue_drain as qd
+        from aj_crew.messaging import queue_drain as qd
 
         calls: list[str] = []
 
@@ -150,7 +150,7 @@ class TestTheRegistry:
         channel unwakeable until its next restart -- the stranding this module exists to
         prevent. The drop compares first, so a stale failure is a no-op.
         """
-        from kiro_crew.messaging import queue_drain as qd
+        from aj_crew.messaging import queue_drain as qd
 
         async def _fresh(session_key: str) -> None: ...
 
@@ -175,7 +175,7 @@ class TestTheRegistry:
         """
         import logging
 
-        from kiro_crew.messaging import queue_drain as qd
+        from aj_crew.messaging import queue_drain as qd
 
         rounds = {"n": 0}
 
@@ -184,7 +184,7 @@ class TestTheRegistry:
             # A peer asks to wake us on EVERY round, so the cap is what ends the loop.
             qd._PENDING.setdefault(_UNIFIED, set()).add("telegram")
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.messaging.queue_drain"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.messaging.queue_drain"):
             await qd.drain_until_quiet(channel="telegram", session_key=_UNIFIED, pump=_pump)
 
         assert rounds["n"] == qd._MAX_WAKE_ROUNDS, "the cap bounds the rounds"
@@ -226,7 +226,7 @@ class TestTheRegistry:
         """
         import logging
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.messaging.queue_drain"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.messaging.queue_drain"):
             await wake_other_drains(waker="telegram", session_key=_UNIFIED, channels={"discord"})
 
         assert caplog.records == [], "a channel that is not deployed is not a wake failure"
@@ -292,10 +292,10 @@ class TestTheRegistry:
 
         with draining("telegram", _UNIFIED):
             await wake_other_drains(
-                waker="discord", session_key="telegram:kirocrew:direct:9", channels={"telegram"}
+                waker="discord", session_key="telegram:ajcrew:direct:9", channels={"telegram"}
             )
 
-        assert calls == ["telegram:kirocrew:direct:9"]
+        assert calls == ["telegram:ajcrew:direct:9"]
 
     @pytest.mark.asyncio
     async def test_a_mutually_waking_pair_terminates(self) -> None:
@@ -626,21 +626,21 @@ class TestTheContractCoversEveryDrainingChannel:
     #: Spelled out rather than discovered, so ADDING a fifth draining channel without
     #: adding it here is the thing that fails.
     _MODULES = {
-        "telegram": "kiro_crew.telegram.transport_dispatch",
-        "discord": "kiro_crew.discord.transport_dispatch",
-        "teams": "kiro_crew.teams.transport_dispatch",
-        "webex": "kiro_crew.webex.transport_dispatch",
+        "telegram": "aj_crew.telegram.transport_dispatch",
+        "discord": "aj_crew.discord.transport_dispatch",
+        "teams": "aj_crew.teams.transport_dispatch",
+        "webex": "aj_crew.webex.transport_dispatch",
     }
 
     def test_the_enumeration_matches_the_modules_that_actually_drain(self) -> None:
         """Guards the list above: a fifth draining channel must not slip past it."""
         import pathlib
 
-        root = pathlib.Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+        root = pathlib.Path(__file__).resolve().parent.parent / "src" / "aj_crew"
         # A dispatcher composed from owners in its channel's ``dispatch`` package drains
         # from one of them (Telegram's turn queue), so each is read with its owners.
         draining_modules = {
-            f"kiro_crew.{p.relative_to(root).with_suffix('').as_posix().replace('/', '.')}"
+            f"aj_crew.{p.relative_to(root).with_suffix('').as_posix().replace('/', '.')}"
             for p in root.rglob("transport_dispatch.py")
             if "async def _drain_queue"
             in "".join(
@@ -674,7 +674,7 @@ class TestTheContractCoversEveryDrainingChannel:
         """
         import pathlib
 
-        root = pathlib.Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+        root = pathlib.Path(__file__).resolve().parent.parent / "src" / "aj_crew"
         definers = sorted(
             p.relative_to(root).as_posix()
             for p in root.rglob("*.py")
@@ -684,9 +684,9 @@ class TestTheContractCoversEveryDrainingChannel:
 
     def test_every_producer_tags_with_its_own_channel_name(self) -> None:
         """Read off the real producers, so a tag written by hand cannot pass this."""
-        from kiro_crew.discord.transport_dispatch import _origin_kwargs as dc_kwargs
-        from kiro_crew.messaging.queue_drain import QUEUED_CHANNEL_KEY, entry_channel
-        from kiro_crew.telegram.transport_dispatch import _origin_kwargs as tg_kwargs
+        from aj_crew.discord.transport_dispatch import _origin_kwargs as dc_kwargs
+        from aj_crew.messaging.queue_drain import QUEUED_CHANNEL_KEY, entry_channel
+        from aj_crew.telegram.transport_dispatch import _origin_kwargs as tg_kwargs
 
         assert entry_channel(tg_kwargs(_tg_origin_for(7, 70))) == "telegram"
         assert entry_channel(dc_kwargs(_dc_origin_for("u1", "c1"))) == "discord"
@@ -697,7 +697,7 @@ class TestTheContractCoversEveryDrainingChannel:
         """Each drain's ownership read accepts its own tag and refuses the other three."""
         import importlib
 
-        from kiro_crew.messaging.queue_drain import tag_entry
+        from aj_crew.messaging.queue_drain import tag_entry
 
         readers = {
             "telegram": ("_queued_origin", {"telegram_user_id": "7"}),
@@ -714,7 +714,7 @@ class TestTheContractCoversEveryDrainingChannel:
 
 
 def _tg_origin_for(user: int, chat: int) -> Any:
-    from kiro_crew.telegram.transport_dispatch import _QueuedOrigin as TgOrigin
+    from aj_crew.telegram.transport_dispatch import _QueuedOrigin as TgOrigin
 
     return TgOrigin(
         user_id=str(user), chat_id=str(chat), thread_id="", chat_type="private", username=""
@@ -723,12 +723,12 @@ def _tg_origin_for(user: int, chat: int) -> Any:
 
 def _tg_entry_kwargs(user: int, chat: int) -> dict:
     """A Telegram queue entry's payload, spelled by the PRODUCTION writer."""
-    from kiro_crew.telegram.transport_dispatch import _origin_kwargs
+    from aj_crew.telegram.transport_dispatch import _origin_kwargs
 
     return _origin_kwargs(_tg_origin_for(user, chat))
 
 
 def _dc_origin_for(user: str, channel: str) -> Any:
-    from kiro_crew.discord.transport_dispatch import _QueuedOrigin as DcOrigin
+    from aj_crew.discord.transport_dispatch import _QueuedOrigin as DcOrigin
 
     return DcOrigin(user_id=user, channel_id=channel, thread_id="")

@@ -18,22 +18,22 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import context as ctx
-from kiro_crew.config import loader as loader_mod
-from kiro_crew.config.loader import (
-    KiroCrewConfig,
+from aj_crew import context as ctx
+from aj_crew.config import loader as loader_mod
+from aj_crew.config.loader import (
+    AjCrewConfig,
     config_dir,
     resolve_agent_bindings,
     workspace_dir_for,
 )
-from kiro_crew.dashboard.handlers import cron
-from kiro_crew.history import ConversationLog
-from kiro_crew.history_consolidation import HistoryConsolidator
-from kiro_crew.hooks import HookManager
-from kiro_crew.learn import Lesson, LessonStore
-from kiro_crew.member_memory_auth import bind_private_session_store
-from kiro_crew.memory import INDEX_DB_FILE, MemoryStore
-from kiro_crew.memory_stores import (
+from aj_crew.dashboard.handlers import cron
+from aj_crew.history import ConversationLog
+from aj_crew.history_consolidation import HistoryConsolidator
+from aj_crew.hooks import HookManager
+from aj_crew.learn import Lesson, LessonStore
+from aj_crew.member_memory_auth import bind_private_session_store
+from aj_crew.memory import INDEX_DB_FILE, MemoryStore
+from aj_crew.memory_stores import (
     DEFAULT_MEMORY_STORE,
     MEMORY_DB_FILE,
     UnknownMemoryStore,
@@ -42,8 +42,8 @@ from kiro_crew.memory_stores import (
     memory_stores_root,
     resolve_store_path,
 )
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.vector_memory import VectorMemoryStore, create_member_database, open_member_database
+from aj_crew.skills import SkillsLoader
+from aj_crew.vector_memory import VectorMemoryStore, create_member_database, open_member_database
 
 #: The two silos, and the crew bound to each. Both are DECLARED in the fixture's
 #: config, because declaring is what makes a store resolvable at all — an undeclared
@@ -77,15 +77,15 @@ def _config_payload() -> dict:
     return {
         "agents": {
             CODING_CREW: {
-                "kiro_agent": "kirocrew",
+                "kiro_agent": "ajcrew",
                 "memory_store": CODING,
                 "member_id": CODING_CREW,
                 # Bound to the WORKSPACE that shares the store's name, so this
                 # crew alone would expose a resolver that reads one namespace.
                 "workspace": CODING,
             },
-            EMAIL_CREW: {"kiro_agent": "kirocrew", "memory_store": EMAIL, "member_id": EMAIL_CREW},
-            DEFAULT_CREW: {"kiro_agent": "kirocrew", "memory_store": DEFAULT_MEMORY_STORE},
+            EMAIL_CREW: {"kiro_agent": "ajcrew", "memory_store": EMAIL, "member_id": EMAIL_CREW},
+            DEFAULT_CREW: {"kiro_agent": "ajcrew", "memory_store": DEFAULT_MEMORY_STORE},
         },
         "default_agent": DEFAULT_CREW,
         "workspaces": {
@@ -235,7 +235,7 @@ class TestOneDatabasePerMember:
         The two ends must agree, and the crew that names ``"default"`` must come out
         holding the GLOBAL store — that is the invariant the whole unit is for.
         """
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         for crew, expected in (
             (CODING_CREW, CODING),
             (EMAIL_CREW, EMAIL),
@@ -570,7 +570,7 @@ class TestConsolidatorStoreResolution:
     ) -> None:
         from test_history_consolidation_retry import KEY, _make_consolidator, _seed_log
 
-        from kiro_crew import execution_context, memory_stores
+        from aj_crew import execution_context, memory_stores
 
         log = await asyncio.to_thread(_seed_log, tmp_path)
         await asyncio.to_thread(bind_private_session_store, KEY, CODING)
@@ -895,7 +895,7 @@ class TestLessonRoutesFollowTheBindingNotThePopulation:
     """
 
     async def test_a_private_subagent_writes_and_recalls_only_its_own_lessons(self, silos) -> None:
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.subagent_persistence import create_agent_folder
 
         key = "subagent:worker-a"
         await asyncio.to_thread(create_agent_folder, "worker-a", memory_store=CODING)
@@ -1181,7 +1181,7 @@ class TestTheSessionsRecordedBindingIsWhatASurfaceReads:
             ctx.store_of_session(log, _CHANNEL_SESSION_KEY)
 
     def test_subagent_reads_its_own_record_without_transcript_metadata(self, silos):
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.subagent_persistence import create_agent_folder
 
         create_agent_folder("memoryrun", memory_store=CODING)
         assert ctx.store_of_session(ConversationLog(), "subagent:memoryrun") == CODING
@@ -1245,7 +1245,7 @@ class TestTheSessionsRecordedBindingIsWhatASurfaceReads:
         store for one session, so ``_session_memory_store`` is an adapter over this
         resolver rather than a second implementation of it.
         """
-        from kiro_crew.dashboard.handlers._shared import _session_memory_store
+        from aj_crew.dashboard.handlers._shared import _session_memory_store
 
         log = _seeded_log(tmp_path / "sessions", _CHANNEL_SESSION_KEY, CODING)
         state = MagicMock()
@@ -1281,7 +1281,7 @@ class TestTheSessionsRecordedBindingIsWhatASurfaceReads:
     async def test_turn_identity_and_first_store_construction_run_off_loop(
         self, silos, tmp_path, monkeypatch, unavailable
     ) -> None:
-        from kiro_crew import embeddings, execution_context, memory_stores
+        from aj_crew import embeddings, execution_context, memory_stores
 
         silos.builder.conversation_log = await asyncio.to_thread(
             _seeded_log, tmp_path / "sessions", _CHANNEL_SESSION_KEY, CODING
@@ -1412,7 +1412,7 @@ async def _prompt_through_the_channel_pipeline(
 
     REAL pipeline and ``ContextBuilder``; only network or provider seams are replaced.
     """
-    import kiro_crew.messaging.dispatch as dispatch_mod
+    import aj_crew.messaging.dispatch as dispatch_mod
 
     captured: list[str] = []
 
@@ -1437,7 +1437,7 @@ async def _prompt_through_the_channel_pipeline(
         channel_type="weixin",
         session_key=session_key,
         conversation_id="weixin:userA",
-        agent="kirocrew",
+        agent="ajcrew",
         user_text="what do you know about merging?",
         renderer=_PipelineRenderer(),
         approval_mode="auto",
@@ -1510,15 +1510,15 @@ class TestTheChannelPipelineReadsTheSessionsOwnSilo:
 #: ``EXPECTED_BACKLOG`` counts what is still unconverted, so the two halves together
 #: leave no site unaccounted for.
 _CONVERTED_TURN_SURFACES: tuple[tuple[str, str], ...] = (
-    ("src/kiro_crew/slack/handler_runtime/turn.py", "candidate_key"),
-    ("src/kiro_crew/slack/transport_dispatch.py", "session_key"),
-    ("src/kiro_crew/telegram/dispatch/turn_engine.py", "session_key"),
-    ("src/kiro_crew/messaging/dispatch.py", "session_key"),
+    ("src/aj_crew/slack/handler_runtime/turn.py", "candidate_key"),
+    ("src/aj_crew/slack/transport_dispatch.py", "session_key"),
+    ("src/aj_crew/telegram/dispatch/turn_engine.py", "session_key"),
+    ("src/aj_crew/messaging/dispatch.py", "session_key"),
     # Auto-nudge continues the nudged session; both injections continue the PARENT.
-    ("src/kiro_crew/slack/gateway_runtime/nudge_channel_fire.py", "key"),
-    ("src/kiro_crew/slack/gateway_runtime/subagent_injection.py", "parent_key"),
+    ("src/aj_crew/slack/gateway_runtime/nudge_channel_fire.py", "key"),
+    ("src/aj_crew/slack/gateway_runtime/subagent_injection.py", "parent_key"),
     # The heartbeat resolves the store of its own fixed key.
-    ("src/kiro_crew/slack/gateway_runtime/heartbeat_turns.py", "session_key"),
+    ("src/aj_crew/slack/gateway_runtime/heartbeat_turns.py", "session_key"),
 )
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]

@@ -71,7 +71,7 @@ jobs:
     # full matrix behind it. Every heavy job `needs` this one, so skipping it
     # skips them all.
     if: github.event_name != 'push' || vars.MERGE_QUEUE_ENABLED != 'true' || github.actor != 'github-merge-queue[bot]'
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || github.event_name == 'merge_group' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || github.event_name == 'merge_group' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     # 15, not 5: the job's own work is seconds, but its `fetch-depth: 0`
     # checkout (paths-filter and the leaf resolver diff against the merge base
     # with local git) is a full-history fetch of a large repository, and on a
@@ -101,7 +101,7 @@ jobs:
       windows_tests: ${{ steps.windows-scope.outputs.windows_tests }}
       # Central runner labels: eligible repository/event/actor combinations
       # use CodeBuild. Any other run EXECUTING in this repository uses the
-      # `kirocrew-runners` group's own runner label, and a fork running its own
+      # `ajcrew-runners` group's own runner label, and a fork running its own
       # CI uses `ubuntu-latest`, because it cannot reach that group. Windows
       # uses the hosted image on every non-fleet path, since the group is
       # Linux-only. A consumer reads a `codebuild-` output as "admitted" and
@@ -224,12 +224,12 @@ jobs:
               # files (action.yml, probe.py) need their directory listed.
               - '.github/actions/setup-windows-tests/**'
               - '**/*.ps1'
-              - 'src/kiro_crew/flock_compat.py'
-              - 'src/kiro_crew/platform_compat.py'
-              - 'src/kiro_crew/platform_compat_*.py'
-              - 'src/kiro_crew/platform_lock_compat.py'
-              - 'src/kiro_crew/platform_owner_compat.py'
-              - 'src/kiro_crew/platform_log_append.py'
+              - 'src/aj_crew/flock_compat.py'
+              - 'src/aj_crew/platform_compat.py'
+              - 'src/aj_crew/platform_compat_*.py'
+              - 'src/aj_crew/platform_lock_compat.py'
+              - 'src/aj_crew/platform_owner_compat.py'
+              - 'src/aj_crew/platform_log_append.py'
               - 'pyproject.toml'
               - 'setup.cfg'
               - '**/conftest.py'
@@ -419,7 +419,7 @@ jobs:
           # executes here and can; a fork's own CI on its own `main` executes
           # there and cannot.
           IN_REPO: ${{ github.repository == 'kirodotdev/KiroCrew' }}
-          LABEL: codebuild-kirocrew-gha-linux-${{ github.run_id }}-${{ github.run_attempt }}
+          LABEL: codebuild-ajcrew-gha-linux-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           if [ "$ELIGIBLE" = "true" ]; then
             echo "linux_runner=$LABEL" >> "$GITHUB_OUTPUT"
@@ -427,7 +427,7 @@ jobs:
           elif [ "$IN_REPO" = "true" ]; then
             # Running here but not admitted to the fleet: a fork head, an
             # unlisted actor, or a pull_request action other than
-            # opened/synchronize. Those runs take the `kirocrew-runners`
+            # opened/synchronize. Those runs take the `ajcrew-runners`
             # larger-runner group rather than the shared standard pool, whose
             # concurrency is shared enterprise-wide and which this matrix
             # occupies at a triple-digit job count. Same CPU and memory as a
@@ -442,8 +442,8 @@ jobs:
             # destinations, because the fleet runners are REPOSITORY-level
             # self-hosted runners and are not members of this organization
             # group. Keep this label in step with the runner definition's name.
-            echo "linux_runner=kirocrew-linux-4-core" >> "$GITHUB_OUTPUT"
-            echo "linux_runner_large=kirocrew-linux-4-core" >> "$GITHUB_OUTPUT"
+            echo "linux_runner=ajcrew-linux-4-core" >> "$GITHUB_OUTPUT"
+            echo "linux_runner_large=ajcrew-linux-4-core" >> "$GITHUB_OUTPUT"
           else
             # Another repository entirely -- a fork running its own CI. It cannot
             # reach this organization's group, so the label would match no runner
@@ -465,14 +465,14 @@ jobs:
           # it. A fork pull request against this repository executes here and
           # can; a fork's own CI on its own `main` executes there and cannot.
           IN_REPO: ${{ github.repository == 'kirodotdev/KiroCrew' }}
-          LABEL: codebuild-kirocrew-gha-windows-${{ github.run_id }}-${{ github.run_attempt }}
+          LABEL: codebuild-ajcrew-gha-windows-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           if [ "$ELIGIBLE" = "true" ]; then
             echo "windows_runner=$LABEL instance-size:large" >> "$GITHUB_OUTPUT"
           elif [ "$IN_REPO" = "true" ]; then
             # Running here but not admitted to the fleet: a fork head, an
             # unlisted actor, or a pull_request action other than
-            # opened/synchronize. Those runs take `kirocrew-windows-4-core`
+            # opened/synchronize. Those runs take `ajcrew-windows-4-core`
             # rather than the standard Windows pool, whose concurrency is
             # shared enterprise-wide. Same CPU and memory as a
             # public-repository `windows-latest`, so durations do not move;
@@ -480,12 +480,12 @@ jobs:
             # standard ones are free.
             #
             # The runner's own LABEL, not `runs-on: {group: ...}`, and the
-            # label of the SEPARATE `kirocrew-runners-windows` group rather
-            # than a Windows definition inside `kirocrew-runners`: a bare
+            # label of the SEPARATE `ajcrew-runners-windows` group rather
+            # than a Windows definition inside `ajcrew-runners`: a bare
             # `group:` dispatches to any member, so a Windows runner added to
             # the Linux group would make every Linux consumer eligible to land
             # on Windows. A label names one definition and cannot.
-            echo "windows_runner=kirocrew-windows-4-core" >> "$GITHUB_OUTPUT"
+            echo "windows_runner=ajcrew-windows-4-core" >> "$GITHUB_OUTPUT"
           else
             # Another repository entirely -- a fork running its own CI. It
             # cannot reach this organization's group, so the label would match
@@ -556,9 +556,9 @@ jobs:
     # so neither CPU nor memory is the constraint. Routed through the shared
     # resolver rather than an inline expression, so the fleet's actor and event
     # admission is not restated here; a run it rejects takes the
-    # `kirocrew-runners` group in this repository and the hosted image in a
+    # `ajcrew-runners` group in this repository and the hosted image in a
     # fork, which is what the resolver's own fallbacks already decide.
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 10
     strategy:
       max-parallel: 4
@@ -617,7 +617,7 @@ jobs:
     # needs the barrier. On any other push, Fast Gate runs on the push too
     # (fast-gate.yml has a push trigger) and this job consumes it.
     if: github.event_name != 'push' || vars.MERGE_QUEUE_ENABLED != 'true' || github.actor != 'github-merge-queue[bot]'
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || github.event_name == 'merge_group' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || github.event_name == 'merge_group' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 15
     permissions:
       # actions:read is what lets this read another workflow's runs. Job-level
@@ -694,7 +694,7 @@ jobs:
     # and the ref is restated so a later trigger on another branch cannot reach
     # it.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && !(vars.MERGE_QUEUE_ENABLED == 'true' && github.actor == 'github-merge-queue[bot]')
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || github.event_name == 'merge_group' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || github.event_name == 'merge_group' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 15
     permissions:
       # actions:write is what lets this cancel its own run (it also covers the
@@ -752,7 +752,7 @@ jobs:
       && needs.await-fast-gate.result == 'success'
       && contains(fromJSON('["success","skipped"]'), needs.backend-lint.result)
       && contains(fromJSON('["success","skipped"]'), needs.frontend-lint.result) }}
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 5
     steps:
       - name: Backend and Frontend Lint passed or were not needed
@@ -777,7 +777,7 @@ jobs:
     if: needs.changes.outputs.only_frontend != 'true'
     # Large alone did not fix black's process-pool failure. Bound its workers
     # below as well, on hosted and fleet alike; preserve every lint/type gate.
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner_large || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner_large || 'ubuntu-latest' }}
     # The job's floor on today's hosted runners is ~14-15 min (black --check
     # over the whole tree alone takes 7-8 min, flake8 ~2 min, mypy cold ~3 min),
     # so 15 cancelled mypy mid-run on green PRs. 25 is the budget frontend-test
@@ -879,7 +879,7 @@ jobs:
       # black-clean, so the bulk pass it waits on is ~95,800 lines and has been
       # "pending" long enough for the old estimate in this comment to drift by 3x.
       # Leaving it off meanwhile was the worse failure: AGENTS.md tells every
-      # contributor to run `black src/kiro_crew test` before committing, and
+      # contributor to run `black src/aj_crew test` before committing, and
       # following that instruction reformats those 1,420 files on top of their
       # change. The baseline makes the gate real for everything else, so new code
       # is formatted without any PR being forced to carry unrelated churn.
@@ -903,7 +903,7 @@ jobs:
 
       # isort/flake8/mypy below are BLOCKING (config in pyproject.toml + setup.cfg).
       #
-      # The two repo-root modules are named explicitly: `src/kiro_crew test` misses
+      # The two repo-root modules are named explicitly: `src/aj_crew test` misses
       # them, and between them they hold the host-protection floor for all three
       # testpaths -- the isolation fixtures and the xdist worker budget -- so they
       # are the last files that should go unlinted.
@@ -911,10 +911,10 @@ jobs:
       - name: Check imports (isort)
         # --jobs: one process per core. The verdict is per file, so it is the
         # serial run's (measured: 32s serial, ~5s at 8 jobs, same exit code).
-        run: isort --check-only src/kiro_crew test conftest.py xdist_budget.py --jobs "$(nproc)"
+        run: isort --check-only src/aj_crew test conftest.py xdist_budget.py --jobs "$(nproc)"
 
       - name: Lint (flake8)
-        run: flake8 src/kiro_crew test conftest.py xdist_budget.py
+        run: flake8 src/aj_crew test conftest.py xdist_budget.py
 
       # mypy is the longest step on the lint path (~150s cold over ~3,900
       # files, ~5s warm). A pull request restores the cache main last saved,
@@ -935,7 +935,7 @@ jobs:
             mypy-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml', 'setup.cfg') }}-
 
       - name: Type check (mypy)
-        run: mypy src/kiro_crew/
+        run: mypy src/aj_crew/
 
       - name: Save the mypy cache (main)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -972,7 +972,7 @@ jobs:
     # Not `linux_runner_large`: black, the one backend gate that needs the
     # large fleet for its process pool, runs in `backend-lint`. Every gate
     # below is a single-process stdlib scan.
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 15
     steps:
       # Full history, for the same reason `backend-lint` needs it: four of the
@@ -1035,8 +1035,8 @@ jobs:
       - name: Check ACP frame fixtures for host data (gate, baselined)
         run: python3 scripts/check_acp_frame_host_data.py
 
-      # Application code must reach the agent backend through kiro_crew.agent_sdk,
-      # not by importing kiro_crew.acp (or kiro_crew.providers, which re-exports
+      # Application code must reach the agent backend through aj_crew.agent_sdk,
+      # not by importing aj_crew.acp (or aj_crew.providers, which re-exports
       # the same ACP shapes and would otherwise be a laundering channel). Today's
       # edges are carried in the baseline as pre-existing and it is shrink-only. Design
       # record: docs/request-for-change/rfc-crew-agent-sdk-boundary.md.
@@ -1084,9 +1084,9 @@ jobs:
     if: ${{ !cancelled() && needs.lint-gate.result == 'success' && needs.changes.outputs.only_frontend != 'true' }}
     # Default fleet compute, through the shared resolver, so the fleet's actor
     # and event admission is not restated here. A run the fleet does not admit
-    # takes the `kirocrew-runners` group in this repository and the hosted
+    # takes the `ajcrew-runners` group in this repository and the hosted
     # image in a fork, the destination this lane had before.
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -1141,14 +1141,14 @@ jobs:
     needs: [changes, await-fast-gate, lint-gate]
     if: ${{ !cancelled() && needs.lint-gate.result == 'success' }}
     # All eight shards use large compute and the measured non-root boundary.
-    # A non-admitted run executing here takes the `kirocrew-runners` group; a
+    # A non-admitted run executing here takes the `ajcrew-runners` group; a
     # fork's own CI, and an absent resolver output, stay on the hosted pool.
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner_large || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner_large || 'ubuntu-latest' }}
     # Individual tests still time out at 120 seconds; this is the per-shard
     # wall-clock budget. File sharding reduces repeated collection, not test
     # coverage. On CodeBuild (admitted runs) eight shards finish in ~20 min, so
     # 60 is ample. A run not admitted to the fleet resolves linux_runner_large
-    # to 'kirocrew-linux-4-core' and runs four shards in parallel instead of
+    # to 'ajcrew-linux-4-core' and runs four shards in parallel instead of
     # eight; a single shard there takes about three times as long and needs 70
     # to clear its pytest run plus setup while still bounding a hung job. The
     # predicate mirrors max-parallel below: startsWith(..., 'codebuild-') is
@@ -1159,7 +1159,7 @@ jobs:
       # 4 protects the shared hosted pool and the larger-runner group's own
       # `maximum_runners` cap; the CodeBuild label has its own account quota.
       # startsWith(..., 'codebuild-') is true only on CodeBuild-routed runs. Every
-      # non-fleet value ('kirocrew-linux-4-core' or 'ubuntu-latest') fails that
+      # non-fleet value ('ajcrew-linux-4-core' or 'ubuntu-latest') fails that
       # test, so this still lifts only on CodeBuild.
       max-parallel: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && 8 || 4 }}
       # Don't cancel sibling shards when one fails -- we want the full failure
@@ -1175,7 +1175,7 @@ jobs:
       SHARD_COUNT: 8
       # A temp entry a test leaves behind fails the job instead of warning
       # (test/conftest_floor_tmp.py `_TMP_RESIDUE_STRICT_ENV`). Each `Backend Tests*` job below sets it too.
-      KIROCREW_TMP_RESIDUE_STRICT: "1"
+      AJCREW_TMP_RESIDUE_STRICT: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -1387,9 +1387,9 @@ jobs:
           python -m pytest ${PROGRESS[@]+"${PROGRESS[@]}"} -p scripts.ci_file_shards -q -n "$WORKERS" --timeout=120 -m "not ipv6_required and not real_venv" \
             --file-shards "$SHARD_COUNT" --file-shard ${{ matrix.group }} \
             --file-shard-pins scripts/ci_file_shard_pins.txt \
-            --cov=kiro_crew --cov=sage_lib \
-            --cov=src/kiro_crew/apps/builtins/aws_control/crew/packaging \
-            --cov=src/kiro_crew/apps/builtins/code_review_sage/tests
+            --cov=aj_crew --cov=sage_lib \
+            --cov=src/aj_crew/apps/builtins/aws_control/crew/packaging \
+            --cov=src/aj_crew/apps/builtins/code_review_sage/tests
         # The shard union plus backend-test-ipv6 retains the full test population.
         # The eleven sandbox files -- the two sandbox suites, the two ops git/gh
         # suites, and the seven auto_improvement suites --
@@ -1434,7 +1434,7 @@ jobs:
           if-no-files-found: error
 
   # Windows regression line: the backend supports Windows natively via
-  # kiro_crew.platform_compat (see docs/guides/windows-install.md for the
+  # aj_crew.platform_compat (see docs/guides/windows-install.md for the
   # per-feature status), but until this job existed nothing in CI held
   # that line -- a POSIX-only regression would land silently. Single
   # Python (3.12: the preferred Windows runtime; numpy 1.x ships no 3.13
@@ -1452,14 +1452,14 @@ jobs:
     # `!= 'false'` keeps an absent output running the suite.
     if: ${{ !cancelled() && needs.lint-gate.result == 'success' && needs.changes.outputs.windows_tests != 'false' }}
     # All eight shards share the actor-gated large label; absent output is hosted.
-    runs-on: ${{ startsWith(needs.changes.outputs.windows_runner, 'codebuild-') && format('codebuild-kirocrew-gha-windows-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.windows_runner || 'windows-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.windows_runner, 'codebuild-') && format('codebuild-ajcrew-gha-windows-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.windows_runner || 'windows-latest' }}
     # Retain the existing Windows budget and coverage-free run.
     timeout-minutes: 60
     strategy:
       # 4 protects the pool this run is NOT on CodeBuild for; the CodeBuild label has
       # its own account quota. startsWith(..., 'codebuild-') is true only on
       # CodeBuild-routed runs, so this lifts only there: both non-fleet values,
-      # `kirocrew-windows-4-core` and `windows-latest`, keep the cap at 4, and the
+      # `ajcrew-windows-4-core` and `windows-latest`, keep the cap at 4, and the
       # group's own `maximum_runners` is the ceiling the first of them shares.
       max-parallel: ${{ startsWith(needs.changes.outputs.windows_runner, 'codebuild-') && 8 || 4 }}
       # Full failure picture across shards, same as backend-test.
@@ -1473,7 +1473,7 @@ jobs:
       # times out on plain `git add` here (#1673). Give git invocations a
       # wider budget on this job only.
       MDNB_GIT_TIMEOUT_SEC: 120
-      KIROCREW_TMP_RESIDUE_STRICT: "1"
+      AJCREW_TMP_RESIDUE_STRICT: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -1595,7 +1595,7 @@ jobs:
     # moves. Each by its own LABEL: a bare `group:` dispatches to any member,
     # and the two platforms live in two groups precisely so neither leg can
     # land on the other's runner.
-    runs-on: ${{ matrix.os == 'ubuntu-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest') || matrix.os == 'windows-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-windows-4-core' || 'windows-latest') || matrix.os }}
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest') || matrix.os == 'windows-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-windows-4-core' || 'windows-latest') || matrix.os }}
     timeout-minutes: 15
     strategy:
       max-parallel: 4
@@ -1603,7 +1603,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     env:
-      KIROCREW_TMP_RESIDUE_STRICT: "1"
+      AJCREW_TMP_RESIDUE_STRICT: "1"
     defaults:
       run:
         shell: bash
@@ -1630,9 +1630,9 @@ jobs:
           echo "::remove-matcher owner=python::"
           COVERAGE=(--no-cov)
           if [ "$RUNNER_OS" = "Linux" ] && [ "$ONLY_FRONTEND" != "true" ] && [ "$LEAF_TESTS" != "true" ]; then
-            COVERAGE=(--cov=kiro_crew --cov=sage_lib
-              --cov=src/kiro_crew/apps/builtins/aws_control/crew/packaging
-              --cov=src/kiro_crew/apps/builtins/code_review_sage/tests)
+            COVERAGE=(--cov=aj_crew --cov=sage_lib
+              --cov=src/aj_crew/apps/builtins/aws_control/crew/packaging
+              --cov=src/aj_crew/apps/builtins/code_review_sage/tests)
           fi
           # The bounded IPv6 population always runs, even in reduced scope.
           # Leaf runs repeat it three times; ordinary corpus gates stay once.
@@ -1675,7 +1675,7 @@ jobs:
   # Some container kernels omit a dead flock acquirer's PID from their records.
   # The orphan test there proves the honest unknown-owner refusal only after
   # independently observing the live owner and the later kernel evidence. This
-  # hosted VM runs the same two tests with KIROCREW_LOCK_OWNER_STRICT=1, which
+  # hosted VM runs the same two tests with AJCREW_LOCK_OWNER_STRICT=1, which
   # refuses that branch: the dead parent must be named exactly, on the runner's
   # ordinary filesystem, with no job container and no designated lock root. The
   # ordinary shards keep running both tests in their own environment.
@@ -1684,13 +1684,13 @@ jobs:
     needs: [changes, await-fast-gate, lint-gate]
     if: ${{ !cancelled() && needs.lint-gate.result == 'success' && needs.changes.outputs.only_frontend != 'true' }}
     # Still an ordinary hosted VM, which is the whole contract above: the
-    # `kirocrew-runners` group is the same image with no job container, on a cap
+    # `ajcrew-runners` group is the same image with no job container, on a cap
     # this organization owns rather than the enterprise-shared standard pool. A
     # fork cannot reach an organization group, so it stays hosted-standard.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 15
     env:
-      KIROCREW_TMP_RESIDUE_STRICT: "1"
+      AJCREW_TMP_RESIDUE_STRICT: "1"
     defaults:
       run:
         shell: bash
@@ -1711,18 +1711,18 @@ jobs:
         run: uv pip install --system -e . --group dev
       - name: Run strict kernel lock owner tests
         env:
-          KIROCREW_LOCK_OWNER_STRICT: "1"
+          AJCREW_LOCK_OWNER_STRICT: "1"
           ONLY_FRONTEND: ${{ needs.changes.outputs.only_frontend }}
           LEAF_TESTS: ${{ needs.changes.outputs.leaf_tests }}
         run: |
           echo "::remove-matcher owner=python::"
-          test -z "${KIROCREW_LOCK_TEST_ROOT:-}"
+          test -z "${AJCREW_LOCK_TEST_ROOT:-}"
           test "$(stat -f -c %T /proc)" = proc
           COVERAGE=(--no-cov)
           if [ "$ONLY_FRONTEND" != "true" ] && [ "$LEAF_TESTS" != "true" ]; then
-            COVERAGE=(--cov=kiro_crew --cov=sage_lib
-              --cov=src/kiro_crew/apps/builtins/aws_control/crew/packaging
-              --cov=src/kiro_crew/apps/builtins/code_review_sage/tests)
+            COVERAGE=(--cov=aj_crew --cov=sage_lib
+              --cov=src/aj_crew/apps/builtins/aws_control/crew/packaging
+              --cov=src/aj_crew/apps/builtins/code_review_sage/tests)
           fi
           # Both strict cases always run, even in reduced scope. Leaf runs
           # repeat them three times; ordinary corpus gates stay once.
@@ -1764,7 +1764,7 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
 
-  # `kirocrew pod` on Windows, booted for real under Task Scheduler.
+  # `ajcrew pod` on Windows, booted for real under Task Scheduler.
   #
   # A SEPARATE JOB for the same reason the fail-closed canary below is one: a
   # step inside backend-test-windows would run in every shard and pay for
@@ -1808,11 +1808,11 @@ jobs:
     # any pod boots. A larger runner is an uncontainerized VM on the same
     # Windows Server 2025 image family as `windows-latest`, so it creates the
     # scheduled task the shared pool creates.
-    # `kirocrew-runners-windows` larger-runner group, targeted by GROUP not
+    # `ajcrew-runners-windows` larger-runner group, targeted by GROUP not
     # label; see "The Windows larger-runner group" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners-windows
+      group: ajcrew-runners-windows
     # A cold boot pays for the venv build, interpreter start, config seeding and
     # the health wait. The test's own bound is 180s; this is the job's. The
     # label opt-in measured 76s (boot canary) + 205s (55 scenarios) plus the SPA
@@ -1857,13 +1857,13 @@ jobs:
         run: uv pip install --system -e ".[voice,desktop]" --group dev
 
       # Label opt-in only: the wheel scenario runs `python -m build --wheel` with
-      # THIS interpreter (sys.executable) and, under KIROCREW_E2E_REQUIRE=1, fails
+      # THIS interpreter (sys.executable) and, under AJCREW_E2E_REQUIRE=1, fails
       # rather than skips without it. `build` is not in the dev group on purpose.
       - name: Install the wheel scenario's build tool (label opt-in)
         if: env.POD_SCENARIOS == 'true'
         run: uv pip install --system build==1.3.0
 
-      # The PAYLOAD: the worktree's own `.venv\Scripts\kirocrew.exe`, which is
+      # The PAYLOAD: the worktree's own `.venv\Scripts\ajcrew.exe`, which is
       # what the scheduled task actually boots. Without this the test FAILS
       # naming the missing venv rather than skipping, so a broken step here
       # cannot leave the canary silently green.
@@ -1881,9 +1881,9 @@ jobs:
         if: env.POD_SCENARIOS != 'true'
         shell: bash
         run: |
-          mkdir -p src/kiro_crew/static/dist
-          [ -f src/kiro_crew/static/dist/index.html ] || \
-            printf '<!doctype html><title>pod boot canary</title>' > src/kiro_crew/static/dist/index.html
+          mkdir -p src/aj_crew/static/dist
+          [ -f src/aj_crew/static/dist/index.html ] || \
+            printf '<!doctype html><title>pod boot canary</title>' > src/aj_crew/static/dist/index.html
 
       # Label opt-in only: the scenario suite drives the served dashboard and
       # packages it into the wheel it installs, so the bundle is the real Vite
@@ -1898,17 +1898,17 @@ jobs:
           npm ci --no-audit --no-fund
           npm run build
           cd ..
-          rm -rf src/kiro_crew/static/dist
-          mkdir -p src/kiro_crew/static
-          cp -R website/dist src/kiro_crew/static/dist
-          test -f src/kiro_crew/static/dist/index.html
+          rm -rf src/aj_crew/static/dist
+          mkdir -p src/aj_crew/static
+          cp -R website/dist src/aj_crew/static/dist
+          test -f src/aj_crew/static/dist/index.html
 
       - name: Assert a real pod boots and is reclaimed (not skipped)
         shell: bash
         env:
           # The module's own opt-in: without it the canary skips itself, and the
           # grep below turns that skip into a failure.
-          KIROCREW_E2E_POD_WINDOWS: "1"
+          AJCREW_E2E_POD_WINDOWS: "1"
         run: |
           set -o pipefail
           # Same as backend-test (#7296): the `python` matcher annotates any
@@ -1918,7 +1918,7 @@ jobs:
           # The whole opt-in module: the creation probe, the create/run/delete
           # round trip, and the full pod boot. These are the only tests in the
           # tree that drive the real Task Scheduler, which is why they live in
-          # one module that is skipped without KIROCREW_E2E_POD_WINDOWS.
+          # one module that is skipped without AJCREW_E2E_POD_WINDOWS.
           pytest -v -n0 --no-cov --timeout=600 \
             test/test_pod_windows_boot.py \
             | tee pod-boot.log
@@ -1944,15 +1944,15 @@ jobs:
       # `--timeout=600` is the per-test cap (the wheel scenario carries its own
       # wider mark), and `--basetemp` pins the plane under runner.temp so a failed
       # run's pod logs land where the upload step below can find them.
-      # KIROCREW_E2E_REQUIRE=1 turns every precondition skip into a failure; the
+      # AJCREW_E2E_REQUIRE=1 turns every precondition skip into a failure; the
       # anchored `55 passed` grep is the second lock, for the same reason as the
       # canary's: pytest exits 0 on a collected-but-skipped suite.
       - name: Run the full pod scenario suite (label opt-in, 55 tests, not skipped)
         if: env.POD_SCENARIOS == 'true'
         shell: bash
         env:
-          KIROCREW_E2E_SCENARIOS: "1"
-          KIROCREW_E2E_REQUIRE: "1"
+          AJCREW_E2E_SCENARIOS: "1"
+          AJCREW_E2E_REQUIRE: "1"
         run: |
           set -uo pipefail
           echo "::remove-matcher owner=python::"
@@ -2018,7 +2018,7 @@ jobs:
     name: Windows Fail-Closed Sandbox Contract
     needs: [changes, await-fast-gate, lint-gate]
     if: ${{ !cancelled() && needs.lint-gate.result == 'success' }}
-    runs-on: ${{ startsWith(needs.changes.outputs.windows_runner, 'codebuild-') && format('codebuild-kirocrew-gha-windows-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.windows_runner || 'windows-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.windows_runner, 'codebuild-') && format('codebuild-ajcrew-gha-windows-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.windows_runner || 'windows-latest' }}
     # Keep the real gateway/ACP contract and its existing timeout unchanged.
     timeout-minutes: 25
     steps:
@@ -2135,7 +2135,7 @@ jobs:
     # pytest_timeout is keyed to it. Resolve the destination per leg instead,
     # each leg on its own platform's larger-runner group by LABEL, hosted in a
     # fork that cannot reach an organization group.
-    runs-on: ${{ matrix.os == 'ubuntu-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest') || matrix.os == 'windows-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-windows-4-core' || 'windows-latest') || matrix.os }}
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest') || matrix.os == 'windows-latest' && (github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-windows-4-core' || 'windows-latest') || matrix.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -2147,7 +2147,7 @@ jobs:
           - os: windows-latest
             pytest_timeout: "180"
     env:
-      KIROCREW_TMP_RESIDUE_STRICT: "1"
+      AJCREW_TMP_RESIDUE_STRICT: "1"
       LEAF_REPEAT: "3"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -2260,7 +2260,7 @@ jobs:
     needs: [changes, await-fast-gate, lint-gate]
     if: ${{ !cancelled() && needs.lint-gate.result == 'success' && needs.changes.outputs.only_frontend != 'true' }}
     # An ordinary hosted VM is the requirement stated above, and the
-    # `kirocrew-runners` group is that same VM with no job container, on a cap
+    # `ajcrew-runners` group is that same VM with no job container, on a cap
     # this organization owns rather than the enterprise-shared standard pool. A
     # fork cannot reach an organization group, so it stays hosted-standard.
     #
@@ -2269,10 +2269,10 @@ jobs:
     # that safe: they fail the job by name if an image ever stops granting the
     # namespaces, instead of letting every guarded test skip and the gate go
     # green having asserted nothing.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 30
     env:
-      KIROCREW_TMP_RESIDUE_STRICT: "1"
+      AJCREW_TMP_RESIDUE_STRICT: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -2302,7 +2302,7 @@ jobs:
         # nothing -- the same failure mode the deselects created.
         run: unshare --mount --map-root-user true
 
-      - name: Verify Kiro Crew's own probe agrees with the kernel
+      - name: Verify Aj Crew's own probe agrees with the kernel
         # The probe is stricter than the bare `unshare` above: it also performs the
         # launcher's propagation mount inside the new namespace, because a host
         # that grants the namespaces and refuses that mount cannot build the
@@ -2310,7 +2310,7 @@ jobs:
         # guarded test below skip and this job go green having asserted nothing,
         # so the probe's verdict is asserted on its own, with its reason.
         run: |
-          python3 -c "from kiro_crew.sandbox import userns_available, unavailable_reason; assert userns_available(), unavailable_reason()"
+          python3 -c "from aj_crew.sandbox import userns_available, unavailable_reason; assert userns_available(), unavailable_reason()"
 
       - name: Run sandbox-dependent tests
         # `--no-cov` deliberately. This is the only lane that reaches these lines, so
@@ -2334,22 +2334,22 @@ jobs:
             test/test_member_records_real_sandbox.py \
             test/test_seal_parent_pin_real_sandbox.py \
             test/test_stand_in_stage_real_sandbox.py \
-            src/kiro_crew/apps/builtins/ops_mission_control/tests/test_ledger_sync_git.py \
-            src/kiro_crew/apps/builtins/ops_mission_control/tests/test_schedule_file.py \
-            src/kiro_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings.py \
-            src/kiro_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings_clone.py \
-            src/kiro_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings_commit.py \
-            src/kiro_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings_credentials.py \
-            src/kiro_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings_publish.py \
-            src/kiro_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings_run_lifecycle.py \
-            src/kiro_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings_tool_gate.py \
-            src/kiro_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings_tracks.py \
-            src/kiro_crew/apps/builtins/auto_improvement/tests/test_pr_watchers.py \
-            src/kiro_crew/apps/builtins/auto_improvement/tests/test_lint_findings.py \
-            src/kiro_crew/apps/builtins/auto_improvement/tests/test_github_profile.py \
-            src/kiro_crew/apps/builtins/auto_improvement/tests/test_profile_capture.py \
-            src/kiro_crew/apps/builtins/auto_improvement/tests/test_runner.py \
-            src/kiro_crew/apps/builtins/auto_improvement/tests/test_perf_track_propose.py
+            src/aj_crew/apps/builtins/ops_mission_control/tests/test_ledger_sync_git.py \
+            src/aj_crew/apps/builtins/ops_mission_control/tests/test_schedule_file.py \
+            src/aj_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings.py \
+            src/aj_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings_clone.py \
+            src/aj_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings_commit.py \
+            src/aj_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings_credentials.py \
+            src/aj_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings_publish.py \
+            src/aj_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings_run_lifecycle.py \
+            src/aj_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings_tool_gate.py \
+            src/aj_crew/apps/builtins/auto_improvement/tests/test_dogfood_learnings_tracks.py \
+            src/aj_crew/apps/builtins/auto_improvement/tests/test_pr_watchers.py \
+            src/aj_crew/apps/builtins/auto_improvement/tests/test_lint_findings.py \
+            src/aj_crew/apps/builtins/auto_improvement/tests/test_github_profile.py \
+            src/aj_crew/apps/builtins/auto_improvement/tests/test_profile_capture.py \
+            src/aj_crew/apps/builtins/auto_improvement/tests/test_runner.py \
+            src/aj_crew/apps/builtins/auto_improvement/tests/test_perf_track_propose.py
 
       - name: Require real V1 vector acceleration regressions
         timeout-minutes: 5
@@ -2402,7 +2402,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
           CHANGED="$(git diff --name-only HEAD^1 HEAD)"
-          if printf '%s\n' "$CHANGED" | grep -Eq '^(src/kiro_crew/(.*memory.*|embeddings(_[a-z_]+)?\.py|context\.py|context_assembly/.*|eval/bench/.*)|scripts/ci-member-memory-benchmark\.py|\.github/workflows/ci\.yml)$'; then
+          if printf '%s\n' "$CHANGED" | grep -Eq '^(src/aj_crew/(.*memory.*|embeddings(_[a-z_]+)?\.py|context\.py|context_assembly/.*|eval/bench/.*)|scripts/ci-member-memory-benchmark\.py|\.github/workflows/ci\.yml)$'; then
             echo "selected=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -2411,10 +2411,10 @@ jobs:
         if: steps.member-benchmark.outputs.selected == 'true'
         continue-on-error: true
         env:
-          KIROCREW_HOME: ${{ runner.temp }}/member-memory-benchmark-home
+          AJCREW_HOME: ${{ runner.temp }}/member-memory-benchmark-home
         run: |
           python - <<'PY' >> "$GITHUB_OUTPUT"
-          from kiro_crew import embeddings
+          from aj_crew import embeddings
           print(f"digest={embeddings._GGUF_SHA256}")
           print(f"path={embeddings.default_model_path().parent}")
           PY
@@ -2434,8 +2434,8 @@ jobs:
         # Model availability is optional; retrieval scores are observations.
         # Completed structural measurements are enforced by the next step.
         env:
-          KIROCREW_HOME: ${{ runner.temp }}/member-memory-benchmark-home
-          KIROCREW_SKIP_MODEL_DOWNLOAD: ""
+          AJCREW_HOME: ${{ runner.temp }}/member-memory-benchmark-home
+          AJCREW_SKIP_MODEL_DOWNLOAD: ""
           MEMBER_BENCHMARK_OUTPUT: ${{ runner.temp }}/member-memory-benchmark-evidence
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
@@ -2470,10 +2470,10 @@ jobs:
     name: Backend Tests (crew container)
     needs: [changes, await-fast-gate, lint-gate]
     if: ${{ !cancelled() && needs.lint-gate.result == 'success' && needs.changes.outputs.only_frontend != 'true' }}
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 20
     env:
-      KIROCREW_TMP_RESIDUE_STRICT: "1"
+      AJCREW_TMP_RESIDUE_STRICT: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -2489,14 +2489,14 @@ jobs:
           cache-dependency-glob: |
             pyproject.toml
             setup.cfg
-            src/kiro_crew/apps/builtins/aws_control/crew/runtime/container/requirements.txt
+            src/aj_crew/apps/builtins/aws_control/crew/runtime/container/requirements.txt
 
       # Two installs, deliberately not merged into one resolution.
       #
       # `-e .` and the dev group are what every other backend lane installs, and this
       # suite needs them for a reason that is not obvious: no container test imports
-      # `kiro_crew`, but the repo-root conftest's autouse isolation fixtures do
-      # (`importlib.import_module("kiro_crew.apps")`), so a venv without the package
+      # `aj_crew`, but the repo-root conftest's autouse isolation fixtures do
+      # (`importlib.import_module("aj_crew.apps")`), so a venv without the package
       # errors at test SETUP rather than at collection. Measured: 233 errors, every
       # one a ModuleNotFoundError on a transitive app dependency.
       #
@@ -2521,7 +2521,7 @@ jobs:
         run: |
           uv pip install --system -e "." --group dev
           uv pip install --system -r \
-            src/kiro_crew/apps/builtins/aws_control/crew/runtime/container/requirements.txt
+            src/aj_crew/apps/builtins/aws_control/crew/runtime/container/requirements.txt
 
       # CREW_CONTAINER_TESTS_REQUIRED is the point of this job, not a detail of it.
       # The suite's conftest answers a missing image dependency with
@@ -2548,7 +2548,7 @@ jobs:
           # pytest failure.
           echo "::remove-matcher owner=python::"
           pytest -q -n0 --timeout=180 --no-cov \
-            src/kiro_crew/apps/builtins/aws_control/crew/runtime/container_tests/
+            src/aj_crew/apps/builtins/aws_control/crew/runtime/container_tests/
 
   # ── Real-adapter contract lane (the measurements no other runner makes) ──
   # The codex and opencode projections rest on facts about the ADAPTER, not about
@@ -2585,7 +2585,7 @@ jobs:
     # adapters are spawned through Crew's own session code, which refuses
     # provider execution as root. Setup runs as the runner identity; the
     # contract tests and the junit read-back run through ci-shell.
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 30
     env:
       # THE point of this job. Every guarded test skips where its adapter is absent
@@ -2599,7 +2599,7 @@ jobs:
       # the gateway-boot matrix all read the same name -- rather than a second
       # spelling of it. Each job sets it for its own module set; this job's set is
       # the `real_adapter` marker below.
-      KIROCREW_E2E_REQUIRE: "1"
+      AJCREW_E2E_REQUIRE: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -2747,7 +2747,7 @@ jobs:
           pytest -n0 --no-cov -q test/test_real_adapter_fixture_pins.py
 
       # The second half of the no-silent-skip rule, and the half that does not trust
-      # the first. KIROCREW_E2E_REQUIRE turns an absent adapter into a failure; this
+      # the first. AJCREW_E2E_REQUIRE turns an absent adapter into a failure; this
       # asserts on the REPORT that the selected cases ran. A variable that never
       # arrived, a marker selection that matched nothing, or a skip added inside a
       # test body all reach this step as a skipped or missing case rather than as a
@@ -2805,7 +2805,7 @@ jobs:
       && needs.changes.outputs.only_frontend != 'true'
       && needs.changes.outputs.leaf_tests != 'true' }}
     # CodeBuild-hosted runner (pilot); artifact-only job, default size. Rollback: `ubuntu-latest`.
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -2892,7 +2892,7 @@ jobs:
   coverage-gate:
     name: Coverage Gate
     # CodeBuild-hosted runner (pilot); artifact-only job, default size. Rollback: `ubuntu-latest`.
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 10
     needs: [coverage-combine, frontend-test, frontend-coverage-merge, backend-test, backend-test-ipv6, backend-test-kernel-lock-owner, changes, backend-lint, frontend-lint]
     # Single source of truth for the floors -- referenced by the check steps,
@@ -3194,7 +3194,7 @@ jobs:
     # input byte-identical. only_backend is the catch-all side of the same
     # decision, so an unclassifiable path still runs this.
     if: needs.changes.outputs.only_backend != 'true'
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 20
     steps:
       # Nothing in THIS job reads history or the remote: tsc and eslint judge
@@ -3288,7 +3288,7 @@ jobs:
     # byte-identical, and only_backend is the catch-all side of the same
     # decision so an unclassifiable path still runs them.
     if: needs.changes.outputs.only_backend != 'true'
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 20
     steps:
       # persist-credentials retained: frontend-ratchets/Check for new hardcoded
@@ -3469,7 +3469,7 @@ jobs:
 
       - name: Run the find_ui goldens that need the real generator
         env:
-          KIROCREW_UI_GENERATOR_REQUIRED: "1"
+          AJCREW_UI_GENERATOR_REQUIRED: "1"
         run: |
           uv pip install --system -e . --group dev
           # Same as backend-test (#7296): the `python` matcher annotates any
@@ -3544,7 +3544,7 @@ jobs:
     needs: [changes, await-fast-gate]
     # Reads website/package.json + website/package-lock.json and nothing else.
     if: needs.changes.outputs.only_backend != 'true'
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -3596,16 +3596,16 @@ jobs:
   cfn-lint:
     name: CloudFormation Lint
     needs: [changes, await-fast-gate]
-    # The templates it lints live under src/kiro_crew/deploy/, which the
+    # The templates it lints live under src/aj_crew/deploy/, which the
     # paths-filter counts as backend, so a frontend-only diff cannot touch one.
     if: needs.changes.outputs.only_frontend != 'true'
     # PILOT (first wave): runs on a CodeBuild-hosted runner (project
-    # `kirocrew-gha-linux`, Ubuntu 22.04) instead of ubuntu-latest. The label is
+    # `ajcrew-gha-linux`, Ubuntu 22.04) instead of ubuntu-latest. The label is
     # chosen once in `changes`: the fleet never serves a fork, so a fork pull
-    # request takes the `kirocrew-runners` group and a fork's own CI takes
+    # request takes the `ajcrew-runners` group and a fork's own CI takes
     # `ubuntu-latest`. Rollback: `ubuntu-latest`. Policy, image caveat
     # and exit condition: docs/ci/ci-and-reviews.md, "CodeBuild-hosted runner (pilot)".
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -3622,7 +3622,7 @@ jobs:
         run: pip install "cfn-lint==1.22.3"
 
       - name: Lint deploy templates
-        run: cfn-lint src/kiro_crew/deploy/skills/artifact-deploy/templates/*.yaml
+        run: cfn-lint src/aj_crew/deploy/skills/artifact-deploy/templates/*.yaml
 
   # The Electron shell (website/electron) has its own 460+ test node:test suite,
   # and until now NOTHING ran it on a PR -- its only runner was ota-test.yml,
@@ -3634,14 +3634,14 @@ jobs:
   # pure unit tests, no Electron binary download, no packaging.
   # NOT diff-gated: test/packaging.test.js pins packaging/ paths classified as
   # backend; edition.test.js, auth-allowlist.test.js and external-scheme.test.js
-  # read src/kiro_crew/ Python files also classified as backend. A complete
+  # read src/aj_crew/ Python files also classified as backend. A complete
   # electron_packaging filter would have to cover those paths too, making it
   # indistinguishable from the backend catch-all. The job stays always-on.
   electron-test:
     name: Electron Shell Tests
     needs: [changes, await-fast-gate, lint-gate]
     if: ${{ !cancelled() && needs.lint-gate.result == 'success' }}
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -3685,7 +3685,7 @@ jobs:
     name: Electron Shell Tests (Windows port identity)
     needs: [changes, await-fast-gate, lint-gate]
     if: ${{ !cancelled() && needs.lint-gate.result == 'success' }}
-    runs-on: ${{ startsWith(needs.changes.outputs.windows_runner, 'codebuild-') && format('codebuild-kirocrew-gha-windows-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.windows_runner || 'windows-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.windows_runner, 'codebuild-') && format('codebuild-ajcrew-gha-windows-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.windows_runner || 'windows-latest' }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -3712,12 +3712,12 @@ jobs:
     # vitest --coverage shards' memory; routing and rollback as for cfn-lint. See
     # docs/ci/ci-and-reviews.md, "CodeBuild-hosted runner (pilot)".
     # Rollback: `ubuntu-latest`.
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner_large || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner_large || 'ubuntu-latest' }}
     # Per-shard budget. The whole suite was ~23 min on one runner; split four
     # ways each shard is well under this, and a hung shard fails fast.
     #
     # Route-aware for the same reason backend-test is: off the CodeBuild fleet
-    # the shards run on `kirocrew-linux-4-core`, where the slowest of five
+    # the shards run on `ajcrew-linux-4-core`, where the slowest of five
     # observed fork shards took 18.3 minutes, leaving under 7 of the 25. The
     # fleet keeps 25, so this costs the fast path nothing.
     timeout-minutes: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && 25 || 35 }}
@@ -3956,7 +3956,7 @@ jobs:
       && needs.changes.outputs.only_backend != 'true' }}
     # CodeBuild-hosted runner (pilot), default size: a merge is one process
     # re-reading four blobs, not a test run. Rollback: `ubuntu-latest`.
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -4039,7 +4039,7 @@ jobs:
     name: Bundle Size Gate
     needs: [changes, await-fast-gate, lint-gate]
     # The analyze build reserves a 6 GiB Node heap; use the large memory tier.
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner_large || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner_large || 'ubuntu-latest' }}
     timeout-minutes: 25
     # A backend-only diff cannot change the frontend bundle, so this gate has
     # nothing to measure there. Meta diffs (.github/**, scripts/**) leave both
@@ -4067,7 +4067,7 @@ jobs:
 
       - name: Build in analyze mode
         working-directory: website
-        # `--mode analyze` activates the kirocrew-bundle-report plugin (see
+        # `--mode analyze` activates the ajcrew-bundle-report plugin (see
         # vite.config.ts), which emits dist/bundle-report.json with per-chunk
         # sizes. A normal `npm run build` deliberately never writes one, so the
         # gate below measures a dedicated build instead of taxing the real one.
@@ -4133,7 +4133,7 @@ jobs:
     name: i18n Render Gate (en-XA, head vs base)
     needs: [changes, await-fast-gate, lint-gate]
     if: ${{ !cancelled() && needs.lint-gate.result == 'success' && needs.changes.outputs.only_backend != 'true' }}
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 20
     steps:
       # persist-credentials retained: the base-ref resolver below runs
@@ -4194,7 +4194,7 @@ jobs:
           printf 'I18N_BASE_REF=%s\n' "$I18N_BASE_REF" >> "$GITHUB_ENV"
 
       - name: Render every surface under en-XA, head vs base
-        # The same command the `kirocrew-prepare-pr` profile runs locally.
+        # The same command the `ajcrew-prepare-pr` profile runs locally.
         # It builds its OWN DEV bundle (website/dist-dev) and a temporary base
         # tree; it reads no production build.
         working-directory: website
@@ -4217,7 +4217,7 @@ jobs:
     name: Render Benchmark (counter budgets)
     needs: [changes, await-fast-gate, lint-gate]
     if: ${{ !cancelled() && github.repository == 'kirodotdev/KiroCrew' && needs.lint-gate.result == 'success' && needs.changes.outputs.render_bench == 'true' }}
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     continue-on-error: true
     timeout-minutes: 25
     steps:
@@ -4288,9 +4288,9 @@ jobs:
     name: E2E (stub ACP backend, offline)
     needs: [changes, await-fast-gate, lint-gate]
     if: ${{ !cancelled() && needs.lint-gate.result == 'success' }}
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner_large || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner_large || 'ubuntu-latest' }}
     # Route-aware, for the same reason backend-test is. Off the CodeBuild fleet
-    # this job runs on `kirocrew-linux-4-core`, where the slowest of six
+    # this job runs on `ajcrew-linux-4-core`, where the slowest of six
     # observed fork runs took 23.9 of the 25 minutes -- 66 seconds of margin, so
     # a green run is one slow dependency install away from a cancellation with
     # no failing test. The fleet gets 30, the smallest budget whose derived
@@ -4349,12 +4349,12 @@ jobs:
       - name: Stage frontend into package
         shell: bash
         # The dashboard Playwright specs render the bundled UI the harness
-        # gateway serves from src/kiro_crew/static/dist. Mirror nightly.yml's
+        # gateway serves from src/aj_crew/static/dist. Mirror nightly.yml's
         # build-wheel staging so the specs hit a real dashboard, not a 404.
         run: |
-          rm -rf src/kiro_crew/static/dist
-          mkdir -p src/kiro_crew/static
-          cp -R website/dist src/kiro_crew/static/dist
+          rm -rf src/aj_crew/static/dist
+          mkdir -p src/aj_crew/static
+          cp -R website/dist src/aj_crew/static/dist
 
       # The browser install is the single largest source of red on this job, and
       # never because a test failed: across 112 consecutive E2E jobs the
@@ -4410,19 +4410,19 @@ jobs:
         working-directory: website
         run: node scripts/capture-mcp-app-message-rows.mjs "$RUNNER_TEMP/mcp-app-message-rows"
 
-      - name: kiro-light cards carry their own edge (computed-style sweep)
-        # kiro-light paints --card and --bg the same #ffffff, so a borderless
+      - name: aj-light cards carry their own edge (computed-style sweep)
+        # aj-light paints --card and --bg the same #ffffff, so a borderless
         # card there draws nothing while every other theme shows it. Renders
         # the core dashboard routes and every built-in app page of the built
-        # SPA in kiro-light over loopback with fixture /api/** answers, and
-        # fails on any surface that is a card in `light` or `kiro-dark` but has
-        # no border, ring, shadow or outline in kiro-light. Same build,
+        # SPA in aj-light over loopback with fixture /api/** answers, and
+        # fails on any surface that is a card in `light` or `aj-dark` but has
+        # no border, ring, shadow or outline in aj-light. Same build,
         # Chromium and no-gateway technique as the step above.
-        # docs/ci/kiro-light-card-gate.md has the rule and the exemption list.
+        # docs/ci/aj-light-card-gate.md has the rule and the exemption list.
         timeout-minutes: 10
         shell: bash
         working-directory: website
-        run: node scripts/check-kiro-light-cards.mjs --json "$RUNNER_TEMP/kiro-light-cards.json"
+        run: node scripts/check-aj-light-cards.mjs --json "$RUNNER_TEMP/aj-light-cards.json"
 
       # Every step below runs as `runner` through ci-shell (the job default).
       # Nothing after this point writes a GitHub file command; the Playwright
@@ -4435,7 +4435,7 @@ jobs:
       # corpus, so the editor's simulation of the reader cannot drift from the
       # reader. It lives HERE because it is the only pull-request lane with BOTH
       # runtimes present AND usable: the backend is pip-installed above (Python +
-      # kiro_crew) and `npm ci` has populated website/node_modules (node + the
+      # aj_crew) and `npm ci` has populated website/node_modules (node + the
       # `yaml` package the mirror imports + esbuild). The sharded backend-test job
       # has Python but no website node deps, and frontend-test has node but no
       # Python, so in each of those the file skips with a named reason -- which is
@@ -4445,7 +4445,7 @@ jobs:
       # module, so the count is what proves the corpus actually ran.
       - name: SkillForm frontmatter parity (TS mirror vs Python read path)
         env:
-          KIROCREW_SKILLFORM_PARITY_REQUIRE: "1"
+          AJCREW_SKILLFORM_PARITY_REQUIRE: "1"
         run: |
           set -o pipefail
           # Order-safe: the harness file lands in a separate PR. Until it exists
@@ -4498,18 +4498,18 @@ jobs:
         # overlap fit on the fleet's large instance (fork 991-1104 s vs fleet
         # 663-847 s for this step). The suite's budget is sized for this step to
         # hold two browser lanes, not three.
-        # KIROCREW_E2E=1 is set by setup.py for smoke and only in the UI child
+        # AJCREW_E2E=1 is set by setup.py for smoke and only in the UI child
         # for evidence; REQUIRE turns missing prerequisites into hard failures.
         env:
-          KIROCREW_E2E_REQUIRE: "1"
+          AJCREW_E2E_REQUIRE: "1"
           VOICE_EVIDENCE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
-          KIROCREW_STRICT_ON_LOOP_PERSIST: "1"
-          KIROCREW_MEMORY_UI_EVIDENCE_DIR: ${{ runner.temp }}/memory-embedding-evidence
+          AJCREW_STRICT_ON_LOOP_PERSIST: "1"
+          AJCREW_MEMORY_UI_EVIDENCE_DIR: ${{ runner.temp }}/memory-embedding-evidence
           # The Playwright run's ceiling is sized from this job's wall-clock budget
           # so it cannot kill a green suite that still has job budget to spare. Set
           # from the SAME expression as this job's timeout-minutes above so the two
           # cannot drift: 30 on the CodeBuild fleet, 40 on the hosted route.
-          KIROCREW_E2E_JOB_TIMEOUT_MINUTES: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && 30 || 40 }}
+          AJCREW_E2E_JOB_TIMEOUT_MINUTES: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && 30 || 40 }}
         run: exec python scripts/ci_e2e_parallel.py
 
       - name: Upload read-aloud recovery evidence
@@ -4580,11 +4580,11 @@ jobs:
     needs: [await-fast-gate, lint-gate]
     if: ${{ !cancelled() && needs.lint-gate.result == 'success' }}
     # Hosted is the requirement -- `unshare --map-root-user` on an ordinary VM,
-    # which the fleet container refuses. The `kirocrew-runners` group is that
+    # which the fleet container refuses. The `ajcrew-runners` group is that
     # same VM on a cap this organization owns, off the enterprise-shared
     # standard pool. A fork cannot reach an organization group, so it stays
     # hosted-standard.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -4607,9 +4607,9 @@ jobs:
         run: unshare --mount --map-root-user true
       - name: Require real private workflow MCP execution
         env:
-          KIROCREW_E2E: "1"
-          KIROCREW_E2E_REQUIRE: "1"
-          KIROCREW_STRICT_ON_LOOP_PERSIST: "1"
+          AJCREW_E2E: "1"
+          AJCREW_E2E_REQUIRE: "1"
+          AJCREW_STRICT_ON_LOOP_PERSIST: "1"
         run: |
           echo "::remove-matcher owner=python::"
           python -m pytest -q -n0 --no-cov --timeout=600 test/e2e/test_private_workflow_memory.py
@@ -4617,14 +4617,14 @@ jobs:
   # The integration layer: the real gateway booted IN the pytest process.
   #
   # `test/integration/` sits between the unit shards (bare `web.Application()`
-  # shells, everything mocked) and the E2E jobs above (a `kirocrew gateway`
+  # shells, everything mocked) and the E2E jobs above (an `ajcrew gateway`
   # subprocess). Each test boots `GatewayOrchestrator.run()` on a scratch
-  # `KIROCREW_HOME` with the packaged fake ACP backend, then talks HTTP to the
+  # `AJCREW_HOME` with the packaged fake ACP backend, then talks HTTP to the
   # port it bound -- same interpreter, same event loop. That is what lets a test
   # here assert on a restart (second boot, same home), on an event-loop stall
   # seen from a second request, or on a policy file the boot itself wrote.
   #
-  # Opt-in by `KIROCREW_INTEGRATION=1`; the unit shards collect and skip it.
+  # Opt-in by `AJCREW_INTEGRATION=1`; the unit shards collect and skip it.
   # Linux only: the fixture snapshots and restores the SIGINT/SIGTERM handlers
   # `run()` installs, which is a POSIX dance the Windows shards must not pay.
   #
@@ -4636,7 +4636,7 @@ jobs:
     name: Integration (in-process gateway)
     needs: [changes, await-fast-gate, lint-gate]
     if: ${{ !cancelled() && needs.lint-gate.result == 'success' }}
-    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner_large || 'ubuntu-latest' }}
+    runs-on: ${{ startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner_large || 'ubuntu-latest' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -4657,8 +4657,8 @@ jobs:
       - name: Run the integration layer
         shell: /usr/local/bin/ci-shell {0}
         env:
-          KIROCREW_INTEGRATION: "1"
-          KIROCREW_INTEGRATION_HITS_DIR: ${{ runner.temp }}/integration-hits
+          AJCREW_INTEGRATION: "1"
+          AJCREW_INTEGRATION_HITS_DIR: ${{ runner.temp }}/integration-hits
         run: |
           echo "::remove-matcher owner=python::"
           python -m pytest -q -n 2 --dist loadgroup --max-worker-restart=2 \
@@ -4686,7 +4686,7 @@ jobs:
   # This job runs the one real-subprocess test
   # (TestBuildChildEnvironment.test_build_and_verify_a_real_shadow_venv)
   # on a plain ubuntu-latest runner -- no file-sharding, no shard contention --
-  # behind KIROCREW_REAL_VENV_TESTS=1, with a 300 s per-test cap that is safely
+  # behind AJCREW_REAL_VENV_TESTS=1, with a 300 s per-test cap that is safely
   # above the 120 s venv-create timeout even on a slow runner.
   wheel-engine-real-venv:
     name: Wheel Engine (real venv build)
@@ -4718,7 +4718,7 @@ jobs:
   # The only job that BOOTS A GATEWAY on macOS and Windows.
   #
   # Everything else on those two runners is unit tests. `e2e` above spawns a real
-  # gateway, but it is ubuntu-latest only, because `KIROCREW_E2E` is set solely by
+  # gateway, but it is ubuntu-latest only, because `AJCREW_E2E` is set solely by
   # `setup.py test_e2e`. That was one of the two holes #8117 fell through: it
   # added a settings-file probe to `wrap_argv`'s Windows delegation branch, so on
   # a fresh Windows host -- where that file does not exist -- the Kiro ACP spawn
@@ -4730,7 +4730,7 @@ jobs:
   # boot on the real platform is.
   #
   # Offline and credential-less by construction: the agent binary is the packaged
-  # fake ACP backend, wired through `KIROCREW_KIRO_BIN`, so there is no model, no
+  # fake ACP backend, wired through `AJCREW_KIRO_BIN`, so there is no model, no
   # token, no network and no cost. See docs/ci/e2e-gate.md.
   e2e-boot-matrix:
     name: E2E Gateway Boot (${{ matrix.os }})
@@ -4773,7 +4773,7 @@ jobs:
           && '["macos-15"]'
           || '["ubuntu-latest","macos-15","windows-latest"]') }}
     # Keep matrix.os stable: names, readiness windows and artifact names use it.
-    runs-on: ${{ matrix.os == 'ubuntu-latest' && (startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner_large || 'ubuntu-latest') || matrix.os == 'windows-latest' && (startsWith(needs.changes.outputs.windows_runner, 'codebuild-') && format('codebuild-kirocrew-gha-windows-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.windows_runner || 'windows-latest') || matrix.os }}
+    runs-on: ${{ matrix.os == 'ubuntu-latest' && (startsWith(needs.changes.outputs.linux_runner_large, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.linux_runner_large || 'ubuntu-latest') || matrix.os == 'windows-latest' && (startsWith(needs.changes.outputs.windows_runner, 'codebuild-') && format('codebuild-ajcrew-gha-windows-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.changes.outputs.windows_runner || 'windows-latest') || matrix.os }}
     timeout-minutes: 20
     defaults:
       run:
@@ -4827,10 +4827,10 @@ jobs:
         shell: bash
         run: python .github/actions/setup-windows-tests/probe.py
 
-      - name: Pre-compile kiro_crew source to warm the .pyc cache
+      - name: Pre-compile aj_crew source to warm the .pyc cache
         # Placed AFTER run-as-runner so this step runs as the same user (and
         # with the same HOME) as the pytest session.  conftest._redirect_bytecode_cache
-        # sets PYTHONPYCACHEPREFIX to "${XDG_CACHE_HOME:-~/.cache}/kirocrew/pycache";
+        # sets PYTHONPYCACHEPREFIX to "${XDG_CACHE_HOME:-~/.cache}/ajcrew/pycache";
         # the gateway child inherits that env var, so it only reads bytecode from
         # that prefix tree -- NOT from __pycache__/.  Without the matching prefix
         # this step warms the wrong cache and the first boot is still cold.
@@ -4843,10 +4843,10 @@ jobs:
           python -c "
           import os, subprocess, sys
           cache = os.environ.get('XDG_CACHE_HOME') or os.path.join(os.path.expanduser('~'), '.cache')
-          prefix = os.path.join(cache, 'kirocrew', 'pycache')
+          prefix = os.path.join(cache, 'ajcrew', 'pycache')
           os.makedirs(prefix, exist_ok=True)
           env = {**os.environ, 'PYTHONPYCACHEPREFIX': prefix}
-          sys.exit(subprocess.run([sys.executable, '-m', 'compileall', '-q', 'src/kiro_crew'], env=env).returncode)
+          sys.exit(subprocess.run([sys.executable, '-m', 'compileall', '-q', 'src/aj_crew'], env=env).returncode)
           "
 
       - name: Boot a gateway end to end and assert the pass count
@@ -4854,18 +4854,18 @@ jobs:
         # Windows/macOS retain bash and the exact same test command.
         env:
           # Lifts the module skip.
-          KIROCREW_E2E: "1"
+          AJCREW_E2E: "1"
           # Turns an unmet PRECONDITION (the packaged fake backend missing, the
           # testing package not importable) from a graceful skip into a hard
           # failure. Without it the job could report green having booted zero
           # gateways, because pytest counts a skip as a pass. Same mechanism as
-          # KIROCREW_E2E_REQUIRE on the `e2e` job.
-          KIROCREW_E2E_REQUIRE: "1"
+          # AJCREW_E2E_REQUIRE on the `e2e` job.
+          AJCREW_E2E_REQUIRE: "1"
           # Readiness window per OS, set here rather than in the test so a slow
           # runner is retunable without a code change. Windows gets the widest:
           # subprocess spawn and filesystem latency there are measurably slower,
           # the conditions #9172 addressed when a slow disk killed the gateway.
-          KIROCREW_HARNESS_READY_TIMEOUT: ${{ matrix.os == 'windows-latest' && '180' || matrix.os == 'macos-15' && '90' || '60' }}
+          AJCREW_HARNESS_READY_TIMEOUT: ${{ matrix.os == 'windows-latest' && '180' || matrix.os == 'macos-15' && '90' || '60' }}
         run: |
           set -o pipefail
           # Same as backend-test (#7296): the `python` matcher annotates any

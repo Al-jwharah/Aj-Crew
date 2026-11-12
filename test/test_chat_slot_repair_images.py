@@ -21,11 +21,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config import paths as cfg_paths
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.chat_api.continue_turn import SlotContinueRefusal
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_repair_images
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.config import paths as cfg_paths
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.chat_api.continue_turn import SlotContinueRefusal
+from aj_crew.dashboard.chat_handlers import api_chat_slot_repair_images
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 @pytest.fixture
@@ -300,7 +300,7 @@ async def test_scan_tripwire_is_refused_and_the_turn_is_not_reissued(
     # a 409 instead and does NOT re-issue.
     import json
 
-    from kiro_crew import session_image_repair
+    from aj_crew import session_image_repair
 
     t = sessions_dir / "sid-1.jsonl"
     t.write_text(json.dumps({"data": {"content": []}}) + "\n")
@@ -369,7 +369,7 @@ async def test_a_repair_failure_raises_so_the_turn_is_not_reissued(
     # A transcript that moved under the repair (TranscriptMovedError) is a real
     # failure: the hook raises, the real reload propagates it, the respawn is
     # SKIPPED, no turn is re-issued, and the route answers 409.
-    import kiro_crew.session_image_repair as sir
+    import aj_crew.session_image_repair as sir
 
     t = sessions_dir / "sid-1.jsonl"
     _oversized_transcript(t)

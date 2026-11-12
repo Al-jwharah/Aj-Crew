@@ -6,9 +6,9 @@ import re
 
 import pytest
 
-from kiro_crew import vector_memory as vm
-from kiro_crew.vector_memory_runtime import lessons as _lessons
-from kiro_crew.vector_memory_runtime import text_scoring as ts
+from aj_crew import vector_memory as vm
+from aj_crew.vector_memory_runtime import lessons as _lessons
+from aj_crew.vector_memory_runtime import text_scoring as ts
 
 TEXTS = [
     "never use rm -rf; move the directory into scratch instead",

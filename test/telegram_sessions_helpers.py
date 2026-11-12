@@ -17,15 +17,15 @@ import pytest
 from off_loop_helpers import off_loop
 from test_telegram import FakeClient, FakeCtx, FakeProvider
 
-from kiro_crew.history import ConversationLog, transcript_stem
-from kiro_crew.messaging import auto_title
-from kiro_crew.messaging.link import UNBIND_REASON_UNSPECIFIED, ChannelLink
-from kiro_crew.messaging.session_trust import clear_trusted_sessions
-from kiro_crew.session import _opt_out_key
-from kiro_crew.session_allocation import SessionClosingError
-from kiro_crew.session_map import ConversationOwnershipConflict
-from kiro_crew.telegram.transport import TelegramInboundMessage
-from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
+from aj_crew.history import ConversationLog, transcript_stem
+from aj_crew.messaging import auto_title
+from aj_crew.messaging.link import UNBIND_REASON_UNSPECIFIED, ChannelLink
+from aj_crew.messaging.session_trust import clear_trusted_sessions
+from aj_crew.session import _opt_out_key
+from aj_crew.session_allocation import SessionClosingError
+from aj_crew.session_map import ConversationOwnershipConflict
+from aj_crew.telegram.transport import TelegramInboundMessage
+from aj_crew.telegram.transport_dispatch import TelegramDispatcher
 
 
 @pytest.fixture(autouse=True)
@@ -269,7 +269,7 @@ def _config() -> Any:
             forum_activation="always",
         ),
         dashboard=SimpleNamespace(restore_window_minutes=30, surface_channel_sessions=True),
-        agent=SimpleNamespace(default_agent="kirocrew"),
+        agent=SimpleNamespace(default_agent="ajcrew"),
         messaging=SimpleNamespace(
             dm_scope="per-channel-peer",
             idle_reset_minutes=0,

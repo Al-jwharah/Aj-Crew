@@ -32,7 +32,7 @@ const params = new URLSearchParams(location.search)
 const host = params.get('host') === 'side' ? 'side' : 'pane'
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 document.documentElement.dataset.mode = theme
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const SLOT = 'capture-paste-slot'
 

@@ -27,7 +27,7 @@ import type { ReactNode } from 'react'
 
 /** Mutable so a test can flip a flag and re-render, the way boot resolving does. */
 const themeState = {
-  colorTheme: 'kiro',
+  colorTheme: 'aj',
   theme: 'dark' as const,
   mode: 'dark' as const,
   onboarded: true,
@@ -51,7 +51,7 @@ vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page
 vi.mock('../pages/SystemPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => null }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 
 import { renderWithProviders } from './helpers'
 import App from '../App'

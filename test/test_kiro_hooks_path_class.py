@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.agent_materialization import kiro_hooks
+from aj_crew.agent_materialization import kiro_hooks
 
 _SHELL_METACHARACTERS = [
     ";",

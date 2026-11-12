@@ -16,9 +16,9 @@ from acp_deepseek_backend_helpers import (  # noqa: F401 -- fixtures are used by
     _pinned_kiro_cli_version,
 )
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.session_handle import models_from_config_options
-from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_DEEPSEEK
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.session_handle import models_from_config_options
+from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_DEEPSEEK
 
 # ── The effort option id, read rather than spelled ───────────────────────────
 
@@ -77,7 +77,7 @@ def test_no_site_that_asks_about_effort_spells_the_id_itself() -> None:
     no-op for this harness: the check reports the option unsupported, the push never
     happens, and the dropdown still offers levels that can never be applied.
     """
-    from kiro_crew.providers import acp as provider_module
+    from aj_crew.providers import acp as provider_module
 
     # The class and the owner modules its members live in.
     body = inspect.getsource(provider_module.AcpProvider) + "".join(
@@ -93,7 +93,7 @@ def test_no_site_that_asks_about_effort_spells_the_id_itself() -> None:
 @pytest.mark.asyncio
 async def test_the_effort_push_uses_this_harness_own_option_id(tmp_path) -> None:
     """The push reaches the wire under the id the harness advertised."""
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     provider = AcpProvider.__new__(AcpProvider)
     provider._client = MagicMock()
@@ -281,7 +281,7 @@ def _deepseek_effort_option(levels: list[str] | None = None) -> dict:
 
 def _deepseek_provider(tmp_path, *, levels: list[str] | None = _DEEPSEEK_LEVELS, options=None):
     """An ``AcpProvider`` on deepseek with a session's config options already stored."""
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     provider = AcpProvider(
         acp_backend=ACP_BACKEND_DEEPSEEK, work_dir=tmp_path, model=_DEEPSEEK_MODEL
@@ -303,12 +303,12 @@ class TestTheDeepseekEffortControlIsOffered:
 
     def test_the_registry_does_not_recognise_the_model_this_harness_serves(self) -> None:
         """The premise, stated so the tests below cannot pass for the wrong reason."""
-        from kiro_crew.effort import model_supports_effort
+        from aj_crew.effort import model_supports_effort
 
         assert model_supports_effort(_DEEPSEEK_MODEL) is False
 
     def test_the_advertised_option_answers_for_this_harness(self) -> None:
-        from kiro_crew.agent_sdk.backends import ACP_BACKENDS_EFFORT_FROM_ADVERTISED_OPTION
+        from aj_crew.agent_sdk.backends import ACP_BACKENDS_EFFORT_FROM_ADVERTISED_OPTION
 
         assert ACP_BACKEND_DEEPSEEK in ACP_BACKENDS_EFFORT_FROM_ADVERTISED_OPTION
 
@@ -350,8 +350,8 @@ class TestTheUnmappedLevelsAreHidden:
     """
 
     def test_no_fold_row_exists_for_this_harness(self) -> None:
-        from kiro_crew.agent_sdk.backends import effort_config_option_value
-        from kiro_crew.effort import EFFORT_LEVELS
+        from aj_crew.agent_sdk.backends import effort_config_option_value
+        from aj_crew.effort import EFFORT_LEVELS
 
         for level in EFFORT_LEVELS:
             assert effort_config_option_value(ACP_BACKEND_DEEPSEEK, level) == level
@@ -390,7 +390,7 @@ class TestTheUnmappedLevelsAreHidden:
 
     def test_other_harnesses_accept_every_level(self, tmp_path) -> None:
         """Only an advertised-option harness can hide a level."""
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = AcpProvider(acp_backend=ACP_BACKEND_CLAUDE, work_dir=tmp_path)
         provider._client._acp_config_options = [_deepseek_effort_option(["low"])]
@@ -404,12 +404,12 @@ class TestADeepseekLevelSurvivesAColdStart:
     def _factory_kwargs(self, level: str) -> dict:
         from unittest.mock import patch
 
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.provider = "acp"
         cfg.agent.acp_backend = ACP_BACKEND_DEEPSEEK
-        with patch("kiro_crew.providers.acp.AcpProvider") as mock_provider:
+        with patch("aj_crew.providers.acp.AcpProvider") as mock_provider:
             mock_provider.return_value = MagicMock()
             factory = cfg.create_provider_factory()
             factory(
@@ -448,7 +448,7 @@ class TestTheDeepseekPushNeverNeedsARefusal:
 
     async def _emitted(self, tmp_path, level: str, *, refuse: bool) -> list[str]:
         """Every value written for *level*; with *refuse*, each write is refused."""
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         provider = _deepseek_provider(tmp_path)
         written: list[str] = []
@@ -471,7 +471,7 @@ class TestTheDeepseekPushNeverNeedsARefusal:
     async def test_every_crew_and_advertised_level_emits_only_advertised_values(
         self, tmp_path, refuse
     ) -> None:
-        from kiro_crew.effort import EFFORT_LEVELS
+        from aj_crew.effort import EFFORT_LEVELS
 
         for level in dict.fromkeys([*EFFORT_LEVELS, *_DEEPSEEK_LEVELS]):
             emitted = await self._emitted(tmp_path, level, refuse=refuse)

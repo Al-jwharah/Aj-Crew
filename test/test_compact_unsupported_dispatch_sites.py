@@ -18,16 +18,16 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import task_executor
-from kiro_crew.acp.types import TurnUsage
-from kiro_crew.acp_backends import ACP_BACKEND_KAS
-from kiro_crew.providers.base import (
+from aj_crew import task_executor
+from aj_crew.acp.types import TurnUsage
+from aj_crew.acp_backends import ACP_BACKEND_KAS
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
     LLMEvent,
 )
-from kiro_crew.task_models import SESSION_PREFIX, Project, Task
+from aj_crew.task_models import SESSION_PREFIX, Project, Task
 
 _RUN_TASK_ID = "task-compact-gate"
 _SESSION_KEY = f"{SESSION_PREFIX}:{_RUN_TASK_ID}:task1"
@@ -52,7 +52,7 @@ class _OverflowClient:
 
 
 def _executor_logs(caplog: pytest.LogCaptureFixture) -> list[str]:
-    return [r.getMessage() for r in caplog.records if r.name == "kiro_crew.task_executor"]
+    return [r.getMessage() for r in caplog.records if r.name == "aj_crew.task_executor"]
 
 
 async def _bailing_settle(_ask, _policy):
@@ -66,7 +66,7 @@ async def _run_overflow(monkeypatch: pytest.MonkeyPatch, client: _OverflowClient
     monkeypatch.setattr(task_executor, "persist_token_record_async", AsyncMock(), raising=False)
     fake_config = MagicMock()
     fake_config.load.return_value = SimpleNamespace(agent=SimpleNamespace(provider="acp"))
-    monkeypatch.setattr(task_executor, "KiroCrewConfig", fake_config)
+    monkeypatch.setattr(task_executor, "AjCrewConfig", fake_config)
 
     task = Task(index=1, title="t", description="d")
     run = Project(spec_path="spec.md", spec_content="body")
@@ -89,7 +89,7 @@ async def _run_overflow(monkeypatch: pytest.MonkeyPatch, client: _OverflowClient
 @pytest.mark.asyncio
 async def test_task_runner_skips_compact_on_a_backend_that_cannot_serve_it(monkeypatch, caplog):
     client = _OverflowClient(ACP_BACKEND_KAS)
-    with caplog.at_level(logging.INFO, logger="kiro_crew.task_executor"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.task_executor"):
         sessions = await _run_overflow(monkeypatch, client)
     assert f"Task 1: {ACP_BACKEND_KAS} cannot compact, resetting session" in _executor_logs(caplog)
     client.compact.assert_not_awaited()
@@ -100,7 +100,7 @@ async def test_task_runner_skips_compact_on_a_backend_that_cannot_serve_it(monke
 @pytest.mark.asyncio
 async def test_task_runner_still_compacts_a_backend_that_can(monkeypatch, caplog):
     client = _OverflowClient(None)
-    with caplog.at_level(logging.INFO, logger="kiro_crew.task_executor"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.task_executor"):
         sessions = await _run_overflow(monkeypatch, client)
     assert "Task 1: compaction succeeded" in _executor_logs(caplog)
     client.compact.assert_awaited_once()
@@ -119,7 +119,7 @@ class _ReplProvider:
 
 
 async def _run_repl(monkeypatch: pytest.MonkeyPatch, provider: _ReplProvider) -> None:
-    import kiro_crew.cli_chat as cli_chat
+    import aj_crew.cli_chat as cli_chat
 
     lines = iter(["hello"])
 
@@ -154,7 +154,7 @@ async def test_cli_repl_still_compacts_a_backend_that_can(monkeypatch):
 
 def test_auto_compaction_asks_the_shared_predicate():
     """The automatic gate holds no private copy that could drift from the channels'."""
-    from kiro_crew import session_compaction
-    from kiro_crew.messaging import commands
+    from aj_crew import session_compaction
+    from aj_crew.messaging import commands
 
     assert session_compaction._compact_unsupported_backend is commands.compact_unsupported_backend

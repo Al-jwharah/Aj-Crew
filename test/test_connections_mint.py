@@ -38,11 +38,11 @@ from connections_mint_helpers import (
 )
 from dashboard_owner_helpers import as_owner
 
+from aj_crew import hooks, mcp_grant
+from aj_crew.connections import mint, registry, tool_test
+from aj_crew.dashboard.handlers import connections
+from aj_crew.testing.wait import async_wait_until, await_until
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew import hooks, mcp_grant
-from kiro_crew.connections import mint, registry, tool_test
-from kiro_crew.dashboard.handlers import connections
-from kiro_crew.testing.wait import async_wait_until, await_until
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _isolated_mint = connections_mint_helpers._isolated_mint
@@ -329,7 +329,7 @@ async def test_the_unaudited_warning_names_the_key_not_the_url(
     _audit_calls_recorded(monkeypatch, recorded=False)
     _write_paired_grant_artifacts(secret_url)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_grant"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_grant"):
         assert await mcp_grant.grant_observed(secret_url) is True
 
     blob = "\n".join(r.getMessage() for r in caplog.records)
@@ -421,7 +421,7 @@ async def test_the_agents_dir_read_runs_off_the_loop(
     monkeypatch.setattr(mint, "_acp_client_factory", lambda: _NoChallenge)
     # A concurrent uninstall: the real predicate has to actually find the entry
     # gone, so the recorded verdict is the one the flow acts on.
-    (_isolated_mint / "kirocrew.json").write_text(json.dumps({"mcpServers": {}}), encoding="utf-8")
+    (_isolated_mint / "ajcrew.json").write_text(json.dumps({"mcpServers": {}}), encoding="utf-8")
     seen: list[int] = []
     monkeypatch.setattr(
         mint, "_agent_spec_entry_missing", _calls_recorded(mint._agent_spec_entry_missing, seen)
@@ -435,7 +435,7 @@ async def test_the_agents_dir_read_runs_off_the_loop(
 
 @pytest.mark.asyncio
 async def test_the_data_home_resolution_runs_off_the_loop(monkeypatch: pytest.MonkeyPatch):
-    # Resolving the data home CREATES it under a KIROCREW_HOME override, so it is a
+    # Resolving the data home CREATES it under an AJCREW_HOME override, so it is a
     # write and not a path join.
     seen: list[int] = []
     monkeypatch.setattr(mint, "data_home", _calls_recorded(mint.data_home, seen))
@@ -590,8 +590,8 @@ def test_the_handlers_package_does_not_import_the_mint_engine():
     in-process ``sys.modules`` check would always find it.
     """
     probe = (
-        "import sys; import kiro_crew.dashboard.handlers;"
-        " print('MINT' if 'kiro_crew.connections.mint' in sys.modules else 'CLEAN')"
+        "import sys; import aj_crew.dashboard.handlers;"
+        " print('MINT' if 'aj_crew.connections.mint' in sys.modules else 'CLEAN')"
     )
     out = subprocess.run(
         [sys.executable, "-X", "utf8", "-c", probe],
@@ -688,7 +688,7 @@ def test_a_row_whose_parent_is_a_symlink_is_never_unlinked(tmp_path, monkeypatch
     agents_dir = mint._agent.kiro_agents_dir_path()
     link_dir = tmp_path / "agents-link"
     link_dir.symlink_to(agents_dir, target_is_directory=True)
-    victim = agents_dir / "kirocrew-mint-notion-4242-abcdef01.json"
+    victim = agents_dir / "ajcrew-mint-notion-4242-abcdef01.json"
     victim.write_text("{}", encoding="utf-8")
 
     assert mint._is_reapable_spec(str(link_dir / victim.name)) is False
@@ -699,7 +699,7 @@ def test_a_row_whose_parent_is_a_symlink_is_never_unlinked(tmp_path, monkeypatch
 def test_a_relative_row_is_never_unlinked():
     # Relative paths resolve against the process cwd, which is not a property the
     # gateway controls; only the absolute form the writer recorded is reapable.
-    assert mint._is_reapable_spec("kirocrew-mint-notion-4242-abcdef01.json") is False
+    assert mint._is_reapable_spec("ajcrew-mint-notion-4242-abcdef01.json") is False
 
 
 def test_a_junction_at_a_mint_spec_name_is_never_unlinked(tmp_path, monkeypatch):
@@ -717,7 +717,7 @@ def test_a_junction_at_a_mint_spec_name_is_never_unlinked(tmp_path, monkeypatch)
     (outside / "keep.txt").write_text("not ours", encoding="utf-8")
     monkeypatch.setattr(mint._agent, "kiro_agents_dir_path", lambda: agents_dir)
 
-    planted = agents_dir / "kirocrew-mint-notion-4242-abcdef01.json"
+    planted = agents_dir / "ajcrew-mint-notion-4242-abcdef01.json"
     make_dir_link(planted, outside)
 
     assert mint._is_reapable_spec(str(planted)) is False
@@ -868,10 +868,10 @@ def test_row_tokens_do_not_repeat_across_a_gateway_restart():
     # module state alive, hiding exactly the bug under test.
     probe = (
         # Import in the gateway's own order: the handlers package first, then the
-        # mint engine it defers. A cold `import kiro_crew.connections.mint` trips a
-        # pre-existing cycle in kiro_crew.session_pid that production never hits.
-        "import kiro_crew.dashboard.handlers;"
-        "from kiro_crew.connections.mint import _new_mint_token as t; print(t())"
+        # mint engine it defers. A cold `import aj_crew.connections.mint` trips a
+        # pre-existing cycle in aj_crew.session_pid that production never hits.
+        "import aj_crew.dashboard.handlers;"
+        "from aj_crew.connections.mint import _new_mint_token as t; print(t())"
     )
     first = subprocess.run(
         [sys.executable, "-X", "utf8", "-c", probe],

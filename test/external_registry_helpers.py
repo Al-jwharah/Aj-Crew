@@ -18,15 +18,15 @@ import pytest
 
 @pytest.fixture(autouse=True)
 # flake-ok: pre-existing autouse pin on the shared monkeypatch, moved verbatim; the one monkeypatch.undo() in the test_external_registry*.py modules runs in a finally after its assertions, and only a module reload follows it
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- the one monkeypatch.undo() in the test_external_registry*.py modules runs in a finally after its assertions, and only a module reload follows it
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- the one monkeypatch.undo() in the test_external_registry*.py modules runs in a finally after its assertions, and only a module reload follows it
 def _explicit_registry_execution_admission(monkeypatch):
     """Registry tests exercise admitted installs unless they say otherwise."""
-    monkeypatch.setattr("kiro_crew.apps.execution.third_party_execution_allowed", lambda: True)
+    monkeypatch.setattr("aj_crew.apps.execution.third_party_execution_allowed", lambda: True)
 
 
 @pytest.fixture(autouse=True)
 # flake-ok: pre-existing autouse pin on the shared monkeypatch, moved verbatim; the one monkeypatch.undo() in the test_external_registry*.py modules runs in a finally after its assertions, and only a module reload follows it
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- the one monkeypatch.undo() in the test_external_registry*.py modules runs in a finally after its assertions, and only a module reload follows it
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- the one monkeypatch.undo() in the test_external_registry*.py modules runs in a finally after its assertions, and only a module reload follows it
 def _catalog_absent(monkeypatch):
     """Pin "official catalog reachable, app absent" for the whole module.
 
@@ -38,7 +38,7 @@ def _catalog_absent(monkeypatch):
     answer overrides this by monkeypatching the same seam itself.
     """
     monkeypatch.setattr(
-        "kiro_crew.apps.official_catalog.inventory_for_install",
+        "aj_crew.apps.official_catalog.inventory_for_install",
         lambda name: None,
     )
 
@@ -49,7 +49,7 @@ def cache_dir_fixture(tmp_path, monkeypatch):
     cache = tmp_path / "cache" / "app-manifests"
     cache.mkdir(parents=True)
     monkeypatch.setattr(
-        "kiro_crew.apps.registry._manifest_cache_dir",
+        "aj_crew.apps.registry._manifest_cache_dir",
         lambda: cache,
     )
     return cache

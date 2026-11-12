@@ -1,6 +1,6 @@
 /**
  * The Crew's People/setup mode (`GET /api/shared-crew/mode`, owned by
- * `kiro_crew.shared_crew.crew_mode`) and the pure helpers the session list and
+ * `aj_crew.shared_crew.crew_mode`) and the pure helpers the session list and
  * People surface read it through.
  *
  * Modes are mutually exclusive: `personal` (only the local operator, no team
@@ -111,7 +111,7 @@ export function saveCreatorFilter(crewId: string, value: CreatorFilter): void {
   }
 }
 
-/** The local dashboard token's subjects (`kiro_crew.shared_crew.owner.
+/** The local dashboard token's subjects (`aj_crew.shared_crew.owner.
  *  LOCAL_BOOTSTRAP_SUBJECTS`): the Crew's own operator, never a person's name. */
 const LOCAL_OPERATOR_NAMES: ReadonlySet<string> = new Set(['local-app', 'local-startup'])
 

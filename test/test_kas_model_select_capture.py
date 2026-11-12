@@ -14,13 +14,13 @@ import json
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
-from kiro_crew.acp.session_handle import (
+from aj_crew.acp.session_handle import (
     AcpSessionHandle,
     WatchdogSettings,
     model_select_envelope,
     models_from_config_options,
 )
-from kiro_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
 
 _FIXTURE = Path(__file__).parent / "fixtures" / "acp_frames" / "kas" / "session.jsonl"
 
@@ -128,7 +128,7 @@ def test_model_select_envelope_reads_values_and_current() -> None:
 
 
 def test_refused_switch_does_not_fail_the_session_start() -> None:
-    from kiro_crew.acp.session_handle import AcpError
+    from aj_crew.acp.session_handle import AcpError
 
     handle = _make_handle()
     handle.set_config_option = AsyncMock(  # type: ignore[method-assign]
@@ -163,7 +163,7 @@ def test_non_string_select_ids_are_skipped() -> None:
 
 
 def test_new_kas_session_on_auto_serves_auto() -> None:
-    from kiro_crew.dashboard.handlers.usage import _resolve_model, read_turn_model
+    from aj_crew.dashboard.handlers.usage import _resolve_model, read_turn_model
 
     handle = _stored(_make_handle(), _kas_session_new(["auto", "claude-sonnet-4.5"], "auto"))
     assert handle.served_model == "auto"
@@ -173,7 +173,7 @@ def test_new_kas_session_on_auto_serves_auto() -> None:
 
 
 def test_kas_session_on_a_concrete_model_records_that_model() -> None:
-    from kiro_crew.dashboard.handlers.usage import _resolve_model
+    from aj_crew.dashboard.handlers.usage import _resolve_model
 
     handle = _stored(_make_handle(), _kas_session_new(["claude-sonnet-4.5"], "claude-sonnet-4.5"))
     assert handle.served_model == "claude-sonnet-4.5"

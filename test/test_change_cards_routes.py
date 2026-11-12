@@ -32,11 +32,11 @@ from change_cards_helpers import (
     _run,
 )
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import mcp_guide
-from kiro_crew.dashboard import change_cards as cards
-from kiro_crew.dashboard.change_cards import CardStore
-from kiro_crew.dashboard.handlers import change_cards as routes
+from aj_crew import change_card_catalog as catalog
+from aj_crew import mcp_guide
+from aj_crew.dashboard import change_cards as cards
+from aj_crew.dashboard.change_cards import CardStore
+from aj_crew.dashboard.handlers import change_cards as routes
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 world = change_cards_helpers.world
@@ -116,7 +116,7 @@ def test_a_manual_config_patch_reads_the_old_value_of_a_hyphenated_path(monkeypa
     """The same path grammar gates the old value a manual Settings save records in
     memory, so an ``apps.<name>.model`` row (app names are kebab-case) keeps it."""
     monkeypatch.setattr(cards, "_config_value", lambda path: f"old:{path}")
-    route = ("PATCH", "/api/config/kirocrew")
+    route = ("PATCH", "/api/config/ajcrew")
     assert routes._config_before(route, {"path": "apps.my-app.model"}) == "old:apps.my-app.model"
 
 
@@ -193,7 +193,7 @@ def test_an_internal_or_app_caller_can_never_apply_a_card(world, tmp_path):
         statuses = []
         for auth in ("internal", "app", ""):
             r = await c.patch(
-                "/api/config/kirocrew", json=body, headers=_card_headers(card, auth=auth)
+                "/api/config/ajcrew", json=body, headers=_card_headers(card, auth=auth)
             )
             statuses.append(r.status)
         return statuses
@@ -216,7 +216,7 @@ def test_a_card_step_sent_chunked_applies(world, tmp_path):
             yield raw[5:]
 
         r = await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             data=chunks(),
             headers={**_card_headers(card), "Content-Type": "application/json"},
         )
@@ -233,13 +233,13 @@ def test_apply_must_equal_the_plan_and_the_previewed_state(world, tmp_path):
     async def go(c):
         card = await _propose_setting(c)
         wrong = await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             json={"path": "agent.approval_mode", "value": "auto"},
             headers=_card_headers(card),
         )
         world.config["chat.verbosity"] = "detailed"  # someone changed it meanwhile
         changed = await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             json=card["plan"]["apply"][0]["body"],
             headers=_card_headers(card),
         )
@@ -260,16 +260,12 @@ def test_apply_records_from_the_real_handler_once_then_undo_restores(world, tmp_
     async def go(c):
         card = await _propose_setting(c)
         step = card["plan"]["apply"][0]
-        first = await c.patch(
-            "/api/config/kirocrew", json=step["body"], headers=_card_headers(card)
-        )
-        again = await c.patch(
-            "/api/config/kirocrew", json=step["body"], headers=_card_headers(card)
-        )
+        first = await c.patch("/api/config/ajcrew", json=step["body"], headers=_card_headers(card))
+        again = await c.patch("/api/config/ajcrew", json=step["body"], headers=_card_headers(card))
         applied = store.public(store.get(card["id"]))
         undo_step = applied["plan"]["undo"][0]
         undone = await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             json=undo_step["body"],
             headers=_card_headers(applied, op="undo"),
         )
@@ -277,7 +273,7 @@ def test_apply_records_from_the_real_handler_once_then_undo_restores(world, tmp_
 
     first, again, applied, undone, final = _run(world, store, go)
     assert first == 200 and again["card_replay"] is True
-    assert world.calls == [("PATCH", "/api/config/kirocrew")] * 2  # apply once, undo once
+    assert world.calls == [("PATCH", "/api/config/ajcrew")] * 2  # apply once, undo once
     assert applied["status"] == "applied"
     assert applied["plan"]["undo"][0]["body"] == {"path": "chat.verbosity", "value": "standard"}
     assert undone == 200 and final["status"] == "undone"
@@ -291,14 +287,14 @@ def test_undo_is_refused_when_the_value_changed_after_apply(world, tmp_path):
     async def go(c):
         card = await _propose_setting(c)
         await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             json=card["plan"]["apply"][0]["body"],
             headers=_card_headers(card),
         )
         world.config["chat.verbosity"] = "detailed"
         applied = store.public(store.get(card["id"]))
         r = await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             json=applied["plan"]["undo"][0]["body"],
             headers=_card_headers(applied, op="undo"),
         )
@@ -347,21 +343,21 @@ def test_a_secret_value_reaches_only_the_vault_route(world, tmp_path):
 def test_a_manual_change_leaves_no_memory_line_while_persistence_is_off(
     world, tmp_path, monkeypatch
 ):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    real_load = KiroCrewConfig.load.__func__
+    real_load = AjCrewConfig.load.__func__
 
     def _load(cls, *args, **kwargs):
         cfg = real_load(cls, *args, **kwargs)
         cfg.memory.persistence_enabled = False
         return cfg
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_load))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_load))
     store = CardStore(tmp_path / "c.json")
 
     async def go(c):
         r = await c.patch(
-            "/api/config/kirocrew", json={"path": "chat.verbosity", "value": "brief"}, headers=OWNER
+            "/api/config/ajcrew", json={"path": "chat.verbosity", "value": "brief"}, headers=OWNER
         )
         return r.status
 
@@ -374,7 +370,7 @@ def test_a_manual_settings_change_becomes_a_memory_event(world, tmp_path):
 
     async def go(c):
         r = await c.patch(
-            "/api/config/kirocrew", json={"path": "chat.verbosity", "value": "brief"}, headers=OWNER
+            "/api/config/ajcrew", json={"path": "chat.verbosity", "value": "brief"}, headers=OWNER
         )
         s = await c.post("/api/secrets", json={"name": "K", "value": SECRET_VALUE}, headers=OWNER)
         return r.status, s.status
@@ -405,7 +401,7 @@ def test_preview_edits_bump_the_revision_and_cancel_closes(world, tmp_path):
         )
         revised = await ok.json()
         stale = await c.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             json=revised["plan"]["apply"][0]["body"],
             headers=_card_headers(card),
         )
@@ -429,9 +425,7 @@ def test_server_route_table_matches_the_card_module():
     app = web.Application()
     routes.register_change_card_routes(app)
     mine = {(r.method, r.resource.canonical) for r in app.router.routes() if r.method != "HEAD"}
-    text = (REPO / "src/kiro_crew/dashboard/server_runtime/mcp_routes.py").read_text(
-        encoding="utf-8"
-    )
+    text = (REPO / "src/aj_crew/dashboard/server_runtime/mcp_routes.py").read_text(encoding="utf-8")
     server = set(
         re.findall(
             r'\("(GET|POST)", "(/api/(?:cards|members)/[a-z0-9_{}/-]+)", "api_(?:cards|members)_[a-z_]+"\)',
@@ -442,7 +436,7 @@ def test_server_route_table_matches_the_card_module():
 
 
 def test_only_the_agent_half_is_strict_internal():
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     strict = server._STRICT_INTERNAL_API_PATHS
     assert "/api/cards/agent" in strict
@@ -474,15 +468,15 @@ def test_shim_routes_card_tools_with_the_verified_key(monkeypatch):
 
 
 def test_every_agent_pre_approves_the_card_tools_through_the_ceiling():
-    from kiro_crew import agent
+    from aj_crew import agent
 
     cards_grants = {
-        "@kirocrew-guide/list_change_kinds",
-        "@kirocrew-guide/find_setting",
-        "@kirocrew-guide/get_member_capabilities",
-        "@kirocrew-guide/diagnose_settings",
-        "@kirocrew-guide/propose_change",
-        "@kirocrew-guide/get_change_status",
+        "@ajcrew-guide/list_change_kinds",
+        "@ajcrew-guide/find_setting",
+        "@ajcrew-guide/get_member_capabilities",
+        "@ajcrew-guide/diagnose_settings",
+        "@ajcrew-guide/propose_change",
+        "@ajcrew-guide/get_change_status",
     }
     assert cards_grants <= set(agent._GUIDE_AUTO_GRANTS)
     assert cards_grants <= set(agent.build_agent_config()["allowedTools"])
@@ -517,16 +511,16 @@ def test_setting_id_resolves_to_the_dashboard_store_for_verbosity():
 
 def test_setting_id_with_an_editable_config_key_uses_the_config_route():
     target = cards.resolve_setting({"setting_id": "chat.auto-compact-threshold"})
-    assert target["store"] == "kirocrew" and target["key"] == "session.autocompact_pct"
+    assert target["store"] == "ajcrew" and target["key"] == "session.autocompact_pct"
     target = cards.resolve_setting({"setting_id": "security.how-long-auto-approve-stays-on"})
     assert target["key"] == "agent.yolo_duration" and "24h" in target["allowed"]
     p = {"setting_id": "security.how-long-auto-approve-stays-on", "value": "24h"}
-    before = {"store": "kirocrew", "key": "agent.yolo_duration", "label": "x", "value": "1h"}
+    before = {"store": "ajcrew", "key": "agent.yolo_duration", "label": "x", "value": "1h"}
     preview = catalog.build_preview("setting.change", p, before, {})
     assert preview["apply"][0]["body"] == {"path": "agent.yolo_duration", "value": "24h"}
     assert preview["risk"] == "widen"
     # The raw path form keeps working.
-    assert cards.resolve_setting({"path": "agent.approval_mode"})["store"] == "kirocrew"
+    assert cards.resolve_setting({"path": "agent.approval_mode"})["store"] == "ajcrew"
     assert cards.resolve_setting({"path": "dashboard.verbosity"})["key"] == "verbosity"
 
 
@@ -558,7 +552,7 @@ def test_value_is_validated_against_the_controls_options():
 
 def test_every_dashboard_setting_is_a_registry_id_the_route_accepts():
     ids = {e["id"] for e in cards.settings_registry()}
-    route = (REPO / "src/kiro_crew/dashboard/file_api/dashboard_config.py").read_text(
+    route = (REPO / "src/aj_crew/dashboard/file_api/dashboard_config.py").read_text(
         encoding="utf-8"
     )
     accepted = re.search(r"_allowed = \{([^}]*)\}", route).group(1)
@@ -689,7 +683,7 @@ def test_dashboard_apply_and_undo_through_the_hook(world, tmp_path, monkeypatch)
 
 def test_hook_replays_the_body_to_the_capped_reader_and_request_json(world, tmp_path):
     """A REAL aiohttp app: the handlers read through ``read_bounded_json`` and ``json()``."""
-    from kiro_crew.dashboard.handlers._shared import read_bounded_json
+    from aj_crew.dashboard.handlers._shared import read_bounded_json
 
     store = CardStore(tmp_path / "c.json")
     seen: list[Any] = []
@@ -710,19 +704,19 @@ def test_hook_replays_the_body_to_the_capped_reader_and_request_json(world, tmp_
         app = web.Application(middlewares=[_fake_auth, routes.change_card_middleware])
         app["state"] = FakeState(store)
         routes.register_change_card_routes(app)
-        app.router.add_patch("/api/config/kirocrew", capped_patch)
+        app.router.add_patch("/api/config/ajcrew", capped_patch)
         app.router.add_put("/api/dashboard/config", json_put)
         client = TestClient(TestServer(app))
         await client.start_server()
         try:
             manual = await client.patch(
-                "/api/config/kirocrew",
+                "/api/config/ajcrew",
                 json={"path": "chat.verbosity", "value": "brief"},
                 headers=OWNER,
             )
             card = await _propose_setting(client, value="ultra-brief")
             carded = await client.patch(
-                "/api/config/kirocrew",
+                "/api/config/ajcrew",
                 json=card["plan"]["apply"][0]["body"],
                 headers=_card_headers(card),
             )
@@ -770,35 +764,35 @@ def test_names_follow_the_routes_own_rules_not_ascii():
 @pytest.fixture
 def assistant_editor(tmp_path, monkeypatch):
     """A real CapabilityService over a temp home with one ordinary crewmate."""
-    from kiro_crew import agent, agent_state
-    from kiro_crew.config import loader
-    from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+    from aj_crew import agent, agent_state
+    from aj_crew.config import loader
+    from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
     home = tmp_path / "home"
     specs = home / "agents"
     specs.mkdir(parents=True)
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setenv("KIRO_HOME", str(home / "kiro"))
     monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", specs)
     monkeypatch.setattr(agent_state, "_state_path", lambda: home / "agent_model_state.json")
-    monkeypatch.setattr("kiro_crew.agent_capabilities.default_project_dir", lambda _: "")
+    monkeypatch.setattr("aj_crew.agent_capabilities.default_project_dir", lambda _: "")
     monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
+        "aj_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
     )
     loader._invalidate_config_cache()
-    row = {"kiro_agent": "kirocrew", "workspace": "default", "memory_store": "default"}
+    row = {"kiro_agent": "ajcrew", "workspace": "default", "memory_store": "default"}
     (home / "config.json").write_text(json.dumps({"agents": {"mate": row}}), encoding="utf-8")
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: specs)
     # A default that grants nothing, so the crewmate starts without fs_read approved.
-    (specs / "kirocrew.json").write_text(
-        json.dumps({"name": "kirocrew", "tools": ["fs_read"], "allowedTools": []}),
+    (specs / "ajcrew.json").write_text(
+        json.dumps({"name": "ajcrew", "tools": ["fs_read"], "allowedTools": []}),
         encoding="utf-8",
     )
-    template = json.loads((specs / "kirocrew.json").read_text(encoding="utf-8"))
-    from kiro_crew.agent_capabilities import CapabilityService
+    template = json.loads((specs / "ajcrew.json").read_text(encoding="utf-8"))
+    from aj_crew.agent_capabilities import CapabilityService
 
     app: dict[str, Any] = {}
-    from kiro_crew.dashboard.handlers import agent_capabilities as handler
+    from aj_crew.dashboard.handlers import agent_capabilities as handler
 
     app[handler._SERVICE] = CapabilityService()
     return app, home, specs, template
@@ -807,7 +801,7 @@ def assistant_editor(tmp_path, monkeypatch):
 def test_capabilities_view_explains_both_approval_grammars(assistant_editor):
     app, *_ = assistant_editor
     view = cards.member_capabilities_view(app, "mate")
-    assert view["template"] == "kirocrew"
+    assert view["template"] == "ajcrew"
     assert {"section": "tools", "id": "fs_read"}.items() <= next(
         r for r in view["rows"] if r["id"] == "fs_read"
     ).items()
@@ -882,7 +876,7 @@ def test_a_manual_save_the_hook_cannot_capture_reaches_the_route_unrecorded(
             yield b'{"path":"chat.verbosity","value":"ultra-brief"}'
 
         response = await client.patch(
-            "/api/config/kirocrew",
+            "/api/config/ajcrew",
             data=oversized() if chunked else b"not-json",
             headers=OWNER,
         )
@@ -1004,7 +998,7 @@ def test_each_manual_route_records_names_not_secret_values(route):
         "changes": [{"name": "files", "uninstall": True}],
         "operations": [{"action": "remove", "section": "tools", "id": "read"}],
     }
-    if route == ("PATCH", "/api/config/kirocrew"):
+    if route == ("PATCH", "/api/config/ajcrew"):
         body = {"path": "chat.verbosity", "value": "standard"}
     elif route == ("PUT", "/api/dashboard/config"):
         body = {"show_tool_calls": True}

@@ -21,9 +21,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import (
+from aj_crew.acp import client as acp_client
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KIRO,
@@ -33,9 +33,9 @@ from kiro_crew.acp.types import (
     EVENT_STEER_CONSUMED,
     EVENT_TEXT_CHUNK,
 )
-from kiro_crew.agent_sdk import backend_cards as cards_mod
-from kiro_crew.agent_sdk.backends import ACP_BACKENDS_ACP_CLIENT_SPAWNABLE
-from kiro_crew.testing.wait import await_until
+from aj_crew.agent_sdk import backend_cards as cards_mod
+from aj_crew.agent_sdk.backends import ACP_BACKENDS_ACP_CLIENT_SPAWNABLE
+from aj_crew.testing.wait import await_until
 
 _SID = "goose-session-1"
 _PROMPT_ID = 7

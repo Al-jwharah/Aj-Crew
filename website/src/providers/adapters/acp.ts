@@ -41,9 +41,9 @@ function learnWindow(name: string, window: number): void {
   if (name && Number.isFinite(window) && window > 0) LIVE_WINDOWS[name] = window
 }
 
-/** Narrow view of GET /api/config/kirocrew — only the fields the composer needs
+/** Narrow view of GET /api/config/ajcrew — only the fields the composer needs
  *  to resolve what a new session will actually run on. */
-interface KirocrewAgentConfig {
+interface AjcrewAgentConfig {
   agent?: { model?: string; reasoning_effort?: string }
 }
 
@@ -230,7 +230,7 @@ export class AcpAdapter implements ProviderAdapter {
     // adapter is built once, so they must read the language at use time.
     get sessionProcess() { return i18nT('providers.adapters.acp.session_process') },
     processCountLabel: 'acp_cli',
-    configFile: 'kirocrew.json',
+    configFile: 'ajcrew.json',
     get pluginRegistryName() { return i18nT('providers.adapters.acp.plugin_registry_name') },
     get hooksSection() { return i18nT('providers.adapters.acp.hooks_section') },
   }
@@ -244,14 +244,14 @@ export class AcpAdapter implements ProviderAdapter {
     // the composer shows the real value before a session exists to report one.
     //
     // This deliberately does NOT re-derive the precedence client-side. The
-    // chain is four tiers deep (the KiroCrew agent's own model, the bound kiro
+    // chain is four tiers deep (the Aj Crew agent's own model, the bound kiro
     // agent's pin, the global agent.model default, the installed agent file)
     // and a second copy of it here would drift from the backend's: a fresh slot
     // would display the kiro agent file's model while the turn actually ran on
     // the configured default, and the mismatch would only self-correct once the
     // first turn backfilled slot.model from the live session.
     //
-    // `agentName` is a KiroCrew agent name (a "crew"), not a kiro agent
+    // `agentName` is an Aj Crew agent name (a "crew"), not a kiro agent
     // template — the per-agent default is stored per crew, and several crews can
     // share one template. `app` names the app that owns the session, so the
     // answer includes that app's own model setting as the session start does.
@@ -263,12 +263,12 @@ export class AcpAdapter implements ProviderAdapter {
     }
   }
 
-  /** KiroCrew's configured default model (Settings → Chat → Default Model).
+  /** Aj Crew's configured default model (Settings → Chat → Default Model).
    *  '' when unset or "auto" — both mean "no explicit default", so callers fall
    *  through to the agent-file model exactly as the backend does. */
   async resolveDefaultModel(): Promise<string> {
     try {
-      const c = (await api.kirocrewConfig()) as KirocrewAgentConfig
+      const c = (await api.ajcrewConfig()) as AjcrewAgentConfig
       const m = c?.agent?.model || ''
       return m === 'auto' ? '' : m
     } catch {
@@ -276,14 +276,14 @@ export class AcpAdapter implements ProviderAdapter {
     }
   }
 
-  /** KiroCrew's configured default reasoning effort (Settings → Chat). '' means
+  /** Aj Crew's configured default reasoning effort (Settings → Chat). '' means
    *  no default, i.e. the model picks its own. A per-slot override outranks it,
    *  matching ConfigLoader._acp()'s `reasoning_effort_override or default`.
    *  `readConfig` supplies the gateway config body from the caller's shared
-   *  `['kirocrewConfig']` query, avoiding a second GET at boot. */
+   *  `['ajcrewConfig']` query, avoiding a second GET at boot. */
   async resolveDefaultEffort(readConfig: () => Promise<unknown>): Promise<string> {
     try {
-      const c = (await readConfig()) as KirocrewAgentConfig
+      const c = (await readConfig()) as AjcrewAgentConfig
       return c?.agent?.reasoning_effort || ''
     } catch {
       return ''

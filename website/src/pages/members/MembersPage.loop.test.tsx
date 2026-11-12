@@ -37,7 +37,7 @@ const LABEL = 'On watch'
 function row(name: string) {
   return {
     name, slug: name, slot_key: `member-${name}`, running: false, kiro_agent: name,
-    workspace: 'default', memory_store: 'default', model: '', source: 'kirocrew', starred: false,
+    workspace: 'default', memory_store: 'default', model: '', source: 'ajcrew', starred: false,
   }
 }
 

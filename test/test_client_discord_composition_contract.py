@@ -1,10 +1,10 @@
 """``DiscordClient`` is one class composed from owner modules; these tests pin how.
 
-``kiro_crew.discord.client`` keeps the client's state and lifecycle, the REST verbs and
+``aj_crew.discord.client`` keeps the client's state and lifecycle, the REST verbs and
 the bodies they send, the attachment download, the DM pairing cache and the thread check.
 An owner function whose first parameter is ``self`` is bound as the class attribute of the
 same name, and every other moved name is served from its owner through
-``kiro_crew._facade_mirror``. Pinned here: the owner set and its layer order, that each
+``aj_crew._facade_mirror``. Pinned here: the owner set and its layer order, that each
 moved member is its owner's own function with its base kind and signature, the rules a
 function bound from outside the class body needs, the logger name the rate-limit and
 Gateway tests capture, and the records that moved whole. The layout is described in
@@ -24,20 +24,20 @@ from typing import Any
 import owner_import_scan
 import pytest
 
-import kiro_crew
-from kiro_crew.discord import client as FACADE_MODULE
+import aj_crew
+from aj_crew.discord import client as FACADE_MODULE
 
-FACADE = "kiro_crew.discord.client"
+FACADE = "aj_crew.discord.client"
 STEM = "client"
 FACADE_PATH = Path(FACADE_MODULE.__file__).resolve()
 DISCORD_DIR = FACADE_PATH.parent
-SRC = Path(kiro_crew.__file__).resolve().parent
+SRC = Path(aj_crew.__file__).resolve().parent
 CLS = FACADE_MODULE.DiscordClient
-OWNER_PREFIX = "kiro_crew.discord.client_"
+OWNER_PREFIX = "aj_crew.discord.client_"
 #: An owner the scan must find importing a lower owner, so it cannot pass vacuously.
 FAMILY_IMPORTER = "discord/client_recheck.py"
 
-# Walks src/kiro_crew for owner imports; keep it on one worker.
+# Walks src/aj_crew for owner imports; keep it on one worker.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_client_discord_composition_contract")
 
 SHARED_FACADE_CHECKS = (
@@ -256,7 +256,7 @@ FACADE_PINNED = frozenset(
 
 
 def _owner(stem: str) -> ModuleType:
-    return importlib.import_module(f"kiro_crew.discord.{stem}")
+    return importlib.import_module(f"aj_crew.discord.{stem}")
 
 
 def _source(stem: str) -> str:

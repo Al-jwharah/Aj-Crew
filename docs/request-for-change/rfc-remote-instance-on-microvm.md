@@ -13,14 +13,14 @@ superseded-by: []
 
 # RFC: Remote Instance on Lambda MicroVM
 
-> **Nothing built.** Measured claims about Kiro Crew are read at `fcee47347`.
+> **Nothing built.** Measured claims about Aj Crew are read at `fcee47347`.
 > AWS behaviour is cited to public documentation. The design restates decisions
-> established by an earlier prototype that ran Kiro Crew's published container
+> established by an earlier prototype that ran Aj Crew's published container
 > image on Lambda MicroVMs; no code is carried over.
 
 ## Summary
 
-**Bring Lambda MicroVM into Kiro Crew and consolidate it with our existing
+**Bring Lambda MicroVM into Aj Crew and consolidate it with our existing
 Fargate deployment method.**
 
 A remote crew becomes a MicroVM instead of an ECS task. The lane keeps every
@@ -102,8 +102,8 @@ above the seam learns that a third backend exists.
    from its launch payload, so a laptop that goes to sleep delays the ledger
    rather than costing the user their crew. The gateway's timer is a backstop,
    not the mechanism.
-5. **A hand-deployed base template**, `kirocrew-microvm-base.yaml`, alongside
-   today's `kirocrew-fargate-base.yaml`. It owns the archive bucket and its KMS
+5. **A hand-deployed base template**, `ajcrew-microvm-base.yaml`, alongside
+   today's `ajcrew-fargate-base.yaml`. It owns the archive bucket and its KMS
    key, the recipe bucket an image build reads from, and the two roles the lane
    passes. `provision` never creates a bucket, a key or a role.
 6. **A `microvm` provisioner registered conditionally**, from a complete
@@ -168,7 +168,7 @@ home.
 All figures US East (N. Virginia), Graviton, from the public pricing pages. A
 MicroVM's baseline is set on its image and scales vertically to 4x on demand
 ([MicroVM sizing](https://docs.aws.amazon.com/lambda/latest/dg/microvms-images.html));
-`src/kiro_crew/cloud/sizes.py` documents a crew's working set at 16 GB and up,
+`src/aj_crew/cloud/sizes.py` documents a crew's working set at 16 GB and up,
 so the lane's shape is the 4 GB or 8 GB baseline, not the 2 GB default.
 
 | | Fargate, always on | MicroVM, 2.5 h/day |

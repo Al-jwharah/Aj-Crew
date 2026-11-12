@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from kiro_crew.projection import EMPTY_WATERMARK, ProjectionRegistry, attribute_seq
+from aj_crew.projection import EMPTY_WATERMARK, ProjectionRegistry, attribute_seq
 
 
 def _ev(seq: int, touches: bool = True) -> dict:

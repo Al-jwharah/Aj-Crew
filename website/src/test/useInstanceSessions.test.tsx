@@ -100,7 +100,7 @@ describe('useInstanceSessions', () => {
 
   it('maps a connected instance’s slots onto rows the sessions list can render', async () => {
     instanceChatSlotsMock.mockResolvedValue([
-      { key: 'chat-1', title: 'deploy checklist', agent: 'kirocrew', last_turn_ts: '2026-08-31T14:35:00Z', last_ts: '2026-08-31T14:36:00Z', created: '2026-08-20T09:00:00Z', running: true },
+      { key: 'chat-1', title: 'deploy checklist', agent: 'ajcrew', last_turn_ts: '2026-08-31T14:35:00Z', last_ts: '2026-08-31T14:36:00Z', created: '2026-08-20T09:00:00Z', running: true },
     ])
     const { result } = renderInstanceSessions(true, [CONNECTED])
 

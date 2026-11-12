@@ -10,9 +10,9 @@ import { renderWithProviders } from './helpers'
  * the sidebar applies.
  */
 
-const { patchConfigMock, kirocrewConfigMock } = vi.hoisted(() => ({
+const { patchConfigMock, ajcrewConfigMock } = vi.hoisted(() => ({
   patchConfigMock: vi.fn((_path: string, _value: unknown) => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(() => Promise.resolve({})),
+  ajcrewConfigMock: vi.fn(() => Promise.resolve({})),
 }))
 
 vi.mock('../api/client', () => {
@@ -28,7 +28,7 @@ vi.mock('../api/client', () => {
   }
   return {
     api: {
-      kirocrewConfig: kirocrewConfigMock,
+      ajcrewConfig: ajcrewConfigMock,
       patchConfig: patchConfigMock,
       installTheme: vi.fn(() => Promise.resolve({ ok: true })),
     },
@@ -96,7 +96,7 @@ const KEY = 'dashboard.show_unread_dot'
 const ROUTE = '/settings?tab=display&sub=sidebar'
 
 function seed(value: unknown) {
-  kirocrewConfigMock.mockImplementation(() =>
+  ajcrewConfigMock.mockImplementation(() =>
     Promise.resolve({ dashboard: value === undefined ? {} : { show_unread_dot: value } }),
   )
 }

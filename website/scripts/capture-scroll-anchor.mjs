@@ -41,12 +41,12 @@ const mkMessages = (n, tag) => {
 const slots = [
   {
     key: 'long-session', title: 'Long investigation', running: false,
-    last_message: 'Answer #39', messages: 40, agent: 'kirocrew',
+    last_message: 'Answer #39', messages: 40, agent: 'ajcrew',
     memory_mode: 'persistent', modified: Math.floor(now),
   },
   {
     key: 'short-session', title: 'Quick question', running: false,
-    last_message: 'Answer #3', messages: 4, agent: 'kirocrew',
+    last_message: 'Answer #3', messages: 4, agent: 'ajcrew',
     memory_mode: 'persistent', modified: Math.floor(now) - 300,
   },
 ]

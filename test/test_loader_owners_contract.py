@@ -18,12 +18,12 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import _facade_mirror
-from kiro_crew.agent_sdk.drivers.acp import build_acp_provider
-from kiro_crew.config import loader, loader_config, loader_pipeline, loader_snapshots
+from aj_crew import _facade_mirror
+from aj_crew.agent_sdk.drivers.acp import build_acp_provider
+from aj_crew.config import loader, loader_config, loader_pipeline, loader_snapshots
 
 _OWNERS = tuple(
-    f"kiro_crew.config.loader_{name}"
+    f"aj_crew.config.loader_{name}"
     for name in (
         "credentials",
         "locations",
@@ -86,16 +86,16 @@ def test_owners_are_listed_lowest_layer_first_and_nothing_is_excluded() -> None:
 
 
 def test_the_package_surface_resolves_through_the_facade() -> None:
-    import kiro_crew.config as config_pkg
+    import aj_crew.config as config_pkg
 
     assert [n for n in config_pkg.__all__ if getattr(config_pkg, n) is not getattr(loader, n)] == []
 
 
 class TestTheProviderFactory:
     def test_it_lives_with_its_class_in_one_owner(self) -> None:
-        assert loader.KiroCrewConfig.__module__ == loader_config.__name__
-        assert "create_provider_factory" in vars(loader_config.KiroCrewConfig)
-        assert loader.KiroCrewConfig.create_provider_factory.__module__ == loader_config.__name__
+        assert loader.AjCrewConfig.__module__ == loader_config.__name__
+        assert "create_provider_factory" in vars(loader_config.AjCrewConfig)
+        assert loader.AjCrewConfig.create_provider_factory.__module__ == loader_config.__name__
 
     def test_no_loader_module_imports_the_acp_layer(self) -> None:
         family = sorted(Path(loader.__file__).parent.glob("loader*.py"))
@@ -110,14 +110,14 @@ class TestTheProviderFactory:
                 else:
                     continue
                 for module in modules:
-                    for root in ("kiro_crew.acp", "kiro_crew.providers"):
+                    for root in ("aj_crew.acp", "aj_crew.providers"):
                         if module == root or module.startswith(root + "."):
                             importers.add(path.name)
         assert importers == set()
 
     def test_a_patched_provider_class_reaches_the_factory(self) -> None:
-        cfg = loader.KiroCrewConfig()
-        with patch("kiro_crew.providers.acp.AcpProvider") as provider:
+        cfg = loader.AjCrewConfig()
+        with patch("aj_crew.providers.acp.AcpProvider") as provider:
             # The SDK factory reads the class at call time, so a patch of the
             # providers-layer class reaches it (and config through it).
             assert build_acp_provider() is provider.return_value
@@ -129,7 +129,7 @@ class TestTheProviderFactory:
 
 
 class _FakeConfigClass:
-    """Stands in for ``KiroCrewConfig`` where a function-local import reads it."""
+    """Stands in for ``AjCrewConfig`` where a function-local import reads it."""
 
     __dataclass_fields__ = {"default_workspace": SimpleNamespace(default="fake-default")}
     loads = 0
@@ -145,7 +145,7 @@ class TestTheCycleBreakingImports:
         self, restored_state: pytest.MonkeyPatch
     ) -> None:
         _FakeConfigClass.loads = 0
-        restored_state.setattr(loader, "KiroCrewConfig", _FakeConfigClass)
+        restored_state.setattr(loader, "AjCrewConfig", _FakeConfigClass)
         for name, value in {
             "_MATERIALIZED_AGENTS": frozenset({"kept"}),
             "_MATERIALIZED_AGENTS_READY": True,
@@ -161,7 +161,7 @@ class TestTheCycleBreakingImports:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         seen: list[str] = []
-        monkeypatch.setattr(loader, "KiroCrewConfig", _FakeConfigClass)
+        monkeypatch.setattr(loader, "AjCrewConfig", _FakeConfigClass)
         monkeypatch.setattr(loader, "_alias_workspace_dir", lambda _e, _n, d: seen.append(d))
         loader._locked_workspace_dir({"workspaces": {}}, {"workspace": "w"})
         assert seen == ["fake-default"]
@@ -177,15 +177,15 @@ class TestTheCycleBreakingImports:
 
         monkeypatch.setattr(loader, "read_config_document", refuse)
         with pytest.raises(Reached):
-            loader.KiroCrewConfig._load_resolved()
+            loader.AjCrewConfig._load_resolved()
 
     @pytest.mark.parametrize(
         ("target", "higher", "imported"),
         [
-            (loader_snapshots.reset_dangling_default_agent, loader_config, {"KiroCrewConfig"}),
-            (loader_snapshots._locked_workspace_dir, loader_config, {"KiroCrewConfig"}),
+            (loader_snapshots.reset_dangling_default_agent, loader_config, {"AjCrewConfig"}),
+            (loader_snapshots._locked_workspace_dir, loader_config, {"AjCrewConfig"}),
             (
-                loader_config.KiroCrewConfig._load_resolved,
+                loader_config.AjCrewConfig._load_resolved,
                 loader_pipeline,
                 {"build_config", "persist_write_back", "read_config_document"},
             ),
@@ -198,8 +198,7 @@ class TestTheCycleBreakingImports:
         local = [
             node
             for node in ast.walk(tree)
-            if isinstance(node, ast.ImportFrom)
-            and (node.module or "").startswith("kiro_crew.config")
+            if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("aj_crew.config")
         ]
         assert [(n.module, {a.name for a in n.names}) for n in local] == [
             (higher.__name__, imported)
@@ -210,7 +209,7 @@ class TestTheSnapshotStateHasOneHome:
     @pytest.mark.parametrize("name", _STATE_NAMES)
     def test_the_owner_binds_it_and_the_facade_serves_it(self, name: str) -> None:
         assert name not in vars(loader)
-        assert _index().holders[name] == ("kiro_crew.config.loader_snapshots",)
+        assert _index().holders[name] == ("aj_crew.config.loader_snapshots",)
         assert getattr(loader, name) is vars(loader_snapshots)[name]
 
     @pytest.mark.parametrize("name", _REBOUND_STATE)
@@ -227,7 +226,7 @@ class TestTheSnapshotStateHasOneHome:
     def test_an_owner_rebind_is_what_the_facade_reads(
         self, name: str, restored_state: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        cfg = loader.KiroCrewConfig()
+        cfg = loader.AjCrewConfig()
         cfg.timezone = "Europe/Paris"
         cfg.session.autocompact_pct = 0.42
         for preset, value in {

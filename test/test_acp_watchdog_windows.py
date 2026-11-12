@@ -25,9 +25,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp import session_handle
-from kiro_crew.acp.client import _DEFAULT_PROMPT_TIMEOUT
-from kiro_crew.acp.session_handle import (
+from aj_crew.acp import session_handle
+from aj_crew.acp.client import _DEFAULT_PROMPT_TIMEOUT
+from aj_crew.acp.session_handle import (
     _TURN_BOUNDED_WINDOWS,
     _TURN_CEILING_WINDOW_FRACTION,
     _WORKING_LOG_INTERVAL_SECS,
@@ -38,10 +38,10 @@ from kiro_crew.acp.session_handle import (
     WatchdogSettings,
     _load_watchdog_settings,
 )
-from kiro_crew.config.loader import AgentConfig, KiroCrewConfig, WatchdogConfig
-from kiro_crew.constants import CHAT_TURN_TIMEOUT
+from aj_crew.config.loader import AgentConfig, AjCrewConfig, WatchdogConfig
+from aj_crew.constants import CHAT_TURN_TIMEOUT
 
-_LOGGER_NAME = "kiro_crew.acp.session_handle"
+_LOGGER_NAME = "aj_crew.acp.session_handle"
 _WINDOW_BUDGET = _DEFAULT_PROMPT_TIMEOUT * _TURN_CEILING_WINDOW_FRACTION
 
 
@@ -54,21 +54,21 @@ def _watchdog_text(caplog: pytest.LogCaptureFixture) -> str:
     return "\n".join(record.getMessage() for record in _watchdog_records(caplog))
 
 
-def _fake_config(*, turn_timeout: float = CHAT_TURN_TIMEOUT, **watchdog: float) -> KiroCrewConfig:
+def _fake_config(*, turn_timeout: float = CHAT_TURN_TIMEOUT, **watchdog: float) -> AjCrewConfig:
     """A real config object with only the two sections under test set.
 
     Real ``AgentConfig``/``WatchdogConfig`` rather than a namespace double, so a
     key that does not exist in production fails the test instead of silently
     passing on an invented attribute.
     """
-    return KiroCrewConfig(
+    return AjCrewConfig(
         agent=AgentConfig(chat_turn_timeout_secs=int(turn_timeout)),
         watchdog=WatchdogConfig(**watchdog),
     )
 
 
-def _load_with(monkeypatch: pytest.MonkeyPatch, cfg: KiroCrewConfig) -> WatchdogSettings:
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+def _load_with(monkeypatch: pytest.MonkeyPatch, cfg: AjCrewConfig) -> WatchdogSettings:
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
     return _load_watchdog_settings()
 
 
@@ -154,10 +154,10 @@ def test_sampling_interval_is_not_a_window(monkeypatch: pytest.MonkeyPatch) -> N
 
 
 def test_load_failure_still_yields_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
-    def _boom(cls: type) -> KiroCrewConfig:
+    def _boom(cls: type) -> AjCrewConfig:
         raise RuntimeError("config unavailable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_boom))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_boom))
     assert _load_watchdog_settings() == WatchdogSettings()
 
 

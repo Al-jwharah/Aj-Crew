@@ -1,7 +1,7 @@
 ---
 title: Conductor context cap -- the gateway trims a goal conductor's KAS chat to 150K tokens at a turn start
 status: partial
-author: iamwhatever, with kirocrew-worker
+author: iamwhatever, with ajcrew-worker
 created: 2026-10-19
 last-audited: 2026-11-03
 audited-at: e5353f39bb
@@ -49,7 +49,7 @@ superseded-by: []
   using the window over cutting a warm session.
 - Code measured at `c3f2b27de7`. The numbers come from the R5 study on one
   operator's host: 5,174 dashboard turns from 2026-10-01 to 2026-10-19, each
-  joined across Kiro Crew's usage rows, its chat history and the KAS
+  joined across Aj Crew's usage rows, its chat history and the KAS
   transcripts, plus one live probe on a throwaway KAS session. Every curve is
   Claude Opus 5.5 on KAS with a 1M-token window.
 
@@ -122,9 +122,9 @@ A session is capped when all of these hold:
 
 | Check | Source |
 |---|---|
-| its slot runs the goal conductor, `kirocrew-conductor` or its deprecated alias | `WAKE_RESET_AGENTS` in `src/kiro_crew/autonudge_selfarm.py` |
-| its backend is KAS | `ACP_BACKENDS_HARNESS_MANAGED_COMPACTION` in `src/kiro_crew/agent_sdk/backends_turns.py` |
-| the turn is a dashboard turn | `_run_chat` in `src/kiro_crew/dashboard/chat_runner.py`: the conductor's DM, or a sidebar chat that runs the conductor |
+| its slot runs the goal conductor, `ajcrew-conductor` or its deprecated alias | `WAKE_RESET_AGENTS` in `src/aj_crew/autonudge_selfarm.py` |
+| its backend is KAS | `ACP_BACKENDS_HARNESS_MANAGED_COMPACTION` in `src/aj_crew/agent_sdk/backends_turns.py` |
+| the turn is a dashboard turn | `_run_chat` in `src/aj_crew/dashboard/chat_runner.py`: the conductor's DM, or a sidebar chat that runs the conductor |
 | the cap is on | `session.context_cap`, default `true` (section 3.6) |
 
 Every other session keeps today's behaviour.
@@ -185,9 +185,9 @@ prompt is the seed. If the teardown refuses, nothing changed and the turn runs
 on the old session.
 
 **The seed**, built where every cold start builds its history today
-(`_session_replay_history` in `src/kiro_crew/dashboard/chat_turn/prompt_assembly.py`):
+(`_session_replay_history` in `src/aj_crew/dashboard/chat_turn/prompt_assembly.py`):
 
-1. Kiro Crew's usual new-session context: agent prompt, member section,
+1. Aj Crew's usual new-session context: agent prompt, member section,
    memory, skills and steering. With KAS's own system prompt and tools, a
    fresh conductor session starts at about 55K tokens.
 2. A trim note for the model: the chat was trimmed at this turn's start, the
@@ -205,7 +205,7 @@ on the old session.
    chat's session key. Built by the implementation pull request
    [#29388](https://github.com/kirodotdev/KiroCrew/pull/29388).
 3. The summary: the session-ledger snapshot (`render_snapshot` in
-   `src/kiro_crew/session_ledger.py`, at most 1,600 chars: goal, phase, next,
+   `src/aj_crew/session_ledger.py`, at most 1,600 chars: goal, phase, next,
    tried, artifacts). A patrol wake already carries the same block
    (`compose_nudge_body`), so on a wake it appears twice, once per trim. The
    work ledger is not copied: the conductor's prompt already has it read the
@@ -240,7 +240,7 @@ At every point the char budget bound first: the 270,000-char tail held 408
 user and assistant rows at the p50, under the 500-row quota. The conductor's
 replayable text is about 630 chars per turn at the p50 (564 on a patrol turn,
 1,123 on a person's turn). R5's probe seeded a new KAS session,
-with no Kiro Crew context, with a summary and a 330K-char text tail; it landed
+with no Aj Crew context, with a summary and a 330K-char text tail; it landed
 at 152K, and its credits matched the cost model (1.87 measured vs 1.93
 predicted).
 
@@ -264,7 +264,7 @@ read. Replayed on those ten trims, the landings move from 199K–211K (p50
 | Kept in context | the session context; the trim note; the session-ledger snapshot; the newest messages as text, about 205 turns |
 | Dropped from context | every tool call and its output; messages older than the tail; the old KAS session |
 | Kept on disk | the slot's transcript, `~/.kiro/crew/sessions/dashboard_<slot>.jsonl`, untouched, which is what the dashboard shows; the work ledger and the session ledger; the old KAS session's folder under `~/.kiro/sessions/` |
-| How it is found again | `search_chat_history` searches the transcript and `get_chat_session` reads it (both are on the conductor's mounted `@kirocrew-core`); the conductor's shell can grep the file |
+| How it is found again | `search_chat_history` searches the transcript and `get_chat_session` reads it (both are on the conductor's mounted `@ajcrew-core`); the conductor's shell can grep the file |
 
 ### 3.4 When a trim never fires
 
@@ -288,7 +288,7 @@ session.
 ### 3.5 What the person sees
 
 One transcript row per trim, in the compaction notice family and in the shape
-of `_AUTO_RESTART_UNCOMPACTABLE_NOTICE` (`src/kiro_crew/dashboard/state_parts/session_events.py`),
+of `_AUTO_RESTART_UNCOMPACTABLE_NOTICE` (`src/aj_crew/dashboard/state_parts/session_events.py`),
 for example "♻ Context reached 412K tokens, so the session was restarted with
 about 150K." followed by `_RESTART_MEMORY_TAIL`: "The conversation above is still
 here, and the agent's next reply starts from a recent excerpt of it rather
@@ -508,5 +508,5 @@ notice row; and with `session.context_cap` off, no session changes behaviour.
 
 **Phase 2, a later RFC.** Normal chats, workers and other crewmates, with a
 summary built off the hot path before the cache goes cold: a small model over
-Kiro Crew's own text history, or a summary request that shares the turn's
+Aj Crew's own text history, or a summary request that shares the turn's
 cache right after the turn ends.

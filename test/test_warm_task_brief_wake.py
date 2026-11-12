@@ -22,12 +22,12 @@ from test_warm_task_brief import (
     _State,
 )
 
-from kiro_crew.acp_backends import ACP_BACKEND_KIRO
-from kiro_crew.dashboard import warm_task_brief
-from kiro_crew.dashboard import warm_task_brief_facts as facts
-from kiro_crew.dashboard import warm_task_brief_inputs as inputs
-from kiro_crew.dashboard import warm_task_brief_wake as wake
-from kiro_crew.testing.wait import DEFAULT_INTERVAL_SECS, async_wait_until
+from aj_crew.acp_backends import ACP_BACKEND_KIRO
+from aj_crew.dashboard import warm_task_brief
+from aj_crew.dashboard import warm_task_brief_facts as facts
+from aj_crew.dashboard import warm_task_brief_inputs as inputs
+from aj_crew.dashboard import warm_task_brief_wake as wake
+from aj_crew.testing.wait import DEFAULT_INTERVAL_SECS, async_wait_until
 
 _CFG = SimpleNamespace(
     agent=SimpleNamespace(acp_backend=ACP_BACKEND_KIRO, resolve_model=lambda role: "background")
@@ -221,7 +221,7 @@ def test_the_wake_runs_only_on_the_harness_its_session_starts_on():
     assert not wake._may_wake(state, _CFG, "claude")
     assert not wake._may_wake(state, _CFG, None)
     # A dashboard surface for governance and the audit log, apart from the chat.
-    from kiro_crew.sel import _infer_source
+    from aj_crew.sel import _infer_source
 
     assert wake.session_key("member-alice") == "thread:member-alice:warm-wake"
     assert _infer_source(wake.session_key("member-alice")) == "dashboard"
@@ -261,10 +261,10 @@ async def test_six_wakes_a_day_then_the_one_call_brief(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_the_turn_is_read_only_capped_and_its_session_destroyed(monkeypatch):
-    from kiro_crew import agent_discovery, llm_helpers
-    from kiro_crew.agent_sdk.drivers.acp_turn_vocab import EVENT_TOOL_CALL, EVENT_TOOL_RESULT
-    from kiro_crew.config import loader
-    from kiro_crew.dashboard import side_readonly_spec
+    from aj_crew import agent_discovery, llm_helpers
+    from aj_crew.agent_sdk.drivers.acp_turn_vocab import EVENT_TOOL_CALL, EVENT_TOOL_RESULT
+    from aj_crew.config import loader
+    from aj_crew.dashboard import side_readonly_spec
 
     seen: dict = {}
 
@@ -322,8 +322,8 @@ async def test_the_turn_is_read_only_capped_and_its_session_destroyed(monkeypatc
     key = "thread:thread-x:warm-wake"
     assert state.sessions.log == [("create", key, "mate-ro"), ("release", key), ("destroy", key)]
     # The backend the member route picked decides the confinement, not the global one.
-    from kiro_crew.acp_backends import ACP_BACKEND_GOOSE
-    from kiro_crew.agent_sdk.drivers import acp
+    from aj_crew.acp_backends import ACP_BACKEND_GOOSE
+    from aj_crew.agent_sdk.drivers import acp
 
     monkeypatch.setattr(acp, "goose_side_home_supported", lambda: True)
     state.sessions = _Sessions()
@@ -353,7 +353,7 @@ async def test_a_return_posts_the_wakes_brief_with_its_deploy_line(monkeypatch):
     slot = _foreground_slot(state)
     base = _snapshot()
     _arm_model(monkeypatch, slot, [base, _claimed(base), _claimed(base)], run_model)
-    monkeypatch.setattr(warm_task_brief.KiroCrewConfig, "load", lambda: _CFG)
+    monkeypatch.setattr(warm_task_brief.AjCrewConfig, "load", lambda: _CFG)
     _fake_turn(monkeypatch, json.dumps(_BRIEF))
     await warm_task_brief._prepare_warm_task_brief(state, slot)
     (row,) = _posted(slot)
@@ -366,7 +366,7 @@ async def test_a_return_posts_the_wakes_brief_with_its_deploy_line(monkeypatch):
     state2 = _WakeState()
     slot2 = _foreground_slot(state2)
     _arm_model(monkeypatch, slot2, [base, _claimed(base), _claimed(base)], run_model)
-    monkeypatch.setattr(warm_task_brief.KiroCrewConfig, "load", lambda: _CFG)
+    monkeypatch.setattr(warm_task_brief.AjCrewConfig, "load", lambda: _CFG)
     _fake_turn(monkeypatch, RuntimeError("down"))
     await warm_task_brief._prepare_warm_task_brief(state2, slot2)
     assert one_call == ["model"]

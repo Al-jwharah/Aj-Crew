@@ -19,7 +19,7 @@ import { SLACK_CODE_SWITCHES } from './slackCodeSwitches'
 import { forgetSlackInstallReading } from './SlackManifestUpdate'
 /** Brand name — do-not-translate, so it lives here rather than in the catalog. */
 const CHANNEL_NAME = "Slack"
-const SETUP_GUIDE = 'https://github.com/kirodotdev/KiroCrew/blob/main/src/kiro_crew/docs/slack-integration.md'
+const SETUP_GUIDE = 'https://github.com/Al-jwharah/Aj-Crew/blob/main/src/aj_crew/docs/slack-integration.md'
 
 type Draft = {
   owner_id: string
@@ -480,7 +480,7 @@ export function SlackPanel() {
             description={i18nT('pages.settings.slackPanel.trigger_word_for_the_slack_slash_command_without')}
             value={draft.command}
             onChange={v => upd({ command: v })}
-            placeholder={i18nT('pages.settings.slackPanel.kirocrew')}
+            placeholder={i18nT('pages.settings.slackPanel.ajcrew')}
             disabled={ro}
           />
           {/* The one slack.* field that cannot hot-apply: the slash command is

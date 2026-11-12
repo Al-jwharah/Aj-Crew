@@ -27,11 +27,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from dashboard_owner_helpers import owner_claims
 
-from kiro_crew import platform_compat
-from kiro_crew.apps import bridges, routes
-from kiro_crew.gateway_lock import GatewayLock
-from kiro_crew.history import transcript_stem
-from kiro_crew.session_map import SUPPRESS_REPLAY_FLAG, SessionMap
+from aj_crew import platform_compat
+from aj_crew.apps import bridges, routes
+from aj_crew.gateway_lock import GatewayLock
+from aj_crew.history import transcript_stem
+from aj_crew.session_map import SUPPRESS_REPLAY_FLAG, SessionMap
 
 APP = "acme-app"
 OWNED = "dashboard:acme-run-abc"
@@ -71,7 +71,7 @@ def _stored_sid(tmp_path: pathlib.Path, key: str) -> str:
 
 
 def test_ownership_is_recovered_from_the_conversation_s_own_metadata(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     smap = SessionMap()
     smap.set(OWNED, "sid-app", provider="acp")
     smap.set(MINE, "sid-mine", provider="acp")
@@ -92,7 +92,7 @@ def test_a_slot_the_user_closed_before_uninstalling_is_still_found(tmp_path, mon
     pointer is deliberately preserved across close. This is the MAINLINE state
     before an uninstall, not an edge case: the user closes the tab, then uninstalls.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     SessionMap().set(OWNED, "sid-app", provider="acp")
     _seed_transcript(tmp_path, OWNED, app=APP, closed=True)
 
@@ -100,7 +100,7 @@ def test_a_slot_the_user_closed_before_uninstalling_is_still_found(tmp_path, mon
 
 
 def test_another_app_s_conversations_are_left_alone(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     smap = SessionMap()
     smap.set(OWNED, "sid-app", provider="acp")
     smap.set(OWNED2, "sid-other", provider="acp")
@@ -119,7 +119,7 @@ def test_only_conversations_that_still_hold_a_pointer_are_listed(tmp_path, monke
     what ``clear_sid`` leaves behind, and what a poisoned-conversation escalation
     produces in the wild. Listing it would report a drop that did not happen.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     smap = SessionMap()
     smap.set(OWNED, "sid-app", provider="acp")
     smap.set(OWNED2, "sid-gone", provider="acp")
@@ -143,7 +143,7 @@ async def test_a_conversation_the_app_s_page_embed_began_is_found(tmp_path, monk
     from aiohttp.test_utils import TestClient, TestServer
     from chat_test_helpers import _make_app
 
-    from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+    from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
     state = _embed_state(tmp_path, monkeypatch)
     _seed_transcript(tmp_path, MINE)
@@ -172,7 +172,7 @@ async def test_an_embed_send_that_could_not_record_its_app_is_refused_and_retrie
     from aiohttp.test_utils import TestClient, TestServer
     from chat_test_helpers import _make_app
 
-    from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+    from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
     state = _embed_state(tmp_path, monkeypatch)
     send = {"slot": OWNED.removeprefix("dashboard:"), "message": "hi", "embed_app": APP}
@@ -194,15 +194,15 @@ def _embed_state(tmp_path, monkeypatch):
     """A dashboard state whose turns finish at once, for a page embed's sends."""
     from chat_test_helpers import _make_state
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path / "sessions")
     state.broadcast_ws = MagicMock()
 
     async def run_chat(_state, slot, _message, **_kwargs):
         slot.append("done", "", "done", broadcast=False)
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", run_chat)
     return state
 
 
@@ -215,7 +215,7 @@ def test_a_clear_that_could_not_be_written_is_not_reported_as_clean(tmp_path, mo
     tick on that — while the pointer is still on disk for a reinstall to resume.
     """
     monkeypatch.setattr(bridges, "config_dir", lambda: tmp_path)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     SessionMap().set(OWNED, "sid-owned", provider="acp")
     _seed_transcript(tmp_path, OWNED, app=APP)
 
@@ -235,7 +235,7 @@ def test_a_clear_that_could_not_be_written_is_not_reported_as_clean(tmp_path, mo
 
 def test_a_failed_clear_is_visible_to_the_operator(tmp_path, capsys):
     """And the text has to name the action that fixes it, which is not the gateway one."""
-    from kiro_crew import cli_commands
+    from aj_crew import cli_commands
 
     cli_commands._print_pointer_cleanup(APP, bridges.SessionPointerCleanup(failed=True))
     err = capsys.readouterr().err
@@ -247,7 +247,7 @@ def test_a_failed_clear_is_visible_to_the_operator(tmp_path, capsys):
 
 
 def test_the_cli_path_drops_the_pointer_when_no_gateway_owns_the_map(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     smap = SessionMap()
     smap.set(OWNED, "sid-app", provider="acp")
     smap.set(MINE, "sid-mine", provider="acp")
@@ -270,7 +270,7 @@ def test_the_cli_path_declines_while_a_gateway_owns_the_map(tmp_path, monkeypatc
     since this process read. The lock is really HELD here, not stubbed, so this tests
     mutual exclusion rather than a check a starting gateway could race.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     SessionMap().set(OWNED, "sid-app", provider="acp")
     _seed_transcript(tmp_path, OWNED, app=APP)
 
@@ -293,7 +293,7 @@ def test_an_unusable_lock_path_fails_with_its_remedy_instead_of_declining(
     gateway and run again" would repeat that refusal forever. So it is a
     ``failed`` clear, and the log line names the path and what to do about it.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     SessionMap().set(OWNED, "sid-app", provider="acp")
     _seed_transcript(tmp_path, OWNED, app=APP)
     (tmp_path / "gateway.lock").mkdir()
@@ -314,7 +314,7 @@ def test_an_unopenable_lock_file_fails_instead_of_declining(tmp_path, monkeypatc
     again" would send the operator in circles. It is a ``failed`` clear, and the
     log line carries the cause.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     SessionMap().set(OWNED, "sid-app", provider="acp")
     _seed_transcript(tmp_path, OWNED, app=APP)
     lock_file = tmp_path / "gateway.lock"
@@ -338,7 +338,7 @@ def test_an_unopenable_lock_file_fails_instead_of_declining(tmp_path, monkeypatc
 def test_the_cleared_pointer_stays_diagnosable(tmp_path, monkeypatch):
     """``clear_sid``, not ``delete``: the entry (and its Slack linkage) survives and
     the dropped value is stashed, so this is reversible by hand."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     SessionMap().set(OWNED, "sid-app", provider="acp")
     _seed_transcript(tmp_path, OWNED, app=APP)
 
@@ -352,7 +352,7 @@ def test_deregister_does_NOT_drop_pointers(tmp_path, monkeypatch):
     action, the disable route, and the enable/update reconcile — and App Store Sync
     is a disable/enable pair. Clearing pointers there would discard every long-lived
     conversation's accumulated context on every sync."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     SessionMap().set(OWNED, "sid-app", provider="acp")
     _seed_transcript(tmp_path, OWNED, app=APP)
 
@@ -375,7 +375,7 @@ def test_the_in_gateway_path_clears_inside_the_lock_via_the_live_map(tmp_path):
     src = (
         pathlib.Path(__file__).resolve().parents[1]
         / "src"
-        / "kiro_crew"
+        / "aj_crew"
         / "apps"
         / "routes_uninstall.py"
     ).read_text(encoding="utf-8")
@@ -403,7 +403,7 @@ def test_a_pointer_the_live_map_has_not_flushed_is_still_found(tmp_path, monkeyp
     The pointer for ``OWNED`` exists only in memory, as a turn that just recorded a sid
     leaves it; a file read would miss it and report a clean sweep.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _seed_transcript(tmp_path, OWNED, app=APP)
 
     assert (
@@ -422,7 +422,7 @@ def test_the_caller_s_key_set_still_only_yields_keys_this_app_owns(tmp_path, mon
     most of them the user's own tabs. Ownership stays sourced from the metadata
     line, so a wider candidate set is a wider SEARCH, never a wider sweep.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _seed_transcript(tmp_path, OWNED, app=APP)
     _seed_transcript(tmp_path, OWNED2, app="other-app")
     _seed_transcript(tmp_path, MINE)
@@ -440,7 +440,7 @@ def test_the_in_gateway_path_enumerates_through_the_live_manager(tmp_path):
     src = (
         pathlib.Path(__file__).resolve().parents[1]
         / "src"
-        / "kiro_crew"
+        / "aj_crew"
         / "apps"
         / "routes_uninstall.py"
     ).read_text(encoding="utf-8")
@@ -464,7 +464,7 @@ def test_an_app_that_owned_nothing_is_not_reported_as_declined(tmp_path, monkeyp
     must not carry ``declined``, or the CLI prints a warning about a pointer that
     does not exist.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     SessionMap().set(MINE, "sid-mine", provider="acp")
     _seed_transcript(tmp_path, MINE)
 
@@ -478,7 +478,7 @@ def test_a_declined_clear_is_visible_to_the_operator_and_not_a_success_tick(tmp_
     case rather than an extreme one. Silent, it leaves a pointer keyed by a name a
     reinstall reuses and the operator sees only a success tick.
     """
-    from kiro_crew import cli_commands
+    from aj_crew import cli_commands
 
     cli_commands._print_pointer_cleanup(APP, bridges.SessionPointerCleanup(declined=True))
     err = capsys.readouterr().err
@@ -495,9 +495,9 @@ def test_the_clear_still_runs_when_the_app_is_already_gone(tmp_path, monkeypatch
     Re-running it with the gateway stopped is the only path back — and it only works
     because the bookkeeping half does not require the app to still be installed.
     """
-    from kiro_crew import cli_commands
+    from aj_crew import cli_commands
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     SessionMap().set(OWNED, "sid-app", provider="acp")
     _seed_transcript(tmp_path, OWNED, app=APP, closed=True)
 
@@ -526,7 +526,7 @@ def test_the_cli_path_also_suppresses_the_next_cold_start_s_replay(tmp_path, mon
     ``build_session_replay`` inject the removed app's history into the next
     installation's first turn — the same user-visible bug through a second channel.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     smap = SessionMap()
     smap.set(OWNED, "sid-app", provider="acp")
     smap.set(MINE, "sid-mine", provider="acp")
@@ -550,7 +550,7 @@ def test_the_suppression_follows_the_pointer_and_stops_where_it_does(tmp_path, m
     still replay on a cold start. Widening to every transcript the app owns is a separate,
     wider index; pinned so widening is deliberate.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     smap = SessionMap()
     smap.set(OWNED, "sid-app", provider="acp")
     smap.set(OWNED2, "sid-gone", provider="acp")
@@ -576,7 +576,7 @@ def test_the_suppression_flag_is_one_shot(tmp_path, monkeypatch):
     amnesiac — an idle-timeout expiry, a gateway restart — which is not what an
     uninstall asked for.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     smap = SessionMap()
     smap.set(OWNED, "sid-app", provider="acp")
     smap.set_flag(OWNED, SUPPRESS_REPLAY_FLAG, True)
@@ -597,7 +597,7 @@ def test_the_in_gateway_path_suppresses_replay_and_finishes_durable(tmp_path):
     src = (
         pathlib.Path(__file__).resolve().parents[1]
         / "src"
-        / "kiro_crew"
+        / "aj_crew"
         / "apps"
         / "routes_uninstall.py"
     ).read_text(encoding="utf-8")
@@ -628,7 +628,7 @@ def test_the_cold_start_chokepoint_consumes_the_persisted_flag():
     src = (
         pathlib.Path(__file__).resolve().parents[1]
         / "src"
-        / "kiro_crew"
+        / "aj_crew"
         / "session_parts"
         / "turn_context.py"
     ).read_text(encoding="utf-8")
@@ -653,7 +653,7 @@ def test_the_suppression_survives_the_startup_prune(tmp_path, monkeypatch):
     flag exists for: uninstall from the CLI, start the gateway, reinstall. The one
     place the decision can be recorded is the entry ``prune`` was about to collect.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     smap = SessionMap()
     smap.set(OWNED, "sid-app", provider="acp")
     _seed_transcript(tmp_path, OWNED, app=APP)
@@ -677,7 +677,7 @@ def test_the_flag_stops_holding_the_row_alive_once_consumed(tmp_path, monkeypatc
     collectable again as soon as the first cold start consumes it — the immortality is
     bounded by the thing it is protecting.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     smap = SessionMap()
     smap.set(OWNED, "sid-app", provider="acp")
     _seed_transcript(tmp_path, OWNED, app=APP)
@@ -701,7 +701,7 @@ def test_both_suppression_markers_are_consumed_together():
     src = (
         pathlib.Path(__file__).resolve().parents[1]
         / "src"
-        / "kiro_crew"
+        / "aj_crew"
         / "session_parts"
         / "turn_context.py"
     ).read_text(encoding="utf-8")
@@ -731,7 +731,7 @@ def test_an_unreadable_ownership_record_is_reported_not_silently_unowned(
     """
     import logging
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     smap = SessionMap()
     smap.set(OWNED, "sid-app", provider="acp")
     smap.set(OWNED2, "sid-bad", provider="acp")
@@ -764,7 +764,7 @@ async def test_a_flush_that_fails_does_not_abandon_the_rest_of_the_uninstall(
     ``forget_app_hooks``, and a stale slot-close hook makes leftover tabs UNDISMISSABLE.
     The failure is reported through ``uninstall_log``, not raised and not reported clean.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _seed_transcript(tmp_path, OWNED, app=APP)
 
     class _DurableWriteFails:
@@ -814,31 +814,31 @@ async def test_a_flush_that_fails_does_not_abandon_the_rest_of_the_uninstall(
     }
 
     with (
-        patch("kiro_crew.apps.routes.get_app", return_value=fake_app),
+        patch("aj_crew.apps.routes.get_app", return_value=fake_app),
         patch(
-            "kiro_crew.apps.routes.uninstall_app",
+            "aj_crew.apps.routes.uninstall_app",
             return_value=MagicMock(ok=True, to_dict=lambda: {"ok": True}),
         ),
-        patch("kiro_crew.apps.routes.stop_app_backend", return_value=None),
-        patch("kiro_crew.apps.routes.deregister_app", return_value=None),
+        patch("aj_crew.apps.routes.stop_app_backend", return_value=None),
+        patch("aj_crew.apps.routes.deregister_app", return_value=None),
         patch(
-            "kiro_crew.apps.teardown.on_app_disable",
+            "aj_crew.apps.teardown.on_app_disable",
             new_callable=AsyncMock,
             return_value=None,
         ),
-        patch("kiro_crew.apps.routes.sel", return_value=MagicMock()),
+        patch("aj_crew.apps.routes.sel", return_value=MagicMock()),
         patch(
-            "kiro_crew.apps.routes.classify_and_clean_for_uninstall",
+            "aj_crew.apps.routes.classify_and_clean_for_uninstall",
             return_value={"removable": [], "shared": [], "userInstalled": []},
         ),
         patch(
-            "kiro_crew.apps.routes.clean_dependencies",
+            "aj_crew.apps.routes.clean_dependencies",
             new_callable=AsyncMock,
             return_value=[],
         ),
-        patch("kiro_crew.apps.routes.invalidate_app_secret_cache") as secret_cache,
-        patch("kiro_crew.apps.routes._unregister_notification_channels") as channels,
-        patch("kiro_crew.apps.routes.forget_app_hooks") as hooks,
+        patch("aj_crew.apps.routes.invalidate_app_secret_cache") as secret_cache,
+        patch("aj_crew.apps.routes._unregister_notification_channels") as channels,
+        patch("aj_crew.apps.routes.forget_app_hooks") as hooks,
         caplog.at_level(logging.WARNING, logger=routes.logger.name),
     ):
         resp = await routes.handle_uninstall_app(request)
@@ -883,7 +883,7 @@ async def test_a_teardown_that_raises_still_leaves_the_suppression_durable(tmp_p
     still happen: otherwise a restart loses the memory-only flag and
     ``build_session_replay`` hands the reinstall the removed app's history.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _seed_transcript(tmp_path, OWNED, app=APP)
 
     class _ShutdownRaisesAfterTheClear:
@@ -935,25 +935,25 @@ async def test_a_teardown_that_raises_still_leaves_the_suppression_durable(tmp_p
     }
 
     with (
-        patch("kiro_crew.apps.routes.get_app", return_value=fake_app),
+        patch("aj_crew.apps.routes.get_app", return_value=fake_app),
         patch(
-            "kiro_crew.apps.routes.uninstall_app",
+            "aj_crew.apps.routes.uninstall_app",
             return_value=MagicMock(ok=True, to_dict=lambda: {"ok": True}),
         ),
-        patch("kiro_crew.apps.routes.stop_app_backend", return_value=None),
-        patch("kiro_crew.apps.routes.deregister_app", return_value=None),
+        patch("aj_crew.apps.routes.stop_app_backend", return_value=None),
+        patch("aj_crew.apps.routes.deregister_app", return_value=None),
         patch(
-            "kiro_crew.apps.teardown.on_app_disable",
+            "aj_crew.apps.teardown.on_app_disable",
             new_callable=AsyncMock,
             return_value=None,
         ),
-        patch("kiro_crew.apps.routes.sel", return_value=MagicMock()),
+        patch("aj_crew.apps.routes.sel", return_value=MagicMock()),
         patch(
-            "kiro_crew.apps.routes.classify_and_clean_for_uninstall",
+            "aj_crew.apps.routes.classify_and_clean_for_uninstall",
             return_value={"removable": [], "shared": [], "userInstalled": []},
         ),
         patch(
-            "kiro_crew.apps.routes.clean_dependencies",
+            "aj_crew.apps.routes.clean_dependencies",
             new_callable=AsyncMock,
             return_value=[],
         ),

@@ -47,7 +47,7 @@ agent loads only the one it needs.
 | [governance.md](governance.md) | The two-level governance model, the scope catalog, and the PreToolUse gate. |
 | [platform-context.md](platform-context.md) | The Composed Platform Providers seam, edition resolution, and signed-plugin admission. |
 | [computer-use.md](computer-use.md) | Native desktop GUI automation, its keystone opt-in, and the in-band refusals. |
-| [kas-auth.md](kas-auth.md) | KAS-mode auth: the Kiro OIDC login/refresh/storage lifecycle Kiro Crew runs itself when there is no kiro-cli. |
+| [kas-auth.md](kas-auth.md) | KAS-mode auth: the Kiro OIDC login/refresh/storage lifecycle Aj Crew runs itself when there is no kiro-cli. |
 
 ## Agents and orchestration
 
@@ -57,14 +57,14 @@ agent loads only the one it needs.
 | [adaptive-concurrency.md](adaptive-concurrency.md) | The adaptive concurrency controller: a runtime execution cap that starts at the user's ceiling and is halved only on corroborated work-failure evidence (never loop lag or memory), and the MCP daemon's spawn-gate capacity, cut on critical memory or failing/slow backend inits with pause-and-probe on critical memory; each +1 per clean window; provider throttling scoped to its dependency channel. |
 | [taskq.md](taskq.md) | The durable task queue under every accepted unit of work: `tasks.db`, the validated state machine, write-before-ack, atomic claim with lease and generation fencing, the bounded dispatch window, legacy import and reconcile-first boot. |
 | [monitor-architecture.md](monitor-architecture.md) | The paradigm every monitoring loop follows: the seven layers, the plural probe contract, level-triggered decision, versioned state, and how to add a new monitored kind. Umbrella over the two implementation specs below. |
-| [agent-interrupt-controller.md](agent-interrupt-controller.md) | `kiro_crew.irq`: masking, coalescing, epoch resets and an error backstop, so a cheap probe interrupts an expensive agent turn instead of the turn polling. Also the app-facing probe SDK. |
+| [agent-interrupt-controller.md](agent-interrupt-controller.md) | `aj_crew.irq`: masking, coalescing, epoch resets and an error backstop, so a cheap probe interrupts an expensive agent turn instead of the turn polling. Also the app-facing probe SDK. |
 | [babysit-pr-watch.md](babysit-pr-watch.md) | In-gateway PR watch for babysit loops: `monitor_watch` or a finite `monitor_start` loop; `PrWatchProbe` fetches the pull request each tick and the wake judge decides whether to wake the owning session. No script-cron driver. |
 | [task.md](task.md) | Task models and state. |
 | [taskrunner.md](taskrunner.md) | The execution engine that runs a task spec to completion. |
 | [workflows.md](workflows.md) | The dynamic-workflow engine: the frozen `ctx` contract, the event stream, budgets, and the named conformance gates with the test pinning each. |
 | [decisions.md](decisions.md) | The Jev decision seam: `decisions.enabled` as the only opt-in, session-key sampling through `decisions.bucket`, the scrub-before-send refusal, `skills.select` as the one integration that consumes an answer (with the word-overlap result as its fallback), and the basic call-metadata log. |
 | [crew-mode.md](crew-mode.md) | Crews: the config record, `select_crew` roster and binding, model and workspace resolution, the Crews UI, and the record of the retired `"crew"` slot mode (the old Crew Mode). |
-| [pipeline-conductor.md](pipeline-conductor.md) | The `kirocrew-pipeline-conductor` agent and its skill: the generated spec's permission narrowing, the three deterministic scripts, the patrol cycle, and what the RFC leaves unbuilt. |
+| [pipeline-conductor.md](pipeline-conductor.md) | The `ajcrew-pipeline-conductor` agent and its skill: the generated spec's permission narrowing, the three deterministic scripts, the patrol cycle, and what the RFC leaves unbuilt. |
 | [persistent-agent-channels.md](persistent-agent-channels.md) | Long-lived channels for multi-agent collaboration. |
 | [channel-history.md](channel-history.md) | The channel history buffer. |
 

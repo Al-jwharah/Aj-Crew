@@ -25,7 +25,7 @@ from pid_lifecycle_helpers import (  # noqa: F401 -- fixtures are requested by n
     session_pid_file_fixture,
 )
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 # ── PID-recycle identity guard + cross-platform spawn grace ───────────
 # The quit->reopen race: a stale ``<dead_gw>:<pid>`` entry whose PID has been
@@ -40,9 +40,9 @@ class TestPidStartTokenIdentityGuard:
         self, session_pid_file: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Entries carry ``gw:pid:token`` so the sweep can verify identity."""
-        from kiro_crew.session_pid import _track_session_pid
+        from aj_crew.session_pid import _track_session_pid
 
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: "tok123")
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: "tok123")
         _track_session_pid(4242)
         assert session_pid_file.read_text(encoding="utf-8").strip() == f"{os.getpid()}:4242:tok123"
 
@@ -50,9 +50,9 @@ class TestPidStartTokenIdentityGuard:
         self, session_pid_file: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """No token (Windows / ps failure) → legacy 2-field entry."""
-        from kiro_crew.session_pid import _track_session_pid
+        from aj_crew.session_pid import _track_session_pid
 
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: None)
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: None)
         _track_session_pid(4242)
         assert session_pid_file.read_text(encoding="utf-8").strip() == f"{os.getpid()}:4242"
 
@@ -65,10 +65,10 @@ class TestPidStartTokenIdentityGuard:
         root before its identity was readable or a predecessor on a recycled
         number, the process holding the number NOW is the one being recorded, so
         the line carrying its identity is the one that stays. Never two lines."""
-        from kiro_crew.session_pid import _track_session_pid
+        from aj_crew.session_pid import _track_session_pid
 
         session_pid_file.write_text(f"{os.getpid()}:4242\n")
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: "tok123")
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: "tok123")
         _track_session_pid(4242)
         lines = session_pid_file.read_text(encoding="utf-8").strip().splitlines()
         assert lines == [f"{os.getpid()}:4242:tok123"]
@@ -77,9 +77,9 @@ class TestPidStartTokenIdentityGuard:
         self, session_pid_file: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Untrack matches the token-bearing form, not just the legacy one."""
-        from kiro_crew.session_pid import _track_session_pid, _untrack_session_pid
+        from aj_crew.session_pid import _track_session_pid, _untrack_session_pid
 
-        monkeypatch.setattr("kiro_crew.session_pid._pid_start_token", lambda p: "tok123")
+        monkeypatch.setattr("aj_crew.session_pid._pid_start_token", lambda p: "tok123")
         _track_session_pid(4242)
         _untrack_session_pid(4242)
         assert session_pid_file.read_text(encoding="utf-8").strip() == ""
@@ -90,34 +90,34 @@ class TestPidStartTokenIdentityGuard:
         The PID is live and its cmdline matches an agent, so every pre-existing
         guard passes; only the start-token comparison catches the recycle.
         """
-        from kiro_crew.session_pid import cleanup_orphaned_sessions
+        from aj_crew.session_pid import cleanup_orphaned_sessions
 
         # Dead gateway (999999) : live child PID, recorded with an OLD token.
         session_pid_file.write_text("999999:99998:oldtoken\n")
         kills: list[tuple[int, int]] = []
 
         with (
-            patch("kiro_crew.session_pid._is_managed_agent_process", return_value=True),
+            patch("aj_crew.session_pid._is_managed_agent_process", return_value=True),
             # Live process now reports a DIFFERENT token → PID was recycled.
-            patch("kiro_crew.session_pid._pid_start_token", return_value="newtoken"),
+            patch("aj_crew.session_pid._pid_start_token", return_value="newtoken"),
             patch(
-                "kiro_crew.session_pid.platform_compat.pid_liveness",
+                "aj_crew.session_pid.platform_compat.pid_liveness",
                 return_value=platform_compat.PID_ALIVE,
             ),
             # The owning gateway (999999) must read as DEAD or _skip_tagged
             # skips the entry and the test passes vacuously; the child is alive.
             patch(
-                "kiro_crew.session_pid.platform_compat.pid_exists",
+                "aj_crew.session_pid.platform_compat.pid_exists",
                 side_effect=lambda p: p != 999999,
             ),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, s: kills.append((p, s)),
             ),
             # Grace disabled so the ONLY thing that can save the process is the
             # identity check under test.
-            patch("kiro_crew.session_pid._pid_in_spawn_grace", return_value=False),
-            patch("kiro_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
+            patch("aj_crew.session_pid._pid_in_spawn_grace", return_value=False),
+            patch("aj_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
         ):
             cleanup_orphaned_sessions()
 
@@ -130,30 +130,30 @@ class TestPidStartTokenIdentityGuard:
         transient probe failure orphans it permanently (the fail-safe stated in
         _pid_gone_or_unmanaged: "any inconclusive result retains").
         """
-        from kiro_crew.session_pid import cleanup_orphaned_sessions
+        from aj_crew.session_pid import cleanup_orphaned_sessions
 
         entry = "999999:99998:recorded-token"
         session_pid_file.write_text(entry + "\n")
         kills: list[tuple[int, int]] = []
 
         with (
-            patch("kiro_crew.session_pid._is_managed_agent_process", return_value=True),
+            patch("aj_crew.session_pid._is_managed_agent_process", return_value=True),
             # Identity unreadable (probe failure) — neither match nor mismatch.
-            patch("kiro_crew.session_pid._pid_start_token", return_value=None),
+            patch("aj_crew.session_pid._pid_start_token", return_value=None),
             patch(
-                "kiro_crew.session_pid.platform_compat.pid_liveness",
+                "aj_crew.session_pid.platform_compat.pid_liveness",
                 return_value=platform_compat.PID_ALIVE,
             ),
             patch(
-                "kiro_crew.session_pid.platform_compat.pid_exists",
+                "aj_crew.session_pid.platform_compat.pid_exists",
                 side_effect=lambda p: p != 999999,
             ),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, s: kills.append((p, s)),
             ),
-            patch("kiro_crew.session_pid._pid_in_spawn_grace", return_value=False),
-            patch("kiro_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
+            patch("aj_crew.session_pid._pid_in_spawn_grace", return_value=False),
+            patch("aj_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
         ):
             cleanup_orphaned_sessions()
 
@@ -161,7 +161,7 @@ class TestPidStartTokenIdentityGuard:
 
     def test_session_roots_unreadable_token_retains_entry(self, session_pid_file: Path) -> None:
         """Same fail-safe in the periodic root sweep: retain, don't kill or drop."""
-        from kiro_crew.session_pid import cleanup_orphaned_session_roots
+        from aj_crew.session_pid import cleanup_orphaned_session_roots
 
         entry = "999999:99998:recorded-token"
         session_pid_file.write_text(entry + "\n")
@@ -171,13 +171,13 @@ class TestPidStartTokenIdentityGuard:
             return platform_compat.PID_DEAD if pid == 999999 else platform_compat.PID_ALIVE
 
         with (
-            patch("kiro_crew.session_pid._is_managed_agent_process", return_value=True),
-            patch("kiro_crew.session_pid._pid_start_token", return_value=None),
-            patch("kiro_crew.session_pid.platform_compat.pid_liveness", side_effect=fake_liveness),
-            patch("kiro_crew.session_pid.platform_compat.get_ppid", return_value=1),
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.session_pid._is_managed_agent_process", return_value=True),
+            patch("aj_crew.session_pid._pid_start_token", return_value=None),
+            patch("aj_crew.session_pid.platform_compat.pid_liveness", side_effect=fake_liveness),
+            patch("aj_crew.session_pid.platform_compat.get_ppid", return_value=1),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", return_value=True),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, s: kills.append((p, s)),
             ),
         ):
@@ -198,7 +198,7 @@ class TestPidStartTokenIdentityGuard:
         ever reaps it again. The token is strictly stronger evidence of identity
         than the parent, so it must not be vetoed by the PPid heuristic.
         """
-        from kiro_crew.session_pid import cleanup_orphaned_session_roots
+        from aj_crew.session_pid import cleanup_orphaned_session_roots
 
         entry = "999999:99998:sametoken"
         session_pid_file.write_text(entry + "\n")
@@ -208,15 +208,15 @@ class TestPidStartTokenIdentityGuard:
             return platform_compat.PID_DEAD if pid == 999999 else platform_compat.PID_ALIVE
 
         with (
-            patch("kiro_crew.session_pid._is_managed_agent_process", return_value=True),
-            patch("kiro_crew.session_pid._pid_start_token", return_value="sametoken"),
-            patch("kiro_crew.session_pid.platform_compat.pid_liveness", side_effect=fake_liveness),
+            patch("aj_crew.session_pid._is_managed_agent_process", return_value=True),
+            patch("aj_crew.session_pid._pid_start_token", return_value="sametoken"),
+            patch("aj_crew.session_pid.platform_compat.pid_liveness", side_effect=fake_liveness),
             # The subreaper that adopted the orphan -- neither init(1), nor the
             # dead gateway PID, nor the -1 probe-failure sentinel.
-            patch("kiro_crew.session_pid.platform_compat.get_ppid", return_value=7447),
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.session_pid.platform_compat.get_ppid", return_value=7447),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", return_value=True),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, s: kills.append((p, s)),
             ),
         ):
@@ -232,30 +232,30 @@ class TestPidStartTokenIdentityGuard:
     @_POSIX_ONLY
     def test_matching_token_still_killed(self, session_pid_file: Path) -> None:
         """A genuine orphan (token matches) is still reaped — no regression."""
-        from kiro_crew.session_pid import cleanup_orphaned_sessions
+        from aj_crew.session_pid import cleanup_orphaned_sessions
 
         session_pid_file.write_text("999999:99998:sametoken\n")
         kills: list[tuple[int, int]] = []
 
         with (
-            patch("kiro_crew.session_pid._is_managed_agent_process", return_value=True),
-            patch("kiro_crew.session_pid._pid_start_token", return_value="sametoken"),
+            patch("aj_crew.session_pid._is_managed_agent_process", return_value=True),
+            patch("aj_crew.session_pid._pid_start_token", return_value="sametoken"),
             patch(
-                "kiro_crew.session_pid.platform_compat.pid_liveness",
+                "aj_crew.session_pid.platform_compat.pid_liveness",
                 return_value=platform_compat.PID_ALIVE,
             ),
             # The owning gateway (999999) must read as DEAD or _skip_tagged
             # skips the entry and the test passes vacuously; the child is alive.
             patch(
-                "kiro_crew.session_pid.platform_compat.pid_exists",
+                "aj_crew.session_pid.platform_compat.pid_exists",
                 side_effect=lambda p: p != 999999,
             ),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, s: kills.append((p, s)),
             ),
-            patch("kiro_crew.session_pid._pid_in_spawn_grace", return_value=False),
-            patch("kiro_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
+            patch("aj_crew.session_pid._pid_in_spawn_grace", return_value=False),
+            patch("aj_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
         ):
             cleanup_orphaned_sessions()
 
@@ -264,29 +264,29 @@ class TestPidStartTokenIdentityGuard:
     @_POSIX_ONLY
     def test_legacy_entry_without_token_still_swept(self, session_pid_file: Path) -> None:
         """Back-compat: a 2-field entry keeps its old cmdline+grace behavior."""
-        from kiro_crew.session_pid import cleanup_orphaned_sessions
+        from aj_crew.session_pid import cleanup_orphaned_sessions
 
         session_pid_file.write_text("999999:99998\n")
         kills: list[tuple[int, int]] = []
 
         with (
-            patch("kiro_crew.session_pid._is_managed_agent_process", return_value=True),
+            patch("aj_crew.session_pid._is_managed_agent_process", return_value=True),
             patch(
-                "kiro_crew.session_pid.platform_compat.pid_liveness",
+                "aj_crew.session_pid.platform_compat.pid_liveness",
                 return_value=platform_compat.PID_ALIVE,
             ),
             # The owning gateway (999999) must read as DEAD or _skip_tagged
             # skips the entry and the test passes vacuously; the child is alive.
             patch(
-                "kiro_crew.session_pid.platform_compat.pid_exists",
+                "aj_crew.session_pid.platform_compat.pid_exists",
                 side_effect=lambda p: p != 999999,
             ),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, s: kills.append((p, s)),
             ),
-            patch("kiro_crew.session_pid._pid_in_spawn_grace", return_value=False),
-            patch("kiro_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
+            patch("aj_crew.session_pid._pid_in_spawn_grace", return_value=False),
+            patch("aj_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
         ):
             cleanup_orphaned_sessions()
 
@@ -299,7 +299,7 @@ class TestPidStartTokenIdentityGuard:
         A ``split(":", 1)`` parse would int("99998:tok") -> ValueError and prune
         the entry, silently dropping every token-bearing line from the sweep.
         """
-        from kiro_crew.session_pid import cleanup_orphaned_session_roots
+        from aj_crew.session_pid import cleanup_orphaned_session_roots
 
         session_pid_file.write_text("999999:99998:sametoken\n")
         kills: list[tuple[int, int]] = []
@@ -309,13 +309,13 @@ class TestPidStartTokenIdentityGuard:
             return platform_compat.PID_DEAD if pid == 999999 else platform_compat.PID_ALIVE
 
         with (
-            patch("kiro_crew.session_pid._is_managed_agent_process", return_value=True),
-            patch("kiro_crew.session_pid._pid_start_token", return_value="sametoken"),
-            patch("kiro_crew.session_pid.platform_compat.pid_liveness", side_effect=fake_liveness),
-            patch("kiro_crew.session_pid.platform_compat.get_ppid", return_value=1),
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.session_pid._is_managed_agent_process", return_value=True),
+            patch("aj_crew.session_pid._pid_start_token", return_value="sametoken"),
+            patch("aj_crew.session_pid.platform_compat.pid_liveness", side_effect=fake_liveness),
+            patch("aj_crew.session_pid.platform_compat.get_ppid", return_value=1),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", return_value=True),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, s: kills.append((p, s)),
             ),
         ):
@@ -325,7 +325,7 @@ class TestPidStartTokenIdentityGuard:
 
     def test_session_roots_sweep_spares_recycled_pid(self, session_pid_file: Path) -> None:
         """Token mismatch in the periodic root sweep → prune, never kill."""
-        from kiro_crew.session_pid import cleanup_orphaned_session_roots
+        from aj_crew.session_pid import cleanup_orphaned_session_roots
 
         session_pid_file.write_text("999999:99998:oldtoken\n")
         kills: list[tuple[int, int]] = []
@@ -334,13 +334,13 @@ class TestPidStartTokenIdentityGuard:
             return platform_compat.PID_DEAD if pid == 999999 else platform_compat.PID_ALIVE
 
         with (
-            patch("kiro_crew.session_pid._is_managed_agent_process", return_value=True),
-            patch("kiro_crew.session_pid._pid_start_token", return_value="newtoken"),
-            patch("kiro_crew.session_pid.platform_compat.pid_liveness", side_effect=fake_liveness),
-            patch("kiro_crew.session_pid.platform_compat.get_ppid", return_value=1),
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.session_pid._is_managed_agent_process", return_value=True),
+            patch("aj_crew.session_pid._pid_start_token", return_value="newtoken"),
+            patch("aj_crew.session_pid.platform_compat.pid_liveness", side_effect=fake_liveness),
+            patch("aj_crew.session_pid.platform_compat.get_ppid", return_value=1),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", return_value=True),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, s: kills.append((p, s)),
             ),
         ):
@@ -354,7 +354,7 @@ class TestSandboxedAgentRootIsRecognised:
 
     On Linux with the namespace backend -- ``detect_backend() == "namespace"``, the
     default on most distributions -- ``sandbox.namespace_argv`` wraps the spawn as
-    ``<interpreter> -I -S <run dir>/kirocrew_sandbox_*.py <harness argv…>`` and the
+    ``<interpreter> -I -S <run dir>/ajcrew_sandbox_*.py <harness argv…>`` and the
     launcher's PARENT never execs: it writes the child's uid/gid maps and then blocks
     in ``waitpid`` for the life of the session. That parent is the pid the gateway
     records, so the gate's ``argv[0]`` was the interpreter and every sandboxed agent
@@ -392,7 +392,7 @@ class TestSandboxedAgentRootIsRecognised:
         spellings the resolver produces (the bin shim, whose basename is the name, and
         the package entry, matched against the published relative path).
         """
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         assert _cmdline_names_a_harness(_launcher_cmdline(*wrapped)) is True
 
@@ -415,7 +415,7 @@ class TestSandboxedAgentRootIsRecognised:
         app backends too. Only the inner positions that would have named a harness
         unwrapped may name one here.
         """
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         assert _cmdline_names_a_harness(_launcher_cmdline(*wrapped)) is False
 
@@ -427,7 +427,7 @@ class TestSandboxedAgentRootIsRecognised:
         flags, and a script that is neither in Crew's run directory nor named the way
         ``sandbox.py`` names the launcher it writes.
         """
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         assert _cmdline_names_a_harness(b"/usr/bin/python3\x00foo.py\x00kiro-cli\x00acp") is False
 
@@ -439,7 +439,7 @@ class TestSandboxedAgentRootIsRecognised:
         a hand-written path would fail several at once and stop proving that any single
         one of them is load-bearing.
         """
-        from kiro_crew.sandbox import _SEATBELT_PROFILE_SUFFIX
+        from aj_crew.sandbox import _SEATBELT_PROFILE_SUFFIX
 
         flags, run_dir, prefix, suffix = _launcher_shape()
         script = _launcher_script_path()
@@ -487,7 +487,7 @@ class TestSandboxedAgentRootIsRecognised:
         direction this module fails in everywhere. Asserted as one test over a named map
         so a failure says WHICH condition stopped holding.
         """
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         admitted = [
             broken
@@ -510,13 +510,13 @@ class TestSandboxedAgentRootIsRecognised:
         a raw ``config_dir() / "run"`` would produce. ``namespace_launcher_script_dir``
         normalizes it instead, so both sides agree.
 
-        The DEFAULT home specifically: an explicit ``KIROCREW_HOME`` is ``.resolve()``d by
+        The DEFAULT home specifically: an explicit ``AJCREW_HOME`` is ``.resolve()``d by
         ``config.paths._valid_override_home``, so it can never present this spelling and a
         test driven through it would pass with the normalization removed.
         """
-        import kiro_crew.sandbox as sandbox_mod
-        from kiro_crew.sandbox import namespace_launcher_script_dir
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        import aj_crew.sandbox as sandbox_mod
+        from aj_crew.sandbox import namespace_launcher_script_dir
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         home = tmp_path / "x" / ".." / ".kiro" / "crew"
         # ``sandbox`` binds ``config_dir`` at import, so the repoint goes on that module.
@@ -544,7 +544,7 @@ class TestSandboxedAgentRootIsRecognised:
         * a name whose ``\`` segment makes ``os.path.dirname`` and a backslash-aware
           basename disagree about where the file name starts.
         """
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         flags, run_dir, prefix, suffix = _launcher_shape()
         name = f"{prefix}1_a{suffix}"
@@ -567,8 +567,8 @@ class TestSandboxedAgentRootIsRecognised:
         exception with no per-entry guard, so a propagated error silently stops reclaiming
         EVERY remaining entry. Declining costs one missed reclaim instead.
         """
-        import kiro_crew.sandbox as sandbox_mod
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        import aj_crew.sandbox as sandbox_mod
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         # Built BEFORE the break: the fixture resolves the same directory the gate does.
         cmdline = _launcher_cmdline("kiro-cli", "acp")
@@ -592,8 +592,8 @@ class TestSandboxedAgentRootIsRecognised:
         ``config_dir()`` call -- which creates the data home -- per entry per pass, for an
         answer the free tests already have.
         """
-        import kiro_crew.sandbox as sandbox_mod
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        import aj_crew.sandbox as sandbox_mod
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         def _unexpected() -> str:
             raise AssertionError("the gate resolved the run directory for a plain argv")
@@ -612,7 +612,7 @@ class TestSandboxedAgentRootIsRecognised:
         would be authority granted for one nothing can produce. A loop here would also
         let a crafted argv bury the harness name arbitrarily deep.
         """
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         flags, _run_dir, _prefix, _suffix = _launcher_shape()
         script = _launcher_script_path()
@@ -644,9 +644,9 @@ class TestSandboxedAgentRootIsRecognised:
         asserts both sides of it, because the two predicates reading the same command line
         and answering differently is the kind of thing a later change quietly "fixes".
         """
-        import kiro_crew.session_pid as sp
+        import aj_crew.session_pid as sp
 
-        monkeypatch.setattr(sp, "_env_has_kirocrew_marker", lambda pid, **kw: True)
+        monkeypatch.setattr(sp, "_env_has_ajcrew_marker", lambda pid, **kw: True)
         cmdline = _launcher_cmdline("/usr/local/bin/kiro-cli", "acp")
 
         # The kill gate DOES recognise it; this predicate deliberately does not.
@@ -666,14 +666,14 @@ class TestSandboxedAgentRootIsRecognised:
         the accessor would put a ``sandbox`` import back at ``session_pid`` import time --
         the one thing the lazy lookup exists to avoid. The copy is pinned here instead.
         """
-        from kiro_crew.sandbox import _SANDBOX_ARTIFACT_PREFIX
-        from kiro_crew.session_pid import _MCP_ENTRYPOINT_MARKERS, _SANDBOX_LAUNCHER_MARKER
+        from aj_crew.sandbox import _SANDBOX_ARTIFACT_PREFIX
+        from aj_crew.session_pid import _MCP_ENTRYPOINT_MARKERS, _SANDBOX_LAUNCHER_MARKER
 
         assert _SANDBOX_LAUNCHER_MARKER == _SANDBOX_ARTIFACT_PREFIX.encode()
         assert _SANDBOX_LAUNCHER_MARKER in _MCP_ENTRYPOINT_MARKERS
 
     @_POSIX_ONLY
-    @patch("kiro_crew.sandbox._resolve_agent_executable", return_value="/usr/local/bin/kiro-cli")
+    @patch("aj_crew.sandbox._resolve_agent_executable", return_value="/usr/local/bin/kiro-cli")
     def test_the_argv_the_wrap_really_builds_is_recognised(self, _resolve: Mock) -> None:
         """End-to-end against ``namespace_argv`` itself, not a hand-written shape.
 
@@ -683,9 +683,9 @@ class TestSandboxedAgentRootIsRecognised:
         moved run directory or a renamed artifact fails here rather than silently costing
         every sandboxed root its reclaim.
         """
-        import kiro_crew.sandbox as sandbox_mod
-        from kiro_crew.sandbox import namespace_argv
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        import aj_crew.sandbox as sandbox_mod
+        from aj_crew.sandbox import namespace_argv
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         argv = namespace_argv(["kiro-cli", "acp"], "strict")
         try:
@@ -707,8 +707,8 @@ class TestSandboxedAgentRootIsRecognised:
         two-flag spelling stops being recognised. Both halves are asserted: either one
         alone also passes against a copy of the value kept in this module.
         """
-        import kiro_crew.sandbox as sandbox_mod
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        import aj_crew.sandbox as sandbox_mod
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
         stock = sandbox_mod._LAUNCHER_INTERPRETER_FLAGS
         script = _launcher_script_path()
@@ -730,10 +730,10 @@ class TestSandboxedAgentRootIsRecognised:
         and what ``namespace_argv``'s ``mkstemp`` writes, so a recogniser holding its own
         copy goes quiet on a rename while every other test stays green.
         """
-        import kiro_crew.sandbox as sandbox_mod
-        from kiro_crew.session_pid import _cmdline_names_a_harness
+        import aj_crew.sandbox as sandbox_mod
+        from aj_crew.session_pid import _cmdline_names_a_harness
 
-        monkeypatch.setattr(sandbox_mod, "_SANDBOX_ARTIFACT_PREFIX", "kirocrew_boxed_")
+        monkeypatch.setattr(sandbox_mod, "_SANDBOX_ARTIFACT_PREFIX", "ajcrew_boxed_")
         flags = sandbox_mod._LAUNCHER_INTERPRETER_FLAGS
         run_dir = sandbox_mod.namespace_launcher_script_dir()
 
@@ -741,22 +741,22 @@ class TestSandboxedAgentRootIsRecognised:
             argv = ("/usr/bin/python3", *flags, os.path.join(run_dir, name), "kiro-cli")
             return b"\x00".join(token.encode() for token in argv)
 
-        assert _cmdline_names_a_harness(_line("kirocrew_boxed_1_a.py")) is True
-        assert _cmdline_names_a_harness(_line("kirocrew_sandbox_1_a.py")) is False
+        assert _cmdline_names_a_harness(_line("ajcrew_boxed_1_a.py")) is True
+        assert _cmdline_names_a_harness(_line("ajcrew_sandbox_1_a.py")) is False
 
 
 class TestSpawnGraceCrossPlatform:
     @_POSIX_ONLY
     def test_grace_applies_on_macos(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Regression: the grace window was Linux-only, so macOS never got it."""
-        import kiro_crew.session_pid as sp
+        import aj_crew.session_pid as sp
 
         monkeypatch.setattr(sp.sys, "platform", "darwin")
         monkeypatch.setattr(sp, "_pid_age_seconds", lambda p: 5.0)
         assert sp._pid_in_spawn_grace(4242) is True
 
     def test_old_process_not_in_grace_on_macos(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        import kiro_crew.session_pid as sp
+        import aj_crew.session_pid as sp
 
         monkeypatch.setattr(sp.sys, "platform", "darwin")
         monkeypatch.setattr(sp, "_pid_age_seconds", lambda p: sp.SWEEP_SPAWN_GRACE_SECONDS + 1)
@@ -765,7 +765,7 @@ class TestSpawnGraceCrossPlatform:
     @_POSIX_ONLY
     def test_unknown_age_treated_as_young(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Unreadable age → safe direction (skip the kill)."""
-        import kiro_crew.session_pid as sp
+        import aj_crew.session_pid as sp
 
         monkeypatch.setattr(sp.sys, "platform", "darwin")
         monkeypatch.setattr(sp, "_pid_age_seconds", lambda p: None)
@@ -775,7 +775,7 @@ class TestSpawnGraceCrossPlatform:
         """macOS age comes from the in-process start id — no subprocess/ps."""
         import time as _time
 
-        import kiro_crew.session_pid as sp
+        import aj_crew.session_pid as sp
 
         monkeypatch.setattr(sp.sys, "platform", "darwin")
         monkeypatch.setattr(sp.platform_compat, "IS_WINDOWS", False)
@@ -785,7 +785,7 @@ class TestSpawnGraceCrossPlatform:
         assert age is not None and 85.0 <= age <= 95.0
 
     def test_macos_age_none_when_identity_unknown(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        import kiro_crew.session_pid as sp
+        import aj_crew.session_pid as sp
 
         monkeypatch.setattr(sp.sys, "platform", "darwin")
         monkeypatch.setattr(sp.platform_compat, "IS_WINDOWS", False)
@@ -796,7 +796,7 @@ class TestSpawnGraceCrossPlatform:
         """Windows age comes from the creation FILETIME, so a young PID gets the grace."""
         import time as _time
 
-        import kiro_crew.session_pid as sp
+        import aj_crew.session_pid as sp
 
         monkeypatch.setattr(sp.platform_compat, "IS_WINDOWS", True)
         start = _time.time() - 30.0
@@ -822,9 +822,9 @@ class TestSweepSparesLiveProcess:
     def test_live_process_with_recycled_entry_survives(
         self, session_pid_file: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.session_pid import cleanup_orphaned_sessions
+        from aj_crew.session_pid import cleanup_orphaned_sessions
 
-        monkeypatch.setattr("kiro_crew.session_pid.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_pid.config_dir", lambda: tmp_path)
         victim = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
         try:
             # Stale entry from a DEAD gateway naming the live PID, with a token
@@ -833,7 +833,7 @@ class TestSweepSparesLiveProcess:
 
             with (
                 # Cmdline check passes (as it did in the real incident).
-                patch("kiro_crew.session_pid._is_managed_agent_process", return_value=True),
+                patch("aj_crew.session_pid._is_managed_agent_process", return_value=True),
                 # The owning gateway (999999) must read as DEAD, or `_skip_tagged`
                 # keeps the entry and the prune assertion below fails. Pinned rather
                 # than assumed: 999999 is a perfectly ordinary live PID on a host
@@ -842,12 +842,12 @@ class TestSweepSparesLiveProcess:
                 # that one PID is faked -- every other, the live victim included,
                 # still goes to the real probe.
                 patch(
-                    "kiro_crew.session_pid.platform_compat.pid_exists",
+                    "aj_crew.session_pid.platform_compat.pid_exists",
                     side_effect=lambda p: p != 999999 and platform_compat.pid_exists(p),
                 ),
                 # Grace disabled: isolate the identity check as the sole guard.
-                patch("kiro_crew.session_pid._pid_in_spawn_grace", return_value=False),
-                patch("kiro_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
+                patch("aj_crew.session_pid._pid_in_spawn_grace", return_value=False),
+                patch("aj_crew.session_pid._cleanup_orphaned_mcp_servers", return_value=0),
             ):
                 cleanup_orphaned_sessions()
 
@@ -897,13 +897,13 @@ class TestPidFileRewriteIsAtomic:
         monkeypatch: pytest.MonkeyPatch,
         caplog: pytest.LogCaptureFixture,
     ) -> None:
-        from kiro_crew.session_pid import _write_back_pid_file
+        from aj_crew.session_pid import _write_back_pid_file
 
         original = "100:200:tokA\n101:201:tokB\n102:202:tokC\n"
         session_pid_file.write_text(original, encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.atomic_write.replace_with_retry", self._fail_rename)
+        monkeypatch.setattr("aj_crew.atomic_write.replace_with_retry", self._fail_rename)
 
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.session_pid"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.session_pid"):
             _write_back_pid_file({"101:201:tokB"})
 
         # The rewrite never landed, so the ledger must still name all three
@@ -918,14 +918,14 @@ class TestPidFileRewriteIsAtomic:
         monkeypatch: pytest.MonkeyPatch,
         caplog: pytest.LogCaptureFixture,
     ) -> None:
-        from kiro_crew.session_pid import _untrack_session_pid
+        from aj_crew.session_pid import _untrack_session_pid
 
         gw = os.getpid()
         original = f"{gw}:900:tokX\n{gw}:901:tokY\n"
         session_pid_file.write_text(original, encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.atomic_write.replace_with_retry", self._fail_rename)
+        monkeypatch.setattr("aj_crew.atomic_write.replace_with_retry", self._fail_rename)
 
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.session_pid"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.session_pid"):
             _untrack_session_pid(900)
 
         assert session_pid_file.read_text(encoding="utf-8") == original
@@ -937,13 +937,13 @@ class TestPidFileRewriteIsAtomic:
         monkeypatch: pytest.MonkeyPatch,
         caplog: pytest.LogCaptureFixture,
     ) -> None:
-        from kiro_crew.session_pid import _untrack_pid
+        from aj_crew.session_pid import _untrack_pid
 
         original = "700\n701\n702\n"
         pid_file.write_text(original, encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.atomic_write.replace_with_retry", self._fail_rename)
+        monkeypatch.setattr("aj_crew.atomic_write.replace_with_retry", self._fail_rename)
 
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.session_pid"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.session_pid"):
             _untrack_pid(701)
 
         assert pid_file.read_text(encoding="utf-8") == original
@@ -955,13 +955,13 @@ class TestPidFileRewriteIsAtomic:
         monkeypatch: pytest.MonkeyPatch,
         caplog: pytest.LogCaptureFixture,
     ) -> None:
-        from kiro_crew.session_pid import _untrack_child_pids
+        from aj_crew.session_pid import _untrack_child_pids
 
         original = "800:1\n801:1\n"
         pid_file.write_text(original, encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.atomic_write.replace_with_retry", self._fail_rename)
+        monkeypatch.setattr("aj_crew.atomic_write.replace_with_retry", self._fail_rename)
 
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.session_pid"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.session_pid"):
             _untrack_child_pids({801: object()})
 
         assert pid_file.read_text(encoding="utf-8") == original
@@ -982,18 +982,18 @@ class TestPidFileRewriteIsAtomic:
         this rewrite unguarded during gateway start, so the error escaping here
         would abort startup.
         """
-        from kiro_crew.session_pid import _write_back_pid_file
+        from aj_crew.session_pid import _write_back_pid_file
 
         def _sharing_violation(*_a: object, **_kw: object) -> None:
             raise PermissionError(32, "The process cannot access the file")
 
         original = "100:200:tokA\n101:201:tokB\n"
         session_pid_file.write_text(original, encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.platform_compat.IS_WINDOWS", True)
-        monkeypatch.setattr("kiro_crew.atomic_write.os.replace", _sharing_violation)
+        monkeypatch.setattr("aj_crew.platform_compat.IS_WINDOWS", True)
+        monkeypatch.setattr("aj_crew.atomic_write.os.replace", _sharing_violation)
 
         # Runs with a live event loop, which is what disables the retry.
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.session_pid"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.session_pid"):
             _write_back_pid_file({"101:201:tokB"})
 
         assert session_pid_file.read_text(encoding="utf-8") == original
@@ -1002,7 +1002,7 @@ class TestPidFileRewriteIsAtomic:
     def test_successful_rewrite_lands_and_leaves_no_temp_residue(
         self, session_pid_file: Path
     ) -> None:
-        from kiro_crew.session_pid import _write_back_pid_file
+        from aj_crew.session_pid import _write_back_pid_file
 
         session_pid_file.write_text("100:200:tokA\n101:201:tokB\n", encoding="utf-8")
 
@@ -1014,7 +1014,7 @@ class TestPidFileRewriteIsAtomic:
 
     def test_no_truncating_writer_remains_in_session_pid(self) -> None:
         """Ratchet: every PID-file rewrite goes through the atomic chokepoint."""
-        import kiro_crew.session_pid as sp
+        import aj_crew.session_pid as sp
 
         source = "\n".join(
             Path(str(sys.modules[name].__file__)).read_text(encoding="utf-8")
@@ -1053,7 +1053,7 @@ class TestAcquiringAPidLockDoesNotTruncateTheLockFile:
     SEED = b"lock-file-content-that-must-survive"
 
     def test_session_pid_file_lock_preserves_the_lock_file(self, session_pid_file: Path) -> None:
-        from kiro_crew.session_pid import _session_pid_file_lock, _session_pid_file_path
+        from aj_crew.session_pid import _session_pid_file_lock, _session_pid_file_path
 
         lock_path = _session_pid_file_path().with_suffix(".lock")
         lock_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1065,7 +1065,7 @@ class TestAcquiringAPidLockDoesNotTruncateTheLockFile:
         assert lock_path.read_bytes() == self.SEED
 
     def test_pid_file_lock_preserves_the_lock_file(self, pid_file: Path) -> None:
-        from kiro_crew.session_pid import _pid_file_lock, _pid_file_path
+        from aj_crew.session_pid import _pid_file_lock, _pid_file_path
 
         lock_path = _pid_file_path().with_suffix(".lock")
         lock_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1083,7 +1083,7 @@ class TestAcquiringAPidLockDoesNotTruncateTheLockFile:
         lock, which is exactly the interleaving a truncating open turns into a
         crash rather than a wait.
         """
-        from kiro_crew.session_pid import _periodic_pid_sweep, _session_pid_file_path
+        from aj_crew.session_pid import _periodic_pid_sweep, _session_pid_file_path
 
         path = _session_pid_file_path()
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -1105,7 +1105,7 @@ class TestAcquiringAPidLockDoesNotTruncateTheLockFile:
         mode a naive ``"r"`` fix would introduce, and the reason ``"r+"`` rather
         than ``"r"`` is the answer.
         """
-        from kiro_crew.session_pid import _pid_file_path
+        from aj_crew.session_pid import _pid_file_path
 
         lock_path = _pid_file_path().with_suffix(".lock")
         lock_path.parent.mkdir(parents=True, exist_ok=True)

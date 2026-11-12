@@ -12,9 +12,9 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from kiro_crew.dashboard import crash_dump_store
+from aj_crew.dashboard import crash_dump_store
 
-_SITE = "/opt/venv/lib/python3.12/site-packages/kiro_crew"
+_SITE = "/opt/venv/lib/python3.12/site-packages/aj_crew"
 
 # The field crash, frames innermost-first exactly as faulthandler prints them.
 CRON_STACK = [
@@ -83,7 +83,7 @@ def write_dump(
     dumps_dir.mkdir(parents=True, exist_ok=True)
     path = dumps_dir / f"{crash_dump_store.DUMP_PREFIX}2026090{_DUMP_SEQ:02d}T000000Z.txt"
     header = [
-        "# KiroCrew loop-stall crash dump — opened test",  # brand-ok: mirrors the header bytes the store writes
+        "# AjCrew loop-stall crash dump — opened test",  # brand-ok: mirrors the header bytes the store writes
         f"# PID: {pid} @ {domain or crash_dump_store._pid_domain()} start={start}",
         "# If thread stacks appear below, the event loop wedged and faulthandler fired.",
         "",

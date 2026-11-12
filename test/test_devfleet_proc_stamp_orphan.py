@@ -40,8 +40,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew.apps.builtins.dev_fleet import runtime, worktree_ops
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew.apps.builtins.dev_fleet import runtime, worktree_ops
 
 
 @pytest.fixture(autouse=True)

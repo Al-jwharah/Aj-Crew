@@ -12,7 +12,7 @@
  *    improvement if the token beats what it replaced — otherwise a theme is
  *    quietly made LESS readable by "fixing" it. This is the assertion that
  *    caught rosepine-light (`#d7827e` + white = 2.84:1, against 5.34:1 for
- *    text-strong) and kiro-light's undeclared `--danger-fg` (4.30:1 inherited
+ *    text-strong) and aj-light's undeclared `--danger-fg` (4.30:1 inherited
  *    from the dark defaults, since `:root` matches `<html>` in every theme).
  *
  * The CSS is parsed rather than rendered because jsdom resolves no cascade: it
@@ -37,12 +37,12 @@ const AA_SMALL_TEXT = 4.5
 /*
  * SCOPE: the three tiers the meter bars paint, plus `ok` and `info`, the fills
  * the Approve, Update and status-pill buttons paint. Those two joined once
- * kiro-dark and kiro-light declared their own `--ok-fg` (and kiro-light its
+ * aj-dark and aj-light declared their own `--ok-fg` (and aj-light its
  * `--info-fg`): undeclared, they inherited the `:root` dark defaults' black,
- * 4.44:1 on Kiro's `--ok` and 2.65:1 on kiro-light's `--info`, below the white
+ * 4.44:1 on Kiro's `--ok` and 2.65:1 on aj-light's `--info`, below the white
  * those buttons painted. `index.css` declares two more `-fg` pairs (`aim`,
  * `muted`) with their own consumers, and they are NOT covered here —
- * deliberately, not by oversight: `aim` fails in seven themes (kiro-light
+ * deliberately, not by oversight: `aim` fails in seven themes (aj-light
  * 3.82:1, `amoled-light` 4.13:1) and `muted` in 20+ (`highcontrast-light`
  * measures 1.32:1). Those are real defects in their own right, but fixing them
  * means editing tokens no filled button reads, so they belong to their own
@@ -84,7 +84,7 @@ describe('theme fill/foreground pairs', () => {
     // every assertion below pass without testing anything.
     expect(THEMES.length).toBeGreaterThanOrEqual(30)
     expect(THEMES).toContain('dracula-light')
-    expect(THEMES).toContain('kiro-light')
+    expect(THEMES).toContain('aj-light')
 
     // Both resolver traps that silently substitute the :root dark palette get an
     // anchor, because either one would make the per-theme cases below measure a

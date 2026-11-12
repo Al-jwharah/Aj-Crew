@@ -1,6 +1,6 @@
 """Guard: the Crew Mode dispatch notice kind and its copy keys match the frontend.
 
-``CREW_DISPATCH_NOTICE_KIND`` in ``kiro_crew.dashboard.crew_dispatch_notice`` is
+``CREW_DISPATCH_NOTICE_KIND`` in ``aj_crew.dashboard.crew_dispatch_notice`` is
 the ``meta["kind"]`` wire token the gateway stamps on the one-per-turn dispatch
 notice row. The frontend matches that exact string in
 ``website/src/pages/chat/transcriptRenderers.tsx`` to render the row as
@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from kiro_crew.dashboard.crew_dispatch_notice import CREW_DISPATCH_NOTICE_KIND
+from aj_crew.dashboard.crew_dispatch_notice import CREW_DISPATCH_NOTICE_KIND
 
 _REPO = Path(__file__).resolve().parents[1]
 _RENDERERS = _REPO / "website" / "src" / "pages" / "chat" / "transcriptRenderers.tsx"

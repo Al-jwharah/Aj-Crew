@@ -50,15 +50,15 @@ describe('selectSubagentActivityCount', () => {
   it('counts started agents in the active slot', () => {
     const store = makeStore()
     store.dispatch(setActiveSlot('a'))
-    store.dispatch(sseSubagentSpawn({ slot: 'a', id: 'x1', task: 't', agent: 'kirocrew' }))
-    store.dispatch(sseSubagentSpawn({ slot: 'a', id: 'x2', task: 't', agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: 'a', id: 'x1', task: 't', agent: 'ajcrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: 'a', id: 'x2', task: 't', agent: 'ajcrew' }))
     expect(count(store)).toBe(2)
   })
 
   it('counts agents in background slots too — the whole point of a rail dot', () => {
     const store = makeStore()
     store.dispatch(setActiveSlot('a'))
-    store.dispatch(sseSubagentSpawn({ slot: 'b', id: 'y1', task: 't', agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: 'b', id: 'y1', task: 't', agent: 'ajcrew' }))
     expect(count(store)).toBe(1)
   })
 
@@ -67,7 +67,7 @@ describe('selectSubagentActivityCount', () => {
     // and slotActivity[active].subagents (same object reference).
     const store = makeStore()
     store.dispatch(setActiveSlot('a'))
-    store.dispatch(sseSubagentSpawn({ slot: 'a', id: 'x1', task: 't', agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: 'a', id: 'x1', task: 't', agent: 'ajcrew' }))
     store.dispatch(switchSlot('a'))
     expect(count(store)).toBe(1)
   })
@@ -75,7 +75,7 @@ describe('selectSubagentActivityCount', () => {
   it('drops agents once they finish', () => {
     const store = makeStore()
     store.dispatch(setActiveSlot('a'))
-    store.dispatch(sseSubagentSpawn({ slot: 'a', id: 'x1', task: 't', agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: 'a', id: 'x1', task: 't', agent: 'ajcrew' }))
     store.dispatch(sseSubagentDone({ slot: 'a', id: 'x1', elapsed: 3 }))
     expect(count(store)).toBe(0)
   })
@@ -146,7 +146,7 @@ describe('selectSubagentActivityCount', () => {
         id: 'p1',
         parent: 'dashboard:a',
         task: 'authoritative task',
-        agent: 'kirocrew',
+        agent: 'ajcrew',
         started: 1_000,
         last_tool: '',
         done: false,
@@ -239,7 +239,7 @@ describe('selectSubagentActivityCount', () => {
     }
     expect(isSpawnApprovalGone(card())).toBe(true)
 
-    store.dispatch(sseSubagentSpawn({ slot, id: 'p1', task: 'launched elsewhere', agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot, id: 'p1', task: 'launched elsewhere', agent: 'ajcrew' }))
     expect(card()).toMatchObject({ status: 'running', approvalGone: 'ap-1' })
     expect(isSpawnApprovalGone(card())).toBe(false)
     expect(isAwaitingSpawnApproval(card())).toBe(false)
@@ -278,7 +278,7 @@ describe('selectSubagentActivityCount', () => {
   it('sums started and queued across slots', () => {
     const store = makeStore()
     store.dispatch(setActiveSlot('a'))
-    store.dispatch(sseSubagentSpawn({ slot: 'a', id: 'x1', task: 't', agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: 'a', id: 'x1', task: 't', agent: 'ajcrew' }))
     store.dispatch(sseSubagentQueued({ slot: 'b', queued: 2 }))
     expect(count(store)).toBe(3)
   })
@@ -373,7 +373,7 @@ describe('subagent snapshot ownership', () => {
     slot,
     id: 'orphan-1',
     task: 'read-only audit',
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     streaming: '',
     last_tool: 'WorkspaceSearch',
     started: 1000,
@@ -409,7 +409,7 @@ describe('a nested run approved under its parent key', () => {
     store.dispatch(setActiveSlot('chat1'))
     store.dispatch(sseSubagentPending({ slot: 'subagent:b', id: 'c', task: 't', approval_id: 'spawn:c' }))
     store.dispatch(sseSubagentSpawn({ slot: 'subagent:b', id: 'c', task: '', agent: '' }))
-    store.dispatch(sseSubagentSpawn({ slot: 'chat1', id: 'c', task: 't', agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: 'chat1', id: 'c', task: 't', agent: 'ajcrew' }))
     expect(count(store)).toBe(1)
     store.dispatch(sseSubagentDone({ slot: 'chat1', id: 'c', elapsed: 1, outcome: 'completed' }))
 
@@ -423,7 +423,7 @@ describe('a nested run approved under its parent key', () => {
     store.dispatch(setActiveSlot('chat1'))
     const replay = () => {
       store.dispatch(clearSubagentsForSnapshot())
-      store.dispatch(sseSubagentSnapshot({ slot: 'chat1', id: 'c', task: 't', agent: 'kirocrew', streaming: '', last_tool: '', started: 1000 }))
+      store.dispatch(sseSubagentSnapshot({ slot: 'chat1', id: 'c', task: 't', agent: 'ajcrew', streaming: '', last_tool: '', started: 1000 }))
       store.dispatch(subagentReplayDone())
     }
     store.dispatch(sseSubagentPending({ slot: 'subagent:b', id: 'c', task: 't', approval_id: 'spawn:c' }))
@@ -445,7 +445,7 @@ describe('a nested run approved under its parent key', () => {
   it('ends a copy the approval re-creates after the run started in its root chat', () => {
     const store = makeStore()
     store.dispatch(setActiveSlot('chat1'))
-    store.dispatch(sseSubagentSpawn({ slot: 'chat1', id: 'c', task: 't', agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: 'chat1', id: 'c', task: 't', agent: 'ajcrew' }))
     store.dispatch(sseSubagentSpawn({ slot: 'subagent:b', id: 'c', task: '', agent: '' }))
     store.dispatch(sseSubagentDone({ slot: 'chat1', id: 'c', elapsed: 1, outcome: 'completed' }))
 
@@ -474,7 +474,7 @@ describe('a nested run approved under its parent key', () => {
     store.dispatch(setActiveSlot('chat1'))
     store.dispatch(sseSubagentPending({ slot: 'chat1', id: 'c', task: 't', approval_id: 'spawn:c' }))
     store.dispatch(sseSubagentSpawn({ slot: 'chat1', id: 'c', task: '', agent: '' }))
-    store.dispatch(sseSubagentSpawn({ slot: 'wf:r1:s1', id: 'c', task: 't', agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: 'wf:r1:s1', id: 'c', task: 't', agent: 'ajcrew' }))
 
     expect(store.getState().chat.subagents.c?.status).toBe('running')
   })

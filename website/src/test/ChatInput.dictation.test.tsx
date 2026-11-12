@@ -313,18 +313,18 @@ describe('ChatInput — send is gated while a batch transcript is pending', () =
     // A lone DM thread shows nothing else that is capturing, so the blocked copy
     // has to say which chat to go and end.
     const store = createTestStore({
-      dashboard: { slots: [{ key: 'member-kirocrew', title: 'kirocrew', messages: 1, running: false }], unreadSlots: [], refreshTrigger: 0, subagentRunning: {}, subagentDetails: {}, subagentText: {} } as unknown as RootState['dashboard'],
+      dashboard: { slots: [{ key: 'member-ajcrew', title: 'ajcrew', messages: 1, running: false }], unreadSlots: [], refreshTrigger: 0, subagentRunning: {}, subagentDetails: {}, subagentText: {} } as unknown as RootState['dashboard'],
     })
     renderWithProviders(
-      <ComposerVoiceSliceOverride inputProps={{ voiceBusyElsewhere: true, voiceBusyElsewhereSession: 'member-kirocrew', onVoiceToggle: vi.fn() }}><ChatInput {...base} /></ComposerVoiceSliceOverride>,
+      <ComposerVoiceSliceOverride inputProps={{ voiceBusyElsewhere: true, voiceBusyElsewhereSession: 'member-ajcrew', onVoiceToggle: vi.fn() }}><ChatInput {...base} /></ComposerVoiceSliceOverride>,
       { store },
     )
-    expect(screen.getByRole('button', { name: 'Microphone in use in “kirocrew”' })).toBeDisabled()
-    expect(screen.getByTestId('voice-status-notice').textContent?.replace(/\u2060/g, '')).toBe('Microphone in use in “kirocrew”')
+    expect(screen.getByRole('button', { name: 'Microphone in use in “ajcrew”' })).toBeDisabled()
+    expect(screen.getByTestId('voice-status-notice').textContent?.replace(/\u2060/g, '')).toBe('Microphone in use in “ajcrew”')
     // The name is the way there: one click switches to the chat that holds the
     // mic (switchSlot.pending moves activeSlot synchronously).
-    fireEvent.click(screen.getByRole('button', { name: '“\u2060kirocrew\u2060”' }))
-    expect(store.getState().chat.activeSlot).toBe('member-kirocrew')
+    fireEvent.click(screen.getByRole('button', { name: '“\u2060ajcrew\u2060”' }))
+    expect(store.getState().chat.activeSlot).toBe('member-ajcrew')
   })
 
   it('names an untitled mic owner "Untitled session", never by its raw key (#23084)', () => {

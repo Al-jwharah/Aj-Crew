@@ -31,7 +31,7 @@ export interface Minted {
 
 /** Stands for this page's origin in a srcdoc frame document's policy (`SRCDOC_SELF`
  *  in `apps/app_frame.py`); replaced with `location.origin` before it is set. */
-export const SRCDOC_SELF = '__kirocrew_frame_self__'
+export const SRCDOC_SELF = '__ajcrew_frame_self__'
 /** After a frame loads by URL, how long its document has to say `boot` before
  *  the srcdoc fallback replaces it. The ready deadline still covers the whole load. */
 export const BOOT_GRACE_MS = 1500
@@ -178,7 +178,7 @@ export function loadMintedFrame(
   })
   // The URL is the gateway's own: mintAppFrame accepts only a same-origin
   // `/app-frame/` path, and the frame is sandboxed to an opaque origin.
-  // nosemgrep: semgrep.kirocrew.frontend-external-script-inject
+  // nosemgrep: semgrep.ajcrew.frontend-external-script-inject
   el.src = withBase(minted.frame)
   // In the document only once it has its real URL, so its first load is the frame's.
   root.appendChild(el)

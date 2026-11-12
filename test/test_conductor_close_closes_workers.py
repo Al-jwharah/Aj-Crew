@@ -14,11 +14,11 @@ from unittest.mock import AsyncMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew import crew_mode
-from kiro_crew.dashboard import chat_handlers as handlers
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard import session_managers
-from kiro_crew.testing.wait import await_until, finished, until_parked
+from aj_crew import crew_mode
+from aj_crew.dashboard import chat_handlers as handlers
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard import session_managers
+from aj_crew.testing.wait import await_until, finished, until_parked
 
 
 class _Req:
@@ -249,7 +249,7 @@ async def test_a_worker_that_fails_to_close_is_named_and_stays_open(tmp_path, mo
 async def test_a_worker_that_left_the_tree_stays_open(tmp_path, monkeypatch):
     """``session_release`` and an adoption elsewhere move only the tree edge: the
     worker still names the conductor as its manager, and is still left open."""
-    from kiro_crew.dashboard.session_control_parts import crew_filing
+    from aj_crew.dashboard.session_control_parts import crew_filing
 
     state, slots = _crew(tmp_path)
     real_parents = crew_filing._frame_parents

@@ -30,11 +30,11 @@ from fargate_launch_engine_helpers import (
     _spec,
 )
 
-from kiro_crew.cloud import fargate, fargate_engine
-from kiro_crew.cloud import launch_job as lj
-from kiro_crew.cloud.aws import AWSError
-from kiro_crew.cloud.ec2 import MANAGED_TAG_KEY
-from kiro_crew.cloud.fargate_engine import (
+from aj_crew.cloud import fargate, fargate_engine
+from aj_crew.cloud import launch_job as lj
+from aj_crew.cloud.aws import AWSError
+from aj_crew.cloud.ec2 import MANAGED_TAG_KEY
+from aj_crew.cloud.fargate_engine import (
     MANAGED_TAG_VALUE,
     FargateLaunchEngine,
     FargateSigninHandle,
@@ -43,12 +43,12 @@ from kiro_crew.cloud.fargate_engine import (
     classify_task,
     plan_teardown,
 )
-from kiro_crew.cloud.launch_job import LaunchEngine, SigninHandle
-from kiro_crew.instances.validation import split_ecs_target
-from kiro_crew.platform.defaults import FARGATE_PROVISIONER_ID
-from kiro_crew.platform.interfaces import BUILTIN_PROVISIONER_ID
+from aj_crew.cloud.launch_job import LaunchEngine, SigninHandle
+from aj_crew.instances.validation import split_ecs_target
+from aj_crew.platform.defaults import FARGATE_PROVISIONER_ID
+from aj_crew.platform.interfaces import BUILTIN_PROVISIONER_ID
 
-STARTED_BY = "kirocrew-cloud/kc-a1b2c3"
+STARTED_BY = "ajcrew-cloud/kc-a1b2c3"
 
 
 def _task(last_status: str, *, task_arn: str = REGISTRABLE_ARN, **over: object) -> dict:
@@ -171,7 +171,7 @@ def test_engine_is_injectable_where_the_ec2_engine_is() -> None:
     ``handlers_cloud._engine`` returns ``state.cloud_launch_engine`` ahead of the
     provisioner seam.
     """
-    from kiro_crew.dashboard import handlers_cloud
+    from aj_crew.dashboard import handlers_cloud
 
     class _StubState:
         def __init__(self, engine: object) -> None:
@@ -239,7 +239,7 @@ def test_signin_honours_the_default_login_target() -> None:
     The empty target is what a managed launch carries without Identity Center, so passing it
     changes nothing: no ``error``, and the step is done without a prompt.
     """
-    from kiro_crew.cloud.login_target import KiroLoginTarget
+    from aj_crew.cloud.login_target import KiroLoginTarget
 
     engine = FargateLaunchEngine()
     for target in (None, KiroLoginTarget()):
@@ -257,7 +257,7 @@ def test_identity_center_target_is_refused_at_preflight_before_provision() -> No
     ``launch_job._check_signin_target_supported`` at preflight, because refusing at the
     sign-in step would land after the task is billing.
     """
-    from kiro_crew.cloud.login_target import KiroLoginTarget
+    from aj_crew.cloud.login_target import KiroLoginTarget
 
     target = KiroLoginTarget(
         license="pro", start_url="https://example.awsapps.com/start", region="us-west-2"
@@ -290,7 +290,7 @@ def test_signin_time_identity_center_target_is_a_programming_error_guard() -> No
     Unreachable through ``run_launch``; it guards a caller that bypassed preflight. It is not
     a refusal channel, so ``error`` stays empty on every path that returns a handle.
     """
-    from kiro_crew.cloud.login_target import KiroLoginTarget
+    from aj_crew.cloud.login_target import KiroLoginTarget
 
     target = KiroLoginTarget(
         license="pro", start_url="https://example.awsapps.com/start", region="us-west-2"
@@ -798,7 +798,7 @@ def test_marked_task_with_our_tag_is_ours() -> None:
 def test_marked_task_with_another_tag_and_another_starter_belongs_to_another_launch() -> None:
     """Foreign tag AND foreign ``startedBy``: nothing about it points at this launcher."""
     assert (
-        _classify(_marked(tag="kc-zzzzzz", started_by="kirocrew-cloud/kc-zzzzzz"))
+        _classify(_marked(tag="kc-zzzzzz", started_by="ajcrew-cloud/kc-zzzzzz"))
         is Ownership.OTHER_LAUNCH
     )
 
@@ -827,7 +827,7 @@ def test_marked_task_we_started_with_no_launch_tag_is_mislabelled() -> None:
 def test_launch_tag_written_into_the_managed_marker_is_not_ours() -> None:
     """A launch tag written into the managed marker does not make a task ours.
 
-    ``kirocrew:managed=kc-a1b2c3`` fails every consumer's ``== "true"`` check (``ec2.py``,
+    ``ajcrew:managed=kc-a1b2c3`` fails every consumer's ``== "true"`` check (``ec2.py``,
     the ``cloud/iam.py`` conditions), so the task is UNMARKED and never deleted.
     """
     sighting = TaskSighting(
@@ -858,7 +858,7 @@ def test_ownership_is_read_under_the_writers_own_key() -> None:
     elsewhere = _marked(
         tags={
             MANAGED_TAG_KEY: MANAGED_TAG_VALUE,
-            "kirocrew:not-what-the-writer-uses": TAG,
+            "ajcrew:not-what-the-writer-uses": TAG,
         }
     )
     assert _classify(elsewhere) is Ownership.MISLABELLED
@@ -887,8 +887,8 @@ def test_the_key_is_the_writers_object_and_no_caller_can_substitute_one() -> Non
 def test_module_defines_no_name_its_owners_already_export() -> None:
     """This module assigns nothing that ``cloud.fargate`` or ``cloud.ec2`` owns.
 
-    Derived from the owners' surfaces, so the next re-spelled value is caught too. A
-    ``kirocrew:`` literal is the same defect: a second copy of a value another module owns.
+    Derived from the owners' surfaces, so the next re-spelled value is caught too. An
+    ``ajcrew:`` literal is the same defect: a second copy of a value another module owns.
     """
     owned = set(fargate.__all__) | {"MANAGED_TAG_KEY", "INSTANCE_TAG_KEY"}
     tree = ast.parse(inspect.getsource(fargate_engine))
@@ -906,7 +906,7 @@ def test_module_defines_no_name_its_owners_already_export() -> None:
         for node in ast.walk(tree)
         if isinstance(node, ast.Constant)
         and isinstance(node.value, str)
-        and node.value.startswith("kirocrew:")
+        and node.value.startswith("ajcrew:")
     ]
     assert literals == [], literals
 
@@ -931,7 +931,7 @@ def test_our_task_is_deleted_and_confirmed() -> None:
 def test_another_launchs_task_is_left_alone_without_a_warning() -> None:
     """It has an owner, and that owner tears it down. Silence is correct here."""
     plan = _plan(
-        [_marked(tag="kc-zzzzzz", task_arn=OTHER_ARN, started_by="kirocrew-cloud/kc-zzzzzz")]
+        [_marked(tag="kc-zzzzzz", task_arn=OTHER_ARN, started_by="ajcrew-cloud/kc-zzzzzz")]
     )
     assert plan.delete == ()
     assert plan.confirmed is True
@@ -1178,7 +1178,7 @@ class _DecliningEngine:
 
 def test_unconfirmed_teardown_after_cancel_reaches_the_user(tmp_path) -> None:
     """``launch_job.py:510-514`` must turn a declined confirm into a visible warning."""
-    from kiro_crew.cloud import launch_job as lj
+    from aj_crew.cloud import launch_job as lj
 
     store = lj.LaunchJobStore(root=tmp_path / "launch-jobs")
     job = store.create(profile="dev", region="us-east-1", size_key="balanced")
@@ -1192,7 +1192,7 @@ def test_unconfirmed_teardown_after_cancel_reaches_the_user(tmp_path) -> None:
 
 def test_unconfirmed_teardown_after_failed_provision_reaches_the_user(tmp_path) -> None:
     """``launch_job.py:550-553`` must do the same, and keep the original failure visible."""
-    from kiro_crew.cloud import launch_job as lj
+    from aj_crew.cloud import launch_job as lj
 
     store = lj.LaunchJobStore(root=tmp_path / "launch-jobs")
     job = store.create(profile="dev", region="us-east-1", size_key="balanced")

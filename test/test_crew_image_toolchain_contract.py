@@ -48,7 +48,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CREW_DOCKERFILE = (
     ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "apps"
     / "builtins"
     / "aws_control"

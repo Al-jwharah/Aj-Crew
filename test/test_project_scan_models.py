@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.project_scan import (
+from aj_crew.project_scan import (
     DEFAULT_DEPTH_CAP,
     GIT_DIR,
     KIRO_DIR,

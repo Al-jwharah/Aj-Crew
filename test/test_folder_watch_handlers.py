@@ -9,7 +9,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.knowledge import (
+from aj_crew.dashboard.handlers.knowledge import (
     add_source,
     confirm_source,
     delete_source,
@@ -20,7 +20,7 @@ from kiro_crew.dashboard.handlers.knowledge import (
     retry_file,
     skip_file,
 )
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.store import KnowledgeStore
 
 
 @pytest.fixture()
@@ -32,7 +32,7 @@ def store(tmp_path):
 
 def _make_app(store, watcher=None):
     """Create minimal app with folder watch routes."""
-    from kiro_crew.knowledge.connectors.local_folder import LocalFolderConnector
+    from aj_crew.knowledge.connectors.local_folder import LocalFolderConnector
 
     app = web.Application()
     state = MagicMock()
@@ -88,7 +88,7 @@ class TestAddSourceFolder:
         vault = tmp_path / "vault"
         vault.mkdir()
         async with TestClient(TestServer(_make_app(store))) as client:
-            with patch("kiro_crew.dashboard.handlers.knowledge.is_sensitive_path", return_value=True):
+            with patch("aj_crew.dashboard.handlers.knowledge.is_sensitive_path", return_value=True):
                 resp = await client.post("/api/knowledge/sources", json={
                     "name": "test", "source_type": "local_folder", "uri": str(vault)
                 })
@@ -123,7 +123,7 @@ class TestConfirmSource:
     async def test_confirm_sensitive_path_blocked(self, store, tmp_path):
         sid = store.add_source("test", "local_folder", str(tmp_path))
         async with TestClient(TestServer(_make_app(store))) as client:
-            with patch("kiro_crew.dashboard.handlers.knowledge.is_sensitive_path", return_value=True):
+            with patch("aj_crew.dashboard.handlers.knowledge.is_sensitive_path", return_value=True):
                 resp = await client.post(f"/api/knowledge/sources/{sid}/confirm")
             assert resp.status == 403
 
@@ -180,7 +180,7 @@ class TestResumeSource:
     async def test_resume_sensitive_path_blocked(self, store, tmp_path):
         sid = store.add_source("test", "local_folder", str(tmp_path))
         async with TestClient(TestServer(_make_app(store))) as client:
-            with patch("kiro_crew.dashboard.handlers.knowledge.is_sensitive_path", return_value=True):
+            with patch("aj_crew.dashboard.handlers.knowledge.is_sensitive_path", return_value=True):
                 resp = await client.post(f"/api/knowledge/sources/{sid}/resume")
             assert resp.status == 403
 
@@ -234,7 +234,7 @@ class TestRetryFile:
     async def test_retry_sensitive_path_blocked(self, store):
         sid = store.add_source("test", "local_folder", "/tmp/vault")
         async with TestClient(TestServer(_make_app(store))) as client:
-            with patch("kiro_crew.dashboard.handlers.knowledge.is_sensitive_path", return_value=True):
+            with patch("aj_crew.dashboard.handlers.knowledge.is_sensitive_path", return_value=True):
                 resp = await client.post(f"/api/knowledge/sources/{sid}/files/retry",
                                          json={"file_path": "/home/user/.ssh/id_rsa"})
             assert resp.status == 403

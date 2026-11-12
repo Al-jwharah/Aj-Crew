@@ -21,7 +21,7 @@ from sandbox_absent_ceiling_seal_helpers import (  # noqa: F401 -- fixtures are 
     crew_home_fixture,
 )
 
-from kiro_crew import sandbox, sandbox_aliases
+from aj_crew import sandbox, sandbox_aliases
 
 #: The masked leaves whose NAME must be the masked name: every hidden leaf that is not a
 #: declared alias exception. DERIVED here rather than read from a production constant, so a
@@ -149,7 +149,7 @@ class TestEveryMaskedLeafIsEnumerated:
         Each resolves to one managed path with no override, so a second name is not a
         layout the product offers and the refusal costs no supported setup.
         """
-        from kiro_crew import agent_scratch
+        from aj_crew import agent_scratch
 
         assert "scratch" in _NO_ALIAS_MASKED_LEAVES
         assert "backup" in _NO_ALIAS_MASKED_LEAVES

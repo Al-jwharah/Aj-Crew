@@ -13,9 +13,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp.kas_agents import spec_keys_without_carrier, to_client_custom_agent
-from kiro_crew.acp.kas_permissions import (
+from aj_crew.acp import kas_agents
+from aj_crew.acp.kas_agents import spec_keys_without_carrier, to_client_custom_agent
+from aj_crew.acp.kas_permissions import (
     _ANSWERED_CAPABILITIES,
     WITHHELD_FROM_AUTO_APPROVE,
     authored_restricted_capabilities,
@@ -25,9 +25,9 @@ from kiro_crew.acp.kas_permissions import (
     trusted_agents_withheld,
     withhold_answered_under_authored_rules,
 )
-from kiro_crew.agent_sdk import kas_tool_view
-from kiro_crew.agent_sdk.kas_tool_view import tools_settings_family, tools_settings_unenforced
-from kiro_crew.platform import allowed_commands
+from aj_crew.agent_sdk import kas_tool_view
+from aj_crew.agent_sdk.kas_tool_view import tools_settings_family, tools_settings_unenforced
+from aj_crew.platform import allowed_commands
 
 _ALL = frozenset({"fs_read", "fs_write", "shell"})
 
@@ -209,7 +209,7 @@ class TestNotice:
         got = spec_keys_without_carrier(spec, translates_tools_settings=True)
         assert reason and got == [f"toolsSettings.executeBash.allowedCommands: {entry} ({reason})"]
         assert tools_settings_unenforced(settings) == ["executeBash.allowedCommands"]
-        # kirocrew doctor's row names the same spelling. Looked up when called, so a
+        # ajcrew doctor's row names the same spelling. Looked up when called, so a
         # module without it fails this test, not the file.
         unread = kas_tool_view.unreadable_allowed_commands(settings)
         assert unread == [("executeBash", entry, reason)]
@@ -272,7 +272,7 @@ class TestPwshProcessControl:
 
 class TestOtherReadersAgree:
     def test_the_spawn_gate_reads_the_alias_kiro_cli_keeps(self):
-        from kiro_crew.subagent_parts.agent_policy import spawn_allowlist
+        from aj_crew.subagent_parts.agent_policy import spawn_allowlist
 
         assert spawn_allowlist({"toolsSettings": {"crew": {"availableAgents": []}}}) == ()
         both = {"crew": {"availableAgents": []}, "subagent": {"availableAgents": ["*"]}}
@@ -281,7 +281,7 @@ class TestOtherReadersAgree:
         assert spawn_allowlist({"toolsSettings": only}) == ()
 
     def test_the_read_only_side_spec_keeps_a_base_fs_read_deny(self):
-        from kiro_crew.dashboard.side_readonly_spec import derive_readonly_spec
+        from aj_crew.dashboard.side_readonly_spec import derive_readonly_spec
 
         base = {
             "name": "base",
@@ -298,7 +298,7 @@ class TestOtherReadersAgree:
         assert {"/secret/**", "~/.ssh/**"} <= matches
 
     def test_the_direct_client_allowlists_read_the_alias_kiro_cli_keeps(self):
-        from kiro_crew.acp.spec_tools_allowlists import spec_shell_patterns
+        from aj_crew.acp.spec_tools_allowlists import spec_shell_patterns
 
         aliased = {"executeBash": {"denyByDefault": True, "allowedCommands": ["make"]}}
         assert spec_shell_patterns({"toolsSettings": aliased}) == ("make",)
@@ -309,8 +309,8 @@ class TestOtherReadersAgree:
         assert spec_shell_patterns({"toolsSettings": both}) == ("make",)
 
     def test_the_gate_allowlist_notice_reads_the_alias_kiro_cli_keeps(self):
-        from kiro_crew.acp.spec_tools_allowlists import spec_shell_patterns
-        from kiro_crew.agent_sdk.tools_settings_reach import tools_settings_unapplied
+        from aj_crew.acp.spec_tools_allowlists import spec_shell_patterns
+        from aj_crew.agent_sdk.tools_settings_reach import tools_settings_unapplied
 
         both = {
             "shell": {"allowedCommands": ["git status"]},
@@ -325,8 +325,8 @@ class TestOtherReadersAgree:
         assert tools_settings_unapplied(spawn) == ["toolsSettings.subagent"]
 
     def test_the_notice_never_calls_an_enforced_use_subagent_list_unapplied(self):
-        from kiro_crew.agent_sdk.tools_settings_reach import tools_settings_unapplied
-        from kiro_crew.subagent_parts.agent_policy import spawn_allowlist
+        from aj_crew.agent_sdk.tools_settings_reach import tools_settings_unapplied
+        from aj_crew.subagent_parts.agent_policy import spawn_allowlist
 
         only = {"use_subagent": {"availableAgents": ["reviewer"]}}
         assert spawn_allowlist({"toolsSettings": only}) == ("reviewer",)

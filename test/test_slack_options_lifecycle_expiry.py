@@ -23,13 +23,13 @@ from slack_options_lifecycle_helpers import (
 from slack_wire_helpers import slack_wire
 from test_handler_turn import TURN_ENTRY_FUNCTIONS
 
-from kiro_crew.slack.format import (
+from aj_crew.slack.format import (
     OPTIONS_ACTION_PREFIX,
     OPTIONS_SEVERAL_ACTION,
     build_options_blocks,
     replace_options_blocks,
 )
-from kiro_crew.slack.outbound import PostedOptions, expire_options
+from aj_crew.slack.outbound import PostedOptions, expire_options
 
 
 def _slack() -> MagicMock:
@@ -174,7 +174,7 @@ class TestLifecycleOnTheSlot:
     """remember / expire / forget against a real slot registry."""
 
     def _state(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.sessions.get_slack_link = MagicMock(return_value=(None, None))
         state.push_slots_update = MagicMock()
@@ -196,7 +196,7 @@ class TestLifecycleOnTheSlot:
 
     @pytest.mark.asyncio
     async def test_a_recorded_control_is_expired_on_the_next_turn(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             effective_session_key,
             expire_slack_options,
             remember_slack_options,
@@ -217,7 +217,7 @@ class TestLifecycleOnTheSlot:
     @pytest.mark.asyncio
     async def test_expiry_runs_once_even_if_more_turns_follow(self, tmp_path, monkeypatch):
         """The record is cleared before the edit, so a failure is not retried."""
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             effective_session_key,
             expire_slack_options,
             remember_slack_options,
@@ -241,7 +241,7 @@ class TestLifecycleOnTheSlot:
         Striking every choice through afterwards would erase it, so the click
         drops the record instead.
         """
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             effective_session_key,
             expire_slack_options,
             forget_slack_options,
@@ -267,7 +267,7 @@ class TestLifecycleOnTheSlot:
         ``_run_chat`` takes whatever state object its caller passes; several
         callers pass a stand-in that has no slot registry at all.
         """
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             expire_slack_options,
             forget_slack_options,
             options_records,
@@ -291,7 +291,7 @@ class TestLifecycleOnTheSlot:
 
     @pytest.mark.asyncio
     async def test_a_raising_slot_registry_cannot_break_the_turn(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             expire_slack_options,
             options_records,
             remember_slack_options,
@@ -323,12 +323,12 @@ class TestLifecycleOnTheSlot:
         ``state._slack_to_slot`` itself and so passed while production never
         registered that mapping at all.
         """
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             effective_session_key,
             expire_slack_options,
             remember_slack_options,
         )
-        from kiro_crew.slack import interactions
+        from aj_crew.slack import interactions
 
         state = self._state(tmp_path, monkeypatch)
         state.slack_client.open_dm = AsyncMock(return_value="C1")
@@ -363,7 +363,7 @@ class TestLifecycleOnTheSlot:
         state helper that writes it, so a click on the replayed control could
         not find the slot and answered into a separate Slack session.
         """
-        from kiro_crew.dashboard.chat_utils import slack_options_owner_key
+        from aj_crew.dashboard.chat_utils import slack_options_owner_key
 
         state = self._state(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -380,7 +380,7 @@ class TestLifecycleOnTheSlot:
         Resolving through it alone is what made this silently return the wrong
         session, so the resolver also matches on the slot's own link fields.
         """
-        from kiro_crew.dashboard.chat_utils import slack_options_owner_key
+        from aj_crew.dashboard.chat_utils import slack_options_owner_key
 
         state = self._state(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
@@ -393,7 +393,7 @@ class TestLifecycleOnTheSlot:
         assert slack_options_owner_key(state, thread_ts) == "dashboard:s1"
 
     def test_an_unowned_thread_resolves_to_its_own_slack_key(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_utils import slack_options_owner_key
+        from aj_crew.dashboard.chat_utils import slack_options_owner_key
 
         state = self._state(tmp_path, monkeypatch)
 
@@ -411,7 +411,7 @@ class TestLifecycleOnTheSlot:
         Only a missing STATE is a genuine no-op: with nowhere to record, there is
         nothing to expire.
         """
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             expire_slack_options,
             forget_slack_options,
             options_records,
@@ -449,9 +449,9 @@ class TestTurnEntryWiring:
         """Covers dashboard sends, queue drains, regenerate, rewind, cron
         injection and the Slack-linked-thread route — every turn that runs
         through the dashboard engine."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.sessions.get_slack_link = MagicMock(return_value=(None, None))
         state.push_slots_update = MagicMock()
@@ -476,9 +476,9 @@ class TestTurnEntryWiring:
     async def test_dashboard_prompt_expansion_is_not_a_new_turn(self, tmp_path, monkeypatch):
         """A /prompts reference re-enters the same turn; re-expiring there would
         spend a control the user has not been shown an answer to yet."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.sessions.get_slack_link = MagicMock(return_value=(None, None))
         state.push_slots_update = MagicMock()
@@ -520,7 +520,7 @@ class TestTurnEntryWiring:
     async def test_slack_inbound_turn_expires_under_the_owning_key(
         self, monkeypatch, thread_owner, expected_key
     ):
-        from kiro_crew.slack import transport_dispatch
+        from aj_crew.slack import transport_dispatch
 
         calls: list[str] = []
 
@@ -574,7 +574,7 @@ class TestTurnEntryWiring:
         ``ping`` answers and returns without running the agent, so the pending
         question is still the one being waited on and its control must survive.
         """
-        from kiro_crew.slack import transport_dispatch
+        from aj_crew.slack import transport_dispatch
 
         calls: list[str] = []
 
@@ -609,8 +609,8 @@ class TestTurnEntryWiring:
     @pytest.mark.parametrize(
         "module_name,func_name",
         [
-            ("kiro_crew.slack.transport_dispatch", "handle_message_transport"),
-            ("kiro_crew.slack.handler", "handle_message"),
+            ("aj_crew.slack.transport_dispatch", "handle_message_transport"),
+            ("aj_crew.slack.handler", "handle_message"),
         ],
     )
     def test_slack_inbound_expires_again_after_the_turn_serializes(self, module_name, func_name):

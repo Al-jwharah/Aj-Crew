@@ -22,9 +22,9 @@ from embeddings_helpers import (
     _write_model_file,
 )
 
-import kiro_crew.embeddings as embeddings_mod
-from kiro_crew.embeddings import LlamaCppEmbedder
-from kiro_crew.testing.wait import wait_until
+import aj_crew.embeddings as embeddings_mod
+from aj_crew.embeddings import LlamaCppEmbedder
+from aj_crew.testing.wait import wait_until
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _reset_embedding_singletons = embeddings_helpers._reset_embedding_singletons
@@ -42,7 +42,7 @@ class TestIdleEviction:
         fake_cls = _make_fake_llama_class()
         closed: list[object] = []
         fake_cls.close = lambda self: closed.append(self)
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: fake_cls)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: fake_cls)
         emb = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"))
         assert emb.embed("warm") is not None
         # The embed returns as soon as the loader PUBLISHES the model, but the
@@ -65,7 +65,7 @@ class TestIdleEviction:
         epilogue is held here so the order is fixed, not left to the scheduler.
         """
         fake_cls = _make_fake_llama_class()
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: fake_cls)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: fake_cls)
         emb = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"))
         epilogue = threading.Event()
         real_start_evictor = emb._start_evictor
@@ -116,7 +116,7 @@ class TestIdleEviction:
         fake_cls = _make_fake_llama_class()
         closed: list[object] = []
         fake_cls.close = lambda self: closed.append(self)
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: fake_cls)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: fake_cls)
         monkeypatch.setattr(embeddings_mod, "_INFER_STOP_TIMEOUT_SECS", 0.05)
         emb = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"))
         release = threading.Event()
@@ -174,7 +174,7 @@ class TestIdleEviction:
         fake_cls = _make_fake_llama_class()
         closed: list[object] = []
         fake_cls.close = lambda self: closed.append(self)
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: fake_cls)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: fake_cls)
         monkeypatch.setattr(embeddings_mod, "_INFER_STOP_TIMEOUT_SECS", 0.05)
         emb = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"))
         release = threading.Event()
@@ -281,7 +281,7 @@ class TestIdleEviction:
     @pytest.mark.parametrize("configured", [0, 120])
     def test_the_config_loader_keeps_the_configured_value(self, configured: int):
         """`config get` exports what is configured, so `config set --file` keeps it."""
-        from kiro_crew.config.section_builders import _build_memory_config
+        from aj_crew.config.section_builders import _build_memory_config
 
         built = _build_memory_config({"embedding_idle_evict_secs": configured})
         assert built.embedding_idle_evict_secs == configured
@@ -297,10 +297,10 @@ class TestIdleEviction:
 
 class TestColdLoadWait:
     def test_a_loadable_model_reads_available_without_loading(self, tmp_path, monkeypatch):
-        from kiro_crew.knowledge.embedder import InProcessEmbedder
+        from aj_crew.knowledge.embedder import InProcessEmbedder
 
         fake_cls = _make_fake_llama_class()
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: fake_cls)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: fake_cls)
         backend = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"))
         monkeypatch.setattr(embeddings_mod, "get_shared_embedder", lambda: backend)
         try:
@@ -321,7 +321,7 @@ class TestColdLoadWait:
     def test_a_failed_load_is_not_loadable_after_its_cooldown(self, tmp_path, monkeypatch):
         """A model that never yields vectors (bad dim, corrupt file) is not 'available'."""
         fail_cls = _make_failing_llama_class()
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: fail_cls)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: fail_cls)
         backend = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"))
         assert backend.wait_ready(timeout=5) is False
         assert fail_cls.init_attempts == 1
@@ -330,10 +330,10 @@ class TestColdLoadWait:
 
     def test_watcher_residency_check_never_loads_an_unloaded_model(self, tmp_path, monkeypatch):
         """The watcher asks on every pass; asking must not undo an idle unload."""
-        from kiro_crew.knowledge.embedder import InProcessEmbedder
+        from aj_crew.knowledge.embedder import InProcessEmbedder
 
         fake_cls = _make_fake_llama_class()
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: fake_cls)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: fake_cls)
         backend = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"))
         monkeypatch.setattr(embeddings_mod, "get_shared_embedder", lambda: backend)
         try:
@@ -345,7 +345,7 @@ class TestColdLoadWait:
 
     def test_event_loop_callers_never_wait_for_the_load(self, tmp_path: Path, monkeypatch):
         fake_cls = _make_fake_llama_class()
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: fake_cls)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: fake_cls)
         emb = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"))
 
         async def _on_loop():
@@ -367,7 +367,7 @@ class TestColdLoadWait:
             real_init(self, **kwargs)
 
         fake_cls.__init__ = _slow_init
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: fake_cls)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: fake_cls)
         emb = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"))
         previous = embeddings_mod.embedding_work.get()
         # flake-ok: pre-existing 200 ms caller deadline; the loader stays gated until the finally, so the embed can only return on the deadline; moved verbatim, tracked for a de-flake pass

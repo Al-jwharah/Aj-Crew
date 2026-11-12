@@ -1,9 +1,9 @@
 """The dashboard gateway bootstrap keeps its surface and contracts while its owners move.
 
-``kiro_crew.dashboard.server`` is the gateway's import path and its patch surface.
+``aj_crew.dashboard.server`` is the gateway's import path and its patch surface.
 ``start_dashboard`` stays defined there as the dashboard's boot sequencer;
 ``start_api_server``, the helper families both entrypoints call, and the boot phases
-they delegate to live in the modules of ``kiro_crew.dashboard.server_runtime``, and
+they delegate to live in the modules of ``aj_crew.dashboard.server_runtime``, and
 ``_facade_compose.compose`` runs every function those owners define on the server
 module's globals. The server keeps the imports and the module state, with the
 internal-path sets and the response-header values defined in two pure-data modules
@@ -59,9 +59,9 @@ from dashboard_server_composition_contract_helpers import (
     _within,
 )
 
-import kiro_crew.dashboard.server as server
-from kiro_crew._facade_compose import compose as facade_compose
-from kiro_crew.dashboard import server_runtime
+import aj_crew.dashboard.server as server
+from aj_crew._facade_compose import compose as facade_compose
+from aj_crew.dashboard import server_runtime
 
 #: Every module-level name ``server`` bound at the base the split was cut from: what it
 #: defined and what it imported, private names included, because tests and other
@@ -71,7 +71,7 @@ from kiro_crew.dashboard import server_runtime
 _BASE_NAMES = frozenset("""
         AMBIGUOUS_LOOPBACK_HOSTS APP_WINDOW_URL_PREFIX AUDIT_CLAIMED_KEY Any
         Awaitable Callable DashboardState FOREIGN_HOLDER HEALTHY_PEER
-        InstancesRegistry KiroCrewConfig LISTENER_LOST_EXIT_CODE ListenerGuard
+        InstancesRegistry AjCrewConfig LISTENER_LOST_EXIT_CODE ListenerGuard
         LoopStallWatchdog NO_HOLDER NamedTuple POLICY_REVOKED_SOURCE PROBE_PATHS
         Path PureWindowsPath RECLAIMED SECONDARY_LOOPBACK_FOR STT_PROVIDER_LOCAL
         ScriptHookStore SecondaryLoopback Sequence SkillsLoader SleepInhibitor
@@ -184,7 +184,7 @@ _BASE_NAMES = frozenset("""
 #: ``_BASE_OWNERS``, captured from the one-module file before the split: each moved
 #: name keeps the kind and signature it had there, except ``_apply_startup_yolo``,
 #: which also takes the gateway's ``approval_mode``.
-_BASE_SHAPE_DIGEST = "8177a15dcf3115ecb5fbe803a7f343b86cca6a8bb28555e72ed57bbe2852b33f"
+_BASE_SHAPE_DIGEST = "e1e50326687c24dd5c58cff03e7515aa40e921d2a56e73b27306a44f1cb95bfb"
 
 #: The definitions of the one-module file that ``_BASE_OWNERS`` does not name: the two
 #: entrypoints, and the helpers repository guards read by path or that own module
@@ -210,7 +210,7 @@ _FACADE_DEFS = (
 #: site (``.github/sync-io-in-async-fs-baseline.txt``) that would be a new offender
 #: in any other file; every other stem is a ``server_runtime`` owner. Kept apart from
 #: ``_BASE_OWNERS`` and its shape digest: the entrypoints' ``port`` default is
-#: ``_DEFAULT_PORT``, which reads ``KIROCREW_PORT`` when ``kiro_crew.dashboard.state``
+#: ``_DEFAULT_PORT``, which reads ``AJCREW_PORT`` when ``aj_crew.dashboard.state``
 #: loads, so their signatures depend on the environment the suite runs in.
 _FACADE_DEF_HOMES: dict[str, tuple[str, ...]] = {
     "server": ("start_dashboard",),
@@ -230,21 +230,21 @@ _FACADE_DEF_HOME = {name: stem for stem, names in _FACADE_DEF_HOMES.items() for 
 #: The only imports a data module may bind beside its values: the reader of what a
 #: shipped built-in app declares (its host grants), folded into a value at import.
 _DATA_MODULE_SOURCES: dict[str, tuple[str, ...]] = {
-    "kiro_crew.dashboard.server_internal_paths": ("_builtin_strict_internal_paths",),
+    "aj_crew.dashboard.server_internal_paths": ("_builtin_strict_internal_paths",),
 }
 
 #: The pure-data modules beside the server, by dotted name, and every name each binds.
 #: The server imports all of them and nothing else imports either module, so the
 #: server's binding is the one its owners read and the one a test rebinds.
 _DATA_MODULES: dict[str, tuple[str, ...]] = {
-    "kiro_crew.dashboard.server_internal_paths": (
+    "aj_crew.dashboard.server_internal_paths": (
         "_CSRF_SAFE_METHODS",
         "_MIXED_INTERNAL_API_PATHS",
         "_PRE_AUDIT_DENY_STATUSES",
         "_STRICT_INTERNAL_API_PATHS",
         "_VIA_PROXY_SUFFIX",
     ),
-    "kiro_crew.dashboard.server_response_headers": (
+    "aj_crew.dashboard.server_response_headers": (
         "_IMMUTABLE_CACHE_CONTROL",
         "_IMMUTABLE_PATH_PREFIXES",
         "_NO_STORE_CACHE_CONTROL",
@@ -311,8 +311,8 @@ def test_a_fresh_interpreter_sees_every_base_public_name(tmp_path: Path) -> None
         tmp_path,
         """
         import sys
-        import kiro_crew.dashboard as pkg
-        import kiro_crew.dashboard.server as server
+        import aj_crew.dashboard as pkg
+        import aj_crew.dashboard.server as server
         missing = [n for n in sys.argv[1:] if not hasattr(server, n)]
         assert missing == [], missing
         assert pkg.start_dashboard is server.start_dashboard
@@ -326,7 +326,7 @@ def test_a_fresh_interpreter_sees_every_base_public_name(tmp_path: Path) -> None
 def _facade_importers() -> dict[str, set[str]]:
     """``{module path: names}`` every source file imports from the server by name."""
     found: dict[str, set[str]] = {}
-    for path in sorted((_SRC / "kiro_crew").rglob("*.py")):
+    for path in sorted((_SRC / "aj_crew").rglob("*.py")):
         resolved = path.resolve()
         if resolved == _FACADE_PATH or _OWNER_DIR in resolved.parents or "_vendor" in path.parts:
             continue
@@ -346,7 +346,7 @@ def test_the_seams_other_modules_import_keep_their_identity() -> None:
     function: the gateway's prune wait, the sandboxed documents' frame ancestors, and
     the package's lazy entrypoints. Each resolves to the composed object, which runs
     on the server's globals, so a patch of the server reaches every importer."""
-    from kiro_crew import dashboard as pkg
+    from aj_crew import dashboard as pkg
 
     importers = _facade_importers()
     imported = {name for names in importers.values() for name in names}
@@ -375,67 +375,67 @@ def test_the_shared_state_keeps_its_identity() -> None:
 #: gateway's boot path or close an import cycle, so each stays where the one-module
 #: file had it: inside the function that needs it.
 _LAZY_IMPORTS = {
-    "kiro_crew": "_hist_mod _rs crew_pause crewmate_harness_notice model_registry stt",
-    "kiro_crew.agent": "rebuild_agent_config rebuild_agent_config_reporting",
-    "kiro_crew.change_card_catalog": "HOOKED_ROUTES",
-    "kiro_crew.apps.bridges": "reconcile_enabled_app_resources",
-    "kiro_crew.apps.builtin_adoption": (
+    "aj_crew": "_hist_mod _rs crew_pause crewmate_harness_notice model_registry stt",
+    "aj_crew.agent": "rebuild_agent_config rebuild_agent_config_reporting",
+    "aj_crew.change_card_catalog": "HOOKED_ROUTES",
+    "aj_crew.apps.bridges": "reconcile_enabled_app_resources",
+    "aj_crew.apps.builtin_adoption": (
         "apply_builtin_adoptions released_builtin_packages stage_builtin_adoptions"
     ),
-    "kiro_crew.apps.builtins": "BUILTIN_NAMES",
-    "kiro_crew.apps.manager": "sweep_interrupted_updates",
-    "kiro_crew.apps.builtin_adoption_gate": "adopted_app_own_mcp_servers",
-    "kiro_crew.apps.builtin_adoption_pins": "adoption_pin_names",
-    "kiro_crew.apps.default_installs": "reconcile_default_installs",
-    "kiro_crew.apps.dev_mode": "init_dev_mode_watcher stop_dev_mode_watcher",
-    "kiro_crew.apps.event_bus": "build_broadcast_fn",
-    "kiro_crew.apps.execution": "builtin_app_agents builtin_app_mcp_servers builtin_app_names",
-    "kiro_crew.apps.spawn_sdk": "build_spawn_impl",
-    "kiro_crew.browser_harness.supervisor": "get_supervisor",
-    "kiro_crew.config": "live",
-    "kiro_crew.config.paths": "data_home",
-    "kiro_crew.config.live": "ConfigChange",
-    "kiro_crew.config.loader": "KiroCrewAgentConfig",
-    "kiro_crew.config.resolution": "DEGRADED_WHOLE_CONFIG",
-    "kiro_crew.connections.endpoint_migration": "migrate_retired_endpoints",
-    "kiro_crew.connections.warm": "scavenge_warm_mint_artifacts shutdown_warm_mint",
-    "kiro_crew.crew_log": "crew_log_emit _read_budget",
-    "kiro_crew.edition_locks": "local_enable_locked relay_selected",
-    "kiro_crew.dashboard": (
+    "aj_crew.apps.builtins": "BUILTIN_NAMES",
+    "aj_crew.apps.manager": "sweep_interrupted_updates",
+    "aj_crew.apps.builtin_adoption_gate": "adopted_app_own_mcp_servers",
+    "aj_crew.apps.builtin_adoption_pins": "adoption_pin_names",
+    "aj_crew.apps.default_installs": "reconcile_default_installs",
+    "aj_crew.apps.dev_mode": "init_dev_mode_watcher stop_dev_mode_watcher",
+    "aj_crew.apps.event_bus": "build_broadcast_fn",
+    "aj_crew.apps.execution": "builtin_app_agents builtin_app_mcp_servers builtin_app_names",
+    "aj_crew.apps.spawn_sdk": "build_spawn_impl",
+    "aj_crew.browser_harness.supervisor": "get_supervisor",
+    "aj_crew.config": "live",
+    "aj_crew.config.paths": "data_home",
+    "aj_crew.config.live": "ConfigChange",
+    "aj_crew.config.loader": "AjCrewAgentConfig",
+    "aj_crew.config.resolution": "DEGRADED_WHOLE_CONFIG",
+    "aj_crew.connections.endpoint_migration": "migrate_retired_endpoints",
+    "aj_crew.connections.warm": "scavenge_warm_mint_artifacts shutdown_warm_mint",
+    "aj_crew.crew_log": "crew_log_emit _read_budget",
+    "aj_crew.edition_locks": "local_enable_locked relay_selected",
+    "aj_crew.dashboard": (
         "chat_trust_restart crew_mode_migration display_verdicts handlers_instances stale_wake "
         "tailnet_direct_listener"
     ),
-    "kiro_crew.dashboard.card_send": "card_turn_arrival_middleware card_turn_delegation_middleware",
-    "kiro_crew.dashboard.chat": "_run_chat",
-    "kiro_crew.dashboard.kiro_relay.ingress": "RELAY_INGRESS_APP_KEY",
-    "kiro_crew.relay_client.provider": "publish_gateway_ingress",
-    "kiro_crew.dashboard.lts_gate_middleware": (
+    "aj_crew.dashboard.card_send": "card_turn_arrival_middleware card_turn_delegation_middleware",
+    "aj_crew.dashboard.chat": "_run_chat",
+    "aj_crew.dashboard.kiro_relay.ingress": "RELAY_INGRESS_APP_KEY",
+    "aj_crew.relay_client.provider": "publish_gateway_ingress",
+    "aj_crew.dashboard.lts_gate_middleware": (
         "lts_gate_middleware_for lts_login_source install_lts_gate"
     ),
-    "kiro_crew.lts_boot": "require_kiro_login",
-    "kiro_crew.dashboard.handlers": "config_pending remote_puller wf_handlers work_ledger",
-    "kiro_crew.dashboard.handlers.agents": "_remove_member_leftovers",
-    "kiro_crew.dashboard.handlers.artifact_download": "register_artifact_download_routes",
-    "kiro_crew.dashboard.handlers.ask_question": (
+    "aj_crew.lts_boot": "require_kiro_login",
+    "aj_crew.dashboard.handlers": "config_pending remote_puller wf_handlers work_ledger",
+    "aj_crew.dashboard.handlers.agents": "_remove_member_leftovers",
+    "aj_crew.dashboard.handlers.artifact_download": "register_artifact_download_routes",
+    "aj_crew.dashboard.handlers.ask_question": (
         "api_agent_ask_open api_agent_ask_wait api_agent_ask_withdraw "
         "api_ask_question api_ask_question_answer api_ask_question_dismiss "
         "api_ask_question_pending"
     ),
-    "kiro_crew.dashboard.handlers.autonudge": (
+    "aj_crew.dashboard.handlers.autonudge": (
         "api_autonudge_delete api_autonudge_fire api_autonudge_get api_autonudge_list "
         "api_autonudge_start api_autonudge_update api_monitor_clear api_monitor_contract "
         "api_monitor_create api_monitor_restart api_monitor_slot_get api_monitor_stop "
         "api_monitor_update api_monitors_list api_session_monitor_get"
     ),
-    "kiro_crew.dashboard.handlers.browser_harness_status": "auto_setup_browser_harness",
-    "kiro_crew.dashboard.handlers.change_cards": "change_card_middleware",
-    "kiro_crew.dashboard.handlers.cron_board": "wire_app_cron_folder_creator",
-    "kiro_crew.dashboard.handlers.decisions": "resume_local_decision_model",
-    "kiro_crew.dashboard.handlers.sandbox_doc": "register_sandbox_doc_routes",
-    "kiro_crew.dashboard.handlers.terminal": "apply_terminal_enabled",
-    "kiro_crew.dashboard.handlers.updates": "apply_log_level_from_config",
-    "kiro_crew.dashboard.handlers.webapp_preview": "register_webapp_preview_routes",
-    "kiro_crew.dashboard.handlers.workflows": (
+    "aj_crew.dashboard.handlers.browser_harness_status": "auto_setup_browser_harness",
+    "aj_crew.dashboard.handlers.change_cards": "change_card_middleware",
+    "aj_crew.dashboard.handlers.cron_board": "wire_app_cron_folder_creator",
+    "aj_crew.dashboard.handlers.decisions": "resume_local_decision_model",
+    "aj_crew.dashboard.handlers.sandbox_doc": "register_sandbox_doc_routes",
+    "aj_crew.dashboard.handlers.terminal": "apply_terminal_enabled",
+    "aj_crew.dashboard.handlers.updates": "apply_log_level_from_config",
+    "aj_crew.dashboard.handlers.webapp_preview": "register_webapp_preview_routes",
+    "aj_crew.dashboard.handlers.workflows": (
         "api_workflow_author api_workflow_definition_get api_workflow_definition_remove "
         "api_workflow_definition_run api_workflow_definition_update api_workflow_definitions "
         "api_workflow_definitions_create api_workflow_run api_workflow_run_cancel "
@@ -443,36 +443,36 @@ _LAZY_IMPORTS = {
         "api_workflow_run_rerun api_workflow_run_update_definition "
         "api_workflow_run_update_preview api_workflow_runs"
     ),
-    "kiro_crew.dashboard.handlers_system": "_get_owner_hash _get_static_system_info",
-    "kiro_crew.dashboard.routes.system": "RELEASED_BUILTIN_PACKAGES",
-    "kiro_crew.dashboard.member_slot_retry": "schedule_member_slot_retry",
-    "kiro_crew.dashboard.slot_queue_repository": "drain_restored_parked_sends",
-    "kiro_crew.dashboard.workflow_inject": "inject_bound_workflow_result",
-    "kiro_crew.dashboard.workflow_session_port": "WorkflowSessionPort",
-    "kiro_crew.decisions": "impl_systemone local_runtime",
-    "kiro_crew.diag.recorder": "_DiagRecorder get_recorder",
-    "kiro_crew.memory_startup": "memory_prepared memory_startup_preparing",
-    "kiro_crew.memory_startup_prebuild": "prebuild_startup_reads",
-    "kiro_crew.history_index_worker": "SessionIndexWorkerSupervisor",
-    "kiro_crew.kiro_prerequisite": "KiroPrerequisiteService register_turn_auth_service",
-    "kiro_crew.hooks": "set_builtin_app_agents set_builtin_app_mcp_servers set_builtin_app_names",
-    "kiro_crew.memory": "MemoryStore",
-    "kiro_crew.messaging.session_trust": "clear_trusted_sessions",
-    "kiro_crew.metrics": "_gauges",
-    "kiro_crew.metrics.crew_log_export": "install_otel_crew_log_subscriber",
-    "kiro_crew.page_cache": "read_now",
-    "kiro_crew.security": "redact_credentials redact_exfiltration_urls",
-    "kiro_crew.sel": "sel",
-    "kiro_crew.slack.handler": "load_voice_reply_config",
-    "kiro_crew.stt": "engine stt_models",
-    "kiro_crew.shared_crew": "lifecycle",
-    "kiro_crew.shared_crew.preview": "no_maintenance preview_enabled",
-    "kiro_crew.shared_crew.wiring": "install prepare_gateway",
-    "kiro_crew.shared_crew.host_hooks": "mark_sessions_restored",
-    "kiro_crew.shared_crew.host_power": "shared_use_wants_awake",
-    "kiro_crew.subagent": "_available_memory_gb",
-    "kiro_crew.transcribe": "_whisper_language",
-    "kiro_crew.workflows.service": "WorkflowService",
+    "aj_crew.dashboard.handlers_system": "_get_owner_hash _get_static_system_info",
+    "aj_crew.dashboard.routes.system": "RELEASED_BUILTIN_PACKAGES",
+    "aj_crew.dashboard.member_slot_retry": "schedule_member_slot_retry",
+    "aj_crew.dashboard.slot_queue_repository": "drain_restored_parked_sends",
+    "aj_crew.dashboard.workflow_inject": "inject_bound_workflow_result",
+    "aj_crew.dashboard.workflow_session_port": "WorkflowSessionPort",
+    "aj_crew.decisions": "impl_systemone local_runtime",
+    "aj_crew.diag.recorder": "_DiagRecorder get_recorder",
+    "aj_crew.memory_startup": "memory_prepared memory_startup_preparing",
+    "aj_crew.memory_startup_prebuild": "prebuild_startup_reads",
+    "aj_crew.history_index_worker": "SessionIndexWorkerSupervisor",
+    "aj_crew.kiro_prerequisite": "KiroPrerequisiteService register_turn_auth_service",
+    "aj_crew.hooks": "set_builtin_app_agents set_builtin_app_mcp_servers set_builtin_app_names",
+    "aj_crew.memory": "MemoryStore",
+    "aj_crew.messaging.session_trust": "clear_trusted_sessions",
+    "aj_crew.metrics": "_gauges",
+    "aj_crew.metrics.crew_log_export": "install_otel_crew_log_subscriber",
+    "aj_crew.page_cache": "read_now",
+    "aj_crew.security": "redact_credentials redact_exfiltration_urls",
+    "aj_crew.sel": "sel",
+    "aj_crew.slack.handler": "load_voice_reply_config",
+    "aj_crew.stt": "engine stt_models",
+    "aj_crew.shared_crew": "lifecycle",
+    "aj_crew.shared_crew.preview": "no_maintenance preview_enabled",
+    "aj_crew.shared_crew.wiring": "install prepare_gateway",
+    "aj_crew.shared_crew.host_hooks": "mark_sessions_restored",
+    "aj_crew.shared_crew.host_power": "shared_use_wants_awake",
+    "aj_crew.subagent": "_available_memory_gb",
+    "aj_crew.transcribe": "_whisper_language",
+    "aj_crew.workflows.service": "WorkflowService",
 }
 
 
@@ -500,7 +500,7 @@ def test_a_star_import_carries_the_moved_public_names(tmp_path: Path) -> None:
     assert not hasattr(server, "__all__")
     probe = tmp_path / "server_star_probe.py"
     probe.write_text(
-        "from kiro_crew.dashboard.server import *  # noqa: F401,F403\n", encoding="utf-8"
+        "from aj_crew.dashboard.server import *  # noqa: F401,F403\n", encoding="utf-8"
     )
     spec = importlib.util.spec_from_file_location("server_star_probe", probe)
     assert spec is not None and spec.loader is not None
@@ -558,7 +558,7 @@ def test_the_moved_names_keep_their_base_shapes() -> None:
 
 #: SHA-256 of the same ``"<name> <kind> <signature>"`` lines for the helpers of
 #: ``_FACADE_DEFS``, captured from the server module before they moved to their homes.
-#: The two entrypoints are left out: their ``port`` default reads ``KIROCREW_PORT``.
+#: The two entrypoints are left out: their ``port`` default reads ``AJCREW_PORT``.
 _FACADE_HELPER_SHAPE_DIGEST = "0952dafb87df8d73c3c54e406f8028bf9043f91c08354f04d8a015faf2d76936"
 
 
@@ -588,7 +588,7 @@ def test_facade_state_stays_on_the_facade() -> None:
     state = _module_assignments(_FACADE_PATH.read_text(encoding="utf-8"))
     assert {"logger", "_tailnet_awake_cache", "_OWN_HOST_WARM_TASKS", "_BASE_CSP"} <= state
     assert {"_STRICT_INTERNAL_API_PATHS", "_MIXED_INTERNAL_API_PATHS"} <= set(
-        _DATA_MODULES["kiro_crew.dashboard.server_internal_paths"]
+        _DATA_MODULES["aj_crew.dashboard.server_internal_paths"]
     )
     assert {"_CREWMATE_PRUNE_GATE_TIMEOUT_S", "_TIME_WAIT_BUDGET_SECS"} <= state
     owned = {stem: sorted(_module_assignments(source)) for stem, source in _owner_sources().items()}
@@ -650,7 +650,7 @@ def _data_module_importers(sources: dict[str, str]) -> dict[str, list[str]]:
 def test_only_the_facade_imports_a_data_module() -> None:
     sources = {
         path.relative_to(_SRC).as_posix(): path.read_text(encoding="utf-8")
-        for path in sorted((_SRC / "kiro_crew").rglob("*.py"))
+        for path in sorted((_SRC / "aj_crew").rglob("*.py"))
         if "_vendor" not in path.parts
     }
     assert _data_module_importers(sources) == {
@@ -660,28 +660,26 @@ def test_only_the_facade_imports_a_data_module() -> None:
 
 def test_the_data_module_importer_scan_sees_every_spelling() -> None:
     planted = {
-        "kiro_crew/dashboard/a.py": "from kiro_crew.dashboard import server_internal_paths\n",
-        "kiro_crew/dashboard/b.py": (
-            "import kiro_crew.dashboard.server_response_headers as headers\n"
+        "aj_crew/dashboard/a.py": "from aj_crew.dashboard import server_internal_paths\n",
+        "aj_crew/dashboard/b.py": ("import aj_crew.dashboard.server_response_headers as headers\n"),
+        "aj_crew/dashboard/c.py": (
+            "from aj_crew.dashboard.server_internal_paths import _STRICT_INTERNAL_API_PATHS\n"
         ),
-        "kiro_crew/dashboard/c.py": (
-            "from kiro_crew.dashboard.server_internal_paths import _STRICT_INTERNAL_API_PATHS\n"
-        ),
-        "kiro_crew/dashboard/d.py": "from .server_response_headers import _PERMISSIONS_POLICY\n",
-        "kiro_crew/dashboard/e.py": "from . import server_internal_paths\n",
-        "kiro_crew/x/f.py": (
+        "aj_crew/dashboard/d.py": "from .server_response_headers import _PERMISSIONS_POLICY\n",
+        "aj_crew/dashboard/e.py": "from . import server_internal_paths\n",
+        "aj_crew/x/f.py": (
             "import importlib\n"
-            "importlib.import_module('kiro_crew.dashboard.server_response_headers')\n"
+            "importlib.import_module('aj_crew.dashboard.server_response_headers')\n"
         ),
-        "kiro_crew/x/g.py": "NAME = 'server_internal_paths'\nimport os\n",
+        "aj_crew/x/g.py": "NAME = 'server_internal_paths'\nimport os\n",
     }
     assert _data_module_importers(planted) == {
-        "kiro_crew/dashboard/a.py": ["kiro_crew.dashboard.server_internal_paths"],
-        "kiro_crew/dashboard/b.py": ["kiro_crew.dashboard.server_response_headers"],
-        "kiro_crew/dashboard/c.py": ["kiro_crew.dashboard.server_internal_paths"],
-        "kiro_crew/dashboard/d.py": ["kiro_crew.dashboard.server_response_headers"],
-        "kiro_crew/dashboard/e.py": ["kiro_crew.dashboard.server_internal_paths"],
-        "kiro_crew/x/f.py": ["kiro_crew.dashboard.server_response_headers"],
+        "aj_crew/dashboard/a.py": ["aj_crew.dashboard.server_internal_paths"],
+        "aj_crew/dashboard/b.py": ["aj_crew.dashboard.server_response_headers"],
+        "aj_crew/dashboard/c.py": ["aj_crew.dashboard.server_internal_paths"],
+        "aj_crew/dashboard/d.py": ["aj_crew.dashboard.server_response_headers"],
+        "aj_crew/dashboard/e.py": ["aj_crew.dashboard.server_internal_paths"],
+        "aj_crew/x/f.py": ["aj_crew.dashboard.server_response_headers"],
     }
 
 
@@ -729,7 +727,7 @@ def test_every_base_definition_is_in_exactly_one_place() -> None:
 
 
 def test_the_owners_log_as_the_facade() -> None:
-    """Log capture keyed to ``kiro_crew.dashboard.server`` keeps seeing the moved
+    """Log capture keyed to ``aj_crew.dashboard.server`` keeps seeing the moved
     sites: an owner function logs through the server's ``logger``."""
     assert server.logger.name == _FACADE
     readers = [
@@ -740,7 +738,7 @@ def test_the_owners_log_as_the_facade() -> None:
 
 
 def test_every_owner_function_runs_on_the_facade_globals() -> None:
-    """A patch of ``kiro_crew.dashboard.server.<name>`` reaches an owner function only
+    """A patch of ``aj_crew.dashboard.server.<name>`` reaches an owner function only
     because the function reads the server's globals, not its own."""
     labels = {label for label, _ in _owner_functions()}
     assert len(labels) >= 112
@@ -797,7 +795,7 @@ async def test_a_patch_of_the_facade_reaches_an_owner_function(
     assert resolved == [(tmp_path, "assets", "a.js")]
     loader = MagicMock()
     loader.load.return_value.dashboard.tailscale.enabled = True
-    monkeypatch.setattr(server, "KiroCrewConfig", loader)
+    monkeypatch.setattr(server, "AjCrewConfig", loader)
     assert server._tailnet_origin_enabled() is True
 
 
@@ -827,7 +825,7 @@ def test_a_moved_function_reads_its_source_from_its_owner() -> None:
 
 def test_the_facade_composes_through_the_shared_helper() -> None:
     """The facade composes its owners with the one shared helper,
-    ``kiro_crew._facade_compose.compose``, calling it exactly once, and the owner
+    ``aj_crew._facade_compose.compose``, calling it exactly once, and the owner
     package keeps no copy of its own: its ``__init__`` defines no function."""
     assert server._facade_compose is facade_compose
     source = Path(server.__file__).read_text(encoding="utf-8")
@@ -850,12 +848,12 @@ def test_the_facade_composes_through_the_shared_helper() -> None:
         ("from . import listener\n", True),
         ("from .listener import _bind_once\n", True),
         ("from .. import server\n", True),
-        ("from kiro_crew.dashboard import server\n", True),
-        ("import kiro_crew.dashboard.server as srv\n", True),
-        ("import importlib\nimportlib.import_module('kiro_crew.dashboard.server')\n", True),
-        ("__import__('kiro_crew.dashboard.server_runtime.listener')\n", True),
-        ("if TYPE_CHECKING:\n    from kiro_crew.dashboard.server import logger\n", False),
-        ("def f():\n    from kiro_crew.config import live\n", False),
+        ("from aj_crew.dashboard import server\n", True),
+        ("import aj_crew.dashboard.server as srv\n", True),
+        ("import importlib\nimportlib.import_module('aj_crew.dashboard.server')\n", True),
+        ("__import__('aj_crew.dashboard.server_runtime.listener')\n", True),
+        ("if TYPE_CHECKING:\n    from aj_crew.dashboard.server import logger\n", False),
+        ("def f():\n    from aj_crew.config import live\n", False),
         ("import asyncio\nfrom aiohttp import web\n", False),
     ],
 )

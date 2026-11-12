@@ -19,10 +19,10 @@ import json
 
 import pytest
 
-from kiro_crew.decisions import consent as consent_mod
-from kiro_crew.decisions import gate as gate_mod
-from kiro_crew.decisions.points import compaction_keep as point
-from kiro_crew.decisions.types import Answer, Choice
+from aj_crew.decisions import consent as consent_mod
+from aj_crew.decisions import gate as gate_mod
+from aj_crew.decisions.points import compaction_keep as point
+from aj_crew.decisions.types import Answer, Choice
 
 SECRET = "AKIAIOSFODNN7EXAMPLE"
 
@@ -141,7 +141,7 @@ class TestStateShape:
             seen.append(value)
             return "COMPANION-CLEANED"
 
-        monkeypatch.setattr("kiro_crew.platform.context.redact_via_context", _shim)
+        monkeypatch.setattr("aj_crew.platform.context.redact_via_context", _shim)
         built = point.build_transcript(transcript(calls=1, inp="company-token-abc"))
         state = point.build_state(built, point.STAGES[0])
         assert state["calls"][0]["input"] == "COMPANION-CLEANED"
@@ -157,7 +157,7 @@ class TestStateShape:
         def _boom(_value: str) -> str:
             raise RuntimeError("companion unavailable")
 
-        monkeypatch.setattr("kiro_crew.platform.context.redact_via_context", _boom)
+        monkeypatch.setattr("aj_crew.platform.context.redact_via_context", _boom)
         built = point.build_transcript(transcript(calls=1, inp="something"))
         state = point.build_state(built, point.STAGES[0])
         assert state["calls"][0]["input"] == ""
@@ -597,7 +597,7 @@ class TestOneCharacterUniverse:
         reason -- and this holds the arm to the role filter's own definition so a
         future edit cannot quietly start claiming the narrower thing.
         """
-        from kiro_crew.context import RECALL_ROLES
+        from aj_crew.context import RECALL_ROLES
 
         rows = [
             {"role": role, "content": "x" * 5}
@@ -1032,7 +1032,7 @@ class TestTheBoundaryIsTheDecisionMoment:
             },
         ]
         monkeypatch.setattr(
-            "kiro_crew.history.ConversationLog",
+            "aj_crew.history.ConversationLog",
             lambda *_a, **_kw: type("L", (), {"read_messages": lambda _s, _k: rows})(),
         )
         kept = point.read_rows("sess", fired)
@@ -1049,7 +1049,7 @@ class TestTheBoundaryIsTheDecisionMoment:
             self._stamped("2026-09-21T10:00:05+00:00", role="user", content="b"),
         ]
         monkeypatch.setattr(
-            "kiro_crew.history.ConversationLog",
+            "aj_crew.history.ConversationLog",
             lambda *_a, **_kw: type("L", (), {"read_messages": lambda _s, _k: rows})(),
         )
         assert len(point.read_rows("sess")) == 2
@@ -1080,7 +1080,7 @@ class TestTheBoundaryIsTheDecisionMoment:
             for n in range(5)
         ]
         monkeypatch.setattr(
-            "kiro_crew.history.ConversationLog",
+            "aj_crew.history.ConversationLog",
             lambda *_a, **_kw: type("L", (), {"read_messages": lambda _s, _k: rows})(),
         )
         # Strictly before the burst: the boundary itself is INCLUSIVE, so a row sharing

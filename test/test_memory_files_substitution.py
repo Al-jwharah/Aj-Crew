@@ -20,9 +20,9 @@ from typing import Any, Dict, List, Optional
 
 import pytest
 
-from kiro_crew.memory import MemoryStore
-from kiro_crew.platform.context import current_context, set_context
-from kiro_crew.platform.interfaces import MemoryEntry, MemoryRoots
+from aj_crew.memory import MemoryStore
+from aj_crew.platform.context import current_context, set_context
+from aj_crew.platform.interfaces import MemoryEntry, MemoryRoots
 
 
 class DictMemoryFiles:
@@ -216,7 +216,7 @@ class TestTheInjectedImplementationAnswers:
             def now(cls, tz=None):  # type: ignore[override]
                 return cls(2026, 9, 26, 12, tzinfo=tz)
 
-        monkeypatch.setattr("kiro_crew.memory.datetime", _PinnedClock)
+        monkeypatch.setattr("aj_crew.memory.datetime", _PinnedClock)
         workspace = _seed_local_tree(tmp_path, preferences="- x\n")
         history = workspace / "memory" / "history"
         (history / "2020-01-01.md").write_text("# local only\n", encoding="utf-8")
@@ -289,10 +289,10 @@ class TestProviderFailureIsNotSwallowed:
         ``except Exception``; falling back would serve a stale local copy that the next
         write publishes over the live document.
         """
-        import kiro_crew.memory_files as mf
-        import kiro_crew.platform.context as ctx
-        from kiro_crew.platform.context import PlatformCompositionError
-        from kiro_crew.platform.interfaces import MemoryRoots
+        import aj_crew.memory_files as mf
+        import aj_crew.platform.context as ctx
+        from aj_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.interfaces import MemoryRoots
 
         def _raise() -> Any:
             raise PlatformCompositionError("platform did not compose (governed host)")
@@ -317,7 +317,7 @@ class TestNoContextStillWorks:
         the standalone implementation -- which is what keeps several hundred
         direct ``MemoryStore(...)`` constructions across this suite working.
         """
-        from kiro_crew.memory_files import LocalMemoryFiles
+        from aj_crew.memory_files import LocalMemoryFiles
 
         workspace = _seed_local_tree(tmp_path, preferences="- from local disk\n")
         store = MemoryStore(workspace=workspace)

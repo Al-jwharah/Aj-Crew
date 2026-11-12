@@ -1,6 +1,6 @@
 /**
  * Settings -> Browser -> More -> the `browser.credentials.domains` editor: the
- * sites the edition's sign-in may be used for in Kiro's Chromium. Shown only
+ * sites the edition's sign-in may be used for in Aj's Chromium. Shown only
  * when the edition supplies a sign-in provider.
  *
  * Chips with a remove button plus an add field, written as ONE value (the whole

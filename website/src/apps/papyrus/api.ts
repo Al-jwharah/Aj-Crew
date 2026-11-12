@@ -1,7 +1,7 @@
 // Thin fetch wrapper for the Papyrus backend.
 //
 // The routes are registered directly on the main gateway's aiohttp Application
-// (see kiro_crew/apps/builtins/papyrus/backend/routes.py:register_routes), so the
+// (see aj_crew/apps/builtins/papyrus/backend/routes.py:register_routes), so the
 // base path is /api/apps/papyrus — matching issue-radar and code-review-sage, NOT
 // the /apps/{name}/api reverse-proxy prefix used by apps that run as a separate
 // child process.

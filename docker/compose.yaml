@@ -1,16 +1,19 @@
-# KiroCrew gateway — compose example.
+# Aj Crew gateway — compose example.
 #
 #   docker compose up -d
-#   docker compose exec kirocrew kiro-cli login          # one-time agent login
-#   docker compose exec kirocrew kirocrew token --ttl 2h # mint a dashboard link
+#   docker compose exec ajcrew kiro-cli login          # one-time agent login
+#   docker compose exec ajcrew ajcrew token --ttl 2h # mint a dashboard link
 #
 # Then open the printed link at http://localhost:5476/?token=...
 # Full guide: docs/guides/docker.md
 
 services:
-  kirocrew:
-    image: ghcr.io/kirodotdev/kirocrew:stable
-    container_name: kirocrew
+  ajcrew:
+    # No image is published for Aj Crew yet, so this names the one you build
+    # locally: `make wheel && docker build -f docker/Dockerfile -t ajcrew:dev .`
+    # from a checkout (docs/guides/docker.md, "Building locally").
+    image: ajcrew:dev
+    container_name: ajcrew
     restart: unless-stopped
     ports:
       # Loopback-published by default: only this machine can reach the
@@ -18,14 +21,14 @@ services:
       # interfaces, but that alone is not enough for LAN browsers: every
       # request still requires a dashboard token, AND the browser's Origin/
       # Host must be allowed — set dashboard.url in config.json (or
-      # KIROCREW_CORS_ORIGINS) to the address you browse from, ideally a
+      # AJCREW_CORS_ORIGINS) to the address you browse from, ideally a
       # TLS reverse proxy. See docs/guides/docker.md "Networking and security".
       - "127.0.0.1:5476:5476"
     volumes:
       # One named volume persists everything: gateway state (~/.kiro/crew),
       # kiro-cli credentials, agents, skills. Named volume (not bind mount)
       # so ownership matches the image's non-root user on first use.
-      - kirocrew-home:/home/kirocrew
+      - ajcrew-home:/home/ajcrew
     environment:
       # Channel credentials load from the environment. Put them in an .env
       # file next to this compose file (compose reads it automatically) —
@@ -36,7 +39,7 @@ services:
       # never reside in a long-lived /proc/<pid>/environ.
       SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN:-}
       SLACK_APP_TOKEN: ${SLACK_APP_TOKEN:-}
-      KIROCREW_OWNER_ID: ${KIROCREW_OWNER_ID:-}
+      AJCREW_OWNER_ID: ${AJCREW_OWNER_ID:-}
       DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       WECOM_BOT_ID: ${WECOM_BOT_ID:-}
@@ -53,12 +56,12 @@ services:
       # sandbox (adds unconditional unshare/clone/mount/umount2 allows to the Docker
       # default; see docs/guides/docker.md "Sandbox troubleshooting"):
       #   security_opt:
-      #     - seccomp:./docker/seccomp/kirocrew-seccomp.json
-      KIROCREW_ALLOW_UNSANDBOXED: ${KIROCREW_ALLOW_UNSANDBOXED:-}
+      #     - seccomp:./docker/seccomp/ajcrew-seccomp.json
+      AJCREW_ALLOW_UNSANDBOXED: ${AJCREW_ALLOW_UNSANDBOXED:-}
     # The image's HEALTHCHECK covers liveness; this block is only needed if
     # you override the port.
     # healthcheck:
     #   test: ["CMD", "curl", "-fsS", "http://127.0.0.1:5476/api/health"]
 
 volumes:
-  kirocrew-home:
+  ajcrew-home:

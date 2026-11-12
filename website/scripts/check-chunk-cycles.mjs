@@ -74,7 +74,7 @@ export function main(argv = process.argv.slice(2)) {
     failGate(
       `no chunk in ${reportPath} carries an 'imports' list, so no edge was ` +
         'measured and "no cycles" would be vacuous. The field is written by the ' +
-        'kirocrew-bundle-report plugin in website/scripts/lib/bundleReport.mjs; ' +
+        'ajcrew-bundle-report plugin in website/scripts/lib/bundleReport.mjs; ' +
         're-run `vite build --mode analyze` with a build that includes it.',
       5
     )

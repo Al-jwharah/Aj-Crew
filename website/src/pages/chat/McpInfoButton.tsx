@@ -30,8 +30,8 @@ export default function McpInfoButton({ agent }: { agent?: string }) {
   // Tool Search mode: when on, MCP tool specs are deferred (search-and-call)
   // so servers show connected but their tools load only when used.
   const toolSearchQ = useQuery<{ agent?: { tool_search?: boolean } }, Error, boolean>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
     select: (c) => c.agent?.tool_search ?? true,
     enabled: open,
     staleTime: 0,
@@ -106,9 +106,9 @@ export default function McpInfoButton({ agent }: { agent?: string }) {
             </div>
           )))}
           <div className="mt-2 pt-2 border-t border-border text-[11px] text-muted leading-snug">
-            {agent && agent !== 'kirocrew'
+            {agent && agent !== 'ajcrew'
               ? i18nT('pages.chat.mcpInfoButton.agent_loads_only_its_own_mcp_servers', { name: agent })
-              : i18nT('pages.chat.mcpInfoButton.default_agent_loads_all_mcp_servers', { name: 'kirocrew' })}
+              : i18nT('pages.chat.mcpInfoButton.default_agent_loads_all_mcp_servers', { name: 'ajcrew' })}
           </div>
         </div>
       }</OverlayPortal>}

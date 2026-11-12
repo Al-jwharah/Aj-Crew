@@ -115,7 +115,7 @@ def pytest_collection_modifyitems(config, items):
     :func:`on_self_hosted_runner`.
 
     Lives HERE rather than in ``test/conftest.py`` because the lists already name node
-    ids under ``src/kiro_crew/apps/builtins/auto_improvement/tests/``, and a hook rooted
+    ids under ``src/aj_crew/apps/builtins/auto_improvement/tests/``, and a hook rooted
     at ``test/`` is never registered when only in-package tests are collected -- which is
     exactly what CI's reduced-scope Windows job does when a diff touches no path under
     ``test/``. Those entries are also absent from ``BACKEND_DESELECTS``, so they were
@@ -277,7 +277,7 @@ def _base_nodeid(nodeid: str) -> str:
 
 
 def platform_compat_or_none():
-    """``kiro_crew.platform_compat``, or ``None`` when it cannot be imported.
+    """``aj_crew.platform_compat``, or ``None`` when it cannot be imported.
 
     Imported lazily so the rootdir floor keeps its module-level imports to the
     stdlib: it is loaded before every collection, and a module-scope import of the
@@ -285,7 +285,7 @@ def platform_compat_or_none():
     side effects.
     """
     try:
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
     except ImportError:  # pragma: no cover - partial checkout
         return None
     return platform_compat

@@ -1,4 +1,4 @@
-"""The embedding-model routes of ``kiro_crew.dashboard.handlers.memory`` and its config writes.
+"""The embedding-model routes of ``aj_crew.dashboard.handlers.memory`` and its config writes.
 
 Covers the apply endpoint, ``_write_embed_model_config``, the pip bootstrap, the apply
 worker and the off-loop config transactions. See ``test_handlers_memory_coverage.py``.
@@ -25,12 +25,12 @@ from handlers_memory_coverage_helpers import (  # noqa: F401 -- the autouse fixt
     _store,
 )
 
-import kiro_crew.dashboard.handlers.memory as mem_mod
-from kiro_crew.embeddings import CustomModelSpec
-from kiro_crew.embeddings_shared import ReembedProgress
-from kiro_crew.testing.wait import await_until
+import aj_crew.dashboard.handlers.memory as mem_mod
+from aj_crew.embeddings import CustomModelSpec
+from aj_crew.embeddings_shared import ReembedProgress
+from aj_crew.testing.wait import await_until
 
-_MOD = "kiro_crew.dashboard.handlers.memory"
+_MOD = "aj_crew.dashboard.handlers.memory"
 
 
 # embedding-model apply endpoint (request boundary only)
@@ -45,9 +45,9 @@ def _prog(active: bool = False) -> Any:
 
 class TestEmbeddingModelEndpoint:
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim and no test in the memory handler coverage files calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim and no test in the memory handler coverage files calls monkeypatch.undo()
     def _no_env_override(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.delenv("KIROCREW_EMBED_MODEL_PATH", raising=False)
+        monkeypatch.delenv("AJCREW_EMBED_MODEL_PATH", raising=False)
 
     @pytest.mark.asyncio
     async def test_denied_for_restricted_session(self) -> None:
@@ -127,7 +127,7 @@ class TestEmbeddingModelEndpoint:
         """``bool("false")`` is True; a spelled false must go on to apply."""
         from aiohttp import web
 
-        from kiro_crew.dashboard.handlers import memory_embeddings
+        from aj_crew.dashboard.handlers import memory_embeddings
 
         model = tmp_path / "m.gguf"
         model.write_bytes(b"abcd")
@@ -181,7 +181,7 @@ class TestEmbeddingModelEndpoint:
 
     @pytest.mark.asyncio
     async def test_busy_probe_pool_answers_a_coded_503(self) -> None:
-        from kiro_crew.dashboard.handlers import memory_embeddings
+        from aj_crew.dashboard.handlers import memory_embeddings
 
         state = _make_state()
         req = _make_request(state, method="POST", json_body={"path": "/m.gguf"})
@@ -206,7 +206,7 @@ class TestEmbeddingModelEndpoint:
     async def test_env_override_blocks_config_write_with_409(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_EMBED_MODEL_PATH", "/env/model.gguf")
+        monkeypatch.setenv("AJCREW_EMBED_MODEL_PATH", "/env/model.gguf")
         state = _make_state()
         req = _make_request(state, method="POST", json_body={"path": ""})
         resp = await mem_mod.api_memory_embedding_model(req)
@@ -532,7 +532,7 @@ class TestWriteEmbedModelConfig:
 class TestEnsurePipEdgeCases:
     @pytest.mark.asyncio
     async def test_sandbox_unavailable_is_a_normal_not_ok_result(self) -> None:
-        from kiro_crew.sandbox import SandboxUnavailableError
+        from aj_crew.sandbox import SandboxUnavailableError
 
         def _refuse(argv: Any, **kw: Any) -> Any:
             raise SandboxUnavailableError("no backend", kind="no_backend", detail="not Linux")
@@ -1028,7 +1028,7 @@ class TestConfigWritesRunOffTheEventLoop:
         """
         import threading
 
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         cfg = tmp_path / "config.json"
         cfg.write_text(initial, encoding="utf-8")
@@ -1088,7 +1088,7 @@ class TestConfigWritesRunOffTheEventLoop:
         import threading
 
         seen, cfg = self._instrument(monkeypatch, tmp_path)
-        monkeypatch.setattr(mem_mod.KiroCrewConfig, "load", staticmethod(lambda: MagicMock()))
+        monkeypatch.setattr(mem_mod.AjCrewConfig, "load", staticmethod(lambda: MagicMock()))
 
         state = _make_state(consolidator=None)
         req = _make_request(state, method="PUT", json_body={"history_max_days": 30})
@@ -1155,7 +1155,7 @@ class TestConfigWritesRunOffTheEventLoop:
         self, monkeypatch, tmp_path: Path
     ) -> None:
         seen, cfg = self._instrument(monkeypatch, tmp_path, initial="{oops")
-        monkeypatch.setattr(mem_mod.KiroCrewConfig, "load", staticmethod(lambda: MagicMock()))
+        monkeypatch.setattr(mem_mod.AjCrewConfig, "load", staticmethod(lambda: MagicMock()))
 
         state = _make_state(consolidator=None)
         req = _make_request(state, method="PUT", json_body={"history_max_days": 30})
@@ -1186,7 +1186,7 @@ class TestConfigWritesRunOffTheEventLoop:
     ) -> None:
         """Validation runs ahead of the transaction; a 400 must not write."""
         seen, cfg = self._instrument(monkeypatch, tmp_path)
-        monkeypatch.setattr(mem_mod.KiroCrewConfig, "load", staticmethod(lambda: MagicMock()))
+        monkeypatch.setattr(mem_mod.AjCrewConfig, "load", staticmethod(lambda: MagicMock()))
 
         state = _make_state(consolidator=None)
         req = _make_request(state, method="PUT", json_body={"history_max_days": "abc"})
@@ -1207,7 +1207,7 @@ class TestConfigWritesRunOffTheEventLoop:
         """
         import threading
 
-        from kiro_crew.dashboard.chat_utils import run_config_write
+        from aj_crew.dashboard.chat_utils import run_config_write
 
         in_txn = threading.Event()
         finish = threading.Event()
@@ -1261,7 +1261,7 @@ class TestConfigWritesRunOffTheEventLoop:
         not reach ``list.update``. A non-empty update on it still raises; not pinned here.
         """
         seen, cfg = self._instrument(monkeypatch, tmp_path, initial='{"memory": []}')
-        monkeypatch.setattr(mem_mod.KiroCrewConfig, "load", staticmethod(lambda: MagicMock()))
+        monkeypatch.setattr(mem_mod.AjCrewConfig, "load", staticmethod(lambda: MagicMock()))
 
         state = _make_state(consolidator=None)
         req = _make_request(state, method="PUT", json_body={})

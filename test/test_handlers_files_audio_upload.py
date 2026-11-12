@@ -16,7 +16,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.files import api_upload_file
+from aj_crew.dashboard.handlers.files import api_upload_file
 
 MP3_ID3 = b"ID3\x04\x00\x00\x00\x00\x00\x00" + b"\xff\xfb" + b"\x00" * 64
 MP3_FRAME = b"\xff\xfb" + b"\x00" * 64
@@ -37,7 +37,7 @@ def _make_app() -> web.Application:
 @pytest.fixture
 def mock_sel():
     """Replace SEL writes so each test observes only upload behavior."""
-    with patch("kiro_crew.dashboard.handlers.files._sel") as sel:
+    with patch("aj_crew.dashboard.handlers.files._sel") as sel:
         sel.return_value = MagicMock()
         yield sel.return_value
 
@@ -46,7 +46,7 @@ def mock_sel():
 def upload_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Redirect published uploads into a test-owned temporary directory."""
     target = tmp_path / "uploads"
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.files._UPLOAD_DIR", target)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.files._UPLOAD_DIR", target)
     return target
 
 
@@ -122,7 +122,7 @@ async def test_audio_uses_the_buffered_file_cap(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Apply the ordinary file cap to audio streamed through the media path."""
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.files.upload_max_bytes", lambda: 64)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.files.upload_max_bytes", lambda: 64)
     status, body = await _post(OGG + b"\x00" * 128, "long.ogg", "audio/ogg")
     assert status == 413, body
     assert body["code"] == "audio_too_large", body

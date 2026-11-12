@@ -14,7 +14,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location(
@@ -101,7 +101,7 @@ class TestCIProgress(unittest.TestCase):
             "class TestCases:\n"
             f"    @pytest.mark.parametrize('value', [1, 2], ids=['{CANARY}', '{CANARY}_two'])\n"
             "    def test_case(self, value, record_property):\n"
-            f"        record_property('kirocrew_ci_progress', {{'private': '{CANARY}'}})\n"
+            f"        record_property('ajcrew_ci_progress', {{'private': '{CANARY}'}})\n"
             f"        print('{CANARY}_captured')\n"
             "        assert value == 1\n",
             encoding="utf-8",
@@ -305,7 +305,7 @@ class TestCIProgress(unittest.TestCase):
             when="call",
             duration=0.1,
             outcome="passed",
-            kirocrew_ci_progress={"case": 0, "test": "test_ok"},
+            ajcrew_ci_progress={"case": 0, "test": "test_ok"},
         )
         with (
             patch.object(Path, "mkdir", side_effect=AssertionError("per-event mkdir")),
@@ -393,9 +393,9 @@ class TestCIProgress(unittest.TestCase):
         self.assertEqual(command.count('-n "$WORKERS"'), 4)
         self.assertNotIn("-n auto", command)
         self.assertEqual(command.count("-p scripts.ci_file_shards"), 3)
-        self.assertIn("--cov=kiro_crew --cov=sage_lib", command)
-        self.assertIn("--cov=src/kiro_crew/apps/builtins/aws_control/crew/packaging", command)
-        self.assertIn("--cov=src/kiro_crew/apps/builtins/code_review_sage/tests", command)
+        self.assertIn("--cov=aj_crew --cov=sage_lib", command)
+        self.assertIn("--cov=src/aj_crew/apps/builtins/aws_control/crew/packaging", command)
+        self.assertIn("--cov=src/aj_crew/apps/builtins/code_review_sage/tests", command)
         upload = next(s for s in job["steps"] if s.get("name") == "Upload Linux pytest progress")
         self.assertEqual(upload["if"], "${{ always() }}")
         self.assertEqual(upload["with"]["name"], "linux-pytest-progress-${{ matrix.group }}")

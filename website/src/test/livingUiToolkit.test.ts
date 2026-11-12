@@ -20,7 +20,7 @@ import { describe, expect, it } from 'vitest'
 import { THEME_VAR_NAMES } from '../lib/widgetSrcdoc'
 import { readSource } from './readSource'
 
-const SKILL_DIR = resolve(__dirname, '../../../src/kiro_crew/builtin_skills/living-ui')
+const SKILL_DIR = resolve(__dirname, '../../../src/aj_crew/builtin_skills/living-ui')
 const SOURCE = readSource(join(SKILL_DIR, 'toolkit', 'living-ui.js'))
 const LOOKS_DIR = join(SKILL_DIR, 'looks')
 const BUDGET_BYTES = 5120

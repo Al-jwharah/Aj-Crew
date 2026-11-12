@@ -23,7 +23,7 @@ import inspect
 
 import pytest
 
-from kiro_crew.dashboard.handlers import (
+from aj_crew.dashboard.handlers import (
     diagnostics,
     mcp,
     memory,

@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.sandbox import agent_env_scrub_prefixes, scrub_agent_subprocess_env
+from aj_crew.sandbox import agent_env_scrub_prefixes, scrub_agent_subprocess_env
 
 PROXY_VARS = [
     "HTTP_PROXY",

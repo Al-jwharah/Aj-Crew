@@ -3,7 +3,7 @@
 The contract under test:
 
 * the mapping is empty by default, so nothing changes until an operator sets it;
-* a name outside the POSIX identifier grammar, a name Kiro Crew, the sandbox or a
+* a name outside the POSIX identifier grammar, a name Aj Crew, the sandbox or a
   runtime loader owns, a credential-shaped name, and a non-string or NUL-bearing
   value are dropped with a warning that names the key and never the value;
 * a name the agent environment scrub strips is dropped at spawn, with a warning,
@@ -13,7 +13,7 @@ The contract under test:
   held it exactly as it found it;
 * the shared launch tail lays the map over the inherited gateway environment for
   every backend, on both drivers, so it wins over the gateway's own value -- and
-  everything Kiro Crew sets for the session afterwards, and the scrub, still win
+  everything Aj Crew sets for the session afterwards, and the scrub, still win
   over it.
 """
 
@@ -31,16 +31,16 @@ import pytest
 from _hot_reload_helpers import change as _change
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew.acp import agent_env as agent_env_mod
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp import runtime as runtime_mod
-from kiro_crew.acp.agent_env import agent_env_overlay
-from kiro_crew.agent_sdk.backends import ACP_BACKENDS_ACP_RUNTIME, ACP_BACKENDS_KNOWN
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.config import sections as sections_mod
-from kiro_crew.config.sections import AgentConfig, agent_env_refusal, coerce_agent_env
-from kiro_crew.kiro_prerequisite import identity_park_grace_remaining
-from kiro_crew.session import SessionManager
+from aj_crew.acp import agent_env as agent_env_mod
+from aj_crew.acp import client as client_mod
+from aj_crew.acp import runtime as runtime_mod
+from aj_crew.acp.agent_env import agent_env_overlay
+from aj_crew.agent_sdk.backends import ACP_BACKENDS_ACP_RUNTIME, ACP_BACKENDS_KNOWN
+from aj_crew.config import AjCrewConfig
+from aj_crew.config import sections as sections_mod
+from aj_crew.config.sections import AgentConfig, agent_env_refusal, coerce_agent_env
+from aj_crew.kiro_prerequisite import identity_park_grace_remaining
+from aj_crew.session import SessionManager
 
 _PROXY = {"HTTPS_PROXY": "http://proxy.example:3128", "NO_PROXY": "localhost,127.0.0.1"}
 
@@ -178,8 +178,8 @@ _EXEC_NAMES = [
     "XDG_CONFIG_DIRS",
     "XDG_CACHE_HOME",
     "XDG_STATE_HOME",
-    # A harness Kiro Crew launches, pointed at a config file whose MCP commands
-    # it runs at start-up, and the variable Kiro Crew hands it its own config in.
+    # A harness Aj Crew launches, pointed at a config file whose MCP commands
+    # it runs at start-up, and the variable Aj Crew hands it its own config in.
     "OPENCODE_CONFIG",
     "OPENCODE_CONFIG_DIR",
     "OPENCODE_CONFIG_CONTENT",
@@ -287,7 +287,7 @@ class TestTheConfigKey:
             "ld_library_path",
             "DYLD_INSERT_LIBRARIES",
             "PYTHONSTARTUP",
-            "KIROCREW_SESSION_KEY",
+            "AJCREW_SESSION_KEY",
             "KIRO_API_KEY",
             "DSH_HOME",
             "DBUS_SESSION_BUS_ADDRESS",
@@ -317,10 +317,10 @@ class TestTheConfigKey:
         assert coerce_agent_env({name: "v"}) == {}
 
     def test_every_variable_the_opencode_harness_is_handed_is_refused(self) -> None:
-        # Kiro Crew hands the opencode harness its permission routing through this
+        # Aj Crew hands the opencode harness its permission routing through this
         # variable; the map must not be able to replace it, or point the harness at
         # a different config file through a sibling of it.
-        from kiro_crew.acp.harness import opencode
+        from aj_crew.acp.harness import opencode
 
         name = opencode._ENV_OPENCODE_CONFIG_CONTENT
         assert name.startswith(sections_mod.AGENT_ENV_DENIED_PREFIXES)
@@ -349,7 +349,7 @@ class TestTheConfigKey:
         # The command floor keeps its own list of assignments that decide WHICH
         # code runs. A name it distrusts for one command must not be settable for
         # every command, so its list is pinned as a subset here.
-        from kiro_crew import name_grant
+        from aj_crew import name_grant
 
         for name in name_grant._EXEC_ENV_VARS:
             assert agent_env_refusal(name) is not None, name
@@ -361,7 +361,7 @@ class TestTheConfigKey:
     def test_every_harness_home_override_is_refused(self) -> None:
         # The credential read gate anchors these from the gateway's environment,
         # so the agent child must not be handed a different value.
-        from kiro_crew.agent_sdk.host_auth import home_override_env_vars
+        from aj_crew.agent_sdk.host_auth import home_override_env_vars
 
         overrides = home_override_env_vars()
         assert overrides
@@ -370,8 +370,8 @@ class TestTheConfigKey:
             assert agent_env_refusal(name.lower()) is not None, name
 
     def test_the_deepseek_mapping_shares_the_name_grammar(self) -> None:
-        from kiro_crew.acp.harness import deepseek
-        from kiro_crew.config.sections import AGENT_ENV_NAME_GRAMMAR
+        from aj_crew.acp.harness import deepseek
+        from aj_crew.config.sections import AGENT_ENV_NAME_GRAMMAR
 
         assert deepseek._DEEPSEEK_ENV_NAME_GRAMMAR is AGENT_ENV_NAME_GRAMMAR
 
@@ -396,14 +396,14 @@ class TestTheConfigKey:
         assert coerce_agent_env(None) == {}
 
     def test_the_warning_names_the_key_and_never_the_value(self, caplog) -> None:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.sections"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.sections"):
             coerce_agent_env({"GITHUB_TOKEN": "ghp_do_not_log", "HTTPS_PROXY": "a\x00b"})
         text = caplog.text
         assert "GITHUB_TOKEN" in text and "HTTPS_PROXY" in text
         assert "ghp_do_not_log" not in text and "a\x00b" not in text
 
     def test_the_loader_reads_the_key(self) -> None:
-        from kiro_crew.config.loader import _build_agent_config
+        from aj_crew.config.loader import _build_agent_config
 
         agent = _build_agent_config({"env": {**_PROXY, "PATH": "/evil"}})
         assert agent.env == _PROXY
@@ -414,7 +414,7 @@ class TestTheOverlay:
     def _configure(self, monkeypatch, mapping: dict[str, str]) -> None:
         loaded = SimpleNamespace(agent=SimpleNamespace(env=dict(mapping)))
         monkeypatch.setattr(
-            "kiro_crew.config.KiroCrewConfig.load", staticmethod(lambda: loaded), raising=True
+            "aj_crew.config.AjCrewConfig.load", staticmethod(lambda: loaded), raising=True
         )
 
     def test_the_configured_map_is_returned(self, monkeypatch) -> None:
@@ -431,9 +431,7 @@ class TestTheOverlay:
         def _boom():
             raise OSError("unreadable")
 
-        monkeypatch.setattr(
-            "kiro_crew.config.KiroCrewConfig.load", staticmethod(_boom), raising=True
-        )
+        monkeypatch.setattr("aj_crew.config.AjCrewConfig.load", staticmethod(_boom), raising=True)
         assert agent_env_overlay() == {}
 
 
@@ -441,7 +439,7 @@ def _overlay_patches(overlay: dict[str, str]) -> tuple:
     """Hand both drivers' launch tail *overlay* as the ``agent.env`` answer, and
     put the REAL agent environment scrub back (the golden capture stubs it), so the
     order of the overlay against the scrub is what is measured."""
-    from kiro_crew.sandbox import scrub_agent_subprocess_env
+    from aj_crew.sandbox import scrub_agent_subprocess_env
 
     return (
         patch.object(client_mod, "agent_env_overlay", new=lambda: dict(overlay)),
@@ -457,7 +455,7 @@ def _overlay_patches(overlay: dict[str, str]) -> tuple:
 #: pin that the tail's own order still wins over them.
 _OVERLAY = {
     **_PROXY,
-    "KIROCREW_SPAWNED": "forged",
+    "AJCREW_SPAWNED": "forged",
     "SLACK_BOT_TOKEN": "forged",
 }
 
@@ -466,8 +464,8 @@ def _assert_overlay_landed(added: dict[str, str], golden_added: dict[str, str]) 
     assert added.get("HTTPS_PROXY") == _PROXY["HTTPS_PROXY"]
     assert added.get("NO_PROXY") == _PROXY["NO_PROXY"]
     # Set by Crew after the overlay: the overlay cannot stand in for it.
-    assert added.get("KIROCREW_SPAWNED") == golden_added.get("KIROCREW_SPAWNED")
-    assert added.get("KIROCREW_SPAWNED") != "forged"
+    assert added.get("AJCREW_SPAWNED") == golden_added.get("AJCREW_SPAWNED")
+    assert added.get("AJCREW_SPAWNED") != "forged"
     # Removed by the scrub after the overlay: never reaches the child.
     assert "SLACK_BOT_TOKEN" not in added
 
@@ -499,7 +497,7 @@ def test_every_runtime_launch_carries_agent_env(backend, tmp_path, gateway_proxy
     )
     assert answers["env_added"].get("HTTPS_PROXY") == _PROXY["HTTPS_PROXY"]
     assert answers["env_added"].get("NO_PROXY") == _PROXY["NO_PROXY"]
-    assert answers["env_added"].get("KIROCREW_SPAWNED") != "forged"
+    assert answers["env_added"].get("AJCREW_SPAWNED") != "forged"
     assert "SLACK_BOT_TOKEN" not in answers["env_added"]
 
 
@@ -509,10 +507,10 @@ class _StopReadback(Exception):
 
 def _readback_calls(tmp_path):
     """Each env-sensitive tool-gate read-back, called on a client of its harness."""
-    from kiro_crew.acp.harness import deepseek as deepseek_mod
-    from kiro_crew.acp.harness import opencode as opencode_mod
-    from kiro_crew.acp.harness import pi as pi_mod
-    from kiro_crew.agent_sdk.backends import (
+    from aj_crew.acp.harness import deepseek as deepseek_mod
+    from aj_crew.acp.harness import opencode as opencode_mod
+    from aj_crew.acp.harness import pi as pi_mod
+    from aj_crew.agent_sdk.backends import (
         ACP_BACKEND_DEEPSEEK,
         ACP_BACKEND_OPENCODE,
         ACP_BACKEND_PI,
@@ -558,7 +556,7 @@ def test_a_tool_gate_read_back_sees_agent_env_like_the_spawn(harness, tmp_path, 
 def test_one_spawn_reads_agent_env_once(tmp_path, monkeypatch) -> None:
     """The read-back and the launch tail of one spawn share one reading, so a
     config save between them cannot change what the child gets."""
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_OPENCODE
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_OPENCODE
 
     answers = iter([dict(_PROXY), {"HTTPS_PROXY": "http://changed:9"}])
     monkeypatch.setattr(client_mod, "agent_env_overlay", lambda: next(answers))
@@ -572,10 +570,10 @@ def test_one_spawn_reads_agent_env_once(tmp_path, monkeypatch) -> None:
 def test_the_spawn_carries_the_values_its_read_back_checked(harness, tmp_path, gateway_proxy):
     """A config save between the read-back and the launch must not reach the child:
     the launch tail lays over the reading the read-back took, not a fresh one."""
-    from kiro_crew.acp.harness import deepseek as deepseek_mod
-    from kiro_crew.acp.harness import opencode as opencode_mod
-    from kiro_crew.acp.harness import pi as pi_mod
-    from kiro_crew.sandbox import scrub_agent_subprocess_env
+    from aj_crew.acp.harness import deepseek as deepseek_mod
+    from aj_crew.acp.harness import opencode as opencode_mod
+    from aj_crew.acp.harness import pi as pi_mod
+    from aj_crew.sandbox import scrub_agent_subprocess_env
 
     readings = iter([dict(_PROXY), {"HTTPS_PROXY": "http://changed:9"}])
 
@@ -603,7 +601,7 @@ def test_the_spawn_carries_the_values_its_read_back_checked(harness, tmp_path, g
 def test_a_lower_case_spelling_of_a_scrubbed_name_is_dropped(monkeypatch) -> None:
     loaded = SimpleNamespace(agent=SimpleNamespace(env={"git_askpass": "/bin/x", **_PROXY}))
     monkeypatch.setattr(
-        "kiro_crew.config.KiroCrewConfig.load", staticmethod(lambda: loaded), raising=True
+        "aj_crew.config.AjCrewConfig.load", staticmethod(lambda: loaded), raising=True
     )
     assert agent_env_overlay() == _PROXY
 
@@ -611,7 +609,7 @@ def test_a_lower_case_spelling_of_a_scrubbed_name_is_dropped(monkeypatch) -> Non
 def test_on_windows_a_name_is_folded_to_the_inherited_spelling(monkeypatch) -> None:
     loaded = SimpleNamespace(agent=SimpleNamespace(env={"https_proxy": "http://p:1"}))
     monkeypatch.setattr(
-        "kiro_crew.config.KiroCrewConfig.load", staticmethod(lambda: loaded), raising=True
+        "aj_crew.config.AjCrewConfig.load", staticmethod(lambda: loaded), raising=True
     )
     monkeypatch.setattr(agent_env_mod.os, "name", "nt")
     assert agent_env_overlay() == {"HTTPS_PROXY": "http://p:1"}
@@ -627,7 +625,7 @@ class TestTheSharedBackgroundRuntime:
 
     @staticmethod
     def _manager() -> SessionManager:
-        return SessionManager(KiroCrewConfig(), provider_factory=lambda *a, **kw: AsyncMock())
+        return SessionManager(AjCrewConfig(), provider_factory=lambda *a, **kw: AsyncMock())
 
     @staticmethod
     def _runtime(*, busy: bool) -> AsyncMock:
@@ -641,7 +639,7 @@ class TestTheSharedBackgroundRuntime:
     @staticmethod
     async def _apply(mgr: SessionManager, *paths: str) -> None:
         with patch.object(mgr, "refresh_defaults", AsyncMock()):
-            await mgr._on_config_change(_change(KiroCrewConfig(), *paths))
+            await mgr._on_config_change(_change(AjCrewConfig(), *paths))
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("busy", [False, True], ids=["idle", "busy"])
@@ -706,7 +704,7 @@ class TestTheWriteFloor:
 
     Load and spawn drop such an entry with only a gateway-log line, so a write
     that stored it would succeed, the entry would sit in ``config.json``, and the
-    variable would never reach the agent. Every config writer -- ``kirocrew
+    variable would never reach the agent. Every config writer -- ``ajcrew
     config set`` in each form, every dashboard write, ``save()`` -- lands through
     the publish floor, so the refusal is made there.
     """
@@ -718,7 +716,7 @@ class TestTheWriteFloor:
 
     @staticmethod
     def _put_env(path, mapping: object) -> None:
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew.config.loader import update_config_locked
 
         def put(existing: dict) -> dict:
             existing.setdefault("agent", {})["env"] = mapping
@@ -736,7 +734,7 @@ class TestTheWriteFloor:
     def test_a_refused_entry_is_refused_at_save_and_nothing_is_written(
         self, tmp_path, name: str
     ) -> None:
-        from kiro_crew.config.loader import ConfigWriteRefused
+        from aj_crew.config.loader import ConfigWriteRefused
 
         path = tmp_path / "config.json"
         before = self._seed(path, {"yolo": True})
@@ -764,7 +762,7 @@ class TestTheWriteFloor:
         assert json.loads(path.read_text(encoding="utf-8"))["agent"]["env"] == wanted
 
     def test_a_non_mapping_is_refused_at_save(self, tmp_path) -> None:
-        from kiro_crew.config.loader import ConfigWriteRefused
+        from aj_crew.config.loader import ConfigWriteRefused
 
         path = tmp_path / "config.json"
         before = self._seed(path, {})
@@ -778,7 +776,7 @@ class TestTheWriteFloor:
     ) -> None:
         # Most writers have nothing to do with agent.env and no handler for the
         # refusal; a hand-edited entry must not turn each of them into an error.
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew.config.loader import update_config_locked
 
         path = tmp_path / "config.json"
         stale = {"OPENCODE_CONFIG": "/value/not/printed", **_PROXY}
@@ -788,7 +786,7 @@ class TestTheWriteFloor:
             existing["agent"]["yolo"] = True
             return existing
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             update_config_locked(path, mutate=unrelated)
 
         written = json.loads(path.read_text(encoding="utf-8"))["agent"]
@@ -798,7 +796,7 @@ class TestTheWriteFloor:
         assert "/value/not/printed" not in warned[0]
 
     def test_changing_the_mapping_while_a_refused_entry_stays_is_refused(self, tmp_path) -> None:
-        from kiro_crew.config.loader import ConfigWriteRefused, update_config_locked
+        from aj_crew.config.loader import ConfigWriteRefused, update_config_locked
 
         path = tmp_path / "config.json"
         before = self._seed(path, {"env": {"OPENCODE_CONFIG": "/x"}})
@@ -813,7 +811,7 @@ class TestTheWriteFloor:
         assert path.read_bytes() == before
 
     def test_with_no_readable_prior_document_a_refused_entry_is_refused(self, tmp_path) -> None:
-        from kiro_crew.config.loader import ConfigWriteRefused, write_config_atomically
+        from aj_crew.config.loader import ConfigWriteRefused, write_config_atomically
 
         data = {"agent": {"env": {"GITHUB_TOKEN": "v"}}}
         with pytest.raises(ConfigWriteRefused):
@@ -825,10 +823,10 @@ class TestTheWriteFloor:
         assert corrupt.read_text(encoding="utf-8") == "{ not json"
 
     def test_the_whole_document_save_is_gated_too(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.config.loader import ConfigWriteRefused
+        from aj_crew.config.loader import ConfigWriteRefused
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-        cfg = KiroCrewConfig()
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+        cfg = AjCrewConfig()
         cfg.agent.env = {"OPENCODE_CONFIG_DIR": "/x"}
         with pytest.raises(ConfigWriteRefused) as refused:
             cfg.save()
@@ -836,10 +834,10 @@ class TestTheWriteFloor:
 
     @staticmethod
     def _config_set(key: str, value: str, *, local: bool) -> None:
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
         args = argparse.Namespace(config_action="set", key=key, value=value, file=None, local=local)
-        with patch("kiro_crew.cli_config.sel"):
+        with patch("aj_crew.cli_config.sel"):
             _config_cmd(args)
 
     def test_config_set_refuses_by_key_and_reason_and_writes_nothing(
@@ -847,7 +845,7 @@ class TestTheWriteFloor:
     ) -> None:
         home = tmp_path / "home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         base = home / "config.json"
         self._seed(base, {"yolo": True})
         value = json.dumps({"OPENCODE_CONFIG": "/value/not/printed", **_PROXY})
@@ -869,7 +867,7 @@ class TestTheWriteFloor:
     ) -> None:
         home = tmp_path / "home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         with pytest.raises(SystemExit) as exited:
             self._config_set("agent.env", json.dumps({"GITHUB_TOKEN": "v"}), local=True)
@@ -881,7 +879,7 @@ class TestTheWriteFloor:
     def test_config_set_writes_an_accepted_entry(self, tmp_path, monkeypatch) -> None:
         home = tmp_path / "home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         self._seed(home / "config.json", {})
 
         wanted = {"GOPRIVATE": "corp.example/*", "TOKENIZERS_PARALLELISM": "false"}

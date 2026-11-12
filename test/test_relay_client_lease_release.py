@@ -14,10 +14,10 @@ from aiohttp import web
 from relay_client_helpers import fixture
 from test_relay_client_lease import CREDENTIAL, FakeLeaseService, StepClock, answer, make_source
 
-from kiro_crew.dashboard.server import _TUNNEL_STOP_TIMEOUT_SECS
-from kiro_crew.relay_client import lease as lease_module
-from kiro_crew.relay_client.client import STOP_BUDGET_SECONDS
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.server import _TUNNEL_STOP_TIMEOUT_SECS
+from aj_crew.relay_client import lease as lease_module
+from aj_crew.relay_client.client import STOP_BUDGET_SECONDS
+from aj_crew.testing.wait import await_until
 
 
 @pytest.mark.asyncio

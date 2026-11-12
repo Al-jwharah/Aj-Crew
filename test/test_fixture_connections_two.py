@@ -6,8 +6,8 @@ import shutil
 
 import pytest
 
-from kiro_crew import mcp_discovery
-from kiro_crew.testing.fixtures import seeded_home
+from aj_crew import mcp_discovery
+from aj_crew.testing.fixtures import seeded_home
 
 
 @pytest.mark.asyncio
@@ -22,14 +22,14 @@ async def test_connections_two_drives_real_mcp_discovery(
         raise AssertionError("a disabled fixture server must never be spawned")
 
     with seeded_home("connections-two") as home:
-        kirocrew_source = mcp_discovery._mcp_sources()[0]
-        assert kirocrew_source[0].resolve() == (home / "mcp.json").resolve()
-        assert kirocrew_source[1] == mcp_discovery.SCOPE_KIROCREW
+        ajcrew_source = mcp_discovery._mcp_sources()[0]
+        assert ajcrew_source[0].resolve() == (home / "mcp.json").resolve()
+        assert ajcrew_source[1] == mcp_discovery.SCOPE_AJCREW
 
         # A fixture can seed only its data-home scope. Keep discovery on that
         # production-resolved source so this test never reads a machine-global
         # MCP config or an edition-contributed provider scope.
-        monkeypatch.setattr(mcp_discovery, "_MCP_SOURCES", (kirocrew_source,))
+        monkeypatch.setattr(mcp_discovery, "_MCP_SOURCES", (ajcrew_source,))
         monkeypatch.setattr(mcp_discovery, "_MCP_JSON_PATHS", None)
         monkeypatch.setattr(mcp_discovery, "_extra_scope_sources", lambda: [])
         monkeypatch.setattr(
@@ -39,7 +39,7 @@ async def test_connections_two_drives_real_mcp_discovery(
         )
 
         scoped = mcp_discovery._load_mcp_json_by_source()
-        assert set(scoped[mcp_discovery.SCOPE_KIROCREW]) == {
+        assert set(scoped[mcp_discovery.SCOPE_AJCREW]) == {
             "fixture-healthy",
             "fixture-broken",
         }
@@ -49,7 +49,7 @@ async def test_connections_two_drives_real_mcp_discovery(
         broken = rows["fixture-broken"]
 
         assert healthy.source == "mcp.json"
-        assert healthy.presence[mcp_discovery.SCOPE_KIROCREW] is True
+        assert healthy.presence[mcp_discovery.SCOPE_AJCREW] is True
         assert healthy.disabled is False
         assert healthy.env == {}
         assert isinstance(healthy.args, list) and healthy.args
@@ -57,7 +57,7 @@ async def test_connections_two_drives_real_mcp_discovery(
         assert healthy.args[-1] == "import sys; sys.stdin.buffer.read()"
 
         assert broken.source == "mcp.json"
-        assert broken.presence[mcp_discovery.SCOPE_KIROCREW] is False
+        assert broken.presence[mcp_discovery.SCOPE_AJCREW] is False
         assert broken.disabled is True
         assert shutil.which(broken.command) is None
         assert broken.env == {

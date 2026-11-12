@@ -20,10 +20,10 @@ from cron_secret_env_helpers import (  # noqa: F401 -- the autouse fixtures regi
     cron_home_fixture,
 )
 
-from kiro_crew.config.loader import config_dir as loader_config_dir
-from kiro_crew.cron import CronService
-from kiro_crew.cron_script import compute_secret_env_pin, delivery_fingerprint
-from kiro_crew.dashboard.handlers.cron import api_cron_secret_grant
+from aj_crew.config.loader import config_dir as loader_config_dir
+from aj_crew.cron import CronService
+from aj_crew.cron_script import compute_secret_env_pin, delivery_fingerprint
+from aj_crew.dashboard.handlers.cron import api_cron_secret_grant
 
 _HUGE = 10**400
 _MAPPING = {"MY_TOKEN": "slack-sandbox"}
@@ -32,7 +32,7 @@ _MAPPING = {"MY_TOKEN": "slack-sandbox"}
 @pytest.fixture(autouse=True)
 def _owner_view(_floor_monkeypatch):
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -68,7 +68,7 @@ def _pending_job(svc: CronService, cron_home) -> str:
 
 
 async def _put(svc: CronService, job_id: str, body: str) -> tuple[int, str]:
-    with patch("kiro_crew.dashboard.handlers.cron._sel"):
+    with patch("aj_crew.dashboard.handlers.cron._sel"):
         async with TestClient(TestServer(_app(svc))) as client:
             resp = await client.put(
                 f"/api/crons/{job_id}/secrets",

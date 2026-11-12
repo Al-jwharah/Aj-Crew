@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.secrets.migrate — plaintext .env → vault importer."""
+"""Tests for aj_crew.secrets.migrate — plaintext .env → vault importer."""
 
 from __future__ import annotations
 
@@ -11,10 +11,10 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew
-from kiro_crew import cli
-from kiro_crew.secrets import SecretVault
-from kiro_crew.secrets.migrate import (
+import aj_crew
+from aj_crew import cli
+from aj_crew.secrets import SecretVault
+from aj_crew.secrets.migrate import (
     MigrationConflictError,
     MigrationReport,
     format_report,
@@ -31,8 +31,8 @@ def _migrate(config_dir: Path, ep: Path, **kwargs):
     resolvers rather than passing paths.
     """
     with (
-        patch("kiro_crew.secrets.migrate.env_path", return_value=ep),
-        patch("kiro_crew.secrets.migrate.config_dir", return_value=config_dir),
+        patch("aj_crew.secrets.migrate.env_path", return_value=ep),
+        patch("aj_crew.secrets.migrate.config_dir", return_value=config_dir),
     ):
         return migrate_env_secrets(**kwargs)
 
@@ -98,7 +98,7 @@ def test_child_read_credentials_and_identifiers_not_migrated(tmp_path: Path) -> 
     config_dir = tmp_path / "config"
     ep = _write_env(
         tmp_path,
-        "KIRO_API_KEY=k-abc\nAZURE_DEVOPS_EXT_PAT=pat-placeholder\nKIROCREW_OWNER_ID=U0123ABC456\n",
+        "KIRO_API_KEY=k-abc\nAZURE_DEVOPS_EXT_PAT=pat-placeholder\nAJCREW_OWNER_ID=U0123ABC456\n",
     )
 
     report = _migrate(config_dir, ep, dry_run=False)
@@ -108,7 +108,7 @@ def test_child_read_credentials_and_identifiers_not_migrated(tmp_path: Path) -> 
     text = ep.read_text()
     assert "KIRO_API_KEY=k-abc" in text
     assert "AZURE_DEVOPS_EXT_PAT=pat-placeholder" in text
-    assert "KIROCREW_OWNER_ID=U0123ABC456" in text
+    assert "AJCREW_OWNER_ID=U0123ABC456" in text
     assert "secret://" not in text
 
 
@@ -202,7 +202,7 @@ def test_stale_plaintext_behind_secret_ref_not_queued(tmp_path: Path) -> None:
     config_dir = tmp_path / "config"
     # Pre-seed the vault with the authoritative secret, as a prior migration
     # would have left it.
-    from kiro_crew.secrets.migrate import migrate_env_secrets as _m  # noqa: F401
+    from aj_crew.secrets.migrate import migrate_env_secrets as _m  # noqa: F401
 
     good_env = tmp_path / "good.env"
     good_env.write_text("JIRA_API_TOKEN=good-secret\n")
@@ -526,7 +526,7 @@ def test_lock_held_by_another_process_aborts_cleanly(tmp_path: Path, monkeypatch
 
     # Force the exclusive-lock acquire to fail, simulating another holder.
     monkeypatch.setattr(
-        "kiro_crew.secrets.migrate.platform_compat.try_acquire_lock",
+        "aj_crew.secrets.migrate.platform_compat.try_acquire_lock",
         lambda fd, *, exclusive=False: False,
     )
 
@@ -569,7 +569,7 @@ def test_handle_secrets_reports_conflict_cleanly(tmp_path: Path, monkeypatch, ca
     concise stderr error with a nonzero exit — never an uncaught traceback."""
     import argparse
 
-    from kiro_crew import cli_commands
+    from aj_crew import cli_commands
 
     monkeypatch.setattr(cli_commands, "config_dir", lambda: str(tmp_path / "config"))
 
@@ -594,7 +594,7 @@ def test_handle_secrets_reports_corrupt_vault_cleanly(tmp_path: Path, monkeypatc
     at the CLI as a concise stderr error with a nonzero exit, never a traceback."""
     import argparse
 
-    from kiro_crew import cli_commands
+    from aj_crew import cli_commands
 
     monkeypatch.setattr(cli_commands, "config_dir", lambda: str(tmp_path / "config"))
 
@@ -723,7 +723,7 @@ def test_vault_entry_replaced_between_store_and_rewrite_aborts(tmp_path: Path, m
     .env rewrite, the importer must raise MigrationConflictError and leave the
     .env plaintext untouched — the original value must not be silently discarded
     while .env is rewritten to point at a now-different vault entry."""
-    from kiro_crew.secrets.vault import SecretValue
+    from aj_crew.secrets.vault import SecretValue
 
     config_dir = tmp_path / "config"
     ep = tmp_path / ".env"
@@ -770,7 +770,7 @@ def test_vault_delete_during_held_lock_cannot_strand_plaintext(tmp_path: Path, m
     """
     from contextlib import contextmanager
 
-    from kiro_crew.secrets.vault import SecretVault
+    from aj_crew.secrets.vault import SecretVault
 
     config_dir = tmp_path / "config"
     ep = tmp_path / ".env"
@@ -801,8 +801,8 @@ def test_vault_delete_during_held_lock_cannot_strand_plaintext(tmp_path: Path, m
         events.append("atomic_write")
         real_atomic(path, content, **kwargs)
 
-    import kiro_crew.hidden_leaf_staging as _staging_mod
-    import kiro_crew.secrets.migrate as _migrate_mod
+    import aj_crew.hidden_leaf_staging as _staging_mod
+    import aj_crew.secrets.migrate as _migrate_mod
 
     real_atomic = _staging_mod.publish_env
     monkeypatch.setattr(SecretVault, "hold_cross_process_lock", _tracking_hold)
@@ -846,7 +846,7 @@ def test_env_lock_path_is_inside_vault_dir(tmp_path: Path) -> None:
     unconfined agent can delete/replace the held lock inode and defeat
     serialisation. Inside .vault, every sandbox tier bind-mount-hides the dir.
     """
-    from kiro_crew.secrets.migrate import _env_lock_path
+    from aj_crew.secrets.migrate import _env_lock_path
 
     ep = tmp_path / "config" / ".env"
     ep.parent.mkdir(parents=True, exist_ok=True)
@@ -871,7 +871,7 @@ def test_atomic_write_failure_rolls_back_vault_entries(tmp_path: Path, monkeypat
     def _boom(path, data, **kw):
         raise OSError("disk full")
 
-    monkeypatch.setattr("kiro_crew.secrets.migrate.publish_env", _boom)
+    monkeypatch.setattr("aj_crew.secrets.migrate.publish_env", _boom)
 
     with pytest.raises(OSError):
         _migrate(config_dir, ep, dry_run=False)
@@ -947,7 +947,7 @@ def test_rollback_does_not_delete_concurrently_overwritten_vault_entry(
     def _boom(path, data, **kw):
         raise OSError("disk full")
 
-    monkeypatch.setattr("kiro_crew.secrets.migrate.publish_env", _boom)
+    monkeypatch.setattr("aj_crew.secrets.migrate.publish_env", _boom)
 
     # Patch _compare_and_delete_sync to return False (simulating concurrent
     # overwrite detected: stored entry dict differs from expected_entry) and
@@ -1052,7 +1052,7 @@ def test_rollback_deletes_unchanged_vault_entry(
     def _boom(path, data, **kw):
         raise OSError("disk full")
 
-    monkeypatch.setattr("kiro_crew.secrets.migrate.publish_env", _boom)
+    monkeypatch.setattr("aj_crew.secrets.migrate.publish_env", _boom)
 
     with pytest.raises(OSError):
         _migrate(config_dir_path, ep, dry_run=False)
@@ -1084,7 +1084,7 @@ def test_rollback_no_deadlock_under_concurrent_flock(
     def _boom(path, data, **kw):
         raise OSError("disk full")
 
-    monkeypatch.setattr("kiro_crew.secrets.migrate.publish_env", _boom)
+    monkeypatch.setattr("aj_crew.secrets.migrate.publish_env", _boom)
 
     # Call the rollback path directly (no background worker): the fixed
     # _compare_and_delete_sync acquires the cross-process flock exactly once
@@ -1117,7 +1117,7 @@ def test_rollback_delete_failure_records_orphaned_key_and_propagates_error(
     def _boom(path, data, **kw):
         raise OSError("disk full")
 
-    monkeypatch.setattr("kiro_crew.secrets.migrate.publish_env", _boom)
+    monkeypatch.setattr("aj_crew.secrets.migrate.publish_env", _boom)
 
     # Make _compare_and_delete_sync raise to simulate ENOSPC / I/O error.
     def _raise_enospc(self, name, expected):
@@ -1125,7 +1125,7 @@ def test_rollback_delete_failure_records_orphaned_key_and_propagates_error(
 
     monkeypatch.setattr(SecretVault, "_compare_and_delete_sync", _raise_enospc)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.secrets.migrate"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.secrets.migrate"):
         with pytest.raises(OSError, match="disk full"):
             _migrate(config_dir_path, ep, dry_run=False)
 
@@ -1147,11 +1147,11 @@ def test_rollback_delete_failure_records_orphaned_key_and_propagates_error(
 
 
 class TestRemediationNamesOnlyRealCliSubcommands:
-    """Every ``kirocrew secrets <verb>`` a shipped message tells an operator to
+    """Every ``ajcrew secrets <verb>`` a shipped message tells an operator to
     run must be a verb the CLI actually registers.
 
     The defect this pins: the importer's remediation strings named
-    ``kirocrew secrets set`` and ``kirocrew secrets rm``, but the ``secrets``
+    ``ajcrew secrets set`` and ``ajcrew secrets rm``, but the ``secrets``
     parser registers only ``import`` — so an operator who followed the message
     at the exact moment a migration aborted got ``invalid choice`` and no way
     forward. A dead instruction on a data-loss-adjacent path is worse than no
@@ -1165,12 +1165,12 @@ class TestRemediationNamesOnlyRealCliSubcommands:
     edit here.
     """
 
-    _CMD_RE = re.compile(r"kirocrew secrets ([a-z][a-z0-9-]*)")
+    _CMD_RE = re.compile(r"ajcrew secrets ([a-z][a-z0-9-]*)")
 
     @classmethod
     def _referenced_verbs(cls) -> dict[str, list[str]]:
         """Map each ``secrets`` verb named under ``src/`` to the files naming it."""
-        src_root = Path(kiro_crew.__file__).resolve().parent
+        src_root = Path(aj_crew.__file__).resolve().parent
         found: dict[str, list[str]] = {}
         for path in sorted(src_root.rglob("*.py")):
             for verb in cls._CMD_RE.findall(path.read_text(encoding="utf-8")):
@@ -1179,7 +1179,7 @@ class TestRemediationNamesOnlyRealCliSubcommands:
 
     @staticmethod
     def _verb_is_registered(verb: str, monkeypatch, tmp_path, capsys) -> bool:
-        """True when ``kirocrew secrets <verb> --help`` parses.
+        """True when ``ajcrew secrets <verb> --help`` parses.
 
         ``--help`` makes argparse exit 0 during parsing, so the verb's handler
         never runs (nothing is read, written or migrated). An unregistered verb
@@ -1195,19 +1195,19 @@ class TestRemediationNamesOnlyRealCliSubcommands:
           deliberately") and on Windows also replaces ``sys.stdout`` /
           ``sys.stderr``, which fights pytest's capture. Stubbed: this probe
           reads argparse's exit code, never the encoding of what it printed.
-        * ``main()`` unconditionally pops ``KIROCREW_SANDBOX_ACTIVE`` and
-          ``KIROCREW_SANDBOX_LEVEL`` to refuse an inherited sandbox-bypass
+        * ``main()`` unconditionally pops ``AJCREW_SANDBOX_ACTIVE`` and
+          ``AJCREW_SANDBOX_LEVEL`` to refuse an inherited sandbox-bypass
           marker. ``delenv`` first so MONKEYPATCH owns the deletion and restores
           any inherited value at teardown, leaving the pop a no-op.
         """
         monkeypatch.setattr(cli.platform_compat, "ensure_utf8_console", lambda: None)
-        for marker in ("KIROCREW_SANDBOX_ACTIVE", "KIROCREW_SANDBOX_LEVEL"):
+        for marker in ("AJCREW_SANDBOX_ACTIVE", "AJCREW_SANDBOX_LEVEL"):
             monkeypatch.delenv(marker, raising=False)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "data"))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "data"))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(cli, "boot_platform", lambda *_a, **_k: None)
         monkeypatch.setattr(cli, "_setup_cli_logging", lambda *_a, **_k: None)
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "secrets", verb, "--help"])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "secrets", verb, "--help"])
         with pytest.raises(SystemExit) as excinfo:
             cli.main()
         capsys.readouterr()
@@ -1235,7 +1235,7 @@ class TestRemediationNamesOnlyRealCliSubcommands:
     def test_the_scan_finds_something(self):
         """A regex that stops matching (a rewording to prose, say) would make
         this file silently stop guarding anything."""
-        assert self._referenced_verbs(), "no `kirocrew secrets <verb>` reference found under src/"
+        assert self._referenced_verbs(), "no `ajcrew secrets <verb>` reference found under src/"
 
     def test_every_referenced_verb_is_registered(self, monkeypatch, tmp_path, capsys):
         dead = {
@@ -1244,7 +1244,7 @@ class TestRemediationNamesOnlyRealCliSubcommands:
             if not self._verb_is_registered(verb, monkeypatch, tmp_path, capsys)
         }
         assert not dead, (
-            "shipped remediation text tells the operator to run a `kirocrew secrets` "
+            "shipped remediation text tells the operator to run an `ajcrew secrets` "
             f"subcommand the CLI does not register: {dead}. Point the message at a real "
-            "surface (Settings > Secrets in the dashboard, or `kirocrew secrets import`)."
+            "surface (Settings > Secrets in the dashboard, or `ajcrew secrets import`)."
         )

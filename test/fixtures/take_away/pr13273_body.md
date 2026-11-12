@@ -53,7 +53,7 @@ Coverage locks in each behaviour and every fix is mutation-checked with disjoint
 
 `test_sandbox_mount_checked.py`: 30 passed. `test_sandbox_mount_source_sweep.py`: 78 passed. `test_cron_script.py`: 139 passed, 1 skipped. `test_cron_cancel.py`: 12 passed. `test_cron_secret_env.py`: 95 passed. `test_mcp_cron_security.py`: 187 passed. `test_sandbox_private_window_in_caller_mask.py`: 14 passed.
 
-flake8, isort and black clean on both changed files; `mypy src/kiro_crew/sandbox.py`: no issues; the comment-history gate passes on the diff; Semgrep clean over the diff with the repo's own rules and the two registry rules that had fired (both confirmed discriminating).
+flake8, isort and black clean on both changed files; `mypy src/aj_crew/sandbox.py`: no issues; the comment-history gate passes on the diff; Semgrep clean over the diff with the repo's own rules and the two registry rules that had fired (both confirmed discriminating).
 
 ## Manual verification
 

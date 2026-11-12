@@ -29,7 +29,7 @@ const theme = params.get('theme') || 'dark'
 /** 'enabled' | 'disabled' — whether decisions_enabled is true */
 const scene = params.get('scene') || 'disabled'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // Stub /api/dashboard/config and /api/tips so the governance hook resolves
 // without a live gateway.  Every other /api/ call returns an empty object.

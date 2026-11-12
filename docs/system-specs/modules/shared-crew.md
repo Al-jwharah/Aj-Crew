@@ -37,7 +37,7 @@ behaves as a single-operator Crew, and the direct tailnet listener binds nothing
 
 Shared Crew is behind one release gate until the owner ships it, the Feature
 preview (`shared_crew.preview.preview_enabled`). Either of two things turns it
-on: the gateway environment variable `KIROCREW_SHARED_CREW_PREVIEW=1` (true only
+on: the gateway environment variable `AJCREW_SHARED_CREW_PREVIEW=1` (true only
 for exactly `1`), or the owner's stored choice in the keystone
 `<data home>/shared_crew_preview.json` (`{"enabled": true}`, only a JSON `true`
 counts; a missing, unreadable or malformed file reads as off). It is not a config
@@ -76,7 +76,7 @@ else is 400 `invalid_body`. Each PUT is written to the SEL
 Each field's help in the Settings schema says it needs Shared Crew turned on in Feature Previews.
 
 Advanced settings write through the existing config PATCH,
-`PATCH /api/config/kirocrew` with `{"path": "dashboard.shared_crew.<key>", "value": ...}`
+`PATCH /api/config/ajcrew` with `{"path": "dashboard.shared_crew.<key>", "value": ...}`
 for `admission_enabled` and `tailnet_direct` (booleans) and `principal_concurrency`
 (1 to 256), `crew_concurrency` (0 to 1024), `typing_idle_seconds` (3 to 60)
 (integers; bounds from `SHARED_CREW_BOUNDS`). Advanced saves through the shared
@@ -161,7 +161,7 @@ device a person was seen from is the node key.
 
 #### Direct tailnet listener
 
-Release gate (requires `KIROCREW_SHARED_CREW_PREVIEW=1`): with the gate off,
+Release gate (requires `AJCREW_SHARED_CREW_PREVIEW=1`): with the gate off,
 `tailnet_direct_listener` reads `dashboard.shared_crew.tailnet_direct` as off
 whatever config.json says, so the listener never starts, and no derived set is
 installed, so `allowed_logins` decides the `tailscale serve` path as before. The invite, credential and avatar routes
@@ -195,7 +195,7 @@ is not a boolean reads as off) and Tailscale running, the gateway also listens o
 machine's own tailnet addresses (`100.64.0.0/10` and `fd7a:115c:a1e0::/48`, from
 the daemon's `status`) on the dashboard port (`dashboard/tailnet_direct_listener.py`).
 It never binds a wildcard, a LAN address or any non-tailnet interface, and it does
-not start beside a widened bind (`KIROCREW_BIND`), under a governance ceiling that
+not start beside a widened bind (`AJCREW_BIND`), under a governance ceiling that
 pins `capabilities.tailnet_origin` off, or when the daemon names no address or no
 owner login. Loopback is unchanged. Off keeps the loopback-only listener; a change
 applies at the next gateway start. The bind is fixed at start; a Tailscale that starts later, or
@@ -222,7 +222,7 @@ The owner (stable user id and login both match this machine's node,
 the bootstrap `local-app`) and `auth_owner_whois`, so every owner-gated route
 answers it (`dashboard.tailnet_owner`). Two irreversible actions, `DELETE
 /api/shared-crew/tailscale/credential` and `DELETE /api/sessions`, also need
-`X-Kirocrew-Confirm: irreversible`, which the dashboard sends only after its own
+`X-Ajcrew-Confirm: irreversible`, which the dashboard sends only after its own
 confirm dialog; without it the answer is 428 `confirm_required`. Anyone else is the
 dashboard user `tailnet:uid:<id>` (a tagged node `tailnet:node:<name>`), which never
 matches the owner subject, so owner-gated routes refuse it. A token or cookie it carries is ignored, except an app token,
@@ -639,7 +639,7 @@ and the macOS empty state (`platform_unprovable`) points at the direct link.
 ### AWS SSM invites
 
 Release gate: the same as the direct tailnet listener. Without
-`KIROCREW_SHARED_CREW_PREVIEW=1` (or the owner's stored choice) `ssm` reads as off,
+`AJCREW_SHARED_CREW_PREVIEW=1` (or the owner's stored choice) `ssm` reads as off,
 the SSM routes answer 404 and no SSM port is bound.
 
 AWS Systems Manager (SSM) Session Manager reaches the gateway as a plain loopback
@@ -651,8 +651,8 @@ owner's by its port.
 With `dashboard.shared_crew.ssm` on (default off; only a literal `true`), the gateway
 also binds `127.0.0.1:<ssm_port>` (`ssm_port`, default 5477, 1024 to 65535; the
 dashboard port is refused, `port_in_use`) after the dashboard port, when it finds
-this machine's managed-node id: `KIROCREW_SSM_TARGET` (an `i-` or `mi-` id, with
-`KIROCREW_SSM_REGION`, `AWS_REGION` or `AWS_DEFAULT_REGION`), else IMDSv2
+this machine's managed-node id: `AJCREW_SSM_TARGET` (an `i-` or `mi-` id, with
+`AJCREW_SSM_REGION`, `AWS_REGION` or `AWS_DEFAULT_REGION`), else IMDSv2
 (`shared_crew.ssm.read_imds`, 1 s timeouts, resolved once at start). Without one the
 listener does not start (`no_target`). Nothing reads or writes the user's AWS
 configuration, credentials or profiles, and no process is started. The result is recorded by `ssm.note_listener` and reported as the
@@ -695,7 +695,7 @@ live invites. The first request carrying `?ssm_invite=` sets the `mc_ssm_<port>`
 record, so the next request fails, and a response still open is closed within
 `REVERIFY_SECS` (15 s); the revoke route also closes the person's open dashboard
 sockets. There is no expiry: a link is permanent until revoked and one link is one
-identity. The command names the custom Session document `Kiro-Crew-Shared-Crew-<port>`
+identity. The command names the custom Session document `Aj-Crew-Shared-Crew-<port>`
 (`ssm.session_document`), which fixes `portNumber`, and the guide tells the owner to
 create that document and allow `ssm:StartSession` on it alone: the AWS-managed
 port-forwarding document can forward any port and a shell document is already
@@ -704,7 +704,7 @@ host access. A test reads the guide and checks the command names the same docume
 **Owner routes** (`shared_crew.routes_ssm`, the invite routes' owner gate; 404 without
 the preview): `GET /api/shared-crew/ssm` returns `state`, `reason`, `port`, `target`,
 the `command` a teammate runs (`aws ssm start-session --target <id> --document-name
-Kiro-Crew-Shared-Crew-<port> --parameters localPortNumber=<port>`,
+Aj-Crew-Shared-Crew-<port> --parameters localPortNumber=<port>`,
 built as an argument list from validated parts), `local_url` and `invites`
 (`id`, `alias`, `created_at`, `joined`, `principal_id`, never a secret).
 `POST .../ssm/invites {alias}` makes an invite and returns `invite`, the one-time
@@ -862,7 +862,7 @@ initiator, the responder where one exists, the runtime reference, the outcome an
 causal link. It carries ids, never prompt text or credentials.
 
 `audit.record_action` writes it to the existing tamper-evident security event log
-(`kiro_crew.sel`) as one `shared_crew_action` event: `caller_identity` is the
+(`aj_crew.sel`) as one `shared_crew_action` event: `caller_identity` is the
 initiator's principal id, `operation` is `shared_crew.<action_type>`, `resources`
 is the target, `request_id` the correlation id, and `metadata` holds the action
 ids and a reduced principal (id, kind, provenance, login). That log's HMAC chain,
@@ -966,7 +966,7 @@ standing permission. `reconciling -> queued` requires proof the work never start
 Ambiguous execution after a crash ends in `unknown_outcome` and is surfaced, never
 replayed.
 
-`TASKQ_STATE_MAP` maps every `kiro_crew.taskq.model` state onto this machine; the
+`TASKQ_STATE_MAP` maps every `aj_crew.taskq.model` state onto this machine; the
 durable queue stays the store of record and this is its projection.
 
 ### Capacity accounting
@@ -1195,7 +1195,7 @@ admission requires. Until then the queue stays held and the check retries every
 |---|---|---|
 | `queued`, `admitted` (no linked run id) | `reconciling`, then `queued` and relaunched when a relauncher is registered for its operation and payload, else `cancelled` with `extra.reconcile_detail = host_restarted_before_start` | held only if requeued |
 | `running`, `cancelling` with no unit of its own | `reconciling` -> `unknown_outcome` (`cancelled` if a cancel was asked) | released once proven stopped |
-| `running` with a live scope unit, or a principal slice holding a populated `kirocrew-rt-*.scope` | `reconciling`; the scopes found are stopped (`extra.orphans_reaped`), and the row ends `unknown_outcome` once `systemctl is-active` says each stopped | held |
+| `running` with a live scope unit, or a principal slice holding a populated `ajcrew-rt-*.scope` | `reconciling`; the scopes found are stopped (`extra.orphans_reaped`), and the row ends `unknown_outcome` once `systemctl is-active` says each stopped | held |
 | child or probed background run, including a `queued` or `admitted` one that names its run id | `reconciling`; its owner reconciles the run and the probe settles the row; a child's run key `subagent:<id>` is bound to its budget again and its slice prepared, so a recovered dispatch lands in that person's slice | held |
 
 Nothing that may have run is replayed. No relauncher is registered for chat turns in
@@ -1221,7 +1221,7 @@ The prompt is only shown, never run again.
 ### Containment
 
 Owner: `shared_crew.containment`, reusing `sandbox_cgroup` and `sandbox_slice`.
-Each principal's runtimes start in `kirocrew-agents-<instance>-p<sha256(id)[:12]>.slice`,
+Each principal's runtimes start in `ajcrew-agents-<instance>-p<sha256(id)[:12]>.slice`,
 a child of the instance slice, sized by `systemctl --user set-property --runtime`
 (`principal_cpu_quota_percent`, `principal_memory_max_mb`, `principal_tasks_max`); the
 instance slice gets `crew_cpu_quota_percent`. `sandbox_slice.cgroup_scope_argv` picks
@@ -1444,7 +1444,7 @@ second read; `ended` names why a lease just ended (`sent`, `cleared`, `idle`,
 holds the lease, which of their connections are drafting, and when each last
 reported.
 
-Takeover requires `KIROCREW_SHARED_CREW_PREVIEW=1`; without it the route is
+Takeover requires `AJCREW_SHARED_CREW_PREVIEW=1`; without it the route is
 absent (404) and no frame carries a takeover field. A locked collaborator may
 take the lease over with `POST /api/shared-crew/typing-lease/takeover
 {session_key}`: a dashboard user (the same check as the lease read) whose actor
@@ -1565,7 +1565,7 @@ that never learned a revision sends none and is not compared.
 | `GET /api/shared-crew/send-state?session_key=` | the session's send revision and last accepted send (dashboard users only) |
 | a chat send with `base_revision` | 409 `send_race` with `winner` and `current_revision` when another principal's send was accepted after it |
 | `GET /api/shared-crew/typing-lease?session_key=` | who holds the session's typing lease (dashboard users only) |
-| `POST /api/shared-crew/typing-lease/takeover` `{session_key}` | requires `KIROCREW_SHARED_CREW_PREVIEW=1` (else 404): the caller takes the lease; the new lease body, with `ended: "taken_over"`, `taken_over_from` and `taken_over_from_ids` when it moved; 403 `forbidden` (not a dashboard user) or `not_admitted` (actor cannot hold a lease), 400 `invalid_session_key`, 404 `unknown_session` |
+| `POST /api/shared-crew/typing-lease/takeover` `{session_key}` | requires `AJCREW_SHARED_CREW_PREVIEW=1` (else 404): the caller takes the lease; the new lease body, with `ended: "taken_over"`, `taken_over_from` and `taken_over_from_ids` when it moved; 403 `forbidden` (not a dashboard user) or `not_admitted` (actor cannot hold a lease), 400 `invalid_session_key`, 404 `unknown_session` |
 | a chat send while someone else types | 409 `composer_locked` with `holder` and `lease`; a steer into a running turn is not held |
 | `GET /api/shared-crew/tailscale/invites` | owner: `connected`, `tailnet`, key expiry, `invites`, `members`, `sync` (§2 Tailscale invites) |
 | `POST /api/shared-crew/tailscale/invites` `{emails, multi_use, alias, avatar_id}` | owner: the created `invites` |
@@ -1598,7 +1598,7 @@ The server pushes whole-value frames: `shared_crew.presence`, `shared_crew.work`
 `shared_crew.decision`, `shared_crew.capacity`, `shared_crew.send_state`,
 `shared_crew.typing_lease`, `shared_crew.memory_change` and `shared_crew.people`
 (`{type, user_id}`: someone changed a person's display name or picture, and People
-refetches) (`collab.SERVER_FRAMES`). With `KIROCREW_SHARED_CREW_PREVIEW=1`, the
+refetches) (`collab.SERVER_FRAMES`). With `AJCREW_SHARED_CREW_PREVIEW=1`, the
 `shared_crew.typing_lease` frame announcing a takeover adds `taken_over_from`
 and `taken_over_from_ids` beside `ended: "taken_over"`. The
 client sends `shared_crew.activity` with a session, an `Activity` and, when the
@@ -1665,7 +1665,7 @@ the current record. A busy session's queued sends stay the queue stack's rows.
 | `completed`, `failed`, `expired`, `cancelled`, `unknown_outcome` | the transcript; no extra label | sent |
 | `rejected` | refusal notice by the composer, with whose limit and the next step | restored |
 | lost send race (`send_race`, never an `OperationState`) | notice above the composer: "X sent first", "Send after X's message" (the Send now action), Dismiss; no bubble or error row | restored |
-| someone else typing (typing lease, never an `OperationState`) | composer read-only, button row replaced by "X is typing…"; Stop and Steer stay for a running turn; with `KIROCREW_SHARED_CREW_PREVIEW=1`, a Take over button | kept, read-only |
+| someone else typing (typing lease, never an `OperationState`) | composer read-only, button row replaced by "X is typing…"; Stop and Steer stay for a running turn; with `AJCREW_SHARED_CREW_PREVIEW=1`, a Take over button | kept, read-only |
 | someone took the lease over from this person (preview only) | composer read-only, "X took over typing" in the banner, Take over to take it back | kept, read-only |
 | this person took the lease over (preview only) | composer unlocks once the lease is re-read | kept, editable |
 | a takeover fails (preview only) | inline `ErrorNotice` with the agent hand-off under the banner; still locked | kept, read-only |
@@ -1824,7 +1824,7 @@ or an enum value changes that test in the same change.
 
 Prerequisites. One gateway on a host the operator controls. Collaborators reach it
 through `tailscale serve` (preferred) or the tailnet address directly (only when
-`KIROCREW_BIND` widens the bind), with
+`AJCREW_BIND` widens the bind), with
 `dashboard.tailscale.trust_identity` on and `dashboard.tailscale.allowed_logins`
 listing each person (section 2). Without that opt-in every remote caller is Unknown.
 Per-person containment needs Linux with cgroup v2, a `systemd --user` session and the
@@ -1839,15 +1839,15 @@ Supported profiles.
 | Linux, cgroup v2, delegated user slice | counts and queues | `best_effort` (CPU, memory, pids) | allowed |
 | Unrestricted host root | counts and queues | `best_effort` | not adversarial containment |
 
-Start, stop and configure. Start with `kirocrew gateway` (or the installed service)
-and stop with `kirocrew stop`. Limits live under `dashboard.shared_crew` (section 4)
+Start, stop and configure. Start with `ajcrew gateway` (or the installed service)
+and stop with `ajcrew stop`. Limits live under `dashboard.shared_crew` (section 4)
 and are re-read within seconds, without a restart (every turn gate call refreshes
 the gateway's service, so enabling admission applies to the next turn):
 
 ```bash
-kirocrew config set dashboard.shared_crew.admission_enabled true
-kirocrew config set dashboard.shared_crew.principal_concurrency 2
-kirocrew config set dashboard.shared_crew.hard_limits true   # only on a delegated Linux host
+ajcrew config set dashboard.shared_crew.admission_enabled true
+ajcrew config set dashboard.shared_crew.principal_concurrency 2
+ajcrew config set dashboard.shared_crew.hard_limits true   # only on a delegated Linux host
 ```
 
 Check what holds with `GET /api/shared-crew/capabilities` (what is enforced) and

@@ -16,7 +16,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard.chat_utils import (
     _BLOCKED_SLASH_COMMANDS,
     _SLASH_COMMANDS,
     SLASH_COMMAND_DESCRIPTIONS,
@@ -38,7 +38,7 @@ def _fake_config(provider: str, acp_backend: str = ""):
 
 
 def _make_app() -> web.Application:
-    from kiro_crew.dashboard.handlers.agents import api_slash_commands
+    from aj_crew.dashboard.handlers.agents import api_slash_commands
 
     app = web.Application()
     app.router.add_get("/api/slash-commands", api_slash_commands)
@@ -47,7 +47,7 @@ def _make_app() -> web.Application:
 
 async def _get(provider: str, acp_backend: str = ""):
     with patch(
-        "kiro_crew.dashboard.handlers.agents.KiroCrewConfig.load",
+        "aj_crew.dashboard.handlers.agents.AjCrewConfig.load",
         return_value=_fake_config(provider, acp_backend),
     ):
         async with TestClient(TestServer(_make_app())) as client:
@@ -100,7 +100,7 @@ class TestApiSlashCommands:
         for name, desc in by_name.items():
             assert desc, f"blank description for {name}"
             assert desc == SLASH_COMMAND_DESCRIPTIONS[name]
-        # KiroCrew-local commands read meaningfully.
+        # Aj Crew-local commands read meaningfully.
         assert "side" in by_name["/side"].lower()
 
     @pytest.mark.asyncio

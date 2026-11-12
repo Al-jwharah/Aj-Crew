@@ -38,17 +38,17 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from kiro_crew.apps.builtins.auto_research import handlers as h
-from kiro_crew.apps.builtins.auto_research.campaign import (
+from aj_crew.apps.builtins.auto_research import handlers as h
+from aj_crew.apps.builtins.auto_research.campaign import (
     LOGGER_NAME,
     lifecycle,
     storage,
     watchdog,
 )
 
-_CAMPAIGN = "kiro_crew.apps.builtins.auto_research.campaign"
+_CAMPAIGN = "aj_crew.apps.builtins.auto_research.campaign"
 _CAMPAIGN_DIR = Path(inspect.getsourcefile(storage) or "").resolve().parent
-_EMIT_SSE_PATH = "kiro_crew.apps.builtins.auto_research.handlers._emit_sse"
+_EMIT_SSE_PATH = "aj_crew.apps.builtins.auto_research.handlers._emit_sse"
 
 # Bottom to top: a component may import only components listed before it.
 _LAYERS = [
@@ -159,7 +159,7 @@ class TestPatchReach:
             assert storage.DB_PATH == tmp_path / "x.db"
             assert storage.db_path() == tmp_path / "x.db"
         assert storage.DB_PATH == original
-        with patch("kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
+        with patch("aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR", tmp_path):
             assert storage.research_dir() == tmp_path
         assert "RESEARCH_DIR" not in vars(h)
 
@@ -264,7 +264,7 @@ class TestUndo:
         assert watchdog.POLL_INTERVAL is original
 
 
-_HANDLERS = "kiro_crew.apps.builtins.auto_research.handlers"
+_HANDLERS = "aj_crew.apps.builtins.auto_research.handlers"
 _REPO = Path(__file__).resolve().parents[1]
 _SRC = _REPO / "src"
 _DYNAMIC = "<dynamic>"
@@ -546,10 +546,10 @@ def _repository_create_patches() -> list[_CreatePatch]:
     return sorted(found)
 
 
-_FACADE_IMPORT = "from kiro_crew.apps.builtins.auto_research import handlers as h\n"
+_FACADE_IMPORT = "from aj_crew.apps.builtins.auto_research import handlers as h\n"
 #: Prepended to every self-test source: a bare ``patch`` must be the imported one.
 _PATCH_IMPORT = "from unittest.mock import patch\n"
-_OWNER = "kiro_crew.apps.builtins.auto_research.campaign.lifecycle"
+_OWNER = "aj_crew.apps.builtins.auto_research.campaign.lifecycle"
 
 # (source, the names the scan must report); one must-flag case per form.
 _MUST_FLAG = {
@@ -682,7 +682,7 @@ _MUST_IGNORE = {
     "deeper attribute of the facade": (f"patch('{_HANDLERS}.web.get', create=True)", None),
     "relative import elsewhere": (
         "from .. import handlers\npatch.object(handlers, '_emit_sse', create=True)",
-        "kiro_crew.apps.builtins.spec_builder.tests",
+        "aj_crew.apps.builtins.spec_builder.tests",
     ),
 }
 
@@ -701,16 +701,16 @@ class TestNoCreatePatchOfAForwardedName:
     def test_the_scan_covers_both_test_trees(self):
         sources = {path.relative_to(_REPO).as_posix() for path in _test_sources()}
         assert "test/test_auto_research_facade.py" in sources
-        assert "src/kiro_crew/apps/builtins/auto_research/tests/test_windows_support.py" in sources
+        assert "src/aj_crew/apps/builtins/auto_research/tests/test_windows_support.py" in sources
 
     def test_a_relative_import_resolves_to_the_facade(self):
         source = _PATCH_IMPORT + (
             "from .. import handlers\npatch.object(handlers, '_emit_sse', create=True)"
         )
         package = _package_of(
-            _SRC / "kiro_crew/apps/builtins/auto_research/tests/test_windows_support.py"
+            _SRC / "aj_crew/apps/builtins/auto_research/tests/test_windows_support.py"
         )
-        assert package == "kiro_crew.apps.builtins.auto_research.tests"
+        assert package == "aj_crew.apps.builtins.auto_research.tests"
         assert _scan_source(source, set(h._EXPORTS), package) == ["_emit_sse"]
 
     def test_a_hit_names_its_enclosing_test(self):

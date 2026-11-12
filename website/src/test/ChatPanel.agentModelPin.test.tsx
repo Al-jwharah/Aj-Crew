@@ -7,23 +7,23 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 
-const { kirocrewConfigMock, kirocrewAgentsMock, agentResolvedModelMock, updateKirocrewAgentMock, patchConfigMock } = vi.hoisted(() => ({
-  kirocrewConfigMock: vi.fn(() =>
+const { ajcrewConfigMock, ajcrewAgentsMock, agentResolvedModelMock, updateAjcrewAgentMock, patchConfigMock } = vi.hoisted(() => ({
+  ajcrewConfigMock: vi.fn(() =>
     Promise.resolve({ agent: { model: 'claude-opus-5.5', reasoning_effort: '' } })
   ),
-  kirocrewAgentsMock: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'default' })),
+  ajcrewAgentsMock: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'default' })),
   agentResolvedModelMock: vi.fn(() => Promise.resolve({ model: 'claude-opus-5.5', pinned: false })),
-  updateKirocrewAgentMock: vi.fn(() => Promise.resolve({ ok: true })),
+  updateAjcrewAgentMock: vi.fn(() => Promise.resolve({ ok: true })),
   patchConfigMock: vi.fn(() => Promise.resolve({})),
 }))
 
 vi.mock('../api/client', () => ({
   api: {
     dashboardConfig: () => Promise.resolve({ restore_sessions: false, restore_window_minutes: 30, merge_queued_messages: false, widget_density: 'more' }),
-    kirocrewConfig: kirocrewConfigMock,
-    kirocrewAgents: kirocrewAgentsMock,
+    ajcrewConfig: ajcrewConfigMock,
+    ajcrewAgents: ajcrewAgentsMock,
     agentResolvedModel: agentResolvedModelMock,
-    updateKirocrewAgent: updateKirocrewAgentMock,
+    updateAjcrewAgent: updateAjcrewAgentMock,
     models: () => Promise.resolve([
       { model_name: 'auto', description: 'Default' },
       { model_name: 'claude-opus-5.5', description: 'Opus 5.5' },
@@ -56,7 +56,7 @@ function wrap() {
 
 /** The roster's view of the default agent: its own (member) pin, if any. */
 const seedAgent = (model: string, extra: Record<string, unknown> = {}, name = 'default') =>
-  kirocrewAgentsMock.mockImplementation(() => Promise.resolve({
+  ajcrewAgentsMock.mockImplementation(() => Promise.resolve({
     agents: [{ name, model, ...extra }],
     default_agent: name,
   }) as never)
@@ -73,7 +73,7 @@ const CLEAR_BUTTON = { name: 'Clear its pin' }
 async function settled() {
   const trigger = await screen.findByRole('combobox', { name: 'Default Model' })
   await waitFor(() => expect(trigger).not.toHaveAttribute('data-disabled'))
-  await waitFor(() => expect(kirocrewAgentsMock).toHaveBeenCalled())
+  await waitFor(() => expect(ajcrewAgentsMock).toHaveBeenCalled())
   await waitFor(() => expect(agentResolvedModelMock).toHaveBeenCalled())
 }
 
@@ -87,10 +87,10 @@ async function settled() {
  */
 describe('ChatPanel — default agent model pin notice', () => {
   beforeEach(() => {
-    updateKirocrewAgentMock.mockClear()
+    updateAjcrewAgentMock.mockClear()
     patchConfigMock.mockClear()
     patchConfigMock.mockImplementation(() => Promise.resolve({}) as never)
-    kirocrewAgentsMock.mockClear()
+    ajcrewAgentsMock.mockClear()
     agentResolvedModelMock.mockClear()
     seedResolved('claude-opus-5.5')
   })
@@ -129,11 +129,11 @@ describe('ChatPanel — default agent model pin notice', () => {
     expect(agentResolvedModelMock).not.toHaveBeenCalledWith('')
     expect(agentResolvedModelMock).toHaveBeenCalledWith('oncall')
     expect(agentResolvedModelMock.mock.invocationCallOrder[0]).toBeGreaterThan(
-      kirocrewAgentsMock.mock.invocationCallOrder[0]
+      ajcrewAgentsMock.mock.invocationCallOrder[0]
     )
     fireEvent.click(await screen.findByRole('button', CLEAR_BUTTON))
     await waitFor(() =>
-      expect(updateKirocrewAgentMock).toHaveBeenCalledWith('oncall', { model: '' })
+      expect(updateAjcrewAgentMock).toHaveBeenCalledWith('oncall', { model: '' })
     )
   })
 
@@ -147,10 +147,10 @@ describe('ChatPanel — default agent model pin notice', () => {
     // A roster re-read that has not answered yet: the default agent may be
     // about to change under the button, so it waits.
     let release!: () => void
-    kirocrewAgentsMock.mockImplementationOnce(() => new Promise(resolve => {
+    ajcrewAgentsMock.mockImplementationOnce(() => new Promise(resolve => {
       release = () => resolve({ agents: [{ name: 'default', model: 'claude-opus-5' }], default_agent: 'default' })
     }) as never)
-    qc.refetchQueries({ queryKey: ['kirocrew-agents'] })
+    qc.refetchQueries({ queryKey: ['ajcrew-agents'] })
     await waitFor(() => expect(button).toBeDisabled())
     release()
     await waitFor(() => expect(button).toBeEnabled())
@@ -197,7 +197,7 @@ describe('ChatPanel — default agent model pin notice', () => {
     // waits for the save to land.
     const pending = await screen.findByRole('button', CLEAR_BUTTON)
     expect(pending).toBeDisabled()
-    expect(updateKirocrewAgentMock).not.toHaveBeenCalled()
+    expect(updateAjcrewAgentMock).not.toHaveBeenCalled()
     release()
     await waitFor(() => expect(pending).toBeEnabled())
   })
@@ -249,11 +249,11 @@ describe('ChatPanel — default agent model pin notice', () => {
     await settled()
     const button = await screen.findByRole('button', CLEAR_BUTTON)
     expect(button).toBeEnabled()
-    kirocrewAgentsMock.mockImplementationOnce(() => Promise.reject(new Error('502')) as never)
-    await qc.invalidateQueries({ queryKey: ['kirocrew-agents'] })
+    ajcrewAgentsMock.mockImplementationOnce(() => Promise.reject(new Error('502')) as never)
+    await qc.invalidateQueries({ queryKey: ['ajcrew-agents'] })
     expect(await screen.findByText('Failed to load config.')).toBeInTheDocument()
     expect(screen.getByRole('button', CLEAR_BUTTON)).toBeDisabled()
-    expect(updateKirocrewAgentMock).not.toHaveBeenCalled()
+    expect(updateAjcrewAgentMock).not.toHaveBeenCalled()
   })
 
   it('is hidden when the default agent resolves to the global default', async () => {
@@ -267,7 +267,7 @@ describe('ChatPanel — default agent model pin notice', () => {
   it('is hidden when the resolved model is the global default under another spelling', async () => {
     // `claude-opus-4.8`, `opus` and the provider id `claude-opus-4-8[1m]` are
     // one registry entry; a raw string compare would notice here.
-    kirocrewConfigMock.mockImplementationOnce(() =>
+    ajcrewConfigMock.mockImplementationOnce(() =>
       Promise.resolve({ agent: { model: 'claude-opus-4.8', reasoning_effort: '' } }) as never
     )
     seedAgent('opus')
@@ -280,7 +280,7 @@ describe('ChatPanel — default agent model pin notice', () => {
   it('is hidden when the global default is Auto', async () => {
     // On Auto the setting itself defers to the agent config, so whatever
     // resolves is what the hint already promised.
-    kirocrewConfigMock.mockImplementationOnce(() =>
+    ajcrewConfigMock.mockImplementationOnce(() =>
       Promise.resolve({ agent: { model: 'auto', reasoning_effort: '' } }) as never
     )
     seedAgent('')
@@ -314,39 +314,39 @@ describe('ChatPanel — default agent model pin notice', () => {
   })
 
   it('reports a failed roster read and retries it in place', async () => {
-    kirocrewAgentsMock.mockImplementationOnce(() => Promise.reject(new Error('502')) as never)
+    ajcrewAgentsMock.mockImplementationOnce(() => Promise.reject(new Error('502')) as never)
     seedAgent('claude-opus-5')
     seedResolved('claude-opus-5', true)
     wrap()
-    await waitFor(() => expect(kirocrewAgentsMock).toHaveBeenCalled())
+    await waitFor(() => expect(ajcrewAgentsMock).toHaveBeenCalled())
     expect(await screen.findByText('Failed to load config.')).toBeInTheDocument()
     // The resolver waits for the roster to name the agent, so it has not been
     // asked yet — and there is no agent name it could have been asked for.
     expect(agentResolvedModelMock).not.toHaveBeenCalled()
-    const calls = kirocrewAgentsMock.mock.calls.length
+    const calls = ajcrewAgentsMock.mock.calls.length
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
-    await waitFor(() => expect(kirocrewAgentsMock.mock.calls.length).toBeGreaterThan(calls))
+    await waitFor(() => expect(ajcrewAgentsMock.mock.calls.length).toBeGreaterThan(calls))
     expect(await screen.findByTestId('agent-model-pin-notice')).toBeInTheDocument()
     expect(agentResolvedModelMock).toHaveBeenCalledWith('default')
   })
 
   it('folds two failed reads into one banner whose Retry re-asks both', async () => {
-    kirocrewConfigMock.mockImplementationOnce(() => Promise.reject(new Error('502')) as never)
-    kirocrewAgentsMock.mockImplementationOnce(() => Promise.reject(new Error('502')) as never)
+    ajcrewConfigMock.mockImplementationOnce(() => Promise.reject(new Error('502')) as never)
+    ajcrewAgentsMock.mockImplementationOnce(() => Promise.reject(new Error('502')) as never)
     seedAgent('claude-opus-5')
     seedResolved('claude-opus-5', true)
     wrap()
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalled())
-    await waitFor(() => expect(kirocrewAgentsMock).toHaveBeenCalled())
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalled())
+    await waitFor(() => expect(ajcrewAgentsMock).toHaveBeenCalled())
     expect(await screen.findByText('Failed to load config.')).toBeInTheDocument()
     // One notice, one Retry — not a row per failed read saying the same thing.
     expect(screen.getAllByText('Failed to load config.')).toHaveLength(1)
     expect(screen.getAllByRole('button', { name: 'Retry' })).toHaveLength(1)
-    const cfgCalls = kirocrewConfigMock.mock.calls.length
-    const rosterCalls = kirocrewAgentsMock.mock.calls.length
+    const cfgCalls = ajcrewConfigMock.mock.calls.length
+    const rosterCalls = ajcrewAgentsMock.mock.calls.length
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
-    await waitFor(() => expect(kirocrewConfigMock.mock.calls.length).toBeGreaterThan(cfgCalls))
-    await waitFor(() => expect(kirocrewAgentsMock.mock.calls.length).toBeGreaterThan(rosterCalls))
+    await waitFor(() => expect(ajcrewConfigMock.mock.calls.length).toBeGreaterThan(cfgCalls))
+    await waitFor(() => expect(ajcrewAgentsMock.mock.calls.length).toBeGreaterThan(rosterCalls))
     await waitFor(() => expect(screen.queryByText('Failed to load config.')).toBeNull())
     expect(await screen.findByTestId('agent-model-pin-notice')).toBeInTheDocument()
   })
@@ -358,12 +358,12 @@ describe('ChatPanel — default agent model pin notice', () => {
     await settled()
     fireEvent.click(await screen.findByRole('button', CLEAR_BUTTON))
     await waitFor(() =>
-      expect(updateKirocrewAgentMock).toHaveBeenCalledWith('default', { model: '' })
+      expect(updateAjcrewAgentMock).toHaveBeenCalledWith('default', { model: '' })
     )
   })
 
   it('reports a rejected clear beside the button, with the server reason, and clears it on retry', async () => {
-    updateKirocrewAgentMock.mockImplementationOnce(() => Promise.reject(new Error('agent is read-only')) as never)
+    updateAjcrewAgentMock.mockImplementationOnce(() => Promise.reject(new Error('agent is read-only')) as never)
     seedAgent('claude-opus-5')
     seedResolved('claude-opus-5', true)
     wrap()
@@ -378,7 +378,7 @@ describe('ChatPanel — default agent model pin notice', () => {
     expect(screen.getAllByRole('alert')).toHaveLength(1)
     // The button is the retry: a second attempt resets the error.
     fireEvent.click(screen.getByRole('button', CLEAR_BUTTON))
-    await waitFor(() => expect(updateKirocrewAgentMock).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(updateAjcrewAgentMock).toHaveBeenCalledTimes(2))
     await waitFor(() => expect(screen.queryByTestId('agent-model-pin-clear-error')).toBeNull())
   })
 

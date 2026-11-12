@@ -1,6 +1,6 @@
 """Deterministic coverage for the member-memory V2 retrieval benchmark.
 
-Drives ``evaluate()`` and ``main()`` of ``kiro_crew.eval.bench.member_v2`` with a fake
+Drives ``evaluate()`` and ``main()`` of ``aj_crew.eval.bench.member_v2`` with a fake
 embedder (never ``LlamaCppEmbedder``), so no model is downloaded.
 """
 
@@ -16,9 +16,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config.loader import config_dir
-from kiro_crew.eval.bench import member_v2
-from kiro_crew.eval.bench.member_v2 import (
+from aj_crew.config.loader import config_dir
+from aj_crew.eval.bench import member_v2
+from aj_crew.eval.bench.member_v2 import (
     _bounded_oversized_result,
     _insert,
     _new_store,
@@ -65,7 +65,7 @@ def _make_embed(missing: set[str] | None = None):
 def home() -> Path:
     """The isolated per-test data home ``config_dir()`` already resolves to.
 
-    ``test/conftest.py`` autouse-pins ``KIROCREW_HOME`` per test, so this is
+    ``test/conftest.py`` autouse-pins ``AJCREW_HOME`` per test, so this is
     never the operator's real home; it is returned rather than re-derived so a
     test that also opens a store under it addresses the identical path.
     """
@@ -79,12 +79,12 @@ def sound_report(tmp_path_factory: pytest.TempPathFactory) -> dict:
     A run costs 35-50 s on CI, so it runs once per module; tests that mutate the report
     MUST ``copy.deepcopy`` it first.
 
-    ``KIROCREW_HOME`` is pinned here by a private ``MonkeyPatch``: the V2 store opens as
+    ``AJCREW_HOME`` is pinned here by a private ``MonkeyPatch``: the V2 store opens as
     owned only under the resolved data home, and the per-test pin is function-scoped.
     """
     home = tmp_path_factory.mktemp("member-v2-bench-home")
     with pytest.MonkeyPatch.context() as patch:
-        patch.setenv("KIROCREW_HOME", str(home))
+        patch.setenv("AJCREW_HOME", str(home))
         return evaluate(_make_embed(), home)
 
 
@@ -155,14 +155,14 @@ class TestEvaluateReportShape:
 
 class TestEvaluateRefusals:
     def test_embed_returning_none_for_corpus_text_raises(self, home: Path) -> None:
-        from kiro_crew.eval.bench.admission_corpus import ADMISSION_TOPICS
+        from aj_crew.eval.bench.admission_corpus import ADMISSION_TOPICS
 
         unembeddable = {ADMISSION_TOPICS[0].query}
         with pytest.raises(RuntimeError, match="Model failed to embed corpus input"):
             evaluate(_make_embed(missing=unembeddable), home)
 
     def test_embed_returning_non_finite_value_raises(self, home: Path) -> None:
-        from kiro_crew.eval.bench.admission_corpus import ADMISSION_TOPICS
+        from aj_crew.eval.bench.admission_corpus import ADMISSION_TOPICS
 
         target_text = ADMISSION_TOPICS[0].query
 
@@ -175,7 +175,7 @@ class TestEvaluateRefusals:
             evaluate(_embed, home)
 
     def test_mismatched_embedding_dimensions_raise(self, home: Path) -> None:
-        from kiro_crew.eval.bench.admission_corpus import ADMISSION_TOPICS
+        from aj_crew.eval.bench.admission_corpus import ADMISSION_TOPICS
 
         target_text = ADMISSION_TOPICS[0].query
 
@@ -196,7 +196,7 @@ class TestNewStoreAndInsertRefusals:
         # to exercise its own defensive check is to make the freshly-opened
         # store itself misreport. `algorithm_version` is a read-only property;
         # patch the underlying class attribute for the duration of this call.
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
         monkeypatch.setattr(VectorMemoryStore, "algorithm_version", property(lambda self: "v1"))
         with pytest.raises(RuntimeError, match="did not open the owned V2 policy"):
@@ -255,7 +255,7 @@ class TestMainCli:
         model_path = tmp_path / "fake-model.gguf"
         model_path.write_bytes(b"not a real model, just needs to exist")
         out_json = tmp_path / "report.json"
-        skip_download_before = os.environ.get("KIROCREW_SKIP_MODEL_DOWNLOAD")
+        skip_download_before = os.environ.get("AJCREW_SKIP_MODEL_DOWNLOAD")
         evaluations: list[tuple[TestMainCli._FakeBackend, Path]] = []
 
         def cli_report(embed, temporary: Path) -> dict:
@@ -263,15 +263,13 @@ class TestMainCli:
             assert isinstance(embed.__self__, self._FakeBackend)
             assert embed("CLI wiring probe") == _fake_vector("CLI wiring probe")
             assert temporary.is_dir()
-            assert os.environ["KIROCREW_HOME"] == str(temporary)
-            assert os.environ["KIROCREW_SKIP_MODEL_DOWNLOAD"] == "1"
+            assert os.environ["AJCREW_HOME"] == str(temporary)
+            assert os.environ["AJCREW_SKIP_MODEL_DOWNLOAD"] == "1"
             evaluations.append((embed.__self__, temporary))
             return copy.deepcopy(sound_report)
 
         monkeypatch.setattr(member_v2, "evaluate", cli_report)
-        monkeypatch.setattr(
-            "kiro_crew.embeddings.LlamaCppEmbedder", self._FakeBackend, raising=True
-        )
+        monkeypatch.setattr("aj_crew.embeddings.LlamaCppEmbedder", self._FakeBackend, raising=True)
         monkeypatch.setattr(
             "sys.argv",
             ["member_v2", "--model-path", str(model_path), "--json", str(out_json)],
@@ -294,10 +292,10 @@ class TestMainCli:
         captured = capsys.readouterr()
         assert "full_vectors" in captured.out
 
-        # KIROCREW_HOME is restored to what it was before main() ran (this
+        # AJCREW_HOME is restored to what it was before main() ran (this
         # test's own isolated home), not leaked to main()'s temporary override.
-        assert os.environ.get("KIROCREW_HOME") == str(home)
-        assert os.environ.get("KIROCREW_SKIP_MODEL_DOWNLOAD") == skip_download_before
+        assert os.environ.get("AJCREW_HOME") == str(home)
+        assert os.environ.get("AJCREW_SKIP_MODEL_DOWNLOAD") == skip_download_before
 
 
 class TestStructuralFailures:

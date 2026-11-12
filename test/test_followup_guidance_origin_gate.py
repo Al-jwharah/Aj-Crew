@@ -4,7 +4,7 @@ The applier refuses ``suggest_followup`` on a turn no person sent (a cron, a
 loop's wake, a sub-agent, a peer send such as a crewmate's hand-off), even with
 the tab open. The guidance asked only whether a tab was open, so those turns
 were told to call a tool that was then refused. Both now read one
-predicate, ``kiro_crew.directive_origin.user_origin_gate_admits``, and a caller
+predicate, ``aj_crew.directive_origin.user_origin_gate_admits``, and a caller
 that does not name the turn's provenance is treated as no person's turn.
 
 The parity case runs the real applier and the real guidance on the same inputs.
@@ -21,14 +21,14 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state, drain_background_tasks
 
-from kiro_crew.context import ContextBuilder
-from kiro_crew.context_assembly import turn
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.session_directive_apply import apply_session_directive
-from kiro_crew.memory import MemoryStore
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.wait import finished
+from aj_crew.context import ContextBuilder
+from aj_crew.context_assembly import turn
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.session_directive_apply import apply_session_directive
+from aj_crew.memory import MemoryStore
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.wait import finished
 
 pytestmark = pytest.mark.usefixtures("close_skills_loaders")
 
@@ -84,7 +84,7 @@ def test_a_caller_that_does_not_say_is_not_offered_the_card(tmp_path, monkeypatc
     # A channel turn on a session whose tab is open builds its prompt without
     # naming the turn's provenance. Its directive reaches the applier with no
     # slot and no person mark, so the card would be refused.
-    from kiro_crew import session_surface
+    from aj_crew import session_surface
 
     monkeypatch.setattr(session_surface, "_dashboard_surfaced", frozenset({"slack:C1:1.0"}))
     builder = ContextBuilder(

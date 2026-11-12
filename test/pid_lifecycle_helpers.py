@@ -29,7 +29,7 @@ _POSIX_ONLY = pytest.mark.skipif(
 def pid_file_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Redirect _pid_file_path to a temp file."""
     p = tmp_path / "kiro_pids.txt"
-    monkeypatch.setattr("kiro_crew.session_pid._pid_file_path", lambda: p)
+    monkeypatch.setattr("aj_crew.session_pid._pid_file_path", lambda: p)
     return p
 
 
@@ -37,7 +37,7 @@ def pid_file_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 def session_pid_file_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Redirect _session_pid_file_path to a temp file."""
     p = tmp_path / "kiro_session_pids.txt"
-    monkeypatch.setattr("kiro_crew.session_pid._session_pid_file_path", lambda: p)
+    monkeypatch.setattr("aj_crew.session_pid._session_pid_file_path", lambda: p)
     return p
 
 
@@ -47,7 +47,7 @@ def _launcher_shape() -> "tuple[tuple[str, ...], str, str, str]":
     Read off the sandbox module itself, never from literals, so these fixtures cannot
     become the place the builder and the recogniser drift apart.
     """
-    import kiro_crew.sandbox as sandbox_mod
+    import aj_crew.sandbox as sandbox_mod
 
     return (
         sandbox_mod._LAUNCHER_INTERPRETER_FLAGS,

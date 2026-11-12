@@ -28,7 +28,7 @@ superseded-by: []
 
 ## 1. Summary
 
-Telemetry today cannot say how Kiro Crew is actually used. How many sessions a
+Telemetry today cannot say how Aj Crew is actually used. How many sessions a
 conductor opens against a worker, how many turns each kind of actor causes, how
 deep a session tree gets -- none of it is recorded as a metric. The raw facts are
 already in the crew log: `session/opened` carries the agent name,
@@ -47,7 +47,7 @@ This RFC proposes both, in the smallest shape the existing code already supports
 
 ## 2. Motivation
 
-`src/kiro_crew/metrics/` records the process and its machine: HTTP requests,
+`src/aj_crew/metrics/` records the process and its machine: HTTP requests,
 database calls, tool calls, turns, provider traffic, installed inventory. Those
 instruments are keyed by the runtime, never by the shape of the crew running on
 it, so a maintainer cannot answer a question about how the product is used from
@@ -70,7 +70,7 @@ Goals:
 Non-goals:
 
 - Moving the existing instruments. Process, host, gateway internals and installed
-  inventory stay in `src/kiro_crew/metrics/` and are not touched.
+  inventory stay in `src/aj_crew/metrics/` and are not touched.
 - A new egress path. No raw crew log entry is exported, and no new network
   destination is added.
 - Per-person detail. See section 9.
@@ -82,7 +82,7 @@ Non-goals:
 | Kind of data | Where it comes from |
 |---|---|
 | What happens inside a session, a crew or a member | a counting fold on the crew log |
-| The process, the host, gateway internals, the installed inventory | the existing instruments in `src/kiro_crew/metrics/` |
+| The process, the host, gateway internals, the installed inventory | the existing instruments in `src/aj_crew/metrics/` |
 
 The split is by kind of data, not by convenience. A fact the crew log already
 records is read from the crew log; a fact only the running process knows stays
@@ -167,7 +167,7 @@ first recorded.
   states itself in each. The entry's own `slot` field is read first: a
   `member-<slug>` slot shape is a `crewmate` (below). The `agent` field answers
   the rest -- a filename in `OWNED_KIRO_AGENT_FILES` (`agent_files.py`) keeps its
-  own value, the bare literal `kirocrew` (the emitter's own fallback agent name)
+  own value, the bare literal `ajcrew` (the emitter's own fallback agent name)
   maps to `default`, and everything else folds to `other`. The fold stores only
   the result
   (`opened_agent_kind`), never either raw string -- the classification function's
@@ -381,12 +381,12 @@ rather than here, because it is a code comment.
 
 | Metric | Name | Type | Attributes | Where the number comes from |
 |---|---|---|---|---|
-| session starts by agent kind | `kirocrew.crew.session.started` | counter | `agent_kind`, folded from `session/opened.agent` per section 4.5 | the `session/opened` entry |
-| turn starts by actor and agent kind | `kirocrew.crew.turn.started` | counter | `actor`, the declared `ACTOR_VALUES`; `agent_kind`, the same closed set as session starts, for the session the turn ran in | the `turn/started` entry, attributed from the session's own `otel_usage` fold state (never the raw agent name), so turns inside conductor and worker sessions can be counted apart |
-| session tree depth | `kirocrew.crew.session.tree.depth` | counter | `depth`, one of `0`, `1`, `2`, `3+` | the `depth` field on `session/opened`; one add per session |
-| session tree children | `kirocrew.crew.session.tree.child` | counter | `parent_kind`, the creator session's `agent_kind`; `nth`, one of `1`, `2`, `3`, `4-7`, `8+` | the `session/spawned` entries on the creator's own log; one add per child |
-| session tree roots | `kirocrew.crew.session.tree.roots` | observable gauge | none | `count_roots_with_children`, a new reader S2 adds to the session tree projection, scanned on each OpenTelemetry collect |
-| export lag | `kirocrew.crew.export.lag` | histogram | none | the subscriber timing its own callback, sampled only on a delivery for one of its own folds |
+| session starts by agent kind | `ajcrew.crew.session.started` | counter | `agent_kind`, folded from `session/opened.agent` per section 4.5 | the `session/opened` entry |
+| turn starts by actor and agent kind | `ajcrew.crew.turn.started` | counter | `actor`, the declared `ACTOR_VALUES`; `agent_kind`, the same closed set as session starts, for the session the turn ran in | the `turn/started` entry, attributed from the session's own `otel_usage` fold state (never the raw agent name), so turns inside conductor and worker sessions can be counted apart |
+| session tree depth | `ajcrew.crew.session.tree.depth` | counter | `depth`, one of `0`, `1`, `2`, `3+` | the `depth` field on `session/opened`; one add per session |
+| session tree children | `ajcrew.crew.session.tree.child` | counter | `parent_kind`, the creator session's `agent_kind`; `nth`, one of `1`, `2`, `3`, `4-7`, `8+` | the `session/spawned` entries on the creator's own log; one add per child |
+| session tree roots | `ajcrew.crew.session.tree.roots` | observable gauge | none | `count_roots_with_children`, a new reader S2 adds to the session tree projection, scanned on each OpenTelemetry collect |
+| export lag | `ajcrew.crew.export.lag` | histogram | none | the subscriber timing its own callback, sampled only on a delivery for one of its own folds |
 
 Depth is a counter with a bucket label rather than a histogram so the
 distribution survives backends that do not keep explicit histogram buckets: a

@@ -19,8 +19,8 @@ interface StagedPreview {
 }
 
 function stagedPreview(): StagedPreview {
-  expect(process.env.KIROCREW_E2E_EPHEMERAL, 'Use the isolated gateway E2E harness').toBe('1')
-  const raw = process.env.KIROCREW_E2E_DASHBOARD_PREVIEW
+  expect(process.env.AJCREW_E2E_EPHEMERAL, 'Use the isolated gateway E2E harness').toBe('1')
+  const raw = process.env.AJCREW_E2E_DASHBOARD_PREVIEW
   expect(raw, 'the harness stages a dashboard preview and passes its link').toBeTruthy()
   return JSON.parse(raw as string) as StagedPreview
 }

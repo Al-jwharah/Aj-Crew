@@ -20,8 +20,8 @@ from types import ModuleType
 import embeddings_helpers
 import pytest
 
-import kiro_crew.embeddings as embeddings_mod
-from kiro_crew.embeddings import _platform_libs_dirname
+import aj_crew.embeddings as embeddings_mod
+from aj_crew.embeddings import _platform_libs_dirname
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _reset_embedding_singletons = embeddings_helpers._reset_embedding_singletons
@@ -50,8 +50,8 @@ class TestPlatformLibsDirname:
     def test_supported_platforms(
         self, monkeypatch, platform_str: str, machine: str, expected: str
     ) -> None:
-        monkeypatch.setattr("kiro_crew.embeddings.sys.platform", platform_str)
-        monkeypatch.setattr("kiro_crew.embeddings.platform.machine", lambda: machine)
+        monkeypatch.setattr("aj_crew.embeddings.sys.platform", platform_str)
+        monkeypatch.setattr("aj_crew.embeddings.platform.machine", lambda: machine)
         assert _platform_libs_dirname() == expected
 
     @pytest.mark.parametrize(
@@ -67,8 +67,8 @@ class TestPlatformLibsDirname:
     def test_unsupported_combos_return_none(
         self, monkeypatch, platform_str: str, machine: str
     ) -> None:
-        monkeypatch.setattr("kiro_crew.embeddings.sys.platform", platform_str)
-        monkeypatch.setattr("kiro_crew.embeddings.platform.machine", lambda: machine)
+        monkeypatch.setattr("aj_crew.embeddings.sys.platform", platform_str)
+        monkeypatch.setattr("aj_crew.embeddings.platform.machine", lambda: machine)
         assert _platform_libs_dirname() is None
 
 
@@ -116,14 +116,14 @@ _RECORDING_LLAMA_CPP = '''\
 """Stand-in for the vendored package: records both lib-path channels at import.
 
 The real ``_vendor/llama_cpp/llama_cpp.py`` reads the host's process-local seam
-first and ``LLAMA_CPP_LIB_PATH`` second (its ``kiro_crew DIVERGENCE FROM
+first and ``LLAMA_CPP_LIB_PATH`` second (its ``aj_crew DIVERGENCE FROM
 UPSTREAM``); this records what each held while the package was being imported.
 """
 import os
 import subprocess
 import sys
 
-SEAM_AT_IMPORT = getattr(sys.modules.get("_kiro_crew_llama_cpp_lib_path"), "LIBS_DIR", None)
+SEAM_AT_IMPORT = getattr(sys.modules.get("_aj_crew_llama_cpp_lib_path"), "LIBS_DIR", None)
 ENV_AT_IMPORT = os.environ.get("LLAMA_CPP_LIB_PATH")
 # What a child spawned WHILE the import runs inherits: the environment is
 # snapshotted at spawn, so a variable set only for the import still reaches it.
@@ -174,7 +174,7 @@ def _bundled_libs_dir_of_another_install(root: Path, *, present: bool) -> Path:
         / "lib"
         / "python3.12"
         / "site-packages"
-        / "kiro_crew"
+        / "aj_crew"
         / "_vendor"
         / "llama_cpp_libs"
         / "linux_x86_64"
@@ -334,9 +334,9 @@ class TestBundledLinuxX86CpuGate:
     def test_operator_override_is_kept_out_of_the_bundled_shape_rule(
         self, tmp_path: Path, monkeypatch, caplog
     ) -> None:
-        """A directory that merely sits inside a Kiro Crew tree is still the operator's."""
+        """A directory that merely sits inside an Aj Crew tree is still the operator's."""
         _stub_bundled_linux_libs(tmp_path)
-        override = tmp_path / "kiro_crew" / "_vendor" / "llama_cpp_libs"  # no platform leaf
+        override = tmp_path / "aj_crew" / "_vendor" / "llama_cpp_libs"  # no platform leaf
         override.mkdir(parents=True)
         monkeypatch.setenv(embeddings_mod._LIB_PATH_ENV, str(override))
         _install_recording_llama_cpp(monkeypatch, tmp_path)
@@ -356,7 +356,7 @@ class TestBundledLinuxX86CpuGate:
         assert stand_in.SEAM_AT_IMPORT is None
         assert stand_in.ENV_AT_IMPORT == str(override)
         assert active_lib_path == str(override)
-        assert "inherited from another Kiro Crew process" not in caplog.text
+        assert "inherited from another Aj Crew process" not in caplog.text
 
     def test_runtime_import_hardens_locale_encoded_null_streams(
         self, tmp_path: Path, monkeypatch
@@ -593,8 +593,8 @@ class TestBundledLinuxAarch64DotprodVariant:
 
     def test_windows_arm64_has_no_bundled_runtime(self, monkeypatch) -> None:
         """Windows ARM64 ships no libs, so it never reaches either arm64 build."""
-        monkeypatch.setattr("kiro_crew.embeddings.sys.platform", "win32")
-        monkeypatch.setattr("kiro_crew.embeddings.platform.machine", lambda: "ARM64")
+        monkeypatch.setattr("aj_crew.embeddings.sys.platform", "win32")
+        monkeypatch.setattr("aj_crew.embeddings.platform.machine", lambda: "ARM64")
         assert _platform_libs_dirname() is None
 
 
@@ -612,12 +612,12 @@ class TestBundledWindowsMsvcRuntimeGate:
     """
 
     def test_the_probe_is_a_no_op_off_windows(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.embeddings.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.embeddings.sys.platform", "linux")
         assert embeddings_mod._missing_windows_msvc_runtime() == []
 
     def test_every_named_runtime_dll_is_probed(self, monkeypatch) -> None:
         """Absence is reported per DLL, so the message can name what to install."""
-        monkeypatch.setattr("kiro_crew.embeddings.sys.platform", "win32")
+        monkeypatch.setattr("aj_crew.embeddings.sys.platform", "win32")
         asked: list[str] = []
 
         def _fail(name):
@@ -630,7 +630,7 @@ class TestBundledWindowsMsvcRuntimeGate:
         assert missing == list(embeddings_mod._WINDOWS_MSVC_RUNTIME_DLLS)
 
     def test_a_present_runtime_reports_nothing_missing(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.embeddings.sys.platform", "win32")
+        monkeypatch.setattr("aj_crew.embeddings.sys.platform", "win32")
         monkeypatch.setattr(embeddings_mod.ctypes, "WinDLL", lambda name: object(), raising=False)
         assert embeddings_mod._missing_windows_msvc_runtime() == []
 

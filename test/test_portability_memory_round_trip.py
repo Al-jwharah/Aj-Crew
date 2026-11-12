@@ -26,12 +26,12 @@ from unittest.mock import patch
 import portability_helpers
 import pytest
 
-from kiro_crew import platform_compat, portability, portability_export, snapshot
-from kiro_crew.portability import apply_import_zip, create_export_zip, validate_import_zip
+from aj_crew import platform_compat, portability, portability_export, snapshot
+from aj_crew.portability import apply_import_zip, create_export_zip, validate_import_zip
 
 # Fixtures shared with the sibling modules, bound by assignment so pytest registers
 # them for the tests in this module.
-fake_kirocrew_home = portability_helpers.fake_kirocrew_home
+fake_ajcrew_home = portability_helpers.fake_ajcrew_home
 patched_config_dir = portability_helpers.patched_config_dir
 
 
@@ -52,13 +52,13 @@ class TestRoundTrip:
         zip_path = tmp_path / "export_a.zip"
         zip_path.write_bytes(zip_bytes_a)
 
-        with patch("kiro_crew.portability.config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch("aj_crew.portability.config_dir", return_value=target):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 apply_import_zip(zip_path, mode="replace")
 
         # Export from B
-        with patch("kiro_crew.portability.config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch("aj_crew.portability.config_dir", return_value=target):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 _, manifest_b = create_export_zip()
 
         # Content counts should match
@@ -76,8 +76,8 @@ class TestRoundTrip:
         zip_path = tmp_path / "export.zip"
         zip_path.write_bytes(zip_bytes)
 
-        with patch("kiro_crew.portability.config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch("aj_crew.portability.config_dir", return_value=target):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 apply_import_zip(zip_path, mode="replace")
 
         # Verify semantic memory
@@ -97,8 +97,8 @@ class TestRoundTrip:
         zip_path = tmp_path / "export.zip"
         zip_path.write_bytes(zip_bytes)
 
-        with patch("kiro_crew.portability.config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch("aj_crew.portability.config_dir", return_value=target):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 apply_import_zip(zip_path, mode="replace")
 
         conn = sqlite3.connect(str(target / "memory.db"))
@@ -117,18 +117,18 @@ def test_import_merge_preserves_store_generations(tmp_path, monkeypatch, existin
         _store_bytes,
     )
 
-    from kiro_crew.memory_stores import MEMORY_STORES_DIR_NAME
-    from kiro_crew.vector_memory import VectorMemoryStore, open_member_database
+    from aj_crew.memory_stores import MEMORY_STORES_DIR_NAME
+    from aj_crew.vector_memory import VectorMemoryStore, open_member_database
 
     source, destination = tmp_path / "source", tmp_path / "destination"
     source.mkdir()
     destination.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(source))
+    monkeypatch.setenv("AJCREW_HOME", str(source))
     for name in ("acme", "other"):
         _seed_store_generation(source, name, 2)
     archive = tmp_path / "export.zip"
     archive.write_bytes(create_export_zip()[0])
-    monkeypatch.setenv("KIROCREW_HOME", str(destination))
+    monkeypatch.setenv("AJCREW_HOME", str(destination))
     kept = destination / MEMORY_STORES_DIR_NAME / "acme"
     if existing:
         _seed_store_generation(destination, "acme", 1)
@@ -394,8 +394,8 @@ class TestMemoryOnly:
         target = tmp_path / "target"
         target.mkdir()
 
-        with patch("kiro_crew.portability.config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch("aj_crew.portability.config_dir", return_value=target):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 summary = apply_import_zip(zip_path, mode="merge", memory_only=True)
 
         assert summary["components"] == ["memory"]
@@ -419,8 +419,8 @@ class TestMemoryOnly:
         target = tmp_path / "target"
         target.mkdir()
 
-        with patch("kiro_crew.portability.config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch("aj_crew.portability.config_dir", return_value=target):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 summary = apply_import_zip(zip_path, mode="merge")
 
         assert summary["components"] == ["memory"]
@@ -443,8 +443,8 @@ class TestMemoryOnly:
         target = tmp_path / "target"
         target.mkdir()
 
-        with patch("kiro_crew.portability.config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch("aj_crew.portability.config_dir", return_value=target):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 summary = apply_import_zip(zip_path, mode="merge")
 
         # The nested file declares nothing for the import, which stays whole-install.
@@ -460,8 +460,8 @@ class TestMemoryOnly:
         target.mkdir()
         (target / "config.json").write_text("{}")
 
-        with patch("kiro_crew.portability.config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch("aj_crew.portability.config_dir", return_value=target):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 with pytest.raises(ValueError, match="merge only"):
                     apply_import_zip(zip_path, mode="replace", memory_only=flag)
 
@@ -533,8 +533,8 @@ class TestMemoryOnly:
         target = tmp_path / "target"
         target.mkdir()
 
-        with patch("kiro_crew.portability.config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch("aj_crew.portability.config_dir", return_value=target):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 summary = apply_import_zip(zip_path, mode="merge")
 
         assert "components" not in summary
@@ -556,8 +556,8 @@ class TestMemoryOnly:
         target = tmp_path / "target"
         target.mkdir()
 
-        with patch("kiro_crew.portability.config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch("aj_crew.portability.config_dir", return_value=target):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 apply_import_zip(bundle, mode="merge")
 
         assert (target / "workspace" / "memory" / "preferences.md").is_file()
@@ -580,8 +580,8 @@ class TestMemoryOnly:
         target = tmp_path / "target"
         target.mkdir()
 
-        with patch("kiro_crew.portability.config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch("aj_crew.portability.config_dir", return_value=target):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 with pytest.raises(ValueError, match="More than one"):
                     apply_import_zip(zip_path, mode="merge")
 
@@ -608,8 +608,8 @@ class TestMemoryOnly:
         target = tmp_path / "target"
         target.mkdir()
 
-        with patch("kiro_crew.portability.config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch("aj_crew.portability.config_dir", return_value=target):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 apply_import_zip(zip_path, mode="merge")
 
         assert "snap/workspace/x/MANIFEST.json" not in reads
@@ -636,8 +636,8 @@ class TestMemoryOnly:
         target = tmp_path / "target"
         target.mkdir()
 
-        with patch("kiro_crew.portability.config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch("aj_crew.portability.config_dir", return_value=target):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 with pytest.raises(ValueError):
                     apply_import_zip(zip_path, mode="merge")
 
@@ -670,8 +670,8 @@ class TestMemoryOnly:
         target = tmp_path / "target"
         target.mkdir()
 
-        with patch("kiro_crew.portability.config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch("aj_crew.portability.config_dir", return_value=target):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 with pytest.raises(ValueError, match="left its archive prefix"):
                     apply_import_zip(zip_path, mode="merge")
 

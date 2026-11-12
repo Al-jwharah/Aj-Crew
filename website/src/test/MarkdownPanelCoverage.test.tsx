@@ -1818,7 +1818,7 @@ describe('MarkdownPanel — comment hint banner', () => {
     mountPanel({ onSubmitComments: vi.fn() })
     fireEvent.click(await screen.findByText('Got it'))
     await waitFor(() => expect(screen.queryByText('Got it')).toBeNull())
-    expect(localStorage.getItem('kirocrew:comment-hint-dismissed')).toBe('1')
+    expect(localStorage.getItem('ajcrew:comment-hint-dismissed')).toBe('1')
   })
 
   it('stays away when the panel has nowhere to submit comments', () => {

@@ -18,15 +18,15 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.cron_service.store import CronStoreBusy
-from kiro_crew.dashboard import chat_handlers, slot_retention
-from kiro_crew.dashboard.handlers import sessions
+from aj_crew.cron_service.store import CronStoreBusy
+from aj_crew.dashboard import chat_handlers, slot_retention
+from aj_crew.dashboard.handlers import sessions
 
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     monkeypatch.setattr(
         slot_retention, "live_loop_slot_keys", lambda *, include_paused=False: set()
     )
@@ -169,7 +169,7 @@ async def test_a_slot_with_a_goal_loop_or_monitor_is_refused(state, monkeypatch,
 @pytest.mark.asyncio
 async def test_unknown_loop_bindings_keep_the_slot_and_its_history_row(state, monkeypatch):
     monkeypatch.setattr(
-        "kiro_crew.dashboard.slot_retention.live_loop_slot_keys",
+        "aj_crew.dashboard.slot_retention.live_loop_slot_keys",
         lambda *, include_paused=False: None,
     )
     async with _client(state) as client:

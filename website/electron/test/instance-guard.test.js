@@ -1,7 +1,7 @@
 "use strict";
 // Decision table for the cross-app gateway ownership guard. The guard's
 // contract: interpose ONLY when both sides are positively identified as
-// different KiroCrew identity families; every ambiguous case preserves the
+// different Aj Crew identity families; every ambiguous case preserves the
 // historical reuse behavior.
 
 const { test } = require("node:test");
@@ -24,30 +24,30 @@ test("identityFamily maps channels to bundle-identity families", () => {
 });
 
 test("same family reuses: prod shell, prod gateway", () => {
-  const d = decideGatewayAction("0.1.0", { ok: true, app: "kirocrew", version: "0.1.0-insider.3" });
+  const d = decideGatewayAction("0.1.0", { ok: true, app: "ajcrew", version: "0.1.0-insider.3" });
   assert.equal(d.action, "reuse"); // stable shell + insider gateway = same prod identity
 });
 
 test("same family reuses: nightly shell, nightly gateway (relaunch)", () => {
   const d = decideGatewayAction("0.1.0-nightly.20260722120000", {
-    ok: true, app: "kirocrew", version: "0.1.0-nightly.20260721000000",
+    ok: true, app: "ajcrew", version: "0.1.0-nightly.20260721000000",
   });
   assert.equal(d.action, "reuse");
 });
 
-// A local KiroCrew LISTEN owner is what makes an eviction legitimate. Passing
+// A local Aj Crew LISTEN owner is what makes an eviction legitimate. Passing
 // it explicitly in the cross-family cases keeps those tests about FAMILY logic.
-const LOCAL = { localOwner: "kirocrew" };
+const LOCAL = { localOwner: "ajcrew" };
 
 test("cross family prompts: nightly shell over prod gateway", () => {
-  const d = decideGatewayAction("0.2.0-nightly.20260722120000", { ok: true, app: "kirocrew", version: "0.1.0" }, LOCAL);
+  const d = decideGatewayAction("0.2.0-nightly.20260722120000", { ok: true, app: "ajcrew", version: "0.1.0" }, LOCAL);
   assert.equal(d.action, "takeover-prompt");
   assert.equal(d.otherFamily, "prod");
   assert.equal(d.otherVersion, "0.1.0");
 });
 
 test("cross family prompts: prod shell over nightly gateway", () => {
-  const d = decideGatewayAction("0.1.0", { ok: true, app: "kirocrew", version: "0.1.0-nightly.20260722120000" }, LOCAL);
+  const d = decideGatewayAction("0.1.0", { ok: true, app: "ajcrew", version: "0.1.0-nightly.20260722120000" }, LOCAL);
   assert.equal(d.action, "takeover-prompt");
   assert.equal(d.otherFamily, "nightly");
 });
@@ -57,14 +57,14 @@ test("the lts edition is its own family; a missing edition reads as oss", () => 
   assert.equal(identityFamily("0.1.0", "oss"), "prod");
   assert.equal(identityFamily("0.1.0", undefined), "prod");
   assert.equal(identityFamily("", "lts"), null);
-  assert.equal(FAMILY_META.lts.appName, "KiroCrew LTS"); // brand-ok
-  assert.equal(FAMILY_META.lts.displayName, "Kiro Crew LTS");
+  assert.equal(FAMILY_META.lts.appName, "AjCrew LTS"); // brand-ok
+  assert.equal(FAMILY_META.lts.displayName, "Aj Crew LTS");
 });
 
 test("cross family prompts: lts shell over an oss gateway of the same version", () => {
   // Without the edition the two read as one prod family, and the LTS shell
   // would adopt the oss gateway on the shared port.
-  const oss = { ok: true, app: "kirocrew", version: "0.1.0" };
+  const oss = { ok: true, app: "ajcrew", version: "0.1.0" };
   const d = decideGatewayAction("0.1.0", oss, { ...LOCAL, ownEdition: "lts" });
   assert.equal(d.action, "takeover-prompt");
   assert.equal(d.otherFamily, "prod");
@@ -73,7 +73,7 @@ test("cross family prompts: lts shell over an oss gateway of the same version", 
 });
 
 test("cross family prompts: oss shell over an lts gateway; lts over lts reuses", () => {
-  const lts = { ok: true, app: "kirocrew", version: "0.1.0", edition: "lts" };
+  const lts = { ok: true, app: "ajcrew", version: "0.1.0", edition: "lts" };
   const d = decideGatewayAction("0.1.0", lts, LOCAL);
   assert.equal(d.action, "takeover-prompt");
   assert.equal(d.otherFamily, "lts");
@@ -85,7 +85,7 @@ test("cross family prompts: oss shell over an lts gateway; lts over lts reuses",
 test("a service-managed gateway of the other edition prompts; a service of the same edition reuses", () => {
   // Reusing a service across editions would put the LTS app on the oss backend.
   const SERVICE = { localOwner: "service" };
-  const oss = { ok: true, app: "kirocrew", version: "0.1.0" };
+  const oss = { ok: true, app: "ajcrew", version: "0.1.0" };
   const lts = { ...oss, edition: "lts" };
   const ltsShell = decideGatewayAction("0.1.0", oss, { ...SERVICE, ownEdition: "lts" });
   assert.deepEqual(ltsShell, { action: "takeover-prompt", otherFamily: "prod", otherVersion: "0.1.0", holder: "service" });
@@ -104,21 +104,21 @@ test("unreachable/unparseable health reuses", () => {
   assert.equal(decideGatewayAction("0.1.0-nightly.20260722120000", null).action, "reuse");
 });
 
-test("non-kirocrew responder on the port reuses (never evict a stranger)", () => {
+test("non-ajcrew responder on the port reuses (never evict a stranger)", () => {
   const d = decideGatewayAction("0.1.0-nightly.20260722120000", { ok: true, app: "other", version: "9.9.9" });
   assert.equal(d.action, "reuse");
 });
 
 test("unclassifiable own version never evicts", () => {
-  assert.equal(decideGatewayAction("", { ok: true, app: "kirocrew", version: "0.1.0" }).action, "reuse");
+  assert.equal(decideGatewayAction("", { ok: true, app: "ajcrew", version: "0.1.0" }).action, "reuse");
 });
 
 // ── Locality: a cross-family payload alone must never authorise an eviction ──
 // An `ssh -L 5476:localhost:5476 host` forward makes a REMOTE gateway answer
 // /api/health on localhost with a payload identical to a local install's. Every
 // case below is cross-family (the family logic says "evict") and must still
-// reuse, because the port is not held by a local KiroCrew process.
-const CROSS_FAMILY_HEALTH = { ok: true, app: "kirocrew", version: "0.1.0" };
+// reuse, because the port is not held by a local Aj Crew process.
+const CROSS_FAMILY_HEALTH = { ok: true, app: "ajcrew", version: "0.1.0" };
 const NIGHTLY_SHELL = "0.2.0-nightly.20260722120000";
 
 test("tunnelled remote gateway is reused, never evicted (ssh owns the socket)", () => {
@@ -149,7 +149,7 @@ test("omitting the locality input defaults to no eviction", () => {
 test("a genuine local rival install still prompts (cross-app mutex preserved)", () => {
   // Regression pin for the case the takeover was built for (#193): two installs
   // on ONE machine sharing ~/.kiro/crew and :5476. The guard must keep working.
-  const d = decideGatewayAction(NIGHTLY_SHELL, CROSS_FAMILY_HEALTH, { localOwner: "kirocrew" });
+  const d = decideGatewayAction(NIGHTLY_SHELL, CROSS_FAMILY_HEALTH, { localOwner: "ajcrew" });
   assert.equal(d.action, "takeover-prompt");
   assert.equal(d.otherFamily, "prod");
 });
@@ -157,7 +157,7 @@ test("a genuine local rival install still prompts (cross-app mutex preserved)", 
 test("locality is checked only after family — same-family still short-circuits", () => {
   // A same-family gateway reuses for the family reason regardless of owner, so
   // the reason string stays useful for diagnosing reuse causes.
-  const d = decideGatewayAction("0.1.0", { ok: true, app: "kirocrew", version: "0.1.0-insider.3" }, { localOwner: "foreign" });
+  const d = decideGatewayAction("0.1.0", { ok: true, app: "ajcrew", version: "0.1.0-insider.3" }, { localOwner: "foreign" });
   assert.equal(d.action, "reuse");
   assert.equal(d.reason, "same-family");
 });
@@ -165,10 +165,10 @@ test("locality is checked only after family — same-family still short-circuits
 test("FAMILY_META separates display names from quit-by-name targets", () => {
   // Both installs deliberately share one bundle identifier, so the app NAME
   // is the only valid AppleScript targeting handle.
-  assert.equal(FAMILY_META.prod.appName, "KiroCrew");
-  assert.equal(FAMILY_META.nightly.appName, "KiroCrew Nightly");
-  assert.equal(FAMILY_META.prod.displayName, "Kiro Crew");
-  assert.equal(FAMILY_META.nightly.displayName, "Kiro Crew Nightly");
+  assert.equal(FAMILY_META.prod.appName, "AjCrew"); // brand-ok: desktop productName
+  assert.equal(FAMILY_META.nightly.appName, "AjCrew Nightly");
+  assert.equal(FAMILY_META.prod.displayName, "Aj Crew");
+  assert.equal(FAMILY_META.nightly.displayName, "Aj Crew Nightly");
 });
 
 test("identity probe targets /api/health, never the /api/status liveness URL", () => {
@@ -237,8 +237,8 @@ test("only a POSITIVE boolean marker refuses — truthy junk does not", () => {
 
 
 test("older current-bundle gateways require a warning before reuse", () => {
-  for (const localOwner of ["kirocrew", "service"]) {
-    const decision = decideGatewayAction("0.7.1", { app: "kirocrew", version: "0.7.0" }, {
+  for (const localOwner of ["ajcrew", "service"]) {
+    const decision = decideGatewayAction("0.7.1", { app: "ajcrew", version: "0.7.0" }, {
       localOwner, bundledGateway: true,
     });
     assert.deepEqual(decision, {
@@ -248,7 +248,7 @@ test("older current-bundle gateways require a warning before reuse", () => {
 });
 
 test("a bundle version, when given, is what the stale check compares", () => {
-  const health = { app: "kirocrew", version: "0.12.0.3" };
+  const health = { app: "ajcrew", version: "0.12.0.3" };
   const opts = { localOwner: "service", bundledGateway: true };
   assert.equal(decideGatewayAction("0.12.0-rc.5", health, opts).action, "reuse",
     "the release version alone does not rank above the build number");
@@ -265,12 +265,12 @@ test("a bundle version, when given, is what the stale check compares", () => {
 test("stale warnings require a proven local bundle and a strictly newer same-family app", () => {
   const cases = [
     ["foreign", true, "0.7.0"], ["none", true, "0.7.0"], ["unknown", true, "0.7.0"],
-    ["service", false, "0.7.0"], ["kirocrew", false, "0.7.0"],
-    ["kirocrew", true, "0.7.1"], ["kirocrew", true, "0.8.0"],
-    ["kirocrew", true, ""], ["kirocrew", true, "dev"],
+    ["service", false, "0.7.0"], ["ajcrew", false, "0.7.0"],
+    ["ajcrew", true, "0.7.1"], ["ajcrew", true, "0.8.0"],
+    ["ajcrew", true, ""], ["ajcrew", true, "dev"],
   ];
   for (const [localOwner, bundledGateway, version] of cases) {
-    assert.equal(decideGatewayAction("0.7.1", { app: "kirocrew", version }, {
+    assert.equal(decideGatewayAction("0.7.1", { app: "ajcrew", version }, {
       localOwner, bundledGateway,
     }).action, "reuse", JSON.stringify({ localOwner, bundledGateway, version }));
   }

@@ -4,8 +4,8 @@
  *  this is a no-op; the browser handles the download itself. */
 function announceDownload(filename: string): void {
   try {
-    ;(window as unknown as { kirocrew?: { expectDownload?: (name: string) => void } })
-      .kirocrew?.expectDownload?.(filename)
+    ;(window as unknown as { ajcrew?: { expectDownload?: (name: string) => void } })
+      .ajcrew?.expectDownload?.(filename)
   } catch {
     // A missing/throwing bridge must never block the download itself.
   }

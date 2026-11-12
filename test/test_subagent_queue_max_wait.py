@@ -33,16 +33,16 @@ from overload_fakes import (
     wait_taskq_open,
 )
 
-import kiro_crew.subagent as subagent_mod
-from kiro_crew import taskq
-from kiro_crew.config import live
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.paths import data_home
-from kiro_crew.config.schema import requires_restart
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator, taskq_bridge
-from kiro_crew.subagent_wait_reasons import QUEUED_WAIT_EXPIRED_TEXT
-from kiro_crew.testing.wait import async_wait_until, await_until
+import aj_crew.subagent as subagent_mod
+from aj_crew import taskq
+from aj_crew.config import live
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.paths import data_home
+from aj_crew.config.schema import requires_restart
+from aj_crew.subagent import SubagentManager
+from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator, taskq_bridge
+from aj_crew.subagent_wait_reasons import QUEUED_WAIT_EXPIRED_TEXT
+from aj_crew.testing.wait import async_wait_until, await_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -51,8 +51,8 @@ _PARENT = "dash:maxwait"
 _ADMIT = 30.0
 
 
-def _cfg(bound: int) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _cfg(bound: int) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     cfg.agent.subagent_cost_gb = 0.5
     cfg.agent.spawn_min_memory_gb = 4.0
     cfg.agent.subagent_queue_max_wait_secs = bound
@@ -67,7 +67,7 @@ class _Harness:
         mgr: SubagentManager,
         clock: Clock,
         free: dict[str, float],
-        cfgs: dict[str, KiroCrewConfig],
+        cfgs: dict[str, AjCrewConfig],
     ) -> None:
         self.mgr = mgr
         self.clock = clock
@@ -123,10 +123,10 @@ class _Harness:
         return info
 
 
-def _patch_host(monkeypatch) -> tuple[dict[str, KiroCrewConfig], dict[str, float]]:
+def _patch_host(monkeypatch) -> tuple[dict[str, AjCrewConfig], dict[str, float]]:
     """The config, the short host and the off-loop store a test manager is built on."""
     cfgs = {"cfg": _cfg(1800)}
-    monkeypatch.setattr(KiroCrewConfig, "load", lambda: cfgs["cfg"])
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: cfgs["cfg"])
     monkeypatch.setattr(subagent_mod, "Stats", MagicMock())
     monkeypatch.setattr(subagent_mod, "sel", MagicMock())
     monkeypatch.setattr(SpawnAdmissionCoordinator, "open_store_off_loop", True)
@@ -202,7 +202,7 @@ class TestTheBoundEndsTheWait:
     async def test_expiry_delivers_one_terminal_and_the_depth_goes_to_zero(
         self, monkeypatch, caplog
     ) -> None:
-        caplog.set_level(logging.DEBUG, logger="kiro_crew.subagent_manager.admission")
+        caplog.set_level(logging.DEBUG, logger="aj_crew.subagent_manager.admission")
         async with _harness(monkeypatch) as h:
             await _reload_bound(h, 90)
             info = await h.spawn()
@@ -302,7 +302,7 @@ class TestTheBoundIsLive:
     def test_the_key_is_watched_and_carries_no_restart_mark(self) -> None:
         assert _KEY in SubagentManager.LIVE_CONFIG_PATHS
         assert requires_restart(_KEY) is False
-        assert KiroCrewConfig().agent.subagent_queue_max_wait_secs == 1800
+        assert AjCrewConfig().agent.subagent_queue_max_wait_secs == 1800
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(60)
@@ -393,7 +393,7 @@ class TestEveryWaitingRowExpires:
         """No store row for the sweep to read: a start in temporary memory waits
         in the in-memory window, and the gate bounds that floor wait from its
         own parked clock (``_floor_waits``), ending it with the same terminal."""
-        from kiro_crew.subagent_manager.admission import MEMORY_WAIT_UNTIL_KEY
+        from aj_crew.subagent_manager.admission import MEMORY_WAIT_UNTIL_KEY
 
         async with _harness(monkeypatch) as h:
             h.mgr._memory_mode_for_session = lambda _key: "temporary"
@@ -441,7 +441,7 @@ class TestEveryWaitingRowExpires:
         wherever the monotonic clock happens to stand. In float seconds a park
         that began 2.05 s into the clock adds ``(2.05 + 30) - 2.05``, an ulp
         short of 30, so a 30 s bound would keep the row one more admit wait."""
-        from kiro_crew.subagent_manager.admission import MEMORY_WAIT_UNTIL_KEY
+        from aj_crew.subagent_manager.admission import MEMORY_WAIT_UNTIL_KEY
 
         async with _harness(monkeypatch) as h:
             h.mgr._memory_mode_for_session = lambda _key: "temporary"
@@ -463,7 +463,7 @@ class TestEveryWaitingRowExpires:
     @pytest.mark.asyncio
     @pytest.mark.timeout(60)
     async def test_zero_leaves_an_in_memory_floor_wait_unbounded(self, monkeypatch) -> None:
-        from kiro_crew.subagent_manager.admission import MEMORY_WAIT_UNTIL_KEY
+        from aj_crew.subagent_manager.admission import MEMORY_WAIT_UNTIL_KEY
 
         async with _harness(monkeypatch) as h:
             h.mgr._memory_mode_for_session = lambda _key: "temporary"
@@ -909,8 +909,8 @@ def _through_the_gateway(h: _Harness, stream: Any = None) -> Any:
     )
     orch.dashboard_state.get_slot = MagicMock(return_value=slot)
     orch.dashboard_state.subagents = h.mgr
-    with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-        with patch("kiro_crew.slack.gateway.SubagentManager") as factory:
+    with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.gateway.SubagentManager") as factory:
             factory.return_value = MagicMock()
             orch._init_subagents()
             on_done = factory.call_args.kwargs["on_done"]
@@ -925,10 +925,10 @@ def _through_the_gateway(h: _Harness, stream: Any = None) -> Any:
             _on_consumed()
 
     with (
-        patch("kiro_crew.dashboard.chat_runner._run_chat", consuming_run_chat),
-        patch("kiro_crew.slack.gateway.session_store_for_turn", AsyncMock(return_value="")),
+        patch("aj_crew.dashboard.chat_runner._run_chat", consuming_run_chat),
+        patch("aj_crew.slack.gateway.session_store_for_turn", AsyncMock(return_value="")),
         patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             stream or AsyncMock(return_value="the parent's reply"),
         ),
         patch.object(
@@ -1071,8 +1071,8 @@ class TestADigestHeldExpiryStaysOwed:
     @pytest.mark.asyncio
     @pytest.mark.timeout(60)
     async def test_a_queued_announce_carries_the_debt_to_its_drain(self, monkeypatch) -> None:
-        from kiro_crew.slack.gateway import GatewayOrchestrator
-        from kiro_crew.subagent import SubagentDelivery
+        from aj_crew.slack.gateway import GatewayOrchestrator
+        from aj_crew.subagent import SubagentDelivery
 
         info = subagent_mod.SubagentInfo(id="e1", task="t", error=QUEUED_WAIT_EXPIRED_TEXT)
         info._report_owed = True
@@ -1097,7 +1097,7 @@ class TestADigestHeldExpiryStaysOwed:
     ) -> None:
         # The wave's flusher reports to a parent a teardown retired: nothing is
         # injected, and the held expiry it carried is owed to no one any more.
-        from kiro_crew.subagent import SubagentDelivery
+        from aj_crew.subagent import SubagentDelivery
 
         async with _harness(monkeypatch) as h:
             cleared: list[list[str]] = []
@@ -1253,7 +1253,7 @@ class TestAGivenUpInjectionStaysOwed:
     @pytest.mark.timeout(60)
     @pytest.mark.parametrize("parent", ["cron:j1", "slack:U000"])
     async def test_a_dead_parent_runtime_leaves_the_expiry_owed(self, monkeypatch, parent) -> None:
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         async with _harness(monkeypatch) as h:
             stream = AsyncMock(side_effect=AcpProcessDied("ACP process pipe broken"))
@@ -1339,7 +1339,7 @@ class TestAGivenUpDigestKeepsItsHeldExpiriesOwed:
     async def test_a_failed_digest_leaves_the_held_expiry_owed(
         self, monkeypatch, parent, error, flush
     ) -> None:
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         raised = (
             AcpProcessDied("ACP process pipe broken")

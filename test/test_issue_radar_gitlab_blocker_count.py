@@ -20,11 +20,11 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from kiro_crew.apps.builtins.issue_radar.backend import crew_runtime as cr
-from kiro_crew.apps.builtins.issue_radar.backend import gitlab_client
-from kiro_crew.apps.builtins.issue_radar.backend import gitlab_queries as glq
-from kiro_crew.apps.builtins.issue_radar.backend import provider, store
-from kiro_crew.apps.builtins.issue_radar.backend.errors import ProviderCliError
+from aj_crew.apps.builtins.issue_radar.backend import crew_runtime as cr
+from aj_crew.apps.builtins.issue_radar.backend import gitlab_client
+from aj_crew.apps.builtins.issue_radar.backend import gitlab_queries as glq
+from aj_crew.apps.builtins.issue_radar.backend import provider, store
+from aj_crew.apps.builtins.issue_radar.backend.errors import ProviderCliError
 
 OWNER, REPO, HOST = "o", "r", "gitlab.example.com"
 GITLAB_KEY = provider.RepoKey(owner=OWNER, repo=REPO, provider="gitlab", host=HOST)

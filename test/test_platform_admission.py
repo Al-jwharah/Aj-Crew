@@ -1,4 +1,4 @@
-"""Tests for plugin admission control (kiro_crew.platform.admission)."""
+"""Tests for plugin admission control (aj_crew.platform.admission)."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ import json
 
 import pytest
 
-from kiro_crew.platform import discovery as discovery_mod
-from kiro_crew.platform.admission import (
+from aj_crew.platform import discovery as discovery_mod
+from aj_crew.platform.admission import (
     _MAX_CONFIG_KEY_CHARS,
     _MAX_CONFIG_KEYS,
     MODE_ENFORCE,
@@ -18,7 +18,7 @@ from kiro_crew.platform.admission import (
     PluginManifest,
     evaluate_admission,
 )
-from kiro_crew.platform.discovery import PluginAdmissionError, discover_companion_context
+from aj_crew.platform.discovery import PluginAdmissionError, discover_companion_context
 
 
 def _patch_admission_paths(monkeypatch, adm, tmp_path, policy_path=None):
@@ -48,7 +48,7 @@ class _FakeEntryPoint:
     def __init__(self, name="amazon", value="m:build", loaded=None):
         self.name = name
         self.value = value
-        self.group = "kirocrew.plugins"
+        self.group = "ajcrew.plugins"
         self._loaded = loaded
 
     def load(self):
@@ -72,7 +72,7 @@ def patch_manifest(monkeypatch):
 
     def _set(manifest):
         monkeypatch.setattr(
-            "kiro_crew.platform.admission._read_plugin_manifest",
+            "aj_crew.platform.admission._read_plugin_manifest",
             lambda ep: manifest,
         )
 
@@ -381,10 +381,10 @@ class TestEnforceRequiresManifest:
 class TestPolicyLoading:
     def test_no_policy_fails_closed(self, monkeypatch, tmp_path):
         """an absent policy file must fail closed, not admit-all."""
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
         _nope = tmp_path / "nope.json"
-        monkeypatch.setattr("kiro_crew.platform.admission._policy_default_path", lambda: _nope)
-        from kiro_crew.platform.admission import load_admission_policy
+        monkeypatch.setattr("aj_crew.platform.admission._policy_default_path", lambda: _nope)
+        from aj_crew.platform.admission import load_admission_policy
 
         policy = load_admission_policy()
         # fail-closed: enforce + signature + empty allowlist (admits nothing).
@@ -395,8 +395,8 @@ class TestPolicyLoading:
     def test_unreadable_policy_fails_closed(self, monkeypatch, tmp_path):
         bad = tmp_path / "admission_policy.json"
         bad.write_text("{ not valid json")
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(bad))
-        from kiro_crew.platform.admission import load_admission_policy
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(bad))
+        from aj_crew.platform.admission import load_admission_policy
 
         policy = load_admission_policy()
         # fail-closed: enforce + signature + empty allowlist (admits nothing)
@@ -406,9 +406,9 @@ class TestPolicyLoading:
 
     def test_seed_then_load_is_open(self, monkeypatch, tmp_path):
         """The first-run seed writes a permissive file so a fresh install stays open."""
-        import kiro_crew.platform.admission as adm
+        import aj_crew.platform.admission as adm
 
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
         _patch_admission_paths(monkeypatch, adm, tmp_path)
 
         assert adm.seed_default_policy() is True
@@ -418,9 +418,9 @@ class TestPolicyLoading:
 
     def test_deletion_after_seed_fails_closed_no_reseed(self, monkeypatch, tmp_path):
         """deleting the seeded file must NOT re-seed; load fails closed."""
-        import kiro_crew.platform.admission as adm
+        import aj_crew.platform.admission as adm
 
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
         pol = tmp_path / "admission_policy.json"
         _patch_admission_paths(monkeypatch, adm, tmp_path, policy_path=pol)
 
@@ -437,10 +437,10 @@ class TestPolicyLoading:
         but a legitimate edit must NOT force the dashboard to 'degraded'."""
         import logging as _logging
 
-        import kiro_crew.platform.admission as adm
-        from kiro_crew.platform import governance_health as gh
+        import aj_crew.platform.admission as adm
+        from aj_crew.platform import governance_health as gh
 
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
         pol = tmp_path / "admission_policy.json"
         _patch_admission_paths(monkeypatch, adm, tmp_path, policy_path=pol)
 
@@ -459,10 +459,10 @@ class TestPolicyLoading:
         assert gh.governance_status() != "degraded"
 
     def test_absent_policy_reports_degraded_health(self, monkeypatch, tmp_path):
-        import kiro_crew.platform.admission as adm
-        from kiro_crew.platform import governance_health as gh
+        import aj_crew.platform.admission as adm
+        from aj_crew.platform import governance_health as gh
 
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
         _nope = tmp_path / "nope.json"
         monkeypatch.setattr(adm, "_policy_default_path", lambda: _nope)
         gh.reset()
@@ -483,8 +483,8 @@ class TestPolicyLoading:
                 }
             )
         )
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(p))
-        from kiro_crew.platform.admission import load_admission_policy
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(p))
+        from aj_crew.platform.admission import load_admission_policy
 
         policy = load_admission_policy()
         assert policy.mode == MODE_ENFORCE
@@ -504,7 +504,7 @@ class TestDiscoveryGate:
         ep = _FakeEntryPoint(name="amazon", loaded=_should_not_run)
         monkeypatch.setattr(discovery_mod, "plugin_entry_points", lambda: [ep])
         monkeypatch.setattr(
-            "kiro_crew.platform.admission._read_plugin_manifest",
+            "aj_crew.platform.admission._read_plugin_manifest",
             lambda e: PluginManifest(name="amazon", publisher="p13n", version="1"),
         )
         policy = AdmissionPolicy(mode=MODE_OPEN, banned=["amazon"])
@@ -517,7 +517,7 @@ class TestDiscoveryGate:
         ep = _FakeEntryPoint(name="amazon", loaded=lambda _cfg: sentinel)
         monkeypatch.setattr(discovery_mod, "plugin_entry_points", lambda: [ep])
         monkeypatch.setattr(
-            "kiro_crew.platform.admission._read_plugin_manifest",
+            "aj_crew.platform.admission._read_plugin_manifest",
             lambda e: PluginManifest(name="amazon", publisher="p13n", version="1"),
         )
         policy = AdmissionPolicy(mode=MODE_OPEN)
@@ -528,9 +528,9 @@ class TestDiscoveryGate:
         """ordering: discovery (which runs before the gateway seed on a
         fleet's first boot) seeds the permissive default, so the companion is
         admitted instead of fail-closing when no policy file exists yet."""
-        import kiro_crew.platform.admission as adm
+        import aj_crew.platform.admission as adm
 
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
         _patch_admission_paths(monkeypatch, adm, tmp_path)
 
         sentinel = object()
@@ -545,9 +545,9 @@ class TestDiscoveryGate:
         """A policy deleted after the seed ran fails closed (unchanged), but the
         refusal must say the policy is MISSING and how to restore it: restarting
         does not re-seed, so 'not on the approved allowlist' alone is a dead end."""
-        import kiro_crew.platform.admission as adm
+        import aj_crew.platform.admission as adm
 
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
         _patch_admission_paths(monkeypatch, adm, tmp_path)
         assert adm.seed_default_policy() is True
         (tmp_path / "admission_policy.json").unlink()
@@ -563,14 +563,14 @@ class TestDiscoveryGate:
         assert not (tmp_path / "admission_policy.json").exists()
 
     def test_marker_from_env_override_run_names_the_marker_remedy(self, monkeypatch, tmp_path):
-        """A first run with KIROCREW_ADMISSION_POLICY set stamps the marker with no
+        """A first run with AJCREW_ADMISSION_POLICY set stamps the marker with no
         file; a later start without the override gets the same actionable refusal."""
-        import kiro_crew.platform.admission as adm
+        import aj_crew.platform.admission as adm
 
         _patch_admission_paths(monkeypatch, adm, tmp_path)
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(tmp_path / "fleet.json"))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(tmp_path / "fleet.json"))
         assert adm.seed_default_policy() is False  # marker only, no file
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY")
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY")
 
         ep = _FakeEntryPoint(name="amazon", loaded=lambda _cfg: object())
         monkeypatch.setattr(discovery_mod, "plugin_entry_points", lambda: [ep])
@@ -581,9 +581,9 @@ class TestDiscoveryGate:
     def test_failed_seed_write_names_the_write_remedy(self, monkeypatch, tmp_path):
         """When the seed cannot write the file at all (no marker), the refusal points
         at the write, not at the marker."""
-        import kiro_crew.platform.admission as adm
+        import aj_crew.platform.admission as adm
 
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
         _patch_admission_paths(monkeypatch, adm, tmp_path)
 
         def _refuse(*_a, **_k):
@@ -600,16 +600,16 @@ class TestDiscoveryGate:
 
     def test_present_policy_rejection_carries_no_missing_policy_text(self, monkeypatch, tmp_path):
         """A rejection by a policy that EXISTS is the policy's verdict: no remedy text."""
-        import kiro_crew.platform.admission as adm
+        import aj_crew.platform.admission as adm
 
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
         pol = tmp_path / "admission_policy.json"
         _patch_admission_paths(monkeypatch, adm, tmp_path, policy_path=pol)
         pol.write_text(json.dumps({"mode": "open", "banned": ["amazon"]}))
         ep = _FakeEntryPoint(name="amazon", loaded=lambda _cfg: object())
         monkeypatch.setattr(discovery_mod, "plugin_entry_points", lambda: [ep])
         monkeypatch.setattr(
-            "kiro_crew.platform.admission._read_plugin_manifest",
+            "aj_crew.platform.admission._read_plugin_manifest",
             lambda e: PluginManifest(name="amazon", publisher="p13n", version="1"),
         )
         with pytest.raises(PluginAdmissionError) as exc:
@@ -650,18 +650,18 @@ class TestPolicySignatureTrustRoot:
         # Deliberate: an absent/unreadable ADMISSION policy must not additionally
         # abort boot through the governance path. Plugin admission fails closed in
         # its own domain; the security policy keeps its own fail-closed rules.
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
         monkeypatch.setattr(
-            "kiro_crew.platform.admission._policy_default_path", lambda: tmp_path / "nope.json"
+            "aj_crew.platform.admission._policy_default_path", lambda: tmp_path / "nope.json"
         )
-        from kiro_crew.platform.admission import load_admission_policy
+        from aj_crew.platform.admission import load_admission_policy
 
         policy = load_admission_policy()
         assert policy.require_signature is True  # plugins: fail closed
         assert policy.require_policy_signature is False  # governance: stays advisory
 
     def test_seeded_default_body_declares_the_flag_off(self):
-        import kiro_crew.platform.admission as adm
+        import aj_crew.platform.admission as adm
 
         assert adm._DEFAULT_POLICY_BODY["require_policy_signature"] is False
 
@@ -693,7 +693,7 @@ class TestPolicySignatureTrustRoot:
 
 class TestSharedSigningPrimitives:
     def test_manifest_payload_uses_shared_canonicalization(self):
-        from kiro_crew.platform.admission import canonical_signing_bytes
+        from aj_crew.platform.admission import canonical_signing_bytes
 
         m = PluginManifest(name="p", publisher="pub", version="1")
         expected = canonical_signing_bytes(
@@ -702,14 +702,14 @@ class TestSharedSigningPrimitives:
         assert m.signing_payload() == expected
 
     def test_canonicalization_is_key_order_stable(self):
-        from kiro_crew.platform.admission import canonical_signing_bytes
+        from aj_crew.platform.admission import canonical_signing_bytes
 
         assert canonical_signing_bytes({"a": 1, "b": 2}) == canonical_signing_bytes(
             {"b": 2, "a": 1}
         )
 
     def test_hmac_signature_matches_stdlib(self):
-        from kiro_crew.platform.admission import hmac_signature
+        from aj_crew.platform.admission import hmac_signature
 
         expected = hmac.new(b"k", b"payload", hashlib.sha256).hexdigest()
         assert hmac_signature("k", b"payload") == expected
@@ -719,11 +719,11 @@ class TestReadPolicyTrustRoot:
     """``read_policy_trust_root`` is the side-effect-free reader (not the audited one)."""
 
     def test_reads_flag_and_keys_from_env_path(self, monkeypatch, tmp_path):
-        from kiro_crew.platform.admission import read_policy_trust_root
+        from aj_crew.platform.admission import read_policy_trust_root
 
         adm = tmp_path / "admission_policy.json"
         adm.write_text(json.dumps({"require_policy_signature": True, "trust_keys": {"iss": "k"}}))
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
         policy = read_policy_trust_root()
         assert policy.require_policy_signature is True
         assert policy.trust_keys == {"iss": "k"}
@@ -732,12 +732,12 @@ class TestReadPolicyTrustRoot:
         # An absent trust root — at the default path or an explicitly configured
         # one — is "no operator opted in", so verification stays advisory and every
         # existing install keeps working with no key to provision.
-        from kiro_crew.platform import admission as adm_mod
-        from kiro_crew.platform.admission import read_policy_trust_root
+        from aj_crew.platform import admission as adm_mod
+        from aj_crew.platform.admission import read_policy_trust_root
 
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(tmp_path / "gone.json"))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(tmp_path / "gone.json"))
         assert read_policy_trust_root().require_policy_signature is False
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
         monkeypatch.setattr(
             adm_mod, "_policy_default_path", lambda: tmp_path / "admission_policy.json"
         )
@@ -756,11 +756,11 @@ class TestReadPolicyTrustRoot:
         (``load_admission_policy``); this reader must not additionally make the
         security ceiling unloadable through a second path.
         """
-        from kiro_crew.platform.admission import read_policy_trust_root
+        from aj_crew.platform.admission import read_policy_trust_root
 
         adm = tmp_path / "admission_policy.json"
         adm.write_text(shape)
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
         policy = read_policy_trust_root()
         assert policy.require_policy_signature is False
         assert policy.trust_keys == {}
@@ -769,10 +769,10 @@ class TestReadPolicyTrustRoot:
         # Deliberately NOT _fail_closed_policy(): an admission-policy problem is
         # already handled in admission's own domain and must not make the security
         # ceiling unloadable through a second path.
-        import kiro_crew.platform.admission as adm_mod
-        from kiro_crew.platform.admission import read_policy_trust_root
+        import aj_crew.platform.admission as adm_mod
+        from aj_crew.platform.admission import read_policy_trust_root
 
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
         monkeypatch.setattr(adm_mod, "_policy_default_path", lambda: tmp_path / "nope.json")
         policy = read_policy_trust_root()
         assert policy.require_policy_signature is False
@@ -782,11 +782,11 @@ class TestReadPolicyTrustRoot:
     def test_unreadable_policy_does_not_raise(self, monkeypatch, tmp_path):
         # Never raising is the reader's contract — a corrupt trust root must not
         # take down the security-ceiling load path as well.
-        from kiro_crew.platform.admission import read_policy_trust_root
+        from aj_crew.platform.admission import read_policy_trust_root
 
         bad = tmp_path / "admission_policy.json"
         bad.write_text("{ not json")
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(bad))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(bad))
         policy = read_policy_trust_root()
         assert policy.require_policy_signature is False
         assert policy.trust_keys == {}
@@ -799,11 +799,11 @@ class TestReadPolicyTrustRoot:
         # that apart from real corruption.
         import logging
 
-        from kiro_crew.platform.admission import read_policy_trust_root
+        from aj_crew.platform.admission import read_policy_trust_root
 
         adm = tmp_path / "admission_policy.json"
         adm.write_text("", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
         with caplog.at_level(logging.WARNING):
             read_policy_trust_root()
         joined = " ".join(record.getMessage() for record in caplog.records)
@@ -817,11 +817,11 @@ class TestReadPolicyTrustRoot:
     ):
         import logging
 
-        from kiro_crew.platform.admission import read_policy_trust_root
+        from aj_crew.platform.admission import read_policy_trust_root
 
         adm = tmp_path / "admission_policy.json"
         adm.write_text("{ not json", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
         with caplog.at_level(logging.WARNING):
             read_policy_trust_root()
         joined = " ".join(record.getMessage() for record in caplog.records)
@@ -833,11 +833,11 @@ class TestReadPolicyTrustRoot:
         # the old single-except shape happened to provide.
         import logging
 
-        from kiro_crew.platform.admission import read_policy_trust_root
+        from aj_crew.platform.admission import read_policy_trust_root
 
         adm = tmp_path / "admission_policy.json"
         adm.write_bytes(b'{"require_policy_signature": true, \xff\xfe}')
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
         with caplog.at_level(logging.WARNING):
             policy = read_policy_trust_root()
         assert policy.require_policy_signature is False
@@ -852,11 +852,11 @@ class TestReadPolicyTrustRoot:
         # never-raises contract, and leave the signature requirement unset.
         import logging
 
-        from kiro_crew.platform.admission import read_policy_trust_root
+        from aj_crew.platform.admission import read_policy_trust_root
 
         adm = tmp_path / "admission_policy.json"
         adm.mkdir()
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
         with caplog.at_level(logging.WARNING):
             policy = read_policy_trust_root()
         assert policy.require_policy_signature is False
@@ -868,12 +868,12 @@ class TestReadPolicyTrustRoot:
     def test_does_not_record_posture_or_incident(self, monkeypatch, tmp_path):
         # The whole reason this function exists: load_admission_policy records the
         # dashboard posture + a critical SEL, which is wrong on a repeating path.
-        import kiro_crew.platform.admission as adm_mod
-        from kiro_crew.platform import governance_health
-        from kiro_crew.platform.admission import read_policy_trust_root
+        import aj_crew.platform.admission as adm_mod
+        from aj_crew.platform import governance_health
+        from aj_crew.platform.admission import read_policy_trust_root
 
         governance_health.reset()
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
         monkeypatch.setattr(adm_mod, "_policy_default_path", lambda: tmp_path / "nope.json")
         read_policy_trust_root()
         assert governance_health.governance_status() == "unknown"
@@ -911,7 +911,7 @@ class TestStrictBooleanFlagCoercion:
     def test_present_non_boolean_is_warned_about(self, junk, caplog):
         import logging as _logging
 
-        with caplog.at_level(_logging.WARNING, logger="kiro_crew.platform.admission"):
+        with caplog.at_level(_logging.WARNING, logger="aj_crew.platform.admission"):
             AdmissionPolicy.from_dict({"require_policy_signature": junk})
         messages = [r.getMessage() for r in caplog.records]
         assert any(
@@ -922,7 +922,7 @@ class TestStrictBooleanFlagCoercion:
     def test_a_real_boolean_emits_no_warning(self, caplog):
         import logging as _logging
 
-        with caplog.at_level(_logging.WARNING, logger="kiro_crew.platform.admission"):
+        with caplog.at_level(_logging.WARNING, logger="aj_crew.platform.admission"):
             AdmissionPolicy.from_dict(
                 {"require_signature": True, "require_policy_signature": False}
             )
@@ -947,7 +947,7 @@ class TestNonAsciiSignature:
         )
 
     def test_signature_valid_returns_false(self):
-        from kiro_crew.platform.admission import _signature_valid
+        from aj_crew.platform.admission import _signature_valid
 
         m = PluginManifest(name="amazon", publisher="p13n", version="1", signature=self._BAD_SIG)
         assert _signature_valid(m, self._policy()) is False

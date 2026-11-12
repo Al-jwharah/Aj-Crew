@@ -1,13 +1,13 @@
 # Using local and hosted models through OpenCode, Pi, or goose
 
-Kiro Crew does not call LM Studio, OpenRouter, or Ollama itself for the chat
+Aj Crew does not call LM Studio, OpenRouter, or Ollama itself for the chat
 model; only memory embeddings can opt into an Ollama server
 (`memory.embedding_provider`). The harnesses it can drive already do:
 [OpenCode](https://opencode.ai/docs/),
 [Pi](https://github.com/badlogic/pi-mono/tree/main/packages/coding-agent), and
 [goose](https://block.github.io/goose/). Each keeps its own provider
-configuration and credentials. Kiro Crew starts the harness, and the chat model
-picker lists the models that harness advertises. Kiro Crew holds no LM Studio,
+configuration and credentials. Aj Crew starts the harness, and the chat model
+picker lists the models that harness advertises. Aj Crew holds no LM Studio,
 OpenRouter, or Ollama key and needs no setting of its own for any of them;
 `agent.provider` stays `"acp"` throughout, and `agent.acp_backend` is the only
 choice that changes.
@@ -60,7 +60,7 @@ Then select it in **Settings → Agent Harness**, or set it in
 Use `"pi"` for Pi or `"goose"` for goose. The switch takes effect on the
 **next** session; an existing chat keeps the backend it started on. The Agent
 Harness tab reports a harness whose binary is missing, with the install
-command to run. (`kirocrew doctor` shows each selected harness's sign-in state,
+command to run. (`ajcrew doctor` shows each selected harness's sign-in state,
 but it checks the installed binary only for kiro-cli and Claude, so use the
 Agent Harness tab to confirm an OpenCode, Pi, or goose binary is present.) A
 chat started on a `pi` too old for the adapter fails with a message that names
@@ -275,13 +275,13 @@ at `http://localhost:11434`. goose stores provider settings in its own config
 goose [providers docs](https://block.github.io/goose/docs/getting-started/providers).
 
 Select the harness as in section 1, for example
-`kirocrew config set agent.acp_backend opencode` (or `pi`, or `goose`), then
+`ajcrew config set agent.acp_backend opencode` (or `pi`, or `goose`), then
 start a new chat.
 
 ### 4.2 Ollama on another machine (across the network)
 
 Ollama can run on a separate host (a GPU box, a home server) while the
-harness on the Kiro Crew host reaches it over the network. By default Ollama
+harness on the Aj Crew host reaches it over the network. By default Ollama
 binds to `127.0.0.1`, which only accepts local connections. On the **Ollama
 host**, bind it to all interfaces with `OLLAMA_HOST`, as described in the
 [Ollama FAQ](https://github.com/ollama/ollama/blob/main/docs/faq.md):
@@ -294,7 +294,7 @@ ollama serve
 
 If Ollama runs as a systemd service, set the variable in the unit environment
 (`systemctl edit ollama`, add `Environment="OLLAMA_HOST=0.0.0.0:11434"`) and
-restart it. Open port `11434` in the host's firewall so the Kiro Crew host can
+restart it. Open port `11434` in the host's firewall so the Aj Crew host can
 reach it.
 
 > **Security caveat:** Ollama has **no built-in authentication**. Binding to
@@ -304,7 +304,7 @@ reach it.
 > port is never open to untrusted networks. Treat `OLLAMA_HOST=0.0.0.0` as "on
 > my private network," not "on the internet."
 
-From the Kiro Crew host, confirm you can reach the remote server (replace
+From the Aj Crew host, confirm you can reach the remote server (replace
 `REMOTE_IP`):
 
 ```bash
@@ -324,7 +324,7 @@ requires in the harness provider config.
 
 ### 4.3 Multiple machines: spreading load around
 
-A single harness process talks to **one endpoint**. Kiro Crew does not
+A single harness process talks to **one endpoint**. Aj Crew does not
 round-robin Ollama hosts internally - there is no such feature. Spreading load
 across several Ollama machines is done at the **endpoint layer** or by
 **configuring different members at different hosts**. Two approaches, which
@@ -356,7 +356,7 @@ server {
 ```
 
 The harness base URL then becomes `http://PROXY_IP:8080/v1` (OpenCode, Pi) or
-`http://PROXY_IP:8080` (goose). From Kiro Crew's point of view there is still
+`http://PROXY_IP:8080` (goose). From Aj Crew's point of view there is still
 one harness and one endpoint; the fan-out is entirely the proxy's concern. Each
 Ollama host behind the proxy must have the **same model pulled**, since the
 proxy forwards an opaque model id - keep the model catalogs in sync across the
@@ -364,14 +364,14 @@ pool.
 
 **Approach B - different crew members / sessions at different hosts.** Because
 one session uses one harness and one endpoint, you can split work by pointing
-different parts of Kiro Crew at different Ollama hosts: run more than one
+different parts of Aj Crew at different Ollama hosts: run more than one
 session or worker, each driving a harness configured for a different Ollama
 host. For **crew-member DM sessions** specifically, the backend is chosen by
 `agent.member_acp_backend` (not `agent.acp_backend`); set it to a local harness
 if members should also run on Ollama:
 
 ```bash
-kirocrew config set agent.member_acp_backend opencode   # or goose
+ajcrew config set agent.member_acp_backend opencode   # or goose
 ```
 
 Approach A spreads load per request; Approach B spreads it per session or
@@ -380,9 +380,9 @@ Approach B helps when specific members or workloads should be pinned to
 specific hardware. They compose: point the harness at a proxy **and** assign
 members to different proxies/pools.
 
-## 5. Pick the model in Kiro Crew
+## 5. Pick the model in Aj Crew
 
-1. Start a new chat. Its first session reports the harness's models to Kiro
+1. Start a new chat. Its first session reports the harness's models to Aj
    Crew; until then the picker offers **auto**, plus the configured default,
    and auto runs the harness's own default model.
 2. Open the composer's model picker. It lists the ids the harness advertised,
@@ -403,23 +403,23 @@ harness and the cloud defaults is a single command each way. Set `acp_backend`
 to one concrete value from the table below, for example:
 
 ```bash
-kirocrew config set agent.acp_backend goose
+ajcrew config set agent.acp_backend goose
 ```
 
 | Goal | Command |
 |---|---|
-| Use the local **OpenCode** harness | `kirocrew config set agent.acp_backend opencode` |
-| Use the local **Pi** harness | `kirocrew config set agent.acp_backend pi` |
-| Use the local **goose** harness | `kirocrew config set agent.acp_backend goose` |
-| Back to **kiro-cli** | `kirocrew config set agent.acp_backend kiro` |
-| Back to the cloud default **KAS** | `kirocrew config set agent.acp_backend kas` |
+| Use the local **OpenCode** harness | `ajcrew config set agent.acp_backend opencode` |
+| Use the local **Pi** harness | `ajcrew config set agent.acp_backend pi` |
+| Use the local **goose** harness | `ajcrew config set agent.acp_backend goose` |
+| Back to **kiro-cli** | `ajcrew config set agent.acp_backend kiro` |
+| Back to the cloud default **KAS** | `ajcrew config set agent.acp_backend kas` |
 
 `agent.provider` always stays `acp`; you only ever change `acp_backend`. The
 switch takes effect on the **next** session - an existing chat keeps the
 backend it started on, so start a new chat after switching. An explicit value
 that is unrecognized or unselectable logs a warning and falls back to the Kiro
 CLI (kiro-cli) floor, not KAS; read it back with
-`kirocrew config get agent.acp_backend`, and check **Settings → Agent Harness**
+`ajcrew config get agent.acp_backend`, and check **Settings → Agent Harness**
 to confirm the harness is installed. To move crew-member DM sessions too, set
 `agent.member_acp_backend` the same way (`kiro` there selects KAS, not
 kiro-cli).
@@ -443,7 +443,7 @@ and configure it:
 Reach for **OpenCode** when your gateway host already has Node/npm and you are
 mainly pointing at LM Studio, OpenRouter, or Ollama through one JSON provider
 block. Its install is pinned to major 1, so a newer OpenCode major is refused
-until Kiro Crew's launch supports it.
+until Aj Crew's launch supports it.
 
 Reach for **Pi** when you want its own model picker and sign-in flow
 (`/model`, `/login`), or you are already using Pi's `models.json` /
@@ -451,16 +451,16 @@ Reach for **Pi** when you want its own model picker and sign-in flow
 
 Reach for **goose** when you would rather not manage an npm global and prefer
 a standalone binary, or you already use goose's own configuration and
-extension ecosystem for Ollama or another OpenAI-compatible endpoint. Kiro Crew
+extension ecosystem for Ollama or another OpenAI-compatible endpoint. Aj Crew
 tested goose on the 1.50.x line; a goose outside it still runs, with a warning
 row in the chat that names the installed version and the tested range.
 
 All three reach the same providers the same way underneath, so you can try one
-and switch with a single `kirocrew config set` command (section 6).
+and switch with a single `ajcrew config set` command (section 6).
 
 ## 8. Credentials
 
-Kiro Crew stores no provider key for any of these setups. OpenCode, Pi, and
+Aj Crew stores no provider key for any of these setups. OpenCode, Pi, and
 goose read their own credential files (`~/.local/share/opencode/auth.json`,
 `~/.pi/agent/auth.json`, `~/.config/goose/secrets.yaml`) when they start. The
 agent's file tools are refused those files; the harness process itself still
@@ -477,15 +477,15 @@ command that installs it.
 | Symptom | Check |
 |---|---|
 | "OpenCode is not signed in" or "Pi is not signed in" when a chat starts | The harness found no usable provider. Run the sign-in step for OpenRouter, or add the LM Studio or Ollama provider entry, then start a new chat. |
-| The model is missing from the Kiro Crew picker | Run `opencode models <provider>` or Pi's `/model` (goose: `/model` inside its TUI). If the harness does not list it, fix the harness config first. If it does, start a new chat so a session reports it. |
+| The model is missing from the Aj Crew picker | Run `opencode models <provider>` or Pi's `/model` (goose: `/model` inside its TUI). If the harness does not list it, fix the harness config first. If it does, start a new chat so a session reports it. |
 | LM Studio requests fail | `curl http://localhost:1234/v1/models` must answer on the gateway host. Check that the server is started and the port in the config matches. |
-| Harness cannot reach Ollama | `curl http://HOST:11434/api/tags` must answer from the Kiro Crew host. For a remote host, confirm `OLLAMA_HOST=0.0.0.0:11434` on the Ollama side and that the firewall allows port `11434`. |
+| Harness cannot reach Ollama | `curl http://HOST:11434/api/tags` must answer from the Aj Crew host. For a remote host, confirm `OLLAMA_HOST=0.0.0.0:11434` on the Ollama side and that the firewall allows port `11434`. |
 | Pi lists the LM Studio or Ollama model nowhere | The provider entry needs an `apiKey`, and `models.json` must be valid JSON. `pi --list-models` reads the file on each run; inside Pi, opening `/model` reloads it. |
 | `opencode models openrouter` answers "Provider not found" | No OpenRouter key is stored yet. Run `opencode auth login` and choose OpenRouter. |
 | A turn on Ollama stalls or loops without using tools | The chosen Ollama model likely lacks tool/function-calling support. Pick a tool-capable model from [ollama.com/library](https://ollama.com/library). |
-| New chats still hit the cloud after switching to a local harness | The switch applies on the next session - start a new chat. Re-read `agent.acp_backend` with `kirocrew config get agent.acp_backend`; an explicit value that is unrecognized or unselectable falls back to the Kiro CLI (kiro-cli) floor, not KAS. |
+| New chats still hit the cloud after switching to a local harness | The switch applies on the next session - start a new chat. Re-read `agent.acp_backend` with `ajcrew config get agent.acp_backend`; an explicit value that is unrecognized or unselectable falls back to the Kiro CLI (kiro-cli) floor, not KAS. |
 | The selected harness is not installed | **Settings → Agent Harness** reports a missing harness binary and prints the command that installs it (`npm i -g opencode-ai@1`, Pi's install command, or goose's `download_cli.sh`). If the binary lives somewhere unusual, set `OPENCODE_BIN` / `PI_ACP_BIN` / `GOOSE_BIN`. |
 | A Crew Member DM does not use the model | Member threads follow `agent.member_acp_backend`, not `agent.acp_backend`. See section 1 and section 6. |
 
 For the authoritative backend reference, see the `agent.acp_backend` section of
-[configuration.md](../../src/kiro_crew/docs/configuration.md).
+[configuration.md](../../src/aj_crew/docs/configuration.md).

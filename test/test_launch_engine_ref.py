@@ -1,6 +1,6 @@
 """A packaged install's cloud launch pins its own release tag on the clone path.
 
-``kirocrew-ec2.yaml`` defaults ``KirocrewRef`` to ``main``. A checkout ships its
+``ajcrew-ec2.yaml`` defaults ``AjcrewRef`` to ``main``. A checkout ships its
 own source, so the default is inert for it; a packaged install has no checkout,
 takes the public-repo clone, and with no ref at the call site the instance
 installs ``main`` while this machine runs a release —
@@ -20,14 +20,14 @@ import subprocess
 
 import pytest
 
-import kiro_crew.cloud.source as source_mod
-from kiro_crew.cloud import aws, ec2, launch_engine, sizes
+import aj_crew.cloud.source as source_mod
+from aj_crew.cloud import aws, ec2, launch_engine, sizes
 
-_BOUNDARY_ARN = "arn:aws:iam::123456789012:policy/kirocrew-instance-boundary"
+_BOUNDARY_ARN = "arn:aws:iam::123456789012:policy/ajcrew-instance-boundary"
 
 
 def _template_default(param: str) -> str:
-    text = (ec2.Path(ec2.__file__).parent / "templates" / "kirocrew-ec2.yaml").read_text(
+    text = (ec2.Path(ec2.__file__).parent / "templates" / "ajcrew-ec2.yaml").read_text(
         encoding="utf-8"
     )
     block = text.split(f"  {param}:\n", 1)[1]
@@ -66,11 +66,11 @@ def _overrides(argv: list[str]) -> dict[str, str]:
 class TestPublicRepoUrl:
     def test_probe_asks_the_remote_the_template_clones(self) -> None:
         """A tag confirmed on one remote and cloned from another proves nothing."""
-        assert ec2.PUBLIC_REPO_URL == _template_default("KirocrewRepo")
+        assert ec2.PUBLIC_REPO_URL == _template_default("AjcrewRepo")
 
     def test_template_still_defaults_to_main(self) -> None:
         """The fallback the WARNING promises ("the instance will run main")."""
-        assert _template_default("KirocrewRef") == "main"
+        assert _template_default("AjcrewRef") == "main"
 
 
 _TRUSTED_GIT = "/usr/bin/git"
@@ -185,7 +185,7 @@ class TestReleaseTagExists:
         """A PATH shim must not run with the gateway's privileges; no git = no probe."""
         monkeypatch.setattr(ec2.platform_compat, "trusted_git_bin", lambda: None)
         monkeypatch.setattr(subprocess, "run", lambda *a, **k: pytest.fail("must not spawn"))
-        with caplog.at_level("WARNING", logger="kiro_crew.cloud.ec2"):
+        with caplog.at_level("WARNING", logger="aj_crew.cloud.ec2"):
             assert ec2.release_tag_exists("v0.7.0") is False
         assert "no trusted git" in caplog.text
 
@@ -208,7 +208,7 @@ class TestReleaseTagExists:
             "run",
             lambda argv, **kw: subprocess.CompletedProcess(argv, returncode, "", "fatal"),
         )
-        with caplog.at_level("WARNING", logger="kiro_crew.cloud.ec2"):
+        with caplog.at_level("WARNING", logger="aj_crew.cloud.ec2"):
             assert ec2.release_tag_exists("v0.7.0") is False
         assert "v0.7.0" in caplog.text
 
@@ -225,7 +225,7 @@ class TestReleaseTagExists:
             raise exc
 
         monkeypatch.setattr(subprocess, "run", raiser)
-        with caplog.at_level("WARNING", logger="kiro_crew.cloud.ec2"):
+        with caplog.at_level("WARNING", logger="aj_crew.cloud.ec2"):
             assert ec2.release_tag_exists("v0.7.0") is False
         assert "could not probe" in caplog.text
 
@@ -275,7 +275,7 @@ class TestResolvePublicRef:
         monkeypatch.setattr(ec2, "__version__", "0.7.0")
         monkeypatch.setattr(ec2.release_channel, "__version__", "0.7.0")
         monkeypatch.setattr(ec2, "release_tag_exists", lambda ref, repo="": False)
-        with caplog.at_level("WARNING", logger="kiro_crew.cloud.ec2"):
+        with caplog.at_level("WARNING", logger="aj_crew.cloud.ec2"):
             assert ec2.resolve_public_ref() == ""
         assert "v0.7.0" in caplog.text and "will run main" in caplog.text
 
@@ -285,7 +285,7 @@ class TestResolvePublicRef:
         monkeypatch.setattr(
             ec2, "release_tag_exists", lambda *a, **k: pytest.fail("nightly has no tag to probe")
         )
-        with caplog.at_level("WARNING", logger="kiro_crew.cloud.ec2"):
+        with caplog.at_level("WARNING", logger="aj_crew.cloud.ec2"):
             assert ec2.resolve_public_ref() == ""
         assert "0.8.0.dev20260922" in caplog.text and "will run main" in caplog.text
 
@@ -310,7 +310,7 @@ class TestDeployPinsTheRef:
         ec2.deploy(tag="t1", tier=sizes.default_tier(), profile="dev", region="us-east-1")
 
         overrides = _overrides(captured["argv"])
-        assert overrides["KirocrewRef"] == "v0.7.0"
+        assert overrides["AjcrewRef"] == "v0.7.0"
         assert "SourceBucket" not in overrides
 
     def test_probe_miss_keeps_the_template_default(self, monkeypatch) -> None:
@@ -321,7 +321,7 @@ class TestDeployPinsTheRef:
 
         ec2.deploy(tag="t1", tier=sizes.default_tier(), profile="dev", region="us-east-1")
 
-        assert "KirocrewRef" not in _overrides(captured["argv"])
+        assert "AjcrewRef" not in _overrides(captured["argv"])
 
     def test_explicit_ref_wins_over_the_release_tag(self, monkeypatch) -> None:
         captured: dict = {}
@@ -334,7 +334,7 @@ class TestDeployPinsTheRef:
             tag="t1", tier=sizes.default_tier(), profile="dev", region="us-east-1", ref="my-branch"
         )
 
-        assert _overrides(captured["argv"])["KirocrewRef"] == "my-branch"
+        assert _overrides(captured["argv"])["AjcrewRef"] == "my-branch"
 
     def test_checkout_ships_source_and_never_probes(self, monkeypatch) -> None:
         captured: dict = {}
@@ -349,7 +349,7 @@ class TestDeployPinsTheRef:
 
         overrides = _overrides(captured["argv"])
         assert overrides["SourceBucket"] == "bucket"
-        assert "KirocrewRef" not in overrides
+        assert "AjcrewRef" not in overrides
 
     def test_dry_run_stays_offline(self, monkeypatch) -> None:
         monkeypatch.setattr(source_mod, "find_repo_root", lambda: None)
@@ -358,7 +358,7 @@ class TestDeployPinsTheRef:
             ec2, "resolve_public_ref", lambda repo="": pytest.fail("dry run must not probe")
         )
         r = ec2.deploy(tag="t1", tier=sizes.default_tier(), dry_run=True)
-        assert not any(a.startswith("KirocrewRef=") for a in r.argv)
+        assert not any(a.startswith("AjcrewRef=") for a in r.argv)
 
     def test_probe_repo_is_the_clone_repo(self, monkeypatch) -> None:
         captured: dict = {}
@@ -378,8 +378,8 @@ class TestDeployPinsTheRef:
 
         assert probed == ["https://example.com/fork.git"]
         overrides = _overrides(captured["argv"])
-        assert overrides["KirocrewRepo"] == "https://example.com/fork.git"
-        assert overrides["KirocrewRef"] == "v0.7.0"
+        assert overrides["AjcrewRepo"] == "https://example.com/fork.git"
+        assert overrides["AjcrewRef"] == "v0.7.0"
 
 
 class TestLaunchersReachTheSeam:
@@ -402,7 +402,7 @@ class TestLaunchersReachTheSeam:
         assert "ref" not in seen and "ship_source" not in seen
 
     def test_cli_wizard_passes_no_ref(self, monkeypatch) -> None:
-        from kiro_crew.cloud import wizard
+        from aj_crew.cloud import wizard
 
         seen: dict = {}
 

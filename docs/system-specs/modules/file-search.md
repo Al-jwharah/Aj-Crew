@@ -268,8 +268,8 @@ carry the partial-parse flag with it to stay honest.
 this process can enforce: `pdfplumber` exposes no length limit, and the allocation
 is the parsed character list itself, so any check runs after the memory is already
 committed — a 25 MB input can decompress to orders of magnitude more text. The
-pass therefore hands the bytes to `kiro_crew.pdf_extract.extract_pdf_segments`,
-which spawns `python -m kiro_crew.pdf_extract_child` under the `extractor` rlimit
+pass therefore hands the bytes to `aj_crew.pdf_extract.extract_pdf_segments`,
+which spawns `python -m aj_crew.pdf_extract_child` under the `extractor` rlimit
 profile (`RLIMIT_AS` 1 GiB, `RLIMIT_CPU` 60 s; a Job object with the same memory
 number on Windows, failing closed when it cannot attach; the child's own peak-RSS
 watchdog at the same number on macOS, where `RLIMIT_AS` is not enforced; see
@@ -301,7 +301,7 @@ Two paths produce results:
 
 ### Scope and containment
 
-`api_file_search` treats a caller-supplied `project` as the search root after canonicalization; it is not constrained to a configured workspace root. A `workspace` resolves only to its configured workspace directory. When neither establishes a root, the endpoint searches an existing `KIROCREW_PROJECT_DIR` and the Kiro Crew workspace, but never treats bare home as an implicit fallback; `test_fallback_does_not_use_home` and `test_explicit_home_project_still_searched` pin that distinction.
+`api_file_search` treats a caller-supplied `project` as the search root after canonicalization; it is not constrained to a configured workspace root. A `workspace` resolves only to its configured workspace directory. When neither establishes a root, the endpoint searches an existing `AJCREW_PROJECT_DIR` and the Aj Crew workspace, but never treats bare home as an implicit fallback; `test_fallback_does_not_use_home` and `test_explicit_home_project_still_searched` pin that distinction.
 
 The walk starts at each selected root and the endpoint accepts no descendant path parameter to resolve against it. This is not a general root-containment guard: `api_file_search` resolves each candidate only for the sensitive-path check, so a non-sensitive symlink target outside the selected root can remain a result. A sensitive symlink target is rejected on its canonical path; `test_index_file_symlink_resolved_before_sensitive_check` and `test_walk_fallback_file_symlink_resolved_before_sensitive_check` pin that refusal.
 
@@ -424,14 +424,14 @@ shows literally — the same trade-off inline file mentions make.
 
 | File | Role |
 |---|---|
-| `src/kiro_crew/dashboard/handlers/files.py` | Facade the routes bind |
-| `src/kiro_crew/dashboard/file_api/path_probe.py` | `_run_path_probe`, the bounded off-loop probe chokepoint |
-| `src/kiro_crew/dashboard/file_api/search.py` | `api_file_search` endpoint, fuzzy scorer, walk fallback |
-| `src/kiro_crew/dashboard/file_api/path_complete.py` | `api_path_complete` endpoint, lexical containment walk, no-follow per-component open |
-| `src/kiro_crew/dashboard/file_api/grep.py` | `api_file_grep` endpoint; rg argv + stdin pattern channel, python fallback, document pass |
+| `src/aj_crew/dashboard/handlers/files.py` | Facade the routes bind |
+| `src/aj_crew/dashboard/file_api/path_probe.py` | `_run_path_probe`, the bounded off-loop probe chokepoint |
+| `src/aj_crew/dashboard/file_api/search.py` | `api_file_search` endpoint, fuzzy scorer, walk fallback |
+| `src/aj_crew/dashboard/file_api/path_complete.py` | `api_path_complete` endpoint, lexical containment walk, no-follow per-component open |
+| `src/aj_crew/dashboard/file_api/grep.py` | `api_file_grep` endpoint; rg argv + stdin pattern channel, python fallback, document pass |
 | `website/src/pages/chat/FileBrowserRail.tsx` | Files tab: Name/Content toggle, result rows, status row |
 | `website/src/api/fileGrep.ts` | `/api/file-grep` client and result types |
-| `src/kiro_crew/dashboard/file_index.py` | `FileIndex`, `FileIndexRegistry` |
+| `src/aj_crew/dashboard/file_index.py` | `FileIndex`, `FileIndexRegistry` |
 | `website/src/components/FilePickerMenu.tsx` | Picker UI, `kind` propagation, trailing-slash insertion, `pathMode`, `pathTail` (rows show their root-relative folder cut from the start, so same-named results stay distinguishable in a narrow menu; `ChatEmbed` and a split pane's composer opt in), and, without `pathTail` (the main chat), same-name path disambiguation (`disambiguatedPaths`, over `buildFileLabels`) |
 | `website/src/components/composerTokens.ts` | Caret-relative `@` / `$` / `./` token matchers and the shared token replace |
 | `website/src/components/ChatInput.tsx` | Composer wiring: mounts the trigger pickers and the preview strip |

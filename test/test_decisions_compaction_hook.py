@@ -23,8 +23,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import session_compaction as sc
-from kiro_crew.testing.wait import finished
+from aj_crew import session_compaction as sc
+from aj_crew.testing.wait import finished
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -147,7 +147,7 @@ def _fresh_point_state():
     attempt for ``k`` would otherwise make the next one's first comparison unequal,
     which is an ordering dependency rather than a behaviour.
     """
-    from kiro_crew.decisions.points import compaction_keep
+    from aj_crew.decisions.points import compaction_keep
 
     compaction_keep.reset_records()
     yield
@@ -170,7 +170,7 @@ def scored(monkeypatch):
         seen.append((key, attempt, before))
         return None
 
-    from kiro_crew.decisions.points import compaction_keep
+    from aj_crew.decisions.points import compaction_keep
 
     monkeypatch.setattr(compaction_keep, "score_compaction", _score)
     return seen
@@ -234,7 +234,7 @@ class TestItCannotCostTheCompaction:
         async def _hang(_key: str, _attempt: int = 0, **_kw):
             await asyncio.sleep(3600)
 
-        from kiro_crew.decisions.points import compaction_keep
+        from aj_crew.decisions.points import compaction_keep
 
         monkeypatch.setattr(compaction_keep, "score_compaction", _hang)
 
@@ -258,7 +258,7 @@ class TestItCannotCostTheCompaction:
         assert pending == 1
 
     def test_a_point_that_raises_on_import_leaves_the_compaction_alone(self, monkeypatch):
-        import kiro_crew.decisions.points.compaction_keep as ck
+        import aj_crew.decisions.points.compaction_keep as ck
 
         def _boom(*_a, **_kw):
             raise RuntimeError("the point is broken")
@@ -289,7 +289,7 @@ class TestItCannotCostTheCompaction:
 
             return asyncio.run(_go())
 
-        from kiro_crew.decisions.points import compaction_keep
+        from aj_crew.decisions.points import compaction_keep
 
         monkeypatch.setattr(
             compaction_keep,
@@ -366,7 +366,7 @@ class TestTheBoundaryPrecedesTheCompaction:
 
     def test_rows_appended_after_the_fire_are_not_scored(self, monkeypatch):
         """End to end: the point reads the log, and the compaction's own row is not in it."""
-        from kiro_crew.decisions.points import compaction_keep
+        from aj_crew.decisions.points import compaction_keep
 
         rows = [
             {
@@ -382,7 +382,7 @@ class TestTheBoundaryPrecedesTheCompaction:
 
         monkeypatch.setattr(compaction_keep, "score_compaction", _score)
         monkeypatch.setattr(
-            "kiro_crew.history.ConversationLog",
+            "aj_crew.history.ConversationLog",
             lambda *_a, **_kw: type("L", (), {"read_messages": lambda _s, _k: list(rows)})(),
         )
 
@@ -429,10 +429,10 @@ class TestManualCompactIsExcluded:
         # and a prose reference is not a caller.
         pattern = re.compile(r"_compact_session\s*\(")
         allowed = {
-            Path("src/kiro_crew/session_compaction.py"),
+            Path("src/aj_crew/session_compaction.py"),
             # The automatic idle trigger, which commits through the same funnel.
-            Path("src/kiro_crew/session_idle_compaction.py"),
-            Path("src/kiro_crew/session_parts/turn_context.py"),
+            Path("src/aj_crew/session_idle_compaction.py"),
+            Path("src/aj_crew/session_parts/turn_context.py"),
         }
         offenders = []
         for path in (REPO / "src").rglob("*.py"):
@@ -444,7 +444,7 @@ class TestManualCompactIsExcluded:
         assert offenders == []
 
     def test_the_manual_dashboard_path_runs_the_command_through_the_provider(self):
-        runner_path = REPO / "src/kiro_crew/dashboard/chat_runner.py"
+        runner_path = REPO / "src/aj_crew/dashboard/chat_runner.py"
         runner = "\n".join(
             turn_file.read_text(encoding="utf-8")
             for turn_file in [*sorted(runner_path.with_name("chat_turn").glob("*.py")), runner_path]
@@ -458,8 +458,8 @@ class TestTheRecordReachesTheNotice:
     """``state._compaction_keep_record`` -- the hand-off onto the card's own row."""
 
     def test_a_published_record_is_claimed_once(self):
-        from kiro_crew.dashboard import state as dash_state
-        from kiro_crew.decisions.points import compaction_keep
+        from aj_crew.dashboard import state as dash_state
+        from aj_crew.decisions.points import compaction_keep
 
         compaction_keep.publish_record("k", {"turn_id": "t", "point": "compaction.keep"})
         assert dash_state._compaction_keep_record("k") == {
@@ -470,13 +470,13 @@ class TestTheRecordReachesTheNotice:
         assert dash_state._compaction_keep_record("k") is None
 
     def test_no_record_is_the_ordinary_answer(self):
-        from kiro_crew.dashboard import state as dash_state
+        from aj_crew.dashboard import state as dash_state
 
         assert dash_state._compaction_keep_record("nobody") is None
 
     def test_a_broken_point_still_leaves_the_notice_appendable(self, monkeypatch):
-        from kiro_crew.dashboard import state as dash_state
-        from kiro_crew.decisions.points import compaction_keep
+        from aj_crew.dashboard import state as dash_state
+        from aj_crew.decisions.points import compaction_keep
 
         def _boom(_key):
             raise RuntimeError("store is broken")

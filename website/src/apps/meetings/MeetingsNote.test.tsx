@@ -20,9 +20,9 @@ import EN_CATALOG from '../../i18n/locales/en.json'
 const SessionSource = readFileSync('src/apps/meetings/hooks/useMeetingSession.ts', 'utf-8')
 const ViewSource = readFileSync('src/apps/meetings/MeetingView.tsx', 'utf-8')
 const StoreSource = readFileSync(
-  '../src/kiro_crew/apps/builtins/meetings/backend/store.py', 'utf-8',
+  '../src/aj_crew/apps/builtins/meetings/backend/store.py', 'utf-8',
 )
-const SecuritySource = readFileSync('../src/kiro_crew/security/paths_lists.py', 'utf-8')
+const SecuritySource = readFileSync('../src/aj_crew/security/paths_lists.py', 'utf-8')
 
 const NOTE = EN_CATALOG.apps.meetings.note
 const SESSION = EN_CATALOG.apps.meetings.session

@@ -25,9 +25,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from kiro_crew.crew_log import projection
-from kiro_crew.crew_log.entry_types import WORK_ENTRY_TYPE
-from kiro_crew.crew_log.schema import Entry
+from aj_crew.crew_log import projection
+from aj_crew.crew_log.entry_types import WORK_ENTRY_TYPE
+from aj_crew.crew_log.schema import Entry
 
 CONDUCTOR = "chat-1-lead"
 WORKER_A = "chat-2-worker-a"

@@ -12,13 +12,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.liveness import (
+from aj_crew.acp.liveness import (
     VERDICT_DEAD,
     VERDICT_STUCK_INPUT,
     VERDICT_UNKNOWN,
     VERDICT_WORKING,
 )
-from kiro_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent import SubagentInfo, SubagentManager
 
 
 def _make_manager(stall_idle_secs: int = 120) -> SubagentManager:
@@ -153,7 +153,7 @@ async def test_consult_failure_degrades_to_unknown():
     SubagentManager._note_tool_dispatch(info, _event())
     boom = MagicMock()
     boom.check_tool.side_effect = RuntimeError("proc read blew up")
-    with patch("kiro_crew.subagent.LivenessOracle", return_value=boom):
+    with patch("aj_crew.subagent.LivenessOracle", return_value=boom):
         verdict, evidence = await mgr._stall_verdict(info)
     assert verdict == VERDICT_UNKNOWN
     assert evidence == "oracle offload error"
@@ -181,7 +181,7 @@ async def test_consult_runs_off_the_event_loop():
 
     oracle = MagicMock()
     oracle.check_tool.side_effect = _probe
-    with patch("kiro_crew.subagent.LivenessOracle", return_value=oracle):
+    with patch("aj_crew.subagent.LivenessOracle", return_value=oracle):
         verdict, _ = await mgr._stall_verdict(info)
 
     assert verdict == VERDICT_WORKING
@@ -210,11 +210,11 @@ async def test_only_one_consult_outstanding_per_agent():
     oracle = MagicMock()
     oracle.check_tool.side_effect = _wedged
     try:
-        with patch("kiro_crew.subagent.LivenessOracle", return_value=oracle):
+        with patch("aj_crew.subagent.LivenessOracle", return_value=oracle):
             # First sweep: submits the walk, then times out waiting on it.
             # The bounded await lives in ``consult_offloaded``, so the seam is
             # patched there rather than in this module.
-            with patch("kiro_crew.acp.liveness.asyncio.wait_for", side_effect=asyncio.TimeoutError):
+            with patch("aj_crew.acp.liveness.asyncio.wait_for", side_effect=asyncio.TimeoutError):
                 first, _ = await mgr._stall_verdict(info)
             assert first == VERDICT_UNKNOWN
             # The walk is genuinely in a worker thread and still wedged there.
@@ -257,10 +257,10 @@ async def test_working_child_is_not_flagged():
     SubagentManager._note_tool_dispatch(info, _event())
     with (
         patch(
-            "kiro_crew.subagent.LivenessOracle",
+            "aj_crew.subagent.LivenessOracle",
             return_value=_oracle(VERDICT_WORKING, "shell child 5150 alive"),
         ),
-        patch("kiro_crew.subagent.record_slow_command") as rec,
+        patch("aj_crew.subagent.record_slow_command") as rec,
     ):
         await mgr._maybe_flag_stall("a1b2c3d4", info, now)
     assert info.stalled is False
@@ -287,8 +287,8 @@ async def test_wedged_verdict_flags_immediately_without_two_sweep(verdict, evide
     info = _info(turns=1, _pid=4242, last_activity=now - 200)
     SubagentManager._note_tool_dispatch(info, _event())
     with (
-        patch("kiro_crew.subagent.LivenessOracle", return_value=_oracle(verdict, evidence)),
-        patch("kiro_crew.subagent.record_slow_command"),
+        patch("aj_crew.subagent.LivenessOracle", return_value=_oracle(verdict, evidence)),
+        patch("aj_crew.subagent.record_slow_command"),
     ):
         await mgr._maybe_flag_stall("a1b2c3d4", info, now)
     assert info.stalled is True
@@ -308,7 +308,7 @@ async def test_unknown_still_needs_the_two_sweep_confirmation():
     now = 1_000.0
     info = _info(turns=1, _pid=4242, last_activity=now - 200)
     SubagentManager._note_tool_dispatch(info, _event(is_shell=False))  # -> UNKNOWN
-    with patch("kiro_crew.subagent.record_slow_command") as rec:
+    with patch("aj_crew.subagent.record_slow_command") as rec:
         await mgr._maybe_flag_stall("a1b2c3d4", info, now)
         # Sweep 1: suspect only.
         assert info.stalled is False and info._stall_suspect_at > 0
@@ -331,8 +331,8 @@ async def test_wedged_verdict_still_never_reaps():
     info = _info(turns=1, _pid=4242, last_activity=now - 200)
     SubagentManager._note_tool_dispatch(info, _event())
     with (
-        patch("kiro_crew.subagent.LivenessOracle", return_value=_oracle(VERDICT_DEAD, "gone")),
-        patch("kiro_crew.subagent.record_slow_command"),
+        patch("aj_crew.subagent.LivenessOracle", return_value=_oracle(VERDICT_DEAD, "gone")),
+        patch("aj_crew.subagent.record_slow_command"),
     ):
         await mgr._maybe_flag_stall("a1b2c3d4", info, now)
     assert info.stalled is True
@@ -359,7 +359,7 @@ async def test_working_cannot_suppress_the_badge_forever():
     that turns a case the old idle-time path DID badge into a permanent false
     negative — worse than what it replaces, since the badge is self-clearing and a
     missing badge is not. Past the ceiling the badge wins."""
-    from kiro_crew.subagent import _SUPPRESS_CEILING
+    from aj_crew.subagent import _SUPPRESS_CEILING
 
     mgr = _make_manager(stall_idle_secs=10)
     now = 1_000.0
@@ -369,8 +369,8 @@ async def test_working_cannot_suppress_the_badge_forever():
     below = _info(turns=1, _pid=4242, last_activity=now - 10 * _SUPPRESS_CEILING + 5)
     SubagentManager._note_tool_dispatch(below, _event())
     with (
-        patch("kiro_crew.subagent.LivenessOracle", return_value=oracle),
-        patch("kiro_crew.subagent.record_slow_command"),
+        patch("aj_crew.subagent.LivenessOracle", return_value=oracle),
+        patch("aj_crew.subagent.record_slow_command"),
     ):
         await mgr._maybe_flag_stall("a1b2c3d4", below, now)
     assert below.stalled is False, "WORKING should still suppress below the ceiling"
@@ -384,8 +384,8 @@ async def test_working_cannot_suppress_the_badge_forever():
     )
     SubagentManager._note_tool_dispatch(over, _event())
     with (
-        patch("kiro_crew.subagent.LivenessOracle", return_value=oracle),
-        patch("kiro_crew.subagent.record_slow_command"),
+        patch("aj_crew.subagent.LivenessOracle", return_value=oracle),
+        patch("aj_crew.subagent.record_slow_command"),
     ):
         await mgr._maybe_flag_stall("a1b2c3d4", over, now)
     assert over.stalled is True, "a WORKING reading suppressed the badge past the ceiling"
@@ -435,7 +435,7 @@ async def test_a_verdict_superseded_mid_consult_is_discarded():
         return (VERDICT_DEAD, "shell child 5150 exited, no result frame")
 
     oracle.check_tool.side_effect = _walk_then_activity
-    with patch("kiro_crew.subagent.LivenessOracle", return_value=oracle):
+    with patch("aj_crew.subagent.LivenessOracle", return_value=oracle):
         verdict, evidence = await mgr._stall_verdict(info)
     assert verdict == VERDICT_UNKNOWN, "a stale DEAD verdict was applied"
     assert evidence == "superseded mid-consult"
@@ -458,10 +458,10 @@ async def _flag_with_dead(mgr, info, now):
     SubagentManager._note_tool_dispatch(info, _event())
     with (
         patch(
-            "kiro_crew.subagent.LivenessOracle",
+            "aj_crew.subagent.LivenessOracle",
             return_value=_oracle(VERDICT_DEAD, "shell child 5150 exited, no result frame"),
         ),
-        patch("kiro_crew.subagent.record_slow_command"),
+        patch("aj_crew.subagent.record_slow_command"),
     ):
         await mgr._maybe_flag_stall("a1b2c3d4", info, now)
     return info.stalled
@@ -553,7 +553,7 @@ async def test_a_done_sibling_does_not_restore_the_fast_path():
     assert await _flag_with_dead(mgr, info, now) is False, "shared agent kept fast path"
 
 
-# ── the kirocrew-core wait tool's declared-duration contract ─────────
+# ── the ajcrew-core wait tool's declared-duration contract ─────────
 
 
 def _wait_event(
@@ -561,10 +561,10 @@ def _wait_event(
     *,
     title: str = "wait",
     trusted: bool = True,
-    server="kirocrew-core",
+    server="ajcrew-core",
     call_id: str = "call-1",
 ):
-    """A dispatched ``kirocrew-core`` ``wait`` call, as the subagent loop sees it.
+    """A dispatched ``ajcrew-core`` ``wait`` call, as the subagent loop sees it.
 
     *trusted* sets the adapter-authored identity the reaper keys on; the title is
     model-authored and selects nothing.
@@ -591,7 +591,7 @@ async def test_a_declared_wait_reads_working_inside_its_duration():
     """The wait contract reads only this agent's own tool input and dispatch
     time, so it is as attributable as the shell-child match and must not be
     declined with the opaque MCP tools."""
-    from kiro_crew.acp.liveness import WAIT_TOOL_SLACK_SECS
+    from aj_crew.acp.liveness import WAIT_TOOL_SLACK_SECS
 
     mgr = _make_manager()
     info = _info(_pid=4242)
@@ -617,7 +617,7 @@ async def test_a_subagent_inside_a_declared_wait_is_not_flagged():
     info = _info(turns=1, _pid=4242, last_activity=now - 238)
     SubagentManager._note_tool_dispatch(info, _wait_event(270))
     _age_dispatch(info, 238)
-    with patch("kiro_crew.subagent.record_slow_command") as rec:
+    with patch("aj_crew.subagent.record_slow_command") as rec:
         await mgr._maybe_flag_stall("a1b2c3d4", info, now)
         await mgr._maybe_flag_stall("a1b2c3d4", info, now + 60)
     assert info.stalled is False
@@ -630,7 +630,7 @@ async def test_a_long_declared_wait_is_not_capped_by_the_suppression_ceiling():
     """The ceiling bounds a cmdline match that may belong to a sibling. The wait
     contract cannot be misattributed and bounds itself at seconds + slack, so a
     1800s wait must not be flagged at 4x the idle threshold."""
-    from kiro_crew.subagent import _SUPPRESS_CEILING
+    from aj_crew.subagent import _SUPPRESS_CEILING
 
     mgr = _make_manager(stall_idle_secs=120)
     now = 1_000.0
@@ -638,7 +638,7 @@ async def test_a_long_declared_wait_is_not_capped_by_the_suppression_ceiling():
     info = _info(turns=1, _pid=4242, last_activity=now - idle, _stall_suspect_at=now - 60)
     SubagentManager._note_tool_dispatch(info, _wait_event(1800))
     _age_dispatch(info, idle)
-    with patch("kiro_crew.subagent.record_slow_command"):
+    with patch("aj_crew.subagent.record_slow_command"):
         await mgr._maybe_flag_stall("a1b2c3d4", info, now)
     assert info.stalled is False
     mgr._fire_event.assert_not_called()
@@ -648,7 +648,7 @@ async def test_a_long_declared_wait_is_not_capped_by_the_suppression_ceiling():
 async def test_a_wait_past_its_declared_duration_flags_after_two_sweeps():
     """Once seconds + slack have elapsed the verdict is UNKNOWN again and the
     idle-time path applies unchanged."""
-    from kiro_crew.acp.liveness import WAIT_TOOL_SLACK_SECS
+    from aj_crew.acp.liveness import WAIT_TOOL_SLACK_SECS
 
     mgr = _make_manager(stall_idle_secs=120)
     now = 1_000.0
@@ -656,7 +656,7 @@ async def test_a_wait_past_its_declared_duration_flags_after_two_sweeps():
     info = _info(turns=1, _pid=4242, last_activity=now - overdue)
     SubagentManager._note_tool_dispatch(info, _wait_event(270))
     _age_dispatch(info, overdue)
-    with patch("kiro_crew.subagent.record_slow_command"):
+    with patch("aj_crew.subagent.record_slow_command"):
         await mgr._maybe_flag_stall("a1b2c3d4", info, now)
         assert info.stalled is False and info._stall_suspect_at > 0
         await mgr._maybe_flag_stall("a1b2c3d4", info, now + 60)
@@ -670,7 +670,7 @@ async def test_the_wait_contract_needs_no_proc_consult():
     mgr = _make_manager()
     info = _info(_pid=4242)
     SubagentManager._note_tool_dispatch(info, _wait_event(270))
-    with patch("kiro_crew.subagent.consult_offloaded", new=AsyncMock()) as consult:
+    with patch("aj_crew.subagent.consult_offloaded", new=AsyncMock()) as consult:
         verdict, _evidence = await mgr._stall_verdict(info)
     assert verdict == VERDICT_WORKING
     consult.assert_not_awaited()
@@ -681,7 +681,7 @@ async def test_a_declared_duration_past_the_wait_maximum_counts_as_the_maximum()
     """The declared ``seconds`` is model-authored input, so a value beyond what
     the wait tool will ever sleep must not hold the badge back for longer than
     that tool's own clamp."""
-    from kiro_crew.acp.liveness import WAIT_TOOL_MAX_SECS, WAIT_TOOL_SLACK_SECS
+    from aj_crew.acp.liveness import WAIT_TOOL_MAX_SECS, WAIT_TOOL_SLACK_SECS
 
     mgr = _make_manager()
     info = _info(_pid=4242)
@@ -692,7 +692,7 @@ async def test_a_declared_duration_past_the_wait_maximum_counts_as_the_maximum()
 
 
 def _core_non_wait_event():
-    """A trusted kirocrew-core call that is not ``wait`` but carries ``seconds``."""
+    """A trusted ajcrew-core call that is not ``wait`` but carries ``seconds``."""
     ev = _wait_event(1800, title="wait")
     ev.tool_name = "monitor_start"
     return ev
@@ -737,7 +737,7 @@ async def test_the_wait_contract_is_selected_by_trusted_identity_not_title(event
 async def test_a_forged_wait_title_does_not_lift_the_suppression_ceiling():
     """Even if some other evidence reads WORKING, a call that is not the trusted
     wait tool keeps the ceiling: past it the badge wins."""
-    from kiro_crew.subagent import _SUPPRESS_CEILING
+    from aj_crew.subagent import _SUPPRESS_CEILING
 
     mgr = _make_manager(stall_idle_secs=10)
     now = 1_000.0
@@ -749,7 +749,7 @@ async def test_a_forged_wait_title_does_not_lift_the_suppression_ceiling():
     )
     SubagentManager._note_tool_dispatch(info, _forged_wait_event())
     mgr._stall_verdict = AsyncMock(return_value=(VERDICT_WORKING, "wait tool declared 1800s"))
-    with patch("kiro_crew.subagent.record_slow_command"):
+    with patch("aj_crew.subagent.record_slow_command"):
         await mgr._maybe_flag_stall("a1b2c3d4", info, now)
     assert info.stalled is True
 
@@ -758,7 +758,7 @@ async def test_a_forged_wait_title_does_not_lift_the_suppression_ceiling():
 async def test_a_real_acp_wait_event_selects_the_contract():
     """Pins the field wiring against the real event type: the adapter identity a
     kiro-cli ``_meta.kiro`` frame yields for the wait tool selects the contract."""
-    from kiro_crew.acp.types import EVENT_TOOL_CALL, AcpEvent
+    from aj_crew.acp.types import EVENT_TOOL_CALL, AcpEvent
 
     ev = AcpEvent(
         kind=EVENT_TOOL_CALL,
@@ -766,7 +766,7 @@ async def test_a_real_acp_wait_event_selects_the_contract():
         tool_input='{"seconds": 300, "reason": "ci"}',
         is_shell=False,
         tool_name="wait",
-        mcp_server_name="kirocrew-core",
+        mcp_server_name="ajcrew-core",
         tool_identity_trusted=True,
         mcp_identity_trusted=True,
     )
@@ -777,7 +777,7 @@ async def test_a_real_acp_wait_event_selects_the_contract():
     assert verdict == VERDICT_WORKING, evidence
 
 
-def _kas_tool_call(title: str, raw_input: dict, server: str | None = "kirocrew-core") -> dict:
+def _kas_tool_call(title: str, raw_input: dict, server: str | None = "ajcrew-core") -> dict:
     """A KAS ``tool_call`` update: the server is named, the tool half is not."""
     kiro: dict = {"toolOrigin": "default"}
     if server is not None:
@@ -794,7 +794,7 @@ def _kas_tool_call(title: str, raw_input: dict, server: str | None = "kirocrew-c
 
 
 def _kas_event(update: dict):
-    from kiro_crew.acp._dispatch import parse_session_update
+    from aj_crew.acp._dispatch import parse_session_update
 
     (ev,) = parse_session_update(update)
     return ev
@@ -809,12 +809,12 @@ _KAS_WAIT_ARGS = {"seconds": 270, "reason": "waiting for CI"}
     [
         pytest.param(
             _kas_tool_call(
-                "@kirocrew-core/wait",
-                {"tool_id": "kirocrew-core::wait", "arguments": _KAS_WAIT_ARGS},
+                "@ajcrew-core/wait",
+                {"tool_id": "ajcrew-core::wait", "arguments": _KAS_WAIT_ARGS},
             ),
             id="tool-search-envelope",
         ),
-        pytest.param(_kas_tool_call("@kirocrew-core/wait", dict(_KAS_WAIT_ARGS)), id="wire-title"),
+        pytest.param(_kas_tool_call("@ajcrew-core/wait", dict(_KAS_WAIT_ARGS)), id="wire-title"),
     ],
 )
 async def test_a_kas_wait_frame_selects_the_contract(update):
@@ -831,7 +831,7 @@ async def test_a_kas_wait_frame_selects_the_contract(update):
     _age_dispatch(info, 220)
     verdict, evidence = await mgr._stall_verdict(info)
     assert verdict == VERDICT_WORKING, evidence
-    with patch("kiro_crew.subagent.record_slow_command"):
+    with patch("aj_crew.subagent.record_slow_command"):
         await mgr._maybe_flag_stall("a1b2c3d4", info, now)
         await mgr._maybe_flag_stall("a1b2c3d4", info, now + 60)
     assert info.stalled is False
@@ -844,47 +844,47 @@ async def test_a_kas_wait_frame_selects_the_contract(update):
     [
         pytest.param(
             _kas_tool_call(
-                "@kirocrew-core/wait",
-                {"tool_id": "kirocrew-core::wait", "arguments": _KAS_WAIT_ARGS},
+                "@ajcrew-core/wait",
+                {"tool_id": "ajcrew-core::wait", "arguments": _KAS_WAIT_ARGS},
                 server="third-party",
             ),
             id="other-server-names-core-wait",
         ),
         pytest.param(
-            _kas_tool_call("@kirocrew-core/wait", dict(_KAS_WAIT_ARGS), server=None),
+            _kas_tool_call("@ajcrew-core/wait", dict(_KAS_WAIT_ARGS), server=None),
             id="title-without-server-half",
         ),
         pytest.param(
             _kas_tool_call(
                 "wait",
-                {"tool_id": "kirocrew-core::wait", "arguments": _KAS_WAIT_ARGS},
+                {"tool_id": "ajcrew-core::wait", "arguments": _KAS_WAIT_ARGS},
                 server=None,
             ),
             id="envelope-without-server-half",
         ),
         pytest.param(
             _kas_tool_call(
-                "@kirocrew-core/wait",
-                {"tool_id": "kirocrew-core::monitor_start", "arguments": _KAS_WAIT_ARGS},
+                "@ajcrew-core/wait",
+                {"tool_id": "ajcrew-core::monitor_start", "arguments": _KAS_WAIT_ARGS},
             ),
             id="envelope-names-another-core-tool",
         ),
         pytest.param(
             _kas_tool_call(
-                "@kirocrew-core/wait",
+                "@ajcrew-core/wait",
                 {"tool_id": "other::wait", "arguments": _KAS_WAIT_ARGS},
             ),
             id="envelope-names-another-server",
         ),
         pytest.param(
             _kas_tool_call(
-                "@kirocrew-core/wait",
-                {"tool_id": "kirocrew-core::wait", "arguments": _KAS_WAIT_ARGS, "x": 1},
+                "@ajcrew-core/wait",
+                {"tool_id": "ajcrew-core::wait", "arguments": _KAS_WAIT_ARGS, "x": 1},
             ),
             id="envelope-with-extra-keys",
         ),
         pytest.param(
-            _kas_tool_call("@kirocrew-core/wait extra", dict(_KAS_WAIT_ARGS)),
+            _kas_tool_call("@ajcrew-core/wait extra", dict(_KAS_WAIT_ARGS)),
             id="title-with-trailing-text",
         ),
     ],
@@ -904,15 +904,15 @@ async def test_a_kas_frame_selects_the_contract_only_for_core_wait(update):
 def test_the_main_agent_snapshot_reads_the_kas_identity_too():
     """The main agent builds its snapshot through the same rule, so its oracle's
     wait verdict and keepalive check see the KAS core identity as well."""
-    from kiro_crew.acp.liveness import ToolCallState
+    from aj_crew.acp.liveness import ToolCallState
 
     ev = _kas_event(
         _kas_tool_call(
-            "@kirocrew-core/wait",
-            {"tool_id": "kirocrew-core::wait", "arguments": _KAS_WAIT_ARGS},
+            "@ajcrew-core/wait",
+            {"tool_id": "ajcrew-core::wait", "arguments": _KAS_WAIT_ARGS},
         )
     )
-    assert ToolCallState.identity_of(ev) == ("kirocrew-core", "wait")
+    assert ToolCallState.identity_of(ev) == ("ajcrew-core", "wait")
     builtin = _kas_event(
         {
             "sessionUpdate": "tool_call",
@@ -931,8 +931,8 @@ def test_the_contract_ceiling_matches_the_wait_tool_schema():
     """The reaper stops vouching for a wait at ``WAIT_TOOL_MAX_SECS`` plus slack.
     If the tool's own accepted maximum ever rose past it, a legitimate long wait
     would be badged stalled again, so the two numbers are pinned together."""
-    from kiro_crew.acp.liveness import WAIT_TOOL_MAX_SECS
-    from kiro_crew.validation import WAIT_SCHEMA
+    from aj_crew.acp.liveness import WAIT_TOOL_MAX_SECS
+    from aj_crew.validation import WAIT_SCHEMA
 
     (seconds,) = [f for f in WAIT_SCHEMA.fields if f.name == "seconds"]
     assert seconds.max_val == WAIT_TOOL_MAX_SECS
@@ -942,19 +942,17 @@ def test_the_contract_ceiling_matches_the_wait_tool_schema():
 @pytest.mark.parametrize(
     "meta",
     [
+        pytest.param({"kiro": {"toolName": "wait", "mcpServerName": "ajcrew-core"}}, id="kiro-cli"),
         pytest.param(
-            {"kiro": {"toolName": "wait", "mcpServerName": "kirocrew-core"}}, id="kiro-cli"
-        ),
-        pytest.param(
-            {"kiro": {"toolName": "kirocrew-core___wait", "mcpServerName": "kirocrew-core"}},
+            {"kiro": {"toolName": "ajcrew-core___wait", "mcpServerName": "ajcrew-core"}},
             id="kiro-cli-server-qualified",
         ),
         pytest.param(
             {
                 "goose": {
                     "toolCall": {
-                        "toolName": "kirocrew-core__wait",
-                        "extensionName": "kirocrew-core",
+                        "toolName": "ajcrew-core__wait",
+                        "extensionName": "ajcrew-core",
                     }
                 }
             },
@@ -967,7 +965,7 @@ async def test_a_raw_harness_wait_frame_selects_the_contract(meta):
     ``tool_call`` frame, built by the production frame builder, must yield the
     trusted pair the contract keys on. A hand-built event cannot catch a builder
     that stops earning ``mcp_identity_trusted``."""
-    from kiro_crew.acp._dispatch import _build_tool_call_event
+    from aj_crew.acp._dispatch import _build_tool_call_event
 
     update = {
         "sessionUpdate": "tool_call",
@@ -1025,7 +1023,7 @@ async def test_a_parallel_call_returning_first_leaves_the_wait_judged(write_firs
 
     assert info._inflight_tool is info._active_tool_calls["wait-1"]
     _age_dispatch(info, 300)
-    with patch("kiro_crew.subagent.record_slow_command") as rec:
+    with patch("aj_crew.subagent.record_slow_command") as rec:
         await mgr._maybe_flag_stall("a1b2c3d4", info, now)
         await mgr._maybe_flag_stall("a1b2c3d4", info, now + 60)
     assert info.stalled is False

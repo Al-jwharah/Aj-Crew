@@ -1,7 +1,7 @@
 """A managed MCP server whose ``spec_gate`` is closed is not declared to KAS.
 
-``kirocrew-computer`` carries the one gate. While Computer Use is off or
-unsupported, both spec writers withhold its entry, but an agent file Kiro Crew did
+``ajcrew-computer`` carries the one gate. While Computer Use is off or
+unsupported, both spec writers withhold its entry, but an agent file Aj Crew did
 not write (a legacy spec, or one edited by hand) can still declare it. Declared on
 KAS, the engine launches a backend that advertises no tools, and the managed
 readiness barrier waits out its whole budget on it, so every session on that
@@ -14,13 +14,13 @@ from __future__ import annotations
 import pytest
 from kas_agents_helpers import _spec
 
-import kiro_crew.agent as agent_mod
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp.kas_agents import hoist_servers_for_session, to_client_custom_agent
-from kiro_crew.acp.mcp_session_report import required_managed_servers
+import aj_crew.agent as agent_mod
+from aj_crew.acp import kas_agents
+from aj_crew.acp.kas_agents import hoist_servers_for_session, to_client_custom_agent
+from aj_crew.acp.mcp_session_report import required_managed_servers
 
-_COMPUTER = "kirocrew-computer"
-_AGENT = "kirocrew"
+_COMPUTER = "ajcrew-computer"
+_AGENT = "ajcrew"
 
 
 @pytest.fixture(autouse=True)
@@ -37,9 +37,9 @@ def _set_gate(monkeypatch, gate):
 def _legacy_spec():
     """A spec that still carries the explicit block a fresh build would withhold."""
     return _spec(
-        tools=["fs_read", "@kirocrew-core", f"@{_COMPUTER}"],
+        tools=["fs_read", "@ajcrew-core", f"@{_COMPUTER}"],
         mcpServers={
-            "kirocrew-core": {"command": "kc", "args": ["mcp-core"]},
+            "ajcrew-core": {"command": "kc", "args": ["mcp-core"]},
             _COMPUTER: {"command": "kc", "args": ["mcp-computer"]},
         },
     )
@@ -61,14 +61,14 @@ class TestAGateClosedManagedServerIsNotDeclared:
     def test_the_projection_omits_the_entry(self, monkeypatch):
         _set_gate(monkeypatch, lambda: False)
         out = to_client_custom_agent(_AGENT, _legacy_spec(), "p")
-        assert set(out["mcpServers"]) == {"kirocrew-core"}
+        assert set(out["mcpServers"]) == {"ajcrew-core"}
         assert f"@{_COMPUTER}" in out["tools"], "the ref stays, as on a spec Crew writes"
 
     def test_the_session_neither_sends_it_nor_waits_for_it(self, monkeypatch):
         _set_gate(monkeypatch, lambda: False)
         params = _session_params()
         assert _COMPUTER not in _sent_names(params)
-        assert required_managed_servers(params, _AGENT) == ("kirocrew-core",)
+        assert required_managed_servers(params, _AGENT) == ("ajcrew-core",)
 
     def test_a_gate_that_raises_reads_as_closed(self, monkeypatch):
         """The writers' emission predicate: an unreadable keystone is not evidence
@@ -79,7 +79,7 @@ class TestAGateClosedManagedServerIsNotDeclared:
 
         _set_gate(monkeypatch, unreadable)
         out = to_client_custom_agent(_AGENT, _legacy_spec(), "p")
-        assert set(out["mcpServers"]) == {"kirocrew-core"}
+        assert set(out["mcpServers"]) == {"ajcrew-core"}
 
     def test_an_open_gate_keeps_the_entry(self, monkeypatch):
         _set_gate(monkeypatch, lambda: True)
@@ -89,7 +89,7 @@ class TestAGateClosedManagedServerIsNotDeclared:
 
     def test_the_withhold_is_explained(self, monkeypatch, caplog):
         _set_gate(monkeypatch, lambda: False)
-        with caplog.at_level("INFO", logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level("INFO", logger="aj_crew.acp.kas_agents"):
             to_client_custom_agent(_AGENT, _legacy_spec(), "p")
         assert _COMPUTER in caplog.text
         assert "spec_gate is closed" in caplog.text

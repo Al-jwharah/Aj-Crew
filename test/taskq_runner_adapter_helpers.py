@@ -18,10 +18,10 @@ from pathlib import Path
 import pytest
 from overload_fakes import Clock, open_task_store
 
-from kiro_crew.taskq.adapters import runner as r
-from kiro_crew.taskq.store import TaskStore
+from aj_crew.taskq.adapters import runner as r
+from aj_crew.taskq.store import TaskStore
 
-_RUNNER_LOGGER = "kiro_crew.taskq.adapters.runner"
+_RUNNER_LOGGER = "aj_crew.taskq.adapters.runner"
 
 
 class _Sleeps:

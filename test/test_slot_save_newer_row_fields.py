@@ -17,12 +17,12 @@ import pytest
 from chat_test_helpers import _make_ready_kiro_prerequisite
 from windows_sim import same_tick_file_stat
 
-from kiro_crew.dashboard.chat_persistence import (
+from aj_crew.dashboard.chat_persistence import (
     _rehydrate_slot_from_history,
     _save_slot_to_history,
 )
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog
 
 
 def _make_state(tmp_path):
@@ -42,7 +42,7 @@ def _make_state(tmp_path):
 
 
 def _saved_slot(tmp_path, monkeypatch, *pairs):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("s1")
     for role, content in pairs:
@@ -135,7 +135,7 @@ def _restored_with_newer_field(tmp_path, monkeypatch):
 
 
 def test_the_slot_detail_payload_never_carries_the_private_key(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.chat_utils import UNKNOWN_ROW_FIELDS_KEY, _prepare_messages
+    from aj_crew.dashboard.chat_utils import UNKNOWN_ROW_FIELDS_KEY, _prepare_messages
 
     _state, restored = _restored_with_newer_field(tmp_path, monkeypatch)
     assert any(
@@ -147,8 +147,8 @@ def test_the_slot_detail_payload_never_carries_the_private_key(tmp_path, monkeyp
 
 
 def test_the_websocket_chat_message_frame_never_carries_the_private_key(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.chat_utils import UNKNOWN_ROW_FIELDS_KEY
-    from kiro_crew.dashboard.state import chat_message_note
+    from aj_crew.dashboard.chat_utils import UNKNOWN_ROW_FIELDS_KEY
+    from aj_crew.dashboard.state import chat_message_note
 
     _state, restored = _restored_with_newer_field(tmp_path, monkeypatch)
     row = next(m for m in restored.messages if UNKNOWN_ROW_FIELDS_KEY in m)
@@ -158,7 +158,7 @@ def test_the_websocket_chat_message_frame_never_carries_the_private_key(tmp_path
 
 
 def test_the_row_builder_writes_no_key_outside_the_known_set():
-    from kiro_crew.dashboard.slot_persistence.message_entries import (
+    from aj_crew.dashboard.slot_persistence.message_entries import (
         _KNOWN_ROW_KEYS,
         _build_message_entry_uncached,
     )
@@ -180,9 +180,9 @@ def test_the_row_builder_writes_no_key_outside_the_known_set():
 
 def test_a_channel_window_rebuild_keeps_a_newer_builds_row_field(tmp_path, monkeypatch):
     """The channel restore loop (``channel_slots._rebuild_window``) feeds the same save."""
-    from kiro_crew.dashboard.channel_slots import _rebuild_window
+    from aj_crew.dashboard.channel_slots import _rebuild_window
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("slack_1.1", linked_session_key="slack:1.1")
     rows = [
@@ -213,10 +213,10 @@ def _restored_with_fields(tmp_path, monkeypatch, user_fields, assistant_fields):
 
 def test_a_16_mib_field_from_a_newer_build_is_not_kept_in_memory(tmp_path, monkeypatch, caplog):
     """The over-cap case: the row keeps none of its newer fields, says so, and saves without them."""
-    from kiro_crew.dashboard.chat_utils import UNKNOWN_ROW_FIELDS_KEY
+    from aj_crew.dashboard.chat_utils import UNKNOWN_ROW_FIELDS_KEY
 
     huge = "x" * (16 * 1024 * 1024)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.chat_persistence"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.chat_persistence"):
         state, path, restored = _restored_with_fields(
             tmp_path, monkeypatch, {"reactions": ["thumbs_up"]}, {"blob": huge}
         )
@@ -233,8 +233,8 @@ def test_a_16_mib_field_from_a_newer_build_is_not_kept_in_memory(tmp_path, monke
 
 
 def test_the_cap_keeps_a_row_at_the_cap_and_refuses_one_byte_over(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.chat_utils import UNKNOWN_ROW_FIELDS_KEY
-    from kiro_crew.dashboard.slot_persistence.message_entries import MAX_UNKNOWN_ROW_FIELDS_BYTES
+    from aj_crew.dashboard.chat_utils import UNKNOWN_ROW_FIELDS_KEY
+    from aj_crew.dashboard.slot_persistence.message_entries import MAX_UNKNOWN_ROW_FIELDS_BYTES
 
     fill = MAX_UNKNOWN_ROW_FIELDS_BYTES - len(json.dumps({"blob": ""}))
     _state, _path, restored = _restored_with_fields(
@@ -246,7 +246,7 @@ def test_the_cap_keeps_a_row_at_the_cap_and_refuses_one_byte_over(tmp_path, monk
 
 
 def _kept_fields(slot):
-    from kiro_crew.dashboard.chat_utils import UNKNOWN_ROW_FIELDS_KEY
+    from aj_crew.dashboard.chat_utils import UNKNOWN_ROW_FIELDS_KEY
 
     return [m.get(UNKNOWN_ROW_FIELDS_KEY) for m in slot.messages]
 
@@ -254,7 +254,7 @@ def _kept_fields(slot):
 def _assert_within_the_slot_budget_oldest_dropped_first(kept):
     assert kept[-1] is not None, "the newest row lost its field"
     assert kept[0] is None, "the oldest row still keeps its field: the slot has no budget"
-    from kiro_crew.dashboard.slot_persistence.message_entries import (
+    from aj_crew.dashboard.slot_persistence.message_entries import (
         MAX_UNKNOWN_ROW_FIELDS_SLOT_BYTES,
     )
 
@@ -273,7 +273,7 @@ def test_a_restored_slot_keeps_its_budget_of_newer_fields_and_drops_the_oldest(
     pairs = [p for i in range(200) for p in (("user", f"q{i}"), ("assistant", f"a{i}"))]
     state, path = _saved_slot(tmp_path, monkeypatch, *pairs)
     _edit_rows(path, lambda rows: [row.update(blob="x" * 8000) for row in rows])
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.chat_persistence"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.chat_persistence"):
         restored = _restore(state)
     _assert_within_the_slot_budget_oldest_dropped_first(_kept_fields(restored))
     assert "older row(s)" in caplog.text, "the dropped rows were not logged"
@@ -287,9 +287,9 @@ def test_a_restored_slot_keeps_its_budget_of_newer_fields_and_drops_the_oldest(
 def test_a_channel_window_rebuild_past_the_slot_budget_drops_the_oldest_rows_fields(
     tmp_path, monkeypatch
 ):
-    from kiro_crew.dashboard.channel_slots import _rebuild_window
+    from aj_crew.dashboard.channel_slots import _rebuild_window
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("slack_2.2", linked_session_key="slack:2.2")
     rows = [
@@ -305,8 +305,8 @@ async def _reconciled_after_a_late_writer(tmp_path, monkeypatch):
 
     Returns the window rows as restored and the slot after the reconcile.
     """
-    from kiro_crew.dashboard.chat_handlers import _reconcile_slot_window
-    from kiro_crew.dashboard.chat_utils import UNKNOWN_ROW_FIELDS_KEY
+    from aj_crew.dashboard.chat_handlers import _reconcile_slot_window
+    from aj_crew.dashboard.chat_utils import UNKNOWN_ROW_FIELDS_KEY
 
     pairs = [p for i in range(50) for p in (("user", f"q{i}"), ("assistant", f"a{i}"))]
     state, path = _saved_slot(tmp_path, monkeypatch, *pairs)
@@ -366,12 +366,12 @@ def test_a_window_rebuild_does_not_count_the_rows_it_replaced(tmp_path, monkeypa
     802,400 bytes, under the 1 MiB budget, all keep them, and the next save writes
     every one of them back.
     """
-    from kiro_crew.dashboard.channel_slots import _rebuild_window, refresh_channel_window
-    from kiro_crew.dashboard.slot_persistence.message_entries import (
+    from aj_crew.dashboard.channel_slots import _rebuild_window, refresh_channel_window
+    from aj_crew.dashboard.slot_persistence.message_entries import (
         MAX_UNKNOWN_ROW_FIELDS_SLOT_BYTES,
     )
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("slack_3.3", linked_session_key="slack:3.3")
 

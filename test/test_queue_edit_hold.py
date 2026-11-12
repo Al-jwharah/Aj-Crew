@@ -18,9 +18,9 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import queue_edit_hold
-from kiro_crew.dashboard.chat import api_chat_slot_queue_edit
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard import queue_edit_hold
+from aj_crew.dashboard.chat import api_chat_slot_queue_edit
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 def _app(state) -> web.Application:
@@ -35,7 +35,7 @@ def _app(state) -> web.Application:
 
 
 def _idle_state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     slot = state.get_or_create_slot("chat-1")
@@ -48,7 +48,7 @@ def _user_rows(slot) -> list[str]:
 
 
 def _patched_turn_start():
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     return (
         patch.object(chat_runner, "spawn_guarded_turn", return_value=MagicMock()),
@@ -74,7 +74,7 @@ async def _settle_background(state, slot) -> None:
 
 @pytest.mark.asyncio
 async def test_the_drain_leaves_a_held_entry_queued(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     state, slot, qid = _idle_state(tmp_path, monkeypatch)
     slot._queue[0][queue_edit_hold.EDIT_HOLD_KEY] = queue_edit_hold._clock() + 60.0
@@ -90,7 +90,7 @@ async def test_the_drain_leaves_a_held_entry_queued(tmp_path, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_a_held_responsive_priority_entry_is_not_promoted(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat_runner, responsive_chat
+    from aj_crew.dashboard import chat_runner, responsive_chat
 
     state, slot, qid = _idle_state(tmp_path, monkeypatch)
     slot._queue[0][responsive_chat.RESPONSIVE_KEY] = True
@@ -108,9 +108,9 @@ async def test_a_held_responsive_priority_entry_is_not_promoted(tmp_path, monkey
 
 @pytest.mark.asyncio
 async def test_a_held_priority_entry_does_not_park_a_system_entry(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat_runner, responsive_chat
-    from kiro_crew.dashboard.chat_utils import CRON_NOTIFICATION_KIND
-    from kiro_crew.dashboard.state import CRON_NOTIFY_PREFIX
+    from aj_crew.dashboard import chat_runner, responsive_chat
+    from aj_crew.dashboard.chat_utils import CRON_NOTIFICATION_KIND
+    from aj_crew.dashboard.state import CRON_NOTIFY_PREFIX
 
     state, slot, qid = _idle_state(tmp_path, monkeypatch)
     slot._queue[0][responsive_chat.RESPONSIVE_KEY] = True
@@ -135,7 +135,7 @@ async def test_a_held_priority_entry_does_not_park_a_system_entry(tmp_path, monk
 async def test_a_drain_picked_id_does_not_pass_the_hold(tmp_path, monkeypatch):
     # A queued arrival or a restored card names its id without the person
     # choosing Run now; the hold still keeps it queued.
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     state, slot, qid = _idle_state(tmp_path, monkeypatch)
     slot._queue[0][queue_edit_hold.EDIT_HOLD_KEY] = queue_edit_hold._clock() + 60.0
@@ -154,7 +154,7 @@ async def test_a_drain_picked_id_does_not_pass_the_hold(tmp_path, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_run_now_on_another_card_passes_the_hold(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     state, slot, qid = _idle_state(tmp_path, monkeypatch)
     slot._queue[0][queue_edit_hold.EDIT_HOLD_KEY] = queue_edit_hold._clock() + 60.0
@@ -180,7 +180,7 @@ async def test_a_composer_send_queues_behind_a_held_entry(tmp_path, monkeypatch)
     async def fake_run_chat(st, sl, msg, **_kw):
         direct.append(msg)
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
     state, slot, qid = _idle_state(tmp_path, monkeypatch)
     slot._queue[0][queue_edit_hold.EDIT_HOLD_KEY] = queue_edit_hold._clock() + 60.0
 
@@ -206,8 +206,8 @@ async def test_a_composer_marked_send_waits_behind_the_card_being_edited(
     """A composer send carries the mark that lets it pass the sub-agent hold. An
     open editor's hold is not that hold: the marked send stays queued behind the
     edited card, whether the turn-end drain picks it or a card names it."""
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.dashboard.chat_utils import COMPOSER_SEND_META
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.dashboard.chat_utils import COMPOSER_SEND_META
 
     state, slot, qid = _idle_state(tmp_path, monkeypatch)
     slot._queue[0][queue_edit_hold.EDIT_HOLD_KEY] = queue_edit_hold._clock() + 60.0
@@ -233,10 +233,10 @@ async def test_a_composer_send_an_editor_held_keeps_its_mark_for_after_the_hold(
 
     from chat_test_helpers import _make_app
 
-    from kiro_crew.dashboard.chat_utils import COMPOSER_SEND_META, releases_past_subagent_hold
+    from aj_crew.dashboard.chat_utils import COMPOSER_SEND_META, releases_past_subagent_hold
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", AsyncMock())
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", AsyncMock())
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     subs = MagicMock(
         running_agents_for=MagicMock(return_value=[{"id": "live", "stalled": False}]),
         queued_count_for_async=AsyncMock(return_value=0),
@@ -268,7 +268,7 @@ async def test_a_composer_send_an_editor_held_keeps_its_mark_for_after_the_hold(
 async def test_saving_the_edit_sends_the_edited_words(tmp_path, monkeypatch):
     state, slot, qid = _idle_state(tmp_path, monkeypatch)
     spawn, run = _patched_turn_start()
-    with patch("kiro_crew.sel.sel") as mock_sel, spawn as spawned, run:
+    with patch("aj_crew.sel.sel") as mock_sel, spawn as spawned, run:
         mock_sel.return_value = MagicMock()
         async with TestClient(TestServer(_app(state))) as client:
             resp = await client.post(
@@ -276,7 +276,7 @@ async def test_saving_the_edit_sends_the_edited_words(tmp_path, monkeypatch):
             )
             assert resp.status == 200
             # The turn ends while the editor is open: nothing is sent.
-            from kiro_crew.dashboard import chat_runner
+            from aj_crew.dashboard import chat_runner
 
             assert await chat_runner._start_next_queued_turn(state, slot) is False
             resp = await client.patch(
@@ -344,14 +344,14 @@ async def test_a_release_on_a_slot_held_for_sign_in_starts_nothing(tmp_path, mon
 
 @pytest.mark.asyncio
 async def test_cancelling_the_held_entry_sends_the_one_behind_it(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.chat import api_chat_slot_queue_cancel
+    from aj_crew.dashboard.chat import api_chat_slot_queue_cancel
 
     state, slot, qid = _idle_state(tmp_path, monkeypatch)
     slot.queue_append("next words", directive_user_origin=True)
     app = _app(state)
     app.router.add_delete("/api/chat/slots/{slot}/queue/{queue_id}", api_chat_slot_queue_cancel)
     spawn, run = _patched_turn_start()
-    with patch("kiro_crew.sel.sel") as mock_sel, spawn, run:
+    with patch("aj_crew.sel.sel") as mock_sel, spawn, run:
         mock_sel.return_value = MagicMock()
         async with TestClient(TestServer(app)) as client:
             await client.post(f"/api/chat/slots/chat-1/queue/{qid}/editing", json={"editing": True})
@@ -373,7 +373,7 @@ def test_a_hold_past_its_deadline_no_longer_holds(monkeypatch):
 
 
 def test_the_dashboard_serves_the_hold_route():
-    from kiro_crew.dashboard.routes import chat as chat_routes
+    from aj_crew.dashboard.routes import chat as chat_routes
 
     app = web.Application()
     chat_routes.register(app)
@@ -393,7 +393,7 @@ async def test_a_turn_ending_inside_the_release_grace_sends_nothing(tmp_path, mo
     # Moving from one card's editor to another's: the first editor's blur
     # releases its card before the second card's click holds it. A turn that
     # ends in between must still find the queue held.
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     grace = queue_edit_hold.EDIT_HOLD_SECONDS
     monkeypatch.setattr(

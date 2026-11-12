@@ -14,9 +14,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.acp import skill_projection
-from kiro_crew.acp.harness.base import SpawnPlan
-from kiro_crew.acp.runtime import AcpRuntime, AcpRuntimeError
+from aj_crew.acp import skill_projection
+from aj_crew.acp.harness.base import SpawnPlan
+from aj_crew.acp.runtime import AcpRuntime, AcpRuntimeError
 
 _STAND_IN = "import time; time.sleep(60)"
 
@@ -31,14 +31,12 @@ async def _spawn_until_handshake(
         prepared.append(Path(work_dir))
         return None
 
-    rt = AcpRuntime(
-        work_dir=tmp_path / "wd", agent="kirocrew", sandbox_mode="off", **runtime_kwargs
-    )
+    rt = AcpRuntime(work_dir=tmp_path / "wd", agent="ajcrew", sandbox_mode="off", **runtime_kwargs)
     rt._KILL_TERM_TIMEOUT = 1.0
     rt._KILL_REAP_TIMEOUT = 1.0
 
     async def _plan() -> SpawnPlan:
-        return SpawnPlan(argv=[sys.executable, "-c", _STAND_IN, "--agent", "kirocrew"])
+        return SpawnPlan(argv=[sys.executable, "-c", _STAND_IN, "--agent", "ajcrew"])
 
     async def _failing_handshake(_caps: Any) -> None:
         raise AcpRuntimeError("initialize timed out")

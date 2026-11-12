@@ -21,12 +21,12 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.agent as agent_mod
-import kiro_crew.config.paths as paths_mod
-from kiro_crew.acp import kas_skill_scope
-from kiro_crew.acp.harness.kas import KasHarness
-from kiro_crew.agent_discovery import session_skill_globs
-from kiro_crew.agent_sdk.provider_identity import PROVIDER_ACP
+import aj_crew.agent as agent_mod
+import aj_crew.config.paths as paths_mod
+from aj_crew.acp import kas_skill_scope
+from aj_crew.acp.harness.kas import KasHarness
+from aj_crew.agent_discovery import session_skill_globs
+from aj_crew.agent_sdk.provider_identity import PROVIDER_ACP
 
 
 def _skill(root: Path, dirname: str, name: str | None = None) -> Path:
@@ -173,11 +173,11 @@ async def test_an_agent_that_may_not_inherit_loads_no_skill(home):
 @pytest.mark.asyncio
 async def test_the_whole_catalog_worker_is_not_narrowed(home):
     kiro, checkout, _package = home
-    _agent(kiro, "kirocrew-worker", {"tools": ["*"]})
+    _agent(kiro, "ajcrew-worker", {"tools": ["*"]})
 
-    entry = await _entry("kirocrew-worker", checkout)
+    entry = await _entry("ajcrew-worker", checkout)
 
-    assert _v2_skills("kirocrew-worker", checkout) is None
+    assert _v2_skills("ajcrew-worker", checkout) is None
     assert "permissions" not in entry
 
 
@@ -253,7 +253,7 @@ async def test_a_glob_named_skill_outside_a_wide_scope_never_becomes_a_pattern(h
 
 @pytest.mark.asyncio
 async def test_every_skill_file_is_read_through_the_sensitive_path_fence(home, monkeypatch):
-    import kiro_crew.hooks as hooks
+    import aj_crew.hooks as hooks
 
     kiro, checkout, package = home
     path = _skill(package, "alpha")
@@ -273,7 +273,7 @@ async def test_every_skill_file_is_read_through_the_sensitive_path_fence(home, m
 
 
 def test_a_refused_skill_file_yields_no_name(tmp_path, monkeypatch):
-    import kiro_crew.hooks as hooks
+    import aj_crew.hooks as hooks
 
     path = _skill(tmp_path, "secret")
     monkeypatch.setattr(hooks, "safe_read_prefix", lambda _raw, _n: None)
@@ -292,7 +292,7 @@ def test_a_skill_saved_with_a_bom_is_named_by_its_frontmatter(tmp_path, bom):
 
 @pytest.mark.asyncio
 async def test_a_skill_scope_pin_left_on_the_key_does_not_set_the_new_sessions_scope(home):
-    from kiro_crew.skill_scope_pin import pin_session_skill_spec
+    from aj_crew.skill_scope_pin import pin_session_skill_spec
 
     kiro, checkout, package = home
     alpha = _skill(package, "alpha")
@@ -321,7 +321,7 @@ async def test_a_skill_scope_pin_left_on_the_key_does_not_set_the_new_sessions_s
 async def test_the_skill_scope_denies_are_recorded_in_the_security_event_log(home, monkeypatch):
     import types
 
-    from kiro_crew.acp import kas_agents
+    from aj_crew.acp import kas_agents
 
     kiro, checkout, package = home
     path = _skill(package, "alpha")
@@ -341,7 +341,7 @@ async def test_the_skill_scope_denies_are_recorded_in_the_security_event_log(hom
 
 
 def test_a_skill_scope_record_names_what_it_takes_away():
-    from kiro_crew.acp.kas_agents import _skill_scope_summary
+    from aj_crew.acp.kas_agents import _skill_scope_summary
 
     assert _skill_scope_summary(({"capability": "skill", "effect": "deny"},)) == (
         "every skill denied"

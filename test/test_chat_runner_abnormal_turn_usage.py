@@ -31,11 +31,11 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state, drain_background_tasks
 
-from kiro_crew.acp.types import STOP_REASON_END_TURN, TurnUsage
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_runner import _run_chat
-from kiro_crew.dashboard.handlers import usage as usage_mod
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.acp.types import STOP_REASON_END_TURN, TurnUsage
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_runner import _run_chat
+from aj_crew.dashboard.handlers import usage as usage_mod
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class _FakeSlot:
@@ -71,7 +71,7 @@ def _stub_accessors(monkeypatch, *, usage):
     monkeypatch.setattr(chat_runner, "provider_last_turn_usage", lambda c, *, since=None: usage)
     monkeypatch.setattr(chat_runner, "read_turn_model", lambda c: "served-model")
     monkeypatch.setattr(chat_runner, "read_context_tokens", lambda c: (1234, 200000))
-    monkeypatch.setattr(chat_runner, "read_effective_agent", lambda c: "kirocrew")
+    monkeypatch.setattr(chat_runner, "read_effective_agent", lambda c: "ajcrew")
     monkeypatch.setattr(chat_runner, "telemetry_channel_of", lambda sk: "dashboard")
 
     class _Caps:
@@ -100,7 +100,7 @@ async def test_records_credits_for_a_turn_cut_before_event_complete(_isolated_sh
     assert row["duration_ms"] == 21_600_300
     assert row["model"] == "served-model"
     assert row["provider"] == "acp"
-    assert row["agent"] == "kirocrew"
+    assert row["agent"] == "ajcrew"
     assert row["stop_reason"] == chat_runner.STOP_REASON_CANCELLED
     assert row.get("transcript") == "taskrunner:task-1:chat:abc"
 
@@ -224,7 +224,7 @@ class TestCancelDuringCompletePersist:
         # then sees a changed stats object -- a regressed guard WOULD bill it.
         client.last_prompt_stats = _RealStats(credits=0.0)
 
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         async def _complete(msg):
             # Mid-turn the runtime installs fresh per-turn stats; model that so
@@ -294,7 +294,7 @@ class TestCancelDuringCompletePersist:
         state, slot, client = _drive_state_and_slot(tmp_path, name="shield-persist-slot")
         client.last_prompt_stats = _RealStats(credits=0.0)
 
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         async def _complete(msg):
             client.last_prompt_stats = _RealStats(credits=7.0)
@@ -390,7 +390,7 @@ class TestCancelDuringCompletePersist:
         prior = _RealStats(credits=9.0)
         client.last_prompt_stats = prior
 
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         async def _dies_before_complete(msg):
             # Fresh stats are NOT installed (the dispatch dies first); the prior
@@ -424,7 +424,7 @@ async def _let_the_turn_clock_advance() -> None:
     """
     import time
 
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.testing.wait import async_wait_until
 
     start = time.monotonic()
     await async_wait_until(lambda: time.monotonic() - start >= 0.005)
@@ -439,8 +439,8 @@ class TestStoppedTurnFooter:
 
     @staticmethod
     def _stop_mid_stream(slot, client, credits, *, accumulated=None):
-        from kiro_crew import llm_helpers
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew import llm_helpers
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         async def _stream(msg):
             client.last_prompt_stats = stats = _RealStats(credits=credits)
@@ -552,7 +552,7 @@ class TestStoppedTurnFooter:
         # A tab close / idle sweep / shutdown / turn-ceiling cancel ("error:
         # cancelled") leaves a reply the user read, just like a Stop press, so
         # it gets the same footer beside its usage row.
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", tmp_path)
         monkeypatch.setattr(chat_runner, "read_turn_model", lambda c: "served-model")
@@ -619,9 +619,9 @@ class TestErrorEndTurnFooter:
         # land on the stream. One that does answer ends the prompt as
         # ``cancelled``: the completion bills the turn, and the cancel lands on an
         # await after that and before the completion's own footer attach.
-        from kiro_crew.acp.types import STOP_REASON_CANCELLED
-        from kiro_crew.dashboard import turn_dispatch as td
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_CANCELLED
+        from aj_crew.dashboard import turn_dispatch as td
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", tmp_path)
         monkeypatch.setattr(chat_runner, "read_turn_model", lambda c: "served-model")
@@ -740,8 +740,8 @@ class TestErrorEndTurnFooter:
         # The periodic flush writes only a dirty slot, and it can run after the
         # reply row was saved and before the footer goes on it in place: the
         # footer marks the slot dirty itself, or it stays off disk.
-        from kiro_crew.acp.session_handle import AcpRequestTimeout
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.session_handle import AcpRequestTimeout
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", tmp_path)
         monkeypatch.setattr(chat_runner, "read_turn_model", lambda c: "served-model")
@@ -783,9 +783,9 @@ class TestErrorEndTurnFooter:
         # At the window's cap every append front-trims a row, so the index the
         # turn started at stops naming its first row: the footer finds the reply
         # by the row the turn started after.
-        from kiro_crew.acp.session_handle import AcpRequestTimeout
-        from kiro_crew.dashboard import state as state_mod
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.session_handle import AcpRequestTimeout
+        from aj_crew.dashboard import state as state_mod
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", tmp_path)
         monkeypatch.setattr(chat_runner, "read_turn_model", lambda c: "served-model")
@@ -817,7 +817,7 @@ class TestErrorEndTurnFooter:
         # While the gateway shuts down, the turn's teardown skips its own save, so
         # the helper's save is the last write the reply gets: a footer put on
         # after it is gone when the gateway starts again.
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", tmp_path)
         monkeypatch.setattr(chat_runner, "read_turn_model", lambda c: "served-model")
@@ -858,7 +858,7 @@ class TestErrorEndTurnFooter:
     ) -> None:
         # The reply's text was already a row (flushed at the tool call), so the
         # cut adds no text: the footer alone is new, and it must still be saved.
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, EVENT_TOOL_CALL, LLMEvent
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, EVENT_TOOL_CALL, LLMEvent
 
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", tmp_path)
         monkeypatch.setattr(chat_runner, "read_turn_model", lambda c: "served-model")
@@ -904,7 +904,7 @@ class TestErrorEndTurnFooter:
         # error or a cancel landing after that reaches the seam with the text
         # still there, and with the completion's figures captured whether or not
         # it billed.
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", tmp_path)
         monkeypatch.setattr(chat_runner, "read_turn_model", lambda c: "served-model")
@@ -968,7 +968,7 @@ class TestErrorEndTurnFooter:
         # The completion reported no billing, so it wrote no row; the provider
         # still holds the turn's credits. The seam bills the turn once, under the
         # arm's own stop reason, and the footer shows the figure that row records.
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", tmp_path)
         monkeypatch.setattr(chat_runner, "read_turn_model", lambda c: "served-model")
@@ -1012,7 +1012,7 @@ class TestErrorEndTurnFooter:
         # The gateway is shutting down and a cancel lands on the helper's save:
         # the stall arm that called it still posts its card and queues its
         # recovery, and the turn's usage row is still written.
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", tmp_path)
         monkeypatch.setattr(chat_runner, "read_turn_model", lambda c: "served-model")
@@ -1060,7 +1060,7 @@ class TestErrorEndTurnFooter:
         # The recovery is queued and takes the slot over without a ``chat_done``,
         # so no refresh reaches the client until it finishes: the footer goes out
         # on its own patch, while the recovery has not yet started.
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         monkeypatch.setattr(usage_mod, "_TOKEN_USAGE_DIR", tmp_path)
         monkeypatch.setattr(chat_runner, "read_turn_model", lambda c: "served-model")
@@ -1121,8 +1121,8 @@ class TestErrorEndTurnFooter:
     ) -> None:
         # The text was saved at the tool call, and the failed compaction's notice
         # is the turn's last assistant-role row: the footer belongs on the text.
-        from kiro_crew.acp.types import EVENT_COMPACTION_STATUS
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.types import EVENT_COMPACTION_STATUS
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -1158,8 +1158,8 @@ class TestErrorEndTurnFooter:
 
 
 def test_the_last_reply_row_passes_over_a_system_notice() -> None:
-    from kiro_crew.dashboard.chat_turn.file_changes import _note_reply_row
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.chat_turn.file_changes import _note_reply_row
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("last-reply-row")
     slot.append("assistant", "earlier turn", "msg msg-a", broadcast=False)
@@ -1179,8 +1179,8 @@ def test_the_last_reply_row_passes_over_a_system_notice() -> None:
 def test_the_last_reply_row_is_one_the_runner_recorded() -> None:
     # A workflow completion lands in the window as an assistant row another
     # writer appended mid-turn: it is newer than the reply, and not the reply.
-    from kiro_crew.dashboard.chat_turn.file_changes import _note_reply_row
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.chat_turn.file_changes import _note_reply_row
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("recorded-reply-row")
     slot.append("user", "hello", "msg msg-u", broadcast=False)
@@ -1221,8 +1221,8 @@ class TestAbnormalEndFooter:
     async def test_a_terminal_error_after_a_chunk_keeps_the_footer(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.client import AcpError
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         def _stream(client):
             async def _s(msg):
@@ -1246,8 +1246,8 @@ class TestAbnormalEndFooter:
     async def test_a_post_token_transient_keeps_the_footer_on_the_partial(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.client import AcpError
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         calls = 0
 
@@ -1286,7 +1286,7 @@ class TestAbnormalEndFooter:
     async def test_a_stall_recovery_saves_the_streamed_text_with_its_footer(
         self, tmp_path, monkeypatch, stop_reason
     ) -> None:
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         calls = 0
 
@@ -1321,8 +1321,8 @@ class TestAbnormalEndFooter:
     async def test_a_prompt_timeout_saves_the_streamed_text_with_its_footer(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.acp.session_handle import AcpRequestTimeout
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.session_handle import AcpRequestTimeout
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         def _stream(client):
             async def _s(msg):
@@ -1351,7 +1351,7 @@ class TestAbnormalEndFooter:
         # The turn ceiling's shape: the agent acknowledges the stop, so
         # EVENT_COMPLETE writes the usage row, then the task cancel lands on
         # an await before the end-of-turn attach.
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         def _stream(client):
             async def _s(msg):
@@ -1382,7 +1382,7 @@ class TestAbnormalEndFooter:
     async def test_a_cancel_after_the_end_of_turn_flush_saves_the_reply_once(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         def _stream(client):
             async def _s(msg):
@@ -1426,7 +1426,7 @@ class TestAbnormalEndFooter:
     ) -> None:
         # A workflow result lands in the window after the reply, then the turn
         # is cancelled: the footer stays on this turn's reply, never on that row.
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         def _stream(client):
             async def _s(msg):
@@ -1467,7 +1467,7 @@ class TestAbnormalEndFooter:
     ) -> None:
         # The end-of-turn attach uses the same narrowed scan: a workflow result
         # that lands just before it does not take the turn's footer.
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         def _stream(client):
             async def _s(msg):
@@ -1501,7 +1501,7 @@ class TestAbnormalEndFooter:
     async def test_a_recovery_arm_that_then_fails_saves_the_reply_once(
         self, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         def _stream(client):
             async def _s(msg):

@@ -24,7 +24,7 @@ const message = (i: number): Raw => ({
 
 const CHANNEL: Raw = {
   id: 'ch1', topic: 'Gamma rollout',
-  members: { a1: { id: 'a1', role: 'Researcher', agent_name: 'kirocrew', state: 'listening', listen_mode: 'mention', approval_policy: 'writes' } },
+  members: { a1: { id: 'a1', role: 'Researcher', agent_name: 'ajcrew', state: 'listening', listen_mode: 'mention', approval_policy: 'writes' } },
   messages: [message(1), message(2)],
 }
 
@@ -33,8 +33,8 @@ beforeEach(() => {
   vi.mocked(api).channelsList = vi.fn().mockResolvedValue({ channels: [CHANNEL] })
   vi.mocked(api).channelGet = vi.fn().mockResolvedValue(CHANNEL)
   vi.mocked(api).channelPresets = vi.fn().mockResolvedValue({})
-  vi.mocked(api).kirocrewAgents = vi.fn().mockResolvedValue({ agents: [], default_agent: 'kirocrew' })
-  vi.mocked(api).agentCatalog = vi.fn().mockResolvedValue({ agents: [], default_agent: 'kirocrew' })
+  vi.mocked(api).ajcrewAgents = vi.fn().mockResolvedValue({ agents: [], default_agent: 'ajcrew' })
+  vi.mocked(api).agentCatalog = vi.fn().mockResolvedValue({ agents: [], default_agent: 'ajcrew' })
 })
 
 describe('ChannelPage — following new messages', () => {
@@ -46,7 +46,7 @@ describe('ChannelPage — following new messages', () => {
     Object.defineProperty(list, 'scrollHeight', { value: 4321, configurable: true })
 
     act(() => {
-      window.dispatchEvent(new CustomEvent('kirocrew-channel', {
+      window.dispatchEvent(new CustomEvent('ajcrew-channel', {
         detail: { type: 'channel_message', data: { channel_id: 'ch1', message: message(3) } },
       }))
     })

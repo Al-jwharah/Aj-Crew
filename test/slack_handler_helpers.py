@@ -11,9 +11,9 @@ import time
 
 import pytest
 
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack.handler import _pending_approvals, _thread_agents, _trusted_sessions
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack.handler import _pending_approvals, _thread_agents, _trusted_sessions
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.fixture(autouse=True)

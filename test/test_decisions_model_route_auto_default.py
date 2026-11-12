@@ -38,14 +38,14 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from test_decisions_strip_rides_message import _quiet_sel, _runner_state, _settle, _slot
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.config.sections import DECISION_PROVIDER_ENDPOINT_DEFAULT, DecisionsConfig
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.decisions import gate as gate_mod
-from kiro_crew.decisions import log as log_mod
-from kiro_crew.decisions import outcomes
-from kiro_crew.decisions.types import Answer
-from kiro_crew.providers.base import LLMEvent
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.config.sections import DECISION_PROVIDER_ENDPOINT_DEFAULT, DecisionsConfig
+from aj_crew.dashboard import chat_runner
+from aj_crew.decisions import gate as gate_mod
+from aj_crew.decisions import log as log_mod
+from aj_crew.decisions import outcomes
+from aj_crew.decisions.types import Answer
+from aj_crew.providers.base import LLMEvent
 
 ADVERTISED = ["model-a", "model-b", "model-c"]
 
@@ -71,7 +71,7 @@ def keystone(tmp_path, monkeypatch):
     depend on tearing consent down again.
     """
     path = tmp_path / "decisions_consent.json"
-    monkeypatch.setattr("kiro_crew.config.loader.decisions_consent_path", lambda: path)
+    monkeypatch.setattr("aj_crew.config.loader.decisions_consent_path", lambda: path)
     monkeypatch.setattr(log_mod, "log_dir", lambda: tmp_path / "decisions")
     monkeypatch.setattr(
         gate_mod,
@@ -97,7 +97,7 @@ def keystone(tmp_path, monkeypatch):
 @pytest.fixture
 def answers(monkeypatch):
     """Install an oracle answering a fixed tier; returns a setter."""
-    import kiro_crew.decisions.impl_systemone as impl_mod
+    import aj_crew.decisions.impl_systemone as impl_mod
 
     state = {"tier": "complex"}
 

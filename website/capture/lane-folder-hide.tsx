@@ -47,7 +47,7 @@ const NESTED = 'folder-nested'
 // alone is overridden on mount. Both keys are pinned: the colour theme otherwise
 // drifts with whatever the machine's gateway last stored.
 localStorage.setItem('mc-theme', light ? 'light' : 'dark')
-localStorage.setItem('mc-color-theme', 'kiro')
+localStorage.setItem('mc-color-theme', 'aj')
 // The lane opens directly. The two board renderers are reached through the columns
 // switch instead, because columns preempt the union's choice whenever any exist: `board`
 // draws folder blocks per column, `board-flat` draws the column's rows with no blocks.
@@ -81,23 +81,23 @@ const at = (msAgo: number) => new Date(now - msAgo).toISOString()
  */
 const SLOTS = [
   {
-    key: 'k-hidden-conductor', title: 'Hidden Conductor', agent: 'kirocrew',
+    key: 'k-hidden-conductor', title: 'Hidden Conductor', agent: 'ajcrew',
     running: false, messages: 6, last_ts: at(40_000), folder_id: HIDDEN,
     last_message: 'Both workers reported in.',
   },
   {
-    key: 'k-shown-child', title: 'Shown Child', agent: 'kirocrew-worker',
+    key: 'k-shown-child', title: 'Shown Child', agent: 'ajcrew-worker',
     running: false, messages: 4, last_ts: at(120_000), folder_id: SHOWN,
     parent: { slot: 'k-hidden-conductor', key: 'k-hidden-conductor' },
     last_message: 'Pin covers the lane it names.',
   },
   {
-    key: 'k-shown-plain', title: 'Shown Plain', agent: 'kirocrew',
+    key: 'k-shown-plain', title: 'Shown Plain', agent: 'ajcrew',
     running: false, messages: 9, last_ts: at(300_000), folder_id: SHOWN,
     last_message: 'Nothing owed here.',
   },
   {
-    key: 'k-nested', title: 'Nested Session', agent: 'kirocrew',
+    key: 'k-nested', title: 'Nested Session', agent: 'ajcrew',
     running: false, messages: 3, last_ts: at(420_000), folder_id: NESTED,
     last_message: 'One level down from a visible folder.',
   },
@@ -122,10 +122,10 @@ function Harness() {
         unreadSlots={[]}
         history={[]}
         historyHasMore={false}
-        defaultAgent="kirocrew"
+        defaultAgent="ajcrew"
         installedAgents={[
-          { name: 'kirocrew', source: 'builtin' },
-          { name: 'kirocrew-worker', source: 'builtin' },
+          { name: 'ajcrew', source: 'builtin' },
+          { name: 'ajcrew-worker', source: 'builtin' },
         ]}
       />
     </div>

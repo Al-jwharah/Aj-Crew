@@ -63,7 +63,7 @@ vi.mock('../api/client', async (importOriginal) => {
         ].map(k => [k, vi.fn().mockResolvedValue({})]),
       ),
       chatFolders: vi.fn().mockResolvedValue([]),
-      kirocrewConfig: vi.fn().mockImplementation(() => Promise.resolve(mocks.config ?? {})),
+      ajcrewConfig: vi.fn().mockImplementation(() => Promise.resolve(mocks.config ?? {})),
       sessionsSearch: vi.fn().mockResolvedValue({ sessions: [] }),
       setPinnedOrder: vi.fn(async (keys: string[]) => ({ ok: true, order: keys })),
     },
@@ -131,7 +131,7 @@ function renderSidebar(slots: ChatSlot[]) {
   })
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   // The session sort is read from the gateway config (dashboard.session_sort).
-  if (mocks.config !== undefined) qc.setQueryData(['kirocrewConfig'], mocks.config)
+  if (mocks.config !== undefined) qc.setQueryData(['ajcrewConfig'], mocks.config)
   const tree = (s: ChatSlot[]) => (
     <QueryClientProvider client={qc}>
       <Provider store={store}>

@@ -41,7 +41,7 @@ describe('packSummariesFrom', () => {
           {
             id: BUILTIN_PACK_ID,
             name: 'Kiro',
-            author: 'Kiro Crew',
+            author: 'Aj Crew',
             description: 'The default companion.',
             type: 'builtin',
             format: 'svg',
@@ -64,7 +64,7 @@ describe('packSummariesFrom', () => {
       {
         id: BUILTIN_PACK_ID,
         name: 'Kiro',
-        author: 'Kiro Crew',
+        author: 'Aj Crew',
         type: 'builtin',
         format: 'svg',
       },
@@ -174,7 +174,7 @@ describe('bundleFromText', () => {
     // moves and this constant does not, every import breaks again exactly as it
     // did before, and silently.
     const transfer = readFileSync(
-      resolve(__dirname, '../../../src/kiro_crew/appearance_packs/transfer.py'),
+      resolve(__dirname, '../../../src/aj_crew/appearance_packs/transfer.py'),
       'utf8',
     )
     expect(transfer).toContain(`"kind": "${PACK_BUNDLE_KIND}"`)

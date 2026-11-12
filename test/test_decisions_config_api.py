@@ -22,15 +22,15 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config.sections import (
+from aj_crew.config.sections import (
     DECISION_BUCKET_MAX,
     DECISION_BUCKET_MIN,
     DECISION_MODEL_ROUTE_TIERS,
 )
 
 _BASE_CONFIG = {
-    "agents": {"kirocrew": {"kiro_agent": "kirocrew"}},
-    "default_agent": "kirocrew",
+    "agents": {"ajcrew": {"kiro_agent": "ajcrew"}},
+    "default_agent": "ajcrew",
 }
 
 
@@ -41,11 +41,11 @@ def _app() -> web.Application:
     ``as_owner`` every case below would land on the gate instead of on the
     bucket/provider contract it names.
     """
-    from kiro_crew.dashboard.handlers import api_kirocrew_config, api_kirocrew_config_patch
+    from aj_crew.dashboard.handlers import api_ajcrew_config, api_ajcrew_config_patch
 
     app = web.Application()
-    app.router.add_patch("/api/config/kirocrew", api_kirocrew_config_patch)
-    app.router.add_get("/api/config/kirocrew", api_kirocrew_config)
+    app.router.add_patch("/api/config/ajcrew", api_ajcrew_config_patch)
+    app.router.add_get("/api/config/ajcrew", api_ajcrew_config)
     return as_owner(app)
 
 
@@ -54,12 +54,12 @@ def config_file(tmp_path, monkeypatch):
     """A temp ``config.json`` both handlers read and the PATCH writes."""
     path = tmp_path / "config.json"
     path.write_text(json.dumps(_BASE_CONFIG), encoding="utf-8")
-    monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: path)
+    monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: path)
     return path
 
 
 async def _patch(client, path, value):
-    return await client.patch("/api/config/kirocrew", json={"path": path, "value": value})
+    return await client.patch("/api/config/ajcrew", json={"path": path, "value": value})
 
 
 def _stored(path):
@@ -82,12 +82,12 @@ class TestPatchBucket:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("value", [DECISION_BUCKET_MIN, 1, 37, DECISION_BUCKET_MAX])
     async def test_an_in_range_bucket_is_stored(self, config_file, value):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         async with TestClient(TestServer(_app())) as client:
             assert (await _patch(client, "decisions.bucket", value)).status == 200
         assert _stored(config_file)["bucket"] == value
-        assert KiroCrewConfig.load().decisions.bucket == value
+        assert AjCrewConfig.load().decisions.bucket == value
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("value", [-1, DECISION_BUCKET_MAX + 1, 1000])
@@ -141,14 +141,14 @@ class TestModelRouteIsWritable:
     ):
         """The validator's provider read must not run on the loop thread.
 
-        ``_model_rejected_reason`` otherwise calls ``KiroCrewConfig.load()`` from the
+        ``_model_rejected_reason`` otherwise calls ``AjCrewConfig.load()`` from the
         synchronous hook, so the handler resolves the provider with
         ``asyncio.to_thread``. Also covers the four ``agent.role_models`` keys.
         """
         import asyncio
         import threading
 
-        from kiro_crew.dashboard.handlers import core as _core
+        from aj_crew.dashboard.handlers import core as _core
 
         loop_thread = threading.current_thread()
         seen: list[threading.Thread] = []
@@ -255,7 +255,7 @@ class TestProviderIsNotWritable:
 class TestGet:
     @pytest.mark.asyncio
     async def test_the_api_key_reads_back_masked(self, config_file):
-        from kiro_crew.dashboard.handlers.core import _SENSITIVE_MASK
+        from aj_crew.dashboard.handlers.core import _SENSITIVE_MASK
 
         secret = "sk-" + "realsecret0123456789"
         config_file.write_text(
@@ -268,7 +268,7 @@ class TestGet:
             encoding="utf-8",
         )
         async with TestClient(TestServer(_app())) as client:
-            body = await (await client.get("/api/config/kirocrew")).json()
+            body = await (await client.get("/api/config/ajcrew")).json()
         assert body["decisions"]["provider"]["api_key"] == _SENSITIVE_MASK
         assert secret not in json.dumps(body)
 
@@ -277,5 +277,5 @@ class TestGet:
         """Not sensitive, so the Settings card gets its share to print."""
         async with TestClient(TestServer(_app())) as client:
             await _patch(client, "decisions.bucket", 25)
-            body = await (await client.get("/api/config/kirocrew")).json()
+            body = await (await client.get("/api/config/ajcrew")).json()
         assert body["decisions"]["bucket"] == 25

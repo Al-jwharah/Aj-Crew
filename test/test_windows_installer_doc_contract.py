@@ -96,9 +96,9 @@ def test_the_fake_backend_keeps_readiness_offline() -> None:
     download and turns a real gate into a flake.
     """
     script = _read(INSTALLER_SCRIPT)
-    assert "KIROCREW_KIRO_BIN" in script
-    assert "kiro_crew.testing.fake_acp_backend" in script
-    assert "KIROCREW_SKIP_MODEL_DOWNLOAD" in script
+    assert "AJCREW_KIRO_BIN" in script
+    assert "aj_crew.testing.fake_acp_backend" in script
+    assert "AJCREW_SKIP_MODEL_DOWNLOAD" in script
 
 
 def test_the_readiness_probe_still_exists(workflow: str) -> None:

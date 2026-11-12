@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.imessage.renderer (IMessageRenderer, Layer 2b)."""
+"""Tests for aj_crew.imessage.renderer (IMessageRenderer, Layer 2b)."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.imessage.renderer import IMessageRenderer
-from kiro_crew.imessage.rpc import RpcError, RpcTransportError
-from kiro_crew.imessage.transport import IMESSAGE_CAPABILITIES
+from aj_crew.imessage.renderer import IMessageRenderer
+from aj_crew.imessage.rpc import RpcError, RpcTransportError
+from aj_crew.imessage.transport import IMESSAGE_CAPABILITIES
 
 HANDLE = "+15551234567"
 SELECTOR = {"chat_guid": "iMessage;-;+15551234567"}
@@ -491,7 +491,7 @@ class TestRedactionWarning:
     @pytest.mark.asyncio
     async def test_credential_only_wording_is_unchanged_by_the_url_tally(self) -> None:
         """Regression guard: a credential-only answer sends the exact prior sentence."""
-        from kiro_crew.messaging.renderer import credential_redaction_notice
+        from aj_crew.messaging.renderer import credential_redaction_notice
 
         client = FakeClient()
         renderer = _renderer(client)

@@ -5,7 +5,7 @@ a warm sibling MCP server produces too, and a Windows shell tool reads WORKING
 on movement in any process started since its dispatch, which another
 session's process can produce. So those readings are bounded by
 ``watchdog.tool_stall_hard_cap_secs``; a matched shell child, the declared
-``wait`` verdict and a kirocrew-core tool that pings the session keepalive
+``wait`` verdict and an ajcrew-core tool that pings the session keepalive
 keep deferring. Recovery is the session-scoped ``session/cancel``. A model
 wait's WORKING reading is movement under the runtime, so it is bounded by the
 same cap and then gets the stale probe.
@@ -21,16 +21,16 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from test_acp_stale_recovery import _make_handle, _SilentQueue
 
-from kiro_crew.acp.liveness import (
+from aj_crew.acp.liveness import (
     EVIDENCE_MCP_SUBTREE_ACTIVE,
     EVIDENCE_WINDOWS_TREE_MOVED,
     VERDICT_WORKING,
     ToolCallState,
 )
-from kiro_crew.acp.session_handle import AcpSessionHandle, WatchdogSettings
-from kiro_crew.acp.types import STOP_REASON_TOOL_STALL
-from kiro_crew.session_directive import CORE_MCP_SERVER
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS, async_wait_until
+from aj_crew.acp.session_handle import AcpSessionHandle, WatchdogSettings
+from aj_crew.acp.types import STOP_REASON_TOOL_STALL
+from aj_crew.session_directive import CORE_MCP_SERVER
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, async_wait_until
 
 _MCP_ACTIVE = (VERDICT_WORKING, f"{EVIDENCE_MCP_SUBTREE_ACTIVE} (io +512B cpu +3t)")
 _BACKEND_ACTIVE = (VERDICT_WORKING, "backend activity (io +512B cpu +3t)")
@@ -226,7 +226,7 @@ async def test_other_working_readings_are_never_bounded(evidence):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("tool_name", ["spawn_sub_agents", "kirocrew-core___spawn_sub_agents"])
+@pytest.mark.parametrize("tool_name", ["spawn_sub_agents", "ajcrew-core___spawn_sub_agents"])
 async def test_keepalive_tool_is_not_cut_off(tool_name):
     tool = ToolCallState(
         title="spawn_sub_agents", tool_name=tool_name, mcp_server_name=CORE_MCP_SERVER

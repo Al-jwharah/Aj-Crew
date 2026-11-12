@@ -8,7 +8,7 @@
 # gallery client-side. On the seeded target nothing is authorized, so every card
 # reads "Not connected". "MCP Servers" is the table of configured servers. The
 # `rich` seed ships no `mcp.json`, but the gateway writes its own managed
-# servers (`kirocrew-core`, `kirocrew-cron`, ...) into the agent config on boot,
+# servers (`ajcrew-core`, `ajcrew-cron`, ...) into the agent config on boot,
 # so the table always lists those rows; how many managed servers there are is a
 # release detail, so the scenario reads the two stable names, not the count.
 #
@@ -51,13 +51,13 @@ steps:
     Click the "MCP Servers" sub-tab. The pane changes to a heading that reads "MCP Servers"
     followed by a count in parentheses, "Add Custom" and "Add Server" buttons at its right,
     and a table (Name, Globals, Status, Tools, Actions) listing the gateway's own servers,
-    among them "kirocrew-core" and "kirocrew-cron". Do not toggle, edit or remove any row.
+    among them "ajcrew-core" and "ajcrew-cron". Do not toggle, edit or remove any row.
 expectations:
   - >-
     The "MCP Servers" sub-tab is highlighted and the heading reads "MCP Servers" followed by
     a count in parentheses that is greater than zero (the exact number does not matter).
   - >-
-    The servers table has rows named "kirocrew-core" and "kirocrew-cron" (other rows may be
+    The servers table has rows named "ajcrew-core" and "ajcrew-cron" (other rows may be
     present; their Status text does not matter).
   - The "Add Custom" and "Add Server" buttons are visible at the right of the heading.
   - >-

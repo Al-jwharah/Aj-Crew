@@ -9,10 +9,10 @@ from typing import Any
 import pytest
 from browser_live_helpers import SESSION, FakeRelay
 
-from kiro_crew.browser_harness import live_hub as lh
-from kiro_crew.browser_harness import screencast as sc
-from kiro_crew.browser_harness.takeover import InputEventError
-from kiro_crew.testing.wait import await_until
+from aj_crew.browser_harness import live_hub as lh
+from aj_crew.browser_harness import screencast as sc
+from aj_crew.browser_harness.takeover import InputEventError
+from aj_crew.testing.wait import await_until
 
 pytestmark = pytest.mark.asyncio
 
@@ -141,7 +141,7 @@ async def test_a_new_owner_tab_gets_each_chats_current_state_as_last_published(h
 async def test_the_owner_socket_is_sent_the_browser_snapshot_frames() -> None:
     import json
 
-    from kiro_crew.dashboard import ws as ws_mod
+    from aj_crew.dashboard import ws as ws_mod
 
     wire = Wire()
     h = lh.LiveHub(clock=lambda: 100.0)

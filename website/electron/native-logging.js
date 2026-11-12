@@ -589,7 +589,7 @@ function redactNativeLogSecrets(filePath, { fs, log = () => {} } = {}) {
     // is strictly worse. So: write a sibling at the tight mode, then rename over
     // the original only once the write returned. `renameSync` carries the temp
     // file's mode across, so the replacement is owner-only by construction.
-    // Mirrors `src/kiro_crew/atomic_write.py`, already cited by the rotation
+    // Mirrors `src/aj_crew/atomic_write.py`, already cited by the rotation
     // comment above for the same class of failure.
     // The temp path is predictable, so the write has to be exclusive-create:
     // `writeFileSync`'s default `w` follows a symlink planted at that path and
@@ -784,7 +784,7 @@ function rotateNativeLog(logPath, { fs, log = () => {} } = {}) {
     // is not itself a failure mode. What DOES fail on Windows is a sharing
     // violation when any handle is open on either path (an AV or
     // Search-indexer touch is enough); see `replace_with_retry` in
-    // `src/kiro_crew/atomic_write.py`.
+    // `src/aj_crew/atomic_write.py`.
     redactedHere = true;
     fs.renameSync(logPath, previousPath);
     tightenLogMode(previousPath, { fs, log });
@@ -870,7 +870,7 @@ function initNativeLogging({
     try {
       startCrashReporter({
         // Mandatory, and the reason this is safe to ship on by default:
-        // Kiro Crew does not phone home (website/src/rum.ts is a no-op in the
+        // Aj Crew does not phone home (website/src/rum.ts is a no-op in the
         // public build), so a dump that left the machine would be a new
         // egress path, not a diagnostic. Dumps stay in the app's own
         // crashDumps directory for the user to hand over deliberately.

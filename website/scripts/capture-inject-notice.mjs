@@ -27,14 +27,14 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/inject-notice'
 const SLOT = 'chat-inject-notice'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
 /** The cards are what the shots are of, so every load waits for one to mount. */
 const CARD_WAIT = { selector: '[data-testid="recovery-card"]' }
 
-// Verbatim wire values from src/kiro_crew/dashboard/state.py. Matched with
+// Verbatim wire values from src/aj_crew/dashboard/state.py. Matched with
 // startsWith and then sliced off, so a mismatch here is real drift.
 const SYNTHESIS = '[SYSTEM] Sub-agent synthesis:'
 
@@ -59,7 +59,7 @@ const slots = [{
   running: false,
   last_message: 'All three adapters agree on the ranking rule.',
   messages: 8,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

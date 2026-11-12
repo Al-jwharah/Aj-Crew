@@ -25,12 +25,12 @@ from test_acp_seed_provenance import (  # noqa: F401 -- autouse fixture
     isolated_records,
 )
 
-from kiro_crew import model_registry as mr
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew import model_registry as mr
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.dashboard import chat_runner
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.providers.acp import AcpProvider
 
 # Two distinct advertised model lists the tests toggle between.
 _MODEL_A = "global.anthropic.claude-opus-5[1m]"
@@ -43,7 +43,7 @@ _SERVED_B = [_MODEL_A, _MODEL_B]
 def _pinned_kiro_cli_version(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
     """Pin the kiro-cli version so the spec permissions gate does not shell out."""
     _floor_monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
 
@@ -87,7 +87,7 @@ class TestSettingsWithheldCause:
         # Another settings source defines availableModels, so the owner's seed
         # carries a list at all.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         monkeypatch.setattr(mr, "_ADVERTISED_MODELS", {"claude_code": _SERVED_A})

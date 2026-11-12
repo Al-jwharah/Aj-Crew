@@ -1,7 +1,7 @@
 """``bridges._mcp_lock`` must REPORT why it could not take its sidecar (GH-11474).
 
-The lock guarding ``~/.kiro/agents/kirocrew.json`` is a sidecar
-``kirocrew.lock`` beside it. When that path cannot be opened -- a read-only
+The lock guarding ``~/.kiro/agents/ajcrew.json`` is a sidecar
+``ajcrew.lock`` beside it. When that path cannot be opened -- a read-only
 ``~/.kiro/agents`` mount, or a lock file whose own mode was tightened -- the
 open refuses, and every caller that catches the refusal treats this as
 best-effort work at a level no operator reads:
@@ -36,9 +36,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.apps import bridges
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import platform_compat
+from aj_crew.apps import bridges
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.skipif(
     not platform_compat.IS_POSIX,
@@ -116,7 +116,7 @@ class TestUnwritableLockPathIsReported:
         # No sidecar yet, so creating it is what the filesystem refuses -- the
         # shape a read-only ~/.kiro/agents presents on a fresh install.
         os.chmod(agents_dir, stat.S_IRUSR | stat.S_IXUSR)  # 0o500
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.apps.bridges"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.apps.bridges"):
             with pytest.raises(OSError) as exc_info:
                 with bridges._mcp_lock():
                     pytest.fail("acquired a lock on an unwritable path")
@@ -128,7 +128,7 @@ class TestUnwritableLockPathIsReported:
             "indistinguishable in the log from one that completed it"
         )
         msg = warnings[0]
-        assert str(agents_dir / "kirocrew.lock") in msg, (
+        assert str(agents_dir / "ajcrew.lock") in msg, (
             "the report must name the lock path: which path is unwritable is the "
             "whole of what the operator has to act on"
         )
@@ -144,10 +144,10 @@ class TestUnwritableLockPathIsReported:
         # A PRESENT sidecar whose own mode denies write: the lock fd must be
         # writable (Windows msvcrt.locking fails EACCES on a read-only handle),
         # so an existing file does not rescue this path.
-        lock_path = agents_dir / "kirocrew.lock"
+        lock_path = agents_dir / "ajcrew.lock"
         lock_path.touch()
         os.chmod(lock_path, stat.S_IRUSR)  # 0o400
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.apps.bridges"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.apps.bridges"):
             with pytest.raises(OSError):
                 with bridges._mcp_lock():
                     pytest.fail("acquired a lock on an unwritable sidecar")
@@ -173,7 +173,7 @@ class TestUnwritableLockPathIsReported:
         # writable fd, so it fails identically and must report identically --
         # otherwise the silence just moves to whichever caller reads first.
         os.chmod(agents_dir, stat.S_IRUSR | stat.S_IXUSR)  # 0o500
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.apps.bridges"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.apps.bridges"):
             with pytest.raises(OSError):
                 with bridges._mcp_lock(exclusive=False):
                     pytest.fail("acquired a shared lock on an unwritable path")
@@ -187,10 +187,10 @@ class TestRemediesStayDistinct:
         self, agents_dir: Path, caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(platform_compat, "_LOCK_TIMEOUT_SECS", _TEST_CEILING)
-        lock_path = agents_dir / "kirocrew.lock"
+        lock_path = agents_dir / "ajcrew.lock"
         holder = _spawn_holder(lock_path)
         try:
-            with caplog.at_level(logging.DEBUG, logger="kiro_crew.apps.bridges"):
+            with caplog.at_level(logging.DEBUG, logger="aj_crew.apps.bridges"):
                 with pytest.raises(OSError) as exc_info:
                     with bridges._mcp_lock():
                         pytest.fail("acquired a lock another process holds")
@@ -219,7 +219,7 @@ class TestRemediesStayDistinct:
         target = target_dir / "mcp.json"
         (target_dir / "mcp.lock").touch()
         os.chmod(target_dir / "mcp.lock", stat.S_IRUSR)  # 0o400
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.apps.bridges"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.apps.bridges"):
             with pytest.raises(OSError):
                 with bridges._mcp_lock(target=target):
                     pytest.fail("acquired a lock on an unwritable sidecar")
@@ -242,7 +242,7 @@ class TestNotEverythingIsALockProblem:
         # An ENOSPC on the caller's own atomic write, inside a lock that was
         # taken cleanly. Logged as a lock failure it would send an operator
         # after a holder that does not exist while the disk is full.
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.apps.bridges"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.apps.bridges"):
             with pytest.raises(OSError):
                 with bridges._mcp_lock():
                     raise OSError(errno.ENOSPC, os.strerror(errno.ENOSPC))
@@ -257,10 +257,10 @@ class TestNotEverythingIsALockProblem:
         # The config itself unwritable while the sidecar is fine: the LOCK is
         # healthy, and claiming otherwise would misdirect the one permission
         # case an operator is most likely to hit.
-        spec = agents_dir / "kirocrew.json"
+        spec = agents_dir / "ajcrew.json"
         spec.write_text('{"mcpServers": {}}\n', encoding="utf-8")
         os.chmod(spec, stat.S_IRUSR)  # 0o400
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.apps.bridges"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.apps.bridges"):
             with bridges._mcp_lock():
                 pass
         assert not _lock_warnings(caplog)
@@ -272,17 +272,17 @@ class TestHealthyAcquireIsUnchanged:
     def test_normal_acquire_is_silent(
         self, agents_dir: Path, caplog: pytest.LogCaptureFixture
     ) -> None:
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.apps.bridges"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.apps.bridges"):
             with bridges._mcp_lock():
                 pass
         assert not _lock_warnings(caplog), "a successful acquire logged a lock warning"
-        assert (agents_dir / "kirocrew.lock").exists()
+        assert (agents_dir / "ajcrew.lock").exists()
 
     def test_the_sidecar_is_not_truncated(self, agents_dir: Path) -> None:
         # GH-9248: a truncating open empties the lock file BEFORE the lock is
         # held, so a contender can observe it flicker empty. Pinned here because
         # this acquire was rewritten.
-        lock_path = agents_dir / "kirocrew.lock"
+        lock_path = agents_dir / "ajcrew.lock"
         lock_path.write_text("holder-pid 1234")
         with bridges._mcp_lock():
             pass
@@ -294,12 +294,12 @@ class TestHealthyAcquireIsUnchanged:
         # The legacy shared mcp.json sits under a DIFFERENT sidecar, and its
         # parent may not exist yet -- the acquire creates it.
         target = tmp_path / "settings" / "mcp.json"
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.apps.bridges"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.apps.bridges"):
             with bridges._mcp_lock(target=target):
                 pass
         assert (tmp_path / "settings" / "mcp.lock").exists()
         assert not (
-            agents_dir / "kirocrew.lock"
+            agents_dir / "ajcrew.lock"
         ).exists(), "an explicit target must not fall back to the default sidecar"
         assert not _lock_warnings(caplog)
 
@@ -312,7 +312,7 @@ class TestHealthyAcquireIsUnchanged:
         root.mkdir()
         os.chmod(root, stat.S_IRUSR | stat.S_IXUSR)  # 0o500
         try:
-            with caplog.at_level(logging.DEBUG, logger="kiro_crew.apps.bridges"):
+            with caplog.at_level(logging.DEBUG, logger="aj_crew.apps.bridges"):
                 with pytest.raises(OSError):
                     with bridges._mcp_lock(target=root / "settings" / "mcp.json"):
                         pytest.fail("acquired a lock under an uncreatable parent")

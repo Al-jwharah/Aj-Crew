@@ -1,6 +1,6 @@
 """Regression tests: a DST spring-forward runs a fixed-time cron job once, not twice.
 
-``is_due`` (``kiro_crew.cron_service.schedule``) treats a cron-expression job as
+``is_due`` (``aj_crew.cron_service.schedule``) treats a cron-expression job as
 due when ``croniter.match`` accepts the current local minute. On a
 spring-forward day croniter matches a skipped wall time such as 02:30 in two
 ADJACENT UTC minutes (03:29 and 03:30 local time in America/Toronto). Both
@@ -24,9 +24,9 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-import kiro_crew.cron as cron_mod
-from kiro_crew.cron import CronJob, CronSchedule, CronService
-from kiro_crew.testing.clock import ManualClock
+import aj_crew.cron as cron_mod
+from aj_crew.cron import CronJob, CronSchedule, CronService
+from aj_crew.testing.clock import ManualClock
 
 TORONTO = ZoneInfo("America/Toronto")
 
@@ -145,7 +145,7 @@ async def test_service_runs_spring_forward_slot_once(
     job_id = svc._jobs[0].id
     admitted = SimpleNamespace(admitted=True, reason="")
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=admitted):
+        with patch("aj_crew.cron.admission_check", return_value=admitted):
             for _ in range(2):  # one tick at 03:29 local, one at 03:30 local
                 await svc._on_timer()
                 claim = svc._claims.get(job_id)

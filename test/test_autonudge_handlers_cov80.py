@@ -23,9 +23,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.dashboard.handlers import autonudge as h
-from kiro_crew.monitoring.models import (
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.dashboard.handlers import autonudge as h
+from aj_crew.monitoring.models import (
     MonitorCreationSurface,
     MonitorObservationStatus,
     MonitorOutcome,
@@ -180,7 +180,7 @@ async def test_session_monitor_read_admits_webex_legacy_loop(
     The read resolves the general binding, so it returns the legacy loop under
     ``autonudge_loop`` rather than refusing the session as unbound.
     """
-    session_key = "webex:kirocrew:direct:operator@example.com"
+    session_key = "webex:ajcrew:direct:operator@example.com"
     loop = _loop(loop_id="lp-web", slot_key=session_key)
     _svc(monkeypatch, _FakeSvc([loop]))
 
@@ -271,7 +271,7 @@ async def test_session_monitor_read_admits_legacy_only_webex_binding(
     and returns a normal payload rather than a 401. With no loop armed it reads
     as not armed, distinct from an unbound session.
     """
-    session_key = "webex:kirocrew:direct:operator@example.com"
+    session_key = "webex:ajcrew:direct:operator@example.com"
     _svc(monkeypatch, _FakeSvc([]))
     response = await h.api_session_monitor_get(
         _mk(
@@ -289,7 +289,7 @@ async def test_session_monitor_read_admits_legacy_only_webex_binding(
 
 
 def test_session_monitor_read_is_strict_internal() -> None:
-    from kiro_crew.dashboard.server import (
+    from aj_crew.dashboard.server import (
         _MIXED_INTERNAL_API_PATHS,
         _STRICT_INTERNAL_API_PATHS,
     )
@@ -592,7 +592,7 @@ def test_monitor_config_accepts_a_whole_number_float_on_every_bounded_field(
     """A JSON body may spell an integer as ``60.0``; every bounded field takes
     it as the integer, and refuses a fractional float and a bool alike."""
     monkeypatch.setattr(h, "runtime_ceiling_secs", lambda: 3600)
-    monkeypatch.setattr("kiro_crew.monitoring.limits.runtime_ceiling_secs", lambda: 3600)
+    monkeypatch.setattr("aj_crew.monitoring.limits.runtime_ceiling_secs", lambda: 3600)
     base = {"slot_key": "chat-1-111", "target": "https://github.com/acme/widgets/pull/7"}
     good = {"cadence_secs": 60.0, "max_agent_turns": 3.0, "max_tokens": 5000.0}
     good.update({"max_provider_errors": 4.0, "max_runtime_secs": 1800.0})
@@ -772,7 +772,7 @@ async def test_monitor_create_rejects_webex_sessions(monkeypatch: pytest.MonkeyP
         "POST",
         "/api/monitors",
         body={
-            "slot_key": "webex:kirocrew:direct:operator@example.com",
+            "slot_key": "webex:ajcrew:direct:operator@example.com",
             "target": "https://github.com/acme/widgets/pull/7",
         },
     )
@@ -926,7 +926,7 @@ async def test_monitor_restart_clamped_budget_reaches_the_store(
     land on the record it forwards, not only on the legacy argument. With a
     stored 7200 and a 3600 ceiling the restart succeeds and the new row holds
     3600."""
-    monkeypatch.setattr("kiro_crew.monitoring.limits.runtime_ceiling_secs", lambda: 604800)
+    monkeypatch.setattr("aj_crew.monitoring.limits.runtime_ceiling_secs", lambda: 604800)
     service = AutoNudgeService(base_dir=tmp_path)
     try:
         loop = await service.add_monitor(
@@ -949,10 +949,10 @@ async def test_monitor_restart_clamped_budget_reaches_the_store(
         assert loop.monitor is not None
         loop.active = False
         loop.monitor.outcome = MonitorOutcome.USER_STOP
-        monkeypatch.setattr("kiro_crew.monitoring.limits.runtime_ceiling_secs", lambda: 3600)
+        monkeypatch.setattr("aj_crew.monitoring.limits.runtime_ceiling_secs", lambda: 3600)
         monkeypatch.setattr(h, "runtime_ceiling_secs", lambda: 3600)
         monkeypatch.setattr(h, "_autonudge_get", lambda: service)
-        monkeypatch.setattr("kiro_crew.autonudge_authz.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.autonudge_authz.sel", lambda: MagicMock())
         state = MagicMock()
         state.owner_id = ""
         state._slots = {
@@ -1585,7 +1585,7 @@ async def test_start_answers_an_over_ceiling_budget_with_the_range(
     """An integer above the ceiling is a bound failure, not a type failure: the
     refusal quotes the range so the caller can lower the number."""
     _svc(monkeypatch, _FakeSvc())
-    monkeypatch.setattr("kiro_crew.monitoring.limits.runtime_ceiling_secs", lambda: 3600)
+    monkeypatch.setattr("aj_crew.monitoring.limits.runtime_ceiling_secs", lambda: 3600)
     request = _mk(
         "POST", "/api/autonudge", body={"slot_key": "s", "message": "m", "max_runtime_secs": 7200}
     )
@@ -1879,7 +1879,7 @@ async def test_session_monitor_read_structured_monitor_carries_null_autonudge(
 @pytest.mark.asyncio
 async def test_monitor_contract_returns_the_frontend_contract() -> None:
     """The route hands back the backend's runtime contract verbatim."""
-    from kiro_crew.monitoring.models import monitor_frontend_contract
+    from aj_crew.monitoring.models import monitor_frontend_contract
 
     payload = _body(await h.api_monitor_contract(_mk("GET", "/api/monitor-contract")))
 
@@ -1891,10 +1891,10 @@ async def test_monitor_contract_returns_the_frontend_contract() -> None:
 @pytest.mark.asyncio
 async def test_monitor_contract_names_a_contributed_kind() -> None:
     """A kind an edition registered at boot appears in the served kind list."""
-    from kiro_crew.monitoring import plugins as plugins_module
-    from kiro_crew.monitoring import registry
-    from kiro_crew.monitoring.plugins import MonitorKindPlugin, register_monitor_kind
-    from kiro_crew.monitoring.registry import REVIEW_READY, MonitorKind
+    from aj_crew.monitoring import plugins as plugins_module
+    from aj_crew.monitoring import registry
+    from aj_crew.monitoring.plugins import MonitorKindPlugin, register_monitor_kind
+    from aj_crew.monitoring.registry import REVIEW_READY, MonitorKind
 
     name = "example_runtime_kind"
     plugins_before = dict(plugins_module._PLUGINS)

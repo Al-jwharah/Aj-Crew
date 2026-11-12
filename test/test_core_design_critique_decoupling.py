@@ -1,17 +1,17 @@
-"""GATE: Kiro Crew core does not depend on the Design Critique app's code.
+"""GATE: Aj Crew core does not depend on the Design Critique app's code.
 
 Design Critique is to leave this repository whole. That is only possible while
-nothing outside ``src/kiro_crew/apps/builtins/`` imports it or names it. What the
+nothing outside ``src/aj_crew/apps/builtins/`` imports it or names it. What the
 core needs from the app it reads through a seam that is empty by default: the
-worker slot mode the chat create paths accept comes from ``kiro_crew.apps.seams``,
+worker slot mode the chat create paths accept comes from ``aj_crew.apps.seams``,
 where the app's own ``seams.py`` registers it.
 
 Two properties are pinned:
 
 1. **No core module or script imports the app.** Every module under
-   ``src/kiro_crew`` outside ``apps/builtins/``, and every script under
+   ``src/aj_crew`` outside ``apps/builtins/``, and every script under
    ``scripts/``, is parsed. ``import``, ``from ... import`` (relative ones
-   resolved), ``from kiro_crew.apps.builtins import design_critique``,
+   resolved), ``from aj_crew.apps.builtins import design_critique``,
    ``importlib.import_module`` and ``__import__`` with a literal name are all in
    scope, and the probes below fail if any of those forms stops being caught.
 2. **No core string names the app.** A hard-coded allowlist entry
@@ -36,7 +36,7 @@ import pytest
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_core_design_critique_decoupling")
 
-APP_PACKAGE = "kiro_crew.apps.builtins.design_critique"
+APP_PACKAGE = "aj_crew.apps.builtins.design_critique"
 #: The package directory name and the app id: every spelling that addresses the app.
 APP_NAMES = ("design_critique", "design-critique")
 
@@ -63,19 +63,18 @@ def test_no_core_string_names_the_app(core_trees):
 @pytest.mark.parametrize(
     ("source", "importer", "is_package"),
     [
-        ("import kiro_crew.apps.builtins.design_critique.backend.routes", "kiro_crew.x", False),
-        ("from kiro_crew.apps.builtins.design_critique import seams", "kiro_crew.x", False),
-        ("from kiro_crew.apps.builtins import design_critique", "kiro_crew.x", False),
-        ("from ..apps.builtins.design_critique import seams", "kiro_crew.dashboard.y", False),
-        ("from .builtins.design_critique.backend import routes", "kiro_crew.apps.y", False),
-        ("from .builtins import design_critique", "kiro_crew.apps", True),
+        ("import aj_crew.apps.builtins.design_critique.backend.routes", "aj_crew.x", False),
+        ("from aj_crew.apps.builtins.design_critique import seams", "aj_crew.x", False),
+        ("from aj_crew.apps.builtins import design_critique", "aj_crew.x", False),
+        ("from ..apps.builtins.design_critique import seams", "aj_crew.dashboard.y", False),
+        ("from .builtins.design_critique.backend import routes", "aj_crew.apps.y", False),
+        ("from .builtins import design_critique", "aj_crew.apps", True),
         (
-            "import importlib\n"
-            "importlib.import_module('kiro_crew.apps.builtins.design_critique')",
-            "kiro_crew.x",
+            "import importlib\n" "importlib.import_module('aj_crew.apps.builtins.design_critique')",
+            "aj_crew.x",
             False,
         ),
-        ("__import__('kiro_crew.apps.builtins.design_critique.backend')", "kiro_crew.x", False),
+        ("__import__('aj_crew.apps.builtins.design_critique.backend')", "aj_crew.x", False),
     ],
 )
 def test_the_scan_catches_every_import_form(source, importer, is_package):
@@ -85,13 +84,13 @@ def test_the_scan_catches_every_import_form(source, importer, is_package):
 @pytest.mark.parametrize(
     "source",
     [
-        "from kiro_crew.apps import seams",
-        "from kiro_crew.apps.builtins import BUILTIN_NAMES",
-        "import kiro_crew.apps.builtins.design_tweak",
+        "from aj_crew.apps import seams",
+        "from aj_crew.apps.builtins import BUILTIN_NAMES",
+        "import aj_crew.apps.builtins.design_tweak",
     ],
 )
 def test_the_scan_leaves_other_imports_alone(source):
-    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "kiro_crew.x", False)
+    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "aj_crew.x", False)
 
 
 def test_the_string_scan_skips_docstrings_but_not_allowlists_ids_or_urls():
@@ -99,7 +98,7 @@ def test_the_string_scan_skips_docstrings_but_not_allowlists_ids_or_urls():
         '"""Mentions design-critique in prose."""\n'
         "# an app-worker mode (Design Critique's design-critique, for one)\n"
         '_MODES = ("", "design-critique")\n'
-        'pkg = "kiro_crew.apps.builtins." + "design_critique"\n'
+        'pkg = "aj_crew.apps.builtins." + "design_critique"\n'
         'url = f"/api/apps/design-critique/{app}"\n'
     )
     assert sorted(independence.name_strings(tree, APP_NAMES)) == [

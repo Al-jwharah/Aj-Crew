@@ -53,7 +53,7 @@ const DIST = flag('--dist', undefined)
 const EXPECT = flag('--expect', undefined) // 'clipped' | 'clean' | undefined
 const HOLD = flag('--hold', 'files') // 'files'
 const FONT_DELAY_MS = Number(flag('--font-delay-ms', '4000'))
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 if (HOLD !== 'files') throw new Error(`--hold must be files (the faces have no separate stylesheet), got ${HOLD}`)
 
 mkdirSync(OUT, { recursive: true })
@@ -87,10 +87,10 @@ const title = 'Mermaid label widths'
 const md = ['The measurement pipeline, end to end:', '', '```mermaid', MERMAID_SOURCE, '```'].join('\n')
 const slots = [{
   key: slot, title, running: false, last_message: 'Drew the pipeline.',
-  messages: 2, agent: 'kirocrew', project: PROJECT, updated: now,
+  messages: 2, agent: 'ajcrew', project: PROJECT, updated: now,
 }]
 const detail = {
-  key: slot, title, agent: 'kirocrew', project: PROJECT, running: false,
+  key: slot, title, agent: 'ajcrew', project: PROJECT, running: false,
   messages: [
     { role: 'user', content: 'Draw the measurement pipeline.', ts: now - 60 },
     { role: 'assistant', content: md, ts: now - 30 },

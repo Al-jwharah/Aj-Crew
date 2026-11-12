@@ -12,7 +12,7 @@
 
 /** Where the shipped docs are published. Same base the Security and Discord
  *  settings panels link to. */
-const DOCS_BASE = 'https://github.com/kirodotdev/KiroCrew/blob/main/src/kiro_crew/docs'
+const DOCS_BASE = 'https://github.com/Al-jwharah/Aj-Crew/blob/main/src/aj_crew/docs'
 
 /** A plain docs filename and nothing else. */
 const DOC_FILENAME_RE = /^[a-z0-9][a-z0-9._-]*\.md$/i
@@ -20,7 +20,7 @@ const DOC_FILENAME_RE = /^[a-z0-9][a-z0-9._-]*\.md$/i
 /** The guide to passing secrets to MCP servers, including `secret://` values
  *  and routing a server through the MCP gateway. It lives in the repository's
  *  guides tree, not the shipped docs above, so it carries its own full URL. */
-export const SECRETS_GUIDE_URL = 'https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/secrets-env.md'
+export const SECRETS_GUIDE_URL = 'https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/guides/secrets-env.md'
 
 /** The section of that guide on routing a server through the MCP gateway, the
  *  one place a `secret://` value resolves. */
@@ -31,7 +31,7 @@ export const SECRETS_GUIDE_ROUTING_URL = `${SECRETS_GUIDE_URL}#route-the-server-
  *  link it when they name a `mint_url_rejected` endpoint, so the remedy ends in
  *  a link rather than a bare path. */
 export const OAUTH_ENDPOINT_ALLOWLIST_GUIDE_URL =
-  'https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/connecting-remote-oauth-mcp-server.md#if-the-host-is-not-recognized-the-oauth-endpoint-allowlist'
+  'https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/guides/connecting-remote-oauth-mcp-server.md#if-the-host-is-not-recognized-the-oauth-endpoint-allowlist'
 
 /**
  * The public URL for a docs filename, or `null` when the value is not one.

@@ -34,10 +34,10 @@ from work_ledger_projection_helpers import (
     _width,
 )
 
-from kiro_crew import work_ledger as wl
-from kiro_crew.crew_log import projection
-from kiro_crew.dashboard.handlers import work_ledger as routes
-from kiro_crew.testing.wait import until_parked
+from aj_crew import work_ledger as wl
+from aj_crew.crew_log import projection
+from aj_crew.dashboard.handlers import work_ledger as routes
+from aj_crew.testing.wait import until_parked
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _isolated = work_ledger_projection_helpers._isolated
@@ -529,15 +529,15 @@ def test_the_board_reads_its_own_log_and_never_the_workers():
     """A report only in the WORKER's log is not read: the board's fold reads the
     conductor's units alone, so the open bound item waits for its next report. The
     board's own copy in the conductor's log is what the fold rebuilds the report from."""
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     item_id = "it_0000abcd"
     conductor = CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     worker = CrewLog.create(
-        lg.KIND_SESSION, "u-worker", owner="raymond", agent="kirocrew", slot=WORKER
+        lg.KIND_SESSION, "u-worker", owner="raymond", agent="ajcrew", slot=WORKER
     )
     mine = {"slot": CONDUCTOR, "actor": "conductor", "by": CONDUCTOR}
     conductor.append(
@@ -648,9 +648,9 @@ def test_the_board_reads_its_own_log_and_never_the_workers():
 
 def test_work_fold_uses_append_order_when_header_clocks_go_backward(monkeypatch):
     """A later work append wins even when its unit header carries an older clock."""
-    from kiro_crew import crew_log as lg
-    from kiro_crew import session_ledger
-    from kiro_crew.crew_log import CrewLog, emit, store
+    from aj_crew import crew_log as lg
+    from aj_crew import session_ledger
+    from aj_crew.crew_log import CrewLog, emit, store
 
     older_unit = "u-work-clock-older"
     newer_unit = "u-work-clock-newer"
@@ -658,7 +658,7 @@ def test_work_fold_uses_append_order_when_header_clocks_go_backward(monkeypatch)
 
     monkeypatch.setattr(store, "now_ms", lambda: 2_000)
     first = CrewLog.create(
-        lg.KIND_SESSION, older_unit, owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, older_unit, owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     del first
     assert emit.on_work_recorded(
@@ -678,7 +678,7 @@ def test_work_fold_uses_append_order_when_header_clocks_go_backward(monkeypatch)
     # its header the earlier wall clock and makes the raw store order backwards.
     monkeypatch.setattr(store, "now_ms", lambda: 1_000)
     second = CrewLog.create(
-        lg.KIND_SESSION, newer_unit, owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, newer_unit, owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     del second
     assert emit.on_work_recorded(
@@ -707,14 +707,12 @@ def test_work_fold_uses_append_order_when_header_clocks_go_backward(monkeypatch)
 
 
 def test_an_out_of_range_entry_time_does_not_escape_the_work_fold():
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog, store
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog, store
 
     item_id = "it_0000abcd"
     unit_id = "u-out-of-range-time"
-    unit = CrewLog.create(
-        lg.KIND_SESSION, unit_id, owner="raymond", agent="kirocrew", slot=CONDUCTOR
-    )
+    unit = CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew", slot=CONDUCTOR)
     unit.append(
         "work/recorded",
         {
@@ -760,13 +758,13 @@ async def test_the_rebuild_route_refuses_when_the_crew_log_is_off(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_the_rebuild_route_rebuilds_the_callers_own_board_from_real_units(monkeypatch):
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     monkeypatch.setattr(routes.crew_log_emit, "enabled", lambda: True)
     item_id = "it_0000abcd"
     conductor = CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     mine = {"slot": CONDUCTOR, "actor": "conductor", "by": CONDUCTOR}
     conductor.append(
@@ -849,7 +847,7 @@ async def test_a_board_copy_the_live_unit_refuses_lands_in_the_boards_newest_uni
     """A conductor session just switched agents has no log until its first turn; the
     board's copy then goes to the slot's newest unit that takes it."""
     item_id = await _board()
-    from kiro_crew import session_ledger
+    from aj_crew import session_ledger
 
     real = routes.crew_log_emit.on_work_recorded
     monkeypatch.setattr(
@@ -874,7 +872,7 @@ async def test_a_refused_board_copy_with_no_older_board_unit_lands_in_the_worker
     """A live conductor session with no log and no older board unit: the worker's copy
     is the record, as when the board names no unit at all."""
     item_id = await _board()
-    from kiro_crew import session_ledger
+    from aj_crew import session_ledger
 
     real = routes.crew_log_emit.on_work_recorded
     monkeypatch.setattr(
@@ -897,7 +895,7 @@ async def test_a_report_with_no_board_unit_lands_in_the_workers_log(recorded, mo
     """A board whose conductor has no unit left to record into still takes reports: the
     worker's copy is the record, as it was before the board's copy existed."""
     item_id = await _board()
-    from kiro_crew.dashboard.handlers import work_ledger as work_ledger_handlers
+    from aj_crew.dashboard.handlers import work_ledger as work_ledger_handlers
 
     monkeypatch.setattr(work_ledger_handlers, "_conductor_unit", lambda state, key: "")
     recorded.clear()
@@ -984,14 +982,14 @@ async def test_a_partial_undo_is_not_reported_as_undone(recorded, monkeypatch):
 def test_on_work_recorded_acknowledges_only_an_append_that_landed(monkeypatch):
     """Against the real writer: a valid entry returns True and is in the log; one
     the type refuses returns False; with the emitter off nothing is promised."""
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog, emit
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog, emit
 
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
     emit.reset_caches()
     try:
-        CrewLog.create(lg.KIND_SESSION, "u-ack", owner="raymond", agent="kirocrew", slot=CONDUCTOR)
+        CrewLog.create(lg.KIND_SESSION, "u-ack", owner="raymond", agent="ajcrew", slot=CONDUCTOR)
         good = {"slot": CONDUCTOR, "actor": "conductor", "by": CONDUCTOR, "action": "goal"}
         assert emit.on_work_recorded("u-ack", {**good, "goal": "ship it"}) is True
         assert emit.on_work_recorded("u-ack", {**good, "actor": "nobody"}, timeout=2.0) is False
@@ -1013,13 +1011,11 @@ def test_a_nested_conductors_own_board_folds_even_when_its_first_entry_reports_u
     """The nested conductor is a worker of PARENT and the conductor of NESTED. Its
     log's FIRST entry is a report to the parent's board; that entry must not pick
     the fold's board. Bound by the reader, the fold is of NESTED regardless."""
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     parent, nested = "chat-1-parent", "chat-2-nested"
-    unit = CrewLog.create(
-        lg.KIND_SESSION, "u-nested", owner="raymond", agent="kirocrew", slot=nested
-    )
+    unit = CrewLog.create(lg.KIND_SESSION, "u-nested", owner="raymond", agent="ajcrew", slot=nested)
     unit.append(
         "work/recorded",
         {
@@ -1064,11 +1060,11 @@ def test_a_nested_conductors_own_board_folds_even_when_its_first_entry_reports_u
 
 
 def test_rebuild_removes_an_item_file_the_fold_does_not_know(monkeypatch):
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     conductor = CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     mine = {"slot": CONDUCTOR, "actor": "conductor", "by": CONDUCTOR}
     conductor.append(
@@ -1165,11 +1161,11 @@ async def test_decide_and_accept_log_the_fields_they_commit(recorded):
 
 
 def test_the_fold_keeps_text_at_the_stores_widths_not_the_shared_two_hundred():
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     unit = CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     mine = {"slot": CONDUCTOR, "actor": "conductor", "by": CONDUCTOR}
     unit.append(
@@ -1210,8 +1206,8 @@ async def test_an_unconfirmed_write_is_undone_from_the_record_in_the_same_reques
     """Real units: the record holds goal+create; a report whose append is not
     confirmed is answered 503 and its cache mutation is dropped by the rebuild
     the refusal runs, so the cache never keeps what the log never saw."""
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     monkeypatch.setattr(routes.crew_log_emit, "enabled", lambda: True)
     monkeypatch.setattr(
@@ -1219,10 +1215,8 @@ async def test_an_unconfirmed_write_is_undone_from_the_record_in_the_same_reques
         "unit_for_session_key",
         lambda sessions, key: {CONDUCTOR: "u-conductor", WORKER: "u-worker"}[key],
     )
-    CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
-    )
-    CrewLog.create(lg.KIND_SESSION, "u-worker", owner="raymond", agent="kirocrew", slot=WORKER)
+    CrewLog.create(lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR)
+    CrewLog.create(lg.KIND_SESSION, "u-worker", owner="raymond", agent="ajcrew", slot=WORKER)
     # The conductor's writes land in the record; the worker's report will not, in
     # either copy.
     monkeypatch.setattr(

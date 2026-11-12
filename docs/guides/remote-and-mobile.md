@@ -1,6 +1,6 @@
 # Remote Hosts and Mobile Access
 
-Run Kiro Crew on an always-on host (a VPS, a cloud VM, a Linux desktop, a spare
+Run Aj Crew on an always-on host (a VPS, a cloud VM, a Linux desktop, a spare
 box) so the chat bot, cron jobs, and task runner keep working while your laptop
 sleeps. Then reach the dashboard from wherever you are: an SSH tunnel for a
 laptop, a named HTTPS tunnel for a phone.
@@ -25,7 +25,7 @@ Four parts, in the order you will need them:
   with launchd instead of systemd.
 - **Python**: 3.12 or newer (`setup.cfg` sets `python_requires = >=3.12`).
 - **Node.js**: needed to build the dashboard bundle. `website/package.json`
-  declares `"node": ">=22.12.0"`; `kirocrew doctor` fails below Node 22.12.0, and startup logs a warning.
+  declares `"node": ">=22.12.0"`; `ajcrew doctor` fails below Node 22.12.0, and startup logs a warning.
 - **RAM**: there is no single published floor, because the footprint scales with
   concurrent sessions, spawned subagents, and MCP servers. Two figures from the
   code give you the shape of it: `acp/runtime_liveness.py` recycles a long-lived
@@ -72,7 +72,7 @@ git config --global user.email "you@example.com"
 
 ### Install the agent backend
 
-Kiro Crew drives the `kiro-cli` agent over ACP, and it is the only provider
+Aj Crew drives the `kiro-cli` agent over ACP, and it is the only provider
 (`agent.provider = acp`). Install `kiro-cli` per its own docs, put it on your
 `PATH`, and log in:
 
@@ -80,44 +80,44 @@ Kiro Crew drives the `kiro-cli` agent over ACP, and it is the only provider
 kiro-cli login
 ```
 
-The credentials Kiro Crew itself reads from `~/.kiro/crew/.env` are chat-platform
+The credentials Aj Crew itself reads from `~/.kiro/crew/.env` are chat-platform
 and owner-identity credentials (`SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`,
-`KIROCREW_OWNER_ID`, and the equivalents for Discord / Telegram / Teams / WeCom
+`AJCREW_OWNER_ID`, and the equivalents for Discord / Telegram / Teams / WeCom
 / Webex). There is no model API key to configure: `kiro-cli` owns the model
 credential, and `kiro-cli login` is where it is set.
 
 Two channels do not travel to an arbitrary remote host. **iMessage** needs the
 gateway on a Mac running macOS 14 or newer, with Full Disk Access and Automation
 granted to whatever launched it, so a Linux VPS cannot serve it at all
-([imessage-integration.md](../../src/kiro_crew/docs/imessage-integration.md)).
+([imessage-integration.md](../../src/aj_crew/docs/imessage-integration.md)).
 **WhatsApp** runs anywhere, but it is not in the base install: it needs the
 optional `neonize` dependency (`pip install ".[whatsapp]"`) and a one-time device
 pairing from **Settings → Messaging Channels → WhatsApp**, so reach the remote dashboard
 first (part 2 below) and scan the rotating code from there
-([whatsapp-integration.md](../../src/kiro_crew/docs/whatsapp-integration.md)).
+([whatsapp-integration.md](../../src/aj_crew/docs/whatsapp-integration.md)).
 
-### Install Kiro Crew
+### Install Aj Crew
 
 Same two steps as a local machine (Python backend plus the React dashboard
 bundle). See the [install guide](install.md) for the full walkthrough:
 
 ```bash
-git clone https://github.com/kirodotdev/KiroCrew.git
-cd KiroCrew
+git clone https://github.com/Al-jwharah/Aj-Crew.git
+cd Aj-Crew
 
 # Build the frontend bundle and stage it into the package
 cd website && npm install && npm run build && cd ..
-PYTHONPATH=src python3 -m kiro_crew.frontend stage .
+PYTHONPATH=src python3 -m aj_crew.frontend stage .
 
 # Install the backend (ships the bundled dashboard)
 pip install .
 
 # Configure
-kirocrew setup
-kirocrew doctor            # verify everything, including kiro-cli and Node
+ajcrew setup
+ajcrew doctor            # verify everything, including kiro-cli and Node
 ```
 
-`kirocrew setup` writes the resolved project directory to
+`ajcrew setup` writes the resolved project directory to
 `~/.kiro/crew/project_dir` so the CLI works from any working directory.
 
 Embeddings need no setup step at all: they are always on and run in-process from
@@ -129,28 +129,28 @@ first gateway start. There is no separate embedding service to install.
 Before you commit to a service unit, confirm the gateway actually boots:
 
 ```bash
-tmux new -s kirocrew
-kirocrew gateway
-# Ctrl+B, D to detach; reattach with: tmux attach -t kirocrew
+tmux new -s ajcrew
+ajcrew gateway
+# Ctrl+B, D to detach; reattach with: tmux attach -t ajcrew
 ```
 
 tmux survives an SSH disconnect but does **not** auto-restart on crash or
 auto-start on reboot. Move to [a real service](#3-keep-it-alive-as-a-service)
 once the smoke test passes, and **kill the tmux session first**: only one
 gateway can own the dashboard port, which defaults to `5476`
-(`config/loader_credentials.py` `_DEFAULT_PORT`, overridable with the `KIROCREW_PORT`
+(`config/loader_credentials.py` `_DEFAULT_PORT`, overridable with the `AJCREW_PORT`
 environment variable). Two gateways on one port means the second one fails to
 bind.
 
 ```bash
-tmux kill-session -t kirocrew
+tmux kill-session -t ajcrew
 ```
 
 ### Move your state to the new host
 
 A fresh install starts with no memories, preferences, lessons, or custom agent
 configuration. After installing and running setup on the remote host,
-`scripts/sync-to-remote.sh` copies selected Kiro Crew state from your local
+`scripts/sync-to-remote.sh` copies selected Aj Crew state from your local
 machine. It does **not** copy `~/.kiro/agents/`; review and recreate any custom
 agent specs separately. Run the helper **from the local machine**:
 
@@ -217,7 +217,7 @@ What NOT to carry over:
 - `~/.kiro/crew/security_events.jsonl`: the tamper-evident SEL audit chain
   (`sel.py`); it belongs to the host that wrote it.
 - `~/.kiro/crew/.env`, `.local_secret`, `sel_hmac.key`: secrets. Re-enter
-  channel credentials from the dashboard (or use `kirocrew setup --slack` for
+  channel credentials from the dashboard (or use `ajcrew setup --slack` for
   Slack); the other two are regenerated.
 
 Keeping two hosts loosely in sync afterwards is just rsync (replace the SSH
@@ -239,19 +239,19 @@ The gateway binds `127.0.0.1` and stays there. `is_local_only()` in
 `dashboard/urls.py` always returns `True` in this build, so **setting
 `dashboard.url` does not widen the bind**: it only changes the host used in
 generated links and adds that origin to the CSRF/WebSocket allowlist. The one
-bind override is `KIROCREW_BIND` (an IP address, validated by
+bind override is `AJCREW_BIND` (an IP address, validated by
 `bind_address_for()`), which exists for containers where published ports map to
 a bridge interface; the official Docker image sets it. Both server paths mount
 the token-auth middleware unconditionally, so a wider bind never exposes an
 unauthenticated surface beyond the three token-free liveness probes
 (`/api/health`, `/api/live`, `/api/ready`).
 
-A governance policy can narrow both: the `bind_address` list refuses a
-`KIROCREW_BIND` address it does not name (the gateway then binds `127.0.0.1`),
+A governance policy can narrow both: the `bind_address` list refuses an
+`AJCREW_BIND` address it does not name (the gateway then binds `127.0.0.1`),
 and the `dashboard_origins` list drops an extra origin it does not name. An
 LTS build allows neither until a policy names it. Tailnet access there
 follows the policy's `capabilities.tailnet_origin` alone: until a policy turns it
-on, `kirocrew tailnet up` and the dashboard card say "Tailnet is off by policy".
+on, `ajcrew tailnet up` and the dashboard card say "Tailnet is off by policy".
 
 Everything below therefore works by putting something in front of loopback.
 
@@ -270,8 +270,8 @@ ssh -fN -L 7779:localhost:7779 user@your-host.example.com   # background
 ```
 
 Pass `-C` to enable SSH transport compression. A hand-rolled tunnel gets no
-compression by default, while Kiro Crew's own tunnel manager turns it on for
-exactly this traffic (`src/kiro_crew/instances/ssh_tunnel_manager_child_text.py`): the
+compression by default, while Aj Crew's own tunnel manager turns it on for
+exactly this traffic (`src/aj_crew/instances/ssh_tunnel_manager_child_text.py`): the
 forwarded stream carries the dashboard SPA bundle plus all API/WS payloads,
 which are highly compressible, and the gateway does not gzip at the HTTP layer.
 
@@ -295,7 +295,7 @@ later), and the app keeps the forward up and rebuilds it after sleep
 If your browser reaches the dashboard on a *different* local port than the
 remote one (`ssh -L 8777:localhost:5476`), the browser sends Origin
 `http://localhost:8777`, which is not in the default allowlist. Opt that port in
-with `KIROCREW_ALLOWED_LOOPBACK_PORTS` on the gateway host; the CSRF check
+with `AJCREW_ALLOWED_LOOPBACK_PORTS` on the gateway host; the CSRF check
 deliberately does not blanket-trust every loopback port, because a malicious
 local page on an arbitrary port would otherwise pass it.
 
@@ -326,13 +326,13 @@ With [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/
 
 ```bash
 cloudflared tunnel login
-cloudflared tunnel create kirocrew
-cloudflared tunnel route dns kirocrew kirocrew.example.com
-cloudflared tunnel --url http://localhost:5476 run kirocrew
+cloudflared tunnel create ajcrew
+cloudflared tunnel route dns ajcrew ajcrew.example.com
+cloudflared tunnel --url http://localhost:5476 run ajcrew
 ```
 
 With [ngrok](https://ngrok.com/docs) the equivalent is
-`ngrok http --domain=kirocrew.example.com 5476`.
+`ngrok http --domain=ajcrew.example.com 5476`.
 
 **If you use Tailscale, prefer `tailscale serve` over Funnel.** The two are not
 the same and the difference is the whole security story:
@@ -370,21 +370,21 @@ the same and the difference is the whole security story:
 
   The basic CLI equivalent is:
   ```bash
-  kirocrew config set dashboard.tailscale.enabled true   # once per machine
-  kirocrew restart
-  kirocrew tailnet up
-  kirocrew token                                         # the link to open on the phone
+  ajcrew config set dashboard.tailscale.enabled true   # once per machine
+  ajcrew restart
+  ajcrew tailnet up
+  ajcrew token                                         # the link to open on the phone
   ```
   This manual sequence keeps the config's selected session policy. The guided
   card is the path that safely discovers the local login and atomically enables
   identity-bound restart persistence without asking you to hand-edit an
   allowlist.
-  `kirocrew tailnet up` runs `tailscale serve` for you — HTTPS on 443 in front of
+  `ajcrew tailnet up` runs `tailscale serve` for you — HTTPS on 443 in front of
   the dashboard's loopback port — and prints the URL to open on your phone. That is
   the half that used to be an undocumented command you had to know and type.
 
   The URL `tailnet up` prints carries **no session**, so opening it alone lands on a
-  login you cannot complete from the phone. `kirocrew token` is the step that hands you
+  login you cannot complete from the phone. `ajcrew token` is the step that hands you
   one: with the setting on it prints a `https://<your-tailnet-name>/?token=…` line
   alongside the loopback one. Run it after the restart, since the gateway resolves the
   trusted origin at startup.
@@ -406,7 +406,7 @@ the same and the difference is the whole security story:
   `config set` is cheaper than carrying that risk on every run.
 
   `tailnet up` also needs to know which port to publish, and it will not guess: it
-  takes `--port`, `KIROCREW_PORT`, or the run marker of a gateway that is actually
+  takes `--port`, `AJCREW_PORT`, or the run marker of a gateway that is actually
   listening. With none of those it refuses rather than publishing whatever happens to
   hold the configured port, because `tailscale serve` will expose an unrelated local
   service to every device on your tailnet just as readily as the dashboard.
@@ -425,12 +425,12 @@ the same and the difference is the whole security story:
   installed but will not be run, and `tailnet up` and `tailnet status` name the
   refused binary. For that setup, publish the dashboard with `tailscale serve`
   yourself, set `dashboard.url` to the exact address your browser opens, and
-  restart Kiro Crew.
+  restart Aj Crew.
 
-  `kirocrew tailnet status` shows the three things that are independently
+  `ajcrew tailnet status` shows the three things that are independently
   required — whether the setting is on, whether a MagicDNS name resolves right
   now, and whether serve is actually pointing at this dashboard. Any one of them
-  being wrong looks identical from your phone. `kirocrew tailnet down` stops
+  being wrong looks identical from your phone. `ajcrew tailnet down` stops
   publishing and leaves the setting alone, since the trusted origin is unreachable
   without serve anyway.
 
@@ -461,8 +461,8 @@ the same and the difference is the whole security story:
   If you would rather do it by hand, the equivalent is:
   ```bash
   tailscale serve --bg --https 443 http://127.0.0.1:5476
-  kirocrew config set dashboard.tailscale.enabled true
-  kirocrew restart
+  ajcrew config set dashboard.tailscale.enabled true
+  ajcrew restart
   ```
   `dashboard.tailscale.enabled` reads your own MagicDNS name from the local
   Tailscale daemon and trusts `https://<that name>` as an origin, so you do **not**
@@ -519,13 +519,13 @@ For the tunnel providers above (cloudflared / ngrok / Funnel) set the URL in
 ```json
 {
   "dashboard": {
-    "url": "https://kirocrew.example.com"
+    "url": "https://ajcrew.example.com"
   }
 }
 ```
 
 ```bash
-kirocrew restart
+ajcrew restart
 ```
 
 `dashboard.url` does two things: chat-platform links are generated against that
@@ -559,7 +559,7 @@ service installer such as `cloudflared service install`).
 > tunnelled browser that keeps rotating stays authenticated for as long as it
 > keeps being used.
 >
-> **`kirocrew logout` ends those sessions.** It bumps a persisted revocation
+> **`ajcrew logout` ends those sessions.** It bumps a persisted revocation
 > generation that both access and refresh tokens embed, so established access
 > cookies and refresh chains alike are rejected on their next request. The
 > dashboard's own sign-out (`POST /api/auth/logout`) is the narrower control:
@@ -567,7 +567,7 @@ service installer such as `cloudflared service install`).
 > the gateway ends nothing: cookies are self-contained, signed with the
 > persistent `token_signing.key`, and the revocation generation is reloaded
 > unchanged. **To cut off remote access entirely, also revoke at the provider's
-> auth layer or tear the tunnel down** — logout ends Kiro Crew's sessions, not
+> auth layer or tear the tunnel down** — logout ends Aj Crew's sessions, not
 > the tunnel itself.
 > Note also that config-write and secret-reveal endpoints refuse requests that
 > carry forwarding headers: `is_direct_local_request()` treats any request
@@ -601,7 +601,7 @@ nginx:
 ```nginx
 server {
     listen 443 ssl;
-    server_name kirocrew.example.com;
+    server_name ajcrew.example.com;
     # ssl_certificate / ssl_certificate_key ...
 
     location / {
@@ -620,7 +620,7 @@ server {
 Caddy forwards `Host`, `X-Forwarded-Proto` and WebSocket upgrades by default:
 
 ```
-kirocrew.example.com {
+ajcrew.example.com {
     reverse_proxy 127.0.0.1:5476
 }
 ```
@@ -631,13 +631,13 @@ read-only.
 
 ### Getting a link on your phone
 
-1. In your Kiro Crew DM, send `/kirocrew dashboard` (or `/kirocrew dashboard 6h`).
+1. In your Aj Crew DM, send `/ajcrew dashboard` (or `/ajcrew dashboard 6h`).
 2. The bot DMs you `https://<tunnel-url>/?token=...`.
 3. Tap it. The link exchanges the token for an access cookie **and** a 30-day
    refresh cookie, so this is not a daily ritual — see
    [Session duration](#session-duration).
 
-`kirocrew token` does the same thing from a shell on the gateway host.
+`ajcrew token` does the same thing from a shell on the gateway host.
 
 ### Using Chat on a phone or tablet
 
@@ -657,7 +657,7 @@ Three clocks. The first two are signed into the access token payload
 | Access session TTL (`session_exp`) | 1 hour by default, 20 hours maximum (`MAX_SESSION_TTL_SECS = 20 * 3600`) | How long the access cookie the link mints stays valid |
 | Refresh TTL | 30 days (`MAX_REFRESH_TTL_SECS = 30 * 86400`) | How long the dashboard can silently mint a new access cookie without a new link |
 
-**You re-run `/kirocrew dashboard` or `kirocrew token` roughly once per 30 _idle_
+**You re-run `/ajcrew dashboard` or `ajcrew token` roughly once per 30 _idle_
 days — not every 20 hours.** Opening the link sets two cookies, not one: the
 access cookie plus an `mc_refresh_<port>` refresh cookie (HttpOnly,
 path-restricted to `/api/auth`). The dashboard schedules a
@@ -677,10 +677,10 @@ another link.
 
 The access-session numbers still govern the initial mint. The chat-command
 default is 1 hour (`ttl = 3600` in `slack/events_slash.py` and `slack/handler_runtime/commands.py`);
-pass a duration to raise it (`/kirocrew dashboard 6h`,
-`/kirocrew dashboard 20h`). `parse_duration` accepts `<N>h` or `<N>m` and clamps
+pass a duration to raise it (`/ajcrew dashboard 6h`,
+`/ajcrew dashboard 20h`). `parse_duration` accepts `<N>h` or `<N>m` and clamps
 to the 20-hour ceiling, so asking for more silently gets you 20 hours rather than
-an error. `kirocrew token` defaults straight to `20h`. The 5-minute click window
+an error. `ajcrew token` defaults straight to `20h`. The 5-minute click window
 is not the session length: it only means a link left sitting in a DM overnight is
 dead and you need a fresh one.
 
@@ -690,7 +690,7 @@ dead and you need a fresh one.
 - **Signing out in the dashboard** (`POST /api/auth/logout`) — revokes that
   browser's chain and denylists its access cookie, leaving other browsers'
   sessions alive.
-- **`kirocrew logout`** — ends **all** sessions globally, refresh chains
+- **`ajcrew logout`** — ends **all** sessions globally, refresh chains
   included: it bumps a persisted revocation generation that every access and
   refresh token embeds, so tokens minted before the logout are rejected.
 - **Reuse detection** — a consumed refresh token replayed outside a 60-second
@@ -713,7 +713,7 @@ own devices. If you need one session to roam between devices at `node` scope, se
 refresh cookie then renews from any allowed node, which is what the binding
 exists to stop. Sessions that already exist keep whatever binding they were
 opened with; a chain bound this way stops renewing if you later turn identity
-trust off, and a fresh `kirocrew token` link gets you going again.
+trust off, and a fresh `ajcrew token` link gets you going again.
 
 Chains persist in `~/.kiro/crew/refresh_chains.json` (mode `0600`) — including
 the device binding above — so they survive a gateway restart. On a gateway old enough to predate the feature,
@@ -784,7 +784,7 @@ shell in `index.html` recovers on its own: when a boot module fails to load on a
 top-level page (a dropped connection, or Chromium's `ERR_NETWORK_CHANGED` while a
 network interface comes or goes), it reloads the page after a short, jittered
 delay, up to three times, counting each reload in `sessionStorage` so it can never
-loop. If the page still does not start, it shows **Kiro Crew did not load** with a
+loop. If the page still does not start, it shows **Aj Crew did not load** with a
 **Clear cache and reload** button. A dashboard embedded in another page does not
 reload itself; it reports the failure to the page around it.
 
@@ -792,7 +792,7 @@ reload itself; it reports the failure to the page around it.
 bugs:
 
 - **A closed app gets notifications only through Web Push.** Turn on
-  Settings → Notifications → Desktop alerts → **Notify me even when Kiro Crew is
+  Settings → Notifications → Desktop alerts → **Notify me even when Aj Crew is
   closed** on each
   device. The dashboard then registers a Web Push subscription, and every
   delivered note that is not muted or passive also arrives while the installed
@@ -834,13 +834,13 @@ this requirement because those tunnels are supervised by the local gateway
 itself and use separate loopback ports.
 
 A ready-made plist is at
-[`assets/com.kirocrew.tunnel.plist`](assets/com.kirocrew.tunnel.plist):
+[`assets/com.ajcrew.tunnel.plist`](assets/com.ajcrew.tunnel.plist):
 
 ```bash
-cp docs/guides/assets/com.kirocrew.tunnel.plist ~/Library/LaunchAgents/
+cp docs/guides/assets/com.ajcrew.tunnel.plist ~/Library/LaunchAgents/
 sed -i '' 's|ALIAS@DEV_DESKTOP_HOSTNAME|user@your-host.example.com|g' \
-  ~/Library/LaunchAgents/com.kirocrew.tunnel.plist
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.kirocrew.tunnel.plist
+  ~/Library/LaunchAgents/com.ajcrew.tunnel.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.ajcrew.tunnel.plist
 ```
 
 Verify with the token-free liveness probe (`/api/status` needs a token,
@@ -853,10 +853,10 @@ curl -s http://localhost:5476/api/health     # {"ok": true, ...}
 Manage it:
 
 ```bash
-tail -f /tmp/kirocrew-tunnel.log /tmp/kirocrew-tunnel.err   # ssh writes connection errors to .err
-launchctl kickstart -k gui/$(id -u)/com.kirocrew.tunnel                            # restart
-launchctl bootout gui/$(id -u)/com.kirocrew.tunnel                                 # stop
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.kirocrew.tunnel.plist  # start
+tail -f /tmp/ajcrew-tunnel.log /tmp/ajcrew-tunnel.err   # ssh writes connection errors to .err
+launchctl kickstart -k gui/$(id -u)/com.ajcrew.tunnel                            # restart
+launchctl bootout gui/$(id -u)/com.ajcrew.tunnel                                 # stop
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.ajcrew.tunnel.plist  # start
 ```
 
 The plist sets `ServerAliveInterval=30`, `ServerAliveCountMax=3`,
@@ -872,15 +872,15 @@ Opens the tunnel if needed, mints a token on the remote, and opens the browser.
 #!/bin/zsh -e
 # Required parameters:
 # @raycast.schemaVersion 1
-# @raycast.title Open Kiro Crew
+# @raycast.title Open Aj Crew
 # @raycast.mode compact
 # Optional parameters:
-# @raycast.packageName Kiro Crew Utils
+# @raycast.packageName Aj Crew Utils
 # Documentation:
 # @raycast.description Get a token and open the dashboard
 REMOTE_HOST="user@your-host.example.com"
-REMOTE_CMD='source ~/.zshrc; kirocrew token'
-DEBUG_LOG="/tmp/kirocrew_debug.log"
+REMOTE_CMD='source ~/.zshrc; ajcrew token'
+DEBUG_LOG="/tmp/ajcrew_debug.log"
 
 if lsof -i :5476 -sTCP:LISTEN > /dev/null 2>&1; then
   echo "Tunnel already open"
@@ -889,7 +889,7 @@ else
   echo "Tunnel opened"
 fi
 
-# `kirocrew token` prints only URL(s) on stdout (failures go to stderr). Keep the
+# `ajcrew token` prints only URL(s) on stdout (failures go to stderr). Keep the
 # localhost one: that is what routes through the SSH tunnel opened above.
 URL="$(ssh -o ConnectTimeout=10 "${REMOTE_HOST}" "${REMOTE_CMD}" 2>"${DEBUG_LOG}" | grep -m1 'localhost:5476')"
 
@@ -904,16 +904,16 @@ open "$URL"
 ### Behind a reverse proxy at a sub-path
 
 The stock dashboard expects to sit at the root of its origin. To serve it under
-a prefix such as `https://gateway.example.com/proxy/kirocrew/`, build the
+a prefix such as `https://gateway.example.com/proxy/ajcrew/`, build the
 frontend for that prefix:
 
 ```bash
 cd website
-KIROCREW_BASE_PATH=/proxy/kirocrew npm run build
-cd .. && PYTHONPATH=src python -m kiro_crew.frontend stage .
+AJCREW_BASE_PATH=/proxy/ajcrew npm run build
+cd .. && PYTHONPATH=src python -m aj_crew.frontend stage .
 ```
 
-`KIROCREW_BASE_PATH` is read only at build time. It becomes the prefix of every
+`AJCREW_BASE_PATH` is read only at build time. It becomes the prefix of every
 asset URL, the router base, and the path of the dashboard's own API, stream and
 WebSocket calls. The gateway serves the built page unchanged and does not read
 the variable, so a sub-path deployment is its own build. Unset, or `/`, builds
@@ -928,7 +928,7 @@ The proxy strips the prefix before forwarding, relays cookies, and rewrites
 ### Share one Crew with teammates
 
 Sharing is a preview: turn on Shared Crew in Feature Previews and restart the
-gateway, or set `KIROCREW_SHARED_CREW_PREVIEW=1` in the gateway's environment.
+gateway, or set `AJCREW_SHARED_CREW_PREVIEW=1` in the gateway's environment.
 Without it, Settings > People and the direct link do not appear.
 
 Several people can use one Crew over Tailscale. With the direct link turned on
@@ -1003,13 +1003,13 @@ instead.
 The direct link is off by default. To turn it on:
 
 ```bash
-kirocrew config set dashboard.shared_crew.tailnet_direct true
+ajcrew config set dashboard.shared_crew.tailnet_direct true
 ```
 
 Set it back to `false` to keep only the loopback listener.
 
 The gateway binds only the Tailscale addresses (`100.x` and `fd7a:`), never your
-LAN or every interface. It does not start beside `KIROCREW_BIND`, or when
+LAN or every interface. It does not start beside `AJCREW_BIND`, or when
 Tailscale is not running; `GET /api/shared-crew/capabilities` then reports
 `tailnet_direct.state` and the reason.
 
@@ -1034,7 +1034,7 @@ person only where the operating system can prove that connection came from the
 Tailscale daemon:
 
 ```bash
-kirocrew config set dashboard.tailscale.trust_identity true
+ajcrew config set dashboard.tailscale.trust_identity true
 ```
 
 | Host | Direct Tailscale link | Through `tailscale serve` |
@@ -1069,7 +1069,7 @@ tabs never lock each other, and a personal Crew never locks. The pause length is
 a setting (3 to 60 seconds). A new value applies after a restart:
 
 ```bash
-kirocrew config set dashboard.shared_crew.typing_idle_seconds 15
+ajcrew config set dashboard.shared_crew.typing_idle_seconds 15
 ```
 
 Direct-link access follows Tailscale's rules. The owner-only Invite… dialog shares
@@ -1087,7 +1087,7 @@ To give every
 person a fair share of the host, turn on fair admission:
 
 ```bash
-kirocrew config set dashboard.shared_crew.admission_enabled true
+ajcrew config set dashboard.shared_crew.admission_enabled true
 ```
 
 Limits, profiles, rollback and troubleshooting are in the
@@ -1112,8 +1112,8 @@ On the Crew's machine:
 1. Make it an SSM managed node: the SSM Agent running, and an instance profile
    (or hybrid activation) that lets it register. Crew reads the node id and
    region from the instance metadata service. Off EC2, or where metadata is not
-   reachable, set `KIROCREW_SSM_TARGET` (an `i-` or `mi-` id) and, optionally,
-   `KIROCREW_SSM_REGION` in the gateway's environment.
+   reachable, set `AJCREW_SSM_TARGET` (an `i-` or `mi-` id) and, optionally,
+   `AJCREW_SSM_REGION` in the gateway's environment.
 2. Turn on **Settings > People > Advanced > Let teammates join over AWS SSM** and restart the
    gateway. Crew never reads or changes your AWS configuration, credentials or
    profiles.
@@ -1131,7 +1131,7 @@ below. The message tells them to run:
 
 ```bash
 aws ssm start-session --target <node-id> \
-  --document-name Kiro-Crew-Shared-Crew-5477 \
+  --document-name Aj-Crew-Shared-Crew-5477 \
   --parameters localPortNumber=5477
 ```
 
@@ -1140,7 +1140,7 @@ invite in an `HttpOnly` cookie and drops it from the address.
 
 #### The Session document
 
-The command names a custom Session document, `Kiro-Crew-Shared-Crew-<ssm_port>`,
+The command names a custom Session document, `Aj-Crew-Shared-Crew-<ssm_port>`,
 not `AWS-StartPortForwardingSession`: the AWS-managed document lets its holder
 forward any port on the machine, and Session Manager's shell document gives a
 shell, which is already as much access as the Crew's owner has. The custom
@@ -1149,10 +1149,10 @@ reach only the invite-gated listener. Create it once, with your SSM port in the
 name and in `portNumber` (`5477` by default):
 
 ```bash
-aws ssm create-document --name Kiro-Crew-Shared-Crew-5477 --document-type Session \
+aws ssm create-document --name Aj-Crew-Shared-Crew-5477 --document-type Session \
   --content '{
     "schemaVersion": "1.0",
-    "description": "Forward one local port to the Kiro Crew SSM link",
+    "description": "Forward one local port to the Aj Crew SSM link",
     "sessionType": "Port",
     "parameters": {
       "localPortNumber": {
@@ -1178,7 +1178,7 @@ Then allow `ssm:StartSession` on the node and on that document only, and not on
   "Action": "ssm:StartSession",
   "Resource": [
     "arn:aws:ec2:<region>:<account>:instance/<node-id>",
-    "arn:aws:ssm:<region>:<account>:document/Kiro-Crew-Shared-Crew-5477"
+    "arn:aws:ssm:<region>:<account>:document/Aj-Crew-Shared-Crew-5477"
   ]
 }
 ```
@@ -1195,29 +1195,29 @@ seconds. To stop sharing, remove them in Settings > People.
 ### The built-in installer
 
 ```bash
-kirocrew service install
+ajcrew service install
 ```
 
 On Linux this writes a **system-level** systemd unit at
-`/etc/systemd/system/kirocrew.service` and enables it, so the gateway survives
+`/etc/systemd/system/ajcrew.service` and enables it, so the gateway survives
 SSH disconnects, restarts on failure, and starts on boot
 (`WantedBy=multi-user.target`). On macOS it writes a launchd LaunchAgent at
-`~/Library/LaunchAgents/dev.kirocrew.gateway.plist` with `RunAtLoad`,
+`~/Library/LaunchAgents/dev.ajcrew.gateway.plist` with `RunAtLoad`,
 `KeepAlive=true`, and a finite `ExitTimeOut`, so it starts at login, relaunches
 after exit, and force-kills only after the graceful stop deadline. An explicit
-`kirocrew stop` unloads the agent so it stays down for the current login session.
+`ajcrew stop` unloads the agent so it stays down for the current login session.
 
 ```bash
-kirocrew service status      # service state
-kirocrew logs -f             # tail live logs
-kirocrew stop                # stop
-kirocrew restart             # restart (service-aware)
-kirocrew service uninstall   # remove the unit / plist
+ajcrew service status      # service state
+ajcrew logs -f             # tail live logs
+ajcrew stop                # stop
+ajcrew restart             # restart (service-aware)
+ajcrew service uninstall   # remove the unit / plist
 ```
 
 **Sudo scope on Linux:** the install shells out to `sudo install` (to place the
 unit as root-owned `0644`) and `sudo systemctl` (daemon-reload, enable,
-restart). No kirocrew, MCP, or LLM code path runs under sudo. Once started the
+restart). No ajcrew, MCP, or LLM code path runs under sudo. Once started the
 gateway runs as `User=$USER Group=$(id -gn)`, not root. The unit also caps
 crash-looping with `StartLimitBurst=3` / `StartLimitIntervalSec=300` and pins
 `LimitNOFILE=65536`, because a stock 1024 FD limit fails the frontend
@@ -1225,16 +1225,16 @@ production build with `EMFILE`. It sets `LimitCORE=0` too: where crashes go
 to `systemd-coredump`, a core of the multi-GB gateway can hold a crashed
 gateway's exit, and its restart, for up to 5 minutes. Processes the gateway
 starts inherit that limit; for core files, set `LimitCORE=infinity` in a
-drop-in (`sudo systemctl edit kirocrew`, or `systemctl --user edit kirocrew`
+drop-in (`sudo systemctl edit ajcrew`, or `systemctl --user edit ajcrew`
 for a user unit). An installed unit keeps its text until
-`kirocrew service install` re-renders it.
+`ajcrew service install` re-renders it.
 
-The install also seeds `/etc/kirocrew/kirocrew.env`, which the unit reads as its
+The install also seeds `/etc/ajcrew/ajcrew.env`, which the unit reads as its
 `EnvironmentFile=`, so a port or environment change needs no reinstall (see
 [Setting the service port](install.md#setting-the-service-port)). On an
-SELinux-enforcing host whose kirocrew lives under `$HOME`, the install refuses
+SELinux-enforcing host whose ajcrew lives under `$HOME`, the install refuses
 before writing anything and prints a per-user unit to use instead (see
-[SELinux-enforcing hosts](install.md#selinux-enforcing-hosts-with-kirocrew-under-home)).
+[SELinux-enforcing hosts](install.md#selinux-enforcing-hosts-with-ajcrew-under-home)).
 
 **Why system-level rather than `systemctl --user`:** older distros (systemd 219
 era) have no working per-user manager, and `systemctl --user` there fails with
@@ -1285,8 +1285,8 @@ lingering, the user manager (and everything under it) is torn down when your
 last login session ends, which defeats the entire point of running 24/7.
 
 Verify with `systemctl --user status`, then install the user unit with the helper
-script [`assets/setup.sh`](assets/setup.sh). It resolves the `kirocrew` binary
-and the Node version, renders [`assets/kirocrew.service`](assets/kirocrew.service)
+script [`assets/setup.sh`](assets/setup.sh). It resolves the `ajcrew` binary
+and the Node version, renders [`assets/ajcrew.service`](assets/ajcrew.service)
 into `~/.config/systemd/user/`, and enables it. It reads the template from its
 own directory, so run it from there, and it refuses to proceed if a gateway is
 already running (that port conflict again):
@@ -1303,16 +1303,16 @@ Or do it by hand:
 
 ```bash
 mkdir -p ~/.config/systemd/user
-cp docs/guides/assets/kirocrew.service ~/.config/systemd/user/
-sed -i "s|KIROCREW_BIN|$(command -v kirocrew)|g" ~/.config/systemd/user/kirocrew.service
-sed -i "s/%u/$(whoami)/g" ~/.config/systemd/user/kirocrew.service
-sed -i "s/NVM_NODE_VERSION/$(node --version)/g" ~/.config/systemd/user/kirocrew.service
+cp docs/guides/assets/ajcrew.service ~/.config/systemd/user/
+sed -i "s|AJCREW_BIN|$(command -v ajcrew)|g" ~/.config/systemd/user/ajcrew.service
+sed -i "s/%u/$(whoami)/g" ~/.config/systemd/user/ajcrew.service
+sed -i "s/NVM_NODE_VERSION/$(node --version)/g" ~/.config/systemd/user/ajcrew.service
 systemctl --user daemon-reload
-systemctl --user enable kirocrew
-systemctl --user start kirocrew
+systemctl --user enable ajcrew
+systemctl --user start ajcrew
 ```
 
-`systemctl --user status kirocrew` should report `active (running)`.
+`systemctl --user status ajcrew` should report `active (running)`.
 
 > **`Failed to get D-Bus connection` while running `systemctl --user`?** Your
 > shell has no `XDG_RUNTIME_DIR`, which is how the client finds the per-user bus
@@ -1324,22 +1324,22 @@ Manage a user unit:
 
 | Action | Command |
 |---|---|
-| Status | `systemctl --user status kirocrew` |
-| Restart | `systemctl --user restart kirocrew` |
-| Logs | `journalctl --user -u kirocrew -f` |
-| Uninstall | `systemctl --user disable --now kirocrew` |
+| Status | `systemctl --user status ajcrew` |
+| Restart | `systemctl --user restart ajcrew` |
+| Logs | `journalctl --user -u ajcrew -f` |
+| Uninstall | `systemctl --user disable --now ajcrew` |
 
 ### Hand-rolled system unit
 
-If you want to customize the unit rather than let `kirocrew service install`
+If you want to customize the unit rather than let `ajcrew service install`
 generate it:
 
 ```bash
-KIROCREW_BIN=$(command -v kirocrew 2>/dev/null || echo "$HOME/.local/bin/kirocrew")
+AJCREW_BIN=$(command -v ajcrew 2>/dev/null || echo "$HOME/.local/bin/ajcrew")
 
-sudo tee /etc/systemd/system/kirocrew.service << EOF
+sudo tee /etc/systemd/system/ajcrew.service << EOF
 [Unit]
-Description=Kiro Crew AI Agent Gateway
+Description=Aj Crew AI Agent Gateway
 After=network-online.target
 Wants=network-online.target
 StartLimitBurst=3
@@ -1348,24 +1348,24 @@ StartLimitIntervalSec=300
 [Service]
 Type=simple
 User=$(whoami)
-ExecStart=$KIROCREW_BIN gateway
+ExecStart=$AJCREW_BIN gateway
 Restart=always
 RestartSec=10
 LimitNOFILE=65536
 LimitCORE=0
 WorkingDirectory=$HOME
 Environment=HOME=$HOME
-Environment=PATH=$(dirname $KIROCREW_BIN):$HOME/.local/bin:$HOME/.nvm/versions/node/$(node -v 2>/dev/null || echo v20.0.0)/bin:/usr/local/bin:/usr/bin
+Environment=PATH=$(dirname $AJCREW_BIN):$HOME/.local/bin:$HOME/.nvm/versions/node/$(node -v 2>/dev/null || echo v20.0.0)/bin:/usr/local/bin:/usr/bin
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
 sudo systemctl daemon-reload
-sudo systemctl enable --now kirocrew
+sudo systemctl enable --now ajcrew
 ```
 
-Tail it with `sudo journalctl -u kirocrew -f`. Getting `PATH` right matters:
+Tail it with `sudo journalctl -u ajcrew -f`. Getting `PATH` right matters:
 the unit does not inherit your interactive shell's environment, so `kiro-cli`,
 `node`, and `npx` must all be reachable from the `PATH` you set here or MCP
 servers and tool calls fail with ENOENT.
@@ -1376,25 +1376,25 @@ servers and tool calls fail with ENOENT.
 
 | Symptom | Fix |
 |---|---|
-| `kirocrew: command not found` after install | Put pip's script dir on `PATH` (often `~/.local/bin`), then `source ~/.bashrc` or re-login |
-| Agent backend errors or timeouts | Confirm `kiro-cli` is on `PATH` and logged in (`kiro-cli login`); `kirocrew doctor` reports its status |
-| Service will not start | `sudo journalctl -u kirocrew -n 50` (system unit) or `journalctl --user -u kirocrew -n 50` (user unit) |
-| Service restart-loops then gives up | `StartLimitBurst=3` within 5 minutes stops the loop on purpose. Read the logs, fix the cause, then `sudo systemctl reset-failed kirocrew` |
+| `ajcrew: command not found` after install | Put pip's script dir on `PATH` (often `~/.local/bin`), then `source ~/.bashrc` or re-login |
+| Agent backend errors or timeouts | Confirm `kiro-cli` is on `PATH` and logged in (`kiro-cli login`); `ajcrew doctor` reports its status |
+| Service will not start | `sudo journalctl -u ajcrew -n 50` (system unit) or `journalctl --user -u ajcrew -n 50` (user unit) |
+| Service restart-loops then gives up | `StartLimitBurst=3` within 5 minutes stops the loop on purpose. Read the logs, fix the cause, then `sudo systemctl reset-failed ajcrew` |
 | `systemctl --user` says `Failed to get D-Bus connection` | `export XDG_RUNTIME_DIR=/run/user/$(id -u)` |
-| Gateway will not bind the port | Something else already owns it, usually a tmux gateway. `tmux kill-session -t kirocrew`, then `ss -ltnp \| grep 5476` |
+| Gateway will not bind the port | Something else already owns it, usually a tmux gateway. `tmux kill-session -t ajcrew`, then `ss -ltnp \| grep 5476` |
 | SSH tunnel connection refused | Confirm the gateway is running and listening: `ss -ltnp \| grep 5476` on the remote host |
 | Dashboard loads over the tunnel but the live view flaps online/offline | The TLS-terminating proxy must forward `X-Forwarded-Proto: https`; without it the auth cookie is set without `Secure` and mobile browsers withhold it from the `wss://` upgrade. Refresh itself keeps working (the refresh cookie is `SameSite=Lax`, so it still rides ordinary HTTPS requests), but both cookies then lack `Secure` and could be sent over plain HTTP — fix the header rather than living with it |
 | Chat link still points at `localhost` | Set `dashboard.url` in `config.json` and restart the gateway |
 | Link opens to "token expired" | The presigned URL must be opened within 5 minutes. Request a fresh link |
-| Session drops sooner than you expect | You should be refreshed silently for 30 sliding days. If you are re-minting every ~20 hours instead, the refresh cookie is not reaching `/api/auth/refresh` — confirm the browser is sending an `mc_refresh_<port>` cookie whose port suffix matches the port the gateway resolved for the request, and check the browser console for `[refresh]` warnings. Raising the initial mint (`/kirocrew dashboard 20h`) only widens the access cookie; it does not repair a broken refresh |
+| Session drops sooner than you expect | You should be refreshed silently for 30 sliding days. If you are re-minting every ~20 hours instead, the refresh cookie is not reaching `/api/auth/refresh` — confirm the browser is sending an `mc_refresh_<port>` cookie whose port suffix matches the port the gateway resolved for the request, and check the browser console for `[refresh]` warnings. Raising the initial mint (`/ajcrew dashboard 20h`) only widens the access cookie; it does not repair a broken refresh |
 | Phone cannot reach the tunnel URL | Verify the tunnel process is running and connected on the gateway host |
 | Settings will not save over the tunnel | By design. Config-write and secret-reveal endpoints require a direct-local request, and the forwarding headers a tunnel or reverse proxy adds mark the request as remote. Change these over an SSH session on the host, or through an `ssh -L` forward, which adds no forwarding header |
-| "Embeddings not ready" in the dashboard | The ~610MB model downloads in the background over HTTPS on gateway start. `kirocrew doctor` probes the resolved URL; set `KIROCREW_EMBED_MODEL_URL` for a mirror. Memory falls back to keyword search until it lands, and the agent keeps working |
+| "Embeddings not ready" in the dashboard | The ~610MB model downloads in the background over HTTPS on gateway start. `ajcrew doctor` probes the resolved URL; set `AJCREW_EMBED_MODEL_URL` for a mirror. Memory falls back to keyword search until it lands, and the agent keeps working |
 
 ## See also
 
 - [install.md](install.md): all build and install methods
-- [docker.md](docker.md): container deployment, including `KIROCREW_BIND`
+- [docker.md](docker.md): container deployment, including `AJCREW_BIND`
 - [slack-setup.md](slack-setup.md): chat app creation and configuration
 - [../system-specs/modules/dashboard-token-auth.md](../system-specs/modules/dashboard-token-auth.md): the full access + refresh cookie design
 - [../architecture/security-deep-dive.md](../architecture/security-deep-dive.md): token auth, origin checks, the local-request gate

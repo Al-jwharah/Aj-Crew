@@ -24,10 +24,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_manager.admission.types import REFUSAL_TOMBSTONE_CAUSE
-from kiro_crew.taskq.reconcile import REFUSED
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_manager.admission.types import REFUSAL_TOMBSTONE_CAUSE
+from aj_crew.taskq.reconcile import REFUSED
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -142,8 +142,8 @@ class TestRefusedRowSettle:
         entry sits in the pending map for the process lifetime and the row is
         left for the next incarnation's reconcile to requeue and run.
         """
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.subagent_manager import admission as admission_mod
+        from aj_crew import taskq as _taskq
+        from aj_crew.subagent_manager import admission as admission_mod
 
         monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
         manager = SubagentManager(
@@ -163,8 +163,8 @@ class TestRefusedRowSettle:
 
         try:
             with (
-                patch("kiro_crew.subagent.Stats"),
-                patch("kiro_crew.subagent.sel"),
+                patch("aj_crew.subagent.Stats"),
+                patch("aj_crew.subagent.sel"),
                 patch.object(manager, "_run", _park),
             ):
                 manager.spawn("occupy", parent_session_key=ROOT)
@@ -175,7 +175,7 @@ class TestRefusedRowSettle:
                 params["agent"] = "ghost"
                 manager._running_count = 0
                 with patch(
-                    "kiro_crew.subagent._validate_agent",
+                    "aj_crew.subagent._validate_agent",
                     return_value=("", "agent 'ghost' not found", "agent_not_found"),
                 ):
                     first = await manager._admission._dispatch_async_impl(params)
@@ -200,9 +200,9 @@ class TestRefusedRowSettle:
         while the row's ``failed`` write is still in flight: the dispatcher's
         own await of the settle does not gate a task scheduled beside it.
         """
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.subagent_manager import admission as admission_mod
-        from kiro_crew.subagent_manager.admission import taskq_bridge as bridge_mod
+        from aj_crew import taskq as _taskq
+        from aj_crew.subagent_manager import admission as admission_mod
+        from aj_crew.subagent_manager.admission import taskq_bridge as bridge_mod
 
         monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
         monkeypatch.setattr(bridge_mod, "_SETTLE_RETRY_BACKOFF_CAP_SECS", 0.02)
@@ -235,8 +235,8 @@ class TestRefusedRowSettle:
 
         try:
             with (
-                patch("kiro_crew.subagent.Stats"),
-                patch("kiro_crew.subagent.sel"),
+                patch("aj_crew.subagent.Stats"),
+                patch("aj_crew.subagent.sel"),
                 patch.object(manager, "_run", _park),
                 patch.object(type(store), "finish", _finish_losing_until_released),
             ):
@@ -249,7 +249,7 @@ class TestRefusedRowSettle:
                 params["agent"] = "ghost"
                 manager._running_count = 0
                 with patch(
-                    "kiro_crew.subagent._validate_agent",
+                    "aj_crew.subagent._validate_agent",
                     return_value=("", "agent 'ghost' not found", "agent_not_found"),
                 ):
                     dispatch = asyncio.create_task(manager._admission._dispatch_async_impl(params))
@@ -286,9 +286,9 @@ class TestRefusedRowSettle:
         in that window reverses what the poll already reported. The record is
         registered when the settle lands, before the dispatcher returns.
         """
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.subagent_manager import admission as admission_mod
-        from kiro_crew.subagent_manager.admission import taskq_bridge as bridge_mod
+        from aj_crew import taskq as _taskq
+        from aj_crew.subagent_manager import admission as admission_mod
+        from aj_crew.subagent_manager.admission import taskq_bridge as bridge_mod
 
         monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
         monkeypatch.setattr(bridge_mod, "_SETTLE_RETRY_BACKOFF_CAP_SECS", 0.02)
@@ -309,8 +309,8 @@ class TestRefusedRowSettle:
 
         try:
             with (
-                patch("kiro_crew.subagent.Stats"),
-                patch("kiro_crew.subagent.sel"),
+                patch("aj_crew.subagent.Stats"),
+                patch("aj_crew.subagent.sel"),
                 patch.object(manager, "_run", _park),
                 patch.object(type(store), "finish", _finish_losing_until_released),
             ):
@@ -323,7 +323,7 @@ class TestRefusedRowSettle:
                 params["cwd"] = "/tmp/elsewhere"
                 manager._running_count = 0
                 with patch(
-                    "kiro_crew.subagent.validate_cwd",
+                    "aj_crew.subagent.validate_cwd",
                     return_value=("", "cwd is outside every allowed root"),
                 ):
                     dispatch = asyncio.create_task(manager._admission._dispatch_async_impl(params))
@@ -363,10 +363,10 @@ class TestRefusedRowSettle:
         settle goes on behind the caller, and the row reads FAILED once the
         store takes the write, after every one of the lost tries.
         """
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.subagent_manager import admission as admission_mod
-        from kiro_crew.subagent_manager.admission import taskq_bridge as bridge_mod
-        from kiro_crew.subagent_persistence import read_tombstone
+        from aj_crew import taskq as _taskq
+        from aj_crew.subagent_manager import admission as admission_mod
+        from aj_crew.subagent_manager.admission import taskq_bridge as bridge_mod
+        from aj_crew.subagent_persistence import read_tombstone
 
         monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
         monkeypatch.setattr(bridge_mod, "_SETTLE_RETRY_BACKOFF_CAP_SECS", 0.02)
@@ -387,11 +387,11 @@ class TestRefusedRowSettle:
 
         try:
             with (
-                patch("kiro_crew.subagent.Stats"),
-                patch("kiro_crew.subagent.sel"),
+                patch("aj_crew.subagent.Stats"),
+                patch("aj_crew.subagent.sel"),
                 patch.object(manager, "_run", _park),
                 patch.object(type(store), "finish", _finish_losing),
-                caplog.at_level(logging.WARNING, logger="kiro_crew.subagent_manager.admission"),
+                caplog.at_level(logging.WARNING, logger="aj_crew.subagent_manager.admission"),
             ):
                 manager.spawn("occupy", parent_session_key=ROOT)
                 waiting = manager.spawn("waiting", parent_session_key=ROOT)
@@ -400,7 +400,7 @@ class TestRefusedRowSettle:
                 params["agent"] = "ghost"
                 manager._running_count = 0
                 with patch(
-                    "kiro_crew.subagent._validate_agent",
+                    "aj_crew.subagent._validate_agent",
                     return_value=("", "agent 'ghost' not found", "agent_not_found"),
                 ):
                     first = await manager._admission._dispatch_async_impl(params)
@@ -436,9 +436,9 @@ class TestRefusedRowSettle:
         it -- shielded -- and returns once the row reads terminal; the entry is
         gone once it has.
         """
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.subagent_manager import admission as admission_mod
-        from kiro_crew.subagent_manager.admission import taskq_bridge as bridge_mod
+        from aj_crew import taskq as _taskq
+        from aj_crew.subagent_manager import admission as admission_mod
+        from aj_crew.subagent_manager.admission import taskq_bridge as bridge_mod
 
         monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
         monkeypatch.setattr(bridge_mod, "_SETTLE_RETRY_BACKOFF_CAP_SECS", 0.02)
@@ -473,8 +473,8 @@ class TestRefusedRowSettle:
 
         try:
             with (
-                patch("kiro_crew.subagent.Stats"),
-                patch("kiro_crew.subagent.sel"),
+                patch("aj_crew.subagent.Stats"),
+                patch("aj_crew.subagent.sel"),
                 patch.object(manager, "_run", _park),
                 patch.object(type(store), "finish", _finish_losing_until_released),
             ):
@@ -539,10 +539,10 @@ class TestRefusedRowSettle:
         in for the row, keeps retrying, and lands ``failed`` the moment the
         store answers again.
         """
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.subagent_manager import admission as admission_mod
-        from kiro_crew.subagent_manager.admission import taskq_bridge as bridge_mod
-        from kiro_crew.subagent_persistence import read_tombstone
+        from aj_crew import taskq as _taskq
+        from aj_crew.subagent_manager import admission as admission_mod
+        from aj_crew.subagent_manager.admission import taskq_bridge as bridge_mod
+        from aj_crew.subagent_persistence import read_tombstone
 
         monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
         monkeypatch.setattr(bridge_mod, "_SETTLE_RETRY_BACKOFF_CAP_SECS", 0.02)
@@ -563,11 +563,11 @@ class TestRefusedRowSettle:
 
         try:
             with (
-                patch("kiro_crew.subagent.Stats"),
-                patch("kiro_crew.subagent.sel"),
+                patch("aj_crew.subagent.Stats"),
+                patch("aj_crew.subagent.sel"),
                 patch.object(manager, "_run", _park),
                 patch.object(type(store), "finish", _finish_refusing_until_released),
-                caplog.at_level(logging.WARNING, logger="kiro_crew.subagent_manager.admission"),
+                caplog.at_level(logging.WARNING, logger="aj_crew.subagent_manager.admission"),
             ):
                 manager.spawn("occupy", parent_session_key=ROOT)
                 waiting = manager.spawn("waiting", parent_session_key=ROOT)
@@ -616,10 +616,10 @@ class TestRefusedRowSettle:
         read bound, the settle warns once that it is holding and keeps
         retrying, and the refusal returns only once the row reads FAILED.
         """
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.subagent_manager import admission as admission_mod
-        from kiro_crew.subagent_manager.admission import taskq_bridge as bridge_mod
-        from kiro_crew.subagent_persistence import read_tombstone
+        from aj_crew import taskq as _taskq
+        from aj_crew.subagent_manager import admission as admission_mod
+        from aj_crew.subagent_manager.admission import taskq_bridge as bridge_mod
+        from aj_crew.subagent_persistence import read_tombstone
 
         monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
         monkeypatch.setattr(bridge_mod, "_SETTLE_RETRY_BACKOFF_CAP_SECS", 0.02)
@@ -640,11 +640,11 @@ class TestRefusedRowSettle:
 
         try:
             with (
-                patch("kiro_crew.subagent.Stats"),
-                patch("kiro_crew.subagent.sel"),
+                patch("aj_crew.subagent.Stats"),
+                patch("aj_crew.subagent.sel"),
                 patch.object(manager, "_run", _park),
                 patch.object(type(store), "finish", _finish_refusing_until_released),
-                caplog.at_level(logging.WARNING, logger="kiro_crew.subagent_manager.admission"),
+                caplog.at_level(logging.WARNING, logger="aj_crew.subagent_manager.admission"),
             ):
                 manager.spawn("occupy", parent_session_key=ROOT)
                 waiting = manager.spawn("waiting", parent_session_key=ROOT)
@@ -692,10 +692,10 @@ class TestRefusedRowSettle:
         scheduled by ``_after_dispatch_impl``) keeps the full hold too: it is
         the refusal published, so it fires only once the row reads ``failed``.
         """
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.subagent_manager import admission as admission_mod
-        from kiro_crew.subagent_manager.admission import taskq_bridge as bridge_mod
-        from kiro_crew.subagent_persistence import read_tombstone
+        from aj_crew import taskq as _taskq
+        from aj_crew.subagent_manager import admission as admission_mod
+        from aj_crew.subagent_manager.admission import taskq_bridge as bridge_mod
+        from aj_crew.subagent_persistence import read_tombstone
 
         monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
         monkeypatch.setattr(bridge_mod, "_SETTLE_RETRY_BACKOFF_CAP_SECS", 0.02)
@@ -731,8 +731,8 @@ class TestRefusedRowSettle:
 
         try:
             with (
-                patch("kiro_crew.subagent.Stats"),
-                patch("kiro_crew.subagent.sel"),
+                patch("aj_crew.subagent.Stats"),
+                patch("aj_crew.subagent.sel"),
                 patch.object(manager, "_run", _park),
                 patch.object(type(store), "finish", _finish_refusing_one_row),
                 patch.object(
@@ -740,7 +740,7 @@ class TestRefusedRowSettle:
                     "_tombstone_refused_row",
                     staticmethod(_tombstone_lost_for_one_row),
                 ),
-                caplog.at_level(logging.WARNING, logger="kiro_crew.subagent_manager.admission"),
+                caplog.at_level(logging.WARNING, logger="aj_crew.subagent_manager.admission"),
             ):
                 manager.spawn("occupy", parent_session_key=ROOT)
                 bad = manager.spawn("bad", parent_session_key=ROOT)
@@ -753,7 +753,7 @@ class TestRefusedRowSettle:
                 bad_params["cwd"] = "/tmp/elsewhere"  # disallowed by the time the drain re-checks
                 manager._running_count = 0
                 with patch(
-                    "kiro_crew.subagent.validate_cwd",
+                    "aj_crew.subagent.validate_cwd",
                     return_value=("", "cwd is outside every allowed root"),
                 ):
                     dispatch = asyncio.create_task(
@@ -816,8 +816,8 @@ class TestRefusedRowSettle:
         task the awaiter can take down: it is the first step of the retained
         settle, and the awaiter only joins that settle, shielded.
         """
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.subagent_manager import admission as admission_mod
+        from aj_crew import taskq as _taskq
+        from aj_crew.subagent_manager import admission as admission_mod
 
         monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
         manager = SubagentManager(
@@ -850,8 +850,8 @@ class TestRefusedRowSettle:
 
         try:
             with (
-                patch("kiro_crew.subagent.Stats"),
-                patch("kiro_crew.subagent.sel"),
+                patch("aj_crew.subagent.Stats"),
+                patch("aj_crew.subagent.sel"),
                 patch.object(manager, "_run", _park),
             ):
                 manager.spawn("occupy", parent_session_key=ROOT)
@@ -901,11 +901,11 @@ class TestRefusedRowSettle:
         reconcile over the row -- as the next incarnation would run it --
         settles the row failed instead of requeueing it.
         """
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.subagent_manager import admission as admission_mod
-        from kiro_crew.subagent_manager.admission import taskq_bridge as bridge_mod
-        from kiro_crew.subagent_persistence import read_tombstone
-        from kiro_crew.taskq import reconcile as _reconcile
+        from aj_crew import taskq as _taskq
+        from aj_crew.subagent_manager import admission as admission_mod
+        from aj_crew.subagent_manager.admission import taskq_bridge as bridge_mod
+        from aj_crew.subagent_persistence import read_tombstone
+        from aj_crew.taskq import reconcile as _reconcile
 
         monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
         monkeypatch.setattr(bridge_mod, "_SETTLE_RETRY_BACKOFF_CAP_SECS", 0.02)
@@ -933,8 +933,8 @@ class TestRefusedRowSettle:
 
         try:
             with (
-                patch("kiro_crew.subagent.Stats"),
-                patch("kiro_crew.subagent.sel"),
+                patch("aj_crew.subagent.Stats"),
+                patch("aj_crew.subagent.sel"),
                 patch.object(manager, "_run", _park),
                 patch.object(type(store), "finish", _finish_never_lands),
             ):
@@ -999,11 +999,11 @@ class TestRefusedRowSettle:
         artifacts too: a recorded ending settles the row, and a queued row
         whose artifacts say nothing is left exactly as it was.
         """
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.subagent_manager import admission as admission_mod
-        from kiro_crew.subagent_manager.admission import taskq_bridge as bridge_mod
-        from kiro_crew.subagent_persistence import read_tombstone
-        from kiro_crew.taskq import reconcile as _reconcile
+        from aj_crew import taskq as _taskq
+        from aj_crew.subagent_manager import admission as admission_mod
+        from aj_crew.subagent_manager.admission import taskq_bridge as bridge_mod
+        from aj_crew.subagent_persistence import read_tombstone
+        from aj_crew.taskq import reconcile as _reconcile
 
         monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
         monkeypatch.setattr(bridge_mod, "_SETTLE_RETRY_BACKOFF_CAP_SECS", 0.02)
@@ -1021,8 +1021,8 @@ class TestRefusedRowSettle:
 
         try:
             with (
-                patch("kiro_crew.subagent.Stats"),
-                patch("kiro_crew.subagent.sel"),
+                patch("aj_crew.subagent.Stats"),
+                patch("aj_crew.subagent.sel"),
                 patch.object(manager, "_run", _park),
                 patch.object(type(store), "finish", _finish_never_lands),
             ):
@@ -1073,9 +1073,9 @@ class TestRefusedRowSettle:
         queued row from starting. The settle ends with a warning and leaves the
         row to its tombstone and the boot reconcile.
         """
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.subagent_manager import admission as admission_mod
-        from kiro_crew.subagent_manager.admission import taskq_bridge as bridge_mod
+        from aj_crew import taskq as _taskq
+        from aj_crew.subagent_manager import admission as admission_mod
+        from aj_crew.subagent_manager.admission import taskq_bridge as bridge_mod
 
         monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
         monkeypatch.setattr(bridge_mod, "_SETTLE_RETRY_BACKOFF_CAP_SECS", 0.02)
@@ -1093,8 +1093,8 @@ class TestRefusedRowSettle:
 
         try:
             with (
-                patch("kiro_crew.subagent.Stats"),
-                patch("kiro_crew.subagent.sel"),
+                patch("aj_crew.subagent.Stats"),
+                patch("aj_crew.subagent.sel"),
                 patch.object(manager, "_run", _park),
                 patch.object(type(store), "finish", _finish_raises_a_bug),
                 caplog.at_level(logging.WARNING, logger=bridge_mod._glue_logger.name),
@@ -1106,7 +1106,7 @@ class TestRefusedRowSettle:
                 params["agent"] = "ghost"
                 manager._running_count = 0
                 with patch(
-                    "kiro_crew.subagent._validate_agent",
+                    "aj_crew.subagent._validate_agent",
                     return_value=("", "agent 'ghost' not found", "agent_not_found"),
                 ):
                     # Bounded: with the write raising the same way every time,
@@ -1135,10 +1135,10 @@ class TestRefusedRowSettle:
         published over a row left QUEUED with no tombstone -- dispatchable
         after a restart.
         """
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.subagent_manager import admission as admission_mod
-        from kiro_crew.subagent_manager.admission import taskq_bridge as bridge_mod
-        from kiro_crew.subagent_persistence import read_tombstone
+        from aj_crew import taskq as _taskq
+        from aj_crew.subagent_manager import admission as admission_mod
+        from aj_crew.subagent_manager.admission import taskq_bridge as bridge_mod
+        from aj_crew.subagent_persistence import read_tombstone
 
         monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
         manager = _store_manager()
@@ -1155,8 +1155,8 @@ class TestRefusedRowSettle:
 
         try:
             with (
-                patch("kiro_crew.subagent.Stats"),
-                patch("kiro_crew.subagent.sel"),
+                patch("aj_crew.subagent.Stats"),
+                patch("aj_crew.subagent.sel"),
                 patch.object(manager, "_run", _park),
                 patch.object(bridge_mod._asyncio, "to_thread", _to_thread_without_a_worker),
                 caplog.at_level(logging.WARNING, logger=bridge_mod._glue_logger.name),
@@ -1170,7 +1170,7 @@ class TestRefusedRowSettle:
                 params["agent"] = "ghost"
                 manager._running_count = 0
                 with patch(
-                    "kiro_crew.subagent._validate_agent",
+                    "aj_crew.subagent._validate_agent",
                     return_value=("", "agent 'ghost' not found", "agent_not_found"),
                 ):
                     first = await await_until(
@@ -1230,11 +1230,11 @@ class TestRefusalTombstoneRetention:
         import json
         import time
 
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.subagent import write_refusal_tombstone
-        from kiro_crew.subagent_persistence import create_agent_folder, prune_stale_tombstones
+        from aj_crew import taskq as _taskq
+        from aj_crew.subagent import write_refusal_tombstone
+        from aj_crew.subagent_persistence import create_agent_folder, prune_stale_tombstones
 
-        monkeypatch.setattr("kiro_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
+        monkeypatch.setattr("aj_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
         manager = _store_manager()
         await manager.wait_taskq_ready()
         store = manager._admission.taskq_store()
@@ -1294,14 +1294,14 @@ class TestRefusalTombstoneHygiene:
     """
 
     def test_refusal_tombstone_detail_is_redacted_and_bounded(self) -> None:
-        from kiro_crew.process_identity import MAX_ERROR_DETAIL_LEN
-        from kiro_crew.subagent import write_refusal_tombstone
+        from aj_crew.process_identity import MAX_ERROR_DETAIL_LEN
+        from aj_crew.subagent import write_refusal_tombstone
 
         reason = "refused: key AKIAIOSFODNN7EXAMPLE leaked " + "x" * (MAX_ERROR_DETAIL_LEN * 2)
         with (
-            patch("kiro_crew.subagent.write_tombstone") as writer,
-            patch("kiro_crew.subagent.read_state", return_value={}),
-            patch("kiro_crew.subagent.tombstone_recovery_action", return_value="none"),
+            patch("aj_crew.subagent.write_tombstone") as writer,
+            patch("aj_crew.subagent.read_state", return_value={}),
+            patch("aj_crew.subagent.tombstone_recovery_action", return_value="none"),
         ):
             write_refusal_tombstone("r1", reason)
         writer.assert_called_once()
@@ -1328,9 +1328,9 @@ class TestBootSettleHeldUntilWritten:
         from overload_fakes import Clock
         from overload_fakes import task_record as _rec
 
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.taskq.reconcile import reconcile_on_boot
-        from kiro_crew.taskq.store import TaskStore
+        from aj_crew import taskq as _taskq
+        from aj_crew.taskq.reconcile import reconcile_on_boot
+        from aj_crew.taskq.store import TaskStore
 
         clock = Clock(9000.0)
         path = tmp_path / "t.db"
@@ -1388,9 +1388,9 @@ class TestBootSettleHeldUntilWritten:
         from overload_fakes import Clock
         from overload_fakes import task_record as _rec
 
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.taskq.reconcile import reconcile_on_boot
-        from kiro_crew.taskq.store import TaskStore
+        from aj_crew import taskq as _taskq
+        from aj_crew.taskq.reconcile import reconcile_on_boot
+        from aj_crew.taskq.store import TaskStore
 
         clock = Clock(9000.0)
         path = tmp_path / "t.db"
@@ -1424,9 +1424,9 @@ class TestBootQueuedPassIsBounded:
         from overload_fakes import Clock
         from overload_fakes import task_record as _rec
 
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.taskq.reconcile import reconcile_on_boot
-        from kiro_crew.taskq.store import TaskStore
+        from aj_crew import taskq as _taskq
+        from aj_crew.taskq.reconcile import reconcile_on_boot
+        from aj_crew.taskq.store import TaskStore
 
         clock = Clock(9000.0)
         path = tmp_path / "t.db"
@@ -1485,10 +1485,10 @@ class TestBootQueuedPassIsBounded:
         from overload_fakes import Clock
         from overload_fakes import task_record as _rec
 
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.subagent_manager.admission import taskq_bridge as bridge_mod
-        from kiro_crew.taskq.reconcile import REFUSED, reconcile_on_boot
-        from kiro_crew.taskq.store import TaskStore
+        from aj_crew import taskq as _taskq
+        from aj_crew.subagent_manager.admission import taskq_bridge as bridge_mod
+        from aj_crew.taskq.reconcile import REFUSED, reconcile_on_boot
+        from aj_crew.taskq.store import TaskStore
 
         clock = Clock(9000.0)
         path = tmp_path / "t.db"
@@ -1533,10 +1533,10 @@ class TestBootQueuedPassFencesDispatch:
         from overload_fakes import Clock
         from overload_fakes import task_record as _rec
 
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.taskq import model as _model
-        from kiro_crew.taskq.reconcile import reconcile_on_boot
-        from kiro_crew.taskq.store import TaskStore
+        from aj_crew import taskq as _taskq
+        from aj_crew.taskq import model as _model
+        from aj_crew.taskq.reconcile import reconcile_on_boot
+        from aj_crew.taskq.store import TaskStore
 
         clock = Clock(9000.0)
         path = tmp_path / "t.db"
@@ -1556,7 +1556,7 @@ class TestBootQueuedPassFencesDispatch:
         try:
             with (
                 patch.object(type(store), "queued_rows", _queued_rows),
-                caplog.at_level(logging.WARNING, logger="kiro_crew.taskq.store"),
+                caplog.at_level(logging.WARNING, logger="aj_crew.taskq.store"),
             ):
                 report = reconcile_on_boot(store, artifact_probe=lambda r: verdicts[r.id])
                 assert report.queued_examined == 0
@@ -1607,8 +1607,8 @@ class TestBootQueuedPassFencesDispatch:
         from overload_fakes import Clock
         from overload_fakes import task_record as _rec
 
-        from kiro_crew import taskq as _taskq
-        from kiro_crew.taskq.store import TaskStore
+        from aj_crew import taskq as _taskq
+        from aj_crew.taskq.store import TaskStore
 
         class _LockedKindRead:
             def __init__(self, real: sqlite3.Connection) -> None:

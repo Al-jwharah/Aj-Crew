@@ -542,7 +542,7 @@ function baseInputs(over: Record<string, unknown> = {}) {
     markerSites: [site('chat.toggle', 'k.toggle'), site('chat.older', 'k.older', 2)],
     catalogs: { en: EN, 'zh-CN': ZH },
     locales: ['en', 'zh-CN'],
-    productName: 'Kiro Crew',
+    productName: 'Aj Crew',
     inputDigest: 'sha256:test',
     routes: ROUTES,
     conditions: UI_CONDITIONS,
@@ -1226,7 +1226,7 @@ describe('tabs of other side-panel pages', () => {
 
 describe('gen:ui --out', () => {
   const run = (...args: string[]) => spawnSync(process.execPath, [path.resolve(__dirname, '../../scripts/gen-ui-index.mjs'), ...args], { encoding: 'utf-8' })
-  const COMMITTED = path.resolve(__dirname, '../../../src/kiro_crew/docs/ui-index.generated.json')
+  const COMMITTED = path.resolve(__dirname, '../../../src/aj_crew/docs/ui-index.generated.json')
 
   it('refuses the committed index as a target, so a batch can never overwrite it', () => {
     const before = fs.readFileSync(COMMITTED)
@@ -1245,14 +1245,14 @@ describe('gen:ui --out', () => {
   it('refuses to write the build-time auto tier next to the committed index, or with no file', () => {
     const r = run('--auto-out', path.join(path.dirname(COMMITTED), 'ui-index.auto.json'))
     expect(r.status).toBe(2)
-    expect(r.stderr).toMatch(/--auto-out must not be in src[\\/]kiro_crew[\\/]docs/)
+    expect(r.stderr).toMatch(/--auto-out must not be in src[\\/]aj_crew[\\/]docs/)
     expect(fs.existsSync(path.join(path.dirname(COMMITTED), 'ui-index.auto.json'))).toBe(false)
     expect(run('--auto-out').stderr).toMatch(/--auto-out needs a file path/)
   })
 })
 
 describe('gen:ui --check freshness modes', () => {
-  const STALE = [{ file: 'src/kiro_crew/docs/ui-index.generated.json', missing: false }]
+  const STALE = [{ file: 'src/aj_crew/docs/ui-index.generated.json', missing: false }]
 
   it('passes a fresh tree in every mode', () => {
     for (const warnIfStale of [false, true]) for (const strict of [false, true]) {
@@ -1401,7 +1401,7 @@ export function Chip({ name }: { name: string }) {
 // own index; unset, they read the committed one.
 const INDEX_FILE = process.env.UI_INDEX_FILE
   ? path.resolve(process.env.UI_INDEX_FILE)
-  : path.resolve(__dirname, '../../../src/kiro_crew/docs/ui-index.generated.json')
+  : path.resolve(__dirname, '../../../src/aj_crew/docs/ui-index.generated.json')
 const committed = JSON.parse(fs.readFileSync(INDEX_FILE, 'utf-8')) as Index
 const byId = new Map(committed.locations.map(l => [l.id, l]))
 
@@ -1504,7 +1504,7 @@ describe('the committed index', () => {
     for (const key of Object.keys(LEGACY_PAGE_CANONICAL)) expect(byId.has(`page.${key}`)).toBe(false)
     const crews = byId.get('tab.capabilities.crews') as { alias_keys?: string[]; placements: { route: string }[] }
     expect(crews.placements[0].route).toBe('/capabilities?tab=crews')
-    expect(crews.alias_keys).toContain('components.commandPalette.providers.pagesProvider.kirocrew_agents')
+    expect(crews.alias_keys).toContain('components.commandPalette.providers.pagesProvider.ajcrew_agents')
     // "Tasks" keeps the Task Runner page's own gate.
     const projects = byId.get('page.projects')!
     expect(projects.placements[0].requires).toEqual([{ kind: 'condition', id: 'app_enabled' }])

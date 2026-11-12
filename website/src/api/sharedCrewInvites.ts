@@ -32,7 +32,7 @@ export interface FirstShareView {
 }
 
 /** The header the dashboard sends after its own dialog, for an action that cannot be undone. */
-export const CONFIRM_IRREVERSIBLE_HEADER = { 'X-Kirocrew-Confirm': 'irreversible' } as const
+export const CONFIRM_IRREVERSIBLE_HEADER = { 'X-Ajcrew-Confirm': 'irreversible' } as const
 
 export type InviteStatus = 'pending' | 'accepted'
 

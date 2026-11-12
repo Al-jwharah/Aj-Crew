@@ -26,12 +26,12 @@ from telegram_parity_helpers import (  # noqa: F401 -- the autouse fixture regis
 from telegram_wire_helpers import telegram_wire
 from test_telegram import FakeClient, FakeProvider, _dispatcher, _dm, _Ev, _origin, _prime_live
 
-from kiro_crew.acp.types import EVENT_COMPACTION_STATUS, EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.telegram import renderer_status
-from kiro_crew.telegram.renderer import TelegramRenderer
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES, TelegramInboundMessage
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.acp.types import EVENT_COMPACTION_STATUS, EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.telegram import renderer_status
+from aj_crew.telegram.renderer import TelegramRenderer
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES, TelegramInboundMessage
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import await_until, finished
 
 
 def _frozen_turn_clock(monkeypatch: pytest.MonkeyPatch) -> ManualClock:
@@ -122,8 +122,8 @@ class TestReplyThreading:
     """
 
     def test_a_live_dm_turn_gets_no_quote(self) -> None:
-        from kiro_crew.telegram.transport import TelegramInboundMessage
-        from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
+        from aj_crew.telegram.transport import TelegramInboundMessage
+        from aj_crew.telegram.transport_dispatch import TelegramDispatcher
 
         msg = TelegramInboundMessage(
             channel_type="telegram",
@@ -138,8 +138,8 @@ class TestReplyThreading:
     def test_a_forum_topic_turn_quotes_the_question(self) -> None:
         # Several allow-listed participants can be talking at once, so a flat
         # answer belongs to nobody in particular.
-        from kiro_crew.telegram.transport import TelegramInboundMessage
-        from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
+        from aj_crew.telegram.transport import TelegramInboundMessage
+        from aj_crew.telegram.transport_dispatch import TelegramDispatcher
 
         msg = TelegramInboundMessage(
             channel_type="telegram",
@@ -156,8 +156,8 @@ class TestReplyThreading:
         # It is answered after the turn that was already running, so it lands well
         # below the message it answers. interpret_commands=False is the marker the
         # drain path passes.
-        from kiro_crew.telegram.transport import TelegramInboundMessage
-        from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
+        from aj_crew.telegram.transport import TelegramInboundMessage
+        from aj_crew.telegram.transport_dispatch import TelegramDispatcher
 
         msg = TelegramInboundMessage(
             channel_type="telegram",
@@ -170,8 +170,8 @@ class TestReplyThreading:
         assert TelegramDispatcher._reply_target(msg, interpret_commands=False) == 42
 
     def test_a_missing_message_id_is_no_target_rather_than_zero(self) -> None:
-        from kiro_crew.messaging.transport import InboundMessage
-        from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
+        from aj_crew.messaging.transport import InboundMessage
+        from aj_crew.telegram.transport_dispatch import TelegramDispatcher
 
         bare = InboundMessage(
             channel_type="telegram", user_id="1", conversation_id="-100123", text="hi"
@@ -233,7 +233,7 @@ class TestSplitterConvergence:
         return f"intro\n\n````diff\n{body[:400]}\n```\n{body[400:]}\n````\n\ntail prose"
 
     def test_no_chunk_invents_a_closer_the_source_never_had(self) -> None:
-        from kiro_crew.telegram.renderer import _split_markdown
+        from aj_crew.telegram.renderer import _split_markdown
 
         chunks = _split_markdown(self._payload(), self._BUDGET)
         assert len(chunks) > 1, "the payload must actually split for this to mean anything"
@@ -247,7 +247,7 @@ class TestSplitterConvergence:
         # The parity rebalancer reopened with a bare ``` — losing both the run
         # length and the `diff` info string, so the continuation lost its
         # highlighting and stopped matching its own closer.
-        from kiro_crew.telegram.renderer import _split_markdown
+        from aj_crew.telegram.renderer import _split_markdown
 
         chunks = _split_markdown(self._payload(), self._BUDGET)
         reopened = [c for c in chunks[1:] if c.startswith("`")]
@@ -256,7 +256,7 @@ class TestSplitterConvergence:
 
     def test_the_content_survives_the_round_trip(self) -> None:
         # Whatever the delimiters do, no authored character may be dropped.
-        from kiro_crew.telegram.renderer import _split_markdown
+        from aj_crew.telegram.renderer import _split_markdown
 
         payload = self._payload()
         chunks = _split_markdown(payload, self._BUDGET)
@@ -267,7 +267,7 @@ class TestSplitterConvergence:
     def test_a_plain_three_backtick_block_still_balances(self) -> None:
         # The common case must not regress: each chunk is self-contained markdown,
         # so the per-chunk HTML pass wraps it in <pre> instead of leaking a fence.
-        from kiro_crew.telegram.renderer import _md_to_telegram_html, _split_markdown
+        from aj_crew.telegram.renderer import _md_to_telegram_html, _split_markdown
 
         code = "\n".join(f"row <{i}> & 'v'" for i in range(200))
         chunks = _split_markdown(f"code:\n\n```python\n{code}\n```\n\ndone", 400)
@@ -279,8 +279,8 @@ class TestSplitterConvergence:
         # The point of the change is one splitter, not two that agree today. A
         # channel-local reimplementation would drift the moment the shared
         # contract gains a rule.
-        from kiro_crew.messaging.split import split_markdown_safe
-        from kiro_crew.telegram.renderer import _split_markdown
+        from aj_crew.messaging.split import split_markdown_safe
+        from aj_crew.telegram.renderer import _split_markdown
 
         payload = self._payload()
         assert _split_markdown(payload, self._BUDGET) == split_markdown_safe(payload, self._BUDGET)
@@ -322,7 +322,7 @@ class TestVoiceOut:
             spoken.append(text)
             return True
 
-        with patch("kiro_crew.telegram.transport_dispatch.synthesize_and_deliver", _capture):
+        with patch("aj_crew.telegram.transport_dispatch.synthesize_and_deliver", _capture):
             await d._speak_reply(
                 ("direct", "1"), 1, f"Here is the key {head}**{tail}** for the build.", None
             )
@@ -367,7 +367,7 @@ class TestVoiceOut:
 
     @pytest.mark.asyncio
     async def test_a_short_answer_is_not_spoken(self) -> None:
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.telegram import transport_dispatch as td
 
         d, _, _ = _dispatcher({1})
         called: list[str] = []
@@ -380,7 +380,7 @@ class TestVoiceOut:
     async def test_a_tts_failure_never_raises_out_of_the_turn(self) -> None:
         # The text answer has already landed. A TTS problem must not surface as a
         # failed turn or re-post anything.
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.telegram import transport_dispatch as td
 
         d, client, _ = _dispatcher({1})
 
@@ -395,8 +395,8 @@ class TestVoiceOut:
     def test_ogg_takes_the_native_voice_note_and_wav_does_not(self) -> None:
         # sendVoice REJECTS anything but OGG/Opus with a 400 rather than degrading,
         # and the system engine emits WAV — so the split is a Bot API constraint, not taste.
-        from kiro_crew.telegram.client import TELEGRAM_VOICE_MIMES
-        from kiro_crew.telegram.transport_dispatch import _audio_mime
+        from aj_crew.telegram.client import TELEGRAM_VOICE_MIMES
+        from aj_crew.telegram.transport_dispatch import _audio_mime
 
         assert _audio_mime("/tmp/r.ogg") in TELEGRAM_VOICE_MIMES
         assert _audio_mime("/tmp/r.wav") not in TELEGRAM_VOICE_MIMES
@@ -405,7 +405,7 @@ class TestVoiceOut:
 
     @pytest.mark.asyncio
     async def test_an_oversize_upload_is_refused_rather_than_413d(self) -> None:
-        from kiro_crew.telegram.client import TELEGRAM_MAX_AUDIO_BYTES, TelegramClient
+        from aj_crew.telegram.client import TELEGRAM_MAX_AUDIO_BYTES, TelegramClient
 
         client = TelegramClient(token="1:tok")
         sent: list = []
@@ -428,7 +428,7 @@ class TestVoiceOut:
     async def test_the_voice_message_is_sent_silently(self) -> None:
         # The text answer already pinged; a second notification for one turn is what
         # makes a chat with voice on read as broken.
-        from kiro_crew.telegram.client import TelegramClient
+        from aj_crew.telegram.client import TelegramClient
 
         client = TelegramClient(token="1:tok")
         seen: list[dict] = []
@@ -446,7 +446,7 @@ class TestVoiceOut:
     def test_the_synthesis_settings_come_from_one_reader(self) -> None:
         # Two channels reading the voice_reply section with their own key lists is
         # how they end up honouring different settings.
-        from kiro_crew.voice_reply import DEFAULT_PROVIDER, synthesis_settings
+        from aj_crew.voice_reply import DEFAULT_PROVIDER, synthesis_settings
 
         assert synthesis_settings(None)["provider"] == DEFAULT_PROVIDER
         assert synthesis_settings({"provider": "ploly"})["provider"] == DEFAULT_PROVIDER
@@ -462,14 +462,14 @@ class TestAutoTitle:
     """
 
     def setup_method(self) -> None:
-        from kiro_crew.messaging import auto_title, privacy_mode
+        from aj_crew.messaging import auto_title, privacy_mode
 
         auto_title.reset()
         privacy_mode.reset()
 
     @pytest.mark.asyncio
     async def test_a_turn_with_a_reply_claims_and_spawns_once(self) -> None:
-        from kiro_crew.messaging import auto_title
+        from aj_crew.messaging import auto_title
 
         d, _, _ = _dispatcher({7})
         calls: list[tuple] = []
@@ -490,7 +490,7 @@ class TestAutoTitle:
     async def test_a_restricted_session_is_never_titled(self) -> None:
         # There is nothing to title: it persists no transcript, and generating a
         # name would send its content to a background turn.
-        from kiro_crew.messaging import auto_title, privacy_mode
+        from aj_crew.messaging import auto_title, privacy_mode
 
         d, _, _ = _dispatcher({7})
         privacy_mode.mark_incognito(d._session_key(("direct", "7")))
@@ -510,7 +510,7 @@ class TestAutoTitle:
         # asyncio keeps only a WEAK reference to a bare create_task, so without a
         # strong set the generation can vanish and the conversation silently keeps
         # its truncated name.
-        from kiro_crew.messaging import auto_title
+        from aj_crew.messaging import auto_title
 
         d, _, _ = _dispatcher({7})
         started = asyncio.Event()
@@ -692,7 +692,7 @@ class TestFallbackTitleYieldsToAutoTitle:
     """
 
     def setup_method(self) -> None:
-        from kiro_crew.messaging import auto_title, privacy_mode
+        from aj_crew.messaging import auto_title, privacy_mode
 
         auto_title.reset()
         privacy_mode.reset()
@@ -707,12 +707,12 @@ class TestFallbackTitleYieldsToAutoTitle:
         return log, titles
 
     def test_a_claimed_session_gets_no_fallback_title(self) -> None:
-        from kiro_crew.messaging import auto_title
+        from aj_crew.messaging import auto_title
 
         d, _, _ = _dispatcher({7})
         log, titles = self._log()
         d.conv_log = log  # type: ignore[assignment]
-        key = "telegram:kirocrew:direct:7"
+        key = "telegram:ajcrew:direct:7"
         assert auto_title.try_claim(key)
         d._persist_turn(key, "a very long first message that would be truncated", "hi", True, "a")
         assert titles == [], "a name is on its way; writing the truncation blocks it"
@@ -724,7 +724,7 @@ class TestFallbackTitleYieldsToAutoTitle:
         d, _, _ = _dispatcher({7})
         log, titles = self._log()
         d.conv_log = log  # type: ignore[assignment]
-        key = "telegram:kirocrew:direct:7"
+        key = "telegram:ajcrew:direct:7"
         d._persist_turn(key, "first message", "hi", True, "a")
         assert titles == [(key, "first message")]
 
@@ -732,12 +732,12 @@ class TestFallbackTitleYieldsToAutoTitle:
         # maybe_auto_title releases the claim on SKIP or failure, so the next
         # exchange can retry. Until it does, the conversation should not be stuck
         # unnamed forever.
-        from kiro_crew.messaging import auto_title
+        from aj_crew.messaging import auto_title
 
         d, _, _ = _dispatcher({7})
         log, titles = self._log()
         d.conv_log = log  # type: ignore[assignment]
-        key = "telegram:kirocrew:direct:7"
+        key = "telegram:ajcrew:direct:7"
         auto_title.try_claim(key)
         auto_title.release_claim(key)
         d._persist_turn(key, "first message", "hi", True, "a")
@@ -754,7 +754,7 @@ class TestStatsCounters:
     """
 
     def test_a_served_turn_counts_received_and_success(self) -> None:
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.telegram import transport_dispatch as td
 
         d, _, _ = _dispatcher({7})
         seen: list[str] = []
@@ -771,7 +771,7 @@ class TestStatsCounters:
     def test_a_governance_denied_message_counts_nothing(self) -> None:
         # It never happened as far as the operator's own traffic figures go, and
         # counting it would make the failure ratio read as the bot's fault.
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.telegram import transport_dispatch as td
 
         d, _, _ = _dispatcher({7})
         seen: list[str] = []
@@ -838,7 +838,7 @@ class TestVoiceReplyCharacterization:
     async def test_the_floor_is_fifty_raw_characters(self, monkeypatch: Any) -> None:
         seen: list[Any] = []
         monkeypatch.setattr(
-            "kiro_crew.telegram.transport_dispatch.synthesize_and_deliver", self._synth(seen, [])
+            "aj_crew.telegram.transport_dispatch.synthesize_and_deliver", self._synth(seen, [])
         )
         d, _client = self._voice_dispatcher()
         await d._speak_reply(("direct", "1"), 1, "x" * 49, None)
@@ -851,11 +851,11 @@ class TestVoiceReplyCharacterization:
 
     @pytest.mark.asyncio
     async def test_settings_come_from_the_boot_config(self, monkeypatch: Any) -> None:
-        from kiro_crew.voice_reply import synthesis_settings
+        from aj_crew.voice_reply import synthesis_settings
 
         seen: list[Any] = []
         monkeypatch.setattr(
-            "kiro_crew.telegram.transport_dispatch.synthesize_and_deliver", self._synth(seen, [])
+            "aj_crew.telegram.transport_dispatch.synthesize_and_deliver", self._synth(seen, [])
         )
         d, _client = self._voice_dispatcher()
         section = {"provider": "polly", "voice_id": "Joanna"}
@@ -876,7 +876,7 @@ class TestVoiceReplyCharacterization:
         seen: list[Any] = []
         results: list[Any] = []
         monkeypatch.setattr(
-            "kiro_crew.telegram.transport_dispatch.synthesize_and_deliver",
+            "aj_crew.telegram.transport_dispatch.synthesize_and_deliver",
             self._synth(seen, results, path),
         )
         d, client = self._voice_dispatcher()
@@ -894,7 +894,7 @@ class TestVoiceReplyCharacterization:
         seen: list[Any] = []
         results: list[Any] = []
         monkeypatch.setattr(
-            "kiro_crew.telegram.transport_dispatch.synthesize_and_deliver",
+            "aj_crew.telegram.transport_dispatch.synthesize_and_deliver",
             self._synth(seen, results, tmp_path / "missing.wav"),
         )
         d, client = self._voice_dispatcher()
@@ -904,7 +904,7 @@ class TestVoiceReplyCharacterization:
         path = tmp_path / "reply.wav"
         path.write_bytes(b"RIFF")
         monkeypatch.setattr(
-            "kiro_crew.telegram.transport_dispatch.synthesize_and_deliver",
+            "aj_crew.telegram.transport_dispatch.synthesize_and_deliver",
             self._synth(seen, results, path),
         )
         client.voice_error = OSError("upload refused")
@@ -926,12 +926,12 @@ class TestVoiceReplyCharacterization:
         ],
     )
     def test_the_mime_table_is_exact(self, tmp_path: Any, name: str, mime: str) -> None:
-        from kiro_crew.telegram.transport_dispatch import _audio_mime
+        from aj_crew.telegram.transport_dispatch import _audio_mime
 
         assert _audio_mime(str(tmp_path / name)) == mime
 
     def test_reading_returns_the_bytes_or_nothing(self, tmp_path: Any) -> None:
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.telegram import transport_dispatch as td
 
         target = tmp_path / "a.wav"
         target.write_bytes(b"abc")
@@ -961,7 +961,7 @@ class TestVoiceReplyCharacterization:
         d._persist_turn = lambda *a, **k: order.append(("persist",))  # type: ignore[method-assign]
         await d.handle_message(_msg("hello world"))
         assert speak.await_args.args == (("direct", "1"), 1, "Answer: hello world", None)
-        assert order == [("speak", ["telegram:kirocrew:direct:1"]), ("persist",)]
+        assert order == [("speak", ["telegram:ajcrew:direct:1"]), ("persist",)]
 
     @pytest.mark.asyncio
     async def test_a_forum_turn_speaks_with_an_int_thread(
@@ -970,11 +970,11 @@ class TestVoiceReplyCharacterization:
         path = tmp_path / "reply.ogg"
         path.write_bytes(b"OggS..")
         monkeypatch.setattr(
-            "kiro_crew.telegram.transport_dispatch.synthesize_and_deliver",
+            "aj_crew.telegram.transport_dispatch.synthesize_and_deliver",
             self._synth([], [], path),
         )
         # The fake provider's answer is short; the floor is not what this is about.
-        monkeypatch.setattr("kiro_crew.telegram.dispatch.voice._VOICE_MIN_CHARS", 1)
+        monkeypatch.setattr("aj_crew.telegram.dispatch.voice._VOICE_MIN_CHARS", 1)
         d, _client, _sess = _dispatcher({1}, allow_forum=True, allowed_forum_chat_ids=[-100999])
         d._voice_pref[("forum", "-100999:4")] = True
         async with telegram_wire(monkeypatch) as wire:
@@ -1004,7 +1004,7 @@ class TestStatsAndReplyTargetCharacterization:
             inc_message_failed=lambda: seen.append("failed"),
             summary=lambda: "S",
         )
-        monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.Stats", lambda: recorder)
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.Stats", lambda: recorder)
         return seen
 
     def test_the_counters_per_exit(self, monkeypatch: Any) -> None:
@@ -1036,9 +1036,7 @@ class TestStatsAndReplyTargetCharacterization:
             asked.append(channel)
             raise RuntimeError("profile store down")
 
-        monkeypatch.setattr(
-            "kiro_crew.telegram.transport_dispatch.channel_inbound_permitted", _raise
-        )
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.channel_inbound_permitted", _raise)
         d, _client, _sess = _dispatcher({7})
         with pytest.raises(RuntimeError):
             asyncio.run(d.handle_message(_dm("hi")))
@@ -1046,7 +1044,7 @@ class TestStatsAndReplyTargetCharacterization:
 
     @pytest.mark.asyncio
     async def test_which_message_a_turn_quotes(self) -> None:
-        from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
+        from aj_crew.telegram.transport_dispatch import TelegramDispatcher
 
         d, client, _sess = _dispatcher({1})
         await d.handle_message(_msg("hi"))

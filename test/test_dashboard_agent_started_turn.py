@@ -29,27 +29,27 @@ from dashboard_approval_helpers import (
     _permission_event,
 )
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.transport_errors import AcpError, AcpProcessDied
-from kiro_crew.acp.types import STOP_REASON_STALE_RECOVER
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard import gateway_notice as gn
-from kiro_crew.dashboard.chat import _run_chat
-from kiro_crew.dashboard.chat_turn import turn_ledgers
-from kiro_crew.dashboard.chat_utils import TRANSIENT_GIVE_UP_TEXT, TRANSIENT_RETRY_KIND
-from kiro_crew.hooks import ToolHookResult
-from kiro_crew.providers import acp_turns
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import (
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.transport_errors import AcpError, AcpProcessDied
+from aj_crew.acp.types import STOP_REASON_STALE_RECOVER
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard import gateway_notice as gn
+from aj_crew.dashboard.chat import _run_chat
+from aj_crew.dashboard.chat_turn import turn_ledgers
+from aj_crew.dashboard.chat_utils import TRANSIENT_GIVE_UP_TEXT, TRANSIENT_RETRY_KIND
+from aj_crew.hooks import ToolHookResult
+from aj_crew.providers import acp_turns
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
     LLMEvent,
 )
-from kiro_crew.recovery.ladder import InfraError
-from kiro_crew.shared_crew import turn_gate
-from kiro_crew.testing.wait import async_wait_until, await_until, default_timeout
+from aj_crew.recovery.ladder import InfraError
+from aj_crew.shared_crew import turn_gate
+from aj_crew.testing.wait import async_wait_until, await_until, default_timeout
 
 # A credential-shaped string the agent's own reply carries; it must be stored redacted.
 _SECRET = "AKIA" + "Z" * 16
@@ -105,7 +105,7 @@ async def test_the_turn_shows_its_permission_card_and_its_reply_on_its_own_row(t
     )
     approver = asyncio.get_running_loop().create_task(_answer_approval(slot, "req-1", "approved"))
 
-    with _patch_stats(), patch("kiro_crew.dashboard.chat_runner.sel") as mock_sel:
+    with _patch_stats(), patch("aj_crew.dashboard.chat_runner.sel") as mock_sel:
         await _run_agent_turn(state, slot)
     await _drain(approver)
 
@@ -517,7 +517,7 @@ async def test_regenerate_refuses_a_span_holding_a_reply_the_agent_started(state
     before = [dict(m) for m in slot.messages]
     run_chat = AsyncMock()
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=run_chat):
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=run_chat):
         async with _regen_client(state) as client:
             resp = await client.post("/api/chat/slots/s1/regenerate")
             assert resp.status == 400

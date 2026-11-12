@@ -21,10 +21,10 @@ from typing import Any, Callable, Iterator
 
 import pytest
 
+from aj_crew import agent, agent_state
+from aj_crew.agent_materialization import fork_refresh
+from aj_crew.config.loader import AjCrewConfig
 from conftest import requires_symlinks
-from kiro_crew import agent, agent_state
-from kiro_crew.agent_materialization import fork_refresh
-from kiro_crew.config.loader import KiroCrewConfig
 
 # Captured before any fixture stubs it, so a test can show what the real resolver picks.
 _REAL_AGENT_SPEC_PATH = agent.agent_spec_path
@@ -130,7 +130,7 @@ def _forks(monkeypatch: pytest.MonkeyPatch, forks: dict[str, dict[str, Any]]) ->
 def _bindings(monkeypatch: pytest.MonkeyPatch, bound: dict[str, str]) -> None:
     agents = {crew: SimpleNamespace(kiro_agent=name) for crew, name in bound.items()}
     monkeypatch.setattr(
-        KiroCrewConfig, "load", classmethod(lambda cls: SimpleNamespace(agents=agents))
+        AjCrewConfig, "load", classmethod(lambda cls: SimpleNamespace(agents=agents))
     )
 
 
@@ -144,8 +144,8 @@ def test_no_forks_clears_the_failure_record(monkeypatch: pytest.MonkeyPatch) -> 
 def test_an_unreadable_config_corroborates_nothing(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    _forks(monkeypatch, {"crewfork": {"private_to": "crew", "forked_from": "kirocrew"}})
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_raise))
+    _forks(monkeypatch, {"crewfork": {"private_to": "crew", "forked_from": "ajcrew"}})
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_raise))
     with caplog.at_level(logging.WARNING, logger=agent.logger.name):
         agent._refresh_forked_templates_locked(gated_off=frozenset())
     assert agent._fork_refresh_failed == frozenset({"*"})
@@ -158,11 +158,11 @@ def one_fork(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     _forks(
         monkeypatch,
         {
-            "crewfork": {"private_to": "crew", "forked_from": "kirocrew"},
-            "kirocrew-lite": {"private_to": "other", "forked_from": "kirocrew"},
+            "crewfork": {"private_to": "crew", "forked_from": "ajcrew"},
+            "ajcrew-lite": {"private_to": "other", "forked_from": "ajcrew"},
         },
     )
-    _bindings(monkeypatch, {"crew": "crewfork", "other": "kirocrew-lite"})
+    _bindings(monkeypatch, {"crew": "crewfork", "other": "ajcrew-lite"})
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     return tmp_path
 
@@ -251,19 +251,19 @@ def test_dashboard_author_file_is_installers_is_fail_closed_on_an_unreadable_fil
     refresh leaves the fork's custom ``preToolUse`` guards in place rather than replacing
     them with bundled hooks. A ``.json`` that reproduces the installer-recorded ownership
     digest still returns True."""
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
-    absent = tmp_path / "kirocrew-dashboard-author.json"
+    absent = tmp_path / "ajcrew-dashboard-author.json"
     # Absent / unreadable -> capped reader returns None -> NOT ours.
     assert fork_refresh._dashboard_author_file_is_installers(absent) is False
     # A user file with no recorded ownership digest -> NOT ours.
-    managed = {"name": "kirocrew-dashboard-author", "mcpServers": {"kirocrew-core": {}}}
+    managed = {"name": "ajcrew-dashboard-author", "mcpServers": {"ajcrew-core": {}}}
     absent.write_text(json.dumps(managed), encoding="utf-8")
     assert fork_refresh._dashboard_author_file_is_installers(absent) is False
     # Record the ownership digest of these exact bytes -> now ours (reproduces the digest).
     absent.write_text(json.dumps(managed, indent=2) + "\n", encoding="utf-8")
-    agent_state.set_managed_digest("kirocrew-dashboard-author", agent_state.spec_digest(managed))
+    agent_state.set_managed_digest("ajcrew-dashboard-author", agent_state.spec_digest(managed))
     assert fork_refresh._dashboard_author_file_is_installers(absent) is True
     # A hand-edit after recording changes the bytes -> digest mismatch -> NOT ours.
     edited = dict(managed, prompt="user hand-edit")
@@ -279,7 +279,7 @@ def test_a_fork_of_an_unconfirmed_dashboard_author_origin_is_not_plumbing_refres
     as an owned origin (and refreshes the fork's hooks/MCP plumbing) ONLY when the sidecar
     confirms the origin spec is ours; an unconfirmed origin leaves the fork's plumbing
     untouched -- a corroborated fork still gets its governance passes."""
-    name = "kirocrew-dashboard-author"
+    name = "ajcrew-dashboard-author"
     _forks(monkeypatch, {"crewfork": {"private_to": "crew", "forked_from": name}})
     _bindings(monkeypatch, {"crew": "crewfork"})
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
@@ -341,7 +341,7 @@ def test_an_unconfirmed_private_copy_at_the_dashboard_author_stem_is_governance_
     later tightened against is stripped rather than left live. When the install WOULD land,
     the owned installer handles it and the loop skips it."""
     name = fork_refresh._DASHBOARD_AUTHOR_STEM
-    from kiro_crew.agent_materialization import worker_agent
+    from aj_crew.agent_materialization import worker_agent
 
     # The fork's OWN name equals the owned stem (a private copy at that filename), corroborated.
     _forks(monkeypatch, {name: {"private_to": "crew", "forked_from": name}})
@@ -349,7 +349,7 @@ def test_an_unconfirmed_private_copy_at_the_dashboard_author_stem_is_governance_
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     spec = tmp_path / (name + ".json")
     spec.write_text(
-        json.dumps({"name": name, "tools": [], "allowedTools": ["@kirocrew-core/some_verb"]})
+        json.dumps({"name": name, "tools": [], "allowedTools": ["@ajcrew-core/some_verb"]})
     )
     monkeypatch.setattr(agent, "agent_spec_path", lambda _n: spec)
     monkeypatch.setattr(agent, "_refresh_dynamic_fields", lambda *_a, **_k: None)
@@ -377,10 +377,10 @@ def test_an_unconfirmed_private_copy_at_the_dashboard_author_stem_is_governance_
 @pytest.fixture
 def shared_template(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """No forks; one crew bound to a shared template carrying a denied grant."""
-    from kiro_crew.agent_materialization import auto_approve
+    from aj_crew.agent_materialization import auto_approve
 
     _forks(monkeypatch, {})
-    _bindings(monkeypatch, {"reviewer-crew": "reviewer", "default": "kirocrew"})
+    _bindings(monkeypatch, {"reviewer-crew": "reviewer", "default": "ajcrew"})
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     spec = tmp_path / "reviewer.json"
     monkeypatch.setattr(agent, "agent_spec_path", lambda name: tmp_path / f"{name}.json")
@@ -409,7 +409,7 @@ def test_a_bound_shared_template_is_not_rewritten_after_the_ceiling_tightens(
     shared_template.write_text(json.dumps(doc), encoding="utf-8")
     agent._refresh_forked_templates_locked(gated_off=frozenset())
     written = json.loads(shared_template.read_text(encoding="utf-8"))
-    # Kiro Crew does not own it, so it is never rewritten (owner decision,
+    # Aj Crew does not own it, so it is never rewritten (owner decision,
     # docs/decisions); a kiro-cli start on it is refused instead.
     assert written == doc
     # Mount list and human-authored fields are untouched.
@@ -441,8 +441,8 @@ def test_an_unbound_template_is_never_written(
 def test_an_owned_spec_bound_to_a_crew_is_left_to_its_own_writer(
     shared_template: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    owned = shared_template.parent / "kirocrew.json"
-    raw = json.dumps({"name": "kirocrew", "allowedTools": ["execute_bash"]})
+    owned = shared_template.parent / "ajcrew.json"
+    raw = json.dumps({"name": "ajcrew", "allowedTools": ["execute_bash"]})
     owned.write_text(raw, encoding="utf-8")
     agent._refresh_forked_templates_locked(gated_off=frozenset())
     assert owned.read_text(encoding="utf-8") == raw
@@ -452,13 +452,13 @@ def test_a_second_file_claiming_an_owned_name_is_left_as_written(
     shared_template: Path,
 ) -> None:
     """The owned installer rewrites only ``<name>.json``. Another file that declares the
-    owned name is one Kiro Crew does not own, so it is left as written (a kiro-cli
+    owned name is one Aj Crew does not own, so it is left as written (a kiro-cli
     start on it is refused instead) while the owned file stays with its own writer."""
-    owned = shared_template.parent / "kirocrew.json"
-    raw = json.dumps({"name": "kirocrew", "allowedTools": ["execute_bash"]})
+    owned = shared_template.parent / "ajcrew.json"
+    raw = json.dumps({"name": "ajcrew", "allowedTools": ["execute_bash"]})
     owned.write_text(raw, encoding="utf-8")
-    claimant = shared_template.parent / "pkg-kirocrew.json"
-    claimant.write_text(json.dumps({"name": "kirocrew", "allowedTools": ["execute_bash"]}))
+    claimant = shared_template.parent / "pkg-ajcrew.json"
+    claimant.write_text(json.dumps({"name": "ajcrew", "allowedTools": ["execute_bash"]}))
     agent._refresh_forked_templates_locked(gated_off=frozenset())
     assert json.loads(claimant.read_text(encoding="utf-8"))["allowedTools"] == ["execute_bash"]
     assert owned.read_text(encoding="utf-8") == raw
@@ -469,7 +469,7 @@ def test_a_second_file_claiming_a_fork_name_is_left_as_written(
     shared_template: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The fork refresh rewrites only the file the resolver picks for the fork. Another
-    file that claims the fork's name is not Kiro Crew's, so it is left as written."""
+    file that claims the fork's name is not Aj Crew's, so it is left as written."""
     _forks(monkeypatch, {"crewfork": {"private_to": "crew", "forked_from": "custom"}})
     _bindings(monkeypatch, {"crew": "crewfork"})
     fork_spec = shared_template.parent / "crewfork.json"
@@ -533,7 +533,7 @@ def test_no_forks_and_an_unreadable_config_records_no_failure(
 ) -> None:
     monkeypatch.setattr(agent, "_fork_refresh_failed", frozenset({"stale"}))
     _forks(monkeypatch, {})
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_raise))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_raise))
     with caplog.at_level(logging.WARNING, logger=agent.logger.name):
         agent._refresh_forked_templates_locked(gated_off=frozenset())
     assert agent._fork_refresh_failed == frozenset()
@@ -578,7 +578,7 @@ def test_a_deferred_pass_that_holds_a_shared_template_sets_the_rebuild_hold(
 def test_a_capability_refusal_is_warned_about_not_held(
     shared_template: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    from kiro_crew import agent_capabilities
+    from aj_crew import agent_capabilities
 
     monkeypatch.setattr(agent_state, "get_capabilities", lambda _name: {"schema_version": 1})
 
@@ -594,7 +594,7 @@ def test_a_capability_refusal_is_warned_about_not_held(
 
 def _unreadable(monkeypatch: pytest.MonkeyPatch, filename: str, exc: OSError) -> None:
     """Make every read of *filename* in the agents directory raise *exc*."""
-    from kiro_crew import agent_discovery
+    from aj_crew import agent_discovery
 
     real_read = agent_discovery._read_spec_bytes
 
@@ -634,7 +634,7 @@ def test_the_retry_probe_never_follows_a_link_the_resolver_refuses(
     outside.write_text("{}", encoding="utf-8")
     (shared_template.parent / "linked.json").symlink_to(outside)
     monkeypatch.setattr(agent, "agent_spec_path", lambda _name: None)
-    from kiro_crew import agent_discovery
+    from aj_crew import agent_discovery
 
     opened: list[str] = []
     real_read = agent_discovery._read_spec_bytes
@@ -671,7 +671,7 @@ def test_a_template_declaring_the_name_under_another_filename_is_left_as_written
 def test_every_spec_declaring_a_contested_name_is_left_as_written(
     shared_template: Path,
 ) -> None:
-    """Two specs declare the bound name; neither is Kiro Crew's, so neither is written."""
+    """Two specs declare the bound name; neither is Aj Crew's, so neither is written."""
     shared_template.write_text(json.dumps({"name": "reviewer", "allowedTools": ["execute_bash"]}))
     other = shared_template.parent / "z-other.json"
     other.write_text(json.dumps({"name": "reviewer", "allowedTools": ["execute_bash"]}))
@@ -698,7 +698,7 @@ def test_a_config_load_that_fell_back_to_defaults_holds(
     shared_template: Path, monkeypatch: pytest.MonkeyPatch, unreadable: str
 ) -> None:
     degraded = SimpleNamespace(agents={}, **{unreadable: True})
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: degraded))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: degraded))
     agent._refresh_forked_templates_locked(gated_off=frozenset())
     assert fork_refresh._shared_template_held is True
 
@@ -709,7 +709,7 @@ def test_a_config_degradation_seen_earlier_in_the_process_does_not_hold(
     """The whole-config marker in ``degraded_sections`` lasts the process. A later load
     that read both files whole has every binding, so the hold must follow that load's
     own read, or one bad save would rebuild on every poll until a restart."""
-    from kiro_crew.config.resolution import DEGRADED_WHOLE_CONFIG
+    from aj_crew.config.resolution import DEGRADED_WHOLE_CONFIG
 
     shared_template.write_text(json.dumps({"name": "reviewer", "allowedTools": ["execute_bash"]}))
     repaired = SimpleNamespace(
@@ -718,7 +718,7 @@ def test_a_config_degradation_seen_earlier_in_the_process_does_not_hold(
         _base_unreadable=False,
         _overlay_unreadable=False,
     )
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: repaired))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: repaired))
     agent._refresh_forked_templates_locked(gated_off=frozenset())
     assert json.loads(shared_template.read_text(encoding="utf-8"))["allowedTools"] == [
         "execute_bash"
@@ -738,7 +738,7 @@ def test_a_hold_set_after_the_baseline_was_seeded_still_rebuilds(
     def fake_reporting(**kw: Any) -> tuple[Path, bool]:
         calls.append(1)
         kw["_held_out"].append(False)
-        return Path("kirocrew.json"), True
+        return Path("ajcrew.json"), True
 
     monkeypatch.setattr(agent, "rebuild_agent_config_reporting", fake_reporting)
     # The memo the hook compares against: the ceiling plus every governance profile.
@@ -767,7 +767,7 @@ def test_a_directory_at_a_spec_name_holds_nothing_where_the_open_reports_it(
 
 
 def _answer() -> int:
-    from kiro_crew.platform.governance_profiles import governance_answer_generation
+    from aj_crew.platform.governance_profiles import governance_answer_generation
 
     return governance_answer_generation()
 
@@ -779,7 +779,7 @@ def test_an_unreadable_config_holds_until_a_load_reads_it_whole(
     probe asks a fresh load, so a repaired file, or a read failure that cleared with
     the fingerprint unchanged, ends it."""
     loads = {"cfg": SimpleNamespace(agents={}, _overlay_unreadable=True)}
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: loads["cfg"]))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: loads["cfg"]))
     agent._refresh_forked_templates_locked(gated_off=frozenset())
     assert fork_refresh._shared_template_held is True
     assert fork_refresh._shared_template_hold_record is not None
@@ -796,7 +796,7 @@ def test_a_conductor_installer_hold_is_rebuilt_even_beside_an_unchanged_template
     def fake_reporting(**kw: Any) -> tuple[Path, bool]:
         calls.append(1)
         kw["_held_out"].append(True)
-        return Path("kirocrew.json"), True
+        return Path("ajcrew.json"), True
 
     monkeypatch.setattr(agent, "rebuild_agent_config_reporting", fake_reporting)
     monkeypatch.setattr(fork_refresh, "shared_template_hold_unchanged", lambda _gen: True)
@@ -828,7 +828,7 @@ def test_an_unreadable_main_spec_episode_is_rebuilt_beside_an_unchanged_template
     def fake_reporting(**kw: Any) -> tuple[Path, bool]:
         calls.append(1)
         kw["_held_out"].append(True)
-        return Path("kirocrew.json"), False
+        return Path("ajcrew.json"), False
 
     monkeypatch.setattr(agent, "rebuild_agent_config_reporting", fake_reporting)
     monkeypatch.setattr(fork_refresh, "shared_template_hold_unchanged", lambda _gen: True)
@@ -877,7 +877,7 @@ def test_an_unchanged_template_hold_still_rebuilds_when_the_answer_moved_mid_reb
     def fake_reporting(**kw: Any) -> tuple[Path, bool]:
         calls.append(1)
         kw["_held_out"].append(True)
-        return Path("kirocrew.json"), True
+        return Path("ajcrew.json"), True
 
     monkeypatch.setattr(agent, "rebuild_agent_config_reporting", fake_reporting)
     monkeypatch.setattr(fork_refresh, "shared_template_hold_unchanged", lambda _gen: True)

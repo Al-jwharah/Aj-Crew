@@ -23,10 +23,10 @@ import pytest
 import work_ledger_projection_helpers as helpers
 from test_remote_dispatch_hub_ingest import CONDUCTOR, StubCrew, _remote_item, _state
 
-from kiro_crew import work_ledger
-from kiro_crew.dashboard.handlers import remote_ingest, remote_puller
-from kiro_crew.probes.work_ledger import WorkLedgerProbe, person_wait_fingerprint
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import work_ledger
+from aj_crew.dashboard.handlers import remote_ingest, remote_puller
+from aj_crew.probes.work_ledger import WorkLedgerProbe, person_wait_fingerprint
+from aj_crew.testing.wait import async_wait_until, await_until
 
 _isolated = helpers._isolated
 recorded = helpers.recorded
@@ -40,8 +40,8 @@ def _fresh_puller():
 
 
 def _switch(monkeypatch, on: bool) -> None:
-    monkeypatch.setattr("kiro_crew.remote_dispatch.remote_dispatch_enabled", lambda: on)
-    monkeypatch.setattr("kiro_crew.work_preview.remote_dispatch", lambda: on)
+    monkeypatch.setattr("aj_crew.remote_dispatch.remote_dispatch_enabled", lambda: on)
+    monkeypatch.setattr("aj_crew.work_preview.remote_dispatch", lambda: on)
 
 
 @pytest.fixture
@@ -195,8 +195,8 @@ def test_a_hung_board_is_cut_off_at_its_budget(monkeypatch):
 
 
 def test_a_conductor_with_no_live_session_still_gets_its_report_filed(recorded, peer, monkeypatch):
-    from kiro_crew import session_ledger
-    from kiro_crew.dashboard.handlers import work_ledger as routes
+    from aj_crew import session_ledger
+    from aj_crew.dashboard.handlers import work_ledger as routes
 
     async def go() -> str:
         item_id = await _remote_item(peer)
@@ -213,8 +213,8 @@ def test_a_conductor_with_no_live_session_still_gets_its_report_filed(recorded, 
 
 
 def test_a_board_with_nowhere_to_file_makes_no_peer_call(recorded, peer, monkeypatch):
-    from kiro_crew import session_ledger
-    from kiro_crew.dashboard.handlers import work_ledger as routes
+    from aj_crew import session_ledger
+    from aj_crew.dashboard.handlers import work_ledger as routes
 
     async def go() -> str:
         item_id = await _remote_item(peer)
@@ -241,7 +241,7 @@ def test_a_dirty_board_is_not_pulled(recorded, peer):
 
 
 def test_a_report_the_crew_log_refuses_is_retried_once_per_window(recorded, peer, monkeypatch):
-    from kiro_crew.dashboard.handlers import work_ledger as routes
+    from aj_crew.dashboard.handlers import work_ledger as routes
 
     async def setup() -> str:
         return await _remote_item(peer)
@@ -272,7 +272,7 @@ def test_a_report_the_crew_log_refuses_is_retried_once_per_window(recorded, peer
 
 
 def test_a_changed_snapshot_in_the_same_second_is_not_held(recorded, peer, monkeypatch):
-    from kiro_crew.dashboard.handlers import work_ledger as routes
+    from aj_crew.dashboard.handlers import work_ledger as routes
 
     asyncio.run(_remote_item(peer))
     tries: list[str] = []
@@ -302,9 +302,9 @@ def test_the_boot_path_never_imports_the_puller():
 
     code = (
         "import sys, asyncio; "
-        "from kiro_crew.dashboard.server_runtime import service_hooks; "
+        "from aj_crew.dashboard.server_runtime import service_hooks; "
         "asyncio.run(service_hooks._stop_remote_puller(None)); "
-        "print('kiro_crew.dashboard.handlers.remote_puller' in sys.modules)"
+        "print('aj_crew.dashboard.handlers.remote_puller' in sys.modules)"
     )
     out = subprocess.run(
         [sys.executable, "-c", code], capture_output=True, text=True, encoding="utf-8", check=True
@@ -324,13 +324,13 @@ def test_boards_with_open_remote_names_only_boards_with_a_crew_item(recorded, pe
 
 @pytest.mark.skipif(sys.platform == "win32", reason="a directory symlink needs privilege there")
 def test_boards_are_found_under_a_symlinked_data_home(recorded, peer, monkeypatch, tmp_path):
-    from kiro_crew import work_ledger_store
+    from aj_crew import work_ledger_store
 
     asyncio.run(_remote_item(peer))
     real = work_ledger_store._work_ledger_root()
     link = tmp_path / "linked-home"
     link.symlink_to(real.parent, target_is_directory=True)
-    monkeypatch.setattr("kiro_crew.work_ledger._work_ledger_root", lambda: link / real.name)
+    monkeypatch.setattr("aj_crew.work_ledger._work_ledger_root", lambda: link / real.name)
     assert work_ledger.boards_with_open_remote() == [CONDUCTOR]
 
 

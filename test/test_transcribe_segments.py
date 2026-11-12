@@ -1,4 +1,4 @@
-"""Tests for long recordings in ``kiro_crew.transcribe``.
+"""Tests for long recordings in ``aj_crew.transcribe``.
 
 Covers the provider-aware batch duration cap, the duration verdicts (WAV
 headers and the ffmpeg null-decode probe), the segment cut rules, the
@@ -15,8 +15,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import transcribe
-from kiro_crew.testing.wait import await_until
+from aj_crew import transcribe
+from aj_crew.testing.wait import await_until
 
 #: The timeout a hung-child test hands the product: a backstop that is never waited out.
 #: The fake child fires the product's own ``asyncio.wait_for`` bound as it parks

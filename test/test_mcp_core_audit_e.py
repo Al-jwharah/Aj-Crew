@@ -17,9 +17,9 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import kiro_crew.mcp_core as mcp_core
-from kiro_crew.mcp_core import _call_tool, _call_tool_deferrable, _current_session_thread_ts
-from kiro_crew.mcp_shared import DeferredTool
+import aj_crew.mcp_core as mcp_core
+from aj_crew.mcp_core import _call_tool, _call_tool_deferrable, _current_session_thread_ts
+from aj_crew.mcp_shared import DeferredTool
 
 
 class TestSpawnSubAgentsCancellation:
@@ -28,10 +28,10 @@ class TestSpawnSubAgentsCancellation:
         the parked wait is dropped by the loop and never stepped again, so
         the children are not polled after the cancel and no result is built."""
         with (
-            patch("kiro_crew.mcp_core._post") as mock_post,
-            patch("kiro_crew.mcp_core._get") as mock_get,
-            patch("kiro_crew.mcp_core.sel"),
-            patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}),
+            patch("aj_crew.mcp_core._post") as mock_post,
+            patch("aj_crew.mcp_core._get") as mock_get,
+            patch("aj_crew.mcp_core.sel"),
+            patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}),
         ):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {"done": False, "agent": "slow"}
@@ -53,10 +53,10 @@ class TestSpawnSubAgentsCancellation:
     def test_not_cancelled_completes_normally(self):
         """Control: with no cancel, a done agent still collects results."""
         with (
-            patch("kiro_crew.mcp_core._post") as mock_post,
-            patch("kiro_crew.mcp_core._get") as mock_get,
-            patch("kiro_crew.mcp_core.sel"),
-            patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "s"}),
+            patch("aj_crew.mcp_core._post") as mock_post,
+            patch("aj_crew.mcp_core._get") as mock_get,
+            patch("aj_crew.mcp_core.sel"),
+            patch.dict("os.environ", {"AJCREW_SESSION_KEY": "s"}),
         ):
             mock_post.return_value = {"id": "a1"}
             mock_get.return_value = {"done": True, "agent": "w", "result": "ok"}

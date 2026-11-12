@@ -52,7 +52,7 @@ vi.mock('../api/client', () => ({
     ]),
     tagColumns: vi.fn().mockResolvedValue([]),
     // The settings read behind the folder order. Each case sets it.
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
   },
   SEARCH_MIN_CHARS: 2,
 }))
@@ -128,14 +128,14 @@ beforeEach(() => {
 
 describe('ChatPage folder-suggestion card: the folder order behind its options', () => {
   it('lists the card in the sidebar order and says nothing while the read works', async () => {
-    ;(api.kirocrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ dashboard: { folder_sort: 'name' } })
+    ;(api.ajcrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ dashboard: { folder_sort: 'name' } })
     await renderPage(makeStore())
     await waitFor(() => expect(optionOrder()).toEqual(['Home', 'Work']))
     expect(screen.queryByTestId('folder-order-unavailable')).toBeNull()
   })
 
   it('draws the card in the stored order when the read failed, and leaves the saying of it to the sidebar', async () => {
-    ;(api.kirocrewConfig as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('gateway restarting'))
+    ;(api.ajcrewConfig as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('gateway restarting'))
     await renderPage(makeStore())
     // Stored positions are the fallback: Work (0) before Home (1).
     await waitFor(() => expect(optionOrder()).toEqual(['Work', 'Home']))
@@ -154,7 +154,7 @@ describe('ChatPage folder-suggestion card: the folder order behind its options',
     // the card would otherwise draw the stored order with nothing on screen to
     // say why. No hand-off: the card's dropdown holds an unsaved pick.
     localStorage.setItem('mc-sidebar-pinned', 'false')
-    ;(api.kirocrewConfig as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('gateway restarting'))
+    ;(api.ajcrewConfig as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('gateway restarting'))
     await renderPage(makeStore())
     await waitFor(() => expect(optionOrder()).toEqual(['Work', 'Home']))
     const notice = await screen.findByTestId('folder-suggestion-order-unavailable')

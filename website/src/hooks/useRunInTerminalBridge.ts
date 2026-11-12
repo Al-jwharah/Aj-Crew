@@ -58,7 +58,7 @@ let unscopedHosts = 0
 /**
  * The reuse-current setting and the PTY-delete mutation, mirrored onto refs for
  * useRunInTerminalBridge, for a host other than the chat page (which keeps its
- * own copies; its comments say why each exists). Shares the ['kirocrewConfig']
+ * own copies; its comments say why each exists). Shares the ['ajcrewConfig']
  * query key, so no extra fetch is made.
  */
 export function useRunInTerminalRefs(): RunInTerminalRefs {
@@ -66,8 +66,8 @@ export function useRunInTerminalRefs(): RunInTerminalRefs {
   const deleteTerminalSessionRef = useRef(deleteTerminalSession)
   deleteTerminalSessionRef.current = deleteTerminalSession
   const { data, isError, isPending } = useQuery<{ dashboard?: { terminal?: { reuse_current?: boolean } } }>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
     staleTime: 30_000,
   })
   const terminalReuseRef = useRef(false)

@@ -1,5 +1,5 @@
 /**
- * Crew deep links (`kirocrew://chat?crew=<crew id>&sid=<key>`), the dashboard
+ * Crew deep links (`ajcrew://chat?crew=<crew id>&sid=<key>`), the dashboard
  * half; the behaviour is specified in docs/system-specs/modules/instances.md,
  * "Crew deep link".
  *

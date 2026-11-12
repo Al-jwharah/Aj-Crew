@@ -3,7 +3,7 @@
 Approving, dismissing, or TTL-pruning a pending skill candidate retires the
 review request its bell notification exists to surface. This method is the
 gateway-side half of the consumed-hook seam (see ``set_pending_consumed_hook``
-in ``kiro_crew.skills``): it acks — never deletes — every matching unread
+in ``aj_crew.skills``): it acks — never deletes — every matching unread
 skill-review row, persists once, and broadcasts ``notification_ack`` per row so
 an open feed drops the badge live.
 """
@@ -14,12 +14,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state import DashboardState
 
 
 @pytest.fixture()
 def state(monkeypatch, tmp_path):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),

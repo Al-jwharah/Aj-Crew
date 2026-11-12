@@ -18,9 +18,9 @@ from pathlib import Path
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import emit, lease
-from kiro_crew.crew_log.writer import WriterLimits
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import emit, lease
+from aj_crew.crew_log.writer import WriterLimits
 
 SESSION = "acp-exhaust-0001"
 SESSION_B = "acp-exhaust-0002"
@@ -28,7 +28,7 @@ SESSION_B = "acp-exhaust-0002"
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
     emit.reset_caches()
@@ -82,7 +82,7 @@ def _body(session_id: str = SESSION) -> list[dict]:
 def _open_session(session_id: str = SESSION) -> None:
     emit.on_session_opened(
         session_id,
-        agent="kirocrew",
+        agent="ajcrew",
         slot="chat-x",
         model="claude-opus-5",
         cwd="/tmp",

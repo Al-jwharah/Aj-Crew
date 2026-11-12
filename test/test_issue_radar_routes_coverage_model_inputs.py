@@ -24,7 +24,7 @@ from issue_radar_routes_coverage_helpers import (
     SHA,
 )
 
-from kiro_crew.apps.builtins.issue_radar.backend import routes
+from aj_crew.apps.builtins.issue_radar.backend import routes
 
 
 class TestUntagged(unittest.TestCase):

@@ -6,9 +6,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.chat_delivery import COMMANDS_OFF_META_KEY
-from kiro_crew.slack import handler
-from kiro_crew.slack.handler_runtime import dispatch
+from aj_crew.dashboard.chat_delivery import COMMANDS_OFF_META_KEY
+from aj_crew.slack import handler
+from aj_crew.slack.handler_runtime import dispatch
 
 pytestmark = pytest.mark.asyncio
 
@@ -85,8 +85,8 @@ async def _route_to_slot(
     with (
         patch.object(handler, "_dashboard_state", state),
         patch.object(handler, "is_allowed_user", return_value=True),
-        patch("kiro_crew.dashboard.chat._run_chat", run),
-        patch("kiro_crew.dashboard.session_control.containment_meta", return_value={}),
+        patch("aj_crew.dashboard.chat._run_chat", run),
+        patch("aj_crew.dashboard.session_control.containment_meta", return_value={}),
     ):
         return await handler.maybe_route_linked_thread(
             text,
@@ -137,7 +137,7 @@ async def test_a_linked_slot_on_another_agent_refuses_an_agent_switch_label() ->
             patch.object(handler, "_dashboard_state", state),
             patch.object(handler, "is_allowed_user", return_value=True),
             patch.object(handler, "linked_slot_channel_mismatch", AsyncMock(return_value="crew-a")),
-            patch("kiro_crew.dashboard.chat._run_chat", AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", AsyncMock()),
             patch.object(handler, "append_and_surface") as appended,
         ):
             await handler.maybe_route_linked_thread(

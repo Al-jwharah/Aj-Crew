@@ -24,13 +24,13 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import tailnet, tailnet_live_allowlist
-from kiro_crew.shared_crew import access_set, routes_invites, tailscale_allowlist
-from kiro_crew.shared_crew import tailscale_invite_store as store
-from kiro_crew.shared_crew import tailscale_invites as invites
-from kiro_crew.shared_crew.contracts import ACTOR_REQUEST_KEY, ActorContext, Provenance, Transport
-from kiro_crew.shared_crew.identity import local_operator_principal, tailnet_principal
-from kiro_crew.shared_crew.tailscale_api import (
+from aj_crew.dashboard import tailnet, tailnet_live_allowlist
+from aj_crew.shared_crew import access_set, routes_invites, tailscale_allowlist
+from aj_crew.shared_crew import tailscale_invite_store as store
+from aj_crew.shared_crew import tailscale_invites as invites
+from aj_crew.shared_crew.contracts import ACTOR_REQUEST_KEY, ActorContext, Provenance, Transport
+from aj_crew.shared_crew.identity import local_operator_principal, tailnet_principal
+from aj_crew.shared_crew.tailscale_api import (
     TailscaleApi,
     TailscaleApiError,
     api_key_id,
@@ -41,7 +41,7 @@ from kiro_crew.shared_crew.tailscale_api import (
 @pytest.fixture(autouse=True)
 def _shared_crew_preview_on(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
     """These tests cover the preview's behaviour; the gate itself has its own tests."""
-    _floor_monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    _floor_monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
 
 
 KEY = "tskey-api-kAbC123CNTRL-Zz9yYxXwWvV"
@@ -196,7 +196,7 @@ def config_file(monkeypatch: pytest.MonkeyPatch, tmp_path):
     path.write_text(
         json.dumps({"dashboard": {"tailscale": {"allowed_logins": []}}}), encoding="utf-8"
     )
-    import kiro_crew.config.loader as loader
+    import aj_crew.config.loader as loader
 
     monkeypatch.setattr(loader, "config_path", lambda: path)
     return path
@@ -289,7 +289,7 @@ async def test_a_body_split_across_reads_is_read_to_the_end() -> None:
 
 @pytest.mark.asyncio
 async def test_a_split_body_over_the_cap_is_refused(monkeypatch) -> None:
-    from kiro_crew.shared_crew import tailscale_api
+    from aj_crew.shared_crew import tailscale_api
 
     monkeypatch.setattr(tailscale_api, "MAX_RESPONSE_BYTES", 16)
     pieces = [b"[" + b" " * 10, b" " * 10, b"]"]
@@ -379,8 +379,8 @@ async def test_key_never_leaves_the_vault(fake: FakeTailscale, caplog) -> None:
 
 
 def test_vault_root_is_masked_from_sandbox_and_tools() -> None:
-    from kiro_crew.sandbox_leaves import _RELOCATED_CREW_HIDDEN_LEAVES
-    from kiro_crew.security import is_sensitive_path
+    from aj_crew.sandbox_leaves import _RELOCATED_CREW_HIDDEN_LEAVES
+    from aj_crew.security import is_sensitive_path
 
     root = store.root()
     assert root.parent.name == ".vault"
@@ -623,7 +623,7 @@ async def test_a_rename_keeps_the_old_login_reachable_for_revoke(fake, config_fi
 
 @pytest.mark.asyncio
 async def test_a_stale_sync_keeps_an_invite_created_after_its_fetch(fake, config_file) -> None:
-    from kiro_crew.shared_crew.tailscale_api import parse_invite
+    from aj_crew.shared_crew.tailscale_api import parse_invite
 
     await invites.connect(KEY, "owner")
     old = await invites.create_invites(
@@ -644,7 +644,7 @@ async def test_a_stale_sync_keeps_an_invite_created_after_its_fetch(fake, config
 
 @pytest.mark.asyncio
 async def test_a_stale_sync_does_not_restore_a_revoked_console_invite(fake, config_file) -> None:
-    from kiro_crew.shared_crew.tailscale_api import parse_invite
+    from aj_crew.shared_crew.tailscale_api import parse_invite
 
     await invites.connect(KEY, "owner")
     fake.invites["c1"] = {"id": "c1", "deviceId": 222, "multiUse": False, "accepted": False}
@@ -666,7 +666,7 @@ async def test_a_reusable_link_revoked_during_a_sync_admits_nobody_new(fake, con
     # B is already a member by link I. A sync fetches I as accepted by C, then
     # the owner revokes I before the sync commits. B's removed row still names I,
     # so only the durable revoked set keeps C out.
-    from kiro_crew.shared_crew.tailscale_api import parse_invite
+    from aj_crew.shared_crew.tailscale_api import parse_invite
 
     await invites.connect(KEY, "owner")
     made = await invites.create_invites([], multi_use=True, alias="", avatar_id="", actor="o")
@@ -966,7 +966,7 @@ async def test_revoke_withdraws_a_renamed_members_old_login_after_a_restart(
 
 @pytest.mark.asyncio
 async def test_revoke_closes_the_revoked_persons_open_sockets() -> None:
-    from kiro_crew.shared_crew.contracts import Principal
+    from aj_crew.shared_crew.contracts import Principal
 
     class Sock(dict):
         def __init__(self, principal: Any, *, dashboard: bool = True) -> None:
@@ -1094,7 +1094,7 @@ def _route_app(principal: Any, *, user: str = "local-app") -> web.Application:
 
 @pytest.fixture
 def not_restricted(monkeypatch: pytest.MonkeyPatch) -> None:
-    import kiro_crew.dashboard.handlers._shared as shared
+    import aj_crew.dashboard.handlers._shared as shared
 
     monkeypatch.setattr(shared, "_is_restricted_session", lambda *_a: False)
 

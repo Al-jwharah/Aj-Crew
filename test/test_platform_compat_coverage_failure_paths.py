@@ -1,4 +1,4 @@
-"""Coverage-raising unit tests for :mod:`kiro_crew.platform_compat`: the failure returns.
+"""Coverage-raising unit tests for :mod:`aj_crew.platform_compat`: the failure returns.
 
 Lock release failures, the start-time identity and ppid failure returns, trusted
 binaries and the process-table snapshots, PID-recycling lifetime validation, the kill
@@ -34,8 +34,8 @@ from platform_compat_coverage_helpers import (
     _toolhelp_kernel32,
 )
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import platform_compat as pc
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # The whole-module skip ``test_platform_compat_coverage.py`` applies, for the reasons given
 # there.

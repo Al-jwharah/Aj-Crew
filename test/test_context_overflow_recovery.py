@@ -23,14 +23,14 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.acp.client import (
+from aj_crew.acp.client import (
     AcpError,
     _format_acp_error,
     _is_transient_raw_error,
     _raise_acp_error,
 )
-from kiro_crew.dashboard.chat_utils import CONTEXT_OVERFLOW_KIND
-from kiro_crew.llm_helpers import (
+from aj_crew.dashboard.chat_utils import CONTEXT_OVERFLOW_KIND
+from aj_crew.llm_helpers import (
     acp_error_is_transient,
     is_context_overflow_error,
     stream_and_collect,
@@ -135,19 +135,19 @@ class TestTheFallbackChainDoesNotWalk:
 
 class TestTheDashboardRowCarriesTheKind:
     def test_terminal_meta_is_context_overflow(self):
-        from kiro_crew.dashboard.chat_runner import _terminal_error_meta
+        from aj_crew.dashboard.chat_runner import _terminal_error_meta
 
         assert _terminal_error_meta(_raised(_INPUT_TOO_LONG)) == {"kind": CONTEXT_OVERFLOW_KIND}
         assert _terminal_error_meta(_raised(_KIRO_OVERFLOW)) == {"kind": CONTEXT_OVERFLOW_KIND}
 
     def test_an_untagged_error_keeps_a_plain_row(self):
-        from kiro_crew.dashboard.chat_runner import _terminal_error_meta
+        from aj_crew.dashboard.chat_runner import _terminal_error_meta
 
         assert _terminal_error_meta(AcpError("boom")) is None
 
     def test_the_sign_in_fix_outranks_it(self):
-        from kiro_crew.dashboard.chat_runner import _terminal_error_meta
-        from kiro_crew.dashboard.chat_utils import AUTH_REQUIRED_KIND
+        from aj_crew.dashboard.chat_runner import _terminal_error_meta
+        from aj_crew.dashboard.chat_utils import AUTH_REQUIRED_KIND
 
         err = _raised(_INPUT_TOO_LONG)
         err.auth_required = True
@@ -197,7 +197,7 @@ class TestTheRequestSizeCapIsAnOverflow:
         assert _raised(frame).structural_terminal is True
 
     def test_the_dashboard_row_offers_a_fresh_session(self, frame):
-        from kiro_crew.dashboard.chat_runner import _terminal_error_meta
+        from aj_crew.dashboard.chat_runner import _terminal_error_meta
 
         assert _terminal_error_meta(_raised(frame)) == {"kind": CONTEXT_OVERFLOW_KIND}
 

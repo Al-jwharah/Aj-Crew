@@ -3,7 +3,7 @@
 * mise (``ensure-python.sh``, ``ensure-node.sh``, ``install.sh --mise``) comes
   from one pinned release checked against a recorded sha256
   (``scripts/lib/pinned-mise.sh``). No installer pipes a download into a shell;
-  ``ensure-node.sh`` runs unprompted from gateway start and ``kirocrew update``,
+  ``ensure-node.sh`` runs unprompted from gateway start and ``ajcrew update``,
   so this matters beyond an interactive install.
 * ``cloud-install.sh`` and ``install.ps1`` install the AWS CLI and Session
   Manager plugin as root/admin, from versioned URLs and only when the file
@@ -25,14 +25,14 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.cloud import ssm
+from aj_crew.cloud import ssm
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MISE_LIB = REPO_ROOT / "scripts" / "lib" / "pinned-mise.sh"
 AWS_PINS = REPO_ROOT / "packaging" / "pins" / "aws-tools.env"
 CLOUD_INSTALL = REPO_ROOT / "cloud-install.sh"
 INSTALL_PS1 = REPO_ROOT / "install.ps1"
-DOCKERFILE = REPO_ROOT / "src/kiro_crew/apps/builtins/aws_control/crew/runtime/Dockerfile"
+DOCKERFILE = REPO_ROOT / "src/aj_crew/apps/builtins/aws_control/crew/runtime/Dockerfile"
 SHELL_INSTALLERS = (
     "ensure-python.sh",
     "ensure-node.sh",

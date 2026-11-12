@@ -17,13 +17,13 @@ import re
 
 import pytest
 
-from kiro_crew import cli_cloud
-from kiro_crew.cloud import aws, ec2, host_policy, iam, sizes, source
-from kiro_crew.platform.context import current_context, reset_context, set_context
-from kiro_crew.platform.interfaces import CloudInstancePolicy
+from aj_crew import cli_cloud
+from aj_crew.cloud import aws, ec2, host_policy, iam, sizes, source
+from aj_crew.platform.context import current_context, reset_context, set_context
+from aj_crew.platform.interfaces import CloudInstancePolicy
 
 _ACCT = "123456789012"
-_BOUNDARY = f"arn:aws:iam::{_ACCT}:policy/kirocrew-ec2-boundary"
+_BOUNDARY = f"arn:aws:iam::{_ACCT}:policy/ajcrew-ec2-boundary"
 _HOST_ARN = "arn:aws:iam::{account}:policy/HostAgent/HostMonitoring"
 _STATEMENTS = (
     {
@@ -138,10 +138,10 @@ class TestEditionPolicy:
         # attached policy there would be uncapped.
         assert stmt["Resource"] == iam.INSTANCE_ROLE_ARN
         # Tag-gated: a role at this path created out-of-band, without the
-        # boundary, carries no kirocrew:managed tag and cannot be given them.
+        # boundary, carries no ajcrew:managed tag and cannot be given them.
         assert stmt["Condition"] == {
             "ArnEquals": {"iam:PolicyARN": ["arn:aws:iam::*:policy/HostAgent/HostMonitoring"]},
-            "StringEquals": {"aws:ResourceTag/kirocrew:managed": "true"},
+            "StringEquals": {"aws:ResourceTag/ajcrew:managed": "true"},
         }
 
     def test_argv_names_the_policy_in_the_launch_account(self, host_agent):
@@ -185,7 +185,7 @@ class TestEditionPolicy:
             host_policy.instance_policy()
 
     def test_a_composition_failure_is_not_turned_into_a_refusal(self, install_policy):
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         class _Uncomposed:
             def instance_policy(self):
@@ -404,7 +404,7 @@ class _FakeIam:
 @pytest.fixture
 def account(monkeypatch):
     monkeypatch.setattr(source, "_account_id", lambda *a: _ACCT)
-    monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
+    monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
 
 
 _DENIED_VERSION = (
@@ -452,7 +452,7 @@ class TestMigration:
     ):
         fake = _FakeIam(iam.base_boundary_policy_document(_ACCT))
         monkeypatch.setattr(aws, "run_aws", fake)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "chat-1")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "chat-1")
         with pytest.raises(aws.AWSError, match="iam-boundary --upgrade"):
             source.ensure_instance_boundary()
         assert fake.writes() == []
@@ -521,7 +521,7 @@ class TestMigration:
         self, host_agent, account, monkeypatch
     ):
         monkeypatch.setattr(aws, "run_aws", _FakeIam(None))
-        with pytest.raises(aws.AWSError, match="kirocrew cloud iam-boundary"):
+        with pytest.raises(aws.AWSError, match="ajcrew cloud iam-boundary"):
             source.upgrade_instance_boundary()
 
     def test_upgrade_refuses_when_the_seam_cannot_be_read(
@@ -543,7 +543,7 @@ class TestMigration:
     def test_upgrade_is_refused_in_an_agent_session(self, host_agent, account, monkeypatch):
         fake = _FakeIam(iam.base_boundary_policy_document(_ACCT))
         monkeypatch.setattr(aws, "run_aws", fake)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "chat-1")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "chat-1")
         with pytest.raises(aws.CloudActionDenied):
             source.upgrade_instance_boundary()
         assert fake.calls == []

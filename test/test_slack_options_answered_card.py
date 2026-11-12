@@ -21,9 +21,9 @@ import pytest
 from chat_test_helpers import _make_state
 from slack_options_lifecycle_helpers import _recs
 
-from kiro_crew.slack import interactions, outbound
-from kiro_crew.slack.format import OPTIONS_ACTION_PREFIX, build_options_blocks
-from kiro_crew.slack.outbound import PostedOptions
+from aj_crew.slack import interactions, outbound
+from aj_crew.slack.format import OPTIONS_ACTION_PREFIX, build_options_blocks
+from aj_crew.slack.outbound import PostedOptions
 
 _CHANNEL = "C-room"
 _THREAD = "1700000000.000100"
@@ -33,7 +33,7 @@ _CHOICES = ["Nudge the stuck chat again", "Stop the other chat"]
 
 @pytest.fixture
 def world(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.chat_utils import effective_session_key
+    from aj_crew.dashboard.chat_utils import effective_session_key
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("chat-7-1700000000")
@@ -59,7 +59,7 @@ def world(tmp_path, monkeypatch):
 
 def _post_card(state, session_key: str, *, thread_ts: str | None) -> dict:
     """Record the card under the session that posted it; return a click on its first choice."""
-    from kiro_crew.dashboard.chat_utils import remember_slack_options
+    from aj_crew.dashboard.chat_utils import remember_slack_options
 
     blocks = build_options_blocks(_CHOICES)
     remember_slack_options(
@@ -110,7 +110,7 @@ class TestAnAnsweredCardSurvivesTheNextTurn:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("thread_ts", [None, _THREAD], ids=["top-level", "threaded"])
     async def test_the_answer_turns_start_keeps_the_chose_line(self, world, thread_ts):
-        from kiro_crew.dashboard.chat_utils import expire_slack_options
+        from aj_crew.dashboard.chat_utils import expire_slack_options
 
         state, slack, session_key = world
         await interactions.dispatch(_post_card(state, session_key, thread_ts=thread_ts))
@@ -136,7 +136,7 @@ class TestTheExpiryNeverWritesOverAnAnswer:
     @pytest.mark.asyncio
     async def test_an_expiry_over_an_answered_card_keeps_the_chose_line(self, world, monkeypatch):
         """Whatever leaves the record behind, the expiry must not strike the answer."""
-        from kiro_crew.dashboard.chat_utils import expire_slack_options
+        from aj_crew.dashboard.chat_utils import expire_slack_options
 
         state, slack, session_key = world
         # Leave the record in place, as any forget that misses its key would.
@@ -154,7 +154,7 @@ class TestTheExpiryNeverWritesOverAnAnswer:
     @pytest.mark.asyncio
     async def test_a_claim_whose_buttons_are_still_on_screen_is_still_struck(self, world):
         """An answer whose original survived (a fallback whose delete failed) is not settled."""
-        from kiro_crew.dashboard.chat_utils import expire_slack_options
+        from aj_crew.dashboard.chat_utils import expire_slack_options
 
         state, slack, session_key = world
         _post_card(state, session_key, thread_ts=_THREAD)
@@ -172,7 +172,7 @@ class TestTheExpiryNeverWritesOverAnAnswer:
         """A refused stale click settles the control only once its strike landed."""
         from slack_sdk.errors import SlackApiError
 
-        from kiro_crew.dashboard.chat_utils import expire_slack_options
+        from aj_crew.dashboard.chat_utils import expire_slack_options
 
         state, slack, session_key = world
 

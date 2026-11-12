@@ -30,9 +30,9 @@ from crew_log_projection_helpers import (  # noqa: F401 -- fixtures are used by 
     _turn,
 )
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLogError
-from kiro_crew.crew_log import projection as crew_log
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLogError
+from aj_crew.crew_log import projection as crew_log
 
 # the contract
 
@@ -43,7 +43,7 @@ def test_the_class_fold_is_registered_but_not_advertised():
     Registered, so its caller gets the shared checkpoint and reuse by name. Not
     advertised, or the growth push would send every owner socket a frame nobody reads.
     """
-    from kiro_crew import mcp_crew_log
+    from aj_crew import mcp_crew_log
 
     assert "class" in crew_log.FOLD_NAMES
     assert "class" in crew_log.INTERNAL_PROJECTION_NAMES
@@ -846,7 +846,7 @@ def test_approvals_counts_a_decision_with_no_request_before_it():
 
 def _fold_context(steps: list[tuple[str, dict[str, Any]]]) -> dict[str, Any]:
     """The context part after *steps*, folded through its own apply."""
-    from kiro_crew.crew_log.schema import Entry
+    from aj_crew.crew_log.schema import Entry
 
     ctx = crew_log.context_start()
     for seq, (entry_type, data) in enumerate(steps, start=1):
@@ -899,6 +899,6 @@ def test_usage_the_ordinal_memo_covers_the_rewindable_range():
     ``crew_log`` cannot import the dashboard, so the figure is restated there and pinned
     here: if the live cap grows, a rewind could again reach a turn the memo evicted.
     """
-    from kiro_crew.dashboard import state as dashboard_state
+    from aj_crew.dashboard import state as dashboard_state
 
     assert crew_log.CONTEXT_ORDINAL_MEMO_LIMIT == dashboard_state._MAX_SLOT_MESSAGES

@@ -17,7 +17,7 @@ class TestProxyRequest:
 
     @pytest.fixture(autouse=True)
     # flake-ok: pre-existing autouse port-probe stub on the shared monkeypatch, moved verbatim; tracked for a de-flake pass
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
     def _free_ports(self, monkeypatch):
         # connect() re-probes the fixed base port 53500 for real; on a busy macOS
         # runner something else can hold it, connect() returns an error status, and
@@ -25,8 +25,8 @@ class TestProxyRequest:
         _patch_port_probe(monkeypatch)
 
     def _mgr(self, tmp_path, *, mint=None, factory=_FakeTunnel):
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
 
@@ -71,7 +71,7 @@ class TestProxyRequest:
 
     @pytest.mark.asyncio
     async def test_not_connected_raises_typed_error(self, tmp_path):
-        from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+        from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
         _reg, mgr = self._mgr(tmp_path)
         with pytest.raises(ProxyRequestError) as ei:
@@ -84,7 +84,7 @@ class TestProxyRequest:
     async def test_success_sends_port_scoped_cookie_and_refuses_redirects(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances import ssh_tunnel_manager as m
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -136,10 +136,10 @@ class TestProxyRequest:
         """
         from unittest.mock import MagicMock
 
-        from kiro_crew import edition
-        from kiro_crew.dashboard.origin import check_origin
-        from kiro_crew.dashboard.urls import origin_floor
-        from kiro_crew.instances import ssh_tunnel_manager as m
+        from aj_crew import edition
+        from aj_crew.dashboard.origin import check_origin
+        from aj_crew.dashboard.urls import origin_floor
+        from aj_crew.instances import ssh_tunnel_manager as m
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="DS", ssh_host="ds-1-alias", instance_id="ds-1")
@@ -172,7 +172,7 @@ class TestProxyRequest:
     async def test_chained_crew_gets_no_origin(self, tmp_path, monkeypatch):
         """A chained crew's forward dials its parent's hop, not the crew's own
         port, so no origin the hub could name is the crew's own: it sends none."""
-        from kiro_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances import ssh_tunnel_manager as m
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="DS", ssh_host="ds-1-alias", instance_id="ds-1")
@@ -194,7 +194,7 @@ class TestProxyRequest:
 
     @pytest.mark.asyncio
     async def test_401_gets_exactly_one_remint_retry(self, tmp_path, monkeypatch):
-        from kiro_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances import ssh_tunnel_manager as m
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -227,7 +227,7 @@ class TestProxyRequest:
 
     @pytest.mark.asyncio
     async def test_session_is_exchanged_once_per_minted_link(self, tmp_path, monkeypatch):
-        from kiro_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances import ssh_tunnel_manager as m
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -253,7 +253,7 @@ class TestProxyRequest:
     async def test_failed_exchange_sends_no_link_and_remints(self, tmp_path, monkeypatch):
         """A link whose exchange fails is never sent as a cookie; the
         peer's refusal drives the single re-mint, whose fresh link exchanges."""
-        from kiro_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances import ssh_tunnel_manager as m
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -332,8 +332,8 @@ class TestProxyRequest:
         """An exchange the peer never answered is not a refusal: the request is
         not sent credential-less, the single re-mint is not spent on it, and
         the caller learns the exchange failed rather than "peer rejected"."""
-        from kiro_crew.instances import ssh_tunnel_manager as m
-        from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+        from aj_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -370,8 +370,8 @@ class TestProxyRequest:
         """A peer that answered 500 to the link did not refuse it: the request
         is not sent credential-less, the single re-mint is not spent on it,
         and the caller learns the exchange failed rather than "peer rejected"."""
-        from kiro_crew.instances import ssh_tunnel_manager as m
-        from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+        from aj_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -407,8 +407,8 @@ class TestProxyRequest:
         """A peer that answered 401/403 to the link is the case a re-mint fixes:
         the request goes out without a cookie, the 403 drives ONE re-mint,
         and a second refusal is the typed credential failure."""
-        from kiro_crew.instances import ssh_tunnel_manager as m
-        from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+        from aj_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -476,7 +476,7 @@ class TestProxyRequest:
     async def test_link_is_exchanged_at_connect_while_fresh(self, tmp_path, monkeypatch):
         """A request made after the link's click window still carries a
         session, with no re-mint on the request path."""
-        from kiro_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances import ssh_tunnel_manager as m
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -505,8 +505,8 @@ class TestProxyRequest:
     ):
         """Where a re-mint cannot run, the session obtained at mint time
         still authenticates every peer request kind."""
-        from kiro_crew.instances import ssh_tunnel_manager as m
-        from kiro_crew.instances.token_mint import TokenMintError
+        from aj_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances.token_mint import TokenMintError
 
         mints = {"fail": False}
 
@@ -568,7 +568,7 @@ class TestProxyRequest:
     async def test_exchange_link_keeps_the_session_cookie_the_peer_sets(self):
         from aiohttp import web
 
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager, _PeerUnavailable
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager, _PeerUnavailable
 
         seen: list = []
 
@@ -623,8 +623,8 @@ class TestProxyRequest:
         """
         from aiohttp import web
 
-        from kiro_crew.instances import ssh_tunnel_manager as m
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         peer_delay = 0.3
         # flake-ok: pre-existing 50 ms probe budget pinned below the stub delay, off the passing path, moved verbatim
@@ -655,8 +655,8 @@ class TestProxyRequest:
 
     @pytest.mark.asyncio
     async def test_persistent_401_raises_unauthorized_not_a_loop(self, tmp_path, monkeypatch):
-        from kiro_crew.instances import ssh_tunnel_manager as m
-        from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+        from aj_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -688,8 +688,8 @@ class TestProxyRequest:
         through to the caller as a bare peer 401 — the UI would read "the chat
         endpoint said no" instead of a credential failure, with no coded error.
         """
-        from kiro_crew.instances import ssh_tunnel_manager as m
-        from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+        from aj_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -716,8 +716,8 @@ class TestProxyRequest:
 
     @pytest.mark.asyncio
     async def test_transport_error_maps_to_unreachable(self, tmp_path, monkeypatch):
-        from kiro_crew.instances import ssh_tunnel_manager as m
-        from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+        from aj_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -748,8 +748,8 @@ class TestProxyRequest:
     async def _dropping_mgr(self, tmp_path, monkeypatch, outcomes):
         """A connected manager whose session pops *outcomes*: an exception
         class is raised from ``request``, an int is answered as that status."""
-        from kiro_crew.instances import ssh_tunnel_manager as m
-        from kiro_crew.instances import ssh_tunnel_manager_peer as peer
+        from aj_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances import ssh_tunnel_manager_peer as peer
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -801,7 +801,7 @@ class TestProxyRequest:
     async def test_get_dropped_twice_is_unreachable_after_one_redial(self, tmp_path, monkeypatch):
         import aiohttp
 
-        from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+        from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
         mgr, calls = await self._dropping_mgr(
             tmp_path,
@@ -818,7 +818,7 @@ class TestProxyRequest:
     async def test_post_dropped_before_a_response_is_not_redialled(self, tmp_path, monkeypatch):
         import aiohttp
 
-        from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+        from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
         mgr, calls = await self._dropping_mgr(
             tmp_path, monkeypatch, [aiohttp.ServerDisconnectedError, 200]
@@ -840,8 +840,8 @@ class TestProxyRequest:
 
     @pytest.mark.asyncio
     async def test_get_refused_dial_is_not_redialled(self, tmp_path, monkeypatch):
-        from kiro_crew.instances import ssh_tunnel_manager_peer as peer
-        from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+        from aj_crew.instances import ssh_tunnel_manager_peer as peer
+        from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
         class _Refused(Exception):
             pass
@@ -861,7 +861,7 @@ class TestProxyRequest:
 
     @pytest.mark.asyncio
     async def test_get_timeout_is_not_redialled(self, tmp_path, monkeypatch):
-        from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+        from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
         mgr, calls = await self._dropping_mgr(tmp_path, monkeypatch, [asyncio.TimeoutError, 200])
         with pytest.raises(ProxyRequestError):
@@ -879,13 +879,13 @@ class TestPeerRequestSharedDance:
 
     @pytest.fixture(autouse=True)
     # flake-ok: pre-existing autouse port-probe stub on the shared monkeypatch, moved verbatim; tracked for a de-flake pass
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
     def _free_ports(self, monkeypatch):
         _patch_port_probe(monkeypatch)
 
     def _mgr(self, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
 
@@ -916,7 +916,7 @@ class TestPeerRequestSharedDance:
 
     @pytest.mark.asyncio
     async def test_peer_cookie_header_refuses_when_no_credential(self, tmp_path):
-        from kiro_crew.instances.ssh_tunnel_manager import _PeerUnavailable
+        from aj_crew.instances.ssh_tunnel_manager import _PeerUnavailable
 
         _reg, mgr = self._mgr(tmp_path)
         with pytest.raises(_PeerUnavailable) as ei:
@@ -932,7 +932,7 @@ class TestPeerRequestSharedDance:
         helper's `kind` would be tidier and wrong — this is the drift guard that
         catches it, and it is the reason the codes are literals at each site.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+        from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
         _reg, mgr = self._mgr(tmp_path)
 
@@ -952,7 +952,7 @@ class TestPeerRequestSharedDance:
     @pytest.mark.asyncio
     async def test_each_caller_keeps_its_own_no_credential_code(self, tmp_path):
         """Same split for the missing-credential condition, on a LIVE tunnel."""
-        from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+        from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -983,7 +983,7 @@ class TestPeerRequestSharedDance:
         """
         import inspect
 
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         params = inspect.signature(SshTunnelManager.proxy_request).parameters
         assert "timeout" not in params

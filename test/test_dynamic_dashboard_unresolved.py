@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 from test_dynamic_dashboard import manifest
 
-from kiro_crew import dashboard_feed
+from aj_crew import dashboard_feed
 
 
 class TestWhyAFieldDidNotResolve:

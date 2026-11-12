@@ -11,8 +11,8 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import MagicMock, patch
 
-from kiro_crew.knowledge import embedder as embedder_mod
-from kiro_crew.knowledge.embedder import InProcessEmbedder
+from aj_crew.knowledge import embedder as embedder_mod
+from aj_crew.knowledge.embedder import InProcessEmbedder
 
 
 class _LoadingBackend:
@@ -82,13 +82,13 @@ def _run_search(tmp_path, embedder, results):
     db_dir.mkdir(parents=True)
     (db_dir / "knowledge.db").touch()
     with (
-        patch("kiro_crew.mcp_core.config_dir", return_value=tmp_path),
-        patch("kiro_crew.mcp_core.KnowledgeStore"),
-        patch("kiro_crew.mcp_core.create_embedder_from_config", return_value=embedder),
-        patch("kiro_crew.mcp_core.HybridRetriever") as retriever_cls,
+        patch("aj_crew.mcp_core.config_dir", return_value=tmp_path),
+        patch("aj_crew.mcp_core.KnowledgeStore"),
+        patch("aj_crew.mcp_core.create_embedder_from_config", return_value=embedder),
+        patch("aj_crew.mcp_core.HybridRetriever") as retriever_cls,
     ):
         retriever_cls.return_value.search.return_value = results
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         return _call_tool_inner("local_knowledge_search", {"query": "auth"})
 
@@ -109,5 +109,5 @@ def test_search_does_not_say_keyword_only_when_the_vector_path_is_up(tmp_path) -
     available = MagicMock()
     available.is_available.return_value = True
 
-    with patch("kiro_crew.mcp_core.vector_leg", return_value=(None, None)):
+    with patch("aj_crew.mcp_core.vector_leg", return_value=(None, None)):
         assert _NOTE not in _run_search(tmp_path, available, _HIT)

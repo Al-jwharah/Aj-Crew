@@ -16,8 +16,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_ready_kiro_prerequisite
 
-from kiro_crew.dashboard.handlers import api_prompts
-from kiro_crew.security.credential_sources import CredentialEvidence
+from aj_crew.dashboard.handlers import api_prompts
+from aj_crew.security.credential_sources import CredentialEvidence
 
 # ── Shared fixtures ──
 
@@ -26,9 +26,9 @@ from kiro_crew.security.credential_sources import CredentialEvidence
 def _isolate_home(tmp_path, _floor_monkeypatch):
     """All tests get an isolated $HOME and no project dir."""
     _floor_monkeypatch.setattr(Path, "home", lambda: tmp_path)
-    _floor_monkeypatch.setattr("kiro_crew.agent._project_dir", lambda: None)
+    _floor_monkeypatch.setattr("aj_crew.agent._project_dir", lambda: None)
     # Clear prompt cache between tests
-    import kiro_crew.dashboard.handlers as h
+    import aj_crew.dashboard.handlers as h
 
     h._prompt_cache = None
     h._prompt_cache_ts = 0
@@ -46,7 +46,7 @@ def _no_turn_tail(_floor_monkeypatch):
     async def _skip(*_args, **_kwargs):
         return None
 
-    _floor_monkeypatch.setattr("kiro_crew.dashboard.chat_runner._end_turn_tail", _skip)
+    _floor_monkeypatch.setattr("aj_crew.dashboard.chat_runner._end_turn_tail", _skip)
 
 
 @pytest.fixture(name="aim_dir")
@@ -59,7 +59,7 @@ def aim_dir_fixture(tmp_path, monkeypatch):
     """
     base = tmp_path / "prompt_pkgs"
     base.mkdir()
-    from kiro_crew.platform.defaults import DefaultPromptSourceProvider
+    from aj_crew.platform.defaults import DefaultPromptSourceProvider
 
     monkeypatch.setattr(
         DefaultPromptSourceProvider,
@@ -73,8 +73,8 @@ def aim_dir_fixture(tmp_path, monkeypatch):
 def mock_sel_fixture(monkeypatch):
     """Patch sel() in both chat and handlers modules."""
     m = MagicMock()
-    monkeypatch.setattr("kiro_crew.dashboard.chat.sel", lambda: m)
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.sel", lambda: m)
+    monkeypatch.setattr("aj_crew.dashboard.chat.sel", lambda: m)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.sel", lambda: m)
     return m
 
 
@@ -89,14 +89,14 @@ def block_sensitive_reads_fixture(monkeypatch):
     undiscoverable and each test would then be asserting the discovery refusal
     while claiming to assert the read one.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.is_sensitive_path", lambda p: True)
-    monkeypatch.setattr("kiro_crew.hooks.is_sensitive_path", lambda p: True)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.is_sensitive_path", lambda p: True)
+    monkeypatch.setattr("aj_crew.hooks.is_sensitive_path", lambda p: True)
 
 
 @pytest.fixture(name="block_sensitive_discovery")
 def block_sensitive_discovery_fixture(monkeypatch):
     """Refuse every path at the DISCOVERY gate — the one `_prompt_dir_entry` applies."""
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.is_sensitive_path", lambda p: True)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.is_sensitive_path", lambda p: True)
 
 
 # ── Helpers ──
@@ -206,7 +206,7 @@ class _Slot:
     def __init__(self, project=""):
         self.messages = []
         self.key = "t"
-        self.agent = "kirocrew"
+        self.agent = "ajcrew"
         self.model = None
         self._queue = []
         self._stop_generation = 0

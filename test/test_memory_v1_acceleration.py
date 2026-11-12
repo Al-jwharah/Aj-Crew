@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import vector_memory as vm
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import vector_memory as vm
+from aj_crew.vector_memory import VectorMemoryStore
 
 
 def _forget(store: VectorMemoryStore, episode_id: str) -> None:

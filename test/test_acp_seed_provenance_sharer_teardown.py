@@ -29,12 +29,12 @@ from acp_seed_provenance_helpers import (
     _unwritable_sidecar,
 )
 
-from kiro_crew import model_registry as mr
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp import seed_provenance as sp
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.testing.wait import default_timeout
+from aj_crew import model_registry as mr
+from aj_crew.acp import client as acp_client
+from aj_crew.acp import seed_provenance as sp
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.testing.wait import default_timeout
 
 
 class _ArrivalLock:
@@ -307,7 +307,7 @@ class TestSharedPermissionSurfaceTeardownAndReseed:
         assert sibling._claude_settings_shared is True
         assert sp.has_sharers(path) is True
 
-        replacement = '{"permissions": {"allow": ["mcp__kirocrew-core__spawn_run"]}}\n'
+        replacement = '{"permissions": {"allow": ["mcp__ajcrew-core__spawn_run"]}}\n'
         path.write_text(replacement, encoding="utf-8")
         forgets: list[str] = []
         releases: list[str] = []
@@ -330,10 +330,10 @@ class TestSharedPermissionSurfaceTeardownAndReseed:
         assert path.read_text(encoding="utf-8") == replacement
         # The array itself, resolved the way the spawn path resolves it: the
         # claude mirror withholds both halves, pooled stubs included.
-        stub = {"name": "kirocrew-core", "command": "/stub", "args": [], "env": [], "type": "stdio"}
+        stub = {"name": "ajcrew-core", "command": "/stub", "args": [], "env": [], "type": "stdio"}
         projection = acp_client.mirror_for(ACP_BACKEND_CLAUDE).session_projection(
             owner._agent,
-            stub_server_names=("kirocrew-core",),
+            stub_server_names=("ajcrew-core",),
             stub_elements=[stub],
             permission_surface_owned=owner._permission_surface_governed,
         )
@@ -669,7 +669,7 @@ class TestSharedPermissionSurfaceTeardownAndReseed:
         """
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         owner, path, before = self._owner_with_a_sharer_and_a_warm_cache(
@@ -795,7 +795,7 @@ class TestSharedPermissionSurfaceTeardownAndReseed:
         """
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         owner, path, before = self._owner_with_a_sharer_and_a_warm_cache(
@@ -822,7 +822,7 @@ class TestSharedPermissionSurfaceTeardownAndReseed:
         """
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         owner, path, _before = self._owner_with_a_sharer_and_a_warm_cache(
@@ -846,7 +846,7 @@ class TestSharedPermissionSurfaceTeardownAndReseed:
         """The barrier fires only under a sharer: alone, the owner's re-seed lands."""
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         owner, path, before = self._owner_with_a_sharer_and_a_warm_cache(

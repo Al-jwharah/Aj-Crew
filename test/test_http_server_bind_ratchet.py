@@ -25,7 +25,7 @@ import pytest
 pytestmark = pytest.mark.xdist_group("tree_scan_http_server_bind_ratchet")
 
 _ROOT = Path(__file__).resolve().parent.parent
-_SCANNED = (_ROOT / "src" / "kiro_crew", _ROOT / "test")
+_SCANNED = (_ROOT / "src" / "aj_crew", _ROOT / "test")
 
 # A direct construction of the stdlib class, the shape whose server_bind resolves
 # the host: the class NAME followed by ``((``. Matched on code tokens, so the

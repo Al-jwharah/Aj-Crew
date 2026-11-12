@@ -29,17 +29,17 @@ const T0 = '2026-11-01T20:00:00Z'
 const ago = (min) => new Date(Date.now() - min * 60000).toISOString()
 
 const slots = [
-  { key: ROOT, title: 'Launch party', messages: 2, running: false, agent: 'kirocrew-conductor', agent_kind: 'template', crew_mode_root: true, mode: '', origin: 'user', memory_mode: 'persistent', created: T0, last_ts: ago(1), folder_id: '', workspace: 'default' },
+  { key: ROOT, title: 'Launch party', messages: 2, running: false, agent: 'ajcrew-conductor', agent_kind: 'template', crew_mode_root: true, mode: '', origin: 'user', memory_mode: 'persistent', created: T0, last_ts: ago(1), folder_id: '', workspace: 'default' },
 ]
 
 const CATALOG = {
   agents: [
-    { name: 'kirocrew', selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' },
-    { name: 'kirocrew-conductor', selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' },
+    { name: 'ajcrew', selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' },
+    { name: 'ajcrew-conductor', selection_kind: 'template', kiro_agent: '', workspace: 'default', memory_store: 'default', source: 'builtin' },
   ],
-  default_agent: 'kirocrew',
-  crew_mode_agent: 'kirocrew-conductor',
-  conductor_agents: ['kirocrew-conductor'],
+  default_agent: 'ajcrew',
+  crew_mode_agent: 'ajcrew-conductor',
+  conductor_agents: ['ajcrew-conductor'],
 }
 
 const item = (id, title, over) => ({

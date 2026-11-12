@@ -35,7 +35,7 @@ function stubFetch() {
     }
     // The apply never answers, so the dialog stays in its in-flight state.
     if (url.endsWith('/api/update')) return new Promise<never>(() => {})
-    if (url.includes('/api/config/kirocrew')) return json({ auto_update: true })
+    if (url.includes('/api/config/ajcrew')) return json({ auto_update: true })
     if (url.includes('/api/changelog')) return json({ content: '' })
     return json({})
   }))

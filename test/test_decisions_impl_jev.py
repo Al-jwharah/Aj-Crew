@@ -19,9 +19,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 
-from kiro_crew.config.sections import DecisionProviderConfig
-from kiro_crew.decisions import impl_jev
-from kiro_crew.decisions.impl_jev import (
+from aj_crew.config.sections import DecisionProviderConfig
+from aj_crew.decisions import impl_jev
+from aj_crew.decisions.impl_jev import (
     JevHttpError,
     JevOracle,
     JevProtocolError,
@@ -29,7 +29,7 @@ from kiro_crew.decisions.impl_jev import (
     close_sessions,
     resolve_api_key,
 )
-from kiro_crew.decisions.types import Choice, Noul, Score
+from aj_crew.decisions.types import Choice, Noul, Score
 
 VAULT_REF = "secret://TYPESAFE_API_KEY"
 VAULT_KEY = "test-key"
@@ -42,7 +42,7 @@ def fake_vault(monkeypatch):
     The vault is the ONLY key source ``resolve_api_key`` honours, so every request
     test goes through it. Tests that need a different vault shape patch over this.
     """
-    import kiro_crew.secrets.vault as vault_mod
+    import aj_crew.secrets.vault as vault_mod
 
     store = {"TYPESAFE_API_KEY": VAULT_KEY}
 
@@ -293,7 +293,7 @@ class TestRequestShape:
 
     def test_an_object_of_no_question_type_is_refused(self):
         """The wire speaks the three question types; any other object is a caller bug."""
-        from kiro_crew.decisions.impl_jev import _to_wire
+        from aj_crew.decisions.impl_jev import _to_wire
 
         with pytest.raises(JevProtocolError, match="unsupported question type"):
             _to_wire("hi", "jev-latest", [object()])  # type: ignore[list-item]
@@ -456,7 +456,7 @@ class TestResponseMetadata:
 
     def test_a_provider_model_string_is_bounded(self):
         """A misbehaving provider cannot write an unbounded model field onto the row."""
-        from kiro_crew.decisions.impl_jev import _META_STR_MAX
+        from aj_crew.decisions.impl_jev import _META_STR_MAX
 
         rec = _Recorder(
             body={"model": "m" * (_META_STR_MAX + 50), "answers": {"is_urgent": _yes()}}
@@ -482,7 +482,7 @@ class TestLocalModelServer:
 
     def test_the_vault_is_never_read(self, monkeypatch):
         """Not merely left out of the header: the key is never fetched at all."""
-        import kiro_crew.decisions.impl_jev as mod
+        import aj_crew.decisions.impl_jev as mod
 
         def _boom(_raw):
             raise AssertionError("the vault was read for a local server")
@@ -508,7 +508,7 @@ class TestLocalModelServer:
         self, monkeypatch, caplog
     ):
         """A tunnel to hosted Jev would get 401s; the log names the withheld key, once."""
-        import kiro_crew.decisions.impl_jev as mod
+        import aj_crew.decisions.impl_jev as mod
 
         monkeypatch.setattr(mod, "_keyless_loopback_warned", set())
         mod._warn_keyless_custom_loopback("http://127.0.0.1:9001/v1/systemone", "jev-latest")
@@ -519,7 +519,7 @@ class TestLocalModelServer:
     def test_query_variants_of_one_address_warn_once_and_the_set_stays_bounded(
         self, monkeypatch, caplog
     ):
-        import kiro_crew.decisions.impl_jev as mod
+        import aj_crew.decisions.impl_jev as mod
 
         monkeypatch.setattr(mod, "_keyless_loopback_warned", set())
         for n in range(200):
@@ -533,8 +533,8 @@ class TestLocalModelServer:
         assert len(mod._keyless_loopback_warned) <= mod._KEYLESS_WARNED_MAX
 
     def test_a_local_preset_is_not_warned_about(self, monkeypatch, caplog):
-        import kiro_crew.decisions.impl_jev as mod
-        from kiro_crew.decisions import local_models
+        import aj_crew.decisions.impl_jev as mod
+        from aj_crew.decisions import local_models
 
         monkeypatch.setattr(mod, "_keyless_loopback_warned", set())
         preset = local_models.LOCAL_MODELS[0]
@@ -665,7 +665,7 @@ class TestResponseBound:
     """A provider cannot make the reader allocate an unbounded body."""
 
     def test_an_oversized_response_is_refused_not_allocated(self):
-        from kiro_crew.decisions.impl_jev import _MAX_RESPONSE_BYTES
+        from aj_crew.decisions.impl_jev import _MAX_RESPONSE_BYTES
 
         # One byte past the cap, and valid JSON so nothing else can be blamed:
         # the padding sits inside a real field, so a reader without the cap would
@@ -695,7 +695,7 @@ class TestResolveApiKey:
         """The field is agent-writable: any literal could be a secret the agent read
         and wants sent as a bearer credential. Refused with a warning that names the
         fix and never the value."""
-        with caplog.at_level("WARNING", logger="kiro_crew.decisions.impl_jev"):
+        with caplog.at_level("WARNING", logger="aj_crew.decisions.impl_jev"):
             assert resolve_api_key(raw) == ""
         assert "literal value, which is not used" in caplog.text
         assert raw.strip() not in caplog.text
@@ -708,8 +708,8 @@ class TestResolveApiKey:
         assert resolve_api_key(raw) == ""
 
     def test_a_secret_reference_reads_the_vault(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        import kiro_crew.secrets.vault as vault_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        import aj_crew.secrets.vault as vault_mod
 
         class _Value:
             def reveal(self):
@@ -730,7 +730,7 @@ class TestResolveApiKey:
         """Observed by whether the vault is CONSTRUCTED: ``resolve_api_key`` catches
         ``Exception`` around the vault call, so a raising double could not tell a
         guarded path from an unguarded one."""
-        import kiro_crew.secrets.vault as vault_mod
+        import aj_crew.secrets.vault as vault_mod
 
         constructed: list[int] = []
 
@@ -753,8 +753,8 @@ class TestResolveApiKey:
         assert resolve_api_key(VAULT_REF) == VAULT_KEY
 
     def test_a_missing_vault_entry_resolves_to_empty(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        import kiro_crew.secrets.vault as vault_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        import aj_crew.secrets.vault as vault_mod
 
         class _Vault:
             def __init__(self, *_a, **_k):
@@ -772,7 +772,7 @@ class TestResolveApiKey:
     def test_a_reference_to_any_other_vault_entry_never_reaches_the_vault(self, monkeypatch, name):
         """`provider.api_key` is in agent-writable config: a free name would let an
         agent choose which operator secret is sent as the bearer credential."""
-        import kiro_crew.secrets.vault as vault_mod
+        import aj_crew.secrets.vault as vault_mod
 
         constructed: list[int] = []
 
@@ -790,8 +790,8 @@ class TestResolveApiKey:
         ), "only TYPESAFE_API_KEY may be read; nothing else touches the vault"
 
     def test_a_vault_error_resolves_to_empty_rather_than_raising(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        import kiro_crew.secrets.vault as vault_mod
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        import aj_crew.secrets.vault as vault_mod
 
         class _Vault:
             def __init__(self, *_a, **_k):
@@ -825,7 +825,7 @@ class TestProviderDefaults:
 
     def test_request_body_is_json_serialisable_as_sent(self):
         """Pins that nothing in ``_to_wire`` needs a custom encoder."""
-        from kiro_crew.decisions.impl_jev import _to_wire
+        from aj_crew.decisions.impl_jev import _to_wire
 
         wire = _to_wire("hi", "jev-latest", [CHOICE, URGENT])
         # The body survives a JSON round trip unchanged: no tuple, set or object
@@ -1115,7 +1115,7 @@ class TestCloudflareEnvelope:
 
     @pytest.mark.parametrize("model", ["clef", "clef-flash"])
     def test_the_clef_model_ids_are_valid_wire_model_ids(self, model):
-        from kiro_crew.decisions.types import is_model_id
+        from aj_crew.decisions.types import is_model_id
 
         assert is_model_id(model)
         assert _to_wire("hi", model, [URGENT])["model"] == model
@@ -1299,7 +1299,7 @@ class TestConnectionReuse:
         assert followed == []
 
     def test_an_oversized_body_is_still_refused_and_the_session_survives(self):
-        from kiro_crew.decisions.impl_jev import _MAX_RESPONSE_BYTES
+        from aj_crew.decisions.impl_jev import _MAX_RESPONSE_BYTES
 
         class _Big(_Recorder):
             big = True

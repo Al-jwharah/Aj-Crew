@@ -19,9 +19,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import kiro_crew.acp.client as client_mod
-import kiro_crew.executors as ex
-from kiro_crew.acp.client import AcpClient, _capture_child_records
+import aj_crew.acp.client as client_mod
+import aj_crew.executors as ex
+from aj_crew.acp.client import AcpClient, _capture_child_records
 
 
 def teardown_function() -> None:
@@ -32,7 +32,7 @@ def teardown_function() -> None:
 class TestCaptureChildRecords:
     def test_returns_start_time_and_basename_per_pid(self) -> None:
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=lambda p: p * 10),
             patch.object(client_mod, "_read_basename", side_effect=lambda p: f"bin{p}".encode()),
         ):
             result = _capture_child_records([1, 2, 3])

@@ -13,7 +13,7 @@ import { mkdirSync } from 'node:fs'
 import { serveDist } from './lib/serve-dist.mjs'
 import { logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 
-const OUT = process.argv[2] || (process.env.KIROCREW_SCRATCH || '/tmp') + '/side-panel-active-tab'
+const OUT = process.argv[2] || (process.env.AJCREW_SCRATCH || '/tmp') + '/side-panel-active-tab'
 const NAME = process.argv[3] || 'shot'
 const THEME = process.env.THEME === 'light' ? 'light' : 'dark'
 const VIEWPORT = { width: 1280, height: 760 }
@@ -40,7 +40,7 @@ async function main() {
     theme: THEME,
     slots: [{
       key: SLOT, title: 'Selected tab demo', running: false, last_message: 'Checking the tab strip.',
-      messages: 2, agent: 'kirocrew', memory_mode: 'persistent', folder_id: '',
+      messages: 2, agent: 'ajcrew', memory_mode: 'persistent', folder_id: '',
       modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
     }],
     localStorageEntries: {

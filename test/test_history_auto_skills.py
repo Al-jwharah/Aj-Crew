@@ -12,15 +12,15 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import history
-from kiro_crew.history import ConversationLog, HistoryConsolidator
+from aj_crew import history
+from aj_crew.history import ConversationLog, HistoryConsolidator
 
 
 class TestAutoSkillHelpers:
     """Module-level helpers for auto-skill eligibility."""
 
     def test_count_tool_call_messages(self):
-        from kiro_crew.history import _count_tool_call_messages
+        from aj_crew.history import _count_tool_call_messages
 
         messages = [
             {"role": "user", "content": "hi"},
@@ -33,7 +33,7 @@ class TestAutoSkillHelpers:
         assert _count_tool_call_messages(messages) == 3
 
     def test_count_handles_malformed_tools(self):
-        from kiro_crew.history import _count_tool_call_messages
+        from aj_crew.history import _count_tool_call_messages
 
         messages = [
             {"role": "assistant", "content": "x", "tools": "not-a-list"},
@@ -43,7 +43,7 @@ class TestAutoSkillHelpers:
         assert _count_tool_call_messages(messages) == 0
 
     def test_session_touched_sensitive_true_for_aws(self):
-        from kiro_crew.history import _session_touched_sensitive
+        from aj_crew.history import _session_touched_sensitive
 
         messages = [
             {"role": "assistant", "content": "", "tools": ["Reading ~/.aws/credentials"]},
@@ -51,7 +51,7 @@ class TestAutoSkillHelpers:
         assert _session_touched_sensitive(messages) is True
 
     def test_session_touched_sensitive_true_for_imds(self):
-        from kiro_crew.history import _session_touched_sensitive
+        from aj_crew.history import _session_touched_sensitive
 
         messages = [
             {"role": "assistant", "content": "", "tools": ["curl 169.254.169.254/latest/..."]},
@@ -59,7 +59,7 @@ class TestAutoSkillHelpers:
         assert _session_touched_sensitive(messages) is True
 
     def test_session_touched_sensitive_false_for_normal_tools(self):
-        from kiro_crew.history import _session_touched_sensitive
+        from aj_crew.history import _session_touched_sensitive
 
         messages = [
             {"role": "assistant", "content": "", "tools": ["Running: ls /tmp", "fs_read"]},
@@ -73,7 +73,7 @@ class TestDashboardSchemaToolCallCounting:
 
     def test_count_dashboard_role_tool_messages(self):
         """Dashboard pipeline records tool calls as role='tool' messages."""
-        from kiro_crew.history import _count_tool_call_messages
+        from aj_crew.history import _count_tool_call_messages
 
         messages = [
             {"role": "user", "content": "find info on grading"},
@@ -88,7 +88,7 @@ class TestDashboardSchemaToolCallCounting:
 
     def test_sensitive_detection_dashboard_schema(self):
         """Sensitive paths in dashboard tool content are detected."""
-        from kiro_crew.history import _session_touched_sensitive
+        from aj_crew.history import _session_touched_sensitive
 
         messages = [
             {"role": "assistant", "content": "Reading credentials."},
@@ -99,7 +99,7 @@ class TestDashboardSchemaToolCallCounting:
 
     def test_sensitive_false_for_normal_dashboard_tools(self):
         """Normal dashboard tool messages don't trigger sensitive detection."""
-        from kiro_crew.history import _session_touched_sensitive
+        from aj_crew.history import _session_touched_sensitive
 
         messages = [
             {"role": "tool", "content": "🔧 Running: @builder-mcp/ReadInternalWebsites"},
@@ -109,7 +109,7 @@ class TestDashboardSchemaToolCallCounting:
 
     def test_mixed_schema_no_double_count(self):
         """Sessions mixing legacy tools field and dashboard role='tool' count correctly."""
-        from kiro_crew.history import _count_tool_call_messages
+        from aj_crew.history import _count_tool_call_messages
 
         messages = [
             {"role": "assistant", "content": "step 1", "tools": ["fs_read"]},
@@ -129,8 +129,8 @@ class TestProcessAutoSkillsIntegration:
     @pytest.mark.asyncio
     async def test_consolidator_default_off_never_writes(self, tmp_path):
         """With auto_skills_enabled=False (default), no skill writes happen."""
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -168,8 +168,8 @@ class TestProcessAutoSkillsIntegration:
 
     @pytest.mark.asyncio
     async def test_consolidator_on_creates_auto_skill(self, tmp_path):
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -218,8 +218,8 @@ class TestProcessAutoSkillsIntegration:
 
     @pytest.mark.asyncio
     async def test_sensitive_session_skipped_even_when_enabled(self, tmp_path):
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -263,8 +263,8 @@ class TestProcessAutoSkillsIntegration:
     @pytest.mark.asyncio
     async def test_credentials_in_llm_output_are_redacted_before_write(self, tmp_path):
         """If the LLM returns a procedure with an AWS key, it's redacted before disk write."""
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -310,8 +310,8 @@ class TestProcessAutoSkillsIntegration:
 
     @pytest.mark.asyncio
     async def test_similarity_dedup_skips_near_duplicate(self, tmp_path):
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -362,8 +362,8 @@ class TestProcessAutoSkillsIntegration:
 
         This is the regression test that would have caught the schema mismatch bug.
         """
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -426,8 +426,8 @@ class TestProcessAutoSkillsIntegration:
     async def test_consolidator_stages_when_approval_required(self, tmp_path):
         """With approval_required (the default), a new skill goes to the pending
         queue — not live — and is audited with outcome='staged'."""
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -474,8 +474,8 @@ class TestProcessAutoSkillsIntegration:
     @pytest.mark.asyncio
     async def test_script_bearing_candidate_always_stages(self, tmp_path):
         """A clean script forces staging even when approval_required=False."""
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -519,8 +519,8 @@ class TestProcessAutoSkillsIntegration:
     @pytest.mark.asyncio
     async def test_dangerous_script_dropped_but_skill_staged(self, tmp_path):
         """A script failing the static validator is dropped; the skill still stages."""
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -570,8 +570,8 @@ class TestAutoSkillSELAudit:
     @pytest.mark.asyncio
     async def test_refine_namespace_lock_rejection_emits_sel(self, tmp_path):
         """When LLM tries to refine a hand-authored skill, SEL must log rejection."""
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -616,7 +616,7 @@ class TestAutoSkillSELAudit:
             recorded.append(kwargs)
 
         with patch.object(consolidator, "_call_llm", side_effect=fake_llm):
-            with patch("kiro_crew.history.sel") as mock_sel:
+            with patch("aj_crew.history.sel") as mock_sel:
                 mock_sel.return_value.log_tool_invocation = fake_log
                 await consolidator._consolidate("dashboard:chat-refine", include_history=True)
 
@@ -638,8 +638,8 @@ class TestAutoSkillSELAudit:
     @pytest.mark.asyncio
     async def test_create_path_failure_emits_sel(self, tmp_path):
         """When create_auto_skill returns None (invalid slug / oversize), SEL must log rejection."""
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -676,7 +676,7 @@ class TestAutoSkillSELAudit:
             recorded.append(kwargs)
 
         with patch.object(consolidator, "_call_llm", side_effect=fake_llm):
-            with patch("kiro_crew.history.sel") as mock_sel:
+            with patch("aj_crew.history.sel") as mock_sel:
                 mock_sel.return_value.log_tool_invocation = fake_log
                 await consolidator._consolidate("dashboard:chat-bad-slug", include_history=True)
 
@@ -703,8 +703,8 @@ class TestAutoSkillSELAuditCompleteness:
     @pytest.mark.asyncio
     async def test_create_empty_after_redaction_emits_sel(self, tmp_path):
         """If LLM returns new_skill but redaction strips everything, emit rejection audit."""
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -741,7 +741,7 @@ class TestAutoSkillSELAuditCompleteness:
             recorded.append(kwargs)
 
         with patch.object(consolidator, "_call_llm", side_effect=fake_llm):
-            with patch("kiro_crew.history.sel") as mock_sel:
+            with patch("aj_crew.history.sel") as mock_sel:
                 mock_sel.return_value.log_tool_invocation = fake_log
                 await consolidator._consolidate("dashboard:chat-empty", include_history=True)
 
@@ -758,8 +758,8 @@ class TestAutoSkillSELAuditCompleteness:
     @pytest.mark.asyncio
     async def test_refine_empty_after_redaction_emits_sel(self, tmp_path):
         """Same gap on refine path: empty fields after redaction must audit."""
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import AutoSkillProvenance, SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import AutoSkillProvenance, SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -807,7 +807,7 @@ class TestAutoSkillSELAuditCompleteness:
             recorded.append(kwargs)
 
         with patch.object(consolidator, "_call_llm", side_effect=fake_llm):
-            with patch("kiro_crew.history.sel") as mock_sel:
+            with patch("aj_crew.history.sel") as mock_sel:
                 mock_sel.return_value.log_tool_invocation = fake_log
                 await consolidator._consolidate("dashboard:chat-refine-empty", include_history=True)
 
@@ -823,8 +823,8 @@ class TestAutoSkillSELAuditCompleteness:
     @pytest.mark.asyncio
     async def test_refine_update_failed_emits_sel(self, tmp_path):
         """When update_auto_skill returns False (oversized / missing), audit the rejection."""
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import (
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import (
             AUTO_SKILL_MAX_PROCEDURE_CHARS,
             AutoSkillProvenance,
             SkillsLoader,
@@ -877,7 +877,7 @@ class TestAutoSkillSELAuditCompleteness:
             recorded.append(kwargs)
 
         with patch.object(consolidator, "_call_llm", side_effect=fake_llm):
-            with patch("kiro_crew.history.sel") as mock_sel:
+            with patch("aj_crew.history.sel") as mock_sel:
                 mock_sel.return_value.log_tool_invocation = fake_log
                 await consolidator._consolidate("dashboard:chat-oversize", include_history=True)
 
@@ -901,7 +901,7 @@ class TestConsolidationPromptJsonShape:
         """Extract the new_skill shape example and verify balanced quotes."""
         import inspect
 
-        from kiro_crew.history import HistoryConsolidator
+        from aj_crew.history import HistoryConsolidator
 
         src = inspect.getsource(HistoryConsolidator._run_skill_detection)
         # Find the new_skill prompt key block — it's a concatenated string
@@ -930,8 +930,8 @@ class TestConsolidationPromptJsonShape:
         import asyncio as _asyncio
         from unittest.mock import patch
 
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -1011,8 +1011,8 @@ class TestSkillDetectionFullWindow:
         import asyncio as _asyncio
         from unittest.mock import patch
 
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -1056,8 +1056,8 @@ class TestSkillDetectionFullWindow:
     @pytest.mark.asyncio
     async def test_restricted_line_discards_candidate_before_publication(self, tmp_path, caplog):
         """A mode tightening during extraction wins before skill staging."""
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -1088,7 +1088,7 @@ class TestSkillDetectionFullWindow:
             }
 
         c._event_loop = asyncio.get_running_loop()
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.history"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.history"):
             with patch.object(c, "_call_llm", side_effect=fake_llm):
                 await c._run_skill_detection(key)
 
@@ -1097,8 +1097,8 @@ class TestSkillDetectionFullWindow:
         assert "transcript became restricted during extraction" in caplog.text
 
     def test_lock_timeout_discards_candidate_before_publication(self, tmp_path, monkeypatch):
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -1141,8 +1141,8 @@ class TestSkillDetectionFullWindow:
         import asyncio as _asyncio
         from unittest.mock import patch
 
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -1184,8 +1184,8 @@ class TestSkillDetectionFullWindow:
         import asyncio as _asyncio
         from unittest.mock import patch
 
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -1255,8 +1255,8 @@ class TestSkillDetectionFullWindow:
         import json as _json
         from unittest.mock import patch
 
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         conv_log = ConversationLog(base_dir=tmp_path / "sessions")
         conv_log.init()
@@ -1301,8 +1301,8 @@ async def test_dedupe_candidate_falls_back_to_lexical_without_judge_model(tmp_pa
     """No judge_model configured → _dedupe_candidate uses lexical find_similar."""
     from unittest.mock import MagicMock
 
-    from kiro_crew.history import HistoryConsolidator
-    from kiro_crew.skills import AutoSkillProvenance, SkillsLoader
+    from aj_crew.history import HistoryConsolidator
+    from aj_crew.skills import AutoSkillProvenance, SkillsLoader
 
     skills = SkillsLoader(skills_path=tmp_path / "skills", install_builtins=False)
     skills.create_auto_skill(
@@ -1329,8 +1329,8 @@ async def test_dedupe_candidate_uses_judge_when_configured(tmp_path):
     async judge, bridged from the worker thread back onto the loop."""
     from unittest.mock import MagicMock
 
-    from kiro_crew.history import HistoryConsolidator
-    from kiro_crew.skills import AutoSkillProvenance, SkillsLoader
+    from aj_crew.history import HistoryConsolidator
+    from aj_crew.skills import AutoSkillProvenance, SkillsLoader
 
     skills = SkillsLoader(skills_path=tmp_path / "skills", install_builtins=False)
     skills.create_auto_skill(
@@ -1363,8 +1363,8 @@ async def test_dedupe_candidate_uses_judge_when_configured(tmp_path):
 async def test_all_invalid_scripts_are_rejected_when_approval_disabled(tmp_path):
     """A candidate whose supplied scripts all fail validation is rejected
     instead of being auto-published or queued against the user's opt-out."""
-    from kiro_crew.memory import MemoryStore
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.memory import MemoryStore
+    from aj_crew.skills import SkillsLoader
 
     conv_log = ConversationLog(base_dir=tmp_path / "sessions")
     conv_log.init()

@@ -16,7 +16,7 @@ from slack_gateway_helpers import (
     _make_orchestrator,
 )
 
-from kiro_crew.slack import gateway as gw
+from aj_crew.slack import gateway as gw
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Tests: _start_embeddings
@@ -32,12 +32,12 @@ class TestStartEmbeddings:
         orch.vector_memory = MagicMock(embed_fn=None, embed_fn_factory=None)
         fake_embed_fn = lambda text: [0.1]  # noqa: E731
         with (
-            patch("kiro_crew.slack.gateway.model_file_present", return_value=True),
+            patch("aj_crew.slack.gateway.model_file_present", return_value=True),
             patch(
-                "kiro_crew.slack.gateway.make_sync_embed_fn", return_value=fake_embed_fn
+                "aj_crew.slack.gateway.make_sync_embed_fn", return_value=fake_embed_fn
             ) as mock_make,
             patch(
-                "kiro_crew.slack.gateway.start_background_model_download", return_value=None
+                "aj_crew.slack.gateway.start_background_model_download", return_value=None
             ) as mock_start,
         ):
             await orch._start_embeddings()
@@ -53,9 +53,9 @@ class TestStartEmbeddings:
         orch.vector_memory = MagicMock(embed_fn=None, embed_fn_factory=None)
         fake_task = MagicMock()
         with (
-            patch("kiro_crew.slack.gateway.model_file_present", return_value=False),
+            patch("aj_crew.slack.gateway.model_file_present", return_value=False),
             patch(
-                "kiro_crew.slack.gateway.start_background_model_download", return_value=fake_task
+                "aj_crew.slack.gateway.start_background_model_download", return_value=fake_task
             ) as mock_start,
         ):
             await orch._start_embeddings()
@@ -101,12 +101,10 @@ class TestAutoMigrateMemory:
         orch, store = self._orch_with_store(migrated=False)
         set_migrated = AsyncMock()
         with (
-            patch("kiro_crew.slack.gateway.model_file_present", return_value=True),
-            patch("kiro_crew.slack.gateway.make_sync_embed_fn", return_value=(lambda t: [0.1])),
-            patch(
-                "kiro_crew.slack.gateway.get_shared_embedder", return_value=self._ready_embedder()
-            ),
-            patch("kiro_crew.memory.legacy_memory_present", return_value=True),
+            patch("aj_crew.slack.gateway.model_file_present", return_value=True),
+            patch("aj_crew.slack.gateway.make_sync_embed_fn", return_value=(lambda t: [0.1])),
+            patch("aj_crew.slack.gateway.get_shared_embedder", return_value=self._ready_embedder()),
+            patch("aj_crew.memory.legacy_memory_present", return_value=True),
             patch.object(orch, "_set_memory_migrated", set_migrated),
         ):
             await orch._auto_migrate_memory()
@@ -125,12 +123,10 @@ class TestAutoMigrateMemory:
         orch, store = self._orch_with_store(migrated=True)
         set_migrated = AsyncMock()
         with (
-            patch("kiro_crew.slack.gateway.model_file_present", return_value=True),
-            patch("kiro_crew.slack.gateway.make_sync_embed_fn", return_value=(lambda t: [0.1])),
-            patch(
-                "kiro_crew.slack.gateway.get_shared_embedder", return_value=self._ready_embedder()
-            ),
-            patch("kiro_crew.memory.legacy_memory_present", return_value=True),
+            patch("aj_crew.slack.gateway.model_file_present", return_value=True),
+            patch("aj_crew.slack.gateway.make_sync_embed_fn", return_value=(lambda t: [0.1])),
+            patch("aj_crew.slack.gateway.get_shared_embedder", return_value=self._ready_embedder()),
+            patch("aj_crew.memory.legacy_memory_present", return_value=True),
             patch.object(orch, "_set_memory_migrated", set_migrated),
         ):
             await orch._auto_migrate_memory()
@@ -149,10 +145,10 @@ class TestAutoMigrateMemory:
             wait_ready=MagicMock(return_value=False), is_ready=MagicMock(return_value=False)
         )
         with (
-            patch("kiro_crew.slack.gateway.model_file_present", return_value=True),
-            patch("kiro_crew.slack.gateway.make_sync_embed_fn", return_value=(lambda t: [0.1])),
-            patch("kiro_crew.slack.gateway.get_shared_embedder", return_value=not_ready),
-            patch("kiro_crew.memory.legacy_memory_present", return_value=True),
+            patch("aj_crew.slack.gateway.model_file_present", return_value=True),
+            patch("aj_crew.slack.gateway.make_sync_embed_fn", return_value=(lambda t: [0.1])),
+            patch("aj_crew.slack.gateway.get_shared_embedder", return_value=not_ready),
+            patch("aj_crew.memory.legacy_memory_present", return_value=True),
             patch.object(orch, "_set_memory_migrated", AsyncMock()),
         ):
             await orch._auto_migrate_memory()
@@ -164,9 +160,9 @@ class TestAutoMigrateMemory:
         orch, store = self._orch_with_store(migrated=False)
         set_migrated = AsyncMock()
         with (
-            patch("kiro_crew.slack.gateway.model_file_present", return_value=True),
-            patch("kiro_crew.slack.gateway.make_sync_embed_fn", return_value=(lambda t: [0.1])),
-            patch("kiro_crew.memory.legacy_memory_present", return_value=False),
+            patch("aj_crew.slack.gateway.model_file_present", return_value=True),
+            patch("aj_crew.slack.gateway.make_sync_embed_fn", return_value=(lambda t: [0.1])),
+            patch("aj_crew.memory.legacy_memory_present", return_value=False),
             patch.object(orch, "_set_memory_migrated", set_migrated),
         ):
             await orch._auto_migrate_memory()
@@ -189,14 +185,12 @@ class TestAutoMigrateMemory:
         download_done.set()
         with (
             patch(
-                "kiro_crew.slack.gateway.model_file_present",
+                "aj_crew.slack.gateway.model_file_present",
                 side_effect=lambda: next(presence, True),
             ),
-            patch("kiro_crew.slack.gateway.make_sync_embed_fn", return_value=(lambda t: [0.1])),
-            patch(
-                "kiro_crew.slack.gateway.get_shared_embedder", return_value=self._ready_embedder()
-            ),
-            patch("kiro_crew.memory.legacy_memory_present", return_value=True),
+            patch("aj_crew.slack.gateway.make_sync_embed_fn", return_value=(lambda t: [0.1])),
+            patch("aj_crew.slack.gateway.get_shared_embedder", return_value=self._ready_embedder()),
+            patch("aj_crew.memory.legacy_memory_present", return_value=True),
             patch.object(orch, "_set_memory_migrated", AsyncMock()),
         ):
             await orch._auto_migrate_memory()
@@ -211,9 +205,9 @@ class TestAutoMigrateMemory:
         store.migrate_from_markdown.side_effect = RuntimeError("boom")
         set_migrated = AsyncMock()
         with (
-            patch("kiro_crew.slack.gateway.model_file_present", return_value=True),
-            patch("kiro_crew.slack.gateway.make_sync_embed_fn", return_value=(lambda t: [0.1])),
-            patch("kiro_crew.memory.legacy_memory_present", return_value=True),
+            patch("aj_crew.slack.gateway.model_file_present", return_value=True),
+            patch("aj_crew.slack.gateway.make_sync_embed_fn", return_value=(lambda t: [0.1])),
+            patch("aj_crew.memory.legacy_memory_present", return_value=True),
             patch.object(orch, "_set_memory_migrated", set_migrated),
         ):
             # Must not raise — boot survives.
@@ -379,7 +373,7 @@ class TestReembedSweepDefersTheModelLoad:
         """
         import inspect
 
-        from kiro_crew import embeddings as emb
+        from aj_crew import embeddings as emb
 
         src = inspect.getsource(emb.make_sync_embed_fn)
         assert "_kick_background_load" not in src

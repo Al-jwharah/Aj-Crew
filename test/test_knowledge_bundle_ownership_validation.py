@@ -22,8 +22,8 @@ from knowledge_bundle_ownership_helpers import (  # noqa: F401 -- fixtures are r
     importer_fixture,
 )
 
-from kiro_crew.dashboard.handlers.knowledge import _validate_knowledge_bundle
-from kiro_crew.knowledge.store import BUNDLE_STATE_KEY_COL, KnowledgeBundleError
+from aj_crew.dashboard.handlers.knowledge import _validate_knowledge_bundle
+from aj_crew.knowledge.store import BUNDLE_STATE_KEY_COL, KnowledgeBundleError
 
 
 class TestStateTextMustBeBindable:

@@ -31,9 +31,9 @@ from native_skill_projection_helpers import (
     _metadata_file,
 )
 
-from kiro_crew.acp import skill_projection as projection
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing.wait import wait_until
+from aj_crew.acp import skill_projection as projection
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing.wait import wait_until
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _no_eager_prune = native_skill_projection_helpers._no_eager_prune
@@ -171,7 +171,7 @@ def _publish_pre_view_digest(agents, name):
     alias BYTES only, the shape the launcher incident left on disk."""
     alias = agents / f"{name}.json"
     raw = json.dumps(
-        {"name": name, "resources": [], "mcpServers": {"kirocrew-core": {"command": "x"}}}
+        {"name": name, "resources": [], "mcpServers": {"ajcrew-core": {"command": "x"}}}
     )
     alias.write_text(raw, encoding="utf-8")
     md = projection._projection_metadata_dir()
@@ -421,7 +421,7 @@ def test_an_alias_view_leaves_out_the_welcome_message_and_keeps_a_short_descript
 ):
     """kiro-cli ships every agent's description and welcomeMessage in each
     session/new reply; an alias is a second copy of an agent the host already
-    lists, so it must not double that text. The authored spec keeps it (Kiro Crew
+    lists, so it must not double that text. The authored spec keeps it (Aj Crew
     renders the welcomeMessage from there), and the source is named in a warning."""
     _home, agents, project = native_tree
     source = agents / "custom.json"
@@ -435,7 +435,7 @@ def test_an_alias_view_leaves_out_the_welcome_message_and_keeps_a_short_descript
     source.write_text(json.dumps(spec), encoding="utf-8")
     projection._DISPLAY_TEXT_WARNED.clear()
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.skill_projection"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.skill_projection"):
         prepared = projection.prepare_native_skill_projection(project)
 
     view = json.loads(_alias_file(agents, prepared).read_text(encoding="utf-8"))
@@ -449,7 +449,7 @@ def test_an_alias_view_leaves_out_the_welcome_message_and_keeps_a_short_descript
     assert warnings and "'custom'" in warnings[0] and source.as_posix() in warnings[0]
 
     caplog.clear()
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.skill_projection"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.skill_projection"):
         projection.prepare_native_skill_projection(project)
     assert not [r for r in caplog.records if "welcomeMessage" in r.getMessage()]
 
@@ -535,7 +535,7 @@ def test_a_view_tagged_by_another_home_is_never_reclaimed_as_a_legacy_view(
 
 
 def test_the_display_budget_names_the_readers_frame_limit():
-    from kiro_crew.acp import runtime
+    from aj_crew.acp import runtime
 
     assert projection._STDOUT_FRAME_LIMIT_BYTES == runtime._STDOUT_BUFFER_LIMIT
 
@@ -545,7 +545,7 @@ def test_the_display_text_warning_escapes_what_it_read_from_disk(caplog, monkeyp
     one must not forge a second log record, and a huge one stays bounded."""
     projection._DISPLAY_TEXT_WARNED.clear()
     name = "evil\nWARNING forged record" + "x" * 1000
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.skill_projection"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.skill_projection"):
         projection._warn_on_display_text({name: (64 * 1024, "/p/evil\n.json")})
     messages = [r.getMessage() for r in caplog.records]
     assert messages and all("\n" not in m for m in messages)
@@ -565,7 +565,7 @@ def test_the_display_text_warning_cap_holds_per_insertion(caplog, monkeypatch):
     insert past it; the rest are counted in one line instead of named."""
     projection._DISPLAY_TEXT_WARNED.clear()
     sizes = {f"a{n}": (64 * 1024, f"/p/a{n}.json") for n in range(257)}
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.skill_projection"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.skill_projection"):
         projection._warn_on_display_text(sizes)
     assert len(projection._DISPLAY_TEXT_WARNED) == projection._DISPLAY_TEXT_WARNED_MAX
     assert any("1 more agent(s)" in r.getMessage() for r in caplog.records)
@@ -591,7 +591,7 @@ def test_a_rotated_credential_names_a_new_alias_but_a_launch_nonce_does_not(
     """A rotated credential must name an alias kiro-cli has not loaded -- the old
     name would activate its loaded copy, old credential and all -- and two launch
     contexts never share one; only the volatile nonce changing reuses the alias."""
-    monkeypatch.delenv("KIROCREW_SKILL_VIEW_VOLATILE_ENV", raising=False)
+    monkeypatch.delenv("AJCREW_SKILL_VIEW_VOLATILE_ENV", raising=False)
     _home, agents, project = native_tree
     source = agents / "custom.json"
     source.write_text(json.dumps(_credential_spec("t1", "n1")), encoding="utf-8")
@@ -610,7 +610,7 @@ def test_recognise_does_not_carry_the_launch_name_exemption():
     unprojected spec). So a refresh through recognise() must NOT propagate the
     earlier projection's spawn_agent_name onto the fresh one -- only the direct
     spawn caller sets it."""
-    earlier = projection.NativeSkillProjection({}, spawn_agent_name="kirocrew")
+    earlier = projection.NativeSkillProjection({}, spawn_agent_name="ajcrew")
     fresh = projection.NativeSkillProjection({})
     assert fresh.spawn_agent_name == ""
     fresh.recognise(earlier)
@@ -618,9 +618,9 @@ def test_recognise_does_not_carry_the_launch_name_exemption():
 
     # A projection that already knows its own launch name is likewise untouched by
     # recognise() -- the field is owned by the spawn caller, not this seam.
-    already = projection.NativeSkillProjection({}, spawn_agent_name="kirocrew")
+    already = projection.NativeSkillProjection({}, spawn_agent_name="ajcrew")
     already.recognise(projection.NativeSkillProjection({}, spawn_agent_name="other"))
-    assert already.spawn_agent_name == "kirocrew"
+    assert already.spawn_agent_name == "ajcrew"
 
 
 def test_recognise_carries_advertised_launch_name_but_not_the_request_exemption():
@@ -630,12 +630,12 @@ def test_recognise_carries_advertised_launch_name_but_not_the_request_exemption(
     (advertising only), unlike ``spawn_agent_name`` (the mid-session request
     tolerance), which recognise() must never propagate."""
     earlier = projection.NativeSkillProjection(
-        {}, spawn_agent_name="kirocrew", advertised_launch_name="kirocrew"
+        {}, spawn_agent_name="ajcrew", advertised_launch_name="ajcrew"
     )
     fresh = projection.NativeSkillProjection({})
     fresh.recognise(earlier)
     # Advertising carried; the request exemption NOT carried.
-    assert fresh.advertised_launch_name == "kirocrew"
+    assert fresh.advertised_launch_name == "ajcrew"
     assert fresh.spawn_agent_name == ""
     # A fresh projection that already recorded its own launch name is untouched.
     already = projection.NativeSkillProjection({}, advertised_launch_name="own")
@@ -723,7 +723,7 @@ def test_the_churning_census_bounds_the_group_key_it_retains(native_tree):
 
 def test_a_preparation_writes_only_views_into_the_agents_directory(native_tree):
     """The Kiro IDE lists every entry of ``~/.kiro/agents/`` as an agent. The
-    lock, the lease records and the ownership sidecars are Kiro Crew's own and
+    lock, the lease records and the ownership sidecars are Aj Crew's own and
     belong under its data home; only the views kiro-cli resolves by name may
     land beside the authored specs."""
     _home, agents, project = native_tree
@@ -1100,8 +1100,8 @@ import threading
 from pathlib import Path
 from types import SimpleNamespace
 
-import kiro_crew.agent as agent_module
-from kiro_crew.acp import skill_projection as projection
+import aj_crew.agent as agent_module
+from aj_crew.acp import skill_projection as projection
 
 root = Path(sys.argv[1])
 home = root / "kiro"
@@ -1137,7 +1137,7 @@ def test_a_projection_held_until_exit_releases_its_lease_with_the_reaper_alive(
     ends; queued for the reaper, it never would be."""
     _home, agents, _project = native_tree
     (agents / "custom.json").write_text('{"name":"custom"}', encoding="utf-8")
-    env = {k: v for k, v in os.environ.items() if k != "KIROCREW_NATIVE_SKILL_PROJECTION"}
+    env = {k: v for k, v in os.environ.items() if k != "AJCREW_NATIVE_SKILL_PROJECTION"}
     result = subprocess.run(
         [sys.executable, "-c", _EXIT_WITH_A_BUSY_REAPER, str(tmp_path)],
         capture_output=True,
@@ -1222,7 +1222,7 @@ def test_a_projection_ended_on_the_event_loop_releases_and_prunes_off_it(native_
     assert not done.is_set(), "the end ran inline on the loop thread"
     gate.set()
     assert done.wait(10), "the prune never ran"
-    assert ran_on == [("kirocrew-skill-view-prune", True)]
+    assert ran_on == [("ajcrew-skill-view-prune", True)]
     assert lease_present_at_prune == [False], "the lease outlived its release"
     assert not list(lease_dir.iterdir())
     assert not alias.exists()
@@ -1350,7 +1350,7 @@ def test_ends_that_arrive_while_one_prunes_share_its_next_pass(native_tree, monk
     follow_up_gate.set()
     assert follow_up_done.wait(10), "the later ends got no follow-up pass"
 
-    assert calls == ["first-end", "kirocrew-skill-view-prune"], "each end ran a prune pass"
+    assert calls == ["first-end", "ajcrew-skill-view-prune"], "each end ran a prune pass"
 
 
 def test_an_end_covered_by_a_running_prune_still_loses_its_view(native_tree, monkeypatch, tmp_path):
@@ -1494,7 +1494,7 @@ def test_client_reset_state_releases_the_projection_and_prunes_its_view(native_t
     it a session's views wait for garbage collection or the next spawn's prune,
     and on a host winding down they sit in the Kiro IDE's agent list. Removing the
     ``projection.release()`` call from ``AcpClient`` shutdown reds this test."""
-    from kiro_crew.acp import client as acp_client
+    from aj_crew.acp import client as acp_client
 
     monkeypatch.setattr(projection, "_eager_prune", _REAL_EAGER_PRUNE)
     _home, agents, project = native_tree
@@ -1523,7 +1523,7 @@ def test_client_reset_state_releases_the_projection_and_prunes_its_view(native_t
 def test_two_concurrent_releases_each_prune_their_own_view(native_tree, monkeypatch, tmp_path):
     """A gateway stop ends sessions concurrently: client shutdown runs each
     ``release()`` on the event loop, which hands each end to its own
-    ``kirocrew-skill-view-prune`` daemon thread. If the second end skipped its
+    ``ajcrew-skill-view-prune`` daemon thread. If the second end skipped its
     prune on the in-process lock the first still holds, its view would linger
     until the next spawn or boot drain -- the gateway-stop case the issue names.
     An end that arrives while the other's pass runs is covered by a follow-up
@@ -1561,11 +1561,11 @@ def test_two_concurrent_releases_each_prune_their_own_view(native_tree, monkeypa
 
 
 def _new_prune_threads(before):
-    """The ``kirocrew-skill-view-prune`` threads started since *before* was taken."""
+    """The ``ajcrew-skill-view-prune`` threads started since *before* was taken."""
     return [
         thread
         for thread in threading.enumerate()
-        if thread.name == "kirocrew-skill-view-prune" and thread not in before
+        if thread.name == "ajcrew-skill-view-prune" and thread not in before
     ]
 
 
@@ -1574,7 +1574,7 @@ def _settle_end_prunes(agents, release_threads, *, on_poll=lambda: None):
 
     Joining the release threads is not enough. An end that arrives while another
     end's pass runs only records a request (``_coalesced_end_prune``), and the
-    running end hands the follow-up pass to a NEW ``kirocrew-skill-view-prune``
+    running end hands the follow-up pass to a NEW ``ajcrew-skill-view-prune``
     thread before it exits, so that pass can still be walking when the release
     threads are gone. The follow-up is owed for as long as this agents directory
     is in ``_END_PRUNE_RUNNING`` (a pending request always has a running key), so

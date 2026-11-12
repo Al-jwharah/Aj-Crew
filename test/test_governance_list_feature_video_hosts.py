@@ -14,7 +14,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.platform.governance import CapabilityGate, parse_policy, resolve
+from aj_crew.platform.governance import CapabilityGate, parse_policy, resolve
 
 #: (scope, inner key, matcher, an item the list allows, an item it does not)
 _CASES = (
@@ -43,13 +43,13 @@ def _allow(scope: str, key: str, allowed: str) -> dict:
 
 @pytest.fixture
 def isolated_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return tmp_path
 
 
 @pytest.fixture
 def fake_sel(monkeypatch):
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     fake = MagicMock()
     monkeypatch.setattr(sel_mod, "sel", lambda: fake)
@@ -57,8 +57,8 @@ def fake_sel(monkeypatch):
 
 
 def _install_policy(monkeypatch, doc: dict | None) -> None:
-    from kiro_crew.metrics import provider
-    from kiro_crew.platform import context as pc
+    from aj_crew.metrics import provider
+    from aj_crew.platform import context as pc
 
     ceiling = parse_policy(doc) if doc is not None else None
     ctx = SimpleNamespace(governance=ceiling)
@@ -105,7 +105,7 @@ class TestFeatureVideoHosts:
     _SCOPE = "capabilities.feature_videos_download"
 
     def test_host_denied_follows_the_list(self, isolated_home, fake_sel, monkeypatch) -> None:
-        from kiro_crew import feature_videos_manifest as fvm
+        from aj_crew import feature_videos_manifest as fvm
 
         _install_policy(monkeypatch, _allow(self._SCOPE, "hosts", "mirror.corp.example"))
         assert fvm.host_denied("https://mirror.corp.example/fv/manifest.json") is False
@@ -117,7 +117,7 @@ class TestFeatureVideoHosts:
         ]
 
     def test_host_denied_permits_without_a_policy(self, isolated_home, fake_sel, monkeypatch):
-        from kiro_crew import feature_videos_manifest as fvm
+        from aj_crew import feature_videos_manifest as fvm
 
         _install_policy(monkeypatch, None)
         assert fvm.host_denied(f"{fvm.DEFAULT_CDN_BASE}/0.9.0/manifest.json") is False
@@ -125,7 +125,7 @@ class TestFeatureVideoHosts:
     def test_the_manifest_walk_makes_no_request_to_an_unlisted_host(
         self, isolated_home, fake_sel, monkeypatch
     ) -> None:
-        from kiro_crew import feature_videos_manifest as fvm
+        from aj_crew import feature_videos_manifest as fvm
 
         monkeypatch.delenv(fvm.MANIFEST_URL_ENV, raising=False)
         _install_policy(monkeypatch, _allow(self._SCOPE, "hosts", "mirror.corp.example"))
@@ -139,8 +139,8 @@ class TestFeatureVideoHosts:
     ) -> None:
         """The operator-mirror fetch may follow a cross-host redirect; each hop is
         held to the list like the first url."""
-        from kiro_crew import asset_downloader
-        from kiro_crew import feature_videos_manifest as fvm
+        from aj_crew import asset_downloader
+        from aj_crew import feature_videos_manifest as fvm
 
         _install_policy(monkeypatch, _allow(self._SCOPE, "hosts", "mirror.corp.example"))
         seen: dict = {}
@@ -175,9 +175,9 @@ class TestFeatureVideoHosts:
     def test_a_clip_on_an_unlisted_host_is_not_downloaded(
         self, isolated_home, fake_sel, monkeypatch
     ) -> None:
-        from kiro_crew import asset_downloader
-        from kiro_crew import feature_videos_cache as fvc
-        from kiro_crew import feature_videos_manifest as fvm
+        from aj_crew import asset_downloader
+        from aj_crew import feature_videos_cache as fvc
+        from aj_crew import feature_videos_manifest as fvm
 
         _install_policy(monkeypatch, _allow(self._SCOPE, "hosts", "mirror.corp.example"))
 
@@ -200,13 +200,13 @@ class TestUrlReadings:
     _SCOPE = "capabilities.feature_videos_download"
 
     def test_a_backslash_authority_is_refused(self, isolated_home, fake_sel, monkeypatch) -> None:
-        from kiro_crew import feature_videos_manifest as fvm
+        from aj_crew import feature_videos_manifest as fvm
 
         _install_policy(monkeypatch, _allow(self._SCOPE, "hosts", "mirror.corp.example"))
         assert fvm.host_denied("https://evil.example\\@mirror.corp.example/m.json") is True
 
     def test_a_root_dot_cannot_dodge_a_deny(self, isolated_home, fake_sel, monkeypatch) -> None:
-        from kiro_crew import feature_videos_manifest as fvm
+        from aj_crew import feature_videos_manifest as fvm
 
         doc = _policy(
             self._SCOPE, {"scopes": {"hosts": {"mode": "deny", "deny": ["evil.example"]}}}
@@ -219,7 +219,7 @@ class TestUrlReadings:
         self, isolated_home, fake_sel, monkeypatch
     ) -> None:
         """urllib percent-decodes the authority, so the decoded host is asked too."""
-        from kiro_crew import feature_videos_manifest as fvm
+        from aj_crew import feature_videos_manifest as fvm
 
         doc = _policy(
             self._SCOPE, {"scopes": {"hosts": {"mode": "deny", "deny": ["evil.example"]}}}
@@ -230,8 +230,8 @@ class TestUrlReadings:
     @pytest.mark.parametrize("value", [["mirror.example.com"], "mirror.example.com", 1, None])
     def test_a_host_list_in_the_wrong_shape_fails_to_load(self, value) -> None:
         """A malformed host list must not load as no list, which permits every host."""
-        from kiro_crew.platform.context import PlatformCompositionError
-        from kiro_crew.platform.governance import parse_policy
+        from aj_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.governance import parse_policy
 
         with pytest.raises(PlatformCompositionError, match="scopes.hosts must be an object"):
             parse_policy(_policy(self._SCOPE, {"scopes": {"hosts": value}}))
@@ -241,7 +241,7 @@ class TestUrlReadings:
     ) -> None:
         """A ``+`` is no DNS name character, but a resolver may still answer for it,
         so the host is asked as read rather than dropped."""
-        from kiro_crew import feature_videos_manifest as fvm
+        from aj_crew import feature_videos_manifest as fvm
 
         doc = _policy(
             self._SCOPE, {"scopes": {"hosts": {"mode": "deny", "deny": ["*.blocked.example"]}}}
@@ -253,7 +253,7 @@ class TestUrlReadings:
     def test_a_probe_error_logs_no_url(self, isolated_home, fake_sel, monkeypatch, caplog) -> None:
         import logging
 
-        from kiro_crew import feature_videos_manifest as fvm
+        from aj_crew import feature_videos_manifest as fvm
 
         def _boom(*_a, **_k):
             raise ValueError("https://user:s3cret@mirror.corp.example/")
@@ -278,7 +278,7 @@ class TestUrllibIdna:
     def test_a_deny_names_the_host_urllib_connects_to(
         self, isolated_home, fake_sel, monkeypatch, url
     ) -> None:
-        from kiro_crew import feature_videos_manifest as fvm
+        from aj_crew import feature_videos_manifest as fvm
 
         doc = _policy(
             self._SCOPE, {"scopes": {"hosts": {"mode": "deny", "deny": ["strasse.example"]}}}

@@ -14,11 +14,11 @@ from pathlib import Path
 import pytest
 from _clock_isolation import assert_clock_is_private
 
-from kiro_crew.instances import run_marker
-from kiro_crew.pod import cli as pod_cli
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod.config import PodConfig
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.instances import run_marker
+from aj_crew.pod import cli as pod_cli
+from aj_crew.pod import runtime as rt
+from aj_crew.pod.config import PodConfig
+from aj_crew.testing.clock import ManualClock
 
 
 @pytest.fixture(autouse=True)
@@ -27,7 +27,7 @@ def _isolate_pod_host_state(tmp_path_factory, monkeypatch: pytest.MonkeyPatch) -
 
     Same home pin as ``pod_helpers.py``'s fixture of the same name: ``unit.unit_path``
     and ``PodConfig.pods_dir`` resolve through ``Path.home()``, not
-    ``KIROCREW_HOME``, so a test reaching ``_up`` would otherwise write the
+    ``AJCREW_HOME``, so a test reaching ``_up`` would otherwise write the
     developer's real per-user service state.
     """
     home = tmp_path_factory.mktemp("pod-host-home")
@@ -296,20 +296,20 @@ class TestUpThreadsTheBudget:
     exhausted-budget verdict must tell a live slow boot apart from a dead one."""
 
     def _prep(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PodConfig:
-        monkeypatch.setenv("KIROCREW_POD_WORKTREES_ROOT", str(tmp_path / "wts"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_WORKTREES_ROOT", str(tmp_path / "wts"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
         monkeypatch.setattr(rt, "_git_worktrees", lambda ref: {})
         monkeypatch.setattr(rt, "_port_is_free", lambda _p: True)
         # A ready worktree: venv binary + built dist, so `_up` skips provisioning.
-        from kiro_crew.pod import provision as prov
+        from aj_crew.pod import provision as prov
 
         co = tmp_path / "wts" / "demo"
         b = prov.venv_bin(co)
         b.parent.mkdir(parents=True, exist_ok=True)
         b.write_text("#!/bin/sh\n")
         b.chmod(0o755)
-        (co / "src" / "kiro_crew" / "static" / "dist").mkdir(parents=True, exist_ok=True)
+        (co / "src" / "aj_crew" / "static" / "dist").mkdir(parents=True, exist_ok=True)
         monkeypatch.setattr(rt, "derive_port", lambda cfg, n: 7811)
         monkeypatch.setattr(rt, "is_active", lambda cfg, n: False)
         monkeypatch.setattr(rt, "systemctl", lambda *a, **k: _cp(returncode=0))
@@ -895,7 +895,7 @@ class TestUpThreadsTheBudget:
         assert stops == ["demo"], "the teardown is still attempted"
         assert "Tearing it down FAILED (rc=1)" in err
         assert "Job for pod.service failed" in err
-        assert "kirocrew pod down demo" in err
+        assert "ajcrew pod down demo" in err
         assert audits
 
     def test_a_clean_teardown_says_nothing_about_the_pod_surviving(
@@ -1471,9 +1471,7 @@ class TestWaitHealthyRequiresTheCredential:
         The supersede check needs a starting gateway to mint a new credential, not reuse
         the one on disk. The mint lives in the dashboard, so this pins it at the source.
         """
-        server = (
-            Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard" / "server.py"
-        )
+        server = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard" / "server.py"
         # The credential helpers live in the server_runtime owners it composes.
         owners = sorted((server.parent / "server_runtime").glob("[!_]*.py"))
         assert owners, "expected the server_runtime owners beside server.py"

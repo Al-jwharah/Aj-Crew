@@ -18,10 +18,10 @@ import pytest
 from acp_runtime_helpers import _pinned_kiro_cli_version  # noqa: F401
 from acp_runtime_helpers import _make_runtime
 
-from kiro_crew.acp.harness import SessionExtras
-from kiro_crew.acp.kas_agents import to_client_custom_agent
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.types import ACP_BACKEND_KAS, METHOD_SESSION_LOAD, METHOD_SESSION_NEW
+from aj_crew.acp.harness import SessionExtras
+from aj_crew.acp.kas_agents import to_client_custom_agent
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.types import ACP_BACKEND_KAS, METHOD_SESSION_LOAD, METHOD_SESSION_NEW
 
 SESSION = "dashboard_chat-26256-resume"
 SERVER = "canary-resume-26256"
@@ -32,7 +32,7 @@ APP_SERVER = "mochi:mochi"
 def home(tmp_path, monkeypatch):
     data_home = tmp_path / "crew-home"
     data_home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(data_home))
+    monkeypatch.setenv("AJCREW_HOME", str(data_home))
     return data_home
 
 
@@ -61,7 +61,7 @@ def runtime(tmp_path, monkeypatch, home):
 
     async def _fake_send(method, params, timeout=None):
         if method == METHOD_SESSION_LOAD:
-            return {"modes": {"currentModeId": "kirocrew"}, "models": []}
+            return {"modes": {"currentModeId": "ajcrew"}, "models": []}
         return {}
 
     async def _fake_agents(
@@ -79,7 +79,7 @@ def runtime(tmp_path, monkeypatch, home):
 
 async def _load(rt):
     return await rt.load_session(
-        "", "sid-resume", cwd=rt.test_work_dir, agent="kirocrew", session_key=SESSION
+        "", "sid-resume", cwd=rt.test_work_dir, agent="ajcrew", session_key=SESSION
     )
 
 
@@ -158,7 +158,7 @@ async def test_a_new_sessions_hoisted_app_server_snapshot_is_removed_at_shutdown
 
     async def _fake_send(method, params, timeout=None):
         if method == METHOD_SESSION_NEW:
-            return {"sessionId": "sid-new", "modes": {"currentModeId": "kirocrew"}}
+            return {"sessionId": "sid-new", "modes": {"currentModeId": "ajcrew"}}
         return {}
 
     async def _fake_agents(
@@ -172,7 +172,7 @@ async def test_a_new_sessions_hoisted_app_server_snapshot_is_removed_at_shutdown
     monkeypatch.setattr(rt, "_send_and_await", _fake_send)
     monkeypatch.setattr(rt, "_kas_custom_agents", _fake_agents)
     handle = await rt.create_session(
-        cwd=str(tmp_path), agent="kirocrew", mcp_servers=[], session_key=SESSION
+        cwd=str(tmp_path), agent="ajcrew", mcp_servers=[], session_key=SESSION
     )
     written = _snapshots(home)
     assert len(written) == 1

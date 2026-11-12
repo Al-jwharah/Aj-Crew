@@ -24,9 +24,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps.builtins.dev_fleet import release_worktree, runtime
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.apps.builtins.dev_fleet import release_worktree, runtime
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 
 def _stub_spawn_prep(monkeypatch, argv: list[str]) -> None:
@@ -99,7 +99,7 @@ def test_only_the_release_network_runner_passes_the_opt_ins():
     """Every ``_run_cmd`` call in the package except one keeps the defaults, so the
     shared path is unchanged for them. A new caller that opts in fails here and has to
     be added on purpose."""
-    root = Path(runtime.__file__).resolve().parents[3]  # src/kiro_crew
+    root = Path(runtime.__file__).resolve().parents[3]  # src/aj_crew
     opt_ins = {"sandboxed_hook_scan", "max_output_bytes"}
     callers: set[tuple[str, str]] = set()
     for path in root.rglob("*.py"):

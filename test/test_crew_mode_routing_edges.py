@@ -17,23 +17,23 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew import crew_mode
-from kiro_crew.dashboard.chat_handlers import api_chat_mode, api_chat_slot_approve
-from kiro_crew.dashboard.state import SlotOrigin
+from aj_crew import crew_mode
+from aj_crew.dashboard.chat_handlers import api_chat_mode, api_chat_slot_approve
+from aj_crew.dashboard.state import SlotOrigin
 
 
 @pytest.fixture(autouse=True)
 def _routing_live(_floor_monkeypatch):
     # The routing is off on main until the Crew panel turns it on; these tests pin
     # the rules as they run then.
-    from kiro_crew import crew_mode
+    from aj_crew import crew_mode
 
     _floor_monkeypatch.setattr(crew_mode, "APPROVAL_ROUTING_LIVE", True)
 
 
 @pytest.fixture(autouse=True)
 def _clean(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _floor_monkeypatch.setattr(crew_mode, "_known_roots", set())
     _floor_monkeypatch.setattr(crew_mode, "persisted_parents", lambda: {})
     _floor_monkeypatch.setattr(crew_mode, "_live_cfg", lambda: None)
@@ -59,13 +59,13 @@ def _live(key: str, agent: str, created_by: str = "") -> SimpleNamespace:
 
 
 def test_S2_a_worker_question_card_is_refused_with_the_way_to_ask_its_conductor():
-    from kiro_crew.dashboard.handlers import ask_question as aq
+    from aj_crew.dashboard.handlers import ask_question as aq
 
     state = SimpleNamespace(
         _slots={
-            "root": _live("root", "kirocrew-conductor"),
-            "w": _live("w", "kirocrew-worker", created_by="root"),
-            "plain": _live("plain", "kirocrew"),
+            "root": _live("root", "ajcrew-conductor"),
+            "w": _live("w", "ajcrew-worker", created_by="root"),
+            "plain": _live("plain", "ajcrew"),
         }
     )
     refused = aq._crew_worker_refusal(state, "w", "dashboard:w")
@@ -79,11 +79,11 @@ def test_S2_a_worker_question_card_is_refused_with_the_way_to_ask_its_conductor(
 
 
 def test_F2_a_worker_of_a_closed_conductor_is_told_why_no_answer_comes_yet(monkeypatch):
-    from kiro_crew.dashboard.handlers import ask_question as aq
+    from aj_crew.dashboard.handlers import ask_question as aq
 
     # The root's tab is closed: the stamp survives (known roots) but no slot.
     monkeypatch.setattr(crew_mode, "_known_roots", {"root"})
-    state = SimpleNamespace(_slots={"w": _live("w", "kirocrew-worker", created_by="root")})
+    state = SimpleNamespace(_slots={"w": _live("w", "ajcrew-worker", created_by="root")})
     refused = aq._crew_worker_refusal(state, "w", "dashboard:w")
     # Owner decision: a worker never asks the person, even with its root closed.
     assert refused is not None and refused.status == 409
@@ -92,13 +92,13 @@ def test_F2_a_worker_of_a_closed_conductor_is_told_why_no_answer_comes_yet(monke
     assert body["error"] == aq.CREW_WORKER_ASK_CLOSED_ERROR
     assert "closed" in body["error"] and "work_report" in body["error"]
     # With the root live the usual instruction stands.
-    state._slots["root"] = _live("root", "kirocrew-conductor")
+    state._slots["root"] = _live("root", "ajcrew-conductor")
     body = json.loads(aq._crew_worker_refusal(state, "w", "dashboard:w").text)
     assert body["conductor_open"] is True and body["error"] == aq.CREW_WORKER_ASK_ERROR
 
 
 def test_S2_both_question_routes_refuse_a_worker_before_any_card_opens():
-    from kiro_crew.dashboard.handlers import ask_question as aq
+    from aj_crew.dashboard.handlers import ask_question as aq
 
     source = open(aq.__file__, encoding="utf-8").read()
     mcp_open = source.split("async def api_agent_ask_open", 1)[1]
@@ -108,8 +108,8 @@ def test_S2_both_question_routes_refuse_a_worker_before_any_card_opens():
 
 
 def test_S2_the_tool_hands_the_worker_the_gateways_instruction(monkeypatch):
-    from kiro_crew import mcp_core
-    from kiro_crew.mcp_tools import control
+    from aj_crew import mcp_core
+    from aj_crew.mcp_tools import control
 
     monkeypatch.setattr(
         mcp_core,
@@ -129,7 +129,7 @@ def test_S2_the_tool_hands_the_worker_the_gateways_instruction(monkeypatch):
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()
@@ -152,7 +152,7 @@ async def _app_token(request: web.Request, handler):
 
 
 def _server(state, middleware) -> TestServer:
-    from kiro_crew.dashboard.handlers.crew_workers import api_crew_worker_approve
+    from aj_crew.dashboard.handlers.crew_workers import api_crew_worker_approve
 
     app = web.Application(middlewares=[middleware])
     app["state"] = state
@@ -166,12 +166,12 @@ def _server(state, middleware) -> TestServer:
 
 def _crew(state, request_id: str = "rid-1", grantable: bool = True):
     root = state.get_or_create_slot("root", origin=SlotOrigin.USER)
-    root.agent = "kirocrew-conductor"
+    root.agent = "ajcrew-conductor"
     worker = state.get_or_create_slot("w", origin=SlotOrigin.USER)
-    worker.agent = "kirocrew-worker"
+    worker.agent = "ajcrew-worker"
     worker._created_by = "root"
     other = state.get_or_create_slot("other-root", origin=SlotOrigin.USER)
-    other.agent = "kirocrew-conductor"
+    other.agent = "ajcrew-conductor"
     fut = asyncio.get_running_loop().create_future()
     meta = {"request_id": request_id, **({"trust_grantable": "1"} if grantable else {})}
     row = worker.append("permission", "Shell", json.dumps(meta))
@@ -220,7 +220,7 @@ async def test_B_trust_this_worker_trusts_the_worker_not_its_conductor(state):
 
 @pytest.mark.asyncio
 async def test_F1_card_trust_does_not_pass_to_the_sessions_the_worker_creates(state):
-    from kiro_crew.dashboard.approval_posture import trust_carries
+    from aj_crew.dashboard.approval_posture import trust_carries
 
     worker, _fut, _mid = _crew(state)
     async with TestClient(_server(state, _owner)) as client:
@@ -236,7 +236,7 @@ async def test_F1_card_trust_does_not_pass_to_the_sessions_the_worker_creates(st
 
 @pytest.mark.asyncio
 async def test_F1_a_directly_trusted_session_still_passes_its_trust_on(state):
-    from kiro_crew.dashboard.approval_posture import trust_carries
+    from aj_crew.dashboard.approval_posture import trust_carries
 
     worker, _fut, _mid = _crew(state)
     root = state._slots["root"]
@@ -255,11 +255,11 @@ async def test_F1_a_directly_trusted_session_still_passes_its_trust_on(state):
 
 @pytest.mark.asyncio
 async def test_G1_card_trust_stores_auto_so_subagents_are_trusted(state):
-    from kiro_crew.dashboard.chat_turn.tool_approval import (
+    from aj_crew.dashboard.chat_turn.tool_approval import (
         _persistable_session_policy,
         _slot_is_trusted,
     )
-    from kiro_crew.dashboard.chat_utils_slots import effective_session_key
+    from aj_crew.dashboard.chat_utils_slots import effective_session_key
 
     worker, _fut, _mid = _crew(state)
     key = effective_session_key(worker)
@@ -292,8 +292,8 @@ async def test_G1_card_trust_stores_auto_so_subagents_are_trusted(state):
 
 @pytest.mark.asyncio
 async def test_G1_direct_trust_still_stores_auto_for_inheritance(state):
-    from kiro_crew.dashboard.chat_turn.tool_approval import _persistable_session_policy
-    from kiro_crew.dashboard.chat_utils_slots import effective_session_key
+    from aj_crew.dashboard.chat_turn.tool_approval import _persistable_session_policy
+    from aj_crew.dashboard.chat_utils_slots import effective_session_key
 
     worker, _fut, _mid = _crew(state)
     state.sessions.set_approval_policy.reset_mock()
@@ -369,7 +369,7 @@ async def test_F7_a_native_card_decision_without_a_mid_is_refused(state):
 
 
 def test_F7_the_coordinator_card_carries_its_record_instance():
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     row = {
         "pending_approval": True,
@@ -443,7 +443,7 @@ async def test_B_an_app_token_is_refused(state):
 
 
 def test_B_the_card_shows_the_request_redacted_and_cut():
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     secret = "AKIA" + "ABCDEFGHIJKLMNOP"
     row = {

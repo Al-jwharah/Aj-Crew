@@ -43,7 +43,7 @@ const LEAD = 'chat-2481'
 const LEAD_ROW: LocalSidebarRow = localRow({
   key: LEAD,
   title: 'Session tree: nest a dispatched child',
-  agent: 'kirocrew-lead',
+  agent: 'ajcrew-lead',
   running: true,
   messages: 212,
   last_ts: at(20_000),
@@ -75,7 +75,7 @@ const workers: LocalSidebarRow[] = MINTED.map(({ key, title }, i) =>
   localRow({
     key,
     title,
-    agent: 'kirocrew-worker',
+    agent: 'ajcrew-worker',
     // Before its first turn a worker has sent nothing and is not running: that is
     // precisely why it has no crew log, and so no node in the fold.
     messages: ran ? 6 + i : 0,
@@ -94,5 +94,5 @@ const workers: LocalSidebarRow[] = MINTED.map(({ key, title }, i) =>
 
 mountLocalSidebar(
   [LEAD_ROW, ...workers, UNRELATED],
-  ['kirocrew', 'kirocrew-worker', 'kirocrew-lead'],
+  ['ajcrew', 'ajcrew-worker', 'ajcrew-lead'],
 )

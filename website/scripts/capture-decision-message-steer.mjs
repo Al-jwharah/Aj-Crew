@@ -28,7 +28,7 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/decision-message-steer'
 const SLOT = 'chat-message-steer'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -90,7 +90,7 @@ const slots = [
     running: true,
     last_message: 'Editing parser.py now.',
     messages: 5,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     memory_mode: 'persistent',
     project: PROJECT,
     modified: Math.floor(Date.now() / 1000),

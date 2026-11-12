@@ -9,8 +9,8 @@ import pytest
 from body_stream_helpers import attach_body
 from dashboard_owner_helpers import owner_claims
 
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.dashboard.handlers import api_crons, api_crons_create
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.dashboard.handlers import api_crons, api_crons_create
 
 
 class TestCronCreateApprovalMode:
@@ -73,7 +73,7 @@ class TestCronCreateApprovalMode:
         _, kwargs = request.app["state"].crons.add_job_async.call_args
         assert kwargs.get("enabled") is False
         # The fingerprint of the job as made: an import card's Undo baseline.
-        from kiro_crew.dashboard.change_cards import cron_job_revision
+        from aj_crew.dashboard.change_cards import cron_job_revision
 
         made = await request.app["state"].crons.add_job_async()
         assert json.loads(resp.body)["revision"] == cron_job_revision(made)

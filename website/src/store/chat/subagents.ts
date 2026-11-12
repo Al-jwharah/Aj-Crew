@@ -635,7 +635,7 @@ export const subagentReducers = {
     const existing = subs[action.payload.id]
     if (existing?.status === 'pending') {
       existing.status = 'running'
-      existing.agent = action.payload.agent || existing.agent || 'kirocrew'
+      existing.agent = action.payload.agent || existing.agent || 'ajcrew'
       // Only overwrite a known model with another known one — never clobber a
       // resolved id back to '' if a later frame omits it.
       if (action.payload.model) existing.model = action.payload.model
@@ -653,7 +653,7 @@ export const subagentReducers = {
       return
     }
     subs[safeKey(action.payload.id)] = {
-      id: action.payload.id, task: action.payload.task, agent: action.payload.agent || 'kirocrew',
+      id: action.payload.id, task: action.payload.task, agent: action.payload.agent || 'ajcrew',
       label: action.payload.label || existing?.label || undefined,
       model: action.payload.model || '',
       requestedModel: action.payload.requested_model || existing?.requestedModel || undefined,
@@ -828,7 +828,7 @@ export const subagentReducers = {
       subs[action.payload.id] = {
         id: action.payload.id,
         task: action.payload.task || '',
-        agent: action.payload.agent || 'kirocrew',
+        agent: action.payload.agent || 'ajcrew',
         label: action.payload.label || undefined,
         model: action.payload.model || '',
         requestedModel: action.payload.requested_model || undefined,
@@ -884,7 +884,7 @@ export const subagentReducers = {
     if (existing && isStaleSnapshot(existing, d.tool_count)) {
       const hydrated: SubagentActivity = {
         ...existing,
-        task: d.task || existing.task, agent: d.agent || existing.agent || 'kirocrew',
+        task: d.task || existing.task, agent: d.agent || existing.agent || 'ajcrew',
         label: d.label || existing.label, model: d.model || existing.model,
         requestedModel: d.requested_model || existing.requestedModel,
         childSession: d.child_session || existing.childSession,
@@ -910,7 +910,7 @@ export const subagentReducers = {
         : scratch.toolCalls
     }
     const next: SubagentActivity = {
-      id: d.id, task: d.task, agent: d.agent || 'kirocrew',
+      id: d.id, task: d.task, agent: d.agent || 'ajcrew',
       label: d.label || existing?.label || undefined,
       // Prefer the snapshot's model; fall back to any id a live frame already
       // set, so a reconnect that omits it does not blank the pill.

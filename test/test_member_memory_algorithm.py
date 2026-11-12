@@ -13,11 +13,11 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from member_memory_helpers import declare_v2_store
 
-from kiro_crew import memory_edit, memory_stores, memory_v2
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.history_consolidation import HistoryConsolidator
-from kiro_crew.vector_memory import VectorMemoryStore, open_member_database
-from kiro_crew.vector_memory_constants import _MAX_EPISODIC_RETIRED_PER_WRITE
+from aj_crew import memory_edit, memory_stores, memory_v2
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.history_consolidation import HistoryConsolidator
+from aj_crew.vector_memory import VectorMemoryStore, open_member_database
+from aj_crew.vector_memory_constants import _MAX_EPISODIC_RETIRED_PER_WRITE
 
 
 @pytest.fixture
@@ -432,7 +432,7 @@ def test_owner_correction_preserves_other_subjects_and_ambiguous_prose(stores):
 @pytest.mark.parametrize("accelerator", ["numpy", "faiss"])
 @pytest.mark.parametrize("version", [0, 1], ids=["v1", "v2"])
 def test_restored_episode_returns_to_warm_recall(stores, monkeypatch, accelerator, version):
-    from kiro_crew import vector_memory
+    from aj_crew import vector_memory
 
     if accelerator == "faiss" and not vector_memory._HAS_FAISS:
         pytest.skip("FAISS is not installed")

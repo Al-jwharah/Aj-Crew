@@ -37,9 +37,9 @@ const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 // preference it reads, and set the attribute too so the first paint is already
 // the right palette.
 localStorage.setItem('mc-theme', theme)
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
-const PROJECT_DIR = '/Users/me/workspace/KiroCrew'
+const PROJECT_DIR = '/Users/me/workspace/AjCrew'
 
 /** Fetch stub at the API boundary, so nothing hangs on a gateway that does not
  *  exist here. Three reads matter to this header: branding (`directLocal` gates
@@ -49,7 +49,7 @@ window.fetch = (input: RequestInfo | URL, init?: RequestInit): Promise<Response>
   const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
   if (!url.includes('/api/')) return realFetch(input, init)
   const body = url.includes('/api/dashboard/branding')
-    ? { bot_name: 'Kiro Crew', avatar: '/logo.png', direct_local: true }
+    ? { bot_name: 'Aj Crew', avatar: '/logo.png', direct_local: true }
     : url.includes('/api/project/tree')
       ? {
         root: PROJECT_DIR,

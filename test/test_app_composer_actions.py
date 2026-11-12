@@ -22,15 +22,15 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps import app_frame as af
-from kiro_crew.apps import composer_action_frame as caf
-from kiro_crew.apps.composer_action_grants import (
+from aj_crew.apps import app_frame as af
+from aj_crew.apps import composer_action_frame as caf
+from aj_crew.apps.composer_action_grants import (
     COMPOSER_ACTION_FAMILY,
     action_grant,
     composer_action_grant_entries,
 )
-from kiro_crew.apps.manifest_contributes import Contributes
-from kiro_crew.apps.point_grants import grant_source, point_grant_families
+from aj_crew.apps.manifest_contributes import Contributes
+from aj_crew.apps.point_grants import grant_source, point_grant_families
 
 APP = "snippets"
 POINT = caf.COMPOSER_ACTION_POINT
@@ -103,7 +103,7 @@ def test_the_list_shape_and_cap_are_enforced() -> None:
 
 
 def test_the_entry_is_contained_and_signed(tmp_path) -> None:
-    from kiro_crew.apps.manifest import AppManifest
+    from aj_crew.apps.manifest import AppManifest
 
     raw: dict[str, Any] = {
         "name": APP,
@@ -135,7 +135,7 @@ def test_the_grant_is_the_button_not_its_label() -> None:
 
 
 def test_the_family_is_staged_like_every_point() -> None:
-    from kiro_crew.apps.manager_records import STAGED_GRANT_FAMILIES
+    from aj_crew.apps.manager_records import STAGED_GRANT_FAMILIES
 
     assert COMPOSER_ACTION_FAMILY in point_grant_families()
     assert COMPOSER_ACTION_FAMILY in STAGED_GRANT_FAMILIES
@@ -144,7 +144,7 @@ def test_the_family_is_staged_like_every_point() -> None:
 
 
 def test_a_new_action_on_update_is_held_back() -> None:
-    from kiro_crew.apps.manager_records import (
+    from aj_crew.apps.manager_records import (
         _approved_grants_after_manifest_change,
         _held_back_entries,
     )
@@ -228,8 +228,8 @@ async def _client(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[tuple[TestCl
             calls.append(request.match_info["path"])
             return web.json_response({"ok": True})
 
-    monkeypatch.setattr("kiro_crew.apps.hooks_integration.get_route_registry", _Registry)
-    monkeypatch.setattr("kiro_crew.dashboard.server._embed_parent_port", lambda r, a: None)
+    monkeypatch.setattr("aj_crew.apps.hooks_integration.get_route_registry", _Registry)
+    monkeypatch.setattr("aj_crew.dashboard.server._embed_parent_port", lambda r, a: None)
 
     @web.middleware
     async def auth(request: web.Request, handler: Any) -> web.StreamResponse:
@@ -303,7 +303,7 @@ globalThis.document = {
 };
 """
 _DRIVER = r"""
-const deliver = (data) => (listeners.message || []).forEach((f) => f({ source: parent, data: { 'kirocrew-app-frame': 1, ...data } }));
+const deliver = (data) => (listeners.message || []).forEach((f) => f({ source: parent, data: { 'ajcrew-app-frame': 1, ...data } }));
 const tick = () => new Promise((r) => setTimeout(r, 10));
 deliver({ type: 'init', capability: 'c' });
 for (let i = 0; i < 50 && !posted.some((m) => m.type === 'ready'); i++) await tick();
@@ -359,11 +359,11 @@ def test_the_grant_row_lists_approved_actions_and_holds_new_ones_back(monkeypatc
     """The row renders only approved actions; a declared id still waiting is staged."""
     from types import SimpleNamespace
 
-    from kiro_crew.apps import composer_action_grants as cag
+    from aj_crew.apps import composer_action_grants as cag
 
     granted = {"one:insert"}
     monkeypatch.setattr(
-        "kiro_crew.apps.manager.staged_app_grants",
+        "aj_crew.apps.manager.staged_app_grants",
         lambda name, family, declared: [e for e in declared() if e in granted],
     )
 
@@ -401,7 +401,7 @@ def test_the_grant_row_lists_approved_actions_and_holds_new_ones_back(monkeypatc
 def test_an_app_without_composer_actions_has_no_grant_row():
     from types import SimpleNamespace
 
-    from kiro_crew.apps import composer_action_grants as cag
+    from aj_crew.apps import composer_action_grants as cag
 
     assert cag.composer_action_grant_row("snip", {"contributes": {}}) == {}
     assert cag.composer_action_grant_row("snip", SimpleNamespace(contributes=None)) == {}

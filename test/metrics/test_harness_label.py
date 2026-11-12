@@ -5,10 +5,10 @@ Pins four things:
 * the value set is ``ACP_BACKENDS_KNOWN`` in config spelling plus
   ``claude_code`` / ``unknown`` / ``other``, derived rather than listed, and an
   unknown backend id becomes ``other``;
-* every exported point carries the ``kirocrew.harness`` resource attribute with
+* every exported point carries the ``ajcrew.harness`` resource attribute with
   the CONFIGURED default, and a rebuild after a config change relabels it;
-* ``kirocrew.session.started``, ``kirocrew.session.duration``,
-  ``kirocrew.turn.duration`` and the turn usage family carry the session's
+* ``ajcrew.session.started``, ``ajcrew.session.duration``,
+  ``ajcrew.turn.duration`` and the turn usage family carry the session's
   EFFECTIVE harness, so a per-session override shows up even when the install
   default differs;
 * the providers this reads are the shapes the session map's label already
@@ -25,17 +25,17 @@ from unittest.mock import MagicMock, patch
 import pytest
 from turn_harness import ScriptedProvider, TurnScript, run_turn
 
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.types import (
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     STOP_REASON_END_TURN,
     AcpEvent,
     TurnUsage,
 )
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KAS,
@@ -43,28 +43,28 @@ from kiro_crew.agent_sdk.backends import (
     ACP_BACKENDS_KNOWN,
     backend_to_stored,
 )
-from kiro_crew.config.loader import AgentConfig, KiroCrewConfig, TelemetryConfig
-from kiro_crew.metrics import harness as h
-from kiro_crew.metrics import provider as metrics_provider
-from kiro_crew.metrics import sessions as sess
-from kiro_crew.metrics.provider import get_recorder, reset_for_testing
-from kiro_crew.metrics.provider import shutdown as provider_shutdown
-from kiro_crew.metrics.turns import (
+from aj_crew.config.loader import AgentConfig, AjCrewConfig, TelemetryConfig
+from aj_crew.metrics import harness as h
+from aj_crew.metrics import provider as metrics_provider
+from aj_crew.metrics import sessions as sess
+from aj_crew.metrics.provider import get_recorder, reset_for_testing
+from aj_crew.metrics.provider import shutdown as provider_shutdown
+from aj_crew.metrics.turns import (
     TURN_COST_METRIC,
     TURN_CREDITS_METRIC,
     TURN_METRIC,
     TURN_TOKENS_METRIC,
 )
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.acp import _provider_backend as provider_backend
-from kiro_crew.session_background import _ProviderBgSession
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.acp import _provider_backend as provider_backend
+from aj_crew.session_background import _ProviderBgSession
 
 # -- helpers -----------------------------------------------------------------
 
 
 def _acp_provider(backend: str) -> AcpProvider:
     """An unstarted ``AcpProvider`` on *backend*, constructed without spawning."""
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider(acp_backend=backend)
     provider._client = MagicMock()
     provider._client.backend = backend
@@ -102,10 +102,10 @@ def _clean_seam():
 
 
 def _patch_config(monkeypatch, *, acp_backend: str, provider: str = "acp", **tel):
-    fake = KiroCrewConfig(telemetry=TelemetryConfig(**tel))
+    fake = AjCrewConfig(telemetry=TelemetryConfig(**tel))
     fake.agent = AgentConfig(acp_backend=acp_backend, provider=provider)
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: fake))
-    monkeypatch.delenv("KIROCREW_TELEMETRY", raising=False)
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: fake))
+    monkeypatch.delenv("AJCREW_TELEMETRY", raising=False)
     return fake
 
 
@@ -158,7 +158,7 @@ def test_set_configured_reads_the_agent_section():
 
 
 def test_the_resource_key_has_one_spelling():
-    assert h.RESOURCE_ATTR_HARNESS == "kirocrew.harness"
+    assert h.RESOURCE_ATTR_HARNESS == "ajcrew.harness"
     assert not hasattr(metrics_provider, "RESOURCE_ATTR_HARNESS")
 
 
@@ -227,8 +227,8 @@ def test_the_background_handle_shapes_resolve_too(backend):
 
 def test_the_session_map_label_ignores_the_handle_shapes():
     """``provider_label`` keys the session map; the handle branches must not reach it."""
-    from kiro_crew.acp.types import PROVIDER_LABEL_DEFAULT
-    from kiro_crew.providers.acp import provider_label
+    from aj_crew.acp.types import PROVIDER_LABEL_DEFAULT
+    from aj_crew.providers.acp import provider_label
 
     assert provider_label(_bare_handle(ACP_BACKEND_KAS)) == PROVIDER_LABEL_DEFAULT
     assert provider_label(_provider_bg_session(ACP_BACKEND_KAS)) == PROVIDER_LABEL_DEFAULT
@@ -243,14 +243,14 @@ def test_a_provider_with_no_client_is_unknown_not_kiro():
 
 def test_turn_duration_from_a_background_one_liner_names_its_harness(monkeypatch):
     """The path the review caught: ``model_source`` is the background handle."""
-    from kiro_crew.dashboard.handlers import usage
+    from aj_crew.dashboard.handlers import usage
 
     rec = _CapturingRecorder()
     monkeypatch.setattr(usage, "_write_token_record", lambda record, now: None)
     event = MagicMock()
     event.duration_ms = 800
     event.stop_reason = None
-    with patch("kiro_crew.metrics.turns.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.turns.get_recorder", return_value=rec):
         for source in (_bare_handle(ACP_BACKEND_KAS), _provider_bg_session(ACP_BACKEND_KAS)):
             asyncio.run(
                 usage.persist_token_record_async(
@@ -272,10 +272,10 @@ def test_an_unregistered_backend_on_a_live_provider_is_other():
 
 def test_session_started_carries_the_effective_harness(tmp_path, monkeypatch):
     """The install default is KAS; a member session overridden to Codex counts as codex."""
-    monkeypatch.setattr("kiro_crew.config.paths.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.paths.config_dir", lambda: tmp_path)
     rec = _CapturingRecorder()
     h.set_configured(AgentConfig(acp_backend=ACP_BACKEND_KAS))
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
         asyncio.run(
             sess.record_session_started("dashboard:chat-1", _acp_provider(ACP_BACKEND_CODEX))
         )
@@ -296,11 +296,11 @@ def _session_durations(rec) -> list:
 
 def test_a_clean_end_labels_the_lifetime_with_the_harness_its_start_saw(tmp_path, monkeypatch):
     """Both end paths: the single end and the bulk drain ``close_all`` uses."""
-    monkeypatch.setattr("kiro_crew.config.paths.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.paths.config_dir", lambda: tmp_path)
     clock = [1_700_000_000.0]
     monkeypatch.setattr(sess, "time", SimpleNamespace(time=lambda: clock[0]))
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
         asyncio.run(
             sess.record_session_started("dashboard:chat-1", _acp_provider(ACP_BACKEND_CODEX))
         )
@@ -319,13 +319,13 @@ def test_a_crashed_lifetime_reads_its_harness_from_the_crumb(tmp_path, monkeypat
     A crumb from before the field existed, or holding a value this build does not
     know, reads ``unknown``.
     """
-    from kiro_crew.history import SESSIONS_DIR_NAME, transcript_stem
+    from aj_crew.history import SESSIONS_DIR_NAME, transcript_stem
 
-    monkeypatch.setattr("kiro_crew.config.paths.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.paths.config_dir", lambda: tmp_path)
     started = 1_700_000_000.0
     monkeypatch.setattr(sess, "time", SimpleNamespace(time=lambda: started))
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
         asyncio.run(
             sess.record_session_started("dashboard:chat-0", _acp_provider(ACP_BACKEND_CODEX))
         )
@@ -348,7 +348,7 @@ def test_a_crashed_lifetime_reads_its_harness_from_the_crumb(tmp_path, monkeypat
     transcripts.mkdir()
     for n in range(3):
         (transcripts / f"{transcript_stem(f'dashboard:chat-{n}')}.jsonl").write_text("{}\n")
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
         assert sess.backfill_crashed_sessions() == 3
     assert _session_durations(rec) == ["codex", "unknown", "unknown"]
 
@@ -370,7 +370,7 @@ def _turn_labels(rec) -> list:
 
 
 def test_turn_samples_from_the_shared_boundary_carry_the_effective_harness(monkeypatch):
-    from kiro_crew.dashboard.handlers import usage
+    from aj_crew.dashboard.handlers import usage
 
     rec = _CapturingRecorder()
     monkeypatch.setattr(usage, "_write_token_record", lambda record, now: None)
@@ -378,7 +378,7 @@ def test_turn_samples_from_the_shared_boundary_carry_the_effective_harness(monke
     event.duration_ms = 1200
     event.stop_reason = None
     event.usage = _BILLED
-    with patch("kiro_crew.metrics.turns.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.turns.get_recorder", return_value=rec):
         asyncio.run(
             usage.persist_token_record_async(
                 "cron:job-1",
@@ -393,10 +393,10 @@ def test_turn_samples_from_the_shared_boundary_carry_the_effective_harness(monke
 
 
 def test_turn_samples_from_the_dashboard_owner_carry_the_effective_harness():
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     rec = _CapturingRecorder()
-    with patch("kiro_crew.metrics.turns.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.turns.get_recorder", return_value=rec):
         chat_runner._emit_turn_metric(
             900,
             None,
@@ -433,7 +433,7 @@ async def _dashboard_turn_harness(provider: type[ScriptedProvider] | None) -> li
         stop_reason=STOP_REASON_END_TURN,
         usage=TurnUsage(input_tokens=10, output_tokens=5, duration_ms=1500),
     )
-    with patch("kiro_crew.metrics.turns.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.turns.get_recorder", return_value=rec):
         await run_turn(
             TurnScript(
                 events=[AcpEvent(kind=EVENT_TEXT_CHUNK, text="ok"), landed],
@@ -468,9 +468,9 @@ def test_every_exported_point_carries_the_configured_harness(tmp_path, monkeypat
         rec = get_recorder()
         assert rec.enabled is True
         # A process-level instrument with no session: it still carries the label.
-        rec.counter("kirocrew.session.idle_expired", attrs={"turn_active": False})
+        rec.counter("ajcrew.session.idle_expired", attrs={"turn_active": False})
         provider_shutdown()
-        assert _last_resource(metrics_dir)["kirocrew.harness"] == "kas"
+        assert _last_resource(metrics_dir)["ajcrew.harness"] == "kas"
     finally:
         reset_for_testing()
 
@@ -481,7 +481,7 @@ def test_a_config_change_relabels_the_rebuilt_recorder(tmp_path, monkeypatch):
     tel = {"enabled": True, "local_dir": str(metrics_dir), "export_interval_seconds": 3600}
     _patch_config(monkeypatch, acp_backend=ACP_BACKEND_KAS, **tel)
     try:
-        get_recorder().counter("kirocrew.session.idle_expired", attrs={"turn_active": False})
+        get_recorder().counter("ajcrew.session.idle_expired", attrs={"turn_active": False})
         assert _last_resource_after_flush(metrics_dir) == "kas"
 
         # The operator switches the default to Kiro CLI. The config watcher's
@@ -491,12 +491,12 @@ def test_a_config_change_relabels_the_rebuilt_recorder(tmp_path, monkeypatch):
         # A shutdown hands the next caller a no-op and rebuilds on a worker in
         # production; a test resets that so the rebuild is synchronous.
         reset_for_testing()
-        get_recorder().counter("kirocrew.session.idle_expired", attrs={"turn_active": False})
+        get_recorder().counter("ajcrew.session.idle_expired", attrs={"turn_active": False})
         assert _last_resource_after_flush(metrics_dir) == "kiro"
 
         _patch_config(monkeypatch, acp_backend="unregistered", **tel)
         reset_for_testing()
-        get_recorder().counter("kirocrew.session.idle_expired", attrs={"turn_active": False})
+        get_recorder().counter("ajcrew.session.idle_expired", attrs={"turn_active": False})
         assert _last_resource_after_flush(metrics_dir) == "other"
     finally:
         reset_for_testing()
@@ -527,7 +527,7 @@ def test_the_consent_recheck_relabels_a_process_with_no_watcher(tmp_path, monkey
         _patch_config(monkeypatch, acp_backend=ACP_BACKEND_CODEX, **tel)
         metrics_provider._consent_worker(metrics_provider._build_generation)
         assert metrics_provider._provider is not first
-        get_recorder().counter("kirocrew.session.idle_expired", attrs={"turn_active": False})
+        get_recorder().counter("ajcrew.session.idle_expired", attrs={"turn_active": False})
         assert _last_resource_after_flush(metrics_dir) == "codex"
 
         # The Claude Code seam is the other half of the pair. Rebuild
@@ -536,7 +536,7 @@ def test_the_consent_recheck_relabels_a_process_with_no_watcher(tmp_path, monkey
         get_recorder()
         _patch_config(monkeypatch, acp_backend=ACP_BACKEND_CODEX, provider="claude_code", **tel)
         metrics_provider._consent_worker(metrics_provider._build_generation)
-        get_recorder().counter("kirocrew.session.idle_expired", attrs={"turn_active": False})
+        get_recorder().counter("ajcrew.session.idle_expired", attrs={"turn_active": False})
         assert _last_resource_after_flush(metrics_dir) == "claude_code"
     finally:
         reset_for_testing()
@@ -544,12 +544,12 @@ def test_the_consent_recheck_relabels_a_process_with_no_watcher(tmp_path, monkey
 
 def _last_resource_after_flush(metrics_dir) -> str:
     provider_shutdown()
-    return str(_last_resource(metrics_dir)["kirocrew.harness"])
+    return str(_last_resource(metrics_dir)["ajcrew.harness"])
 
 
 def test_the_watcher_rebuilds_on_the_harness_settings(monkeypatch):
     """``agent.acp_backend`` and ``agent.provider`` move the resource, so they rebuild it."""
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     seen: list = []
 
@@ -564,5 +564,5 @@ def test_the_watcher_rebuilds_on_the_harness_settings(monkeypatch):
 
 
 def test_the_resource_always_carries_the_harness_it_is_given():
-    assert metrics_provider._resource_attributes("codex")["kirocrew.harness"] == "codex"
-    assert metrics_provider._resource_attributes("unknown")["kirocrew.harness"] == "unknown"
+    assert metrics_provider._resource_attributes("codex")["ajcrew.harness"] == "codex"
+    assert metrics_provider._resource_attributes("unknown")["ajcrew.harness"] == "unknown"

@@ -9,7 +9,7 @@
  * fixtures they share with this file are in src/test/SecurityPanelTestUtils.tsx.
  *
  * The trusted-apps and allow-all describes set only their own mocks and read the rail's
- * `kirocrewConfig` and `tailnetStatus` answers from the posture describe's `beforeEach`, so
+ * `ajcrewConfig` and `tailnetStatus` answers from the posture describe's `beforeEach`, so
  * they stay behind it.
  */
 import { ApiError } from '../../api/client'
@@ -49,7 +49,7 @@ vi.mock('../../api/client', () => ({
     securityPosture: vi.fn(),
     // Read + write for the third-party-app execution toggle. Also consumed by
     // YoloDurationCard, which tolerates an unresolved read.
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     patchConfig: vi.fn(),
     // Read by the rail on every mount to summarise the tailnet-origin section.
     // Present here so the rail's own read is a resolved query rather than a
@@ -175,7 +175,7 @@ describe('humaniseScopeLeaf', () => {
 describe('SecurityPanel — governance policy viewer', () => {  beforeEach(() => {
     vi.clearAllMocks()
     ;(api.deniedCommands as ReturnType<typeof vi.fn>).mockResolvedValue(snapshot())
-    ;(api.kirocrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
+    ;(api.ajcrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
     ;(api.tailnetStatus as ReturnType<typeof vi.fn>).mockResolvedValue(TAILNET_OFF)
   })
 
@@ -356,7 +356,7 @@ describe('SecurityPanel — governance policy viewer', () => {  beforeEach(() =>
     expect(screen.getByText(/policy fallback ceiling/)).toBeInTheDocument()
     expect(screen.getByText(/Affected: host\./)).toBeInTheDocument()
     // The remedy is only useful if it says WHERE the file is.
-    expect(screen.getByText(/profiles folder of your Kiro Crew data home/)).toBeInTheDocument()
+    expect(screen.getByText(/profiles folder of your Aj Crew data home/)).toBeInTheDocument()
     // Causes and the restart caveat live on the demoted line, not in the body.
     expect(screen.getByText(/extends a profile that is missing/)).toBeInTheDocument()
   })
@@ -496,7 +496,7 @@ describe('SecurityPanel — central policy distribution', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     ;(api.deniedCommands as ReturnType<typeof vi.fn>).mockResolvedValue(snapshot())
-    ;(api.kirocrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
+    ;(api.ajcrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
     ;(api.tailnetStatus as ReturnType<typeof vi.fn>).mockResolvedValue(TAILNET_OFF)
   })
 
@@ -639,7 +639,7 @@ describe('SecurityPanel — posture disclosure', () => {
     ;(api.deniedCommands as ReturnType<typeof vi.fn>).mockResolvedValue(snapshot())
     ;(api.governancePolicy as ReturnType<typeof vi.fn>).mockResolvedValue(govNoPolicy())
     ;(api.securityPosture as ReturnType<typeof vi.fn>).mockResolvedValue(posture())
-    ;(api.kirocrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
+    ;(api.ajcrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
     ;(api.tailnetStatus as ReturnType<typeof vi.fn>).mockResolvedValue(TAILNET_OFF)
   })
 

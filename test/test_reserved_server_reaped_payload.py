@@ -1,7 +1,7 @@
-"""A reserved ``kirocrew-*`` entry a session mounts as declared launches the installed payload.
+"""A reserved ``ajcrew-*`` entry a session mounts as declared launches the installed payload.
 
-A user-level spec copied from ``kirocrew.json`` names the payload that wrote it
-(``.../toolbox/kirocrew/<version>/.venv/bin/kirocrew``). Kiro Crew never rewrites
+A user-level spec copied from ``ajcrew.json`` names the payload that wrote it
+(``.../toolbox/ajcrew/<version>/.venv/bin/ajcrew``). Aj Crew never rewrites
 a spec it does not own, so once an upgrade removes that payload the entry names a
 missing launcher. Where a key such as ``timeout`` keeps the entry
 out of the per-session element (the KAS agent block, the kiro-cli skill view),
@@ -17,20 +17,20 @@ from types import SimpleNamespace
 import pytest
 from kas_agents_helpers import _spec
 
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp.kas_agents import hoist_servers_for_session, to_client_custom_agent
-from kiro_crew.acp.skill_projection import project_agent_view
-from kiro_crew.config.paths import data_home
+from aj_crew.acp import kas_agents
+from aj_crew.acp.kas_agents import hoist_servers_for_session, to_client_custom_agent
+from aj_crew.acp.skill_projection import project_agent_view
+from aj_crew.config.paths import data_home
 
 
 def _payload_launcher(root, version: str) -> str:
-    return str(root / "toolbox" / "kirocrew" / version / ".venv" / "bin" / "kirocrew")
+    return str(root / "toolbox" / "ajcrew" / version / ".venv" / "bin" / "ajcrew")
 
 
 @pytest.fixture
 def installed(tmp_path, monkeypatch):
     """The managed invocation resolves to the installed payload; the spec names a reaped one."""
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     state = SimpleNamespace(
         launcher=_payload_launcher(tmp_path, "0.11.0.1"),
@@ -43,7 +43,7 @@ def installed(tmp_path, monkeypatch):
         state.calls.append(name)
         if not state.resolves:
             return None
-        return {"command": state.launcher, "args": ["mcp", name.removeprefix("kirocrew-")]}
+        return {"command": state.launcher, "args": ["mcp", name.removeprefix("ajcrew-")]}
 
     monkeypatch.setattr(agent_mod, "managed_mcp_spec_entry", managed)
     return state
@@ -52,10 +52,10 @@ def installed(tmp_path, monkeypatch):
 def test_kas_relaunches_a_reserved_entry_its_timeout_keeps_in_the_agent_block(installed):
     spec = _spec(
         name="mtp-inputs",
-        tools=["@kirocrew-core", "@kirocrew-guide"],
+        tools=["@ajcrew-core", "@ajcrew-guide"],
         mcpServers={
-            "kirocrew-core": {"command": installed.reaped, "args": ["mcp", "core"]},
-            "kirocrew-guide": {
+            "ajcrew-core": {"command": installed.reaped, "args": ["mcp", "core"]},
+            "ajcrew-guide": {
                 "command": installed.reaped,
                 "args": ["mcp", "guide"],
                 "timeout": 120000,
@@ -74,24 +74,22 @@ def test_kas_relaunches_a_reserved_entry_its_timeout_keeps_in_the_agent_block(in
 
     assert installed.calls == [], "the hoist resolves nothing on the event loop"
     assert projected == before, "the projection is not mutated"
-    guide = agents[0]["mcpServers"]["kirocrew-guide"]
+    guide = agents[0]["mcpServers"]["ajcrew-guide"]
     assert guide["command"] == installed.launcher, "the reaped payload is not launched"
     assert guide["args"] == ["mcp", "guide"]
     assert guide["timeout"] == 120000, "the user's timeout still reaches KAS"
-    assert guide["env"]["KIROCREW_SESSION_KEY"] == "cron:mtp", "the projected env stays"
-    (core,) = [e for e in array if e["name"] == "kirocrew-core"]
+    assert guide["env"]["AJCREW_SESSION_KEY"] == "cron:mtp", "the projected env stays"
+    (core,) = [e for e in array if e["name"] == "ajcrew-core"]
     assert core["command"] == installed.launcher
 
 
 def test_kas_leaves_a_block_entry_whose_managed_invocation_does_not_resolve(installed):
     installed.resolves = False
     entry = {"command": installed.reaped, "timeout": 5}
-    projected = to_client_custom_agent(
-        "mtp-inputs", _spec(mcpServers={"kirocrew-guide": entry}), "p"
-    )
+    projected = to_client_custom_agent("mtp-inputs", _spec(mcpServers={"ajcrew-guide": entry}), "p")
     agents, _ = hoist_servers_for_session([projected], "mtp-inputs", [], managed_entries={})
     assert agents[0] is projected
-    assert agents[0]["mcpServers"]["kirocrew-guide"] == entry
+    assert agents[0]["mcpServers"]["ajcrew-guide"] == entry
 
 
 @pytest.mark.parametrize(
@@ -103,20 +101,20 @@ def test_the_skill_view_relaunches_each_reserved_entry_and_keeps_its_keys(
     spec = {
         "name": "mtp-inputs",
         "prompt": "p",
-        "tools": ["@kirocrew-cron", "@kirocrew-guide", "@third-party"],
+        "tools": ["@ajcrew-cron", "@ajcrew-guide", "@third-party"],
         "mcpServers": {
-            "kirocrew-cron": {
+            "ajcrew-cron": {
                 "command": installed.reaped,
                 "args": ["mcp", "cron"],
                 "disabledTools": ["cron_remove"],
             },
-            "kirocrew-guide": {
+            "ajcrew-guide": {
                 "command": installed.reaped,
                 "args": ["mcp", "guide"],
                 "timeout": 120000,
-                "env": {"KIROCREW_HOME": "/crew"},
+                "env": {"AJCREW_HOME": "/crew"},
             },
-            "kirocrew-mate": {"url": "https://example.invalid/mcp"},
+            "ajcrew-mate": {"url": "https://example.invalid/mcp"},
             "third-party": {"command": "/opt/tp", "args": ["serve"]},
         },
     }
@@ -133,18 +131,18 @@ def test_the_skill_view_relaunches_each_reserved_entry_and_keeps_its_keys(
 
     assert refusal is None and view is not None
     servers = view["mcpServers"]
-    assert servers["kirocrew-cron"] == {
+    assert servers["ajcrew-cron"] == {
         "command": installed.launcher,
         "args": ["mcp", "cron"],
         "disabledTools": ["cron_remove"],
     }
-    assert servers["kirocrew-guide"] == {
+    assert servers["ajcrew-guide"] == {
         "command": installed.launcher,
         "args": ["mcp", "guide"],
         "timeout": 120000,
-        "env": {"KIROCREW_HOME": "/crew"},
+        "env": {"AJCREW_HOME": "/crew"},
     }
-    assert servers["kirocrew-mate"] == authored["mcpServers"]["kirocrew-mate"], "no launch"
+    assert servers["ajcrew-mate"] == authored["mcpServers"]["ajcrew-mate"], "no launch"
     assert servers["third-party"] == authored["mcpServers"]["third-party"], "not Crew's"
     assert spec == authored, "the authored spec is not rewritten"
 
@@ -155,7 +153,7 @@ def test_the_skill_view_keeps_an_entry_whose_managed_invocation_does_not_resolve
     installed.resolves = False
     entry = {"command": installed.reaped, "timeout": 5}
     view, _search, refusal = project_agent_view(
-        {"name": "mtp-inputs", "prompt": "p", "mcpServers": {"kirocrew-guide": entry}},
+        {"name": "mtp-inputs", "prompt": "p", "mcpServers": {"ajcrew-guide": entry}},
         tmp_path / "mtp-inputs.json",
         "mtp-inputs",
         crew_home_id=data_home().absolute().as_posix(),
@@ -163,4 +161,4 @@ def test_the_skill_view_keeps_an_entry_whose_managed_invocation_does_not_resolve
         per_session_element=True,
     )
     assert refusal is None and view is not None
-    assert view["mcpServers"]["kirocrew-guide"] == entry
+    assert view["mcpServers"]["ajcrew-guide"] == entry

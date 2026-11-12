@@ -1,4 +1,4 @@
-"""Coverage-raising unit tests for :mod:`kiro_crew.platform_compat`: the filesystem.
+"""Coverage-raising unit tests for :mod:`aj_crew.platform_compat`: the filesystem.
 
 The filesystem helpers (forced rmtree, links, chmod), the Windows SIDs and the owner
 lockdown, and executable and interpreter discovery.
@@ -22,7 +22,7 @@ from typing import Any
 import pytest
 from platform_compat_coverage_helpers import _POSIX_ONLY, _const, _fake_windows, _Fn
 
-from kiro_crew import platform_compat as pc
+from aj_crew import platform_compat as pc
 
 # The whole-module skip ``test_platform_compat_coverage.py`` applies, for the reasons given
 # there, and the libc-handle reset every test of that suite runs under (see conftest.py).

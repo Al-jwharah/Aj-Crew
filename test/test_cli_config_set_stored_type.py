@@ -16,23 +16,23 @@ import pytest
 
 
 def _run(config_dir: Path, key: str, value: str) -> None:
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew.cli_config import _config_cmd
 
     args = argparse.Namespace(config_action="set", key=key, value=value, file=None, local=False)
     with (
-        patch("kiro_crew.cli_config.config_path", return_value=config_dir / "config.json"),
+        patch("aj_crew.cli_config.config_path", return_value=config_dir / "config.json"),
         patch(
-            "kiro_crew.cli_config.config_local_path",
+            "aj_crew.cli_config.config_local_path",
             return_value=config_dir / "config.local.json",
         ),
-        patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-        patch("kiro_crew.cli_config.sel"),
+        patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+        patch("aj_crew.cli_config.sel"),
     ):
         _config_cmd(args)
 
 
 def _config(tmp_path: Path, data: dict) -> Path:
-    config_dir = tmp_path / ".kirocrew"
+    config_dir = tmp_path / ".ajcrew"
     config_dir.mkdir()
     (config_dir / "config.json").write_text(json.dumps(data), encoding="utf-8")
     return config_dir

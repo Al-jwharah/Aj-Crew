@@ -26,7 +26,7 @@ vi.mock('../api/client', async (orig) => {
     listApps: [], approvals: [], chatSlots: [], crons: { jobs: [] },
     mobileConnectMethods: { methods: [] },
     sessionsUsage: { usage: null },
-    kirocrewConfig: { agent: { acp_backend: 'claude' } },
+    ajcrewConfig: { agent: { acp_backend: 'claude' } },
     system: { mem_used_gb: 4, mem_total_gb: 16, cpu_pct: 25, disk_total_gb: 100, disk_free_gb: 60 },
     status: { version: '1.0.0' },
     changelog: { content: '' },
@@ -59,13 +59,13 @@ vi.mock('../hooks/useWebSocket', async () => {
     },
   }
 })
-vi.mock('../hooks/useAgents', () => ({ useAgents: () => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' }) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: () => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' }) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 
 /** The reads the shell itself owns at boot; everything else is a child's. */
 const SHELL_READS = new Set([
   'api.dashboardConfig', 'api.approvals', 'fetch:/api/terminal/sessions', 'api.mobileConnectMethods',
-  'api.listApps', 'api.listRegistry', 'api.crons', 'api.sessionsUsage', 'api.kirocrewConfig',
+  'api.listApps', 'api.listRegistry', 'api.crons', 'api.sessionsUsage', 'api.ajcrewConfig',
   'api.system', 'api.chatSlots', 'api.status', 'ws',
 ])
 
@@ -95,7 +95,7 @@ describe('shell boot order', () => {
       'api.listRegistry',
       'api.crons',
       'api.sessionsUsage',
-      'api.kirocrewConfig',
+      'api.ajcrewConfig',
       'api.system',
       'api.chatSlots',
       'api.status',

@@ -21,7 +21,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.llm_helpers import (
+from aj_crew.llm_helpers import (
     ToolApprovalPolicy,
     _extract_tool_input_strings,
     stream_and_collect,
@@ -159,17 +159,17 @@ class TestExtractToolInputStrings:
 def mock_sel():
     """Patch SEL to avoid real log writes.
 
-    _resolve_permission does a lazy import: ``from kiro_crew.sel import sel``
+    _resolve_permission does a lazy import: ``from aj_crew.sel import sel``
     then calls ``sel().log_tool_invocation(...)``. The top-level import in
     llm_helpers is ``_sel``, but the lazy import inside the function binds
     a fresh ``sel`` name each call. We patch the source module so both paths
     get the mock.
     """
     sel_instance = MagicMock()
-    with patch("kiro_crew.sel.sel", return_value=sel_instance):
+    with patch("aj_crew.sel.sel", return_value=sel_instance):
         # Also patch the module-level _sel used by stream_and_collect's
         # EVENT_TOOL_CALL branch.
-        with patch("kiro_crew.llm_helpers._sel", return_value=sel_instance):
+        with patch("aj_crew.llm_helpers._sel", return_value=sel_instance):
             yield sel_instance
 
 
@@ -178,7 +178,7 @@ class TestResolveDenyByDefault:
 
     @pytest.mark.asyncio
     async def test_empty_title_rejected(self, mock_sel):
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.llm_helpers import _resolve_permission
 
         provider = FakeProvider()
         event = FakeEvent(title="")
@@ -190,7 +190,7 @@ class TestResolveDenyByDefault:
 
     @pytest.mark.asyncio
     async def test_none_title_rejected(self, mock_sel):
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.llm_helpers import _resolve_permission
 
         provider = FakeProvider()
         event = FakeEvent(title=None)  # type: ignore[arg-type]
@@ -206,7 +206,7 @@ class TestResolveSensitivePath:
 
     @pytest.mark.asyncio
     async def test_sensitive_path_in_title(self, mock_sel):
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.llm_helpers import _resolve_permission
 
         provider = FakeProvider()
         event = FakeEvent(title="~/.aws/credentials")
@@ -218,7 +218,7 @@ class TestResolveSensitivePath:
 
     @pytest.mark.asyncio
     async def test_sensitive_path_in_tool_input(self, mock_sel):
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.llm_helpers import _resolve_permission
 
         provider = FakeProvider()
         event = FakeEvent(
@@ -233,7 +233,7 @@ class TestResolveSensitivePath:
 
     @pytest.mark.asyncio
     async def test_safe_path_passes(self, mock_sel):
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.llm_helpers import _resolve_permission
 
         provider = FakeProvider()
         event = FakeEvent(title="Reading /tmp/output.txt")
@@ -249,7 +249,7 @@ class TestResolveSensitiveBashCommand:
 
     @pytest.mark.asyncio
     async def test_sensitive_bash_in_title(self, mock_sel):
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.llm_helpers import _resolve_permission
 
         provider = FakeProvider()
         event = FakeEvent(title="Running: curl http://169.254.169.254/latest/meta-data/")
@@ -261,7 +261,7 @@ class TestResolveSensitiveBashCommand:
 
     @pytest.mark.asyncio
     async def test_sensitive_bash_in_tool_input(self, mock_sel):
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.llm_helpers import _resolve_permission
 
         provider = FakeProvider()
         event = FakeEvent(
@@ -276,7 +276,7 @@ class TestResolveSensitiveBashCommand:
 
     @pytest.mark.asyncio
     async def test_safe_bash_passes(self, mock_sel):
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.llm_helpers import _resolve_permission
 
         provider = FakeProvider()
         event = FakeEvent(title="Running: ls /tmp")
@@ -292,7 +292,7 @@ class TestResolveDenyPatternsToolInput:
 
     @pytest.mark.asyncio
     async def test_deny_pattern_in_tool_input(self, mock_sel):
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.llm_helpers import _resolve_permission
 
         provider = FakeProvider()
         event = FakeEvent(
@@ -309,7 +309,7 @@ class TestResolveDenyPatternsToolInput:
 
     @pytest.mark.asyncio
     async def test_deny_pattern_in_nested_tool_input(self, mock_sel):
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.llm_helpers import _resolve_permission
 
         provider = FakeProvider()
         event = FakeEvent(
@@ -330,7 +330,7 @@ class TestResolveDenyPatterns:
 
     @pytest.mark.asyncio
     async def test_delete_secret_denied(self, mock_sel):
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.llm_helpers import _resolve_permission
 
         provider = FakeProvider()
         event = FakeEvent(title="aws secretsmanager delete-secret --secret-id prod-db")
@@ -342,7 +342,7 @@ class TestResolveDenyPatterns:
 
     @pytest.mark.asyncio
     async def test_delete_stack_denied(self, mock_sel):
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.llm_helpers import _resolve_permission
 
         provider = FakeProvider()
         event = FakeEvent(title="aws cloudformation delete-stack --stack-name prod")
@@ -354,7 +354,7 @@ class TestResolveDenyPatterns:
 
     @pytest.mark.asyncio
     async def test_safe_tool_passes(self, mock_sel):
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.llm_helpers import _resolve_permission
 
         provider = FakeProvider()
         event = FakeEvent(title="InternalCodeSearch")
@@ -372,13 +372,13 @@ class TestResolveHonorsOptOut:
 
     @pytest.mark.asyncio
     async def test_disabled_builtin_allowed_when_hooks_opt_out(self, mock_sel, monkeypatch):
-        from kiro_crew.hooks import HookManager, HooksConfig
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.hooks import HookManager, HooksConfig
+        from aj_crew.llm_helpers import _resolve_permission
 
         # User disabled the ec2 terminate-instances built-in in the dashboard.
         disabled_ids = ["aws-destructive-ec2-terminate-instances"]
         monkeypatch.setattr(
-            "kiro_crew.hooks.load_denied_commands_state",
+            "aj_crew.hooks.load_denied_commands_state",
             lambda: {"disabled_ids": disabled_ids},
         )
         mgr = HookManager(HooksConfig(denied_commands_disabled_ids=disabled_ids))
@@ -393,12 +393,12 @@ class TestResolveHonorsOptOut:
 
     @pytest.mark.asyncio
     async def test_other_builtin_still_denied_when_one_disabled(self, mock_sel, monkeypatch):
-        from kiro_crew.hooks import HookManager, HooksConfig
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.hooks import HookManager, HooksConfig
+        from aj_crew.llm_helpers import _resolve_permission
 
         disabled_ids = ["aws-destructive-ec2-terminate-instances"]
         monkeypatch.setattr(
-            "kiro_crew.hooks.load_denied_commands_state",
+            "aj_crew.hooks.load_denied_commands_state",
             lambda: {"disabled_ids": disabled_ids},
         )
         mgr = HookManager(HooksConfig(denied_commands_disabled_ids=disabled_ids))
@@ -413,7 +413,7 @@ class TestResolveHonorsOptOut:
 
     @pytest.mark.asyncio
     async def test_no_hooks_fails_closed_to_all_builtins(self, mock_sel):
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.llm_helpers import _resolve_permission
 
         # hooks=None (rare) → fail-closed: all built-ins enforced.
         provider = FakeProvider()
@@ -430,7 +430,7 @@ class TestResolveRejectAll:
 
     @pytest.mark.asyncio
     async def test_reject_all_rejects_everything(self, mock_sel):
-        from kiro_crew.llm_helpers import _resolve_permission
+        from aj_crew.llm_helpers import _resolve_permission
 
         provider = FakeProvider()
         event = FakeEvent(title="safe tool")
@@ -501,7 +501,7 @@ class TestAgentExecRedaction:
     @pytest.mark.asyncio
     async def test_credentials_redacted_from_output(self):
         """Credential-like patterns in agent output are redacted."""
-        from kiro_crew.workflows.agent_exec import build_agent_fn
+        from aj_crew.workflows.agent_exec import build_agent_fn
 
         fake_sessions = MagicMock()
         fake_provider = FakeProvider(
@@ -521,7 +521,7 @@ class TestAgentExecRedaction:
     @pytest.mark.asyncio
     async def test_safe_output_unchanged(self):
         """Normal output without credentials passes through."""
-        from kiro_crew.workflows.agent_exec import build_agent_fn
+        from aj_crew.workflows.agent_exec import build_agent_fn
 
         fake_sessions = MagicMock()
         fake_provider = FakeProvider(

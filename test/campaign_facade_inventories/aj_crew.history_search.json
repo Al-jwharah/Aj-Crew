@@ -1,0 +1,43 @@
+{
+ "base_public_names": [
+  "ChunkDecodeError",
+  "INDEX_FILENAME",
+  "IndexRow",
+  "SEARCH_MAX_TOKENS",
+  "SEARCH_MIN_CHARS",
+  "SearchNeedle",
+  "SessionCatalogProjection",
+  "SessionSearchIndex",
+  "bounded_records",
+  "count_needle",
+  "fold_texts",
+  "is_cjk_char",
+  "logger",
+  "needles_match_text",
+  "parse_search_query",
+  "register_search_ref_resolver",
+  "reset_search_ref_resolver_for_tests",
+  "script_runs",
+  "snippet_needles"
+ ],
+ "note": "Frozen at the S79 split of history_search.py: every public name it defined, and every name it bound from the rest of aj_crew. SessionCatalogProjection and its ranking constants stay in the facade; query parsing lives in history_search_query and the shared search memos in history_search_memo, re-bound on the facade through aj_crew._facade_mirror, which serves the one slot the query owner rebinds at run time (_search_ref_resolver).",
+ "rebound": {
+  "ChunkDecodeError": "aj_crew.history_index",
+  "INDEX_FILENAME": "aj_crew.history_index",
+  "IndexRow": "aj_crew.history_index",
+  "SEARCH_MAX_TOKENS": "aj_crew.history_search_query",
+  "SearchNeedle": "aj_crew.history_search_query",
+  "SessionSearchIndex": "aj_crew.history_index",
+  "bounded_records": "aj_crew.jsonl_util",
+  "count_needle": "aj_crew.history_search_query",
+  "fold_texts": "aj_crew.history_index",
+  "is_cjk_char": "aj_crew._sqlite_compat",
+  "logger": "aj_crew.history_search_query",
+  "needles_match_text": "aj_crew.history_search_query",
+  "parse_search_query": "aj_crew.history_search_query",
+  "register_search_ref_resolver": "aj_crew.history_search_query",
+  "reset_search_ref_resolver_for_tests": "aj_crew.history_search_query",
+  "script_runs": "aj_crew._sqlite_compat",
+  "snippet_needles": "aj_crew.history_search_query"
+ }
+}

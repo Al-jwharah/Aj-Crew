@@ -1,7 +1,7 @@
 // Vendor stub: re-exports the host's React Query instance, including its context.
 // Keep runtime exports in sync with the pinned dependency; appSharedModuleBoundary
 // verifies names and identity so apps never bundle a second QueryClientContext.
-const m = window.__kirocrew_modules?.['@tanstack/react-query']
+const m = window.__ajcrew_modules?.['@tanstack/react-query']
 if (!m) throw new Error('[vendor/tanstack-react-query] Host modules not initialized.')
 export const {
   CancelledError, HydrationBoundary, InfiniteQueryObserver, IsRestoringProvider,

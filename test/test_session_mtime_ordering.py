@@ -5,7 +5,7 @@ restart): ``ConversationLog.list_sessions`` orders sessions by file mtime as a
 proxy for "last activity", but housekeeping rewrites (consolidation, rotation,
 metadata/tab_id backfill on restart) were bumping that mtime to "now". On every
 restart the lifecycle consolidates + rehydrates open slots, so long-closed
-sessions leapt to the top of the list and ``kirocrew token`` / a new Slack
+sessions leapt to the top of the list and ``ajcrew token`` / a new Slack
 session resolved to a stale thread.
 
 Fix: only a genuine ``append`` advances a session's mtime; housekeeping
@@ -18,8 +18,8 @@ from __future__ import annotations
 import os
 from unittest.mock import AsyncMock, MagicMock
 
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog
 
 
 class TestHousekeepingPreservesMtime:
@@ -68,7 +68,7 @@ class TestHousekeepingPreservesMtime:
     def test_update_metadata_upsert_new_file_gets_natural_mtime(self, tmp_path):
         log = ConversationLog(base_dir=tmp_path)
         # No prior file → upsert path → should NOT be forced to epoch 0.
-        log.update_metadata("fresh", {"agent": "kirocrew"})
+        log.update_metadata("fresh", {"agent": "ajcrew"})
         p = tmp_path / "fresh.jsonl"
         assert p.exists()
         assert p.stat().st_mtime > 1_700_000_000  # a real, recent timestamp

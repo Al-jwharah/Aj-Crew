@@ -413,7 +413,7 @@ class TestBlockAdjudicationContract:
         )
         harness = tmp_path / "harness.md"
         harness.write_text(
-            "BLOCKING src/kiro_crew/sandbox.py:44 -- the adapted harness"
+            "BLOCKING src/aj_crew/sandbox.py:44 -- the adapted harness"
             " skips the seam.\n"
             "Chain: added branch -> seam widened -> third harness gains a"
             " capability.\n"
@@ -435,7 +435,7 @@ class TestBlockAdjudicationContract:
         # a class decision, not an any-AUTOSDE-id match.
         event_loop = tmp_path / "event_loop.md"
         event_loop.write_text(
-            "BLOCKING src/kiro_crew/thing.py:9 -- a sync read on the loop.\n"
+            "BLOCKING src/aj_crew/thing.py:9 -- a sync read on the loop.\n"
             "Chain: large file -> loop stalls -> requests time out.\n"
             "Anchor: no-blocking-call-on-event-loop\n"
             "Fix: asyncio.to_thread it.\n",
@@ -588,15 +588,15 @@ class TestBlockAdjudicationContract:
 
 FOOTER = "[ADJUDICATION] deadbeef total={total} uphold={uph} downgrade={dwn}"
 MARKER = "[GPT-ADJUDICATED] deadbeef"
-DOWN = "DOWNGRADE {fid} kirocrew/x.py:10 reason=disproportionate-remedy"
-UP = "UPHOLD {fid} kirocrew/x.py:10 reason=harm-warrants-remedy"
+DOWN = "DOWNGRADE {fid} ajcrew/x.py:10 reason=disproportionate-remedy"
+UP = "UPHOLD {fid} ajcrew/x.py:10 reason=harm-warrants-remedy"
 FFOOTER = "[ADJUDICATION-FENCED] deadbeef fenced={n} flagged={k}"
 FMARKER = "[GPT-ADJUDICATED-FENCED] deadbeef"
 FLAGLINE = (
-    "FLAG {fid} kirocrew/x.py:10 -- requires a timestamp collision "
+    "FLAG {fid} ajcrew/x.py:10 -- requires a timestamp collision "
     "the monotonic writer cannot produce"
 )
-UPFENCED = "UPHOLD-FENCED {fid} kirocrew/x.py:10 -- plausible in real operation"
+UPFENCED = "UPHOLD-FENCED {fid} ajcrew/x.py:10 -- plausible in real operation"
 
 
 def _adjudication(*lines: str) -> str:
@@ -899,7 +899,7 @@ class TestBlockAdjudicationArithmetic:
                 _adjudication(
                     FOOTER.format(total=2, uph=0, dwn=2),
                     DOWN.format(fid="F1"),
-                    "DOWNGRADE F2 kirocrew/x.py:10 reason=security-class",
+                    "DOWNGRADE F2 ajcrew/x.py:10 reason=security-class",
                     MARKER,
                 ),
                 "other than disproportionate-remedy",
@@ -1261,29 +1261,29 @@ class TestBlockAdjudicationExtraction:
         [
             "**One blocking issue.**",
             "",
-            "**BLOCKING — kirocrew/session/replay.py:120**",
+            "**BLOCKING — ajcrew/session/replay.py:120**",
             "`ptr = self._instruction_ptr`",
             "After ~20 cron runs the pointer's target is out of the window.",
             "Fix: keep the instruction text inline.",
             "",
-            "**BLOCKING — kirocrew/gateway/app.py:44**",
+            "**BLOCKING — ajcrew/gateway/app.py:44**",
             "`token = request.headers[...]`",
             "An expired access token -> _authorize() admits the caller -> "
             "the session outlives its grant.",
             "Fix: verify the expiry.",
             "",
-            "**BLOCKING — kirocrew/tools/registry.py:9**",
+            "**BLOCKING — ajcrew/tools/registry.py:9**",
             '`name = spec["name"]`',
             "A spec with no name raises KeyError at registration.",
             "Fix: use .get with a default.",
             "",
-            "**BLOCKING — kirocrew/store/rotate.py:77**",
+            "**BLOCKING — ajcrew/store/rotate.py:77**",
             "`self._segments.pop()`",
             "A duplicated segment silently corrupts the archive index.",
             "Fix: dedupe by mid.",
             "",
             "Notes:",
-            "- kirocrew/util/fmt.py:3 trailing space",
+            "- ajcrew/util/fmt.py:3 trailing space",
             "",
             "[BLOCK-MERGE] deadbeef",
             "[GPT-REVIEWED] deadbeef",

@@ -21,14 +21,14 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
-from kiro_crew.shared_crew import admission_entry as entry
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import send_race, work_store
-from kiro_crew.shared_crew.admission import Liveness, OperationState, ReasonCode
-from kiro_crew.shared_crew.collab import FRAME_SEND_STATE, SERVER_FRAMES
-from kiro_crew.shared_crew.containment import ContainmentReport, SliceManager
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
+from aj_crew.shared_crew import admission_entry as entry
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import send_race, work_store
+from aj_crew.shared_crew.admission import Liveness, OperationState, ReasonCode
+from aj_crew.shared_crew.collab import FRAME_SEND_STATE, SERVER_FRAMES
+from aj_crew.shared_crew.containment import ContainmentReport, SliceManager
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     ActorContext,
     DisplaySnapshot,
@@ -39,13 +39,13 @@ from kiro_crew.shared_crew.contracts import (
     Transport,
     principal_id_for,
 )
-from kiro_crew.shared_crew.crew_mode import LOCAL_BOOTSTRAP_SUBJECTS
-from kiro_crew.shared_crew.identity import local_operator_principal
-from kiro_crew.shared_crew.send_race import Conflict, Granted, Replay, SendRaceRegistry
-from kiro_crew.shared_crew.typing_lease import same_person
-from kiro_crew.shared_crew.work_store import WorkStore
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.shared_crew.crew_mode import LOCAL_BOOTSTRAP_SUBJECTS
+from aj_crew.shared_crew.identity import local_operator_principal
+from aj_crew.shared_crew.send_race import Conflict, Granted, Replay, SendRaceRegistry
+from aj_crew.shared_crew.typing_lease import same_person
+from aj_crew.shared_crew.work_store import WorkStore
+from aj_crew.taskq.store import TaskStore
+from aj_crew.testing.clock import ManualClock
 
 BOUND = 30.0
 
@@ -272,8 +272,8 @@ def _actor_middleware():
 def dash_state(tmp_path, monkeypatch):
     from chat_test_helpers import _make_state
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.broadcast_ws_owners = MagicMock()
@@ -327,8 +327,8 @@ def installed(tmp_path, monkeypatch):
 
 
 def _client(state) -> TestClient:
-    from kiro_crew.dashboard.chat_handlers import api_chat
-    from kiro_crew.shared_crew.routes_collab import api_shared_crew_send_state
+    from aj_crew.dashboard.chat_handlers import api_chat
+    from aj_crew.shared_crew.routes_collab import api_shared_crew_send_state
 
     app = web.Application(middlewares=[_actor_middleware()])
     app["state"] = state
@@ -354,8 +354,8 @@ async def test_two_collaborators_racing_at_the_host_accept_exactly_one(dash_stat
     slot = dash_state.get_or_create_slot("s1")
     run_chat = AsyncMock()
     with (
-        patch("kiro_crew.dashboard.chat_handlers._run_chat", new=run_chat),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers._run_chat", new=run_chat),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
     ):
         async with _client(dash_state) as client:
             results = await asyncio.wait_for(
@@ -396,8 +396,8 @@ async def test_lost_winner_response_then_retry_runs_once(dash_state):
     slot = dash_state.get_or_create_slot("s1")
     run_chat = AsyncMock()
     with (
-        patch("kiro_crew.dashboard.chat_handlers._run_chat", new=run_chat),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers._run_chat", new=run_chat),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
     ):
         async with _client(dash_state) as client:
             body = {"slot": "s1", "message": "hello", "base_revision": 0}
@@ -422,8 +422,8 @@ async def test_a_refused_send_gives_its_claim_back(dash_state):
     dash_state.get_or_create_slot("s1")
     refusal = web.json_response({"error": "archived", "code": "relay_archive"}, status=409)
     with (
-        patch("kiro_crew.dashboard.chat_handlers.relay_archive_refusal", return_value=refusal),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers.relay_archive_refusal", return_value=refusal),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
     ):
         async with _client(dash_state) as client:
             st1, first = await _post(
@@ -446,8 +446,8 @@ async def test_send_now_enters_admission_and_queues_without_steering(dash_state,
     slot.task = busy
     steer = AsyncMock()
     with (
-        patch("kiro_crew.dashboard.chat_handlers.steer_into_running_turn", new=steer),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers.steer_into_running_turn", new=steer),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
     ):
         async with _client(dash_state) as client:
             draft = {"slot": "s1", "message": "bob's draft", "steer": True}
@@ -498,7 +498,7 @@ async def test_a_losing_steer_never_steers(dash_state):
     busy.done.return_value = False
     slot.task = busy
     steer = AsyncMock()
-    with patch("kiro_crew.dashboard.chat_handlers.steer_into_running_turn", new=steer):
+    with patch("aj_crew.dashboard.chat_handlers.steer_into_running_turn", new=steer):
         async with _client(dash_state) as client:
             status, body = await _post(
                 client, "bob", {"slot": "s1", "message": "x", "steer": True, "base_revision": 0}

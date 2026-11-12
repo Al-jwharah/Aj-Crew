@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.builtins.mochi.appearance_store import (
+from aj_crew.apps.builtins.mochi.appearance_store import (
     MANIFEST_FILE,
     SOURCE_FILE,
     PackError,
@@ -244,7 +244,7 @@ class TestStagedOverwriteAcrossEveryWriter:
         pack = appearances_dir(tmp_path) / "edit-me"
         before = sorted(p.name for p in pack.iterdir())
 
-        import kiro_crew.apps.builtins.mochi.appearance_store as store
+        import aj_crew.apps.builtins.mochi.appearance_store as store
 
         real = store.atomic_write
         calls = {"n": 0}
@@ -375,7 +375,7 @@ class TestBundleRoundTrip:
         ).encode()
 
     def test_import_then_export_round_trips(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.appearance_store import export_pack, import_bundle
+        from aj_crew.apps.builtins.mochi.appearance_store import export_pack, import_bundle
 
         blob = self._bundle({"manifest.json": self._manifest(), "idle.svg": b"<svg/>"})
         meta = import_bundle(tmp_path, blob)
@@ -391,7 +391,7 @@ class TestBundleRoundTrip:
             assert sorted(z.namelist()) == ["idle.svg", "manifest.json"]
 
     def test_path_traversal_entry_is_refused(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.appearance_store import PackError, import_bundle
+        from aj_crew.apps.builtins.mochi.appearance_store import PackError, import_bundle
 
         # zipfile.extractall would happily write through this.
         blob = self._bundle({"manifest.json": self._manifest(), "../escaped.svg": b"<svg/>"})
@@ -400,21 +400,21 @@ class TestBundleRoundTrip:
         assert not (tmp_path.parent / "escaped.svg").exists()
 
     def test_nested_directory_entry_is_refused(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.appearance_store import PackError, import_bundle
+        from aj_crew.apps.builtins.mochi.appearance_store import PackError, import_bundle
 
         blob = self._bundle({"manifest.json": self._manifest(), "sub/idle.svg": b"<svg/>"})
         with pytest.raises(PackError, match="Unsafe entry"):
             import_bundle(tmp_path, blob)
 
     def test_disallowed_extension_is_refused(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.appearance_store import PackError, import_bundle
+        from aj_crew.apps.builtins.mochi.appearance_store import PackError, import_bundle
 
         blob = self._bundle({"manifest.json": self._manifest(), "run.sh": b"#!/bin/sh\n"})
         with pytest.raises(PackError, match="Disallowed file"):
             import_bundle(tmp_path, blob)
 
     def test_zip_bomb_is_refused_before_writing(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.appearance_store import (
+        from aj_crew.apps.builtins.mochi.appearance_store import (
             MAX_BUNDLE_BYTES,
             PackError,
             import_bundle,
@@ -426,25 +426,25 @@ class TestBundleRoundTrip:
             import_bundle(tmp_path, blob)
 
     def test_missing_manifest_is_refused(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.appearance_store import PackError, import_bundle
+        from aj_crew.apps.builtins.mochi.appearance_store import PackError, import_bundle
 
         with pytest.raises(PackError, match="Missing manifest"):
             import_bundle(tmp_path, self._bundle({"idle.svg": b"<svg/>"}))
 
     def test_corrupt_archive_is_refused(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.appearance_store import PackError, import_bundle
+        from aj_crew.apps.builtins.mochi.appearance_store import PackError, import_bundle
 
         with pytest.raises(PackError, match="corrupted"):
             import_bundle(tmp_path, b"not a zip")
 
     def test_export_of_a_missing_pack_raises(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.appearance_store import PackError, export_pack
+        from aj_crew.apps.builtins.mochi.appearance_store import PackError, export_pack
 
         with pytest.raises(PackError, match="not found"):
             export_pack(tmp_path, "nope")
 
     def test_export_reports_a_referenced_file_that_is_gone(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.appearance_store import (
+        from aj_crew.apps.builtins.mochi.appearance_store import (
             PackError,
             export_pack,
             import_bundle,
@@ -468,7 +468,7 @@ class TestSavePackFromContent:
         ``atomic_write`` — which mkdir -p's the resolved parent — plants the
         content anywhere the gateway can write, the governance keystone
         included. State slots were always safe (fixed tuples)."""
-        from kiro_crew.apps.builtins.mochi.appearance_store import PackError, save_pack
+        from aj_crew.apps.builtins.mochi.appearance_store import PackError, save_pack
 
         with pytest.raises(PackError, match="invalid slot name"):
             save_pack(
@@ -481,7 +481,7 @@ class TestSavePackFromContent:
         assert not (tmp_path.parent / "escaped.json").exists()
 
     def test_identical_content_is_written_once_and_shared(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.appearance_store import get_pack_detail, save_pack
+        from aj_crew.apps.builtins.mochi.appearance_store import get_pack_detail, save_pack
 
         same = "<svg id='a'/>"
         meta = save_pack(
@@ -499,7 +499,7 @@ class TestSavePackFromContent:
         assert files == ["idle.svg", "manifest.json", "thinking.svg"]
 
     def test_extension_follows_the_declared_format(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.appearance_store import save_pack
+        from aj_crew.apps.builtins.mochi.appearance_store import save_pack
 
         save_pack(tmp_path, {"id": "l", "format": "lottie"}, {"idle": '{"v":"5"}'})
         # The renderer chooses its loader from the extension, so a Lottie written
@@ -507,13 +507,13 @@ class TestSavePackFromContent:
         assert (tmp_path / "appearances" / "l" / "idle.json").is_file()
 
     def test_missing_idle_is_refused(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.appearance_store import PackError, save_pack
+        from aj_crew.apps.builtins.mochi.appearance_store import PackError, save_pack
 
         with pytest.raises(PackError, match="Missing required states"):
             save_pack(tmp_path, {"id": "x"}, {"walking": "<svg/>"})
 
     def test_only_idle_is_required(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.appearance_store import save_pack
+        from aj_crew.apps.builtins.mochi.appearance_store import save_pack
 
         # Divergence from upstream, kept deliberately: it demanded all six states
         # while having almost no fallbacks, so a one-drawing pack rendered five
@@ -521,14 +521,14 @@ class TestSavePackFromContent:
         assert save_pack(tmp_path, {"id": "one"}, {"idle": "<svg/>"})["id"] == "one"
 
     def test_an_editor_pack_is_always_user_owned(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.appearance_store import save_pack
+        from aj_crew.apps.builtins.mochi.appearance_store import save_pack
 
         meta = save_pack(tmp_path, {"id": "b", "type": "built-in"}, {"idle": "<svg/>"})
         # Otherwise the user could not delete what they just created.
         assert meta["type"] == "custom"
 
     def test_resaving_prunes_art_for_removed_slots(self, tmp_path) -> None:
-        from kiro_crew.apps.builtins.mochi.appearance_store import save_pack
+        from aj_crew.apps.builtins.mochi.appearance_store import save_pack
 
         save_pack(tmp_path, {"id": "p"}, {"idle": "<svg id='1'/>", "error": "<svg id='2'/>"})
         save_pack(tmp_path, {"id": "p"}, {"idle": "<svg id='1'/>"})
@@ -583,7 +583,7 @@ class TestActivityLogDoesNotBlockTheLoop:
     def test_log_activity_holds_a_file_lock(self) -> None:
         import inspect
 
-        from kiro_crew.apps.builtins.mochi import activity_log
+        from aj_crew.apps.builtins.mochi import activity_log
 
         # log_activity locks the read-modify-write via the shared
         # activity_mutation contextmanager (also used by the reset unlink), which
@@ -598,7 +598,7 @@ class TestActivityLogDoesNotBlockTheLoop:
     def test_hooks_offloads_the_write_when_on_the_loop(self) -> None:
         import inspect
 
-        from kiro_crew.apps.builtins.mochi import hooks
+        from aj_crew.apps.builtins.mochi import hooks
 
         src = inspect.getsource(hooks.MochiRuntime._log_activity)
         assert "run_in_executor(" in src and "get_running_loop()" in src

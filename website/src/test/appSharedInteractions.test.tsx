@@ -3,7 +3,7 @@ import { act, fireEvent, render, renderHook, screen } from '@testing-library/rea
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AppApiProvider, useChatLauncher, activeLocale, fmtNumber, fmtCurrency, useLanguageGeneration, APP_SDK_LEVEL } from '../app-sdk'
 import { fmtCurrency as hostFmtCurrency } from '../i18n/format'
-import { Clickable, SettingsInput, SettingsToggle, Modal, ErrorNotice, Select, guideCaution } from '../kirocrew-ui'
+import { Clickable, SettingsInput, SettingsToggle, Modal, ErrorNotice, Select, guideCaution } from '../ajcrew-ui'
 import { guideCaution as hostGuideCaution } from '../guide/trustRoot'
 import HostModal from '../components/Modal'
 import HostErrorNotice from '../components/ErrorNotice'

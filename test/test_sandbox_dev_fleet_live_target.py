@@ -32,12 +32,12 @@ import sys
 
 import pytest
 
-from kiro_crew import sandbox, sandbox_plan
-from kiro_crew.service import live_target
+from aj_crew import sandbox, sandbox_plan
+from aj_crew.service import live_target
 
 _POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="POSIX launcher only")
 _MODES = ("standard", "cc", "strict")
-_CREW_PREFIXES = (".kiro/crew", ".kirocrew")
+_CREW_PREFIXES = (".kiro/crew", ".ajcrew")
 
 
 @pytest.fixture(autouse=True)
@@ -110,9 +110,9 @@ class TestNoBackendGetsThePointerBack:
 
     def test_the_isolated_startup_stays_scoped_to_md_notebook(self) -> None:
         """dev-fleet owns no hidden leaf; the isolated start is keyed on md-notebook alone."""
-        import kiro_crew.apps.backend  # noqa: F401 -- the source read below
+        import aj_crew.apps.backend  # noqa: F401 -- the source read below
 
-        source = inspect.getsource(sys.modules["kiro_crew.apps.backend"])
+        source = inspect.getsource(sys.modules["aj_crew.apps.backend"])
         assert "dev-fleet" not in sandbox._APP_BACKEND_OWNED_LEAVES
         assert "_shipped_md_notebook" in source
         assert "_shipped_dev_fleet" not in source

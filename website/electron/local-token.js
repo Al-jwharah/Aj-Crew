@@ -31,7 +31,7 @@ const LOOPBACK_FAMILY_BINDS = Object.freeze({
 });
 
 /** Hostnames that name a SET of listeners rather than one. */
-const AMBIGUOUS_LOOPBACK_NAMES = Object.freeze(["localhost", "kirocrew.localhost"]);
+const AMBIGUOUS_LOOPBACK_NAMES = Object.freeze(["localhost", "ajcrew.localhost"]);
 
 /**
  * What a `backendUrl` actually dials: its origin, its port, and every loopback

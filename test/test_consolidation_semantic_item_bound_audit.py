@@ -31,9 +31,9 @@ from test_consolidation_semantic_item_bound import (
     _store_for,
 )
 
-from kiro_crew import history_consolidation
-from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED, _LEASE_TOKEN
-from kiro_crew.testing.wait import finished
+from aj_crew import history_consolidation
+from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED, _LEASE_TOKEN
+from aj_crew.testing.wait import finished
 
 
 @pytest.mark.asyncio

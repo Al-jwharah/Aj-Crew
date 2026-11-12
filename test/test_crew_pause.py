@@ -19,9 +19,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import crew_mode, crew_pause, platform_compat
-from kiro_crew.dashboard.turn_dispatch import mark_turn_unstarted
-from kiro_crew.testing.wait import until_parked
+from aj_crew import crew_mode, crew_pause, platform_compat
+from aj_crew.dashboard.turn_dispatch import mark_turn_unstarted
+from aj_crew.testing.wait import until_parked
 
 
 @pytest.fixture(autouse=True)
@@ -154,13 +154,13 @@ def test_a_damaged_file_pauses_nothing(_pause_store, body):
 
 
 def _row(key: str, **over: Any) -> dict[str, Any]:
-    return {"key": key, "agent": "kirocrew", "agent_kind": "template", "parent": None, **over}
+    return {"key": key, "agent": "ajcrew", "agent_kind": "template", "parent": None, **over}
 
 
 # root runs; w1 runs; its sub-team member w3 runs too; w2 waits on an approval;
 # w4 is idle; "other" is outside the crew.
 _TREE = [
-    _row("root", agent="kirocrew-conductor", running=True),
+    _row("root", agent="ajcrew-conductor", running=True),
     _row("w1", created_by="root", running=True),
     _row("w2", created_by="root", running=True, pending_approval=True),
     _row("w3", created_by="w1", running=True),
@@ -207,9 +207,9 @@ def _req(state: Any, slot: str = "root") -> Any:
 
 @pytest.fixture
 def routes(monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard import state as dash_state
-    from kiro_crew.dashboard.handlers import crew_pause as handler
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import state as dash_state
+    from aj_crew.dashboard.handlers import crew_pause as handler
 
     async def _allow(*_a: Any, **_k: Any) -> None:
         return None
@@ -258,7 +258,7 @@ async def test_pause_stops_every_running_member_at_every_depth_and_leaves_needs_
 
 @pytest.mark.asyncio
 async def test_a_stop_the_compaction_declined_is_not_counted_as_stopped(routes, monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     async def _stop(state: Any, slot: Any, **kw: Any) -> dict[str, Any]:
         return {"ok": True, "info": "compacting"} if slot.key == "w3" else {"ok": True}
@@ -276,7 +276,7 @@ async def test_a_stop_the_compaction_declined_is_not_counted_as_stopped(routes, 
 async def test_a_refused_stop_is_not_counted_as_stopped(routes, monkeypatch):
     """A stop refused with ``ok: False`` and no ``info`` (a cron run the pause may
     not cancel) stopped nothing, so Resume all owes it no Continue."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     async def _stop(state: Any, slot: Any, **kw: Any) -> dict[str, Any]:
         if slot.key == "w3":
@@ -295,7 +295,7 @@ async def test_a_refused_stop_is_not_counted_as_stopped(routes, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_a_turn_still_being_prepared_counts_as_stopped(routes, monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     async def _stop(state: Any, slot: Any, **kw: Any) -> dict[str, Any]:
         # The provider has no turn yet; the recorded Stop aborts it before dispatch.
@@ -309,7 +309,7 @@ async def test_a_turn_still_being_prepared_counts_as_stopped(routes, monkeypatch
 
 @pytest.mark.asyncio
 async def test_a_repeated_pause_keeps_what_an_earlier_one_stopped(routes, monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     async def _stop(state: Any, slot: Any, **kw: Any) -> dict[str, Any]:
         return {"ok": True, "info": "compacting"} if slot.key == "w3" else {"ok": True}
@@ -326,7 +326,7 @@ async def test_a_repeated_pause_keeps_what_an_earlier_one_stopped(routes, monkey
 async def test_a_turn_an_earlier_pause_stopped_is_still_continued_after_a_second_pause(
     routes, monkeypatch
 ):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     await routes.handler.api_crew_pause(_req(_state(_TREE)))
     assert crew_pause.record("root")["stopped"] == ["root", "w1", "w3"]
@@ -351,7 +351,7 @@ async def test_a_turn_an_earlier_pause_stopped_is_still_continued_after_a_second
 
 @pytest.mark.asyncio
 async def test_resume_after_a_restart_sends_the_queued_message_of_a_stopped_worker(routes):
-    from kiro_crew.dashboard.slot_queue_repository import (
+    from aj_crew.dashboard.slot_queue_repository import (
         RESTORED_QUEUE_KEY,
         RESTORED_SEND_CHOSEN_KEY,
     )
@@ -385,8 +385,8 @@ async def test_resume_after_a_restart_sends_the_queued_message_of_a_stopped_work
 @pytest.mark.parametrize("dropped", [False, True])
 @pytest.mark.asyncio
 async def test_a_restored_card_that_does_not_start_is_not_lost(routes, monkeypatch, dropped):
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard.slot_queue_repository import (
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard.slot_queue_repository import (
         RESTORED_QUEUE_KEY,
         RESTORED_SEND_CHOSEN_KEY,
     )
@@ -422,8 +422,8 @@ async def test_a_restored_card_that_does_not_start_is_not_lost(routes, monkeypat
 async def test_resume_while_memory_prepares_never_parks_a_stopped_workers_card(
     routes, monkeypatch, memory
 ):
-    from kiro_crew import memory_startup
-    from kiro_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
+    from aj_crew import memory_startup
+    from aj_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
 
     await routes.handler.api_crew_pause(_req(_state(_TREE)))
     _restart()
@@ -464,10 +464,10 @@ async def test_a_members_continue_while_memory_prepares_keeps_it_paused(
 ):
     from chat_test_helpers import _make_state
 
-    from kiro_crew import memory_startup
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard.chat_api import continue_turn
-    from kiro_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
+    from aj_crew import memory_startup
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard.chat_api import continue_turn
+    from aj_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("chat-w1")
@@ -494,7 +494,7 @@ async def test_a_members_continue_while_memory_prepares_keeps_it_paused(
 
 @pytest.mark.asyncio
 async def test_a_turn_the_pause_gate_ended_during_a_compaction_is_continued(routes, monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     # w3's send waits on a compaction: the pause's Stop answers "compacting".
     async def _stop(state: Any, slot: Any, **kw: Any) -> dict[str, Any]:
@@ -513,7 +513,7 @@ async def test_a_turn_the_pause_gate_ended_during_a_compaction_is_continued(rout
 
 @pytest.mark.asyncio
 async def test_a_turn_owed_while_the_pause_settles_is_not_settled_away(routes, monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     # w3's Stop is declined by a compaction, and that compaction ends while the
     # pause still waits on the other stops: the gate ends w3's turn, owing it.
@@ -612,7 +612,7 @@ async def test_resume_all_reports_a_pause_file_it_could_not_save(routes, monkeyp
 async def test_a_live_queue_dropped_as_stale_still_continues_the_stopped_worker(
     routes, monkeypatch
 ):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     await routes.handler.api_crew_pause(_req(_state(_TREE)))
 
@@ -651,7 +651,7 @@ def test_readers_never_wait_on_a_writer():
 
 
 def test_both_entrypoints_preload_the_pause_file_at_startup():
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     app = web.Application()
     server._register_mcp_routes(app)
@@ -759,7 +759,7 @@ async def test_a_turn_started_during_the_pause_write_is_stopped_too(routes, monk
 
 @pytest.mark.asyncio
 async def test_a_refused_hand_back_stays_paused_and_is_reported(routes, monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     await routes.handler.api_crew_pause(_req(_state(_TREE)))
 
@@ -780,7 +780,7 @@ async def test_a_refused_hand_back_stays_paused_and_is_reported(routes, monkeypa
 
 @pytest.mark.asyncio
 async def test_resume_re_asks_a_synthesis_the_pause_withheld(routes, monkeypatch):
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     await routes.handler.api_crew_pause(_req(_state(_TREE)))
     slots = {r["key"]: _fake_slot(r["key"]) for r in _TREE}
@@ -812,8 +812,8 @@ async def test_pause_refuses_a_session_that_is_not_a_crew_root(routes):
 
 @pytest.mark.asyncio
 async def test_the_pause_routes_take_the_owner_gate(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_pause as handler
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_pause as handler
+    from aj_crew.dashboard.handlers import crew_workers
 
     async def _deny(*_a: Any, **_k: Any) -> web.Response:
         return web.json_response({"code": "owner_only"}, status=403)
@@ -831,7 +831,7 @@ async def test_the_pause_routes_take_the_owner_gate(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_the_worker_list_carries_the_pause(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     async def _allow(*_a: Any, **_k: Any) -> None:
         return None
@@ -854,7 +854,7 @@ async def test_the_worker_list_carries_the_pause(monkeypatch):
 def test_a_pause_landing_during_the_drain_probes_holds_the_drain(tmp_path, monkeypatch):
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard import chat_handlers, chat_runner
+    from aj_crew.dashboard import chat_handlers, chat_runner
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("chat-w9")
@@ -874,7 +874,7 @@ def test_a_pause_landing_during_the_drain_probes_holds_the_drain(tmp_path, monke
 def test_a_held_slot_keeps_its_queue_and_starts_no_turn(tmp_path):
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard.chat_turn.queue_drain import _start_next_queued_turn
+    from aj_crew.dashboard.chat_turn.queue_drain import _start_next_queued_turn
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("chat-held")
@@ -894,7 +894,7 @@ def test_a_paused_crew_forks_no_new_session(tmp_path, monkeypatch):
         _slot,
     )
 
-    from kiro_crew.dashboard import session_control as sc
+    from aj_crew.dashboard import session_control as sc
 
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
@@ -916,8 +916,8 @@ def test_a_pause_landing_during_a_fork_refuses_the_child(tmp_path, monkeypatch):
         _slot,
     )
 
-    from kiro_crew.dashboard import chat_fork
-    from kiro_crew.dashboard import session_control as sc
+    from aj_crew.dashboard import chat_fork
+    from aj_crew.dashboard import session_control as sc
 
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
@@ -950,7 +950,7 @@ def test_a_paused_crew_opens_no_new_session(tmp_path, monkeypatch):
         _slot,
     )
 
-    from kiro_crew.dashboard import session_control as sc
+    from aj_crew.dashboard import session_control as sc
 
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
@@ -968,7 +968,7 @@ async def test_a_patrol_wake_on_a_paused_root_is_refused_as_busy(monkeypatch):
     from test_autonudge_dashboard_fire import _fake_spawn, _loop, _orchestrator
     from test_autonudge_dashboard_fire import _slot as nudge_slot
 
-    from kiro_crew.slack import gateway as gw
+    from aj_crew.slack import gateway as gw
 
     orch = _orchestrator()
     orch.dashboard_state.get_slot = MagicMock(return_value=nudge_slot("chat-1-1785"))
@@ -977,7 +977,7 @@ async def test_a_patrol_wake_on_a_paused_root_is_refused_as_busy(monkeypatch):
     spawn = _fake_spawn()
     with (
         patch.object(gw, "spawn_guarded_turn", spawn),
-        patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
     ):
         assert await orch._fire_dashboard_nudge(_loop()) is False
     assert spawn.calls == []
@@ -989,7 +989,7 @@ async def test_a_pause_landing_while_a_patrol_prepares_holds_its_turn(monkeypatc
     from test_autonudge_dashboard_fire import _fake_spawn, _loop, _orchestrator
     from test_autonudge_dashboard_fire import _slot as nudge_slot
 
-    from kiro_crew.slack import gateway as gw
+    from aj_crew.slack import gateway as gw
 
     orch = _orchestrator()
     orch.dashboard_state.get_slot = MagicMock(return_value=nudge_slot("chat-1-1785"))
@@ -1003,7 +1003,7 @@ async def test_a_pause_landing_while_a_patrol_prepares_holds_its_turn(monkeypatc
     spawn = _fake_spawn()
     with (
         patch.object(gw, "spawn_guarded_turn", spawn),
-        patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
     ):
         assert await orch._fire_dashboard_nudge(_loop()) is False
     assert spawn.calls == []
@@ -1013,8 +1013,8 @@ async def test_a_pause_landing_while_a_patrol_prepares_holds_its_turn(monkeypatc
 async def test_continue_on_a_paused_root_points_at_the_board(tmp_path, monkeypatch):
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard import chat_handlers  # noqa: F401  (binds continue_turn's names)
-    from kiro_crew.dashboard.chat_api.continue_turn import api_chat_slot_continue
+    from aj_crew.dashboard import chat_handlers  # noqa: F401  (binds continue_turn's names)
+    from aj_crew.dashboard.chat_api.continue_turn import api_chat_slot_continue
 
     state = _make_state(tmp_path)
     state.get_or_create_slot("chat-root")
@@ -1032,8 +1032,8 @@ async def test_continue_on_a_paused_root_points_at_the_board(tmp_path, monkeypat
 async def test_a_refused_member_continue_keeps_it_paused(tmp_path, monkeypatch):
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.dashboard.chat_api import continue_turn
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.dashboard.chat_api import continue_turn
 
     state = _make_state(tmp_path)
     state.get_or_create_slot("chat-w1")
@@ -1059,7 +1059,7 @@ async def test_a_resume_all_during_a_members_refused_continue_still_hands_it_bac
 ):
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     monkeypatch.setattr(routes.handler, "_ROOT_LOCKS", {})
     state = _make_state(tmp_path)
@@ -1095,7 +1095,7 @@ async def test_a_members_continue_that_waited_behind_resume_all_starts_no_second
 ):
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     monkeypatch.setattr(routes.handler, "_ROOT_LOCKS", {})
     state = _make_state(tmp_path)
@@ -1122,7 +1122,7 @@ async def test_a_members_continue_after_resume_and_a_new_pause_still_continues_i
 ):
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     monkeypatch.setattr(routes.handler, "_ROOT_LOCKS", {})
     state = _make_state(tmp_path)
@@ -1148,17 +1148,17 @@ async def test_a_members_continue_after_resume_and_a_new_pause_still_continues_i
 
 
 def test_ultra_mode_defaults_to_the_team_lead_and_a_set_key_keeps_its_value():
-    from kiro_crew.config.loader_builders import _build_agent_config
-    from kiro_crew.config.sections_agent import _CREW_MODE_AGENT_DEFAULT
+    from aj_crew.config.loader_builders import _build_agent_config
+    from aj_crew.config.sections_agent import _CREW_MODE_AGENT_DEFAULT
 
-    assert crew_mode.DEFAULT_CREW_MODE_AGENT == "kirocrew-team-lead"
+    assert crew_mode.DEFAULT_CREW_MODE_AGENT == "ajcrew-team-lead"
     assert _CREW_MODE_AGENT_DEFAULT == crew_mode.DEFAULT_CREW_MODE_AGENT
-    assert _build_agent_config({}).crew_mode_agent == "kirocrew-team-lead"
-    assert _build_agent_config({"crew_mode_agent": "kirocrew-conductor"}).crew_mode_agent == (
-        "kirocrew-conductor"
+    assert _build_agent_config({}).crew_mode_agent == "ajcrew-team-lead"
+    assert _build_agent_config({"crew_mode_agent": "ajcrew-conductor"}).crew_mode_agent == (
+        "ajcrew-conductor"
     )
     # The deprecated ledger alias still names the shipped conductor, not the default.
-    assert crew_mode.CONDUCTOR_ALIASES["kirocrew-ledger-conductor"] == "kirocrew-conductor"
+    assert crew_mode.CONDUCTOR_ALIASES["ajcrew-ledger-conductor"] == "ajcrew-conductor"
 
 
 # ── the goal stays current ─────────────────────────────────────────────────────
@@ -1169,9 +1169,9 @@ _GOAL_FIRST = "call `work_ledger_record` `action=goal` FIRST, before you dispatc
 def test_the_lead_prompt_and_both_skills_carry_the_goal_first_rule():
     from pathlib import Path
 
-    from kiro_crew.agent_parts.spec_prompts import _TEAM_LEAD_SYSTEM_PROMPT
+    from aj_crew.agent_parts.spec_prompts import _TEAM_LEAD_SYSTEM_PROMPT
 
-    skills = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "builtin_skills"
+    skills = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "builtin_skills"
     texts = {
         "prompt": _TEAM_LEAD_SYSTEM_PROMPT,
         "team-lead": (skills / "team-lead" / "SKILL.md").read_text(encoding="utf-8"),
@@ -1185,13 +1185,13 @@ def test_the_lead_prompt_and_both_skills_carry_the_goal_first_rule():
 
 
 def test_an_ultra_mode_board_turn_tells_the_lead_to_write_the_goal(monkeypatch):
-    from kiro_crew import dashboard_agentic
+    from aj_crew import dashboard_agentic
 
     monkeypatch.setattr(
         dashboard_agentic, "turn_block", lambda key, **_kw: "[DASHBOARD] goal-board"
     )
     monkeypatch.setattr(dashboard_agentic, "_shows_board", lambda key: True)
-    from kiro_crew.dashboard_templates import instance as instance_store
+    from aj_crew.dashboard_templates import instance as instance_store
 
     monkeypatch.setattr(instance_store, "read", lambda key: SimpleNamespace(state="adopted"))
     block = dashboard_agentic.session_turn_block("chat-root")
@@ -1205,10 +1205,10 @@ async def test_a_send_to_a_held_idle_session_is_queued_not_started(tmp_path, mon
     from aiohttp.test_utils import TestClient, TestServer
     from chat_test_helpers import _make_app, _make_state
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     started: list[Any] = []
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat._run_chat",
+        "aj_crew.dashboard.chat._run_chat",
         AsyncMock(side_effect=lambda *a, **k: started.append(1)),
     )
     state = _make_state(tmp_path)

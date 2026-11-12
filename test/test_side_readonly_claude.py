@@ -18,13 +18,13 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.acp import _dispatch
-from kiro_crew.acp.client_claude_session import _CLAUDE_SIDE_READ_ONLY_ASK_RULES
-from kiro_crew.acp.harness_tool_names import CLAUDE_READ_ONLY_BUILTINS
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.llm_helpers import ToolApprovalPolicy, stream_and_collect
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.acp import _dispatch
+from aj_crew.acp.client_claude_session import _CLAUDE_SIDE_READ_ONLY_ASK_RULES
+from aj_crew.acp.harness_tool_names import CLAUDE_READ_ONLY_BUILTINS
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.llm_helpers import ToolApprovalPolicy, stream_and_collect
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
 _READS = [("Read", "read"), ("WebFetch", "fetch"), ("WebSearch", "fetch")]
 _WRITES_AND_EXEC = [
@@ -105,7 +105,7 @@ class _ScriptedProvider:
 
 
 async def _gate(acp_event, policy: ToolApprovalPolicy) -> _ScriptedProvider:
-    from kiro_crew.hooks import HookManager, HooksConfig
+    from aj_crew.hooks import HookManager, HooksConfig
 
     llm_event = AcpProvider._to_llm_event(acp_event)
     provider = _ScriptedProvider(llm_event)
@@ -248,7 +248,7 @@ async def test_each_captured_side_read_gets_a_read_only_decision_and_an_sel_row(
     assert len(events) == 5
     for event in events:
         assert event.harness_builtin_tool in ("fs_read", "grep", "glob")
-        with patch("kiro_crew.sel.sel") as sel:
+        with patch("aj_crew.sel.sel") as sel:
             provider = await _gate(event, ToolApprovalPolicy.READ_ONLY)
         rows = [c.kwargs for c in sel.return_value.log_tool_invocation.call_args_list]
         assert provider.approved == [event.request_id] and provider.rejected == []
@@ -333,13 +333,13 @@ def _captured_search_event(tool: str, path: str):
 async def test_a_read_folded_search_on_a_credential_path_is_still_refused(tool, leaf):
     """The gate's own sensitive-path deny binds a folded Grep/Glob too, so the
     fold adds nothing where claude's deny rules might not reach."""
-    from kiro_crew.security import sandbox_credential_targets
+    from aj_crew.security import sandbox_credential_targets
 
     path = str(Path.home() / leaf)
     assert any(Path(path).is_relative_to(t) for t in sandbox_credential_targets())
     event = _captured_search_event(tool, path)
     assert event.tool_kind == "read"
-    with patch("kiro_crew.sel.sel") as sel:
+    with patch("aj_crew.sel.sel") as sel:
         provider = await _gate(event, ToolApprovalPolicy.READ_ONLY)
     assert provider.approved == [] and provider.rejected == [event.request_id]
     (row,) = [c.kwargs for c in sel.return_value.log_tool_invocation.call_args_list]

@@ -18,16 +18,16 @@ from typing import Any
 import pytest
 from test_transcript_file_change_bound import _loaded_slot, _plain
 
-from kiro_crew import channel_transcript_migration
-from kiro_crew import history as history_module
-from kiro_crew import history_rewrite
-from kiro_crew.dashboard import chat_persistence
-from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-from kiro_crew.dashboard.slot_persistence import transcript_merge
-from kiro_crew.dashboard.slot_persistence.transcript_merge import (
+from aj_crew import channel_transcript_migration
+from aj_crew import history as history_module
+from aj_crew import history_rewrite
+from aj_crew.dashboard import chat_persistence
+from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+from aj_crew.dashboard.slot_persistence import transcript_merge
+from aj_crew.dashboard.slot_persistence.transcript_merge import (
     _frozen_prefix_and_foreign_appends,
 )
-from kiro_crew.history import ARCHIVE_DIR_NAME, ConversationLog
+from aj_crew.history import ARCHIVE_DIR_NAME, ConversationLog
 
 
 def _refuse(*_a: Any, **_k: Any) -> None:
@@ -478,8 +478,8 @@ class TestEveryWholeTranscriptReplaceIsSynced:
     def test_the_agent_selection_rollback(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import execution_context
-        from kiro_crew.session_agent_selection import SelectionChange, restore_agent_selection
+        from aj_crew import execution_context
+        from aj_crew.session_agent_selection import SelectionChange, restore_agent_selection
 
         published = {"store": {"store_id": "default"}}
         monkeypatch.setattr(execution_context, "restore_live_session_execution", lambda *_a: False)

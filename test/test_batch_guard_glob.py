@@ -15,26 +15,26 @@ import pytest
 
 
 def _glob_matches(pattern: str, resource: str) -> bool:
-    guard = importlib.import_module("kiro_crew.acp.batch_guard")
+    guard = importlib.import_module("aj_crew.acp.batch_guard")
     return guard._glob_matches(pattern, resource, unread=False)
 
 
 @pytest.mark.parametrize(
     ("pattern", "resource", "expected"),
     [
-        ("kirocrew-work/work_report", "kirocrew-work/work_report", True),
-        ("kirocrew-work/work_report", "kirocrew-work/work_reports", False),
-        ("kirocrew-work/*", "kirocrew-work/work_report", True),
-        ("kirocrew-work/*", "kirocrew-work/a/b", False),
-        ("*", "kirocrew-work/work_report", False),
-        ("**", "kirocrew-work/work_report", True),
+        ("ajcrew-work/work_report", "ajcrew-work/work_report", True),
+        ("ajcrew-work/work_report", "ajcrew-work/work_reports", False),
+        ("ajcrew-work/*", "ajcrew-work/work_report", True),
+        ("ajcrew-work/*", "ajcrew-work/a/b", False),
+        ("*", "ajcrew-work/work_report", False),
+        ("**", "ajcrew-work/work_report", True),
         ("**", "", True),
         ("*", "", True),
         ("***", "a/b", True),
-        ("kirocrew-work/work_?eport", "kirocrew-work/work_report", True),
-        ("kirocrew-work/work_?eport", "kirocrew-work/work_/eport", False),
-        ("kirocrew-*/session_*", "kirocrew-dashboard/session_send", True),
-        ("**/session_send", "kirocrew-dashboard/session_send", True),
+        ("ajcrew-work/work_?eport", "ajcrew-work/work_report", True),
+        ("ajcrew-work/work_?eport", "ajcrew-work/work_/eport", False),
+        ("ajcrew-*/session_*", "ajcrew-dashboard/session_send", True),
+        ("**/session_send", "ajcrew-dashboard/session_send", True),
         # A segment star must hand the slash back to an earlier ** to match.
         ("a**b*c", "ab/bc", True),
         ("a.b/c", "aXb/c", False),
@@ -45,7 +45,7 @@ def test_the_glob_reads_star_globstar_and_question_mark(pattern, resource, expec
 
 
 def test_a_long_run_of_stars_is_matched_in_bounded_work():
-    guard = importlib.import_module("kiro_crew.acp.batch_guard")
+    guard = importlib.import_module("aj_crew.acp.batch_guard")
     pattern = "a" + "*" * 30 + "b"
     resource = "a" * 5000
     matched, steps = guard._glob_match_steps(pattern, resource)

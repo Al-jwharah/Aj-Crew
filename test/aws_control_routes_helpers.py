@@ -18,8 +18,8 @@ from unittest.mock import AsyncMock
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import aws_consent
-from kiro_crew.apps.builtins.aws_control.backend import routes as routes_mod
+from aj_crew import aws_consent
+from aj_crew.apps.builtins.aws_control.backend import routes as routes_mod
 
 BASE = "/api/apps/aws-control"
 ACCOUNT = "111122223333"
@@ -94,5 +94,5 @@ def _consent_ok():
     return mock.patch.object(routes_mod.aws_consent, "refuse_and_log", AsyncMock(return_value=True))
 
 
-def _drive_found(name: str = "kirocrew-drive-abc"):
+def _drive_found(name: str = "ajcrew-drive-abc"):
     return mock.patch.object(routes_mod.storage_mod, "find_drive", return_value=name)

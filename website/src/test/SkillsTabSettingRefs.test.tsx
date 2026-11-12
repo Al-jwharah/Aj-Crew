@@ -75,7 +75,7 @@ describe('SkillsTab SettingRef call sites', () => {
     // Need at least one skill so the main list renders (not empty state)
     // and at least one pending candidate so the panel renders
     mockApi.skills.mockResolvedValue([
-      { key: 'existing', name: 'existing', description: 'a skill', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'existing', name: 'existing', description: 'a skill', source: 'ajcrew', loaded_by_agents: [] },
     ])
 
     // Mock the pending skills API to return a candidate
@@ -98,7 +98,7 @@ describe('SkillsTab SettingRef call sites', () => {
 
   it('pending panel hint surfaces the auto-approve opt-out and the script and update caveats', async () => {
     mockApi.skills.mockResolvedValue([
-      { key: 'existing', name: 'existing', description: 'a skill', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'existing', name: 'existing', description: 'a skill', source: 'ajcrew', loaded_by_agents: [] },
     ])
     mockApi.skillsPending.mockResolvedValue({
       pending: [{ slug: 'test-candidate', name: 'Test Candidate', description: 'a candidate', has_scripts: false, created: Date.now() }],
@@ -122,7 +122,7 @@ describe('SkillsTab SettingRef call sites', () => {
 
   it('script-bearing candidates carry the always-requires-review explanation', async () => {
     mockApi.skills.mockResolvedValue([
-      { key: 'existing', name: 'existing', description: 'a skill', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'existing', name: 'existing', description: 'a skill', source: 'ajcrew', loaded_by_agents: [] },
     ])
     mockApi.skillsPending.mockResolvedValue({
       pending: [

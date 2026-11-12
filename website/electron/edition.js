@@ -2,8 +2,8 @@
 // Which edition this desktop build is: "oss" or "lts".
 //
 // Fixed when the app is BUILT, never at run time, from the same stamp the
-// backend's kiro_crew/edition.py gets: packaging/build-desktop.sh reads
-// KIROCREW_BUILD_EDITION (set by `make desktop EDITION=lts`) and, for an
+// backend's aj_crew/edition.py gets: packaging/build-desktop.sh reads
+// AJCREW_BUILD_EDITION (set by `make desktop EDITION=lts`) and, for an
 // LTS build only, stages the file EDITION next to this module. package.json
 // `files` packs it into app.asar, so it is trusted as code is trusted. An oss
 // build stages nothing and packs nothing. No environment variable or config

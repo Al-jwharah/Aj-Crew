@@ -40,15 +40,15 @@ from types import ModuleType
 
 import pytest
 
-from kiro_crew import cloud, crew_log, skill_providers
-from kiro_crew.apps.builtins.papyrus import backend as papyrus_backend
-from kiro_crew.apps.builtins.papyrus.backend import gitops, store
-from kiro_crew.cloud import config as cloud_config
-from kiro_crew.cloud import ec2, fargate_engine, login_target, ssm
-from kiro_crew.cloud.fargate import identity, runtask, taskdef
-from kiro_crew.crew_log import schema as crew_log_schema
-from kiro_crew.dashboard.handlers import artifacts as artifact_handlers
-from kiro_crew.skill_providers import github as skill_provider_github
+from aj_crew import cloud, crew_log, skill_providers
+from aj_crew.apps.builtins.papyrus import backend as papyrus_backend
+from aj_crew.apps.builtins.papyrus.backend import gitops, store
+from aj_crew.cloud import config as cloud_config
+from aj_crew.cloud import ec2, fargate_engine, login_target, ssm
+from aj_crew.cloud.fargate import identity, runtask, taskdef
+from aj_crew.crew_log import schema as crew_log_schema
+from aj_crew.dashboard.handlers import artifacts as artifact_handlers
+from aj_crew.skill_providers import github as skill_provider_github
 
 #: Packages whose modules validate client-supplied input on a request path.
 #: The structural walk imports every module in each -- recursively, so a
@@ -68,11 +68,11 @@ _VALIDATORS = (
     pytest.param(ec2._TAG_RE, "my-crew-1", id="cloud-ec2-tag"),
     pytest.param(ec2._REGION_RE, "us-east-1", id="cloud-ec2-region"),
     pytest.param(ec2._CIDR_RE, "10.0.0.0/16", id="cloud-ec2-cidr"),
-    pytest.param(ec2._REPO_RE, "https://github.com/kirodotdev/KiroCrew.git", id="cloud-ec2-repo"),
+    pytest.param(ec2._REPO_RE, "https://github.com/Al-jwharah/Aj-Crew.git", id="cloud-ec2-repo"),
     pytest.param(ec2._REF_RE, "release/1.2", id="cloud-ec2-ref"),
     pytest.param(ec2._PROFILE_SPEC.pattern, "default", id="cloud-ec2-profile"),
     pytest.param(ec2._SUBNET_ID_RE, "subnet-0123456789abcdef0", id="cloud-ec2-subnet-id"),
-    pytest.param(fargate_engine._TAG_VALUE_RE, "kirocrew_launch-1", id="cloud-engine-tag-value"),
+    pytest.param(fargate_engine._TAG_VALUE_RE, "ajcrew_launch-1", id="cloud-engine-tag-value"),
     pytest.param(login_target._REGION_RE, "ap-southeast-2", id="cloud-login-region"),
     pytest.param(login_target._HOSTNAME_RE, "example.awsapps.com", id="cloud-login-hostname"),
     pytest.param(ssm._USERNAME_RE, "ec2-user", id="cloud-ssm-username"),
@@ -82,15 +82,15 @@ _VALIDATORS = (
     pytest.param(identity._REGION_RE, "us-east-1", id="cloud-identity-region"),
     pytest.param(
         identity._SECRET_NAME_RE,
-        "kirocrew/crew/my-crew/gateway_token",
+        "ajcrew/crew/my-crew/gateway_token",
         id="cloud-identity-secret-name",
     ),
     pytest.param(identity._SECRET_SUFFIX_RE, "Ab12Cd", id="cloud-identity-secret-suffix"),
     pytest.param(identity._SECRET_TAIL_RE, "gateway_token-Ab12Cd", id="cloud-identity-secret-tail"),
-    pytest.param(runtask._TAG_VALUE_RE, "kirocrew_launch-1", id="cloud-runtask-tag-value"),
+    pytest.param(runtask._TAG_VALUE_RE, "ajcrew_launch-1", id="cloud-runtask-tag-value"),
     pytest.param(
         taskdef._DIGEST_REF_RE,
-        "public.ecr.aws/kirocrew/crew@sha256:" + "0" * 64,
+        "public.ecr.aws/ajcrew/crew@sha256:" + "0" * 64,
         id="cloud-taskdef-digest-ref",
     ),
     pytest.param(skill_provider_github._OWNER_RE, "acme", id="skill-provider-owner"),

@@ -11,10 +11,10 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.constants import CHANNEL_SESSION_NAMESPACES
-from kiro_crew.crew_log.entry_types_lifecycle import ACTOR_VALUES
-from kiro_crew.messaging.link import TELEMETRY_CHANNELS
-from kiro_crew.metrics import usage_attrs as ua
+from aj_crew.constants import CHANNEL_SESSION_NAMESPACES
+from aj_crew.crew_log.entry_types_lifecycle import ACTOR_VALUES
+from aj_crew.messaging.link import TELEMETRY_CHANNELS
+from aj_crew.metrics import usage_attrs as ua
 
 
 def test_trigger_source_values_are_pinned():

@@ -112,7 +112,7 @@ vi.mock('@dnd-kit/core', async (importOriginal) => {
 
 const mocks = vi.hoisted(() => ({
   chatFolders: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
   updateChatFolder: vi.fn(),
   reorderChatFolders: vi.fn(),
   setSlotFolder: vi.fn(),
@@ -178,8 +178,8 @@ function renderSidebar(opts: {
   const config = opts.folderSort === undefined ? { dashboard: {} }
     : opts.folderSort === null ? null
       : { dashboard: { folder_sort: opts.folderSort } }
-  if (config) mocks.kirocrewConfig.mockResolvedValue(config)
-  else mocks.kirocrewConfig.mockImplementation(() => new Promise(() => {}))
+  if (config) mocks.ajcrewConfig.mockResolvedValue(config)
+  else mocks.ajcrewConfig.mockImplementation(() => new Promise(() => {}))
 
   let pane: HTMLElement | null = null
   if (opts.onDropSessionRef) {
@@ -210,7 +210,7 @@ function renderSidebar(opts: {
   })
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
   qc.setQueryData(['chat-folders'], folders)
-  if (config) qc.setQueryData(['kirocrewConfig'], config)
+  if (config) qc.setQueryData(['ajcrewConfig'], config)
   const tree = (rows: TestSlot[]) => (
     <QueryClientProvider client={qc}>
       <Provider store={store}>
@@ -269,7 +269,7 @@ beforeEach(() => {
   hapticMock.mockReset()
   for (const m of Object.values(mocks)) m.mockReset()
   mocks.chatFolders.mockResolvedValue(FOLDERS)
-  mocks.kirocrewConfig.mockResolvedValue({ dashboard: {} })
+  mocks.ajcrewConfig.mockResolvedValue({ dashboard: {} })
   mocks.updateChatFolder.mockResolvedValue({ ok: true })
   mocks.reorderChatFolders.mockResolvedValue({ ok: true })
   mocks.setSlotFolder.mockResolvedValue({ ok: true })

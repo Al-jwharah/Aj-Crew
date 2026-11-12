@@ -63,13 +63,13 @@ const patchConfig = vi.fn(async (path: string, value: unknown) => {
   if (path === 'dashboard.session_sort') serverConfig.dashboard.session_sort = value
   return { ok: true }
 })
-const kirocrewConfig = vi.fn(async () => ({ dashboard: { ...serverConfig.dashboard } }))
+const ajcrewConfig = vi.fn(async () => ({ dashboard: { ...serverConfig.dashboard } }))
 vi.mock('../api/client', () => ({
   SEARCH_MIN_CHARS: 2,
   api: new Proxy({} as Record<string, unknown>, {
     get: (_t, name: string) => {
       if (name === 'patchConfig') return patchConfig
-      if (name === 'kirocrewConfig') return kirocrewConfig
+      if (name === 'ajcrewConfig') return ajcrewConfig
       return vi.fn().mockResolvedValue([])
     },
   }),
@@ -108,7 +108,7 @@ function renderSidebar(dashboard: Record<string, unknown>) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity, refetchOnMount: false }, mutations: { retry: false } } })
   qc.setQueryData(['chat-folders'], FOLDERS)
   serverConfig.dashboard = { ...dashboard }
-  qc.setQueryData(['kirocrewConfig'], { dashboard: { ...dashboard } })
+  qc.setQueryData(['ajcrewConfig'], { dashboard: { ...dashboard } })
   return render(
     <QueryClientProvider client={qc}>
       <Provider store={store}>
@@ -131,7 +131,7 @@ function radioStateByText(getAllByRole: (r: string) => HTMLElement[], label: str
   return row ? row.getAttribute('aria-checked') : null
 }
 
-beforeEach(() => { localStorage.clear(); patchConfig.mockClear(); kirocrewConfig.mockClear() })
+beforeEach(() => { localStorage.clear(); patchConfig.mockClear(); ajcrewConfig.mockClear() })
 afterEach(() => vi.clearAllMocks())
 
 describe('chat sidebar — sort-and-filter menu announces the checked row (#14178)', () => {

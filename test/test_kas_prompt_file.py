@@ -13,16 +13,16 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.agent as agent_mod
-import kiro_crew.config.paths as paths_mod
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp.harness.kas import KasHarness
-from kiro_crew.acp.kas_agents import (
+import aj_crew.agent as agent_mod
+import aj_crew.config.paths as paths_mod
+from aj_crew.acp import kas_agents
+from aj_crew.acp.harness.kas import KasHarness
+from aj_crew.acp.kas_agents import (
     KasAgentTranslationError,
     build_kas_custom_agents,
     resolve_prompt,
 )
-from kiro_crew.agent_sdk.spec_hooks import kas_spec_load_error
+from aj_crew.agent_sdk.spec_hooks import kas_spec_load_error
 
 
 @pytest.mark.parametrize("ref", ["file://$N9_PROMPTS/p.md", "file://${N9_PROMPTS}/p.md"])
@@ -104,10 +104,10 @@ async def test_a_resumed_session_keeps_the_notice(monkeypatch, tmp_path):
     # off the handle that ``session/load`` built.
     from acp_runtime_helpers import _make_runtime
 
-    from kiro_crew.acp.harness import SessionExtras
-    from kiro_crew.acp.types import ACP_BACKEND_KAS, METHOD_SESSION_LOAD
+    from aj_crew.acp.harness import SessionExtras
+    from aj_crew.acp.types import ACP_BACKEND_KAS, METHOD_SESSION_LOAD
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew-home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew-home"))
     rt, _, _ = _make_runtime()
     rt._can_load_session = True
     rt._acp_backend = ACP_BACKEND_KAS

@@ -58,7 +58,7 @@ describe('chain parity with the server', () => {
     // Read the backend's own table rather than restating it: a chain changed
     // there and not here is the drift this test exists for.
     const py = readFileSync(
-      resolve(__dirname, '../../../src/kiro_crew/dashboard/appearances.py'),
+      resolve(__dirname, '../../../src/aj_crew/dashboard/appearances.py'),
       'utf-8',
     )
     for (const [state, chain] of [

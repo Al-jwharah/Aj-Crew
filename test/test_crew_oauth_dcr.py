@@ -12,9 +12,9 @@ import urllib.parse
 
 import pytest
 
-from kiro_crew.connections import crew_oauth, crew_oauth_dcr, registry
-from kiro_crew.connections.crew_oauth import CrewOAuthError, Tokens, TokenStore
-from kiro_crew.connections.crew_oauth_dcr import ClientStore
+from aj_crew.connections import crew_oauth, crew_oauth_dcr, registry
+from aj_crew.connections.crew_oauth import CrewOAuthError, Tokens, TokenStore
+from aj_crew.connections.crew_oauth_dcr import ClientStore
 
 STRIPE_MCP = "https://mcp.stripe.com"
 STRIPE_ISS = "https://access.stripe.com/mcp"
@@ -64,8 +64,8 @@ class Vendor:
 
 @pytest.fixture()
 def vendor(tmp_path, monkeypatch):
-    import kiro_crew.config.paths as paths
-    import kiro_crew.mcp_oauth_discovery as disc
+    import aj_crew.config.paths as paths
+    import aj_crew.mcp_oauth_discovery as disc
 
     monkeypatch.setattr(paths, "config_dir", lambda: tmp_path)
     v = Vendor()
@@ -91,11 +91,11 @@ def _registered(vendor):
 # --- discovery and registration ----------------------------------------------
 
 
-def test_a_public_card_registers_kiro_crew_once_and_asks_for_resource(vendor):
+def test_a_public_card_registers_aj_crew_once_and_asks_for_resource(vendor):
     plan = asyncio.run(crew_oauth_dcr.prepare("stripe"))
     (call,) = _registered(vendor)
     body = call[3]
-    assert body["client_name"] == "Kiro Crew"
+    assert body["client_name"] == "Aj Crew"
     assert body["redirect_uris"] == ["http://127.0.0.1:48100/callback"]
     assert body["token_endpoint_auth_method"] == "none"
     assert plan.client.client_id == "cid-1" and plan.client.client_secret is None
@@ -375,8 +375,8 @@ def test_the_shared_port_is_reserved_in_the_registry():
 
 
 def test_forget_kas_grant_deletes_only_that_urls_entries(tmp_path):
-    from kiro_crew.mcp_grant_kas import forget_kas_grant, kas_connection_hash
-    from kiro_crew.secrets import SecretVault
+    from aj_crew.mcp_grant_kas import forget_kas_grant, kas_connection_hash
+    from aj_crew.secrets import SecretVault
 
     vault = SecretVault(tmp_path)
     digest = kas_connection_hash(STRIPE_MCP)
@@ -393,9 +393,9 @@ def test_forget_kas_grant_deletes_only_that_urls_entries(tmp_path):
 def test_harness_grants_go_only_when_the_full_census_finds_no_sharer(
     monkeypatch, project_dirs, shared, unlinked
 ):
-    import kiro_crew.connections.ownership as ownership
-    import kiro_crew.mcp_grant as mcp_grant
-    import kiro_crew.mcp_grant_kas as mcp_grant_kas
+    import aj_crew.connections.ownership as ownership
+    import aj_crew.mcp_grant as mcp_grant
+    import aj_crew.mcp_grant_kas as mcp_grant_kas
 
     forgot: list[str] = []
     gone: list[str] = []
@@ -539,7 +539,7 @@ def test_post_reads_an_answer_that_arrives_in_pieces(monkeypatch):
 
 
 def test_an_unreachable_endpoint_is_a_coded_failure(monkeypatch):
-    from kiro_crew.link_unfurl import UnfurlRejected
+    from aj_crew.link_unfurl import UnfurlRejected
 
     async def _session(url):
         raise UnfurlRejected("blocked_url")
@@ -552,7 +552,7 @@ def test_an_unreachable_endpoint_is_a_coded_failure(monkeypatch):
 
 
 def test_a_dcr_connect_reaches_waiting_through_the_mint_row(vendor, monkeypatch):
-    from kiro_crew.connections import mint
+    from aj_crew.connections import mint
 
     monkeypatch.setattr(crew_oauth_dcr, "DCR_CALLBACK_PORT", 0)
     monkeypatch.setattr(mint, "_mints", {})
@@ -581,7 +581,7 @@ def test_a_dcr_connect_reaches_waiting_through_the_mint_row(vendor, monkeypatch)
 )
 def test_each_cards_consent_link_passes_the_banner_gate(authorize):
     """The six live ``authorization_endpoint`` values, with ``resource`` and the shared redirect."""
-    from kiro_crew.security import oauth_url_contains_credential
+    from aj_crew.security import oauth_url_contains_credential
 
     client = crew_oauth_dcr.Client(
         client_id="3f9c2a7e-1b4d-4c8a-9e0f-5a6b7c8d9e0f",
@@ -610,11 +610,11 @@ POD_REDIRECT = f"{POD}/api/connections/oauth/callback"
 def _config(monkeypatch, url, tunnel=""):
     from types import SimpleNamespace
 
-    import kiro_crew.config as config
-    import kiro_crew.tunnel as tunnel_mod
+    import aj_crew.config as config
+    import aj_crew.tunnel as tunnel_mod
 
     cfg = SimpleNamespace(dashboard=SimpleNamespace(url=url))
-    monkeypatch.setattr(config.KiroCrewConfig, "load", staticmethod(lambda *a, **k: cfg))
+    monkeypatch.setattr(config.AjCrewConfig, "load", staticmethod(lambda *a, **k: cfg))
     monkeypatch.setattr(tunnel_mod, "get_tunnel_url", lambda: tunnel)
 
 
@@ -649,7 +649,7 @@ def test_a_gateway_gaining_a_public_url_registers_again_and_drops_the_old_pair(v
 def _gateway_app():
     from aiohttp import web
 
-    from kiro_crew.dashboard.handlers.connections import api_connections_oauth_callback
+    from aj_crew.dashboard.handlers.connections import api_connections_oauth_callback
 
     app = web.Application()
     app.router.add_get(
@@ -686,7 +686,7 @@ def _ok_handler(calls):
         from aiohttp import web
 
         calls.append(request.query.get("code"))
-        return web.Response(text="Signed in. You can close this tab and return to Kiro Crew.")
+        return web.Response(text="Signed in. You can close this tab and return to Aj Crew.")
 
     return _h
 
@@ -755,8 +755,8 @@ def test_the_gateway_route_never_reflects_input(audits):
 def test_the_gateway_route_is_token_free_for_get_only():
     from aiohttp import web
 
-    from kiro_crew.dashboard.routes import agent_config
-    from kiro_crew.dashboard.token_auth_paths import (
+    from aj_crew.dashboard.routes import agent_config
+    from aj_crew.dashboard.token_auth_paths import (
         _BYPASS_EXACT,
         _BYPASS_EXACT_METHODS,
         CREW_OAUTH_CALLBACK_PATH,

@@ -21,7 +21,7 @@ const OUT = process.argv[2] || '../temp-screenshots/chat-config-per-field-merge'
 mkdirSync(OUT, { recursive: true })
 
 const slots = [{
-  key: 's1', title: 'Worker', messages: 2, running: false, agent: 'kirocrew',
+  key: 's1', title: 'Worker', messages: 2, running: false, agent: 'ajcrew',
   created: '2026-09-19T01:00:00Z', last_ts: '2026-09-19T21:14:00Z',
 }]
 

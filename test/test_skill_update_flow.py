@@ -20,8 +20,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew import history as H
-from kiro_crew.history import HistoryConsolidator
+from aj_crew import history as H
+from aj_crew.history import HistoryConsolidator
 
 _LIVE_BODY = "## When to use\nold\n## Steps\n1. old\n## Gotchas\nnone\n"
 
@@ -108,7 +108,7 @@ def _mk(loader, approval_required=True, **kw):
 
 
 def _sel_recorder(recorded):
-    ctx = patch("kiro_crew.history.sel")
+    ctx = patch("aj_crew.history.sel")
     mock = ctx.start()
     mock.return_value.log_tool_invocation = lambda **k: recorded.append(k)
     return ctx
@@ -669,7 +669,7 @@ async def test_stage_update_truncates_long_target_slug():
     `<slug>-update` would exceed the 64-char slug cap and staging would REJECT it
     — silently dropping the learning, since consolidation advances its offset
     regardless. The slug must be truncated so the suffix fits."""
-    from kiro_crew.skills import _AUTO_NAME_PATTERN
+    from aj_crew.skills import _AUTO_NAME_PATTERN
 
     long_slug = "d" * 60
     assert _AUTO_NAME_PATTERN.match(long_slug)  # the target itself is legal
@@ -992,13 +992,13 @@ async def test_base_version_is_captured_before_the_body_it_describes():
 
 
 def _prov(session_key="s"):
-    from kiro_crew.skills import AutoSkillProvenance
+    from aj_crew.skills import AutoSkillProvenance
 
     return AutoSkillProvenance(session_key=session_key, created_at=AutoSkillProvenance.now_iso())
 
 
 def _real_loader_with_live(tmp_path, slug="deploy-helper"):
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.skills import SkillsLoader
 
     loader = SkillsLoader(skills_path=tmp_path / "skills", install_builtins=False)
     assert (
@@ -1046,7 +1046,7 @@ def _stage_direct(
 
 @pytest.fixture()
 def consumed(monkeypatch):
-    from kiro_crew import skills_auto_model
+    from aj_crew import skills_auto_model
 
     events: list[dict] = []
     monkeypatch.setattr(skills_auto_model, "_PENDING_CONSUMED_HOOK", events.append)
@@ -1088,8 +1088,8 @@ async def test_two_sessions_leave_one_pending_update_merged_from_live(tmp_path, 
 
 
 def test_staged_update_records_the_digest_of_its_files(tmp_path):
-    from kiro_crew.skill_runtime.auto_skills import _staged_digest
-    from kiro_crew.skills_review import _candidate_digest
+    from aj_crew.skill_runtime.auto_skills import _staged_digest
+    from aj_crew.skills_review import _candidate_digest
 
     loader = _real_loader_with_live(tmp_path)
     name = _stage_direct(loader, "u-one", scripts=[{"filename": "run.sh", "content": "echo hi\n"}])
@@ -1109,7 +1109,7 @@ def test_staged_update_records_the_digest_of_its_files(tmp_path):
 
 @pytest.mark.parametrize("base_version", [1, None], ids=["matching-base", "no-base"])
 def test_unreadable_new_update_keeps_a_readable_queued_update(tmp_path, consumed, base_version):
-    from kiro_crew.skills_candidate_tree import _PENDING_SCRIPT_MAX_ENTRIES
+    from aj_crew.skills_candidate_tree import _PENDING_SCRIPT_MAX_ENTRIES
 
     loader = _real_loader_with_live(tmp_path)
     assert _stage_direct(loader, "u-readable") == "auto/u-readable"
@@ -1153,7 +1153,7 @@ def _fifo_as_script(pdir):
 @pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="needs os.mkfifo")
 @pytest.mark.parametrize("plant", [_fifo_as_skill_md, _fifo_as_script], ids=["skill-md", "script"])
 def test_a_fifo_in_a_candidate_has_no_digest_and_does_not_block(tmp_path, plant):
-    from kiro_crew.skill_runtime.auto_skills import _staged_digest
+    from aj_crew.skill_runtime.auto_skills import _staged_digest
 
     loader = _real_loader_with_live(tmp_path)
     name = _stage_direct(loader, "u-fifo", scripts=[{"filename": "run.sh", "content": "echo hi\n"}])
@@ -1215,7 +1215,7 @@ def test_replacement_keeps_a_queued_update_with_fifo_metadata(tmp_path, consumed
 
 
 def test_replacement_removes_an_untouched_update_with_redacted_metadata(tmp_path, consumed):
-    from kiro_crew.skills_review import _candidate_digest
+    from aj_crew.skills_review import _candidate_digest
 
     loader = _real_loader_with_live(tmp_path)
     first = _stage_direct(
@@ -1237,7 +1237,7 @@ def test_replacement_removes_an_untouched_update_with_redacted_metadata(tmp_path
 def test_replacement_keeps_an_oversized_queued_update_without_reading_it(
     tmp_path, consumed, monkeypatch
 ):
-    from kiro_crew.skills_auto_model import _PENDING_DOCUMENT_MAX_BYTES
+    from aj_crew.skills_auto_model import _PENDING_DOCUMENT_MAX_BYTES
 
     loader = _real_loader_with_live(tmp_path)
     first = _stage_direct(loader, "u-big").split("/", 1)[1]
@@ -1390,7 +1390,7 @@ def test_replacement_keeps_queued_updates_when_live_version_is_unreadable(tmp_pa
 
 
 def test_a_failed_removal_keeps_the_queued_update(tmp_path, consumed, monkeypatch):
-    from kiro_crew.skill_runtime import auto_skills
+    from aj_crew.skill_runtime import auto_skills
 
     loader = _real_loader_with_live(tmp_path)
     first = _stage_direct(loader, "u-one").split("/", 1)[1]
@@ -1436,7 +1436,7 @@ def test_dismiss_with_the_read_digest_deletes(tmp_path, consumed):
 
 
 def test_dismiss_with_a_stale_digest_refuses_and_keeps(tmp_path, consumed):
-    from kiro_crew.skills import PendingDismissRefused
+    from aj_crew.skills import PendingDismissRefused
 
     loader = _real_loader_with_live(tmp_path)
     slug = _stage_direct(loader, "u-one").split("/", 1)[1]
@@ -1451,7 +1451,7 @@ def test_dismiss_with_a_stale_digest_refuses_and_keeps(tmp_path, consumed):
 
 
 def test_dismiss_with_a_digest_refuses_an_unreadable_candidate(tmp_path, monkeypatch):
-    from kiro_crew.skills import PendingDismissRefused
+    from aj_crew.skills import PendingDismissRefused
 
     loader = _real_loader_with_live(tmp_path)
     slug = _stage_direct(loader, "u-one").split("/", 1)[1]
@@ -1467,7 +1467,7 @@ def test_dismiss_with_a_digest_refuses_an_unreadable_candidate(tmp_path, monkeyp
 def test_dismiss_with_a_digest_refuses_without_the_lock(tmp_path, monkeypatch):
     import contextlib
 
-    from kiro_crew.skills import PendingDismissRefused
+    from aj_crew.skills import PendingDismissRefused
 
     loader = _real_loader_with_live(tmp_path)
     slug = _stage_direct(loader, "u-one").split("/", 1)[1]

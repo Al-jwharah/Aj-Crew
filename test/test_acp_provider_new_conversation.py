@@ -13,10 +13,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.transport_errors import AcpError
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_OPENCODE
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.transport_errors import AcpError
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_OPENCODE
+from aj_crew.providers.acp import AcpProvider
 
 
 def _provider_over(client: object) -> AcpProvider:

@@ -7,7 +7,7 @@ unusable file, so each gives that same answer instead of raising
 
 * ``mcp_discovery_config._load_agent_config`` skips the project-dir and the
   bundled ``defaults.json``;
-* ``KiroCrewConfig._resolve_agent_model`` falls back to the default model.
+* ``AjCrewConfig._resolve_agent_model`` falls back to the default model.
 """
 
 from __future__ import annotations
@@ -18,10 +18,10 @@ from typing import TypeVar
 
 import pytest
 
-from kiro_crew import mcp_discovery_config
-from kiro_crew.config import loader
-from kiro_crew.config.loader_config import KiroCrewConfig
-from kiro_crew.config.sections import DEFAULT_MODEL
+from aj_crew import mcp_discovery_config
+from aj_crew.config import loader
+from aj_crew.config.loader_config import AjCrewConfig
+from aj_crew.config.sections import DEFAULT_MODEL
 
 T = TypeVar("T")
 
@@ -47,7 +47,7 @@ def test_project_dir_defaults_that_do_not_decode_are_skipped(tmp_path, monkeypat
     project = tmp_path / "project"
     (project / "agents").mkdir(parents=True)
     _undecodable_defaults(project / "agents")
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(project))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(project))
     empty_home = tmp_path / "home"
     (empty_home / ".kiro" / "agents").mkdir(parents=True)
 
@@ -57,7 +57,7 @@ def test_project_dir_defaults_that_do_not_decode_are_skipped(tmp_path, monkeypat
 
 
 def test_bundled_defaults_that_do_not_decode_are_skipped(tmp_path, monkeypatch):
-    monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+    monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
     bundled = Path(mcp_discovery_config.__file__).resolve().parent / "config" / "defaults.json"
     real_read_text = Path.read_text
 
@@ -87,7 +87,7 @@ def test_model_resolution_skips_bundled_defaults_that_do_not_decode(tmp_path, mo
     monkeypatch.setattr(loader, "config_package_dir", lambda: package)
     monkeypatch.setattr(loader, "kiro_agents_dir", lambda: agents)
 
-    assert _read(KiroCrewConfig._resolve_agent_model) == DEFAULT_MODEL
+    assert _read(AjCrewConfig._resolve_agent_model) == DEFAULT_MODEL
 
 
 @pytest.mark.parametrize("raw", [b"{not json", b"{}"])
@@ -102,4 +102,4 @@ def test_model_resolution_answers_the_same_for_bad_json(tmp_path, monkeypatch, r
     monkeypatch.setattr(loader, "config_package_dir", lambda: package)
     monkeypatch.setattr(loader, "kiro_agents_dir", lambda: agents)
 
-    assert KiroCrewConfig._resolve_agent_model() == DEFAULT_MODEL
+    assert AjCrewConfig._resolve_agent_model() == DEFAULT_MODEL

@@ -2,7 +2,7 @@
 
 The adapter announces a child only to a client that declares
 ``clientCapabilities.subagents``, and then sends the child's own frames on the child's
-session. ``kiro_crew.acp.client_native_children`` reads that form on ``AcpClient``:
+session. ``aj_crew.acp.client_native_children`` reads that form on ``AcpClient``:
 the capability (section 1), the frames of one live capture turned into the roster
 and activity events the native cards read (section 2), the state table and the
 bounds (section 3), the cards those events draw (section 4), the approval gate a
@@ -33,19 +33,19 @@ from turn_harness import (
     run_turn,
 )
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.client_native_children import (
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.client_native_children import (
     CLAUDE_CLIENT_CAPABILITIES,
     _label,
     _standard_state_status,
 )
-from kiro_crew.acp.session_handle_native_children import (
+from aj_crew.acp.session_handle_native_children import (
     NATIVE_CHILD_LABEL_CAP,
     NATIVE_CHILD_NOT_RESUMABLE,
     NATIVE_CHILD_ROSTER_CAP,
     NATIVE_CHILDREN_UNCHARGED_KIND,
 )
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     ACP_CLIENT_CAPABILITIES,
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
@@ -58,7 +58,7 @@ from kiro_crew.acp.types import (
     AcpEvent,
     JsonRpcMessage,
 )
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_DEEPSEEK,
     ACP_BACKEND_GOOSE,
@@ -66,11 +66,11 @@ from kiro_crew.agent_sdk.backends import (
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
 )
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard import session_health
-from kiro_crew.dashboard.chat_runner import _native_subagent_sync
-from kiro_crew.hook_runtime.hook_types import HooksConfig
-from kiro_crew.hooks import HookManager
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard import session_health
+from aj_crew.dashboard.chat_runner import _native_subagent_sync
+from aj_crew.hook_runtime.hook_types import HooksConfig
+from aj_crew.hooks import HookManager
 
 CAPTURE = Path(__file__).parent / "fixtures" / "claude_native_subagents" / "agent-task-0.94.0.jsonl"
 PARENT = "parent-0001"
@@ -627,7 +627,7 @@ async def test_an_overlong_link_is_ignored_and_one_past_the_cap_is_counted() -> 
 async def test_the_overflow_is_said_once_at_the_next_turn_and_cleared(caplog) -> None:
     client = _client()
     client._native_child_overflow = 2
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
         await _turn(client, [])
         await _turn(client, [])
     said = [r.getMessage() for r in caplog.records if "native child store made" in r.getMessage()]
@@ -932,7 +932,7 @@ async def test_spawn_continue_on_a_claude_child_gets_the_typed_refusal() -> None
     """Through the real ``continue_conversation`` path, with the claude client as
     a live session's provider client: the child id has no conversation, so the
     run is refused with ``native_child_not_resumable`` before any session starts."""
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.subagent import SubagentManager
 
     client = await _client_after_capture()
     sessions = MagicMock()
@@ -944,7 +944,7 @@ async def test_spawn_continue_on_a_claude_child_gets_the_typed_refusal() -> None
     ctx = MagicMock()
     ctx.hooks.auto_approve_subagent_spawn = True
     manager = SubagentManager(sessions=sessions, ctx_builder=ctx)
-    with patch("kiro_crew.subagent.sel"), patch("kiro_crew.subagent.read_state", return_value=None):
+    with patch("aj_crew.subagent.sel"), patch("aj_crew.subagent.read_state", return_value=None):
         info = manager.continue_conversation(CHILD, "keep going")
     assert info is not None and info.done
     assert info.error and info.error.startswith(f"{NATIVE_CHILD_NOT_RESUMABLE}: {CHILD}")

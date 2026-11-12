@@ -24,11 +24,11 @@ the First Principles lane reads that decision off the base branch.
 **Where it lands.** Since #30149 (merged 2026-11-05), core pins PPTX Maker to
 the app repository
 [`KiroCrewCaptain/kirocrew-app-pptx-maker`](https://github.com/KiroCrewCaptain/kirocrew-app-pptx-maker)
-(`src/kiro_crew/apps/adoption-pins.json`, version 0.3.1 at `1c47c5099d`), and a
+(`src/aj_crew/apps/adoption-pins.json`, version 0.3.1 at `1c47c5099d`), and a
 host moves its built-in record onto that repository at its next restart. The
 implementation therefore lands in the app repository, followed by a pin bump in
 `adoption-pins.json`. No app PR is open yet. Core PR #15394 changes
-`src/kiro_crew/apps/builtins/pptx_maker/`, which an adopted host no longer runs,
+`src/aj_crew/apps/builtins/pptx_maker/`, which an adopted host no longer runs,
 so it does not ship this RFC. File paths below are relative to the app
 repository at `1c47c5099d`.
 
@@ -42,7 +42,7 @@ engine:
 1. The four app agents (`pptx-maker-spec`, `-vibe`, `-style`, `-composer`) are
    replaced by one `pptx-maker` agent with no prompt of its own, the shape SDPM
    prescribes for Kiro CLI. The old names are removed without an alias.
-2. After a Kiro Crew update moves the pin, the user installs the new engine
+2. After an Aj Crew update moves the pin, the user installs the new engine
    with the page's existing button. Nothing is fetched automatically. The agent
    is registered again after provisioning and after a deck-root change.
 
@@ -52,7 +52,7 @@ change.
 
 ## Motivation: what v0.10 breaks
 
-Measured on SDPM tags `v0.3.8` and `v0.10.1`, on Kiro Crew main at
+Measured on SDPM tags `v0.3.8` and `v0.10.1`, on Aj Crew main at
 `ad5b1e670`, and re-read on the app repository at `1c47c5099d`, which still
 pins v0.3.8 and has the same dependencies.
 
@@ -119,7 +119,7 @@ sub-agent that has the sdpm tools as a composer, including a copy of itself.
 Four agents would hold the same server and tools and differ in one sentence each,
 and users would see four PPTX Maker agents where one does the job.
 
-SDPM's web-only `hearing` tool is not mounted; `@kirocrew-core/ask_question`
+SDPM's web-only `hearing` tool is not mounted; `@ajcrew-core/ask_question`
 gives native question cards. No `autoApprove` / `allowedTools`, as today.
 
 **Old names are removed, not aliased.** The `DEPRECATED_AGENT_SPECS` precedent in
@@ -131,7 +131,7 @@ in the deck directory, not the conversation: a new chat resumes any deck through
 
 #### 2. Explicit engine update, re-registered agent
 
-Engine code is fetched on a user click only, as today. Between a Kiro Crew
+Engine code is fetched on a user click only, as today. Between an Aj Crew
 update and that click, the installed engine is v0.3.8 and the shipped agent
 expects v0.10.4. The page treats that window like a first install: the source
 marker no longer matches the pin, so `/engine` reports the engine as not ready
@@ -163,9 +163,9 @@ Breaking:
   `backend/engine_source.py`, `ui/src/PptxMakerPage.tsx`,
   `skills/pptx-maker/SKILL.md`, `prompts/spec-studio.md` and their tests under
   `tests/` and `ui/tests/`, all changed in the app implementation PR. In core,
-  the pin in `src/kiro_crew/apps/adoption-pins.json` moves to that release, and
+  the pin in `src/aj_crew/apps/adoption-pins.json` moves to that release, and
   `docs/system-specs/modules/pptx-maker.md` is updated to match.
-- The Library between a Kiro Crew update and the Install click (decision 2).
+- The Library between an Aj Crew update and the Install click (decision 2).
 
 Compatible: SDPM's user config (`config.json`, `state.json`, `styles/`,
 `templates/`) and the deck root are read unchanged. Verified on a v0.3.8 install

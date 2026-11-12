@@ -16,13 +16,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.platform.context import PlatformCompositionError
-from kiro_crew.platform.governance import parse_policy, parse_profile
+from aj_crew.platform.context import PlatformCompositionError
+from aj_crew.platform.governance import parse_policy, parse_profile
 
 EDITIONS = ("oss", "lts")
 
 #: The package sources, read as text by the route-coverage tests.
-_SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+_SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 
 def _doc(**body: object) -> dict:
@@ -30,12 +30,12 @@ def _doc(**body: object) -> dict:
 
 
 def _set_edition(monkeypatch: pytest.MonkeyPatch, value: str) -> bool:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", value)
+    monkeypatch.setattr("aj_crew.edition.EDITION", value)
     return value == "lts"
 
 
 def _install(monkeypatch: pytest.MonkeyPatch, doc: dict | None) -> None:
-    from kiro_crew.platform import context as pc
+    from aj_crew.platform import context as pc
 
     ctx = SimpleNamespace(governance=parse_policy(doc) if doc is not None else None)
     monkeypatch.setattr(pc, "current_context", lambda: ctx)
@@ -54,13 +54,13 @@ class TestUpdateChannel:
                 parse_policy(_doc(updates={"channel": bad}))
 
     def test_the_policy_channels_are_the_release_channels(self) -> None:
-        from kiro_crew.platform.governance_parts.carriers import UPDATE_CHANNELS
-        from kiro_crew.platform.update_layout import RELEASE_CHANNELS
+        from aj_crew.platform.governance_parts.carriers import UPDATE_CHANNELS
+        from aj_crew.platform.update_layout import RELEASE_CHANNELS
 
         assert set(UPDATE_CHANNELS) == set(RELEASE_CHANNELS)
 
     def test_tiers_keep_the_authority_channel(self) -> None:
-        from kiro_crew.platform.governance import _intersect_ceilings as intersect_ceilings
+        from aj_crew.platform.governance import _intersect_ceilings as intersect_ceilings
 
         top = parse_policy(_doc(updates={"channel": "stable"}))
         low = parse_policy(_doc(updates={"channel": "nightly"}))
@@ -71,7 +71,7 @@ class TestUpdateChannel:
     @pytest.mark.parametrize("edition", EDITIONS)
     @pytest.mark.parametrize("pin", ["", "insider"])
     def test_release_channel_follows_the_pin(self, monkeypatch, tmp_path, edition, pin) -> None:
-        from kiro_crew.platform import update_layout
+        from aj_crew.platform import update_layout
 
         lts = _set_edition(monkeypatch, edition)
         (tmp_path / "channel").write_text("nightly\n", encoding="utf-8")
@@ -82,7 +82,7 @@ class TestUpdateChannel:
         assert update_layout.release_channel() == expected
 
     def test_an_oss_install_cannot_pick_the_lts_channel(self, monkeypatch, tmp_path) -> None:
-        from kiro_crew.platform import update_layout
+        from aj_crew.platform import update_layout
 
         _set_edition(monkeypatch, "oss")
         monkeypatch.setattr(update_layout, "data_home", lambda: tmp_path)
@@ -98,9 +98,9 @@ class TestUpdateChannel:
     ) -> None:
         from test_lts_unkeyed_locks import _owner_request
 
-        from kiro_crew.dashboard.handlers import updates
-        from kiro_crew.platform import update_layout
-        from kiro_crew.platform.update_layout import InstallLayout
+        from aj_crew.dashboard.handlers import updates
+        from aj_crew.platform import update_layout
+        from aj_crew.platform.update_layout import InstallLayout
 
         _install(monkeypatch, _doc(updates={"channel": "insider"}))
         monkeypatch.setattr(update_layout, "data_home", lambda: tmp_path)
@@ -130,9 +130,9 @@ class TestApplyChannelPin:
     """
 
     def test_the_check_refuses_another_channel_than_the_pin(self, monkeypatch) -> None:
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
-        pin = "kiro_crew.platform.update_layout.policy_release_channel"
+        pin = "aj_crew.platform.update_layout.policy_release_channel"
         monkeypatch.setattr(pin, lambda: "stable")
         with pytest.raises(wheel_engine.WheelUpdateError, match="stable channel"):
             wheel_engine.check_policy_channel("nightly")
@@ -143,10 +143,10 @@ class TestApplyChannelPin:
     def test_the_engine_refuses_before_its_preflight_and_any_download(
         self, monkeypatch, tmp_path
     ) -> None:
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         monkeypatch.setattr(
-            "kiro_crew.platform.update_layout.policy_release_channel", lambda: "stable"
+            "aj_crew.platform.update_layout.policy_release_channel", lambda: "stable"
         )
         monkeypatch.setattr(wheel_engine, "_sweep_layout_debris", lambda *a, **k: None)
         monkeypatch.setattr(wheel_engine, "_repair_dangling_stable_link", lambda *a: None)
@@ -173,11 +173,11 @@ class TestApplyChannelPin:
         assert ran == [] and fetched == []
 
     def test_a_pin_installed_during_the_build_stops_the_swap(self, monkeypatch, tmp_path) -> None:
-        from kiro_crew.platform import wheel_engine
+        from aj_crew.platform import wheel_engine
 
         pin = {"value": ""}
         monkeypatch.setattr(
-            "kiro_crew.platform.update_layout.policy_release_channel", lambda: pin["value"]
+            "aj_crew.platform.update_layout.policy_release_channel", lambda: pin["value"]
         )
         monkeypatch.setattr(wheel_engine, "_sweep_layout_debris", lambda *a, **k: None)
         monkeypatch.setattr(wheel_engine, "_repair_dangling_stable_link", lambda *a: None)
@@ -240,7 +240,7 @@ class TestApplyChannelPin:
 
         uses_step = re.compile(
             r"wheel_engine\.(build_shadow_venv|promote)\b"
-            r"|from kiro_crew\.platform\.wheel_engine import [^)]*\b(build_shadow_venv|promote)\b",
+            r"|from aj_crew\.platform\.wheel_engine import [^)]*\b(build_shadow_venv|promote)\b",
             re.S,
         )
         offenders = sorted(
@@ -267,7 +267,7 @@ class TestYoloCap:
             parse_profile({"name": "p", "yolo_max_seconds": 60})
 
     def test_tiers_keep_the_lower_cap(self) -> None:
-        from kiro_crew.platform.governance import _intersect_ceilings as intersect_ceilings
+        from aj_crew.platform.governance import _intersect_ceilings as intersect_ceilings
 
         top = parse_policy(_doc(yolo_max_seconds=3600))
         low = parse_policy(_doc(yolo_max_seconds=600))
@@ -279,8 +279,8 @@ class TestYoloCap:
     @pytest.mark.parametrize("edition", EDITIONS)
     @pytest.mark.parametrize("cap", [0, 900])
     def test_yolo_ttl_cap(self, monkeypatch, edition, cap) -> None:
-        from kiro_crew.platform.governance_parts.baseline import LTS_YOLO_MAX_SECONDS
-        from kiro_crew.safety_override_permits import yolo_ttl_cap
+        from aj_crew.platform.governance_parts.baseline import LTS_YOLO_MAX_SECONDS
+        from aj_crew.safety_override_permits import yolo_ttl_cap
 
         lts = _set_edition(monkeypatch, edition)
         _install(monkeypatch, _doc(yolo_max_seconds=cap) if cap else None)
@@ -288,19 +288,19 @@ class TestYoloCap:
         assert yolo_ttl_cap() == expected
 
     def test_no_untimed_grant_under_a_cap(self, monkeypatch) -> None:
-        from kiro_crew import safety_override_permits as permits
+        from aj_crew import safety_override_permits as permits
 
-        monkeypatch.setattr("kiro_crew.safety_override.yolo_ttl_cap", lambda: 900)
+        monkeypatch.setattr("aj_crew.safety_override.yolo_ttl_cap", lambda: 900)
         assert permits.declared_grant_permitted() is False
         assert permits.until_shutdown_permitted() is False
 
     @pytest.fixture
     def capped(self, monkeypatch):
-        from kiro_crew.safety_override import reset_singleton, safety_override
+        from aj_crew.safety_override import reset_singleton, safety_override
 
         reset_singleton()
-        monkeypatch.setattr("kiro_crew.safety_override.yolo_ttl_cap", lambda: 900)
-        with patch("kiro_crew.safety_override.sel") as mock_sel:
+        monkeypatch.setattr("aj_crew.safety_override.yolo_ttl_cap", lambda: 900)
+        with patch("aj_crew.safety_override.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             yield safety_override()
         reset_singleton()
@@ -308,9 +308,9 @@ class TestYoloCap:
     def test_live_grants_are_clamped_before_the_permit_is_published(
         self, capped, monkeypatch
     ) -> None:
-        from kiro_crew import safety_override_grant as grant
+        from aj_crew import safety_override_grant as grant
 
-        monkeypatch.setattr("kiro_crew.safety_override.approval_mode_permitted", lambda _m: True)
+        monkeypatch.setattr("aj_crew.safety_override.approval_mode_permitted", lambda _m: True)
         # The invalidation mask that precedes every push.
         grant._on_ceiling_invalidating()
         seen: list[bool] = []
@@ -325,9 +325,9 @@ class TestYoloCap:
         assert grant._yolo_policy_permitted is True
 
     def test_a_cap_past_a_day_still_leaves_the_24h_ceiling(self, capped, monkeypatch) -> None:
-        from kiro_crew.safety_override import SafetyOverride
+        from aj_crew.safety_override import SafetyOverride
 
-        monkeypatch.setattr("kiro_crew.safety_override.yolo_ttl_cap", lambda: 172800)
+        monkeypatch.setattr("aj_crew.safety_override.yolo_ttl_cap", lambda: 172800)
         assert capped.activate_declared().ttl == SafetyOverride._MAX_TTL
         assert capped.is_permanent is False
 
@@ -341,7 +341,7 @@ class TestYoloCap:
 
     def test_a_live_grant_is_shortened_by_a_new_cap(self, capped, monkeypatch) -> None:
 
-        monkeypatch.setattr("kiro_crew.safety_override.yolo_ttl_cap", lambda: 0)
+        monkeypatch.setattr("aj_crew.safety_override.yolo_ttl_cap", lambda: 0)
         capped.activate_declared()
         assert capped.is_permanent is True
         capped.clamp_to_cap(900)
@@ -350,7 +350,7 @@ class TestYoloCap:
 
     def test_a_new_cap_counts_from_when_the_grant_was_armed(self, capped, monkeypatch) -> None:
 
-        monkeypatch.setattr("kiro_crew.safety_override.yolo_ttl_cap", lambda: 0)
+        monkeypatch.setattr("aj_crew.safety_override.yolo_ttl_cap", lambda: 0)
         capped.activate("dashboard", ttl=3600)
         capped._activated_at -= 1700
         capped.clamp_to_cap(1800)
@@ -367,7 +367,7 @@ class TestYoloCap:
 
     def test_a_scoped_grant_past_a_new_cap_is_ended(self, capped, monkeypatch) -> None:
 
-        monkeypatch.setattr("kiro_crew.safety_override.yolo_ttl_cap", lambda: 0)
+        monkeypatch.setattr("aj_crew.safety_override.yolo_ttl_cap", lambda: 0)
         capped.activate_scoped("run:1", "dashboard", ttl=3600)
         started, ends = capped._scoped["run:1"]
         capped._scoped["run:1"] = (started - 1000, ends)
@@ -392,7 +392,7 @@ def _slack_channels(*allowed: str) -> dict:
 class TestSlackChannels:
     @pytest.mark.parametrize("edition", EDITIONS)
     def test_the_list_admits_what_it_names(self, monkeypatch, edition) -> None:
-        from kiro_crew.slack.channel_policy import channel_refusal
+        from aj_crew.slack.channel_policy import channel_refusal
 
         _set_edition(monkeypatch, edition)
         _install(monkeypatch, _slack_channels("C0123", "D*"))
@@ -411,7 +411,7 @@ class TestSlackChannels:
     ) -> None:
         # No list: an oss build opens channels as before; a locked-off
         # (LTS) build admits none until the policy names the leaf.
-        from kiro_crew.slack.channel_policy import new_channel_refusal
+        from aj_crew.slack.channel_policy import new_channel_refusal
 
         lts = _set_edition(monkeypatch, edition)
         _install(monkeypatch, doc)
@@ -434,7 +434,7 @@ class TestSlackChannels:
     ) -> None:
         # Its id is unknown until Slack creates it, so a list of explicit ids
         # (or a narrower glob) cannot vouch for it.
-        from kiro_crew.slack.channel_policy import new_channel_refusal
+        from aj_crew.slack.channel_policy import new_channel_refusal
 
         _set_edition(monkeypatch, edition)
         _install(monkeypatch, _slack_channels(*allowed))
@@ -447,18 +447,18 @@ class TestSlackChannels:
         ids=["no-ceiling", "unnamed", "no-leaf"],
     )
     def test_an_unnamed_list_admits_nothing_only_in_lts(self, monkeypatch, edition, doc) -> None:
-        from kiro_crew.slack.channel_policy import channel_refusal
+        from aj_crew.slack.channel_policy import channel_refusal
 
         lts = _set_edition(monkeypatch, edition)
         _install(monkeypatch, doc)
         assert bool(channel_refusal("C0123")) is lts
 
     def test_every_refusal_is_audited_once(self, monkeypatch) -> None:
-        from kiro_crew.slack.channel_policy import channel_refusal
+        from aj_crew.slack.channel_policy import channel_refusal
 
         _install(monkeypatch, _slack_channels("C0123"))
         fake = MagicMock()
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: fake)
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: fake)
         assert channel_refusal("C0123") == ""
         assert channel_refusal("C0999", operation="slack.interactive", caller="U1")
         assert channel_refusal("C0999", audit=False)
@@ -472,8 +472,8 @@ class TestSlackChannels:
 
     @pytest.mark.parametrize("edition", EDITIONS)
     def test_an_evaluation_error_refuses_only_in_lts(self, monkeypatch, edition) -> None:
-        from kiro_crew.platform import context as pc
-        from kiro_crew.slack.channel_policy import channel_refusal
+        from aj_crew.platform import context as pc
+        from aj_crew.slack.channel_policy import channel_refusal
 
         lts = _set_edition(monkeypatch, edition)
 
@@ -487,8 +487,8 @@ class TestSlackChannels:
     async def test_a_client_write_to_a_refused_channel_never_reaches_slack(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.slack.channel_policy import SlackChannelRefused
-        from kiro_crew.slack.client import RealSlackClient
+        from aj_crew.slack.channel_policy import SlackChannelRefused
+        from aj_crew.slack.client import RealSlackClient
 
         _install(monkeypatch, _slack_channels("C0123"))
         client = RealSlackClient.__new__(RealSlackClient)
@@ -528,15 +528,15 @@ class TestSlackIntake:
     async def test_a_message_in_a_refused_channel_is_dropped_and_audited(self, monkeypatch) -> None:
         from slack_events_coverage_helpers import _event, _make_orch
 
-        from kiro_crew.slack import events as ev
+        from aj_crew.slack import events as ev
 
         monkeypatch.setattr(
-            "kiro_crew.slack.channel_policy.channel_refusal", lambda _c, **_k: "refused"
+            "aj_crew.slack.channel_policy.channel_refusal", lambda _c, **_k: "refused"
         )
         fake_sel = MagicMock()
         orch = _make_orch()
-        with patch("kiro_crew.slack.events.sel", return_value=fake_sel):
-            with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
+        with patch("aj_crew.slack.events.sel", return_value=fake_sel):
+            with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
                 await ev._route_message(orch, _event(), ev.SeenCache())
         hm.assert_not_called()
         assert fake_sel.log_api_access.call_args.kwargs["error"] == "channel_not_allowed_by_policy"
@@ -545,7 +545,7 @@ class TestSlackIntake:
     async def test_a_pure_stop_is_not_held_to_the_channel_list(self, monkeypatch) -> None:
         from slack_events_coverage_helpers import _event, _make_orch
 
-        from kiro_crew.slack import events as ev
+        from aj_crew.slack import events as ev
 
         asked: list[str] = []
 
@@ -553,10 +553,10 @@ class TestSlackIntake:
             asked.append(channel)
             return "refused"
 
-        monkeypatch.setattr("kiro_crew.slack.channel_policy.channel_refusal", _refuse)
+        monkeypatch.setattr("aj_crew.slack.channel_policy.channel_refusal", _refuse)
         orch = _make_orch()
-        with patch("kiro_crew.slack.events.sel", return_value=MagicMock()):
-            with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
+        with patch("aj_crew.slack.events.sel", return_value=MagicMock()):
+            with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
                 await ev._route_message(orch, _event(text="!stop"), ev.SeenCache())
         assert asked == []
 
@@ -566,7 +566,7 @@ class TestSlackInteractions:
 
     @pytest.mark.asyncio
     async def test_an_options_choice_in_a_refused_channel_is_dropped(self, monkeypatch) -> None:
-        from kiro_crew.slack import interactions as ix
+        from aj_crew.slack import interactions as ix
 
         monkeypatch.setattr(ix, "is_allowed_user", lambda _u: True)
         monkeypatch.setattr(ix, "channel_refusal", lambda _c, **_k: "refused")
@@ -617,7 +617,7 @@ class TestLtsTiers:
     def _compose(self, monkeypatch, central: dict, home: dict):
         from dataclasses import replace
 
-        from kiro_crew.platform.governance import TIER_CENTRAL, TIER_HOME, compose_tier_ladder
+        from aj_crew.platform.governance import TIER_CENTRAL, TIER_HOME, compose_tier_ladder
 
         _set_edition(monkeypatch, "lts")
         top = replace(parse_policy(central), tier=TIER_CENTRAL)
@@ -635,10 +635,10 @@ class TestLtsTiers:
         assert ceiling.yolo_max_seconds == 1800
         assert ceiling.updates.channel == "lts"
         _install(monkeypatch, None)
-        from kiro_crew.platform import context as pc
+        from aj_crew.platform import context as pc
 
         monkeypatch.setattr(pc, "current_context", lambda: SimpleNamespace(governance=ceiling))
-        from kiro_crew.slack.channel_policy import channel_refusal
+        from aj_crew.slack.channel_policy import channel_refusal
 
         assert channel_refusal("C0123")
 
@@ -652,12 +652,12 @@ class TestLtsTiers:
 
 class TestSessionRenewalCap:
     def test_renewal_cannot_carry_a_grant_past_the_cap(self, monkeypatch) -> None:
-        from kiro_crew.safety_override import reset_singleton, safety_override
+        from aj_crew.safety_override import reset_singleton, safety_override
 
         reset_singleton()
-        monkeypatch.setattr("kiro_crew.safety_override.yolo_ttl_cap", lambda: 900)
+        monkeypatch.setattr("aj_crew.safety_override.yolo_ttl_cap", lambda: 900)
         try:
-            with patch("kiro_crew.safety_override.sel") as mock_sel:
+            with patch("aj_crew.safety_override.sel") as mock_sel:
                 mock_sel.return_value = MagicMock()
                 so = safety_override()
                 assert so.activate("dashboard").active
@@ -676,12 +676,12 @@ class TestSessionRenewalCap:
 
 class TestScopedRenewalCap:
     def test_activity_renewal_cannot_carry_a_grant_past_the_cap(self, monkeypatch) -> None:
-        from kiro_crew.safety_override import reset_singleton, safety_override
+        from aj_crew.safety_override import reset_singleton, safety_override
 
         reset_singleton()
-        monkeypatch.setattr("kiro_crew.safety_override.yolo_ttl_cap", lambda: 900)
+        monkeypatch.setattr("aj_crew.safety_override.yolo_ttl_cap", lambda: 900)
         try:
-            with patch("kiro_crew.safety_override.sel") as mock_sel:
+            with patch("aj_crew.safety_override.sel") as mock_sel:
                 mock_sel.return_value = MagicMock()
                 so = safety_override()
                 assert so.activate_scoped("run:1", "dashboard").active

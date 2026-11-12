@@ -39,7 +39,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 const fold = params.get('fold') !== '0'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const TS = '2026-08-30T21:50:00.000Z'
 const row = (role: string, content: string, meta?: Record<string, unknown>): ChatMessage =>
@@ -54,7 +54,7 @@ const row = (role: string, content: string, meta?: Record<string, unknown>): Cha
 const MESSAGES: ChatMessage[] = [
   row('user', 'detect the root cause then raise the suggestion'),
   row('assistant', 'Delegating three independent investigations.'),
-  row('tool', '🔧 Running: @kirocrew-core/spawn_run', { tool_call_id: 's1', purpose: 'spawn three agents' }),
+  row('tool', '🔧 Running: @ajcrew-core/spawn_run', { tool_call_id: 's1', purpose: 'spawn three agents' }),
   row('assistant', 'Spawned 3 agents — code path and existing guards, the content that triggered it, and upstream prior art. Waiting for results.'),
   row('tool', '🔧 Reading result.txt:1', { tool_call_id: 't1', purpose: 'read a result' }),
   row('assistant', 'Root cause identified — and it overturns the long-line hypothesis I gave earlier. Investigation B is still running; A and C are in. The trigger is catastrophic regex backtracking in a grammar pattern, not an oversized input.'),

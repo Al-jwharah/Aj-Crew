@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from kiro_crew.connections.vendors.github.rate_limit import RateLimitSnapshot, read_rate_limit
+from aj_crew.connections.vendors.github.rate_limit import RateLimitSnapshot, read_rate_limit
 
 
 def test_reads_full_primary_limit_header_set() -> None:

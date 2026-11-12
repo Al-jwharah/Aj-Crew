@@ -14,8 +14,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.dashboard.dynamic_cards import CardBudget
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.dynamic_cards import CardBudget
+from aj_crew.testing.wait import await_until
 
 
 async def _parked() -> None:
@@ -35,15 +35,15 @@ async def _worker_done(service) -> None:
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- the automatic card modules' autouse seeded session tree with the crew log on, moved verbatim; none of them calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- the automatic card modules' autouse seeded session tree with the crew log on, moved verbatim; none of them calls monkeypatch.undo()
 def _seeded_session_tree(monkeypatch):
     """A seeded, empty session tree and a crew log that is on, for every case.
 
     The root gate refuses an unseeded tree, and no card is generated with the log off,
     which is this suite's environment default.
     """
-    from kiro_crew.crew_log import session_tree_projection
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.crew_log import session_tree_projection
+    from aj_crew.dashboard import card_lifecycle
 
     monkeypatch.setattr(card_lifecycle, "crew_log_enabled", lambda: True)
 
@@ -62,9 +62,9 @@ def lifecycle_fixture(monkeypatch):
     here never depends on what some sibling left in the store, and the session-tree
     projection is reset because ``_eligible`` refuses a slot the tree calls a worker.
     """
-    from kiro_crew.crew_log import session_tree_projection
-    from kiro_crew.dashboard import card_lifecycle
-    from kiro_crew.history import TranscriptWithheld
+    from aj_crew.crew_log import session_tree_projection
+    from aj_crew.dashboard import card_lifecycle
+    from aj_crew.history import TranscriptWithheld
 
     session_tree_projection.reset_for_tests()
     session_tree_projection.projection().ensure_seeded()
@@ -130,7 +130,7 @@ def lifecycle_fixture(monkeypatch):
         agent=SimpleNamespace(resolve_model=lambda role: "auto"),
         dashboard=SimpleNamespace(dynamic_dashboard_cards=True, language=""),
     )
-    monkeypatch.setattr(card_lifecycle.KiroCrewConfig, "load", lambda: cfg)
+    monkeypatch.setattr(card_lifecycle.AjCrewConfig, "load", lambda: cfg)
     service = card_lifecycle.CardLifecycle(state, enabled=True)
     service.publisher.budget = CardBudget(debounce=0)
     return service, slot, state

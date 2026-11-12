@@ -1,10 +1,10 @@
-"""`kirocrew doctor` Sandbox section — honest verdicts from an unconfined shell.
+"""`ajcrew doctor` Sandbox section — honest verdicts from an unconfined shell.
 
 The probe (`sandbox.detect_backend`) answers for the PROBING process, not for
 the gateway service. On a host that restricts unprivileged user namespaces the
-kirocrew-userns AppArmor profile is ATTACHED to the resolved kirocrew launcher
+ajcrew-userns AppArmor profile is ATTACHED to the resolved ajcrew launcher
 script, not via a systemd `AppArmorProfile=` unit directive, which does not
-confine the gateway's sandbox probe. A `kirocrew doctor` invocation that did
+confine the gateway's sandbox probe. An `ajcrew doctor` invocation that did
 not go through that exact attached path is unconfined regardless of how
 healthy the service's own sandbox is.
 
@@ -27,9 +27,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_doctor, platform_compat, sandbox
-from kiro_crew.service import apparmor
-from kiro_crew.service import linux as service_linux
+from aj_crew import cli_doctor, platform_compat, sandbox
+from aj_crew.service import apparmor
+from aj_crew.service import linux as service_linux
 
 
 def _arm_apparmor_denial(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -68,7 +68,7 @@ def _proc_self_reader(*, uid_map: str, status: str):
 
 
 class TestUserNamespaceVantage:
-    """Only Kiro Crew's own agent-shell shape changes the host verdict."""
+    """Only Aj Crew's own agent-shell shape changes the host verdict."""
 
     def test_confined_shell_reports_unverifiable_and_not_an_issue(
         self, monkeypatch: pytest.MonkeyPatch, capsys
@@ -90,7 +90,7 @@ class TestUserNamespaceVantage:
         out = capsys.readouterr().out
         assert "backend:     ⏭  cannot be verified from this shell" in out
         assert "This shell is already confined" in out
-        assert "run `kirocrew doctor` from an unconfined shell" in out
+        assert "run `ajcrew doctor` from an unconfined shell" in out
         assert "❌" not in out
         assert issues == []
 
@@ -182,21 +182,21 @@ def _install_profile(
 
 
 def _resolve_launcher(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
-    """Make ``kirocrew_bin()`` resolve to a real file under *tmp_path* and
+    """Make ``ajcrew_bin()`` resolve to a real file under *tmp_path* and
     return its resolved path, for both attaching the profile to and comparing
     against in ``_service_profile_applies``.
 
     Also points ``service_linux.UNIT_PATH`` at a (by default absent) unit file
     under *tmp_path*: the directive check reads the REAL
     ``/etc/systemd/system`` unit otherwise, and a developer host with an
-    installed kirocrew service would leak its own unit contents into these
+    installed ajcrew service would leak its own unit contents into these
     verdicts. Absent file = best-effort read finds nothing = attachment verdict
     stands, which is the CI baseline too. A test that wants a directive
     present writes the file."""
-    launcher = tmp_path / "kirocrew"
+    launcher = tmp_path / "ajcrew"
     launcher.write_text("#!/bin/sh\n")
-    monkeypatch.setattr(service_linux, "kirocrew_bin", lambda: str(launcher))
-    monkeypatch.setattr(service_linux, "UNIT_PATH", tmp_path / "kirocrew.service")
+    monkeypatch.setattr(service_linux, "ajcrew_bin", lambda: str(launcher))
+    monkeypatch.setattr(service_linux, "UNIT_PATH", tmp_path / "ajcrew.service")
     return launcher.resolve()
 
 
@@ -343,7 +343,7 @@ class TestProfileAbsent:
         out = capsys.readouterr().out
         assert "❌" in out
         assert "not installed" in out
-        assert "kirocrew service install" in out
+        assert "ajcrew service install" in out
         assert "cannot be verified from this shell" not in out
         assert issues
 
@@ -409,8 +409,8 @@ class TestServiceProfileApplies:
             f'profile {apparmor.PROFILE_NAME} "{launcher}" flags=(unconfined) {{}}\n',
             encoding="utf-8",
         )
-        (tmp_path / "kirocrew.service").write_text(
-            "[Service]\nAppArmorProfile=kirocrew-userns\n", encoding="utf-8"
+        (tmp_path / "ajcrew.service").write_text(
+            "[Service]\nAppArmorProfile=ajcrew-userns\n", encoding="utf-8"
         )
         assert not cli_doctor._service_profile_applies(profile, apparmor.PROFILE_NAME)
 
@@ -425,8 +425,8 @@ class TestServiceProfileApplies:
             f'profile {apparmor.PROFILE_NAME} "{launcher}" flags=(unconfined) {{}}\n',
             encoding="utf-8",
         )
-        (tmp_path / "kirocrew.service").write_text(
-            "[Service]\nExecStart=/opt/kirocrew-venv/bin/kirocrew gateway\n",
+        (tmp_path / "ajcrew.service").write_text(
+            "[Service]\nExecStart=/opt/ajcrew-venv/bin/ajcrew gateway\n",
             encoding="utf-8",
         )
         assert cli_doctor._service_profile_applies(profile, apparmor.PROFILE_NAME)
@@ -444,12 +444,12 @@ class TestServiceProfileApplies:
             f'profile {apparmor.PROFILE_NAME} "{launcher}" flags=(unconfined) {{}}\n',
             encoding="utf-8",
         )
-        (tmp_path / "kirocrew.service").write_bytes(
+        (tmp_path / "ajcrew.service").write_bytes(
             b"[Service]\n\xff\xfe garbage \xff\nExecStart=/x\n"
         )
         assert cli_doctor._service_profile_applies(profile, apparmor.PROFILE_NAME)
-        (tmp_path / "kirocrew.service").write_bytes(
-            b"[Service]\n\xff\xfe\nAppArmorProfile=kirocrew-userns\n"
+        (tmp_path / "ajcrew.service").write_bytes(
+            b"[Service]\n\xff\xfe\nAppArmorProfile=ajcrew-userns\n"
         )
         assert not cli_doctor._service_profile_applies(profile, apparmor.PROFILE_NAME)
 
@@ -482,15 +482,15 @@ class TestServiceProfileApplies:
             tmp_path / "missing-profile", apparmor.PROFILE_NAME
         )
 
-    def test_an_unresolvable_kirocrew_bin_does_not_apply(
+    def test_an_unresolvable_ajcrew_bin_does_not_apply(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        """``kirocrew_bin()`` can point at a path that does not exist (an
+        """``ajcrew_bin()`` can point at a path that does not exist (an
         uninstalled or moved venv); that must read as "not applied", not raise."""
-        monkeypatch.setattr(service_linux, "kirocrew_bin", lambda: "/nonexistent/kirocrew")
+        monkeypatch.setattr(service_linux, "ajcrew_bin", lambda: "/nonexistent/ajcrew")
         profile = tmp_path / "profile"
         profile.write_text(
-            f'profile {apparmor.PROFILE_NAME} "/nonexistent/kirocrew" flags=(unconfined) {{}}\n',
+            f'profile {apparmor.PROFILE_NAME} "/nonexistent/ajcrew" flags=(unconfined) {{}}\n',
             encoding="utf-8",
         )
         assert not cli_doctor._service_profile_applies(profile, apparmor.PROFILE_NAME)

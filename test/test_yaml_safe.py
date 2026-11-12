@@ -1,4 +1,4 @@
-"""The shared alias-refusing YAML loader, ``kiro_crew.yaml_safe.NoAliasSafeLoader``."""
+"""The shared alias-refusing YAML loader, ``aj_crew.yaml_safe.NoAliasSafeLoader``."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ import pytest
 import yaml
 from yaml_helpers import load_with
 
-from kiro_crew.agent_spec_format import _FrontmatterLoader
-from kiro_crew.yaml_safe import NoAliasSafeLoader
+from aj_crew.agent_spec_format import _FrontmatterLoader
+from aj_crew.yaml_safe import NoAliasSafeLoader
 
 
 def test_an_alias_is_refused_where_it_appears() -> None:

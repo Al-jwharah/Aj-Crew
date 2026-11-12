@@ -185,8 +185,8 @@ export const COMPLETION_KEEP_CHARS_DEFAULT = 3000
 /** What PATCH returns beside the config when it clamped the value it was sent. */
 export type ClampNotice = { requested: number; stored: number; min: number; max: number }
 
-/** Shape of the kirocrewConfig query payload this panel reads and patches. */
-export type KirocrewConfigShape = {
+/** Shape of the ajcrewConfig query payload this panel reads and patches. */
+export type AjcrewConfigShape = {
   session?: { autocompact_pct?: number; compact_wait_secs?: number }
   session_summary?: { enabled?: boolean }
   agent?: {

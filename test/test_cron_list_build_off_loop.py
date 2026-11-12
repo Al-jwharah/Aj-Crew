@@ -17,11 +17,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.dashboard.handlers.cron import api_crons
-from kiro_crew.dashboard.handlers.cron_board import _job_snapshot
-from kiro_crew.security import redact_credentials, redact_exfiltration_urls
-from kiro_crew.security.redaction_switch import owner_view
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.dashboard.handlers.cron import api_crons
+from aj_crew.dashboard.handlers.cron_board import _job_snapshot
+from aj_crew.security import redact_credentials, redact_exfiltration_urls
+from aj_crew.security.redaction_switch import owner_view
 
 SECRET = "deploy key AKIAIOSFODNN7EXAMPLE here"
 
@@ -59,7 +59,7 @@ class TestApiCrons:
     @pytest.mark.asyncio
     async def test_rows_are_built_off_the_loop(self, monkeypatch):
         """The row build runs in a worker thread; the loop-owned reads stay on the loop."""
-        import kiro_crew.cron as cron_mod
+        import aj_crew.cron as cron_mod
 
         loop_thread = threading.get_ident()
         seen: dict[str, set[int]] = {"format": set(), "running": set(), "slot": set()}

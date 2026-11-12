@@ -82,16 +82,16 @@ describe('an incremental frame for an unknown sub-agent', () => {
     s.dispatch(sseSubagentTool({ slot: SLOT, id: ID, tool: 'fs_read' }))
     expect(sub(s).task).toBe('')
     expect(sub(s).agent).toBe('')
-    s.dispatch(sseSubagentDone({ slot: SLOT, id: ID, elapsed: 3, outcome: 'completed', task: 'the real task', agent: 'kirocrew' }))
+    s.dispatch(sseSubagentDone({ slot: SLOT, id: ID, elapsed: 3, outcome: 'completed', task: 'the real task', agent: 'ajcrew' }))
     expect(sub(s).task).toBe('the real task')
-    expect(sub(s).agent).toBe('kirocrew')
+    expect(sub(s).agent).toBe('ajcrew')
   })
 
   it('makes a running agent visible again after a reconnect discards its entry', () => {
     // The whole point, end to end: spawn, lose the entry the way a reconnect
     // does, then deliver the next incremental frame the agent would send.
     const s = store()
-    s.dispatch(sseSubagentSpawn({ slot: SLOT, id: ID, task: 'do a thing', agent: 'kirocrew' }))
+    s.dispatch(sseSubagentSpawn({ slot: SLOT, id: ID, task: 'do a thing', agent: 'ajcrew' }))
     expect(sub(s)).toBeDefined()
     s.dispatch(clearSubagentsForSnapshot())
     s.dispatch(subagentReplayDone())
@@ -176,7 +176,7 @@ describe('a minted entry does not assert a start time it never saw', () => {
 
   it('carries no flag on an entry whose spawn frame was seen', () => {
     const s = store()
-    s.dispatch(sseSubagentSpawn({ slot: SLOT, id: ID, task: 'do a thing', agent: 'kirocrew' }))
+    s.dispatch(sseSubagentSpawn({ slot: SLOT, id: ID, task: 'do a thing', agent: 'ajcrew' }))
     expect(sub(s).startedAtAssumed).toBeFalsy()
   })
 
@@ -185,7 +185,7 @@ describe('a minted entry does not assert a start time it never saw', () => {
     s.dispatch(sseSubagentTool({ slot: SLOT, id: ID, tool: 'fs_read' }))
     expect(sub(s).startedAtAssumed).toBe(true)
     s.dispatch(sseSubagentSnapshot({
-      id: ID, slot: SLOT, task: 'do a thing', agent: 'kirocrew',
+      id: ID, slot: SLOT, task: 'do a thing', agent: 'ajcrew',
       streaming: '', last_tool: 'fs_read', started: 1_700_000_000,
     }))
     expect(sub(s).startedAtAssumed).toBeFalsy()
@@ -206,7 +206,7 @@ describe('a minted entry does not assert a start time it never saw', () => {
     const s = store()
     s.dispatch(sseSubagentTool({ slot: SLOT, id: ID, tool: 'fs_read' }))
     const assumedAt = sub(s).startedAt
-    s.dispatch(sseSubagentSpawn({ slot: SLOT, id: ID, task: 'do a thing', agent: 'kirocrew' }))
+    s.dispatch(sseSubagentSpawn({ slot: SLOT, id: ID, task: 'do a thing', agent: 'ajcrew' }))
     expect(sub(s).startedAt).toBe(assumedAt)
     expect(sub(s).startedAtAssumed).toBe(true)
     expect(sub(s).task).toBe('do a thing')

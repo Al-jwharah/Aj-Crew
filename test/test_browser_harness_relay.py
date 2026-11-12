@@ -20,8 +20,8 @@ import pytest
 import pytest_asyncio
 from aiohttp import web
 
-from kiro_crew.browser_harness import relay as relay_mod
-from kiro_crew.browser_harness.relay import RELAY_ID_BASE, CdpError, CdpRelay, RelayClosed
+from aj_crew.browser_harness import relay as relay_mod
+from aj_crew.browser_harness.relay import RELAY_ID_BASE, CdpError, CdpRelay, RelayClosed
 
 #: A hang ceiling only: every wait below awaits a signal the relay emits.
 _WAIT = 30.0

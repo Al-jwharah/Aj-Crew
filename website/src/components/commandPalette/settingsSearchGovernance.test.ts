@@ -503,11 +503,11 @@ describe('the Kiro sign-in entry follows the selected harness', () => {
   // The search reads the harness from the cache the shell's boot read fills, so
   // each case seeds that cache (or leaves it empty) instead of serving a fetch.
   const renderWithConfig = async (cached: unknown) => {
-    const config = vi.spyOn(api, 'kirocrewConfig')
+    const config = vi.spyOn(api, 'ajcrewConfig')
     vi.spyOn(api, 'dashboardConfig').mockResolvedValue({ decisions_enabled: true } as never)
     vi.spyOn(api, 'tipsStatus').mockResolvedValue({ enabled_config: true } as never)
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    if (cached !== undefined) client.setQueryData(['kirocrewConfig'], cached)
+    if (cached !== undefined) client.setQueryData(['ajcrewConfig'], cached)
     const wrapper = ({ children }: { children: ReactNode }) =>
       createElement(Provider, { store: createTestStore() },
         createElement(QueryClientProvider, { client }, createElement(MemoryRouter, null, children)))

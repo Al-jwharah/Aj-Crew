@@ -16,11 +16,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import api_send_message
-from kiro_crew.mcp_core import _call_tool
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.telegram.client import TELEGRAM_MAX_TEXT, TelegramClient
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES, TelegramTransport
+from aj_crew.dashboard.handlers import api_send_message
+from aj_crew.mcp_core import _call_tool
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.telegram.client import TELEGRAM_MAX_TEXT, TelegramClient
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES, TelegramTransport
 
 
 def _client(*results: int | None) -> Any:
@@ -104,8 +104,8 @@ async def test_a_part_whose_render_outgrows_the_cap_is_split_and_still_rendered(
 async def test_the_second_split_grades_its_cuts_with_the_composed_redactor() -> None:
     # The outer split grades with redact_via_context; the re-split by rendered
     # length must too, or a companion-only credential could be cut across pieces.
-    from kiro_crew.platform.context import redact_via_context
-    from kiro_crew.telegram import transport as transport_module
+    from aj_crew.platform.context import redact_via_context
+    from aj_crew.telegram import transport as transport_module
 
     content = "**x** " * (TELEGRAM_MAX_TEXT // 6 + 200)
     client = create_autospec(TelegramClient, instance=True)
@@ -148,14 +148,14 @@ async def _post(state: MagicMock, body: dict[str, Any]):
     app["state"] = state
     permitted = MagicMock(permitted=True)
     with (
-        patch("kiro_crew.sel.sel", return_value=MagicMock()),
-        patch("kiro_crew.platform.governance_profiles.vet_and_audit", return_value=permitted),
+        patch("aj_crew.sel.sel", return_value=MagicMock()),
+        patch("aj_crew.platform.governance_profiles.vet_and_audit", return_value=permitted),
     ):
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
                 "/api/send-message",
                 json=body,
-                headers={"X-Session-Key": "telegram:kirocrew:dm:99887766"},
+                headers={"X-Session-Key": "telegram:ajcrew:dm:99887766"},
             )
             return resp.status, await resp.json()
 
@@ -230,8 +230,8 @@ async def test_an_unknown_format_is_refused_before_any_send() -> None:
 
 def test_the_tool_forwards_format_to_the_gateway() -> None:
     with (
-        patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "cron:abc123"}),
-        patch("kiro_crew.mcp_core._post") as post,
+        patch.dict("os.environ", {"AJCREW_SESSION_KEY": "cron:abc123"}),
+        patch("aj_crew.mcp_core._post") as post,
     ):
         post.return_value = {"ok": True, "delivered_to": "telegram"}
         _call_tool("send_message", {"text": "*hi*", "session": "telegram", "format": "markdown"})

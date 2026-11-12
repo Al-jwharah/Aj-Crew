@@ -12,15 +12,15 @@ vi.mock('../api/client', () => ({ api: mockApi }))
 import SkillContextBudget from '../pages/overview/SkillContextBudget'
 
 const HOT_SKILL = {
-  key: 'kirocrew-commands',
-  name: 'kirocrew-commands',
+  key: 'ajcrew-commands',
+  name: 'ajcrew-commands',
   size_bytes: 21728,
   deliveries: 664,
   chars: 14427392,
   inject_on_trigger: true,
   always: false,
   owned: true,
-  source: 'kirocrew',
+  source: 'ajcrew',
   idle_days: 0.0,
 }
 
@@ -33,7 +33,7 @@ const COLD_SKILL = {
   inject_on_trigger: true,
   always: false,
   owned: true,
-  source: 'kirocrew',
+  source: 'ajcrew',
   idle_days: null,
 }
 
@@ -46,7 +46,7 @@ const FROZEN_SKILL = {
   inject_on_trigger: false,
   always: false,
   owned: true,
-  source: 'kirocrew',
+  source: 'ajcrew',
   idle_days: 14.5,
 }
 
@@ -59,7 +59,7 @@ const PINNED_SKILL = {
   inject_on_trigger: true,
   always: true,
   owned: true,
-  source: 'kirocrew',
+  source: 'ajcrew',
   idle_days: 0.0,
 }
 
@@ -85,7 +85,7 @@ const FOLDED_SKILL = {
   inject_on_trigger: true,
   always: false,
   owned: true,
-  source: 'kirocrew',
+  source: 'ajcrew',
   idle_days: 0.0,
   folded_from: ['pod-e2e'],
 }
@@ -127,14 +127,14 @@ describe('SkillContextBudget — control plane', () => {
     it('puts hot skills (inject=true, chars>0) in the counting group', async () => {
       mount()
       // HOT_SKILL, PINNED_SKILL, PACKAGE_SKILL, FOLDED_SKILL are all inject_on_trigger=true with chars>0
-      await screen.findByText(/Kirocrew Commands/i)
+      await screen.findByText(/Ajcrew Commands/i)
       // Cold skill should show "if it fires" text
       expect(screen.getAllByText(/Grill/i).length).toBeGreaterThan(0)
     })
 
     it('puts cold skills (inject=true, chars=0) in the never-fired group', async () => {
       mount()
-      await screen.findByText(/Kirocrew Commands/i)
+      await screen.findByText(/Ajcrew Commands/i)
       // Verify "if it fires" text for cold skills
       expect(screen.getByText(/if it fires/i)).toBeTruthy()
     })
@@ -180,7 +180,7 @@ describe('SkillContextBudget — control plane', () => {
   describe('toggle behavior', () => {
     it('shows toggle for owned, non-always skills', async () => {
       mount()
-      await screen.findByText(/Kirocrew Commands/i)
+      await screen.findByText(/Ajcrew Commands/i)
       // There should be multiple toggles
       const toggles = screen.getAllByRole('switch')
       expect(toggles.length).toBeGreaterThan(0)
@@ -242,7 +242,7 @@ describe('SkillContextBudget — control plane', () => {
       const toggle = await screen.findByRole('switch')
       fireEvent.click(toggle)
       await waitFor(() => {
-        expect(mockApi.setSkillInjectOnTrigger).toHaveBeenCalledWith('kirocrew-commands', false)
+        expect(mockApi.setSkillInjectOnTrigger).toHaveBeenCalledWith('ajcrew-commands', false)
       })
     })
   })

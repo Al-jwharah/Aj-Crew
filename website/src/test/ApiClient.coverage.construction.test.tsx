@@ -217,8 +217,8 @@ describe('query-string builders', () => {
     expect(call(1).url).toBe('/api/effort-levels?slot=chat-1')
     await api.mcpActive()
     expect(call(2).url).toBe('/api/mcp/active')
-    await api.mcpActive('kirocrew')
-    expect(call(3).url).toBe('/api/mcp/active?agent=kirocrew')
+    await api.mcpActive('ajcrew')
+    expect(call(3).url).toBe('/api/mcp/active?agent=ajcrew')
   })
 
   it('browse/project helpers encode the path they were handed', async () => {
@@ -255,8 +255,8 @@ describe('query-string builders', () => {
 
   it('scopes fileSearch to a project and relays the abort signal under its deadline', async () => {
     const ctl = new AbortController()
-    await api.fileSearch('cli', 'kirocrew', ctl.signal)
-    expect(call().url).toBe('/api/file-search?q=cli&project=kirocrew')
+    await api.fileSearch('cli', 'ajcrew', ctl.signal)
+    expect(call().url).toBe('/api/file-search?q=cli&project=ajcrew')
     // The fetch gets the DEADLINE's signal, not the caller's: the bound lives in
     // the client, so a caller cannot opt out of it by handing over its own.
     const relayed = call().init?.signal as AbortSignal
@@ -474,9 +474,9 @@ describe('request bodies with conditionally-omitted keys', () => {
   it('createChatFolder folds the modal settings into the create body', async () => {
     await api.createChatFolder('Work')
     expect(call().body).toEqual({ name: 'Work', parent_id: '' })
-    await api.createChatFolder('Work', 'p1', { project_dir: '/r', default_agent: 'kirocrew', color: 'blue' })
+    await api.createChatFolder('Work', 'p1', { project_dir: '/r', default_agent: 'ajcrew', color: 'blue' })
     expect(call(1).body).toEqual({
-      name: 'Work', parent_id: 'p1', project_dir: '/r', default_agent: 'kirocrew', color: 'blue',
+      name: 'Work', parent_id: 'p1', project_dir: '/r', default_agent: 'ajcrew', color: 'blue',
     })
   })
 

@@ -13,7 +13,7 @@ So two things are pinned here:
 
 * the death is announced ONCE, where it is detected, with what the process was
   carrying at that instant -- and each consumer reads that one record instead of
-  forming its own account (:mod:`kiro_crew.runtime_death`);
+  forming its own account (:mod:`aj_crew.runtime_death`);
 * the reason names the exit status, and a stderr line becomes the stated CAUSE
   only when it matches a signature that describes a death.
 
@@ -32,8 +32,8 @@ from types import SimpleNamespace
 import pytest
 from source_corpus import parsed_candidates
 
-from kiro_crew import runtime_death, runtime_ownership
-from kiro_crew.acp.runtime import AcpRuntime, _proven_death_cause, _rc_phrase
+from aj_crew import runtime_death, runtime_ownership
+from aj_crew.acp.runtime import AcpRuntime, _proven_death_cause, _rc_phrase
 
 # The exact stderr those deaths carry, and the line wrongly promoted to their
 # cause. Kept verbatim so a future edit to the signature table
@@ -74,8 +74,8 @@ def _run_shared_cron_deaths(*, limit: int, deaths: int):
     """Drive shared process deaths through the real gateway cron callback."""
     from unittest.mock import AsyncMock, MagicMock, patch
 
-    from kiro_crew.cron import CronJob, CronSchedule
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.cron import CronJob, CronSchedule
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gateway = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gateway.sessions = MagicMock()
@@ -124,14 +124,10 @@ def _run_shared_cron_deaths(*, limit: int, deaths: int):
                 await callback(job)
 
     with (
-        patch(
-            "kiro_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)
-        ),
-        patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=fail),
-        patch(
-            "kiro_crew.slack.gateway.build_cron_session_context", return_value=("cron:run", "run")
-        ),
-        patch("kiro_crew.slack.gateway.runtime_death.caused_by_this_session", return_value=False),
+        patch("aj_crew.slack.gateway.CronService.create", new=AsyncMock(side_effect=capture_cron)),
+        patch("aj_crew.slack.gateway.stream_and_collect", side_effect=fail),
+        patch("aj_crew.slack.gateway.build_cron_session_context", return_value=("cron:run", "run")),
+        patch("aj_crew.slack.gateway.runtime_death.caused_by_this_session", return_value=False),
     ):
         asyncio.run(run())
 
@@ -145,7 +141,7 @@ def test_cron_shared_deaths_get_the_default_exemption_under_a_tight_limit():
     default threshold, so a job with limit 2 still survives four shared deaths
     and pauses at the fifth, where the hand-over lands on its own counter.
     """
-    from kiro_crew.cron_service.model import _AUTO_PAUSE_THRESHOLD
+    from aj_crew.cron_service.model import _AUTO_PAUSE_THRESHOLD
 
     job = _run_shared_cron_deaths(limit=2, deaths=_AUTO_PAUSE_THRESHOLD - 1)
     assert job.consecutive_failures == 0
@@ -165,7 +161,7 @@ def test_cron_shared_deaths_charge_a_never_or_raised_limit_job_to_the_default(li
     fired at full rate forever. It is charged at the default instead, which
     starts the backoff without pausing it.
     """
-    from kiro_crew.cron_service.model import _AUTO_PAUSE_THRESHOLD
+    from aj_crew.cron_service.model import _AUTO_PAUSE_THRESHOLD
 
     job = _run_shared_cron_deaths(limit=limit, deaths=_AUTO_PAUSE_THRESHOLD)
     assert job.consecutive_failures == _AUTO_PAUSE_THRESHOLD
@@ -232,14 +228,14 @@ def test_an_enospc_signature_still_earns_its_operator_hint():
     rt = _runtime(rc=1, stderr=["mkdir failed: No space left on device", "goodbye"])
     reason = rt._exit_reason(1)
     assert "No space left on device" in reason
-    assert "kirocrew doctor" in reason
+    assert "ajcrew doctor" in reason
 
 
 def test_the_unexplained_tail_is_demoted_to_debug_not_dropped(caplog):
     """Demoted, not lost: a reader already looking at this runtime still gets
     the line, and the composed summary keeps its own labelled stderr_tail."""
     rt = _runtime(stderr=COE_STDERR)
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.acp.runtime"):
         rt._exit_reason(-15)
     assert "HTTP 404" in caplog.text
     assert "exit stderr tail" in caplog.text
@@ -274,7 +270,7 @@ def test_a_shared_runtimes_death_is_nobodys_single_failure(caplog):
     is real at cap 1 -- a sub-agent holds no lease, so the registry cannot see
     it and only the runtime's own session count can."""
     rt = _runtime(sessions=2)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.runtime_death"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.runtime_death"):
         rt._mark_dead(rt._exit_reason(-15))
     death = runtime_death.death_of(rt)
     assert death is not None
@@ -356,7 +352,7 @@ def test_a_lease_only_tenant_counts_too(monkeypatch):
     """The other half of the two readings: a session that holds a lease but has
     not opened its ACP session yet is a real tenant the runtime cannot see."""
     rt = _runtime(sessions=1)
-    monkeypatch.setattr("kiro_crew.acp.runtime.outstanding_leases", lambda _t: 2)
+    monkeypatch.setattr("aj_crew.acp.runtime.outstanding_leases", lambda _t: 2)
     rt._mark_dead(rt._exit_reason(-15))
     death = runtime_death.death_of(rt)
     assert death is not None
@@ -456,7 +452,7 @@ def test_the_cap_drops_an_abandoned_row_not_the_streak_still_recovering():
 
 # ────────────── the guards exist at the sites that charge (items b, c) ──────────────
 
-_SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+_SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 # Each entry: the file, the call that must not run unguarded, and how many such
 # calls the guard is expected to cover. Structural rather than behavioural

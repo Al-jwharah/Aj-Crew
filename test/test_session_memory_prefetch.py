@@ -18,14 +18,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import context_omissions
-from kiro_crew.context import ContextBuilder
-from kiro_crew.context_assembly import budget as _budgets
-from kiro_crew.context_assembly import store_admission
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import context_omissions
+from aj_crew.context import ContextBuilder
+from aj_crew.context_assembly import budget as _budgets
+from aj_crew.context_assembly import store_admission
+from aj_crew.dashboard import chat_runner
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.clock import ManualClock
 
 # Every test here compares two built contexts byte for byte, and ``build_message``
 # prepends a ``[RESOURCES]`` line carrying the host's LIVE free-memory figure once
@@ -206,7 +206,7 @@ def test_a_store_that_cannot_see_other_writers_never_matches() -> None:
 
 
 def test_the_vector_token_is_part_of_the_inputs_compared(builder) -> None:
-    from kiro_crew import context as ctx
+    from aj_crew import context as ctx
 
     memory = builder.get_memory_for(None, None)
     vectors = _FakeVectorStore()
@@ -219,14 +219,14 @@ def test_the_vector_token_is_part_of_the_inputs_compared(builder) -> None:
 
 def test_a_real_store_token_holds_across_its_own_reads(tmp_path) -> None:
     """The reads' own access stamps must not invalidate every prefetch."""
-    from kiro_crew.vector_memory import VectorMemoryStore
+    from aj_crew.vector_memory import VectorMemoryStore
 
     vectors = VectorMemoryStore(db_path=tmp_path / "memory.db")
     vectors.init()
     memory = MemoryStore(workspace=tmp_path / "ws")
     memory.init()
     memory.vector_store = vectors
-    from kiro_crew import context as ctx
+    from aj_crew import context as ctx
 
     caps = ctx._resolve_caps(None)
     before = store_admission._memory_read_inputs(memory, caps, MESSAGE, True)
@@ -332,7 +332,7 @@ def test_a_prefetch_running_past_the_recall_bound_is_joined_not_restarted(
     Restarting would queue the same reads behind the running ones and finish later
     than reading once without any prefetch.
     """
-    from kiro_crew import context as ctx
+    from aj_crew import context as ctx
 
     expected, _ = _build(builder)
     # Far shorter than the held reads, but above 0, which turns the prefetch off.
@@ -358,7 +358,7 @@ def test_a_prefetch_running_past_the_recall_bound_is_joined_not_restarted(
 
 
 def test_a_stuck_prefetch_is_given_up_on_at_the_build_embed_deadline(builder, reads, monkeypatch):
-    from kiro_crew import context as ctx
+    from aj_crew import context as ctx
 
     monkeypatch.setattr(ctx, "_PROMPT_BUILD_EMBED_TIMEOUT_SECS", 0.05)
     release = threading.Event()
@@ -383,14 +383,14 @@ def test_a_result_over_the_size_bound_is_not_held(builder, reads, monkeypatch):
 
 
 def test_the_size_bound_holds_any_result_a_build_could_admit_whole() -> None:
-    from kiro_crew import context as ctx
+    from aj_crew import context as ctx
 
     assert store_admission._MEMORY_PREFETCH_MAX_CHARS >= ctx._resolve_caps(None).protected_context
 
 
 def test_the_memory_caps_do_not_depend_on_the_model_window() -> None:
     """The prefetch resolves caps without a window; the build passes the client's."""
-    from kiro_crew import context as ctx
+    from aj_crew import context as ctx
 
     fields = ("prefs", "projects", "memory_history", "semantic", "episodic", "prefs_startup")
     unbounded = ctx._resolve_caps(None)
@@ -587,8 +587,8 @@ def test_the_table_holds_no_copy_of_the_message(builder) -> None:
 
 def test_the_build_cuts_the_prefetch_embed_deadline_to_its_own(builder) -> None:
     """A slow embed then ends where the build's own read would have stopped waiting."""
-    from kiro_crew import context as ctx
-    from kiro_crew.embeddings import EmbeddingWork, embedding_work
+    from aj_crew import context as ctx
+    from aj_crew.embeddings import EmbeddingWork, embedding_work
 
     store_admission.reserve_memory_prefetch(None, None, MESSAGE)
     entry = _held(MESSAGE)
@@ -613,7 +613,7 @@ def test_the_build_cuts_the_prefetch_embed_deadline_to_its_own(builder) -> None:
 
 
 def test_the_prefetch_records_the_embed_budget_it_runs_under(builder) -> None:
-    from kiro_crew.embeddings import EmbeddingWork, embedding_work
+    from aj_crew.embeddings import EmbeddingWork, embedding_work
 
     work = EmbeddingWork(deadline=10_000_000.0)
     store_admission.reserve_memory_prefetch(None, None, MESSAGE)
@@ -630,7 +630,7 @@ def test_the_prefetch_records_the_embed_budget_it_runs_under(builder) -> None:
 @pytest.mark.parametrize("leaf", ["preferences", "projects", "history"])
 def test_a_linked_memory_source_turns_the_prefetch_off(builder, tmp_path, leaf) -> None:
     """Metadata is read only behind the reader's admission; a link is never followed."""
-    from kiro_crew import context as ctx
+    from aj_crew import context as ctx
 
     memory = builder.get_memory_for(None, None)
     path = {
@@ -659,7 +659,7 @@ def test_a_linked_memory_source_turns_the_prefetch_off(builder, tmp_path, leaf) 
 
 def test_a_store_on_another_file_provider_turns_the_prefetch_off(builder, monkeypatch) -> None:
     """Local metadata says nothing about content served by another provider."""
-    from kiro_crew import context as ctx
+    from aj_crew import context as ctx
 
     memory = builder.get_memory_for(None, None)
     monkeypatch.setattr(memory, "_files_cache", object())
@@ -671,7 +671,7 @@ def test_a_store_on_another_file_provider_turns_the_prefetch_off(builder, monkey
 @pytest.mark.skipif(not hasattr(os, "symlink"), reason="needs symlinks")
 def test_a_link_inside_the_history_directory_is_never_followed(builder, tmp_path) -> None:
     """The root guard passes; the entry stat itself must not follow either link."""
-    from kiro_crew import context as ctx
+    from aj_crew import context as ctx
 
     memory = builder.get_memory_for(None, None)
     outside = tmp_path / "outside.md"
@@ -690,8 +690,8 @@ def test_a_link_inside_the_history_directory_is_never_followed(builder, tmp_path
 
 def test_the_join_ends_at_the_build_embed_deadline(builder, monkeypatch) -> None:
     """An embed still in flight gives the build the short bound; the join keeps to it."""
-    from kiro_crew import context as ctx
-    from kiro_crew.embeddings import EmbeddingWork, embedding_work
+    from aj_crew import context as ctx
+    from aj_crew.embeddings import EmbeddingWork, embedding_work
 
     # Pin store_admission.time to a manual clock so the deadline computation is
     # exact: (monotonic_start + 0.05) - monotonic_start == 0.05 by construction.
@@ -728,8 +728,8 @@ def test_a_prefetch_whose_embed_wait_is_cut_is_joined_past_the_build_deadline(
     """Cut to the build's deadline, the prefetch's reads after it are the keyword
     reads the build would make itself: the join keeps the long bound rather than end
     at that deadline and run them a second time beside the prefetch's."""
-    from kiro_crew import context as ctx
-    from kiro_crew.embeddings import EmbeddingWork, embedding_work
+    from aj_crew import context as ctx
+    from aj_crew.embeddings import EmbeddingWork, embedding_work
 
     clock = ManualClock(monotonic_start=0.0)
     clock.install(monkeypatch, store_admission)
@@ -788,8 +788,8 @@ def test_only_an_unclaimed_fresh_session_answers_fresh_start_unclaimed(first_tur
     """The read the admission gate asks, and it consumes nothing."""
     from types import SimpleNamespace
 
-    from kiro_crew.session_parts import claims
-    from kiro_crew.session_parts.record import FirstTurnState
+    from aj_crew.session_parts import claims
+    from aj_crew.session_parts.record import FirstTurnState
 
     sessions = {}
     if first_turn is not None:

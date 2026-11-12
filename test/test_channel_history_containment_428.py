@@ -7,7 +7,7 @@ would pass. ``Path.is_relative_to`` compares path components instead.
 
 from __future__ import annotations
 
-from kiro_crew.channel_history import ChannelHistory
+from aj_crew.channel_history import ChannelHistory
 
 
 def test_observe_path_accepts_child(tmp_path) -> None:

@@ -19,10 +19,10 @@ from pathlib import Path
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.chat_tags import validate_folder_tag_ids
-from kiro_crew.dashboard.slot_persistence import metadata_codec as codec
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.dashboard.tag_vocabulary_read import known_tag_ids, prune_tag_ids
+from aj_crew.dashboard.chat_tags import validate_folder_tag_ids
+from aj_crew.dashboard.slot_persistence import metadata_codec as codec
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.tag_vocabulary_read import known_tag_ids, prune_tag_ids
 
 #: What a persisted value can carry: a listed id, an id the store does not list (a tag
 #: applied after a stale snapshot, or a dangling id), a duplicate, and hand-edit junk.
@@ -49,7 +49,7 @@ def _loaded(home: Path) -> DashboardState:
 
 
 def _slot_restore(tmp_path: Path, monkeypatch, loaded: DashboardState) -> list[str]:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state._tags = [dict(t) for t in loaded._tags]
     state._tags_authoritative = loaded._tags_authoritative
@@ -71,7 +71,7 @@ _STORES = {
 
 @pytest.mark.parametrize("store", sorted(_STORES))
 def test_every_prune_site_answers_what_the_one_reader_answers(store, tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path, raising=False)
     tags, expected = _STORES[store]
     if isinstance(tags, str):
         (tmp_path / "tags.json").write_text(tags, encoding="utf-8")
@@ -114,7 +114,7 @@ def test_no_prune_site_reads_the_vocabulary_authority_flag_itself():
     ``_tags_authoritative`` again would be a second spelling of it. Writes (the loader
     and the create reconciliation set the flag) are fine; the agent-policy check, which
     refuses a removal and never prunes, is the only other reader."""
-    src = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+    src = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
     read = re.compile(r"""(?:\.|["'])_tags_authoritative\b(?!["']?\s*(?::\s*bool\s*)?=(?!=))""")
     allowed = {"dashboard/tag_vocabulary_read.py", "dashboard/chat_tags_policy.py"}
     readers = sorted(

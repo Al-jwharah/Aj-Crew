@@ -10,7 +10,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state import DashboardState
 
 
 class TestSlotModelGuardFollowsTheBackend:
@@ -21,7 +21,7 @@ class TestSlotModelGuardFollowsTheBackend:
 
     @staticmethod
     def _app(state: DashboardState) -> web.Application:
-        from kiro_crew.dashboard.chat import api_chat_slot_model, api_chat_slots_model
+        from aj_crew.dashboard.chat import api_chat_slot_model, api_chat_slots_model
 
         app = web.Application()
         app["state"] = state
@@ -32,7 +32,7 @@ class TestSlotModelGuardFollowsTheBackend:
     @staticmethod
     def _claude_key() -> str:
         """A canonical key the claude_code namespace translates, read off the registry."""
-        from kiro_crew import model_registry
+        from aj_crew import model_registry
 
         return next(
             e["model_name"]
@@ -43,9 +43,9 @@ class TestSlotModelGuardFollowsTheBackend:
 
     @staticmethod
     def _configure(monkeypatch, *, default: str, member: str) -> None:
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        original = KiroCrewConfig.load
+        original = AjCrewConfig.load
 
         def load(*args, **kwargs):
             cfg = original(*args, **kwargs)
@@ -53,11 +53,11 @@ class TestSlotModelGuardFollowsTheBackend:
             cfg.agent.member_acp_backend = member
             return cfg
 
-        monkeypatch.setattr(KiroCrewConfig, "load", staticmethod(load))
+        monkeypatch.setattr(AjCrewConfig, "load", staticmethod(load))
 
     @pytest.mark.asyncio
     async def test_claude_backend_accepts_a_canonical_key(self, tmp_path, monkeypatch):
-        from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS
+        from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS
 
         self._configure(monkeypatch, default=ACP_BACKEND_CLAUDE, member=ACP_BACKEND_KAS)
         key = self._claude_key()
@@ -74,7 +74,7 @@ class TestSlotModelGuardFollowsTheBackend:
 
     @pytest.mark.asyncio
     async def test_kiro_backend_still_refuses_it(self, tmp_path, monkeypatch):
-        from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
+        from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
 
         self._configure(monkeypatch, default=ACP_BACKEND_KIRO, member=ACP_BACKEND_CLAUDE)
         key = self._claude_key()
@@ -94,7 +94,7 @@ class TestSlotModelGuardFollowsTheBackend:
 
     @pytest.mark.asyncio
     async def test_a_member_dm_is_judged_on_the_member_backend(self, tmp_path, monkeypatch):
-        from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS
+        from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS
 
         self._configure(monkeypatch, default=ACP_BACKEND_CLAUDE, member=ACP_BACKEND_KAS)
         key = self._claude_key()
@@ -111,7 +111,7 @@ class TestSlotModelGuardFollowsTheBackend:
 
     @pytest.mark.asyncio
     async def test_bulk_pick_must_pass_on_every_slots_backend(self, tmp_path, monkeypatch):
-        from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS
+        from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS
 
         self._configure(monkeypatch, default=ACP_BACKEND_CLAUDE, member=ACP_BACKEND_KAS)
         key = self._claude_key()

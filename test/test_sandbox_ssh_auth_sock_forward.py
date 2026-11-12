@@ -30,9 +30,9 @@ import sys
 import pytest
 from test_sandbox_launcher_program import launch
 
-import kiro_crew.sandbox as sb
-from kiro_crew import sandbox_launcher_program as program
-from kiro_crew.sandbox_plan import namespace_payload
+import aj_crew.sandbox as sb
+from aj_crew import sandbox_launcher_program as program
+from aj_crew.sandbox_plan import namespace_payload
 
 
 @pytest.fixture(autouse=True)
@@ -235,7 +235,7 @@ def test_forward_is_noop_on_windows(monkeypatch):
     The opt-in must not be OFFERED on a platform where it cannot work. Pins the
     platform behaviour as a property.
     """
-    from kiro_crew import ssh_auth_sock_consent as consent
+    from aj_crew import ssh_auth_sock_consent as consent
 
     monkeypatch.setattr(consent, "is_granted", lambda: True)
 
@@ -256,7 +256,7 @@ def test_forward_reads_keystone_not_agent_config(monkeypatch, tmp_path):
     its own SSH_AUTH_SOCK forwarding on. The reader must consult the keystone
     store and fail closed when it holds no explicit enable.
     """
-    from kiro_crew import ssh_auth_sock_consent as consent
+    from aj_crew import ssh_auth_sock_consent as consent
 
     monkeypatch.setattr(sb.platform_compat, "IS_WINDOWS", False)
     monkeypatch.setattr(consent, "ssh_auth_sock_consent_path", lambda: tmp_path / "c.json")
@@ -289,8 +289,8 @@ def test_a_store_that_is_not_utf8_reads_as_no_consent(monkeypatch, tmp_path):
     scrubbed either way; reading it as "not granted" is what lets the consent
     notice still tell the operator how to grant it.
     """
-    from kiro_crew import ssh_auth_sock_consent as consent
-    from kiro_crew.config import loader
+    from aj_crew import ssh_auth_sock_consent as consent
+    from aj_crew.config import loader
 
     monkeypatch.setattr(sb.platform_compat, "IS_WINDOWS", False)
     monkeypatch.setattr(sb, "_governance_sandbox_floor", lambda: None)
@@ -306,8 +306,8 @@ def test_a_store_that_is_not_utf8_reads_as_no_consent(monkeypatch, tmp_path):
 
 def test_keystone_leaf_is_fenced_and_sealed():
     """The consent leaf sits on both fences that keep it agent-unwritable."""
-    from kiro_crew import sandbox as _sb
-    from kiro_crew.security import paths as _sp
+    from aj_crew import sandbox as _sb
+    from aj_crew.security import paths as _sp
 
     assert "ssh_auth_sock_consent.json" in _sp._CREW_SECRET_LEAVES
     assert "ssh_auth_sock_consent.json" in _sb._CREW_READONLY_LEAVES
@@ -320,7 +320,7 @@ def test_keystone_leaf_is_fenced_and_sealed():
 @pytest.fixture
 def _no_consent(monkeypatch):
     """Consent absent, non-Windows, ungoverned: only the tier rule can forward."""
-    from kiro_crew import ssh_auth_sock_consent as consent
+    from aj_crew import ssh_auth_sock_consent as consent
 
     monkeypatch.setattr(sb.platform_compat, "IS_WINDOWS", False)
     monkeypatch.setattr(consent, "is_granted", lambda: False)
@@ -456,7 +456,7 @@ def test_wrap_rejudges_forward_against_the_floor_it_applies(
     monkeypatch.setattr(sb, "_governance_sandbox_floor", lambda: floor)
     monkeypatch.setattr(sb, "detect_backend", lambda **_: "namespace")
     # The suite may itself run inside a Crew sandbox; take the outer-wrap path.
-    monkeypatch.setattr(sb, "_inside_kirocrew_sandbox", lambda: False)
+    monkeypatch.setattr(sb, "_inside_ajcrew_sandbox", lambda: False)
     monkeypatch.setattr(sb, "namespace_argv", _builder)
     monkeypatch.setattr(sb, "sandbox_exec_argv", _builder)
     applied: list[bool] = []

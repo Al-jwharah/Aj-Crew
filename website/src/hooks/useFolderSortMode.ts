@@ -36,11 +36,11 @@ export interface FolderSortModeRead {
   readonly error: string | null
 }
 
-/** The slice of the `['kirocrewConfig']` body this read looks at. */
+/** The slice of the `['ajcrewConfig']` body this read looks at. */
 export type FolderSortConfigBody = { dashboard?: { folder_sort?: unknown } }
 
 /**
- * One `['kirocrewConfig']` query observation, read as a folder sort mode --
+ * One `['ajcrewConfig']` query observation, read as a folder sort mode --
  * the SINGLE derivation every surface keys on. Shared by
  * {@link useFolderSortMode} (which FETCHES the entry), the sidebar (its own
  * observer of the same key, with the optimistic overlay layered on the mode)
@@ -98,7 +98,7 @@ export function useFolderSortRead(q: {
  * (The Command Bar's Search Folders view reads the same entry through
  * {@link useFolderSortRead} without fetching, for the reason given there.)
  *
- * Read through the shared `['kirocrewConfig']` query rather than a dedicated
+ * Read through the shared `['ajcrewConfig']` query rather than a dedicated
  * fetch: the sidebar already holds that query for its own settings, the sidebar
  * menu writes the mode through `api.patchConfig` and settles it back into the
  * same cache entry, so a picker opened right after a switch draws the new order
@@ -116,8 +116,8 @@ export function useFolderSortRead(q: {
  */
 export function useFolderSortMode(): FolderSortModeRead {
   const q = useQuery<FolderSortConfigBody>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
   return useFolderSortRead(q)
 }

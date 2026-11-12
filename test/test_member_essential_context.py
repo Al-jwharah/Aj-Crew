@@ -10,17 +10,17 @@ from unittest.mock import Mock
 import member_essential_context_helpers
 import pytest
 
-from conftest import make_dir_link, requires_symlinks
-from kiro_crew import context as context_module
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.context import CONTEXT_GROUP_LESSONS
-from kiro_crew.member_essential_context import MemberEssentialContextError
-from kiro_crew.members import slug_for_name, write_member_rules
-from kiro_crew.memory import MemoryStore
-from kiro_crew.memory_stores import (
+from aj_crew import context as context_module
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.context import CONTEXT_GROUP_LESSONS
+from aj_crew.member_essential_context import MemberEssentialContextError
+from aj_crew.members import slug_for_name, write_member_rules
+from aj_crew.memory import MemoryStore
+from aj_crew.memory_stores import (
     UnknownMemoryStore,
     provision_member_memory,
 )
+from conftest import make_dir_link, requires_symlinks
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _close_skills_loaders = member_essential_context_helpers._close_skills_loaders
@@ -111,7 +111,7 @@ def test_oversized_guide_is_left_out_by_name_instead_of_refusing_the_turn(env):
 async def test_profile_save_rejects_oversized_candidate_without_replacing_anchors(env, document):
     from member_memory_helpers import request
 
-    from kiro_crew.dashboard.handlers import memory as handlers
+    from aj_crew.dashboard.handlers import memory as handlers
 
     state = SimpleNamespace(
         context_builder=env.builder,
@@ -140,10 +140,10 @@ async def test_profile_save_rejects_oversized_candidate_without_replacing_anchor
 
 
 def test_profile_preflight_includes_the_other_anchor_without_persisting_candidate(env):
-    from kiro_crew.config.sections import WorkspaceConfig
-    from kiro_crew.dashboard.handlers.memory import _validate_private_profile_update
+    from aj_crew.config.sections import WorkspaceConfig
+    from aj_crew.dashboard.handlers.memory import _validate_private_profile_update
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.workspaces["writer-project"] = WorkspaceConfig(dir=str(env.project))
     cfg.agents["writer"].workspace = "writer-project"
     cfg.save()
@@ -265,9 +265,9 @@ def test_cold_member_prompt_never_constructs_learned_memory(env, monkeypatch):
 def test_execution_namespace_controls_member_prompt_identity(env, entrypoint, selection):
     from dataclasses import replace
 
-    from kiro_crew.execution_context import execution_for_store, resolve_member_execution
+    from aj_crew.execution_context import execution_for_store, resolve_member_execution
 
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     template = "writer" if selection == "colliding-alias" else "critic-runtime"
     (env.project / ".kiro" / "agents" / f"{template}.json").write_text(
         json.dumps({"name": template, "prompt": "CAPTURED_TEMPLATE_INSTRUCTIONS"}),
@@ -341,7 +341,7 @@ def _template_delegate(config):
     """
     from dataclasses import replace
 
-    from kiro_crew.execution_context import resolve_member_execution
+    from aj_crew.execution_context import resolve_member_execution
 
     return replace(
         resolve_member_execution(config, "writer"),
@@ -369,7 +369,7 @@ def test_template_selected_delegate_keeps_identity_and_rules_but_not_the_desk_pr
     It uses the member's memory and rules, but it was picked to do the work, so the desk
     protocol (which hands work to another session) and its briefing are withheld.
     """
-    delegate = _template_delegate(KiroCrewConfig.load())
+    delegate = _template_delegate(AjCrewConfig.load())
     prompt, _ = env.builder.build_message(
         "Do the task",
         fresh,
@@ -386,7 +386,7 @@ def test_template_selected_delegate_keeps_identity_and_rules_but_not_the_desk_pr
 
 def test_template_selected_delegate_session_start_withholds_the_desk_protocol(env):
     prompt = env.builder.build_session_context(
-        execution_context=_template_delegate(KiroCrewConfig.load()),
+        execution_context=_template_delegate(AjCrewConfig.load()),
         agent="task-template",
         project=str(env.project),
     )
@@ -399,9 +399,9 @@ def test_member_at_its_desk_gets_its_whole_desk(env, entrypoint):
     """The counterpart: a member turn the caller names as the DESK keeps all four
     layers, protocol included. ``member=`` is what the dashboard passes for a
     ``mode == "member"`` slot -- the pinned DM thread."""
-    from kiro_crew.execution_context import resolve_member_execution
+    from aj_crew.execution_context import resolve_member_execution
 
-    execution = resolve_member_execution(KiroCrewConfig.load(), "writer")
+    execution = resolve_member_execution(AjCrewConfig.load(), "writer")
     options = dict(execution_context=execution, project=str(env.project), member="writer")
     if entrypoint == "message":
         prompt, _ = env.builder.build_message("Continue", True, **options)
@@ -437,9 +437,9 @@ def test_member_selected_off_its_desk_keeps_identity_and_rules_but_not_the_desk(
     identity and `[PERMANENT RULES]`, no `[HOW YOU WORK]`, no briefing, and no DM-thread
     sentence. Pinned on every lifecycle and both entry points.
     """
-    from kiro_crew.execution_context import resolve_member_execution
+    from aj_crew.execution_context import resolve_member_execution
 
-    execution = resolve_member_execution(KiroCrewConfig.load(), "writer")
+    execution = resolve_member_execution(AjCrewConfig.load(), "writer")
     base = dict(execution_context=execution, project=str(env.project))
     if entrypoint == "message":
         prompt, _ = env.builder.build_message(
@@ -461,10 +461,10 @@ def test_a_delegate_with_memory_withheld_gets_no_layer_four_placeholder_either(e
     briefing is missing and not to fill the gap; the delegate on the same store
     keeps identity and rules and gets no `[CURRENT ASSIGNMENT` line of any kind.
     """
-    from kiro_crew.context import CONTEXT_GROUP_PROJECT
-    from kiro_crew.execution_context import resolve_member_execution
+    from aj_crew.context import CONTEXT_GROUP_PROJECT
+    from aj_crew.execution_context import resolve_member_execution
 
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     options = dict(project=str(env.project), context_groups=frozenset({CONTEXT_GROUP_PROJECT}))
     member_prompt, _ = env.builder.build_message(
         "Continue",
@@ -494,10 +494,10 @@ def test_spawn_agent_delegate_of_a_member_is_the_same_delegate(env):
     layers -- one predicate, both delegate paths."""
     from unittest.mock import MagicMock
 
-    from kiro_crew.execution_context import resolve_member_execution
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.execution_context import resolve_member_execution
+    from aj_crew.subagent import SubagentManager
 
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     parent = resolve_member_execution(config, "writer")
     manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
     admitted = manager._admission.resolve_spawn_execution(
@@ -529,10 +529,10 @@ def test_a_member_with_no_persisted_id_keeps_its_rules_when_session_create_names
     """
     from dataclasses import replace
 
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
-    config = KiroCrewConfig.load()
-    config.agents["scribe"] = KiroCrewAgentConfig(
+    config = AjCrewConfig.load()
+    config.agents["scribe"] = AjCrewAgentConfig(
         kiro_agent="critic-runtime", description="A scribe with no persisted identity"
     )
     config.save()
@@ -569,11 +569,11 @@ def test_a_member_with_no_persisted_id_spawns_a_plain_template_child(env):
     """
     from unittest.mock import MagicMock
 
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.subagent import SubagentManager
 
-    config = KiroCrewConfig.load()
-    config.agents["scribe"] = KiroCrewAgentConfig(
+    config = AjCrewConfig.load()
+    config.agents["scribe"] = AjCrewAgentConfig(
         kiro_agent="critic-runtime", description="A scribe with no persisted identity"
     )
     config.save()
@@ -620,12 +620,12 @@ def test_a_member_with_no_persisted_id_spawns_a_plain_template_child(env):
 
 @pytest.mark.parametrize("other_v2", [False, True])
 def test_captured_member_id_wins_over_another_members_alias(env, other_v2):
-    from kiro_crew.execution_context import resolve_member_execution
+    from aj_crew.execution_context import resolve_member_execution
 
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     execution = resolve_member_execution(config, "writer")
     config.agents["original-writer"] = config.agents.pop("writer")
-    config.agents[env.member] = KiroCrewAgentConfig(
+    config.agents[env.member] = AjCrewAgentConfig(
         kiro_agent="critic-runtime", description="OTHER_MEMBER_PERSONA"
     )
     if other_v2:
@@ -647,13 +647,13 @@ def test_captured_member_id_wins_over_another_members_alias(env, other_v2):
 @pytest.mark.parametrize("entrypoint", ["message", "session"])
 @pytest.mark.parametrize("replacement_v2", [False, True])
 def test_deleted_captured_member_never_renders_replacement_persona(env, entrypoint, replacement_v2):
-    from kiro_crew.execution_context import resolve_member_execution
+    from aj_crew.execution_context import resolve_member_execution
 
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     captured = resolve_member_execution(config, "writer")
     assert captured.member_id == "writer"
     del config.agents["writer"]
-    config.agents["writer"] = KiroCrewAgentConfig(
+    config.agents["writer"] = AjCrewAgentConfig(
         kiro_agent="critic-runtime", description="REPLACEMENT_PERSONA"
     )
     if replacement_v2:
@@ -677,9 +677,9 @@ def test_deleted_captured_member_never_renders_replacement_persona(env, entrypoi
 @pytest.mark.parametrize("entrypoint", ["message", "session"])
 @pytest.mark.parametrize("selected_v2", [False, True])
 def test_explicit_member_name_does_not_select_another_members_id(env, entrypoint, selected_v2):
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     config.agents["original-writer"] = config.agents.pop("writer")
-    config.agents["writer"] = KiroCrewAgentConfig(
+    config.agents["writer"] = AjCrewAgentConfig(
         kiro_agent="critic-runtime", description="EXPLICIT_NAME_PERSONA"
     )
     store = provision_member_memory(config, "writer") if selected_v2 else "default"
@@ -695,8 +695,8 @@ def test_explicit_member_name_does_not_select_another_members_id(env, entrypoint
 
 
 def test_strict_member_section_and_profile_validation_refuse_deleted_id(env):
-    config = KiroCrewConfig.load()
-    config.agents["writer"] = KiroCrewAgentConfig(description="REPLACEMENT_V1_PERSONA")
+    config = AjCrewConfig.load()
+    config.agents["writer"] = AjCrewAgentConfig(description="REPLACEMENT_V1_PERSONA")
     config.save()
     with pytest.raises(UnknownMemoryStore, match="member identity"):
         env.builder._build_member_section(env.member, strict=True)
@@ -709,9 +709,9 @@ def test_strict_member_section_and_profile_validation_refuse_deleted_id(env):
 async def test_workflow_cold_prompt_prepares_only_optional_lessons(env, monkeypatch, available):
     import asyncio
 
-    from kiro_crew import embeddings
-    from kiro_crew.execution_context import resolve_member_execution
-    from kiro_crew.workflow_memory import WorkflowScope
+    from aj_crew import embeddings
+    from aj_crew.execution_context import resolve_member_execution
+    from aj_crew.workflow_memory import WorkflowScope
 
     vectors = {}
     monkeypatch.setattr(context_module, "_memory_stores", {})
@@ -724,7 +724,7 @@ async def test_workflow_cold_prompt_prepares_only_optional_lessons(env, monkeypa
             raise UnknownMemoryStore("synthetic unavailable database")
 
         monkeypatch.setattr(env.builder, "ensure_store", unavailable)
-    config = await asyncio.to_thread(KiroCrewConfig.load)
+    config = await asyncio.to_thread(AjCrewConfig.load)
     execution = resolve_member_execution(config, "writer")
     scope = WorkflowScope("wf_000099", env.store, "", execution_context=execution)
     try:
@@ -797,7 +797,7 @@ def test_nonrecursive_glob_does_not_expand_declared_scope(env):
 
 
 def test_unreadable_project_template_does_not_fall_back_to_another_soul(env, monkeypatch):
-    from kiro_crew import agent
+    from aj_crew import agent
 
     spec = env.project / ".kiro" / "agents" / "writer-template.json"
     spec.write_bytes(b"\xff")
@@ -814,9 +814,9 @@ def test_unreadable_project_template_does_not_fall_back_to_another_soul(env, mon
 def test_global_template_cannot_import_managed_memory_or_peer_briefing(env, monkeypatch, leaf):
     from pathlib import Path
 
-    from kiro_crew import agent
-    from kiro_crew.config import config_dir
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew import agent
+    from aj_crew.config import config_dir
+    from aj_crew.member_essential_context import documents_for_member
 
     path = config_dir() / leaf
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -866,7 +866,7 @@ def test_a_symlinked_global_template_supplies_the_members_persona(env, tmp_path)
 
 @requires_symlinks
 def test_a_linked_template_is_parsed_by_the_name_the_agents_directory_lists(env, tmp_path):
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew.member_essential_context import documents_for_member
 
     target = _dotfile(tmp_path, "writer-template", "---\nname: writer-template\n---\nMD_PERSONA\n")
     (_global_agents() / "writer-template.md").symlink_to(target)
@@ -911,9 +911,9 @@ def test_the_execution_prompt_of_a_symlinked_global_template_is_read(env, tmp_pa
 def test_a_global_template_linked_into_managed_state_is_refused_and_audited(
     env, monkeypatch, spec_name, leaf, body
 ):
-    from kiro_crew import agent_discovery
-    from kiro_crew.config import config_dir
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew import agent_discovery
+    from aj_crew.config import config_dir
+    from aj_crew.member_essential_context import documents_for_member
 
     target = config_dir() / leaf
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -933,9 +933,9 @@ def test_a_global_template_linked_into_managed_state_is_refused_and_audited(
 def test_a_linked_template_swapped_into_managed_state_before_open_is_refused(
     env, monkeypatch, tmp_path
 ):
-    from kiro_crew import agent_discovery
-    from kiro_crew.config import config_dir
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew import agent_discovery
+    from aj_crew.config import config_dir
+    from aj_crew.member_essential_context import documents_for_member
 
     managed = config_dir() / "workspace" / "memory"
     managed.mkdir(parents=True, exist_ok=True)
@@ -968,7 +968,7 @@ def test_a_linked_template_swapped_into_managed_state_before_open_is_refused(
 
 @requires_symlinks
 def test_an_unverifiable_managed_root_refuses_every_linked_template(env, monkeypatch, tmp_path):
-    from kiro_crew import agent_discovery, member_essential_context
+    from aj_crew import agent_discovery, member_essential_context
 
     target = _dotfile(
         tmp_path, "writer-template.json", {"name": "writer-template", "prompt": "DOTFILES_PERSONA"}
@@ -997,14 +997,14 @@ def test_an_unverifiable_managed_root_refuses_every_linked_template(env, monkeyp
 def test_an_agents_directory_under_the_data_home_reads_its_entries_unrefused(
     env, monkeypatch, tmp_path
 ):
-    from kiro_crew import agent_discovery
-    from kiro_crew.config import config_dir
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew import agent_discovery
+    from aj_crew.config import config_dir
+    from aj_crew.member_essential_context import documents_for_member
 
     agents = config_dir() / "kiro" / "agents"
     agents.mkdir(parents=True)
-    monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", agents)
-    monkeypatch.setattr("kiro_crew.agent_discovery._KIRO_AGENTS_DIR", agents)
+    monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", agents)
+    monkeypatch.setattr("aj_crew.agent_discovery._KIRO_AGENTS_DIR", agents)
     for index in range(3):
         (agents / f"unrelated-{index}.json").write_text(
             json.dumps({"name": f"unrelated-{index}"}), encoding="utf-8"
@@ -1027,8 +1027,8 @@ def test_an_agents_directory_under_the_data_home_reads_its_entries_unrefused(
 
 
 def test_a_regular_global_template_read_does_not_consult_managed_roots(env, monkeypatch):
-    from kiro_crew import member_essential_context
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew import member_essential_context
+    from aj_crew.member_essential_context import documents_for_member
 
     (_global_agents() / "writer-template.json").write_text(
         json.dumps({"name": "writer-template", "prompt": "REGULAR_PERSONA"}), encoding="utf-8"
@@ -1046,7 +1046,7 @@ def test_a_regular_global_template_read_does_not_consult_managed_roots(env, monk
 
 @requires_symlinks
 def test_a_regular_global_template_wins_over_a_link_declaring_the_same_name(env, tmp_path):
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew.member_essential_context import documents_for_member
 
     agents = _global_agents()
     (agents / "writer-template.json").write_text(
@@ -1065,7 +1065,7 @@ def test_a_regular_global_template_wins_over_a_link_declaring_the_same_name(env,
 
 @requires_symlinks
 def test_two_linked_templates_with_differing_content_are_ambiguous(env, tmp_path):
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew.member_essential_context import documents_for_member
 
     agents = _global_agents()
     first = _dotfile(tmp_path, "a.json", {"name": "writer-template", "prompt": "FIRST"})
@@ -1079,8 +1079,8 @@ def test_two_linked_templates_with_differing_content_are_ambiguous(env, tmp_path
 
 @requires_symlinks
 def test_managed_roots_are_resolved_once_per_template_read(env, monkeypatch, tmp_path):
-    from kiro_crew import member_essential_context
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew import member_essential_context
+    from aj_crew.member_essential_context import documents_for_member
 
     agents = _global_agents()
     target = _dotfile(
@@ -1109,8 +1109,8 @@ def test_managed_roots_are_resolved_once_per_template_read(env, monkeypatch, tmp
 
 @requires_symlinks
 def test_session_mcp_reads_the_servers_of_a_linked_global_spec(env, tmp_path):
-    from kiro_crew.acp import session_mcp
-    from kiro_crew.config import config_dir
+    from aj_crew.acp import session_mcp
+    from aj_crew.config import config_dir
 
     servers = {"linked-srv": {"command": "/nonexistent/linked-server"}}
     target = _dotfile(
@@ -1143,7 +1143,7 @@ def test_runtime_override_keeps_the_memory_owners_soul(env):
 def test_literal_steering_prefix_does_not_enumerate_unrelated_project_root(env, monkeypatch):
     from pathlib import Path
 
-    from kiro_crew import member_essential_context as essentials
+    from aj_crew import member_essential_context as essentials
 
     original = essentials.os.scandir
 
@@ -1174,7 +1174,7 @@ def test_matches_admits_a_declared_root_reached_through_a_symlink(env, tmp_path)
     ordinary ``$HOME`` layout on hosts where ``/home/<user>`` links elsewhere,
     where it refused EVERY essential source for every private member.
     """
-    from kiro_crew import member_essential_context as essentials
+    from aj_crew import member_essential_context as essentials
 
     linked_root = tmp_path / "linked-root"
     linked_root.symlink_to(env.project, target_is_directory=True)
@@ -1191,7 +1191,7 @@ def test_matches_admits_a_declared_root_reached_through_a_symlink(env, tmp_path)
 )
 def test_read_admits_a_document_under_a_symlinked_root(env, tmp_path):
     """The containment check compares real paths, so either spelling admits."""
-    from kiro_crew import member_essential_context as essentials
+    from aj_crew import member_essential_context as essentials
 
     linked_root = tmp_path / "linked-root"
     linked_root.symlink_to(env.project, target_is_directory=True)
@@ -1207,7 +1207,7 @@ def test_read_admits_a_document_under_a_symlinked_root(env, tmp_path):
 )
 def test_symlinked_root_still_refuses_a_document_outside_it(env, tmp_path):
     """Normalizing the root's spelling must not widen what the root contains."""
-    from kiro_crew import member_essential_context as essentials
+    from aj_crew import member_essential_context as essentials
 
     outside = tmp_path / "outside.md"
     outside.write_text("OUTSIDE_SECRET", encoding="utf-8")
@@ -1230,7 +1230,7 @@ def test_absolute_resource_in_realpath_spelling_admits_under_a_linked_root(env, 
     Installers record realpath spellings while the root stays a link (``/home/<user>``
     on another filesystem), so a lexical ``relative_to`` would refuse every source.
     """
-    from kiro_crew import member_essential_context as essentials
+    from aj_crew import member_essential_context as essentials
 
     linked_root = tmp_path / "linked-root"
     linked_root.symlink_to(env.project, target_is_directory=True)
@@ -1251,7 +1251,7 @@ def test_absolute_resource_in_realpath_spelling_admits_under_a_linked_root(env, 
 )
 def test_absolute_resource_outside_a_linked_root_is_still_refused(env, tmp_path):
     """Accepting the root's other spelling must not admit a sibling of the root."""
-    from kiro_crew import member_essential_context as essentials
+    from aj_crew import member_essential_context as essentials
 
     outside = tmp_path / "outside-guide.md"
     outside.write_text("OUTSIDE_SECRET", encoding="utf-8")
@@ -1268,7 +1268,7 @@ def test_absolute_resource_in_link_spelling_admits_under_a_resolved_root(env, tm
     the template records the resource through the ``$HOME`` link, so neither
     spelling of the root is a lexical prefix of the declaration.
     """
-    from kiro_crew import member_essential_context as essentials
+    from aj_crew import member_essential_context as essentials
 
     linked_root = tmp_path / "linked-root"
     make_dir_link(linked_root, env.project)
@@ -1282,7 +1282,7 @@ def test_absolute_resource_in_link_spelling_admits_under_a_resolved_root(env, tm
 
 def test_link_spelled_resource_still_refuses_outside_and_links_below_root(env, tmp_path):
     """Matching the root's link spelling admits neither a sibling nor a link below it."""
-    from kiro_crew import member_essential_context as essentials
+    from aj_crew import member_essential_context as essentials
 
     outside = tmp_path / "outside"
     outside.mkdir()
@@ -1318,8 +1318,8 @@ def test_owner_cleared_empty_anchors_are_valid_but_missing_source_refuses(env):
 
 
 def test_default_workspace_guides_are_allowed_without_its_global_memory(env):
-    from kiro_crew.config import config_dir
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew.config import config_dir
+    from aj_crew.member_essential_context import documents_for_member
 
     project = config_dir() / "workspace"
     project.mkdir(parents=True, exist_ok=True)

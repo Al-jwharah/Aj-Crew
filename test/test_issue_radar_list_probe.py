@@ -34,11 +34,11 @@ from unittest import mock
 
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.apps.builtins.issue_radar.backend import github_client as gh
-from kiro_crew.apps.builtins.issue_radar.backend import routes, store
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew.apps.builtins.issue_radar.backend import github_client as gh
+from aj_crew.apps.builtins.issue_radar.backend import routes, store
+from aj_crew.testing.wait import async_wait_until, finished
 
-PROBE_TARGET = "kiro_crew.apps.builtins.issue_radar.backend.github_client.probe_open_list"
+PROBE_TARGET = "aj_crew.apps.builtins.issue_radar.backend.github_client.probe_open_list"
 
 
 def _key(owner: str, repo: str):
@@ -48,7 +48,7 @@ def _key(owner: str, repo: str):
     loose owner/repo pair. GitHub is used throughout here so these tests keep
     asserting the ORIGINAL probe behaviour unchanged.
     """
-    from kiro_crew.apps.builtins.issue_radar.backend import provider
+    from aj_crew.apps.builtins.issue_radar.backend import provider
 
     return provider.key_from_parts(owner, repo)
 

@@ -18,7 +18,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps.context import AppContext
+from aj_crew.apps.context import AppContext
 
 APP = "gate-probe"
 OWNER = "owner-1"
@@ -29,7 +29,7 @@ _NO_APP_CLAIM = object()
 def audit_rows(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     recorder = SimpleNamespace(log_api_access=lambda **kw: rows.append(kw))
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: recorder)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: recorder)
     return rows
 
 
@@ -123,9 +123,9 @@ async def test_the_audited_app_is_the_contexts_own(
 
 
 def test_the_gate_and_level_are_on_every_context(tmp_path: Path) -> None:
-    from kiro_crew.apps.app_sdk_level import APP_SDK_LEVEL
-    from kiro_crew.apps.context import build_app_context
-    from kiro_crew.apps.embed_sdk import EmbedSDK
+    from aj_crew.apps.app_sdk_level import APP_SDK_LEVEL
+    from aj_crew.apps.context import build_app_context
+    from aj_crew.apps.embed_sdk import EmbedSDK
 
     for ctx in (AppContext(name=APP, data_dir=tmp_path), build_app_context(APP, tmp_path)):
         assert callable(ctx.require_owner)

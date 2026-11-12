@@ -285,8 +285,8 @@ describe('TurnBlock — renderable content stays visible in collapseAll mode', (
 describe('TurnBlock — spawn_run launch visibility', () => {
   const SPAWN_OUTPUT = [
     'Spawned 2 subagent(s). Results will arrive as completion events:',
-    '  1713e7d0 (kirocrew): read the specs',
-    '  5c15adde (kirocrew): read the code',
+    '  1713e7d0 (ajcrew): read the specs',
+    '  5c15adde (ajcrew): read the code',
   ].join('\n')
 
   const spawnItem = (idx: number): TurnItem => ({
@@ -631,7 +631,7 @@ describe('TurnBlock — a reply cut short and resumed', () => {
     const items: TurnItem[] = [
       { kind: 'single', msg: { role: 'tool', content: '🔧 Running: shell', ts: '1' }, idx: 0 },
       { kind: 'single', msg: { role: 'assistant', content: 'Both stacks build clean. The first one is faster on a cold start, but it pins an older bundler and', ts: '2', meta: stamped }, idx: 1 },
-      { kind: 'single', msg: { role: 'assistant', content: '[Subagent completion event]\nAgent `c9d0e1f2` (kirocrew) completed ✅\nTask: measure', ts: '3', meta: { subagentCompletion: {} } }, idx: 2 },
+      { kind: 'single', msg: { role: 'assistant', content: '[Subagent completion event]\nAgent `c9d0e1f2` (ajcrew) completed ✅\nTask: measure', ts: '3', meta: { subagentCompletion: {} } }, idx: 2 },
       { kind: 'single', msg: { role: 'assistant', content: 'Context compacted', ts: '4', kind: 'compaction' }, idx: 3 },
       { kind: 'single', msg: recovery('5'), idx: 4 },
       { kind: 'single', msg: { role: 'assistant', content: 'The second stack keeps its lint config and tests in one place. Recommendation: the second stack.', ts: '6', meta: stamped }, idx: 5 },

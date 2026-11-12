@@ -1,15 +1,15 @@
 # Debugging a running gateway
 
-**Local page, not a mirror.** This page is Kiro Crew's own documentation and has
+**Local page, not a mirror.** This page is Aj Crew's own documentation and has
 no upstream source, so a re-fetch of the `kiro-cli/` mirror must leave it alone.
 
-The `kirocrew-debug` MCP server answers five questions about a live Kiro Crew
+The `ajcrew-debug` MCP server answers five questions about a live Aj Crew
 gateway. Each tool is one question plus a time window, answered by the process that
 owns the truth. Every tool is read-only, and the set is ratcheted to exactly five
 names by `test/test_mcp_debug.py` — a write tool cannot be added without that test
 changing.
 
-Grant the set by adding the `mcpServers` entry and a `@kirocrew-debug` reference to
+Grant the set by adding the `mcpServers` entry and a `@ajcrew-debug` reference to
 an agent's `tools`. It is opt-in: kiro-cli reads `tools/list` once per session, so a
 tool listed in core would spend context in every request of every session forever.
 
@@ -44,7 +44,7 @@ These are the readings that look like facts and are not. An agent that trusts th
 reaches confident wrong conclusions, which is most of why this server exists.
 
 **Empty placeholder mounts.** The agent sandbox mounts empty, zero-size
-placeholders over Kiro Crew's fenced paths — the crew log, the ledgers, `.env`, the
+placeholders over Aj Crew's fenced paths — the crew log, the ledgers, `.env`, the
 vault. A shell `ls` there shows 0 entries whatever the host actually holds, and
 they share one mount mtime. Emptiness proves nothing. A zero-byte `.env` seen from a
 sandbox is not a lost credential. Read such a store through a credentialed route —
@@ -68,7 +68,7 @@ inspect call says nothing about a monitor's state. `debug_refusals` classes thes
 **`/proc/<pid>/environ` is unreadable from the sandbox.** The gateway can read
 same-uid environs and your shell cannot, which is why `debug_processes
 include_env=true` can answer at all — and why it returns only four allow-listed keys
-(`KIROCREW_HOME`, `KIROCREW_POD_ROOT`, `TMPDIR`, `KIROCREW_SCRATCH`) and never the
+(`AJCREW_HOME`, `AJCREW_POD_ROOT`, `TMPDIR`, `AJCREW_SCRATCH`) and never the
 rest.
 
 ## Authorization
@@ -104,12 +104,12 @@ read-back. Output is capped at 64 KB with a cursor.
 ## Diagnostic recorder
 
 The gateway runs a diagnostic recorder that `debug_snapshots` reads back. It is on
-by default; `KIROCREW_DIAG_RECORDER=0` (or `false`, `no`, `off`) turns it off.
+by default; `AJCREW_DIAG_RECORDER=0` (or `false`, `no`, `off`) turns it off.
 
 | Variable | Default | Range |
 |---|---|---|
-| `KIROCREW_DIAG_SAMPLE_SECS` | 30 | 1 to 3600 seconds between samples |
-| `KIROCREW_DIAG_RETAIN_DAYS` | 7 | 1 to 365 days of day files kept |
+| `AJCREW_DIAG_SAMPLE_SECS` | 30 | 1 to 3600 seconds between samples |
+| `AJCREW_DIAG_RETAIN_DAYS` | 7 | 1 to 365 days of day files kept |
 
 Rows land in `diag/snapshots-YYYYMMDD.jsonl` under the crew data home, one file per
 day. After three consecutive samples that each take over 200 ms, the cadence drops
@@ -128,7 +128,7 @@ source, so `debug_refusals` classifies budget timeouts after the fact from the
 security event log and reports `live.available: false`. That block becomes real when
 the accessor exists.
 
-A build that does not carry `kiro_crew.diag` cannot answer `debug_threads`,
+A build that does not carry `aj_crew.diag` cannot answer `debug_threads`,
 `debug_processes` or `debug_snapshots` at all. Those routes answer HTTP 501 with
 `{"error": "diag not available in this build", "code": "diag_unavailable"}` and the
 tools relay it verbatim, so

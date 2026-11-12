@@ -7,7 +7,7 @@ import re
 
 import pytest
 
-from kiro_crew.dashboard_templates.manifest import (
+from aj_crew.dashboard_templates.manifest import (
     ManifestError,
     check_parity,
     load_template,
@@ -89,7 +89,7 @@ def test_parity_refuses_both_directions():
 def test_a_page_may_carry_a_script(tmp_path):
     (tmp_path / "manifest.json").write_text(json.dumps(_raw()))
     (tmp_path / "template.html").write_text(
-        PAGE + "<script>const f = window.kirocrew.fields; void f;</script>"
+        PAGE + "<script>const f = window.ajcrew.fields; void f;</script>"
     )
     manifest, html = load_template(tmp_path)
     assert manifest.id == "goal-board" and "<script>" in html
@@ -129,7 +129,7 @@ def test_a_trailing_newline_cannot_pass_an_id_a_field_or_a_path():
     ``"report\\n"`` would make a directory and registry key that looks like ``report``.
     Ids, field names and paths are all checked.
     """
-    from kiro_crew.dashboard_templates.manifest import _FIELD, _ID, _PATH
+    from aj_crew.dashboard_templates.manifest import _FIELD, _ID, _PATH
 
     for pattern, good in ((_ID, "report"), (_FIELD, "items"), (_PATH, "conductor.slot")):
         assert pattern.match(good), f"{pattern.pattern} refuses the valid {good!r}"

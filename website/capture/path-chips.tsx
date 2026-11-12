@@ -36,7 +36,7 @@ const params = new URLSearchParams(location.search)
 const scene = params.get('scene') || 'chips'
 const theme = params.get('theme') || 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 /** Paths the fake backend reports as directories / files; everything else 404s
  *  as missing, mirroring the real endpoint's three outcomes. */

@@ -31,7 +31,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from kiro_crew.pipeline_board_contract import (  # noqa: E402
+from aj_crew.pipeline_board_contract import (  # noqa: E402
     build_pipeline_board,
     card_template_path,
     panel_card_data,
@@ -208,7 +208,7 @@ def _mismatch() -> dict[str, str]:
     }
     panel = build_pipeline_board(
         view,  # type: ignore[arg-type]
-        validate_judgment({"lede": "A board from another version of Kiro Crew."}),
+        validate_judgment({"lede": "A board from another version of Aj Crew."}),
         name="Pipeline Conductor",
         captured_at="2026-09-29 15:37 UTC",
         stale_after_seconds=900,

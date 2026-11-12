@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import member_memory_auth as mma
+from aj_crew import member_memory_auth as mma
 
 DAY = 24 * 3600.0
 

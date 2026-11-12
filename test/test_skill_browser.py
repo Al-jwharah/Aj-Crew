@@ -4,7 +4,7 @@ Covers:
 - ``list_kiro_skills`` discovery of ``~/.kiro/skills/`` and workspace ``.kiro/skills/``
 - ``_resolve_loaded_by_agents`` glob-matching against installed agent JSONs
 - ``list_skill_tree`` / ``read_skill_file`` size + sensitive-path + escape guards
-- ``_resolve_skill_root`` cross-source resolution (kirocrew / kiro-user / aim)
+- ``_resolve_skill_root`` cross-source resolution (ajcrew / kiro-user / aim)
 - ``GET /api/skills/<name>/tree`` and ``GET /api/skills/<name>/file`` end-to-end
 
 Tests use a tmp_path fake $HOME so we never touch the real filesystem.
@@ -30,8 +30,7 @@ from skill_browser_helpers import (  # noqa: F401 -- the fixture is requested by
     fake_home_fixture,
 )
 
-from conftest import make_dir_link
-from kiro_crew.dashboard.handlers._shared import (
+from aj_crew.dashboard.handlers._shared import (
     SKILL_FILE_MAX_BYTES,
     SKILL_TREE_MAX_ENTRIES,
     _agent_loads_skill,
@@ -52,6 +51,7 @@ from kiro_crew.dashboard.handlers._shared import (
     read_skill_file,
     skill_rows_for_globs,
 )
+from conftest import make_dir_link
 
 # ── _parse_skill_description ──
 
@@ -429,7 +429,7 @@ class TestAnnotateSkillsWithAgents:
             for n in ("s1", "s2", "s3", "s4", "s5")
         ]
 
-        import kiro_crew.dashboard.handlers._shared as shared
+        import aj_crew.dashboard.handlers._shared as shared
 
         calls = {"n": 0}
         real = shared._load_parsed_agents
@@ -494,8 +494,8 @@ class TestCollectSkillsBlocking:
         result = collect_skills_blocking(loader, package_skills, project_dir=None)
 
         by_key = {s["key"]: s for s in result}
-        # kirocrew source defaulted, package rows merged, kiro discovered.
-        assert by_key["mc"]["source"] == "kirocrew"
+        # ajcrew source defaulted, package rows merged, kiro discovered.
+        assert by_key["mc"]["source"] == "ajcrew"
         assert "package/aim-one" in by_key
         assert "kiro-user/kiro-one" in by_key
         # Every entry carries loaded_by_agents; the kiro skill matches loader.
@@ -520,9 +520,9 @@ class TestOneRowPerSkillFile:
 
     def test_extra_paths_over_kiro_user_lists_once(self, fake_home, close_skills_loaders):
         """Real loader: ``skills.extra_paths`` naming ``~/.kiro/skills`` reaches
-        the file as a Kiro Crew row AND as a ``kiro-user`` row; one is listed."""
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.skills import SkillsLoader
+        the file as an Aj Crew row AND as a ``kiro-user`` row; one is listed."""
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.skills import SkillsLoader
 
         user_root = fake_home / ".kiro" / "skills"
         skill_dir = user_root / "tracker"
@@ -531,7 +531,7 @@ class TestOneRowPerSkillFile:
             "---\nname: tracker\ndescription: top level\n"
             "inputs:\n  - name: x\n    description: nested input\n---\nbody\n"
         )
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.skills.extra_paths = [str(user_root)]
         loader = SkillsLoader(
             skills_path=fake_home / ".kiro" / "crew" / "skills",
@@ -556,9 +556,9 @@ class TestOneRowPerSkillFile:
         alias = tmp_path / "alias"
         alias.symlink_to(md.parent)  # a second spelling of the same file
         rows = [
-            {"key": "s", "source": "kirocrew", "owned": False,
+            {"key": "s", "source": "ajcrew", "owned": False,
              "path": str(alias / "SKILL.md"), "loaded_by_agents": ["a"]},
-            {"key": "s2", "source": "kirocrew", "owned": True,
+            {"key": "s2", "source": "ajcrew", "owned": True,
              "path": str(md), "loaded_by_agents": ["b"]},
             {"key": "kiro-user/s", "source": "kiro-user",
              "path": str(md), "loaded_by_agents": ["a", "c"]},
@@ -587,10 +587,10 @@ class TestOneRowPerSkillFile:
             return _os.stat_result((st.st_mode, 0, st.st_dev, *st[3:]))
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers._shared.os.stat", zero_ino
+            "aj_crew.dashboard.handlers._shared.os.stat", zero_ino
         )
         rows = [
-            {"key": "a", "source": "kirocrew", "path": str(a)},
+            {"key": "a", "source": "ajcrew", "path": str(a)},
             {"key": "kiro-user/b", "source": "kiro-user", "path": str(b)},
         ]
         assert [r["key"] for r in _one_row_per_skill_file(rows)] == ["a", "kiro-user/b"]
@@ -600,7 +600,7 @@ class TestOneRowPerSkillFile:
         md.parent.mkdir()
         md.write_text("---\nname: s\n---\n")
         rows = [
-            {"key": "s", "source": "kirocrew", "owned": False, "path": str(md),
+            {"key": "s", "source": "ajcrew", "owned": False, "path": str(md),
              "deliveries": 7, "last_used_at": 1700000000.0,
              "created_at": 1690000000.0,
              "size_bytes": 42, "inject_on_trigger": False},
@@ -621,7 +621,7 @@ class TestOneRowPerSkillFile:
         md.parent.mkdir()
         md.write_text("---\nname: s\n---\n")
         rows = [
-            {"key": "s", "source": "kirocrew", "owned": False, "path": str(md)},
+            {"key": "s", "source": "ajcrew", "owned": False, "path": str(md)},
             {"key": "package/s", "source": "package", "path": str(md)},
         ]
         out = _one_row_per_skill_file(rows)
@@ -645,13 +645,13 @@ class TestOneRowPerSkillFile:
             p.parent.mkdir()
             p.write_text("---\nname: s\n---\n")
         rows = [
-            {"key": "s", "source": "kirocrew", "path": str(a)},
+            {"key": "s", "source": "ajcrew", "path": str(a)},
             {"key": "kiro-user/s", "source": "kiro-user", "path": str(b)},
             # A workspace row is consent-gated, so it never merges, even
             # when it names a file another row lists.
             {"key": "kiro-workspace/s", "source": "kiro-workspace", "path": str(a)},
-            {"key": "no-path", "source": "kirocrew", "path": ""},
-            {"key": "gone", "source": "kirocrew", "path": str(tmp_path / "missing")},
+            {"key": "no-path", "source": "ajcrew", "path": ""},
+            {"key": "gone", "source": "ajcrew", "path": str(tmp_path / "missing")},
         ]
         assert [r["key"] for r in _one_row_per_skill_file(rows)] == [
             "s", "kiro-user/s", "kiro-workspace/s", "no-path", "gone",
@@ -693,7 +693,7 @@ class TestExpandAgentGlobs:
 
     def test_shared_cache_resolves_a_repeated_glob_once(self, fake_home, monkeypatch):
         """A skill path named by many agents is canonicalised once, not per agent."""
-        from kiro_crew.skill_runtime import catalog
+        from aj_crew.skill_runtime import catalog
 
         skills_root = fake_home / ".kiro" / "skills"
         shared = _write_skill(skills_root, "shared") / "SKILL.md"
@@ -819,7 +819,7 @@ class TestAgentMatchIndex:
 
     def test_skills_root_is_resolved_once_per_index_not_per_row(self, fake_home, monkeypatch):
         """The alias rule's skills-root check runs once per index, however many rows miss."""
-        import kiro_crew.skills as skills_module
+        import aj_crew.skills as skills_module
 
         root = skills_module.skills_dir()
         rows = [_write_skill(root, f"row{i}") / "SKILL.md" for i in range(3)]
@@ -945,7 +945,7 @@ class TestProjectRelativeGlobAnchorsOnProjectDir:
         link = user_root / "dup-one"
         make_dir_link(link, crew_dir)
         rows = _one_row_per_skill_file([
-            {"key": "dup-one", "source": "kirocrew", "owned": True,
+            {"key": "dup-one", "source": "ajcrew", "owned": True,
              "path": str(crew_dir / "SKILL.md")},
             {"key": "kiro-user/dup-one", "source": "kiro-user",
              "path": str(link / "SKILL.md")},
@@ -964,7 +964,7 @@ class TestProjectRelativeGlobAnchorsOnProjectDir:
         against it. The user spec maps nothing; the project spec maps the
         project skill, so the project spec must win and the row is kept.
         """
-        from kiro_crew.agent_discovery import agent_skill_globs
+        from aj_crew.agent_discovery import agent_skill_globs
 
         user_agents = fake_home / ".kiro" / "agents"
         user_agents.mkdir(parents=True)
@@ -1107,7 +1107,7 @@ class TestReadSkillFile:
 
 
 class TestResolveSkillRoot:
-    def test_kirocrew_skill(self, fake_home):
+    def test_ajcrew_skill(self, fake_home):
         skill_dir = _write_skill(fake_home / ".kiro" / "crew" / "skills", "foo")
         state = MagicMock(_slots={})
         out = _resolve_skill_root("foo", state)
@@ -1148,7 +1148,7 @@ class TestResolveSkillRoot:
         out = _resolve_skill_root("kiro-user/linked", state)
         assert out == target_dir.resolve()
 
-    def test_nested_kirocrew_skill_resolves(self, fake_home):
+    def test_nested_ajcrew_skill_resolves(self, fake_home):
         """Regression: category-keyed skills (``utils/multi-badger``,
         ``code/builder-toolbox``) live one level below the skills root.
         An over-strict symlink guard that required the candidate's parent
@@ -1166,19 +1166,19 @@ class TestResolveSkillRoot:
         out = _resolve_skill_root("kiro-user/cat/nested-one", state)
         assert out == skill_dir.resolve()
 
-    def test_kirocrew_skill_honors_kirocrew_home(self, tmp_path, monkeypatch):
-        """``_resolve_skill_root`` must resolve kirocrew skills under the
+    def test_ajcrew_skill_honors_ajcrew_home(self, tmp_path, monkeypatch):
+        """``_resolve_skill_root`` must resolve ajcrew skills under the
         active config home (``skills_dir()``), not a hardcoded
-        ``~/.kiro/crew``.  An isolated dev gateway sets KIROCREW_HOME to a
+        ``~/.kiro/crew``.  An isolated dev gateway sets AJCREW_HOME to a
         separate directory; the tree/file endpoints must follow it."""
         home_dir = tmp_path / "real-home"
         home_dir.mkdir()
         monkeypatch.setenv("HOME", str(home_dir))
         monkeypatch.setattr(Path, "home", lambda: home_dir)
 
-        # Isolated config home elsewhere, selected via KIROCREW_HOME.
+        # Isolated config home elsewhere, selected via AJCREW_HOME.
         mc_home = tmp_path / "dev-home"
-        monkeypatch.setenv("KIROCREW_HOME", str(mc_home))
+        monkeypatch.setenv("AJCREW_HOME", str(mc_home))
         skill_dir = _write_skill(mc_home / "skills", "isolated-skill")
 
         state = MagicMock(_slots={})
@@ -1310,7 +1310,7 @@ class TestEndpoints:
         events.  Failed access (traversal/sensitive-path) is a probing signal."""
         _write_skill(fake_home / ".kiro" / "skills", "demo")
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.sel", lambda: sel_mock)
 
         state = MagicMock(_slots={}, context_builder=None)
         async with TestClient(TestServer(_make_app(state))) as client:
@@ -1331,14 +1331,14 @@ class TestEndpoints:
         """Route collision regression: a nested skill whose last path segment
         is literally ``tree`` (``utils/tree``) must reach the detail endpoint,
         not the tree browser.  The ``/-/`` separator keeps them distinct."""
-        from kiro_crew.dashboard.handlers import (
+        from aj_crew.dashboard.handlers import (
             api_skill_detail,
             api_skill_file,
             api_skill_tree,
         )
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
-        # A real skill literally named ``utils/tree`` under the kirocrew root.
+        # A real skill literally named ``utils/tree`` under the ajcrew root.
         _write_skill(fake_home / ".kiro" / "crew" / "skills", "utils/tree", description="edge")
 
         app = web.Application()
@@ -1386,13 +1386,13 @@ class TestApiSkillsAgentScoping:
         the same override in ``test_agent_template_skills.py``'s fixture.
         """
         monkeypatch.setattr(
-            "kiro_crew.agent_discovery._KIRO_AGENTS_DIR",
+            "aj_crew.agent_discovery._KIRO_AGENTS_DIR",
             fake_home / ".kiro" / "agents",
         )
 
     @staticmethod
     def _state() -> MagicMock:
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         # A real SkillsLoader, not a bare MagicMock: `_get_skills` treats
         # `hasattr(state, "_standalone_skills")` as "already built", but a
@@ -1599,7 +1599,7 @@ class TestSessionScopedSkillResolution:
         metadata. An app caller must therefore own that exact slot; a foreign,
         unscoped, missing, or absent slot key is indistinguishable from missing.
         """
-        from kiro_crew.dashboard.handlers import prompts
+        from aj_crew.dashboard.handlers import prompts
 
         project = tmp_path / "foreign-project"
         _write_skill(
@@ -1675,8 +1675,8 @@ class TestSessionScopedSkillResolution:
         browse routes resolve through the shared-project fallback, so they keep
         the uniform 404.
         """
-        from kiro_crew.dashboard.handlers import api_skill_detail, prompts
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.dashboard.handlers import api_skill_detail, prompts
+        from aj_crew.skills import SkillsLoader
 
         project = tmp_path / "foreign-project"
         _write_skill(project / ".kiro" / "skills", "foreign-skill")

@@ -16,7 +16,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.mcp_core import WAIT_PING_SECS, _call_tool
+from aj_crew.mcp_core import WAIT_PING_SECS, _call_tool
 
 # Smallest wait the handler allows (seconds = max(60, ...)), so the loop makes
 # 60 / WAIT_PING_SECS = 12 countdown pings before it would elapse naturally.
@@ -36,7 +36,7 @@ class _Clock:
     satisfy the check.
 
     Additionally, the clock checks the *immediate caller's module* to
-    distinguish calls originating from the code-under-test (the ``kirocrew-core``
+    distinguish calls originating from the code-under-test (the ``ajcrew-core``
     MCP server) from infrastructure calls that happen to share the same thread
     (e.g. pytest-xdist worker heartbeats that issue process-global
     ``time.sleep(0.001)`` between test iterations). Only calls whose immediate
@@ -102,9 +102,9 @@ def _run_wait(reply_fn, *, seconds: int = MIN_WAIT, reason: str = "test", identi
         return reply_fn(len(posts), dict(body or {}))
 
     with (
-        patch("kiro_crew.mcp_core._post", side_effect=_fake_post),
+        patch("aj_crew.mcp_core._post", side_effect=_fake_post),
         patch(
-            "kiro_crew.mcp_core._resolve_session_key_strict",
+            "aj_crew.mcp_core._resolve_session_key_strict",
             return_value="dashboard:test" if identified else "",
         ),
         patch.object(_time, "monotonic", clock.monotonic),
@@ -449,7 +449,7 @@ class TestWaitSettlementAudit:
     ):
         from unittest.mock import MagicMock
 
-        from kiro_crew import mcp_core, mcp_shared
+        from aj_crew import mcp_core, mcp_shared
 
         audit = MagicMock()
         monkeypatch.setattr(mcp_core, "sel", lambda: audit)
@@ -487,7 +487,7 @@ class TestWaitSettlementAudit:
     ):
         from test_mcp_shared import _LoopHarness, _tools_call
 
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         retiring = threading.Event()
         release = threading.Event()

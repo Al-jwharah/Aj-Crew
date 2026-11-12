@@ -1,6 +1,6 @@
 """Mermaid flattening: every edge a line draws reaches the reader, on every channel.
 
-One shared reading (:func:`kiro_crew.messaging.markup.flatten_mermaid_body`)
+One shared reading (:func:`aj_crew.messaging.markup.flatten_mermaid_body`)
 feeds both the WhatsApp renderer and Slack's ``_convert_mermaid``, so each case
 runs through both: a fix that reaches only one channel fails here.
 """
@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.messaging.markup import flatten_mermaid_body
-from kiro_crew.slack import format as slack_format
+from aj_crew.messaging.markup import flatten_mermaid_body
+from aj_crew.slack import format as slack_format
 
 
 def _shared(body: str) -> str:

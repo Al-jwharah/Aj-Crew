@@ -19,8 +19,8 @@ from unittest.mock import DEFAULT, MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.platform import update_layout
+from aj_crew.dashboard.handlers import updates
+from aj_crew.platform import update_layout
 
 
 @pytest.fixture(autouse=True)
@@ -32,8 +32,8 @@ def _isolated_module_state(_floor_monkeypatch, tmp_path):
     exactly the class of cross-test coupling this module's cache contract exists
     to prevent.
     """
-    _floor_monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
-    _floor_monkeypatch.delenv("KIROCREW_CDN_BASE", raising=False)
+    _floor_monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
+    _floor_monkeypatch.delenv("AJCREW_CDN_BASE", raising=False)
     _floor_monkeypatch.setattr(update_layout, "data_home", lambda: tmp_path)
     # The apply tests fake every git spawn, so the repo-config probe would read
     # their minimal fixture checkout as unreadable. The refusal itself is covered
@@ -166,7 +166,7 @@ def _git_proj(monkeypatch, tmp_path) -> str:
     # local config it cannot read (``repo_exec_config_reason``).
     (git_dir / "config").write_text("[core]\n\trepositoryformatversion = 0\n", encoding="utf-8")
     monkeypatch.setattr(
-        "kiro_crew.platform.update_capability.running_from_checkout",
+        "aj_crew.platform.update_capability.running_from_checkout",
         lambda root, **kw: True,
     )
     return str(proj)

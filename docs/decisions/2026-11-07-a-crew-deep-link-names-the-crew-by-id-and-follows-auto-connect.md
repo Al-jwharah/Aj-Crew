@@ -5,7 +5,7 @@ Date: 2026-11-07
 
 ## Decision
 
-`kirocrew://chat?crew=<crew id>&sid=<session>` names the crew by its id (its
+`ajcrew://chat?crew=<crew id>&sid=<session>` names the crew by its id (its
 key in `instances.json`, never the display name); the app switches to that crew
 the way a tab click does and then sends the crew's pane an open-session
 message, and an unknown or unavailable crew shows an error and opens nothing.

@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard.chat_turn.model_fallback import _settle_session_model
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.chat_turn.model_fallback import _settle_session_model
+from aj_crew.dashboard.state import _ChatSlot
 
 
 class _Client:

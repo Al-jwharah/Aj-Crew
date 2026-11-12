@@ -139,15 +139,15 @@ class TestInterpreterArgvLiteralMint:
     @pytest.mark.parametrize(
         "cmd",
         [
-            "python -c 'os.kill(pid_from(\"[k]irocrew gateway\"), 9)'",
+            "python -c 'os.kill(pid_from(\"[a]jcrew gateway\"), 9)'",
             "python -c 'os.killpg(pgid_of(\"{n}\"), 15)'",
             "node -e 'process.kill(pidOf(\"{n}\"), 9)'",
         ],
     )
     def test_direct_kill_api_blocked(self, cmd):
         # `os.kill` IS the execution sink, so it stands as its own alternative rather than
-        # behind the shell-command sink list.  Matched on `irocrew` rather than the full
-        # name so the standard "don't match my own lookup" bracket idiom (`[k]irocrew`),
+        # behind the shell-command sink list.  Matched on `jcrew` rather than the full
+        # name so the standard "don't match my own lookup" bracket idiom (`[a]jcrew`),
         # which still resolves to the gateway, is not a free pass.
         assert _denied_by(cmd.format(n=_NAME)) is not None
 
@@ -197,10 +197,10 @@ class TestInterpreterArgvLiteralMint:
         assert _denied_by(cmd.format(n=_NAME, v=_TOK)) is None
 
     def test_parameter_expansion_inside_a_substitution_body_is_still_a_kill(self):
-        # `kill $(pgrep -f kiro${x:-crew})` hides the name behind an expansion whose
+        # `kill $(pgrep -f aj${x:-crew})` hides the name behind an expansion whose
         # literal branch the shell substitutes back in, so the body is searched both raw
         # and with those defaults resolved.
-        assert _denied_by("kill $(pgrep -f kiro${x:-crew})") == _RULE_KILL
+        assert _denied_by("kill $(pgrep -f aj${x:-crew})") == _RULE_KILL
 
     def test_kill_api_mentioned_in_prose_allowed(self):
         assert _denied_by(f"echo 'os.kill docs mention {_NAME}'") is None
@@ -208,13 +208,13 @@ class TestInterpreterArgvLiteralMint:
     @pytest.mark.parametrize(
         "cmd",
         [
-            "python -c 'os.system(\"PKILL -f [k]irocrew\")'",
-            "node -e 'execSync(\"PKILL -f [k]irocrew\")'",
-            "python -c \"subprocess.run(['PKILL','-f','[k]irocrew'])\"",
+            "python -c 'os.system(\"PKILL -f [a]jcrew\")'",
+            "node -e 'execSync(\"PKILL -f [a]jcrew\")'",
+            "python -c \"subprocess.run(['PKILL','-f','[a]jcrew'])\"",
         ],
     )
     def test_bracket_idiom_inside_an_interpreter_payload_blocked(self, cmd):
-        # `[k]irocrew` is the standard "don't match my own process lookup" idiom and still
+        # `[a]jcrew` is the standard "don't match my own process lookup" idiom and still
         # resolves to the gateway.  The direct-kill-API branch and the sink-qualified
         # branches all account for it, so the three are consistent.
         assert _denied_by(cmd.replace("PKILL", _PK)) is not None
@@ -228,8 +228,8 @@ class TestInterpreterArgvLiteralMint:
     def test_bracket_idiom_in_prose_still_allowed(self):
         # Tolerating the idiom must not turn a mention into a match: no execution sink,
         # no denial.
-        assert _denied_by(f"echo 'run {_PK} [k]irocrew to stop it'") is None
-        assert _denied_by(f"git commit -m 'note: {_PK} [k]irocrew rule'") is None
+        assert _denied_by(f"echo 'run {_PK} [a]jcrew to stop it'") is None
+        assert _denied_by(f"git commit -m 'note: {_PK} [a]jcrew rule'") is None
 
     def test_data_consumer_not_in_program_position_still_allowed(self):
         # The exemption still holds for an ordinary consumer invocation.
@@ -264,7 +264,7 @@ class TestInterpreterArgvLiteralMint:
         assembled = (
             "python -c 'import os; os.system("
             + Q
-            + "kiro"
+            + "aj"
             + Q
             + " + "
             + Q
@@ -278,7 +278,7 @@ class TestInterpreterArgvLiteralMint:
     def test_a_base64_wrapped_mint_is_decoded_and_denied(self):
         """An inline payload hiding the mint in a base64 literal is DENIED -- by decoding it.
 
-        `base64.b64decode("a2lyb2NyZXcgdG9rZW4=")` is `kirocrew token`; the floor decodes
+        `base64.b64decode("YWpjcmV3IHRva2Vu")` is `ajcrew token`; the floor decodes
         every base64-shaped literal of the command AS SUBMITTED (base64 does not survive
         the lower-casing the rest of the floor reads) and matches the decoded text. This
         replaces the earlier reading, under which the `b64decode`/`exec`/`__import__`
@@ -291,7 +291,7 @@ class TestInterpreterArgvLiteralMint:
         computed = (
             "python -c 'import os,base64; os.system(base64.b64decode("
             + Q
-            + "a2lyb2NyZXcgdG9rZW4="
+            + "YWpjcmV3IHRva2Vu"
             + Q
             + ").decode())'"
         )
@@ -362,7 +362,7 @@ class TestCredentialMintSegmentScoping:
                 f'"/opt/custom/{_NAME}" {_TOK}',
                 f"$(which {_NAME}) {_TOK}",
                 f"docker exec {_NAME} {_NAME} {_TOK} --ttl 2h",
-                f"KIROCREW_HOME=/tmp/h KIROCREW_PORT=6777 {_NAME} {_TOK}",
+                f"AJCREW_HOME=/tmp/h AJCREW_PORT=6777 {_NAME} {_TOK}",
             ),
             # A mint reached through a subcommand word is still a mint; the retired
             # pattern covered it via its unbounded gap and this must not regress.
@@ -533,9 +533,9 @@ class TestCredentialMintSegmentScoping:
             *_named(
                 "test_incidental_mention_allowed",
                 f"cd /workplace/x/{_NAME}-wt-y && pytest test/test_{_TOK}_auth.py",
-                f"cd /workplace/x/{_NAME}-wt-y && grep -n mint src/kiro_crew/{_TOK}_auth.py",
+                f"cd /workplace/x/{_NAME}-wt-y && grep -n mint src/aj_crew/{_TOK}_auth.py",
                 f"tail -20 /tmp/{_NAME}-gw.log | sed 's/{_TOK}=.*/REDACTED/'",
-                f"KIROCREW_HOME=/tmp/h ./bin/{_NAME} gateway  # banner prints the auth {_TOK}",
+                f"AJCREW_HOME=/tmp/h ./bin/{_NAME} gateway  # banner prints the auth {_TOK}",
                 f"cat /tmp/{_NAME}-dev/config.json  # contains a {_TOK} field",
                 f"grep -rn {_TOK} ~/.{_NAME}/skills/",
                 f"{_NAME} doctor 2>&1 | grep {_TOK}",

@@ -24,11 +24,11 @@ import pytest
 from pipeline_conductor_fleet_probe_helpers import LOAD_NAME
 from skill_script_helpers import load_skill_script
 
-from kiro_crew import agent, hooks, validation
-from kiro_crew.autonudge import NudgeLoop, nudge_cycle_header
+from aj_crew import agent, hooks, validation
+from aj_crew.autonudge import NudgeLoop, nudge_cycle_header
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = REPO_ROOT / "src" / "kiro_crew" / "builtin_skills" / "pipeline-conductor"
+SKILL_DIR = REPO_ROOT / "src" / "aj_crew" / "builtin_skills" / "pipeline-conductor"
 SKILL_MD = SKILL_DIR / "SKILL.md"
 DESIGN_DOC = REPO_ROOT / "docs" / "request-for-change" / "rfc-pipeline-conductor.md"
 
@@ -356,7 +356,7 @@ class TestPodReproAdmissionGate:
         assert "no edit, commit, or pr" in brief
         assert "run the same pod trace green" in brief
         assert "tear the pod down to zero residue" in brief
-        assert "worktree's `./.venv/bin/kirocrew`" in brief
+        assert "worktree's `./.venv/bin/ajcrew`" in brief
         assert "repository's own playwright runner" in brief
         assert "missing required engine" in brief
 
@@ -460,10 +460,10 @@ class TestSpecCheckRefusesAnUndeclaredGate:
     def test_startup_runs_the_check_before_it_dispatches_anything(self):
         startup = _flat(_skill_section("## Startup (once per run)"))
         posix = startup.index(
-            '`"$kirocrew_runtime_python" -i -b "<skill-dir>/scripts/spec_check.py" --spec <path>`'
+            '`"$ajcrew_runtime_python" -i -b "<skill-dir>/scripts/spec_check.py" --spec <path>`'
         )
         powershell = startup.index(
-            '`& $env:kirocrew_runtime_python -i -b "<skill-dir>/scripts/spec_check.py" --spec <path>`'
+            '`& $env:ajcrew_runtime_python -i -b "<skill-dir>/scripts/spec_check.py" --spec <path>`'
         )
         agent_read = startup.index("only after exit 0 may you read the spec")
         # The step after the check: build the queue. A dispatcher creates no folder
@@ -495,7 +495,7 @@ class TestSpecCheckReadsThroughTheSensitivePathGate:
     def _plant_credential_store(monkeypatch, root):
         """Plant a credential store, classify ONLY it as sensitive, and return its path.
 
-        Patched on ``kiro_crew.hooks`` because that is where the real call site looks
+        Patched on ``aj_crew.hooks`` because that is where the real call site looks
         it up. Canonical paths are compared, so a symlink resolves to the target.
         """
         aws = root / ".aws"
@@ -562,7 +562,7 @@ class TestSpecCheckReadsThroughTheSensitivePathGate:
     ):
         """With no route to the gate, the script refuses rather than reading plainly.
 
-        Both routes are stubbed: the import and the re-exec under Kiro Crew's own
+        Both routes are stubbed: the import and the re-exec under Aj Crew's own
         interpreter (``TestSpecCheckRunsWhereTheGateIsImportable``).
         """
         script = self._script()
@@ -579,7 +579,7 @@ class TestSpecCheckRunsWhereTheGateIsImportable:
     """The check has to reach an interpreter that can import the gate.
 
     A plain ``python3`` on a managed-venv install cannot import it, and would refuse
-    every spec. So the script re-runs under the ``kirocrew`` launcher's sibling
+    every spec. So the script re-runs under the ``ajcrew`` launcher's sibling
     interpreter; with no launcher, or a second failure there, it still refuses.
     """
 
@@ -591,7 +591,7 @@ class TestSpecCheckRunsWhereTheGateIsImportable:
     def _install(tmp_path):
         """A synced copy of the script plus a launcher whose sibling has the gate.
 
-        As in production, the copy sits outside ``kiro_crew/``, and only ``kirocrew``
+        As in production, the copy sits outside ``aj_crew/``, and only ``ajcrew``
         is on ``PATH``, not the interpreter beside it.
         """
         scripts = tmp_path / "skills" / "pipeline-conductor" / "scripts"
@@ -601,7 +601,7 @@ class TestSpecCheckRunsWhereTheGateIsImportable:
 
         bindir = tmp_path / "venv" / "bin"
         bindir.mkdir(parents=True)
-        launcher = bindir / "kirocrew"
+        launcher = bindir / "ajcrew"
         launcher.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
         # A ``PATH`` lookup skips a file it cannot execute, so the mode is part of
         # the fixture rather than decoration.
@@ -621,7 +621,7 @@ class TestSpecCheckRunsWhereTheGateIsImportable:
         ``-S`` and ``-E`` drop ``site-packages`` and ``PYTHONPATH``, so this interpreter
         stands in for an operator ``python3`` without the package.
 
-        ``KIROCREW_HOME`` and ``KIROCREW_WORKSPACE`` are pinned explicitly: the gate
+        ``AJCREW_HOME`` and ``AJCREW_WORKSPACE`` are pinned explicitly: the gate
         imports ``config.paths``, whose ``config_dir()`` creates the home on first use.
         """
         return subprocess.run(
@@ -632,8 +632,8 @@ class TestSpecCheckRunsWhereTheGateIsImportable:
             env={
                 **os.environ,
                 "PATH": str(bindir),
-                "KIROCREW_HOME": str(home),
-                "KIROCREW_WORKSPACE": str(home / "workspace"),
+                "AJCREW_HOME": str(home),
+                "AJCREW_WORKSPACE": str(home / "workspace"),
             },
         )
 
@@ -678,7 +678,7 @@ class TestSpecCheckRunsWhereTheGateIsImportable:
         runtime_python = tmp_path / "sealed bundle" / "python3.12"
         runtime_python.parent.mkdir(parents=True)
         runtime_python.write_text("", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_RUNTIME_PYTHON", str(runtime_python))
+        monkeypatch.setenv("AJCREW_RUNTIME_PYTHON", str(runtime_python))
         monkeypatch.setattr(
             script.shutil,
             "which",
@@ -691,7 +691,7 @@ class TestSpecCheckRunsWhereTheGateIsImportable:
     def test_the_interpreter_is_the_launcher_s_sibling_resolved_through_the_link(
         self, tmp_path, monkeypatch
     ):
-        """``bin/kirocrew`` -> ``bin/python``, resolved on the REAL path.
+        """``bin/ajcrew`` -> ``bin/python``, resolved on the REAL path.
 
         The launcher is habitually a symlink from a user's ``bin`` directory into
         the venv, so the sibling lookup has to run in the venv rather than beside
@@ -699,25 +699,23 @@ class TestSpecCheckRunsWhereTheGateIsImportable:
         creating one needs a privilege the Windows runner does not hold.
         """
         script = self._script()
-        monkeypatch.delenv("KIROCREW_RUNTIME_PYTHON", raising=False)
+        monkeypatch.delenv("AJCREW_RUNTIME_PYTHON", raising=False)
         bindir = tmp_path / "venv" / "bin"
         bindir.mkdir(parents=True)
-        (bindir / "kirocrew").write_text("", encoding="utf-8")
+        (bindir / "ajcrew").write_text("", encoding="utf-8")
         (bindir / "python").write_text("", encoding="utf-8")
-        monkeypatch.setattr(
-            script.shutil, "which", lambda _name: str(tmp_path / "link" / "kirocrew")
-        )
-        monkeypatch.setattr(script.os.path, "realpath", lambda _p: str(bindir / "kirocrew"))
+        monkeypatch.setattr(script.shutil, "which", lambda _name: str(tmp_path / "link" / "ajcrew"))
+        monkeypatch.setattr(script.os.path, "realpath", lambda _p: str(bindir / "ajcrew"))
         monkeypatch.setattr(script.os, "name", "posix")
         assert script.bundled_python() == str(bindir / "python")
 
     def test_the_posix_desktop_interpreter_is_the_versioned_sibling(self, tmp_path, monkeypatch):
-        """Desktop PBS layout: ``bin/kirocrew`` -> ``bin/python3.12``."""
+        """Desktop PBS layout: ``bin/ajcrew`` -> ``bin/python3.12``."""
         script = self._script()
-        monkeypatch.delenv("KIROCREW_RUNTIME_PYTHON", raising=False)
+        monkeypatch.delenv("AJCREW_RUNTIME_PYTHON", raising=False)
         bindir = tmp_path / "backend-dist" / "bin"
         bindir.mkdir(parents=True)
-        launcher = bindir / "kirocrew"
+        launcher = bindir / "ajcrew"
         launcher.write_text("", encoding="utf-8")
         python = bindir / "python3.12"
         python.write_text("", encoding="utf-8")
@@ -726,14 +724,14 @@ class TestSpecCheckRunsWhereTheGateIsImportable:
         assert script.bundled_python() == str(python)
 
     def test_the_windows_venv_interpreter_carries_the_exe_suffix(self, tmp_path, monkeypatch):
-        """``Scripts/kirocrew.exe`` -> ``Scripts/python.exe``."""
+        """``Scripts/ajcrew.exe`` -> ``Scripts/python.exe``."""
         script = self._script()
-        monkeypatch.delenv("KIROCREW_RUNTIME_PYTHON", raising=False)
+        monkeypatch.delenv("AJCREW_RUNTIME_PYTHON", raising=False)
         scripts = tmp_path / "venv" / "Scripts"
         scripts.mkdir(parents=True)
-        (scripts / "kirocrew.exe").write_text("", encoding="utf-8")
+        (scripts / "ajcrew.exe").write_text("", encoding="utf-8")
         (scripts / "python.exe").write_text("", encoding="utf-8")
-        monkeypatch.setattr(script.shutil, "which", lambda _name: str(scripts / "kirocrew.exe"))
+        monkeypatch.setattr(script.shutil, "which", lambda _name: str(scripts / "ajcrew.exe"))
         monkeypatch.setattr(script.os, "name", "nt")
         got = script.bundled_python()
         assert got is not None
@@ -743,13 +741,13 @@ class TestSpecCheckRunsWhereTheGateIsImportable:
         assert os.path.realpath(got) == os.path.realpath(str(scripts / "python.exe"))
 
     def test_the_windows_desktop_interpreter_is_above_the_cmd_shim(self, tmp_path, monkeypatch):
-        """Desktop PBS layout: ``bin\\kirocrew.cmd`` -> ``python.exe``."""
+        """Desktop PBS layout: ``bin\\ajcrew.cmd`` -> ``python.exe``."""
         script = self._script()
-        monkeypatch.delenv("KIROCREW_RUNTIME_PYTHON", raising=False)
+        monkeypatch.delenv("AJCREW_RUNTIME_PYTHON", raising=False)
         root = tmp_path / "backend-dist"
         bindir = root / "bin"
         bindir.mkdir(parents=True)
-        launcher = bindir / "kirocrew.cmd"
+        launcher = bindir / "ajcrew.cmd"
         launcher.write_text("@echo off\n", encoding="utf-8")
         python = root / "python.exe"
         python.write_text("", encoding="utf-8")
@@ -759,7 +757,7 @@ class TestSpecCheckRunsWhereTheGateIsImportable:
 
     def test_no_injected_path_or_launcher_leaves_no_interpreter_to_reach(self, monkeypatch):
         script = self._script()
-        monkeypatch.delenv("KIROCREW_RUNTIME_PYTHON", raising=False)
+        monkeypatch.delenv("AJCREW_RUNTIME_PYTHON", raising=False)
         monkeypatch.setattr(script.shutil, "which", lambda _name: None)
         assert script.bundled_python() is None
 
@@ -806,13 +804,13 @@ class TestSpecCheckRunsWhereTheGateIsImportable:
     def test_the_caller_s_data_home_reaches_the_child_unchanged(self, tmp_path, monkeypatch):
         """The script pins no home of its own, in either direction.
 
-        A pod's whole isolation is ``KIROCREW_HOME``, so the re-exec forwards the
+        A pod's whole isolation is ``AJCREW_HOME``, so the re-exec forwards the
         environment and adds only its own loop marker.
         """
         script = self._script()
         monkeypatch.setattr(script, "safe_read_file", None)
         monkeypatch.setattr(script, "bundled_python", lambda: "/venv/bin/python")
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "relocated"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "relocated"))
         seen = {}
         monkeypatch.setattr(
             script.subprocess, "call", lambda argv, env=None: seen.update(env=env) or 0
@@ -820,7 +818,7 @@ class TestSpecCheckRunsWhereTheGateIsImportable:
         spec = tmp_path / "pipeline-spec.json"
         spec.write_text("{}", encoding="utf-8")
         script.main(["--spec", str(spec)])
-        assert seen["env"]["KIROCREW_HOME"] == str(tmp_path / "relocated")
+        assert seen["env"]["AJCREW_HOME"] == str(tmp_path / "relocated")
 
 
 class TestProbeSignalsAreDocumented:
@@ -1377,7 +1375,7 @@ class TestWorkOrderBriefClauses:
         brief = _flat(_skill_section(self.HEADING))
         assert "on posix" in brief
         assert "on powershell" in brief
-        assert "kirocrew_runtime_python" in brief
+        assert "ajcrew_runtime_python" in brief
 
     def test_the_gate_does_not_copy_isolated_mode_from_startup(self):
         """``preflight.py`` imports its sibling ``push_guard``, and ``-I`` drops
@@ -1385,9 +1383,7 @@ class TestWorkOrderBriefClauses:
         would make the mandatory gate raise ``ModuleNotFoundError`` on every push
         -- a fleet-wide push refusal. The clause carries the exception and its
         reason, because an unexplained omission gets 'fixed' back in."""
-        gate_scripts = (
-            REPO_ROOT / "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts"
-        )
+        gate_scripts = REPO_ROOT / "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts"
         preflight = (gate_scripts / "preflight.py").read_text(encoding="utf-8")
         assert "from push_guard import" in preflight, "the sibling import this guards is gone"
         brief = _flat(_skill_section(self.HEADING))
@@ -1433,7 +1429,7 @@ class TestWorkOrderBriefClauses:
         script, so the duplicated literal cannot drift."""
         script = (
             REPO_ROOT
-            / "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts/push_guard.py"
+            / "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts/push_guard.py"
         ).read_text(encoding="utf-8")
         declared = re.search(r"^DEFAULT_MAX_AHEAD = (\d+)", script, re.M)
         assert declared, "DEFAULT_MAX_AHEAD not found in push_guard.py"
@@ -1451,7 +1447,7 @@ class TestWorkOrderBriefClauses:
         unknown code, so the number is asserted against the script."""
         script = (
             REPO_ROOT
-            / "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts/push_guard.py"
+            / "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts/push_guard.py"
         ).read_text(encoding="utf-8")
         declared = re.search(r"^EXIT_FOREIGN_INDEX = (\d+)", script, re.M)
         assert declared, "EXIT_FOREIGN_INDEX not found in push_guard.py"

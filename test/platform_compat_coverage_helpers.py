@@ -16,7 +16,7 @@ from typing import Any, Callable
 
 import pytest
 
-from kiro_crew import platform_compat as pc
+from aj_crew import platform_compat as pc
 
 # Some tests below simulate the POSIX branch (forcing ``IS_POSIX = True``) or the
 # Windows branch from a POSIX host, by monkeypatching attributes that only exist

@@ -177,7 +177,7 @@ describe('FeaturedSpotlight — installed lead swaps to local art on a failed re
       name: 'demo-app',
       displayName: 'Demo App',
       description: 'About demo-app.',
-      author: 'Kiro Crew',
+      author: 'Aj Crew',
       version: '1.0.0',
       tags: ['agents'],
       installed: true,
@@ -359,7 +359,7 @@ describe('FeaturedSpotlight desktop-only Enable name', () => {
     try {
       renderCard()
       const btn = screen.getByRole('button', { name: '启用' })
-      expect(btn).toHaveAccessibleDescription('在这里可以启用，但该应用自己的窗口需要 Kiro Crew 桌面端才能使用。')
+      expect(btn).toHaveAccessibleDescription('在这里可以启用，但该应用自己的窗口需要 Aj Crew 桌面端才能使用。')
     } finally {
       await act(async () => { await i18next.changeLanguage('en') })
     }

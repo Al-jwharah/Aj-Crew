@@ -6,7 +6,7 @@ instruction can only stack a whiteout on top -- the bytes stay in the layer
 stack, so every ``docker pull`` fetches the wheel and then discards it, next
 to the already-installed copy of the same code. Measured on the published
 artifact: 48,047,081 compressed bytes, 5.7% of
-``ghcr.io/kirodotdev/kirocrew:latest``; layer 6 contained exactly ``tmp/``,
+``ghcr.io/al-jwharah/ajcrew:latest``; layer 6 contained exactly ``tmp/``,
 ``tmp/wheels/`` and the wheel, layer 7 exactly the ``tmp/.wh.wheels``
 whiteout -- the proof the delete happened a layer too late.
 
@@ -42,7 +42,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 
-_CREW_TREE = ROOT / "src" / "kiro_crew" / "apps" / "builtins" / "aws_control" / "crew"
+_CREW_TREE = ROOT / "src" / "aj_crew" / "apps" / "builtins" / "aws_control" / "crew"
 _CREW_RUNTIME = _CREW_TREE / "runtime"
 #: The crew image lane's build-plan module, in the crew tree's ``scripts/``.
 _BUILD_PLAN = _CREW_TREE / "scripts" / "crew_image_build_plan.py"

@@ -19,12 +19,12 @@ from typing import Any, cast
 
 import pytest
 
-from kiro_crew import history_index_worker
-from kiro_crew._sqlite_compat import fts5_available
-from kiro_crew.history import ConversationLog
-from kiro_crew.history_index import INDEX_FILENAME, SessionSearchIndex
-from kiro_crew.history_index_worker import SessionIndexWorkerSupervisor
-from kiro_crew.testing.wait import wait_until
+from aj_crew import history_index_worker
+from aj_crew._sqlite_compat import fts5_available
+from aj_crew.history import ConversationLog
+from aj_crew.history_index import INDEX_FILENAME, SessionSearchIndex
+from aj_crew.history_index_worker import SessionIndexWorkerSupervisor
+from aj_crew.testing.wait import wait_until
 
 pytestmark = pytest.mark.skipif(not fts5_available(), reason="SQLite built without FTS5")
 
@@ -39,7 +39,7 @@ def _is_ours(child):
     Matched by the name the supervisor gives its child, so a stray belonging to
     another test is never touched.
     """
-    return child.name.startswith("kirocrew-session-index")
+    return child.name.startswith("ajcrew-session-index")
 
 
 @pytest.fixture(autouse=True)
@@ -80,7 +80,7 @@ def _settle(sessions, *keys):
     ``history_search._INDEX_QUIET_WINDOW_SECS``. A monkeypatch does not reach the
     spawned child, so the file's mtime is moved back instead.
     """
-    from kiro_crew import history_search
+    from aj_crew import history_search
 
     settled = time.time() - history_search._INDEX_QUIET_WINDOW_SECS - 600.0
     for key in keys:
@@ -163,7 +163,7 @@ def _own_children():
     without a pid probe, and ``os.kill(pid, 0)`` is rejected on Windows.
     """
     return [
-        c for c in multiprocessing.active_children() if c.name.startswith("kirocrew-session-index")
+        c for c in multiprocessing.active_children() if c.name.startswith("ajcrew-session-index")
     ]
 
 
@@ -206,7 +206,7 @@ def test_a_spawn_that_keeps_failing_gives_up_after_a_healthy_child_dies(tmp_path
     a failed respawn that kept the dead child's start time would look healthy too
     and retry at minimum backoff forever.
     """
-    import kiro_crew.history_index_worker as worker_module
+    import aj_crew.history_index_worker as worker_module
 
     class _AlwaysFailsToSpawn:
         def __init__(self, *args, **kwargs):
@@ -333,7 +333,7 @@ def test_the_child_body_survives_a_failing_pass(tmp_path, monkeypatch, _restore_
     The failure branch takes the same wait as the success branch, so a child whose
     passes keep failing still notices a parent that has gone.
     """
-    import kiro_crew.history_search as history_search
+    import aj_crew.history_search as history_search
 
     calls = []
 

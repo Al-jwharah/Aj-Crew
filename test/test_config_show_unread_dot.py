@@ -12,14 +12,14 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from test_config_patch import _make_app_with_state, _patch, tmp_config  # noqa: F401
 
-from kiro_crew.config import KiroCrewConfig
+from aj_crew.config import AjCrewConfig
 
 KEY = "dashboard.show_unread_dot"
 
 
 def test_defaults_to_shown(tmp_config) -> None:  # noqa: F811
-    assert KiroCrewConfig().dashboard.show_unread_dot is True
-    assert KiroCrewConfig.load().dashboard.show_unread_dot is True
+    assert AjCrewConfig().dashboard.show_unread_dot is True
+    assert AjCrewConfig.load().dashboard.show_unread_dot is True
 
 
 @pytest.mark.asyncio
@@ -31,7 +31,7 @@ async def test_boolean_written_and_loaded(tmp_config, value) -> None:  # noqa: F
         assert resp.status == 200
     data = json.loads(tmp_config.read_text(encoding="utf-8"))
     assert data["dashboard"]["show_unread_dot"] is value
-    assert KiroCrewConfig.load().dashboard.show_unread_dot is value
+    assert AjCrewConfig.load().dashboard.show_unread_dot is value
 
 
 @pytest.mark.asyncio

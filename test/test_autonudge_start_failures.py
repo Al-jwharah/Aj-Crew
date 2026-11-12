@@ -13,13 +13,13 @@ import math
 
 import pytest
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import (
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import (
     SESSION_START_FAILURE_REASON,
     AutoNudgeService,
     NudgeLoop,
 )
-from kiro_crew.autonudge_service.model import (
+from aj_crew.autonudge_service.model import (
     STRUCTURAL_TERMINAL_REASON,
     budget_elapsed,
     cap_reached,
@@ -30,7 +30,7 @@ SLOT = "chat-1-987"
 
 @pytest.fixture(autouse=True)
 def _enable(monkeypatch):
-    monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.fixture(autouse=True)
@@ -536,7 +536,7 @@ async def test_an_unreadable_bound_stops_the_loop_at_load_and_keeps_the_value(
     it as 0 would run the loop with no limit, so it fails closed instead: the loop
     is deactivated at load under ``structural_terminal`` with its schedule cleared,
     the value stays as stored, and the WARNING names the field and the value."""
-    caplog.set_level("WARNING", logger="kiro_crew.autonudge")
+    caplog.set_level("WARNING", logger="aj_crew.autonudge")
     reloaded, loop_id = await _reloaded_with_bound(
         store_dir, field, stored, **{field: _ARMED_BOUND[field]}
     )
@@ -579,7 +579,7 @@ async def test_resume_does_not_revive_a_loop_with_an_unreadable_bound(store_dir,
 @pytest.mark.asyncio
 async def test_a_numeric_bound_loads_unchanged(store_dir, _nosleep, caplog):
     """Control: an int bound, the only form the gateway writes, is left as it is."""
-    caplog.set_level("WARNING", logger="kiro_crew.autonudge")
+    caplog.set_level("WARNING", logger="aj_crew.autonudge")
     reloaded, loop_id = await _reloaded_with_bound(
         store_dir, "max_cycles", 24, row={"max_runtime_secs": 3600}, max_cycles=24
     )
@@ -598,9 +598,9 @@ def test_both_terminal_branches_report_a_tagged_start_failure(monkeypatch):
     The shared runtime raises ``AcpSessionStartTimeout``, an ``AcpRuntimeError`` and not an
     ``AcpError``, and member slots run there. The helper reads the tag, not the type.
     """
-    from kiro_crew.acp.client import AcpTimeoutError
-    from kiro_crew.acp.runtime import AcpSessionStartTimeout
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.acp.client import AcpTimeoutError
+    from aj_crew.acp.runtime import AcpSessionStartTimeout
+    from aj_crew.dashboard import chat_runner
 
     reported: list[str] = []
 
@@ -631,9 +631,9 @@ def test_both_terminal_branches_report_a_tagged_start_failure(monkeypatch):
 def test_an_untagged_or_human_turn_reports_nothing(monkeypatch):
     """Two false-positive guards in one place: an ordinary failure is not a starved
     start, and a human turn must not spend an unrelated loop's stand-down budget."""
-    from kiro_crew.acp.client import AcpTimeoutError
-    from kiro_crew.acp.runtime import AcpSessionStartTimeout
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.acp.client import AcpTimeoutError
+    from aj_crew.acp.runtime import AcpSessionStartTimeout
+    from aj_crew.dashboard import chat_runner
 
     reported: list[str] = []
 

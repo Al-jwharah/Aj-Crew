@@ -15,14 +15,14 @@ function makeJob(overrides: Partial<CronJob> = {}): CronJob {
 
 describe('JobForm script/command edit path', () => {
   it('jobKindOf derives the execution kind from the carried field', () => {
-    expect(jobKindOf(makeJob({ script: '~/.kirocrew/crons/f.py:run' }))).toBe('script')
+    expect(jobKindOf(makeJob({ script: '~/.ajcrew/crons/f.py:run' }))).toBe('script')
     expect(jobKindOf(makeJob({ command: 'echo hi' }))).toBe('command')
     expect(jobKindOf(makeJob({ message: 'do the thing' }))).toBe('message')
     expect(jobKindOf(undefined)).toBe('message')
   })
 
   it('parseJobDefaults seeds jobKind=script for a script cron with empty message', () => {
-    const result = parseJobDefaults(makeJob({ script: '~/.kirocrew/crons/nba_progress_nudge.py:run' }))
+    const result = parseJobDefaults(makeJob({ script: '~/.ajcrew/crons/nba_progress_nudge.py:run' }))
     expect(result.jobKind).toBe('script')
     expect(result.message).toBe('')
     expect(result.schedMode).toBe('weekly')
@@ -30,7 +30,7 @@ describe('JobForm script/command edit path', () => {
 
   it('buildBody does NOT require a message for a script cron and omits message/agent', () => {
     let error = ''
-    const f = { ...parseJobDefaults(makeJob({ script: '~/.kirocrew/crons/f.py:run' })) }
+    const f = { ...parseJobDefaults(makeJob({ script: '~/.ajcrew/crons/f.py:run' })) }
     const body = buildBody(f, 'America/Chicago', e => { error = e })
     expect(error).toBe('')
     expect(body).not.toBeNull()
@@ -60,7 +60,7 @@ describe('JobForm script/command edit path', () => {
 
   it('buildBody changing only the schedule of a script cron still saves (interval mode)', () => {
     let error = ''
-    const base = parseJobDefaults(makeJob({ script: '~/.kirocrew/crons/f.py:run' }))
+    const base = parseJobDefaults(makeJob({ script: '~/.ajcrew/crons/f.py:run' }))
     const f = { ...base, schedMode: 'interval' as const, intVal: 30, intUnit: 'minutes' as const }
     const body = buildBody(f, 'UTC', e => { error = e })
     expect(error).toBe('')
@@ -81,7 +81,7 @@ describe('JobForm script/command edit path', () => {
 
   it('buildBody requires a name for every kind', () => {
     let error = ''
-    const f = { ...parseJobDefaults(makeJob({ script: '~/.kirocrew/crons/f.py:run', name: '' })) }
+    const f = { ...parseJobDefaults(makeJob({ script: '~/.ajcrew/crons/f.py:run', name: '' })) }
     const body = buildBody(f, 'UTC', e => { error = e })
     expect(body).toBeNull()
     expect(error).toBe('Name is required')
@@ -90,15 +90,15 @@ describe('JobForm script/command edit path', () => {
   it('renders the script value read-only and hides the Agent selector in the detail panel', () => {
     renderWithProviders(
       <JobForm
-        job={makeJob({ script: '~/.kirocrew/crons/nba_progress_nudge.py:run' })}
-        agents={[{ name: 'kirocrew', description: '' } as never]}
-        defaultAgent="kirocrew"
+        job={makeJob({ script: '~/.ajcrew/crons/nba_progress_nudge.py:run' })}
+        agents={[{ name: 'ajcrew', description: '' } as never]}
+        defaultAgent="ajcrew"
         onSaved={() => {}}
         layout="vertical"
       />,
     )
     // Script value shown
-    expect(screen.getByText('~/.kirocrew/crons/nba_progress_nudge.py:run')).toBeInTheDocument()
+    expect(screen.getByText('~/.ajcrew/crons/nba_progress_nudge.py:run')).toBeInTheDocument()
     // "Script" label present, no "Message" textarea label, no "Agent" label
     expect(screen.getByText('Script')).toBeInTheDocument()
     expect(screen.queryByText('Agent')).not.toBeInTheDocument()
@@ -111,8 +111,8 @@ describe('JobForm script/command edit path', () => {
     renderWithProviders(
       <JobForm
         job={makeJob({ message: 'do the thing' })}
-        agents={[{ name: 'kirocrew', description: '' } as never]}
-        defaultAgent="kirocrew"
+        agents={[{ name: 'ajcrew', description: '' } as never]}
+        defaultAgent="ajcrew"
         onSaved={() => {}}
         layout="vertical"
       />,

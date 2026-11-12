@@ -23,10 +23,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.decisions import local_models
-from kiro_crew.decisions import local_runtime as lr
-from kiro_crew.testing.wait import wait_until
+from aj_crew import platform_compat
+from aj_crew.decisions import local_models
+from aj_crew.decisions import local_runtime as lr
+from aj_crew.testing.wait import wait_until
 
 pytestmark = pytest.mark.timeout(120)
 
@@ -51,13 +51,13 @@ def launcher_tether(name: str) -> str:
 
 
 #: The stand-in server: the launcher contract of ``local_servers/*.py`` -- bind
-#: 127.0.0.1 on ``--port``, answer ``/kirocrew-attest`` with the secret, exit at
+#: 127.0.0.1 on ``--port``, answer ``/ajcrew-attest`` with the secret, exit at
 #: end of stdin through the launchers' own tether -- and nothing else.
 _STUB_HEAD = textwrap.dedent("""
     import argparse, os, socketserver, sys, threading
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-    ATTEST = os.environ.pop("KIROCREW_LOCAL_ATTEST", "")
+    ATTEST = os.environ.pop("AJCREW_LOCAL_ATTEST", "")
 
     """)
 _STUB_BODY = textwrap.dedent("""
@@ -80,7 +80,7 @@ _STUB_BODY = textwrap.dedent("""
 
     class H(BaseHTTPRequestHandler):
         def do_GET(self):
-            body = ATTEST.encode() if self.path == "/kirocrew-attest" else b""
+            body = ATTEST.encode() if self.path == "/ajcrew-attest" else b""
             self.send_response(200 if body else 404)
             self.end_headers()
             self.wfile.write(body)
@@ -181,9 +181,9 @@ def make_runtime(tmp_path: Path, setattr) -> lr.LocalModelRuntime:
     rt = lr.LocalModelRuntime(tmp_path / "models", download=download, run_command=run_command)
     # The interpreter running the suite stands in for the preset's uv environment.
     rt._env_python = lambda m: Path(sys.executable)  # type: ignore[method-assign]
-    import kiro_crew.env
+    import aj_crew.env
 
-    setattr(kiro_crew.env, "resolve_uv", lambda: sys.executable)
+    setattr(aj_crew.env, "resolve_uv", lambda: sys.executable)
     return rt
 
 
@@ -257,7 +257,7 @@ _PARENT = textwrap.dedent("""
     import sys, time
     sys.path[:0] = {paths!r}
     import test_decisions_local_runtime_real_spawn as t
-    from kiro_crew.decisions import local_runtime as lr
+    from aj_crew.decisions import local_runtime as lr
 
     from pathlib import Path
     rt = t.make_runtime(Path({tmp!r}), setattr)

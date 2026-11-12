@@ -22,8 +22,8 @@ from aws_control_backup_helpers import (
     ACCOUNT,
 )
 
-from kiro_crew.apps.builtins.aws_control.backend import backup, costs
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.apps.builtins.aws_control.backend import backup, costs
+from aj_crew.testing.wait import default_timeout
 
 # costs — cache read and freshness branches
 
@@ -42,7 +42,7 @@ class TestUnreadableStateIsNotOverwritten:
     """
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse state pin moved verbatim; no test in this module calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse state pin moved verbatim; no test in this module calls monkeypatch.undo()
     def _isolated_state(self, tmp_path, monkeypatch):
         self.state_file = tmp_path / "backup.json"
         # Captured BEFORE the failure is injected, so assertions can read the
@@ -160,7 +160,7 @@ class TestALostRunWriteDoesNotReUploadForever:
     """
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse state pin moved verbatim; no test in this module calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse state pin moved verbatim; no test in this module calls monkeypatch.undo()
     def _isolated_state(self, tmp_path, monkeypatch):
         self.state_file = tmp_path / "backup.json"
         monkeypatch.setattr(backup, "_state_path", lambda: self.state_file)
@@ -489,7 +489,7 @@ class TestALostRunWriteDoesNotReUploadForever:
 
         def slow_read():
             # flake-ok: pre-existing 10 ms delay and wall-clock read inside the patched locked read; moved verbatim and the stamp is compared with that moment
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing delay inside the patched locked read moved verbatim
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing delay inside the patched locked read moved verbatim
             time.sleep(0.01)
             observed["inside"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="microseconds")
             return real_read()
@@ -980,7 +980,7 @@ def test_staging_name_preserves_digest_and_byte_budget(basename):
 
 class TestCostsCacheBranches:
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse cache pin moved verbatim; no test in this module calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse cache pin moved verbatim; no test in this module calls monkeypatch.undo()
     def _isolated_cache(self, tmp_path, monkeypatch):
         monkeypatch.setattr(costs, "_cache_path", lambda account: tmp_path / f"{account}.json")
         yield

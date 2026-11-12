@@ -1,10 +1,10 @@
 """The cron ``agent`` help names the agent an agent-less job really runs.
 
 An agent-less LLM job dispatches ``agent.default_agent`` and degrades to the
-``kirocrew`` floor only when that is unset
+``ajcrew`` floor only when that is unset
 (``slack/gateway_runtime/cron_fire.py``; learn-cron-dashboard spec,
 "Per-agent cron"). Each surface that describes the omitted agent must say so
-rather than promise the bare kirocrew agent.
+rather than promise the bare ajcrew agent.
 """
 
 from __future__ import annotations
@@ -13,8 +13,8 @@ import argparse
 
 import pytest
 
-from kiro_crew import cli_parser_agent
-from kiro_crew.mcp_cron import _list_tools
+from aj_crew import cli_parser_agent
+from aj_crew.mcp_cron import _list_tools
 
 
 def _subparser(parser: argparse.ArgumentParser, name: str) -> argparse.ArgumentParser:
@@ -25,7 +25,7 @@ def _subparser(parser: argparse.ArgumentParser, name: str) -> argparse.ArgumentP
 
 
 def _agent_help(action_name: str) -> str:
-    root = argparse.ArgumentParser(prog="kirocrew")
+    root = argparse.ArgumentParser(prog="ajcrew")
     cli_parser_agent.register_cron_parser(root.add_subparsers(dest="command"))
     cron = _subparser(_subparser(root, "cron"), action_name)
     for action in cron._actions:
@@ -55,5 +55,5 @@ def test_the_omitted_agent_is_described_as_agent_default_agent(surface: str) -> 
     # The default is not always substituted (cron_fire.py's gates, e.g. a
     # default declaring availableAgents keeps the floor), so the text must not
     # promise it unconditionally.
-    assert "the kirocrew agent when that is unset or not eligible" in text
-    assert "default kirocrew agent" not in text
+    assert "the ajcrew agent when that is unset or not eligible" in text
+    assert "default ajcrew agent" not in text

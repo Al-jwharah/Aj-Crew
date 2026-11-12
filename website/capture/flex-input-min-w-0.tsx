@@ -33,7 +33,7 @@ const width = parseInt(params.get('w') || '360', 10)
 const fixOn = params.get('fix') !== 'off'
 const minW = fixOn ? 'min-w-0 ' : ''
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 /** One constrained frame per site, mirroring its real row ancestry. */
 function Scenes() {

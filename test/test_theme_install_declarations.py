@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 from theme_install_helpers import _VALID_MP3, _VALID_VARS, _make_tiered, _write
 
-from kiro_crew.dashboard.theme_validate import (
+from aj_crew.dashboard.theme_validate import (
     _THEME_AUDIO_TRIGGERS,
     _THEME_OVERLAY_DEFAULT_POSITION,
     _THEME_OVERLAY_DEFAULT_ZINDEX,

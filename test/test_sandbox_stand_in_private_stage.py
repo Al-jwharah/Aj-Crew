@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import RecordingLibc, launch
 
-from kiro_crew import sandbox_launcher_program as program
+from aj_crew import sandbox_launcher_program as program
 
 pytestmark = pytest.mark.skipif(
     not sys.platform.startswith("linux"), reason="the namespace launcher is Linux-only"

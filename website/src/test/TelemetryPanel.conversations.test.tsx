@@ -153,13 +153,13 @@ describe('TelemetryPanel — conversations by spend', () => {
         title: 'Asked over Telegram',
         channel: 'telegram',
         category: 'telegram',
-        slot: 'telegram:kirocrew:direct:874',
+        slot: 'telegram:ajcrew:direct:874',
       }),
     ])
     await waitFor(() => expect(screen.getByText('Asked over Telegram')).toBeInTheDocument())
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
     // Still named, though — falling back to "Untitled" would lose the one piece
     // of identity the row has.
-    expect(screen.getByText('Asked over Telegram')).toHaveAccessibleDescription('telegram:kirocrew:direct:874')
+    expect(screen.getByText('Asked over Telegram')).toHaveAccessibleDescription('telegram:ajcrew:direct:874')
   })
 })

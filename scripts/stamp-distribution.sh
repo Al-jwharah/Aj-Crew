@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Write src/kiro_crew/_build_info.py so a packaged build reports which install
+# Write src/aj_crew/_build_info.py so a packaged build reports which install
 # path it came from in the usage beacon's `dist` field.
 #
-# WHY A GENERATED MODULE, not an env var: `KIROCREW_DISTRIBUTION` is inherited by
+# WHY A GENERATED MODULE, not an env var: `AJCREW_DISTRIBUTION` is inherited by
 # every child process and settable by anyone with a shell, so a stray export
 # relabels that host's daily count. A module inside the package tree ships with
 # the artifact and a running install cannot change it. `beacon.distribution()`
@@ -31,7 +31,7 @@ esac
 # The release lane these bytes are packaged for, from the packaging job's
 # environment (nightly.yml passes build_channel: nightly to every build
 # workflow, which exports it as KC_BUILD_CHANNEL). Empty when the job names
-# none. Read by kiro_crew.build_channel; a value outside the known lanes is
+# none. Read by aj_crew.build_channel; a value outside the known lanes is
 # refused rather than baked, for the same reason as DIST above.
 BUILD_CHANNEL="${KC_BUILD_CHANNEL:-}"
 case "$BUILD_CHANNEL" in
@@ -41,7 +41,7 @@ case "$BUILD_CHANNEL" in
 esac
 
 if [ -z "$PKG_DIR" ]; then
-  PKG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/src/kiro_crew"
+  PKG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/src/aj_crew"
 fi
 
 if [ ! -d "$PKG_DIR" ]; then
@@ -52,7 +52,7 @@ fi
 # git tree id of website/ in the tree being packaged. Baked alongside
 # DISTRIBUTION so the dashboard bundle-freshness guard can compare it against
 # the website/ tree the served dist was built from (see
-# src/kiro_crew/dashboard/stale_bundle_guard.py). A tree id, not HEAD: a
+# src/aj_crew/dashboard/stale_bundle_guard.py). A tree id, not HEAD: a
 # backend-only commit must not make a correct bundle look stale. Empty-safe:
 # git may be unavailable in some packaging sandboxes (a staged copy is not a
 # git repo), in which case WEBSITE_TREE stays "" and the guard skips silently.

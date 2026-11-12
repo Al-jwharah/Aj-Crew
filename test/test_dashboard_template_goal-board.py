@@ -12,7 +12,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-TEMPLATE = ROOT / "src/kiro_crew/dashboard_templates/builtin/goal-board/template.html"
+TEMPLATE = ROOT / "src/aj_crew/dashboard_templates/builtin/goal-board/template.html"
 
 
 def _style() -> str:
@@ -55,9 +55,9 @@ def test_a_needs_you_option_asks_to_send_and_reply_fills_the_chat_box() -> None:
     so it stays ``act``. No other channel exists."""
     script = _script()
     assert sorted(re.findall(r"type:\s*'([\w:-]+)'", script)) == [
-        "kirocrew-dashboard:act",
-        "kirocrew-dashboard:open",
-        "kirocrew-dashboard:send",
+        "ajcrew-dashboard:act",
+        "ajcrew-dashboard:open",
+        "ajcrew-dashboard:send",
     ]
     assert script.count("postMessage(") == 3
     assert "postMessage(" in _function("act")
@@ -93,7 +93,7 @@ def test_a_pr_chip_asks_the_host_to_open_it_and_never_opens_it_itself() -> None:
     """The frame has no allow-popups: a link opens only through the host's bridge."""
     script = _script()
     body = _function("openLink")
-    assert "parent.postMessage({ type: 'kirocrew-dashboard:open', url: url }, '*')" in body
+    assert "parent.postMessage({ type: 'ajcrew-dashboard:open', url: url }, '*')" in body
     assert PR_URL in script
     for banned in ("window.open", "href", "<a ", "target"):
         assert banned not in script, banned
@@ -137,7 +137,7 @@ def test_an_items_artifact_values_that_can_open_become_host_links() -> None:
 def test_live_keys_off_the_workers_status_not_a_masked_field() -> None:
     """``member_dashboard._page_safe`` drops ``worker_session_key`` before any field
     reaches a page, so a ``live`` test on it would never be true."""
-    from kiro_crew.dashboard.handlers.member_dashboard import _MASKED_VALUE_KEYS
+    from aj_crew.dashboard.handlers.member_dashboard import _MASKED_VALUE_KEYS
 
     body = _function("view")
     for masked in _MASKED_VALUE_KEYS:

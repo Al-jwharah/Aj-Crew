@@ -8,9 +8,9 @@ from threading import Event
 import pytest
 from member_memory_helpers import env as _member_env
 
-from kiro_crew.mcp_tools import learn
-from kiro_crew.memory_recall import MAX_RECALL_PAYLOAD_BYTES, _transport_size
-from kiro_crew.testing.wait import wait_until
+from aj_crew.mcp_tools import learn
+from aj_crew.memory_recall import MAX_RECALL_PAYLOAD_BYTES, _transport_size
+from aj_crew.testing.wait import wait_until
 
 env = _member_env
 

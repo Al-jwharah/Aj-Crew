@@ -1,7 +1,7 @@
 """Every backend id and every model-registry namespace names exactly one harness.
 
 A backend id is a plain string, and the vocabulary in
-:mod:`kiro_crew.agent_sdk.backends` is built from sets and dict keys. Two
+:mod:`aj_crew.agent_sdk.backends` is built from sets and dict keys. Two
 ``ACP_BACKEND_*`` constants spelled with the same string therefore collapse into
 one member of ``ACP_BACKENDS_KNOWN`` and one key of every per-backend table with
 no error at import, and whichever entry Python reads last silently decides what
@@ -27,14 +27,14 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Dict, Iterable, Mapping, Set
 
-from kiro_crew.agent_sdk import backends as sdk_backends
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.agent_sdk import backends as sdk_backends
+from aj_crew.agent_sdk.backends import (
     _MODEL_REGISTRY_NAMESPACE_BY_BACKEND,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     ACP_BACKENDS_KNOWN,
 )
-from kiro_crew.agent_sdk.capabilities import MODEL_NAMESPACE_ACP
+from aj_crew.agent_sdk.capabilities import MODEL_NAMESPACE_ACP
 
 # The id-constant prefix. ``ACP_BACKENDS_*`` (the capability sets) does not
 # match it, and the ``ACP_BACKEND_*`` per-backend tables are dicts, so the

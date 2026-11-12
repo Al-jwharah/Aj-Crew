@@ -20,7 +20,7 @@ from issue_radar_crew_store_helpers import (  # noqa: F401 -- the autouse fixtur
     _unit,
 )
 
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
 
 # ── non-finite numbers ──────────────────────────────────────────────────────
 #

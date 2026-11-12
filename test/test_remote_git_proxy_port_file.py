@@ -16,9 +16,9 @@ from pathlib import Path
 import pytest
 from test_remote_session_launch import _launch, sync
 
-from kiro_crew.remote_session import workspace_tools
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.remote_session import workspace_tools
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX guest shell")
@@ -26,7 +26,7 @@ from kiro_crew.testing.wait import async_wait_until
 async def test_two_launches_in_one_guest_keep_separate_git_proxy_port_files(tmp_path):
     from test_remote_git_proxy import HttpBackendUpstream
 
-    worker_dir = tmp_path / "guest" / ".kirocrew-worker"
+    worker_dir = tmp_path / "guest" / ".ajcrew-worker"
     parent, child = _launch(tmp_path, "sess-share"), _launch(tmp_path, "sess-share")
     assert parent.git_proxy_port_file != child.git_proxy_port_file
     await parent.install()
@@ -125,7 +125,7 @@ def test_tool_server_argv_names_the_launch_port_file(tmp_path, monkeypatch):
         async def start(self):
             return 1
 
-    from kiro_crew.remote_session import relay
+    from aj_crew.remote_session import relay
 
     monkeypatch.setattr(relay, "WorkspaceRelay", Relay)
 
@@ -143,7 +143,7 @@ def test_tool_server_argv_names_the_launch_port_file(tmp_path, monkeypatch):
 def test_no_shared_default_port_file_exists_on_either_side():
     """A proxy started without its own port file refuses to start, and a tool
     server given none routes no git: neither falls back to one shared path."""
-    from kiro_crew.remote_session import git_proxy
+    from aj_crew.remote_session import git_proxy
 
     with pytest.raises(SystemExit) as refused:
         git_proxy.main([])

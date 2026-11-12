@@ -128,7 +128,7 @@ const servers = ROWS.map(([name, stub, transport, recommendation]) => ({
   in_allowlist: stub,
   entry_poolable: false,
   pooling_blocked_by_env: ENV_BLOCKED.has(name),
-  agents: ['kirocrew'],
+  agents: ['ajcrew'],
   transport,
   denylisted: false,
   ...(recommendation ? { recommendation } : {}),

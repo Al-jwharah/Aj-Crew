@@ -31,7 +31,7 @@ const skill = (key: string, deliveries: number | null, lastUsedAgoS: number | nu
   key,
   name: key,
   description: `${key} skill`,
-  source: 'kirocrew',
+  source: 'ajcrew',
   inject_on_trigger: true,
   size_bytes: 1000,
   deliveries,

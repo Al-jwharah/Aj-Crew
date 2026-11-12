@@ -53,10 +53,10 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from test_update_provider import _UNALLOCATABLE_PID
 
-import kiro_crew.acp._dispatch as acp_dispatch
-import kiro_crew.acp.client as acp_client
-import kiro_crew.acp.runtime as acp_runtime
-from kiro_crew.acp.client import (
+import aj_crew.acp._dispatch as acp_dispatch
+import aj_crew.acp.client as acp_client
+import aj_crew.acp.runtime as acp_runtime
+from aj_crew.acp.client import (
     AcpClient,
     AcpProcessDied,
     _loggable_request_id,
@@ -64,9 +64,9 @@ from kiro_crew.acp.client import (
     write_notification_best_effort,
     write_response_frame_bounded,
 )
-from kiro_crew.acp.runtime import AcpRuntime, AcpRuntimeDead, AcpRuntimeStdinStalled
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.testing.wait import await_until, default_timeout
+from aj_crew.acp.runtime import AcpRuntime, AcpRuntimeDead, AcpRuntimeStdinStalled
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.testing.wait import await_until, default_timeout
 
 # Short enough that a stalled drain fails in well under a second, long enough
 # that a healthy AsyncMock drain (resolves on the next loop tick) never trips it.
@@ -1341,7 +1341,7 @@ class TestRequestWriteNoProgressBound:
         the third stalled are unread in the same pipe the live child may still
         read, so their deaths are ambiguous deliveries; a session with no prompt
         outstanding is not, and none of them is re-typed as a throttle."""
-        from kiro_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.session_handle import AcpSessionHandle
 
         rt, proc = _runtime_with_stdin(stalled=True)
         handles = {}
@@ -1584,95 +1584,95 @@ class TestEveryBackendIdLogSiteIsSanitized:
     permission-answer lines, and the read-loop/permission bookkeeping lines."""
 
     SITES = {
-        "src/kiro_crew/acp/client.py": [],
-        "src/kiro_crew/acp/runtime_tree_kill.py": [],
-        "src/kiro_crew/acp/runtime_spawn_launch.py": [],
-        "src/kiro_crew/acp/runtime_spawn_entry.py": [],
-        "src/kiro_crew/acp/runtime_session_setup.py": [],
-        "src/kiro_crew/acp/runtime_session_create.py": [],
-        "src/kiro_crew/acp/runtime_session_load.py": [],
-        "src/kiro_crew/acp/runtime_session_registry.py": [],
-        "src/kiro_crew/acp/runtime_mode_activation.py": [],
-        "src/kiro_crew/acp/runtime_wire.py": [
+        "src/aj_crew/acp/client.py": [],
+        "src/aj_crew/acp/runtime_tree_kill.py": [],
+        "src/aj_crew/acp/runtime_spawn_launch.py": [],
+        "src/aj_crew/acp/runtime_spawn_entry.py": [],
+        "src/aj_crew/acp/runtime_session_setup.py": [],
+        "src/aj_crew/acp/runtime_session_create.py": [],
+        "src/aj_crew/acp/runtime_session_load.py": [],
+        "src/aj_crew/acp/runtime_session_registry.py": [],
+        "src/aj_crew/acp/runtime_mode_activation.py": [],
+        "src/aj_crew/acp/runtime_wire.py": [
             "send_notification method=%s: %s; activity clock not refreshed",
             "response to req=%s; marking runtime dead",
             "while sending request method=%s req=%s;",
         ],
-        "src/kiro_crew/acp/runtime_liveness.py": [],
-        "src/kiro_crew/acp/runtime_host_requests.py": [
+        "src/aj_crew/acp/runtime_liveness.py": [],
+        "src/aj_crew/acp/runtime_host_requests.py": [
             "Ownerless server request answered -32601 — method=%s id=%s",
             "answer-task cap (%d) reached at %s request id=%s%s and no ",
             "auto-rejected permission request id=%s for session %s ",
             "answer for permission request id=%s could not be written in ",
             "failed to answer unroutable permission request id=%s",
         ],
-        "src/kiro_crew/acp/runtime_frame_accounting.py": [
+        "src/aj_crew/acp/runtime_frame_accounting.py": [
             "Dropped %d unroutable frame(s) for session %s (method=%s)",
         ],
-        "src/kiro_crew/acp/runtime_reader_loop.py": [],
-        "src/kiro_crew/acp/runtime_class.py": [],
-        "src/kiro_crew/acp/client_turn.py": [
+        "src/aj_crew/acp/runtime_reader_loop.py": [],
+        "src/aj_crew/acp/runtime_class.py": [],
+        "src/aj_crew/acp/client_turn.py": [
             "ACP event: method=%s id=%s action=%s",
         ],
-        "src/kiro_crew/acp/client_transport.py": [
+        "src/aj_crew/acp/client_transport.py": [
             "to req=%s; treating the backend as dead",
             "while sending request method=%s req=%s;",
             "Deferring inbound server request: method=%s id=%s (waiting for %d)",
             "Deferring non-matching response: id=%s (waiting for %d)",
         ],
-        "src/kiro_crew/acp/client_permissions.py": [
+        "src/aj_crew/acp/client_permissions.py": [
             "reject_tool: no deny option advertised for req=%s",
             "ACP: rejecting unknown server request: method=%s id=%s",
             "Permission requested for tool: %s (req=%s)",
             "approve_tool: security floor rejected req=%s: %s",
             "auto-approve identity gate rejected req=%s: %s",
         ],
-        "src/kiro_crew/acp/client_claude_seed.py": [],
-        "src/kiro_crew/acp/client_claude_session.py": [],
-        "src/kiro_crew/acp/client_model_selection.py": [],
-        "src/kiro_crew/acp/client_seed_ownership.py": [],
-        "src/kiro_crew/acp/client_spawn_env.py": [],
-        "src/kiro_crew/acp/client_timeouts.py": [],
-        "src/kiro_crew/acp/client_lifecycle.py": [],
-        "src/kiro_crew/acp/client_mcp_array.py": [],
-        "src/kiro_crew/acp/client_tool_events.py": [],
-        "src/kiro_crew/acp/client_turn_control.py": [],
-        "src/kiro_crew/acp/client_usage.py": [],
-        "src/kiro_crew/acp/client_class.py": [],
-        "src/kiro_crew/acp/client_start.py": [],
-        "src/kiro_crew/acp/session_handle.py": [],
-        "src/kiro_crew/acp/session_handle_runtime_contract.py": [],
-        "src/kiro_crew/acp/session_handle_watchdog.py": [],
-        "src/kiro_crew/acp/session_handle_lifecycle.py": [],
-        "src/kiro_crew/acp/session_handle_compaction.py": [],
-        "src/kiro_crew/acp/session_handle_turn.py": [
+        "src/aj_crew/acp/client_claude_seed.py": [],
+        "src/aj_crew/acp/client_claude_session.py": [],
+        "src/aj_crew/acp/client_model_selection.py": [],
+        "src/aj_crew/acp/client_seed_ownership.py": [],
+        "src/aj_crew/acp/client_spawn_env.py": [],
+        "src/aj_crew/acp/client_timeouts.py": [],
+        "src/aj_crew/acp/client_lifecycle.py": [],
+        "src/aj_crew/acp/client_mcp_array.py": [],
+        "src/aj_crew/acp/client_tool_events.py": [],
+        "src/aj_crew/acp/client_turn_control.py": [],
+        "src/aj_crew/acp/client_usage.py": [],
+        "src/aj_crew/acp/client_class.py": [],
+        "src/aj_crew/acp/client_start.py": [],
+        "src/aj_crew/acp/session_handle.py": [],
+        "src/aj_crew/acp/session_handle_runtime_contract.py": [],
+        "src/aj_crew/acp/session_handle_watchdog.py": [],
+        "src/aj_crew/acp/session_handle_lifecycle.py": [],
+        "src/aj_crew/acp/session_handle_compaction.py": [],
+        "src/aj_crew/acp/session_handle_turn.py": [
             "rejected permission request id=%s stranded in the ",
             "cancelled elicitation request id=%s stranded in the ",
         ],
-        "src/kiro_crew/acp/session_handle_dispatch.py": [
+        "src/aj_crew/acp/session_handle_dispatch.py": [
             "Dropping stray response frame id=%s (no waiter)",
             "id=%s for fidelity-unaware consumer (child=%s)",
         ],
-        "src/kiro_crew/acp/session_handle_mcp.py": [],
-        "src/kiro_crew/acp/session_handle_kas.py": [],
-        "src/kiro_crew/acp/session_handle_native_children.py": [],
-        "src/kiro_crew/acp/session_handle_model_selection.py": [],
-        "src/kiro_crew/acp/session_handle_steering.py": [],
-        "src/kiro_crew/acp/session_handle_permissions.py": [
+        "src/aj_crew/acp/session_handle_mcp.py": [],
+        "src/aj_crew/acp/session_handle_kas.py": [],
+        "src/aj_crew/acp/session_handle_native_children.py": [],
+        "src/aj_crew/acp/session_handle_model_selection.py": [],
+        "src/aj_crew/acp/session_handle_steering.py": [],
+        "src/aj_crew/acp/session_handle_permissions.py": [
             "reject_tool: no deny option advertised for req=%s",
             "approve_tool: security floor rejected req=%s: %s",
         ],
-        "src/kiro_crew/acp/session_handle_updates.py": [],
-        "src/kiro_crew/acp/session_handle_class.py": [],
-        "src/kiro_crew/acp/runtime.py": [],
-        "src/kiro_crew/acp/_dispatch.py": [],
-        "src/kiro_crew/acp/_dispatch_parts/tool_call_identity.py": [],
-        "src/kiro_crew/acp/_dispatch_parts/surfaced_text.py": [],
-        "src/kiro_crew/acp/_dispatch_parts/tool_call_provenance.py": [],
-        "src/kiro_crew/acp/_dispatch_parts/adapter_signals.py": [],
-        "src/kiro_crew/acp/_dispatch_parts/tool_result_events.py": [],
-        "src/kiro_crew/acp/_dispatch_parts/session_update_parser.py": [],
-        "src/kiro_crew/acp/_dispatch_parts/permission_requests.py": [
+        "src/aj_crew/acp/session_handle_updates.py": [],
+        "src/aj_crew/acp/session_handle_class.py": [],
+        "src/aj_crew/acp/runtime.py": [],
+        "src/aj_crew/acp/_dispatch.py": [],
+        "src/aj_crew/acp/_dispatch_parts/tool_call_identity.py": [],
+        "src/aj_crew/acp/_dispatch_parts/surfaced_text.py": [],
+        "src/aj_crew/acp/_dispatch_parts/tool_call_provenance.py": [],
+        "src/aj_crew/acp/_dispatch_parts/adapter_signals.py": [],
+        "src/aj_crew/acp/_dispatch_parts/tool_result_events.py": [],
+        "src/aj_crew/acp/_dispatch_parts/session_update_parser.py": [],
+        "src/aj_crew/acp/_dispatch_parts/permission_requests.py": [
             "(req=%s tool_call_id=%s)",
         ],
     }
@@ -1778,7 +1778,7 @@ class TestProbeTeardownIsARequestForEveryHarness:
         ``_TERMINATE_TIMEOUT`` for a reply the host never sends, so adding one
         must restore a notification arm there, through
         ``write_notification_best_effort``."""
-        from kiro_crew.acp import harness
+        from aj_crew.acp import harness
 
         notifying = [
             b for b in sorted(harness._HARNESSES) if harness.harness_for(b).teardown.notification

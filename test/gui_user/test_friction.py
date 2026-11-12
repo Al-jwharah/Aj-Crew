@@ -1161,8 +1161,8 @@ class TestLedgerProvenance:
             {"event": "pull_request"},  # wrong event: fork-reachable
             {"event": "workflow_dispatch"},  # a maintainer's ad-hoc run is not the nightly
             {"head_branch": "feat/anything"},  # untrusted branch
-            {"head_repository": {"full_name": "someone/KiroCrew"}},  # fork head
-            {"repository": {"full_name": "someone/KiroCrew"}},  # foreign base
+            {"head_repository": {"full_name": "someone/AjCrew"}},  # fork head
+            {"repository": {"full_name": "someone/AjCrew"}},  # foreign base
             {"head_repository": None},  # provenance missing is provenance wrong
             {"status": "in_progress", "conclusion": None},  # not finished
             {"conclusion": "skipped"},  # the job never ran
@@ -1248,7 +1248,7 @@ class TestLedgerProvenance:
         [
             _run(99, event="workflow_dispatch", status="in_progress", conclusion=None),
             _run(99, head_branch="feat/x", status="in_progress", conclusion=None),
-            _run(99, head_repository={"full_name": "someone/KiroCrew"}),
+            _run(99, head_repository={"full_name": "someone/AjCrew"}),
             {"id": 99},
             None,
         ],

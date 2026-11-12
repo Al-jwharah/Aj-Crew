@@ -24,21 +24,21 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from conftest import requires_symlinks
-from kiro_crew import acp_backends
-from kiro_crew.acp.client import AcpClient, AcpToolGateUnroutable
-from kiro_crew.acp.harness import copilot as copilot_mod
-from kiro_crew.acp.transport_errors import AcpError
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.agent_sdk import tool_gate as gate
-from kiro_crew.agent_sdk.backends import (
+from aj_crew import acp_backends
+from aj_crew.acp.client import AcpClient, AcpToolGateUnroutable
+from aj_crew.acp.harness import copilot as copilot_mod
+from aj_crew.acp.transport_errors import AcpError
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.agent_sdk import tool_gate as gate
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_COPILOT,
     ACP_BACKEND_FORBIDDEN_MODES,
     ACP_BACKEND_PROMPT_COMMAND_ALLOWLIST,
     prompt_command_issue,
     session_config_drift_issue,
 )
-from kiro_crew.agent_sdk.drivers.acp_vocab import is_user_worded_failure
+from aj_crew.agent_sdk.drivers.acp_vocab import is_user_worded_failure
+from conftest import requires_symlinks
 
 COPILOT = ACP_BACKEND_COPILOT
 _CORPUS = Path(__file__).parent / "fixtures" / "acp_frames" / "copilot"
@@ -321,7 +321,7 @@ def test_the_tripwire_is_inert_on_every_other_backend(backend: str) -> None:
 def test_the_tripwire_runs_on_every_reader_the_goose_one_does() -> None:
     import inspect
 
-    from kiro_crew.acp import client_turn
+    from aj_crew.acp import client_turn
 
     source = inspect.getsource(client_turn)
     assert "await self._tripwire_goose_mode(msg)" not in source
@@ -525,7 +525,7 @@ def test_the_walk_stops_at_the_git_root(tmp_path) -> None:
 async def test_a_project_with_repo_hooks_is_refused_before_anything_is_written(
     tmp_path, monkeypatch
 ) -> None:
-    from kiro_crew.acp.harness.base import SpawnContext
+    from aj_crew.acp.harness.base import SpawnContext
 
     root = _repo(tmp_path)
     (root / ".github" / "hooks").mkdir(parents=True)
@@ -547,8 +547,8 @@ async def test_a_project_with_repo_hooks_is_refused_before_anything_is_written(
 
 @pytest.mark.asyncio
 async def test_a_config_write_failure_is_worded_for_the_person(tmp_path, monkeypatch) -> None:
-    from kiro_crew.acp import launch as launch_mod
-    from kiro_crew.acp.harness.base import SpawnContext
+    from aj_crew.acp import launch as launch_mod
+    from aj_crew.acp.harness.base import SpawnContext
 
     monkeypatch.setattr(copilot_mod, "config_dir", lambda: tmp_path / "home")
     client = AcpClient(work_dir=tmp_path, acp_backend=COPILOT)
@@ -736,8 +736,8 @@ async def test_the_launch_config_goes_when_initialize_answers_or_fails(tmp_path)
 
 @pytest.mark.asyncio
 async def test_a_refused_spawn_removes_the_config_it_wrote(tmp_path, monkeypatch) -> None:
-    from kiro_crew.acp import launch as launch_mod
-    from kiro_crew.acp.harness.base import SpawnContext
+    from aj_crew.acp import launch as launch_mod
+    from aj_crew.acp.harness.base import SpawnContext
 
     monkeypatch.setattr(copilot_mod, "config_dir", lambda: tmp_path)
     client = AcpClient(work_dir=tmp_path, acp_backend=COPILOT)
@@ -823,8 +823,8 @@ def test_the_frame_path_check_reaches_the_copilot_tripwire() -> None:
 
 def test_the_launch_config_lives_in_the_masked_staging_directory(tmp_path, monkeypatch) -> None:
     """Every agent sandbox masks this directory whole and the read gate fences it."""
-    from kiro_crew import sandbox_leaves
-    from kiro_crew.security.paths import is_sensitive_path
+    from aj_crew import sandbox_leaves
+    from aj_crew.security.paths import is_sensitive_path
 
     monkeypatch.setattr(copilot_mod, "config_dir", lambda: tmp_path)
     path = Path(copilot_mod.write_copilot_mcp_config({"mcpServers": {}}))
@@ -839,8 +839,8 @@ def test_the_launch_config_lives_in_the_masked_staging_directory(tmp_path, monke
 
 @pytest.mark.asyncio
 async def test_the_spawn_hands_the_config_back_to_this_child_alone(tmp_path, monkeypatch) -> None:
-    from kiro_crew.acp import launch as launch_mod
-    from kiro_crew.acp.harness.base import SpawnContext
+    from aj_crew.acp import launch as launch_mod
+    from aj_crew.acp.harness.base import SpawnContext
 
     monkeypatch.setattr(copilot_mod, "config_dir", lambda: tmp_path / "home")
     client = AcpClient(work_dir=tmp_path, acp_backend=COPILOT)
@@ -908,7 +908,7 @@ def _event_for(tmp_path: Path, frame: dict, backend: str = COPILOT):
 
 def test_a_copilot_edit_names_its_file_to_the_write_ceiling(tmp_path) -> None:
     """The ``filesystem.write`` ceiling classifies an edit by its target set."""
-    from kiro_crew.platform.governance import classify_tool_args
+    from aj_crew.platform.governance import classify_tool_args
 
     frame = _edit_permission_frame("mcp-stdio-mount-live.jsonl")
     target = frame["params"]["toolCall"]["rawInput"]["fileName"]
@@ -935,7 +935,7 @@ def test_each_frame_of_a_multi_file_patch_is_judged_by_its_own_file(tmp_path) ->
 
 
 def test_an_edit_naming_no_absolute_target_is_denied_by_the_edit_gate(tmp_path) -> None:
-    from kiro_crew.llm_helpers_parts.tool_input_denials import _edit_target_denial
+    from aj_crew.llm_helpers_parts.tool_input_denials import _edit_target_denial
 
     frame = _edit_permission_frame("mcp-stdio-mount-live.jsonl")
     params = json.loads(json.dumps(frame["params"]))
@@ -946,7 +946,7 @@ def test_an_edit_naming_no_absolute_target_is_denied_by_the_edit_gate(tmp_path) 
     # The frame still reaches the edit gate on trusted provenance (not the document
     # scan), with a relative stand-in the gate reads as unanchored; a relative path
     # the harness sent is never taken as a target.
-    from kiro_crew.platform.tool_paths import edit_target_candidates
+    from aj_crew.platform.tool_paths import edit_target_candidates
 
     assert event.raw_params_trusted
     assert event.raw_tool_params == {"path": ["copilot-edit-target-unresolved"]}
@@ -995,7 +995,7 @@ def test_a_new_file_diff_does_not_name_dev_null(tmp_path) -> None:
 
 @pytest.mark.parametrize("kind", ["other", None, "move"])
 def test_a_write_outside_the_edit_kind_is_still_routed_to_the_write_plane(tmp_path, kind) -> None:
-    from kiro_crew.platform.tool_paths import is_edit_call
+    from aj_crew.platform.tool_paths import is_edit_call
 
     raw = {"fileName": "/w/x.txt", "diff": "+x"} if kind != "move" else {}
     frame = _edit_frame_with(raw, kind=kind, locations=[{"path": "/w/x.txt"}])
@@ -1026,9 +1026,9 @@ def _move_diff(source: str, dest: str) -> str:
 async def _always_on_gate_approves(event) -> bool:
     from unittest.mock import MagicMock, patch
 
-    import kiro_crew.sel as sel_mod
-    from kiro_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
-    from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+    import aj_crew.sel as sel_mod
+    from aj_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
+    from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
 
     class _Provider:
         async def approve_tool(self, request_id: str) -> None:
@@ -1118,7 +1118,7 @@ def test_a_cached_content_block_path_stays_a_target(tmp_path) -> None:
 @pytest.mark.asyncio
 async def test_allow_always_is_answered_as_allow_once(tmp_path, kwargs, options) -> None:
     """Copilot's allow-always would stop it asking, so no later file would be judged."""
-    from kiro_crew.acp.types import OUTCOME_SELECTED
+    from aj_crew.acp.types import OUTCOME_SELECTED
 
     client = AcpClient(work_dir=tmp_path, acp_backend=COPILOT)
     frame = _edit_frame_with({"fileName": str(tmp_path / "a.txt"), "diff": "+a"})
@@ -1178,7 +1178,7 @@ def test_seeding_keeps_every_path_of_a_cached_path_list(tmp_path) -> None:
     ],
 )
 def test_an_unreadable_target_is_denied_as_unanchored(tmp_path, raw) -> None:
-    from kiro_crew.platform.tool_paths import edit_target_candidates
+    from aj_crew.platform.tool_paths import edit_target_candidates
 
     event = _event_for(tmp_path, _edit_frame_with(raw, locations=[{"path": "/w/x.txt"}]))
     assert event.diff_path == "copilot-edit-target-unresolved"
@@ -1194,7 +1194,7 @@ def test_a_nested_path_spelling_is_a_target(tmp_path) -> None:
 
 
 def test_a_copilot_delete_keeps_its_caution_badge() -> None:
-    from kiro_crew.platform.tool_paths import is_workspace_edit_call
+    from aj_crew.platform.tool_paths import is_workspace_edit_call
 
     assert not is_workspace_edit_call("delete", "/w/x.txt")
     assert not is_workspace_edit_call("move", "/w/x.txt")
@@ -1216,7 +1216,7 @@ def test_header_parsing_reads_headers_only_and_both_tab_spellings(tmp_path) -> N
 
 
 def test_a_windows_drive_header_keeps_its_drive() -> None:
-    from kiro_crew.acp.client_copilot import _copilot_diff_header_paths
+    from aj_crew.acp.client_copilot import _copilot_diff_header_paths
 
     assert _copilot_diff_header_paths("--- a/C:/w/x.txt\n+++ b/C:/w/y.txt\n@@\n") == (
         ["C:/w/x.txt", "C:/w/y.txt"],
@@ -1260,7 +1260,7 @@ def _feed(client, frame):
 def test_an_mcp_call_carries_its_server_to_the_gate(tmp_path, monkeypatch) -> None:
     """A ceiling about ``@probe/marker`` can only bind when the event names the server."""
     tool_call, permission = _mcp_frames()
-    client = _client_with_placed(tmp_path, ["kirocrew-core", "probe"], monkeypatch)
+    client = _client_with_placed(tmp_path, ["ajcrew-core", "probe"], monkeypatch)
     _feed(client, tool_call)
     event = client._build_permission_event(
         JsonRpcMessage(
@@ -1274,7 +1274,7 @@ def test_an_mcp_call_carries_its_server_to_the_gate(tmp_path, monkeypatch) -> No
 def test_the_tool_call_event_carries_the_recovered_identity(tmp_path, monkeypatch) -> None:
     """The turn loop reads the EVENT, not the caches, to resolve a directive."""
     tool_call, _ = _mcp_frames()
-    client = _client_with_placed(tmp_path, ["kirocrew-core", "probe"], monkeypatch)
+    client = _client_with_placed(tmp_path, ["ajcrew-core", "probe"], monkeypatch)
     event = _feed(client, tool_call)
     assert (event.mcp_server_name, event.tool_name) == ("probe", "marker")
     assert event.mcp_identity_trusted is True
@@ -1282,18 +1282,18 @@ def test_the_tool_call_event_carries_the_recovered_identity(tmp_path, monkeypatc
 
 
 def test_a_copilot_directive_call_resolves_to_its_directive(tmp_path, monkeypatch) -> None:
-    """``kirocrew-core-reset_conversation`` is the only spelling Copilot sends for it.
+    """``ajcrew-core-reset_conversation`` is the only spelling Copilot sends for it.
 
     ``directive_tool_from_call`` cannot read that hyphenated wire title, so without the
     recovered identity on the event no directive or input digest is recorded and the
     tool completes without resetting anything.
     """
-    from kiro_crew import session_directive
+    from aj_crew import session_directive
 
     tool_call, _ = _mcp_frames()
     tool_call = json.loads(json.dumps(tool_call))
-    tool_call["params"]["update"]["title"] = "kirocrew-core-reset_conversation"
-    client = _client_with_placed(tmp_path, ["kirocrew-core", "probe"], monkeypatch)
+    tool_call["params"]["update"]["title"] = "ajcrew-core-reset_conversation"
+    client = _client_with_placed(tmp_path, ["ajcrew-core", "probe"], monkeypatch)
     event = _feed(client, tool_call)
     assert session_directive.directive_tool_from_call("", "", event.wire_title) == ""
     assert (
@@ -1413,7 +1413,7 @@ def test_an_oversized_git_file_is_not_a_pointer(tmp_path) -> None:
 @pytest.mark.parametrize("version", ["1.0.200", "1.0.99", ""])
 def test_an_unverified_copilot_release_is_refused_at_the_handshake(tmp_path, version) -> None:
     """The list-based guards fail open on another release, so the session is refused."""
-    from kiro_crew.acp import client_copilot as cp
+    from aj_crew.acp import client_copilot as cp
 
     client = AcpClient(work_dir=tmp_path, acp_backend=COPILOT)
     client._agent_version = version
@@ -1436,7 +1436,7 @@ def test_an_unverified_copilot_release_is_refused_at_the_handshake(tmp_path, ver
 
 
 def test_the_verified_copilot_release_starts(tmp_path) -> None:
-    from kiro_crew.acp import client_copilot as cp
+    from aj_crew.acp import client_copilot as cp
 
     client = AcpClient(work_dir=tmp_path, acp_backend=COPILOT)
     client._agent_version = cp.COPILOT_VERIFIED_VERSION
@@ -1545,7 +1545,7 @@ async def test_a_built_in_with_no_server_shape_is_not_refused(tmp_path, monkeypa
 
 def test_the_sign_in_remedy_gives_only_actions() -> None:
     """UX: the remedy says what to run; how the harness reads it is not the reader's."""
-    from kiro_crew.agent_sdk.host_auth import declaration_for
+    from aj_crew.agent_sdk.host_auth import declaration_for
 
     remedy = declaration_for(COPILOT).sign_in_remedy
     assert "copilot login" in remedy and "gh auth login" in remedy
@@ -1554,8 +1554,8 @@ def test_the_sign_in_remedy_gives_only_actions() -> None:
 
 def test_the_install_hint_pins_the_verified_release() -> None:
     """A new install lands on the release the defences were measured on."""
-    from kiro_crew.acp import client_copilot as cp
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_LAUNCH, COPILOT_VERIFIED_VERSION
+    from aj_crew.acp import client_copilot as cp
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_LAUNCH, COPILOT_VERIFIED_VERSION
 
     record = ACP_BACKEND_LAUNCH[COPILOT]
     assert record.install_command == f"npm i -g @github/copilot@{COPILOT_VERIFIED_VERSION}"
@@ -1581,7 +1581,7 @@ def test_an_edit_seed_is_not_retained_past_its_event(tmp_path) -> None:
 
 @pytest.mark.asyncio
 async def test_identity_records_are_bounded_and_overflow_refuses(tmp_path, monkeypatch) -> None:
-    from kiro_crew.acp.client_tool_events import (
+    from aj_crew.acp.client_tool_events import (
         COPILOT_IDENTITY_OVERFLOW,
         COPILOT_IDENTITY_RECORDS_MAX,
     )
@@ -1620,7 +1620,7 @@ def test_the_version_refusal_runs_at_the_handshake() -> None:
 
 
 def test_the_verified_version_is_the_recorded_handshake() -> None:
-    from kiro_crew.acp import client_copilot as cp
+    from aj_crew.acp import client_copilot as cp
 
     reported = {
         f["result"]["agentInfo"]["version"]
@@ -1633,7 +1633,7 @@ def test_the_verified_version_is_the_recorded_handshake() -> None:
 
 @pytest.mark.asyncio
 async def test_an_over_long_server_shaped_title_is_refused(tmp_path, monkeypatch) -> None:
-    from kiro_crew.acp.harness.copilot import COPILOT_TITLE_MAX_CHARS
+    from aj_crew.acp.harness.copilot import COPILOT_TITLE_MAX_CHARS
 
     tool_call, permission = _mcp_frames()
     tool_call = json.loads(json.dumps(tool_call))
@@ -1682,7 +1682,7 @@ def test_the_seed_restore_keeps_whatever_was_cached(tmp_path) -> None:
 @pytest.mark.asyncio
 async def test_an_unverified_release_is_refused_once_without_a_respawn(tmp_path) -> None:
     """A fresh process reports the same version, so the refusal must not be retried."""
-    from kiro_crew.acp import client_copilot as cp
+    from aj_crew.acp import client_copilot as cp
 
     client = AcpClient(work_dir=tmp_path, acp_backend=COPILOT)
     spawns = {"n": 0}
@@ -1764,8 +1764,8 @@ def test_unicode_whitespace_ends_the_name_as_the_harness_reads_it(text) -> None:
 
 @pytest.mark.parametrize("title", ["probe-m-arker", "elsewhere-marker"])
 def test_an_over_long_tool_call_id_is_never_stored(tmp_path, monkeypatch, title) -> None:
-    from kiro_crew.acp._dispatch_parts.tool_call_provenance import TOOL_CALL_CACHE_MAX_KEY_CHARS
-    from kiro_crew.acp.harness.copilot import COPILOT_IDENTITY_OVERFLOW
+    from aj_crew.acp._dispatch_parts.tool_call_provenance import TOOL_CALL_CACHE_MAX_KEY_CHARS
+    from aj_crew.acp.harness.copilot import COPILOT_IDENTITY_OVERFLOW
 
     tool_call, _ = _mcp_frames()
     client = _client_with_placed(tmp_path, ["probe", "probe-m"], monkeypatch)

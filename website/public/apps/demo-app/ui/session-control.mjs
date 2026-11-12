@@ -1,4 +1,4 @@
-// Demo Kiro Crew session control — proves the composer-bar contribution works
+// Demo Aj Crew session control — proves the composer-bar contribution works
 // end-to-end. Loaded dynamically by SessionControlHost via
 // import('/apps/demo-app/ui/session-control.mjs'), so the module's DEFAULT export
 // must be a component: the host mounts it with React.lazy.
@@ -6,8 +6,8 @@
 // Same host-module convention as index.mjs next door, and no JSX for the same
 // reason — this file is served exactly as written, with no build step.
 
-const React = window.__kirocrew_modules.react
-const { Tag } = window.__kirocrew_modules['lucide-react']
+const React = window.__ajcrew_modules.react
+const { Tag } = window.__ajcrew_modules['lucide-react']
 
 const { createElement: h } = React
 

@@ -9,11 +9,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.shared_crew import access
-from kiro_crew.shared_crew import capabilities as caps_mod
-from kiro_crew.shared_crew.access import note_tailnet, setup_paths_dict
-from kiro_crew.shared_crew.capabilities import aggregate_capabilities
-from kiro_crew.shared_crew.routes_capabilities import CAPABILITIES_PATH, register
+from aj_crew.shared_crew import access
+from aj_crew.shared_crew import capabilities as caps_mod
+from aj_crew.shared_crew.access import note_tailnet, setup_paths_dict
+from aj_crew.shared_crew.capabilities import aggregate_capabilities
+from aj_crew.shared_crew.routes_capabilities import CAPABILITIES_PATH, register
 
 
 @pytest.fixture(autouse=True)
@@ -79,7 +79,7 @@ def test_no_role_or_acl_exists_in_any_contract() -> None:
     """Every admitted collaborator has the same rights: no contract names a role or ACL."""
     import inspect
 
-    from kiro_crew.shared_crew import contracts
+    from aj_crew.shared_crew import contracts
 
     banned = {"role", "roles", "acl", "acls", "permission", "permissions", "scope", "scopes"}
     for module in (contracts, access):

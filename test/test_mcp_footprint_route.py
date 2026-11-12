@@ -26,9 +26,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import token_auth
-from kiro_crew.dashboard.handlers import gateway_footprint as mcp_footprint
-from kiro_crew.mcp_gateway import footprint
+from aj_crew.dashboard import token_auth
+from aj_crew.dashboard.handlers import gateway_footprint as mcp_footprint
+from aj_crew.mcp_gateway import footprint
 
 OWNER = "owner-subject"
 PATH = "/api/mcp-gateway/footprint"
@@ -46,7 +46,7 @@ def _state() -> SimpleNamespace:
 
 
 def _routes(app: web.Application) -> None:
-    from kiro_crew.dashboard.routes import agent_config
+    from aj_crew.dashboard.routes import agent_config
 
     agent_config.register(app)
 
@@ -274,8 +274,8 @@ async def test_shared_now_reads_the_running_routing_set(
         is_running = True
         _spec = SimpleNamespace(
             mcp_target_env={
-                "KIROCREW_MCP_TARGET_DOCS_MCP": "x",
-                "KIROCREW_MCP_TARGET_SLACK_MCP__ab12": "y",
+                "AJCREW_MCP_TARGET_DOCS_MCP": "x",
+                "AJCREW_MCP_TARGET_SLACK_MCP__ab12": "y",
             }
         )
 
@@ -323,7 +323,7 @@ def test_a_settings_launch_is_kept_beside_an_agent_override(
 ) -> None:
     """One agent overrides a server; the others inherit the settings launch, so
     the reading must recognise both."""
-    from kiro_crew.dashboard.handlers import mcp as mcp_handlers
+    from aj_crew.dashboard.handlers import mcp as mcp_handlers
 
     settings = tmp_path / "settings" / "mcp.json"
     settings.parent.mkdir()
@@ -343,7 +343,7 @@ def test_a_settings_launch_is_kept_beside_an_agent_override(
             }
         },
     )
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: tmp_path / "agents")
     specs = mcp_footprint._specs(False, {})

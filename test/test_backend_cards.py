@@ -43,9 +43,9 @@ from typing import Set, Tuple
 
 import pytest
 
-from kiro_crew.agent_sdk import backend_cards as cards_mod
-from kiro_crew.agent_sdk import backends as sdk_backends
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.agent_sdk import backend_cards as cards_mod
+from aj_crew.agent_sdk import backends as sdk_backends
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_DEEPSEEK,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
@@ -419,7 +419,7 @@ def test_the_command_channel_reaches_no_card_line_at_all() -> None:
     WHICH channel carries a command instead answers a question the reader did not
     ask: they lose no feature, carry no new risk, and no setting of theirs stops
     working. It is recorded off the card with that reason, and the channel itself is
-    in ``kirocrew doctor`` and ``providers/mirrors/README.md``.
+    in ``ajcrew doctor`` and ``providers/mirrors/README.md``.
     """
     line_ids = {spec.id for spec in cards_mod.USER_FACING_LINES}
     assert cards_mod.NOTE_CREW_COMMAND_CHANNEL not in line_ids
@@ -673,7 +673,7 @@ def test_an_unmeasured_line_is_never_counted_as_available() -> None:
 
     The one reading that would be worse than the two-level card is an unmeasured
     line that some consumer reads as a capability. ``available`` stays a bool and
-    stays False, so the panel's own "supports N of M" count, ``kirocrew doctor`` and
+    stays False, so the panel's own "supports N of M" count, ``ajcrew doctor`` and
     anything predating ``measured`` all answer not-available.
     """
     for backend in sorted(sdk_backends.ACP_BACKENDS_KNOWN):

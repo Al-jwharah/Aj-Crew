@@ -18,12 +18,12 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import history, history_index_worker, history_listing_index, history_listing_memo
-from kiro_crew.dashboard.handlers.sessions_parts.history_reads import _is_user_listed_row
-from kiro_crew.history import ConversationLog
-from kiro_crew.history_listing_index import _STOP_CHECK_EVERY, SessionListingIndex
-from kiro_crew.history_search import SessionCatalogProjection
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import history, history_index_worker, history_listing_index, history_listing_memo
+from aj_crew.dashboard.handlers.sessions_parts.history_reads import _is_user_listed_row
+from aj_crew.history import ConversationLog
+from aj_crew.history_listing_index import _STOP_CHECK_EVERY, SessionListingIndex
+from aj_crew.history_search import SessionCatalogProjection
+from aj_crew.testing.wait import async_wait_until
 
 _BASE_NS = 1_700_000_000 * 10**9
 _META = {"_type": "metadata", "created_at": "2026-01-01T00:00:00"}
@@ -300,7 +300,7 @@ class _Supervisor:
 @pytest.mark.asyncio
 async def test_boot_runs_one_head_read_pass(tmp_path, monkeypatch, caplog) -> None:
     """Both entrypoints kick the search supervisor; its warm-up builds the index once."""
-    from kiro_crew.dashboard import server as srv
+    from aj_crew.dashboard import server as srv
 
     window = 50
     monkeypatch.setattr(history, "_SEARCH_SCAN_WINDOW", window)

@@ -15,16 +15,16 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew import name_grant
-from kiro_crew.channel import (
+from aj_crew import name_grant
+from aj_crew.channel import (
     _APPROVAL_FIELD_MAX_CHARS,
     _APPROVAL_SHELL_TITLE_PREFIX,
     Channel,
     ChannelMessage,
     _stream_task,
 )
-from kiro_crew.config.loader import KiroCrewConfig, config_local_path, config_path
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST
+from aj_crew.config.loader import AjCrewConfig, config_local_path, config_path
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST
 
 
 def _make_agent():
@@ -332,7 +332,7 @@ def test_serialize_round_trips_meta_and_tolerates_its_absence():
 # --------------------------------------------------------------------------- #
 #
 # The window comes out of a real config.json, written the way the gateway writes
-# one. ``KiroCrewConfig.save()`` publishes every field, so a config nobody edited
+# one. ``AjCrewConfig.save()`` publishes every field, so a config nobody edited
 # still holds a ``tool_approval_timeout_secs`` (the field default). A test that
 # hands the helper only the keys under test cannot see that.
 
@@ -345,12 +345,12 @@ def _silent_channel():
 
 
 def _save_config(**agent_fields):
-    """Write ``config.json`` as the gateway's first boot does: ``KiroCrewConfig().save()``.
+    """Write ``config.json`` as the gateway's first boot does: ``AjCrewConfig().save()``.
 
     ``agent_fields`` are set on the in-memory config before the write. The suite
-    pins ``KIROCREW_HOME`` to a scratch directory for every test.
+    pins ``AJCREW_HOME`` to a scratch directory for every test.
     """
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     for name, value in agent_fields.items():
         setattr(cfg.agent, name, value)
     cfg.save()
@@ -365,17 +365,17 @@ async def _expire_one_card(monkeypatch, *, loader=None):
     """Run one approval to expiry; return (waited, steered reasons, client).
 
     The module's ``asyncio`` is swapped so ``wait_for`` records its window and expires at
-    once, with no wall clock. ``loader`` replaces ``KiroCrewConfig`` for a read that raises.
+    once, with no wall clock. ``loader`` replaces ``AjCrewConfig`` for a read that raises.
     """
     import asyncio
     import types
 
-    import kiro_crew.channel as channel_mod
+    import aj_crew.channel as channel_mod
 
     if loader is not None:
         # ``raising=False``: on a channel module that never read the setting, the
         # name is absent, and the test must still reach its window assertion.
-        monkeypatch.setattr(channel_mod, "KiroCrewConfig", loader, raising=False)
+        monkeypatch.setattr(channel_mod, "AjCrewConfig", loader, raising=False)
     waited: list = []
 
     async def _expiring_wait_for(aw, timeout=None):
@@ -419,7 +419,7 @@ async def test_a_config_saved_with_defaults_keeps_the_full_cap(monkeypatch):
     """The first boot's ``save()`` writes the default window; nobody chose it."""
     _save_config()
     written = json.loads(config_path().read_text(encoding="utf-8"))["agent"]
-    default = KiroCrewConfig().agent.tool_approval_timeout_secs
+    default = AjCrewConfig().agent.tool_approval_timeout_secs
     # The premise: the file carries the key, at the field default.
     assert written["tool_approval_timeout_secs"] == default
     waited, reasons, client = await _expire_one_card(monkeypatch)
@@ -440,7 +440,7 @@ async def test_the_default_window_under_a_short_turn_ceiling_keeps_the_full_cap(
     default, not a choice."""
     _save_config(chat_turn_timeout_secs=ceiling)
     # The premise: what the loader leaves of the saved default at this ceiling.
-    assert KiroCrewConfig.load().agent.tool_approval_timeout_secs == loaded
+    assert AjCrewConfig.load().agent.tool_approval_timeout_secs == loaded
     waited, _reasons, _client = await _expire_one_card(monkeypatch)
     assert waited == [3600]
 
@@ -468,7 +468,7 @@ async def test_a_window_the_loader_pulls_under_the_turn_ceiling_is_waited_as_pul
     card waits."""
     _save_config(chat_turn_timeout_secs=ceiling, tool_approval_timeout_secs=written)
     # The premise: what the loader leaves of the written window at this ceiling.
-    assert KiroCrewConfig.load().agent.tool_approval_timeout_secs == loaded
+    assert AjCrewConfig.load().agent.tool_approval_timeout_secs == loaded
     waited, _reasons, _client = await _expire_one_card(monkeypatch)
     assert waited == [loaded]
 
@@ -486,8 +486,8 @@ async def test_an_omitted_window_under_a_short_turn_ceiling_keeps_the_full_cap(
     _write_config({"agent": {"chat_turn_timeout_secs": ceiling}})
     # The premise: nothing pulls an omitted key, so it loads as the field default.
     assert (
-        KiroCrewConfig.load().agent.tool_approval_timeout_secs
-        == KiroCrewConfig().agent.tool_approval_timeout_secs
+        AjCrewConfig.load().agent.tool_approval_timeout_secs
+        == AjCrewConfig().agent.tool_approval_timeout_secs
     )
     waited, _reasons, _client = await _expire_one_card(monkeypatch)
     assert waited == [3600]
@@ -520,8 +520,8 @@ async def test_a_malformed_window_under_a_short_turn_ceiling_keeps_the_full_cap(
     where a saved default loads as 240."""
     _write_config({"agent": {"chat_turn_timeout_secs": 300, "tool_approval_timeout_secs": written}})
     assert (
-        KiroCrewConfig.load().agent.tool_approval_timeout_secs
-        == KiroCrewConfig().agent.tool_approval_timeout_secs
+        AjCrewConfig.load().agent.tool_approval_timeout_secs
+        == AjCrewConfig().agent.tool_approval_timeout_secs
     )
     waited, _reasons, _client = await _expire_one_card(monkeypatch)
     assert waited == [3600]
@@ -589,7 +589,7 @@ async def test_an_overlay_the_loader_cannot_use_leaves_the_window_in_the_base(
     window in ``config.json`` is the window."""
     _write_config({"agent": {"chat_turn_timeout_secs": 300, "tool_approval_timeout_secs": 500}})
     config_local_path().write_text(overlay_text, encoding="utf-8")
-    assert KiroCrewConfig.load().agent.tool_approval_timeout_secs == 240
+    assert AjCrewConfig.load().agent.tool_approval_timeout_secs == 240
     waited, _reasons, _client = await _expire_one_card(monkeypatch)
     assert waited == [240]
 
@@ -611,7 +611,7 @@ async def test_a_window_set_in_the_local_overlay_is_waited(monkeypatch):
     config_local_path().write_text(
         json.dumps({"agent": {"tool_approval_timeout_secs": 90}}), encoding="utf-8"
     )
-    assert KiroCrewConfig.load().agent.tool_approval_timeout_secs == 90
+    assert AjCrewConfig.load().agent.tool_approval_timeout_secs == 90
     waited, _reasons, _client = await _expire_one_card(monkeypatch)
     assert waited == [90]
 
@@ -627,7 +627,7 @@ async def test_a_configured_window_above_the_cap_is_capped(monkeypatch):
 async def test_a_zero_window_is_raised_by_the_loader_not_replaced_by_the_cap(monkeypatch):
     """The loader never yields a window under 30 s, so there is no zero to guard."""
     _write_config({"agent": {"tool_approval_timeout_secs": 0}})
-    assert KiroCrewConfig.load().agent.tool_approval_timeout_secs == 30
+    assert AjCrewConfig.load().agent.tool_approval_timeout_secs == 30
     waited, _reasons, _client = await _expire_one_card(monkeypatch)
     assert waited == [30]
 
@@ -670,9 +670,9 @@ async def test_a_cli_grant_leaves_channel_agents_asking(monkeypatch, source, car
     """``gateway --approval yolo``'s grant is for dashboard chats: a channel agent still asks."""
     from unittest.mock import MagicMock
 
-    from kiro_crew.safety_override import reset_singleton, safety_override
+    from aj_crew.safety_override import reset_singleton, safety_override
 
-    monkeypatch.setattr("kiro_crew.safety_override.sel", MagicMock())
+    monkeypatch.setattr("aj_crew.safety_override.sel", MagicMock())
     reset_singleton()
     assert safety_override().activate_declared(source).active is True
     agent = _make_agent()

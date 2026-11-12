@@ -30,11 +30,11 @@ from builtin_adoption_helpers import (
     write_tree,
 )
 
-from kiro_crew.apps import builtin_adoption_pins as pins_mod
-from kiro_crew.apps import execution as exec_mod
-from kiro_crew.apps import manager, routes_listing
-from kiro_crew.apps.builtin_adoption_checks import ALL_REASON_CODES
-from kiro_crew.apps.builtin_adoption_state import AdoptionLedger, write_ledger
+from aj_crew.apps import builtin_adoption_pins as pins_mod
+from aj_crew.apps import execution as exec_mod
+from aj_crew.apps import manager, routes_listing
+from aj_crew.apps.builtin_adoption_checks import ALL_REASON_CODES
+from aj_crew.apps.builtin_adoption_state import AdoptionLedger, write_ledger
 
 _WEBSITE_SRC = Path(__file__).resolve().parents[1] / "website" / "src"
 _FIXTURE = _WEBSITE_SRC / "test" / "fixtures" / "adoptionApiRows.json"
@@ -135,7 +135,7 @@ async def _produce() -> dict[str, Any]:
     _adopted_record()
     detail["adopted"] = await _detail_row()
     adopted_list = await _list_rows()
-    _adopted_record(version="9.0.0", minKiroCrewVersion="999.0.0")
+    _adopted_record(version="9.0.0", minAjCrewVersion="999.0.0")
     detail["adopted_host_too_old"] = await _detail_row()
     _uninstall_after_adoption()
     missing["released"] = await _missing_body()
@@ -173,7 +173,7 @@ def test_the_dashboard_names_every_reason_code_the_gateway_can_send():
 
 @pytest.mark.asyncio
 async def test_a_release_check_that_raises_keeps_the_plain_404(wheel, monkeypatch):
-    from kiro_crew.apps import builtin_adoption
+    from aj_crew.apps import builtin_adoption
 
     def _unanswerable(name: str) -> bool:
         raise RuntimeError(f"unreadable state for {name}")

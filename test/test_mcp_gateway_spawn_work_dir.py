@@ -24,10 +24,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.config.loader_locations import workspace_root
-from kiro_crew.mcp_gateway import backend as backend_mod
-from kiro_crew.mcp_gateway.backend import spawn_backend
-from kiro_crew.mcp_gateway.pool import PoolKey
+from aj_crew.config.loader_locations import workspace_root
+from aj_crew.mcp_gateway import backend as backend_mod
+from aj_crew.mcp_gateway.backend import spawn_backend
+from aj_crew.mcp_gateway.pool import PoolKey
 
 _FAKE_PID = 5150
 
@@ -36,7 +36,7 @@ class _FakeProcess:
     """The parts of an ``asyncio`` subprocess ``spawn_backend`` reads."""
 
     def __init__(self) -> None:
-        # nosemgrep: kirocrew.mock-pid-allocatable -- the fake process is never signalled; get_process_start_id is patched
+        # nosemgrep: ajcrew.mock-pid-allocatable -- the fake process is never signalled; get_process_start_id is patched
         self.pid = _FAKE_PID
         self.returncode = None
         self.stdin = MagicMock()
@@ -81,7 +81,7 @@ def _pool_key(work_dir: str) -> PoolKey:
 
 def _default_work_dir(monkeypatch: pytest.MonkeyPatch, root: Path) -> Path:
     """Point the workspace at *root* and return the default work dir the rewriter bakes."""
-    monkeypatch.setenv("KIROCREW_WORKSPACE", str(root))
+    monkeypatch.setenv("AJCREW_WORKSPACE", str(root))
     return workspace_root(create=False) / "_default"
 
 

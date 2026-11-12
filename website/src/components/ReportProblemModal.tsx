@@ -40,7 +40,7 @@ interface ReportProblemModalProps {
  * redaction notice, and the deliveries can never drift between surfaces.
  *
  * Calls the shared diagnostics collector (the same engine behind
- * `kirocrew doctor --bundle`): collects gateway + kiro-cli logs and crash
+ * `ajcrew doctor --bundle`): collects gateway + kiro-cli logs and crash
  * reports, scrubs secrets, zips them, and offers two deliveries — download the
  * bundle, or open a pre-filled GitHub issue. The saved path is shown above the
  * actions, so a local user can find the bundle on disk without a third button

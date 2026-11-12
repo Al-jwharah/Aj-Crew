@@ -10,7 +10,7 @@ import test_ci_fleet_routing_expression_parity as parity
 import yaml
 
 _REPO = "kirodotdev/KiroCrew"
-_FORK = "contributor/KiroCrew"
+_FORK = "contributor/AjCrew"
 _ACTORS = '["101", "202"]'
 _EXPRESSIONS = {
     "push-pr": parity._CANONICAL_ROUTING_EXPR,
@@ -187,9 +187,9 @@ def test_actor_and_event_truth_table(
     # from a fork, and a job asking for one there waits until GitHub cancels it.
     moved = parity._GROUP_THEN_HOSTED_TAIL in _EXPRESSIONS[policy]
     if eligible:
-        expected = "codebuild-kirocrew-gha-linux-456-3"
+        expected = "codebuild-ajcrew-gha-linux-456-3"
     elif moved and repo == _REPO:
-        expected = "kirocrew-linux-4-core"
+        expected = "ajcrew-linux-4-core"
     else:
         expected = "ubuntu-latest"
     assert _evaluate(_EXPRESSIONS[policy], context) == expected
@@ -242,9 +242,9 @@ def test_readiness_route_truth_table(event, repo, pr_head, run_head, actor, acto
     # executing OUTSIDE this repository reaches the hosted image, because a
     # fork's own copy cannot reach an organization runner group.
     if eligible:
-        expected = "codebuild-kirocrew-gha-linux-456-3"
+        expected = "codebuild-ajcrew-gha-linux-456-3"
     elif repo == _REPO:
-        expected = "kirocrew-linux-4-core"
+        expected = "ajcrew-linux-4-core"
     else:
         expected = "ubuntu-latest"
     assert _evaluate(parity._CANONICAL_READINESS_EXPR, context) == expected
@@ -301,9 +301,9 @@ def test_sensitive_change_review_route_truth_table(event, repo, pr_head, actor, 
     # here -- and so a dropped fork branch still fails the fork rows.
     moved = parity._GROUP_THEN_HOSTED_TAIL in parity._CANONICAL_BASE_ONLY_PR_EXPR
     if admitted:
-        expected = "codebuild-kirocrew-gha-linux-456-3"
+        expected = "codebuild-ajcrew-gha-linux-456-3"
     elif moved and repo == _REPO:
-        expected = "kirocrew-linux-4-core"
+        expected = "ajcrew-linux-4-core"
     else:
         expected = "ubuntu-latest"
     assert _evaluate(parity._CANONICAL_BASE_ONLY_PR_EXPR, context) == expected
@@ -316,7 +316,7 @@ def test_parity_detector_rejects_corrupted_routes(tmp_path, monkeypatch, shape):
         expression = expression.replace("head.repo.full_name ==", "head.repo.full_name !=")
     else:
         expression = expression.replace(parity._ACTOR_PREDICATE + " && ", "")
-    value = ["codebuild-kirocrew-gha-linux-456-3"] if shape == "literal-array" else expression
+    value = ["codebuild-ajcrew-gha-linux-456-3"] if shape == "literal-array" else expression
     path = tmp_path / "fast-gate.yml"
     if shape == "folded":
         path.write_text(f"jobs:\n  gate:\n    runs-on: >-\n      {value}\n", encoding="utf-8")
@@ -369,7 +369,7 @@ def test_the_ratchet_audit_route_reaches_the_group_on_its_non_fleet_path():
     """
     assert parity._GROUP_THEN_HOSTED_TAIL in parity._CANONICAL_DISPATCH_MERGE_GROUP_EXPR, (
         "main-ratchet-audit.yml's non-fleet path is expected to take the "
-        "kirocrew-runners group label, with the hosted image reachable only from a "
+        "ajcrew-runners group label, with the hosted image reachable only from a "
         "fork. Restoring the bare hosted tail is a rollback: do it deliberately, and "
         "before the merge queue is enabled rather than after."
     )
@@ -418,9 +418,9 @@ def test_a_rerun_consumer_asks_for_its_own_attempts_fleet_label(job_id, os_leg, 
     workflow = yaml.safe_load((parity._WORKFLOWS_DIR / "ci.yml").read_text(encoding="utf-8"))
     runs_on = workflow["jobs"][job_id]["runs-on"]
     outputs = {
-        "linux_runner": "codebuild-kirocrew-gha-linux-456-1",
-        "linux_runner_large": "codebuild-kirocrew-gha-linux-456-1 instance-size:large",
-        "windows_runner": "codebuild-kirocrew-gha-windows-456-1 instance-size:large",
+        "linux_runner": "codebuild-ajcrew-gha-linux-456-1",
+        "linux_runner_large": "codebuild-ajcrew-gha-linux-456-1 instance-size:large",
+        "windows_runner": "codebuild-ajcrew-gha-windows-456-1 instance-size:large",
     }
     context = {f"needs.changes.outputs.{k}": v for k, v in outputs.items()}
     context.update({"github.run_id": "456", "matrix.os": os_leg})

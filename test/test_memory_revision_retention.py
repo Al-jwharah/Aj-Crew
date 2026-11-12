@@ -9,17 +9,17 @@ from contextlib import closing
 
 import pytest
 
-from kiro_crew import (
+from aj_crew import (
     memory_edit,
 )
-from kiro_crew import memory_record_metadata as metadata
-from kiro_crew import (
+from aj_crew import memory_record_metadata as metadata
+from aj_crew import (
     memory_stores,
     vector_memory,
 )
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.config import loader
-from kiro_crew.vector_memory import (
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.config import loader
+from aj_crew.vector_memory import (
     SemanticRejectCode,
     VectorMemoryStore,
     create_member_database,
@@ -29,7 +29,7 @@ from kiro_crew.vector_memory import (
 
 @pytest.fixture(params=["v1", "named-v1", "v2"])
 def store(request, tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     name = "default" if request.param == "v1" else "member-alice"
     private = request.param == "v2"
     directory = tmp_path if name == "default" else tmp_path / "memory_stores" / name
@@ -416,7 +416,7 @@ def test_refused_automated_write_logs_the_audit_row_that_keeps_both_values(store
     the rejected value and the losing source, so the dropped update can be found.
     """
     _write(store, 1)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.vector_memory"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.vector_memory"):
         code, reason = store.set_semantic(
             "user.email", "newer@example.net", 0.9, "consolidation:dm"
         )

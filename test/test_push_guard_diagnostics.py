@@ -32,8 +32,8 @@ from push_guard_helpers import (
     _run_push_guard_inprocess,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.testing.wait import default_timeout, wait_until
+from aj_crew import platform_compat
+from aj_crew.testing.wait import default_timeout, wait_until
 
 # pytest resolves a fixture in the requesting test's module, so each shared
 # fixture this module uses is bound here by name.

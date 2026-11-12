@@ -27,19 +27,19 @@ from chat_runner_coverage_helpers import (
 )
 from dashboard_approval_helpers import _context_builder
 
-import kiro_crew.config.paths as paths_mod
-import kiro_crew.hooks as hooks_mod
-from kiro_crew.acp.types import (
+import aj_crew.config.paths as paths_mod
+import aj_crew.hooks as hooks_mod
+from aj_crew.acp.types import (
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     EVENT_TOOL_RESULT,
 )
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.hooks import ScriptHookResult, ScriptHookStore
-from kiro_crew.providers.base import LLMEvent
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.hooks import ScriptHookResult, ScriptHookStore
+from aj_crew.providers.base import LLMEvent
 
 _AGENT = "kas-hooked"
 
@@ -73,8 +73,8 @@ def fired(tmp_path, monkeypatch) -> list[tuple[str, str]]:
 
 def _write_spec(tmp_path, hooks) -> None:
     """The spec where both the turn's agent admission and the hook reader find it."""
-    from kiro_crew.agent_discovery import clear_list_agents_cache
-    from kiro_crew.config.loader import refresh_materialized_agents
+    from aj_crew.agent_discovery import clear_list_agents_cache
+    from aj_crew.config.loader import refresh_materialized_agents
 
     agents = paths_mod.kiro_agents_dir()
     agents.mkdir(parents=True, exist_ok=True)

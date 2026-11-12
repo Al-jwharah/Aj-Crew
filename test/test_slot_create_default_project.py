@@ -13,15 +13,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.security import paths
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import chat_handlers
+from aj_crew.security import paths
 
 _WORKSPACE_DEFAULT = "workspace-default"
 
 
-def _cfg(project: Path) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _cfg(project: Path) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     cfg.dashboard.default_project = str(project)
     return cfg
 
@@ -47,7 +47,7 @@ async def test_a_stall_cooldown_keeps_the_configured_default_project(
 @pytest.mark.asyncio
 async def test_a_sensitive_default_project_still_falls_back(_workspace_default: None) -> None:
     # The crew home is a per-test tmp dir here; ``diag`` is on its fence.
-    fenced = Path(os.environ["KIROCREW_HOME"]) / "diag"
+    fenced = Path(os.environ["AJCREW_HOME"]) / "diag"
     fenced.mkdir(parents=True, exist_ok=True)
 
     born = await chat_handlers._birth_default_project(_cfg(fenced), "default")

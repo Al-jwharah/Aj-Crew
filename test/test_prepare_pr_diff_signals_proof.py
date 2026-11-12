@@ -20,10 +20,10 @@ from pathlib import Path
 from git_maintenance_helpers import git_maintenance_off_entries
 from skill_script_helpers import load_skill_script
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 ROOT = Path(__file__).resolve().parent.parent
-PREPARE_PR = ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev" / "kirocrew-prepare-pr"
+PREPARE_PR = ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr"
 SCRIPT = PREPARE_PR / "scripts" / "diff_signals.py"
 PROVE = PREPARE_PR / "scripts" / "prove.py"
 PROOF = ROOT / ".github" / "scripts" / "proof_line_check.py"

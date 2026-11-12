@@ -20,20 +20,20 @@ vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page
 vi.mock('../pages/SystemPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => null }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 vi.mock('../pages/NotificationsPage', () => ({ default: () => null }))
 vi.mock('../pages/SchedulePage', () => ({ default: () => null }))
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
 
-const { sessionsUsageMock, kirocrewConfigMock, isMobileMock } = vi.hoisted(() => ({
+const { sessionsUsageMock, ajcrewConfigMock, isMobileMock } = vi.hoisted(() => ({
   sessionsUsageMock: vi.fn(),
   // Which harness the gateway runs. Per-test, because the whole point of the
   // non-kiro cases below is that the SAME failed usage read renders differently
   // depending on this answer.
-  kirocrewConfigMock: vi.fn(),
+  ajcrewConfigMock: vi.fn(),
   isMobileMock: vi.fn(() => false),
 }))
 vi.mock('../hooks/useIsMobile', () => ({ useIsMobile: () => isMobileMock() }))
@@ -43,7 +43,7 @@ vi.mock('../api/client', () => ({
     notifications: vi.fn().mockResolvedValue({ notifications: [] }),
     status: vi.fn().mockResolvedValue({ uptime: '1h', sessions: 0, messages: 0, cron_jobs: 0, subagents: 0, lessons: 0 }),
     sessionsUsage: sessionsUsageMock,
-    kirocrewConfig: kirocrewConfigMock,
+    ajcrewConfig: ajcrewConfigMock,
     listApps: vi.fn().mockResolvedValue([]),
     system: vi.fn().mockResolvedValue({ mem_used_gb: 4.0, mem_total_gb: 16.0, cpu_pct: 25.0, disk_total_gb: 100.0, disk_free_gb: 60.0 }),
     chatSlotAgent: vi.fn().mockResolvedValue({}),
@@ -83,8 +83,8 @@ describe('top-bar credit segment — failed vs loading', () => {
     sessionsUsageMock.mockReset()
     // Default: the kiro-cli harness, so the no-reading dash below is a
     // Kiro-backend surface and every pre-existing case reads as it did before.
-    kirocrewConfigMock.mockReset()
-    kirocrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'kiro' } })
+    ajcrewConfigMock.mockReset()
+    ajcrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'kiro' } })
     isMobileMock.mockReturnValue(false)
   })
 
@@ -138,7 +138,7 @@ describe('top-bar credit segment — failed vs loading', () => {
     // failed). The modal this dash opens carries the Refresh that can fix that,
     // so the dash must stay on screen -- a hidden pill would make that path
     // unreachable. Both Kiro harnesses run on the Kiro account.
-    kirocrewConfigMock.mockResolvedValue({ agent: { acp_backend: backend } })
+    ajcrewConfigMock.mockResolvedValue({ agent: { acp_backend: backend } })
     sessionsUsageMock.mockResolvedValue({ usage: { available: false } })
     renderWithProviders(<App />, { route: '/chat', preloadedState: connectedState })
 
@@ -157,7 +157,7 @@ describe('top-bar credit segment — failed vs loading', () => {
     // ruled out and the modal behind it said "Could not read your balance" about
     // a balance this harness does not have. Whether the surface exists is the
     // harness's verdict; the reading only decides what it shows.
-    kirocrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'claude' } })
+    ajcrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'claude' } })
     sessionsUsageMock.mockRejectedValue(Object.assign(new Error('Service Unavailable'), { status: 503 }))
     renderWithProviders(<App />, { route: '/chat', preloadedState: connectedState })
 
@@ -174,7 +174,7 @@ describe('top-bar credit segment — failed vs loading', () => {
     // harness. The segment goes away, so the modal over it must go too -- an
     // overlay left behind a pill that no longer exists is the dead-end this
     // hide rule exists to prevent, and its Refresh could never succeed here.
-    kirocrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'claude' } })
+    ajcrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'claude' } })
     sessionsUsageMock.mockResolvedValueOnce({ usage: {} })
     sessionsUsageMock.mockRejectedValue(Object.assign(new Error('Service Unavailable'), { status: 503 }))
     const { queryClient } = renderWithProviders(<App />, { route: '/chat', preloadedState: connectedState })
@@ -195,7 +195,7 @@ describe('top-bar credit segment — failed vs loading', () => {
     // should not exist -- so the segment stays and the modal carries the retry.
     // Without this the hide rule could be widened until it swallowed the state
     // it was written to show.
-    kirocrewConfigMock.mockResolvedValue({ agent: { acp_backend: backend } })
+    ajcrewConfigMock.mockResolvedValue({ agent: { acp_backend: backend } })
     sessionsUsageMock.mockRejectedValue(Object.assign(new Error('Service Unavailable'), { status: 503 }))
     renderWithProviders(<App />, { route: '/chat', preloadedState: connectedState })
 
@@ -230,7 +230,7 @@ describe('top-bar credit segment — failed vs loading', () => {
     sessionsUsageMock.mockResolvedValue({
       usage: { available: false, reason: 'account_unproven', account_type: 'ExternalIdP' },
     })
-    kirocrewConfigMock.mockRejectedValue(Object.assign(new Error('boom'), { status: 500 }))
+    ajcrewConfigMock.mockRejectedValue(Object.assign(new Error('boom'), { status: 500 }))
     renderWithProviders(<App />, { route: '/chat', preloadedState: connectedState })
 
     const pill = await screen.findByLabelText(i18nT('app.kiro_credit_usage_sign_in_type'))

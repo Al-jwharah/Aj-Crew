@@ -41,7 +41,7 @@ const RULES = [
 const now = Date.now() / 1000
 const slots = [{
   key: SLOT, title: 'Link patterns', running: false,
-  last_message: 'triage summary', messages: 4, agent: 'kirocrew',
+  last_message: 'triage summary', messages: 4, agent: 'ajcrew',
   memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now),
   source_links: [], source_links_total: 0,
 }]

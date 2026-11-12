@@ -1,7 +1,7 @@
 """How a channel conversation's crew log is opened ahead of its turn.
 
-The opener and the facts it reads live in :mod:`kiro_crew.messaging.dispatch_crew_log` and are
-reached, as every caller reaches them, through :mod:`kiro_crew.messaging.dispatch`. Each read
+The opener and the facts it reads live in :mod:`aj_crew.messaging.dispatch_crew_log` and are
+reached, as every caller reaches them, through :mod:`aj_crew.messaging.dispatch`. Each read
 is best-effort: a stand-in without the reader, or one that raises, states nothing rather than
 failing the turn, and the opener itself never raises.
 """
@@ -14,9 +14,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.history import transcript_stem
-from kiro_crew.messaging import dispatch
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.history import transcript_stem
+from aj_crew.messaging import dispatch
 
 
 class _Raises:

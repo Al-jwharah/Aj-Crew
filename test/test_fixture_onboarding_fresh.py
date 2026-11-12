@@ -1,12 +1,12 @@
 """Consumer contract for the onboarding-fresh seeded-home fixture."""
 
-from kiro_crew.config.loader import KiroCrewConfig, config_path
-from kiro_crew.testing.fixtures import seeded_home
+from aj_crew.config.loader import AjCrewConfig, config_path
+from aj_crew.testing.fixtures import seeded_home
 
 
 def _loaded_onboarding_state() -> tuple[bool, bool]:
     """Report whether config exists and the value the production loader exposes."""
-    return config_path().is_file(), KiroCrewConfig.load().dashboard.onboarded
+    return config_path().is_file(), AjCrewConfig.load().dashboard.onboarded
 
 
 def test_onboarding_fresh_is_explicit_first_run_and_distinct_from_empty() -> None:

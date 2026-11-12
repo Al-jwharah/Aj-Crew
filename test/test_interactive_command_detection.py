@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.liveness import (
+from aj_crew.acp.liveness import (
     EVIDENCE_PLATFORM_LIMITED,
     INTERACTIVE_CONFIRM,
     INTERACTIVE_EDITOR,
@@ -33,12 +33,12 @@ from kiro_crew.acp.liveness import (
     classify_interactive_command,
     non_interactive_hint,
 )
-from kiro_crew.acp.session_handle import (
+from aj_crew.acp.session_handle import (
     INTERACTIVE_POLICY_WAIT,
     AcpSessionHandle,
     WatchdogSettings,
 )
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_STRUCTURED_STATUS,
     METHOD_SESSION_UPDATE,

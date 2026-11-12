@@ -12,9 +12,9 @@ import time
 import pytest
 from test_mcp_gateway_bluegreen import _make_mock_backend, _make_pool_key
 
-from kiro_crew.config.section_builders import _build_mcp_gateway_config
-from kiro_crew.mcp_gateway.daemon.cli import _build_argparser
-from kiro_crew.mcp_gateway.pool import BackendPool
+from aj_crew.config.section_builders import _build_mcp_gateway_config
+from aj_crew.mcp_gateway.daemon.cli import _build_argparser
+from aj_crew.mcp_gateway.pool import BackendPool
 
 
 async def _idle_pool(*servers: str) -> BackendPool:

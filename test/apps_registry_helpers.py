@@ -16,15 +16,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.apps import registry
+from aj_crew.apps import registry
 
 
 @pytest.fixture(autouse=True)
 def _explicit_registry_execution_admission(_floor_monkeypatch):
     """These tests must reach admitted registry subprocess paths."""
-    _floor_monkeypatch.setattr(
-        "kiro_crew.apps.execution.third_party_execution_allowed", lambda: True
-    )
+    _floor_monkeypatch.setattr("aj_crew.apps.execution.third_party_execution_allowed", lambda: True)
 
 
 @pytest.fixture(autouse=True)
@@ -40,7 +38,7 @@ def _catalog_absent(_floor_monkeypatch):
     the same seam itself (see ``TestCatalogAppsIncludesExternalRegistries``).
     """
     _floor_monkeypatch.setattr(
-        "kiro_crew.apps.official_catalog.inventory_for_install",
+        "aj_crew.apps.official_catalog.inventory_for_install",
         lambda name: None,
     )
 
@@ -58,7 +56,7 @@ def unsandboxed_spawn(_floor_monkeypatch):
     hosts. Autouse because the coupling is a property of the whole module, not of
     individual tests. Sandbox construction is covered by ``test_sandbox_*.py``.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     _floor_monkeypatch.setattr(sandbox, "_allow_unsandboxed_exec", lambda: True)
 

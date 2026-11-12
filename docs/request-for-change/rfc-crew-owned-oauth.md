@@ -1,7 +1,7 @@
 ---
 title: Crew-owned OAuth for Connections -- the gateway runs OAuth and holds the tokens, harnesses get a stdio bridge
 status: draft
-author: zejiangg, with kirocrew agent session
+author: zejiangg, with ajcrew agent session
 created: 2026-11-04
 last-audited: 2026-11-04
 audited-at: 4055dcd61e
@@ -15,10 +15,10 @@ superseded-by: []
 # RFC: Crew-owned OAuth for Connections
 
 - Status: draft. Proposed for team review; the team has not decided. Nothing is built, and this document changes no code.
-- Would amend [mcp-oauth-ownership.md](../architecture/design-notes/mcp-oauth-ownership.md) (the rule "Kiro Crew never reads or holds the credential") and the invariant in [connections.md](../system-specs/modules/connections.md). It picks up the "OAuth custody under the Agent SDK" option left open in [rfc-crew-agent-sdk-boundary.md](rfc-crew-agent-sdk-boundary.md).
-- Measured at Kiro Crew `origin/main` `4055dcd61e` (first written at `aff16f9886`; every cited Crew file and line was re-checked at `4055dcd61e`) and KAS `kiro-team/kiro-agent` `main` `d05183bc8d`.
+- Would amend [mcp-oauth-ownership.md](../architecture/design-notes/mcp-oauth-ownership.md) (the rule "Aj Crew never reads or holds the credential") and the invariant in [connections.md](../system-specs/modules/connections.md). It picks up the "OAuth custody under the Agent SDK" option left open in [rfc-crew-agent-sdk-boundary.md](rfc-crew-agent-sdk-boundary.md).
+- Measured at Aj Crew `origin/main` `4055dcd61e` (first written at `aff16f9886`; every cited Crew file and line was re-checked at `4055dcd61e`) and KAS `kiro-team/kiro-agent` `main` `d05183bc8d`.
 
-Crew paths are under `src/kiro_crew/` unless they start with `docs/`. KAS paths are under `packages/kiro-agent/src/`. A claim marked *(earlier research)* comes from the author's earlier research notes, which are not in this repository; it was not re-verified for this document.
+Crew paths are under `src/aj_crew/` unless they start with `docs/`. KAS paths are under `packages/kiro-agent/src/`. A claim marked *(earlier research)* comes from the author's earlier research notes, which are not in this repository; it was not re-verified for this document.
 
 ---
 
@@ -31,7 +31,7 @@ Crew paths are under `src/kiro_crew/` unless they start with `docs/`. KAS paths 
 - **claude, codex, opencode, goose, pi, copilot, strands, deepseek**: Crew's own capability table says none honours a Connection's `oauth` block.
 - Google also needs `access_type=offline` + `prompt=consent`. No engine sends them.
 
-**Proposal.** Kiro Crew runs OAuth itself, in the gateway: consent URL, code swap with the secret, refresh, revoke. Tokens live in Crew's existing encrypted vault. Each harness gets a plain **stdio** MCP server (a tiny bridge) that forwards to the gateway over Crew's owner-only, kernel-attested Unix socket (on Windows, verified loopback TCP; see [Amendment 2026-11-07](#amendment-2026-11-07-windows-bridge-over-verified-loopback-tcp-ahead-of-phase-2)). The gateway adds `Authorization: Bearer` and forwards to the vendor. The token never enters the harness, the sandbox, the wire or the transcript. Any harness that can start a stdio MCP server works with no OAuth code of its own.
+**Proposal.** Aj Crew runs OAuth itself, in the gateway: consent URL, code swap with the secret, refresh, revoke. Tokens live in Crew's existing encrypted vault. Each harness gets a plain **stdio** MCP server (a tiny bridge) that forwards to the gateway over Crew's owner-only, kernel-attested Unix socket (on Windows, verified loopback TCP; see [Amendment 2026-11-07](#amendment-2026-11-07-windows-bridge-over-verified-loopback-tcp-ahead-of-phase-2)). The gateway adds `Authorization: Bearer` and forwards to the vendor. The token never enters the harness, the sandbox, the wire or the transcript. Any harness that can start a stdio MCP server works with no OAuth code of its own.
 
 **Most of it exists.** Crew already ships each half:
 
@@ -43,7 +43,7 @@ Crew paths are under `src/kiro_crew/` unless they start with `docs/`. KAS paths 
 
 **Top security risk.** An agent's own shell runs in the same process tree as the bridge. It can reach the same Unix socket and pass the same ancestry attestation. It cannot read the token, but it could drive the vendor's MCP tools directly and skip Crew's per-tool approval. Mitigations: the gateway proxy enforces the governed tool policy and audits every `tools/call` itself, and pins one bridge per session and server. This needs a security review before the flag goes on.
 
-**Decisions needed.** (1) Retire the design rule "Kiro Crew never reads or holds the credential" (`docs/architecture/design-notes/mcp-oauth-ownership.md`, "The boundary in one sentence"). It is already untrue on KAS: Crew's vault stores KAS's MCP tokens today. (2) Who signs off the security review. (3) Whether DCR providers move too.
+**Decisions needed.** (1) Retire the design rule "Aj Crew never reads or holds the credential" (`docs/architecture/design-notes/mcp-oauth-ownership.md`, "The boundary in one sentence"). It is already untrue on KAS: Crew's vault stores KAS's MCP tokens today. (2) Who signs off the security review. (3) Whether DCR providers move too.
 
 **Recommendation.** Ship the small KAS fix (alternative a) now if KAS will take it. Build this proposal as the long-term path, MVP first, behind a flag.
 
@@ -100,7 +100,7 @@ Each harness has its own config schema, its own token store, its own refresh log
 
 ### 2.1 How Crew writes Connection config today
 
-1. Operator saves a client in Settings → OAuth Apps. Client id goes to `config.json` `connections.oauth_clients.<slug>.client_id`; secret goes to the vault as `CONNECTIONS_<SLUG>_CLIENT_SECRET`; env `KIROCREW_CONNECTIONS_<SLUG>_CLIENT_ID/_SECRET` overrides (module docstring, `_SECRET_NAME_SUFFIX` and `client_secret_env_name` in `connections/oauth_clients.py`).
+1. Operator saves a client in Settings → OAuth Apps. Client id goes to `config.json` `connections.oauth_clients.<slug>.client_id`; secret goes to the vault as `CONNECTIONS_<SLUG>_CLIENT_SECRET`; env `AJCREW_CONNECTIONS_<SLUG>_CLIENT_ID/_SECRET` overrides (module docstring, `_SECRET_NAME_SUFFIX` and `client_secret_env_name` in `connections/oauth_clients.py`).
 2. `apply_preregistered_oauth_client` writes `oauth.clientId`, `oauth.clientSecret` (when present) and `oauth.redirectUri` into the agent's MCP entry (`connections/oauth_clients.py`). `strip_preregistered_oauth_client` removes them.
 3. The Connections card sign-in ("mint") runs one dedicated `kiro-cli acp` process, which is v2 *(earlier research; `connections/mint.py`, 1,316 lines)*.
 4. Grant presence is read by `stat` on v2's `~/.aws/sso/cache/<sha256>.token.json` pair, never opened (`grant_presence` in `mcp_grant.py`; `revoke_local_grant` unlinks a pair).
@@ -110,17 +110,17 @@ Each harness has its own config schema, its own token store, its own refresh log
 
 The authoritative statement is the design note:
 
-> kiro-cli owns the OAuth chain end to end and Kiro Crew never reads or holds the credential. … A design that would move custody into Kiro Crew is a proposal, not current behaviour, and is argued in `rfc-crew-agent-sdk-boundary.md`.
+> kiro-cli owns the OAuth chain end to end and Aj Crew never reads or holds the credential. … A design that would move custody into Aj Crew is a proposal, not current behaviour, and is argued in `rfc-crew-agent-sdk-boundary.md`.
 
 `docs/architecture/design-notes/mcp-oauth-ownership.md`, "The boundary in one sentence" (last changed `a13c55c5e2`, 2026-09-22; created `cdf2a1055c`, 2026-08-04).
 
 The rule is repeated as an invariant in:
 
-- `docs/system-specs/modules/connections.md`, "What a green L1 run actually proves" ("**Kiro Crew holds no token.** kiro-cli owns the OAuth chain and injects the bearer…").
+- `docs/system-specs/modules/connections.md`, "What a green L1 run actually proves" ("**Aj Crew holds no token.** kiro-cli owns the OAuth chain and injects the bearer…").
 - the module docstring of `connections/l1_smoke.py` (L1 verdicts are built on it: a healthy managed provider answers with a challenge, graded `GRANT_HELD`).
-- `_runtime_grant_present` in `mcp_discovery_remote.py` ("The probe holds no token of its own (Kiro Crew stores no credentials)").
+- `_runtime_grant_present` in `mcp_discovery_remote.py` ("The probe holds no token of its own (Aj Crew stores no credentials)").
 
-The custody move was already sketched as a future option in [rfc-crew-agent-sdk-boundary.md](rfc-crew-agent-sdk-boundary.md), section "OAuth custody under the Agent SDK" ( "Kiro Crew owns the OAuth chain end-to-end", refresh in a background task, sign-out revokes upstream). That RFC is `status: partial` and did not decide the OAuth part.
+The custody move was already sketched as a future option in [rfc-crew-agent-sdk-boundary.md](rfc-crew-agent-sdk-boundary.md), section "OAuth custody under the Agent SDK" ( "Aj Crew owns the OAuth chain end-to-end", refresh in a background task, sign-out revokes upstream). That RFC is `status: partial` and did not decide the OAuth part.
 
 ### 2.3 Why the rule was chosen
 
@@ -134,7 +134,7 @@ The rule is a consequence of kiro-cli being the only harness, not a security goa
 ### 2.4 The rule is already partly untrue
 
 - On KAS, Crew's vault holds the engine's MCP `client` and `tokens` values (module docstring of `acp/kas_secret_storage.py`). Crew never interprets them, but it holds them, encrypted, gateway-wide (same docstring).
-- Crew already holds third-party credentials and injects them gateway-side: Custom secrets via `kirocrew-secrets` (§3.3). WakaTime OAuth (client secret + tokens in the vault, single-flight refresh) is designed in `docs/architecture/design-notes/wakatime-oauth-read-auth.md`, "Credentials and storage" (design note, #19809; not found implemented on main: `build_client` in `wakatime/service.py` has no token code).
+- Crew already holds third-party credentials and injects them gateway-side: Custom secrets via `ajcrew-secrets` (§3.3). WakaTime OAuth (client secret + tokens in the vault, single-flight refresh) is designed in `docs/architecture/design-notes/wakatime-oauth-read-auth.md`, "Credentials and storage" (design note, #19809; not found implemented on main: `build_client` in `wakatime/service.py` has no token code).
 
 So the team is not choosing "hold credentials or not". It is choosing whether Crew holds them **opaquely, per harness** (today) or **owns them, once** (this RFC).
 
@@ -166,7 +166,7 @@ So the team is not choosing "hold credentials or not". It is choosing whether Cr
 
  Harness (KAS, claude, codex, …), inside the sandbox
  ───────────────────────────────────────────────────
-  session/new: mcpServers.github = { command: python -P -m kiro_crew.kas_env_shim
+  session/new: mcpServers.github = { command: python -P -m aj_crew.kas_env_shim
                                      --connection github --session S … }   (stdio, no url, no headers)
   harness ⇄ stdio JSON-RPC ⇄ bridge ──AF_UNIX, SO_PEERCRED attested──▶ ConnectionProxy (gateway)
                                                                          policy check, SEL audit
@@ -193,7 +193,7 @@ The harness sees a stdio server. It never gets a URL to the vendor, a header, or
 
 ### 3.3 The closest precedent: mediated secrets
 
-`kirocrew-secrets` already does gateway-side injection of a vault secret into an outbound HTTPS call, so the value never reaches the agent:
+`ajcrew-secrets` already does gateway-side injection of a vault secret into an outbound HTTPS call, so the value never reaches the agent:
 
 - The tool runs inside the agent sandbox, holds only the secret **name**, and forwards non-secret intent to `POST /api/mediated-secret-request` (module docstring of `mcp_secrets.py`).
 - Transport is the owner-only dashboard Unix socket, **no TCP fallback**; the client checks the answering peer is the genuine gateway pid before sending credential bytes (`_call_tool_inner` in `mcp_secrets.py`). Windows is refused outright (same function).
@@ -288,7 +288,7 @@ What it **could** do without mitigation: open the socket, speak MCP, and call an
 Mitigations, all in C4:
 
 1. **The proxy is a gate, not a pipe.** C4 applies the same governance ceiling and per-agent MCP grant the harness gate uses to every `tools/call` before forwarding, and writes one SEL event per call (tool name, slug, session, outcome; never arguments that could hold data). A call that would need user approval is refused at C4 unless the harness approval for that call id was seen. How C4 learns of the approval (Crew's gate already sees `session/request_permission`) is a design detail for review.
-2. **Pin one bridge per (session, server).** The first attested connection for a pair registers the peer pid; C4 also checks its cmdline is `kiro_crew.kas_env_shim` with the expected reference. Later connections from another pid are refused and audited. The bridge connects at MCP start, before any agent turn. This is new and is defence in depth: a same-uid process can fake a cmdline, so it narrows the hole rather than closing it.
+2. **Pin one bridge per (session, server).** The first attested connection for a pair registers the peer pid; C4 also checks its cmdline is `aj_crew.kas_env_shim` with the expected reference. Later connections from another pid are refused and audited. The bridge connects at MCP start, before any agent turn. This is new and is defence in depth: a same-uid process can fake a cmdline, so it narrows the hole rather than closing it.
 3. **Least privilege per Connection.** Request the smallest scopes; the registry already records per-provider scope guidance (e.g. read-only by default, *(earlier research)*).
 
 Residual: an agent that runs arbitrary code in its own session can reach the vendor with that session's grant. This is no worse than today's position for the same agent: it can already call the vendor's tools through the harness. The new part is that the call may not be shown for approval. The security review must decide if mitigations 1-2 are enough to ship by default.
@@ -302,7 +302,7 @@ Residual: an agent that runs arbitrary code in its own session can reach the ven
 
 ### 4.5 Other local processes, same user
 
-The vault's own doc says: "The protection is enforced by Kiro Crew, not by the operating system: another program running as you can still open the files" (`src/kiro_crew/docs/secrets-vault.md`, "Where it lives, and why the agent cannot read it"; also the module docstring of `secrets/vault.py`). This RFC does not change that. Any malware running as the user can read the key file and decrypt the vault. Compared with today it is an improvement over v2's plaintext `token.json`, and equal to the KAS vault. OS keychain storage is out of scope; it was floated in `rfc-crew-agent-sdk-boundary.md`, "If the Agent SDK owned the MCP servers".
+The vault's own doc says: "The protection is enforced by Aj Crew, not by the operating system: another program running as you can still open the files" (`src/aj_crew/docs/secrets-vault.md`, "Where it lives, and why the agent cannot read it"; also the module docstring of `secrets/vault.py`). This RFC does not change that. Any malware running as the user can read the key file and decrypt the vault. Compared with today it is an improvement over v2's plaintext `token.json`, and equal to the KAS vault. OS keychain storage is out of scope; it was floated in `rfc-crew-agent-sdk-boundary.md`, "If the Agent SDK owned the MCP servers".
 
 ### 4.6 Multi-user hosts
 
@@ -435,7 +435,7 @@ Do (a) in parallel if the KAS team will take it: it unblocks the default backend
 
 Read at `0795ebc479`. Phase 1 shipped behind the flag in [#29543](https://github.com/kirodotdev/KiroCrew/pull/29543) and [#31821](https://github.com/kirodotdev/KiroCrew/pull/31821); [#31149](https://github.com/kirodotdev/KiroCrew/issues/31149) tracks its follow-ups. This amendment changes §3.3, §4.2, §4.6, the phasing table and open question 7. Each of those points here. Everything else stands.
 
-**Threat scope.** Kiro Crew is a single-owner personal tool. Other local OS users are out of scope as a threat. The same-user rules stay: the bridge token, the pid pin (§4.3) and per-call approval at the proxy.
+**Threat scope.** Aj Crew is a single-owner personal tool. Other local OS users are out of scope as a threat. The same-user rules stay: the bridge token, the pid pin (§4.3) and per-call approval at the proxy.
 
 **Windows transport.** The bridge→gateway leg uses loopback TCP on `127.0.0.1`. Both ends check the connection before any credential byte moves:
 
@@ -460,7 +460,7 @@ Read at `43ac0cd051`. Phase 1 shipped behind the flag in [#29543](https://github
 
 **Decision.** The 30 DCR Connection cards move to Crew-owned OAuth, and owner-added remote MCP servers follow later. Crew registers its own client at each vendor's `registration_endpoint` (RFC 7591), holds the client and the tokens in the vault, and serves the harness through the same proxy and bridge as GitHub. One generic engine covers every card; per-card facts are registry data, with no vendor-specific Python.
 
-**Client name.** Crew registers as `client_name: "Kiro Crew"`. A card may set an optional `dcr_client_name` override for a vendor that admitted `kiro` (the name KAS registers), so an existing admission is not lost. Figma and Zapier key on this name: Figma admits by catalog, and Zapier shows one MCP server per client name.
+**Client name.** Crew registers as `client_name: "Aj Crew"`. A card may set an optional `dcr_client_name` override for a vendor that admitted `kiro` (the name KAS registers), so an existing admission is not lost. Figma and Zapier key on this name: Figma admits by catalog, and Zapier shows one MCP server per client name.
 
 **Issuer.** A registry card pins the committed `l0_expectations.authorization_server`, the same invariant as the L0 probe. If the advertised `authorization_servers[0]` differs, sign-in fails with `issuer_changed` and is audited. An owner-added server has no committed issuer, so it follows the advertised one through the vetted fetch in `mcp_oauth_discovery.py` (SSRF vet, pinned connector, HTTPS:443, no redirects). Crew never falls back to guessed `/authorize`, `/token` or `/register` paths.
 
@@ -501,7 +501,7 @@ Atlassian is the first live card: its KAS sign-in is the worst today (the 60 s w
 
 Unchanged: per-call approval at the proxy, the pid pin, the bridge transport (POSIX socket, Windows verified TCP) and the §4.3 residual risk.
 
-**Unverified, needs live tests.** Whether each vendor accepts Crew's `127.0.0.1` redirect and `Kiro Crew` client name; refresh rotation per vendor; the public URL shape of a Crew pod for step 4b.
+**Unverified, needs live tests.** Whether each vendor accepts Crew's `127.0.0.1` redirect and `Aj Crew` client name; refresh rotation per vendor; the public URL shape of a Crew pod for step 4b.
 
 ## Amendment 2026-11-08: one grant per Google slug, revoke on the last
 
@@ -553,7 +553,7 @@ The annotation strip applies to every bridge: it is harmless on KAS, which alrea
 
 **Owner rulings and corrections, 2026-11-09 (steps 3b, 3e, 3f).**
 
-- **3f pi: approved.** The owner accepts the product-shape change. With custody on, pi (broker-only) receives the Crew-owned Connection element from the spec, rewritten to the shim stdio element, through the sealed per-session MCP handoff file (`KIROCREW_PI_MCP_HANDOFF` in `acp/harness/pi.py`), the only path that carries Crew's servers into pi. Same-name rule: a user's own `github` (or any same-named) entry in pi's `mcp.json` wins. Crew's element is then not mounted, and the panel says why, using the existing `mcp_json` reason in `acp/pi_mcp_registration.py`. pi still joins the allowlist only with its live capture.
+- **3f pi: approved.** The owner accepts the product-shape change. With custody on, pi (broker-only) receives the Crew-owned Connection element from the spec, rewritten to the shim stdio element, through the sealed per-session MCP handoff file (`AJCREW_PI_MCP_HANDOFF` in `acp/harness/pi.py`), the only path that carries Crew's servers into pi. Same-name rule: a user's own `github` (or any same-named) entry in pi's `mcp.json` wins. Crew's element is then not mounted, and the panel says why, using the existing `mcp_json` reason in `acp/pi_mcp_registration.py`. pi still joins the allowlist only with its live capture.
 - **3e goose: no name-only binding.** The approval stays bound to session, server, tool and args digest, as on every other harness. Binding by tool name only is rejected. The row's earlier premise was wrong: goose's `rawInput` is the exact forwarded arguments (block/goose `0edf2bdc`, `conversion.rs` 92-157 and `tool_approval.rs` 135-149); `{"": "{}"}` was a call with no arguments. So goose can bind the digest and joins with its live capture like the others.
 - **Real blocker for goose, copilot, codex, pi and strands.** The enforced-harness sandbox mask hides `kas-mcp-launch`, so the bridge never starts there. The fix is a narrow `crew-oauth-bridge` leaf that exposes bridge snapshots only, in its own code PR.
 - **opencode and deepseek** stay out of the allowlist for now (left out of #33597): their permission frames name no trusted MCP server, so the approval cannot be bound to one. They join once a trusted server identity is found.
@@ -577,7 +577,7 @@ The code alone is useless without the in-memory PKCE verifier and, for a confide
 6. **Spec secret** stays in the owner-only spec in a mixed fleet: no new exposure.
 7. **Rekey** failure is an availability issue (fail closed), not a leak.
 8. **Unauthenticated HTTPS callback route** on pods, bounded by the rules above. The mix-up defence (`iss`, RFC 9207; `resource`, RFC 8707) from the DCR amendment applies to it unchanged.
-9. **Unchanged:** Windows bridge transport, `kirocrew chat` (no gateway port, native path), entries that send a credential header (native path).
+9. **Unchanged:** Windows bridge transport, `ajcrew chat` (no gateway port, native path), entries that send a credential header (native path).
 
 **Unverified, needs live tests.** The `rawInput` shape on opencode, deepseek, copilot, pi and strands; a user-scope `github` server clashing with Crew's on Claude, codex and pi; codex keeping annotation-stripped tools listed; whether KAS has the allow-always and rekey gaps too; the public URL shape of a Crew pod; whether a remote harness host keeps the native path.
 

@@ -20,18 +20,18 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import mcp_core, platform_compat
-from kiro_crew.dashboard.chat_runner import _handle_workflow_command
-from kiro_crew.dashboard.handlers.workflows import (
+from aj_crew import mcp_core, platform_compat
+from aj_crew.dashboard.chat_runner import _handle_workflow_command
+from aj_crew.dashboard.handlers.workflows import (
     api_workflow_definition_get,
     api_workflow_definition_remove,
     api_workflow_definition_run,
     api_workflow_definition_update,
     api_workflow_definitions,
 )
-from kiro_crew.testing.wait import LoopHop
-from kiro_crew.workflows.library import WorkflowDefinitionLibrary, command_ref
-from kiro_crew.workflows.service import WorkflowService
+from aj_crew.testing.wait import LoopHop
+from aj_crew.workflows.library import WorkflowDefinitionLibrary, command_ref
+from aj_crew.workflows.service import WorkflowService
 
 pytestmark = pytest.mark.asyncio
 
@@ -707,7 +707,7 @@ async def test_definition_routes_on_a_claimed_removed_slug(tmp_path) -> None:
 
 class _Slot:
     key = "main"
-    agent = "kirocrew"
+    agent = "ajcrew"
 
     def __init__(self) -> None:
         self.messages: list[str] = []
@@ -725,7 +725,7 @@ class _Sel:
 async def test_the_workflow_command_on_a_claimed_removed_slug(tmp_path, monkeypatch) -> None:
     """``/workflow`` lists the record under its id, ``/workflow <slug>`` answers
     not found, and ``/workflow <id>`` starts it and names the id, not the slug."""
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.sel", lambda: _Sel())
     svc, starts = _service_on_claimed_slug(tmp_path)
     state = SimpleNamespace(workflow_service=svc, push_slots_update=lambda: None)
     slot = _Slot()
@@ -781,7 +781,7 @@ def _id_claims_removed_slug(tmp_path) -> WorkflowDefinitionLibrary:
 async def test_a_hand_written_id_equal_to_a_removed_slug_answers_not_found_by_it(
     tmp_path, monkeypatch
 ) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.sel", lambda: _Sel())
     library = _id_claims_removed_slug(tmp_path)
     svc, starts = _recording_service(library)
     state = SimpleNamespace(workflow_service=svc, push_slots_update=lambda: None)
@@ -869,7 +869,7 @@ async def test_a_record_whose_id_and_slug_are_both_reserved_is_listed_but_unreac
     on both refs, for the dashboard to mark; the chat ``/workflow`` list and
     ``workflow_library_list`` leave it out, since every command would answer
     not found. Its file must give it a new id and slug, or go."""
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.sel", lambda: _Sel())
     library = WorkflowDefinitionLibrary(tmp_path)
     for name in ("Debug Project", "Triage Tickets"):
         gone = library.create(source=SOURCE_V1, name=name)
@@ -1041,7 +1041,7 @@ async def test_a_hand_written_slug_equal_to_a_removed_id_answers_not_found_by_it
     """A removed record's id is reserved as a slug too. A new save never takes
     it, and a hand-written record whose slug is that id is reached only by its
     own free id, so a written-down ``/workflow debug-tool`` never runs it."""
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.sel", lambda: _Sel())
     library = WorkflowDefinitionLibrary(tmp_path)
     _hand_written(library, "debug-tool", "hand-tool")
     assert library.remove("debug-tool") is not None
@@ -1094,7 +1094,7 @@ async def test_a_listed_command_runs_the_record_it_is_listed_on(
     """One live record's id is another's slug, by hand: ``shared-ref`` reaches
     the record whose id it is, so the other record is offered under its own id
     in every list, and that command runs it, in either folder order."""
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.sel", lambda: _Sel())
     library = WorkflowDefinitionLibrary(tmp_path)
     _hand_written(library, "shared-ref", "alpha")
     _hand_written(library, "wfd_other", "shared-ref")
@@ -1194,7 +1194,7 @@ async def test_an_unreadable_library_file_is_warned_about_once_until_it_changes(
             if record.levelname == "WARNING" and str(path) in record.getMessage()
         ]
 
-    with caplog.at_level("WARNING", logger="kiro_crew.workflows.library"):
+    with caplog.at_level("WARNING", logger="aj_crew.workflows.library"):
         for _ in range(3):
             assert [item["slug"] for item in library.list()] == ["debug-project"]
         assert len(warnings_for(broken)) == 1 and len(warnings_for(no_id)) == 1
@@ -1243,7 +1243,7 @@ async def test_a_run_updates_a_restored_copy_through_its_free_slug(tmp_path) -> 
     """A copy restored beside its tombstone answers only to its free slug: its
     id is reserved. A run-to-revision update through that slug must write by the
     slug (pinned with expected_id), not re-read by the reserved id and 404."""
-    from kiro_crew.workflows.update_from_run import source_sha256
+    from aj_crew.workflows.update_from_run import source_sha256
 
     library = WorkflowDefinitionLibrary(tmp_path)
     gone = library.create(source=SOURCE_V1, name="Debug Project")
@@ -1275,7 +1275,7 @@ async def test_a_run_updates_a_restored_copy_through_its_free_slug(tmp_path) -> 
 async def test_an_update_card_for_a_restored_copy_patches_its_free_slug_pinned_by_id() -> None:
     """The card's snapshot carries the ref that reaches the copy (its free slug,
     since its id is reserved), and Apply PATCHes that ref with expected_id."""
-    from kiro_crew import change_card_catalog as catalog
+    from aj_crew import change_card_catalog as catalog
 
     p = catalog.validate_params("workflow.update", {"workflow": "deploy-two", "source": SOURCE_V2})
     snapshot = {

@@ -29,7 +29,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SKILL_DIR = ROOT / "src" / "kiro_crew" / "builtin_skills" / "living-ui"
+SKILL_DIR = ROOT / "src" / "aj_crew" / "builtin_skills" / "living-ui"
 TOOLKIT = SKILL_DIR / "toolkit" / "living-ui.js"
 SKILL_MD = SKILL_DIR / "SKILL.md"
 

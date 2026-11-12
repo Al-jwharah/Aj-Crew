@@ -21,19 +21,19 @@ from copy import deepcopy
 
 import pytest
 
-from kiro_crew.monitoring import github_pull_request as pr_mod
-from kiro_crew.monitoring import github_workflow_run as wf_mod
-from kiro_crew.monitoring.models import (
+from aj_crew.monitoring import github_pull_request as pr_mod
+from aj_crew.monitoring import github_workflow_run as wf_mod
+from aj_crew.monitoring.models import (
     MonitorDecision,
     MonitorObservationStatus,
     MonitorOutcome,
     MonitorState,
     ProviderErrorKind,
 )
-from kiro_crew.monitoring.shadow import run_shadow_probe
-from kiro_crew.taskq import dependency as taskq_dependency
-from kiro_crew.taskq.adapters.github import SCOPE_API
-from kiro_crew.taskq.dependency import DependencyCoordinator, DependencySignal
+from aj_crew.monitoring.shadow import run_shadow_probe
+from aj_crew.taskq import dependency as taskq_dependency
+from aj_crew.taskq.adapters.github import SCOPE_API
+from aj_crew.taskq.dependency import DependencyCoordinator, DependencySignal
 
 
 @pytest.fixture

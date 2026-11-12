@@ -1,5 +1,5 @@
 /**
- * Shared Crew wire contracts. Mirrors `kiro_crew.shared_crew` (contracts.py,
+ * Shared Crew wire contracts. Mirrors `aj_crew.shared_crew` (contracts.py,
  * admission.py, collab.py); the owning spec is
  * docs/system-specs/modules/shared-crew.md. Types only plus the state-machine
  * table: no request methods live here, so adding a Shared Crew endpoint still
@@ -93,7 +93,7 @@ export interface SharedCrewCapabilities {
    *  enterprise policy pins tailnet access off, and the invite routes answer 404.
    *  An older gateway omits it. */
   invites?: { state: 'available' | 'unavailable'; reason: '' | 'governance_pinned_off' }
-  /** `true` only while the gateway runs with `KIROCREW_SHARED_CREW_PREVIEW=1`.
+  /** `true` only while the gateway runs with `AJCREW_SHARED_CREW_PREVIEW=1`.
    *  Off, or omitted by an older gateway, the sharing surfaces stay hidden. */
   shared_crew_preview?: boolean
 }
@@ -314,7 +314,7 @@ export interface TypingLease {
    *  `taken_over`), or ''. */
   ended: string
   /** Only on the frame (and takeover answer) announcing a takeover, which needs
-   *  `KIROCREW_SHARED_CREW_PREVIEW=1`: who held the lease before, and every id
+   *  `AJCREW_SHARED_CREW_PREVIEW=1`: who held the lease before, and every id
    *  that counts as them. */
   taken_over_from?: PublicPrincipal | null
   taken_over_from_ids?: string[]
@@ -361,7 +361,7 @@ export interface SharedDecision {
 
 /** `GET`/`PUT /api/shared-crew/preview`: the owner's Feature preview switch.
  *  `enabled` is the stored choice, `active` what this gateway started with,
- *  `env_override` true while `KIROCREW_SHARED_CREW_PREVIEW=1` forces it on. */
+ *  `env_override` true while `AJCREW_SHARED_CREW_PREVIEW=1` forces it on. */
 export interface SharedCrewPreviewSetting {
   enabled: boolean
   active: boolean

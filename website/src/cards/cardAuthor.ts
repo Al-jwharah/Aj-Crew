@@ -6,7 +6,7 @@ import type { MemberRosterRow } from '../api/client'
  * inside its chat, the product name everywhere else. The card copy says this
  * name ("Pebble's reason"), never "the agent".
  */
-export const CARD_AUTHOR_DEFAULT = 'Kiro Crew'
+export const CARD_AUTHOR_DEFAULT = 'Aj Crew'
 
 export const CardAuthorContext = createContext<string>(CARD_AUTHOR_DEFAULT)
 

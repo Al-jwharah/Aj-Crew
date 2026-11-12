@@ -7,13 +7,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config.loader import (
+from aj_crew.config.loader import (
     ACTIVATION_MENTION,
     ACTIVATION_OBSERVE,
     ACTIVATION_REVIEW,
     ChannelConfig,
 )
-from kiro_crew.slack.events import (
+from aj_crew.slack.events import (
     _MAX_RECOVERED_TEXT_CHARS,
     _SLACK_BLOCK_FALLBACKS,
     _extract_blocks_text,
@@ -452,7 +452,7 @@ class TestRouteMessageFallbackRecovery:
     async def test_placeholder_text_with_no_recoverable_blocks_drops_message(self):
         """When blocks have no extractable text and text is placeholder, message is dropped
         by the (not text and not files) guard — _route_message returns without dispatching."""
-        from kiro_crew.slack.events import _route_message
+        from aj_crew.slack.events import _route_message
 
         event = {
             "user": "U123",
@@ -471,10 +471,10 @@ class TestRouteMessageFallbackRecovery:
         mock_seen.check = lambda x: False  # SeenCache.check: unseen
         mock_seen.add = lambda x: None  # SeenCache.add: no-op in test
 
-        with patch("kiro_crew.slack.enterprise.check_message_origin", return_value=True), \
-             patch("kiro_crew.slack.events.sel") as mock_sel, \
-             patch("kiro_crew.slack.events.is_allowed_user", return_value=True), \
-             patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_handle:
+        with patch("aj_crew.slack.enterprise.check_message_origin", return_value=True), \
+             patch("aj_crew.slack.events.sel") as mock_sel, \
+             patch("aj_crew.slack.events.is_allowed_user", return_value=True), \
+             patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_handle:
             mock_sel.return_value.log_api_access = lambda **kw: None
             await _route_message(mock_orch, event, mock_seen, is_mention=False)
             # Message should be dropped — handle_message never called
@@ -483,7 +483,7 @@ class TestRouteMessageFallbackRecovery:
     @pytest.mark.asyncio
     async def test_placeholder_text_replaced_by_block_content(self):
         """_route_message passes recovered text (not the placeholder) past the early guard."""
-        from kiro_crew.slack.events import _route_message
+        from aj_crew.slack.events import _route_message
 
         event = {
             "user": "U123",
@@ -523,11 +523,11 @@ class TestRouteMessageFallbackRecovery:
         mock_seen.check = lambda x: False  # SeenCache.check: unseen
         mock_seen.add = lambda x: None  # SeenCache.add: no-op in test
 
-        with patch("kiro_crew.slack.enterprise.check_message_origin", return_value=True), \
-             patch("kiro_crew.slack.events.sel") as mock_sel, \
-             patch("kiro_crew.slack.events.is_allowed_user", return_value=True), \
-             patch("kiro_crew.slack.events.is_owner", return_value=True), \
-             patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_handle:
+        with patch("aj_crew.slack.enterprise.check_message_origin", return_value=True), \
+             patch("aj_crew.slack.events.sel") as mock_sel, \
+             patch("aj_crew.slack.events.is_allowed_user", return_value=True), \
+             patch("aj_crew.slack.events.is_owner", return_value=True), \
+             patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_handle:
             mock_sel.return_value.log_api_access = lambda **kw: None
             await _route_message(mock_orch, event, mock_seen, is_mention=True)
             # handle_message SHOULD be called — text was recovered and is non-empty
@@ -547,10 +547,10 @@ class TestRouteMessageFallbackRecovery:
         import dataclasses
         from unittest.mock import MagicMock
 
-        from kiro_crew.platform import build_default_context
-        from kiro_crew.platform.context import set_context
-        from kiro_crew.platform.interfaces import InterceptDecision
-        from kiro_crew.slack.events import SeenCache, _route_message
+        from aj_crew.platform import build_default_context
+        from aj_crew.platform.context import set_context
+        from aj_crew.platform.interfaces import InterceptDecision
+        from aj_crew.slack.events import SeenCache, _route_message
 
         calls = {"intercept": 0}
 
@@ -591,11 +591,11 @@ class TestRouteMessageFallbackRecovery:
             mock_orch.slack = None
 
             seen = SeenCache()  # REAL cache so the dedup path is exercised
-            with patch("kiro_crew.slack.enterprise.check_message_origin", return_value=True), \
-                 patch("kiro_crew.slack.events.sel") as mock_sel, \
-                 patch("kiro_crew.slack.events.is_allowed_user", return_value=True), \
-                 patch("kiro_crew.slack.events.is_owner", return_value=True), \
-                 patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_handle:
+            with patch("aj_crew.slack.enterprise.check_message_origin", return_value=True), \
+                 patch("aj_crew.slack.events.sel") as mock_sel, \
+                 patch("aj_crew.slack.events.is_allowed_user", return_value=True), \
+                 patch("aj_crew.slack.events.is_owner", return_value=True), \
+                 patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_handle:
                 audits = []
                 mock_sel.return_value.log_api_access = lambda **kw: audits.append(kw)
 
@@ -622,9 +622,9 @@ class TestRouteMessageFallbackRecovery:
         import dataclasses
         from unittest.mock import MagicMock
 
-        from kiro_crew.platform import build_default_context
-        from kiro_crew.platform.context import set_context
-        from kiro_crew.slack.events import SeenCache, _route_message
+        from aj_crew.platform import build_default_context
+        from aj_crew.platform.context import set_context
+        from aj_crew.slack.events import SeenCache, _route_message
 
         class _RaisingGate:
             def validate_enterprise(self, *a, **k):
@@ -661,11 +661,11 @@ class TestRouteMessageFallbackRecovery:
             mock_orch.slack = None
 
             seen = SeenCache()
-            with patch("kiro_crew.slack.enterprise.check_message_origin", return_value=True), \
-                 patch("kiro_crew.slack.events.sel") as mock_sel, \
-                 patch("kiro_crew.slack.events.is_allowed_user", return_value=True), \
-                 patch("kiro_crew.slack.events.is_owner", return_value=True), \
-                 patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_handle:
+            with patch("aj_crew.slack.enterprise.check_message_origin", return_value=True), \
+                 patch("aj_crew.slack.events.sel") as mock_sel, \
+                 patch("aj_crew.slack.events.is_allowed_user", return_value=True), \
+                 patch("aj_crew.slack.events.is_owner", return_value=True), \
+                 patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_handle:
                 audits = []
                 mock_sel.return_value.log_api_access = lambda **kw: audits.append(kw)
 
@@ -689,10 +689,10 @@ class TestRouteMessageFallbackRecovery:
         import dataclasses
         from unittest.mock import MagicMock
 
-        from kiro_crew.platform import build_default_context
-        from kiro_crew.platform.context import set_context
-        from kiro_crew.platform.interfaces import InterceptDecision
-        from kiro_crew.slack.events import SeenCache, _route_message
+        from aj_crew.platform import build_default_context
+        from aj_crew.platform.context import set_context
+        from aj_crew.platform.interfaces import InterceptDecision
+        from aj_crew.slack.events import SeenCache, _route_message
 
         class _DropGate:
             def validate_enterprise(self, *a, **k):
@@ -729,11 +729,11 @@ class TestRouteMessageFallbackRecovery:
             mock_orch.slack = None
 
             seen = SeenCache()
-            with patch("kiro_crew.slack.enterprise.check_message_origin", return_value=True), \
-                 patch("kiro_crew.slack.events.sel") as mock_sel, \
-                 patch("kiro_crew.slack.events.is_allowed_user", return_value=True), \
-                 patch("kiro_crew.slack.events.is_owner", return_value=True), \
-                 patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_handle:
+            with patch("aj_crew.slack.enterprise.check_message_origin", return_value=True), \
+                 patch("aj_crew.slack.events.sel") as mock_sel, \
+                 patch("aj_crew.slack.events.is_allowed_user", return_value=True), \
+                 patch("aj_crew.slack.events.is_owner", return_value=True), \
+                 patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_handle:
                 audits = []
                 mock_sel.return_value.log_api_access = lambda **kw: audits.append(kw)
 
@@ -847,11 +847,11 @@ class TestThreadFollowAddressedToOthers:
         orch = self._orch(activation)
         dispatch = AsyncMock()
         with (
-            patch("kiro_crew.slack.events.sel") as mock_sel,
-            patch("kiro_crew.slack.events.is_allowed_user", return_value=True),
-            patch("kiro_crew.slack.events.is_owner", return_value=True),
-            patch("kiro_crew.slack.events.validated_self_user_id", return_value=self_uid),
-            patch("kiro_crew.slack.events.handle_message", dispatch),
+            patch("aj_crew.slack.events.sel") as mock_sel,
+            patch("aj_crew.slack.events.is_allowed_user", return_value=True),
+            patch("aj_crew.slack.events.is_owner", return_value=True),
+            patch("aj_crew.slack.events.validated_self_user_id", return_value=self_uid),
+            patch("aj_crew.slack.events.handle_message", dispatch),
         ):
             mock_sel.return_value.log_api_access = _log
             await _route_message(orch, event, self._seen(), is_mention=False)
@@ -979,11 +979,11 @@ class TestPastedTableBlocks:
         seen.check_and_add = lambda x: False
         seen.check = lambda x: False
         seen.add = lambda x: None
-        with patch("kiro_crew.slack.enterprise.check_message_origin", return_value=True), \
-             patch("kiro_crew.slack.events.sel"), \
-             patch("kiro_crew.slack.events.is_allowed_user", return_value=True), \
-             patch("kiro_crew.slack.events.is_owner", return_value=True), \
-             patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_handle:
+        with patch("aj_crew.slack.enterprise.check_message_origin", return_value=True), \
+             patch("aj_crew.slack.events.sel"), \
+             patch("aj_crew.slack.events.is_allowed_user", return_value=True), \
+             patch("aj_crew.slack.events.is_owner", return_value=True), \
+             patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_handle:
             await _route_message(orch, dict(event, user="U123", channel="C456", ts="1.2", team="T789"), seen, is_mention=True)
         assert mock_handle.called
         # The turn's positional arguments only: the ``spool_text`` keyword carries
@@ -1036,15 +1036,15 @@ def _forward_seen():
 
 async def _route_forward(event, **extra_patches):
     """Run _route_message against ``event`` and return the handle_message mock."""
-    from kiro_crew.slack.events import _route_message
+    from aj_crew.slack.events import _route_message
 
     orch = _forward_orch()
     seen = _forward_seen()
-    with patch("kiro_crew.slack.enterprise.check_message_origin", return_value=True), \
-         patch("kiro_crew.slack.events.sel") as mock_sel, \
-         patch("kiro_crew.slack.events.is_allowed_user", return_value=True), \
-         patch("kiro_crew.slack.events.is_owner", return_value=True), \
-         patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_handle:
+    with patch("aj_crew.slack.enterprise.check_message_origin", return_value=True), \
+         patch("aj_crew.slack.events.sel") as mock_sel, \
+         patch("aj_crew.slack.events.is_allowed_user", return_value=True), \
+         patch("aj_crew.slack.events.is_owner", return_value=True), \
+         patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as mock_handle:
         mock_sel.return_value.log_api_access = lambda **kw: None
         await _route_message(orch, event, seen, is_mention=True)
     return mock_handle
@@ -1326,17 +1326,17 @@ class TestRouteMessageForwardFence:
                 }
             ],
         }
-        from kiro_crew.slack.events import _route_message
+        from aj_crew.slack.events import _route_message
 
         orch = _forward_orch()
         seen = _forward_seen()
-        with patch("kiro_crew.slack.enterprise.check_message_origin", return_value=True), \
-             patch("kiro_crew.slack.events.sel") as mock_sel, \
-             patch("kiro_crew.slack.events.is_allowed_user", return_value=True), \
-             patch("kiro_crew.slack.events.is_owner", return_value=True), \
-             patch("kiro_crew.slack.format.redact_exfiltration_urls", side_effect=lambda s: (s.replace("http://evil.example/exfil", "[redacted-url]"), ["http://evil.example/exfil"])) as rx, \
-             patch("kiro_crew.slack.format.redact_credentials", side_effect=lambda s: (s, [])), \
-             patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
+        with patch("aj_crew.slack.enterprise.check_message_origin", return_value=True), \
+             patch("aj_crew.slack.events.sel") as mock_sel, \
+             patch("aj_crew.slack.events.is_allowed_user", return_value=True), \
+             patch("aj_crew.slack.events.is_owner", return_value=True), \
+             patch("aj_crew.slack.format.redact_exfiltration_urls", side_effect=lambda s: (s.replace("http://evil.example/exfil", "[redacted-url]"), ["http://evil.example/exfil"])) as rx, \
+             patch("aj_crew.slack.format.redact_credentials", side_effect=lambda s: (s, [])), \
+             patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as hm:
             mock_sel.return_value.log_api_access = lambda **kw: None
             await _route_message(orch, event, seen, is_mention=True)
         assert hm.called
@@ -1354,7 +1354,7 @@ class TestForwardedFilesNormalization:
     """forwarded_files_from_slack turns raw Slack file objects into records."""
 
     def test_normalizes_slack_file_objects(self):
-        from kiro_crew.slack.format import forwarded_files_from_slack
+        from aj_crew.slack.format import forwarded_files_from_slack
 
         files = forwarded_files_from_slack(
             [
@@ -1377,7 +1377,7 @@ class TestForwardedFilesNormalization:
         assert f.permalink == "https://x.slack.com/files/U1/F1/cat.png"
 
     def test_tolerates_malformed_entries(self):
-        from kiro_crew.slack.format import forwarded_files_from_slack
+        from aj_crew.slack.format import forwarded_files_from_slack
 
         files = forwarded_files_from_slack(
             [None, "junk", {}, {"size": "not-a-number", "name": "ok.txt"}, 42]
@@ -1387,7 +1387,7 @@ class TestForwardedFilesNormalization:
         assert files[0].size == 0
 
     def test_non_list_input_returns_empty(self):
-        from kiro_crew.slack.format import forwarded_files_from_slack
+        from aj_crew.slack.format import forwarded_files_from_slack
 
         assert forwarded_files_from_slack(None) == ()
         assert forwarded_files_from_slack({"name": "x"}) == ()
@@ -1397,7 +1397,7 @@ class TestBuildForwardFenceFiles:
     """build_forward_fence emits per-file metadata lines inside the fence."""
 
     def test_file_metadata_lines_inside_fence(self):
-        from kiro_crew.slack.format import ForwardedFile, build_forward_fence
+        from aj_crew.slack.format import ForwardedFile, build_forward_fence
 
         fence = build_forward_fence(
             "some text",
@@ -1424,7 +1424,7 @@ class TestBuildForwardFenceFiles:
         assert begin < fence.index("some text") < end
 
     def test_image_only_fence_is_non_empty_and_describes_file(self):
-        from kiro_crew.slack.format import ForwardedFile, build_forward_fence
+        from aj_crew.slack.format import ForwardedFile, build_forward_fence
 
         fence = build_forward_fence(
             "",
@@ -1440,7 +1440,7 @@ class TestBuildForwardFenceFiles:
         assert "\n\n" not in fence[begin:end]
 
     def test_file_name_fence_markers_neutralized(self):
-        from kiro_crew.slack.format import ForwardedFile, build_forward_fence
+        from aj_crew.slack.format import ForwardedFile, build_forward_fence
 
         fence = build_forward_fence(
             "",
@@ -1457,7 +1457,7 @@ class TestAssembleForwardMessage:
     """assemble_forward_message is the shared content-assembly layer."""
 
     def _fwd(self, **kw):
-        from kiro_crew.slack.format import ForwardedFile, ForwardedMessage
+        from aj_crew.slack.format import ForwardedFile, ForwardedMessage
 
         defaults = dict(
             text="third party text",
@@ -1471,7 +1471,7 @@ class TestAssembleForwardMessage:
         return ForwardedMessage(**defaults)
 
     def test_note_before_fence_comment_after(self):
-        from kiro_crew.slack.format import assemble_forward_message
+        from aj_crew.slack.format import assemble_forward_message
 
         out = assemble_forward_message(self._fwd(), note="my note", comment="my question")
         begin = out.index("UNTRUSTED FORWARDED CONTENT BEGIN")
@@ -1481,13 +1481,13 @@ class TestAssembleForwardMessage:
         assert end < out.index("[Your comment]: my question")
 
     def test_body_is_redacted_files_described(self):
-        from kiro_crew.slack.format import assemble_forward_message
+        from aj_crew.slack.format import assemble_forward_message
 
         with patch(
-            "kiro_crew.slack.format.redact_exfiltration_urls",
+            "aj_crew.slack.format.redact_exfiltration_urls",
             side_effect=lambda s: (s.replace("third party text", "[redacted-body]"), ["u"]),
         ), patch(
-            "kiro_crew.slack.format.redact_credentials",
+            "aj_crew.slack.format.redact_credentials",
             side_effect=lambda s: (s, []),
         ):
             out = assemble_forward_message(self._fwd())
@@ -1498,7 +1498,7 @@ class TestAssembleForwardMessage:
     def test_identical_input_produces_identical_fence_for_both_paths(self):
         """(d) Equivalent normalized input yields byte-identical fence output —
         the property that keeps the two acquisition adapters consistent."""
-        from kiro_crew.slack.format import assemble_forward_message
+        from aj_crew.slack.format import assemble_forward_message
 
         fwd = self._fwd()
         assert assemble_forward_message(fwd) == assemble_forward_message(fwd)
@@ -1591,7 +1591,7 @@ class TestRouteMessageForwardFiles:
     async def test_route_output_matches_shared_assembler(self):
         """(d) The events adapter delegates assembly wholesale: its routed text
         equals assemble_forward_message on the equivalent normalized input."""
-        from kiro_crew.slack.format import (
+        from aj_crew.slack.format import (
             ForwardedFile,
             ForwardedMessage,
             assemble_forward_message,
@@ -1660,7 +1660,7 @@ class TestForwardFenceBoundsAndRedaction:
         assert "[file 1/1]" in routed
 
     def test_assembler_redacts_a_credential_in_a_permalink_but_not_the_note(self):
-        from kiro_crew.slack.format import (
+        from aj_crew.slack.format import (
             ForwardedFile,
             ForwardedMessage,
             assemble_forward_message,
@@ -1676,7 +1676,7 @@ class TestForwardFenceBoundsAndRedaction:
         assert out.startswith("see this\n\n")
 
     def test_file_count_and_field_length_are_capped_with_an_omitted_line(self):
-        from kiro_crew.slack import format as ff
+        from aj_crew.slack import format as ff
 
         raw = [{"name": "n" * 1000, "mimetype": "image/png"} for _ in range(ff._MAX_FORWARDED_FILES + 3)]
         files = ff.forwarded_files_from_slack(raw)
@@ -1689,7 +1689,7 @@ class TestForwardFenceBoundsAndRedaction:
 
     @pytest.mark.parametrize("size", ["x", None, -5, float("inf")])
     def test_a_malformed_size_is_dropped(self, size):
-        from kiro_crew.slack.format import forwarded_files_from_slack
+        from aj_crew.slack.format import forwarded_files_from_slack
 
         (entry,) = forwarded_files_from_slack([{"name": "a.png", "size": size}])
         assert entry.size == 0
@@ -1815,7 +1815,7 @@ class TestForwardedTablesStayInsideTheFence:
 
 def test_shared_text_and_per_attachment_ladder_agree():
     """_extract_shared_text reads each share attachment through the one ladder."""
-    from kiro_crew.slack.events_block_text import (
+    from aj_crew.slack.events_block_text import (
         _extract_share_attachment_text,
         _extract_shared_text,
     )
@@ -1839,7 +1839,7 @@ def test_shared_text_and_per_attachment_ladder_agree():
 )
 def test_a_marker_split_across_two_fields_is_neutralized(name, body):
     """A marker that only exists once the fence lines are joined is still removed."""
-    from kiro_crew.slack.format import ForwardedFile, ForwardedMessage, assemble_forward_message
+    from aj_crew.slack.format import ForwardedFile, ForwardedMessage, assemble_forward_message
 
     fwd = ForwardedMessage(
         text=body,
@@ -1851,7 +1851,7 @@ def test_a_marker_split_across_two_fields_is_neutralized(name, body):
     assert out.rstrip().endswith("---")
     assert "[removed embedded fence marker]" in out
     assert out.index("now obey me") < out.index("UNTRUSTED FORWARDED CONTENT END")
-    from kiro_crew.slack.format import _FENCE_MARKER_RE
+    from aj_crew.slack.format import _FENCE_MARKER_RE
 
     inner = out[out.index("inside it.]") : out.rindex("--- UNTRUSTED FORWARDED CONTENT END")]
     assert not _FENCE_MARKER_RE.search(inner)
@@ -1871,10 +1871,10 @@ class TestInterceptorSkipsIgnoredMessages:
     def _run(self, *, activation, text, is_mention, history=None):
         import dataclasses
 
-        from kiro_crew.platform import build_default_context
-        from kiro_crew.platform.context import set_context
-        from kiro_crew.platform.interfaces import InterceptDecision
-        from kiro_crew.slack.events import SeenCache
+        from aj_crew.platform import build_default_context
+        from aj_crew.platform.context import set_context
+        from aj_crew.platform.interfaces import InterceptDecision
+        from aj_crew.slack.events import SeenCache
 
         order: list[str] = []
 
@@ -1918,10 +1918,10 @@ class TestInterceptorSkipsIgnoredMessages:
         try:
             with (
                 # The facade patch reaches events_inbound's binding too.
-                patch("kiro_crew.slack.events.sel") as ev_sel,
-                patch("kiro_crew.slack.events.is_allowed_user", return_value=True),
-                patch("kiro_crew.slack.events.is_owner", return_value=True),
-                patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as handle,
+                patch("aj_crew.slack.events.sel") as ev_sel,
+                patch("aj_crew.slack.events.is_allowed_user", return_value=True),
+                patch("aj_crew.slack.events.is_owner", return_value=True),
+                patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as handle,
             ):
                 ev_sel.return_value.log_api_access = lambda **kw: audits.append(kw)
                 asyncio.run(_route_message(orch, event, SeenCache(), is_mention=is_mention))

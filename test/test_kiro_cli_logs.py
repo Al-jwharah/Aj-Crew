@@ -25,9 +25,9 @@ from pathlib import Path
 
 import pytest
 
+from aj_crew import diagnostics
+from aj_crew.mcp_tools import logs as logs_tool
 from conftest import requires_symlinks
-from kiro_crew import diagnostics
-from kiro_crew.mcp_tools import logs as logs_tool
 
 # All four secret shapes the issue names, in one log body.
 _LOG = (
@@ -253,7 +253,7 @@ def test_response_budget_stays_under_the_transport_ceiling():
     what keeps the two numbers in the right order, so a change to either side
     fails rather than silently re-opening the truncation.
     """
-    from kiro_crew import validation
+    from aj_crew import validation
 
     assert diagnostics._MAX_LOG_RESPONSE_CHARS < validation.MAX_RESPONSE_LEN
     # And with room for the framing the reader adds on top of the log text.
@@ -593,7 +593,7 @@ def test_hidden_character_split_credential_does_not_survive_the_transport(tmp_pa
     So this asserts the property end to end, through the real transport call, not
     just that `_scrub` returned something.
     """
-    from kiro_crew import validation
+    from aj_crew import validation
 
     secret = "AKIAIOSFODNN7EXAMPLE"
     split = "AKIA\u200bIOSFODNN7EXAMPLE"
@@ -613,7 +613,7 @@ def test_scrub_strips_hidden_characters_before_redacting(tmp_path):
     when it is intact, so the split form passing through is attributable to the
     invisible rather than to the pattern never having covered the shape.
     """
-    from kiro_crew import validation
+    from aj_crew import validation
 
     secret = "AKIAIOSFODNN7EXAMPLE"
 
@@ -809,8 +809,8 @@ def _stub_sel(monkeypatch):
     from unittest.mock import MagicMock
 
     sel = MagicMock()
-    monkeypatch.setattr("kiro_crew.mcp_core.sel", lambda: sel)
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:global-v1")
+    monkeypatch.setattr("aj_crew.mcp_core.sel", lambda: sel)
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:global-v1")
     return sel
 
 
@@ -820,7 +820,7 @@ def test_tool_keeps_redacted_protocol_logs_and_captured_audit_identity(
 ):
     sel = _stub_sel(monkeypatch)
     _source(monkeypatch, tmp_path, _LOG)
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", session_key)
+    monkeypatch.setenv("AJCREW_SESSION_KEY", session_key)
 
     result = logs_tool.kiro_cli_logs("kiro_cli_logs", {"tail": 10})
 
@@ -861,7 +861,7 @@ def test_tool_error_is_prefixed_and_audited(monkeypatch):
 def test_tool_rejects_out_of_range_tail(monkeypatch):
     _stub_sel(monkeypatch)
     # Schema bound is 1..100000; a validation error surfaces as a string, not a raise.
-    from kiro_crew.validation import ValidationError
+    from aj_crew.validation import ValidationError
 
     with pytest.raises(ValidationError):
         logs_tool.kiro_cli_logs("kiro_cli_logs", {"tail": 0})

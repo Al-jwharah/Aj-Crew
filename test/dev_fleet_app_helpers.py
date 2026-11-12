@@ -17,15 +17,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew.apps.builtins.dev_fleet import live as live_mod
-from kiro_crew.apps.builtins.dev_fleet import repository as repository_mod
-from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod
-from kiro_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew.apps.builtins.dev_fleet import live as live_mod
+from aj_crew.apps.builtins.dev_fleet import repository as repository_mod
+from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod
+from aj_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
 
 # These Dev Fleet make-live / cancel / sync / build tests assert POSIX-only
 # behaviour that has no Windows equivalent: os.geteuid, the ``.venv/bin`` layout
-# (vs ``.venv\\Scripts\\kirocrew.exe``), systemctl/launchctl service probing, and
+# (vs ``.venv\\Scripts\\ajcrew.exe``), systemctl/launchctl service probing, and
 # ``/``-rooted trusted-binary paths. The production code is correct on Windows;
 # only these fixtures/assertions are POSIX-shaped, so they are skipped under the
 # reduced-scope backend CI that runs on Windows.
@@ -47,7 +47,7 @@ def _venv_maps_to_the_synced_checkout():
     ``test_sync_refuses_a_venv_that_serves_another_checkout``, which patches it
     back to a refusal, and the logic behind it lives in ``test/test_dep_sync.py``.
     """
-    from kiro_crew import dep_sync
+    from aj_crew import dep_sync
 
     with (
         patch.object(dep_sync, "installed_package_origin", return_value="<stubbed>"),
@@ -135,9 +135,9 @@ def _start_run_stub(rid: str) -> AsyncMock:
 
 #: Temp-directory prefixes the dev-fleet sync stages and ``_start_run``'s finally owns.
 _STAGED_SYNC_PREFIXES = (
-    "kirocrew-sync-runner-",
-    "kirocrew-npm-preflight-",
-    "kirocrew-dep-sync-",
+    "ajcrew-sync-runner-",
+    "ajcrew-npm-preflight-",
+    "ajcrew-dep-sync-",
 )
 
 
@@ -158,7 +158,7 @@ def _sweep_staged_sync_tempdirs():
     out of the staged directory, so they must keep it alive across the stubbed run.
     Those reach the leak through their own inline ``AsyncMock``, and a per-test call
     they must each remember is how this came back: MEASURED with
-    ``KIROCREW_TMP_PER_TEST=1``, eleven directories outlived one run of this file,
+    ``AJCREW_TMP_PER_TEST=1``, eleven directories outlived one run of this file,
     named after six tests.
 
     Sweeping is sound HERE in a way a general temp sweep is not (see the residue
@@ -221,7 +221,7 @@ async def _run_sync(mod, locked):
     MAIN_REPO is pinned because the sync refuses outright when no checkout was
     discovered, and these tests are about the sync's own behaviour: leaving it
     ambient makes them pass or fail on whether the HOST running them happens to
-    sit in a Kiro Crew checkout. Assertions that quote the repo path must use
+    sit in an Aj Crew checkout. Assertions that quote the repo path must use
     ``_SYNC_REPO`` rather than reading ``mod.MAIN_REPO``.
 
     The venv-origin guard is answered by the module's autouse fixture; a test
@@ -236,7 +236,7 @@ async def _run_sync(mod, locked):
         patch.object(runtime_mod, "_trusted_bin", side_effect=lambda n: f"/usr/bin/{n}"),
         patch.object(worktree_ops_mod.dep_sync, "locked_console_scripts", return_value=locked),
         patch(
-            "kiro_crew.apps.builtins.dev_fleet.worktree_ops.sandboxed_spawn_argv",
+            "aj_crew.apps.builtins.dev_fleet.worktree_ops.sandboxed_spawn_argv",
             side_effect=lambda cmd, mode, env=None: (cmd, env or {}, None),
         ),
         patch.object(
@@ -289,22 +289,22 @@ def _reset_shutdown_admission_state():
 
 
 def _mk_make_live_wt(tmp_path, *, venv: bool = False, dist: bool = False, venv_exec: bool = True):
-    """Build a fake worktree dir with optional .venv/bin/kirocrew and built dist.
+    """Build a fake worktree dir with optional .venv/bin/ajcrew and built dist.
 
-    When ``venv`` is set the fake ``.venv/bin/kirocrew`` is created **executable**
+    When ``venv`` is set the fake ``.venv/bin/ajcrew`` is created **executable**
     (``venv_exec=True``, the realistic provisioned state that passes the make-live
     exec-bit gate); pass ``venv_exec=False`` to simulate a present-but-non-executable
     binary (the ``venv_not_executable`` case)."""
-    wt = tmp_path / "kirocrew-wt-feat"
+    wt = tmp_path / "ajcrew-wt-feat"
     wt.mkdir(parents=True, exist_ok=True)
     if venv:
         vb = wt / ".venv" / "bin"
         vb.mkdir(parents=True, exist_ok=True)
-        kcbin = vb / "kirocrew"
+        kcbin = vb / "ajcrew"
         kcbin.write_text("#!/bin/sh\n")
         kcbin.chmod(0o755 if venv_exec else 0o644)
     if dist:
-        dd = wt / "src" / "kiro_crew" / "static" / "dist"
+        dd = wt / "src" / "aj_crew" / "static" / "dist"
         dd.mkdir(parents=True, exist_ok=True)
         (dd / "index.html").write_text("<html></html>")
     return wt

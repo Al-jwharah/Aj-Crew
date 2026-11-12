@@ -61,7 +61,7 @@ jobs:
     # lanes already run: a GitHub-hosted Ubuntu VM with no fleet credentials,
     # and the steps below materialize no fork code on either runner.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     # A full-history checkout on the runner fleet can take most of fifteen
     # minutes even with the blobless filter below; 20 leaves headroom.
     timeout-minutes: 20

@@ -15,7 +15,7 @@ import shutil
 
 import pytest
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 
 def make_escaping_link(inside: pathlib.Path, outside: pathlib.Path) -> str:
@@ -104,7 +104,7 @@ def forget_env_at_teardown(monkeypatch, *names: str) -> None:
 
 
 def cap_project_root_walk(monkeypatch, ceiling: pathlib.Path) -> None:
-    """Make ``kiro_crew.artifact_source`` see NO project root above ``ceiling``.
+    """Make ``aj_crew.artifact_source`` see NO project root above ``ceiling``.
 
     ``classify_source`` walks up from a file looking for ``PROJECT_ROOT_MARKERS``
     (``.git``, ``Makefile``, ``package.json``, ``.kiro``, ...), so a test that
@@ -120,7 +120,7 @@ def cap_project_root_walk(monkeypatch, ceiling: pathlib.Path) -> None:
     the ``_tempdir`` narrowing these tests already do -- the two seams together
     make the rest of ``tmp_path`` ordinary, UNMARKED filesystem.
     """
-    from kiro_crew import artifact_source
+    from aj_crew import artifact_source
 
     real_marker = artifact_source.project_root_marker
     top = os.path.normcase(os.path.realpath(str(ceiling)))
@@ -146,7 +146,7 @@ def cap_node_module_walk(monkeypatch, ceiling: pathlib.Path) -> None:
     outside ``ceiling`` are dropped from the walk; inside it the real walk runs, so
     the ``node_modules`` a test plants beside a link target still counts.
     """
-    from kiro_crew.acp import client as acp_client
+    from aj_crew.acp import client as acp_client
 
     real_walk = acp_client._node_module_search_dirs
     top = os.path.normcase(os.path.realpath(str(ceiling)))
@@ -180,7 +180,7 @@ def drain_breadcrumb_writes(timeout: float = 5.0) -> None:
     write landed inside its own context needs certainty, so a drain that does
     not complete raises instead of returning a value a fixture could ignore.
     """
-    from kiro_crew.safety_override import flush_breadcrumb_writes
+    from aj_crew.safety_override import flush_breadcrumb_writes
 
     if not flush_breadcrumb_writes(timeout):
         raise TimeoutError(
@@ -232,7 +232,7 @@ def close_skills_loaders(monkeypatch):
     that build loaders inline is not worth its cost, so a module that builds
     ``ContextBuilder``s requests it from a one-line module-level autouse fixture.
     """
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.skills import SkillsLoader
 
     created: list = []
     orig_init = SkillsLoader.__init__
@@ -275,7 +275,7 @@ def close_subagent_managers(monkeypatch):
     module that builds managers inline requests it from a one-line module-level
     autouse fixture instead of carrying its own copy of this body.
     """
-    import kiro_crew.subagent as _subagent_mod
+    import aj_crew.subagent as _subagent_mod
 
     created: list = []
     orig_init = _subagent_mod.SubagentManager.__init__
@@ -350,7 +350,7 @@ def named_cron_caller(monkeypatch):
     owner onto its fake job instead of hardcoding this value.
     """
     key = "dashboard:conftest-slot"
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", key)
+    monkeypatch.setenv("AJCREW_SESSION_KEY", key)
     return key
 
 
@@ -363,7 +363,7 @@ def command_crons_run_here(monkeypatch):
     something else -- field forwarding, store errors, a later mutation -- states
     here that it is not about that refusal, so it runs the same on every shard.
     """
-    import kiro_crew.mcp_cron as mcp_cron
+    import aj_crew.mcp_cron as mcp_cron
 
     monkeypatch.setattr(mcp_cron, "_command_cron_platform_refusal", lambda: None)
 
@@ -403,8 +403,8 @@ def healthy_host_memory(monkeypatch: pytest.MonkeyPatch) -> None:
     a bar no 8 GB machine clears -- a wave whose reserve outgrew the host would
     read as admitted here and as queued on the operator's.
     """
-    import kiro_crew.subagent as subagent
-    from kiro_crew.constants import DEFAULT_SPAWN_MIN_MEMORY_GB
+    import aj_crew.subagent as subagent
+    from aj_crew.constants import DEFAULT_SPAWN_MIN_MEMORY_GB
 
     real_check = subagent.check_memory_available
 
@@ -435,7 +435,7 @@ def isolate_mcp_host_paths(tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPat
     """
     import importlib
 
-    mcp_handlers = importlib.import_module("kiro_crew.dashboard.handlers.mcp")
+    mcp_handlers = importlib.import_module("aj_crew.dashboard.handlers.mcp")
     global_mcp = tmp_path / "host-kiro-settings" / "mcp.json"
     monkeypatch.setattr(mcp_handlers, "_GLOBAL_MCP_JSON", global_mcp)
     monkeypatch.setattr(mcp_handlers, "_MCP_LOCK_PATH", global_mcp.with_suffix(".lock"))
@@ -464,7 +464,7 @@ def ample_host_free_memory(monkeypatch: pytest.MonkeyPatch) -> None:
     Opt in per module with
     ``pytestmark = pytest.mark.usefixtures("ample_host_free_memory")``.
     """
-    import kiro_crew.resource_status as resource_status
+    import aj_crew.resource_status as resource_status
 
     monkeypatch.setattr(resource_status, "_read_available_gb", lambda: _HEALTHY_AVAILABLE_GB)
 
@@ -488,7 +488,7 @@ def ample_host_resources(monkeypatch: pytest.MonkeyPatch) -> None:
     A test that is actually ABOUT the advisory patches the probe in its own body,
     which lands on top of this and reverts to it.
     """
-    import kiro_crew.resource_status as resource_status
+    import aj_crew.resource_status as resource_status
 
     def _ample(cfg: object | None = None) -> "resource_status.ResourceStatus":
         return resource_status.ResourceStatus(

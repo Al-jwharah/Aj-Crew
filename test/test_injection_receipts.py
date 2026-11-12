@@ -21,15 +21,15 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state, drain_background_tasks
 
-from kiro_crew import context_omissions, injection_receipts
-from kiro_crew.context import ContextBuilder
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.state import row_mid
-from kiro_crew.lesson_validation import render_lesson_tier, render_withheld_tier
-from kiro_crew.memory import MemoryStore
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.wait import finished
+from aj_crew import context_omissions, injection_receipts
+from aj_crew.context import ContextBuilder
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.state import row_mid
+from aj_crew.lesson_validation import render_lesson_tier, render_withheld_tier
+from aj_crew.memory import MemoryStore
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.wait import finished
 
 
 def _rows(count: int) -> list[tuple[dict, str]]:
@@ -134,7 +134,7 @@ def _line(receipts, **overrides):
         turn_index=4,
         user_msg_id="m-1",
         model="m",
-        agent="kirocrew",
+        agent="ajcrew",
         phase="session_start",
         store="",
         now=datetime(2026, 10, 13, 15, 42, 22, 877000, tzinfo=timezone.utc),
@@ -155,7 +155,7 @@ class TestTheLine:
             "turn_index": 4,
             "user_msg_id": "m-1",
             "model": "m",
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "surface": "dashboard",
             "phase": "session_start",
             "memory_store": "",

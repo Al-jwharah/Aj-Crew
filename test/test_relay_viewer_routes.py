@@ -18,12 +18,12 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from token_auth_helpers import _make_request, _ok_handler, clear_nonces  # noqa: F401
 
-from kiro_crew.dashboard.handlers import relay_viewer as rv
-from kiro_crew.dashboard.kiro_relay import limits
-from kiro_crew.dashboard.kiro_relay.caller import RELAY_CALLER_KEY, RelayCaller, RelayCallerKind
-from kiro_crew.dashboard.token_auth import token_auth_middleware
-from kiro_crew.member_memory_auth import LocalOwnerProvenance
-from kiro_crew.relay_viewer import cps
+from aj_crew.dashboard.handlers import relay_viewer as rv
+from aj_crew.dashboard.kiro_relay import limits
+from aj_crew.dashboard.kiro_relay.caller import RELAY_CALLER_KEY, RelayCaller, RelayCallerKind
+from aj_crew.dashboard.token_auth import token_auth_middleware
+from aj_crew.member_memory_auth import LocalOwnerProvenance
+from aj_crew.relay_viewer import cps
 
 SECRET = "local-secret-value"
 BEARER = "bearer-sign-in-9f8e7d6c5b4a"
@@ -91,14 +91,12 @@ def viewer(monkeypatch):
     monkeypatch.setattr(cps, "create_crew_access_token", _mint)
     monkeypatch.setattr(rv, "require_owner_dashboard_request", _owner)
     monkeypatch.setattr(
-        "kiro_crew.member_memory_auth.local_owner_bootstrap_provenance",
+        "aj_crew.member_memory_auth.local_owner_bootstrap_provenance",
         lambda _r: state.provenance,
     )
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: MagicMock())
     # Never the host's real vault.
-    monkeypatch.setattr(
-        "kiro_crew.auth.bridge.vault_identity_fingerprint", lambda: state.fingerprint
-    )
+    monkeypatch.setattr("aj_crew.auth.bridge.vault_identity_fingerprint", lambda: state.fingerprint)
     return state
 
 
@@ -351,7 +349,7 @@ async def test_token_auth_bypass_is_post_only_and_crews_is_gated() -> None:
 
 @pytest.mark.asyncio
 async def test_sign_in_missing_is_signed_out(monkeypatch) -> None:
-    from kiro_crew.auth.provider import KasAuthProvider, NotAuthenticated
+    from aj_crew.auth.provider import KasAuthProvider, NotAuthenticated
 
     async def _none(self):
         raise NotAuthenticated("no stored Kiro credential")
@@ -381,7 +379,7 @@ async def test_the_token_type_reaches_both_the_list_and_the_mint(viewer) -> None
     [("external_idp", "EXTERNAL_IDP"), ("identity_center", ""), (None, "")],
 )
 async def test_the_sign_in_names_its_token_type(monkeypatch, auth_method, token_type) -> None:
-    from kiro_crew.auth.provider import KasAuthProvider
+    from aj_crew.auth.provider import KasAuthProvider
 
     async def _current(self):
         return SimpleNamespace(access_token=BEARER, auth_method=auth_method)
@@ -393,7 +391,7 @@ async def test_the_sign_in_names_its_token_type(monkeypatch, auth_method, token_
 @pytest.mark.asyncio
 async def test_the_test_credential_sends_no_token_type(monkeypatch) -> None:
     monkeypatch.setattr(
-        "kiro_crew.relay_client.lease.read_lease_credential", lambda ref: "test-credential-value"
+        "aj_crew.relay_client.lease.read_lease_credential", lambda ref: "test-credential-value"
     )
     assert await rv._bearer("file:/somewhere") == ("test-credential-value", "")
 
@@ -454,7 +452,7 @@ async def test_a_cps_403_does_not_refresh(viewer, monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_the_forced_refresh_waits_out_its_cooldown(monkeypatch, caplog) -> None:
-    from kiro_crew.auth.provider import KasAuthProvider
+    from aj_crew.auth.provider import KasAuthProvider
 
     caplog.set_level(logging.DEBUG)
     forced = []
@@ -486,7 +484,7 @@ async def test_the_forced_refresh_waits_out_its_cooldown(monkeypatch, caplog) ->
 
 @pytest.mark.asyncio
 async def test_a_peer_refreshed_sign_in_is_not_forced(monkeypatch) -> None:
-    from kiro_crew.auth.provider import KasAuthProvider
+    from aj_crew.auth.provider import KasAuthProvider
 
     forced = []
 
@@ -504,8 +502,8 @@ async def test_a_peer_refreshed_sign_in_is_not_forced(monkeypatch) -> None:
 async def test_two_concurrent_401s_share_one_refresh_and_both_resend(monkeypatch) -> None:
     import asyncio
 
-    from kiro_crew.auth.provider import KasAuthProvider
-    from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+    from aj_crew.auth.provider import KasAuthProvider
+    from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
     stored = [BEARER]
     refreshes = []
@@ -561,7 +559,7 @@ async def test_the_sign_in_marker_follows_the_account_and_is_never_logged(viewer
 async def test_the_test_credential_has_no_sign_in_marker(monkeypatch) -> None:
     read = []
     monkeypatch.setattr(
-        "kiro_crew.auth.bridge.vault_identity_fingerprint", lambda: read.append(1) or FP_A
+        "aj_crew.auth.bridge.vault_identity_fingerprint", lambda: read.append(1) or FP_A
     )
     assert await rv._sign_in_marker("relay-viewer-test-credential") is None
     assert read == []
@@ -631,7 +629,7 @@ async def test_a_switch_after_the_mint_refuses_the_grant(viewer, monkeypatch, ca
 async def test_a_switch_away_and_back_still_refuses_the_grant(viewer, monkeypatch, caplog):
     # A to B to A: every sign-in writes a new generation, so A's second sign-in
     # does not fingerprint like its first.
-    from kiro_crew.auth.bridge import _identity_digest
+    from aj_crew.auth.bridge import _identity_digest
 
     account_a = SimpleNamespace(identity="social", provider="Google", profile_arn="arn:a")
     account_b = SimpleNamespace(identity="social", provider="Google", profile_arn="arn:b")

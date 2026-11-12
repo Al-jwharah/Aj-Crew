@@ -10,7 +10,7 @@ nobody's. That does not change. What the tools below add is a READ, through the
 gateway, audited; the fence's integrity guarantee is not what they relax.
 
 What it also did was make the log unverifiable by anyone but the operator with a
-shell. `kirocrew-crew-log` is the sanctioned door: an MCP server of three read-only
+shell. `ajcrew-crew-log` is the sanctioned door: an MCP server of three read-only
 proxies over the gateway's own routes, so an agent can check a crew log without
 being able to touch it.
 
@@ -59,7 +59,7 @@ Every failure is a typed code, never a traceback.
 
 | Code | Means |
 |---|---|
-| `crew_log_disabled` | Session crew-log emission is off because `KIROCREW_CREW_LOG` is set to a falsy or unrecognised value. Unset it (or remove it from `~/.kiro/crew/.env`) and restart the gateway. |
+| `crew_log_disabled` | Session crew-log emission is off because `AJCREW_CREW_LOG` is set to a falsy or unrecognised value. Unset it (or remove it from `~/.kiro/crew/.env`) and restart the gateway. |
 | `unknown_unit` | No session log for that unit. |
 | `unresolvable_key` | The key names no live ACP session, so no unit is receiving its work right now. |
 | `unknown_projection` | Not one of the six folds. |
@@ -70,7 +70,7 @@ Every failure is a typed code, never a traceback.
 
 The tools are advertised whether or not the flag is on. An agent must learn the
 flag state from `crew_log_disabled`, which says how to switch it on; a missing tool
-would instead read as "Kiro Crew cannot do this at all".
+would instead read as "Aj Crew cannot do this at all".
 
 ## Who may read what
 
@@ -125,7 +125,7 @@ The refusals, and what each rules out:
   cookie-and-owner gate. Admitting a cookie here would make a second, separately
   audited path out of a door built for one caller.
 - **A request naming another component.** The prefix serves
-  `kirocrew-crew-log`; the `X-Internal-Caller` header is validated, not trusted.
+  `ajcrew-crew-log`; the `X-Internal-Caller` header is validated, not trusted.
 - **A session the gateway cannot name.** Refused with `forbidden` and a one-line
   reason, ahead of every scope arm: an operator's record of WHICH session read a
   log is only worth having if the identity behind it was resolved strictly rather
@@ -214,10 +214,10 @@ loads a server only when something references it:
 
 ```json
 {
-  "tools": ["@kirocrew-crew-log"],
+  "tools": ["@ajcrew-crew-log"],
   "mcpServers": {
-    "kirocrew-crew-log": {
-      "command": "kirocrew",
+    "ajcrew-crew-log": {
+      "command": "ajcrew",
       "args": ["mcp-crew-log"]
     }
   }

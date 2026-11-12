@@ -16,9 +16,9 @@ import { normalizeModelKey } from '../../lib/model'
 import { fmtNumber } from '../../i18n/format'
 import { hiddenIdsFor, hiddenModelMatcher, normalizeHiddenModels } from '../../hooks/useInteractiveModels'
 import { i18nT } from '../../i18n/t'
-import type { KiroCrewAgent } from '../../components/AgentSelector'
+import type { AjCrewAgent } from '../../components/AgentSelector'
 import type {
-  KirocrewConfigShape,
+  AjcrewConfigShape,
 } from './chatPanelOptions'
 
 type OptimisticOverlay = ReturnType<typeof useOptimisticConfigPaths>
@@ -46,11 +46,11 @@ export function chatPanelConfigOpts(
 ) {
   return (path: string, errMsg: (err: unknown) => string) =>
     overlay.mutationOpts<string>({
-      queryKey: ['kirocrewConfig'],
+      queryKey: ['ajcrewConfig'],
       mutationFn: (v: string) => api.patchConfig(path, v),
       path: () => path,
       displayValue: v => v,
-      applyToCache: (cached, v) => setConfigPathValue(cached as KirocrewConfigShape, path, v),
+      applyToCache: (cached, v) => setConfigPathValue(cached as AjcrewConfigShape, path, v),
       onFailure: err => setPathSaveError(path, withOverlayReason(errMsg(err), err)),
       onSupersede: clearOwnPathError,
     })
@@ -80,7 +80,7 @@ export function useChatPanelFallbackModels({
   overlay, mcCfg, optimisticConfigOpts,
 }: {
   overlay: OptimisticOverlay
-  mcCfg: KirocrewConfigShape | undefined
+  mcCfg: AjcrewConfigShape | undefined
   optimisticConfigOpts: ChatPanelConfigOpts
 }) {
   // ── Throttle-fallback model (agent.fallback_model) ──
@@ -146,7 +146,7 @@ export function useChatPanelModelDefaults({
   clearOwnPathError: (path: string) => void
   overlay: OptimisticOverlay
   dashCfg: DashboardConfig
-  mcCfg: KirocrewConfigShape | undefined
+  mcCfg: AjcrewConfigShape | undefined
   optimisticConfigOpts: ChatPanelConfigOpts
   fallbackModel: string
   shownFallbackModel: string
@@ -271,9 +271,9 @@ export function useChatPanelModelDefaults({
   // new session runs through), so the notice below compares its answer with
   // this select rather than re-deriving the chain from the roster — which would
   // miss a template pin and would notice a pin the active harness cannot claim.
-  const agentsQ = useQuery<{ agents?: KiroCrewAgent[]; default_agent?: string }>({
-    queryKey: ['kirocrew-agents'],
-    queryFn: () => api.kirocrewAgents(),
+  const agentsQ = useQuery<{ agents?: AjCrewAgent[]; default_agent?: string }>({
+    queryKey: ['ajcrew-agents'],
+    queryFn: () => api.ajcrewAgents(),
   })
   const pinAgentName = agentsQ.data?.default_agent || 'default'
   const pinAgent = agentsQ.data?.agents?.find(a => a.name === pinAgentName)
@@ -330,9 +330,9 @@ export function useChatPanelModelDefaults({
   const showPinNotice = agentPinOverrides && (!memberPinCarried || memberPinApplied)
   const clearAgentPinMut = useMutation({
     // '' is the inherit sentinel: the agent falls back to the global default.
-    mutationFn: () => api.updateKirocrewAgent(pinAgentName, { model: '' }),
+    mutationFn: () => api.updateAjcrewAgent(pinAgentName, { model: '' }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['kirocrew-agents'] })
+      qc.invalidateQueries({ queryKey: ['ajcrew-agents'] })
       qc.invalidateQueries({ queryKey: ['resolved-model'] })
     },
     // No onError banner: the failure renders inline beside the button that
@@ -368,7 +368,7 @@ export function useChatPanelModelDefaults({
   // ── Default agent's effort pin vs Default Reasoning Effort ──
   // Same question as the model notice above, asked of the same resolver read:
   // `reasoning_effort` is what a new chat on the default agent starts at
-  // (`KiroCrewConfig.resolve_session_effort`: the agent's own pin, then the
+  // (`AjCrewConfig.resolve_session_effort`: the agent's own pin, then the
   // role-aware default), and `effort_pinned` says the agent's own record won.
   // A gateway that predates those fields leaves them unset, which shows nothing.
   const resolvedEffortRaw = resolvedQ.data?.reasoning_effort
@@ -404,9 +404,9 @@ export function useChatPanelModelDefaults({
     : i18nT('pages.settings.chatPanel.model_default')
   const clearAgentEffortPinMut = useMutation({
     // '' is the inherit sentinel: the agent falls back to the global default.
-    mutationFn: () => api.updateKirocrewAgent(pinAgentName, { reasoning_effort: '' }),
+    mutationFn: () => api.updateAjcrewAgent(pinAgentName, { reasoning_effort: '' }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['kirocrew-agents'] })
+      qc.invalidateQueries({ queryKey: ['ajcrew-agents'] })
       qc.invalidateQueries({ queryKey: ['resolved-model'] })
     },
     // Rendered inline beside the button, like the model clear above.

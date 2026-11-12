@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import credential_patterns as cp
+from aj_crew import credential_patterns as cp
 
 
 class TestImportFreeShape:
@@ -40,10 +40,10 @@ class TestImportFreeShape:
 
     def test_fresh_import_pulls_in_no_module(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """A fresh import adds only the module itself to ``sys.modules``."""
-        import kiro_crew
+        import aj_crew
 
-        mod_name = "kiro_crew.credential_patterns"
-        monkeypatch.setattr(kiro_crew, "credential_patterns", sys.modules[mod_name])
+        mod_name = "aj_crew.credential_patterns"
+        monkeypatch.setattr(aj_crew, "credential_patterns", sys.modules[mod_name])
         monkeypatch.delitem(sys.modules, mod_name)
 
         before = set(sys.modules)
@@ -62,7 +62,7 @@ class TestSharedSpellings:
         reflow of the concatenation cannot make this pass vacuously, and a
         hand-written copy reintroduced at one of the five AWS sites fails here.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         for name in (
             "_EXFIL_PATTERNS",
@@ -79,14 +79,14 @@ class TestSharedSpellings:
 
     def test_redaction_floor_compiles_the_shared_spellings(self) -> None:
         """``log_redaction``'s patterns are exactly the shared strings."""
-        from kiro_crew.log_redaction import _AWS_KEY_ID_RE, _JWT_RE, _TOKEN_PARAM_RE
+        from aj_crew.log_redaction import _AWS_KEY_ID_RE, _JWT_RE, _TOKEN_PARAM_RE
 
         assert _AWS_KEY_ID_RE.pattern == cp.AWS_KEY_ID_REDACTION
         assert _JWT_RE.pattern == cp.JWT_MULTI_SEGMENT
         assert _TOKEN_PARAM_RE.pattern == cp.TOKEN_PARAMETER
 
     def test_no_module_spells_the_prefix_group_by_hand(self) -> None:
-        """No module under ``src/kiro_crew`` writes the prefix group as a literal.
+        """No module under ``src/aj_crew`` writes the prefix group as a literal.
 
         The point of the consolidation, enforced across the WHOLE tree rather than
         the two original homes: five sites in ``security.py``, the redaction floor,
@@ -114,8 +114,8 @@ class TestSharedSpellings:
 
         A built-in app that compiles one of them too pins that in its own ``tests/``.
         """
-        from kiro_crew import sel
-        from kiro_crew.metrics import schema as metrics_schema
+        from aj_crew import sel
+        from aj_crew.metrics import schema as metrics_schema
 
         assert metrics_schema._HIGH_ENTROPY_PATTERNS[0].pattern == cp.AWS_KEY_ID
         # SEL shares only the PREFIXES: its body is mixed-case and boundary-bounded,

@@ -236,7 +236,7 @@ describe('useWebSocket chat_done native toast', () => {
     expect(CONSTRUCTED[0].options?.body).toBe('Response ready')
     // Per-slot, so two sessions finishing while away produce two toasts rather
     // than one overwriting the other.
-    expect(CONSTRUCTED[0].options?.tag).toBe('kirocrew-chat-done:slot-a')
+    expect(CONSTRUCTED[0].options?.tag).toBe('ajcrew-chat-done:slot-a')
   })
 
   it('does not toast for an intermediate turn even when desktop alerts are enabled', () => {
@@ -278,7 +278,7 @@ describe('useWebSocket chat_done native toast', () => {
       // the user is being asked to answer, and "Response ready" over a pending
       // question card sends them looking for a finished reply.
       expect(CONSTRUCTED[0].options?.body).toBe('Waiting for your input')
-      expect(CONSTRUCTED[0].options?.tag).toBe('kirocrew-chat-done:slot-question')
+      expect(CONSTRUCTED[0].options?.tag).toBe('ajcrew-chat-done:slot-question')
       expect(CONSTRUCTED[0].options?.silent).toBe(true)
     } finally {
       window.removeEventListener(MC_NOTIFICATION_EVENT, onSound)

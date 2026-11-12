@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.acp.transport_errors import (
+from aj_crew.acp.client import AcpError
+from aj_crew.acp.transport_errors import (
     PROVIDER_ERROR_CONNECTION,
     _raise_acp_error,
     classify_provider_error,
 )
-from kiro_crew.llm_helpers import (
+from aj_crew.llm_helpers import (
     CONNECTION_RECOVERY_WINDOW_SECS,
     CONNECTION_RETRY_MAX_DELAY,
     acp_error_is_connection_failure,
@@ -98,7 +98,7 @@ def test_window_never_opens_for_a_provider_error():
 
 
 def test_connection_backoff_matches_the_ladder_then_caps():
-    import kiro_crew.llm_helpers as helpers
+    import aj_crew.llm_helpers as helpers
 
     rng_state = helpers._JITTER_RNG.getstate()
     try:

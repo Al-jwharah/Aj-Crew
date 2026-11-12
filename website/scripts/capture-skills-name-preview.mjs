@@ -6,7 +6,7 @@
  * Same shape as capture-prompt-name-preview.mjs: serves the REAL built SPA
  * (website/dist) behind a loopback server and answers /api/** from the shared
  * fixture router. Nothing here talks to a gateway, which is the point -- a bare
- * `vite` harness proxies /api to whatever KIROCREW_PORT names.
+ * `vite` harness proxies /api to whatever AJCREW_PORT names.
  *
  * Seven frames. Skills differ from prompts in having a second field that feeds the
  * stored name -- the optional Category -- and in letting BOTH fields nest, so the
@@ -68,11 +68,11 @@ const formLabel = (lang, key) => catalog(lang).components.skillForm[key]
 const SKILLS = [
   {
     key: 'release-notes', name: 'release-notes', description: 'Draft release notes from a diff',
-    source: 'kirocrew', loaded_by_agents: [], always: false,
+    source: 'ajcrew', loaded_by_agents: [], always: false,
   },
   {
     key: 'utils/triage', name: 'utils/triage', description: 'Triage an inbound issue',
-    source: 'kirocrew', loaded_by_agents: [], always: false,
+    source: 'ajcrew', loaded_by_agents: [], always: false,
   },
 ]
 

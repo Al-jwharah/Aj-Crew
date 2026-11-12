@@ -11,12 +11,12 @@ from types import SimpleNamespace
 
 import pytest
 
+from aj_crew import skills
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.security import paths
+from aj_crew.skill_search_index import SkillSearchIndex
+from aj_crew.testing.wait import wait_until
 from conftest import make_dir_link
-from kiro_crew import skills
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.security import paths
-from kiro_crew.skill_search_index import SkillSearchIndex
-from kiro_crew.testing.wait import wait_until
 
 
 def _skill(root: Path, key: str, *, always: bool = False) -> Path:
@@ -34,7 +34,7 @@ def test_cold_metadata_reads_overlap_and_join_with_tail_pinned_instruction(tmp_p
     root = tmp_path / "skills"
     for i in range(64):
         _skill(root, f"skill-{i:03}", always=i == 63)
-    loader = skills.SkillsLoader(root, install_builtins=False, config=KiroCrewConfig())
+    loader = skills.SkillsLoader(root, install_builtins=False, config=AjCrewConfig())
     read = loader._read_enumerated_skill_bytes
     rendezvous = threading.Barrier(2)
     workers: set[threading.Thread] = set()

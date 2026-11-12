@@ -46,13 +46,13 @@ from real_adapter_gate import (
     pinned_version,
 )
 
-from kiro_crew.acp.kas_pin import KAS_PIN_VERSION
-from kiro_crew.agent_sdk.backends_launch import COPILOT_VERIFIED_VERSION
-from kiro_crew.kiro_cli import (
+from aj_crew.acp.kas_pin import KAS_PIN_VERSION
+from aj_crew.agent_sdk.backends_launch import COPILOT_VERIFIED_VERSION
+from aj_crew.kiro_cli import (
     MANDATORY_MCPS_DROP_MIN_VERSION,
     SPEC_PERMISSIONS_MIN_VERSION,
 )
-from kiro_crew.mcp_hot_reload import MCP_HOT_RELOAD_MIN_KIRO_CLI_VERSION
+from aj_crew.mcp_hot_reload import MCP_HOT_RELOAD_MIN_KIRO_CLI_VERSION
 
 COPILOT_PACKAGE = "@github/copilot"
 

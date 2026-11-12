@@ -14,9 +14,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import memory_startup_prebuild as startup_prebuild
-from kiro_crew.vector_memory import VectorMemoryStore
-from kiro_crew.vector_memory_runtime import term_index
+from aj_crew import memory_startup_prebuild as startup_prebuild
+from aj_crew.vector_memory import VectorMemoryStore
+from aj_crew.vector_memory_runtime import term_index
 
 _DIM = 16
 
@@ -124,7 +124,7 @@ def test_a_failing_step_is_logged_and_the_rest_still_run(
 
 
 def test_the_gateway_hook_skips_a_gateway_without_a_vector_store(monkeypatch) -> None:
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     called: list[object] = []
     monkeypatch.setattr(startup_prebuild, "prebuild_startup_reads", called.append)
@@ -138,7 +138,7 @@ def test_the_gateway_hook_skips_a_gateway_without_a_vector_store(monkeypatch) ->
 
 
 def test_the_gateway_hook_prebuilds_the_default_memory_store(monkeypatch) -> None:
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     vectors = object()
     seen: list[object] = []
@@ -184,8 +184,8 @@ def _kick(monkeypatch, state, *, preparing, prepared=lambda: True) -> None:
     """Run the knowledge kick to completion, its thread hops run inline."""
     import asyncio
 
-    from kiro_crew import memory_startup
-    from kiro_crew.dashboard import server
+    from aj_crew import memory_startup
+    from aj_crew.dashboard import server
 
     async def inline_to_thread(fn, *args, **kwargs):
         return fn(*args, **kwargs)
@@ -246,8 +246,8 @@ def test_the_prebuild_waits_for_memory_preparation(monkeypatch) -> None:
 
         state = _state(order, memory_startup_task=asyncio.ensure_future(preparation()))
         state._knowledge_store = _KnowledgeStore(order, on_pass=released.set)
-        from kiro_crew import memory_startup
-        from kiro_crew.dashboard import server
+        from aj_crew import memory_startup
+        from aj_crew.dashboard import server
 
         async def inline_to_thread(fn, *args, **kwargs):
             return fn(*args, **kwargs)

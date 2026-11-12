@@ -414,7 +414,7 @@ describe('WidgetFrame openInNewTab', () => {
     // message; the frame itself grants no popups.
     const bridge = Array.from(parsed.body.querySelectorAll(':scope > script'))
       .map((s) => s.textContent ?? '')
-      .find((t) => t.includes('kirocrew-dashboard:open'))
+      .find((t) => t.includes('ajcrew-dashboard:open'))
     expect(bridge).toBeDefined()
     expect(bridge).toContain("window.open(href, '_blank', 'noopener,noreferrer')")
     expect(bridge).not.toContain('confirm(')
@@ -802,7 +802,7 @@ describe('WidgetFrame saved-state probe (useQuery cache)', () => {
 // ── exists vs pinned (auto-registered widgets) ─────────────────────────────
 //
 // The backend auto-registers every emitted <mcwidget> as an UNPINNED artifact
-// (src/kiro_crew/widget_artifacts.py), so `{exists: true, pinned: false}` is the
+// (src/aj_crew/widget_artifacts.py), so `{exists: true, pinned: false}` is the
 // normal steady state. These tests pin the two states apart: collapsing them
 // (the pre-auto-registration behavior) would light up every widget's star as
 // though the user had already saved it, and would make the star click a no-op.

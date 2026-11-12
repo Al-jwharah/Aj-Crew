@@ -1,4 +1,4 @@
-"""Kiro Crew's own generated agent specs are never offered, or accepted, as sub-agents.
+"""Aj Crew's own generated agent specs are never offered, or accepted, as sub-agents.
 
 A side turn publishes ``~/.kiro/agents/<agent>--readonly.json``
 (``dashboard.side_readonly_spec``) because that directory is the only place
@@ -7,7 +7,7 @@ so ``spawn_run``'s "Valid names right now", ``spawn_list``'s "Available agents"
 and the unknown-agent refusal all offered the read-only spec, and the gate
 accepted it. The child's kiro-cli then refused the mode ("Agent mode
 '<agent>--readonly' is not available on this session") and told the user to run
-``kirocrew setup --agent-only``, which does not write that file.
+``ajcrew setup --agent-only``, which does not write that file.
 
 Every test here publishes the spec through the REAL publisher into a temporary
 registry and reads it back through the REAL ``list_agents`` -- no roster is
@@ -24,11 +24,11 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import agent_discovery
-from kiro_crew import subagent as sa
-from kiro_crew.dashboard import side_readonly_spec as srs
-from kiro_crew.mcp_tools import spawn as spawn_tools
+from aj_crew import agent as agent_mod
+from aj_crew import agent_discovery
+from aj_crew import subagent as sa
+from aj_crew.dashboard import side_readonly_spec as srs
+from aj_crew.mcp_tools import spawn as spawn_tools
 
 _BASE = {"name": "scout", "description": "Scouts the repo", "allowedTools": ["fs_read"]}
 
@@ -74,9 +74,7 @@ class TestThePredicate:
         assert sa._validate_agent("mine--readonly") == ("mine--readonly", "", "")
 
     def test_a_skill_view_alias_row_is_internal(self) -> None:
-        alias = SimpleNamespace(
-            name="kirocrew-skill-view-abc", filename="kirocrew-skill-view-abc.json"
-        )
+        alias = SimpleNamespace(name="ajcrew-skill-view-abc", filename="ajcrew-skill-view-abc.json")
         assert agent_discovery.is_internal_agent_spec(alias)
 
     def test_a_partial_row_is_answered_not_raised(self) -> None:
@@ -108,7 +106,7 @@ class TestTheGateRefusesIt:
         assert name == ""
         assert code == sa.AGENT_INTERNAL_CODE
         assert err == (
-            "agent 'scout--readonly' is the read-only spec Kiro Crew derives from 'scout' "
+            "agent 'scout--readonly' is the read-only spec Aj Crew derives from 'scout' "
             "for side replies, not a sub-agent; name 'scout' to spawn that agent; "
             "available: scout"
         )
@@ -116,13 +114,13 @@ class TestTheGateRefusesIt:
     def test_a_base_that_is_not_offered_is_not_suggested(self, registry: Path) -> None:
         """The host default is reached by omitting ``agent``; the refusal does not
         tell the caller to name it."""
-        (registry / "kirocrew.json").write_text(
-            json.dumps({"name": "kirocrew", "description": "host"}), encoding="utf-8"
+        (registry / "ajcrew.json").write_text(
+            json.dumps({"name": "ajcrew", "description": "host"}), encoding="utf-8"
         )
-        srs.publish_readonly_spec("kirocrew")
-        _, err, code = sa._validate_agent("kirocrew--readonly")
+        srs.publish_readonly_spec("ajcrew")
+        _, err, code = sa._validate_agent("ajcrew--readonly")
         assert code == sa.AGENT_INTERNAL_CODE
-        assert "name 'kirocrew'" not in err
+        assert "name 'ajcrew'" not in err
         assert err.endswith("; available: scout")
 
     def test_a_project_agent_declaring_the_name_still_wins(self, registry: Path) -> None:
@@ -160,7 +158,7 @@ class TestTheGateRefusesIt:
         it: the SDK's own ownership set must leave the derived spec out too."""
         import asyncio
 
-        from kiro_crew.apps.spawn_sdk import SpawnError, SpawnSDK, build_spawn_impl
+        from aj_crew.apps.spawn_sdk import SpawnError, SpawnSDK, build_spawn_impl
 
         (registry / "myapp--helper.json").write_text(
             json.dumps({"name": "myapp--helper", "description": "app agent"}), encoding="utf-8"
@@ -174,7 +172,7 @@ class TestTheGateRefusesIt:
                 return SimpleNamespace(id="sub-1", error="")
 
         sdk = SpawnSDK("myapp", build_spawn_impl(_Manager()))
-        with patch("kiro_crew.apps.spawn_sdk._audit_spawn_denied"):
+        with patch("aj_crew.apps.spawn_sdk._audit_spawn_denied"):
             with pytest.raises(SpawnError, match="only spawn its OWN"):
                 asyncio.run(sdk.run("do a thing", "myapp--helper--readonly"))
         assert calls == [], "the derived spec must never reach the manager"
@@ -184,11 +182,11 @@ class TestTheModeRefusalExplanation:
     def test_an_ordinary_agent_keeps_the_setup_remedy(self) -> None:
         cause, remedy = srs.unavailable_mode_explanation("ops")
         assert cause == "its ~/.kiro/agents/ops.json is likely missing."
-        assert remedy == "Run `kirocrew setup --agent-only` to materialize the agent config."
+        assert remedy == "Run `ajcrew setup --agent-only` to materialize the agent config."
 
     def test_a_published_spec_is_explained_and_names_its_base(self, registry: Path) -> None:
         cause, remedy = srs.unavailable_mode_explanation("scout--readonly")
-        assert "kirocrew setup --agent-only" not in cause + remedy
+        assert "ajcrew setup --agent-only" not in cause + remedy
         assert "derives from 'scout'" in cause
         assert remedy == (
             "A new session starts a kiro-cli that lists it. It is not a sub-agent: to spawn "
@@ -196,14 +194,14 @@ class TestTheModeRefusalExplanation:
         )
 
     def test_the_host_default_base_is_given_a_remedy_it_can_follow(self, registry: Path) -> None:
-        """The common derived spec is ``kirocrew--readonly``. The host default is
+        """The common derived spec is ``ajcrew--readonly``. The host default is
         reached by omitting ``agent``, and a new session is what re-lists the
-        spec, so the remedy must say both rather than only "name 'kirocrew'"."""
-        (registry / "kirocrew.json").write_text(
-            json.dumps({"name": "kirocrew", "description": "host"}), encoding="utf-8"
+        spec, so the remedy must say both rather than only "name 'ajcrew'"."""
+        (registry / "ajcrew.json").write_text(
+            json.dumps({"name": "ajcrew", "description": "host"}), encoding="utf-8"
         )
-        srs.publish_readonly_spec("kirocrew")
-        _, remedy = srs.unavailable_mode_explanation("kirocrew--readonly")
+        srs.publish_readonly_spec("ajcrew")
+        _, remedy = srs.unavailable_mode_explanation("ajcrew--readonly")
         assert remedy.startswith("A new session starts a kiro-cli that lists it.")
         assert "omit 'agent' when that is the default agent" in remedy
 
@@ -217,11 +215,11 @@ class TestTheModeRefusalExplanation:
     def test_the_name_alone_does_not_decide(self, registry: Path) -> None:
         """A user's own ``mine--readonly`` (no owner marker) and a derived-shaped
         name with no file both keep the ordinary answer: the wording is keyed on
-        the marker, so it never tells a user their own agent is Kiro Crew's."""
+        the marker, so it never tells a user their own agent is Aj Crew's."""
         (registry / "mine--readonly.json").write_text(
             json.dumps({"name": "mine--readonly", "description": "mine"}), encoding="utf-8"
         )
-        ordinary = "Run `kirocrew setup --agent-only` to materialize the agent config."
+        ordinary = "Run `ajcrew setup --agent-only` to materialize the agent config."
         cause, remedy = srs.unavailable_mode_explanation("mine--readonly")
         # Present, so it gets the present-file answer, not the read-only one.
         assert "derives from" not in cause
@@ -239,7 +237,7 @@ class TestTheModeRefusalExplanation:
         assert (
             f"`kiro-cli agent validate --path {srs._shell_quoted(registry / 'ops.json')}`" in remedy
         )
-        assert "kirocrew setup" not in remedy
+        assert "ajcrew setup" not in remedy
 
     def test_the_shown_path_is_the_probed_file(self, registry: Path, monkeypatch) -> None:
         """``KIRO_HOME`` moves the agents directory; the answer names that file."""

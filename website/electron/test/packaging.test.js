@@ -190,12 +190,12 @@ describe("electron-builder files list", () => {
   });
 
   it("lists the baked EXTERNALLY-MANAGED marker so a build that places it packs it into app.asar", () => {
-    // build-desktop.sh copies KIROCREW_MANAGED_INSTALL_MARKER here; without this
+    // build-desktop.sh copies AJCREW_MANAGED_INSTALL_MARKER here; without this
     // entry electron-builder would leave it out and readExternallyManaged would
     // find nothing beside main.js -- the edition silently ships un-managed.
     assert.ok(bundledFiles.includes("EXTERNALLY-MANAGED"));
     const script = fs.readFileSync(path.join(ROOT, "..", "..", "packaging", "build-desktop.sh"), "utf8");
-    assert.match(script, /KIROCREW_MANAGED_INSTALL_MARKER/);
+    assert.match(script, /AJCREW_MANAGED_INSTALL_MARKER/);
     assert.match(script, /\$ELECTRON_DIR\/EXTERNALLY-MANAGED/);
   });
 });
@@ -210,7 +210,7 @@ describe("macOS bundle naming", () => {
   );
 
   it("keeps CFBundleName aligned with productName for Electron helpers", () => {
-    assert.equal(pkg.build.productName, "KiroCrew");
+    assert.equal(pkg.build.productName, "AjCrew"); // brand-ok: desktop productName
     assert.equal(
       Object.hasOwn(extendInfo, "CFBundleName"),
       false,
@@ -219,10 +219,10 @@ describe("macOS bundle naming", () => {
   });
 
   it("uses CFBundleDisplayName for spaced stable and nightly names", () => {
-    assert.equal(extendInfo.CFBundleDisplayName, "Kiro Crew");
+    assert.equal(extendInfo.CFBundleDisplayName, "Aj Crew");
     assert.match(
       buildScript,
-      /-c\.mac\.extendInfo\.CFBundleDisplayName=Kiro Crew Nightly/
+      /-c\.mac\.extendInfo\.CFBundleDisplayName=Aj Crew Nightly/
     );
     assert.doesNotMatch(buildScript, /-c\.mac\.extendInfo\.CFBundleName=/);
   });
@@ -254,7 +254,7 @@ describe("Linux desktop naming", () => {
     // rename the deb/rpm launcher that package installs already ship. The
     // AppImage is the only target whose bundled entry is copied into a user
     // launcher, and it gets the name per invocation instead.
-    assert.equal(pkg.build.productName, "KiroCrew"); // brand-ok -- internal package identity
+    assert.equal(pkg.build.productName, "AjCrew"); // brand-ok -- internal package identity
     assert.equal(pkg.build.linux.desktop, undefined);
     assert.doesNotMatch(buildScript, /EB_ARGS\+=\([\s\S]*?-c\.linux\.desktop\.entry\.Name[\s\S]*?\n\s*\)\n\s*fi/);
     assert.ok(fnMatch, "build-desktop.sh defines linux_target_eb_args");
@@ -273,7 +273,7 @@ describe("Linux desktop naming", () => {
     const dropMatch = buildScript.match(/^drop_overridden_eb_args\(\) \{\n[\s\S]*?\n\}$/m);
     assert.ok(dropMatch, "build-desktop.sh defines drop_overridden_eb_args");
     const common = [
-      "-c.productName=KiroCrew Nightly",
+      "-c.productName=AjCrew Nightly",
       "-c.linux.icon=icon-nightly.png",
       "-c.win.icon=icon-nightly.png",
     ];
@@ -281,7 +281,7 @@ describe("Linux desktop naming", () => {
     const { configureBuildCommand } = require("electron-builder/out/builder");
     const expected = { AppImage: "build/icons-nightly", deb: "icon-nightly.png", rpm: "icon-nightly.png" };
     for (const target of Object.keys(expected)) {
-      const overrides = targetArgs(target, "KiroCrew Nightly");
+      const overrides = targetArgs(target, "AjCrew Nightly");
       const kept = child_process.execFileSync(
         "bash",
         ["-euo", "pipefail", "-c", `${dropMatch[0]}\ndrop_overridden_eb_args "$@"`, "_", ...overrides, "--", ...common],
@@ -300,15 +300,15 @@ describe("Linux desktop naming", () => {
     // multi-size hicolor icon directory. deb/rpm (both channels): nothing --
     // they keep electron-builder's productName Name and the canonical
     // per-channel icon from the common EB_ARGS block.
-    assert.deepEqual(targetArgs("AppImage", "KiroCrew"), [ // brand-ok -- product name under test
-      "-c.linux.desktop.entry.Name=Kiro Crew",
+    assert.deepEqual(targetArgs("AppImage", "AjCrew"), [ // brand-ok -- product name under test
+      "-c.linux.desktop.entry.Name=Aj Crew",
     ]);
-    assert.deepEqual(targetArgs("AppImage", "KiroCrew Nightly"), [
-      "-c.linux.desktop.entry.Name=Kiro Crew Nightly",
+    assert.deepEqual(targetArgs("AppImage", "AjCrew Nightly"), [
+      "-c.linux.desktop.entry.Name=Aj Crew Nightly",
       "-c.linux.icon=build/icons-nightly",
     ]);
     for (const target of ["deb", "rpm"]) {
-      for (const productName of ["KiroCrew", "KiroCrew Nightly"]) { // brand-ok -- product names under test
+      for (const productName of ["AjCrew", "AjCrew Nightly"]) { // brand-ok -- product names under test
         assert.deepEqual(targetArgs(target, productName), [],
           `${target} (${productName}) must receive no per-target override`);
       }
@@ -316,7 +316,7 @@ describe("Linux desktop naming", () => {
     // The AppImage icon override is nightly-only; stable AppImage never gets it,
     // so the stable channel's canonical icon is untouched for every format.
     assert.ok(
-      !targetArgs("AppImage", "KiroCrew").some((a) => a.startsWith("-c.linux.icon=")), // brand-ok -- product name under test
+      !targetArgs("AppImage", "AjCrew").some((a) => a.startsWith("-c.linux.icon=")), // brand-ok -- product name under test
       "stable AppImage must not override the icon"
     );
   });
@@ -324,20 +324,20 @@ describe("Linux desktop naming", () => {
   it("gives the LTS edition its own side-by-side identity, nightly pattern", bashOnly, () => {
     // RFC crew-lts-edition D11: the LTS app updates from its own lane, so it
     // must not share an install identity the oss installer would replace.
-    assert.deepEqual(targetArgs("AppImage", "KiroCrew LTS"), [ // brand-ok -- product name under test
-      "-c.linux.desktop.entry.Name=Kiro Crew LTS",
+    assert.deepEqual(targetArgs("AppImage", "AjCrew LTS"), [ // brand-ok -- product name under test
+      "-c.linux.desktop.entry.Name=Aj Crew LTS",
     ]);
-    assert.match(buildScript, /if \[ "\$\{KIROCREW_BUILD_EDITION:-oss\}" = "lts" \]; then[\s\S]*?PRODUCT_NAME="KiroCrew LTS"/); // brand-ok -- product name under test
-    const block = buildScript.match(/elif \[ "\$PRODUCT_NAME" = "KiroCrew LTS" \]; then[\s\S]*?EB_ARGS\+=\(([\s\S]*?)\n {4}\)/); // brand-ok -- product name under test
+    assert.match(buildScript, /if \[ "\$\{AJCREW_BUILD_EDITION:-oss\}" = "lts" \]; then[\s\S]*?PRODUCT_NAME="AjCrew LTS"/); // brand-ok -- product name under test
+    const block = buildScript.match(/elif \[ "\$PRODUCT_NAME" = "AjCrew LTS" \]; then[\s\S]*?EB_ARGS\+=\(([\s\S]*?)\n {4}\)/); // brand-ok -- product name under test
     assert.ok(block, "build-desktop.sh has an LTS identity block");
     for (const arg of [
-      "-c.productName=KiroCrew LTS", // brand-ok -- product name under test
-      "-c.mac.extendInfo.CFBundleDisplayName=Kiro Crew LTS",
-      "-c.deb.packageName=kirocrew-lts",
-      "-c.rpm.packageName=kirocrew-lts",
-      "-c.linux.executableName=kirocrew-desktop-lts",
-      "-c.extraMetadata.desktopName=kirocrew-desktop-lts.desktop",
-      "-c.extraMetadata.name=kirocrew-desktop-lts",
+      "-c.productName=AjCrew LTS", // brand-ok -- product name under test
+      "-c.mac.extendInfo.CFBundleDisplayName=Aj Crew LTS",
+      "-c.deb.packageName=ajcrew-lts",
+      "-c.rpm.packageName=ajcrew-lts",
+      "-c.linux.executableName=ajcrew-desktop-lts",
+      "-c.extraMetadata.desktopName=ajcrew-desktop-lts.desktop",
+      "-c.extraMetadata.name=ajcrew-desktop-lts",
       "-c.win.appId=${BASE_APP_ID}.lts",
     ]) {
       assert.ok(block[1].includes(`"${arg}"`), `LTS identity sets ${arg}`);
@@ -364,15 +364,15 @@ describe("Linux desktop naming", () => {
     );
     assert.match(
       integration,
-      /path\.join\(resourcesPath, "backend-dist", "kirocrew-backend", "bin"\)/
+      /path\.join\(resourcesPath, "backend-dist", "ajcrew-backend", "bin"\)/
     );
     assert.match(
       buildScript,
-      /build_backend "\$PBS_DIR" "\$ELECTRON_DIR\/backend-dist\/kirocrew-backend" "\$\{TARGET_ARCH:-\}"/
+      /build_backend "\$PBS_DIR" "\$ELECTRON_DIR\/backend-dist\/ajcrew-backend" "\$\{TARGET_ARCH:-\}"/
     );
     assert.match(
       buildScript,
-      /"\$out\/bin\/python3\.12"(?: -[sP]+)* -m kiro_crew --version/
+      /"\$out\/bin\/python3\.12"(?: -[sP]+)* -m aj_crew --version/
     );
   });
 });
@@ -420,13 +420,17 @@ describe("first-download installer design contract", () => {
     );
     assert.deepEqual(bmpInfo(sidebar), { width: 164, height: 314, bitsPerPixel: 24 });
     assert.deepEqual(bmpInfo(header), { width: 150, height: 57, bitsPerPixel: 24 });
-    for (const eyeRegion of [
-      { left: 84, top: 15, right: 96, bottom: 29 },
-      { left: 106, top: 8, right: 119, bottom: 23 },
-      { left: 98, top: 32, right: 114, bottom: 47 },
+    // The header carries the gem mark on its dark tile (x 96-137, y 8-49):
+    // the tile's ground is dark above and below the gem, the gem's table is
+    // light, and the strip to the left of the wordmark stays the page's white.
+    for (const tileGround of [
+      { left: 102, top: 10, right: 131, bottom: 15 },
+      { left: 102, top: 42, right: 131, bottom: 47 },
     ]) {
-      assert.ok(bmpDarkPixelCount(header, eyeRegion) >= 6);
+      assert.ok(bmpDarkPixelCount(header, tileGround) >= 130);
     }
+    assert.equal(bmpDarkPixelCount(header, { left: 111, top: 18, right: 122, bottom: 21 }), 0);
+    assert.equal(bmpDarkPixelCount(header, { left: 0, top: 0, right: 60, bottom: 12 }), 0);
     assert.equal(pkg.build.nsis.oneClick, false);
     assert.equal(pkg.build.nsis.perMachine, false);
     assert.equal(pkg.build.nsis.allowToChangeInstallationDirectory, false);
@@ -545,7 +549,7 @@ describe("first-download installer design contract", () => {
     // own ACP relay and accepts its `kiro-cli login`. The copy above stays true
     // only while that default is a Kiro CLI–hosted agent, so pin it here.
     const backends = fs.readFileSync(
-      path.join(REPO_ROOT, "src", "kiro_crew", "agent_sdk", "backends.py"),
+      path.join(REPO_ROOT, "src", "aj_crew", "agent_sdk", "backends.py"),
       "utf8",
     );
     assert.match(
@@ -554,7 +558,7 @@ describe("first-download installer design contract", () => {
       "installer copy must change if a fresh configuration stops defaulting to a Kiro CLI-hosted agent",
     );
     const configSections = fs.readFileSync(
-      path.join(REPO_ROOT, "src", "kiro_crew", "config", "sections_agent.py"),
+      path.join(REPO_ROOT, "src", "aj_crew", "config", "sections_agent.py"),
       "utf8",
     );
     assert.match(
@@ -646,7 +650,7 @@ describe("first-download installer design contract", () => {
     assert.match(buildScript, /DLLs\/_tkinter\.pyd DLLs\/tcl\*\.dll DLLs\/tk\*\.dll/);
     assert.match(
       buildScript,
-      /precompile_windows\.py" \\\r?\n\s*--root "\$out" --module kiro_crew\.cli_server/
+      /precompile_windows\.py" \\\r?\n\s*--root "\$out" --module aj_crew\.cli_server/
     );
   });
 
@@ -664,14 +668,14 @@ describe("first-download installer design contract", () => {
     // The recogniser, compressed-audio decoder, and every Python/runtime
     // dependency are installer payload. The gate executes a hash-authenticated,
     // immutable view of the decoder, so pip metadata alone cannot make a release pass.
-    assert.match(buildScript, /-m kiro_crew\.stt\.decoder \\\n\s+--install-into "\$2\/kirocrew_ffmpeg\/bin"/);
+    assert.match(buildScript, /-m aj_crew\.stt\.decoder \\\n\s+--install-into "\$2\/ajcrew_ffmpeg\/bin"/);
     assert.match(windowsBuilder, /install_desktop_decoder "\$out\/python\.exe" "\$sp"/);
     assert.doesNotMatch(buildScript, /imageio-ffmpeg/);
     assert.match(buildScript, /ERROR: no prebuilt speech recogniser for supported target/);
     assert.match(buildScript, /macOS Intel[^\n]+legacy backend unsupported/);
     assert.doesNotMatch(buildScript, /bundling without it/);
-    assert.match(buildScript, /from kiro_crew\.stt\.engine import probe/);
-    assert.match(buildScript, /from kiro_crew\.transcribe import _packaged_ffmpeg_version_probe/);
+    assert.match(buildScript, /from aj_crew\.stt\.engine import probe/);
+    assert.match(buildScript, /from aj_crew\.transcribe import _packaged_ffmpeg_version_probe/);
     assert.match(buildScript, /decoder = _packaged_ffmpeg_version_probe\(\)/);
     // Both halves of the decoder verdict are pinned, because collapsing them back
     // into one boolean is the regression this shape exists to prevent.
@@ -701,12 +705,12 @@ describe("first-download installer design contract", () => {
       windowsBuilder,
       /root_uri="\$\(cd "\$ROOT" && "\$out\/python\.exe" -c[\s\S]*?sys\.stdout\.write\(Path\.cwd\(\)\.as_uri\(\)\)/
     );
-    assert.match(windowsBuilder, /"kirocrew\[voice-aws\] @ \$root_uri"/);
+    assert.match(windowsBuilder, /"ajcrew\[voice-aws\] @ \$root_uri"/);
     assert.match(buildScript, /"\$ROOT\[voice-codex\]"/);
-    assert.doesNotMatch(windowsBuilder, /"kirocrew\[voice-codex\] @ \$root_uri"/);
-    assert.match(windowsBuilder, /"kirocrew\[voice\] @ \$root_uri"/);
+    assert.doesNotMatch(windowsBuilder, /"ajcrew\[voice-codex\] @ \$root_uri"/);
+    assert.match(windowsBuilder, /"ajcrew\[voice\] @ \$root_uri"/);
     assert.doesNotMatch(windowsBuilder, /"\$ROOT\[voice(?:-aws)?\]"/);
-    assert.doesNotMatch(windowsBuilder, /if\s+!\s+[\s\S]*?kirocrew\[voice\]/);
+    assert.doesNotMatch(windowsBuilder, /if\s+!\s+[\s\S]*?ajcrew\[voice\]/);
   });
 
   it("bundles the Feishu SDK into every backend, since the app cannot install it later", () => {
@@ -720,7 +724,7 @@ describe("first-download installer design contract", () => {
     };
     assert.match(between("build_backend() {", "build_backend_windows() {"), /"\$ROOT\[feishu\]"/);
     const windowsBuilder = between("build_backend_windows() {", "stdlib_probe_gate() {");
-    assert.match(windowsBuilder, /"kirocrew\[feishu\] @ \$root_uri"/);
+    assert.match(windowsBuilder, /"ajcrew\[feishu\] @ \$root_uri"/);
     // Shipped compiled, so the first Feishu start does not compile ~11k modules
     // on the gateway loop.
     assert.match(windowsBuilder, /precompile_windows\.py" \\\n[^\n]*--module lark_oapi\n/);
@@ -1032,11 +1036,11 @@ describe("first-download installer design contract", () => {
     assert.equal(pkg.devDependencies["electron-builder"], "26.15.3");
   });
 
-  it("reuses the shipped logo and opening-animation ghost artwork", () => {
+  it("ships the gem artwork in the splash, the installers and the site logo", () => {
     const normalize = text => text.replaceAll(",", " ").replace(/\s+/g, " ");
     const loading = normalize(fs.readFileSync(path.join(ROOT, "loading.html"), "utf8"));
     const siteLogo = normalize(
-      fs.readFileSync(path.join(REPO_ROOT, "site", "public", "kirocrew-logo.svg"), "utf8")
+      fs.readFileSync(path.join(REPO_ROOT, "site", "public", "ajcrew-logo.svg"), "utf8")
     );
     const dmgSource = normalize(
       fs.readFileSync(path.join(INSTALLER_ASSETS, "dmg-background.svg"), "utf8")
@@ -1048,9 +1052,32 @@ describe("first-download installer design contract", () => {
       fs.readFileSync(path.join(INSTALLER_ASSETS, "windows-installer-header.svg"), "utf8")
     );
 
-    const openingGhost = "M398.554 818.914C316.315 1001.03";
-    const logoGhost = "M84.76 266.62c-19.2 42.53";
-    const logoEyes = [
+    // The gem is six straight-edged facets: three on the crown, three on the
+    // pavilion. Each is its own closed path, or one sub-path of a compound path.
+    const facetCount = text =>
+      [...text.matchAll(/ d="([^"]+)"/g)]
+        .flatMap(match => match[1].split(/(?<=Z)/))
+        .filter(sub => /^\s*M[-\d. ]+(?:L[-\d. ]+){2,3}Z$/.test(sub)).length;
+    assert.equal(facetCount(siteLogo), 6);
+    assert.equal(facetCount(sidebarSource), 6);
+    assert.equal(facetCount(headerSource), 6);
+    // The disk-image background repeats the gem as decoration.
+    assert.ok(facetCount(dmgSource) >= 6);
+    assert.equal(facetCount(dmgSource) % 6, 0);
+
+    // The splash draws the gem character: one body and a pair of eyes that blink.
+    const gem = loading.match(/var GEM_SVG =(.*?)<\/svg>/);
+    assert.ok(gem, "loading.html must carry the gem character");
+    assert.equal((gem[1].match(/<path /g) || []).length, 3);
+    const eyes = gem[1].split('<g class="g-eyes">')[1];
+    assert.ok(eyes, "the eyes are grouped so they blink together");
+    assert.equal((eyes.match(/<path /g) || []).length, 2);
+    assert.match(loading, /h = w \* GEM_ASPECT/);
+
+    // None of them still carries the artwork this identity replaced.
+    const replaced = [
+      "M398.554 818.914C316.315 1001.03",
+      "M84.76 266.62c-19.2 42.53",
       "M140.41 203.27c-7.67 0",
       "M171.94 203.27c-7.67 0",
       "M61.06 92.87c-1.57-4.01",
@@ -1058,16 +1085,10 @@ describe("first-download installer design contract", () => {
       "M194.79 60.97c3.96 2.55",
       "M178.51 50.47c3.96 2.55",
     ];
-    assert.ok(loading.includes(openingGhost));
-    assert.ok(dmgSource.includes(openingGhost));
-    assert.ok(sidebarSource.includes(openingGhost));
-    assert.ok(siteLogo.includes(logoGhost));
-    assert.ok(sidebarSource.includes(logoGhost));
-    assert.ok(headerSource.includes(logoGhost));
-    for (const eye of logoEyes) {
-      assert.ok(siteLogo.includes(eye));
-      assert.ok(sidebarSource.includes(eye));
-      assert.ok(headerSource.includes(eye));
+    for (const source of [loading, siteLogo, dmgSource, sidebarSource, headerSource]) {
+      for (const outline of replaced) {
+        assert.ok(!source.includes(outline));
+      }
     }
   });
 
@@ -1343,7 +1364,7 @@ describe("uninstall data preservation contract", () => {
     // NSIS generates its own uninstaller, so there is no in-app uninstall
     // handler to audit any more -- the guarantee moves entirely into config.
     // deleteAppDataOnUninstall MUST stay false/absent: it would delete the
-    // Electron userData dir on uninstall, and the KiroCrew home under
+    // Electron userData dir on uninstall, and the Aj Crew home under
     // ~/.kiro/crew is user data that survives an uninstall by design.
     assert.notEqual(
       electronPkg.build.nsis?.deleteAppDataOnUninstall,
@@ -1369,7 +1390,7 @@ describe("uninstall data preservation contract", () => {
 
   it("uses an assisted installer so nightly installs beside stable", () => {
     // getWindowsInstallationDirName(appInfo, !oneClick || isPerMachine) in
-    // app-builder-lib only uses productFilename ("KiroCrew" / "KiroCrew
+    // app-builder-lib only uses productFilename ("AjCrew" / "AjCrew (brand-ok: desktop productName)
     // Nightly") when that flag is true. Under oneClick+perUser it falls back to
     // appInfo.sanitizedName -- the npm package name -- which would put both
     // channels in ONE directory named after the package rather than the product.
@@ -1388,10 +1409,10 @@ describe("uninstall data preservation contract", () => {
     // it -- the same class as the nsis.guid hazard above. The launcher and
     // desktop-entry names are per-install paths and must move with it.
     for (const override of [
-      "-c.deb.packageName=kirocrew-nightly",
-      "-c.rpm.packageName=kirocrew-nightly",
-      "-c.linux.executableName=kirocrew-desktop-nightly",
-      "-c.extraMetadata.desktopName=kirocrew-desktop-nightly.desktop",
+      "-c.deb.packageName=ajcrew-nightly",
+      "-c.rpm.packageName=ajcrew-nightly",
+      "-c.linux.executableName=ajcrew-desktop-nightly",
+      "-c.extraMetadata.desktopName=ajcrew-desktop-nightly.desktop",
     ]) {
       assert.ok(
         nightlyOverrides.includes(override),
@@ -1414,10 +1435,10 @@ describe("uninstall data preservation contract", () => {
     }
     // And the stable defaults they override must be the ones actually shipped,
     // so a rename on either side fails here instead of silently colliding.
-    assert.equal(electronPkg.build.deb.packageName, "kirocrew");
-    assert.equal(electronPkg.build.rpm.packageName, "kirocrew");
-    assert.equal(electronPkg.build.linux.executableName, "kirocrew-desktop");
-    assert.equal(electronPkg.desktopName, "kirocrew-desktop.desktop");
+    assert.equal(electronPkg.build.deb.packageName, "ajcrew");
+    assert.equal(electronPkg.build.rpm.packageName, "ajcrew");
+    assert.equal(electronPkg.build.linux.executableName, "ajcrew-desktop");
+    assert.equal(electronPkg.desktopName, "ajcrew-desktop.desktop");
     // syncDesktopName is what ties Electron's app_id and the entry's
     // StartupWMClass to desktopName; without it the nightly override above
     // would move the filename but not the window association.
@@ -1497,7 +1518,7 @@ describe("uninstall data preservation contract", () => {
     }
   });
 
-  it("keeps the uninstaller away from the Kiro Crew data home", () => {
+  it("keeps the uninstaller away from the Aj Crew data home", () => {
     // The one thing this macro must never touch: sessions, memory, the DB and
     // config. It is user data and survives an uninstall by design.
     const nsh = fs.readFileSync(path.join(ROOT, "build", "installer.nsh"), "utf8");
@@ -1565,13 +1586,13 @@ describe("uninstall data preservation contract", () => {
       "utf8"
     );
     assert.ok(
-      buildScript.includes("-c.extraMetadata.name=kirocrew-desktop-nightly"),
+      buildScript.includes("-c.extraMetadata.name=ajcrew-desktop-nightly"),
       "build-desktop.sh must give the nightly channel its own npm name, or the " +
         "uninstaller's cache removal reaches into the other channel's install"
     );
     // The stable default it overrides must be the one actually shipped, so a
     // rename on either side fails here instead of silently re-sharing.
-    assert.equal(electronPkg.name, "kirocrew-desktop");
+    assert.equal(electronPkg.name, "ajcrew-desktop");
   });
 
   it("gives nightly its own Windows appId so a channel update cannot orphan the other's shortcuts", () => {
@@ -1602,7 +1623,7 @@ describe("uninstall data preservation contract", () => {
     // even though its .exe is untouched.
     //
     // main.js already splits the RUNTIME id (app.setAppUserModelId picks
-    // com.amazon.kiro.crew.nightly for a nightly stamp). Leaving the PACKAGED
+    // io.github.al-jwharah.ajcrew.nightly for a nightly stamp). Leaving the PACKAGED
     // id shared makes the two disagree: the app claims one identity at runtime
     // while its own shortcuts were stamped with the other.
     const buildScript = fs.readFileSync(
@@ -1610,7 +1631,7 @@ describe("uninstall data preservation contract", () => {
       "utf8"
     );
     assert.ok(
-      buildScript.includes("-c.win.appId=com.amazon.kiro.crew.nightly"),
+      buildScript.includes("-c.win.appId=io.github.al-jwharah.ajcrew.nightly"),
       "build-desktop.sh must give the nightly channel its own WINDOWS appId, or " +
         "uninstalling one channel deregisters the other channel's shortcut " +
         "AppUserModelID and Windows reports that app as relocated"
@@ -1619,17 +1640,17 @@ describe("uninstall data preservation contract", () => {
     // value, so a top-level override would change the macOS bundle id too and
     // break Squirrel.Mac's designated-requirement check on every installed mac.
     assert.ok(
-      !buildScript.includes("-c.appId=com.amazon.kiro.crew.nightly"),
+      !buildScript.includes("-c.appId=io.github.al-jwharah.ajcrew.nightly"),
       "the nightly appId override must be win-scoped; a top-level appId would " +
         "also move the macOS bundle id and strand installed mac updates"
     );
     // The runtime id main.js claims for a nightly build must equal the one the
     // installer stamps, or the shortcuts and the process disagree again.
     assert.ok(
-      main.includes("com.amazon.kiro.crew.nightly"),
+      main.includes("io.github.al-jwharah.ajcrew.nightly"),
       "main.js must claim the same nightly AppUserModelID the installer stamps"
     );
     // And the shared production id must remain the mac/appId default.
-    assert.equal(electronPkg.build.appId, "com.amazon.kiro.crew");
+    assert.equal(electronPkg.build.appId, "io.github.al-jwharah.ajcrew");
   });
 });

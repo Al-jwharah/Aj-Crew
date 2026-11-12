@@ -14,11 +14,11 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.agent as agent_mod
-import kiro_crew.config.paths as paths_mod
-from kiro_crew.acp.harness.kas import KasHarness, resolve_projected_spec
-from kiro_crew.acp.kas_agents import expand_kiro_cli_tool_names
-from kiro_crew.acp.session_handle import AcpRuntimeError
+import aj_crew.agent as agent_mod
+import aj_crew.config.paths as paths_mod
+from aj_crew.acp.harness.kas import KasHarness, resolve_projected_spec
+from aj_crew.acp.kas_agents import expand_kiro_cli_tool_names
+from aj_crew.acp.session_handle import AcpRuntimeError
 
 
 @pytest.fixture
@@ -126,7 +126,7 @@ async def test_a_shadowing_project_spec_changes_nothing_about_the_user_agent(lay
 
     assert entry["prompt"] == "user prompt"
     # The user-level spec's grant, plus Crew's default servers it gets as a custom agent.
-    assert entry["tools"] == ["@kept", "@kirocrew-core", "@kirocrew-cron"]
+    assert entry["tools"] == ["@kept", "@ajcrew-core", "@ajcrew-cron"]
     wire = json.dumps(entry.get("mcpServers"))
     assert "/usr/bin/kept-server" in wire
     assert "/usr/bin/muted-server" in wire
@@ -135,8 +135,8 @@ async def test_a_shadowing_project_spec_changes_nothing_about_the_user_agent(lay
 
 
 def test_a_shadowing_project_spec_keeps_the_user_level_hooks_the_stale_check_reads(layout):
-    from kiro_crew.acp.kas_agents import pre_tool_hook_matchers
-    from kiro_crew.agent_sdk import spec_hooks
+    from aj_crew.acp.kas_agents import pre_tool_hook_matchers
+    from aj_crew.agent_sdk import spec_hooks
 
     user, checkout, project = layout
     user_hooks = {"preToolUse": [{"matcher": "*", "command": "/usr/bin/user-hook"}]}
@@ -169,9 +169,7 @@ async def test_with_no_project_spec_the_user_level_agent_is_projected(layout):
 
     assert entry["prompt"] == "user prompt"
     # A user-level custom agent also gets Crew's default servers.
-    assert entry["tools"] == expand_kiro_cli_tool_names(
-        ["fs_read", "@kirocrew-core", "@kirocrew-cron"]
-    )
+    assert entry["tools"] == expand_kiro_cli_tool_names(["fs_read", "@ajcrew-core", "@ajcrew-cron"])
 
 
 @pytest.mark.asyncio
@@ -264,7 +262,7 @@ async def test_an_unreadable_shadowing_spec_still_runs_the_user_agent(layout):
 
 
 def test_the_tool_search_judgement_reads_the_spec_the_projection_sends(layout):
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
     _user, checkout, project = layout
     _write(project, "proj", {"name": "proj", "prompt": "p", "tools": ["tool_search"]})
@@ -282,7 +280,7 @@ def test_the_tool_search_judgement_reads_the_spec_the_projection_sends(layout):
 @pytest.fixture
 def bound(layout, monkeypatch):
     """*layout*, with an app's ``app--deploy.json`` registered and a session bound to it."""
-    from kiro_crew.apps import agent_launch, bridges
+    from aj_crew.apps import agent_launch, bridges
 
     user, checkout, project = layout
     monkeypatch.setattr(bridges, "KIRO_AGENTS_DIR", user)
@@ -307,7 +305,7 @@ async def test_a_bound_session_projects_the_registered_file(bound):
 async def test_a_bound_session_whose_registered_file_is_gone_is_refused(bound):
     # The app is switched off between the turn's check and the session start: its
     # registered file is gone, and the checkout's same-named spec is not run.
-    from kiro_crew.acp.session_handle import AcpAgentUnavailable
+    from aj_crew.acp.session_handle import AcpAgentUnavailable
 
     user, checkout = bound
     (user / "app--deploy.json").unlink()
@@ -325,7 +323,7 @@ async def test_a_bound_session_whose_registered_file_is_gone_is_refused(bound):
 
 @pytest.mark.asyncio
 async def test_a_binding_applies_only_to_the_agent_it_names(bound):
-    from kiro_crew.apps import agent_launch
+    from aj_crew.apps import agent_launch
 
     user, checkout = bound
     _write(user, "other", {"name": "other", "prompt": "another agent", "tools": []})

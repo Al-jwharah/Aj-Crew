@@ -15,8 +15,8 @@ from config_live_helpers import (  # noqa: F401 -- fixtures are used by name
     cfg_file_fixture,
 )
 
-from kiro_crew.config import live
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config import live
+from aj_crew.config.loader import AjCrewConfig
 
 # ── the restart hint the dashboard answers with ───────────────────────────
 
@@ -38,14 +38,14 @@ class TestRestartHintIsSchemaDriven:
     )
 
     def test_every_put_settable_field_is_hot(self) -> None:
-        from kiro_crew.dashboard.handlers.core import _changed_paths_need_restart
+        from aj_crew.dashboard.handlers.core import _changed_paths_need_restart
 
         for key in self.PUT_KEYS:
             assert not _changed_paths_need_restart([f"agent.{key}"]), key
         assert not _changed_paths_need_restart([f"agent.{k}" for k in self.PUT_KEYS])
 
     def test_a_restart_true_path_flips_the_hint(self) -> None:
-        from kiro_crew.dashboard.handlers.core import _changed_paths_need_restart
+        from aj_crew.dashboard.handlers.core import _changed_paths_need_restart
 
         for path in (
             "agent.jail",
@@ -62,7 +62,7 @@ class TestRestartHintIsSchemaDriven:
         """The dashboard sends every setting on each save, so the handler feeds
         only the paths whose value actually MOVED -- an untouched restart=True
         field must not make a live edit report restart_required."""
-        from kiro_crew.dashboard.handlers.core import _changed_paths_need_restart
+        from aj_crew.dashboard.handlers.core import _changed_paths_need_restart
 
         applied = ["max_subagents", "jail"]
         agent = {"max_subagents": 8, "jail": True}
@@ -73,8 +73,8 @@ class TestRestartHintIsSchemaDriven:
 
     def test_the_hint_and_the_schema_cannot_drift(self) -> None:
         """Whatever the schema marks, the handler agrees with -- no second list."""
-        from kiro_crew.config.schema import SCHEMA_REGISTRY, requires_restart
-        from kiro_crew.dashboard.handlers.core import _changed_paths_need_restart
+        from aj_crew.config.schema import SCHEMA_REGISTRY, requires_restart
+        from aj_crew.dashboard.handlers.core import _changed_paths_need_restart
 
         marked = {e.path for e in SCHEMA_REGISTRY if e.requires_restart}
         assert marked, "no restart=True fields in the schema at all"
@@ -95,7 +95,7 @@ class TestRestartHintIsSchemaDriven:
         """``requires_restart`` resolves through ancestors, so a marked container
         covers keys the schema never enumerates (a stub-server name, a jail
         sub-key) -- otherwise a nested edit would report itself hot."""
-        from kiro_crew.config.schema import requires_restart
+        from aj_crew.config.schema import requires_restart
 
         assert requires_restart("mcp_gateway.stub_servers")
         assert requires_restart("mcp_gateway.stub_servers.some-server")
@@ -118,11 +118,11 @@ class TestRestartRequiredOverHttp:
         from aiohttp import web
         from dashboard_owner_helpers import as_owner
 
-        from kiro_crew.dashboard import handlers
+        from aj_crew.dashboard import handlers
 
         app = web.Application()
-        app.router.add_put("/api/config/kirocrew", handlers.api_kirocrew_config)
-        app.router.add_patch("/api/config/kirocrew", handlers.api_kirocrew_config_patch)
+        app.router.add_put("/api/config/ajcrew", handlers.api_ajcrew_config)
+        app.router.add_patch("/api/config/ajcrew", handlers.api_ajcrew_config_patch)
         # Both doors are owner-gated, so the restart hint is only reached as owner.
         return as_owner(app)
 
@@ -132,14 +132,14 @@ class TestRestartRequiredOverHttp:
 
         from aiohttp.test_utils import TestClient, TestServer
 
-        with patch("kiro_crew.dashboard.handlers.sel", return_value=MagicMock()):
+        with patch("aj_crew.dashboard.handlers.sel", return_value=MagicMock()):
             yield lambda: TestClient(TestServer(self._app()))
 
     @pytest.mark.asyncio
     async def test_put_a_hot_field_reports_no_restart(self, client_ctx) -> None:
         """The regression pin: a live field must not ask the user to restart."""
         async with client_ctx() as c:
-            resp = await c.put("/api/config/kirocrew", json={"agent": {"max_subagents": 8}})
+            resp = await c.put("/api/config/ajcrew", json={"agent": {"max_subagents": 8}})
             assert resp.status == 200
             body = await resp.json()
         assert body["restart_required"] is False
@@ -150,7 +150,7 @@ class TestRestartRequiredOverHttp:
     ) -> None:
         async with client_ctx() as c:
             resp = await c.put(
-                "/api/config/kirocrew",
+                "/api/config/ajcrew",
                 json={"agent": {"max_subagents": 8, "subagent_max_turns": 50}},
             )
             assert resp.status == 200
@@ -167,14 +167,14 @@ class TestRestartRequiredOverHttp:
         makes the difference observable: the first PUT moves the value and reports
         a restart, the identical second one moves nothing and must not."""
         with patch(
-            "kiro_crew.config.schema.requires_restart",
+            "aj_crew.config.schema.requires_restart",
             side_effect=lambda p: p == "agent.max_subagents",
         ):
             async with client_ctx() as c:
-                first = await c.put("/api/config/kirocrew", json={"agent": {"max_subagents": 8}})
+                first = await c.put("/api/config/ajcrew", json={"agent": {"max_subagents": 8}})
                 assert first.status == 200
                 assert (await first.json())["restart_required"] is True
-                again = await c.put("/api/config/kirocrew", json={"agent": {"max_subagents": 8}})
+                again = await c.put("/api/config/ajcrew", json={"agent": {"max_subagents": 8}})
                 assert again.status == 200
                 body = await again.json()
         assert body["restart_required"] is False
@@ -186,11 +186,11 @@ class TestRestartRequiredOverHttp:
         """The False above is the SCHEMA's answer, not a constant: mark the very
         same path ``restart=True`` and the same request flips to True."""
         with patch(
-            "kiro_crew.config.schema.requires_restart",
+            "aj_crew.config.schema.requires_restart",
             side_effect=lambda p: p == "agent.max_subagents",
         ):
             async with client_ctx() as c:
-                resp = await c.put("/api/config/kirocrew", json={"agent": {"max_subagents": 8}})
+                resp = await c.put("/api/config/ajcrew", json={"agent": {"max_subagents": 8}})
                 assert resp.status == 200
                 body = await resp.json()
         assert body["restart_required"] is True
@@ -199,7 +199,7 @@ class TestRestartRequiredOverHttp:
     async def test_patch_a_hot_field_carries_no_restart_hint(self, client_ctx) -> None:
         async with client_ctx() as c:
             resp = await c.patch(
-                "/api/config/kirocrew", json={"path": "agent.model", "value": "model-patched"}
+                "/api/config/ajcrew", json={"path": "agent.model", "value": "model-patched"}
             )
             assert resp.status == 200
             body = await resp.json()
@@ -211,13 +211,13 @@ class TestRestartRequiredOverHttp:
         """PATCH ends in ``_hot_apply_after_write``, so the new value is in force
         before the response -- an applier has already run by the time it returns."""
         w = live.watch()
-        await w.start(initial=KiroCrewConfig.load())
+        await w.start(initial=AjCrewConfig.load())
         seen: list[str] = []
         w.subscribe("agent.model", callback=lambda ch: seen.append(ch.new.agent.model), name="m")
         try:
             async with client_ctx() as c:
                 resp = await c.patch(
-                    "/api/config/kirocrew", json={"path": "agent.model", "value": "model-hotpatch"}
+                    "/api/config/ajcrew", json={"path": "agent.model", "value": "model-hotpatch"}
                 )
                 assert resp.status == 200
             assert seen == ["model-hotpatch"]

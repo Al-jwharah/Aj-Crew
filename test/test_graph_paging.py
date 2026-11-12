@@ -8,7 +8,7 @@ cursor rather than a terminal error.
 
 import pytest
 
-from kiro_crew.connections.vendors.microsoft.graph.paging import (
+from aj_crew.connections.vendors.microsoft.graph.paging import (
     DELTA_TERMINATED_MODES,
     RESYNC_APPLY,
     RESYNC_UPLOAD,
@@ -19,7 +19,7 @@ from kiro_crew.connections.vendors.microsoft.graph.paging import (
     next_step,
     parse_resync,
 )
-from kiro_crew.connections.vendors.microsoft.graph.payload import GraphPage
+from aj_crew.connections.vendors.microsoft.graph.payload import GraphPage
 
 
 class TestPageabilityGate:

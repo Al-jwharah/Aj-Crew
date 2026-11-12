@@ -52,31 +52,31 @@ class TestSessionSlotRecovery:
     """learn_add must accept keys whose slot was evicted from memory but whose
     JSONL file still exists in the data home's sessions/ — this covers the
     long-lived Slack thread / reopened dashboard tab cases where the MCP
-    subprocess holds a stale KIROCREW_SESSION_KEY env var that maps to a swept
+    subprocess holds a stale AJCREW_SESSION_KEY env var that maps to a swept
     slot.
     """
 
     @pytest.fixture(autouse=True)
     def _persisted_history_dir_tracks_patched_home(self, _floor_monkeypatch):
-        """Point ``_shared.config_dir()`` at ``<patched home>/.kirocrew``.
+        """Point ``_shared.config_dir()`` at ``<patched home>/.ajcrew``.
 
-        The data home moved from ``~/.kirocrew`` to ``~/.kiro/crew``
+        The data home moved from ``~/.ajcrew`` to ``~/.kiro/crew``
         (``config_dir()``); ``_session_has_persisted_history`` now probes
-        ``config_dir()/sessions`` rather than ``Path.home()/".kirocrew"/"sessions"``.
+        ``config_dir()/sessions`` rather than ``Path.home()/".ajcrew"/"sessions"``.
         Each test here patches ``Path.home()`` and seeds JSONL under
-        ``<home>/.kirocrew/sessions``, but ``config_dir()`` reads ``KIROCREW_HOME``
+        ``<home>/.ajcrew/sessions``, but ``config_dir()`` reads ``AJCREW_HOME``
         (a different tmp dir pinned by conftest), so redirect ``_shared``'s
-        ``config_dir`` to ``Path.home()/".kirocrew"`` (lazy, tracks the per-test
+        ``config_dir`` to ``Path.home()/".ajcrew"`` (lazy, tracks the per-test
         ``Path.home`` patch) to keep the seeded layout authoritative. Applied
         first so a test's own patches still win.
         """
         _floor_monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers._shared.config_dir",
-            lambda: Path.home() / ".kirocrew",
+            "aj_crew.dashboard.handlers._shared.config_dir",
+            lambda: Path.home() / ".ajcrew",
         )
 
     def _write_sessions_jsonl(self, tmp_path, stem: str) -> None:
-        sess_dir = tmp_path / ".kirocrew" / "sessions"
+        sess_dir = tmp_path / ".ajcrew" / "sessions"
         sess_dir.mkdir(parents=True, exist_ok=True)
         (sess_dir / f"{stem}.jsonl").write_text(
             '{"_type": "metadata", "created_at": "2026-01-01T00:00:00"}\n',
@@ -88,10 +88,10 @@ class TestSessionSlotRecovery:
         self, tmp_path, monkeypatch
     ):
         """Core fix: evicted slot + existing JSONL → learn_add proceeds."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.cron._get_memory",
+            "aj_crew.dashboard.handlers.cron._get_memory",
             MagicMock(return_value=MagicMock(vector_store=None)),
         )
         state = _make_state(tmp_path)
@@ -111,10 +111,10 @@ class TestSessionSlotRecovery:
         self, tmp_path, monkeypatch
     ):
         """dashboard_{stem}.jsonl fallback path from slack/interactions.py."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.cron._get_memory",
+            "aj_crew.dashboard.handlers.cron._get_memory",
             MagicMock(return_value=MagicMock(vector_store=None)),
         )
         state = _make_state(tmp_path)
@@ -135,10 +135,10 @@ class TestSessionSlotRecovery:
         """A cron session keys off ``cron:{id}`` and persists its transcript as
         ``cron_{id}.jsonl`` (``_safe_key`` maps ``:`` → ``_``). The resolver must
         probe that name so an idle-evicted-but-real cron's learn_add succeeds."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.cron._get_memory",
+            "aj_crew.dashboard.handlers.cron._get_memory",
             MagicMock(return_value=MagicMock(vector_store=None)),
         )
         state = _make_state(tmp_path)
@@ -160,10 +160,10 @@ class TestSessionSlotRecovery:
         """A cron's linked dashboard slot keys off ``dashboard:cron-{id}`` and
         persists as ``dashboard_cron-{id}.jsonl``; probing that name also
         recovers the evicted cron session for learn_add."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.cron._get_memory",
+            "aj_crew.dashboard.handlers.cron._get_memory",
             MagicMock(return_value=MagicMock(vector_store=None)),
         )
         state = _make_state(tmp_path)
@@ -183,11 +183,11 @@ class TestSessionSlotRecovery:
         """Regression guard: a ``cron:`` key with no backing JSONL is still
         rejected. The cron probes only ADD positive matches — they must not
         relax the deny path."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         state = _make_state(tmp_path)
         # Empty sessions dir so the path-exists check is meaningful.
-        (tmp_path / ".kirocrew" / "sessions").mkdir(parents=True, exist_ok=True)
+        (tmp_path / ".ajcrew" / "sessions").mkdir(parents=True, exist_ok=True)
 
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(
@@ -204,15 +204,15 @@ class TestSessionSlotRecovery:
         """AC #4: the path-traversal guard still runs first on the slot_name
         even for a ``cron:``-prefixed key, so a traversal attempt is rejected
         even when a file exists at the resolved target."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         state = _make_state(tmp_path)
-        sess_dir = tmp_path / ".kirocrew" / "sessions"
+        sess_dir = tmp_path / ".ajcrew" / "sessions"
         sess_dir.mkdir(parents=True, exist_ok=True)
         # Seed files at each resolved traversal target so the guard — NOT the
         # missing-file fallback — is what rejects each request.
-        # "../escape" → sess_dir/../escape.jsonl → ~/.kirocrew/escape.jsonl
-        (tmp_path / ".kirocrew" / "escape.jsonl").write_text("{}\n")
+        # "../escape" → sess_dir/../escape.jsonl → ~/.ajcrew/escape.jsonl
+        (tmp_path / ".ajcrew" / "escape.jsonl").write_text("{}\n")
         # "a/b" → sess_dir/a/b.jsonl
         sub = sess_dir / "a"
         sub.mkdir(parents=True, exist_ok=True)
@@ -236,11 +236,11 @@ class TestSessionSlotRecovery:
     @pytest.mark.asyncio
     async def test_learn_add_still_rejected_when_no_jsonl_exists(self, tmp_path, monkeypatch):
         """Forged/stale keys with no backing JSONL are still rejected as unknown."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         state = _make_state(tmp_path)
         # Create an empty sessions dir so the path-exists check is meaningful.
-        (tmp_path / ".kirocrew" / "sessions").mkdir(parents=True, exist_ok=True)
+        (tmp_path / ".ajcrew" / "sessions").mkdir(parents=True, exist_ok=True)
 
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(
@@ -260,16 +260,16 @@ class TestSessionSlotRecovery:
         the request — without creating the target files, the test would pass
         even if the guard were removed because ``Path.exists()`` would return
         ``False`` for the missing file."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         state = _make_state(tmp_path)
-        sess_dir = tmp_path / ".kirocrew" / "sessions"
+        sess_dir = tmp_path / ".ajcrew" / "sessions"
         sess_dir.mkdir(parents=True, exist_ok=True)
 
         # Seed files at every resolved traversal target so that the guard —
         # NOT the missing-file fallback — is what rejects each request.
-        # "../escape" → sess_dir/../escape.jsonl → ~/.kirocrew/escape.jsonl
-        (tmp_path / ".kirocrew" / "escape.jsonl").write_text("{}\n")
+        # "../escape" → sess_dir/../escape.jsonl → ~/.ajcrew/escape.jsonl
+        (tmp_path / ".ajcrew" / "escape.jsonl").write_text("{}\n")
         # ".hidden" → sess_dir/.hidden.jsonl
         (sess_dir / ".hidden.jsonl").write_text("{}\n")
         # "a/b" → sess_dir/a/b.jsonl
@@ -320,7 +320,7 @@ class TestSessionSlotRecovery:
     def test_session_has_persisted_history_unit(self, tmp_path, monkeypatch):
         """Direct unit test for the helper."""
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
-        from kiro_crew.dashboard.handlers._shared import _session_has_persisted_history
+        from aj_crew.dashboard.handlers._shared import _session_has_persisted_history
 
         assert _session_has_persisted_history("1776000000.123456") is False
         assert _session_has_persisted_history("") is False
@@ -329,7 +329,7 @@ class TestSessionSlotRecovery:
         assert _session_has_persisted_history("a\\b") is False
         assert _session_has_persisted_history("bad\x00key") is False
 
-        sess_dir = tmp_path / ".kirocrew" / "sessions"
+        sess_dir = tmp_path / ".ajcrew" / "sessions"
         sess_dir.mkdir(parents=True, exist_ok=True)
         (sess_dir / "1776000000.123456.jsonl").write_text("{}\n")
         assert _session_has_persisted_history("1776000000.123456") is True
@@ -357,17 +357,17 @@ class TestSessionSlotRecovery:
     @pytest.mark.asyncio
     async def test_learn_add_audits_live_slot_allow_path(self, tmp_path, monkeypatch):
         """Live in-memory slot → audit event with resources='live_slot'."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.cron._get_memory",
+            "aj_crew.dashboard.handlers.cron._get_memory",
             MagicMock(return_value=MagicMock(vector_store=None)),
         )
         state = _make_state(tmp_path)
         # Seed a live slot so in_slots=True on the guard.
         state.get_or_create_slot("live1")
 
-        with patch("kiro_crew.dashboard.handlers.cron._sel") as mock_sel:
+        with patch("aj_crew.dashboard.handlers.cron._sel") as mock_sel:
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/lessons",
@@ -394,14 +394,14 @@ class TestSessionSlotRecovery:
         audited for the security-controls rule even though the downstream
         write is denied.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         state = _make_state(tmp_path)
         # Populate _restricted_keys without a live slot so in_slots=False
         # and in_restricted=True on the guard.
         state._restricted_keys.add("dashboard:r1")
 
-        with patch("kiro_crew.dashboard.handlers.cron._sel") as mock_sel:
+        with patch("aj_crew.dashboard.handlers.cron._sel") as mock_sel:
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/lessons",
@@ -425,15 +425,15 @@ class TestSessionSlotRecovery:
         """Key in a channel namespace (here ``slack:``) → audit event with
         resources='channel_namespace' (the tag now covers every channel, not
         just Slack)."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.cron._get_memory",
+            "aj_crew.dashboard.handlers.cron._get_memory",
             MagicMock(return_value=MagicMock(vector_store=None)),
         )
         state = _make_state(tmp_path)
 
-        with patch("kiro_crew.dashboard.handlers.cron._sel") as mock_sel:
+        with patch("aj_crew.dashboard.handlers.cron._sel") as mock_sel:
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/lessons",
@@ -456,15 +456,15 @@ class TestSessionSlotRecovery:
         resources='dashboard_ui'. This key bypasses the slot-scope block
         entirely; the allow decision still needs its own SEL event.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.cron._get_memory",
+            "aj_crew.dashboard.handlers.cron._get_memory",
             MagicMock(return_value=MagicMock(vector_store=None)),
         )
         state = _make_state(tmp_path)
 
-        with patch("kiro_crew.dashboard.handlers.cron._sel") as mock_sel:
+        with patch("aj_crew.dashboard.handlers.cron._sel") as mock_sel:
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/lessons",
@@ -493,18 +493,18 @@ class TestSessionSlotRecovery:
         would race the flush and 400 with ``unknown session``. The key must be
         allowed via the Slack namespace even with an empty sessions dir.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.cron._get_memory",
+            "aj_crew.dashboard.handlers.cron._get_memory",
             MagicMock(return_value=MagicMock(vector_store=None)),
         )
         state = _make_state(tmp_path)
         # Empty sessions dir: no JSONL fallback is possible, so the allow can
         # only come from the bare-thread_ts namespace recognition.
-        (tmp_path / ".kirocrew" / "sessions").mkdir(parents=True, exist_ok=True)
+        (tmp_path / ".ajcrew" / "sessions").mkdir(parents=True, exist_ok=True)
 
-        with patch("kiro_crew.dashboard.handlers.cron._sel") as mock_sel:
+        with patch("aj_crew.dashboard.handlers.cron._sel") as mock_sel:
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/lessons",
@@ -529,10 +529,10 @@ class TestSessionSlotRecovery:
         sub-second component) with no backing JSONL is still ``unknown
         session``. Guards against the regex matching arbitrary ``N.M`` keys.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         state = _make_state(tmp_path)
-        (tmp_path / ".kirocrew" / "sessions").mkdir(parents=True, exist_ok=True)
+        (tmp_path / ".ajcrew" / "sessions").mkdir(parents=True, exist_ok=True)
 
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(
@@ -552,10 +552,10 @@ class TestSessionSlotRecovery:
         NOT be granted channel_namespace access — `[0-9]` (not `\\d`) enforces
         this. With no backing JSONL the call is rejected as unknown session.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         state = _make_state(tmp_path)
-        (tmp_path / ".kirocrew" / "sessions").mkdir(parents=True, exist_ok=True)
+        (tmp_path / ".ajcrew" / "sessions").mkdir(parents=True, exist_ok=True)
 
         # Arabic-Indic digits forming "١٧٨١٢١٥٨٦٤.٤٨٧٨٤٩" — \d would match this,
         # [0-9] does not.
@@ -608,9 +608,9 @@ class TestArchivedRestrictedSessionRecovery:
     async def test_learn_add_denied_for_archived_restricted_session(
         self, tmp_path, monkeypatch, mode
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.handlers._shared import _session_has_persisted_history
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.handlers._shared import _session_has_persisted_history
 
         state = _make_state(tmp_path)
         self._archive(tmp_path, "e1", mode)
@@ -637,10 +637,10 @@ class TestArchivedRestrictedSessionRecovery:
         self, tmp_path, monkeypatch
     ):
         """The recovery path this rides on must keep working for normal sessions."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.cron._get_memory",
+            "aj_crew.dashboard.handlers.cron._get_memory",
             MagicMock(return_value=MagicMock(vector_store=None)),
         )
         state = _make_state(tmp_path)
@@ -659,8 +659,8 @@ class TestArchivedRestrictedSessionRecovery:
         [("incognito", "incognito"), ("temporary", "temporary"), ("persistent", "persistent")],
     )
     def test_persisted_memory_mode_reader(self, tmp_path, monkeypatch, mode, expected):
-        monkeypatch.setattr("kiro_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.handlers._shared import _persisted_session_memory_mode
+        monkeypatch.setattr("aj_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.handlers._shared import _persisted_session_memory_mode
 
         self._archive(tmp_path, "s1", mode)
         assert _persisted_session_memory_mode("s1") == expected
@@ -672,8 +672,8 @@ class TestArchivedRestrictedSessionRecovery:
         session and must read as ``persistent``; anything unparseable must read
         as ``None`` so the write gate fails closed instead of allowing.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.handlers._shared import _persisted_session_memory_mode
+        monkeypatch.setattr("aj_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.handlers._shared import _persisted_session_memory_mode
 
         assert _persisted_session_memory_mode("missing") is None
         assert _persisted_session_memory_mode("../escape") is None
@@ -724,9 +724,9 @@ class TestArchivedRestrictedSessionRecovery:
         restricted mode (never to None, which would also be wrong here: the
         header IS parseable and DOES name a restricted mode).
         """
-        monkeypatch.setattr("kiro_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.handlers._shared import _persisted_session_memory_mode
-        from kiro_crew.history import INCOGNITO_MEMORY_MODES
+        monkeypatch.setattr("aj_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.handlers._shared import _persisted_session_memory_mode
+        from aj_crew.history import INCOGNITO_MEMORY_MODES
 
         sess_dir = tmp_path / "sessions"
         sess_dir.mkdir(parents=True, exist_ok=True)
@@ -740,8 +740,8 @@ class TestArchivedRestrictedSessionRecovery:
     @pytest.mark.parametrize("raw", ["", "  ", "bogus", "persistent-ish", "incognito2"])
     def test_unrecognized_mode_reads_as_unknown(self, tmp_path, monkeypatch, raw):
         """An unrecognised value is unknown (None), not silently permissive."""
-        monkeypatch.setattr("kiro_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.handlers._shared import _persisted_session_memory_mode
+        monkeypatch.setattr("aj_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.handlers._shared import _persisted_session_memory_mode
 
         sess_dir = tmp_path / "sessions"
         sess_dir.mkdir(parents=True, exist_ok=True)
@@ -753,8 +753,8 @@ class TestArchivedRestrictedSessionRecovery:
     @pytest.mark.asyncio
     async def test_learn_add_denied_for_whitespace_bearing_incognito(self, tmp_path, monkeypatch):
         """End-to-end: the padded value must still produce a 403, not a 200."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         sess_dir = tmp_path / "sessions"
         sess_dir.mkdir(parents=True, exist_ok=True)
@@ -782,9 +782,9 @@ class TestArchivedRestrictedSessionRecovery:
         PERSISTENT Slack file answer for the INCOGNITO dashboard session and the
         lesson is stored. Existence stays true; the mode must read unknown.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.handlers._shared import (
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.handlers._shared import (
             _persisted_session_memory_mode,
             _probe_persisted_session,
         )
@@ -832,8 +832,8 @@ class TestArchivedRestrictedSessionRecovery:
         exactly the escape being guarded against (and a colon is not a legal
         NTFS filename character anyway, so the file could not be created there).
         """
-        monkeypatch.setattr("kiro_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.handlers._shared import (
+        monkeypatch.setattr("aj_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.handlers._shared import (
             _persisted_session_memory_mode,
             _persisted_session_path,
             _session_has_persisted_history,
@@ -871,11 +871,11 @@ class TestDurableSlackFlagsAtHttpGate:
     @pytest.fixture()
     def durable(self, tmp_path, monkeypatch):
         """A real SessionMap in tmp_path, with the in-memory LRUs emptied."""
-        monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
-        from kiro_crew.slack import handler as _h
+        monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
+        from aj_crew.slack import handler as _h
 
         _h._thread_temporary.clear()
         _h._thread_incognito.clear()
@@ -886,8 +886,8 @@ class TestDurableSlackFlagsAtHttpGate:
     @pytest.mark.parametrize("flag", ["incognito", "temporary"])
     @pytest.mark.asyncio
     async def test_learn_add_denied_for_durable_slack_flag(self, tmp_path, durable, flag):
-        from kiro_crew.session_map import SessionMap
-        from kiro_crew.slack import handler as _h
+        from aj_crew.session_map import SessionMap
+        from aj_crew.slack import handler as _h
 
         sm = SessionMap()
         sm.set_flag(self.SLACK_KEY, flag, True)
@@ -915,12 +915,12 @@ class TestDurableSlackFlagsAtHttpGate:
         """An ordinary Slack thread must stay writable — no over-blocking."""
         from unittest.mock import MagicMock as _MM
 
-        from kiro_crew.session_map import SessionMap
+        from aj_crew.session_map import SessionMap
 
         state = _make_state(tmp_path)
         state.sessions._session_map = SessionMap()
         with patch(
-            "kiro_crew.dashboard.handlers.cron._get_memory",
+            "aj_crew.dashboard.handlers.cron._get_memory",
             _MM(return_value=_MM(vector_store=None)),
         ):
             async with TestClient(TestServer(_make_app(state))) as client:
@@ -948,14 +948,14 @@ class TestLessonsDeleteGate:
     @pytest.fixture(autouse=True)
     def _persisted_history_dir_tracks_patched_home(self, _floor_monkeypatch):
         """Same redirect as TestSessionSlotRecovery: keep the seeded
-        ``<home>/.kirocrew/sessions`` layout authoritative for the probe."""
+        ``<home>/.ajcrew/sessions`` layout authoritative for the probe."""
         _floor_monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers._shared.config_dir",
-            lambda: Path.home() / ".kirocrew",
+            "aj_crew.dashboard.handlers._shared.config_dir",
+            lambda: Path.home() / ".ajcrew",
         )
 
     def _write_sessions_jsonl(self, tmp_path, stem: str, *, memory_mode=None) -> None:
-        sess_dir = tmp_path / ".kirocrew" / "sessions"
+        sess_dir = tmp_path / ".ajcrew" / "sessions"
         sess_dir.mkdir(parents=True, exist_ok=True)
         meta = {"_type": "metadata", "created_at": "2026-01-01T00:00:00"}
         if memory_mode:
@@ -963,11 +963,11 @@ class TestLessonsDeleteGate:
         (sess_dir / f"{stem}.jsonl").write_text(_json.dumps(meta) + "\n", encoding="utf-8")
 
     def _deletable_state(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         # Route reads the vector store through cron_lessons.py's own binding.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.cron._get_memory",
+            "aj_crew.dashboard.handlers.cron._get_memory",
             MagicMock(return_value=MagicMock(vector_store=None)),
         )
         state = _make_state(tmp_path)
@@ -988,7 +988,7 @@ class TestLessonsDeleteGate:
     async def test_delete_rejected_for_unknown_session(self, tmp_path, monkeypatch):
         """Core regression: a forged/unknown key must NOT delete lessons."""
         state = self._deletable_state(tmp_path, monkeypatch)
-        (tmp_path / ".kirocrew" / "sessions").mkdir(parents=True, exist_ok=True)
+        (tmp_path / ".ajcrew" / "sessions").mkdir(parents=True, exist_ok=True)
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.delete(
                 "/api/lessons",
@@ -1003,7 +1003,7 @@ class TestLessonsDeleteGate:
     @pytest.mark.asyncio
     async def test_delete_rejects_forged_cron_key_without_jsonl(self, tmp_path, monkeypatch):
         state = self._deletable_state(tmp_path, monkeypatch)
-        (tmp_path / ".kirocrew" / "sessions").mkdir(parents=True, exist_ok=True)
+        (tmp_path / ".ajcrew" / "sessions").mkdir(parents=True, exist_ok=True)
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.delete(
                 "/api/lessons",
@@ -1071,7 +1071,7 @@ class TestLessonsDeleteGate:
             resp = await client.delete(
                 "/api/lessons",
                 json={"rule": "x"},
-                headers={"X-Session-Key": "telegram:kirocrew:forum:-1004326574849:18:gen3"},
+                headers={"X-Session-Key": "telegram:ajcrew:forum:-1004326574849:18:gen3"},
             )
             assert resp.status == 200
 
@@ -1136,8 +1136,8 @@ class TestSharedRecognitionGate:
 
     @pytest.mark.asyncio
     async def test_create_and_delete_call_the_same_gate(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers import cron as cron_handlers
-        from kiro_crew.history import is_incognito_transcript
+        from aj_crew.dashboard.handlers import cron as cron_handlers
+        from aj_crew.history import is_incognito_transcript
 
         calls: dict[str, dict] = {}
 
@@ -1177,8 +1177,8 @@ class TestSharedRecognitionGate:
         """Every gate refusal carries ``code: unknown_session`` (the contract
         learn_remove dispatches on) — the per-route ``error_codes`` knob was
         dropped, so create's 400 carries it too."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.handlers._shared.config_dir", lambda: tmp_path)
         (tmp_path / "sessions").mkdir(parents=True, exist_ok=True)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_app(state))) as client:
@@ -1207,7 +1207,7 @@ class TestSharedRecognitionGate:
         import io
         import urllib.error
 
-        from kiro_crew.mcp_core import _http_error_body
+        from aj_crew.mcp_core import _http_error_body
 
         err = urllib.error.HTTPError(
             url="http://x/api/lessons",
@@ -1234,10 +1234,10 @@ class TestSharedRecognitionGate:
     def test_learn_remove_dispatches_on_code_not_wording(self, monkeypatch):
         """A rephrased error message must not break the fail-closed mapping:
         the dispatch key is ``code == "unknown_session"``, not the wording."""
-        from kiro_crew.mcp_tools.learn import learn_remove
+        from aj_crew.mcp_tools.learn import learn_remove
 
         monkeypatch.setattr(
-            "kiro_crew.mcp_core._delete",
+            "aj_crew.mcp_core._delete",
             lambda path, body=None: {
                 "error": "session not recognised (reworded)",
                 "code": "unknown_session",
@@ -1247,10 +1247,10 @@ class TestSharedRecognitionGate:
         assert "No lessons were removed" in out
 
     def test_learn_remove_surfaces_other_errors_verbatim(self, monkeypatch):
-        from kiro_crew.mcp_tools.learn import learn_remove
+        from aj_crew.mcp_tools.learn import learn_remove
 
         monkeypatch.setattr(
-            "kiro_crew.mcp_core._delete",
+            "aj_crew.mcp_core._delete",
             lambda path, body=None: {"error": "boom"},
         )
         assert learn_remove("learn_remove", {"query": "x"}) == "Error: boom"
@@ -1272,26 +1272,26 @@ class TestMemoryRoutesSessionGate:
     @pytest.fixture(autouse=True)
     def _persisted_history_dir_tracks_patched_home(self, _floor_monkeypatch):
         _floor_monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers._shared.config_dir",
-            lambda: Path.home() / ".kirocrew",
+            "aj_crew.dashboard.handlers._shared.config_dir",
+            lambda: Path.home() / ".ajcrew",
         )
 
     def _memory_state(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         store = MagicMock()
         store.set_semantic = MagicMock(return_value=None)
         store.delete_semantic = MagicMock(return_value=True)
         store.delete_episodic = MagicMock(return_value=True)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.memory._get_vector_store",
+            "aj_crew.dashboard.handlers.memory._get_vector_store",
             MagicMock(return_value=store),
         )
         state = _make_state(tmp_path)
         return state, store
 
     def _make_memory_app(self, state):
-        from kiro_crew.dashboard.handlers import (
+        from aj_crew.dashboard.handlers import (
             api_memory_episodic_delete,
             api_memory_semantic_delete,
             api_memory_semantic_write,
@@ -1338,7 +1338,7 @@ class TestMemoryRoutesSessionGate:
     async def test_rejected_for_forged_unknown_session(self, tmp_path, monkeypatch, route):
         """Core regression: a forged/unknown key must NOT mutate memory."""
         state, store = self._memory_state(tmp_path, monkeypatch)
-        (tmp_path / ".kirocrew" / "sessions").mkdir(parents=True, exist_ok=True)
+        (tmp_path / ".ajcrew" / "sessions").mkdir(parents=True, exist_ok=True)
         async with TestClient(TestServer(self._make_memory_app(state))) as client:
             resp = await self._call(client, route, {"X-Session-Key": "dashboard:forged-slot"})
             assert resp.status == 400
@@ -1394,7 +1394,7 @@ class TestMemoryRoutesSessionGate:
         persisted memory_mode marker is the only remaining evidence once the
         slot is evicted, and memory writes block every private mode."""
         state, store = self._memory_state(tmp_path, monkeypatch)
-        sess_dir = tmp_path / ".kirocrew" / "sessions"
+        sess_dir = tmp_path / ".ajcrew" / "sessions"
         sess_dir.mkdir(parents=True, exist_ok=True)
         meta = {
             "_type": "metadata",

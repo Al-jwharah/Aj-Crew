@@ -1,7 +1,7 @@
 ---
 title: The follow-up card's Start sends its prompt
 status: accepted
-author: Pearcekieser, with kirocrew-contributor
+author: Pearcekieser, with ajcrew-contributor
 created: 2026-10-30
 last-audited: 2026-11-03
 audited-at: 95f78562f1
@@ -24,7 +24,7 @@ superseded-by: []
 
 ## The rule today
 
-Verified at `95f78562f1`. `FollowUpCard.tsx` states the rule as a deliberate product constraint: "Both non-skip actions PRE-FILL a composer rather than sending ... so a click can never start an unattended turn." The `suggest_followup` tool description in `src/kiro_crew/mcp_tools/control_parts/schemas.py` and `src/kiro_crew/docs/followup-suggestions.md` promise the same thing.
+Verified at `95f78562f1`. `FollowUpCard.tsx` states the rule as a deliberate product constraint: "Both non-skip actions PRE-FILL a composer rather than sending ... so a click can never start an unattended turn." The `suggest_followup` tool description in `src/aj_crew/mcp_tools/control_parts/schemas.py` and `src/aj_crew/docs/followup-suggestions.md` promise the same thing.
 
 Text from outside a keystroke reaches a session in one of two ways (`website/src/pages/chat/page/launchIntake.ts`). The main surfaces are:
 
@@ -36,7 +36,7 @@ Text from outside a keystroke reaches a session in one of two ways (`website/src
 | An `[OPTIONS:]` chip in a transcript: double-click or Send now (`FollowUpBar.tsx`), or a single click when `dashboard.quick_send` is on (`tryQuickSend` in `ComposerDockView.tsx`) | Sends the option text |
 | The follow-up card: Start in new worktree, Start in new chat | Pre-fills the new session |
 | The follow-up card: Add to this session | Pre-fills this session |
-| A Dashboard card's `kirocrew-dashboard:send` ([rfc-dashboard-card-send.md](rfc-dashboard-card-send.md), draft, implementation #22379) | Proposed: sends the card's text into the card's own thread, only after a recent real interaction while the card frame holds focus, and the turn gets no auto-approval |
+| A Dashboard card's `ajcrew-dashboard:send` ([rfc-dashboard-card-send.md](rfc-dashboard-card-send.md), draft, implementation #22379) | Proposed: sends the card's text into the card's own thread, only after a recent real interaction while the card frame holds focus, and the turn gets no auto-approval |
 | A widget action (`WidgetFrame.tsx`) | Pre-fills only, as a security rule: widget script can post the message itself, so it cannot be told from a click |
 | The error card's "Ask the agent", the redaction card, the Projects "Chat" button, an artifact's "Send to session" | Pre-fills |
 

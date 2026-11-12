@@ -1,4 +1,4 @@
-"""A data-home entry the process cannot stat must not abort ``kirocrew snapshot``.
+"""A data-home entry the process cannot stat must not abort ``ajcrew snapshot``.
 
 Two halves:
 
@@ -20,11 +20,11 @@ import shutil
 import tarfile
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
+from aj_crew import pinned_fs
+from aj_crew import snapshot as snap
 from conftest import make_dir_link
-from kiro_crew import pinned_fs
-from kiro_crew import snapshot as snap
 
 # Unique enough that the interception below can key on the base name alone, which is
 # what makes it work for a bare name opened relative to a directory descriptor as
@@ -49,7 +49,7 @@ def _is_denied(path, name: str, home) -> bool:
 
     A BARE name is how the pinned walks ask, through a directory descriptor. An absolute
     path is denied only inside the data home and not under ``<data home>/staging``
-    (``kiro_crew.staging``), where the staged copy has the same base name: refusing it
+    (``aj_crew.staging``), where the staged copy has the same base name: refusing it
     would fake a failure the product never produces.
     """
     if isinstance(path, int):
@@ -62,7 +62,7 @@ def _is_denied(path, name: str, home) -> bool:
         return False
     if not os.path.dirname(text):
         return True
-    from kiro_crew.staging import STAGING_DIRNAME
+    from aj_crew.staging import STAGING_DIRNAME
 
     for root in {str(home), os.path.realpath(home)}:
         staging_root = os.path.join(root, STAGING_DIRNAME)
@@ -75,9 +75,9 @@ def _is_denied(path, name: str, home) -> bool:
 def home(tmp_path, monkeypatch):
     d = tmp_path / "home"
     d.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(d))
-    monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "0")
-    _setup_fake_kirocrew(d)
+    monkeypatch.setenv("AJCREW_HOME", str(d))
+    monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "0")
+    _setup_fake_ajcrew(d)
     return d
 
 
@@ -205,7 +205,7 @@ def refused_dir(request):
 
 
 def _manifest_of(out, tmp_path) -> dict:
-    tarballs = sorted(out.glob("kirocrew-snapshot-*.tar.gz"))
+    tarballs = sorted(out.glob("ajcrew-snapshot-*.tar.gz"))
     assert tarballs, "no bundle was written"
     extract = tmp_path / "extract"
     extract.mkdir()
@@ -224,7 +224,7 @@ class TestAProtectedFileNoComponentWantsIsNeverTouched:
         out = tmp_path / "out"
         rc = snap.snapshot_main([str(out), *unpinnable_argv()])
         assert rc == 0, capsys.readouterr()
-        assert sorted(out.glob("kirocrew-snapshot-*.tar.gz")), "no bundle was written"
+        assert sorted(out.glob("ajcrew-snapshot-*.tar.gz")), "no bundle was written"
 
     def test_a_scoped_snapshot_succeeds(self, home, deny_victim, tmp_path, capsys):
         """``--components config,memory`` must not fail on it either."""
@@ -232,7 +232,7 @@ class TestAProtectedFileNoComponentWantsIsNeverTouched:
         out = tmp_path / "out"
         rc = snap.snapshot_main([str(out), "--components", "config,memory", *unpinnable_argv()])
         assert rc == 0, capsys.readouterr()
-        assert sorted(out.glob("kirocrew-snapshot-*.tar.gz")), "no bundle was written"
+        assert sorted(out.glob("ajcrew-snapshot-*.tar.gz")), "no bundle was written"
 
     def test_the_estimate_does_not_report_it_as_skipped(self, home, deny_victim, tmp_path, capsys):
         """It is outside every component, so the estimate never looks at it at all."""
@@ -252,11 +252,11 @@ class TestABundleWithOmissionsDoesNotPrune:
 
     def _seed_complete(self, out, tmp_path, stamp="20260101T000000Z"):
         out.mkdir(exist_ok=True)
-        existing = out / f"kirocrew-snapshot-{stamp}.tar.gz"
+        existing = out / f"ajcrew-snapshot-{stamp}.tar.gz"
         with tarfile.open(existing, "w:gz") as tf:
             payload = tmp_path / f"payload-{stamp}"
             payload.mkdir()
-            tf.add(str(payload), arcname=f"kirocrew-snapshot-{stamp}")
+            tf.add(str(payload), arcname=f"ajcrew-snapshot-{stamp}")
         return existing
 
     def test_a_prior_complete_archive_survives_keep_1(self, home, deny_victim, tmp_path, capsys):
@@ -280,7 +280,7 @@ class TestABundleWithOmissionsDoesNotPrune:
         )
         assert rc == snap.EXIT_INCOMPLETE == 3
         # The bundle is still written and the prune is still held.
-        assert len(sorted(out.glob("kirocrew-snapshot-*.tar.gz"))) == 2
+        assert len(sorted(out.glob("ajcrew-snapshot-*.tar.gz"))) == 2
         assert existing.is_file()
         assert "--strict: exiting 3" in capsys.readouterr().out
 
@@ -303,7 +303,7 @@ class TestABundleWithOmissionsDoesNotPrune:
         rc = snap.snapshot_main([str(out), "--keep", "1", *unpinnable_argv()])
         assert rc == 0
         assert not existing.exists(), "retention stopped working for an ordinary run"
-        assert len(sorted(out.glob("kirocrew-snapshot-*.tar.gz"))) == 1
+        assert len(sorted(out.glob("ajcrew-snapshot-*.tar.gz"))) == 1
 
 
 class TestTheEstimateIsScopedToTheSelectedComponents:
@@ -417,7 +417,7 @@ class TestAnUnreadableEntryInsideASelectedTree:
         out = tmp_path / "out"
         rc = snap.snapshot_main([str(out), "--components", "workspace", *unpinnable_argv()])
         assert rc == 0
-        assert sorted(out.glob("kirocrew-snapshot-*.tar.gz")), "no bundle was written"
+        assert sorted(out.glob("ajcrew-snapshot-*.tar.gz")), "no bundle was written"
 
     def test_the_bundle_records_the_omission(self, home, deny_victim, tmp_path):
         """A backup that could not read a file must SAY so, not omit it silently."""
@@ -543,14 +543,14 @@ class TestTheRestagePassFailsClosedOnAnUnreadableDestination(object):
                 except (TypeError, ValueError):
                     text = ""
                 # The STAGED copy only: under the bundle, not the live tree. Snapshot
-                # build now stages under ``<data home>/staging`` (``kiro_crew.staging``,
+                # build now stages under ``<data home>/staging`` (``aj_crew.staging``,
                 # off the system temp dir), so the staged copy IS inside the data home --
                 # it is told from the live file by living under the ``staging`` leaf, not
                 # by being outside the home. Fired ONCE, so a swallowed error lets the run
                 # finish rather than resurfacing at the next pass that stats the same file
                 # -- which is what makes this able to tell the narrow catch from the broad
                 # one.
-                from kiro_crew.staging import STAGING_DIRNAME
+                from aj_crew.staging import STAGING_DIRNAME
 
                 staging_roots = {
                     os.path.join(str(home), STAGING_DIRNAME),
@@ -832,11 +832,11 @@ class TestATreeROOTThatCannotBeStatted:
     def test_a_prior_complete_archive_survives_keep_1(self, home, monkeypatch, tmp_path, capsys):
         out = tmp_path / "out"
         out.mkdir()
-        existing = out / "kirocrew-snapshot-20260101T000000Z.tar.gz"
+        existing = out / "ajcrew-snapshot-20260101T000000Z.tar.gz"
         with tarfile.open(existing, "w:gz") as tf:
             payload = tmp_path / "payload"
             payload.mkdir()
-            tf.add(str(payload), arcname="kirocrew-snapshot-20260101T000000Z")
+            tf.add(str(payload), arcname="ajcrew-snapshot-20260101T000000Z")
         self._deny_stat_of(monkeypatch, home / "plan_memory")
         rc = snap.snapshot_main(
             [str(out), "--components", "workspace", "--keep", "1", *unpinnable_argv()]
@@ -875,11 +875,11 @@ class TestATreeROOTThatCannotBeStatted:
         shutil.rmtree(home / "plan_memory")
         out = tmp_path / "out"
         out.mkdir()
-        existing = out / "kirocrew-snapshot-20260101T000000Z.tar.gz"
+        existing = out / "ajcrew-snapshot-20260101T000000Z.tar.gz"
         with tarfile.open(existing, "w:gz") as tf:
             payload = tmp_path / "payload"
             payload.mkdir()
-            tf.add(str(payload), arcname="kirocrew-snapshot-20260101T000000Z")
+            tf.add(str(payload), arcname="ajcrew-snapshot-20260101T000000Z")
         rc = snap.snapshot_main(
             [str(out), "--components", "workspace", "--keep", "1", *unpinnable_argv()]
         )
@@ -954,11 +954,11 @@ class TestRetentionActsOnTheClass:
 
     def _seed_complete(self, out, tmp_path):
         out.mkdir(exist_ok=True)
-        existing = out / "kirocrew-snapshot-20260101T000000Z.tar.gz"
+        existing = out / "ajcrew-snapshot-20260101T000000Z.tar.gz"
         with tarfile.open(existing, "w:gz") as tf:
             payload = tmp_path / "payload"
             payload.mkdir(exist_ok=True)
-            tf.add(str(payload), arcname="kirocrew-snapshot-20260101T000000Z")
+            tf.add(str(payload), arcname="ajcrew-snapshot-20260101T000000Z")
         return existing
 
     @pytest.mark.parametrize(
@@ -1135,11 +1135,11 @@ class TestAPostStatSwapIsAnOmissionNotAScreen:
         """End to end: a swapped entry is an omission, so the older whole bundle survives."""
         out = tmp_path / "out"
         out.mkdir()
-        existing = out / "kirocrew-snapshot-20260101T000000Z.tar.gz"
+        existing = out / "ajcrew-snapshot-20260101T000000Z.tar.gz"
         with tarfile.open(existing, "w:gz") as tf:
             payload = tmp_path / "payload"
             payload.mkdir()
-            tf.add(str(payload), arcname="kirocrew-snapshot-20260101T000000Z")
+            tf.add(str(payload), arcname="ajcrew-snapshot-20260101T000000Z")
         (home / "workspace" / VICTIM).write_text("wanted\n")
         self._swap_open_to(monkeypatch, VICTIM, errno_code=errno.ELOOP)
         rc = snap.snapshot_main([str(out), "--components", "workspace", "--keep", "1"])
@@ -1258,11 +1258,11 @@ class TestADirectoryWhoseListingAloneIsRefused:
     ):
         out = tmp_path / "out"
         out.mkdir()
-        existing = out / "kirocrew-snapshot-20260101T000000Z.tar.gz"
+        existing = out / "ajcrew-snapshot-20260101T000000Z.tar.gz"
         with tarfile.open(existing, "w:gz") as tf:
             payload = tmp_path / "payload"
             payload.mkdir()
-            tf.add(str(payload), arcname="kirocrew-snapshot-20260101T000000Z")
+            tf.add(str(payload), arcname="ajcrew-snapshot-20260101T000000Z")
         victim = home / "workspace" / DIR_VICTIM
         victim.mkdir()
         (victim / "inner.txt").write_text("wanted\n")

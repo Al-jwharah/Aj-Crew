@@ -197,7 +197,7 @@ let mochiPetInstanceId = "self";
  * ONE call does everything the shell needs. `POST /api/instances/{id}/connect` is
  * idempotent (an already-connected tunnel returns its cached token) AND it
  * validates that token over the live tunnel before handing it over, re-minting
- * when it has gone stale — which happens after a remote `kirocrew restart` or a
+ * when it has gone stale — which happens after a remote `ajcrew restart` or a
  * failed self-heal. That is why this is a single connect rather than "list to
  * find the port, then fetch a token": a token we did not validate produces a
  * server-rendered 403 on first load, and a top-level window that lands on a 403
@@ -786,7 +786,7 @@ function applyMochiShortcuts(desired) {
 /**
  * Global screen-capture shortcut.
  *
- * Capture runs in the CROP WINDOW's renderer, on KiroCrew's existing
+ * Capture runs in the CROP WINDOW's renderer, on Aj Crew's existing
  * getDisplayMedia path (`session.setDisplayMediaRequestHandler` is already
  * registered — see display-media.js, which also gates on the macOS Screen
  * Recording permission and surfaces guidance when it is denied). There is still

@@ -17,7 +17,7 @@ from types import SimpleNamespace
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew.crew_log import crew_log_path, emit, resolve
+from aj_crew.crew_log import crew_log_path, emit, resolve
 
 SESSION = "acp-sid-1"
 
@@ -31,7 +31,7 @@ pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
     emit.reset_caches()
@@ -61,7 +61,7 @@ def _of(kind: str) -> list[dict]:
 def _open_session() -> None:
     emit.on_session_opened(
         SESSION,
-        agent="kirocrew",
+        agent="ajcrew",
         slot="chat-7",
         model="claude-opus-5",
         cwd="/home/dev/project",
@@ -395,7 +395,7 @@ def test_a_background_call_with_no_owner_or_no_kind_resolves_no_owner():
     infrastructure, and picking a session for it would put someone else's spend in
     a user's log.
     """
-    from kiro_crew.llm_helpers import _background_crew_log_owner
+    from aj_crew.llm_helpers import _background_crew_log_owner
 
     sessions = _Sessions({"dashboard:chat-7": _Provider(SESSION)})
     assert _background_crew_log_owner(sessions, "", "title") == ""
@@ -411,7 +411,7 @@ def test_a_background_owner_is_resolved_before_the_call_not_after_it():
     -- a session that never incurred it -- silently, in an append-only file. So the
     owner is pinned before the call and the teardown writes to that pin.
     """
-    from kiro_crew.llm_helpers import _background_crew_log_owner, _record_background_crew_log
+    from aj_crew.llm_helpers import _background_crew_log_owner, _record_background_crew_log
 
     _open_session()
     sessions = _Sessions({"dashboard:chat-7": _Provider(SESSION)})
@@ -438,7 +438,7 @@ def test_both_background_helpers_pin_the_owner_before_their_first_await():
     import importlib
     import inspect
 
-    from kiro_crew import llm_helpers
+    from aj_crew import llm_helpers
 
     # The facade and every owner module it is composed from, parsed as one tree.
     modules = [llm_helpers, *map(importlib.import_module, llm_helpers._OWNERS)]
@@ -469,7 +469,7 @@ def test_both_background_helpers_pin_the_owner_before_their_first_await():
 
 
 def test_a_named_background_call_lands_in_the_owner_s_log():
-    from kiro_crew.llm_helpers import _background_crew_log_owner, _record_background_crew_log
+    from aj_crew.llm_helpers import _background_crew_log_owner, _record_background_crew_log
 
     _open_session()
     sessions = _Sessions({"dashboard:chat-7": _Provider(SESSION)})
@@ -478,7 +478,7 @@ def test_a_named_background_call_lands_in_the_owner_s_log():
         owner,
         "memory_consolidation",
         _Usage(credits=2.5, input_tokens=40),
-        model="kirocrew-lite",
+        model="ajcrew-lite",
         provider="acp",
         elapsed_ms=77,
     )
@@ -499,7 +499,7 @@ def test_a_child_is_spawned_then_closed_and_the_spawn_carries_its_scope():
         SESSION,
         4,
         agent_id="ab12",
-        agent="kirocrew",
+        agent="ajcrew",
         model="claude-opus-5",
         scope={"memory": False, "lessons": True, "project": True},
     )
@@ -520,7 +520,7 @@ def test_a_spawn_carries_no_ref_because_the_child_has_no_log_to_cite():
     """
     _open_session()
     emit.on_turn_started(SESSION, 1, "user")
-    emit.on_subagent_spawned(SESSION, 1, agent_id="ab12", agent="kirocrew")
+    emit.on_subagent_spawned(SESSION, 1, agent_id="ab12", agent="ajcrew")
     assert_drained()
     (entry,) = [e for e in _body() if e["type"] == "subagent/spawned"]
     assert "ref" not in entry
@@ -536,7 +536,7 @@ def test_a_spawn_with_no_asking_turn_omits_the_field_rather_than_writing_zero():
     worse trade.
     """
     _open_session()
-    emit.on_subagent_spawned(SESSION, 0, agent_id="ab12", agent="kirocrew")
+    emit.on_subagent_spawned(SESSION, 0, agent_id="ab12", agent="ajcrew")
     assert_drained()
     (data,) = _of("subagent/spawned")
     assert "turn" not in data
@@ -589,7 +589,7 @@ def test_a_replayed_queued_child_is_repinned_with_an_unobserved_turn(monkeypatch
     """
     from types import SimpleNamespace
 
-    from kiro_crew.subagent_manager.admission.gate import _GateMixin
+    from aj_crew.subagent_manager.admission.gate import _GateMixin
 
     monkeypatch.setattr(resolve, "unit_for_session_key", lambda _sessions, _key: SESSION)
     stub = SimpleNamespace(_manager=SimpleNamespace(_sessions=None))
@@ -614,7 +614,7 @@ def test_a_replayed_queued_child_is_pinned_to_the_unit_that_asked(monkeypatch):
     the child's spawn and closer in the successor's log, so a per-unit view would
     move that child's spend onto a unit that never asked for it.
     """
-    from kiro_crew.subagent_manager.admission.gate import _GateMixin
+    from aj_crew.subagent_manager.admission.gate import _GateMixin
 
     monkeypatch.setattr(resolve, "unit_for_session_key", lambda _sessions, _key: "successor")
     stub = SimpleNamespace(_manager=SimpleNamespace(_sessions=None))
@@ -633,7 +633,7 @@ def test_a_dispatch_after_the_turn_s_closer_is_queued_names_no_turn(monkeypatch)
     be stamped with a turn that never asked for it, where the schema says a
     dispatch with no asking turn has no ``turn``.
     """
-    from kiro_crew.subagent_manager.admission.gate import _GateMixin
+    from aj_crew.subagent_manager.admission.gate import _GateMixin
 
     monkeypatch.setattr(resolve, "unit_for_session_key", lambda _sessions, _key: SESSION)
     stub = SimpleNamespace(_manager=SimpleNamespace(_sessions=None))
@@ -656,7 +656,7 @@ def test_a_child_of_a_rerun_turn_names_the_attempt_that_asked(monkeypatch):
     ``turn/started`` is identified by ``(turn, attempt)``, so a ``subagent/spawned``
     that carries only ``turn`` cannot be joined to the try that dispatched it.
     """
-    from kiro_crew.subagent_manager.admission.gate import _GateMixin
+    from aj_crew.subagent_manager.admission.gate import _GateMixin
 
     monkeypatch.setattr(resolve, "unit_for_session_key", lambda _sessions, _key: SESSION)
     stub = SimpleNamespace(_manager=SimpleNamespace(_sessions=None))
@@ -668,7 +668,7 @@ def test_a_child_of_a_rerun_turn_names_the_attempt_that_asked(monkeypatch):
     info = SimpleNamespace(
         id="rerun-1",
         parent_session_key="slot-key",
-        run_agent="kirocrew",
+        run_agent="ajcrew",
         model="",
         task="",
         include_memory=True,
@@ -780,7 +780,7 @@ def test_a_retried_start_job_keeps_the_attempt_it_derived(monkeypatch):
 
 def test_an_over_long_unit_id_is_never_put_on_the_queued_row():
     """The provider authors the id; the durable row must not carry an unbounded one."""
-    from kiro_crew.subagent_manager.admission.gate_reporting import crew_log_asking_origin
+    from aj_crew.subagent_manager.admission.gate_reporting import crew_log_asking_origin
 
     huge = "s" * (emit._MAX_SESSION_ID_CHARS + 1)
     sessions = _Sessions({"dashboard:chat-7": _Provider(huge)})
@@ -811,8 +811,8 @@ async def test_a_claim_the_store_cannot_take_is_pinned_before_the_row_is_left_qu
     """
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew import taskq as _taskq
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew import taskq as _taskq
+    from aj_crew.subagent import SubagentManager
 
     sessions = MagicMock()
     sessions.get_pid = MagicMock(return_value=None)
@@ -866,8 +866,8 @@ async def test_a_run_whose_memory_binding_cannot_be_persisted_records_no_spawn(m
     """
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew import subagent as _subagent
-    from kiro_crew.subagent import SubagentInfo, SubagentManager
+    from aj_crew import subagent as _subagent
+    from aj_crew.subagent import SubagentInfo, SubagentManager
 
     sessions = MagicMock()
     sessions.get_pid = MagicMock(return_value=None)
@@ -983,7 +983,7 @@ def test_a_terminal_is_recorded_before_the_child_leaves_the_running_set():
     """
     import inspect
 
-    from kiro_crew.subagent_manager.terminal import TerminalCoordinator
+    from aj_crew.subagent_manager.terminal import TerminalCoordinator
 
     body = inspect.getsource(TerminalCoordinator._finish)
     record = body.index("self._record_crew_log_terminal(info)")
@@ -1002,7 +1002,7 @@ def test_the_closer_is_handed_over_before_its_child_s_origin_pin_is_released():
     reaches the writer. Reporting stays one-shot because every route is gated on
     ``_claim_finalize``.
     """
-    from kiro_crew.subagent_manager.terminal import TerminalCoordinator
+    from aj_crew.subagent_manager.terminal import TerminalCoordinator
 
     _open_session()
     emit.remember_child_origin("ab12", SESSION, 3)
@@ -1036,9 +1036,9 @@ def test_a_turn_still_pending_at_the_terminal_is_billed_in_the_closer():
     """
     from unittest.mock import MagicMock
 
-    from kiro_crew.acp.types import AcpPromptStats
-    from kiro_crew.subagent import SubagentInfo, _RunCreditAccounting
-    from kiro_crew.subagent_manager.terminal import TerminalCoordinator
+    from aj_crew.acp.types import AcpPromptStats
+    from aj_crew.subagent import SubagentInfo, _RunCreditAccounting
+    from aj_crew.subagent_manager.terminal import TerminalCoordinator
 
     _open_session()
     emit.remember_child_origin("ab12", SESSION, 3)
@@ -1199,7 +1199,7 @@ def test_the_terminal_closer_names_the_session_the_child_ran_in(outcome, closer)
     first entry written after that session exists (``subagent/spawned`` is written at
     admission, before the child has one).
     """
-    from kiro_crew.subagent_manager.terminal import TerminalCoordinator
+    from aj_crew.subagent_manager.terminal import TerminalCoordinator
 
     _open_session()
     emit.remember_child_origin("ab12", SESSION, 3)
@@ -1213,7 +1213,7 @@ def test_the_terminal_closer_names_the_session_the_child_ran_in(outcome, closer)
 
 
 def test_a_child_that_never_got_a_session_closes_without_a_child_sid():
-    from kiro_crew.subagent_manager.terminal import TerminalCoordinator
+    from aj_crew.subagent_manager.terminal import TerminalCoordinator
 
     _open_session()
     emit.remember_child_origin("ab12", SESSION, 3)
@@ -1228,7 +1228,7 @@ def test_a_child_that_never_got_a_session_closes_without_a_child_sid():
 def test_a_recovery_that_never_got_a_session_keeps_the_earlier_attempt_s_child_sid():
     """A cancel-recovery attempt that fails before acquiring clears ``_session_id``; the
     closer must still name the session the child last ran in."""
-    from kiro_crew.subagent_manager.terminal import TerminalCoordinator
+    from aj_crew.subagent_manager.terminal import TerminalCoordinator
 
     _open_session()
     emit.remember_child_origin("ab12", SESSION, 3)
@@ -1256,8 +1256,8 @@ def test_each_attempt_remembers_the_last_session_before_clearing(current, earlie
     """``_run_inner_impl`` clears the cleanup identity first; the last session id survives."""
     import asyncio
 
-    import kiro_crew.subagent as facade
-    from kiro_crew.subagent_manager.run import RunEventCoordinator
+    import aj_crew.subagent as facade
+    from aj_crew.subagent_manager.run import RunEventCoordinator
 
     info = SimpleNamespace(_session_id=current, _last_session_id=earlier)
 

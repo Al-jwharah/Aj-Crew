@@ -18,8 +18,8 @@ class TestPromptBusyRecovery:
 
     @pytest.mark.asyncio
     async def test_prompt_busy_resets_session_and_requeues(self, tmp_path: Path) -> None:
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
 
         state = _make_state(tmp_path)
         state.sessions.get_or_create = AsyncMock(return_value=(MagicMock(), False, False))
@@ -62,8 +62,8 @@ class TestPromptBusyRecovery:
         """When ACP subprocess dies (SIGTERM/SIGKILL), _run_chat must reset
         the session and re-queue the message so autonudges land on a fresh
         provider instead of a bare ❌ error card with no work done."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
 
         state = _make_state(tmp_path)
         state.sessions.get_or_create = AsyncMock(return_value=(MagicMock(), False, False))
@@ -107,7 +107,7 @@ class TestAcpProcessDiedRecoveryRequeue:
     @pytest.mark.asyncio
     async def test_retry_at_depth_0_requeues_message(self, tmp_path: Path) -> None:
         """First pipe death at depth 0 → message re-queued, retrying shown."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         self._make_stream_raise(client, AcpProcessDied("pipe broken"))
@@ -143,8 +143,8 @@ class TestAcpProcessDiedRecoveryRequeue:
         """A steer written into a turn sits in the same pipe as its prompt, so
         when the turn's death is ambiguous the teardown requeues it with the
         possibly-delivered mark; a plain death requeues it plainly."""
-        from kiro_crew.acp.client import AcpProcessDied
-        from kiro_crew.dashboard.chat_utils import STEER_POSSIBLY_DELIVERED_META
+        from aj_crew.acp.client import AcpProcessDied
+        from aj_crew.dashboard.chat_utils import STEER_POSSIBLY_DELIVERED_META
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
 
@@ -155,7 +155,7 @@ class TestAcpProcessDiedRecoveryRequeue:
 
         client.stream = _steered_then_died
         client.stream_command = _steered_then_died
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         requeued: list[dict] = []
         _real = chat_runner._requeue_unconsumed_steers
@@ -176,7 +176,7 @@ class TestAcpProcessDiedRecoveryRequeue:
     ) -> None:
         """The note reaches the model; slash-command dispatch and the mirror still
         read the user's own text."""
-        from kiro_crew.dashboard.chat_utils import STEER_POSSIBLY_DELIVERED_NOTE
+        from aj_crew.dashboard.chat_utils import STEER_POSSIBLY_DELIVERED_NOTE
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         sent: list[str] = []
@@ -196,7 +196,7 @@ class TestAcpProcessDiedRecoveryRequeue:
     @pytest.mark.asyncio
     async def test_budget_exhaustion_shows_stuck(self, tmp_path: Path) -> None:
         """4th pipe death → 'Session stuck' shown, no re-queue."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         slot._acp_pipe_death_retries = 3  # already exhausted
@@ -211,7 +211,7 @@ class TestAcpProcessDiedRecoveryRequeue:
     @pytest.mark.asyncio
     async def test_nested_depth_shows_please_retry(self, tmp_path: Path) -> None:
         """Pipe death at depth > 0 → 'please retry' shown, no re-queue."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         self._make_stream_raise(client, AcpProcessDied("pipe broken"))
@@ -233,13 +233,13 @@ class TestAcpProcessDiedRecoveryRequeue:
         marker here reports a dropped connection to a user whose status card
         says the session was busy.
         """
-        from kiro_crew.dashboard.chat_runner import PromptBusyExhaustedError
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_runner import PromptBusyExhaustedError
+        from aj_crew.dashboard.chat_utils import (
             _BUSY_RECOVER_MSG,
             SYNTHETIC_RECOVERY_KIND,
             RecoveryPayload,
         )
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         slot._titled = True
@@ -252,7 +252,7 @@ class TestAcpProcessDiedRecoveryRequeue:
         client.stream_command = _stream_then_busy
 
         with patch(
-            "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+            "aj_crew.dashboard.chat_runner._start_next_queued_turn",
             new_callable=AsyncMock,
             return_value=False,
         ):
@@ -288,8 +288,8 @@ class TestAcpProcessDiedRecoveryRequeue:
         the previous recovery, not the user's request. Tagging it ORIGINAL makes the
         next dequeue mirror internal orchestration to a linked thread as user speech.
         """
-        from kiro_crew.acp.client import AcpProcessDied
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.acp.client import AcpProcessDied
+        from aj_crew.dashboard.chat_utils import (
             _CONN_RECOVER_MSG,
             SYNTHETIC_RECOVERY_KIND,
             RecoveryPayload,
@@ -300,7 +300,7 @@ class TestAcpProcessDiedRecoveryRequeue:
         self._make_stream_raise(client, AcpProcessDied("pipe broken"))
 
         with patch(
-            "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+            "aj_crew.dashboard.chat_runner._start_next_queued_turn",
             new_callable=AsyncMock,
             return_value=False,
         ):
@@ -329,8 +329,8 @@ class TestAcpProcessDiedRecoveryRequeue:
         no thread to reply into, so the continuation's answer is never delivered and the
         question asked on Slack stays unanswered.
         """
-        from kiro_crew.dashboard.chat_utils import _CONN_RECOVER_MSG
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat_utils import _CONN_RECOVER_MSG
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         slot._titled = True
@@ -356,7 +356,7 @@ class TestAcpProcessDiedRecoveryRequeue:
     @pytest.mark.asyncio
     async def test_session_reset_propagated(self, tmp_path: Path) -> None:
         """Verify the finally block resets the session after AcpProcessDied."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         state.sessions = real_sessions(client)
@@ -379,7 +379,7 @@ class TestAcpProcessDiedRecoveryRequeue:
     @pytest.mark.asyncio
     async def test_stop_state_suppresses_requeue(self, tmp_path: Path) -> None:
         """AcpProcessDied during active stop → no re-queue."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         slot._stop_state = "killing"
@@ -392,7 +392,7 @@ class TestAcpProcessDiedRecoveryRequeue:
     @pytest.mark.asyncio
     async def test_stop_state_suppresses_requeue_prompt_busy(self, tmp_path: Path) -> None:
         """PromptBusyExhaustedError during active stop → no re-queue."""
-        from kiro_crew.dashboard.chat_runner import PromptBusyExhaustedError
+        from aj_crew.dashboard.chat_runner import PromptBusyExhaustedError
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         slot._stop_state = "soft_pending"
@@ -405,7 +405,7 @@ class TestAcpProcessDiedRecoveryRequeue:
     @pytest.mark.asyncio
     async def test_stop_state_suppresses_requeue_acp_error(self, tmp_path: Path) -> None:
         """AcpError retry-eligible during active stop → no re-queue."""
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         slot._stop_state = "killing"
@@ -418,7 +418,7 @@ class TestAcpProcessDiedRecoveryRequeue:
     @pytest.mark.asyncio
     async def test_should_suppress_requeue_helper(self, tmp_path: Path) -> None:
         """_should_suppress_requeue returns True for non-idle states."""
-        from kiro_crew.dashboard.chat_runner import _should_suppress_requeue
+        from aj_crew.dashboard.chat_runner import _should_suppress_requeue
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("helper-test")
@@ -437,8 +437,8 @@ class TestAcpProcessDiedRecoveryRequeue:
         """First pipe death at depth 0 → queue_insert is called."""
         from unittest.mock import patch as _patch
 
-        from kiro_crew.acp.client import AcpProcessDied
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.acp.client import AcpProcessDied
+        from aj_crew.dashboard.state import _ChatSlot
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         self._make_stream_raise(client, AcpProcessDied("pipe broken"))
@@ -461,8 +461,8 @@ class TestAcpProcessDiedRecoveryRequeue:
         from unittest.mock import Mock
         from unittest.mock import patch as _patch
 
-        from kiro_crew.acp.client import AcpProcessDied
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.acp.client import AcpProcessDied
+        from aj_crew.dashboard.state import _ChatSlot
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         self._make_stream_raise(client, AcpProcessDied("pipe broken"))
@@ -483,10 +483,10 @@ class TestAcpProcessDiedRecoveryRequeue:
         with (
             _patch.object(_ChatSlot, "queue_insert", spy),
             _patch(
-                "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+                "aj_crew.dashboard.chat_runner._start_next_queued_turn",
                 new=AsyncMock(return_value=False),
             ),
-            _patch("kiro_crew.dashboard.chat_runner._finish_queue_cycle"),
+            _patch("aj_crew.dashboard.chat_runner._finish_queue_cycle"),
         ):
             await _run_chat(
                 state,
@@ -504,8 +504,8 @@ class TestAcpProcessDiedRecoveryRequeue:
         self, tmp_path: Path, event_type: str
     ) -> None:
         """First token or tool closes durable replay windows immediately."""
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -554,7 +554,7 @@ class TestAcpProcessDiedRecoveryRequeue:
     @pytest.mark.asyncio
     async def test_acperror_process_exited_uses_pipe_death_counter(self, tmp_path: Path) -> None:
         """Option Y: AcpError 'process exited' increments the pipe-death counter, not busy."""
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         self._make_stream_raise(client, AcpError("ACP process exited (code=1)"))
@@ -567,7 +567,7 @@ class TestAcpProcessDiedRecoveryRequeue:
         assert any("Connection lost" in m.get("content", "") for m in error_msgs)
         # A recovery IS queued here, so the notice must be tagged: an untagged row is
         # indistinguishable from a terminal failure and re-offers an executing choice.
-        from kiro_crew.dashboard.chat_utils import TRANSIENT_RETRY_KIND
+        from aj_crew.dashboard.chat_utils import TRANSIENT_RETRY_KIND
 
         _retrying = [m for m in error_msgs if "retrying" in m.get("content", "").lower()]
         assert _retrying, "no retrying notice to inspect"
@@ -587,7 +587,7 @@ class TestAcpProcessDiedRecoveryRequeue:
     @pytest.mark.asyncio
     async def test_acperror_already_in_progress_uses_busy_counter(self, tmp_path: Path) -> None:
         """Option Y: AcpError 'already in progress' increments the busy counter, not pipe-death."""
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         self._make_stream_raise(client, AcpError("Prompt already in progress"))
@@ -604,7 +604,7 @@ class TestAcpProcessDiedRecoveryRequeue:
         """PromptBusyExhaustedError at _prompt_depth>0 with budget remaining hits the
         else branch: surfaces a 'Session busy — please retry' card (not a silent
         failure) and does NOT re-queue (mirrors the AcpProcessDied depth>0 handling)."""
-        from kiro_crew.llm_helpers import PromptBusyExhaustedError
+        from aj_crew.llm_helpers import PromptBusyExhaustedError
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         self._make_stream_raise(client, PromptBusyExhaustedError("busy"))
@@ -630,7 +630,7 @@ class TestAcpProcessDiedRecoveryRequeue:
         block on `_prompt_depth == 0` makes a depth>0 pipe-death fall through to
         the generic else: no session reset (the next turn hit the dead process) and the
         failure never counted toward the exhaustion threshold."""
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         state, slot, client, _run_chat = self._make_state_and_slot(tmp_path)
         self._make_stream_raise(client, AcpError("ACP process exited (code=1)"))
@@ -647,6 +647,6 @@ class TestAcpProcessDiedRecoveryRequeue:
         assert not slot._queue, "depth>0 must not re-queue"
         # Discriminating control: nothing is queued, so this notice is genuinely terminal
         # and must NOT be tagged -- tagging it would hide pills a user still needs.
-        from kiro_crew.dashboard.chat_utils import TRANSIENT_RETRY_KIND
+        from aj_crew.dashboard.chat_utils import TRANSIENT_RETRY_KIND
 
         assert all((m.get("meta") or {}).get("kind") != TRANSIENT_RETRY_KIND for m in error_msgs)

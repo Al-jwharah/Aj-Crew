@@ -17,8 +17,8 @@ import warnings
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.conpty import WindowsPty
+from aj_crew import platform_compat
+from aj_crew.conpty import WindowsPty
 
 pytestmark = pytest.mark.skipif(
     not platform_compat.IS_WINDOWS,

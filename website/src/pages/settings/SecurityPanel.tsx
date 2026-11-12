@@ -27,7 +27,7 @@ import { api, type DeniedCommandsData, type TailnetStatusData } from '../../api/
 import { i18nT } from '../../i18n/t'
 import { fmtDateFields, fmtTime, toDate } from '../../i18n/format'
 import { CODE_BASE, PostureSection } from './SecurityPanelPosture'
-import { type KirocrewCfgShape, YoloDurationCard } from './SecurityPanelApprovals'
+import { type AjcrewCfgShape, YoloDurationCard } from './SecurityPanelApprovals'
 import { DeniedCommandsSection } from './SecurityPanelDeniedCommands'
 import { TAILNET_STATE_KEY, TailnetOriginCard } from './SecurityPanelTailnet'
 import { ThirdPartyAppsCard, TrustedRegistriesCard } from './SecurityPanelTrust'
@@ -192,7 +192,7 @@ export function SecurityPanel({ basePath }: { basePath?: string } = {}) {
   // 192px rail would repeat the card's message without room to act on it.
   const status = useAppSelector(s => s.dashboard.status)
   const { data: dc } = useQuery<DeniedCommandsData>({ queryKey: ['denied-commands'], queryFn: api.deniedCommands })
-  const { data: cfg, isError: cfgError } = useQuery<KirocrewCfgShape>({ queryKey: ['kirocrewConfig'], queryFn: api.kirocrewConfig })
+  const { data: cfg, isError: cfgError } = useQuery<AjcrewCfgShape>({ queryKey: ['ajcrewConfig'], queryFn: api.ajcrewConfig })
   // Same key and staleTime the card uses, so the rail adds no second request.
   const { data: tailnet, isError: tailnetError } = useQuery<TailnetStatusData>({
     queryKey: ['tailnet-status'],

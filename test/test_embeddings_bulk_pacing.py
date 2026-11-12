@@ -12,7 +12,7 @@ import queue
 
 import pytest
 
-from kiro_crew import embeddings as emb
+from aj_crew import embeddings as emb
 
 
 @pytest.fixture(autouse=True)

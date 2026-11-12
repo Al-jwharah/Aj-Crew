@@ -1,9 +1,9 @@
 """What the Linux namespace plan seals, hides and carves out, and how the launcher applies it.
 
 The launcher is tested at its two interfaces. What a spawn masks, seals and re-opens is
-read off the :class:`~kiro_crew.sandbox_plan.ConfinementPlan` that
+read off the :class:`~aj_crew.sandbox_plan.ConfinementPlan` that
 ``sandbox._spawn_plan`` builds for it; what the launcher program then DOES with that
-plan is driven through the stages of ``kiro_crew.sandbox_launcher_program`` with the
+plan is driven through the stages of ``aj_crew.sandbox_launcher_program`` with the
 shared stand-in libc from ``test_sandbox_launcher_program``, on a tree under
 ``tmp_path``. The writable carve-outs, the sealed run-parent predicate, the rendered
 launcher script, the agent env-passthrough contract and the pre-exec hardlink scan
@@ -24,18 +24,18 @@ import sandbox_argv_helpers
 from sandbox_argv_helpers import _POSIX_ONLY, _SECCOMP_ALLOW, _SECCOMP_EPERM, _seccomp_verdict
 from test_sandbox_launcher_program import CoveringLibc, RecordingLibc, launch, payload, refusal
 
-import kiro_crew.sandbox as sandbox_mod
-from kiro_crew import sandbox_launcher_program as launcher_program
-from kiro_crew import sandbox_plan, sandbox_workspace
-from kiro_crew.instances import run_marker
-from kiro_crew.sandbox import (
+import aj_crew.sandbox as sandbox_mod
+from aj_crew import sandbox_launcher_program as launcher_program
+from aj_crew import sandbox_plan, sandbox_workspace
+from aj_crew.instances import run_marker
+from aj_crew.sandbox import (
     _SENSITIVE_ENV_PREFIXES,
     _build_launcher_script,
     _build_seatbelt_profile,
     _voice_runtime_parent_paths,
     _voice_runtime_sandbox_paths,
 )
-from kiro_crew.sandbox_launcher import launcher_program_source
+from aj_crew.sandbox_launcher import launcher_program_source
 
 # Several tests of this suite spawn real child interpreters (subprocess.run([sys.executable,
 # ...])); every part of it pins itself to the same dedicated xdist worker so concurrent
@@ -786,12 +786,12 @@ class TestSealedRuntimeParentPredicate:
     @staticmethod
     def _windows_path_semantics(monkeypatch) -> None:
         """Run the classification as Windows, on whichever OS runs the test."""
-        monkeypatch.setattr("kiro_crew.sandbox.sys.platform", "win32")
+        monkeypatch.setattr("aj_crew.sandbox.sys.platform", "win32")
 
     def test_on_windows_a_declared_temp_is_honored_because_nothing_seals_run(
         self, monkeypatch, tmp_path
     ):
-        # Kiro Crew has no native Windows sandbox backend, so ``<data home>/run``
+        # Aj Crew has no native Windows sandbox backend, so ``<data home>/run``
         # is never sealed for a probe child there and a declared temp under it is
         # writable. The classification therefore answers None for every path on
         # win32 -- the declaration is honored exactly as it was before the check
@@ -851,7 +851,7 @@ class TestBuildLauncherScript:
         Skipping leaves ``unshare`` permitted, so the child can enter a nested
         user namespace, hold CAP_SYS_ADMIN over a copy of this mount tree, and
         umount every credential mask -- the escape the filter exists to deny.
-        Both ``_inside_kirocrew_sandbox`` and
+        Both ``_inside_ajcrew_sandbox`` and
         ``docs/system-specs/modules/security.md`` state that a sandboxed tree is
         confined "by the outer namespace + seccomp", so a silent skip makes that
         claim false while every caller still reads the spawn as isolated.
@@ -1026,7 +1026,7 @@ class TestBuildLauncherScript:
         matches its actual type — and a future entry that happens to be a file cannot
         silently stop being hidden.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         home = os.path.expanduser("~")
         extra = tuple(os.path.join(home, rel) for rel in security.sensitive_home_dirs())
@@ -1081,9 +1081,9 @@ class TestBuildLauncherScript:
         assert run.environ["KEEP_ME"] == "1"
 
     @_POSIX_ONLY
-    def test_launcher_has_no_unimportable_kiro_crew_refs(self, tmp_path):
-        """The launcher runs as a standalone ~/.kirocrew/run script with the
-        launcher dir scrubbed from sys.path, so it CANNOT import kiro_crew.
+    def test_launcher_has_no_unimportable_aj_crew_refs(self, tmp_path):
+        """The launcher runs as a standalone ~/.ajcrew/run script with the
+        launcher dir scrubbed from sys.path, so it CANNOT import aj_crew.
         Referencing a module-level helper like ``platform_compat`` NameErrors at
         runtime and crashed every command cron. Guard: the program imports only
         the standard library, there is no module-qualified RUNTIME reference to
@@ -1102,7 +1102,7 @@ class TestBuildLauncherScript:
             for node in ast.walk(tree)
             if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name)
         }
-        forbidden = used_modules & {"platform_compat", "kiro_crew", "logger", "logging"}
+        forbidden = used_modules & {"platform_compat", "aj_crew", "logger", "logging"}
         assert not forbidden, f"launcher references un-importable module(s) {forbidden}"
         imported: set[str] = set()
         for node in ast.walk(tree):

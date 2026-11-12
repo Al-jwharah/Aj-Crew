@@ -4,7 +4,7 @@
 without limit while the Windows branch refuses past ``_LOCK_TIMEOUT_SECS``. That
 asymmetry turns an unavailable agent-spec lock into a gateway that hangs at boot:
 ``agents_spec_lock`` -> ``file_lock(wait=True)`` -> ``flock``, leaving a live
-process with no port bound, no ``KIROCREW_READY`` line, and nothing logged at
+process with no port bound, no ``AJCREW_READY`` line, and nothing logged at
 WARNING or ERROR. An operator and a health check both read that as a start which
 has not finished, and wait.
 
@@ -37,9 +37,9 @@ from typing import Iterator
 import pytest
 from _clock_isolation import assert_clock_is_private
 
-from kiro_crew import platform_compat
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import platform_compat
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing.clock import ManualClock
 
 pytestmark = pytest.mark.skipif(
     not platform_compat.IS_POSIX, reason="POSIX flock ceiling; Windows has its own branch"
@@ -258,7 +258,7 @@ class TestStagingLockOutlastsItsOwnWork:
         # Derived from the bounds it must outlast rather than compared with a
         # literal, so raising either subprocess timeout without raising the lock
         # ceiling fails here instead of silently refusing live contenders.
-        from kiro_crew import frontend
+        from aj_crew import frontend
 
         assert frontend._STAGING_LOCK_TIMEOUT >= (
             frontend._INSTALL_TIMEOUT + frontend._BUILD_TIMEOUT
@@ -270,7 +270,7 @@ class TestStagingLockOutlastsItsOwnWork:
     def test_the_staging_lock_passes_its_ceiling_to_the_primitive(self, tmp_path: Path):
         # Asserted by capturing the value the primitive receives, not by reading
         # the source: a call site can keep the identifier and still be inert.
-        from kiro_crew import frontend
+        from aj_crew import frontend
 
         seen: dict[str, object] = {}
 
@@ -295,8 +295,8 @@ def _pin_clock(monkeypatch) -> ManualClock:
     itself) would also record, and count against the deadline, any other
     thread's sleep in the worker.
 
-    The lock owners in ``kiro_crew.platform_lock_compat`` read the clock through a
-    function-local ``from kiro_crew.platform_compat import ... time``
+    The lock owners in ``aj_crew.platform_lock_compat`` read the clock through a
+    function-local ``from aj_crew.platform_compat import ... time``
     (``_posix_acquire_blocking``, ``_win_acquire_blocking``, ``file_lock`` and
     ``acquire_lock``), so this one install clocks all of them, including a
     ``file_lock`` that another thread left running in this worker takes while
@@ -565,12 +565,12 @@ class TestAgentSpecLockDoesNotHangBoot:
     ):
         # End to end on the lock the boot path takes: the gateway-startup hang
         # reduced to a single call.
-        from kiro_crew.agent import agents_spec_lock
+        from aj_crew.agent import agents_spec_lock
 
         monkeypatch.setattr(platform_compat, "_LOCK_TIMEOUT_SECS", _TEST_CEILING)
         agents_dir = tmp_path / "agents"
         agents_dir.mkdir()
-        proc = _spawn_holder(agents_dir / ".kirocrew-agents.lock")
+        proc = _spawn_holder(agents_dir / ".ajcrew-agents.lock")
         try:
             with pytest.raises(OSError, match="still held"):
                 with agents_spec_lock(agents_dir):
@@ -585,7 +585,7 @@ class TestAgentSpecLockDoesNotHangBoot:
         # An unwritable lock path is refused by ``os.open`` before any lock is
         # attempted. Pinned so a "retry until the ceiling" change cannot turn
         # this prompt refusal into a wait.
-        from kiro_crew.agent import agents_spec_lock
+        from aj_crew.agent import agents_spec_lock
 
         agents_dir = tmp_path / "readonly"
         agents_dir.mkdir()
@@ -613,13 +613,13 @@ class TestLockFailureIsReported:
     def test_unwritable_path_is_logged_with_path_and_reason(
         self, tmp_path: Path, caplog: pytest.LogCaptureFixture
     ):
-        from kiro_crew.agent import agents_spec_lock
+        from aj_crew.agent import agents_spec_lock
 
         agents_dir = tmp_path / "ro"
         agents_dir.mkdir()
         os.chmod(agents_dir, 0o500)
         try:
-            with caplog.at_level("WARNING", logger="kiro_crew.agent"):
+            with caplog.at_level("WARNING", logger="aj_crew.agent"):
                 with pytest.raises(OSError):
                     with agents_spec_lock(agents_dir):
                         pass
@@ -631,7 +631,7 @@ class TestLockFailureIsReported:
         message = records[-1].getMessage()
         # The PATH is what makes the log actionable: a bare "permission denied"
         # does not say which mount to fix.
-        assert ".kirocrew-agents.lock" in message
+        assert ".ajcrew-agents.lock" in message
         assert str(agents_dir) in message
         # And the remedy that resolves it.
         assert "KIRO_HOME" in message
@@ -641,14 +641,14 @@ class TestLockFailureIsReported:
     ):
         # A stuck holder needs a different action than an unwritable mount, so
         # the two must not be reported with the same remedy.
-        from kiro_crew.agent import agents_spec_lock
+        from aj_crew.agent import agents_spec_lock
 
         monkeypatch.setattr(platform_compat, "_LOCK_TIMEOUT_SECS", _TEST_CEILING)
         agents_dir = tmp_path / "contended-agents"
         agents_dir.mkdir()
-        proc = _spawn_holder(agents_dir / ".kirocrew-agents.lock")
+        proc = _spawn_holder(agents_dir / ".ajcrew-agents.lock")
         try:
-            with caplog.at_level("WARNING", logger="kiro_crew.agent"):
+            with caplog.at_level("WARNING", logger="aj_crew.agent"):
                 with pytest.raises(OSError, match="still held"):
                     with agents_spec_lock(agents_dir):
                         pytest.fail("took the lock while another process held it")
@@ -660,7 +660,7 @@ class TestLockFailureIsReported:
 
         messages = [r.getMessage() for r in caplog.records if r.levelname == "WARNING"]
         assert any("still held" in m for m in messages), messages
-        assert any(".kirocrew-agents.lock" in m for m in messages), messages
+        assert any(".ajcrew-agents.lock" in m for m in messages), messages
         # The read-only remedy would be wrong advice here: the path IS writable.
         assert not any("KIRO_HOME" in m for m in messages), messages
 
@@ -671,11 +671,11 @@ class TestLockFailureIsReported:
         # as an agent-spec lock problem would send an operator hunting a stuck
         # holder while the real fault is the disk or a permission, so the report
         # must cover the acquire alone and let a body error through untouched.
-        from kiro_crew.agent import agents_spec_lock
+        from aj_crew.agent import agents_spec_lock
 
         agents_dir = tmp_path / "body-error"
         agents_dir.mkdir()
-        with caplog.at_level("WARNING", logger="kiro_crew.agent"):
+        with caplog.at_level("WARNING", logger="aj_crew.agent"):
             with pytest.raises(OSError, match="no space left"):
                 with agents_spec_lock(agents_dir):
                     # Same exception TYPE the acquire raises, so only scoping

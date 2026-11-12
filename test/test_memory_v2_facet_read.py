@@ -23,16 +23,16 @@ from unittest import mock
 import pytest
 from aiohttp import web
 
-from kiro_crew import memory_schema
-from kiro_crew.config import loader as loader_mod
-from kiro_crew.config.loader import config_dir
-from kiro_crew.dashboard.handlers import _shared
-from kiro_crew.memory_stores import (
+from aj_crew import memory_schema
+from aj_crew.config import loader as loader_mod
+from aj_crew.config.loader import config_dir
+from aj_crew.dashboard.handlers import _shared
+from aj_crew.memory_stores import (
     DEFAULT_MEMORY_STORE,
     MEMORY_DB_FILE,
     resolve_store_path,
 )
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.vector_memory import VectorMemoryStore
 
 # Each test writes ``config.json`` into its own data home and drops the process-wide
 # config cache, so two workers racing that global is a flake. One xdist group for the
@@ -200,9 +200,9 @@ class TestTheAllowlistIsDerivedNotRestated:
         Read from the rendered help, as ``test_cli_help.py`` does: argparse's
         ``_actions`` is private.
         """
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("sys.argv", ["kirocrew", "memory", "carve", "--help"])
-        from kiro_crew.cli import main
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("sys.argv", ["ajcrew", "memory", "carve", "--help"])
+        from aj_crew.cli import main
 
         with pytest.raises(SystemExit):
             main()
@@ -688,7 +688,7 @@ class TestTheCarveRoute:
 
     @pytest.fixture
     def handler(self):
-        import kiro_crew.dashboard.handlers.memory as mem_mod
+        import aj_crew.dashboard.handlers.memory as mem_mod
 
         return mem_mod
 
@@ -707,7 +707,7 @@ class TestTheCarveRoute:
         self, handler_mod, store, query, *, silo: str, owner: bool = True
     ) -> web.Response:
         """Exercise the real owner gate and resolver with a selected silo."""
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         async def _ensure(name: str):
             assert name == silo
@@ -849,7 +849,7 @@ class TestTheCarveRoute:
     def test_the_route_is_registered_as_a_get(self) -> None:
         from aiohttp import web as aiohttp_web
 
-        from kiro_crew.dashboard.routes import memory as memory_routes
+        from aj_crew.dashboard.routes import memory as memory_routes
 
         app = aiohttp_web.Application()
         app["state"] = None
@@ -872,7 +872,7 @@ class TestTheCarveRoute:
 
 
 def _carve_args(**overrides: Any) -> Any:
-    """The namespace ``kirocrew memory carve`` hands its handler.
+    """The namespace ``ajcrew memory carve`` hands its handler.
 
     Every facet defaults to ``None`` — an ABSENT flag — because that is what
     argparse produces, and the difference between ``None`` and ``""`` is the whole
@@ -902,7 +902,7 @@ class TestTheCarveCliVerb:
 
     @staticmethod
     def _run(**overrides: Any) -> None:
-        from kiro_crew.cli_commands import _memory_carve
+        from aj_crew.cli_commands import _memory_carve
 
         _memory_carve(_carve_args(**overrides))
 

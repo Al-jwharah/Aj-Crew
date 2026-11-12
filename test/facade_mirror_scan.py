@@ -621,8 +621,8 @@ def _alias_chain(text: str, dotted: str, words: _TextWords | None = None) -> boo
     """Whether *text* writes ``<alias>.<leaf>`` outside an import line, where ``<alias>``
     is a name *text* binds the parent module of *dotted* to (:func:`_text_aliases`).
 
-    ``from kiro_crew.mcp_tools import browser as mod`` then ``mod.mcp_core`` spells
-    ``kiro_crew.mcp_tools.browser.mcp_core`` without any of the literal spellings above.
+    ``from aj_crew.mcp_tools import browser as mod`` then ``mod.mcp_core`` spells
+    ``aj_crew.mcp_tools.browser.mcp_core`` without any of the literal spellings above.
     """
     head, _, leaf = dotted.rpartition(".")
     head_leaf = head.rpartition(".")[2]

@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from windows_sim import nonatomic_write, unlink_sharing_violation
 
-from kiro_crew.mcp_gateway.backend import Backend
-from kiro_crew.mcp_gateway.pool import (
+from aj_crew.mcp_gateway.backend import Backend
+from aj_crew.mcp_gateway.pool import (
     _MAX_SPAWN_DRAIN_RETRIES,
     DRAIN_DEADLINE_SECS,
     BackendPool,
@@ -26,7 +26,7 @@ from kiro_crew.mcp_gateway.pool import (
     PoolKey,
     _DrainingBackend,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 logger = logging.getLogger(__name__)
 
@@ -278,7 +278,7 @@ async def test_drain_deadline_default_used() -> None:
 @pytest.mark.asyncio
 async def test_drain_and_rewarm_schedules_prewarm_on_success() -> None:
     """The credential-change handler drains then schedules a re-warm."""
-    from kiro_crew.mcp_gateway.gatewayd import _drain_and_rewarm_on_credential_change
+    from aj_crew.mcp_gateway.gatewayd import _drain_and_rewarm_on_credential_change
 
     pool = BackendPool(max_backends=10)
     key = _make_pool_key()
@@ -297,7 +297,7 @@ async def test_drain_and_rewarm_schedules_prewarm_on_success() -> None:
 async def test_drain_and_rewarm_skips_prewarm_on_drain_failure() -> None:
     """If the drain raises, the re-warm is deliberately skipped (re-warming
     would reuse + PIN stale backends)."""
-    from kiro_crew.mcp_gateway.gatewayd import _drain_and_rewarm_on_credential_change
+    from aj_crew.mcp_gateway.gatewayd import _drain_and_rewarm_on_credential_change
 
     pool = BackendPool(max_backends=10)
     pool.drain_all_to_bluegreen = AsyncMock(side_effect=RuntimeError("boom"))  # type: ignore[method-assign]
@@ -480,7 +480,7 @@ def test_credwatch_streaming_digest_matches_oneshot(tmp_path: Path) -> None:
     chunk boundary."""
     import hashlib
 
-    from kiro_crew.mcp_gateway import credwatch
+    from aj_crew.mcp_gateway import credwatch
 
     payload = b"rotate-me-" * 20000  # > _DIGEST_CHUNK_BYTES (64 KiB)
     cred = tmp_path / "cred"
@@ -562,7 +562,7 @@ class _ProbeBarrier:
 async def test_credwatch_first_observation_is_baseline_no_fire(tmp_path: Path) -> None:
     """The first observation of the credential file establishes the baseline
     and never fires on_change."""
-    from kiro_crew.mcp_gateway import credwatch
+    from aj_crew.mcp_gateway import credwatch
 
     cred = tmp_path / "cred"
     cred.write_bytes(b"secret-v1")
@@ -594,7 +594,7 @@ async def test_credwatch_baseline_established_immediately(tmp_path: Path) -> Non
     within the first interval must fire on_change. Under the old wait-first loop
     the baseline probe ran only after one interval, so it would have adopted the
     rotated content as the baseline and never fired."""
-    from kiro_crew.mcp_gateway import credwatch
+    from aj_crew.mcp_gateway import credwatch
 
     cred = tmp_path / "cred"
     cred.write_bytes(b"secret-v1")
@@ -629,7 +629,7 @@ async def test_credwatch_baseline_established_immediately(tmp_path: Path) -> Non
 async def test_credwatch_no_fire_on_byte_identical_rewrite(tmp_path: Path) -> None:
     """An mtime bump with byte-identical content (a no-op rewrite by a
     credential refresh daemon) must NOT fire on_change."""
-    from kiro_crew.mcp_gateway import credwatch
+    from aj_crew.mcp_gateway import credwatch
 
     cred = tmp_path / "cred"
     cred.write_bytes(b"secret-v1")
@@ -666,7 +666,7 @@ async def test_credwatch_no_fire_on_byte_identical_rewrite(tmp_path: Path) -> No
 async def test_credwatch_fires_on_content_change(tmp_path: Path) -> None:
     """A real content change past the baseline fires on_change (async
     handlers are awaited)."""
-    from kiro_crew.mcp_gateway import credwatch
+    from aj_crew.mcp_gateway import credwatch
 
     cred = tmp_path / "cred"
     cred.write_bytes(b"secret-v1")
@@ -711,7 +711,7 @@ async def test_credwatch_fires_on_content_change_with_unchanged_mtime(tmp_path: 
     An mtime cheap-gate would permanently miss this rotation."""
     import os
 
-    from kiro_crew.mcp_gateway import credwatch
+    from aj_crew.mcp_gateway import credwatch
 
     cred = tmp_path / "cred"
     cred.write_bytes(b"secret-v1")
@@ -756,7 +756,7 @@ async def test_credwatch_absent_then_appearing_fires(tmp_path: Path) -> None:
     real 'no credential -> credential' transition and DOES fire on_change — so a
     backend prewarmed during the absent startup window gets drained/respawned.
     (The initial absent observation itself is the silent baseline.)"""
-    from kiro_crew.mcp_gateway import credwatch
+    from aj_crew.mcp_gateway import credwatch
 
     cred = tmp_path / "cred"  # does not exist yet
     stop = asyncio.Event()
@@ -786,7 +786,7 @@ async def test_credwatch_absent_then_appearing_fires(tmp_path: Path) -> None:
 async def test_credwatch_never_appearing_file_never_fires(tmp_path: Path) -> None:
     """A file that stays ABSENT for the watcher's whole life never fires — the
     absent baseline is silent and there is no transition to report."""
-    from kiro_crew.mcp_gateway import credwatch
+    from aj_crew.mcp_gateway import credwatch
 
     cred = tmp_path / "cred"  # never created
     stop = asyncio.Event()
@@ -815,7 +815,7 @@ async def test_credwatch_present_then_deleted_fires_revocation(tmp_path: Path) -
     """Deleting a PRESENT credential (present -> absent) is a revocation and
     MUST fire on_change — otherwise pooled backends keep the revoked credential.
     A second delete-poll while already absent does NOT re-fire."""
-    from kiro_crew.mcp_gateway import credwatch
+    from aj_crew.mcp_gateway import credwatch
 
     cred = tmp_path / "cred"
     cred.write_bytes(b"secret-v1")
@@ -848,7 +848,7 @@ async def test_credwatch_delete_then_reappear_fires_twice(tmp_path: Path) -> Non
     """present -> absent -> present: the delete fires (revocation) AND the later
     re-appearance fires again (new credential), because the baseline moves to
     absent on delete rather than being left stale."""
-    from kiro_crew.mcp_gateway import credwatch
+    from aj_crew.mcp_gateway import credwatch
 
     cred = tmp_path / "cred"
     cred.write_bytes(b"secret-v1")
@@ -893,7 +893,7 @@ async def test_credwatch_nonatomic_appearance_double_fires_but_atomic_single(
     EXTRA time (this is the real Windows failure, made deterministic via
     ``nonatomic_write``). The atomic helper collapses it to a single
     absent→present transition and fires exactly once."""
-    from kiro_crew.mcp_gateway import credwatch
+    from aj_crew.mcp_gateway import credwatch
 
     # Hazard: non-atomic appearance → the empty truncate window fires spuriously.
     cred = tmp_path / "cred"
@@ -949,7 +949,7 @@ async def test_credwatch_resilient_unlink_survives_sharing_violation(
     on Windows (``unlink_sharing_violation``). A bare ``unlink`` propagates it;
     ``_resilient_cred_unlink`` retries through the transient violation, the file
     is deleted, and the revocation fires exactly once."""
-    from kiro_crew.mcp_gateway import credwatch
+    from aj_crew.mcp_gateway import credwatch
 
     # Hazard: a bare unlink propagates the sharing violation.
     doomed = tmp_path / "cred"
@@ -1012,7 +1012,7 @@ class _WatchingIdentity:
 
 def test_default_identity_watch_paths_empty() -> None:
     """The public DefaultIdentityProvider watches nothing."""
-    from kiro_crew.platform.defaults import DefaultIdentityProvider
+    from aj_crew.platform.defaults import DefaultIdentityProvider
 
     assert DefaultIdentityProvider().credential_watch_paths() == []
 
@@ -1020,7 +1020,7 @@ def test_default_identity_watch_paths_empty() -> None:
 def test_manager_resolves_no_watch_paths_by_default() -> None:
     """With the standalone default context, the manager resolves no watch
     paths — the daemon command line stays byte-identical."""
-    from kiro_crew.mcp_gateway.manager import GatewayManager
+    from aj_crew.mcp_gateway.manager import GatewayManager
 
     assert GatewayManager._credential_watch_paths() == []
 
@@ -1028,12 +1028,12 @@ def test_manager_resolves_no_watch_paths_by_default() -> None:
 def test_manager_threads_seam_watch_paths(tmp_path: Path) -> None:
     """A context whose IdentityProvider supplies watch paths gets each one
     threaded through the manager's argv resolution."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.mcp_gateway.manager import GatewayManager
-    from kiro_crew.platform import build_default_context, set_context
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.mcp_gateway.manager import GatewayManager
+    from aj_crew.platform import build_default_context, set_context
 
     cred = tmp_path / "rotated-credential"
-    ctx = build_default_context(KiroCrewConfig())
+    ctx = build_default_context(AjCrewConfig())
     ctx = dataclasses.replace(ctx, identity=_WatchingIdentity([cred]))
     set_context(ctx)
 
@@ -1043,16 +1043,16 @@ def test_manager_threads_seam_watch_paths(tmp_path: Path) -> None:
 def test_manager_degrades_to_empty_on_adapter_failure(tmp_path: Path) -> None:
     """A pre-method companion adapter (or any non-composition adapter
     failure) degrades to [] — no watcher — instead of raising."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.mcp_gateway.manager import GatewayManager
-    from kiro_crew.platform import build_default_context, set_context
-    from kiro_crew.platform.defaults import DefaultIdentityProvider
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.mcp_gateway.manager import GatewayManager
+    from aj_crew.platform import build_default_context, set_context
+    from aj_crew.platform.defaults import DefaultIdentityProvider
 
     class _PreMethodIdentity(DefaultIdentityProvider):
         # Simulate an adapter built before the v1 method addition.
         credential_watch_paths = None  # type: ignore[assignment]
 
-    ctx = build_default_context(KiroCrewConfig())
+    ctx = build_default_context(AjCrewConfig())
     ctx = dataclasses.replace(ctx, identity=_PreMethodIdentity())
     set_context(ctx)
 
@@ -1061,7 +1061,7 @@ def test_manager_degrades_to_empty_on_adapter_failure(tmp_path: Path) -> None:
 
 def test_gatewayd_argparser_accepts_repeatable_watch_flag() -> None:
     """--credential-watch-path is repeatable and defaults to []."""
-    from kiro_crew.mcp_gateway.gatewayd import _build_argparser
+    from aj_crew.mcp_gateway.gatewayd import _build_argparser
 
     p = _build_argparser()
     args = p.parse_args([])

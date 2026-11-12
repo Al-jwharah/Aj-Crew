@@ -2,7 +2,7 @@
 
 One shared boundary array applied through a single catch-all
 ``View(instrument_type=Histogram)`` cannot serve every instrument: a 60s top
-bound sized for session startup sends a 227589ms ``kirocrew.turn.duration``
+bound sized for session startup sends a 227589ms ``ajcrew.turn.duration``
 sample into the +Inf overflow bucket, and the aggregator then reports
 ``p50 == p90 == 60000`` — a ceiling artifact rendered as a real latency.
 
@@ -26,14 +26,14 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard.handlers.telemetry import _Hist, _other_series
-from kiro_crew.metrics import provider as provider_mod
-from kiro_crew.metrics.events import (
+from aj_crew.dashboard.handlers.telemetry import _Hist, _other_series
+from aj_crew.metrics import provider as provider_mod
+from aj_crew.metrics.events import (
     NON_MS_HISTOGRAM_UNITS,
     PROCESS_CPU_UTILIZATION,
     PROCESS_RSS_SAMPLED,
 )
-from kiro_crew.metrics.provider import (
+from aj_crew.metrics.provider import (
     _CPU_RATIO_BUCKETS,
     _CREDIT_BUCKETS,
     _FAST_BUCKETS_MS,
@@ -45,7 +45,7 @@ from kiro_crew.metrics.provider import (
     _USD_BUCKETS,
     histogram_bounds,
 )
-from kiro_crew.metrics.turns import TURN_COST_METRIC, TURN_CREDITS_METRIC
+from aj_crew.metrics.turns import TURN_COST_METRIC, TURN_CREDITS_METRIC
 
 # One xdist worker for the whole module: every test here derives from ONE module-cached
 # scan of src/ (rglob + ast.parse, ~30s). Under `--dist loadgroup` an unmarked module is
@@ -55,7 +55,7 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_test_provider_bucket_views"
 _SRC = Path(provider_mod.__file__).resolve().parent.parent
 # Histogram instrument names are the `.duration` metrics (all ms); counters
 # end in `.count` / `.acquire` / `.action` / `.outcome` and carry no bounds.
-_NAME_RE = re.compile(r'"(kirocrew\.[a-z0-9_.]*\.duration)"')
+_NAME_RE = re.compile(r'"(ajcrew\.[a-z0-9_.]*\.duration)"')
 
 
 @lru_cache(maxsize=1)
@@ -75,9 +75,9 @@ def _emitted_histogram_units() -> dict[str, set[str]]:
     """Instrument name -> the set of ``unit=`` values its emit calls pass.
 
     The naming scan above can only recognise a histogram by a ``.duration``
-    suffix. That is not a property of the code: ``kirocrew.embed.queue_wait`` and
-    ``kirocrew.embed.inference`` are millisecond histograms with no such suffix,
-    and a non-duration histogram (``kirocrew.turn.credits``) has no reason to
+    suffix. That is not a property of the code: ``ajcrew.embed.queue_wait`` and
+    ``ajcrew.embed.inference`` are millisecond histograms with no such suffix,
+    and a non-duration histogram (``ajcrew.turn.credits``) has no reason to
     carry one — all three were therefore invisible to the old guard and inherited
     OTEL's default 10s-ceiling buckets in silence.
 
@@ -118,7 +118,7 @@ def _emitted_histogram_units() -> dict[str, set[str]]:
                 name = consts[first.id]
             else:
                 continue
-            if not name.startswith("kirocrew."):
+            if not name.startswith("ajcrew."):
                 continue
             unit = "ms"  # the recorder's default
             for kw in node.keywords:
@@ -134,7 +134,7 @@ def _emitted_histogram_names() -> set[str]:
 
 @lru_cache(maxsize=1)
 def _sampler_histogram_names() -> frozenset[str]:
-    """Instruments passed to ``kiro_crew.metrics.events.emit_histogram``.
+    """Instruments passed to ``aj_crew.metrics.events.emit_histogram``.
 
     The sampler-cadence series (loop lag, queue depth, recovery duration) are
     recorded through that helper with a constant imported from ``events.py``,
@@ -175,8 +175,8 @@ class TestCompleteness:
     def test_source_scan_finds_the_known_instruments(self):
         """Guard the guard: a scan that matches nothing would pass vacuously."""
         names = _source_histogram_names()
-        assert "kirocrew.turn.duration" in names
-        assert "kirocrew.session.startup.duration" in names
+        assert "ajcrew.turn.duration" in names
+        assert "ajcrew.session.startup.duration" in names
         assert len(names) >= 7
 
     def test_every_source_histogram_has_bounds(self):
@@ -191,11 +191,11 @@ class TestCompleteness:
     def test_sampler_millisecond_histograms_have_bounds(self):
         """The sampler scan must find the loop-lag instrument, and every
         millisecond instrument it finds must be in the ms map; dropping the
-        ``kirocrew.loop.lag_ms`` entry fails here, not only in the stale check.
+        ``ajcrew.loop.lag_ms`` entry fails here, not only in the stale check.
         The sampler's non-millisecond series (queue depth, wait and recovery
         seconds) predate this map and are outside it."""
         names = _sampler_histogram_names()
-        assert "kirocrew.loop.lag_ms" in names
+        assert "ajcrew.loop.lag_ms" in names
         ms_names = {name for name in names if name.endswith("_ms")}
         missing = sorted(ms_names - set(_HISTOGRAM_BUCKETS_MS))
         assert not missing, f"sampler millisecond histograms without bounds: {missing}"
@@ -220,7 +220,7 @@ class TestNonDurationHistograms:
     Two properties, both load-bearing and neither covered by the name-suffix scan
     above:
 
-    1. **Explicit buckets.** `kirocrew.turn.credits` spans 0.03 to 658 in real
+    1. **Explicit buckets.** `ajcrew.turn.credits` spans 0.03 to 658 in real
        data. OTEL's default boundaries top out at 10000 with nothing below 5, so
        every one of those samples would land in the FIRST bucket and the reported
        p50/p90 would be a constant.
@@ -232,11 +232,11 @@ class TestNonDurationHistograms:
     def test_emitted_scan_finds_both_families(self):
         """Guard the guard, again: an empty AST harvest would pass vacuously."""
         units = _emitted_histogram_units()
-        assert units.get("kirocrew.turn.duration") == {"ms"}
-        assert units.get("kirocrew.turn.credits") == {"credit"}
-        assert units.get("kirocrew.turn.cost_usd") == {"usd"}
+        assert units.get("ajcrew.turn.duration") == {"ms"}
+        assert units.get("ajcrew.turn.credits") == {"credit"}
+        assert units.get("ajcrew.turn.cost_usd") == {"usd"}
         # The pair that motivated the unit-based check: ms, no `.duration` suffix.
-        assert units.get("kirocrew.embed.queue_wait") == {"ms"}
+        assert units.get("ajcrew.embed.queue_wait") == {"ms"}
 
     def test_every_emitted_histogram_is_registered_somewhere(self):
         missing = sorted(_emitted_histogram_names() - set(histogram_bounds()))
@@ -573,9 +573,9 @@ class TestViewWiring:
     def test_long_turn_does_not_land_in_the_overflow_bucket(self):
         """The regression: 227589ms must fall inside an explicit bucket."""
         mp, reader = self._provider()
-        mp.get_meter("t").create_histogram("kirocrew.turn.duration", unit="ms").record(227589)
+        mp.get_meter("t").create_histogram("ajcrew.turn.duration", unit="ms").record(227589)
 
-        (dp,) = self._points(reader, "kirocrew.turn.duration")
+        (dp,) = self._points(reader, "ajcrew.turn.duration")
         counts = list(dp.bucket_counts)
         overflow_index = len(dp.explicit_bounds)
         assert counts[overflow_index] == 0, "sample fell into the +Inf bucket"
@@ -588,20 +588,20 @@ class TestViewWiring:
     def test_no_duplicate_streams_per_instrument(self):
         mp, reader = self._provider()
         meter = mp.get_meter("t")
-        meter.create_histogram("kirocrew.turn.duration", unit="ms").record(5000)
-        meter.create_histogram("kirocrew.session.startup.duration", unit="ms").record(4400)
+        meter.create_histogram("ajcrew.turn.duration", unit="ms").record(5000)
+        meter.create_histogram("ajcrew.session.startup.duration", unit="ms").record(4400)
 
-        assert len(self._points(reader, "kirocrew.turn.duration")) == 1
-        assert len(self._points(reader, "kirocrew.session.startup.duration")) == 1
+        assert len(self._points(reader, "ajcrew.turn.duration")) == 1
+        assert len(self._points(reader, "ajcrew.session.startup.duration")) == 1
 
     def test_each_instrument_gets_its_own_family(self):
         mp, reader = self._provider()
         meter = mp.get_meter("t")
-        meter.create_histogram("kirocrew.turn.duration", unit="ms").record(60000)
-        meter.create_histogram("kirocrew.mcp.backend.acquire.duration", unit="ms").record(1)
+        meter.create_histogram("ajcrew.turn.duration", unit="ms").record(60000)
+        meter.create_histogram("ajcrew.mcp.backend.acquire.duration", unit="ms").record(1)
 
-        (turn,) = self._points(reader, "kirocrew.turn.duration")
-        (fast,) = self._points(reader, "kirocrew.mcp.backend.acquire.duration")
+        (turn,) = self._points(reader, "ajcrew.turn.duration")
+        (fast,) = self._points(reader, "ajcrew.mcp.backend.acquire.duration")
         assert list(turn.explicit_bounds) == list(_TURN_BUCKETS_MS)
         assert list(fast.explicit_bounds) == list(_FAST_BUCKETS_MS)
 
@@ -609,11 +609,11 @@ class TestViewWiring:
         """A credit and a dollar must not inherit a duration family's array."""
         mp, reader = self._provider()
         meter = mp.get_meter("t")
-        meter.create_histogram("kirocrew.turn.credits", unit="credit").record(6.76)
-        meter.create_histogram("kirocrew.turn.cost_usd", unit="usd").record(0.0032)
+        meter.create_histogram("ajcrew.turn.credits", unit="credit").record(6.76)
+        meter.create_histogram("ajcrew.turn.cost_usd", unit="usd").record(0.0032)
 
-        (credits,) = self._points(reader, "kirocrew.turn.credits")
-        (cost,) = self._points(reader, "kirocrew.turn.cost_usd")
+        (credits,) = self._points(reader, "ajcrew.turn.credits")
+        (cost,) = self._points(reader, "ajcrew.turn.cost_usd")
         assert list(credits.explicit_bounds) == list(_CREDIT_BUCKETS)
         assert list(cost.explicit_bounds) == list(_USD_BUCKETS)
         # Each sample sits inside a bounded bucket, so a percentile over it can
@@ -630,7 +630,7 @@ class TestAggregatorReadsRealPercentiles:
     """End-to-end: the fix must change what the Telemetry page reports."""
 
     def test_turn_percentiles_are_no_longer_pinned_to_the_ceiling(self):
-        from kiro_crew.dashboard.handlers.telemetry import _pct_from_buckets
+        from aj_crew.dashboard.handlers.telemetry import _pct_from_buckets
 
         # The same sample read against the startup boundaries and the turn ones.
         old_bounds = _STARTUP_BUCKETS_MS  # the catch-all's shared array

@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import pinned_fs
-from kiro_crew.pod import runtime as rt
+from aj_crew import pinned_fs
+from aj_crew.pod import runtime as rt
 
 requires_pinned_walk = pytest.mark.skipif(
     not pinned_fs.supports_pinned_walk(),

@@ -24,9 +24,9 @@ from unittest.mock import MagicMock
 import pytest
 from member_memory_helpers import declare_v2_store
 
-from kiro_crew.history import HistoryConsolidator
-from kiro_crew.history_consolidation_memory import _reroute_lesson_semantic_keys
-from kiro_crew.vector_memory import VectorMemoryStore, open_member_database
+from aj_crew.history import HistoryConsolidator
+from aj_crew.history_consolidation_memory import _reroute_lesson_semantic_keys
+from aj_crew.vector_memory import VectorMemoryStore, open_member_database
 
 
 def _reroute(result: dict) -> dict:
@@ -81,7 +81,7 @@ def test_lesson_semantic_passthrough_fields_carried() -> None:
                 "key": "lesson.y",
                 "value": "a scoped standing rule",
                 "applies": "always",
-                "repo_scope": "src/kiro_crew",
+                "repo_scope": "src/aj_crew",
             }
         ]
     }
@@ -89,7 +89,7 @@ def test_lesson_semantic_passthrough_fields_carried() -> None:
     assert out["lessons"][0] == {
         "rule": "a scoped standing rule",
         "applies": "always",
-        "repo_scope": "src/kiro_crew",
+        "repo_scope": "src/aj_crew",
     }
 
 
@@ -210,7 +210,7 @@ def test_v1_write_path_dedups_rerouted_lesson(tmp_path) -> None:
 
 def test_v2_write_path_dedups_rerouted_lesson(tmp_path, monkeypatch) -> None:
     """The member V2 path routes a rerouted ``lesson.*`` item through its lesson branch."""
-    from kiro_crew import memory_stores
+    from aj_crew import memory_stores
 
     monkeypatch.setattr(memory_stores, "memory_stores_root", lambda: tmp_path / "stores")
     directory = declare_v2_store(tmp_path, "member-alice")

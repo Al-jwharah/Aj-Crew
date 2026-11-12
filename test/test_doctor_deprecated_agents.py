@@ -1,4 +1,4 @@
-"""Tests for the `kirocrew doctor` deprecated-agent-spec check.
+"""Tests for the `ajcrew doctor` deprecated-agent-spec check.
 
 Guards the retirement contract from rfc-conductor-work-ledger.md ("What
 retired means for the name"): a config surface that persists an agent name --
@@ -15,14 +15,14 @@ import json
 
 import pytest
 
-from kiro_crew import cli_doctor, cron
-from kiro_crew.agent import DEPRECATED_AGENT_SPECS
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.paths import config_dir
-from kiro_crew.config.sections import KiroCrewAgentConfig
+from aj_crew import cli_doctor, cron
+from aj_crew.agent import DEPRECATED_AGENT_SPECS
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.paths import config_dir
+from aj_crew.config.sections import AjCrewAgentConfig
 
-DEPRECATED = "kirocrew-ledger-conductor"
-REPLACEMENT = "kirocrew-conductor"
+DEPRECATED = "ajcrew-ledger-conductor"
+REPLACEMENT = "ajcrew-conductor"
 
 
 @pytest.fixture()
@@ -180,7 +180,7 @@ class TestJobAgentNamesFromDisk:
     def test_gate_predicate_is_shared_with_dispatch(self) -> None:
         # The reader, session-key stability, and the Slack dispatch path must
         # all read the same gate.
-        from kiro_crew.slack import gateway
+        from aj_crew.slack import gateway
 
         assert gateway.agent_sequence_dispatches is cron.agent_sequence_dispatches
         assert not cron.agent_sequence_dispatches(["one"])
@@ -198,8 +198,8 @@ class TestJobAgentNamesFromDisk:
 
 class TestOpenSlotAgentNames:
     def _write_slot(self, slot_key: str, agent: str) -> None:
-        from kiro_crew.dashboard.chat_utils import slot_transcript_key
-        from kiro_crew.history import _safe_key, _sessions_dir
+        from aj_crew.dashboard.chat_utils import slot_transcript_key
+        from aj_crew.history import _safe_key, _sessions_dir
 
         sessions = _sessions_dir()
         sessions.mkdir(parents=True, exist_ok=True)
@@ -242,8 +242,8 @@ class TestOpenSlotAgentNames:
 
 class TestDoctorDeprecatedAgentSpecs:
     def test_crew_binding_naming_deprecated_is_flagged(self, no_other_surfaces, capsys) -> None:
-        cfg = KiroCrewConfig()
-        cfg.agents = {"myteam": KiroCrewAgentConfig(kiro_agent=DEPRECATED)}
+        cfg = AjCrewConfig()
+        cfg.agents = {"myteam": AjCrewAgentConfig(kiro_agent=DEPRECATED)}
         issues: list[str] = []
         cli_doctor._doctor_deprecated_agent_specs(cfg, issues)
         out = capsys.readouterr().out
@@ -257,7 +257,7 @@ class TestDoctorDeprecatedAgentSpecs:
         monkeypatch.setattr(cron, "job_agent_names_from_disk", lambda: [("nightly", DEPRECATED)])
         monkeypatch.setattr(cli_doctor, "_open_slot_agent_names", lambda: [])
         issues: list[str] = []
-        cli_doctor._doctor_deprecated_agent_specs(KiroCrewConfig(), issues)
+        cli_doctor._doctor_deprecated_agent_specs(AjCrewConfig(), issues)
         out = capsys.readouterr().out
         assert "cron job 'nightly'" in out
         assert REPLACEMENT in out
@@ -267,7 +267,7 @@ class TestDoctorDeprecatedAgentSpecs:
         monkeypatch.setattr(cron, "job_agent_names_from_disk", lambda: [])
         monkeypatch.setattr(cli_doctor, "_open_slot_agent_names", lambda: [("chat-3", DEPRECATED)])
         issues: list[str] = []
-        cli_doctor._doctor_deprecated_agent_specs(KiroCrewConfig(), issues)
+        cli_doctor._doctor_deprecated_agent_specs(AjCrewConfig(), issues)
         out = capsys.readouterr().out
         assert "chat slot 'chat-3'" in out
         assert REPLACEMENT in out
@@ -276,8 +276,8 @@ class TestDoctorDeprecatedAgentSpecs:
     def test_job_naming_a_crew_is_reported_once_via_the_crew(self, monkeypatch, capsys) -> None:
         # The job names the CREW; the crew binds the deprecated spec. One
         # finding (the crew's), not two -- fixing the binding fixes the job.
-        cfg = KiroCrewConfig()
-        cfg.agents = {"myteam": KiroCrewAgentConfig(kiro_agent=DEPRECATED)}
+        cfg = AjCrewConfig()
+        cfg.agents = {"myteam": AjCrewAgentConfig(kiro_agent=DEPRECATED)}
         monkeypatch.setattr(cron, "job_agent_names_from_disk", lambda: [("nightly", "myteam")])
         monkeypatch.setattr(cli_doctor, "_open_slot_agent_names", lambda: [])
         issues: list[str] = []
@@ -290,9 +290,9 @@ class TestDoctorDeprecatedAgentSpecs:
     def test_config_selectors_naming_deprecated_are_flagged(
         self, no_other_surfaces, capsys
     ) -> None:
-        from kiro_crew.config.sections import ChannelConfig
+        from aj_crew.config.sections import ChannelConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.default_agent = DEPRECATED
         cfg.session.pool_agent = DEPRECATED
         cfg.slack_channels = {"C123": ChannelConfig(agent=DEPRECATED)}
@@ -308,8 +308,8 @@ class TestDoctorDeprecatedAgentSpecs:
     def test_default_agent_naming_a_crew_is_reported_once_via_the_crew(
         self, no_other_surfaces, capsys
     ) -> None:
-        cfg = KiroCrewConfig()
-        cfg.agents = {"myteam": KiroCrewAgentConfig(kiro_agent=DEPRECATED)}
+        cfg = AjCrewConfig()
+        cfg.agents = {"myteam": AjCrewAgentConfig(kiro_agent=DEPRECATED)}
         cfg.agent.default_agent = "myteam"
         issues: list[str] = []
         cli_doctor._doctor_deprecated_agent_specs(cfg, issues)
@@ -322,10 +322,10 @@ class TestDoctorDeprecatedAgentSpecs:
         # verbatim, so a list can arrive here; dict.get on an unhashable value
         # would raise TypeError. Doctor must diagnose a malformed config, not
         # crash on it.
-        from kiro_crew.config.sections import ChannelConfig
+        from aj_crew.config.sections import ChannelConfig
 
-        cfg = KiroCrewConfig()
-        cfg.agents = {"broken": KiroCrewAgentConfig(kiro_agent=[DEPRECATED])}  # type: ignore[arg-type]
+        cfg = AjCrewConfig()
+        cfg.agents = {"broken": AjCrewAgentConfig(kiro_agent=[DEPRECATED])}  # type: ignore[arg-type]
         cfg.agent.default_agent = [DEPRECATED]  # type: ignore[assignment]
         cfg.session.pool_agent = {"agent": DEPRECATED}  # type: ignore[assignment]
         channel = ChannelConfig()
@@ -337,10 +337,10 @@ class TestDoctorDeprecatedAgentSpecs:
         assert issues == []
 
     def test_current_names_are_silent(self, monkeypatch, capsys) -> None:
-        cfg = KiroCrewConfig()
-        cfg.agents = {"myteam": KiroCrewAgentConfig(kiro_agent=REPLACEMENT)}
+        cfg = AjCrewConfig()
+        cfg.agents = {"myteam": AjCrewAgentConfig(kiro_agent=REPLACEMENT)}
         monkeypatch.setattr(cron, "job_agent_names_from_disk", lambda: [("nightly", REPLACEMENT)])
-        monkeypatch.setattr(cli_doctor, "_open_slot_agent_names", lambda: [("chat-1", "kirocrew")])
+        monkeypatch.setattr(cli_doctor, "_open_slot_agent_names", lambda: [("chat-1", "ajcrew")])
         issues: list[str] = []
         cli_doctor._doctor_deprecated_agent_specs(cfg, issues)
         assert capsys.readouterr().out == ""
@@ -353,7 +353,7 @@ class TestDoctorDeprecatedAgentSpecs:
         monkeypatch.setattr(cron, "job_agent_names_from_disk", lambda: [(hostile, DEPRECATED)])
         monkeypatch.setattr(cli_doctor, "_open_slot_agent_names", lambda: [])
         issues: list[str] = []
-        cli_doctor._doctor_deprecated_agent_specs(KiroCrewConfig(), issues)
+        cli_doctor._doctor_deprecated_agent_specs(AjCrewConfig(), issues)
         out = capsys.readouterr().out
         assert "\x1b" not in out
         assert "\\x1b" in out

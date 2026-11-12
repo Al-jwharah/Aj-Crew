@@ -24,7 +24,7 @@ from unittest.mock import patch
 import pytest
 from test_cron_merge_result_busy_store import _ADMITTED, _BusyStore, _service, _tick
 
-from kiro_crew.cron import CronJob, CronService
+from aj_crew.cron import CronJob, CronService
 
 _AT = 1_800_000_000.0
 
@@ -110,7 +110,7 @@ async def test_a_consume_queued_by_a_busy_merge_keeps_a_schedule_saved_since(
     )
     store = _BusyStore(service, merges_only=True)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             # The run's merge cannot lock the store, so its finalizer holds the record
             # and queues the consume. The Done() path queues its removal alone.
             store.on = True

@@ -1,4 +1,4 @@
-//! Native fast path for `kiro_crew.security.redaction_patterns._might_contain_credential`.
+//! Native fast path for `aj_crew.security.redaction_patterns._might_contain_credential`.
 //!
 //! The Python gate runs 21 substring searches plus 6 regex searches over the same
 //! text, one after another. This does the same test in ONE linear-time scan with

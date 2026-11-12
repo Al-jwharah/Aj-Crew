@@ -10,7 +10,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.remote_session import git_gateway, workspace_tools
+from aj_crew.remote_session import git_gateway, workspace_tools
 
 
 @pytest.mark.asyncio
@@ -20,7 +20,7 @@ async def test_an_upload_flows_on_credit_and_never_buffers_past_its_window():
     while every byte still arrives."""
     from test_remote_git_proxy import FrameLink
 
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.testing.wait import async_wait_until
 
     link = FrameLink()
     received = 0
@@ -81,7 +81,7 @@ async def test_a_stalled_upload_leaves_its_cancel_and_other_requests_readable():
     still takes this request's cancel and serves another request meanwhile."""
     from test_remote_git_proxy import FrameLink
 
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.testing.wait import async_wait_until
 
     link = FrameLink()
     stalled = asyncio.Event()
@@ -132,7 +132,7 @@ async def test_a_stalled_upload_leaves_its_cancel_and_other_requests_readable():
 
 
 def test_the_guest_and_the_gateway_agree_on_the_upload_window():
-    from kiro_crew.remote_session import git_proxy
+    from aj_crew.remote_session import git_proxy
 
     assert git_proxy.UPLOAD_WINDOW == git_gateway.UPLOAD_WINDOW
 
@@ -141,8 +141,8 @@ def test_the_guest_and_the_gateway_agree_on_the_upload_window():
 async def test_a_paused_git_reader_does_not_trip_the_stall_check(monkeypatch):
     """The git reader's backpressure goes through the base link's consumer
     gate, so a busy reader is not mistaken for a silent connection."""
-    from kiro_crew.remote_session import link as link_module
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.remote_session import link as link_module
+    from aj_crew.testing.wait import async_wait_until
 
     async def unused_dial():
         raise AssertionError("the wire is attached in memory")
@@ -355,7 +355,7 @@ def test_history_never_verifies_signatures_under_log_show_signature(tmp_path, mo
 async def test_lfs_returns_to_https_without_reading_credentials(repo, op):
     from test_remote_git_proxy import FrameLink
 
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.testing.wait import async_wait_until
 
     link = FrameLink()
 

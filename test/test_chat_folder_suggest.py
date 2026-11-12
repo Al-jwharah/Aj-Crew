@@ -9,8 +9,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.dashboard import chat_folder_suggest as fs
-from kiro_crew.history import INCOGNITO_MEMORY_MODES
+from aj_crew.dashboard import chat_folder_suggest as fs
+from aj_crew.history import INCOGNITO_MEMORY_MODES
 
 # ── _parse_choice ───────────────────────────────────────────────────────────
 
@@ -22,7 +22,7 @@ from kiro_crew.history import INCOGNITO_MEMORY_MODES
         ("  2  ", 3, 1),
         ("#2", 3, 1),
         ("2.", 3, 1),
-        ("2) Kiro Crew", 3, 1),
+        ("2) Aj Crew", 3, 1),
         ("2\nbecause it is about i18n", 3, 1),
         ("1", 1, 0),
         # NONE is the explicit escape and must win over anything after it.
@@ -38,7 +38,7 @@ from kiro_crew.history import INCOGNITO_MEMORY_MODES
         ("", 3, None),
         ("   ", 3, None),
         ("the second one", 3, None),
-        ("Kiro Crew", 3, None),
+        ("Aj Crew", 3, None),
     ],
 )
 def test_parse_choice(reply: str, count: int, expected: int | None) -> None:
@@ -270,10 +270,10 @@ def test_build_prompt_numbers_folders_and_marks_empty_ones() -> None:
     prompt = fs._build_prompt(
         title="Fix the render gate flake",
         message="the artifacts surface keeps failing",
-        labels=["Kiro Crew › i18n", "Errands"],
+        labels=["Aj Crew › i18n", "Errands"],
         samples=[["Pseudolocale gate", "Catalog sync"], []],
     )
-    assert '1. Kiro Crew › i18n — contains: "Pseudolocale gate"; "Catalog sync"' in prompt
+    assert '1. Aj Crew › i18n — contains: "Pseudolocale gate"; "Catalog sync"' in prompt
     assert "2. Errands — (no sessions yet)" in prompt
     assert "Fix the render gate flake" in prompt
     # The NONE escape must always be offered, or the model is forced to guess.
@@ -333,14 +333,14 @@ def _run(state, slot, *, reply="1", enabled=True):
         return reply
 
     with (
-        patch.object(fs.KiroCrewConfig, "load", staticmethod(lambda: cfg)),
+        patch.object(fs.AjCrewConfig, "load", staticmethod(lambda: cfg)),
         patch.object(fs, "run_bg_oneliner", fake_oneliner),
     ):
         asyncio.run(fs.maybe_suggest_folder(state, slot))
     return calls
 
 
-_FOLDERS = [{"id": "f1", "name": "Kiro Crew", "order": 0}]
+_FOLDERS = [{"id": "f1", "name": "Aj Crew", "order": 0}]
 
 
 def test_suggests_and_delivers_to_owner_sockets() -> None:
@@ -352,7 +352,7 @@ def test_suggests_and_delivers_to_owner_sockets() -> None:
     payload = rec.sent[0][1]
     assert payload["slot"] == slot.key
     assert payload["folder_id"] == "f1"
-    assert payload["folder_name"] == "Kiro Crew"
+    assert payload["folder_name"] == "Aj Crew"
     assert isinstance(payload["ts"], float)
 
 
@@ -426,7 +426,7 @@ def test_manual_filing_during_the_model_call_wins() -> None:
         return "1"
 
     with (
-        patch.object(fs.KiroCrewConfig, "load", staticmethod(lambda: cfg)),
+        patch.object(fs.AjCrewConfig, "load", staticmethod(lambda: cfg)),
         patch.object(fs, "run_bg_oneliner", racing_oneliner),
     ):
         asyncio.run(fs.maybe_suggest_folder(state, slot))
@@ -460,7 +460,7 @@ def test_model_failure_is_silent_and_not_retried() -> None:
         raise RuntimeError("model unavailable")
 
     with (
-        patch.object(fs.KiroCrewConfig, "load", staticmethod(lambda: cfg)),
+        patch.object(fs.AjCrewConfig, "load", staticmethod(lambda: cfg)),
         patch.object(fs, "run_bg_oneliner", boom),
     ):
         asyncio.run(fs.maybe_suggest_folder(state, slot))
@@ -481,7 +481,7 @@ def test_model_call_names_the_slot_in_the_usage_row() -> None:
         return "1"
 
     with (
-        patch.object(fs.KiroCrewConfig, "load", staticmethod(lambda: cfg)),
+        patch.object(fs.AjCrewConfig, "load", staticmethod(lambda: cfg)),
         patch.object(fs, "run_bg_oneliner", capturing_oneliner),
     ):
         asyncio.run(fs.maybe_suggest_folder(state, slot))

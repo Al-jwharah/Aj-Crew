@@ -17,7 +17,7 @@
  */
 import { i18nT } from '../../i18n/t'
 
-export type ToolCategory = 'filesystem' | 'execution' | 'web' | 'kirocrew' | 'other'
+export type ToolCategory = 'filesystem' | 'execution' | 'web' | 'ajcrew' | 'other'
 
 export interface ToolMeta {
   label: string
@@ -83,23 +83,23 @@ const TOOL_CLASS: Record<
     descriptionKey: 'components.crew.toolMeta.web_search_description',
   },
   introspect: {
-    category: 'kirocrew',
+    category: 'ajcrew',
     readOnly: true,
     labelKey: 'components.crew.toolMeta.introspect_label',
     descriptionKey: 'components.crew.toolMeta.introspect_description',
   },
   session: {
-    category: 'kirocrew',
+    category: 'ajcrew',
     labelKey: 'components.crew.toolMeta.session_label',
     descriptionKey: 'components.crew.toolMeta.session_description',
   },
   report: {
-    category: 'kirocrew',
+    category: 'ajcrew',
     labelKey: 'components.crew.toolMeta.report_label',
     descriptionKey: 'components.crew.toolMeta.report_description',
   },
   tool_search: {
-    category: 'kirocrew',
+    category: 'ajcrew',
     readOnly: true,
     labelKey: 'components.crew.toolMeta.tool_search_label',
     descriptionKey: 'components.crew.toolMeta.tool_search_description',

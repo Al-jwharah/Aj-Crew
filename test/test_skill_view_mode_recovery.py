@@ -19,15 +19,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import native_skill_projection_helpers
 import pytest
 
-from kiro_crew.acp import skill_projection as projection
-from kiro_crew.acp.runtime import AcpRuntime, AcpRuntimeError, _format_runtime_rpc_error
+from aj_crew.acp import skill_projection as projection
+from aj_crew.acp.runtime import AcpRuntime, AcpRuntimeError, _format_runtime_rpc_error
 
 _end_projections_before_tmp_path_goes = (
     native_skill_projection_helpers._end_projections_before_tmp_path_goes
 )
 
-VIEW = "kirocrew-skill-view-" + "a" * 24
-OTHER_VIEW = "kirocrew-skill-view-" + "b" * 24
+VIEW = "ajcrew-skill-view-" + "a" * 24
+OTHER_VIEW = "ajcrew-skill-view-" + "b" * 24
 
 
 @pytest.fixture(autouse=True)
@@ -47,7 +47,7 @@ def _fresh_view_memory(monkeypatch, tmp_path):
 
 @pytest.fixture
 def native_tree(tmp_path, monkeypatch):
-    monkeypatch.delenv("KIROCREW_NATIVE_SKILL_PROJECTION", raising=False)
+    monkeypatch.delenv("AJCREW_NATIVE_SKILL_PROJECTION", raising=False)
     home = tmp_path / "kiro"
     agents = home / "agents"
     agents.mkdir(parents=True)
@@ -59,7 +59,7 @@ def native_tree(tmp_path, monkeypatch):
     monkeypatch.setattr(projection.platform_compat, "path_volume_is_remote", lambda path: False)
     monkeypatch.setattr(projection.platform_compat, "first_linked_ancestor", lambda path: None)
     monkeypatch.setattr(
-        "kiro_crew.agent.managed_mcp_spec_entry",
+        "aj_crew.agent.managed_mcp_spec_entry",
         lambda name, **_kw: {"command": "test-core", "args": []},
     )
     monkeypatch.setattr(
@@ -67,7 +67,7 @@ def native_tree(tmp_path, monkeypatch):
         "list_agents",
         lambda **kw: [SimpleNamespace(name="custom", filename="custom.json", scope="global")],
     )
-    monkeypatch.setattr("kiro_crew.agent._KIRO_MCP_JSON", home / "settings" / "mcp.json")
+    monkeypatch.setattr("aj_crew.agent._KIRO_MCP_JSON", home / "settings" / "mcp.json")
     (agents / "custom.json").write_text('{"name":"custom","description":"v1"}', encoding="utf-8")
     # Freeze the projection clock so the drain budget never expires; the production
     # budget is left at its real value and only the deadline comparison is held.
@@ -188,9 +188,9 @@ def test_a_ledger_that_already_holds_the_views_is_not_rewritten(tmp_path, monkey
     monkeypatch.setattr(projection, "atomic_write", lambda *a, **k: writes.append(a))
     ledger = projection._ViewLedgerWrites(agents, "home")
     assert ledger.retain_many({VIEW: "custom"})
-    assert ledger.retain(VIEW, {"x-kirocrew-agent": "custom"})
+    assert ledger.retain(VIEW, {"x-ajcrew-agent": "custom"})
     # A record naming no admissible agent has nothing to keep.
-    assert ledger.retain(OTHER_VIEW, {"x-kirocrew-agent": OTHER_VIEW})
+    assert ledger.retain(OTHER_VIEW, {"x-ajcrew-agent": OTHER_VIEW})
     assert writes == []
 
 
@@ -198,17 +198,17 @@ def test_the_look_ahead_records_only_this_homes_views(tmp_path):
     agents = tmp_path / "agents"
     metadata = projection._projection_metadata_dir()
     metadata.mkdir(parents=True)
-    names = ["kirocrew-skill-view-" + f"{n:024x}" for n in range(3)]
+    names = ["ajcrew-skill-view-" + f"{n:024x}" for n in range(3)]
     homes = ["mine", "theirs", "mine"]
     for name, home in zip(names, homes):
         (metadata / f"{name}.json").write_text(
-            '{"x-kirocrew-managed": "skill-view", "x-kirocrew-home": "%s", '
-            '"x-kirocrew-agent": "agent-%s"}' % (home, name[-1]),
+            '{"x-ajcrew-managed": "skill-view", "x-ajcrew-home": "%s", '
+            '"x-ajcrew-agent": "agent-%s"}' % (home, name[-1]),
             encoding="utf-8",
         )
     ledger = projection._ViewLedgerWrites(agents, "mine")
     ledger.look_ahead([agents / f"{name}.json" for name in names], 0)
-    assert ledger.retain(names[0], {"x-kirocrew-agent": "agent-0"})
+    assert ledger.retain(names[0], {"x-ajcrew-agent": "agent-0"})
     # One write covered the window; another home's view took no slot.
     assert projection._read_view_ledger(metadata) == {names[0]: "agent-0", names[2]: "agent-2"}
 
@@ -241,14 +241,14 @@ def test_the_bound_drops_redundant_entries_then_the_oldest_retired_ones(
 ):
     monkeypatch.setattr(projection, "_VIEW_SOURCES_MAX", 2)
     monkeypatch.setattr(projection, "_LEDGER_EVICTION_WARNED", False)
-    names = ["kirocrew-skill-view-" + f"{n:024x}" for n in range(4)]
+    names = ["ajcrew-skill-view-" + f"{n:024x}" for n in range(4)]
     projection._record_view_ledger_entries(tmp_path, {names[0]: "a", names[1]: "b"})
     # names[0]'s sidecar is present but unreadable, so it answers for nothing;
     # names[1]'s still maps it to "b", so that entry is redundant and goes first,
     # although names[0] is older.
     (tmp_path / f"{names[0]}.json").write_text("not json", encoding="utf-8")
     (tmp_path / f"{names[1]}.json").write_text(
-        '{"x-kirocrew-managed": "skill-view", "x-kirocrew-agent": "b"}', encoding="utf-8"
+        '{"x-ajcrew-managed": "skill-view", "x-ajcrew-agent": "b"}', encoding="utf-8"
     )
     held = projection._record_view_ledger_entries(tmp_path, {names[2]: "c"})
     assert held == {names[0]: "a", names[2]: "c"}
@@ -266,7 +266,7 @@ def test_the_bound_drops_redundant_entries_then_the_oldest_retired_ones(
 
 def test_a_batch_rewrites_its_held_pairs_so_the_bound_cannot_evict_them(tmp_path, monkeypatch):
     monkeypatch.setattr(projection, "_VIEW_SOURCES_MAX", 2)
-    names = ["kirocrew-skill-view-" + f"{n:024x}" for n in range(3)]
+    names = ["ajcrew-skill-view-" + f"{n:024x}" for n in range(3)]
     metadata = projection._projection_metadata_dir()
     metadata.mkdir(parents=True)
     projection._record_view_ledger_entries(metadata, {names[0]: "a", names[1]: "b"})
@@ -294,8 +294,8 @@ def test_a_refused_write_is_not_retried_for_every_candidate(tmp_path, monkeypatc
 
     monkeypatch.setattr(projection, "_record_view_ledger_entries", refused)
     ledger = projection._ViewLedgerWrites(tmp_path / "agents", "home")
-    names = ["kirocrew-skill-view-" + f"{n:024x}" for n in range(3)]
-    assert not any([ledger.retain(name, {"x-kirocrew-agent": "a"}) for name in names])
+    names = ["ajcrew-skill-view-" + f"{n:024x}" for n in range(3)]
+    assert not any([ledger.retain(name, {"x-ajcrew-agent": "a"}) for name in names])
     assert len(calls) == 1
     assert not ledger.retain_many({names[0]: "a"})
     assert len(calls) == 1
@@ -327,11 +327,11 @@ def test_the_view_ledger_keeps_its_newest_admissible_entries_over_redundant_ones
     tmp_path, monkeypatch
 ):
     monkeypatch.setattr(projection, "_VIEW_SOURCES_MAX", 2)
-    names = ["kirocrew-skill-view-" + f"{n:024x}" for n in range(3)]
+    names = ["ajcrew-skill-view-" + f"{n:024x}" for n in range(3)]
     projection._record_view_ledger(tmp_path, {"a": names[0], "b": names[1]})
     # The oldest view's sidecar still answers for it, so the bound may drop it.
     (tmp_path / f"{names[0]}.json").write_text(
-        '{"x-kirocrew-managed": "skill-view", "x-kirocrew-agent": "a"}', encoding="utf-8"
+        '{"x-ajcrew-managed": "skill-view", "x-ajcrew-agent": "a"}', encoding="utf-8"
     )
     projection._record_view_ledger(tmp_path, {"c": names[2], "x" * 10_000: VIEW})
     assert projection._read_view_ledger(tmp_path) == {names[1]: "b", names[2]: "c"}
@@ -385,7 +385,7 @@ async def test_create_and_load_map_a_stored_view_before_any_guard():
     projection._remember_view_sources({"custom": VIEW})
     rt = AcpRuntime(work_dir="/tmp")
     assert await rt._source_agent(VIEW) == "custom"
-    assert await rt._source_agent("kirocrew") == "kirocrew"
+    assert await rt._source_agent("ajcrew") == "ajcrew"
     assert await rt._source_agent(None) is None
     with pytest.raises(AcpRuntimeError, match="Pick the agent"):
         await rt._source_agent(OTHER_VIEW)
@@ -393,7 +393,7 @@ async def test_create_and_load_map_a_stored_view_before_any_guard():
 
 @pytest.mark.asyncio
 async def test_a_handle_set_mode_sends_the_source_agent():
-    from kiro_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.session_handle import AcpSessionHandle
 
     projection._remember_view_sources({"custom": VIEW})
     runtime = MagicMock()
@@ -427,14 +427,14 @@ def test_a_missing_view_nothing_remembers_still_reads_as_a_view(tmp_path):
 
 
 def test_a_missing_real_spec_suggests_setup_without_clean(tmp_path):
-    with patch("kiro_crew.acp.runtime.kiro_agents_dir", return_value=tmp_path):
-        text = _format_runtime_rpc_error(_mode_not_found("kirocrew"))
-    assert "kirocrew setup --agent-only`" in text
+    with patch("aj_crew.acp.runtime.kiro_agents_dir", return_value=tmp_path):
+        text = _format_runtime_rpc_error(_mode_not_found("ajcrew"))
+    assert "ajcrew setup --agent-only`" in text
     assert "--clean" not in text
 
 
 def test_the_direct_client_launches_the_source_agent(tmp_path):
-    from kiro_crew.acp.client import AcpClient, AcpError
+    from aj_crew.acp.client import AcpClient, AcpError
 
     projection._remember_view_sources({"custom": VIEW})
     client = AcpClient(work_dir=tmp_path / "wd", agent=VIEW, sandbox_mode="off")

@@ -11,7 +11,7 @@
  * missed message just falls back to the normal staleness refetch.
  */
 
-export const ARTIFACT_COMMENTS_SYNC_CHANNEL = 'kirocrew-artifact-comments-sync'
+export const ARTIFACT_COMMENTS_SYNC_CHANNEL = 'ajcrew-artifact-comments-sync'
 
 type SyncMsg = { slug: string }
 

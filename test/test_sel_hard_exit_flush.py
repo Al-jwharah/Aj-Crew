@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.sel import (
+from aj_crew.sel import (
     SecurityEvent,
     SecurityEventLog,
     flush_audit_queue,
@@ -90,7 +90,7 @@ def _event(event_id: str) -> SecurityEvent:
         timestamp="2026-05-13T00:00:00+00:00",
         event_type="tool_invocation",
         caller_identity="dashboard:abc",
-        agent="kirocrew",
+        agent="ajcrew",
         source="dashboard",
         operation="execute_bash",
         outcome="approved",
@@ -113,7 +113,7 @@ class TestFlushAuditQueue:
         """With no live SEL there is nothing queued, and constructing one to
         find that out would create the trust directory and HMAC key as a side
         effect of leaving. The drain must not reach for the filesystem at all."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         before = sorted(p.name for p in tmp_path.iterdir())
         flush_audit_queue()
         assert SecurityEventLog._instance is None
@@ -244,16 +244,12 @@ class TestEveryGatewayHardExitFlushesTheAuditQueue:
     """
 
     _MODULES = (
-        Path(__file__).resolve().parents[1] / "src/kiro_crew/slack/gateway.py",
+        Path(__file__).resolve().parents[1] / "src/aj_crew/slack/gateway.py",
         *sorted(
-            (Path(__file__).resolve().parents[1] / "src/kiro_crew/slack/gateway_runtime").glob(
-                "*.py"
-            )
+            (Path(__file__).resolve().parents[1] / "src/aj_crew/slack/gateway_runtime").glob("*.py")
         ),
-        *sorted((Path(__file__).resolve().parents[1] / "src/kiro_crew/slack").glob("events*.py")),
-        *sorted(
-            (Path(__file__).resolve().parents[1] / "src/kiro_crew").glob("platform_compat*.py")
-        ),
+        *sorted((Path(__file__).resolve().parents[1] / "src/aj_crew/slack").glob("events*.py")),
+        *sorted((Path(__file__).resolve().parents[1] / "src/aj_crew").glob("platform_compat*.py")),
     )
     _HELPERS = {"flush_audit_queue", "flush_audit_queue_before_hard_exit"}
 
@@ -393,7 +389,7 @@ class TestEveryGatewayHardExitFlushesTheAuditQueue:
         """``platform_compat_runtime.py`` is scanned, so ``exit_after_failed_restart_exec``
         -- a gateway hard exit -- is held to the drain contract and must satisfy
         it."""
-        path = Path(__file__).resolve().parents[1] / "src/kiro_crew/platform_compat_runtime.py"
+        path = Path(__file__).resolve().parents[1] / "src/aj_crew/platform_compat_runtime.py"
         tree = ast.parse(path.read_text(encoding="utf-8"))
         by_name = {fn.name: fn for fn, _ in self._hard_exit_functions(tree)}
         assert (
@@ -405,7 +401,7 @@ class TestEveryGatewayHardExitFlushesTheAuditQueue:
         """The force exit's ``hard_exit`` is scanned under the function the
         ``kc-force-exit`` thread runs, and that function drains the queue."""
         path = (
-            Path(__file__).resolve().parents[1] / "src/kiro_crew/slack/gateway_runtime/exit_path.py"
+            Path(__file__).resolve().parents[1] / "src/aj_crew/slack/gateway_runtime/exit_path.py"
         )
         tree = ast.parse(path.read_text(encoding="utf-8"))
         by_name = {fn.name: fn for fn, _ in self._hard_exit_functions(tree)}
@@ -439,9 +435,9 @@ class TestSelFlushPrecedesGatewayLogDrain:
     # which the ``sel`` marker in ``_SEL_DRAINS`` catches. ``_force_exit`` is
     # the second-signal force exit's thread body.
     _PATHS = {
-        "src/kiro_crew/slack/gateway_runtime/exit_path.py": {"_shutdown_and_exit", "_force_exit"},
-        "src/kiro_crew/platform_compat_runtime.py": {"exit_after_failed_restart_exec"},
-        "src/kiro_crew/slack/events_slash.py": {"_handle_restart"},
+        "src/aj_crew/slack/gateway_runtime/exit_path.py": {"_shutdown_and_exit", "_force_exit"},
+        "src/aj_crew/platform_compat_runtime.py": {"exit_after_failed_restart_exec"},
+        "src/aj_crew/slack/events_slash.py": {"_handle_restart"},
     }
 
     @staticmethod

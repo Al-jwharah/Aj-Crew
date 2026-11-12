@@ -9,9 +9,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 WARNING = "chat history is not included in this restore"
 
@@ -19,8 +19,8 @@ WARNING = "chat history is not included in this restore"
 def _home(tmp_path: Path, monkeypatch) -> Path:
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    _setup_fake_kirocrew(home)
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    _setup_fake_ajcrew(home)
     (home / "sessions").mkdir()
     (home / "sessions" / "dashboard_chat-a.jsonl").write_text('{"_type": "metadata"}\n')
     return home
@@ -30,7 +30,7 @@ def _snapshot(tmp_path: Path, *components: str) -> Path:
     out = tmp_path / "out"
     argv = [str(out), *(("--components", ",".join(components)) if components else ())]
     assert snap.snapshot_main([*argv, *unpinnable_argv()]) == 0
-    return next(out.glob("kirocrew-snapshot-*.tar.gz"))
+    return next(out.glob("ajcrew-snapshot-*.tar.gz"))
 
 
 def _restore(bundle: Path, mode: str, *components: str) -> int:

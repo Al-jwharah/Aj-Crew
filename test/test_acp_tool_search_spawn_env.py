@@ -11,21 +11,21 @@ import sys
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import kiro_cli
-from kiro_crew.acp.harness._common import MANDATORY_MCPS_ENV as _ENV
-from kiro_crew.acp.harness.kas import KasHarness
-from kiro_crew.acp.harness.kiro import KiroHarness
+from aj_crew import agent as agent_mod
+from aj_crew import kiro_cli
+from aj_crew.acp.harness._common import MANDATORY_MCPS_ENV as _ENV
+from aj_crew.acp.harness.kas import KasHarness
+from aj_crew.acp.harness.kiro import KiroHarness
 
 
 @pytest.fixture(autouse=True)
 def quiet_host(monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep credentials independent of the host."""
     monkeypatch.setattr(
-        "kiro_crew.config.loader.inject_kiro_cli_api_key", lambda _env: None, raising=True
+        "aj_crew.config.loader.inject_kiro_cli_api_key", lambda _env: None, raising=True
     )
     monkeypatch.setattr(
-        "kiro_crew.config.loader.strip_kiro_cli_api_key", lambda _env: None, raising=True
+        "aj_crew.config.loader.strip_kiro_cli_api_key", lambda _env: None, raising=True
     )
 
 
@@ -75,21 +75,19 @@ def test_older_or_unknown_engine_keeps_crew_servers(harness, overlay, monkeypatc
     monkeypatch.delenv(_ENV, raising=False)
     monkeypatch.setattr(kiro_cli, "mandatory_mcps_drop_allowed", lambda _binary: False)
     monkeypatch.setattr(
-        agent_mod, "_MANAGED_MCP_SERVERS", {"kirocrew-z": {}, "kirocrew-work": {"opt_in": True}}
+        agent_mod, "_MANAGED_MCP_SERVERS", {"ajcrew-z": {}, "ajcrew-work": {"opt_in": True}}
     )
-    monkeypatch.setattr(
-        agent_mod, "_extra_mcp_servers", lambda: {"edition-a": {}, "kirocrew-z": {}}
-    )
+    monkeypatch.setattr(agent_mod, "_extra_mcp_servers", lambda: {"edition-a": {}, "ajcrew-z": {}})
     env = {} if overlay is None else {_ENV: overlay}
     harness().apply_spawn_env(env)
-    assert env[_ENV] == "edition-a,kirocrew-work,kirocrew-z"
+    assert env[_ENV] == "ajcrew-work,ajcrew-z,edition-a"
 
 
 @pytest.mark.parametrize("root", ["kas", "app/kas"], ids=["data-home", "desktop"])
 @pytest.mark.parametrize("overlay", [None, "", "overlay-server"])
 def test_kas_engine_bundle_defers_crew_servers(overlay, root, tmp_path, monkeypatch) -> None:
     """Crew's own KAS bundle keeps ``tools`` fixed on a load: no engine floor applies."""
-    from kiro_crew.acp import kas_bundle
+    from aj_crew.acp import kas_bundle
 
     def unexpected_probe(*_args):
         pytest.fail("A bundle spawn must not consult the kiro-cli engine floor")
@@ -109,18 +107,18 @@ def test_kas_outside_the_engine_bundle_keeps_the_floor(
     spawned_binary, tmp_path, monkeypatch
 ) -> None:
     """The relay runs whatever KAS its kiro-cli carries, so the floor still decides."""
-    from kiro_crew.acp import kas_bundle
+    from aj_crew.acp import kas_bundle
 
     monkeypatch.setattr(kas_bundle, "kas_engines_root", lambda home=None: tmp_path / "kas")
     monkeypatch.setattr(kas_bundle, "bundled_kas_root", lambda: None)
     binary = None if spawned_binary is None else str(tmp_path / "bin" / "kiro-cli")
     monkeypatch.delenv(_ENV, raising=False)
     monkeypatch.setattr(kiro_cli, "mandatory_mcps_drop_allowed", lambda _binary: False)
-    monkeypatch.setattr(agent_mod, "_MANAGED_MCP_SERVERS", {"kirocrew-z": {}})
+    monkeypatch.setattr(agent_mod, "_MANAGED_MCP_SERVERS", {"ajcrew-z": {}})
     monkeypatch.setattr(agent_mod, "_extra_mcp_servers", lambda: {})
     env: dict[str, str] = {}
     KasHarness().apply_spawn_env(env, spawned_binary=binary)
-    assert env[_ENV] == "kirocrew-z"
+    assert env[_ENV] == "ajcrew-z"
 
 
 @_HOSTS
@@ -184,7 +182,7 @@ def test_spawn_env_keeps_real_opt_in_servers_resident(harness, monkeypatch) -> N
     monkeypatch.setattr(kiro_cli, "mandatory_mcps_drop_allowed", lambda _binary: False)
     env: dict[str, str] = {}
     harness().apply_spawn_env(env)
-    for server in ("kirocrew-dashboard", "kirocrew-work", "kirocrew-crew-log"):
+    for server in ("ajcrew-dashboard", "ajcrew-work", "ajcrew-crew-log"):
         assert server in env[_ENV].split(",")
         assert server not in agent_mod.emission_eligible_mcp_servers()
 
@@ -205,7 +203,7 @@ def test_spawn_env_keeps_real_opt_in_servers_resident(harness, monkeypatch) -> N
     ],
 )
 def test_deferral_requires_the_pinned_install(case, tmp_path, monkeypatch) -> None:
-    monkeypatch.delenv("KIROCREW_KIRO_BIN", raising=False)
+    monkeypatch.delenv("AJCREW_KIRO_BIN", raising=False)
     install = tmp_path / "install"
     install.mkdir()
     pinned = install / "kiro-cli"
@@ -270,12 +268,12 @@ class TestTheServerSet:
         the eligible set ("would a rebuild re-add it") drops it.
         """
         owned = agent_mod.crew_owned_mcp_servers()
-        for opt_in in ("kirocrew-dashboard", "kirocrew-work", "kirocrew-crew-log"):
+        for opt_in in ("ajcrew-dashboard", "ajcrew-work", "ajcrew-crew-log"):
             assert opt_in in owned
             assert opt_in not in agent_mod.emission_eligible_mcp_servers()
 
     def test_it_names_the_always_on_servers_too(self) -> None:
-        assert {"kirocrew-core", "kirocrew-cron"} <= agent_mod.crew_owned_mcp_servers()
+        assert {"ajcrew-core", "ajcrew-cron"} <= agent_mod.crew_owned_mcp_servers()
 
     def test_it_is_a_superset_of_what_a_rebuild_would_emit(self) -> None:
         """Erring wide is free (a name for an absent server matches no tool); erring
@@ -285,10 +283,10 @@ class TestTheServerSet:
     def test_it_carries_the_edition_seam_and_claims_no_prefix(self) -> None:
         """The set is the managed map plus the edition adapter's extras.
 
-        A ``kirocrew-`` prefix check would be vacuous: the public adapter returns nothing,
+        An ``ajcrew-`` prefix check would be vacuous: the public adapter returns nothing,
         and the seam does not constrain its keys.
         """
-        from kiro_crew.agent import _MANAGED_MCP_SERVERS, _extra_mcp_servers
+        from aj_crew.agent import _MANAGED_MCP_SERVERS, _extra_mcp_servers
 
         assert agent_mod.crew_owned_mcp_servers() == frozenset(
             (*_MANAGED_MCP_SERVERS, *_extra_mcp_servers())
@@ -299,7 +297,7 @@ def test_operator_help_states_the_floor_and_the_override() -> None:
     """The agent.tool_search help names the measured floor and the recovery knob."""
     import dataclasses
 
-    from kiro_crew.config.sections import AgentConfig
+    from aj_crew.config.sections import AgentConfig
 
     help_text = next(
         f.metadata["help"] for f in dataclasses.fields(AgentConfig) if f.name == "tool_search"
@@ -314,7 +312,7 @@ def test_operator_kiro_bin_override_refuses_deferral_without_probing(tmp_path, m
     pinned = tmp_path / "kiro-cli"
     pinned.write_text("executable")
     pinned.chmod(0o755)
-    monkeypatch.setenv("KIROCREW_KIRO_BIN", str(pinned))
+    monkeypatch.setenv("AJCREW_KIRO_BIN", str(pinned))
     monkeypatch.setattr(kiro_cli, "pin_kiro_cli", lambda: (str(pinned), False))
 
     def probe(_binary):
@@ -336,7 +334,7 @@ def test_operator_kiro_bin_override_refuses_deferral_without_probing(tmp_path, m
 def test_posix_kiro_cli_without_chat_sibling(version, allowed, tmp_path, monkeypatch) -> None:
     if sys.platform == "win32":
         pytest.skip("Windows ships one self-contained kiro-cli.exe")
-    monkeypatch.delenv("KIROCREW_KIRO_BIN", raising=False)
+    monkeypatch.delenv("AJCREW_KIRO_BIN", raising=False)
     pinned = tmp_path / "kiro-cli"
     pinned.write_text("executable")
     pinned.chmod(0o755)
@@ -378,13 +376,13 @@ def managed_launcher(tmp_path, monkeypatch):
     """A toolbox-style shim with no kiro-cli-chat beside it, and the install behind it."""
     if sys.platform == "win32":
         pytest.skip("Windows has no chat sibling")
-    monkeypatch.delenv("KIROCREW_KIRO_BIN", raising=False)
+    monkeypatch.delenv("AJCREW_KIRO_BIN", raising=False)
     shim = _executable(tmp_path / "shim-bin" / "kiro-cli")
     real = _executable(tmp_path / "install" / "bin" / "kiro-cli")
     chat = _executable(tmp_path / "install" / "bin" / "kiro-cli-chat")
     resolver = _ShimResolver({shim: real})
     monkeypatch.setattr(
-        "kiro_crew.sandbox.current_context",
+        "aj_crew.sandbox.current_context",
         lambda: type("Ctx", (), {"agent_executable": resolver})(),
     )
     monkeypatch.setattr(kiro_cli, "pin_kiro_cli", lambda: (shim, False))
@@ -444,7 +442,7 @@ def test_a_resolved_install_that_fails_any_check_keeps_crew_servers(case, manage
 def test_an_operator_kiro_bin_override_refuses_before_resolving(
     managed_launcher, monkeypatch
 ) -> None:
-    monkeypatch.setenv("KIROCREW_KIRO_BIN", managed_launcher["shim"])
+    monkeypatch.setenv("AJCREW_KIRO_BIN", managed_launcher["shim"])
     assert kiro_cli.mandatory_mcps_drop_allowed(managed_launcher["shim"]) is False
     assert managed_launcher["resolver"].calls == []
     assert managed_launcher["probed"] == []

@@ -542,7 +542,7 @@ describe('wire parity with the gateway constants', () => {
   // gateway_notice.py, at column 0 (the META_KEY / ARGS_KEY entries name meta
   // fields, not tokens); every token must be known to the frontend on exactly
   // one row role, or its row falls back to raw English on every locale.
-  const read = (file: string) => readFileSync(join(__dirname, '../../../src/kiro_crew/dashboard', file), 'utf8')
+  const read = (file: string) => readFileSync(join(__dirname, '../../../src/aj_crew/dashboard', file), 'utf8')
   const sources = [read('chat_utils.py'), read('gateway_notice.py')]
   const backend = sources.flatMap((py) =>
     [...py.matchAll(/^(?:TRANSIENT|GATEWAY)_NOTICE_(?!META_KEY|ARGS_KEY)[A-Z_]+\s*=\s*"([^"]+)"/gm)].map((m) => m[1]),
@@ -600,7 +600,7 @@ describe('the KAS signed-out row', () => {
   const RELAY_WIRE = `KAS runs through kiro-cli's relay. ${TAIL}`
   const lead = (route: string, message: string) => GN.kas_route_lead.replace('{{route}}', route).replace('{{message}}', message)
   const RELAY = GN.kas_route_relay
-  const BUNDLE = GN.kas_route_bundle.replace('{{productName}}', 'Kiro Crew')
+  const BUNDLE = GN.kas_route_bundle.replace('{{productName}}', 'Aj Crew')
   const row = (args?: { route: string }) =>
     msg('error', {
       content: RELAY_WIRE,
@@ -635,7 +635,7 @@ describe('the KAS signed-out row', () => {
   it('recognises each sentence written before the token existed, route included', () => {
     const bare = msg('error', { content: TAIL })
     const relay = msg('error', { content: RELAY_WIRE })
-    const bundle = msg('error', { content: `KAS runs on Kiro Crew's own engine because kiro-cli is not installed. ${TAIL}` })
+    const bundle = msg('error', { content: `KAS runs on Aj Crew's own engine because kiro-cli is not installed. ${TAIL}` })
     expect(resolveGatewayNotice(bare, [bare], 0)?.text).toBe(GN.kas_signed_out)
     expect(resolveGatewayNotice(relay, [relay], 0)?.text).toBe(lead(RELAY, GN.kas_signed_out))
     expect(resolveGatewayNotice(bundle, [bundle], 0)?.text).toBe(lead(BUNDLE, GN.kas_signed_out))
@@ -650,7 +650,7 @@ describe('the KAS signed-out row', () => {
     const tail = 'Not signed in to Kiro. Sign in from Settings → Agent Harness → Kiro sign-in, then send your message again.'
     const bare = msg('error', { content: tail })
     const relay = msg('error', { content: `KAS runs through kiro-cli's relay. ${tail}` })
-    const bundle = msg('error', { content: `KAS runs on Kiro Crew's own engine because kiro-cli is not installed. ${tail}` })
+    const bundle = msg('error', { content: `KAS runs on Aj Crew's own engine because kiro-cli is not installed. ${tail}` })
     expect(resolveGatewayNotice(bare, [bare], 0)?.text).toBe(GN.kas_signed_out)
     expect(resolveGatewayNotice(relay, [relay], 0)?.text).toBe(lead(RELAY, GN.kas_signed_out))
     expect(resolveGatewayNotice(bundle, [bundle], 0)?.text).toBe(lead(BUNDLE, GN.kas_signed_out))

@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard.handlers import (
+from aj_crew.dashboard.handlers import (
     _CSS_VALUE_ALLOWED_RE,
     _THEME_CSS_VARS_SET,
     _sanitize_css_value,

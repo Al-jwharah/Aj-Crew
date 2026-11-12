@@ -6,7 +6,7 @@ What lives in this directory, and why the private key does not
 
 ``manifest.json`` is a real signed manifest, and ``signing-key.pub.pem`` is the
 public half of the throwaway key that signed it. It is a CROSS-TOOL fixture: the
-dashboard's verifier (``kiro_crew.platform.feed_trust``) and the publishing tool's
+dashboard's verifier (``aj_crew.platform.feed_trust``) and the publishing tool's
 verifier both have to accept these exact bytes, so it pins the signed byte format
 in one artifact instead of in two independent test helpers that can drift.
 
@@ -65,7 +65,7 @@ _RSA_BITS = 3072
 #: * an entry with ``used_when`` and ``min_version`` set, and one with both empty,
 #:   since those are the optional-ish fields.
 _DOCUMENT: dict = {
-    "schema": "kirocrew-feature-videos-manifest-v1",
+    "schema": "ajcrew-feature-videos-manifest-v1",
     "release": "0.6.0",
     "cdn_base": "https://cdn.example.invalid/feature-videos",
     "generated_at": "2026-01-31T09:00:00Z",

@@ -13,9 +13,9 @@ from datetime import date, datetime, timedelta
 
 import pytest
 
-from kiro_crew import memory as memory_module
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.memory import MemoryStore, _is_corruption_error
+from aj_crew import memory as memory_module
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.memory import MemoryStore, _is_corruption_error
 
 
 def _steady_clock(day: date, next_day: date) -> type[datetime]:

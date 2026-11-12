@@ -11,7 +11,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.crew_log import eager, projection, slot_prime
+from aj_crew.crew_log import eager, projection, slot_prime
 
 
 @pytest.fixture

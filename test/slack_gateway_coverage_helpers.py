@@ -15,9 +15,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.autonudge import NudgeLoop
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.slack import gateway as gw
+from aj_crew.autonudge import NudgeLoop
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.slack import gateway as gw
 
 #: Lost-run ceiling for a wait the test itself must end (a turn it parks, a
 #: replay it releases). A nudge turn's pre-turn chain makes real executor hops
@@ -64,8 +64,8 @@ def _make_orchestrator(**kwargs: Any) -> Any:
     (``sessions`` / ``slack`` / ``ctx_builder`` ...) for mocks, which do not
     satisfy the orchestrator's declared attribute types.
     """
-    cfg = KiroCrewConfig()
-    creds = {"KIROCREW_OWNER_ID": "U_OWNER"}
+    cfg = AjCrewConfig()
+    creds = {"AJCREW_OWNER_ID": "U_OWNER"}
     with patch.object(cfg, "load_credentials", return_value=creds):
         return gw.GatewayOrchestrator(
             cfg,
@@ -126,4 +126,4 @@ def _slack_nudge_orchestrator() -> Any:
     return orch
 
 
-_DKEY = "discord:kirocrew:direct:U9"
+_DKEY = "discord:ajcrew:direct:U9"

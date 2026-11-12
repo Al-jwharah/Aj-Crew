@@ -16,14 +16,14 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.platform import update_fetch
-from kiro_crew.testing.wait import async_wait_until, await_until, default_timeout
+from aj_crew.platform import update_fetch
+from aj_crew.testing.wait import async_wait_until, await_until, default_timeout
 
 
 @pytest.fixture
 def root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """A scratch root, and git probes that let the real prepare step run."""
-    from kiro_crew import agent_scratch
+    from aj_crew import agent_scratch
 
     scratch_root = tmp_path / "scratch-root"
     objects = tmp_path / "objects"

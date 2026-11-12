@@ -1,5 +1,5 @@
-"""Tests for ``kirocrew open`` (``cli_open.py``), the CLI face of the desktop
-app's ``kirocrew://`` URL scheme.
+"""Tests for ``ajcrew open`` (``cli_open.py``), the CLI face of the desktop
+app's ``ajcrew://`` URL scheme.
 
 The slot-key grammar lives twice -- here in Python and in
 ``website/electron/deep-link.js`` for the Electron shell -- because neither side
@@ -7,7 +7,7 @@ can import the other. The pin test at the bottom reads the JavaScript source and
 asserts the two regexes are byte-identical, so a change to one without the other
 goes red here. The same class pins the resolver's other copies of a Python rule:
 the app-name grammar, and the SSH host and crew-name rules its
-``kirocrew://remote-crew/add`` shape checks.
+``ajcrew://remote-crew/add`` shape checks.
 """
 
 from __future__ import annotations
@@ -19,12 +19,12 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_open
-from kiro_crew.apps import manifest_names
-from kiro_crew.cli_open import DeepLinkError, build_deep_link, open_url
-from kiro_crew.instances import registry as instances_registry
-from kiro_crew.instances import validation as instances_validation
-from kiro_crew.instances.registry import _ID_RE
+from aj_crew import cli_open
+from aj_crew.apps import manifest_names
+from aj_crew.cli_open import DeepLinkError, build_deep_link, open_url
+from aj_crew.instances import registry as instances_registry
+from aj_crew.instances import validation as instances_validation
+from aj_crew.instances.registry import _ID_RE
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _DEEP_LINK_JS = _REPO_ROOT / "website" / "electron" / "deep-link.js"
@@ -38,15 +38,15 @@ _SSH_HOST_SAMPLES = (
 
 class TestBuildDeepLink:
     def test_bare_scheme_when_no_session(self):
-        assert build_deep_link() == "kirocrew://"
+        assert build_deep_link() == "ajcrew://"
         # An empty session is "no target", not an error: it opens the app.
-        assert build_deep_link(session="") == "kirocrew://"
+        assert build_deep_link(session="") == "ajcrew://"
 
     def test_session_is_percent_encoded_like_the_dashboard_link(self):
-        assert build_deep_link(session="cos-quick-chat") == "kirocrew://chat?sid=cos-quick-chat"
+        assert build_deep_link(session="cos-quick-chat") == "ajcrew://chat?sid=cos-quick-chat"
         assert (
             build_deep_link(session="hook:cos:menubar-chat")
-            == "kirocrew://chat?sid=hook%3Acos%3Amenubar-chat"
+            == "ajcrew://chat?sid=hook%3Acos%3Amenubar-chat"
         )
 
     @pytest.mark.parametrize(
@@ -67,11 +67,11 @@ class TestOpenUrl:
 
         monkeypatch.setattr(cli_open, "open_with_default_app", launch)
         for platform in ("darwin", "linux"):
-            assert open_url("kirocrew://chat?sid=k", platform=platform) == (
+            assert open_url("ajcrew://chat?sid=k", platform=platform) == (
                 True,
                 "open_with_default_app",
             )
-        assert launched == [("kirocrew://chat?sid=k", 2.0), ("kirocrew://chat?sid=k", 2.0)]
+        assert launched == [("ajcrew://chat?sid=k", 2.0), ("ajcrew://chat?sid=k", 2.0)]
 
     def test_no_registered_handler_is_a_failure(self, monkeypatch):
         # The launcher exiting non-zero ("No application knows how to open URL",
@@ -79,9 +79,9 @@ class TestOpenUrl:
         monkeypatch.setattr(
             cli_open, "open_with_default_app", lambda url, *, wait_for_exit=None: False
         )
-        assert open_url("kirocrew://", platform="linux") == (
+        assert open_url("ajcrew://", platform="linux") == (
             False,
-            "no application is registered for kirocrew://",
+            "no application is registered for ajcrew://",
         )
 
     def test_windows_uses_startfile_not_the_shared_launcher(self, monkeypatch):
@@ -92,22 +92,22 @@ class TestOpenUrl:
             raise AssertionError("the shared launcher refuses Windows; it must not be called there")
 
         monkeypatch.setattr(cli_open, "open_with_default_app", refuse)
-        assert open_url("kirocrew://", platform="win32") == (True, "os.startfile")
-        assert opened == ["kirocrew://"]
+        assert open_url("ajcrew://", platform="win32") == (True, "os.startfile")
+        assert opened == ["ajcrew://"]
 
     def test_windows_startfile_error_is_a_failure(self, monkeypatch):
         def boom(url):
             raise OSError("no application is associated")
 
         monkeypatch.setattr(cli_open.os, "startfile", boom, raising=False)
-        assert open_url("kirocrew://", platform="win32") == (False, "no application is associated")
+        assert open_url("ajcrew://", platform="win32") == (False, "no application is associated")
 
 
 class TestCli:
     def _run(self, monkeypatch, tmp_path, capsys, *argv):
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr(sys, "argv", ["kirocrew", *argv])
-        from kiro_crew.cli import main
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr(sys, "argv", ["ajcrew", *argv])
+        from aj_crew.cli import main
 
         with pytest.raises(SystemExit) as exc:
             main()
@@ -121,13 +121,13 @@ class TestCli:
             monkeypatch, tmp_path, capsys, "open", "cos-quick-chat-high", "--print"
         )
         assert code == 0
-        assert out.strip() == "kirocrew://chat?sid=cos-quick-chat-high"
+        assert out.strip() == "ajcrew://chat?sid=cos-quick-chat-high"
         assert opened == []
 
     def test_no_session_prints_the_bare_scheme(self, monkeypatch, tmp_path, capsys):
         code, out, _ = self._run(monkeypatch, tmp_path, capsys, "open", "--print")
         assert code == 0
-        assert out.strip() == "kirocrew://"
+        assert out.strip() == "ajcrew://"
 
     def test_invalid_session_exits_2_with_a_reason(self, monkeypatch, tmp_path, capsys):
         code, out, err = self._run(monkeypatch, tmp_path, capsys, "open", "bad key", "--print")
@@ -140,14 +140,14 @@ class TestCli:
         monkeypatch.setattr(cli_open, "open_url", lambda url: opened.append(url) or (True, "stub"))
         code, _, _ = self._run(monkeypatch, tmp_path, capsys, "open", "cos-quick-chat")
         assert code == 0
-        assert opened == ["kirocrew://chat?sid=cos-quick-chat"]
+        assert opened == ["ajcrew://chat?sid=cos-quick-chat"]
 
     def test_failed_open_exits_1_and_names_the_fallback(self, monkeypatch, tmp_path, capsys):
         monkeypatch.setattr(cli_open, "open_url", lambda url: (False, "no handler"))
         code, _, err = self._run(monkeypatch, tmp_path, capsys, "open")
         assert code == 1
         assert "no handler" in err
-        assert "kirocrew token" in err
+        assert "ajcrew token" in err
 
 
 def _js_regex(name: str) -> str:
@@ -171,7 +171,7 @@ class TestGrammarAgreesWithTheElectronResolver:
         assert cli_open._SLOT_KEY_RE.pattern == _js_regex("SLOT_KEY_RE")
 
     def test_app_name_samples_agree_with_the_manifest_grammar(self):
-        # deep-link.js checks ``kirocrew://apps/detail/<name>`` with plain logic
+        # deep-link.js checks ``ajcrew://apps/detail/<name>`` with plain logic
         # rather than a copy of ``KEBAB_RE``; deep-link.test.js runs the same
         # samples through it, so the two grammars cannot drift apart.
         samples = json.loads(_APP_NAME_SAMPLES.read_text(encoding="utf-8"))

@@ -31,7 +31,7 @@ describe('CopyCommandButton', () => {
 
   it('shows check icon after successful copy', async () => {
     mockedCopyCode.mockResolvedValue(true)
-    render(<CopyCommandButton text="kirocrew config set x true" />)
+    render(<CopyCommandButton text="ajcrew config set x true" />)
 
     await act(async () => {
       fireEvent.click(screen.getByRole('button'))
@@ -103,7 +103,7 @@ describe('CopyCommandButton', () => {
   })
 })
 
-const WIN_LAUNCHER = 'C:\\Kiro Crew\\resources\\bin\\kirocrew.cmd'
+const WIN_LAUNCHER = 'C:\\Aj Crew\\resources\\bin\\ajcrew.cmd'
 const HINTS: ConfigSetHintsV1 = {
   version: 1,
   encoding: 'utf-8-base64',
@@ -289,7 +289,7 @@ describe('ConfigSetCommandRow without launcher hints', () => {
       <ConfigSetCommandRow configKey="instances.enabled" schemaType="boolean" />,
     )
 
-    expect(displayedCommands(container)).toEqual(['kirocrew config set instances.enabled true'])
+    expect(displayedCommands(container)).toEqual(['ajcrew config set instances.enabled true'])
     expect(screen.getByText('This command may need quoting changes in some shells.')).not.toBeNull()
     // No hint is also what a non-owner or a tree without the cached status sees on a
     // current gateway, so the note never tells anyone to update.
@@ -307,6 +307,6 @@ describe('ConfigSetCommandRow without launcher hints', () => {
       />,
     )
 
-    expect(displayedCommands(container)).toEqual(['kirocrew config set session.archive_retention_days 7'])
+    expect(displayedCommands(container)).toEqual(['ajcrew config set session.archive_retention_days 7'])
   })
 })

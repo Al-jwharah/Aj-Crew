@@ -33,7 +33,7 @@ from session_scope_reap_helpers import (  # noqa: F401 -- the autouse fixture re
     _scope_errors_fail_the_test_fixture,
 )
 
-from kiro_crew import session_scope_reap as r
+from aj_crew import session_scope_reap as r
 
 pytestmark = pytest.mark.skipif(sys.platform != "linux", reason="Agent scope reaping is Linux-only")
 
@@ -316,7 +316,7 @@ def test_helper_that_is_its_own_live_leader_waits_for_a_pre_boot_scope(tmp_path)
 
 
 def test_unmarked_credential_helper_scope_is_left_alone(tmp_path, caplog):
-    # The helper is the toolbox's binary, not one Kiro Crew spawns by name, so
+    # The helper is the toolbox's binary, not one Aj Crew spawns by name, so
     # without the spawn marker it is not attributable to this install and the
     # ownership condition refuses the scope before the anchor is even consulted.
     slice_dir = tmp_path / "slice"
@@ -526,11 +526,11 @@ class TestSandboxCredentialHelperRule:
     def test_the_helper_is_not_one_of_the_existential_anchor_identities(self):
         # Pinned in the direction that matters: if the helper ever becomes an
         # existential anchor, one of them authorizes killing every sibling.
-        from kiro_crew.session_pid import _is_agent_runtime_anchor
+        from aj_crew.session_pid import _is_agent_runtime_anchor
 
         cmdline = _creds_helper_cmdline()
-        assert _is_agent_runtime_anchor(cmdline, has_kirocrew_marker=True) is False
-        assert _is_agent_runtime_anchor(cmdline, has_kirocrew_marker=False) is False
+        assert _is_agent_runtime_anchor(cmdline, has_ajcrew_marker=True) is False
+        assert _is_agent_runtime_anchor(cmdline, has_ajcrew_marker=False) is False
 
 
 def test_reclaims_env_clearing_descendants_by_tree(tmp_path):

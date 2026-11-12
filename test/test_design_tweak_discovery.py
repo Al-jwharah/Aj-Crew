@@ -13,7 +13,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.apps.builtins.design_tweak.backend import server
+from aj_crew.apps.builtins.design_tweak.backend import server
 
 # ---------------------------------------------------------------------------
 # _lsof_fields

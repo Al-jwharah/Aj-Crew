@@ -44,7 +44,7 @@ const order = page => page.$$eval('[data-session-row]', els =>
 
 /**
  * The colour theme is applied ASYNCHRONOUSLY after mount, so a frame taken too
- * early carries a different theme than its siblings: one pass read kiro-dark
+ * early carries a different theme than its siblings: one pass read aj-dark
  * before the hover and monokai-dark after it, in the SAME page. Seeding
  * localStorage does not win that race. So wait for `data-theme` to stop moving,
  * and assert the frames agree with each other rather than with a hardcoded name.

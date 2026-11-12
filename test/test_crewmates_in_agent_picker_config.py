@@ -7,12 +7,12 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config.loader import AjCrewConfig
 
 
 def test_default_is_off():
     # Off keeps the templates-only picker every install has today.
-    assert KiroCrewConfig().dashboard.crewmates_in_agent_picker is False
+    assert AjCrewConfig().dashboard.crewmates_in_agent_picker is False
 
 
 @pytest.mark.parametrize(
@@ -25,13 +25,13 @@ def test_flag_is_read_from_the_config_file(tmp_path, raw, expected):
     dashboard = {} if raw is None else {"crewmates_in_agent_picker": raw}
     cfg_file = tmp_path / "config.json"
     cfg_file.write_text(json.dumps({"dashboard": dashboard}), encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=cfg_file):
-        assert KiroCrewConfig.load().dashboard.crewmates_in_agent_picker is expected
+    with patch("aj_crew.config.loader.config_path", return_value=cfg_file):
+        assert AjCrewConfig.load().dashboard.crewmates_in_agent_picker is expected
 
 
 def test_flag_reaches_the_config_api_payload():
-    # The SPA reads the flag from GET /api/config/kirocrew, which serves
+    # The SPA reads the flag from GET /api/config/ajcrew, which serves
     # ``to_dict()`` -- so the key must survive serialization.
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.dashboard.crewmates_in_agent_picker = True
     assert cfg.to_dict()["dashboard"]["crewmates_in_agent_picker"] is True

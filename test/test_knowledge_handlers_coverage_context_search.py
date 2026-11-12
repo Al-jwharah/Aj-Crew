@@ -21,8 +21,8 @@ from knowledge_handlers_coverage_helpers import (  # noqa: F401 -- the fixture i
     store_fixture,
 )
 
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.knowledge.embedder import embedder_signature
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.knowledge.embedder import embedder_signature
 
 
 def _patch_retriever(monkeypatch, results):

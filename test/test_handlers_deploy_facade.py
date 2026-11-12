@@ -1,9 +1,9 @@
 """The deploy routes' facade keeps the patch seams and the import surface the one module had.
 
-``kiro_crew.deploy.handlers`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the
-``kiro_crew.deploy.handlers_<role>`` owners beside it. The dashboard server, the webapp preview
+``aj_crew.deploy.handlers`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the
+``aj_crew.deploy.handlers_<role>`` owners beside it. The dashboard server, the webapp preview
 handler, the artifact tools and tests still reach every name as
-``kiro_crew.deploy.handlers.<name>``, and the moved code reads its names as plain module
+``aj_crew.deploy.handlers.<name>``, and the moved code reads its names as plain module
 globals, so a patch through the facade reaches that code only because the mirror writes it into
 every module holding the name.
 
@@ -30,8 +30,8 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.deploy import handlers
+from aj_crew import _facade_mirror
+from aj_crew.deploy import handlers
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_handlers_deploy_facade")
 
@@ -39,15 +39,15 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_handlers_deploy_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.deploy.handlers"
+FACADE = "aj_crew.deploy.handlers"
 DEPLOY_DIR = Path(handlers.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
 
 #: The owners, lowest layer first: each imports only owners listed before it.
 _OWNERS = (
-    "kiro_crew.deploy.handlers_guards",
-    "kiro_crew.deploy.handlers_content",
-    "kiro_crew.deploy.handlers_sites",
+    "aj_crew.deploy.handlers_guards",
+    "aj_crew.deploy.handlers_content",
+    "aj_crew.deploy.handlers_sites",
 )
 
 #: Names the test trees are known to patch through the facade, one of each seam the family
@@ -141,7 +141,7 @@ def test_a_facade_patch_of_the_audit_reaches_the_owner_that_denies(
 
     monkeypatch.setattr(handlers, "_audit", _record)
     holders = _index().holders["_audit"]
-    assert set(holders) == {"kiro_crew.deploy.handlers_guards", "kiro_crew.deploy.handlers_sites"}
+    assert set(holders) == {"aj_crew.deploy.handlers_guards", "aj_crew.deploy.handlers_sites"}
     assert all(vars(sys.modules[owner])["_audit"] is _record for owner in holders)
     response = handlers._deny_restricted(SimpleNamespace(app=None), "deploy")
     assert response is not None and response.status == 403
@@ -152,7 +152,7 @@ def test_the_owners_are_every_handlers_sibling_in_layer_order() -> None:
     """A ``handlers_*.py`` module the facade does not list would hold names a patch through
     the facade never reaches, so the sibling set and the owner tuple agree, and each owner
     imports only owners listed before it."""
-    siblings = {f"kiro_crew.deploy.{path.stem}" for path in DEPLOY_DIR.glob("handlers_*.py")}
+    siblings = {f"aj_crew.deploy.{path.stem}" for path in DEPLOY_DIR.glob("handlers_*.py")}
     assert set(_OWNERS) == siblings
     assert _index().owners == _OWNERS
     for position, owner in enumerate(_OWNERS):
@@ -172,7 +172,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
         tree = ast.parse(Path(sys.modules[owner].__file__).read_text(encoding="utf-8"))
         for node in tree.body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in _OWNERS:
+                if not node.module.startswith("aj_crew") or node.module in _OWNERS:
                     continue
                 for alias in node.names:
                     found.setdefault(alias.asname or alias.name, (node.module, alias.name))
@@ -193,7 +193,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
-    """An owner holds these and the facade serves them, so ``from kiro_crew.deploy.handlers
+    """An owner holds these and the facade serves them, so ``from aj_crew.deploy.handlers
     import scan_content`` type-checks only because the facade names each one from its home
     under ``TYPE_CHECKING``; exactly those."""
     served = set(_index().exports)
@@ -211,7 +211,7 @@ def test_the_owner_that_logs_logs_under_the_facade_name() -> None:
         for owner in _OWNERS
         if "logger" in vars(sys.modules[owner])
     }
-    assert "kiro_crew.deploy.handlers_sites" in loggers
+    assert "aj_crew.deploy.handlers_sites" in loggers
     assert all(found is handlers.logger for found in loggers.values())
 
 
@@ -230,9 +230,9 @@ def test_the_names_production_imports_from_the_facade_are_their_owners_objects()
     artifact tools ``_redact_text``, and the dashboard server ``register_routes`` from this
     facade; each is the one object its owner defines, and a name the family only imports is
     served as its home's object."""
-    content = importlib.import_module("kiro_crew.deploy.handlers_content")
-    guards = importlib.import_module("kiro_crew.deploy.handlers_guards")
-    paths = importlib.import_module("kiro_crew.config.paths")
+    content = importlib.import_module("aj_crew.deploy.handlers_content")
+    guards = importlib.import_module("aj_crew.deploy.handlers_guards")
+    paths = importlib.import_module("aj_crew.config.paths")
     assert handlers.WebAppRootError is content.WebAppRootError
     assert handlers.resolve_webapp_public_dir is content.resolve_webapp_public_dir
     assert handlers._redact_text is guards._redact_text

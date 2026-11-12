@@ -49,7 +49,7 @@ from dashboard_server_composition_contract_helpers import (
 )
 from source_corpus import iter_statements, repo_files_named, repo_root
 
-import kiro_crew.dashboard.server as server
+import aj_crew.dashboard.server as server
 
 _PHASES = frozenset(name for names in _PHASE_OWNERS.values() for name in names)
 
@@ -65,7 +65,7 @@ def _package_of(path: Path) -> str:
 def test_nothing_but_the_facade_imports_an_owner() -> None:
     """The server module is the one import path and the one patch surface."""
     importers = []
-    for path in sorted((_SRC / "kiro_crew").rglob("*.py")):
+    for path in sorted((_SRC / "aj_crew").rglob("*.py")):
         resolved = path.resolve()
         if _OWNER_DIR in resolved.parents or resolved == _FACADE_PATH or "_vendor" in path.parts:
             continue
@@ -85,7 +85,7 @@ def test_nothing_but_the_facade_imports_an_owner() -> None:
 #: ``port`` parameter default, which Python evaluates when the owner loads, before
 #: compose.
 _RUNTIME_IMPORT_ALLOWLIST = {
-    "api_entrypoint": ("kiro_crew.dashboard.state", "_DEFAULT_PORT"),
+    "api_entrypoint": ("aj_crew.dashboard.state", "_DEFAULT_PORT"),
 }
 
 
@@ -144,9 +144,9 @@ def test_a_fresh_facade_import_loads_every_owner(tmp_path: Path) -> None:
         tmp_path,
         """
         import sys
-        import kiro_crew.dashboard.server
+        import aj_crew.dashboard.server
         missing = [n for n in sys.argv[1:]
-                   if f"kiro_crew.dashboard.server_runtime.{n}" not in sys.modules]
+                   if f"aj_crew.dashboard.server_runtime.{n}" not in sys.modules]
         assert missing == [], missing
         print("ok")
         """,
@@ -159,10 +159,10 @@ def test_a_second_facade_import_recomposes_the_owners_onto_it(tmp_path: Path) ->
         tmp_path,
         """
         import sys
-        import kiro_crew.dashboard.server as first
-        del sys.modules["kiro_crew.dashboard.server"]
-        import kiro_crew.dashboard.server as second
-        from kiro_crew.dashboard.server_runtime import listener
+        import aj_crew.dashboard.server as first
+        del sys.modules["aj_crew.dashboard.server"]
+        import aj_crew.dashboard.server as second
+        from aj_crew.dashboard.server_runtime import listener
         assert second is not first
         assert second._bind_once.__globals__ is vars(second)
         assert listener._bind_once is second._bind_once
@@ -179,7 +179,7 @@ _FUNCTIONS = frozenset({ast.FunctionDef, ast.AsyncFunctionDef})
 _ASSIGNMENTS = frozenset({ast.Assign, ast.AugAssign})
 #: Nodes with no call inside and no binding: a name, a constant, an expression context.
 _LEAVES = frozenset({ast.Name, ast.Constant, ast.Load, ast.Store, ast.Del})
-_FACADE_STRING = re.compile(r"""^kiro_crew\.dashboard\.server\.(\w+)$""")
+_FACADE_STRING = re.compile(r"""^aj_crew\.dashboard\.server\.(\w+)$""")
 
 #: The patches whose attribute the scan cannot resolve from the source, keyed by
 #: (test file, enclosing function), with the names each one rebinds: the startup
@@ -206,7 +206,7 @@ def _facade_aliases(tree: ast.Module) -> set[str]:
     for node in iter_statements(tree):
         if isinstance(node, ast.Import):
             aliases |= {a.asname for a in node.names if a.name == _FACADE and a.asname}
-        elif isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.dashboard":
+        elif isinstance(node, ast.ImportFrom) and node.module == "aj_crew.dashboard":
             aliases |= {a.asname or a.name for a in node.names if a.name == "server"}
         elif isinstance(node, ast.Assign) and len(node.targets) == 1:
             assignments.append((node.targets[0], node.value))
@@ -343,7 +343,7 @@ def _may_patch_the_facade(text: str) -> bool:
     """Every spelling of a server patch names the server's dotted path or imports
     ``server`` from the dashboard package, so a source with neither holds none."""
     return "dashboard.server" in text or (
-        "kiro_crew.dashboard import" in text and re.search(r"\bserver\b", text) is not None
+        "aj_crew.dashboard import" in text and re.search(r"\bserver\b", text) is not None
     )
 
 
@@ -416,7 +416,7 @@ def _patched_names_in(text: str) -> tuple[set[str], set[str]]:
                         visit(item, params, label)
 
     visit(tree, {}, "<module>")
-    found |= set(re.findall(r"""["']kiro_crew\.dashboard\.server\.(\w+)["']""", text))
+    found |= set(re.findall(r"""["']aj_crew\.dashboard\.server\.(\w+)["']""", text))
     return found, dynamic
 
 
@@ -540,28 +540,28 @@ def _captured_names(source: str) -> set[str]:
 def test_the_patch_scan_reads_every_spelling() -> None:
     planted = (
         "import importlib, sys\n"
-        "import kiro_crew.dashboard.server as srv\n"
-        "from kiro_crew.dashboard import server as sv\n"
-        "facade = importlib.import_module('kiro_crew.dashboard.server')\n"
+        "import aj_crew.dashboard.server as srv\n"
+        "from aj_crew.dashboard import server as sv\n"
+        "facade = importlib.import_module('aj_crew.dashboard.server')\n"
         "alias = facade\n"
-        "held = sys.modules['kiro_crew.dashboard.server']\n"
+        "held = sys.modules['aj_crew.dashboard.server']\n"
         "def test(monkeypatch):\n"
         "    monkeypatch.setattr(srv, 'first', 1)\n"
         "    monkeypatch.setattr(sv, 'second', 2)\n"
         "    patch.object(alias, 'third')\n"
         "    sv.fourth = 4\n"
-        "    monkeypatch.setattr('kiro_crew.dashboard.server.fifth', 5)\n"
+        "    monkeypatch.setattr('aj_crew.dashboard.server.fifth', 5)\n"
         "    monkeypatch.setattr(sv.web, 'attr', 7)\n"
         "    monkeypatch.setattr(other, 'not_the_facade', 8)\n"
         "    monkeypatch.delattr(sv, 'sixth')\n"
         "    patch.object(target=alias, attribute='seventh')\n"
         "    patch.multiple(held, eighth=1, create=True)\n"
-        "    patch('kiro_crew.dashboard.server.KiroCrewConfig.load')\n"
+        "    patch('aj_crew.dashboard.server.AjCrewConfig.load')\n"
         "@pytest.mark.parametrize('which', ['ninth', 'tenth'])\n"
         "def test_param(which):\n"
-        "    patch(f'kiro_crew.dashboard.server.{which}')\n"
-        "FACADE = 'kiro_crew.dashboard.server'\n"
-        "other = 'kiro_crew.dashboard.state'\n"
+        "    patch(f'aj_crew.dashboard.server.{which}')\n"
+        "FACADE = 'aj_crew.dashboard.server'\n"
+        "other = 'aj_crew.dashboard.state'\n"
         "def test_strings(monkeypatch):\n"
         "    path = FACADE\n"
         "    patch(f'{path}.eleventh')\n"
@@ -588,7 +588,7 @@ def test_the_patch_scan_reads_every_spelling() -> None:
     }
     assert dynamic == set()
     unresolvable = (
-        "from kiro_crew.dashboard import server as sv\n"
+        "from aj_crew.dashboard import server as sv\n"
         "def _drive(monkeypatch, name):\n"
         "    monkeypatch.setattr(sv, name, 1)\n"
     )
@@ -601,7 +601,7 @@ def test_the_capture_scan_flags_what_an_owner_evaluates_when_it_loads() -> None:
         "from typing import TYPE_CHECKING\n"
         "import asyncio as aio\n"
         "if TYPE_CHECKING:\n"
-        "    from kiro_crew.dashboard.server import logger\n"
+        "    from aj_crew.dashboard.server import logger\n"
         "LIMIT = _CAP * 2\n"
         "def f(x=_DEFAULT, *, y=_KW):\n"
         "    return logger, sel\n"
@@ -636,7 +636,7 @@ def test_the_whole_census_holds_the_known_rebinds_and_an_owner_s_definitions() -
         "sel_is_warm",
         "data_home",
         "current_context",
-        "KiroCrewConfig",
+        "AjCrewConfig",
         "DashboardState",
         "_bind_once",
         "_start_site",
@@ -934,7 +934,7 @@ def _install_trace(monkeypatch: pytest.MonkeyPatch) -> list[str]:
             continue
         if not isinstance(value, types.FunctionType):
             continue
-        if not (getattr(value, "__module__", "") or "").startswith("kiro_crew"):
+        if not (getattr(value, "__module__", "") or "").startswith("aj_crew"):
             continue
         if inspect.iscoroutinefunction(value):
 
@@ -1071,7 +1071,7 @@ async def test_the_dashboard_boot_keeps_its_chain_hooks_and_order(
 
     # The pinned chain is the Shared Crew preview boot: without the preview the
     # team-config gate and the Shared Crew hooks are not installed at all.
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
     runner, state, boot, teardown = await _traced_dashboard(tmp_path, monkeypatch)
     try:
         app = runner.app
@@ -1096,7 +1096,7 @@ async def test_the_headless_boot_keeps_its_chain_hooks_and_order(
 
     # The pinned chain is the Shared Crew preview boot: without the preview the
     # team-config gate and the Shared Crew hooks are not installed at all.
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
     runner, _state, boot, teardown = await _traced_api(tmp_path, monkeypatch)
     try:
         app = runner.app

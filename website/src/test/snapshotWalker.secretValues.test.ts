@@ -12,7 +12,7 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { setHtml } from './domFixture'
 
-const HARNESS_DIR = join(__dirname, '../../../src/kiro_crew/browser_harness')
+const HARNESS_DIR = join(__dirname, '../../../src/aj_crew/browser_harness')
 
 function walkerSource(): string {
   const lines = readFileSync(join(HARNESS_DIR, 'snapshot_walker.js'), 'utf8').split('\n')

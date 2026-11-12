@@ -1,4 +1,4 @@
-"""Tests for Teams' file POLICY layer (``kiro_crew.teams.attachments``).
+"""Tests for Teams' file POLICY layer (``aj_crew.teams.attachments``).
 
 Covers the inbound envelope mapping -- including the auth flag that differs per
 attachment kind and is a credential leak if inverted -- and the outbound
@@ -16,9 +16,9 @@ import os
 
 import pytest
 
-from kiro_crew.messaging.attachments import IngestResult
-from kiro_crew.messaging.outbound_files import OutboundFile
-from kiro_crew.teams.attachments import (
+from aj_crew.messaging.attachments import IngestResult
+from aj_crew.messaging.outbound_files import OutboundFile
+from aj_crew.teams.attachments import (
     REASON_INLINE_UNDELIVERED,
     REASON_INLINE_UNSUPPORTED,
     TEAMS_FILE_DOWNLOAD_INFO,
@@ -86,7 +86,7 @@ class TestInboundMapping:
         self, name: str, expected_mime: str
     ) -> None:
         """Teams sends a pasted image as ``image/*``: it must reach the image path."""
-        from kiro_crew.messaging.attachments import IMAGE, classify
+        from aj_crew.messaging.attachments import IMAGE, classify
 
         raw = {"contentType": "image/*", "contentUrl": "https://smba.trafficmanager.net/img/1"}
         if name != "image":
@@ -103,7 +103,7 @@ class TestInboundMapping:
     @pytest.mark.asyncio
     async def test_a_pasted_image_star_reaches_the_model_as_an_image(self, tmp_path) -> None:
         """End to end: the downloaded PNG bytes land in ``image_paths``, not as a file."""
-        from kiro_crew.messaging.attachments import ingest_attachments
+        from aj_crew.messaging.attachments import ingest_attachments
 
         png = base64.b64decode(
             "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
@@ -242,7 +242,7 @@ class TestInboundIngestion:
         assert len(result.text_blocks) == 1
         for path in result.temp_paths:
             assert path.startswith(str(tmp_path))
-        from kiro_crew.messaging.attachments import cleanup
+        from aj_crew.messaging.attachments import cleanup
 
         cleanup(result.temp_paths)
 
@@ -368,7 +368,7 @@ class TestQuoteReply:
         assert quoted_reply_text(self._body(html)) == ""
 
     def test_an_oversized_body_is_skipped_rather_than_parsed(self) -> None:
-        from kiro_crew.teams.attachments import _MAX_REPLY_HTML_CHARS
+        from aj_crew.teams.attachments import _MAX_REPLY_HTML_CHARS
 
         html = (
             f"<blockquote {self._MARKER}><p>{'x' * _MAX_REPLY_HTML_CHARS}</p>"
@@ -396,7 +396,7 @@ class TestQuoteReply:
         """
         import time
 
-        from kiro_crew.teams.attachments import _BREAK_RE
+        from aj_crew.teams.attachments import _BREAK_RE
 
         def _elapsed(n: int) -> float:
             payload = "<br" + "\t" * n

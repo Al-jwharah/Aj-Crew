@@ -15,11 +15,11 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew.artifacts import ArtifactStore
-from kiro_crew.dashboard.handlers import webapp_preview as wp
-from kiro_crew.deploy import handlers as deploy_handlers
-from kiro_crew.deploy.webapp_types import webapp_metadata_from_dict
+from aj_crew import artifacts as art_mod
+from aj_crew.artifacts import ArtifactStore
+from aj_crew.dashboard.handlers import webapp_preview as wp
+from aj_crew.deploy import handlers as deploy_handlers
+from aj_crew.deploy.webapp_types import webapp_metadata_from_dict
 
 
 @pytest.fixture
@@ -32,7 +32,7 @@ def env(tmp_path: Path, monkeypatch):
     (app_dir / "public" / "css").mkdir(parents=True)
     (app_dir / "public" / "index.html").write_text("<html>terrace</html>")
     (app_dir / "public" / "css" / "app.css").write_text("body{}")
-    (app_dir / "public" / ".kirocrew-deploy.json").write_text("{}")
+    (app_dir / "public" / ".ajcrew-deploy.json").write_text("{}")
     (app_dir / "api" / "secret").mkdir(parents=True)
     (app_dir / "api" / "secret" / "keys.py").write_text("SECRET = 1")
     # The web-root resolution (and its allow-list check) lives in
@@ -167,7 +167,7 @@ class TestPreviewServe:
         with pytest.raises(web.HTTPNotFound):
             await wp.serve_artifact_app_file(
                 _req({"slug": "terrace-app", "token": token,
-                      "path": ".kirocrew-deploy.json"}))
+                      "path": ".ajcrew-deploy.json"}))
 
     @pytest.mark.asyncio
     async def test_symlink_escape_blocked(self, env, tmp_path) -> None:
@@ -331,7 +331,7 @@ class TestRound2Fixes:
     async def test_an_injecting_ancestor_cannot_reach_the_header(self, env, monkeypatch) -> None:
         """The ancestor producer is not trusted to have made its values safe."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.server._extra_frame_ancestors",
+            "aj_crew.dashboard.server._extra_frame_ancestors",
             lambda request, app: ["http://localhost:5476; default-src *"],
         )
         store, app_dir = env
@@ -394,7 +394,7 @@ class TestRound3Fixes:
 
     def test_write_time_app_dir_validation(self) -> None:
         """Round-3 F1: validation.py rejects control chars and relative paths."""
-        from kiro_crew.validation import ValidationError, _validate_webapp_metadata_shape
+        from aj_crew.validation import ValidationError, _validate_webapp_metadata_shape
         _validate_webapp_metadata_shape({"app_dir": "/abs/path"})
         _validate_webapp_metadata_shape({"app_dir": "~/workspace/app"})
         _validate_webapp_metadata_shape({"app_dir": ""})
@@ -511,7 +511,7 @@ class TestRound6Fixes:
         """Round-6 F2: native Windows absolute paths pass write-time
         validation (preview later degrades via the platform gate);
         relative paths still fail."""
-        from kiro_crew.validation import (
+        from aj_crew.validation import (
             ValidationError,
             _validate_webapp_metadata_shape,
         )

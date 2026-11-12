@@ -41,10 +41,10 @@ from session_control_helpers import (  # noqa: F401 -- autouse fixtures register
     _slot,
 )
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.start_priority import StartPriority
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.start_priority import StartPriority
 
 _MODEL = "claude-sonnet-4.6"
 _EFFORT = "low"
@@ -88,14 +88,14 @@ def test_a_created_session_arms_one_background_eager_spawn_with_its_bindings(tmp
     state, caller = _world(tmp_path, monkeypatch)
     arms = _record_arms(monkeypatch, state)
 
-    created = _create(state, caller, agent="kirocrew", model=_MODEL, reasoning_effort=_EFFORT)
+    created = _create(state, caller, agent="ajcrew", model=_MODEL, reasoning_effort=_EFFORT)
 
     child = state.get_slot(created["target"])
     assert len(arms) == 1
     arm = arms[0]
     assert arm["state"] is state
     assert arm["slot"] is child
-    assert arm["agent"] == "kirocrew"
+    assert arm["agent"] == "ajcrew"
     assert arm["model"] == _MODEL
     assert arm["effort"] == _EFFORT
     assert arm["persisted"], "armed before the birth record landed"
@@ -181,7 +181,7 @@ class TestEndToEnd:
     async def test_the_spawn_uses_the_childs_model_and_effort(self, tmp_path, monkeypatch):
         state, caller = _world(tmp_path, monkeypatch)
         self._sessions(state)
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             child = await self._create_child(state, caller, model=_MODEL, reasoning_effort=_EFFORT)
             await child._eager_spawn_task
 
@@ -199,7 +199,7 @@ class TestEndToEnd:
         """The seed's turn is running before the spawn wakes: no second start."""
         state, caller = _world(tmp_path, monkeypatch)
         self._sessions(state)
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             child = await self._create_child(state, caller)
             _busy(child)
             await child._eager_spawn_task
@@ -210,7 +210,7 @@ class TestEndToEnd:
     async def test_a_child_closed_before_the_spawn_starts_nothing(self, tmp_path, monkeypatch):
         state, caller = _world(tmp_path, monkeypatch)
         self._sessions(state)
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             child = await self._create_child(state, caller)
             state._slots.pop(child.key)
             await child._eager_spawn_task
@@ -227,7 +227,7 @@ class TestEndToEnd:
             return (MagicMock(), True, False)
 
         state.sessions.get_or_create = AsyncMock(side_effect=_create_then_close)
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             child = await self._create_child(state, caller)
             await child._eager_spawn_task
 

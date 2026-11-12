@@ -32,13 +32,13 @@ from test_decisions_tool_risk_card import (
     _tool_rows,
 )
 
-from kiro_crew import decisions as core
-from kiro_crew.dashboard.handlers.decisions import api_decisions_feedback
-from kiro_crew.decisions import log as log_mod
-from kiro_crew.decisions.points import tool_risk as tr
-from kiro_crew.decisions.types import Answer
+from aj_crew import decisions as core
+from aj_crew.dashboard.handlers.decisions import api_decisions_feedback
+from aj_crew.decisions import log as log_mod
+from aj_crew.decisions.points import tool_risk as tr
+from aj_crew.decisions.types import Answer
 
-from kiro_crew.dashboard import chat_runner  # isort: skip
+from aj_crew.dashboard import chat_runner  # isort: skip
 
 
 @pytest.fixture(autouse=True)
@@ -57,7 +57,7 @@ def _generous_append_deadline(monkeypatch):
     chain under test was never reached. Raised, not removed: a genuinely stuck
     writer still fails, by name, inside the suite's ``--timeout``.
     """
-    from kiro_crew import platform_log_append
+    from aj_crew import platform_log_append
 
     monkeypatch.setattr(platform_log_append, "_APPEND_TIMEOUT_SECONDS", 10.0)
     monkeypatch.setattr(core.gate, "_LOG_BUDGET_SECS", 20.0)
@@ -100,9 +100,9 @@ def sampled(tmp_path, monkeypatch):
     keystone.write_text(
         json.dumps({"enabled": True, "endpoint": ENDPOINT, "tool_args": True}), encoding="utf-8"
     )
-    monkeypatch.setattr("kiro_crew.config.loader.decisions_consent_path", lambda: keystone)
+    monkeypatch.setattr("aj_crew.config.loader.decisions_consent_path", lambda: keystone)
     monkeypatch.setattr(
-        "kiro_crew.decisions.capability.is_decisions_denied", lambda *_a, **_kw: False
+        "aj_crew.decisions.capability.is_decisions_denied", lambda *_a, **_kw: False
     )
     provider = SimpleNamespace(endpoint=ENDPOINT, model="", timeout_ms=5000, api_key="")
     snapshot = SimpleNamespace(
@@ -117,7 +117,7 @@ def sampled(tmp_path, monkeypatch):
         async def ask(self, _state, _questions):
             return {tr.QUESTION_ID: Answer(id=tr.QUESTION_ID, value=tr.TIER_RISKY, p=0.88)}
 
-    monkeypatch.setattr("kiro_crew.decisions.impl_systemone.SystemOneProvider", _Oracle)
+    monkeypatch.setattr("aj_crew.decisions.impl_systemone.SystemOneProvider", _Oracle)
     return keystone
 
 
@@ -149,7 +149,7 @@ async def test_a_trusted_tool_call_is_flagged_on_its_card_and_takes_a_verdict(
     tmp_path, home, sampled, monkeypatch
 ):
     """decide -> the tool card carries it -> a verdict is filed against the same turn."""
-    import kiro_crew.dashboard.handlers as handlers_pkg
+    import aj_crew.dashboard.handlers as handlers_pkg
 
     monkeypatch.setattr(handlers_pkg, "sel", lambda: MagicMock())
     state, client = _runner(tmp_path)

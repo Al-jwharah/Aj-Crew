@@ -1,11 +1,11 @@
 /**
  * Create never asks for a template: `NewCrewmateDialog` offers none, and every
- * new mate starts on the built-in `kirocrew` agent as its starting binding (the
+ * new mate starts on the built-in `ajcrew` agent as its starting binding (the
  * server gives it its own, source-free file at create).
  *
  * Creating with only a name issues the POST -- it is NOT blocked -- and sends
- * `kiro_agent: 'kirocrew'`. A restored required-template refusal (#1684) would
- * leave `createKirocrewAgent` uncalled and fail the first assertion; a dropped
+ * `kiro_agent: 'ajcrew'`. A restored required-template refusal (#1684) would
+ * leave `createAjcrewAgent` uncalled and fail the first assertion; a dropped
  * `DEFAULT_CREWMATE_TEMPLATE` would fail the `kiro_agent` one.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
@@ -20,13 +20,13 @@ vi.mock('../hooks/useIsMobile', () => ({ useIsMobile: () => false }))
 // The dialog reads the execution catalog for its "Built from" list, the
 // workspace list for its Advanced fold, and the roster for its post-failure
 // reconcile. The create path here touches only the name, so a bare stub keeps
-// the dialog mountable without a network; `createKirocrewAgent` resolves with
+// the dialog mountable without a network; `createAjcrewAgent` resolves with
 // the created name, as the server answers a 2xx.
 const mockApi = vi.hoisted(() => ({
   agentCatalog: vi.fn(async () => ({ agents: [] })),
   workspaces: vi.fn(async () => ({ workspaces: [] })),
   members: vi.fn(async () => ({ members: [] })),
-  createKirocrewAgent: vi.fn(async () => ({ name: 'researcher' })),
+  createAjcrewAgent: vi.fn(async () => ({ name: 'researcher' })),
   createWorkspace: vi.fn(),
 }))
 vi.mock('../api/client', () => ({ api: mockApi }))
@@ -52,10 +52,10 @@ function renderDialog() {
 const nameInput = () => screen.getByLabelText('Name') as HTMLInputElement
 
 describe('NewCrewmateDialog — no template to pick; every mate starts on the built-in agent', () => {
-  beforeEach(() => { mockApi.createKirocrewAgent.mockClear() })
+  beforeEach(() => { mockApi.createAjcrewAgent.mockClear() })
   afterEach(() => { vi.restoreAllMocks(); cleanup() })
 
-  it('creates without touching Built from, defaulting kiro_agent to the built-in kirocrew agent', async () => {
+  it('creates without touching Built from, defaulting kiro_agent to the built-in ajcrew agent', async () => {
     renderDialog()
     // Only a name is given; "Built from" is never opened.
     fireEvent.change(nameInput(), { target: { value: 'researcher' } })
@@ -63,9 +63,9 @@ describe('NewCrewmateDialog — no template to pick; every mate starts on the bu
 
     // The guard is retired: the request IS issued (not refused for a missing
     // template), and it carries the default agent as `kiro_agent`.
-    await waitFor(() => expect(mockApi.createKirocrewAgent).toHaveBeenCalledTimes(1))
-    expect(mockApi.createKirocrewAgent).toHaveBeenCalledWith(
-      expect.objectContaining({ name: 'researcher', kiro_agent: 'kirocrew' }),
+    await waitFor(() => expect(mockApi.createAjcrewAgent).toHaveBeenCalledTimes(1))
+    expect(mockApi.createAjcrewAgent).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'researcher', kiro_agent: 'ajcrew' }),
     )
   })
 
@@ -76,8 +76,8 @@ describe('NewCrewmateDialog — no template to pick; every mate starts on the bu
 
     // `''` is the create API's "allocate one of its own" value; a stored
     // workspace name would be the explicit opt-in to share one.
-    await waitFor(() => expect(mockApi.createKirocrewAgent).toHaveBeenCalledTimes(1))
-    expect(mockApi.createKirocrewAgent).toHaveBeenCalledWith(
+    await waitFor(() => expect(mockApi.createAjcrewAgent).toHaveBeenCalledTimes(1))
+    expect(mockApi.createAjcrewAgent).toHaveBeenCalledWith(
       expect.objectContaining({ workspace: '' }),
     )
   })
@@ -85,11 +85,11 @@ describe('NewCrewmateDialog — no template to pick; every mate starts on the bu
   it('the card never names a template, folded or unfolded', async () => {
     renderDialog()
     const form = screen.getByTestId('crewmate-create-form')
-    expect(form).not.toHaveTextContent(/kirocrew/i)
+    expect(form).not.toHaveTextContent(/ajcrew/i)
     fireEvent.click(screen.getByTestId('crewmate-create-advanced-toggle'))
     expect(await screen.findByRole('textbox', { name: 'Goal' })).toBeInTheDocument()
     expect(screen.queryByRole('combobox', { name: 'Built from' })).toBeNull()
-    expect(form).not.toHaveTextContent(/kirocrew/i)
+    expect(form).not.toHaveTextContent(/ajcrew/i)
   })
 
   it('still refuses a BLANK name — client-side name validation is independent of the retired template guard', async () => {
@@ -98,7 +98,7 @@ describe('NewCrewmateDialog — no template to pick; every mate starts on the bu
     // WITHOUT a request. Distinct from the old template guard, which this test's
     // sibling proves is gone.
     fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-    expect(mockApi.createKirocrewAgent).not.toHaveBeenCalled()
+    expect(mockApi.createAjcrewAgent).not.toHaveBeenCalled()
     expect(screen.getByTestId('crewmate-create-name-hint')).toBeInTheDocument()
   })
 })

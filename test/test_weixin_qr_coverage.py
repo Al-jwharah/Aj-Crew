@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.handlers import weixin_qr as qr
-from kiro_crew.hidden_leaf_staging import EnvStagingRefused
+from aj_crew.dashboard.handlers import weixin_qr as qr
+from aj_crew.hidden_leaf_staging import EnvStagingRefused
 
 LONG = "x" * 300
 PNG = "data:image/png;base64,QQ=="
@@ -186,7 +186,7 @@ def test_a_confirmed_sign_in_that_cannot_be_saved_is_reported_and_ends_the_sessi
 
 def test_a_sign_in_refused_by_a_pending_config_reaches_the_dashboard_chain(sessions, monkeypatch):
     """Not a 500: the refusal propagates so the chain answers its 409 code."""
-    from kiro_crew.config.loader import PendingEditBlocksSave
+    from aj_crew.config.loader import PendingEditBlocksSave
 
     monkeypatch.setattr(qr, "_stage_weixin_config", lambda **kw: (Path("config.json"), "{}"))
     refused = PendingEditBlocksSave("config.json")
@@ -198,7 +198,7 @@ def test_a_sign_in_refused_by_a_pending_config_reaches_the_dashboard_chain(sessi
 
 
 def _config(creds: dict[str, str] | None = None, **weixin: Any) -> SimpleNamespace:
-    """What ``KiroCrewConfig.load()`` returns: a weixin section and a credential store."""
+    """What ``AjCrewConfig.load()`` returns: a weixin section and a credential store."""
     section = {"enabled": True, "account_id": "acct", "dm_policy": "open", "token": ""}
     section.update({"allowed_user_ids": [], "session_folder": "", **weixin})
     reader = MagicMock(return_value=creds or {})
@@ -206,7 +206,7 @@ def _config(creds: dict[str, str] | None = None, **weixin: Any) -> SimpleNamespa
 
 
 def _get(monkeypatch, cfg: SimpleNamespace, state: Any = None):
-    monkeypatch.setattr(qr, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+    monkeypatch.setattr(qr, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
     request = SimpleNamespace(app={} if state is None else {"state": state})
     return _run(qr.weixin_config_get, request)
 

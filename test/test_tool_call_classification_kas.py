@@ -10,9 +10,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.acp._dispatch import build_permission_event, classify_tool_call, parse_session_update
-from kiro_crew.acp.types import AcpEvent, JsonRpcMessage
-from kiro_crew.hooks import TOOL_DENY, HookManager
+from aj_crew.acp._dispatch import build_permission_event, classify_tool_call, parse_session_update
+from aj_crew.acp.types import AcpEvent, JsonRpcMessage
+from aj_crew.hooks import TOOL_DENY, HookManager
 
 # ── KAS: the built-in's id is on the permission frame, not the tool_call ──────
 
@@ -107,7 +107,7 @@ class TestKasPermissionFrameTakesTheToolCallKind:
         import json
         from pathlib import Path
 
-        from kiro_crew.platform.tool_paths import WRITE_PLANE_KINDS
+        from aj_crew.platform.tool_paths import WRITE_PLANE_KINDS
 
         reg = json.loads(
             (Path(__file__).parent / "fixtures" / "kas_builtin_tool_ids.json").read_text()
@@ -125,7 +125,7 @@ class TestKasPermissionFrameTakesTheToolCallKind:
         permission frame must still auto-approve under ``--approval reads`` by
         the identity fold (``grep_search`` -> ``grep``), which a carried
         ``search`` would veto."""
-        from kiro_crew.hooks import TOOL_AUTO_APPROVE, HookManager, hook_gate_kwargs
+        from aj_crew.hooks import TOOL_AUTO_APPROVE, HookManager, hook_gate_kwargs
 
         for kas_id, title in (
             ("grep_search", "Grep Search"),
@@ -195,7 +195,7 @@ class TestKasPermissionFrameTakesTheToolCallKind:
         test unhashable and abort the turn -- so the cached tool_call kind
         fills the blank exactly as it does for a frame that omits the field, and
         without a cache the event carries ``""``. The gate then classifies."""
-        from kiro_crew.platform.tool_paths import is_edit_call
+        from aj_crew.platform.tool_paths import is_edit_call
 
         def frame(with_cache: bool) -> AcpEvent:
             caches: dict[str, Any] = {
@@ -267,7 +267,7 @@ class TestKasPermissionFrameTakesTheToolCallKind:
         toolCallId retains nothing, and ``read``/``search``/``execute``/
         ``fetch``/``other`` (kinds the reader never carries) are not written
         either -- growth with no reader."""
-        from kiro_crew.platform.tool_paths import WRITE_PLANE_KINDS
+        from aj_crew.platform.tool_paths import WRITE_PLANE_KINDS
 
         caches: dict[str, Any] = {"tool_kind_cache": {}}
         huge = "k" * (1024 * 1024)
@@ -303,7 +303,7 @@ class TestTheKindCarryOverIsKasOnly:
         import asyncio
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.session_handle import AcpSessionHandle
 
         rt = MagicMock()
         rt.acp_backend = acp_backend
@@ -314,7 +314,7 @@ class TestTheKindCarryOverIsKasOnly:
         return AcpSessionHandle("sA", asyncio.Queue(), rt)
 
     def test_the_kas_handle_hands_the_cache_to_the_wire(self) -> None:
-        from kiro_crew.acp.types import ACP_BACKEND_KAS
+        from aj_crew.acp.types import ACP_BACKEND_KAS
 
         h = self._handle(ACP_BACKEND_KAS)
         assert h._tool_kind_cache_for_wire() is h._tool_call_kind
@@ -331,7 +331,7 @@ class TestTheKindCarryOverIsKasOnly:
         import asyncio
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.session_handle import AcpSessionHandle
 
         rt = MagicMock(spec=["pid", "is_alive", "send_notification", "supports_image_prompt"])
         rt.pid = None
@@ -341,7 +341,7 @@ class TestTheKindCarryOverIsKasOnly:
         assert AcpSessionHandle("sA", asyncio.Queue(), rt)._tool_kind_cache_for_wire() is None
 
     def test_the_kas_handle_hands_the_overflow_record_to_the_wire(self) -> None:
-        from kiro_crew.acp.types import ACP_BACKEND_KAS
+        from aj_crew.acp.types import ACP_BACKEND_KAS
 
         h = self._handle(ACP_BACKEND_KAS)
         assert h._tool_call_cache_overflow_for_wire() is h._tool_call_cache_overflow
@@ -362,7 +362,7 @@ class TestTheKindCarryOverIsKasOnly:
         never fires because the record is never written."""
         import asyncio
 
-        from kiro_crew.acp._dispatch import (
+        from aj_crew.acp._dispatch import (
             TOOL_CALL_CACHE_MAX_ENTRIES,
             TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS,
         )
@@ -383,7 +383,7 @@ class TestTheKindCarryOverIsKasOnly:
                 method="session/update", params={"sessionId": "sA", "update": upd}
             )
 
-        from kiro_crew.acp._dispatch import scoped_tool_cache_key as _k
+        from aj_crew.acp._dispatch import scoped_tool_cache_key as _k
 
         big = {"path": "/tmp/big", "text": "x" * (TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS + 1)}
         h._handle_update(_frame(0, rawInput=big))
@@ -412,8 +412,8 @@ class TestTheKindCarryOverIsKasOnly:
     def test_the_kas_handle_is_the_one_the_bound_governs(self) -> None:
         """Counterfactual for the test above: on the KAS handle the same frames
         are refused past the bound and the record is written."""
-        from kiro_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS, overflow_scope_key
-        from kiro_crew.acp.types import ACP_BACKEND_KAS
+        from aj_crew.acp._dispatch import TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS, overflow_scope_key
+        from aj_crew.acp.types import ACP_BACKEND_KAS
 
         h = self._handle(ACP_BACKEND_KAS)
         big = {"path": "/tmp/big", "text": "x" * (TOOL_CALL_CACHE_MAX_PAYLOAD_CHARS + 1)}
@@ -442,7 +442,7 @@ class TestTheKindCarryOverIsKasOnly:
         trusted identity proves the read: the kiro path hands the parser no
         cache at all (the KAS-only membership), and even a parser handed one
         carries only write-plane kinds, never ``search``."""
-        from kiro_crew.hooks import TOOL_AUTO_APPROVE, HookManager, hook_gate_kwargs
+        from aj_crew.hooks import TOOL_AUTO_APPROVE, HookManager, hook_gate_kwargs
 
         def flow(with_cache: bool) -> AcpEvent:
             caches: dict[str, Any] = {
@@ -545,7 +545,7 @@ class TestTheKindCarryOverIsKasOnly:
 class TestKasSpawnWarnsOnVocabularyDrift:
     """The policy fold fails permissive on engine drift, so the KAS harness says
     once per kiro-cli release when it spawns the relay -- where an operator sees
-    it without running ``kirocrew doctor`` -- that the installed kiro-cli is not
+    it without running ``ajcrew doctor`` -- that the installed kiro-cli is not
     the one the tables were measured on. Same comparison and same reading (the
     pinned binary's ``--version``) as the doctor row. It lives on the harness,
     not on the shared runtime (H13)."""
@@ -555,12 +555,12 @@ class TestKasSpawnWarnsOnVocabularyDrift:
     ) -> None:
         import logging
 
-        from kiro_crew.acp.harness import kas as kas_mod
-        from kiro_crew.platform.tool_names import KAS_TOOL_IDS_VERIFIED_ON_KIRO_CLI
+        from aj_crew.acp.harness import kas as kas_mod
+        from aj_crew.platform.tool_names import KAS_TOOL_IDS_VERIFIED_ON_KIRO_CLI
 
         newer = (*KAS_TOOL_IDS_VERIFIED_ON_KIRO_CLI[-1][:2], 99)
         monkeypatch.setattr(kas_mod, "_DRIFT_WARNED_VERSION", None)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.harness.kas"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.harness.kas"):
             kas_mod.warn_kas_vocabulary_drift(newer)
             kas_mod.warn_kas_vocabulary_drift(newer)
         hits = [r for r in caplog.records if "tool-name tables" in r.getMessage()]
@@ -576,10 +576,10 @@ class TestKasSpawnWarnsOnVocabularyDrift:
         gateway) warns, and what is retained is a fixed-shape tuple."""
         import logging
 
-        from kiro_crew.acp.harness import kas as kas_mod
+        from aj_crew.acp.harness import kas as kas_mod
 
         monkeypatch.setattr(kas_mod, "_DRIFT_WARNED_VERSION", None)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.harness.kas"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.harness.kas"):
             kas_mod.warn_kas_vocabulary_drift((9, 1, 0))
             kas_mod.warn_kas_vocabulary_drift((9, 1, 0))
             assert kas_mod._DRIFT_WARNED_VERSION == (9, 1, 0)
@@ -595,11 +595,11 @@ class TestKasSpawnWarnsOnVocabularyDrift:
     ) -> None:
         import logging
 
-        from kiro_crew.acp.harness import kas as kas_mod
-        from kiro_crew.platform.tool_names import KAS_TOOL_IDS_VERIFIED_ON_KIRO_CLI
+        from aj_crew.acp.harness import kas as kas_mod
+        from aj_crew.platform.tool_names import KAS_TOOL_IDS_VERIFIED_ON_KIRO_CLI
 
         monkeypatch.setattr(kas_mod, "_DRIFT_WARNED_VERSION", None)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.harness.kas"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.harness.kas"):
             kas_mod.warn_kas_vocabulary_drift(KAS_TOOL_IDS_VERIFIED_ON_KIRO_CLI[0])
             kas_mod.warn_kas_vocabulary_drift(None)
         assert not [r for r in caplog.records if "tool-name tables" in r.getMessage()]
@@ -611,8 +611,8 @@ class TestKasSpawnWarnsOnVocabularyDrift:
         vocabulary comparison and no KAS-membership conditional for it."""
         import inspect
 
-        from kiro_crew.acp import runtime as runtime_mod
-        from kiro_crew.acp.harness.kas import KasHarness
+        from aj_crew.acp import runtime as runtime_mod
+        from aj_crew.acp.harness.kas import KasHarness
 
         spawn = inspect.getsource(KasHarness.resolve_spawn)
         assert (
@@ -635,8 +635,8 @@ class TestKasSpawnWarnsOnVocabularyDrift:
     ) -> None:
         """The spawn hands the probe's answer to the warning; a probe that cannot
         answer hands ``None`` and the spawn still resolves."""
-        from kiro_crew.acp.harness import kas as kas_mod
-        from kiro_crew.acp.harness.base import SpawnContext
+        from aj_crew.acp.harness import kas as kas_mod
+        from aj_crew.acp.harness.base import SpawnContext
 
         seen: list[object] = []
         monkeypatch.setattr(kas_mod, "installed_kiro_cli_version", lambda: (2, 30, 1))
@@ -648,7 +648,7 @@ class TestKasSpawnWarnsOnVocabularyDrift:
         async def _no_vault():
             return False
 
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         monkeypatch.setattr(client_mod, "_resolve_kiro_bin_for_spawn", _bin)
         monkeypatch.setattr(kas_mod, "vault_holds_identity_off_loop", _no_vault)
@@ -674,8 +674,8 @@ class TestKasPermissionFrameCarriesTheBuiltinId:
         grant keyed on a trusted SERVER still sees none and does not fire. (The id
         does reach the read-only proof, by design, where only a read-only
         allowlisted id can gain; see ``TestClassifierOnlyHostTrustedProof``.)"""
-        from kiro_crew.acp._dispatch import identified_mcp_call
-        from kiro_crew.hooks import event_is_spawn_run
+        from aj_crew.acp._dispatch import identified_mcp_call
+        from aj_crew.hooks import event_is_spawn_run
 
         event = _kas_builtin_flow("spawn_run", title="spawn_run")
         assert event.tool_name == "spawn_run"
@@ -702,7 +702,7 @@ class TestKasPermissionFrameCarriesTheBuiltinId:
         assert event.tool_name == ""
 
     def test_the_frame_id_bound_is_the_permission_tool_id_bound(self) -> None:
-        from kiro_crew.acp._dispatch import _MAX_HARNESS_TOOL_ID_LEN
+        from aj_crew.acp._dispatch import _MAX_HARNESS_TOOL_ID_LEN
 
         ok = "k" * _MAX_HARNESS_TOOL_ID_LEN
         assert _kas_builtin_flow(ok).tool_name == ok
@@ -715,7 +715,7 @@ class TestKasPermissionFrameCarriesTheBuiltinId:
         by ``kas_consent_tool`` alone: a verified consent block yields the Crew
         name rules are written against, a disagreeing one yields nothing, and the
         raw spawn-family id never reaches the gate as a spelling no rule carries."""
-        from kiro_crew.acp._dispatch import build_permission_event
+        from aj_crew.acp._dispatch import build_permission_event
 
         def frame(kiro: dict[str, Any]) -> AcpEvent:
             msg = JsonRpcMessage(
@@ -760,7 +760,7 @@ class TestKasPermissionFrameCarriesTheBuiltinId:
         """End to end through the gate: the rule an operator wrote for kiro-cli
         denies the KAS built-in that does the same work, from the frame alone."""
         event = _kas_builtin_flow("read_file")
-        from kiro_crew.hooks import HooksConfig
+        from aj_crew.hooks import HooksConfig
 
         mgr = HookManager(HooksConfig(auto_deny_tools=["fs_read"]))
         decision = mgr.on_tool_call(
@@ -777,7 +777,7 @@ class TestKasPermissionFrameCarriesTheBuiltinId:
         """A harness that is not handed the KAS store builds the same event
         with ``kas_builtin_ids`` False, so the kiro-cli rule does not fold onto
         its bare ``read_file`` and the read is not proven read-only."""
-        from kiro_crew.hooks import TOOL_AUTO_APPROVE, HooksConfig, hook_gate_kwargs
+        from aj_crew.hooks import TOOL_AUTO_APPROVE, HooksConfig, hook_gate_kwargs
 
         on_kas = _kas_builtin_flow("read_file")
         off_kas = _kas_builtin_flow("read_file", on_kas=False)
@@ -899,7 +899,7 @@ class TestKasMcpServedIdentity:
         else and emptying it would hand the call to the title-keyed grant loop.
         The name is matched as a name, never as a pattern, so a metacharacter in
         it is inert."""
-        from kiro_crew.mcp_gateway.tool_surface import admits_name
+        from aj_crew.mcp_gateway.tool_surface import admits_name
 
         assert admits_name(server)
         frame = dict(self._TOOL_CALL)
@@ -914,7 +914,7 @@ class TestKasMcpServedIdentity:
         two halves are bounded before retention and goose/kiro-cli/codex -- the
         first-class channels -- retain a string verbatim as they always did, so no
         first-class path gains a bound or a refusal (H13)."""
-        from kiro_crew.acp._dispatch import (
+        from aj_crew.acp._dispatch import (
             _CODEX_MCP_TOOL_CALL_MARKER,
             _MCP_IDENTITY_META_CHANNELS,
             _meta_identity,
@@ -1008,7 +1008,7 @@ class TestKasMcpServedIdentity:
         past its own deny."""
         import copy
 
-        from kiro_crew.hooks import HooksConfig
+        from aj_crew.hooks import HooksConfig
 
         long_tool = "very_long_tool_name_" + "x" * (length - len("very_long_tool_name_"))
         assert len(long_tool) == length
@@ -1062,7 +1062,7 @@ class TestKasMcpServedIdentity:
         """
         import copy
 
-        from kiro_crew.acp._dispatch import _CODEX_MCP_TOOL_CALL_MARKER
+        from aj_crew.acp._dispatch import _CODEX_MCP_TOOL_CALL_MARKER
 
         over = "n" * 513
         caches: dict[str, Any] = {
@@ -1189,8 +1189,8 @@ class TestKasMcpServedIdentity:
         import asyncio
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.acp.session_handle import AcpSessionHandle
-        from kiro_crew.acp.types import ACP_BACKEND_KAS
+        from aj_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.types import ACP_BACKEND_KAS
 
         for backend in (ACP_BACKEND_KAS,):
             rt = MagicMock()
@@ -1269,7 +1269,7 @@ class TestKasMcpServedIdentity:
         # Wired before the consumer yield, after the unidentifiable-MCP refusal.
         import inspect
 
-        from kiro_crew.acp import session_handle
+        from aj_crew.acp import session_handle
 
         src = inspect.getsource(session_handle.AcpSessionHandle._dispatch_events)
         a = src.index("self._refuse_unidentifiable_mcp_approval(msg, _perm_event)")
@@ -1281,7 +1281,7 @@ class TestKasMcpServedIdentity:
         """The reason the server must be read: a built-in ``fs_read`` deny must not
         bind to a server's ``read_file``, and the host read-only proof must not
         treat it as the engine's own."""
-        from kiro_crew.hooks import HooksConfig, _is_host_read_only_builtin
+        from aj_crew.hooks import HooksConfig, _is_host_read_only_builtin
 
         event = self._flow()
         assert (
@@ -1300,7 +1300,7 @@ class TestKasMcpServedIdentity:
         assert decision.action != TOOL_DENY
 
     def test_a_per_server_rule_binds_through_the_pair(self) -> None:
-        from kiro_crew.hooks import HooksConfig
+        from aj_crew.hooks import HooksConfig
 
         event = self._flow()
         decision = HookManager(HooksConfig(auto_deny_tools=["@probefs/read_file"])).on_tool_call(

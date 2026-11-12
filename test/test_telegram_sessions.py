@@ -31,15 +31,15 @@ from telegram_sessions_helpers import (
 )
 from telegram_wire_helpers import telegram_wire
 
-from kiro_crew.messaging.link import UNBIND_REASON_UNSPECIFIED, ChannelLink
-from kiro_crew.messaging.session_resume import SETTLE_NOTHING, RoutingDecision
-from kiro_crew.telegram.session_resume import _ROUTE_OWNER_REFUSAL
-from kiro_crew.telegram.transport import TelegramInboundMessage
-from kiro_crew.testing.wait import await_until
+from aj_crew.messaging.link import UNBIND_REASON_UNSPECIFIED, ChannelLink
+from aj_crew.messaging.session_resume import SETTLE_NOTHING, RoutingDecision
+from aj_crew.telegram.session_resume import _ROUTE_OWNER_REFUSAL
+from aj_crew.telegram.transport import TelegramInboundMessage
+from aj_crew.testing.wait import await_until
 
 
 def _resume_module() -> Any:
-    return importlib.import_module("kiro_crew.telegram.session_resume")
+    return importlib.import_module("aj_crew.telegram.session_resume")
 
 
 def _private_topic(text: str, thread: int, *, chat_id: int = 7, user_id: int = 7):
@@ -72,14 +72,14 @@ class TestTelegramPrivateChatTopicRouting:
         assert dispatcher._route_thread(route) is None
         # Byte-identical to the pre-forum DM key: users who never enable topics
         # see no change.
-        assert dispatcher._session_key(route) == "telegram:kirocrew:direct:7"
+        assert dispatcher._session_key(route) == "telegram:ajcrew:direct:7"
 
     def test_a_private_topic_folds_chat_id_and_thread(self, tmp_path: Any) -> None:
         dispatcher, _, _, _ = _dispatcher(tmp_path)
         route = dispatcher._route_key(chat_type="private", user_id=7, chat_id=7, thread=11)
         assert route == ("direct_topic", "7:11")
         assert dispatcher._route_thread(route) == 11
-        assert dispatcher._session_key(route) == "telegram:kirocrew:direct_topic:7:11"
+        assert dispatcher._session_key(route) == "telegram:ajcrew:direct_topic:7:11"
 
     def test_two_private_topics_resolve_to_distinct_sessions(self, tmp_path: Any) -> None:
         dispatcher, _, _, _ = _dispatcher(tmp_path)
@@ -99,7 +99,7 @@ class TestTelegramPrivateChatTopicRouting:
         topic = dispatcher._route_key(chat_type="private", user_id=7, chat_id=7, thread=11)
         general = dispatcher._route_key(chat_type="private", user_id=7, chat_id=7, thread=None)
         group = dispatcher._route_key(chat_type="supergroup", user_id=7, chat_id=-100, thread=11)
-        # A private topic is a 1:1 DM: it keeps /kirocrew dashboard and the
+        # A private topic is a 1:1 DM: it keeps /ajcrew dashboard and the
         # host-wide listings; a supergroup Topic (group-readable) does not.
         assert dispatcher._is_private_route(topic) is True
         assert dispatcher._is_private_route(general) is True
@@ -117,13 +117,13 @@ class TestTelegramPrivateChatTopicRouting:
         # The threadless DM collapses into the shared unified bucket; the topic
         # keeps its own full bucket, or the fix would be a no-op.
         assert general.startswith("unified:")
-        assert topic == "telegram:kirocrew:direct_topic:7:11"
+        assert topic == "telegram:ajcrew:direct_topic:7:11"
 
     @pytest.mark.asyncio
     async def test_a_private_topic_turn_runs_under_its_own_session(self, tmp_path: Any) -> None:
         dispatcher, _, sessions, _ = _dispatcher(tmp_path)
         await dispatcher.handle_message(_private_topic("in topic 11", thread=11))
-        assert sessions.last_key == "telegram:kirocrew:direct_topic:7:11"
+        assert sessions.last_key == "telegram:ajcrew:direct_topic:7:11"
 
 
 class TestTelegramSessionPicker:
@@ -157,8 +157,8 @@ class TestTelegramSessionPicker:
     @pytest.mark.asyncio
     async def test_lists_only_this_dm_native_generations(self, tmp_path: Any) -> None:
         dispatcher, client, sessions, log = _dispatcher(tmp_path)
-        prior_key = "telegram:kirocrew:direct:7:gen4"
-        other_key = "telegram:kirocrew:direct:8:gen4"
+        prior_key = "telegram:ajcrew:direct:7:gen4"
+        other_key = "telegram:ajcrew:direct:8:gen4"
         await asyncio.to_thread(log.append, prior_key, "user", "earlier telegram work")
         await asyncio.to_thread(log.set_title, prior_key, "Earlier Telegram generation")
         await asyncio.to_thread(log.append, other_key, "user", "somebody else's work")
@@ -490,7 +490,7 @@ class TestTelegramSessionPicker:
         an escaping store error would discard the press with no reply and leave a
         dead button. It settles fail-closed instead.
         """
-        from kiro_crew.messaging.resume_expectation import ExpectationStoreError
+        from aj_crew.messaging.resume_expectation import ExpectationStoreError
 
         dispatcher, client, sessions, _ = _dispatcher(tmp_path)
         expectations = dispatcher._session_resume.expectations
@@ -665,7 +665,7 @@ class TestTelegramSessionPicker:
         """
         dispatcher, client, sessions, _ = _dispatcher(tmp_path)
         link = dispatcher._session_resume.link_for(7, None)
-        unified_native = "unified:kirocrew:direct:7"
+        unified_native = "unified:ajcrew:direct:7"
         sessions.set_mirror_link(unified_native, link, accepts_inbound=False)
 
         await dispatcher.handle_message(_dm("/session launch"))
@@ -692,7 +692,7 @@ class TestTelegramSessionPicker:
         await dispatcher._session_resume.choose(
             client,
             _callback(data, message_id=message_id),
-            native_key="unified:kirocrew:direct:999",
+            native_key="unified:ajcrew:direct:999",
         )
 
         assert sessions.inbound_keys == set(), "an unrelated mirror must not be displaced"

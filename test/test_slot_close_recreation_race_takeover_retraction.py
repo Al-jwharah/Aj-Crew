@@ -23,8 +23,8 @@ from slot_close_recreation_race_helpers import (
     _Req,
 )
 
-from kiro_crew.dashboard import chat_handlers as handlers
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard import chat_handlers as handlers
+from aj_crew.testing.wait import async_wait_until
 
 
 class _TombstoneClock:
@@ -50,7 +50,7 @@ def _freeze_tombstone_clock(monkeypatch) -> _TombstoneClock:
     """Bind the tombstone stamp and every noter's start to one controllable clock."""
     import time as real_time
 
-    from kiro_crew.dashboard import channel_slots, chat_persistence
+    from aj_crew.dashboard import channel_slots, chat_persistence
 
     clock = _TombstoneClock(real_time)
     for module in (channel_slots, chat_persistence, handlers):
@@ -67,9 +67,9 @@ async def test_a_rehydrate_begun_after_the_close_does_not_make_it_yield(tmp_path
     """
     import threading
 
-    from kiro_crew.dashboard import chat_persistence
-    from kiro_crew.dashboard.chat_persistence import rehydrate_slot_from_history_async
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard import chat_persistence
+    from aj_crew.dashboard.chat_persistence import rehydrate_slot_from_history_async
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -131,9 +131,9 @@ async def test_a_noter_refused_after_noting_does_not_make_the_close_yield(tmp_pa
     """
     import threading
 
-    from kiro_crew.dashboard import chat_persistence
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
-    from kiro_crew.history import HistoryLockTimeout
+    from aj_crew.dashboard import chat_persistence
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.history import HistoryLockTimeout
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -196,7 +196,7 @@ def test_a_retraction_before_the_basis_opened_does_not_hide_a_later_takeover(tmp
     ``basis_moved`` and the claim registration must both see it; a net count would
     read zero and truncate under the taker's read.
     """
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.dashboard.slot_registry import SlotRegistry
 
     state = _make_state(tmp_path)
     overlapping = SlotRegistry.open_takeover_basis(state, NAME)
@@ -232,7 +232,7 @@ def test_a_pre_basis_note_retracted_after_the_basis_does_not_hide_a_later_takeov
     that note: the takeover that postdates the basis still stands, for both
     consumers.
     """
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.dashboard.slot_registry import SlotRegistry
 
     state = _make_state(tmp_path)
     overlapping = SlotRegistry.open_takeover_basis(state, NAME)
@@ -269,7 +269,7 @@ def test_a_stale_retraction_across_watch_recreation_does_not_withdraw_a_newer_no
     A notes on a watch that retires; B notes on a new one; A's retraction must not
     remove B's note, though both are note 1 of their watch.
     """
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.dashboard.slot_registry import SlotRegistry
 
     state = _make_state(tmp_path)
     first_holder = SlotRegistry.open_takeover_basis(state, NAME)
@@ -308,7 +308,7 @@ def test_a_handed_over_dismissal_settles_on_publish_or_on_the_last_retraction(tm
     taker's success exit (nothing to write) or on the last retraction (the record
     comes back to be written); with nobody standing it comes back at once.
     """
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.dashboard.slot_registry import SlotRegistry
 
     state = _make_state(tmp_path)
     # Deferred: a taker stands.
@@ -398,7 +398,7 @@ def test_a_handed_over_dismissal_settles_on_publish_or_on_the_last_retraction(tm
 
 def test_a_retracted_note_no_longer_moves_the_basis(tmp_path) -> None:
     """The registry rule behind the two races above."""
-    from kiro_crew.dashboard.slot_registry import (
+    from aj_crew.dashboard.slot_registry import (
         NO_TAKEOVER_NOTE,
         SlotRegistry,
         TakeoverNote,
@@ -458,7 +458,7 @@ async def test_a_resume_that_waited_out_a_committing_close_does_not_publish_over
     """
     import threading
 
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -533,8 +533,8 @@ async def test_a_taker_refused_after_registering_its_slot_still_leaves_the_tab_d
     """
     import threading
 
-    from kiro_crew.dashboard import chat_persistence
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard import chat_persistence
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -622,8 +622,8 @@ async def _close_whose_taker_gives_up_during_its_drain(state, monkeypatch, *, cl
     """
     import threading
 
-    from kiro_crew.dashboard import chat_persistence
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard import chat_persistence
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
 
     slot = state.get_or_create_slot(NAME)
     for row in ("first question", "first answer", "second question", "second answer"):
@@ -730,7 +730,7 @@ async def test_a_plain_create_between_the_hand_off_and_the_queued_write_is_a_com
     """
     import threading
 
-    from kiro_crew.dashboard.slot_persistence import takeover_ordering
+    from aj_crew.dashboard.slot_persistence import takeover_ordering
 
     state = _make_state(tmp_path)
     key, closing, drain_release = await _close_whose_taker_gives_up_during_its_drain(
@@ -774,7 +774,7 @@ async def test_a_close_whose_own_marker_write_fails_does_not_report_success(
     The close reports ``history_save_failed`` (bulk: ``failed``), and the dismissal
     stays owed so a later taker's exit still writes it.
     """
-    from kiro_crew.dashboard import chat_persistence
+    from aj_crew.dashboard import chat_persistence
 
     state = _make_state(tmp_path)
     key, closing, drain_release = await _close_whose_taker_gives_up_during_its_drain(
@@ -860,7 +860,7 @@ async def test_an_owed_marker_is_not_written_over_a_reopen_that_published_meanwh
     """
     import threading
 
-    from kiro_crew.dashboard.slot_persistence import takeover_ordering
+    from aj_crew.dashboard.slot_persistence import takeover_ordering
 
     state = _make_state(tmp_path)
     key, rehydrate, read_release, _unpark = await _close_handed_over_to_a_parked_taker(
@@ -903,7 +903,7 @@ async def test_an_owed_marker_whose_write_fails_stays_owed_and_lands_on_the_next
     stays owed on the watch (which therefore stays alive). A later reopen that
     notes the key and gives up finds it still owed and writes it.
     """
-    from kiro_crew.dashboard import chat_persistence
+    from aj_crew.dashboard import chat_persistence
 
     state = _make_state(tmp_path)
     key, rehydrate, read_release, unpark = await _close_handed_over_to_a_parked_taker(
@@ -955,7 +955,7 @@ async def test_an_owed_marker_yields_to_a_user_resume_that_read_the_header_befor
     """
     import threading
 
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
 
     state = _make_state(tmp_path)
     key, rehydrate, read_release, _unpark = await _close_handed_over_to_a_parked_taker(
@@ -1004,7 +1004,7 @@ async def test_an_owed_marker_lands_when_the_resume_it_yielded_to_refuses(tmp_pa
     """A marker that yielded to an in-flight resume is written by that resume's refusal exit."""
     import threading
 
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
 
     state = _make_state(tmp_path)
     key, rehydrate, read_release, _unpark = await _close_handed_over_to_a_parked_taker(
@@ -1051,7 +1051,7 @@ async def test_two_resumes_in_flight_and_a_cancelled_one_still_settle_the_owed_m
     """
     import threading
 
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
 
     state = _make_state(tmp_path)
     key, rehydrate, read_release, _unpark = await _close_handed_over_to_a_parked_taker(
@@ -1110,7 +1110,7 @@ async def test_a_resume_admitted_between_the_markers_guard_and_its_rename_reopen
     """
     import threading
 
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
 
     state = _make_state(tmp_path)
     key, rehydrate, read_release, _unpark = await _close_handed_over_to_a_parked_taker(
@@ -1164,8 +1164,8 @@ async def test_a_skipped_marker_write_whose_line_reads_open_stays_owed(tmp_path,
     line as "written" would clear the dismissal over a missing marker. The
     outcome is ``failed``, the dismissal stays owed, and the next exit writes it.
     """
-    from kiro_crew.dashboard import chat_persistence
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard import chat_persistence
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
 
     state = _make_state(tmp_path)
     key, rehydrate, read_release, unpark = await _close_handed_over_to_a_parked_taker(
@@ -1217,7 +1217,7 @@ async def test_a_publication_that_noted_nothing_settles_the_dismissal_at_once(tm
     ``put_slot`` is the only publication there is, so the dismissal settles there
     and the tab it publishes is never closed under. Settling twice is harmless.
     """
-    from kiro_crew.dashboard.slot_registry import SlotRegistry
+    from aj_crew.dashboard.slot_registry import SlotRegistry
 
     state = _make_state(tmp_path)
     basis = SlotRegistry.open_takeover_basis(state, NAME)
@@ -1261,8 +1261,8 @@ async def test_a_taker_that_gives_up_after_the_close_returned_still_leaves_the_t
     """
     import threading
 
-    from kiro_crew.dashboard import chat_persistence
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard import chat_persistence
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)
@@ -1342,8 +1342,8 @@ async def test_close_archive_yields_to_a_user_resume_begun_before_the_close(tmp_
     """
     import threading
 
-    from kiro_crew.dashboard import chat_persistence
-    from kiro_crew.dashboard.chat_utils import slot_transcript_key
+    from aj_crew.dashboard import chat_persistence
+    from aj_crew.dashboard.chat_utils import slot_transcript_key
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot(NAME)

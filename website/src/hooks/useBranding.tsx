@@ -21,7 +21,7 @@ interface Branding {
 }
 
 const defaults: Branding = {
-  botName: 'Kiro Crew',
+  botName: 'Aj Crew',
   avatar: '/logo.png',
   directLocal: false,
   desktopLauncher: false,

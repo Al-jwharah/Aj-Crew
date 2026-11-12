@@ -11,7 +11,7 @@ vi.mock('react-dom', async (importOriginal) => {
 })
 
 const mockSkills = [
-  { key: 'kirocrew-dev/prepare-pr', name: 'prepare-pr', description: 'PR workflow' },
+  { key: 'ajcrew-dev/prepare-pr', name: 'prepare-pr', description: 'PR workflow' },
   { key: 'dev-fleet/pod-e2e', name: 'pod-e2e', description: 'E2E tests' },
 ]
 
@@ -34,7 +34,7 @@ describe('HookSkillsDropdown', () => {
     filter: '',
     setFilter: vi.fn(),
     onClose: vi.fn(),
-    selected: ['kirocrew-dev/prepare-pr'],
+    selected: ['ajcrew-dev/prepare-pr'],
     filtered: [mockSkills[1]],
     byKey: mockByKey,
     onAdd: vi.fn(),
@@ -58,7 +58,7 @@ describe('HookSkillsDropdown', () => {
   it('calls onRemove when remove button is clicked', () => {
     renderWithProviders(<HookSkillsDropdown {...baseProps} />)
     fireEvent.click(screen.getByRole('button', { name: /remove.*prepare-pr/i }))
-    expect(baseProps.onRemove).toHaveBeenCalledWith('kirocrew-dev/prepare-pr')
+    expect(baseProps.onRemove).toHaveBeenCalledWith('ajcrew-dev/prepare-pr')
   })
 
   it('renders available candidates to add', () => {

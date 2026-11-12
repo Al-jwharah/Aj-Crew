@@ -1,14 +1,14 @@
 """Regression: deploy IAM must Deny tampering the append-only audit LogBucket.
 
-CWE-732: the S3BucketLevel/S3ObjectLevel Allow grants use the kirocrew-deploy-*
-wildcard, which also matches the audit bucket kirocrew-deploy-logs-* (CloudTrail
+CWE-732: the S3BucketLevel/S3ObjectLevel Allow grants use the ajcrew-deploy-*
+wildcard, which also matches the audit bucket ajcrew-deploy-logs-* (CloudTrail
 data events + S3 access logs). An explicit Deny (Deny overrides Allow) fences the
 deploy principal out of Put/Delete on that bucket without affecting real deploys.
 """
 
 from __future__ import annotations
 
-from kiro_crew.deploy.iam import policy_document
+from aj_crew.deploy.iam import policy_document
 
 
 def _by_sid(doc: dict, sid: str) -> dict | None:
@@ -29,6 +29,6 @@ def test_policy_denies_audit_log_bucket_tamper():
         for need in ("s3:PutObject", "s3:DeleteObject", "s3:DeleteBucket"):
             assert need in acts, f"{tier}: Deny missing {need}"
         res = deny["Resource"] if isinstance(deny["Resource"], list) else [deny["Resource"]]
-        assert res and all("kirocrew-deploy-logs-" in r for r in res), res
+        assert res and all("ajcrew-deploy-logs-" in r for r in res), res
         # The legitimate object-level Allow is still present (real deploys work).
         assert _by_sid(doc, "S3ObjectLevel") is not None, f"{tier}: S3ObjectLevel missing"

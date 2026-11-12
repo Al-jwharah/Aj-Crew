@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.webex.renderer (WebexRenderer, Layer 2b)."""
+"""Tests for aj_crew.webex.renderer (WebexRenderer, Layer 2b)."""
 
 from __future__ import annotations
 
@@ -6,9 +6,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.webex.client import WEBEX_MAX_TEXT
-from kiro_crew.webex.renderer import _STATUS_EDIT_BUDGET, WebexRenderer
-from kiro_crew.webex.transport import WEBEX_CAPABILITIES
+from aj_crew.webex.client import WEBEX_MAX_TEXT
+from aj_crew.webex.renderer import _STATUS_EDIT_BUDGET, WebexRenderer
+from aj_crew.webex.transport import WEBEX_CAPABILITIES
 
 #: A last-status time every throttle window has passed. Not ``0.0``: the clock is
 #: ``time.monotonic()``, which can read under the doubled throttle (256 s by the

@@ -30,7 +30,7 @@ vi.mock('../api/client', () => ({ api: {
   sharedCrewSendState: vi.fn(), sharedCrewTypingLease: vi.fn(), sharedCrewWork: vi.fn(),
   sharedCrewCapacity: vi.fn(), sharedCrewSessions: vi.fn(), sharedCrewAccess: vi.fn(),
   tailscaleInvites: vi.fn(), sharedCrewSsm: vi.fn(), tailscaleUploadAvatar: vi.fn(), mobileConnectMethods: vi.fn(),
-  kirocrewConfig: vi.fn(), patchConfig: vi.fn(),
+  ajcrewConfig: vi.fn(), patchConfig: vi.fn(),
 } }))
 // People's Advanced section reads the config schema for its restart badges;
 // these tests are about Shared Crew reads, so the schema answers empty.
@@ -91,7 +91,7 @@ beforeEach(() => {
   vi.mocked(api.sharedCrewSsm).mockResolvedValue(null)
   vi.mocked(api.sharedCrewAccess).mockResolvedValue(null)
   vi.mocked(api.mobileConnectMethods).mockResolvedValue({ methods: [] })
-  vi.mocked(api.kirocrewConfig).mockResolvedValue({} as never)
+  vi.mocked(api.ajcrewConfig).mockResolvedValue({} as never)
   vi.mocked(api.tailscaleUploadAvatar).mockResolvedValue({ avatar_id: 'picture' })
   vi.mocked(api.sharedCrewWork).mockResolvedValue({ items: [queued] } as never)
   vi.mocked(api.sharedCrewCapacity).mockResolvedValue(null)

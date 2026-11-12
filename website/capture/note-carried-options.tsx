@@ -28,7 +28,7 @@ const scene = (params.get('scene') || 'note') as 'note' | 'cron'
 const theme = params.get('theme') || 'dark'
 const fixOn = params.get('fix') !== 'off'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const NOTE_CLS = 'reconcile-note'
 const MARKER = '[OPTIONS: Fix | Skip]'
@@ -107,7 +107,7 @@ function Scene() {
           )}
         </div>
         <div className="mt-1 rounded-2xl border border-border bg-bg-elevated px-3 py-3 text-[13px] text-muted">
-          Message Kiro Crew… (/command · @file · $skill)
+          Message Aj Crew… (/command · @file · $skill)
         </div>
       </div>
     </div>

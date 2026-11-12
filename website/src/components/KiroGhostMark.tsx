@@ -1,9 +1,12 @@
-// The Kiro ghost mark, sized and tinted for use as a nav/UI glyph.
+// The Kiro ghost mark: the logo of the Kiro harnesses (Kiro CLI, kiro-agent) in
+// the Agent Harness list and the composer's model chip. It is a third party's
+// mark, shown the way the other harness logos are (`HarnessLogo.tsx`); the
+// product's own glyph is `AjMark`.
 //
 // The source art (`kiro-ghost-mark.svg`) is the ghost from the Kiro brand mark —
 // the same silhouette shipped as the product icon in the public `kirodotdev/Kiro`
 // repo (`assets/kiro-icon.png`) and used by the Electron boot sequence
-// (`KiroGhost`), traced as an OUTLINE (stroked body, solid eyes) to match how
+// (the ghost), traced as an OUTLINE (stroked body, solid eyes) to match how
 // the Kiro IDE draws it in its own activity bar. It is a static brand asset
 // rendered from a plain URL import — NOT svgr/`?react`, and no inline SVG paths
 // in TSX — so it does not fall under the `use-lucide-icons` rule, the same

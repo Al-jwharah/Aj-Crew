@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 _CREDENTIAL_PASSES = frozenset({"redact_credentials", "redact_credentials_with_records"})
 _URL_PASSES = frozenset({"redact_exfiltration_urls", "redact_exfiltration_urls_with_records"})
@@ -33,12 +33,12 @@ _PAD = "a" * 40  # enough query to make the URL pass flag the address
 
 
 def _helpers() -> list[tuple[str, object]]:
-    from kiro_crew import snapshot_redact
-    from kiro_crew.apps import routes
-    from kiro_crew.apps.builtins.aws_control.backend import accounts
-    from kiro_crew.apps.builtins.aws_control.backend.backup_parts import egress_text
-    from kiro_crew.apps.builtins.dev_fleet import runtime as dev_fleet_runtime
-    from kiro_crew.apps.builtins.mochi import redact as mochi_redact
+    from aj_crew import snapshot_redact
+    from aj_crew.apps import routes
+    from aj_crew.apps.builtins.aws_control.backend import accounts
+    from aj_crew.apps.builtins.aws_control.backend.backup_parts import egress_text
+    from aj_crew.apps.builtins.dev_fleet import runtime as dev_fleet_runtime
+    from aj_crew.apps.builtins.mochi import redact as mochi_redact
 
     return [
         ("snapshot_redact._scrub", lambda s: snapshot_redact._scrub(s)[0]),

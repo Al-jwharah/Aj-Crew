@@ -17,10 +17,10 @@ from app_bridges_helpers import _make_app_source
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis import strategies as st
 
+from aj_crew.apps.bridges import _deregister_mcp_servers, _register_mcp_servers, register_app
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
+from aj_crew.apps.manifest import AppManifest
 from conftest import host_abs
-from kiro_crew.apps.bridges import _deregister_mcp_servers, _register_mcp_servers, register_app
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
-from kiro_crew.apps.manifest import AppManifest
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -30,8 +30,8 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 
 class TestMCPRegistration:
     def test_register_mcp_servers(self, tmp_path, app_env, monkeypatch):
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -60,7 +60,7 @@ class TestMCPRegistration:
         naming a PATH fragment must be emitted complete. See env.emit_env."""
         import os
 
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -101,8 +101,8 @@ class TestMCPRegistration:
         # 9101, …). The manifest's mcpServers url carries an illustrative fixed port.
         # Registration MUST rewrite it to the live allocated port, else agents call the
         # wrong port and every app tool call silently fails.
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -132,8 +132,8 @@ class TestMCPRegistration:
         # makes kiro-cli try to connect on EVERY session → "backend hiccup" → 3 retries →
         # hard error, breaking all requests. The enable/boot flow re-registers with the
         # live port once the backend is up.
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -162,8 +162,8 @@ class TestMCPRegistration:
         # registration must be SCRUBBED
         # when we re-register and the backend still isn't up — so it can't keep poisoning
         # every kiro session across reboots/disable.
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -193,8 +193,8 @@ class TestMCPRegistration:
     def test_stdio_mcp_server_always_registered_no_backend(self, tmp_path, app_env, monkeypatch):
         # A command/stdio MCP server (no url) has no port to be dead — it must always be
         # registered regardless of backend liveness (only HTTP url servers are gated).
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -222,8 +222,8 @@ class TestMCPRegistration:
         # _collect_app_mcp_servers (test_app_mcp_scoping::test_self_managed_http_url_is_preserved),
         # the other writer of this config: the two must agree or one scrubs what the other
         # writes straight back.
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -251,8 +251,8 @@ class TestMCPRegistration:
         # The complement of the self-managed case: an app that DOES declare a backend
         # (backend.entryPoint set) still has its portless url scrubbed when no live port
         # is known — the scrub is now conditional on backend.entryPoint, not removed.
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -281,9 +281,9 @@ class TestMCPRegistration:
     ):
         # reregister_app_mcp_servers (called after the backend starts) overwrites the
         # earlier manifest-default entry with the live-port url.
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
-        from kiro_crew.apps.bridges import reregister_app_mcp_servers
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
+        from aj_crew.apps.bridges import reregister_app_mcp_servers
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -321,9 +321,9 @@ class TestMCPRegistration:
         # backend isn't marked *healthy* yet (get_app_backend_port would return None at
         # that instant). An explicit live_port must still rewrite the url — this is the
         # exact bug that left the registered url at :9100 while the backend was on :9101.
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
-        from kiro_crew.apps.bridges import reregister_app_mcp_servers
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
+        from aj_crew.apps.bridges import reregister_app_mcp_servers
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -340,7 +340,7 @@ class TestMCPRegistration:
         assert data["mcpServers"]["test-app:my-mcp"]["url"] == "http://localhost:9101/mcp"
 
     def test_deregister_mcp_servers(self, tmp_path, app_env, monkeypatch):
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -373,7 +373,7 @@ class TestMCPRegistration:
         # synchronously on the gateway event loop, so the scrub must NOT run
         # here or a held lock would stall all chat/heartbeat. Boot reconcile
         # performs it off-loop instead.
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -386,14 +386,14 @@ class TestMCPRegistration:
         assert called == [], "deregister must not run the blocking legacy scrub on the event loop"
 
     def test_deregister_no_servers(self, tmp_path, monkeypatch):
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
         assert _deregister_mcp_servers("nonexistent") == 0
 
     def test_register_no_mcp_servers(self, tmp_path, app_env, monkeypatch):
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -402,8 +402,8 @@ class TestMCPRegistration:
         assert _register_mcp_servers("test", manifest) == []
 
     def test_register_app_includes_mcp(self, tmp_path, app_env, monkeypatch):
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -447,8 +447,8 @@ class TestMCPProperties:
         """**Validates: Requirements 8.1, 8.2**"""
         import uuid
 
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / f"mcp-{uuid.uuid4().hex[:8]}.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -489,8 +489,8 @@ class TestMCPProperties:
         assume(app_a != app_b)
         import uuid
 
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / f"mcp-iso-{uuid.uuid4().hex[:8]}.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -519,8 +519,8 @@ class TestBootReconcile:
         # have it scrubbed at gateway boot — else kiro-cli dials the dead port on every
         # session. start_enabled_app_backends() reconciles disabled apps before starting
         # any backend.
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -572,8 +572,8 @@ class TestBootReconcile:
         # shape breaks every kiro-cli session. The health-gated path calls
         # _gate_mcp_registration(healthy=False) on health failure, which scrubs the entry
         # the same way the disabled path does.
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -599,8 +599,8 @@ class TestBootReconcile:
     def test_enabled_app_healthy_registers_with_live_port(self, tmp_path, app_env, monkeypatch):
         # The complement: once /health passes, _gate_mcp_registration(healthy=True) writes the
         # HTTP MCP url with the confirmed live port (rewriting the manifest's illustrative one).
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -621,8 +621,8 @@ class TestBootReconcile:
         # Review scenario: the boot loop must NOT register MCP servers for a freshly
         # spawned (healthy=False) enabled app — registration is deferred to the health-check
         # loop. Registering here is what could leave a dead url for a never-healthy app.
-        import kiro_crew.apps.backend as backend_mod
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.backend as backend_mod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -667,14 +667,14 @@ class TestRebuildPreservesTheLiveMcpSpec:
     """
 
     def test_live_registered_spec_wins_over_the_manifest(self, monkeypatch):
-        from kiro_crew import agent
+        from aj_crew import agent
 
         class _M:
             mcpServers = {"srv": {"url": "http://127.0.0.1:9100/mcp"}}  # illustrative
 
         monkeypatch.setattr(agent, "_ceiling_filtered_spec", lambda ref, spec, *, audit=True: spec)
-        import kiro_crew.apps.bridges as bridges
-        import kiro_crew.apps.manager as manager
+        import aj_crew.apps.bridges as bridges
+        import aj_crew.apps.manager as manager
 
         monkeypatch.setattr(manager, "list_apps", lambda: [{"name": "someapp"}])
         monkeypatch.setattr(manager, "is_app_enabled", lambda n: True)
@@ -688,15 +688,15 @@ class TestRebuildPreservesTheLiveMcpSpec:
         assert out["someapp:srv"]["url"] == "http://127.0.0.1:54321/mcp"
 
     def test_http_server_with_no_live_entry_is_skipped(self, monkeypatch):
-        from kiro_crew import agent
+        from aj_crew import agent
 
         class _M:
             mcpServers = {"srv": {"url": "http://127.0.0.1:9100/mcp"}}
             backend = SimpleNamespace(entryPoint="backend.py")
 
         monkeypatch.setattr(agent, "_ceiling_filtered_spec", lambda ref, spec, *, audit=True: spec)
-        import kiro_crew.apps.bridges as bridges
-        import kiro_crew.apps.manager as manager
+        import aj_crew.apps.bridges as bridges
+        import aj_crew.apps.manager as manager
 
         monkeypatch.setattr(manager, "list_apps", lambda: [{"name": "someapp"}])
         monkeypatch.setattr(manager, "is_app_enabled", lambda n: True)
@@ -706,14 +706,14 @@ class TestRebuildPreservesTheLiveMcpSpec:
         assert "someapp:srv" not in out  # dead-port URL never written
 
     def test_stdio_server_falls_back_to_the_manifest(self, monkeypatch):
-        from kiro_crew import agent
+        from aj_crew import agent
 
         class _M:
             mcpServers = {"srv": {"command": "run", "args": ["x"]}}
 
         monkeypatch.setattr(agent, "_ceiling_filtered_spec", lambda ref, spec, *, audit=True: spec)
-        import kiro_crew.apps.bridges as bridges
-        import kiro_crew.apps.manager as manager
+        import aj_crew.apps.bridges as bridges
+        import aj_crew.apps.manager as manager
 
         monkeypatch.setattr(manager, "list_apps", lambda: [{"name": "someapp"}])
         monkeypatch.setattr(manager, "is_app_enabled", lambda n: True)
@@ -733,7 +733,7 @@ class TestLegacyScrubIsLocked:
     def test_scrub_holds_the_legacy_file_lock(self) -> None:
         import inspect
 
-        from kiro_crew.apps import bridges as bridges_mod
+        from aj_crew.apps import bridges as bridges_mod
 
         src = inspect.getsource(bridges_mod._scrub_legacy_shared_mcp)
         assert "with _mcp_lock(target=_LEGACY_SHARED_MCP_PATH):" in src
@@ -741,7 +741,7 @@ class TestLegacyScrubIsLocked:
     def test_scrub_removes_only_the_apps_entries(self, tmp_path, monkeypatch) -> None:
         import json
 
-        from kiro_crew.apps import bridges as bridges_mod
+        from aj_crew.apps import bridges as bridges_mod
 
         legacy = tmp_path / "mcp.json"
         legacy.write_text(
@@ -764,7 +764,7 @@ class TestReregisterRefreshesAgents:
     """
 
     def test_reregister_refreshes_agents_after_registering(self, monkeypatch) -> None:
-        from kiro_crew.apps import bridges as bridges_mod
+        from aj_crew.apps import bridges as bridges_mod
 
         calls: list[str] = []
         monkeypatch.setattr(bridges_mod, "_registration_source", lambda n: (object(), "/app/root"))
@@ -798,7 +798,7 @@ class TestMcpEnableHandlersOffloadTheSync:
         import importlib
         import re
 
-        from kiro_crew.dashboard.handlers import mcp
+        from aj_crew.dashboard.handlers import mcp
 
         # The handler facade and its owners, read as one text.
         src = "\n".join(
@@ -820,14 +820,14 @@ class TestMcpEnableHandlersOffloadTheSync:
 
 
 class TestMalformedConfigIsNotClobbered:
-    """A read-modify-write of an EXISTING-but-unreadable kirocrew.json must
+    """A read-modify-write of an EXISTING-but-unreadable ajcrew.json must
     ABORT, not treat it as empty and overwrite it — that would drop the agent's
     whole configuration."""
 
     def test_strict_read_raises_on_malformed_existing(self, tmp_path, monkeypatch):
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.bridges as bmod
 
-        mcp_path = tmp_path / "kirocrew.json"
+        mcp_path = tmp_path / "ajcrew.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
         # Missing file -> empty map, both modes.
         assert bmod._read_mcp_json_unlocked() == {}
@@ -839,9 +839,9 @@ class TestMalformedConfigIsNotClobbered:
             bmod._read_mcp_json_unlocked(strict=True)
 
     def test_register_does_not_overwrite_a_malformed_config(self, tmp_path, app_env, monkeypatch):
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.bridges as bmod
 
-        mcp_path = tmp_path / "kirocrew.json"
+        mcp_path = tmp_path / "ajcrew.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
         original = "{ this is not json and must survive"
         mcp_path.write_text(original, encoding="utf-8")
@@ -865,8 +865,8 @@ class TestDemotionKeepsBackendIndependentServers:
     """
 
     def test_the_unhealthy_reconcile_scrubs_http_and_keeps_stdio(self, monkeypatch, tmp_path):
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         calls: dict[str, object] = {}
 
@@ -898,7 +898,7 @@ class TestDemotionKeepsBackendIndependentServers:
         # mirroring _collect_app_mcp_servers.
         import inspect
 
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         src = inspect.getsource(brmod._register_mcp_servers)
         assert "servers.pop(namespaced, None)" in src
@@ -909,7 +909,7 @@ class TestScrubFallsBackWhenTheManifestCannotSay:
     """No manifest → remove everything, rather than keep a dead url out of ignorance."""
 
     def test_an_unresolvable_manifest_scrubs_every_entry(self, monkeypatch):
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(brmod, "_registration_source", lambda n: (None, brmod.Path(".")))
         removed: list[str] = []
@@ -930,7 +930,7 @@ class TestScrubFallsBackWhenTheManifestCannotSay:
     def test_a_manifest_declaring_no_servers_also_scrubs_everything(self, monkeypatch):
         # A stale `<app>:` entry with nothing declaring it is exactly the shape that
         # should not survive; there is no independent server to protect.
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         empty = SimpleNamespace(mcpServers={})
         monkeypatch.setattr(brmod, "_registration_source", lambda n: (empty, brmod.Path(".")))
@@ -957,7 +957,7 @@ class TestLifecycleWritersShareTheHealthSerialization:
         # the honest probe — it fails only while someone actually holds it.
         import threading
 
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         result: list[bool] = []
 
@@ -973,7 +973,7 @@ class TestLifecycleWritersShareTheHealthSerialization:
         return result[0]
 
     def test_mcp_registration_runs_under_the_guard(self, monkeypatch):
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         held: list[bool] = []
         monkeypatch.setattr(
@@ -996,7 +996,7 @@ class TestLifecycleWritersShareTheHealthSerialization:
         assert held == [True]
 
     def test_mcp_deregistration_runs_under_the_guard(self, monkeypatch):
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         held: list[bool] = []
         monkeypatch.setattr(
@@ -1012,7 +1012,7 @@ class TestLifecycleWritersShareTheHealthSerialization:
     def test_agent_materialization_runs_under_the_guard(self, monkeypatch, tmp_path):
         # The READ is inside too, not just the write: an agent copies the ambient spec,
         # so a read before a scrub and a write after it is the interleave that matters.
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         held: list[bool] = []
         monkeypatch.setattr(brmod, "_kiro_agents_dir", lambda: tmp_path)
@@ -1029,7 +1029,7 @@ class TestLifecycleWritersShareTheHealthSerialization:
         # The health transition holds the lock and then calls straight into these
         # writers. A non-re-entrant lock would deadlock the watch thread here, which is
         # why it is an RLock — pinned so nobody "simplifies" it back to Lock.
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         with bmod._health_reconcile_lock:
             assert bmod._health_reconcile_lock.acquire(blocking=False)
@@ -1044,7 +1044,7 @@ class TestScrubNeverDeletesMaterializedAgents:
     """
 
     def test_an_unreadable_manifest_keeps_the_agents(self, monkeypatch):
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(brmod, "_registration_source", lambda n: (None, brmod.Path(".")))
         monkeypatch.setattr(brmod, "_deregister_mcp_servers", lambda n: 1)
@@ -1057,7 +1057,7 @@ class TestScrubNeverDeletesMaterializedAgents:
         assert brmod.scrub_backend_mcp_url("unreadable") == []
 
     def test_a_manifest_declaring_no_servers_keeps_them_too(self, monkeypatch):
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(
             brmod,
@@ -1075,7 +1075,7 @@ class TestScrubNeverDeletesMaterializedAgents:
 
     def test_the_mcp_entry_is_still_scrubbed(self, monkeypatch):
         # Keeping the agents must not turn into keeping the dead url as well.
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(brmod, "_registration_source", lambda n: (None, brmod.Path(".")))
         removed: list[str] = []
@@ -1096,7 +1096,7 @@ class TestUnreadableManifestIsNotASilentRegistration:
     """
 
     def test_an_unreadable_manifest_is_collected(self, monkeypatch):
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(brmod, "_registration_source", lambda n: (None, brmod.Path(".")))
         monkeypatch.setattr(brmod, "_registration_denied", lambda name, action, app_root: None)
@@ -1107,7 +1107,7 @@ class TestUnreadableManifestIsNotASilentRegistration:
 
     def test_a_manifest_declaring_no_servers_is_not_collected(self, monkeypatch):
         # Readable and simply empty: nothing to register, and retrying never changes it.
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(
             brmod,
@@ -1129,7 +1129,7 @@ class TestScrubDoesNotRematerializeAgents:
     """
 
     def test_the_scrub_touches_mcp_only(self, monkeypatch):
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         manifest = SimpleNamespace(mcpServers={"srv": {"command": "x"}}, agents=["a.json"])
         monkeypatch.setattr(brmod, "_registration_source", lambda n: (manifest, brmod.Path(".")))
@@ -1150,7 +1150,7 @@ class TestScrubDoesNotRematerializeAgents:
     def test_a_denied_app_still_gets_a_full_removal(self, monkeypatch):
         # The admission gate `reregister_app_mcp_servers` applied has to survive the
         # switch: nothing of a denied app stays reachable, not even its stdio servers.
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         manifest = SimpleNamespace(mcpServers={"srv": {"command": "x"}}, agents=[])
         monkeypatch.setattr(brmod, "_registration_source", lambda n: (manifest, brmod.Path(".")))

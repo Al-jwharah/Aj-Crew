@@ -18,7 +18,7 @@ import type { Artifact } from '../types'
 vi.mock('../api/client')
 vi.mock('../pages/ChatPage', () => ({
   default: () => <div data-testid="chat-page" />,
-  PREFILL_STORAGE_KEY: 'kirocrew_prefill',
+  PREFILL_STORAGE_KEY: 'ajcrew_prefill',
 }))
 
 const mkArtifact = (): Artifact => ({

@@ -3,7 +3,7 @@
  * structure `toolCallTitle.ts` renders into a localized title. Produced by
  * `shellCommandParse.ts` for shell commands and by `toolCallTitle.ts` for
  * native and MCP tools; mirrored field-for-field by
- * `src/kiro_crew/tool_call_title.py`, and pinned by
+ * `src/aj_crew/tool_call_title.py`, and pinned by
  * `test/fixtures/tool_call_titles.json`.
  *
  * Optional fields are OMITTED when absent (never `undefined`-valued), so a

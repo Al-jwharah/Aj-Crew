@@ -8,8 +8,8 @@ from pathlib import Path
 import pytest
 from overload_fakes import Clock, open_task_store
 
-from kiro_crew.taskq import migrate, model
-from kiro_crew.taskq.store import (
+from aj_crew.taskq import migrate, model
+from aj_crew.taskq.store import (
     TaskStore,
     TaskStoreUnavailable,
     detect_network_filesystem,
@@ -74,7 +74,7 @@ def test_detect_network_filesystem_on_tmp_is_not_true(tmp_path: Path) -> None:
 def test_detect_network_filesystem_recognizes_linux_mount_table(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.taskq import store as store_mod
 
     monkeypatch.setattr(store_mod.sys, "platform", "linux")
     monkeypatch.setattr(store_mod, "_linux_mount_type", lambda p: "nfs4")
@@ -93,7 +93,7 @@ def test_detect_network_filesystem_asks_the_windows_volume_type(
 
     An unclassifiable volume stays unknown rather than becoming a mode choice.
     """
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.taskq import store as store_mod
 
     monkeypatch.setattr(store_mod.sys, "platform", "win32")
     monkeypatch.setattr(
@@ -106,7 +106,7 @@ def test_a_windows_network_home_uses_delete_journal_and_warns(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """End to end through the shipped default (``auto``, i.e. ``network_fs=None``)."""
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.taskq import store as store_mod
 
     monkeypatch.setattr(store_mod.sys, "platform", "win32")
     monkeypatch.setattr(store_mod.platform_compat, "path_volume_is_remote", lambda p: True)
@@ -120,7 +120,7 @@ def test_a_windows_network_home_uses_delete_journal_and_warns(
 
 
 def test_a_windows_local_volume_keeps_wal(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.taskq import store as store_mod
 
     monkeypatch.setattr(store_mod.sys, "platform", "win32")
     monkeypatch.setattr(store_mod.platform_compat, "path_volume_is_remote", lambda p: False)
@@ -144,7 +144,7 @@ def test_an_undecidable_volume_takes_delete_rather_than_guessing_local(
     shared-memory assumption SMB/NFS does not honour, so the store the queue
     depends on is the thing at risk. DELETE is slower and correct everywhere.
     """
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.taskq import store as store_mod
 
     monkeypatch.setattr(store_mod.sys, "platform", "win32")
     monkeypatch.setattr(store_mod.platform_compat, "path_volume_is_remote", lambda p: None)
@@ -170,7 +170,7 @@ def test_an_explicit_wal_override_still_wins_on_an_undecidable_volume(
 ) -> None:
     """Fail-safe must not become a trap: an operator who KNOWS the disk is local
     keeps the fast mode, and the detector is not consulted at all."""
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.taskq import store as store_mod
 
     asked: list[Path] = []
 
@@ -194,7 +194,7 @@ def test_the_journal_mode_override_wins_over_the_windows_volume_type(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, remote: bool
 ) -> None:
     """``agent.task_store_journal_mode`` forces the mode and skips detection."""
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.taskq import store as store_mod
 
     asked: list[Path] = []
 
@@ -931,16 +931,16 @@ def test_diagnostic_open_does_not_record_incarnation(tmp_path: Path) -> None:
 def test_doctor_task_store_is_silent_without_store_and_reports_with_one(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from kiro_crew import cli_doctor
+    from aj_crew import cli_doctor
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     issues: list[str] = []
     cli_doctor._doctor_task_store(issues)
     assert capsys.readouterr().out == "" and issues == []
     s = TaskStore(tmp_path / "tasks" / "tasks.db", network_fs=False).open()
     s.accept([_rec("a")])
     s.close()
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.taskq import store as store_mod
 
     monkeypatch.setattr(store_mod, "detect_network_filesystem", lambda p: True)
     cli_doctor._doctor_task_store(issues)
@@ -990,7 +990,7 @@ def test_corrupt_store_is_quarantined_and_recreated(tmp_path: Path) -> None:
 def test_two_quarantines_in_the_same_second_keep_both_copies(tmp_path: Path, monkeypatch) -> None:
     """A crash loop quarantines repeatedly; every copy is evidence and none is
     overwritten, even with a frozen clock and one pid."""
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.taskq import store as store_mod
 
     monkeypatch.setattr(store_mod.time, "time", lambda: 1_800_000_000.25)
     path = tmp_path / "tasks" / "tasks.db"
@@ -1050,7 +1050,7 @@ def test_diagnostic_open_reports_corruption_without_moving_the_file(tmp_path: Pa
 
 
 def test_locked_store_still_refuses_instead_of_quarantining(tmp_path: Path, monkeypatch) -> None:
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.taskq import store as store_mod
 
     path = tmp_path / "tasks" / "tasks.db"
     TaskStore(path, window=8, network_fs=False).open().close()  # a healthy file
@@ -1074,7 +1074,7 @@ def test_locked_store_still_refuses_instead_of_quarantining(tmp_path: Path, monk
 
 
 def test_is_corruption_classifies_sqlite_errors() -> None:
-    from kiro_crew.sqlite_quarantine import is_damaged_database_error as _is_corruption
+    from aj_crew.sqlite_quarantine import is_damaged_database_error as _is_corruption
 
     assert _is_corruption(sqlite3.DatabaseError("file is not a database"))
     assert _is_corruption(sqlite3.DatabaseError("database disk image is malformed"))
@@ -1093,7 +1093,7 @@ def test_is_corruption_classifies_sqlite_errors() -> None:
     )
 
 
-# ── the on-loop guard (kiro_crew.on_loop_db) ──────────────────────────────────
+# ── the on-loop guard (aj_crew.on_loop_db) ──────────────────────────────────
 
 
 @pytest.mark.asyncio
@@ -1107,8 +1107,8 @@ async def test_store_connection_on_the_loop_is_diagnosed(
     ``async def``; every site this store actually had was one plain helper down
     from one, which is why the accessor is where the check has to live.
     """
-    from kiro_crew.on_loop_db import OnLoopStoreError
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.on_loop_db import OnLoopStoreError
+    from aj_crew.taskq import store as store_mod
 
     guard = store_mod._ON_LOOP_DB_GUARD
 
@@ -1124,7 +1124,7 @@ async def test_store_connection_on_the_loop_is_diagnosed(
     # Production: one throttled WARNING with a stack, and the call proceeds.
     guard.reset_throttle()
     caplog.clear()
-    with caplog.at_level("WARNING", logger="kiro_crew.on_loop_db"):
+    with caplog.at_level("WARNING", logger="aj_crew.on_loop_db"):
         assert store.count_pending(model.KIND_SUBAGENT) == 0
         assert store.count_pending(model.KIND_SUBAGENT) == 0
     warnings = [r for r in caplog.records if "task store" in r.getMessage()]
@@ -1281,7 +1281,7 @@ async def test_unstarted_index_read_takes_no_connection_on_the_loop(
     """The serial-lock done-probe reads the index on the gateway loop. That read
     must never reach the connection: the strict on-loop guard is armed, the
     connection accessor raises if taken, and the loop counter stays put."""
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.taskq import store as store_mod
 
     await store.run(store.accept_one, _rec("t"))
     monkeypatch.setenv(store_mod.STRICT_ON_LOOP_ENV, "1")

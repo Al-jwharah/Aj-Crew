@@ -39,7 +39,7 @@ gate = _load()
 
 PAGE = "website/src/pages/NewThing.tsx"
 NESTED_PAGE = "website/src/pages/settings/NewPanel.tsx"
-HANDLER = "src/kiro_crew/dashboard/handlers/new_thing.py"
+HANDLER = "src/aj_crew/dashboard/handlers/new_thing.py"
 
 
 # ---------------------------------------------------------------------------
@@ -58,7 +58,7 @@ class TestTriggers:
             pytest.param([], ["website/src/pages/OldThing.tsx"], 0, 0, id="page-deleted"),
             pytest.param([HANDLER], [], 0, 0, id="handler-added"),
             pytest.param(
-                [], ["src/kiro_crew/dashboard/handlers/old_thing.py"], 0, 0, id="handler-deleted"
+                [], ["src/aj_crew/dashboard/handlers/old_thing.py"], 0, 0, id="handler-deleted"
             ),
             pytest.param([], [], 1, 0, id="route-added"),
             pytest.param([], [], 0, 1, id="route-removed"),
@@ -118,8 +118,8 @@ class TestNonFeatures:
                     "website/src/pages/NewThing.spec.tsx",
                     "website/src/pages/chat/helpers.test.ts",
                     "website/src/pages/__snapshots__/NewThing.snap",
-                    "src/kiro_crew/dashboard/handlers/__init__.py",
-                    "src/kiro_crew/dashboard/handlers/_shared.py",
+                    "src/aj_crew/dashboard/handlers/__init__.py",
+                    "src/aj_crew/dashboard/handlers/_shared.py",
                     "website/src/pages/overview/index.ts",
                 ],
             ),
@@ -129,8 +129,8 @@ class TestNonFeatures:
                 [
                     "website/src/components/NewThing.tsx",
                     "website/src/surfaces/builtins.tsx",
-                    "src/kiro_crew/dashboard/chat_handlers.py",
-                    "src/kiro_crew/memory.py",
+                    "src/aj_crew/dashboard/chat_handlers.py",
+                    "src/aj_crew/memory.py",
                     "docs/guides/new.md",
                     "test/test_new_thing.py",
                 ],
@@ -144,7 +144,7 @@ class TestNonFeatures:
     def test_real_page_is_a_feature_file(self):
         """Guard against a prefix typo that would exempt the whole tree."""
         assert gate.is_feature_file("website/src/pages/ChatPage.tsx")
-        assert gate.is_feature_file("src/kiro_crew/dashboard/handlers/artifacts.py")
+        assert gate.is_feature_file("src/aj_crew/dashboard/handlers/artifacts.py")
 
     def test_the_map_is_never_its_own_trigger(self):
         assert not gate.is_feature_file(gate.MAP_PATH)

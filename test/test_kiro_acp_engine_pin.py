@@ -15,13 +15,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import kiro_cli
-from kiro_crew import sandbox as sandbox_mod
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp import managed_agent_shadow as managed_shadow_mod
-from kiro_crew.acp.harness import SpawnContext, harness_for
-from kiro_crew.acp.types import ACP_BACKEND_KIRO
+from aj_crew import agent as agent_mod
+from aj_crew import kiro_cli
+from aj_crew import sandbox as sandbox_mod
+from aj_crew.acp import client as client_mod
+from aj_crew.acp import managed_agent_shadow as managed_shadow_mod
+from aj_crew.acp.harness import SpawnContext, harness_for
+from aj_crew.acp.types import ACP_BACKEND_KIRO
 
 #: The ``--agent-engine`` block of kiro-cli 3.0.0's ``acp --help`` (trailing spaces dropped).
 HELP_3_0_0 = """Usage: kiro-cli acp [OPTIONS]
@@ -186,7 +186,7 @@ async def test_the_single_process_client_launch_pins_v2_before_the_agent(
     """``AcpClient``'s own kiro-cli launch takes the same pin as the harness."""
     from unittest.mock import AsyncMock, patch
 
-    from kiro_crew.acp.client import AcpClient
+    from aj_crew.acp.client import AcpClient
 
     wrapped: dict[str, object] = {}
 

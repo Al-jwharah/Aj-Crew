@@ -15,7 +15,7 @@ import { sseSubagentSpawn, sseSubagentDone, sseSubagentBatchUpdate, sseSubagentB
 function spawnMany(store: ReturnType<typeof createTestStore>, n: number) {
   const SLOT = store.getState().chat.activeSlot
   for (let i = 0; i < n; i++) {
-    store.dispatch(sseSubagentSpawn({ slot: SLOT, id: `ag${i}`, task: `task ${i}`, agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: SLOT, id: `ag${i}`, task: `task ${i}`, agent: 'ajcrew' }))
   }
   return SLOT
 }

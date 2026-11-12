@@ -1,7 +1,7 @@
 ---
 title: Crew log wake -- a worker's write pulls the conductor's tick forward
 status: implemented
-author: Raymond Chen, with kirocrew-lead
+author: Raymond Chen, with ajcrew-lead
 created: 2026-10-01
 last-audited: 2026-10-06
 audited-at: ea7e91c8e6
@@ -25,7 +25,7 @@ superseded-by: []
 - Terminology. An earlier draft of this design (2026-09-22, never in this tree)
   said "the ledger is the channel" and hooked `session_ledger_record`. The word
   has since moved. The per-unit append-only file is the **crew log**
-  (`kiro_crew.crew_log`, recorded by default since
+  (`aj_crew.crew_log`, recorded by default since
   [#14295](https://github.com/kirodotdev/KiroCrew/pull/14295)). The **session
   ledger** (`session_ledger.py`, fold `ledger`) and the **work ledger**
   (`work_ledger.py`, entry type `WORK_ENTRY_TYPE`, rebuilt by
@@ -357,7 +357,7 @@ The window is **10 s, a starting value with no measured basis** -- no
 distribution of inter-report gaps has been measured. It is deliberately kept at
 seconds scale so the §4 latency promise still holds: an isolated `question`
 reaches its conductor in seconds, not in a cadence and not in a minute. It is
-tunable through `KIROCREW_WORK_LEDGER_WAKE_BATCH_SECS`, and `0` restores the
+tunable through `AJCREW_WORK_LEDGER_WAKE_BATCH_SECS`, and `0` restores the
 delay-zero arm exactly.
 
 Three rules keep the window from costing news. It is clamped to the loop's own

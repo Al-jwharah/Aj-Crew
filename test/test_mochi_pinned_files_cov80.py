@@ -21,8 +21,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps.builtins.mochi import pinned_files_service as pfs
-from kiro_crew.apps.builtins.mochi.pinned_files_service import (
+from aj_crew.apps.builtins.mochi import pinned_files_service as pfs
+from aj_crew.apps.builtins.mochi.pinned_files_service import (
     DATA_FILE_NAME,
     DEBOUNCE_MS,
     MAX_PINS,
@@ -275,7 +275,7 @@ class TestCorruptStoreIsNotOverwrittenOnMutation:
         # The SECOND writer of the same file, and the worse half of the bug: its
         # lenient read defaulted to an EMPTY list, so a corrupt store was zeroed
         # rather than merely reverted to one process's view.
-        from kiro_crew.apps.builtins.mochi import mcp_server
+        from aj_crew.apps.builtins.mochi import mcp_server
 
         corrupt = '{"pins": [{"path": "/a"}, {"path": ' + '"/truncated'
         pins_file = tmp_path / DATA_FILE_NAME
@@ -319,7 +319,7 @@ class TestCorruptStoreIsNotOverwrittenOnMutation:
 
     def test_the_mcp_pin_tools_still_work_on_a_healthy_store(self, tmp_path, monkeypatch):
         # The strict read must not break the ordinary path it now guards.
-        from kiro_crew.apps.builtins.mochi import mcp_server
+        from aj_crew.apps.builtins.mochi import mcp_server
 
         _write_pins(tmp_path, [{"path": "/a"}])
         monkeypatch.setattr(mcp_server, "_data_dir", lambda: tmp_path)
@@ -433,7 +433,7 @@ class TestRemoveAndMarkSeen:
         The create is injected by patching ``open_create_or_existing`` (as the
         route test does) rather than a directory mode, so this holds on Windows
         too, where a read-only directory still allows files to be created in it."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         target = tmp_path / "notes.txt"
         target.write_text("x", encoding="utf-8")
@@ -453,7 +453,7 @@ class TestRemoveAndMarkSeen:
     def test_a_lock_create_refusal_raises_pins_write_error_on_mark_seen(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         target = tmp_path / "notes.txt"
         target.write_text("x", encoding="utf-8")

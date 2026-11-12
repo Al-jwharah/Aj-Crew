@@ -20,7 +20,7 @@ from typing import Any
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
-from kiro_crew.metrics.recorder import MetricsRecorder
+from aj_crew.metrics.recorder import MetricsRecorder
 
 
 def _recorder_with_reader() -> tuple[MetricsRecorder, InMemoryMetricReader]:
@@ -65,10 +65,10 @@ class _BoomMeter:
 class TestUpDownCounter:
     def test_up_down_counter_records_a_negative_delta(self) -> None:
         rec, reader = _recorder_with_reader()
-        rec.up_down_counter("kirocrew.pool.live", 3, attrs={"kind": "backend"})
-        rec.up_down_counter("kirocrew.pool.live", -2)
+        rec.up_down_counter("ajcrew.pool.live", 3, attrs={"kind": "backend"})
+        rec.up_down_counter("ajcrew.pool.live", -2)
 
-        matching = [dp for name, dp in _points(reader) if name == "kirocrew.pool.live"]
+        matching = [dp for name, dp in _points(reader) if name == "ajcrew.pool.live"]
         assert matching, "the up/down counter must reach the reader"
         assert sum(dp.value for dp in matching) == 1
 
@@ -88,39 +88,39 @@ class TestUpDownCounter:
                 return _Inst()
 
         rec = MetricsRecorder(CountingMeter())  # type: ignore[arg-type]
-        rec.up_down_counter("kirocrew.pool.live", 1)
-        rec.up_down_counter("kirocrew.pool.live", -1)
-        assert created == ["kirocrew.pool.live"]
+        rec.up_down_counter("ajcrew.pool.live", 1)
+        rec.up_down_counter("ajcrew.pool.live", -1)
+        assert created == ["ajcrew.pool.live"]
         assert added == [1, -1]
 
     def test_disabled_recorder_skips_the_up_down_path_entirely(self) -> None:
         rec = MetricsRecorder(None)
-        rec.up_down_counter("kirocrew.pool.live", -1)
+        rec.up_down_counter("ajcrew.pool.live", -1)
         assert rec.enabled is False
 
 
 class TestFailuresAreSwallowed:
     def test_invalid_name_is_logged_not_raised(self, caplog: Any) -> None:
         rec, _reader = _recorder_with_reader()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.metrics.recorder"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.metrics.recorder"):
             rec.up_down_counter("Not A Metric Name", 1)
         assert any("up_down_counter" in r.message for r in caplog.records)
 
     def test_instrument_add_failure_is_logged_not_raised(self, caplog: Any) -> None:
         rec = MetricsRecorder(_BoomMeter())  # type: ignore[arg-type]
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.metrics.recorder"):
-            rec.up_down_counter("kirocrew.pool.live", 1)
-            rec.counter("kirocrew.pool.spawns")
-            rec.histogram("kirocrew.pool.latency", 5.0)
+        with caplog.at_level(logging.WARNING, logger="aj_crew.metrics.recorder"):
+            rec.up_down_counter("ajcrew.pool.live", 1)
+            rec.counter("ajcrew.pool.spawns")
+            rec.histogram("ajcrew.pool.latency", 5.0)
         messages = [r.message for r in caplog.records]
         assert any("up_down_counter" in m for m in messages)
         assert any("counter" in m for m in messages)
         assert any("histogram" in m for m in messages)
 
     def test_app_metric_cannot_spoof_the_core_namespace(self, caplog: Any) -> None:
-        """``app_id`` set + a ``kirocrew.`` name is a namespace violation, and the
+        """``app_id`` set + an ``ajcrew.`` name is a namespace violation, and the
         facade must drop it rather than emit it."""
         rec, reader = _recorder_with_reader()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.metrics.recorder"):
-            rec.up_down_counter("kirocrew.core.thing", 1, app_id="some_app")
-        assert not [n for n, _ in _points(reader) if n == "kirocrew.core.thing"]
+        with caplog.at_level(logging.WARNING, logger="aj_crew.metrics.recorder"):
+            rec.up_down_counter("ajcrew.core.thing", 1, app_id="some_app")
+        assert not [n for n, _ in _points(reader) if n == "ajcrew.core.thing"]

@@ -28,8 +28,8 @@ from stt_engine_helpers import (  # noqa: F401 -- the fixture is requested by na
     fake_engine_fixture,
 )
 
-from kiro_crew.stt import engine as engine_mod
-from kiro_crew.stt import models
+from aj_crew.stt import engine as engine_mod
+from aj_crew.stt import models
 
 
 @pytest.mark.asyncio

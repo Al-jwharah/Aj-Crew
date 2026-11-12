@@ -8,7 +8,7 @@ from types import ModuleType, SimpleNamespace
 
 import pytest
 
-from kiro_crew.stt import codex_media
+from aj_crew.stt import codex_media
 
 
 class _Plane:

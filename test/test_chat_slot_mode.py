@@ -8,8 +8,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat import api_chat_slot_mode
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.chat import api_chat_slot_mode
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 def _make_app(state: DashboardState) -> web.Application:
@@ -48,7 +48,7 @@ class TestChatSlotMode:
             return await handler(request)
 
         app.middlewares.append(_as_app)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop") as save:
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop") as save:
             async with TestClient(TestServer(app)) as client:
                 resp = await client.patch("/api/chat/slots/s1/mode", json={"mode": ""})
                 assert resp.status == 404
@@ -63,7 +63,7 @@ class TestChatSlotMode:
         slot = _ChatSlot("test")
         assert slot.mode == ""
         state = _mock_state(slot)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop"):
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop"):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.patch(
                     "/api/chat/slots/test/mode",
@@ -80,7 +80,7 @@ class TestChatSlotMode:
         slot = _ChatSlot("test")
         slot.mode = "design-critique"
         state = _mock_state(slot)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop"):
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop"):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.patch(
                     "/api/chat/slots/test/mode",
@@ -95,7 +95,7 @@ class TestChatSlotMode:
     async def test_invalid_mode_rejected(self):
         slot = _ChatSlot("test")
         state = _mock_state(slot)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop"):
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop"):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.patch(
                     "/api/chat/slots/test/mode",
@@ -109,7 +109,7 @@ class TestChatSlotMode:
     @pytest.mark.asyncio
     async def test_slot_not_found(self):
         state = _mock_state()  # no slot
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop"):
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop"):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.patch(
                     "/api/chat/slots/nonexistent/mode",
@@ -122,7 +122,7 @@ class TestChatSlotMode:
         slot = _ChatSlot("test")
         slot.mode = "design-critique"
         state = _mock_state(slot)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop"):
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop"):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.patch(
                     "/api/chat/slots/test/mode",
@@ -143,7 +143,7 @@ class TestChatSlotMode:
         assert slot.running
         state = _mock_state(slot)
         try:
-            with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop"):
                 async with TestClient(TestServer(_make_app(state))) as client:
                     resp = await client.patch(
                         "/api/chat/slots/test/mode",
@@ -173,7 +173,7 @@ class TestChatSlotMode:
         state.subagents.has_pending_work_for_async = AsyncMock(
             side_effect=lambda k: bool(asked.append(k)) or k == slot.linked_session_key
         )
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop"):
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop"):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.patch(
                     "/api/chat/slots/test/mode",
@@ -191,7 +191,7 @@ class TestChatSlotMode:
         longer exists."""
         slot = _ChatSlot("test")
         state = _mock_state(slot)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop"):
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop"):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.patch("/api/chat/slots/test/mode", json={"mode": "crew"})
         assert resp.status == 400
@@ -206,23 +206,23 @@ class TestRetiredModeRestore:
     """
 
     def test_crew_restores_as_plain_chat(self):
-        from kiro_crew.dashboard.chat_persistence import _restored_mode
+        from aj_crew.dashboard.chat_persistence import _restored_mode
 
         assert _restored_mode("crew") == ""
 
     def test_orchestrator_restores_as_plain_chat(self):
-        from kiro_crew.dashboard.chat_persistence import _restored_mode
+        from aj_crew.dashboard.chat_persistence import _restored_mode
 
         assert _restored_mode("orchestrator") == ""
 
     @pytest.mark.parametrize("raw", ["design-critique", "member"])
     def test_live_modes_pass_through(self, raw):
-        from kiro_crew.dashboard.chat_persistence import _restored_mode
+        from aj_crew.dashboard.chat_persistence import _restored_mode
 
         assert _restored_mode(raw) == raw
 
     @pytest.mark.parametrize("raw", ["", None, 42, ["crew"]])
     def test_non_string_or_empty_is_plain_chat(self, raw):
-        from kiro_crew.dashboard.chat_persistence import _restored_mode
+        from aj_crew.dashboard.chat_persistence import _restored_mode
 
         assert _restored_mode(raw) == ""

@@ -18,12 +18,12 @@ import pytest
 from acp_session_mcp_helpers import agents_dir_fixture  # noqa: F401
 from acp_session_mcp_helpers import _write_spec
 
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp import client_claude_session
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.knowledge.llm_pool import _get_acp_backend
+from aj_crew.acp import client as client_mod
+from aj_crew.acp import client_claude_session
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.knowledge.llm_pool import _get_acp_backend
 
 _CAPTURE = (
     Path(__file__).parent / "fixtures" / "acp_frames" / "claude" / "zero-tools-refused-live.jsonl"
@@ -89,7 +89,7 @@ async def test_a_zero_tool_session_is_sent_no_tool(tmp_path, agents_dir, monkeyp
     withheld by the mirror, so it never reaches the wire either.
     """
     _write_spec(agents_dir, servers=servers, tools=[])
-    client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+    client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
     [params] = await _session_new_params(client, tmp_path, monkeypatch)
     assert client.spec_zero_tools is True
     assert params["mcpServers"] == []
@@ -100,7 +100,7 @@ async def test_a_zero_tool_session_is_sent_no_tool(tmp_path, agents_dir, monkeyp
 async def test_a_session_with_tools_keeps_its_envelope(tmp_path, agents_dir, monkeypatch):
     """Only a spec that declares the empty list changes the envelope."""
     _write_spec(agents_dir, servers={"foo": {"command": "/bin/foo"}}, tools=["@foo"])
-    client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+    client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
     [params] = await _session_new_params(client, tmp_path, monkeypatch)
     assert client.spec_zero_tools is False
     assert "tools" not in params["_meta"]["claudeCode"]["options"]
@@ -112,7 +112,7 @@ async def test_a_zero_tool_session_composed_with_a_server_is_not_started(
 ):
     """The wire array is the one channel left that could mount a tool."""
     _write_spec(agents_dir, servers={}, tools=[])
-    client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+    client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
     monkeypatch.setattr(
         client, "_pooled_mcp_servers", lambda: [{"name": "stray", "command": "/bin/stray"}]
     )
@@ -134,7 +134,7 @@ async def test_a_zero_tool_session_on_an_unverified_adapter_is_stopped(
     tmp_path, monkeypatch, version
 ):
     """Below the options floor, or with no version, ``tools: []`` may be ignored."""
-    client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+    client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
     client._spec_zero_tools = True
     sent, killed = _pin_harness(client, monkeypatch, version)
     with pytest.raises(client_mod.AcpError, match="not verified to honour"):
@@ -148,7 +148,7 @@ async def test_a_zero_tool_session_on_an_unverified_adapter_is_stopped(
 @pytest.mark.asyncio
 async def test_a_zero_tool_session_on_a_verified_adapter_is_not_mode_pinned(tmp_path, monkeypatch):
     """It mounts no tool, so even an approving mode has nothing to approve."""
-    client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+    client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
     client._spec_zero_tools = True
     sent, killed = _pin_harness(client, monkeypatch, "0.93.0")
     await client._pin_claude_starting_mode({"sessionId": "s-1", "modes": {"currentModeId": "auto"}})
@@ -164,7 +164,7 @@ def _capture() -> tuple[dict, list[dict]]:
 def test_the_capture_was_recorded_under_the_shipped_options(tmp_path):
     """The recorded envelope is the one ``_claude_session_meta`` builds today."""
     meta, _ = _capture()
-    client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+    client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
     client._spec_zero_tools = True
     assert meta["options"] == client._claude_session_meta()["claudeCode"]["options"]
     assert {"Bash", "Write", "WebFetch"} <= set(meta["allow"])

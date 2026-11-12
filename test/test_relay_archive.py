@@ -18,17 +18,17 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.chat_persistence import (
+from aj_crew.dashboard.chat_persistence import (
     _rehydrate_slot_from_history,
     _save_slot_to_history,
 )
-from kiro_crew.dashboard.peer_redaction import redact_peer_text
-from kiro_crew.dashboard.relay_archive import (
+from aj_crew.dashboard.peer_redaction import redact_peer_text
+from aj_crew.dashboard.relay_archive import (
     RELAY_ARCHIVE_CODE,
     is_relay_archive,
     relay_archive_refusal,
 )
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
 
 def _archive(key: str = "chat-1", *, complete: bool = True) -> _ChatSlot:
@@ -42,14 +42,14 @@ def _archive(key: str = "chat-1", *, complete: bool = True) -> _ChatSlot:
 
 def _app(state, *, app_name: str = "") -> web.Application:
     """The send and turn-restarting handlers behind one owner-authenticated server."""
-    from kiro_crew.dashboard.chat import api_chat
-    from kiro_crew.dashboard.chat_fork import api_chat_slot_fork
-    from kiro_crew.dashboard.chat_handlers import api_chat_slot_continue
-    from kiro_crew.dashboard.chat_regenerate import (
+    from aj_crew.dashboard.chat import api_chat
+    from aj_crew.dashboard.chat_fork import api_chat_slot_fork
+    from aj_crew.dashboard.chat_handlers import api_chat_slot_continue
+    from aj_crew.dashboard.chat_regenerate import (
         api_chat_slot_edit_resend,
         api_chat_slot_regenerate,
     )
-    from kiro_crew.dashboard.chat_rewind import api_chat_slot_rewind
+    from aj_crew.dashboard.chat_rewind import api_chat_slot_rewind
 
     @web.middleware
     async def _auth(request, handler):
@@ -75,8 +75,8 @@ def ready(monkeypatch):
     async def _ok(_request):
         return None
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_regenerate.reject_if_kiro_unverified", _ok)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_rewind.reject_if_kiro_unverified", _ok)
+    monkeypatch.setattr("aj_crew.dashboard.chat_regenerate.reject_if_kiro_unverified", _ok)
+    monkeypatch.setattr("aj_crew.dashboard.chat_rewind.reject_if_kiro_unverified", _ok)
 
 
 def _with_a_turn(state, slot: _ChatSlot) -> _ChatSlot:
@@ -169,7 +169,7 @@ async def test_a_foreign_app_gets_the_anti_enumeration_404_not_the_409(tmp_path,
 
 @pytest.mark.asyncio
 async def test_run_chat_refuses_an_archive_before_any_execution(tmp_path):
-    from kiro_crew.dashboard.chat_runner import _run_chat
+    from aj_crew.dashboard.chat_runner import _run_chat
 
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
@@ -257,7 +257,7 @@ async def test_resolve_fork_source_refuses_an_archive(tmp_path, complete):
     one guard here covers both -- and keys on ``executor`` alone, so a half-written
     binding is refused too.
     """
-    from kiro_crew.dashboard.chat_fork import resolve_fork_source
+    from aj_crew.dashboard.chat_fork import resolve_fork_source
 
     state = _make_state(tmp_path)
     slot = _with_a_turn(state, _archive(complete=complete))

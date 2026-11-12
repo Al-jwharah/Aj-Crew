@@ -26,7 +26,7 @@ const theme = params.get('theme') || 'dark'
 const scene = params.get('scene') || 'checked'
 const lang = params.get('lang') || 'en'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const goalRow = { label: 'Goal 1', field: 'goal', number: 1, before: null, after: 'Keep the release notes current for every weekly build' }
 const offer = (checked: boolean) => ({

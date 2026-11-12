@@ -17,8 +17,8 @@ from pathlib import Path
 import pytest
 import yaml
 
-import kiro_crew.eval.bench.safepath as sp
-from kiro_crew.eval.bench.safepath import UnsafePathError
+import aj_crew.eval.bench.safepath as sp
+from aj_crew.eval.bench.safepath import UnsafePathError
 
 WORKFLOW = (
     Path(__file__).resolve().parents[1]
@@ -56,7 +56,7 @@ def _swap_after_first_check(
 def trust_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     root = tmp_path / "crew"
     root.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(root))
+    monkeypatch.setenv("AJCREW_HOME", str(root))
     return root
 
 

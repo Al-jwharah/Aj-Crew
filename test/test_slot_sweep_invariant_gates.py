@@ -1,6 +1,6 @@
 """Build gates for the invariants the folder and tag delete sweeps rely on.
 
-Each gate scans every module under ``src/kiro_crew`` and has a planted violation
+Each gate scans every module under ``src/aj_crew`` and has a planted violation
 below that proves it fires. None takes an inline suppression marker; the only
 exemptions are the write-chain tables and census bounds below, each with its reason
 beside it. The ``# loop-ok:`` marker belongs to ``test_no_blocking_call_on_loop.py``

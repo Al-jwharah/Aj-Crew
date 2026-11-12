@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import session_directive
+from aj_crew import session_directive
 
 _CLOSE = "reply with one line"
 
@@ -23,7 +23,7 @@ def _lower(text: str) -> str:
 
 
 def test_monitor_start_ack_asks_for_a_closing_line():
-    from kiro_crew.mcp_tools.control_parts.monitor import monitor_start
+    from aj_crew.mcp_tools.control_parts.monitor import monitor_start
 
     out = _lower(monitor_start("monitor_start", {"message": "watch the build"}))
     assert _CLOSE in out
@@ -31,8 +31,8 @@ def test_monitor_start_ack_asks_for_a_closing_line():
 
 
 def test_monitor_watch_ack_asks_for_a_closing_line():
-    from kiro_crew import mcp_core
-    from kiro_crew.mcp_tools.control_parts import monitor as mon
+    from aj_crew import mcp_core
+    from aj_crew.mcp_tools.control_parts import monitor as mon
 
     with (
         patch.object(mcp_core, "require_strict_session_key", return_value=("chat-1", "")),
@@ -57,7 +57,7 @@ def test_armed_monitor_outcome_asks_for_a_closing_line():
     """The applied result replaces the ack in the transcript, so it says the same."""
     import inspect
 
-    from kiro_crew.dashboard import session_directive_apply_monitor as m
+    from aj_crew.dashboard import session_directive_apply_monitor as m
 
     src = inspect.getsource(m._monitor_start).lower()
     assert "reply with one line saying the watch is armed" in src
@@ -65,7 +65,7 @@ def test_armed_monitor_outcome_asks_for_a_closing_line():
 
 
 def test_monitor_start_schema_asks_for_a_closing_line():
-    from kiro_crew.mcp_tools.control_parts.schemas import schemas
+    from aj_crew.mcp_tools.control_parts.schemas import schemas
 
     desc = next(t for t in schemas() if t["name"] == "monitor_start")["description"]
     assert "reply with one line and end your turn" in desc.lower()
@@ -73,7 +73,7 @@ def test_monitor_start_schema_asks_for_a_closing_line():
 
 @pytest.mark.parametrize("can_work", [True, False])
 def test_spawn_run_receipt_asks_for_a_closing_line(can_work):
-    from kiro_crew.mcp_tools.spawn import _spawn_run_receipt
+    from aj_crew.mcp_tools.spawn import _spawn_run_receipt
 
     out = _spawn_run_receipt(
         agent_ids=["s1"],
@@ -94,8 +94,8 @@ def test_spawn_run_receipt_asks_for_a_closing_line(can_work):
 
 
 def test_spawn_continue_receipt_asks_for_a_closing_line():
-    from kiro_crew import mcp_core
-    from kiro_crew.mcp_tools.spawn import spawn_continue
+    from aj_crew import mcp_core
+    from aj_crew.mcp_tools.spawn import spawn_continue
 
     with (
         patch.object(mcp_core, "_resolve_session_key", return_value="dashboard:chat-1"),

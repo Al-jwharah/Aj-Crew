@@ -18,9 +18,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-import kiro_crew
-from kiro_crew.agent import _VALID_HOOK_EVENTS
-from kiro_crew.dashboard.handlers.hooks import api_kiro_hooks
+import aj_crew
+from aj_crew.agent import _VALID_HOOK_EVENTS
+from aj_crew.dashboard.handlers.hooks import api_kiro_hooks
 
 # The handler imports `_shipped_defaults` at module scope (hoisted), so
 # it is patched in the handler's namespace.  `KIRO_AGENTS_DIR` stays patched at
@@ -28,9 +28,9 @@ from kiro_crew.dashboard.handlers.hooks import api_kiro_hooks
 # globals at call time, so the source-module patch is unaffected by the hoist —
 # do NOT retarget it to the handler namespace (the name does not exist there).
 # `redact` is likewise patched where it is defined.
-_P_AGENTS_DIR = "kiro_crew.agent.KIRO_AGENTS_DIR"
-_P_DEFAULTS = "kiro_crew.dashboard.handlers.hooks._shipped_defaults"
-_P_REDACT = "kiro_crew.security.redact"
+_P_AGENTS_DIR = "aj_crew.agent.KIRO_AGENTS_DIR"
+_P_DEFAULTS = "aj_crew.dashboard.handlers.hooks._shipped_defaults"
+_P_REDACT = "aj_crew.security.redact"
 
 
 def _make_app() -> web.Application:
@@ -47,7 +47,7 @@ def kiro_dir(tmp_path: Path) -> Path:
 
 def _write_agent_cfg(kiro_dir: Path, data: object) -> None:
     kiro_dir.mkdir(parents=True, exist_ok=True)
-    (kiro_dir / "kirocrew.json").write_text(json.dumps(data))
+    (kiro_dir / "ajcrew.json").write_text(json.dumps(data))
 
 
 def _write_defaults(path: Path, data: object) -> None:
@@ -60,7 +60,7 @@ class TestApiKiroHooks:
 
     @pytest.mark.asyncio
     async def test_missing_agent_cfg_returns_empty(self, kiro_dir: Path, tmp_path: Path) -> None:
-        """Path 1: OSError when kirocrew.json doesn't exist → empty hooks."""
+        """Path 1: OSError when ajcrew.json doesn't exist → empty hooks."""
         defaults = tmp_path / "defaults.json"
         _write_defaults(defaults, {"hooks": {}})
         with patch(_P_AGENTS_DIR, kiro_dir), patch(_P_DEFAULTS, return_value=defaults):
@@ -71,9 +71,9 @@ class TestApiKiroHooks:
 
     @pytest.mark.asyncio
     async def test_malformed_json_in_agent_cfg(self, kiro_dir: Path, tmp_path: Path) -> None:
-        """Path 1: JSONDecodeError in kirocrew.json → empty hooks."""
+        """Path 1: JSONDecodeError in ajcrew.json → empty hooks."""
         kiro_dir.mkdir(parents=True, exist_ok=True)
-        (kiro_dir / "kirocrew.json").write_text("{not valid json")
+        (kiro_dir / "ajcrew.json").write_text("{not valid json")
         defaults = tmp_path / "defaults.json"
         _write_defaults(defaults, {"hooks": {}})
         with patch(_P_AGENTS_DIR, kiro_dir), patch(_P_DEFAULTS, return_value=defaults):
@@ -99,7 +99,7 @@ class TestApiKiroHooks:
 
     @pytest.mark.asyncio
     async def test_raw_not_dict_returns_empty(self, kiro_dir: Path, tmp_path: Path) -> None:
-        """Path 3: kirocrew.json contains a list → isinstance(raw, dict) guard."""
+        """Path 3: ajcrew.json contains a list → isinstance(raw, dict) guard."""
         _write_agent_cfg(kiro_dir, ["not", "a", "dict"])
         defaults = tmp_path / "defaults.json"
         _write_defaults(defaults, {"hooks": {}})
@@ -222,7 +222,7 @@ class TestApiKiroHooks:
         page. The patch stands in for a cp932 (Japanese Windows) locale there, so
         only a read that names its encoding sees the file's real text.
         """
-        shipped = Path(kiro_crew.__file__).parent / "config" / "defaults.json"
+        shipped = Path(aj_crew.__file__).parent / "config" / "defaults.json"
         shipped_bytes = shipped.read_bytes()
         with pytest.raises(UnicodeDecodeError):
             shipped_bytes.decode("cp932")  # precondition: the file is not cp932-clean

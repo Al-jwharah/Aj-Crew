@@ -20,17 +20,17 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.dashboard import server as dashboard_server
-from kiro_crew.dashboard import token_auth
-from kiro_crew.instances import run_marker
+from aj_crew.dashboard import server as dashboard_server
+from aj_crew.dashboard import token_auth
+from aj_crew.instances import run_marker
 
 
 @pytest.fixture()
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     # config_dir memoises on (env value, resolved home); clear it so the temp
     # home is honoured rather than a value cached by an earlier test.
-    from kiro_crew.config import paths
+    from aj_crew.config import paths
 
     monkeypatch.setattr(paths, "_config_dir_memo", None, raising=False)
     # Which listener addresses this PROCESS published is in-process state (one
@@ -85,7 +85,7 @@ class TestPerPortCredentialFile:
 class TestListenerKeyedCredentialFile:
     """One port number can carry several listeners; the name must separate them.
 
-    ``KIROCREW_BIND=::1`` binds the v6 loopback and leaves IPv4
+    ``AJCREW_BIND=::1`` binds the v6 loopback and leaves IPv4
     ``127.0.0.1:<port>`` unbound, so a co-resident can hold the address a client
     dials while this gateway holds the same port number. A name keyed by port
     alone cannot tell the two apart, and a client resolving it sends this
@@ -222,7 +222,7 @@ class TestListenerKeyedCredentialFile:
 
     def test_the_second_loopback_family_is_the_only_counterpart(self) -> None:
         # The pairing is between the two loopback LITERALS and nothing else. A
-        # wildcard, an interface-specific literal, or an operator's KIROCREW_BIND
+        # wildcard, an interface-specific literal, or an operator's AJCREW_BIND
         # is one listener named on purpose, and gets no second socket.
         assert dashboard_server.SECONDARY_LOOPBACK_FOR == {
             "127.0.0.1": "::1",
@@ -415,7 +415,7 @@ class TestListenerKeyedCredentialFile:
         src = (
             _Path(__file__).resolve().parent.parent
             / "src"
-            / "kiro_crew"
+            / "aj_crew"
             / "slack"
             / "gateway_runtime"
             / "exit_path.py"
@@ -707,17 +707,17 @@ class TestSharedFileIsNotClobberedWhileASiblingServes:
         # credential at all -- the guard must key on the ownership proof, not on
         # the file's presence.
         run_marker.write_marker(5476)
-        with mock.patch("kiro_crew.port_resolution._gateway_owns_port", return_value=False):
+        with mock.patch("aj_crew.port_resolution._gateway_owns_port", return_value=False):
             assert dashboard_server._live_sibling_port(7811) is None
 
     def test_a_verified_live_marker_is_a_sibling(self, home: Path) -> None:
         run_marker.write_marker(5476)
-        with mock.patch("kiro_crew.port_resolution._gateway_owns_port", return_value=True):
+        with mock.patch("aj_crew.port_resolution._gateway_owns_port", return_value=True):
             assert dashboard_server._live_sibling_port(7811) == 5476
 
     def test_own_port_is_never_its_own_sibling(self, home: Path) -> None:
         run_marker.write_marker(5476)
-        with mock.patch("kiro_crew.port_resolution._gateway_owns_port", return_value=True):
+        with mock.patch("aj_crew.port_resolution._gateway_owns_port", return_value=True):
             assert dashboard_server._live_sibling_port(5476) is None
 
     def test_discovery_failure_does_not_block_startup(self, home: Path) -> None:
@@ -727,7 +727,7 @@ class TestSharedFileIsNotClobberedWhileASiblingServes:
 
 class TestClientReadsTheCredentialForThePortItDials:
     def test_per_port_beats_the_shared_file(self, home: Path) -> None:
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         (home / ".local_secret").write_text("newcomer-that-replaced-the-file")
         dashboard_server._write_secret_file(run_marker.secret_path(5476), "owner-of-5476")
@@ -737,14 +737,14 @@ class TestClientReadsTheCredentialForThePortItDials:
     def test_falls_back_to_shared_file_for_a_gateway_without_a_per_port_file(
         self, home: Path
     ) -> None:
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         (home / ".local_secret").write_text("older-gateway")
         with mock.patch.object(mcp_core, "_api_port", return_value=5476):
             assert mcp_core._internal_secret() == "older-gateway"
 
     def test_no_credential_anywhere_yields_empty_not_an_exception(self, home: Path) -> None:
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         with mock.patch.object(mcp_core, "_api_port", return_value=5476):
             assert mcp_core._internal_secret() == ""
@@ -756,7 +756,7 @@ class TestClientReadsTheCredentialForThePortItDials:
         Before the fix the client read the shared file and sent the newcomer's
         credential to the incumbent; now each port resolves to its own owner.
         """
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         shared = home / ".local_secret"
         with mock.patch.object(dashboard_server, "_live_sibling_port", return_value=None):
@@ -785,7 +785,7 @@ class TestPruneKeepsALiveSibling:
         """
         run_marker.write_marker(5476)
         dashboard_server._write_secret_file(run_marker.secret_path(5476), "incumbent")
-        with mock.patch("kiro_crew.port_resolution._gateway_owns_port", return_value=False):
+        with mock.patch("aj_crew.port_resolution._gateway_owns_port", return_value=False):
             run_marker.prune_markers(keep_port=7811)
         assert run_marker.marker_ports() == []
         assert run_marker.read_secret(5476) == "incumbent"
@@ -794,7 +794,7 @@ class TestPruneKeepsALiveSibling:
         run_marker.write_marker(5476)
         dashboard_server._write_secret_file(run_marker.secret_path(5476), "incumbent")
         with mock.patch(
-            "kiro_crew.port_resolution._gateway_owns_port",
+            "aj_crew.port_resolution._gateway_owns_port",
             side_effect=OSError("no listener tooling"),
         ):
             run_marker.prune_markers(keep_port=7811)
@@ -806,7 +806,7 @@ class TestPruneKeepsALiveSibling:
         # credential writer needs to leave its credential alone.
         run_marker.write_marker(5476)
         dashboard_server._write_secret_file(run_marker.secret_path(5476), "alive")
-        with mock.patch("kiro_crew.port_resolution._gateway_owns_port", return_value=True):
+        with mock.patch("aj_crew.port_resolution._gateway_owns_port", return_value=True):
             run_marker.prune_markers(keep_port=7811)
         assert run_marker.marker_ports() == [5476]
         assert run_marker.read_secret(5476) == "alive"
@@ -814,7 +814,7 @@ class TestPruneKeepsALiveSibling:
     def test_unverifiable_ownership_still_prunes(self, home: Path) -> None:
         run_marker.write_marker(5476)
         with mock.patch(
-            "kiro_crew.port_resolution._gateway_owns_port",
+            "aj_crew.port_resolution._gateway_owns_port",
             side_effect=OSError("no /proc"),
         ):
             run_marker.prune_markers(keep_port=7811)
@@ -832,7 +832,7 @@ class TestPruneKeepsALiveSibling:
         run_marker.write_marker(5476)
         dashboard_server._write_secret_file(run_marker.secret_path(5476), "incumbent")
         with mock.patch(
-            "kiro_crew.port_resolution._gateway_owns_port",
+            "aj_crew.port_resolution._gateway_owns_port",
             side_effect=OSError("ownership unverifiable on this host"),
         ):
             run_marker.prune_markers(keep_port=7811)
@@ -862,11 +862,11 @@ class TestEphemeralBindPublishesUnderTheRealPort:
         assert dashboard_server._resolved_bound_port(runner, 0) == 41234
 
     def test_a_unix_socket_address_is_not_mistaken_for_a_port(self) -> None:
-        runner = self._Runner(["/run/user/1000/kirocrew/gateway.sock", ("127.0.0.1", 41234)])
+        runner = self._Runner(["/run/user/1000/ajcrew/gateway.sock", ("127.0.0.1", 41234)])
         assert dashboard_server._resolved_bound_port(runner, 0) == 41234
 
     def test_zero_when_no_tcp_address_is_readable(self) -> None:
-        runner = self._Runner(["/run/user/1000/kirocrew/gateway.sock"])
+        runner = self._Runner(["/run/user/1000/ajcrew/gateway.sock"])
         assert dashboard_server._resolved_bound_port(runner, 0) == 0
 
     def test_credential_lands_under_the_assigned_port_not_zero(self, home: Path) -> None:
@@ -913,24 +913,24 @@ class TestEveryToolGetsTheExplanation:
         exc = urllib.error.HTTPError(
             "http://127.0.0.1/api/x", code, "Forbidden", {}, io.BytesIO(payload)
         )
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         return mcp_core._http_error_body(exc)
 
     def test_auth_mismatch_is_rewritten_for_every_caller(self) -> None:
         out = self._body(b'{"error": "Forbidden", "code": "internal_auth_mismatch"}')
-        assert "wrong Kiro Crew instance" in out["error"]
+        assert "wrong Aj Crew instance" in out["error"]
         assert out["error"] != "Forbidden"
 
     def test_a_plain_forbidden_is_not_misdiagnosed(self) -> None:
         # A genuine permission denial carries the same body; explaining it as a
         # credential desync would send that user after a bug they do not have.
         out = self._body(b'{"error": "Forbidden"}')
-        assert "wrong Kiro Crew instance" not in out["error"]
+        assert "wrong Aj Crew instance" not in out["error"]
         assert out["error"] == "Forbidden"
 
     def test_learn_add_surfaces_the_rewritten_message(self) -> None:
-        from kiro_crew.mcp_tools import learn
+        from aj_crew.mcp_tools import learn
 
         rewritten = self._body(b'{"error": "Forbidden", "code": "internal_auth_mismatch"}')
         with (
@@ -941,7 +941,7 @@ class TestEveryToolGetsTheExplanation:
             ),
         ):
             out = learn.learn_add("learn_add", {"rule": "always check the port"})
-        assert "wrong Kiro Crew instance" in out
+        assert "wrong Aj Crew instance" in out
         assert out.strip() != "Error: Forbidden"
 
     def test_secret_missing_gets_its_own_code_and_honest_message(self) -> None:
@@ -949,7 +949,7 @@ class TestEveryToolGetsTheExplanation:
         # from a stale one; the decoder must not fold the first case into the
         # second-gateway explanation.
         out = self._body(b'{"error": "Forbidden", "code": "internal_secret_missing"}')
-        assert "wrong Kiro Crew instance" not in out["error"]
+        assert "wrong Aj Crew instance" not in out["error"]
         assert "no internal credential" in out["error"]
 
     def test_secret_missing_does_not_promise_a_restart_or_one_cause(self) -> None:
@@ -1060,27 +1060,27 @@ class TestTheSharedHelperOwnsThePairing:
     """
 
     def test_helper_prefers_the_per_port_credential(self, home: Path) -> None:
-        from kiro_crew.config.loader import read_local_secret
+        from aj_crew.config.loader import read_local_secret
 
         (home / ".local_secret").write_text("shared-replaced-by-newcomer")
         dashboard_server._write_secret_file(run_marker.secret_path(5476), "owner-of-5476")
         assert read_local_secret(5476) == "owner-of-5476"
 
     def test_helper_falls_back_to_the_shared_file(self, home: Path) -> None:
-        from kiro_crew.config.loader import read_local_secret
+        from aj_crew.config.loader import read_local_secret
 
         (home / ".local_secret").write_text("older-gateway")
         assert read_local_secret(5476) == "older-gateway"
 
     def test_helper_returns_empty_when_nothing_is_readable(self, home: Path) -> None:
-        from kiro_crew.config.loader import read_local_secret
+        from aj_crew.config.loader import read_local_secret
 
         assert read_local_secret(5476) == ""
 
     def test_port_is_required_so_a_call_site_cannot_omit_the_dial_target(self) -> None:
         import inspect
 
-        from kiro_crew.config.loader import read_local_secret
+        from aj_crew.config.loader import read_local_secret
 
         param = inspect.signature(read_local_secret).parameters["port"]
         assert param.default is inspect.Parameter.empty, (
@@ -1099,7 +1099,7 @@ class TestTheSharedHelperOwnsThePairing:
         """
         import pathlib
 
-        src = pathlib.Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+        src = pathlib.Path(__file__).resolve().parent.parent / "src" / "aj_crew"
         offenders = []
         for path in src.rglob("*.py"):
             for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
@@ -1118,7 +1118,7 @@ class TestTheSharedHelperOwnsThePairing:
         """
         import pathlib
 
-        src = pathlib.Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+        src = pathlib.Path(__file__).resolve().parent.parent / "src" / "aj_crew"
         allowed = {pathlib.Path("config/loader_locations.py")}
         # dashboard/server.py composes its server_runtime owners into one namespace,
         # so the two are read as one module.
@@ -1147,13 +1147,11 @@ class TestTheSharedHelperOwnsThePairing:
         )
 
     def test_mcp_core_delegates_rather_than_reimplementing(self, home: Path) -> None:
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         with (
             mock.patch.object(mcp_core, "_api_port", return_value=7811),
-            mock.patch(
-                "kiro_crew.mcp_core.read_local_secret", return_value="from-helper"
-            ) as helper,
+            mock.patch("aj_crew.mcp_core.read_local_secret", return_value="from-helper") as helper,
         ):
             assert mcp_core._internal_secret() == "from-helper"
         # The dial host is named now, so the credential is paired to the listener
@@ -1161,7 +1159,7 @@ class TestTheSharedHelperOwnsThePairing:
         helper.assert_called_once_with(7811, dial_host="127.0.0.1")
 
     def test_cron_trigger_pairs_its_credential_with_the_port(self, home: Path) -> None:
-        from kiro_crew import cron_trigger
+        from aj_crew import cron_trigger
 
         shared = home / ".local_secret"
         shared.write_text("shared-replaced-by-newcomer")
@@ -1191,22 +1189,22 @@ class TestTheSharedHelperOwnsThePairing:
         """One resolution owns both, so credential and dial target cannot diverge.
 
         The parent mints the credential and the child sends it. If the child resolves
-        its own port it reads KIROCREW_PORT, which is 5476 on a `--port auto` gateway
+        its own port it reads AJCREW_PORT, which is 5476 on a `--port auto` gateway
         -- a SIBLING -- so it would present a valid credential for one gateway to a
         different one and the call would 403. The parent therefore injects the port it
         minted for, and the child prefers it.
         """
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
         job = mock.Mock()
 
-        with mock.patch.dict(os.environ, {"_KIROCREW_DIAL_PORT": "7899", "KIROCREW_PORT": "5476"}):
+        with mock.patch.dict(os.environ, {"_AJCREW_DIAL_PORT": "7899", "AJCREW_PORT": "5476"}):
             ctx = cron_script.ScriptContext(job=job)
             assert ctx._port == 7899
 
         # Without the injection the fallback still holds for a directly-constructed
         # context, so this is a preference and not a hard dependency.
-        with mock.patch.dict(os.environ, {"KIROCREW_PORT": "5476"}, clear=True):
+        with mock.patch.dict(os.environ, {"AJCREW_PORT": "5476"}, clear=True):
             assert cron_script.ScriptContext(job=job)._port == 5476
 
     def test_cron_trigger_prefers_a_named_path_over_the_home_wide_file(
@@ -1219,7 +1217,7 @@ class TestTheSharedHelperOwnsThePairing:
         the caller named a file would authenticate with whichever generation wrote
         last. It does NOT outrank the per-port read -- see the companion test.
         """
-        from kiro_crew import cron_trigger
+        from aj_crew import cron_trigger
 
         (home / ".local_secret").write_text("ambient-home-of-this-process")
         explicit = tmp_path / "pod-home-secret"
@@ -1258,7 +1256,7 @@ class TestTheSharedHelperOwnsThePairing:
         flipping this order -- flipping it would make both callers prefer the
         home-wide file and reinstate the bug.
         """
-        from kiro_crew import cron_trigger
+        from aj_crew import cron_trigger
 
         dashboard_server._write_secret_file(run_marker.secret_path(9999), "per-port")
         named = tmp_path / "named-secret"
@@ -1290,9 +1288,9 @@ class TestFrameRelayNeverCredentialsASiblingGateway:
 
     ``screencast`` mirrors captures to its own gateway's ingress, which is strict:
     no credential means the POST is refused and the frame is dropped. The hazard is
-    the opposite case. ``parse_dashboard_url`` reads ``KIROCREW_PORT`` then
+    the opposite case. ``parse_dashboard_url`` reads ``AJCREW_PORT`` then
     ``dashboard.url``, and on a ``--port auto`` gateway neither names the port that
-    was actually bound -- only ``KIROCREW_BOUND_PORT`` does. So both the ingress URL
+    was actually bound -- only ``AJCREW_BOUND_PORT`` does. So both the ingress URL
     and the credential resolved to 5476, a SIBLING on a multi-gateway host, and the
     sibling then ACCEPTED the frame and broadcast somebody else's desktop to its own
     owners.
@@ -1304,11 +1302,11 @@ class TestFrameRelayNeverCredentialsASiblingGateway:
     def test_ingress_follows_the_bound_port_not_the_configured_one(
         self, home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
         # The shape of the bug: config names the sibling, the bound port is ours.
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "7811")
-        monkeypatch.delenv("KIROCREW_PORT", raising=False)
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "7811")
+        monkeypatch.delenv("AJCREW_PORT", raising=False)
         (home / "config.json").write_text('{"dashboard": {"url": "http://127.0.0.1:5476"}}')
 
         url = screencast._ingress_url()
@@ -1318,10 +1316,10 @@ class TestFrameRelayNeverCredentialsASiblingGateway:
     def test_the_credential_matches_the_port_the_frame_is_posted_to(
         self, home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "7811")
-        monkeypatch.delenv("KIROCREW_PORT", raising=False)
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "7811")
+        monkeypatch.delenv("AJCREW_PORT", raising=False)
         dashboard_server._write_secret_file(run_marker.secret_path(5476), "sibling-secret")
         dashboard_server._write_secret_file(run_marker.secret_path(7811), "our-secret")
 
@@ -1338,15 +1336,15 @@ class TestFrameRelayNeverCredentialsASiblingGateway:
         ``evidence_backed=False``. An earlier draft of this fix withheld the
         credential in that case, reasoning that a guessed port might be a sibling's.
         It was the wrong trade twice over: a ``--port auto`` gateway always has
-        ``KIROCREW_BOUND_PORT`` to offer, so the guard never fired in the scenario
+        ``AJCREW_BOUND_PORT`` to offer, so the guard never fired in the scenario
         it was written for, and it silently stopped every ordinary default-port
         install from mirroring. ``test_computer_use_api`` caught it.
         """
-        from kiro_crew.computer_use import screencast
-        from kiro_crew.port_resolution import resolve_client_port_ex
+        from aj_crew.computer_use import screencast
+        from aj_crew.port_resolution import resolve_client_port_ex
 
-        monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
-        monkeypatch.delenv("KIROCREW_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_PORT", raising=False)
         port, evidence_backed = resolve_client_port_ex(None)
         if evidence_backed:  # pragma: no cover - environment-dependent guard
             pytest.skip("this environment supplies positive port evidence")
@@ -1359,10 +1357,10 @@ class TestFrameRelayNeverCredentialsASiblingGateway:
         self, home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Both read the same resolver, so no input can split them apart."""
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "7811")
-        monkeypatch.delenv("KIROCREW_PORT", raising=False)
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "7811")
+        monkeypatch.delenv("AJCREW_PORT", raising=False)
         (home / "config.json").write_text('{"dashboard": {"url": "http://127.0.0.1:5476"}}')
         dashboard_server._write_secret_file(run_marker.secret_path(7811), "our-secret")
 
@@ -1371,22 +1369,22 @@ class TestFrameRelayNeverCredentialsASiblingGateway:
         assert ":7811" in url
         assert headers.get(screencast.FRAME_SECRET_HEADER) == "our-secret"
 
-    def test_an_inherited_kirocrew_port_does_not_win_over_the_bound_port(
+    def test_an_inherited_ajcrew_port_does_not_win_over_the_bound_port(
         self, home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The generic client resolver's own ordering is the hazard here.
 
-        ``resolve_client_port_ex`` reads ``KIROCREW_PORT`` BEFORE
-        ``KIROCREW_BOUND_PORT``, which is right for a CLI client aiming at a chosen
+        ``resolve_client_port_ex`` reads ``AJCREW_PORT`` BEFORE
+        ``AJCREW_BOUND_PORT``, which is right for a CLI client aiming at a chosen
         instance and wrong for code running inside the gateway. A shell that
-        exported ``KIROCREW_PORT=5476`` and then started a second gateway with
+        exported ``AJCREW_PORT=5476`` and then started a second gateway with
         ``--port auto`` leaves both set, and the frame would carry 5476's own valid
         credential -- so that sibling ACCEPTS the capture rather than refusing it.
         """
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
-        monkeypatch.setenv("KIROCREW_PORT", "5476")  # inherited, names the sibling
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "7811")  # what we actually bound
+        monkeypatch.setenv("AJCREW_PORT", "5476")  # inherited, names the sibling
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "7811")  # what we actually bound
         dashboard_server._write_secret_file(run_marker.secret_path(5476), "sibling-secret")
         dashboard_server._write_secret_file(run_marker.secret_path(7811), "our-secret")
 
@@ -1398,14 +1396,14 @@ class TestFrameRelayNeverCredentialsASiblingGateway:
             "capture and broadcasts this desktop to its owners"
         )
 
-    def test_kirocrew_port_still_decides_when_no_port_was_bound(
+    def test_ajcrew_port_still_decides_when_no_port_was_bound(
         self, home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Preferring the bound port must not disable the dev-instance override."""
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
-        monkeypatch.setenv("KIROCREW_PORT", "6777")
-        monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
+        monkeypatch.setenv("AJCREW_PORT", "6777")
+        monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
         dashboard_server._write_secret_file(run_marker.secret_path(6777), "dev-secret")
 
         assert ":6777" in screencast._ingress_url()
@@ -1414,10 +1412,10 @@ class TestFrameRelayNeverCredentialsASiblingGateway:
     def test_a_malformed_bound_port_falls_through_instead_of_raising(
         self, home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "not-a-port")
-        monkeypatch.setenv("KIROCREW_PORT", "6777")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "not-a-port")
+        monkeypatch.setenv("AJCREW_PORT", "6777")
         assert ":6777" in screencast._ingress_url()
 
 
@@ -1425,10 +1423,10 @@ class TestCronDialsTheGatewayItRunsUnderNotASibling:
     """A startup cron must not mint-and-send a credential to a sibling gateway.
 
     ``_resolve_dial_port`` is the single resolution the parent injects as
-    ``_KIROCREW_DIAL_PORT`` so credential and dial target cannot diverge. The
+    ``_AJCREW_DIAL_PORT`` so credential and dial target cannot diverge. The
     hazard is the same one screencast had: the generic resolver reads
-    ``KIROCREW_PORT`` before ``KIROCREW_BOUND_PORT``, so an inherited
-    ``KIROCREW_PORT=5476`` beside a ``--port auto`` gateway dials 5476 -- a
+    ``AJCREW_PORT`` before ``AJCREW_BOUND_PORT``, so an inherited
+    ``AJCREW_PORT=5476`` beside a ``--port auto`` gateway dials 5476 -- a
     SIBLING -- and an overdue cron then authenticates a real callback against it.
 
     Deliberately NOT tested: a "refuse until the per-port credential exists" gate.
@@ -1437,53 +1435,53 @@ class TestCronDialsTheGatewayItRunsUnderNotASibling:
     would only reintroduce the default-port regression a sibling fix already hit.
     """
 
-    def test_bound_port_wins_over_an_inherited_kirocrew_port(
+    def test_bound_port_wins_over_an_inherited_ajcrew_port(
         self, home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
-        monkeypatch.setenv("KIROCREW_PORT", "5476")  # inherited, the sibling
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "7811")  # what we actually bound
+        monkeypatch.setenv("AJCREW_PORT", "5476")  # inherited, the sibling
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "7811")  # what we actually bound
         assert cron_script._resolve_dial_port() == 7811
 
     def test_the_credential_is_read_for_the_dialed_port(
         self, home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
-        monkeypatch.setenv("KIROCREW_PORT", "5476")
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "7811")
+        monkeypatch.setenv("AJCREW_PORT", "5476")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "7811")
         dashboard_server._write_secret_file(run_marker.secret_path(5476), "sibling-secret")
         dashboard_server._write_secret_file(run_marker.secret_path(7811), "our-secret")
         # The caller resolves the dial port once and passes it in; the credential
-        # must be the one for that port, never the inherited-KIROCREW_PORT sibling.
+        # must be the one for that port, never the inherited-AJCREW_PORT sibling.
         assert (
             cron_script._resolve_internal_secret(cron_script._resolve_dial_port()) == "our-secret"
         )
 
-    def test_kirocrew_port_still_decides_when_no_port_was_bound(
+    def test_ajcrew_port_still_decides_when_no_port_was_bound(
         self, home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
-        monkeypatch.setenv("KIROCREW_PORT", "6777")
-        monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
+        monkeypatch.setenv("AJCREW_PORT", "6777")
+        monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
         assert cron_script._resolve_dial_port() == 6777
 
     def test_a_malformed_bound_port_falls_through(
         self, home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "not-a-port")
-        monkeypatch.setenv("KIROCREW_PORT", "6777")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "not-a-port")
+        monkeypatch.setenv("AJCREW_PORT", "6777")
         assert cron_script._resolve_dial_port() == 6777
 
 
 class TestTheServingResolverIsTheOneGatewaySideChokepoint:
     """One shared resolver for every in-gateway caller, bound-port-first.
 
-    The client resolver reads KIROCREW_PORT first, which is right for a CLI client
+    The client resolver reads AJCREW_PORT first, which is right for a CLI client
     and wrong for code inside the gateway. Rather than each in-gateway module
     carrying its own bound-port-first override (screencast, cron_script did, and
     mcp_cron was missed entirely), resolve_serving_port is the single chokepoint they
@@ -1491,35 +1489,35 @@ class TestTheServingResolverIsTheOneGatewaySideChokepoint:
     reaching for the client resolver.
     """
 
-    def test_bound_port_beats_an_inherited_kirocrew_port(
+    def test_bound_port_beats_an_inherited_ajcrew_port(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.port_resolution import resolve_serving_port
+        from aj_crew.port_resolution import resolve_serving_port
 
-        monkeypatch.setenv("KIROCREW_PORT", "5476")
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "7811")
+        monkeypatch.setenv("AJCREW_PORT", "5476")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "7811")
         assert resolve_serving_port() == 7811
 
-    def test_kirocrew_port_still_decides_with_no_bound_port(
+    def test_ajcrew_port_still_decides_with_no_bound_port(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.port_resolution import resolve_serving_port
+        from aj_crew.port_resolution import resolve_serving_port
 
-        monkeypatch.setenv("KIROCREW_PORT", "6777")
-        monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
+        monkeypatch.setenv("AJCREW_PORT", "6777")
+        monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
         assert resolve_serving_port() == 6777
 
     def test_a_malformed_bound_port_falls_through(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.port_resolution import resolve_serving_port
+        from aj_crew.port_resolution import resolve_serving_port
 
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "not-a-port")
-        monkeypatch.setenv("KIROCREW_PORT", "6777")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "not-a-port")
+        monkeypatch.setenv("AJCREW_PORT", "6777")
         assert resolve_serving_port() == 6777
 
     def test_every_in_gateway_consumer_routes_through_it(self) -> None:
         # A grep-level guard: the three in-gateway consumers must not reach for the
         # client resolver directly, or the sibling bug returns one file at a time.
-        src = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        src = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         offenders = []
         for rel in (
             "computer_use/screencast.py",
@@ -1613,7 +1611,7 @@ class TestReadLocalSecretDialHost:
     """
 
     def test_dial_host_prefers_the_listener_entry(self, home: Path) -> None:
-        from kiro_crew.config.loader import read_local_secret
+        from aj_crew.config.loader import read_local_secret
 
         # Port-keyed says one thing, the dialled listener says another. A caller
         # that names its host must get the LISTENER'S value, not the port file's.
@@ -1622,7 +1620,7 @@ class TestReadLocalSecretDialHost:
         assert read_local_secret(5476, dial_host="127.0.0.1") == "listener-keyed"
 
     def test_dial_host_fails_closed_when_another_family_is_published(self, home: Path) -> None:
-        from kiro_crew.config.loader import read_local_secret
+        from aj_crew.config.loader import read_local_secret
 
         # The port-keyed AND shared files exist, and the gateway published a
         # listener entry for the OTHER family (::1). A caller dialling 127.0.0.1
@@ -1634,7 +1632,7 @@ class TestReadLocalSecretDialHost:
         assert read_local_secret(5476, dial_host="127.0.0.1") == ""
 
     def test_dial_host_falls_back_when_no_listener_entry_exists(self, home: Path) -> None:
-        from kiro_crew.config.loader import read_local_secret
+        from aj_crew.config.loader import read_local_secret
 
         # A gateway that published NO listener entry for this port (older gateway,
         # or one that could not name its bound address) has no other listener's
@@ -1646,7 +1644,7 @@ class TestReadLocalSecretDialHost:
     def test_dial_host_falls_back_to_shared_for_a_pre_per_listener_gateway(
         self, home: Path
     ) -> None:
-        from kiro_crew.config.loader import read_local_secret
+        from aj_crew.config.loader import read_local_secret
 
         # No per-port file and no listener entry -- a gateway predating the whole
         # per-listener publish. The shared file is the only credential, and a
@@ -1655,7 +1653,7 @@ class TestReadLocalSecretDialHost:
         assert read_local_secret(5476, dial_host="127.0.0.1") == "shared-secret"
 
     def test_no_dial_host_keeps_port_keyed_read(self, home: Path) -> None:
-        from kiro_crew.config.loader import read_local_secret
+        from aj_crew.config.loader import read_local_secret
 
         # A caller that structurally cannot name a host keeps the pre-existing
         # port-keyed-then-shared resolution.
@@ -1663,13 +1661,13 @@ class TestReadLocalSecretDialHost:
         assert read_local_secret(5476) == "port-keyed"
 
     def test_no_dial_host_falls_back_to_shared(self, home: Path) -> None:
-        from kiro_crew.config.loader import read_local_secret
+        from aj_crew.config.loader import read_local_secret
 
         (home / ".local_secret").write_text("shared-secret", encoding="utf-8")
         assert read_local_secret(5476) == "shared-secret"
 
     def test_round_trip_through_the_real_publisher(self, home: Path) -> None:
-        from kiro_crew.config.loader import read_local_secret
+        from aj_crew.config.loader import read_local_secret
 
         # End to end: a gateway bound to both families publishes via the real
         # writer; a caller dialling either literal or the ambiguous name reads the
@@ -1713,7 +1711,7 @@ class TestHasListenerEntriesIsThreeValued:
             assert run_marker.has_listener_entries(5476) is None
 
     def test_dial_host_fails_closed_when_run_dir_is_unreadable(self, home: Path) -> None:
-        from kiro_crew.config.loader import read_local_secret
+        from aj_crew.config.loader import read_local_secret
 
         # The port-keyed and shared files are readable, but run/ enumeration
         # raises. Because absence of a covering listener entry is UNPROVEN, the
@@ -1746,14 +1744,14 @@ class TestSingleFamilyGatewayAuthenticatesTheV4LiteralDial:
     """
 
     def test_wildcard_bind_covers_the_v4_literal_dial(self, home: Path) -> None:
-        from kiro_crew.config.loader import read_local_secret
+        from aj_crew.config.loader import read_local_secret
 
         # A --slack-only / container gateway binds 0.0.0.0 and publishes one entry.
         _publish_listener(home, 5476, "0.0.0.0", "wild")
         assert read_local_secret(5476, dial_host="127.0.0.1") == "wild"
 
     def test_v4_only_bind_covers_the_v4_literal_dial(self, home: Path) -> None:
-        from kiro_crew.config.loader import read_local_secret
+        from aj_crew.config.loader import read_local_secret
 
         # An IPv6-less host: only the v4 entry is published. A v4-literal dial is
         # covered; no squatter can be on a v6 the host cannot even offer.
@@ -1761,7 +1759,7 @@ class TestSingleFamilyGatewayAuthenticatesTheV4LiteralDial:
         assert read_local_secret(5476, dial_host="127.0.0.1") == "v4only"
 
     def test_v4_literal_still_fails_closed_when_only_v6_is_published(self, home: Path) -> None:
-        from kiro_crew.config.loader import read_local_secret
+        from aj_crew.config.loader import read_local_secret
 
         # A ::1-only gateway. A v4-literal dial finds the v4 family uncovered while
         # a listener MAP exists -> fail closed, no port-keyed fallback to a v4

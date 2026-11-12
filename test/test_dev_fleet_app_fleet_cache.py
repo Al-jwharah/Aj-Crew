@@ -26,13 +26,13 @@ from dev_fleet_app_helpers import (
     _stub_make_live,
 )
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
-from kiro_crew.apps.builtins.dev_fleet import live as live_mod
-from kiro_crew.apps.builtins.dev_fleet import repository as repository_mod
-from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod
-from kiro_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
+from aj_crew.apps.builtins.dev_fleet import live as live_mod
+from aj_crew.apps.builtins.dev_fleet import repository as repository_mod
+from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod
+from aj_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
 
 # =============================================================================
 # Task: restart identity handshake + sync step labels
@@ -40,14 +40,14 @@ from kiro_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
 
 
 def test_parse_step_marker_index_and_label():
-    from kiro_crew.apps.builtins.dev_fleet.server import _parse_step_marker
+    from aj_crew.apps.builtins.dev_fleet.server import _parse_step_marker
 
     assert _parse_step_marker("::step::0::Pull") == (0, "Pull")
     assert _parse_step_marker("::step::3::pip install") == (3, "pip install")
 
 
 def test_parse_step_marker_non_marker_and_partial():
-    from kiro_crew.apps.builtins.dev_fleet.server import _parse_step_marker
+    from aj_crew.apps.builtins.dev_fleet.server import _parse_step_marker
 
     assert _parse_step_marker("regular build output") == (None, None)
     assert _parse_step_marker("::step::") == (None, None)  # no index or label
@@ -560,7 +560,7 @@ def test_declared_platforms_all_resolve_to_a_real_sys_platform():
     so a declaration can claim a platform the gate rejects. `windows` was in
     exactly that state until the mapping row landed.
     """
-    from kiro_crew.apps.manifest import PlatformConfig
+    from aj_crew.apps.manifest import PlatformConfig
 
     manifest = json.loads((Path(mod.__file__).parent / "app.json").read_text(encoding="utf-8"))
     cfg = PlatformConfig(os=manifest["platform"]["os"])
@@ -651,7 +651,7 @@ async def test_sync_builds_and_stages_under_one_lock_holder(monkeypatch, tmp_pat
 
 def test_kill_tree_reaps_a_descendant_that_escaped_the_process_group():
     """A new-session descendant is outside the group, so killpg alone misses it."""
-    from kiro_crew.apps.builtins.dev_fleet import server as dev
+    from aj_crew.apps.builtins.dev_fleet import server as dev
 
     killed: list[int] = []
 
@@ -674,7 +674,7 @@ def test_kill_tree_enumerates_descendants_before_killing_anything():
     A kill reparents survivors to init and erases the PPID links, so a snapshot
     taken after the kill cannot see the processes that escaped.
     """
-    from kiro_crew.apps.builtins.dev_fleet import server as dev
+    from aj_crew.apps.builtins.dev_fleet import server as dev
 
     events: list[str] = []
 
@@ -698,7 +698,7 @@ def test_kill_tree_enumerates_descendants_before_killing_anything():
 
 def test_kill_tree_survives_an_already_dead_descendant():
     """The group kill usually reaps descendants; a dead pid must not raise."""
-    from kiro_crew.apps.builtins.dev_fleet import server as dev
+    from aj_crew.apps.builtins.dev_fleet import server as dev
 
     def _kill(pid, *a, **k):
         if pid == 222:
@@ -782,7 +782,7 @@ def test_serving_install_reason_names_both_installs_and_a_remedy(tmp_path):
     assert reason is not None
     # Both sides must be named — one path alone does not identify the mismatch.
     assert tmp_path.name in reason
-    assert "kiro_crew" in reason
+    assert "aj_crew" in reason
     assert "Make live" in reason
     # Problem first, action before the paths: a warn banner that leads with two
     # absolute paths and buries the remedy at the end gets skimmed.

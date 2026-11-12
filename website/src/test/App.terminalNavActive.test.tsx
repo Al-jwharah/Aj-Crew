@@ -32,7 +32,7 @@ vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page
 vi.mock('../pages/SystemPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => null }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 vi.mock('../pages/NotificationsPage', () => ({ default: () => null }))
 vi.mock('../pages/SchedulePage', () => ({ default: () => null }))
 vi.mock('../components/CliPanel', () => ({
@@ -41,7 +41,7 @@ vi.mock('../components/CliPanel', () => ({
   useDeleteTerminalSession: () => vi.fn(),
 }))
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
 vi.mock('../api/client', () => ({
@@ -57,7 +57,7 @@ vi.mock('../api/client', () => ({
     chatSlotModel: vi.fn().mockResolvedValue({}),
     chatMode: vi.fn().mockResolvedValue({}),
     listInstances: vi.fn().mockResolvedValue({ instances: [], warm_set_cap: 5 }),
-    kirocrewConfig: vi.fn().mockResolvedValue({}),
+    ajcrewConfig: vi.fn().mockResolvedValue({}),
   },
   isAuthBannerShown: vi.fn(() => false),
   ApiError: class ApiError extends Error {
@@ -160,7 +160,7 @@ describe('App nav rail — Terminal row reflects the docked panel state', () => 
     await waitFor(() => expect(terminalRow()).toBeInTheDocument())
     expect(screen.queryByTestId('chat-page')).not.toBeInTheDocument()
     // Let the reuse-setting read settle: while it is pending the run copies.
-    await waitFor(() => expect(api.kirocrewConfig).toHaveBeenCalled())
+    await waitFor(() => expect(api.ajcrewConfig).toHaveBeenCalled())
     await act(async () => {})
 
     act(() => {

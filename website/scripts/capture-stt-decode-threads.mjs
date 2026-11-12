@@ -7,7 +7,7 @@
  * Frames are fixture states on a 128-core host:
  *   1. auto (the default)               -> the picker reads Auto (16)
  *   2. 64 stored                        -> what an operator on a large host picks
- *   3. KIROCREW_STT_THREADS set         -> the picker is disabled and the note says the env var wins
+ *   3. AJCREW_STT_THREADS set         -> the picker is disabled and the note says the env var wins
  *
  * Usage: node scripts/capture-stt-decode-threads.mjs [outDir]
  */

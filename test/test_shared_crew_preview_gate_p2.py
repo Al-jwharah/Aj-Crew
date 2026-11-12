@@ -1,6 +1,6 @@
 """The Shared Crew preview gate on P2's surfaces: the direct listener and the access routes.
 
-Without ``KIROCREW_SHARED_CREW_PREVIEW=1`` ``tailnet_direct`` reads as off whatever
+Without ``AJCREW_SHARED_CREW_PREVIEW=1`` ``tailnet_direct`` reads as off whatever
 config.json says, the direct listener never starts, and the invite, credential
 and access routes answer 404. With it set, today's behaviour holds.
 """
@@ -14,12 +14,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import tailnet_direct
-from kiro_crew.dashboard import tailnet_direct_listener as listener
-from kiro_crew.dashboard.routes import shared_crew as shared_crew_routes
-from kiro_crew.shared_crew import access_set, routes_invites
-from kiro_crew.shared_crew.preview import PREVIEW_ENV
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import tailnet_direct
+from aj_crew.dashboard import tailnet_direct_listener as listener
+from aj_crew.dashboard.routes import shared_crew as shared_crew_routes
+from aj_crew.shared_crew import access_set, routes_invites
+from aj_crew.shared_crew.preview import PREVIEW_ENV
 
 GATED_ROUTES = [
     ("GET", "/api/shared-crew/tailscale/invites"),
@@ -35,8 +35,8 @@ GATED_ROUTES = [
 ]
 
 
-def _cfg_with_direct_on() -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _cfg_with_direct_on() -> AjCrewConfig:
+    cfg = AjCrewConfig()
     shared = dataclasses.replace(cfg.dashboard.shared_crew, tailnet_direct=True)
     return dataclasses.replace(
         cfg, dashboard=dataclasses.replace(cfg.dashboard, shared_crew=shared)
@@ -81,10 +81,10 @@ def test_gate_off_keeps_allowed_logins_in_charge_with_tailscale_on(
     preview_off, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """With Tailscale on but no preview, no derived set replaces allowed_logins."""
-    from kiro_crew.dashboard import tailnet
+    from aj_crew.dashboard import tailnet
 
     monkeypatch.setattr(access_set, "install_placeholder", pytest.fail)
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     ts = dataclasses.replace(cfg.dashboard.tailscale, enabled=True)
     cfg = dataclasses.replace(cfg, dashboard=dataclasses.replace(cfg.dashboard, tailscale=ts))
     listener.prepare_access_set(cfg)
@@ -153,24 +153,24 @@ async def test_gate_on_serves_the_routes_behind_their_own_checks(preview_on) -> 
 _BOOT_PROBE = """
 import sys
 from aiohttp import web
-import kiro_crew.dashboard.server
-import kiro_crew.dashboard.server_runtime.api_entrypoint
-import kiro_crew.dashboard.token_auth
-from kiro_crew.dashboard.routes import shared_crew
+import aj_crew.dashboard.server
+import aj_crew.dashboard.server_runtime.api_entrypoint
+import aj_crew.dashboard.token_auth
+from aj_crew.dashboard.routes import shared_crew
 shared_crew.register(web.Application())
 print(",".join(m for m in sys.argv[1:] if m in sys.modules))
 """
 
 PREVIEW_ONLY_MODULES = [
-    "kiro_crew.shared_crew.routes_invites",
-    "kiro_crew.shared_crew.routes_access",
-    "kiro_crew.shared_crew.tailscale_invites",
-    "kiro_crew.shared_crew.tailscale_invite_store",
-    "kiro_crew.shared_crew.tailscale_api",
-    "kiro_crew.shared_crew.lifecycle",
-    "kiro_crew.dashboard.tailnet_direct",
-    "kiro_crew.dashboard.tailnet_direct_listener",
-    "kiro_crew.dashboard.tailnet_localapi",
+    "aj_crew.shared_crew.routes_invites",
+    "aj_crew.shared_crew.routes_access",
+    "aj_crew.shared_crew.tailscale_invites",
+    "aj_crew.shared_crew.tailscale_invite_store",
+    "aj_crew.shared_crew.tailscale_api",
+    "aj_crew.shared_crew.lifecycle",
+    "aj_crew.dashboard.tailnet_direct",
+    "aj_crew.dashboard.tailnet_direct_listener",
+    "aj_crew.dashboard.tailnet_localapi",
 ]
 
 

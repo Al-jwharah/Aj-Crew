@@ -77,8 +77,8 @@ mkdirSync(OUT, { recursive: true })
 
 const RADAR = {
   name: 'Radar', slug: 'radar', bound: true, slot_key: 'member-radar', running: false,
-  kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'radar', memory_version: 2, memory_owner: 'Radar',
-  model: '', description: 'Triage new GitHub issues every morning', source: 'kirocrew',
+  kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'radar', memory_version: 2, memory_owner: 'Radar',
+  model: '', description: 'Triage new GitHub issues every morning', source: 'ajcrew',
   last_active_ts: Math.floor(Date.now() / 1000) - 30,
   last_message: "Hi! I'm Radar. Each morning I'll read the new issues, sort them by what they need, and bring you only the ones that need a decision.",
 }
@@ -150,8 +150,8 @@ async function newPage(theme, scene, viewport = { width: 1440, height: 900 }) {
       // seeded first turn is refused (POST /api/chat above).
       // A refused greeting produced no reply, so the roster row has no preview.
       // greeting-slow: same roster; the greeting has not been answered yet.
-      if ((scene === 'greeting-fail' || scene === 'greeting-slow') && rosterReads > 1) return json({ members: [{ ...RADAR, last_message: '', last_active_ts: null }], default_agent: 'kirocrew' })
-      return json({ members, default_agent: 'kirocrew' })
+      if ((scene === 'greeting-fail' || scene === 'greeting-slow') && rosterReads > 1) return json({ members: [{ ...RADAR, last_message: '', last_active_ts: null }], default_agent: 'ajcrew' })
+      return json({ members, default_agent: 'ajcrew' })
     }
     if (path === '/api/agents' && route.request().method() === 'POST') {
       if (scene === 'taken') return route.fulfill({ status: 409, contentType: 'application/json', body: JSON.stringify({ error: "Agent 'Radar' already exists", code: 'agent_exists' }) })
@@ -177,18 +177,18 @@ async function newPage(theme, scene, viewport = { width: 1440, height: 900 }) {
     }
     if (path === '/api/crons') return json({ jobs: [] })
     if (path === '/api/webhooks') return json({ tokens: [] })
-    if (path === '/api/agents') return json({ agents: [], default_agent: 'kirocrew' })
+    if (path === '/api/agents') return json({ agents: [], default_agent: 'ajcrew' })
     if (path === '/api/agents/catalog' && scene === 'options-fail') return route.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"Agent choices could not be loaded. Retry the catalog.","code":"agent_catalog_unavailable"}' })
     if (path === '/api/agents/catalog') return json({
       agents: [
-        { name: 'kirocrew', selection_kind: 'template', kiro_agent: 'kirocrew', scope: 'global' },
-        { name: 'kirocrew-autofix', selection_kind: 'template', kiro_agent: 'kirocrew-autofix', scope: 'global' },
-        { name: 'kirocrew-research', selection_kind: 'template', kiro_agent: 'kirocrew-research', scope: 'global' },
+        { name: 'ajcrew', selection_kind: 'template', kiro_agent: 'ajcrew', scope: 'global' },
+        { name: 'ajcrew-autofix', selection_kind: 'template', kiro_agent: 'ajcrew-autofix', scope: 'global' },
+        { name: 'ajcrew-research', selection_kind: 'template', kiro_agent: 'ajcrew-research', scope: 'global' },
       ],
-      default_agent: 'kirocrew',
+      default_agent: 'ajcrew',
     })
     if (path === '/api/workspaces') return json({ workspaces: [{ name: 'default' }] })
-    if (path === '/api/config/default-agent') return json({ default_agent: 'kirocrew' })
+    if (path === '/api/config/default-agent') return json({ default_agent: 'ajcrew' })
     if (path === '/api/autonudge') return json({ enabled: true, loops: [] })
     const thread = path.match(/^\/api\/members\/([^/]+)\/thread$/)
     if (thread) {
@@ -254,7 +254,7 @@ for (const theme of ['dark', 'light']) {
     await dlg.getByLabel('Name').fill('Radar')
     await dlg.getByLabel('Goal', { exact: true }).fill('Triage new GitHub issues every morning')
     check(`02-dialog-${theme} title`, await dlg.getByText('New mate', { exact: true }).isVisible(), 'dialog title')
-    check(`02-dialog-${theme} built from`, await dlg.getByText('Built from', { exact: true }).isVisible() && await dlg.getByRole('combobox', { name: 'Built from' }).getByText('kirocrew — the standard setup (default)').isVisible(), 'Built from + default option')
+    check(`02-dialog-${theme} built from`, await dlg.getByText('Built from', { exact: true }).isVisible() && await dlg.getByRole('combobox', { name: 'Built from' }).getByText('ajcrew — the standard setup (default)').isVisible(), 'Built from + default option')
     check(`02-dialog-${theme} job hint`, await dlg.getByText(/on the Schedule page\.$/).isVisible(), 'HEAD wording of the job hint')
     check(`02-dialog-${theme} name placeholder`, (await dlg.getByLabel('Name').getAttribute('placeholder')) === 'e.g. Radar or Dr. Eggbot', 'placeholder shows a free-form display name (spaces and punctuation are fine)')
     check(`02-dialog-${theme} advanced`, (await dlg.getByTestId('crewmate-create-advanced-toggle').getAttribute('aria-expanded')) === 'false', 'Advanced folded')
@@ -284,7 +284,7 @@ for (const theme of ['dark', 'light']) {
     check(`02b-dialog-advanced-${theme} workspace`, await adv.getByRole('combobox', { name: 'Workspace' }).isVisible(), 'workspace field')
     check(`02b-dialog-advanced-${theme} model`, await adv.getByRole('combobox', { name: 'Edit default model' }).isVisible(), 'model field')
     check(`02b-dialog-advanced-${theme} triggers`, await adv.getByLabel('Triggers').isVisible(), 'triggers field')
-    check(`02b-dialog-advanced-${theme} triggers hint`, await adv.getByText(/^Situations when Kiro Crew should hand a task to this mate/).isVisible(), 'HEAD wording of the triggers hint (when-to-use, no schedule contrast)')
+    check(`02b-dialog-advanced-${theme} triggers hint`, await adv.getByText(/^Situations when Aj Crew should hand a task to this mate/).isVisible(), 'HEAD wording of the triggers hint (when-to-use, no schedule contrast)')
     check(`02b-dialog-advanced-${theme} no stale hint`, (await dlg.getByText(/not a schedule/).count()) === 0, 'old routing-vs-schedule sentence gone')
     const colour = adv.getByLabel('Session color hex value')
     check(`02b-dialog-advanced-${theme} colour`, await colour.isVisible(), 'session colour field')
@@ -679,7 +679,7 @@ for (const theme of ['dark', 'light']) {
     const err = dlg.getByTestId('crewmate-create-options-error')
     await err.waitFor()
     check(`07d-dialog-options-failed-${theme} text`, await err.getByText('Couldn\'t load the Built from choices; the default is shown.', { exact: true }).isVisible(), 'options notice names the list')
-    check(`07d-dialog-options-failed-${theme} default kept`, await dlg.getByRole('combobox', { name: 'Built from' }).getByText('kirocrew — the standard setup (default)').isVisible(), 'built-in default still offered')
+    check(`07d-dialog-options-failed-${theme} default kept`, await dlg.getByRole('combobox', { name: 'Built from' }).getByText('ajcrew — the standard setup (default)').isVisible(), 'built-in default still offered')
     await assertTheme(page, theme, `07d-dialog-options-failed-${theme}`)
     await page.screenshot({ path: `${OUT}/07d-dialog-options-failed-${theme}.png` })
     await page.close()
@@ -765,7 +765,7 @@ for (const theme of ['dark', 'light']) {
   const msg = listNotice.getByText('Could not load your mates.', { exact: false })
   check(`08b-roster-load-failed-mobile-${theme} notice`, await msg.isVisible(), 'roster-column notice shown below md')
   const msgBox = await msg.boundingBox()
-  const link = listNotice.getByRole('button', { name: 'Ask Kiro Crew about this (opens a chat)' })
+  const link = listNotice.getByRole('button', { name: 'Ask Aj Crew about this (opens a chat)' })
   const linkBox = await link.boundingBox()
   check(`08b-roster-load-failed-mobile-${theme} sentence unsqueezed`, !!msgBox && msgBox.width > 150 && msgBox.height < 40, `message box=${JSON.stringify(msgBox)}`)
   check(`08b-roster-load-failed-mobile-${theme} link below`, !!msgBox && !!linkBox && linkBox.y >= msgBox.y + msgBox.height - 2, `link box=${JSON.stringify(linkBox)}`)

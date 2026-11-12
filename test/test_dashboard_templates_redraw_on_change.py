@@ -1,6 +1,6 @@
 """Built-in boards redraw on the frame's change event, never on every message.
 
-The frame fires ``kirocrew-dashboard`` only when a read moved something the page
+The frame fires ``ajcrew-dashboard`` only when a read moved something the page
 shows. A board that redraws on any ``message`` instead wipes and rebuilds its
 sections on every read, including the many that change nothing, and the reader sees
 the page blink as if it reloaded.
@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import dashboard_frame
+from aj_crew import dashboard_frame
 
 _BUILTIN = Path(dashboard_frame.__file__).resolve().parent / "dashboard_templates" / "builtin"
 _TEMPLATES = sorted(p.parent.name for p in _BUILTIN.glob("*/template.html"))

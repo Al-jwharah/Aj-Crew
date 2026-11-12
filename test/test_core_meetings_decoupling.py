@@ -1,7 +1,7 @@
-"""GATE: Kiro Crew core does not depend on the Meetings (``meetings``) app's code.
+"""GATE: Aj Crew core does not depend on the Meetings (``meetings``) app's code.
 
 Meetings is to leave this repository whole. That is only possible while nothing
-outside ``src/kiro_crew/apps/builtins/`` imports it or names it. What the app needs
+outside ``src/aj_crew/apps/builtins/`` imports it or names it. What the app needs
 from the core it imports from the core (speech-to-text, the untrusted-calendar
 fence, the redaction and sandbox helpers); the core needs nothing from the app. The
 app's pins of core behaviour (the startup sweep's store row and the transcript's
@@ -11,9 +11,9 @@ priority) run in the app's own ``tests/``.
 Two properties are pinned:
 
 1. **No core module or script imports the app.** Every module under
-   ``src/kiro_crew`` outside ``apps/builtins/``, and every script under
+   ``src/aj_crew`` outside ``apps/builtins/``, and every script under
    ``scripts/``, is parsed. ``import``, ``from ... import`` (relative ones
-   resolved), ``from kiro_crew.apps.builtins import meetings``,
+   resolved), ``from aj_crew.apps.builtins import meetings``,
    ``importlib.import_module`` and ``__import__`` with a literal name are all in
    scope, and the probes below fail if any of those forms stops being caught.
 2. **The strings that still name the app are a pinned, shrinking list.** A path
@@ -41,12 +41,12 @@ import pytest
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_core_meetings_decoupling")
 
-APP_PACKAGE = "kiro_crew.apps.builtins.meetings"
+APP_PACKAGE = "aj_crew.apps.builtins.meetings"
 #: The package directory name, which is also the app id: the one spelling that
 #: addresses the app. Its agents (``meetings-note-taker`` and the rest) contain it.
 APP_NAMES = ("meetings",)
 
-#: (path relative to ``src/kiro_crew``, the literal): the core strings that still
+#: (path relative to ``src/aj_crew``, the literal): the core strings that still
 #: name the app, or say the word about something else, each with why it is not a
 #: seam. A row about the app is deleted together with the file, store or skill it
 #: names.
@@ -124,24 +124,24 @@ def test_the_strings_naming_the_app_are_the_pinned_list(core_trees):
 @pytest.mark.parametrize(
     ("source", "importer", "is_package"),
     [
-        ("import kiro_crew.apps.builtins.meetings.backend.routes", "kiro_crew.x", False),
-        ("from kiro_crew.apps.builtins.meetings.backend import store", "kiro_crew.x", False),
-        ("from kiro_crew.apps.builtins import meetings", "kiro_crew.x", False),
-        ("from ..apps.builtins.meetings.backend import constants", "kiro_crew.dashboard.y", False),
-        ("from .builtins.meetings.backend import store", "kiro_crew.apps.y", False),
-        ("from .builtins import meetings", "kiro_crew.apps", True),
+        ("import aj_crew.apps.builtins.meetings.backend.routes", "aj_crew.x", False),
+        ("from aj_crew.apps.builtins.meetings.backend import store", "aj_crew.x", False),
+        ("from aj_crew.apps.builtins import meetings", "aj_crew.x", False),
+        ("from ..apps.builtins.meetings.backend import constants", "aj_crew.dashboard.y", False),
+        ("from .builtins.meetings.backend import store", "aj_crew.apps.y", False),
+        ("from .builtins import meetings", "aj_crew.apps", True),
         (
             "import importlib\n"
-            "importlib.import_module('kiro_crew.apps.builtins.meetings.backend.constants')",
-            "kiro_crew.x",
+            "importlib.import_module('aj_crew.apps.builtins.meetings.backend.constants')",
+            "aj_crew.x",
             False,
         ),
-        ("__import__('kiro_crew.apps.builtins.meetings')", "kiro_crew.x", False),
+        ("__import__('aj_crew.apps.builtins.meetings')", "aj_crew.x", False),
         (
             "from typing import TYPE_CHECKING\n"
             "if TYPE_CHECKING:\n"
-            "    from kiro_crew.apps.builtins.meetings.backend.domain import session\n",
-            "kiro_crew.x",
+            "    from aj_crew.apps.builtins.meetings.backend.domain import session\n",
+            "aj_crew.x",
             False,
         ),
     ],
@@ -153,14 +153,14 @@ def test_the_scan_catches_every_import_form(source, importer, is_package):
 @pytest.mark.parametrize(
     "source",
     [
-        "from kiro_crew.apps import seams",
-        "from kiro_crew.apps.builtins import BUILTIN_NAMES",
-        "import kiro_crew.apps.builtins.meetings_other",
-        "from kiro_crew.connections.vendors.zoom import paging",
+        "from aj_crew.apps import seams",
+        "from aj_crew.apps.builtins import BUILTIN_NAMES",
+        "import aj_crew.apps.builtins.meetings_other",
+        "from aj_crew.connections.vendors.zoom import paging",
     ],
 )
 def test_the_scan_leaves_other_imports_alone(source):
-    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "kiro_crew.x", False)
+    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "aj_crew.x", False)
 
 
 def test_the_string_scan_skips_docstrings_but_not_paths_ids_or_agents():

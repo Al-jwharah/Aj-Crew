@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from skill_script_helpers import no_bytecode
 
-from kiro_crew.apps.module_loader import (
+from aj_crew.apps.module_loader import (
     _module_namespace,
     cache_shutdown_callable,
     clear_shutdown_callable,
@@ -39,7 +39,7 @@ def _create_app_module(app_dir: Path, module_path: str, content: str) -> None:
 def _explicit_third_party_execution_admission(monkeypatch) -> None:
     """Most loader tests exercise isolation, so opt them in explicitly."""
     monkeypatch.setattr(
-        "kiro_crew.apps.execution.third_party_execution_allowed", lambda: True
+        "aj_crew.apps.execution.third_party_execution_allowed", lambda: True
     )
 
 
@@ -113,7 +113,7 @@ def register_routes(ctx):
     def test_third_party_load_warns_once(self, tmp_path: Path, caplog) -> None:
         import logging
 
-        import kiro_crew.apps.module_loader as ml
+        import aj_crew.apps.module_loader as ml
 
         ml._warned_third_party_apps.discard("evil-app")
         app_dir = self._make_app(tmp_path)
@@ -129,7 +129,7 @@ def register_routes(ctx):
     def test_builtin_load_does_not_warn(self, caplog) -> None:
         import logging
 
-        import kiro_crew.apps.module_loader as ml
+        import aj_crew.apps.module_loader as ml
 
         # The deploy_web builtin ships a backend module; loading it must not warn.
         builtins = ml._BUILTINS_DIR
@@ -167,10 +167,10 @@ def register_routes(ctx):
         return app_dir
 
     def test_third_party_denied_when_gate_off(self, tmp_path: Path, monkeypatch) -> None:
-        import kiro_crew.apps.module_loader as ml
+        import aj_crew.apps.module_loader as ml
 
         monkeypatch.setattr(
-            "kiro_crew.apps.execution.third_party_execution_allowed", lambda: False
+            "aj_crew.apps.execution.third_party_execution_allowed", lambda: False
         )
         ml._warned_third_party_apps.discard("evil-app")
         app_dir = self._make_app(tmp_path)
@@ -183,7 +183,7 @@ def register_routes(ctx):
         unload_app_modules("evil-app")
 
     def test_third_party_allowed_with_explicit_admission(self, tmp_path: Path) -> None:
-        import kiro_crew.apps.module_loader as ml
+        import aj_crew.apps.module_loader as ml
 
         ml._warned_third_party_apps.discard("evil-app")
         app_dir = self._make_app(tmp_path)
@@ -193,11 +193,11 @@ def register_routes(ctx):
         unload_app_modules("evil-app")
 
     def test_builtin_load_not_blocked_by_gate(self, monkeypatch) -> None:
-        import kiro_crew.apps.module_loader as ml
+        import aj_crew.apps.module_loader as ml
 
         # Gate closed, but builtins are trusted — they must still load.
         monkeypatch.setattr(
-            "kiro_crew.apps.execution.third_party_execution_allowed", lambda: False
+            "aj_crew.apps.execution.third_party_execution_allowed", lambda: False
         )
         app_dir = ml._BUILTINS_DIR / "deploy_web"
         if not (app_dir / "handlers.py").is_file():
@@ -243,8 +243,8 @@ def register_routes(ctx):
         assert func_b(None) == "routes_from_b"
 
         # Verify they're in sys.modules under different keys
-        assert "_kirocrew_app_app-a.backend.routes" in sys.modules
-        assert "_kirocrew_app_app-b.backend.routes" in sys.modules
+        assert "_ajcrew_app_app-a.backend.routes" in sys.modules
+        assert "_ajcrew_app_app-b.backend.routes" in sys.modules
 
         unload_app_modules("app-a")
         unload_app_modules("app-b")
@@ -259,7 +259,7 @@ def setup(ctx):
         load_app_module("my-app", tmp_path, "handlers:setup")
         key = _module_namespace("my-app", "handlers")
         assert key in sys.modules
-        assert key == "_kirocrew_app_my-app.handlers"
+        assert key == "_ajcrew_app_my-app.handlers"
 
         unload_app_modules("my-app")
 
@@ -356,10 +356,10 @@ class TestModuleUnload:
         assert count == 4
         assert not is_app_module_loaded("test-app")
 
-        assert "_kirocrew_app_test-app.mod_a" not in sys.modules
-        assert "_kirocrew_app_test-app.sub.mod_b" not in sys.modules
-        assert "_kirocrew_app_test-app.sub" not in sys.modules
-        assert "_kirocrew_app_test-app" not in sys.modules
+        assert "_ajcrew_app_test-app.mod_a" not in sys.modules
+        assert "_ajcrew_app_test-app.sub.mod_b" not in sys.modules
+        assert "_ajcrew_app_test-app.sub" not in sys.modules
+        assert "_ajcrew_app_test-app" not in sys.modules
 
     def test_unload_does_not_affect_other_apps(self, tmp_path: Path) -> None:
         """Unloading app A does not remove app B's modules."""
@@ -504,8 +504,8 @@ def register(ctx):
         assert func_a(None) == 1
         assert func_b(None) == 2
         assert (
-            sys.modules["_kirocrew_app_iso-a.backend.config"]
-            is not sys.modules["_kirocrew_app_iso-b.backend.config"]
+            sys.modules["_ajcrew_app_iso-a.backend.config"]
+            is not sys.modules["_ajcrew_app_iso-b.backend.config"]
         )
 
         unload_app_modules("iso-a")
@@ -548,8 +548,8 @@ def register(ctx):
         with pytest.raises(ImportError):
             load_app_module("broken-app", app_dir, "backend.routes:register")
 
-        assert "_kirocrew_app_broken-app" not in sys.modules
-        assert "_kirocrew_app_broken-app.backend" not in sys.modules
+        assert "_ajcrew_app_broken-app" not in sys.modules
+        assert "_ajcrew_app_broken-app.backend" not in sys.modules
         assert not is_app_module_loaded("broken-app")
 
     def test_failed_load_keeps_an_earlier_successful_load(
@@ -580,9 +580,9 @@ def on_startup(ctx):
             load_app_module("mixed-app", app_dir, "backend.hooks:on_startup")
 
         # The working hook and the sibling it imported are still usable.
-        assert "_kirocrew_app_mixed-app.backend.routes" in sys.modules
-        assert "_kirocrew_app_mixed-app.backend.config" in sys.modules
-        assert "_kirocrew_app_mixed-app.backend.hooks" not in sys.modules
+        assert "_ajcrew_app_mixed-app.backend.routes" in sys.modules
+        assert "_ajcrew_app_mixed-app.backend.config" in sys.modules
+        assert "_ajcrew_app_mixed-app.backend.hooks" not in sys.modules
         assert func(None) == 11
 
         unload_app_modules("mixed-app")
@@ -625,8 +625,8 @@ def on_startup(ctx):
         with pytest.raises(ImportError):
             load_app_module("residue-app", app_dir, "backend.hooks:on_startup")
 
-        parent = sys.modules["_kirocrew_app_residue-app.backend"]
-        assert "_kirocrew_app_residue-app.backend.render" not in sys.modules
+        parent = sys.modules["_ajcrew_app_residue-app.backend"]
+        assert "_ajcrew_app_residue-app.backend.render" not in sys.modules
         assert not hasattr(parent, "render"), (
             "the rolled-back sibling is still reachable as a parent attribute, so a "
             "later relative import would reuse it instead of re-reading the file"
@@ -654,9 +654,9 @@ def on_startup(ctx):
 """)
 
         first = load_app_module("two-hooks-app", app_dir, "backend.hooks:on_startup")
-        key = "_kirocrew_app_two-hooks-app.backend.hooks"
+        key = "_ajcrew_app_two-hooks-app.backend.hooks"
         first_module = sys.modules[key]
-        parent = sys.modules["_kirocrew_app_two-hooks-app.backend"]
+        parent = sys.modules["_ajcrew_app_two-hooks-app.backend"]
 
         # Same module, a callable it does not define: the load re-executes the
         # file (replacing the sys.modules entry) and then fails the attr check.
@@ -677,7 +677,7 @@ def test_deploy_skill_install_copy_fallback(tmp_path, monkeypatch):
     """When symlinking fails (Windows/restricted FS), skills are copied — never skipped."""
     from pathlib import Path
 
-    import kiro_crew.deploy as deploy_pkg
+    import aj_crew.deploy as deploy_pkg
 
     monkeypatch.setattr(deploy_pkg, "config_dir", lambda: tmp_path)
 
@@ -692,10 +692,10 @@ def test_deploy_skill_install_copy_fallback(tmp_path, monkeypatch):
 
 
 def test_deploy_skill_install_preserves_user_placed_dir(tmp_path, monkeypatch):
-    """A user-placed directory without .kirocrew-managed marker is never removed."""
+    """A user-placed directory without .ajcrew-managed marker is never removed."""
     from pathlib import Path
 
-    import kiro_crew.deploy as deploy_pkg
+    import aj_crew.deploy as deploy_pkg
 
     monkeypatch.setattr(deploy_pkg, "config_dir", lambda: tmp_path)
 
@@ -706,7 +706,7 @@ def test_deploy_skill_install_preserves_user_placed_dir(tmp_path, monkeypatch):
     user_dir.mkdir()
     (user_dir / "my-custom-file.txt").write_text("user content")
 
-    # No .kirocrew-managed marker — should survive
+    # No .ajcrew-managed marker — should survive
     def _no_symlink(self, target, *a, **kw):
         raise OSError("symlink not permitted")
     monkeypatch.setattr(Path, "symlink_to", _no_symlink)
@@ -721,10 +721,10 @@ def test_deploy_skill_install_preserves_user_placed_dir(tmp_path, monkeypatch):
 
 
 def test_deploy_skill_install_replaces_managed_dir(tmp_path, monkeypatch):
-    """A directory WITH .kirocrew-managed marker is replaced on refresh."""
+    """A directory WITH .ajcrew-managed marker is replaced on refresh."""
     from pathlib import Path
 
-    import kiro_crew.deploy as deploy_pkg
+    import aj_crew.deploy as deploy_pkg
 
     monkeypatch.setattr(deploy_pkg, "config_dir", lambda: tmp_path)
 
@@ -733,7 +733,7 @@ def test_deploy_skill_install_replaces_managed_dir(tmp_path, monkeypatch):
     skills_dir.mkdir()
     managed_dir = skills_dir / "artifact-deploy"
     managed_dir.mkdir()
-    (managed_dir / ".kirocrew-managed").write_text("")
+    (managed_dir / ".ajcrew-managed").write_text("")
     (managed_dir / "stale-file.txt").write_text("old")
 
     def _no_symlink(self, target, *a, **kw):
@@ -747,7 +747,7 @@ def test_deploy_skill_install_replaces_managed_dir(tmp_path, monkeypatch):
     assert not (managed_dir / "stale-file.txt").exists()
     assert (managed_dir / "SKILL.md").exists()
     # Marker was re-written by the copy fallback
-    assert (managed_dir / ".kirocrew-managed").exists()
+    assert (managed_dir / ".ajcrew-managed").exists()
 
 
 # ---------------------------------------------------------------------------
@@ -827,7 +827,7 @@ def test_clear_all_shutdown_callables_drops_the_whole_cache():
     unload_app_modules, so it must drop the whole shutdown cache -- otherwise a
     callable captured this generation survives into an in-process restart and
     could stop a NEWLY loaded worker."""
-    import kiro_crew.apps.module_loader as ml
+    import aj_crew.apps.module_loader as ml
 
     ml._shutdown_callables.clear()
     ml.cache_shutdown_callable("app-a", lambda ctx: None)

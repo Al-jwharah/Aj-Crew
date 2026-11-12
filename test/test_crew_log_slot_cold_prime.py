@@ -26,15 +26,15 @@ import pytest
 from crew_log_projection_helpers import _busy_log, _entries  # noqa: F401
 from test_crew_log_types import CANONICAL
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import projection_catalogue
-from kiro_crew.crew_log.projection_slot_memo import _Ordinal, _ordinal_seq, _SlotFold
-from kiro_crew.crew_log.schema import Entry
-from kiro_crew.projection import ProjectionRegistry
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import projection_catalogue
+from aj_crew.crew_log.projection_slot_memo import _Ordinal, _ordinal_seq, _SlotFold
+from aj_crew.crew_log.schema import Entry
+from aj_crew.projection import ProjectionRegistry
 
 SLOT = "dashboard:3"
 UNIT = "acp-cold-prime"
@@ -44,13 +44,13 @@ UNIT = "acp-cold-prime"
 def _isolated_home(tmp_path, _floor_monkeypatch):
     """Own data home, crew log on, no eager folder and no warm fold carried over."""
     monkeypatch = _floor_monkeypatch
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     crew_log_emit.reset_caches()
     crew_log_eager.stop_for_tests()
     crew_log.forget_slot_folds()
-    from kiro_crew.crew_log import projection_workstreams
+    from aj_crew.crew_log import projection_workstreams
 
     # Module-global and cleared only on read: no test may see another's leftover count.
     monkeypatch.setattr(projection_workstreams, "_WORKSTREAMS_UNITS_DROPPED", {})
@@ -225,7 +225,7 @@ def test_a_state_handed_out_after_prime_does_not_move_when_the_registry_is_drive
 
 
 def _write_work_unit(unit: str, count: int) -> None:
-    handle = CrewLog.create(lg.KIND_SESSION, unit, owner="owner", agent="kirocrew", slot=SLOT)
+    handle = CrewLog.create(lg.KIND_SESSION, unit, owner="owner", agent="ajcrew", slot=SLOT)
     base = CANONICAL["work/recorded"]
     for index in range(count):
         data = dict(base, slot=SLOT, item_id=f"it_{index % 7:08x}", summary=f"step {index}")
@@ -255,7 +255,7 @@ def _counted_cold_fold(monkeypatch, count: int) -> tuple[int, int]:
             calls["depth"] -= 1
 
     # Neither the savepoint read nor the memo may answer: the cold prime is measured.
-    from kiro_crew.crew_log import projection_slot_memo
+    from aj_crew.crew_log import projection_slot_memo
 
     monkeypatch.setattr(projection_slot_memo, "_resume_slot_fold", lambda *a, **k: None)
     monkeypatch.setattr(projection_catalogue._Fold, "copied", counting_copied)
@@ -297,7 +297,7 @@ def _write_slot(units: int, per_unit: int, seed: int) -> tuple[str, ...]:
     ids: list[str] = []
     for index in range(units):
         unit = f"acp-large-{index:03d}"
-        handle = CrewLog.create(lg.KIND_SESSION, unit, owner="owner", agent="kirocrew", slot=SLOT)
+        handle = CrewLog.create(lg.KIND_SESSION, unit, owner="owner", agent="ajcrew", slot=SLOT)
         for _ in range(per_unit):
             entry_type = rng.choice(types)
             data = copy.deepcopy(CANONICAL[entry_type])
@@ -310,7 +310,7 @@ def _write_slot(units: int, per_unit: int, seed: int) -> tuple[str, ...]:
 
 
 def _cold_value(name: str, units: tuple[str, ...]) -> str:
-    from kiro_crew.crew_log import projection_slot_memo
+    from aj_crew.crew_log import projection_slot_memo
 
     crew_log.forget_slot_folds()
     original = projection_slot_memo._resume_slot_fold
@@ -323,7 +323,7 @@ def _cold_value(name: str, units: tuple[str, ...]) -> str:
         # only difference measured between the two paths on a real board. Each fold
         # here is preceded by the same selection result, so the count is compared
         # like every other field.
-        from kiro_crew.crew_log import projection_workstreams
+        from aj_crew.crew_log import projection_workstreams
 
         if name == crew_log.WORKSTREAMS_FOLD_NAME:
             projection_workstreams._WORKSTREAMS_UNITS_DROPPED[SLOT] = 3
@@ -367,11 +367,11 @@ def test_a_cold_session_fold_equals_the_copy_per_step_fold_and_copies_nothing_pe
     tail through ``apply`` would cost one copy per entry. The count of ``copied`` calls
     is pinned at zero, and the values against the copy-per-step path.
     """
-    from kiro_crew.crew_log import checkpoint as savepoints
-    from kiro_crew.crew_log.projection_session import _SessionFold
+    from aj_crew.crew_log import checkpoint as savepoints
+    from aj_crew.crew_log.projection_session import _SessionFold
 
     monkeypatch.setattr(savepoints, "load", lambda *a, **k: None, raising=False)
-    handle = CrewLog.create(lg.KIND_SESSION, UNIT, owner="owner", agent="kirocrew", slot=SLOT)
+    handle = CrewLog.create(lg.KIND_SESSION, UNIT, owner="owner", agent="ajcrew", slot=SLOT)
     rng = random.Random(3)
     for _ in range(300):
         entry_type = rng.choice(sorted(CANONICAL))
@@ -481,7 +481,7 @@ class _Points:
         self._points = points
 
     def load(self, store, key, *, state_version, identity, admit=None):
-        from kiro_crew.projection import Savepoint
+        from aj_crew.projection import Savepoint
 
         state, watermark = self._points[key]
         return Savepoint(

@@ -101,7 +101,7 @@ const EMPTY_FOLDER = 'f-empty'
 
 async function renderSidebar(collapsed: boolean) {
   fixtures.chatFolders = [
-    { id: FOLDER, name: 'kirocrew-github-autofix', order: 0, collapsed },
+    { id: FOLDER, name: 'ajcrew-github-autofix', order: 0, collapsed },
     { id: EMPTY_FOLDER, name: 'empty folder', order: 1, collapsed: false },
   ]
   // Cast through the factory's own parameter type rather than `any`: the
@@ -134,7 +134,7 @@ async function renderSidebar(collapsed: boolean) {
       </Provider>
     </QueryClientProvider>,
   )
-  await utils.findByText('kirocrew-github-autofix')
+  await utils.findByText('ajcrew-github-autofix')
   return utils
 }
 
@@ -146,11 +146,11 @@ describe('folder rail collapses its folder', () => {
     const { getByTestId, getAllByRole } = await renderSidebar(false)
     const rail = getByTestId(`folder-rail-${FOLDER}`)
     expect(rail.getAttribute('aria-hidden')).toBe('true')
-    expect(rail.getAttribute('aria-label')).toBe('Collapse folder kirocrew-github-autofix')
-    expect(rail.getAttribute('title')).toBe('Collapse folder kirocrew-github-autofix')
+    expect(rail.getAttribute('aria-label')).toBe('Collapse folder ajcrew-github-autofix')
+    expect(rail.getAttribute('title')).toBe('Collapse folder ajcrew-github-autofix')
     // The rail is hidden from assistive technology, so the header toggle is the
     // only collapse control a screen reader sees.
-    expect(getAllByRole('button', { name: 'Collapse folder kirocrew-github-autofix' })).toHaveLength(1)
+    expect(getAllByRole('button', { name: 'Collapse folder ajcrew-github-autofix' })).toHaveLength(1)
     fireEvent.click(rail)
     await waitFor(() => expect(updateChatFolder).toHaveBeenCalledWith(FOLDER, { collapsed: true }))
   })

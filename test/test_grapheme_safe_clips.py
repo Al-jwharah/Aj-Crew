@@ -3,12 +3,12 @@
 Cutting by code point inside a grapheme cluster produces a changed or broken
 glyph: a dangling joiner, a lone regional indicator (boxed letter, not a
 flag), a dropped tone mark that changes the word. The site below shares the
-one guard in ``kiro_crew.imessage.plaintext``, which covers all six joining
+one guard in ``aj_crew.imessage.plaintext``, which covers all six joining
 mechanisms rather than a single subset. Ops Mission Control's notification
 clip shares it too; its cases run in that app's own ``tests/``.
 """
 
-from kiro_crew.computer_use.render import _clip as render_clip
+from aj_crew.computer_use.render import _clip as render_clip
 
 FAMILY = "👨\u200d👩\u200d👧"
 

@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 from test_snapshot import unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 def _real_db(path: Path) -> bytes:
@@ -36,7 +36,7 @@ class TestOurOwnDatabasesInsideATreeAreStrict:
         return h
 
     def _bundle(self, tmp_path, knowledge_bytes: bytes, name: str) -> Path:
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         kdir = payload / "workspace" / "knowledge"
         kdir.mkdir(parents=True, exist_ok=True)
         (payload / "memory.db").write_bytes(_real_db(tmp_path / f"sound-{name}.db"))

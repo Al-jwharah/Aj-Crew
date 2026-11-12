@@ -1,7 +1,7 @@
-"""Regression tests for Round-21 findings (KiroCrew PR #6).
+"""Regression tests for Round-21 findings (Aj Crew PR #6).
 
 F1: the app-arch (CloudFormation stack) reap path verifies the stack's
-    kirocrew:site identity tag before deletion, matching the R19 engine-arch
+    ajcrew:site identity tag before deletion, matching the R19 engine-arch
     gate; deploy-backend.sh tags stacks at creation.
 F2: webapp_metadata.public_url validation rejects Basic-auth userinfo
     (https://user:pass@host) at the backend; safeHttpUrl mirrors it in the FE.
@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 _SKILL = Path(__file__).resolve().parents[1] / (
-    "src/kiro_crew/deploy/skills/artifact-deploy"
+    "src/aj_crew/deploy/skills/artifact-deploy"
 )
 
 
@@ -20,7 +20,7 @@ _SKILL = Path(__file__).resolve().parents[1] / (
 
 def test_f1_deploy_backend_tags_stack_at_creation():
     src = (_SKILL / "scripts/deploy-backend.sh").read_text(encoding="utf-8")
-    assert '--tags "kirocrew:site=$SLUG"' in src
+    assert '--tags "ajcrew:site=$SLUG"' in src
 
 
 def test_f1_lambda_gates_every_delete_stack():
@@ -40,7 +40,7 @@ def test_f1_lambda_gates_every_delete_stack():
 def test_f1_shell_reaper_gates_stack_deletion():
     src = (_SKILL / "scripts/reaper.sh").read_text(encoding="utf-8")
     # Both Phase A and the Phase B DELETE_FAILED retry check the tag.
-    assert src.count("kirocrew:site") >= 2
+    assert src.count("ajcrew:site") >= 2
     assert "tag mismatch" in src
 
 
@@ -48,12 +48,12 @@ def test_f1_shell_reaper_gates_stack_deletion():
 
 
 def _validate(url: str):
-    from kiro_crew.validation import _validate_webapp_metadata_shape
+    from aj_crew.validation import _validate_webapp_metadata_shape
     _validate_webapp_metadata_shape({"deploy_target": {"public_url": url}})
 
 
 def test_f2_backend_rejects_userinfo_url():
-    from kiro_crew.validation import ValidationError
+    from aj_crew.validation import ValidationError
     with pytest.raises(ValidationError):
         _validate("https://user:secret@attacker.example/path")
     with pytest.raises(ValidationError):
@@ -61,7 +61,7 @@ def test_f2_backend_rejects_userinfo_url():
 
 
 def test_f2_backend_accepts_plain_https():
-    from kiro_crew.validation import ARTIFACT_SAVE_SCHEMA, validate_tool_args
+    from aj_crew.validation import ARTIFACT_SAVE_SCHEMA, validate_tool_args
 
     # The empty URL is the documented draft state.
     for url in ("https://d123.cloudfront.net/site/", ""):

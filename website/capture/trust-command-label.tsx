@@ -57,7 +57,7 @@ const key = (params.get('cmd') ?? 'api_config') as keyof typeof COMMANDS
 const cmd = COMMANDS[key] ?? COMMANDS.api_config
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 initI18n('en')
 

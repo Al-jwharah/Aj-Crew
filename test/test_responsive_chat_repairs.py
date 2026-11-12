@@ -13,11 +13,11 @@ from dashboard_owner_helpers import as_owner
 from test_responsive_chat import _busy
 from test_responsive_chat import fixture as _responsive_fixture
 
-from kiro_crew.dashboard import chat_handlers, chat_runner
-from kiro_crew.dashboard import responsive_chat as rc
-from kiro_crew.dashboard.chat_delivery import queue_entry_view
-from kiro_crew.dashboard.handlers import ask_question
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard import chat_handlers, chat_runner
+from aj_crew.dashboard import responsive_chat as rc
+from aj_crew.dashboard.chat_delivery import queue_entry_view
+from aj_crew.dashboard.handlers import ask_question
+from aj_crew.dashboard.state import _ChatSlot
 
 fixture = _responsive_fixture
 
@@ -160,7 +160,7 @@ async def test_actual_queue_push_pop_and_detail_carry_only_normalized_identity(
 async def test_prompts_get_keeps_same_request_guidance_and_owner(tmp_path, monkeypatch, responsive):
     from test_chat_runner_coverage import _complete, _runner_state, _slot
 
-    from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
     state, client = _runner_state(tmp_path)
     slot = _slot("prompt-responsive")
@@ -214,7 +214,7 @@ async def test_prompts_get_keeps_same_request_guidance_and_owner(tmp_path, monke
 
 @pytest.mark.asyncio
 async def test_http_priority_filters_caller_metadata_through_drain(fixture, monkeypatch):
-    from kiro_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
+    from aj_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
 
     state, slot, *_ = fixture
     _busy(slot)
@@ -321,7 +321,7 @@ async def test_hard_stop_teardown_before_resolver_resumes_retained_priority(fixt
     _busy(slot)
     owner = slot.task
     await rc.accept(request, slot, "priority", None)
-    from kiro_crew.dashboard.chat_delivery import queue_for_next_turn
+    from aj_crew.dashboard.chat_delivery import queue_for_next_turn
 
     queue_for_next_turn(state, slot, "ordinary", directive_user_origin=True)
     run = AsyncMock()
@@ -387,9 +387,9 @@ async def test_http_responsive_accept_notifies_human_and_observer_once(fixture, 
         _busy(slot)
     nudge = MagicMock()
     observer = MagicMock()
-    monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: nudge)
+    monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: nudge)
     monkeypatch.setattr(
-        "kiro_crew.platform.context.current_context",
+        "aj_crew.platform.context.current_context",
         lambda: SimpleNamespace(dashboard=SimpleNamespace(on_user_message=observer)),
     )
     monkeypatch.setattr(chat_runner, "_run_chat", AsyncMock())
@@ -454,7 +454,7 @@ async def test_normal_completion_after_cancel_preserves_only_uncertain_recovery(
 ):
     from test_chat_runner_coverage import _complete, _runner_state, _slot
 
-    from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
     state, client = _runner_state(tmp_path)
     slot = _slot("responsive-normal-completion")
@@ -501,7 +501,7 @@ async def test_normal_completion_after_cancel_preserves_only_uncertain_recovery(
     request = MagicMock(spec=web.Request)
     request.app = {"state": state}
     request.get = lambda key, default=None: default
-    monkeypatch.setattr("kiro_crew.dashboard.chat_delivery.start_queue_persist", lambda *a: None)
+    monkeypatch.setattr("aj_crew.dashboard.chat_delivery.start_queue_persist", lambda *a: None)
     try:
         await asyncio.wait_for(entered.wait(), 30)
         await rc.accept(request, slot, "New question", None)

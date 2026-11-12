@@ -9,10 +9,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.mcp_gateway import gatewayd, stub, stub_link, transport
-from kiro_crew.mcp_gateway.daemon import connection, identity, wire
-from kiro_crew.mcp_gateway.pool import BackendPool
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.mcp_gateway import gatewayd, stub, stub_link, transport
+from aj_crew.mcp_gateway.daemon import connection, identity, wire
+from aj_crew.mcp_gateway.pool import BackendPool
+from aj_crew.testing.ids import UNALLOCATABLE_PID
 
 pytestmark = pytest.mark.xdist_group("mcp_gateway")
 

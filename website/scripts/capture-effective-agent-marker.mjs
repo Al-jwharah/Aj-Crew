@@ -10,7 +10,7 @@
  *     if the agent it names is the one running.
  *
  *  2. effective-agent-after.png — the same six sessions with `effective_agent`
- *     on the wire. Only the two diverged rows gain "· answered by kirocrew"; the
+ *     on the wire. Only the two diverged rows gain "· answered by ajcrew"; the
  *     four honored rows are byte-identical to frame 1, which is the property that
  *     matters most. A marker that also appeared on a healthy row would be worse
  *     than no marker at all.
@@ -54,15 +54,15 @@ const mkSlot = (key, title, agent, extra = {}) => ({
 // "nothing to report" spellings the backend can send — "", and the field absent
 // altogether (a row from persisted state, or a gateway predating the field) —
 // because each is a separate chance to render a false marker.
-const DIVERGED = { 'chat-mochi': 'kirocrew', 'chat-research': 'kirocrew' }
+const DIVERGED = { 'chat-mochi': 'ajcrew', 'chat-research': 'ajcrew' }
 
 const baseSlots = [
   mkSlot('chat-mochi', 'Pet chat — feeding schedule', 'mochi'),
-  mkSlot('chat-review', 'Review PR 6104', 'kirocrew'),
+  mkSlot('chat-review', 'Review PR 6104', 'ajcrew'),
   mkSlot('chat-research', 'Compare vector stores', 'research-bot'),
-  mkSlot('chat-triage', 'Triage needs-triage queue', 'kirocrew'),
+  mkSlot('chat-triage', 'Triage needs-triage queue', 'ajcrew'),
   mkSlot('chat-notes', 'Draft weekly notes', 'writer'),
-  mkSlot('chat-sweep', 'Dependency sweep', 'kirocrew'),
+  mkSlot('chat-sweep', 'Dependency sweep', 'ajcrew'),
 ]
 
 /** The shipped payload: no `effective_agent` anywhere. */
@@ -173,7 +173,7 @@ async function main() {
       // The marker must NAME the agent, not merely exist: an empty or
       // placeholder marker would photograph fine and tell the user nothing.
       const text = await page.textContent(MARKER)
-      if (!text || !text.includes('kirocrew')) {
+      if (!text || !text.includes('ajcrew')) {
         throw new Error(`frame 2: marker does not name the effective agent (read ${JSON.stringify(text)})`)
       }
       // Readable without hovering: the visible text carries the meaning, and the
@@ -200,7 +200,7 @@ async function main() {
       // A deliberately long effective agent, so the marker WANTS more room than
       // the row has. If it took it, the timestamp would be the thing that lost.
       const crowded = afterSlots.map(s =>
-        DIVERGED[s.key] ? { ...s, effective_agent: 'kirocrew-research-orchestrator' } : s,
+        DIVERGED[s.key] ? { ...s, effective_agent: 'ajcrew-research-orchestrator' } : s,
       )
       const { context, page } = await renderSidebar(browser, base, crowded, 260)
       for (const key of Object.keys(DIVERGED)) {

@@ -7,9 +7,9 @@ silent truncation) and that the text reaches the published guide intact.
 
 import pytest
 
-from kiro_crew import guide_catalog as catalog
-from kiro_crew.dashboard.guide_runs import GuideError, GuideStore
-from kiro_crew.mcp_guide import _tool_definitions
+from aj_crew import guide_catalog as catalog
+from aj_crew.dashboard.guide_runs import GuideError, GuideStore
+from aj_crew.mcp_guide import _tool_definitions
 
 SLOT = "chat-fixture"
 SESSION = "dashboard:chat-fixture"
@@ -149,7 +149,7 @@ def test_the_start_route_accepts_intro_and_refuses_bad_text():
 
 
 def test_the_mcp_tool_forwards_intro_and_notes_to_the_gateway(monkeypatch):
-    from kiro_crew import mcp_guide
+    from aj_crew import mcp_guide
 
     sent: list[dict] = []
     monkeypatch.setattr(mcp_guide, "_strict_session_key", lambda: ("dashboard:c", ""))

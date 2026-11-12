@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import yaml
 
-from kiro_crew import slack_manifest
+from aj_crew import slack_manifest
 
 
 def _manifest(features: frozenset[str] = frozenset()) -> dict:

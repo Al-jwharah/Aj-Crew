@@ -15,10 +15,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import pinned_fs
-from kiro_crew.dashboard.handlers import _shared
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.subagent import SubagentManager
+from aj_crew import pinned_fs
+from aj_crew.dashboard.handlers import _shared
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.subagent import SubagentManager
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -73,7 +73,7 @@ async def _run(resolver: object, **spawn_kwargs: object) -> tuple[object, dict]:
     mgr = SubagentManager(sessions=_mock_sessions(), ctx_builder=ctx)
     mgr._should_use_session_sharing = MagicMock(return_value=False)  # type: ignore[method-assign]
     mgr._parent_steering_dirs = resolver  # type: ignore[assignment]
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("do the thing", **spawn_kwargs)  # type: ignore[arg-type]
         assert info is not None
         await mgr._tasks[info.id]
@@ -128,9 +128,7 @@ def _slot(key: str, folder_id: str) -> SimpleNamespace:
 @pytest.fixture
 def _no_execution(monkeypatch):
     """The parent has no member execution: a person's chat, principal ``""``."""
-    monkeypatch.setattr(
-        "kiro_crew.execution_context.read_session_execution", lambda *_a, **_k: None
-    )
+    monkeypatch.setattr("aj_crew.execution_context.read_session_execution", lambda *_a, **_k: None)
 
 
 @pytest.mark.usefixtures("_no_execution")
@@ -188,8 +186,8 @@ class TestDashboardResolver:
 @pytest.mark.asyncio
 async def test_gateway_wires_the_resolver_into_the_manager(tmp_path, monkeypatch):
     """``DashboardState`` hands its manager the folder resolver, bound to itself."""
-    from kiro_crew.dashboard.state import DashboardState
-    from kiro_crew.subagent_parts import agent_policy
+    from aj_crew.dashboard.state import DashboardState
+    from aj_crew.subagent_parts import agent_policy
 
     # The constructor also installs the process-wide parent-project resolver.
     monkeypatch.setattr(agent_policy, "_parent_project_resolver", None)

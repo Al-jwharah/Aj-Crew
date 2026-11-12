@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '../api/client'
-import type { KiroCrewAgent } from '../components/AgentSelector'
+import type { AjCrewAgent } from '../components/AgentSelector'
 import { withMarkdownBlocks } from '../lib/markdownAgents'
 import { jsonEqual } from '../utils/structuralEqual'
 import { setCrewModeCatalog, withoutConductors } from '../lib/crewMode'
@@ -29,7 +29,7 @@ import { useCrewMode } from './usePreviewFlag'
  * @returns `choices` — the catalog rows a namespace-aware picker (the chat agent
  *   pop-up) renders, keyed by (selection_kind, name). Unless the gateway's
  *   `dashboard.crewmates_in_agent_picker` config is `true` (read from the shared
- *   `['kirocrewConfig']` query, like `useCrewmateThreadsFlag`), a member row is
+ *   `['ajcrewConfig']` query, like `useCrewmateThreadsFlag`), a member row is
  *   withheld when a listed template reaches the same binding (see
  *   `withoutCoveredCrewmates`: the member has no memory of its own, runs a
  *   listed template and has no workspace, pin, label, triggers or description
@@ -69,13 +69,13 @@ import { useCrewMode } from './usePreviewFlag'
  */
 /** The roster before any load, and after a scope switch empties it. One shared
  *  array, so emptying an already empty roster is not a state change. */
-const NO_CHOICES: KiroCrewAgent[] = []
+const NO_CHOICES: AjCrewAgent[] = []
 
 /** The workspace a template pick runs on until the config names another. */
 const DEFAULT_WORKSPACE = 'default'
 
 /** `next` unless it is structurally equal to `prev`, in which case `prev`. */
-function keepIfEqual(prev: KiroCrewAgent[], next: KiroCrewAgent[]): KiroCrewAgent[] {
+function keepIfEqual(prev: AjCrewAgent[], next: AjCrewAgent[]): AjCrewAgent[] {
   return jsonEqual(prev, next) ? prev : next
 }
 
@@ -88,28 +88,28 @@ function crewCatalogIdentity(agent: string | undefined, conductorAgents: readonl
 }
 
 export function useAgents(refreshTrigger: number, sessionKey?: string, projectDir?: string) {
-  const [choices, setChoices] = useState<KiroCrewAgent[]>(NO_CHOICES)
+  const [choices, setChoices] = useState<AjCrewAgent[]>(NO_CHOICES)
   // The last roster that actually LOADED, kept across a scope switch. `choices`
   // is emptied on a switch so the picker cannot offer the old scope's agents,
   // but surfaces that only DESCRIBE agents (the sidebar's agent-label tint, the
   // row's inherited session colour) must not go blank for that window: every row
   // briefly lost its agent colour on each session switch and flashed back once
   // the new fetch resolved. Never use this to pick or send an agent.
-  const [displayChoices, setDisplayChoices] = useState<KiroCrewAgent[]>(NO_CHOICES)
+  const [displayChoices, setDisplayChoices] = useState<AjCrewAgent[]>(NO_CHOICES)
   const [defaultAgent, setDefaultAgent] = useState('')
   // Closed until the config says otherwise: a missing or failed read keeps
   // the templates-only pop-up the gateway ships with.
   const memberChoicesQuery = useQuery<{ dashboard?: { crewmates_in_agent_picker?: boolean } }, Error, boolean>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
     select: (c) => c?.dashboard?.crewmates_in_agent_picker === true,
   })
   const memberChoices = memberChoicesQuery.data === true
   // The workspace a template pick runs on, from the same shared query: a
   // crewmate bound anywhere else is a different binding, so no template covers it.
   const defaultWorkspaceQuery = useQuery<{ default_workspace?: unknown }, Error, string>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
     select: (c) => (typeof c?.default_workspace === 'string' && c.default_workspace) || DEFAULT_WORKSPACE,
   })
   const defaultWorkspace = defaultWorkspaceQuery.data ?? DEFAULT_WORKSPACE
@@ -229,15 +229,15 @@ export function useAgents(refreshTrigger: number, sessionKey?: string, projectDi
  * No crewmate is exempt for being "the default": a session created without a
  * crewmate runs the default TEMPLATE, which the catalog lists as its own row and
  * the badge marks, so the way back from any switch is that template row. The
- * stock `default` crewmate (shared memory, the `kirocrew` template, nothing else)
+ * stock `default` crewmate (shared memory, the `ajcrew` template, nothing else)
  * is therefore withheld like any covered crewmate; the search reaches a crewmate
  * only on the Crewmates page.
  */
-export function withoutCoveredCrewmates(choices: KiroCrewAgent[], defaultWorkspace = DEFAULT_WORKSPACE): KiroCrewAgent[] {
+export function withoutCoveredCrewmates(choices: AjCrewAgent[], defaultWorkspace = DEFAULT_WORKSPACE): AjCrewAgent[] {
   const templates = new Map(
     choices.filter(c => c.selection_kind === 'template').map(c => [c.name, c] as const),
   )
-  const covered = (c: KiroCrewAgent) => {
+  const covered = (c: AjCrewAgent) => {
     const template = templates.get(c.kiro_agent)
     return c.memory_store === 'default' && template !== undefined && !hasOwnSetup(c, template, defaultWorkspace)
   }
@@ -260,7 +260,7 @@ function trimmedText(value: unknown): string {
  * briefing, a harness, worker, approval or dynamic-capabilities choice) is the
  * server's `own_setup` verdict.
  */
-function hasOwnSetup(member: KiroCrewAgent, template: KiroCrewAgent, defaultWorkspace: string): boolean {
+function hasOwnSetup(member: AjCrewAgent, template: AjCrewAgent, defaultWorkspace: string): boolean {
   const model = trimmedText(member.model)
   const description = trimmedText(member.description)
   return member.own_setup === true
@@ -273,8 +273,8 @@ function hasOwnSetup(member: KiroCrewAgent, template: KiroCrewAgent, defaultWork
 }
 
 /** One row per name, member first — see `agents` in the hook's docs. */
-export function foldByName(choices: KiroCrewAgent[]): KiroCrewAgent[] {
-  const byName = new Map<string, KiroCrewAgent>()
+export function foldByName(choices: AjCrewAgent[]): AjCrewAgent[] {
+  const byName = new Map<string, AjCrewAgent>()
   for (const row of choices) {
     const held = byName.get(row.name)
     if (!held || (held.selection_kind === 'template' && row.selection_kind === 'member')) {

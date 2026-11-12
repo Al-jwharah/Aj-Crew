@@ -30,8 +30,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import dist_file_response
-from kiro_crew.dashboard import server as srv
+from aj_crew.dashboard import dist_file_response
+from aj_crew.dashboard import server as srv
 
 
 def _dist(tmp_path: Path) -> Path:

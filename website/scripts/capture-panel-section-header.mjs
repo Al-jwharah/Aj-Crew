@@ -26,7 +26,7 @@ import { mkdirSync } from 'node:fs'
 const BASE = process.argv[2] || 'http://127.0.0.1:6803'
 const OUT = process.argv[3] || '../temp-screenshots/panel-section-header'
 const SLOT = 'chat-panel-headers'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -36,7 +36,7 @@ const slots = [{
   running: false,
   last_message: 'Both tabs now share one header component.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),
@@ -165,7 +165,7 @@ async function main() {
       localStorage.setItem('mc-privacy-notice-v1', '1')
       // The Files tab reads agent-touched files from this per-slot key, so
       // seeding it here avoids having to replay a whole tool-call turn.
-      localStorage.setItem('kirocrew:touched-files:' + slot, JSON.stringify([
+      localStorage.setItem('ajcrew:touched-files:' + slot, JSON.stringify([
         { path: '/Users/diwm/.kiro/crew/workspace/scratch/link-unfurl-contract.md', ts: Date.now(), lastWrite: Date.now(), source: 'tool' },
         { path: '/Users/diwm/.kiro/crew/workspace/scratch/notes.ts', ts: Date.now(), source: 'tool' },
       ]))

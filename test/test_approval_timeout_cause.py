@@ -15,10 +15,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import constants
-from kiro_crew.constants import DENY_CAUSE_APPROVAL_TIMEOUT, DENY_CAUSE_APPROVAL_UNDELIVERABLE
-from kiro_crew.messaging import approval
-from kiro_crew.messaging.approval import (
+from aj_crew import constants
+from aj_crew.constants import DENY_CAUSE_APPROVAL_TIMEOUT, DENY_CAUSE_APPROVAL_UNDELIVERABLE
+from aj_crew.messaging import approval
+from aj_crew.messaging.approval import (
     DENY,
     PendingApprovals,
     SessionApprovalDecider,
@@ -28,7 +28,7 @@ from kiro_crew.messaging.approval import (
     reset_for_tests,
 )
 
-SESSION = "whatsapp:kirocrew:direct:447700900000"
+SESSION = "whatsapp:ajcrew:direct:447700900000"
 
 
 @pytest.fixture(autouse=True)
@@ -47,7 +47,7 @@ class TestTheCauseNamesAreShared:
         """The driver compares the decider's cause against the constants leaf
         and the dashboard builds the wording from the same name; a drift between
         them would silently steer nothing."""
-        from kiro_crew.dashboard import state
+        from aj_crew.dashboard import state
 
         assert state.DENY_CAUSE_APPROVAL_TIMEOUT == constants.DENY_CAUSE_APPROVAL_TIMEOUT
         assert state.DENY_CAUSE_POLICY == constants.DENY_CAUSE_POLICY
@@ -67,8 +67,8 @@ class TestTheBoundedSteerSpellings:
     def test_both_spellings_share_the_one_bound(self):
         import inspect
 
-        from kiro_crew import deny_notice
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew import deny_notice
+        from aj_crew.dashboard import chat_runner
 
         assert chat_runner._STEER_NOTICE_BOUND_SECS == constants.STEER_NOTICE_BOUND_SECS
         default = (
@@ -80,9 +80,9 @@ class TestTheBoundedSteerSpellings:
         import re
         from pathlib import Path
 
-        import kiro_crew
+        import aj_crew
 
-        pkg = Path(kiro_crew.__file__).parent
+        pkg = Path(aj_crew.__file__).parent
         pattern = re.compile(r"asyncio\.wait_for\(\s*\w+\.steer\(")
         spellings = {
             str(path.relative_to(pkg)).replace("\\", "/")
@@ -182,7 +182,7 @@ class TestButtonDeciders:
 
     @pytest.mark.asyncio
     async def test_discord(self, monkeypatch):
-        from kiro_crew.discord import renderer as discord_renderer
+        from aj_crew.discord import renderer as discord_renderer
 
         monkeypatch.setattr(discord_renderer, "_APPROVAL_TIMEOUT_S", 0.01)
         decider = discord_renderer.DiscordApprovalDecider(session_key="discord:1")
@@ -200,7 +200,7 @@ class TestButtonDeciders:
 
     @pytest.mark.asyncio
     async def test_slack_transport(self, monkeypatch):
-        from kiro_crew.slack import renderer as slack_renderer
+        from aj_crew.slack import renderer as slack_renderer
 
         monkeypatch.setattr(slack_renderer, "_APPROVAL_TIMEOUT", 0.01)
         decider = slack_renderer.SlackApprovalDecider(session_key="slack:C1:t1")
@@ -215,7 +215,7 @@ class TestButtonDeciders:
 
     @pytest.mark.asyncio
     async def test_telegram(self, monkeypatch):
-        from kiro_crew.telegram import renderer as telegram_renderer
+        from aj_crew.telegram import renderer as telegram_renderer
 
         monkeypatch.setattr(telegram_renderer, "_APPROVAL_TIMEOUT_S", 0.01)
         decider = telegram_renderer.TelegramApprovalDecider(session_key="telegram:1")
@@ -232,7 +232,7 @@ class TestButtonDeciders:
 
     @pytest.mark.asyncio
     async def test_teams(self, monkeypatch):
-        from kiro_crew.teams import approvals as teams_approvals
+        from aj_crew.teams import approvals as teams_approvals
 
         monkeypatch.setattr(teams_approvals, "APPROVAL_TIMEOUT_SECS", 0.01)
         decider = teams_approvals.TeamsApprovalDecider(session_key="teams:1")
@@ -250,7 +250,7 @@ class TestButtonDeciders:
         """An abandoned Teams card means the prompt never reached the user;
         the cause must be undeliverable, not timeout, and a subsequent human
         click records no cause."""
-        from kiro_crew.teams import approvals as teams_approvals
+        from aj_crew.teams import approvals as teams_approvals
 
         decider = teams_approvals.TeamsApprovalDecider(session_key="teams:1")
         decider.abandon("r-aband")
@@ -269,7 +269,7 @@ class TestButtonDeciders:
         """A prompt the channel refused is denied with the undeliverable cause,
         whether the refusal lands before or during the wait, and a press on a
         later prompt that reuses the key records no cause."""
-        from kiro_crew.discord import renderer as discord_renderer
+        from aj_crew.discord import renderer as discord_renderer
 
         cls = discord_renderer.DiscordApprovalDecider
         decider = cls(session_key="discord:1")
@@ -302,7 +302,7 @@ class TestButtonDeciders:
 
     @pytest.mark.asyncio
     async def test_telegram_undelivered_prompt_sets_undeliverable_cause(self):
-        from kiro_crew.telegram import renderer as telegram_renderer
+        from aj_crew.telegram import renderer as telegram_renderer
 
         cls = telegram_renderer.TelegramApprovalDecider
         decider = cls(session_key="telegram:1")

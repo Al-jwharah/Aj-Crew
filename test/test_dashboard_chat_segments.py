@@ -18,14 +18,14 @@ class TestFlushSegment:
 
         Validates: Requirements 1.1, 1.2, 4.3, 6.3
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("s1")
         slot.append("chunk", "Hello ")
         slot.append("chunk", "world")
 
-        from kiro_crew.dashboard.chat import _flush_segment
+        from aj_crew.dashboard.chat import _flush_segment
 
         _flush_segment(state, slot, "Hello world")
 
@@ -46,7 +46,7 @@ class TestFlushSegment:
         it nothing registers emitted widgets, and the in-session Artifacts tab
         can never list them.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -58,10 +58,10 @@ class TestFlushSegment:
             return []
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.register_widgets_off_loop", _fake_register
+            "aj_crew.dashboard.chat_runner.register_widgets_off_loop", _fake_register
         )
 
-        from kiro_crew.dashboard.chat import _flush_segment
+        from aj_crew.dashboard.chat import _flush_segment
 
         async def _run():
             _flush_segment(state, slot, '<mcwidget title="W">body</mcwidget>')
@@ -85,7 +85,7 @@ class TestFlushSegment:
 
     def test_flush_segment_skips_registration_without_a_widget(self, tmp_path, monkeypatch):
         """The common case (no widget) must not touch the artifact store at all."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -98,10 +98,10 @@ class TestFlushSegment:
             return []
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.register_widgets_off_loop", _fake_register
+            "aj_crew.dashboard.chat_runner.register_widgets_off_loop", _fake_register
         )
 
-        from kiro_crew.dashboard.chat import _flush_segment
+        from aj_crew.dashboard.chat import _flush_segment
 
         async def _run():
             _flush_segment(state, slot, "just prose, no widget here")
@@ -117,7 +117,7 @@ class TestFlushSegment:
         text would persist to disk (and re-surface on the artifact page) exactly
         what the segment redaction just removed.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -129,10 +129,10 @@ class TestFlushSegment:
             return []
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.register_widgets_off_loop", _fake_register
+            "aj_crew.dashboard.chat_runner.register_widgets_off_loop", _fake_register
         )
 
-        from kiro_crew.dashboard.chat import _flush_segment
+        from aj_crew.dashboard.chat import _flush_segment
 
         secret = "AKIAIOSFODNN7EXAMPLE"
 
@@ -156,7 +156,7 @@ class TestFlushSegment:
         The HTTP gate (`_is_restricted_session`) denies their artifact writes, so the
         chat path must not be a back door around it.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -171,10 +171,10 @@ class TestFlushSegment:
             return []
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner.register_widgets_off_loop", _fake_register
+            "aj_crew.dashboard.chat_runner.register_widgets_off_loop", _fake_register
         )
 
-        from kiro_crew.dashboard.chat import _flush_segment
+        from aj_crew.dashboard.chat import _flush_segment
 
         async def _run():
             _flush_segment(state, slot, '<mcwidget title="W">secret body</mcwidget>')
@@ -206,7 +206,7 @@ class TestRunChatSegmentFlush:
     @staticmethod
     def _make_state_for_run_chat(tmp_path, monkeypatch):
         """Create a DashboardState wired for _run_chat tests."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.push_slots_update = MagicMock()
@@ -222,7 +222,7 @@ class TestRunChatSegmentFlush:
         any chat_chunk broadcast (pentest issue 3), while the reassembled stream
         stays lossless and shows the redaction.
         """
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         # AKIAIOSFODNN7EXAMPLE split exactly as in the pentest reproduction.
         events = [
@@ -236,7 +236,7 @@ class TestRunChatSegmentFlush:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "echo the key")
 
@@ -261,7 +261,7 @@ class TestRunChatSegmentFlush:
     ):
         """A credential split across thinking chunks must not appear raw on any
         chat_thinking broadcast (issue 3 parity for the thinking stream)."""
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_THINKING_CHUNK,
@@ -280,7 +280,7 @@ class TestRunChatSegmentFlush:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "think about it")
 
@@ -302,11 +302,11 @@ class TestRunChatSegmentFlush:
     ):
         """A reply that repeats an MCP app tool's result is saved without its render
         marker; the marker split across two deltas is cut too."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         sid = "0123456789abcdef0123456789abcdef"
         events = [
-            LLMEvent(kind=EVENT_TEXT_CHUNK, text="Result:\n[kirocrew-mcp-app:0123456789"),
+            LLMEvent(kind=EVENT_TEXT_CHUNK, text="Result:\n[ajcrew-mcp-app:0123456789"),
             LLMEvent(kind=EVENT_TEXT_CHUNK, text=f"{sid[10:]}] 3 rows found\nDONE"),
             LLMEvent(kind=EVENT_COMPLETE),
         ]
@@ -315,7 +315,7 @@ class TestRunChatSegmentFlush:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "render the app, then repeat the tool result")
 
@@ -330,7 +330,7 @@ class TestRunChatSegmentFlush:
 
         Validates: Requirements 1.1, 1.2, 1.3, 4.3
         """
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -350,7 +350,7 @@ class TestRunChatSegmentFlush:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -373,10 +373,10 @@ class TestRunChatSegmentFlush:
         The directive was applied from its tool row; the saved reply row is what
         the finished bubble and every reload show, so the marker must not be in it.
         """
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         events = [
-            LLMEvent(kind=EVENT_TEXT_CHUNK, text="Tagged.\n[[KIROCREW_SESSION_DIRECTIVE]]"),
+            LLMEvent(kind=EVENT_TEXT_CHUNK, text="Tagged.\n[[AJCREW_SESSION_DIRECTIVE]]"),
             LLMEvent(kind=EVENT_TEXT_CHUNK, text='{"kind":"chat_tag","args":{"add":["x"]}}'),
             LLMEvent(kind=EVENT_TEXT_CHUNK, text="\nDONE"),
             LLMEvent(kind=EVENT_COMPLETE),
@@ -386,7 +386,7 @@ class TestRunChatSegmentFlush:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "tag this chat, then repeat the tool result")
 
@@ -397,8 +397,8 @@ class TestRunChatSegmentFlush:
     @pytest.mark.asyncio
     async def test_tool_turn_progress_claim_surfaces_idle_notice(self, tmp_path, monkeypatch):
         """A mixed turn must not replay tools, but it must not claim it keeps running."""
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -422,7 +422,7 @@ class TestRunChatSegmentFlush:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "run the full gate")
 
@@ -441,7 +441,7 @@ class TestRunChatSegmentFlush:
         Pins the `_run_chat` call to `state.refresh_slot_source_status(slot.key)`; the
         state-level tests call it directly and would miss its removal here.
         """
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         events = [LLMEvent(kind=EVENT_TEXT_CHUNK, text="ok"), LLMEvent(kind=EVENT_COMPLETE)]
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -450,7 +450,7 @@ class TestRunChatSegmentFlush:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -463,7 +463,7 @@ class TestRunChatSegmentFlush:
 
         Validates: Requirements 1.4
         """
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_PERMISSION_REQUEST,
             EVENT_TEXT_CHUNK,
@@ -490,7 +490,7 @@ class TestRunChatSegmentFlush:
         client.approve_tool = AsyncMock()
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "run ls")
 
@@ -507,7 +507,7 @@ class TestRunChatSegmentFlush:
 
         Validates: Requirements 8.1
         """
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             LLMEvent,
@@ -524,7 +524,7 @@ class TestRunChatSegmentFlush:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -550,7 +550,7 @@ class TestRunChatSegmentFlush:
 
         Validates: Requirements 7.1
         """
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -572,7 +572,7 @@ class TestRunChatSegmentFlush:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -609,11 +609,11 @@ class TestRunChatSegmentFlush:
         it, whether or not the client saw the turn boundary -- a snapshot or a
         `_done` lost to a reconnect cannot make the next turn's chunks read as
         replays of the finished one."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("s1")
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         def seqs() -> list[int]:
             return [
@@ -640,7 +640,7 @@ class TestRunChatSegmentFlush:
         assert second_turn[0] > first_turn[-1], (first_turn, second_turn)
         # Every frame names the process generation that numbered it, so a client
         # can drop a floor from before a gateway restart instead of comparing.
-        from kiro_crew.dashboard.chat_utils import chunk_generation
+        from aj_crew.dashboard.chat_utils import chunk_generation
 
         gens = {
             c.args[1].get("gen")
@@ -658,7 +658,7 @@ class TestRunChatSegmentFlush:
         replay guard from; a row without the stamp would leave the snapshot
         unable to say how far the stream it holds has advanced.
         """
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -678,7 +678,7 @@ class TestRunChatSegmentFlush:
         # rebuilt at the segment flush (chunk rows are dropped from it), so
         # neither an instance patch nor reading `slot.messages` afterwards sees
         # every chunk row the runner appended.
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         appended: list[dict] = []
         real_append = _ChatSlot.append
@@ -694,7 +694,7 @@ class TestRunChatSegmentFlush:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -727,7 +727,7 @@ class TestRunChatNativeSubagentAttribution:
 
     @staticmethod
     def _make_state_for_run_chat(tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.push_slots_update = MagicMock()
@@ -739,7 +739,7 @@ class TestRunChatNativeSubagentAttribution:
 
     @pytest.mark.asyncio
     async def test_native_tool_calls_attribute_dedupe_and_accumulate(self, tmp_path, monkeypatch):
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_SUBAGENT_ACTIVITY,
             EVENT_SUBAGENT_LIST,
@@ -803,7 +803,7 @@ class TestRunChatNativeSubagentAttribution:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "explore the codebase with 1 subagent")
 

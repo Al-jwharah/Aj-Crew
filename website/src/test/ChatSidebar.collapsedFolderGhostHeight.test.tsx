@@ -104,7 +104,7 @@ const SLOTS = [
 ]
 
 async function renderSidebar(collapsed: boolean) {
-  fixtures.chatFolders = [{ id: FOLDER, name: 'kirocrew-github-autofix', order: 0, collapsed }]
+  fixtures.chatFolders = [{ id: FOLDER, name: 'ajcrew-github-autofix', order: 0, collapsed }]
   // Cast through the factory's own parameter type rather than `any`: the
   // preloaded slices are partial on purpose (this suite only needs the sidebar's
   // inputs), and naming the type keeps the cast checked against the real shape.
@@ -135,7 +135,7 @@ async function renderSidebar(collapsed: boolean) {
       </Provider>
     </QueryClientProvider>,
   )
-  await utils.findByText('kirocrew-github-autofix')
+  await utils.findByText('ajcrew-github-autofix')
   return utils
 }
 

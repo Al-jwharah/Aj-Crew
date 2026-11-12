@@ -23,16 +23,16 @@ from aws_control_app_helpers import (  # noqa: F401 -- fixtures are used by name
     _request,
 )
 
-from kiro_crew import aws_consent
-from kiro_crew.apps.builtins.aws_control.backend import accounts as accounts_mod
-from kiro_crew.apps.builtins.aws_control.backend import routes as routes_mod
+from aj_crew import aws_consent
+from aj_crew.apps.builtins.aws_control.backend import accounts as accounts_mod
+from aj_crew.apps.builtins.aws_control.backend import routes as routes_mod
 
 
 class TestStateShapeGuards:
     """Round-9 pins: corrupted persisted JSON reads as empty, never a 500."""
 
     def test_costs_cache_decoding_to_a_list_reads_as_no_cache(self, tmp_path, monkeypatch):
-        from kiro_crew.apps.builtins.aws_control.backend import costs
+        from aj_crew.apps.builtins.aws_control.backend import costs
 
         monkeypatch.setattr(costs, "_cache_path", lambda account: tmp_path / "c.json")
         (tmp_path / "c.json").write_text('["not", "a", "dict"]', encoding="utf-8")
@@ -41,7 +41,7 @@ class TestStateShapeGuards:
     def test_backup_state_with_scalar_accounts_reads_as_empty(self, tmp_path, monkeypatch):
         import json as _json
 
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         monkeypatch.setattr(backup, "_state_path", lambda: tmp_path / "backup.json")
         (tmp_path / "backup.json").write_text(
@@ -167,7 +167,7 @@ class TestRound16Hardening:
         # would make the next retry upload a duplicate).
         import json as _json
 
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         monkeypatch.setattr(backup, "_state_path", lambda: tmp_path / "backup.json")
         (tmp_path / "backup.json").write_text(
@@ -190,7 +190,7 @@ class TestRound16Hardening:
                 routes_mod.aws_consent, "refuse_and_log", AsyncMock(return_value=True)
             ),
             mock.patch.object(
-                routes_mod.storage_mod, "find_drive", return_value="kirocrew-drive-abc"
+                routes_mod.storage_mod, "find_drive", return_value="ajcrew-drive-abc"
             ),
             mock.patch.object(routes_mod.storage_mod, "head_object_meta", return_value={}),
             mock.patch.object(routes_mod.storage_mod, "presign", return_value="https://signed"),
@@ -215,7 +215,7 @@ class TestRound17Hardening:
     """Round-17 pins: no link following in backup/restore, whole-field egress."""
 
     def test_archive_does_not_walk_a_symlinked_directory(self, tmp_path):
-        from kiro_crew.apps.builtins.aws_control.backend import backup as _bk
+        from aj_crew.apps.builtins.aws_control.backend import backup as _bk
 
         if not _bk._CAN_PIN_TRAVERSAL:
             pytest.skip(
@@ -224,7 +224,7 @@ class TestRound17Hardening:
             )
         import tarfile as _tarfile
 
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         # A secret outside the tree, reachable only through a planted link.
         outside = tmp_path / "outside"
@@ -248,7 +248,7 @@ class TestRound17Hardening:
         assert not any("credentials" in n for n in names)
 
     def test_restore_refuses_a_symlinked_destination(self, tmp_path, monkeypatch):
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         staging = tmp_path / "restore"
         staging.mkdir(parents=True)
@@ -279,7 +279,7 @@ class TestRound17Hardening:
     def test_restore_writes_through_a_temp_file_then_replaces(self, tmp_path, monkeypatch):
         from pathlib import Path
 
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         monkeypatch.setattr(backup, "app_data_dir", lambda name: tmp_path)
         seen: list[str] = []
@@ -320,7 +320,7 @@ class TestRound17Hardening:
         with an OSError instead of staging anything. Only a co-tenant or the console
         can place such a name: this app's own writer produces short fixed ones.
         """
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         longest = "x" * 255
         name = backup._staging_name(f"snapshots/{'a' * 32}/{longest}")
@@ -333,13 +333,13 @@ class TestRound17Hardening:
     def test_same_named_archives_from_two_installs_stage_side_by_side(self, tmp_path, monkeypatch):
         """Namespacing creates this collision, so the staging name has to resolve it.
 
-        Two installs each write ``kirocrew-snapshot-X.tar.gz`` under their own
+        Two installs each write ``ajcrew-snapshot-X.tar.gz`` under their own
         prefix. Restoring both must leave two files: a basename-only destination
         would have the second silently replace the first.
         """
         from pathlib import Path
 
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         monkeypatch.setattr(backup, "app_data_dir", lambda name: tmp_path)
         keys = [f"snapshots/{'a' * 32}/same.tar.gz", f"snapshots/{'b' * 32}/same.tar.gz"]
@@ -388,8 +388,8 @@ class TestRound18Hardening:
         # DIRECTORY is fenced, not that one name, because an atomic write goes
         # through a temporary in the same directory before the rename -- fencing
         # only the final name leaves a writable path to the same bytes.
-        from kiro_crew import security
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew import security
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         assert backup.STATE_DIR_LEAF in security._CREW_SECRET_LEAVES
         # The leaf is always '/'-joined (a catalog key, not a local path), so
@@ -402,7 +402,7 @@ class TestRound18Hardening:
         )
 
     def test_restore_refuses_a_symlinked_staging_directory(self, tmp_path, monkeypatch):
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         # An agent plants `restore` as a link to somewhere outside app storage.
         elsewhere = tmp_path / "elsewhere"
@@ -435,7 +435,7 @@ class TestRound19Hardening:
     presign refuses a key that is not in the drive."""
 
     def test_archive_streams_from_a_descriptor_not_a_reopened_path(self, tmp_path):
-        from kiro_crew.apps.builtins.aws_control.backend import backup as _bk
+        from aj_crew.apps.builtins.aws_control.backend import backup as _bk
 
         if not _bk._CAN_PIN_TRAVERSAL:
             pytest.skip(
@@ -447,7 +447,7 @@ class TestRound19Hardening:
         # call it: everything after the single O_NOFOLLOW open comes off the fd.
         import tarfile as _tarfile
 
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         root = tmp_path / "sessions"
         root.mkdir()
@@ -471,7 +471,7 @@ class TestRound19Hardening:
             assert member.read() == b"line\n"
 
     def test_non_regular_entries_are_skipped_by_fstat(self, tmp_path):
-        from kiro_crew.apps.builtins.aws_control.backend import backup as _bk
+        from aj_crew.apps.builtins.aws_control.backend import backup as _bk
 
         if not _bk._CAN_PIN_TRAVERSAL:
             pytest.skip(
@@ -490,7 +490,7 @@ class TestRound19Hardening:
         if not hasattr(os, "mkfifo"):
             pytest.skip("no FIFOs on this platform")
 
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         root = tmp_path / "sessions"
         root.mkdir()
@@ -516,7 +516,7 @@ class TestRound19Hardening:
                 routes_mod.aws_consent, "refuse_and_log", AsyncMock(return_value=True)
             ),
             mock.patch.object(
-                routes_mod.storage_mod, "find_drive", return_value="kirocrew-drive-abc"
+                routes_mod.storage_mod, "find_drive", return_value="ajcrew-drive-abc"
             ),
             mock.patch.object(routes_mod.storage_mod, "head_object_meta", return_value=None),
             mock.patch.object(routes_mod.storage_mod, "presign") as presign,
@@ -546,9 +546,9 @@ class TestRound21Partition:
         # `arn:aws:s3:::` prefix dropped the drive we created ourselves on
         # GovCloud and China, so the console reported no drive and a second
         # confirm would mint a second billable bucket.
-        from kiro_crew.apps.builtins.aws_control.backend import storage
+        from aj_crew.apps.builtins.aws_control.backend import storage
 
-        name = "kirocrew-drive-abc123def456"
+        name = "ajcrew-drive-abc123def456"
         payload = json.dumps(
             {"ResourceTagMappingList": [{"ResourceARN": f"arn:{partition}:s3:::{name}"}]}
         )
@@ -556,14 +556,12 @@ class TestRound21Partition:
             assert storage.find_drive("p", "us-west-2", account="111122223333") == name
 
     def test_a_non_s3_arn_is_still_rejected(self):
-        from kiro_crew.apps.builtins.aws_control.backend import storage
+        from aj_crew.apps.builtins.aws_control.backend import storage
 
         payload = json.dumps(
             {
                 "ResourceTagMappingList": [
-                    {
-                        "ResourceARN": "arn:aws:dynamodb:us-west-2:1:table/kirocrew-drive-abc123def456"
-                    }
+                    {"ResourceARN": "arn:aws:dynamodb:us-west-2:1:table/ajcrew-drive-abc123def456"}
                 ]
             }
         )
@@ -571,7 +569,7 @@ class TestRound21Partition:
             assert storage.find_drive("p", "us-west-2", account="111122223333") is None
 
     def test_drive_policy_arns_are_partition_neutral(self):
-        from kiro_crew.deploy import iam
+        from aj_crew.deploy import iam
 
         doc = iam.policy_document(tier="drive")
         arns = [
@@ -585,7 +583,7 @@ class TestRound21Partition:
         # GovCloud or China, where the owner's own drive lives.
         assert not [a for a in arns if a.startswith("arn:aws:")]
         # The bucket-name scoping itself must survive the change.
-        assert all("kirocrew-drive-" in a for a in arns)
+        assert all("ajcrew-drive-" in a for a in arns)
 
 
 class TestRound22Hardening:
@@ -593,20 +591,20 @@ class TestRound22Hardening:
     build before it can upload."""
 
     def test_teardown_refuses_an_upload_that_has_not_started(self):
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         # Everything else authorizes; only the teardown signal is set. A worker
         # thread cannot be killed, so this gate is what makes disabling the app
         # stop a backup that is still building its archive.
         with (
             mock.patch(
-                "kiro_crew.deploy.engine._checked",
+                "aj_crew.deploy.engine._checked",
                 return_value=json.dumps({"Account": ACCOUNT}),
             ),
-            mock.patch("kiro_crew.apps.manager.is_app_enabled", return_value=True),
-            mock.patch("kiro_crew.aws_consent.is_granted", return_value=(True, "")),
+            mock.patch("aj_crew.apps.manager.is_app_enabled", return_value=True),
+            mock.patch("aj_crew.aws_consent.is_granted", return_value=(True, "")),
             mock.patch(
-                "kiro_crew.aws_consent.read_grant",
+                "aj_crew.aws_consent.read_grant",
                 return_value=SimpleNamespace(account=ACCOUNT),
             ),
         ):
@@ -632,7 +630,7 @@ class TestRound22Hardening:
                 backup.clear_stop()
 
     def test_reenabling_clears_the_teardown_signal(self):
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         backup.signal_stop()
         assert backup._STOP.is_set()
@@ -640,7 +638,7 @@ class TestRound22Hardening:
         assert not backup._STOP.is_set()
 
     def test_nightly_backup_claims_the_run_through_the_sdk(self):
-        from kiro_crew.apps.builtins.aws_control import hooks
+        from aj_crew.apps.builtins.aws_control import hooks
 
         sdk = mock.Mock(start_async=AsyncMock(return_value="run-1"))
         with (
@@ -675,8 +673,8 @@ class TestRound22Hardening:
         }
 
     def test_a_refused_claim_does_not_crash_the_loop(self, caplog):
-        from kiro_crew.apps.builtins.aws_control import hooks
-        from kiro_crew.apps.job_sdk import JobError
+        from aj_crew.apps.builtins.aws_control import hooks
+        from aj_crew.apps.job_sdk import JobError
 
         caplog.set_level(logging.INFO, logger=hooks.logger.name)
         sdk = mock.Mock(start_async=AsyncMock(side_effect=JobError("shutting down")))
@@ -708,7 +706,7 @@ class TestRound23Junctions:
     """Round-23 pin: link checks are junction-aware, not islink-only."""
 
     def test_root_link_is_refused_before_any_traversal(self, tmp_path):
-        from kiro_crew.apps.builtins.aws_control.backend import backup as _bk
+        from aj_crew.apps.builtins.aws_control.backend import backup as _bk
 
         if not _bk._CAN_PIN_TRAVERSAL:
             pytest.skip(
@@ -717,7 +715,7 @@ class TestRound23Junctions:
             )
         import tarfile as _tarfile
 
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         root = tmp_path / "sessions"
         root.mkdir()
@@ -728,7 +726,7 @@ class TestRound23Junctions:
                 assert backup._add_tree(tar, root, "crew") == 0
 
     def test_restore_uses_the_junction_aware_predicate(self, tmp_path, monkeypatch):
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         base = tmp_path / "appdata"
         (base / "restore").mkdir(parents=True)
@@ -764,7 +762,7 @@ class TestRound24Hardening:
         import os
         import tarfile as _tarfile
 
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         if not backup._CAN_PIN_TRAVERSAL:
             pytest.skip("platform has no openat; the name-based fallback is covered above")
@@ -801,7 +799,7 @@ class TestRound24Hardening:
         ]
 
     def test_pinned_traversal_refuses_a_symlinked_subdirectory(self, tmp_path):
-        from kiro_crew.apps.builtins.aws_control.backend import backup as _bk
+        from aj_crew.apps.builtins.aws_control.backend import backup as _bk
 
         if not _bk._CAN_PIN_TRAVERSAL:
             pytest.skip(
@@ -810,7 +808,7 @@ class TestRound24Hardening:
             )
         import tarfile as _tarfile
 
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -831,7 +829,7 @@ class TestRound24Hardening:
     def test_depth_ceiling_prunes_instead_of_exhausting_descriptors(self, tmp_path):
         import tarfile as _tarfile
 
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         # The ceiling is a property of the PINNED descent specifically: it holds
         # one descriptor per level, so a pathological tree could exhaust the
@@ -863,7 +861,7 @@ class TestRound24Hardening:
         # Trimming first can cut a credential in half, and a half token matches
         # no redaction pattern - so the fragment survives every later pass. The
         # secret is placed so that a naive `err[:200]` would split it.
-        from kiro_crew.deploy import engine
+        from aj_crew.deploy import engine
 
         secret = "AKIAIOSFODNN7EXAMPLE"
         padded = "x" * 190 + secret + " trailing context"
@@ -891,12 +889,12 @@ class TestRound26Hardening:
         )
         return (
             mock.patch(
-                "kiro_crew.deploy.engine._checked",
+                "aj_crew.deploy.engine._checked",
                 return_value=json.dumps({"Account": ACCOUNT}),
             ),
-            mock.patch("kiro_crew.apps.manager.is_app_enabled", return_value=True),
-            mock.patch("kiro_crew.aws_consent.is_granted", return_value=(True, "")),
-            mock.patch("kiro_crew.aws_consent.read_grant", return_value=grant),
+            mock.patch("aj_crew.apps.manager.is_app_enabled", return_value=True),
+            mock.patch("aj_crew.aws_consent.is_granted", return_value=(True, "")),
+            mock.patch("aj_crew.aws_consent.read_grant", return_value=grant),
         )
 
     def test_grant_for_another_account_refuses_the_upload(self):
@@ -905,7 +903,7 @@ class TestRound26Hardening:
         # points back at A. `is_granted` matches profile+region and says yes, and
         # the live probe says A -- but the consent on file belongs to B, so the
         # owner never approved S3 use for A. Refuse.
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         p1, p2, p3, p4 = self._authorizing_env("999988887777")
         with p1, p2, p3, p4:
@@ -920,7 +918,7 @@ class TestRound26Hardening:
                 )
 
     def test_grant_naming_no_account_refuses_the_upload(self):
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         p1, p2, p3, p4 = self._authorizing_env("")
         with p1, p2, p3, p4:
@@ -935,7 +933,7 @@ class TestRound26Hardening:
                 )
 
     def test_matching_grant_account_allows_the_upload(self):
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         p1, p2, p3, p4 = self._authorizing_env(ACCOUNT)
         with p1, p2, p3, p4:
@@ -949,16 +947,16 @@ class TestRound26Hardening:
             )  # no raise
 
     def test_grant_withdrawn_mid_build_refuses_the_upload(self):
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         with (
             mock.patch(
-                "kiro_crew.deploy.engine._checked",
+                "aj_crew.deploy.engine._checked",
                 return_value=json.dumps({"Account": ACCOUNT}),
             ),
-            mock.patch("kiro_crew.apps.manager.is_app_enabled", return_value=True),
-            mock.patch("kiro_crew.aws_consent.is_granted", return_value=(True, "")),
-            mock.patch("kiro_crew.aws_consent.read_grant", return_value=None),
+            mock.patch("aj_crew.apps.manager.is_app_enabled", return_value=True),
+            mock.patch("aj_crew.aws_consent.is_granted", return_value=(True, "")),
+            mock.patch("aj_crew.aws_consent.read_grant", return_value=None),
         ):
             backup.clear_stop()
             with pytest.raises(RuntimeError, match="withdrawn"):
@@ -980,7 +978,7 @@ class TestRound29Hardening:
         # unless the query says otherwise, and this app would cache that as one
         # account's bill. The filter is what makes the figure mean what the page
         # claims. Asserting on the argv is the only way to pin it.
-        from kiro_crew.apps.builtins.aws_control.backend import costs
+        from aj_crew.apps.builtins.aws_control.backend import costs
 
         monkeypatch.setattr(costs, "_cache_path", lambda account: tmp_path / "c.json")
         payload = json.dumps({"ResultsByTime": []})
@@ -1054,7 +1052,7 @@ class TestRound29Hardening:
         # ~/.aws/config is operator-writable text and this value flows into an
         # argv, so a non-region string must read as "declares none" rather than
         # being trusted.
-        from kiro_crew.apps.builtins.aws_control.backend import accounts
+        from aj_crew.apps.builtins.aws_control.backend import accounts
 
         for bad in ("not a region", "us-west-2; rm -rf ~", ""):
             with mock.patch.object(accounts.engine, "run_aws", return_value=(0, bad, "")):
@@ -1073,7 +1071,7 @@ class TestRound36Hardening:
         # so it escapes the try/except entirely and would raise TypeError on the
         # aware subtraction that sits OUTSIDE the guard -- in the nightly loop,
         # every wake, so a backup the owner enabled silently never ran.
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         with (
             mock.patch.object(backup, "nightly_enabled", return_value=True),
@@ -1091,7 +1089,7 @@ class TestRound36Hardening:
         # UTC, the same treatment costs.is_fresh and shares._prune already apply.
         import datetime as _dt
 
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         # A pinned instant, so the stamp sits one hour before it on every host.
         now = _dt.datetime(2026, 1, 1, 12, 0, tzinfo=_dt.timezone.utc)
@@ -1105,7 +1103,7 @@ class TestRound36Hardening:
             assert backup.due_for_nightly(ACCOUNT, now=now) is False
 
     def test_a_non_string_last_run_reads_as_due(self):
-        from kiro_crew.apps.builtins.aws_control.backend import backup
+        from aj_crew.apps.builtins.aws_control.backend import backup
 
         for bad in (5, ["2026-01-01"], None, {}):
             with (
@@ -1120,7 +1118,7 @@ class TestRound36Hardening:
         # _PROFILE_RE is a shell-safety gate, not a secret gate: it admits
         # [A-Za-z0-9._@=+-] up to 128 chars, so an access key id passes it and
         # would render verbatim into the guidance card and the clipboard.
-        from kiro_crew.apps.builtins.aws_control.backend import accounts
+        from aj_crew.apps.builtins.aws_control.backend import accounts
 
         key = "AKIAIOSFODNN7EXAMPLE"
         plan = accounts.reconnect_plan(accounts.KIND_SSO, key)
@@ -1129,7 +1127,7 @@ class TestRound36Hardening:
         assert plan["command"].startswith("aws sso login --profile ")
 
     def test_an_ordinary_profile_name_survives_the_reconnect_command(self):
-        from kiro_crew.apps.builtins.aws_control.backend import accounts
+        from aj_crew.apps.builtins.aws_control.backend import accounts
 
         plan = accounts.reconnect_plan(accounts.KIND_SSO, "team-prod")
         assert plan["command"] == "aws sso login --profile team-prod"

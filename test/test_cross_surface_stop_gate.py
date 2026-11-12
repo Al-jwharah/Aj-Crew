@@ -2,7 +2,7 @@
 
 A channel-born dashboard slot runs its turns on the channel's session
 (``effective_session_key`` returns ``linked_session_key``). A stop issued from
-that channel -- Slack's ``/kirocrew stop`` -- reaches ``SessionManager.stop_turn``
+that channel -- Slack's ``/ajcrew stop`` -- reaches ``SessionManager.stop_turn``
 and the provider cancel, but never the slot's own ``_stop_state``. The two
 end-of-turn continuation gates read the slot's Stop signal, so they must ALSO
 read a session-scoped one that ``stop_turn`` records, or a human's stop is
@@ -17,20 +17,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from chat_test_helpers import _make_ready_kiro_prerequisite
 
-from kiro_crew.agent_sdk import TURN_STOP_REASON_CANCELLED
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.dashboard.chat import _run_chat
-from kiro_crew.dashboard.recovery_replays import ReplayFamily
-from kiro_crew.dashboard.state import REFUSAL_RECOVERY_PREFIX, DashboardState, _ChatSlot
-from kiro_crew.history import ConversationLog
-from kiro_crew.hooks import ToolHookResult
-from kiro_crew.providers.base import (
+from aj_crew.agent_sdk import TURN_STOP_REASON_CANCELLED
+from aj_crew.config import AjCrewConfig
+from aj_crew.dashboard.chat import _run_chat
+from aj_crew.dashboard.recovery_replays import ReplayFamily
+from aj_crew.dashboard.state import REFUSAL_RECOVERY_PREFIX, DashboardState, _ChatSlot
+from aj_crew.history import ConversationLog
+from aj_crew.hooks import ToolHookResult
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     LLMEvent,
 )
-from kiro_crew.session import SessionManager
-from kiro_crew.testing.wait import await_until
+from aj_crew.session import SessionManager
+from aj_crew.testing.wait import await_until
 
 LINKED_KEY = "slack:1700000000.000100"
 
@@ -40,7 +40,7 @@ LINKED_KEY = "slack:1700000000.000100"
 
 @pytest.fixture
 def cfg(tmp_path):
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.soft_stop_budget_secs = 0.01
     return cfg
 
@@ -497,7 +497,7 @@ async def _run_denied_turn(state, client, slot, *, channel_stop: bool, stop_coun
         return _events([LLMEvent(kind=EVENT_COMPLETE, stop_reason="end_turn")])
 
     client.stream = MagicMock(side_effect=_stream)
-    with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+    with patch("aj_crew.dashboard.chat.sel") as mock_sel:
         mock_sel.return_value = MagicMock()
         await _run_chat(state, slot, "hello")
         if slot.task:
@@ -521,12 +521,12 @@ class TestChannelStopPurgesAQueuedContinuationAtDrain:
 
     @staticmethod
     def _queued_continuation(tmp_path, stop_counts):
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             _PROMISE_ONLY_CONTINUE_MSG,
             SYNTHETIC_RECOVERY_KIND,
             RecoveryPayload,
         )
-        from kiro_crew.dashboard.session_control import containment_meta
+        from aj_crew.dashboard.session_control import containment_meta
 
         state, _client = _make_state(
             tmp_path, deny_reason="Blocked by security policy: git push", stop_counts=stop_counts
@@ -554,13 +554,13 @@ class TestChannelStopPurgesAQueuedContinuationAtDrain:
 
     @pytest.mark.asyncio
     async def test_a_stop_on_the_linked_session_while_queued_purges_it(self, tmp_path):
-        from kiro_crew.dashboard.chat_runner import _start_next_queued_turn
+        from aj_crew.dashboard.chat_runner import _start_next_queued_turn
 
         stop_counts = {LINKED_KEY: 0}
         state, slot = self._queued_continuation(tmp_path, stop_counts)
-        stop_counts[LINKED_KEY] = 1  # /kirocrew stop landed while it waited
+        stop_counts[LINKED_KEY] = 1  # /ajcrew stop landed while it waited
 
-        with patch("kiro_crew.dashboard.chat_runner._run_chat", new_callable=AsyncMock):
+        with patch("aj_crew.dashboard.chat_runner._run_chat", new_callable=AsyncMock):
             started = await _start_next_queued_turn(state, slot)
 
         assert started is False
@@ -573,12 +573,12 @@ class TestChannelStopPurgesAQueuedContinuationAtDrain:
 
     @pytest.mark.asyncio
     async def test_no_stop_lets_the_queued_continuation_dispatch(self, tmp_path):
-        from kiro_crew.dashboard.chat_runner import _start_next_queued_turn
+        from aj_crew.dashboard.chat_runner import _start_next_queued_turn
 
         stop_counts = {LINKED_KEY: 0}
         state, slot = self._queued_continuation(tmp_path, stop_counts)
 
-        with patch("kiro_crew.dashboard.chat_runner._run_chat", new_callable=AsyncMock) as run_chat:
+        with patch("aj_crew.dashboard.chat_runner._run_chat", new_callable=AsyncMock) as run_chat:
             started = await _start_next_queued_turn(state, slot)
             if slot.task:
                 await slot.task

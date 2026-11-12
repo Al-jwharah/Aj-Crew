@@ -25,25 +25,25 @@ from aiohttp.test_utils import TestClient, TestServer
 from change_cards_helpers import AGENT, Clock, _card_headers
 from named_cases_helpers import named_cases
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import crewmate_bundle, crewmate_carried, crewmate_stage
-from kiro_crew.crewmate_bundle import crewmate_import_params, read_crewmate_file
-from kiro_crew.dashboard import change_cards as cards
-from kiro_crew.dashboard.agent_name_segment import agent_route_name
-from kiro_crew.dashboard.change_cards import (
+from aj_crew import change_card_catalog as catalog
+from aj_crew import crewmate_bundle, crewmate_carried, crewmate_stage
+from aj_crew.crewmate_bundle import crewmate_import_params, read_crewmate_file
+from aj_crew.dashboard import change_cards as cards
+from aj_crew.dashboard.agent_name_segment import agent_route_name
+from aj_crew.dashboard.change_cards import (
     CARD_TTL_SECONDS,
     MAX_LIVE_CARDS_PER_SLOT,
     CardError,
     CardStore,
 )
-from kiro_crew.dashboard.handlers import change_cards as routes
-from kiro_crew.dashboard.handlers import crewmate_import_files as files_route
-from kiro_crew.dashboard.state_parts.slot_directory import _normalize_slot_key
+from aj_crew.dashboard.handlers import change_cards as routes
+from aj_crew.dashboard.handlers import crewmate_import_files as files_route
+from aj_crew.dashboard.state_parts.slot_directory import _normalize_slot_key
 
 world = change_cards_helpers.world
 
 MANIFEST = {
-    "format": "kirocrew.crewmate",
+    "format": "ajcrew.crewmate",
     "formatVersion": 1,
     "name": "Release Captain",
     "description": "Watches release branches.",
@@ -68,7 +68,7 @@ async def _no_sweep(store) -> None:
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _floor_monkeypatch.setattr(routes, "_run_stage_sweep", _no_sweep)
     _floor_monkeypatch.setattr(routes, "_STAGE_SWEEP", None)
 
@@ -344,7 +344,7 @@ def test_the_zip_inventory_is_vetted_before_zipfile_reads_it(monkeypatch):
         seen.append("zipfile")
         return real(*a, **k)
 
-    from kiro_crew import zip_vet
+    from aj_crew import zip_vet
 
     def vet(*a, **k):
         seen.append("vet")
@@ -487,7 +487,7 @@ def _import_app(world, store: CardStore, writes: _Writes, monkeypatch, tmp_path)
     )
     monkeypatch.setattr(files_route, "_set_avatar", set_avatar)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers._shared.require_owner_dashboard_request",
+        "aj_crew.dashboard.handlers._shared.require_owner_dashboard_request",
         lambda request, op: _owner_gate(request),
     )
 
@@ -1021,7 +1021,7 @@ def test_route_tables_register_the_import_routes():
 
 @pytest.mark.skipif(os.name == "nt", reason="symlinks need privileges on Windows")
 def test_skills_land_under_the_workspace_and_a_linked_skills_folder_is_refused(tmp_path):
-    from kiro_crew.config.loader import WorkspaceConfig
+    from aj_crew.config.loader import WorkspaceConfig
 
     ws = tmp_path / "member-ws"
     ws.mkdir()
@@ -1080,7 +1080,7 @@ def test_a_skills_folder_resolving_outside_the_workspace_is_refused_on_any_drive
     tmp_path, monkeypatch, outside
 ):
     """A skills folder on another drive is outside the workspace: a 409, never a raise."""
-    from kiro_crew.config.loader import WorkspaceConfig
+    from aj_crew.config.loader import WorkspaceConfig
 
     ws = tmp_path / "member-ws"
     ws.mkdir()
@@ -1099,7 +1099,7 @@ def test_a_skills_folder_resolving_outside_the_workspace_is_refused_on_any_drive
 )
 def test_a_script_folder_resolving_outside_crons_is_refused_on_any_drive(monkeypatch, outside):
     """The same for ``crons/imported/<slug>``, refused as ``scripts_dir_link``."""
-    from kiro_crew.config.paths import config_dir
+    from aj_crew.config.paths import config_dir
 
     crons = config_dir() / "crons"
     target = crons / files_route.IMPORTED_SCRIPTS_DIR / "mate"
@@ -1111,18 +1111,18 @@ def test_a_script_folder_resolving_outside_crons_is_refused_on_any_drive(monkeyp
 
 
 def test_the_picture_commits_through_the_editor_avatar_path(monkeypatch):
-    from kiro_crew.config import loader
-    from kiro_crew.dashboard.handlers.agents import _avatars_dir, _live_avatar_file
+    from aj_crew.config import loader
+    from aj_crew.dashboard.handlers.agents import _avatars_dir, _live_avatar_file
 
     agent = SimpleNamespace(avatar={}, memory_store="store-1")
     saved: list[tuple[str, dict]] = []
     monkeypatch.setattr(
-        loader.KiroCrewConfig,
+        loader.AjCrewConfig,
         "load",
         classmethod(lambda cls: SimpleNamespace(agents={"mate": agent})),
     )
     monkeypatch.setattr(
-        "kiro_crew.memory_stores.persist_member_config",
+        "aj_crew.memory_stores.persist_member_config",
         lambda cfg, key, **kw: saved.append((key, dict(cfg.agents[key].avatar))),
     )
     pin = asyncio.run(files_route._set_avatar("mate", "png", PNG))
@@ -1224,13 +1224,13 @@ def test_the_file_undo_finds_a_script_cron_by_a_drive_letter_path(monkeypatch):
             "cron_revisions": {"sj1": "rev-1"},
         },
     )
-    monkeypatch.setattr("kiro_crew.dashboard.change_cards.cron_job_revision", lambda job: job.rev)
+    monkeypatch.setattr("aj_crew.dashboard.change_cards.cron_job_revision", lambda job: job.rev)
     crons = _Crons()
     crons.jobs["sj1"] = SimpleNamespace(
         id="sj1", script=f"{windows_path}:main", enabled=False, rev="rev-1"
     )
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers._shared.require_owner_dashboard_request",
+        "aj_crew.dashboard.handlers._shared.require_owner_dashboard_request",
         lambda request, op: _no_denial(),
     )
 
@@ -1261,7 +1261,7 @@ async def _no_denial():
 def test_the_file_undo_refuses_when_a_paused_script_cron_was_edited(world, monkeypatch, tmp_path):
     store, writes = CardStore(tmp_path / "c.json"), _Writes()
     monkeypatch.setattr(
-        "kiro_crew.dashboard.change_cards.cron_job_revision",
+        "aj_crew.dashboard.change_cards.cron_job_revision",
         lambda job: f"{job.cron_expr}|{job.message}",
     )
 
@@ -1329,7 +1329,7 @@ def test_the_file_undo_refuses_a_cron_edited_after_its_check(world, monkeypatch,
         calls["n"] += 1
         return "fp" if calls["n"] <= 2 else "edited"
 
-    monkeypatch.setattr("kiro_crew.dashboard.change_cards.cron_job_revision", revision)
+    monkeypatch.setattr("aj_crew.dashboard.change_cards.cron_job_revision", revision)
 
     async def go(c, app):
         card_id = await _raise(c, _zip(_carrying()))
@@ -1380,7 +1380,7 @@ def test_a_failed_file_step_keeps_files_the_owner_changed_meanwhile(tmp_path):
 
 
 def test_the_rules_clear_compares_under_the_rules_lock(tmp_path, monkeypatch):
-    from kiro_crew.members_parts import prompt_layers
+    from aj_crew.members_parts import prompt_layers
 
     monkeypatch.setattr(prompt_layers, "member_rules_path", lambda slug: tmp_path / f"{slug}.json")
     prompt_layers.write_member_rules("m1", member="Mate", text="Never push to main.")
@@ -1479,7 +1479,7 @@ def test_an_upload_waits_for_the_start_up_sweep_before_it_stages(world, monkeypa
     waits for it, so the copy it stages is never swept."""
     import threading
 
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.testing.wait import async_wait_until
 
     store, writes = CardStore(tmp_path / "c.json"), _Writes()
     monkeypatch.setattr(routes, "_STAGE_SWEEP", None)

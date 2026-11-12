@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.apps.manifest import (
+from aj_crew.apps.manifest import (
     MAX_SESSION_CONTROLS_PER_APP,
     AppManifest,
     _normalize_status_path,

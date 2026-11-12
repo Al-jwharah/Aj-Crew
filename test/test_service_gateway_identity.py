@@ -1,8 +1,8 @@
-"""Whether the running kirocrew service is this gateway, from the service manager's answer.
+"""Whether the running ajcrew service is this gateway, from the service manager's answer.
 
 A unit installed before the managed-service marker existed has no marker, so
 the restart idle check reads the main pid of each running unit a service restart
-reaches instead (``kiro_crew.service.gateway_identity``). Any of them that is not
+reaches instead (``aj_crew.service.gateway_identity``). Any of them that is not
 this gateway refuses; nothing read at all is unknown.
 """
 
@@ -13,9 +13,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import gateway_restart
-from kiro_crew.pod import launchd as pod_launchd
-from kiro_crew.service import common, gateway_identity, linux, macos
+from aj_crew import gateway_restart
+from aj_crew.pod import launchd as pod_launchd
+from aj_crew.service import common, gateway_identity, linux, macos
 
 MINE = {4242, 4241}
 
@@ -54,7 +54,7 @@ def _systemd(monkeypatch, answers: dict[bool, object], *, user_reachable: bool =
     return asked
 
 
-def _shown(pid: str, *, unit: str = "kirocrew.service", load: str = "loaded") -> dict:
+def _shown(pid: str, *, unit: str = "ajcrew.service", load: str = "loaded") -> dict:
     return {"Id": [unit], "LoadState": [load], "MainPID": [pid]}
 
 
@@ -82,7 +82,7 @@ def test_an_unreachable_user_scope_is_skipped_as_the_restart_skips_it(monkeypatc
 
 
 def test_an_alias_is_not_the_service(monkeypatch):
-    """``show kirocrew.service`` on an alias answers for another unit, which restart never selects."""
+    """``show ajcrew.service`` on an alias answers for another unit, which restart never selects."""
     _systemd(
         monkeypatch,
         {False: _shown("4242", unit="other-app.service"), True: _shown("999")},

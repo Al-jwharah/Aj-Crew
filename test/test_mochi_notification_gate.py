@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from kiro_crew.apps.builtins.mochi.notification_gate import (
+from aj_crew.apps.builtins.mochi.notification_gate import (
     MAX_BUFFER_SIZE,
     MERGE_WINDOW_MS,
     NotificationGate,

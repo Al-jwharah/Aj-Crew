@@ -32,10 +32,10 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from kiro_crew import platform_compat  # noqa: E402
-from kiro_crew.dashboard.source_providers import runner  # noqa: E402
-from kiro_crew.testing.ids import unallocatable_pids  # noqa: E402
-from kiro_crew.testing.wait import async_wait_until  # noqa: E402
+from aj_crew import platform_compat  # noqa: E402
+from aj_crew.dashboard.source_providers import runner  # noqa: E402
+from aj_crew.testing.ids import unallocatable_pids  # noqa: E402
+from aj_crew.testing.wait import async_wait_until  # noqa: E402
 
 _BLOCK_SECS = 0.4
 

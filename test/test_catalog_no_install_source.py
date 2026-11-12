@@ -12,7 +12,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps import registry as reg
+from aj_crew.apps import registry as reg
 
 URL = "https://github.com/org/dup"
 

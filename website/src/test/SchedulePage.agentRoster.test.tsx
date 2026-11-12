@@ -30,14 +30,14 @@ vi.mock('../api/client', () => ({
     models: vi.fn().mockResolvedValue([]),
     updateCron: vi.fn().mockResolvedValue({}),
     createCron: vi.fn().mockResolvedValue({}),
-    defaultAgent: vi.fn().mockResolvedValue({ default_agent: 'default', default_template: 'kirocrew' }),
-    kirocrewAgents: vi.fn(),
+    defaultAgent: vi.fn().mockResolvedValue({ default_agent: 'default', default_template: 'ajcrew' }),
+    ajcrewAgents: vi.fn(),
     agentCatalog: vi.fn(),
   },
 }))
 
 const ROSTER = [
-  { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'built-in', source: 'kirocrew' },
+  { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'built-in', source: 'ajcrew' },
   { name: 'oncall', kiro_agent: 'oncall-agent', workspace: 'oncall', memory_store: 'oncall-kb', description: 'paging', source: 'package' },
 ]
 
@@ -58,8 +58,8 @@ describe('SchedulePage roster failure wiring (#5990)', () => {
     vi.mocked(api).chatFolders.mockResolvedValue([])
     vi.mocked(api).cronHistoryAll.mockResolvedValue({ runs: [] })
     vi.mocked(api).models.mockResolvedValue([])
-    vi.mocked(api).defaultAgent.mockResolvedValue({ default_agent: 'default', default_template: 'kirocrew' })
-    vi.mocked(api).kirocrewAgents.mockRejectedValue(new Error('gateway restarting'))
+    vi.mocked(api).defaultAgent.mockResolvedValue({ default_agent: 'default', default_template: 'ajcrew' })
+    vi.mocked(api).ajcrewAgents.mockRejectedValue(new Error('gateway restarting'))
     vi.mocked(api).agentCatalog.mockRejectedValue(new Error('gateway restarting'))
   })
 
@@ -72,7 +72,7 @@ describe('SchedulePage roster failure wiring (#5990)', () => {
     expect(screen.getByText('Retry')).toBeInTheDocument()
     // The trigger still reads the default agent, because that name comes from a
     // SEPARATE query that succeeded -- the exact shape of the report.
-    expect(screen.getByLabelText('Switch agent')).toHaveTextContent('kirocrew')
+    expect(screen.getByLabelText('Switch agent')).toHaveTextContent('ajcrew')
     expect(screen.queryByText('No matches')).not.toBeInTheDocument()
   })
 
@@ -81,9 +81,9 @@ describe('SchedulePage roster failure wiring (#5990)', () => {
     await openJobAgentPicker()
     await waitFor(() => expect(screen.getByText('Retry')).toBeInTheDocument())
 
-    vi.mocked(api).kirocrewAgents.mockResolvedValue({ agents: ROSTER, default_agent: 'kirocrew' })
+    vi.mocked(api).ajcrewAgents.mockResolvedValue({ agents: ROSTER, default_agent: 'ajcrew' })
 
-    vi.mocked(api).agentCatalog.mockResolvedValue({ agents: ROSTER, default_agent: 'kirocrew' })
+    vi.mocked(api).agentCatalog.mockResolvedValue({ agents: ROSTER, default_agent: 'ajcrew' })
     fireEvent.click(screen.getByText('Retry'))
 
     await waitFor(() => expect(screen.getByText('oncall')).toBeInTheDocument())
@@ -99,8 +99,8 @@ describe('SchedulePage roster failure wiring (#5990)', () => {
     await waitFor(() => expect(screen.getByText('Retry')).toBeInTheDocument())
 
     const before = store.getState().dashboard.refreshTrigger
-    vi.mocked(api).kirocrewAgents.mockResolvedValue({ agents: ROSTER, default_agent: 'kirocrew' })
-    vi.mocked(api).agentCatalog.mockResolvedValue({ agents: ROSTER, default_agent: 'kirocrew' })
+    vi.mocked(api).ajcrewAgents.mockResolvedValue({ agents: ROSTER, default_agent: 'ajcrew' })
+    vi.mocked(api).agentCatalog.mockResolvedValue({ agents: ROSTER, default_agent: 'ajcrew' })
     fireEvent.click(screen.getByText('Retry'))
 
     // `useAgents` state is per-instance and the app shell holds its own copy, so

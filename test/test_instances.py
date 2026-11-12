@@ -106,7 +106,7 @@ class TestSshTunnelArgvCompression:
         _patch_port_probe(monkeypatch)
 
     def test_compression_flag_present_by_default(self):
-        from kiro_crew.instances.ssh_tunnel_manager import _build_ssh_tunnel_argv
+        from aj_crew.instances.ssh_tunnel_manager import _build_ssh_tunnel_argv
 
         argv = _build_ssh_tunnel_argv("host-a", 7779, 7879)
         assert "-C" in argv
@@ -115,7 +115,7 @@ class TestSshTunnelArgvCompression:
         assert argv[0] == "ssh" and argv[-1] == "host-a"
 
     def test_compression_flag_omitted_when_disabled(self):
-        from kiro_crew.instances.ssh_tunnel_manager import _build_ssh_tunnel_argv
+        from aj_crew.instances.ssh_tunnel_manager import _build_ssh_tunnel_argv
 
         argv = _build_ssh_tunnel_argv("host-a", 7779, 7879, compression=False)
         assert "-C" not in argv
@@ -128,8 +128,8 @@ class TestSshTunnelArgvCompression:
         # The manager must thread ssh_compression to the tunnel factory on
         # connect() -- that flag is what _build_ssh_tunnel_argv uses to add/omit
         # -C. Drive a real connect and assert the captured value both ways.
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager, TunnelState
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager, TunnelState
 
         captured: dict = {}
 
@@ -175,7 +175,7 @@ class TestTunnelStatusCarriesTheDialIdentity:
     """
 
     def test_an_ssm_tunnel_surfaces_its_node_and_account(self):
-        from kiro_crew.instances.ssh_tunnel_manager import _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import _SshTunnel
 
         tun = _SshTunnel(
             "ssm-1",
@@ -194,7 +194,7 @@ class TestTunnelStatusCarriesTheDialIdentity:
         assert d["aws_region"] == "us-east-1"
 
     def test_an_ssh_tunnel_carries_no_ssm_coordinates(self):
-        from kiro_crew.instances.ssh_tunnel_manager import _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import _SshTunnel
 
         # Even if an SSH forward is handed SSM-shaped values, the status reports
         # none, so a record requiring an SSM node can never match an SSH tunnel.
@@ -224,8 +224,8 @@ class TestSshTunnelWindowsRefusal:
 
     @pytest.mark.asyncio
     async def test_ssh_spawn_failure_on_windows_names_the_platform(self, monkeypatch):
-        from kiro_crew import platform_compat
-        from kiro_crew.instances.ssh_tunnel_manager import (
+        from aj_crew import platform_compat
+        from aj_crew.instances.ssh_tunnel_manager import (
             _WINDOWS_SSH_TUNNEL_UNSUPPORTED,
             TunnelState,
             _SshTunnel,
@@ -255,8 +255,8 @@ class TestSshTunnelWindowsRefusal:
         # IS on PATH spawns successfully, so start() reaches the spawn rather than
         # refusing up front. (The spawn is stubbed to raise AFTER being entered,
         # so we only assert the spawn was reached, not the connect outcome.)
-        from kiro_crew import platform_compat
-        from kiro_crew.instances.ssh_tunnel_manager import _SshTunnel
+        from aj_crew import platform_compat
+        from aj_crew.instances.ssh_tunnel_manager import _SshTunnel
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
 
@@ -278,8 +278,8 @@ class TestSshTunnelWindowsRefusal:
     async def test_ssm_spawn_failure_on_windows_keeps_the_generic_message(self, monkeypatch):
         # The Windows wording is scoped to the ssh transport: an SSM spawn
         # failure on Windows keeps the generic spawn-error message.
-        from kiro_crew import platform_compat
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
+        from aj_crew import platform_compat
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
 
@@ -302,8 +302,8 @@ class TestSshTunnelWindowsRefusal:
     async def test_ssh_spawn_failure_on_posix_keeps_the_generic_message(self, monkeypatch):
         # Control: on POSIX an ssh spawn failure keeps the generic message
         # (behaviour unchanged off Windows).
-        from kiro_crew import platform_compat
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
+        from aj_crew import platform_compat
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
 
@@ -390,7 +390,7 @@ class TestSshTunnelMultiplexing:
     )
 
     def test_tunnel_argv_pins_multiplexing_off(self):
-        from kiro_crew.instances.ssh_tunnel_manager import _build_ssh_tunnel_argv
+        from aj_crew.instances.ssh_tunnel_manager import _build_ssh_tunnel_argv
 
         argv = _build_ssh_tunnel_argv("host-a", 7779, 7879)
         assert "ControlPath=none" in argv
@@ -409,7 +409,7 @@ class TestSshTunnelMultiplexing:
         so the assertions above test the pins rather than restating ssh's
         defaults.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import _build_ssh_tunnel_argv
+        from aj_crew.instances.ssh_tunnel_manager import _build_ssh_tunnel_argv
 
         args = _ssh_args(_build_ssh_tunnel_argv(self._HOST, 7779, 7879))
         pinned = _ssh_effective_config(tmp_path, self._ADVERSARIAL_CONFIG, args, self._HOST)
@@ -429,7 +429,7 @@ class TestSshTunnelMultiplexing:
         ``IgnoreUnknown`` would discard the user's and turn their config into ``Bad
         configuration option``. The keyword is invented so no OpenSSH release knows it.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import _build_ssh_tunnel_argv
+        from aj_crew.instances.ssh_tunnel_manager import _build_ssh_tunnel_argv
 
         cfg = tmp_path / "ssh_config"
         cfg.write_text(
@@ -460,7 +460,7 @@ class TestSshTunnelMultiplexing:
         ssh-config alias path for identity, port, and bastion reachability, so
         pinning must not turn the argv into a general ssh_config override.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import _build_ssh_tunnel_argv
+        from aj_crew.instances.ssh_tunnel_manager import _build_ssh_tunnel_argv
 
         config = (
             self._ADVERSARIAL_CONFIG
@@ -490,8 +490,8 @@ class TestSshTunnelManager:
         _patch_port_probe(monkeypatch)
 
     def _mgr(self, tmp_path, *, mint=None, factory=_FakeTunnel):
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
 
@@ -512,7 +512,7 @@ class TestSshTunnelManager:
 
     @pytest.mark.asyncio
     async def test_connect_persists_and_idempotent(self, tmp_path):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -537,7 +537,7 @@ class TestSshTunnelManager:
         The loopback port IS the pane iframe's browser origin, so moving it resets
         ``localStorage`` UI preferences; connect() must prefer the recorded port.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager, TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager, TunnelState
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="A", ssh_host="a-alias", instance_id="a")
@@ -571,7 +571,7 @@ class TestSshTunnelManager:
         idempotent connect would hand the same (stalled) forwarder back. The
         rebuild must stop the old child, spawn a new one, keep the user's
         connect intent, and answer CONNECTED with a live token."""
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -603,7 +603,7 @@ class TestSshTunnelManager:
         every other connect failure: ERROR status with the reason, retained for
         last_error, and the old tunnel is left tracked and intact — nothing is
         removed unless the stop succeeded."""
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -631,7 +631,7 @@ class TestSshTunnelManager:
         connect intent: for an absent tunnel it answers DISCONNECTED, spawns
         nothing, mints nothing, and leaves was_connected exactly as the user
         last set it (here: cleared by an explicit disconnect)."""
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -660,7 +660,7 @@ class TestSshTunnelManager:
     async def test_connect_only_if_connected_answers_a_live_tunnel_like_plain_connect(
         self, tmp_path
     ):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -681,7 +681,7 @@ class TestSshTunnelManager:
 
     @pytest.mark.asyncio
     async def test_connect_rebuild_with_no_tunnel_is_a_plain_connect(self, tmp_path):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -706,7 +706,7 @@ class TestSshTunnelManager:
             asyncio.run(mgr.connect("ghost"))
 
     def test_validation_failure(self, tmp_path):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="Bad", ssh_host="-obadhost", instance_id="bad")  # registry ok; manager rejects
@@ -715,7 +715,7 @@ class TestSshTunnelManager:
         assert mgr.status("bad") is None and mgr.get_token("bad") == ""
 
     def test_tunnel_failure(self, tmp_path):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         def failing(*a, **k):
             t = _FakeTunnel(*a, **k)
@@ -728,8 +728,8 @@ class TestSshTunnelManager:
         assert st.state == TunnelState.ERROR and mgr.get_token("cd-1") == ""
 
     def test_mint_failure_tears_down(self, tmp_path):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
-        from kiro_crew.instances.token_mint import TokenMintError
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.token_mint import TokenMintError
 
         async def bad_mint(
             host,
@@ -767,7 +767,7 @@ class TestSshTunnelManager:
         # Regression: connect() records the allocated local_port, but
         # disconnect() must reset it to the unallocated sentinel. Otherwise the
         # freed port stays recorded and reads as reserved forever.
-        from kiro_crew.instances.registry import _UNALLOCATED_PORT
+        from aj_crew.instances.registry import _UNALLOCATED_PORT
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1", instance_id="cd-1")
@@ -787,7 +787,7 @@ class TestSshTunnelManager:
     async def test_disconnect_clears_stale_port_without_live_tunnel(self, tmp_path):
         # A port left recorded by an unclean prior exit (no live tunnel tracked)
         # must still be clearable via disconnect, so the user can recover.
-        from kiro_crew.instances.registry import _UNALLOCATED_PORT
+        from aj_crew.instances.registry import _UNALLOCATED_PORT
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1", instance_id="cd-1")
@@ -799,7 +799,7 @@ class TestSshTunnelManager:
 
     @pytest.mark.asyncio
     async def test_token_validates_status_mapping(self, tmp_path, monkeypatch):
-        from kiro_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances import ssh_tunnel_manager as m
 
         class _Resp:
             def __init__(self, status):
@@ -840,7 +840,7 @@ class TestSshTunnelManager:
 
     @pytest.mark.asyncio
     async def test_token_validates_denies_on_error(self, tmp_path, monkeypatch):
-        from kiro_crew.instances import ssh_tunnel_manager as m
+        from aj_crew.instances import ssh_tunnel_manager as m
 
         class _BoomSess:
             def __init__(self, *a, **k):

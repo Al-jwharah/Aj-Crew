@@ -180,7 +180,7 @@ export function skippedTemplateRows(raw: unknown): { name: string; reason: Templ
 }
 
 /**
- * The export's `X-Kirocrew-Sessions-Skipped-Size` header: how many chats the server
+ * The export's `X-Ajcrew-Sessions-Skipped-Size` header: how many chats the server
  * left out so the archive stays within what import accepts. A bare non-negative
  * integer; anything else reads as 0.
  */
@@ -369,11 +369,11 @@ export default function PortabilityTab() {
       const blob = await resp.blob()
       const cd = resp.headers.get('Content-Disposition') || ''
       const m = cd.match(/filename="?([^"]+)"?/)
-      downloadBlob(blob, m ? m[1] : 'kirocrew-export.zip')
+      downloadBlob(blob, m ? m[1] : 'ajcrew-export.zip')
       setExportStatus({ type: 'ok', msg: i18nT('pages.overview.portabilityTab.download_started') })
-      const { names, more } = unbundledTemplates(resp.headers.get('X-Kirocrew-Unbundled-Templates'))
+      const { names, more } = unbundledTemplates(resp.headers.get('X-Ajcrew-Unbundled-Templates'))
       if (names.length || more) setExportWarning(i18nT('pages.overview.portabilityTab.export_templates_not_included', { names: joinWithMore(names, more) }))
-      const skipped = withChats ? skippedChats(resp.headers.get('X-Kirocrew-Sessions-Skipped-Size')) : 0
+      const skipped = withChats ? skippedChats(resp.headers.get('X-Ajcrew-Sessions-Skipped-Size')) : 0
       if (skipped > 0) setExportChatsSkipped(i18nT('pages.overview.portabilityTab.export_chats_skipped_size', { chats: skipped }))
     } catch (e: unknown) {
       setExportStatus({ type: 'error', msg: e instanceof Error ? e.message : i18nT('pages.overview.portabilityTab.network_error') })
@@ -630,7 +630,7 @@ export default function PortabilityTab() {
         <p className="text-muted text-[13px] mb-3">
           {memoryImport
             ? i18nT('pages.overview.portabilityTab.import_memory_description')
-            : i18nT('pages.overview.portabilityTab.upload_a_kirocrew_export_zip_to_restore_settings')}
+            : i18nT('pages.overview.portabilityTab.upload_a_ajcrew_export_zip_to_restore_settings')}
         </p>
         {/* Above the Import button, so the option is read before the commit.
             Under Replace the box is off and looks it, like the export's chat box. */}

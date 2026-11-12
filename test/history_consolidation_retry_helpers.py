@@ -13,8 +13,8 @@ from collections.abc import Callable
 from typing import Any, TypeVar
 from unittest.mock import MagicMock
 
-from kiro_crew import history as history_mod
-from kiro_crew.history import ConversationLog, HistoryConsolidator
+from aj_crew import history as history_mod
+from aj_crew.history import ConversationLog, HistoryConsolidator
 
 KEY = "dashboard:chat-retry"
 

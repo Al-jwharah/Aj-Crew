@@ -3,7 +3,7 @@
 A wrapper script that exec's a BARE tool name exits 127 ("command not found") when the
 tool's dir is missing from PATH, and the session sees only "backend gone: exit rc=127".
 
-Pinned: the daemon's PATH comes from :func:`kiro_crew.env.augmented_path`, the same
+Pinned: the daemon's PATH comes from :func:`aj_crew.env.augmented_path`, the same
 helper the kiro-cli spawn uses; it is built OFF the event loop (a cold cache globs every
 version-manager root); and a real bare-name wrapper exits 127 without the dir and starts
 with it.
@@ -22,13 +22,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import kiro_crew.env as env_mod
-from kiro_crew.env import augmented_path, emit_env, mcp_runtime_path, mcp_search_path
-from kiro_crew.mcp_gateway import gatewayd as gatewayd_mod
-from kiro_crew.mcp_gateway import manager as manager_mod
-from kiro_crew.mcp_gateway.backend import Backend
-from kiro_crew.mcp_gateway.manager import GatewayManager, GatewaySpec
-from kiro_crew.mcp_gateway.pool import BackendPool, PoolKey
+import aj_crew.env as env_mod
+from aj_crew.env import augmented_path, emit_env, mcp_runtime_path, mcp_search_path
+from aj_crew.mcp_gateway import gatewayd as gatewayd_mod
+from aj_crew.mcp_gateway import manager as manager_mod
+from aj_crew.mcp_gateway.backend import Backend
+from aj_crew.mcp_gateway.manager import GatewayManager, GatewaySpec
+from aj_crew.mcp_gateway.pool import BackendPool, PoolKey
 
 
 def _same_dir(a: str, b: str) -> bool:

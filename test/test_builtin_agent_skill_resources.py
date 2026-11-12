@@ -1,8 +1,8 @@
-# Copyright Kiro Crew contributors
+# Copyright Aj Crew contributors
 # SPDX-License-Identifier: Apache-2.0
 """A generated agent can reach the skills its own prompt tells it to read.
 
-Every spec Kiro Crew generates for itself is a custom template, so under the scoping
+Every spec Aj Crew generates for itself is a custom template, so under the scoping
 rule it sees exactly its own ``skill://`` resources: with none,
 ``session_skill_globs`` answers ``[]`` and the catalog answers nothing. The
 conductors, the team lead, the dashboard author and the dashboard manager each carry
@@ -28,21 +28,21 @@ from pathlib import Path, PurePosixPath
 
 import pytest
 
-from kiro_crew import agent
-from kiro_crew import skills as skills_mod
-from kiro_crew.agent_discovery import (
+from aj_crew import agent
+from aj_crew import skills as skills_mod
+from aj_crew.agent_discovery import (
     clear_list_agents_cache,
     session_skill_globs,
     skill_resource_uris,
 )
-from kiro_crew.agent_materialization import (
+from aj_crew.agent_materialization import (
     conductor_agents,
     service_agents,
     skill_resources,
     worker_agent,
 )
-from kiro_crew.context import _skills_injection_plan
-from kiro_crew.skills import SKILL_READ_CAPACITY, SkillsLoader
+from aj_crew.context import _skills_injection_plan
+from aj_crew.skills import SKILL_READ_CAPACITY, SkillsLoader
 
 _BUILTIN_SKILLS = Path(skills_mod.__file__).parent / "builtin_skills"
 
@@ -54,38 +54,38 @@ _STEERING_GLOB = "file://.kiro/steering/**/*.md"
 #:
 #: The keys are the claim this module makes, so they are read from the installers'
 #: behaviour and not from a list the installers also read: each row is what the
-#: prompt the installer writes tells the agent to load. ``kirocrew-ledger-conductor``
+#: prompt the installer writes tells the agent to load. ``ajcrew-ledger-conductor``
 #: is here because it is a deprecated ALIAS emitting the conductor's body -- an alias
 #: that reached a different skill set would silently change what an in-flight session
 #: can do.
 AGENTS: dict[str, tuple[object, tuple[str, ...]]] = {
-    "kirocrew-conductor": (
+    "ajcrew-conductor": (
         conductor_agents._install_conductor_agent,
         ("goal-conductor", "dashboard", "widgets", "living-ui", "artifacts"),
     ),
-    "kirocrew-ledger-conductor": (
+    "ajcrew-ledger-conductor": (
         conductor_agents._install_ledger_conductor_agent,
         ("goal-conductor", "dashboard", "widgets", "living-ui", "artifacts"),
     ),
-    "kirocrew-pipeline-conductor": (
+    "ajcrew-pipeline-conductor": (
         conductor_agents._install_pipeline_conductor_agent,
         ("pipeline-conductor", "dashboard", "widgets", "living-ui", "artifacts"),
     ),
-    "kirocrew-security-conductor": (
+    "ajcrew-security-conductor": (
         conductor_agents._install_security_conductor_agent,
         ("security-conductor", "widgets", "living-ui", "artifacts"),
     ),
-    "kirocrew-team-lead": (
+    "ajcrew-team-lead": (
         service_agents._install_team_lead_agent,
         ("team-lead", "goal-conductor", "dashboard", "widgets", "living-ui", "artifacts"),
     ),
-    "kirocrew-dashboard-manager": (
+    "ajcrew-dashboard-manager": (
         service_agents._install_dashboard_manager_agent,
         ("dashboard",),
     ),
-    "kirocrew-dashboard-author": (
+    "ajcrew-dashboard-author": (
         worker_agent._install_dashboard_author_agent,
-        ("kirocrew-dev/dashboard-template",),
+        ("ajcrew-dev/dashboard-template",),
     ),
 }
 
@@ -109,13 +109,13 @@ class _Rig:
             # fixture's idea of one. Only SKILL.md: the scripts and references beside
             # it are not what a scope admits or refuses.
             shutil.copyfile(source, target)
-        binary = tmp_path / "bin" / "kirocrew"
+        binary = tmp_path / "bin" / "ajcrew"
         binary.parent.mkdir()
         binary.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
         binary.chmod(0o755)
         monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", self.agents)
-        monkeypatch.setattr("kiro_crew.agent_discovery._KIRO_AGENTS_DIR", self.agents)
-        monkeypatch.setattr(agent, "_KIROCREW_BIN", str(binary))
+        monkeypatch.setattr("aj_crew.agent_discovery._KIRO_AGENTS_DIR", self.agents)
+        monkeypatch.setattr(agent, "_AJCREW_BIN", str(binary))
         monkeypatch.setattr(agent, "_KIRO_MCP_JSON", tmp_path / "kiro-global-mcp.json")
         monkeypatch.setattr(skills_mod, "skills_dir", lambda: self.skills)
 
@@ -143,7 +143,7 @@ def rig(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> _Rig:
 def _scope(name: str) -> list[str]:
     """The scope the session itself resolves, with no session key bound."""
     scope = session_skill_globs("", name)
-    assert scope is not None, f"{name} resolved the whole catalog, which is kirocrew's alone"
+    assert scope is not None, f"{name} resolved the whole catalog, which is ajcrew's alone"
     return scope
 
 
@@ -217,7 +217,7 @@ def test_the_mapping_is_derived_from_the_live_skills_directory(
     name: str, rig: _Rig, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """Never a hardcoded ``~/.kiro/crew/skills``. Every generated spec is rewritten on
-    each boot, so a relocated ``KIROCREW_HOME`` must come out mapped at the new root --
+    each boot, so a relocated ``AJCREW_HOME`` must come out mapped at the new root --
     a literal would map a path that holds nothing."""
     moved = tmp_path / "relocated-home" / "skills"
     (moved / "goal-conductor").mkdir(parents=True)
@@ -237,22 +237,22 @@ class TestTheMappingIsMergedAndNotOverwritten:
         """Every derived spec inherits one ``file://`` steering glob. Replacing
         ``resources`` instead of appending to it would drop it, and
         ``.kiro/steering/**/*.md`` would stop loading for that agent."""
-        spec = rig.install("kirocrew-conductor")
+        spec = rig.install("ajcrew-conductor")
         resources = spec["resources"]
         assert resources[0] == _STEERING_GLOB
         assert resources[1:] == list(
-            skill_resources.prompt_skill_uris(*AGENTS["kirocrew-conductor"][1])
+            skill_resources.prompt_skill_uris(*AGENTS["ajcrew-conductor"][1])
         )
 
     def test_a_persons_own_mapping_keeps_its_place_and_the_charter_skill_is_appended(
         self, rig: _Rig
     ) -> None:
         config = {"resources": ["skill://~/mine/a/SKILL.md", _STEERING_GLOB]}
-        skill_resources.map_prompt_skills(config, "kirocrew-dev/dashboard-template")
+        skill_resources.map_prompt_skills(config, "ajcrew-dev/dashboard-template")
         assert config["resources"] == [
             "skill://~/mine/a/SKILL.md",
             _STEERING_GLOB,
-            *skill_resources.prompt_skill_uris("kirocrew-dev/dashboard-template"),
+            *skill_resources.prompt_skill_uris("ajcrew-dev/dashboard-template"),
         ]
 
     def test_a_second_boot_does_not_map_the_same_skill_twice(self, rig: _Rig) -> None:

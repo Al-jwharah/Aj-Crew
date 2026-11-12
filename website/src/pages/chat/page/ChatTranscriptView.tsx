@@ -18,6 +18,7 @@ import EarlierMessagesBar from '../EarlierMessagesBar'
 import TranscriptScrollShell from '../TranscriptScrollShell'
 import TurnNavigationMinimap from '../TurnNavigationMinimap'
 import WelcomeView from '../../../components/WelcomeView'
+import SimpleWelcome from '../../../components/SimpleWelcome'
 import { useMarkTranscriptShown } from '../../../hooks/useAckCronNotesInView'
 import { ChatProjectDirCtx } from '../../../components/markdown/contexts'
 import CrewModeWelcome from '../../../components/CrewModeWelcome'
@@ -49,7 +50,7 @@ interface ChatTranscriptViewProps {
   activityOpen: boolean
   completedTurnCount: number
   cursorIsForActiveSlot: boolean
-  kiroCrewVersion: string
+  ajCrewVersion: string
   loadingOlder: boolean
   olderFailed: boolean
   setTurnDisclosureFor: (key: string, expanded: boolean) => void
@@ -64,6 +65,8 @@ interface ChatTranscriptViewProps {
   turnRowMayBeLive: (it: TurnItem) => boolean
   setInput: (next: string | ((prev: string) => string)) => void
   isWelcomeState: boolean
+  /** Simple layout's home: the welcome frames a composer centred in the pane. */
+  simpleHome?: boolean
   /** The chat runs on the conductor (crewModeSwitch): the welcome hero is the Crew Mode page. */
   crewModeOn: boolean
   /** Opens the side panel task board (crewModeSwitch); unset when this chat has no Overview. */
@@ -108,8 +111,8 @@ interface ChatTranscriptViewProps {
  * The transcript column: the welcome hero, or the turn minimap and the scroll shell with its rows, the earlier-messages bar, the measurement farm, the footer, the pulse survey and the tail spacer; and the restore skeleton.
  */
 export default function ChatTranscriptView({
-  embedded, popout, activeSlot, appToolCallIds, titleInTopbar, workerBreadcrumb = false, activityOpen, completedTurnCount, cursorIsForActiveSlot, kiroCrewVersion, loadingOlder, olderFailed, setTurnDisclosureFor, slotHasMore,
-  slotLoading, slotRunning, slotState, environmentStart, slotStopping, slotSwitchTarget, turnDisclosure, turnRowMayBeLive, setInput, isWelcomeState, crewModeOn, openTaskBoard, chatConfig, scrollerRef, bindScroller, handleSurveyLayoutChange,
+  embedded, popout, activeSlot, appToolCallIds, titleInTopbar, workerBreadcrumb = false, activityOpen, completedTurnCount, cursorIsForActiveSlot, ajCrewVersion, loadingOlder, olderFailed, setTurnDisclosureFor, slotHasMore,
+  slotLoading, slotRunning, slotState, environmentStart, slotStopping, slotSwitchTarget, turnDisclosure, turnRowMayBeLive, setInput, isWelcomeState, simpleHome = false, crewModeOn, openTaskBoard, chatConfig, scrollerRef, bindScroller, handleSurveyLayoutChange,
   onScrollPin, pinned, approve, dismissApproval, currentSlot, projectDir = null, regenerating, sendUnconfirmed, dockH, lastRole, streamTick, footerActivityKey, footerSentHere = false, toggleAct, renderedDisplayItems, stableMsgKey, virtualKey, handleLoadEarlier,
   spinnerNearTop, virt, visibleDisplayItems, chatNav, navigateToTurn, turnStepAnnouncement, renderFarmItem, renderMessage, renderTurnItem,
 }: ChatTranscriptViewProps) {
@@ -120,7 +123,9 @@ export default function ChatTranscriptView({
   useMarkTranscriptShown(activeSlot, !slotLoading && !virt.restoreGate && !isWelcomeState && renderedDisplayItems.length > 0, () => scrollerRef.current)
   return (
     <ChatProjectDirCtx.Provider value={projectDir}>
-      {isWelcomeState ? (
+      {isWelcomeState && simpleHome ? (
+        <SimpleWelcome setInput={setInput} dockH={dockH} />
+      ) : isWelcomeState ? (
         <motion.div
           key="welcome-hero"
           // `position`, not a full `layout`: the box now changes SIZE on
@@ -257,7 +262,7 @@ export default function ChatTranscriptView({
               // a missing check.
               key={activeSlot}
               sessionId={activeSlot}
-              kiroCrewVersion={kiroCrewVersion}
+              ajCrewVersion={ajCrewVersion}
               turnCount={completedTurnCount}
               slotOrigin={currentSlot?.origin}
               onLayoutChange={handleSurveyLayoutChange}

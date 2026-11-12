@@ -17,10 +17,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import move_transcript_past
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.dashboard.handlers import api_sessions_summarize
-from kiro_crew.dashboard.handlers import sessions as sessions_handlers
-from kiro_crew.history import ConversationLog, HistoryLockTimeout, TranscriptBusy
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.dashboard.handlers import api_sessions_summarize
+from aj_crew.dashboard.handlers import sessions as sessions_handlers
+from aj_crew.history import ConversationLog, HistoryLockTimeout, TranscriptBusy
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
@@ -112,7 +112,7 @@ class TestSessionsSummarizeHandler:
             )
             assert resp.status == 200
         # Only the bounded top-N sessions triggered an LLM pass.
-        from kiro_crew.dashboard.handlers.sessions import _SUMMARIZE_MAX_SESSIONS
+        from aj_crew.dashboard.handlers.sessions import _SUMMARIZE_MAX_SESSIONS
 
         assert len(created) == _SUMMARIZE_MAX_SESSIONS
 

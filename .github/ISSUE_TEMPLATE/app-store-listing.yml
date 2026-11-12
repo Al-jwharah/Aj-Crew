@@ -1,5 +1,5 @@
 name: App Store listing request
-description: Request that your Kiro Crew app be listed in the official App Store catalog.
+description: Request that your Aj Crew app be listed in the official App Store catalog.
 labels: ["enhancement"]
 body:
   - type: markdown
@@ -11,7 +11,7 @@ body:
         maintainer authors the catalog entry from what you provide here.
 
         Before filing, self-run the review checklist in
-        [publishing-guide.md section 14](https://github.com/kirodotdev/KiroCrew/blob/main/docs/app-kit/publishing-guide.md).
+        [publishing-guide.md section 14](https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/app-kit/publishing-guide.md).
         Your app repository must be public and git-cloneable so the publish
         pipeline can resolve and pin a commit. If your app has any **executable**
         surface (install scripts, backend, hooks, lifecycle scripts,

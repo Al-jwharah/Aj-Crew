@@ -91,7 +91,7 @@ function loadImage(url: string): Promise<HTMLImageElement> {
       reject(new Error('frame'))
     }
     // An image element, not a script: url is a recorded frame on the gateway's own API.
-    // nosemgrep: semgrep.kirocrew.frontend-external-script-inject
+    // nosemgrep: semgrep.ajcrew.frontend-external-script-inject
     img.src = url
   })
   imageLoading.set(url, load)

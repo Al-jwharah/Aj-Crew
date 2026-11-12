@@ -23,8 +23,8 @@ from registry_store_art_prewarm_helpers import (
     _pin_registry,
 )
 
-from kiro_crew.apps import registry
-from kiro_crew.apps.registry import (
+from aj_crew.apps import registry
+from aj_crew.apps.registry import (
     _TRUST_OWNER,
     _installed_manifest_cache_path,
     _manifest_cache_path,

@@ -1,9 +1,9 @@
 """The gateway boot matrix installs a supported Node before it boots a gateway.
 
 A harness gateway that finds a Node below the supported major runs the boot-time
-repair (``kiro_crew.cli._ensure_node``), and on POSIX that is ``ensure-node.sh``
+repair (``aj_crew.cli._ensure_node``), and on POSIX that is ``ensure-node.sh``
 downloading mise and a Node release. That download then sits inside the
-KIROCREW_READY window and times the boot out on a slow network. The job
+AJCREW_READY window and times the boot out on a slow network. The job
 must therefore put a supported Node on PATH itself, before the boot step, on every
 OS: Linux and macOS through their own setup-node step, Windows through
 ``setup-windows-tests``.
@@ -15,7 +15,7 @@ from pathlib import Path
 
 import yaml
 
-from kiro_crew.constants import MIN_NODE_VERSION
+from aj_crew.constants import MIN_NODE_VERSION
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _SETUP_NODE = "actions/setup-node@"

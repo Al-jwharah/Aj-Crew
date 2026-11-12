@@ -31,8 +31,8 @@ import pytest
 from aiohttp import StreamReader, web
 from dashboard_owner_helpers import NoConfiguredOwner
 
-from kiro_crew.config.sections import DECISION_PROVIDER_ENDPOINT_DEFAULT as DEFAULT_ENDPOINT
-from kiro_crew.decisions import consent
+from aj_crew.config.sections import DECISION_PROVIDER_ENDPOINT_DEFAULT as DEFAULT_ENDPOINT
+from aj_crew.decisions import consent
 
 CUSTOM = "https://proxy.example/v1/systemone"
 SAGEMAKER = "sagemaker://argus-9b?region=us-west-2"
@@ -53,7 +53,7 @@ def _judge_lane_unavailable(monkeypatch):
     so without this the answer would depend on whether some earlier test in the shard
     happened to build one -- which is an order dependence, not a behaviour.
     """
-    from kiro_crew.dashboard.handlers import decisions as mod
+    from aj_crew.dashboard.handlers import decisions as mod
 
     monkeypatch.setattr(mod, "_llm_lane_available", lambda: False)
 
@@ -61,14 +61,14 @@ def _judge_lane_unavailable(monkeypatch):
 @pytest.fixture
 def keystone(tmp_path, monkeypatch):
     path = tmp_path / "decisions_consent.json"
-    monkeypatch.setattr("kiro_crew.config.loader.decisions_consent_path", lambda: path)
+    monkeypatch.setattr("aj_crew.config.loader.decisions_consent_path", lambda: path)
     return path
 
 
 @pytest.fixture
 def configured(monkeypatch):
     """Pin the endpoint the live config names; returns a setter."""
-    from kiro_crew.decisions import gate
+    from aj_crew.decisions import gate
 
     def _set(endpoint):
         monkeypatch.setattr(gate, "configured_endpoint", lambda config=None: endpoint)
@@ -91,7 +91,7 @@ class TestTheLogIsSealedToo:
     """
 
     def test_the_log_directory_is_mounted_read_only(self):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert "decisions" in sandbox._CREW_READONLY_LEAVES
 
@@ -104,14 +104,14 @@ class TestTheLogIsSealedToo:
         rather than sensitive: reading the rows is the point of recording them, and the
         gateway's own writer opens the file directly without passing this gate.
         """
-        from kiro_crew.security.paths import write_protected_home_paths
+        from aj_crew.security.paths import write_protected_home_paths
 
         entries = write_protected_home_paths()
         assert any(entry.endswith("/decisions") for entry in entries), entries
 
     def test_the_log_directory_stays_readable_through_the_tools(self):
         """A record nobody may read is a record nobody can be shown."""
-        from kiro_crew.security.paths import is_sensitive_path
+        from aj_crew.security.paths import is_sensitive_path
 
         assert is_sensitive_path("~/.kiro/crew/decisions") is False
         assert is_sensitive_path("~/.kiro/crew/decisions/decisions-20260919.jsonl") is False
@@ -120,14 +120,14 @@ class TestTheLogIsSealedToo:
         """A mount cannot target a path that does not exist, and an install that has
         never sampled a decision has no log directory -- which is precisely the
         state in which the name is creatable from inside the sandbox."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert "decisions" in sandbox._CREW_PRECREATE_READONLY_DIR_LEAVES
 
     def test_it_is_pre_created_as_a_DIRECTORY_not_a_file(self):
         """A regular file at that name is worse than an absent one: the gateway's
         own log directory could not then be created there."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert "decisions" not in sandbox._CREW_PRECREATE_READONLY_FILE_LEAVES
 
@@ -135,13 +135,13 @@ class TestTheLogIsSealedToo:
         """A resolving symlink is followed by the mount, which would seal a target
         the governed party chose and leave the lexical name replaceable -- so the
         anti-forgery seal would be satisfied by a link rather than by the log."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert "decisions" in sandbox._CREW_NOFOLLOW_READONLY_DIR_LEAVES
 
     def test_the_grant_is_sealed_as_well(self):
         """Both halves, so neither can be read as sufficient on its own."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert "decisions_consent.json" in sandbox._CREW_READONLY_LEAVES
 
@@ -152,13 +152,13 @@ class TestTheLeafIsAKeystone:
         assert keystone.name == "decisions_consent.json"
 
     def test_fenced_on_the_agent_file_tool_path(self):
-        from kiro_crew.security.paths import _CREW_SECRET_LEAVES, is_sensitive_path
+        from aj_crew.security.paths import _CREW_SECRET_LEAVES, is_sensitive_path
 
         assert "decisions_consent.json" in _CREW_SECRET_LEAVES
         assert is_sensitive_path("~/.kiro/crew/decisions_consent.json") is True
 
     def test_mounted_read_only_and_pre_created_in_the_sandbox(self):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert "decisions_consent.json" in sandbox._CREW_READONLY_LEAVES
         assert "decisions_consent.json" in sandbox._CREW_PRECREATE_READONLY_FILE_LEAVES
@@ -167,8 +167,8 @@ class TestTheLeafIsAKeystone:
         """The other half of the design: nothing agent-writable stands in for it."""
         from dataclasses import fields
 
-        from kiro_crew.config.sections import DecisionsConfig
-        from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+        from aj_crew.config.sections import DecisionsConfig
+        from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
         assert "enabled" not in {f.name for f in fields(DecisionsConfig)}
         assert "decisions.enabled" not in _EDITABLE_CONFIG
@@ -402,7 +402,7 @@ class TestWrite:
         import threading
         import time
 
-        from kiro_crew.decisions import consent as module
+        from aj_crew.decisions import consent as module
 
         consent.save_enabled(True, endpoint=DEFAULT_ENDPOINT, history_budget_chars=2000)
         real_write = module.atomic_write
@@ -503,7 +503,7 @@ def _points_off():
     :class:`TestPointProjection` is where the registry's own membership is pinned;
     here the shape is all that matters.
     """
-    from kiro_crew.decisions import gate
+    from aj_crew.decisions import gate
 
     rows = []
     for name in gate.DECISION_POINT_NAMES:
@@ -525,7 +525,7 @@ def _points_off():
 @pytest.fixture
 def audit(monkeypatch):
     """Capture SEL rows the handler writes."""
-    import kiro_crew.dashboard.handlers as handlers_pkg
+    import aj_crew.dashboard.handlers as handlers_pkg
 
     rows: list[dict] = []
     fake = MagicMock()
@@ -539,7 +539,7 @@ class TestHandler:
     async def test_get_reports_the_keystone_against_the_configured_endpoint(
         self, keystone, audit, configured
     ):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_get
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_get
 
         resp = await api_decisions_consent_get(_request())
         assert resp.status == 200
@@ -588,8 +588,8 @@ class TestHandler:
         ``server._audit_middleware_denial`` gate)."""
         import threading
 
-        import kiro_crew.sel as sel_mod
-        from kiro_crew.dashboard.handlers import decisions as mod
+        import aj_crew.sel as sel_mod
+        from aj_crew.dashboard.handlers import decisions as mod
 
         loop_thread = threading.get_ident()
         writer_threads: list[int] = []
@@ -614,8 +614,8 @@ class TestHandler:
     async def test_a_failing_audit_never_breaks_the_request(
         self, keystone, configured, monkeypatch
     ):
-        import kiro_crew.dashboard.handlers as handlers_pkg
-        from kiro_crew.dashboard.handlers import decisions as mod
+        import aj_crew.dashboard.handlers as handlers_pkg
+        from aj_crew.dashboard.handlers import decisions as mod
 
         def _boom():
             raise RuntimeError("SEL down")
@@ -628,7 +628,7 @@ class TestHandler:
     async def test_put_binds_consent_to_the_configured_endpoint_and_audits_it(
         self, keystone, audit, configured
     ):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         configured(CUSTOM)
         resp = await api_decisions_consent_put(_request(body={"enabled": True, "endpoint": CUSTOM}))
@@ -646,8 +646,8 @@ class TestHandler:
 
     @pytest.mark.asyncio
     async def test_enabling_is_refused_while_no_model_is_chosen(self, keystone, audit, configured):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
-        from kiro_crew.decisions.local_models import ENDPOINT_NONE
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.decisions.local_models import ENDPOINT_NONE
 
         configured(ENDPOINT_NONE)
         resp = await api_decisions_consent_put(
@@ -662,7 +662,7 @@ class TestHandler:
     async def test_enabling_must_echo_the_reviewed_endpoint(self, keystone, audit, configured):
         """The GET-to-PUT window is operator-paced and config is agent-writable: consent
         binds to the address the owner SAW, or it is refused."""
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         # No echo at all: refused as a malformed body, nothing written.
         resp = await api_decisions_consent_put(_request(body={"enabled": True}))
@@ -696,7 +696,7 @@ class TestHandler:
         than as a malformed body. A non-object body still lands here, because there
         is no field to omit in the first place.
         """
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         resp = await api_decisions_consent_put(_request(body=body))
         assert resp.status == 400
@@ -714,7 +714,7 @@ class TestHandler:
         route carries its own validation and a test of the writer leaves it
         unexercised -- which is what revert-verify caught.
         """
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         resp = await api_decisions_consent_put(
             _request(
@@ -730,7 +730,7 @@ class TestHandler:
     async def test_the_route_records_the_ceiling_the_owner_echoed(
         self, keystone, audit, configured
     ):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         resp = await api_decisions_consent_put(
             _request(
@@ -747,7 +747,7 @@ class TestHandler:
         self, keystone, audit, configured
     ):
         """With nothing recorded, the switch consents to the message and the menu."""
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         resp = await api_decisions_consent_put(
             _request(body={"enabled": True, "endpoint": DEFAULT_ENDPOINT})
@@ -766,7 +766,7 @@ class TestHandler:
         must keep the recorded ceiling, not default to 0. Driven through the handler,
         where that default lives.
         """
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         first = await api_decisions_consent_put(
             _request(
@@ -796,7 +796,7 @@ class TestHandler:
         egress limit by losing a race. The writer resolves it from the same read its
         write is based on, so the route must hand the sentinel down untouched.
         """
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         consent.save_enabled(True, endpoint=DEFAULT_ENDPOINT, history_budget_chars=2000)
         seen: list = []
@@ -860,7 +860,7 @@ class TestHandler:
         Preserving on absence is only safe if an explicit 0 still lowers it, which is
         the owner's way to take prior turns back without turning the seam off.
         """
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         await api_decisions_consent_put(
             _request(
@@ -883,7 +883,7 @@ class TestHandler:
         self, keystone, audit, configured
     ):
         """Preserving is for an enable; a revocation clears the ceiling with it."""
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         await api_decisions_consent_put(
             _request(
@@ -899,7 +899,7 @@ class TestHandler:
 
     @pytest.mark.asyncio
     async def test_put_refuses_a_body_that_is_not_json(self, keystone, audit, configured):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         resp = await api_decisions_consent_put(_request(body=ValueError("bad json")))
         assert resp.status == 400
@@ -907,7 +907,7 @@ class TestHandler:
 
     @pytest.mark.asyncio
     async def test_put_leaves_a_corrupt_keystone_byte_identical(self, keystone, audit, configured):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         keystone.write_text("{corrupt", encoding="utf-8")
         resp = await api_decisions_consent_put(
@@ -926,7 +926,7 @@ class TestHandler:
     async def test_both_verbs_are_owner_only(self, keystone, audit, configured, kwargs):
         """An app token or an allow-listed non-owner is the agent's third key;
         both are refused on the read too, so nobody but the owner learns the state."""
-        from kiro_crew.dashboard.handlers.decisions import (
+        from aj_crew.dashboard.handlers.decisions import (
             api_decisions_consent_get,
             api_decisions_consent_put,
         )
@@ -947,14 +947,14 @@ class TestHandler:
         import sys
 
         probe = (
-            "import sys; import kiro_crew.dashboard.handlers; "
-            "print(sorted(m for m in sys.modules if m.startswith('kiro_crew.decisions')))"
+            "import sys; import aj_crew.dashboard.handlers; "
+            "print(sorted(m for m in sys.modules if m.startswith('aj_crew.decisions')))"
         )
         # The child must import the same checkout the test runs against.
-        import kiro_crew
+        import aj_crew
 
         env = dict(os.environ)
-        src = str(Path(kiro_crew.__file__).resolve().parents[1])
+        src = str(Path(aj_crew.__file__).resolve().parents[1])
         env["PYTHONPATH"] = os.pathsep.join(filter(None, (src, env.get("PYTHONPATH"))))
         out = subprocess.run(
             [sys.executable, "-c", probe],
@@ -971,8 +971,8 @@ class TestHandler:
         """Cookie-authed like the AWS pair, and not on the strict-internal list."""
         import inspect
 
-        from kiro_crew.dashboard import routes
-        from kiro_crew.dashboard.routes import system as system_routes
+        from aj_crew.dashboard import routes
+        from aj_crew.dashboard.routes import system as system_routes
 
         source = inspect.getsource(system_routes)
         assert 'add_get("/api/decisions/consent"' in source
@@ -994,8 +994,8 @@ _PIN_DOC: dict = {
 @pytest.fixture
 def ceiling(monkeypatch):
     """Install a boot-frozen ceiling for the duration of a test; returns a setter."""
-    from kiro_crew.platform import context as pc
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.platform import context as pc
+    from aj_crew.platform.governance import parse_policy
 
     def _set(doc: "dict | None") -> None:
         parsed = parse_policy(doc) if doc is not None else None
@@ -1012,7 +1012,7 @@ def ceiling(monkeypatch):
 @pytest.fixture
 def governance_rows(monkeypatch):
     """Capture the ``governance_decision`` rows the probe writes through the seam."""
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     rows: list[dict] = []
     fake = MagicMock()
@@ -1034,7 +1034,7 @@ class TestCapabilityCeiling:
 
     def test_the_row_is_a_default_on_capability(self):
         """A DATA change: one row, no ``CONTRACT_VERSION`` or evaluator edit."""
-        from kiro_crew.platform.governance import CAPABILITY, SCOPE_CATALOG
+        from aj_crew.platform.governance import CAPABILITY, SCOPE_CATALOG
 
         spec = SCOPE_CATALOG["capabilities.decisions"]
         assert spec.kind == CAPABILITY
@@ -1043,7 +1043,7 @@ class TestCapabilityCeiling:
         assert spec.capability_default is True
 
     def test_a_policy_can_actually_express_the_pin(self):
-        from kiro_crew.platform.governance import CapabilityGate, parse_policy
+        from aj_crew.platform.governance import CapabilityGate, parse_policy
 
         gate = parse_policy(_PIN_DOC).get("capabilities.decisions")
         assert isinstance(gate, CapabilityGate)
@@ -1052,7 +1052,7 @@ class TestCapabilityCeiling:
     # ── the probe ─────────────────────────────────────────────────────
 
     def test_the_probe_permits_an_ungoverned_host_and_denies_a_pin(self, ceiling, governance_rows):
-        from kiro_crew.decisions.capability import is_decisions_denied
+        from aj_crew.decisions.capability import is_decisions_denied
 
         assert is_decisions_denied() is False
         ceiling(_PIN_DOC)
@@ -1067,7 +1067,7 @@ class TestCapabilityCeiling:
         An upgrade must not widen that pin: the local row only narrows, so the hosted
         deny still covers a local preset. Both rows are still evaluated and audited,
         so the trail does not depend on which row answered."""
-        from kiro_crew.decisions.capability import is_decisions_denied
+        from aj_crew.decisions.capability import is_decisions_denied
 
         ceiling(_PIN_DOC)
         assert is_decisions_denied(local=True) is True
@@ -1092,7 +1092,7 @@ class TestCapabilityCeiling:
     def test_no_pin_keeps_local_models_permitted(self, governance_rows):
         """The owner's default is unchanged: with nothing pinned, both rows permit,
         and the local answer records both rows it consulted."""
-        from kiro_crew.decisions.capability import is_decisions_denied
+        from aj_crew.decisions.capability import is_decisions_denied
 
         assert is_decisions_denied(local=True) is False
         assert is_decisions_denied() is False
@@ -1105,7 +1105,7 @@ class TestCapabilityCeiling:
     def test_a_local_pin_withdraws_local_models_only(self, ceiling):
         """The local row narrows: a fleet that permits hosted Jev can still withdraw
         local models, and that pin leaves hosted Jev alone."""
-        from kiro_crew.decisions.capability import is_decisions_denied
+        from aj_crew.decisions.capability import is_decisions_denied
 
         ceiling(
             {
@@ -1125,7 +1125,7 @@ class TestCapabilityCeiling:
         a preset this gateway runs and attests still sends nothing under a hosted pin."""
         from types import SimpleNamespace
 
-        from kiro_crew.decisions import consent, gate
+        from aj_crew.decisions import consent, gate
 
         endpoint = "http://127.0.0.1:8102/v1/systemone"
         self._runtime(monkeypatch, preset="plumb-4b", state="running", port=8102)
@@ -1140,8 +1140,8 @@ class TestCapabilityCeiling:
     def test_only_a_route_built_preset_has_a_presets_shape(self):
         """A hand-written loopback address can be a tunnel to hosted Jev, so only the
         exact address the provider route builds has a preset's shape."""
-        from kiro_crew.config.sections import DECISION_PROVIDER_ENDPOINT_DEFAULT
-        from kiro_crew.decisions.capability import names_local_preset
+        from aj_crew.config.sections import DECISION_PROVIDER_ENDPOINT_DEFAULT
+        from aj_crew.decisions.capability import names_local_preset
 
         assert names_local_preset("http://127.0.0.1:8102/v1/systemone", "plumb-4b") is True
         assert names_local_preset("http://127.0.0.1:8102/v1/systemone/", "plumb-4b") is False
@@ -1150,7 +1150,7 @@ class TestCapabilityCeiling:
 
     @staticmethod
     def _runtime(monkeypatch, **status):
-        from kiro_crew.decisions import local_runtime
+        from aj_crew.decisions import local_runtime
 
         full = {
             "preset": "",
@@ -1168,7 +1168,7 @@ class TestCapabilityCeiling:
     def test_a_preset_shaped_address_nothing_runs_is_not_local(self, monkeypatch):
         """config.json has other writers: a route-built address alone names a port,
         not what listens there, so it must not move the seam onto the local row."""
-        from kiro_crew.decisions.capability import is_local_preset
+        from aj_crew.decisions.capability import is_local_preset
 
         self._runtime(monkeypatch)
         assert is_local_preset("http://127.0.0.1:8102/v1/systemone", "plumb-4b") is False
@@ -1178,7 +1178,7 @@ class TestCapabilityCeiling:
         )
 
     def test_the_runtime_attests_the_preset_it_runs_on_its_port(self, monkeypatch):
-        from kiro_crew.decisions.capability import is_local_preset
+        from aj_crew.decisions.capability import is_local_preset
 
         self._runtime(monkeypatch, preset="plumb-4b", state="running", port=8102)
         assert is_local_preset("http://127.0.0.1:8102/v1/systemone", "plumb-4b") is True
@@ -1190,7 +1190,7 @@ class TestCapabilityCeiling:
     def test_a_preset_being_prepared_is_local_for_consent_only(self, monkeypatch):
         """While it downloads, nothing of ours listens on the port, so the send path
         stays on the hosted row; the consent switch may still be offered for it."""
-        from kiro_crew.decisions.capability import is_local_preset
+        from aj_crew.decisions.capability import is_local_preset
 
         self._runtime(monkeypatch, preset="laya", state="downloading", port=8104)
         assert is_local_preset("http://127.0.0.1:8104/v1/systemone", "english") is False
@@ -1202,7 +1202,7 @@ class TestCapabilityCeiling:
         """The surface key is what a profile binds on, and it is never a caller
         value -- a request carrying ``slack:x`` must not dodge a dashboard-bound
         profile. An unevaluable ceiling denies."""
-        from kiro_crew.decisions import capability
+        from aj_crew.decisions import capability
 
         seen: list[dict] = []
 
@@ -1234,7 +1234,7 @@ class TestCapabilityCeiling:
     ):
         """``vet_and_audit`` never ran, so it wrote nothing: the probe must audit
         the denial it is about to act on itself."""
-        from kiro_crew.decisions import capability
+        from aj_crew.decisions import capability
 
         monkeypatch.setattr(
             capability, "vet_and_audit", lambda *_a, **_k: (_ for _ in ()).throw(RuntimeError())
@@ -1251,7 +1251,7 @@ class TestCapabilityCeiling:
         moves between them (a central-policy install, a profile reload), the pair may
         mix snapshots: the old hosted permit with the new local permit. The local side
         must fail closed for that call, audited, rather than run past a fresh deny."""
-        from kiro_crew.decisions import capability
+        from aj_crew.decisions import capability
 
         generation = iter([1, 2])
         monkeypatch.setattr(capability, "governance_answer_generation", lambda: next(generation))
@@ -1290,7 +1290,7 @@ class TestCapabilityCeiling:
     async def test_enabling_is_refused_and_nothing_is_written(
         self, keystone, audit, configured, ceiling, governance_rows
     ):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         ceiling(_PIN_DOC)
         resp = await api_decisions_consent_put(
@@ -1307,7 +1307,7 @@ class TestCapabilityCeiling:
     ):
         """The owner consented BEFORE the pin. Refusing the disabling write too
         would trap them with a keystone saying ``true`` they cannot clear."""
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         keystone.write_text(
             json.dumps({"enabled": True, "endpoint": DEFAULT_ENDPOINT}), encoding="utf-8"
@@ -1330,7 +1330,7 @@ class TestCapabilityCeiling:
         The scope rides along at its REVOKING value (the route refuses a body naming
         neither switch nor scope), so the refusal can only come from the ceiling.
         """
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         keystone.write_text(
             json.dumps(
@@ -1352,7 +1352,7 @@ class TestCapabilityCeiling:
         self, keystone, audit, configured, ceiling, governance_rows
     ):
         """``0`` takes prior turns back, so it is a revocation and must not be trapped."""
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         keystone.write_text(
             json.dumps(
@@ -1372,7 +1372,7 @@ class TestCapabilityCeiling:
         self, keystone, audit, configured, ceiling, governance_rows
     ):
         """Disabling forces the ceiling to 0, so the number in the body grants nothing."""
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         keystone.write_text(
             json.dumps(
@@ -1399,7 +1399,7 @@ class TestCapabilityCeiling:
         body's ``endpoint`` is only ever the echo an enabling write is checked against,
         and an enabling write is refused under the pin by the test above.
         """
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         keystone.write_text(
             json.dumps({"enabled": True, "endpoint": DEFAULT_ENDPOINT}), encoding="utf-8"
@@ -1417,7 +1417,7 @@ class TestCapabilityCeiling:
     ):
         """A keystone consenting for the configured address, under a pin: the card
         must not read ``permits: true`` and offer to send."""
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_get
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_get
 
         keystone.write_text(
             json.dumps({"enabled": True, "endpoint": DEFAULT_ENDPOINT}), encoding="utf-8"
@@ -1444,8 +1444,8 @@ class TestCapabilityCeiling:
         ``true``. Presentation, not the control -- the two chokepoints above are."""
         from aiohttp.test_utils import make_mocked_request
 
-        import kiro_crew.dashboard.handlers as handlers_pkg
-        from kiro_crew.dashboard.handlers.files import api_dashboard_config
+        import aj_crew.dashboard.handlers as handlers_pkg
+        from aj_crew.dashboard.handlers.files import api_dashboard_config
 
         monkeypatch.setattr(handlers_pkg, "sel", lambda: MagicMock())
         resp = await api_dashboard_config(make_mocked_request("GET", "/api/dashboard/config"))
@@ -1489,8 +1489,8 @@ class TestCapabilityCeiling:
         field has to be DROPPED rather than rejected or every toggle save 400s."""
         from aiohttp.test_utils import make_mocked_request
 
-        import kiro_crew.dashboard.handlers as handlers_pkg
-        from kiro_crew.dashboard.handlers.files import api_dashboard_config
+        import aj_crew.dashboard.handlers as handlers_pkg
+        from aj_crew.dashboard.handlers.files import api_dashboard_config
 
         monkeypatch.setattr(handlers_pkg, "sel", lambda: MagicMock())
         get = await api_dashboard_config(make_mocked_request("GET", "/api/dashboard/config"))
@@ -1517,7 +1517,7 @@ class TestCapabilityCeiling:
 
 def _gate_module():
     """The gate, imported late for the reason the handler imports it late."""
-    from kiro_crew.decisions import gate
+    from aj_crew.decisions import gate
 
     return gate
 
@@ -1550,8 +1550,8 @@ class TestPointProjection:
     async def test_every_shipped_point_gets_a_row_in_the_registry_s_own_order(
         self, keystone, audit, configured
     ):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_get
-        from kiro_crew.decisions import gate
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_get
+        from aj_crew.decisions import gate
 
         rows = json.loads((await api_decisions_consent_get(_request())).text)["points"]
         assert [r["id"] for r in rows] == list(gate.DECISION_POINT_NAMES)
@@ -1582,7 +1582,7 @@ class TestPointProjection:
         telling them the seam works when no turn can reach it. ``off`` is already every
         reason nothing is sent and a share of zero is one of them.
         """
-        from kiro_crew.dashboard.handlers import decisions as mod
+        from aj_crew.dashboard.handlers import decisions as mod
 
         # Every scope the GATE knows about, read from its own map rather than listed
         # here: a scope this test does not grant leaves its point reporting
@@ -1624,7 +1624,7 @@ class TestPointProjection:
         import asyncio as _asyncio
         import threading
 
-        from kiro_crew.dashboard.handlers import decisions as mod
+        from aj_crew.dashboard.handlers import decisions as mod
 
         loop_thread = threading.current_thread()
         seen: list[threading.Thread] = []
@@ -1643,7 +1643,7 @@ class TestPointProjection:
 
     def test_an_unreadable_share_reports_no_point_as_running(self, monkeypatch):
         """Fail-closed, the same direction the gate's own bucket parse takes."""
-        from kiro_crew.dashboard.handlers import decisions as mod
+        from aj_crew.dashboard.handlers import decisions as mod
 
         class Boom:
             @staticmethod
@@ -1652,8 +1652,8 @@ class TestPointProjection:
 
         monkeypatch.setitem(
             __import__("sys").modules,
-            "kiro_crew.config.loader",
-            type("M", (), {"KiroCrewConfig": Boom}),
+            "aj_crew.config.loader",
+            type("M", (), {"AjCrewConfig": Boom}),
         )
         assert mod._sampling_admits_anybody() is False
 
@@ -1662,8 +1662,8 @@ class TestPointProjection:
         self, keystone, audit, configured, monkeypatch
     ):
         """The property the projection exists for, driven by widening the registry."""
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_get
-        from kiro_crew.decisions import gate
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_get
+        from aj_crew.decisions import gate
 
         monkeypatch.setattr(
             gate, "DECISION_POINT_NAMES", (*gate.DECISION_POINT_NAMES, "invented.point")
@@ -1685,7 +1685,7 @@ class TestPointProjection:
         switched off: the fix is its own panel's switch, so it must not report the
         word that sends a reader back to the main switch they already turned on.
         """
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_get
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_get
 
         # The judge is the one point with TWO lanes, and only its Jev lane answers to a
         # scope. Left on the default ``auto`` it lands on the small model when Jev is
@@ -1746,14 +1746,14 @@ class TestPointProjection:
     async def test_a_governance_pin_makes_every_row_off_even_with_consent_recorded(
         self, keystone, audit, configured, monkeypatch
     ):
-        from kiro_crew.dashboard.handlers import decisions as mod
+        from aj_crew.dashboard.handlers import decisions as mod
 
         keystone.write_text(
             json.dumps({"enabled": True, "endpoint": DEFAULT_ENDPOINT, "tool_args": True}),
             encoding="utf-8",
         )
         monkeypatch.setattr(
-            "kiro_crew.decisions.capability.is_decisions_denied", lambda *_a, **_k: True
+            "aj_crew.decisions.capability.is_decisions_denied", lambda *_a, **_k: True
         )
         rows = json.loads((await mod.api_decisions_consent_get(_request())).text)["points"]
         assert {r["status"] for r in rows} == {"off"}
@@ -1773,7 +1773,7 @@ class TestScopeOnlyWrite:
     async def test_it_moves_the_scope_and_leaves_the_switch_and_address_alone(
         self, keystone, audit, configured
     ):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         keystone.write_text(
             json.dumps({"enabled": True, "endpoint": DEFAULT_ENDPOINT}), encoding="utf-8"
@@ -1803,7 +1803,7 @@ class TestScopeOnlyWrite:
         address. A predicate that named only the two scopes refused every ceiling save
         with a 400 -- the control dead on the one path an owner has for it.
         """
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         keystone.write_text(
             json.dumps({"enabled": True, "endpoint": DEFAULT_ENDPOINT}), encoding="utf-8"
@@ -1824,7 +1824,7 @@ class TestScopeOnlyWrite:
     @pytest.mark.asyncio
     async def test_a_body_naming_nothing_at_all_is_still_refused(self, keystone, audit, configured):
         """The property the predicate exists for, which widening it must not lose."""
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         keystone.write_text(
             json.dumps({"enabled": True, "endpoint": DEFAULT_ENDPOINT}), encoding="utf-8"
@@ -1843,7 +1843,7 @@ class TestScopeOnlyWrite:
         says so, which is what the card re-reads -- and it is the same answer a
         concurrent revoke landing first would produce.
         """
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         resp = await api_decisions_consent_put(_request(body={"tool_args": True}))
         assert resp.status == 200
@@ -1856,7 +1856,7 @@ class TestScopeOnlyWrite:
     async def test_it_is_refused_when_the_endpoint_moved_under_the_consent(
         self, keystone, audit, configured
     ):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         keystone.write_text(
             json.dumps({"enabled": True, "endpoint": DEFAULT_ENDPOINT}), encoding="utf-8"
@@ -1872,13 +1872,13 @@ class TestScopeOnlyWrite:
     async def test_a_governance_pin_refuses_it_like_an_enabling_write(
         self, keystone, audit, configured, monkeypatch
     ):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         keystone.write_text(
             json.dumps({"enabled": True, "endpoint": DEFAULT_ENDPOINT}), encoding="utf-8"
         )
         monkeypatch.setattr(
-            "kiro_crew.decisions.capability.is_decisions_denied", lambda *_a, **_k: True
+            "aj_crew.decisions.capability.is_decisions_denied", lambda *_a, **_k: True
         )
         resp = await api_decisions_consent_put(_request(body={"tool_args": True}))
         assert resp.status == 403

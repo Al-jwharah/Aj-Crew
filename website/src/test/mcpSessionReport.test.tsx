@@ -90,7 +90,7 @@ describe('mcpSessionFailureReason', () => {
 })
 
 const servers = [
-  { name: 'kirocrew-core', enabled: true },
+  { name: 'ajcrew-core', enabled: true },
   { name: 'github-mcp', enabled: true },
   { name: 'slack-mcp', enabled: true },
 ]
@@ -120,8 +120,8 @@ describe('McpToolsPanel session report', () => {
       <McpToolsPanel
         {...base}
         sessionReport={report({
-          configured: ['kirocrew-core'],
-          ready: ['kirocrew-core'],
+          configured: ['ajcrew-core'],
+          ready: ['ajcrew-core'],
           failed: ['slack-mcp'],
           failures: { 'slack-mcp': 'spawn ENOENT' },
         })}
@@ -140,7 +140,7 @@ describe('McpToolsPanel session report', () => {
       <McpToolsPanel
         {...base}
         sessionReport={report({
-          ready: ['kirocrew-core'],
+          ready: ['ajcrew-core'],
           failed: ['slack-mcp'],
           awaiting_auth: ['github-mcp'],
         })}
@@ -156,7 +156,7 @@ describe('McpToolsPanel session report', () => {
   })
 
   it('renders an unreported server as a dashed ring, not a solid hollow dot', () => {
-    render(<McpToolsPanel {...base} sessionReport={report({ ready: ['kirocrew-core'] })} />)
+    render(<McpToolsPanel {...base} sessionReport={report({ ready: ['ajcrew-core'] })} />)
     const unreported = screen.getAllByTitle('No report from this session yet')
     expect(unreported).toHaveLength(2)
     for (const mark of unreported) {
@@ -181,7 +181,7 @@ describe('McpToolsPanel session report', () => {
   })
 
   it('carries no footnote explaining where the list comes from', () => {
-    render(<McpToolsPanel {...base} sessionReport={report({ ready: ['kirocrew-core'] })} />)
+    render(<McpToolsPanel {...base} sessionReport={report({ ready: ['ajcrew-core'] })} />)
     expect(screen.queryByText(/this agent's configuration/)).toBeNull()
   })
 
@@ -220,7 +220,7 @@ describe('McpToolsPanel session report', () => {
     render(
       <McpToolsPanel
         {...base}
-        sessionReport={report({ ready: ['kirocrew-core', 'slack-mcp'], no_tools: ['slack-mcp'] })}
+        sessionReport={report({ ready: ['ajcrew-core', 'slack-mcp'], no_tools: ['slack-mcp'] })}
       />,
     )
     const warning = screen.getByRole('status')
@@ -231,7 +231,7 @@ describe('McpToolsPanel session report', () => {
     // row-scanning reader sees; the healthy row has none.
     const name = screen.getByText('slack-mcp')
     expect(name.parentElement?.querySelector('svg.text-warn')).not.toBeNull()
-    expect(screen.getByText('kirocrew-core').parentElement?.querySelector('svg.text-warn')).toBeNull()
+    expect(screen.getByText('ajcrew-core').parentElement?.querySelector('svg.text-warn')).toBeNull()
   })
 
   it('names a no-tools server the configured list does not show', () => {
@@ -245,7 +245,7 @@ describe('McpToolsPanel session report', () => {
   })
 
   it('shows no warning when every server gave tools', () => {
-    render(<McpToolsPanel {...base} sessionReport={report({ ready: ['kirocrew-core'] })} />)
+    render(<McpToolsPanel {...base} sessionReport={report({ ready: ['ajcrew-core'] })} />)
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 })

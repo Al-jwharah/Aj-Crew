@@ -33,8 +33,8 @@ from aws_control_backup_retention_helpers import (
     _write_account,
 )
 
-from kiro_crew.apps.builtins.aws_control.backend import backup, storage
-from kiro_crew.deploy.engine import AWSError
+from aj_crew.apps.builtins.aws_control.backend import backup, storage
+from aj_crew.deploy.engine import AWSError
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 audit = aws_control_backup_retention_helpers.audit
@@ -583,13 +583,13 @@ class TestEveryTerminalSweepStateReachesTheStatusRead:
         backup.clear_stop()
         drive.rows = _archives(backup.KIND_SNAPSHOT, ["01", "02", "03"])
         monkeypatch.setattr(
-            "kiro_crew.deploy.engine._checked",
+            "aj_crew.deploy.engine._checked",
             lambda *a, **k: json.dumps({"Account": ACCOUNT}),
         )
-        monkeypatch.setattr("kiro_crew.apps.manager.is_app_enabled", lambda name: True)
+        monkeypatch.setattr("aj_crew.apps.manager.is_app_enabled", lambda name: True)
         grant = mock.Mock(account=ACCOUNT)
-        monkeypatch.setattr("kiro_crew.aws_consent.read_grant", lambda service: grant)
-        monkeypatch.setattr("kiro_crew.aws_consent.is_granted", lambda *a, **k: (True, ""))
+        monkeypatch.setattr("aj_crew.aws_consent.read_grant", lambda service: grant)
+        monkeypatch.setattr("aj_crew.aws_consent.is_granted", lambda *a, **k: (True, ""))
         real = _REAL_AUTHORIZE_UPLOAD
         calls = {"n": 0}
 
@@ -620,14 +620,14 @@ class TestEveryTerminalSweepStateReachesTheStatusRead:
         backup.clear_stop()
         drive.rows = _archives(backup.KIND_SNAPSHOT, ["01", "02", "03"])
         monkeypatch.setattr(
-            "kiro_crew.deploy.engine._checked",
+            "aj_crew.deploy.engine._checked",
             lambda *a, **k: json.dumps({"Account": ACCOUNT}),
         )
         enabled = {"on": True}
-        monkeypatch.setattr("kiro_crew.apps.manager.is_app_enabled", lambda name: enabled["on"])
+        monkeypatch.setattr("aj_crew.apps.manager.is_app_enabled", lambda name: enabled["on"])
         grant = mock.Mock(account=ACCOUNT)
-        monkeypatch.setattr("kiro_crew.aws_consent.read_grant", lambda service: grant)
-        monkeypatch.setattr("kiro_crew.aws_consent.is_granted", lambda *a, **k: (True, ""))
+        monkeypatch.setattr("aj_crew.aws_consent.read_grant", lambda service: grant)
+        monkeypatch.setattr("aj_crew.aws_consent.is_granted", lambda *a, **k: (True, ""))
         calls = {"n": 0}
 
         def gate(*args: Any, **kwargs: Any) -> None:

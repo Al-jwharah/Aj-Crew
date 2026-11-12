@@ -15,10 +15,10 @@ from typing import Any
 import pytest
 from test_guide_routes import OWNER, FakeState, _quiet_sel, _run, agent  # noqa: F401
 
-from kiro_crew import guide_catalog
-from kiro_crew.dashboard import guide_observe
-from kiro_crew.dashboard.guide_observe import ObservationHub, observation_hub_for
-from kiro_crew.dashboard.guide_runs import GuideError, GuideStore, guide_store_for
+from aj_crew import guide_catalog
+from aj_crew.dashboard import guide_observe
+from aj_crew.dashboard.guide_observe import ObservationHub, observation_hub_for
+from aj_crew.dashboard.guide_runs import GuideError, GuideStore, guide_store_for
 
 TARGET = "chat.older-sessions"
 TOGGLE = "chat.sessions-sidebar-toggle"
@@ -299,7 +299,7 @@ def test_a_turn_the_user_did_not_send_cannot_observe_their_tab(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A loop wake or an injected turn asks nothing of the tab and leaves the guide alone."""
-    from kiro_crew.dashboard.handlers import guide as guide_routes
+    from aj_crew.dashboard.handlers import guide as guide_routes
 
     monkeypatch.setattr(guide_routes, "OBSERVE_WAIT_SECONDS", 0.05)
     state = TabState(answer=None)
@@ -323,7 +323,7 @@ def test_a_turn_the_user_did_not_send_cannot_observe_their_tab(
 def test_a_tab_that_does_not_answer_in_time_is_not_observed_and_marks_its_guide_stale(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard.handlers import guide as guide_routes
+    from aj_crew.dashboard.handlers import guide as guide_routes
 
     monkeypatch.setattr(guide_routes, "OBSERVE_WAIT_SECONDS", 0.05)
     state = TabState(answer=None)
@@ -361,7 +361,7 @@ def test_a_tab_on_another_build_is_not_observed() -> None:
 def test_a_reply_carrying_text_is_refused_and_the_answer_is_not_observed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard.handlers import guide as guide_routes
+    from aj_crew.dashboard.handlers import guide as guide_routes
 
     # The tab's reply is posted, and refused, while the request is still
     # waiting; only then does the route's wait start. So the refusal is seen
@@ -551,7 +551,7 @@ def _ui_locale(state: FakeState, headers: dict[str, str]) -> tuple[int, Any]:
 
 @pytest.fixture
 def no_configured_language(monkeypatch: pytest.MonkeyPatch) -> None:
-    import kiro_crew.context as context
+    import aj_crew.context as context
 
     monkeypatch.setattr(context, "ui_language_tag", lambda _cfg: "")
 
@@ -580,7 +580,7 @@ def test_the_tabs_ui_language_is_kept_only_as_a_shipped_tag(no_configured_langua
 
 
 def test_the_configured_language_answers_when_no_tab_has(monkeypatch: pytest.MonkeyPatch) -> None:
-    import kiro_crew.context as context
+    import aj_crew.context as context
 
     monkeypatch.setattr(context, "ui_language_tag", lambda _cfg: "de")
     state = FakeState()

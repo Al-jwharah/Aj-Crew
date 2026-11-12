@@ -4,27 +4,27 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import mcp_core, mcp_cron, mcp_dashboard
-from kiro_crew.mcp_tool_titles import _table, declared_tool_title, with_titles
+from aj_crew import mcp_core, mcp_cron, mcp_dashboard
+from aj_crew.mcp_tool_titles import _table, declared_tool_title, with_titles
 
 _SERVERS = {
-    "kirocrew-core": mcp_core,
-    "kirocrew-dashboard": mcp_dashboard,
-    "kirocrew-cron": mcp_cron,
+    "ajcrew-core": mcp_core,
+    "ajcrew-dashboard": mcp_dashboard,
+    "ajcrew-cron": mcp_cron,
 }
 
 
 def _install_builtins_that_declare_agent_tools() -> None:
     """Write each shipped built-in that declares manifest ``agentTools`` into the test home.
 
-    ``kirocrew-core`` lists such a tool only for a first-party app: one whose installed
+    ``ajcrew-core`` lists such a tool only for a first-party app: one whose installed
     slot the builtin owns. A real gateway registers every built-in at boot; the isolated
     test home has none.
     """
     import json
 
-    from kiro_crew.apps import manager
-    from kiro_crew.apps.discovery import discover_builtin_apps
+    from aj_crew.apps import manager
+    from aj_crew.apps.discovery import discover_builtin_apps
 
     for app in discover_builtin_apps():
         if app.get("agentTools"):
@@ -39,11 +39,11 @@ def _install_builtins_that_declare_agent_tools() -> None:
 
 @pytest.mark.parametrize("server", sorted(_SERVERS))
 def test_every_listed_tool_carries_its_declared_title(server: str, monkeypatch) -> None:
-    # The title table covers every DECLARED tool. ``kirocrew-core`` lists an app's
+    # The title table covers every DECLARED tool. ``ajcrew-core`` lists an app's
     # tools only while that app is enabled, and the isolated test home has
     # none installed, so the gate is held open here to compare the whole table.
-    from kiro_crew.mcp_tools import app_tools
-    from kiro_crew.mcp_tools import code_channels as code_channel_tools
+    from aj_crew.mcp_tools import app_tools
+    from aj_crew.mcp_tools import code_channels as code_channel_tools
 
     _install_builtins_that_declare_agent_tools()
     monkeypatch.setattr(app_tools, "app_enabled_state", lambda _name: True)
@@ -65,14 +65,14 @@ def test_titles_are_short_single_line_copy() -> None:
 
 
 def test_lookup_is_keyed_by_server() -> None:
-    assert declared_tool_title("kirocrew-core", "spawn_run") == "Start sub-agent"
+    assert declared_tool_title("ajcrew-core", "spawn_run") == "Start sub-agent"
     assert declared_tool_title("other-mcp", "spawn_run") == ""
-    assert declared_tool_title("kirocrew-core", "no_such_tool") == ""
+    assert declared_tool_title("ajcrew-core", "no_such_tool") == ""
 
 
 def test_with_titles_copies_and_keeps_a_title_the_descriptor_already_has() -> None:
     own = {"name": "spawn_run", "title": "Custom"}
     bare = {"name": "spawn_run"}
-    out = with_titles("kirocrew-core", [own, bare])
+    out = with_titles("ajcrew-core", [own, bare])
     assert out == [own, {"name": "spawn_run", "title": "Start sub-agent"}]
     assert "title" not in bare

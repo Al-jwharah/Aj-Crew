@@ -1,10 +1,10 @@
-"""``kiro_crew.slack.events`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.slack.events`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.slack.events`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the owners
+``aj_crew.slack.events`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the owners
 in its ``_OWNERS``, lowest layer first: ``events_block_text``, ``events_queue``,
 ``events_slash``, ``events_home_tab``, ``events_voice`` and ``events_inbound``. It keeps
 ``init_socket_mode`` and ``_route_message`` itself, and every name an owner defines still
-resolves as ``kiro_crew.slack.events.<name>``.
+resolves as ``aj_crew.slack.events.<name>``.
 
 ``test/test_facade_mirror_guards.py`` holds every mirrored facade to the shared rules. These
 tests pin what is particular to this one: every name the test trees patch through it reaches
@@ -12,7 +12,7 @@ every module holding it; the owner list and its layering; that each global rebou
 time lives in the one module that rebinds it, with every reader beside it; that the slash
 commands register at import, in the one module's order, as the functions the facade
 serves; that every owner imports on its own; that every public name the module held before
-the split still type-checks through it; that the owners log as ``kiro_crew.slack.events``;
+the split still type-checks through it; that the owners log as ``aj_crew.slack.events``;
 and the import inventory that stands in for the F401 check ``setup.cfg`` switches off
 for it.
 """
@@ -34,9 +34,9 @@ import pytest
 import source_corpus
 import test_campaign_facades_base_public_names as base_names
 
-from kiro_crew import _facade_mirror
-from kiro_crew.slack import events
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror
+from aj_crew.slack import events
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_events_facade")
 
@@ -53,14 +53,14 @@ SHARED_FACADE_CHECKS = (
     "logger_scan_can_fail",
 )
 
-FACADE = "kiro_crew.slack.events"
+FACADE = "aj_crew.slack.events"
 OWNERS = (
-    "kiro_crew.slack.events_block_text",
-    "kiro_crew.slack.events_queue",
-    "kiro_crew.slack.events_slash",
-    "kiro_crew.slack.events_home_tab",
-    "kiro_crew.slack.events_voice",
-    "kiro_crew.slack.events_inbound",
+    "aj_crew.slack.events_block_text",
+    "aj_crew.slack.events_queue",
+    "aj_crew.slack.events_slash",
+    "aj_crew.slack.events_home_tab",
+    "aj_crew.slack.events_voice",
+    "aj_crew.slack.events_inbound",
 )
 
 #: Names the test trees are known to patch through the facade, one or more per kind of
@@ -93,8 +93,8 @@ _KNOWN_SEAMS = frozenset(
 
 #: A test file worth parsing spells the facade itself, never only an ``events_*`` owner.
 _SPELLS_THE_FACADE = re.compile(
-    r"kiro_crew\.slack\.events(?![\w])"
-    r"|from\s+kiro_crew\.slack\s+import\s+"
+    r"aj_crew\.slack\.events(?![\w])"
+    r"|from\s+aj_crew\.slack\s+import\s+"
     r"(?:\([^)]*?\bevents\b(?!_)|[^\n]*?\bevents\b(?!_))"
 )
 
@@ -103,7 +103,7 @@ _SPELLS_THE_FACADE = re.compile(
 _BASE_IMPORTS = frozenset("""
     ACTIVATION_MENTION ACTIVATION_OBSERVE ACTIVATION_OFF ACTIVATION_REVIEW APPROVAL_AUTO
     APPROVAL_INTERACTIVE Any AsyncIterator AsyncWebClient Callable Coroutine
-    InterceptDecision Iterable Iterator KiroCrewConfig LINK_WINDOW_SECS Literal
+    InterceptDecision Iterable Iterator AjCrewConfig LINK_WINDOW_SECS Literal
     MAX_SESSION_TTL_SECS OrderedDict STOP_DECLINED_COMPACTING_TEXT SkillsLoader
     SocketModeRequest SocketModeResponse Stats TYPE_CHECKING
     VOICE_MEMO_DURATION_UNVERIFIED VOICE_MEMO_FAILED VOICE_MEMO_TOO_LONG
@@ -135,7 +135,7 @@ _GLUE_IMPORTS = frozenset({"_facade_mirror", "_importlib", "_sys"})
 #: The logger every owner names, so a record reads as the one module's did.
 _LOGGER_NAME = FACADE
 
-#: The ``/kirocrew`` sub-commands the one module registered at import, in its order, with
+#: The ``/ajcrew`` sub-commands the one module registered at import, in its order, with
 #: the handler each named.
 _BASE_SLASH_REGISTRATIONS = (
     ("dashboard", "_handle_dashboard"),
@@ -153,8 +153,8 @@ _BASE_SLASH_REGISTRATIONS = (
 #: Globals the family rebinds at run time with ``global name`` today, each with the one owner
 #: that rebinds it: the scan below must find at least these.
 _REBOUND_HOMES = {
-    "_skills_loader": "kiro_crew.slack.events_home_tab",
-    "_home_tab_collect_sem": "kiro_crew.slack.events_home_tab",
+    "_skills_loader": "aj_crew.slack.events_home_tab",
+    "_home_tab_collect_sem": "aj_crew.slack.events_home_tab",
 }
 
 #: Generous for an import, and well under the suite's ``--timeout=120``, so a hung child
@@ -215,34 +215,34 @@ def _run_child(code: str, workdir: Path) -> str:
 #: Each spelling the patch scan must read, and each it must skip, keyed by case id.
 _SPELLING_CASES = {
     "monkeypatch-from-import": (
-        "from kiro_crew.slack import events as ev\n"
+        "from aj_crew.slack import events as ev\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(ev, 'A', 1)\n",
         {"A"},
     ),
     "patch-object-import-as": (
-        "import kiro_crew.slack.events as events\n"
+        "import aj_crew.slack.events as events\n"
         "from unittest import mock\n"
         "def t():\n    with mock.patch.object(events, 'B'):\n        pass\n",
         {"B"},
     ),
     "mock-patch-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.slack.events.C'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.slack.events.C'):\n        pass\n",
         {"C"},
     ),
     "dotted-setattr": (
-        "def t(monkeypatch):\n    monkeypatch.setattr('kiro_crew.slack.events.D', 1)\n",
+        "def t(monkeypatch):\n    monkeypatch.setattr('aj_crew.slack.events.D', 1)\n",
         {"D"},
     ),
     # An owner is not the facade, even bound under the facade's name.
     "owner-named-like-the-facade": (
-        "from kiro_crew.slack import events_inbound as events\n"
+        "from aj_crew.slack import events_inbound as events\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(events, 'X', 1)\n",
         set(),
     ),
     "owner-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.slack.events_queue.Y'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.slack.events_queue.Y'):\n        pass\n",
         set(),
     ),
 }
@@ -353,8 +353,8 @@ def test_a_facade_write_of_a_rebound_global_lands_with_its_writer(name: str) -> 
 
 _REGISTRY_PROBE = """
 import json, sys
-import kiro_crew.slack.events as facade
-slash = sys.modules["kiro_crew.slack.events_slash"]
+import aj_crew.slack.events as facade
+slash = sys.modules["aj_crew.slack.events_slash"]
 print(json.dumps({
     "order": list(facade.SLASH_REGISTRY),
     "handlers": {name: fn.__name__ for name, (fn, _) in facade.SLASH_REGISTRY.items()},
@@ -381,8 +381,8 @@ def test_the_slash_commands_register_at_import_in_the_one_modules_order(tmp_path
 _COLD_IMPORT_PROBE = """
 import importlib, json, sys
 importlib.import_module({owner!r})
-preloaded = "kiro_crew.slack.events" in sys.modules
-import kiro_crew.slack.events as facade
+preloaded = "aj_crew.slack.events" in sys.modules
+import aj_crew.slack.events as facade
 index = vars(facade)["__facade_mirror__"]
 print(json.dumps({{
     "preloaded": preloaded, "divergent": list(index.divergent()), "owners": list(index.owners)
@@ -416,7 +416,7 @@ def test_the_mirror_indexes_exactly_the_owners_with_no_exclusion_and_no_forward(
 def test_the_owners_are_every_events_sibling() -> None:
     assert events.__file__ is not None
     siblings = sorted(
-        f"kiro_crew.slack.{path.stem}" for path in Path(events.__file__).parent.glob("events_*.py")
+        f"aj_crew.slack.{path.stem}" for path in Path(events.__file__).parent.glob("events_*.py")
     )
     assert siblings == sorted(OWNERS)
 
@@ -447,8 +447,8 @@ def _layering_gaps(trees: dict[str, ast.Module]) -> dict[str, list[str]]:
 
 def test_the_layering_check_can_fail() -> None:
     trees = {name: _tree(sys.modules[name]) for name in OWNERS}
-    trees[OWNERS[0]] = ast.parse("from kiro_crew.slack.events_inbound import SeenCache\n")
-    trees[OWNERS[1]] = ast.parse("from kiro_crew.slack import events\n")
+    trees[OWNERS[0]] = ast.parse("from aj_crew.slack.events_inbound import SeenCache\n")
+    trees[OWNERS[1]] = ast.parse("from aj_crew.slack import events\n")
     assert _layering_gaps(trees) == {
         OWNERS[0]: [OWNERS[5]],
         OWNERS[1]: [FACADE],
@@ -477,7 +477,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for owner in OWNERS:
         for node in _tree(sys.modules[owner]).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -598,10 +598,10 @@ def test_the_inventory_check_reports_a_planted_import() -> None:
     planted = (
         _source(events)
         + "\nimport pickle\nimport shelve\n"
-        + "from kiro_crew.slack.events_queue import _safe_log\n"
+        + "from aj_crew.slack.events_queue import _safe_log\n"
         + "\n\ndef _planted() -> object:\n    return shelve\n"
     )
     assert unexpected_imports(planted, _owner_names(), _owners_read()) == [
         "pickle",
-        "kiro_crew.slack.events_queue._safe_log",
+        "aj_crew.slack.events_queue._safe_log",
     ]

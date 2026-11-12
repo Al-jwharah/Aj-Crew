@@ -1,12 +1,12 @@
-"""KiroCrew packaging — plain setuptools build.
+"""Aj Crew packaging — plain setuptools build.
 
 Package metadata, dependencies, and entry points live in ``setup.cfg`` and
 ``pyproject.toml``; this file only adds a custom ``build_py`` step that copies
-the pre-built frontend assets from ``src/kiro_crew/static/dist`` into the
+the pre-built frontend assets from ``src/aj_crew/static/dist`` into the
 package.
 
 The frontend is built separately with npm/Vite in the ``website/`` directory
-and the resulting ``dist/`` is staged as ``src/kiro_crew/static/dist`` before
+and the resulting ``dist/`` is staged as ``src/aj_crew/static/dist`` before
 packaging. Vite emits content-hashed filenames that change on every build, so
 ``static/dist/`` is intentionally excluded from the ``package_data`` globs in
 ``setup.cfg``; we copy the directory tree directly here instead.
@@ -26,11 +26,11 @@ from setuptools.command.build_py import build_py
 
 
 def _load_edition_stamp() -> ModuleType:
-    """Load ``kiro_crew/_edition_stamp.py`` by path; importing the package here would pull its deps."""
+    """Load ``aj_crew/_edition_stamp.py`` by path; importing the package here would pull its deps."""
     path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "src", "kiro_crew", "_edition_stamp.py"
+        os.path.dirname(os.path.abspath(__file__)), "src", "aj_crew", "_edition_stamp.py"
     )
-    spec = importlib.util.spec_from_file_location("_kiro_crew_edition_stamp", path)
+    spec = importlib.util.spec_from_file_location("_aj_crew_edition_stamp", path)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -42,7 +42,7 @@ class E2eTestCommand(Command):
 
     Invoked as ``python setup.py test_e2e``. Distinct from the regular test run
     (the Makefile ``test`` target / plain ``pytest``) on purpose:
-      * sets ``KIROCREW_E2E=1`` to lift the ``skipif`` gate in
+      * sets ``AJCREW_E2E=1`` to lift the ``skipif`` gate in
         test_e2e_smoke.py (those tests spawn a real gateway subprocess);
       * runs only that one file, serially, clearing the default
         ``[tool:pytest]`` addopts (``-n auto`` + ``--cov`` + ``--timeout=120``)
@@ -62,7 +62,7 @@ class E2eTestCommand(Command):
     def run(self) -> None:
         base = os.path.dirname(os.path.abspath(__file__))
         env = dict(os.environ)
-        env["KIROCREW_E2E"] = "1"
+        env["AJCREW_E2E"] = "1"
         # Turn the on-loop persistence discipline into a CI-ENFORCED invariant
         # (not just a dev-only convention). The e2e harness spawns a REAL gateway
         # subprocess and drives real chat turns through it; ``spawn_feature_gateway``
@@ -76,13 +76,13 @@ class E2eTestCommand(Command):
         # allowlist guard in test/test_history_locking_remediation.py adds a
         # deterministic static check that no NEW un-offloaded production call-site
         # appears regardless of e2e coverage.
-        env["KIROCREW_STRICT_ON_LOOP_PERSIST"] = "1"
+        env["AJCREW_STRICT_ON_LOOP_PERSIST"] = "1"
         cmd = [
             sys.executable, "-m", "pytest",
             os.path.join("test", "test_e2e_smoke.py"),
             # Folded in: the dashboard Playwright suite boots the same harness
             # gateway (wired to the packaged fake ACP backend via
-            # KIROCREW_KIRO_BIN) and shells `playwright test` against it, so
+            # AJCREW_KIRO_BIN) and shells `playwright test` against it, so
             # `test_e2e` is the single offline pre-release E2E gate.
             os.path.join("test", "test_playwright_e2e.py"),
             # Drop the heavy unit-test addopts (-n auto, --cov, --timeout=120);
@@ -97,7 +97,7 @@ class E2eTestCommand(Command):
             "-v",
             "--timeout=1800",
         ]
-        print("[test_e2e] KIROCREW_E2E=1 " + " ".join(cmd))
+        print("[test_e2e] AJCREW_E2E=1 " + " ".join(cmd))
         rc = subprocess.call(cmd, cwd=base, env=env)
         if rc != 0:
             raise SystemExit(rc)
@@ -106,9 +106,9 @@ class E2eTestCommand(Command):
 class BuildWithFrontend(build_py):
     """Custom build_py that copies the pre-built frontend dist/ into the package.
 
-    Expects ``src/kiro_crew/static/dist`` to already exist in-tree (built by
+    Expects ``src/aj_crew/static/dist`` to already exist in-tree (built by
     ``npm run build`` in the ``website/`` directory and staged by
-    ``python -m kiro_crew.frontend stage``). If it is missing we print a warning
+    ``python -m aj_crew.frontend stage``). If it is missing we print a warning
     telling the user to build the frontend, but do not fail — the backend is
     still usable without the bundled web UI assets.
     """
@@ -117,10 +117,10 @@ class BuildWithFrontend(build_py):
         super().run()
         self._stamp_edition()
         base = os.path.dirname(os.path.abspath(__file__))
-        src_dist = os.path.join(base, "src", "kiro_crew", "static", "dist")
+        src_dist = os.path.join(base, "src", "aj_crew", "static", "dist")
         if os.path.isdir(src_dist):
             build_dist = os.path.join(
-                self.build_lib, "kiro_crew", "static", "dist"
+                self.build_lib, "aj_crew", "static", "dist"
             )
             if os.path.isdir(build_dist):
                 shutil.rmtree(build_dist)
@@ -133,12 +133,12 @@ class BuildWithFrontend(build_py):
                 "         Build the frontend first:\n"
                 "             cd website && npm install && npm run build\n"
                 "         then stage it: make build, or\n"
-                "             PYTHONPATH=src python -m kiro_crew.frontend stage ."
+                "             PYTHONPATH=src python -m aj_crew.frontend stage ."
             )
         self._copy_changelog(base)
 
     def _stamp_edition(self) -> None:
-        """Write ``$KIROCREW_BUILD_EDITION`` (default ``oss``) into the BUILT edition.py.
+        """Write ``$AJCREW_BUILD_EDITION`` (default ``oss``) into the BUILT edition.py.
 
         Only the copy under ``build_lib`` changes, so the source tree stays
         ``oss``. It is rewritten on every build, ``oss`` included: ``build_py``
@@ -148,14 +148,14 @@ class BuildWithFrontend(build_py):
         """
         stamp = _load_edition_stamp()
         edition = stamp.requested_edition(os.environ)
-        path = os.path.join(self.build_lib, "kiro_crew", "edition.py")
+        path = os.path.join(self.build_lib, "aj_crew", "edition.py")
         try:
             if getattr(self, "editable_mode", False):
                 # An editable install runs the source tree, which stays oss. The
                 # packaging targets run one as a prerequisite with the variable
                 # still set, so check the value but stamp nothing.
                 base = os.path.dirname(os.path.abspath(__file__))
-                stamp.check_edition(os.path.join(base, "src", "kiro_crew", "edition.py"), edition)
+                stamp.check_edition(os.path.join(base, "src", "aj_crew", "edition.py"), edition)
                 print(f"Editable install: {stamp.ENV}={edition} not stamped; source is oss")
                 return
             stamp.stamp_file(path, edition)
@@ -168,13 +168,13 @@ class BuildWithFrontend(build_py):
 
         Pip-wheel installs ship no source tree, so the dashboard's
         ``/api/changelog`` endpoint (handlers/updates_channel.py:_changelog_path) falls
-        back to a bundled ``kiro_crew/CHANGELOG.md``. Copy it in here rather than
+        back to a bundled ``aj_crew/CHANGELOG.md``. Copy it in here rather than
         via package_data because it lives at the repo root, outside the
-        ``src/kiro_crew`` package tree that setuptools globs.
+        ``src/aj_crew`` package tree that setuptools globs.
         """
         src_changelog = os.path.join(base, "CHANGELOG.md")
         if os.path.isfile(src_changelog):
-            pkg_dir = os.path.join(self.build_lib, "kiro_crew")
+            pkg_dir = os.path.join(self.build_lib, "aj_crew")
             if os.path.isdir(pkg_dir):
                 shutil.copy2(src_changelog, os.path.join(pkg_dir, "CHANGELOG.md"))
 

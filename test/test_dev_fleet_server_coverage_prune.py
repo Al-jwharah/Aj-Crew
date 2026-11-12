@@ -21,8 +21,8 @@ from dev_fleet_server_coverage_helpers import (  # noqa: F401 -- the autouse fix
     _pin_module_state,
 )
 
-from kiro_crew.apps.builtins.dev_fleet import fleet_state, repository, runtime, worktree_ops
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.apps.builtins.dev_fleet import fleet_state, repository, runtime, worktree_ops
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 # --------------------------------------------------------------------------

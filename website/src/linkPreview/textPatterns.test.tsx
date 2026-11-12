@@ -370,7 +370,7 @@ describe('textPatterns: declaring', () => {
     await settle()
     // The acronym pattern is on now, and it also matches the TK prefix of TK-1234.
     expect(spans(container)).toEqual(['ZQT', 'TK'])
-    expect(window.localStorage.getItem('kirocrew:link-preview-text-off:cards-app')).toBe('["ticket"]')
+    expect(window.localStorage.getItem('ajcrew:link-preview-text-off:cards-app')).toBe('["ticket"]')
   })
 
   it('bumps the generation only on a change', () => {

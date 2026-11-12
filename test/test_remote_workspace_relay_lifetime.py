@@ -8,10 +8,10 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.coder import remote_worker
-from kiro_crew.remote_session import relay as relay_mod
-from kiro_crew.testing.ids import seq_ids
-from kiro_crew.testing.wait import await_until
+from aj_crew.coder import remote_worker
+from aj_crew.remote_session import relay as relay_mod
+from aj_crew.testing.ids import seq_ids
+from aj_crew.testing.wait import await_until
 
 pytestmark = pytest.mark.asyncio
 

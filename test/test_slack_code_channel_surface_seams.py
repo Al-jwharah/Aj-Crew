@@ -13,8 +13,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.slack.code_channels import surface, wrapup
-from kiro_crew.slack.code_channels.store import Binding
+from aj_crew.slack.code_channels import surface, wrapup
+from aj_crew.slack.code_channels.store import Binding
 
 
 def _binding(channel: str = "C1", session_key: str = "chat-1-1") -> Binding:
@@ -26,7 +26,7 @@ def _boom(*_a: Any, **_k: Any) -> Any:
 
 
 def test_install_subscribes_its_hooks_once(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.slack.code_channels import hooks
+    from aj_crew.slack.code_channels import hooks
 
     starts: list[tuple[Any, bool]] = []
     ends: list[Any] = []
@@ -61,7 +61,7 @@ def test_a_slack_provider_that_raises_reads_as_not_connected(
 
 
 def test_dashboard_state_is_the_handlers(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     marker = object()
     monkeypatch.setattr(handler, "get_dashboard_state", lambda: marker)
@@ -85,7 +85,7 @@ def test_a_failed_audit_write_is_swallowed(monkeypatch: pytest.MonkeyPatch) -> N
 def test_caller_slot_key_is_empty_without_a_state_or_on_a_failed_lookup(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard import session_control  # the facade mirrors every holder
+    from aj_crew.dashboard import session_control  # the facade mirrors every holder
 
     assert surface.caller_slot_key(None, "chat-1-1") == ""
     assert surface.caller_slot_key(object(), "") == ""
@@ -107,7 +107,7 @@ def test_a_channel_not_fenced_here_is_never_fenced_unrecorded(
 
 
 def test_the_workspace_gate_fails_closed(monkeypatch: pytest.MonkeyPatch) -> None:
-    import kiro_crew.platform as platform
+    import aj_crew.platform as platform
 
     assert surface.workspace_admitted("") is False
     gate = SimpleNamespace(check_message_origin=lambda team: team == "T1")
@@ -119,7 +119,7 @@ def test_the_workspace_gate_fails_closed(monkeypatch: pytest.MonkeyPatch) -> Non
 
 
 def test_an_unreadable_channel_policy_refuses(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.slack import channel_policy
+    from aj_crew.slack import channel_policy
 
     monkeypatch.setattr(channel_policy, "channel_refusal", lambda *_a, **_k: "")
     assert surface.channel_policy_refusal("C1", operation="op", caller="U1") == ""
@@ -132,7 +132,7 @@ def test_an_unreadable_channel_policy_refuses(monkeypatch: pytest.MonkeyPatch) -
 def test_channel_stopped_reads_the_live_scopes_and_fails_to_not_stopped(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.slack.agent_sessions import fence
+    from aj_crew.slack.agent_sessions import fence
 
     live = [
         SimpleNamespace(channel="C1", stopped=True),

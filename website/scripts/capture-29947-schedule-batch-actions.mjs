@@ -17,9 +17,9 @@ mkdirSync(OUT, { recursive: true })
 
 const now = Math.floor(Date.now() / 1000)
 const SEED_JOBS = [
-  { id: 'a1', name: 'Morning digest', schedule: '0 8 * * 1-5', message: 'Summarise overnight activity.', enabled: true, agent: 'kirocrew', last_status: 'ok', last_run_ts: now - 3600, next_run_ts: now + 7200 },
-  { id: 'b2', name: 'PR review sweep', schedule: 'every 1h', message: 'Check open PRs for new comments.', enabled: true, strict_schedule: true, agent: 'kirocrew', last_status: 'ok', last_run_ts: now - 600, next_run_ts: now + 3000 },
-  { id: 'c3', name: 'Weekly report', schedule: '0 17 * * 5', message: 'Write the weekly report.', enabled: false, agent: 'kirocrew', last_run_ts: now - 86400 * 3, next_run_ts: null },
+  { id: 'a1', name: 'Morning digest', schedule: '0 8 * * 1-5', message: 'Summarise overnight activity.', enabled: true, agent: 'ajcrew', last_status: 'ok', last_run_ts: now - 3600, next_run_ts: now + 7200 },
+  { id: 'b2', name: 'PR review sweep', schedule: 'every 1h', message: 'Check open PRs for new comments.', enabled: true, strict_schedule: true, agent: 'ajcrew', last_status: 'ok', last_run_ts: now - 600, next_run_ts: now + 3000 },
+  { id: 'c3', name: 'Weekly report', schedule: '0 17 * * 5', message: 'Write the weekly report.', enabled: false, agent: 'ajcrew', last_run_ts: now - 86400 * 3, next_run_ts: null },
   { id: 'd4', name: 'Feed poller', schedule: 'every 300s', script: '~/.kiro/crew/crons/feed.py:check', message: '', enabled: true, is_running: true, last_run_ts: now - 30, next_run_ts: now + 270 },
 ]
 
@@ -38,7 +38,7 @@ async function open(theme, { failToggle = false, folders = [], check = true } = 
       if (path === '/api/crons') { await json(route, { jobs: JOBS }); return true }
       if (path === '/api/cron-folders') { await json(route, folders); return true }
       if (path === '/api/crons/history') { await json(route, { runs: [] }); return true }
-      if (path === '/api/agents') { await json(route, { agents: [{ name: 'kirocrew' }], default_agent: 'kirocrew' }); return true }
+      if (path === '/api/agents') { await json(route, { agents: [{ name: 'ajcrew' }], default_agent: 'ajcrew' }); return true }
       if (path === '/api/models') { await json(route, []); return true }
       if (path === '/api/members') { await json(route, { members: [] }); return true }
       if (/^\/api\/crons\/[^/]+\/enable$/.test(path)) {

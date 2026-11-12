@@ -10,11 +10,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from kiro_crew.deploy.iam import boundary_policy_document, policy_document
+from aj_crew.deploy.iam import boundary_policy_document, policy_document
 
 _TEMPLATES = (
     Path(__file__).resolve().parents[1]
-    / "src/kiro_crew/deploy/skills/artifact-deploy/templates"
+    / "src/aj_crew/deploy/skills/artifact-deploy/templates"
 )
 
 
@@ -47,7 +47,7 @@ def test_fullstack_policy_grants_scoped_log_group_perms():
     assert logs_st, "no logs statement in fullstack policy"
     res = logs_st[0]["Resource"]
     res = res if isinstance(res, list) else [res]
-    assert all("/kirocrew-deploy-app/" in r for r in res), res
+    assert all("/ajcrew-deploy-app/" in r for r in res), res
     assert all(r != "*" for r in res), res
     # logs:DescribeLogGroups is not resource-scopable — must be Resource "*".
     desc = [s for s in doc["Statement"] if s.get("Action") == ["logs:DescribeLogGroups"]]

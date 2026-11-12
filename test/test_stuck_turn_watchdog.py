@@ -25,15 +25,15 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp import session_handle_dispatch
-from kiro_crew.acp.session_handle import AcpSessionHandle, WatchdogSettings
-from kiro_crew.acp.types import (
+from aj_crew.acp import session_handle_dispatch
+from aj_crew.acp.session_handle import AcpSessionHandle, WatchdogSettings
+from aj_crew.acp.types import (
     METHOD_REQUEST_PERMISSION,
     METHOD_SESSION_UPDATE,
     STOP_REASON_TOOL_STALL,
     JsonRpcMessage,
 )
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.testing.wait import default_timeout
 
 # Windows tight enough that a park of a few hundred ms is many multiples of the
 # suspect window: without the correction the arm would act well inside the test.
@@ -318,7 +318,7 @@ async def test_rejecting_also_ends_the_human_wait():
 
 
 def _make_manager():
-    from kiro_crew.session import SessionManager
+    from aj_crew.session import SessionManager
 
     cfg = MagicMock()
     cfg.session.pool_size = 0
@@ -486,14 +486,14 @@ async def test_stuck_turn_survives_a_raising_callback(caplog):
 
     manager.on_stuck_turn = _boom
 
-    with caplog.at_level("WARNING", logger="kiro_crew.session"):
+    with caplog.at_level("WARNING", logger="aj_crew.session"):
         await manager._stuck_turn_check()  # must not raise
 
     # The first raising callback must not cost the second parked turn its report.
     reported = [
         r.args[0]
         for r in caplog.records
-        if r.name == "kiro_crew.session" and "has not been pulled" in r.getMessage()
+        if r.name == "aj_crew.session" and "has not been pulled" in r.getMessage()
     ]
     assert reported == ["dashboard:a", "dashboard:b"]
 
@@ -523,7 +523,7 @@ def test_the_notice_states_the_duration_and_floors_at_one_minute():
     """The duration is the point — it is what separates this from a slow turn.
     Flooring at 1 matters because integer division of a minutes-scale threshold
     would otherwise render "0 min", which only reads as a bug."""
-    from kiro_crew.dashboard.state import stuck_turn_notice
+    from aj_crew.dashboard.state import stuck_turn_notice
 
     assert "10 min" in stuck_turn_notice(600.0)
     assert "1 min" in stuck_turn_notice(59.0)  # floored, never "0 min"
@@ -533,7 +533,7 @@ def test_the_notice_states_the_duration_and_floors_at_one_minute():
 def test_the_notice_promises_no_remedy_it_did_not_perform():
     """The hook cancels nothing, so the notice must not imply recovery is under
     way — what the turn is blocked on is not knowable from where it was seen."""
-    from kiro_crew.dashboard.state import stuck_turn_notice
+    from aj_crew.dashboard.state import stuck_turn_notice
 
     text = stuck_turn_notice(600.0).lower()
     assert "nothing has been cancelled" in text
@@ -551,8 +551,8 @@ def test_the_dashboard_subscribes_to_the_hook():
     import inspect
     from pathlib import Path
 
-    from kiro_crew.dashboard import state as state_mod
-    from kiro_crew.session import SessionManager
+    from aj_crew.dashboard import state as state_mod
+    from aj_crew.session import SessionManager
 
     owners = sorted((Path(state_mod.__file__).parent / "state_parts").glob("*.py"))
     src = inspect.getsource(state_mod.DashboardState) + "\n".join(

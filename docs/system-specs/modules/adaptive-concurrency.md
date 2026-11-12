@@ -1,4 +1,4 @@
-# Adaptive concurrency (`kiro_crew.adaptive`)
+# Adaptive concurrency (`aj_crew.adaptive`)
 
 The controller that turns the user's concurrency configuration into a runtime
 cap the host can actually sustain. It implements RFC
@@ -436,9 +436,9 @@ running while the controller's timer was late. `adaptive/busy.py`'s
 `LoopBusySampler` is one daemon thread, armed before each sample's sleep for the
 sleep plus `lag_decrease_ms`; if the controller has not woken by then it reads the
 loop thread's frame once, and the controller disarms it on waking. It names code
-only (the innermost frame, and the innermost `kiro_crew` frame below a library
+only (the innermost frame, and the innermost `aj_crew` frame below a library
 frame, each at most 120 characters), never a file path, argument or local value.
-The walk stops at asyncio's `Handle._run`; with no `kiro_crew` frame inside the
+The walk stops at asyncio's `Handle._run`; with no `aj_crew` frame inside the
 callback the handle is running, it names that callback (the watchdog's
 `stall_enrichment._callable_name`, attributes only), which is the only name a
 native callback has.
@@ -511,7 +511,7 @@ answers does the tool print `agent.max_subagents`, and then it is labelled a
 ceiling rather than the cap in force -- the number a caller sizes a fan-out from
 has to be the effective one.
 
-**`kirocrew doctor` is another process outside the gateway.** Its overload
+**`ajcrew doctor` is another process outside the gateway.** Its overload
 section prints the configured adaptive bounds, then reads the same `GET
 /api/spawn/adaptive` snapshot with the local secret resolved for the
 `127.0.0.1` listener it dials (over the gateway's unix socket when that file
@@ -548,11 +548,11 @@ Pinned by `test_subagent_memory_bounds_concurrency.py::
 test_the_prompt_figure_is_the_auto_ceiling_on_any_host` and
 `test_the_spawn_tool_names_the_figure_and_the_memory_wait`.
 
-Metrics: `kirocrew.adaptive.decisions{action}` (`metrics/events.py::ADAPTIVE_DECISIONS`)
+Metrics: `ajcrew.adaptive.decisions{action}` (`metrics/events.py::ADAPTIVE_DECISIONS`)
 increments once per decision that changed a cap or the paused flag; `action` is
 the closed policy enum. Holds and fixed-mode ticks are not counted. Each tick also
 records the process RSS and CPU-utilization histograms
-(`kirocrew.process.memory.rss_sampled`, `kirocrew.process.cpu.utilization`;
+(`ajcrew.process.memory.rss_sampled`, `ajcrew.process.cpu.utilization`;
 `PROCESS_RSS_SAMPLED` and `PROCESS_CPU_UTILIZATION` in `metrics/events.py`).
 
 ## Dependency signals

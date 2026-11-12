@@ -90,7 +90,7 @@ Extract `website/src/chat-core/` as four headless layers plus per-surface chrome
 
 Background: P3's ChatEmbed adoption (#8631, to land after #8599) mounts the real `ChatInput`, whose subtree reads slot state from the dashboard Redux store. That flips `ChatEmbed`'s contract from "no Redux dependency" to "must mount under the host store", and points the `app-sdk → components/providers/hooks` dependency opposite to the standalone-publish plan in `app-sdk/index.ts`. Both in-tree hosts (spec-builder, ops-mission-control) already mount in-host, so nothing breaks today.
 
-**Gate: met (2026-10-11).** The gate was that `@kirocrew/app-sdk` must not publish standalone until `ChatEmbed` mounts without a `Provider`. #8651 [closed as delivered](https://github.com/kirodotdev/KiroCrew/issues/8651#issuecomment-6113694017) on 2026-10-11: #8631 never reached `main`, so `ChatEmbed` never mounted the store-bound `ChatInput`; it mounts the store-free `Composer` root and atoms (P3-f), and `ChatEmbed.composerStoreFree.test.tsx` pins that statically. The standalone publish no longer waits on #8651. What stays true: the dashboard `ChatInput` is still store-bound, so a later change that mounts it inside `ChatEmbed` has to bring the store-free seam with it.
+**Gate: met (2026-10-11).** The gate was that `@ajcrew/app-sdk` must not publish standalone until `ChatEmbed` mounts without a `Provider`. #8651 [closed as delivered](https://github.com/kirodotdev/KiroCrew/issues/8651#issuecomment-6113694017) on 2026-10-11: #8631 never reached `main`, so `ChatEmbed` never mounted the store-bound `ChatInput`; it mounts the store-free `Composer` root and atoms (P3-f), and `ChatEmbed.composerStoreFree.test.tsx` pins that statically. The standalone publish no longer waits on #8651. What stays true: the dashboard `ChatInput` is still store-bound, so a later change that mounts it inside `ChatEmbed` has to bring the store-free seam with it.
 
 ### 4.2 Progress (2026-09-05)
 
@@ -152,7 +152,7 @@ Follow-ups recorded during review, not yet scheduled: route SideChat's four rema
 ## 6. Risks
 
 - `ChatPage.tsx` is entangled with Redux slots, URL sync, and panels; extraction pulls threads. Mitigation: strangler order (registry first, page last), per-surface capture-harness screenshots as regression evidence, and contract tests before any move.
-- `app-sdk` modules are exposed to third-party apps via `window.__kirocrew_modules`; renaming/removing exports is a compat break. Mitigation: keep `app-sdk` exports as thin re-exports over chat-core.
+- `app-sdk` modules are exposed to third-party apps via `window.__ajcrew_modules`; renaming/removing exports is a compat break. Mitigation: keep `app-sdk` exports as thin re-exports over chat-core.
 - P2 touches every send path. Mitigation: receipt-contract tests run against old and new implementations before cutover; each surface's existing send tests pass unmodified as compatibility evidence (the rule every P2 slice has held to).
 - Layer-4 adoption by an app surface couples app-sdk to the dashboard store until #8651 — see §4.1.
 

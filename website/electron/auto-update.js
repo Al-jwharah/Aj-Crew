@@ -9,7 +9,7 @@
  * support, and — on macOS — still drives Squirrel.Mac underneath, so the proven
  * atomic bundle swap is unchanged. See docs/guides/windows-install.md and issue #598.
  *
- * The ONE KiroCrew-specific concern vs. a plain Electron app is unchanged: the
+ * The ONE concern specific to Aj Crew vs. a plain Electron app is unchanged: the
  * bundled Python gateway is a long-running child process, so it MUST be stopped
  * gracefully BEFORE the app bundle is swapped — otherwise the swap races a live
  * child and can leave a half-replaced app. That is why autoInstallOnAppQuit is
@@ -28,13 +28,19 @@
  * marker-driven managed lane, both reporting through one state reporter.
  */
 
-// Default update feed host: updates.crew.kiro.dev, the pointer hostname of the
-// public distribution CDN (CloudFront + OAC over the kirocrew-updates bucket).
+// Update feed host. This build names NONE (DEFAULT_FEED_BASE below is empty):
+// it publishes no signed desktop releases of its own, and falling back to
+// another project's feed would offer that project's builds as updates to this
+// one. With no feed the updater is never armed and no host is contacted;
+// AJCREW_UPDATE_FEED names one for an operator's own mirror or the update
+// harness. The layout below is what a feed of this project's own must follow:
+// a pointer host (called updates.<host> here) and a byte host
+// (download.<host>).
 //
 // electron-updater's generic provider treats the configured URL as a DIRECTORY
 // and resolves <base>/latest-mac.yml (macOS) or <base>/latest-linux.yml (Linux)
 // from it. The artifact URLs inside those files are ABSOLUTE and point at the
-// byte hostname (download.crew.kiro.dev), which is what preserves our
+// byte hostname, which is what preserves the
 // pointer/bytes host split: `new URL(fileUrl, base)` ignores the base when
 // fileUrl is absolute. That behaviour is structural but undocumented, so
 // test/auto-update.test.js pins it against the real installed library — a
@@ -153,14 +159,14 @@ const RELAUNCH_PATH_MAX_CHARS = 1024;
 /**
  * Is this install's update lifecycle owned by an external package manager?
  *
- * Lookup order: the `KIROCREW_EXTERNALLY_MANAGED` env var (a path to a marker
+ * Lookup order: the `AJCREW_EXTERNALLY_MANAGED` env var (a path to a marker
  * file, or any other non-empty value to mark the install managed with no
- * metadata — the test-harness seam, mirroring `KIROCREW_UPDATE_FEED`, and
+ * metadata — the test-harness seam, mirroring `AJCREW_UPDATE_FEED`, and
  * honored ONLY on an unpackaged build: in a packaged app one env var in the
  * launch environment would otherwise name the file whose body we execute), then
  * the BAKED marker `<app code>/EXTERNALLY-MANAGED` (inside app.asar, next to
  * this file — placed there at build time by `packaging/build-desktop.sh` when
- * `KIROCREW_MANAGED_INSTALL_MARKER` names one; read on a PACKAGED build only,
+ * `AJCREW_MANAGED_INSTALL_MARKER` names one; read on a PACKAGED build only,
  * since in a dev checkout that directory is writable source), then the LOOSE marker
  * `<resourcesPath>/EXTERNALLY-MANAGED` a repackager drops beside the app.
  * I/O-bearing and fully injectable, like resolveLinuxInstall above.
@@ -267,7 +273,7 @@ function readExternallyManaged({
     // environment (shell profile, launchd plist, .desktop file) is writable by
     // the user, so honoring it there would let one env var choose the file whose
     // body this process shells.
-    const override = (!isPackaged && env && env.KIROCREW_EXTERNALLY_MANAGED) || "";
+    const override = (!isPackaged && env && env.AJCREW_EXTERNALLY_MANAGED) || "";
     if (override) {
       // A value that names a marker file reads it; any other non-empty value
       // (including a dangling path) marks the install managed with no metadata.
@@ -480,7 +486,9 @@ function isBundleContainerWritable(resourcesPath) {
   }
 }
 
-const DEFAULT_FEED_BASE = "https://updates.crew.kiro.dev/feed";
+// EMPTY on purpose: see the header. A release pipeline of this project's own
+// fills it in, together with DOWNLOAD_BASE below.
+const DEFAULT_FEED_BASE = "";
 const CHECK_INTERVAL_MS = 4 * 60 * 60 * 1000; // every 4h while running
 const LAUNCH_CHECK_DELAY_MS = 30 * 1000; // let startup settle first
 
@@ -496,9 +504,31 @@ const LAUNCH_CHECK_DELAY_MS = 30 * 1000; // let startup settle first
  */
 const SUPPORTED_PLATFORMS = new Set(["darwin", "linux", "win32"]);
 
+/**
+ * A host base an install may be pointed at: HTTPS, or HTTP on loopback (the
+ * local update harness). Anything else reads as "none", so a mistyped or
+ * downgraded override can neither arm the updater nor produce a download link.
+ *
+ * @param {string|undefined|null} raw
+ * @returns {string} the base without trailing slashes, or "" when unusable
+ */
+function usableBase(raw) {
+  const base = String(raw || "").trim().replace(/\/+$/, "");
+  if (!base) return "";
+  try {
+    const parsed = new URL(base);
+    const isLoopback = ["127.0.0.1", "localhost", "[::1]", "::1"].includes(parsed.hostname);
+    return parsed.protocol === "https:" || (parsed.protocol === "http:" && isLoopback) ? base : "";
+  } catch {
+    return "";
+  }
+}
+
 // Byte host for human (manual) downloads -- deliberately the same CDN the
 // updater pulls from, so a manual reinstall lands on identical artifacts.
-const DOWNLOAD_BASE = "https://download.crew.kiro.dev";
+// EMPTY unless AJCREW_DOWNLOAD_BASE names one, for the reason DEFAULT_FEED_BASE
+// is: with no byte host there is no manual-download link to offer.
+const DOWNLOAD_BASE = usableBase(process.env.AJCREW_DOWNLOAD_BASE);
 // Channels with a desktop publish lane. "dev" has none. "lts" is the LTS
 // edition's own channel (policy-channel.js), published by release-lts.yml
 // (test_windows_signing_contract.py keeps the two sets equal).
@@ -751,7 +781,7 @@ function shouldAutoOffer({ candidate, current, followedChannel, defaultChannel }
  * keeps the contract explicit and independent of that internal.
  *
  * Enforces HTTPS, with plain HTTP allowed ONLY for loopback so the local
- * update harness (KIROCREW_UPDATE_FEED=http://127.0.0.1:PORT/feed) works;
+ * update harness (AJCREW_UPDATE_FEED=http://127.0.0.1:PORT/feed) works;
  * cleartext update metadata over a real network stays rejected.
  *
  * `variant` adds one path segment below the channel, which is how a Linux
@@ -771,6 +801,7 @@ function shouldAutoOffer({ candidate, current, followedChannel, defaultChannel }
  */
 function buildFeedBase({ base, channel, variant = "" }) {
   const b = (base || DEFAULT_FEED_BASE).replace(/\/+$/, "");
+  if (!b) throw new Error("no update feed is configured for this build");
   const tail = variant ? `${encodeURIComponent(variant)}/` : "";
   const url = `${b}/${encodeURIComponent(channel)}/${tail}`;
   const parsed = new URL(url);
@@ -789,7 +820,7 @@ function buildFeedBase({ base, channel, variant = "" }) {
  * user with no next step -- the card simply re-offers the same update after
  * relaunch (observed in the field on 0.1.2-nightly.20260729t073648). Reinstalling
  * over the top is the supported recovery and is non-destructive: user data lives
- * in the KiroCrew home directory, never inside the app bundle.
+ * in the Aj Crew home directory, never inside the app bundle.
  *
  * Computed HERE rather than in the renderer because the display-oriented
  * getInfo().platform value is not the updater's routing authority. osPlatform
@@ -807,11 +838,12 @@ function buildFeedBase({ base, channel, variant = "" }) {
  * @returns {string|null}
  */
 function manualDownloadUrl(channel, osPlatform, osArch = process.arch, linuxFormat = "", macDistArch = "") {
+  if (!DOWNLOAD_BASE) return null;
   if (!channelHasLane(channel)) return null;
   // On darwin the arch comes from the BUILD, not the host: the universal DMG
-  // runs anywhere, so a universal install is offered KiroCrew.dmg whatever
+  // runs anywhere, so a universal install is offered AjCrew.dmg whatever
   // process.arch says, and a single-arch install is offered its own DMG
-  // (KiroCrew-arm64.dmg / KiroCrew-x64.dmg, the latest aliases
+  // (AjCrew-arm64.dmg / AjCrew-x64.dmg, the latest aliases
   // sign-and-notarize.yml's mac_variant legs write) so a reinstall keeps the
   // install the user chose. Linux has no universal
   // binary: publish-linux.yml publishes one artifact per arch per format under
@@ -828,8 +860,8 @@ function manualDownloadUrl(channel, osPlatform, osArch = process.arch, linuxForm
   // publish-linux.yml writes to the CDN, and the arch and extension are
   // interpolated because there are now six (arch, format) pairs to name.
   // The lts channel publishes the LTS edition under its own file stem
-  // (release-lts.yml, `KiroCrew-LTS`), so a download never reads as the oss app. // brand-ok
-  const stem = channel === "lts" ? "KiroCrew-LTS" : "KiroCrew"; // brand-ok
+  // (release-lts.yml, `AjCrew-LTS`), so a download never reads as the oss app. // brand-ok
+  const stem = channel === "lts" ? "AjCrew-LTS" : "AjCrew"; // brand-ok
   const linuxFile = linuxArch ? `${stem}-${linuxArch}.${linuxExt}` : null;
   // Windows ships x64 only. build-windows.yml has no arm64 leg, and Windows has
   // exactly one channel file whatever the arch (electron-updater appends an arch
@@ -1091,7 +1123,7 @@ function initAutoUpdate(deps) {
           : [];
       } catch { return []; }
     },
-    feedBase = process.env.KIROCREW_UPDATE_FEED || DEFAULT_FEED_BASE,
+    feedBase = process.env.AJCREW_UPDATE_FEED || DEFAULT_FEED_BASE,
     onUpdateState = null,
     log = console,
     // Whether a security policy provider currently governs this install's
@@ -1194,6 +1226,13 @@ function initAutoUpdate(deps) {
   if (!SUPPORTED_PLATFORMS.has(osPlatform)) {
     log.info(`[update] ${osPlatform} — auto-update disabled (no publish lane yet)`);
     return { check: () => {}, download: async () => {}, install: async () => {}, getInfo, disabled: "platform" };
+  }
+  // No feed is named: there is nothing to check and nothing to install from.
+  // Stand down before anything is constructed, so no host is contacted and
+  // About says why instead of offering a Check button that can only error.
+  if (!feedBase) {
+    log.info("[update] no update feed configured — auto-update disabled");
+    return { check: () => {}, download: async () => {}, install: async () => {}, getInfo, disabled: "no-feed" };
   }
   // A channel can lack a desktop publish lane entirely -- that is what
   // channelHasLane() records. No PLATFORM restricts channels today: every

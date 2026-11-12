@@ -85,7 +85,7 @@ await page.route('**/api/**', route => {
     return json(route, [{
       key: 'chat-1', title: 'Reviewing the light palette', running: false,
       last_message: 'Secondary text lives in the session rail too.', messages: 4,
-      agent: 'kirocrew', memory_mode: 'persistent', project: '', folder_id: '',
+      agent: 'ajcrew', memory_mode: 'persistent', project: '', folder_id: '',
       modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
     }])
   }

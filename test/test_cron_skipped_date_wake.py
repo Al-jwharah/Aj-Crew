@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cron
-from kiro_crew.cron import _TIMER_POLL_SECS, CronJob, CronSchedule, CronService
-from kiro_crew.cron_service.schedule import is_due, next_wake_secs
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import cron
+from aj_crew.cron import _TIMER_POLL_SECS, CronJob, CronSchedule, CronService
+from aj_crew.cron_service.schedule import is_due, next_wake_secs
+from aj_crew.testing.clock import ManualClock
 
 _NOW = datetime(2026, 10, 26, 9, 0, tzinfo=timezone.utc).timestamp()
 

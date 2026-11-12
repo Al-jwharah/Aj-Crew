@@ -108,11 +108,11 @@ const busy = params.get('busy') === '1'
 // ?subagents=1 — radar's turn runs on the server with sub-agents out, but no
 // live frame has reached this tab yet: the stream state still reads idle.
 const subagents = params.get('subagents') === '1'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 // ThemeProvider reads its cache from storage; without these it would resolve
 // its own default and repaint over the ?theme= the frame asked for.
 localStorage.setItem('mc-theme', theme)
-localStorage.setItem('mc-color-theme', 'kiro')
+localStorage.setItem('mc-color-theme', 'aj')
 
 // Live presence rides the WS `slots` frames; seed the same shape so the
 // Radar dot renders "working" from the store, not from the roster snapshot.

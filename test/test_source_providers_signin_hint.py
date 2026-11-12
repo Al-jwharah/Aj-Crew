@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard.source_providers import runner
+from aj_crew.dashboard.source_providers import runner
 
 HOST = "gitlab.example.internal"
 

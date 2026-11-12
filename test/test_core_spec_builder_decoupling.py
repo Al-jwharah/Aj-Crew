@@ -1,7 +1,7 @@
-"""GATE: Kiro Crew core does not depend on the Spec Builder (``spec-builder``) app's code.
+"""GATE: Aj Crew core does not depend on the Spec Builder (``spec-builder``) app's code.
 
 Spec Builder is to leave this repository whole. That is only possible while nothing
-outside ``src/kiro_crew/apps/builtins/`` imports it or names it. What the app keeps
+outside ``src/aj_crew/apps/builtins/`` imports it or names it. What the app keeps
 on the dashboard state it creates there itself: the outbox's process-local claim
 sets are not declared by ``DashboardState``. The scans are the shared ones in
 ``test/core_app_independence.py``.
@@ -9,9 +9,9 @@ sets are not declared by ``DashboardState``. The scans are the shared ones in
 Two properties are pinned:
 
 1. **No core module or script imports the app.** Every module under
-   ``src/kiro_crew`` outside ``apps/builtins/``, and every script under
+   ``src/aj_crew`` outside ``apps/builtins/``, and every script under
    ``scripts/``, is parsed. ``import``, ``from ... import`` (relative ones
-   resolved), ``from kiro_crew.apps.builtins import spec_builder``,
+   resolved), ``from aj_crew.apps.builtins import spec_builder``,
    ``importlib.import_module`` and ``__import__`` with a literal name are all in
    scope, and the probes below fail if any of those forms stops being caught.
 2. **The strings that still name the app are a pinned, shrinking list.** A path
@@ -38,11 +38,11 @@ import pytest
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_core_spec_builder_decoupling")
 
-APP_PACKAGE = "kiro_crew.apps.builtins.spec_builder"
+APP_PACKAGE = "aj_crew.apps.builtins.spec_builder"
 #: The package directory name and the app id: every spelling that addresses the app.
 APP_NAMES = ("spec_builder", "spec-builder")
 
-#: (path relative to ``src/kiro_crew``, or to the repo root for a script, the
+#: (path relative to ``src/aj_crew``, or to the repo root for a script, the
 #: literal): the strings core keeps on purpose, each deleted with the file it names.
 KNOWN_NAME_REFERENCES: frozenset[tuple[str, str]] = frozenset(
     {
@@ -93,7 +93,7 @@ def test_the_strings_naming_the_app_are_the_pinned_list(core_trees):
 
 def test_the_dashboard_state_declares_no_spec_builder_claim():
     """The outbox claim sets are the app's, created on first use, never core's."""
-    from kiro_crew.dashboard.state_parts import dashboard_state
+    from aj_crew.dashboard.state_parts import dashboard_state
 
     source = Path(dashboard_state.__file__).read_text(encoding="utf-8")
     assert "_spec_decision_deliveries" not in source
@@ -103,27 +103,27 @@ def test_the_dashboard_state_declares_no_spec_builder_claim():
     ("source", "importer", "is_package"),
     [
         (
-            "from kiro_crew.apps.builtins.spec_builder.backend.runtime import _dispatch_turn",
-            "kiro_crew.dashboard.x",
+            "from aj_crew.apps.builtins.spec_builder.backend.runtime import _dispatch_turn",
+            "aj_crew.dashboard.x",
             False,
         ),
-        ("import kiro_crew.apps.builtins.spec_builder.backend.routes", "kiro_crew.x", False),
-        ("from kiro_crew.apps.builtins import spec_builder", "kiro_crew.x", False),
-        ("from ..apps.builtins.spec_builder import backend", "kiro_crew.dashboard.y", False),
-        ("from .builtins.spec_builder.backend import routes", "kiro_crew.apps.y", False),
-        ("from .builtins import spec_builder", "kiro_crew.apps", True),
+        ("import aj_crew.apps.builtins.spec_builder.backend.routes", "aj_crew.x", False),
+        ("from aj_crew.apps.builtins import spec_builder", "aj_crew.x", False),
+        ("from ..apps.builtins.spec_builder import backend", "aj_crew.dashboard.y", False),
+        ("from .builtins.spec_builder.backend import routes", "aj_crew.apps.y", False),
+        ("from .builtins import spec_builder", "aj_crew.apps", True),
         (
             "import importlib\n"
-            "importlib.import_module('kiro_crew.apps.builtins.spec_builder.backend')",
-            "kiro_crew.x",
+            "importlib.import_module('aj_crew.apps.builtins.spec_builder.backend')",
+            "aj_crew.x",
             False,
         ),
-        ("__import__('kiro_crew.apps.builtins.spec_builder')", "kiro_crew.x", False),
+        ("__import__('aj_crew.apps.builtins.spec_builder')", "aj_crew.x", False),
         (
             "from typing import TYPE_CHECKING\n"
             "if TYPE_CHECKING:\n"
-            "    from kiro_crew.apps.builtins.spec_builder.backend import runtime",
-            "kiro_crew.x",
+            "    from aj_crew.apps.builtins.spec_builder.backend import runtime",
+            "aj_crew.x",
             False,
         ),
     ],
@@ -135,13 +135,13 @@ def test_the_scan_catches_every_import_form(source, importer, is_package):
 @pytest.mark.parametrize(
     "source",
     [
-        "from kiro_crew.apps import seams",
-        "from kiro_crew.apps.builtins import BUILTIN_NAMES",
-        "import kiro_crew.apps.builtins.spec_builder_extras",
+        "from aj_crew.apps import seams",
+        "from aj_crew.apps.builtins import BUILTIN_NAMES",
+        "import aj_crew.apps.builtins.spec_builder_extras",
     ],
 )
 def test_the_scan_leaves_other_imports_alone(source):
-    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "kiro_crew.x", False)
+    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "aj_crew.x", False)
 
 
 def test_the_string_scan_skips_docstrings_but_not_allowlists_ids_or_urls():
@@ -149,7 +149,7 @@ def test_the_string_scan_skips_docstrings_but_not_allowlists_ids_or_urls():
         '"""Mentions spec-builder in prose."""\n'
         "# a worker slot (Spec Builder's spec-builder, for one)\n"
         '_APPS = ("", "spec-builder")\n'
-        'pkg = "kiro_crew.apps.builtins." + "spec_builder"\n'
+        'pkg = "aj_crew.apps.builtins." + "spec_builder"\n'
         'url = f"/api/apps/spec-builder/{name}"\n'
     )
     assert sorted(independence.name_strings(tree, APP_NAMES)) == [

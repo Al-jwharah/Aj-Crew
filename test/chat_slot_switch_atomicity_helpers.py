@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import web
 
-from kiro_crew.dashboard.chat import (
+from aj_crew.dashboard.chat import (
     api_chat_slot_agent,
     api_chat_slot_model,
     api_chat_slot_project,
@@ -19,7 +19,7 @@ from kiro_crew.dashboard.chat import (
     api_chat_slot_workspace,
     api_chat_slots_model,
 )
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 # Valid registry aliases the model guard accepts (tests are exempt from the
 # hardcoded-model-literal gate; these mirror the ids the existing model-switch

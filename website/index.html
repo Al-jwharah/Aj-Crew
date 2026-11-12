@@ -30,7 +30,7 @@
   <link rel="manifest" href="/manifest.json" crossorigin="use-credentials" />
   <meta name="theme-color" content="#0d0f12" />
   <link rel="apple-touch-icon" href="/icon-192.png" />
-  <title>Kiro Crew</title>
+  <title>Aj Crew</title>
   <script>
     // The entry module (the module tag Vite appends to the document head on
     // build; the /src/main.tsx tag in the body in dev) is an ES module with a
@@ -228,7 +228,7 @@
       try { return window.self !== window.top; } catch (err) { return true; }
     }
     // An embedded page waits longer before painting, so a host that owns boot
-    // failures gets the first move. The Kiro Crew host (InstancesViewport) answers
+    // failures gets the first move. The Aj Crew host (InstancesViewport) answers
     // `script-error` by reloading the frame, which discards this timer, and keeps
     // an opaque overlay over the frame until the pane reports ready, so the panel
     // never shows twice there. A host that ignores the message used to leave a
@@ -421,7 +421,7 @@
          control is wanted in every case anyway. -->
     <style>#boot-failure-retry:focus{outline:2px solid #93c5fd;outline-offset:3px}</style>
     <div style="max-width:32rem">
-      <h1 id="boot-failure-title" style="margin:0 0 12px;font-size:1.25rem;font-weight:600">Kiro Crew did not load</h1>
+      <h1 id="boot-failure-title" style="margin:0 0 12px;font-size:1.25rem;font-weight:600">Aj Crew did not load</h1>
       <p id="boot-failure-why" style="margin:0 0 12px">Part of its code never arrived, so nothing could start. That is almost always the network or a proxy in front of it, not something you did.</p>
       <p style="margin:0 0 20px">The button below clears this page's cached copy before it reloads, which is what gets you out of it when reloading the page yourself keeps failing. None of your chats or settings are kept there, so nothing of yours is lost.       <!-- Two closing sentences, toggled by the reveal, because the two paths owe the
            reader different things. On a fetch failure the build is probably fine and
@@ -431,7 +431,7 @@
            button it offers. Both are static markup so the link survives without JS
            building HTML. `hidden` alone flips them, and neither declares an inline
            `display` -- see the note on the panel tag for why that matters. -->
-      <span id="boot-failure-next-fetch">If that does not help, the build itself is likely broken and worth reporting at <a href="https://github.com/kirodotdev/KiroCrew/issues" style="color:#93c5fd">github.com/kirodotdev/KiroCrew/issues</a>, with the line below (one tap selects it).</span><span id="boot-failure-next-build" hidden>The fault is in this build, so reloading may or may not fetch a fixed copy. Either way it is worth reporting at <a href="https://github.com/kirodotdev/KiroCrew/issues" style="color:#93c5fd">github.com/kirodotdev/KiroCrew/issues</a>, with the line below (one tap selects it).</span></p>
+      <span id="boot-failure-next-fetch">If that does not help, the build itself is likely broken and worth reporting at <a href="https://github.com/Al-jwharah/Aj-Crew/issues" style="color:#93c5fd">github.com/Al-jwharah/Aj-Crew/issues</a>, with the line below (one tap selects it).</span><span id="boot-failure-next-build" hidden>The fault is in this build, so reloading may or may not fetch a fixed copy. Either way it is worth reporting at <a href="https://github.com/Al-jwharah/Aj-Crew/issues" style="color:#93c5fd">github.com/Al-jwharah/Aj-Crew/issues</a>, with the line below (one tap selects it).</span></p>
       <button id="boot-failure-retry" type="button"
               style="font:inherit;padding:10px 18px;border:1px solid #3b82f6;border-radius:8px;background:#1d4ed8;color:#fff;cursor:pointer">Clear cache and reload</button>
       <!-- `user-select: all` so one tap or click selects the WHOLE line: the copy

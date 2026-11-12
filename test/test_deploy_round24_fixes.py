@@ -1,4 +1,4 @@
-"""Regression tests for Round-24 advisories (KiroCrew PR #6).
+"""Regression tests for Round-24 advisories (Aj Crew PR #6).
 
 F1: scan-blocked MCP previews with OVERRIDABLE (non-credential) findings are
     persisted as pending entries flagged override_scan_required, so the human
@@ -16,7 +16,7 @@ _ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_f1_pending_schema_carries_override_flag(tmp_path, monkeypatch):
-    from kiro_crew.deploy import pending
+    from aj_crew.deploy import pending
     monkeypatch.setattr(pending, "_store_path",
                         lambda: tmp_path / "pending.json")
     entry = pending.add_pending({
@@ -29,7 +29,7 @@ def test_f1_pending_schema_carries_override_flag(tmp_path, monkeypatch):
 
 
 def test_f1_mcp_blocked_path_distinguishes_credential():
-    src = (_ROOT / "src/kiro_crew/mcp_tools/artifacts.py").read_text(encoding="utf-8")
+    src = (_ROOT / "src/aj_crew/mcp_tools/artifacts.py").read_text(encoding="utf-8")
     blocked = src.split('if d.get("blocked"):', 1)[1][:2000]
     # Credential findings: hard block, no pending.
     assert 'if d.get("credential"):' in blocked
@@ -38,7 +38,7 @@ def test_f1_mcp_blocked_path_distinguishes_credential():
 
 
 def test_f1_confirm_handler_requires_explicit_human_override():
-    src = (_ROOT / "src/kiro_crew/deploy/handlers.py").read_text(encoding="utf-8")
+    src = (_ROOT / "src/aj_crew/deploy/handlers.py").read_text(encoding="utf-8")
     seg = src.split('if entry.get("override_scan_required"):', 1)[1][:600]
     # override_scan only set from the request body (human action), and only
     # when it is literally True.
@@ -57,7 +57,7 @@ def test_f1_frontend_sends_override_and_labels_action():
 
 def test_f2_reaper_quarantines_on_every_identity_mismatch():
     src = (
-        _ROOT / "src/kiro_crew/deploy/skills/artifact-deploy/scripts/"
+        _ROOT / "src/aj_crew/deploy/skills/artifact-deploy/scripts/"
         "reaper_lambda/index.py"
     ).read_text(encoding="utf-8")
     assert "def _quarantine_manifest" in src

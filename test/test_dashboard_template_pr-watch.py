@@ -1,7 +1,7 @@
 """The ``pr-watch`` built-in, checked against a fold value a pod really served.
 
 The template declares ``{"fold": ..., "path": ...}`` per field and the host resolves
-each one at run time. :mod:`kiro_crew.dashboard_templates.manifest` validates a path's
+each one at run time. :mod:`aj_crew.dashboard_templates.manifest` validates a path's
 SPELLING, never its target, so a plausible path that resolves to nothing would ship and
 render a blank cell on every dashboard with every gate green. These cases resolve all of
 them against ``test/fixtures/dashboard_templates/pod_folds.json``.
@@ -28,11 +28,11 @@ from typing import Any
 import dashboard_template_checks
 import pytest
 
-from kiro_crew.dashboard_templates.manifest import MAX_FIELDS, ManifestError, load_template
+from aj_crew.dashboard_templates.manifest import MAX_FIELDS, ManifestError, load_template
 
 TEMPLATE_ID = "pr-watch"
 ROOT = Path(__file__).resolve().parents[1]
-DIRECTORY = ROOT / "src/kiro_crew/dashboard_templates/builtin" / TEMPLATE_ID
+DIRECTORY = ROOT / "src/aj_crew/dashboard_templates/builtin" / TEMPLATE_ID
 FIXTURES = ROOT / "test/fixtures/dashboard_templates"
 POD = FIXTURES / "pod_folds.json"
 SAMPLE = FIXTURES / "sample_work-kanban.json"
@@ -320,9 +320,9 @@ class TestItDrawsFromTheHost(dashboard_template_checks.ItReadsTheHostsOwnFieldBa
         assert "bag().agentic" in html, "the written tag is not gated on the host's mark"
 
     def test_the_mark_is_read_as_the_hosts_array_of_names(self, html: str) -> None:
-        """``window.kirocrew.agentic`` is a LIST, not an object.
+        """``window.ajcrew.agentic`` is a LIST, not an object.
 
-        :func:`kiro_crew.dashboard_frame.read_payload` puts ``sorted(agentic)`` there, so
+        :func:`aj_crew.dashboard_frame.read_payload` puts ``sorted(agentic)`` there, so
         a PROPERTY read of ``lanes`` is always false and the tag never shows.
         """
         assert "agentic.indexOf('lanes')" in html, (
@@ -343,7 +343,7 @@ class TestItDrawsFromTheHost(dashboard_template_checks.ItReadsTheHostsOwnFieldBa
         Without it, that case pins this page to a spelling rather than to the host's
         contract, and would keep passing if the host ever changed shape.
         """
-        from kiro_crew.dashboard_frame import read_payload
+        from aj_crew.dashboard_frame import read_payload
 
         payload = read_payload({"lanes": []}, agentic=["lanes"])
         assert isinstance(payload["agentic"], list), (
@@ -360,7 +360,7 @@ class TestItDrawsFromTheHost(dashboard_template_checks.ItReadsTheHostsOwnFieldBa
         stringified bag draws nothing while every cell still fills, which is the exact
         failure this case names.
         """
-        from kiro_crew.dashboard_frame import read_payload
+        from aj_crew.dashboard_frame import read_payload
 
         payload = read_payload({"lanes": [{"name": "x", "state": "fail"}], "omitted": 2})
         assert isinstance(payload["fields"]["lanes"], list)
@@ -376,4 +376,4 @@ class TestItDrawsFromTheHost(dashboard_template_checks.ItReadsTheHostsOwnFieldBa
         """The order of the host's first fill against the script is not the page's to
         assume, and a later fold write arrives as a message."""
         assert "window.addEventListener('load', render)" in html
-        assert "addEventListener('kirocrew-dashboard'" in html
+        assert "addEventListener('ajcrew-dashboard'" in html

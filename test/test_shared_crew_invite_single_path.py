@@ -12,8 +12,8 @@ from pathlib import Path
 
 from aiohttp import web
 
-import kiro_crew
-from kiro_crew.shared_crew import routes_invites
+import aj_crew
+from aj_crew.shared_crew import routes_invites
 
 #: Every call of a ``create_invites`` function or method in the package.
 _CALL = re.compile(r"\bcreate_invites\(")
@@ -40,7 +40,7 @@ def test_one_route_creates_invites() -> None:
 
 
 def test_create_invites_has_one_caller_per_layer() -> None:
-    root = Path(kiro_crew.__file__).parent
+    root = Path(aj_crew.__file__).parent
     callers: dict[str, int] = {}
     for path in root.rglob("*.py"):
         count = sum(

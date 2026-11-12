@@ -25,9 +25,9 @@ from test_regenerate_swap import (
     _run_chat_state,
 )
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat import _save_slot_to_history
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat import _save_slot_to_history
+from aj_crew.testing.wait import await_until
 
 
 @pytest.mark.asyncio
@@ -50,7 +50,7 @@ async def test_i1_no_retired_row_is_credited_at_the_window_cap(
         return await real(*args, **kwargs)
 
     with (
-        patch("kiro_crew.dashboard.state._MAX_SLOT_MESSAGES", cap),
+        patch("aj_crew.dashboard.state._MAX_SLOT_MESSAGES", cap),
         patch.object(chat_runner, "save_slot_off_loop", new=_append_during_the_write),
     ):
         await chat_runner.settle_regenerate(state, slot)
@@ -73,7 +73,7 @@ async def test_i2_a_regenerate_during_the_swap_is_refused_and_after_it_works(
     from chat_regenerate_cov80_helpers import _make_regen_app
     from test_regenerate_swap import _client_streaming
 
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     state = _run_chat_state(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -100,7 +100,7 @@ async def test_i2_a_regenerate_during_the_swap_is_refused_and_after_it_works(
 
     with (
         patch(
-            "kiro_crew.dashboard.chat_regenerate.reject_if_kiro_unverified",
+            "aj_crew.dashboard.chat_regenerate.reject_if_kiro_unverified",
             new=AsyncMock(return_value=None),
         ),
         patch.object(chat_runner, "save_slot_off_loop", new=_held),
@@ -126,7 +126,7 @@ async def test_i2_a_regenerate_during_the_swap_is_refused_and_after_it_works(
             async def _capture(*a, **kw):
                 seen.extend(v["content"] for v in slot._pending_variants)
 
-            with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_capture):
+            with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_capture):
                 assert (await client.post("/api/chat/slots/s1/regenerate")).status == 200
                 await asyncio.sleep(0)
     assert seen == ["old", "fresh"]

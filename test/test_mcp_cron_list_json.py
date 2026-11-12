@@ -26,14 +26,14 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import mcp_cron
-from kiro_crew.cron import CronJob, CronSchedule
+from aj_crew import mcp_cron
+from aj_crew.cron import CronJob, CronSchedule
 
 
 @pytest.fixture(autouse=True)
 def _isolate(monkeypatch, tmp_path):
-    monkeypatch.setattr("kiro_crew.cron._DEFAULT_DIR", tmp_path)
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:json-slot")
+    monkeypatch.setattr("aj_crew.cron._DEFAULT_DIR", tmp_path)
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:json-slot")
     yield
 
 
@@ -96,7 +96,7 @@ class TestFolder:
 
     @pytest.fixture(autouse=True)
     def _folders(self):
-        from kiro_crew.config.loader import config_dir
+        from aj_crew.config.loader import config_dir
 
         config_dir().mkdir(parents=True, exist_ok=True)
         self.path = config_dir() / "cron_folders.json"
@@ -158,7 +158,7 @@ class TestOwnership:
     ) -> None:
         """Prose here is correct: the consumer must not read an empty scope as an
         empty registry, and the script relays the sentence verbatim."""
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
         with patch.object(mcp_cron, "_authz_session_key", return_value=""):
             out = _call([_job()])
         assert out == mcp_cron._SCOPED_EMPTY
@@ -231,7 +231,7 @@ class TestBoundsAndSafety:
         assert len(out["jobs"]) == mcp_cron._JSON_MAX_JOBS
 
     def test_it_stays_under_the_response_ceiling_on_ASCII_prompts(self) -> None:
-        from kiro_crew.validation import MAX_RESPONSE_LEN
+        from aj_crew.validation import MAX_RESPONSE_LEN
 
         jobs = [
             _job(id=f"j{i:03d}", name=f"job-{i}" * 5, message="Check the timestamp. " * 40)
@@ -249,7 +249,7 @@ class TestBoundsAndSafety:
         appends a notice OUTSIDE the JSON grammar, so the consumer would receive a
         document that does not parse at all.
         """
-        from kiro_crew.validation import MAX_RESPONSE_LEN
+        from aj_crew.validation import MAX_RESPONSE_LEN
 
         jobs = [
             _job(id=f"j{i:03d}", name="任务" * 20, message="检查时间戳是否变化。" * 60)
@@ -328,7 +328,7 @@ class TestValidationSurface:
         assert mcp_cron._validate_args("cron_list", {"json": True})["json"] is True
 
     def test_a_non_bool_flag_is_rejected(self) -> None:
-        from kiro_crew.validation import ValidationError
+        from aj_crew.validation import ValidationError
 
         with pytest.raises(ValidationError):
             mcp_cron._validate_args("cron_list", {"json": "yes"})

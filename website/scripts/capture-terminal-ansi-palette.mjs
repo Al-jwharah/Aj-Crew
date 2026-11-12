@@ -54,7 +54,7 @@ async function stubContext(context, scene) {
   await stubDashboardApi(context, {
     theme: scene.mode,
     localStorageEntries: {
-      // The default color theme is kiro-dark, a different palette from `dark`:
+      // The default color theme is aj-dark, a different palette from `dark`:
       // set it explicitly or the frame shows the wrong theme's colours.
       'mc-color-theme': scene.color,
       'mc-bottom-terminal': JSON.stringify({
@@ -64,12 +64,12 @@ async function stubContext(context, scene) {
     },
     extra: async (path, route) => {
       if (path === '/api/chat/slots' && route.request().method() === 'POST') {
-        await json(route, { key: 'fixture-chat', title: 'New Session…', agent: 'kirocrew' })
+        await json(route, { key: 'fixture-chat', title: 'New Session…', agent: 'ajcrew' })
         return true
       }
       // The boot answer is the server-side source of truth and overwrites the
       // localStorage seed, so the named theme goes in its `color` field: seeding
-      // localStorage alone lands on the kiro-dark default.
+      // localStorage alone lands on the aj-dark default.
       if (path === '/api/theme/boot') {
         await json(route, { mode: scene.mode, color: scene.color })
         return true

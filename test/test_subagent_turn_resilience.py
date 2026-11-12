@@ -36,15 +36,15 @@ from subagent_turn_resilience_helpers import (  # noqa: F401 -- the autouse fixt
     _TransientError,
 )
 
-from kiro_crew import session_surface
-from kiro_crew import subagent_persistence as sp
-from kiro_crew.llm_helpers import TRANSIENT_RETRIES
-from kiro_crew.subagent import (
+from aj_crew import session_surface
+from aj_crew import subagent_persistence as sp
+from aj_crew.llm_helpers import TRANSIENT_RETRIES
+from aj_crew.subagent import (
     _TRANSIENT_CONTINUE_MSG,
     SubagentInfo,
     SubagentManager,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until, default_timeout
+from aj_crew.testing.wait import async_wait_until, await_until, default_timeout
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -118,7 +118,7 @@ async def test_user_cancel_is_neutral_stopped_with_partial():
 
     mgr._fire_event = _spy
 
-    with patch("kiro_crew.subagent.Stats") as stats, patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats") as stats, patch("aj_crew.subagent.sel"):
         info = mgr.spawn("long job")
         assert info is not None
         await await_until(started, what="the stream's first yield")
@@ -150,7 +150,7 @@ async def test_unexpected_cancel_auto_continues_once():
     started = asyncio.Event()
     mgr = _manager(_mock_sessions(_hanging_stream_factory(started)))
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("interruptible job")
         assert info is not None
         await await_until(started, what="the stream's first yield")
@@ -186,7 +186,7 @@ async def test_unexpected_cancel_hand_off_is_visible_to_a_wait_for_waiter():
     started = asyncio.Event()
     mgr = _manager(_mock_sessions(_hanging_stream_factory(started)))
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("interruptible job")
         assert info is not None
         await await_until(started, what="the stream's first yield")
@@ -215,7 +215,7 @@ async def test_unexpected_cancel_after_tool_activity_finalizes_without_respawn()
     cannot verify which side effects already happened — a preamble alone
     cannot make re-running safe. The run
     is finalized with an explicit suppression error instead."""
-    from kiro_crew.acp.client import EVENT_TOOL_CALL
+    from aj_crew.acp.client import EVENT_TOOL_CALL
 
     started = asyncio.Event()
     stream_calls: list[str] = []
@@ -239,7 +239,7 @@ async def test_unexpected_cancel_after_tool_activity_finalizes_without_respawn()
         return _gen()
 
     mgr = _manager(_mock_sessions(stream_factory))
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("side-effecting job")
         assert info is not None
         await await_until(started, what="the stream's first yield")
@@ -263,7 +263,7 @@ async def test_unexpected_cancel_after_tool_activity_finalizes_without_respawn()
 async def test_cancel_recovery_text_only_respawn_gets_resume_preamble():
     """Text-only activity is safe to resume: the respawned prompt must carry
     the interruption preamble so the model continues instead of restarting."""
-    from kiro_crew.subagent import _CANCEL_RESUME_PREFIX
+    from aj_crew.subagent import _CANCEL_RESUME_PREFIX
 
     started = asyncio.Event()
     mgr = _manager(_mock_sessions(_hanging_stream_factory(started)))
@@ -276,7 +276,7 @@ async def test_cancel_recovery_text_only_respawn_gets_resume_preamble():
 
     mgr._ctx_builder.build_message = MagicMock(side_effect=_capture)
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("resumable job")
         assert info is not None
         await await_until(started, what="the stream's first yield")
@@ -306,7 +306,7 @@ async def test_shutdown_cancel_does_not_auto_continue():
     started = asyncio.Event()
     mgr = _manager(_mock_sessions(_hanging_stream_factory(started)))
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("job at shutdown")
         assert info is not None
         await await_until(started, what="the stream's first yield")
@@ -337,7 +337,7 @@ async def _cancelled_by_the_shutdown(
         on_done=on_done,
     )
     mgr._should_use_session_sharing = MagicMock(return_value=False)
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("job at shutdown", parent_session_key=parent)
         assert info is not None
         await await_until(started, what="the stream's first yield")
@@ -375,7 +375,7 @@ async def test_a_shutdown_cancel_under_a_tab_is_announced_by_the_next_start(
     notify = AsyncMock(return_value=True)
     next_start = SubagentManager(sessions=MagicMock(), ctx_builder=None, on_orphan_notify=notify)
     next_start._is_pid_alive = MagicMock(return_value=False)
-    with patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.sel"):
         await next_start._reconcile_orphans()
 
     notify.assert_awaited_once()
@@ -444,7 +444,7 @@ async def test_a_shutdown_cancel_of_a_run_whose_folder_was_never_written_is_repo
 async def test_orphan_injection_delegates_to_callback():
     notify = AsyncMock(return_value=True)
     mgr = SubagentManager(sessions=MagicMock(), ctx_builder=None, on_orphan_notify=notify)
-    with patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.sel"):
         ok = await mgr._try_inject_orphan_notification("dashboard:main", "msg")
     assert ok is True
     # The structured completion facts are forwarded as a third arg;
@@ -480,10 +480,10 @@ async def test_delivered_orphan_survives_audit_and_tombstone_failures():
     }
 
     with (
-        patch("kiro_crew.subagent.has_dashboard_surface", return_value=True),
-        patch("kiro_crew.subagent.sel", return_value=audit),
+        patch("aj_crew.subagent.has_dashboard_surface", return_value=True),
+        patch("aj_crew.subagent.sel", return_value=audit),
         patch(
-            "kiro_crew.subagent.write_tombstone", side_effect=OSError("disk unavailable")
+            "aj_crew.subagent.write_tombstone", side_effect=OSError("disk unavailable")
         ) as write_tombstone,
     ):
         result = await mgr._notify_orphan("orphan-1", state, False)
@@ -510,25 +510,25 @@ async def test_delivered_orphan_survives_audit_and_tombstone_failures():
 async def test_orphan_dm_delegates_to_callback(caplog):
     dm = AsyncMock(return_value=True)
     mgr = SubagentManager(sessions=MagicMock(), ctx_builder=None, on_orphan_dm=dm)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.subagent"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.subagent"):
         await mgr._send_orphan_slack_dm("orphan msg")
     dm.assert_awaited_once_with("orphan msg")
     # A delivered notice does not also fall through to the undelivered log line.
-    assert [r.getMessage() for r in caplog.records if r.name == "kiro_crew.subagent"] == []
+    assert [r.getMessage() for r in caplog.records if r.name == "aj_crew.subagent"] == []
 
 
 @pytest.mark.asyncio
 async def test_orphan_dm_callback_error_is_swallowed(caplog):
     dm = AsyncMock(side_effect=RuntimeError("slack down"))
     mgr = SubagentManager(sessions=MagicMock(), ctx_builder=None, on_orphan_dm=dm)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.subagent"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.subagent"):
         await mgr._send_orphan_slack_dm("orphan msg")  # must not raise
     dm.assert_awaited_once_with("orphan msg")
     # The failed delivery falls through to the log line, so the notice is not lost.
     warnings = [
         r.getMessage()
         for r in caplog.records
-        if r.name == "kiro_crew.subagent" and r.levelno == logging.WARNING
+        if r.name == "aj_crew.subagent" and r.levelno == logging.WARNING
     ]
     assert warnings == ["Orphan notification (no delivery channel wired): orphan msg"]
 
@@ -551,20 +551,20 @@ async def test_undelivered_orphan_log_keeps_result_path_and_whole_worktree(caplo
     run_dir = tmp_path / "subagents" / "2f2cb4b5"
     mgr = SubagentManager(sessions=MagicMock(), ctx_builder=None)
     with (
-        patch("kiro_crew.subagent.has_dashboard_surface", return_value=False),
-        patch("kiro_crew.subagent.agent_dir_for_display", return_value=run_dir),
+        patch("aj_crew.subagent.has_dashboard_surface", return_value=False),
+        patch("aj_crew.subagent.agent_dir_for_display", return_value=run_dir),
     ):
         msg = await mgr._notify_orphan("2f2cb4b5", state, True)
     assert msg is not None
     assert f"Worktree: `{worktree}`" in msg.splitlines()
     assert f"Result saved at: `{run_dir / 'result.txt'}`" in msg.splitlines()
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.subagent"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.subagent"):
         await mgr._send_orphan_slack_dm(msg)
     warnings = [
         r.getMessage()
         for r in caplog.records
-        if r.name == "kiro_crew.subagent" and r.levelno == logging.WARNING
+        if r.name == "aj_crew.subagent" and r.levelno == logging.WARNING
     ]
     assert warnings == [f"Orphan notification (no delivery channel wired): {msg}"]
 
@@ -573,7 +573,7 @@ async def test_undelivered_orphan_log_keeps_result_path_and_whole_worktree(caplo
 async def test_orphan_notice_without_recorded_cwd_has_no_worktree_line():
     state = {"id": "orphan-2", "task": "recover work", "parent_session": ""}
     mgr = SubagentManager(sessions=MagicMock(), ctx_builder=None)
-    with patch("kiro_crew.subagent.has_dashboard_surface", return_value=False):
+    with patch("aj_crew.subagent.has_dashboard_surface", return_value=False):
         msg = await mgr._notify_orphan("orphan-2", state, False)
     assert msg is not None
     assert not any(line.startswith("Worktree:") for line in msg.splitlines())
@@ -601,7 +601,7 @@ async def test_cancel_recovery_waits_for_slow_teardown():
     sessions.reset = AsyncMock(side_effect=_slow_reset)
     mgr = _manager(sessions)
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("slow teardown job")
         assert info is not None
         await await_until(started, what="the stream's first yield")
@@ -625,7 +625,7 @@ async def test_cancel_recovery_waits_for_free_slot():
     started = asyncio.Event()
     mgr = _manager(_mock_sessions(_hanging_stream_factory(started)))
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("capacity job")
         assert info is not None
         await await_until(started, what="the stream's first yield")
@@ -675,9 +675,9 @@ async def test_cancel_recovery_failure_emits_done_and_delivers():
     mgr._fire_event = _spy
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent._RECOVERY_SLOT_WAIT_SECS", 0.4),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent._RECOVERY_SLOT_WAIT_SECS", 0.4),
     ):
         info = mgr.spawn("doomed recovery job")
         assert info is not None
@@ -740,9 +740,9 @@ async def test_cancel_recovery_slot_wait_survives_a_forward_wall_clock_step():
     clock = _WallSteppedClock()
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.time", clock),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.time", clock),
     ):
         info = mgr.spawn("recovery under a wall-clock step")
         assert info is not None
@@ -794,10 +794,10 @@ async def test_cancel_recovery_slot_wait_without_a_clock_step_gives_up_at_its_de
     give_up = 0.4
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.time", clock),
-        patch("kiro_crew.subagent._RECOVERY_SLOT_WAIT_SECS", give_up),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.time", clock),
+        patch("aj_crew.subagent._RECOVERY_SLOT_WAIT_SECS", give_up),
     ):
         info = mgr.spawn("recovery that never finds a slot")
         assert info is not None
@@ -842,8 +842,8 @@ async def test_cancel_all_reaches_pending_recovery_and_finalizes():
     mgr._fire_event = AsyncMock()
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
     ):
         info = mgr.spawn("job interrupted by shutdown")
         assert info is not None
@@ -871,7 +871,7 @@ async def test_transient_error_after_tool_call_sends_continue_prompt():
     """A transient error after TOOL activity (no text yet) must send CONTINUE —
     replaying the full prompt could re-execute the mutating tool that already
     ran (duplicate writes/messages)."""
-    from kiro_crew.acp.client import EVENT_TOOL_CALL
+    from aj_crew.acp.client import EVENT_TOOL_CALL
 
     calls: list[str] = []
 
@@ -895,7 +895,7 @@ async def test_transient_error_after_tool_call_sends_continue_prompt():
         return _gen()
 
     mgr = _manager(_mock_sessions(stream_factory))
-    with patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0):
+    with patch("aj_crew.subagent.transient_retry_delay", return_value=0.0):
         info = await _spawn_and_wait(mgr)
 
     assert info.error == ""
@@ -923,7 +923,7 @@ async def test_post_activity_retry_is_one_shot():
         return _gen()
 
     mgr = _manager(_mock_sessions(stream_factory))
-    with patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0):
+    with patch("aj_crew.subagent.transient_retry_delay", return_value=0.0):
         info = await _spawn_and_wait(mgr)
 
     # Attempt 1 (original) → activity → ONE continuation → second post-activity
@@ -945,7 +945,7 @@ def test_no_raw_cancel_outside_chokepoint():
     import inspect
     from pathlib import Path
 
-    import kiro_crew.subagent as subagent_mod
+    import aj_crew.subagent as subagent_mod
 
     source_root = Path(subagent_mod.__file__).resolve().parent
     source_paths = [Path(subagent_mod.__file__).resolve()]
@@ -1025,7 +1025,7 @@ def test_chokepoint_unmarked_cancel_consumes_recovery_budget():
 def test_outcome_property_is_canonical_three_way():
     """SubagentInfo.outcome is THE single classification source: stopped wins
     over error-nullability; error means failed; neither means completed."""
-    from kiro_crew.subagent import SubagentInfo
+    from aj_crew.subagent import SubagentInfo
 
     stopped = SubagentInfo(id="o1", task="t")
     stopped.user_stopped = True
@@ -1051,9 +1051,9 @@ async def test_reconcile_multiple_orphans_sends_single_digest_dm():
         {"id": "orph-3", "pid": None, "parent_session": "", "task": "task three"},
     ]
     with (
-        patch("kiro_crew.subagent.list_orphans", return_value=orphans),
-        patch("kiro_crew.subagent.write_tombstone"),
-        patch("kiro_crew.subagent.sel"),
+        patch("aj_crew.subagent.list_orphans", return_value=orphans),
+        patch("aj_crew.subagent.write_tombstone"),
+        patch("aj_crew.subagent.sel"),
     ):
         await mgr._reconcile_orphans()
 
@@ -1072,9 +1072,9 @@ async def test_reconcile_single_orphan_dm_is_not_wrapped_in_digest():
 
     orphans = [{"id": "solo-1", "pid": None, "parent_session": "", "task": "solo task"}]
     with (
-        patch("kiro_crew.subagent.list_orphans", return_value=orphans),
-        patch("kiro_crew.subagent.write_tombstone"),
-        patch("kiro_crew.subagent.sel"),
+        patch("aj_crew.subagent.list_orphans", return_value=orphans),
+        patch("aj_crew.subagent.write_tombstone"),
+        patch("aj_crew.subagent.sel"),
     ):
         await mgr._reconcile_orphans()
 
@@ -1115,7 +1115,7 @@ async def test_generate_failed_after_output_keeps_the_output_with_a_warning(keep
 
     mgr = _manager(_mock_sessions(_recording))
     mgr.update_completion_keep(keep, 3000)
-    with patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0):
+    with patch("aj_crew.subagent.transient_retry_delay", return_value=0.0):
         info = await _spawn_and_wait(mgr)
 
     assert info.outcome == "completed"
@@ -1143,7 +1143,7 @@ async def test_generate_failed_after_output_keeps_the_output_with_a_warning(keep
 )
 async def test_other_failures_after_output_still_fail(error, text):
     mgr = _manager(_mock_sessions(_streams_then_fails(error, text)))
-    with patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0):
+    with patch("aj_crew.subagent.transient_retry_delay", return_value=0.0):
         info = await _spawn_and_wait(mgr)
 
     assert info.outcome == "failed"
@@ -1166,7 +1166,7 @@ async def test_control_tag_only_output_still_fails():
         return _gen()
 
     mgr = _manager(_mock_sessions(stream_factory))
-    with patch("kiro_crew.subagent.transient_retry_delay", return_value=0.0):
+    with patch("aj_crew.subagent.transient_retry_delay", return_value=0.0):
         info = await _spawn_and_wait(mgr)
 
     assert info.outcome == "failed"
@@ -1181,7 +1181,7 @@ async def test_subagent_tool_frames_carry_the_tool_call_id():
     its own id but an unchanged ``tool_count``, so matching on counts alone would let it
     overwrite the parent's last call.
     """
-    from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, EVENT_TOOL_CALL, LLMEvent
+    from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, EVENT_TOOL_CALL, LLMEvent
 
     async def stream(*_args, **_kwargs):
         yield LLMEvent(

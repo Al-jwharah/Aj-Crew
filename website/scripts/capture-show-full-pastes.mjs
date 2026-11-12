@@ -31,7 +31,7 @@ mkdirSync(OUT, { recursive: true })
 
 const slots = [{
   key: 's1', title: 'Worker - paste a config and talk about it', messages: 4,
-  running: false, agent: 'kirocrew', created: '2026-09-19T01:00:00Z',
+  running: false, agent: 'ajcrew', created: '2026-09-19T01:00:00Z',
   last_ts: '2026-09-19T21:14:00Z',
 }]
 
@@ -45,8 +45,8 @@ const PASTE = [
   '',
   '[gateway.tls]',
   'enabled = false',
-  'cert = "/etc/kirocrew/server.pem"',
-  'key = "/etc/kirocrew/server.key"',
+  'cert = "/etc/ajcrew/server.pem"',
+  'key = "/etc/ajcrew/server.key"',
   '',
   '[memory]',
   'store = "global-v1"',

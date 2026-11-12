@@ -24,9 +24,9 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.cron import CronJob, CronService
-from kiro_crew.slack.gateway_runtime.cron_dispatch import _defer_cron_before_dispatch
-from kiro_crew.testing.wait import await_until
+from aj_crew.cron import CronJob, CronService
+from aj_crew.slack.gateway_runtime.cron_dispatch import _defer_cron_before_dispatch
+from aj_crew.testing.wait import await_until
 
 _ADMITTED = SimpleNamespace(admitted=True, reason="")
 
@@ -86,7 +86,7 @@ async def test_a_refused_one_shot_stays_enabled_and_runs_once_dispatch_opens(
         "remind-once", "msg", at_ts=time.time() - 1, delete_after_run=delete_after_run
     )
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             await _tick(service, job.id)  # refused before dispatch
             stored = _stored(tmp_path, job.id)
             assert stored.enabled and not stored.user_paused, "a refused one-shot was parked"
@@ -118,7 +118,7 @@ async def test_a_fire_time_denied_one_shot_is_still_parked(tmp_path, never_start
     service._on_job = deny  # type: ignore[assignment]
     job = await service.add_job_async("remind-once", "msg", at_ts=time.time() - 1)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             await _tick(service, job.id)
     finally:
         await service.stop()
@@ -140,7 +140,7 @@ async def test_a_pause_made_while_the_fire_was_refused_is_kept(tmp_path):
 
     gateway.during_refusal = pause
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             await _tick(service, job.id)
     finally:
         await service.stop()

@@ -884,7 +884,7 @@ describe('ThemeEditorPanel AI prompt', () => {
 
     await act(async () => { fireEvent.click(btn('Copy prompt')) })
     expect(btn('Prompt copied')).toBeInTheDocument()
-    expect(clipboard.copyToClipboard.mock.calls[0][0]).toContain('Design a colour theme for Kiro Crew')
+    expect(clipboard.copyToClipboard.mock.calls[0][0]).toContain('Design a colour theme for Aj Crew')
     expect(screen.queryByRole('alert')).toBeNull()
 
     act(() => { vi.runOnlyPendingTimers() })

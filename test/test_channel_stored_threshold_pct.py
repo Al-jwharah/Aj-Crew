@@ -16,7 +16,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-import kiro_crew.config.loader as loader
+import aj_crew.config.loader as loader
 
 CHANNELS = [
     ("/api/telegram/config", "api_telegram_config_save", "telegram"),
@@ -26,7 +26,7 @@ CHANNELS = [
 
 
 def _save(monkeypatch, tmp_path: Path, route: str, handler: str, body: dict) -> tuple[int, dict]:
-    import kiro_crew.dashboard.handlers.messaging as mod
+    import aj_crew.dashboard.handlers.messaging as mod
 
     env = tmp_path / ".env"
     if not env.exists():

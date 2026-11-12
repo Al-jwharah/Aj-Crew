@@ -10,9 +10,9 @@ import shutil
 import tarfile
 from datetime import datetime, timezone
 
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 def _peek(bundle, tmp_path):
@@ -28,8 +28,8 @@ def _peek(bundle, tmp_path):
 def _home(tmp_path, monkeypatch):
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    _setup_fake_kirocrew(home)
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    _setup_fake_ajcrew(home)
     return home
 
 
@@ -48,7 +48,7 @@ class TestReplaceDoesNotKeepATreeTheArchiveLacks:
         shutil.rmtree(home / "workspace" / "knowledge")
         out = tmp_path / "out"
         assert snap.snapshot_main([str(out), "--components", "memory", *unpinnable_argv()]) == 0
-        bundle = next(out.glob("kirocrew-snapshot-*.tar.gz"))
+        bundle = next(out.glob("ajcrew-snapshot-*.tar.gz"))
         assert not (
             _peek(bundle, tmp_path) / "workspace" / "knowledge"
         ).exists(), "the bundle carries a knowledge tree, so this test proves nothing"
@@ -86,7 +86,7 @@ class TestReplaceDoesNotKeepATreeTheArchiveLacks:
         shutil.rmtree(home / "workspace" / "knowledge")
         out = tmp_path / "out"
         assert snap.snapshot_main([str(out), "--components", "memory", *unpinnable_argv()]) == 0
-        bundle = next(out.glob("kirocrew-snapshot-*.tar.gz"))
+        bundle = next(out.glob("ajcrew-snapshot-*.tar.gz"))
 
         kd = home / "workspace" / "knowledge"
         kd.mkdir(parents=True, exist_ok=True)
@@ -119,7 +119,7 @@ class TestReplaceDoesNotKeepATreeTheArchiveLacks:
         (kd / "note.md").write_text("from the bundle")
         out = tmp_path / "out"
         assert snap.snapshot_main([str(out), "--components", "memory", *unpinnable_argv()]) == 0
-        bundle = next(out.glob("kirocrew-snapshot-*.tar.gz"))
+        bundle = next(out.glob("ajcrew-snapshot-*.tar.gz"))
 
         (kd / "note.md").write_text("changed since the backup")
         assert (
@@ -151,7 +151,7 @@ class TestTwoRestoresInOneSecondKeepSeparateRollbackSets:
         (md / "preferences.md").write_text("original")
         out = tmp_path / "out"
         assert snap.snapshot_main([str(out), "--components", "memory", *unpinnable_argv()]) == 0
-        bundle = next(out.glob("kirocrew-snapshot-*.tar.gz"))
+        bundle = next(out.glob("ajcrew-snapshot-*.tar.gz"))
 
         frozen = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
 

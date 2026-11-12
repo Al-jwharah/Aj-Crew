@@ -22,12 +22,12 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_parser_gateway
-from kiro_crew.skills import _SHORT_DESC_CHARS, SkillsLoader
-from kiro_crew.trigger_match import MIN_TRIGGER_OVERLAP, trigger_score, words_of
+from aj_crew import cli_parser_gateway
+from aj_crew.skills import _SHORT_DESC_CHARS, SkillsLoader
+from aj_crew.trigger_match import MIN_TRIGGER_OVERLAP, trigger_score, words_of
 
 ROOT = Path(__file__).resolve().parent.parent
-SKILL = ROOT / "src" / "kiro_crew" / "builtin_skills" / "feature-request" / "SKILL.md"
+SKILL = ROOT / "src" / "aj_crew" / "builtin_skills" / "feature-request" / "SKILL.md"
 
 
 @pytest.fixture(scope="module")
@@ -59,17 +59,17 @@ def test_ordinary_prose_does_not_fire(meta: dict[str, str], text: str) -> None:
     assert score < MIN_TRIGGER_OVERLAP, f"{text!r} scored {score}"
 
 
-# Each ``kirocrew <command>`` the skill cites is parsed by the registrar that defines
+# Each ``ajcrew <command>`` the skill cites is parsed by the registrar that defines
 # that command, with abbreviations off, so a renamed, dropped or misspelt flag fails here.
-def test_cited_kirocrew_commands_parse() -> None:
-    commands = re.findall(r"`kirocrew ([^`]+)`", SKILL.read_text(encoding="utf-8"))
-    assert commands, "SKILL.md cites no `kirocrew ...` command"
+def test_cited_ajcrew_commands_parse() -> None:
+    commands = re.findall(r"`ajcrew ([^`]+)`", SKILL.read_text(encoding="utf-8"))
+    assert commands, "SKILL.md cites no `ajcrew ...` command"
     for command in commands:
-        parser = argparse.ArgumentParser(prog="kirocrew", exit_on_error=False)
+        parser = argparse.ArgumentParser(prog="ajcrew", exit_on_error=False)
         exact = functools.partial(argparse.ArgumentParser, allow_abbrev=False)
         cli_parser_gateway.register_doctor_parser(
             parser.add_subparsers(dest="command", parser_class=exact)
         )
         args, unknown = parser.parse_known_args(command.split())
-        assert args.command == "doctor", f"{command!r} is not a kirocrew doctor command"
-        assert unknown == [], f"{command!r}: {unknown} are not options of kirocrew doctor"
+        assert args.command == "doctor", f"{command!r} is not an ajcrew doctor command"
+        assert unknown == [], f"{command!r}: {unknown} are not options of ajcrew doctor"

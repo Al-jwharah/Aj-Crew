@@ -29,11 +29,11 @@ from apps_registry_helpers import _explicit_registry_execution_admission  # noqa
 from apps_registry_helpers import _install_script_runs_on_this_host  # noqa: F401 - fixture
 from apps_registry_helpers import unsandboxed_spawn  # noqa: F401 - fixture
 
-from kiro_crew import platform_compat
-from kiro_crew.apps import lifecycle_scripts, registry
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS, await_until
+from aj_crew import platform_compat
+from aj_crew.apps import lifecycle_scripts, registry
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, await_until
 
 
 class _RunsUntilKilled:

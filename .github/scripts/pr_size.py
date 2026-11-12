@@ -14,7 +14,7 @@ is 3.3% of the 1,980 studied pull requests and holds 26.9% of their rebase loops
 The levels:
 
 * **Hint** at ``FILES_HINT`` files: a notice only. The local twin is
-  ``diff_signals.py`` in the kirocrew-prepare-pr skill, which prints ``! SIZE``.
+  ``diff_signals.py`` in the ajcrew-prepare-pr skill, which prints ``! SIZE``.
 * **Stop** at ``FILES_STOP`` files: red once ``PR_SIZE_ENFORCED`` is true and no owner
   has approved. Until then it prints a warning that says what would be red.
 * **Age** at ``HOURS_AGING`` hours open: a notice. Never red, because waiting for a

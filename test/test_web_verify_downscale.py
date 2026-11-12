@@ -19,7 +19,7 @@ from PIL import Image
 _SCRIPT = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "web-verify"
     / "scripts"
@@ -151,7 +151,7 @@ class DownscaleTest(unittest.TestCase):
         self.assertEqual(mod.main([]), 1)
 
     def test_bundled_python_is_the_launcher_s_sibling(self) -> None:
-        """bin/kirocrew -> bin/python, resolved THROUGH the launcher's symlink.
+        """bin/ajcrew -> bin/python, resolved THROUGH the launcher's symlink.
 
         `realpath` is patched rather than creating a real symlink: on Windows
         `Path.symlink_to` needs a privilege the CI runner does not hold, which
@@ -164,16 +164,16 @@ class DownscaleTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             bindir = Path(td) / "venv" / "bin"
             bindir.mkdir(parents=True)
-            (bindir / "kirocrew").write_text("#!/bin/sh\n")
+            (bindir / "ajcrew").write_text("#!/bin/sh\n")
             (bindir / "python").write_text("#!/bin/sh\n")
-            shim = str(Path(td) / "shim" / "kirocrew")
+            shim = str(Path(td) / "shim" / "ajcrew")
             with mock.patch.object(mod.shutil, "which", return_value=shim), \
-                    mock.patch.object(mod.os.path, "realpath", return_value=str(bindir / "kirocrew")), \
+                    mock.patch.object(mod.os.path, "realpath", return_value=str(bindir / "ajcrew")), \
                     mock.patch.object(mod.os, "name", "posix"):
                 self.assertEqual(mod.bundled_python(), str(bindir / "python"))
 
     def test_bundled_python_uses_the_exe_suffix_on_windows(self) -> None:
-        """Windows: Scripts/kirocrew.exe -> Scripts/python.exe. Only the suffix
+        """Windows: Scripts/ajcrew.exe -> Scripts/python.exe. Only the suffix
         differs, which is why the directory name needs no special casing.
 
         Compared as RESOLVED paths, not strings: on Windows
@@ -189,9 +189,9 @@ class DownscaleTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             scripts = Path(td) / "venv" / "Scripts"
             scripts.mkdir(parents=True)
-            (scripts / "kirocrew.exe").write_text("")
+            (scripts / "ajcrew.exe").write_text("")
             (scripts / "python.exe").write_text("")
-            with mock.patch.object(mod.shutil, "which", return_value=str(scripts / "kirocrew.exe")), \
+            with mock.patch.object(mod.shutil, "which", return_value=str(scripts / "ajcrew.exe")), \
                     mock.patch.object(mod.os, "name", "nt"):
                 got = mod.bundled_python()
             self.assertIsNotNone(got)
@@ -210,7 +210,7 @@ class DownscaleTest(unittest.TestCase):
 
     def test_cap_matches_the_prompt_block_ceiling(self) -> None:
         """One number, two enforcement points — drift here is silent."""
-        from kiro_crew.acp.prompt_blocks import MAX_IMAGE_EDGE_PX
+        from aj_crew.acp.prompt_blocks import MAX_IMAGE_EDGE_PX
 
         self.assertEqual(mod.MAX_EDGE_PX, MAX_IMAGE_EDGE_PX)
 

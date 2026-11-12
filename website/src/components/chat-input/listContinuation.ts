@@ -3,7 +3,7 @@ import { applyListEdit, listLineBreakEdit, listMarkerBackspaceEdit } from '../co
 import { findTokenRanges, type PasteBlock } from '../../utils/pasteTokens'
 
 /** Set once the user dismisses the visible list-indent hint under the composer. */
-export const LIST_HINT_DISMISSED_KEY = 'kirocrew:list-indent-hint-dismissed'
+export const LIST_HINT_DISMISSED_KEY = 'ajcrew:list-indent-hint-dismissed'
 
 /* Markdown list continuation for the textarea composer.
 

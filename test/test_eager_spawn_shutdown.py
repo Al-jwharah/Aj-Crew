@@ -14,10 +14,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, ResolvedBindings
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.testing.wait import await_until
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, ResolvedBindings
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture
@@ -26,11 +26,11 @@ def eager(monkeypatch):
     state = MagicMock(spec=DashboardState)
     state.get_slot.return_value = slot
     state.sessions = MagicMock()
-    cfg = KiroCrewConfig(agents={"default": KiroCrewAgentConfig()})
+    cfg = AjCrewConfig(agents={"default": AjCrewAgentConfig()})
     bindings = ResolvedBindings(
         workspace_dir=Path("workspace"),
         effective_memory_config={},
-        kiro_agent="kirocrew",
+        kiro_agent="ajcrew",
         model="",
         resolved_alias="default",
         requested_resolved=True,
@@ -41,7 +41,7 @@ def eager(monkeypatch):
     spawn = AsyncMock()
     monkeypatch.setattr(chat_runner, "_EAGER_SPAWN_DEBOUNCE_SECS", 0)
     monkeypatch.setattr(chat_runner, "_consume_pending_reset", AsyncMock(return_value=False))
-    monkeypatch.setattr(chat_runner.KiroCrewConfig, "load", lambda: cfg)
+    monkeypatch.setattr(chat_runner.AjCrewConfig, "load", lambda: cfg)
     monkeypatch.setattr(chat_runner, "resolve_session_agent_bindings", lambda *args, **kw: bindings)
     monkeypatch.setattr(chat_runner, "_require_session_memory_assignment", lambda *args: None)
     monkeypatch.setattr(chat_runner, "record_agent_selection", lambda *args, **kwargs: None)

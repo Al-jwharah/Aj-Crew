@@ -1,6 +1,6 @@
 """A running stub never loads the gateway's pool, manager or metrics graph.
 
-The stub is the most replicated process Kiro Crew runs, one per session per MCP
+The stub is the most replicated process Aj Crew runs, one per session per MCP
 server, so whatever it loads is paid for once per stub on the host.
 
 The bound is on the steady state, after the Register payload and log label are built:
@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 #: Modules a stub must not hold once it is bridging. Each has a large
 #: transitive graph and is reached, if at all, on a path a stub takes rarely:
@@ -34,33 +34,33 @@ from kiro_crew.subprocess_utf8 import UTF8_TEXT
 #: catch a cheap leaf landing beside an expensive one, and report a failure
 #: that does not say which module grew the footprint.
 FORBIDDEN_WHEN_BRIDGING = (
-    "kiro_crew.config.loader",
-    "kiro_crew.mcp_gateway.pool",
-    "kiro_crew.mcp_gateway.manager",
-    "kiro_crew.mcp_gateway.backend",
-    "kiro_crew.mcp_gateway.rewriter",
+    "aj_crew.config.loader",
+    "aj_crew.mcp_gateway.pool",
+    "aj_crew.mcp_gateway.manager",
+    "aj_crew.mcp_gateway.backend",
+    "aj_crew.mcp_gateway.rewriter",
     # The rewriter's owner modules, which hold its code beside the facade above.
-    "kiro_crew.mcp_gateway.rewriter_env",
-    "kiro_crew.mcp_gateway.rewriter_launch",
-    "kiro_crew.mcp_gateway.rewriter_overlay",
-    "kiro_crew.mcp_gateway.rewriter_spec",
-    "kiro_crew.metrics.events",
-    "kiro_crew.jsonl_util",
-    "kiro_crew.security",
-    "kiro_crew.validation",
+    "aj_crew.mcp_gateway.rewriter_env",
+    "aj_crew.mcp_gateway.rewriter_launch",
+    "aj_crew.mcp_gateway.rewriter_overlay",
+    "aj_crew.mcp_gateway.rewriter_spec",
+    "aj_crew.metrics.events",
+    "aj_crew.jsonl_util",
+    "aj_crew.security",
+    "aj_crew.validation",
     # The stub imports only the 10 managed server NAMES from ``mcp_cleanup``.
     # ``mcp_cleanup`` imports ``agent_sdk.mcp_refs`` lazily, inside the one
     # function that reads it, so that NAME import does not pull
-    # ``kiro_crew.agent_sdk`` and its subtree into a bridging stub.
-    "kiro_crew.agent_sdk",
+    # ``aj_crew.agent_sdk`` and its subtree into a bridging stub.
+    "aj_crew.agent_sdk",
 )
 
 #: Additionally absent after a bare ``import``: building the Register payload
-#: hashes the target binary, which reaches ``code_fingerprint`` for one of Kiro
+#: hashes the target binary, which reaches ``code_fingerprint`` for one of Aj
 #: Crew's own servers. ``mcp_caller`` and ``mcp_cleanup`` are NOT here: every
 #: run builds a Register payload, so importing them in the module body changes
 #: when rather than whether, and the eager spelling is the readable one.
-FORBIDDEN_AT_IMPORT = FORBIDDEN_WHEN_BRIDGING + ("kiro_crew.code_fingerprint",)
+FORBIDDEN_AT_IMPORT = FORBIDDEN_WHEN_BRIDGING + ("aj_crew.code_fingerprint",)
 
 #: What the rewriter stamps into every overlay it writes. 64 MiB is the shipped
 #: default, so a probe using it asserts the plumbing without also asserting a
@@ -74,7 +74,7 @@ STUB_ARGV = [
     "--socket",
     "/nonexistent/gateway.sock",
     "--server",
-    "kirocrew-core",
+    "ajcrew-core",
     "--agent",
     "a",
     "--target-command",
@@ -97,11 +97,11 @@ def _run_probe(
     """
     env = dict(os.environ)
     env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
-    env["KIROCREW_HOME"] = str(tmp_path / "crew")
+    env["AJCREW_HOME"] = str(tmp_path / "crew")
     if session_key:
-        env["KIROCREW_SESSION_KEY"] = "chat-probe"
+        env["AJCREW_SESSION_KEY"] = "chat-probe"
     else:
-        env.pop("KIROCREW_SESSION_KEY", None)
+        env.pop("AJCREW_SESSION_KEY", None)
     return subprocess.run(
         [sys.executable, "-B", "-c", code],
         cwd=tmp_path,
@@ -125,7 +125,7 @@ def test_bridging_stub_holds_none_of_the_heavy_modules(tmp_path, session_key):
     """
     code = (
         "import json, sys\n"
-        "import kiro_crew.mcp_gateway.stub as stub\n"
+        "import aj_crew.mcp_gateway.stub as stub\n"
         f"args = stub._parse_args({STUB_ARGV!r})\n"
         "stub._adopt_read_ceiling(args)\n"
         "payload = stub.build_register_payload(args)\n"
@@ -150,7 +150,7 @@ def test_stub_import_loads_even_less(tmp_path):
     """A bare import reaches neither the bridging set nor the startup modules."""
     code = (
         "import json, sys\n"
-        "import kiro_crew.mcp_gateway.stub\n"
+        "import aj_crew.mcp_gateway.stub\n"
         f"forbidden = {list(FORBIDDEN_AT_IMPORT)!r}\n"
         "print(json.dumps(sorted(m for m in forbidden if m in sys.modules)))\n"
     )
@@ -168,10 +168,10 @@ def test_stub_label_matches_the_poolkey_the_daemon_builds(tmp_path):
     though nothing would fail.
     """
     code = (
-        "import kiro_crew.mcp_gateway.stub as stub\n"
+        "import aj_crew.mcp_gateway.stub as stub\n"
         f"args = stub._parse_args({STUB_ARGV!r})\n"
         "payload = stub.build_register_payload(args)\n"
-        "from kiro_crew.mcp_gateway.pool import PoolKey\n"
+        "from aj_crew.mcp_gateway.pool import PoolKey\n"
         "mine = stub.format_pool_label(payload)\n"
         "theirs = PoolKey.from_register(payload).human_readable()\n"
         "assert mine == theirs, (mine, theirs)\n"
@@ -182,7 +182,7 @@ def test_stub_label_matches_the_poolkey_the_daemon_builds(tmp_path):
 
 def test_label_names_every_field_it_is_missing():
     """A payload short of a label field raises, rather than printing ``None``."""
-    from kiro_crew.mcp_gateway.hashing import format_pool_label
+    from aj_crew.mcp_gateway.hashing import format_pool_label
 
     with pytest.raises(ValueError) as caught:
         format_pool_label({"server_name": "s"})
@@ -195,22 +195,22 @@ def test_adopted_ceiling_comes_off_argv_without_reading_config(tmp_path):
     """The flag the rewriter wrote is the ceiling, and config stays unloaded."""
     code = (
         "import sys\n"
-        "import kiro_crew.mcp_gateway.stub as stub\n"
+        "import aj_crew.mcp_gateway.stub as stub\n"
         f"args = stub._parse_args({STUB_ARGV!r})\n"
         f"assert stub._adopt_read_ceiling(args) == {FLAG_CEILING}\n"
         f"assert stub._HELD_FRAME_BYTES == {FLAG_CEILING}\n"
-        "assert 'kiro_crew.config.loader' not in sys.modules\n"
+        "assert 'aj_crew.config.loader' not in sys.modules\n"
     )
     result = _run_probe(tmp_path, code)
     assert result.returncode == 0, result.stderr
 
 
 def test_env_var_still_beats_the_flag(tmp_path):
-    """``KIROCREW_MCP_READ_LIMIT`` stays the per-process override it was."""
+    """``AJCREW_MCP_READ_LIMIT`` stays the per-process override it was."""
     code = (
         "import os\n"
-        "os.environ['KIROCREW_MCP_READ_LIMIT'] = '2048'\n"
-        "import kiro_crew.mcp_gateway.stub as stub\n"
+        "os.environ['AJCREW_MCP_READ_LIMIT'] = '2048'\n"
+        "import aj_crew.mcp_gateway.stub as stub\n"
         f"args = stub._parse_args({STUB_ARGV!r})\n"
         "assert stub._adopt_read_ceiling(args) == 2048\n"
     )
@@ -231,9 +231,9 @@ def test_absent_or_unusable_flag_resolves_the_old_way(tmp_path, bad):
     code = (
         "import sys\n"
         "from unittest.mock import patch\n"
-        "import kiro_crew.mcp_gateway.stub as stub\n"
+        "import aj_crew.mcp_gateway.stub as stub\n"
         f"args = stub._parse_args({argv!r})\n"
-        "with patch('kiro_crew.config.loader._raw_config',\n"
+        "with patch('aj_crew.config.loader._raw_config',\n"
         "           return_value={'mcp_gateway': {'read_buffer_limit_bytes': 4194304}}):\n"
         "    assert stub._adopt_read_ceiling(args) == 4194304\n"
     )
@@ -243,7 +243,7 @@ def test_absent_or_unusable_flag_resolves_the_old_way(tmp_path, bad):
 
 def _fingerprint(limit: int) -> dict:
     """``_rewrite_inputs_fingerprint`` with everything but the ceiling pinned."""
-    from kiro_crew.mcp_gateway import rewriter
+    from aj_crew.mcp_gateway import rewriter
 
     return rewriter._rewrite_inputs_fingerprint(
         source_dir=Path("/tmp"),
@@ -253,7 +253,7 @@ def _fingerprint(limit: int) -> dict:
         work_dir=Path("/tmp"),
         sandbox_mode="standard",
         approval_mode="on-request",
-        stub_set=frozenset(["kirocrew-core"]),
+        stub_set=frozenset(["ajcrew-core"]),
         pooling_enabled=True,
         forward_env=False,
         identity_keys=(),
@@ -287,7 +287,7 @@ def test_one_rewrite_pass_writes_one_ceiling(tmp_path):
     """
     import inspect
 
-    from kiro_crew.mcp_gateway import rewriter
+    from aj_crew.mcp_gateway import rewriter
 
     assert "read_buffer_limit" in inspect.signature(rewriter._build_stub_entry).parameters
     body = inspect.getsource(rewriter._build_stub_entry)
@@ -307,12 +307,12 @@ def test_the_module_body_defaults_the_ceiling_without_reading_config(tmp_path):
     """
     code = (
         "import sys\n"
-        "import kiro_crew.mcp_gateway.stub as stub\n"
-        "from kiro_crew.mcp_gateway.read_limits import _DEFAULT_READ_BUFFER_LIMIT\n"
+        "import aj_crew.mcp_gateway.stub as stub\n"
+        "from aj_crew.mcp_gateway.read_limits import _DEFAULT_READ_BUFFER_LIMIT\n"
         "assert stub.READ_BUFFER_LIMIT_BYTES == _DEFAULT_READ_BUFFER_LIMIT\n"
         "assert stub._HELD_FRAME_BYTES == _DEFAULT_READ_BUFFER_LIMIT\n"
         "assert stub._HELD_TOTAL_BYTES == _DEFAULT_READ_BUFFER_LIMIT\n"
-        "assert 'kiro_crew.config.loader' not in sys.modules\n"
+        "assert 'aj_crew.config.loader' not in sys.modules\n"
     )
     result = _run_probe(tmp_path, code)
     assert result.returncode == 0, result.stderr
@@ -327,8 +327,8 @@ def test_a_lowered_ceiling_does_not_tighten_the_retention_floor(tmp_path):
     argv = [a for a in STUB_ARGV if a != str(FLAG_CEILING)]
     argv[argv.index("--read-limit") + 1 : argv.index("--read-limit") + 1] = ["4096"]
     code = (
-        "import kiro_crew.mcp_gateway.stub as stub\n"
-        "from kiro_crew.mcp_gateway.read_limits import _DEFAULT_READ_BUFFER_LIMIT\n"
+        "import aj_crew.mcp_gateway.stub as stub\n"
+        "from aj_crew.mcp_gateway.read_limits import _DEFAULT_READ_BUFFER_LIMIT\n"
         f"args = stub._parse_args({argv!r})\n"
         "assert stub._adopt_read_ceiling(args) == 4096\n"
         "assert stub._HELD_FRAME_BYTES == 4096\n"
@@ -354,9 +354,9 @@ def test_execution_context_does_not_load_validation():
             sys.executable,
             "-B",
             "-c",
-            "import sys, kiro_crew.execution_context\n"
-            "assert 'kiro_crew.validation' not in sys.modules\n"
-            "assert 'kiro_crew.security' not in sys.modules\n",
+            "import sys, aj_crew.execution_context\n"
+            "assert 'aj_crew.validation' not in sys.modules\n"
+            "assert 'aj_crew.security' not in sys.modules\n",
         ],
         env=env,
         capture_output=True,
@@ -368,7 +368,7 @@ def test_execution_context_does_not_load_validation():
 
 def test_validation_still_binds_the_constant_that_moved():
     """``validation.MAX_SHORT_STRING`` is the leaf's object, for its 15 readers."""
-    from kiro_crew import constants, validation
+    from aj_crew import constants, validation
 
     assert validation.MAX_SHORT_STRING is constants.MAX_SHORT_STRING
     assert validation.MAX_SHORT_STRING == 500

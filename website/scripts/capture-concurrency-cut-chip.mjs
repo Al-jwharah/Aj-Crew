@@ -46,7 +46,7 @@ mkdirSync(OUT, { recursive: true })
 const now = Math.floor(Date.now() / 1000)
 const baseSlot = {
   key: ACTIVE, title: TITLE, running: true, messages: 4,
-  agent: 'kirocrew', modified: now, last_ts: new Date().toISOString(), folder_id: '',
+  agent: 'ajcrew', modified: now, last_ts: new Date().toISOString(), folder_id: '',
   last_message: 'Starting three agents for the split.',
 }
 const linkedSlot = { ...baseSlot, links: [{ channel: 'discord', label: 'Discord DM', target: '…42', direction: 'both', paused: false }] }

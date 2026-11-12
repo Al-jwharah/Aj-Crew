@@ -1,4 +1,4 @@
-"""Coverage for ``kirocrew computer doctor``, ``help`` and ``main``."""
+"""Coverage for ``ajcrew computer doctor``, ``help`` and ``main``."""
 
 from __future__ import annotations
 
@@ -9,18 +9,18 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew.agent_sdk.backends import (
+from aj_crew import agent as agent_mod
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KIRO,
     ACP_BACKEND_OPENCODE,
 )
-from kiro_crew.agent_sdk.drivers import acp as acp_driver
-from kiro_crew.computer_use import cli as cu_cli
-from kiro_crew.computer_use import enable_state as cu_enable_state
-from kiro_crew.computer_use import index as cu_index
-from kiro_crew.computer_use import service as cu_service
-from kiro_crew.computer_use.types import PERMISSION_UNKNOWN, STATE_KEY_ENABLED
+from aj_crew.agent_sdk.drivers import acp as acp_driver
+from aj_crew.computer_use import cli as cu_cli
+from aj_crew.computer_use import enable_state as cu_enable_state
+from aj_crew.computer_use import index as cu_index
+from aj_crew.computer_use import service as cu_service
+from aj_crew.computer_use.types import PERMISSION_UNKNOWN, STATE_KEY_ENABLED
 
 
 @pytest.fixture(autouse=True)
@@ -34,7 +34,7 @@ def fresh_singletons():
 
 @pytest.fixture
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return tmp_path
 
 
@@ -70,7 +70,7 @@ def _render(monkeypatch: pytest.MonkeyPatch, **overrides) -> None:
 
 
 _ROUTE_OR_KIRO = (
-    "Chat backend:  {} chats do not load these tools. Route kirocrew-computer in MCP "
+    "Chat backend:  {} chats do not load these tools. Route ajcrew-computer in MCP "
     "Management and restart, or use the Kiro CLI backend."
 )
 _KIRO_ONLY = "Chat backend:  {} chats do not load these tools. Use the Kiro CLI backend."
@@ -123,7 +123,7 @@ class TestBuildDoctorReport:
             probe_permissions=lambda: SimpleNamespace(
                 accessibility="granted",
                 screen_recording="missing",
-                responsible_hint="Kiro Crew.app",
+                responsible_hint="Aj Crew.app",
             ),
         )
         monkeypatch.setattr(cu_service, "get_shared_service", lambda: fake)
@@ -131,7 +131,7 @@ class TestBuildDoctorReport:
         assert report["platform"] == "macos"
         assert report["supported"] is True
         assert report["permissions"]["screen_recording"] == "missing"
-        assert report["permissions"]["responsible_hint"] == "Kiro Crew.app"
+        assert report["permissions"]["responsible_hint"] == "Aj Crew.app"
 
     def test_blocked_targets_are_category_and_reason_rows(self, home):
         blocked = cu_cli.build_doctor_report()["blocked_apps"]
@@ -172,7 +172,7 @@ class TestDoctorCommand:
         permissions = {
             "accessibility": "granted",
             "screen_recording": "missing",
-            "responsible_hint": "Kiro Crew.app",
+            "responsible_hint": "Aj Crew.app",
         }
         _render(monkeypatch, platform="macos", permissions=permissions)
         with pytest.raises(SystemExit):
@@ -180,7 +180,7 @@ class TestDoctorCommand:
         out = capsys.readouterr().out
         assert "Accessibility: granted" in out
         assert "Screen record: missing" in out
-        assert "Grant to:      Kiro Crew.app" in out
+        assert "Grant to:      Aj Crew.app" in out
         assert "Note: these permission readings are advisory." in out
 
     def test_blocked_targets_are_printed_under_their_heading(self, monkeypatch, capsys):
@@ -210,14 +210,14 @@ class TestDoctorCommand:
     ):
         config: dict = {"agent": {"acp_backend": backend}}
         if routing:
-            config["mcp_gateway"] = {"stub_servers": ["kirocrew-computer"]}
+            config["mcp_gateway"] = {"stub_servers": ["ajcrew-computer"]}
         (home / "config.json").write_text(json.dumps(config), encoding="utf-8")
         # What the running gateway routes: the saved list AND a stub in the overlay
         # built at its start.
         monkeypatch.setattr(
             agent_mod,
             "gateway_routed_names",
-            lambda: frozenset({"kirocrew-computer"} if routing == "served" else ()),
+            lambda: frozenset({"ajcrew-computer"} if routing == "served" else ()),
         )
         asked: list[tuple[str, ...]] = []
 
@@ -227,7 +227,7 @@ class TestDoctorCommand:
             # computer server unresolved, kiro-cli resolves every ref against the
             # spec itself. It never models the gateway's stub, routed or not.
             return True, [
-                (b, [] if b == ACP_BACKEND_KIRO else ["@kirocrew-computer"], True) for b in backends
+                (b, [] if b == ACP_BACKEND_KIRO else ["@ajcrew-computer"], True) for b in backends
             ]
 
         monkeypatch.setattr(acp_driver, "agent_spec_mcp_refs", refs)
@@ -261,6 +261,6 @@ class TestHelpAndEntryPoint:
         assert "Commands:" in capsys.readouterr().out
 
     def test_main_reads_the_process_arguments(self, monkeypatch, capsys):
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "help"])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "help"])
         cu_cli.main()
         assert "Commands:" in capsys.readouterr().out

@@ -71,7 +71,7 @@ function createRemoteCrewPrompt({ BrowserWindow, nativeTheme, isWindows = false 
         <label>Host</label>
         <input id="h" value="${escapeAttr(opening.host)}" placeholder="myhost.example.com" autofocus>
         <div class="hint">An SSH host or a name from your SSH config.</div>
-        <label>kirocrew binary path</label>
+        <label>ajcrew binary path</label>
         <input id="b" value="${escapeAttr(opening.binPath)}" placeholder="${escapeAttr(DEFAULT_REMOTE_BIN)}">
         <div class="hint">Leave blank for ${escapeAttr(DEFAULT_REMOTE_BIN)}.</div>
         <label>Remote port</label>

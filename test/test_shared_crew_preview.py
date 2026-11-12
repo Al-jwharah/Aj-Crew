@@ -1,4 +1,4 @@
-"""The Shared Crew release gate: ``KIROCREW_SHARED_CREW_PREVIEW=1`` (``shared_crew.preview``)."""
+"""The Shared Crew release gate: ``AJCREW_SHARED_CREW_PREVIEW=1`` (``shared_crew.preview``)."""
 
 from __future__ import annotations
 
@@ -6,10 +6,10 @@ import json
 
 import pytest
 
-from kiro_crew.config.loader import config_path
-from kiro_crew.config.sections_shared_crew import SharedCrewConfig, load_shared_crew_config
-from kiro_crew.shared_crew import admission_entry, admission_gate, capabilities
-from kiro_crew.shared_crew.preview import PREVIEW_ENV, preview_enabled
+from aj_crew.config.loader import config_path
+from aj_crew.config.sections_shared_crew import SharedCrewConfig, load_shared_crew_config
+from aj_crew.shared_crew import admission_entry, admission_gate, capabilities
+from aj_crew.shared_crew.preview import PREVIEW_ENV, preview_enabled
 
 #: Every switch on and every limit moved off its default.
 _ALL_ON = {
@@ -26,7 +26,7 @@ _ALL_ON = {
 
 @pytest.fixture
 def configured(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     path = config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps({"dashboard": {"shared_crew": _ALL_ON}}), encoding="utf-8")

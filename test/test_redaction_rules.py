@@ -16,9 +16,9 @@ import string
 import pytest
 import yaml
 
-from kiro_crew.security import redaction_rules as rr
-from kiro_crew.security.redaction_rules import redact as redact_mod
-from kiro_crew.security.redaction_rules.rules import base62_crc32
+from aj_crew.security import redaction_rules as rr
+from aj_crew.security.redaction_rules import redact as redact_mod
+from aj_crew.security.redaction_rules.rules import base62_crc32
 
 UPPER_DIGITS = string.ascii_uppercase + string.digits
 ALNUM = string.ascii_letters + string.digits
@@ -86,7 +86,7 @@ def _packaged_data() -> dict[str, object]:
     from importlib import resources
 
     text = (
-        resources.files("kiro_crew.security.redaction_rules")
+        resources.files("aj_crew.security.redaction_rules")
         .joinpath("rules.yaml")
         .read_text(encoding="utf-8")
     )
@@ -581,7 +581,7 @@ class TestLabelledSecretField:
         assert parsed["env"][1] == {"name": "REGION", "value": "us-east-1"}
 
     def test_many_unrelated_pairs_are_read_once_each(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.security.redaction_rules import detectors
+        from aj_crew.security.redaction_rules import detectors
 
         calls = 0
         real = detectors.labelled_value

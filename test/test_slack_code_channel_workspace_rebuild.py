@@ -15,8 +15,8 @@ from pathlib import Path
 import pytest
 import test_slack_code_channel_workspace as _ws
 
-from kiro_crew.slack.code_channels.workspace import git_ops, service
-from kiro_crew.slack.code_channels.workspace.store import WorkspaceStore
+from aj_crew.slack.code_channels.workspace import git_ops, service
+from aj_crew.slack.code_channels.workspace.store import WorkspaceStore
 
 FakeBinding = _ws.FakeBinding
 Harness = _ws.Harness
@@ -119,7 +119,7 @@ def test_a_directory_swapped_in_at_the_destination_is_refused(repo, audits, tmp_
 @pytest.fixture
 def channel_store(tmp_path):
     """The code-channel store, EMPTY: production plans the worktree first."""
-    from kiro_crew.slack.code_channels.store import CodeChannelStore, set_store
+    from aj_crew.slack.code_channels.store import CodeChannelStore, set_store
 
     store = CodeChannelStore(tmp_path / "routing" / "slack-code-channels.json")
     set_store(store)
@@ -130,8 +130,8 @@ def channel_store(tmp_path):
 def _production_bind(tmp_path, monkeypatch, channel_store, project: str):
     """The real order: plan_session cuts the worktree, then the core stores the
     binding (project_dir = the worktree, repo_root = planned_root), then prepare."""
-    from kiro_crew.slack.code_channels.store import Binding
-    from kiro_crew.slack.code_channels.workspace import core as ws_core
+    from aj_crew.slack.code_channels.store import Binding
+    from aj_crew.slack.code_channels.workspace import core as ws_core
 
     h, dash, _made, _statuses = _conductor_harness(tmp_path, monkeypatch)
     monkeypatch.setattr(ws_core, "_SERVICE", h.svc)
@@ -245,7 +245,7 @@ def test_a_remembered_root_the_gate_does_not_confirm_is_ignored(
 ):
     """A remembered root that the top level is no channel tree of (another repo,
     a missing path) is not used: the top level is, as without one."""
-    from kiro_crew.slack.code_channels.store import Binding
+    from aj_crew.slack.code_channels.store import Binding
 
     channel_store.put_binding(
         Binding(channel_id="C1", team_id="T1", session_key="chat-1", anchor_ts="1.0")
@@ -259,7 +259,7 @@ def test_a_remembered_root_the_gate_does_not_confirm_is_ignored(
 
 
 def test_a_root_that_is_the_worktree_is_never_remembered(tmp_path, channel_store):
-    from kiro_crew.slack.code_channels.store import Binding
+    from aj_crew.slack.code_channels.store import Binding
 
     channel_store.put_binding(
         Binding(channel_id="C1", team_id="T1", session_key="chat-1", anchor_ts="1.0")
@@ -296,7 +296,7 @@ def test_a_remembered_root_that_still_confirms_the_tree_is_not_replaced(
 def test_an_unreadable_store_is_never_rewritten_empty(tmp_path, monkeypatch):
     """A transient read error must abandon the write, not publish an empty store
     over every record; a display read still answers empty."""
-    from kiro_crew.slack.code_channels.workspace.store import WorkspaceRecord
+    from aj_crew.slack.code_channels.workspace.store import WorkspaceRecord
 
     store = WorkspaceStore(tmp_path / "store.json")
     store.put(WorkspaceRecord(team_id="T1", channel_id="C1", worktree="/wt/one"))
@@ -379,7 +379,7 @@ def test_a_rebind_to_another_repository_still_removes_the_old_diff_tab(tmp_path,
 def test_a_known_tab_is_removed_even_when_its_digest_was_reset(tmp_path):
     """A digest reset for a republish (a rebind raced a refresh) keeps the tab's
     id; a clean diff then still removes that tab."""
-    from kiro_crew.slack.code_channels.workspace.store import WorkspaceRecord
+    from aj_crew.slack.code_channels.workspace.store import WorkspaceRecord
 
     h = Harness(tmp_path)
     record = WorkspaceRecord(team_id="T1", channel_id="C1", worktree="/wt", view_id="V7")
@@ -476,8 +476,8 @@ def test_existing_bindings_are_prepared_once_at_gateway_start(
     """After an upgrade a channel's first turn may come from the dashboard, which
     admits the session before any hook: the gateway's start prepares every
     stored binding, so that turn already runs in the channel's worktree."""
-    from kiro_crew.slack.code_channels.store import Binding
-    from kiro_crew.slack.code_channels.workspace import core as ws_core
+    from aj_crew.slack.code_channels.store import Binding
+    from aj_crew.slack.code_channels.workspace import core as ws_core
 
     channel_store.put_binding(
         Binding(
@@ -516,8 +516,8 @@ def test_the_start_sweep_runs_again_once_the_connect_probe_reads_the_scopes(monk
     already runs in its worktree."""
     import asyncio
 
-    from kiro_crew.slack import features
-    from kiro_crew.slack.code_channels.workspace import core as ws_core
+    from aj_crew.slack import features
+    from aj_crew.slack.code_channels.workspace import core as ws_core
 
     monkeypatch.setattr(features, "_SCOPE_LISTENERS", [])
     monkeypatch.setattr(ws_core, "_SERVICE", None)
@@ -581,8 +581,8 @@ def test_a_rebuilt_record_recovers_its_channel_folder_for_the_watcher(
     """The record is lost while the channel's folder survives: the rebuilt record
     finds that folder again (the one whose project is the channel's tree), so the
     watcher keeps refreshing the channel after its workers' turns."""
-    from kiro_crew.slack.code_channels.store import Binding
-    from kiro_crew.slack.code_channels.workspace import core as ws_core
+    from aj_crew.slack.code_channels.store import Binding
+    from aj_crew.slack.code_channels.workspace import core as ws_core
 
     h, dash, _made, _statuses = _conductor_harness(tmp_path, monkeypatch)
     monkeypatch.setattr(ws_core, "_SERVICE", h.svc)
@@ -682,11 +682,11 @@ def test_a_dashboard_turn_waits_for_its_workspace_and_is_refused_without_one(mon
     import asyncio
     from types import SimpleNamespace
 
-    from kiro_crew.slack.code_channels import binding as binding_mod
-    from kiro_crew.slack.code_channels import hooks
-    from kiro_crew.slack.code_channels.workspace import core as ws_core
-    from kiro_crew.slack.code_channels.workspace import service as svc_mod
-    from kiro_crew.slack.code_channels.workspace.store import WorkspaceRecord
+    from aj_crew.slack.code_channels import binding as binding_mod
+    from aj_crew.slack.code_channels import hooks
+    from aj_crew.slack.code_channels.workspace import core as ws_core
+    from aj_crew.slack.code_channels.workspace import service as svc_mod
+    from aj_crew.slack.code_channels.workspace.store import WorkspaceRecord
 
     outcome: dict = {"record": None, "raise": False}
     ensured: list[tuple[str, bool]] = []
@@ -711,9 +711,7 @@ def test_a_dashboard_turn_waits_for_its_workspace_and_is_refused_without_one(mon
     )
     links = {"chat-1": ("1.0", "C1"), "chat-2": ("", "")}
     state = SimpleNamespace(sessions=SimpleNamespace(get_slack_link=lambda key: links[key]))
-    monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_utils.effective_session_key", lambda slot: slot.key
-    )
+    monkeypatch.setattr("aj_crew.dashboard.chat_utils.effective_session_key", lambda slot: slot.key)
 
     def turn(key):
         return asyncio.run(binding_mod.notify_turn_prepare(state, SimpleNamespace(key=key)))
@@ -743,9 +741,9 @@ def test_a_repository_that_can_never_get_a_worktree_is_refused_only_while_a_retr
     import asyncio
     from types import SimpleNamespace
 
-    from kiro_crew.slack.code_channels.workspace import core as ws_core
-    from kiro_crew.slack.code_channels.workspace import service as svc_mod
-    from kiro_crew.slack.code_channels.workspace.store import WorkspaceStore
+    from aj_crew.slack.code_channels.workspace import core as ws_core
+    from aj_crew.slack.code_channels.workspace import service as svc_mod
+    from aj_crew.slack.code_channels.workspace.store import WorkspaceStore
 
     proj = tmp_path / "repo"
     proj.mkdir()
@@ -778,9 +776,9 @@ def test_a_context_bar_that_fails_to_publish_never_refuses_a_ready_worktree(monk
     import subprocess
     from types import SimpleNamespace
 
-    from kiro_crew.slack.code_channels.workspace import core as ws_core
-    from kiro_crew.slack.code_channels.workspace import service as svc_mod
-    from kiro_crew.slack.code_channels.workspace.store import WorkspaceRecord, WorkspaceStore
+    from aj_crew.slack.code_channels.workspace import core as ws_core
+    from aj_crew.slack.code_channels.workspace import service as svc_mod
+    from aj_crew.slack.code_channels.workspace.store import WorkspaceRecord, WorkspaceStore
 
     tree = tmp_path / "tree"
     tree.mkdir()
@@ -816,9 +814,9 @@ def test_spent_bind_attempts_do_not_carry_over_to_a_new_project(monkeypatch, tmp
     import asyncio
     from types import SimpleNamespace
 
-    from kiro_crew.slack.code_channels.workspace import core as ws_core
-    from kiro_crew.slack.code_channels.workspace import service as svc_mod
-    from kiro_crew.slack.code_channels.workspace.store import WorkspaceStore
+    from aj_crew.slack.code_channels.workspace import core as ws_core
+    from aj_crew.slack.code_channels.workspace import service as svc_mod
+    from aj_crew.slack.code_channels.workspace.store import WorkspaceStore
 
     first, second = tmp_path / "one", tmp_path / "two"
     first.mkdir()
@@ -852,9 +850,9 @@ def test_a_bind_that_always_raises_is_refused_only_while_a_retry_is_left(monkeyp
     import asyncio
     from types import SimpleNamespace
 
-    from kiro_crew.slack.code_channels.workspace import core as ws_core
-    from kiro_crew.slack.code_channels.workspace import service as svc_mod
-    from kiro_crew.slack.code_channels.workspace.store import WorkspaceStore
+    from aj_crew.slack.code_channels.workspace import core as ws_core
+    from aj_crew.slack.code_channels.workspace import service as svc_mod
+    from aj_crew.slack.code_channels.workspace.store import WorkspaceStore
 
     proj = tmp_path / "plain"
     proj.mkdir()
@@ -889,9 +887,9 @@ def test_an_unwritable_store_never_refuses_a_turn_whose_outcome_is_known(monkeyp
     import asyncio
     from types import SimpleNamespace
 
-    from kiro_crew.slack.code_channels.workspace import core as ws_core
-    from kiro_crew.slack.code_channels.workspace import service as svc_mod
-    from kiro_crew.slack.code_channels.workspace.store import WorkspaceRecord, WorkspaceStore
+    from aj_crew.slack.code_channels.workspace import core as ws_core
+    from aj_crew.slack.code_channels.workspace import service as svc_mod
+    from aj_crew.slack.code_channels.workspace.store import WorkspaceRecord, WorkspaceStore
 
     plain, tree = tmp_path / "plain", tmp_path / "tree"
     plain.mkdir()
@@ -952,8 +950,8 @@ def test_an_unwritable_store_never_refuses_a_turn_whose_outcome_is_known(monkeyp
 def test_a_deterministic_refusal_is_told_apart_from_a_git_error(
     monkeypatch, status, has_base, refused
 ):
-    from kiro_crew.dashboard.handlers import worktree as wt
-    from kiro_crew.slack.code_channels.workspace import git_ops
+    from aj_crew.dashboard.handlers import worktree as wt
+    from aj_crew.slack.code_channels.workspace import git_ops
 
     monkeypatch.setattr(wt, "_resolve_base_ref", lambda root: "main")
     monkeypatch.setattr(wt, "_create_worktree_sync", lambda root, branch: ({"error": "no"}, status))
@@ -974,8 +972,8 @@ def test_a_kept_branch_that_could_not_be_checked_out_again_is_retried(monkeypatc
     "Branch already exists", and checking the branch out again failed for a
     reason that can pass (a lock). That is retried, never settled, or the
     channel would run in the shared checkout without its own commits."""
-    from kiro_crew.dashboard.handlers import worktree as wt
-    from kiro_crew.slack.code_channels.workspace import git_ops
+    from aj_crew.dashboard.handlers import worktree as wt
+    from aj_crew.slack.code_channels.workspace import git_ops
 
     monkeypatch.setattr(wt, "_resolve_base_ref", lambda root: "main")
     monkeypatch.setattr(
@@ -1006,10 +1004,10 @@ def test_a_repository_that_refuses_a_worktree_runs_its_turns_in_the_project_at_o
     import asyncio
     from types import SimpleNamespace
 
-    from kiro_crew.slack.code_channels.workspace import core as ws_core
-    from kiro_crew.slack.code_channels.workspace import git_ops
-    from kiro_crew.slack.code_channels.workspace import service as svc_mod
-    from kiro_crew.slack.code_channels.workspace.store import WorkspaceStore
+    from aj_crew.slack.code_channels.workspace import core as ws_core
+    from aj_crew.slack.code_channels.workspace import git_ops
+    from aj_crew.slack.code_channels.workspace import service as svc_mod
+    from aj_crew.slack.code_channels.workspace.store import WorkspaceStore
 
     proj = tmp_path / "repo"
     proj.mkdir()
@@ -1047,8 +1045,8 @@ def test_a_channel_branch_checked_out_in_the_shared_checkout_is_never_adopted(
     """The channel's tree was removed and its branch checked out in the main
     checkout: adopting that would run the channel in the shared checkout. Only
     a linked worktree is adopted; the branch held by the main one is not."""
-    from kiro_crew.dashboard.handlers import worktree as wt
-    from kiro_crew.slack.code_channels.workspace import git_ops
+    from aj_crew.dashboard.handlers import worktree as wt
+    from aj_crew.slack.code_channels.workspace import git_ops
 
     main, linked = tmp_path / "repo", tmp_path / "repo-wt-slack-x"
     main.mkdir()

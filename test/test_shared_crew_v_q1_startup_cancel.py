@@ -13,13 +13,13 @@ import pytest
 from chat_test_helpers import _make_state
 from test_shared_crew_turn_outcome import _service
 
-from kiro_crew import memory_startup
-from kiro_crew.dashboard import chat_runner, server
-from kiro_crew.shared_crew import admission_entry
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import host_hooks
-from kiro_crew.shared_crew.admission import OperationKind, OperationState, RuntimeOwnershipRef
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import memory_startup
+from aj_crew.dashboard import chat_runner, server
+from aj_crew.shared_crew import admission_entry
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import host_hooks
+from aj_crew.shared_crew.admission import OperationKind, OperationState, RuntimeOwnershipRef
+from aj_crew.testing.wait import async_wait_until
 
 BOUND = 30
 
@@ -80,7 +80,7 @@ async def test_cancelled_acceptance_releases_reservation(tmp_path, monkeypatch, 
 
 @pytest.mark.asyncio
 async def test_real_restore_before_memory_task_publication_drains_once(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(server.cautious_boot, "pause_before", AsyncMock())
     before = _service(tmp_path)
     running = await before.admit(
@@ -141,7 +141,7 @@ async def test_real_restore_before_memory_task_publication_drains_once(tmp_path,
     monkeypatch.setattr(memory_startup, "_active", startup)
     delivered = []
 
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     async def stream(message):
         delivered.append(message)

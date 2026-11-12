@@ -147,7 +147,7 @@ try {
       const path = new URL(route.request().url()).pathname
       const method = route.request().method()
       if (path === '/api/kiro-prerequisite') return json(route, { ...status, ...s.status })
-      if (path === '/api/config/kirocrew') {
+      if (path === '/api/config/ajcrew') {
         if (method === 'PATCH') return json(route, failure, s.patchCode ?? 200)
         return s.configCode ? json(route, failure, s.configCode) : json(route, { agent: s.config ?? {} })
       }

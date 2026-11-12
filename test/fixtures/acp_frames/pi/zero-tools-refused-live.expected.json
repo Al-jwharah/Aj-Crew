@@ -157,9 +157,9 @@
       {
         "kind": "tool_result",
         "tool_call_id": "call_write_2",
-        "tool_output": "Denied by the Kiro Crew tool gate",
-        "tool_output_bytes": 33,
-        "tool_output_digest": "46d4ecb0b0613d69fadbca561b56cea2cbb18829888c60babf0928b0c53927bf",
+        "tool_output": "Denied by the Aj Crew tool gate",
+        "tool_output_bytes": 31,
+        "tool_output_digest": "ada9bd4a11f29fc35022bf924946e82a1cb1782371a34e5f3d5096b906ccf064",
         "tool_status": "failed"
       }
     ],
@@ -171,13 +171,13 @@
     "events": [
       {
         "kind": "text_chunk",
-        "text": "Tool result: Denied by the Kiro Crew tool gate"
+        "text": "Tool result: Denied by the Aj Crew tool gate"
       }
     ],
     "frame": "session/update",
     "session_update": "agent_message_chunk",
     "text_chunk": {
-      "text": "Tool result: Denied by the Kiro Crew tool gate",
+      "text": "Tool result: Denied by the Aj Crew tool gate",
       "thinking": false
     }
   },
@@ -280,13 +280,13 @@
     "events": [
       {
         "kind": "text_chunk",
-        "text": "Tool result: Denied by the Kiro Crew tool gate"
+        "text": "Tool result: Denied by the Aj Crew tool gate"
       }
     ],
     "frame": "session/update",
     "session_update": "agent_message_chunk",
     "text_chunk": {
-      "text": "Tool result: Denied by the Kiro Crew tool gate",
+      "text": "Tool result: Denied by the Aj Crew tool gate",
       "thinking": false
     }
   },
@@ -380,9 +380,9 @@
       {
         "kind": "tool_result",
         "tool_call_id": "call_mcp__probe_server__echo_10",
-        "tool_output": "Denied by the Kiro Crew tool gate",
-        "tool_output_bytes": 33,
-        "tool_output_digest": "46d4ecb0b0613d69fadbca561b56cea2cbb18829888c60babf0928b0c53927bf",
+        "tool_output": "Denied by the Aj Crew tool gate",
+        "tool_output_bytes": 31,
+        "tool_output_digest": "ada9bd4a11f29fc35022bf924946e82a1cb1782371a34e5f3d5096b906ccf064",
         "tool_status": "failed"
       }
     ],
@@ -394,13 +394,13 @@
     "events": [
       {
         "kind": "text_chunk",
-        "text": "Tool result: Denied by the Kiro Crew tool gate"
+        "text": "Tool result: Denied by the Aj Crew tool gate"
       }
     ],
     "frame": "session/update",
     "session_update": "agent_message_chunk",
     "text_chunk": {
-      "text": "Tool result: Denied by the Kiro Crew tool gate",
+      "text": "Tool result: Denied by the Aj Crew tool gate",
       "thinking": false
     }
   },

@@ -56,7 +56,7 @@ export function kiroPrerequisiteRefetchInterval(
 // Two behaviors key off it: the faster poll above, and forcing that poll to probe
 // the HOST rather than read the boot-time latch.
 //
-// Forcing matters because Kiro Crew no longer performs setup — the user installs
+// Forcing matters because Aj Crew no longer performs setup — the user installs
 // Kiro CLI from kiro.dev and may sign in from a terminal. Neither of those
 // touches the gateway, and the latched status is refreshed only at boot or on an
 // explicit request, so a latch-reading poll can never observe them and the gate
@@ -131,7 +131,7 @@ function OwnerSetupRequired({
         <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted">
           {authRequired
             ? i18nT('api.client.stale_owner_session_sign_in_again')
-            : i18nT('components.kiroPrerequisiteGate.ask_the_kiro_crew_owner_to_install_kiro_cli_and')}
+            : i18nT('components.kiroPrerequisiteGate.ask_the_aj_crew_owner_to_install_kiro_cli_and')}
         </p>
         {/* "Check again" re-probes readiness, which cannot change for this
             viewer until they sign back in — a retry that cannot succeed is a
@@ -156,7 +156,7 @@ function OwnerSetupRequired({
 // this only ever suppresses first-run setup chrome for someone the gateway
 // already confirmed had completed setup, and it never grants session
 // readiness (that stays server-driven via `ready`).
-const SETUP_COMPLETE_KEY = 'kirocrew:kiro-setup-complete'
+const SETUP_COMPLETE_KEY = 'ajcrew:kiro-setup-complete'
 
 function rememberedSetupComplete(): boolean {
   return safeGetItem(SETUP_COMPLETE_KEY) === '1'
@@ -211,7 +211,7 @@ function SetupStatusError({
 // AppArmor profile `service install` writes. Linked from the gate so the screen
 // is a starting point rather than a dead end (issue #1660).
 const SANDBOX_DOCS_URL =
-  'https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/install.md' +
+  'https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/guides/install.md' +
   '#linux-the-agent-sandbox-and-unprivileged-user-namespaces'
 
 /**
@@ -225,7 +225,7 @@ const SANDBOX_DOCS_URL =
  * strictly more than the bare errno it replaced.
  *
  * Exactly ONE command per mechanism, deliberately. The AppArmor case previously
- * also offered `aa-exec -p kirocrew-userns` for a hand-started gateway, which is
+ * also offered `aa-exec -p ajcrew-userns` for a hand-started gateway, which is
  * worse than no advice: entering a named profile is not permitted for an
  * unconfined user, and `aa-exec` execs the command anyway instead of failing, so
  * the user gets a remedy that looks applied and changes nothing. The profile is
@@ -261,14 +261,14 @@ function splitSharedCommandPrefix(a: string, b: string): [string, string, string
 /**
  * The two sign-in commands, rendered VERBATIM from the backend constants, never
  * catalog values: a translated command cannot be typed. Shown only once a CLI
- * exists to sign into — before that the install step owns the screen. Kiro Crew
+ * exists to sign into — before that the install step owns the screen. Aj Crew
  * does not run them; the footer's Check again reads the result.
  *
  * BOTH tiers are offered, because the sign-in page the bare command opens
  * presents a free Builder ID as a peer of organization SSO: a user on an SSO
  * plan who picks the wrong one authenticates successfully and only discovers
  * the mismatch later, as missing models. Naming the tier here makes it a
- * decision instead of a guess. Kiro Crew does not detect which one applies —
+ * decision instead of a guess. Aj Crew does not detect which one applies —
  * that would mean inspecting the host's identity configuration — so the copy
  * describes the choice and lets the user make it.
  *
@@ -349,7 +349,7 @@ function remedySteps(remedy: string): React.ReactNode {
           <li className="text-sm leading-relaxed text-muted">
             {i18nT('components.kiroPrerequisiteGate.remedy_apparmor_service_install')}
             <CopyCommand>
-              <code>kirocrew service install</code>
+              <code>ajcrew service install</code>
             </CopyCommand>
           </li>
         </ul>
@@ -387,7 +387,7 @@ function remedySteps(remedy: string): React.ReactNode {
       // something usable on its own: the two flags drop into any `docker run`
       // line the operator already has, and the Pod block is real nested YAML,
       // not a dotted path, so it drops into a manifest as-is. The
-      // `kirocrew-seccomp.json` profile the Docker flags name is explained by
+      // `ajcrew-seccomp.json` profile the Docker flags name is explained by
       // the Linux sandbox guide linked below, which the now-shorter remedy
       // keeps in view. Each block carries a one-word caption so the reader
       // knows which of the two is theirs before copying.
@@ -399,7 +399,7 @@ function remedySteps(remedy: string): React.ReactNode {
               {i18nT('components.kiroPrerequisiteGate.remedy_mount_denied_docker')}
             </p>
             <CopyCommand>
-              <code>--security-opt apparmor=unconfined --security-opt seccomp=kirocrew-seccomp.json</code>
+              <code>--security-opt apparmor=unconfined --security-opt seccomp=ajcrew-seccomp.json</code>
             </CopyCommand>
             <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
               {i18nT('components.kiroPrerequisiteGate.remedy_mount_denied_pod')}
@@ -441,10 +441,10 @@ function SandboxRemedy({ remedy, transient }: { remedy: string; transient: boole
         </>
       ) : null}
       <p className="mt-2 text-sm leading-relaxed text-muted">
-        {i18nT('components.kiroPrerequisiteGate.run_kirocrew_doctor_on_the_gateway_host_for_a_ful')}
+        {i18nT('components.kiroPrerequisiteGate.run_ajcrew_doctor_on_the_gateway_host_for_a_ful')}
       </p>
       <CopyCommand>
-        <code>kirocrew doctor</code>
+        <code>ajcrew doctor</code>
       </CopyCommand>
       <a
         className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-accent hover:underline focus-ring"
@@ -491,7 +491,7 @@ function SandboxUnavailable({
     failureKind === 'transient'
       ? i18nT('components.kiroPrerequisiteGate.the_check_hit_a_temporary_limit_and_was_not_cach')
       : failureKind === 'foreign_sandbox'
-        ? i18nT('components.kiroPrerequisiteGate.another_sandbox_already_confines_kiro_crew_so_it')
+        ? i18nT('components.kiroPrerequisiteGate.another_sandbox_already_confines_aj_crew_so_it')
         : remedy === 'apparmor_userns'
           ? i18nT('components.kiroPrerequisiteGate.this_host_allows_user_namespaces_but_the_kernel_d')
           : remedy === 'mount_denied'
@@ -505,7 +505,7 @@ function SandboxUnavailable({
   return (
     <SetupShell
       asideHeadline={i18nT('components.kiroPrerequisiteGate.sandbox_unavailable')}
-      asideBody={i18nT('components.kiroPrerequisiteGate.kiro_crew_isolates_the_agent_in_an_os_level_sand')}
+      asideBody={i18nT('components.kiroPrerequisiteGate.aj_crew_isolates_the_agent_in_an_os_level_sand')}
       footer={
         <Btn type="button" disabled={retrying} onClick={onRetry}>
           <RefreshCw className={`lucide-inline ${retrying ? 'animate-spin' : ''}`} />
@@ -568,12 +568,12 @@ function CliOutdated({
   onRetry: () => void
   allowRemoteSetup: boolean
 }) {
-  // The CLI is installed but too old to expose the `acp` subcommand Kiro Crew
+  // The CLI is installed but too old to expose the `acp` subcommand Aj Crew
   // launches every session through — so it would fail at session-create rather
   // than here. The probe runs for a signed-out CLI too, so this card says
   // nothing about sign-in: a "signed in" claim here would be false for that
   // reader. The remedy is an UPDATE in place, not a reinstall, and unlike the
-  // install/sign-in steps Kiro Crew CAN run this one for the user (it is the
+  // install/sign-in steps Aj Crew CAN run this one for the user (it is the
   // CLI's own self-update). We therefore offer a button that runs it AND show
   // the command for anyone who would rather run it on the host themselves.
   return (
@@ -625,7 +625,7 @@ function CliOutdated({
         <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted">
           {i18nT('components.kiroPrerequisiteGate.kiro_cli_is_installed_but_too_old')}
         </p>
-        {/* Kiro Crew runs the update for the user via the button below, but the
+        {/* Aj Crew runs the update for the user via the button below, but the
             command is shown too — some hosts prefer to run it themselves, and it
             is the one thing a support conversation needs. Verbatim in a <code>,
             never a catalog value: a translated command cannot be run. */}
@@ -674,7 +674,7 @@ function AgentSpecsMissing({
   return (
     <SetupShell
       asideHeadline={i18nT('components.kiroPrerequisiteGate.agent_specs_missing')}
-      asideBody={i18nT('components.kiroPrerequisiteGate.kiro_crew_installs_the_agent_specs_kiro_cli_load')}
+      asideBody={i18nT('components.kiroPrerequisiteGate.aj_crew_installs_the_agent_specs_kiro_cli_load')}
     >
       <>
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-danger/10 text-danger-text">
@@ -684,10 +684,10 @@ function AgentSpecsMissing({
           {i18nT('components.kiroPrerequisiteGate.agent_specs_missing')}
         </p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-text-strong">
-          {i18nT('components.kiroPrerequisiteGate.kiro_crew_s_agent_specs_are_not_installed')}
+          {i18nT('components.kiroPrerequisiteGate.aj_crew_s_agent_specs_are_not_installed')}
         </h1>
         <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted">
-          {i18nT('components.kiroPrerequisiteGate.kiro_crew_writes_its_own_agent_specs_where_kiro')}
+          {i18nT('components.kiroPrerequisiteGate.aj_crew_writes_its_own_agent_specs_where_kiro')}
         </p>
         <div className="mt-5 w-full max-w-lg text-left">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
@@ -750,7 +750,7 @@ function AgentSpecsRejected({
   return (
     <SetupShell
       asideHeadline={i18nT('components.kiroPrerequisiteGate.agent_specs_rejected')}
-      asideBody={i18nT('components.kiroPrerequisiteGate.kiro_crew_installs_the_agent_specs_kiro_cli_load')}
+      asideBody={i18nT('components.kiroPrerequisiteGate.aj_crew_installs_the_agent_specs_kiro_cli_load')}
     >
       <>
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-danger/10 text-danger-text">
@@ -760,7 +760,7 @@ function AgentSpecsRejected({
           {i18nT('components.kiroPrerequisiteGate.agent_specs_rejected')}
         </p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-text-strong">
-          {i18nT('components.kiroPrerequisiteGate.kiro_cli_will_not_load_kiro_crew_s_agent_specs')}
+          {i18nT('components.kiroPrerequisiteGate.kiro_cli_will_not_load_aj_crew_s_agent_specs')}
         </h1>
         <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted">
           {i18nT('components.kiroPrerequisiteGate.the_files_are_on_disk_but_kiro_cli_refuses_them')}
@@ -810,7 +810,7 @@ function AgentSpecsRejected({
             <code> outside the catalog: a translator must not be able to alter a
             string the user pastes into a shell, and prose cannot be copied. */}
         <p className="mt-4 max-w-lg text-[13px] leading-relaxed text-muted">
-          {i18nT('components.kiroPrerequisiteGate.repair_rewrites_the_specs_kiro_crew_owns')}
+          {i18nT('components.kiroPrerequisiteGate.repair_rewrites_the_specs_aj_crew_owns')}
         </p>
         <ul className="mt-3 w-full max-w-lg list-none space-y-2 text-left">
           <li className="text-sm leading-relaxed text-muted">
@@ -819,7 +819,7 @@ function AgentSpecsRejected({
           <li className="text-sm leading-relaxed text-muted">
             {i18nT('components.kiroPrerequisiteGate.remedy_spec_rejected_rewrite')}
             <CopyCommand>
-              <code>kirocrew setup --agent-only --clean</code>
+              <code>ajcrew setup --agent-only --clean</code>
             </CopyCommand>
           </li>
         </ul>
@@ -851,7 +851,7 @@ const ACP_BACKEND_CONFIG_KEY = 'agent.acp_backend'
  */
 const KIRO_BACKEND = ACP_BACKEND_KIRO
 /** Shared with Settings → Agent Harness so a switch made here is what that panel reads. */
-const CONFIG_QUERY_KEY = ['kirocrewConfig'] as const
+const CONFIG_QUERY_KEY = ['ajcrewConfig'] as const
 const BACKENDS_QUERY_KEY = ['acpBackends'] as const
 /**
  * Poll while the picker is on screen, so an install is noticed without a click.
@@ -906,7 +906,7 @@ function configuredBackendCanStart(
   if (status.sandbox_blocked_backends?.includes(probe.id)) return false
   // KAS is kiro-cli's relay: it completes first-run setup on the kiro-cli
   // ACP-support rule, the SAME rule record_independent_backend_setup enforces
-  // (by the same id) before it writes the marker. KAS also loads Kiro Crew's
+  // (by the same id) before it writes the marker. KAS also loads Aj Crew's
   // agent specs, so a missing or rejected spec keeps the gate on its repair card.
   if (probe.id === ACP_BACKEND_KAS) {
     return status.acp_supported !== false
@@ -925,7 +925,7 @@ function configuredBackendCanStart(
  * credential mask would not apply at the operator's configured tier. With
  * `agent.sandbox: off` on a host whose sandbox works, the first is true and the
  * second lists every enforced harness — so "this host cannot provide that
- * sandbox" would be false, and Check again / `kirocrew doctor` re-measure a host
+ * sandbox" would be false, and Check again / `ajcrew doctor` re-measure a host
  * that is fine. The remedy is the setting, and only the setting.
  */
 function sandboxOffFor(
@@ -980,7 +980,7 @@ export function knownPlatform(platform: string | undefined): string {
 /**
  * The install command for Kiro CLI, for the gateway's platform.
  *
- * Kiro Crew still does not RUN it: the command is shown for the user to paste on
+ * Aj Crew still does not RUN it: the command is shown for the user to paste on
  * the gateway host, and Kiro's own setup page stays one click away for every
  * other install route (RPM, AppImage, musl). The commands are `<code>` children,
  * never catalog values — a translated command cannot be typed.
@@ -1257,9 +1257,9 @@ function OtherCodingAgents({
                                 {i18nT('components.kiroPrerequisiteGate.sandbox_blocked_agent_detail', { name })}
                               </p>
                               <p className="text-muted">
-                                {i18nT('components.kiroPrerequisiteGate.run_kirocrew_doctor_on_the_gateway_host_for_a_ful')}
+                                {i18nT('components.kiroPrerequisiteGate.run_ajcrew_doctor_on_the_gateway_host_for_a_ful')}
                               </p>
-                              <CopyCommand><code>kirocrew doctor</code></CopyCommand>
+                              <CopyCommand><code>ajcrew doctor</code></CopyCommand>
                             </div>
                           ) : (
                             <p className="text-[13px] leading-relaxed text-text">
@@ -1267,7 +1267,7 @@ function OtherCodingAgents({
                             </p>
                           )}
                           {/* Server-owned sentence, rendered verbatim like Settings → Agent Harness
-                              does: it names this harness's own sign-in, which Kiro Crew
+                              does: it names this harness's own sign-in, which Aj Crew
                               neither performs nor can check. */}
                           {shown.auth?.signs_in_separately && shown.auth.sign_in_remedy ? (
                             <p className="text-[12px] leading-relaxed text-muted">{shown.auth.sign_in_remedy}</p>
@@ -1453,7 +1453,7 @@ export default function KiroPrerequisiteGate({ children }: { children: ReactNode
   const kiroNotReady = !!statusQuery.data && !statusQuery.data.ready && !ltsLocked
   const configQuery = useQuery<{ agent?: { acp_backend?: string } }>({
     queryKey: CONFIG_QUERY_KEY,
-    queryFn: () => api.kirocrewConfig(),
+    queryFn: () => api.ajcrewConfig(),
     enabled: kiroNotReady,
     retry: false,
   })
@@ -1588,7 +1588,7 @@ export default function KiroPrerequisiteGate({ children }: { children: ReactNode
   }
   // LTS build, nobody signed in: the gateway is a sign-in-only app that
   // serves Crew's own sign-in and nothing else. Once a sign-in lands it says so
-  // (`lts_signed_in_restart`) and exits; the user starts Kiro Crew again.
+  // (`lts_signed_in_restart`) and exits; the user starts Aj Crew again.
   if (signInOnly) {
     const starting = i18nT('components.kiroPrerequisiteGate.your_crew_is_almost_ready')
     const aside = i18nT('components.kiroPrerequisiteGate.lts_sign_in_aside')
@@ -1710,7 +1710,7 @@ export default function KiroPrerequisiteGate({ children }: { children: ReactNode
   const repairError = repairMutation.data?.agent_spec_repair_error
     || (repairMutation.error ? asSentence(repairMutation.error.message) : '')
     || (status.agent_spec_repair_error ?? '')
-  // Kiro Crew's own agent specs are absent, so kiro-cli answers every
+  // Aj Crew's own agent specs are absent, so kiro-cli answers every
   // session/set_mode with "Mode '<name>' not found" and not one message can
   // succeed. Placed BEFORE the `initial_setup_complete` bail-out -- the only
   // branch here that hijacks an established install -- and gated ON that same
@@ -1734,7 +1734,7 @@ export default function KiroPrerequisiteGate({ children }: { children: ReactNode
     )
   }
   // Present but refused. Kiro CLI drops a spec it rejects from its agent table,
-  // so `--agent kirocrew` resolves to the default agent with none of Kiro Crew's
+  // so `--agent ajcrew` resolves to the default agent with none of Aj Crew's
   // MCP servers -- the same total failure as an absent spec, and the one the
   // stat-only check above cannot see. Ordered AFTER missing for the same reason
   // that check is scoped to present files: one fault should raise one card, and
@@ -1759,7 +1759,7 @@ export default function KiroPrerequisiteGate({ children }: { children: ReactNode
   // probe result, not a latch (a `false` default would hide the state on an older
   // gateway that omits the field, so the strict `=== false` is deliberate), so it
   // is safe to surface even on an established install — and its remedy is unique:
-  // update the CLI in place, which Kiro Crew runs for the user here. Ordered
+  // update the CLI in place, which Aj Crew runs for the user here. Ordered
   // BEFORE the established-install bail-out for the same reason as the spec
   // branches: this is a total failure the chat error card cannot pre-empt, and
   // this screen is the only place that offers the update.
@@ -1897,7 +1897,7 @@ export default function KiroPrerequisiteGate({ children }: { children: ReactNode
                 ? i18nT('components.kiroPrerequisiteGate.kiro_cli_is_installed_finish_signing_in_to_conti')
                 : i18nT('components.kiroPrerequisiteGate.kiro_cli_is_not_installed_yet')}
             </p>
-            {/* The one-line installer is SHOWN, never run: Kiro Crew does not
+            {/* The one-line installer is SHOWN, never run: Aj Crew does not
                 install Kiro CLI. The setup page stays as the route for every
                 other install form (RPM, AppImage, musl) and stays correct as
                 those change. */}

@@ -15,13 +15,13 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import pinned_fs
-from kiro_crew import sandbox as sb
-from kiro_crew import security
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.identity_stores import fenced_home_dirs, store_mappings
-from kiro_crew.pod import runtime_home
-from kiro_crew.pod.runtime import (
+from aj_crew import pinned_fs
+from aj_crew import sandbox as sb
+from aj_crew import security
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.identity_stores import fenced_home_dirs, store_mappings
+from aj_crew.pod import runtime_home
+from aj_crew.pod.runtime import (
     _RUNTIME_AUTH_STORE_FILE_CAP,
     _is_sqlite_sidecar,
     _runtime_auth_store_mappings,
@@ -541,8 +541,8 @@ def test_the_staged_store_is_readable_through_the_pod_mask_in_every_tier(
     exactly the failure mode this PR already hit once with `.aws`.
     """
     os_home = "/pods/p1/os-home"
-    monkeypatch.setenv("KIROCREW_POD", "1")
-    monkeypatch.setenv("KIROCREW_OS_HOME", os_home)
+    monkeypatch.setenv("AJCREW_POD", "1")
+    monkeypatch.setenv("AJCREW_OS_HOME", os_home)
 
     for dirs in (
         tuple(sb._sandbox_policy().strict_dirs()),
@@ -560,7 +560,7 @@ class TestTheStagedStoresResidualIsPinned:
     """What DOES and does NOT fence the staged identity store (a bearer-token database).
 
     1. the TOOL gate refuses every staged store path, on every platform row;
-    2. the bash-TEXT layer does not, for any path (see the ``KIROCREW_HOME`` parity);
+    2. the bash-TEXT layer does not, for any path (see the ``AJCREW_HOME`` parity);
     3. the OS bind-mask does not, because the harness resolves its token from it.
 
     Fact 3 holds because the harness and its tool subprocesses share one mount
@@ -585,8 +585,8 @@ class TestTheStagedStoresResidualIsPinned:
         second edit, which is the property that keeps this from rotting.
         """
         os_home = str(tmp_path / "pod-os-home")
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", os_home)
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", os_home)
 
         staged = self._staged_dbs(os_home)
         assert staged, "fenced_home_dirs() is empty; the fence has nothing to cover"
@@ -598,8 +598,8 @@ class TestTheStagedStoresResidualIsPinned:
 
     def test_the_real_home_store_stays_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """The pod anchoring is ADDITIVE -- it must not displace the host's fence."""
-        monkeypatch.delenv("KIROCREW_POD", raising=False)
-        monkeypatch.delenv("KIROCREW_OS_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_POD", raising=False)
+        monkeypatch.delenv("AJCREW_OS_HOME", raising=False)
 
         for leaf in fenced_home_dirs():
             path = str(Path.home() / Path(*leaf.split("/")) / "data.sqlite3")
@@ -615,9 +615,9 @@ class TestTheStagedStoresResidualIsPinned:
         """
         os_home = str(tmp_path / "pod-os-home")
         crew_home = str(tmp_path / "crew-home")
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", os_home)
-        monkeypatch.setenv("KIROCREW_HOME", crew_home)
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", os_home)
+        monkeypatch.setenv("AJCREW_HOME", crew_home)
 
         spellings = [
             os.path.join(os_home, ".local", "share", "kiro-cli", "data.sqlite3"),
@@ -651,8 +651,8 @@ class TestTheStagedStoresResidualIsPinned:
         entry covering it would break sign-in.
         """
         os_home = "/pods/p1/os-home"
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", os_home)
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", os_home)
 
         store_leaves = set(fenced_home_dirs())
         for tier_name in ("_STRICT_DIRS", "_CC_DIRS", "_STANDARD_DIRS"):

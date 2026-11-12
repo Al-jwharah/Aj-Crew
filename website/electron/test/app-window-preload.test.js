@@ -46,8 +46,8 @@ function loadPreload(argv) {
 
 test("the bridge exposes exactly the host calls, under one global", () => {
   const { exposed } = loadPreload(["electron", "--kc-app-window=pets/pet/overlay/1"]);
-  assert.deepStrictEqual(Object.keys(exposed), ["kirocrewDesktopWindow"]);
-  const bridge = exposed.kirocrewDesktopWindow;
+  assert.deepStrictEqual(Object.keys(exposed), ["ajcrewDesktopWindow"]);
+  const bridge = exposed.ajcrewDesktopWindow;
   assert.ok(Object.isFrozen(bridge));
   assert.deepStrictEqual(Object.keys(bridge).sort(), [
     "app", "close", "kind", "level", "onShortcut", "open", "ready", "setFocusable", "setHitRegions", "window",
@@ -60,7 +60,7 @@ test("the bridge exposes exactly the host calls, under one global", () => {
 
 test("each call sends its own channel with coerced arguments", () => {
   const { exposed, sent } = loadPreload(["--kc-app-window=pets/pet/overlay/1"]);
-  const bridge = exposed.kirocrewDesktopWindow;
+  const bridge = exposed.ajcrewDesktopWindow;
   bridge.ready();
   bridge.close();
   bridge.open({ toString: () => "panel" });
@@ -80,19 +80,19 @@ test("each call sends its own channel with coerced arguments", () => {
 test("onShortcut delivers ids and unsubscribes", () => {
   const { exposed, listeners } = loadPreload(["--kc-app-window=pets/panel/panel/1"]);
   const got = [];
-  const off = exposed.kirocrewDesktopWindow.onShortcut((id) => got.push(id));
+  const off = exposed.ajcrewDesktopWindow.onShortcut((id) => got.push(id));
   const [listener] = listeners["app-window:shortcut"];
   listener({}, "toggle");
   listener({}, { not: "an id" });
   off();
   assert.deepStrictEqual(got, ["toggle"]);
   assert.deepStrictEqual(listeners["app-window:shortcut"], []);
-  assert.strictEqual(typeof exposed.kirocrewDesktopWindow.onShortcut(null), "function");
+  assert.strictEqual(typeof exposed.ajcrewDesktopWindow.onShortcut(null), "function");
 });
 
 test("a window the host did not tag reports no identity", () => {
   const { exposed } = loadPreload(["electron"]);
-  const bridge = exposed.kirocrewDesktopWindow;
+  const bridge = exposed.ajcrewDesktopWindow;
   assert.deepStrictEqual(
     { app: bridge.app, window: bridge.window, level: bridge.level },
     { app: "", window: "", level: 0 },

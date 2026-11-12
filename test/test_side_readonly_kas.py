@@ -22,14 +22,14 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.acp._dispatch import build_permission_event, parse_session_update
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.acp_backends import ACP_BACKEND_KAS, ACP_BACKENDS_SIDE_READONLY
-from kiro_crew.dashboard.side_readonly_spec import derive_readonly_spec
-from kiro_crew.llm_helpers import ToolApprovalPolicy, stream_and_collect
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew import platform_compat
+from aj_crew.acp._dispatch import build_permission_event, parse_session_update
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.acp_backends import ACP_BACKEND_KAS, ACP_BACKENDS_SIDE_READONLY
+from aj_crew.dashboard.side_readonly_spec import derive_readonly_spec
+from aj_crew.llm_helpers import ToolApprovalPolicy, stream_and_collect
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
 _OPTIONS = [
     {"optionId": "accept", "name": "Allow", "kind": "allow_once"},
@@ -224,7 +224,7 @@ class _ScriptedProvider:
 
 
 def _hooks():
-    from kiro_crew.hooks import HookManager, HooksConfig
+    from aj_crew.hooks import HookManager, HooksConfig
 
     return HookManager(HooksConfig())
 
@@ -247,7 +247,7 @@ def test_kas_is_a_side_readonly_member():
 
 def test_the_derived_spec_projects_no_kas_allow_rule():
     """The grant KAS would honour without asking is gone from the projected agent."""
-    from kiro_crew.acp.kas_agents import to_client_custom_agent
+    from aj_crew.acp.kas_agents import to_client_custom_agent
 
     base = {
         "name": "probe",

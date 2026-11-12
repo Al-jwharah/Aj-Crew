@@ -57,7 +57,7 @@ async function main() {
 
     // The mode preference resolves through the provider; pin the resolved
     // attribute so a 'light' preference cannot render dark unnoticed.
-    await page.evaluate(m => { document.documentElement.dataset.theme = `kiro-${m}` }, shot.mode)
+    await page.evaluate(m => { document.documentElement.dataset.theme = `aj-${m}` }, shot.mode)
     await page.waitForTimeout(400)
 
     // Assertion 1: the claimed option is the selected one (aria-pressed).

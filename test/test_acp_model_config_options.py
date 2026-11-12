@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
 
 SESSION_NEW_RESPONSE = json.loads(r"""{
  "sessionId": "92889b94-e33b-482e-b465-28a89a2b379f",
@@ -245,9 +245,9 @@ def test_cc_models_serves_harvested_catalog_with_verbatim_wire_ids(tmp_path: Pat
     from types import SimpleNamespace
     from unittest.mock import MagicMock
 
-    from kiro_crew.agent_sdk.capabilities import capabilities_for
-    from kiro_crew.dashboard.handlers.agents import _cc_models
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.agent_sdk.capabilities import capabilities_for
+    from aj_crew.dashboard.handlers.agents import _cc_models
+    from aj_crew.providers.acp import AcpProvider
 
     client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE)
     client._capture_available_models(SESSION_NEW_RESPONSE)
@@ -276,7 +276,7 @@ def test_cc_models_falls_back_to_registry_without_a_session(tmp_path: Path):
     from types import SimpleNamespace
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard.handlers.agents import _cc_models
+    from aj_crew.dashboard.handlers.agents import _cc_models
 
     state = SimpleNamespace(sessions=SimpleNamespace(active_providers=lambda: []))
     request = MagicMock()

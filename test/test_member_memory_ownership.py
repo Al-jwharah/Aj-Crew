@@ -13,17 +13,16 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from conftest import make_dir_link
-from kiro_crew.config.loader import (
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+from aj_crew.config.loader import (
+    AjCrewAgentConfig,
+    AjCrewConfig,
     config_dir,
     resolve_agent_bindings,
     update_config_locked,
 )
-from kiro_crew.config.sections import MemoryStoreConfig
-from kiro_crew.members import dm_binding_path, write_dm_binding
-from kiro_crew.memory_stores import (
+from aj_crew.config.sections import MemoryStoreConfig
+from aj_crew.members import dm_binding_path, write_dm_binding
+from aj_crew.memory_stores import (
     MemberAlreadyExists,
     UnknownMemoryStore,
     memory_store_dir_for,
@@ -35,12 +34,13 @@ from kiro_crew.memory_stores import (
     require_memory_store,
     resolve_store_path,
 )
-from kiro_crew.vector_memory import read_member_database_identity
+from aj_crew.vector_memory import read_member_database_identity
+from conftest import make_dir_link
 
 
-def _new_member(name: str = "reviewer") -> tuple[KiroCrewConfig, str]:
-    cfg = KiroCrewConfig.load()
-    cfg.agents[name] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+def _new_member(name: str = "reviewer") -> tuple[AjCrewConfig, str]:
+    cfg = AjCrewConfig.load()
+    cfg.agents[name] = AjCrewAgentConfig(kiro_agent="ajcrew")
     return cfg, provision_member_memory(cfg, name)
 
 
@@ -60,7 +60,7 @@ class TestPrivateOwnership:
         persist_member_config(
             stale, "reviewer", expected_store=store, changed_fields={"kiro_agent"}
         )
-        loaded = KiroCrewConfig.load()
+        loaded = AjCrewConfig.load()
         assert loaded.agents["reviewer"].kiro_agent == "new-template"
         assert loaded.agents["reviewer"].workspace == "concurrent-workspace"
         assert loaded.agents["reviewer"].avatar == {"kind": "image", "v": 42}
@@ -81,8 +81,8 @@ class TestPrivateOwnership:
         assert saved["agents"]["reviewer"] == occupied
 
     def test_partial_update_cannot_omit_a_new_binding_or_add_unknown_fields(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["reviewer"] = KiroCrewAgentConfig()
+        cfg = AjCrewConfig.load()
+        cfg.agents["reviewer"] = AjCrewAgentConfig()
         cfg.save()
         provision_member_memory(cfg, "reviewer")
         with pytest.raises(UnknownMemoryStore, match="omitted its changed memory binding"):
@@ -93,7 +93,7 @@ class TestPrivateOwnership:
             persist_member_config(
                 cfg, "reviewer", expected_store="default", changed_fields={"typo"}
             )
-        assert KiroCrewConfig.load().agents["reviewer"].memory_store == "default"
+        assert AjCrewConfig.load().agents["reviewer"].memory_store == "default"
 
     def test_member_starts_empty_and_global_files_are_unchanged(self):
         home = config_dir()
@@ -111,7 +111,7 @@ class TestPrivateOwnership:
         assert (root / "memory.db").is_file()
         assert (home / "memory.db").read_bytes() == b"existing-v1-database"
         assert (home / "lessons.jsonl").read_text(encoding="utf-8") == "global lessons"
-        loaded = KiroCrewConfig.load()
+        loaded = AjCrewConfig.load()
         assert loaded.default_agent == "default"
         assert resolve_agent_bindings(loaded, "default").memory_store_name == "default"
         assert resolve_agent_bindings(loaded, "reviewer").memory_store_name == store
@@ -125,7 +125,7 @@ class TestPrivateOwnership:
 
     def test_members_have_distinct_stores_even_when_names_share_a_slug(self):
         cfg, first = _new_member("Code Review")
-        cfg.agents["Code-Review"] = KiroCrewAgentConfig()
+        cfg.agents["Code-Review"] = AjCrewAgentConfig()
         second = provision_member_memory(cfg, "Code-Review")
         assert first != second
         assert require_member_memory_store(cfg, "Code Review") == first
@@ -133,9 +133,9 @@ class TestPrivateOwnership:
         assert cfg.agents["Code Review"].member_id != cfg.agents["Code-Review"].member_id
 
     def test_live_legacy_name_reserves_its_slug_before_any_dm_binding(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["on_call"] = KiroCrewAgentConfig()
-        cfg.agents["on-call"] = KiroCrewAgentConfig()
+        cfg = AjCrewConfig.load()
+        cfg.agents["on_call"] = AjCrewAgentConfig()
+        cfg.agents["on-call"] = AjCrewAgentConfig()
 
         store = provision_member_memory(cfg, "on-call")
 
@@ -145,8 +145,8 @@ class TestPrivateOwnership:
 
     def test_retained_dm_binding_reserves_deleted_legacy_slug(self):
         write_dm_binding("code-review", member="Code Review", slot_key="member-code-review")
-        cfg = KiroCrewConfig.load()
-        cfg.agents["Code-Review"] = KiroCrewAgentConfig()
+        cfg = AjCrewConfig.load()
+        cfg.agents["Code-Review"] = AjCrewAgentConfig()
 
         store = provision_member_memory(cfg, "Code-Review")
 
@@ -159,8 +159,8 @@ class TestPrivateOwnership:
         # treat that as "my own binding": the namesake would inherit the deleted
         # crewmate's thread. Only the upgrade may claim a same-name binding.
         write_dm_binding("radar", member="Radar", slot_key="member-radar")
-        cfg = KiroCrewConfig.load()
-        cfg.agents["Radar"] = KiroCrewAgentConfig()
+        cfg = AjCrewConfig.load()
+        cfg.agents["Radar"] = AjCrewAgentConfig()
 
         store = provision_member_memory(cfg, "Radar")
 
@@ -175,8 +175,8 @@ class TestPrivateOwnership:
         path = dm_binding_path("radar")
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(b"\xff\xfe{not json")
-        cfg = KiroCrewConfig.load()
-        cfg.agents["Radar"] = KiroCrewAgentConfig()
+        cfg = AjCrewConfig.load()
+        cfg.agents["Radar"] = AjCrewAgentConfig()
 
         store = provision_member_memory(cfg, "Radar")
 
@@ -186,13 +186,13 @@ class TestPrivateOwnership:
 
     @pytest.mark.parametrize("replacement", ["Code Review", "Code-Review"])
     def test_deleted_member_identity_stays_reserved_by_retained_store(self, replacement):
-        from kiro_crew.execution_context import (
+        from aj_crew.execution_context import (
             member_config_for_id,
             resolve_member_execution,
             validate_execution,
         )
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.vector_memory import open_member_database
+        from aj_crew.memory import MemoryStore
+        from aj_crew.vector_memory import open_member_database
 
         global_db = config_dir() / "memory.db"
         global_db.write_bytes(b"existing-global-v1")
@@ -215,11 +215,11 @@ class TestPrivateOwnership:
             return data
 
         update_config_locked(mutate=delete_member)
-        cfg = KiroCrewConfig.load()
-        cfg.agents[replacement] = KiroCrewAgentConfig()
+        cfg = AjCrewConfig.load()
+        cfg.agents[replacement] = AjCrewAgentConfig()
         new_store = provision_member_memory(cfg, replacement)
         persist_member_config(cfg, replacement, create=True)
-        loaded = KiroCrewConfig.load()
+        loaded = AjCrewConfig.load()
         new_id = loaded.agents[replacement].member_id
 
         with pytest.raises(UnknownMemoryStore, match="identity is missing"):
@@ -251,13 +251,13 @@ class TestPrivateOwnership:
         assert resolve_agent_bindings(cfg, "default").memory_store_name == "default"
 
     def test_store_listing_follows_exact_member_avatar_and_updates_without_rebinding(self):
-        from kiro_crew.dashboard.handlers.memory_admin import _list_stores_blocking
+        from aj_crew.dashboard.handlers.memory_admin import _list_stores_blocking
 
         cfg, first = _new_member("Code Review")
         cfg.agents["Code Review"].avatar = {"kind": "image", "v": 11}
         persist_member_config(cfg, "Code Review", create=True)
-        cfg = KiroCrewConfig.load()
-        cfg.agents["Code-Review"] = KiroCrewAgentConfig(avatar={"kind": "image", "v": 22})
+        cfg = AjCrewConfig.load()
+        cfg.agents["Code-Review"] = AjCrewAgentConfig(avatar={"kind": "image", "v": 22})
         second = provision_member_memory(cfg, "Code-Review")
         persist_member_config(cfg, "Code-Review", create=True)
 
@@ -268,18 +268,18 @@ class TestPrivateOwnership:
         assert rows[second]["owner_avatar"] == {"kind": "image", "v": 22}
         assert rows["default"]["owner_avatar"] == {}
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents["Code Review"].avatar = {"kind": "image", "v": 33}
         persist_member_config(cfg, "Code Review", create=False, expected_store=first)
         refreshed = {row["name"]: row for row in _list_stores_blocking()}
         assert refreshed[first]["owner_avatar"] == {"kind": "image", "v": 33}
         assert refreshed[second]["owner_avatar"] == rows[second]["owner_avatar"]
-        assert require_member_memory_store(KiroCrewConfig.load(), "Code Review") == first
+        assert require_member_memory_store(AjCrewConfig.load(), "Code Review") == first
 
     def test_deleted_member_store_is_not_listed_for_the_picker(self):
         """The store record stays (its member id is reserved), but no route can
         read it, so listing it hands the picker a row whose every click is a 503."""
-        from kiro_crew.dashboard.handlers.memory_admin import _list_stores_blocking
+        from aj_crew.dashboard.handlers.memory_admin import _list_stores_blocking
 
         cfg, store = _new_member("reviewer")
         persist_member_config(cfg, "reviewer", create=True)
@@ -292,7 +292,7 @@ class TestPrivateOwnership:
         update_config_locked(mutate=delete_member)
         names = {row["name"] for row in _list_stores_blocking()}
         assert store not in names and "default" in names
-        assert store in KiroCrewConfig.load().memory_stores  # reservation intact
+        assert store in AjCrewConfig.load().memory_stores  # reservation intact
 
     @pytest.mark.parametrize("junk", [[], {"id": 1}, 7, None])
     def test_non_string_identities_in_config_never_crash_the_picker(self, junk):
@@ -300,7 +300,7 @@ class TestPrivateOwnership:
         ``owner_member_id``) is kept as written so the resolvers refuse it and
         doctor can show it, but the picker must not hash it into an unhashable
         TypeError that turns ``/api/memory/stores`` into a 500."""
-        from kiro_crew.dashboard.handlers.memory_admin import _list_stores_blocking
+        from aj_crew.dashboard.handlers.memory_admin import _list_stores_blocking
 
         cfg, store = _new_member("reviewer")
         persist_member_config(cfg, "reviewer", create=True)
@@ -312,7 +312,7 @@ class TestPrivateOwnership:
             return data
 
         update_config_locked(mutate=corrupt)
-        loaded = KiroCrewConfig.load()
+        loaded = AjCrewConfig.load()
         assert loaded.agents["reviewer"].member_id == junk
         assert loaded.agents["bystander"].member_id == junk
         assert loaded.memory_stores[store].owner_member_id == junk
@@ -333,15 +333,15 @@ class TestPrivateOwnership:
 
     @pytest.mark.parametrize("binding", ["", "missing", "../escape", None])
     def test_broken_member_binding_never_selects_global_or_initialization(self, binding):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["reviewer"] = KiroCrewAgentConfig(memory_store=binding)
+        cfg = AjCrewConfig.load()
+        cfg.agents["reviewer"] = AjCrewAgentConfig(memory_store=binding)
         with pytest.raises(UnknownMemoryStore):
             resolve_agent_bindings(cfg, "reviewer")
 
     @pytest.mark.parametrize("binding", ["default", "legacy"])
     def test_existing_legacy_member_keeps_its_exact_binding_and_database(self, binding):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["reviewer"] = KiroCrewAgentConfig(memory_store=binding)
+        cfg = AjCrewConfig.load()
+        cfg.agents["reviewer"] = AjCrewAgentConfig(memory_store=binding)
         cfg.default_agent = "reviewer"
         cfg.memory_stores["legacy"] = MemoryStoreConfig()
         cfg.save()
@@ -368,10 +368,10 @@ class TestPrivateOwnership:
     def test_legacy_advisory_resolution_does_not_probe_private_or_database_files(
         self, monkeypatch, binding
     ):
-        import kiro_crew.memory_stores as stores
+        import aj_crew.memory_stores as stores
 
-        cfg = KiroCrewConfig.load()
-        cfg.agents["reviewer"] = KiroCrewAgentConfig(memory_store=binding)
+        cfg = AjCrewConfig.load()
+        cfg.agents["reviewer"] = AjCrewAgentConfig(memory_store=binding)
         cfg.memory_stores["legacy"] = MemoryStoreConfig()
 
         def unexpected(*args):
@@ -397,8 +397,8 @@ class TestPrivateOwnership:
             resolve_agent_bindings(cfg, "reviewer")
 
     def test_unrelated_nonregular_database_never_opens_sqlite(self, monkeypatch):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["reviewer"] = KiroCrewAgentConfig()
+        cfg = AjCrewConfig.load()
+        cfg.agents["reviewer"] = AjCrewAgentConfig()
         database = memory_stores_root() / "malformed-peer" / "memory.db"
         database.mkdir(parents=True)
 
@@ -409,8 +409,8 @@ class TestPrivateOwnership:
         assert resolve_agent_bindings(cfg, "reviewer").memory_store_name == "default"
 
     def test_selected_legacy_nonregular_database_refuses_before_sqlite(self, monkeypatch):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["reviewer"] = KiroCrewAgentConfig(memory_store="legacy")
+        cfg = AjCrewConfig.load()
+        cfg.agents["reviewer"] = AjCrewAgentConfig(memory_store="legacy")
         cfg.memory_stores["legacy"] = MemoryStoreConfig()
         database = memory_stores_root() / "legacy" / "memory.db"
         database.mkdir(parents=True)
@@ -434,7 +434,7 @@ class TestPrivateOwnership:
     def test_corrupt_peer_does_not_disable_legacy_members_or_global(self):
         cfg, peer = _new_member("other")
         (memory_stores_root() / peer / "memory.db").write_text("{invalid", encoding="utf-8")
-        cfg.agents["reviewer"] = KiroCrewAgentConfig()
+        cfg.agents["reviewer"] = AjCrewAgentConfig()
         assert require_member_memory_store(cfg, "reviewer") == "default"
         assert require_member_memory_store(cfg, "default") == "default"
         with pytest.raises(UnknownMemoryStore):
@@ -442,8 +442,8 @@ class TestPrivateOwnership:
 
     @pytest.mark.parametrize("owner,version", [("other", 2), ("reviewer", 1)])
     def test_owned_invalid_binding_never_advertises_initialization(self, owner, version):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["reviewer"] = KiroCrewAgentConfig(memory_store="owned")
+        cfg = AjCrewConfig.load()
+        cfg.agents["reviewer"] = AjCrewAgentConfig(memory_store="owned")
         cfg.memory_stores["owned"] = MemoryStoreConfig(owner_member=owner, memory_version=version)
         before = copy.deepcopy(cfg)
         for operation in (require_member_memory_store, provision_member_memory):
@@ -454,7 +454,7 @@ class TestPrivateOwnership:
 
     def test_shared_binding_is_refused_for_both_members(self):
         cfg, store = _new_member()
-        cfg.agents["intruder"] = KiroCrewAgentConfig(memory_store=store)
+        cfg.agents["intruder"] = AjCrewAgentConfig(memory_store=store)
         for name in ("reviewer", "intruder"):
             with pytest.raises(UnknownMemoryStore):
                 require_member_memory_store(cfg, name)
@@ -483,7 +483,7 @@ class TestPrivateOwnership:
 
     def test_store_link_to_another_member_is_refused(self):
         cfg, store = _new_member()
-        cfg.agents["other"] = KiroCrewAgentConfig()
+        cfg.agents["other"] = AjCrewAgentConfig()
         other = provision_member_memory(cfg, "other")
         root = memory_stores_root() / store
         import shutil
@@ -494,7 +494,7 @@ class TestPrivateOwnership:
             require_member_memory_store(cfg, "reviewer")
 
     def test_undeclared_store_never_resolves_to_configured_or_global_default(self):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.memory_stores["legacy"] = MemoryStoreConfig()
         cfg.default_memory_store = "legacy"
         cfg.save()
@@ -507,9 +507,9 @@ class TestPrivateOwnership:
         assert len([v for v in cfg.memory_stores.values() if v.owner_member == "reviewer"]) == 1
 
     def test_legacy_named_store_is_not_adopted_or_copied(self):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.memory_stores["legacy"] = MemoryStoreConfig()
-        cfg.agents["reviewer"] = KiroCrewAgentConfig(memory_store="legacy")
+        cfg.agents["reviewer"] = AjCrewAgentConfig(memory_store="legacy")
         cfg.save()
         legacy = memory_store_dir_for("legacy")
         legacy.mkdir(parents=True)
@@ -521,7 +521,7 @@ class TestPrivateOwnership:
         assert memory_store_version("legacy") == 1
 
     def test_concurrent_creation_has_one_winner_and_preserves_other_settings(self):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.save()
         first, _ = _new_member()
         second, _ = _new_member()
@@ -536,35 +536,35 @@ class TestPrivateOwnership:
         with ThreadPoolExecutor(max_workers=2) as pool:
             results = list(pool.map(publish, [first, second]))
         assert sorted(results) == [False, True]
-        loaded = KiroCrewConfig.load()
+        loaded = AjCrewConfig.load()
         assert len([v for v in loaded.memory_stores.values() if v.owner_member == "reviewer"]) == 1
         require_member_memory_store(loaded, "reviewer")
 
     def test_metadata_edit_does_not_resurrect_a_concurrently_removed_member(self):
         cfg, store = _new_member()
         persist_member_config(cfg, "reviewer", create=True)
-        stale_editor = KiroCrewConfig.load()
+        stale_editor = AjCrewConfig.load()
         stale_editor.agents["reviewer"].description = "Unsaved edit"
-        latest = KiroCrewConfig.load()
+        latest = AjCrewConfig.load()
         del latest.agents["reviewer"]
         latest.save()
         with pytest.raises(UnknownMemoryStore, match="removed concurrently"):
             persist_member_config(stale_editor, "reviewer", expected_store=store)
-        assert "reviewer" not in KiroCrewConfig.load().agents
+        assert "reviewer" not in AjCrewConfig.load().agents
 
 
 @pytest.fixture
 def owner_crud_app(monkeypatch):
-    import kiro_crew.dashboard.handlers.agents as handlers
+    import aj_crew.dashboard.handlers.agents as handlers
 
     pass  # Member routing does not depend on OS isolation.
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request", lambda _: True
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request", lambda _: True
     )
     monkeypatch.setattr(handlers, "list_agents", lambda: [])
     app = web.Application()
-    app.router.add_post("/api/agents", handlers.api_kirocrew_agents_create)
-    app.router.add_put("/api/agents/{name}", handlers.api_kirocrew_agent_update)
+    app.router.add_post("/api/agents", handlers.api_ajcrew_agents_create)
+    app.router.add_put("/api/agents/{name}", handlers.api_ajcrew_agent_update)
     return app
 
 
@@ -579,8 +579,8 @@ class TestMemberMemoryUserFlows:
         ],
     )
     async def test_rejected_opt_in_does_not_leave_private_evidence(self, owner_crud_app, invalid):
-        cfg = await asyncio.to_thread(KiroCrewConfig.load)
-        cfg.agents["reviewer"] = KiroCrewAgentConfig()
+        cfg = await asyncio.to_thread(AjCrewConfig.load)
+        cfg.agents["reviewer"] = AjCrewAgentConfig()
         await asyncio.to_thread(cfg.save)
         root = memory_stores_root()
         before = set(root.iterdir()) if root.exists() else set()
@@ -589,7 +589,7 @@ class TestMemberMemoryUserFlows:
                 "/api/agents/reviewer", json={"provision_memory": True, **invalid}
             )
             assert response.status == 400, await response.text()
-            loaded = await asyncio.to_thread(KiroCrewConfig.load)
+            loaded = await asyncio.to_thread(AjCrewConfig.load)
             assert loaded.agents["reviewer"].memory_store == "default"
             assert (
                 await asyncio.to_thread(require_member_memory_store, loaded, "reviewer")
@@ -604,7 +604,7 @@ class TestMemberMemoryUserFlows:
     async def test_create_edit_and_refuse_rebinding(self, owner_crud_app):
         async with TestClient(TestServer(owner_crud_app)) as client:
             response = await client.post(
-                "/api/agents", json={"name": "reviewer", "kiro_agent": "kirocrew"}
+                "/api/agents", json={"name": "reviewer", "kiro_agent": "ajcrew"}
             )
             assert response.status == 200, await response.text()
             store = (await response.json())["memory_store"]
@@ -615,21 +615,21 @@ class TestMemberMemoryUserFlows:
             assert response.status == 200, await response.text()
             response = await client.put("/api/agents/reviewer", json={"memory_store": "default"})
             assert response.status == 409
-        loaded = await asyncio.to_thread(KiroCrewConfig.load)
+        loaded = await asyncio.to_thread(AjCrewConfig.load)
         assert loaded.agents["reviewer"].description == "Checks patches"
         assert loaded.agents["reviewer"].memory_store == store
 
     @pytest.mark.asyncio
     async def test_legacy_member_metadata_edits_do_not_initialize_memory(self, owner_crud_app):
-        cfg = await asyncio.to_thread(KiroCrewConfig.load)
-        cfg.agents["reviewer"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = await asyncio.to_thread(AjCrewConfig.load)
+        cfg.agents["reviewer"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         await asyncio.to_thread(cfg.save)
         async with TestClient(TestServer(owner_crud_app)) as client:
             response = await client.put(
                 "/api/agents/reviewer", json={"description": "Checks patches"}
             )
             assert response.status == 200
-            unchanged = await asyncio.to_thread(KiroCrewConfig.load)
+            unchanged = await asyncio.to_thread(AjCrewConfig.load)
             assert unchanged.agents["reviewer"].memory_store == "default"
             assert (
                 await asyncio.to_thread(require_member_memory_store, unchanged, "reviewer")
@@ -637,23 +637,23 @@ class TestMemberMemoryUserFlows:
             )
             response = await client.put("/api/agents/reviewer", json={"provision_memory": True})
             assert response.status == 400, await response.text()
-        loaded = await asyncio.to_thread(KiroCrewConfig.load)
+        loaded = await asyncio.to_thread(AjCrewConfig.load)
         await asyncio.to_thread(require_member_memory_store, loaded, "reviewer")
 
     def test_cli_creates_private_memory_and_refuses_rebinding(self, capsys, monkeypatch):
-        from kiro_crew.cli_commands import _handle_agent
+        from aj_crew.cli_commands import _handle_agent
 
         pass  # Member routing does not depend on OS isolation.
         _handle_agent(
             argparse.Namespace(
                 agent_action="create",
                 name="reviewer",
-                kiro_agent="kirocrew",
+                kiro_agent="ajcrew",
                 workspace="default",
                 memory_store="default",
             )
         )
-        loaded = KiroCrewConfig.load()
+        loaded = AjCrewConfig.load()
         require_member_memory_store(loaded, "reviewer")
         with pytest.raises(SystemExit) as exc:
             _handle_agent(
@@ -677,8 +677,8 @@ class TestMemberMemoryUserFlows:
 
         from chat_test_helpers import _make_state
 
-        from kiro_crew.dashboard.handlers import members as handlers
-        from kiro_crew.member_memory_auth import read_private_session_store
+        from aj_crew.dashboard.handlers import members as handlers
+        from aj_crew.member_memory_auth import read_private_session_store
 
         cfg, store = await asyncio.to_thread(_new_member)
         await asyncio.to_thread(persist_member_config, cfg, "reviewer", create=True)
@@ -726,8 +726,8 @@ class TestMemberMemoryUserFlows:
 
         from chat_test_helpers import _make_state
 
-        from kiro_crew import member_memory_auth
-        from kiro_crew.dashboard.handlers import members as handlers
+        from aj_crew import member_memory_auth
+        from aj_crew.dashboard.handlers import members as handlers
 
         cfg, store = await asyncio.to_thread(_new_member)
         await asyncio.to_thread(persist_member_config, cfg, "reviewer", create=True)
@@ -781,8 +781,8 @@ class TestMemberMemoryUserFlows:
 
         from chat_test_helpers import _make_state
 
-        cfg = KiroCrewConfig.load()
-        cfg.agents["reviewer"] = KiroCrewAgentConfig()
+        cfg = AjCrewConfig.load()
+        cfg.agents["reviewer"] = AjCrewAgentConfig()
         cfg.save()
         state = _make_state(tmp_path)
         owner_crud_app["state"] = state
@@ -798,7 +798,7 @@ class TestMemberMemoryUserFlows:
                 response = await client.put("/api/agents/reviewer", json={"provision_memory": True})
                 assert response.status == 400, await response.text()
                 assert (await response.json())["code"] == "member_memory_creation_only"
-            assert KiroCrewConfig.load().agents["reviewer"].memory_store == "default"
+            assert AjCrewConfig.load().agents["reviewer"].memory_store == "default"
             state.sessions.reset.assert_not_awaited()
         finally:
             slot.task = None

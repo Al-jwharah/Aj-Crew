@@ -68,7 +68,7 @@ await stubDashboardApi(page, {
   slots: [{
     key: 'chat-1', title: 'Theme overlay probe', running: false,
     last_message: 'Checking the top bar stays above the theme.', messages: 2,
-    agent: 'kirocrew', memory_mode: 'persistent', project: '', folder_id: '',
+    agent: 'ajcrew', memory_mode: 'persistent', project: '', folder_id: '',
     modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
   }],
   localStorageEntries: { 'mc-color-theme': `custom-${SLUG}` },

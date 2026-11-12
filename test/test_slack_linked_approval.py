@@ -18,10 +18,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from chat_test_helpers import _make_state as _make_dashboard_state
 
-import kiro_crew.slack.handler as handler
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.messaging.session_trust import clear_trusted_sessions, is_session_trusted
-from kiro_crew.slack.handler import (
+import aj_crew.slack.handler as handler
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.messaging.session_trust import clear_trusted_sessions, is_session_trusted
+from aj_crew.slack.handler import (
     _ACTION_APPROVE,
     _ACTION_REJECT,
     _ACTION_TRUST,
@@ -327,8 +327,8 @@ class TestLinkedInteractionRouting:
         """Each chat's agent numbers its own requests, so two chats can both wait on
         request ``1``. Approve on chat B's card approves B's tool and leaves A's
         waiting."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_dashboard_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.push_slots_update = MagicMock()

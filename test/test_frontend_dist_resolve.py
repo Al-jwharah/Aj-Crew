@@ -1,4 +1,4 @@
-"""Tests for ``kiro_crew.frontend.ensure_dev_dist_symlink``.
+"""Tests for ``aj_crew.frontend.ensure_dev_dist_symlink``.
 
 Covers the runtime dist-resolution contract described:
 
@@ -6,7 +6,7 @@ Covers the runtime dist-resolution contract described:
 * valid symlink is kept
 * a dangling / index-less symlink is replaced, unless it points at this
   checkout's ``website/dist`` outside an edition (kept until the build lands)
-* sibling ``KiroCrewWebsite/dist`` is resolved and symlinked
+* sibling ``AjCrewWebsite/dist`` is resolved and symlinked
 * nothing-found returns ``None`` (caller logs warning and serves legacy UI); a
   stock checkout still links its unbuilt ``website/dist``
 """
@@ -29,13 +29,13 @@ from unittest.mock import patch
 
 import pytest
 
+from aj_crew import atomic_write, frontend, platform_compat
 from conftest import make_dir_link
-from kiro_crew import atomic_write, frontend, platform_compat
 
 
-def _fake_kiro_crew_package(root: Path) -> Path:
+def _fake_aj_crew_package(root: Path) -> Path:
     """Build the minimal directory shape the resolver walks."""
-    pkg = root / "src" / "KiroCrew" / "src" / "kiro_crew"
+    pkg = root / "src" / "AjCrew" / "src" / "aj_crew"  # brand-ok: fixture data
     pkg.mkdir(parents=True)
     (pkg / "__init__.py").write_text("")
     return pkg
@@ -83,12 +83,12 @@ def _rebuild_in_place(built: Path, chunk: str, emptied=lambda: None) -> None:
 def fake_pkg(tmp_path, monkeypatch):
     """Patch ``frontend.__file__`` to a throwaway filesystem layout.
 
-    Returns the ``kiro_crew`` package dir (``<ws>/src/KiroCrew/src/kiro_crew``).
-    The resolver uses ``Path(__file__)`` from ``kiro_crew.frontend`` to locate
+    Returns the ``aj_crew`` package dir (``<ws>/src/AjCrew/src/aj_crew``).
+    The resolver uses ``Path(__file__)`` from ``aj_crew.frontend`` to locate
     the package; monkeypatching that attribute redirects every probe to the
     temp-dir tree we build in each test.
     """
-    pkg = _fake_kiro_crew_package(tmp_path)
+    pkg = _fake_aj_crew_package(tmp_path)
     monkeypatch.setattr(frontend, "__file__", str(pkg / "frontend.py"))
     return pkg
 
@@ -146,7 +146,7 @@ def test_dangling_symlink_is_replaced_when_candidate_exists(fake_pkg, tmp_path, 
     shutil.rmtree(dead_target)  # now dangling on both POSIX and Windows
 
     # Sibling checkout has a fresh dist — resolver should pick it up.
-    sibling_dist = _make_dist(fake_pkg.parent.parent.parent / "KiroCrewWebsite" / "dist")
+    sibling_dist = _make_dist(fake_pkg.parent.parent.parent / "AjCrewWebsite" / "dist")
 
     monkeypatch.setattr(subprocess, "run", _no_brazil_path)
 
@@ -181,7 +181,7 @@ def test_symlink_to_empty_dir_is_replaced(fake_pkg, tmp_path, monkeypatch):
     tree_dist.parent.mkdir(parents=True)
     platform_compat.symlink_or_junction(str(empty_target), str(tree_dist))
 
-    sibling_dist = _make_dist(fake_pkg.parent.parent.parent / "KiroCrewWebsite" / "dist")
+    sibling_dist = _make_dist(fake_pkg.parent.parent.parent / "AjCrewWebsite" / "dist")
     monkeypatch.setattr(subprocess, "run", _no_brazil_path)
 
     result = frontend.ensure_dev_dist_symlink()
@@ -194,8 +194,8 @@ def test_symlink_to_empty_dir_is_replaced(fake_pkg, tmp_path, monkeypatch):
 
 
 def test_sibling_checkout_is_symlinked(fake_pkg, monkeypatch):
-    """Sibling KiroCrewWebsite/dist wins even when brazil-path is available."""
-    sibling_dist = _make_dist(fake_pkg.parent.parent.parent / "KiroCrewWebsite" / "dist")
+    """Sibling AjCrewWebsite/dist wins even when brazil-path is available."""
+    sibling_dist = _make_dist(fake_pkg.parent.parent.parent / "AjCrewWebsite" / "dist")
 
     # Should not be reached — sibling wins first.
     def _should_not_run(*a, **kw):
@@ -312,7 +312,7 @@ def test_an_unbuilt_checkout_that_cannot_be_linked_starts_as_before(fake_pkg, mo
 def test_an_edition_does_not_link_an_unbuilt_website_dist(fake_pkg, monkeypatch):
     """Under an edition a later stock build must never be served, so no link is made."""
     _unbuilt_checkout(fake_pkg, monkeypatch)
-    monkeypatch.setenv("KIROCREW_EDITION_DIR", str(fake_pkg / "edition"))
+    monkeypatch.setenv("AJCREW_EDITION_DIR", str(fake_pkg / "edition"))
 
     assert frontend.ensure_dev_dist_symlink() is None
     assert not os.path.lexists(fake_pkg / "static" / "dist")
@@ -334,7 +334,7 @@ def test_empty_real_dir_is_replaced_when_candidate_exists(fake_pkg, monkeypatch)
     tree_dist = fake_pkg / "static" / "dist"
     tree_dist.mkdir(parents=True)  # empty — no index.html
 
-    sibling_dist = _make_dist(fake_pkg.parent.parent.parent / "KiroCrewWebsite" / "dist")
+    sibling_dist = _make_dist(fake_pkg.parent.parent.parent / "AjCrewWebsite" / "dist")
     monkeypatch.setattr(subprocess, "run", _no_brazil_path)
 
     result = frontend.ensure_dev_dist_symlink()
@@ -354,7 +354,7 @@ def test_resolver_produces_a_symlink_the_pwa_guard_accepts(fake_pkg, tmp_path, m
     prefixes.
     """
     _ = tmp_path  # unused — fake_pkg is the layout we need
-    sibling_dist = _make_dist(fake_pkg.parent.parent.parent / "KiroCrewWebsite" / "dist")
+    sibling_dist = _make_dist(fake_pkg.parent.parent.parent / "AjCrewWebsite" / "dist")
     (sibling_dist / "pcm-worklet.js").write_text("// worklet")
     monkeypatch.setattr(subprocess, "run", _no_brazil_path)
 
@@ -452,8 +452,8 @@ async def test_build_frontend_async_spawns_resolved_npm_path(tmp_path, monkeypat
 
 
 def _repo_with_build(root: Path) -> Path:
-    """Minimal repo shape: src/kiro_crew/ plus a built website/dist."""
-    (root / "src" / "kiro_crew" / "static").mkdir(parents=True)
+    """Minimal repo shape: src/aj_crew/ plus a built website/dist."""
+    (root / "src" / "aj_crew" / "static").mkdir(parents=True)
     built = _make_dist(root / "website" / "dist")
     (built / "assets" / "app-abc123.js").write_text("console.log(1)")
     return built
@@ -462,7 +462,7 @@ def _repo_with_build(root: Path) -> Path:
 def test_stage_built_dist_refreshes_an_existing_real_dir(tmp_path):
     """Re-staging overwrites an already-staged tree instead of merging it."""
     _repo_with_build(tmp_path)
-    static_dist = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    static_dist = tmp_path / "src" / "aj_crew" / "static" / "dist"
     static_dist.mkdir()
     (static_dist / "index.html").write_text("stale")
     (static_dist / "old-hashed-chunk.js").write_text("stale")
@@ -476,7 +476,7 @@ def test_stage_built_dist_refreshes_an_existing_real_dir(tmp_path):
 
 def test_stage_built_dist_reports_failure_when_build_missing(tmp_path):
     """No build output → False, so Dev Fleet's strict step fails the sync."""
-    (tmp_path / "src" / "kiro_crew" / "static").mkdir(parents=True)
+    (tmp_path / "src" / "aj_crew" / "static").mkdir(parents=True)
     assert frontend._stage_dist(tmp_path / "website" / "dist", tmp_path) is False
 
 
@@ -487,7 +487,7 @@ def test_stage_built_dist_keeps_serving_when_copy_fails(tmp_path):
     served assets down with it.
     """
     built = _repo_with_build(tmp_path)
-    static_dist = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    static_dist = tmp_path / "src" / "aj_crew" / "static" / "dist"
     static_dist.mkdir()
     (static_dist / "index.html").write_text("previously staged")
 
@@ -506,7 +506,7 @@ def test_stage_built_dist_sweeps_abandoned_staging_dirs(tmp_path):
     which fail-closes Dev Fleet's prune.
     """
     _repo_with_build(tmp_path)
-    static_parent = tmp_path / "src" / "kiro_crew" / "static"
+    static_parent = tmp_path / "src" / "aj_crew" / "static"
     static_parent.mkdir(parents=True, exist_ok=True)
     orphan = static_parent / ".dist.staging.abandoned"
     orphan.mkdir()
@@ -532,7 +532,7 @@ def test_concurrent_staging_does_not_destroy_the_served_tree(tmp_path):
     that serialized them anyway could not hide a missing lock.
     """
     _repo_with_build(tmp_path)
-    static_dist = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    static_dist = tmp_path / "src" / "aj_crew" / "static" / "dist"
     _make_dist(static_dist, chunk="served-0.js")  # a staged copy, as installs have
 
     workers = 4
@@ -610,10 +610,10 @@ def test_stage_built_dist_refuses_a_source_without_index(tmp_path):
     outDir) empties its outDir before repopulating it, and that build is not
     under the staging lock, so a peer flow's rebuild can be seen mid-flight.
     """
-    (tmp_path / "src" / "kiro_crew" / "static").mkdir(parents=True)
+    (tmp_path / "src" / "aj_crew" / "static").mkdir(parents=True)
     mid_rebuild = tmp_path / "website" / "dist"
     mid_rebuild.mkdir(parents=True)  # exists, but Vite has not written index.html yet
-    static_dist = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    static_dist = tmp_path / "src" / "aj_crew" / "static" / "dist"
     static_dist.mkdir()
     (static_dist / "index.html").write_text("last good bundle")
 
@@ -629,7 +629,7 @@ def test_stage_built_dist_refuses_when_source_is_emptied_mid_copy(tmp_path, caps
     emptying the tree while copytree reads it.
     """
     built = _repo_with_build(tmp_path)
-    static_dist = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    static_dist = tmp_path / "src" / "aj_crew" / "static" / "dist"
     static_dist.mkdir()
     (static_dist / "index.html").write_text("last good bundle")
 
@@ -664,7 +664,7 @@ def test_stage_built_dist_refuses_when_a_referenced_chunk_is_missing(tmp_path):
     """
     built = _repo_with_build(tmp_path)
     (built / "assets" / "main-abc123.js").unlink()  # index still references it
-    static_dist = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    static_dist = tmp_path / "src" / "aj_crew" / "static" / "dist"
     static_dist.mkdir()
     (static_dist / "index.html").write_text("last good bundle")
 
@@ -687,7 +687,7 @@ def test_incomplete_bundle_reason_ignores_route_served_references(tmp_path):
 
 
 def test_incomplete_bundle_reason_checks_sub_path_build_refs(tmp_path):
-    """A KIROCREW_BASE_PATH build writes /<base>/assets/...; its chunks still count.
+    """An AJCREW_BASE_PATH build writes /<base>/assets/...; its chunks still count.
 
     Without matching the base, such an index has no refs at all and a tree with
     every chunk missing would pass as complete.
@@ -711,9 +711,9 @@ def test_stage_built_dist_sweeps_residue_even_when_refusing(tmp_path):
     accumulate ~30 MB trees that fail-close Dev Fleet's prune just because the
     source was mid-rebuild each time.
     """
-    (tmp_path / "src" / "kiro_crew" / "static").mkdir(parents=True)
+    (tmp_path / "src" / "aj_crew" / "static").mkdir(parents=True)
     (tmp_path / "website" / "dist").mkdir(parents=True)  # no index.html -> refused
-    static_parent = tmp_path / "src" / "kiro_crew" / "static"
+    static_parent = tmp_path / "src" / "aj_crew" / "static"
     orphan = static_parent / ".dist.staging.abandoned"
     orphan.mkdir()
     (orphan / "half-copied.js").write_text("x")
@@ -730,14 +730,14 @@ def test_build_and_stage_holds_the_lock_across_the_build(tmp_path):
     copy could copy half of each — and lazy chunks are unreachable from
     index.html, so no inspection of the copy detects that reliably.
     """
-    (tmp_path / "src" / "kiro_crew" / "static").mkdir(parents=True)
+    (tmp_path / "src" / "aj_crew" / "static").mkdir(parents=True)
     website = tmp_path / "website"
     website.mkdir()
     lock_held_during_build = {"value": False}
 
     def _fake_build(*args, **kwargs):
         # A peer process would block here; probe it without blocking ourselves.
-        lock_path = tmp_path / "src" / "kiro_crew" / "static" / ".dist.staging.lock"
+        lock_path = tmp_path / "src" / "aj_crew" / "static" / ".dist.staging.lock"
         with open(lock_path, "a+") as probe:
             lock_held_during_build["value"] = not frontend.platform_compat.try_acquire_lock(
                 probe.fileno(), exclusive=True
@@ -757,15 +757,15 @@ def test_build_and_stage_holds_the_lock_across_the_build(tmp_path):
         assert frontend.build_and_stage(tmp_path, npm="/usr/bin/true") is True
 
     assert lock_held_during_build["value"], "the build ran without the staging lock"
-    staged = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    staged = tmp_path / "src" / "aj_crew" / "static" / "dist"
     assert (staged / "index.html").is_file()
 
 
 def test_build_and_stage_reports_a_failed_build(tmp_path):
     """A non-zero build must not publish anything and must return False."""
-    (tmp_path / "src" / "kiro_crew" / "static").mkdir(parents=True)
+    (tmp_path / "src" / "aj_crew" / "static").mkdir(parents=True)
     (tmp_path / "website").mkdir()
-    static_dist = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    static_dist = tmp_path / "src" / "aj_crew" / "static" / "dist"
     static_dist.mkdir()
     (static_dist / "index.html").write_text("last good bundle")
 
@@ -813,7 +813,7 @@ def _atomic_checkout(root: Path) -> Path:
 def _dev_linked(root: Path) -> tuple[Path, Path]:
     """An atomic checkout whose static/dist is the dev link to website/dist."""
     built = _atomic_checkout(root)
-    served = root / "src" / "kiro_crew" / "static" / "dist"
+    served = root / "src" / "aj_crew" / "static" / "dist"
     make_dir_link(served, built)  # a junction on Windows
     return built, served
 
@@ -878,8 +878,8 @@ def _node_that_runs_publish_dist() -> str:
 @pytest.fixture(autouse=True)
 def _clean_edition_env(monkeypatch):
     """An edition env changes which path staging takes; tests opt in explicitly."""
-    monkeypatch.delenv("KIROCREW_EDITION_DIR", raising=False)
-    monkeypatch.delenv("KIROCREW_ALLOW_EDITION", raising=False)
+    monkeypatch.delenv("AJCREW_EDITION_DIR", raising=False)
+    monkeypatch.delenv("AJCREW_ALLOW_EDITION", raising=False)
 
 
 def test_staging_keeps_the_dev_link(tmp_path):
@@ -914,7 +914,7 @@ def test_a_dev_link_stage_sweeps_residue_when_the_lock_is_free(tmp_path):
 def test_staging_links_a_fresh_checkout_instead_of_copying(tmp_path):
     """Nothing served yet: link, so hand builds go live."""
     built = _atomic_checkout(tmp_path)
-    served = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    served = tmp_path / "src" / "aj_crew" / "static" / "dist"
 
     assert frontend._stage_dist(built, tmp_path, lambda _m: None) is True
 
@@ -930,11 +930,11 @@ def test_staging_re_points_any_occupant_at_an_atomic_build(tmp_path, occupant):
     request; whatever was there before is swept.
     """
     built = _atomic_checkout(tmp_path)
-    served = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    served = tmp_path / "src" / "aj_crew" / "static" / "dist"
     if occupant == "real copy":
         _make_dist(served, chunk="old-1.js")
     elif occupant == "link elsewhere":
-        make_dir_link(served, _make_dist(tmp_path / "KiroCrewWebsite" / "dist", chunk="other-9.js"))
+        make_dir_link(served, _make_dist(tmp_path / "AjCrewWebsite" / "dist", chunk="other-9.js"))
     else:
         gone = tmp_path / "gone"
         gone.mkdir()
@@ -950,7 +950,7 @@ def test_staging_re_points_any_occupant_at_an_atomic_build(tmp_path, occupant):
 def test_staging_copies_where_the_build_does_not_publish_atomically(tmp_path):
     """An older target revision builds in place, so it is served from an immutable copy."""
     built = _repo_with_build(tmp_path)  # no website/scripts/publish-dist.mjs
-    served = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    served = tmp_path / "src" / "aj_crew" / "static" / "dist"
     make_dir_link(served, built)
 
     assert frontend._stage_dist(built, tmp_path, lambda _m: None) is True
@@ -964,7 +964,7 @@ def test_staging_copies_where_the_build_does_not_publish_atomically(tmp_path):
 def test_restaging_a_copy_sweeps_the_copy_it_replaced(tmp_path):
     """Each copy is immutable and fresh; the one not served is removed."""
     built = _repo_with_build(tmp_path)
-    served = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    served = tmp_path / "src" / "aj_crew" / "static" / "dist"
 
     assert frontend._stage_dist(built, tmp_path, lambda _m: None) is True
     first = served.resolve()
@@ -979,7 +979,7 @@ def test_restaging_a_copy_sweeps_the_copy_it_replaced(tmp_path):
 def test_restaging_an_in_place_target_says_to_restart_the_gateway_that_pinned_the_copy(tmp_path):
     """That target's gateway resolved the copy once at start, and the sweep just removed it."""
     built = _repo_with_build(tmp_path)  # no website/scripts/publish-dist.mjs
-    served = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    served = tmp_path / "src" / "aj_crew" / "static" / "dist"
     make_dir_link(served, built)
     lines: list[str] = []
 
@@ -994,7 +994,7 @@ def test_restaging_an_in_place_target_says_to_restart_the_gateway_that_pinned_th
 def test_an_edition_restage_of_an_atomic_revision_needs_no_restart(tmp_path, monkeypatch):
     """Its own gateway resolves static/dist per request, so a swept copy costs it nothing."""
     built, _served = _dev_linked(tmp_path)
-    monkeypatch.setenv("KIROCREW_EDITION_DIR", str(tmp_path / "edition"))
+    monkeypatch.setenv("AJCREW_EDITION_DIR", str(tmp_path / "edition"))
     lines: list[str] = []
 
     assert frontend._stage_dist(built, tmp_path, lambda _m: None) is True
@@ -1010,14 +1010,14 @@ def test_a_staged_copy_is_ignored_under_an_older_revision_s_gitignore(tmp_path):
         pytest.skip("git is not on PATH")
     built = _repo_with_build(tmp_path)  # an older target: builds in place
     (tmp_path / ".gitignore").write_text(  # the rules a revision before .dist.<id> carries
-        "website/dist/\nsrc/kiro_crew/static/dist\n"
-        "src/kiro_crew/static/.dist.staging.*\nsrc/kiro_crew/static/.dist.previous.*\n",
+        "website/dist/\nsrc/aj_crew/static/dist\n"
+        "src/aj_crew/static/.dist.staging.*\nsrc/aj_crew/static/.dist.previous.*\n",
         encoding="utf-8",
     )
     subprocess.run([git, "init", "-q"], cwd=str(tmp_path), check=True)
 
     assert frontend._stage_dist(built, tmp_path, lambda _m: None) is True
-    served = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    served = tmp_path / "src" / "aj_crew" / "static" / "dist"
     assert _serves_a_staged_copy(served)
 
     untracked = subprocess.run(
@@ -1033,7 +1033,7 @@ def test_a_staged_copy_is_ignored_under_an_older_revision_s_gitignore(tmp_path):
 def test_an_edition_bundle_is_staged_as_a_private_copy(tmp_path, monkeypatch):
     """A later stock build in the same checkout must not replace an edition dashboard."""
     built, served = _dev_linked(tmp_path)
-    monkeypatch.setenv("KIROCREW_EDITION_DIR", str(tmp_path / "edition"))
+    monkeypatch.setenv("AJCREW_EDITION_DIR", str(tmp_path / "edition"))
 
     assert frontend._stage_dist(built, tmp_path, lambda _m: None) is True
     shutil.rmtree(built)
@@ -1046,7 +1046,7 @@ def test_an_edition_bundle_is_staged_as_a_private_copy(tmp_path, monkeypatch):
 def test_a_failed_re_point_leaves_the_served_tree_in_place(tmp_path):
     """A real static/dist retired for the link is put back if the link cannot land."""
     built = _repo_with_build(tmp_path)
-    served = _make_dist(tmp_path / "src" / "kiro_crew" / "static" / "dist", chunk="old-1.js")
+    served = _make_dist(tmp_path / "src" / "aj_crew" / "static" / "dist", chunk="old-1.js")
     real_replace = frontend.replace_with_retry
 
     def _refuse_the_link(src, dst):
@@ -1071,7 +1071,7 @@ def test_a_failed_re_point_retries_the_rollback_rename(tmp_path, monkeypatch):
     leaving ``static/dist`` absent and the retired bundle to the next sweep.
     """
     built = _repo_with_build(tmp_path)
-    served = _make_dist(tmp_path / "src" / "kiro_crew" / "static" / "dist", chunk="old-1.js")
+    served = _make_dist(tmp_path / "src" / "aj_crew" / "static" / "dist", chunk="old-1.js")
     real_replace = os.replace
     contended: list[str] = []
 
@@ -1103,7 +1103,7 @@ def test_a_failed_re_point_retries_the_rollback_rename(tmp_path, monkeypatch):
 def test_a_failed_re_point_leaves_the_link_in_place(tmp_path):
     """A link that cannot be replaced still serves what it served."""
     built = _repo_with_build(tmp_path)
-    served = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    served = tmp_path / "src" / "aj_crew" / "static" / "dist"
     make_dir_link(served, built)
     real_replace = frontend.replace_with_retry
 
@@ -1122,7 +1122,7 @@ def test_a_failed_re_point_leaves_the_link_in_place(tmp_path):
 def test_a_dev_link_another_starter_made_first_is_kept(tmp_path):
     """Gateway start links without the lock; losing that race is success, never a copy."""
     built = _atomic_checkout(tmp_path)
-    served = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    served = tmp_path / "src" / "aj_crew" / "static" / "dist"
     logged: list[str] = []
 
     def _raced(static_dist, target):
@@ -1144,7 +1144,7 @@ def test_a_build_through_the_dev_link_keeps_the_served_page_whole(tmp_path, monk
     the Vite plugin does, and the watchdog's probe holds before and after.
     """
     node = _node_that_runs_publish_dist()
-    from kiro_crew.dashboard import stale_asset_watchdog
+    from aj_crew.dashboard import stale_asset_watchdog
 
     built, served = _dev_linked(tmp_path)
     monkeypatch.setattr(stale_asset_watchdog, "_DIST_INDEX", served / "index.html")
@@ -1193,7 +1193,7 @@ def test_a_build_that_writes_in_place_is_served_from_a_copy_meanwhile(tmp_path):
     during the build still finds a whole bundle.
     """
     built = _repo_with_build(tmp_path)  # no publish-dist.mjs: builds in place
-    served = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    served = tmp_path / "src" / "aj_crew" / "static" / "dist"
     make_dir_link(served, built)
     during: list[str] = []
 
@@ -1271,7 +1271,7 @@ def test_an_edition_gateway_drops_a_dangling_link_to_this_checkout_s_build(fake_
     served.parent.mkdir(parents=True)
     make_dir_link(served, built)
     shutil.rmtree(built)
-    monkeypatch.setenv("KIROCREW_EDITION_DIR", str(fake_pkg / "edition"))
+    monkeypatch.setenv("AJCREW_EDITION_DIR", str(fake_pkg / "edition"))
     monkeypatch.setattr(subprocess, "run", _no_brazil_path)
 
     assert frontend.ensure_dev_dist_symlink() is None
@@ -1289,7 +1289,7 @@ def test_gateway_start_survives_a_looping_link(fake_pkg, monkeypatch):
     served = fake_pkg / "static" / "dist"
     served.parent.mkdir(parents=True)
     served.symlink_to(served)
-    sibling = _make_dist(fake_pkg.parent.parent.parent / "KiroCrewWebsite" / "dist")
+    sibling = _make_dist(fake_pkg.parent.parent.parent / "AjCrewWebsite" / "dist")
     monkeypatch.setattr(subprocess, "run", _no_brazil_path)
 
     assert frontend.ensure_dev_dist_symlink() == sibling.resolve()
@@ -1301,7 +1301,7 @@ def test_an_edition_gateway_never_serves_through_the_dev_link(fake_pkg, monkeypa
     served = fake_pkg / "static" / "dist"
     served.parent.mkdir(parents=True)
     make_dir_link(served, built)
-    monkeypatch.setenv("KIROCREW_EDITION_DIR", str(fake_pkg / "edition"))
+    monkeypatch.setenv("AJCREW_EDITION_DIR", str(fake_pkg / "edition"))
     monkeypatch.setattr(subprocess, "run", _no_brazil_path)
 
     assert frontend.ensure_dev_dist_symlink() == served
@@ -1321,7 +1321,7 @@ def test_an_edition_gateway_serves_the_build_it_found_when_staging_fails(fake_pk
     served.parent.mkdir(parents=True)
     if linked:
         make_dir_link(served, built)
-    monkeypatch.setenv("KIROCREW_EDITION_DIR", str(fake_pkg / "edition"))
+    monkeypatch.setenv("AJCREW_EDITION_DIR", str(fake_pkg / "edition"))
     monkeypatch.setattr(subprocess, "run", _no_brazil_path)
     monkeypatch.setattr(frontend, "_stage_dist", lambda *_a, **_k: False)
 
@@ -1333,7 +1333,7 @@ def test_an_edition_gateway_serves_the_build_it_found_when_staging_fails(fake_pk
 def test_an_edition_gateway_waits_for_the_lock_for_its_own_budget(fake_pkg, monkeypatch):
     """Start passes its short lock budget, which only binds off the event loop (cli_server)."""
     _make_dist(fake_pkg.parent.parent / "website" / "dist")
-    monkeypatch.setenv("KIROCREW_EDITION_DIR", str(fake_pkg / "edition"))
+    monkeypatch.setenv("AJCREW_EDITION_DIR", str(fake_pkg / "edition"))
     monkeypatch.setattr(subprocess, "run", _no_brazil_path)
     budgets: list = []
     monkeypatch.setattr(
@@ -1351,9 +1351,9 @@ def test_a_build_publishes_over_a_looping_link(tmp_path):
 
     Listed in ``test/requires-real-symlinks.txt``: only a symlink can loop.
     """
-    (tmp_path / "src" / "kiro_crew" / "static").mkdir(parents=True)
+    (tmp_path / "src" / "aj_crew" / "static").mkdir(parents=True)
     built = _make_dist(tmp_path / "website" / "dist")
-    served = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    served = tmp_path / "src" / "aj_crew" / "static" / "dist"
     served.symlink_to(served)
 
     assert frontend._stage_dist(built, tmp_path, log=lambda _m: None) is True
@@ -1381,7 +1381,7 @@ def test_completeness_fixtures_shared_with_publish_dist(tmp_path, case):
 
 def test_the_in_gap_budget_stays_under_the_watchdog_s_re_check():
     """A publish that lands inside its in-gap budget is never read as a vanished install."""
-    from kiro_crew.dashboard import stale_asset_watchdog
+    from aj_crew.dashboard import stale_asset_watchdog
 
     source = _PUBLISH_DIST.read_text(encoding="utf-8")
     match = re.search(r"export const IN_GAP_BUDGET_MS = ([\d_]+)", source)
@@ -1410,14 +1410,14 @@ def test_a_stage_log_line_cannot_fail_without_a_console(tmp_path, monkeypatch, s
 
     frontend.stage_built_dist(tmp_path)
 
-    assert _serves_a_staged_copy(tmp_path / "src" / "kiro_crew" / "static" / "dist")
+    assert _serves_a_staged_copy(tmp_path / "src" / "aj_crew" / "static" / "dist")
 
 
 def test_the_stage_command_reports_a_held_lock_plainly(tmp_path, monkeypatch, capsys):
-    """`python -m kiro_crew.frontend stage` fails fast, by name, behind a build."""
+    """`python -m aj_crew.frontend stage` fails fast, by name, behind a build."""
     _repo_with_build(tmp_path)
     monkeypatch.setattr(frontend, "_CLI_STAGE_LOCK_TIMEOUT", 0)
-    static_parent = tmp_path / "src" / "kiro_crew" / "static"
+    static_parent = tmp_path / "src" / "aj_crew" / "static"
 
     with frontend._staging_lock(static_parent):
         code = _run_bounded(lambda: frontend.main(["stage", str(tmp_path)]))
@@ -1435,7 +1435,7 @@ def test_the_stage_command_refuses_a_directory_that_is_not_a_checkout(tmp_path, 
 
     assert frontend.main(["stage", str(website)]) == 1
 
-    assert "is not a Kiro Crew checkout" in capsys.readouterr().out
+    assert "is not an Aj Crew checkout" in capsys.readouterr().out
     assert sorted(p.relative_to(website) for p in website.rglob("*")) == before
 
 
@@ -1448,9 +1448,9 @@ def test_the_stage_command_stages_a_relative_repo(tmp_path, monkeypatch, edition
     """
     _repo_with_build(tmp_path)  # no publish-dist.mjs: the copy path
     if edition:
-        monkeypatch.setenv("KIROCREW_EDITION_DIR", str(tmp_path / "edition"))
+        monkeypatch.setenv("AJCREW_EDITION_DIR", str(tmp_path / "edition"))
     monkeypatch.chdir(tmp_path)
-    served = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    served = tmp_path / "src" / "aj_crew" / "static" / "dist"
 
     assert frontend.main(["stage", "."]) == 0
 
@@ -1462,8 +1462,8 @@ def test_the_stage_command_stages_a_relative_repo(tmp_path, monkeypatch, edition
 
 def test_a_sweep_keeps_everything_while_static_dist_resolves_nowhere(tmp_path):
     """Which copy a dangling link meant cannot be told, so none is deleted."""
-    (tmp_path / "src" / "kiro_crew" / "static").mkdir(parents=True)
-    served = tmp_path / "src" / "kiro_crew" / "static" / "dist"
+    (tmp_path / "src" / "aj_crew" / "static").mkdir(parents=True)
+    served = tmp_path / "src" / "aj_crew" / "static" / "dist"
     copy = _make_dist(served.parent / ".dist.1-copy")
     gone = tmp_path / "gone"
     gone.mkdir()
@@ -1481,7 +1481,7 @@ def test_the_served_copy_is_recognised_through_a_second_spelling(tmp_path, monke
     real.mkdir()
     _repo_with_build(real)
     assert frontend._stage_dist(real / "website" / "dist", real, lambda _m: None) is True
-    served = real / "src" / "kiro_crew" / "static" / "dist"
+    served = real / "src" / "aj_crew" / "static" / "dist"
     copy = served.resolve()
     alias = tmp_path / "alias"
     make_dir_link(alias, real)
@@ -1498,7 +1498,7 @@ def test_the_served_copy_is_recognised_through_a_second_spelling(tmp_path, monke
 def test_a_real_static_dist_an_overlay_cannot_rename_is_replaced_by_the_link(tmp_path):
     """An overlay refuses to rename a lower-layer directory aside; it is removed, then linked."""
     built = _atomic_checkout(tmp_path)
-    served = _make_dist(tmp_path / "src" / "kiro_crew" / "static" / "dist", chunk="old-1.js")
+    served = _make_dist(tmp_path / "src" / "aj_crew" / "static" / "dist", chunk="old-1.js")
     real_replace = frontend.replace_with_retry
     refused: list[str] = []
     lines: list[str] = []
@@ -1521,7 +1521,7 @@ def test_a_real_static_dist_an_overlay_cannot_rename_is_replaced_by_the_link(tmp
 def test_a_real_static_dist_refused_for_another_reason_keeps_serving(tmp_path):
     """Only EXDEV removes the directory; any other refusal to move it aside leaves it in place."""
     built = _atomic_checkout(tmp_path)
-    served = _make_dist(tmp_path / "src" / "kiro_crew" / "static" / "dist", chunk="old-1.js")
+    served = _make_dist(tmp_path / "src" / "aj_crew" / "static" / "dist", chunk="old-1.js")
     real_replace = frontend.replace_with_retry
 
     def _busy(src, dst):
@@ -1540,7 +1540,7 @@ def test_a_real_static_dist_refused_for_another_reason_keeps_serving(tmp_path):
 def test_an_overlay_removal_that_fails_part_way_is_undone(tmp_path):
     """An overlay that cannot remove a lower-layer directory (EIO) gets the served bundle back."""
     built = _atomic_checkout(tmp_path)
-    served = _make_dist(tmp_path / "src" / "kiro_crew" / "static" / "dist", chunk="old-1.js")
+    served = _make_dist(tmp_path / "src" / "aj_crew" / "static" / "dist", chunk="old-1.js")
     real_replace = frontend.replace_with_retry
     real_rmtree = shutil.rmtree
 
@@ -1569,7 +1569,7 @@ def test_an_overlay_removal_that_fails_part_way_is_undone(tmp_path):
 def test_an_overlay_removal_interrupted_part_way_is_undone(tmp_path):
     """Ctrl-C while an overlay removes a lower-layer directory gets the served bundle back."""
     built = _atomic_checkout(tmp_path)
-    served = _make_dist(tmp_path / "src" / "kiro_crew" / "static" / "dist", chunk="old-1.js")
+    served = _make_dist(tmp_path / "src" / "aj_crew" / "static" / "dist", chunk="old-1.js")
     real_replace = frontend.replace_with_retry
     real_rmtree = shutil.rmtree
 
@@ -1598,7 +1598,7 @@ def test_an_overlay_removal_interrupted_part_way_is_undone(tmp_path):
 def test_replacing_a_real_static_dist_says_to_restart_a_running_gateway(tmp_path):
     """A gateway that resolved the directory at start cannot follow the link that replaces it."""
     built = _atomic_checkout(tmp_path)
-    _make_dist(tmp_path / "src" / "kiro_crew" / "static" / "dist", chunk="old-1.js")
+    _make_dist(tmp_path / "src" / "aj_crew" / "static" / "dist", chunk="old-1.js")
     lines: list[str] = []
 
     assert frontend._stage_dist(built, tmp_path, lines.append) is True
@@ -1616,7 +1616,7 @@ def test_build_and_stage_reaps_the_whole_tree_on_timeout(tmp_path):
     writing website/dist after the lock releases — and a surviving writer makes
     the lock's exclusion meaningless.
     """
-    (tmp_path / "src" / "kiro_crew" / "static").mkdir(parents=True)
+    (tmp_path / "src" / "aj_crew" / "static").mkdir(parents=True)
     (tmp_path / "website").mkdir()
     killed: list[tuple[int, int]] = []
 
@@ -1649,7 +1649,7 @@ def test_build_timeout_reaps_a_descendant_that_escaped_the_group(tmp_path):
     and enumerate BEFORE killing, because the kill reparents survivors to init
     and erases the PPID links that identify them.
     """
-    (tmp_path / "src" / "kiro_crew" / "static").mkdir(parents=True)
+    (tmp_path / "src" / "aj_crew" / "static").mkdir(parents=True)
     (tmp_path / "website").mkdir()
     events: list[str] = []
     killed: list[int] = []
@@ -1711,7 +1711,7 @@ def test_build_budget_leaves_room_under_dev_fleet_s_run_deadline():
     leaving the other half for everything before it.
     """
     runtime = pytest.importorskip(
-        "kiro_crew.apps.builtins.dev_fleet.runtime",
+        "aj_crew.apps.builtins.dev_fleet.runtime",
         reason="dev_fleet app backend not importable in this environment",
     )
     assert frontend._BUILD_TIMEOUT * 2 <= runtime._RUN_DEADLINE_S, (
@@ -1729,7 +1729,7 @@ def test_build_timeout_message_names_the_budget_that_expired(tmp_path):
     nothing they could act on: not which budget was hit, not how long it waited.
     This line is the ONLY trace the failure leaves, so it carries the number.
     """
-    (tmp_path / "src" / "kiro_crew" / "static").mkdir(parents=True)
+    (tmp_path / "src" / "aj_crew" / "static").mkdir(parents=True)
     (tmp_path / "website").mkdir()
     killed: list[int] = []
     logged: list[str] = []
@@ -1759,12 +1759,12 @@ def test_build_timeout_message_names_the_budget_that_expired(tmp_path):
 
 def test_stage_built_dist_accepts_an_explicit_source_dir(tmp_path):
     """A caller may stage from a build directory other than website/dist."""
-    (tmp_path / "src" / "kiro_crew" / "static").mkdir(parents=True)
+    (tmp_path / "src" / "aj_crew" / "static").mkdir(parents=True)
     scratch = _make_dist(tmp_path / "website" / "dist-scratch")
 
     assert frontend._stage_dist(scratch, tmp_path) is True
 
-    assert (tmp_path / "src" / "kiro_crew" / "static" / "dist" / "index.html").is_file()
+    assert (tmp_path / "src" / "aj_crew" / "static" / "dist" / "index.html").is_file()
 
 
 def test_build_and_stage_accepts_a_string_repo_path(tmp_path):
@@ -1774,7 +1774,7 @@ def test_build_and_stage_accepts_a_string_repo_path(tmp_path):
     path must be normalised before any `/` is applied to it — `str / str` raises
     TypeError and would fail every stock Pull+Build before it builds anything.
     """
-    (tmp_path / "src" / "kiro_crew" / "static").mkdir(parents=True)
+    (tmp_path / "src" / "aj_crew" / "static").mkdir(parents=True)
     built = _make_dist(tmp_path / "website" / "dist")
     assert built.is_dir()
 
@@ -1801,4 +1801,4 @@ def test_build_and_stage_accepts_a_string_repo_path(tmp_path):
             str(tmp_path), npm="/usr/bin/true", log=lambda _m: None
         ) is True
 
-    assert (tmp_path / "src" / "kiro_crew" / "static" / "dist" / "index.html").is_file()
+    assert (tmp_path / "src" / "aj_crew" / "static" / "dist" / "index.html").is_file()

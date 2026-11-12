@@ -30,9 +30,9 @@ function dt(items: ItemSpec[], files: File[] = []): DataTransfer {
 
 /** Install/remove the desktop shell's path bridge. */
 function stubBridge(impl: ((f: File) => string) | null) {
-  const w = window as { kirocrew?: { getPathForFile?: (f: File) => string } }
-  if (impl) w.kirocrew = { getPathForFile: impl }
-  else delete w.kirocrew
+  const w = window as { ajcrew?: { getPathForFile?: (f: File) => string } }
+  if (impl) w.ajcrew = { getPathForFile: impl }
+  else delete w.ajcrew
 }
 
 afterEach(() => stubBridge(null))

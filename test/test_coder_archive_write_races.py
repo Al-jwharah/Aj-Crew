@@ -14,15 +14,15 @@ from weakref import WeakValueDictionary
 import pytest
 from test_coder_retention import KEY, _envs, _started
 
-from kiro_crew.coder import retention
-from kiro_crew.remote_session import workspace_tools as wt
-from kiro_crew.testing.wait import await_until, until_parked
+from aj_crew.coder import retention
+from aj_crew.remote_session import workspace_tools as wt
+from aj_crew.testing.wait import await_until, until_parked
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Archive retention runs only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 @pytest.fixture

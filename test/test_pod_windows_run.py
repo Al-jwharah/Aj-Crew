@@ -11,19 +11,19 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.pod import _windows_run as runs
-from kiro_crew.pod import cli as pod_cli
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod import windows as win
-from kiro_crew.pod.config import PodConfig
+from aj_crew.pod import _windows_run as runs
+from aj_crew.pod import cli as pod_cli
+from aj_crew.pod import runtime as rt
+from aj_crew.pod import windows as win
+from aj_crew.pod.config import PodConfig
 
 
 @pytest.fixture
 def model(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
     cfg = PodConfig.load()
     cfg.pods_dir.mkdir(parents=True, exist_ok=True)
     state = SimpleNamespace(events=[], active=1, job_missing=False, failure="", count=0)
@@ -40,7 +40,7 @@ def model(tmp_path, monkeypatch):
     monkeypatch.setattr(rt.time, "sleep", lambda *_a: None)
 
     class Job:
-        name = "Global\\KiroCrew.Pod." + "a" * 32
+        name = "Global\\AjCrew.Pod." + "a" * 32
 
         @classmethod
         def create(cls):
@@ -115,7 +115,7 @@ def contained(cfg, name="demo"):
     # Model a different supervisor, never the current pytest process.
     record["publisher"] = [777, "100"]
     runs.publish(cfg, name, record)
-    return runs.ready(cfg, name, record, "Global\\KiroCrew.Pod." + "a" * 32, (4242, "100"))
+    return runs.ready(cfg, name, record, "Global\\AjCrew.Pod." + "a" * 32, (4242, "100"))
 
 
 def test_disappearing_successor_record_uses_job_not_empty_old_tree(model, monkeypatch):
@@ -322,12 +322,12 @@ def test_public_up_prepares_home_only_after_start_reservation(
 ):
     import argparse
 
-    from kiro_crew.pod import cli
+    from aj_crew.pod import cli
 
     cfg, state = model
     checkout = tmp_path / "checkout"
     binary = checkout / "fake-gateway"
-    (checkout / "src" / "kiro_crew" / "static" / "dist").mkdir(parents=True)
+    (checkout / "src" / "aj_crew" / "static" / "dist").mkdir(parents=True)
     binary.write_text("unused", encoding="utf-8")
     binary.chmod(0o700)
     if preexisting_home:
@@ -665,7 +665,7 @@ def test_start_rollback_preserves_claimed_or_changed_run(startup, monkeypatch, c
             record = runs.claim(cfg, "demo")
             if changed in {"ready", "drained"}:
                 record = runs.ready(
-                    cfg, "demo", record, "Global\\KiroCrew.Pod." + "a" * 32, (4242, "100")
+                    cfg, "demo", record, "Global\\AjCrew.Pod." + "a" * 32, (4242, "100")
                 )
             if changed == "drained":
                 runs.drained(cfg, "demo", record)
@@ -985,7 +985,7 @@ def test_unspawned_retirement_fails_closed_on_unprovable_evidence(startup, monke
             win.jobs, "open_identity", lambda *_a: (_ for _ in ()).throw(OSError(5, "denied"))
         )
     elif evidence == "job_key":
-        runs.publish(cfg, "demo", {**record, "job": "Global\\KiroCrew.Pod." + "a" * 32})
+        runs.publish(cfg, "demo", {**record, "job": "Global\\AjCrew.Pod." + "a" * 32})
     elif evidence == "no_exit":
         runs.publish(cfg, "demo", {**record, "state": "finished"})
     before = runs.path(cfg, "demo").read_bytes()
@@ -1133,7 +1133,7 @@ def test_boot_that_publishes_its_gateway_while_waited_for_is_not_retired(startup
     def wait(*_a, **_kw):
         if not published:
             published.update(
-                runs.ready(cfg, "demo", record, "Global\\KiroCrew.Pod." + "a" * 32, (4242, "100"))
+                runs.ready(cfg, "demo", record, "Global\\AjCrew.Pod." + "a" * 32, (4242, "100"))
             )
             return False
         return True
@@ -1150,7 +1150,7 @@ def test_retired_receipt_refuses_a_record_that_moved_on(startup):
     """`retired` is a compare-and-swap: a stale `preparing` view never overwrites `ready`."""
     cfg, _state = startup
     record = _unspawned(cfg)
-    ready = runs.ready(cfg, "demo", record, "Global\\KiroCrew.Pod." + "a" * 32, (4242, "100"))
+    ready = runs.ready(cfg, "demo", record, "Global\\AjCrew.Pod." + "a" * 32, (4242, "100"))
     with pytest.raises(OSError, match="changed while retiring"):
         runs.retired(cfg, "demo", record)
     assert runs.read(cfg, "demo") == ready
@@ -1162,8 +1162,8 @@ def test_retire_hint_names_the_manual_procedure_only_on_windows(monkeypatch, win
     monkeypatch.setattr(rt, "IS_WINDOWS", windows)
     plain = pod_cli._retire_hint("demo")
     deliberate = pod_cli._retire_hint("demo", deliberately=True)
-    assert plain.startswith("Retire it with `kirocrew pod down demo`.")
-    assert deliberate.startswith("Retire it deliberately with `kirocrew pod down demo`.")
+    assert plain.startswith("Retire it with `ajcrew pod down demo`.")
+    assert deliberate.startswith("Retire it deliberately with `ajcrew pod down demo`.")
     for hint in (plain, deliberate):
         assert hint.count(win.MANUAL_RETIREMENT_POINTER) == (1 if windows else 0)
 

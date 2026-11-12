@@ -6,9 +6,9 @@ never from the prose, whether the terminal error row gets the
 ``model_unentitled`` kind the frontend turns into fix affordances.
 """
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.dashboard.chat_runner import _model_unentitled_meta
-from kiro_crew.dashboard.chat_utils import MODEL_UNENTITLED_KIND
+from aj_crew.acp.client import AcpError
+from aj_crew.dashboard.chat_runner import _model_unentitled_meta
+from aj_crew.dashboard.chat_utils import MODEL_UNENTITLED_KIND
 
 
 def _exc(rejected, advertised):
@@ -46,7 +46,7 @@ def test_untagged_exception_yields_none():
 
 def test_verdict_is_the_shared_predicate():
     # The helper defers to client.model_is_unusable, so the two cannot drift.
-    from kiro_crew.acp.client import model_is_unusable
+    from aj_crew.acp.client import model_is_unusable
 
     for rejected, adv in [("auto", ["glm-5"]), ("glm-5", ["glm-5"]), ("auto", []), ("auto", None)]:
         expected = {"kind": MODEL_UNENTITLED_KIND} if model_is_unusable(rejected, adv) else None
@@ -57,8 +57,8 @@ def test_verdict_is_the_shared_predicate():
 
 
 def test_terminal_error_meta_reads_the_auth_required_tag():
-    from kiro_crew.dashboard.chat_runner import _terminal_error_meta
-    from kiro_crew.dashboard.chat_utils import AUTH_REQUIRED_KIND
+    from aj_crew.dashboard.chat_runner import _terminal_error_meta
+    from aj_crew.dashboard.chat_utils import AUTH_REQUIRED_KIND
 
     e = AcpError("Your session has expired.", transient=False)
     assert _terminal_error_meta(e) is None
@@ -67,7 +67,7 @@ def test_terminal_error_meta_reads_the_auth_required_tag():
 
 
 def test_terminal_error_meta_prefers_the_entitlement_verdict():
-    from kiro_crew.dashboard.chat_runner import _terminal_error_meta
+    from aj_crew.dashboard.chat_runner import _terminal_error_meta
 
     e = _exc("auto", ["gpt-5.6-sol"])
     e.auth_required = True
@@ -77,8 +77,8 @@ def test_terminal_error_meta_prefers_the_entitlement_verdict():
 def test_raise_acp_error_tags_session_expiry_from_the_raw_frame():
     import pytest
 
-    from kiro_crew.acp.client import _raise_acp_error
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS
+    from aj_crew.acp.client import _raise_acp_error
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS
 
     # The engine's own wording for a Crew-owned relay whose credential callback
     # was refused, and a bare 401: both are a sign-in problem.
@@ -104,8 +104,8 @@ def test_raise_acp_error_tags_session_expiry_from_the_raw_frame():
 
 
 def test_terminal_error_meta_reads_the_usage_limit_tag():
-    from kiro_crew.dashboard.chat_runner import _terminal_error_meta
-    from kiro_crew.dashboard.chat_utils import USAGE_LIMIT_KIND
+    from aj_crew.dashboard.chat_runner import _terminal_error_meta
+    from aj_crew.dashboard.chat_utils import USAGE_LIMIT_KIND
 
     e = AcpError("The monthly usage limit has been reached.", transient=False)
     # Prose alone never decides it: the tag is the carrier.
@@ -115,8 +115,8 @@ def test_terminal_error_meta_reads_the_usage_limit_tag():
 
 
 def test_terminal_error_meta_ranks_usage_limit_below_the_other_verdicts():
-    from kiro_crew.dashboard.chat_runner import _terminal_error_meta
-    from kiro_crew.dashboard.chat_utils import AUTH_REQUIRED_KIND
+    from aj_crew.dashboard.chat_runner import _terminal_error_meta
+    from aj_crew.dashboard.chat_utils import AUTH_REQUIRED_KIND
 
     # Entitlement first: its fix (pick a served model) is what the prose says.
     e = _exc("auto", ["gpt-5.6-sol"])
@@ -133,7 +133,7 @@ def test_terminal_error_meta_ranks_usage_limit_below_the_other_verdicts():
 def test_raise_acp_error_tags_a_spent_allowance_from_the_raw_frame():
     import pytest
 
-    from kiro_crew.acp.client import _raise_acp_error
+    from aj_crew.acp.client import _raise_acp_error
 
     # The shapes a capped account actually produces: kiro-cli's stream envelope
     # around the provider sentence (the reporter's screenshot, request id
@@ -175,8 +175,8 @@ def test_usage_limit_tag_never_rides_with_the_sign_in_tag():
     and the usage tag is what that row carries instead."""
     import pytest
 
-    from kiro_crew.acp.client import _raise_acp_error
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS
+    from aj_crew.acp.client import _raise_acp_error
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS
 
     frame = {
         "code": -32603,
@@ -196,8 +196,8 @@ def test_auth_required_tag_is_reserved_for_host_auth_callback_backends():
     would sign in the wrong thing while that harness stays signed out."""
     import pytest
 
-    from kiro_crew.acp.client import AcpAuthRequired, _raise_acp_error
-    from kiro_crew.agent_sdk.backends import ACP_BACKENDS_HOST_AUTH_CALLBACK, ACP_BACKENDS_KNOWN
+    from aj_crew.acp.client import AcpAuthRequired, _raise_acp_error
+    from aj_crew.agent_sdk.backends import ACP_BACKENDS_HOST_AUTH_CALLBACK, ACP_BACKENDS_KNOWN
 
     frame = {"code": -32603, "message": "request failed", "data": "HTTP 401 Unauthorized"}
     for backend in ACP_BACKENDS_KNOWN:
@@ -220,10 +220,10 @@ def test_terminal_error_meta_reads_the_session_start_failed_tag_on_both_families
     # The two ACP exception families share no base; both carry the tag and both
     # must yield the kind, so the Continue guard counts a start that failed on
     # the shared runtime the same as one on a dedicated client.
-    from kiro_crew.acp.client import AcpTimeoutError
-    from kiro_crew.acp.runtime import AcpRequestTimeout, AcpSessionStartTimeout
-    from kiro_crew.dashboard.chat_runner import _terminal_error_meta
-    from kiro_crew.dashboard.chat_utils import SESSION_START_FAILED_KIND
+    from aj_crew.acp.client import AcpTimeoutError
+    from aj_crew.acp.runtime import AcpRequestTimeout, AcpSessionStartTimeout
+    from aj_crew.dashboard.chat_runner import _terminal_error_meta
+    from aj_crew.dashboard.chat_utils import SESSION_START_FAILED_KIND
 
     runtime_side = AcpSessionStartTimeout("session/new timed out after 90s", collector=None)
     assert _terminal_error_meta(runtime_side) == {"kind": SESSION_START_FAILED_KIND}
@@ -240,8 +240,8 @@ def test_terminal_error_meta_reads_the_session_start_failed_tag_on_both_families
 def test_terminal_error_meta_lets_the_actionable_kinds_outrank_a_start_failure():
     # A start that failed BECAUSE the process is signed out has a fix (sign in);
     # that verdict, not the generic start-failure count, is what the card shows.
-    from kiro_crew.dashboard.chat_runner import _terminal_error_meta
-    from kiro_crew.dashboard.chat_utils import AUTH_REQUIRED_KIND
+    from aj_crew.dashboard.chat_runner import _terminal_error_meta
+    from aj_crew.dashboard.chat_utils import AUTH_REQUIRED_KIND
 
     e = AcpError("not signed in", transient=False)
     e.session_start_failed = True
@@ -256,10 +256,10 @@ def test_terminal_error_meta_reads_the_kiro_cli_missing_tag_on_both_families():
     # A host with no kiro-cli refuses every session start. Both exception
     # families carry the tag, so the row is the same kind whichever path spawned,
     # and the feature-request chat can offer its form instead of a dead end.
-    from kiro_crew.acp.kiro_cli_missing import AcpKiroCliMissing
-    from kiro_crew.acp.session_handle import AcpRuntimeError
-    from kiro_crew.dashboard.chat_runner import _terminal_error_meta
-    from kiro_crew.dashboard.chat_utils import KIRO_CLI_MISSING_KIND
+    from aj_crew.acp.kiro_cli_missing import AcpKiroCliMissing
+    from aj_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew.dashboard.chat_runner import _terminal_error_meta
+    from aj_crew.dashboard.chat_utils import KIRO_CLI_MISSING_KIND
 
     assert _terminal_error_meta(AcpKiroCliMissing("kiro-cli not found")) == {
         "kind": KIRO_CLI_MISSING_KIND

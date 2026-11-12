@@ -26,7 +26,7 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/decision-strip'
 const SLOT = 'chat-decision-strip'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -80,7 +80,7 @@ const slots = [
     running: false,
     last_message: 'Built the package. Two tests fail, both in the same file.',
     messages: 4,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     memory_mode: 'persistent',
     project: PROJECT,
     modified: Math.floor(Date.now() / 1000),

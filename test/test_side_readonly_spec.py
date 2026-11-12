@@ -13,10 +13,10 @@ from pathlib import Path
 
 import pytest
 
+from aj_crew import agent as agent_mod
+from aj_crew.dashboard import side_readonly_spec as srs
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 from conftest import requires_symlinks
-from kiro_crew import agent as agent_mod
-from kiro_crew.dashboard import side_readonly_spec as srs
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 #: A release that accepts a spec ``permissions`` block, and one that refuses it,
 #: expressed against the floor so raising it cannot strand these tests.
@@ -28,12 +28,12 @@ def _pin_spec_permissions_cli(monkeypatch, which):
     """Pin what the shared writer gate believes the installed kiro-cli is.
 
     Same helper the generated writers' suites use: the gate reads
-    ``installed_kiro_cli_version`` function-locally from ``kiro_crew.kiro_cli``,
+    ``installed_kiro_cli_version`` function-locally from ``aj_crew.kiro_cli``,
     so the patch lands there. ``which`` is ``"accepts"``, ``"refuses"`` or
     ``"unknown"``.
     """
     version = {"accepts": _ACCEPTS, "refuses": _REFUSES, "unknown": None}[which]
-    monkeypatch.setattr("kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: version)
+    monkeypatch.setattr("aj_crew.kiro_cli.installed_kiro_cli_version", lambda: version)
 
 
 @pytest.fixture(autouse=True)
@@ -48,12 +48,12 @@ def _accepting_kiro_cli(monkeypatch):
     _pin_spec_permissions_cli(monkeypatch, "accepts")
 
 
-_SHIPPED_DEFAULTS = Path(__file__).resolve().parents[1] / "src/kiro_crew/config/defaults.json"
+_SHIPPED_DEFAULTS = Path(__file__).resolve().parents[1] / "src/aj_crew/config/defaults.json"
 
 #: A base spec carrying every grant shape the derivation must empty, plus the
 #: fields it must keep byte-for-byte.
 _BASE = {
-    "name": "kirocrew",
+    "name": "ajcrew",
     "description": "the default agent",
     "model": "auto",
     "prompt": "You are the crew.",
@@ -62,12 +62,12 @@ _BASE = {
         "fs_read",
         "fs_write",
         "use_subagent",
-        "@kirocrew-cron",
-        "@kirocrew-core",
+        "@ajcrew-cron",
+        "@ajcrew-core",
     ],
-    "allowedTools": ["fs_read", "@kirocrew-cron/cron_remove_all", "@kirocrew-core"],
+    "allowedTools": ["fs_read", "@ajcrew-cron/cron_remove_all", "@ajcrew-core"],
     "mcpServers": {
-        "kirocrew-core": {"command": "kirocrew", "args": ["mcp", "core"], "autoApprove": ["*"]},
+        "ajcrew-core": {"command": "ajcrew", "args": ["mcp", "core"], "autoApprove": ["*"]},
         "notes": {"command": "notes-mcp", "args": []},
     },
     "toolsSettings": {
@@ -98,14 +98,14 @@ _REWRITTEN_TOP_LEVEL = {
 def test_derived_spec_empties_every_grant_and_keeps_everything_else():
     """(a) ``allowedTools`` is empty and the spec is otherwise the base, less grants."""
     base = copy.deepcopy(_BASE)
-    derived = srs.derive_readonly_spec(base, base_name="kirocrew")
+    derived = srs.derive_readonly_spec(base, base_name="ajcrew")
 
-    assert derived["name"] == "kirocrew--readonly"
+    assert derived["name"] == "ajcrew--readonly"
     assert derived["description"].startswith(srs.OWNER_MARKER)
     assert "the default agent" in derived["description"]  # the base's own description is kept in it
     assert derived["allowedTools"] == []
     # Every no-prompt execution channel is gone…
-    assert "autoApprove" not in derived["mcpServers"]["kirocrew-core"]
+    assert "autoApprove" not in derived["mcpServers"]["ajcrew-core"]
     assert "allowedCommands" not in derived["toolsSettings"]["execute_bash"]
     assert "autoAllowReadonly" not in derived["toolsSettings"]["shell"]
     assert "allowedPaths" not in derived["toolsSettings"]["fs_write"]
@@ -126,7 +126,7 @@ def test_derived_spec_empties_every_grant_and_keeps_everything_else():
     assert set(derived) == set(base) - {"hooks"}
     # Put the grants back and the nested structures match the base too.
     restored = copy.deepcopy(derived)
-    restored["mcpServers"]["kirocrew-core"]["autoApprove"] = ["*"]
+    restored["mcpServers"]["ajcrew-core"]["autoApprove"] = ["*"]
     restored["toolsSettings"]["execute_bash"]["allowedCommands"] = ["git status"]
     restored["toolsSettings"]["shell"]["autoAllowReadonly"] = True
     restored["toolsSettings"]["fs_write"]["allowedPaths"] = ["~/notes/**"]
@@ -138,17 +138,17 @@ def test_derived_spec_empties_every_grant_and_keeps_everything_else():
 
 
 def test_shipped_default_grants_are_absent_from_the_derived_spec():
-    """(d) The shipped ``kirocrew`` spec pre-authorizes ``@kirocrew-cron/cron_remove_all``
-    and ``@kirocrew-core`` wholesale; neither survives derivation, and the tools stay
+    """(d) The shipped ``ajcrew`` spec pre-authorizes ``@ajcrew-cron/cron_remove_all``
+    and ``@ajcrew-core`` wholesale; neither survives derivation, and the tools stay
     mounted so a read through them still reaches the gate."""
     shipped = json.loads(_SHIPPED_DEFAULTS.read_text(encoding="utf-8"))
-    assert "@kirocrew-cron/cron_remove_all" in shipped["allowedTools"], "fixture premise"
-    assert "@kirocrew-core" in shipped["allowedTools"], "fixture premise"
+    assert "@ajcrew-cron/cron_remove_all" in shipped["allowedTools"], "fixture premise"
+    assert "@ajcrew-core" in shipped["allowedTools"], "fixture premise"
 
-    derived = srs.derive_readonly_spec(shipped, base_name="kirocrew")
+    derived = srs.derive_readonly_spec(shipped, base_name="ajcrew")
 
     assert derived["allowedTools"] == []
-    assert "@kirocrew-cron/cron_remove_all" not in json.dumps(derived["allowedTools"])
+    assert "@ajcrew-cron/cron_remove_all" not in json.dumps(derived["allowedTools"])
     assert derived["tools"] == shipped["tools"]
     assert derived["resources"] == shipped["resources"]
     assert "hooks" not in derived  # the shipped postToolUse audit hook does not ride along
@@ -257,17 +257,17 @@ def test_denied_read_paths_land_on_every_read_tool_and_keep_the_base_denies():
 def test_credential_denied_paths_come_from_the_claude_side_source(monkeypatch):
     """One list for both side chats: the claude deny rules' own targets."""
     monkeypatch.setattr(
-        "kiro_crew.security.sandbox_credential_targets", lambda: ("/h/.ssh", "/h/.aws")
+        "aj_crew.security.sandbox_credential_targets", lambda: ("/h/.ssh", "/h/.aws")
     )
     assert srs.credential_denied_paths() == ("/h/.ssh", "/h/.ssh/**", "/h/.aws", "/h/.aws/**")
 
 
 def test_publish_denies_every_credential_target_to_kiro_read_tools(agents_dir):
-    from kiro_crew.security import sandbox_credential_targets
+    from aj_crew.security import sandbox_credential_targets
 
-    (agents_dir / "kirocrew.json").write_text(json.dumps(_BASE), encoding="utf-8")
-    srs.publish_readonly_spec("kirocrew")
-    on_disk = json.loads((agents_dir / "kirocrew--readonly.json").read_text(encoding="utf-8"))
+    (agents_dir / "ajcrew.json").write_text(json.dumps(_BASE), encoding="utf-8")
+    srs.publish_readonly_spec("ajcrew")
+    on_disk = json.loads((agents_dir / "ajcrew--readonly.json").read_text(encoding="utf-8"))
     targets = sandbox_credential_targets()
     assert any(os.path.basename(t) == ".ssh" for t in targets), "fixture premise"
     # One key of the read alias group: kiro-cli reads only the first one.
@@ -283,11 +283,11 @@ def test_publish_refuses_when_the_credential_paths_cannot_be_resolved(agents_dir
         raise RuntimeError("stalled")
 
     monkeypatch.setattr(srs, "credential_denied_paths", stalled)
-    (agents_dir / "kirocrew.json").write_text(json.dumps(_BASE), encoding="utf-8")
+    (agents_dir / "ajcrew.json").write_text(json.dumps(_BASE), encoding="utf-8")
     with pytest.raises(srs.ReadOnlySpecError) as exc:
-        srs.publish_readonly_spec("kirocrew")
+        srs.publish_readonly_spec("ajcrew")
     assert exc.value.code == "credential_paths_unresolved"
-    assert not (agents_dir / "kirocrew--readonly.json").exists()
+    assert not (agents_dir / "ajcrew--readonly.json").exists()
 
 
 @pytest.fixture
@@ -301,25 +301,25 @@ def agents_dir(tmp_path, monkeypatch):
 
 
 def test_publish_writes_the_derived_spec_beside_the_base_and_only_when_it_changes(agents_dir):
-    (agents_dir / "kirocrew.json").write_text(json.dumps(_BASE), encoding="utf-8")
+    (agents_dir / "ajcrew.json").write_text(json.dumps(_BASE), encoding="utf-8")
 
-    published = srs.publish_readonly_spec("kirocrew")
+    published = srs.publish_readonly_spec("ajcrew")
 
-    target = agents_dir / "kirocrew--readonly.json"
-    assert published.name == "kirocrew--readonly"
+    target = agents_dir / "ajcrew--readonly.json"
+    assert published.name == "ajcrew--readonly"
     assert target.is_file() and not target.is_symlink()
     on_disk = json.loads(target.read_text(encoding="utf-8"))
     expected = srs.derive_readonly_spec(
-        _BASE, base_name="kirocrew", denied_read_paths=srs.credential_denied_paths()
+        _BASE, base_name="ajcrew", denied_read_paths=srs.credential_denied_paths()
     )
     assert on_disk == expected
     assert published.digest == srs.spec_digest(expected)
     # The base file is untouched.
-    assert json.loads((agents_dir / "kirocrew.json").read_text(encoding="utf-8")) == _BASE
+    assert json.loads((agents_dir / "ajcrew.json").read_text(encoding="utf-8")) == _BASE
 
     # Unchanged base: no rewrite (mtime and inode stable), same digest.
     before = target.stat()
-    again = srs.publish_readonly_spec("kirocrew")
+    again = srs.publish_readonly_spec("ajcrew")
     after = target.stat()
     assert (again.name, again.digest) == (published.name, published.digest)
     assert (after.st_mtime_ns, after.st_ino) == (before.st_mtime_ns, before.st_ino)
@@ -327,8 +327,8 @@ def test_publish_writes_the_derived_spec_beside_the_base_and_only_when_it_change
     # Changed base: regenerated from it, with a new digest. A hand edit to the
     # derived file is overwritten the same way — it is a runtime resource.
     changed = dict(_BASE, prompt="You are the crew, v2.")
-    (agents_dir / "kirocrew.json").write_text(json.dumps(changed), encoding="utf-8")
-    third = srs.publish_readonly_spec("kirocrew")
+    (agents_dir / "ajcrew.json").write_text(json.dumps(changed), encoding="utf-8")
+    third = srs.publish_readonly_spec("ajcrew")
     assert third.digest != published.digest
     assert json.loads(target.read_text(encoding="utf-8"))["prompt"] == "You are the crew, v2."
     assert json.loads(target.read_text(encoding="utf-8"))["allowedTools"] == []
@@ -407,7 +407,7 @@ def test_publish_fails_closed_when_the_base_spec_is_missing_or_broken(agents_dir
 def test_publish_derives_from_a_linked_user_base_outside_managed_state(
     agents_dir, tmp_path, monkeypatch
 ):
-    from kiro_crew.config import config_dir
+    from aj_crew.config import config_dir
 
     home = tmp_path / "home"
     home.mkdir()
@@ -436,50 +436,50 @@ def test_publish_derives_from_a_linked_user_base_outside_managed_state(
 
 def test_publish_refuses_a_project_spec_that_shadows_the_derived_name(agents_dir, tmp_path):
     """kiro-cli searches the project scope FIRST, so a checkout carrying
-    ``.kiro/agents/kirocrew--readonly.json`` would be loaded in place of the
+    ``.kiro/agents/ajcrew--readonly.json`` would be loaded in place of the
     generated spec — with whatever grants it declares. Refuse, never race it."""
-    (agents_dir / "kirocrew.json").write_text(json.dumps(_BASE), encoding="utf-8")
+    (agents_dir / "ajcrew.json").write_text(json.dumps(_BASE), encoding="utf-8")
     project = tmp_path / "proj"
     (project / ".kiro" / "agents").mkdir(parents=True)
-    planted = project / ".kiro" / "agents" / "kirocrew--readonly.json"
+    planted = project / ".kiro" / "agents" / "ajcrew--readonly.json"
     planted.write_text(
-        json.dumps(dict(_BASE, name="kirocrew--readonly", allowedTools=["execute_bash"])),
+        json.dumps(dict(_BASE, name="ajcrew--readonly", allowedTools=["execute_bash"])),
         encoding="utf-8",
     )
 
     with pytest.raises(srs.ReadOnlySpecError) as exc:
-        srs.publish_readonly_spec("kirocrew", str(project))
+        srs.publish_readonly_spec("ajcrew", str(project))
     assert exc.value.code == "derived_name_shadowed"
-    assert not (agents_dir / "kirocrew--readonly.json").exists()
+    assert not (agents_dir / "ajcrew--readonly.json").exists()
     # A planted file that declares the name under another filename is caught too.
     planted.rename(project / ".kiro" / "agents" / "innocent.json")
     with pytest.raises(srs.ReadOnlySpecError) as exc:
-        srs.publish_readonly_spec("kirocrew", str(project))
+        srs.publish_readonly_spec("ajcrew", str(project))
     assert exc.value.code == "derived_name_shadowed"
 
 
 def test_publish_refuses_a_second_user_spec_declaring_the_derived_name(agents_dir):
-    (agents_dir / "kirocrew.json").write_text(json.dumps(_BASE), encoding="utf-8")
+    (agents_dir / "ajcrew.json").write_text(json.dumps(_BASE), encoding="utf-8")
     (agents_dir / "other.json").write_text(
-        json.dumps(dict(_BASE, name="kirocrew--readonly")), encoding="utf-8"
+        json.dumps(dict(_BASE, name="ajcrew--readonly")), encoding="utf-8"
     )
 
     with pytest.raises(srs.ReadOnlySpecError) as exc:
-        srs.publish_readonly_spec("kirocrew")
+        srs.publish_readonly_spec("ajcrew")
     assert exc.value.code == "derived_name_shadowed"
-    assert not (agents_dir / "kirocrew--readonly.json").exists()
+    assert not (agents_dir / "ajcrew--readonly.json").exists()
 
 
 def test_publish_never_overwrites_a_foreign_file_at_the_derived_path(agents_dir):
-    """A user's own ``kirocrew--readonly.json`` (no owner marker) is not ours to
+    """A user's own ``ajcrew--readonly.json`` (no owner marker) is not ours to
     rewrite; the turn is refused and the file is left byte-for-byte."""
-    (agents_dir / "kirocrew.json").write_text(json.dumps(_BASE), encoding="utf-8")
-    foreign = agents_dir / "kirocrew--readonly.json"
-    foreign_text = json.dumps(dict(_BASE, name="kirocrew--readonly", description="mine"))
+    (agents_dir / "ajcrew.json").write_text(json.dumps(_BASE), encoding="utf-8")
+    foreign = agents_dir / "ajcrew--readonly.json"
+    foreign_text = json.dumps(dict(_BASE, name="ajcrew--readonly", description="mine"))
     foreign.write_text(foreign_text, encoding="utf-8")
 
     with pytest.raises(srs.ReadOnlySpecError) as exc:
-        srs.publish_readonly_spec("kirocrew")
+        srs.publish_readonly_spec("ajcrew")
     assert exc.value.code == "derived_path_foreign"
     assert foreign.read_text(encoding="utf-8") == foreign_text
 
@@ -489,7 +489,7 @@ def test_publish_never_overwrites_a_foreign_file_at_the_derived_path(agents_dir)
     elsewhere.write_text("{}", encoding="utf-8")
     foreign.symlink_to(elsewhere)
     with pytest.raises(srs.ReadOnlySpecError) as exc:
-        srs.publish_readonly_spec("kirocrew")
+        srs.publish_readonly_spec("ajcrew")
     assert exc.value.code == "derived_path_foreign"
     assert foreign.is_symlink() and elsewhere.read_text(encoding="utf-8") == "{}"
 
@@ -510,10 +510,10 @@ def test_the_derived_spec_carries_a_kas_block_only_where_the_cli_accepts_it(
     turn's read-only isolation -- so the field is withheld there, exactly as the
     generated writers in ``agent.py`` withhold it.
     """
-    (agents_dir / "kirocrew.json").write_text(json.dumps(_BASE), encoding="utf-8")
+    (agents_dir / "ajcrew.json").write_text(json.dumps(_BASE), encoding="utf-8")
     _pin_spec_permissions_cli(monkeypatch, release)
 
-    published = srs.publish_readonly_spec("kirocrew")
+    published = srs.publish_readonly_spec("ajcrew")
 
     on_disk = json.loads((agents_dir / f"{published.name}.json").read_text(encoding="utf-8"))
     assert on_disk["allowedTools"] == [], "the emptied grant list is never withheld"
@@ -533,10 +533,10 @@ def test_a_base_without_a_kas_block_never_gains_one(agents_dir, monkeypatch):
     release, where a gate that forgot the guard would write one.
     """
     base = {k: v for k, v in _BASE.items() if k != "permissions"}
-    (agents_dir / "kirocrew.json").write_text(json.dumps(base), encoding="utf-8")
+    (agents_dir / "ajcrew.json").write_text(json.dumps(base), encoding="utf-8")
     _pin_spec_permissions_cli(monkeypatch, "accepts")
 
-    published = srs.publish_readonly_spec("kirocrew")
+    published = srs.publish_readonly_spec("ajcrew")
 
     on_disk = json.loads((agents_dir / f"{published.name}.json").read_text(encoding="utf-8"))
     assert "permissions" not in on_disk

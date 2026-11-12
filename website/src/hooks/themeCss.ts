@@ -66,7 +66,7 @@ const escapeCssValue = sanitizeCssValue
  * The syntax/diff colours an omitted-token pack falls back to, per polarity:
  * `token: [light-palette value, dark-palette value]`.
  *
- * These are a SECOND spelling of the built-in kiro palette — the first is
+ * These are a SECOND spelling of the built-in aj palette — the first is
  * `src/index.css`, whose default dark block and `[data-theme="light"]` block
  * carry the same eleven pairs. This module cannot read a stylesheet (nothing
  * here touches the DOM, see the file header), so the copy is unavoidable; what
@@ -302,7 +302,7 @@ export function buildCustomThemeCss(slug: string, theme: CustomThemeData): strin
   // Static defaults (not user-controlled). Both font stacks read the role tokens
   // first: this block sits on the same [data-theme] selector a pack's font CSS
   // targets, so hardcoding the built-in families here would out-specify :root and
-  // strand a pack's own faces. An unfilled role falls through to Kiro Crew's stack.
+  // strand a pack's own faces. An unfilled role falls through to Aj Crew's stack.
   const darkDefaults =
     '--font-body:var(--theme-font-sans, var(--script-fallbacks),\'Space Grotesk\',-apple-system,BlinkMacSystemFont,sans-serif);' +
     '--mono:var(--theme-font-mono, var(--script-fallbacks-mono),\'JetBrains Mono\',ui-monospace,SFMono-Regular,monospace);' +
@@ -357,7 +357,7 @@ export const assetUrlValue = (slug: string, rel: string) => `url('${assetBase(sl
  * preference reads through, which is what keeps the routing honest — a Sans
  * selection picks up the pack's proportional face, a Mono selection picks up its
  * monospace face, System stays on the OS face because it reads no token, and an
- * unfilled role falls back to Kiro Crew's own stack. Writing `--font-body`
+ * unfilled role falls back to Aj Crew's own stack. Writing `--font-body`
  * directly here instead would be unreachable: the preference applies it as an
  * inline style on the same <html> element, and inline outranks any selector.
  *

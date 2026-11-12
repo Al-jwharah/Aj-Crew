@@ -1,4 +1,4 @@
-"""Coverage tests for ``kiro_crew.dashboard.chat_runner``: the approval ladder of a turn.
+"""Coverage tests for ``aj_crew.dashboard.chat_runner``: the approval ladder of a turn.
 
 Covers the auto-approve rungs a ``_run_chat`` turn walks between the interactive
 prompt and the session-trust flag (trusted patterns and their deadlines, read-only
@@ -28,9 +28,9 @@ from chat_runner_coverage_helpers import (
     _write_recorder,
 )
 
-from kiro_crew import name_grant
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.trust_patterns import (
+from aj_crew import name_grant
+from aj_crew.dashboard import chat_runner
+from aj_crew.trust_patterns import (
     GrantDeadline,
     base_trust_patterns,
     canonical_non_shell_trust_key,
@@ -457,7 +457,7 @@ class TestRunChatAutoApproveRungs:
 
     @pytest.mark.asyncio
     async def test_one_shadowed_name_refused_by_two_rungs_is_one_notice(self, tmp_path):
-        from kiro_crew.hooks import TOOL_AUTO_APPROVE, ToolHookResult
+        from aj_crew.hooks import TOOL_AUTO_APPROVE, ToolHookResult
 
         context_builder = MagicMock()
         context_builder.hooks.on_tool_call.return_value = ToolHookResult(action=TOOL_AUTO_APPROVE)
@@ -632,13 +632,13 @@ class TestRunChatAutoApproveRungs:
             and c.kwargs.get("outcome") == "auto_approved"
         ]
 
-    # ── Reads mode and Kiro Crew's own read-only MCP tools ───────────────────
+    # ── Reads mode and Aj Crew's own read-only MCP tools ───────────────────
 
     @staticmethod
     def _real_gate_state(tmp_path):
         """A runner whose context builder carries a REAL ``HookManager``, so the
         permission walks the gate's tiers rather than a scripted verdict."""
-        from kiro_crew.hooks import HookManager
+        from aj_crew.hooks import HookManager
 
         context_builder = MagicMock()
         context_builder.hooks = HookManager()
@@ -647,7 +647,7 @@ class TestRunChatAutoApproveRungs:
 
     @staticmethod
     def _core_read(
-        server: str = "kirocrew-core", tool: str = "memory_recall", *, trusted: bool = True
+        server: str = "ajcrew-core", tool: str = "memory_recall", *, trusted: bool = True
     ):
         """A permission request for a first-party MCP read, as kiro-cli raises
         it: the trusted ``_meta.kiro`` pair, no ``kind``, a model-authored title."""
@@ -693,8 +693,8 @@ class TestRunChatAutoApproveRungs:
         "server,tool",
         [
             ("evil-server", "memory_recall"),  # same name, another server
-            ("kirocrew-core", "learn_add"),  # a core WRITE tool
-            ("kirocrew-core", "list_sessions"),  # a core tool kept off the list
+            ("ajcrew-core", "learn_add"),  # a core WRITE tool
+            ("ajcrew-core", "list_sessions"),  # a core tool kept off the list
         ],
     )
     async def test_reads_mode_prompts_for_every_other_mcp_call(self, tmp_path, server, tool):
@@ -784,8 +784,8 @@ class TestRunChatAutoApproveRungs:
         self, tmp_path, monkeypatch
     ):
         """Approved while the grant was live, the answer would land after its deadline: ask."""
-        from kiro_crew import permission_floor, trust_patterns
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew import permission_floor, trust_patterns
+        from aj_crew.acp.client import AcpClient
 
         state, client = _runner_state(tmp_path)
         slot = _slot()
@@ -891,8 +891,8 @@ class TestRunChatAutoApproveRungs:
         self, tmp_path, monkeypatch
     ):
         """A grant that ends during the awaited check is not answered: the call prompts."""
-        from kiro_crew import permission_floor
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew import permission_floor
+        from aj_crew.acp.client import AcpClient
 
         state, client = _runner_state(tmp_path)
         slot = _slot()

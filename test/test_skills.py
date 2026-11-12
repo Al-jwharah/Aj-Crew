@@ -21,8 +21,8 @@ from skills_helpers import (  # noqa: F401 -- the autouse fixtures register by i
     _settled,
 )
 
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.skills import _NEW_SKILL_BOOST_WINDOW_SECS, _SHORT_DESC_CHARS, SkillsLoader
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.skills import _NEW_SKILL_BOOST_WINDOW_SECS, _SHORT_DESC_CHARS, SkillsLoader
 
 
 class TestFindSimilar:
@@ -104,7 +104,7 @@ class TestCreateAutoSkill:
     """Tests for SkillsLoader.create_auto_skill."""
 
     def _make_provenance(self):
-        from kiro_crew.skills import AutoSkillProvenance
+        from aj_crew.skills import AutoSkillProvenance
 
         return AutoSkillProvenance(
             session_key="dashboard:chat-1",
@@ -179,7 +179,7 @@ class TestCreateAutoSkill:
         )
 
     def test_rejects_oversized_procedure(self, tmp_path):
-        from kiro_crew.skills import AUTO_SKILL_MAX_PROCEDURE_CHARS
+        from aj_crew.skills import AUTO_SKILL_MAX_PROCEDURE_CHARS
 
         loader = SkillsLoader(skills_path=tmp_path / "skills", install_builtins=False)
         huge = "x" * (AUTO_SKILL_MAX_PROCEDURE_CHARS + 1)
@@ -333,7 +333,7 @@ class TestResolveDollarSkills:
         every platform; ``make_dir_link`` keeps the symlinked-base path exercised
         on Windows (a junction) instead of skipping there.
         """
-        from kiro_crew.skills import _iter_skill_files
+        from aj_crew.skills import _iter_skill_files
 
         real_base = tmp_path / "real_skills"
         _create_skill(real_base, "flat-skill", "---\nname: flat-skill\n---\n# Flat")
@@ -365,7 +365,7 @@ class TestResolveDollarSkills:
         skill must still be found and its resolved SKILL.md must land under the
         tree — proving a link ancestor is resolved and contained, not dropped.
         """
-        from kiro_crew.skills import _iter_skill_files
+        from aj_crew.skills import _iter_skill_files
 
         base = tmp_path / "skills"
         base.mkdir(parents=True, exist_ok=True)
@@ -395,8 +395,8 @@ class TestResolveDollarSkills:
         a skill reached only through that out-of-root ancestor resolves outside
         the roots and must not enumerate, while an in-tree sibling still does.
         """
+        from aj_crew.skills import _iter_skill_files
         from conftest import make_dir_link
-        from kiro_crew.skills import _iter_skill_files
 
         base = tmp_path / "skills"
         base.mkdir(parents=True, exist_ok=True)
@@ -427,16 +427,16 @@ class TestResolveDollarSkills:
 
     def test_renamed_builtin_answers_to_its_old_name(self, tmp_path):
         """A saved hook or AGENTS.md line still says `$prepare-pr` (or the old
-        nested key) after the skill became `kirocrew-dev/kirocrew-prepare-pr`."""
+        nested key) after the skill became `ajcrew-dev/ajcrew-prepare-pr`."""
         _create_skill(
             tmp_path / "skills",
-            "kirocrew-dev/kirocrew-prepare-pr",
-            "---\nname: kirocrew-prepare-pr\ndescription: PR loop\n---\n# PR\nBody P.",
+            "ajcrew-dev/ajcrew-prepare-pr",
+            "---\nname: ajcrew-prepare-pr\ndescription: PR loop\n---\n# PR\nBody P.",
         )
         loader = self._loader(tmp_path)
-        for text in ("run $prepare-pr", "run $kirocrew-dev/prepare-pr"):
+        for text in ("run $prepare-pr", "run $ajcrew-dev/prepare-pr"):
             out = loader.resolve_dollar_skills(text)
-            assert [name for _, name, _ in out] == ["kirocrew-dev/kirocrew-prepare-pr"], text
+            assert [name for _, name, _ in out] == ["ajcrew-dev/ajcrew-prepare-pr"], text
             assert "Body P." in out[0][2]
 
     def test_installed_skill_keeps_its_name_over_a_relocation_alias(self, tmp_path):
@@ -444,8 +444,8 @@ class TestResolveDollarSkills:
         _create_skill(skills_dir, "prepare-pr", "---\nname: prepare-pr\n---\nUser's own.")
         _create_skill(
             skills_dir,
-            "kirocrew-dev/kirocrew-prepare-pr",
-            "---\nname: kirocrew-prepare-pr\n---\nBuilt-in.",
+            "ajcrew-dev/ajcrew-prepare-pr",
+            "---\nname: ajcrew-prepare-pr\n---\nBuilt-in.",
         )
         loader = self._loader(tmp_path)
         assert [name for _, name, _ in loader.resolve_dollar_skills("$prepare-pr")] == [
@@ -461,8 +461,8 @@ class TestResolveDollarSkills:
         _create_skill(skills_dir, "team-b/prepare-pr", "---\nname: b\n---\nB.")
         _create_skill(
             skills_dir,
-            "kirocrew-dev/kirocrew-prepare-pr",
-            "---\nname: kirocrew-prepare-pr\n---\nBuilt-in.",
+            "ajcrew-dev/ajcrew-prepare-pr",
+            "---\nname: ajcrew-prepare-pr\n---\nBuilt-in.",
         )
         loader = self._loader(tmp_path)
         assert loader.resolve_dollar_skills("$prepare-pr") == []
@@ -514,7 +514,7 @@ class TestResolveDollarSkills:
                 f"---\nname: skill{i}\ndescription: d{i}\n---\n# S{i}\nbody{i}",
             )
         loader = _settled(SkillsLoader(skills_path=skills_dir, install_builtins=False))
-        monkeypatch.setattr("kiro_crew.skills._MAX_DOLLAR_SKILLS", 5)
+        monkeypatch.setattr("aj_crew.skills._MAX_DOLLAR_SKILLS", 5)
         msg = " ".join(f"$skill{i}" for i in range(8))
         out = loader.resolve_dollar_skills(msg)
         assert len(out) == 5
@@ -529,7 +529,7 @@ class TestResolveDollarSkills:
             "WorkforceEmploymentKnowledgeBase/oncall-handover",
             "---\nname: WFE/oncall-handover\n---\nAIM",
         )
-        cfg = KiroCrewConfig(skills=SkillsConfig(extra_paths=[str(aim)]))
+        cfg = AjCrewConfig(skills=SkillsConfig(extra_paths=[str(aim)]))
         loader = _settled(SkillsLoader(skills_path=local, install_builtins=False, config=cfg))
         out = loader.resolve_dollar_skills("$oncall-handover")
         assert len(out) == 1
@@ -542,7 +542,7 @@ class TestResolveDollarSkills:
             "WorkforceEmploymentKnowledgeBase/alarm-investigation",
             "---\nname: WFE/alarm-investigation\n---\nAIM ALARM",
         )
-        cfg = KiroCrewConfig(skills=SkillsConfig(extra_paths=[str(aim)]))
+        cfg = AjCrewConfig(skills=SkillsConfig(extra_paths=[str(aim)]))
         loader = _settled(
             SkillsLoader(skills_path=tmp_path / "skills", install_builtins=False, config=cfg)
         )
@@ -556,7 +556,7 @@ class TestResolveDollarSkills:
         # resolve via $leaf WITHOUT being in config extra_paths — the loader
         # appends edition roots so the $skill resolver matches what the
         # /api/skills picker offers (frontend/backend parity).
-        from kiro_crew.platform.defaults import DefaultMcpToolingProvider
+        from aj_crew.platform.defaults import DefaultMcpToolingProvider
 
         aim_root = tmp_path / "aim_skills"
         _create_skill(
@@ -575,7 +575,7 @@ class TestResolveDollarSkills:
     def test_local_skill_wins_over_aim_root_on_leaf_collision(self, tmp_path, monkeypatch):
         # Local skills dir and an edition root both have a `grill` leaf → local
         # wins (edition roots are appended last, _iter dedupes by first-seen).
-        from kiro_crew.platform.defaults import DefaultMcpToolingProvider
+        from aj_crew.platform.defaults import DefaultMcpToolingProvider
 
         aim_root = tmp_path / "aim_skills"
         _create_skill(aim_root, "SomePkg/grill", "---\nname: grill\n---\nAIM GRILL")
@@ -766,7 +766,7 @@ class TestLazyLoadContext:
         assert "more skill(s) not shown" in tight
 
     def test_user_authored_classification(self, tmp_path, monkeypatch):
-        import kiro_crew.skills as skills_mod
+        import aj_crew.skills as skills_mod
 
         skills_dir = tmp_path / "skills"
         provider = tmp_path / "provider" / "app-skill"
@@ -919,7 +919,7 @@ class TestDisabledAppSkillsAreNotTriggered:
     @staticmethod
     def _apps(monkeypatch, **enabled: bool) -> None:
         """Stub the app registry: name -> enabled."""
-        import kiro_crew.apps.manager as mgr
+        import aj_crew.apps.manager as mgr
 
         monkeypatch.setattr(
             mgr,
@@ -935,7 +935,7 @@ class TestDisabledAppSkillsAreNotTriggered:
             SkillsLoader(
                 skills_path=skills,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
 
@@ -949,7 +949,7 @@ class TestDisabledAppSkillsAreNotTriggered:
             SkillsLoader(
                 skills_path=skills,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
 
@@ -965,7 +965,7 @@ class TestDisabledAppSkillsAreNotTriggered:
             SkillsLoader(
                 skills_path=skills,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
 
@@ -984,7 +984,7 @@ class TestDisabledAppSkillsAreNotTriggered:
             SkillsLoader(
                 skills_path=skills,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
 
@@ -993,7 +993,7 @@ class TestDisabledAppSkillsAreNotTriggered:
     def test_an_unreadable_app_registry_hides_nothing(self, tmp_path, monkeypatch):
         """Fail OPEN here, deliberately: a transient read error must not silently
         strip an enabled app's skills out of context."""
-        import kiro_crew.apps.manager as mgr
+        import aj_crew.apps.manager as mgr
 
         skills = tmp_path / "skills"
         self._write_app_skill(skills, "deploy_web", "artifact-deploy", "deploy")
@@ -1006,7 +1006,7 @@ class TestDisabledAppSkillsAreNotTriggered:
             SkillsLoader(
                 skills_path=skills,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
 
@@ -1022,7 +1022,7 @@ class TestDisabledAppSkillsAreNotTriggered:
         tree (``apps/builtins/auto_improvement/skills/ai-discover``), not the
         data-home apps root. Returns the app's manifest name.
         """
-        import kiro_crew.skills as skills_mod
+        import aj_crew.skills as skills_mod
 
         target = (
             Path(skills_mod.__file__).parent
@@ -1051,7 +1051,7 @@ class TestDisabledAppSkillsAreNotTriggered:
             SkillsLoader(
                 skills_path=skills,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
 
@@ -1066,7 +1066,7 @@ class TestDisabledAppSkillsAreNotTriggered:
             SkillsLoader(
                 skills_path=skills,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
 
@@ -1075,11 +1075,11 @@ class TestDisabledAppSkillsAreNotTriggered:
     def test_a_flat_link_into_a_linked_apps_root_is_gated(self, tmp_path, monkeypatch):
         """The default data home keeps ``$HOME``'s spelling, so ``apps_dir()`` can
         reach the apps root through a link that the skill's real path has followed."""
-        import kiro_crew.apps.manager as mgr
+        import aj_crew.apps.manager as mgr
         from conftest import make_dir_link
 
         real_home = tmp_path / "crew"
-        monkeypatch.setenv("KIROCREW_HOME", str(real_home))
+        monkeypatch.setenv("AJCREW_HOME", str(real_home))
         skill_dir = real_home / "apps" / "deploy_web" / "skills" / "artifact-deploy"
         skill_dir.mkdir(parents=True)
         (skill_dir / "SKILL.md").write_text(
@@ -1099,7 +1099,7 @@ class TestDisabledAppSkillsAreNotTriggered:
             SkillsLoader(
                 skills_path=skills,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
 
@@ -1119,7 +1119,7 @@ class TestDisabledAppSkillsAreNotTriggered:
             SkillsLoader(
                 skills_path=skills,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
 
@@ -1144,7 +1144,7 @@ class TestDisabledAppSkillsAreNotTriggered:
             SkillsLoader(
                 skills_path=skills,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
 
@@ -1163,7 +1163,7 @@ class TestDisabledAppSkillsAreNotTriggered:
             SkillsLoader(
                 skills_path=skills,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
 
@@ -1184,7 +1184,7 @@ class TestDisabledAppSkillsAreNotTriggered:
             SkillsLoader(
                 skills_path=skills,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
 
@@ -1211,7 +1211,7 @@ class TestDisabledAppSkillsAreNotTriggered:
             SkillsLoader(
                 skills_path=skills,
                 install_builtins=False,
-                config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+                config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
             )
         )
 
@@ -1229,10 +1229,10 @@ class TestDisabledAppSkillsAreNotTriggered:
         nothing else reports it."""
         import json
 
-        import kiro_crew
-        from kiro_crew.frontmatter import SKILL_LOADER, parse_frontmatter
+        import aj_crew
+        from aj_crew.frontmatter import SKILL_LOADER, parse_frontmatter
 
-        pkg = Path(kiro_crew.__file__).resolve().parent
+        pkg = Path(aj_crew.__file__).resolve().parent
         apps = {
             json.loads(p.read_text(encoding="utf-8"))["name"]
             for p in (pkg / "apps" / "builtins").glob("*/app.json")
@@ -1274,7 +1274,7 @@ class TestStripFrontmatterCloserParity:
     def test_lenient_closer_strips_whatever_the_parser_parses(self, closer: str) -> None:
         """The invariant itself: for the same document, the display parser
         reads the fields AND the stripper removes the block."""
-        from kiro_crew.frontmatter import SKILL_LOADER, parse_frontmatter
+        from aj_crew.frontmatter import SKILL_LOADER, parse_frontmatter
 
         doc = self._doc(closer)
         fields = parse_frontmatter(doc, SKILL_LOADER)
@@ -1295,7 +1295,7 @@ class TestStripFrontmatterCloserParity:
         tolerates a carriage return before each fence newline, so the
         stripper must too — a CRLF document whose fields render in the UI
         must not leak its whole block to the model."""
-        from kiro_crew.frontmatter import SKILL_LOADER, parse_frontmatter
+        from aj_crew.frontmatter import SKILL_LOADER, parse_frontmatter
 
         doc = f"---\r\ndescription: test skill\r\n---\r\n{self.BODY}"
         fields = parse_frontmatter(doc, SKILL_LOADER)
@@ -1329,7 +1329,7 @@ class TestStripFrontmatterCloserParity:
         switching SKILL_LOADER to leading_ws_fence), the premise assertion
         here goes red, forcing the stripper's opener to be revisited in the
         same change instead of silently reopening the leak."""
-        from kiro_crew.frontmatter import SKILL_LOADER, parse_frontmatter
+        from aj_crew.frontmatter import SKILL_LOADER, parse_frontmatter
 
         doc = f" ---\ndescription: test skill\n---\n{self.BODY}"
         fields = parse_frontmatter(doc, SKILL_LOADER)

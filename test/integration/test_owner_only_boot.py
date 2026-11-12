@@ -21,8 +21,8 @@ from pathlib import Path
 import pytest
 from integration import conftest as harness
 
-from kiro_crew.config.paths import config_dir, ensure_data_home
-from kiro_crew.owner_only_files import TightenReport, tighten_data_home
+from aj_crew.config.paths import config_dir, ensure_data_home
+from aj_crew.owner_only_files import TightenReport, tighten_data_home
 
 pytestmark = pytest.mark.skipif(os.name != "posix", reason="POSIX mode bits")
 
@@ -59,7 +59,7 @@ async def test_a_fresh_boot_leaves_nothing_readable_by_others(
     assert stat.S_IMODE(planted.stat().st_mode) & 0o077, "the harness no longer plants a 0644 file"
     # The booted gateway's own post-bind sweep would repair whatever a boot step
     # created 0644 before this test could see it.
-    from kiro_crew.dashboard import server as dashboard_server
+    from aj_crew.dashboard import server as dashboard_server
 
     monkeypatch.setattr(
         dashboard_server, "tighten_data_home", lambda *_a, **_k: TightenReport(complete=True)

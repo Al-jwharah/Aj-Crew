@@ -1,9 +1,9 @@
 /**
- * Settings > Developer > **Agent MCP servers**: mount the two opt-in Kiro Crew MCP
- * sets on the DEFAULT agent, or take them off -- `kirocrew-dashboard` (folders, tags,
- * session control) and `kirocrew-debug` (gateway debug reads).
+ * Settings > Developer > **Agent MCP servers**: mount the two opt-in Aj Crew MCP
+ * sets on the DEFAULT agent, or take them off -- `ajcrew-dashboard` (folders, tags,
+ * session control) and `ajcrew-debug` (gateway debug reads).
  *
- * The state is the default agent's spec, read with `GET /api/agents/detail/kirocrew`:
+ * The state is the default agent's spec, read with `GET /api/agents/detail/ajcrew`:
  * a set is on when the spec holds its entry and its `@server` ref, and it came from
  * the mount-only record when the entry carries that record's stamp. Add records each
  * set that is off (`POST .../mcp-additions`, where the gateway builds the entry);
@@ -22,13 +22,13 @@ import { SettingsCard, SettingsSection } from '../../components/settings'
 import { i18nT } from '../../i18n/t'
 
 const QK = ['defaultAgentMcpSets']
-const SETS = ['kirocrew-dashboard', 'kirocrew-debug'] as const
+const SETS = ['ajcrew-dashboard', 'ajcrew-debug'] as const
 type SetName = (typeof SETS)[number]
 /** The mount-only record's stamp on a spec entry (`template_mcp_additions.MERGED_MARK`). */
-const STAMP = 'x-kirocrew-card-addition'
+const STAMP = 'x-ajcrew-card-addition'
 
 type Spec = { mcpServers?: Record<string, unknown>; tools?: unknown[] }
-type KirocrewConfigShape = { agent?: { session_control?: boolean } }
+type AjcrewConfigShape = { agent?: { session_control?: boolean } }
 type SetState = 'recorded' | 'by_hand' | 'off'
 type Action = 'add' | 'remove'
 type Outcome = { kind: 'done'; action: Action } | { kind: 'failed'; action: Action; reason: string }
@@ -88,12 +88,12 @@ export function DefaultMcpGrantsSection() {
   // the spec, which picks up a change another tab or a change card made.
   const q = useQuery<Spec>({
     queryKey: QK,
-    queryFn: () => api.agentDetail('kirocrew') as Promise<Spec>,
+    queryFn: () => api.agentDetail('ajcrew') as Promise<Spec>,
     staleTime: 0,
   })
-  const cfgQ = useQuery<KirocrewConfigShape>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig() as Promise<KirocrewConfigShape>,
+  const cfgQ = useQuery<AjcrewConfigShape>({
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig() as Promise<AjcrewConfigShape>,
   })
   const mut = useMutation({
     mutationFn: (action: Action) => run(action, q.data),
@@ -147,7 +147,7 @@ export function DefaultMcpGrantsSection() {
           label={i18nT('pages.settings.defaultMcpGrantsSection.dashboard_label')}
           desc={i18nT('pages.settings.defaultMcpGrantsSection.dashboard_desc')}
           state={states[0]}
-          testId="default-mcp-state-kirocrew-dashboard"
+          testId="default-mcp-state-ajcrew-dashboard"
         />
         {sessionControl === 'off' && (
           <div className="pb-2 text-[13px] text-muted" data-testid="default-mcp-session-control-note">
@@ -171,7 +171,7 @@ export function DefaultMcpGrantsSection() {
           label={i18nT('pages.settings.defaultMcpGrantsSection.debug_label')}
           desc={i18nT('pages.settings.defaultMcpGrantsSection.debug_desc')}
           state={states[1]}
-          testId="default-mcp-state-kirocrew-debug"
+          testId="default-mcp-state-ajcrew-debug"
         />
         <div className="flex flex-wrap gap-2 pt-2">
           <Btn onClick={() => mut.mutate('add')} disabled={busy || !states.includes('off')}>

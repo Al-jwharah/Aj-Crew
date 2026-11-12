@@ -241,7 +241,7 @@ describe('InviteEntry and its dialog', () => {
       fireEvent.click(button)
       await waitFor(() => expect(copy).toHaveBeenCalledTimes(1))
       expect(copy.mock.calls[0][0].split('\n')).toEqual([
-        'Mac Studio invited you to Kiro Crew.',
+        'Mac Studio invited you to Aj Crew.',
         '1. Accept the Tailscale share: https://login.tailscale.com/admin/invite/abc',
         '2. Open Crew: http://100.64.0.1:5476/',
         '',

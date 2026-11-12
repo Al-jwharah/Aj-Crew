@@ -21,9 +21,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import autonudge, autonudge_authz, autonudge_selfarm
-from kiro_crew.autonudge_authz import authorize_and_add_nudge
-from kiro_crew.dashboard import session_directive_apply as sda
+from aj_crew import autonudge, autonudge_authz, autonudge_selfarm
+from aj_crew.autonudge_authz import authorize_and_add_nudge
+from aj_crew.dashboard import session_directive_apply as sda
 
 SESSION = "dashboard:chat-1"
 BINDING = "chat-1"
@@ -50,7 +50,7 @@ def _loop(loop_id: str = LOOP_ID, *, active: bool = True) -> SimpleNamespace:
 def _slot(**over: Any) -> SimpleNamespace:
     base: dict[str, Any] = {
         "key": BINDING,
-        "agent": "kirocrew-conductor",
+        "agent": "ajcrew-conductor",
         "_app": "",
         "messages": [],
         "_question_pending": {},
@@ -274,7 +274,7 @@ def arm_env(monkeypatch: pytest.MonkeyPatch) -> list[tuple[str, str]]:
     return writes
 
 
-async def _arm(svc: Any, tmp_path: Path, initiator: str, agent: str = "kirocrew-conductor") -> Any:
+async def _arm(svc: Any, tmp_path: Path, initiator: str, agent: str = "ajcrew-conductor") -> Any:
     slot = SimpleNamespace(workspace="default", mode="", memory_mode="persistent", agent=agent)
     return await authorize_and_add_nudge(
         svc=svc,
@@ -336,7 +336,7 @@ async def test_ordinary_slot_record_is_forgotten_when_the_arm_fails(
     monkeypatch: pytest.MonkeyPatch, arm_env: list[tuple[str, str]], tmp_path: Path
 ) -> None:
     """A record written for an arm that never committed must not outlive it."""
-    from kiro_crew.autonudge_service.model import NudgeAdmissionRefused
+    from aj_crew.autonudge_service.model import NudgeAdmissionRefused
 
     forgotten: list[str] = []
     monkeypatch.setattr(autonudge_authz, "forget_self_arm", forgotten.append)
@@ -362,7 +362,7 @@ async def test_a_pause_during_the_trust_read_refuses(wake_env: dict[str, Any]) -
         wake_env["svc"].current.active = False
         return True
 
-    import kiro_crew.autonudge_selfarm as selfarm
+    import aj_crew.autonudge_selfarm as selfarm
 
     selfarm_patch = pytest.MonkeyPatch()
     selfarm_patch.setattr(selfarm, "is_recorded_self_arm", _record_then_pause)
@@ -392,7 +392,7 @@ async def test_only_a_wake_reset_is_marked_to_wait_at_the_boundary(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("agent", ["", "kirocrew", "kirocrew-worker"])
+@pytest.mark.parametrize("agent", ["", "ajcrew", "ajcrew-worker"])
 async def test_a_non_conductor_wake_is_refused(wake_env: dict[str, Any], agent: str) -> None:
     """A self-armed loop on any other agent's slot passes every loop check, so
     the agent check is what keeps the exception to the conductor."""
@@ -404,13 +404,13 @@ async def test_a_non_conductor_wake_is_refused(wake_env: dict[str, Any], agent: 
 
 @pytest.mark.asyncio
 async def test_the_deprecated_conductor_alias_is_admitted(wake_env: dict[str, Any]) -> None:
-    slot = _slot(agent="kirocrew-ledger-conductor")
+    slot = _slot(agent="ajcrew-ledger-conductor")
     result = await _wake_reset(slot, _state())
     assert result.startswith("Conversation reset queued")
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("agent", ["", "kirocrew", "kirocrew-worker"])
+@pytest.mark.parametrize("agent", ["", "ajcrew", "ajcrew-worker"])
 async def test_other_agents_arming_themselves_are_not_recorded(
     arm_env: list[tuple[str, str]], tmp_path: Path, agent: str
 ) -> None:

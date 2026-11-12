@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-from kiro_crew.workflow_memory import read_task_snapshot, write_task_snapshot
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew.workflow_memory import read_task_snapshot, write_task_snapshot
 
 
 def test_member_task_payload_has_one_canonical_record(tmp_path):

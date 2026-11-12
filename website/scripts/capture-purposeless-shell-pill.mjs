@@ -56,7 +56,7 @@ const slots = [
     running: false,
     last_message: 'Findings logged to the ledger.',
     messages: 6,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     memory_mode: 'persistent',
     project: PROJECT,
     modified: Math.floor(Date.now() / 1000),

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Verify the vendored ``_vendor`` tree against a committed sha256 manifest.
 
-``src/kiro_crew/_vendor`` (vendored llama-cpp-python: executable Python plus
+``src/aj_crew/_vendor`` (vendored llama-cpp-python: executable Python plus
 per-platform native libraries) is deliberately excluded from every
 source-level content review: semgrep, the AI reviewers' reviewable diff, and
 the formatter/linter configs all skip it. Without a content gate, a PR that
@@ -16,12 +16,12 @@ MISSING, and UNEXPECTED (extra) file — all three classes matter, because an
 added importable file is as dangerous as a modified one.
 
 The manifest uses ``sha256sum``-compatible lines
-(``<hex>  src/kiro_crew/_vendor/<relpath>``), sorted with a trailing newline,
+(``<hex>  src/aj_crew/_vendor/<relpath>``), sorted with a trailing newline,
 so it is plain-text line-diffable in review and independently verifiable with
 ``sha256sum -c scripts/vendor_manifest.sha256`` from the repository root.
 
 Legitimate vendored bumps regenerate it with ``--write`` (see the "Updating
-the vendored tree" section of ``src/kiro_crew/_vendor/README.md``) and commit
+the vendored tree" section of ``src/aj_crew/_vendor/README.md``) and commit
 the manifest diff alongside the vendored changes.
 
 This is a different concern from ``scripts/verify_vendored_payload.py``, which
@@ -41,11 +41,11 @@ import pathlib
 import sys
 
 _REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
-_DEFAULT_VENDOR_DIR = _REPO_ROOT / "src" / "kiro_crew" / "_vendor"
+_DEFAULT_VENDOR_DIR = _REPO_ROOT / "src" / "aj_crew" / "_vendor"
 _DEFAULT_MANIFEST = _REPO_ROOT / "scripts" / "vendor_manifest.sha256"
 
 # Manifest paths are repo-root-relative so `sha256sum -c` works from the root.
-_MANIFEST_PATH_PREFIX = "src/kiro_crew/_vendor/"
+_MANIFEST_PATH_PREFIX = "src/aj_crew/_vendor/"
 
 # One read buffer per chunk keeps peak memory flat while hashing the ~26MB of
 # native libraries.
@@ -192,7 +192,7 @@ def main(argv: list[str]) -> int:
         if caches:
             print(
                 "\nLocally generated __pycache__ dirs (an imported vendored tree) can be\n"
-                "removed with: find src/kiro_crew/_vendor -name __pycache__ -type d "
+                "removed with: find src/aj_crew/_vendor -name __pycache__ -type d "
                 "-exec rm -rf {} +\nCommitted bytecode must never land in _vendor.",
                 file=sys.stderr,
             )
@@ -226,7 +226,7 @@ def main(argv: list[str]) -> int:
         print(
             "\nIf this vendored change is intentional, regenerate the manifest\n"
             "(python scripts/verify_vendor_manifest.py --write) and commit it —\n"
-            "see 'Updating the vendored tree' in src/kiro_crew/_vendor/README.md.",
+            "see 'Updating the vendored tree' in src/aj_crew/_vendor/README.md.",
             file=sys.stderr,
         )
         return 1

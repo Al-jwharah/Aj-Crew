@@ -43,7 +43,7 @@ import { DriveSectionView } from './DrivePage'
 
 const ACCOUNT_ID = '111122223333'
 const OTHER_ACCOUNT = '999988887777'
-const BUCKET = 'kirocrew-drive-abc123'
+const BUCKET = 'ajcrew-drive-abc123'
 // The key spelled out rather than recomputed: this is the on-disk contract.
 const KEY = `kc:app:aws-control:view:drive:${ACCOUNT_ID}`
 

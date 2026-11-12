@@ -1,4 +1,4 @@
-"""Coverage tests for :mod:`kiro_crew.history`.
+"""Coverage tests for :mod:`aj_crew.history`.
 
 Targets helpers and error branches the other ``test_history*.py`` files skip.
 Every test writes only under ``tmp_path``; no network, no subprocess.
@@ -17,9 +17,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from windows_sim import same_tick_file_stat
 
-from kiro_crew import history as H
-from kiro_crew.execution_context import STRICTEST_MEMORY_MODE
-from kiro_crew.history import (
+from aj_crew import history as H
+from aj_crew.execution_context import STRICTEST_MEMORY_MODE
+from aj_crew.history import (
     _CONSOLIDATION_BACKOFF_BASE_SECS,
     _CONSOLIDATION_BACKOFF_MAX_SECS,
     _CONSOLIDATION_MAX_ATTEMPTS,
@@ -27,9 +27,9 @@ from kiro_crew.history import (
     ConversationLog,
     HistoryConsolidator,
 )
-from kiro_crew.session import BACKGROUND_KEY
-from kiro_crew.testing.wait import await_until
-from kiro_crew.vector_memory import SemanticRejectCode
+from aj_crew.session import BACKGROUND_KEY
+from aj_crew.testing.wait import await_until
+from aj_crew.vector_memory import SemanticRejectCode
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
@@ -65,7 +65,7 @@ class TestOffLoopWrappers:
     def test_append_off_loop_inline_failure_is_logged(self, caplog) -> None:
         log = MagicMock()
         log.append.side_effect = OSError("disk gone")
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             H.append_off_loop(log, "k", "user", "hi", agent="a")
         assert "inline append failed" in caplog.text
         log.append.assert_called_once_with("k", "user", "hi", agent="a")
@@ -120,14 +120,14 @@ class TestOffLoopWrappers:
     def test_append_if_absent_off_loop_inline_failure_is_logged(self, caplog) -> None:
         log = MagicMock()
         log.append_if_absent.side_effect = OSError("disk gone")
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             H.append_if_absent_off_loop(log, "k", "assistant", "yo")
         assert "inline append failed" in caplog.text
 
     def test_update_metadata_off_loop_inline_failure_is_logged(self, caplog) -> None:
         log = MagicMock()
         log.update_metadata.side_effect = OSError("disk gone")
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             H.update_metadata_off_loop(log, "k", {"title": "t"})
         assert "inline update failed" in caplog.text
 
@@ -157,7 +157,7 @@ class TestOffLoopWrappers:
             fut.add_done_callback(lambda _f: loop.call_soon_threadsafe(done.set))
             return fut
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             with patch.object(loop, "run_in_executor", _spy):
                 H.append_off_loop(log, "k", "user", "hi")
             await await_until(done, what="the offloaded append finishing")
@@ -505,7 +505,7 @@ class TestLastMessagePreview:
         log.append("k", "assistant", "text")
         # The preview is built by preview_text.speech_preview, which reads the
         # stripper from its own module; that is the seam to rebind.
-        with patch("kiro_crew.preview_text.strip_markdown_preview", return_value=""):
+        with patch("aj_crew.preview_text.strip_markdown_preview", return_value=""):
             assert log.last_message_preview("k") == ""
 
 
@@ -525,7 +525,7 @@ class TestListSessions:
                     "_type": "metadata",
                     "created_at": "2026-01-01T00:00:00",
                     "title": "Titled",
-                    "agent": "kirocrew",
+                    "agent": "ajcrew",
                     "memory_mode": "ephemeral",
                     "folder_id": "f1",
                 },
@@ -534,7 +534,7 @@ class TestListSessions:
         )
         (row,) = log.list_sessions()
         assert row["title"] == "Titled"
-        assert row["agent"] == "kirocrew"
+        assert row["agent"] == "ajcrew"
         assert row["memory_mode"] == "ephemeral"
         assert row["folder_id"] == "f1"
         assert row["created"] == "2026-01-01T00:00:00"
@@ -798,7 +798,7 @@ class TestNoteFailedAttempt:
         log = MagicMock()
         log.record_consolidation_failure.side_effect = OSError("no disk")
         c = _consolidator(log=log)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             await c._note_failed_attempt("k", _SPAN, "boom")
         assert "Could not persist consolidation retry state" in caplog.text
         log.mark_consolidated.assert_not_called()
@@ -808,9 +808,9 @@ class TestNoteFailedAttempt:
         log = MagicMock()
         log.record_consolidation_failure.return_value = (0, 0.0)
         c = _consolidator(log=log)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             assert await c._note_failed_attempt("k", _SPAN, "boom") is True
-        messages = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.history"]
+        messages = [r.getMessage() for r in caplog.records if r.name == "aj_crew.history"]
         assert [m for m in messages if "attempt" in m] == []
         log.mark_consolidated.assert_not_called()
 
@@ -819,7 +819,7 @@ class TestNoteFailedAttempt:
         log = MagicMock()
         log.record_consolidation_failure.return_value = (1, 1e12)
         c = _consolidator(log=log)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             await c._note_failed_attempt("k", _SPAN, "boom")
         assert "Consolidation attempt 1/" in caplog.text
         log.mark_consolidated.assert_not_called()
@@ -837,7 +837,7 @@ class TestNoteFailedAttempt:
             0.0,
         )
         c = _consolidator(log=log)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             await c._note_failed_attempt("k", _SPAN, "boom")
         assert "Abandoning consolidation" in caplog.text
         log.mark_consolidated.assert_called_once_with("k", _SPAN.total, _SPAN.generation)
@@ -851,7 +851,7 @@ class TestNoteFailedAttempt:
         )
         log.mark_consolidated.side_effect = OSError("no disk")
         c = _consolidator(log=log)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             await c._note_failed_attempt("k", _SPAN, "boom")
         assert "Could not mark abandoned consolidation" in caplog.text
 
@@ -862,7 +862,7 @@ class TestNoteEnvironmentFailure:
         log = MagicMock()
         log.record_consolidation_environment_failure.side_effect = OSError("no disk")
         c = _consolidator(log=log)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             await c._note_environment_failure("k", "kiro-cli missing")
         assert "Could not persist consolidation environment backoff" in caplog.text
 
@@ -871,7 +871,7 @@ class TestNoteEnvironmentFailure:
         log = MagicMock()
         log.record_consolidation_environment_failure.return_value = (0, 0.0)
         c = _consolidator(log=log)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             await c._note_environment_failure("k", "gone")
         assert "could not reach the LLM" not in caplog.text
 
@@ -880,7 +880,7 @@ class TestNoteEnvironmentFailure:
         log = MagicMock()
         log.record_consolidation_environment_failure.return_value = (3, 1e12)
         c = _consolidator(log=log)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             await c._note_environment_failure("k", "no session manager")
         assert "environment failure #3" in caplog.text
         log.mark_consolidated.assert_not_called()
@@ -910,7 +910,7 @@ class TestWriteStructuredMemory:
                 "not a dict",
             ]
         }
-        with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.history"):
             c._write_structured_memory(result, "sess")
         sources = {kw["key"]: kw["source"] for _, kw in vs.set_semantic.call_args_list}
         assert sources == {"plain": "consolidation:sess", "explicit": "consolidation:sess"}
@@ -933,7 +933,7 @@ class TestWriteStructuredMemory:
         vs = MagicMock()
         vs.set_semantic.return_value = (SemanticRejectCode.ALLOWLIST, "not allowlisted")
         c = _consolidator(vector_store=vs)
-        with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.history"):
             c._write_structured_memory({"semantic": [{"key": "a", "value": "b"}]}, "k")
         assert "0 written" in caplog.text
         assert "1 refused" in caplog.text
@@ -951,7 +951,7 @@ class TestWriteStructuredMemory:
             "Existing entry has higher confidence (0.90 vs 0.60)",
         )
         c = _consolidator(vector_store=vs)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             c._write_structured_memory({"semantic": [{"key": "head_sha", "value": "b"}]}, "k")
         assert "Existing entry has higher confidence (0.90 vs 0.60)" in caplog.text
         # The pointer is scoped to audited causes: VALUE_SIZE and VALUE_ENCODING are
@@ -969,7 +969,7 @@ class TestWriteStructuredMemory:
         vs.set_semantic.return_value = None
         c = _consolidator(vector_store=vs)
         items = [{"key": f"k{i}", "value": "v"} for i in range(200)]
-        with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.history"):
             c._write_structured_memory({"semantic": items}, "k")
         cap = H._MAX_SEMANTIC_PER_CONSOLIDATION
         assert f"Semantic consolidation: {cap} written," in caplog.text
@@ -988,7 +988,7 @@ class TestWriteStructuredMemory:
                 7,
             ]
         }
-        with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.history"):
             c._write_structured_memory(result, "sess")
         # ``facets`` is part of the call now: the consolidator stamps the carve axes
         # it already holds. ``None`` here because this test drives
@@ -1016,7 +1016,7 @@ class TestWriteStructuredMemory:
         vs = MagicMock()
         vs.write_episodic.return_value = False
         c = _consolidator(vector_store=vs)
-        with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.history"):
             c._write_structured_memory({"episodic": [{"text": "x"}]}, "k")
         assert "episodic entries from consolidation" not in caplog.text
 
@@ -1025,7 +1025,7 @@ class TestWriteStructuredMemory:
         vs.write_episodic.return_value = True
         c = _consolidator(vector_store=vs)
         items = [{"text": f"t{i}"} for i in range(200)]
-        with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.history"):
             c._write_structured_memory({"episodic": items}, "k")
         cap = H._MAX_EPISODIC_PER_CONSOLIDATION
         assert f"Wrote {cap} episodic entries from consolidation" in caplog.text
@@ -1050,7 +1050,7 @@ class TestSaveLessons:
         vs.write_lesson.return_value = True
         c = _consolidator(vector_store=vs)
         raw = [{"rule": f"r{i}"} for i in range(H._MAX_LESSONS_PER_CONSOLIDATION + 5)]
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
             c._save_lessons(raw)
         assert "capping to" in caplog.text
         assert vs.write_lesson.call_count == H._MAX_LESSONS_PER_CONSOLIDATION
@@ -1060,7 +1060,7 @@ class TestSaveLessons:
         vs.write_lesson.side_effect = [True, False]
         store = MagicMock()
         c = _consolidator(vector_store=vs, lesson_store=store)
-        with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.history"):
             c._save_lessons(
                 [
                     {"rule": "one", "category": "style", "negative": "not that"},
@@ -1075,7 +1075,7 @@ class TestSaveLessons:
     def test_vector_store_zero_writes_logs_nothing(self, caplog) -> None:
         vs = MagicMock()
         vs.write_lesson.return_value = False
-        with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.history"):
             _consolidator(vector_store=vs)._save_lessons([{"rule": "r"}])
         assert "vector store" not in caplog.text
 
@@ -1085,7 +1085,7 @@ class TestSaveLessons:
     def test_lesson_store_fallback_saves_lessons(self, caplog) -> None:
         store = MagicMock()
         c = _consolidator(lesson_store=store)
-        with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.history"):
             c._save_lessons(
                 [
                     {"rule": "always X", "category": "workflow", "negative": "never Y"},
@@ -1102,7 +1102,7 @@ class TestSaveLessons:
         assert "Extracted 1 lesson(s) from chat" in caplog.text
 
     def test_lesson_store_defaults_category(self, tmp_path: Path) -> None:
-        from kiro_crew.learn import LessonStore
+        from aj_crew.learn import LessonStore
 
         store = LessonStore(base_dir=tmp_path)
         _consolidator(lesson_store=store)._save_lessons([{"rule": "r"}])
@@ -1129,7 +1129,7 @@ class TestDedupeJudge:
     async def test_returns_text_and_releases_session(self) -> None:
         sessions = _fake_sessions()
         c = _consolidator(sessions=sessions)
-        with patch("kiro_crew.history.stream_and_collect", AsyncMock(return_value="DUP")):
+        with patch("aj_crew.history.stream_and_collect", AsyncMock(return_value="DUP")):
             assert await c._dedupe_judge("prompt") == "DUP"
         sessions.release.assert_called_once_with(BACKGROUND_KEY)
         sessions.recycle_background.assert_awaited_once()
@@ -1138,7 +1138,7 @@ class TestDedupeJudge:
     async def test_empty_text_becomes_empty_string(self) -> None:
         sessions = _fake_sessions()
         c = _consolidator(sessions=sessions)
-        with patch("kiro_crew.history.stream_and_collect", AsyncMock(return_value=None)):
+        with patch("aj_crew.history.stream_and_collect", AsyncMock(return_value=None)):
             assert await c._dedupe_judge("prompt") == ""
 
     @pytest.mark.asyncio
@@ -1146,7 +1146,7 @@ class TestDedupeJudge:
         sessions = _fake_sessions()
         c = _consolidator(sessions=sessions)
         with patch(
-            "kiro_crew.history.stream_and_collect",
+            "aj_crew.history.stream_and_collect",
             AsyncMock(side_effect=RuntimeError("provider down")),
         ):
             assert await c._dedupe_judge("prompt") == ""
@@ -1157,7 +1157,7 @@ class TestDedupeJudge:
         sessions = _fake_sessions()
         sessions.release.side_effect = RuntimeError("already released")
         c = _consolidator(sessions=sessions)
-        with patch("kiro_crew.history.stream_and_collect", AsyncMock(return_value="NEW")):
+        with patch("aj_crew.history.stream_and_collect", AsyncMock(return_value="NEW")):
             assert await c._dedupe_judge("prompt") == "NEW"
 
 
@@ -1171,7 +1171,7 @@ class TestMergeSkillUpdate:
         sessions = _fake_sessions()
         c = _consolidator(sessions=sessions)
         collector = AsyncMock(return_value="## When to use\nmerged\n")
-        with patch("kiro_crew.history.stream_and_collect", collector):
+        with patch("aj_crew.history.stream_and_collect", collector):
             out = await c._merge_skill_update(
                 "EXISTING BODY", "the description", "trig1, trig2", "1. do it"
             )
@@ -1186,7 +1186,7 @@ class TestMergeSkillUpdate:
     async def test_empty_text_returns_none(self) -> None:
         sessions = _fake_sessions()
         c = _consolidator(sessions=sessions)
-        with patch("kiro_crew.history.stream_and_collect", AsyncMock(return_value="")):
+        with patch("aj_crew.history.stream_and_collect", AsyncMock(return_value="")):
             assert await c._merge_skill_update("b", "d", "t", "p") is None
 
     @pytest.mark.asyncio
@@ -1194,7 +1194,7 @@ class TestMergeSkillUpdate:
         sessions = _fake_sessions()
         c = _consolidator(sessions=sessions)
         with patch(
-            "kiro_crew.history.stream_and_collect",
+            "aj_crew.history.stream_and_collect",
             AsyncMock(side_effect=RuntimeError("provider down")),
         ):
             assert await c._merge_skill_update("b", "d", "t", "p") is None
@@ -1205,7 +1205,7 @@ class TestMergeSkillUpdate:
         sessions = _fake_sessions()
         sessions.recycle_background.side_effect = RuntimeError("boom")
         c = _consolidator(sessions=sessions)
-        with patch("kiro_crew.history.stream_and_collect", AsyncMock(return_value="x")):
+        with patch("aj_crew.history.stream_and_collect", AsyncMock(return_value="x")):
             assert await c._merge_skill_update("b", "d", "t", "p") == "x"
 
 
@@ -1243,12 +1243,12 @@ class TestRewriteSession:
         log = _log(tmp_path)
         log.append("k", "user", "a")
         log.append("k", "user", "b")
-        log.update_metadata("k", {"title": "mine", "agent": "kirocrew"})
+        log.update_metadata("k", {"title": "mine", "agent": "ajcrew"})
         keep = log._read_messages("k")[:1]
         log.rewrite_session("k", keep)
         meta = _log(tmp_path).get_metadata("k")
         assert meta["title"] == "mine"
-        assert meta["agent"] == "kirocrew"
+        assert meta["agent"] == "ajcrew"
         assert meta["compacted_at"]
 
     def test_rewrite_preserves_mtime(self, tmp_path: Path) -> None:
@@ -1366,9 +1366,9 @@ class TestUpdateMetadataLocked:
 
     def test_upsert_creates_metadata_line(self, tmp_path: Path) -> None:
         log = _log(tmp_path)
-        log.update_metadata("fresh", {"agent": "kirocrew"})
+        log.update_metadata("fresh", {"agent": "ajcrew"})
         meta = _log(tmp_path).get_metadata("fresh")
-        assert meta["agent"] == "kirocrew"
+        assert meta["agent"] == "ajcrew"
         assert meta["last_consolidated"] == 0
 
     def test_replace_failure_cleans_up_the_temp_file(self, tmp_path: Path) -> None:
@@ -1463,7 +1463,7 @@ class TestUpdateMetadataLocked:
         import inspect
         import textwrap
 
-        from kiro_crew.history_projection import SessionMetadataProjection
+        from aj_crew.history_projection import SessionMetadataProjection
 
         source = textwrap.dedent(inspect.getsource(SessionMetadataProjection.update_metadata_if))
         function = ast.parse(source).body[0]
@@ -1512,7 +1512,7 @@ class TestDeleteSession:
         log = _log(tmp_path)
         log.append("k", "user", "hi")
         with patch.object(log, "_locked", side_effect=H.HistoryLockTimeout("wedged")):
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.history"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.history"):
                 assert log.delete_session("k") is False
         assert "lock timeout, not deleting" in caplog.text
         assert log._path("k").exists()

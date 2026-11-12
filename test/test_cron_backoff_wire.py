@@ -15,11 +15,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.cron_service.model import _NEVER_PAUSE_BACKOFF_BASE_SECS
-from kiro_crew.dashboard.handlers import cron_board
-from kiro_crew.dashboard.handlers.cron import api_crons
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.cron_service.model import _NEVER_PAUSE_BACKOFF_BASE_SECS
+from aj_crew.dashboard.handlers import cron_board
+from aj_crew.dashboard.handlers.cron import api_crons
+from aj_crew.testing.clock import ManualClock
 
 # A fixed stamp: the backoff counts from `last_run_ts`, so the expected epoch is
 # exact with no clock read.

@@ -111,7 +111,7 @@ function renderSidebar() {
           <MemoryRouter>
             <ChatSidebar
               slots={[]} activeSlot={null} unreadSlots={[]}
-              history={[]} historyHasMore={false} defaultAgent="kirocrew" installedAgents={[]}
+              history={[]} historyHasMore={false} defaultAgent="ajcrew" installedAgents={[]}
             />
           </MemoryRouter>
         </ThemeProvider>

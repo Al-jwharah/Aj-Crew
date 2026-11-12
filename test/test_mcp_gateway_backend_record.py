@@ -22,10 +22,10 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import platform_compat, process_identity
-from kiro_crew.mcp_gateway import backend_record
-from kiro_crew.testing.ids import unallocatable_pids
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew import platform_compat, process_identity
+from aj_crew.mcp_gateway import backend_record
+from aj_crew.testing.ids import unallocatable_pids
+from aj_crew.testing.wait import async_wait_until, finished
 
 posix_only = pytest.mark.skipif(sys.platform == "win32", reason="process groups are POSIX")
 
@@ -133,7 +133,7 @@ def test_parse_reads_new_and_legacy_lines_and_drops_junk() -> None:
 
 
 def test_runtime_reconcile_reads_only_pids_from_the_new_format(tmp_path: Path, monkeypatch) -> None:
-    from kiro_crew import runtime_reconcile as rr
+    from aj_crew import runtime_reconcile as rr
 
     sock = tmp_path / "gateway.sock"
     backend_record.record_path(sock).write_text("111 9001\n222 9002\n", encoding="utf-8")
@@ -320,7 +320,7 @@ async def test_group_gone_polls_past_the_eperm_macos_gives_a_zombie_only_group()
 async def test_supervisor_reap_goes_through_the_identity_check(tmp_path: Path) -> None:
     from unittest.mock import MagicMock
 
-    from kiro_crew.mcp_gateway import manager as mgr
+    from aj_crew.mcp_gateway import manager as mgr
 
     sock = tmp_path / "gateway.sock"
     backend_record.record_path(sock).write_text("111 old\n", encoding="utf-8")
@@ -352,12 +352,12 @@ async def test_a_new_daemon_reaps_the_record_a_crashed_one_left(
     anything, a replacement daemon simply starts on the same socket. It must
     reap the previous generation's backends before its first heartbeat
     overwrites the record that names them."""
-    from kiro_crew.mcp_gateway import gatewayd as gw
-    from kiro_crew.mcp_gateway import transport
+    from aj_crew.mcp_gateway import gatewayd as gw
+    from aj_crew.mcp_gateway import transport
 
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     sock = short_sock_dir / "gw.sock"
     async with _spawned() as spawned:
         orphan = await _session_leader_with_child(spawned)
@@ -367,7 +367,7 @@ async def test_a_new_daemon_reaps_the_record_a_crashed_one_left(
             sys.executable,
             "-c",
             "import sys, asyncio\n"
-            "from kiro_crew.mcp_gateway import gatewayd as g\n"
+            "from aj_crew.mcp_gateway import gatewayd as g\n"
             "sys.exit(asyncio.run(g._amain(sys.argv[1:])))",
             "--socket",
             str(sock),
@@ -401,8 +401,8 @@ async def test_a_new_daemon_reaps_the_record_a_crashed_one_left(
 async def test_a_daemon_that_loses_the_lock_leaves_the_record_alone(short_sock_dir: Path) -> None:
     """The record belongs to whichever daemon holds the lock. A loser that
     reaped it would kill the backends of a daemon that is serving."""
-    from kiro_crew.mcp_gateway import gatewayd as gw
-    from kiro_crew.mcp_gateway import transport
+    from aj_crew.mcp_gateway import gatewayd as gw
+    from aj_crew.mcp_gateway import transport
 
     sock = short_sock_dir / "gw.sock"
     await asyncio.to_thread(transport.prepare_dir, sock)
@@ -474,10 +474,10 @@ async def test_a_daemon_that_cannot_move_the_record_aside_refuses_to_start(
     """Serving over a record still at its path would overwrite it on the first
     heartbeat, or unlink it on a clean shutdown. The daemon must not bind, must
     leave the record as it was, and must release the lock for a retry."""
-    from kiro_crew.mcp_gateway import gatewayd as gw
-    from kiro_crew.mcp_gateway import transport
+    from aj_crew.mcp_gateway import gatewayd as gw
+    from aj_crew.mcp_gateway import transport
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     sock = short_sock_dir / "gw.sock"
     await asyncio.to_thread(transport.prepare_dir, sock)
     record = backend_record.record_path(sock)
@@ -509,10 +509,10 @@ async def test_a_slow_boot_reap_does_not_delay_the_bind(
     """The manager gives a fresh daemon a few seconds to bind. A reap that is
     slow (one taskkill per entry on Windows) must not spend that budget, and a
     reap interrupted by shutdown must leave its list for the next boot."""
-    from kiro_crew.mcp_gateway import gatewayd as gw
-    from kiro_crew.mcp_gateway import transport
+    from aj_crew.mcp_gateway import gatewayd as gw
+    from aj_crew.mcp_gateway import transport
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     sock = short_sock_dir / "gw.sock"
     await asyncio.to_thread(transport.prepare_dir, sock)
     backend_record.record_path(sock).write_text(f"{os.getpid()} s\n", encoding="utf-8")
@@ -574,7 +574,7 @@ def test_pool_publishes_each_backends_spawn_identity_across_all_three_sets() -> 
     daemon, so all three reach the record, each with its own spawn identity."""
     from types import SimpleNamespace
 
-    from kiro_crew.mcp_gateway.pool import BackendPool
+    from aj_crew.mcp_gateway.pool import BackendPool
 
     pool = BackendPool(max_backends=4)
     p1, p2, p3 = unallocatable_pids(3)

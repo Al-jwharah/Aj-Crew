@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.webex.transport (WebexTransport, Layer 1)."""
+"""Tests for aj_crew.webex.transport (WebexTransport, Layer 1)."""
 
 from __future__ import annotations
 
@@ -6,10 +6,10 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.webex.cards import MAX_CARD_ACTIONS
-from kiro_crew.webex.client import WebexInbound
-from kiro_crew.webex.transport import WEBEX_CAPABILITIES, WEBEX_SAFE_MESSAGE_CHARS, WebexTransport
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.webex.cards import MAX_CARD_ACTIONS
+from aj_crew.webex.client import WebexInbound
+from aj_crew.webex.transport import WEBEX_CAPABILITIES, WEBEX_SAFE_MESSAGE_CHARS, WebexTransport
 
 
 class FakeClient:
@@ -64,18 +64,18 @@ class TestAuthorize:
 
     def test_unknown_denied(self) -> None:
         t = WebexTransport(FakeClient(), allowed_emails=["kyle@example.com"])
-        with patch("kiro_crew.webex.transport.sel") as mock_sel:
+        with patch("aj_crew.webex.transport.sel") as mock_sel:
             assert t.authorize(_msg("stranger@example.com")) is False
         mock_sel().log_api_access.assert_called_once()
 
     def test_empty_email_denied(self) -> None:
         t = WebexTransport(FakeClient(), allowed_emails=["kyle@example.com"])
-        with patch("kiro_crew.webex.transport.sel"):
+        with patch("aj_crew.webex.transport.sel"):
             assert t.authorize(_msg("")) is False
 
     def test_empty_allowlist_denies_everyone(self) -> None:
         t = WebexTransport(FakeClient())  # fail closed
-        with patch("kiro_crew.webex.transport.sel"):
+        with patch("aj_crew.webex.transport.sel"):
             assert t.authorize(_msg("anyone@example.com")) is False
 
 
@@ -101,7 +101,7 @@ class TestReceive:
             dispatched.append(inbound)
 
         t = WebexTransport(FakeClient(), allowed_emails=["kyle@example.com"], dispatch=dispatch)
-        with patch("kiro_crew.webex.transport.sel"):
+        with patch("aj_crew.webex.transport.sel"):
             await t.receive(_inbound("stranger@example.com", "hello"))
         assert dispatched == []
 
@@ -114,7 +114,7 @@ class TestReceive:
             dispatched.append(inbound)
 
         t = WebexTransport(FakeClient(), allowed_emails=["kyle@example.com"], dispatch=dispatch)
-        with patch("kiro_crew.webex.transport.sel") as mock_sel:
+        with patch("aj_crew.webex.transport.sel") as mock_sel:
             await t.receive(_inbound("kyle@example.com", "hello", room_type="group"))
         assert dispatched == []
         mock_sel().log_api_access.assert_called_once()
@@ -176,13 +176,13 @@ class TestRoomGate:
 
     @staticmethod
     def _transport(**kw):
-        from kiro_crew.webex.transport import WebexTransport
+        from aj_crew.webex.transport import WebexTransport
 
         return WebexTransport(_FakeClient(), allowed_emails=["kyle@example.com"], **kw)
 
     @staticmethod
     def _inbound(room_type: str, room_id: str = "ROOM"):
-        from kiro_crew.webex.client import WebexInbound
+        from aj_crew.webex.client import WebexInbound
 
         return WebexInbound(
             person_email="kyle@example.com", room_id=room_id, text="hi", room_type=room_type
@@ -221,7 +221,7 @@ class TestRoomGate:
 class TestConfiguredTargets:
     @staticmethod
     def _transport(**kw):
-        from kiro_crew.webex.transport import WebexTransport
+        from aj_crew.webex.transport import WebexTransport
 
         return WebexTransport(_FakeClient(), allowed_emails=["kyle@example.com"], **kw)
 
@@ -269,7 +269,7 @@ class TestThreading:
         Declaring the capability while dropping the argument is exactly the drift
         the capability ledger exists to catch.
         """
-        from kiro_crew.webex.transport import WebexTransport
+        from aj_crew.webex.transport import WebexTransport
 
         client = _FakeClient()
         t = WebexTransport(client, allowed_emails=["kyle@example.com"])

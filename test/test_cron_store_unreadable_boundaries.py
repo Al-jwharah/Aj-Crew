@@ -28,8 +28,8 @@ from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 from source_corpus import candidate_sources, src_root
 
-from kiro_crew.cron import CronService, CronStoreBusy, CronStoreUnreadable
-from kiro_crew.messaging.commands import cron_remove_all_reply
+from aj_crew.cron import CronService, CronStoreBusy, CronStoreUnreadable
+from aj_crew.messaging.commands import cron_remove_all_reply
 
 # One xdist worker for the whole module: the two ratchets at the bottom derive from
 # ONE module-cached scan of src/. Under `--dist loadgroup` an unmarked module is spread
@@ -58,7 +58,7 @@ def _svc_with_unreadable_store(tmp_path: Path) -> CronService:
 
 def _dashboard_client(svc: CronService) -> TestClient:
     """Minimal app exposing POST /api/crons backed by *svc*."""
-    from kiro_crew.dashboard.handlers.cron import api_crons_create
+    from aj_crew.dashboard.handlers.cron import api_crons_create
 
     app = web.Application()
     app["state"] = SimpleNamespace(crons=svc, push_refresh=lambda _k: None)
@@ -97,13 +97,11 @@ async def test_dashboard_create_translates_unreadable_store(tmp_path: Path) -> N
 async def test_dashboard_create_refuses_unavailable_member_without_mutation(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, schedule: dict, member: str
 ) -> None:
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
-    config = KiroCrewConfig()
-    config.agents["broken"] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew", memory_store="missing-store"
-    )
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: config))
+    config = AjCrewConfig()
+    config.agents["broken"] = AjCrewAgentConfig(kiro_agent="ajcrew", memory_store="missing-store")
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: config))
     svc = await CronService.create(base_dir=tmp_path)
     keep = await svc.add_job_async("keep", "existing task", every_secs=300)
     before = (tmp_path / "crons.json").read_bytes()
@@ -134,13 +132,13 @@ async def test_dashboard_create_refuses_unavailable_member_without_mutation(
 async def test_dashboard_create_keeps_valid_member_binding(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, schedule: dict
 ) -> None:
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-    from kiro_crew.memory_stores import provision_member_memory
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+    from aj_crew.memory_stores import provision_member_memory
 
-    config = KiroCrewConfig()
-    config.agents["writer"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+    config = AjCrewConfig()
+    config.agents["writer"] = AjCrewAgentConfig(kiro_agent="ajcrew")
     store = provision_member_memory(config, "writer")
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: config))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: config))
     svc = await CronService.create(base_dir=tmp_path)
     refresh = Mock()
     async with _dashboard_client(svc) as client:
@@ -172,7 +170,7 @@ def test_cli_cron_add_translates_unreadable_store(
     """
     import argparse
 
-    import kiro_crew.cli_commands as cc
+    import aj_crew.cli_commands as cc
 
     (tmp_path / "crons.json").write_bytes(_UNREADABLE)
     monkeypatch.setattr(cc, "config_dir", lambda: tmp_path)
@@ -211,11 +209,11 @@ def test_mcp_cron_add_translates_unreadable_store(
     caller BEFORE it reaches the store -- without it this test would pass on the
     authz message and never exercise the write at all.
     """
-    import kiro_crew.mcp_cron as mc
+    import aj_crew.mcp_cron as mc
 
     (tmp_path / "crons.json").write_bytes(_UNREADABLE)
-    monkeypatch.setattr("kiro_crew.mcp_cron.config_dir", lambda: tmp_path)
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:unreadable-probe")
+    monkeypatch.setattr("aj_crew.mcp_cron.config_dir", lambda: tmp_path)
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:unreadable-probe")
 
     out = mc._call_tool_inner("cron_add", {"name": "n", "message": "m", "every": 300})
 
@@ -568,7 +566,7 @@ async def test_app_deregister_propagates_unreadable_rather_than_reporting_zero(
     `deregister_app_crons_from_service` needs its own arm or the generic handler
     returns 0.
     """
-    from kiro_crew.apps.bridges import deregister_app_crons_from_service
+    from aj_crew.apps.bridges import deregister_app_crons_from_service
 
     svc = _svc_with_unreadable_app_owned_store(tmp_path)
     with pytest.raises(CronStoreUnreadable) as exc:
@@ -584,7 +582,7 @@ async def test_absent_store_still_tears_down_cleanly(tmp_path: Path) -> None:
     real regression. `_load` returns at its `exists()` check WITHOUT setting
     `_load_failed`, which is what keeps the two cases distinguishable.
     """
-    from kiro_crew.apps.bridges import deregister_app_crons_from_service
+    from aj_crew.apps.bridges import deregister_app_crons_from_service
 
     assert not (tmp_path / "crons.json").exists()
     svc = CronService(base_dir=tmp_path)
@@ -596,7 +594,7 @@ async def test_absent_store_still_tears_down_cleanly(tmp_path: Path) -> None:
 @pytest.mark.asyncio
 async def test_honestly_empty_store_still_tears_down_cleanly(tmp_path: Path) -> None:
     """NC, second half: an EMPTY job list is not an unreadable one."""
-    from kiro_crew.apps.bridges import deregister_app_crons_from_service
+    from aj_crew.apps.bridges import deregister_app_crons_from_service
 
     (tmp_path / "crons.json").write_text(json.dumps({"version": 2, "jobs": []}), encoding="utf-8")
     svc = CronService(base_dir=tmp_path)
@@ -631,7 +629,7 @@ async def test_disable_reports_unreadable_cleanup_instead_of_crashing(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The disable hook must record a 'failed' cleanup note, not propagate."""
-    from kiro_crew.apps import hooks_integration as hi
+    from aj_crew.apps import hooks_integration as hi
 
     svc = _svc_with_unreadable_app_owned_store(tmp_path)
     monkeypatch.setattr(hi, "_lifecycle_dispatcher", _dispatcher_stub(svc))
@@ -649,7 +647,7 @@ async def test_disable_over_a_healthy_store_still_reports_no_failure(
 
     Guards against buying the lane by turning every store read into a refusal.
     """
-    from kiro_crew.apps import hooks_integration as hi
+    from aj_crew.apps import hooks_integration as hi
 
     (tmp_path / "crons.json").write_text(json.dumps({"version": 2, "jobs": []}), encoding="utf-8")
     svc = CronService(base_dir=tmp_path)
@@ -900,7 +898,7 @@ def test_a_corrupt_store_does_not_discard_a_queued_one_shot_removal(tmp_path: Pa
 _PROBE = "raise_if_store_unreadable"
 
 #: The one module the scan skips: the store service itself (see the scan below).
-_STORE_MODULE = "src/kiro_crew/cron.py"
+_STORE_MODULE = "src/aj_crew/cron.py"
 
 #: Public reads. A read never raises on an unreadable store -- that IS the hazard.
 _CRON_READS = frozenset(
@@ -942,29 +940,29 @@ _CRON_WRITES = frozenset(
 #: structural reason. An exemption is a visible, reviewable line on purpose --
 #: adding one should feel like a claim someone can check, because it is.
 _EXEMPT_READ_DECIDE_WRITE: dict[tuple[str, str], str] = {
-    ("src/kiro_crew/apps/bridges_crons.py", "register_app_crons_with_service"): (
+    ("src/aj_crew/apps/bridges_crons.py", "register_app_crons_with_service"): (
         "An empty read makes every definition look ABSENT, so the add is still "
         "attempted and refuses at the write. The degraded read biases TOWARD the "
         "write rather than around it, so the refusal cannot be skipped."
     ),
-    ("src/kiro_crew/onboarding_import.py", "_write_schedule"): (
+    ("src/aj_crew/onboarding_import.py", "_write_schedule"): (
         "Same shape: no matching job means it falls through to `add_job`, which "
         "refuses. Absence routes INTO the write, so the store cannot stay silent."
     ),
-    ("src/kiro_crew/dashboard/state_parts/sidebar_stores.py", "delete_cron_folder"): (
+    ("src/aj_crew/dashboard/state_parts/sidebar_stores.py", "delete_cron_folder"): (
         "The authoritative write is `save_cron_folders()` on a DIFFERENT store and "
         "happens BEFORE the read. The job loop that follows is documented "
         "best-effort cleanup whose per-job failure is benign (an unknown folder_id "
         "renders as ungrouped and self-heals), so the outcome this reports does not "
         "depend on the cron read at all."
     ),
-    ("src/kiro_crew/cli_commands_cron.py", "_cron_dispatch"): (
+    ("src/aj_crew/cli_commands_cron.py", "_cron_dispatch"): (
         "A verb dispatcher: the read and the writes are ALTERNATIVE branches of one "
         "request, never a read that decides a write. Its own dispatch-boundary "
         "wrapper already translates the refusal for every verb, including ones "
         "added later."
     ),
-    ("src/kiro_crew/mcp_cron.py", "_call_tool_inner"): (
+    ("src/aj_crew/mcp_cron.py", "_call_tool_inner"): (
         "The same verb-dispatcher shape as `_cron_dispatch` -- one branch per tool, "
         "so no branch reads and then decides a write."
     ),
@@ -1049,10 +1047,10 @@ def _read_decide_write_callers() -> tuple[tuple[str, str, int, bool], ...]:
             continue
         if "/tests/" in posix or path.name.startswith("test_"):
             continue
-        # Keyed as `src/kiro_crew/...` from the package root, not from the checkout,
+        # Keyed as `src/aj_crew/...` from the package root, not from the checkout,
         # so the exemption keys resolve identically for an editable and an installed
         # package layout.
-        rel = "src/kiro_crew/" + path.relative_to(root).as_posix()
+        rel = "src/aj_crew/" + path.relative_to(root).as_posix()
         # Only the store module itself is the service. Matched on the full package
         # path, not the bare name: a name match also hid the dashboard's own
         # `handlers/cron.py` and the grant handlers split out of it.

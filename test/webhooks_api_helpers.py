@@ -20,8 +20,8 @@ import pytest
 from aiohttp.test_utils import make_mocked_request
 from body_stream_helpers import BodyStreamPayload
 
-from kiro_crew import webhooks
-from kiro_crew.dashboard.handlers import hooks as H
+from aj_crew import webhooks
+from aj_crew.dashboard.handlers import hooks as H
 
 
 @pytest.fixture(name="wired")
@@ -31,9 +31,7 @@ def wired_fixture(tmp_path, monkeypatch):
     monkeypatch.setattr(H, "_HOOK_STORE_PATH", Path(tmp_path) / "hooks.json")
     monkeypatch.setattr(H, "_sel", lambda: MagicMock())
     monkeypatch.setattr(H, "_legacy_hook_token", lambda: "")
-    monkeypatch.setattr(
-        H, "_installed_agent_names", lambda: {"kirocrew", "code-reviewer", "oncall"}
-    )
+    monkeypatch.setattr(H, "_installed_agent_names", lambda: {"ajcrew", "code-reviewer", "oncall"})
     # The failed-auth throttle, the replay seen-set and the in-flight session
     # registry are all process-global, so leaking them between tests would make a
     # later 401 come back as a 429, or a fresh call come back as a 409.

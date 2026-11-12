@@ -46,12 +46,12 @@ const iso = s => new Date(s * 1000).toISOString()
 const SLOTS = [
   {
     key: 'chat-a', title: 'Crew 面板开场动画排查', running: true, messages: 4,
-    agent: 'kirocrew', modified: now, last_ts: iso(now), folder_id: '',
+    agent: 'ajcrew', modified: now, last_ts: iso(now), folder_id: '',
     last_message: 'Reading ui/dialog.tsx.',
   },
   {
     key: 'chat-b', title: 'App Store 内建行改为来自 catalog', running: false, messages: 12,
-    agent: 'kirocrew', modified: now - 420, last_ts: iso(now - 420), folder_id: '',
+    agent: 'ajcrew', modified: now - 420, last_ts: iso(now - 420), folder_id: '',
     last_message: '57 checks green.',
   },
   {

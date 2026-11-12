@@ -19,13 +19,13 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.platform import governance
-from kiro_crew.platform import governance_health as health
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform import policy_distribution as pd
+from aj_crew.platform import governance
+from aj_crew.platform import governance_health as health
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform import policy_distribution as pd
 
 #: The import the boot tier must NOT perform on a host that configures no source.
-_ENGINE_MODULE = "kiro_crew.platform.policy_distribution"
+_ENGINE_MODULE = "aj_crew.platform.policy_distribution"
 
 #: A scheme no built-in handles, so a fake fetcher registered for it cannot be
 #: confused with (or shadowed by) the real https/http/file transports.
@@ -179,8 +179,8 @@ def _hermetic_governance_globals(_floor_monkeypatch):
     which leaves the first test in a worker exposed to whatever ran before pytest
     installed that guard.
     """
-    _floor_monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
-    _floor_monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+    _floor_monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
+    _floor_monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
     # Every per-process latch and memo the ladder keeps (last bundled document, the
     # absence audit, the env-inversion warning, the intersect pairs) is reset as one
     # unit so a test states its own tiers and reads its own audit rows.
@@ -251,11 +251,11 @@ def install_ceiling_fixture():
     """
     from dataclasses import replace
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.platform import context as context_mod
-    from kiro_crew.platform.bootstrap import build_default_context
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.platform import context as context_mod
+    from aj_crew.platform.bootstrap import build_default_context
 
-    base = build_default_context(KiroCrewConfig.load())
+    base = build_default_context(AjCrewConfig.load())
 
     def install(ceiling):
         context_mod.set_context(replace(base, governance=ceiling))

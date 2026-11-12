@@ -20,7 +20,7 @@ _INFINITE_ORDER = b'{"name": "Renamed", "order": 1e400}'
 
 @pytest.mark.asyncio
 async def test_an_update_with_an_infinite_order_is_refused(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     app = _make_tags_app(state)
     async with TestClient(TestServer(app)) as client:
@@ -41,7 +41,7 @@ async def test_an_update_with_an_infinite_order_is_refused(tmp_path, monkeypatch
 
 @pytest.mark.asyncio
 async def test_a_word_order_is_still_ignored(tmp_path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     app = _make_tags_app(state)
     async with TestClient(TestServer(app)) as client:

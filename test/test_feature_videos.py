@@ -1,4 +1,4 @@
-"""Unit tests for kiro_crew.feature_videos — the deterministic feature-intro catalog."""
+"""Unit tests for aj_crew.feature_videos — the deterministic feature-intro catalog."""
 
 from __future__ import annotations
 
@@ -15,9 +15,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from body_stream_helpers import attach_body
 
-from kiro_crew import feature_videos as fv
-from kiro_crew import feature_videos_cache as cache_mod
-from kiro_crew.agent_files import ASSISTANT_MEMBER_NAME
+from aj_crew import feature_videos as fv
+from aj_crew import feature_videos_cache as cache_mod
+from aj_crew.agent_files import ASSISTANT_MEMBER_NAME
 
 
 def _request(method: str, path: str, *, session_key: str = "dashboard:ui") -> MagicMock:
@@ -137,11 +137,11 @@ class TestShippedCatalog:
 
     def test_the_intro_clip_is_not_bundled(self) -> None:
         """The intro ships through the signed CDN manifest like every other clip."""
-        assert "kiro-crew-intro" not in {e.id for e in fv.CATALOG}
+        assert "aj-crew-intro" not in {e.id for e in fv.CATALOG}
         repo = Path(__file__).resolve().parent.parent
         bundled = repo / "website" / "public" / "app-assets" / "feature-videos"
-        assert not (bundled / "kiro-crew-intro.mp4").exists()
-        assert not (bundled / "kiro-crew-intro.jpg").exists()
+        assert not (bundled / "aj-crew-intro.mp4").exists()
+        assert not (bundled / "aj-crew-intro.jpg").exists()
 
     def test_a_clip_still_needs_its_media(self) -> None:
         with patch.object(fv, "CATALOG", (_entry("clip", src=""),)):
@@ -171,7 +171,7 @@ class TestShippedCatalog:
         assert not fv._CTA_ROUTE_RE.fullmatch(route)
 
     def test_docs_are_in_the_tips_allowlist(self) -> None:
-        from kiro_crew.tips_allowlist import TIP_DOC_ALLOWLIST
+        from aj_crew.tips_allowlist import TIP_DOC_ALLOWLIST
 
         for entry in fv.CATALOG:
             assert entry.doc in TIP_DOC_ALLOWLIST
@@ -218,7 +218,7 @@ class TestShippedCatalog:
         catalog entry has no payload builder of its own precisely so the hosted
         and bundled shapes cannot drift.
         """
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             picked = _first()
         assert picked is not None
         payload = picked.payload()
@@ -261,7 +261,7 @@ class TestAssetExistenceGate:
         # The frontend cannot catch this: the Explore card fetches nothing before
         # the user presses Watch, and it shows on the JSON alone. An unshipped
         # entry must not reach it.
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with patch.object(fv, "CATALOG", (_entry("unshipped"),)):
                 assert fv.offerable() == ()
                 assert _first() is None
@@ -273,7 +273,7 @@ class TestAssetExistenceGate:
 
     def test_shipped_entry_is_offered(self, asset_root: Path, tmp_path: Path) -> None:
         self._ship(asset_root, "ready")
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with patch.object(fv, "CATALOG", (_entry("ready"),)):
                 picked = _first()
         assert picked is not None and picked.id == "ready"
@@ -282,7 +282,7 @@ class TestAssetExistenceGate:
         self, asset_root: Path, tmp_path: Path
     ) -> None:
         self._ship(asset_root, "second")
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with patch.object(fv, "CATALOG", (_entry("first"), _entry("second"))):
                 picked = _first()
         assert picked is not None and picked.id == "second"
@@ -291,7 +291,7 @@ class TestAssetExistenceGate:
         self, asset_root: Path, tmp_path: Path
     ) -> None:
         # The whole point: nothing is written, so the entry comes back by itself.
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with patch.object(fv, "CATALOG", (_entry("late"),)):
                 assert _first() is None
                 self._ship(asset_root, "late")
@@ -324,7 +324,7 @@ class TestProbes:
     ) -> None:
         cfg = MagicMock()
         cfg.agents = agents
-        with patch.object(fv.KiroCrewConfig, "load", return_value=cfg):
+        with patch.object(fv.AjCrewConfig, "load", return_value=cfg):
             assert fv.probe_fires("mate_missing") is fires
 
     def test_unknown_signal_does_not_fire(self) -> None:
@@ -341,7 +341,7 @@ class TestProbes:
             assert fv.probe_fires("boom") is False
 
     def test_tips_feedback_probe_reads_tips_state(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             state_file = fv.config_dir() / "tips_state.json"
             state_file.parent.mkdir(parents=True, exist_ok=True)
             assert fv.probe_fires("tips_feedback_exists") is False
@@ -354,7 +354,7 @@ class TestProbes:
 
     def test_tips_feedback_probe_fires_on_opt_out(self, tmp_path: Path) -> None:
         """Opting out is the strongest reaction, and the only one writing no collection."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             state_file = fv.config_dir() / "tips_state.json"
             state_file.parent.mkdir(parents=True, exist_ok=True)
             # Exactly what tips writes on optout from a fresh install: every
@@ -382,7 +382,7 @@ class TestProbes:
         # ever called monitor_start withdraws both entries and the assertion
         # reads as a failure of the opt-out path it is not testing.
         control = _entry("control")
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             state_file = fv.config_dir() / "tips_state.json"
             state_file.parent.mkdir(parents=True, exist_ok=True)
             state_file.write_text(json.dumps({"opted_out": True}), encoding="utf-8")
@@ -391,28 +391,28 @@ class TestProbes:
         assert picked is not None and picked.id == "control"
 
     def test_opted_out_false_does_not_fire(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             state_file = fv.config_dir() / "tips_state.json"
             state_file.parent.mkdir(parents=True, exist_ok=True)
             state_file.write_text(json.dumps({"opted_out": False}), encoding="utf-8")
             assert fv.probe_fires("tips_feedback_exists") is False
 
     def test_tips_feedback_probe_fires_on_last_shown_ts(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             state_file = fv.config_dir() / "tips_state.json"
             state_file.parent.mkdir(parents=True, exist_ok=True)
             state_file.write_text(json.dumps({"last_shown_ts": 1.0}), encoding="utf-8")
             assert fv.probe_fires("tips_feedback_exists") is True
 
     def test_tips_feedback_probe_tolerates_a_corrupt_file(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             state_file = fv.config_dir() / "tips_state.json"
             state_file.parent.mkdir(parents=True, exist_ok=True)
             state_file.write_text("{not json", encoding="utf-8")
             assert fv.probe_fires("tips_feedback_exists") is False
 
     def test_artifacts_probe_fires_only_on_a_real_artifact(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             root = fv.config_dir() / "artifacts"
             root.mkdir(parents=True, exist_ok=True)
             assert fv.probe_fires("artifacts_nonempty") is False
@@ -428,7 +428,7 @@ class TestProbes:
             assert fv.probe_fires("artifacts_nonempty") is True
 
     def test_config_key_probe_reads_the_file_not_the_default(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             cfg_file = fv.config_path()
             cfg_file.parent.mkdir(parents=True, exist_ok=True)
             cfg_file.write_text(json.dumps({"dashboard": {}}), encoding="utf-8")
@@ -442,7 +442,7 @@ class TestProbes:
             assert fv.probe_fires("config_key_set:dashboard.tips_enabled") is True
 
     def test_config_key_probe_also_reads_the_local_overlay(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             overlay = fv.config_local_path()
             overlay.parent.mkdir(parents=True, exist_ok=True)
             overlay.write_text(json.dumps({"agent": {"acp_backend": "kiro"}}), encoding="utf-8")
@@ -475,11 +475,11 @@ class TestProbes:
 
 class TestState:
     def test_missing_file_loads_empty(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             assert fv.load_state().videos == {}
 
     def test_round_trip(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             st = fv.FeatureVideoState(videos={"feature-tips": {"status": "seen", "ts": 12.5}})
             fv.save_state(st)
             assert fv.load_state().status_of("feature-tips") == "seen"
@@ -487,7 +487,7 @@ class TestState:
     def test_state_file_is_owner_only(self, tmp_path: Path) -> None:
         if sys.platform.startswith("win"):
             pytest.skip("POSIX mode bits are a no-op on Windows")
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             fv.save_state(fv.FeatureVideoState(videos={"feature-tips": {"status": "seen"}}))
             mode = stat.S_IMODE(fv._state_path().stat().st_mode)
         assert mode == 0o600, f"expected 0600, got {mode:o}"
@@ -505,14 +505,14 @@ class TestState:
         ],
     )
     def test_malformed_state_degrades_to_empty(self, tmp_path: Path, raw: str) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             path = fv._state_path()
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(raw, encoding="utf-8")
             assert fv.load_state().videos == {}
 
     def test_non_numeric_ts_is_zeroed_not_dropped(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             path = fv._state_path()
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(
@@ -525,7 +525,7 @@ class TestState:
 
     def test_an_unfloatable_ts_does_not_crash_the_loader(self, tmp_path: Path) -> None:
         """A several-hundred-digit int raises OverflowError, not ValueError."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             path = fv._state_path()
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(
@@ -538,7 +538,7 @@ class TestState:
 
     def test_concurrent_records_keep_both_rows(self, tmp_path: Path) -> None:
         """Load-mutate-save is one transaction, so neither writer drops the other."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             fv._state_path().parent.mkdir(parents=True, exist_ok=True)
             barrier = threading.Barrier(2)
 
@@ -560,7 +560,7 @@ class TestState:
 
     def test_deeply_nested_state_does_not_crash_the_loader(self, tmp_path: Path) -> None:
         """json.loads raises RecursionError, which is neither OSError nor ValueError."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             path = fv._state_path()
             path.parent.mkdir(parents=True, exist_ok=True)
             depth = sys.getrecursionlimit() * 3
@@ -568,7 +568,7 @@ class TestState:
             assert fv.load_state().videos == {}
 
     def test_deeply_nested_tips_state_does_not_crash_the_probe(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             tips_state = fv.config_dir() / "tips_state.json"
             tips_state.parent.mkdir(parents=True, exist_ok=True)
             depth = sys.getrecursionlimit() * 3
@@ -576,7 +576,7 @@ class TestState:
             assert fv.probe_fires("tips_feedback_exists") is False
 
     def test_deeply_nested_config_does_not_crash_the_probe(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             cfg_file = fv.config_path()
             cfg_file.parent.mkdir(parents=True, exist_ok=True)
             depth = sys.getrecursionlimit() * 3
@@ -584,7 +584,7 @@ class TestState:
             assert fv.probe_fires("config_key_set:dashboard.tips_enabled") is False
 
     def test_state_lives_beside_tips_state(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             assert fv._state_path().name == "feature_videos_state.json"
             assert fv._state_path().parent == fv.config_dir()
 
@@ -613,13 +613,13 @@ class TestVersionGate:
 class TestEligibleOffers:
     def test_lists_every_eligible_entry(self, tmp_path: Path) -> None:
         """The whole eligible set goes to the card, which draws one at random."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with patch.object(fv, "CATALOG", (_entry("first"), _entry("second"))):
                 ids = [o.id for o in fv.eligible_offers("9.9.9")]
         assert ids == ["first", "second"]
 
     def test_skips_seen_and_dismissed(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             fv.save_state(
                 fv.FeatureVideoState(
                     videos={
@@ -633,7 +633,7 @@ class TestEligibleOffers:
         assert picked is not None and picked.id == "third"
 
     def test_skips_a_used_feature(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with (
                 patch.object(
                     fv,
@@ -646,7 +646,7 @@ class TestEligibleOffers:
         assert picked is not None and picked.id == "unused"
 
     def test_any_firing_signal_withdraws_the_entry(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with (
                 patch.object(
                     fv,
@@ -665,7 +665,7 @@ class TestEligibleOffers:
             calls.append("ran")
             return False
 
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             fv.save_state(fv.FeatureVideoState(videos={"first": {"status": "seen", "ts": 1.0}}))
             with (
                 patch.object(fv, "CATALOG", (_entry("first", used_when=("p",)),)),
@@ -675,7 +675,7 @@ class TestEligibleOffers:
         assert calls == []
 
     def test_skips_a_version_gated_entry(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with patch.object(
                 fv, "CATALOG", (_entry("future", min_version="99.0.0"), _entry("now"))
             ):
@@ -683,7 +683,7 @@ class TestEligibleOffers:
         assert picked is not None and picked.id == "now"
 
     def test_returns_none_when_everything_is_exhausted(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             fv.save_state(fv.FeatureVideoState(videos={"only": {"status": "seen", "ts": 1.0}}))
             with patch.object(fv, "CATALOG", (_entry("only"),)):
                 assert _first() is None
@@ -692,9 +692,9 @@ class TestEligibleOffers:
 class TestLibraryRoute:
     def test_kill_switch_reports_disabled_and_no_video(self, tmp_path: Path) -> None:
         async def run() -> dict[str, object]:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 with (
-                    patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls,
+                    patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls,
                     patch.object(fv, "CATALOG", (_entry("first"),)),
                 ):
                     cfg_cls.load.return_value = _cfg(enabled=False)
@@ -709,9 +709,9 @@ class TestLibraryRoute:
 
     def test_serves_every_eligible_entry(self, tmp_path: Path) -> None:
         async def run() -> dict[str, object]:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 with (
-                    patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls,
+                    patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls,
                     patch.object(fv, "CATALOG", (_entry("first"), _entry("second"))),
                 ):
                     cfg_cls.load.return_value = _cfg()
@@ -727,9 +727,9 @@ class TestLibraryRoute:
 
     def test_restricted_session_gets_nothing_but_stays_enabled(self, tmp_path: Path) -> None:
         async def run() -> dict[str, object]:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 with (
-                    patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls,
+                    patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls,
                     patch.object(fv, "_is_restricted_session", return_value=True),
                     patch.object(fv, "CATALOG", (_entry("first"),)),
                 ):
@@ -743,12 +743,12 @@ class TestLibraryRoute:
 
     def test_empty_when_every_clip_is_finished(self, tmp_path: Path) -> None:
         async def run() -> dict[str, object]:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 fv.save_state(
                     fv.FeatureVideoState(videos={"only": {"status": "dismissed", "ts": 1.0}})
                 )
                 with (
-                    patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls,
+                    patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls,
                     patch.object(fv, "CATALOG", (_entry("only"),)),
                 ):
                     cfg_cls.load.return_value = _cfg()
@@ -764,11 +764,11 @@ class TestLibraryRoute:
 class TestStatusRoute:
     def test_reports_enabled_and_state(self, tmp_path: Path) -> None:
         async def run() -> dict[str, object]:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 fv.save_state(
                     fv.FeatureVideoState(videos={"feature-tips": {"status": "seen", "ts": 7.0}})
                 )
-                with patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls:
+                with patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls:
                     cfg_cls.load.return_value = _cfg()
                     resp = await fv.api_feature_videos_status(
                         _request("GET", "/api/feature-videos/status")
@@ -784,12 +784,12 @@ class TestStatusRoute:
         """The state map is engagement history, so a temporary session is served none."""
 
         async def run() -> dict[str, object]:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 fv.save_state(
                     fv.FeatureVideoState(videos={"feature-tips": {"status": "seen", "ts": 7.0}})
                 )
                 with (
-                    patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls,
+                    patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls,
                     patch.object(fv, "_blocks_reads_session", return_value=True),
                 ):
                     cfg_cls.load.return_value = _cfg()
@@ -811,12 +811,12 @@ class TestStatusRoute:
         """Incognito withholds WRITES; only a read-blocking session loses the map."""
 
         async def run() -> dict[str, object]:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 fv.save_state(
                     fv.FeatureVideoState(videos={"feature-tips": {"status": "seen", "ts": 7.0}})
                 )
                 with (
-                    patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls,
+                    patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls,
                     patch.object(fv, "_is_restricted_session", return_value=True),
                     patch.object(fv, "_blocks_reads_session", return_value=False),
                 ):
@@ -831,8 +831,8 @@ class TestStatusRoute:
 
     def test_reports_the_kill_switch(self, tmp_path: Path) -> None:
         async def run() -> dict[str, object]:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
-                with patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls:
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
+                with patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls:
                     cfg_cls.load.return_value = _cfg(enabled=False)
                     resp = await fv.api_feature_videos_status(
                         _request("GET", "/api/feature-videos/status")
@@ -854,7 +854,7 @@ class TestFeedbackRoute:
     @pytest.mark.parametrize("status", ["seen", "dismissed"])
     def test_records_both_statuses_permanently(self, tmp_path: Path, status: str) -> None:
         async def run() -> tuple[dict[str, object], str, object, float]:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 before = time.time()
                 resp = await fv.api_feature_videos_feedback(
                     _feedback_request({"id": "feature-tips", "status": status})
@@ -871,9 +871,9 @@ class TestFeedbackRoute:
 
     def test_recorded_video_is_not_offered_again(self, tmp_path: Path) -> None:
         async def run() -> object:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 with (
-                    patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls,
+                    patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls,
                     patch.object(fv, "CATALOG", (_entry("first"), _entry("second"))),
                 ):
                     cfg_cls.load.return_value = _cfg()
@@ -905,7 +905,7 @@ class TestFeedbackRoute:
             pytest.skip("POSIX mode bits are a no-op on Windows")
 
         async def run() -> int:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 await fv.api_feature_videos_feedback(
                     _feedback_request({"id": "monitor-loops", "status": "seen"})
                 )
@@ -932,7 +932,7 @@ class TestFeedbackRoute:
         self, tmp_path: Path, body: dict[str, object], code: str
     ) -> None:
         async def run() -> tuple[int, dict[str, object]]:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 resp = await fv.api_feature_videos_feedback(_feedback_request(body))
             return resp.status, json.loads(resp.body)  # type: ignore[arg-type]
 
@@ -944,7 +944,7 @@ class TestFeedbackRoute:
         """One code for every non-slug id: membership is tighter than a length bound."""
 
         async def run() -> tuple[dict[str, object], bool]:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 resp = await fv.api_feature_videos_feedback(
                     _feedback_request({"id": "y" * 5000, "status": "seen"})
                 )
@@ -957,7 +957,7 @@ class TestFeedbackRoute:
 
     def test_a_rejected_body_writes_no_state(self, tmp_path: Path) -> None:
         async def run() -> bool:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 await fv.api_feature_videos_feedback(
                     _feedback_request({"id": "no-such-video", "status": "seen"})
                 )
@@ -969,7 +969,7 @@ class TestFeedbackRoute:
         """The write side needs the same gate /library has — it is where the trace lands."""
 
         async def run() -> tuple[int, dict[str, object], bool]:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 with patch.object(fv, "_is_restricted_session", return_value=True):
                     resp = await fv.api_feature_videos_feedback(
                         _feedback_request({"id": "feature-tips", "status": "seen"})
@@ -983,7 +983,7 @@ class TestFeedbackRoute:
 
     def test_non_object_body_is_rejected(self, tmp_path: Path) -> None:
         async def run() -> int:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 resp = await fv.api_feature_videos_feedback(_feedback_request(["feature-tips"]))
             return resp.status
 
@@ -1001,9 +1001,9 @@ class TestIssuedIdSurvivesACatalogChange:
 
     def test_feedback_is_accepted_for_a_clip_that_left_the_catalog(self, tmp_path: Path) -> None:
         async def run() -> tuple[int, object]:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 with (
-                    patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls,
+                    patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls,
                     patch.object(fv, "CATALOG", (_entry("about-to-vanish"),)),
                 ):
                     cfg_cls.load.return_value = _cfg()
@@ -1030,7 +1030,7 @@ class TestIssuedIdSurvivesACatalogChange:
         """The ledger widens the accepted set by what was OFFERED, not by anything."""
 
         async def run() -> int:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 with patch.object(fv, "CATALOG", ()):
                     resp = await fv.api_feature_videos_feedback(
                         _feedback_request({"id": "never-offered", "status": "seen"})
@@ -1041,15 +1041,15 @@ class TestIssuedIdSurvivesACatalogChange:
 
     def test_one_library_answer_never_evicts_an_id_it_offers(self, tmp_path: Path) -> None:
         """Every listed clip stays acceptable, even in a library past 64 clips."""
-        from kiro_crew import feature_videos_manifest as manifest_mod
+        from aj_crew import feature_videos_manifest as manifest_mod
 
         assert fv._ISSUED_ID_LIMIT >= manifest_mod._MAX_ENTRIES
         catalog = tuple(_entry(f"clip-{i}") for i in range(70))
 
         async def run() -> list[str]:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 with (
-                    patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls,
+                    patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls,
                     patch.object(fv, "CATALOG", catalog),
                 ):
                     cfg_cls.load.return_value = _cfg()
@@ -1075,9 +1075,9 @@ class TestIssuedIdSurvivesACatalogChange:
         """The persisted row supersedes the offer, so the id need not stay acceptable."""
 
         async def run() -> None:
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
                 with patch.object(fv, "CATALOG", (_entry("recorded-once"),)):
-                    with patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls:
+                    with patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls:
                         cfg_cls.load.return_value = _cfg()
                         await fv.api_feature_videos_library(
                             _request("GET", "/api/feature-videos/library")
@@ -1108,29 +1108,29 @@ class TestRouteRegistration:
 
 class TestConfigFlag:
     def test_default_is_off(self) -> None:
-        from kiro_crew.config.sections import DashboardConfig
+        from aj_crew.config.sections import DashboardConfig
 
         assert DashboardConfig().feature_videos_enabled is False
 
     def test_loader_reads_the_key(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(
             json.dumps({"dashboard": {"feature_videos_enabled": False}}), encoding="utf-8"
         )
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: cfg_file)
-        assert KiroCrewConfig.load().dashboard.feature_videos_enabled is False
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: cfg_file)
+        assert AjCrewConfig.load().dashboard.feature_videos_enabled is False
 
     def test_absent_key_keeps_the_default(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(json.dumps({"dashboard": {}}), encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: cfg_file)
-        assert KiroCrewConfig.load().dashboard.feature_videos_enabled is False
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: cfg_file)
+        assert AjCrewConfig.load().dashboard.feature_videos_enabled is False
 
     def test_a_non_bool_value_keeps_the_default(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -1140,11 +1140,11 @@ class TestConfigFlag:
         Still load-bearing with the default OFF: a naive ``bool(...)`` would read the
         STRING "false" as True and turn the feature on against the operator's config.
         """
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(
             json.dumps({"dashboard": {"feature_videos_enabled": "false"}}), encoding="utf-8"
         )
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: cfg_file)
-        assert KiroCrewConfig.load().dashboard.feature_videos_enabled is False
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: cfg_file)
+        assert AjCrewConfig.load().dashboard.feature_videos_enabled is False

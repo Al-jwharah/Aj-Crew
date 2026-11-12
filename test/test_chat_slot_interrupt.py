@@ -10,8 +10,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat import api_chat_slot_interrupt
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.chat import api_chat_slot_interrupt
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 def _make_app(state: DashboardState) -> web.Application:
@@ -40,7 +40,7 @@ def _patch_sel():
     """Patch sel() to avoid SecurityEventLog initialization."""
     mock_sel = MagicMock()
     mock_sel.log_tool_invocation = MagicMock()
-    with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=mock_sel):
+    with patch("aj_crew.dashboard.chat_handlers.sel", return_value=mock_sel):
         yield mock_sel
 
 
@@ -80,7 +80,7 @@ class TestChatSlotInterrupt:
         state.subagents = MagicMock(running_agents_for=MagicMock(return_value=["child-1"]))
 
         with patch(
-            "kiro_crew.dashboard.chat_handlers._start_next_queued_turn",
+            "aj_crew.dashboard.chat_handlers._start_next_queued_turn",
             new=AsyncMock(return_value=True),
         ) as start:
             async with TestClient(TestServer(_make_app(state))) as client:
@@ -115,11 +115,11 @@ class TestChatSlotInterrupt:
 
         with (
             patch(
-                "kiro_crew.dashboard.chat_handlers.read_bounded_json",
+                "aj_crew.dashboard.chat_handlers.read_bounded_json",
                 new=AsyncMock(return_value=({"queue_id": qid}, None)),
             ),
             patch(
-                "kiro_crew.dashboard.chat_handlers._start_next_queued_turn",
+                "aj_crew.dashboard.chat_handlers._start_next_queued_turn",
                 new=AsyncMock(return_value=True),
             ) as start,
         ):
@@ -156,11 +156,11 @@ class TestChatSlotInterrupt:
 
         with (
             patch(
-                "kiro_crew.dashboard.chat_handlers.read_bounded_json",
+                "aj_crew.dashboard.chat_handlers.read_bounded_json",
                 new=rebind_while_reading,
             ),
             patch(
-                "kiro_crew.dashboard.chat_handlers._start_next_queued_turn",
+                "aj_crew.dashboard.chat_handlers._start_next_queued_turn",
                 new=AsyncMock(return_value=True),
             ) as start,
         ):
@@ -189,7 +189,7 @@ class TestChatSlotInterrupt:
         state.subagents = MagicMock(running_agents_for=MagicMock(return_value=["child-1"]))
 
         with patch(
-            "kiro_crew.dashboard.chat_handlers._start_next_queued_turn",
+            "aj_crew.dashboard.chat_handlers._start_next_queued_turn",
             new=AsyncMock(return_value=True),
         ) as start:
             async with TestClient(TestServer(_make_app(state))) as client:
@@ -214,7 +214,7 @@ class TestChatSlotInterrupt:
         state = _mock_state(slot)
 
         with patch(
-            "kiro_crew.dashboard.chat_handlers._start_next_queued_turn",
+            "aj_crew.dashboard.chat_handlers._start_next_queued_turn",
             new=AsyncMock(return_value=True),
         ) as start:
             async with TestClient(TestServer(_make_app(state))) as client:
@@ -237,7 +237,7 @@ class TestChatSlotInterrupt:
         state = _mock_state(slot)
 
         with patch(
-            "kiro_crew.dashboard.chat_handlers._start_next_queued_turn",
+            "aj_crew.dashboard.chat_handlers._start_next_queued_turn",
             new=AsyncMock(return_value=True),
         ) as start:
             async with TestClient(TestServer(_make_app(state))) as client:
@@ -287,11 +287,11 @@ class TestChatSlotInterrupt:
 
         with (
             patch(
-                "kiro_crew.dashboard.chat_handlers.read_bounded_json",
+                "aj_crew.dashboard.chat_handlers.read_bounded_json",
                 new=replace_slot_while_reading,
             ),
             patch(
-                "kiro_crew.dashboard.chat_handlers._start_next_queued_turn",
+                "aj_crew.dashboard.chat_handlers._start_next_queued_turn",
                 new=AsyncMock(return_value=True),
             ) as start,
         ):
@@ -316,7 +316,7 @@ class TestChatSlotInterrupt:
         state = _mock_state(slot)
 
         with patch(
-            "kiro_crew.dashboard.chat_handlers._start_next_queued_turn",
+            "aj_crew.dashboard.chat_handlers._start_next_queued_turn",
             new=AsyncMock(return_value=False),
         ):
             async with TestClient(TestServer(_make_app(state))) as client:
@@ -465,7 +465,7 @@ class TestRefusalRecoverySkippedOnCancel:
     def test_stop_press_suppresses_recovery(self):
         """The guard must return False when the user stopped, even with
         non-empty refusal_reasons."""
-        from kiro_crew.dashboard.state import should_queue_refusal_recovery
+        from aj_crew.dashboard.state import should_queue_refusal_recovery
 
         refusal_reasons = [
             ("Creating /tmp/name.txt", "command '---' is not on the read-only allowlist")
@@ -476,7 +476,7 @@ class TestRefusalRecoverySkippedOnCancel:
 
     def test_normal_refusal_still_triggers_recovery(self):
         """When the turn ends with refusal reasons and no Stop, recovery fires."""
-        from kiro_crew.dashboard.state import should_queue_refusal_recovery
+        from aj_crew.dashboard.state import should_queue_refusal_recovery
 
         refusal_reasons = [("write /tmp/x", "not on read-only allowlist")]
         assert should_queue_refusal_recovery(refusal_reasons, needs_reset=False, user_stopped=False)
@@ -489,12 +489,12 @@ class TestRefusalRecoveryOnBackendAbort:
     turn ends ``stopReason: "cancelled"``. The gate reads the host's own Stop signal only.
     """
 
-    REFUSALS = [("python3 -c ...", "Blocked by security policy: credential-exfil-kirocrew-token")]
+    REFUSALS = [("python3 -c ...", "Blocked by security policy: credential-exfil-ajcrew-token")]
 
     def test_backend_abort_without_a_stop_press_queues_recovery(self):
         # The wire said "cancelled"; the host's Stop signal says nobody pressed
         # Stop. The gate only ever sees the latter, so recovery is owed.
-        from kiro_crew.dashboard.state import should_queue_refusal_recovery
+        from aj_crew.dashboard.state import should_queue_refusal_recovery
 
         assert should_queue_refusal_recovery(self.REFUSALS, needs_reset=False, user_stopped=False)
 
@@ -502,7 +502,7 @@ class TestRefusalRecoveryOnBackendAbort:
         # The person pressed Stop during the turn (and it may already have
         # resolved, so the slot reads idle again): the continuation must not
         # jump ahead of whatever they type next.
-        from kiro_crew.dashboard.state import should_queue_refusal_recovery
+        from aj_crew.dashboard.state import should_queue_refusal_recovery
 
         assert not should_queue_refusal_recovery(
             self.REFUSALS, needs_reset=False, user_stopped=True
@@ -514,7 +514,7 @@ class TestRefusalRecoveryOnBackendAbort:
         # Stop signal is required rather than defaulted.
         import inspect
 
-        from kiro_crew.dashboard.state import should_queue_refusal_recovery
+        from aj_crew.dashboard.state import should_queue_refusal_recovery
 
         params = inspect.signature(should_queue_refusal_recovery).parameters
         assert "stop_reason" not in params
@@ -524,7 +524,7 @@ class TestRefusalRecoveryOnBackendAbort:
     def test_in_band_delivery_still_short_circuits_on_an_abort(self):
         # Not reachable on codex today (the abort discards a pending steer), but
         # the precedence must hold: a confirmed in-band notice owes no extra turn.
-        from kiro_crew.dashboard.state import should_queue_refusal_recovery
+        from aj_crew.dashboard.state import should_queue_refusal_recovery
 
         assert not should_queue_refusal_recovery(
             self.REFUSALS,

@@ -1,21 +1,16 @@
 /**
- * The Kiro ghost brand mark (`components/KiroGhostMark.tsx`) and its use as the
- * "Agent Capabilities" nav icon.
+ * The Kiro ghost mark (`components/KiroGhostMark.tsx`): the logo the Kiro
+ * harnesses wear in the Agent Harness list (`HarnessLogo.tsx`). The product's
+ * own glyph is `AjMark`, pinned in `AjMark.test.tsx`.
  *
- * Two things are pinned here:
- * - the mark paints the ghost asset as a CSS mask over `currentColor`, which is
- *   what lets it follow the rail's active (accent) / idle colour states instead
- *   of being a fixed-colour <img>;
- * - the `capabilities` built-in surface renders that mark rather than a Lucide
- *   glyph (regression guard for the icon swap).
+ * Pinned here: the mark paints the ghost asset as a CSS mask over
+ * `currentColor`, which is what lets it follow the row's text colour instead of
+ * being a fixed-colour <img>.
  */
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import type { ReactElement } from 'react'
 import { KiroGhostMark } from '../components/KiroGhostMark'
-import '../surfaces/builtins'
-import { getBuiltinSurface } from '../surfaces/registry'
 
 describe('KiroGhostMark', () => {
   // The mask contract must be asserted against React's OWN style serialization,
@@ -64,13 +59,5 @@ describe('KiroGhostMark', () => {
     const el = getByTestId('kiro-ghost-mark')
     expect(el.style.width).toBe('24px')
     expect(el.style.height).toBe('24px')
-  })
-})
-
-describe('Customize nav icon', () => {
-  it('uses the Kiro ghost mark', () => {
-    const surface = getBuiltinSurface('capabilities')
-    expect(surface?.label).toBe('Customize')
-    expect((surface?.icon as ReactElement).type).toBe(KiroGhostMark)
   })
 })

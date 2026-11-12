@@ -96,7 +96,7 @@ def test_only_the_exact_switch_value_requires_an_adapter(monkeypatch, value):
 
 def test_the_switch_is_the_one_the_rest_of_the_repository_already_reads():
     """One name for one mechanism, rather than a second spelling of it."""
-    assert REQUIRE_ENV == "KIROCREW_E2E_REQUIRE"
+    assert REQUIRE_ENV == "AJCREW_E2E_REQUIRE"
     sibling = (TEST_DIR / "e2e/scenarios/conftest.py").read_text(encoding="utf-8")
     assert REQUIRE_ENV in sibling
 

@@ -1,4 +1,4 @@
-"""``kirocrew snapshot --keep`` and ``--list`` order bundles by the stamp in their name.
+"""``ajcrew snapshot --keep`` and ``--list`` order bundles by the stamp in their name.
 
 A bundle's mtime is when it last landed on this disk: copying an older bundle
 back in from off-host storage gives it a fresh one. Ordered by mtime, that older
@@ -15,9 +15,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import pinned_fs, snapshot
+from aj_crew import pinned_fs, snapshot
 
-_OLD = "kirocrew-snapshot-20200101T000000Z.tar.gz"
+_OLD = "ajcrew-snapshot-20200101T000000Z.tar.gz"
 
 
 def _touch(path: Path, mtime: float) -> Path:
@@ -27,18 +27,18 @@ def _touch(path: Path, mtime: float) -> Path:
 
 
 def test_newest_first_orders_by_the_name_stamp(tmp_path: Path) -> None:
-    from kiro_crew.snapshot_order import newest_first
+    from aj_crew.snapshot_order import newest_first
 
-    older = _touch(tmp_path / "kirocrew-snapshot-20240101T000000Z.tar.gz", 2_000_000_000)
-    newer = _touch(tmp_path / "kirocrew-snapshot-20250101T000000Z.tar.gz", 1_000_000_000)
+    older = _touch(tmp_path / "ajcrew-snapshot-20240101T000000Z.tar.gz", 2_000_000_000)
+    newer = _touch(tmp_path / "ajcrew-snapshot-20250101T000000Z.tar.gz", 1_000_000_000)
     assert newest_first([older, newer]) == [newer, older]
 
 
 def test_a_name_without_a_stamp_falls_back_to_its_mtime(tmp_path: Path) -> None:
-    from kiro_crew.snapshot_order import newest_first
+    from aj_crew.snapshot_order import newest_first
 
-    stamped = _touch(tmp_path / "kirocrew-snapshot-20240101T000000Z.tar.gz", 1_000_000_000)
-    renamed = _touch(tmp_path / "kirocrew-snapshot-manual.tar.gz", 1_800_000_000)
+    stamped = _touch(tmp_path / "ajcrew-snapshot-20240101T000000Z.tar.gz", 1_000_000_000)
+    renamed = _touch(tmp_path / "ajcrew-snapshot-manual.tar.gz", 1_800_000_000)
     assert newest_first([stamped, renamed]) == [renamed, stamped]
 
 
@@ -56,7 +56,7 @@ def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     root = tmp_path / "home"
     (root / "workspace").mkdir(parents=True)
     (root / "workspace" / "note.md").write_text("hello\n", encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_HOME", str(root))
+    monkeypatch.setenv("AJCREW_HOME", str(root))
     return root
 
 
@@ -71,7 +71,7 @@ def test_keep_one_keeps_the_bundle_just_written_over_a_copied_in_older_one(
 
     _snapshot([str(out), "--keep", "1"])
 
-    left = sorted(p.name for p in out.glob("kirocrew-snapshot-*.tar.gz"))
+    left = sorted(p.name for p in out.glob("ajcrew-snapshot-*.tar.gz"))
     assert len(left) == 1
     assert left != [copied.name]
 
@@ -83,28 +83,28 @@ def test_keep_one_keeps_the_bundle_just_written_after_the_clock_went_back(
     """A bundle stamped in the future by a run before a clock correction does not win."""
     out = tmp_path / "out"
     out.mkdir()
-    future = _touch(out / "kirocrew-snapshot-29990101T000000Z.tar.gz", 1_000_000_000)
+    future = _touch(out / "ajcrew-snapshot-29990101T000000Z.tar.gz", 1_000_000_000)
 
     _snapshot([str(out), "--keep", "1"])
 
-    left = [p.name for p in out.glob("kirocrew-snapshot-*.tar.gz")]
+    left = [p.name for p in out.glob("ajcrew-snapshot-*.tar.gz")]
     assert len(left) == 1
     assert left != [future.name]
 
 
 def test_one_second_stamps_tie_break_on_mtime(tmp_path: Path) -> None:
-    from kiro_crew.snapshot_order import newest_first
+    from aj_crew.snapshot_order import newest_first
 
-    first = _touch(tmp_path / "kirocrew-snapshot-20240101T000000Z.tar.gz", 1_000_000_000)
-    second = _touch(tmp_path / "kirocrew-snapshot-20240101T000000Z-1.tar.gz", 1_000_000_005)
+    first = _touch(tmp_path / "ajcrew-snapshot-20240101T000000Z.tar.gz", 1_000_000_000)
+    second = _touch(tmp_path / "ajcrew-snapshot-20240101T000000Z-1.tar.gz", 1_000_000_005)
     assert newest_first([first, second]) == [second, first]
 
 
 def test_an_impossible_stamp_falls_back_to_its_mtime(tmp_path: Path) -> None:
-    from kiro_crew.snapshot_order import newest_first
+    from aj_crew.snapshot_order import newest_first
 
-    bad = _touch(tmp_path / "kirocrew-snapshot-20241399T000000Z.tar.gz", 1_900_000_000)
-    good = _touch(tmp_path / "kirocrew-snapshot-20240101T000000Z.tar.gz", 1_000_000_000)
+    bad = _touch(tmp_path / "ajcrew-snapshot-20241399T000000Z.tar.gz", 1_900_000_000)
+    good = _touch(tmp_path / "ajcrew-snapshot-20240101T000000Z.tar.gz", 1_000_000_000)
     assert newest_first([good, bad]) == [bad, good]
 
 

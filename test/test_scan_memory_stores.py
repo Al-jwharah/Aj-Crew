@@ -27,19 +27,19 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import memory_stores as memory_stores_mod
-from kiro_crew import security, vector_memory
-from kiro_crew.cli_commands import _finding_store_suffix, _security
-from kiro_crew.config import loader as loader_mod
-from kiro_crew.config.loader import config_dir
-from kiro_crew.learn import Lesson, LessonStore
-from kiro_crew.memory_stores import (
+from aj_crew import memory_stores as memory_stores_mod
+from aj_crew import security, vector_memory
+from aj_crew.cli_commands import _finding_store_suffix, _security
+from aj_crew.config import loader as loader_mod
+from aj_crew.config.loader import config_dir
+from aj_crew.learn import Lesson, LessonStore
+from aj_crew.memory_stores import (
     DEFAULT_MEMORY_STORE,
     MEMORY_DB_FILE,
     memory_stores_root,
     resolve_store_path,
 )
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.vector_memory import VectorMemoryStore
 
 #: Two declared, written silos plus one declared-but-never-written store. ``personal``
 #: sorts BEFORE ``work``, which the fail-soft test relies on: corrupting it proves a bad
@@ -48,7 +48,7 @@ PERSONAL = "personal"
 WORK = "work"
 UNUSED = "unused"
 
-#: Declared with a malformed name. ``KiroCrewConfig.load`` keeps the operator's entry
+#: Declared with a malformed name. ``AjCrewConfig.load`` keeps the operator's entry
 #: verbatim, and ``usable_store_names`` is what makes it undeclared for resolution — so
 #: this pins that the audit runs through the same filter a crew's binding does. The
 #: defect is the uppercase letter; the name must not be a case variant of a declared
@@ -110,7 +110,7 @@ def _plant(db_path: Path, text: str) -> None:
 
     Only ``vector_memory``'s copy of the predicate is lifted; ``security`` keeps the real
     matcher. ``mock.patch.object``, not ``monkeypatch.undo()``, which would also revert
-    the conftest's ``KIROCREW_HOME`` isolation and reach the REAL data home.
+    the conftest's ``AJCREW_HOME`` isolation and reach the REAL data home.
     """
     with mock.patch.object(vector_memory, "_contains_injection", lambda _text: False):
         db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -317,7 +317,7 @@ class TestDefaultOnlyInstallIsUnchanged:
         assert finding["store"] == DEFAULT_MEMORY_STORE
 
     def test_printed_audit_line_is_byte_identical(self, default_only_home, capsys) -> None:
-        """``kirocrew security audit`` prints no store label when there is no silo."""
+        """``ajcrew security audit`` prints no store label when there is no silo."""
         _plant(resolve_store_path(DEFAULT_MEMORY_STORE), INJECTIONS[DEFAULT_MEMORY_STORE])
         (finding,) = security.scan_memory()
 
@@ -412,7 +412,7 @@ class TestOneBadSiloDoesNotSilenceTheAudit:
         def boom() -> None:
             raise sqlite3.OperationalError("config unavailable")
 
-        monkeypatch.setattr(loader_mod.KiroCrewConfig, "load", staticmethod(boom))
+        monkeypatch.setattr(loader_mod.AjCrewConfig, "load", staticmethod(boom))
 
         findings = security.scan_memory()
 
@@ -703,7 +703,7 @@ class TestAnInstallWithNoNamedStoresIsUnchanged:
         _security(argparse.Namespace(sec_action="audit"))
         out = capsys.readouterr().out
 
-        # ``kirocrew security audit`` prints the memory tick only when the HISTORY pass
+        # ``ajcrew security audit`` prints the memory tick only when the HISTORY pass
         # found something, so a fully clean install's memory verdict is the ABSENCE of a
         # warning block rather than a second tick.
         assert "suspicious memory entries" not in out
@@ -718,7 +718,7 @@ class TestMemberDatabaseAudit:
     def test_member_sqlite_rows_are_scanned_and_legacy_lessons_ignored(self):
         from member_memory_helpers import write_member_home
 
-        from kiro_crew.vector_memory import open_member_database
+        from aj_crew.vector_memory import open_member_database
 
         write_member_home(config_dir(), "alice")
         loader_mod._invalidate_config_cache()
@@ -770,7 +770,7 @@ class TestMemberDatabaseAudit:
 def test_member_audit_includes_all_retained_learning_tables(tier):
     from member_memory_helpers import write_member_home
 
-    from kiro_crew.vector_memory import open_member_database
+    from aj_crew.vector_memory import open_member_database
 
     write_member_home(config_dir(), "alice")
     loader_mod._invalidate_config_cache()

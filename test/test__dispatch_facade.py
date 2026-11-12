@@ -1,8 +1,8 @@
-"""``kiro_crew.acp._dispatch`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.acp._dispatch`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.acp._dispatch`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the
-owners in ``kiro_crew.acp._dispatch_parts``. ``AcpClient``, ``AcpRuntime``, the tests and
-the documents still reach every name as ``kiro_crew.acp._dispatch.<name>``, and the moved
+``aj_crew.acp._dispatch`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the
+owners in ``aj_crew.acp._dispatch_parts``. ``AcpClient``, ``AcpRuntime``, the tests and
+the documents still reach every name as ``aj_crew.acp._dispatch.<name>``, and the moved
 code reads its names as plain module globals, so a patch through the facade reaches that
 code only because the mirror writes it into every module holding the name.
 
@@ -28,8 +28,8 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.acp import _dispatch
+from aj_crew import _facade_mirror
+from aj_crew.acp import _dispatch
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan__dispatch_facade")
 
@@ -37,7 +37,7 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan__dispatch_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams",)
 
-FACADE = "kiro_crew.acp._dispatch"
+FACADE = "aj_crew.acp._dispatch"
 PARTS_DIR = Path(_dispatch.__file__).resolve().parent / "_dispatch_parts"
 FACADE_MODULE = _dispatch
 INVENTORY = source_corpus.repo_root() / "test" / "campaign_facade_inventories" / f"{FACADE}.json"
@@ -77,7 +77,7 @@ def _test_tree_files() -> list[Path]:
         rel = path.relative_to(root).as_posix()
         if rel == "conftest.py" or rel.startswith("test/"):
             found.append(path)
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and (
+        elif rel.startswith("src/aj_crew/apps/builtins/") and (
             "/tests/" in rel or path.name.startswith("test_") or path.name == "conftest.py"
         ):
             found.append(path)
@@ -143,7 +143,7 @@ def test_the_owners_are_the_parts_package_in_layer_order() -> None:
     owners listed before it: the order the facade loads them and a read resolves in."""
     owners = list(_index().owners)
     on_disk = {
-        f"kiro_crew.acp._dispatch_parts.{p.stem}": p
+        f"aj_crew.acp._dispatch_parts.{p.stem}": p
         for p in PARTS_DIR.glob("*.py")
         if p.name != "__init__.py"
     }
@@ -169,7 +169,7 @@ def test_the_facade_keeps_the_default_read_path_and_forwards_no_table() -> None:
 
 
 def test_the_family_logs_through_one_logger_named_for_the_facade() -> None:
-    """``caplog`` filters keyed on ``kiro_crew.acp._dispatch`` keep seeing the moved code."""
+    """``caplog`` filters keyed on ``aj_crew.acp._dispatch`` keep seeing the moved code."""
     assert _dispatch.logger.name == FACADE
     loggers = [m for m in _family() if "logger" in vars(m)]
     assert len(loggers) >= 4
@@ -209,9 +209,9 @@ def _home(value: object) -> str:
 
 
 def test_every_project_name_the_facade_imported_stays_bound_on_it() -> None:
-    """A name the facade imported from the rest of ``kiro_crew`` before its owners moved
+    """A name the facade imported from the rest of ``aj_crew`` before its owners moved
     out is bound on it still, statically and as its home module's object, so a reader that
-    spells it through ``kiro_crew.acp._dispatch`` keeps type-checking."""
+    spells it through ``aj_crew.acp._dispatch`` keeps type-checking."""
     rebound = json.loads(INVENTORY.read_text(encoding="utf-8"))["rebound"]
     assert "ACP_BACKENDS_META_IDENTITY" in rebound, "the inventory went blind"
     bound = _static_bindings(Path(_dispatch.__file__))
@@ -247,7 +247,7 @@ def test_every_name_served_from_outside_the_family_is_visible_to_a_type_checker(
     served_from_outside = {
         name: _home(getattr(_dispatch, name))
         for name in imported_by_owners
-        if _home(getattr(_dispatch, name)).startswith("kiro_crew")
+        if _home(getattr(_dispatch, name)).startswith("aj_crew")
         and _home(getattr(_dispatch, name)) not in family
     }
     assert served_from_outside == {}

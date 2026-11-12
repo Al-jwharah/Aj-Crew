@@ -38,7 +38,7 @@ const folders = [
 
 const slots = [{
   key: 'chat-w1', title: 'Sprint planning', running: false, last_message: '',
-  messages: 3, agent: 'kirocrew', memory_mode: 'persistent', project: '',
+  messages: 3, agent: 'ajcrew', memory_mode: 'persistent', project: '',
   folder_id: FID, modified: now, tags: [], source_links: [], source_links_total: 0,
 }]
 
@@ -60,7 +60,7 @@ async function main() {
       calls.push('create')
       await json(route, {
         key: 'chat-new', title: '', running: false, messages: 0,
-        agent: 'kirocrew', folder_id: FID, modified: now, tags: [],
+        agent: 'ajcrew', folder_id: FID, modified: now, tags: [],
       })
       return true
     }

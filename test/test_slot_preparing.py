@@ -4,7 +4,7 @@ import asyncio
 
 import pytest
 
-from kiro_crew.dashboard.slot_preparing import is_preparing, preparing_caption, preparing_message
+from aj_crew.dashboard.slot_preparing import is_preparing, preparing_caption, preparing_message
 
 
 class _State:
@@ -18,7 +18,7 @@ class _State:
 
 
 def _slot():
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
     return _ChatSlot("thread-p")
 

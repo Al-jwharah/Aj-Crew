@@ -13,23 +13,23 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import model_registry
-from kiro_crew.acp.client import (
+from aj_crew import model_registry
+from aj_crew.acp.client import (
     DEFAULT_MODEL,
     AcpClient,
     AcpError,
     AcpModelUnavailable,
     _jsonrpc_error_code,
 )
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KIRO,
     JsonRpcMessage,
 )
-from kiro_crew.agent_sdk import backends as sdk_backends
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard.handlers import agents
+from aj_crew.agent_sdk import backends as sdk_backends
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard.handlers import agents
 
 #: What codex-acp puts on the wire at ``session/new``: no ``models`` object, the
 #: list lives in the ``model`` select. Values are the ids the adapter accepts back.
@@ -402,7 +402,7 @@ async def test_api_models_routes_the_codex_backend_to_the_advertised_list(monkey
     import json
 
     monkeypatch.setattr(
-        agents.KiroCrewConfig,
+        agents.AjCrewConfig,
         "load",
         staticmethod(
             lambda: SimpleNamespace(agent=SimpleNamespace(acp_backend=ACP_BACKEND_CODEX, model=""))
@@ -439,7 +439,7 @@ def _feeding_handle(backend: str, models: list[dict]):
 
 
 def test_handle_feed_populates_the_codex_cross_session_cache() -> None:
-    from kiro_crew.acp import session_handle_model_selection as sh_models
+    from aj_crew.acp import session_handle_model_selection as sh_models
 
     handle = _feeding_handle(
         ACP_BACKEND_CODEX,
@@ -455,7 +455,7 @@ def test_handle_feed_populates_the_codex_cross_session_cache() -> None:
 
 
 def test_handle_feed_holds_a_shrinking_list_until_a_second_read() -> None:
-    from kiro_crew.acp import session_handle_model_selection as sh_models
+    from aj_crew.acp import session_handle_model_selection as sh_models
 
     full = [{"modelId": "gpt-5.4"}, {"modelId": "gpt-5.5"}]
     sh_models._feed_advertised_model_cache(_feeding_handle(ACP_BACKEND_CODEX, full))
@@ -473,7 +473,7 @@ def test_handle_feed_holds_a_shrinking_list_until_a_second_read() -> None:
 
 def test_handle_feed_skips_a_non_advertised_backend() -> None:
     """kiro reaches its ids through --list-models, not this feed (harness-parity H6)."""
-    from kiro_crew.acp import session_handle_model_selection as sh_models
+    from aj_crew.acp import session_handle_model_selection as sh_models
 
     handle = _feeding_handle(ACP_BACKEND_KIRO, [{"modelId": "claude-opus-4.8"}])
 
@@ -484,7 +484,7 @@ def test_handle_feed_skips_a_non_advertised_backend() -> None:
 
 
 def test_handle_feed_is_a_no_op_when_nothing_was_advertised() -> None:
-    from kiro_crew.acp import session_handle_model_selection as sh_models
+    from aj_crew.acp import session_handle_model_selection as sh_models
 
     handle = _feeding_handle(ACP_BACKEND_CODEX, [])
 
@@ -496,7 +496,7 @@ def test_handle_feed_is_a_no_op_when_nothing_was_advertised() -> None:
 
 @pytest.mark.asyncio
 async def test_handle_persist_offloads_only_when_changed(monkeypatch) -> None:
-    from kiro_crew.acp import session_handle_model_selection as sh_models
+    from aj_crew.acp import session_handle_model_selection as sh_models
 
     calls = []
     monkeypatch.setattr(model_registry, "persist_advertised_models", lambda: calls.append(1))

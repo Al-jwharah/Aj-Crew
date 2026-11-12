@@ -7,7 +7,7 @@ regenerated whenever the response shape changes -- otherwise they carry fields t
 handler no longer emits and a reader trusting them sees a shape that cannot occur.
 
 Run from the repo root with the worktree's venv:
-    KIROCREW_HOME=<scratch> KIROCREW_FIXTURE_SCRATCH=1 ./.venv/bin/python <this file>
+    AJCREW_HOME=<scratch> AJCREW_FIXTURE_SCRATCH=1 ./.venv/bin/python <this file>
 """
 
 from __future__ import annotations
@@ -20,31 +20,31 @@ import sys
 
 sys.path.insert(0, "src")
 
-from kiro_crew.config import paths as _paths  # noqa: E402
+from aj_crew.config import paths as _paths  # noqa: E402
 
 # Refuse to run against anything but a scratch home the operator chose ON
-# PURPOSE. A presence-only ``KIROCREW_HOME`` check is not enough: an override
+# PURPOSE. A presence-only ``AJCREW_HOME`` check is not enough: an override
 # that is absent, or set but REJECTED (a root/system dir), makes ``data_home()``
 # fall back to the LIVE default home, and this script's ``apply_conductor_action``
 # writes would then seed fixture conductors into the operator's real work
 # ledger, with no recovery path. So resolve the EFFECTIVE home and require two
 # things: (1) a genuinely selected override (``data_home()`` != the default),
-# and (2) an explicit ``KIROCREW_FIXTURE_SCRATCH=1`` opt-in, so a ``KIROCREW_HOME``
+# and (2) an explicit ``AJCREW_FIXTURE_SCRATCH=1`` opt-in, so an ``AJCREW_HOME``
 # left exported to a live custom instance cannot be contaminated by accident.
 _effective_home = _paths.data_home().resolve()
 _default_home = _paths._default_home().resolve()
 if _effective_home == _default_home:
     sys.exit(
-        "refusing to run: KIROCREW_HOME does not select a scratch dir (it is unset "
+        "refusing to run: AJCREW_HOME does not select a scratch dir (it is unset "
         "or was rejected, so the effective home is the LIVE default "
-        f"{_default_home}). Point KIROCREW_HOME at a throwaway directory."
+        f"{_default_home}). Point AJCREW_HOME at a throwaway directory."
     )
-if os.environ.get("KIROCREW_FIXTURE_SCRATCH") != "1":
+if os.environ.get("AJCREW_FIXTURE_SCRATCH") != "1":
     sys.exit(
-        "refusing to run: set KIROCREW_FIXTURE_SCRATCH=1 to confirm "
+        "refusing to run: set AJCREW_FIXTURE_SCRATCH=1 to confirm "
         f"{_effective_home} is a THROWAWAY home. This script writes fixture "
         "conductors into that home's work ledger; the confirmation prevents "
-        "seeding them into a KIROCREW_HOME left exported to a live instance."
+        "seeding them into an AJCREW_HOME left exported to a live instance."
     )
 
 
@@ -52,8 +52,8 @@ from types import SimpleNamespace  # noqa: E402
 
 from aiohttp.test_utils import make_mocked_request  # noqa: E402
 
-from kiro_crew import work_ledger as wl  # noqa: E402
-from kiro_crew.dashboard.handlers import work_ledger_board as board  # noqa: E402
+from aj_crew import work_ledger as wl  # noqa: E402
+from aj_crew.dashboard.handlers import work_ledger_board as board  # noqa: E402
 
 OUT = pathlib.Path("website/scripts/fixtures")
 OWNER = "owner-subject"

@@ -112,7 +112,7 @@ describe('useWebSocket member projection frames', () => {
     // The truncation drops EVERY key a slug holds, while each read owns only
     // some of them: a roster row carries `roster`, and the open member's
     // activity, wake and driving views come from its own per-member read. The
-    // two query keys are SIBLINGS under ['kirocrew-agents'], so repairing one
+    // two query keys are SIBLINGS under ['ajcrew-agents'], so repairing one
     // does not match the other, and the drawer would stay blank until something
     // else happened to refetch it.
     //
@@ -139,8 +139,8 @@ describe('useWebSocket member projection frames', () => {
       ws.simulateMessage({ type: 'member_projection', data: { slug: 'oncall', key: 'wake', value: { patrol: 'stopped' }, seq: 9 } })
       ws.simulateMessage({ type: 'members_subscribed', data: { lastSeqs: { oncall: 5 } } })
     })
-    const projections = JSON.stringify(['kirocrew-agents', 'member-projections'])
-    const roster = JSON.stringify(['kirocrew-agents', 'members-roster'])
+    const projections = JSON.stringify(['ajcrew-agents', 'member-projections'])
+    const roster = JSON.stringify(['ajcrew-agents', 'members-roster'])
     expect(reset.map((k) => JSON.stringify(k))).toContain(projections)
     expect(reset.map((k) => JSON.stringify(k))).toContain(roster)
     // Marking either query stale is exactly what leaves the rolled-back block

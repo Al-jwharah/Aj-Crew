@@ -25,8 +25,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps import routes as app_routes
-from kiro_crew.dashboard import token_auth
+from aj_crew.apps import routes as app_routes
+from aj_crew.dashboard import token_auth
 
 pytestmark = pytest.mark.asyncio
 
@@ -50,7 +50,7 @@ def _app(*, user: str = "", app_claim: str | None = "") -> web.Application:
     ``app_claim=None`` leaves the ``app`` key unset, the shape of a request no
     authenticator stamped.
     """
-    from kiro_crew.dashboard.routes import system
+    from aj_crew.dashboard.routes import system
 
     @web.middleware
     async def _claims(request: web.Request, handler: Any) -> web.StreamResponse:
@@ -70,10 +70,10 @@ def _app(*, user: str = "", app_claim: str | None = "") -> web.Application:
 def config_path(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     crew = tmp_path / "crew"
     crew.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(crew))
+    monkeypatch.setenv("AJCREW_HOME", str(crew))
     monkeypatch.setattr(app_routes, "sel", lambda: _Sel())
     monkeypatch.setattr(app_routes, "get_app", lambda name: {"name": name, "enabled": True})
-    from kiro_crew.apps.manager import app_data_dir
+    from aj_crew.apps.manager import app_data_dir
 
     path = app_data_dir(APP) / "config.json"
     path.parent.mkdir(parents=True, exist_ok=True)

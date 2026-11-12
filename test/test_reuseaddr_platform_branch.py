@@ -13,9 +13,9 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-import kiro_crew
+import aj_crew
 
-SRC_ROOT = Path(kiro_crew.__file__).resolve().parent
+SRC_ROOT = Path(aj_crew.__file__).resolve().parent
 _PLATFORM_MARKERS = ("IS_POSIX", "IS_WINDOWS", "os.name", "sys.platform")
 
 

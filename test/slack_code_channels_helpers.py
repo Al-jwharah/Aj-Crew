@@ -14,13 +14,13 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.config.loader import ACTIVATION_MENTION, ChannelConfig
-from kiro_crew.slack import features
-from kiro_crew.slack.code_channels import binding as binding_mod
-from kiro_crew.slack.code_channels import recognition, routing, status
-from kiro_crew.slack.code_channels.classifier import RouteDecision
-from kiro_crew.slack.code_channels.store import CodeChannelStore, set_store
-from kiro_crew.slack.handler import LinkedRoute
+from aj_crew.config.loader import ACTIVATION_MENTION, ChannelConfig
+from aj_crew.slack import features
+from aj_crew.slack.code_channels import binding as binding_mod
+from aj_crew.slack.code_channels import recognition, routing, status
+from aj_crew.slack.code_channels.classifier import RouteDecision
+from aj_crew.slack.code_channels.store import CodeChannelStore, set_store
+from aj_crew.slack.handler import LinkedRoute
 
 REQUIRED_SCOPE = features.REQUIRED_SCOPE[features.CODE_CHANNELS]
 SELF_USER = "UBOT"
@@ -256,7 +256,7 @@ class Env:
                 return None
             return False if agent in self.missing_agents else None
 
-        from kiro_crew.dashboard import slack_code_settings as _scs
+        from aj_crew.dashboard import slack_code_settings as _scs
 
         monkeypatch.setattr(_scs, "default_agent_available", default_agent_available)
 

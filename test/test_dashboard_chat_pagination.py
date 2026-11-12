@@ -16,7 +16,7 @@ from chat_test_helpers import _make_app, _make_state
 class TestSlotDetailPagination:
     @pytest.mark.asyncio
     async def test_default_returns_latest(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("test")
         for i in range(10):
@@ -31,7 +31,7 @@ class TestSlotDetailPagination:
 
     @pytest.mark.asyncio
     async def test_pagination_with_before(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("test")
         log = state.conversation_log
@@ -60,7 +60,7 @@ class TestSlotDetailPagination:
 
     @pytest.mark.asyncio
     async def test_empty_slot(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("empty")
         async with TestClient(TestServer(_make_app(state))) as client:
@@ -72,7 +72,7 @@ class TestSlotDetailPagination:
 
     @pytest.mark.asyncio
     async def test_not_found(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.get("/api/chat/slots/nonexistent")
@@ -80,7 +80,7 @@ class TestSlotDetailPagination:
 
     async def _slot_with_history(self, tmp_path, monkeypatch, name, count=10):
         """A slot with *count* messages on disk and in memory."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot(name)
         for i in range(count):
@@ -154,7 +154,7 @@ class TestSlotDetailPagination:
         any of the archive probe, the page composition, or the re-probe is inlined
         onto the event loop.
         """
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         state = await self._slot_with_history(tmp_path, monkeypatch, "bounded-reader", count=30)
 
@@ -252,7 +252,7 @@ class TestSlotDetailPagination:
         self, tmp_path, monkeypatch
     ):
         """A raw U+2028 row is deterministic; answer from the full reader, once."""
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         state = await self._slot_with_history(tmp_path, monkeypatch, "u2028-row", count=30)
         path = state.conversation_log._path("dashboard:u2028-row")
@@ -280,8 +280,8 @@ class TestSlotDetailPagination:
     @pytest.mark.asyncio
     async def test_oversized_row_uses_full_reader_without_retrying(self, tmp_path, monkeypatch):
         """A deterministic over-cap row must not be re-scanned per retry attempt."""
-        from kiro_crew import history_projection
-        from kiro_crew.jsonl_util import OversizedRecord
+        from aj_crew import history_projection
+        from aj_crew.jsonl_util import OversizedRecord
 
         state = await self._slot_with_history(tmp_path, monkeypatch, "big-row", count=30)
         attempts: list[int] = []
@@ -305,7 +305,7 @@ class TestSlotDetailPagination:
         self, tmp_path, monkeypatch, caplog
     ):
         """Raw/durable prefix counters disagreeing is deterministic for the snapshot."""
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         state = await self._slot_with_history(tmp_path, monkeypatch, "prefix-skew", count=30)
         slot = state.get_or_create_slot("prefix-skew")
@@ -342,9 +342,9 @@ class TestSlotDetailPagination:
         self, tmp_path, monkeypatch, caplog
     ):
         """A fresh tab with no transcript file is a stable empty durable revision."""
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("fresh-tab")
         slot.append("user", "hello")
@@ -366,7 +366,7 @@ class TestSlotDetailPagination:
         self, tmp_path, monkeypatch
     ):
         """No conversation log (memory-only gateway): paginate from the resident window, never 500."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.conversation_log = None
         slot = state.get_or_create_slot("memonly")
@@ -430,7 +430,7 @@ class TestSlotDetailPagination:
 
     @pytest.mark.asyncio
     async def test_raw_and_durable_prefix_mismatch_uses_full_reader(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("mixed-prefix")
         state.conversation_log.append("dashboard:mixed-prefix", "done", "")
@@ -569,7 +569,7 @@ class TestSlotDetailPagination:
         self, tmp_path, monkeypatch
     ):
         """The no-limit branch reassembles disk+memory and still claims has_more false."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("whole")
         log = state.conversation_log
@@ -610,7 +610,7 @@ class TestSlotDetailPagination:
         lands mid-read must not be silently absent. Appending from inside the
         patched read reproduces exactly that window deterministically.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("midread")
         log = state.conversation_log
@@ -647,7 +647,7 @@ class TestFullPaginationWalk:
     @pytest.mark.asyncio
     async def test_walk_all_pages(self, tmp_path, monkeypatch):
         """Simulate frontend infinite scroll — walk backwards through all messages."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("walk")
         log = state.conversation_log
@@ -685,7 +685,7 @@ class TestFullPaginationWalk:
     @pytest.mark.asyncio
     async def test_walk_with_trimmed_memory(self, tmp_path, monkeypatch):
         """Pagination with before uses disk — can access all messages."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("trim")
         log = state.conversation_log

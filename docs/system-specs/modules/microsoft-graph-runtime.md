@@ -8,11 +8,11 @@ the `W05` runtime base in the connector campaign's DAG
 SharePoint/Outlook (`W06`) and OneDrive/OneNote/Teams/Excel (`W07`) streams build
 on it rather than re-deriving these conventions.
 
-The code lives under `src/kiro_crew/connections/vendors/microsoft/graph/` and is
+The code lives under `src/aj_crew/connections/vendors/microsoft/graph/` and is
 pure logic: no network call, no credential, no token cache. It sits inside
-`kiro_crew.connections` (the shipped account-link subsystem —
+`aj_crew.connections` (the shipped account-link subsystem —
 [connections](connections.md)) as that subsystem's per-vendor Graph source, and
-is distinct from `kiro_crew.teams`, which is the Bot Framework channel transport,
+is distinct from `aj_crew.teams`, which is the Bot Framework channel transport,
 **not** the Graph Teams connector. The shared control-plane container at the
 `vendors/` layer is owned by the connector campaign's `W01` stream; this base
 depends on it by name and does not define or re-export any of its surface.
@@ -21,7 +21,7 @@ depends on it by name and does not define or re-export any of its surface.
 
 This base defines **no vendor-error taxonomy and no error envelope.** The
 RUN-01 closed error set (`OperationError` / `ErrorClass`) and its typed envelope
-are `W01`'s single source in `kiro_crew.connections.control_plane`; the mapping
+are `W01`'s single source in `aj_crew.connections.control_plane`; the mapping
 from a Graph vendor error to that typed envelope is a separate campaign leaf that
 consumes `W01`'s prepared boundary. This base consumes W01's shared vocabulary
 where it needs one — the `CredentialMode` axis the locator reads — and defines
@@ -43,7 +43,7 @@ boundary first. Do not grow an error hierarchy in this tree.
   empty id that would only surface when the path is assembled.
 - **The credential mode**, supplied per dispatch to `build_path` as W01's
   shared `CredentialMode`
-  (`kiro_crew.connections.control_plane.operation.CredentialMode`:
+  (`aj_crew.connections.control_plane.operation.CredentialMode`:
   `oauth_user` / `fine_grained_pat` / `service_to_service`). This base defines no
   second auth-mode vocabulary; `is_app_only` is its one Graph-specific reading of
   that shared axis.

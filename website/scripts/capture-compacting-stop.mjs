@@ -25,7 +25,7 @@ if (!HINT || !CARD) throw new Error('compacting keys missing from en.manual.json
 // capture time rather than copied here: a copy drifted once and the shots then
 // showed a wording the code no longer shipped.
 const NOTICES_PY = fileURLToPath(
-  new URL('../../src/kiro_crew/dashboard/state_parts/session_events.py', import.meta.url),
+  new URL('../../src/aj_crew/dashboard/state_parts/session_events.py', import.meta.url),
 )
 function noticeTemplate(name) {
   // Matches ``NAME = (`` ... ``)`` and joins the adjacent string literals,
@@ -73,7 +73,7 @@ const slots = [{
   stop_state: 'idle',
   last_message: 'Cross-referenced the last three incident reports.',
   messages: 7,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   modified: now,
   source_links: [],

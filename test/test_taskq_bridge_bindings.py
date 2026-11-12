@@ -46,9 +46,9 @@ from typing import Any
 import pytest
 from facade_mirror_scan import global_reads, patched_names
 
-import kiro_crew.subagent as subagent_mod
-from kiro_crew.subagent_manager.admission import taskq_bridge as facade
-from kiro_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
+import aj_crew.subagent as subagent_mod
+from aj_crew.subagent_manager.admission import taskq_bridge as facade
+from aj_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_taskq_bridge_bindings")
 
@@ -59,9 +59,9 @@ SHARED_BINDINGS_CHECKS = (
     "leaf_test_scope_derives_this_file_as_a_corpus_gate",
 )
 
-_FACADE = "kiro_crew.subagent_manager.admission.taskq_bridge"
-_PACKAGE = "kiro_crew.subagent_manager.admission"
-_ADMISSION_LOGGER = "kiro_crew.subagent_manager.admission"
+_FACADE = "aj_crew.subagent_manager.admission.taskq_bridge"
+_PACKAGE = "aj_crew.subagent_manager.admission"
+_ADMISSION_LOGGER = "aj_crew.subagent_manager.admission"
 _TEST_ROOT = Path(__file__).resolve().parent
 _REPO_ROOT = _TEST_ROOT.parent
 
@@ -430,7 +430,7 @@ def test_the_runtime_import_scan_can_fail() -> None:
         "if TYPE_CHECKING:\n"
         "    from .taskq_bridge import _TaskqBridgeMixin\n"
         "def f():\n"
-        "    import kiro_crew.subagent_manager.admission.taskq_bridge\n"
+        "    import aj_crew.subagent_manager.admission.taskq_bridge\n"
         "def g():\n"
         "    from .taskq_bridge_window import _window_entry\n"
     )
@@ -482,7 +482,7 @@ def _owner_importers(src: Path, owners: frozenset[str]) -> list[str]:
 
 
 def test_the_owner_importer_scan_can_fail(tmp_path: Path) -> None:
-    pkg = tmp_path / "kiro_crew" / "subagent_manager" / "admission"
+    pkg = tmp_path / "aj_crew" / "subagent_manager" / "admission"
     pkg.mkdir(parents=True)
     (pkg / "other.py").write_text(
         "from .taskq_bridge_reads import UNKNOWN_PENDING\n", encoding="utf-8"
@@ -491,7 +491,7 @@ def test_the_owner_importer_scan_can_fail(tmp_path: Path) -> None:
         "from .taskq_bridge import UNKNOWN_PENDING  # taskq_bridge_reads\n", encoding="utf-8"
     )
     owners = frozenset({f"{_PACKAGE}.taskq_bridge_reads"})
-    assert _owner_importers(tmp_path, owners) == ["kiro_crew/subagent_manager/admission/other.py"]
+    assert _owner_importers(tmp_path, owners) == ["aj_crew/subagent_manager/admission/other.py"]
 
 
 def test_nothing_else_in_src_imports_an_owner() -> None:
@@ -727,10 +727,10 @@ def _foreign_loggers(tree: ast.Module) -> list[str]:
 def test_the_logger_scan_can_fail() -> None:
     tree = ast.parse(
         "import logging as _logging\n"
-        "_glue_logger = _logging.getLogger('kiro_crew.subagent_manager.admission')\n"
+        "_glue_logger = _logging.getLogger('aj_crew.subagent_manager.admission')\n"
         "_log = _logging.getLogger(__name__)\n"
         "from logging import getLogger\n"
-        "other = getLogger('kiro_crew.subagent_manager.admission.taskq_bridge_reads')\n"
+        "other = getLogger('aj_crew.subagent_manager.admission.taskq_bridge_reads')\n"
     )
     assert [line.split(":")[0] for line in _foreign_loggers(tree)] == ["3", "5"]
 
@@ -810,7 +810,7 @@ def test_the_facade_binds_a_moved_name_only_by_importing_it_from_its_owner() -> 
 def _test_tree_files() -> list[Path]:
     """The root conftest, ``test/`` and the builtin apps' test modules and conftests."""
     files = [_REPO_ROOT / "conftest.py", *sorted(_TEST_ROOT.rglob("*.py"))]
-    builtins_root = _REPO_ROOT / "src" / "kiro_crew" / "apps" / "builtins"
+    builtins_root = _REPO_ROOT / "src" / "aj_crew" / "apps" / "builtins"
     for path in sorted(builtins_root.rglob("*.py")):
         rel = path.relative_to(builtins_root).as_posix()
         if "/tests/" in rel or path.name.startswith("test_") or path.name == "conftest.py":
@@ -869,13 +869,13 @@ def test_no_name_patched_through_the_facade_is_read_by_an_owner() -> None:
 def test_the_reach_scan_can_fail(tmp_path: Path) -> None:
     probe = tmp_path / "test_probe.py"
     probe.write_text(
-        "from kiro_crew.subagent_manager.admission import taskq_bridge as bridge\n"
+        "from aj_crew.subagent_manager.admission import taskq_bridge as bridge\n"
         "def test_x(monkeypatch):\n"
         "    monkeypatch.setattr(bridge, 'QUEUED_LISTING_CAP', 1)\n"
         "def test_y():\n"
         "    from unittest import mock\n"
         "    with mock.patch(\n"
-        "        'kiro_crew.subagent_manager.admission.taskq_bridge._STATE_READ_ATTEMPTS', 1\n"
+        "        'aj_crew.subagent_manager.admission.taskq_bridge._STATE_READ_ATTEMPTS', 1\n"
         "    ):\n"
         "        pass\n",
         encoding="utf-8",

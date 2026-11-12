@@ -27,7 +27,7 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/decision-model-route'
 const SLOT = 'chat-model-route'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -123,7 +123,7 @@ const slots = [
     running: false,
     last_message: 'Here is the shape I would take, and the one trade-off it forces.',
     messages: 4,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     memory_mode: 'persistent',
     project: PROJECT,
     // A routed slot pins nothing: it stores `auto` and carries the flag.

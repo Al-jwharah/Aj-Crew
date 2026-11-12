@@ -15,15 +15,15 @@ from urllib.parse import urlencode
 import pytest
 from body_stream_helpers import BodyStreamPayload
 
-from kiro_crew import mcp_core
-from kiro_crew.mcp_core import _call_tool
-from kiro_crew.skills import (
+from aj_crew import mcp_core
+from aj_crew.mcp_core import _call_tool
+from aj_crew.skills import (
     PROJECT_SKILL_BODY_CAP,
     SkillBodyPage,
     SkillReadRefusal,
     SkillsLoader,
 )
-from kiro_crew.validation import MAX_RESPONSE_LEN, sanitize_response
+from aj_crew.validation import MAX_RESPONSE_LEN, sanitize_response
 
 pytestmark = pytest.mark.xdist_group("skill_read_paging")
 
@@ -403,7 +403,7 @@ class TestGatewayContract:
         from aiohttp import web
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.handlers import prompts
+        from aj_crew.dashboard.handlers import prompts
 
         root = tmp_path / "skills"
         large = _skill(root, _KEY, _body_over(_LARGE))
@@ -492,7 +492,7 @@ class TestLoaderContract:
         body's own size. Only the page's lines are copied; the count is a scan."""
         import tracemalloc
 
-        from kiro_crew.skills import _page_skill_body
+        from aj_crew.skills import _page_skill_body
 
         body = "".join(f"{n}\n" for n in range(500_000))
         tracemalloc.start()
@@ -520,7 +520,7 @@ class TestLoaderContract:
     def test_a_confined_body_is_never_read_past_the_project_bound(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, opened
     ):
-        from kiro_crew import skill_trust
+        from aj_crew import skill_trust
 
         project = tmp_path / "project"
         key = "release"
@@ -540,7 +540,7 @@ class TestLoaderContract:
         read passes -- the enumeration and the trust verdict ``load_skill``
         re-checks on its own -- or the body is refused before its size is ever
         measured and the reason reads ``unreadable`` instead of the bound."""
-        from kiro_crew import skill_trust
+        from aj_crew import skill_trust
 
         monkeypatch.setattr(skill_trust, "project_skill_traversal_supported", lambda: False)
         project = tmp_path / "project"
@@ -559,7 +559,7 @@ class TestLoaderContract:
         read is refused with its size and the paging hint -- never with the
         project-bound message, which would say the body exceeds a bound it does
         not exceed."""
-        from kiro_crew import skill_trust
+        from aj_crew import skill_trust
 
         project = tmp_path / "project"
         key = "release"

@@ -14,7 +14,7 @@ import { createPortal } from 'react-dom'
 import { OverlayPortal } from './overlayRoot'
 import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
-import { KiroGhost } from './KiroGhost'
+import { AjGem } from './AjGem'
 
 import { i18nT } from '../i18n/t'
 
@@ -49,7 +49,7 @@ function FloatingGhost({
         y: { delay, duration: 3.8, ease: 'easeInOut', repeat: Infinity },
       }}
     >
-      <KiroGhost size={160} className="h-full w-full" />
+      <AjGem size={160} className="h-full w-full" />
     </motion.div>
   )
 }
@@ -78,8 +78,8 @@ export function ShellAside({ copy, compact = false }: { copy: ShellAsideCopy; co
       <FloatingGhost className={`-top-20 left-[40%] hidden h-48 w-36 rotate-180 ${compact ? 'xl:block xl:-top-10' : 'lg:block'}`} delay={0.75} rotate={180} />
       <div className={`relative z-10 flex w-full flex-col ${compact ? 'p-5' : 'p-7'} sm:p-10`}>
         <div className="flex items-center gap-3">
-          <KiroGhost size={28} className="h-8 w-7" />
-          <span className="text-[15px] font-semibold tracking-wide">{i18nT('components.onboardingChapterShell.kiro_crew')}</span>
+          <AjGem size={28} className="h-8 w-7" />
+          <span className="text-[15px] font-semibold tracking-wide">{i18nT('components.onboardingChapterShell.aj_crew')}</span>
         </div>
         <div className="mt-auto max-w-[290px]">
           <h1 className={`${compact ? 'mt-4 text-2xl sm:mt-0' : 'text-4xl'} font-semibold leading-[1.05] tracking-[-0.02em] sm:text-[clamp(2.2rem,4vw,3.5rem)]`}>

@@ -241,7 +241,7 @@ export function SourceBadge({ source, children, tone = 'auto', title }: { source
   const cls =
     tone === 'neutral' ? neutral
     : source === 'package' ? 'bg-aim-subtle text-aim border-aim/30'
-    : source === 'kirocrew' ? neutral
+    : source === 'ajcrew' ? neutral
     : source === 'project' ? 'text-ok border-ok/30'
     : neutral
   return <span title={title} className={`px-1.5 py-[2px] rounded-full text-[11px] font-bold border shrink-0 ${cls}`}>{children ?? source}</span>

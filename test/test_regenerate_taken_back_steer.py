@@ -18,8 +18,8 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import steer_retract
-from kiro_crew.dashboard.chat_delivery import (
+from aj_crew.dashboard import steer_retract
+from aj_crew.dashboard.chat_delivery import (
     STEER_RETRACTABLE_META,
     STEER_STATE_CONSUMED,
     STEER_STATE_WRITTEN,
@@ -33,7 +33,7 @@ _REPLY_AFTER_STEER = "Stage two ships to prod on Thursday."
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     return _make_state(tmp_path)
 
 
@@ -70,7 +70,7 @@ async def _regenerate(state, slot, armed: list[tuple[str, str]] | None = None):
         armed.extend((m["role"], m["content"]) for m in target.rows)
 
     run_chat = AsyncMock(side_effect=_turn)
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=run_chat):
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=run_chat):
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post(f"/api/chat/slots/{slot.key}/regenerate")
             body = await resp.json()

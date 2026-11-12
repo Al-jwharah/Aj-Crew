@@ -68,7 +68,7 @@ export type UsageSeriesPayload = {
 }
 
 /** The agent-rendered controls a click can be reported for. Mirrors
- *  `UI_CONTROL_VALUES` in `src/kiro_crew/metrics/feature_usage.py`; the server
+ *  `UI_CONTROL_VALUES` in `src/aj_crew/metrics/feature_usage.py`; the server
  *  counts any other value as `other`. */
 export type UiControl =
   | 'option_chip'
@@ -124,7 +124,7 @@ export function createTelemetryEndpoints({ get, post, j, jfetch: fetch }: Client
         // False only when the gateway says recording is switched off. Absent reads as
         // on: an older gateway does not send the field.
         recording: read.recording !== false,
-        // The KIROCREW_CREW_LOG value that switched it off, so the panel can quote it.
+        // The AJCREW_CREW_LOG value that switched it off, so the panel can quote it.
         // Empty when the gateway does not send one.
         flagValue: typeof read.flag_value === 'string' ? read.flag_value : '',
         // False when that value is not one of the switch-off spellings.

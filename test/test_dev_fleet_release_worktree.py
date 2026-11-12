@@ -38,9 +38,9 @@ from typing import Any
 import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 
-from kiro_crew.apps.builtins.dev_fleet import release_worktree, repository, runtime
-from kiro_crew.dashboard.handlers import worktree as dash_worktree
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS, async_wait_until
+from aj_crew.apps.builtins.dev_fleet import release_worktree, repository, runtime
+from aj_crew.dashboard.handlers import worktree as dash_worktree
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, async_wait_until
 
 requires_git = pytest.mark.skipif(shutil.which("git") is None, reason="git not available")
 

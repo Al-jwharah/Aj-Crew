@@ -14,19 +14,19 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.discord.transport import DISCORD_CAPABILITIES
-from kiro_crew.feishu.transport import FEISHU_CAPABILITIES
-from kiro_crew.imessage.transport import IMESSAGE_CAPABILITIES
-from kiro_crew.messaging.transport import TransportCapabilities
-from kiro_crew.slack.transport import SLACK_CAPABILITIES
-from kiro_crew.teams.transport import TEAMS_CAPABILITIES
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
-from kiro_crew.webex.transport import WEBEX_CAPABILITIES
-from kiro_crew.wecom.transport import WECOM_CAPABILITIES
-from kiro_crew.weixin.transport import WEIXIN_CAPABILITIES
-from kiro_crew.whatsapp.transport import WHATSAPP_CAPABILITIES
+from aj_crew.discord.transport import DISCORD_CAPABILITIES
+from aj_crew.feishu.transport import FEISHU_CAPABILITIES
+from aj_crew.imessage.transport import IMESSAGE_CAPABILITIES
+from aj_crew.messaging.transport import TransportCapabilities
+from aj_crew.slack.transport import SLACK_CAPABILITIES
+from aj_crew.teams.transport import TEAMS_CAPABILITIES
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
+from aj_crew.webex.transport import WEBEX_CAPABILITIES
+from aj_crew.wecom.transport import WECOM_CAPABILITIES
+from aj_crew.weixin.transport import WEIXIN_CAPABILITIES
+from aj_crew.whatsapp.transport import WHATSAPP_CAPABILITIES
 
-DOC = Path(__file__).parent.parent / "src" / "kiro_crew" / "docs" / "channel-capabilities.md"
+DOC = Path(__file__).parent.parent / "src" / "aj_crew" / "docs" / "channel-capabilities.md"
 
 #: The doc's column label -> that channel's live declaration.
 CHANNELS: dict[str, TransportCapabilities] = {
@@ -162,12 +162,12 @@ class TestTheZeroWidgetSection:
     #: it. Anchors are short so a rewording does not red the check; user-facing docs
     #: anchor on a phrase rather than the private ``_strip_options``.
     STRIP_SITES = {
-        "src/kiro_crew/docs/channel-capabilities.md": "drops the list",
-        "src/kiro_crew/docs/whatsapp-integration.md": "dropped, not numbered",
-        "src/kiro_crew/messaging/transport.py": "_strip_options",
-        "src/kiro_crew/messaging/renderer.py": "_strip_options",
-        "src/kiro_crew/whatsapp/transport.py": "_strip_options",
-        "src/kiro_crew/whatsapp/commands.py": "strips a complete",
+        "src/aj_crew/docs/channel-capabilities.md": "drops the list",
+        "src/aj_crew/docs/whatsapp-integration.md": "dropped, not numbered",
+        "src/aj_crew/messaging/transport.py": "_strip_options",
+        "src/aj_crew/messaging/renderer.py": "_strip_options",
+        "src/aj_crew/whatsapp/transport.py": "_strip_options",
+        "src/aj_crew/whatsapp/commands.py": "strips a complete",
         "docs/system-specs/modules/messaging.md": "_strip_options",
     }
 
@@ -177,7 +177,7 @@ class TestTheZeroWidgetSection:
         Readers must see the exception inline, so it lives in seven files; on a change
         this one test fails and names every file still carrying the stale sentence.
         """
-        from kiro_crew.whatsapp.turn_renderer import _strip_options
+        from aj_crew.whatsapp.turn_renderer import _strip_options
 
         repo = Path(__file__).parent.parent
         still_strips = _strip_options("Pick.\n\n[OPTIONS: a | b]") == "Pick."
@@ -205,7 +205,7 @@ class TestTheZeroWidgetSection:
         calling it a gap has to go — which is the direction a reader most needs the
         doc to be right about, because today the answers vanish silently.
         """
-        from kiro_crew.whatsapp.turn_renderer import _strip_options
+        from aj_crew.whatsapp.turn_renderer import _strip_options
 
         stripped = _strip_options("Pick one.\n\n[OPTIONS: Ship it | Hold]")
         assert stripped == "Pick one.", (

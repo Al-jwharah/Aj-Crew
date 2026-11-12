@@ -13,20 +13,20 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
 
-def _loaded(tmp_path: Path, data: dict) -> KiroCrewConfig:
+def _loaded(tmp_path: Path, data: dict) -> AjCrewConfig:
     """Load *data* as config.json through the real load path.
 
-    Goes through `KiroCrewConfig.load()` rather than constructing dataclasses: every
+    Goes through `AjCrewConfig.load()` rather than constructing dataclasses: every
     clamp under test lives on the load path, so a hand-built dataclass skips all of them
     and proves nothing about what a hand-edited file produces.
     """
     (tmp_path / "config.json").write_text(json.dumps(data), encoding="utf-8")
-    with unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
-        return KiroCrewConfig.load()
+    with unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
+        return AjCrewConfig.load()
 
 
 def _bounded_numeric_fields() -> list[tuple[str, str, str, float, float]]:
@@ -111,10 +111,10 @@ def test_the_title_refresh_cadence_loads_verbatim_except_for_the_gap_it_raises(
     The write table admits the loader's whole domain, 0 (the built-in schedule) through
     the ceiling, and the loader stores 0 and MIN..MAX verbatim. The gap 1..MIN-1 is inside
     that range and rises to MIN on load, so a typo of 1 cannot spend an LLM call on every
-    turn. The PATCH gate stores the gap the same way `kirocrew config set` does, and the
+    turn. The PATCH gate stores the gap the same way `ajcrew config set` does, and the
     Settings row reads back the LOADED value, so the cadence it shows is the one that runs.
     """
-    from kiro_crew.config.sections import (
+    from aj_crew.config.sections import (
         TITLE_REFRESH_EVERY_TURNS_MAX,
         TITLE_REFRESH_EVERY_TURNS_MIN,
     )
@@ -162,13 +162,13 @@ def test_a_negative_knowledge_budget_keeps_its_default_instead_of_clamping_to_ze
 def test_the_completion_keep_ceiling_matches_its_owner() -> None:
     """The one bound that genuinely has to be spelled twice, pinned equal.
 
-    `context_management` does `from kiro_crew.config.loader import config_dir`, so the
+    `context_management` does `from aj_crew.config.loader import config_dir`, so the
     loader cannot import `RESULT_FILE_MAX_BYTES` back without a circular import. The value
     therefore lives in both modules, and this test is the only place the two spellings can
     be held together -- a test imports both without the cycle.
     """
-    from kiro_crew.config import loader
-    from kiro_crew.context_management import RESULT_FILE_MAX_BYTES
+    from aj_crew.config import loader
+    from aj_crew.context_management import RESULT_FILE_MAX_BYTES
 
     assert loader.COMPLETION_KEEP_CHARS_MAX == RESULT_FILE_MAX_BYTES, (
         "the loader's completion-keep ceiling has drifted from context_management's "
@@ -184,8 +184,8 @@ def test_the_write_table_reads_its_bounds_from_the_loader_constants() -> None:
     share named constants. This is NOT tautological: it fails the moment someone
     re-hardcodes a literal in either place.
     """
-    from kiro_crew.config import loader
-    from kiro_crew.config.sections import TITLE_REFRESH_EVERY_TURNS_MAX
+    from aj_crew.config import loader
+    from aj_crew.config.sections import TITLE_REFRESH_EVERY_TURNS_MAX
 
     expected = {
         "agent.soft_stop_budget_secs": (loader.SOFT_STOP_BUDGET_MIN, loader.SOFT_STOP_BUDGET_MAX),

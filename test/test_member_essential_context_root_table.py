@@ -11,7 +11,7 @@ from collections import Counter
 
 import member_essential_context_helpers
 
-from kiro_crew import member_essential_context as mec
+from aj_crew import member_essential_context as mec
 
 _close_skills_loaders = member_essential_context_helpers._close_skills_loaders
 env = member_essential_context_helpers.env

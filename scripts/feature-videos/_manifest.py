@@ -37,7 +37,7 @@ _CLI_MANIFEST_SIGNER = _REPO_ROOT / "packaging" / "signing" / "cli-manifest.py"
 def _load_cli_manifest_signer() -> ModuleType:
     """The CLI artifact manifest signer, loaded by path (its name has a hyphen)."""
     spec = importlib.util.spec_from_file_location(
-        "kirocrew_cli_manifest_signer", _CLI_MANIFEST_SIGNER
+        "ajcrew_cli_manifest_signer", _CLI_MANIFEST_SIGNER
     )
     if spec is None or spec.loader is None:  # pragma: no cover - present in every checkout
         raise RuntimeError(f"cannot load {_CLI_MANIFEST_SIGNER}")
@@ -58,7 +58,7 @@ public_key_id = _signer.public_key_id
 kms_sign_digest = _signer.kms_sign_digest
 MAX_SIGNATURE_BYTES: int = _signer.MAX_SIGNATURE_BYTES
 
-SCHEMA = "kirocrew-feature-videos-manifest-v1"
+SCHEMA = "ajcrew-feature-videos-manifest-v1"
 
 #: The committed public half of the release signing key -- the same PEM the
 #: runtime pins and ``cli.sh`` embeds.

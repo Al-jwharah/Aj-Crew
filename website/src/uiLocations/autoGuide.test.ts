@@ -212,7 +212,7 @@ describe('auto locations from buildUiIndex', () => {
     agentSettings: [{ id: 'chat.a-setting', label: 'A setting', tab: 'chat', route: '/settings/chat?highlight=chat.a-setting' }],
     descriptors: { 'chat.toggle': { kind: 'toggle', placements: [{ surface: 'chat', parent: 'page.chat', entry: 'toolbar' }] } },
     markerSites: [{ id: 'chat.toggle', rel: 'F.tsx', line: 1, resolved: { source: { key: 'k.toggle' }, excluded: [] } }],
-    previewEnablers: {}, catalogs: { en: EN }, locales: ['en'], productName: 'Kiro Crew', inputDigest: 'sha256:test',
+    previewEnablers: {}, catalogs: { en: EN }, locales: ['en'], productName: 'Aj Crew', inputDigest: 'sha256:test',
     routes: ROUTES, conditions: UI_CONDITIONS, revealStates: UI_REVEAL_STATES,
     resolveGuide: () => ({ ok: false, reason: 'none' }),
     autoCandidates,
@@ -307,7 +307,7 @@ describe('auto locations from buildUiIndex', () => {
 })
 
 describe('the real generator', () => {
-  const dir = fs.mkdtempSync(path.join(process.env.KIROCREW_SCRATCH ?? os.tmpdir(), 'ui-auto-'))
+  const dir = fs.mkdtempSync(path.join(process.env.AJCREW_SCRATCH ?? os.tmpdir(), 'ui-auto-'))
   const gen = () => {
     const out = path.join(dir, `${Math.random().toString(36).slice(2)}`)
     fs.mkdirSync(out)

@@ -104,7 +104,7 @@ def _git_vars_to_strip() -> frozenset[str]:
     outrank the maintenance entries above. Imported at call time, since this
     module's module-level imports stay stdlib-only.
     """
-    from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+    from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
     return (_GIT_LOCATION_VARS - {"GIT_CEILING_DIRECTORIES"}) | {"GIT_CONFIG_PARAMETERS"}
 

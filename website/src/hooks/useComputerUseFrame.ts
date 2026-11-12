@@ -4,7 +4,7 @@ import { useAppSelector } from '../store'
 import { sessionDisplayTitle } from '../utils/sessionDisplayTitle'
 
 /**
- * Shape of the `kirocrew-computer-use-frame` CustomEvent detail. Mirrors the WS
+ * Shape of the `ajcrew-computer-use-frame` CustomEvent detail. Mirrors the WS
  * `computer_use_frame` payload the gateway builds in
  * `computer_use/screencast.py::build_frame_payload`, where every field is bounded
  * to an explicit charset / range before it reaches the wire.
@@ -36,7 +36,7 @@ export interface ComputerUseFrameState {
 }
 
 /** Window event the WS layer dispatches for each `computer_use_frame` message. */
-export const COMPUTER_USE_FRAME_EVENT = 'kirocrew-computer-use-frame'
+export const COMPUTER_USE_FRAME_EVENT = 'ajcrew-computer-use-frame'
 
 /**
  * Subscribe to the computer-use live view (PiP) frame stream.

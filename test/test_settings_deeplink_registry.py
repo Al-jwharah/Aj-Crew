@@ -24,9 +24,9 @@ import json
 from fnmatch import fnmatch
 from pathlib import Path
 
-from kiro_crew.context import _BUNDLED_DOCS_DIR
-from kiro_crew.tips import _sanitize_tip_action
-from kiro_crew.tips_allowlist import TIP_DOC_ALLOWLIST
+from aj_crew.context import _BUNDLED_DOCS_DIR
+from aj_crew.tips import _sanitize_tip_action
+from aj_crew.tips_allowlist import TIP_DOC_ALLOWLIST
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -127,11 +127,11 @@ def test_both_packaging_lanes_ship_the_registry() -> None:
     setup_cfg = (_REPO_ROOT / "setup.cfg").read_text(encoding="utf-8")
     assert "docs/*.json" in setup_cfg
     manifest = (_REPO_ROOT / "MANIFEST.in").read_text(encoding="utf-8")
-    assert "recursive-include src/kiro_crew/docs *.json" in manifest
+    assert "recursive-include src/aj_crew/docs *.json" in manifest
     # No later exclude may strip it back out: MANIFEST.in is order-sensitive, and
     # `global-exclude *.so` silently removing `libllama.so` from every published
     # Linux wheel is the precedent (test_vendored_llama_payload.py).
-    tail = manifest.split("recursive-include src/kiro_crew/docs *.json", 1)[1]
+    tail = manifest.split("recursive-include src/aj_crew/docs *.json", 1)[1]
     for line in tail.splitlines():
         parts = line.split()
         if not parts or parts[0] not in ("exclude", "global-exclude", "recursive-exclude"):
@@ -160,7 +160,7 @@ def test_tip_prose_ships_apart_from_on_row_description() -> None:
 def test_settings_search_reads_tip_and_on_row_help() -> None:
     """Settings search keeps every tip word: `_help_text` joins tip then
     description, so a query matches either one."""
-    from kiro_crew.dashboard.change_cards import _help_text
+    from aj_crew.dashboard.change_cards import _help_text
 
     assert _help_text({"hint": "Tip.", "description": "Row."}) == "Tip. Row."
     assert _help_text({"hint": "Tip."}) == "Tip."

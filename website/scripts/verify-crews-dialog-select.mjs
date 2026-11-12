@@ -25,8 +25,8 @@ import { stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 import { crewsApi } from './lib/crews-fixtures.mjs'
 
 const CREWS = [
-  { name: 'default', kiro_agent: 'kirocrew', workspace: 'core-ws', memory_store: 'default' },
-  { name: 'oncall', kiro_agent: 'kirocrew', workspace: 'oncall', memory_store: 'oncall-mem' },
+  { name: 'default', kiro_agent: 'ajcrew', workspace: 'core-ws', memory_store: 'default' },
+  { name: 'oncall', kiro_agent: 'ajcrew', workspace: 'oncall', memory_store: 'oncall-mem' },
 ]
 
 async function main() {

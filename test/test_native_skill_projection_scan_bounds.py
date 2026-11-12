@@ -26,7 +26,7 @@ from native_skill_projection_helpers import (
     _metadata_file,
 )
 
-from kiro_crew.acp import skill_projection as projection
+from aj_crew.acp import skill_projection as projection
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _no_eager_prune = native_skill_projection_helpers._no_eager_prune
@@ -301,11 +301,11 @@ def test_prune_candidate_traversal_counts_unrelated_entries_and_caps_skip_credit
     """Neither arbitrary padding nor a large skip set can extend the walk."""
     _home, agents, _project = native_tree
     work_limit = 3
-    skip = {f"kirocrew-skill-view-{0xB00 + index:024x}" for index in range(20)}
+    skip = {f"ajcrew-skill-view-{0xB00 + index:024x}" for index in range(20)}
     names = [
         *(f"unrelated-{index}.json" for index in range(50)),
         *(f"{stem}.json" for stem in sorted(skip)),
-        *(f"kirocrew-skill-view-{index:024x}.json" for index in range(2)),
+        *(f"ajcrew-skill-view-{index:024x}.json" for index in range(2)),
     ]
     walked = 0
 
@@ -431,7 +431,7 @@ def test_capped_lease_scan_reports_its_ceiling_and_reclaimed_count(
     for n in range(3):
         projection.atomic_write(
             lease_dir / f"residue-{n}.json",
-            json.dumps({"aliases": [f"kirocrew-skill-view-{n}"]}),
+            json.dumps({"aliases": [f"ajcrew-skill-view-{n}"]}),
             restrict_to_owner=True,
         )
         projection.atomic_write(lease_dir / f"residue-{n}.hold", "", restrict_to_owner=True)
@@ -462,7 +462,7 @@ def test_lease_scan_stops_on_its_deadline_and_answers_uncertain(native_tree, mon
     for n in range(3):
         projection.atomic_write(
             lease_dir / f"residue-{n}.json",
-            json.dumps({"aliases": [f"kirocrew-skill-view-{n}"]}),
+            json.dumps({"aliases": [f"ajcrew-skill-view-{n}"]}),
             restrict_to_owner=True,
         )
         projection.atomic_write(lease_dir / f"residue-{n}.hold", "", restrict_to_owner=True)
@@ -541,7 +541,7 @@ def test_capped_lease_scan_counts_only_fully_removed_pairs(native_tree, monkeypa
     for n in range(3):
         projection.atomic_write(
             lease_dir / f"residue-{n}.json",
-            json.dumps({"aliases": [f"kirocrew-skill-view-{n}"]}),
+            json.dumps({"aliases": [f"ajcrew-skill-view-{n}"]}),
             restrict_to_owner=True,
         )
         projection.atomic_write(lease_dir / f"residue-{n}.hold", "", restrict_to_owner=True)
@@ -578,7 +578,7 @@ def test_unreadable_lease_record_still_drains_validated_residue(native_tree, mon
     stale = lease_dir / "a-stale.json"
     stale_holder = lease_dir / "a-stale.hold"
     projection.atomic_write(
-        stale, json.dumps({"aliases": ["kirocrew-skill-view-stale"]}), restrict_to_owner=True
+        stale, json.dumps({"aliases": ["ajcrew-skill-view-stale"]}), restrict_to_owner=True
     )
     projection.atomic_write(stale_holder, "", restrict_to_owner=True)
     bad = lease_dir / "b-bad.json"
@@ -628,7 +628,7 @@ def test_unreadable_lease_record_does_not_hide_stale_leases_after_it(native_tree
     stale = lease_dir / "b-stale.json"
     stale_holder = lease_dir / "b-stale.hold"
     projection.atomic_write(
-        stale, json.dumps({"aliases": ["kirocrew-skill-view-stale"]}), restrict_to_owner=True
+        stale, json.dumps({"aliases": ["ajcrew-skill-view-stale"]}), restrict_to_owner=True
     )
     projection.atomic_write(stale_holder, "", restrict_to_owner=True)
     real_scandir = projection.os.scandir
@@ -668,7 +668,7 @@ def test_record_less_holder_litter_is_reclaimed_and_cannot_pin_the_cap(native_tr
     orphans = [lease_dir / f"{1000 + n}-{uuid.uuid4().hex}.hold" for n in range(4)]
     for orphan in orphans:
         projection.atomic_write(orphan, "", restrict_to_owner=True)
-    held = projection._acquire_projection_lease(agents, {"kirocrew-skill-view-live"})
+    held = projection._acquire_projection_lease(agents, {"ajcrew-skill-view-live"})
     try:
         monkeypatch.setattr(projection, "_PROJECTION_LEASE_SCAN_LIMIT", 3, raising=False)
         drained = 0
@@ -678,7 +678,7 @@ def test_record_less_holder_litter_is_reclaimed_and_cannot_pin_the_cap(native_tr
                 break
             drained += 1
         assert not any(orphan.exists() for orphan in orphans)
-        assert live == {"kirocrew-skill-view-live"} and uncertain is False
+        assert live == {"ajcrew-skill-view-live"} and uncertain is False
         assert drained >= 1, "the ceiling was never reached, so the litter was not exercised"
         # The live lease's own pair is untouched.
         assert len(list(lease_dir.glob("*.json"))) == 1
@@ -730,11 +730,9 @@ def test_census_truncates_wherever_the_reclaim_lease_scan_caps(native_tree, monk
     The census must then report ``truncated`` instead of promising a drain.
     """
     _home, agents, _project = native_tree
-    projection.atomic_write(
-        agents / "kirocrew-skill-view-orphan.json", "{}", restrict_to_owner=True
-    )
+    projection.atomic_write(agents / "ajcrew-skill-view-orphan.json", "{}", restrict_to_owner=True)
     leases = [
-        projection._acquire_projection_lease(agents, {f"kirocrew-skill-view-live{n}"})
+        projection._acquire_projection_lease(agents, {f"ajcrew-skill-view-live{n}"})
         for n in range(3)
     ]
     try:
@@ -1079,7 +1077,7 @@ class TestSettingsReadRetry:
         assert calls[0] == calls[1] == str(global_settings)
 
     def test_rollback_with_one_refusal_still_restores(self, native_tree, monkeypatch):
-        # KIROCREW_NATIVE_SKILL_PROJECTION=0 still reads the workspace cli.json
+        # AJCREW_NATIVE_SKILL_PROJECTION=0 still reads the workspace cli.json
         # during rollback, so the retry must cover that path too.
         _home, agents, project = native_tree
         (agents / "custom.json").write_text('{"name":"custom"}', encoding="utf-8")
@@ -1088,7 +1086,7 @@ class TestSettingsReadRetry:
         settings.write_text("{}", encoding="utf-8")
         projection.prepare_native_skill_projection(project)
         monkeypatch.setattr(projection, "_settings_read_sleep", lambda secs: None)
-        monkeypatch.setenv("KIROCREW_NATIVE_SKILL_PROJECTION", "0")
+        monkeypatch.setenv("AJCREW_NATIVE_SKILL_PROJECTION", "0")
         self._flaky_reader(monkeypatch, refusals=1)
 
         assert projection.prepare_native_skill_projection(project) is None
@@ -1231,8 +1229,8 @@ async def test_set_mode_sends_the_fresh_alias_never_a_changed_spawn_one(
     CHANGED_ALIAS = projection.NATIVE_SKILL_ALIAS_PREFIX + "2" * 24
     OTHER_ALIAS = projection.NATIVE_SKILL_ALIAS_PREFIX + "3" * 24
 
-    import kiro_crew.agent as agent_module
-    from kiro_crew.acp import runtime as runtime_module
+    import aj_crew.agent as agent_module
+    from aj_crew.acp import runtime as runtime_module
 
     spawn = projection.NativeSkillProjection({"crew": SPAWN_ALIAS})
     if refreshed_alias == "same":

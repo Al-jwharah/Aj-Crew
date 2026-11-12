@@ -8,8 +8,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from test_dashboard_chat import TestRunChatTransientRetry as _TransientSuite
 
-from kiro_crew.dashboard.recovery_replays import ReplayFamily
-from kiro_crew.dashboard.state import SUBAGENT_SYNTHESIS_PROMPT
+from aj_crew.dashboard.recovery_replays import ReplayFamily
+from aj_crew.dashboard.state import SUBAGENT_SYNTHESIS_PROMPT
 
 
 class TestRunChatTransientRetryImageDiscard:
@@ -25,7 +25,7 @@ class TestRunChatTransientRetryImageDiscard:
 
     @staticmethod
     def _image_error():
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         exc = AcpError("The model could not process an image", transient=False)
         exc.structural_terminal = True
@@ -38,10 +38,10 @@ class TestRunChatTransientRetryImageDiscard:
     ):
         """A typed image rejection after a tool result cannot be repaired by
         retrying the native conversation. With no new user attachment, discard
-        the resume SID once and continue from Kiro Crew's text transcript without
+        the resume SID once and continue from Aj Crew's text transcript without
         replaying the original request or its completed tool side effects."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import (
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -85,9 +85,9 @@ class TestRunChatTransientRetryImageDiscard:
         so a newer user message does not cancel it: the completion runs again on
         the fresh conversation, reports itself consumed, and the user's message
         runs after it."""
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         calls: list[str] = []
 
@@ -140,8 +140,8 @@ class TestRunChatTransientRetryImageDiscard:
         output already landed would replay as a continuation, and the synthesis
         turn is runner-authored: with a user message queued, neither is retried,
         and the user's message runs next."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import (
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -189,7 +189,7 @@ class TestRunChatTransientRetryImageDiscard:
         """A current attachment may itself be invalid. Preserve the healthy
         native conversation and let the actionable terminal error tell the user
         to remove or re-encode that image instead of discarding history."""
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         async def _fail(msg):
             raise self._image_error()
@@ -215,7 +215,7 @@ class TestRunChatTransientRetryImageDiscard:
     ):
         """If the fresh conversation also rejects an image, surface the error;
         never loop through repeated discard and synthetic replay."""
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         async def _fail(msg):
             raise self._image_error()
@@ -245,7 +245,7 @@ class TestRunChatTransientRetryImageDiscard:
         as a CURRENT-turn image block. Such a rejection is of the image the user
         just sent, so the healthy conversation must survive and the verbatim
         replay must never re-inline the same bytes."""
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         async def _fail(msg):
             raise self._image_error()
@@ -277,7 +277,7 @@ class TestRunChatTransientRetryImageDiscard:
         leaves ``_stopping`` back at idle, so only the enqueue-time stop-generation
         snapshot can see it. The recovery must be dropped, not dispatched: its
         replay would re-run a cancelled turn's remaining destructive step."""
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         calls: list[str] = []
 
@@ -320,9 +320,9 @@ class TestRunChatTransientRetryImageDiscard:
         must still veto the recovery. The queue entry is already consumed at
         this seam, so the runner must use the identity and snapshots passed by
         the drain."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.dashboard.chat_utils import effective_session_key
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         provider_calls = 0
 
@@ -384,8 +384,8 @@ class TestRunChatTransientRetryPoisonedDiscard:
         one exhaustion is still plausibly a momentary outage, and discarding
         on it would throw away a healthy conversation on every blip that
         outlasts the ladder."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
 
         async def _always_fail(msg):
             raise AcpError(self._TRANSIENT)
@@ -417,10 +417,10 @@ class TestRunChatTransientRetryPoisonedDiscard:
         Two silent exhaustions mean the backend rejects this conversation for good. The
         second discards it (discard_conversation(), since reset() would session/load the
         poison back) keeping the session-map entry, and re-queues the message once."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.llm_helpers import TRANSIENT_RETRIES
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.llm_helpers import TRANSIENT_RETRIES
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         # Fail every attempt of two full cycles (the "poisoned conversation"),
         # then succeed — the success models the fresh post-discard conversation.
@@ -438,7 +438,7 @@ class TestRunChatTransientRetryPoisonedDiscard:
         state = self._make_state(tmp_path, monkeypatch)
         # fallback_model="" (disabled): pins the PRE-FEATURE escalation ladder
         # (the "auto" default would walk the fallback branch instead).
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
         client = self._client(_stream)
         self._wire_sessions(state, client)
         slot = state.get_or_create_slot("s1")
@@ -447,7 +447,7 @@ class TestRunChatTransientRetryPoisonedDiscard:
         with (
             patch("asyncio.sleep", new_callable=AsyncMock),
             patch(
-                "kiro_crew.dashboard.chat_runner.run_bg_oneliner",
+                "aj_crew.dashboard.chat_runner.run_bg_oneliner",
                 new_callable=AsyncMock,
                 return_value="OK",
             ) as canary,
@@ -492,8 +492,8 @@ class TestRunChatTransientRetryPoisonedDiscard:
         prolonged outage), no second discard fires: the one-shot is consumed by
         the first escalation and only a LANDED turn re-arms it, so a discard
         loop is impossible. Later cycles surface the terminal ❌ as before."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
 
         async def _always_fail(msg):
             raise AcpError(self._TRANSIENT)
@@ -508,7 +508,7 @@ class TestRunChatTransientRetryPoisonedDiscard:
         with (
             patch("asyncio.sleep", new_callable=AsyncMock),
             patch(
-                "kiro_crew.dashboard.chat_runner.run_bg_oneliner",
+                "aj_crew.dashboard.chat_runner.run_bg_oneliner",
                 new_callable=AsyncMock,
                 return_value="OK",
             ),
@@ -542,9 +542,9 @@ class TestRunChatTransientRetryPoisonedDiscard:
         exhaustion would discard a healthy conversation),
         while a cancelled turn with NO output proves nothing and preserves
         it. In both cases the spent one-shot stays consumed."""
-        from kiro_crew.acp.types import STOP_REASON_CANCELLED
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_CANCELLED
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         # ── Cancelled turn with NO output: both guards preserved. ──
         async def _cancelled_silent(msg):
@@ -605,8 +605,8 @@ class TestRunChatTransientRetryPoisonedDiscard:
         ALSO fails, no discard fires, the one-shot stays unconsumed, and the
         streak stays accrued so a later user-initiated cycle re-probes once
         the outage ends."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
 
         async def _always_fail(msg):
             raise AcpError(self._TRANSIENT)
@@ -621,7 +621,7 @@ class TestRunChatTransientRetryPoisonedDiscard:
         with (
             patch("asyncio.sleep", new_callable=AsyncMock),
             patch(
-                "kiro_crew.dashboard.chat_runner.run_bg_oneliner",
+                "aj_crew.dashboard.chat_runner.run_bg_oneliner",
                 new_callable=AsyncMock,
                 side_effect=AcpError(self._TRANSIENT),
             ) as canary,
@@ -646,8 +646,8 @@ class TestRunChatTransientRetryPoisonedDiscard:
     async def test_canary_empty_reply_is_not_positive_evidence(self, tmp_path, monkeypatch):
         """A canary that completes with EMPTY output proves nothing about the
         fresh conversation working — fail-safe to no-discard."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
 
         async def _always_fail(msg):
             raise AcpError(self._TRANSIENT)
@@ -662,7 +662,7 @@ class TestRunChatTransientRetryPoisonedDiscard:
         with (
             patch("asyncio.sleep", new_callable=AsyncMock),
             patch(
-                "kiro_crew.dashboard.chat_runner.run_bg_oneliner",
+                "aj_crew.dashboard.chat_runner.run_bg_oneliner",
                 new_callable=AsyncMock,
                 return_value="  ",
             ),
@@ -682,8 +682,8 @@ class TestRunChatTransientRetryPoisonedDiscard:
         Re-queueing cancelled work would repeat its tool side effects. The veto keys on
         _stop_generation, since teardown can reset _stop_state to "idle" before the check.
         Nothing is consumed: the one-shot stays armed and the streak stays accrued."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
 
         async def _always_fail(msg):
             raise AcpError(self._TRANSIENT)
@@ -706,7 +706,7 @@ class TestRunChatTransientRetryPoisonedDiscard:
         with (
             patch("asyncio.sleep", new_callable=AsyncMock),
             patch(
-                "kiro_crew.dashboard.chat_runner.run_bg_oneliner",
+                "aj_crew.dashboard.chat_runner.run_bg_oneliner",
                 new_callable=AsyncMock,
                 side_effect=_canary_with_midflight_stop,
             ) as canary,
@@ -729,8 +729,8 @@ class TestRunChatTransientRetryPoisonedDiscard:
         """When the session's served model cannot be read, the canary cannot
         be pinned to it, so the probe is meaningless — fail-safe: no probe,
         no discard, one-shot preserved."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
 
         async def _always_fail(msg):
             raise AcpError(self._TRANSIENT)
@@ -746,7 +746,7 @@ class TestRunChatTransientRetryPoisonedDiscard:
         with (
             patch("asyncio.sleep", new_callable=AsyncMock),
             patch(
-                "kiro_crew.dashboard.chat_runner.run_bg_oneliner",
+                "aj_crew.dashboard.chat_runner.run_bg_oneliner",
                 new_callable=AsyncMock,
                 return_value="OK",
             ) as canary,

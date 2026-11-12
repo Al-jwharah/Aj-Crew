@@ -12,8 +12,8 @@ import uuid
 
 import pytest
 
-from kiro_crew.cron import CronService
-from kiro_crew.mcp_cron import _call_tool_inner, _list_tools, _validate_args
+from aj_crew.cron import CronService
+from aj_crew.mcp_cron import _call_tool_inner, _list_tools, _validate_args
 
 
 def _unique_name() -> str:
@@ -22,14 +22,14 @@ def _unique_name() -> str:
 
 @pytest.fixture(autouse=True)
 def _isolate_cron_store(monkeypatch, tmp_path):
-    monkeypatch.setattr("kiro_crew.cron._DEFAULT_DIR", tmp_path)
-    monkeypatch.setattr("kiro_crew.mcp_cron.config_dir", lambda: tmp_path)
-    monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+    monkeypatch.setattr("aj_crew.cron._DEFAULT_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.mcp_cron.config_dir", lambda: tmp_path)
+    monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
     # Pinned rather than deleted: ``mcp_cron`` refuses a write from a caller it
     # cannot name, and every test here writes. A fixed value keeps the isolation
     # this fixture is for (no ambient key leaks in) while stating the identity
     # precondition these tests always assumed.
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:psess-slot")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:psess-slot")
 
 
 class TestCronAddPersistentSession:
@@ -100,7 +100,7 @@ class TestCronAddPersistentSessionValidation:
 
     def test_schema_has_persistent_session_bool_field(self):
         """CRON_ADD_SCHEMA declares persistent_session with bool type."""
-        from kiro_crew.validation import CRON_ADD_SCHEMA
+        from aj_crew.validation import CRON_ADD_SCHEMA
 
         specs = {f.name: f for f in CRON_ADD_SCHEMA.fields}
         assert "persistent_session" in specs, (
@@ -128,7 +128,7 @@ class TestCronAddPersistentSessionValidation:
         ],
     )
     def test_validator_rejects_a_non_bool(self, value):
-        from kiro_crew.validation import ValidationError
+        from aj_crew.validation import ValidationError
 
         with pytest.raises(ValidationError):
             _validate_args(

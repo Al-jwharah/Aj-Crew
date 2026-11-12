@@ -190,7 +190,7 @@ fi
   echo "annotation=$annotation"
 } >> "$GITHUB_OUTPUT"
 
-template_url="https://github.com/${GITHUB_REPOSITORY:-kirodotdev/KiroCrew}/blob/main/.github/PULL_REQUEST_TEMPLATE.md"
+template_url="https://github.com/${GITHUB_REPOSITORY:-Al-jwharah/Aj-Crew}/blob/main/.github/PULL_REQUEST_TEMPLATE.md"
 
 # Multiline output via a delimiter that cannot occur in the summary: nothing
 # from the body is echoed into it, only section names from the list above.

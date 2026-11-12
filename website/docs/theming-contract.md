@@ -11,9 +11,9 @@ end-to-end subsystem (install pipeline, validation, routes, security model).
 ## The rule for contributors
 
 **Pack manifest versioning:** every `theme.json` MUST declare
-`"formatVersion": 1` (integer). Kiro Crew rejects packs with a missing value or
+`"formatVersion": 1` (integer). Aj Crew rejects packs with a missing value or
 an unknown major with an explicit "this pack requires a newer version of
-Kiro Crew" error. Author against the current major; breaking manifest changes
+Aj Crew" error. Author against the current major; breaking manifest changes
 bump it.
 
 **Every new UI element MUST be themable at least at the color layer.** Style it
@@ -36,7 +36,7 @@ customization surface a theme (built-in, custom, or installed) can set.
 **Fills are flat.** The brand system is flat: a new decorative gradient fill
 (`linear-`, `radial-`, or `conic-gradient` used as a background or surface
 color) on chrome, a dialog, or an exported image such as a share card is a UX
-review finding. A fill is one solid token, or the brand purple `#7c3aed` on an
+review finding. A fill is one solid token, or the brand ink `#0b0c0f` on an
 outward-facing artifact. "Looks premium" is not an exception; a gradient also
 bands under every social platform's re-encode. Functional gradients are not
 fills and are fine: `mask-image` scroll-edge fades, loading shimmer, and the
@@ -65,18 +65,18 @@ omitted tokens are filled, so a declared value always wins, and only
 The author-facing detail lives in the `theme-pack-authoring` skill.
 
 **A card must carry its own edge.** `--card` is not guaranteed to differ from
-`--bg`: in `kiro-light` both are `#ffffff`, because the canvas is white and the
+`--bg`: in `aj-light` both are `#ffffff`, because the canvas is white and the
 shell (nav rail, sessions list) steps back onto `--panel` instead. So a `bg-card`
 surface that sits directly on the page and has no `border`, `ring`, or `shadow`
 paints nothing visible there — it "works" in every other theme and ships invisible
-in that one. `scripts/check-kiro-light-cards.mjs` renders the core dashboard routes
+in that one. `scripts/check-aj-light-cards.mjs` renders the core dashboard routes
 and every built-in app page (one per `src/apps/builtinRegistry.ts` entry) in
-kiro-light and fails CI on such a surface (`docs/ci/kiro-light-card-gate.md` at the
+aj-light and fails CI on such a surface (`docs/ci/aj-light-card-gate.md` at the
 repo root). A new page is covered once it is added to that script's route list,
 with fixtures for the API answers it needs to render. The rule for a new component: a `bg-card` box on
 `--bg` gets a `border-border`, a `ring-1 ring-border`, or a `shadow-*`, the way the
 settings cards already do. The one surface that deliberately stays borderless (the
-user bubble) is handled by a kiro-light-scoped hook in `src/styles/chat-transcript.css`, and
+user bubble) is handled by a aj-light-scoped hook in `src/styles/chat-transcript.css`, and
 `src/test/kiroLightShellHooks.test.ts` pins that list; a new borderless card is a
 second hook there, not an unmarked exception. A Liquid Glass pane (`components/Glass.tsx`,
 below) is not one: the top bar's search trigger, readout capsule and Request a Feature
@@ -132,7 +132,7 @@ parity (a parity test guards drift), then define it in **every** built-in theme:
 
 - Frontend: `ALLOWED_CSS_VARS` in `src/hooks/themeCss.ts`
 - Backend: `_THEME_CSS_VARS_SET` (built from `_THEME_CSS_VARS`) in
-  `src/kiro_crew/dashboard/theme_validate.py`
+  `src/aj_crew/dashboard/theme_validate.py`
 
 Never introduce a one-off literal instead of a variable.
 
@@ -254,7 +254,7 @@ packaged asset names:
 ```json
 {
   "level": 1,
-  "branding": { "botName": "KIRO CREW" }
+  "branding": { "botName": "AJ CREW" }
 }
 ```
 
@@ -270,13 +270,13 @@ branding/wordmark.svg   # reserved brand artwork for supporting surfaces
 `welcome` accepts `.svg`, `.png`, `.webp`, or `.gif` (256 KB), and an animated
 WebP/GIF/SVG plays in place; under `prefers-reduced-motion: reduce` it holds its
 first frame, like the loader art. The welcome screen shows `welcome`, else `logo`,
-else the stock ghost, in the 48px hero slot. `splash` accepts `.svg` or `.png`
-(512 KB) and takes the place of the ghosts on the desktop app's next boot
-splash, over the theme accent; under `prefers-reduced-motion: reduce` an
+else the stock gem, in the 48px hero slot. `splash` accepts `.svg` or `.png`
+(512 KB) and takes the place of the gems on the desktop app's next boot
+splash, over the accent-tinted ink ground; under `prefers-reduced-motion: reduce` an
 animated SVG holds still on one frame. Without it the stock splash stays.
 The backend serves only validated files from the installed pack, and the label is
 trimmed to 48 printable characters. When an asset or label is absent, the shell
-falls back independently to its configured Kiro Crew branding. Compiled edition
+falls back independently to its configured Aj Crew branding. Compiled edition
 branding registered through `registerThemeBranding()` has precedence over an
 installed pack. `useShellBranding` in `src/shell/branding.ts` owns that order.
 
@@ -302,8 +302,8 @@ Settings → Display → **Font Family** reads through them:
 
 | Option | Resolves to |
 |---|---|
-| Sans | the pack's `sans` face, else Kiro Crew's own proportional stack |
-| Mono | the pack's `mono` face, else Kiro Crew's own monospace stack |
+| Sans | the pack's `sans` face, else Aj Crew's own proportional stack |
+| Mono | the pack's `mono` face, else Aj Crew's own monospace stack |
 | System | the OS face — no token, so a pack cannot reach the body font here |
 | OpenDyslexic | the bundled OpenDyslexic stack — no token, so a pack cannot take this accessibility choice away; it supplies its own monospace face too |
 | Custom | the family the user types (`resolveCustomFontFamily`), bypassing the pack's sans token |
@@ -407,7 +407,7 @@ an external `url()`), both raw and after CSS escape-decoding, so an escaped toke
 cannot hide from the scoper.
 
 **Install-time forbidden selectors.** The backend has its own, independent check.
-`_THEME_CSS_FORBIDDEN` in `src/kiro_crew/dashboard/theme_validate.py` rejects a
+`_THEME_CSS_FORBIDDEN` in `src/aj_crew/dashboard/theme_validate.py` rejects a
 pack outright if its `overrides.css` contains any of `iframe`, `script`,
 `[data-auth]`, `.token`, `.credential`, `#app-root`, matched case-insensitively
 against both the raw text and a comment-stripped, escape-decoded copy. The same
@@ -438,8 +438,8 @@ components or inline SVG through this field.
 
 Allowed names: `cloud`, `flower`, `heart`, `moon`, `sparkles`, `star`, `sun`,
 `zap`. The existing four-slot carousel supplies the cross-fade, cascade timing,
-and reduced-motion behavior. An absent declaration preserves the default Kiro
-ghost poses. Invalid names, duplicates, fewer than four entries, or declarations
+and reduced-motion behavior. An absent declaration preserves the default gem
+poses. Invalid names, duplicates, fewer than four entries, or declarations
 on a Level-0 pack are rejected during install.
 
 ### Compiled themes: component seam

@@ -12,14 +12,14 @@ import { render, screen, fireEvent, renderHook as rtlRenderHook, waitFor } from 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createElement, type ReactNode } from 'react'
 import AgentDropdownList, { type AgentItem } from '../components/AgentDropdownList'
-import AgentSelector, { type KiroCrewAgent } from '../components/AgentSelector'
+import AgentSelector, { type AjCrewAgent } from '../components/AgentSelector'
 import { markdownBlock, withMarkdownBlocks } from '../lib/markdownAgents'
 import { useAgents } from '../hooks/useAgents'
 
 vi.mock('../api/client', () => ({
   api: {
     agentCatalog: vi.fn(),
-    kirocrewConfig: vi.fn(() => Promise.resolve({})),
+    ajcrewConfig: vi.fn(() => Promise.resolve({})),
   },
 }))
 
@@ -76,7 +76,7 @@ describe('markdownBlock', () => {
 
 describe('the chat agent pop-up', () => {
   const agents: AgentItem[] = [
-    { name: 'kirocrew', source: 'kirocrew' },
+    { name: 'ajcrew', source: 'ajcrew' },
     { name: 'md-probe', source: 'builtin', description: 'Markdown probe', markdown_block: { backend: 'kiro', capable: ['kas'] } },
   ]
 
@@ -106,8 +106,8 @@ describe('the chat agent pop-up', () => {
 
 describe('the form agent picker (Schedule, Channels, Projects, Webhooks)', () => {
   it('draws the same pill and still selects the row', () => {
-    const agents: KiroCrewAgent[] = [
-      { name: 'coding', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: '', source: '' },
+    const agents: AjCrewAgent[] = [
+      { name: 'coding', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: '', source: '' },
       {
         name: 'md-probe', kiro_agent: 'md-probe', workspace: 'default', memory_store: 'default', description: '', source: '',
         markdown_only: true, markdown_block: { backend: 'kiro', capable: ['kas'] },

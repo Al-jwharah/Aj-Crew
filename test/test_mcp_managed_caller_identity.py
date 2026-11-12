@@ -11,29 +11,29 @@ import importlib
 
 import pytest
 
-from kiro_crew import mcp_discovery
-from kiro_crew.mcp_caller import POOLING_REQUIRES_TENANT_NONCE
-from kiro_crew.mcp_discovery import (
+from aj_crew import mcp_discovery
+from aj_crew.mcp_caller import POOLING_REQUIRES_TENANT_NONCE
+from aj_crew.mcp_discovery import (
     _MANAGED_SERVER_TOOL_MODULES,
     managed_server_is_session_bound,
 )
-from kiro_crew.mcp_gateway.gatewayd import REGISTERED_CAPABILITIES
-from kiro_crew.mcp_gateway.stub import must_degrade_nonce_blind
+from aj_crew.mcp_gateway.gatewayd import REGISTERED_CAPABILITIES
+from aj_crew.mcp_gateway.stub import must_degrade_nonce_blind
 
 #: Managed server name -> the function that starts its stdio loop. Separate from
 #: the discovery map because that map points at the module whose ``_list_tools``
 #: is read; this names the entry point whose argument is the fact under test.
-#: ``kirocrew-core`` is the odd one out — the others all call theirs
+#: ``ajcrew-core`` is the odd one out — the others all call theirs
 #: ``run_mcp_server``.
 _SERVE_ENTRY = {
-    "kirocrew-core": "run_mcp_core_server",
-    "kirocrew-cron": "run_mcp_server",
-    "kirocrew-computer": "run_mcp_server",
-    "kirocrew-dashboard": "run_mcp_server",
-    "kirocrew-work": "run_mcp_server",
-    "kirocrew-panel": "run_mcp_server",
-    "kirocrew-guide": "run_mcp_server",
-    "kirocrew-mate": "run_mcp_server",
+    "ajcrew-core": "run_mcp_core_server",
+    "ajcrew-cron": "run_mcp_server",
+    "ajcrew-computer": "run_mcp_server",
+    "ajcrew-dashboard": "run_mcp_server",
+    "ajcrew-work": "run_mcp_server",
+    "ajcrew-panel": "run_mcp_server",
+    "ajcrew-guide": "run_mcp_server",
+    "ajcrew-mate": "run_mcp_server",
 }
 
 
@@ -108,20 +108,20 @@ def test_the_withheld_set_is_a_real_exception_not_a_stale_one(monkeypatch) -> No
 def test_a_negotiating_server_keeps_what_earns_its_place() -> None:
     """A caller-aware entry resting on the nonce must keep all three of its parts.
 
-    ``kirocrew-computer`` is shareable only because the per-connection nonce separates
+    ``ajcrew-computer`` is shareable only because the per-connection nonce separates
     unnamed callers and a daemon minting none is refused. The checks above read only the
     advertising bit, so they cannot see a missing part.
     """
-    assert "kirocrew-computer" in mcp_discovery._MANAGED_SERVERS_CALLER_AWARE
+    assert "ajcrew-computer" in mcp_discovery._MANAGED_SERVERS_CALLER_AWARE
     # 1. the backend separates the callers the gateway cannot name by the nonce
-    assert "kirocrew-computer" in POOLING_REQUIRES_TENANT_NONCE
+    assert "ajcrew-computer" in POOLING_REQUIRES_TENANT_NONCE
     # 2. a current daemon attests that it mints one
     assert "tenant_nonce" in REGISTERED_CAPABILITIES
     # 3. a stub asked to POOL it behind a daemon that does not attest is degraded
-    assert must_degrade_nonce_blind("kirocrew-computer", poolable=True, capabilities=[]) is True
+    assert must_degrade_nonce_blind("ajcrew-computer", poolable=True, capabilities=[]) is True
     assert (
         must_degrade_nonce_blind(
-            "kirocrew-computer",
+            "ajcrew-computer",
             poolable=True,
             capabilities=list(REGISTERED_CAPABILITIES),
         )
@@ -133,18 +133,18 @@ def test_the_concrete_verdicts_are_spelled_out() -> None:
     """The concrete answers the dashboard renders, spelled out.
 
     The derived checks above would pass if every server flipped at once. These servers
-    refuse or namespace an unidentified caller; ``kirocrew-computer`` instead relies on
+    refuse or namespace an unidentified caller; ``ajcrew-computer`` instead relies on
     the negotiated ``tenant_nonce`` (see ``test_a_negotiating_server_keeps_what_earns_its_place``).
     """
-    assert managed_server_is_session_bound("kirocrew-core") is False
-    assert managed_server_is_session_bound("kirocrew-cron") is False
-    assert managed_server_is_session_bound("kirocrew-computer") is False
-    assert managed_server_is_session_bound("kirocrew-dashboard") is False
-    assert managed_server_is_session_bound("kirocrew-work") is False
-    # ``kirocrew-debug`` gates its host-wide reads on the caller being the OWNER, which needs
+    assert managed_server_is_session_bound("ajcrew-core") is False
+    assert managed_server_is_session_bound("ajcrew-cron") is False
+    assert managed_server_is_session_bound("ajcrew-computer") is False
+    assert managed_server_is_session_bound("ajcrew-dashboard") is False
+    assert managed_server_is_session_bound("ajcrew-work") is False
+    # ``ajcrew-debug`` gates its host-wide reads on the caller being the OWNER, which needs
     # a session the gateway named; session-bound would resolve an empty identity and
     # refuse every wide read.
-    assert managed_server_is_session_bound("kirocrew-debug") is False
+    assert managed_server_is_session_bound("ajcrew-debug") is False
 
 
 def test_a_third_party_server_is_not_claimed_either_way() -> None:

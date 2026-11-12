@@ -1,11 +1,11 @@
-"""Coverage for :mod:`kiro_crew.slack.events`: the voice, deletion and approval-mode helpers.
+"""Coverage for :mod:`aj_crew.slack.events`: the voice, deletion and approval-mode helpers.
 
 Voice-note transcription (the reaction bracket and the per-file transcriber), the
 ``message_deleted`` handler, and ``_resolve_approval_mode``.
 
 Conventions follow ``test_slack_events_coverage.py``: a ``MagicMock`` stand-in for
 ``GatewayOrchestrator``, ``AsyncMock`` for the Slack client, and
-``kiro_crew.slack.events.sel`` patched by the autouse fixtures from
+``aj_crew.slack.events.sel`` patched by the autouse fixtures from
 ``slack_events_coverage_helpers.py`` so no audit file is written.
 """
 
@@ -21,8 +21,8 @@ from slack_events_coverage_helpers import _isolated_home_fixture  # noqa: F401
 from slack_events_coverage_helpers import _mock_sel_fixture  # noqa: F401
 from slack_events_coverage_helpers import _make_orch
 
-from kiro_crew.slack import events as ev
-from kiro_crew.slack import files as slack_files
+from aj_crew.slack import events as ev
+from aj_crew.slack import files as slack_files
 
 
 @pytest.fixture(name="_real_sel")
@@ -31,7 +31,7 @@ def _real_sel_fixture(_mock_sel, tmp_path, monkeypatch):
 
     The fake keeps recording, and every write also lands as a row the test reads back.
     """
-    from kiro_crew import sel as sel_mod
+    from aj_crew import sel as sel_mod
 
     monkeypatch.setattr(sel_mod.SecurityEventLog, "_instance", None)
     monkeypatch.setattr(sel_mod.SecurityEventLog, "_initialized", False)
@@ -61,7 +61,7 @@ class TestTranscribeWithReaction:
         orch = _make_orch()
         slack = AsyncMock()
         with patch(
-            "kiro_crew.slack.events._transcribe_files",
+            "aj_crew.slack.events._transcribe_files",
             new_callable=AsyncMock,
             return_value=["hello"],
         ):
@@ -76,7 +76,7 @@ class TestTranscribeWithReaction:
         slack = AsyncMock()
         slack.add_reaction.side_effect = RuntimeError("no perms")
         with patch(
-            "kiro_crew.slack.events._transcribe_files",
+            "aj_crew.slack.events._transcribe_files",
             new_callable=AsyncMock,
             return_value=[],
         ):
@@ -89,7 +89,7 @@ class TestTranscribeWithReaction:
         slack = AsyncMock()
         slack.remove_reaction.side_effect = RuntimeError("gone")
         with patch(
-            "kiro_crew.slack.events._transcribe_files",
+            "aj_crew.slack.events._transcribe_files",
             new_callable=AsyncMock,
             return_value=["x"],
         ):
@@ -100,7 +100,7 @@ class TestTranscribeWithReaction:
         orch = _make_orch()
         slack = AsyncMock()
         with patch(
-            "kiro_crew.slack.events._transcribe_files",
+            "aj_crew.slack.events._transcribe_files",
             new_callable=AsyncMock,
             side_effect=RuntimeError("boom"),
         ):
@@ -137,7 +137,7 @@ class TestTranscribeFiles:
             }
         ]
         with patch(
-            "kiro_crew.slack.events.transcribe_audio",
+            "aj_crew.slack.events.transcribe_audio",
             new_callable=AsyncMock,
             return_value="spoken words",
         ):
@@ -157,7 +157,7 @@ class TestTranscribeFiles:
             }
         ]
         with patch(
-            "kiro_crew.slack.events.transcribe_audio",
+            "aj_crew.slack.events.transcribe_audio",
             new_callable=AsyncMock,
             return_value="",
         ):
@@ -178,16 +178,16 @@ class TestTranscribeFiles:
         ]
         with (
             patch(
-                "kiro_crew.slack.events.load_stt_config",
+                "aj_crew.slack.events.load_stt_config",
                 return_value=SimpleNamespace(timeout_secs=900),
             ),
-            patch("kiro_crew.slack.events.batch_duration_cap_secs", return_value=3600),
+            patch("aj_crew.slack.events.batch_duration_cap_secs", return_value=3600),
             patch(
-                "kiro_crew.slack.events.audio_exceeds_secs",
+                "aj_crew.slack.events.audio_exceeds_secs",
                 new_callable=AsyncMock,
                 return_value=True,
             ),
-            patch("kiro_crew.slack.events.transcribe_audio", new_callable=AsyncMock) as transcribe,
+            patch("aj_crew.slack.events.transcribe_audio", new_callable=AsyncMock) as transcribe,
         ):
             result = await ev._transcribe_files(orch, files)
 
@@ -213,16 +213,16 @@ class TestTranscribeFiles:
         ]
         with (
             patch(
-                "kiro_crew.slack.events.load_stt_config",
+                "aj_crew.slack.events.load_stt_config",
                 return_value=SimpleNamespace(timeout_secs=900),
             ),
-            patch("kiro_crew.slack.events.batch_duration_cap_secs", return_value=3600),
+            patch("aj_crew.slack.events.batch_duration_cap_secs", return_value=3600),
             patch(
-                "kiro_crew.slack.events.audio_exceeds_secs",
+                "aj_crew.slack.events.audio_exceeds_secs",
                 new_callable=AsyncMock,
                 return_value=None,
             ),
-            patch("kiro_crew.slack.events.transcribe_audio", new_callable=AsyncMock) as transcribe,
+            patch("aj_crew.slack.events.transcribe_audio", new_callable=AsyncMock) as transcribe,
         ):
             result = await ev._transcribe_files(orch, files)
 
@@ -246,17 +246,17 @@ class TestTranscribeFiles:
         ]
         with (
             patch(
-                "kiro_crew.slack.events.load_stt_config",
+                "aj_crew.slack.events.load_stt_config",
                 return_value=SimpleNamespace(timeout_secs=900),
             ),
-            patch("kiro_crew.slack.events.batch_duration_cap_secs", return_value=3600),
+            patch("aj_crew.slack.events.batch_duration_cap_secs", return_value=3600),
             patch(
-                "kiro_crew.slack.events.audio_exceeds_secs",
+                "aj_crew.slack.events.audio_exceeds_secs",
                 new_callable=AsyncMock,
                 return_value=False,
             ),
             patch(
-                "kiro_crew.slack.events.transcribe_audio",
+                "aj_crew.slack.events.transcribe_audio",
                 new_callable=AsyncMock,
                 return_value="hello from the memo",
             ) as transcribe,
@@ -309,11 +309,11 @@ class TestTranscribeFiles:
 
         monkeypatch.setattr(tempfile, "mkstemp", _mkstemp_in_tmp)
         with patch(
-            "kiro_crew.slack.events.transcribe_audio",
+            "aj_crew.slack.events.transcribe_audio",
             new_callable=AsyncMock,
             return_value="words",
         ):
-            with patch("kiro_crew.slack.events.os.unlink", side_effect=OSError("locked")) as unlink:
+            with patch("aj_crew.slack.events.os.unlink", side_effect=OSError("locked")) as unlink:
                 assert await ev._transcribe_files(orch, files) == ["words"]
         unlink.assert_called_once()
         # The surviving file is inside tmp_path, not the system temp dir.
@@ -331,7 +331,7 @@ class TestHandleMessageDeleted:
         orch = _make_orch()
         orch._pending_queue = {"1.0": [("1.0", "text", {})]}
         event = {"deleted_ts": "1.0", "channel": "C1", "previous_message": {"user": "U_BAD"}}
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=False) as allowed:
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=False) as allowed:
             await ev._handle_message_deleted(orch, event)
         allowed.assert_called_once_with("U_BAD")
         orch.sessions.cancel_queued.assert_not_called()
@@ -343,7 +343,7 @@ class TestHandleMessageDeleted:
         orch = _make_orch()
         orch._pending_queue = {"1.0": [("1.0", "text", {})]}
         event = {"channel": "C1", "previous_message": {"user": "U_OWNER", "thread_ts": "1.0"}}
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
             await ev._handle_message_deleted(orch, event)
         orch.sessions.cancel_queued.assert_not_called()
         assert orch._pending_queue == {"1.0": [("1.0", "text", {})]}
@@ -359,7 +359,7 @@ class TestHandleMessageDeleted:
             "channel": "C1",
             "previous_message": {"user": "U_OWNER", "thread_ts": "1.0"},
         }
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
             await ev._handle_message_deleted(orch, event)
         orch.sessions.cancel_queued.assert_called_once_with("1.0", "2.0")
         assert "queued=True" in _mock_sel.log_api_access.call_args.kwargs["resources"]
@@ -374,7 +374,7 @@ class TestHandleMessageDeleted:
         orch = _make_orch()
         orch._pending_queue = {"3.0": [("3.0", "text", {})]}
         event = {"deleted_ts": "3.0", "channel": "C1", "previous_message": {"user": "U_OWNER"}}
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
             await ev._handle_message_deleted(orch, event)
         assert "3.0" not in orch._pending_queue
 
@@ -383,7 +383,7 @@ class TestHandleMessageDeleted:
         orch = _make_orch()
         orch._pending_queue = {"4.0": [("4.0", "gone", {}), ("5.0", "stays", {})]}
         event = {"deleted_ts": "4.0", "channel": "C1", "previous_message": {"user": "U_OWNER"}}
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
             await ev._handle_message_deleted(orch, event)
         assert orch._pending_queue["4.0"] == [("5.0", "stays", {})]
 
@@ -391,7 +391,7 @@ class TestHandleMessageDeleted:
     async def test_nothing_queued_still_audits(self, _mock_sel, _real_sel):
         orch = _make_orch()
         event = {"deleted_ts": "6.0", "channel": "C1", "previous_message": {"user": "U_OWNER"}}
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
             await ev._handle_message_deleted(orch, event)
         assert "queued=False" in _mock_sel.log_api_access.call_args.kwargs["resources"]
         assert _deleted_rows(_real_sel) == [
@@ -408,17 +408,17 @@ class TestResolveApprovalMode:
     def test_yolo_forces_auto(self):
         orch = _make_orch()
         orch._approval_mode = "interactive"
-        with patch("kiro_crew.slack.events.is_yolo_mode", return_value=True):
+        with patch("aj_crew.slack.events.is_yolo_mode", return_value=True):
             assert ev._resolve_approval_mode(orch) == ev.APPROVAL_AUTO
 
     def test_cli_flag_wins_over_config(self):
         orch = _make_orch()
         orch._approval_mode = ev.APPROVAL_AUTO
-        with patch("kiro_crew.slack.events.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.events.is_yolo_mode", return_value=False):
             assert ev._resolve_approval_mode(orch) == ev.APPROVAL_AUTO
 
     def test_anything_else_is_interactive(self):
         orch = _make_orch()
         orch._approval_mode = "reads"
-        with patch("kiro_crew.slack.events.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.events.is_yolo_mode", return_value=False):
             assert ev._resolve_approval_mode(orch) == ev.APPROVAL_INTERACTIVE

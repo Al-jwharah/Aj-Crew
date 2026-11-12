@@ -27,13 +27,13 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
 )
 from test_chat_agent_selection import _turn_state
 
-from kiro_crew.config import loader
-from kiro_crew.config.loader_snapshots import (
+from aj_crew.config import loader
+from aj_crew.config.loader_snapshots import (
     _materialized_kiro_agent,
     materialized_snapshot_complete,
 )
-from kiro_crew.config.paths import kiro_agents_dir
-from kiro_crew.dashboard import session_control as sc
+from aj_crew.config.paths import kiro_agents_dir
+from aj_crew.dashboard import session_control as sc
 
 
 @pytest.fixture

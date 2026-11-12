@@ -24,8 +24,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard import server as srv
+from aj_crew import platform_compat
+from aj_crew.dashboard import server as srv
 
 _EPHEMERAL = 43127
 
@@ -103,7 +103,7 @@ async def test_an_unknown_bound_port_stays_tcp_only_and_leaves_a_sibling_socket(
 ) -> None:
     """Port ``0`` names no listener this process holds, so nothing is bound or unlinked."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.server.dashboard_socket_path",
+        "aj_crew.dashboard.server.dashboard_socket_path",
         lambda port: short_sock_dir / f"dashboard-{port}.sock",
     )
     sibling_path = short_sock_dir / "dashboard-0.sock"

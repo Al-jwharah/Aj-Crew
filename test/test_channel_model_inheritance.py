@@ -13,13 +13,13 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.session import SessionManager
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.session import SessionManager
 
 
 @pytest.fixture
 def cfg():
-    c = KiroCrewConfig()
+    c = AjCrewConfig()
     # The default provider is now ``acp`` (KiroACP/kiro-cli). These tests
     # exercise the ``agent.model`` fallback path, so pin the provider to
     # ``acp`` explicitly to be robust to future default changes.
@@ -77,23 +77,23 @@ class TestModelFallbackToGlobalConfig:
             approval_policy="trusted",
         )
         # Without the fix, model_override would be None and kiro-cli
-        # would default to 'auto' (Sonnet) for non-kirocrew agents.
+        # would default to 'auto' (Sonnet) for non-ajcrew agents.
         assert captured["model_override"] == "claude-opus-4.6"
         await mgr.close_all()
 
     @pytest.mark.asyncio
-    async def test_kirocrew_agent_uses_global(self, cfg):
-        """The default 'kirocrew' agent is excluded from per-agent resolution
+    async def test_ajcrew_agent_uses_global(self, cfg):
+        """The default 'ajcrew' agent is excluded from per-agent resolution
         and inherits the global model (it intentionally tracks the global)."""
         captured: dict = {}
         mgr = SessionManager(cfg, provider_factory=_capturing_factory(captured))
-        await mgr.get_or_create("kirocrew-sess", agent="kirocrew")
+        await mgr.get_or_create("ajcrew-sess", agent="ajcrew")
         assert captured["model_override"] == "claude-opus-4.6"
         await mgr.close_all()
 
 
 class TestResolveNamedAgentModel:
-    """Real-file coverage for KiroCrewConfig._resolve_named_agent_model.
+    """Real-file coverage for AjCrewConfig._resolve_named_agent_model.
 
     Uses the ``agents_dir`` dependency-injection seam to point the resolver at
     a temp directory — real files, no patching.
@@ -105,34 +105,34 @@ class TestResolveNamedAgentModel:
             json.dumps({"name": "foo-agent", "model": "claude-sonnet-3"})
         )
         assert (
-            KiroCrewConfig._resolve_named_agent_model("foo-agent", agents_dir=tmp_path)
+            AjCrewConfig._resolve_named_agent_model("foo-agent", agents_dir=tmp_path)
             == "claude-sonnet-3"
         )
 
     def test_reads_model_by_filename_stem(self, tmp_path):
         (tmp_path / "bar.json").write_text(json.dumps({"model": "claude-haiku-4.5"}))
         assert (
-            KiroCrewConfig._resolve_named_agent_model("bar", agents_dir=tmp_path)
+            AjCrewConfig._resolve_named_agent_model("bar", agents_dir=tmp_path)
             == "claude-haiku-4.5"
         )
 
     def test_returns_empty_when_not_found(self, tmp_path):
         (tmp_path / "bar.json").write_text(json.dumps({"model": "x"}))
-        assert KiroCrewConfig._resolve_named_agent_model("nope", agents_dir=tmp_path) == ""
+        assert AjCrewConfig._resolve_named_agent_model("nope", agents_dir=tmp_path) == ""
 
     def test_returns_empty_for_empty_agent(self, tmp_path):
-        assert KiroCrewConfig._resolve_named_agent_model("", agents_dir=tmp_path) == ""
+        assert AjCrewConfig._resolve_named_agent_model("", agents_dir=tmp_path) == ""
 
     def test_skips_non_dict_json(self, tmp_path):
         # stem matches "weird" but the content isn't an object -> skipped safely
         (tmp_path / "weird.json").write_text(json.dumps([1, 2, 3]))
-        assert KiroCrewConfig._resolve_named_agent_model("weird", agents_dir=tmp_path) == ""
+        assert AjCrewConfig._resolve_named_agent_model("weird", agents_dir=tmp_path) == ""
 
     def test_skips_malformed_json_and_finds_valid(self, tmp_path):
         (tmp_path / "broken.json").write_text("{not valid json")
         (tmp_path / "good.json").write_text(json.dumps({"model": "claude-opus-4.8"}))
         assert (
-            KiroCrewConfig._resolve_named_agent_model("good", agents_dir=tmp_path)
+            AjCrewConfig._resolve_named_agent_model("good", agents_dir=tmp_path)
             == "claude-opus-4.8"
         )
 
@@ -142,13 +142,13 @@ class TestResolveNamedAgentModel:
         # (Deterministic: no valid file can match first and short-circuit.)
         (tmp_path / "broken.json").write_text("{not valid json")
         assert (
-            KiroCrewConfig._resolve_named_agent_model("broken", agents_dir=tmp_path) == ""
+            AjCrewConfig._resolve_named_agent_model("broken", agents_dir=tmp_path) == ""
         )
 
     def test_match_with_no_model_field_returns_empty(self, tmp_path):
         (tmp_path / "nomodel.json").write_text(json.dumps({"name": "nomodel"}))
         assert (
-            KiroCrewConfig._resolve_named_agent_model("nomodel", agents_dir=tmp_path) == ""
+            AjCrewConfig._resolve_named_agent_model("nomodel", agents_dir=tmp_path) == ""
         )
 
 
@@ -160,8 +160,8 @@ class TestAgentSpecReadsAreHardened:
     path donates nothing."""
 
     def test_named_resolver_refuses_an_oversized_spec(self, tmp_path, monkeypatch):
-        from kiro_crew import agent_discovery
-        from kiro_crew.hooks import FileTooLargeError
+        from aj_crew import agent_discovery
+        from aj_crew.hooks import FileTooLargeError
 
         (tmp_path / "huge.json").write_text(json.dumps({"name": "huge", "model": "m"}))
         monkeypatch.setattr(
@@ -169,7 +169,7 @@ class TestAgentSpecReadsAreHardened:
             "_read_spec_bytes",
             lambda _p: (_ for _ in ()).throw(FileTooLargeError()),
         )
-        assert KiroCrewConfig._resolve_named_agent_model("huge", agents_dir=tmp_path) == ""
+        assert AjCrewConfig._resolve_named_agent_model("huge", agents_dir=tmp_path) == ""
 
     def test_named_resolver_refuses_a_link_into_a_sensitive_path(
         self, tmp_path, monkeypatch
@@ -179,8 +179,8 @@ class TestAgentSpecReadsAreHardened:
         # here rather than skipped. The sensitive-path verdict is scoped to
         # the junction's TARGET so the test proves resolution follows the
         # link: a same-named spec OUTSIDE the link must still read fine.
+        from aj_crew import agent_discovery
         from conftest import make_dir_link
-        from kiro_crew import agent_discovery
 
         outside = tmp_path / "sensitive-outside"
         outside.mkdir()
@@ -192,23 +192,23 @@ class TestAgentSpecReadsAreHardened:
             "is_sensitive_path",
             lambda p: "sensitive-outside" in str(p),
         )
-        assert KiroCrewConfig._resolve_named_agent_model("link", agents_dir=tmp_path) == ""
+        assert AjCrewConfig._resolve_named_agent_model("link", agents_dir=tmp_path) == ""
         assert (
-            KiroCrewConfig._resolve_named_agent_model("direct", agents_dir=tmp_path)
+            AjCrewConfig._resolve_named_agent_model("direct", agents_dir=tmp_path)
             == "fine"
         )
 
     def test_installed_spec_resolver_reads_through_the_hardened_reader(
         self, tmp_path, monkeypatch
     ):
-        # The installed kirocrew.json path goes through the same reader: a
+        # The installed ajcrew.json path goes through the same reader: a
         # spec the reader refuses yields no model, and the resolver falls
         # through to the bundled default instead of trusting the file.
-        import kiro_crew.config.loader as loader_mod
-        from kiro_crew import agent_discovery
-        from kiro_crew.hooks import FileTooLargeError
+        import aj_crew.config.loader as loader_mod
+        from aj_crew import agent_discovery
+        from aj_crew.hooks import FileTooLargeError
 
-        (tmp_path / "kirocrew.json").write_text(json.dumps({"model": "pinned"}))
+        (tmp_path / "ajcrew.json").write_text(json.dumps({"model": "pinned"}))
         monkeypatch.setattr(loader_mod, "kiro_agents_dir", lambda: tmp_path)
         seen = {}
 
@@ -217,6 +217,6 @@ class TestAgentSpecReadsAreHardened:
             raise FileTooLargeError()
 
         monkeypatch.setattr(agent_discovery, "_read_spec_bytes", _refusing_read)
-        result = KiroCrewConfig._resolve_agent_model()
+        result = AjCrewConfig._resolve_agent_model()
         assert seen["called"] is True
         assert result != "pinned"

@@ -19,20 +19,20 @@ import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { serveDist } from './lib/serve-dist.mjs'
 import { chromiumExecutable } from './lib/chromium-executable.mjs'
-import { logPageProblems, stubDashboardApi, json, KIROCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
+import { logPageProblems, stubDashboardApi, json, AJCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/template-edit-later-note'
 const PREFIX = process.argv[3] || 'after'
 mkdirSync(OUT, { recursive: true })
 
 const CREWS = [
-  { name: 'default', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'Used for all new chats', source: 'user', model: '', triggers: '' },
+  { name: 'default', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'Used for all new chats', source: 'user', model: '', triggers: '' },
 ]
 
 /** A plain ARRAY: what /api/agents/installed really answers. */
 const INSTALLED = [
-  { name: 'kirocrew', description: 'Built-in', source: 'kirocrew', model: '', skills: ['memory'], mcp_servers: ['kirocrew-core'], filename: 'kirocrew.json', kirocrew_owned: true },
-  { name: 'atlas', description: 'Long-horizon planner', source: 'builtin', model: '', skills: [], mcp_servers: [], filename: 'atlas.json', kirocrew_owned: false },
+  { name: 'ajcrew', description: 'Built-in', source: 'ajcrew', model: '', skills: ['memory'], mcp_servers: ['ajcrew-core'], filename: 'ajcrew.json', ajcrew_owned: true },
+  { name: 'atlas', description: 'Long-horizon planner', source: 'builtin', model: '', skills: [], mcp_servers: [], filename: 'atlas.json', ajcrew_owned: false },
 ]
 
 const NOTE = /you can switch this agent's template anytime/i
@@ -49,8 +49,8 @@ try {
   logPageProblems(page)
   await stubDashboardApi(page, {
     extra: async (path, route) => {
-      if (path === '/api/config/kirocrew') {
-        await json(route, { ...KIROCREW_CONFIG_FIXTURE })
+      if (path === '/api/config/ajcrew') {
+        await json(route, { ...AJCREW_CONFIG_FIXTURE })
         return true
       }
       if (path === '/api/agents') {

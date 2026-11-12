@@ -1,8 +1,8 @@
 """Tests for Crew-owned KAS auth: the vault probe and the callback answer.
 
 Both driven against a real :class:`TokenStore` rooted in a temp data home: the
-spawn-time vault probe (``kiro_crew.auth.bridge.vault_holds_identity``, plus the
-runtime's off-loop wrapper in :mod:`kiro_crew.acp.kas_host_auth`) and the
+spawn-time vault probe (``aj_crew.auth.bridge.vault_holds_identity``, plus the
+runtime's off-loop wrapper in :mod:`aj_crew.acp.kas_host_auth`) and the
 callback answer (``answer_get_access_token``). The provider's own resolve/refresh
 behavior is covered in ``test_kas_auth_flows.py``; here the network is never
 touched — a stored token that is still far from expiry is returned without a
@@ -16,17 +16,17 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.acp.kas_host_auth import (
+from aj_crew.acp.kas_host_auth import (
     HostAuthCallbackError,
     answer_get_access_token,
     vault_holds_identity_off_loop,
 )
-from kiro_crew.auth.bridge import (
+from aj_crew.auth.bridge import (
     describe_vault_identity,
     vault_holds_identity,
     vault_identity_fingerprint,
 )
-from kiro_crew.auth.store import KasToken, TokenStore, TokenStoreError
+from aj_crew.auth.store import KasToken, TokenStore, TokenStoreError
 
 
 def _token(identity: str = "social", *, expires_in: int = 3600, **overrides) -> KasToken:
@@ -47,7 +47,7 @@ def data_home(tmp_path):
     """Point the seam's vault root (``bridge.data_home``) at a temp directory."""
     home = tmp_path / "data-home"
     home.mkdir()
-    with patch("kiro_crew.auth.bridge.data_home", return_value=home):
+    with patch("aj_crew.auth.bridge.data_home", return_value=home):
         yield home
 
 
@@ -81,21 +81,21 @@ class TestVaultProbe:
         """A timer-driven caller asks the same question without repeating the
         spawn-time WARNING: same verdicts, diagnostics at DEBUG."""
         TokenStore(data_home).save(_token(expires_in=-60, refresh_token=None))
-        with caplog.at_level("DEBUG", logger="kiro_crew.auth.bridge"):
+        with caplog.at_level("DEBUG", logger="aj_crew.auth.bridge"):
             assert vault_holds_identity(warn=False) is True
             with patch(
-                "kiro_crew.auth.store.TokenStore.resolve",
+                "aj_crew.auth.store.TokenStore.resolve",
                 side_effect=TokenStoreError("refusing linked token-store directory"),
             ):
                 assert vault_holds_identity(warn=False) is True
-        bridge_records = [r for r in caplog.records if r.name == "kiro_crew.auth.bridge"]
+        bridge_records = [r for r in caplog.records if r.name == "aj_crew.auth.bridge"]
         assert [r.levelname for r in bridge_records] == ["DEBUG", "DEBUG"]
         assert "at-value" not in caplog.text
         caplog.clear()
         # The default still warns, for the spawn and doctor.
-        with caplog.at_level("DEBUG", logger="kiro_crew.auth.bridge"):
+        with caplog.at_level("DEBUG", logger="aj_crew.auth.bridge"):
             assert vault_holds_identity() is True
-        assert [r.levelname for r in caplog.records if r.name == "kiro_crew.auth.bridge"] == [
+        assert [r.levelname for r in caplog.records if r.name == "aj_crew.auth.bridge"] == [
             "WARNING"
         ]
         TokenStore(data_home).save(_token())
@@ -168,7 +168,7 @@ class TestVaultProbe:
         switch to kiro-cli's account: the spawn stays Crew-owned and fails there."""
         TokenStore(data_home).save(_token())
         with patch(
-            "kiro_crew.auth.store.TokenStore.resolve",
+            "aj_crew.auth.store.TokenStore.resolve",
             side_effect=TokenStoreError("refusing linked token-store directory"),
         ):
             assert vault_holds_identity() is True
@@ -176,7 +176,7 @@ class TestVaultProbe:
         assert "kas logout" in caplog.text
 
     def test_unexpected_error_degrades_to_no_identity(self, data_home):
-        with patch("kiro_crew.auth.store.TokenStore.resolve", side_effect=RuntimeError("boom")):
+        with patch("aj_crew.auth.store.TokenStore.resolve", side_effect=RuntimeError("boom")):
             assert vault_holds_identity() is False
 
     @pytest.mark.asyncio
@@ -211,7 +211,7 @@ class TestVaultFingerprint:
 
     def test_unreadable_vault_is_absent(self, data_home):
         TokenStore(data_home).save(_token())
-        with patch("kiro_crew.auth.store.TokenStore.resolve", side_effect=RuntimeError("boom")):
+        with patch("aj_crew.auth.store.TokenStore.resolve", side_effect=RuntimeError("boom")):
             assert vault_identity_fingerprint() == ""
 
     @pytest.mark.asyncio
@@ -219,7 +219,7 @@ class TestVaultFingerprint:
         """What makes an incomplete post-logout retirement retry: the gateway's
         identity fingerprint moves when the vault empties, so the per-turn check
         re-sweeps until the sweep completes -- same path as a kiro-cli logout."""
-        from kiro_crew import kiro_prerequisite as kp
+        from aj_crew import kiro_prerequisite as kp
 
         service = kp.KiroPrerequisiteService(
             home=tmp_path / "cli-home", environ={}, platform_name="linux"
@@ -253,7 +253,7 @@ class TestCallbackAnswer:
     async def test_no_identity_is_a_token_free_error(self, data_home):
         with pytest.raises(HostAuthCallbackError) as excinfo:
             await answer_get_access_token()
-        assert str(excinfo.value) == "not signed in to Kiro Crew"
+        assert str(excinfo.value) == "not signed in to Aj Crew"
 
     @pytest.mark.asyncio
     async def test_an_ambient_api_key_never_answers_for_the_vault(self, data_home, monkeypatch):
@@ -263,12 +263,12 @@ class TestCallbackAnswer:
         monkeypatch.setenv("KIRO_API_KEY", "ambient-key")
         with pytest.raises(HostAuthCallbackError) as excinfo:
             await answer_get_access_token()
-        assert str(excinfo.value) == "not signed in to Kiro Crew"
+        assert str(excinfo.value) == "not signed in to Aj Crew"
 
     @pytest.mark.asyncio
     async def test_vault_error_is_categorized_not_echoed(self, data_home, caplog):
         with patch(
-            "kiro_crew.auth.store.TokenStore.resolve",
+            "aj_crew.auth.store.TokenStore.resolve",
             side_effect=TokenStoreError("refusing linked token-store directory: /secret/path"),
         ):
             with pytest.raises(HostAuthCallbackError) as excinfo:
@@ -287,7 +287,7 @@ class TestCallbackAnswer:
             pass
 
         with patch(
-            "kiro_crew.auth.bridge.handle_get_access_token",
+            "aj_crew.auth.bridge.handle_get_access_token",
             side_effect=Exploding("body: at-value rt-value"),
         ):
             with pytest.raises(HostAuthCallbackError) as excinfo:

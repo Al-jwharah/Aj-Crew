@@ -12,7 +12,7 @@ import { isEmbeddableLoopbackOrigin } from '../lib/tunnelOrigin'
 /** The space-separated sources of a `NAME = (...)` or `NAME = "..."` literal in server.py. */
 function serverSources(name: string): string[] {
   const server = readFileSync(
-    join(__dirname, '../../../src/kiro_crew/dashboard/server.py'),
+    join(__dirname, '../../../src/aj_crew/dashboard/server.py'),
     'utf8',
   )
   const m = new RegExp(`^${name} = (\\([\\s\\S]*?\\n\\)|"[^"\\n]*")`, 'm').exec(server)
@@ -23,7 +23,7 @@ function serverSources(name: string): string[] {
 
 // A wildcard host-source is probed with one single-label name, the shape the
 // client documents for `*.localhost`.
-const WILDCARD_PROBE = 'kirocrew'
+const WILDCARD_PROBE = 'ajcrew'
 
 /** The (protocol, hostname) pairs the CSP admits, as `"http:|127.0.0.1"` keys. */
 function serverPairs(): Set<string> {

@@ -21,7 +21,7 @@ from handlers_memory_coverage_helpers import (  # noqa: F401 -- the autouse fixt
     _reset_setup_status,
 )
 
-import kiro_crew.dashboard.handlers.memory as mem_mod
+import aj_crew.dashboard.handlers.memory as mem_mod
 
 
 def _consolidator() -> Any:

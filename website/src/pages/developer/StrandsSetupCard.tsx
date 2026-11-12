@@ -31,7 +31,7 @@ const SECRET_PREVIEW = '••••••••'
 /** The settings-search anchor and test id of the section. */
 export const STRANDS_SETUP_ANCHOR = 'strands-setup'
 
-const CONFIG_QUERY_KEY = ['kirocrewConfig']
+const CONFIG_QUERY_KEY = ['ajcrewConfig']
 const SECRETS_QUERY_KEY = ['secrets']
 /** A field's Save or Remove. The provider picker waits while one runs: switching
  *  would unmount the field and drop its outcome, a failure included. */
@@ -120,7 +120,7 @@ function failureNotice(error: Error | null, lead: string): { title?: string; mes
  */
 export function StrandsSetupCard() {
   const qc = useQueryClient()
-  const configQ = useQuery({ queryKey: CONFIG_QUERY_KEY, queryFn: () => api.kirocrewConfig() })
+  const configQ = useQuery({ queryKey: CONFIG_QUERY_KEY, queryFn: () => api.ajcrewConfig() })
   const secretsQ = useQuery<{ names?: string[] }>({
     queryKey: SECRETS_QUERY_KEY,
     queryFn: () => api.secretsList(),
@@ -369,7 +369,7 @@ function StrandsField({
   // The map as in force now, read at write time rather than taken from the render.
   // Each write below sends only its own key (the gateway merges it into the saved
   // map under its config lock), so this read decides nothing about other keys.
-  const freshEnv = async () => readStrandsEnv(await api.kirocrewConfig())
+  const freshEnv = async () => readStrandsEnv(await api.ajcrewConfig())
 
   const saveMut = useMutation({
     mutationKey: FIELD_WRITE_KEY,

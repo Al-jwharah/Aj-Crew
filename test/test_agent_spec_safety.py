@@ -23,7 +23,7 @@ from conftest import requires_symlinks
 def test_ensure_agent_materialized_noop_for_non_managed_agent(tmp_path, monkeypatch):
     """A non-managed (app/custom) agent can't be regenerated here → returns
     False and never touches rebuild_agent_config."""
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: tmp_path)
     rebuild = unittest.mock.MagicMock()
@@ -35,7 +35,7 @@ def test_ensure_agent_materialized_noop_for_non_managed_agent(tmp_path, monkeypa
 
 def test_ensure_agent_materialized_present_is_noop(tmp_path, monkeypatch):
     """Managed default already on disk → True, no regeneration."""
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: tmp_path)
     (tmp_path / agent_mod.AGENT_FILENAME).write_text("{}", encoding="utf-8")
@@ -50,7 +50,7 @@ def test_ensure_agent_materialized_present_is_noop(tmp_path, monkeypatch):
 def test_ensure_agent_materialized_regenerates_when_missing(tmp_path, monkeypatch):
     """Managed default missing → rebuild_agent_config is invoked and the file
     is materialized (the reporter's fresh-checkout case)."""
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: tmp_path)
 
@@ -70,7 +70,7 @@ def test_ensure_agent_materialized_regenerates_when_missing(tmp_path, monkeypatc
 def test_ensure_agent_materialized_swallows_errors(tmp_path, monkeypatch):
     """Best-effort: a rebuild failure never propagates (it sits on the spawn
     hot path) — returns False instead."""
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: tmp_path)
     rebuild = unittest.mock.MagicMock(side_effect=RuntimeError("boom"))
@@ -92,7 +92,7 @@ class TestAgentSpecPathRejectsTraversal:
     def test_traversal_is_refused_and_the_outside_file_is_untouched(
         self, tmp_path: Path, monkeypatch
     ):
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents = tmp_path / "agents"
         agents.mkdir()
@@ -122,7 +122,7 @@ class TestAgentSpecPathRejectsTraversal:
         ],
     )
     def test_names_outside_the_grammar_are_refused(self, tmp_path: Path, monkeypatch, name):
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents = tmp_path / "agents"
         agents.mkdir()
@@ -131,7 +131,7 @@ class TestAgentSpecPathRejectsTraversal:
 
     @pytest.mark.parametrize("name", ["my-agent_2", "reviewer.v2", "a" * 64])
     def test_a_valid_name_still_resolves(self, tmp_path: Path, monkeypatch, name):
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents = tmp_path / "agents"
         agents.mkdir()
@@ -152,26 +152,26 @@ class TestSpecPathRefusesSymlinks:
     def test_a_symlinked_spec_is_refused_and_the_target_is_not_copied(
         self, tmp_path: Path, monkeypatch
     ):
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents = tmp_path / "agents"
         agents.mkdir()
         secret = tmp_path / "protected.json"
         secret.write_text(json.dumps({"model": "leaked", "secret": "s"}), encoding="utf-8")
-        link = agents / "kirocrew.json"
+        link = agents / "ajcrew.json"
         link.symlink_to(secret)
         monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: agents)
 
-        assert agent_mod.agent_spec_path("kirocrew") is None
+        assert agent_mod.agent_spec_path("ajcrew") is None
         with pytest.raises(FileNotFoundError):
-            agent_mod.reset_agent_model("kirocrew")
+            agent_mod.reset_agent_model("ajcrew")
         # The link is intact and nothing was copied into the agents directory.
         assert link.is_symlink()
         assert json.loads(secret.read_text(encoding="utf-8"))["secret"] == "s"
 
     @requires_symlinks
     def test_the_name_scan_also_skips_a_symlink(self, tmp_path: Path, monkeypatch):
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents = tmp_path / "agents"
         agents.mkdir()
@@ -183,14 +183,14 @@ class TestSpecPathRefusesSymlinks:
         assert agent_mod.agent_spec_path("wanted") is None
 
     def test_a_plain_spec_is_still_accepted(self, tmp_path: Path, monkeypatch):
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents = tmp_path / "agents"
         agents.mkdir()
-        (agents / "kirocrew.json").write_text(json.dumps({"name": "kirocrew"}), encoding="utf-8")
+        (agents / "ajcrew.json").write_text(json.dumps({"name": "ajcrew"}), encoding="utf-8")
         monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: agents)
 
-        assert agent_mod.agent_spec_path("kirocrew") == agents / "kirocrew.json"
+        assert agent_mod.agent_spec_path("ajcrew") == agents / "ajcrew.json"
 
 
 class TestSpecPathPrefersTheDeclaredName:
@@ -203,7 +203,7 @@ class TestSpecPathPrefersTheDeclaredName:
     """
 
     def _dir(self, tmp_path: Path, monkeypatch) -> Path:
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents = tmp_path / "agents"
         agents.mkdir()
@@ -214,7 +214,7 @@ class TestSpecPathPrefersTheDeclaredName:
         """The resolver prefers the declared name. (The WRITE path additionally
         refuses this state outright -- see TestResetRefusesAnAmbiguousName --
         because the runtime's choice between the two files is undefined.)"""
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents = self._dir(tmp_path, monkeypatch)
         (agents / "foo.json").write_text(
@@ -232,7 +232,7 @@ class TestSpecPathPrefersTheDeclaredName:
         """`foo.json` declaring `bar`, with nothing declaring `foo`: the runtime
         matches it by STEM, so it is the live spec for `--agent foo` and refusing
         it would leave a live pin unresettable."""
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents = self._dir(tmp_path, monkeypatch)
         (agents / "foo.json").write_text(
@@ -258,7 +258,7 @@ class TestSpecPathPrefersTheDeclaredName:
     def test_the_filename_is_accepted_unless_another_name_is_declared(
         self, tmp_path: Path, monkeypatch, body: dict
     ):
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents = self._dir(tmp_path, monkeypatch)
         (agents / "foo.json").write_text(json.dumps(body), encoding="utf-8")
@@ -275,7 +275,7 @@ class TestResetRefusesAnAmbiguousName:
     """
 
     def test_a_declared_match_plus_a_filename_match_is_refused(self, tmp_path: Path, monkeypatch):
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents = tmp_path / "agents"
         agents.mkdir()
@@ -300,7 +300,7 @@ class TestResetRefusesAnAmbiguousName:
         assert agent_mod.agent_state.get_model_managed("foo") is None
 
     def test_an_unambiguous_declared_match_still_resets(self, tmp_path: Path, monkeypatch):
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents = tmp_path / "agents"
         agents.mkdir()
@@ -316,7 +316,7 @@ class TestResetRefusesAnAmbiguousName:
     def test_two_specs_declaring_the_same_name_is_refused(self, tmp_path: Path, monkeypatch):
         """Same undefined-liveness argument as the filename collision: the
         runtime iterates unordered, so a writer cannot pick."""
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents = tmp_path / "agents"
         agents.mkdir()
@@ -348,36 +348,36 @@ class TestSpecReadsAreSizeCapped:
     """
 
     def test_an_oversized_spec_is_refused_by_resolver_and_reset(self, tmp_path: Path, monkeypatch):
-        import kiro_crew.agent as agent_mod
-        from kiro_crew import hooks
+        import aj_crew.agent as agent_mod
+        from aj_crew import hooks
 
         monkeypatch.setattr(hooks, "MAX_FILE_BYTES", 256)
         agents = tmp_path / "agents"
         agents.mkdir()
-        (agents / "kirocrew.json").write_text(
-            json.dumps({"name": "kirocrew", "model": "m", "pad": "x" * 1024}), encoding="utf-8"
+        (agents / "ajcrew.json").write_text(
+            json.dumps({"name": "ajcrew", "model": "m", "pad": "x" * 1024}), encoding="utf-8"
         )
         monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: agents)
 
-        assert agent_mod.agent_spec_path("kirocrew") is None
+        assert agent_mod.agent_spec_path("ajcrew") is None
         with pytest.raises(FileNotFoundError):
-            agent_mod.reset_agent_model("kirocrew")
+            agent_mod.reset_agent_model("ajcrew")
 
     def test_a_normal_sized_spec_under_the_same_cap_still_resets(self, tmp_path: Path, monkeypatch):
         """The A-side of the cap test: proves the refusal above is the SIZE, not
         the lowered cap breaking every read."""
-        import kiro_crew.agent as agent_mod
-        from kiro_crew import hooks
+        import aj_crew.agent as agent_mod
+        from aj_crew import hooks
 
         monkeypatch.setattr(hooks, "MAX_FILE_BYTES", 256)
         agents = tmp_path / "agents"
         agents.mkdir()
-        (agents / "kirocrew.json").write_text(
-            json.dumps({"name": "kirocrew", "model": "claude-opus-4.8"}), encoding="utf-8"
+        (agents / "ajcrew.json").write_text(
+            json.dumps({"name": "ajcrew", "model": "claude-opus-4.8"}), encoding="utf-8"
         )
         monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: agents)
 
-        _, previous = agent_mod.reset_agent_model("kirocrew")
+        _, previous = agent_mod.reset_agent_model("ajcrew")
         assert previous == "claude-opus-4.8"
 
 
@@ -392,7 +392,7 @@ class TestResetOutputEscapesUntrustedPaths:
     HOSTILE = "/tmp/agents/evil\x1b[2J.json"
 
     def test_the_success_line_escapes_the_path(self, monkeypatch, capsys):
-        import kiro_crew.cli_commands as cli_commands
+        import aj_crew.cli_commands as cli_commands
 
         monkeypatch.setattr(
             cli_commands,
@@ -400,7 +400,7 @@ class TestResetOutputEscapesUntrustedPaths:
             lambda name: (Path(self.HOSTILE), "claude-opus-4.8"),
         )
 
-        cli_commands._agent_reset_model(argparse.Namespace(agent="kirocrew"))
+        cli_commands._agent_reset_model(argparse.Namespace(agent="ajcrew"))
 
         out = capsys.readouterr().out
         assert "Cleared" in out
@@ -408,13 +408,13 @@ class TestResetOutputEscapesUntrustedPaths:
         assert "\\x1b" in out, "the path is still shown, just escaped"
 
     def test_the_no_pin_line_escapes_the_path(self, monkeypatch, capsys):
-        import kiro_crew.cli_commands as cli_commands
+        import aj_crew.cli_commands as cli_commands
 
         monkeypatch.setattr(
             cli_commands, "reset_agent_model", lambda name: (Path(self.HOSTILE), "")
         )
 
-        cli_commands._agent_reset_model(argparse.Namespace(agent="kirocrew"))
+        cli_commands._agent_reset_model(argparse.Namespace(agent="ajcrew"))
 
         out = capsys.readouterr().out
         assert "had no pinned model" in out
@@ -423,24 +423,24 @@ class TestResetOutputEscapesUntrustedPaths:
 
     def test_the_ambiguity_refusal_escapes_both_paths(self, tmp_path: Path, monkeypatch):
         """The refusal message names two paths; both come off disk."""
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents = tmp_path / "agents"
         agents.mkdir()
-        (agents / "kirocrew.json").write_text(json.dumps({"name": "other"}), encoding="utf-8")
-        (agents / "elsewhere.json").write_text(json.dumps({"name": "kirocrew"}), encoding="utf-8")
+        (agents / "ajcrew.json").write_text(json.dumps({"name": "other"}), encoding="utf-8")
+        (agents / "elsewhere.json").write_text(json.dumps({"name": "ajcrew"}), encoding="utf-8")
         monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: agents)
         # Inject the hostile path as the CONFLICTING file, portably.
         monkeypatch.setattr(agent_mod, "_conflicting_spec_for", lambda n, c, d: Path(self.HOSTILE))
 
         with pytest.raises(ValueError) as exc:
-            agent_mod.reset_agent_model("kirocrew")
+            agent_mod.reset_agent_model("ajcrew")
         assert "\x1b" not in str(exc.value)
         assert "\\x1b" in str(exc.value)
 
     def test_the_duplicate_name_refusal_escapes_paths(self, tmp_path: Path, monkeypatch):
         """The other refusal builds its message from a list of real spec paths."""
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         agents = tmp_path / "agents"
         agents.mkdir()
@@ -465,7 +465,7 @@ class TestSelHookRejectedRedaction:
     """
 
     def _capture_sel(self, monkeypatch) -> list:
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         events: list = []
 
@@ -477,7 +477,7 @@ class TestSelHookRejectedRedaction:
         return events
 
     def test_credential_straddling_the_cut_is_not_leaked(self, monkeypatch) -> None:
-        from kiro_crew.agent import _sel_hook_rejected
+        from aj_crew.agent import _sel_hook_rejected
 
         events = self._capture_sel(monkeypatch)
         # fabricated AKIA-shaped literal, inlined (a ``secret``-named binding
@@ -490,7 +490,7 @@ class TestSelHookRejectedRedaction:
 
     def test_plain_command_truncation_unchanged(self, monkeypatch) -> None:
         """Ordinary path is result-preserving: no secret ⇒ the same 200-char slice."""
-        from kiro_crew.agent import _sel_hook_rejected
+        from aj_crew.agent import _sel_hook_rejected
 
         events = self._capture_sel(monkeypatch)
         _sel_hook_rejected("preToolUse", "c" * 250, "denied")

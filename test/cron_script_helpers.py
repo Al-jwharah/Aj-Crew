@@ -2,7 +2,7 @@
 
 ``_cron_caller_is_named`` names the cron caller ``mcp_cron`` requires, and
 ``_crons_dir_tracks_patched_home`` points ``cron_script.config_dir()`` at
-``<patched home>/.kirocrew``.
+``<patched home>/.ajcrew``.
 """
 
 from __future__ import annotations
@@ -24,22 +24,22 @@ def _cron_caller_is_named(named_cron_caller):
 
 @pytest.fixture(autouse=True)
 def _crons_dir_tracks_patched_home(_floor_monkeypatch, tmp_path):
-    """Keep ``cron_script.config_dir()`` pointed at ``<patched home>/.kirocrew``.
+    """Keep ``cron_script.config_dir()`` pointed at ``<patched home>/.ajcrew``.
 
-    Tests write scripts under ``<home>/.kirocrew/crons``, but ``config_dir()`` reads
-    ``KIROCREW_HOME``, which the conftest pins to a different tmp dir. The lookup is
+    Tests write scripts under ``<home>/.ajcrew/crons``, but ``config_dir()`` reads
+    ``AJCREW_HOME``, which the conftest pins to a different tmp dir. The lookup is
     lazy, so it tracks whatever ``Path.home()`` each test patches.
 
     The stub creates the directory because the real ``config_dir`` does. A test that
     leaves ``Path.home`` unpatched gets a per-test tmp dir, never the operator's home.
     """
     real_home = Path.home()
-    fallback = tmp_path / "kirocrew-home-fallback"
+    fallback = tmp_path / "ajcrew-home-fallback"
 
     def _home_dir() -> Path:
         home = Path.home()
-        d = fallback if home == real_home else home / ".kirocrew"
+        d = fallback if home == real_home else home / ".ajcrew"
         d.mkdir(parents=True, exist_ok=True)
         return d
 
-    _floor_monkeypatch.setattr("kiro_crew.cron_script.config_dir", _home_dir)
+    _floor_monkeypatch.setattr("aj_crew.cron_script.config_dir", _home_dir)

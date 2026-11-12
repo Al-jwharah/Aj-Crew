@@ -6,7 +6,7 @@ cursor-less refusal (negative fault test 3), and the month-iterated report.
 
 import pytest
 
-from kiro_crew.connections.vendors.zoom.paging import (
+from aj_crew.connections.vendors.zoom.paging import (
     Pagination,
     classify_pagination,
     next_cursor_request,

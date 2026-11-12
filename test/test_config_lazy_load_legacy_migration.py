@@ -19,10 +19,10 @@ import logging
 
 import pytest
 
-from kiro_crew.config import loader as L
-from kiro_crew.config import migration as M
-from kiro_crew.config import superseded_defaults as SD
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config import loader as L
+from aj_crew.config import migration as M
+from aj_crew.config import superseded_defaults as SD
+from aj_crew.config.loader import AjCrewConfig
 
 KEY = "skills.lazy_load"
 
@@ -73,8 +73,8 @@ def _rewrite_notices(caplog) -> list[str]:
 def test_a_0_6_config_holding_false_is_migrated_once(home, caplog):
     _write(home, _legacy_config())
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.config.loader"):
-        cfg = KiroCrewConfig.load()
+    with caplog.at_level(logging.INFO, logger="aj_crew.config.loader"):
+        cfg = AjCrewConfig.load()
 
     assert cfg.skills.lazy_load is True, "this very load must already run the new default"
     stored = _on_disk(home)
@@ -86,14 +86,14 @@ def test_a_0_6_config_holding_false_is_migrated_once(home, caplog):
     notices = _rewrite_notices(caplog)
     assert len(notices) == 1 and "0.6.0" in notices[0]
     assert "The current default (the ranked skill index) applies." in notices[0]
-    assert "kirocrew config set skills.lazy_load false" in notices[0]
+    assert "ajcrew config set skills.lazy_load false" in notices[0]
 
     migrated = (home / "config.json").read_bytes()
     ledger = SD.ack_file_path().read_bytes()
     caplog.clear()
     L._invalidate_config_cache()
-    with caplog.at_level(logging.INFO, logger="kiro_crew.config.loader"):
-        again = KiroCrewConfig.load()
+    with caplog.at_level(logging.INFO, logger="aj_crew.config.loader"):
+        again = AjCrewConfig.load()
 
     assert again.skills.lazy_load is True
     assert (home / "config.json").read_bytes() == migrated, "a second load is a no-op"
@@ -106,7 +106,7 @@ def test_a_0_6_config_holding_false_is_migrated_once(home, caplog):
 )
 def test_every_pre_0_7_stamp_is_provable(home, stamp):
     _write(home, _legacy_config(stamp=stamp))
-    assert KiroCrewConfig.load().skills.lazy_load is True
+    assert AjCrewConfig.load().skills.lazy_load is True
     assert "lazy_load" not in _on_disk(home)["skills"]
 
 
@@ -126,8 +126,8 @@ def test_a_0_7_or_later_stamp_keeps_false_and_is_only_reported(home, monkeypatch
     monkeypatch.setattr(SD, "SUPERSEDED_DEFAULTS", (*SD.SUPERSEDED_DEFAULTS, row))
     _write(home, _legacy_config(stamp=stamp))
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-        cfg = KiroCrewConfig.load()
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+        cfg = AjCrewConfig.load()
 
     assert cfg.skills.lazy_load is False
     assert _on_disk(home)["skills"]["lazy_load"] is False
@@ -145,8 +145,8 @@ def test_the_report_skips_the_key_the_same_load_is_removing(home, monkeypatch, c
     monkeypatch.setattr(SD, "SUPERSEDED_DEFAULTS", (*SD.SUPERSEDED_DEFAULTS, row))
     _write(home, _legacy_config())
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-        KiroCrewConfig.load()
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+        AjCrewConfig.load()
 
     assert not any("superseded default" in r.getMessage() for r in caplog.records)
     assert len(_rewrite_notices(caplog)) == 1
@@ -157,7 +157,7 @@ def test_an_existing_connections_ui_marker_blocks_the_migration(home):
     _marker(home).write_text("{}", encoding="utf-8")
     _write(home, _legacy_config())
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.skills.lazy_load is False
     assert _on_disk(home)["skills"]["lazy_load"] is False
@@ -167,7 +167,7 @@ def test_an_existing_connections_ui_marker_blocks_the_migration(home):
 def test_an_explicit_true_is_untouched(home):
     _write(home, _legacy_config(lazy_load=True))
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.skills.lazy_load is True
     assert _on_disk(home)["skills"]["lazy_load"] is True
@@ -178,7 +178,7 @@ def test_an_explicit_true_is_untouched(home):
 @pytest.mark.parametrize("lazy_load", [0, "false", None])
 def test_only_the_exact_boolean_false_is_rewritten(home, lazy_load):
     _write(home, _legacy_config(lazy_load=lazy_load))
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
     assert _on_disk(home)["skills"]["lazy_load"] == lazy_load
     assert KEY not in SD.adopted_superseded()
 
@@ -206,7 +206,7 @@ def test_an_unreadable_or_missing_stamp_does_not_migrate(home, meta):
         data["meta"] = meta
     _write(home, data)
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.skills.lazy_load is False
     assert _on_disk(home)["skills"]["lazy_load"] is False
@@ -219,7 +219,7 @@ def test_an_unreadable_ledger_does_not_migrate(home):
     SD.ack_file_path().write_text("{not json", encoding="utf-8")
     _write(home, _legacy_config())
 
-    assert KiroCrewConfig.load().skills.lazy_load is False
+    assert AjCrewConfig.load().skills.lazy_load is False
     assert _on_disk(home)["skills"]["lazy_load"] is False
     # Declined up front, not by a ledger write that fails and aborts the pass: the
     # other migrations, and the boundary marker, still land.
@@ -233,7 +233,7 @@ def test_a_ledger_entry_keeps_it_one_shot_without_the_marker(home):
     )
     _write(home, _legacy_config())
 
-    assert KiroCrewConfig.load().skills.lazy_load is False
+    assert AjCrewConfig.load().skills.lazy_load is False
     assert _on_disk(home)["skills"]["lazy_load"] is False
 
 
@@ -248,14 +248,14 @@ def test_a_deferred_write_defers_everything(home):
 
     with pytest.MonkeyPatch.context() as patched:
         patched.setattr(L, "_persist_config_migration", contended)
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
     assert any(M.MIGRATE_SKILLS_LAZY_LOAD in p for p in seen)
     assert cfg.skills.lazy_load is False, "memory never runs ahead of the stored document"
     assert _on_disk(home)["skills"]["lazy_load"] is False
     assert not _marker(home).exists(), "the boundary marker must defer with the rewrite"
 
-    assert KiroCrewConfig.load().skills.lazy_load is True
+    assert AjCrewConfig.load().skills.lazy_load is True
     assert "lazy_load" not in _on_disk(home)["skills"]
 
 
@@ -267,8 +267,8 @@ def test_an_overlay_value_wins_in_memory(home, caplog):
     )
     L._invalidate_config_cache()
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-        cfg = KiroCrewConfig.load()
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+        cfg = AjCrewConfig.load()
 
     assert "lazy_load" not in _on_disk(home)["skills"]
     assert cfg.skills.lazy_load is False
@@ -283,7 +283,7 @@ def test_a_degraded_first_load_keeps_the_proof_until_a_clean_load(home):
     (home / "config.local.json").write_text("{not json", encoding="utf-8")
     L._invalidate_config_cache()
 
-    assert KiroCrewConfig.load().skills.lazy_load is False
+    assert AjCrewConfig.load().skills.lazy_load is False
     assert not _marker(home).exists()
     assert L.refresh_config_meta_stamp() is False
     assert _on_disk(home)["meta"]["lastTouchedVersion"] == "0.6.0"
@@ -291,7 +291,7 @@ def test_a_degraded_first_load_keeps_the_proof_until_a_clean_load(home):
     (home / "config.local.json").unlink()
     L.reset_degraded_observations()  # what the operator's restart does
     L._invalidate_config_cache()
-    assert KiroCrewConfig.load().skills.lazy_load is True
+    assert AjCrewConfig.load().skills.lazy_load is True
     assert "lazy_load" not in _on_disk(home)["skills"]
 
 
@@ -310,7 +310,7 @@ def test_the_transform_re_checks_the_value_inside_the_lock():
         doc,
         frozenset({M.MIGRATE_SKILLS_LAZY_LOAD}),
         overlay_kiro_agent=None,
-        default_kiro_agent="kirocrew",
+        default_kiro_agent="ajcrew",
         record_adoptions=recorded.append,
     )
 
@@ -331,7 +331,7 @@ def test_one_ledger_record_carries_every_removal_of_the_pass():
             doc,
             frozenset({M.MIGRATE_SKILLS_LAZY_LOAD, M.MIGRATE_SUPERSEDED_DEFAULTS}),
             overlay_kiro_agent=None,
-            default_kiro_agent="kirocrew",
+            default_kiro_agent="ajcrew",
             adopt_keys=frozenset({"agent.subagent_timeout_secs"}),
             record_adoptions=recorded.append,
         )
@@ -350,7 +350,7 @@ def test_the_transform_re_checks_the_stamp_inside_the_lock():
         doc,
         frozenset({M.MIGRATE_SKILLS_LAZY_LOAD}),
         overlay_kiro_agent=None,
-        default_kiro_agent="kirocrew",
+        default_kiro_agent="ajcrew",
         record_adoptions=recorded.append,
     )
 
@@ -371,7 +371,7 @@ def test_a_failed_ledger_record_aborts_the_removal():
             doc,
             frozenset({M.MIGRATE_SKILLS_LAZY_LOAD}),
             overlay_kiro_agent=None,
-            default_kiro_agent="kirocrew",
+            default_kiro_agent="ajcrew",
             record_adoptions=refuse,
         )
     assert doc["skills"]["lazy_load"] is False
@@ -379,7 +379,7 @@ def test_a_failed_ledger_record_aborts_the_removal():
 
 def test_doctor_replays_the_rewrite_with_a_restore_command():
     line = SD.adoption_summary(KEY, False)
-    assert line.endswith("kirocrew config set skills.lazy_load false")
+    assert line.endswith("ajcrew config set skills.lazy_load false")
     # The skills.lazy_load registry row carries the same key and old value, so it
     # vouches for the ledger entry and lists a value a failed write left stored.
     assert (KEY, False) in {(e.dotted_key, e.old_default) for e in SD.SUPERSEDED_DEFAULTS}

@@ -36,7 +36,7 @@ const theme = params.get('theme') || 'dark'
 const streaming = params.get('stream') === '1'
 const intervalMs = Number(params.get('interval') || 80)
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const CONTENT = [
   'Reading the gateway logs now. The reconnect storm starts when the session',

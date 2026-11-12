@@ -10,8 +10,8 @@ from __future__ import annotations
 import pytest
 from stray_line_helpers import STRAY_LINES, too_deep_to_decode
 
-from kiro_crew import json_line
-from kiro_crew.json_line import (
+from aj_crew import json_line
+from aj_crew.json_line import (
     parse_json_object_line,
     recover_line_id,
     recover_top_level_id,

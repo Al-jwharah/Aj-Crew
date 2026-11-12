@@ -8,13 +8,13 @@ import pytest
 from autonudge_helpers import _enable  # noqa: F401
 from autonudge_helpers import svc_fixture  # noqa: F401
 
-from kiro_crew.autonudge import (
+from aj_crew.autonudge import (
     APPROVAL_STALL_REASON,
     AUTONUDGE_STOP_REASON,
     MonitorUpdateConflict,
     NudgeLoop,
 )
-from kiro_crew.monitoring.models import MONITOR_STATE_VERSION, MonitorBudgets, MonitorOutcome
+from aj_crew.monitoring.models import MONITOR_STATE_VERSION, MonitorBudgets, MonitorOutcome
 
 #: Lost-run ceiling for synchronization the test itself must release. It is a
 #: hang guard whose expiry fails at the awaited line, never a performance
@@ -401,7 +401,7 @@ async def test_replace_stopped_preserves_a_quarantined_monitor_record(svc):
     """``_load()`` quarantines a malformed monitor payload as BLOCKED precisely
     to retain the raw record for inspection — a directive re-arm deleting it
     would destroy the only copy of the corrupt state."""
-    from kiro_crew.monitoring.models import MONITOR_STOP_INVALID_RECORD
+    from aj_crew.monitoring.models import MONITOR_STOP_INVALID_RECORD
 
     existing = await svc.add_monitor(
         slot_key="chat-1-123",

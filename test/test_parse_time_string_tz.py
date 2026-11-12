@@ -1,6 +1,6 @@
 """Tests that parse_time_string uses config timezone, not system timezone.
 
-Patches ``kiro_crew.cron`` rather than ``kiro_crew.mcp_cron``: the parser lives
+Patches ``aj_crew.cron`` rather than ``aj_crew.mcp_cron``: the parser lives
 beside ``get_local_tz`` in ``cron`` so both one-shot entry points (the
 ``cron_add`` MCP tool and ``POST /api/crons``) share one implementation, and a
 patch has to target the module whose globals the function actually reads.
@@ -11,7 +11,7 @@ from datetime import datetime
 from unittest.mock import patch
 from zoneinfo import ZoneInfo
 
-import kiro_crew.cron as cron_mod
+import aj_crew.cron as cron_mod
 
 
 def test_at_time_uses_config_timezone_not_system():

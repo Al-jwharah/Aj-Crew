@@ -1,8 +1,8 @@
 """Composition contract between ``SkillsLoader`` and ``skill_runtime``.
 
-``kiro_crew.skills`` keeps the loader's state and its locks, binds the code repository
+``aj_crew.skills`` keeps the loader's state and its locks, binds the code repository
 guards pin by path from its ``skills_*`` owner modules, and delegates the rest of its
-rules to the modules under ``kiro_crew.skill_runtime``. What this file pins is what callers of
+rules to the modules under ``aj_crew.skill_runtime``. What this file pins is what callers of
 the loader observe independently of where each rule lives:
 
 * the class keeps every member it had, with the same kind and signature, and the
@@ -40,15 +40,15 @@ from source_corpus import repo_files_named, repo_root
 from test_link_screen_hold_pin import SCREENS
 from test_security_posture import _REDACTOR_CALL_RE
 
-import kiro_crew.skills as sk
-from kiro_crew import pinned_fs
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.skills import AutoSkillProvenance, ClaimRefusal, SkillsLoader
+import aj_crew.skills as sk
+from aj_crew import pinned_fs
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.skills import AutoSkillProvenance, ClaimRefusal, SkillsLoader
 
-RUNTIME_PACKAGE = "kiro_crew.skill_runtime"
+RUNTIME_PACKAGE = "aj_crew.skill_runtime"
 RUNTIME_DIR = Path(sk.__file__).resolve().with_name("skill_runtime")
 FACADE_PATH = Path(sk.__file__).resolve()
-FACADE_LOGGER = "kiro_crew.skills"
+FACADE_LOGGER = "aj_crew.skills"
 
 #: The owners the loader composes. A module added or removed changes the
 #: composition, so the set is spelled out rather than globbed.
@@ -66,7 +66,7 @@ RUNTIME_MODULES = frozenset(
 )
 
 #: Facade bindings that tests REBIND to change what the loader does, and which
-#: moved code consumes. Runtime code reads each through ``kiro_crew.skills`` at
+#: moved code consumes. Runtime code reads each through ``aj_crew.skills`` at
 #: call time. ``os`` is rebound too, but only around ``installed_skill_currency``,
 #: which lives in ``skills_builtin_provenance``; runtime code reads ``os`` directly.
 FACADE_SEAMS = frozenset(
@@ -161,7 +161,7 @@ _LOADER_MEMBERS = {
 
 _LOADER_SIGNATURES = {
     "_ALLOWED_CANDIDATE_TOP": "['.meta.json', 'SKILL.md', 'scripts']",
-    "__init__": "(self, skills_path: 'Path | None' = None, install_builtins: 'bool' = True, config: 'KiroCrewConfig | None' = None)",
+    "__init__": "(self, skills_path: 'Path | None' = None, install_builtins: 'bool' = True, config: 'AjCrewConfig | None' = None)",
     "_adopt_snapshot": "(self, project_key: 'str', snapshot: '_StoredCatalog', *, generation: 'int') -> 'list[tuple[str, Path, str | None]] | None'",
     "_adopt_extra_paths": "(self, resolved_paths: 'list[Path]') -> 'None'",
     "_append_project_skill_bodies": "(self, parts: 'list[str]', project_skills: 'list[dict]', project_dir: 'str | Path | None', budget: 'int | None', pinned: 'set[str] | None' = None) -> '_delivery.SkippedProjectSkills'",
@@ -232,7 +232,7 @@ _LOADER_SIGNATURES = {
     "_run_catalog_build": "(self, project_key: 'str', generation: 'int') -> 'None'",
     "_safe_name": "(name: 'str') -> 'bool'",
     "_scoped_entries": "(self, project_dir: 'str | Path | None', only: 'list[str] | None') -> 'list[_ScopedSkillEntry]'",
-    "_screen_extra_paths": "(cfg: 'KiroCrewConfig') -> 'list[Path]'",
+    "_screen_extra_paths": "(cfg: 'AjCrewConfig') -> 'list[Path]'",
     "_served_key_by_realpath": "(self) -> 'dict[str, str]'",
     "_short_desc": "(desc: 'str', suffix: 'str' = '...') -> 'str'",
     "_snapshot_admitted_roots": "(self) -> 'tuple[str, ...]'",
@@ -277,7 +277,7 @@ _LOADER_SIGNATURES = {
     "read_auto_skill_body": "(self, name: 'str') -> 'str | None'",
     "read_scoped_skill": "(self, key: 'str', *, only: 'list[str] | None' = None, project_dir: 'str | Path | None' = None, max_bytes: 'int' = 99000) -> 'str | None'",
     "read_scoped_skill_page": "(self, key: 'str', *, only: 'list[str] | None' = None, project_dir: 'str | Path | None' = None, offset: 'int | None' = None, limit: 'int | None' = None, capacity: 'int' = 99000) -> 'SkillBodyPage | SkillReadRefusal'",
-    "reconfigure": "(self, cfg: 'KiroCrewConfig') -> 'None'",
+    "reconfigure": "(self, cfg: 'AjCrewConfig') -> 'None'",
     "resolve_dollar_skills": "(self, text: 'str', project_dir: 'str | Path | None' = None, *, only: 'list[str] | None' = None) -> 'list[tuple[str, str, str]]'",
     "resolve_ledger_aliases": "(self) -> 'dict[str, list[str]]'",
     "resolve_tool_read_keys": "(self, tool_name: 'str' = '', raw_params: 'dict | None' = None, command: 'str | None' = None) -> 'list[str]'",
@@ -338,8 +338,8 @@ is_retired_conductor_skill logger remove_retired_conductor_skill
 set_pending_consumed_hook set_pending_staged_hook skills_dir
 """.split()
 
-_IMPORTED_KIRO_CREW_NAMES = """
-FileTooLargeError KiroCrewConfig MAX_SCRIPT_BYTES MIN_TRIGGER_OVERLAP PinnedDirectory
+_IMPORTED_AJ_CREW_NAMES = """
+FileTooLargeError AjCrewConfig MAX_SCRIPT_BYTES MIN_TRIGGER_OVERLAP PinnedDirectory
 SKILL_LOADER SKILL_SEARCH_INDEX_FILENAME SKILL_USAGE_FILENAME SkillSearchIndex
 SkillUsageLedger atomic_write body_fingerprint config_dir ensure_owner_rwx_dirs
 file_lock get_recorder hooks_module is_link_or_junction is_sensitive_path
@@ -418,7 +418,7 @@ def _sibling_name_imports(source: str) -> list[str]:
     """Every import, at any depth, that binds a runtime owner's function rather
     than the owner module.
 
-    ``from kiro_crew.skill_runtime.listing import f`` copies ``f`` into the
+    ``from aj_crew.skill_runtime.listing import f`` copies ``f`` into the
     importer once, so a patch of ``listing.f`` never reaches that caller."""
     hits = []
     for node in ast.walk(ast.parse(source)):
@@ -478,8 +478,8 @@ class TestSurface(
         missing = [name for name in _MODULE_NAMES if not hasattr(sk, name)]
         assert missing == []
 
-    def test_every_imported_kiro_crew_name_still_resolves_on_the_facade(self) -> None:
-        missing = [name for name in _IMPORTED_KIRO_CREW_NAMES if not hasattr(sk, name)]
+    def test_every_imported_aj_crew_name_still_resolves_on_the_facade(self) -> None:
+        missing = [name for name in _IMPORTED_AJ_CREW_NAMES if not hasattr(sk, name)]
         assert missing == []
 
     def test_a_moved_name_is_its_owner_object_not_a_copy(self) -> None:
@@ -498,15 +498,15 @@ class TestSurface(
         assert {"_dedupe_identical_skills", "_family_line", "_matches_any"} <= set(moved)
 
     def test_a_star_import_still_binds_every_public_name(self, tmp_path: Path) -> None:
-        probe = _load_probe(tmp_path, "sk_star_probe", "from kiro_crew.skills import *\n")
+        probe = _load_probe(tmp_path, "sk_star_probe", "from aj_crew.skills import *\n")
         public = [name for name in _MODULE_NAMES if not name.startswith("_") and name != "logger"]
-        public += [name for name in _IMPORTED_KIRO_CREW_NAMES if not name.startswith("_")]
+        public += [name for name in _IMPORTED_AJ_CREW_NAMES if not name.startswith("_")]
         assert [name for name in public if not hasattr(probe, name)] == []
 
 
-#: Every spelling a test uses to reach the facade module: ``import kiro_crew.skills``
-#: (aliased or not) and ``from kiro_crew import ..., skills, ...``.
-_MENTIONS_THE_FACADE = re.compile(r"kiro_crew\.skills\b|from kiro_crew import [^\n]*\bskills\b")
+#: Every spelling a test uses to reach the facade module: ``import aj_crew.skills``
+#: (aliased or not) and ``from aj_crew import ..., skills, ...``.
+_MENTIONS_THE_FACADE = re.compile(r"aj_crew\.skills\b|from aj_crew import [^\n]*\bskills\b")
 
 
 class TestPlacement(
@@ -537,16 +537,16 @@ class TestPlacement(
         for stem, source in _runtime_sources().items():
             for node in ast.parse(source).body:
                 if isinstance(node, ast.Import):
-                    assert "kiro_crew.skills" not in [alias.name for alias in node.names], stem
+                    assert "aj_crew.skills" not in [alias.name for alias in node.names], stem
                 elif isinstance(node, ast.ImportFrom):
-                    assert node.module != "kiro_crew.skills", stem
+                    assert node.module != "aj_crew.skills", stem
                     assert not (
-                        node.module == "kiro_crew"
+                        node.module == "aj_crew"
                         and "skills" in [alias.name for alias in node.names]
                     ), stem
 
-    def test_runtime_modules_import_no_other_kiro_crew_name(self) -> None:
-        """Every name the facade imports from another ``kiro_crew`` module was a facade
+    def test_runtime_modules_import_no_other_aj_crew_name(self) -> None:
+        """Every name the facade imports from another ``aj_crew`` module was a facade
         binding a caller could patch. Taking those names through ``sk`` at call time,
         rather than importing them again at module scope, keeps each such patch
         effective on the moved code. Sibling owner modules and ``TYPE_CHECKING``
@@ -558,11 +558,11 @@ class TestPlacement(
                 if id(node) in typing_only:
                     continue
                 if isinstance(node, ast.ImportFrom) and _imported_module(node).startswith(
-                    "kiro_crew"
+                    "aj_crew"
                 ):
                     assert _imported_module(node) == RUNTIME_PACKAGE, (stem, node.module)
                 elif isinstance(node, ast.Import):
-                    assert not [a.name for a in node.names if a.name.startswith("kiro_crew")], stem
+                    assert not [a.name for a in node.names if a.name.startswith("aj_crew")], stem
 
     def test_runtime_imports_form_a_dag(self) -> None:
         graph = {
@@ -597,10 +597,10 @@ class TestPlacement(
     @pytest.mark.parametrize(
         "planted",
         [
-            "from kiro_crew.skill_runtime.listing import _dedupe_identical_skills\n",
-            "from kiro_crew.skill_runtime.listing import _dedupe_identical_skills as dedupe\n",
-            "def f():\n    from kiro_crew.skill_runtime.catalog import _matches_any\n",
-            "from kiro_crew.skill_runtime import _matches_any\n",
+            "from aj_crew.skill_runtime.listing import _dedupe_identical_skills\n",
+            "from aj_crew.skill_runtime.listing import _dedupe_identical_skills as dedupe\n",
+            "def f():\n    from aj_crew.skill_runtime.catalog import _matches_any\n",
+            "from aj_crew.skill_runtime import _matches_any\n",
             "from .listing import _fingerprint_mtime_and_size\n",
         ],
     )
@@ -610,7 +610,7 @@ class TestPlacement(
     @pytest.mark.parametrize(
         "allowed",
         [
-            "from kiro_crew.skill_runtime import listing as _listing\n",
+            "from aj_crew.skill_runtime import listing as _listing\n",
             "from . import catalog\n",
         ],
     )
@@ -618,7 +618,7 @@ class TestPlacement(
         assert _sibling_name_imports(allowed) == []
 
     def test_runtime_functions_import_the_facade_as_a_module(self) -> None:
-        """``from kiro_crew import skills as sk`` and then ``sk.<seam>``: never a
+        """``from aj_crew import skills as sk`` and then ``sk.<seam>``: never a
         by-name import of a facade binding, which would read it once, not per call."""
         imports = 0
         for stem, source in _runtime_sources().items():
@@ -627,9 +627,9 @@ class TestPlacement(
             for node in ast.walk(tree):
                 if id(node) in typing_only:
                     continue
-                if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew":
+                if isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
                     imports += "skills" in [alias.name for alias in node.names]
-                if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.skills":
+                if isinstance(node, ast.ImportFrom) and node.module == "aj_crew.skills":
                     raise AssertionError(f"{stem}:{node.lineno} imports facade names by name")
         assert imports > 30
 
@@ -686,13 +686,13 @@ class TestPlacement(
     def test_the_seam_scan_catches_a_planted_bare_read(self) -> None:
         planted = (
             "def f(loader, path: 'validate_file_path') -> 'sel':\n"
-            "    from kiro_crew import skills as sk\n"
+            "    from aj_crew import skills as sk\n"
             "    good = sk.validate_file_path(str(path))\n"
             "    return validate_file_path(str(path)), _COLD_CATALOG_WAIT_SECS\n"
             "class Owner:\n"
             "    def lock(self):\n"
-            "        from kiro_crew.platform_compat import file_lock\n"
-            "        from kiro_crew.hooks import safe_read_file as read\n"
+            "        from aj_crew.platform_compat import file_lock\n"
+            "        from aj_crew.hooks import safe_read_file as read\n"
             "        return file_lock, read\n"
         )
         assert [hit.split(": ")[1] for hit in self._bare_seam_loads(planted)] == [
@@ -704,7 +704,7 @@ class TestPlacement(
 
     @staticmethod
     def _facade_patched_names() -> set[str]:
-        """Names any test rebinds on ``kiro_crew.skills`` itself."""
+        """Names any test rebinds on ``aj_crew.skills`` itself."""
         tests = repo_root() / "test"
         found: set[str] = set()
         for path in repo_files_named(".py"):
@@ -714,13 +714,13 @@ class TestPlacement(
             if not _MENTIONS_THE_FACADE.search(text):
                 continue
             tree = ast.parse(text)
-            aliases = {"kiro_crew.skills"}
+            aliases = {"aj_crew.skills"}
             for node in ast.walk(tree):
-                if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew":
+                if isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
                     aliases |= {a.asname or a.name for a in node.names if a.name == "skills"}
                 elif isinstance(node, ast.Import):
                     aliases |= {
-                        a.asname for a in node.names if a.name == "kiro_crew.skills" and a.asname
+                        a.asname for a in node.names if a.name == "aj_crew.skills" and a.asname
                     }
             for node in ast.walk(tree):
                 if not isinstance(node, ast.Call) or len(node.args) < 2:
@@ -733,7 +733,7 @@ class TestPlacement(
                     and ast.unparse(node.func).endswith(("setattr", "patch.object"))
                 ):
                     found.add(name.value)
-            found |= set(re.findall(r"""["']kiro_crew\.skills\.(\w+)["']""", text))
+            found |= set(re.findall(r"""["']aj_crew\.skills\.(\w+)["']""", text))
         return found - {"SkillsLoader"}
 
     def test_no_runtime_module_binds_a_name_tests_rebind_on_the_facade(self) -> None:
@@ -776,15 +776,15 @@ class TestPlacement(
 
     def test_the_seam_import_scan_catches_an_aliased_import(self) -> None:
         planted = (
-            "from kiro_crew.hooks import validate_file_path as _vfp\n"
-            "from kiro_crew.platform_compat import file_lock, pinned_directory\n"
+            "from aj_crew.hooks import validate_file_path as _vfp\n"
+            "from aj_crew.platform_compat import file_lock, pinned_directory\n"
             "if TYPE_CHECKING:\n"
-            "    from kiro_crew.hooks import safe_read_file\n"
+            "    from aj_crew.hooks import safe_read_file\n"
         )
         assert self._module_seam_imports(planted) == ["1: validate_file_path", "2: file_lock"]
 
     def test_every_runtime_logger_is_the_facade_logger(self) -> None:
-        """caplog filters on ``kiro_crew.skills``; a ``skill_runtime.*`` logger is not
+        """caplog filters on ``aj_crew.skills``; a ``skill_runtime.*`` logger is not
         its child, so its records would fall outside every such assertion."""
         for stem, source in _runtime_sources().items():
             calls = [
@@ -801,7 +801,7 @@ class TestPlacement(
                 assert module.logger is logging.getLogger(FACADE_LOGGER)
 
     def test_no_runtime_module_anchors_a_path_on_its_own_file(self) -> None:
-        """``Path(__file__).parent`` in the facade is the ``kiro_crew`` package; in a
+        """``Path(__file__).parent`` in the facade is the ``aj_crew`` package; in a
         runtime module it is ``skill_runtime``, which would narrow the builtin-app
         root the ownership check compares against. Anchors go through the facade."""
         for stem, source in _runtime_sources().items():
@@ -976,7 +976,7 @@ def make_loader(tmp_path):
     made: list[SkillsLoader] = []
 
     def build(*, extra_paths: list[str] | None = None, max_triggered: int = 3) -> SkillsLoader:
-        cfg = KiroCrewConfig(
+        cfg = AjCrewConfig(
             skills=SkillsConfig(extra_paths=extra_paths or [], max_triggered=max_triggered)
         )
         loader = SkillsLoader(skills_path=tmp_path / "skills", install_builtins=False, config=cfg)
@@ -1240,7 +1240,7 @@ class TestSeamsReachTheRuntime:
         assert calls[-1] == "_matches_any"
 
     def test_the_ownership_check_anchors_at_the_package_root(self, make_loader) -> None:
-        """A builtin app's skill resolves inside ``kiro_crew/apps/builtins``, and its
+        """A builtin app's skill resolves inside ``aj_crew/apps/builtins``, and its
         owner is the manifest name of that package directory."""
         builtins_root = FACADE_PATH.parent / "apps" / "builtins"
         manifest = next(
@@ -1444,7 +1444,7 @@ class TestThePinnedPendingRead:
         one over ``_PENDING_DOCUMENT_MAX_BYTES``, derived from the generator's
         procedure limit, refuses the candidate whole.
         """
-        from kiro_crew.skills_script_validator import MAX_SCRIPT_BYTES
+        from aj_crew.skills_script_validator import MAX_SCRIPT_BYTES
 
         loader, pdir = self._candidate(make_loader)
         over_script_cap = "# pad\n" * (MAX_SCRIPT_BYTES // 6 + 10)

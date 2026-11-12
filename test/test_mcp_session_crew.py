@@ -12,9 +12,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import mcp_session_crew as tools
-from kiro_crew import remote_dispatch
-from kiro_crew.mcp_tools.dashboard_client import DashboardError
+from aj_crew import mcp_session_crew as tools
+from aj_crew import remote_dispatch
+from aj_crew.mcp_tools.dashboard_client import DashboardError
 
 
 class _Client:
@@ -190,19 +190,19 @@ def test_close_posts_and_renders():
 
 @pytest.mark.parametrize("value, expected", [(True, True), (False, False)])
 def test_the_switch_reads_the_config(monkeypatch, value, expected):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.work_ledger.remote_dispatch = value
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
     assert remote_dispatch.remote_dispatch_enabled() is expected
 
 
 def test_an_unreadable_config_reads_as_off(monkeypatch):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     def _boom(cls):
         raise OSError("unreadable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_boom))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_boom))
     assert remote_dispatch.remote_dispatch_enabled() is False

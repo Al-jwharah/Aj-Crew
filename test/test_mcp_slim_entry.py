@@ -1,6 +1,6 @@
 """The stdio MCP servers start without the gateway-only stack.
 
-``kirocrew mcp-*`` must not import the whole CLI (aiohttp, boto3/botocore, awscrt,
+``ajcrew mcp-*`` must not import the whole CLI (aiohttp, boto3/botocore, awscrt,
 slack_sdk) before it dispatches, and ``mcp-dashboard`` must not reach the same
 stack through ``dashboard.chat_folders``. The import checks run in a fresh
 interpreter, because ``sys.modules`` in the test process already holds
@@ -20,8 +20,8 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.platform as kc_platform
-from kiro_crew import (
+import aj_crew.platform as kc_platform
+from aj_crew import (
     _llama_lib_path,
     _ssl_compat,
     cli_log_files,
@@ -29,9 +29,9 @@ from kiro_crew import (
     platform_compat,
     project_dir,
 )
-from kiro_crew.platform import tree_liveness
-from kiro_crew.platform.context import PlatformCompositionError
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.platform import tree_liveness
+from aj_crew.platform.context import PlatformCompositionError
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 SRC = str(Path(mcp_entry.__file__).resolve().parents[1])
 HEAVY = ("aiohttp", "boto3", "botocore", "awscrt", "slack_sdk", "amazon_transcribe")
@@ -46,7 +46,7 @@ def _child_env(tmp_path: Path, **extra: str) -> dict[str, str]:
     env.update(
         HOME=str(tmp_path),
         USERPROFILE=str(tmp_path),  # Path.home() on Windows
-        KIROCREW_HOME=str(tmp_path / "home"),
+        AJCREW_HOME=str(tmp_path / "home"),
         PYTHONPATH=SRC,
         PYTHONDONTWRITEBYTECODE="1",  # no .pyc left in the checkout
     )
@@ -82,14 +82,14 @@ def test_mcp_server_module_skips_gateway_stack(module: str, tmp_path: Path) -> N
 #: A Codex thread launches the server from the operator's own config and may
 #: never call it, so whatever the start imports is paid by every such helper.
 DASHBOARD_START_UNUSED = (
-    "kiro_crew.mcp_core",
-    "kiro_crew.history",
-    "kiro_crew.knowledge",
-    "kiro_crew.skills",
-    "kiro_crew.messaging",
-    "kiro_crew.session",
-    "kiro_crew.cron",
-    "kiro_crew.apps.bridges",
+    "aj_crew.mcp_core",
+    "aj_crew.history",
+    "aj_crew.knowledge",
+    "aj_crew.skills",
+    "aj_crew.messaging",
+    "aj_crew.session",
+    "aj_crew.cron",
+    "aj_crew.apps.bridges",
 )
 
 
@@ -105,11 +105,11 @@ def test_dashboard_start_skips_unused_application_subsystems(tmp_path: Path) -> 
             sys.executable,
             "-c",
             "import json, sys\n"
-            "from kiro_crew.mcp_entry import slim_server\n"
+            "from aj_crew.mcp_entry import slim_server\n"
             "assert slim_server(['mcp-dashboard']) is not None\n"
             "print(json.dumps(sorted(sys.modules)))",
         ],
-        env=_child_env(tmp_path, KIROCREW_PROJECT_DIR=str(tmp_path)),
+        env=_child_env(tmp_path, AJCREW_PROJECT_DIR=str(tmp_path)),
         cwd=str(tmp_path),
         capture_output=True,
         **UTF8_TEXT,
@@ -118,19 +118,19 @@ def test_dashboard_start_skips_unused_application_subsystems(tmp_path: Path) -> 
     )
     assert out.returncode == 0, out.stderr
     loaded = set(json.loads(out.stdout.strip().splitlines()[-1]))
-    assert "kiro_crew.mcp_dashboard" in loaded
+    assert "aj_crew.mcp_dashboard" in loaded
     assert not loaded & set(DASHBOARD_START_UNUSED), sorted(loaded & set(DASHBOARD_START_UNUSED))
 
 
 def test_slim_entry_module_scope_imports_nothing_from_the_package(tmp_path: Path) -> None:
     # Only the package root (whose __init__ is stdlib-only) may be present.
     probe = _loaded_after(
-        "import kiro_crew.mcp_entry, sys\n"
-        "assert not [n for n in sys.modules if n.startswith('kiro_crew.') and n != 'kiro_crew.mcp_entry'], "
-        "[n for n in sys.modules if n.startswith('kiro_crew.')]",
+        "import aj_crew.mcp_entry, sys\n"
+        "assert not [n for n in sys.modules if n.startswith('aj_crew.') and n != 'aj_crew.mcp_entry'], "
+        "[n for n in sys.modules if n.startswith('aj_crew.')]",
         tmp_path,
     )
-    assert "kiro_crew" in probe
+    assert "aj_crew" in probe
     assert not probe & set(HEAVY)
 
 
@@ -154,14 +154,14 @@ def test_other_argv_shapes_fall_back_to_the_cli(argv: list[str]) -> None:
 def test_bad_port_falls_back_so_the_cli_reports_it(
     monkeypatch: pytest.MonkeyPatch, port: str
 ) -> None:
-    monkeypatch.setenv("KIROCREW_PORT", port)
+    monkeypatch.setenv("AJCREW_PORT", port)
     assert mcp_entry.slim_server(["mcp-core"]) is None
 
 
 def test_valid_port_is_accepted(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("KIROCREW_PORT", "7777")
+    monkeypatch.setenv("AJCREW_PORT", "7777")
     assert mcp_entry._port_env_ok() is True
-    monkeypatch.delenv("KIROCREW_PORT")
+    monkeypatch.delenv("AJCREW_PORT")
     assert mcp_entry._port_env_ok() is True
 
 
@@ -174,11 +174,11 @@ def startup(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[str, list]:
     seen: dict[str, list] = {"boot": [], "log": [], "lock": []}
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
-    monkeypatch.setenv("KIROCREW_SANDBOX_LEVEL", "strict")
-    monkeypatch.delenv("KIROCREW_PORT", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
+    monkeypatch.setenv("AJCREW_SANDBOX_LEVEL", "strict")
+    monkeypatch.delenv("AJCREW_PORT", raising=False)
     for var in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS"):
         monkeypatch.delenv(var, raising=False)
     monkeypatch.setattr(_ssl_compat, "_ensure_ssl_certs", lambda: None)
@@ -192,24 +192,24 @@ def startup(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[str, list]:
 
 
 def test_slim_server_runs_the_cli_steps_and_returns_the_entry(startup: dict) -> None:
-    from kiro_crew import mcp_guide
+    from aj_crew import mcp_guide
 
     server = mcp_entry.slim_server(["mcp-guide"])
     assert server is mcp_guide.run_mcp_server
     assert startup["lock"] == [True] and len(startup["boot"]) == 1
     assert startup["log"] and startup["log"][0].is_dir()
-    assert "KIROCREW_SANDBOX_ACTIVE" not in os.environ
-    assert "KIROCREW_SANDBOX_LEVEL" not in os.environ
+    assert "AJCREW_SANDBOX_ACTIVE" not in os.environ
+    assert "AJCREW_SANDBOX_LEVEL" not in os.environ
     assert os.environ["OPENBLAS_NUM_THREADS"] == "1" and os.environ["OMP_NUM_THREADS"] == "1"
 
 
 def test_project_dir_is_detected_when_unset(
     startup: dict, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.delenv("KIROCREW_PROJECT_DIR")
+    monkeypatch.delenv("AJCREW_PROJECT_DIR")
     monkeypatch.setattr(project_dir, "detect_project_dir", lambda saved: str(tmp_path / "p"))
     assert mcp_entry.slim_server(["mcp-guide"]) is not None
-    assert os.environ["KIROCREW_PROJECT_DIR"] == str(tmp_path / "p")
+    assert os.environ["AJCREW_PROJECT_DIR"] == str(tmp_path / "p")
 
 
 def test_platform_composition_error_fails_closed(
@@ -244,8 +244,8 @@ def test_detached_stderr_falls_back_before_logging(
 def test_a_refused_root_run_falls_back_before_the_data_home_is_touched(
     startup: dict, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew import config as kc_config
-    from kiro_crew import data_home_owner
+    from aj_crew import config as kc_config
+    from aj_crew import data_home_owner
 
     seen: list[tuple] = []
 
@@ -257,7 +257,7 @@ def test_a_refused_root_run_falls_back_before_the_data_home_is_touched(
         raise AssertionError("the data home was touched before the refusal")
 
     monkeypatch.setattr(data_home_owner, "root_run_refusal", refuse)
-    monkeypatch.delenv("KIROCREW_PROJECT_DIR")
+    monkeypatch.delenv("AJCREW_PROJECT_DIR")
     monkeypatch.setattr(project_dir, "detect_project_dir", lambda saved: touched())
     monkeypatch.setattr(kc_config, "ensure_data_home", touched)
     assert mcp_entry.slim_server(["mcp-core"]) is None
@@ -312,7 +312,7 @@ def test_stderr_is_compares_the_open_file(tmp_path: Path) -> None:
 
 @pytest.fixture
 def clean_kc_logger():
-    logger = logging.getLogger("kiro_crew")
+    logger = logging.getLogger("aj_crew")
     handlers, level = list(logger.handlers), logger.level
     yield logger
     for h in logger.handlers[:]:
@@ -325,7 +325,7 @@ def clean_kc_logger():
 def test_setup_logging_appends_to_gateway_log(
     clean_kc_logger: logging.Logger, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     before = list(clean_kc_logger.handlers)
     mcp_entry._setup_logging(tmp_path)
     added = [h for h in clean_kc_logger.handlers if h not in before]
@@ -341,7 +341,7 @@ def test_setup_logging_keeps_console_only_when_the_file_cannot_open(
     def _no_file(*a, **k):
         raise OSError("read-only")
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(cli_log_files, "_AppendOnlyLogFileHandler", _no_file)
     clean_kc_logger.addHandler(logging.NullHandler())  # a handler already there
     before = list(clean_kc_logger.handlers)
@@ -351,9 +351,9 @@ def test_setup_logging_keeps_console_only_when_the_file_cannot_open(
 
 def _spy_steps(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> list[str]:
     """Record every start-up step BOTH paths run, under one name per step."""
-    from kiro_crew import cli
-    from kiro_crew import config as kc_config
-    from kiro_crew import mcp_guide
+    from aj_crew import cli
+    from aj_crew import config as kc_config
+    from aj_crew import mcp_guide
 
     steps: list[str] = []
 
@@ -361,7 +361,7 @@ def _spy_steps(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> list[str]:
         return lambda *a, **k: steps.append(name) or result
 
     monkeypatch.setattr(platform_compat, "ensure_utf8_console", rec("utf8"))
-    from kiro_crew import data_home_owner
+    from aj_crew import data_home_owner
 
     monkeypatch.setattr(data_home_owner, "root_run_refusal", rec("root_refusal", ""))
     monkeypatch.setattr(cli, "_detect_project_dir", rec("project_dir", str(tmp_path / "p")))
@@ -372,7 +372,7 @@ def _spy_steps(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> list[str]:
         monkeypatch.setattr(
             owner, "ensure_data_home", lambda: steps.append("data_home") or real_home()
         )
-    from kiro_crew.config import validation
+    from aj_crew.config import validation
 
     monkeypatch.setattr(validation, "prime_extension_config_keys", rec("config_keys"))
     monkeypatch.setattr(cli, "_setup_cli_logging", rec("logging"))
@@ -391,18 +391,18 @@ def test_cli_and_slim_start_run_the_same_steps_for_an_mcp_server(
     start-up step added to ``cli.main`` must be added to ``slim_server`` too.
     Both paths run here with each step spied: the ordered steps and the
     environment each leaves behind must match."""
-    from kiro_crew import cli
+    from aj_crew import cli
 
     home = tmp_path / "home"
     home.mkdir()
 
     def run(path) -> tuple[list[str], dict[str, str | None]]:
         with monkeypatch.context() as m:
-            m.setenv("KIROCREW_HOME", str(home))
-            m.delenv("KIROCREW_PROJECT_DIR", raising=False)
-            m.delenv("KIROCREW_PORT", raising=False)
-            m.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
-            m.setenv("KIROCREW_SANDBOX_LEVEL", "strict")
+            m.setenv("AJCREW_HOME", str(home))
+            m.delenv("AJCREW_PROJECT_DIR", raising=False)
+            m.delenv("AJCREW_PORT", raising=False)
+            m.setenv("AJCREW_SANDBOX_ACTIVE", "1")
+            m.setenv("AJCREW_SANDBOX_LEVEL", "strict")
             for var in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS"):
                 m.delenv(var, raising=False)
             before = dict(os.environ)
@@ -413,7 +413,7 @@ def test_cli_and_slim_start_run_the_same_steps_for_an_mcp_server(
         return steps, {k: after.get(k) for k in keys if before.get(k) != after.get(k)}
 
     def via_cli() -> None:
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "mcp-guide"])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "mcp-guide"])
         cli.main()
 
     cli_steps, cli_env = run(via_cli)
@@ -429,9 +429,9 @@ def test_slim_start_primes_config_keys_without_admission_side_effects(
 ) -> None:
     """Priming runs before logging, so it must not seed the admission policy,
     publish a posture, or write a SEL record, even with no policy file present."""
-    from kiro_crew import sel as sel_mod
-    from kiro_crew.config import validation
-    from kiro_crew.platform import admission, discovery, governance_health
+    from aj_crew import sel as sel_mod
+    from aj_crew.config import validation
+    from aj_crew.platform import admission, discovery, governance_health
 
     home = tmp_path / "home"
     home.mkdir()
@@ -451,8 +451,8 @@ def test_slim_start_primes_config_keys_without_admission_side_effects(
         value = "companion:build"
         dist = _Dist()
 
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
     steps = _spy_steps(monkeypatch, tmp_path)
     monkeypatch.setattr(validation, "prime_extension_config_keys", real_prime)
     monkeypatch.setattr(discovery, "plugin_entry_points", lambda: [_EntryPoint()])
@@ -476,7 +476,7 @@ def test_slim_start_primes_config_keys_without_admission_side_effects(
 
 
 def test_full_cli_keeps_registry_scan_off_the_gateway_readiness_path() -> None:
-    cli_src = (Path(SRC) / "kiro_crew" / "cli.py").read_text(encoding="utf-8")
+    cli_src = (Path(SRC) / "aj_crew" / "cli.py").read_text(encoding="utf-8")
     guard = cli_src.index('\n    if args.command != "gateway":\n')
     prime = cli_src.index("\n        prime_extension_config_keys()\n")
     first_load = cli_src.index("\n    _setup_cli_logging(args.command, args.verbose)\n")
@@ -492,7 +492,7 @@ def test_slim_servers_match_the_cli_dispatch() -> None:
 
     for command, (module, func) in mcp_entry.SLIM_SERVERS.items():
         assert callable(getattr(importlib.import_module(module), func)), command
-    cli_src = (Path(SRC) / "kiro_crew" / "cli.py").read_text(encoding="utf-8")
+    cli_src = (Path(SRC) / "aj_crew" / "cli.py").read_text(encoding="utf-8")
     for command, (module, func) in mcp_entry.SLIM_SERVERS.items():
         assert f'"{command}"' in cli_src
         assert module in cli_src, module
@@ -506,15 +506,15 @@ def test_slim_servers_match_the_cli_dispatch() -> None:
 
 
 def test_mcp_guide_answers_initialize_without_the_gateway_stack(tmp_path: Path) -> None:
-    """End to end: ``python -m kiro_crew mcp-guide`` speaks MCP and maps no aiohttp."""
+    """End to end: ``python -m aj_crew mcp-guide`` speaks MCP and maps no aiohttp."""
     (tmp_path / "home").mkdir()
     proc = subprocess.Popen(
-        [sys.executable, "-m", "kiro_crew", "mcp-guide"],
+        [sys.executable, "-m", "aj_crew", "mcp-guide"],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
         **UTF8_TEXT,
-        env=_child_env(tmp_path, KIROCREW_PROJECT_DIR=str(tmp_path)),
+        env=_child_env(tmp_path, AJCREW_PROJECT_DIR=str(tmp_path)),
         cwd=str(tmp_path),
     )
     lines: queue.Queue[str] = queue.Queue()

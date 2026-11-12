@@ -53,7 +53,7 @@ import {
   __resetNavSeamForTests,
 } from '../utils/errorReport'
 
-const ERROR_HANDOFF_CLAIMED_KEY = 'kirocrew_error_handoff_claimed'
+const ERROR_HANDOFF_CLAIMED_KEY = 'ajcrew_error_handoff_claimed'
 const navigated: string[] = []
 
 function GuardedErrorNotice({ allow }: { allow: boolean }) {

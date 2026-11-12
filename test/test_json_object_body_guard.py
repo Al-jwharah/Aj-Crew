@@ -32,8 +32,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard.handlers import _shared as shared
-from kiro_crew.dashboard.handlers import agents as agents_mod
+from aj_crew.dashboard.handlers import _shared as shared
+from aj_crew.dashboard.handlers import agents as agents_mod
 
 # Marked per-test rather than module-wide: the cap-register tests below are
 # synchronous, and a module-wide asyncio mark warns on every one of them.
@@ -244,7 +244,7 @@ _CAP_REGISTER: dict[str, tuple[str, str]] = {
     # The UI-preference backup stores values up to MAX_VALUE_BYTES (64 KB) and a
     # document up to MAX_TOTAL_BYTES, so the shared 64 KB default -- exactly one
     # legal value, with no room for the JSON envelope -- would 413 a patch the
-    # store itself accepts. The cap is owned in kiro_crew/ui_prefs.py beside the
+    # store itself accepts. The cap is owned in aj_crew/ui_prefs.py beside the
     # limits it has to cover, so the two cannot drift apart again.
     "handlers/ui_prefs.py::api_ui_prefs": ("MAX_REQUEST_BYTES", _BOUNDED_EXPLICIT),
     # A browser-built download: one artifact export, at most the largest stored

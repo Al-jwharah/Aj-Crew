@@ -20,9 +20,9 @@ const mockConfirm = vi.fn(() => true)
 Object.defineProperty(window, 'confirm', { writable: true, value: mockConfirm })
 
 const slotsWithRunning = [
-  { key: 'slot-idle-1', title: 'Pipeline debug', running: false, agent: 'kirocrew', created: '2026-04-08T01:00:00Z', last_ts: '2026-04-08T02:00:00Z', folder_id: '' },
-  { key: 'slot-running-1', title: 'Code review', running: true, agent: 'kirocrew', created: '2026-04-08T00:00:00Z', last_ts: '2026-04-08T01:30:00Z', folder_id: '' },
-  { key: 'slot-idle-2', title: 'Oncall triage', running: false, agent: 'kirocrew', created: '2026-04-07T10:00:00Z', last_ts: '2026-04-07T12:00:00Z', folder_id: '' },
+  { key: 'slot-idle-1', title: 'Pipeline debug', running: false, agent: 'ajcrew', created: '2026-04-08T01:00:00Z', last_ts: '2026-04-08T02:00:00Z', folder_id: '' },
+  { key: 'slot-running-1', title: 'Code review', running: true, agent: 'ajcrew', created: '2026-04-08T00:00:00Z', last_ts: '2026-04-08T01:30:00Z', folder_id: '' },
+  { key: 'slot-idle-2', title: 'Oncall triage', running: false, agent: 'ajcrew', created: '2026-04-07T10:00:00Z', last_ts: '2026-04-07T12:00:00Z', folder_id: '' },
 ]
 
 const defaultProps = {
@@ -31,8 +31,8 @@ const defaultProps = {
   unreadSlots: [] as string[],
   history: [],
   historyHasMore: false,
-  defaultAgent: 'kirocrew',
-  installedAgents: [{ name: 'kirocrew', source: 'builtin' }],
+  defaultAgent: 'ajcrew',
+  installedAgents: [{ name: 'ajcrew', source: 'builtin' }],
 }
 
 /** Open the filter menu by clicking the Sort & filter button. */

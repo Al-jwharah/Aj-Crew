@@ -9,11 +9,11 @@ import pytest
 from aiohttp.test_utils import make_mocked_request
 from test_taskrunner_execution_context import make_runner, member_execution
 
-from kiro_crew.dashboard.handlers import taskrunner as handlers
-from kiro_crew.execution_context import bind_session_execution, read_session_execution
-from kiro_crew.history import ConversationLog
-from kiro_crew.task_models import Project, Task
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.handlers import taskrunner as handlers
+from aj_crew.execution_context import bind_session_execution, read_session_execution
+from aj_crew.history import ConversationLog
+from aj_crew.task_models import Project, Task
+from aj_crew.testing.wait import await_until
 
 ORIGIN = "capture-source"
 

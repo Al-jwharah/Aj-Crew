@@ -49,7 +49,7 @@ const LONG = [
   '--exclude=*.log --exclude=*.tmp --exclude=*.pyc --exclude=__pycache__ --exclude=.venv',
   '--exclude=.pytest_cache --exclude=.mypy_cache --exclude=.ruff_cache --exclude=playwright-report',
   '--directory=/home/dev/project website/src website/public website/capture website/scripts',
-  'src/kiro_crew test docs/system-specs README.md pyproject.toml package.json package-lock.json',
+  'src/aj_crew test docs/system-specs README.md pyproject.toml package.json package-lock.json',
 ].join(' ')
 if (LONG.length <= 500) throw new Error(`LONG must exceed the 500-character bound, is ${LONG.length}`)
 
@@ -99,8 +99,8 @@ for (const s of SCENES) {
     const baseItems = items.filter(t => /commands/.test(t))
     const hasAll = items.some(t => /Trust all tools in this channel/.test(t))
     if (s.scene === 'simple') {
-      ok = items.length === 3 && offersCommand && /until Kiro Crew restarts/.test(exact)
-        && baseItems.length === 1 && /Trust all ls commands for @dev — until Kiro Crew restarts/.test(baseItems[0]) && hasAll
+      ok = items.length === 3 && offersCommand && /until Aj Crew restarts/.test(exact)
+        && baseItems.length === 1 && /Trust all ls commands for @dev — until Aj Crew restarts/.test(baseItems[0]) && hasAll
     } else if (s.scene === 'compound') {
       ok = items.length === 2 && offersCommand && baseItems.length === 0 && hasAll
         && !items.some(t => /\bcat\b commands/.test(t))
@@ -130,9 +130,9 @@ for (const s of SCENES) {
     // three confirmations exist for -- so each frame asserts its own sentence.
     const [click, expected, suffix] = {
       base: [page.locator('[role="menuitem"]', { hasText: /commands/ }),
-        /Trusted — ls commands are auto-approved for @dev until Kiro Crew restarts/, '-confirmed'],
+        /Trusted — ls commands are auto-approved for @dev until Aj Crew restarts/, '-confirmed'],
       command: [page.locator('[role="menuitem"]').first(),
-        /Trusted — ls -la \/home\/dev\/project is auto-approved for @dev until Kiro Crew restarts/, '-confirmed-command'],
+        /Trusted — ls -la \/home\/dev\/project is auto-approved for @dev until Aj Crew restarts/, '-confirmed-command'],
       all: [page.locator('[data-capture-root] button', { hasText: /^Trust all tools in this channel/ }),
         /Trusted — all tools in this channel are auto-approved, persists across restarts/, '-confirmed-all'],
     }[s.confirm]

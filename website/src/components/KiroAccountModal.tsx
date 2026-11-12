@@ -115,7 +115,7 @@ interface KiroAccountModalProps {
 }
 
 const KIRO_ACCOUNT_URL = 'https://app.kiro.dev/settings/account'
-const KIRO_ACCOUNT_EMAIL_HIDDEN_KEY = 'kirocrew:account-email-hidden'
+const KIRO_ACCOUNT_EMAIL_HIDDEN_KEY = 'ajcrew:account-email-hidden'
 
 function formatResetDate(value: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
@@ -505,7 +505,7 @@ function RefreshButton({
 }
 
 /** The query the top bar reads the selected harness from (`agent.acp_backend`). */
-const KIROCREW_CONFIG_QUERY = ['kirocrewConfig'] as const
+const AJCREW_CONFIG_QUERY = ['ajcrewConfig'] as const
 
 function CreditUsage({ usage, onClose }: { usage: KiroAccountUsage; onClose: () => void }) {
   const queryClient = useQueryClient()
@@ -516,7 +516,7 @@ function CreditUsage({ usage, onClose }: { usage: KiroAccountUsage; onClose: () 
   // modal on that state is the user asking again, so ask again.
   const configUnreadable = usage === 'config-unreadable'
   useEffect(() => {
-    if (configUnreadable) void queryClient.invalidateQueries({ queryKey: KIROCREW_CONFIG_QUERY })
+    if (configUnreadable) void queryClient.invalidateQueries({ queryKey: AJCREW_CONFIG_QUERY })
   }, [configUnreadable, queryClient])
   const refreshButton = (compact: boolean) => (
     <RefreshButton
@@ -525,7 +525,7 @@ function CreditUsage({ usage, onClose }: { usage: KiroAccountUsage; onClose: () 
       onClick={() => {
         // Pressing Refresh on the unreadable-config state retries BOTH reads:
         // the config that decides the surface and the balance it would show.
-        if (configUnreadable) void queryClient.invalidateQueries({ queryKey: KIROCREW_CONFIG_QUERY })
+        if (configUnreadable) void queryClient.invalidateQueries({ queryKey: AJCREW_CONFIG_QUERY })
         // The forecast line reads the shared Usage report; retry it too, so a
         // failed forecast read is not left behind a Refresh that cannot clear it.
         void queryClient.invalidateQueries({ queryKey: ['provider-usage'] })
@@ -734,8 +734,8 @@ function SignInSettingsLink({ onClose, usage }: { onClose: () => void; usage: Ki
   // The same read the credits pill already holds: opening the popup reuses its
   // answer rather than refetching it under the pill.
   const cfgQuery = useQuery<AcpBackendConfig>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
     refetchOnMount: false,
   })
   const onKas = cfgQuery.data !== undefined && configuredAcpBackend(cfgQuery.data) === KIRO_SIGN_IN_BACKEND

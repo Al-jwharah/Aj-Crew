@@ -35,8 +35,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_reset_conversation
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.chat_handlers import api_chat_slot_reset_conversation
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 OWNER = "acme-app"
 OTHER = "other-app"
@@ -180,7 +180,7 @@ class TestTheReplayParameter:
         """
         import inspect
 
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         src = inspect.getsource(chat_handlers.api_chat_slot_reset_conversation)
         body_read = src.index("await read_bounded_json(")
@@ -338,7 +338,7 @@ class TestItRefusesWhenItCannotBeSafe:
         sel_events: list[dict] = []
 
         with patch(
-            "kiro_crew.dashboard.chat_handlers.sel",
+            "aj_crew.dashboard.chat_handlers.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: sel_events.append(kw)),
         ):
             status, body = await _post(_make_app(state), "slack_123.456")
@@ -361,7 +361,7 @@ class TestItRefusesWhenItCannotBeSafe:
         sel_events: list[dict] = []
 
         with patch(
-            "kiro_crew.dashboard.chat_handlers.sel",
+            "aj_crew.dashboard.chat_handlers.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: sel_events.append(kw)),
         ):
             status, body = await _post(_make_app(state), "chat-1-foo")

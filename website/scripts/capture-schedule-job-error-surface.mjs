@@ -38,7 +38,7 @@ const FAILED = {
   id: 'b4e1d7a0-31c2',
   name: 'Nightly database backup',
   schedule: '0 2 * * *',
-  command: 'pg_dump --format=custom kirocrew > /backups/nightly.dump',
+  command: 'pg_dump --format=custom ajcrew > /backups/nightly.dump',
   message: '',
   enabled: true,
   last_status: 'error',
@@ -56,13 +56,13 @@ const SUCCEEDED = {
   id: 'f09c2b56-8ad4',
   name: 'Log rotation and prune',
   schedule: 'every 6h',
-  command: 'logrotate -f /etc/logrotate.d/kirocrew',
+  command: 'logrotate -f /etc/logrotate.d/ajcrew',
   message: '',
   enabled: true,
   last_status: 'ok',
   last_result:
-    'rotating pattern: /var/log/kirocrew/*.log  weekly (4 rotations)\n'
-    + 'considering log /var/log/kirocrew/gateway.log\n'
+    'rotating pattern: /var/log/ajcrew/*.log  weekly (4 rotations)\n'
+    + 'considering log /var/log/ajcrew/gateway.log\n'
     + '  log needs rotating\n'
     + 'pruned 3 archives older than 28d, reclaimed 118 MB',
   last_run_ts: now - 900,
@@ -88,7 +88,7 @@ async function schedulePageWith(browser, jobs, theme) {
       if (path === '/api/crons') { await json(route, { jobs }); return true }
       if (path === '/api/cron-folders') { await json(route, []); return true }
       if (path === '/api/crons/history') { await json(route, { runs: [] }); return true }
-      if (path === '/api/agents') { await json(route, { agents: [{ name: 'kirocrew' }], default_agent: 'kirocrew' }); return true }
+      if (path === '/api/agents') { await json(route, { agents: [{ name: 'ajcrew' }], default_agent: 'ajcrew' }); return true }
       if (path === '/api/models') { await json(route, []); return true }
       return false
     },

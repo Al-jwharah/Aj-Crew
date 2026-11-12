@@ -11,7 +11,7 @@ export const SESSION_MANAGER_PLUGIN_INSTALL_URL =
 // The pre-flight troubleshooting entry of the Remote Crew on EC2 guide: it covers
 // the missing credential helper and a refused plugin or AWS CLI.
 export const REMOTE_CREW_PREFLIGHT_GUIDE_URL =
-  'https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/remote-crew-on-ec2.md#set-up-pre-flight-credential-helper-not-found-or-plugin-refused'
+  'https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/guides/remote-crew-on-ec2.md#set-up-pre-flight-credential-helper-not-found-or-plugin-refused'
 
 // Typed by the user, so never a catalog value: the AWS config file's usual
 // place and the command that prints a program's full path.

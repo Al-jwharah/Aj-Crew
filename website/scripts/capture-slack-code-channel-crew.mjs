@@ -38,17 +38,17 @@ const FOLDER = 'f-code'
 const channel = (id, name) => ({ channel_name: name, status: 'active', web_url: `https://slack.com/app_redirect?channel=${id}&team=T0TEAM1` })
 const slackLink = { channel: 'slack', label: 'Slack', target: '…0001', binding: 'b', direction: 'out', drives_session: true, live: true }
 const row = (key, title, ago, extra = {}) => ({
-  key, title, running: false, messages: 4, agent: 'kirocrew-conductor', last_ts: iso(ago), last_turn_ts: iso(ago), created: iso(ago),
+  key, title, running: false, messages: 4, agent: 'ajcrew-conductor', last_ts: iso(ago), last_turn_ts: iso(ago), created: iso(ago),
   folder_id: FOLDER, last_message: 'All three chats are still working.', source_links: [], source_links_total: 0, ...extra,
 })
 const worker = (key, title, ago, extra = {}) => row(key, title, ago, {
-  agent: 'kirocrew-worker', parent: { slot: 'chat-cond', key: 'chat-cond' }, last_message: 'Running the focused tests.', ...extra,
+  agent: 'ajcrew-worker', parent: { slot: 'chat-cond', key: 'chat-cond' }, last_message: 'Running the focused tests.', ...extra,
 })
 
 function slots(waiting, aggregate = null) {
   return [
-    row('chat-cond', 'Fix Kiro Crew issue 22452', 60, {
-      links: [slackLink], code_channel: channel('C0CODE1', 'fix-kirocrew-issue-22452'), running: !aggregate,
+    row('chat-cond', 'Fix Aj Crew issue 22452', 60, {
+      links: [slackLink], code_channel: channel('C0CODE1', 'fix-ajcrew-issue-22452'), running: !aggregate,
       ...(aggregate ? { work_aggregate: aggregate, last_message: 'All three fixes are merged.' } : {}),
     }),
     worker('chat-w1', 'Fix #22452: Bitbucket comment wake', 120, { running: !waiting && !aggregate }),
@@ -56,9 +56,9 @@ function slots(waiting, aggregate = null) {
       ? { pending_approval: true, running: true, last_message: 'approve git push' }
       : { running: !aggregate }),
     worker('chat-w3', 'Fix #22452: tests and docs', 240),
-    row('chat-c2', 'Fix Kiro Crew issue 21964', 3600, { links: [slackLink], code_channel: channel('C0CODE2', 'fix-kirocrew-issue-21964'), last_message: 'No news yet.' }),
-    row('chat-plain', 'Plan the Q4 roadmap', 4000, { agent: 'kirocrew' }),
-    row('chat-plain-kid', 'Draft the Q4 survey', 4100, { agent: 'kirocrew', parent: { slot: 'chat-plain', key: 'chat-plain' } }),
+    row('chat-c2', 'Fix Aj Crew issue 21964', 3600, { links: [slackLink], code_channel: channel('C0CODE2', 'fix-ajcrew-issue-21964'), last_message: 'No news yet.' }),
+    row('chat-plain', 'Plan the Q4 roadmap', 4000, { agent: 'ajcrew' }),
+    row('chat-plain-kid', 'Draft the Q4 survey', 4100, { agent: 'ajcrew', parent: { slot: 'chat-plain', key: 'chat-plain' } }),
   ]
 }
 const FOLDERS = [{ id: FOLDER, name: 'Code channels', order: 0 }]
@@ -108,7 +108,7 @@ async function scene(browser, base, theme, width) {
   // Collapsed (the default) and working.
   {
     const { context, page } = await load(browser, base, { theme, width, waiting: false, expanded: null })
-    const cond = rowOf(page, 'Fix Kiro Crew issue 22452')
+    const cond = rowOf(page, 'Fix Aj Crew issue 22452')
     check(`${where}: conductor row shows`, await cond.count() === 1)
     for (const w of ['Bitbucket comment wake', 'GitLab note wake', 'tests and docs']) {
       check(`${where}: worker "${w}" folded by default`, await rowOf(page, w).count() === 0)
@@ -119,7 +119,7 @@ async function scene(browser, base, theme, width) {
     const line = cond.getByTestId('code-channel-crew-state')
     check(`${where}: crew line reads "3 working"`, (await line.count()) === 1 && (await line.textContent()) === '3 working')
     check(`${where}: an ordinary parent's child is still listed`, await rowOf(page, 'Draft the Q4 survey').count() === 1)
-    check(`${where}: a crew with no workers has no fold`, await rowOf(page, 'Fix Kiro Crew issue 21964').getByTestId('code-channel-crew-toggle').count() === 0)
+    check(`${where}: a crew with no workers has no fold`, await rowOf(page, 'Fix Aj Crew issue 21964').getByTestId('code-channel-crew-toggle').count() === 0)
     if (await toggle.count()) {
       const box = await toggle.boundingBox()
       const rowBox = await cond.boundingBox()
@@ -131,7 +131,7 @@ async function scene(browser, base, theme, width) {
   // Needs approval: a hidden worker waits on an approval.
   {
     const { context, page } = await load(browser, base, { theme, width, waiting: true, expanded: null })
-    const cond = rowOf(page, 'Fix Kiro Crew issue 22452')
+    const cond = rowOf(page, 'Fix Aj Crew issue 22452')
     const line = cond.getByTestId('code-channel-crew-state')
     check(`${where}: a hidden worker's approval surfaces on the conductor row`,
       (await line.count()) === 1 && (await line.textContent()) === 'Needs approval · approve git push',
@@ -147,7 +147,7 @@ async function scene(browser, base, theme, width) {
     [{ state: 'stuck', label: 'tests worker went quiet', counts: { stuck: 1 } }, '1 stuck · tests worker went quiet', 'stuck'],
   ]) {
     const { context, page } = await load(browser, base, { theme, width, waiting: false, expanded: null, aggregate })
-    const line = rowOf(page, 'Fix Kiro Crew issue 22452').getByTestId('code-channel-crew-state')
+    const line = rowOf(page, 'Fix Aj Crew issue 22452').getByTestId('code-channel-crew-state')
     check(`${where}: aggregate ${file} reads "${text}"`, (await line.count()) === 1 && (await line.textContent()) === text,
       (await line.count()) ? await line.textContent() : 'no crew line')
     await shootFolder(page, join(OUT, `crew-aggregate-${file}-${width}px-${theme}.png`))
@@ -156,7 +156,7 @@ async function scene(browser, base, theme, width) {
   // Expanded by a click, then persisted across a reload.
   {
     const { context, page } = await load(browser, base, { theme, width, waiting: true, expanded: null })
-    const toggle = rowOf(page, 'Fix Kiro Crew issue 22452').getByTestId('code-channel-crew-toggle')
+    const toggle = rowOf(page, 'Fix Aj Crew issue 22452').getByTestId('code-channel-crew-toggle')
     if (await toggle.count()) {
       await toggle.click()
       await page.waitForTimeout(600)
@@ -185,8 +185,8 @@ async function scene(browser, base, theme, width) {
       if (await t.count() === 0) return null
       return t.evaluate(el => el.getBoundingClientRect().left)
     }
-    const sibling = await titleX('Fix Kiro Crew issue 21964')
-    const conductorX = await titleX('Fix Kiro Crew issue 22452')
+    const sibling = await titleX('Fix Aj Crew issue 21964')
+    const conductorX = await titleX('Fix Aj Crew issue 22452')
     for (const w of ['Bitbucket comment wake', 'GitLab note wake', 'tests and docs']) {
       const x = await titleX(w)
       check(`${where}: worker "${w}" content aligns with its sibling rows`,
@@ -222,14 +222,14 @@ async function record(browser, base) {
   await page.goto(base + '/chat', { waitUntil: 'domcontentloaded' })
   await page.locator('.session-row').first().waitFor({ state: 'visible', timeout: 20_000 })
   await page.waitForTimeout(1500)
-  const toggle = rowOf(page, 'Fix Kiro Crew issue 22452').getByTestId('code-channel-crew-toggle')
+  const toggle = rowOf(page, 'Fix Aj Crew issue 22452').getByTestId('code-channel-crew-toggle')
   await toggle.hover()
   await page.waitForTimeout(800)
   await toggle.click() // open
   await rowOf(page, 'tests and docs').waitFor({ state: 'visible' })
   check('record: the fold opens', await rowOf(page, 'tests and docs').count() === 1)
   await page.waitForTimeout(1800)
-  await rowOf(page, 'Fix Kiro Crew issue 22452').getByTestId('code-channel-crew-toggle').click() // close
+  await rowOf(page, 'Fix Aj Crew issue 22452').getByTestId('code-channel-crew-toggle').click() // close
   await page.waitForTimeout(400)
   check('record: the fold closes', await rowOf(page, 'tests and docs').count() === 0)
   await page.mouse.move(1050, 470)

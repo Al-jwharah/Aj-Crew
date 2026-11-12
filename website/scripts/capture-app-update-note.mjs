@@ -25,7 +25,7 @@ import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/app-update-note'
 const PREFIX = process.argv[3] || 'shot'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 // Fixed timestamps: the feed groups by date and prints a relative age, so a
 // clock-derived value would make two runs differ for no reason.
@@ -42,7 +42,7 @@ const NOTES = [
   {
     kind: 'update',
     channel: 'system.agent',
-    title: 'Kiro Crew 0.11.1 is available',
+    title: 'Aj Crew 0.11.1 is available',
     body: 'Install it from Settings › About.',
     ts: '1792489000',
     url: '/settings/about',

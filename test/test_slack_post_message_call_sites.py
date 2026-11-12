@@ -9,7 +9,7 @@ changes how existing messages look, so it is tracked as a design; until then thi
 guard stops the count of direct sends from growing.
 
 How it works: an AST scan counts every ``<anything>.post_message(...)`` call in
-each ``kiro_crew`` module and compares the count with :data:`BASELINE`, which
+each ``aj_crew`` module and compares the count with :data:`BASELINE`, which
 records today's call sites per module with a one-line reason.
 
 - A module that is not in the baseline, or that has more calls than its row
@@ -42,7 +42,7 @@ from source_corpus import parsed_candidates, src_root
 
 _METHOD = "post_message"
 
-# ``<module path relative to the kiro_crew package>``: ``(direct calls, reason)``.
+# ``<module path relative to the aj_crew package>``: ``(direct calls, reason)``.
 # Keep rows sorted by path. A reason says why the module posts directly today.
 BASELINE: dict[str, tuple[int, str]] = {
     "apps/builtins/ops_mission_control/backend/slack_out.py": (

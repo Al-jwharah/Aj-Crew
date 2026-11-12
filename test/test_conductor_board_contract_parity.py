@@ -21,8 +21,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import agent_panel
-from kiro_crew.conductor_board_contract import (
+from aj_crew import agent_panel
+from aj_crew.conductor_board_contract import (
     BOARD_CREW_NAME,
     BOARD_TEMPLATE_ID,
     STEPS,
@@ -250,7 +250,7 @@ def test_a_pr_with_a_repo_asks_the_host_to_open_it() -> None:
     """The sandbox has no allow-popups: a PR opens only through the host's bridge,
     which honours exactly a github.com pull-request URL. No repo, no button."""
     src = _script(_html())
-    assert 'parent.postMessage({ type: "kirocrew-dashboard:open", url: url }, "*")' in src
+    assert 'parent.postMessage({ type: "ajcrew-dashboard:open", url: url }, "*")' in src
     assert src.count("postMessage(") == 1
     assert r"/^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/pull\/[0-9]+\/?$/" in src
     assert '"https://github.com/" + repo + "/pull/" + prNum[1]' in src

@@ -14,9 +14,9 @@ from unittest.mock import patch
 import pytest
 from chat_runner_coverage_helpers import _slot, _state
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY, RESTORED_SEND_CHOSEN_KEY
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY, RESTORED_SEND_CHOSEN_KEY
+from aj_crew.testing.wait import await_until
 
 
 def _setup(tmp_path, *, chosen: bool = False):

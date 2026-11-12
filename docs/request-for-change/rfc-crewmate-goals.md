@@ -128,7 +128,7 @@ a card. This replaces #19240's plan to write the goal into the rules file when a
 > target stays at 40. The Goals tab labels key results **Milestones**; the
 > code, the API and the tool names keep `key_results`.
 
-On the `kirocrew-mate` server from #19258:
+On the `ajcrew-mate` server from #19258:
 
 | Tool | Does | Sign-off |
 |---|---|---|

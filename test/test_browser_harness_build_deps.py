@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.browser_harness import build_deps, install
+from aj_crew.browser_harness import build_deps, install
 
 _OLD = (2, 26)
 

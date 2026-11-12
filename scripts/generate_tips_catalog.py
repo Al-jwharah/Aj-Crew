@@ -4,8 +4,8 @@
 Usage:
     python scripts/generate_tips_catalog.py
 
-Scans src/kiro_crew/docs/*.md (same logic as tips._scan_docs_catalog) and writes
-a static JSON catalog to src/kiro_crew/data/tips_catalog.json.
+Scans src/aj_crew/docs/*.md (same logic as tips._scan_docs_catalog) and writes
+a static JSON catalog to src/aj_crew/data/tips_catalog.json.
 Idempotent — safe to run multiple times.
 """
 
@@ -19,13 +19,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
-_DOCS_DIR = _REPO_ROOT / "src" / "kiro_crew" / "docs"
+_DOCS_DIR = _REPO_ROOT / "src" / "aj_crew" / "docs"
 
 # Single source of truth for which docs are user-facing tip candidates.
 # tips_allowlist is dependency-free, so importing it never pulls the runtime.
 sys.path.insert(0, str(_REPO_ROOT / "src"))
-from kiro_crew.tips_allowlist import TIP_DOC_ALLOWLIST  # noqa: E402
-from kiro_crew.tips_text import (  # noqa: E402
+from aj_crew.tips_allowlist import TIP_DOC_ALLOWLIST  # noqa: E402
+from aj_crew.tips_text import (  # noqa: E402
     first_prose_paragraph,
     strip_decoration,
     truncate_summary,
@@ -97,7 +97,7 @@ def main() -> None:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "entries": entries,
     }
-    out_path = _REPO_ROOT / "src" / "kiro_crew" / "data" / "tips_catalog.json"
+    out_path = _REPO_ROOT / "src" / "aj_crew" / "data" / "tips_catalog.json"
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(output, indent=2) + "\n", encoding="utf-8")
     print(f"Generated {len(entries)} catalog entries -> {out_path}")

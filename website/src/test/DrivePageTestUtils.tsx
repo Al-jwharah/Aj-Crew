@@ -19,7 +19,7 @@ export const ACCOUNT_ID = '111122223333'
 
 export const driveExists: Extract<DriveStatus, { exists: true }> = {
   exists: true,
-  bucket: 'kirocrew-drive-abc123',
+  bucket: 'ajcrew-drive-abc123',
   region: 'us-west-2',
   usage: {
     bytes: 3_500_000_000,

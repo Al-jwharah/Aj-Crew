@@ -1,7 +1,7 @@
 """SubagentManager admission on top of the durable task queue.
 
 Real ``SubagentManager`` admission and drain; the run itself is a fake worker
-that finishes at once. No kiro-cli, no sockets, tmp ``KIROCREW_HOME``.
+that finishes at once. No kiro-cli, no sockets, tmp ``AJCREW_HOME``.
 """
 
 from __future__ import annotations
@@ -17,15 +17,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from overload_fakes import settle_store_writes
 
-import kiro_crew.subagent as subagent_mod
-from kiro_crew.dashboard import chat_utils
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_manager.admission import (
+import aj_crew.subagent as subagent_mod
+from aj_crew.dashboard import chat_utils
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_manager.admission import (
     TASK_STORE_UNAVAILABLE_CODE,
     SpawnAdmissionCoordinator,
 )
-from kiro_crew.taskq import model
-from kiro_crew.taskq.store import TaskStore, TaskStoreUnavailable
+from aj_crew.taskq import model
+from aj_crew.taskq.store import TaskStore, TaskStoreUnavailable
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -59,7 +59,7 @@ async def _manager(max_concurrent: int = 2, **kw) -> SubagentManager:
 
 
 def _store_path() -> Path:
-    return Path(os.environ["KIROCREW_HOME"]) / "tasks" / "tasks.db"
+    return Path(os.environ["AJCREW_HOME"]) / "tasks" / "tasks.db"
 
 
 async def _fake_run(mgr: SubagentManager, info: SubagentInfo, *, fail: bool = False) -> None:
@@ -130,7 +130,7 @@ async def _drain_until_terminal(mgr: SubagentManager, store: TaskStore, *, total
 
 @pytest.fixture
 def quiet():
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         yield
 
 
@@ -467,7 +467,7 @@ async def test_the_settle_builds_the_result_path_off_the_event_loop(quiet, monke
     the event loop for each finished run, and a busy disk turns that into a loop
     stall the watchdog ends the gateway for.
     """
-    import kiro_crew.subagent_persistence as persistence
+    import aj_crew.subagent_persistence as persistence
 
     real = persistence.agent_dir_for_display
     calls: list[bool] = []
@@ -526,7 +526,7 @@ async def _parent_parked_on_one_child(
         await _settle(store)
         assert store.state_of(parent.id) == model.RUNNING
         live_parent._inflight_tool = SimpleNamespace(
-            tool_name="@kirocrew-core/spawn_sub_agents", title="call"
+            tool_name="@ajcrew-core/spawn_sub_agents", title="call"
         )
         child = mgr.spawn("C", parent_session_key=f"subagent:{parent.id}")
         await _settle(store)
@@ -559,7 +559,7 @@ async def test_a_terminal_write_the_store_refused_still_resumes_the_parent(
     purpose (a schema drift, a driver bug), so the pin is about the ESCAPE and
     not about ``TaskStoreUnavailable`` being spelled twice.
     """
-    from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+    from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
 
     monkeypatch.setattr(SpawnAdmissionCoordinator, "pump_off_loop", pump_off_loop)
     mgr = await _manager(max_concurrent=2)
@@ -606,8 +606,8 @@ async def test_a_fenced_settle_propagates_unless_a_live_owner_holds_the_row(
     Both settle paths, because each reads the row in a frame of its own: the
     inline write, and the one posted to the writer thread (production's).
     """
-    from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
-    from kiro_crew.taskq.waits import WaitRecord
+    from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+    from aj_crew.taskq.waits import WaitRecord
 
     monkeypatch.setattr(SpawnAdmissionCoordinator, "pump_off_loop", pump_off_loop)
     mgr = await _manager(max_concurrent=4)
@@ -747,8 +747,8 @@ async def test_a_registered_run_carries_its_claims_attempt_into_its_tombstone(qu
     registered run holds the generation its claim began, a wait wake moves the
     run's fence generation but not that attempt, the run's tombstone records it
     and a delivery rewrite keeps it -- so the boot pass cancels the parked row."""
-    from kiro_crew.subagent_persistence import mark_delivered, read_tombstone
-    from kiro_crew.taskq.reconcile import reconcile_on_boot
+    from aj_crew.subagent_persistence import mark_delivered, read_tombstone
+    from aj_crew.taskq.reconcile import reconcile_on_boot
 
     mgr = await _manager()
     store = mgr._taskq
@@ -857,7 +857,7 @@ def _no_store_read(store: TaskStore):
 
 
 def _probe_says_done(mgr: SubagentManager, agent_id: str) -> bool:
-    from kiro_crew.apps.spawn_sdk import build_done_probe
+    from aj_crew.apps.spawn_sdk import build_done_probe
 
     return build_done_probe(mgr)(agent_id)
 
@@ -1200,7 +1200,7 @@ async def test_a_row_with_an_empty_stage_owner_still_refills_and_starts(
 
 def test_a_store_outage_mid_retirement_still_reports_every_committed_cancel() -> None:
     """Rows cancelled before the outage are reported; no stage row is dispatched."""
-    from kiro_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
+    from aj_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
 
     def _row(row_id: str, owner: str = "") -> SimpleNamespace:
         params = {"task": row_id, "_stage_boundary_owner": owner} if owner else {"task": row_id}
@@ -1227,7 +1227,7 @@ def test_a_store_outage_mid_retirement_still_reports_every_committed_cancel() ->
 
 def test_a_stage_row_an_outage_left_queued_arms_a_retry_pass() -> None:
     """The retry wake is armed even when the rest of the refill touches no store."""
-    from kiro_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
+    from aj_crew.subagent_manager.admission.taskq_bridge import _TaskqBridgeMixin
 
     wakes: list[float] = []
     reported: list[dict] = []
@@ -1398,20 +1398,20 @@ async def test_an_unreadable_overflow_keeps_the_attached_children_guard_closed(q
 async def test_task_queue_disabled_keeps_legacy_queue(
     quiet, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    real_load = KiroCrewConfig.load
+    real_load = AjCrewConfig.load
 
     def load_disabled(*a, **k):
         cfg = real_load(*a, **k)
         cfg.agent.task_queue_enabled = False
         return cfg
 
-    monkeypatch.setattr(KiroCrewConfig, "load", staticmethod(load_disabled))
+    monkeypatch.setattr(AjCrewConfig, "load", staticmethod(load_disabled))
     mgr = await _manager(max_concurrent=1)
     assert mgr._taskq is None
     with patch.object(SubagentManager, "_run", new=AsyncMock()):
         mgr.spawn("a", parent_session_key="dash:1")
         q = mgr.spawn("b", parent_session_key="dash:1")
     assert q.queued and len(mgr._queue) == 1
-    assert not (Path(os.environ["KIROCREW_HOME"]) / "tasks").exists()
+    assert not (Path(os.environ["AJCREW_HOME"]) / "tasks").exists()

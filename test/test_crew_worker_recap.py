@@ -16,10 +16,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import crew_mode
-from kiro_crew.crew_log.projection_catalogue import Projection
-from kiro_crew.members_parts.member_space import DM_SLOT_MODE
-from kiro_crew.work_ledger_records import WorkItem
+from aj_crew import crew_mode
+from aj_crew.crew_log.projection_catalogue import Projection
+from aj_crew.members_parts.member_space import DM_SLOT_MODE
+from aj_crew.work_ledger_records import WorkItem
 
 MATE = "dm-ada"
 
@@ -34,14 +34,14 @@ def _fresh_roots(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def _row(key: str, **over: Any) -> dict[str, Any]:
-    return {"key": key, "agent": "kirocrew", "agent_kind": "template", "parent": None, **over}
+    return {"key": key, "agent": "ajcrew", "agent_kind": "template", "parent": None, **over}
 
 
 _TREE = [
     _row(MATE, agent="ada", agent_kind="member", mode=DM_SLOT_MODE),
     _row("m1", created_by=MATE, title="Slot title one"),
     _row("m2", created_by="m1", title="Slot title two"),
-    _row("croot", agent="kirocrew-conductor"),
+    _row("croot", agent="ajcrew-conductor"),
     _row("cw", created_by="croot"),
     _row("plain"),
 ]
@@ -77,7 +77,7 @@ def _state(rows: list[dict[str, Any]]) -> Any:
 
 @pytest.fixture
 def recap(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_worker_recap, crew_workers
+    from aj_crew.dashboard.handlers import crew_worker_recap, crew_workers
 
     async def _allow(*_a: Any, **_k: Any) -> None:
         return None
@@ -131,7 +131,7 @@ async def test_a_session_with_no_item_is_its_title_and_nothing_else(recap):
 
 @pytest.mark.asyncio
 async def test_a_grandchilds_item_on_its_sub_conductors_ledger_is_found(recap, monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     item = WorkItem(item_id="it_bbbb2222", title="Check links", worker_session_key="m2")
     monkeypatch.setattr(
@@ -156,7 +156,7 @@ async def test_a_session_outside_the_tree_and_a_non_root_are_refused(recap):
 
 @pytest.mark.asyncio
 async def test_the_recap_keeps_the_owner_gate(monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_worker_recap, crew_workers
+    from aj_crew.dashboard.handlers import crew_worker_recap, crew_workers
 
     async def _allow(*_a: Any, **_k: Any) -> None:
         return None
@@ -174,7 +174,7 @@ async def test_the_recap_keeps_the_owner_gate(monkeypatch):
 @pytest.mark.asyncio
 async def test_the_recap_makes_no_model_call(recap, monkeypatch):
     """Records only: the model-written intent summary and its generator are never reached."""
-    from kiro_crew.dashboard import chat_summary
+    from aj_crew.dashboard import chat_summary
 
     def _boom(*_a: Any, **_k: Any) -> Any:
         raise AssertionError("the recap must not read or make a model summary")
@@ -190,7 +190,7 @@ async def test_the_recap_makes_no_model_call(recap, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_report_text_is_redacted(recap, monkeypatch):
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew.dashboard.handlers import crew_workers
 
     secret = "AKIA" + "ABCDEFGHIJKLMNOP"
     item = WorkItem(
@@ -205,7 +205,7 @@ async def test_report_text_is_redacted(recap, monkeypatch):
 async def test_text_is_redacted_before_it_is_cut(recap, monkeypatch):
     """A secret that straddles a length cap is removed whole: the cut runs on the
     redacted text, so no prefix of the secret survives it."""
-    from kiro_crew.dashboard.handlers import crew_worker_recap, crew_workers
+    from aj_crew.dashboard.handlers import crew_worker_recap, crew_workers
 
     secret = "AKIA" + "ABCDEFGHIJKLMNOP"
     pad = "x" * (crew_worker_recap.RECAP_TEXT_MAX - 4)
@@ -227,7 +227,7 @@ async def test_text_is_redacted_before_it_is_cut(recap, monkeypatch):
 
 
 def test_the_pr_link_comes_from_typed_fields_and_never_from_a_bad_repo():
-    from kiro_crew.dashboard.handlers import crew_worker_recap as r
+    from aj_crew.dashboard.handlers import crew_worker_recap as r
 
     # The typed fields win: the link is built from ``pr`` and the acceptance repo.
     linked = WorkItem(
@@ -272,9 +272,9 @@ def test_the_pr_link_comes_from_typed_fields_and_never_from_a_bad_repo():
 
 
 def test_the_session_folds_give_last_turn_pending_approvals_and_open_questions(monkeypatch):
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.crew_log import projection_session_memo
-    from kiro_crew.dashboard.handlers import crew_worker_recap as r
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import projection_session_memo
+    from aj_crew.dashboard.handlers import crew_worker_recap as r
 
     values = {
         "timeline": {
@@ -289,8 +289,8 @@ def test_the_session_folds_give_last_turn_pending_approvals_and_open_questions(m
         },
         "tools": {
             "open_calls": [
-                {"name": "mcp_kirocrew_core_ask_question"},
-                {"name": "@kirocrew-core/ask_question"},
+                {"name": "mcp_ajcrew_core_ask_question"},
+                {"name": "@ajcrew-core/ask_question"},
                 {"name": "execute_bash"},
             ]
         },
@@ -314,10 +314,10 @@ def test_the_session_folds_give_last_turn_pending_approvals_and_open_questions(m
 def test_a_closed_session_reads_its_newest_saved_unit(monkeypatch):
     """A closed tab has no serving provider: its folds come from the newest unit the
     store holds for its slot, so its last turn and open calls still show."""
-    from kiro_crew import session_ledger
-    from kiro_crew.crew_log import projection_readers
-    from kiro_crew.dashboard.handlers import crew_worker_recap as r
-    from kiro_crew.dashboard.handlers import crew_workers
+    from aj_crew import session_ledger
+    from aj_crew.crew_log import projection_readers
+    from aj_crew.dashboard.handlers import crew_worker_recap as r
+    from aj_crew.dashboard.handlers import crew_workers
 
     seen: list[str] = []
     monkeypatch.setattr(projection_readers, "newest_unit_in_succession", lambda slot: f"u-{slot}")
@@ -349,9 +349,9 @@ def test_a_closed_session_reads_its_newest_saved_unit(monkeypatch):
 def test_a_permanently_deleted_sessions_units_are_never_read(monkeypatch):
     """The store keeps a deleted session's files; the ledger seam excludes them. A
     unit the seam does not list is never folded, so nothing of it reaches the recap."""
-    from kiro_crew import session_ledger
-    from kiro_crew.crew_log import projection_readers
-    from kiro_crew.dashboard.handlers import crew_worker_recap as r
+    from aj_crew import session_ledger
+    from aj_crew.crew_log import projection_readers
+    from aj_crew.dashboard.handlers import crew_worker_recap as r
 
     monkeypatch.setattr(projection_readers, "newest_unit_in_succession", lambda slot: "u-deleted")
     monkeypatch.setattr(session_ledger, "crew_log_units", lambda slot, *a, **k: ())
@@ -364,7 +364,7 @@ def test_a_permanently_deleted_sessions_units_are_never_read(monkeypatch):
 def test_a_peer_crews_item_never_stands_for_a_local_session(monkeypatch):
     """A remote bind names the peer's slot key, which can equal a local key; the
     local session's own item is the one read, whatever order the board lists them."""
-    from kiro_crew.dashboard.handlers import crew_workers, work_ledger_board
+    from aj_crew.dashboard.handlers import crew_workers, work_ledger_board
 
     local = WorkItem(item_id="it_local001", title="Local task", worker_session_key="m1")
     peer = WorkItem(

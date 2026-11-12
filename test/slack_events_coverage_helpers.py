@@ -1,4 +1,4 @@
-"""Fixtures and builders shared by the :mod:`kiro_crew.slack.events` coverage tests.
+"""Fixtures and builders shared by the :mod:`aj_crew.slack.events` coverage tests.
 
 ``test_slack_events_coverage.py`` and its ``_message_helpers``, ``_route_guards`` and
 ``_route_flow`` siblings import these by name. The three autouse fixtures keep SEL
@@ -15,20 +15,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config.loader import (
+from aj_crew.config.loader import (
     ACTIVATION_ALWAYS,
+    AjCrewConfig,
     ChannelConfig,
-    KiroCrewConfig,
     MessagingConfig,
 )
-from kiro_crew.slack import events as ev
+from aj_crew.slack import events as ev
 
 
 @pytest.fixture(name="_mock_sel", autouse=True)
 def _mock_sel_fixture():
     """Keep every SEL audit write in memory (no filesystem side effects)."""
     fake = MagicMock()
-    with patch("kiro_crew.slack.events.sel", return_value=fake):
+    with patch("aj_crew.slack.events.sel", return_value=fake):
         yield fake
 
 
@@ -41,7 +41,7 @@ def _fresh_trusted_bot_turn_ledger(_floor_monkeypatch):
 @pytest.fixture(name="_isolated_home", autouse=True)
 def _isolated_home_fixture(tmp_path, _floor_monkeypatch):
     """Point every home-derived path at ``tmp_path`` so nothing touches real HOME."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / ".kiro" / "crew"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / ".kiro" / "crew"))
     _floor_monkeypatch.setenv("KIRO_HOME", str(tmp_path / ".kiro"))
     _floor_monkeypatch.setenv("HOME", str(tmp_path))
     _floor_monkeypatch.setenv("USERPROFILE", str(tmp_path))
@@ -55,12 +55,12 @@ def _make_orch(
 ) -> MagicMock:
     """Minimal mock ``GatewayOrchestrator`` (mirrors ``test_channel_activation``)."""
     orch = MagicMock()
-    orch._cfg = KiroCrewConfig(
+    orch._cfg = AjCrewConfig(
         slack_channels=channels or {},
         slack_dm_activation=dm_activation,
         messaging=MessagingConfig(use_transport=use_transport),
     )
-    orch.slack_command = "kirocrew"
+    orch.slack_command = "ajcrew"
     orch._owner_id = "U_OWNER"
     orch._allowed_users = {"U_OWNER"}
     orch._tracking_channels = set()
@@ -135,7 +135,7 @@ class _capture_respond:
                 sink.append(json or {})
                 return MagicMock()
 
-        p = patch("kiro_crew.slack.events.aiohttp.ClientSession", _Session)
+        p = patch("aj_crew.slack.events.aiohttp.ClientSession", _Session)
         p.start()
         self._patches.append(p)
         # _handle_slash reads response_url straight off the payload, so inject it
@@ -150,7 +150,7 @@ class _capture_respond:
             payload.setdefault("response_url", url)
             return await self._orig(orch, payload)
 
-        p2 = patch("kiro_crew.slack.events._handle_slash", _wrapped)
+        p2 = patch("aj_crew.slack.events._handle_slash", _wrapped)
         p2.start()
         self._patches.append(p2)
         return self

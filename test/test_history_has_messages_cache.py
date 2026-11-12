@@ -16,11 +16,11 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.dashboard.handlers.sessions_parts.history_reads import _is_user_listed_row
-from kiro_crew.history import ConversationLog
-from kiro_crew.history_cache import _LRUCache
+from aj_crew.dashboard.handlers.sessions_parts.history_reads import _is_user_listed_row
+from aj_crew.history import ConversationLog
+from aj_crew.history_cache import _LRUCache
 
-_SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+_SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 
 def _line(record: dict) -> str:

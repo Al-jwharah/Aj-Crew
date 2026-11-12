@@ -10,13 +10,13 @@ to ``wrap_argv``'s Windows delegation predicate::
 ``kiro_internal_sandbox_enabled()`` reads ``~/.kiro/settings/amazon-internal.json``
 and returns False when that file is absent. A fresh Windows install does not have
 it. So delegation stopped, control fell through to backend detection, Windows has
-no Kiro Crew OS sandbox backend, and the no-backend policy fail-closed: the ACP
+no Aj Crew OS sandbox backend, and the no-backend policy fail-closed: the ACP
 backend never started and the gateway never became usable.
 
 ``test/test_sandbox_argv.py`` already pinned that exact branch and did not catch
 it, for two compounding reasons. It is line 2 of ``test/windows-collect-ignore.txt``,
 so it is not collected on ``windows-latest`` at all. And where it does run, in the
-Linux shards, it monkeypatches ``kiro_crew.sandbox.sys.platform`` to ``"win32"``
+Linux shards, it monkeypatches ``aj_crew.sandbox.sys.platform`` to ``"win32"``
 and patches ``kiro_internal_sandbox_enabled`` to ``return_value=True`` -- which
 hardcodes the one answer a fresh Windows host cannot give. Real filesystem state
 was never involved on any OS.
@@ -55,7 +55,7 @@ one prompt turn against the packaged fake ACP backend. ``/api/health`` alone is
 NOT sufficient: it answers while the ACP spawn is being refused, which is exactly
 how that break stayed invisible. The prompt turn is the load-bearing assertion.
 
-It does NOT use ``kiro_crew.testing.harness.spawn_feature_gateway``, which cannot
+It does NOT use ``aj_crew.testing.harness.spawn_feature_gateway``, which cannot
 run on Windows today: ``_wait_for_ready_line`` registers a PIPE with
 ``selectors.DefaultSelector()`` (the Windows selector accepts sockets only) and
 teardown goes through ``terminate_pgid``, which calls ``os.killpg`` / ``os.getpgid``
@@ -82,16 +82,16 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.atomic_write import read_bytes_with_retry
-from kiro_crew.testing.harness import _terminate_process_group
-from kiro_crew.testing.wait import wait_until
+from aj_crew import platform_compat
+from aj_crew.atomic_write import read_bytes_with_retry
+from aj_crew.testing.harness import _terminate_process_group
+from aj_crew.testing.wait import wait_until
 
 pytestmark = pytest.mark.skipif(
     sys.platform != "win32",
     reason=(
         "the Windows fail-closed sandbox opt-in contract is a win32 host property: "
-        "it depends on there being no Kiro Crew OS sandbox backend and on the real "
+        "it depends on there being no Aj Crew OS sandbox backend and on the real "
         "absence of ~/.kiro/settings/amazon-internal.json, neither of which a "
         "POSIX host can represent without the platform mocks that let the break through"
     ),
@@ -111,7 +111,7 @@ def _kiro_internal_settings_path() -> Path:
     Read from ``sandbox`` rather than restated so a move of the file cannot leave
     this test asserting the absence of a path nothing consults any more.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     return Path(os.path.expanduser(sandbox._KIRO_INTERNAL_SETTINGS_PATH))
 
@@ -145,14 +145,14 @@ def _read_config_json(config_path: Path) -> dict:
 def fresh_windows_home(monkeypatch, tmp_path):
     """A scratch data home with NO config.json, on a host with no settings file.
 
-    Both halves of "fresh" are asserted rather than assumed. ``KIROCREW_HOME`` is
+    Both halves of "fresh" are asserted rather than assumed. ``AJCREW_HOME`` is
     already pinned per test by the rootdir conftest isolation floor; this fixture
     re-pins it to its own subdirectory so the opt-in write below cannot be
     confused with state another test left, and resets the sandbox backend cache so
     a probe result cached by an earlier test in the same xdist worker cannot
     decide this one.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     settings = _kiro_internal_settings_path()
     if settings.exists():
@@ -164,8 +164,8 @@ def fresh_windows_home(monkeypatch, tmp_path):
 
     home = tmp_path / "crew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    paths = sys.modules.get("kiro_crew.config.paths")
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    paths = sys.modules.get("aj_crew.config.paths")
     if paths is not None:
         monkeypatch.setattr(paths, "_resolved_home", None, raising=False)
     sandbox.reset_backend()
@@ -182,7 +182,7 @@ def _write_config(home: Path, payload: dict) -> None:
     function rather than that it reads the operator's file, which is the class of
     shortcut this whole suite exists to avoid.
     """
-    from kiro_crew.config.paths import config_dir
+    from aj_crew.config.paths import config_dir
 
     target = config_dir() / "config.json"
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -200,7 +200,7 @@ class TestFreshWindowsHostPrecondition:
         it, a host that happened to carry the settings file would pass that test
         for the wrong reason and the regression would be invisible again.
         """
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert not _kiro_internal_settings_path().exists()
         assert sandbox.kiro_internal_sandbox_enabled() is False
@@ -212,7 +212,7 @@ class TestFreshWindowsHostPrecondition:
         test fails first and says so, rather than every assertion below silently
         changing meaning.
         """
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert sandbox.detect_backend(config_mode="auto") == "none"
 
@@ -250,7 +250,7 @@ class TestWrapArgvContract:
         refusal whose remedy is undiscoverable is the failure mode
         ``_setup_sandbox_consent`` was added to fix.
         """
-        from kiro_crew.sandbox import SandboxUnavailableError, wrap_argv
+        from aj_crew.sandbox import SandboxUnavailableError, wrap_argv
 
         with pytest.raises(SandboxUnavailableError) as excinfo:
             wrap_argv(list(self.UNCLASSIFIED_ARGV), mode="auto")
@@ -264,7 +264,7 @@ class TestWrapArgvContract:
         The second half of the pair, and the direction that is easy to get wrong.
         On win32 an UNDECLARED ``agent.sandbox_allow_unsandboxed_exec`` resolves to
         ``True`` at load time -- see
-        :func:`kiro_crew.config.loader.unsandboxed_exec_platform_default`, which is
+        :func:`aj_crew.config.loader.unsandboxed_exec_platform_default`, which is
         ``sys.platform == "win32"`` because there is no native wrapper to apply and
         nothing installable that would produce one, so fail-closing here would
         refuse every script cron, hook, app backend, MCP probe and provider CLI on
@@ -277,8 +277,8 @@ class TestWrapArgvContract:
         pins that, which is why it is pinned here: the platform default is a
         default, not an override.
         """
-        from kiro_crew.config.superseded_defaults import record_adoptions
-        from kiro_crew.sandbox import SandboxUnavailableError, wrap_argv
+        from aj_crew.config.superseded_defaults import record_adoptions
+        from aj_crew.sandbox import SandboxUnavailableError, wrap_argv
 
         # A stored false on Windows is adopted once as the stale pre-0.6.0 default;
         # mark that one-shot done so this false reads as the operator's lockdown.
@@ -312,7 +312,7 @@ class TestWrapArgvContract:
         on this host, which is precisely the fresh-install breakage no test could
         observe while the platform and the probe were both mocked.
         """
-        from kiro_crew.sandbox import wrap_argv
+        from aj_crew.sandbox import wrap_argv
 
         argv = [str(Path(fresh_windows_home) / "kiro-cli.exe"), "acp"]
         wrapped, launcher = wrap_argv(argv, mode="auto", is_kiro_cli=True)
@@ -331,7 +331,7 @@ class TestWrapArgvContract:
         harmless simplification and would hand any spawn a path out of the
         sandbox by filename.
         """
-        from kiro_crew.sandbox import SandboxUnavailableError, wrap_argv
+        from aj_crew.sandbox import SandboxUnavailableError, wrap_argv
 
         with pytest.raises(SandboxUnavailableError):
             wrap_argv([str(Path(fresh_windows_home) / "kiro-cli"), "acp"], mode="auto")
@@ -423,7 +423,7 @@ def _read_until_ready(
     gateway the caller is about to use, at a deadline the caller has no reason to
     know about -- surfacing as an unrelated connection error later in the test.
     """
-    from kiro_crew.testing.harness import READY_PREFIX, parse_ready_line
+    from aj_crew.testing.harness import READY_PREFIX, parse_ready_line
 
     stop = threading.Event()
 
@@ -466,12 +466,12 @@ def _write_fake_backend_launcher(directory: Path) -> Path:
     """The ``.cmd`` shim that runs the packaged fake ACP backend.
 
     Shared with ``test/e2e/test_gateway_boot_matrix.py`` through
-    ``kiro_crew.testing.harness.fake_acp_backend_launcher``, which carries the
+    ``aj_crew.testing.harness.fake_acp_backend_launcher``, which carries the
     reasoning: no shebang on Windows, ``.cmd`` is runnable, and the name is
     deliberately not ``kiro-cli`` so delegation must come from the reviewed
     ``is_kiro_cli=True`` call site rather than the basename.
     """
-    from kiro_crew.testing.harness import fake_acp_backend_launcher
+    from aj_crew.testing.harness import fake_acp_backend_launcher
 
     return fake_acp_backend_launcher(directory)
 
@@ -488,24 +488,24 @@ def fresh_windows_gateway(fresh_windows_home, tmp_path):
     launcher = _write_fake_backend_launcher(tmp_path)
     env = {
         **os.environ,
-        "KIROCREW_HOME": str(fresh_windows_home),
+        "AJCREW_HOME": str(fresh_windows_home),
         "KIRO_HOME": str(fresh_windows_home / "kiro"),
-        "KIROCREW_WORKSPACE": str(tmp_path / "workspace"),
-        "KIROCREW_KIRO_BIN": str(launcher),
+        "AJCREW_WORKSPACE": str(tmp_path / "workspace"),
+        "AJCREW_KIRO_BIN": str(launcher),
         # Marks this as a test rig; grants no launch privilege. The launcher above
         # is exec'd by the ordinary in-place path like any other runnable file.
-        "KIROCREW_FAKE_ACP_TEST_MODE": "1",
+        "AJCREW_FAKE_ACP_TEST_MODE": "1",
         # --json-ready flushes its own line, but earlier prints block-buffer into
         # a pipe and would mask an early failure behind them.
         "PYTHONUNBUFFERED": "1",
         # Embeddings are default-on; never let a test kick the ~610MB download.
-        "KIROCREW_SKIP_MODEL_DOWNLOAD": "1",
+        "AJCREW_SKIP_MODEL_DOWNLOAD": "1",
         "PYTHONUTF8": "1",
     }
     cmd = [
         sys.executable,
         "-m",
-        "kiro_crew",
+        "aj_crew",
         "gateway",
         "--test-mode",
         "--approval",
@@ -590,7 +590,7 @@ class TestFreshWindowsGatewayDelegates:
         catch. The prompt turn is the assertion.
         """
         gateway = fresh_windows_gateway
-        from kiro_crew.testing.fake_acp_backend import REPLY_TEXT
+        from aj_crew.testing.fake_acp_backend import REPLY_TEXT
 
         wait_until(
             lambda: gateway.get("/api/health", timeout=10) is not None,
@@ -610,7 +610,7 @@ class TestFreshWindowsGatewayDelegates:
             written = _read_config_json(config_path)
             agent_section = written.get("agent") or {}
             assert not agent_section.get("sandbox_allow_unsandboxed_exec", False)
-            # The KIROCREW_KIRO_BIN seam only fires when the provider resolves to
+            # The AJCREW_KIRO_BIN seam only fires when the provider resolves to
             # acp. Fail fast and say so, rather than surfacing it minutes later as
             # an indistinguishable "no reply" timeout.
             assert agent_section.get("provider", "acp") == "acp"

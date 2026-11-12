@@ -4,20 +4,20 @@ The reported defect: on KAS every ``mochi:mochi`` tool refused as
 ``identity_unattestable``. The kiro-cli path re-declares the server per session
 with the signed token (``session_mcp.kiro_control_plane_servers``), but KAS never
 reaches it, and ``kas_agents.hoist_servers_for_session`` tokened only the managed
-``kirocrew-*`` names, so the app server launched with no token at all.
+``ajcrew-*`` names, so the app server launched with no token at all.
 """
 
 from __future__ import annotations
 
-from kiro_crew.acp import kas_app_identity
-from kiro_crew.acp.kas_agents import MANAGED_MCP_SERVER_NAMES, hoist_servers_for_session
-from kiro_crew.mcp_gateway.session_servers import STUB_SESSION_TOKEN_ENV
+from aj_crew.acp import kas_app_identity
+from aj_crew.acp.kas_agents import MANAGED_MCP_SERVER_NAMES, hoist_servers_for_session
+from aj_crew.mcp_gateway.session_servers import STUB_SESSION_TOKEN_ENV
 
 APP = "mochi:mochi"
 PINNED = {
     "command": "/crew/python3.12",
-    "args": ["-s", "-P", "-m", "kiro_crew", "app", "mcp", "mochi"],
-    "env": {"PYTHONPATH": "/crew/site-packages", "KIROCREW_HOME": "/crew/home"},
+    "args": ["-s", "-P", "-m", "aj_crew", "app", "mcp", "mochi"],
+    "env": {"PYTHONPATH": "/crew/site-packages", "AJCREW_HOME": "/crew/home"},
 }
 
 
@@ -25,7 +25,7 @@ def _agents(entry=None):
     return [
         {
             "id": "mochi--mochi",
-            "mcpServers": {APP: entry or {"command": "kirocrew", "args": ["app", "mcp", "mochi"]}},
+            "mcpServers": {APP: entry or {"command": "ajcrew", "args": ["app", "mcp", "mochi"]}},
         }
     ]
 
@@ -41,7 +41,7 @@ def _hoist(agents, launches):
 
 
 def test_app_server_is_hoisted_with_the_token_and_the_shipped_launch(monkeypatch):
-    monkeypatch.setenv("KIROCREW_BOUND_PORT", "8642")
+    monkeypatch.setenv("AJCREW_BOUND_PORT", "8642")
     out_agents, array = _hoist(_agents(), {APP: PINNED})
 
     (element,) = array
@@ -49,9 +49,9 @@ def test_app_server_is_hoisted_with_the_token_and_the_shipped_launch(monkeypatch
     assert (element["command"], element["args"]) == (PINNED["command"], PINNED["args"])
     env = _env(element)
     assert env[STUB_SESSION_TOKEN_ENV] == "tok-1"
-    assert env["KIROCREW_PORT"] == "8642"
+    assert env["AJCREW_PORT"] == "8642"
     assert env["PYTHONPATH"] == "/crew/site-packages"
-    assert env["KIROCREW_HOME"] == "/crew/home"
+    assert env["AJCREW_HOME"] == "/crew/home"
     # Moved out of the block: the session-level element is the one launch.
     assert "mcpServers" not in out_agents[0]
 
@@ -75,7 +75,7 @@ def test_an_app_server_without_a_shipped_launch_is_left_alone():
 
 
 def test_resolver_returns_the_launch_for_a_declared_app_server(monkeypatch, tmp_path):
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     monkeypatch.setattr(session_mcp, "builtin_app_identity_launches", lambda: {APP: PINNED})
     monkeypatch.setattr(session_mcp, "native_settings_sources", lambda _wd: [])
@@ -95,7 +95,7 @@ def test_resolver_returns_the_launch_for_a_declared_app_server(monkeypatch, tmp_
 
 
 def test_resolver_withholds_every_app_server_on_unreadable_settings(monkeypatch, tmp_path):
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     def unreadable(_wd):
         raise session_mcp.NativeSettingsUnreadable("global", tmp_path / "mcp.json", "bad")
@@ -110,7 +110,7 @@ def test_resolver_withholds_every_app_server_on_unreadable_settings(monkeypatch,
 
 
 def test_resolver_honours_a_settings_restriction(monkeypatch, tmp_path):
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     muted = session_mcp.NativeSettingsSource(
         session_mcp.NATIVE_SOURCE_GLOBAL, tmp_path / "mcp.json", {APP: {"disabled": True}}
@@ -128,7 +128,7 @@ def test_resolver_honours_a_settings_restriction(monkeypatch, tmp_path):
 def test_the_shipped_disabled_false_still_hoists_and_tokens():
     # Mochi's manifest declares ``disabled: false`` and registration copies it into
     # the agent's entry, so the hoist must not read that no-op as a restriction.
-    entry = {"command": "kirocrew", "args": ["app", "mcp", "mochi"], "disabled": False}
+    entry = {"command": "ajcrew", "args": ["app", "mcp", "mochi"], "disabled": False}
     _, array = _hoist(_agents(entry), {APP: PINNED})
 
     assert [e["name"] for e in array] == [APP]
@@ -139,9 +139,9 @@ def test_the_shipped_manifest_entry_shape_is_hoistable():
     import json
     from pathlib import Path
 
-    import kiro_crew
+    import aj_crew
 
-    manifest = Path(kiro_crew.__file__).parent / "apps" / "builtins" / "mochi" / "app.json"
+    manifest = Path(aj_crew.__file__).parent / "apps" / "builtins" / "mochi" / "app.json"
     entry = json.loads(manifest.read_text(encoding="utf-8"))["mcpServers"]["mochi"]
     _, array = _hoist(_agents(dict(entry)), {APP: PINNED})
 
@@ -149,7 +149,7 @@ def test_the_shipped_manifest_entry_shape_is_hoistable():
 
 
 def test_a_real_restriction_on_the_entry_still_blocks_the_hoist():
-    entry = {"command": "kirocrew", "args": ["app", "mcp", "mochi"], "disabledTools": ["x"]}
+    entry = {"command": "ajcrew", "args": ["app", "mcp", "mochi"], "disabledTools": ["x"]}
     agents = _agents(entry)
     out_agents, array = _hoist(agents, {APP: PINNED})
 

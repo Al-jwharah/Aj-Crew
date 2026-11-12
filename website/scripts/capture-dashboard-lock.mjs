@@ -46,7 +46,7 @@ async function shootBadge(theme, tag) {
   check(`${tag}: badge says Layout locked`, text.trim().startsWith('Layout locked'), JSON.stringify(text))
   check(`${tag}: no switch control`, (await page.locator('[role="switch"]').count()) === 0)
   const painted = await page.evaluate(() => document.documentElement.dataset.theme)
-  check(`${tag}: theme kiro-${theme}`, painted === `kiro-${theme}`)
+  check(`${tag}: theme aj-${theme}`, painted === `aj-${theme}`)
   await page.screenshot({ path: `${OUT}/${tag}.png` })
   await page.close()
 }
@@ -65,7 +65,7 @@ async function shootBadgeWorking(theme, tag) {
   check(`${tag}: no switch/button`, (await page.locator('[role="switch"]').count()) === 0)
   check(`${tag}: iframe present`, (await page.locator('[data-testid="crew-dashboard-iframe"]').count()) === 1)
   const painted = await page.evaluate(() => document.documentElement.dataset.theme)
-  check(`${tag}: theme kiro-${theme}`, painted === `kiro-${theme}`)
+  check(`${tag}: theme aj-${theme}`, painted === `aj-${theme}`)
   await page.screenshot({ path: `${OUT}/${tag}.png` })
   await page.close()
 }
@@ -87,7 +87,7 @@ async function shootSwitchFlipError(theme, tag) {
   await err.waitFor({ state: 'visible', timeout: 10000 })
   check(`${tag}: error notice visible`, (await err.count()) === 1)
   const painted = await page.evaluate(() => document.documentElement.dataset.theme)
-  check(`${tag}: theme kiro-${theme}`, painted === `kiro-${theme}`)
+  check(`${tag}: theme aj-${theme}`, painted === `aj-${theme}`)
   await page.screenshot({ path: `${OUT}/${tag}.png` })
   await page.close()
 }
@@ -106,7 +106,7 @@ async function shootSwitchError(theme, tag) {
   check(`${tag}: error notice visible`, (await err.count()) === 1)
   check(`${tag}: switch hidden on error`, (await page.locator('[role="switch"]').count()) === 0)
   const painted = await page.evaluate(() => document.documentElement.dataset.theme)
-  check(`${tag}: theme kiro-${theme}`, painted === `kiro-${theme}`)
+  check(`${tag}: theme aj-${theme}`, painted === `aj-${theme}`)
   await page.screenshot({ path: `${OUT}/${tag}.png` })
   await page.close()
 }
@@ -124,7 +124,7 @@ async function shootSwitch(theme, locked, tag) {
   const checked = await sw.getAttribute('aria-checked')
   check(`${tag}: switch aria-checked=${locked}`, checked === String(locked))
   const painted = await page.evaluate(() => document.documentElement.dataset.theme)
-  check(`${tag}: theme kiro-${theme}`, painted === `kiro-${theme}`)
+  check(`${tag}: theme aj-${theme}`, painted === `aj-${theme}`)
   await page.screenshot({ path: `${OUT}/${tag}.png` })
   await page.close()
 }

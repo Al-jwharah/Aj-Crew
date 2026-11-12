@@ -18,8 +18,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.cron import CronJob
-from kiro_crew.dashboard.handlers.cron import api_cron_update, api_crons, api_crons_create
+from aj_crew.cron import CronJob
+from aj_crew.dashboard.handlers.cron import api_cron_update, api_crons, api_crons_create
 
 pytestmark = pytest.mark.asyncio
 

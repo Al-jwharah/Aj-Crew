@@ -13,7 +13,7 @@ from unittest.mock import patch
 import pytest
 from test_tailnet_mobile import _HOST, _machine, _owner_session_token, _request
 
-from kiro_crew.dashboard.handlers import tailnet_mobile
+from aj_crew.dashboard.handlers import tailnet_mobile
 
 
 @pytest.mark.asyncio

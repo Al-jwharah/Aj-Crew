@@ -4,7 +4,7 @@ On KAS the agent's servers travel in ``session/new`` and the engine stores that
 batch in ``session.json``, so the projection keeps env values off the wire. These
 tests pin how the values still reach the server: the projection writes an
 owner-only launch snapshot and hands the engine Crew's launcher plus a reference,
-and the launcher (``kiro_crew.kas_env_shim``) starts the real command with them only
+and the launcher (``aj_crew.kas_env_shim``) starts the real command with them only
 when the snapshot matches that reference. The canary must reach the server's
 process and must appear in nothing that crosses the wire.
 """
@@ -21,10 +21,10 @@ from pathlib import Path
 import pytest
 from kas_agents_helpers import _spec
 
-from kiro_crew import kas_env_shim
-from kiro_crew.acp import kas_env_launch
-from kiro_crew.acp._dispatch import build_session_new_params
-from kiro_crew.acp.kas_agents import (
+from aj_crew import kas_env_shim
+from aj_crew.acp import kas_env_launch
+from aj_crew.acp._dispatch import build_session_new_params
+from aj_crew.acp.kas_agents import (
     build_kas_custom_agents,
     hoist_servers_for_session,
     to_client_custom_agent,
@@ -51,7 +51,7 @@ for line in sys.stdin:
 def home(tmp_path, monkeypatch):
     data_home = tmp_path / "crew-home"
     data_home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(data_home))
+    monkeypatch.setenv("AJCREW_HOME", str(data_home))
     return data_home
 
 
@@ -70,7 +70,7 @@ def _server_spec(script: Path, **extra) -> dict:
     }
 
 
-def _project(spec: dict, agent: str = "kirocrew", session_key: str = SESSION) -> dict:
+def _project(spec: dict, agent: str = "ajcrew", session_key: str = SESSION) -> dict:
     return to_client_custom_agent(agent, spec, "p", session_key=session_key)
 
 
@@ -134,7 +134,7 @@ class TestProjection:
             "--session",
             SESSION,
             "--agent",
-            "kirocrew",
+            "ajcrew",
             "--server",
             "canary",
             "--version",
@@ -167,7 +167,7 @@ class TestProjection:
             assert (home / "kas-mcp-launch").stat().st_mode & 0o777 == 0o700
 
     def test_a_crewmate_worker_spec_takes_the_same_path(self, home, script):
-        from kiro_crew.mate_worker import MATE_WORKER_AGENT, merge_worker_spec, worker_additions
+        from aj_crew.mate_worker import MATE_WORKER_AGENT, merge_worker_spec, worker_additions
 
         base = {"name": MATE_WORKER_AGENT, "prompt": "base", "tools": ["*"], "mcpServers": {}}
         mate = {"prompt": "", "tools": ["*"], "mcpServers": {"headstart": _server_spec(script)}}
@@ -187,7 +187,7 @@ class TestProjection:
         monkeypatch.delenv("KC33089_ENDPOINT", raising=False)
         loaded = SimpleNamespace(agent=SimpleNamespace(env={"KC33089_ENDPOINT": CANARY}))
         monkeypatch.setattr(
-            "kiro_crew.config.KiroCrewConfig.load", staticmethod(lambda: loaded), raising=True
+            "aj_crew.config.AjCrewConfig.load", staticmethod(lambda: loaded), raising=True
         )
         server = {**_server_spec(script), "env": {"CANARY_26256_ENDPOINT": "${KC33089_ENDPOINT}"}}
         entry = _project(_spec(mcpServers={"canary": server}))
@@ -216,7 +216,7 @@ class TestProjection:
         """A background or pooled runtime has no session key yet; the batch names
         the snapshot with a random key, so the server still gets its env."""
         spec = _spec(mcpServers={"c": _server_spec(script)})
-        entry = build_kas_custom_agents(tmp_path, "kirocrew", spec, session_key="")[0]
+        entry = build_kas_custom_agents(tmp_path, "ajcrew", spec, session_key="")[0]
         launched = entry["mcpServers"]["c"]
         assert CANARY not in _wire_text(entry)
         assert launched["args"][launched["args"].index("--session") + 1].startswith("unkeyed-")
@@ -323,9 +323,9 @@ class TestLifecycle:
     def test_the_boot_sweep_waits_while_another_owner_holds_runtimes(
         self, home, script, owner, swept
     ):
-        from kiro_crew.agent_sdk.agent_specs import sweep_kas_launch_snapshots
+        from aj_crew.agent_sdk.agent_specs import sweep_kas_launch_snapshots
 
-        # A `kirocrew chat` CLI (or a second gateway) on this data home records its
+        # An `ajcrew chat` CLI (or a second gateway) on this data home records its
         # KAS runtime under its own pid; the parent process stands in for it here.
         rows = {"other": f"{os.getppid()}:424242:tok\n", "self": f"{os.getpid()}:424242:tok\n"}
         if owner in rows:
@@ -367,7 +367,7 @@ class TestLifecycle:
         import logging
 
         spec = _spec(mcpServers={"c": _server_spec(script, PORT=8080, NESTED={"x": 1})})
-        with caplog.at_level(logging.INFO, logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.acp.kas_agents"):
             entry = _project(spec)
         env = json.loads(_snapshot(home, entry["mcpServers"]["c"]).read_text("utf-8"))["env"]
         assert env["PORT"] == "8080" and "NESTED" not in env
@@ -377,10 +377,10 @@ class TestLifecycle:
         import asyncio
         from types import SimpleNamespace
 
-        from kiro_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.session_provider import AcpSessionProvider
 
         seen: list[object] = []
-        batch = [{"id": "kirocrew", "mcpServers": {}}]
+        batch = [{"id": "ajcrew", "mcpServers": {}}]
         provider = AcpSessionProvider.__new__(AcpSessionProvider)
         provider._handle = SimpleNamespace(kas_registered_agents=batch)
 
@@ -398,7 +398,7 @@ class TestLifecycle:
         import asyncio
         from types import SimpleNamespace
 
-        from kiro_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.session_provider import AcpSessionProvider
 
         live = _project(_spec(mcpServers={"c": _server_spec(script)}))["mcpServers"]["c"]
         aged = _snapshot(home, live)
@@ -421,11 +421,11 @@ class TestLifecycle:
         import asyncio
         import threading
 
-        from kiro_crew import session as session_mod
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.metrics import sessions as metrics_sessions
-        from kiro_crew.slack import gateway as gateway_mod
-        from kiro_crew.slack.gateway import GatewayOrchestrator
+        from aj_crew import session as session_mod
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.metrics import sessions as metrics_sessions
+        from aj_crew.slack import gateway as gateway_mod
+        from aj_crew.slack.gateway import GatewayOrchestrator
 
         class _Stop(Exception):
             pass
@@ -462,7 +462,7 @@ class TestLifecycle:
         monkeypatch.setattr(session_mod, "cleanup_orphaned_sessions", _cleanup)
         monkeypatch.setattr(metrics_sessions, "backfill_crashed_sessions", lambda _cutoff: 0)
         monkeypatch.setattr(kas_env_launch, "sweep_stale", _slow_sweep)
-        orchestrator = GatewayOrchestrator(KiroCrewConfig(), no_dashboard=True, no_crons=True)
+        orchestrator = GatewayOrchestrator(AjCrewConfig(), no_dashboard=True, no_crons=True)
         with pytest.raises(_Stop):
             await orchestrator.run()
         await asyncio.gather(*list(orchestrator._background_tasks), return_exceptions=True)
@@ -490,7 +490,7 @@ class TestShim:
         argv, env = kas_env_shim.resolve_launch(ref, environ)
         assert argv == [sys.executable, str(script)]
         assert env["CANARY_26256_ENDPOINT"] == CANARY
-        assert "KIROCREW_HOME" not in env, "the data home is the launcher's, not the server's"
+        assert "AJCREW_HOME" not in env, "the data home is the launcher's, not the server's"
 
     @pytest.mark.parametrize("flag", ["--session", "--agent", "--server"])
     def test_another_session_agent_or_server_finds_no_snapshot(self, launched, flag, capsys):
@@ -519,7 +519,7 @@ class TestShim:
 
     def test_no_data_home_is_refused(self, launched, capsys):
         ref, environ = launched
-        environ.pop("KIROCREW_HOME")
+        environ.pop("AJCREW_HOME")
         self._refusal(ref, environ)
         assert "data home" in capsys.readouterr().err
 
@@ -544,12 +544,12 @@ class TestShim:
         assert "cannot be opened" in capsys.readouterr().err
 
     def test_a_malformed_reference_is_refused(self, home, capsys):
-        self._refusal(["--session", SESSION], {"KIROCREW_HOME": str(home)})
+        self._refusal(["--session", SESSION], {"AJCREW_HOME": str(home)})
         assert "malformed" in capsys.readouterr().err
 
 
 def test_the_snapshot_leaf_is_sealed_and_fenced_like_pi_gate():
-    from kiro_crew import sandbox, security
+    from aj_crew import sandbox, security
 
     leaf = kas_env_shim.SNAPSHOT_LEAF
     assert leaf in sandbox._CREW_READONLY_LEAVES

@@ -17,15 +17,15 @@ import pytest
 import subagent_continuable_helpers
 from subagent_continuable_helpers import _manager
 
-from kiro_crew.apps.context import build_app_context
-from kiro_crew.apps.spawn_sdk import (
+from aj_crew.apps.context import build_app_context
+from aj_crew.apps.spawn_sdk import (
     CONVERSATION_BUSY,
     CONVERSATION_GONE,
     SpawnError,
     SpawnSDK,
     build_spawn_impl,
 )
-from kiro_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent import SubagentInfo, SubagentManager
 
 _close_subagent_managers = subagent_continuable_helpers._close_subagent_managers
 
@@ -67,7 +67,7 @@ def _refusal(error: str) -> object:
 
 @pytest.fixture(autouse=True)
 def _known_agents(_floor_monkeypatch):
-    import kiro_crew.apps.spawn_sdk as spawn_sdk
+    import aj_crew.apps.spawn_sdk as spawn_sdk
 
     _floor_monkeypatch.setattr(
         spawn_sdk,
@@ -75,7 +75,7 @@ def _known_agents(_floor_monkeypatch):
         lambda: [
             types.SimpleNamespace(name="probe-bg", filename="probe--probe-bg.json"),
             types.SimpleNamespace(name="other-bg", filename="other--other-bg.json"),
-            types.SimpleNamespace(name="kirocrew", filename="kirocrew.json"),
+            types.SimpleNamespace(name="ajcrew", filename="ajcrew.json"),
         ],
     )
 
@@ -83,7 +83,7 @@ def _known_agents(_floor_monkeypatch):
 @pytest.fixture
 def denials(monkeypatch):
     calls: list[dict] = []
-    import kiro_crew.apps.spawn_sdk as spawn_sdk
+    import aj_crew.apps.spawn_sdk as spawn_sdk
 
     class _Sel:
         def log_tool_invocation(self, **kw):
@@ -132,20 +132,20 @@ class TestContinueRunsWithTheSpawnChecks:
 
     def test_a_user_conversation_is_refused(self, tmp_path, denials):
         # A chat-spawned run carries no app; an app must not drive it.
-        mgr = _FakeManager(owner=("", "kirocrew"))
+        mgr = _FakeManager(owner=("", "ajcrew"))
         with pytest.raises(SpawnError):
             asyncio.run(_sdk(tmp_path, mgr).continue_("sub-1", "drive it"))
         assert mgr.continues == []
 
     def test_a_run_of_a_non_app_agent_is_refused(self, tmp_path, denials):
-        mgr = _FakeManager(owner=("probe", "kirocrew"))
+        mgr = _FakeManager(owner=("probe", "ajcrew"))
         with pytest.raises(SpawnError, match="OWN agents"):
             asyncio.run(_sdk(tmp_path, mgr).continue_("sub-1", "escalate"))
         assert mgr.continues == []
         assert denials
 
     def test_an_unreadable_owner_fails_closed(self, tmp_path, denials, monkeypatch):
-        import kiro_crew.subagent_persistence as persistence
+        import aj_crew.subagent_persistence as persistence
 
         def _gone(_conv):
             raise ValueError("memory_unavailable: run record is unavailable")
@@ -163,7 +163,7 @@ class TestContinueRunsWithTheSpawnChecks:
     def test_a_pruned_run_is_gone_not_unverifiable(self, tmp_path, denials, monkeypatch):
         # Retention removed the folder and eviction the live record: an ordinary
         # expiry, which the app answers with a fresh run.
-        import kiro_crew.subagent_persistence as persistence
+        import aj_crew.subagent_persistence as persistence
 
         assert not persistence._agent_dir("sub-1").exists()
         mgr = _FakeManager(owner=None)
@@ -174,7 +174,7 @@ class TestContinueRunsWithTheSpawnChecks:
         assert denials and denials[0]["tool_name"] == "spawn_continue"
 
     def test_an_evicted_run_is_checked_from_its_run_record(self, tmp_path, monkeypatch):
-        import kiro_crew.subagent_persistence as persistence
+        import aj_crew.subagent_persistence as persistence
 
         monkeypatch.setattr(
             persistence,

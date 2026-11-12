@@ -17,7 +17,7 @@ import pytest
 from aiohttp import web
 from chat_test_helpers import stub_readonly_spec_publisher
 
-from kiro_crew.dashboard.handlers.side import (
+from aj_crew.dashboard.handlers.side import (
     api_side_close,
     api_side_open,
     api_side_state,
@@ -25,7 +25,7 @@ from kiro_crew.dashboard.handlers.side import (
     api_side_tools,
     api_side_turn,
 )
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
 _SIDE_QUESTION = "what is the difference between TCP and UDP?"
 _SIDE_ANSWER = "TCP is connection-oriented and UDP is not."

@@ -16,9 +16,9 @@ from datetime import datetime, timezone
 
 import pytest
 
-import kiro_crew.skills as skills_mod
+import aj_crew.skills as skills_mod
+from aj_crew.skills import MAX_SKILL_VERSIONS, AutoSkillProvenance, SkillsLoader
 from conftest import requires_symlinks
-from kiro_crew.skills import MAX_SKILL_VERSIONS, AutoSkillProvenance, SkillsLoader
 
 
 @pytest.fixture()
@@ -769,7 +769,7 @@ def test_read_auto_skill_body_reads_the_validated_path_not_the_original(tmp_path
     a swap of the final component between check and read would put the
     substituted bytes into the update-merge prompt.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     loader = SkillsLoader()
     live = tmp_path / "skills" / "auto" / "deploy-x"
     live.mkdir(parents=True)
@@ -794,7 +794,7 @@ def test_read_auto_skill_body_reads_the_validated_path_not_the_original(tmp_path
 def test_read_auto_skill_body_returns_none_when_safe_read_refuses(tmp_path, monkeypatch):
     """A PermissionError from the hardened reader (sensitive path or a detected
     symlink swap) must surface as None, not propagate into the merge path."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     loader = SkillsLoader()
     live = tmp_path / "skills" / "auto" / "deploy-y"
     live.mkdir(parents=True)

@@ -1,4 +1,4 @@
-"""Regression tests for Round-27 findings (KiroCrew PR #6).
+"""Regression tests for Round-27 findings (Aj Crew PR #6).
 
 F1 (Codex): missing bucket TagSet is an identity FAILURE — the reaper
     quarantines the manifest and touches nothing (no name-prefix pass);
@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 
 _SCRIPTS = Path(__file__).resolve().parents[1] / (
-    "src/kiro_crew/deploy/skills/artifact-deploy/scripts"
+    "src/aj_crew/deploy/skills/artifact-deploy/scripts"
 )
 
 
@@ -25,7 +25,7 @@ def test_f1_lambda_untagged_bucket_is_identity_failure():
     # Fail closed: quarantine + return, no prefix-based pass.
     assert "_quarantine_manifest(slug)" in seg
     assert 'return "reaped"' in seg
-    assert 'startswith("kirocrew-web-")' not in seg
+    assert 'startswith("ajcrew-web-")' not in seg
 
 
 def test_f1_shell_reaper_gates_bucket_deletion_on_tag():
@@ -40,7 +40,7 @@ def test_f1_shell_reaper_gates_bucket_deletion_on_tag():
 
 
 def test_f2_boundary_destructive_cloudfront_actions_are_tag_scoped():
-    from kiro_crew.deploy import iam
+    from aj_crew.deploy import iam
     doc = iam.boundary_policy_document()
     for st in doc["Statement"]:
         actions = st.get("Action", [])
@@ -50,13 +50,13 @@ def test_f2_boundary_destructive_cloudfront_actions_are_tag_scoped():
                        "cloudfront:UpdateDistribution"}
         if destructive & set(actions):
             cond = json.dumps(st.get("Condition", {}))
-            assert "aws:ResourceTag/kirocrew:managed" in cond, (
+            assert "aws:ResourceTag/ajcrew:managed" in cond, (
                 f"statement {st.get('Sid')} grants destructive CloudFront "
                 f"actions without the managed-tag condition")
 
 
 def test_f2_boundary_no_unconditioned_delete_distribution_on_star():
-    from kiro_crew.deploy import iam
+    from aj_crew.deploy import iam
     doc = iam.boundary_policy_document()
     for st in doc["Statement"]:
         actions = st.get("Action", [])

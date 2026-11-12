@@ -12,11 +12,11 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard.server import (
+from aj_crew.dashboard.server import (
     _SKILL_APPROVAL_SETTING_URL,
     _pending_skill_notification,
 )
-from kiro_crew.notifications.bus import payload_from_legacy
+from aj_crew.notifications.bus import payload_from_legacy
 
 
 def _info(**kw) -> dict:

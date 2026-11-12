@@ -1,4 +1,4 @@
-"""The ACP hooks surface: what Kiro Crew answers, what it runs, and what it refuses.
+"""The ACP hooks surface: what Aj Crew answers, what it runs, and what it refuses.
 
 Pins what the surface is only correct if it keeps doing:
 
@@ -7,7 +7,7 @@ Pins what the surface is only correct if it keeps doing:
 * a list answer is filtered by trigger and by tool identity through Crew's own
   matcher, and a disabled hook is withheld unless the request asked for it;
 * the handshake does NOT announce the capability, so the backend asks nothing;
-* ``executeHook`` runs only a hook listed for the SAME owning Kiro Crew session,
+* ``executeHook`` runs only a hook listed for the SAME owning Aj Crew session,
   only its STORED command, and only once the tool gate and the governance switch
   both clear it -- every refusal answered as an error, never as a result.
 
@@ -24,12 +24,12 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import hooks as hooks_mod
-from kiro_crew.acp import kas_wire, session_handle
-from kiro_crew.acp._dispatch import classify_notification
-from kiro_crew.acp.harness.kas import KasHarness
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew import hooks as hooks_mod
+from aj_crew.acp import kas_wire, session_handle
+from aj_crew.acp._dispatch import classify_notification
+from aj_crew.acp.harness.kas import KasHarness
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     ACP_BACKENDS_HOOKS_LIST,
@@ -37,8 +37,8 @@ from kiro_crew.acp.types import (
     KAS_CLIENT_CAPABILITIES,
     JsonRpcMessage,
 )
-from kiro_crew.hooks import HOOK_EVENTS, ScriptHookStore, set_global_hook_store
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.hooks import HOOK_EVENTS, ScriptHookStore, set_global_hook_store
+from aj_crew.testing.wait import async_wait_until
 
 
 class _FakeHandle:
@@ -47,7 +47,7 @@ class _FakeHandle:
     def __init__(self, session_id: str = "handle-session", session_key: str = "slot:1") -> None:
         self._session_id = session_id
         self._session_key = session_key
-        self._crew_agent = "kirocrew"
+        self._crew_agent = "ajcrew"
         self._listed_hooks = kas_wire.ListedHookStore()
         self._hook_tasks: set = set()
         self._runtime = _CapturingRuntime()
@@ -140,7 +140,7 @@ class TestTriggerSpellings:
         # Body-scope import, as the sibling gates in this tree use: naming it in
         # the module block puts this change's only new import beside another, and
         # two additions to one import region conflict on every rebase.
-        from kiro_crew.hooks import HOOK_EVENT_SESSION_LANE_CHANGED
+        from aj_crew.hooks import HOOK_EVENT_SESSION_LANE_CHANGED
 
         assert set(kas_wire._CREW_EVENT_TO_ACP_TRIGGER) == set(HOOK_EVENTS) - {
             HOOK_EVENT_SESSION_LANE_CHANGED
@@ -226,7 +226,7 @@ class TestSelection:
 
     def test_a_truncated_answer_says_so(self, caplog):
         pool = [_hook(id=f"crew:script:{i}") for i in range(kas_wire.HOOKS_LIST_MAX + 3)]
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.kas_wire"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.kas_wire"):
             selected = kas_wire.select_hooks(pool, trigger="preToolUse")
         assert len(selected) == kas_wire.HOOKS_LIST_MAX
         assert "3 further hook(s) withheld" in caplog.text
@@ -280,7 +280,7 @@ class TestNormalizeScriptHook:
                 "name": "skills only",
                 "event": "UserPromptSubmit",
                 "command": "",
-                "skills": ["kirocrew-dev/kirocrew-prepare-pr"],
+                "skills": ["ajcrew-dev/ajcrew-prepare-pr"],
             }
         )
         assert kas_wire.normalize_script_hook(created) is None
@@ -712,7 +712,7 @@ def passthrough_sandbox(monkeypatch):
     A host without a sandbox backend (Windows CI) otherwise fails closed with exit -1
     before the hook runs.
     """
-    monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+    monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
 
 
 @pytest.fixture
@@ -873,7 +873,7 @@ class TestExecuteHook:
             (
                 9,
                 kas_wire.HOOK_EXECUTE_REFUSED_CODE,
-                "Refused by Kiro Crew: hook id was not listed for this session",
+                "Refused by Aj Crew: hook id was not listed for this session",
             )
         ]
 
@@ -890,7 +890,7 @@ class TestExecuteHook:
         await _execute(handle, {"hookId": f"crew:script:{created.id}"})
 
         assert [e[2] for e in handle._runtime.errors] == [
-            "Refused by Kiro Crew: no owning Kiro Crew session for this ACP session"
+            "Refused by Aj Crew: no owning Aj Crew session for this ACP session"
         ]
 
     @pytest.mark.asyncio
@@ -906,7 +906,7 @@ class TestExecuteHook:
 
         await _execute(handle, {"hookId": f"crew:script:{created.id}"})
 
-        assert [e[2] for e in handle._runtime.errors] == ["Refused by Kiro Crew: hook is disabled"]
+        assert [e[2] for e in handle._runtime.errors] == ["Refused by Aj Crew: hook is disabled"]
 
     @pytest.mark.asyncio
     async def test_a_hook_removed_after_listing_is_refused(
@@ -921,7 +921,7 @@ class TestExecuteHook:
 
         await _execute(handle, {"hookId": f"crew:script:{created.id}"})
 
-        assert [e[2] for e in handle._runtime.errors] == ["Refused by Kiro Crew: hook not found"]
+        assert [e[2] for e in handle._runtime.errors] == ["Refused by Aj Crew: hook not found"]
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
@@ -950,9 +950,7 @@ class TestExecuteHook:
         await _execute(handle, {"hookId": f"crew:script:{created.id}"})
 
         assert handle._runtime.responses == []
-        assert [e[2] for e in handle._runtime.errors] == [
-            f"Refused by Kiro Crew: {expected.reason}"
-        ]
+        assert [e[2] for e in handle._runtime.errors] == [f"Refused by Aj Crew: {expected.reason}"]
         # Refused before governance was even asked.
         assert governance_permits == []
 
@@ -975,14 +973,14 @@ class TestExecuteHook:
 
         await _execute(handle, {"hookId": f"crew:script:{created.id}"})
 
-        assert [e[2] for e in handle._runtime.errors] == ["Refused by Kiro Crew: configured deny"]
+        assert [e[2] for e in handle._runtime.errors] == ["Refused by Aj Crew: configured deny"]
         assert len(seen) == 1
         call = seen[0]
         assert call["tool_name"] == "echo a"
         assert call["command"] == "echo a"
         assert call["is_shell"] is True
         assert call["session_key"] == "slot:9"
-        assert call["agent"] == "kirocrew"
+        assert call["agent"] == "ajcrew"
 
     @pytest.mark.asyncio
     async def test_governance_off_is_refused_and_audited(self, store: ScriptHookStore, monkeypatch):
@@ -1006,7 +1004,7 @@ class TestExecuteHook:
         await _execute(handle, {"hookId": f"crew:script:{created.id}"})
 
         assert [e[2] for e in handle._runtime.errors] == [
-            "Refused by Kiro Crew: Blocked by governance policy: script hooks disabled"
+            "Refused by Aj Crew: Blocked by governance policy: script hooks disabled"
         ]
         assert asked == ["slot:3"]
         assert audited == [("slot:3", "kas_execute_hook", "denied", "script hooks disabled")]
@@ -1058,7 +1056,7 @@ class TestExecuteHook:
         await _execute(handle, {"hookId": f"crew:script:{created.id}", "userPrompt": "{}"})
 
         assert handle._runtime.errors == [
-            (9, kas_wire.HOOK_EXECUTE_REFUSED_CODE, "Kiro Crew could not run the hook")
+            (9, kas_wire.HOOK_EXECUTE_REFUSED_CODE, "Aj Crew could not run the hook")
         ]
 
     @pytest.mark.asyncio
@@ -1151,7 +1149,7 @@ class TestExecuteHookReviewFixes:
         await _execute(handle, {"hookId": f"crew:script:{created.id}"})
 
         assert handle._runtime.responses == []
-        assert [e[2] for e in handle._runtime.errors] == ["Kiro Crew could not run the hook"]
+        assert [e[2] for e in handle._runtime.errors] == ["Aj Crew could not run the hook"]
 
     @pytest.mark.asyncio
     async def test_every_refusal_is_audited_with_its_reason(
@@ -1293,7 +1291,7 @@ class TestExecuteHookReviewFixes:
         await _execute(handle, {"hookId": f"crew:script:{created.id}", "userPrompt": prompt})
 
         assert [e[2] for e in handle._runtime.errors] == [
-            "Refused by Kiro Crew: tool hook request carries no tool call"
+            "Refused by Aj Crew: tool hook request carries no tool call"
         ]
 
     @pytest.mark.asyncio
@@ -1312,7 +1310,7 @@ class TestExecuteHookReviewFixes:
             (
                 21,
                 kas_wire.HOOK_EXECUTE_REFUSED_CODE,
-                "Refused by Kiro Crew: too many hooks already running",
+                "Refused by Aj Crew: too many hooks already running",
             )
         ]
         assert [(r["outcome"], r["error"], r["session_key"]) for r in audited] == [
@@ -1443,7 +1441,7 @@ class TestExecuteHookReviewFixes:
         # land with no process to kill. POSIX spawns through
         # create_subprocess_limited; Windows' unwrapped path through
         # create_subprocess_shell.
-        import kiro_crew.sandbox as sandbox_mod
+        import aj_crew.sandbox as sandbox_mod
 
         spawned: list[Any] = []
 

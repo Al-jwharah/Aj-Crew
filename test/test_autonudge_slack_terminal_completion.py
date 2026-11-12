@@ -20,11 +20,11 @@ from collections.abc import Awaitable, Callable
 
 import pytest
 
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.monitoring.completion import MonitorCompletionHook
-from kiro_crew.monitoring.controller import MonitorController
-from kiro_crew.monitoring.github_pull_request import GitHubPullRequestProbeResult
-from kiro_crew.monitoring.models import (
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.monitoring.completion import MonitorCompletionHook
+from aj_crew.monitoring.controller import MonitorController
+from aj_crew.monitoring.github_pull_request import GitHubPullRequestProbeResult
+from aj_crew.monitoring.models import (
     MONITOR_STOP_AGENT_TURN_BUDGET,
     MONITOR_STOP_APPROVAL_STALL,
     MONITOR_STOP_USER,

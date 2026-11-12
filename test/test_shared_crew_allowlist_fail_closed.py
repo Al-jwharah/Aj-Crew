@@ -20,11 +20,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import tailnet, tailnet_proxy_proof
-from kiro_crew.dashboard.tailnet import TailnetTrust
-from kiro_crew.dashboard.token_auth import generate_token, token_auth_middleware
-from kiro_crew.shared_crew import people
-from kiro_crew.shared_crew.contracts import ACTOR_REQUEST_KEY
+from aj_crew.dashboard import tailnet, tailnet_proxy_proof
+from aj_crew.dashboard.tailnet import TailnetTrust
+from aj_crew.dashboard.token_auth import generate_token, token_auth_middleware
+from aj_crew.shared_crew import people
+from aj_crew.shared_crew.contracts import ACTOR_REQUEST_KEY
 
 TRUST = TailnetTrust(
     trust_identity=True,
@@ -39,13 +39,13 @@ ALICE, MALLORY, NOBODY = "100.64.0.11", "100.64.0.13", "100.64.0.99"
 
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
-    import kiro_crew.dashboard.revocation_gen as rg
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.dashboard.revocation_gen as rg
+    import aj_crew.dashboard.token_auth as ta
 
     monkeypatch = _floor_monkeypatch
     # The fail-closed serve path is Shared Crew preview behaviour.
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     monkeypatch.setattr(rg, "_gen", 0)
     monkeypatch.setattr(ta, "_revoked_store_singleton", None)
     monkeypatch.setattr(tailnet, "IS_POSIX", True)
@@ -195,7 +195,7 @@ async def test_without_the_preview_an_off_list_login_is_still_denied(monkeypatch
     # Without the preview the serve-path refusal does not run, so the proof
     # must not run either: the daemon still names Mallory and the mandatory
     # allowlist deny applies even where the kernel cannot prove the proxy.
-    monkeypatch.delenv("KIROCREW_SHARED_CREW_PREVIEW", raising=False)
+    monkeypatch.delenv("AJCREW_SHARED_CREW_PREVIEW", raising=False)
     no_proof(monkeypatch)
     status, body = await _ask([("X-Forwarded-For", MALLORY)])
     assert status == 403, body

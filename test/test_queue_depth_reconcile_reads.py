@@ -33,15 +33,15 @@ from queue_depth_reconcile_helpers import (
     _warned,
 )
 
-import kiro_crew.subagent as subagent_mod
-import kiro_crew.subagent_manager.run as run_mod
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
-from kiro_crew.subagent_manager.run import _QUEUE_DEPTH_RETRIES
-from kiro_crew.subagent_wait_reasons import QUEUED_REASON_LOW_MEMORY
-from kiro_crew.taskq import model
-from kiro_crew.taskq.store import TaskStore, TaskStoreUnavailable
-from kiro_crew.testing.wait import await_until
+import aj_crew.subagent as subagent_mod
+import aj_crew.subagent_manager.run as run_mod
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+from aj_crew.subagent_manager.run import _QUEUE_DEPTH_RETRIES
+from aj_crew.subagent_wait_reasons import QUEUED_REASON_LOW_MEMORY
+from aj_crew.taskq import model
+from aj_crew.taskq.store import TaskStore, TaskStoreUnavailable
+from aj_crew.testing.wait import await_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 

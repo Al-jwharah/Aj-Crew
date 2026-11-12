@@ -1,4 +1,4 @@
-"""Shared Crew's advanced settings are writable through ``PATCH /api/config/kirocrew``.
+"""Shared Crew's advanced settings are writable through ``PATCH /api/config/ajcrew``.
 
 The Settings page writes one path per call: ``{"path": "dashboard.shared_crew.<key>",
 "value": ...}``. The integer domains are the loader's own bounds.
@@ -13,14 +13,14 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config import loader as L
-from kiro_crew.config.sections_shared_crew import (
+from aj_crew.config import loader as L
+from aj_crew.config.sections_shared_crew import (
     SHARED_CREW_BOUNDS,
     SharedCrewConfig,
     shared_crew_config_from,
 )
-from kiro_crew.dashboard.handlers import api_kirocrew_config_patch
-from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+from aj_crew.dashboard.handlers import api_ajcrew_config_patch
+from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
 PREFIX = "dashboard.shared_crew."
 KNOBS = {
@@ -46,9 +46,9 @@ def cfg_home(tmp_path, monkeypatch):
 
 async def _patch(path: str, value):
     app = web.Application()
-    app.router.add_patch("/api/config/kirocrew", api_kirocrew_config_patch)
+    app.router.add_patch("/api/config/ajcrew", api_ajcrew_config_patch)
     async with TestClient(TestServer(as_owner(app))) as client:
-        resp = await client.patch("/api/config/kirocrew", json={"path": path, "value": value})
+        resp = await client.patch("/api/config/ajcrew", json={"path": path, "value": value})
         return resp.status, await resp.json()
 
 
@@ -118,14 +118,14 @@ async def test_a_switch_that_is_not_listed_is_not_editable(cfg_home):
 def test_the_section_and_field_help_name_the_feature_preview_not_the_environment():
     from dataclasses import fields
 
-    from kiro_crew.config.sections_dashboard import DashboardConfig
+    from aj_crew.config.sections_dashboard import DashboardConfig
 
     section = next(f for f in fields(DashboardConfig) if f.name == "shared_crew")
     assert "Not active in this build" not in section.metadata["help"]
     assert "Feature Previews" in section.metadata["help"]
     for f in fields(SharedCrewConfig):
         assert "Feature Previews" in f.metadata["help"], f.name
-        assert "KIROCREW_SHARED_CREW_PREVIEW" not in f.metadata["help"], f.name
+        assert "AJCREW_SHARED_CREW_PREVIEW" not in f.metadata["help"], f.name
 
 
 # -- tailnet_direct opens the tailnet, so a ceiling pinning it off refuses it -- #
@@ -134,7 +134,7 @@ def test_the_section_and_field_help_name_the_feature_preview_not_the_environment
 @pytest.fixture
 def governance_records(monkeypatch) -> list[dict]:
     """Every ``governance_decision`` SEL row the request writes."""
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     got: list[dict] = []
 
@@ -156,11 +156,11 @@ def _pin_tailnet_off(monkeypatch) -> None:
     """
     from types import SimpleNamespace
 
-    from kiro_crew.platform import context as pc
-    from kiro_crew.platform import governance_profiles
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.platform import context as pc
+    from aj_crew.platform import governance_profiles
+    from aj_crew.platform.governance import parse_policy
 
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
     ctx = SimpleNamespace(governance=parse_policy({"version": 1, "boot": {}}))
     monkeypatch.setattr(pc, "current_context", lambda: ctx)
     monkeypatch.setattr(pc, "installed_context", lambda: ctx)
@@ -198,7 +198,7 @@ async def test_tailnet_direct_off_is_still_writable_under_a_pin(cfg_home, monkey
 
 @pytest.mark.asyncio
 async def test_tailnet_direct_writes_on_a_host_that_is_not_pinned(cfg_home, monkeypatch):
-    from kiro_crew.dashboard import tailnet
+    from aj_crew.dashboard import tailnet
 
     monkeypatch.setattr(tailnet, "is_governance_pinned_off", lambda **_k: False)
     status, body = await _patch(PREFIX + "tailnet_direct", True)
@@ -211,10 +211,10 @@ async def test_tailnet_direct_writes_on_a_host_that_is_not_pinned(cfg_home, monk
 def test_config_set_refuses_tailnet_direct_under_a_pin(tmp_path, monkeypatch, local):
     import argparse
 
-    from kiro_crew.cli_config import _config_cmd
-    from kiro_crew.dashboard import tailnet
+    from aj_crew.cli_config import _config_cmd
+    from aj_crew.dashboard import tailnet
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     seen: list[dict] = []
     monkeypatch.setattr(tailnet, "is_governance_pinned_off", lambda **kw: seen.append(kw) or True)
     args = argparse.Namespace(

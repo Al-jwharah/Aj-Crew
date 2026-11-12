@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.acp.client import (
+from aj_crew.acp.client import (
     _CLAUDE_ACP_PKG_ENTRY,
     _CODEX_ACP_PKG_ENTRY,
     _PI_ACP_PKG_ENTRY,
@@ -124,7 +124,7 @@ def test_resolved_adapter_argv_is_not_confused_with_a_sandbox_launcher():
 
 
 def _stderr_log_lines(caplog) -> list[str]:
-    return [r.getMessage() for r in caplog.records if r.name == "kiro_crew.acp.client"]
+    return [r.getMessage() for r in caplog.records if r.name == "aj_crew.acp.client"]
 
 
 @pytest.mark.asyncio
@@ -133,7 +133,7 @@ async def test_kiro_stderr_keeps_its_existing_prefix(caplog):
     reader = AsyncMock(spec=["readline"])
     reader.readline = AsyncMock(side_effect=[b"adapter warning\n", b""])
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
         await client._drain_stderr(reader)
 
     assert _stderr_log_lines(caplog) == ["kiro-cli stderr: adapter warning"]
@@ -146,7 +146,7 @@ async def test_adapter_stderr_uses_the_label_its_call_site_resolved(caplog):
     reader = AsyncMock(spec=["readline"])
     reader.readline = AsyncMock(side_effect=[b"adapter warning\n", b""])
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
         await client._drain_stderr(reader, label="codex-acp via /opt/acp/codex-acp")
 
     assert _stderr_log_lines(caplog) == ["codex-acp via /opt/acp/codex-acp stderr: adapter warning"]

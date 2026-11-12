@@ -17,14 +17,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.types import STOP_REASON_CANCELLED, STOP_REASON_END_TURN
-from kiro_crew.dashboard import member_message_notes
-from kiro_crew.dashboard.handlers.messaging import api_notification_channels
-from kiro_crew.dashboard.member_message_notes import MEMBER_CHANNEL, post_turn_reply
-from kiro_crew.dashboard.notification_coordinator import unread_count
-from kiro_crew.dashboard.state import DashboardState, row_mid
-from kiro_crew.members import DM_SLOT_MODE, member_slot_key, write_dm_binding
-from kiro_crew.notifications.bus import SYSTEM_CHANNELS
+from aj_crew.acp.types import STOP_REASON_CANCELLED, STOP_REASON_END_TURN
+from aj_crew.dashboard import member_message_notes
+from aj_crew.dashboard.handlers.messaging import api_notification_channels
+from aj_crew.dashboard.member_message_notes import MEMBER_CHANNEL, post_turn_reply
+from aj_crew.dashboard.notification_coordinator import unread_count
+from aj_crew.dashboard.state import DashboardState, row_mid
+from aj_crew.members import DM_SLOT_MODE, member_slot_key, write_dm_binding
+from aj_crew.notifications.bus import SYSTEM_CHANNELS
 
 ADA = {"slug": "ada", "name": "Ada"}
 
@@ -43,8 +43,8 @@ def _clear_async_state():
 
 
 def _make_state(monkeypatch, tmp_path) -> DashboardState:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),
@@ -261,18 +261,18 @@ def _runner_state(monkeypatch, tmp_path) -> DashboardState:
     """
     from chat_test_helpers import _make_state as _chat_state
 
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-    from kiro_crew.memory_stores import provision_member_memory
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+    from aj_crew.memory_stores import provision_member_memory
 
-    cfg = KiroCrewConfig.load()
-    cfg.agents["Ada"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["Ada"] = AjCrewAgentConfig(kiro_agent="ajcrew")
     provision_member_memory(cfg, "Ada")
     cfg.save()
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.title_then_refresh", AsyncMock())
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.generate_session_summary", AsyncMock())
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.title_then_refresh", AsyncMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.generate_session_summary", AsyncMock())
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent", lambda name, project_dir=None: ""
+        "aj_crew.config.loader._materialized_kiro_agent", lambda name, project_dir=None: ""
     )
     context = SimpleNamespace(
         ensure_store=AsyncMock(return_value=object()),
@@ -287,8 +287,8 @@ def _runner_state(monkeypatch, tmp_path) -> DashboardState:
 
 def _turn_harness(state: DashboardState, slot_key: str, events: list):
     """A real ``_run_chat`` turn in *slot_key* whose model streams *events*."""
-    from kiro_crew.dashboard.chat_runner import _run_chat
-    from kiro_crew.member_memory_auth import bind_private_session_store
+    from aj_crew.dashboard.chat_runner import _run_chat
+    from aj_crew.member_memory_auth import bind_private_session_store
 
     state.sessions.get_or_create = AsyncMock(return_value=(MagicMock(), False, False))
     state.sessions.release = MagicMock()
@@ -324,8 +324,8 @@ class TestThroughTheRunner:
     async def test_a_turn_with_a_tool_call_between_segments_posts_one_note(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew.acp.types import EVENT_TOOL_CALL, EVENT_TOOL_CALL_UPDATE
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.types import EVENT_TOOL_CALL, EVENT_TOOL_CALL_UPDATE
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         state = _runner_state(monkeypatch, tmp_path)
         slot_key = _bind()
@@ -339,7 +339,7 @@ class TestThroughTheRunner:
         ]
         slot, run_chat = _turn_harness(state, slot_key, events)
         with patch(
-            "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+            "aj_crew.dashboard.chat_runner._start_next_queued_turn",
             new_callable=AsyncMock,
             return_value=False,
         ):
@@ -359,7 +359,7 @@ class TestThroughTheRunner:
         self, monkeypatch, tmp_path, stop_reason, notes
     ):
         # The user who pressed Stop is on the thread; the end-of-turn row is the control.
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         state = _runner_state(monkeypatch, tmp_path)
         events = [
@@ -368,7 +368,7 @@ class TestThroughTheRunner:
         ]
         slot, run_chat = _turn_harness(state, _bind(), events)
         with patch(
-            "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+            "aj_crew.dashboard.chat_runner._start_next_queued_turn",
             new_callable=AsyncMock,
             return_value=False,
         ):
@@ -379,7 +379,7 @@ class TestThroughTheRunner:
 
     @pytest.mark.asyncio
     async def test_an_ordinary_chat_turn_posts_no_member_note(self, monkeypatch, tmp_path):
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         state = _runner_state(monkeypatch, tmp_path)
         _bind()
@@ -387,7 +387,7 @@ class TestThroughTheRunner:
             state, "chat-7-1700000000", [LLMEvent(kind=EVENT_TEXT_CHUNK, text="Hi.")]
         )
         with patch(
-            "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+            "aj_crew.dashboard.chat_runner._start_next_queued_turn",
             new_callable=AsyncMock,
             return_value=False,
         ):

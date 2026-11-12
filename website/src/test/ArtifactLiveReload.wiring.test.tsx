@@ -23,7 +23,7 @@ vi.mock('../api/client')
 // Stub the embedded chat page — covered by its own suites.
 vi.mock('../pages/ChatPage', () => ({
   default: () => <div data-testid="chat-page" />,
-  PREFILL_STORAGE_KEY: 'kirocrew_prefill',
+  PREFILL_STORAGE_KEY: 'ajcrew_prefill',
 }))
 // The real bodies lazily load Monaco / navigate a blob iframe; neither belongs
 // in a test of which content the surface chose to render. The module's pure

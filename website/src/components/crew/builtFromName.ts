@@ -10,10 +10,10 @@
 import { i18nT } from '../../i18n/t'
 
 /** The built-in template a crewmate starts from unless another is picked. */
-export const DEFAULT_TEMPLATE = 'kirocrew'
+export const DEFAULT_TEMPLATE = 'ajcrew'
 
 /** Source-defined agents a crewmate runs on that are not templates anyone picks. */
-const SOURCE_DEFINED = new Set(['kirocrew-mate-conductor', 'kirocrew-mate-worker'])
+const SOURCE_DEFINED = new Set(['ajcrew-mate-conductor', 'ajcrew-mate-worker'])
 
 /** A template's name as the user sees it: the default one is labelled as such. */
 export function templateDisplayName(name: string): string {

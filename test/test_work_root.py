@@ -1,4 +1,4 @@
-"""Tests for :mod:`kiro_crew.work_root`.
+"""Tests for :mod:`aj_crew.work_root`.
 
 Everything runs against a monkeypatched data home under ``tmp_path``; the real
 ``<data home>/work`` is never touched.
@@ -21,7 +21,7 @@ import pytest
 if sys.platform != "win32":
     import fcntl
 
-from kiro_crew import work_root as wr
+from aj_crew import work_root as wr
 
 _POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
 
@@ -518,7 +518,7 @@ class TestSandboxMask:
     def test_the_root_is_masked_from_sandboxed_agents(self) -> None:
         # Pins the name the module owns to the name the sandbox hides, so a
         # rename on one side cannot quietly unmask the root on the other.
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert wr.WORK_DIRNAME in sandbox._CREW_HIDDEN_LEAVES
 
@@ -526,7 +526,7 @@ class TestSandboxMask:
         # The root is created lazily by the first allocate_work call. The mask
         # loop is isdir-guarded, so an absent leaf gets no bind at all and every
         # sandbox spawned before the first allocation would see the real path.
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert wr.WORK_DIRNAME in sandbox._CREW_PRECREATE_HIDDEN_DIR_LEAVES
 
@@ -534,7 +534,7 @@ class TestSandboxMask:
         # The mask covers a spawned subprocess; this covers the agent's own file
         # tools. Keys are guessable by design, and allocate_work REJOINS whatever
         # sits at one, so a plantable root is adopted as a job's prior state.
-        from kiro_crew.security import paths
+        from aj_crew.security import paths
 
         assert wr.WORK_DIRNAME in paths._CREW_SECRET_LEAVES
 
@@ -545,7 +545,7 @@ class TestSandboxMask:
         # pathology this module exists to remove, reached through this module. A
         # sandboxed consumer is served one already-allocated key directory by
         # whatever spawns it, so no entry here may lift the mask over the root.
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert wr.WORK_DIRNAME not in sandbox._CREW_SANDBOX_VISIBLE_LEAVES
         assert wr.WORK_DIRNAME not in sandbox._CREW_READONLY_LEAVES
@@ -554,8 +554,8 @@ class TestSandboxMask:
 
     def test_no_environment_variable_names_the_root(self) -> None:
         # The distinction this module draws is per-process residue versus
-        # cross-process state; a variable beside KIROCREW_SCRATCH collapses it.
-        from kiro_crew import agent_scratch
+        # cross-process state; a variable beside AJCREW_SCRATCH collapses it.
+        from aj_crew import agent_scratch
 
         env = agent_scratch.scratch_env(Path("/somewhere"))
         assert not any("WORK" in name for name in env)

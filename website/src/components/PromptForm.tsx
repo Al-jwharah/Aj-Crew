@@ -45,7 +45,7 @@ export interface PromptFormData {
 /* ── Frontmatter grammar ──────────────────────────────────────────────────
  *
  *  Mirrored from the backend's SKILL_LOADER dialect (`parse_frontmatter` in
- *  src/kiro_crew/frontmatter.py), which is what actually reads a prompt's
+ *  src/aj_crew/frontmatter.py), which is what actually reads a prompt's
  *  description. The editor must agree with that grammar or it will rewrite a
  *  line the server does not read, leaving the old value in effect. Its rules:
  *  a field is a COLUMN-0 line split at its FIRST colon, with the key and the
@@ -227,7 +227,7 @@ export function assemblePromptContent(data: PromptFormData): string {
 /** The filename stem the server will actually save a new prompt under.
  *
  *  Mirrors the create handler's own sanitizer in
- *  `src/kiro_crew/dashboard/handlers/prompts_authoring.py`:
+ *  `src/aj_crew/dashboard/handlers/prompts_authoring.py`:
  *
  *      safe_name = re.sub(r"[^a-z0-9\-]", "-", raw_name.lower()).strip("-")
  *

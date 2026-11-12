@@ -26,7 +26,7 @@ vi.mock('../api/client', () => ({
   api: {
     mcpActive: vi.fn().mockResolvedValue([{ name: 'github', enabled: true }]),
     mcpServers: vi.fn().mockResolvedValue([{ name: 'github', tools: ['search_issues'], disabledTools: [] }]),
-    kirocrewConfig: vi.fn().mockResolvedValue({ agent: { tool_search: false } }),
+    ajcrewConfig: vi.fn().mockResolvedValue({ agent: { tool_search: false } }),
     channelTargets: vi.fn().mockResolvedValue([]),
     slackChannels: vi.fn().mockResolvedValue([]),
     chatFolders: vi.fn().mockResolvedValue([]),
@@ -72,7 +72,7 @@ describe('ChatHeaderMenu — MCP submenu and colour-pick close', () => {
     renderMenu()
     const sub = await screen.findByText('MCP servers')
     // Menu open, submenu shut: no MCP server request yet. The config read is
-    // a shared ['kirocrewConfig'] cache other menu rows also fill, so only the
+    // a shared ['ajcrewConfig'] cache other menu rows also fill, so only the
     // two MCP-keyed queries are pinned here.
     expect(api.mcpActive).not.toHaveBeenCalled()
     expect(api.mcpServers).not.toHaveBeenCalled()
@@ -83,7 +83,7 @@ describe('ChatHeaderMenu — MCP submenu and colour-pick close', () => {
     await waitFor(() => {
       expect(api.mcpActive).toHaveBeenCalledWith('default')
       expect(api.mcpServers).toHaveBeenCalled()
-      expect(api.kirocrewConfig).toHaveBeenCalled()
+      expect(api.ajcrewConfig).toHaveBeenCalled()
     })
     // The per-server tool list the panel derives from the full server list.
     expect(await screen.findByText('github')).toBeInTheDocument()

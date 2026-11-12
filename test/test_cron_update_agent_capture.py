@@ -8,18 +8,18 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.cron import CronService, resolve_cron_memory
-from kiro_crew.cron_service.identity import rebind_cron_session_template
-from kiro_crew.execution_context import (
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.cron import CronService, resolve_cron_memory
+from aj_crew.cron_service.identity import rebind_cron_session_template
+from aj_crew.execution_context import (
     ExecutionContext,
     MemoryStoreRef,
     bind_session_execution,
     execution_from_record,
     read_session_execution,
 )
-from kiro_crew.memory_stores import UnknownMemoryStore, provision_member_memory
-from kiro_crew.session_agent_selection import record_agent_selection
+from aj_crew.memory_stores import UnknownMemoryStore, provision_member_memory
+from aj_crew.session_agent_selection import record_agent_selection
 
 
 def _capture(job):
@@ -64,7 +64,7 @@ def test_clearing_the_agent_returns_to_the_default_floor(tmp_path):
 
     service.update_job(job.id, agent_id="")
 
-    assert resolve_cron_memory(_reloaded(tmp_path, job.id))[1] == "kirocrew"
+    assert resolve_cron_memory(_reloaded(tmp_path, job.id))[1] == "ajcrew"
 
 
 def test_resubmitting_the_same_agent_leaves_the_capture_alone(tmp_path):
@@ -213,7 +213,7 @@ def test_an_unchanged_record_is_not_rewritten(tmp_path):
     key = f"cron:{job.id}"
     bind_session_execution(key, _capture(job))
 
-    with patch("kiro_crew.execution_context.bind_session_execution") as bind:
+    with patch("aj_crew.execution_context.bind_session_execution") as bind:
         rebind_cron_session_template(key, _capture(job), job.name)
 
     bind.assert_not_called()
@@ -222,8 +222,8 @@ def test_an_unchanged_record_is_not_rewritten(tmp_path):
 
 @pytest.fixture
 def writer_member():
-    cfg = KiroCrewConfig.load()
-    cfg.agents["writer"] = KiroCrewAgentConfig(kiro_agent="writer-template", triggers="write")
+    cfg = AjCrewConfig.load()
+    cfg.agents["writer"] = AjCrewAgentConfig(kiro_agent="writer-template", triggers="write")
     store = provision_member_memory(cfg, "writer")
     cfg.save()
     return store

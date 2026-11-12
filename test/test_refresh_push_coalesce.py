@@ -6,8 +6,8 @@ import asyncio
 
 import pytest
 
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.dashboard.state_parts import refresh_coalesce
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state_parts import refresh_coalesce
 
 WINDOW = 1.5
 
@@ -15,7 +15,7 @@ WINDOW = 1.5
 @pytest.fixture(autouse=True)
 def _fixed_window(_floor_monkeypatch):
     """Every behaviour test runs on a 1.5 s window, whatever the shell's
-    ``KIROCREW_REFRESH_COALESCE_S`` set at import."""
+    ``AJCREW_REFRESH_COALESCE_S`` set at import."""
     _floor_monkeypatch.setattr(refresh_coalesce, "REFRESH_COALESCE_WINDOW_S", WINDOW)
 
 
@@ -178,14 +178,14 @@ def test_a_zero_window_sends_every_push(state, loop, clock, monkeypatch):
     [("", 1.5), ("0", 0.0), ("-2", 0.0), ("0.25", 0.25), ("nan", 1.5), ("x", 1.5)],
 )
 def test_window_reads_the_rollback_switch(monkeypatch, raw, window):
-    monkeypatch.setenv("KIROCREW_REFRESH_COALESCE_S", raw)
+    monkeypatch.setenv("AJCREW_REFRESH_COALESCE_S", raw)
     assert refresh_coalesce._window_from_env() == window
 
 
 def test_close_all_ws_sends_the_pending_frame_before_the_sockets_close(
     state, loop, clock, monkeypatch
 ):
-    from kiro_crew.dashboard import state as state_facade
+    from aj_crew.dashboard import state as state_facade
 
     class _Hub:
         async def close_all_ws(self) -> None:
@@ -238,7 +238,7 @@ def test_the_turn_end_and_history_coalescers_are_independent(state, loop, clock)
 
 
 def test_close_all_ws_sends_a_pending_history_frame_too(state, loop, clock, monkeypatch):
-    from kiro_crew.dashboard import state as state_facade
+    from aj_crew.dashboard import state as state_facade
 
     class _Hub:
         async def close_all_ws(self) -> None:

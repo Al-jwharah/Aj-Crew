@@ -34,13 +34,13 @@ test("pre-existing group-writable manifest root still fails closed", () => {
   const res = integrateLinuxDesktop(baseDeps(fs));
 
   assert.deepEqual(res, { skipped: true, reason: "manifest unavailable" });
-  assert.ok(!fs._files.has(`${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`));
+  assert.ok(!fs._files.has(`${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`));
 });
 
 test("metadata-only chmod makes a managed launcher user-owned", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const original = fs._files.get(launcher);
   fs.chmodSync(launcher, 0o600);
 
@@ -57,7 +57,7 @@ test("metadata-only chmod makes a managed launcher user-owned", () => {
 test("metadata ctime drift makes a managed launcher user-owned", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const original = fs._files.get(launcher);
   fs._touchMetadata(launcher); // models an ACL/xattr update with unchanged bytes and mode
 
@@ -74,7 +74,7 @@ test("metadata ctime drift makes a managed launcher user-owned", () => {
 test("metadata mtime drift makes a managed launcher user-owned", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const original = fs._files.get(launcher);
   const customizedMtime = fs.lstatSync(launcher).mtimeNs + 10_000_000_000n;
   fs._setMtime(launcher, customizedMtime);
@@ -93,7 +93,7 @@ test("metadata mtime drift makes a managed launcher user-owned", () => {
 test("mtime edit after busy moved-AppImage repair revokes restored ownership", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const original = fs._files.get(launcher);
   fs._beforeLeasedPublish = (target) => target === launcher ? "busy" : null;
 
@@ -122,7 +122,7 @@ test("mtime edit after busy moved-AppImage repair revokes restored ownership", (
 test("verified obsolete anchor and recovery names are removed on the next launch", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
 
   integrateLinuxDesktop(baseDeps(fs, {
     env: { APPIMAGE: "/new/K.AppImage", APPDIR, HOME },
@@ -147,7 +147,7 @@ test("verified obsolete anchor and recovery names are removed on the next launch
 test("changed recovery names are preserved and cleanup authority is revoked", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
 
   integrateLinuxDesktop(baseDeps(fs, {
     env: { APPIMAGE: "/new/K.AppImage", APPDIR, HOME },
@@ -173,9 +173,9 @@ test("changed recovery names are preserved and cleanup authority is revoked", ()
 test("metadata-only chmod makes a managed icon user-owned", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`;
+  const icon = `${HOME}/.local/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`;
   fs.chmodSync(icon, 0o600);
-  fs._files.set(`${APPDIR}/usr/share/icons/hicolor/16x16/apps/kirocrew-desktop.png`, "NEW ICON");
+  fs._files.set(`${APPDIR}/usr/share/icons/hicolor/16x16/apps/ajcrew-desktop.png`, "NEW ICON");
 
   const res = integrateLinuxDesktop(baseDeps(fs, { version: "0.6.0" }));
 
@@ -188,7 +188,7 @@ test("metadata-only chmod makes a managed icon user-owned", () => {
 test("absent canonical path recovers the exact pending inode after an interrupted update", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const linkSync = fs.linkSync;
   let blockLauncherLinks = true;
   fs.linkSync = (src, dest) => {
@@ -227,7 +227,7 @@ test("absent canonical path recovers the exact pending inode after an interrupte
 test("interrupted-update recovery from a moved AppImage updates Exec without orphaning side files", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const linkSync = fs.linkSync;
   let blockLauncherLinks = true;
   fs.linkSync = (src, dest) => {
@@ -293,7 +293,7 @@ test("a long data path never publishes a manifest the next launch cannot read", 
 test("a promoted interrupted update followed by a move does not orphan side files", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const fsyncSync = fs.fsyncSync;
   let failPublicSync = true;
   fs.fsyncSync = (fd) => {
@@ -331,7 +331,7 @@ test("a promoted interrupted update followed by a move does not orphan side file
 
 test("a launcher deleted after an interrupted first publication is restored", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const fsyncSync = fs.fsyncSync;
   let failPublicSync = true;
   fs.fsyncSync = (fd) => {
@@ -358,7 +358,7 @@ test("a launcher deleted after an interrupted first publication is restored", ()
 test("deleted interrupted-update provenance permits fresh ownership and later moves", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const linkSync = fs.linkSync;
   let blockLauncherLinks = true;
   fs.linkSync = (src, dest) => {
@@ -401,7 +401,7 @@ test("deleted interrupted-update provenance permits fresh ownership and later mo
 test("recreating a deleted managed launcher retires its old anchor", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const oldAnchor = JSON.parse(fs._files.get(STATE_PATH)).artifacts[launcher].anchorPath;
   fs.unlinkSync(launcher);
 
@@ -421,7 +421,7 @@ test("recreating a deleted managed launcher retires its old anchor", () => {
 test("recreates a managed launcher after both public file and anchor are deleted", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const oldAnchor = JSON.parse(fs._files.get(STATE_PATH)).artifacts[launcher].anchorPath;
   fs.unlinkSync(launcher);
   fs.unlinkSync(oldAnchor);
@@ -437,7 +437,7 @@ test("recreates a managed launcher after both public file and anchor are deleted
 test("restored replacement failure leaves only the current anchor after cleanup", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const linkSync = fs.linkSync;
   let fail = true;
   fs.linkSync = (src, dest) => {
@@ -466,7 +466,7 @@ test("restored replacement failure leaves only the current anchor after cleanup"
 test("a concurrent canonical winner revokes pending state and exact side files", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const winner = "[Desktop Entry]\nType=Application\nName=Winner\nExec=/winner %U\n";
   const linkSync = fs.linkSync;
   fs.linkSync = (src, dest) => {
@@ -494,7 +494,7 @@ test("a concurrent canonical winner revokes pending state and exact side files",
 test("manifest recovery paths cannot escape through a generated-name prefix", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const target = `${HOME}/Documents/report.md`;
   fs._files.set(target, "KEEP ME");
   const state = JSON.parse(fs._files.get(STATE_PATH));
@@ -535,14 +535,14 @@ test("failed manifest publication removes unreferenced public temps", () => {
 test("metadata change after pending durability revokes update ownership", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const original = fs._files.get(launcher);
   const renameSync = fs.renameSync;
   let changed = false;
   fs.renameSync = (src, dest) => {
     const result = renameSync(src, dest);
     if (!changed && dest === STATE_PATH && /"pending"/.test(String(fs._files.get(dest))) &&
-        ![...fs._files.keys()].some((p) => p.startsWith(`${launcher}.kirocrew-displaced-`))) {
+        ![...fs._files.keys()].some((p) => p.startsWith(`${launcher}.ajcrew-displaced-`))) {
       changed = true;
       fs.chmodSync(launcher, 0o600);
     }
@@ -561,12 +561,12 @@ test("metadata change after pending durability revokes update ownership", () => 
 test("metadata change during displacement restores and preserves the old inode", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const original = fs._files.get(launcher);
   const renameSync = fs.renameSync;
   fs.renameSync = (src, dest) => {
     const result = renameSync(src, dest);
-    if (src === launcher && dest.includes(".kirocrew-displaced-")) fs.chmodSync(dest, 0o600);
+    if (src === launcher && dest.includes(".ajcrew-displaced-")) fs.chmodSync(dest, 0o600);
     return result;
   };
 
@@ -582,13 +582,13 @@ test("metadata change during displacement restores and preserves the old inode",
 test("xattr change after lease-held displacement cancels publication", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const original = fs._files.get(launcher);
   const renameSync = fs.renameSync;
   let changed = false;
   fs.renameSync = (src, dest) => {
     const result = renameSync(src, dest);
-    if (!changed && src === launcher && dest.includes(".kirocrew-displaced-")) {
+    if (!changed && src === launcher && dest.includes(".ajcrew-displaced-")) {
       changed = true;
       fs._setXattr(dest, "user.after_displacement", "changed");
     }
@@ -607,13 +607,13 @@ test("xattr change after lease-held displacement cancels publication", () => {
 test("xattr edit immediately before displacement is not masked by rename ctime", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const original = fs._files.get(launcher);
   const originalFingerprint = fs._fingerprintFor(launcher);
   const renameSync = fs.renameSync;
   let changed = false;
   fs.renameSync = (src, dest) => {
-    if (!changed && src === launcher && dest.includes(".kirocrew-displaced-")) {
+    if (!changed && src === launcher && dest.includes(".ajcrew-displaced-")) {
       changed = true;
       fs._setXattr(src, "user.test", "changed");
     }
@@ -632,7 +632,7 @@ test("xattr edit immediately before displacement is not masked by rename ctime",
 test("replacement between recovery inspection and leased unlink survives", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   integrateLinuxDesktop(baseDeps(fs, {
     env: { APPIMAGE: "/new/K.AppImage", APPDIR, HOME }, version: "0.6.0",
   }));
@@ -661,7 +661,7 @@ test("replacement between recovery inspection and leased unlink survives", () =>
 test("unavailable metadata helper retains recovery provenance", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   integrateLinuxDesktop(baseDeps(fs, {
     env: { APPIMAGE: "/new/K.AppImage", APPDIR, HOME }, version: "0.6.0",
   }));
@@ -681,7 +681,7 @@ test("unavailable metadata helper retains recovery provenance", () => {
 test("deleted canonical does not adopt an xattr-edited anchor", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const record = JSON.parse(fs._files.get(STATE_PATH)).artifacts[launcher];
   fs.unlinkSync(launcher);
   fs._setXattr(record.anchorPath, "user.after_delete", "changed");
@@ -699,7 +699,7 @@ test("deleted canonical does not adopt an xattr-edited anchor", () => {
 test("xattr edit during publication is never promoted as owned", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const linkSync = fs.linkSync;
   let changed = false;
   fs.linkSync = (src, dest) => {
@@ -728,7 +728,7 @@ test("xattr edit during publication is never promoted as owned", () => {
 test("chmod after initial leased verification preserves the recovery inode", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   integrateLinuxDesktop(baseDeps(fs, {
     env: { APPIMAGE: "/new/K.AppImage", APPDIR, HOME }, version: "0.6.0",
   }));
@@ -755,7 +755,7 @@ test("chmod after initial leased verification preserves the recovery inode", () 
 test("deleted canonical does not adopt a chmod-customized anchor", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const record = JSON.parse(fs._files.get(STATE_PATH)).artifacts[launcher];
   fs.unlinkSync(launcher);
   fs.chmodSync(record.anchorPath, 0o600);
@@ -772,7 +772,7 @@ test("deleted canonical does not adopt a chmod-customized anchor", () => {
 test("xattr edit during restored cleanup is never re-adopted", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const linkSync = fs.linkSync;
   let failPublication = true;
   fs.linkSync = (src, dest) => {
@@ -787,7 +787,7 @@ test("xattr edit during restored cleanup is never re-adopted", () => {
   }));
   let edited = false;
   fs._beforeLeasedDelete = (target) => {
-    if (!edited && target.includes(".kirocrew-displaced-")) {
+    if (!edited && target.includes(".ajcrew-displaced-")) {
       edited = true;
       fs._setXattr(target, "user.during_restore", "changed");
     }
@@ -808,7 +808,7 @@ test("xattr edit during restored cleanup is never re-adopted", () => {
 test("interrupted recovery restores an xattr-customized prior inode", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const original = fs._files.get(launcher);
   const linkSync = fs.linkSync;
   let blockLauncherLinks = true;
@@ -842,7 +842,7 @@ test("interrupted recovery restores an xattr-customized prior inode", () => {
 test("pre-lease xattr edit cannot become replacement provenance", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const original = fs._files.get(launcher);
   const fingerprintFor = fs._fingerprintFor;
   let changed = false;
@@ -865,7 +865,7 @@ test("pre-lease xattr edit cannot become replacement provenance", () => {
 
 test("ambiguous first-install manifest commit retains recoverable temp", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   const fsyncSync = fs.fsyncSync;
   let failed = false;
   fs.fsyncSync = (fd) => {
@@ -901,15 +901,15 @@ test("trailing-slash XDG_DATA_HOME installs through the canonical boundary", () 
   }));
 
   assert.equal(res.installed, true);
-  assert.ok(fs._files.has(`${dataRoot}/applications/kirocrew-desktop-appimage.desktop`));
-  assert.ok(fs._files.has(`${dataRoot}/icons/hicolor/16x16/apps/kirocrew-desktop.png`));
+  assert.ok(fs._files.has(`${dataRoot}/applications/ajcrew-desktop-appimage.desktop`));
+  assert.ok(fs._files.has(`${dataRoot}/icons/hicolor/16x16/apps/ajcrew-desktop.png`));
 });
 
 
 test("interrupted direct cleanup retains recovery provenance without orphans", () => {
   const fs = makeFakeFs(bundleWithIcons(["16x16"]));
   integrateLinuxDesktop(baseDeps(fs));
-  const launcher = `${HOME}/.local/share/applications/kirocrew-desktop-appimage.desktop`;
+  const launcher = `${HOME}/.local/share/applications/ajcrew-desktop-appimage.desktop`;
   integrateLinuxDesktop(baseDeps(fs, {
     env: { APPIMAGE: "/new/K.AppImage", APPDIR, HOME }, version: "0.6.0",
   }));

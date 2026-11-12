@@ -12,10 +12,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.browser_harness import frames, install, live_hub, ops
-from kiro_crew.dashboard.handlers.browser_harness_status import stop_browser_harness_install
-from kiro_crew.testing.wait import async_wait_until, wait_until
+from aj_crew import platform_compat
+from aj_crew.browser_harness import frames, install, live_hub, ops
+from aj_crew.dashboard.handlers.browser_harness_status import stop_browser_harness_install
+from aj_crew.testing.wait import async_wait_until, wait_until
 
 
 class FrameRelay:
@@ -263,7 +263,7 @@ async def test_a_second_cancel_still_waits_for_the_installer_child(
 
 
 def test_a_stopped_install_ends_the_chromium_download_between_chunks(tmp_path: Path) -> None:
-    from kiro_crew.browser_harness import chromium
+    from aj_crew.browser_harness import chromium
 
     stop = threading.Event()
     reads: list[int] = []

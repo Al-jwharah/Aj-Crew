@@ -20,9 +20,8 @@ import pytest
 from registry_store_art_prewarm_helpers import ART, MANIFEST, _entry, _fake_fetch, _pin_registry
 from stray_line_helpers import too_deep_to_decode
 
-from conftest import requires_symlinks
-from kiro_crew.apps import registry as reg_mod
-from kiro_crew.apps.registry import (
+from aj_crew.apps import registry as reg_mod
+from aj_crew.apps.registry import (
     _TRUST_OWNER,
     _blob_cache_dir,
     _copy_declared_art,
@@ -30,7 +29,8 @@ from kiro_crew.apps.registry import (
     _prewarm_owner_tier_store_assets,
     _read_manifest_cache,
 )
-from kiro_crew.testing.wait import finished
+from aj_crew.testing.wait import finished
+from conftest import requires_symlinks
 
 # ---------------------------------------------------------------------------
 # The rewarm-age import guard
@@ -39,7 +39,7 @@ from kiro_crew.testing.wait import finished
 
 class TestRewarmAgeGuard:
     def test_a_non_positive_window_is_refused(self):
-        from kiro_crew.apps.registry_pipeline import store_art
+        from aj_crew.apps.registry_pipeline import store_art
 
         # A manifest TTL that does not exceed the index TTL is the misconfiguration
         # that turns every fresh fetch into a full credentialed re-clone.
@@ -49,7 +49,7 @@ class TestRewarmAgeGuard:
             store_art._check_rewarm_age(100.0, 200.0)
 
     def test_a_positive_window_is_accepted(self):
-        from kiro_crew.apps.registry_pipeline import store_art
+        from aj_crew.apps.registry_pipeline import store_art
 
         # Negative control: a manifest TTL wider than the index TTL passes, so the
         # guard is observing the sign of the difference and not always raising.
@@ -313,7 +313,7 @@ class TestCloneFailureBackoff:
 
 class TestRewarmAgeDerivation:
     def test_the_module_constant_is_the_checkers_return(self):
-        from kiro_crew.apps.registry_pipeline import caches, store_art
+        from aj_crew.apps.registry_pipeline import caches, store_art
 
         assert store_art._REWARM_AGE == store_art._check_rewarm_age(
             caches._MANIFEST_CACHE_TTL, caches._EXTERNAL_REGISTRY_CACHE_TTL
@@ -322,7 +322,7 @@ class TestRewarmAgeDerivation:
         assert store_art._REWARM_AGE > 0
 
     def test_the_checker_returns_the_window(self):
-        from kiro_crew.apps.registry_pipeline import store_art
+        from aj_crew.apps.registry_pipeline import store_art
 
         assert store_art._check_rewarm_age(200.0, 100.0) == 100.0
 
@@ -571,7 +571,7 @@ class TestBlobCacheReclaim:
         deep = _make_blob_file("a/b/c/d/e/deep.png", age_past_cutoff=3600)
         assert deep.is_file()
 
-        with caplog.at_level("WARNING", logger="kiro_crew.apps.registry"):
+        with caplog.at_level("WARNING", logger="aj_crew.apps.registry"):
             reg_mod._gc_blob_cache_dir()
 
         assert deep.is_file(), "a file past the depth ceiling must not be reclaimed"

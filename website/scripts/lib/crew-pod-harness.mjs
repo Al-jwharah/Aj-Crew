@@ -1,6 +1,6 @@
 /**
  * Shared plumbing for capture harnesses that run against a REAL pod
- * (`kirocrew pod up <worktree> --json`) and need one crew to exist.
+ * (`ajcrew pod up <worktree> --json`) and need one crew to exist.
  *
  * Used by `capture-avatar-entry-affordance.mjs` (the crew editor's avatar
  * entries, #9103), `capture-members-header-identity-pill.mjs` (the Crew
@@ -9,10 +9,10 @@
  * theme, a crew created through the real API — so the recipe lives once.
  */
 
-/** Read the JSON line `kirocrew pod up <wt> --json` printed, from `POD_INFO`. */
+/** Read the JSON line `ajcrew pod up <wt> --json` printed, from `POD_INFO`. */
 export function podInfo(readFileSync) {
   const infoPath = process.env.POD_INFO
-  if (!infoPath) throw new Error('POD_INFO must point at the JSON line `kirocrew pod up <wt> --json` printed')
+  if (!infoPath) throw new Error('POD_INFO must point at the JSON line `ajcrew pod up <wt> --json` printed')
   const info = JSON.parse(readFileSync(infoPath, 'utf-8'))
   const BASE = String(info.base_url).replace('127.0.0.1', 'localhost')
   // The bearer credential is only ever appended to the URL the SPA exchanges for
@@ -62,7 +62,7 @@ export async function primeCrewPod(page, authed, crew, theme) {
       await fetch('/api/agents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', triggers: 'incidents, pager' }),
+        body: JSON.stringify({ name, kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', triggers: 'incidents, pager' }),
       })
     }
   }, [crew, theme])

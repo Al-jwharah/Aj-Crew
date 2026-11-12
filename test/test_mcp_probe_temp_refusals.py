@@ -15,8 +15,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import mcp_discovery
-from kiro_crew.mcp_discovery import (
+from aj_crew import mcp_discovery
+from aj_crew.mcp_discovery import (
     McpServerInfo,
     _cache_probe,
     _probe_cache,
@@ -34,7 +34,7 @@ _REDACTED = "/data/run/[REDACTED: credential]/tmp"
 @pytest.fixture(autouse=True)
 def _isolated(monkeypatch):
     """No real spawn, no managed-temp allocation, a clean cache."""
-    from kiro_crew.mcp_gateway import backend_tmp as bt
+    from aj_crew.mcp_gateway import backend_tmp as bt
 
     _probe_cache.clear()
     monkeypatch.setattr(bt, "allocate_probe_tmp", MagicMock(side_effect=OSError("no alloc")))
@@ -61,7 +61,7 @@ async def test_sealed_refusal_is_in_the_payload_with_the_warning_facts(monkeypat
     monkeypatch.setattr(mcp_discovery, "classify_declared_temp_path", lambda path: "sealed")
     server = _server({"TMPDIR": _DECLARED})
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_discovery"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_discovery"):
         await probe_server(server)
 
     expected = [{"key": "TMPDIR", "path": _REDACTED, "cause": "sealed"}]
@@ -126,7 +126,7 @@ def test_refusal_survives_the_cache_and_the_list_merge(tmp_path, monkeypatch) ->
     agent_dir.mkdir()
     cfg = {"mcpServers": {"srv": {"command": "srv", "env": {"TMPDIR": "/x/run/t"}}}}
     (agent_dir / "defaults.json").write_text(json.dumps(cfg), encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
     monkeypatch.setattr(mcp_discovery, "_MCP_JSON_PATHS", (tmp_path / "nope.json",))
     monkeypatch.setattr(mcp_discovery.Path, "home", lambda: tmp_path)
 

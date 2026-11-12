@@ -34,16 +34,16 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.process_identity import (
+from aj_crew import platform_compat
+from aj_crew.acp.client import AcpClient
+from aj_crew.process_identity import (
     ProcessHandle,
     _finish_gone_leader,
     _group_member_vouches,
     process_handle_of,
     record_live_children_after_turn,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 posix_only = pytest.mark.skipif(
     sys.platform == "win32", reason="process groups are POSIX; Windows uses the tree pin"
@@ -77,7 +77,7 @@ def _leader_gone(handle: ProcessHandle) -> ProcessHandle:
 @pytest.fixture
 def _tracking_file(tmp_path: Path) -> Iterator[Path]:
     """The record persists like the startup snapshot; keep that file in tmp."""
-    with patch("kiro_crew.session_pid.config_dir", return_value=tmp_path):
+    with patch("aj_crew.session_pid.config_dir", return_value=tmp_path):
         yield tmp_path
 
 
@@ -226,7 +226,7 @@ class TestTheVerifiedGroupOutlivesALeaderReapedBeforeTeardown:
             _child_pids={},
             _kc_verified_group=(4242, "old-start", 4242),
         )
-        with patch("kiro_crew.process_identity.isolated_group_of", return_value=None):
+        with patch("aj_crew.process_identity.isolated_group_of", return_value=None):
             assert _handle_for(client).pgid is None  # type: ignore[arg-type]
             client._kc_verified_group = (4243, "new-start", 4243)
             assert _handle_for(client).pgid is None  # type: ignore[arg-type]
@@ -240,13 +240,13 @@ class TestTheVerifiedGroupOutlivesALeaderReapedBeforeTeardown:
             _child_pids={},
             _kc_verified_group=(4242, "s", 9999),
         )
-        with patch("kiro_crew.process_identity.isolated_group_of", return_value=4242):
+        with patch("aj_crew.process_identity.isolated_group_of", return_value=4242):
             assert _handle_for(client).pgid == 4242  # type: ignore[arg-type]
 
     @pytest.mark.asyncio
     async def test_a_failed_read_keeps_the_earlier_retained_id(self) -> None:
         client = SimpleNamespace(_pid=4242, _start_time="s", _kc_verified_group=(4242, "s", 4242))
-        with patch("kiro_crew.process_identity.isolated_group_of", return_value=None):
+        with patch("aj_crew.process_identity.isolated_group_of", return_value=None):
             await record_live_children_after_turn(client)
         assert client._kc_verified_group == (4242, "s", 4242)
 
@@ -277,7 +277,7 @@ class TestTheHelperIsGuardedAndBestEffort:
                     cancelled.set()
                     raise
 
-        with patch("kiro_crew.process_identity.TREE_REFRESH_TIMEOUT", 0.05):
+        with patch("aj_crew.process_identity.TREE_REFRESH_TIMEOUT", 0.05):
             await record_live_children_after_turn(_Hangs())
         assert cancelled.is_set(), "the bound returned without ending the hung record"
         assert "timed out" in caplog.text
@@ -318,7 +318,7 @@ class TestBothProvidersRecordAtTurnEnd:
 
     @pytest.mark.asyncio
     async def test_the_shared_provider_ends_the_turn_before_it_records(self) -> None:
-        from kiro_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.session_provider import AcpSessionProvider
 
         order: list[str] = []
 
@@ -341,7 +341,7 @@ class TestBothProvidersRecordAtTurnEnd:
         provider._end_shared_turn = _end  # type: ignore[method-assign]
 
         with patch(
-            "kiro_crew.acp.session_provider.record_live_children_after_turn",
+            "aj_crew.acp.session_provider.record_live_children_after_turn",
             side_effect=_record,
         ):
             async for _e in provider.stream("hi"):
@@ -354,7 +354,7 @@ class TestBothProvidersRecordAtTurnEnd:
 
     @pytest.mark.asyncio
     async def test_the_dedicated_provider_records_its_client_at_turn_end(self) -> None:
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         calls: list[Any] = []
 
@@ -376,7 +376,7 @@ class TestBothProvidersRecordAtTurnEnd:
         provider._ready_confirmed_session = _ready  # type: ignore[method-assign]
 
         with patch(
-            "kiro_crew.providers.acp_turns.record_live_children_after_turn",
+            "aj_crew.providers.acp_turns.record_live_children_after_turn",
             side_effect=_record,
         ):
             async for _e in provider.stream("hi"):

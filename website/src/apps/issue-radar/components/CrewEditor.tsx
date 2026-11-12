@@ -72,7 +72,7 @@ const BACKSTOP_WAKE_SECONDS = 300
  *  would have stored anyway — a create form that disagrees with the server's
  *  defaults teaches the user the wrong numbers. */
 const DEFAULTS = {
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   model: '',
   triageModel: '',
   extraPrompt: '',

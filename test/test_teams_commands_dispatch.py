@@ -15,10 +15,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.safety_override import safety_override
-from kiro_crew.teams.approvals import TeamsApprovalDecider
-from kiro_crew.teams.client import TeamsInbound
-from kiro_crew.teams.transport_dispatch import TeamsDispatcher
+from aj_crew.safety_override import safety_override
+from aj_crew.teams.approvals import TeamsApprovalDecider
+from aj_crew.teams.client import TeamsInbound
+from aj_crew.teams.transport_dispatch import TeamsDispatcher
 
 _SVC = "https://smba.trafficmanager.net/teams"
 _EMAIL = "me@example.com"
@@ -135,7 +135,7 @@ def _dispatcher(client, sessions=None) -> TeamsDispatcher:
             messaging=SimpleNamespace(
                 queue_mode="steer", dm_scope="per_user", idle_reset_minutes=0, daily_reset_hour=-1
             ),
-            agent=SimpleNamespace(default_agent="kirocrew", approval_mode="interactive"),
+            agent=SimpleNamespace(default_agent="ajcrew", approval_mode="interactive"),
             teams=SimpleNamespace(soft_threshold_pct=80, hard_threshold_pct=95),
             dashboard=SimpleNamespace(url=""),
         ),
@@ -235,7 +235,7 @@ class TestYolo:
     @pytest.mark.asyncio
     async def test_teams_keeps_no_grant_of_its_own(self) -> None:
         """The regression guard for the whole design: one grant, not two."""
-        from kiro_crew.teams import approvals
+        from aj_crew.teams import approvals
 
         client = _Client()
         d = _dispatcher(client)
@@ -273,7 +273,7 @@ class TestDashboardLink:
     @pytest.mark.asyncio
     async def test_a_failure_is_reported_not_swallowed(self, monkeypatch) -> None:
         """A credential that could not be minted must say so."""
-        import kiro_crew.dashboard.token_auth as ta
+        import aj_crew.dashboard.token_auth as ta
 
         def _boom(*a, **kw):
             raise RuntimeError("no signing key")
@@ -328,7 +328,7 @@ class TestMirrorCommands:
 
     @pytest.mark.asyncio
     async def test_a_typed_stop_survives_a_channels_governance_deny(self, monkeypatch) -> None:
-        from kiro_crew.messaging import dispatch
+        from aj_crew.messaging import dispatch
 
         async def _denied(_channel_type):
             return False
@@ -346,7 +346,7 @@ class TestMirrorCommands:
 
     @pytest.mark.asyncio
     async def test_help_lists_every_command(self) -> None:
-        from kiro_crew.teams.commands import COMMAND_SPEC
+        from aj_crew.teams.commands import COMMAND_SPEC
 
         client = _Client()
         d = _dispatcher(client)
@@ -360,8 +360,8 @@ class TestMirrorCommands:
 class TestPromptCard:
     @pytest.mark.asyncio
     async def test_a_prompt_posts_a_card_and_arms_the_nonce(self) -> None:
-        from kiro_crew.teams.renderer import TeamsRenderer
-        from kiro_crew.teams.transport import TEAMS_CAPABILITIES
+        from aj_crew.teams.renderer import TeamsRenderer
+        from aj_crew.teams.transport import TEAMS_CAPABILITIES
 
         client = _Client()
         decider = TeamsApprovalDecider(session_key="teams:s1")
@@ -380,8 +380,8 @@ class TestPromptCard:
 
     @pytest.mark.asyncio
     async def test_no_decider_means_no_dead_buttons(self) -> None:
-        from kiro_crew.teams.renderer import TeamsRenderer
-        from kiro_crew.teams.transport import TEAMS_CAPABILITIES
+        from aj_crew.teams.renderer import TeamsRenderer
+        from aj_crew.teams.transport import TEAMS_CAPABILITIES
 
         client = _Client()
         r = TeamsRenderer(client, "CONV", _SVC, TEAMS_CAPABILITIES)
@@ -392,8 +392,8 @@ class TestPromptCard:
 
     @pytest.mark.asyncio
     async def test_a_prompt_falls_back_to_the_last_tool_title(self) -> None:
-        from kiro_crew.teams.renderer import TeamsRenderer
-        from kiro_crew.teams.transport import TEAMS_CAPABILITIES
+        from aj_crew.teams.renderer import TeamsRenderer
+        from aj_crew.teams.transport import TEAMS_CAPABILITIES
 
         client = _Client()
         decider = TeamsApprovalDecider(session_key="teams:s1")
@@ -431,8 +431,8 @@ class TestChipsOutliveTheirTurn:
         async def _permitted(_c, **_kw):
             return True
 
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", _fake_drive)
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.inbound_permitted", _permitted)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", _fake_drive)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.inbound_permitted", _permitted)
         client = _Client()
         d = _dispatcher(client)
 
@@ -462,8 +462,8 @@ class TestChipsOutliveTheirTurn:
         async def _permitted(_c, **_kw):
             return True
 
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", _fake_drive)
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.inbound_permitted", _permitted)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", _fake_drive)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.inbound_permitted", _permitted)
         d = _dispatcher(_Client())
 
         await d.handle_message(_inbound("hello"))
@@ -487,8 +487,8 @@ class TestChipsOutliveTheirTurn:
         async def _permitted(_c, **_kw):
             return True
 
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", _fake_drive)
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.inbound_permitted", _permitted)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", _fake_drive)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.inbound_permitted", _permitted)
         client = _Client()
         d = _dispatcher(client)
         await d.handle_message(_inbound("choose something"))
@@ -515,8 +515,8 @@ class TestChipsOutliveTheirTurn:
         async def _permitted(_c, **_kw):
             return True
 
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", _fake_drive)
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.inbound_permitted", _permitted)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", _fake_drive)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.inbound_permitted", _permitted)
         client = _Client()
         d = _dispatcher(client)
         await d.handle_message(_inbound("choose something"))
@@ -537,8 +537,8 @@ class TestChipsOutliveTheirTurn:
         async def _permitted(_c, **_kw):
             return True
 
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", _fake_drive)
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.inbound_permitted", _permitted)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", _fake_drive)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.inbound_permitted", _permitted)
         d = _dispatcher(_Client())
 
         await d.handle_message(_inbound("hello"))
@@ -547,7 +547,7 @@ class TestChipsOutliveTheirTurn:
 
 
 def _click_option(*, nonce: str, index: int, label: str) -> TeamsInbound:
-    from kiro_crew.teams.cards import KIND_OPTION
+    from aj_crew.teams.cards import KIND_OPTION
 
     return TeamsInbound(
         conversation_id="CONV",

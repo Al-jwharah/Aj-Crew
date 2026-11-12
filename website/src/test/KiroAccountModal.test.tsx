@@ -36,7 +36,7 @@ vi.mock('../api/client', async importOriginal => {
       kiroUsage: vi.fn(async () => KIRO_USAGE_EMPTY),
       // The sign-out link's harness read; its own cases live in
       // KiroAccountModal.signOutLink.test.tsx.
-      kirocrewConfig: vi.fn(async () => ({ agent: { acp_backend: 'kas' } })),
+      ajcrewConfig: vi.fn(async () => ({ agent: { acp_backend: 'kas' } })),
       kasLoginStatus: vi.fn(async () => ({ authenticated: true, provider: 'Google', identity: 'social' })),
     },
   }
@@ -57,7 +57,7 @@ const BASE_USAGE: KiroCreditUsage = {
 
 describe('KiroAccountModal', () => {
   beforeEach(() => {
-    localStorage.removeItem('kirocrew:account-email-hidden')
+    localStorage.removeItem('ajcrew:account-email-hidden')
     __resetNavSeamForTests()
     sessionStorage.clear()
     installSoftNavigate(() => {})
@@ -83,7 +83,7 @@ describe('KiroAccountModal', () => {
           costUsd: 0,
           bonusCredits: [
             { name: 'Welcome bonus', used: 500, total: 500, daysLeft: 13 },
-            { name: 'Amb-Kiro-crew-test', used: 185.84, total: 2_000, daysLeft: 153 },
+            { name: 'Amb-Aj-crew-test', used: 185.84, total: 2_000, daysLeft: 153 },
           ],
         }}
       />,
@@ -98,7 +98,7 @@ describe('KiroAccountModal', () => {
     expect(screen.getByText('$0.00')).toBeInTheDocument()
     expect(screen.getByText('Bonus credits')).toBeInTheDocument()
     expect(screen.getByText('Welcome bonus')).toBeInTheDocument()
-    expect(screen.getByText('Amb-Kiro-crew-test')).toBeInTheDocument()
+    expect(screen.getByText('Amb-Aj-crew-test')).toBeInTheDocument()
     expect(screen.getByText(/Remaining credit balance: 1,814.16/)).toBeInTheDocument()
     expect(screen.getByText(/Used: 185.84 \/ 2,000/)).toBeInTheDocument()
     expect(screen.getByText(/Days until expiration: 153/)).toBeInTheDocument()
@@ -116,7 +116,7 @@ describe('KiroAccountModal', () => {
 
   it('names the subscription on the link to the Kiro plan page (#23812)', () => {
     // Someone looking to cancel or change a plan scans for "subscription"; the
-    // link is the only way from Kiro Crew to that page, so it must say so.
+    // link is the only way from Aj Crew to that page, so it must say so.
     renderWithProviders(<KiroAccountModal open onClose={vi.fn()} usage={BASE_USAGE} />)
     const manage = screen.getByRole('link', { name: 'Manage account & subscription' })
     expect(manage).toHaveAttribute('href', 'https://app.kiro.dev/settings/account')
@@ -264,10 +264,10 @@ describe('KiroAccountModal', () => {
 
     const email = await screen.findByText('owner@example.com')
     expect(email).toHaveClass('blur-[5px]')
-    expect(localStorage.getItem('kirocrew:account-email-hidden')).toBeNull()
+    expect(localStorage.getItem('ajcrew:account-email-hidden')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Show email' }))
     expect(email).not.toHaveClass('blur-[5px]')
-    expect(localStorage.getItem('kirocrew:account-email-hidden')).toBe('0')
+    expect(localStorage.getItem('ajcrew:account-email-hidden')).toBe('0')
 
     firstRender.unmount()
     renderWithProviders(
@@ -278,7 +278,7 @@ describe('KiroAccountModal', () => {
     expect(persistedEmail).not.toHaveClass('blur-[5px]')
     fireEvent.click(screen.getByRole('button', { name: 'Hide email' }))
     expect(persistedEmail).toHaveClass('blur-[5px]')
-    expect(localStorage.getItem('kirocrew:account-email-hidden')).toBe('1')
+    expect(localStorage.getItem('ajcrew:account-email-hidden')).toBe('1')
   })
 
   it('keeps the generic label for an unspecified social provider', async () => {
@@ -565,7 +565,7 @@ describe('KiroAccountModal refresh', () => {
     )
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
     rerender(<KiroAccountModal open onClose={onClose} usage="config-unreadable" />)
-    await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: ['kirocrewConfig'] }))
+    await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: ['ajcrewConfig'] }))
     const dialog = screen.getByRole('dialog', { name: 'Kiro Account' })
     const alert = within(dialog).getByRole('alert')
     expect(alert).toHaveTextContent('Could not load settings, so your balance can’t be shown.')
@@ -574,7 +574,7 @@ describe('KiroAccountModal refresh', () => {
 
     invalidate.mockClear()
     fireEvent.click(within(dialog).getByRole('button', REFRESH))
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['kirocrewConfig'] })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['ajcrewConfig'] })
     await waitFor(() => expect(refreshMock).toHaveBeenCalledTimes(1))
 
     // The hand-off opens the chat under this overlay, so it closes the modal.

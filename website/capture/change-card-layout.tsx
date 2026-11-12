@@ -27,7 +27,7 @@ const theme = params.get('theme') || 'dark'
 const scene = params.get('scene') || 'goal'
 const width = Number(params.get('width') || 720)
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const now = Date.now()
 const base = {
@@ -52,8 +52,8 @@ const edit: Card = {
   params: { path: 'chat.verbosity', value: 'brief' },
   changes: [{ label: 'Reply length', before: 'standard', after: 'brief' }],
   plan: {
-    apply: [{ method: 'PATCH', path: '/api/config/kirocrew', body: { path: 'chat.verbosity', value: 'brief' } }],
-    undo: [{ method: 'PATCH', path: '/api/config/kirocrew', body: { path: 'chat.verbosity', value: 'standard' } }],
+    apply: [{ method: 'PATCH', path: '/api/config/ajcrew', body: { path: 'chat.verbosity', value: 'brief' } }],
+    undo: [{ method: 'PATCH', path: '/api/config/ajcrew', body: { path: 'chat.verbosity', value: 'standard' } }],
   },
 }
 // A scope the title does not cover: Affects stays.

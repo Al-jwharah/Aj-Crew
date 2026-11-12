@@ -27,9 +27,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.cron import CronService
-from kiro_crew.dashboard import token_auth
-from kiro_crew.dashboard.handlers import cron as h
+from aj_crew.cron import CronService
+from aj_crew.dashboard import token_auth
+from aj_crew.dashboard.handlers import cron as h
 
 pytestmark = pytest.mark.asyncio
 
@@ -41,7 +41,7 @@ OWNER_SUBJECT = "local-app"
 
 @pytest.fixture
 def sel_calls(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     recorder = MagicMock()
     monkeypatch.setattr(sel_mod, "sel", lambda: recorder)
@@ -249,8 +249,8 @@ async def test_app_rest_made_cron_session_resolves_to_the_app(svc, grant_crons, 
 async def test_fire_gate_follows_the_app_toggle_for_a_rest_made_job(
     svc, grant_crons, sel_calls, monkeypatch, enabled, refused
 ) -> None:
-    import kiro_crew.apps.manager as manager
-    from kiro_crew import mcp_cron
+    import aj_crew.apps.manager as manager
+    from aj_crew import mcp_cron
 
     job_id = await _rest_create(svc, APP_A)
     monkeypatch.setattr(manager, "app_enabled_state", lambda name: enabled)

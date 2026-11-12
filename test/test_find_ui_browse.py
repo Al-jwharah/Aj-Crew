@@ -26,8 +26,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import mcp_guide, ui_index
-from kiro_crew.validation import ValidationError
+from aj_crew import mcp_guide, ui_index
+from aj_crew.validation import ValidationError
 
 
 @pytest.fixture(autouse=True)
@@ -636,7 +636,7 @@ def test_browsing_needs_no_session_gateway_or_config(monkeypatch: pytest.MonkeyP
     monkeypatch.setattr(mcp_guide, "_strict_session_key", lambda: ("", "Error: no identity"))
     monkeypatch.setattr(mcp_guide, "_get", boom)
     monkeypatch.setattr(mcp_guide, "_post", boom)
-    import kiro_crew.config.loader as loader
+    import aj_crew.config.loader as loader
 
     monkeypatch.setattr(loader, "load_config", boom, raising=False)
     read: list[Path] = []

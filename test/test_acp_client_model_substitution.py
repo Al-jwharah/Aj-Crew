@@ -6,14 +6,14 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-import kiro_crew.acp.client as acp_client
-from kiro_crew.acp.client import (
+import aj_crew.acp.client as acp_client
+from aj_crew.acp.client import (
     AcpClient,
     AcpError,
     _is_model_substitution_advisory,
     _substitute_model_from_advisory,
 )
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
 
 
 class TestSubstitutionAdvisory:
@@ -21,7 +21,7 @@ class TestSubstitutionAdvisory:
 
     claude-agent-acp returns a JSON-RPC -32603 error frame on session/new (and
     related calls) when admin-tier / headless-tier policy substitutes the
-    requested model for another. The substitute is already live, so Kiro Crew
+    requested model for another. The substitute is already live, so Aj Crew
     must treat the advisory as a warning and keep the session, NOT raise.
     """
 
@@ -293,8 +293,8 @@ class TestSubstitutionFollow:
         assert sent.count("session/new") == 2
 
     async def _run_substitution_retry_case(self, tmp_path, monkeypatch, *, lose_surface):
-        from kiro_crew import model_registry
-        from kiro_crew.acp import seed_provenance as sp
+        from aj_crew import model_registry
+        from aj_crew.acp import seed_provenance as sp
 
         monkeypatch.setattr(model_registry, "_ADVERTISED_MODELS", {})
         monkeypatch.setattr(sp, "_RECORDS", {})
@@ -598,7 +598,7 @@ class TestSubstitutionWrappersAndRedaction:
         client._send_request = _send  # type: ignore[assignment]
         client._wait_for_response = _wait  # type: ignore[assignment]
 
-        with patch("kiro_crew.acp.client.logger") as mock_logger:
+        with patch("aj_crew.acp.client.logger") as mock_logger:
             await client._new_session_following_substitution()
 
         # Find the warning call that mentions the substitution adoption.
@@ -660,7 +660,7 @@ class TestSubstitutionWrappersAndRedaction:
 
         client._drain_notifications = _drain  # type: ignore[assignment]
 
-        with patch("kiro_crew.acp.client.logger") as mock_logger:
+        with patch("aj_crew.acp.client.logger") as mock_logger:
             await client._initialize_session()
 
         info_calls = [

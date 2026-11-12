@@ -18,10 +18,10 @@ import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 from skill_script_helpers import load_skill_script
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 ROOT = Path(__file__).resolve().parent.parent
-PREPARE_PR = ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev" / "kirocrew-prepare-pr"
+PREPARE_PR = ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr"
 SCRIPT = PREPARE_PR / "scripts" / "regen_shared.py"
 SKILL = PREPARE_PR / "SKILL.md"
 REFERENCE = PREPARE_PR / "references" / "split-and-regen.md"
@@ -376,22 +376,20 @@ def test_every_real_entry_reruns_on_the_changes_its_generator_reads(tmp_path: Pa
     ui = by_name["find_ui index"]
     for path in ("website/src/uiLocations/areas/x.ts", "website/scripts/lib/ui-index.mjs"):
         assert rs.stale_entries([ui], [path], [], str(ROOT)) == [ui]
-    assert rs.stale_entries([ui], ["src/kiro_crew/chat.py"], [], str(ROOT)) == []
+    assert rs.stale_entries([ui], ["src/aj_crew/chat.py"], [], str(ROOT)) == []
     # The file-length baseline only shrinks, and it is empty once every file is under the
     # cap, so its row check reads a one-row copy at the same path, in the shape the real
     # file has while a file is still over.
     capped = tmp_path / by_name["file-length baseline"]["files"][0]
     capped.parent.mkdir(parents=True)
-    capped.write_text("2001 src/kiro_crew/over_the_cap.py\n", encoding="utf-8")
+    capped.write_text("2001 src/aj_crew/over_the_cap.py\n", encoding="utf-8")
     for name, root in (("file-length baseline", tmp_path), ("black baseline", ROOT)):
         entry = by_name[name]
         assert entry["listed_in_output"] is True
         listed = sorted(rs.baseline_paths(str(root), entry["files"][0]))
         assert listed, name
         assert rs.stale_entries([entry], [listed[0]], [], str(root)) == [entry]
-        assert (
-            rs.stale_entries([entry], ["src/kiro_crew/not_in_a_baseline.py"], [], str(root)) == []
-        )
+        assert rs.stale_entries([entry], ["src/aj_crew/not_in_a_baseline.py"], [], str(root)) == []
 
 
 def test_a_baseline_entry_is_stale_when_a_changed_path_is_one_of_its_rows(repo: Path) -> None:

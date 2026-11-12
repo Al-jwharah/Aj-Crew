@@ -2,7 +2,7 @@
 
 Every one of those modules imports the autouse ``_pinned_kiro_cli_version``, so
 each runs under the same autouse set. ``_run_install`` runs ``install_agent``
-with the ``kiro_crew.agent`` globals patched under ``tmp_path``.
+with the ``aj_crew.agent`` globals patched under ``tmp_path``.
 """
 
 from __future__ import annotations
@@ -19,8 +19,8 @@ import pytest
 # Re-exported under the original private names so the call sites below are unchanged.
 from mcp_merge_helpers import DEFAULT_MANAGED_MCPS as _DEFAULT_MANAGED_MCPS
 
-from kiro_crew.agent import install_agent
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.agent import install_agent
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 
 @pytest.fixture(autouse=True)
@@ -28,11 +28,11 @@ def _pinned_kiro_cli_version(_floor_monkeypatch):
     """Pin the kiro-cli release the spec ``permissions`` gate believes is installed.
 
     ``_write_derived_permissions`` reads ``installed_kiro_cli_version`` from
-    ``kiro_crew.kiro_cli``, which would spawn the host's ``kiro-cli --version`` (CI has
+    ``aj_crew.kiro_cli``, which would spawn the host's ``kiro-cli --version`` (CI has
     none). Pinned to the floor release so no test reaches the binary.
     """
     _floor_monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
 
@@ -62,29 +62,29 @@ def _run_install(  # type: ignore[return]
     if not mc_config.exists():
         mc_config.write_text(json.dumps({"agent": {"kiro_hooks_autoimport": False}}))
 
-    _user_home = tmp_path / "kirocrew_home"
+    _user_home = tmp_path / "ajcrew_home"
     patches = [
         patch.multiple(
-            "kiro_crew.agent",
+            "aj_crew.agent",
             KIRO_AGENTS_DIR=kiro_dir,
             _BUNDLED_CFG_DIR=cfg_dir,
-            _KIROCREW_BIN="/usr/bin/kirocrew",
+            _AJCREW_BIN="/usr/bin/ajcrew",
             _MANAGED_MCP_SERVERS=(
                 managed_mcps if managed_mcps is not None else _DEFAULT_MANAGED_MCPS
             ),
             _KIRO_MCP_JSON=tmp_path / "fake_kiro_mcp.json",
             _CC_MCP_JSON=tmp_path / "fake_cc_mcp.json",
         ),
-        patch("kiro_crew.agent._user_dir", lambda: _user_home),
-        patch("kiro_crew.agent._prompt_path", return_value=prompt),
-        patch("kiro_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json"),
-        patch("kiro_crew.agent._project_dir", return_value=None),
-        patch("kiro_crew.agent._aim_skill_paths", return_value=[]),
+        patch("aj_crew.agent._user_dir", lambda: _user_home),
+        patch("aj_crew.agent._prompt_path", return_value=prompt),
+        patch("aj_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json"),
+        patch("aj_crew.agent._project_dir", return_value=None),
+        patch("aj_crew.agent._aim_skill_paths", return_value=[]),
         patch(
-            "kiro_crew.agent.shutil.which",
+            "aj_crew.agent.shutil.which",
             side_effect=which if which is not None else (lambda c, **kw: c),
         ),
-        patch("kiro_crew.agent._mc_config_path", return_value=mc_config),
+        patch("aj_crew.agent._mc_config_path", return_value=mc_config),
     ]
     with ExitStack() as stack:
         for p in patches:

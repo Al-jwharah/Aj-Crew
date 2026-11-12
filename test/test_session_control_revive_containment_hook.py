@@ -24,9 +24,9 @@ from session_control_revive_helpers import (  # noqa: F401 -- the autouse fixtur
     _slot,
 )
 
-from kiro_crew import history_schema
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import history_schema
+from aj_crew.dashboard import session_control as sc
+from aj_crew.testing.clock import ManualClock
 
 # ── The resume core's pre-publish containment hook ───────────────────────────
 
@@ -36,7 +36,7 @@ def test_a_refused_hook_leaves_the_durable_session_as_it_found_it(tmp_path):
     restores on the next start). A refusal from the hook must not leave that
     clear behind: the marker goes back with its original ``closed_at``, no slot
     is published, and the construction mark is released."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -65,7 +65,7 @@ def test_a_refused_hook_leaves_the_durable_session_as_it_found_it(tmp_path):
 
 
 def test_a_hook_that_raises_discards_the_built_slot(tmp_path):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -89,7 +89,7 @@ def test_a_hook_that_raises_discards_the_built_slot(tmp_path):
 def test_a_clean_hook_publishes_once_and_the_history_click_passes_none(tmp_path):
     """No hook is the History tab's path and is unchanged; a hook that answers
     ``None`` publishes the same slot the click would."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -120,7 +120,7 @@ def test_a_refused_hook_restores_the_marker_before_releasing_the_reservation(tmp
     construction mark still reserves the key (a concurrent resume could
     otherwise publish in the gap and be marked closed), and releases the mark
     last."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -171,7 +171,7 @@ def test_a_reopen_write_that_cannot_land_refuses_instead_of_publishing(tmp_path,
     """A hooked resume whose deferred ``clear_closed`` raises must not publish a
     tab whose line still says closed (it would vanish at the next start); it
     refuses ``reopen_failed`` and leaves the marker as it was."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -203,7 +203,7 @@ def test_a_cancellation_during_the_deferred_clear_still_discards_the_build(tmp_p
     mark stays reserved for the process lifetime and the cleared ``closed`` marker
     stays cleared. The clear lands, then the task is cancelled before the
     verification read; the mark must be released and the marker restored."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -243,7 +243,7 @@ def test_a_history_click_that_loses_the_race_leaves_the_marker_untouched(tmp_pat
 
     It is refused ``resume_in_progress``, so if the racing revive is refused too, the
     archived session stays archived."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -275,7 +275,7 @@ def test_a_history_click_refused_by_an_in_flight_delete_writes_nothing(tmp_path,
     durable write: the ``closed`` marker is still set, and neither the reopen
     clear nor a marker restore was attempted, so there is nothing a failed
     rollback could leave half-done."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -313,7 +313,7 @@ def test_a_concurrent_resume_during_the_hook_gets_a_coded_conflict_not_a_500(tmp
     """While one resume holds the built slot retracted and under construction, a
     second resume of the same key must not reach the constructor's bare
     ``ValueError``; it is answered with ``resume_in_progress`` (409)."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -344,7 +344,7 @@ def test_with_a_hook_the_folder_un_hide_keeps_the_history_paths_place(tmp_path):
     the hook's last answer and the publish. So a refused hooked resume can leave
     a hidden folder visible, exactly as a click refused at the member barrier
     already can; nothing is rolled back there either."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     _folder(state, "f1", "Hidden one")
@@ -373,7 +373,7 @@ def test_with_a_hook_a_gone_folder_still_drops_the_filing_like_the_click_does(tm
     """The existence verdict hydration binds ``folder_id`` from is still taken
     before construction under a hook (read-only); a session whose folder no
     longer exists comes back unfiled, as it does from the History tab."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     _folder(state, "f1", "Doomed")
@@ -429,7 +429,7 @@ def _publish_live_during_resume(monkeypatch, state, key, **fields):
     """A human History click (or another reviver) publishes *key* while the
     revive's own resume is between its resolution and its publish, with the
     given slot fields on the live slot."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     original = chat_handlers.resume_slot_from_history
 
@@ -479,7 +479,7 @@ def test_a_clear_that_lands_then_reads_unreadable_once_retries_and_publishes(tmp
     session -- rather than refusing on the one-shot transient. The fail-safe
     stands: a read that is unreadable across every retry still refuses (covered
     by the persistent-lock cases)."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -529,7 +529,7 @@ def test_a_persistently_unreadable_verification_refuses_and_restores_the_marker(
 
     If the confirmation re-read is unreadable too, it escalates to
     ``reopen_rollback_failed``; either way nothing is published."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -581,7 +581,7 @@ def test_a_refusal_whose_marker_restore_cannot_be_confirmed_answers_rollback_fai
     marker absent, the caller hears ``reopen_rollback_failed`` (503) instead of
     the refusal that triggered the discard, because the durable session is now
     in a state the caller must act on (it would reopen at the next start)."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -623,7 +623,7 @@ def test_a_refusal_whose_marker_restore_cannot_be_confirmed_answers_rollback_fai
 def test_a_marker_restore_that_fails_once_recovers_on_the_retry(tmp_path, monkeypatch):
     """One raise from the restore write is retried; when the retry lands and the
     re-read confirms the marker, the original refusal is what the caller hears."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -668,7 +668,7 @@ def test_a_session_recreated_during_the_hook_is_refused_not_published(tmp_path, 
     the old transcript under the new file's identity, and every later save would
     take the delete-won arm and drop its rows. The barrier is re-run after the
     hook's last await with the same ``resume_session_deleted`` answer."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     clock = ManualClock()
     clock.install(monkeypatch, history_schema, time=False, datetime=True)
@@ -702,7 +702,7 @@ def test_a_session_recreated_during_the_hook_is_refused_not_published(tmp_path, 
 
 
 def test_a_session_deleted_during_the_hook_is_refused_not_resurrected(tmp_path):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -755,7 +755,7 @@ def test_the_rollback_never_archives_a_replacement_transcript(tmp_path, monkeypa
     refuses, and the rollback must NOT put the old ``closed`` marker onto the
     replacement: both its write guard and its confirmation read compare the
     stamp against the one this resume read."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     clock = ManualClock()
     clock.install(monkeypatch, history_schema, time=False, datetime=True)
@@ -853,7 +853,7 @@ def test_an_unreadable_final_identity_read_refuses_rather_than_publishing(tmp_pa
     invalidation generation; the synchronous re-check after it refuses ``resume_conflict``
     with the marker rolled back.
     """
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -886,7 +886,7 @@ def test_a_delete_in_flight_during_the_last_await_refuses_before_it_unlinks(tmp_
     ``delete_session`` bumps the generation only after the unlink, so the re-check after
     the await also reads the in-flight marker and refuses ``resume_conflict``.
     """
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -928,7 +928,7 @@ def test_the_archived_link_probe_reads_getters_the_session_manager_actually_has(
     import inspect
     import re
 
-    from kiro_crew.session import SessionManager
+    from aj_crew.session import SessionManager
 
     names: set[str] = set()
     for fn in (sc._archived_session_is_channel_linked, sc._probe_channel_mirror_for_key):

@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.feishu.transport_dispatch (FeishuDispatcher)."""
+"""Tests for aj_crew.feishu.transport_dispatch (FeishuDispatcher)."""
 
 from __future__ import annotations
 
@@ -12,19 +12,19 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
-from kiro_crew.feishu.client import LarkInbound
-from kiro_crew.feishu.transport_dispatch import FeishuDispatcher
-from kiro_crew.messaging.attachments import Attachment
-from kiro_crew.messaging.commands import COMPACT_ACCOUNT_CHANGED_REPLY_ZH
-from kiro_crew.messaging.inbound_spool import InboundRoute
-from kiro_crew.messaging.link import (
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+from aj_crew.feishu.client import LarkInbound
+from aj_crew.feishu.transport_dispatch import FeishuDispatcher
+from aj_crew.messaging.attachments import Attachment
+from aj_crew.messaging.commands import COMPACT_ACCOUNT_CHANGED_REPLY_ZH
+from aj_crew.messaging.inbound_spool import InboundRoute
+from aj_crew.messaging.link import (
     CHAT_TYPE_DIRECT,
     CHAT_TYPE_FORUM,
     ChannelLink,
     build_dm_session_key,
 )
-from kiro_crew.session_allocation import SessionClosingError
+from aj_crew.session_allocation import SessionClosingError
 
 #: A real 2x2 PNG: outbound extraction admits a file on its byte signature.
 _PNG = base64.b64decode(
@@ -270,12 +270,12 @@ def _live_messaging(**messaging_kw):
     (``dm_scope`` is the exception: restart-marked, read from the boot copy).
     Resets the watcher on exit so nothing leaks into the next test.
     """
-    from kiro_crew.config import live
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config import live
+    from aj_crew.config.loader import AjCrewConfig
 
     live.reset_for_tests()
     try:
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         live.watch().prime(
             dataclasses.replace(cfg, messaging=dataclasses.replace(cfg.messaging, **messaging_kw))
         )
@@ -363,7 +363,7 @@ class TestTurn:
             FakeCtx(),
             FakeClient(),
             conv_log=conv,
-            cfg=_cfg(default_agent="kirocrew"),
+            cfg=_cfg(default_agent="ajcrew"),
             agent="my-custom-agent",
         )
 
@@ -376,12 +376,12 @@ class TestTurn:
         assert set(conv.agents) == {"my-custom-agent"}
 
     @pytest.mark.asyncio
-    async def test_agent_resolves_to_kirocrew_when_unset(self) -> None:
+    async def test_agent_resolves_to_ajcrew_when_unset(self) -> None:
         provider = FakeProvider([AcpEvent(kind=EVENT_COMPLETE)])
         sessions = FakeSessions(provider)
         d = _dispatcher(sessions, FakeCtx(), FakeClient(), cfg=_cfg(default_agent=""))
         await d.handle_message(_inbound("hi"))
-        assert sessions.last_agent == "kirocrew"
+        assert sessions.last_agent == "ajcrew"
 
     @pytest.mark.asyncio
     async def test_cold_start_failure_finalizes_renderer(self) -> None:
@@ -587,7 +587,7 @@ class TestTurn:
         async def _capture(turn, **kwargs):
             captured.append(turn)
 
-        monkeypatch.setattr("kiro_crew.feishu.transport_dispatch.drive_turn", _capture)
+        monkeypatch.setattr("aj_crew.feishu.transport_dispatch.drive_turn", _capture)
 
         sessions = FakeSessions(FakeProvider([]), ctx_pct=10.0)
         d = _dispatcher(sessions, FakeCtx(), FakeClient())
@@ -597,7 +597,7 @@ class TestTurn:
         predicate = captured[0].auto_approve_session
         assert callable(predicate), "grant must be a predicate, not a captured value"
 
-        import kiro_crew.feishu.transport_dispatch as mod
+        import aj_crew.feishu.transport_dispatch as mod
 
         monkeypatch.setattr(mod, "safety_override", lambda: SimpleNamespace(is_active=lambda: True))
         assert predicate() is True
@@ -618,7 +618,7 @@ class TestTurn:
         async def _capture(turn, **kwargs):
             captured.append(turn)
 
-        monkeypatch.setattr("kiro_crew.feishu.transport_dispatch.drive_turn", _capture)
+        monkeypatch.setattr("aj_crew.feishu.transport_dispatch.drive_turn", _capture)
 
         sessions = FakeSessions(FakeProvider([]), ctx_pct=10.0)
         d = _dispatcher(sessions, FakeCtx(), FakeClient())
@@ -637,7 +637,7 @@ class TestTurn:
         async def _capture(turn, **kwargs):
             captured.append(turn)
 
-        monkeypatch.setattr("kiro_crew.feishu.transport_dispatch.drive_turn", _capture)
+        monkeypatch.setattr("aj_crew.feishu.transport_dispatch.drive_turn", _capture)
 
         d = _dispatcher(FakeSessions(FakeProvider([]), ctx_pct=10.0), FakeCtx(), FakeClient())
         await d.handle_message(_inbound("hello", open_id="ou_dm", message_id="m1"))
@@ -665,7 +665,7 @@ class TestTurn:
         async def _ceiling(*_args, **_kwargs) -> bool:
             return restricted
 
-        monkeypatch.setattr("kiro_crew.feishu.transport_dispatch.uploads_restricted", _ceiling)
+        monkeypatch.setattr("aj_crew.feishu.transport_dispatch.uploads_restricted", _ceiling)
         chart = tmp_path / "chart.png"
         chart.write_bytes(_PNG)
         provider = FakeProvider(
@@ -772,7 +772,7 @@ class TestCommands:
     async def test_update_pause_spools_new_before_generation_side_effects(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.messaging import dispatch
+        from aj_crew.messaging import dispatch
 
         sessions = FakeSessions(FakeProvider([]))
         sessions.reserve_inbound_callback = lambda: None
@@ -1108,7 +1108,7 @@ class TestStopCommand:
 
     @pytest.mark.asyncio
     async def test_stop_during_automatic_compaction_is_declined(self) -> None:
-        from kiro_crew.session_lifecycle import STOP_DECLINED_COMPACTING_TEXT, consume_stop_declined
+        from aj_crew.session_lifecycle import STOP_DECLINED_COMPACTING_TEXT, consume_stop_declined
 
         provider = CancellableProvider("acked")
         sessions = FakeSessions(provider)
@@ -1138,7 +1138,7 @@ class TestStopCommand:
         self, monkeypatch, text, command_text, chat_type, chat_id
     ) -> None:
         """Feishu has no buttons: a typed /stop is its only off-switch."""
-        from kiro_crew.messaging import dispatch
+        from aj_crew.messaging import dispatch
 
         async def _denied(channel_type: str) -> bool:
             return False
@@ -1162,7 +1162,7 @@ class TestStopCommand:
         self, monkeypatch, word: str
     ) -> None:
         """A cancel word Feishu does not act on must not pass a deny into the steer path."""
-        from kiro_crew.messaging import dispatch
+        from aj_crew.messaging import dispatch
 
         async def _denied(channel_type: str) -> bool:
             return False
@@ -1184,7 +1184,7 @@ class TestStopCommand:
     async def test_an_ordinary_message_is_still_dropped_on_a_denied_channel(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.messaging import dispatch
+        from aj_crew.messaging import dispatch
 
         async def _denied(channel_type: str) -> bool:
             return False
@@ -1217,7 +1217,7 @@ class TestStopCommand:
 class TestHelpCommand:
     @pytest.mark.asyncio
     async def test_help_replies_with_the_shared_help_text(self) -> None:
-        from kiro_crew.feishu.commands import COMMANDS, build_help
+        from aj_crew.feishu.commands import COMMANDS, build_help
 
         sessions = FakeSessions(FakeProvider([]))
         client = FakeClient()
@@ -1232,7 +1232,7 @@ class TestHelpCommand:
 
     @pytest.mark.asyncio
     async def test_group_help_intercepts_despite_the_bot_mention(self) -> None:
-        from kiro_crew.feishu.commands import build_help
+        from aj_crew.feishu.commands import build_help
 
         sessions = FakeSessions(FakeProvider([]))
         client = FakeClient()
@@ -1252,8 +1252,8 @@ class TestHelpCommand:
         assert sessions.successes == []
 
     def test_help_card_is_rendered_by_the_shared_command_table(self) -> None:
-        from kiro_crew.feishu import commands
-        from kiro_crew.messaging import command_table
+        from aj_crew.feishu import commands
+        from aj_crew.messaging import command_table
 
         assert commands.build_help() == command_table.build_help_text(
             commands._HELP_HEADER, commands.COMMANDS, commands._HELP_FOOTER
@@ -1261,14 +1261,14 @@ class TestHelpCommand:
 
     def test_every_intercepted_command_is_in_the_table(self) -> None:
         """Every command the dispatcher acts on is listed in /help, both ways."""
-        from kiro_crew.feishu.commands import COMMANDS, parse_command
+        from aj_crew.feishu.commands import COMMANDS, parse_command
 
         names = {spec.name for spec in COMMANDS}
         assert names == {"new", "compact", "agent", "stop", "help"}
         assert {parse_command(f"/{n}") for n in names} == names
         assert parse_command("/reset") == "new"
         assert parse_command("/cancel") == "stop"
-        assert parse_command("/agent kirocrew") is None
+        assert parse_command("/agent ajcrew") is None
 
 
 # Tests: mid-turn busy
@@ -1373,8 +1373,8 @@ class TestInboundFiles:
 
         A path the user typed is theirs: it stays as written and is not copied.
         """
-        from kiro_crew.chat_attachments import attachments_dir
-        from kiro_crew.history import ConversationLog
+        from aj_crew.chat_attachments import attachments_dir
+        from aj_crew.history import ConversationLog
 
         typed = tmp_path / "mine.png"
         typed.write_bytes(b"\x89PNG\r\n\x1a\n")
@@ -1398,7 +1398,7 @@ class TestInboundFiles:
 
     @pytest.mark.asyncio
     async def test_a_governance_deny_fetches_nothing(self, monkeypatch) -> None:
-        from kiro_crew.messaging import dispatch
+        from aj_crew.messaging import dispatch
 
         async def _denied(channel_type: str) -> bool:
             return False
@@ -1514,7 +1514,7 @@ class TestRestartSeeding:
         route = d._route(dm)
         bucket = build_dm_session_key(
             "feishu",
-            "kirocrew",
+            "ajcrew",
             route[1],
             gen=0,
             dm_scope="per-channel-peer",
@@ -1650,16 +1650,16 @@ class TestCompactCapabilityGate:
 
 
 def _agent_roster():
-    from kiro_crew.agent_discovery import AgentInfo
+    from aj_crew.agent_discovery import AgentInfo
 
     return [
         AgentInfo(name="beta", filename="beta.json", description="", model=""),
         AgentInfo(
-            name="kirocrew-worker",
-            filename="kirocrew-worker.json",
+            name="ajcrew-worker",
+            filename="ajcrew-worker.json",
             description="",
             model="",
-            kirocrew_owned=True,
+            ajcrew_owned=True,
         ),
     ]
 
@@ -1667,7 +1667,7 @@ def _agent_roster():
 class TestAgentCommand:
     @pytest.mark.asyncio
     async def test_agent_name_switches_the_next_turn(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.list_agents", _agent_roster)
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.list_agents", _agent_roster)
         sessions = FakeSessions(FakeProvider([AcpEvent(kind=EVENT_COMPLETE)]))
         client = FakeClient()
         d = _dispatcher(sessions, FakeCtx(), client, cfg=_cfg(default_agent=""))
@@ -1678,20 +1678,20 @@ class TestAgentCommand:
 
     @pytest.mark.asyncio
     async def test_internal_agent_is_refused(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.list_agents", _agent_roster)
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.list_agents", _agent_roster)
         sessions = FakeSessions(FakeProvider([AcpEvent(kind=EVENT_COMPLETE)]))
         client = FakeClient()
         d = _dispatcher(sessions, FakeCtx(), client, cfg=_cfg(default_agent=""))
-        await d.handle_message(_inbound("/agent kirocrew-worker"))
+        await d.handle_message(_inbound("/agent ajcrew-worker"))
         assert "No agent named" in client.replies[-1][1]
         await d.handle_message(_inbound("hi", message_id="m2"))
-        assert sessions.last_agent == "kirocrew"
+        assert sessions.last_agent == "ajcrew"
 
     @pytest.mark.asyncio
     async def test_bare_agent_shows_the_current_agent(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.list_agents", _agent_roster)
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.list_agents", _agent_roster)
         client = FakeClient()
         d = _dispatcher(FakeSessions(FakeProvider([])), FakeCtx(), client)
         await d.handle_message(_inbound("/agent"))
         reply = client.replies[-1][1]
-        assert "`beta`" in reply and "kirocrew-worker" not in reply
+        assert "`beta`" in reply and "ajcrew-worker" not in reply

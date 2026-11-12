@@ -31,31 +31,31 @@ from chat_merge_back_helpers import (  # noqa: F401
     model_fixture,
 )
 
-from kiro_crew.dashboard import chat_handlers, chat_merge_back, chat_persistence
-from kiro_crew.dashboard.chat_merge_back import MERGE_NOTE_SOURCE
-from kiro_crew.dashboard.chat_persistence import (
+from aj_crew.dashboard import chat_handlers, chat_merge_back, chat_persistence
+from aj_crew.dashboard.chat_merge_back import MERGE_NOTE_SOURCE
+from aj_crew.dashboard.chat_persistence import (
     _apply_recent_session,
     _rehydrate_slot_from_history,
     _save_slot_to_history,
 )
-from kiro_crew.dashboard.chat_utils import effective_session_key, slot_history_key
-from kiro_crew.dashboard.slot_buffers import (
+from aj_crew.dashboard.chat_utils import effective_session_key, slot_history_key
+from aj_crew.dashboard.slot_buffers import (
     MAX_DEFERRED_NOTE_CHARS,
     MERGED_FROM_MAX_KEY_CHARS,
     MERGED_FROM_META_KEY,
 )
-from kiro_crew.dashboard.state import (
+from aj_crew.dashboard.state import (
     _MAX_CONSUMED_MERGE_CARDS,
     _MAX_CONTEXT_PER_SOURCE,
     _MAX_PENDING_CONTEXT,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class TestMerge:
     @staticmethod
     def _full_line(slot, existing_meta, window):
-        from kiro_crew.dashboard.slot_persistence import metadata_line
+        from aj_crew.dashboard.slot_persistence import metadata_line
 
         meta_line, _mode, _queue, retired, _tab_id = metadata_line.build_full_line(
             slot,
@@ -83,8 +83,8 @@ class TestMerge:
     @staticmethod
     def _kept_reply(*events_before_end):
         """A reply kiro-cli keeps: *events_before_end*, then a normal ``end_turn``."""
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         async def events():
             for event in events_before_end:
@@ -95,7 +95,7 @@ class TestMerge:
 
     @staticmethod
     def _text(text: str):
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         return LLMEvent(kind=EVENT_TEXT_CHUNK, text=text)
 
@@ -162,7 +162,7 @@ class TestMerge:
         queue there. The cards were registered before the await, so the
         unstamped durable entry replays no context either.
         """
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         key = slot_history_key(chats.parent)
@@ -197,7 +197,7 @@ class TestMerge:
     async def test_a_twin_that_queued_context_before_consumption_discards_it_at_drain(
         self, chats, model
     ):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         note_id = await self._merged_card(chats, "queued twin summary")
@@ -223,7 +223,7 @@ class TestMerge:
 
     def test_the_consumed_merge_registry_has_a_hard_count_bound(self, chats):
         """The registry is count-bounded whether or not its guards ever resolve."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         contexts = [_queued_merge_context(index) for index in range(_MAX_CONSUMED_MERGE_CARDS + 3)]
 
@@ -245,7 +245,7 @@ class TestMerge:
         tracked task. A landed stamp finishes them there and the finally has
         nothing to schedule.
         """
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         key = slot_history_key(chats.parent)
@@ -285,7 +285,7 @@ class TestMerge:
         must not sit through a backoff for a write nobody awaits -- and the
         retry is the tracked task's.
         """
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         key = slot_history_key(chats.parent)
@@ -324,7 +324,7 @@ class TestMerge:
         replied, so the bounded retry belongs to the tracked task the finally
         schedules.
         """
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         key = slot_history_key(chats.parent)
@@ -357,7 +357,7 @@ class TestMerge:
         write, so the finally owes the stamp. Without a retry, one failed write
         there would leave a hold whose card the next restart replays.
         """
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         key = slot_history_key(chats.parent)
@@ -392,7 +392,7 @@ class TestMerge:
         whose write is still owed -- and left an already-queued twin copy
         holding its pending-context seat.
         """
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         key = slot_history_key(chats.parent)
@@ -420,7 +420,7 @@ class TestMerge:
         runs strictly after the stamp returns, and a stamp that proved nothing
         durable leaves the guard unstamped and reports the card unconsumed.
         """
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         key = slot_history_key(chats.parent)
@@ -455,7 +455,7 @@ class TestMerge:
     async def test_a_slot_restored_while_the_stamp_is_pending_queues_no_consumed_context(
         self, chats, monkeypatch
     ):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         await _place_merge_card(state, chats.parent, chats.fork, "pending stamp summary")
@@ -493,7 +493,7 @@ class TestMerge:
         never happened. A returned identity is read as proof the card can never
         replay, so the proof is read back off disk.
         """
-        from kiro_crew.dashboard.slot_buffers import stamp_consumed_merge_cards_sync
+        from aj_crew.dashboard.slot_buffers import stamp_consumed_merge_cards_sync
 
         state = chats.state
         key = slot_history_key(chats.parent)
@@ -542,7 +542,7 @@ class TestMerge:
         thing ``restore_deferred_note_hold`` and the drain can consult, which is
         why a proven stamp keeps its guard instead of dropping it.
         """
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         key = slot_history_key(chats.parent)
@@ -583,7 +583,7 @@ class TestMerge:
         stamp; an unstamped one is the whole suppression until the write lands,
         so filling the registry must not drop it.
         """
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         contexts = [_queued_merge_context(index) for index in range(_MAX_CONSUMED_MERGE_CARDS)]
@@ -630,7 +630,7 @@ class TestMerge:
 
     @pytest.mark.asyncio
     async def test_a_rows_only_handover_keeps_the_consumed_stamp_for_the_restore(self, chats):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         original = chats.parent
@@ -668,8 +668,8 @@ class TestMerge:
     async def test_the_finally_path_tracks_the_stamp_and_retires_only_with_row_proof(
         self, chats, model, monkeypatch, row_in_window
     ):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard import state as dashboard_state
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard import state as dashboard_state
 
         state = chats.state
         parent = chats.parent
@@ -779,7 +779,7 @@ class TestMerge:
         recovery requeue is a bare continuation, so the card must go back on the
         queue and out again exactly once, with its durable hold intact meanwhile.
         """
-        from kiro_crew.acp.transport_errors import AcpError, AcpProcessDied
+        from aj_crew.acp.transport_errors import AcpError, AcpProcessDied
 
         state = chats.state
         parent = chats.parent
@@ -820,7 +820,7 @@ class TestMerge:
         """A discarded native conversation cannot retain its drained card prompt."""
         from unittest.mock import AsyncMock
 
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         state = chats.state
         parent = chats.parent
@@ -865,8 +865,8 @@ class TestMerge:
         """The completion is synthetic and the turn was never answered, so the
         reset session lacks the prompt that carried the frame: the card goes back
         on the queue, keeps its durable hold, and the next turn carries it once."""
-        from kiro_crew.acp.types import STOP_REASON_COMPACTION_FAILED
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_COMPACTION_FAILED
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         state = chats.state
         parent = chats.parent
@@ -902,7 +902,7 @@ class TestMerge:
     async def test_a_runtime_death_reported_as_a_stop_reason_returns_the_card(self, chats, model):
         """The ``error:`` stop class replaces the runtime on the next claim with no
         reset flag set, so the card's return must follow from the terminal itself."""
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         state = chats.state
         parent = chats.parent
@@ -998,8 +998,8 @@ class TestMerge:
     async def test_a_completed_turns_cards_free_the_merge_cap_before_it_unwinds(
         self, chats, model, monkeypatch
     ):
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat_handlers import _source_cap_reached
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat_handlers import _source_cap_reached
 
         for index in range(_MAX_CONTEXT_PER_SOURCE):
             chats.parent.append_pending_context(_queued_merge_context(index))
@@ -1052,7 +1052,7 @@ class TestMerge:
 
         assert len(chats.parent._pending_context) == _MAX_CONTEXT_PER_SOURCE
         assert all(entry.get("noteId") for entry in chats.parent._pending_context)
-        from kiro_crew.dashboard.chat_runner import drain_pending_context
+        from aj_crew.dashboard.chat_runner import drain_pending_context
 
         next_prefix = drain_pending_context(chats.parent)
         assert next_prefix.count(f'[Background context from "{MERGE_NOTE_SOURCE}"]') == (
@@ -1100,7 +1100,7 @@ class TestMerge:
     async def test_a_completed_turn_retires_the_merge_context_in_its_own_save(
         self, chats, model, monkeypatch
     ):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = chats.state
         key = slot_history_key(chats.parent)
@@ -1245,7 +1245,7 @@ class TestMerge:
 
     @pytest.mark.asyncio
     async def test_an_unbound_channel_parent_bound_later_retires_its_card(self, chats, model):
-        from kiro_crew.dashboard.channel_slots import _rebind_unbound_channel_slot
+        from aj_crew.dashboard.channel_slots import _rebind_unbound_channel_slot
 
         state = chats.state
         parent, fork = _channel_parent_and_fork(state, _CHANNEL_STEM, linked=False)
@@ -1294,7 +1294,7 @@ class TestMerge:
         assert not state.conversation_log.get_metadata(_CHANNEL_KEY).get("deferred_notes")
 
     def test_a_returned_card_is_not_queued_twice_under_another_spelling_of_its_file(self, chats):
-        from kiro_crew.dashboard.chat_runner import _restore_consumed_merge_contexts
+        from aj_crew.dashboard.chat_runner import _restore_consumed_merge_contexts
 
         parent = chats.parent
         parent.channel_origin = True

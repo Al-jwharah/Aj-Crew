@@ -1,13 +1,13 @@
 # Design — Human-in-the-Loop Tool-Approval Layer
 
-Status: partially implemented in `src/kiro_crew/hooks.py` and the dashboard approval components. Unimplemented: typed `ToolPreviewFrame` previews (the App Builder Kit dependency did not ship), batch multi-select approval of pending tool calls, and the show-raw-input control on the approval card.
+Status: partially implemented in `src/aj_crew/hooks.py` and the dashboard approval components. Unimplemented: typed `ToolPreviewFrame` previews (the App Builder Kit dependency did not ship), batch multi-select approval of pending tool calls, and the show-raw-input control on the approval card.
 
 ## Overview
 
 The approval layer is the seam between an autonomous agent and any consequential action.
-It already exists in Kiro Crew as three cooperating pieces:
+It already exists in Aj Crew as three cooperating pieces:
 
-1. **Enforcement (backend):** `HookManager.on_tool_call` in `src/kiro_crew/hooks.py`
+1. **Enforcement (backend):** `HookManager.on_tool_call` in `src/aj_crew/hooks.py`
    returns `TOOL_ALLOW` / `TOOL_AUTO_APPROVE` / `TOOL_DENY` at the PreToolUse boundary,
    applying sensitive-path, exfiltration, write-protected-config, deny-by-default-shell,
    and governance (ceiling ∩ profile) rules. This is the **only** policy authority.
@@ -61,7 +61,7 @@ Tool executes (approved) or is skipped (rejected); agent turn continues
 
 | Existing | Layer relationship |
 |---|---|
-| `src/kiro_crew/hooks.py` (`on_tool_call`) | **Unchanged.** Sole policy authority; the layer reads its verdict. |
+| `src/aj_crew/hooks.py` (`on_tool_call`) | **Unchanged.** Sole policy authority; the layer reads its verdict. |
 | `website/src/components/ApprovalCard.tsx` | Hosts `ToolPreviewFrame` + the batch affordance. |
 | `website/src/components/ToolInputPreview.tsx` | The fallback preview and the "show raw input" surface. |
 | `website/src/components/chat-input/approval.ts` (`resolveApproval`) | **Unchanged** resume path the layer reuses (id-scoped by `request_id`; `approveChatSlot` is trust-grants only). |
@@ -175,17 +175,17 @@ parallel policy Req 6.1 forbids.
 
 The portable shape is three steps; the table names what an adopter substitutes.
 
-| Step | Portable shape | Kiro Crew binding | AI-SDK binding |
+| Step | Portable shape | Aj Crew binding | AI-SDK binding |
 |---|---|---|---|
 | Intercept | evaluate the call before it executes | `HookManager.on_tool_call` | a tool with no `execute`, or `prepareStep`/`onStepFinish` interruption |
 | Render | build a card from the invocation state | `ApprovalCard` + `ToolPreviewFrame` | render from `UIToolInvocation` at `input-available` |
 | Resume | apply the decision to the same invocation | `resolveApproval(request_id, action)` | `addToolResult({ toolCallId, output })` + continued stream |
 
 **Explicit boundary (Req 5.3):** the *enforcement* (`on_tool_call`) and the *transport*
-(`resolveApproval` / `approveChatSlot`) are Kiro-Crew-specific — an adopter swaps in their own. The *portable*
+(`resolveApproval` / `approveChatSlot`) are Aj-Crew-specific — an adopter swaps in their own. The *portable*
 part is: intercept before execute, render a card from the invocation state, resume the
 same invocation on decision. **The AI-SDK `UIToolInvocation` union is reused as a state
-model, not a transport claim (Req 5.4)** — Kiro Crew's chat transport is markdown +
+model, not a transport claim (Req 5.4)** — Aj Crew's chat transport is markdown +
 `<mcwidget>` opaque strings (`useBlockAssembler.ts`, `types/index.chat.ts`), not a typed
 `tool-<name>` part stream, exactly as documented for the App Builder Kit tool-view encoding.
 

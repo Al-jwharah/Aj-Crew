@@ -1,4 +1,4 @@
-"""The ``kirocrew-guide`` HTTP routes, the post-success commit hook and the MCP shim.
+"""The ``ajcrew-guide`` HTTP routes, the post-success commit hook and the MCP shim.
 
 Everything runs against a temp home and an in-process aiohttp app: no gateway,
 no MCP process, no real service. The auth layer is replaced by a tiny middleware
@@ -19,11 +19,11 @@ from aiohttp import web
 from crew_log_drain import assert_drained
 from guide_route_helpers import CREWMATE, FakeState, agent, run_guide_app
 
-from kiro_crew import guide_catalog, mcp_guide
-from kiro_crew.dashboard import guide_runs
-from kiro_crew.dashboard.guide_runs import guide_store_for
-from kiro_crew.dashboard.handlers import guide as guide_routes
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew import guide_catalog, mcp_guide
+from aj_crew.dashboard import guide_runs
+from aj_crew.dashboard.guide_runs import guide_store_for
+from aj_crew.dashboard.handlers import guide as guide_routes
+from aj_crew.dashboard.state import _ChatSlot
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -705,7 +705,7 @@ def test_two_concurrent_saves_credit_at_most_one():
 
 
 def test_the_public_agents_create_route_is_wired_through_the_hook(monkeypatch):
-    from kiro_crew.dashboard.handlers import agents as agents_handlers
+    from aj_crew.dashboard.handlers import agents as agents_handlers
 
     state = FakeState()
     g = _at_commit(state)
@@ -713,7 +713,7 @@ def test_the_public_agents_create_route_is_wired_through_the_hook(monkeypatch):
     async def impl(request):
         return web.json_response(CREATED)
 
-    monkeypatch.setattr(agents_handlers, "_api_kirocrew_agents_create", impl)
+    monkeypatch.setattr(agents_handlers, "_api_ajcrew_agents_create", impl)
 
     async def go(c):
         r = await c.post("/api/agents", json={}, headers=OWNER | _guide_headers(g))
@@ -722,7 +722,7 @@ def test_the_public_agents_create_route_is_wired_through_the_hook(monkeypatch):
     status = _run(
         go,
         state,
-        extra_routes=[("POST", "/api/agents", agents_handlers.api_kirocrew_agents_create)],
+        extra_routes=[("POST", "/api/agents", agents_handlers.api_ajcrew_agents_create)],
     )
     assert status == 200
     assert guide_store_for(state)._guides[g["guide_id"]].status == "completed"
@@ -772,11 +772,11 @@ def test_mcp_open_add_only_points_at_the_existing_add_form():
 
 
 def test_no_mcp_mutation_is_wired_to_the_guide_hook():
-    from kiro_crew.dashboard.handlers import mcp_custom
+    from aj_crew.dashboard.handlers import mcp_custom
 
     assert not hasattr(guide_routes, "_EVIDENCE")
     assert "run_guided_crewmate_create" not in (
-        REPO / "src/kiro_crew/dashboard/handlers/mcp_custom.py"
+        REPO / "src/aj_crew/dashboard/handlers/mcp_custom.py"
     ).read_text(encoding="utf-8")
     assert mcp_custom.api_mcp_custom_add
 
@@ -788,9 +788,7 @@ def test_server_route_table_matches_the_guide_module():
     app = web.Application()
     guide_routes.register_guide_routes(app)
     mine = {(r.method, r.resource.canonical) for r in app.router.routes() if r.method != "HEAD"}
-    text = (REPO / "src/kiro_crew/dashboard/server_runtime/mcp_routes.py").read_text(
-        encoding="utf-8"
-    )
+    text = (REPO / "src/aj_crew/dashboard/server_runtime/mcp_routes.py").read_text(encoding="utf-8")
     server = set(re.findall(r'\("(GET|POST)", "(/api/guide/[a-z/]+)", "api_guide_[a-z_]+"\)', text))
     assert server == mine
     for method, path in mine:
@@ -801,7 +799,7 @@ def test_server_route_table_matches_the_guide_module():
 
 
 def test_only_the_agent_half_is_strict_internal():
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     strict = server._STRICT_INTERNAL_API_PATHS
     assert "/api/guide/agent" in strict
@@ -938,7 +936,7 @@ def test_shim_module_holds_no_per_caller_state():
 
 
 def test_shim_schema_rejects_an_injected_guide_id():
-    from kiro_crew.validation import MCP_GUIDE_SCHEMAS, ValidationError, validate_tool_args
+    from aj_crew.validation import MCP_GUIDE_SCHEMAS, ValidationError, validate_tool_args
 
     with pytest.raises(ValidationError):
         validate_tool_args({"guide_id": "../x"}, MCP_GUIDE_SCHEMAS["guide_cancel"])
@@ -1021,16 +1019,16 @@ GUIDE_SID = "acp-guide-1"
 
 @pytest.fixture
 def guide_log(tmp_path, monkeypatch):
-    from kiro_crew.crew_log import CrewLog
-    from kiro_crew.crew_log import emit as crew_log_emit
-    from kiro_crew.crew_log.schema import KIND_SESSION
-    from kiro_crew.dashboard import chat_cards
+    from aj_crew.crew_log import CrewLog
+    from aj_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log.schema import KIND_SESSION
+    from aj_crew.dashboard import chat_cards
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(crew_log_emit.CREW_LOG_ENV, "1")
     crew_log_emit.reset_caches()
     chat_cards.reset()
-    CrewLog.create(KIND_SESSION, GUIDE_SID, owner="owner", agent="kirocrew", slot="chat-1")
+    CrewLog.create(KIND_SESSION, GUIDE_SID, owner="owner", agent="ajcrew", slot="chat-1")
 
     def entries(prefix: str) -> list:
         assert_drained()
@@ -1206,7 +1204,7 @@ def test_a_re_claim_after_a_lapsed_lease_is_not_a_second_start(guide_log):
 
 def test_each_patch_bumps_the_rows_revision_so_a_replay_outranks_the_completion(guide_log):
     """A replay takes the row from ``completed`` back to ``offered``; only the revision orders them."""
-    from kiro_crew.dashboard import chat_cards
+    from aj_crew.dashboard import chat_cards
 
     state = FakeState()
     slot = _live_slot(state)
@@ -1224,7 +1222,7 @@ def test_a_conversation_that_refuses_the_row_never_breaks_the_guide(guide_log):
     """A slot whose append or update raises leaves the guide alone, quietly."""
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard import chat_cards
+    from aj_crew.dashboard import chat_cards
 
     class BrokenSlot:
         key = "chat-1"

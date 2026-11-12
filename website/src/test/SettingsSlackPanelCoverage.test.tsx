@@ -62,7 +62,7 @@ type SaveResult = Awaited<ReturnType<typeof api.saveSlackConfig>>
 
 const MANIFEST = {
   alias: 'tester',
-  manifest: 'display_information:\n  name: KiroCrew-tester\n',  // brand-ok: product emits KiroCrew-<alias> (slack-manifest.yaml)
+  manifest: 'display_information:\n  name: AjCrew-tester\n',  // brand-ok: product emits AjCrew-<alias> (slack-manifest.yaml)
   create_url: 'https://example.invalid/apps/new',
 }
 
@@ -78,7 +78,7 @@ function config(over: Partial<SlackConfigData> = {}): SlackConfigData {
     bot_token_preview: '',
     app_token_preview: '',
     owner_id: 'U000OWNER',
-    command: 'kirocrew',
+    command: 'ajcrew',
     allowed_enterprise_ids: ['E000ONE'],
     reactions_enabled: false,
     show_thinking: false,
@@ -178,12 +178,12 @@ describe('SlackPanel connection status', () => {
       bot_token_set: true,
       app_token_set: true,
       owner_id: '',
-      connect_error: 'KIROCREW_OWNER_ID is not set',
+      connect_error: 'AJCREW_OWNER_ID is not set',
     })
     await hydrated()
     expect(screen.getByText('Needs setup')).toBeInTheDocument()
     expect(
-      screen.getByText('Slack stays off until an owner is set. Add your Owner Slack member ID (KIROCREW_OWNER_ID) below.'),
+      screen.getByText('Slack stays off until an owner is set. Add your Owner Slack member ID (AJCREW_OWNER_ID) below.'),
     ).toBeInTheDocument()
     expect(screen.queryByText(/Slack connection failed at startup/)).not.toBeInTheDocument()
   })
@@ -219,7 +219,7 @@ describe('SlackPanel manifest card', () => {
     await hydrated()
 
     expect(screen.getByRole('link', { name: 'Create Slack app' })).toHaveAttribute('href', MANIFEST.create_url)
-    expect(screen.getByText(/named KiroCrew-tester/)).toBeInTheDocument()  // brand-ok: product emits KiroCrew-<alias> (slack-manifest.yaml)
+    expect(screen.getByText(/named AjCrew-tester/)).toBeInTheDocument()  // brand-ok: product emits AjCrew-<alias> (slack-manifest.yaml)
 
     fireEvent.click(screen.getByRole('button', { name: 'Copy manifest YAML' }))
     expect(writeText).toHaveBeenCalledWith(MANIFEST.manifest)
@@ -251,7 +251,7 @@ describe('SlackPanel manifest card', () => {
 
     const copy = screen.getByRole('button', { name: 'Copy manifest YAML' })
     expect(copy).toBeDisabled()
-    expect(screen.getByText(/named KiroCrew-you/)).toBeInTheDocument()  // brand-ok: product emits KiroCrew-<alias> (slack-manifest.yaml)
+    expect(screen.getByText(/named AjCrew-you/)).toBeInTheDocument()  // brand-ok: product emits AjCrew-<alias> (slack-manifest.yaml)
 
     fireEvent.click(copy)
     expect(writeText).not.toHaveBeenCalled()
@@ -272,7 +272,7 @@ describe('SlackPanel read-only session', () => {
 
     expect(
       screen.getByText(
-        'Slack settings are managed on the machine running Kiro Crew and are read-only from remote sessions.',
+        'Slack settings are managed on the machine running Aj Crew and are read-only from remote sessions.',
       ),
     ).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Save Slack settings' })).not.toBeInTheDocument()
@@ -365,7 +365,7 @@ describe('SlackPanel save payload', () => {
     await hydrated()
 
     fireEvent.change(screen.getByPlaceholderText('U0123ABC456'), { target: { value: '  U000NEW  ' } })
-    fireEvent.change(screen.getByPlaceholderText('kirocrew'), { target: { value: ' crew ' } })
+    fireEvent.change(screen.getByPlaceholderText('ajcrew'), { target: { value: ' crew ' } })
     fireEvent.click(screen.getByRole('switch', { name: 'Phase reactions' }))
     fireEvent.click(screen.getByRole('switch', { name: 'Show thinking' }))
     fireEvent.click(saveBtn())

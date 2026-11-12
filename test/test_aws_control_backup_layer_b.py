@@ -18,8 +18,8 @@ from aws_control_backup_helpers import (
     _SessionsArchiveLayerBGateHarness,
 )
 
-from kiro_crew.apps.builtins.aws_control.backend import backup
-from kiro_crew.config import loader
+from aj_crew.apps.builtins.aws_control.backend import backup
+from aj_crew.config import loader
 
 # Layer B in the sessions archive -- the operator's standing permission
 
@@ -893,7 +893,7 @@ class TestSessionsArchiveLayerBGatePermission(_SessionsArchiveLayerBGateHarness)
         what makes this a permission rather than a preference. A move out of that
         directory would silently un-protect it, so the placement is pinned.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         assert backup.STATE_DIR_LEAF in security._CREW_SECRET_LEAVES
         # Read through ``app_data_dir`` rather than ``_state_path``, which this

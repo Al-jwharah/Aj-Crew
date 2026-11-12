@@ -1,4 +1,4 @@
-"""What kirocrew-prepare-pr's SKILL.md may carry, so it stops regrowing.
+"""What ajcrew-prepare-pr's SKILL.md may carry, so it stops regrowing.
 
 An agent reads SKILL.md whole on every PR turn, and reads a file under
 ``references/`` only when a step points it there. Most of the text that kept
@@ -18,10 +18,10 @@ from pathlib import Path
 SKILL_DIR = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
 )
 SKILL = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
 SCRIPTS = {p.stem: p.read_text(encoding="utf-8") for p in (SKILL_DIR / "scripts").glob("*.py")}
@@ -69,7 +69,7 @@ def test_script_detail_stays_in_the_scripts_help():
 
 
 def test_ci_lane_rules_live_in_the_ci_reference():
-    start = SKILL.index("## Kiro Crew CI at a glance\n")
+    start = SKILL.index("## Aj Crew CI at a glance\n")
     end = SKILL.index("\n## ", start + 1)
     section = SKILL[start:end]
     assert "`references/ci.md`" in section

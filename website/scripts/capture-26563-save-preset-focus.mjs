@@ -38,7 +38,7 @@ const IDLE_SVG = readFileSync(fileURLToPath(
 // Manage button. So the fixture lists `kiro-ghost` as `custom` to reach the
 // real panel; nothing else about the panel is stubbed.
 const PACK = {
-  id: 'kiro-ghost', name: 'Kiro', author: 'Kiro Crew', description: '',
+  id: 'kiro-ghost', name: 'Kiro', author: 'Aj Crew', description: '',
   type: 'custom', format: 'svg', thumbnail: '',
 }
 

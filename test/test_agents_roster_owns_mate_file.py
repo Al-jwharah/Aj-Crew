@@ -19,10 +19,10 @@ from aiohttp.test_utils import TestClient, TestServer
 
 
 def _make_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_agents
+    from aj_crew.dashboard.handlers import api_ajcrew_agents
 
     app = web.Application()
-    app.router.add_get("/api/agents", api_kirocrew_agents)
+    app.router.add_get("/api/agents", api_ajcrew_agents)
     return app
 
 
@@ -33,7 +33,7 @@ async def test_owns_mate_file_needs_the_file_not_just_matching_names(
     mates = tmp_path / "mates" / "agents"
     mates.mkdir(parents=True)
     (mates / "ben.json").write_text(json.dumps({"name": "ben"}), encoding="utf-8")
-    monkeypatch.setattr("kiro_crew.config.paths.mate_agents_dir", lambda: mates)
+    monkeypatch.setattr("aj_crew.config.paths.mate_agents_dir", lambda: mates)
 
     cfg_file = tmp_path / "config.json"
     cfg_file.write_text(
@@ -41,18 +41,18 @@ async def test_owns_mate_file_needs_the_file_not_just_matching_names(
             {
                 "agents": {
                     # Same names, no mate file: left on the shared template.
-                    "reviewer": {"kiro_agent": "reviewer", "source": "kirocrew"},
+                    "reviewer": {"kiro_agent": "reviewer", "source": "ajcrew"},
                     # Same names, mate file present.
-                    "ben": {"kiro_agent": "ben", "source": "kirocrew"},
+                    "ben": {"kiro_agent": "ben", "source": "ajcrew"},
                     # Bound to a different template.
-                    "other": {"kiro_agent": "kirocrew", "source": "kirocrew"},
+                    "other": {"kiro_agent": "ajcrew", "source": "ajcrew"},
                 },
                 "default_agent": "other",
             }
         ),
         encoding="utf-8",
     )
-    with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file):
+    with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get("/api/agents")
             assert resp.status == 200
@@ -66,13 +66,13 @@ async def test_owns_mate_file_needs_the_file_not_just_matching_names(
 def test_binding_is_mate_and_the_roster_share_one_rule(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew import mate_capabilities
+    from aj_crew import mate_capabilities
 
     mates = tmp_path / "mates" / "agents"
     mates.mkdir(parents=True)
-    monkeypatch.setattr("kiro_crew.config.paths.mate_agents_dir", lambda: mates)
+    monkeypatch.setattr("aj_crew.config.paths.mate_agents_dir", lambda: mates)
     assert mate_capabilities.owns_mate_file("reviewer", "reviewer") is False
     (mates / "reviewer.json").write_text("{}", encoding="utf-8")
     assert mate_capabilities.owns_mate_file("reviewer", "reviewer") is True
-    assert mate_capabilities.owns_mate_file("reviewer", "kirocrew") is False
+    assert mate_capabilities.owns_mate_file("reviewer", "ajcrew") is False
     assert mate_capabilities.owns_mate_file("reviewer", "") is False

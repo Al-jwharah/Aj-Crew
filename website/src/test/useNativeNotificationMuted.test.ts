@@ -1,6 +1,6 @@
 /**
  * Muting a notification channel must silence it on every attention surface,
- * per the backend contract in `kiro_crew/notifications/settings.py`
+ * per the backend contract in `aj_crew/notifications/settings.py`
  * (`ChannelSettings.apply()`): a muted note arrives with `silenced: true` and
  * `priority: "passive"`, and every attention surface — badge count, sound,
  * native banner, feed styling — is meant to skip it.
@@ -38,7 +38,7 @@ function mount() {
   function wrapper({ children }: { children: React.ReactNode }) {
     return createElement(Provider, { store }, children)
   }
-  renderHook(() => useNativeNotification('Kiro Crew', '/avatar.png'), { wrapper })
+  renderHook(() => useNativeNotification('Aj Crew', '/avatar.png'), { wrapper })
   return store
 }
 

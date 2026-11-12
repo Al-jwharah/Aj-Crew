@@ -1,9 +1,9 @@
-"""The session tree keeps ONE ``$KIROCREW_SCRATCH`` across every process it spans.
+"""The session tree keeps ONE ``$AJCREW_SCRATCH`` across every process it spans.
 
 The scratch root is masked for every sandboxed process and each spawn is handed
 back only its own directory, so before this a dedicated subagent process, a
 companion runtime and a recycled runtime's successor each got an EMPTY
-``$KIROCREW_SCRATCH``: a brief the parent staged there was unreadable to the
+``$AJCREW_SCRATCH``: a brief the parent staged there was unreadable to the
 child, and a runtime recycled for RSS mid-task lost the sessions' files. These
 tests pin the four seams that close that: ``agent_scratch`` (env + window
 validation), the two spawners (a second private window, the shared name), the
@@ -26,7 +26,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import agent_scratch as sc
+from aj_crew import agent_scratch as sc
 
 #: A pid no live process can own on any supported platform (above every pid_max),
 #: so a cleanup path that signals a fake reaches nothing on the runner.
@@ -57,14 +57,14 @@ class TestScratchEnvShared:
         # The prompt-visible name is the TREE's; temp files and the kiro-cli
         # log stay per-process, because two live processes appending to one
         # log is the sharing the pin exists to prevent.
-        assert env["KIROCREW_SCRATCH"] == str(shared)
+        assert env["AJCREW_SCRATCH"] == str(shared)
         assert {env["TMPDIR"], env["TMP"], env["TEMP"]} == {str(own)}
         assert env["KIRO_CHAT_LOG_FILE"] == str(own / "kiro-log" / "kiro-chat.log")
 
     def test_no_shared_is_the_first_process_shape(self, tmp_path: Path, monkeypatch) -> None:
         monkeypatch.setattr(sc, "_CAN_CAP_LOGS", False)
         assert sc.scratch_env(tmp_path) == sc.scratch_env(tmp_path, shared=None)
-        assert sc.scratch_env(tmp_path)["KIROCREW_SCRATCH"] == str(tmp_path)
+        assert sc.scratch_env(tmp_path)["AJCREW_SCRATCH"] == str(tmp_path)
 
 
 class TestSharedScratchWindow:
@@ -451,7 +451,7 @@ class TestSpawnersMountTheTreeWindow:
         async def resolve_installed(*, environ=None, home=None):
             return str(executable)
 
-        import kiro_crew.acp.client as client_mod
+        import aj_crew.acp.client as client_mod
 
         monkeypatch.setattr(client_mod, "_resolve_kiro_bin_for_spawn", resolve_installed)
         monkeypatch.setattr(module, "wrap_argv", capture_wrap)
@@ -475,8 +475,8 @@ class TestSpawnersMountTheTreeWindow:
     async def test_runtime_spawn_adds_the_tree_dir_as_a_second_window(
         self, scratch_root: Path, tmp_path: Path, monkeypatch
     ) -> None:
-        import kiro_crew.acp.runtime as runtime_mod
-        from kiro_crew.acp.runtime import AcpRuntime
+        import aj_crew.acp.runtime as runtime_mod
+        from aj_crew.acp.runtime import AcpRuntime
 
         wrapped, stop = self._install_capture(
             monkeypatch, runtime_mod, tmp_path, "create_subprocess_limited"
@@ -490,7 +490,7 @@ class TestSpawnersMountTheTreeWindow:
         assert Path(own).parent == scratch_root and Path(own) != tree
         assert Path(second) == tree
         env = wrapped["spawn_kwargs"]["env"]  # type: ignore[index]
-        assert env["KIROCREW_SCRATCH"] == str(tree)
+        assert env["AJCREW_SCRATCH"] == str(tree)
         assert env["TMPDIR"] == own
         # Spawns made on behalf of sessions on this runtime inherit the TREE.
         assert runtime.work_scratch_dir == tree
@@ -499,8 +499,8 @@ class TestSpawnersMountTheTreeWindow:
     async def test_runtime_spawn_drops_a_swept_tree_dir_and_keeps_its_own(
         self, scratch_root: Path, tmp_path: Path, monkeypatch
     ) -> None:
-        import kiro_crew.acp.runtime as runtime_mod
-        from kiro_crew.acp.runtime import AcpRuntime
+        import aj_crew.acp.runtime as runtime_mod
+        from aj_crew.acp.runtime import AcpRuntime
 
         wrapped, stop = self._install_capture(
             monkeypatch, runtime_mod, tmp_path, "create_subprocess_limited"
@@ -513,7 +513,7 @@ class TestSpawnersMountTheTreeWindow:
 
         (own,) = tuple(wrapped["kwargs"]["extra_private_dirs"])  # type: ignore[index]
         env = wrapped["spawn_kwargs"]["env"]  # type: ignore[index]
-        assert env["KIROCREW_SCRATCH"] == own == env["TMPDIR"]
+        assert env["AJCREW_SCRATCH"] == own == env["TMPDIR"]
         assert not gone.exists()
         assert runtime.work_scratch_dir == Path(own)
 
@@ -521,8 +521,8 @@ class TestSpawnersMountTheTreeWindow:
     async def test_client_spawn_adds_the_tree_dir_as_a_second_window(
         self, scratch_root: Path, tmp_path: Path, monkeypatch
     ) -> None:
-        import kiro_crew.acp.client as client_mod
-        from kiro_crew.acp.client import AcpClient
+        import aj_crew.acp.client as client_mod
+        from aj_crew.acp.client import AcpClient
 
         wrapped, stop = self._install_capture(
             monkeypatch, client_mod, tmp_path, "create_subprocess_limited"
@@ -536,7 +536,7 @@ class TestSpawnersMountTheTreeWindow:
         assert Path(own).parent == scratch_root and Path(own) != tree
         assert Path(second) == tree
         env = wrapped["spawn_kwargs"]["env"]  # type: ignore[index]
-        assert env["KIROCREW_SCRATCH"] == str(tree)
+        assert env["AJCREW_SCRATCH"] == str(tree)
         assert env["TMPDIR"] == own
         assert client.work_scratch_dir == tree
 
@@ -548,8 +548,8 @@ class TestSpawnersMountTheTreeWindow:
         still the same session tree: its children mounted the directory the
         previous process exposed and the work it staged is there. The new
         process joins it as the tree rather than starting an empty one."""
-        import kiro_crew.acp.client as client_mod
-        from kiro_crew.acp.client import AcpClient
+        import aj_crew.acp.client as client_mod
+        from aj_crew.acp.client import AcpClient
 
         wrapped, stop = self._install_capture(
             monkeypatch, client_mod, tmp_path, "create_subprocess_limited"
@@ -563,7 +563,7 @@ class TestSpawnersMountTheTreeWindow:
         own, second = tuple(wrapped["kwargs"]["extra_private_dirs"])  # type: ignore[index]
         assert Path(second) == previous and Path(own) != previous
         env = wrapped["spawn_kwargs"]["env"]  # type: ignore[index]
-        assert env["KIROCREW_SCRATCH"] == str(previous)
+        assert env["AJCREW_SCRATCH"] == str(previous)
         assert client.work_scratch_dir == previous
 
 
@@ -581,8 +581,8 @@ class TestAnInheritingRuntimeJoinsTheMarkerOnceLive:
     def _drive(monkeypatch, tmp_path: Path, tree: Path, adopt_outcome: str):
         from test_acp_spawn_offload import TestRuntimeShieldSurvivesAFailedAppend
 
-        import kiro_crew.acp.runtime as runtime_mod
-        from kiro_crew.acp.runtime import AcpRuntime
+        import aj_crew.acp.runtime as runtime_mod
+        from aj_crew.acp.runtime import AcpRuntime
 
         class _StopSpawn(Exception):
             pass
@@ -594,13 +594,13 @@ class TestAnInheritingRuntimeJoinsTheMarkerOnceLive:
         mock_proc.stdout = None
         TestRuntimeShieldSurvivesAFailedAppend._patch_prelude(monkeypatch, tmp_path, mock_proc)
         # No native agent tree here either (the offload module's autouse fixture).
-        from kiro_crew.acp import skill_projection
+        from aj_crew.acp import skill_projection
 
         monkeypatch.setattr(
             skill_projection,
             "prepare_native_skill_projection",
             lambda work_dir, **_kwargs: skill_projection.NativeSkillProjection(
-                {"kirocrew": "kirocrew-view"}
+                {"ajcrew": "ajcrew-view"}
             ),
         )
         calls: list[tuple[str, Path, int]] = []
@@ -659,7 +659,7 @@ class TestAnInheritingRuntimeJoinsTheMarkerOnceLive:
     ) -> None:
         """ "stale" leaves the marker naming only the other users: their exit would
         read as a dead owner over this runtime's live use."""
-        from kiro_crew.agent_scratch import SharedScratchJoinError
+        from aj_crew.agent_scratch import SharedScratchJoinError
 
         tree = tmp_path / "scratch" / "parent-abcdef01"
         runtime, calls, kill, _stop = self._drive(monkeypatch, tmp_path, tree, "stale")
@@ -672,7 +672,7 @@ class TestAnInheritingRuntimeJoinsTheMarkerOnceLive:
 
 class TestSpawnsOnBehalfOfAParent:
     def test_companion_runtime_kwargs_carry_the_parents_tree_dir(self, tmp_path: Path) -> None:
-        from kiro_crew.session_allocation import _collect_parent_runtime_kwargs
+        from aj_crew.session_allocation import _collect_parent_runtime_kwargs
 
         tree = tmp_path / "scratch" / "runtime-abcdef01"
         provider = MagicMock()
@@ -693,7 +693,7 @@ class TestSpawnsOnBehalfOfAParent:
         assert kwargs["shared_scratch"] == tree
 
     def test_a_parent_without_a_path_contributes_nothing(self) -> None:
-        from kiro_crew.session_allocation import (
+        from aj_crew.session_allocation import (
             _collect_parent_runtime_kwargs,
             parent_work_scratch_dir,
         )
@@ -713,7 +713,7 @@ class TestSpawnsOnBehalfOfAParent:
         self, tmp_path: Path
     ) -> None:
         """H14: the ABC property is the contract; a client-side path alone is not read."""
-        from kiro_crew.session_allocation import parent_work_scratch_dir
+        from aj_crew.session_allocation import parent_work_scratch_dir
 
         tree = tmp_path / "scratch" / "chat-1-abcdef01"
         provider = SimpleNamespace(
@@ -728,11 +728,11 @@ class TestSpawnsOnBehalfOfAParent:
         self, tmp_path: Path
     ) -> None:
         """A pooled child's mounts were fixed at pre-spawn with no parent."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         cfg = MagicMock()
         cfg.session.pool_size = 2
-        cfg.session.pool_agent = "kirocrew"
+        cfg.session.pool_agent = "ajcrew"
         cfg.session.pool_ttl_secs = 1800
         cfg.session.timeout_secs = 3600
         cfg.agent.default_agent = ""
@@ -754,14 +754,14 @@ class TestSpawnsOnBehalfOfAParent:
             return built[-1]
 
         factory = MagicMock(side_effect=_build)
-        with patch("kiro_crew.session.default_project_dir", return_value=""):
+        with patch("aj_crew.session.default_project_dir", return_value=""):
             mgr = SessionManager(cfg, provider_factory=factory)
         pooled = _provider()
         mgr._drain_and_claim = AsyncMock(return_value=pooled)
         mgr._schedule_replenish = MagicMock()
         tree = tmp_path / "scratch" / "runtime-abcdef01"
         try:
-            got = await mgr.get_or_create("subagent:s1", agent="kirocrew", shared_scratch=tree)
+            got = await mgr.get_or_create("subagent:s1", agent="ajcrew", shared_scratch=tree)
         finally:
             await mgr.close_all()
 
@@ -772,10 +772,10 @@ class TestSpawnsOnBehalfOfAParent:
         assert factory.call_args.kwargs["shared_scratch"] == tree
 
     def _run_dedicated(self, sessions: MagicMock) -> dict:
-        from kiro_crew.config.loader import AgentConfig, KiroCrewConfig
-        from kiro_crew.execution_context import execution_for_store
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.config.loader import AgentConfig, AjCrewConfig
+        from aj_crew.execution_context import execution_for_store
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.subagent import SubagentInfo, SubagentManager
 
         sessions.get_pid = MagicMock(return_value=None)
         sessions.get_approval_policy = MagicMock(return_value="")
@@ -797,7 +797,7 @@ class TestSpawnsOnBehalfOfAParent:
             yield LLMEvent(kind=EVENT_COMPLETE)
 
         mock_client.stream = fake_stream
-        cfg = KiroCrewConfig(agent=AgentConfig())
+        cfg = AjCrewConfig(agent=AgentConfig())
         runner = SubagentManager(sessions=sessions, ctx_builder=ctx_builder)
         info = SubagentInfo(
             execution_context=execution_for_store(""),
@@ -809,7 +809,7 @@ class TestSpawnsOnBehalfOfAParent:
         runner._log_spawned(info)
         with (
             patch.object(runner, "_should_use_session_sharing", return_value=False),
-            patch("kiro_crew.config.loader.KiroCrewConfig.load", classmethod(lambda c: cfg)),
+            patch("aj_crew.config.loader.AjCrewConfig.load", classmethod(lambda c: cfg)),
         ):
             asyncio.run(runner._run_inner(info, "subagent:sub1"))
         return captured
@@ -836,14 +836,14 @@ class TestTheKiroDedicatedPathCarriesTheTree:
 
     @staticmethod
     def _provider(tree: Path):
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
-        with patch("kiro_crew.providers.acp.AcpClient"):
+        with patch("aj_crew.providers.acp.AcpClient"):
             provider = AcpProvider(acp_backend="", shared_scratch=tree)
         provider._client = MagicMock()
         provider._client.backend = ""
         provider._client._work_dir = "/tmp/ws"
-        provider._client._agent = "kirocrew"
+        provider._client._agent = "ajcrew"
         provider._client._sandbox_mode = "auto"
         provider._client._extra_env = {}
         provider._client._mcp_gateway_overlay = None
@@ -868,9 +868,9 @@ class TestTheKiroDedicatedPathCarriesTheTree:
         runtime.create_session = AsyncMock(return_value=handle)
         runtime.work_scratch_dir = tree
         with (
-            patch("kiro_crew.providers.acp.AcpRuntime", return_value=runtime) as ctor,
+            patch("aj_crew.providers.acp.AcpRuntime", return_value=runtime) as ctor,
             patch(
-                "kiro_crew.providers.acp.AcpSessionProvider",
+                "aj_crew.providers.acp.AcpSessionProvider",
                 side_effect=lambda h, rt, **kw: SimpleNamespace(
                     _handle=h, _runtime=rt, resumed=False, work_scratch_dir=rt.work_scratch_dir
                 ),
@@ -908,9 +908,9 @@ class TestTheKiroDedicatedPathCarriesTheTree:
             return runtime
 
         with (
-            patch("kiro_crew.providers.acp.AcpRuntime", side_effect=build) as ctor,
+            patch("aj_crew.providers.acp.AcpRuntime", side_effect=build) as ctor,
             patch(
-                "kiro_crew.providers.acp.AcpSessionProvider",
+                "aj_crew.providers.acp.AcpSessionProvider",
                 side_effect=lambda h, rt, **kw: SimpleNamespace(
                     _handle=h,
                     _runtime=rt,
@@ -919,7 +919,7 @@ class TestTheKiroDedicatedPathCarriesTheTree:
                     # What the restart reads off the client it replaces.
                     backend="",
                     _work_dir="/tmp/ws",
-                    _agent="kirocrew",
+                    _agent="ajcrew",
                     _sandbox_mode="auto",
                     _extra_env={},
                     _mcp_gateway_overlay=None,
@@ -938,7 +938,7 @@ class TestTheKiroDedicatedPathCarriesTheTree:
 
     def test_the_capability_is_declared_on_the_provider_contract(self) -> None:
         """H14: read off ``LLMProvider``, never probed for a private name."""
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         assert isinstance(vars(LLMProvider)["work_scratch_dir"], property)
 
@@ -953,9 +953,9 @@ class TestBgRuntimeSuccessorInheritsTheTree:
 
     @staticmethod
     def _cfg():
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
-        c = KiroCrewConfig()
+        c = AjCrewConfig()
         c.session.timeout_secs = 2
         return c
 
@@ -990,7 +990,7 @@ class TestBgRuntimeSuccessorInheritsTheTree:
 
     @pytest.mark.asyncio
     async def test_a_stale_runtimes_successor_inherits_and_adopts(self, tmp_path: Path) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(self._cfg(), provider_factory=self._factory())
         tree = tmp_path / "scratch" / "runtime-abcdef01"
@@ -1004,7 +1004,7 @@ class TestBgRuntimeSuccessorInheritsTheTree:
         mgr._bg_runtime = stale
 
         fresh = self._fresh_runtime()
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=fresh) as ctor:
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=fresh) as ctor:
             await mgr.get_bg_session()
 
         assert ctor.call_count == 1
@@ -1020,8 +1020,8 @@ class TestBgRuntimeSuccessorInheritsTheTree:
         self, tmp_path: Path
     ) -> None:
         """The retry clears the slot before the second iteration reads it."""
-        from kiro_crew.acp.runtime import AcpRuntimeDead
-        from kiro_crew.session import SessionManager
+        from aj_crew.acp.runtime import AcpRuntimeDead
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(self._cfg(), provider_factory=self._factory())
         tree = tmp_path / "scratch" / "runtime-abcdef01"
@@ -1042,7 +1042,7 @@ class TestBgRuntimeSuccessorInheritsTheTree:
         mgr._bg_runtime = dying
 
         fresh = self._fresh_runtime()
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=fresh) as ctor:
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=fresh) as ctor:
             await mgr.get_bg_session()
 
         assert ctor.call_count == 1
@@ -1057,8 +1057,8 @@ class TestBgRuntimeSuccessorInheritsTheTree:
         """The stale runtime is detached and the slot cleared BEFORE the
         replacement spawns; a spawn failure must not leave the next call with
         nothing to inherit."""
-        from kiro_crew.acp.runtime import AcpRuntimeDead
-        from kiro_crew.session import SessionManager
+        from aj_crew.acp.runtime import AcpRuntimeDead
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(self._cfg(), provider_factory=self._factory())
         tree = tmp_path / "scratch" / "runtime-abcdef01"
@@ -1073,13 +1073,13 @@ class TestBgRuntimeSuccessorInheritsTheTree:
 
         failing = self._fresh_runtime()
         failing.spawn = AsyncMock(side_effect=AcpRuntimeDead("spawn failed"))
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=failing):
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=failing):
             with pytest.raises(AcpRuntimeDead):
                 await mgr.get_bg_session()
         assert mgr._bg_runtime is None or not mgr._bg_runtime.is_alive()
 
         fresh = self._fresh_runtime()
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=fresh) as ctor:
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=fresh) as ctor:
             await mgr.get_bg_session()
         assert ctor.call_args.kwargs["shared_scratch"] == tree
         mgr._draining_bg_runtimes = []
@@ -1093,7 +1093,7 @@ class TestBgRuntimeSuccessorInheritsTheTree:
         agent on the runtime, so a tampered marker must not lock the ``_bg``
         slot out of ever getting a replacement: the inherit is dropped and the
         replacement proceeds with its own directory."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(self._cfg(), provider_factory=self._factory())
         tree = tmp_path / "scratch" / "runtime-abcdef01"
@@ -1111,7 +1111,7 @@ class TestBgRuntimeSuccessorInheritsTheTree:
             side_effect=sc.SharedScratchJoinError("owner marker replaced with a link")
         )
         recovered = self._fresh_runtime()
-        with patch("kiro_crew.acp.runtime.AcpRuntime", side_effect=[refusing, recovered]) as ctor:
+        with patch("aj_crew.acp.runtime.AcpRuntime", side_effect=[refusing, recovered]) as ctor:
             await mgr.get_bg_session()
         assert [c.kwargs["shared_scratch"] for c in ctor.call_args_list] == [tree, None]
         assert mgr._bg_runtime is recovered
@@ -1126,7 +1126,7 @@ class TestBgRuntimeSuccessorInheritsTheTree:
         """A plain ``ScratchBoundaryError`` is the replacement's OWN marker
         (record_owner), which says nothing about the inherited tree: the
         failure propagates and the inherit is kept for the next call."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(self._cfg(), provider_factory=self._factory())
         tree = tmp_path / "scratch" / "runtime-abcdef01"
@@ -1143,7 +1143,7 @@ class TestBgRuntimeSuccessorInheritsTheTree:
         own_failure.spawn = AsyncMock(
             side_effect=sc.ScratchBoundaryError("own owner marker replaced with a link")
         )
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=own_failure) as ctor:
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=own_failure) as ctor:
             with pytest.raises(sc.ScratchBoundaryError):
                 await mgr.get_bg_session()
         assert ctor.call_count == 1  # no second, tree-less spawn
@@ -1153,12 +1153,12 @@ class TestBgRuntimeSuccessorInheritsTheTree:
 
     @pytest.mark.asyncio
     async def test_the_first_runtime_of_a_gateway_starts_its_own_tree(self) -> None:
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(self._cfg(), provider_factory=self._factory())
         assert mgr._bg_runtime is None
         fresh = self._fresh_runtime()
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=fresh) as ctor:
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=fresh) as ctor:
             await mgr.get_bg_session()
 
         assert ctor.call_args.kwargs["shared_scratch"] is None
@@ -1171,20 +1171,20 @@ class TestBgRuntimeSuccessorInheritsTheTree:
         """A backend switch retires the runtime without another acquisition
         reading it as a predecessor; the tree must already be on the state or
         the switch back starts empty and the sweep takes the forgotten tree."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(self._cfg(), provider_factory=self._factory())
         tree = tmp_path / "scratch" / "runtime-fresh0001"
         fresh = self._fresh_runtime()
         fresh.work_scratch_dir = tree
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=fresh):
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=fresh):
             await mgr.get_bg_session()
         assert mgr._background_runtime.state.inherited_scratch == tree
         # Retired by a path that never re-reads the slot; the next replacement
         # still inherits the tree the retired runtime exposed.
         mgr._bg_runtime = None
         successor = self._fresh_runtime()
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=successor) as ctor:
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=successor) as ctor:
             await mgr.get_bg_session()
         assert ctor.call_args.kwargs["shared_scratch"] == tree
         await mgr.close_all()
@@ -1253,10 +1253,10 @@ class TestEveryProcessSpawnSeamIsAccountedFor:
         """``AcpClient(**kwargs)`` in AcpProvider is filled by its own __init__;
         the parent-side collectors that feed the dedicated and pooled arms
         name the key too."""
-        from kiro_crew import session_allocation
-        from kiro_crew.config import loader_config
-        from kiro_crew.providers import acp as acp_provider
-        from kiro_crew.subagent_manager import run_turn as sub_run
+        from aj_crew import session_allocation
+        from aj_crew.config import loader_config
+        from aj_crew.providers import acp as acp_provider
+        from aj_crew.subagent_manager import run_turn as sub_run
 
         assert '"shared_scratch": shared_scratch' in inspect.getsource(acp_provider.AcpProvider)
         assert 'kwargs["shared_scratch"]' in inspect.getsource(

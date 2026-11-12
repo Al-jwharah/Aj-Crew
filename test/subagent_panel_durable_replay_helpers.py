@@ -15,7 +15,7 @@ import time
 
 import pytest
 
-from kiro_crew.subagent_persistence import _PANEL_TRUNC_MARKER, read_panel_records
+from aj_crew.subagent_persistence import _PANEL_TRUNC_MARKER, read_panel_records
 
 DAY = 86_400.0
 
@@ -29,7 +29,7 @@ def agent_root_fixture(tmp_path, monkeypatch):
     """Point persistence at a registry below this test's temp directory."""
     root = tmp_path / "subagents"
     root.mkdir()
-    monkeypatch.setattr("kiro_crew.subagent_persistence._SUBAGENTS_DIR", root)
+    monkeypatch.setattr("aj_crew.subagent_persistence._SUBAGENTS_DIR", root)
     return root
 
 
@@ -38,7 +38,7 @@ def write_record(
     agent_id: str,
     *,
     task: str = "summarise the changelog",
-    agent: str = "kirocrew",
+    agent: str = "ajcrew",
     parent_session: str = "dashboard:chat-1",
     started: float | None = None,
     memory_mode: str = "persistent",

@@ -127,7 +127,7 @@ async function shoot(page, base, shot) {
               key: MENU_SLOT,
               messages: 4,
               running: false,
-              agent: 'kirocrew-conductor',
+              agent: 'ajcrew-conductor',
               mode: '',
             },
           ],

@@ -20,12 +20,12 @@ import pytest
 from governance_distribution_helpers import _hermetic_governance_globals  # noqa: F401
 from governance_distribution_helpers import install_ceiling_fixture  # noqa: F401
 
-from kiro_crew import lts_boot
-from kiro_crew.auth.store import KasToken, TokenStore
-from kiro_crew.platform import enterprise_policy_fetch as epf
-from kiro_crew.platform import governance
-from kiro_crew.platform import policy_distribution as pd
-from kiro_crew.platform.context import PlatformCompositionError
+from aj_crew import lts_boot
+from aj_crew.auth.store import KasToken, TokenStore
+from aj_crew.platform import enterprise_policy_fetch as epf
+from aj_crew.platform import governance
+from aj_crew.platform import policy_distribution as pd
+from aj_crew.platform.context import PlatformCompositionError
 
 _ARN = "arn:aws:codewhisperer:us-east-1:123456789012:profile/ABCDEFGHIJKL"
 _EU_ARN = "arn:aws:codewhisperer:eu-central-1:123456789012:profile/ABCDEFGHIJKL"
@@ -112,7 +112,7 @@ def _http_error(code: int, body: dict) -> urllib.error.HTTPError:
 @pytest.fixture(name="vault")
 def vault_fixture(tmp_path, monkeypatch):
     store = TokenStore(tmp_path / "data")
-    monkeypatch.setattr("kiro_crew.auth.bridge.default_token_store", lambda: store)
+    monkeypatch.setattr("aj_crew.auth.bridge.default_token_store", lambda: store)
     monkeypatch.delenv("KIRO_API_KEY", raising=False)
 
     def sign_in(profile_arn: str | None = _ARN, *, auth_method: str = "identity_center") -> None:
@@ -140,7 +140,7 @@ def cps_fixture(monkeypatch):
 
 @pytest.fixture(name="enterprise")
 def enterprise_fixture(monkeypatch):
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 @pytest.fixture(name="kills", autouse=True)
@@ -316,7 +316,7 @@ class TestWrongHost:
         """No environment variable or local setting moves the address."""
         monkeypatch.setenv(pd.POLICY_URL_ENV, "https://elsewhere.example.invalid/p.json")
         monkeypatch.setenv(pd.POLICY_HEADERS_ENV, '{"Authorization": "Bearer other-secret"}')
-        monkeypatch.setenv("KIROCREW_EM_ENDPOINT", "https://elsewhere.example.invalid/")
+        monkeypatch.setenv("AJCREW_EM_ENDPOINT", "https://elsewhere.example.invalid/")
         vault(_EU_ARN)
         governance.load_security_policy()
         (req,) = cps.requests
@@ -490,7 +490,7 @@ class TestProfileBoundCache:
         self, enterprise, vault, cps, monkeypatch
     ):
         """The concurrent-writer handoff checks the profile as well as the source."""
-        from kiro_crew.platform import policy_distribution_boot as boot
+        from aj_crew.platform import policy_distribution_boot as boot
 
         vault()
         governance.load_security_policy()
@@ -504,7 +504,7 @@ class TestProfileBoundCache:
 
     def test_the_outage_fallback_refuses_a_changed_account(self, enterprise, vault, cps):
         """A switch while this process runs: the pinned profile's cache is not served."""
-        from kiro_crew.platform import policy_distribution_boot as boot
+        from aj_crew.platform import policy_distribution_boot as boot
 
         vault()
         governance.load_security_policy()
@@ -579,7 +579,7 @@ class TestPinnedProfile:
         epf.pinned_scope()
         install_ceiling(governance.parse_policy(json.loads(epf.fetch(_request()).body)))
         # A real sign-out: the vault holds no identity any more.
-        from kiro_crew.auth.bridge import default_token_store
+        from aj_crew.auth.bridge import default_token_store
 
         store = default_token_store()
         store.delete(store.resolve().identity)
@@ -646,12 +646,12 @@ class TestSwitchDuringASuccessfulFetch:
 
     def test_no_sign_in_matches_no_cache(self, enterprise, vault, cps, monkeypatch):
         """Signed out: the identity matches no recorded copy, so nothing cached is served."""
-        from kiro_crew.platform import policy_distribution_source as src
+        from aj_crew.platform import policy_distribution_source as src
 
         vault()
         governance.load_security_policy()
         body = pd.read_cache().body
-        monkeypatch.setattr("kiro_crew.auth.bridge.default_token_store", lambda: None)
+        monkeypatch.setattr("aj_crew.auth.bridge.default_token_store", lambda: None)
         _restart(monkeypatch)
         assert src._source_identity(pd.ENTERPRISE_POLICY_URL) != src._source_identity(
             pd.ENTERPRISE_POLICY_URL, body
@@ -664,8 +664,8 @@ class TestSwitchDuringASuccessfulFetch:
         self, enterprise, vault, cps, monkeypatch
     ):
         """An upgrade that maps a new rule refetches instead of serving the old copy."""
-        from kiro_crew.platform import enterprise_policy_translate as t
-        from kiro_crew.platform import policy_distribution_source as src
+        from aj_crew.platform import enterprise_policy_translate as t
+        from aj_crew.platform import policy_distribution_source as src
 
         vault()
         governance.load_security_policy()
@@ -699,7 +699,7 @@ class TestSwitchDuringASuccessfulFetch:
         assert not governance.resolve(ceiling, None, "capabilities.memory_writes", "").permitted
 
     def test_oss_sources_are_unchanged(self):
-        from kiro_crew.platform import policy_distribution_source as src
+        from aj_crew.platform import policy_distribution_source as src
 
         for url in ("https://p.example/x.json", "file:///etc/p.json"):
             assert src._source_identity(url) == url == src._source_identity(url, b"{}")
@@ -716,7 +716,7 @@ class TestTranslation:
         ],
     )
     def test_excludes_intersect_by_what_they_admit(self, excludes, expected):
-        from kiro_crew.platform import enterprise_policy_translate as t
+        from aj_crew.platform import enterprise_policy_translate as t
 
         rules = [
             {"capability": "messaging_channel", "effect": "deny", "exclude": e} for e in excludes
@@ -724,7 +724,7 @@ class TestTranslation:
         assert t.ruleset(rules, "messaging_channel") == {"mode": "allow", "allow": expected}
 
     def test_a_denied_glob_removes_the_literals_it_matches(self):
-        from kiro_crew.platform import enterprise_policy_translate as t
+        from aj_crew.platform import enterprise_policy_translate as t
 
         rules = [
             {"capability": "messaging_channel", "effect": "deny", "exclude": ["slack", "teams"]},
@@ -733,7 +733,7 @@ class TestTranslation:
         assert t.ruleset(rules, "messaging_channel") == {"mode": "allow", "allow": ["teams"]}
 
     def test_a_denied_glob_beside_an_allowed_glob_is_refused(self):
-        from kiro_crew.platform import enterprise_policy_translate as t
+        from aj_crew.platform import enterprise_policy_translate as t
 
         rules = [
             {"capability": "messaging_channel", "effect": "deny", "exclude": ["s*"]},
@@ -743,7 +743,7 @@ class TestTranslation:
             t.ruleset(rules, "messaging_channel")
 
     def test_a_denied_glob_that_cannot_meet_an_allowed_glob_is_dropped(self):
-        from kiro_crew.platform import enterprise_policy_translate as t
+        from aj_crew.platform import enterprise_policy_translate as t
 
         rules = [
             {"capability": "messaging_channel", "effect": "deny", "exclude": ["t*"]},
@@ -753,13 +753,13 @@ class TestTranslation:
 
     def test_a_lone_deny_match_grants_nothing(self):
         """Named by a rule, nothing granted: no channel is allowed, not every other one."""
-        from kiro_crew.platform import enterprise_policy_translate as t
+        from aj_crew.platform import enterprise_policy_translate as t
 
         rules = [{"capability": "messaging_channel", "effect": "deny", "match": ["discord"]}]
         assert t.ruleset(rules, "messaging_channel") == {"mode": "allow", "allow": []}
 
     def test_two_different_globs_are_refused(self):
-        from kiro_crew.platform import enterprise_policy_translate as t
+        from aj_crew.platform import enterprise_policy_translate as t
 
         rules = [
             {"capability": "messaging_channel", "effect": "deny", "exclude": e}
@@ -774,7 +774,7 @@ _FLOOR = ["normal"]
 
 
 def _translate(*rules: str) -> dict:
-    from kiro_crew.platform import enterprise_policy_translate as t
+    from aj_crew.platform import enterprise_policy_translate as t
 
     if not rules:
         return t.translate("rules: []\n")
@@ -845,7 +845,7 @@ class TestSwitchRows:
         assert not governance.resolve(ceiling, None, "capabilities.cron", "").permitted
 
     def test_an_unknown_effect_is_refused(self):
-        from kiro_crew.platform import enterprise_policy_translate as t
+        from aj_crew.platform import enterprise_policy_translate as t
 
         with pytest.raises(t.TranslationError):
             _translate("{capability: cron, effect: maybe}")
@@ -987,7 +987,7 @@ class TestSandboxMinLevel:
         [("off", None), ("standard", None), ("cc", "cc"), ("strict", "strict")],
     )
     def test_each_level(self, value, floor, caplog):
-        from kiro_crew.platform import enterprise_policy_translate as t
+        from aj_crew.platform import enterprise_policy_translate as t
 
         doc = t.translate("rules: []\n", [_setting(value)])
         assert doc.get("sandbox") == (None if floor is None else {"min_level": floor})
@@ -1007,26 +1007,26 @@ class TestSandboxMinLevel:
     )
     def test_an_unknown_value_sets_no_floor_and_warns(self, entry, caplog):
         """Not a level the organisation picked, so Crew adds no floor of its own."""
-        from kiro_crew.platform import enterprise_policy_translate as t
+        from aj_crew.platform import enterprise_policy_translate as t
 
         doc = t.translate("rules: []\n", [entry])
         assert "sandbox" not in doc
         assert "crew_sandbox_min_level" in caplog.text and "sets no sandbox floor" in caplog.text
 
     def test_an_unknown_value_beside_a_known_one_keeps_the_known_one(self):
-        from kiro_crew.platform import enterprise_policy_translate as t
+        from aj_crew.platform import enterprise_policy_translate as t
 
         doc = t.translate("rules: []\n", [_setting("bogus"), _setting("cc")])
         assert doc["sandbox"] == {"min_level": "cc"}
 
     def test_absent_keeps_crews_default(self):
-        from kiro_crew.platform import enterprise_policy_translate as t
+        from aj_crew.platform import enterprise_policy_translate as t
 
         assert "sandbox" not in t.translate("rules: []\n")
         assert "sandbox" not in t.translate("rules: []\n", [_setting("strict", key="other")])
 
     def test_several_entries_take_the_strictest(self):
-        from kiro_crew.platform import enterprise_policy_translate as t
+        from aj_crew.platform import enterprise_policy_translate as t
 
         for entries in (
             [_setting("off"), _setting("strict")],
@@ -1038,9 +1038,9 @@ class TestSandboxMinLevel:
     @pytest.mark.parametrize("policy", ["off", "standard", "cc", "strict"])
     def test_the_stricter_of_local_and_policy_wins(self, enterprise, local, policy):
         """Policy only raises; a stricter local level is kept; nothing goes below standard."""
-        from kiro_crew import sandbox_tiers
-        from kiro_crew.platform import enterprise_policy_translate as t
-        from kiro_crew.platform.governance import _ORDINAL_SCALES
+        from aj_crew import sandbox_tiers
+        from aj_crew.platform import enterprise_policy_translate as t
+        from aj_crew.platform.governance import _ORDINAL_SCALES
 
         ceiling = governance.parse_policy(t.translate("rules: []\n", [_setting(policy)]))
         governed = governance.resolve_ordinal(ceiling, None, "sandbox.min_level")
@@ -1053,8 +1053,8 @@ class TestSandboxMinLevel:
         assert level == max(local_level, policy, key=scale.index)
 
     def test_a_stricter_local_profile_wins_over_the_policy(self, enterprise):
-        from kiro_crew.platform import enterprise_policy_translate as t
-        from kiro_crew.platform.governance import OrdinalControl
+        from aj_crew.platform import enterprise_policy_translate as t
+        from aj_crew.platform.governance import OrdinalControl
 
         ceiling = governance.parse_policy(t.translate("rules: []\n", [_setting("cc")]))
 
@@ -1156,26 +1156,26 @@ class TestSandboxMinLevel:
 
 class TestSignInCommands:
     def _main(self, monkeypatch, tmp_path, argv):
-        from kiro_crew import cli
+        from aj_crew import cli
 
         def failed_policy(_cfg):
             raise PlatformCompositionError("no Kiro sign-in was found")
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         monkeypatch.setattr(cli, "boot_platform", failed_policy)
         monkeypatch.setattr(cli, "maybe_reexec", lambda _argv: None)
         monkeypatch.setattr(
             cli.platform_compat, "limit_malloc_arenas", cli.platform_compat.MallocArenaCap
         )
         monkeypatch.setattr(cli, "_setup_cli_logging", lambda *_args: None)
-        monkeypatch.setattr(cli.sys, "argv", ["kirocrew", *argv])
+        monkeypatch.setattr(cli.sys, "argv", ["ajcrew", *argv])
         return cli
 
     def test_kas_login_runs_when_the_policy_load_fails(self, enterprise, monkeypatch, tmp_path):
         cli = self._main(monkeypatch, tmp_path, ["kas", "whoami"])
         ran: list = []
         monkeypatch.setattr(
-            "kiro_crew.cli_kas_login.kas_login_cmd", lambda args: ran.append(args.kas_action) or 0
+            "aj_crew.cli_kas_login.kas_login_cmd", lambda args: ran.append(args.kas_action) or 0
         )
         with pytest.raises(SystemExit) as exited:
             cli.main()
@@ -1187,7 +1187,7 @@ class TestSignInCommands:
         cli = self._main(monkeypatch, tmp_path, ["kas", "route"])
         ran: list = []
         monkeypatch.setattr(
-            "kiro_crew.cli_kas_login.kas_login_cmd", lambda args: ran.append(args.kas_action) or 0
+            "aj_crew.cli_kas_login.kas_login_cmd", lambda args: ran.append(args.kas_action) or 0
         )
         with pytest.raises(SystemExit) as exited:
             cli.main()
@@ -1243,7 +1243,7 @@ class TestOss:
 class TestBootWithoutCompanion:
     """An LTS build with no companion boots on the core defaults, every gate on.
 
-    Each test runs the real ``bootstrap_context`` with no ``kirocrew.plugins`` entry
+    Each test runs the real ``bootstrap_context`` with no ``ajcrew.plugins`` entry
     point, against the fake control plane, so the policy fetch, the built-in
     baseline and the local tiers are the shipped ones.
     """
@@ -1255,23 +1255,23 @@ class TestBootWithoutCompanion:
         ``apply_selectable_denials`` assigns ``baseline - denied``, so an empty denial
         restores the full set for the tests that run after this one.
         """
-        from kiro_crew.agent_sdk.backends import apply_selectable_denials
+        from aj_crew.agent_sdk.backends import apply_selectable_denials
 
         yield
         apply_selectable_denials(set())
 
     @staticmethod
     def _boot(monkeypatch):
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.platform import bootstrap
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.platform import bootstrap
 
         monkeypatch.setattr(bootstrap, "plugin_entry_points", lambda: [])
-        return bootstrap.bootstrap_context(KiroCrewConfig())
+        return bootstrap.bootstrap_context(AjCrewConfig())
 
     def test_boot_fetches_the_policy_and_composes_the_core_defaults(
         self, enterprise, vault, cps, monkeypatch
     ):
-        from kiro_crew.platform.defaults import DefaultIdentityProvider
+        from aj_crew.platform.defaults import DefaultIdentityProvider
 
         vault()
         ctx = self._boot(monkeypatch)
@@ -1305,7 +1305,7 @@ class TestBootWithoutCompanion:
             ),
             encoding="utf-8",
         )
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(local))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(local))
         vault()
         ceiling = self._boot(monkeypatch).governance
         # Asked to widen egress: still the baseline's denial.
@@ -1339,9 +1339,9 @@ class TestOlderTranslationTerminalRefusal:
     ):
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.handlers import terminal_session
-        from kiro_crew.platform import context as platform_context
-        from kiro_crew.platform import policy_distribution_source as src
+        from aj_crew.dashboard.handlers import terminal_session
+        from aj_crew.platform import context as platform_context
+        from aj_crew.platform import policy_distribution_source as src
 
         vault()
         governance.load_security_policy()
@@ -1368,7 +1368,7 @@ class TestOlderTranslationTerminalRefusal:
         [(epf.ISSUER_PREFIX + "abc", None), ("operator", False)],
     )
     def test_only_a_translated_document_has_its_refusal_dropped(self, issuer, expected):
-        from kiro_crew.platform import policy_distribution_boot as boot
+        from aj_crew.platform import policy_distribution_boot as boot
 
         doc = {"version": 1, "boot": {"allow_terminal": False}, "identity": {"issuer": issuer}}
         ceiling = boot.parse_distributed_policy(json.dumps(doc).encode("utf-8"), source="")

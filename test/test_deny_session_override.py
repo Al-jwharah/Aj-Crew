@@ -38,9 +38,9 @@ from dashboard_approval_helpers import (
     _set_stream,
 )
 
-from kiro_crew.dashboard import session_control, session_deliver
-from kiro_crew.dashboard.chat import _run_chat
-from kiro_crew.dashboard.deny_override import (
+from aj_crew.dashboard import session_control, session_deliver
+from aj_crew.dashboard.chat import _run_chat
+from aj_crew.dashboard.deny_override import (
     DENY_OVERRIDE_META_KEY,
     deny_key_family,
     override_decision,
@@ -48,18 +48,18 @@ from kiro_crew.dashboard.deny_override import (
     slot_deny_waivers,
     slot_may_override,
 )
-from kiro_crew.hooks import (
+from aj_crew.hooks import (
     HOOK_EVENT_PRE_TOOL_USE,
     TOOL_DENY,
     HookManager,
     HooksConfig,
     ToolHookResult,
 )
-from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.security import is_denied
-from kiro_crew.security.denied_rules import DENY_REASON_PREFIX
-from kiro_crew.security.deny_waiver import deny_key_is_self_guard, deny_reason_key
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.security import is_denied
+from aj_crew.security.denied_rules import DENY_REASON_PREFIX
+from aj_crew.security.deny_waiver import deny_key_is_self_guard, deny_reason_key
+from aj_crew.testing.wait import await_until, finished
 
 _RM_ROOT = "rm -rf /.*"
 _CHMOD_777 = "chmod 777.*"
@@ -75,13 +75,13 @@ def audit_ok(monkeypatch):
         written.append((key, mechanism))
         return True
 
-    monkeypatch.setattr("kiro_crew.security.deny_gate._emit_deny_exception_event", _emit)
+    monkeypatch.setattr("aj_crew.security.deny_gate._emit_deny_exception_event", _emit)
     return written
 
 
 @pytest.fixture
 def restore_context():
-    from kiro_crew.platform import reset_context
+    from aj_crew.platform import reset_context
 
     yield
     reset_context()
@@ -89,16 +89,16 @@ def restore_context():
 
 def _pin_ceiling(patterns):
     """Install a governance ceiling whose commands-scope deny pins *patterns*."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.platform import governance as gov
-    from kiro_crew.platform import set_context
-    from kiro_crew.platform.bootstrap import build_default_context
-    from kiro_crew.platform.profile import PROFILE_STANDALONE
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.platform import governance as gov
+    from aj_crew.platform import set_context
+    from aj_crew.platform.bootstrap import build_default_context
+    from aj_crew.platform.profile import PROFILE_STANDALONE
 
     ceiling = gov.parse_policy(
         {"version": 1, "boot": {}, "commands": {"mode": "deny", "deny": list(patterns)}}
     )
-    ctx = build_default_context(KiroCrewConfig(), profile=PROFILE_STANDALONE)
+    ctx = build_default_context(AjCrewConfig(), profile=PROFILE_STANDALONE)
     set_context(dataclasses.replace(ctx, governance=ceiling))
 
 
@@ -151,9 +151,7 @@ class TestIsDeniedWaiver:
         # A push a person waived is not a feature-branch push: its only audit is the
         # override's own deny_exception, never a BRANCH_GATE push_allowed.
         pushes: list[str] = []
-        monkeypatch.setattr(
-            "kiro_crew.security.deny_gate._schedule_push_allow_audit", pushes.append
-        )
+        monkeypatch.setattr("aj_crew.security.deny_gate._schedule_push_allow_audit", pushes.append)
         key = deny_reason_key(is_denied(push) or "")
         assert is_denied(push, waived=frozenset({key})) is None
         assert pushes == []
@@ -161,9 +159,7 @@ class TestIsDeniedWaiver:
 
     def test_feature_branch_push_still_records_push_allowed(self, audit_ok, monkeypatch):
         pushes: list[str] = []
-        monkeypatch.setattr(
-            "kiro_crew.security.deny_gate._schedule_push_allow_audit", pushes.append
-        )
+        monkeypatch.setattr("aj_crew.security.deny_gate._schedule_push_allow_audit", pushes.append)
         feature = "git " + "push origin feature-x"
         assert is_denied(feature) is None
         assert pushes == [feature]
@@ -171,7 +167,7 @@ class TestIsDeniedWaiver:
 
     def test_failed_audit_keeps_the_refusal(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.security.deny_gate._emit_deny_exception_event",
+            "aj_crew.security.deny_gate._emit_deny_exception_event",
             lambda *_a, **_k: False,
         )
         reason = is_denied("rm -rf /", waived=frozenset({_RM_ROOT}))
@@ -193,7 +189,7 @@ class TestGovernancePinnedNeverWaived:
         assert audit_ok == []
 
     def test_gate_drops_a_pinned_git_publish_tag(self, restore_context, audit_ok):
-        from kiro_crew.security.denied_rules import _GIT_PUBLISH_FLOOR_BY_ID
+        from aj_crew.security.denied_rules import _GIT_PUBLISH_FLOOR_BY_ID
 
         key = "git-publish-push-protected-branch-name"
         _pin_ceiling([_GIT_PUBLISH_FLOOR_BY_ID[key]])
@@ -207,7 +203,7 @@ class TestGovernancePinnedNeverWaived:
     def test_gate_drops_a_profile_pinned_key(self, monkeypatch, audit_ok):
         # Pins from any loaded profile count, not only the active ceiling's.
         monkeypatch.setattr(
-            "kiro_crew.security.pinned_builtin_command_ids_for_snapshot",
+            "aj_crew.security.pinned_builtin_command_ids_for_snapshot",
             lambda: {"local-destructive-rm-rf-root"},
         )
         result = HookManager(HooksConfig()).on_tool_call(
@@ -233,16 +229,16 @@ class TestGovernancePinnedNeverWaived:
 #: a self-protection catalog rule, a credential-exfil catalog rule whose card family
 #: is file upload (held by its category), and the ungated subcommand floors.
 _SELF_GUARD_COMMANDS = [
-    "kirocrew " + "token",
-    "kirocrew " + "token --ttl 30d",
-    "python3 -c \"import subprocess; subprocess.run(['kirocrew', 'tok' + 'en'])\"",
-    "pkill -f kirocrew",
+    "ajcrew " + "token",
+    "ajcrew " + "token --ttl 30d",
+    "python3 -c \"import subprocess; subprocess.run(['ajcrew', 'tok' + 'en'])\"",
+    "pkill -f ajcrew",
     "aws s3 cp ./build.zip s3://bucket/",
-    "kirocrew restart",
-    "kirocrew update",
-    "kirocrew gateway restart",
-    "kirocrew cloud destroy",
-    "kirocrew skills authority-retire",
+    "ajcrew restart",
+    "ajcrew update",
+    "ajcrew gateway restart",
+    "ajcrew cloud destroy",
+    "ajcrew skills authority-retire",
 ]
 
 
@@ -265,7 +261,7 @@ class TestSelfGuardNeverOverridden:
         assert audit_ok == []
 
     def test_every_ungated_floor_is_a_self_guard(self):
-        from kiro_crew.security.denied_rules_tables import (
+        from aj_crew.security.denied_rules_tables import (
             _SELF_PROTECTION_FLOOR_BY_ID,
             _SELF_PROTECTION_UNGATED_FLOOR_IDS,
         )
@@ -274,7 +270,7 @@ class TestSelfGuardNeverOverridden:
         assert [k for k in keys if not deny_key_is_self_guard(k)] == []
 
     def test_every_self_protection_and_credential_rule_is_a_self_guard(self):
-        from kiro_crew.security import denied_rules
+        from aj_crew.security import denied_rules
 
         rules = [
             r
@@ -297,7 +293,7 @@ class TestSelfGuardNeverOverridden:
     )
     def test_the_card_is_offered_only_for_an_ordinary_rule(self, monkeypatch, command, offered):
         _no_pins(monkeypatch)
-        monkeypatch.setattr("kiro_crew.dashboard.deny_override._overlay_patterns", lambda: set())
+        monkeypatch.setattr("aj_crew.dashboard.deny_override._overlay_patterns", lambda: set())
         verdict = ToolHookResult.deny(is_denied(command) or "")
         verdict.tier = "deny-rules"
         event = _shell_event(tool_input=json.dumps({"command": command}))
@@ -368,7 +364,7 @@ def _scripted_gate(keys: list[str]) -> MagicMock:
 
 def _no_pins(monkeypatch, pinned=frozenset()):
     monkeypatch.setattr(
-        "kiro_crew.security.pinned_builtin_command_ids_for_snapshot", lambda: set(pinned)
+        "aj_crew.security.pinned_builtin_command_ids_for_snapshot", lambda: set(pinned)
     )
 
 
@@ -465,7 +461,7 @@ class TestDashboardOverrideCard:
             seen.append(threading.get_ident())
             return set()
 
-        monkeypatch.setattr("kiro_crew.security.pinned_builtin_command_ids_for_snapshot", _pins)
+        monkeypatch.setattr("aj_crew.security.pinned_builtin_command_ids_for_snapshot", _pins)
         state, client = _make_state(tmp_path, context_builder=_scripted_gate([_RM_ROOT]))
         slot = _make_slot()
         _set_stream(client, _stream())
@@ -551,7 +547,7 @@ class TestDenyKeyFamily:
     """The family slug picks the card's plain-language line; every built-in rule has one."""
 
     def test_every_builtin_rule_has_a_family(self):
-        from kiro_crew.security import denied_rules
+        from aj_crew.security import denied_rules
 
         # These take the generic line on purpose: no family line fits them.
         generic = {
@@ -577,7 +573,7 @@ class TestDenyKeyFamily:
         [
             ("git-publish-push-protected-branch-name", "git_publish"),
             ("self-protection-restart", "self_protection"),
-            ("credential-exfil-kirocrew-token", "credentials"),
+            ("credential-exfil-ajcrew-token", "credentials"),
             ("local-destructive-chmod-777", "permissions"),
             (_RM_ROOT, "wipe"),
             (_CHMOD_777, "permissions"),
@@ -665,8 +661,8 @@ class TestNativeKasChild:
     def _handle():
         import asyncio
 
-        from kiro_crew.acp.session_handle import AcpSessionHandle
-        from kiro_crew.acp_backends import ACP_BACKEND_KAS
+        from aj_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp_backends import ACP_BACKEND_KAS
 
         rt = MagicMock()
         rt.pid = None
@@ -676,7 +672,7 @@ class TestNativeKasChild:
 
     @staticmethod
     def _permission():
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         return JsonRpcMessage(
             id=7,
@@ -690,7 +686,7 @@ class TestNativeKasChild:
         )
 
     def test_the_handle_marks_a_native_child_call(self):
-        from kiro_crew.acp._dispatch import scoped_tool_cache_key
+        from aj_crew.acp._dispatch import scoped_tool_cache_key
 
         handle = self._handle()
         own = handle._build_permission_event(self._permission())
@@ -700,7 +696,7 @@ class TestNativeKasChild:
         assert child is not None and child.native_child_call
 
     def test_the_provider_forwards_the_mark(self):
-        from kiro_crew.providers.acp_turns import _to_llm_event
+        from aj_crew.providers.acp_turns import _to_llm_event
 
         assert _to_llm_event(_shell_event(native_child_call=True)).native_child_call
 
@@ -722,8 +718,8 @@ class TestNativeKasChild:
         ],
     )
     def test_the_direct_client_marks_a_child_frame(self, params, child):
-        from kiro_crew.acp.client_permissions import _is_child_permission_frame
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.client_permissions import _is_child_permission_frame
+        from aj_crew.acp.types import JsonRpcMessage
 
         msg = JsonRpcMessage(id=1, method="session/request_permission", params=params)
         assert _is_child_permission_frame(msg, "own-sid") is child
@@ -732,7 +728,7 @@ class TestNativeKasChild:
     async def test_a_call_a_subagent_activity_named_gets_no_override(self, tmp_path, monkeypatch):
         # Any transport: the dashboard's own record of a child's tool call keeps
         # both the parent's session waiver and the card away from it.
-        from kiro_crew.acp.types import EVENT_SUBAGENT_ACTIVITY
+        from aj_crew.acp.types import EVENT_SUBAGENT_ACTIVITY
 
         _no_pins(monkeypatch)
         state, client = _make_state(tmp_path, context_builder=_scripted_gate([_RM_ROOT]))
@@ -771,7 +767,7 @@ class TestNativeKasChild:
 
 class TestBackendAllowlist:
     def test_lists_name_only_proven_backends(self):
-        from kiro_crew.agent_sdk.backends import (
+        from aj_crew.agent_sdk.backends import (
             ACP_BACKEND_CLAUDE,
             ACP_BACKEND_CODEX,
             ACP_BACKEND_KAS,
@@ -779,7 +775,7 @@ class TestBackendAllowlist:
             ACP_BACKENDS_DIRECT_CLIENT_CHILD_CALLS_MARKED,
             ACP_BACKENDS_SHARED_RUNTIME_CHILD_CALLS_MARKED,
         )
-        from kiro_crew.security.deny_waiver import child_calls_marked
+        from aj_crew.security.deny_waiver import child_calls_marked
 
         direct = ACP_BACKENDS_DIRECT_CLIENT_CHILD_CALLS_MARKED
         shared = ACP_BACKENDS_SHARED_RUNTIME_CHILD_CALLS_MARKED
@@ -811,8 +807,8 @@ class TestBackendAllowlist:
         "backend, marked", [("", True), ("claude", True), ("codex", False), ("kas", False)]
     )
     def test_the_direct_client_stamps_the_mark(self, tmp_path, backend, marked):
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient(work_dir=tmp_path, acp_backend=backend)
         msg = JsonRpcMessage(
@@ -827,7 +823,7 @@ class TestBackendAllowlist:
         assert event is not None and event.child_calls_marked is marked
 
     def test_the_provider_forwards_the_mark(self):
-        from kiro_crew.providers.acp_turns import _to_llm_event
+        from aj_crew.providers.acp_turns import _to_llm_event
 
         assert _to_llm_event(_shell_event()).child_calls_marked is True
         assert _to_llm_event(_shell_event(child_calls_marked=False)).child_calls_marked is False
@@ -851,19 +847,19 @@ class _FakeOverlay:
 
 @pytest.fixture
 def overlay_context(restore_context):
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.platform import set_context
-    from kiro_crew.platform.bootstrap import build_default_context
-    from kiro_crew.platform.profile import PROFILE_STANDALONE
-    from kiro_crew.platform.security_authority import PolicyAuthority
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.platform import set_context
+    from aj_crew.platform.bootstrap import build_default_context
+    from aj_crew.platform.profile import PROFILE_STANDALONE
+    from aj_crew.platform.security_authority import PolicyAuthority
 
-    ctx = build_default_context(KiroCrewConfig(), profile=PROFILE_STANDALONE)
+    ctx = build_default_context(AjCrewConfig(), profile=PROFILE_STANDALONE)
     set_context(dataclasses.replace(ctx, security=PolicyAuthority(_FakeOverlay())))
 
 
 class TestOverlayNeverWaived:
     def test_the_authority_drops_an_overlay_waiver(self, audit_ok):
-        from kiro_crew.platform.security_authority import PolicyAuthority
+        from aj_crew.platform.security_authority import PolicyAuthority
 
         authority = PolicyAuthority(_FakeOverlay())
         reason = authority.is_denied(_OVERLAY_COMMAND, waived=frozenset({_OVERLAY_GLOB}))
@@ -885,7 +881,7 @@ class TestOverlayNeverWaived:
         assert audit_ok == []
 
     def test_no_card_is_offered_for_an_overlay_rule(self, overlay_context, monkeypatch):
-        from kiro_crew.dashboard.deny_override import override_offer_key
+        from aj_crew.dashboard.deny_override import override_offer_key
 
         _no_pins(monkeypatch)
         verdict = ToolHookResult.deny(f"{DENY_REASON_PREFIX}{_OVERLAY_GLOB}")
@@ -897,14 +893,14 @@ class TestOverlayNeverWaived:
         assert override_offer_key(other, _make_slot(), _shell_event()) == _RM_ROOT
 
     def test_an_unreadable_overlay_offers_nothing(self, monkeypatch):
-        from kiro_crew.dashboard.deny_override import override_offer_key
+        from aj_crew.dashboard.deny_override import override_offer_key
 
         _no_pins(monkeypatch)
 
         def _boom():
             raise RuntimeError("no context")
 
-        monkeypatch.setattr("kiro_crew.platform.context.current_context", _boom)
+        monkeypatch.setattr("aj_crew.platform.context.current_context", _boom)
         verdict = ToolHookResult.deny(f"{DENY_REASON_PREFIX}{_RM_ROOT}")
         verdict.tier = "deny-rules"
         assert override_offer_key(verdict, _make_slot(), _shell_event()) is None
@@ -1160,7 +1156,7 @@ class TestAnswerRoute:
         ],
     )
     def test_refusals(self, monkeypatch, override, action, user, from_app, native, code):
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         # The owner's functions run on the facade's globals, so its ``sel`` is patched.
         monkeypatch.setattr(chat_handlers, "sel", lambda: MagicMock())
@@ -1186,7 +1182,7 @@ class TestAnswerRoute:
         # resolver: a plain approve there settles no override card.
         import asyncio
 
-        from kiro_crew.dashboard.interaction_coordinator import ApprovalCoordinator
+        from aj_crew.dashboard.interaction_coordinator import ApprovalCoordinator
 
         async def _run():
             slot = _make_slot()
@@ -1214,7 +1210,7 @@ class TestAnswerRoute:
         # "approved" as a refusal, which would close the card as a rejection.
         import asyncio
 
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         # The owner's functions run on the facade's globals, so its ``sel`` is patched.
         monkeypatch.setattr(chat_handlers, "sel", lambda: MagicMock())
@@ -1245,8 +1241,8 @@ class TestAnswerRoute:
 def route_state(tmp_path, monkeypatch, _floor_monkeypatch):
     from chat_test_helpers import _make_state as _make_chat_state
 
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_chat_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()
@@ -1257,7 +1253,7 @@ def route_state(tmp_path, monkeypatch, _floor_monkeypatch):
 def _route_app(state):
     from aiohttp import web
 
-    from kiro_crew.dashboard.chat_handlers import api_chat_slot_approve
+    from aj_crew.dashboard.chat_handlers import api_chat_slot_approve
 
     @web.middleware
     async def _dashboard_user(request, handler):
@@ -1274,7 +1270,7 @@ def _route_app(state):
 def _override_card(state, request_id):
     import asyncio
 
-    from kiro_crew.dashboard.state import SlotOrigin
+    from aj_crew.dashboard.state import SlotOrigin
 
     slot = state.get_or_create_slot("selected", origin=SlotOrigin.USER)
     fut = asyncio.get_running_loop().create_future()

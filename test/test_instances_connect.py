@@ -11,7 +11,7 @@ import asyncio
 import pytest
 from instances_helpers import _enable, _FakeTunnel, _patch_port_probe
 
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 
 class TestInstancesStartupHooks:
@@ -26,7 +26,7 @@ class TestInstancesStartupHooks:
     def _state(self):
         from unittest.mock import MagicMock
 
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         return DashboardState(
             sessions=MagicMock(), crons=MagicMock(), lessons=MagicMock(), start_time=0.0
@@ -35,7 +35,7 @@ class TestInstancesStartupHooks:
     def test_register_then_freeze_then_startup_creates_manager(self, tmp_path, monkeypatch):
         from aiohttp import web
 
-        from kiro_crew.dashboard.server import _register_instances_hooks
+        from aj_crew.dashboard.server import _register_instances_hooks
 
         _enable(tmp_path, monkeypatch, enabled=True)
         app = web.Application()
@@ -65,7 +65,7 @@ class TestInstancesStartupHooks:
     def test_disabled_skips_manager_creation(self, tmp_path, monkeypatch):
         from aiohttp import web
 
-        from kiro_crew.dashboard.server import _register_instances_hooks
+        from aj_crew.dashboard.server import _register_instances_hooks
 
         _enable(tmp_path, monkeypatch, enabled=False)
         app = web.Application()
@@ -88,7 +88,7 @@ class TestPortMirror:
 
     @staticmethod
     def _mgr(reg, factory, monkeypatch, *, port_free=True):
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         # Allocation must still succeed when ``port_free`` is False: that case
         # models the TOCTOU loss where the port is taken between allocating it
@@ -110,8 +110,8 @@ class TestPortMirror:
 
     @pytest.mark.asyncio
     async def test_local_port_allocated_not_mirrored(self, tmp_path, monkeypatch):
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         captured: dict = {}
 
@@ -139,8 +139,8 @@ class TestPortMirror:
         This is the case mirroring made impossible — and the shipped defaults put
         every stock pair in it.
         """
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         seen: dict[str, int] = {}
 
@@ -170,8 +170,8 @@ class TestPortMirror:
         ``localStorage`` UI preferences. Here the base port is free and lower, yet
         the recorded one is returned.
         """
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         captured: dict = {}
 
@@ -201,8 +201,8 @@ class TestPortMirror:
         """
         import time
 
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         captured: dict = {}
 
@@ -238,8 +238,8 @@ class TestPortMirror:
         unreserving it for this crew would bind on a port a hub still forwards
         another crew's bearer token to (confused deputy).
         """
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         captured: dict = {}
 
@@ -271,8 +271,8 @@ class TestPortMirror:
         A rebuild escapes the stalled port. With no live tunnel to tear down there is
         no freed port, only the recorded ``local_port``, so the gate is the flag.
         """
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1", remote_port=7900)
@@ -303,8 +303,8 @@ class TestPortMirror:
 
     @pytest.mark.asyncio
     async def test_port_conflict_hard_fails(self, tmp_path, monkeypatch):
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         captured: dict = {}
 
@@ -329,13 +329,13 @@ class TestLastError:
 
     @pytest.fixture(autouse=True)
     # flake-ok: pre-existing autouse port-probe stub on the shared monkeypatch, moved verbatim; tracked for a de-flake pass
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
     def _free_ports(self, monkeypatch):
         _patch_port_probe(monkeypatch)
 
     def _mgr(self, tmp_path, *, mint=None, factory=_FakeTunnel):
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
 
@@ -378,7 +378,7 @@ class TestLastError:
 
     @pytest.mark.asyncio
     async def test_retained_on_mint_failure_after_teardown(self, tmp_path):
-        from kiro_crew.instances.token_mint import TokenMintError
+        from aj_crew.instances.token_mint import TokenMintError
 
         async def bad_mint(
             host,
@@ -399,8 +399,8 @@ class TestLastError:
 
     @pytest.mark.asyncio
     async def test_cleared_on_successful_connect(self, tmp_path):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
-        from kiro_crew.instances.token_mint import TokenMintError
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.token_mint import TokenMintError
 
         calls = {"n": 0}
 
@@ -428,7 +428,7 @@ class TestLastError:
 
     @pytest.mark.asyncio
     async def test_cleared_on_explicit_disconnect(self, tmp_path):
-        from kiro_crew.instances.token_mint import TokenMintError
+        from aj_crew.instances.token_mint import TokenMintError
 
         async def bad_mint(
             host,
@@ -455,13 +455,13 @@ class TestStatusForRetainedError:
 
     @pytest.fixture(autouse=True)
     # flake-ok: pre-existing autouse port-probe stub on the shared monkeypatch, moved verbatim; tracked for a de-flake pass
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
     def _free_ports(self, monkeypatch):
         _patch_port_probe(monkeypatch)
 
     def _mgr(self, tmp_path, *, mint=None, factory=_FakeTunnel):
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
 
@@ -484,8 +484,8 @@ class TestStatusForRetainedError:
     async def test_surfaces_error_when_no_live_tunnel(self, tmp_path):
         import types
 
-        from kiro_crew.dashboard.handlers_instances import _status_for
-        from kiro_crew.instances.token_mint import TokenMintError
+        from aj_crew.dashboard.handlers_instances import _status_for
+        from aj_crew.instances.token_mint import TokenMintError
 
         async def bad_mint(
             host,
@@ -511,7 +511,7 @@ class TestStatusForRetainedError:
     async def test_disconnected_when_no_tunnel_and_no_error(self, tmp_path):
         import types
 
-        from kiro_crew.dashboard.handlers_instances import _status_for
+        from aj_crew.dashboard.handlers_instances import _status_for
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1", instance_id="cd-1")
@@ -523,7 +523,7 @@ class TestStatusForRetainedError:
     async def test_live_tunnel_status_wins(self, tmp_path):
         import types
 
-        from kiro_crew.dashboard.handlers_instances import _status_for
+        from aj_crew.dashboard.handlers_instances import _status_for
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1", instance_id="cd-1")
@@ -541,13 +541,13 @@ class TestStartupRevive:
 
     @pytest.fixture(autouse=True)
     # flake-ok: pre-existing autouse port-probe stub on the shared monkeypatch, moved verbatim; tracked for a de-flake pass
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
     def _free_ports(self, monkeypatch):
         _patch_port_probe(monkeypatch)
 
     def _mgr(self, tmp_path, *, mint=None, factory=_FakeTunnel):
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
 
@@ -568,8 +568,8 @@ class TestStartupRevive:
 
     @pytest.mark.asyncio
     async def test_revives_all_was_connected(self, tmp_path):
-        import kiro_crew.dashboard.server as server
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        import aj_crew.dashboard.server as server
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="A", ssh_host="host-a", instance_id="a", remote_port=7777)
@@ -587,9 +587,9 @@ class TestStartupRevive:
 
     @pytest.mark.asyncio
     async def test_some_fail_isolated_and_intent_preserved(self, tmp_path):
-        import kiro_crew.dashboard.server as server
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
-        from kiro_crew.instances.token_mint import TokenMintError
+        import aj_crew.dashboard.server as server
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.token_mint import TokenMintError
 
         async def mint(
             host,
@@ -622,7 +622,7 @@ class TestStartupRevive:
 
     @pytest.mark.asyncio
     async def test_noop_when_none_intended(self, tmp_path):
-        import kiro_crew.dashboard.server as server
+        import aj_crew.dashboard.server as server
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="A", ssh_host="host-a", instance_id="a")  # was_connected False
@@ -642,7 +642,7 @@ class TestStartupRevive:
 
         from aiohttp import web
 
-        import kiro_crew.dashboard.server as server
+        import aj_crew.dashboard.server as server
 
         cfg = types.SimpleNamespace(
             instances=types.SimpleNamespace(
@@ -656,7 +656,7 @@ class TestStartupRevive:
                 probe_failure_threshold=3,
             )
         )
-        monkeypatch.setattr(server, "KiroCrewConfig", types.SimpleNamespace(load=lambda: cfg))
+        monkeypatch.setattr(server, "AjCrewConfig", types.SimpleNamespace(load=lambda: cfg))
         monkeypatch.setattr(server, "InstancesRegistry", lambda: object())
         # The manager double carries `sync_hop_holds` because startup genuinely calls
         # it: a lent hop's lease is persisted and its listening socket is not, so the

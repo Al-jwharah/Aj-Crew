@@ -28,18 +28,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew.acp import runtime as runtime_mod
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_handle import AcpRuntimeError
-from kiro_crew.acp.skill_projection import NativeSkillProjection
-from kiro_crew.acp.types import METHOD_SET_MODE
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew.acp import runtime as runtime_mod
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_handle import AcpRuntimeError
+from aj_crew.acp.skill_projection import NativeSkillProjection
+from aj_crew.acp.types import METHOD_SET_MODE
+from aj_crew.testing.wait import async_wait_until, finished
 
-SPAWN_ALIAS = "kirocrew-skill-view-" + "0" * 24
+SPAWN_ALIAS = "ajcrew-skill-view-" + "0" * 24
 # The view prepared from the spec before the edit that revoked a grant.
-OLD_ALIAS = "kirocrew-skill-view-" + "a" * 24
+OLD_ALIAS = "ajcrew-skill-view-" + "a" * 24
 # The view prepared from the spec after it.
-NEW_ALIAS = "kirocrew-skill-view-" + "b" * 24
+NEW_ALIAS = "ajcrew-skill-view-" + "b" * 24
 
 
 class _FakeKiro:
@@ -151,7 +151,7 @@ def _runtime(loaded: set[str]) -> tuple[AcpRuntime, _FakeKiro]:
 @pytest.fixture(autouse=True)
 def rescans(monkeypatch):
     """Record the in-place rescan nudges instead of touching an agents directory."""
-    from kiro_crew.acp import skill_projection
+    from aj_crew.acp import skill_projection
 
     seen: list[str] = []
     monkeypatch.setattr(skill_projection, "announce_alias", seen.append)
@@ -186,10 +186,10 @@ async def _run(rt: AcpRuntime, prepare: _ScriptedPrepare, body: Callable[[], Any
     try:
         with (
             patch(
-                "kiro_crew.acp.skill_projection.prepare_native_skill_projection",
+                "aj_crew.acp.skill_projection.prepare_native_skill_projection",
                 side_effect=prepare,
             ),
-            patch("kiro_crew.agent.require_unchanged_derived_spec", return_value=None),
+            patch("aj_crew.agent.require_unchanged_derived_spec", return_value=None),
         ):
             await finished(body(), "body", timeout=10)
     finally:
@@ -250,7 +250,7 @@ async def test_a_retry_after_a_newer_view_was_adopted_never_resends_the_older_al
     """A's alias is not loaded yet, so A retries after a forced rescan. B adopts
     the post-revocation view meanwhile. A's retry must not name its own, older
     alias -- the rescan makes the host load it, and the retry would activate it."""
-    from kiro_crew.acp import skill_projection
+    from aj_crew.acp import skill_projection
 
     rt, kiro = _runtime({NEW_ALIAS})
     monkeypatch.setattr(skill_projection, "announce_alias", kiro.loaded.add)
@@ -344,7 +344,7 @@ async def test_a_retry_whose_agent_the_newer_view_refuses_fails_without_the_olde
 ):
     """The edit made the agent's view unpreparable (B's projection refuses it).
     A's retry has no fresh alias to send and must not fall back to its own."""
-    from kiro_crew.acp import skill_projection
+    from aj_crew.acp import skill_projection
 
     rt, kiro = _runtime(set())
     monkeypatch.setattr(skill_projection, "announce_alias", kiro.loaded.add)
@@ -373,10 +373,10 @@ async def test_a_retry_whose_agent_the_newer_view_refuses_fails_without_the_olde
     try:
         with (
             patch(
-                "kiro_crew.acp.skill_projection.prepare_native_skill_projection",
+                "aj_crew.acp.skill_projection.prepare_native_skill_projection",
                 side_effect=lambda *_a, **_k: next(prepared),
             ),
-            patch("kiro_crew.agent.require_unchanged_derived_spec", return_value=None),
+            patch("aj_crew.agent.require_unchanged_derived_spec", return_value=None),
         ):
             await finished(body(), "body", timeout=10)
     finally:
@@ -539,10 +539,10 @@ async def test_a_newer_preparation_that_yields_no_view_leaves_a_pending_start_un
     try:
         with (
             patch(
-                "kiro_crew.acp.skill_projection.prepare_native_skill_projection",
+                "aj_crew.acp.skill_projection.prepare_native_skill_projection",
                 side_effect=prepare,
             ),
-            patch("kiro_crew.agent.require_unchanged_derived_spec", return_value=None),
+            patch("aj_crew.agent.require_unchanged_derived_spec", return_value=None),
         ):
             await finished(body(), "body", timeout=10)
     finally:

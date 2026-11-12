@@ -24,13 +24,13 @@ from file_change_snapshots_helpers import (
 )
 from turn_harness import Raise
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_TOOL_CALL,
     EVENT_TOOL_CALL_UPDATE,
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew.dashboard.chat_runner import (
     _MAX_SNAPSHOT,
     _MAX_SNAPSHOT_PATH_CHARS,
     _MAX_TURN_SNAPSHOT_CHARS,
@@ -42,7 +42,7 @@ from kiro_crew.dashboard.chat_runner import (
     _truncate_snapshot,
     _turn_line_changes,
 )
-from kiro_crew.security import redact
+from aj_crew.security import redact
 
 # ── per-turn snapshot budget ────────────────────────────────────────────────
 
@@ -366,7 +366,7 @@ class TestSnapshotPathBound:
         # confirms the length gate alone did not refuse it.
         long_path = "\\\\?\\C:\\" + "a" * 8_000 + "\\file.txt"
         assert 4_096 < len(long_path) <= _MAX_SNAPSHOT_PATH_CHARS
-        with patch("kiro_crew.dashboard.chat_runner.validate_file_path") as validate:
+        with patch("aj_crew.dashboard.chat_runner.validate_file_path") as validate:
             validate.return_value = None
             assert (
                 _snapshot_write_target({"command": "create", "path": long_path}, diff_old_text="")
@@ -407,8 +407,8 @@ class TestTurnSnapshotAccumulator:
     def test_repeat_recency_drives_the_budget_at_and_below_the_cap(
         self, short_tmp_dir: Path, monkeypatch, row_cap: int
     ) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_ENTRIES", row_cap)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_CHARS", 0)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_ENTRIES", row_cap)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_CHARS", 0)
         slot = _make_slot_with_assistant_message()
         early = short_tmp_dir / "early.py"
         other = short_tmp_dir / "other.py"
@@ -590,7 +590,7 @@ def _files(directory: Path, count: int, *, disk: str = "after\n") -> list[Path]:
 class TestOmittedSnapshotFiles:
     @pytest.mark.parametrize("multiple", [2, 10])
     def test_large_flush_visits_dropped_indices_at_most_once(self, monkeypatch, multiple):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         total = _MAX_TURN_SNAPSHOT_ENTRIES * multiple
         visited = 0
@@ -632,7 +632,7 @@ class TestOmittedSnapshotFiles:
         self, monkeypatch, short_tmp_dir, site
     ):
         # Through the real turn; a cap of 3 instead of 200 keeps the script short.
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_ENTRIES", 3)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_ENTRIES", 3)
         paths = _files(short_tmp_dir, 5)
         writes = [
             event
@@ -695,8 +695,8 @@ class TestOmittedSnapshotFiles:
     async def test_row_cap_and_path_budget_drops_are_counted_as_files(
         self, monkeypatch, short_tmp_dir
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_ENTRIES", 2)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_CHARS", 0)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_ENTRIES", 2)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_CHARS", 0)
         paths = _files(short_tmp_dir, 3)
         writes = [
             event
@@ -738,7 +738,7 @@ class TestOmittedSnapshotFiles:
         paths = _files(short_tmp_dir, 3)
         # Room for two paths beside the protected entry, none of their content.
         budget = 2 * len(str(paths[0])) + 5
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_CHARS", budget)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_CHARS", budget)
         writes = [e for i, path in enumerate(paths) for e in _write_call(i, path, "x" * 4096)]
         record = await _snapshot_turn(*writes, *_DIES, seeded=False)
         meta = _persisted_meta(record, "")
@@ -754,7 +754,7 @@ class TestOmittedSnapshotFiles:
         # path, f0 is dropped, and only the dropped one is counted.
         paths = _files(short_tmp_dir, 3)
         budget = len(str(paths[0])) + 5
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_CHARS", budget)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_CHARS", budget)
         writes = [e for i, path in enumerate(paths) for e in _write_call(i, path, "x" * 4096)]
         record = await _snapshot_turn(*writes, *_LANDS)
         meta = _persisted_meta(record, "done")
@@ -765,7 +765,7 @@ class TestOmittedSnapshotFiles:
 
     def test_a_flush_without_drops_clears_an_earlier_count_on_its_message(self, monkeypatch):
         slot = _make_slot_with_assistant_message()
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_ENTRIES", 1)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._MAX_TURN_SNAPSHOT_ENTRIES", 1)
         for path in ("/a.py", "/b.py"):
             _record_turn_snapshot(slot, {"path": path, "content": "before"})
         _flush_file_changes(slot)

@@ -21,7 +21,7 @@ import pytest
 from taskrunner_v2_scenarios_helpers import _passthrough_sandbox  # noqa: F401
 from taskrunner_v2_scenarios_helpers import _llm_event, _make_provider, _mock_sessions
 
-from kiro_crew.taskrunner import MAX_TOTAL_TASKS, Step, StepStatus, TaskRun, TaskRunner
+from aj_crew.taskrunner import MAX_TOTAL_TASKS, Step, StepStatus, TaskRun, TaskRunner
 
 # ── Additional Scenario Tests: Edge Cases & Use Case Coverage ──
 
@@ -177,7 +177,7 @@ class TestScenarioReviewRetryNoSecondReview:
         sessions = _mock_sessions()
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
         run = TaskRun(spec_path=str(tmp_path / "t.md"), spec_content="s", status="running")
-        run.branch_name = "kirocrew/task/test"
+        run.branch_name = "ajcrew/task/test"
         step = Step(index=1, title="Reviewed", description="d")
         run.tasks = [step]
 
@@ -205,9 +205,9 @@ class TestScenarioReviewRetryNoSecondReview:
             return True
 
         with (
-            patch("kiro_crew.task_executor.execute_task", side_effect=_exec_step),
-            patch("kiro_crew.task_executor.self_review", side_effect=_review_once),
-            patch("kiro_crew.task_executor.git_coord") as mock_git,
+            patch("aj_crew.task_executor.execute_task", side_effect=_exec_step),
+            patch("aj_crew.task_executor.self_review", side_effect=_review_once),
+            patch("aj_crew.task_executor.git_coord") as mock_git,
         ):
             mock_git.commit_step = AsyncMock(return_value="abc123")
             mock_git.revert_step = AsyncMock()
@@ -225,7 +225,7 @@ class TestScenarioProcessCrashDoesNotConsumeRetry:
     @pytest.mark.asyncio
     async def test_crash_then_success(self, tmp_path: Path) -> None:
         sessions = _mock_sessions()
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         call_num = 0
         provider = MagicMock()
@@ -284,10 +284,10 @@ class TestScenarioGitFinalizeOnFailedTask:
                 ],
             ),
             patch.object(runner, "_execute_tasks", side_effect=RuntimeError("boom")),
-            patch("kiro_crew.taskrunner.git_coord") as mock_git,
+            patch("aj_crew.taskrunner.git_coord") as mock_git,
         ):
             mock_git.init_workspace = AsyncMock(
-                side_effect=lambda r: setattr(r, "branch_name", "kirocrew/task/test")
+                side_effect=lambda r: setattr(r, "branch_name", "ajcrew/task/test")
             )
             mock_git.finalize = _mock_finalize
 
@@ -345,7 +345,7 @@ class TestScenarioReplanNewStepsFailThenSecondReplan:
         with (
             patch.object(runner, "_decompose", side_effect=_mock_decompose),
             patch.object(runner, "_execute_single_task", side_effect=_mock_exec),
-            patch("kiro_crew.task_executor.git_coord") as mock_git,
+            patch("aj_crew.task_executor.git_coord") as mock_git,
         ):
             mock_git.get_state_summary = AsyncMock(return_value="")
             result = await runner._try_replan(run, step1)
@@ -387,7 +387,7 @@ class TestScenarioTokenBudgetDuringReplan:
         with (
             patch.object(runner, "_decompose", side_effect=_mock_decompose),
             patch.object(runner, "_execute_single_task", side_effect=_mock_exec),
-            patch("kiro_crew.task_executor.git_coord") as mock_git,
+            patch("aj_crew.task_executor.git_coord") as mock_git,
         ):
             mock_git.get_state_summary = AsyncMock(return_value="")
             result = await runner._try_replan(run, failed)
@@ -423,7 +423,7 @@ class TestScenarioCheckpointResumeWithGit:
         async def _mock_git_init(r):
             nonlocal git_init_called
             git_init_called = True
-            r.branch_name = "kirocrew/task/test"
+            r.branch_name = "ajcrew/task/test"
 
         with (
             patch.object(
@@ -436,10 +436,10 @@ class TestScenarioCheckpointResumeWithGit:
             ),
             patch.object(runner, "_load_checkpoint", return_value={"already done"}),
             patch.object(runner, "_execute_tasks", side_effect=_mock_exec_steps),
-            patch("kiro_crew.taskrunner.git_coord") as mock_git,
+            patch("aj_crew.taskrunner.git_coord") as mock_git,
         ):
             mock_git.init_workspace = _mock_git_init
-            mock_git.finalize = AsyncMock(return_value="kirocrew/task/test")
+            mock_git.finalize = AsyncMock(return_value="ajcrew/task/test")
 
             result = await runner.run(spec)
 
@@ -537,7 +537,7 @@ class TestScenarioStepWithTestFailureThenPass:
         step = Step(index=1, title="Impl", description="d")
         run.tasks = [step]
 
-        with patch("kiro_crew.task_executor.run_tests", side_effect=_run_tests):
+        with patch("aj_crew.task_executor.run_tests", side_effect=_run_tests):
             success = await runner._execute_single_task(run, step)
 
         assert success
@@ -620,7 +620,7 @@ class TestScenarioGitCommitNoChanges:
         sessions = _mock_sessions()
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
         run = TaskRun(spec_path=str(tmp_path / "t.md"), spec_content="s", status="running")
-        run.branch_name = "kirocrew/task/test"
+        run.branch_name = "ajcrew/task/test"
         step = Step(index=1, title="NoOp", description="d")
         run.tasks = [step]
 
@@ -645,9 +645,9 @@ class TestScenarioGitCommitNoChanges:
             return True
 
         with (
-            patch("kiro_crew.task_executor.execute_task", side_effect=_exec_side_effect),
-            patch("kiro_crew.task_executor.self_review", return_value=False),
-            patch("kiro_crew.task_executor.git_coord") as mock_git,
+            patch("aj_crew.task_executor.execute_task", side_effect=_exec_side_effect),
+            patch("aj_crew.task_executor.self_review", return_value=False),
+            patch("aj_crew.task_executor.git_coord") as mock_git,
         ):
             mock_git.commit_step = AsyncMock(return_value="")  # no changes
             mock_git.revert_step = AsyncMock()
@@ -685,15 +685,15 @@ class TestScenarioBuildStepPromptGitContext:
         sessions = _mock_sessions()
         runner = TaskRunner(sessions=sessions, auto_test=False)
         run = TaskRun(spec_path="/t.md", spec_content="spec")
-        run.branch_name = "kirocrew/task/my-task"
+        run.branch_name = "ajcrew/task/my-task"
         step = Step(index=1, title="Code", description="write code")
         run.tasks = [step]
 
-        with patch("kiro_crew.task_executor.git_coord") as mock_git:
+        with patch("aj_crew.task_executor.git_coord") as mock_git:
             mock_git.get_state_summary = AsyncMock(return_value="## Git Log\nstep 1: setup")
             prompt = await runner._build_task_prompt(run, step, attempt=1)
 
-        assert "kirocrew/task/my-task" in prompt
+        assert "ajcrew/task/my-task" in prompt
         assert "Git Log" in prompt
 
 
@@ -717,7 +717,7 @@ class TestScenarioTestFailureCycleDetection:
         step = Step(index=1, title="Fix tests", description="d")
         run.tasks = [step]
 
-        with patch("kiro_crew.task_executor.run_tests", return_value=(False, "FAIL: test_foo")):
+        with patch("aj_crew.task_executor.run_tests", return_value=(False, "FAIL: test_foo")):
             success = await runner._execute_single_task(run, step)
 
         assert not success
@@ -765,7 +765,7 @@ class TestScenarioMixedErrorTypes:
             test_calls += 1
             return (False, "FAIL: test_bar")
 
-        with patch("kiro_crew.task_executor.run_tests", side_effect=_run_tests):
+        with patch("aj_crew.task_executor.run_tests", side_effect=_run_tests):
             success = await runner._execute_single_task(run, step)
 
         assert not success
@@ -810,7 +810,7 @@ class TestScenarioReplanSuccessCompletesTask:
         with (
             patch.object(runner, "_decompose", side_effect=_decompose),
             patch.object(runner, "_execute_single_task", side_effect=_exec_single),
-            patch("kiro_crew.task_executor.git_coord") as mock_git,
+            patch("aj_crew.task_executor.git_coord") as mock_git,
         ):
             mock_git.init_workspace = AsyncMock()
             mock_git.finalize = AsyncMock()
@@ -833,7 +833,7 @@ class TestScenarioReviewRetryAlsoFails:
         sessions = _mock_sessions()
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
         run = TaskRun(spec_path=str(tmp_path / "t.md"), spec_content="s", status="running")
-        run.branch_name = "kirocrew/task/test"
+        run.branch_name = "ajcrew/task/test"
         step = Step(index=1, title="Code", description="d")
         run.tasks = [step]
 
@@ -851,9 +851,9 @@ class TestScenarioReviewRetryAlsoFails:
             return False
 
         with (
-            patch("kiro_crew.task_executor.execute_task", side_effect=_exec_step),
-            patch("kiro_crew.task_executor.self_review", return_value=False),
-            patch("kiro_crew.task_executor.git_coord") as mock_git,
+            patch("aj_crew.task_executor.execute_task", side_effect=_exec_step),
+            patch("aj_crew.task_executor.self_review", return_value=False),
+            patch("aj_crew.task_executor.git_coord") as mock_git,
         ):
             mock_git.commit_step = AsyncMock(return_value="abc123")
             mock_git.revert_step = AsyncMock()
@@ -972,7 +972,7 @@ class TestScenarioCrashDoesNotAffectCycleCounter:
             if call_count == 1:
                 raise RuntimeError("error A")
             if call_count == 2:
-                from kiro_crew.acp.client import AcpProcessDied
+                from aj_crew.acp.client import AcpProcessDied
 
                 raise AcpProcessDied()
             # After crash recovery, different error — should not match "error A"
@@ -1037,14 +1037,14 @@ class TestScenarioGitCommitFailureNonFatal:
         sessions = _mock_sessions()
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
         run = TaskRun(spec_path=str(tmp_path / "t.md"), spec_content="s", status="running")
-        run.branch_name = "kirocrew/task/test"
+        run.branch_name = "ajcrew/task/test"
         step = Step(index=1, title="Code", description="d")
         run.tasks = [step]
 
         with (
-            patch("kiro_crew.task_executor.execute_task", return_value=True),
-            patch("kiro_crew.task_executor.self_review", return_value=True) as review,
-            patch("kiro_crew.task_executor.git_coord") as mock_git,
+            patch("aj_crew.task_executor.execute_task", return_value=True),
+            patch("aj_crew.task_executor.self_review", return_value=True) as review,
+            patch("aj_crew.task_executor.git_coord") as mock_git,
         ):
             mock_git.commit_step = AsyncMock(side_effect=RuntimeError("git broken"))
             result = await runner._execute_single_task(run, step, "hk")

@@ -58,7 +58,7 @@ class TestShippedInventory:
     def test_seeds_are_shipped_fixtures(self) -> None:
         fixtures = {
             p.name
-            for p in (HERE.parents[1] / "src" / "kiro_crew" / "tests_fixtures").iterdir()
+            for p in (HERE.parents[1] / "src" / "aj_crew" / "tests_fixtures").iterdir()
             if p.is_dir()
         }
         for r in fc.validate(fc.load()):

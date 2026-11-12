@@ -28,7 +28,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-from kiro_crew.history import ConversationLog
+from aj_crew.history import ConversationLog
 
 KEY = "preview-stop"
 
@@ -204,7 +204,7 @@ class TestPreviewSkipsStopEventRows:
 
     def test_predicate_refuses_non_dict_meta_without_raising(self) -> None:
         """``is_stop_event_row`` answers False for every non-dict meta shape."""
-        from kiro_crew.dashboard.state import is_stop_event_row
+        from aj_crew.dashboard.state import is_stop_event_row
 
         for bad_meta in ("corrupt", ["kind", "stop_event"], 7, True):
             row = {"role": "system", "content": "x", "meta": bad_meta}

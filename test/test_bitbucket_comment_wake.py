@@ -11,9 +11,9 @@ from urllib.error import HTTPError
 
 import pytest
 
-from kiro_crew.monitoring import bitbucket_pull_request as bitbucket_module
-from kiro_crew.monitoring.bitbucket_pull_request import BitbucketPullRequestProvider
-from kiro_crew.monitoring.models import MonitorObservationStatus
+from aj_crew.monitoring import bitbucket_pull_request as bitbucket_module
+from aj_crew.monitoring.bitbucket_pull_request import BitbucketPullRequestProvider
+from aj_crew.monitoring.models import MonitorObservationStatus
 
 
 def _probe(provider, target: str, **kwargs):

@@ -1,7 +1,7 @@
 """``ensure-python.sh`` must not record an interpreter whose venvs cannot run.
 
 ``make backend`` builds its venv with ``"$PY" -m venv`` from the recorded path.
-Toolbox's kirocrew Python is a shared-libpython build behind a shell wrapper
+Toolbox's ajcrew Python is a shared-libpython build behind a shell wrapper
 (``exec ld-linux --library-path <lib> bin/real/python3.12``): it runs, clears
 the 3.12 floor and reports the wrapper as ``sys.executable``, but the venv it
 makes links ``bin/python`` to the real binary, which dies with
@@ -97,7 +97,7 @@ def _run(tmp_path: Path, *, broken: bool, mise_python: str, extra_env=None):
     data_home = tmp_path / "data"
     env = dict(os.environ)
     env["HOME"] = str(user_home)
-    env["KIROCREW_HOME"] = str(data_home)
+    env["AJCREW_HOME"] = str(data_home)
     env["PATH"] = os.pathsep.join([str(fake_bin), "/usr/bin", "/bin"])
     env.update(extra_env or {})
 

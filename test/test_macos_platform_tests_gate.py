@@ -482,17 +482,17 @@ class TestTheOnDemandLaneCannotBecomeAGate:
         filters = next(step["with"]["filters"] for step in steps if step.get("id") == "filter")
         paths = yaml.safe_load(filters)["darwin"]
         assert {
-            "src/kiro_crew/session_pid.py",
-            "src/kiro_crew/session_pid_harness.py",
-            "src/kiro_crew/session_pid_mappings.py",
-            "src/kiro_crew/session_pid_orphan_kill.py",
-            "src/kiro_crew/session_pid_orphan_scan.py",
-            "src/kiro_crew/session_pid_provider_kill.py",
-            "src/kiro_crew/session_pid_rss.py",
-            "src/kiro_crew/session_pid_tracking.py",
-            "src/kiro_crew/session_lifecycle.py",
-            "src/kiro_crew/session_cleanup.py",
-            "src/kiro_crew/session_pool.py",
+            "src/aj_crew/session_pid.py",
+            "src/aj_crew/session_pid_harness.py",
+            "src/aj_crew/session_pid_mappings.py",
+            "src/aj_crew/session_pid_orphan_kill.py",
+            "src/aj_crew/session_pid_orphan_scan.py",
+            "src/aj_crew/session_pid_provider_kill.py",
+            "src/aj_crew/session_pid_rss.py",
+            "src/aj_crew/session_pid_tracking.py",
+            "src/aj_crew/session_lifecycle.py",
+            "src/aj_crew/session_cleanup.py",
+            "src/aj_crew/session_pool.py",
             "test/test_darwin_native_provider_reap.py",
         } <= set(paths)
 
@@ -514,9 +514,9 @@ class TestTheOnDemandLaneCannotBecomeAGate:
         filters = next(step["with"]["filters"] for step in steps if step.get("id") == "filter")
         darwin = yaml.safe_load(filters)["darwin"]
         for path in (
-            "src/kiro_crew/hooks.py",
-            "src/kiro_crew/pinned_fs.py",
-            "src/kiro_crew/dashboard/handlers/files.py",
+            "src/aj_crew/hooks.py",
+            "src/aj_crew/pinned_fs.py",
+            "src/aj_crew/dashboard/handlers/files.py",
             "test/test_safe_read_file_bytes_descriptor.py",
             "test/test_theme_install.py",
         ):

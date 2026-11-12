@@ -5,7 +5,7 @@
  * gateway plus a dashboard credential; without one the shell renders its prerequisite
  * gate instead of the tab, which is worse evidence than none. This mounts the REAL
  * SettingsTab against the REAL stylesheet, theme tokens and live i18n catalog, with a
- * server snapshot seeded into the same ['kirocrewConfig'] query key the tab reads in
+ * server snapshot seeded into the same ['ajcrewConfig'] query key the tab reads in
  * production — so the rows, order and copy are the shipped ones.
  *
  * Theme comes from the query string: ?theme=dark|light
@@ -54,7 +54,7 @@ const KNOWLEDGE_CONFIG = {
 const qc = new QueryClient({
   defaultOptions: { queries: { retry: false, staleTime: Infinity, refetchOnMount: false } },
 })
-qc.setQueryData(['kirocrewConfig'], { knowledge: KNOWLEDGE_CONFIG })
+qc.setQueryData(['ajcrewConfig'], { knowledge: KNOWLEDGE_CONFIG })
 // The model dropdown reads the shared list through useAvailableModels, whose key is
 // scoped by provider id. Seeding it keeps the picker on its real Auto-first shape
 // instead of the placeholder a failed fetch would leave.

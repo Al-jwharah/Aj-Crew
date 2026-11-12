@@ -17,8 +17,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.files import api_channel_upload_file, api_slack_upload_file
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.handlers.files import api_channel_upload_file, api_slack_upload_file
+from aj_crew.dashboard.state import DashboardState
 
 
 def _make_app(slack_client, tmp_path, state=None):
@@ -65,13 +65,13 @@ class TestFileUploadChannel:
         app = _make_app(slack, tmp_path)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir",
+            "aj_crew.config.loader.outbox_dir",
             return_value=outbox_file.parent,
         ), patch(
-            "kiro_crew.config.loader.workspace_root",
+            "aj_crew.config.loader.workspace_root",
             return_value=tmp_path,
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel",
+            "aj_crew.dashboard.handlers.files.is_tracked_channel",
             return_value=True,
         ):
             async with TestClient(TestServer(app)) as client:
@@ -101,13 +101,13 @@ class TestFileUploadChannel:
         app = _make_app(slack, tmp_path)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir",
+            "aj_crew.config.loader.outbox_dir",
             return_value=outbox_file.parent,
         ), patch(
-            "kiro_crew.config.loader.workspace_root",
+            "aj_crew.config.loader.workspace_root",
             return_value=tmp_path,
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel",
+            "aj_crew.dashboard.handlers.files.is_tracked_channel",
             return_value=False,
         ):
             async with TestClient(TestServer(app)) as client:
@@ -135,16 +135,16 @@ class TestFileUploadChannel:
         app = _make_app(slack, tmp_path)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir",
+            "aj_crew.config.loader.outbox_dir",
             return_value=outbox_file.parent,
         ), patch(
-            "kiro_crew.config.loader.workspace_root",
+            "aj_crew.config.loader.workspace_root",
             return_value=tmp_path,
         ), patch(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
         ) as mock_cfg:
             mock_cfg.return_value.load_credentials.return_value = {
-                "KIROCREW_OWNER_ID": "U_OWNER"
+                "AJCREW_OWNER_ID": "U_OWNER"
             }
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -172,10 +172,10 @@ class TestFileUploadChannel:
         app = _make_app(slack, tmp_path)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir",
+            "aj_crew.config.loader.outbox_dir",
             return_value=outbox_file.parent,
         ), patch(
-            "kiro_crew.config.loader.workspace_root",
+            "aj_crew.config.loader.workspace_root",
             return_value=tmp_path,
         ):
             async with TestClient(TestServer(app)) as client:
@@ -207,10 +207,10 @@ class TestFileUploadChannel:
         outside.write_text("data", encoding="utf-8")
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir",
+            "aj_crew.config.loader.outbox_dir",
             return_value=tmp_path / "outbox",
         ), patch(
-            "kiro_crew.config.loader.workspace_root",
+            "aj_crew.config.loader.workspace_root",
             return_value=tmp_path / "workspace",
         ):
             async with TestClient(TestServer(app)) as client:
@@ -248,16 +248,16 @@ class TestFileUploadBinary:
         app = _make_app(slack, tmp_path)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir",
+            "aj_crew.config.loader.outbox_dir",
             return_value=outbox,
         ), patch(
-            "kiro_crew.config.loader.workspace_root",
+            "aj_crew.config.loader.workspace_root",
             return_value=tmp_path,
         ), patch(
-            "kiro_crew.dashboard.handlers.files._sel",
+            "aj_crew.dashboard.handlers.files._sel",
             return_value=MagicMock(),
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel",
+            "aj_crew.dashboard.handlers.files.is_tracked_channel",
             return_value=True,
         ):
             async with TestClient(TestServer(app)) as client:
@@ -286,13 +286,13 @@ class TestFileUploadBinary:
         app = _make_app(slack, tmp_path)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir",
+            "aj_crew.config.loader.outbox_dir",
             return_value=outbox,
         ), patch(
-            "kiro_crew.config.loader.workspace_root",
+            "aj_crew.config.loader.workspace_root",
             return_value=tmp_path,
         ), patch(
-            "kiro_crew.dashboard.handlers.files._sel",
+            "aj_crew.dashboard.handlers.files._sel",
             return_value=MagicMock(),
         ):
             async with TestClient(TestServer(app)) as client:
@@ -316,7 +316,7 @@ class TestFileUploadRedactionFailure:
     @pytest.mark.asyncio
     async def test_scan_error_returns_stable_message(self, tmp_path, outbox_file):
         """The 500 body and the audit record carry no exception text, only its type."""
-        from kiro_crew.dashboard.handlers import files as files_handlers
+        from aj_crew.dashboard.handlers import files as files_handlers
 
         real_redact = files_handlers.redact
 
@@ -331,16 +331,16 @@ class TestFileUploadRedactionFailure:
         app = _make_app(slack, tmp_path)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir",
+            "aj_crew.config.loader.outbox_dir",
             return_value=outbox_file.parent,
         ), patch(
-            "kiro_crew.config.loader.workspace_root",
+            "aj_crew.config.loader.workspace_root",
             return_value=tmp_path,
         ), patch(
-            "kiro_crew.dashboard.handlers.files._sel",
+            "aj_crew.dashboard.handlers.files._sel",
             return_value=sel,
         ), patch(
-            "kiro_crew.dashboard.handlers.files.redact",
+            "aj_crew.dashboard.handlers.files.redact",
             _raising_redact,
         ):
             async with TestClient(TestServer(app)) as client:
@@ -393,11 +393,11 @@ class TestFileUploadSlotThreading:
         app = _make_app(slack, tmp_path, state=state)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox
+            "aj_crew.config.loader.outbox_dir", return_value=outbox
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel", return_value=False
+            "aj_crew.dashboard.handlers.files.is_tracked_channel", return_value=False
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -434,11 +434,11 @@ class TestFileUploadSlotThreading:
         app = _make_app(slack, tmp_path, state=state)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox
+            "aj_crew.config.loader.outbox_dir", return_value=outbox
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel", return_value=False
+            "aj_crew.dashboard.handlers.files.is_tracked_channel", return_value=False
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -474,14 +474,14 @@ class TestFileUploadSlotThreading:
         app = _make_app(slack, tmp_path, state=state)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox
+            "aj_crew.config.loader.outbox_dir", return_value=outbox
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.config.loader.KiroCrewConfig.load"
+            "aj_crew.config.loader.AjCrewConfig.load"
         ) as mock_cfg:
             mock_cfg.return_value.load_credentials.return_value = {
-                "KIROCREW_OWNER_ID": "U_OWNER"
+                "AJCREW_OWNER_ID": "U_OWNER"
             }
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -521,14 +521,14 @@ class TestFileUploadSlotThreading:
         app = _make_app(slack, tmp_path, state=state)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox
+            "aj_crew.config.loader.outbox_dir", return_value=outbox
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.config.loader.KiroCrewConfig.load"
+            "aj_crew.config.loader.AjCrewConfig.load"
         ) as mock_cfg:
             mock_cfg.return_value.load_credentials.return_value = {
-                "KIROCREW_OWNER_ID": "U_OWNER"
+                "AJCREW_OWNER_ID": "U_OWNER"
             }
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -569,14 +569,14 @@ class TestFileUploadSlotThreading:
         app = _make_app(slack, tmp_path, state=state)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox
+            "aj_crew.config.loader.outbox_dir", return_value=outbox
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.config.loader.KiroCrewConfig.load"
+            "aj_crew.config.loader.AjCrewConfig.load"
         ) as mock_cfg:
             mock_cfg.return_value.load_credentials.return_value = {
-                "KIROCREW_OWNER_ID": "U_OWNER"
+                "AJCREW_OWNER_ID": "U_OWNER"
             }
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -609,11 +609,11 @@ class TestFileUploadSlotThreading:
         app = _make_app(slack, tmp_path, state=state)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox
+            "aj_crew.config.loader.outbox_dir", return_value=outbox
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel", return_value=True
+            "aj_crew.dashboard.handlers.files.is_tracked_channel", return_value=True
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -651,11 +651,11 @@ class TestFileUploadSlotThreading:
         app = _make_app(slack, tmp_path, state=state)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox
+            "aj_crew.config.loader.outbox_dir", return_value=outbox
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel", return_value=True
+            "aj_crew.dashboard.handlers.files.is_tracked_channel", return_value=True
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -692,11 +692,11 @@ class TestFileUploadSlotThreading:
         app = _make_app(slack, tmp_path, state=state)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox
+            "aj_crew.config.loader.outbox_dir", return_value=outbox
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel", return_value=False
+            "aj_crew.dashboard.handlers.files.is_tracked_channel", return_value=False
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -735,7 +735,7 @@ class TestChannelUploadEndpoint:
 
     @staticmethod
     def _link(channel_type, channel_id="42", thread_id=None):
-        from kiro_crew.messaging.link import ChannelLink
+        from aj_crew.messaging.link import ChannelLink
 
         return ChannelLink(channel_type=channel_type, channel_id=channel_id, thread_id=thread_id)
 
@@ -751,10 +751,10 @@ class TestChannelUploadEndpoint:
         transport.send_document = AsyncMock(return_value="123")
         app = self._app()
         with patch(
-            "kiro_crew.dashboard.chat_runner._resolve_mirror_target",
+            "aj_crew.dashboard.chat_runner._resolve_mirror_target",
             return_value=(self._link("telegram", "42"), transport),
         ), patch(
-            "kiro_crew.messaging.upload_gate.uploads_restricted",
+            "aj_crew.messaging.upload_gate.uploads_restricted",
             new=AsyncMock(return_value=True),
         ):
             async with TestClient(TestServer(app)) as client:
@@ -782,7 +782,7 @@ class TestChannelUploadEndpoint:
         app = self._app()
         leaky_name = "AKIA" + "IOSFODNN7EXAMPLE" + ".txt"
         with patch(
-            "kiro_crew.dashboard.chat_runner._resolve_mirror_target",
+            "aj_crew.dashboard.chat_runner._resolve_mirror_target",
             return_value=(self._link("telegram", "42"), transport),
         ):
             async with TestClient(TestServer(app)) as client:
@@ -810,12 +810,12 @@ class TestChannelUploadEndpoint:
         transport.send_document = AsyncMock(return_value="900")
         app = self._app()
         with patch(
-            "kiro_crew.dashboard.chat_runner._resolve_mirror_target",
+            "aj_crew.dashboard.chat_runner._resolve_mirror_target",
             return_value=(self._link("telegram", "42"), transport),
         ), patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -854,7 +854,7 @@ class TestChannelUploadEndpoint:
 
         app = self._app()
         with patch(
-            "kiro_crew.dashboard.chat_runner._resolve_mirror_target",
+            "aj_crew.dashboard.chat_runner._resolve_mirror_target",
             side_effect=_fake_resolver,
         ):
             async with TestClient(TestServer(app)) as client:
@@ -885,7 +885,7 @@ class TestChannelUploadEndpoint:
     async def test_no_destination_is_a_skip(self, tmp_path, outbox_file):
         app = self._app()
         with patch(
-            "kiro_crew.dashboard.chat_runner._resolve_mirror_target",
+            "aj_crew.dashboard.chat_runner._resolve_mirror_target",
             return_value=None,
         ):
             async with TestClient(TestServer(app)) as client:
@@ -907,12 +907,12 @@ class TestChannelUploadEndpoint:
         transport.send_document = AsyncMock(return_value="123")
         app = self._app()
         with patch(
-            "kiro_crew.dashboard.chat_runner._resolve_mirror_target",
+            "aj_crew.dashboard.chat_runner._resolve_mirror_target",
             return_value=(self._link("telegram", "42", thread_id="7"), transport),
         ), patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -951,12 +951,12 @@ class TestChannelUploadEndpoint:
         transport.send_document = AsyncMock(return_value="900")
         app = self._app()
         with patch(
-            "kiro_crew.dashboard.chat_runner._resolve_mirror_target",
+            "aj_crew.dashboard.chat_runner._resolve_mirror_target",
             return_value=(self._link("discord", "555"), transport),
         ), patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_pdf.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_pdf.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -980,7 +980,7 @@ class TestChannelUploadEndpoint:
         assert outbound.path == str(outbox_pdf)
         # `.pdf` survives end-to-end — the whole point of the separate verb.
         # `upload_filename` would have made this `report.bin`.
-        from kiro_crew.messaging.outbound_files import upload_filename
+        from aj_crew.messaging.outbound_files import upload_filename
 
         assert Path(outbound.path).name == "report.pdf"
         assert upload_filename(outbound, 0) == "report.bin"
@@ -998,12 +998,12 @@ class TestChannelUploadEndpoint:
         transport.send_document = AsyncMock(return_value="900")
         app = self._app()
         with patch(
-            "kiro_crew.dashboard.chat_runner._resolve_mirror_target",
+            "aj_crew.dashboard.chat_runner._resolve_mirror_target",
             return_value=(self._link("discord", "555"), transport),
         ), patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -1028,7 +1028,7 @@ class TestChannelUploadEndpoint:
         transport = MagicMock(spec_set=["send_message"])
         app = self._app()
         with patch(
-            "kiro_crew.dashboard.chat_runner._resolve_mirror_target",
+            "aj_crew.dashboard.chat_runner._resolve_mirror_target",
             return_value=(self._link("discord", "555"), transport),
         ):
             async with TestClient(TestServer(app)) as client:
@@ -1048,7 +1048,7 @@ class TestChannelUploadEndpoint:
         transport = MagicMock(spec_set=["send_message"])  # no upload verb
         app = self._app()
         with patch(
-            "kiro_crew.dashboard.chat_runner._resolve_mirror_target",
+            "aj_crew.dashboard.chat_runner._resolve_mirror_target",
             return_value=(self._link("teams", "t1"), transport),
         ):
             async with TestClient(TestServer(app)) as client:
@@ -1076,12 +1076,12 @@ class TestChannelUploadEndpoint:
         transport.send_document = AsyncMock()
         app = self._app()
         with patch(
-            "kiro_crew.dashboard.chat_runner._resolve_mirror_target",
+            "aj_crew.dashboard.chat_runner._resolve_mirror_target",
             return_value=(self._link("telegram"), transport),
         ), patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox
+            "aj_crew.config.loader.outbox_dir", return_value=outbox
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=workspace
+            "aj_crew.config.loader.workspace_root", return_value=workspace
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -1102,12 +1102,12 @@ class TestChannelUploadEndpoint:
         transport.send_document = AsyncMock(side_effect=RuntimeError("boom"))
         app = self._app()
         with patch(
-            "kiro_crew.dashboard.chat_runner._resolve_mirror_target",
+            "aj_crew.dashboard.chat_runner._resolve_mirror_target",
             return_value=(self._link("telegram"), transport),
         ), patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -1127,12 +1127,12 @@ class TestChannelUploadEndpoint:
         transport.send_document = AsyncMock(return_value="")
         app = self._app()
         with patch(
-            "kiro_crew.dashboard.chat_runner._resolve_mirror_target",
+            "aj_crew.dashboard.chat_runner._resolve_mirror_target",
             return_value=(self._link("telegram"), transport),
         ), patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -1181,11 +1181,11 @@ class TestSlackUploadAuthorizationRungs:
         app = _make_app(slack, tmp_path, state=self._state(slack, restricted=True))
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel", return_value=True
+            "aj_crew.dashboard.handlers.files.is_tracked_channel", return_value=True
         ):
             resp, body = await self._post(
                 app,
@@ -1214,15 +1214,15 @@ class TestSlackUploadAuthorizationRungs:
         sel = MagicMock()
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel", return_value=True
+            "aj_crew.dashboard.handlers.files.is_tracked_channel", return_value=True
         ), patch(
-            "kiro_crew.dashboard.handlers.files._sel", return_value=sel
+            "aj_crew.dashboard.handlers.files._sel", return_value=sel
         ), patch(
-            "kiro_crew.dashboard.upload_destination.vet_and_audit",
+            "aj_crew.dashboard.upload_destination.vet_and_audit",
             return_value=self._decision(False),
         ):
             resp, body = await self._post(
@@ -1259,13 +1259,13 @@ class TestSlackUploadAuthorizationRungs:
         app = _make_app(slack, tmp_path, state=self._state(slack))
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel", return_value=True
+            "aj_crew.dashboard.handlers.files.is_tracked_channel", return_value=True
         ), patch(
-            "kiro_crew.dashboard.upload_destination.vet_and_audit",
+            "aj_crew.dashboard.upload_destination.vet_and_audit",
             return_value=self._decision(True),
         ) as vet:
             resp, _ = await self._post(
@@ -1294,13 +1294,13 @@ class TestSlackUploadAuthorizationRungs:
         app = _make_app(slack, tmp_path, state=self._state(slack))
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel", return_value=True
+            "aj_crew.dashboard.handlers.files.is_tracked_channel", return_value=True
         ), patch(
-            "kiro_crew.dashboard.upload_destination.vet_and_audit",
+            "aj_crew.dashboard.upload_destination.vet_and_audit",
             side_effect=RuntimeError("profile store unreadable"),
         ):
             resp, body = await self._post(
@@ -1329,14 +1329,14 @@ class TestSlackUploadAuthorizationRungs:
         app = _make_app(slack, tmp_path, state=self._state(slack))
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.config.loader.KiroCrewConfig.load"
+            "aj_crew.config.loader.AjCrewConfig.load"
         ) as mock_cfg:
             mock_cfg.return_value.load_credentials.return_value = {
-                "KIROCREW_OWNER_ID": "U_OWNER"
+                "AJCREW_OWNER_ID": "U_OWNER"
             }
             resp, body = await self._post(
                 app,
@@ -1354,7 +1354,7 @@ class TestSlackUploadAuthorizationRungs:
         # An EMPTY key classifies as ``unknown`` and matches no profile at all, so
         # vetting under it would make host-side governance inert on this leg.
         # ``_host`` is the bind target operators actually attach it to.
-        from kiro_crew.platform.governance_profiles import HOST_SESSION_KEY
+        from aj_crew.platform.governance_profiles import HOST_SESSION_KEY
 
         slack = MagicMock()
         slack.upload_file = AsyncMock()
@@ -1362,17 +1362,17 @@ class TestSlackUploadAuthorizationRungs:
         app = _make_app(slack, tmp_path, state=self._state(slack))
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.config.loader.KiroCrewConfig.load"
+            "aj_crew.config.loader.AjCrewConfig.load"
         ) as mock_cfg, patch(
-            "kiro_crew.dashboard.upload_destination.vet_and_audit",
+            "aj_crew.dashboard.upload_destination.vet_and_audit",
             return_value=self._decision(True),
         ) as vet:
             mock_cfg.return_value.load_credentials.return_value = {
-                "KIROCREW_OWNER_ID": "U_OWNER"
+                "AJCREW_OWNER_ID": "U_OWNER"
             }
             resp, _ = await self._post(
                 app,
@@ -1396,11 +1396,11 @@ class TestSlackUploadAuthorizationRungs:
         app = _make_app(slack, tmp_path, state=state)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.dashboard.upload_destination.vet_and_audit",
+            "aj_crew.dashboard.upload_destination.vet_and_audit",
             return_value=self._decision(False),
         ):
             resp, _ = await self._post(
@@ -1457,13 +1457,13 @@ class TestDestinationOracleEquivalence:
         sel = MagicMock()
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel", return_value=False
+            "aj_crew.dashboard.handlers.files.is_tracked_channel", return_value=False
         ), patch(
-            "kiro_crew.dashboard.handlers.files._sel", return_value=sel
+            "aj_crew.dashboard.handlers.files._sel", return_value=sel
         ):
             resp, body = await self._post_slack(
                 app,
@@ -1501,13 +1501,13 @@ class TestDestinationOracleEquivalence:
         sel = MagicMock()
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.config.loader.KiroCrewConfig.load"
+            "aj_crew.config.loader.AjCrewConfig.load"
         ) as mock_cfg, patch(
-            "kiro_crew.dashboard.handlers.files._sel", return_value=sel
+            "aj_crew.dashboard.handlers.files._sel", return_value=sel
         ):
             mock_cfg.return_value.load_credentials.return_value = {}
             resp, body = await self._post_slack(
@@ -1540,11 +1540,11 @@ class TestDestinationOracleEquivalence:
         app = _make_app(slack, tmp_path)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel",
+            "aj_crew.dashboard.handlers.files.is_tracked_channel",
             side_effect=RuntimeError("config unreadable"),
         ):
             resp, body = await self._post_slack(
@@ -1573,11 +1573,11 @@ class TestDestinationOracleEquivalence:
         app = _make_app(slack, tmp_path, state=state)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel",
+            "aj_crew.dashboard.handlers.files.is_tracked_channel",
             side_effect=RuntimeError("config unreadable"),
         ):
             resp, body = await self._post_slack(
@@ -1604,11 +1604,11 @@ class TestDestinationOracleEquivalence:
         probe = MagicMock(side_effect=RuntimeError("must not be consulted"))
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.dashboard.handlers.files.is_tracked_channel", new=probe
+            "aj_crew.dashboard.handlers.files.is_tracked_channel", new=probe
         ):
             resp, _ = await self._post_slack(
                 app,
@@ -1634,14 +1634,14 @@ class TestDestinationOracleEquivalence:
         app = _make_app(slack, tmp_path, state=state)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.config.loader.KiroCrewConfig.load"
+            "aj_crew.config.loader.AjCrewConfig.load"
         ) as mock_cfg:
             mock_cfg.return_value.load_credentials.return_value = {
-                "KIROCREW_OWNER_ID": "U_OWNER"
+                "AJCREW_OWNER_ID": "U_OWNER"
             }
             resp, _ = await self._post_slack(
                 app,
@@ -1669,9 +1669,9 @@ class TestDestinationOracleEquivalence:
         outside.write_text("data", encoding="utf-8")
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=tmp_path / "outbox"
+            "aj_crew.config.loader.outbox_dir", return_value=tmp_path / "outbox"
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path / "workspace"
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path / "workspace"
         ):
             resp, body = await self._post_slack(
                 app,
@@ -1697,18 +1697,18 @@ class TestDestinationOracleEquivalence:
         app = _make_app(slack, tmp_path)
 
         with patch(
-            "kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent
+            "aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent
         ), patch(
-            "kiro_crew.config.loader.workspace_root", return_value=tmp_path
+            "aj_crew.config.loader.workspace_root", return_value=tmp_path
         ), patch(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             side_effect=RuntimeError("credential store unreadable"),
         ), patch(
             # An unreadable config also breaks the governance evaluation this leg
             # runs first, and THAT rung is fail-closed — so without pinning it
             # permitted, its 403 would answer before the owner-DM fallback this
             # case is about ever ran.
-            "kiro_crew.dashboard.upload_destination.vet_and_audit",
+            "aj_crew.dashboard.upload_destination.vet_and_audit",
             return_value=MagicMock(permitted=True, rule="", layer="", reason=""),
         ):
             resp, body = await self._post_slack(
@@ -1730,8 +1730,8 @@ class TestDestinationOracleEquivalence:
         import inspect
         import textwrap
 
-        from kiro_crew.dashboard import upload_destination
-        from kiro_crew.dashboard.handlers import files
+        from aj_crew.dashboard import upload_destination
+        from aj_crew.dashboard.handlers import files
 
         def _body(func):
             """The function's code without its docstring, which names these rungs.

@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 from turn_harness import SlotSpec, TurnContext, TurnScript, run_turn
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
 
 pytestmark = pytest.mark.asyncio
 
@@ -21,7 +21,7 @@ pytestmark = pytest.mark.asyncio
 async def test_the_turns_session_starts_in_the_directory_preparation_moved_it_to(
     monkeypatch: pytest.MonkeyPatch, tmp_path
 ) -> None:
-    from kiro_crew.slack.code_channels import binding as binding_mod
+    from aj_crew.slack.code_channels import binding as binding_mod
 
     tree = tmp_path / "channel-worktree"
     tree.mkdir()
@@ -58,13 +58,13 @@ async def test_a_turn_whose_workspace_is_not_ready_is_not_run(
 ) -> None:
     """The worktree should exist and does not (a git error): no session is
     acquired, so nothing runs in the shared checkout, and the row says why."""
-    from kiro_crew.slack.code_channels import binding as binding_mod
+    from aj_crew.slack.code_channels import binding as binding_mod
 
     async def notify_turn_prepare(_state, _slot) -> bool:
         return False
 
     monkeypatch.setattr(binding_mod, "notify_turn_prepare", notify_turn_prepare)
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     told: list[str] = []
 
@@ -86,7 +86,7 @@ async def test_a_turn_whose_workspace_is_not_ready_is_not_run(
     assert record.allocations == []
     [row] = [r for r in record.window if "worktree is not ready" in str(r.get("content"))]
     # Tokened, so every dashboard locale shows its own copy of the row.
-    from kiro_crew.dashboard import gateway_notice as gn
+    from aj_crew.dashboard import gateway_notice as gn
 
     assert (row.get("meta") or {}).get(gn.GATEWAY_NOTICE_META_KEY) == (
         gn.GATEWAY_NOTICE_CODE_CHANNEL_WORKTREE_NOT_READY

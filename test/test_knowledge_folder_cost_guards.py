@@ -16,8 +16,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.knowledge import add_source, confirm_source
-from kiro_crew.knowledge.folder_watcher import (
+from aj_crew.dashboard.handlers.knowledge import add_source, confirm_source
+from aj_crew.knowledge.folder_watcher import (
     DEFAULT_MAX_FILES,
     FolderWatcher,
     estimate_scan_cost,
@@ -25,7 +25,7 @@ from kiro_crew.knowledge.folder_watcher import (
     max_files_prop,
     walk_filters,
 )
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.store import KnowledgeStore
 
 
 @pytest.fixture()
@@ -45,23 +45,23 @@ def _cfg(folder_budget: int):
 
 class TestFolderChunkBudgetResolution:
     def test_configured_default_applies_with_no_property(self):
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load",
+        with patch("aj_crew.config.loader.AjCrewConfig.load",
                    return_value=_cfg(300)):
             assert folder_chunk_budget({}) == 300
 
     def test_per_source_property_wins_over_the_default(self):
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load",
+        with patch("aj_crew.config.loader.AjCrewConfig.load",
                    return_value=_cfg(300)):
             assert folder_chunk_budget({"chunk_budget": 25}) == 25
 
     def test_per_source_zero_disables_the_bound(self):
         # The explicit opt-out for a user who does want the folder in one burst.
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load",
+        with patch("aj_crew.config.loader.AjCrewConfig.load",
                    return_value=_cfg(300)):
             assert folder_chunk_budget({"chunk_budget": 0}) is None
 
     def test_configured_zero_disables_the_bound(self):
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load",
+        with patch("aj_crew.config.loader.AjCrewConfig.load",
                    return_value=_cfg(0)):
             assert folder_chunk_budget({}) is None
 
@@ -89,12 +89,12 @@ class TestFolderChunkBudgetResolution:
         ],
     )
     def test_unusable_property_falls_back_to_the_default(self, bad: object):
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load",
+        with patch("aj_crew.config.loader.AjCrewConfig.load",
                    return_value=_cfg(300)):
             assert folder_chunk_budget({"chunk_budget": bad}) == 300
 
     def test_unreadable_config_does_not_raise_into_a_scan(self):
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load",
+        with patch("aj_crew.config.loader.AjCrewConfig.load",
                    side_effect=OSError("boom")):
             assert folder_chunk_budget({}) is None
 
@@ -102,7 +102,7 @@ class TestFolderChunkBudgetResolution:
 class TestBudgetIsWiredToHandAddedSources:
     @pytest.mark.asyncio
     async def test_sweep_passes_the_folder_budget(self, store, tmp_path):
-        from kiro_crew.knowledge.watcher import KnowledgeWatcher
+        from aj_crew.knowledge.watcher import KnowledgeWatcher
 
         folder = tmp_path / "repo"
         folder.mkdir()
@@ -114,7 +114,7 @@ class TestBudgetIsWiredToHandAddedSources:
         w._folder_watcher.scan_source = AsyncMock(return_value={})
         w._maybe_dedup_sweep = AsyncMock()
         w._maybe_reembed_stale = AsyncMock()
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load",
+        with patch("aj_crew.config.loader.AjCrewConfig.load",
                    return_value=_cfg(120)):
             await w._scan()
         assert w._folder_watcher.scan_source.await_args.kwargs["chunk_budget"] == 120
@@ -138,7 +138,7 @@ class TestBudgetIsWiredToHandAddedSources:
         app["knowledge_watcher"] = watcher
         app.router.add_post("/api/knowledge/sources/{id}/confirm", confirm_source)
         async with TestClient(TestServer(app)) as client:
-            with patch("kiro_crew.config.loader.KiroCrewConfig.load",
+            with patch("aj_crew.config.loader.AjCrewConfig.load",
                        return_value=_cfg(90)):
                 resp = await client.post(f"/api/knowledge/sources/{sid}/confirm")
                 assert resp.status == 200
@@ -239,7 +239,7 @@ class TestExistingSourcesIngestTheSameFiles:
 
 class TestAddFolderResponseCarriesTheEstimate:
     def _app(self, store, watcher):
-        from kiro_crew.knowledge.connectors.local_folder import LocalFolderConnector
+        from aj_crew.knowledge.connectors.local_folder import LocalFolderConnector
 
         app = web.Application()
         state = MagicMock()
@@ -264,7 +264,7 @@ class TestAddFolderResponseCarriesTheEstimate:
         watcher = MagicMock()
         watcher._folder_watcher = FolderWatcher(store, MagicMock())
         async with TestClient(TestServer(self._app(store, watcher))) as client:
-            with patch("kiro_crew.config.loader.KiroCrewConfig.load",
+            with patch("aj_crew.config.loader.AjCrewConfig.load",
                        return_value=_cfg(300)):
                 resp = await client.post("/api/knowledge/sources", json={
                     "name": "repo", "source_type": "local_folder", "uri": str(folder)})
@@ -285,7 +285,7 @@ class TestAddFolderResponseCarriesTheEstimate:
         watcher = MagicMock()
         watcher._folder_watcher = FolderWatcher(store, MagicMock())
         async with TestClient(TestServer(self._app(store, watcher))) as client:
-            with patch("kiro_crew.config.loader.KiroCrewConfig.load",
+            with patch("aj_crew.config.loader.AjCrewConfig.load",
                        return_value=_cfg(0)):
                 resp = await client.post("/api/knowledge/sources", json={
                     "name": "repo", "source_type": "local_folder", "uri": str(folder)})
@@ -302,7 +302,7 @@ class TestAddFolderResponseCarriesTheEstimate:
         watcher = MagicMock()
         watcher._folder_watcher = FolderWatcher(store, MagicMock())
         async with TestClient(TestServer(self._app(store, watcher))) as client:
-            with patch("kiro_crew.config.loader.KiroCrewConfig.load",
+            with patch("aj_crew.config.loader.AjCrewConfig.load",
                        return_value=_cfg(300)):
                 resp = await client.post("/api/knowledge/sources", json={
                     "name": "repo", "source_type": "local_folder", "uri": str(folder),
@@ -324,7 +324,7 @@ class TestAddFolderResponseCarriesTheEstimate:
         watcher = MagicMock()
         watcher._folder_watcher = FolderWatcher(store, MagicMock())
         async with TestClient(TestServer(self._app(store, watcher))) as client:
-            with patch("kiro_crew.config.loader.KiroCrewConfig.load",
+            with patch("aj_crew.config.loader.AjCrewConfig.load",
                        return_value=_cfg(300)):
                 resp = await client.post("/api/knowledge/sources", json={
                     "name": "repo", "source_type": "local_folder", "uri": str(folder),
@@ -348,7 +348,7 @@ class TestEstimator:
 
     def test_estimate_is_capped_per_file(self, tmp_path):
         # A single huge file cannot exceed the chunker's own per-file ceiling.
-        from kiro_crew.knowledge.chunker import MAX_CHUNKS_PER_FILE
+        from aj_crew.knowledge.chunker import MAX_CHUNKS_PER_FILE
 
         huge = tmp_path / "huge.md"
         huge.write_text("word " * 400_000)

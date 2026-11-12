@@ -7,7 +7,7 @@ registration-throttle and sandbox-init detectors) and the compaction-failure
 readers. Every expected value is a literal read off the current code, never one
 computed with the function under test.
 
-The code is reached only through the ``kiro_crew.acp.client`` facade, so these
+The code is reached only through the ``aj_crew.acp.client`` facade, so these
 tests hold unchanged before and after the definitions move to their owner module.
 """
 
@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.acp import client as acp_client
+from aj_crew.acp import client as acp_client
 
 _RID = "0f1e2d3c-aaaa-bbbb-cccc-000000000001"
 _TEN_MODELS = ["m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10"]

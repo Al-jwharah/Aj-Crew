@@ -43,12 +43,12 @@ only input is a hard signal that the chosen backend said no.
 
 ### Current state (verified at `f2c0d926cf`)
 
-`_requested_backend` in `src/kiro_crew/dashboard/messaging_api/spawn.py`
+`_requested_backend` in `src/aj_crew/dashboard/messaging_api/spawn.py`
 probes every selectable backend and refuses a spawn whose backend is not
 available, with the code `backend_not_installed` or
 `backend_restart_required`. The refusal lists only the
 backends that can start, so the calling agent can retry on one of them.
-`src/kiro_crew/acp/transport_errors.py` already classifies a spent allowance
+`src/aj_crew/acp/transport_errors.py` already classifies a spent allowance
 (`PROVIDER_ERROR_USAGE_LIMIT`) and an expired login as terminal, non-retryable
 verdicts.
 
@@ -131,7 +131,7 @@ change that adds the consumer.
 
 ### 4. Where it runs
 
-`src/kiro_crew/subagent_parts/backend_failover.py` holds a pure resolver,
+`src/aj_crew/subagent_parts/backend_failover.py` holds a pure resolver,
 `next_failover_backend(*, current, chain, triggers, verdict) -> str | None`,
 with no gateway imports. `_requested_backend` calls it when the chosen backend
 is unavailable with a configured trigger, and walks forward to the first chain

@@ -13,13 +13,13 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.memory as memory_module
+import aj_crew.memory as memory_module
+from aj_crew.context import ContextBuilder
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.clock import ManualClock
 from conftest import plant_day_link
-from kiro_crew.context import ContextBuilder
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.clock import ManualClock
 
 # A fixed instant near midday UTC. The history reader computes "today" from the process's
 # zone, so the test derives yesterday from the same frozen instant, in that zone.
@@ -48,8 +48,8 @@ def _close_skills_loaders(close_skills_loaders):
 
 class TestLessonsCap:
     def test_over_cap_preserves_complete_explicit_rules(self, tmp_path):
-        from kiro_crew.context import _LESSONS_STARTUP_CAP
-        from kiro_crew.learn import Lesson
+        from aj_crew.context import _LESSONS_STARTUP_CAP
+        from aj_crew.learn import Lesson
 
         lessons = LessonStore(base_dir=tmp_path)
         # Save enough long lessons that the formatted context exceeds the cap.
@@ -101,7 +101,7 @@ class TestLessonsCap:
         assert end - start <= _LESSONS_STARTUP_CAP
 
     def test_under_cap_no_error_block(self, tmp_path):
-        from kiro_crew.learn import Lesson
+        from aj_crew.learn import Lesson
 
         lessons = LessonStore(base_dir=tmp_path)
         lessons.save(Lesson(ts="1", rule="always run the formatter", category="knowledge"))
@@ -268,7 +268,7 @@ class TestMemoryGetContextQueryWiring:
         # re-inject rows deleted from it.
         from types import SimpleNamespace
 
-        from kiro_crew.learn import Lesson
+        from aj_crew.learn import Lesson
 
         builder = self._builder(tmp_path)
         store = builder.get_memory_for(None)
@@ -290,7 +290,7 @@ class TestMemoryGetContextQueryWiring:
         # vanish from the prompt in the meantime.
         from types import SimpleNamespace
 
-        from kiro_crew.learn import Lesson
+        from aj_crew.learn import Lesson
 
         builder = self._builder(tmp_path)
         store = builder.get_memory_for(None)
@@ -307,8 +307,8 @@ class TestMemoryGetContextQueryWiring:
         assert "JSONL-SENTINEL" in msg
 
     def test_withheld_only_vector_store_still_yields_jsonl_lessons(self, tmp_path):
-        from kiro_crew.learn import Lesson
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.learn import Lesson
+        from aj_crew.vector_memory import VectorMemoryStore
 
         builder = self._builder(tmp_path)
         memory = builder.get_memory_for(None)
@@ -547,7 +547,7 @@ class TestDurableModelVersionLessonContext:
     def test_jsonl_context_renders_durable_model_version_references(self, tmp_path):
         from types import SimpleNamespace
 
-        from kiro_crew.learn import Lesson
+        from aj_crew.learn import Lesson
 
         builder = self._builder(tmp_path)
         memory = builder.get_memory_for(None)
@@ -582,7 +582,7 @@ class TestDurableModelVersionLessonContext:
             assert rule in message
 
     def test_vector_context_renders_durable_model_version_references(self, tmp_path):
-        from kiro_crew.vector_memory import LessonWriteOutcome, VectorMemoryStore
+        from aj_crew.vector_memory import LessonWriteOutcome, VectorMemoryStore
 
         builder = self._builder(tmp_path)
         memory = builder.get_memory_for(None)
@@ -618,7 +618,7 @@ class TestDurableModelVersionLessonContext:
     def test_vector_context_renders_model_qualified_tooling(
         self, tmp_path, rule: str, category: str
     ) -> None:
-        from kiro_crew.vector_memory import LessonWriteOutcome, VectorMemoryStore
+        from aj_crew.vector_memory import LessonWriteOutcome, VectorMemoryStore
 
         builder = self._builder(tmp_path)
         memory = builder.get_memory_for(None)
@@ -638,8 +638,8 @@ class TestDurableModelVersionLessonContext:
             vector_store.close()
 
     def test_key_confirmed_legacy_negative_pin_yields_jsonl_fallback(self, tmp_path):
-        from kiro_crew.learn import Lesson
-        from kiro_crew.vector_memory import (
+        from aj_crew.learn import Lesson
+        from aj_crew.vector_memory import (
             _LESSON_NEGATIVE_SEP,
             VectorMemoryStore,
             _lesson_key,

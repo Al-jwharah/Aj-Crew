@@ -1,8 +1,8 @@
 # App Platform Trust Model
 
-Kiro Crew's app platform loads app Python directly into the gateway process
+Aj Crew's app platform loads app Python directly into the gateway process
 (`apps/module_loader.py` → `importlib` → `exec_module`). This page documents the
-resulting trust boundary and how Kiro Crew makes it explicit.
+resulting trust boundary and how Aj Crew makes it explicit.
 
 ## What an app can do
 
@@ -17,7 +17,7 @@ The `AppContext` capability permissions (`permissions.cron`,
 `permissions.events`, `permissions.spawn`, `permissions.storage`, and
 `permissions.jobs`) gate only which SDK objects `context.py` populates.
 A non-empty `permissions.mcpTools` scopes the app's OWN agents: when they are
-materialized, every host-managed (`kirocrew-*`) tool the app did not declare is
+materialized, every host-managed (`ajcrew-*`) tool the app did not declare is
 added to the agent spec's `managedToolPolicy.exclude`, which the managed servers
 enforce per session. A managed server whose tool names cannot be read is withheld
 whole (`managedToolPolicy.excludeServers`) rather than left reachable. It covers sessions running on the app's agents (including
@@ -30,9 +30,9 @@ sandbox** around in-process app code (hooks and route handlers). An app's
 separate backend process is launched under the OS sandbox's `standard` mode
 where a sandbox backend applies, which does not bound the in-process modules.
 
-> **Admitting and enabling an app is therefore equivalent to running that code with the same privileges as Kiro Crew itself.** Only trust apps you trust.
+> **Admitting and enabling an app is therefore equivalent to running that code with the same privileges as Aj Crew itself.** Only trust apps you trust.
 
-## How Kiro Crew makes the boundary explicit
+## How Aj Crew makes the boundary explicit
 
 - **Builtin vs third-party split** — apps shipped inside the package
   (`apps/builtins/`) are trusted like core. Anything loaded from outside that
@@ -122,10 +122,10 @@ independently re-checks that the caller's token app matches the target app, sinc
 the proxy signs requests with the target app's secret.
 
 That signature is how a backend tells a gateway-forwarded request from a direct
-connection to its loopback port. The v1 `X-KiroCrew-Proxy` HMAC carries no nonce,
+connection to its loopback port. The v1 `X-AjCrew-Proxy` HMAC carries no nonce,
 so a copy of one signed request verifies again for up to 60 seconds. Every
-forwarded request therefore also carries `X-KiroCrew-Proxy-Nonce` and an
-`X-KiroCrew-Proxy-V2` HMAC that binds that nonce. A backend that verifies v2 with a
+forwarded request therefore also carries `X-AjCrew-Proxy-Nonce` and an
+`X-AjCrew-Proxy-V2` HMAC that binds that nonce. A backend that verifies v2 with a
 process-lifetime replay cache accepts each request once. v1 is unchanged and still
 verifies, so a backend that never moves to v2 keeps working but stays replayable
 inside the window. The proxy strips caller-sent copies of all these headers, so a

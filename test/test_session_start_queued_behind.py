@@ -20,14 +20,14 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from test_update_provider import _UNALLOCATABLE_PID
 
-import kiro_crew.acp.runtime as runtime_mod
-from kiro_crew.acp.runtime import (
+import aj_crew.acp.runtime as runtime_mod
+from aj_crew.acp.runtime import (
     AcpRequestTimeout,
     AcpRuntime,
     AcpSessionStartTimeout,
     _queued_behind_note,
 )
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
@@ -49,7 +49,7 @@ _BACKSTOP = 30.0
 
 @pytest.fixture(autouse=True)
 def _fresh_gate(monkeypatch):
-    import kiro_crew.acp.session_handle as sh
+    import aj_crew.acp.session_handle as sh
 
     monkeypatch.setattr(sh, "_MCP_DRAIN_NO_REPORT_CEILING", 0.05, raising=False)
     runtime_mod._session_start_gates.clear()

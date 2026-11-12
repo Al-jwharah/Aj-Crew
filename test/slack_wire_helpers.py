@@ -35,8 +35,8 @@ import aiohttp
 import pytest
 from aiohttp import web
 
-from kiro_crew.slack import team_ids
-from kiro_crew.slack.client import RealSlackClient
+from aj_crew.slack import team_ids
+from aj_crew.slack.client import RealSlackClient
 
 # Bound at import so a test that stubs ``aiohttp.ClientSession`` (for a
 # ``response_url`` post) still leaves the client a real session to the wire.

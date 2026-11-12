@@ -19,19 +19,19 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import mcp_work
-from kiro_crew.acp import session_mcp
-from kiro_crew.mcp_gateway import STUB_MODULE
-from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
-from kiro_crew.mcp_gateway.hashing import STUB_FLAGS_FLAG, encode_target_args
-from kiro_crew.mcp_gateway.session_servers import attach_stub_session_token
-from kiro_crew.providers.mirrors.copilot import copilot_projection
-from kiro_crew.providers.mirrors.deepseek import deepseek_projection
-from kiro_crew.providers.mirrors.goose import goose_projection
-from kiro_crew.providers.mirrors.identity import identity_bound_crew_servers
-from kiro_crew.providers.mirrors.opencode import opencode_projection, opencode_tool_id
-from kiro_crew.providers.mirrors.strands import strands_projection
+from aj_crew import agent as agent_mod
+from aj_crew import mcp_work
+from aj_crew.acp import session_mcp
+from aj_crew.mcp_gateway import STUB_MODULE
+from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+from aj_crew.mcp_gateway.hashing import STUB_FLAGS_FLAG, encode_target_args
+from aj_crew.mcp_gateway.session_servers import attach_stub_session_token
+from aj_crew.providers.mirrors.copilot import copilot_projection
+from aj_crew.providers.mirrors.deepseek import deepseek_projection
+from aj_crew.providers.mirrors.goose import goose_projection
+from aj_crew.providers.mirrors.identity import identity_bound_crew_servers
+from aj_crew.providers.mirrors.opencode import opencode_projection, opencode_tool_id
+from aj_crew.providers.mirrors.strands import strands_projection
 
 _TOKEN = "session-token-a"
 _WORK = mcp_work.SERVER_NAME
@@ -51,12 +51,12 @@ def agents_dir(tmp_path, monkeypatch):
 
 
 def _write_spec(agents_dir: Path, *, servers: dict, tools: list) -> None:
-    spec = {"name": "kirocrew", "mcpServers": servers, "tools": tools}
-    (agents_dir / "kirocrew.json").write_text(json.dumps(spec), encoding="utf-8")
+    spec = {"name": "ajcrew", "mcpServers": servers, "tools": tools}
+    (agents_dir / "ajcrew.json").write_text(json.dumps(spec), encoding="utf-8")
 
 
 def _stub_args(server: str, *, envelope: bool = False) -> list[str]:
-    flags = ["--server", server, "--agent", "kirocrew", "--socket", "/run/gw.sock"]
+    flags = ["--server", server, "--agent", "ajcrew", "--socket", "/run/gw.sock"]
     if envelope:
         return ["-m", STUB_MODULE, f"{STUB_FLAGS_FLAG}={encode_target_args(flags)}"]
     return ["-m", STUB_MODULE, *flags]
@@ -74,14 +74,14 @@ def _stub(server: str = _WORK, *, token: str = _TOKEN, envelope: bool = False) -
 
 
 def _grant(agents_dir, *names: str) -> None:
-    servers = {n: {"command": "/opt/kirocrew", "args": ["mcp-work"]} for n in names}
+    servers = {n: {"command": "/opt/ajcrew", "args": ["mcp-work"]} for n in names}
     _write_spec(agents_dir, servers=servers, tools=[f"@{n}" for n in names])
 
 
 def _project(stubs: list[dict], *, session_token: str = _TOKEN, project=opencode_projection, **kw):
     names = tuple(sorted({s["name"] for s in stubs}))
     return project(
-        "kirocrew",
+        "ajcrew",
         session_key="worker:one",
         session_token=session_token,
         stub_server_names=names,
@@ -138,15 +138,13 @@ _LOOK_ALIKES = {
     "conflicting token pairs": _with_env(
         [dict(_TOKEN_PAIR), {"name": STUB_SESSION_TOKEN_ENV, "value": "session-token-b"}]
     ),
-    "extra env pair": _with_env(
-        [dict(_TOKEN_PAIR), {"name": "KIROCREW_SESSION_KEY", "value": "x"}]
-    ),
+    "extra env pair": _with_env([dict(_TOKEN_PAIR), {"name": "AJCREW_SESSION_KEY", "value": "x"}]),
     "env as a mapping": _with(env={STUB_SESSION_TOKEN_ENV: _TOKEN}),
     "pair with extra keys": _with_env([{**_TOKEN_PAIR, "extra": "1"}]),
-    "not the stub module": _with(args=["-m", "kiro_crew.mcp_work", "--server", _WORK]),
-    "spec launch, no stub": _with(command="/opt/kirocrew", args=["mcp-work"]),
-    "registers another server": _with(args=_stub_args("kirocrew-dashboard")),
-    "registers two servers": _with(args=[*_stub_args(_WORK), "--server", "kirocrew-mate"]),
+    "not the stub module": _with(args=["-m", "aj_crew.mcp_work", "--server", _WORK]),
+    "spec launch, no stub": _with(command="/opt/ajcrew", args=["mcp-work"]),
+    "registers another server": _with(args=_stub_args("ajcrew-dashboard")),
+    "registers two servers": _with(args=[*_stub_args(_WORK), "--server", "ajcrew-mate"]),
     "unreadable envelope": _with(args=["-m", STUB_MODULE, f"{STUB_FLAGS_FLAG}=@@not-base64@@"]),
     "non-string arg": _with(args=["-m", STUB_MODULE, "--server", _WORK, 7]),
     "http transport": _with(type="http", url="http://127.0.0.1:1"),
@@ -171,8 +169,8 @@ def test_a_session_with_no_token_admits_no_work_ledger_stub(agents_dir):
 @pytest.mark.parametrize(
     "entry,tools",
     [
-        ({"command": "/opt/kirocrew", "disabled": True}, [f"@{_WORK}"]),
-        ({"command": "/opt/kirocrew"}, ["@kirocrew-core"]),
+        ({"command": "/opt/ajcrew", "disabled": True}, [f"@{_WORK}"]),
+        ({"command": "/opt/ajcrew"}, ["@ajcrew-core"]),
     ],
     ids=["server disabled", "not granted"],
 )
@@ -185,7 +183,7 @@ def test_work_ledger_stub_keeps_the_spec_restrictions(agents_dir, entry, tools):
 
 def test_a_switched_off_tool_is_denied_on_the_stub_or_the_stub_is_withheld(agents_dir):
     """opencode keeps a narrowed server mounted only while its deny rule is in force."""
-    entry = {"command": "/opt/kirocrew", "disabledTools": ["work_report"]}
+    entry = {"command": "/opt/ajcrew", "disabledTools": ["work_report"]}
     _write_spec(agents_dir, servers={_WORK: entry}, tools=[f"@{_WORK}"])
     rule = opencode_tool_id(_WORK, "work_report")
     projection = _project([_stub()])
@@ -231,6 +229,6 @@ def test_every_single_binary_harness_admits_only_the_work_ledger_stub(agents_dir
     assert mounted.get(_WORK) == stub
     assert not set(others) & set(mounted)
     # No per-tool deny channel here, so a narrowed work-ledger server is withheld whole.
-    entry = {"command": "/opt/kirocrew", "disabledTools": ["work_report"]}
+    entry = {"command": "/opt/ajcrew", "disabledTools": ["work_report"]}
     _write_spec(agents_dir, servers={_WORK: entry}, tools=[f"@{_WORK}"])
     assert _WORK not in _mounted([_stub()], project=project)

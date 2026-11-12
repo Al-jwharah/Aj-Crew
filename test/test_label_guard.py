@@ -10,9 +10,9 @@ private copy that could drift.
 
 from __future__ import annotations
 
-from kiro_crew import label_guard
-from kiro_crew.dashboard import chat_title
-from kiro_crew.label_guard import is_verdict_reply, looks_like_prose
+from aj_crew import label_guard
+from aj_crew.dashboard import chat_title
+from aj_crew.label_guard import is_verdict_reply, looks_like_prose
 
 
 def test_dashboard_title_delegates_to_the_shared_guard():

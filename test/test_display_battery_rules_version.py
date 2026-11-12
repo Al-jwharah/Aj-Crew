@@ -26,32 +26,32 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard import display_battery
-from kiro_crew.dashboard import display_verdicts as dv
+from aj_crew.dashboard import display_battery
+from aj_crew.dashboard import display_verdicts as dv
 
 PKG = Path(display_battery.__file__).resolve().parent.parent
 
 #: Package modules a rule source imports that are NOT rules inputs, and why.
 NOT_RULES: dict[str, str] = {
-    "kiro_crew.sel": "SEL audit records; the battery never writes one (trace below)",
-    "kiro_crew.security.denied_rules": "bash-audit symbols exfil re-uses; never called by the battery",
-    "kiro_crew.config": "operator OAuth file, banner-only (test_display_redaction_source_guard)",
-    "kiro_crew.config.loader": "same; plus the owner-view switch path, which turns storage off",
-    "kiro_crew.platform.context": "exempt-host source; its output, the host set, is in every tag",
-    "kiro_crew.platform.governance": "the switch's policy gate; only read_state reaches it, never the battery",
-    "kiro_crew.atomic_write": "the owner-view switch writer; never reached from the battery",
-    "kiro_crew._facade_mirror": "mirror facade glue: runs at import and on attribute access only",
-    "kiro_crew.security.exfil_bash": "the bash egress gate; the battery never calls it",
-    "kiro_crew.security.shell_commands": "the bash gates' command reader; the battery never calls it",
+    "aj_crew.sel": "SEL audit records; the battery never writes one (trace below)",
+    "aj_crew.security.denied_rules": "bash-audit symbols exfil re-uses; never called by the battery",
+    "aj_crew.config": "operator OAuth file, banner-only (test_display_redaction_source_guard)",
+    "aj_crew.config.loader": "same; plus the owner-view switch path, which turns storage off",
+    "aj_crew.platform.context": "exempt-host source; its output, the host set, is in every tag",
+    "aj_crew.platform.governance": "the switch's policy gate; only read_state reaches it, never the battery",
+    "aj_crew.atomic_write": "the owner-view switch writer; never reached from the battery",
+    "aj_crew._facade_mirror": "mirror facade glue: runs at import and on attribute access only",
+    "aj_crew.security.exfil_bash": "the bash egress gate; the battery never calls it",
+    "aj_crew.security.shell_commands": "the bash gates' command reader; the battery never calls it",
 }
 
 # Inputs that make every display redactor take its matching path.
 PROBE = r"""
 import json, os, sys
 from pathlib import Path
-from kiro_crew.dashboard import display_battery
-from kiro_crew.security import exfil
-from kiro_crew import slack_manifest
+from aj_crew.dashboard import display_battery
+from aj_crew.security import exfil
+from aj_crew import slack_manifest
 
 # The exempt-host source is keyed (its output is in every tag), so it is held
 # fixed here and its own package files do not count as rules inputs.
@@ -125,7 +125,7 @@ def test_the_battery_executes_only_rule_sources(tmp_path: Path) -> None:
 
 
 def _module_of(rel: str) -> str:
-    return "kiro_crew." + rel[: -len(".py")].replace("/", ".").removesuffix(".__init__")
+    return "aj_crew." + rel[: -len(".py")].replace("/", ".").removesuffix(".__init__")
 
 
 def _imports(rel: str) -> set[str]:
@@ -143,10 +143,10 @@ def _imports(rel: str) -> set[str]:
             else:
                 name = node.module or ""
             found.add(name)
-            # ``from kiro_crew import slack_manifest`` names a module.
+            # ``from aj_crew import slack_manifest`` names a module.
             for a in node.names:
                 found.add(f"{name}.{a.name}")
-    return {n for n in found if n == "kiro_crew" or n.startswith("kiro_crew.")}
+    return {n for n in found if n == "aj_crew" or n.startswith("aj_crew.")}
 
 
 def test_rule_sources_import_nothing_unlisted() -> None:
@@ -158,7 +158,7 @@ def test_rule_sources_import_nothing_unlisted() -> None:
             continue
         for name in _imports(rel):
             if name not in known:
-                continue  # ``kiro_crew`` itself, or a symbol of an imported module
+                continue  # ``aj_crew`` itself, or a symbol of an imported module
             assert name in listed or name in NOT_RULES, f"{rel} imports unlisted {name}"
 
 
@@ -202,7 +202,7 @@ def test_a_missing_rule_file_gives_no_digest(tmp_path: Path) -> None:
 
 def test_the_rules_version_is_the_rule_digest_not_the_package(monkeypatch) -> None:
     """The version follows the rule digest and ignores the package code fingerprint."""
-    import kiro_crew.code_fingerprint as cf
+    import aj_crew.code_fingerprint as cf
 
     base = dv.rules_version()
     assert dv.rules_version() == base

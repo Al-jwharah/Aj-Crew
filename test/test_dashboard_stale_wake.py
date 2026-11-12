@@ -3,7 +3,7 @@
 The out-of-date line (``dashboard_stale_fields``) reached a Bot only inside a turn, so a
 Bot with neither Daily Goal Reminder nor Heartbeat on kept a stale field until someone
 talked to it. The gateway's one stale-wake cron job now starts one hidden turn in that
-Bot's own thread (:mod:`kiro_crew.dashboard.stale_wake`). Each test below fails when its
+Bot's own thread (:mod:`aj_crew.dashboard.stale_wake`). Each test below fails when its
 piece of the change is removed:
 
 * crossing the limit wakes exactly once -- drop the book check in ``due_fields`` and the
@@ -30,10 +30,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_pause, dashboard_agentic
-from kiro_crew import members as members_mod
-from kiro_crew.dashboard import goal_reminder, mate_welcome, stale_wake
-from kiro_crew.dashboard_templates.manifest import parse_manifest
+from aj_crew import crew_pause, dashboard_agentic
+from aj_crew import members as members_mod
+from aj_crew.dashboard import goal_reminder, mate_welcome, stale_wake
+from aj_crew.dashboard_templates.manifest import parse_manifest
 
 SLUG = "scout"
 MEMBER = "Scout"
@@ -317,11 +317,11 @@ def test_a_start_with_the_preview_off_removes_a_job_left_from_before(monkeypatch
 
 
 def test_only_bots_in_the_crew_with_a_thread_are_listed(monkeypatch) -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     names = ["Ann", "Bad", "NoThread", "Scout", "_hidden"]
     cfg = SimpleNamespace(agents={n: {} for n in names})
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
     monkeypatch.setattr(members_mod, "is_dispatchable_member_name", lambda n: not n.startswith("_"))
 
     def _slug(name, _cfg):
@@ -340,12 +340,12 @@ def test_only_bots_in_the_crew_with_a_thread_are_listed(monkeypatch) -> None:
 
 
 def test_an_unreadable_crew_config_lists_no_bots(monkeypatch) -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     def _fail(cls, *a, **k):
         raise OSError("gone")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_fail))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_fail))
     assert stale_wake.bots() == []
 
 
@@ -359,22 +359,22 @@ def test_a_damaged_book_reads_as_empty(monkeypatch, tmp_path, body) -> None:
 
 
 def _previews(monkeypatch, previews: dict[str, bool]) -> None:
-    from kiro_crew.config import KiroCrewConfig
+    from aj_crew.config import AjCrewConfig
 
     cfg = SimpleNamespace(
         dashboard=SimpleNamespace(feature_previews=previews), degraded_sections=frozenset()
     )
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
 
 
 @pytest.mark.parametrize("section", ["*", "dashboard"])
 def test_a_torn_config_reads_as_unknown_not_off(monkeypatch, section) -> None:
-    from kiro_crew.config import KiroCrewConfig
+    from aj_crew.config import AjCrewConfig
 
     cfg = SimpleNamespace(
         dashboard=SimpleNamespace(feature_previews={}), degraded_sections=frozenset({section})
     )
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
     assert stale_wake.switch_state() is None
 
 
@@ -423,7 +423,7 @@ def test_the_stale_state_carries_each_fields_write_stamp(monkeypatch) -> None:
     assert "headline" in line and "never" in line
     # A cold fold (nobody opened the Bot since a restart) wakes nothing now, and is
     # folded in the background so a later tick can read it.
-    from kiro_crew.crew_log import slot_prime
+    from aj_crew.crew_log import slot_prime
 
     primed: list[tuple[str, str]] = []
     monkeypatch.setattr(dashboard_agentic, "_agentic_written_at", lambda slot: None)
@@ -477,7 +477,7 @@ def test_only_a_tick_that_woke_someone_is_loud() -> None:
 async def test_a_quiet_run_writes_no_history_row(tmp_path) -> None:
     from unittest.mock import AsyncMock
 
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     svc = CronService(base_dir=tmp_path)
     svc._history.append = AsyncMock()
@@ -501,7 +501,7 @@ async def test_a_quiet_run_writes_no_history_row(tmp_path) -> None:
 async def test_a_quiet_run_that_failed_keeps_its_row(tmp_path) -> None:
     from unittest.mock import AsyncMock
 
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     svc = CronService(base_dir=tmp_path)
     svc._history.append = AsyncMock()

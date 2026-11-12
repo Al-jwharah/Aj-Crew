@@ -53,7 +53,7 @@ const COMMENTS = [
 mkdirSync(OUT, { recursive: true })
 const now = Math.floor(Date.now() / 1000)
 const SLOTS = [{
-  key: ACTIVE, title: 'Review the cleanup steps', running: false, messages: 2, agent: 'kirocrew',
+  key: ACTIVE, title: 'Review the cleanup steps', running: false, messages: 2, agent: 'ajcrew',
   memory_mode: 'persistent', modified: now, last_ts: '2026-10-22T17:00:00Z', folder_id: '',
   last_message: 'Opened it in the side panel.', source_links: [], source_links_total: 0,
 }]
@@ -102,7 +102,7 @@ async function main() {
         'mc-active-slot': ACTIVE,
         'mc-privacy-notice-v1': '1',
         'mc-sidebar-pinned': 'true',
-        'kirocrew:comment-hint-dismissed': '1',
+        'ajcrew:comment-hint-dismissed': '1',
         'mc-comment-drafts': JSON.stringify({ [FILE]: COMMENTS }),
         [`mc-panel-tabs:${ACTIVE}`]: JSON.stringify({
           activeId: `file:${FILE}`,

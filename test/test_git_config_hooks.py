@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import git_config_hooks as gch
+from aj_crew import git_config_hooks as gch
 
 
 def _git_version() -> tuple[int, int]:
@@ -225,7 +225,7 @@ def test_disable_args_stop_the_hook_even_with_an_event_named_hook(
 
 
 def _md_use_path_git(monkeypatch) -> None:
-    from kiro_crew.apps.builtins.md_notebook import git_ops
+    from aj_crew.apps.builtins.md_notebook import git_ops
 
     monkeypatch.setattr(git_ops, "_git_bin", lambda: shutil.which("git"))
     # TRUSTED_PATH would hide a newer git a developer put first on PATH.
@@ -236,7 +236,7 @@ def _md_use_path_git(monkeypatch) -> None:
 async def test_md_notebook_run_git_carries_the_disable(
     repo: Path, tmp_path: Path, monkeypatch
 ) -> None:
-    from kiro_crew.apps.builtins.md_notebook import git_ops
+    from aj_crew.apps.builtins.md_notebook import git_ops
 
     _md_use_path_git(monkeypatch)
     _plant(repo, tmp_path / "marker")
@@ -255,7 +255,7 @@ async def test_md_notebook_run_git_carries_the_disable(
 
 @pytest.mark.asyncio
 async def test_md_notebook_scan_failure_is_a_git_error(repo: Path, monkeypatch) -> None:
-    from kiro_crew.apps.builtins.md_notebook import git_ops
+    from aj_crew.apps.builtins.md_notebook import git_ops
 
     _md_use_path_git(monkeypatch)
     with (repo / ".git" / "config").open("a") as fh:
@@ -267,7 +267,7 @@ async def test_md_notebook_scan_failure_is_a_git_error(repo: Path, monkeypatch) 
 @needs_config_hooks
 @pytest.mark.asyncio
 async def test_md_notebook_commit_does_not_fire(repo: Path, tmp_path: Path, monkeypatch) -> None:
-    from kiro_crew.apps.builtins.md_notebook import git_ops
+    from aj_crew.apps.builtins.md_notebook import git_ops
 
     _md_use_path_git(monkeypatch)
     marker = tmp_path / "marker"
@@ -283,7 +283,7 @@ async def test_md_notebook_commit_does_not_fire(repo: Path, tmp_path: Path, monk
 
 @pytest.mark.asyncio
 async def test_papyrus_git_carries_the_disable(repo: Path, tmp_path: Path, monkeypatch) -> None:
-    from kiro_crew.apps.builtins.papyrus.backend import gitops
+    from aj_crew.apps.builtins.papyrus.backend import gitops
 
     _plant(repo, tmp_path / "marker")
     seen: list[list[str]] = []
@@ -313,8 +313,8 @@ async def test_papyrus_git_scans_without_a_trusted_git(
 ) -> None:
     """The sandboxed scan works without a 'trusted' git in a fixed system dir: with
     trusted_git_bin() returning None, the planted hook is still disabled."""
-    from kiro_crew import platform_compat
-    from kiro_crew.apps.builtins.papyrus.backend import gitops
+    from aj_crew import platform_compat
+    from aj_crew.apps.builtins.papyrus.backend import gitops
 
     monkeypatch.setattr(platform_compat, "trusted_git_bin", lambda: None)
     _plant(repo, tmp_path / "marker")
@@ -340,7 +340,7 @@ async def test_papyrus_git_scans_without_a_trusted_git(
 
 
 def test_dev_fleet_rewrites_only_git(repo: Path, tmp_path: Path) -> None:
-    from kiro_crew.apps.builtins.dev_fleet import runtime
+    from aj_crew.apps.builtins.dev_fleet import runtime
 
     _plant(repo, tmp_path / "marker")
     assert runtime._with_config_hooks_off(["npm", "ci"], str(repo)) == ["npm", "ci"]
@@ -365,7 +365,7 @@ def test_dev_fleet_rewrites_only_git(repo: Path, tmp_path: Path) -> None:
 async def test_dev_fleet_run_cmd_carries_the_disable(
     repo: Path, tmp_path: Path, monkeypatch
 ) -> None:
-    from kiro_crew.apps.builtins.dev_fleet import runtime
+    from aj_crew.apps.builtins.dev_fleet import runtime
 
     _plant(repo, tmp_path / "marker")
     seen: list[list[str]] = []
@@ -382,7 +382,7 @@ async def test_dev_fleet_run_cmd_carries_the_disable(
 
 @pytest.mark.asyncio
 async def test_dev_fleet_run_cmd_refuses_on_scan_failure(repo: Path, monkeypatch) -> None:
-    from kiro_crew.apps.builtins.dev_fleet import runtime
+    from aj_crew.apps.builtins.dev_fleet import runtime
 
     with (repo / ".git" / "config").open("a") as fh:
         fh.write('[hook "a=b"]\n\tcommand = true\n')
@@ -395,7 +395,7 @@ async def test_dev_fleet_run_cmd_refuses_on_scan_failure(repo: Path, monkeypatch
 
 
 def test_worktree_run_git_carries_the_disable(repo: Path, tmp_path: Path, monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import worktree as wt
+    from aj_crew.dashboard.handlers import worktree as wt
 
     _plant(repo, tmp_path / "marker")
     seen: list[list[str]] = []
@@ -418,7 +418,7 @@ def test_worktree_run_git_carries_the_disable(repo: Path, tmp_path: Path, monkey
 def test_worktree_run_git_scan_failure_reads_as_git_failure(repo: Path, monkeypatch) -> None:
     """A hook name that cannot be disabled (`=` in it) fails the scan closed: the git
     call is refused and reads as a git failure, never run with the hook enabled."""
-    from kiro_crew.dashboard.handlers import worktree as wt
+    from aj_crew.dashboard.handlers import worktree as wt
 
     with (repo / ".git" / "config").open("a") as fh:
         fh.write('[hook "a=b"]\n\tcommand = true\n')
@@ -433,7 +433,7 @@ def test_worktree_run_git_scan_failure_reads_as_git_failure(repo: Path, monkeypa
 
 
 def test_update_governance_refuses_a_repo_hook(repo: Path) -> None:
-    from kiro_crew.platform import update_governance as ug
+    from aj_crew.platform import update_governance as ug
 
     assert ug.repo_exec_config_reason(str(repo)) == ""
     _git(repo, "config", "hook.pwn.command", "true")
@@ -441,7 +441,7 @@ def test_update_governance_refuses_a_repo_hook(repo: Path) -> None:
 
 
 def test_update_governance_ignores_a_global_hook(repo: Path, tmp_path: Path, monkeypatch) -> None:
-    from kiro_crew.platform import update_governance as ug
+    from aj_crew.platform import update_governance as ug
 
     glob = tmp_path / "global.cfg"
     glob.write_text('[hook "mine"]\n\tcommand = true\n\tevent = pre-commit\n')
@@ -474,7 +474,7 @@ def _passthrough_spawn(argv, *, mode, env):
 def test_sandboxed_scan_produces_flags(tmp_path: Path, monkeypatch) -> None:
     """The sandboxed entry point disables a planted hook, using the git the caller's own
     spawn resolves -- with no dependency on a 'trusted' system git existing."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "trusted_git_bin", lambda: None, raising=False)
     repo = tmp_path / "r"

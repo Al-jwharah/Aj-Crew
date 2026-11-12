@@ -18,11 +18,11 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_ready_kiro_prerequisite
 
-from kiro_crew.dashboard import session_pulse_counter as spc
-from kiro_crew.dashboard.state import DashboardState, SlotOrigin
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard import session_pulse_counter as spc
+from aj_crew.dashboard.state import DashboardState, SlotOrigin
+from aj_crew.history import ConversationLog
 
-_SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+_SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 # Origin shapes that must never count, flag or not.
 _NON_USER_KWARGS = (
@@ -40,7 +40,7 @@ def _isolated_counter(tmp_path, monkeypatch: pytest.MonkeyPatch):
     # Both the counter module and state resolve config_dir(); point both at a
     # throwaway dir so the counter file and any open-slots snapshot stay local.
     monkeypatch.setattr(spc, "config_dir", lambda: counter_dir)
-    import kiro_crew.dashboard.state as state_mod
+    import aj_crew.dashboard.state as state_mod
 
     monkeypatch.setattr(state_mod, "config_dir", lambda: counter_dir, raising=False)
     return counter_dir
@@ -133,7 +133,7 @@ def test_restore_shape_named_user_slot_does_not_increment(tmp_path) -> None:
 
 
 def _opted_in_call_counts() -> dict[str, int]:
-    """Map of module path (relative to src/kiro_crew) -> number of
+    """Map of module path (relative to src/aj_crew) -> number of
     ``get_or_create_slot(...)`` calls passing a truthy ``count_user_session``,
     swept over the whole package so a new opt-in anywhere is caught."""
     counts: dict[str, int] = {}
@@ -165,7 +165,7 @@ def _opted_in_call_counts() -> dict[str, int]:
 def test_only_human_request_paths_opt_in() -> None:
     # Exactly the three human request-layer paths carry the flag: the chat-send
     # auto-create and the new-chat tab (chat_api/chat_send.py, chat_api/slot_create.py), and fork
-    # (chat_fork.py). This sweeps every module under src/kiro_crew, so an
+    # (chat_fork.py). This sweeps every module under src/aj_crew, so an
     # opt-in appearing anywhere else -- most importantly the session-control
     # create verb, whose absence is required -- or disappearing from
     # these two files is a deliberate decision: update this pin alongside it.

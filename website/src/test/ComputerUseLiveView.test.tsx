@@ -14,14 +14,14 @@ import { sseSlots } from '../store/dashboardSlice'
 /** Dispatch the window event the WS layer emits for a `computer_use_frame`. */
 function pushFrame(data: string, extra: Record<string, unknown> = {}) {
   window.dispatchEvent(
-    new CustomEvent('kirocrew-computer-use-frame', {
+    new CustomEvent('ajcrew-computer-use-frame', {
       detail: { data, format: 'jpeg', ...extra },
     }),
   )
 }
 
 function pushToggle() {
-  window.dispatchEvent(new CustomEvent('kirocrew-toggle-computer-use-live'))
+  window.dispatchEvent(new CustomEvent('ajcrew-toggle-computer-use-live'))
 }
 
 describe('ComputerUseLiveView', () => {
@@ -42,7 +42,7 @@ describe('ComputerUseLiveView', () => {
     const { container } = renderWithProviders(<ComputerUseLiveView />)
     await act(async () => {
       window.dispatchEvent(
-        new CustomEvent('kirocrew-computer-use-frame', { detail: { format: 'jpeg' } }),
+        new CustomEvent('ajcrew-computer-use-frame', { detail: { format: 'jpeg' } }),
       )
     })
     expect(container.firstChild).toBeNull()

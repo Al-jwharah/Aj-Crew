@@ -11,7 +11,7 @@ That refusal is right. Its VISIBILITY was not:
   else on the host (``cp -al``, rsnapshot, a dotfile manager keeping the pointer as a
   link), so nobody did anything wrong and nobody has a reason to read that log;
 * on the CLI the refusal is not in the ``AcpError`` hierarchy, so ``_stream_and_print``'s
-  handler never saw it and it escaped as a stack trace that reads as a Kiro Crew crash;
+  handler never saw it and it escaped as a stack trace that reads as an Aj Crew crash;
 * nothing named the condition BEFORE a spawn tried and failed.
 
 So this file pins three surfaces and the one property that keeps them honest: they all
@@ -32,7 +32,7 @@ from unittest import mock
 import pytest
 from turn_harness import TurnScript, run_turn
 
-from kiro_crew import cli_chat, cli_doctor, sandbox
+from aj_crew import cli_chat, cli_doctor, sandbox
 
 _POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="POSIX link semantics")
 _LINUX_ONLY = pytest.mark.skipif(
@@ -222,7 +222,7 @@ class TestTheProbeAndTheRefusalSayOneThing:
 
 
 class TestDoctorNamesItBeforeTheNextSpawn:
-    """``kirocrew doctor`` is where an operator looks when agents stop starting."""
+    """``ajcrew doctor`` is where an operator looks when agents stop starting."""
 
     @_LINUX_ONLY
     def test_a_healthy_pointer_prints_nothing(self, crew_home, capsys) -> None:
@@ -365,7 +365,7 @@ class TestTheRefusalReachesTheChatCard:
         one error row word for word -- no generic "agent failed to start", no
         "Connection lost -- retrying...", and no queued retry.
         """
-        detail = sandbox._live_target_multilink_detail("/var/lib/kirocrew/live_target.json", 2)
+        detail = sandbox._live_target_multilink_detail("/var/lib/ajcrew/live_target.json", 2)
         record = await run_turn(
             TurnScript(allocation_error=sandbox.SandboxCeilingUnsealable(detail))
         )
@@ -399,7 +399,7 @@ class TestTheRefusalReachesTheChatCard:
         before appending it. A remedy containing a path and a ``find`` invocation must
         come out the other side intact -- a scrubbed ``find`` line is a remedy the
         operator cannot run."""
-        from kiro_crew.security import redact_credentials, redact_exfiltration_urls
+        from aj_crew.security import redact_credentials, redact_exfiltration_urls
 
         detail = sandbox._live_target_multilink_detail(str(_pointer(crew_home)), 2)
 
@@ -412,20 +412,20 @@ class TestTheRefusalReachesTheChatCard:
         """A transient verdict would put this in the "Connection lost -- retrying..."
         ladder: the card would show no reason, and the retries would fail identically
         because nothing about the host changed between them."""
-        from kiro_crew.llm_helpers import acp_error_is_transient
+        from aj_crew.llm_helpers import acp_error_is_transient
 
         refusal = sandbox.SandboxCeilingUnsealable(
-            sandbox._live_target_multilink_detail("/var/lib/kirocrew/live_target.json", 2)
+            sandbox._live_target_multilink_detail("/var/lib/ajcrew/live_target.json", 2)
         )
 
         assert acp_error_is_transient(refusal) is False
 
 
 class TestTheRefusalReachesTheCli:
-    """``kirocrew chat`` printed a stack trace for a host with one extra file link."""
+    """``ajcrew chat`` printed a stack trace for a host with one extra file link."""
 
     def test_the_refusal_prints_the_remedy_and_exits_nonzero(self, monkeypatch, capsys) -> None:
-        detail = sandbox._live_target_multilink_detail("/var/lib/kirocrew/live_target.json", 2)
+        detail = sandbox._live_target_multilink_detail("/var/lib/ajcrew/live_target.json", 2)
 
         def _boom(coro, *_args, **_kwargs):
             # Close it rather than drop it: an abandoned coroutine emits a
@@ -441,7 +441,7 @@ class TestTheRefusalReachesTheCli:
         assert exit_info.value.code == 1
         err = capsys.readouterr().err
         assert "-samefile" in err
-        assert "kirocrew doctor" in err
+        assert "ajcrew doctor" in err
 
     def test_a_sigint_still_exits_cleanly(self, monkeypatch, capsys) -> None:
         """Guard the guard: the new handler must not have displaced the Ctrl-C path."""
@@ -506,7 +506,7 @@ def _hostile_args(fn) -> list[object]:
         if param.annotation in ("int", int):
             args.append(2)
         else:
-            args.append(f"/var/lib/kirocrew/{_CONTROL_PAYLOAD}live_target.json")
+            args.append(f"/var/lib/ajcrew/{_CONTROL_PAYLOAD}live_target.json")
     return args
 
 
@@ -516,7 +516,7 @@ class TestAPlantedPointerCannotDriveTheOperatorsTerminal:
     A SYMLINK's target comes back from ``os.readlink`` as arbitrary bytes, and the party
     that plants it is the sandboxed agent this pointer-masking exists to contain. Both
     readers print the sentence verbatim -- doctor through ``_print_wrapped`` and
-    ``kirocrew chat`` through ``❌ {exc}`` -- and an operator running ``kirocrew doctor``
+    ``ajcrew chat`` through ``❌ {exc}`` -- and an operator running ``ajcrew doctor``
     after "agents stopped starting" is the expected trigger, so an OSC/CSI payload would
     reach a terminal on the normal path and act the instant it is emitted.
 
@@ -540,7 +540,7 @@ class TestAPlantedPointerCannotDriveTheOperatorsTerminal:
         sentence = formatter(*_hostile_args(formatter))
 
         assert "live_target.json" in sentence
-        assert "/var/lib/kirocrew/" in sentence
+        assert "/var/lib/ajcrew/" in sentence
 
     def test_an_ordinary_path_is_left_byte_identical(self) -> None:
         """The remedy is meant to be COPIED, which is why this is not ``repr``.
@@ -549,11 +549,11 @@ class TestAPlantedPointerCannotDriveTheOperatorsTerminal:
         unusable-fragment outcome ``_print_wrapped`` avoids by never splitting a token. A real path
         holds no control bytes, so defusing must be a no-op on it.
         """
-        target = "/var/lib/kirocrew/live_target.json"
+        target = "/var/lib/ajcrew/live_target.json"
 
         sentence = sandbox._live_target_multilink_detail(target, 2)
 
-        assert f"find /var/lib/kirocrew -samefile {target}" in sentence
+        assert f"find /var/lib/ajcrew -samefile {target}" in sentence
 
     @_LINUX_ONLY
     @_POSIX_ONLY
@@ -651,20 +651,20 @@ class TestTheRemedySurvivesBeingPasted:
     """
 
     def test_a_path_with_a_space_is_shell_quoted(self) -> None:
-        target = "/opt/my data/kirocrew/live_target.json"
+        target = "/opt/my data/ajcrew/live_target.json"
 
         sentence = sandbox._live_target_multilink_detail(target, 2)
 
         assert (
-            "find '/opt/my data/kirocrew' -samefile "
-            "'/opt/my data/kirocrew/live_target.json'" in sentence
+            "find '/opt/my data/ajcrew' -samefile "
+            "'/opt/my data/ajcrew/live_target.json'" in sentence
         )
 
     def test_an_ordinary_path_is_not_quoted(self) -> None:
         """Quoting every path would make the common case uglier for no gain."""
-        sentence = sandbox._live_target_multilink_detail("/var/lib/kirocrew/lt.json", 2)
+        sentence = sandbox._live_target_multilink_detail("/var/lib/ajcrew/lt.json", 2)
 
-        assert "find /var/lib/kirocrew -samefile /var/lib/kirocrew/lt.json" in sentence
+        assert "find /var/lib/ajcrew -samefile /var/lib/ajcrew/lt.json" in sentence
         assert "'" not in sentence
 
 
@@ -878,7 +878,7 @@ class TestTheSiblingRefusalsAreDefusedToo:
         assert f"{link} is a SYMLINK -> {tmp_path / 'elsewhere.json'}." in str(refusal.value)
 
     def test_the_cloud_cli_sink_defuses_builders_it_does_not_own(self) -> None:
-        """``kirocrew cloud`` prints every one of these verbatim, as ``kirocrew chat`` does.
+        """``ajcrew cloud`` prints every one of these verbatim, as ``ajcrew chat`` does.
 
         The sink is the half that covers a builder added later in a module this handler
         does not own, which is why both halves exist.
@@ -889,7 +889,7 @@ class TestTheSiblingRefusalsAreDefusedToo:
         ``-s`` on a terminal would fail on the UI's own decoration while the refusal text
         was escaped correctly.
         """
-        from kiro_crew import cli_cloud
+        from aj_crew import cli_cloud
 
         def explode(_args):
             raise sandbox.SandboxCeilingUnsealable(f"refused {_LINKABLE_PAYLOAD} here")
@@ -1008,7 +1008,7 @@ class TestTheSinkDefusesBuildersItDoesNotOwn:
 
     def test_an_ordinary_refusal_reaches_the_terminal_unchanged(self, monkeypatch, capsys) -> None:
         """The escape must be invisible on every real message, or it is a new defect."""
-        plain = "cannot mask /var/lib/kirocrew/live_target.json: the live-target pointer"
+        plain = "cannot mask /var/lib/ajcrew/live_target.json: the live-target pointer"
 
         def _refuse(*_args, **_kwargs):
             raise sandbox.SandboxCeilingUnsealable(plain)
@@ -1031,7 +1031,7 @@ class TestTheRemedyAdmitsWhereItLooked:
     """
 
     def test_the_remedy_names_its_scope_and_how_to_widen_it(self) -> None:
-        sentence = sandbox._live_target_multilink_detail("/var/lib/kirocrew/lt.json", 2)
+        sentence = sandbox._live_target_multilink_detail("/var/lib/ajcrew/lt.json", 2)
 
         assert "searches the data home only" in sentence
         # The widening is actionable, not a caveat: it names the flag and the search root.
@@ -1040,7 +1040,7 @@ class TestTheRemedyAdmitsWhereItLooked:
 
     def test_the_remedy_says_why_the_filesystem_is_the_bound(self) -> None:
         """Without this an operator would widen to `/` and wait for a pointless scan."""
-        sentence = sandbox._live_target_multilink_detail("/var/lib/kirocrew/lt.json", 2)
+        sentence = sandbox._live_target_multilink_detail("/var/lib/ajcrew/lt.json", 2)
 
         assert "cannot cross a filesystem" in sentence
 

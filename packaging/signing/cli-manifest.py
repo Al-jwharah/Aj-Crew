@@ -23,14 +23,14 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
-SCHEMA = "kirocrew-cli-artifact-manifest-v1"
+SCHEMA = "ajcrew-cli-artifact-manifest-v1"
 ALGORITHM = "RSASSA_PKCS1_V1_5_SHA_256"
 CHANNELS = ("nightly", "insider", "stable", "lts")
 
 
 def wheel_filename(channel: str, version: str) -> str:
     """The wheel a channel publishes: the LTS edition's own distribution on lts."""
-    stem = "kirocrew_lts" if channel == "lts" else "kirocrew"
+    stem = "ajcrew_lts" if channel == "lts" else "ajcrew"
     return f"{stem}-{version}-py3-none-any.whl"
 
 
@@ -498,7 +498,7 @@ def _kms_sign_command(args: argparse.Namespace) -> None:
 
     signature = kms_sign_digest(args.key_arn, pinned_der, hashlib.sha256(canonical).digest())
 
-    with tempfile.TemporaryDirectory(prefix="kirocrew-cli-manifest-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="ajcrew-cli-manifest-") as temporary:
         signature_path = Path(temporary) / "signature.bin"
         signature_path.write_bytes(signature)
         _assemble_command(

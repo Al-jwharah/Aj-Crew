@@ -20,7 +20,7 @@ from llm_pool_helpers import (  # noqa: F401 -- the autouse fixture registers by
     _zero_tool_client,
 )
 
-from kiro_crew.knowledge.llm_pool import (
+from aj_crew.knowledge.llm_pool import (
     DEFAULT_IDLE_TTL_SECS,
     WORKER_RECYCLE_CALLS,
     WORKER_RECYCLE_PCT,
@@ -44,21 +44,21 @@ class TestIdleTtlConfig:
             assert _get_idle_ttl() == DEFAULT_IDLE_TTL_SECS == 300.0
 
     def test_reads_value_from_config(self, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text('{"knowledge": {"pool_idle_ttl_secs": 60}}')
         with patch("pathlib.Path.home", return_value=tmp_path):
             assert _get_idle_ttl() == 60.0
 
     def test_zero_disables(self, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text('{"knowledge": {"pool_idle_ttl_secs": 0}}')
         with patch("pathlib.Path.home", return_value=tmp_path):
             assert _get_idle_ttl() == 0.0
 
     def test_negative_falls_back_to_default(self, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text('{"knowledge": {"pool_idle_ttl_secs": -5}}')
         with patch("pathlib.Path.home", return_value=tmp_path):
@@ -66,14 +66,14 @@ class TestIdleTtlConfig:
 
     def test_bool_falls_back_to_default(self, tmp_path):
         # JSON ``true`` is an int subclass in Python; must not read as 1s TTL.
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text('{"knowledge": {"pool_idle_ttl_secs": true}}')
         with patch("pathlib.Path.home", return_value=tmp_path):
             assert _get_idle_ttl() == DEFAULT_IDLE_TTL_SECS
 
     def test_string_falls_back_to_default(self, tmp_path):
-        config = tmp_path / ".kirocrew" / "config.json"
+        config = tmp_path / ".ajcrew" / "config.json"
         config.parent.mkdir(parents=True)
         config.write_text('{"knowledge": {"pool_idle_ttl_secs": "600"}}')
         with patch("pathlib.Path.home", return_value=tmp_path):
@@ -387,9 +387,9 @@ class TestWorkerConversationRecycle:
         # makes _collect_active_pids report a non-empty protected set to whatever
         # else shares this worker.
         with (
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", return_value=new_client),
-            patch("kiro_crew.knowledge.llm_pool.register_protected_pid"),
-            patch("kiro_crew.knowledge.llm_pool.unregister_protected_pid"),
+            patch("aj_crew.knowledge.llm_pool.AcpClient", return_value=new_client),
+            patch("aj_crew.knowledge.llm_pool.register_protected_pid"),
+            patch("aj_crew.knowledge.llm_pool.unregister_protected_pid"),
         ):
             await worker.reset_conversation()
 

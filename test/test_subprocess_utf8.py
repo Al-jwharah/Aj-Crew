@@ -16,7 +16,7 @@ import sys
 
 import pytest
 
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 # A child printing this exercises multi-byte UTF-8; under cp1252 these bytes
 # decode to mojibake, so a passing equality check proves UTF-8 decoding.
@@ -74,27 +74,27 @@ class TestUtf8Stdout:
     (git prints paths byte-for-byte), so the decode must preserve it."""
 
     def test_carriage_return_survives_the_decode(self):
-        from kiro_crew.subprocess_utf8 import utf8_stdout
+        from aj_crew.subprocess_utf8 import utf8_stdout
 
         assert utf8_stdout(b"wt\rcr/.git\n") == "wt\rcr/.git\n"
 
     def test_crlf_is_not_collapsed(self):
-        from kiro_crew.subprocess_utf8 import utf8_stdout
+        from aj_crew.subprocess_utf8 import utf8_stdout
 
         assert utf8_stdout(b"path\r\n") == "path\r\n"
 
     def test_str_passes_through_for_test_stand_ins(self):
-        from kiro_crew.subprocess_utf8 import utf8_stdout
+        from aj_crew.subprocess_utf8 import utf8_stdout
 
         assert utf8_stdout("already decoded\r\n") == "already decoded\r\n"
 
     def test_none_is_the_empty_answer(self):
-        from kiro_crew.subprocess_utf8 import utf8_stdout
+        from aj_crew.subprocess_utf8 import utf8_stdout
 
         assert utf8_stdout(None) == ""
 
     def test_malformed_bytes_degrade_to_replacement(self):
-        from kiro_crew.subprocess_utf8 import utf8_stdout
+        from aj_crew.subprocess_utf8 import utf8_stdout
 
         assert utf8_stdout(b"a\xffb") == "a\ufffdb"
 
@@ -105,7 +105,7 @@ class TestUtf8Stdout:
         ``sys.stdout.buffer`` so its OWN text-mode stdout cannot translate
         the ``\\n`` to ``\\r\\n`` on Windows before the capture ever sees it --
         this test pins the parent-side decode, not the child's platform."""
-        from kiro_crew.subprocess_utf8 import utf8_stdout
+        from aj_crew.subprocess_utf8 import utf8_stdout
 
         done = subprocess.run(
             [
@@ -130,7 +130,7 @@ class TestUtf8PathStdout:
     """
 
     def test_non_utf8_byte_becomes_a_lone_surrogate(self):
-        from kiro_crew.subprocess_utf8 import utf8_path_stdout
+        from aj_crew.subprocess_utf8 import utf8_path_stdout
 
         assert utf8_path_stdout(b"/tmp/repo-\xff/.git\n") == "/tmp/repo-\udcff/.git\n"
 
@@ -138,22 +138,22 @@ class TestUtf8PathStdout:
     def test_round_trips_through_fsencode_on_posix(self):
         """The exact property the classifier's ``lstat`` depends on: fsencode
         of the decoded path is byte-identical to what git printed."""
-        from kiro_crew.subprocess_utf8 import utf8_path_stdout
+        from aj_crew.subprocess_utf8 import utf8_path_stdout
 
         raw = b"/tmp/repo-\xff/.git"
         assert os.fsencode(utf8_path_stdout(raw)) == raw
 
     def test_carriage_return_survives_the_decode(self):
-        from kiro_crew.subprocess_utf8 import utf8_path_stdout
+        from aj_crew.subprocess_utf8 import utf8_path_stdout
 
         assert utf8_path_stdout(b"wt\rcr/.git\n") == "wt\rcr/.git\n"
 
     def test_str_passes_through_for_test_stand_ins(self):
-        from kiro_crew.subprocess_utf8 import utf8_path_stdout
+        from aj_crew.subprocess_utf8 import utf8_path_stdout
 
         assert utf8_path_stdout("already decoded\n") == "already decoded\n"
 
     def test_none_is_the_empty_answer(self):
-        from kiro_crew.subprocess_utf8 import utf8_path_stdout
+        from aj_crew.subprocess_utf8 import utf8_path_stdout
 
         assert utf8_path_stdout(None) == ""

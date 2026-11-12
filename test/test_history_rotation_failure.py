@@ -16,10 +16,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import history as history_module
-from kiro_crew import history_rewrite
-from kiro_crew.history import ARCHIVE_DIR_NAME, ConversationLog
-from kiro_crew.history_offload import append_rows_if_absent_off_loop
+from aj_crew import history as history_module
+from aj_crew import history_rewrite
+from aj_crew.history import ARCHIVE_DIR_NAME, ConversationLog
+from aj_crew.history_offload import append_rows_if_absent_off_loop
 
 PAD = "padding " * 20
 Q = f"{PAD} question"

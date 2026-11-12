@@ -46,7 +46,7 @@ const PREVIEW_REMOTE_CREW_CHAT = 'mc-preview-remote-crew-chat'
 
 const BOUND = 'chat-bound'
 const LOCAL = 'chat-local'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 /** en.json — read from the catalog rather than paraphrased, so a copy change
  *  fails this harness instead of silently passing against stale wording. */
@@ -59,7 +59,7 @@ const nowSec = Math.floor(Date.now() / 1000)
 const ago = (mins) => new Date((nowSec - mins * 60) * 1000).toISOString()
 
 const slot = (key, title, extra = {}) => ({
-  key, title, running: false, messages: 3, agent: 'kirocrew', mode: '',
+  key, title, running: false, messages: 3, agent: 'ajcrew', mode: '',
   memory_mode: 'persistent', folder_id: '', last_message: '', project: PROJECT,
   source_links: [], source_links_total: 0,
   created: '2026-09-13T01:00:00Z', modified: nowSec,
@@ -124,12 +124,12 @@ const capabilities = (id) => ({
   version: '0.5.0',
   local_version: '0.5.0',
   version_match: true,
-  agents: [{ name: 'kirocrew', description: "The crew's default agent", scope: 'global', model: 'auto' }],
-  default_agent: 'kirocrew',
+  agents: [{ name: 'ajcrew', description: "The crew's default agent", scope: 'global', model: 'auto' }],
+  default_agent: 'ajcrew',
   models: [{ model_name: 'auto', display_name: 'Auto', description: 'Let the crew choose', context_window: 0 }],
   effort_levels: ['low', 'medium', 'high'],
-  workspaces: [{ name: 'kirocrew', path: '/workspace/kirocrew' }],
-  default_workspace: '/workspace/kirocrew',
+  workspaces: [{ name: 'ajcrew', path: '/workspace/ajcrew' }],
+  default_workspace: '/workspace/ajcrew',
   unavailable: {},
 })
 

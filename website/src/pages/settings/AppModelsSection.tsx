@@ -87,7 +87,7 @@ function AppModelRow({
   const name = appDisplayName(app)
   const mut = useMutation(
     overlay.mutationOpts<string>({
-      queryKey: ['kirocrewConfig'],
+      queryKey: ['ajcrewConfig'],
       mutationFn: (value: string) => api.patchConfig(path, value),
       path: () => path,
       displayValue: value => value,
@@ -127,8 +127,8 @@ export function AppModelsSection({ index }: { index?: number }) {
   const overlay = useOptimisticConfigPaths(qc)
   const [failure, setFailure] = useState<{ path: string; message: string } | null>(null)
   const configQ = useQuery<ConfigWithApps>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
   const appsQ = useQuery({ queryKey: ['apps'], queryFn: () => api.listApps() })
   const modelsQ = useAvailableModelsQuery()

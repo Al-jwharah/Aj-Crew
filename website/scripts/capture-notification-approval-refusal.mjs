@@ -330,7 +330,7 @@ await decidedDismissFailedFrame('17b-detail-decided-dismiss-failed-light', 'ligh
   const tsSeconds = String(Date.parse(TS) / 1000)
   const slots = [{
     key: SLOT, title: 'Nightly backup', running: true, last_message: 'Waiting on your approval.',
-    messages: 1, agent: 'kirocrew', memory_mode: 'persistent', project: '', folder_id: '',
+    messages: 1, agent: 'ajcrew', memory_mode: 'persistent', project: '', folder_id: '',
     modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
   }]
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, colorScheme: 'dark' })
@@ -386,7 +386,7 @@ await decidedDismissFailedFrame('17b-detail-decided-dismiss-failed-light', 'ligh
   // One ordinary chat open, which shares nothing with the cron approval.
   const slots = [{
     key: 'chat-notes', title: 'Notes', running: false, last_message: 'Done.',
-    messages: 1, agent: 'kirocrew', memory_mode: 'persistent', project: '', folder_id: '',
+    messages: 1, agent: 'ajcrew', memory_mode: 'persistent', project: '', folder_id: '',
     modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
   }]
   await stubDashboardApi(page, {
@@ -507,7 +507,7 @@ await decidedDismissFailedFrame('17b-detail-decided-dismiss-failed-light', 'ligh
   const tsSeconds = String(Date.parse(PRESSED.ts) / 1000)
   const slots = [{
     key: SLOT, title: 'Nightly backup', running: true, last_message: 'Waiting on your approval.',
-    messages: 1, agent: 'kirocrew', memory_mode: 'persistent', project: '', folder_id: '',
+    messages: 1, agent: 'ajcrew', memory_mode: 'persistent', project: '', folder_id: '',
     modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
   }]
   const context = await browser.newContext({

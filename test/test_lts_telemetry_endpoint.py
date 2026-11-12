@@ -14,12 +14,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import edition_locks
-from kiro_crew.config.sections_telemetry import TelemetryConfig
-from kiro_crew.metrics import provider as metrics_provider
-from kiro_crew.platform.context import PlatformCompositionError
-from kiro_crew.platform.defaults import DefaultTelemetryProvider
-from kiro_crew.platform.governance import (
+from aj_crew import edition_locks
+from aj_crew.config.sections_telemetry import TelemetryConfig
+from aj_crew.metrics import provider as metrics_provider
+from aj_crew.platform.context import PlatformCompositionError
+from aj_crew.platform.defaults import DefaultTelemetryProvider
+from aj_crew.platform.governance import (
     TIER_CENTRAL,
     TIER_HOME,
     compose_tier_ladder,
@@ -47,14 +47,14 @@ def _fresh_lock_log():
 
 @pytest.fixture
 def enterprise(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 @pytest.fixture
 def fake_sel(monkeypatch):
     from unittest.mock import MagicMock
 
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     fake = MagicMock()
     monkeypatch.setattr(sel_mod, "sel", lambda: fake)
@@ -63,7 +63,7 @@ def fake_sel(monkeypatch):
 
 def _install(monkeypatch, doc: "dict | None") -> SimpleNamespace:
     """Install *doc* as the context's ceiling and the public default provider."""
-    from kiro_crew.platform import context as pc
+    from aj_crew.platform import context as pc
 
     ctx = SimpleNamespace(governance=parse_policy(doc) if doc is not None else None)
     monkeypatch.setattr(pc, "current_context", lambda: ctx)
@@ -218,8 +218,8 @@ def test_a_process_without_a_context_follows_the_live_policy(
     exporter_mod = pytest.importorskip("opentelemetry.exporter.otlp.proto.http.metric_exporter")
     from opentelemetry.sdk.metrics.export import MetricExportResult
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.platform import bootstrap
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.platform import bootstrap
 
     def no_context():
         raise PlatformCompositionError("no context installed")
@@ -236,7 +236,7 @@ def test_a_process_without_a_context_follows_the_live_policy(
     policy = {"now": parse_policy(_policy(enabled=True, otlp_endpoint=ADMIN))}
     monkeypatch.setattr(bootstrap, "load_security_policy", lambda: policy["now"])
     metrics_provider.use_telemetry_provider(
-        lambda: bootstrap.compose_telemetry_provider(KiroCrewConfig())
+        lambda: bootstrap.compose_telemetry_provider(AjCrewConfig())
     )
     reader = None
     try:
@@ -265,17 +265,17 @@ def test_a_collector_added_during_a_build_is_picked_up_on_the_recheck(
     """A policy refresh lands between resolving the destinations and recording the key."""
     from unittest.mock import patch
 
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     # The suite pins collection off by env; this test needs it on.
-    monkeypatch.delenv("KIROCREW_TELEMETRY", raising=False)
+    monkeypatch.delenv("AJCREW_TELEMETRY", raising=False)
     ctx = _install(monkeypatch, _policy(enabled=True))
-    cfg = KiroCrewConfig(
+    cfg = AjCrewConfig(
         telemetry=TelemetryConfig(
             enabled=True, local_dir=str(tmp_path), export_interval_seconds=3600
         )
     )
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
     built: list = []
     monkeypatch.setattr(
         metrics_provider, "_build_otlp_reader", lambda d, c: built.append(d.endpoint) or None
@@ -305,17 +305,17 @@ def test_a_policy_that_starts_permitting_the_host_gets_a_reader_on_the_recheck(
 ) -> None:
     from unittest.mock import patch
 
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    monkeypatch.delenv("KIROCREW_TELEMETRY", raising=False)
+    monkeypatch.delenv("AJCREW_TELEMETRY", raising=False)
     deny = {"otlp_hosts": {"mode": "allow", "allow": ["other.corp.example"]}}
     ctx = _install(monkeypatch, _policy(enabled=True, otlp_endpoint=ADMIN, scopes=deny))
-    cfg = KiroCrewConfig(
+    cfg = AjCrewConfig(
         telemetry=TelemetryConfig(
             enabled=True, local_dir=str(tmp_path), export_interval_seconds=3600
         )
     )
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
     built: list = []
     monkeypatch.setattr(
         metrics_provider, "_build_otlp_reader", lambda d, c: built.append(d.endpoint) or None

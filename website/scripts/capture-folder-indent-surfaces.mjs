@@ -34,7 +34,7 @@ const ago = (ms) => new Date(NOW - ms).toISOString()
 const agoSec = (ms) => Math.floor((NOW - ms) / 1000)
 
 const slot = (key, title, folder_id, ageMs, extra = {}) => ({
-  key, title, messages: 4, running: false, agent: 'kirocrew',
+  key, title, messages: 4, running: false, agent: 'ajcrew',
   created: ago(ageMs + DAY), last_ts: ago(ageMs), modified: agoSec(ageMs),
   folder_id, last_message: '', tags: [], source_links: [], source_links_total: 0,
   ...extra,
@@ -104,8 +104,8 @@ const boardSlots = [
 // ── 04 members page ───────────────────────────────────────────────────────────
 const member = (name, description, last_message, extra = {}) => ({
   name, slug: name.toLowerCase(), bound: true, slot_key: `member-${name.toLowerCase()}`, running: false,
-  kiro_agent: 'kirocrew', workspace: 'default', memory_store: name.toLowerCase(), memory_version: 2, memory_owner: name,
-  model: '', description, source: 'kirocrew', last_active_ts: agoSec(30 * 60e3), last_message, ...extra,
+  kiro_agent: 'ajcrew', workspace: 'default', memory_store: name.toLowerCase(), memory_version: 2, memory_owner: name,
+  model: '', description, source: 'ajcrew', last_active_ts: agoSec(30 * 60e3), last_message, ...extra,
 })
 const members = [
   member('Radar', 'Watches CI and the issue queue', 'Back up since 08:22Z.', { running: true }),
@@ -277,7 +277,7 @@ async function main() {
       localStorageEntries: { 'mc-crewmates-onboarded': '1', 'mc-members-roster-width': String(rosterWidth) },
       extra: async (path, route) => {
         if (path === '/api/theme/boot') { await json(route, { mode: 'dark', theme: '', crewmates_onboarded: true }); return true }
-        if (path === '/api/members') { await json(route, { members, default_agent: 'kirocrew' }); return true }
+        if (path === '/api/members') { await json(route, { members, default_agent: 'ajcrew' }); return true }
         if (path === '/api/teams') { await json(route, { teams }); return true }
         if (path === '/api/autonudge') { await json(route, { enabled: true, loops: [] }); return true }
         if (path === '/api/workspaces') { await json(route, { workspaces: [{ name: 'default' }] }); return true }

@@ -10,7 +10,7 @@ import type { ArtifactsResponse } from '../../components/commandPalette/provider
 import { createFoldersProvider, FOLDERS_STALE_MS } from './foldersProvider'
 import { createMatesProvider, mateRoute } from './matesProvider'
 import { busySlotKeys } from '../../lib/crewMode'
-import type { KiroCrewAgent } from '../../components/AgentSelector'
+import type { AjCrewAgent } from '../../components/AgentSelector'
 import { useFolderSortRead, type FolderSortConfigBody } from '../../hooks/useFolderSortMode'
 import { useRecentsProvider } from '../../components/commandPalette/providers/recentsProvider'
 import { useSessionsProvider } from '../../components/commandPalette/providers/sessionsProvider'
@@ -85,7 +85,7 @@ export function useCommandBarOverlayEngines({
   const queryClient = useQueryClient()
 
   // The person's folder sort mode (`dashboard.folder_sort`), read the same way as the
-  // two entries above — a SUBSCRIBER to the shared `['kirocrewConfig']` key, never a
+  // two entries above — a SUBSCRIBER to the shared `['ajcrewConfig']` key, never a
   // fetch: the shell's own read of that key holds the entry from boot and the
   // WebSocket invalidates it on a config change, so fetching here would be the
   // request-on-open this surface exists to avoid, for a value that is already in the
@@ -94,12 +94,12 @@ export function useCommandBarOverlayEngines({
   // sidebar says, above its list, when there is no body to draw from (there is no
   // sidebar on this surface to say it). A body on hand is drawn and acted on,
   // whatever the shell's last refetch did.
-  const kirocrewConfigQuery = useQuery<FolderSortConfigBody>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+  const ajcrewConfigQuery = useQuery<FolderSortConfigBody>({
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
     enabled: false,
   })
-  const { mode: folderSortMode, error: folderSortError } = useFolderSortRead(kirocrewConfigQuery)
+  const { mode: folderSortMode, error: folderSortError } = useFolderSortRead(ajcrewConfigQuery)
 
   /**
    * The artifacts view's engine.
@@ -232,7 +232,7 @@ export function useCommandBarOverlayEngines({
     () =>
       createMatesProvider({
         fetchMates: async () => {
-          const body = await queryClient.fetchQuery<{ agents?: KiroCrewAgent[] }>({
+          const body = await queryClient.fetchQuery<{ agents?: AjCrewAgent[] }>({
             // The SHARED key `NewCrewmateDialog` already uses for this exact read --
             // the sessionless `api.agentCatalog()`, whose answer is the GLOBAL roster.
             // A second key of this surface's own would be two caches of one response:

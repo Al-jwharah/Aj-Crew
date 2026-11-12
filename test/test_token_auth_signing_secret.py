@@ -42,9 +42,9 @@ def test_signing_secret_transient_publish_failure_never_creates_the_destination(
     """
     from windows_sim import link_sharing_violation
 
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     key_file = tmp_path / ts._SECRET_KEY_FILE
 
     # A sharing violation (EACCES / WinError 32) on EVERY publish attempt: never
@@ -80,9 +80,9 @@ def test_signing_secret_persists_on_a_filesystem_without_hard_links(tmp_path, mo
     """
     from windows_sim import link_unsupported
 
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     key_file = tmp_path / ts._SECRET_KEY_FILE
 
     with link_unsupported(match=ts._SECRET_KEY_FILE) as state:
@@ -110,9 +110,9 @@ def test_signing_secret_concurrent_first_init_converges_without_hard_links(
     """
     from windows_sim import link_unsupported
 
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     key_file = tmp_path / ts._SECRET_KEY_FILE
     assert not key_file.exists()
 
@@ -170,9 +170,9 @@ def test_signing_secret_failed_dir_sync_keeps_a_recoverable_name(tmp_path, monke
     """
     import errno as _errno
 
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
 
     def _failing_sync(path, **kwargs):  # type: ignore[no-untyped-def]
         # best_effort would swallow this; strict must let it surface here.
@@ -184,7 +184,7 @@ def test_signing_secret_failed_dir_sync_keeps_a_recoverable_name(tmp_path, monke
 
     monkeypatch.setattr(ts, "fsync_dir", _failing_sync)
     secret = ts._load_or_create_secret()
-    # nosemgrep: kirocrew.test-bare-monkeypatch-undo -- pre-existing undo inside the test body, moved verbatim; tracked for a de-flake pass
+    # nosemgrep: ajcrew.test-bare-monkeypatch-undo -- pre-existing undo inside the test body, moved verbatim; tracked for a de-flake pass
     monkeypatch.undo()
 
     key_file = tmp_path / ts._SECRET_KEY_FILE
@@ -215,7 +215,7 @@ def test_signing_secret_failed_dir_sync_keeps_a_recoverable_name(tmp_path, monke
     # And it is still fenced, which is what makes keeping it acceptable. Asserted
     # where the staging directory REALLY sits: the fence resolves its targets from
     # the real crew-home prefixes, so a tmp_path candidate would prove nothing.
-    from kiro_crew import security
+    from aj_crew import security
 
     targets = security._home_dir_targets(
         tuple(d for d in security.sensitive_home_dirs() if d.endswith(ts._AUTH_STORE_STAGING_LEAF))
@@ -256,8 +256,8 @@ def test_signing_secret_staging_file_is_covered_by_the_keystone_fence(
     """
     from pathlib import Path
 
-    from kiro_crew import security
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew import security
+    from aj_crew.dashboard import token_secret as ts
 
     captured: list[str] = []
     real_link = os.link
@@ -266,10 +266,10 @@ def test_signing_secret_staging_file_is_covered_by_the_keystone_fence(
         captured.append(str(src_path))
         return real_link(src_path, dst_path, **kwargs)
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     monkeypatch.setattr(os, "link", _spy_link)
     ts._load_or_create_secret()
-    # nosemgrep: kirocrew.test-bare-monkeypatch-undo -- pre-existing undo inside the test body, moved verbatim; tracked for a de-flake pass
+    # nosemgrep: ajcrew.test-bare-monkeypatch-undo -- pre-existing undo inside the test body, moved verbatim; tracked for a de-flake pass
     monkeypatch.undo()
 
     assert captured, "the publish never linked, so no staging name was observed"
@@ -309,9 +309,9 @@ def test_signing_secret_publish_leaves_no_staging_file_behind(tmp_path, monkeypa
     precreated by the sandbox materialiser, so it is a fixture of the data home
     rather than an artifact of one write. What must not remain is a file in it.
     """
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     key_file = tmp_path / ts._SECRET_KEY_FILE
     staging = tmp_path / ts._AUTH_STORE_STAGING_LEAF
 
@@ -354,9 +354,9 @@ def test_signing_secret_survives_a_staging_dir_mode_it_cannot_narrow(tmp_path, m
     The load-bearing assertion is therefore that the key reached disk. The
     warning is asserted too, so the weaker outcome is at least not silent.
     """
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     staging = tmp_path / ts._AUTH_STORE_STAGING_LEAF
     staging.mkdir(parents=True, exist_ok=True)
     os.chmod(staging, 0o755)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions -- the wide mode IS this test's input: 0o755 carries no group/world WRITE bit, which is the boundary the validator warns on rather than refuses. lockdown-ok: a tmp_path directory, not a published artifact.  # noqa: E501  # fmt: skip
@@ -398,7 +398,7 @@ def test_signing_secret_staging_dir_is_locked_to_its_owner_on_both_platforms(
     file between the write and the publish link. The directory-shaped helper is what
     expresses owner-only on both platforms, so the assertion is that it is CALLED.
     """
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
     called: list[str] = []
     monkeypatch.setattr(
@@ -422,7 +422,7 @@ def test_signing_secret_staging_dir_refuses_when_windows_lockdown_fails(
     a name leak. On Windows there is no such reading, so failing to lock is the whole
     signal and it fails closed.
     """
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
     def _refusing_lockdown(_path):
         raise OSError(errno.EPERM, "cannot write the DACL")
@@ -457,9 +457,9 @@ def test_signing_secret_refuses_a_group_writable_staging_dir(tmp_path, monkeypat
     side: a home that genuinely cannot stage DOES reach the in-place writer, because there the
     alternative is no persisted key on any boot.
     """
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     staging = tmp_path / ts._AUTH_STORE_STAGING_LEAF
     staging.mkdir(parents=True, exist_ok=True)
     os.chmod(staging, 0o777)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions -- the world-writable mode IS this test's input, and refusing it is what is under test. lockdown-ok: a tmp_path directory, not a published artifact.  # noqa: E501  # fmt: skip
@@ -508,9 +508,9 @@ def test_signing_secret_persists_in_place_when_the_home_cannot_stage_at_all(
     permission refusal carries its own exception type rather than being told apart by errno at
     the call site.
     """
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     blocker = tmp_path / ts._AUTH_STORE_STAGING_LEAF
     blocker.write_text("not a directory\n", encoding="utf-8")
 
@@ -538,9 +538,9 @@ def test_signing_secret_readable_staging_dir_is_not_refused(tmp_path, monkeypatc
     ``dir_mode=0755`` is the CIFS/vfat default rather than a hostile setting, and it grants
     no substitution. Refusing it would fail the publish on an ordinary mount.
     """
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     staging = tmp_path / ts._AUTH_STORE_STAGING_LEAF
     staging.mkdir(parents=True, exist_ok=True)
     os.chmod(staging, 0o755)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions -- the read-only-wide mode IS this test's input. lockdown-ok: a tmp_path directory, not a published artifact.  # noqa: E501  # fmt: skip
@@ -568,9 +568,9 @@ def test_signing_secret_a_recovered_staging_failure_does_NOT_unlock_the_in_place
     it, so a LATER link failure that should have degraded to an ephemeral secret instead
     writes the real name.
     """
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
 
     real_staging = ts.auth_store_staging_dir
     staging_calls: list[int] = []
@@ -627,9 +627,9 @@ def test_signing_secret_retries_a_transient_staging_dir_failure(tmp_path, monkey
     costs the host its persisted signing key, which is why the discriminating
     assertion is that the key is on disk after a first-attempt failure.
     """
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
 
     real = ts.auth_store_staging_dir
     calls: list[int] = []
@@ -670,9 +670,9 @@ def test_signing_secret_binary_write_survives_windows_text_mode(tmp_path, monkey
     """
     from windows_sim import windows_text_mode_write
 
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     key_file = tmp_path / ts._SECRET_KEY_FILE
 
     # A deterministic 32-byte key that CONTAINS 0x0A (LF) at index 10, so a
@@ -703,9 +703,9 @@ def test_signing_secret_existing_file_never_overwritten(tmp_path, monkeypatch) -
     untouched, so restarts / sibling instances keep signing with the identical
     key.
     """
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     key_file = tmp_path / ts._SECRET_KEY_FILE
     original = b"K" * 48  # deterministic, >= 32 bytes
     key_file.write_bytes(original)
@@ -741,9 +741,9 @@ def test_signing_secret_write_failure_cleans_up_incomplete_file(tmp_path, monkey
     the loader exhausts the publish budget, reaches the fallback, and has to
     clean up after itself before degrading to an ephemeral secret.
     """
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     key_file = tmp_path / ts._SECRET_KEY_FILE
     assert not key_file.exists()
 
@@ -809,9 +809,9 @@ def test_signing_secret_incomplete_file_not_deleted_if_replaced(tmp_path, monkey
     subsequent create would leave. The cleanup's ``os.lstat`` identity check
     must see the mismatch and leave the sibling's key untouched.
     """
-    from kiro_crew.dashboard import token_secret as ts
+    from aj_crew.dashboard import token_secret as ts
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     key_file = tmp_path / ts._SECRET_KEY_FILE
     sibling_key = b"S" * 48  # distinct, valid (>= 32 bytes)
 
@@ -857,7 +857,7 @@ def test_warm_auth_singletons_primes_both_off_loop(monkeypatch) -> None:
     """
     import asyncio
 
-    import kiro_crew.dashboard.token_auth as _ta
+    import aj_crew.dashboard.token_auth as _ta
 
     calls = {"secret": 0, "store": 0}
     real_secret = _ta._get_secret
@@ -894,7 +894,7 @@ def test_middleware_factory_does_no_blocking_warmup() -> None:
     substring presence."""
     import inspect
 
-    from kiro_crew.dashboard.token_auth import (
+    from aj_crew.dashboard.token_auth import (
         token_auth_middleware,
         warm_auth_singletons,
     )
@@ -916,7 +916,7 @@ def test_start_paths_warm_auth_singletons_off_loop() -> None:
     before the middleware chain is built."""
     import inspect
 
-    from kiro_crew.dashboard import server as _srv
+    from aj_crew.dashboard import server as _srv
 
     for fn in (_srv.start_dashboard, _srv.start_api_server):
         src = inspect.getsource(fn)

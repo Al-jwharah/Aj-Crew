@@ -14,7 +14,7 @@ const { isEditorLink } = createRequire(import.meta.url)('../../electron/external
 
 // A gateway that takes this browser for a local client and can open its desktop's handlers, seen from a Mac.
 vi.mock('../hooks/useBranding', () => ({
-  useBranding: () => ({ botName: 'Kiro Crew', avatar: '/logo.png', directLocal: true, desktopLauncher: true }),
+  useBranding: () => ({ botName: 'Aj Crew', avatar: '/logo.png', directLocal: true, desktopLauncher: true }),
 }))
 vi.mock('../utils/platform', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../utils/platform')>()),

@@ -66,7 +66,7 @@ const COSTS = { monthToDate: 2.25, currency: 'USD', fetchedAt: new Date().toISOS
 // into its error boundary and every later assertion fails on an unmounted UI.
 const DRIVE = {
   exists: true,
-  bucket: 'kirocrew-drive-7f3a91c4',
+  bucket: 'ajcrew-drive-7f3a91c4',
   region: 'us-west-2',
   usage: {
     bytes: 44677427,
@@ -125,7 +125,7 @@ const SHELL = {
   '/api/auth/me': { user: 'owner', app: '' },
   '/api/status': { sessions: 0, messages: 0, cron_jobs: 0, subagents: 0, lessons: 0, uptime: 1, version: '0.1.0' },
   '/api/kiro-prerequisite': { installed: true, authenticated: true, ready: true },
-  '/api/dashboard/branding': { bot_name: 'Kiro Crew', avatar: '' },
+  '/api/dashboard/branding': { bot_name: 'Aj Crew', avatar: '' },
   '/api/theme/boot': { mode: 'dark', theme: '' },
   '/api/themes': { themes: [], installed: [] },
   '/api/notifications': { notifications: [], unread: 0 },

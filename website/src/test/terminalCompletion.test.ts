@@ -10,7 +10,7 @@ import {
 /* The prompt used across these cases mirrors a real oh-my-zsh (af-magic) line:
  * a path, a git branch, then a `»` terminator. The heuristic must find the
  * command after the LAST terminator, not inside the prompt text. */
-const PROMPT = '~/work/KiroCrew (feat/x) » '
+const PROMPT = '~/work/AjCrew (feat/x) » '
 
 describe('extractToken', () => {
   it('returns the word ending at the cursor', () => {
@@ -266,7 +266,7 @@ describe('isSafeName — lone surrogates', () => {
 
 describe('shellEscape', () => {
   it('leaves a safe name untouched', () => {
-    expect(shellEscape('KiroCrew-terminal_v2.1')).toBe('KiroCrew-terminal_v2.1')
+    expect(shellEscape('AjCrew-terminal_v2.1')).toBe('AjCrew-terminal_v2.1') // brand-ok: fixture data
   })
 
   it('leaves letters and digits of any script untouched', () => {
@@ -292,12 +292,12 @@ describe('shellEscape', () => {
 
 describe('commonPrefix', () => {
   it('returns the shared leading text', () => {
-    expect(commonPrefix(['KiroCrew', 'KiroCli'])).toBe('KiroC')
+    expect(commonPrefix(['AjCrew', 'AjCli'])).toBe('AjC') // brand-ok: directory-name fixture
     expect(commonPrefix(['docs', 'doctor', 'dock'])).toBe('doc')
   })
 
   it('returns the whole name for a single entry', () => {
-    expect(commonPrefix(['KiroCrew'])).toBe('KiroCrew')
+    expect(commonPrefix(['AjCrew'])).toBe('AjCrew') // brand-ok: fixture data
   })
 
   it('returns empty when nothing is shared', () => {
@@ -425,13 +425,13 @@ describe('buildInsertion — escaped on-screen text', () => {
 
 describe('buildInsertion', () => {
   it('appends only the missing suffix in the common case', () => {
-    expect(buildInsertion('Kiro', 'KiroCrew', '/')).toEqual({ erase: 0, text: 'Crew/' })
+    expect(buildInsertion('Aj', 'AjCrew', '/')).toEqual({ erase: 0, text: 'Crew/' }) // brand-ok: directory-name fixture
   })
 
   it('rewrites the token when the typed case differs from disk', () => {
-    // Matching is case-insensitive, so `kiro` can select `KiroCrew`; sending
+    // Matching is case-insensitive, so `aj` can select `AjCrew`; sending (brand-ok: directory-name fixture)
     // only the suffix would leave a path that does not exist.
-    expect(buildInsertion('kiro', 'KiroCrew', '/')).toEqual({ erase: 4, text: 'KiroCrew/' })
+    expect(buildInsertion('aj', 'AjCrew', '/')).toEqual({ erase: 2, text: 'AjCrew/' }) // brand-ok: directory-name fixture
   })
 
   it('inserts the whole name for an empty token', () => {

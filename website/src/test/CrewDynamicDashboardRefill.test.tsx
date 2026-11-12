@@ -4,7 +4,7 @@
  *
  * The instance version only moves when the page changes, so a read at the same
  * version is the same page with fresher numbers. The composed document already
- * listens for the host's refill (`kirocrew-dashboard:data`, see
+ * listens for the host's refill (`ajcrew-dashboard:data`, see
  * `dashboard_frame._BOOTSTRAP_JS`) and every shipped template redraws on it, so
  * the frame should keep its document and post the new read into it. Minting a
  * new document instead reloads the whole iframe: the visible flicker.
@@ -41,7 +41,7 @@ const MANIFEST = { id: 'project-report', version: 1, title: 'Project report', fi
 function composed(credits: number): string {
   const read = { fields: { credits }, agentic: [], seq: credits, stale: false, missing: [], written_at: {}, locale: 'en', subject: 'crewmate' }
   return (
-    `<script type="application/json" id="kirocrew-dashboard-data">${JSON.stringify(read)}</script>` +
+    `<script type="application/json" id="ajcrew-dashboard-data">${JSON.stringify(read)}</script>` +
     `<p data-dashboard-field="credits">${credits}</p>`
   )
 }
@@ -142,14 +142,14 @@ describe('CrewDynamicDashboard refill in place', () => {
 describe('islandRead', () => {
   it('returns the island JSON the gateway escaped for HTML, unchanged', () => {
     // `dashboard_frame.escape_json_for_html` writes `<` as JSON's own \u003c.
-    const html = '<script type="application/json" id="kirocrew-dashboard-data">{"fields":{"t":"\\u003c/script\\u003e"}}</script>'
+    const html = '<script type="application/json" id="ajcrew-dashboard-data">{"fields":{"t":"\\u003c/script\\u003e"}}</script>'
     expect(islandRead(html)).toEqual({ fields: { t: '</script>' } })
   })
 
   it('is null for a page with no island or a broken one, so the frame re-mints', () => {
     expect(islandRead('<p>no island</p>')).toBeNull()
-    expect(islandRead('<script type="application/json" id="kirocrew-dashboard-data">{nope</script>')).toBeNull()
-    expect(islandRead('<script type="application/json" id="kirocrew-dashboard-data">[1]</script>')).toBeNull()
+    expect(islandRead('<script type="application/json" id="ajcrew-dashboard-data">{nope</script>')).toBeNull()
+    expect(islandRead('<script type="application/json" id="ajcrew-dashboard-data">[1]</script>')).toBeNull()
   })
 })
 

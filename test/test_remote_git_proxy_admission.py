@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 from test_remote_git_credential_isolation import git_workdir as _git_workdir
 
-from kiro_crew.remote_session import git_gateway, workspace_tools
-from kiro_crew.testing.wait import await_until
+from aj_crew.remote_session import git_gateway, workspace_tools
+from aj_crew.testing.wait import await_until
 
 git_workdir = _git_workdir
 
@@ -44,7 +44,7 @@ def test_proxy_requires_its_own_capability_and_exact_host():
     import io
     import threading
 
-    from kiro_crew.remote_session import git_proxy
+    from aj_crew.remote_session import git_proxy
 
     class ReplyingGateway(git_proxy.Gateway):
         def send(self, frame):
@@ -97,8 +97,8 @@ async def test_channel_caps_live_requests_and_releases_admission():
 
     from test_remote_git_proxy import HEADER, FrameLink, HttpBackendUpstream
 
-    from kiro_crew.remote_session import git_gateway
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.remote_session import git_gateway
+    from aj_crew.testing.wait import async_wait_until
 
     link = FrameLink()
     release = asyncio.Event()
@@ -146,8 +146,8 @@ async def test_a_guest_past_its_upload_window_fails_only_that_request(monkeypatc
 
     from test_remote_git_proxy import HEADER, FrameLink, HttpBackendUpstream
 
-    from kiro_crew.remote_session import git_gateway
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.remote_session import git_gateway
+    from aj_crew.testing.wait import async_wait_until
 
     link = FrameLink()
     release = asyncio.Event()
@@ -217,7 +217,7 @@ def test_guest_retirement_releases_a_blocked_frame_reader(monkeypatch):
     import threading
     from types import SimpleNamespace
 
-    from kiro_crew.remote_session import git_proxy
+    from aj_crew.remote_session import git_proxy
 
     blocked = threading.Event()
 
@@ -268,7 +268,7 @@ def test_guest_retirement_releases_a_blocked_frame_reader(monkeypatch):
 def test_guest_admission_is_bounded_and_reusable():
     import io
 
-    from kiro_crew.remote_session import git_proxy
+    from aj_crew.remote_session import git_proxy
 
     gateway = git_proxy.Gateway(out=io.StringIO())
     ids = [gateway.open()[0] for _ in range(git_proxy.MAX_LIVE_REQUESTS)]
@@ -288,7 +288,7 @@ async def test_fetch_retries_anonymously_and_preserves_body_and_status(method, f
 
     from test_remote_git_proxy import HEADER, FrameLink, HttpBackendUpstream, _Response
 
-    from kiro_crew.remote_session import git_gateway
+    from aj_crew.remote_session import git_gateway
 
     class Upstream(HttpBackendUpstream):
         async def answer(self, method, url, headers, data, allow_redirects):
@@ -338,11 +338,11 @@ async def test_push_authentication_never_falls_back_to_anonymous(missing):
 
     from test_remote_git_proxy import HEADER, FrameLink, HttpBackendUpstream
 
-    from kiro_crew.remote_session import git_gateway
+    from aj_crew.remote_session import git_gateway
 
     async def credential(host):
         if missing:
-            raise git_gateway.GitProxyRefusal(502, "Kiro Crew: no login; gh auth login")
+            raise git_gateway.GitProxyRefusal(502, "Aj Crew: no login; gh auth login")
         return HEADER
 
     upstream, link = HttpBackendUpstream(Path("unused"), status=401), FrameLink()
@@ -409,7 +409,7 @@ async def test_capability_bootstrap_failure_closes_link_and_stops_worker(
 
     from test_remote_session_launch import _launch
 
-    from kiro_crew.remote_session import relay
+    from aj_crew.remote_session import relay
 
     launch = _launch(tmp_path, "bootstrap-failure")
     link = SimpleNamespace(

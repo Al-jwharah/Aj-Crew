@@ -29,9 +29,9 @@ from crew_log_routes_helpers import (
     _turn,
 )
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.dashboard.handlers import crew_log as routes
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.dashboard.handlers import crew_log as routes
 
 
 class TestOnlyTheInternalTransportReachesThese:
@@ -97,7 +97,7 @@ class TestOnlyTheInternalTransportReachesThese:
         offered the cookie fall-through, because what is behind it is another live
         session's history. The browser's own pair must stay OUT of the prefix, or
         the panel could not load its own log at all."""
-        from kiro_crew.dashboard.server import (
+        from aj_crew.dashboard.server import (
             _MIXED_INTERNAL_API_PATHS,
             _STRICT_INTERNAL_API_PATHS,
         )
@@ -284,7 +284,7 @@ class TestTheNewRoutes:
         units = {row["unit"]: row for row in body["units"]}
         assert set(units) == {SESSION, "s-second"}
         assert units[SESSION]["slot"] == "dashboard:1"
-        assert units[SESSION]["agent"] == "kirocrew"
+        assert units[SESSION]["agent"] == "ajcrew"
         assert units[SESSION]["model"] == "opus"
         assert units[SESSION]["open"] is True
         assert units[SESSION]["last_seq"] >= 3
@@ -311,7 +311,7 @@ class TestTheNewRoutes:
         other.append(
             "session/opened",
             {
-                "agent": "kirocrew",
+                "agent": "ajcrew",
                 "slot": "dashboard:99",
                 "model": "opus",
                 "cwd": "/w",
@@ -428,7 +428,7 @@ class TestAudit:
         sel.log_api_access.side_effect = lambda **kw: recorded.append(kw)
         path = "/api/crew-log/x"
         request = _internal_request(path, match=match)
-        with patch("kiro_crew.sel.sel", return_value=sel):
+        with patch("aj_crew.sel.sel", return_value=sel):
             asyncio.run(getattr(routes, handler)(request))
         rows = [row for row in recorded if row["operation"] == operation]
         assert rows, recorded
@@ -447,7 +447,7 @@ class TestAudit:
         sel = MagicMock()
         sel.log_api_access.side_effect = lambda **kw: recorded.append(kw)
         request = _internal_request("/api/crew-log/sessions", session_key="")
-        with patch("kiro_crew.sel.sel", return_value=sel):
+        with patch("aj_crew.sel.sel", return_value=sel):
             response = asyncio.run(routes.api_crew_log_sessions(request))
         assert response.status == 403
         rows = [row for row in recorded if row["operation"] == "session_crew_log.list"]
@@ -474,7 +474,7 @@ class TestAudit:
             sessions={"subagent:abc": SESSION},
             match={"unit": "s-dispatched"},
         )
-        with patch("kiro_crew.sel.sel", return_value=sel):
+        with patch("aj_crew.sel.sel", return_value=sel):
             response = asyncio.run(routes.api_crew_log_unit_page(request))
         assert response.status == 200
         rows = [row for row in recorded if row["operation"] == "session_crew_log.read"]
@@ -502,7 +502,7 @@ class TestAudit:
             sessions={"subagent:abc": SESSION},
             match={"unit": "s-stranger-unit"},
         )
-        with patch("kiro_crew.sel.sel", return_value=sel):
+        with patch("aj_crew.sel.sel", return_value=sel):
             response = asyncio.run(routes.api_crew_log_unit_page(request))
         assert response.status == 403
         rows = [row for row in recorded if row["operation"] == "session_crew_log.read"]
@@ -522,7 +522,7 @@ class TestAudit:
         sel = MagicMock()
         sel.log_api_access.side_effect = lambda **kw: recorded.append(kw)
         request = _internal_request("/api/crew-log/sessions", secret=False)
-        with patch("kiro_crew.sel.sel", return_value=sel):
+        with patch("aj_crew.sel.sel", return_value=sel):
             response = asyncio.run(routes.api_crew_log_sessions(request))
         assert response.status == 403
         rows = [row for row in recorded if row["operation"] == "session_crew_log.list"]
@@ -542,14 +542,14 @@ class TestAudit:
         recorded: list[dict] = []
         sel = MagicMock()
         sel.log_api_access.side_effect = lambda **kw: recorded.append(kw)
-        request = _internal_request("/api/crew-log/sessions", caller="kirocrew-dashboard")
-        with patch("kiro_crew.sel.sel", return_value=sel):
+        request = _internal_request("/api/crew-log/sessions", caller="ajcrew-dashboard")
+        with patch("aj_crew.sel.sel", return_value=sel):
             response = asyncio.run(routes.api_crew_log_sessions(request))
         assert response.status == 403
         rows = [row for row in recorded if row["operation"] == "session_crew_log.list"]
         assert rows, recorded
         assert rows[0]["outcome"] == "denied"
-        assert rows[0]["caller"] == "kirocrew-dashboard"
+        assert rows[0]["caller"] == "ajcrew-dashboard"
         assert rows[0]["source"] == "mcp"
         assert routes.CREW_LOG_MCP_CALLER in rows[0]["error"]
 
@@ -561,7 +561,7 @@ class TestAudit:
         sel = MagicMock()
         sel.log_api_access.side_effect = lambda **kw: recorded.append(kw)
         request = _internal_request("/api/crew-log/sessions", caller="not-a-real-server")
-        with patch("kiro_crew.sel.sel", return_value=sel):
+        with patch("aj_crew.sel.sel", return_value=sel):
             response = asyncio.run(routes.api_crew_log_sessions(request))
         assert response.status == 403
         rows = [row for row in recorded if row["operation"] == "session_crew_log.list"]
@@ -591,7 +591,7 @@ class TestAudit:
         sel = MagicMock()
         sel.log_api_access.side_effect = lambda **kw: recorded.append(kw)
         request = _internal_request("/api/crew-log/x", secret=False, match=match)
-        with patch("kiro_crew.sel.sel", return_value=sel):
+        with patch("aj_crew.sel.sel", return_value=sel):
             response = asyncio.run(getattr(routes, handler)(request))
         assert response.status == 403
         assert [row for row in recorded if row["outcome"] == "denied"], recorded
@@ -600,7 +600,7 @@ class TestAudit:
         _flag_on(monkeypatch)
         _opened(_log())
         request = _internal_request("/api/crew-log/sessions")
-        with patch("kiro_crew.sel.sel", side_effect=RuntimeError("sel is down")):
+        with patch("aj_crew.sel.sel", side_effect=RuntimeError("sel is down")):
             response = asyncio.run(routes.api_crew_log_sessions(request))
         assert response.status == 200
 
@@ -610,7 +610,7 @@ class TestAudit:
         session itself carries. The second is automatic; this pins that it happens.
         """
         monkeypatch.setenv(routes.CREW_LOG_ENV, "1")
-        from kiro_crew.crew_log import emit
+        from aj_crew.crew_log import emit
 
         handle = _log()
         _opened(handle)
@@ -619,7 +619,7 @@ class TestAudit:
             SESSION,
             1,
             name="crew_log_read",
-            server="kirocrew-crew-log",
+            server="ajcrew-crew-log",
             kind="read",
             call_id="c-1",
             args='{"unit": "self"}',
@@ -632,7 +632,7 @@ class TestAudit:
             for entry in CrewLog.open(lg.KIND_SESSION, SESSION).iter_from(1)
             if entry.type == "tool/called"
         ]
-        assert called[0].data["server"] == "kirocrew-crew-log"
+        assert called[0].data["server"] == "ajcrew-crew-log"
         assert called[0].data["name"] == "crew_log_read"
 
 
@@ -644,7 +644,7 @@ class TestTheBrowserRoutesAreUnchanged:
         _opened(_log())
         request = _internal_request(f"/api/sessions/{SESSION}/crew-log", match={"id": SESSION})
         with patch(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             return_value=False,
         ):
             response = asyncio.run(routes.api_session_crew_log(request))

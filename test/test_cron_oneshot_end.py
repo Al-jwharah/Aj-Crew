@@ -25,9 +25,9 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.cron as cron_mod
-from kiro_crew.cron import _JOB_TIMEOUT_SECS, CronJob, CronService, CronStoreBusy
-from kiro_crew.testing.wait import await_until
+import aj_crew.cron as cron_mod
+from aj_crew.cron import _JOB_TIMEOUT_SECS, CronJob, CronService, CronStoreBusy
+from aj_crew.testing.wait import await_until
 
 _ADMITTED = SimpleNamespace(admitted=True, reason="")
 
@@ -150,7 +150,7 @@ async def test_a_timed_out_one_shot_is_disabled_and_does_not_run_again(tmp_path,
     service = await _service(tmp_path, payload)
     job = await _one_shot(service)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             await _tick(service, job.id)  # the run times out
             stored = _stored(tmp_path, job.id)
             assert stored is not None and stored.last_error.startswith("Timed out")
@@ -168,7 +168,7 @@ async def test_a_one_shot_that_always_times_out_runs_once(tmp_path, tiny_deadlin
     service = await _service(tmp_path, payload)
     job = await _one_shot(service)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             for _ in range(8):
                 await _tick(service, job.id)
     finally:
@@ -185,7 +185,7 @@ async def test_a_timed_out_delete_after_run_one_shot_is_kept_paused(
     service = await _service(tmp_path, payload)
     job = await _one_shot(service, delete_after_run=True)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             await _tick(service, job.id)
             await _tick(service, job.id)
     finally:
@@ -206,7 +206,7 @@ async def test_a_timeout_before_the_payload_started_keeps_the_one_shot_due(
     service = await _service(tmp_path, payload)
     job = await _one_shot(service, delete_after_run=delete_after_run)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             await _tick(service, job.id)
     finally:
         await service.stop()
@@ -226,7 +226,7 @@ async def test_a_reaped_one_shot_is_parked_like_a_timed_out_one(tmp_path):
     service = await _service(tmp_path, payload)
     job = await _one_shot(service)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             await _reap(service, payload, job.id)
             stored = _stored(tmp_path, job.id)
             assert stored is not None and stored.last_error.startswith("Reaped")
@@ -254,7 +254,7 @@ async def test_a_reaped_one_shot_stays_disabled_when_the_store_changed_meanwhile
 
     service._merge_terminal_state_locked = merge_after_another_writer  # type: ignore[method-assign]
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             await _reap(service, payload, job.id)
             await _tick(service, job.id)
     finally:
@@ -279,7 +279,7 @@ async def test_a_reaped_one_shot_whose_pause_could_not_be_saved_stays_off_the_sc
 
     service._merge_terminal_state_locked = busy_merge  # type: ignore[method-assign]
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             await _reap(service, payload, job.id)
             stored = _stored(tmp_path, job.id)
             assert stored is not None and stored.enabled, "the busy store took the pause"
@@ -299,7 +299,7 @@ async def test_a_reaped_run_whose_payload_never_started_keeps_the_one_shot_due(
     service = await _service(tmp_path, payload)
     job = await _one_shot(service, delete_after_run=delete_after_run)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             await _reap(service, payload, job.id)
     finally:
         await service.stop()
@@ -318,7 +318,7 @@ async def test_a_reaped_claim_with_no_start_stamp_keeps_the_one_shot_due(tmp_pat
     service = await _service(tmp_path, payload)
     job = await _one_shot(service)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             await _reap(service, payload, job.id, unstamped=True)
     finally:
         await service.stop()
@@ -346,7 +346,7 @@ async def test_a_store_reload_during_the_run_does_not_change_how_the_reaper_ends
     service = await _service(tmp_path, payload)
     job = await _one_shot(service)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             await service._on_timer()
             await await_until(payload.started, what="the run to start")
             claim = service._claims[job.id]
@@ -409,7 +409,7 @@ async def test_parking_the_one_shot_does_no_store_io_on_the_event_loop(
 
         setattr(service, name, watched)
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             if ending == "timeout":
                 await _tick(service, job.id)
             else:

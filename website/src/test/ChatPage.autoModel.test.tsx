@@ -61,7 +61,7 @@ vi.mock('../api/client', () => ({
 }))
 vi.mock('../hooks/useVoiceInput', () => ({ useVoiceInput: () => ({ recording: false, transcribing: false, toggle: vi.fn() }), voiceInputSupported: false }))
 vi.mock('../hooks/useBranding', () => ({ useBranding: () => ({ botName: 'Test', avatar: '' }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: () => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' }) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: () => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span> }))
 vi.mock('../components/WelcomeView', () => ({ default: () => null }))
 vi.mock('../components/MarkdownPanel', () => ({ default: () => null }))
@@ -84,7 +84,7 @@ function makeStore(model?: string) {
     preloadedState: {
       dashboard: {
         status: null,
-        slots: [{ key: 'slot-a', messages: 0, running: false, mode: '', agent: 'kirocrew', model, pending_approval: false, waiting_for_input: false, last_activity_ts: undefined }],
+        slots: [{ key: 'slot-a', messages: 0, running: false, mode: '', agent: 'ajcrew', model, pending_approval: false, waiting_for_input: false, last_activity_ts: undefined }],
         unreadSlots: [], refreshTrigger: 0, approvalMode: 'normal',
         subagentRunning: {}, subagentDetails: {}, subagentText: {},
       } as unknown as RootState['dashboard'],

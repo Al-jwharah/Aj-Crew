@@ -2,7 +2,7 @@
 
 A person typing in a cron job's or a channel conversation's tab runs the dashboard
 runner on that parent's session, and a ``spawn_sub_agents`` result that turn reads
-back settles when the turn gives the session back (``kiro_crew.parent_turns``). The
+back settles when the turn gives the session back (``aj_crew.parent_turns``). The
 runner notes the landing only for a turn that ended on ``end_turn``, from the task
 that holds the session's permit: that release confirms the marks, so the children's
 completions play no second turn. Any other end notes nothing, so the release revokes
@@ -17,8 +17,8 @@ from typing import Any
 import pytest
 from chat_runner_coverage_helpers import _complete, _drive, _runner_state, _set_stream, _slot
 
-from kiro_crew.acp.types import EVENT_TEXT_CHUNK
-from kiro_crew.providers.base import LLMEvent
+from aj_crew.acp.types import EVENT_TEXT_CHUNK
+from aj_crew.providers.base import LLMEvent
 
 
 def _answer() -> LLMEvent:

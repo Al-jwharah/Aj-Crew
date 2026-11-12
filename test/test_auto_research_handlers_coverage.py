@@ -21,7 +21,7 @@ Everything is patched at the workflow-service and autonudge boundary, so no
 network, no subprocess and no real gateway is involved. ``DB_PATH`` /
 ``RESEARCH_DIR`` are pinned into ``tmp_path`` (the same
 fixture shape ``test_auto_research.py`` uses) on top of the per-test
-``KIROCREW_HOME`` that ``conftest.py`` already pins, so nothing is written
+``AJCREW_HOME`` that ``conftest.py`` already pins, so nothing is written
 outside the temp tree. Handlers are invoked through aiohttp's own
 ``make_mocked_request`` rather than a live ``TestServer``, so no socket is bound
 and no gateway task is started.
@@ -61,8 +61,8 @@ from auto_research_handlers_coverage_helpers import (
 )
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.apps.builtins.auto_research import handlers as h
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.apps.builtins.auto_research import handlers as h
+from aj_crew.testing.wait import async_wait_until
 
 # --- helpers ----------------------------------------------------------------
 
@@ -279,7 +279,7 @@ class TestStopWorkflow:
     async def test_cancel_failure_is_swallowed(
         self, _isolate: Path, caplog: pytest.LogCaptureFixture
     ):
-        from kiro_crew.apps.builtins.auto_research.campaign import LOGGER_NAME
+        from aj_crew.apps.builtins.auto_research.campaign import LOGGER_NAME
 
         cid = _campaign(execution_mode="workflow")
         h._write_workflow_run_id(cid, "run-9")
@@ -578,7 +578,7 @@ class TestWatchdogLoop:
     ):
         """Turn admission caches ``_trust`` as the session's ``approval_policy``; the
         spawn gate and each child's tool approval read that, not the flag."""
-        from kiro_crew.dashboard.chat_utils_slots import effective_session_key
+        from aj_crew.dashboard.chat_utils_slots import effective_session_key
 
         cid = _campaign()
         _running(cid, started_at=time.time() - (h._TRUST_TTL_SECS + 60))
@@ -596,7 +596,7 @@ class TestWatchdogLoop:
     async def test_trust_is_reestablished_and_a_paused_loop_rearmed(
         self, _isolate: Path, fast_watchdog, monkeypatch: pytest.MonkeyPatch
     ):
-        from kiro_crew.autonudge import AutoNudgeService
+        from aj_crew.autonudge import AutoNudgeService
 
         cid = _campaign()
         _running(cid)

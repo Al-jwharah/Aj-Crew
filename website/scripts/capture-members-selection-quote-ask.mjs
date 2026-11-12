@@ -41,8 +41,8 @@ mkdirSync(OUT, { recursive: true })
 const REPLY = 'Six new issues: four covered by open PRs, one routed to needs-human, one queued as auto-fixable.'
 
 const MEMBERS = [
-  { name: 'radar', slug: 'radar', bound: true, slot_key: 'member-radar', running: false, kiro_agent: 'kirocrew-autofix', workspace: 'autofix', memory_store: 'default', model: '', last_active_ts: 1000, last_message: 'Six new issues: four covered by open PRs.' },
-  { name: 'fixer', slug: 'fixer', bound: true, slot_key: 'member-fixer', running: false, kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', model: '', last_active_ts: 900, last_message: 'Two PRs opened for the queue.' },
+  { name: 'radar', slug: 'radar', bound: true, slot_key: 'member-radar', running: false, kiro_agent: 'ajcrew-autofix', workspace: 'autofix', memory_store: 'default', model: '', last_active_ts: 1000, last_message: 'Six new issues: four covered by open PRs.' },
+  { name: 'fixer', slug: 'fixer', bound: true, slot_key: 'member-fixer', running: false, kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', model: '', last_active_ts: 900, last_message: 'Two PRs opened for the queue.' },
 ]
 
 const browser = await chromium.launch()

@@ -17,17 +17,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import autonudge_judge
-from kiro_crew.autonudge import NudgeLoop
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import session_control
-from kiro_crew.monitoring.models import MonitorDispatchResult
-from kiro_crew.slack import gateway as gw
+from aj_crew import autonudge_judge
+from aj_crew.autonudge import NudgeLoop
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import session_control
+from aj_crew.monitoring.models import MonitorDispatchResult
+from aj_crew.slack import gateway as gw
 
 
 def _orchestrator() -> Any:
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U_OWNER"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U_OWNER"}):
         return gw.GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
 
 
@@ -45,10 +45,10 @@ class _Wired(NamedTuple):
 async def _wire(orch: Any) -> _Wired:
     """Run ``_init_autonudge`` against a recording service and controller."""
     with contextlib.ExitStack() as stack:
-        stack.enter_context(patch("kiro_crew.slack.gateway.autonudge_enabled", return_value=True))
-        service_cls = stack.enter_context(patch("kiro_crew.slack.gateway.AutoNudgeService"))
+        stack.enter_context(patch("aj_crew.slack.gateway.autonudge_enabled", return_value=True))
+        service_cls = stack.enter_context(patch("aj_crew.slack.gateway.AutoNudgeService"))
         controller_cls = stack.enter_context(
-            patch("kiro_crew.monitoring.controller.MonitorController")
+            patch("aj_crew.monitoring.controller.MonitorController")
         )
         service = MagicMock()
         service.start = AsyncMock()
@@ -84,7 +84,7 @@ async def test_a_webex_loop_fires_through_the_webex_adapter() -> None:
     ("key", "adapter", "who"),
     [
         ("slack:111.222", "_fire_slack_nudge", "Slack"),
-        ("discord:kirocrew:direct:U9", "_fire_discord_nudge", "Discord"),
+        ("discord:ajcrew:direct:U9", "_fire_discord_nudge", "Discord"),
         ("chat-1", "_fire_dashboard_nudge", "Dashboard"),
     ],
 )
@@ -97,7 +97,7 @@ async def test_an_untyped_monitor_dispatch_answers_unavailable(
     setattr(orch, adapter, AsyncMock(return_value=True))
     wired = await _wire(orch)
 
-    with caplog.at_level("ERROR", logger="kiro_crew.slack.gateway"):
+    with caplog.at_level("ERROR", logger="aj_crew.slack.gateway"):
         result = await wired.monitor_dispatch(_loop(key), "envelope")
 
     assert result is MonitorDispatchResult.UNAVAILABLE

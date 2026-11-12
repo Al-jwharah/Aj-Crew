@@ -1,6 +1,6 @@
 """A task run never runs git in the user's own checkout.
 
-``git_coord`` gives a run an isolated worktree on ``kirocrew/task/<id>`` and runs its
+``git_coord`` gives a run an isolated worktree on ``ajcrew/task/<id>`` and runs its
 step commits and reverts there. Two cases can leave a run with git enabled while
 ``work_dir`` still names the user's checkout, where ``commit_step``'s ``git add -A``
 would commit the user's uncommitted work and ``revert_step``'s ``reset --hard`` would
@@ -26,8 +26,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import git_coord
-from kiro_crew.task_models import Project, Task
+from aj_crew import git_coord
+from aj_crew.task_models import Project, Task
 
 _USER_EDIT = "my uncommitted work\n"
 
@@ -40,7 +40,7 @@ def _git(cwd: Path, *args: str) -> str:
 
 @pytest.fixture
 def repo(tmp_path, monkeypatch) -> Path:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
 
     async def _plain(argv, **_k):
         return list(argv), dict(os.environ), None
@@ -102,7 +102,7 @@ def test_a_restart_after_an_unrecorded_worktree_add_never_touches_the_users_chec
         "uncommitted files changed"
     )
     assert Path(run.work_dir) != repo
-    assert run.git_enabled and run.branch_name == "kirocrew/task/t-crash"
+    assert run.git_enabled and run.branch_name == "ajcrew/task/t-crash"
 
 
 def test_a_cancelled_recovery_leaves_nothing_for_finalize_to_remove(repo, monkeypatch):
@@ -116,7 +116,7 @@ def test_a_cancelled_recovery_leaves_nothing_for_finalize_to_remove(repo, monkey
     """
     before = _user_state(repo)
     asyncio.run(git_coord.init_workspace(_run(repo, "t-cancel")))
-    leftover = Path(repo).parent / ".kirocrew-work" / "t-cancel"
+    leftover = Path(repo).parent / ".ajcrew-work" / "t-cancel"
     (leftover / "draft.txt").write_text("uncommitted work inside the leftover\n")
     real = git_coord._leftover_dir_is_ours
 
@@ -143,8 +143,8 @@ def test_a_cancelled_recovery_leaves_nothing_for_finalize_to_remove(repo, monkey
 
 def test_a_failed_init_leaves_git_disabled(repo, tmp_path):
     before = _user_state(repo)
-    # `.kirocrew-work` beside the repository is a file, so `worktree add` cannot create its dir.
-    (repo.parent / ".kirocrew-work").write_text("not a directory\n")
+    # `.ajcrew-work` beside the repository is a file, so `worktree add` cannot create its dir.
+    (repo.parent / ".ajcrew-work").write_text("not a directory\n")
     run = _run(repo, "t-noroom")
     with pytest.raises(RuntimeError):
         asyncio.run(git_coord.init_workspace(run))

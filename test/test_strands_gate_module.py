@@ -1,7 +1,7 @@
 """The Strands gate module's own behaviour, run against stand-in ``strands`` modules.
 
-The gate module is loaded by the Strands CLI's Python worker, never by Kiro Crew, and
-the Strands SDK is not a Kiro Crew dependency. So these tests load the module from its
+The gate module is loaded by the Strands CLI's Python worker, never by Aj Crew, and
+the Strands SDK is not an Aj Crew dependency. So these tests load the module from its
 packaged path with small stand-ins for exactly the ``strands`` names it imports, and
 drive the one behaviour that lives in its own code: what happens to the next prompt
 when a cancel left an approval interrupt open. On Strands CLI 0.2.3 that state is
@@ -27,11 +27,11 @@ import pytest
 GATE = (
     Path(__file__).resolve().parent.parent
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "agent_sdk"
     / "gate_extensions"
     / "strands"
-    / "kiro_crew_strands_gate.py"
+    / "aj_crew_strands_gate.py"
 )
 
 
@@ -137,15 +137,15 @@ def _stand_in_strands(monkeypatch: pytest.MonkeyPatch) -> type:
 @pytest.fixture
 def gated(monkeypatch: pytest.MonkeyPatch) -> type:
     for name in (
-        "KIROCREW_STRANDS_PROJECT",
-        "KIROCREW_STRANDS_PROJECT_SHA256",
-        "KIROCREW_STRANDS_GATE_MARKER",
-        "KIROCREW_STRANDS_GATE_SESSION",
-        "KIROCREW_STRANDS_WITHHELD",
+        "AJCREW_STRANDS_PROJECT",
+        "AJCREW_STRANDS_PROJECT_SHA256",
+        "AJCREW_STRANDS_GATE_MARKER",
+        "AJCREW_STRANDS_GATE_SESSION",
+        "AJCREW_STRANDS_WITHHELD",
     ):
         monkeypatch.delenv(name, raising=False)
     agent_cls = _stand_in_strands(monkeypatch)
-    spec = importlib.util.spec_from_file_location("kiro_crew_strands_gate_under_test", GATE)
+    spec = importlib.util.spec_from_file_location("aj_crew_strands_gate_under_test", GATE)
     assert spec is not None and spec.loader is not None
     gate = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(gate)
@@ -306,15 +306,15 @@ def test_the_key_reaches_the_worker_but_no_launch_environment(tmp_path, monkeypa
     import os
     import subprocess
 
-    from kiro_crew.acp.harness import strands as strands_mod
-    from kiro_crew.acp.harness import strands_keys
+    from aj_crew.acp.harness import strands as strands_mod
+    from aj_crew.acp.harness import strands_keys
 
     monkeypatch.setattr(
         strands_mod, "_strands_vault_env", lambda: {"OPENAI_API_KEY": "sk-test-value"}
     )
     launch = strands_mod.StrandsLaunch()
     launch._session = types.SimpleNamespace(_scratch_dir=tmp_path, _shared_scratch=None)
-    env = {k: v for k, v in os.environ.items() if not k.startswith("KIROCREW_STRANDS_")}
+    env = {k: v for k, v in os.environ.items() if not k.startswith("AJCREW_STRANDS_")}
 
     async def to_thread(fn, *args):
         return fn(*args)
@@ -590,11 +590,11 @@ def isolated_import(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setattr(zipimport.zipimporter, "__init__", zipimport.zipimporter.__init__)
     for name in ("helper", "later", "fresh"):
         monkeypatch.delitem(sys.modules, name, raising=False)
-    monkeypatch.delitem(sys.modules, "kirocrew_strands_user_project", raising=False)
+    monkeypatch.delitem(sys.modules, "ajcrew_strands_user_project", raising=False)
 
 
 def test_the_gate_fingerprint_equals_the_gateway_one(gated, tmp_path) -> None:
-    from kiro_crew.acp.harness import strands_project_pin
+    from aj_crew.acp.harness import strands_project_pin
 
     entry = _user_project(tmp_path / "proj")
     (entry.parent / "__pycache__").mkdir()

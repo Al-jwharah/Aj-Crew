@@ -1,4 +1,4 @@
-"""Composition contracts for the public :mod:`kiro_crew.history` facade.
+"""Composition contracts for the public :mod:`aj_crew.history` facade.
 
 These tests pin seams that are easy to lose when ``history.py`` is split into
 focused components: the import/call surface other modules use and the exact
@@ -11,8 +11,8 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-from kiro_crew import executors, frontmatter, history, llm_helpers, skills, skills_script_validator
-from kiro_crew.history_index import FOLD_SEPARATOR
+from aj_crew import executors, frontmatter, history, llm_helpers, skills, skills_script_validator
+from aj_crew.history_index import FOLD_SEPARATOR
 
 
 class _FrozenDateTime(datetime):

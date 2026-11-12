@@ -1,4 +1,4 @@
-"""Unit coverage for :mod:`kiro_crew.apps.backend`: ``stop_app_backend``.
+"""Unit coverage for :mod:`aj_crew.apps.backend`: ``stop_app_backend``.
 
 SIGTERM-then-SIGKILL escalation for a spawned child, the identity revalidation every
 recorded PID of an adopted backend passes before it is signalled (and the SIGKILL of
@@ -18,8 +18,8 @@ import pytest
 from apps_backend_coverage_helpers import _isolated_module_state  # noqa: F401
 from apps_backend_coverage_helpers import _fake_proc
 
-import kiro_crew.apps.backend as bmod
-from kiro_crew.apps.backend import AppProcess
+import aj_crew.apps.backend as bmod
+from aj_crew.apps.backend import AppProcess
 
 
 class TestStopSpawnedBackend:
@@ -82,7 +82,7 @@ class TestStopSpawnedBackend:
 
 class TestStopAdoptedBackend:
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- the class's instant PID wait, moved verbatim; tracked for a de-flake pass
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- the class's instant PID wait, moved verbatim; tracked for a de-flake pass
     def _fast_wait(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(bmod, "_wait_for_pids", lambda _pids, timeout=2.0: None)
 
@@ -291,7 +291,7 @@ class TestWaitForPids:
 
         monkeypatch.setattr(bmod.platform_compat, "pid_liveness", _liveness)
         # flake-ok: a pre-existing in-test stand-in for the backend module's time.sleep, undone by monkeypatch at teardown; tracked for a de-flake pass
-        # nosemgrep: kirocrew.test-stdlib-clock-rebound -- a pre-existing in-test stand-in for the backend module's time.sleep moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-stdlib-clock-rebound -- a pre-existing in-test stand-in for the backend module's time.sleep moved verbatim; tracked for a de-flake pass
         monkeypatch.setattr(bmod.time, "sleep", lambda _s: None)
         bmod._wait_for_pids([111], timeout=5.0)
         assert states == []
@@ -305,7 +305,7 @@ class TestWaitForPids:
             lambda _pid: bmod.platform_compat.PID_UNSIGNALABLE,
         )
         # flake-ok: a pre-existing in-test stand-in for the backend module's time.sleep, undone by monkeypatch at teardown; tracked for a de-flake pass
-        # nosemgrep: kirocrew.test-stdlib-clock-rebound -- a pre-existing in-test stand-in for the backend module's time.sleep moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-stdlib-clock-rebound -- a pre-existing in-test stand-in for the backend module's time.sleep moved verbatim; tracked for a de-flake pass
         monkeypatch.setattr(
             bmod.time, "sleep", lambda _s: pytest.fail("slept on an unsignalable pid")
         )

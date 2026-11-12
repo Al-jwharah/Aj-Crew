@@ -7,7 +7,7 @@ Date: 2026-11-08
 
 When a plain `pip` install is below the policy minimum version, the gateway's
 version-compliance log line says to run its in-place upgrade and the
-`kirocrew restart` after it from your own terminal; the `kirocrew update` print
+`ajcrew restart` after it from your own terminal; the `ajcrew update` print
 and the extras install commands keep their text.
 
 ## Why

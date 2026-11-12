@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.cloud import aws, connect, ssm
-from kiro_crew.testing.wait import wait_until
+from aj_crew import platform_compat as pc
+from aj_crew.cloud import aws, connect, ssm
+from aj_crew.testing.wait import wait_until
 
 #: How long a killed tree's descendant may take to leave the process table.
 #: Well under the 30 s the stand-in descendants sleep, so a test that waited on
@@ -173,7 +173,7 @@ class TestConnect:
         assert opened["n"] == 0  # never opened the token URL
 
     def test_connect_tears_down_tunnel_when_mint_fails(self, monkeypatch):
-        # Tunnel comes up ready but mint_token returns "" (e.g. `kirocrew token`
+        # Tunnel comes up ready but mint_token returns "" (e.g. `ajcrew token`
         # failed on the box). A ready tunnel with no URL is useless and would
         # leak the SSM child; connect() must tear it down and report ready=False.
         monkeypatch.setattr(ssm, "require_session_manager_plugin", lambda: None)
@@ -363,7 +363,7 @@ class TestKillProcessTree:
         ``proc.terminate()`` kills only the wrapper and leaves the plugin holding the
         forwarded port. Runs on any platform by forcing ``os.name``.
         """
-        from kiro_crew.cloud import ssm as ssm_mod
+        from aj_crew.cloud import ssm as ssm_mod
 
         calls: list[list[str]] = []
 
@@ -416,7 +416,7 @@ class TestKillProcessTree:
 
         `kill_port_forward` accepts any object with poll/terminate/wait, on both platforms.
         """
-        from kiro_crew.cloud import ssm as ssm_mod
+        from aj_crew.cloud import ssm as ssm_mod
 
         class NoPid:
             terminated = False
@@ -457,10 +457,10 @@ class TestRegistryIntegration:
     def test_unregister_ecs_task_removes_the_matching_record(self, monkeypatch, tmp_path):
         """Teardown holds a task ARN, which carries the cluster and the task id but
         never the runtime id, so the row cannot be found by its whole target."""
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
-        import kiro_crew.instances.registry as regmod
+        import aj_crew.instances.registry as regmod
 
         monkeypatch.setattr(regmod, "InstancesRegistry", lambda *a, **k: reg)
         runtime = f"{'a' * 32}-1234567890"
@@ -480,10 +480,10 @@ class TestRegistryIntegration:
         ``f"ecs:{cluster}_{task}_"`` prefix test would let cluster ``crews`` remove
         a row belonging to cluster ``crews_eu``. Splitting with the registry's own
         reader compares the cluster as a whole."""
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
-        import kiro_crew.instances.registry as regmod
+        import aj_crew.instances.registry as regmod
 
         monkeypatch.setattr(regmod, "InstancesRegistry", lambda *a, **k: reg)
         runtime = f"{'a' * 32}-1234567890"
@@ -500,10 +500,10 @@ class TestRegistryIntegration:
 
     def test_unregister_ecs_task_ignores_an_ec2_record(self, monkeypatch, tmp_path):
         """An SSM target is not an ECS target, so it must not be parsed as one."""
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
-        import kiro_crew.instances.registry as regmod
+        import aj_crew.instances.registry as regmod
 
         monkeypatch.setattr(regmod, "InstancesRegistry", lambda *a, **k: reg)
         reg.add(name="EC2", ssm_target="i-0abc1234", connection_method="ssm", instance_id="ec2")
@@ -515,10 +515,10 @@ class TestRegistryIntegration:
         """Two rows can name one task under distinct ids. Returning on the first
         leaves the other addressing a stopped task, and no sweep prunes it because
         a stopped task is not listed for teardown at all."""
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
-        import kiro_crew.instances.registry as regmod
+        import aj_crew.instances.registry as regmod
 
         monkeypatch.setattr(regmod, "InstancesRegistry", lambda *a, **k: reg)
         task_id = "0" * 32
@@ -546,10 +546,10 @@ class TestRegistryIntegration:
         """ "No row" and "could not remove the row" are both falsy, and a caller
         that reports a teardown as complete has to tell them apart: the first means
         nothing is left behind, the second means something is."""
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
-        import kiro_crew.instances.registry as regmod
+        import aj_crew.instances.registry as regmod
 
         monkeypatch.setattr(regmod, "InstancesRegistry", lambda *a, **k: reg)
         runtime = f"{'a' * 32}-1234567890"
@@ -570,18 +570,18 @@ class TestRegistryIntegration:
         assert [i.id for i in reg.list()] == ["cloud"]
 
     def test_register_instance(self, monkeypatch, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         monkeypatch.setattr(connect, "InstancesRegistry", InstancesRegistry, raising=False)
         # Patch the lazy import target: connect imports InstancesRegistry inside
         # the function, so patch the class used there via the module.
-        import kiro_crew.instances.registry as regmod
+        import aj_crew.instances.registry as regmod
 
         monkeypatch.setattr(regmod, "InstancesRegistry", lambda *a, **k: reg)
 
         rid = connect.register_instance(
-            "i-0abc1234", name="Kiro Crew Cloud", profile="dev", region="us-west-2"
+            "i-0abc1234", name="Aj Crew Cloud", profile="dev", region="us-west-2"
         )
         assert rid is not None
         # Registers over the native SSM transport, not the legacy ssh_host path.
@@ -594,20 +594,20 @@ class TestRegistryIntegration:
         assert inst.provisioner_id == "aws_ec2"
 
     def test_register_instance_is_idempotent_on_relaunch(self, monkeypatch, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
-        import kiro_crew.instances.registry as regmod
+        import aj_crew.instances.registry as regmod
 
         monkeypatch.setattr(regmod, "InstancesRegistry", lambda *a, **k: reg)
 
-        first = connect.register_instance("i-0abc1234", name="Kiro Crew Cloud")
+        first = connect.register_instance("i-0abc1234", name="Aj Crew Cloud")
         assert first is not None
         # Simulate persisted per-instance state a re-launch must NOT wipe:
         # customized TTL, an allocated local port, and sticky connect intent.
         reg.update(first, ttl="30m", local_port=5599, was_connected=True)
 
-        second = connect.register_instance("i-0abc1234", name="Kiro Crew Cloud")
+        second = connect.register_instance("i-0abc1234", name="Aj Crew Cloud")
         # Re-launch updates in place: same id, no duplicate, state preserved.
         assert second == first
         matches = [i for i in reg.list() if i.ssm_target == "i-0abc1234"]
@@ -624,17 +624,17 @@ class TestRegistryIntegration:
         ``provisioner_id`` resolves the engine, so a Fargate task left with the EC2
         default goes to the EC2 engine; a re-launch must not reset it either.
         """
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
-        import kiro_crew.instances.registry as regmod
+        import aj_crew.instances.registry as regmod
 
         monkeypatch.setattr(regmod, "InstancesRegistry", lambda *a, **k: reg)
 
         target = "ecs:crews_0123456789abcdef0123456789abcdef_" + "a" * 32 + "-1234567890"
         first = connect.register_instance(
             target,
-            name="Kiro Crew Cloud (t)",
+            name="Aj Crew Cloud (t)",
             connection_method="fargate",
             provisioner_id="aws_fargate",
         )
@@ -643,7 +643,7 @@ class TestRegistryIntegration:
 
         second = connect.register_instance(
             target,
-            name="Kiro Crew Cloud (t)",
+            name="Aj Crew Cloud (t)",
             connection_method="fargate",
             provisioner_id="aws_fargate",
         )
@@ -651,14 +651,14 @@ class TestRegistryIntegration:
         assert next(i for i in reg.list() if i.id == first).provisioner_id == "aws_fargate"
 
     def test_unregister_instance_empty_arg_is_noop(self, monkeypatch, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
-        import kiro_crew.instances.registry as regmod
+        import aj_crew.instances.registry as regmod
 
         monkeypatch.setattr(regmod, "InstancesRegistry", lambda *a, **k: reg)
         # An SSM record (ssh_host="") and an SSH record (ssm_target="") coexist.
-        connect.register_instance("i-0abc1234", name="Kiro Crew Cloud")
+        connect.register_instance("i-0abc1234", name="Aj Crew Cloud")
         reg.add(name="dev-box", ssh_host="dev-box")
 
         # An empty needle must NOT match an empty transport field of either record.
@@ -666,25 +666,25 @@ class TestRegistryIntegration:
         assert len(reg.list()) == 2
 
     def test_unregister_instance_ssm(self, monkeypatch, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
-        import kiro_crew.instances.registry as regmod
+        import aj_crew.instances.registry as regmod
 
         monkeypatch.setattr(regmod, "InstancesRegistry", lambda *a, **k: reg)
 
-        connect.register_instance("i-0abc1234", name="Kiro Crew Cloud")
+        connect.register_instance("i-0abc1234", name="Aj Crew Cloud")
         # Removal matches on ssm_target (the native registration).
         assert connect.unregister_instance("i-0abc1234") is True
         assert not any(i.ssm_target == "i-0abc1234" for i in reg.list())
 
     def test_unregister_instance_legacy_ssh_host(self, monkeypatch, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         # A box registered the old way (ssh_host = instance id) still unregisters.
-        reg.add(name="Kiro Crew Cloud", ssh_host="i-0abc")
-        import kiro_crew.instances.registry as regmod
+        reg.add(name="Aj Crew Cloud", ssh_host="i-0abc")
+        import aj_crew.instances.registry as regmod
 
         monkeypatch.setattr(regmod, "InstancesRegistry", lambda *a, **k: reg)
 
@@ -697,7 +697,7 @@ class TestIsLaunchedInstance:
     handlers_instances.py uses to lock PATCH's addressing fields."""
 
     def _store(self, monkeypatch, tmp_path):
-        import kiro_crew.cloud.launch_job as ljmod
+        import aj_crew.cloud.launch_job as ljmod
 
         store = ljmod.LaunchJobStore(root=tmp_path / "launch-jobs")
         monkeypatch.setattr(ljmod, "LaunchJobStore", lambda *a, **k: store)
@@ -716,7 +716,7 @@ class TestIsLaunchedInstance:
 
     def test_unrelated_target_is_not_launched(self, monkeypatch, tmp_path):
         # A hand-added SSM record whose ssm_target happens to look like an EC2 id
-        # but was never provisioned by a Kiro Crew launch job.
+        # but was never provisioned by an Aj Crew launch job.
         store = self._store(monkeypatch, tmp_path)
         job = store.create(profile="dev", region="us-west-2", size_key="light")
         job.instance_id = "i-0abc1234"
@@ -794,7 +794,7 @@ _ECS_TARGET = f"ecs:crews_{_TASK}_{_TASK}-1234567890"
 
 class TestEcsTargetSplit:
     def test_returns_the_three_parts(self):
-        from kiro_crew.instances.validation import split_ecs_target
+        from aj_crew.instances.validation import split_ecs_target
 
         assert split_ecs_target(_ECS_TARGET) == ("crews", _TASK, f"{_TASK}-1234567890")
 
@@ -805,7 +805,7 @@ class TestEcsTargetSplit:
         separators takes only part of the name and splitting on the last two works
         by accident. The pattern's own groups cannot get this wrong.
         """
-        from kiro_crew.instances.validation import split_ecs_target
+        from aj_crew.instances.validation import split_ecs_target
 
         target = f"ecs:my_prod_crews_{_TASK}_{_TASK}-42"
         assert split_ecs_target(target) == ("my_prod_crews", _TASK, f"{_TASK}-42")
@@ -814,7 +814,7 @@ class TestEcsTargetSplit:
         "bad", ["i-0123456789abcdef0", f"ecs:crews_{_TASK}_{_TASK}-1234567890 --profile admin", ""]
     )
     def test_no_parts_come_out_of_a_value_the_validator_would_reject(self, bad):
-        from kiro_crew.instances.validation import split_ecs_target
+        from aj_crew.instances.validation import split_ecs_target
 
         assert split_ecs_target(bad) is None
 
@@ -912,7 +912,7 @@ def test_the_printed_paths_match_the_containers_own_constants():
 
     source = (
         Path(__file__).resolve().parents[1]
-        / "src/kiro_crew/apps/builtins/aws_control/crew/runtime/container/front/app.py"
+        / "src/aj_crew/apps/builtins/aws_control/crew/runtime/container/front/app.py"
     )
     tree = ast.parse(source.read_text(encoding="utf-8"))
     found = {

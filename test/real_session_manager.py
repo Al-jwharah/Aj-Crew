@@ -1,7 +1,7 @@
 """A real ``SessionManager`` for tests, faked only at the ACP child.
 
-``real_sessions()`` builds the production ``kiro_crew.session.SessionManager`` on a
-default ``KiroCrewConfig``. Its provider factory hands back an in-process stand-in
+``real_sessions()`` builds the production ``aj_crew.session.SessionManager`` on a
+default ``AjCrewConfig``. Its provider factory hands back an in-process stand-in
 for the ACP child (``fake_provider``), so nothing is spawned and nothing reaches the
 network, while every registry, link, policy and teardown path is the real one.
 
@@ -9,7 +9,7 @@ A test can then read what the code left behind through the manager's own API
 (``has_session``, ``get_slack_link``, ``get_approval_policy``,
 ``consume_needs_reinjection`` ...) instead of reading back what a mock was sent.
 
-Writes such as the session map land under ``KIROCREW_HOME``, which ``conftest.py``
+Writes such as the session map land under ``AJCREW_HOME``, which ``conftest.py``
 points at a per-test directory.
 """
 
@@ -19,8 +19,8 @@ from collections.abc import Callable
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import SessionManager
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import SessionManager
 
 
 def fake_provider(provider: Any = None) -> Any:
@@ -68,7 +68,7 @@ def real_sessions(
     provider: Any = None,
     *,
     factory: Callable[..., Any] | None = None,
-    cfg: KiroCrewConfig | None = None,
+    cfg: AjCrewConfig | None = None,
 ) -> SessionManager:
     """A real ``SessionManager`` whose every new session runs on a fake ACP child.
 
@@ -87,7 +87,7 @@ def real_sessions(
             return fake_provider(factory(*args, **kwargs))
         return fake_provider()
 
-    return SessionManager(cfg or KiroCrewConfig(), provider_factory=_factory)
+    return SessionManager(cfg or AjCrewConfig(), provider_factory=_factory)
 
 
 async def open_session(mgr: SessionManager, key: str, **kwargs: Any) -> str:

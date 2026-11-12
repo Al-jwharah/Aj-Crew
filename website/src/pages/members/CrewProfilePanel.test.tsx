@@ -43,7 +43,7 @@ const EXPORT_VIEW_WAIT_MS = 5000
 const member = (overrides: Partial<MemberRosterRow> = {}): MemberRosterRow => ({
   name: 'oncall', slug: 'oncall', bound: true, slot_key: 'member-oncall', running: false,
   // `workspace` is the configured workspace's NAME, the way the roster carries it.
-  kiro_agent: 'kirocrew', workspace: 'oncall-desk', memory_store: 'default', model: '',
+  kiro_agent: 'ajcrew', workspace: 'oncall-desk', memory_store: 'default', model: '',
   ...overrides,
 } as MemberRosterRow)
 

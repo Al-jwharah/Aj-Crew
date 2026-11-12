@@ -10,7 +10,7 @@ Two surfaces:
    emits none; a superseding ``final`` (debounce coalesce) wins; a closed ws
    or a failing background call never sends.
 
-Per-test config isolation comes from the autouse KIROCREW_HOME fixture in
+Per-test config isolation comes from the autouse AJCREW_HOME fixture in
 conftest, so these do not take tmp_path themselves.
 """
 
@@ -25,12 +25,12 @@ import numpy as np
 import pytest
 from aiohttp import WSMsgType, web
 
-import kiro_crew.dashboard.handlers.core as core
-from kiro_crew.config.loader import KiroCrewConfig, config_path
-from kiro_crew.dashboard import stt_stream
-from kiro_crew.stt import engine as engine_mod
-from kiro_crew.stt import models
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+import aj_crew.dashboard.handlers.core as core
+from aj_crew.config.loader import AjCrewConfig, config_path
+from aj_crew.dashboard import stt_stream
+from aj_crew.stt import engine as engine_mod
+from aj_crew.stt import models
+from aj_crew.testing.wait import async_wait_until, await_until, finished
 
 
 def _req(method: str, body: dict | None = None):
@@ -52,14 +52,14 @@ def _stub_probes(monkeypatch):
 
 def test_defaults_to_off() -> None:
     """Endpointing (auto-submit) is opt-in, so absent from config it is off."""
-    assert KiroCrewConfig.load().stt.endpointing is False
+    assert AjCrewConfig.load().stt.endpointing is False
 
 
 def test_explicit_true_is_honoured() -> None:
     path = config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps({"stt": {"endpointing": True}}), encoding="utf-8")
-    assert KiroCrewConfig.load().stt.endpointing is True
+    assert AjCrewConfig.load().stt.endpointing is True
 
 
 def test_non_bool_in_config_file_falls_back_to_off() -> None:
@@ -70,7 +70,7 @@ def test_non_bool_in_config_file_falls_back_to_off() -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     for bogus in ("true", "false", 1, 0, None, [], {}):
         path.write_text(json.dumps({"stt": {"endpointing": bogus}}), encoding="utf-8")
-        loaded = KiroCrewConfig.load().stt.endpointing
+        loaded = AjCrewConfig.load().stt.endpointing
         assert loaded is False, f"{bogus!r} should fall back to off, got {loaded!r}"
 
 
@@ -140,7 +140,7 @@ async def _drain(ep: "stt_stream._Endpointer") -> None:
 @pytest.mark.asyncio
 async def test_complete_verdict_emits_endpoint_frame(monkeypatch) -> None:
     monkeypatch.setattr(
-        "kiro_crew.dashboard.stt_stream.run_bg_oneliner",
+        "aj_crew.dashboard.stt_stream.run_bg_oneliner",
         AsyncMock(return_value="COMPLETE"),
     )
     ws = _fake_ws()
@@ -153,7 +153,7 @@ async def test_complete_verdict_emits_endpoint_frame(monkeypatch) -> None:
 @pytest.mark.asyncio
 async def test_incomplete_verdict_emits_nothing(monkeypatch) -> None:
     monkeypatch.setattr(
-        "kiro_crew.dashboard.stt_stream.run_bg_oneliner",
+        "aj_crew.dashboard.stt_stream.run_bg_oneliner",
         AsyncMock(return_value="INCOMPLETE"),
     )
     ws = _fake_ws()
@@ -169,7 +169,7 @@ async def test_newer_final_supersedes_the_debounced_one(monkeypatch) -> None:
     debounce (gen bumped), so exactly one classification runs and one frame is
     emitted — not two."""
     bg = AsyncMock(return_value="COMPLETE")
-    monkeypatch.setattr("kiro_crew.dashboard.stt_stream.run_bg_oneliner", bg)
+    monkeypatch.setattr("aj_crew.dashboard.stt_stream.run_bg_oneliner", bg)
     ws = _fake_ws()
     ep = stt_stream._Endpointer(ws, object(), debounce=0.02, timeout=1.0)
     ep.note_final("first part")
@@ -182,7 +182,7 @@ async def test_newer_final_supersedes_the_debounced_one(monkeypatch) -> None:
 @pytest.mark.asyncio
 async def test_closed_ws_never_sends(monkeypatch) -> None:
     monkeypatch.setattr(
-        "kiro_crew.dashboard.stt_stream.run_bg_oneliner",
+        "aj_crew.dashboard.stt_stream.run_bg_oneliner",
         AsyncMock(return_value="COMPLETE"),
     )
     ws = _fake_ws(closed=True)
@@ -195,7 +195,7 @@ async def test_closed_ws_never_sends(monkeypatch) -> None:
 @pytest.mark.asyncio
 async def test_background_failure_is_swallowed(monkeypatch) -> None:
     monkeypatch.setattr(
-        "kiro_crew.dashboard.stt_stream.run_bg_oneliner",
+        "aj_crew.dashboard.stt_stream.run_bg_oneliner",
         AsyncMock(side_effect=RuntimeError("model unavailable")),
     )
     ws = _fake_ws()
@@ -212,10 +212,10 @@ async def test_default_budget_fits_a_default_backend_turn(monkeypatch) -> None:
     """The default endpointer gives the background turn at least the stt polish
     one-liner's budget. A budget shorter than a turn on the default backend times
     out every judgment, so auto-submit never fires."""
-    from kiro_crew.dashboard.handlers.core_stt_speech import _POLISH_TIMEOUT_SECS
+    from aj_crew.dashboard.handlers.core_stt_speech import _POLISH_TIMEOUT_SECS
 
     bg = AsyncMock(return_value="COMPLETE")
-    monkeypatch.setattr("kiro_crew.dashboard.stt_stream.run_bg_oneliner", bg)
+    monkeypatch.setattr("aj_crew.dashboard.stt_stream.run_bg_oneliner", bg)
     ws = _fake_ws()
     ep = stt_stream._Endpointer(ws, object(), debounce=0.0)
     ep.note_final("deploy the service to production")
@@ -231,7 +231,7 @@ async def test_failed_judgment_is_logged_at_info(monkeypatch, caplog) -> None:
     import logging
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.stt_stream.run_bg_oneliner",
+        "aj_crew.dashboard.stt_stream.run_bg_oneliner",
         AsyncMock(side_effect=asyncio.TimeoutError()),
     )
     ws = _fake_ws()
@@ -268,7 +268,7 @@ async def test_partial_invalidates_pending_verdict(monkeypatch) -> None:
     the scheduled verdict so a stale COMPLETE cannot auto-submit a truncated
     request."""
     bg = AsyncMock(return_value="COMPLETE")
-    monkeypatch.setattr("kiro_crew.dashboard.stt_stream.run_bg_oneliner", bg)
+    monkeypatch.setattr("aj_crew.dashboard.stt_stream.run_bg_oneliner", bg)
     ws = _fake_ws()
     ep = stt_stream._Endpointer(ws, object(), debounce=0.02, timeout=1.0)
     ep.note_final("deploy the service")  # schedules gen 1
@@ -295,7 +295,7 @@ async def test_single_flight_collision_reruns_not_drops(monkeypatch) -> None:
             await release.wait()  # hold the first call in-flight
         return "COMPLETE"
 
-    monkeypatch.setattr("kiro_crew.dashboard.stt_stream.run_bg_oneliner", fake)
+    monkeypatch.setattr("aj_crew.dashboard.stt_stream.run_bg_oneliner", fake)
     ws = _fake_ws()
     ep = stt_stream._Endpointer(ws, object(), debounce=0.0, timeout=1.0)
 
@@ -321,7 +321,7 @@ async def test_empty_final_does_not_invalidate_pending(monkeypatch) -> None:
     """An empty final must be ignored entirely — it must not bump the generation
     and strand a good pending verdict."""
     bg = AsyncMock(return_value="COMPLETE")
-    monkeypatch.setattr("kiro_crew.dashboard.stt_stream.run_bg_oneliner", bg)
+    monkeypatch.setattr("aj_crew.dashboard.stt_stream.run_bg_oneliner", bg)
     ws = _fake_ws()
     ep = stt_stream._Endpointer(ws, object(), debounce=0.02, timeout=1.0)
     ep.note_final("turn on the lights")  # schedules gen 1
@@ -422,7 +422,7 @@ class _LocalEndpointStream:
         await async_wait_until(lambda: self.received >= count)
 
     def start(self):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.stt.endpointing = True
         cfg.stt.silence_ms = 700
         request = SimpleNamespace(app={"state": SimpleNamespace(sessions=object())})

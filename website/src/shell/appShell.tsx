@@ -53,6 +53,8 @@ import { useMotionValue, useTransform } from 'framer-motion'
 import { useDrawerSwipe, animateDrawer, registerDrawerTargets, takeOverDrawer, safeAreaLeft } from '../hooks/useDrawerSwipe'
 import { useTopbarCollapse } from '../lib/useTopbarCollapse'
 import { usePersistedBool } from '../hooks/usePersistedBool'
+import { useShellLayout } from '../hooks/useShellLayout'
+import { readNavCollapsed, navCollapsedKey } from '../lib/simpleLayout'
 import { usePaletteShortcutsEnabled } from '../hooks/useCommandPalette'
 import { showNativeDevTools, subscribeNativeNavigate, useMacFullscreen } from './platform/electronBridge'
 import { REMOTE_CREW_SETTINGS_PATH, remoteCrewAddFromPath } from '../lib/remoteCrewAddLink'
@@ -121,7 +123,7 @@ interface AppListEntry {
 }
 
 // Apps-nav fetch resilience (see refreshAppNav). The dashboard loads
-// `/api/apps` once on mount; right after a `kirocrew update` the gateway is
+// `/api/apps` once on mount; right after an `ajcrew update` the gateway is
 // mid-restart (cold backend, apps-dir scan) and that first request can fail or
 // time out. Retry with bounded backoff so the Apps rail self-heals instead of
 // staying empty until a manual reload or an app enable/disable.
@@ -185,7 +187,7 @@ export function useAppShell() {
   // Track whether the session-expired auth banner is currently injected by
   // api/client.ts. When auth is the real reason the gateway is unreachable,
   // the red top-banner tells the user what to do (paste a fresh
-  // `kirocrew token` URL) and the capsule reddens quietly underneath it --
+  // `ajcrew token` URL) and the capsule reddens quietly underneath it --
   // for a sighted user the tint does not argue with the banner. But the
   // banner is a plain <div> with no role="alert"/aria-live, so it is never
   // announced; the capsule's accessible name and role="status" region are the
@@ -415,9 +417,22 @@ export function useAppShell() {
   useNotificationSound()
   // The rail starts collapsed until the user expands it: only a stored '0'
   // (the user's own expand) opens it on load.
-  const [navCollapsed, setNavCollapsed] = useState(() => localStorage.getItem('mc-nav') !== '0')
+  //
+  // Each shell layout keeps its own collapse state (`navCollapsedKey`): the
+  // Simple sidebar carries the recent chats, so it starts open, and collapsing
+  // it must not collapse the Advanced rail a user goes back to (or the other
+  // way round). A layout switch re-reads the state for the layout now drawn.
+  const [shellLayout] = useShellLayout()
+  const simpleShell = shellLayout === 'simple'
+  const [navCollapsed, setNavCollapsed] = useState(() => readNavCollapsed(simpleShell))
   const navCollapsedRef = useRef(navCollapsed)
   navCollapsedRef.current = navCollapsed
+  const navLayoutRef = useRef(simpleShell)
+  useEffect(() => {
+    if (navLayoutRef.current === simpleShell) return
+    navLayoutRef.current = simpleShell
+    setNavCollapsed(readNavCollapsed(simpleShell))
+  }, [simpleShell])
   // Preview expand mode from the Web Preview tab collapses the left nav
   // as a STARTING layout, not a lock — the brand toggle keeps its standard
   // behavior while expand mode is on, so the rail can be brought back without
@@ -460,7 +475,7 @@ export function useAppShell() {
   const {
     focusMode, toggleFocusMode, focusActive, topPeek, railPeek, topPeekTrigger, topPeekSurface,
     railPeekTrigger, railPeekSurface, topChromeShown, localHeaderDragGaps,
-  } = useFocusChrome({ isMobile, navCollapsed, activeInstanceId, topReservePx })
+  } = useFocusChrome({ isMobile, navCollapsed, simpleShell, activeInstanceId, topReservePx })
   // Whether the shell's one-shot entrance animation has already played.
   //
   // The local pane is HIDDEN, not unmounted, while a remote instance tab is
@@ -719,8 +734,8 @@ export function useAppShell() {
         // only fills the console with the same refusal (#32031). The rail stays
         // without apps, which is what that caller has.
         if (isPermissionRefusal(e)) return
-        // A transient failure (e.g. the gateway mid-restart right after a
-        // `kirocrew update`, or the cold apps-dir scan) used to be swallowed
+        // A transient failure (e.g. the gateway mid-restart right after an
+        // `ajcrew update`, or the cold apps-dir scan) used to be swallowed
         // here, leaving the Apps rail empty until a manual reload or an app
         // enable/disable. Retry with bounded exponential backoff so it
         // self-heals. The reconnect effect below covers the WS-drop case.
@@ -756,7 +771,7 @@ export function useAppShell() {
     window.addEventListener('mc:apps-changed', handler)
     return () => window.removeEventListener('mc:apps-changed', handler)
   }, [refreshAppNav, queryClient])
-  // An app installed, updated or removed OUTSIDE this tab (`kirocrew app
+  // An app installed, updated or removed OUTSIDE this tab (`ajcrew app
   // install` in a terminal, another tab's App Store) fires no mc:apps-changed
   // here, and the gateway sends no event for it: CLI uninstall does not even go
   // through the gateway. With ['apps'] at staleTime Infinity the nav rail and
@@ -792,7 +807,7 @@ export function useAppShell() {
     }
   }, [refreshAppNav, queryClient])
   // Refetch the Apps nav when the gateway connection is *re*-established after a
-  // drop — e.g. a `kirocrew update` restart disconnects then reconnects the
+  // drop — e.g. an `ajcrew update` restart disconnects then reconnects the
   // WebSocket. Only fires on a connected→disconnected→connected cycle, NOT the
   // initial connect (the mount fetch already covers that), so a normal load
   // never double-fetches.
@@ -808,13 +823,13 @@ export function useAppShell() {
 
   const { appBadges, discoverBadges, railAppBadges, railAppRunStates } = useRailBadges(approvalCount)
 
-  const { shortcutsOpen, setShortcutsOpen, toggleShortcutsModal, commandPalette, agentSwitchNotice } = useShellKeyboard({
+  const { shortcutsOpen, setShortcutsOpen, toggleShortcutsModal, commandPalette, agentSwitchNotice, startNewChat, newChatPending } = useShellKeyboard({
     toggleFocusMode, toggleNav: () => toggleNav(), terminalEnabled, isPopout, isEmbed, terminalPoppedOut, activeSlotProject,
   })
 
   const { kiroUsageOpen, setKiroUsageOpen, kiroUsageState, usageSegmentHidden, kiroAccountEntry } = useKiroUsageReadout()
   // Feature previews live on the gateway; this keeps the browser cache of them in
-  // step. Called beside the credit readout, which already reads ['kirocrewConfig'].
+  // step. Called beside the credit readout, which already reads ['ajcrewConfig'].
   usePreviewFlagServerSync()
   // Both forms use the side groups' container-query ladders. On desktop the
   // measured ladder (`.topbar.tb-measured`, index.css) adds folds when those
@@ -833,6 +848,9 @@ export function useAppShell() {
   const [topbarSearchSetting] = usePersistedBool('mc-topbar-search', true)
   const paletteChordLive = usePaletteShortcutsEnabled()
   const topbarSearch = topbarSearchSetting || !paletteChordLive
+  // The Simple layout is a DESKTOP form: the phone shell is already one bar
+  // and a drawer, so it keeps the same rows in both layouts.
+  const simpleLayout = simpleShell && !isMobile
   const metrics = useMetricsReadout(isMobile, updateAvailable, topbarLevels.right)
   const { capsuleCollapsed, setCapsuleCollapsed, capsuleLayoutPulse, pulseCapsuleLayout, sysMetrics, metricsProbeRef, metricsGroupRef } = metrics
 
@@ -857,7 +875,7 @@ export function useAppShell() {
   // would surface the dashboard with the previous session still on screen: the
   // window comes forward and the notification appears to have opened nothing.
   //
-  // A crew link (`kirocrew://chat?crew=`) is read HERE only, never off the URL.
+  // A crew link (`ajcrew://chat?crew=`) is read HERE only, never off the URL.
   const openCrewLink = useCrewDeepLink()
   usePaneOpenSlot({ navigate, mayLeave: mayLeaveForNavigation })
   useEffect(() => {
@@ -882,7 +900,7 @@ export function useAppShell() {
         )
         return
       }
-      // A Remote Crew add link (`kirocrew://remote-crew/add`) only fills in the
+      // A Remote Crew add link (`ajcrew://remote-crew/add`) only fills in the
       // local Crew's add form; the user still presses Add. Like an app link it
       // brings the local Crew forward first. The values travel in the store and
       // the route is the bare page, so the dashboard's own URL never carries them.
@@ -963,7 +981,7 @@ export function useAppShell() {
       // The user has taken ownership of the rail: leaving preview expand mode
       // must not overwrite this with the pre-expand state.
       navAutoCollapsed.current = null
-      setNavCollapsed(prev => { const next = !prev; safeSetItem('mc-nav', next ? '1' : '0'); return next })
+      setNavCollapsed(prev => { const next = !prev; safeSetItem(navCollapsedKey(simpleShell), next ? '1' : '0'); return next })
     }
   }
   // Close mobile nav on route change
@@ -988,8 +1006,8 @@ export function useAppShell() {
   // beside-vs-fill from it. Kept in sync with the gridTemplateColumns value
   // in App's shell grid; railWidthFor is the single source for both.
   useEffect(() => {
-    setRailWidth(focusActive ? 0 : railWidthFor({ isMobile, collapsed: effectiveCollapsed }))
-  }, [isMobile, effectiveCollapsed, focusActive])
+    setRailWidth(focusActive ? 0 : railWidthFor({ isMobile, collapsed: effectiveCollapsed, simple: simpleShell }))
+  }, [isMobile, effectiveCollapsed, focusActive, simpleShell])
   // The header's three grid tracks (see `.topbar` in index.css) size themselves:
   // the search width is a function of the window and the two side groups split
   // the remainder. Each group re-lays-out its own contents with container
@@ -1072,7 +1090,7 @@ export function useAppShell() {
     setShowUpdateModal, showChangelog, updateError, setUpdateError, reportProblemOpen,
     setReportProblemOpen, requestFeature, toggleNav, effectiveCollapsed, closeMobileNav, activePath,
     libraryNavActive, discoverNavActive, isChat, needsFixedHeight, navRowActive, membersRoute, mobileSingle,
-    membersBarPending, mobileNavOpen, topbarSearch,
+    membersBarPending, mobileNavOpen, topbarSearch, simpleLayout, startNewChat, newChatPending,
   }
 }
 

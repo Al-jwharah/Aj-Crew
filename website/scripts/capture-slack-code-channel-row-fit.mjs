@@ -43,7 +43,7 @@ const channel = (id, name, status = 'active') => ({
 const FOLDER = 'f-code'
 const slackLink = { channel: 'slack', label: 'Slack', target: '…0001', binding: 'b', direction: 'out', drives_session: true, live: true }
 const row = (key, title, ts, code, parent = null) => ({
-  key, title, running: false, messages: 4, agent: 'kirocrew-conductor', last_ts: ts, last_turn_ts: ts,
+  key, title, running: false, messages: 4, agent: 'ajcrew-conductor', last_ts: ts, last_turn_ts: ts,
   folder_id: FOLDER, last_message: 'Pushed the fix and opened the pull request.', source_links: [], source_links_total: 0,
   links: [slackLink], code_channel: code, created: ts,
   ...(parent ? { parent: { slot: parent, key: parent } } : {}),
@@ -64,11 +64,11 @@ const ROWS = [
 const PLAIN = ['Tidy the changelog', row('chat-plain', 'Tidy the changelog', yesterday, undefined, 'chat-today')]
 const SLOTS = [...ROWS, PLAIN].map(([, s]) => s)
 // Three folders deep, like this crew's own "Slack Code › Code channels ›
-// kirocrew-worker": every level indents the rows filed at the bottom.
+// ajcrew-worker": every level indents the rows filed at the bottom.
 const FOLDERS = [
   { id: 'f-top', name: 'Slack Code', order: 0 },
-  { id: 'f-mid', name: 'Code channels', order: 0, parent_id: 'f-top', default_agent: 'kirocrew-conductor' },
-  { id: FOLDER, name: 'kirocrew-worker', order: 0, parent_id: 'f-mid', default_agent: 'kirocrew-conductor' },
+  { id: 'f-mid', name: 'Code channels', order: 0, parent_id: 'f-top', default_agent: 'ajcrew-conductor' },
+  { id: FOLDER, name: 'ajcrew-worker', order: 0, parent_id: 'f-mid', default_agent: 'ajcrew-conductor' },
 ]
 /** The two ways rows nest: folders (the tree lane), and the conductor lane's
  *  lineage (conductor, its worker, that worker's workers). */
@@ -163,7 +163,7 @@ async function checkNesting(page, where, layout) {
     const depths = await page.locator('[data-conductor-depth]').evaluateAll(els => els.map(el => Number(el.getAttribute('data-conductor-depth'))))
     check(`${where}: rows nest two levels deep`, depths.length > 0 && Math.max(...depths) >= 2, `depths ${JSON.stringify(depths)}`)
   } else {
-    const shown = await page.getByText('kirocrew-worker', { exact: true }).count()
+    const shown = await page.getByText('ajcrew-worker', { exact: true }).count()
     check(`${where}: rows sit three folders deep`, shown > 0)
   }
 }

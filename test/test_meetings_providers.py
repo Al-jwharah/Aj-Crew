@@ -2,7 +2,7 @@
 
 Lives in the repo-level ``test/`` tree (not the app's in-package ``tests/``)
 because ``setup.cfg`` sets ``testpaths = test transfer`` — a test under
-``src/kiro_crew/apps/builtins/...`` is never collected by CI.
+``src/aj_crew/apps/builtins/...`` is never collected by CI.
 
 These cover the two internal couplings the port replaced, so the assertions are
 about the SEAM as much as the implementations: an out-of-repo edition must be
@@ -35,9 +35,9 @@ from meetings_helpers import (  # noqa: F401
 )
 from yarl import URL
 
-from kiro_crew.apps.builtins.meetings.backend import constants as k
-from kiro_crew.apps.builtins.meetings.backend.providers import calendar as cal
-from kiro_crew.apps.builtins.meetings.backend.providers import tasks as taskprov
+from aj_crew.apps.builtins.meetings.backend import constants as k
+from aj_crew.apps.builtins.meetings.backend.providers import calendar as cal
+from aj_crew.apps.builtins.meetings.backend.providers import tasks as taskprov
 
 
 class _AnyPort:
@@ -360,7 +360,7 @@ class TestEventId:
         assert cal._event_id_for("event/1") == cal._event_id_for("event/1")
 
     def test_the_id_is_filesystem_safe_and_within_the_cap(self):
-        from kiro_crew.apps.builtins.meetings.backend import store
+        from aj_crew.apps.builtins.meetings.backend import store
 
         for uid in ("event/1", "a b c", "../escape", "x" * 500, "ünïcøde"):
             event_id = cal._event_id_for(uid)
@@ -617,7 +617,7 @@ class TestParseIcs:
         event_id = cal.parse_ics(text)[0].event_id
         assert "/" not in event_id and " " not in event_id
         # The id must survive the store's own validator.
-        from kiro_crew.apps.builtins.meetings.backend import store
+        from aj_crew.apps.builtins.meetings.backend import store
 
         assert store.safe_meeting_id(event_id) == event_id
 

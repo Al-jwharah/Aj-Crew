@@ -1,4 +1,4 @@
-"""``kirocrew doctor`` names a leftover browser CLI prefix and never touches it.
+"""``ajcrew doctor`` names a leftover browser CLI prefix and never touches it.
 
 An earlier version's browser CLI installer wrote ``<data-home>/playwright-cli``.
 Nothing reads it any more; doctor's one informational row tells the operator it
@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.doctor_checks import install as doctor_install
-from kiro_crew.doctor_checks import render
+from aj_crew.doctor_checks import install as doctor_install
+from aj_crew.doctor_checks import render
 
 
 def test_doctor_says_nothing_when_no_leftover_prefix_exists(

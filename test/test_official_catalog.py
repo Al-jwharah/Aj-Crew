@@ -20,7 +20,7 @@ import urllib.request
 import pytest
 from loopback_servers import LoopbackHTTPServer
 
-from kiro_crew.apps import official_catalog as oc
+from aj_crew.apps import official_catalog as oc
 
 
 def doc(**over):
@@ -216,15 +216,15 @@ class TestAnnotate:
 
     def test_a_curated_author_is_applied_for_display(self):
         rows = self.rows()
-        oc.annotate(rows, [{"name": "demo-app", "author": {"name": "Kiro Crew", "kind": "org"}}])
-        assert rows[0]["author"] == "Kiro Crew"
+        oc.annotate(rows, [{"name": "demo-app", "author": {"name": "Aj Crew", "kind": "org"}}])
+        assert rows[0]["author"] == "Aj Crew"
 
     def test_a_curated_author_does_not_reach_the_verified_snapshot(self):
         """With the signature unchecked, the catalog is trusted only as far as
         TLS -- and TLS to a CDN is not evidence for a first-party badge. Wiring
         the author into `_index_author` is the step AFTER verification lands."""
         rows = self.rows()
-        oc.annotate(rows, [{"name": "demo-app", "author": {"name": "Kiro Crew"}}])
+        oc.annotate(rows, [{"name": "demo-app", "author": {"name": "Aj Crew"}}])
         assert "_index_author" not in rows[0]
 
     def test_an_entry_matching_no_row_is_ignored(self):
@@ -763,7 +763,7 @@ class TestNameSquattingCannotInheritCuratedCopy:
         "name": "official-app",
         "displayName": "The Real One",
         "summary": "Curated copy that belongs to the official app.",
-        "author": {"name": "Kiro Crew", "kind": "org"},  # brand-ok: squat fixture
+        "author": {"name": "Aj Crew", "kind": "org"},  # brand-ok: squat fixture
         "iconRef": "assets/icons/abc.png",
     }
 
@@ -786,7 +786,7 @@ class TestNameSquattingCannotInheritCuratedCopy:
 
 
 class TestSkipFetchSwitch:
-    """``KIROCREW_SKIP_APP_STORE_FETCH=1`` keeps every document off the network.
+    """``AJCREW_SKIP_APP_STORE_FETCH=1`` keeps every document off the network.
 
     The E2E harness gateway sets it. The suite's autouse ``_no_live_catalog_network``
     makes ``_open_catalog`` raise ``AssertionError`` -- outside the family
@@ -813,10 +813,20 @@ class TestSkipFetchSwitch:
         with pytest.raises(oc.CatalogUnavailable):
             oc.fetch_inventory_entries()
 
-    @pytest.mark.parametrize("value", ["", "0", "true", "yes"])
-    def test_only_the_exact_value_arms_it(self, monkeypatch, value):
-        monkeypatch.setenv(oc.SKIP_FETCH_ENV, value)
+    def test_only_the_exact_value_opts_in(self, monkeypatch):
+        monkeypatch.setenv(oc.SKIP_FETCH_ENV, "0")
         assert oc.store_fetch_skipped() is False
+
+    @pytest.mark.parametrize("value", ["", "1", "false", "no", "00"])
+    def test_any_other_value_keeps_the_store_off_the_network(self, monkeypatch, value):
+        monkeypatch.setenv(oc.SKIP_FETCH_ENV, value)
+        assert oc.store_fetch_skipped() is True
+
+    def test_the_shipped_default_is_off_the_network(self, monkeypatch):
+        # The published catalog belongs to the upstream project, so a build that
+        # was told nothing must not read it.
+        monkeypatch.delenv(oc.SKIP_FETCH_ENV, raising=False)
+        assert oc.store_fetch_skipped() is True
 
 
 class TestFailedFetchIsRemembered:

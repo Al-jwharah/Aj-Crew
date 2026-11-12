@@ -13,7 +13,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import workflows as handlers
+from aj_crew.dashboard.handlers import workflows as handlers
 
 pytestmark = pytest.mark.asyncio
 

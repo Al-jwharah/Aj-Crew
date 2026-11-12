@@ -18,19 +18,19 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.change_card_catalog_plans import DASHBOARD_SETTINGS
-from kiro_crew.config.loader import KiroCrewConfig, config_path
-from kiro_crew.config.sections import PREFERRED_LANGUAGES
-from kiro_crew.context import (
+from aj_crew.change_card_catalog_plans import DASHBOARD_SETTINGS
+from aj_crew.config.loader import AjCrewConfig, config_path
+from aj_crew.config.sections import PREFERRED_LANGUAGES
+from aj_crew.context import (
     _RESPONSE_PREFERENCES_FOOTER,
     _RESPONSE_PREFERENCES_HEADER,
     ContextBuilder,
     _build_response_preferences_section,
     _build_ui_language_section,
 )
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 _REPO = Path(__file__).resolve().parents[1]
 
@@ -218,7 +218,7 @@ class TestCodeListsAgree:
         assert values == ("", *PREFERRED_LANGUAGES)
 
     def test_the_config_enum_is_auto_plus_every_code(self):
-        field = KiroCrewConfig().dashboard.__dataclass_fields__["preferred_language"]
+        field = AjCrewConfig().dashboard.__dataclass_fields__["preferred_language"]
         assert field.metadata["enum"] == ["", *PREFERRED_LANGUAGES]
 
     def test_the_codes_are_the_dashboards_pickable_ui_languages(self):
@@ -235,23 +235,23 @@ class TestConfigRoundTrip:
     def cfg_file(self, tmp_path):
         p = tmp_path / "config.json"
         p.write_text("{}", encoding="utf-8")
-        with patch("kiro_crew.config.loader.config_path", return_value=p):
+        with patch("aj_crew.config.loader.config_path", return_value=p):
             yield p
 
     def test_default_is_auto(self, cfg_file):
-        assert KiroCrewConfig.load().dashboard.preferred_language == ""
+        assert AjCrewConfig.load().dashboard.preferred_language == ""
 
     def test_a_stored_code_loads(self, cfg_file):
         cfg_file.write_text(
             json.dumps({"dashboard": {"preferred_language": "zh-CN"}}), encoding="utf-8"
         )
-        assert KiroCrewConfig.load().dashboard.preferred_language == "zh-CN"
+        assert AjCrewConfig.load().dashboard.preferred_language == "zh-CN"
 
     def test_an_invalid_stored_value_loads_as_auto(self, cfg_file):
         cfg_file.write_text(
             json.dumps({"dashboard": {"preferred_language": "klingon"}}), encoding="utf-8"
         )
-        assert KiroCrewConfig.load().dashboard.preferred_language == ""
+        assert AjCrewConfig.load().dashboard.preferred_language == ""
 
 
 @pytest.fixture()
@@ -259,15 +259,15 @@ def handler_app(tmp_path):
     p = tmp_path / "config.json"
     p.write_text("{}", encoding="utf-8")
     try:
-        import kiro_crew.dashboard.handlers  # noqa: F401
+        import aj_crew.dashboard.handlers  # noqa: F401
     except ImportError:
         pytest.skip("dashboard handler deps not available locally")
-    from kiro_crew.dashboard.handlers.files import api_dashboard_config
+    from aj_crew.dashboard.handlers.files import api_dashboard_config
 
     sel = MagicMock()
     with (
-        patch("kiro_crew.config.loader.config_path", return_value=p),
-        patch("kiro_crew.dashboard.handlers.sel", return_value=sel),
+        patch("aj_crew.config.loader.config_path", return_value=p),
+        patch("aj_crew.dashboard.handlers.sel", return_value=sel),
     ):
         app = web.Application()
         app.router.add_put("/api/dashboard/config", api_dashboard_config)
@@ -285,7 +285,7 @@ async def test_handler_round_trips_a_code_and_auto(handler_app):
         ] == "zh-CN"
         resp = await client.put("/api/dashboard/config", json={"preferred_language": ""})
         assert resp.status == 200
-    assert KiroCrewConfig.load().dashboard.preferred_language == ""
+    assert AjCrewConfig.load().dashboard.preferred_language == ""
 
 
 @pytest.mark.asyncio
@@ -295,4 +295,4 @@ async def test_handler_rejects_values_outside_the_list(handler_app, bad):
         resp = await client.put("/api/dashboard/config", json={"preferred_language": bad})
         assert resp.status == 400
         assert "zh-CN" in (await resp.json())["error"]
-    assert KiroCrewConfig.load().dashboard.preferred_language == ""
+    assert AjCrewConfig.load().dashboard.preferred_language == ""

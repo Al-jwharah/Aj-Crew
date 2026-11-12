@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-TEMPLATES_DIR = ROOT / "src" / "kiro_crew" / "deploy" / "skills" / "artifact-deploy" / "templates"
+TEMPLATES_DIR = ROOT / "src" / "aj_crew" / "deploy" / "skills" / "artifact-deploy" / "templates"
 
 
 class TestEmailRedactionInLogs:
@@ -23,8 +23,8 @@ class TestEmailRedactionInLogs:
     @pytest.mark.parametrize(
         "module_path",
         [
-            "src/kiro_crew/teams/transport_dispatch.py",
-            "src/kiro_crew/webex/transport_dispatch.py",
+            "src/aj_crew/teams/transport_dispatch.py",
+            "src/aj_crew/webex/transport_dispatch.py",
         ],
     )
     def test_no_raw_email_in_log_info(self, module_path):
@@ -50,7 +50,7 @@ class TestWeakCryptography:
     """MD5 must carry usedforsecurity=False; SHA-1 must be replaced."""
 
     def test_vector_memory_md5_annotated(self):
-        text = (ROOT / "src" / "kiro_crew" / "vector_memory.py").read_text(encoding="utf-8")
+        text = (ROOT / "src" / "aj_crew" / "vector_memory.py").read_text(encoding="utf-8")
         md5_calls = [line for line in text.splitlines() if "hashlib.md5(" in line]
         for line in md5_calls:
             assert (

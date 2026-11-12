@@ -146,7 +146,7 @@ async function main() {
     if (path === '/api/status') return json(route, status)
     if (path === '/api/models') return json(route, MODELS)
     if (path.startsWith('/api/effort-levels')) return json(route, ['low', 'medium', 'high', 'xhigh', 'max'])
-    if (path === '/api/config/kirocrew') {
+    if (path === '/api/config/ajcrew') {
       return json(route, {
         agent: { model: 'claude-opus-5', reasoning_effort: 'high', provider: 'acp' },
         session: { autocompact_pct: 90 },
@@ -155,11 +155,11 @@ async function main() {
     }
     if (path === '/api/agents') {
       return json(route, {
-        agents: [{ name: 'default', kiro_agent: 'kirocrew', description: 'Default crew agent' }],
+        agents: [{ name: 'default', kiro_agent: 'ajcrew', description: 'Default crew agent' }],
         default_agent: 'default',
       })
     }
-    if (path.startsWith('/api/agents/detail/')) return json(route, { name: 'kirocrew', model: 'claude-opus-5', skills: [] })
+    if (path.startsWith('/api/agents/detail/')) return json(route, { name: 'ajcrew', model: 'claude-opus-5', skills: [] })
     if (path === '/api/agents/installed') return json(route, [])
     // LanguageProvider treats the boot payload as authoritative over the
     // localStorage fast-path, so a payload without `language` reverts the UI to

@@ -11,16 +11,16 @@ import logging
 import pytest
 from kas_agents_helpers import _spec
 
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp import kas_engine_features as features
-from kiro_crew.acp.harness.kas import KasHarness
-from kiro_crew.acp.kas_agents import to_client_custom_agent
+from aj_crew.acp import kas_agents
+from aj_crew.acp import kas_engine_features as features
+from aj_crew.acp.harness.kas import KasHarness
+from aj_crew.acp.kas_agents import to_client_custom_agent
 
 _SECRET = "placeholder-client-secret-value"
 _CLIENT_ID = "placeholder-client-id"
 # A managed server with no spec_gate: a gated one is withheld from the projection
 # while its gate is closed, as it is on Linux and with Computer Use off.
-_MANAGED = "kirocrew-core"
+_MANAGED = "ajcrew-core"
 
 
 def _initialize(**kiro: object) -> dict:
@@ -92,7 +92,7 @@ class TestAdvertised:
         """The dashboard hands the notice an ``AcpProvider``, whose client holds the answer."""
         from types import SimpleNamespace
 
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = AcpProvider.__new__(AcpProvider)  # no spawn
         provider._client = SimpleNamespace(initialize_result=_initialize(mcpServerOAuth=True))
@@ -194,7 +194,7 @@ class TestCrewsOwnServers:
 
     @staticmethod
     def _spec() -> dict:
-        return _spec(mcpServers={_MANAGED: {"command": "kirocrew", "args": ["mcp"]}})
+        return _spec(mcpServers={_MANAGED: {"command": "ajcrew", "args": ["mcp"]}})
 
     @pytest.mark.parametrize("governed", [False, True])
     def test_they_are_never_marked_and_stay_in_the_hoisted_session_array(
@@ -214,7 +214,7 @@ class TestCrewsOwnServers:
     def test_registry_mode_keeps_the_warning_and_the_notice(self, monkeypatch, caplog):
         monkeypatch.setattr(kas_agents, "_registry_governed", lambda: True)
         withheld: dict = {}
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.kas_agents"):
             to_client_custom_agent(
                 "a", self._spec(), "p", engine_features=POINTERS, withheld_out=withheld
             )
@@ -222,7 +222,7 @@ class TestCrewsOwnServers:
         assert _MANAGED in withheld
 
     def test_the_session_array_is_left_alone(self):
-        array = [{"name": _MANAGED, "command": "kirocrew", "args": ["mcp"], "env": []}]
+        array = [{"name": _MANAGED, "command": "ajcrew", "args": ["mcp"], "env": []}]
         caps = _caps(mcpRegistryPointers=True)
         assert KasHarness().session_mcp_servers(array, agent_capabilities=caps) is array
 
@@ -234,8 +234,8 @@ class TestRuntimeSeam:
     async def _seen(caps: dict) -> frozenset[str]:
         from types import SimpleNamespace
 
-        from kiro_crew.acp import runtime_session_setup
-        from kiro_crew.acp.harness import SessionExtras
+        from aj_crew.acp import runtime_session_setup
+        from aj_crew.acp.harness import SessionExtras
 
         seen: dict = {}
 
@@ -270,10 +270,10 @@ class TestOAuthNotice:
         import asyncio
         from types import SimpleNamespace
 
-        from kiro_crew.acp.types import ACP_BACKEND_KAS
-        from kiro_crew.agent_sdk import spec_hooks
-        from kiro_crew.agent_sdk.capabilities import capabilities_for
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.acp.types import ACP_BACKEND_KAS
+        from aj_crew.agent_sdk import spec_hooks
+        from aj_crew.agent_sdk.capabilities import capabilities_for
+        from aj_crew.dashboard import chat_runner
 
         seen: dict = {}
 

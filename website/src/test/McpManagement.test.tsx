@@ -47,7 +47,7 @@ function server(over: Partial<Server> = {}): Server {
     can_stub: true,
     in_allowlist: false,
     entry_poolable: false,
-    agents: ['kirocrew'],
+    agents: ['ajcrew'],
     transport: 'stdio',
     denylisted: false,
     ...over,
@@ -932,22 +932,22 @@ describe('stub every server the evidence allows', () => {
   })
 
   it('does not name a server as skipped when another write shared it', async () => {
-    // Kiro Crew's own servers follow kirocrew-core: the follower's own write is
-    // skipped, but sharing kirocrew-core puts it in the set in effect anyway.
+    // Aj Crew's own servers follow ajcrew-core: the follower's own write is
+    // skipped, but sharing ajcrew-core puts it in the set in effect anyway.
     vi.spyOn(api, 'mcpGatewayStatus').mockResolvedValue(status({ enabled: true }) as never)
     vi.spyOn(api, 'mcpMeasureProgress').mockResolvedValue(idleProgress as never)
     vi.spyOn(api, 'mcpGatewayServers').mockResolvedValue({
       servers: [
-        { ...server({ name: 'kirocrew-dashboard' }), recommendation: declared },
-        { ...server({ name: 'kirocrew-core' }), recommendation: declared },
+        { ...server({ name: 'ajcrew-dashboard' }), recommendation: declared },
+        { ...server({ name: 'ajcrew-core' }), recommendation: declared },
         { ...server({ name: 'ineligible-mcp' }), recommendation: declared },
       ],
     } as never)
     vi.spyOn(api, 'mcpGatewaySetStub').mockImplementation((async (name: string) => {
-      if (name === 'kirocrew-core') {
+      if (name === 'ajcrew-core') {
         return {
           ok: true, name, stub: true, stubbed: [name], skipped: [],
-          stub_servers: ['kirocrew-core', 'kirocrew-dashboard'],
+          stub_servers: ['ajcrew-core', 'ajcrew-dashboard'],
         }
       }
       // A write that stubs nothing carries no `stub_servers`.
@@ -956,7 +956,7 @@ describe('stub every server the evidence allows', () => {
     vi.spyOn(api, 'mcpGatewayLaunchPreview').mockImplementation((async (name: string) => preview(name)) as never)
 
     mount()
-    await screen.findByText('kirocrew-core', undefined, { timeout: 5000 })
+    await screen.findByText('ajcrew-core', undefined, { timeout: 5000 })
     fireEvent.click(await screen.findByRole('button', { name: M('enable_all') }, { timeout: 5000 }))
     // Chain: servers re-read -> one batched launch read -> the confirm button.
     fireEvent.click(await screen.findByRole('button', { name: M('share_all_confirm', { count: 3 }) }, { timeout: 5000 }))

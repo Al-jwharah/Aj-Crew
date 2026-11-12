@@ -18,8 +18,8 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import _process_group_supervisor as supervisor
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import _process_group_supervisor as supervisor
+from aj_crew.testing.clock import ManualClock
 
 _COMMAND = os.path.realpath(sys.executable)  # absolute on every platform
 _ERR = OSError(errno.EMFILE, "no fds")

@@ -13,8 +13,8 @@ import argparse
 
 import pytest
 
-from kiro_crew.mcp_gateway import stub, stub_link
-from kiro_crew.mcp_gateway.read_limits import _DEFAULT_READ_BUFFER_LIMIT
+from aj_crew.mcp_gateway import stub, stub_link
+from aj_crew.mcp_gateway.read_limits import _DEFAULT_READ_BUFFER_LIMIT
 
 _BOUNDS = ("READ_BUFFER_LIMIT_BYTES", "_HELD_FRAME_BYTES", "_HELD_TOTAL_BYTES")
 
@@ -22,7 +22,7 @@ _BOUNDS = ("READ_BUFFER_LIMIT_BYTES", "_HELD_FRAME_BYTES", "_HELD_TOTAL_BYTES")
 @pytest.fixture
 def bounds(monkeypatch: pytest.MonkeyPatch) -> None:
     """Restore the three bounds after the test: the adoption writes them for good."""
-    monkeypatch.delenv("KIROCREW_MCP_READ_LIMIT", raising=False)
+    monkeypatch.delenv("AJCREW_MCP_READ_LIMIT", raising=False)
     for name in _BOUNDS:
         monkeypatch.setattr(stub, name, getattr(stub, name))
 

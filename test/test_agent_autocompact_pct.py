@@ -23,45 +23,45 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.loader import (
+from aj_crew.config.loader import (
     AUTOCOMPACT_PCT_MAX,
     AUTOCOMPACT_PCT_MIN,
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+    AjCrewAgentConfig,
+    AjCrewConfig,
     crew_autocompact_pct,
 )
-from kiro_crew.dashboard.chat import api_chat_slot_autocompact
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.session import SessionManager, _Session
+from aj_crew.dashboard.chat import api_chat_slot_autocompact
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.session import SessionManager, _Session
 
 
-def _load_agents(agents: dict) -> KiroCrewConfig:
+def _load_agents(agents: dict) -> AjCrewConfig:
     """Load a config file holding *agents* through the real ``load()`` path."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump({"agents": agents}, f)
         tmp = Path(f.name)
     try:
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-            return KiroCrewConfig.load()
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+            return AjCrewConfig.load()
     finally:
         tmp.unlink(missing_ok=True)
 
 
 class TestLoader:
     def test_a_declared_value_survives_load(self) -> None:
-        cfg = _load_agents({"orchestrator": {"kiro_agent": "kirocrew", "autocompact_pct": 45}})
+        cfg = _load_agents({"orchestrator": {"kiro_agent": "ajcrew", "autocompact_pct": 45}})
         assert cfg.agents["orchestrator"].autocompact_pct == 45.0
 
     def test_an_absent_value_inherits(self) -> None:
-        cfg = _load_agents({"worker": {"kiro_agent": "kirocrew"}})
+        cfg = _load_agents({"worker": {"kiro_agent": "ajcrew"}})
         assert cfg.agents["worker"].autocompact_pct == 0.0
         assert crew_autocompact_pct(cfg, "worker") is None
 
     def test_out_of_range_values_clamp_to_the_global_range(self) -> None:
         cfg = _load_agents(
             {
-                "low": {"kiro_agent": "kirocrew", "autocompact_pct": 1},
-                "high": {"kiro_agent": "kirocrew", "autocompact_pct": 99},
+                "low": {"kiro_agent": "ajcrew", "autocompact_pct": 1},
+                "high": {"kiro_agent": "ajcrew", "autocompact_pct": 99},
             }
         )
         assert cfg.agents["low"].autocompact_pct == AUTOCOMPACT_PCT_MIN
@@ -70,14 +70,14 @@ class TestLoader:
     def test_junk_and_negative_values_inherit(self, monkeypatch: pytest.MonkeyPatch) -> None:
         # jsonschema off, so the raw values reach the coercer rather than being
         # stripped by validation first.
-        import kiro_crew.config.validation as validation
+        import aj_crew.config.validation as validation
 
         monkeypatch.setattr(validation, "_HAS_JSONSCHEMA", False)
         cfg = _load_agents(
             {
-                "junk": {"kiro_agent": "kirocrew", "autocompact_pct": "fast"},
-                "flag": {"kiro_agent": "kirocrew", "autocompact_pct": True},
-                "neg": {"kiro_agent": "kirocrew", "autocompact_pct": -20},
+                "junk": {"kiro_agent": "ajcrew", "autocompact_pct": "fast"},
+                "flag": {"kiro_agent": "ajcrew", "autocompact_pct": True},
+                "neg": {"kiro_agent": "ajcrew", "autocompact_pct": -20},
             }
         )
         for name in ("junk", "flag", "neg"):
@@ -85,17 +85,17 @@ class TestLoader:
             assert crew_autocompact_pct(cfg, name) is None, name
 
     def test_resolver_ignores_unknown_and_empty_names(self) -> None:
-        cfg = KiroCrewConfig()
-        cfg.agents = {"orch": KiroCrewAgentConfig(kiro_agent="kirocrew", autocompact_pct=40.0)}
+        cfg = AjCrewConfig()
+        cfg.agents = {"orch": AjCrewAgentConfig(kiro_agent="ajcrew", autocompact_pct=40.0)}
         assert crew_autocompact_pct(cfg, "orch") == 40.0
         assert crew_autocompact_pct(cfg, "") is None
         assert crew_autocompact_pct(cfg, "nobody") is None
 
 
 def _manager(**agents: float) -> SessionManager:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        name: KiroCrewAgentConfig(kiro_agent="kirocrew", autocompact_pct=pct)
+        name: AjCrewAgentConfig(kiro_agent="ajcrew", autocompact_pct=pct)
         for name, pct in agents.items()
     }
     return SessionManager(cfg, provider_factory=lambda *a, **k: object())
@@ -103,7 +103,7 @@ def _manager(**agents: float) -> SessionManager:
 
 def _register(mgr: SessionManager, key: str, member: str) -> None:
     """Place a live session on *key* whose allocation selected crew *member*."""
-    session = _Session(provider=MagicMock(), agent="kirocrew")
+    session = _Session(provider=MagicMock(), agent="ajcrew")
     session.capability_member = member
     mgr._sessions[mgr._fold_key(key)] = session
 
@@ -154,8 +154,8 @@ class TestPrecedence:
         """The manager's config is replaced by the watcher; the next reading uses it."""
         mgr = _manager(orchestrator=40.0)
         _register(mgr, "conductor", "orchestrator")
-        changed = KiroCrewConfig()
-        changed.agents = {"orchestrator": KiroCrewAgentConfig(autocompact_pct=60.0)}
+        changed = AjCrewConfig()
+        changed.agents = {"orchestrator": AjCrewAgentConfig(autocompact_pct=60.0)}
         mgr._cfg = changed
         assert mgr.effective_autocompact_pct("conductor") == 60.0
 
@@ -177,7 +177,7 @@ class TestEndpoint:
         state.sessions = mgr
         state.conversation_log = MagicMock()
         with unittest.mock.patch(
-            "kiro_crew.dashboard.chat_handlers.effective_session_key", return_value="conductor"
+            "aj_crew.dashboard.chat_handlers.effective_session_key", return_value="conductor"
         ):
             _register(mgr, "conductor", "orchestrator")
             async with TestClient(TestServer(_make_app(state))) as client:
@@ -196,7 +196,7 @@ class TestEndpoint:
         state._slots = {slot.key: slot}
         state.sessions = mgr
         state.conversation_log = MagicMock()
-        with unittest.mock.patch.object(KiroCrewConfig, "load", return_value=_crew_cfg()):
+        with unittest.mock.patch.object(AjCrewConfig, "load", return_value=_crew_cfg()):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.get("/api/chat/slots/test/autocompact")
                 data = await resp.json()
@@ -227,7 +227,7 @@ class TestEndpoint:
         state._slots = {slot.key: slot}
         state.sessions = _manager()
         state.conversation_log = MagicMock()
-        with unittest.mock.patch.object(KiroCrewConfig, "load", return_value=cfg):
+        with unittest.mock.patch.object(AjCrewConfig, "load", return_value=cfg):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.get("/api/chat/slots/test/autocompact")
                 data = await resp.json()
@@ -248,7 +248,7 @@ class TestEndpoint:
         state._slots = {slot.key: slot}
         state.sessions = _manager()
         state.conversation_log = MagicMock()
-        with unittest.mock.patch.object(KiroCrewConfig, "load", return_value=cfg):
+        with unittest.mock.patch.object(AjCrewConfig, "load", return_value=cfg):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.get("/api/chat/slots/test/autocompact")
                 data = await resp.json()
@@ -266,7 +266,7 @@ class TestEndpoint:
         state._slots = {slot.key: slot}
         state.sessions = _manager()
         state.conversation_log = MagicMock()
-        with unittest.mock.patch.object(KiroCrewConfig, "load", return_value=cfg):
+        with unittest.mock.patch.object(AjCrewConfig, "load", return_value=cfg):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.get("/api/chat/slots/test/autocompact")
                 body = await resp.text()
@@ -276,11 +276,11 @@ class TestEndpoint:
         assert data["agent"].startswith("[REDACTED")
 
 
-def _crew_cfg(**agents: float) -> KiroCrewConfig:
+def _crew_cfg(**agents: float) -> AjCrewConfig:
     """A config whose crews declare *agents* (name -> pct), plus a silent default."""
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        name: KiroCrewAgentConfig(kiro_agent="kirocrew", autocompact_pct=pct)
+        name: AjCrewAgentConfig(kiro_agent="ajcrew", autocompact_pct=pct)
         for name, pct in {"default": 0.0, **agents}.items()
     }
     cfg.default_agent = "default"
@@ -302,9 +302,9 @@ class _ReplProvider:
 
 
 async def _repl_once(
-    monkeypatch: pytest.MonkeyPatch, cfg: KiroCrewConfig, agent: str
+    monkeypatch: pytest.MonkeyPatch, cfg: AjCrewConfig, agent: str
 ) -> _ReplProvider:
-    import kiro_crew.cli_chat as cli_chat
+    import aj_crew.cli_chat as cli_chat
 
     lines = iter(["hello"])
 
@@ -337,7 +337,7 @@ class TestCliChat:
     async def test_the_repl_follows_the_global_for_a_crew_that_declares_none(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         cfg = _crew_cfg(builder=0.0)
         assert cli_chat._repl_compact_at(cfg, "builder") == cfg.session.autocompact_pct

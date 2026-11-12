@@ -19,20 +19,20 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import pin_harness_choice
 
-from kiro_crew.acp_backends import (
+from aj_crew.acp_backends import (
     ACP_BACKEND_CODEX,
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
     ACP_BACKENDS_EFFORT_FROM_ADVERTISED_OPTION,
 )
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_selection_capabilities
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.effort import EFFORT_LEVELS
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.chat_handlers import api_chat_slot_selection_capabilities
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.effort import EFFORT_LEVELS
+from aj_crew.providers.acp import AcpProvider
 
 # ── selection-capabilities before the session reports ──
 
@@ -49,7 +49,7 @@ def _state(slot: _ChatSlot, live: tuple = ()) -> DashboardState:
 
 def _config(monkeypatch, *, member: str, resolves_to: str = "") -> None:
     monkeypatch.setattr(
-        chat_handlers.KiroCrewConfig,
+        chat_handlers.AjCrewConfig,
         "load",
         lambda: SimpleNamespace(
             agent=SimpleNamespace(acp_backend="", member_acp_backend=member), agents={}
@@ -101,9 +101,9 @@ async def test_a_cold_member_thread_resolves_its_model_on_the_routed_harness(mon
 
 @pytest.mark.asyncio
 async def test_a_cold_slot_judges_effort_on_the_model_a_foreign_pin_falls_to(monkeypatch):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     config.agent.model = "claude-haiku-4.5"
     config.save()
     pin_harness_choice(acp_backend="", member_acp_backend="")
@@ -231,19 +231,19 @@ def test_a_codex_build_without_its_effort_option_takes_no_effort(tmp_path):
 
 
 async def _resolved(*, member: str, state: object = None, model: str = "") -> dict:
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-    from kiro_crew.dashboard.handlers import api_kirocrew_agent_resolved_model
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+    from aj_crew.dashboard.handlers import api_ajcrew_agent_resolved_model
 
-    cfg = KiroCrewConfig.load()
-    cfg.agents["writer"] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew", workspace="default", memory_store="default", model=model
+    cfg = AjCrewConfig.load()
+    cfg.agents["writer"] = AjCrewAgentConfig(
+        kiro_agent="ajcrew", workspace="default", memory_store="default", model=model
     )
     cfg.save()
     # save() keeps the harness fields as stored, so the choice goes on disk.
     pin_harness_choice(acp_backend="", member_acp_backend=member)
     app = web.Application()
     app["state"] = state
-    app.router.add_get("/api/agents/resolved-model", api_kirocrew_agent_resolved_model)
+    app.router.add_get("/api/agents/resolved-model", api_ajcrew_agent_resolved_model)
     async with TestClient(TestServer(app)) as client:
         resp = await client.get("/api/agents/resolved-model", params={"agent": "writer"})
         assert resp.status == 200
@@ -462,7 +462,7 @@ async def test_opencode_borrowed_answer_requires_the_same_served_model(
 def test_model_scoped_borrowing_checks_served_identity_even_for_own_crew(
     backend, supported, served
 ):
-    from kiro_crew.dashboard.handlers.agents_harness_effort import harness_effort
+    from aj_crew.dashboard.handlers.agents_harness_effort import harness_effort
 
     live = MagicMock()
     live.capabilities = capabilities_for(backend)

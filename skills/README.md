@@ -1,13 +1,13 @@
 # Skills
 
-Skills are markdown files that teach the LLM agent how to use Kiro Crew capabilities.
+Skills are markdown files that teach the LLM agent how to use Aj Crew capabilities.
 
 ## This directory is repo-checkout-only
 
-Skills here are synced into `~/.kiro/crew/skills` only when `KIROCREW_PROJECT_DIR`
+Skills here are synced into `~/.kiro/crew/skills` only when `AJCREW_PROJECT_DIR`
 points at this checkout, and they are not part of the wheel. **A skill that any
 shipped feature, prompt, or doc references MUST live in
-`src/kiro_crew/builtin_skills/` instead** — that tree is packaged and copied into every
+`src/aj_crew/builtin_skills/` instead** — that tree is packaged and copied into every
 install's skills directory on gateway start. Use this directory for skills whose
 audience is someone working in this checkout.
 
@@ -49,7 +49,7 @@ Instructions for the LLM agent...
 | `description` | yes | Repository convention for the one-line summary the LLM sees to decide relevance; the runtime falls back to the name if omitted |
 | `always` | no | `true` to inject into every session (default: `false`) |
 | `triggers` | no | Comma-separated phrases used by opt-in trigger matching (`skills.max_triggered > 0`). Prefix with `!` for negative triggers (e.g. `!test` excludes when "test" appears) |
-| `repo_scope` | no | Relative path (e.g. `src/kiro_crew`) that must exist in the session's active project directory, or an ancestor of it, for the skill to be eligible. Mechanically suppresses repo-specific skills outside their repo — use for skills whose instructions would be wrong or destructive elsewhere. Fails closed: a session that names no project, and one whose project cannot be resolved, get neither the skill's body nor its index entry. The process working directory is never consulted. |
+| `repo_scope` | no | Relative path (e.g. `src/aj_crew`) that must exist in the session's active project directory, or an ancestor of it, for the skill to be eligible. Mechanically suppresses repo-specific skills outside their repo — use for skills whose instructions would be wrong or destructive elsewhere. Fails closed: a session that names no project, and one whose project cannot be resolved, get neither the skill's body nor its index entry. The process working directory is never consulted. |
 | `inject_on_trigger` | no | `false` keeps a trigger match from injecting the full body — the skill stays index-only and is read on demand. Use for a skill whose body is too large to spend context on speculatively. |
 
 Provenance keys (`source`, `session_key`, `created_at`, `refined_at`,

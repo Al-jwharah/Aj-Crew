@@ -11,9 +11,9 @@ import pytest
 from webhooks_api_helpers import wired_fixture  # noqa: F401
 from webhooks_api_helpers import _payload, _req
 
-from kiro_crew import webhooks
-from kiro_crew.dashboard.handlers import hooks as H
-from kiro_crew.dashboard.token_auth_paths import AGENT_HOOK_STATUS_PATH
+from aj_crew import webhooks
+from aj_crew.dashboard.handlers import hooks as H
+from aj_crew.dashboard.token_auth_paths import AGENT_HOOK_STATUS_PATH
 
 pytestmark = pytest.mark.asyncio
 

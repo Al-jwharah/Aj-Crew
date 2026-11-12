@@ -31,25 +31,25 @@ const now = Math.floor(Date.now() / 1000)
 // render a note.
 const JOBS = [
   {
-    id: 'job-1', name: 'Flaky feed poller', schedule: 'every 300s', enabled: true, agent: 'kirocrew',
+    id: 'job-1', name: 'Flaky feed poller', schedule: 'every 300s', enabled: true, agent: 'ajcrew',
     message: 'Poll the release feed and flag regressions.',
     last_status: 'ok', last_run_ts: now - 420, last_retry_count: 3, last_retry_run_ts: now - 420,
     next_run_ts: now + 180,
   },
   {
-    id: 'job-2', name: 'Nightly report', schedule: 'every 1d', timezone: 'America/Los_Angeles', enabled: true, agent: 'kirocrew',
+    id: 'job-2', name: 'Nightly report', schedule: 'every 1d', timezone: 'America/Los_Angeles', enabled: true, agent: 'ajcrew',
     message: "Summarise yesterday's CI failures and post the digest to #build-health.",
     last_status: 'ok', last_run_ts: now - 3600, last_retry_count: 1, last_retry_run_ts: now - 3600,
     next_run_ts: now + 7200,
   },
   {
-    id: 'job-3', name: 'Weekly compliance digest', schedule: '0 9 * * 1', cron_expr: '0 9 * * 1', enabled: true, agent: 'kirocrew',
+    id: 'job-3', name: 'Weekly compliance digest', schedule: '0 9 * * 1', cron_expr: '0 9 * * 1', enabled: true, agent: 'ajcrew',
     message: 'Compile the weekly compliance digest.',
     last_status: 'ok', last_run_ts: now - 86400, last_retry_count: 0, last_retry_run_ts: now - 86400,
     next_run_ts: now + 6 * 86400,
   },
   {
-    id: 'job-4', name: 'Cancelled sync', schedule: 'every 900s', enabled: true, agent: 'kirocrew',
+    id: 'job-4', name: 'Cancelled sync', schedule: 'every 900s', enabled: true, agent: 'ajcrew',
     message: 'Mirror the shared drive index.',
     // The last COMPLETED run retried twice; the most recent run was cancelled and
     // advanced `last_run_ts` on its own. The stamps disagree, so no note.
@@ -94,8 +94,8 @@ async function stubApi(page) {
     const path = new URL(route.request().url()).pathname
     if (path === '/api/crons') return json(route, { jobs: JOBS })
     if (path === '/api/cron-folders') return json(route, [])
-    if (path === '/api/agents') return json(route, { agents: [{ name: 'kirocrew', description: '' }], default_agent: 'kirocrew' })
-    if (path === '/api/config/default-agent') return json(route, { default_agent: 'kirocrew' })
+    if (path === '/api/agents') return json(route, { agents: [{ name: 'ajcrew', description: '' }], default_agent: 'ajcrew' })
+    if (path === '/api/config/default-agent') return json(route, { default_agent: 'ajcrew' })
     if (path === '/api/models') return json(route, [])
     if (path === '/api/kiro-prerequisite') return json(route, PREREQ)
     if (path === '/api/crons/history') return json(route, { runs: [] })

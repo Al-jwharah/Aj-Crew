@@ -20,7 +20,7 @@ import { chromium } from 'playwright'
 import { mkdirSync, readFileSync } from 'node:fs'
 
 import { serveDist } from './lib/serve-dist.mjs'
-import { KIROCREW_CONFIG_FIXTURE, json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
+import { AJCREW_CONFIG_FIXTURE, json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/26327-explore'
 mkdirSync(OUT, { recursive: true })
@@ -59,16 +59,16 @@ const MILESTONES = {
 
 // The clips the server lists for the Explore video card: on disk, unfinished.
 const LIBRARY = { enabled: true, videos: [{
-  id: 'kiro-crew-intro', feature: 'kiro-crew', title: 'Kiro Crew in 15 seconds',
-  description: 'A short tour of what Kiro Crew does.', duration_s: 15, doc: 'dashboard.md',
-  src: '/feature-videos/1.0.0/kiro-crew-intro.mp4', poster: '/feature-videos/1.0.0/kiro-crew-intro.jpg',
+  id: 'aj-crew-intro', feature: 'aj-crew', title: 'Aj Crew in 15 seconds',
+  description: 'A short tour of what Aj Crew does.', duration_s: 15, doc: 'dashboard.md',
+  src: '/feature-videos/1.0.0/aj-crew-intro.mp4', poster: '/feature-videos/1.0.0/aj-crew-intro.jpg',
 }] }
 // A local clip to serve for the playing frame (FEATURE_VIDEO_CLIP=<mp4>); the
 // frame is skipped without one, since no clip ships in the package.
 const CLIP = process.env.FEATURE_VIDEO_CLIP || ''
 
 // One open, empty chat: the new-chat page with its suggestions.
-const SLOTS = [{ key: 'chat-1', title: 'New chat', messages: 0, running: false, agent: 'kirocrew', mode: '', created: '2026-10-30T01:00:00Z', last_ts: '2026-10-30T02:00:00Z', folder_id: '' }]
+const SLOTS = [{ key: 'chat-1', title: 'New chat', messages: 0, running: false, agent: 'ajcrew', mode: '', created: '2026-10-30T01:00:00Z', last_ts: '2026-10-30T02:00:00Z', folder_id: '' }]
 const SUGGESTIONS = { suggestions: [
   { text: 'Summarize the open PRs I review', kind: 'review' },
   { text: 'What changed in the deploy pipeline this week?', kind: 'ops' },
@@ -95,7 +95,7 @@ async function open(theme, width, milestones, { route = '/chat?slot=chat-1', con
       if (path.startsWith('/api/milestones/')) { await json(r, { ok: true }); return true }
       if (path === '/api/suggestions') { await json(r, SUGGESTIONS); return true }
       if (path === '/api/feature-videos/library') { await json(r, LIBRARY); return true }
-      if (config && path === '/api/config/kirocrew') { await json(r, config); return true }
+      if (config && path === '/api/config/ajcrew') { await json(r, config); return true }
       return false
     },
   })
@@ -198,8 +198,8 @@ try {
   else {
     // Watch plays the listed clip in the card, from the path the server named.
     const { context, page } = await open('dark', 1400, MILESTONES)
-    await page.route('**/feature-videos/1.0.0/kiro-crew-intro.mp4', r => r.fulfill({ status: 200, contentType: 'video/mp4', body: readFileSync(CLIP) }))
-    await page.route('**/feature-videos/1.0.0/kiro-crew-intro.jpg', r => r.fulfill({ status: 404, body: '' }))
+    await page.route('**/feature-videos/1.0.0/aj-crew-intro.mp4', r => r.fulfill({ status: 200, contentType: 'video/mp4', body: readFileSync(CLIP) }))
+    await page.route('**/feature-videos/1.0.0/aj-crew-intro.jpg', r => r.fulfill({ status: 404, body: '' }))
     await welcome(page)
     await page.getByTestId('try-today-entry').click()
     await page.getByTestId('explore-intro-video-watch').click({ timeout: 10000 })
@@ -256,7 +256,7 @@ try {
   }
   {
     // Settings › Display › View, on a gateway whose config carries the key.
-    const config = { ...KIROCREW_CONFIG_FIXTURE, dashboard: { ...(KIROCREW_CONFIG_FIXTURE.dashboard || {}), milestones_enabled: true } }
+    const config = { ...AJCREW_CONFIG_FIXTURE, dashboard: { ...(AJCREW_CONFIG_FIXTURE.dashboard || {}), milestones_enabled: true } }
     const { context, page } = await open('dark', 1400, MILESTONES, { route: '/settings?tab=display&sub=view', config })
     const toggle = page.getByRole('switch', { name: 'Explore' })
     await toggle.waitFor({ timeout: 20000 })

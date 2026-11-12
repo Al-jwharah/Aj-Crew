@@ -16,9 +16,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat_folders import api_chat_slot_muted
-from kiro_crew.dashboard.slot_persistence import metadata_codec as mc
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.chat_folders import api_chat_slot_muted
+from aj_crew.dashboard.slot_persistence import metadata_codec as mc
+from aj_crew.dashboard.state import _ChatSlot
 
 
 def _make_app(state: MagicMock, *, declared_app: str = "", internal_auth: bool = False):
@@ -47,11 +47,11 @@ def _state(slot: _ChatSlot) -> MagicMock:
 
 def _fences():
     return (
-        patch("kiro_crew.dashboard.chat_folders.refuse_unattributable_caller", return_value=None),
-        patch("kiro_crew.dashboard.chat_folders.member_slot_write_refused", return_value=None),
-        patch("kiro_crew.dashboard.chat_folders.deny_app_slot_access", return_value=None),
-        patch("kiro_crew.dashboard.chat_folders.app_owns_transcript", return_value=True),
-        patch("kiro_crew.dashboard.chat_folders._effective_request_app", return_value=""),
+        patch("aj_crew.dashboard.chat_folders.refuse_unattributable_caller", return_value=None),
+        patch("aj_crew.dashboard.chat_folders.member_slot_write_refused", return_value=None),
+        patch("aj_crew.dashboard.chat_folders.deny_app_slot_access", return_value=None),
+        patch("aj_crew.dashboard.chat_folders.app_owns_transcript", return_value=True),
+        patch("aj_crew.dashboard.chat_folders._effective_request_app", return_value=""),
     )
 
 
@@ -69,7 +69,7 @@ class TestMutedEndpoint:
         state = _state(slot)
         f1, f2, f3, f4, f5 = _fences()
         save = AsyncMock(return_value=True)
-        with f1, f2, f3, f4, f5, patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", save):
+        with f1, f2, f3, f4, f5, patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", save):
             status, body = await _patch(state, {"muted": True}, internal_auth=True)
         assert status == 403
         assert body["code"] == "muted_user_only"
@@ -106,7 +106,7 @@ class TestMutedEndpoint:
             f3,
             f4,
             f5,
-            patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", _save),
+            patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", _save),
         ):
             status, body = await _patch(state, {"muted": True})
         assert status == 200

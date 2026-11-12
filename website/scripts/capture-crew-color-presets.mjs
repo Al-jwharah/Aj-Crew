@@ -29,9 +29,9 @@ const PREFIX = process.argv[3] || 'after'
 // One crew per state the preset row can be in. `#6366f1` is the first preset
 // (indigo); `#0a7d55` is deliberately NOT in the set.
 const CREWS = [
-  { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default' },
-  { name: 'devops', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', session_color: '#6366f1' },
-  { name: 'makerworks', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', session_color: '#0a7d55' },
+  { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default' },
+  { name: 'devops', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', session_color: '#6366f1' },
+  { name: 'makerworks', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', session_color: '#0a7d55' },
 ]
 
 /** Endpoints the editor reads that `crewsApi` does not cover. A table, not a
@@ -44,7 +44,7 @@ const EXTRA = {
 
 mkdirSync(OUT, { recursive: true })
 
-const fixtures = crewsApi({ crews: CREWS, defaultAgent: 'kirocrew' })
+const fixtures = crewsApi({ crews: CREWS, defaultAgent: 'ajcrew' })
 const routeAll = async (path, route) => {
   const canned = EXTRA[path]
   if (!canned) return fixtures(path, route)

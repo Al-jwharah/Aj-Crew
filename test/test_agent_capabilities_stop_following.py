@@ -15,14 +15,14 @@ from agent_capabilities_helpers import _accepting_kiro_cli  # noqa: F401
 from agent_capabilities_helpers import editor_fixture  # noqa: F401
 from agent_capabilities_helpers import _pin_spec_permissions_cli, save, spec_for
 
-from kiro_crew import agent, agent_state
-from kiro_crew.agent_capabilities import (
+from aj_crew import agent, agent_state
+from aj_crew.agent_capabilities import (
     CapabilityError,
     member_backend_gap,
     prepare_member_capabilities,
     tool_limited_servers,
 )
-from kiro_crew.config import loader
+from aj_crew.config import loader
 
 
 @pytest.mark.parametrize("release", ["accepts", "refuses", "unknown"])
@@ -38,7 +38,7 @@ def test_a_fork_writes_permissions_only_where_the_installed_cli_accepts_them(
     grants. The grant list itself is never withheld: it is the ceiling, not
     the optional relay.
     """
-    from kiro_crew.agent_sdk.drivers.acp import derived_agent_permissions
+    from aj_crew.agent_sdk.drivers.acp import derived_agent_permissions
 
     service, home, specs, parent = editor
     parent["permissions"] = derived_agent_permissions(parent["allowedTools"], "parent")
@@ -92,14 +92,14 @@ def test_parent_is_owned_confirmation_gates_the_dashboard_author_stem(tmp_path, 
     digest. A pre-existing user template at the stem -- no recorded digest, or an
     absent/unreadable file -- is NOT an owned parent, so a capability save does not refresh
     its inherited guards away."""
-    from kiro_crew import agent_capabilities as cap
-    from kiro_crew import agent_state
+    from aj_crew import agent_capabilities as cap
+    from aj_crew import agent_state
 
-    parent = tmp_path / "kirocrew-dashboard-author.json"
+    parent = tmp_path / "ajcrew-dashboard-author.json"
     snap = {"parent": {"scope": "global", "path": str(parent)}}
 
     # Another owned name is owned.
-    other = {"parent": {"scope": "global", "path": str(tmp_path / "kirocrew.json")}}
+    other = {"parent": {"scope": "global", "path": str(tmp_path / "ajcrew.json")}}
     assert cap._parent_is_owned(other) is True
     # A non-global parent is never owned.
     assert cap._parent_is_owned({"parent": {"scope": "project", "path": str(parent)}}) is False
@@ -110,17 +110,17 @@ def test_parent_is_owned_confirmation_gates_the_dashboard_author_stem(tmp_path, 
     # Dashboard-author stem, ABSENT file -> not confirmed -> NOT owned (fail-safe).
     assert cap._parent_is_owned(snap) is False
     # A file at the stem with NO recorded ownership digest -> not confirmed -> NOT owned.
-    managed = {"name": "kirocrew-dashboard-author", "mcpServers": {"kirocrew-core": {}}}
+    managed = {"name": "ajcrew-dashboard-author", "mcpServers": {"ajcrew-core": {}}}
     parent.write_text(json.dumps(managed, indent=2) + "\n", encoding="utf-8")
     assert cap._parent_is_owned(snap) is False
     # Record the ownership digest of these exact bytes -> reproduces it -> owned.
-    agent_state.set_managed_digest("kirocrew-dashboard-author", agent_state.spec_digest(managed))
+    agent_state.set_managed_digest("ajcrew-dashboard-author", agent_state.spec_digest(managed))
     assert cap._parent_is_owned(snap) is True
 
 
 def cap_agent_state_for(cap):
     """`_parent_is_owned` imports agent_state locally; patch the module object itself."""
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     return agent_state
 
@@ -384,7 +384,7 @@ def test_stop_following_leaves_the_spec_alone_and_runs_the_fork_refresh_on_a_new
     answer. Stopping follow writes only the sidecar entry (the spec bytes are
     untouched) and then runs the fork refresh, which governs every private
     copy that has no saved intent."""
-    from kiro_crew import agent_capabilities as capabilities
+    from aj_crew import agent_capabilities as capabilities
 
     service, home, specs, parent = editor
     save(service, enroll=True)
@@ -427,7 +427,7 @@ def test_stop_following_holds_the_spawn_gate_from_before_the_write_to_after_the_
 ):
     """Between dropping the intent and the refresh a fork-backed session start
     must keep waiting, or it could run grants the refresh has not re-filtered."""
-    from kiro_crew import agent_capabilities as capabilities
+    from aj_crew import agent_capabilities as capabilities
 
     service, home, specs, parent = editor
     save(service, enroll=True)
@@ -460,7 +460,7 @@ def test_stop_following_releases_the_spawn_gate_when_it_is_refused(editor):
 def test_stop_following_survives_a_failing_fork_refresh(editor, monkeypatch):
     """The refresh fails closed on its own (the copy's sessions stay blocked), so
     its failure never undoes or fails the stop."""
-    from kiro_crew import agent_capabilities as capabilities
+    from aj_crew import agent_capabilities as capabilities
 
     service, home, specs, parent = editor
     save(service, enroll=True)
@@ -500,8 +500,8 @@ async def test_http_stop_following_maps_each_refusal(editor, monkeypatch):
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers.agent_capabilities import _SERVICE
-    from kiro_crew.dashboard.routes.agents import register
+    from aj_crew.dashboard.handlers.agent_capabilities import _SERVICE
+    from aj_crew.dashboard.routes.agents import register
 
     service, _, _, _ = editor
 
@@ -577,7 +577,7 @@ def test_stop_following_refuses_single_tool_limits_an_independent_copy_cannot_ke
 def test_stop_following_refuses_a_removal_an_owned_template_refresh_would_restore(
     editor, monkeypatch
 ):
-    from kiro_crew import agent_capabilities as capabilities
+    from aj_crew import agent_capabilities as capabilities
 
     service, home, specs, parent = editor
     save(service, [{"section": "tools", "id": "read", "action": "remove"}], enroll=True)
@@ -634,8 +634,8 @@ def test_stop_following_stops_tracking_the_shipped_model_for_a_chosen_model(edit
     """A copy of an owned template can still track the shipped model. The fork
     refresh would replace a model the member chose once the intent is gone, so
     stopping follow turns the tracking off in the same write."""
-    from kiro_crew import agent_capabilities as capabilities
-    from kiro_crew.agent_materialization import fork_refresh
+    from aj_crew import agent_capabilities as capabilities
+    from aj_crew.agent_materialization import fork_refresh
 
     service, home, specs, parent = editor
     save(
@@ -657,8 +657,8 @@ def test_stop_following_stops_tracking_the_shipped_model_for_a_chosen_model(edit
 
 
 def test_stop_following_leaves_model_tracking_alone_without_a_chosen_model(editor, monkeypatch):
-    from kiro_crew import agent_capabilities as capabilities
-    from kiro_crew.agent_materialization import fork_refresh
+    from aj_crew import agent_capabilities as capabilities
+    from aj_crew.agent_materialization import fork_refresh
 
     service, home, specs, parent = editor
     save(service, enroll=True)
@@ -677,8 +677,8 @@ def test_stop_following_refuses_a_removal_under_an_owned_name_the_parent_check_m
     parent came from. ``_parent_is_owned`` counts only a global-scope parent, so the
     refusal asks the refresh's own rule too, or a project-scoped parent at an owned
     name slips through and the refresh restores what the member removed."""
-    from kiro_crew import agent_capabilities as capabilities
-    from kiro_crew.agent_materialization import fork_refresh
+    from aj_crew import agent_capabilities as capabilities
+    from aj_crew.agent_materialization import fork_refresh
 
     service, home, specs, parent = editor
     save(service, [{"section": "tools", "id": "read", "action": "remove"}], enroll=True)

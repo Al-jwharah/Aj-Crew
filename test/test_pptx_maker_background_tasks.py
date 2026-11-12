@@ -14,8 +14,8 @@ import weakref
 
 import pytest
 
-from kiro_crew.apps.builtins.pptx_maker.backend import routes
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.apps.builtins.pptx_maker.backend import routes
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.mark.asyncio

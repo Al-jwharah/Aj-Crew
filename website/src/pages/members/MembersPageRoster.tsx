@@ -273,7 +273,7 @@ export function useMembersPageRosterView({
   )
   const starMutation = useMutation({
     mutationFn: ({ m, next }: { m: MemberRosterRow; next: boolean }) =>
-      api.updateKirocrewAgent(m.name, { starred: next }),
+      api.updateAjcrewAgent(m.name, { starred: next }),
     onMutate: async ({ m, next }) => {
       // A roster refetch already in flight would land AFTER the optimistic
       // patch and overwrite it with the pre-write row: stop it first. (The

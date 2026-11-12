@@ -20,7 +20,7 @@
  * nothing either way and is `unknown`.
  *
  * The dashboard CSP admits this only for the IPv4 loopback hosts in its
- * `connect-src` (`_LOOPBACK_FRAME_SRC` in src/kiro_crew/dashboard/server.py). A
+ * `connect-src` (`_LOOPBACK_FRAME_SRC` in src/aj_crew/dashboard/server.py). A
  * `*.localhost` host is framable but not connectable, so a probe there would be
  * refused by CSP and read as unreachable; `canProbePanePort` says no for it.
  */

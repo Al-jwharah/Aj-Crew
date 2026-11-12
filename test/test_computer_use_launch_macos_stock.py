@@ -31,7 +31,7 @@ class TestMacOSStockApplicationsParent:
         one of *mine*, which this user (uid 501) owns. The parent itself is writable, as a
         stock ``/Applications`` is for an admin user, and nothing else is.
         """
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         root = tmp_path / "Applications"
         macos = root / "Foo.app" / "Contents" / "MacOS"

@@ -16,9 +16,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import name_grant
-from kiro_crew.channel import ChannelAgent, _stream_task
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST
+from aj_crew import name_grant
+from aj_crew.channel import ChannelAgent, _stream_task
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST
 
 
 def _make_agent(commands: set[str] | None = None, bases: set[str] | None = None):
@@ -99,7 +99,7 @@ def _approval_posts(ch):
 @pytest.mark.asyncio
 async def test_matching_shell_command_is_auto_approved(monkeypatch):
     sel_mock = MagicMock()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_mock)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_mock)
     _stub_name_grant_verdict(monkeypatch, None)
     agent = _make_agent(bases={"ls"})
     ch = _make_channel(agent)
@@ -137,7 +137,7 @@ async def test_name_grant_refusal_falls_through_to_interactive_card(monkeypatch)
     the file behind a trusted ./deploy.sh was replaced) must NOT auto-approve
     — and must not reject either: the request takes the interactive card."""
     sel_mock = MagicMock()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_mock)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_mock)
     _stub_name_grant_verdict(
         monkeypatch, name_grant.Refusal("SHADOWED", "resolved outside system bin")
     )
@@ -164,7 +164,7 @@ async def test_name_grant_refusal_falls_through_to_interactive_card(monkeypatch)
 async def test_declined_grant_card_says_why_it_asks_again(monkeypatch):
     """The reader trusted this command, so the card that asks again names why
     -- with the refusal's constant text, never its command-built detail."""
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: MagicMock())
     refusal = name_grant.Refusal(name_grant.AMBIGUOUS_ENV, "BASH_FUNC_*%% is set")
     _stub_name_grant_verdict(monkeypatch, refusal)
     agent = _make_agent(commands={"echo hi"})
@@ -186,9 +186,9 @@ async def test_identity_check_reaches_raw_shell_input(monkeypatch):
     refused verdict on the raw-input shape must fall through to the card."""
     # The PreToolUse gate refuses an unrecoverable shell command before this
     # tier; this pins the tier itself, so the gate is stood aside.
-    monkeypatch.setattr("kiro_crew.permission_floor.refusal_for", lambda event, **kwargs: None)
+    monkeypatch.setattr("aj_crew.permission_floor.refusal_for", lambda event, **kwargs: None)
     sel_mock = MagicMock()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_mock)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_mock)
     checked: list[str] = []
 
     async def stub(command):
@@ -215,7 +215,7 @@ async def test_human_approval_pins_the_shell_command_identity(monkeypatch):
     behind its names BEFORE execution is released — approving first would let
     a self-replacing script swap the file and get the replacement pinned."""
     sel_mock = MagicMock()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_mock)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_mock)
     order: list[str] = []
     monkeypatch.setattr(name_grant, "pin_human_approval", lambda cmd: order.append(f"pin:{cmd}"))
     agent = _make_agent()
@@ -236,7 +236,7 @@ async def test_human_approval_pins_the_shell_command_identity(monkeypatch):
 @pytest.mark.asyncio
 async def test_rejected_approval_pins_nothing(monkeypatch):
     sel_mock = MagicMock()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_mock)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_mock)
     pins: list[str] = []
     monkeypatch.setattr(name_grant, "pin_human_approval", pins.append)
     agent = _make_agent()
@@ -429,7 +429,7 @@ async def test_approval_message_name_falls_back_to_title(monkeypatch):
     posted approval card must still carry the tool name for display."""
     # An unrecoverable shell command is refused by the PreToolUse gate before
     # any card; this pins the card's naming, so the gate is stood aside.
-    monkeypatch.setattr("kiro_crew.permission_floor.refusal_for", lambda event, **kwargs: None)
+    monkeypatch.setattr("aj_crew.permission_floor.refusal_for", lambda event, **kwargs: None)
     agent = _make_agent(set())
     ch = _make_channel(agent)
     event = _perm_event(title="Running: ls /tmp", tool_input="{}", is_shell=True)

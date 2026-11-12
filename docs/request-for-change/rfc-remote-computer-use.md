@@ -74,7 +74,7 @@ Six decisions:
   `macos` and `windows`.
 - **The desktop app already holds a tunnel and a bundled backend.** In Remote
   Tunnel mode the app keeps an SSH forward open by running
-  `kirocrew desktop tunnel` from `backend-dist` (`tunnel-keeper.js`) and
+  `ajcrew desktop tunnel` from `backend-dist` (`tunnel-keeper.js`) and
   fetches a dashboard link token by running a command over SSH
   (`token-sources.js`, `remote-token.js`). `backend-dist` carries the whole
   Python package, the macOS driver included (`find-bin.js`).
@@ -101,7 +101,7 @@ Six decisions:
   (`testing/fake_computer_use.py`).
 - **The grant should be the app's.** `computer_use/permissions.py` documents
   that macOS attributes Accessibility and Screen Recording to the responsible
-  process, so a `backend-dist` child of `KiroCrew.app` should run under the
+  process, so a `backend-dist` child of `AjCrew.app` should run under the
   app's grant. This is not yet verified for a client-only packaged app;
   Phase 0 measures it.
 
@@ -136,12 +136,12 @@ Six decisions:
 ```
  Linux gateway                                     Mac
  ┌───────────────────────────────┐   SSH -L   ┌──────────────────────────────┐
- │ tools.dispatch_tool           │◄──────────►│ KiroCrew.app (Electron main) │
+ │ tools.dispatch_tool           │◄──────────►│ AjCrew.app (Electron main) │
  │  keystone, policy, index,     │            │  computer-executor-channel   │
  │  fingerprint, refusals, audit │  scoped    │   attach / drain / result    │
  │ RemoteExecutorBackend         │  executor  │   heartbeat / reaped / detach│
  │  ExecutorBus + attachment     │  credential│        │ stdio JSON lines     │
- └───────────────────────────────┘            │  kirocrew computer executor  │
+ └───────────────────────────────┘            │  ajcrew computer executor  │
                                               │   floors + MacOSBackend      │
                                               └──────────────────────────────┘
 ```
@@ -153,12 +153,12 @@ dashboard link token: it expires in minutes and is exchanged for a browser
 session cookie (`token_auth_tokens.py`, `token_auth.py`), so it cannot carry a
 long-lived channel. The channel gets its own credential the same way the app
 gets that token, by running a command over SSH: a new
-`kirocrew computer executor-token` subcommand prints a random owner-bound
+`ajcrew computer executor-token` subcommand prints a random owner-bound
 bearer credential scoped to the executor routes only, with a 12-hour expiry,
 plus the gateway's **installation id**, a random value this RFC adds and
 persists in the gateway's config directory. Possession of SSH to the gateway
 host is the owner check, as it already is for the link token. Gateway logout
-(`kirocrew logout`) revokes every executor credential. The channel re-runs
+(`ajcrew logout`) revokes every executor credential. The channel re-runs
 the command before expiry and after a 401.
 
 **The agent cannot mint or read it.** The agent runs a shell on that same
@@ -178,7 +178,7 @@ before each namespace spawn, so the mask always has a directory to bind over.
 A mint run from an agent shell therefore cannot write the digest, so the
 credential it prints is never accepted, whatever spelling got the command to
 run. The command-text floor is a second layer: the verb is
-named `executor-token` so the existing `credential-exfil-kirocrew-token` rule
+named `executor-token` so the existing `credential-exfil-ajcrew-token` rule
 (`security/denied_rules.py`) refuses it from an agent shell, and the argv
 floor (`_is_credential_mint` in `security/argv_floor.py`) gains the
 subcommand for the interpreter form. A mint run outside the sandbox through
@@ -350,13 +350,13 @@ Phase 3 measures each case over a real tunnel and records the numbers here.
   and hand off to the loop with `run_coroutine_threadsafe`; a call made on the
   loop thread, or after the loop closed, is refused rather than deadlocked.
 - **Selection.** `select_default_backend()` is untouched. A process that did
-  not register the remote backend (`kirocrew computer doctor`, `apps`, `call`
+  not register the remote backend (`ajcrew computer doctor`, `apps`, `call`
   on a Linux host) still gets `LinuxBackend` and today's answer. An unknown
   platform keeps its current backend.
 - **Status.** `BackendStatus` gains `kind` (`local` or `remote`).
   `RemoteExecutorBackend.status()` reports `kind="remote"`, `supported` true
   only while an attachment is live and its executor says supported, and a
-  reason that names the fix when not ("no Mac is attached: open Kiro Crew on
+  reason that names the fix when not ("no Mac is attached: open Aj Crew on
   the Mac and allow this crew to use it"). `platform_id` is the attached
   executor's platform, else `linux`.
 - **Settings.** `_snapshot()` carries `kind`, and `ComputerUsePanel.tsx`
@@ -458,7 +458,7 @@ executor can live (§1).
 
 ### 6. Mac side
 
-- **`kirocrew computer executor`**, a new subcommand in
+- **`ajcrew computer executor`**, a new subcommand in
   `computer_use/cli.py`. It speaks the §2 codec on stdin and stdout, holds one
   `MacOSBackend`, and makes no outbound network calls. The capture path's
   live-view relay (`screencast.emit_snapshot_frame`) posts only inside a
@@ -471,14 +471,14 @@ executor can live (§1).
   `launch_spawn` calls the existing `launch_app` helper with the pinned name,
   the Mac identity floor as `permit` and the Mac self-window floor as
   `refuse_launched`, so the already-running refusal and the window wait are
-  inherited. `kirocrew computer call` cannot serve here: it returns rendered
+  inherited. `ajcrew computer call` cannot serve here: it returns rendered
   text, keeps its index per process and gates on the Mac's keystone.
 - **Floors on the Mac.** Before each verb, on the canonical record it resolved
   from the handle, the executor imports and runs, never copies:
   - the indexless refusal: every verb whose tool twin is in
     `tools._ELEMENT_REQUIRED_TOOLS` is refused without an element, so a
     keystroke can never land in whatever field holds focus;
-  - `policy.check_app` with an empty `PolicyConfig`, so the `kirocrew_self`
+  - `policy.check_app` with an empty `PolicyConfig`, so the `ajcrew_self`
     floor applies (operator allow and deny lists stay gateway-only: they are
     config, not floors);
   - `policy.check_input_target` with an empty `PolicyConfig` for every tool in
@@ -538,7 +538,7 @@ executor can live (§1).
 Each phase is its own PR, independently shippable.
 
 **Phase 0: TCC probe.** On a signed packaged app in client-only mode, run the
-executor as a child of `KiroCrew.app` and record whether it inherits
+executor as a child of `AjCrew.app` and record whether it inherits
 Accessibility and Screen Recording, including after an ad-hoc re-sign.
 Exit: a test asserts the recorded verdict is `inherits` or
 `does-not-inherit`. Phase 3 is blocked until it is `inherits`, or until a
@@ -575,8 +575,8 @@ transport wrapping `FakeComputerUseBackend` that offsets `captured_at` by
   wrong-attachment-token and stale-generation calls are each refused;
 - an oversized body is rejected by length before parsing; an unknown key is
   rejected after parsing and before any dataclass is built;
-- `kirocrew computer doctor` on Linux still reports `LINUX_REASON`;
-- from an agent shell on the gateway host, `kirocrew computer executor-token`
+- `ajcrew computer doctor` on Linux still reports `LINUX_REASON`;
+- from an agent shell on the gateway host, `ajcrew computer executor-token`
   and its interpreter form are refused by the mint floor; a mint that runs
   inside the agent sandbox anyway produces a credential the routes refuse,
   because the digest store is hidden from it, and that holds on a fresh home
@@ -585,12 +585,12 @@ transport wrapping `FakeComputerUseBackend` that offsets `captured_at` by
   and the store is unreadable through the agent's file tools and sandboxed
   shell.
 
-**Phase 2: the executor.** `kirocrew computer executor`, the codec, handles,
+**Phase 2: the executor.** `ajcrew computer executor`, the codec, handles,
 the Mac-side floors, `launch_identity` / `launch_spawn`. Exit: a client that
 skips the gateway and sends raw verbs is refused, one case each, for: a secure
 field via each of the five secure-target verbs, a forged `secure=False`
 element over a real password field, a denied command typed into a terminal,
-the Kiro Crew window, a handle from another generation, a launch of the Kiro
+the Aj Crew window, a handle from another generation, a launch of the Aj
 Crew app, a `launch_spawn` whose token no longer resolves to its pinned
 identity, a capture of a secure, truncated, depth-truncated and
 unknown-window-id window, a `global` click with the pointer option off, an
@@ -655,7 +655,7 @@ the crew is too old.
   shows. What a compromised gateway gets is no more than an honest gateway
   with an empty operator policy: every floor without a config key runs on the
   Mac, on a record the Mac resolved, so it cannot type into a password field,
-  type a denied command, drive or launch the Kiro Crew window, capture a
+  type a denied command, drive or launch the Aj Crew window, capture a
   secure window, or move the pointer without the Mac's pointer option, which
   never crosses the wire. Terminals stay drivable, as they are locally
   (`check_app` keeps them off its denylist), but the text scan runs on the Mac
@@ -693,7 +693,7 @@ the crew is too old.
 - **Move the whole dispatch to the Mac** (forward MCP calls, run
   `dispatch_tool` there). One gate, on the Mac. Rejected: the gateway's audit,
   its operator policy and `rfc-jev-task-executor`'s second caller of
-  `dispatch_tool` would all fork, and `kirocrew computer call` already shows
+  `dispatch_tool` would all fork, and `ajcrew computer call` already shows
   the cost (text results, per-process index, Mac keystone).
 - **Reverse SSH tunnel to a Mac listener.** Rejected: an inbound port on a
   laptop, and a new credential the gateway would hold for it.

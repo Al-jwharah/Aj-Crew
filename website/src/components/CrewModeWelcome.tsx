@@ -2,8 +2,8 @@ import { cn } from '../lib/utils'
 import { motion, useReducedMotion, type TargetAndTransition, type Transition } from 'framer-motion'
 import { ChevronRight, Hand, Target, Zap } from 'lucide-react'
 import { useEffect, useState, type ReactNode } from 'react'
-import { KiroGhost } from './KiroGhost'
-import { KiroGhostMark } from './KiroGhostMark'
+import { AjGem } from './AjGem'
+import { AjMark } from './AjMark'
 import { Btn } from './ui'
 
 import { i18nT } from '../i18n/t'
@@ -96,7 +96,7 @@ function PoppingGhost({ x, y, size, tone, delay, still }: (typeof CREW_GHOSTS)[n
         animate={still ? undefined : { y: [0, -8, 0] }}
         transition={still ? undefined : { delay: delay + 0.6, duration: 1.9, ease: 'easeInOut' }}
       >
-        <KiroGhostMark size={size} />
+        <AjMark size={size} />
       </motion.span>
     </motion.span>
   )
@@ -147,7 +147,7 @@ function Flow({ still }: { still: boolean }) {
           style={{ boxShadow: '0 0 16px var(--color-aim)' }}
           {...enter(still, AT.split, { opacity: 0, scale: 0.3, rotate: -30 }, { opacity: 1, scale: 1, rotate: 0 })}
         >
-          <KiroGhostMark size={16} />
+          <AjMark size={16} />
         </motion.span>
       </Step>
       <Step label={i18nT('components.crewMode.flow_parallel')} still={still} arrowAt={AT.board - 0.1}>
@@ -163,7 +163,7 @@ function Flow({ still }: { still: boolean }) {
                 className={TONE_TEXT[(['aim', 'info', 'ok'] as const)[i]]}
                 {...enter(still, at, { opacity: 0, x: -30, y: (1 - i) * 18, scale: 0.4 }, { opacity: 1, x: 0, y: 0, scale: 1 }, { stiffness: 220, damping: 16 })}
               >
-                <KiroGhostMark size={11} />
+                <AjMark size={11} />
               </motion.span>
             </motion.span>
           ))}
@@ -278,7 +278,7 @@ export default function CrewModeWelcome({ onOpenTaskBoard, chatKey }: {
             style={{ boxShadow: '0 0 32px var(--color-aim)' }}
             {...enter(still, 0, { opacity: 0, scale: 0.3 }, { opacity: 1, scale: 1 }, { stiffness: 220, damping: 14 })}
           >
-            <KiroGhost size={52} />
+            <AjGem size={52} />
           </motion.span>
         </div>
         {CREW_GHOSTS.map(g => <PoppingGhost key={`${g.x}-${g.y}`} {...g} still={still} />)}

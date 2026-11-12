@@ -26,7 +26,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 const lang = params.get('lang') || 'en'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 // `data-mode` is what the glass surfaces key their tint on (useTheme sets both in
 // the app); without it a light page drew the composer in the dark tint.
 document.documentElement.setAttribute('data-mode', theme === 'light' ? 'light' : 'dark')

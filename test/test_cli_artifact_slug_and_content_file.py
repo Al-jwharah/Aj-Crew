@@ -1,4 +1,4 @@
-"""``kirocrew artifact`` keeps the slug in one URL segment and reports a bad --content-file.
+"""``ajcrew artifact`` keeps the slug in one URL segment and reports a bad --content-file.
 
 The slug is spliced into ``/api/artifacts/<slug>``. A slug holding ``/`` would
 reach another route (``artifact delete x/publish`` unpublished ``x`` and printed
@@ -17,13 +17,13 @@ from unittest.mock import patch
 import pytest
 from cli_commands_coverage_helpers import _FakeResponse
 
-from kiro_crew import cli_commands as cc
-from kiro_crew.cli_parser_agent import register_artifact_parser
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew import cli_commands as cc
+from aj_crew.cli_parser_agent import register_artifact_parser
+from aj_crew.config.loader import AjCrewConfig
 
 
 def _parse(argv: list[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(prog="kirocrew")
+    parser = argparse.ArgumentParser(prog="ajcrew")
     register_artifact_parser(parser.add_subparsers(dest="command"))
     return parser.parse_args(argv)
 
@@ -31,11 +31,11 @@ def _parse(argv: list[str]) -> argparse.Namespace:
 def _run(args: argparse.Namespace, reply: dict | None = None):
     """Run the command against a fake gateway; return the mocked sender."""
     with (
-        patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
-        patch("kiro_crew.cli_commands.parse_dashboard_url", return_value=("localhost", 5476)),
-        patch("kiro_crew.cli_commands._internal_secret", return_value="s"),
+        patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
+        patch("aj_crew.cli_commands.parse_dashboard_url", return_value=("localhost", 5476)),
+        patch("aj_crew.cli_commands._internal_secret", return_value="s"),
         patch(
-            "kiro_crew.cli_commands._gateway_send",
+            "aj_crew.cli_commands._gateway_send",
             side_effect=[_FakeResponse(reply or {"slug": "s1", "version": 2, "content": "c"})],
         ) as send,
         # A terminal stdin, so a metadata-only update does not read stdin.
@@ -48,10 +48,10 @@ def _run(args: argparse.Namespace, reply: dict | None = None):
 def _run_refused(args: argparse.Namespace) -> int:
     """Run a command that must exit before any request; return its exit code."""
     with (
-        patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
-        patch("kiro_crew.cli_commands.parse_dashboard_url", return_value=("localhost", 5476)),
-        patch("kiro_crew.cli_commands._internal_secret", return_value="s"),
-        patch("kiro_crew.cli_commands._gateway_send") as send,
+        patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
+        patch("aj_crew.cli_commands.parse_dashboard_url", return_value=("localhost", 5476)),
+        patch("aj_crew.cli_commands._internal_secret", return_value="s"),
+        patch("aj_crew.cli_commands._gateway_send") as send,
     ):
         with pytest.raises(SystemExit) as exc:
             cc._artifact(args)

@@ -37,11 +37,11 @@ from crew_log_fold_eager_helpers import (  # noqa: F401 -- the autouse fixture r
     _work_entry,
 )
 
-from kiro_crew.crew_log import eager
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import slot_prime
-from kiro_crew.metrics import crew_log_health as health
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.crew_log import eager
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import slot_prime
+from aj_crew.metrics import crew_log_health as health
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 SESSION = "acp-health"
 
@@ -68,7 +68,7 @@ class _Rec:
 @pytest.fixture()
 def rec(monkeypatch):
     r = _Rec()
-    monkeypatch.setattr("kiro_crew.metrics.provider.get_recorder", lambda: r)
+    monkeypatch.setattr("aj_crew.metrics.provider.get_recorder", lambda: r)
     return r
 
 
@@ -120,7 +120,7 @@ def test_the_append_path_never_reaches_the_metrics_module_at_all(tmp_path):
     """
     probe = (
         "import sys\n"
-        "from kiro_crew.crew_log import eager\n"
+        "from aj_crew.crew_log import eager\n"
         # The fold WORKER imports the metrics module on purpose, through its
         # thread claim -- that is where recording is allowed. ``note_commit``
         # starts that worker, so leaving it live would race this probe's print
@@ -130,9 +130,9 @@ def test_the_append_path_never_reaches_the_metrics_module_at_all(tmp_path):
         "eager._run = lambda: None\n"
         "eager.note_commit('acp-probe', 'turn/started', 1)\n"
         "eager.note_commit('acp-probe', 'turn/completed', 2)\n"
-        "print('health' if 'kiro_crew.metrics.crew_log_health' in sys.modules else 'clean')\n"
+        "print('health' if 'aj_crew.metrics.crew_log_health' in sys.modules else 'clean')\n"
     )
-    env = dict(os.environ, PYTHONPATH="src", KIROCREW_HOME=str(tmp_path / "home"))
+    env = dict(os.environ, PYTHONPATH="src", AJCREW_HOME=str(tmp_path / "home"))
     done = subprocess.run(  # noqa: S603 - fixed argv, no shell
         [sys.executable, "-c", probe],
         capture_output=True,
@@ -258,10 +258,10 @@ def _a_slot_with_work() -> None:
 
 def _a_session_with_turns(unit_id: str = SESSION) -> None:
     """One session unit with a turn, which every session fold moves on."""
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
-    handle = CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="kirocrew")
+    handle = CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew")
     handle.append("turn/started", {"turn": 1, "actor": "user", "depth": 0}, src="gateway")
 
 
@@ -301,7 +301,7 @@ def test_a_slot_fold_resumed_from_disk_records_the_savepoint_origin(rec):
     earned once a fold has advanced that far: a shorter log leaves nothing on
     disk and the next pass is honestly cold.
     """
-    from kiro_crew.crew_log import checkpoint as savepoints
+    from aj_crew.crew_log import checkpoint as savepoints
 
     handle = _slot_log("acp-health-savepoint", WORK_SLOT)
     for nth in range(savepoints.MIN_ADVANCE_ENTRIES + 4):
@@ -315,11 +315,11 @@ def test_a_slot_fold_resumed_from_disk_records_the_savepoint_origin(rec):
 
 def test_a_session_fold_resumed_from_disk_records_the_savepoint_origin(rec):
     """The session scope reaches the savepoint branch the same way the slot does."""
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
-    from kiro_crew.crew_log import checkpoint as savepoints
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
+    from aj_crew.crew_log import checkpoint as savepoints
 
-    handle = CrewLog.create(lg.KIND_SESSION, SESSION, owner="raymond", agent="kirocrew")
+    handle = CrewLog.create(lg.KIND_SESSION, SESSION, owner="raymond", agent="ajcrew")
     for turn in range(savepoints.MIN_ADVANCE_ENTRIES + 4):
         handle.append(
             "turn/started", {"turn": turn + 1, "actor": "user", "depth": 0}, src="gateway"
@@ -378,7 +378,7 @@ def test_a_slot_fold_that_raises_mid_apply_records_its_start_and_no_apply(rec, m
     mean the fold never started, and the assertion would hold for the wrong
     reason.
     """
-    from kiro_crew.crew_log import projection_slot_memo
+    from aj_crew.crew_log import projection_slot_memo
 
     _a_slot_with_work()
 

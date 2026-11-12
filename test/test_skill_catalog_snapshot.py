@@ -27,14 +27,14 @@ from pathlib import Path
 
 import pytest
 
+from aj_crew import skill_search_index as skill_search_index_module
+from aj_crew import skill_trust
+from aj_crew import skills as skills_module
+from aj_crew.skill_runtime import catalog as catalog_module
+from aj_crew.skill_search_index import SKILL_SEARCH_INDEX_FILENAME, SkillSearchIndex
+from aj_crew.skills import SkillsLoader, _trusted_skill_roots
+from aj_crew.testing.wait import wait_until
 from conftest import make_dir_link
-from kiro_crew import skill_search_index as skill_search_index_module
-from kiro_crew import skill_trust
-from kiro_crew import skills as skills_module
-from kiro_crew.skill_runtime import catalog as catalog_module
-from kiro_crew.skill_search_index import SKILL_SEARCH_INDEX_FILENAME, SkillSearchIndex
-from kiro_crew.skills import SkillsLoader, _trusted_skill_roots
-from kiro_crew.testing.wait import wait_until
 
 _WAIT = 30.0
 """Bound on every wait a test itself must unblock, so a missed release fails by

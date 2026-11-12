@@ -19,7 +19,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.hooks import (
+from aj_crew.hooks import (
     HOOK_INJECT_CONTEXT,
     HOOK_MODIFY,
     HOOK_PASSTHROUGH,
@@ -434,7 +434,7 @@ class TestToolHooks:
         only for a child whose own identity verified."""
         from types import SimpleNamespace
 
-        from kiro_crew.hooks import ToolHookResult, identity_grant_covers_child
+        from aj_crew.hooks import ToolHookResult, identity_grant_covers_child
 
         cfg = HooksConfig(auto_approve_tools=["@memory-mcp/*", "Reading *"])
         mgr = HookManager(cfg)
@@ -474,12 +474,12 @@ class TestToolHooks:
         traced to its pattern."""
         import logging
 
-        from kiro_crew import hooks as hooks_mod
+        from aj_crew import hooks as hooks_mod
 
         hooks_mod._TITLE_ONLY_GRANT_NOTED.clear()
         cfg = HooksConfig(auto_approve_tools=["Look up*"])
         mgr = HookManager(cfg)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.hooks"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.hooks"):
             for _ in range(2):
                 assert (
                     mgr.on_tool_call(
@@ -496,7 +496,7 @@ class TestToolHooks:
         # No breadcrumb when the identity is unproven: the title branch is the
         # grant key there and the pattern simply grants.
         caplog.clear()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.hooks"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.hooks"):
             assert (
                 mgr.on_tool_call(
                     "Look up the paper", mcp_server_name="memory-mcp", mcp_tool_name="search_memory"
@@ -543,7 +543,7 @@ class TestAnUnreadableMcpIdentityIsDeniedByTheGate:
 def _denied_grant():
     """Built at use time from the gate's own binding, so a module reload in the
     suite cannot hand the gate a class it does not recognise."""
-    from kiro_crew.hooks import SpecDeniedGrant
+    from aj_crew.hooks import SpecDeniedGrant
 
     return SpecDeniedGrant(denied_commands=("make clean",))
 
@@ -612,8 +612,8 @@ class TestHookGateKwargs:
         exact values under the gate's keyword names; ``command`` is the
         recovered ``shell_command`` and ``mcp_tool_name`` is the ``_meta.kiro``
         ``tool_name`` (never the model-authored title)."""
-        from kiro_crew.acp.types import AcpEvent
-        from kiro_crew.hooks import hook_gate_kwargs
+        from aj_crew.acp.types import AcpEvent
+        from aj_crew.hooks import hook_gate_kwargs
 
         event = AcpEvent(
             kind="permission_request",
@@ -676,7 +676,7 @@ class TestHookGateKwargs:
         ``None`` in a string/bool slot — yields exactly the default the gate
         parameter declares, matching the ``getattr(...) or ""`` /
         ``bool(getattr(...))`` reads the channel dispatchers used."""
-        from kiro_crew.hooks import hook_gate_kwargs
+        from aj_crew.hooks import hook_gate_kwargs
 
         bare = hook_gate_kwargs(SimpleNamespace())
         assert bare == {
@@ -721,7 +721,7 @@ class TestHookGateKwargs:
         # A non-shell event recovers no command even when its params carry one:
         # ``shell_command`` is None off the shell kind, and the helper does not
         # second-guess it (the gate keys deny-by-default on is_shell + command).
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         non_shell = AcpEvent(kind="permission_request", raw_tool_params={"command": "ls"})
         assert hook_gate_kwargs(non_shell)["command"] is None
@@ -732,8 +732,8 @@ class TestHookGateKwargs:
         the identity out of it: an identity-keyed deny binds on a benign title
         only because the helper threaded ``mcp_server_name``/``mcp_tool_name``/
         ``mcp_identity_trusted`` — the very signal a hand-copying site drops."""
-        from kiro_crew.acp.types import AcpEvent
-        from kiro_crew.hooks import hook_gate_kwargs
+        from aj_crew.acp.types import AcpEvent
+        from aj_crew.hooks import hook_gate_kwargs
 
         mgr = HookManager(HooksConfig(auto_deny_tools=["@ops/delete_*"]))
         event = AcpEvent(
@@ -766,7 +766,7 @@ class TestHookGateKwargs:
         """A surface with a different event shape may replace an extracted
         value; a key the helper does not extract is refused loudly, so a
         misspelt override cannot become a stray gate kwarg."""
-        from kiro_crew.hooks import hook_gate_kwargs
+        from aj_crew.hooks import hook_gate_kwargs
 
         ev = SimpleNamespace(tool_kind="", raw_tool_params={"cmd": "ls"}, is_shell=False)
         kwargs = hook_gate_kwargs(ev, tool_kind="bash", command="ls", is_shell=True)
@@ -785,7 +785,7 @@ class TestHookGateKwargs:
         reaching no dispatcher because every site had to be edited by hand."""
         import dataclasses
 
-        from kiro_crew.hooks import TOOL_ALLOW, ToolCall, ToolHookResult, hook_gate_kwargs
+        from aj_crew.hooks import TOOL_ALLOW, ToolCall, ToolHookResult, hook_gate_kwargs
 
         probe = SimpleNamespace(
             title="<title>",
@@ -814,7 +814,7 @@ class TestHookGateKwargs:
         ]
         assert unfilled == [], f"ToolCall fields no event attribute fills: {unfilled}"
         assert (call.title, call.resolved_agent) == ("<title>", "")
-        assert ToolCall.from_event(probe, resolved_agent="kirocrew").resolved_agent == "kirocrew"
+        assert ToolCall.from_event(probe, resolved_agent="ajcrew").resolved_agent == "ajcrew"
         with pytest.raises(TypeError, match="resolved_agnet"):
             ToolCall.from_event(probe, resolved_agnet="typo")
 
@@ -882,9 +882,9 @@ class TestHookGateKwargs:
             "deny_waivers": frozenset({"<key>"}),
         }
         HookManager().on_tool_call(
-            probe.title, resolved_agent="kirocrew", **surface, **hook_gate_kwargs(probe)
+            probe.title, resolved_agent="ajcrew", **surface, **hook_gate_kwargs(probe)
         )
-        assert seen == [(dataclasses.replace(call, resolved_agent="kirocrew"), surface)]
+        assert seen == [(dataclasses.replace(call, resolved_agent="ajcrew"), surface)]
 
     # Sites the structural scan treats specially. Each entry is a reviewed
     # decision, not drift: a new entry needs a reason in the site's comment.
@@ -1082,9 +1082,9 @@ class TestHookGateKwargs:
         exceptions; anything else is an offender."""
         from pathlib import Path
 
-        import kiro_crew
+        import aj_crew
 
-        root = Path(kiro_crew.__file__).resolve().parent
+        root = Path(aj_crew.__file__).resolve().parent
         event_kwargs = set(self.EVENT_FIELD_BY_KWARG)
         offenders: list[str] = []
         helper_sites: set[str] = set()
@@ -1427,16 +1427,16 @@ class TestSentTitleWithACompanionOverlay:
     def _install_overlay(*patterns: str) -> None:
         import dataclasses
 
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.platform import set_context
-        from kiro_crew.platform.bootstrap import build_default_context
-        from kiro_crew.platform.security_authority import PolicyAuthority
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.platform import set_context
+        from aj_crew.platform.bootstrap import build_default_context
+        from aj_crew.platform.security_authority import PolicyAuthority
 
         class _Overlay:
             def extra_deny_patterns(self):
                 return patterns
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, security=PolicyAuthority(overlay=_Overlay())))
 
     def test_the_fixture_cuts_inside_the_quotes(self):
@@ -1486,21 +1486,21 @@ class TestSentTitleSegmentPass:
     ANCHORED = r"^echo blocked .*\.\.\.$"
 
     def test_a_pattern_anchored_to_one_segment_matches_it(self):
-        from kiro_crew.security import is_denied_synthesized_target
+        from aj_crew.security import is_denied_synthesized_target
 
         assert is_denied_synthesized_target(self.CHAINED, [self.ANCHORED], segments=True)
         # The synthesized-target default stays whole-string only.
         assert is_denied_synthesized_target(self.CHAINED, [self.ANCHORED]) is None
 
     def test_no_floor_runs(self):
-        from kiro_crew.security import is_denied_synthesized_target
+        from aj_crew.security import is_denied_synthesized_target
 
         cut = _LONG_FEATURE_PUSH[:197] + "..."
         assert is_denied_synthesized_target(cut, [], segments=True) is None
         assert is_denied_synthesized_target(cut, [r"\bshred\b"], segments=True) is None
 
     def test_it_decides_as_is_denied_does_on_the_same_patterns(self):
-        from kiro_crew.security import is_denied, is_denied_synthesized_target
+        from aj_crew.security import is_denied, is_denied_synthesized_target
 
         cases = [
             (self.CHAINED, [self.ANCHORED]),

@@ -23,7 +23,7 @@ function resolved(value: string): boolean {
 
 describe('design-critique protocol constants', () => {
   it('runs as the core agent, not a bundled persona (a builtin never registers one)', () => {
-    expect(AGENT).toBe('kirocrew')
+    expect(AGENT).toBe('ajcrew')
   })
 
   it('keeps every storage key distinct', () => {

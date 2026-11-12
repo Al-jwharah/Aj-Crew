@@ -1,7 +1,7 @@
 """The printed launcher policy grants what CloudFormation's handlers call.
 
 ``test/fixtures/cfn_schema_handler_permissions.json`` pins, for every resource
-type in ``kirocrew-ec2.yaml``, the ``handlers.create/update/delete.permissions``
+type in ``ajcrew-ec2.yaml``, the ``handlers.create/update/delete.permissions``
 lists from the public CloudFormation resource schemas. Each listed permission
 either is allowed by ``iam.policy_document()`` for the concrete request the
 launch makes (action, resource ARN under ``ROLE_PATH``, and the request's
@@ -14,12 +14,12 @@ import pathlib
 
 import pytest
 
-from kiro_crew.cloud import iam
+from aj_crew.cloud import iam
 
 _FIXTURE = (
     pathlib.Path(__file__).resolve().parent / "fixtures" / "cfn_schema_handler_permissions.json"
 )
-_TEMPLATE = pathlib.Path(iam.__file__).resolve().parent / "templates" / "kirocrew-ec2.yaml"
+_TEMPLATE = pathlib.Path(iam.__file__).resolve().parent / "templates" / "ajcrew-ec2.yaml"
 
 _ACCOUNT = "111122223333"
 _REGION = "us-east-1"

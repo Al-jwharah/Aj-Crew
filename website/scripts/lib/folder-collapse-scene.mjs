@@ -23,7 +23,7 @@ export async function routeFolderCollapseScene(page, { theme = 'dark' } = {}) {
     { id: 'f-b', name: 'beta folder', order: 1, collapsed: false },
   ]
   const slots = ['a', 'b'].flatMap((f, fi) => Array.from({ length: 40 }, (_, i) => ({
-    key: `${f}-${i}`, title: `${f === 'a' ? 'alpha' : 'beta'} session ${i}`, agent: 'kirocrew',
+    key: `${f}-${i}`, title: `${f === 'a' ? 'alpha' : 'beta'} session ${i}`, agent: 'ajcrew',
     running: false, messages: 3, folder_id: `f-${f}`, last_ts: iso(fi * 100 + i), created: iso(1000 + i),
   })))
   const bootApi = makeFixedApi('/tmp/demo').set('/api/status', {

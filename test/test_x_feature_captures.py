@@ -432,7 +432,7 @@ def test_codex_and_opencode_reach_the_server_on_the_session_array() -> None:
     """The saved spec's server and the member entry, each called once and answered."""
     for rel, server, tool in (
         ("codex/saved-spec-projection-live.jsonl", "probe", "probe_codeword"),
-        ("codex/member-dispatch-live.jsonl", "kirocrew-dashboard", "session_status"),
+        ("codex/member-dispatch-live.jsonl", "ajcrew-dashboard", "session_status"),
     ):
         (call,) = _updates(rel, "tool_call")
         assert call["rawInput"] == {"server": server, "tool": tool, "arguments": {}}, rel
@@ -442,7 +442,7 @@ def test_codex_and_opencode_reach_the_server_on_the_session_array() -> None:
     assert done["rawOutput"]["result"]["content"][0]["text"] == "tangerine-42"
     rel = "opencode/member-dispatch-live.jsonl"
     (call,) = _updates(rel, "tool_call")
-    assert call["title"] == "kirocrew-dashboard_session_status"
+    assert call["title"] == "ajcrew-dashboard_session_status"
     assert len(_methods(rel, "session/request_permission")) == 1
 
 

@@ -15,7 +15,7 @@ export function isAskQuestionToolName(name: string): boolean {
 }
 
 /** The only MCP server whose `ask_question` returns the user's answers. */
-export const ASK_QUESTION_SERVER = 'kirocrew-core'
+export const ASK_QUESTION_SERVER = 'ajcrew-core'
 
 /** The header line `_format_ask_outcome` (mcp_tools/control.py) writes first. */
 export const ASK_ANSWERED_HEADER = 'User has answered your questions:'

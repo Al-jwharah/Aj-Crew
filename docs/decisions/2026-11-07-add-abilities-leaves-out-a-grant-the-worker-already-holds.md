@@ -1,6 +1,6 @@
 # Add abilities leaves out a grant-only tool setting the Bot's worker already grants
 
-Decided by: Bolin Chen (bolichen97), Kiro Crew maintainer, 2026-11-07
+Decided by: Bolin Chen (bolichen97), Aj Crew maintainer, 2026-11-07
 Date: 2026-11-07
 Supersedes: 2026-11-02-a-crewmates-worker-carries-its-template-policy.md (in part: "every other `toolsSettings` key, in any form, is refused with its name", for `web_fetch.trusted` and `subagent.trustedAgents` that the merged worker already grants, at Add abilities time only)
 

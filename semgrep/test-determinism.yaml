@@ -9,7 +9,7 @@ rules:
   # purpose says why with `# nosemgrep: <rule id>` plus the reason; for the
   # autouse fixture rule that line is the fixture's `def` line.
 
-  - id: kirocrew.test-sleep-as-barrier
+  - id: ajcrew.test-sleep-as-barrier
     patterns:
       - pattern-inside: |
           def $TEST(...):
@@ -60,14 +60,14 @@ rules:
     paths:
       include:
         - test/**
-        - src/kiro_crew/apps/builtins/**/tests/**
-        - src/kiro_crew/apps/builtins/**/*_tests/**
+        - src/aj_crew/apps/builtins/**/tests/**
+        - src/aj_crew/apps/builtins/**/*_tests/**
         - conftest.py
     message: >
       A fixed sleep in a test body is a bet on how fast the host is: it passes on
       a fast runner and reds a loaded one, or it makes a negative assertion pass
       for the trivial reason. Wait on the state you assert with
-      kiro_crew.testing.wait.wait_until / async_wait_until (D1), or hold the
+      aj_crew.testing.wait.wait_until / async_wait_until (D1), or hold the
       blocker and wait until it is parked (until_parked).
     severity: ERROR
     languages: [python]
@@ -75,13 +75,13 @@ rules:
       category: correctness
       subcategory: test-determinism
 
-  - id: kirocrew.test-bare-monkeypatch-undo
+  - id: ajcrew.test-bare-monkeypatch-undo
     pattern: monkeypatch.undo()
     paths:
       include:
         - test/**
-        - src/kiro_crew/apps/builtins/**/tests/**
-        - src/kiro_crew/apps/builtins/**/*_tests/**
+        - src/aj_crew/apps/builtins/**/tests/**
+        - src/aj_crew/apps/builtins/**/*_tests/**
         - conftest.py
     message: >
       monkeypatch.undo() reverts EVERY patch on the shared instance, including
@@ -94,15 +94,15 @@ rules:
       category: correctness
       subcategory: test-determinism
 
-  - id: kirocrew.test-in-process-reload
+  - id: ajcrew.test-in-process-reload
     pattern-either:
       - pattern: importlib.reload(...)
       - pattern: reload(...)
     paths:
       include:
         - test/**
-        - src/kiro_crew/apps/builtins/**/tests/**
-        - src/kiro_crew/apps/builtins/**/*_tests/**
+        - src/aj_crew/apps/builtins/**/tests/**
+        - src/aj_crew/apps/builtins/**/*_tests/**
         - conftest.py
     message: >
       importlib.reload rebinds a shared module's globals in place, so code that
@@ -115,7 +115,7 @@ rules:
       category: correctness
       subcategory: test-determinism
 
-  - id: kirocrew.test-stdlib-clock-rebound
+  - id: ajcrew.test-stdlib-clock-rebound
     # `$MOD.time` is the time module reached through another module's binding
     # (`subject.time`, `"pkg.mod.time.monotonic"`): the same object, so the same
     # whole-worker patch. `$MP.setattr(subject, "time", clock)` rebinds the
@@ -133,8 +133,8 @@ rules:
     paths:
       include:
         - test/**
-        - src/kiro_crew/apps/builtins/**/tests/**
-        - src/kiro_crew/apps/builtins/**/*_tests/**
+        - src/aj_crew/apps/builtins/**/tests/**
+        - src/aj_crew/apps/builtins/**/*_tests/**
         - conftest.py
     message: >
       Patching the stdlib time module replaces the clock for the whole worker:
@@ -147,7 +147,7 @@ rules:
       category: correctness
       subcategory: test-determinism
 
-  - id: kirocrew.test-naive-local-time
+  - id: ajcrew.test-naive-local-time
     pattern-either:
       - pattern: datetime.now()
       - pattern: datetime.datetime.now()
@@ -161,8 +161,8 @@ rules:
     paths:
       include:
         - test/**
-        - src/kiro_crew/apps/builtins/**/tests/**
-        - src/kiro_crew/apps/builtins/**/*_tests/**
+        - src/aj_crew/apps/builtins/**/tests/**
+        - src/aj_crew/apps/builtins/**/*_tests/**
         - conftest.py
     message: >
       A naive local-time read depends on the host's zone and on when the test
@@ -175,7 +175,7 @@ rules:
       category: correctness
       subcategory: test-determinism
 
-  - id: kirocrew.test-unseeded-random
+  - id: ajcrew.test-unseeded-random
     pattern-either:
       - pattern: os.urandom(...)
       - patterns:
@@ -188,8 +188,8 @@ rules:
     paths:
       include:
         - test/**
-        - src/kiro_crew/apps/builtins/**/tests/**
-        - src/kiro_crew/apps/builtins/**/*_tests/**
+        - src/aj_crew/apps/builtins/**/tests/**
+        - src/aj_crew/apps/builtins/**/*_tests/**
         - conftest.py
     message: >
       An unseeded draw makes the input different on every run, so a red cannot
@@ -202,7 +202,7 @@ rules:
       category: correctness
       subcategory: test-determinism
 
-  - id: kirocrew.test-autouse-shared-monkeypatch
+  - id: ajcrew.test-autouse-shared-monkeypatch
     patterns:
       - pattern-either:
           - pattern: |
@@ -219,8 +219,8 @@ rules:
     paths:
       include:
         - test/**
-        - src/kiro_crew/apps/builtins/**/tests/**
-        - src/kiro_crew/apps/builtins/**/*_tests/**
+        - src/aj_crew/apps/builtins/**/tests/**
+        - src/aj_crew/apps/builtins/**/*_tests/**
         - conftest.py
     message: >
       An autouse fixture that patches through the shared monkeypatch is lifted
@@ -232,7 +232,7 @@ rules:
       category: correctness
       subcategory: test-determinism
 
-  - id: kirocrew.test-promise-sleep
+  - id: ajcrew.test-promise-sleep
     patterns:
       - pattern-either:
           - pattern: new Promise(($R) => setTimeout($R, $N))
@@ -262,7 +262,7 @@ rules:
       category: correctness
       subcategory: test-determinism
 
-  - id: kirocrew.test-wait-for-timeout
+  - id: ajcrew.test-wait-for-timeout
     pattern: $PAGE.waitForTimeout(...)
     paths:
       include:

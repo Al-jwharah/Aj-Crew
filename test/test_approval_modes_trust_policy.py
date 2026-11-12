@@ -1,7 +1,7 @@
 """A ``permission_mode`` deny of ``trust`` / ``trust_reads`` holds at every entry point.
 
 RFC crew-lts-edition D9. The verdict is pushed at ceiling install
-(``kiro_crew.approval_mode_policy``); these cases install a real ceiling and check each
+(``aj_crew.approval_mode_policy``); these cases install a real ceiling and check each
 place a session's Trust is set or honoured: the dashboard mode API, the approval card,
 the picker's disabled list, the slot's own flags, the stored ``"auto"`` policy, the
 messaging Trust set, the crewmate default, a cron job's ``auto`` and a spawn's ``auto``.
@@ -18,14 +18,14 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import approval_mode_policy as amp
-from kiro_crew import safety_override as so_mod
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.governance import parse_policy
+from aj_crew import approval_mode_policy as amp
+from aj_crew import safety_override as so_mod
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.governance import parse_policy
 
 #: The owner's rule, after translation: Trust is not offered.
 OWNER_RULE = {"mode": "allow", "allow": ["normal", "trust_reads"]}
@@ -39,7 +39,7 @@ def _isolate(tmp_path, _floor_monkeypatch):
     d = tmp_path / "profiles"
     d.mkdir()
     _floor_monkeypatch.setattr(gp, "_PROFILES_DIR", d)
-    _floor_monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    _floor_monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     gp.reset_store()
     ctx_mod.reset_context()
     so_mod.reset_singleton()
@@ -53,9 +53,9 @@ def _isolate(tmp_path, _floor_monkeypatch):
 
 def _install(rule: dict | None) -> None:
     """Install *rule* as the ``approval_modes`` ceiling (``None``: no policy)."""
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    base = build_default_context(KiroCrewConfig.load())
+    base = build_default_context(AjCrewConfig.load())
     ceiling = (
         None
         if rule is None
@@ -78,7 +78,7 @@ def _make_state(tmp_path) -> DashboardState:
 
 
 def _make_app(state: DashboardState) -> web.Application:
-    from kiro_crew.dashboard.chat import api_chat_mode, api_chat_slot_approve
+    from aj_crew.dashboard.chat import api_chat_mode, api_chat_slot_approve
 
     @web.middleware
     async def _test_auth(request: web.Request, handler):
@@ -104,7 +104,7 @@ async def _set_mode(state: DashboardState, mode: str) -> tuple[int, dict]:
 class TestTheModeApi:
     @pytest.mark.asyncio
     async def test_the_owner_rule_refuses_trust_and_keeps_reads(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
         _install(OWNER_RULE)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
@@ -119,7 +119,7 @@ class TestTheModeApi:
 
     @pytest.mark.asyncio
     async def test_a_rule_allowing_all_three_keeps_trust(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
         _install(ALL_THREE)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
@@ -130,7 +130,7 @@ class TestTheModeApi:
 
     @pytest.mark.asyncio
     async def test_no_rule_keeps_trust(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
         _install(None)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
@@ -152,7 +152,7 @@ class TestTheModeApi:
     @pytest.mark.asyncio
     async def test_a_deny_during_the_mode_write_clears_the_stored_auto(self, tmp_path, monkeypatch):
         """A deny landing during the request's awaits leaves no stored auto behind."""
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
         _install(None)
         state = _make_state(tmp_path)
         policies: dict[str, str] = {}
@@ -178,7 +178,7 @@ class TestTheModeApi:
 
     @pytest.mark.asyncio
     async def test_the_card_trust_press_is_refused(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
         _install(OWNER_RULE)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
@@ -198,8 +198,8 @@ class TestTheModeApi:
 
 def test_a_profile_may_not_deny_trust_only_the_policy_may():
     """Only the installed policy enforces a Trust deny, so a profile's deny is refused."""
-    from kiro_crew.platform.context import PlatformCompositionError
-    from kiro_crew.platform.governance_parts.parsing import _parse_controls
+    from aj_crew.platform.context import PlatformCompositionError
+    from aj_crew.platform.governance_parts.parsing import _parse_controls
 
     assert _parse_controls({"approval_modes": OWNER_RULE}, is_policy=True)
     with pytest.raises(PlatformCompositionError, match="must not forbid 'trust'"):
@@ -224,7 +224,7 @@ class TestThePickerList:
 class TestAGrantMadeBeforeTheDeny:
     def test_the_slot_flags_are_masked_then_dropped(self, tmp_path):
         # Through the facade, whose names the function runs on.
-        from kiro_crew.dashboard.server import _drop_policy_denied_trust
+        from aj_crew.dashboard.server import _drop_policy_denied_trust
 
         _install(None)
         state = _make_state(tmp_path)
@@ -245,7 +245,7 @@ class TestAGrantMadeBeforeTheDeny:
 
     def test_a_yolo_grant_keeps_auto_only_on_a_slot_it_reaches(self, tmp_path, monkeypatch):
         """A CLI-launch YOLO skips channel slots, so their revoked Trust is cleared."""
-        from kiro_crew.dashboard.server import _drop_policy_denied_trust
+        from aj_crew.dashboard.server import _drop_policy_denied_trust
 
         _install(None)
         state = _make_state(tmp_path)
@@ -253,7 +253,7 @@ class TestAGrantMadeBeforeTheDeny:
         channel = state.get_or_create_slot("s2")
         reached._trust = channel._trust = True
         live = MagicMock(has_grant=MagicMock(return_value=True))
-        monkeypatch.setattr("kiro_crew.dashboard.server.safety_override", lambda: live)
+        monkeypatch.setattr("aj_crew.dashboard.server.safety_override", lambda: live)
         state.yolo_reaches = lambda slot, **kw: slot is reached
         _install(OWNER_RULE)
         state.sessions.set_approval_policy.reset_mock()
@@ -264,7 +264,7 @@ class TestAGrantMadeBeforeTheDeny:
 
     def test_a_cli_launch_yolo_keeps_no_stored_auto(self, monkeypatch):
         """``gateway --approval yolo`` is dashboard-only, so it keeps no revoked auto."""
-        import kiro_crew.safety_override as so
+        import aj_crew.safety_override as so
 
         _install(OWNER_RULE)
         cli = MagicMock(is_active=MagicMock(return_value=True), is_cli_launch=True)
@@ -291,7 +291,7 @@ class TestAGrantMadeBeforeTheDeny:
     def test_the_session_store_reads_a_denied_auto_as_empty(self):
         from types import SimpleNamespace
 
-        from kiro_crew.session_allocation import SessionAllocationService
+        from aj_crew.session_allocation import SessionAllocationService
 
         boundary = SimpleNamespace(
             _sessions={"k": SimpleNamespace(approval_policy="auto")},
@@ -304,7 +304,7 @@ class TestAGrantMadeBeforeTheDeny:
 
     @pytest.mark.asyncio
     async def test_a_running_subagents_inherited_auto_ends_with_the_deny(self):
-        from kiro_crew.tool_permission import ParentPolicyAuto
+        from aj_crew.tool_permission import ParentPolicyAuto
 
         _install(None)
         grant = ParentPolicyAuto("auto")
@@ -316,7 +316,7 @@ class TestAGrantMadeBeforeTheDeny:
 
     @pytest.mark.asyncio
     async def test_a_running_auto_cron_asks_after_the_deny(self):
-        from kiro_crew.cron_service.fields import auto_job_approver
+        from aj_crew.cron_service.fields import auto_job_approver
 
         asked: list[object] = []
 
@@ -332,7 +332,7 @@ class TestAGrantMadeBeforeTheDeny:
 
     def test_an_unrelated_install_under_yolo_keeps_standing_trust(self, tmp_path):
         """The install mask must not make the YOLO suspend take standing Trust."""
-        from kiro_crew.dashboard.server import (
+        from aj_crew.dashboard.server import (
             _clear_override_derived_trust,
             _suspend_override_derived_trust,
         )
@@ -362,7 +362,7 @@ class TestAGrantMadeBeforeTheDeny:
         assert policies["dashboard:s1"] == "auto"
 
     def test_the_messaging_trust_set_refuses_and_masks(self):
-        from kiro_crew.messaging import session_trust as st
+        from aj_crew.messaging import session_trust as st
 
         _install(None)
         st.add_trusted_session("slack:C1:1")
@@ -388,7 +388,7 @@ class TestOtherEntryPoints:
         assert amp.clamp_session_mode("trust") == "trust"
 
     def test_a_cron_jobs_auto_is_refused_and_not_honoured(self):
-        from kiro_crew.cron_service.fields import (
+        from aj_crew.cron_service.fields import (
             effective_job_approval_mode,
             refuse_policy_denied_auto,
         )
@@ -404,8 +404,8 @@ class TestOtherEntryPoints:
 
     def test_a_cron_auto_refusal_is_audited_for_every_writer(self, monkeypatch):
         """The CLI, apps SDK and dashboard share this refusal, so it writes the SEL row."""
-        import kiro_crew.sel as sel_mod
-        from kiro_crew.cron_service.fields import refuse_policy_denied_auto
+        import aj_crew.sel as sel_mod
+        from aj_crew.cron_service.fields import refuse_policy_denied_auto
 
         events: list[dict] = []
         fake = MagicMock()
@@ -427,7 +427,7 @@ class TestOtherEntryPoints:
 
     @pytest.mark.asyncio
     async def test_a_typed_trust_reply_approves_once_and_says_so(self):
-        from kiro_crew.messaging import approval as ap
+        from aj_crew.messaging import approval as ap
 
         ap.reset_for_tests()
         _install(OWNER_RULE)
@@ -437,8 +437,8 @@ class TestOtherEntryPoints:
         ap.reset_for_tests()
 
     def test_editing_a_saved_auto_job_still_saves(self):
-        from kiro_crew.cron_service.fields import apply_job_update
-        from kiro_crew.cron_service.model import CronJob
+        from aj_crew.cron_service.fields import apply_job_update
+        from aj_crew.cron_service.model import CronJob
 
         _install(OWNER_RULE)
         saved = CronJob(id="j1", name="j", message="m", approval_mode="auto")
@@ -452,8 +452,8 @@ class TestOtherEntryPoints:
     async def test_a_spawns_auto_is_not_inherited_by_its_child(self, monkeypatch):
         from types import SimpleNamespace
 
-        import kiro_crew.subagent as sa_facade
-        from kiro_crew.subagent_manager.turn_session import resolve_parent_policy
+        import aj_crew.subagent as sa_facade
+        from aj_crew.subagent_manager.turn_session import resolve_parent_policy
 
         monkeypatch.setattr(sa_facade, "sel", lambda: MagicMock())
         manager = SimpleNamespace(
@@ -478,7 +478,7 @@ class TestOtherEntryPoints:
     async def test_the_messaging_driver_falls_back_to_asking(self):
         from types import SimpleNamespace
 
-        from kiro_crew.messaging.driver import APPROVAL_TRUST, APPROVAL_TRUST_READS, TurnDriver
+        from aj_crew.messaging.driver import APPROVAL_TRUST, APPROVAL_TRUST_READS, TurnDriver
 
         asked: list[object] = []
 
@@ -500,7 +500,7 @@ class TestOtherEntryPoints:
 
 def test_the_trust_hooks_run_after_the_yolo_hooks():
     """The YOLO suspend reads stored policies the trust mask also answers."""
-    from kiro_crew import safety_override_grant
+    from aj_crew import safety_override_grant
 
     invalidate = list(ctx_mod._CEILING_INVALIDATE_HOOKS)
     install = list(ctx_mod._CEILING_INSTALL_HOOKS)
@@ -539,7 +539,7 @@ def test_with_no_rule_an_unreadable_profiles_dir_keeps_trust(monkeypatch):
 @pytest.mark.asyncio
 async def test_a_ceiling_rule_denying_trust_denies_in_all_four_paths(monkeypatch):
     """Rule present: installing, bootstrap and a failed read deny."""
-    import kiro_crew.platform.governance_parts.evaluator as ev
+    import aj_crew.platform.governance_parts.evaluator as ev
 
     _install(OWNER_RULE)
     assert amp.session_mode_permitted("trust") is False
@@ -626,15 +626,15 @@ def test_with_no_rule_a_first_read_without_a_context_allows_trust(monkeypatch):
 @pytest.mark.asyncio
 async def test_a_profile_save_clamps_a_denied_stored_mode_on_the_live_dm(tmp_path, monkeypatch):
     """A resent stored Trust the policy now denies lands the DM on Reads, not a refusal."""
-    from kiro_crew import members as members_mod
-    from kiro_crew.dashboard.agent_admin import crew_update
+    from aj_crew import members as members_mod
+    from aj_crew.dashboard.agent_admin import crew_update
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock())
 
     async def _no_workers(*a, **kw):
         return 0
 
-    monkeypatch.setattr("kiro_crew.dashboard.crewmate_approval.apply_to_live_sessions", _no_workers)
+    monkeypatch.setattr("aj_crew.dashboard.crewmate_approval.apply_to_live_sessions", _no_workers)
     _install(OWNER_RULE)
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("dm1")
@@ -677,7 +677,7 @@ def test_a_resolve_that_starts_during_an_install_writes_nothing():
 
 def test_a_crewmate_seed_waits_for_a_final_policy_answer(tmp_path):
     """A passing deny (a profile edit not yet resolved) is not committed as the mode."""
-    from kiro_crew.dashboard.handlers.members_thread import _seed_member_approval
+    from aj_crew.dashboard.handlers.members_thread import _seed_member_approval
 
     _install(NO_READS)
     state = _make_state(tmp_path)
@@ -745,7 +745,7 @@ def test_a_failed_install_read_lowers_the_fence_and_stays_closed(monkeypatch):
 
 def test_dropping_reads_resets_a_kept_yolo_auto(tmp_path):
     """A Reads slot keeps YOLO's stored auto through the YOLO cleanup; a Reads deny clears it."""
-    from kiro_crew.dashboard.server import _drop_policy_denied_trust
+    from aj_crew.dashboard.server import _drop_policy_denied_trust
 
     _install(None)
     state = _make_state(tmp_path)
@@ -757,7 +757,7 @@ def test_dropping_reads_resets_a_kept_yolo_auto(tmp_path):
 
 
 def test_a_reads_only_deny_keeps_a_full_trust_auto(tmp_path):
-    from kiro_crew.dashboard.server import _drop_policy_denied_trust
+    from aj_crew.dashboard.server import _drop_policy_denied_trust
 
     _install(None)
     state = _make_state(tmp_path)
@@ -784,8 +784,8 @@ def test_a_late_grant_under_a_deny_holds_nothing(tmp_path):
 
 def test_a_typed_trust_grant_is_revoked_by_a_deny():
     """A text-reply Trust goes through the shared grant, so a deny revokes it."""
-    from kiro_crew.messaging import session_trust as st
-    from kiro_crew.messaging.approval import TextReplyApprovalDecider
+    from aj_crew.messaging import session_trust as st
+    from aj_crew.messaging.approval import TextReplyApprovalDecider
 
     _install(None)
     sessions = MagicMock()

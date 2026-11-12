@@ -1,4 +1,4 @@
-"""The MCP section of ``kirocrew doctor``.
+"""The MCP section of ``ajcrew doctor``.
 
 ``_doctor_mcp_tools`` probes only the managed servers, reports tool counts and errors and repairs
 missing tool references; the section's checks consult the same ``spec_gate`` that spec emission
@@ -21,15 +21,15 @@ from cli_helpers import (  # noqa: F401 -- the autouse fixture registers by impo
 class TestDoctorMcpTools:
     """Tests for the `_doctor_mcp_tools` helper — the MCP section of doctor.
 
-    The helper live-probes only the managed servers (`kirocrew-core`,
-    `kirocrew-cron`) via `probe_server`; tests monkey-patch that call so
+    The helper live-probes only the managed servers (`ajcrew-core`,
+    `ajcrew-cron`) via `probe_server`; tests monkey-patch that call so
     no child processes are spawned.
     """
 
     def _mock_probe(self, results: dict[str, tuple[str, list[str], str]]):
         """Return a patch target for `probe_server` that yields per-name
         results. `results[name] = (status, tools, error)`."""
-        from kiro_crew.mcp_discovery import McpServerInfo
+        from aj_crew.mcp_discovery import McpServerInfo
 
         async def fake(target: McpServerInfo) -> McpServerInfo:
             status, tools, error = results.get(target.name, ("ok", [], ""))
@@ -38,12 +38,12 @@ class TestDoctorMcpTools:
             target.error = error
             return target
 
-        return patch("kiro_crew.cli_doctor.probe_server", side_effect=fake)
+        return patch("aj_crew.cli_doctor.probe_server", side_effect=fake)
 
     def test_success_shows_tool_counts(self, tmp_path, capsys):
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         # Every managed server must be present or doctor reports it as a config
         # issue, so the fixture is built from the registry doctor iterates rather
         # than a literal pair (see _healthy_agent_file).
@@ -51,58 +51,58 @@ class TestDoctorMcpTools:
         issues: list[str] = []
         with self._mock_probe(
             {
-                "kirocrew-core": ("ok", ["spawn_run", "learn_add", "task_run"], ""),
-                "kirocrew-cron": ("ok", ["cron_add"], ""),
+                "ajcrew-core": ("ok", ["spawn_run", "learn_add", "task_run"], ""),
+                "ajcrew-cron": ("ok", ["cron_add"], ""),
             }
         ):
             _doctor_mcp_tools(agent_path, issues)
         out = capsys.readouterr().out
-        assert "@kirocrew-core: ✅ 3 tools" in out
-        assert "@kirocrew-cron: ✅ 1 tool" in out
+        assert "@ajcrew-core: ✅ 3 tools" in out
+        assert "@ajcrew-cron: ✅ 1 tool" in out
         assert issues == []
 
     def test_failure_shows_error_head_and_indented_stderr(self, tmp_path, capsys):
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         _write_agent_config(
             agent_path,
-            tools=["@kirocrew-core", "@kirocrew-cron"],
-            allowed=["@kirocrew-core", "@kirocrew-cron"],
+            tools=["@ajcrew-core", "@ajcrew-cron"],
+            allowed=["@ajcrew-core", "@ajcrew-cron"],
             servers={
-                "kirocrew-core": {"command": "/bin/kirocrew", "args": ["mcp-core"]},
-                "kirocrew-cron": {"command": "/bin/kirocrew", "args": ["mcp-cron"]},
+                "ajcrew-core": {"command": "/bin/ajcrew", "args": ["mcp-core"]},
+                "ajcrew-cron": {"command": "/bin/ajcrew", "args": ["mcp-cron"]},
             },
         )
         issues: list[str] = []
         fail_err = (
             "no response\n"
-            "stderr: Directory isn't within a workspace: '/home/u/.kirocrew-app' "
+            "stderr: Directory isn't within a workspace: '/home/u/.ajcrew-app' "
             "(Example::Cli::FindupException)"
         )
         with self._mock_probe(
             {
-                "kirocrew-core": ("error", [], fail_err),
-                "kirocrew-cron": ("ok", [], ""),
+                "ajcrew-core": ("error", [], fail_err),
+                "ajcrew-cron": ("ok", [], ""),
             }
         ):
             _doctor_mcp_tools(agent_path, issues)
         out = capsys.readouterr().out
         # First line of error becomes the head; subsequent lines indent.
-        assert "@kirocrew-core: ❌ no response" in out
+        assert "@ajcrew-core: ❌ no response" in out
         assert "      stderr: Directory isn't within a workspace" in out
         assert "FindupException" in out
-        assert "@kirocrew-cron: ✅ 0 tools" in out
-        assert "@kirocrew-core probe" in issues
+        assert "@ajcrew-cron: ✅ 0 tools" in out
+        assert "@ajcrew-core probe" in issues
         # Healthy server must not pollute the issue list.
-        assert "@kirocrew-cron probe" not in issues
+        assert "@ajcrew-cron probe" not in issues
 
     def test_missing_mcp_server_cannot_auto_fix(self, tmp_path, capsys):
         """A missing `mcpServers` entry is install-specific; doctor reports
         the user needs to re-run setup and does not attempt to probe."""
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         _write_agent_config(
             agent_path,
             tools=[],
@@ -113,65 +113,65 @@ class TestDoctorMcpTools:
         with self._mock_probe({}) as probe_mock:
             _doctor_mcp_tools(agent_path, issues)
         out = capsys.readouterr().out
-        assert "@kirocrew-core: ❌ missing from mcpServers" in out
-        assert "@kirocrew-cron: ❌ missing from mcpServers" in out
-        assert "re-run `kirocrew setup`" in out
-        assert "@kirocrew-core config" in issues
-        assert "@kirocrew-cron config" in issues
+        assert "@ajcrew-core: ❌ missing from mcpServers" in out
+        assert "@ajcrew-cron: ❌ missing from mcpServers" in out
+        assert "re-run `ajcrew setup`" in out
+        assert "@ajcrew-core config" in issues
+        assert "@ajcrew-cron config" in issues
         probe_mock.assert_not_called()
 
     def test_auto_fix_adds_missing_tools_and_allowed(self, tmp_path, capsys):
         """Missing `tools` / `allowedTools` entries are added to the agent
         config and persisted in-place."""
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         _write_agent_config(
             agent_path,
             tools=[],
             allowed=[],
             servers={
-                "kirocrew-core": {"command": "/bin/kirocrew", "args": ["mcp-core"]},
-                "kirocrew-cron": {"command": "/bin/kirocrew", "args": ["mcp-cron"]},
+                "ajcrew-core": {"command": "/bin/ajcrew", "args": ["mcp-core"]},
+                "ajcrew-cron": {"command": "/bin/ajcrew", "args": ["mcp-cron"]},
             },
         )
         issues: list[str] = []
         with self._mock_probe(
             {
-                "kirocrew-core": ("ok", [], ""),
-                "kirocrew-cron": ("ok", [], ""),
+                "ajcrew-core": ("ok", [], ""),
+                "ajcrew-cron": ("ok", [], ""),
             }
         ):
             _doctor_mcp_tools(agent_path, issues)
         out = capsys.readouterr().out
         assert "Auto-fixed agent config" in out
         updated = json.loads(agent_path.read_text(encoding="utf-8"))
-        assert updated["tools"] == ["@kirocrew-cron", "@kirocrew-core"]
-        assert updated["allowedTools"] == ["@kirocrew-cron", "@kirocrew-core"]
+        assert updated["tools"] == ["@ajcrew-cron", "@ajcrew-core"]
+        assert updated["allowedTools"] == ["@ajcrew-cron", "@ajcrew-core"]
 
     def test_auto_fix_skips_write_when_shared_home_declined(self, tmp_path, capsys):
         """An instance that must not own the shared agent home reports the
         auto-fix as skipped and leaves the spec byte-identical."""
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         _write_agent_config(
             agent_path,
             tools=[],
             allowed=[],
             servers={
-                "kirocrew-core": {"command": "/bin/kirocrew", "args": ["mcp-core"]},
-                "kirocrew-cron": {"command": "/bin/kirocrew", "args": ["mcp-cron"]},
+                "ajcrew-core": {"command": "/bin/ajcrew", "args": ["mcp-core"]},
+                "ajcrew-cron": {"command": "/bin/ajcrew", "args": ["mcp-cron"]},
             },
         )
         before = agent_path.read_bytes()
         issues: list[str] = []
         with (
-            patch("kiro_crew.agent._decline_shared_agent_home", return_value=agent_path),
+            patch("aj_crew.agent._decline_shared_agent_home", return_value=agent_path),
             self._mock_probe(
                 {
-                    "kirocrew-core": ("ok", [], ""),
-                    "kirocrew-cron": ("ok", [], ""),
+                    "ajcrew-core": ("ok", [], ""),
+                    "ajcrew-cron": ("ok", [], ""),
                 }
             ),
         ):
@@ -187,16 +187,16 @@ class TestDoctorMcpTools:
     ):
         """Ownership that changes between the probe and the write is caught under
         the agent-spec lock, and the audit records that final refusal."""
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         _write_agent_config(
             agent_path,
             tools=[],
             allowed=[],
             servers={
-                "kirocrew-core": {"command": "/bin/kirocrew", "args": ["mcp-core"]},
-                "kirocrew-cron": {"command": "/bin/kirocrew", "args": ["mcp-cron"]},
+                "ajcrew-core": {"command": "/bin/ajcrew", "args": ["mcp-core"]},
+                "ajcrew-cron": {"command": "/bin/ajcrew", "args": ["mcp-cron"]},
             },
         )
         before = agent_path.read_bytes()
@@ -204,14 +204,14 @@ class TestDoctorMcpTools:
         sel_mock = MagicMock()
         with (
             patch(
-                "kiro_crew.agent._decline_shared_agent_home",
+                "aj_crew.agent._decline_shared_agent_home",
                 side_effect=[None, agent_path],
             ),
-            patch("kiro_crew.cli_doctor.sel", sel_mock),
+            patch("aj_crew.cli_doctor.sel", sel_mock),
             self._mock_probe(
                 {
-                    "kirocrew-core": ("ok", [], ""),
-                    "kirocrew-cron": ("ok", [], ""),
+                    "ajcrew-core": ("ok", [], ""),
+                    "ajcrew-cron": ("ok", [], ""),
                 }
             ),
         ):
@@ -231,26 +231,26 @@ class TestDoctorMcpTools:
     def test_declined_home_reports_a_forbidden_grant_without_writing(self, tmp_path, capsys):
         """A declined home leaves a ceiling-forbidden grant on disk, logs no
         SEL revoke, and reports the grant for the owning install to repair."""
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
-        refs = ["@kirocrew-core", "@kirocrew-cron"]
+        agent_path = tmp_path / "ajcrew.json"
+        refs = ["@ajcrew-core", "@ajcrew-cron"]
         _write_agent_config(
             agent_path,
             tools=refs,
             allowed=refs,
             servers={
-                "kirocrew-core": {"command": "/bin/kirocrew", "args": ["mcp-core"]},
-                "kirocrew-cron": {"command": "/bin/kirocrew", "args": ["mcp-cron"]},
+                "ajcrew-core": {"command": "/bin/ajcrew", "args": ["mcp-core"]},
+                "ajcrew-cron": {"command": "/bin/ajcrew", "args": ["mcp-cron"]},
             },
         )
         before = agent_path.read_bytes()
         issues: list[str] = []
         sel_mock = MagicMock()
         with (
-            patch("kiro_crew.agent._decline_shared_agent_home", return_value=agent_path),
-            patch("kiro_crew.cli_doctor.may_skip_gate_now", return_value=False),
-            patch("kiro_crew.cli_doctor.sel", sel_mock),
+            patch("aj_crew.agent._decline_shared_agent_home", return_value=agent_path),
+            patch("aj_crew.cli_doctor.may_skip_gate_now", return_value=False),
+            patch("aj_crew.cli_doctor.sel", sel_mock),
             self._mock_probe({}),
         ):
             _doctor_mcp_tools(agent_path, issues)
@@ -266,65 +266,65 @@ class TestDoctorMcpTools:
         assert "auto-approve withheld" not in out
         assert issues == [
             f"{ref} auto-approve forbidden by ceiling (repair from the owning install)"
-            for ref in ("@kirocrew-cron", "@kirocrew-core")
+            for ref in ("@ajcrew-cron", "@ajcrew-core")
         ] + [
-            "@kirocrew-guide config",
-            "@kirocrew-mate config",
+            "@ajcrew-guide config",
+            "@ajcrew-mate config",
             "agent config (auto-fix skipped: shared home)",
         ]
 
     def test_ceiling_revoke_drops_per_tool_grants_too(self, tmp_path, capsys):
         """Withholding auto-approve drops the bare ref and every ``@server/tool``
         grant of that server, duplicates included, and nothing else."""
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         _write_agent_config(
             agent_path,
-            tools=["@kirocrew-core"],
+            tools=["@ajcrew-core"],
             allowed=[
-                "@kirocrew-core",
-                "@kirocrew-core/send_message",
-                "@kirocrew-core/send_message",
-                "@kirocrew-corex/run",
+                "@ajcrew-core",
+                "@ajcrew-core/send_message",
+                "@ajcrew-core/send_message",
+                "@ajcrew-corex/run",
                 "fs_read",
             ],
-            servers={"kirocrew-core": {"command": "/bin/kirocrew", "args": ["mcp-core"]}},
+            servers={"ajcrew-core": {"command": "/bin/ajcrew", "args": ["mcp-core"]}},
         )
         issues: list[str] = []
         with (
-            patch("kiro_crew.agent._decline_shared_agent_home", return_value=None),
-            patch("kiro_crew.cli_doctor.may_skip_gate_now", return_value=False),
-            patch("kiro_crew.cli_doctor.sel", MagicMock()),
+            patch("aj_crew.agent._decline_shared_agent_home", return_value=None),
+            patch("aj_crew.cli_doctor.may_skip_gate_now", return_value=False),
+            patch("aj_crew.cli_doctor.sel", MagicMock()),
             self._mock_probe({}),
         ):
             _doctor_mcp_tools(agent_path, issues)
         written = json.loads(agent_path.read_text(encoding="utf-8"))
-        assert written["allowedTools"] == ["@kirocrew-corex/run", "fs_read"]
-        assert "@kirocrew-core" in written["tools"]
+        assert written["allowedTools"] == ["@ajcrew-corex/run", "fs_read"]
+        assert "@ajcrew-core" in written["tools"]
 
     def test_a_confirm_tools_withhold_is_not_reported_as_a_ceiling(self, tmp_path, capsys):
         """The operator's own ``hooks.confirm_tools`` names itself as the cause."""
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         _write_agent_config(
             agent_path,
-            tools=["@kirocrew-core"],
-            allowed=["@kirocrew-core"],
-            servers={"kirocrew-core": {"command": "/bin/kirocrew", "args": ["mcp-core"]}},
+            tools=["@ajcrew-core"],
+            allowed=["@ajcrew-core"],
+            servers={"ajcrew-core": {"command": "/bin/ajcrew", "args": ["mcp-core"]}},
         )
         sel_mock = MagicMock()
         with (
-            patch("kiro_crew.agent._decline_shared_agent_home", return_value=None),
-            patch("kiro_crew.cli_doctor.may_skip_gate_now", return_value=False),
-            patch("kiro_crew.cli_doctor.withheld_by_confirm_tools", return_value=True),
-            patch("kiro_crew.cli_doctor.sel", sel_mock),
+            patch("aj_crew.agent._decline_shared_agent_home", return_value=None),
+            patch("aj_crew.cli_doctor.may_skip_gate_now", return_value=False),
+            patch("aj_crew.cli_doctor.withheld_by_confirm_tools", return_value=True),
+            patch("aj_crew.cli_doctor.sel", sel_mock),
             self._mock_probe({}),
         ):
             _doctor_mcp_tools(agent_path, [])
         out = capsys.readouterr().out
-        assert "@kirocrew-core: 🔒 auto-approve withheld by hooks.confirm_tools" in out
+        assert "@ajcrew-core: 🔒 auto-approve withheld by hooks.confirm_tools" in out
         assert "security policy" not in out
         resources = [
             c.kwargs.get("resources", "")
@@ -334,31 +334,31 @@ class TestDoctorMcpTools:
         assert resources and "(hooks.confirm_tools)" in resources[0]
 
     def test_declined_home_names_confirm_tools_as_the_cause(self, tmp_path, capsys):
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         _write_agent_config(
             agent_path,
-            tools=["@kirocrew-core"],
-            allowed=["@kirocrew-core"],
-            servers={"kirocrew-core": {"command": "/bin/kirocrew", "args": ["mcp-core"]}},
+            tools=["@ajcrew-core"],
+            allowed=["@ajcrew-core"],
+            servers={"ajcrew-core": {"command": "/bin/ajcrew", "args": ["mcp-core"]}},
         )
         issues: list[str] = []
         with (
-            patch("kiro_crew.agent._decline_shared_agent_home", return_value=agent_path),
-            patch("kiro_crew.cli_doctor.may_skip_gate_now", return_value=False),
-            patch("kiro_crew.cli_doctor.withheld_by_confirm_tools", return_value=True),
-            patch("kiro_crew.cli_doctor.sel", MagicMock()),
+            patch("aj_crew.agent._decline_shared_agent_home", return_value=agent_path),
+            patch("aj_crew.cli_doctor.may_skip_gate_now", return_value=False),
+            patch("aj_crew.cli_doctor.withheld_by_confirm_tools", return_value=True),
+            patch("aj_crew.cli_doctor.sel", MagicMock()),
             self._mock_probe({}),
         ):
             _doctor_mcp_tools(agent_path, issues)
         assert (
-            "@kirocrew-core auto-approve withheld by hooks.confirm_tools "
+            "@ajcrew-core auto-approve withheld by hooks.confirm_tools "
             "(repair from the owning install)"
         ) in issues
 
     def test_auto_fix_never_blanket_allows_computer_use(self, tmp_path, capsys):
-        """**Doctor must never add ``@kirocrew-computer`` to ``allowedTools``.**
+        """**Doctor must never add ``@ajcrew-computer`` to ``allowedTools``.**
 
         An ``allowedTools`` tool is approved inside kiro-cli and never reaches
         ``hooks.on_tool_call``, skipping the deny floor and approval clamp: a Plane-A
@@ -366,10 +366,10 @@ class TestDoctorMcpTools:
 
         The spec gate is pinned OPEN: a closed gate (the CI default) skips the repair.
         """
-        from kiro_crew import agent
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew import agent
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         _healthy_agent_file(agent_path)
         # Start from the state an upgrade leaves behind: servers registered, no
         # tool refs at all, so every ref doctor could add is attributable to it.
@@ -378,25 +378,25 @@ class TestDoctorMcpTools:
         data["allowedTools"] = []
         agent_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
-        gated_open = dict(agent._MANAGED_MCP_SERVERS["kirocrew-computer"])
+        gated_open = dict(agent._MANAGED_MCP_SERVERS["ajcrew-computer"])
         gated_open["spec_gate"] = lambda: True
         issues: list[str] = []
         with (
-            patch.dict(agent._MANAGED_MCP_SERVERS, {"kirocrew-computer": gated_open}),
+            patch.dict(agent._MANAGED_MCP_SERVERS, {"ajcrew-computer": gated_open}),
             self._mock_probe({}),
         ):
             _doctor_mcp_tools(agent_path, issues)
 
         updated = json.loads(agent_path.read_text(encoding="utf-8"))
-        assert "@kirocrew-computer" in updated["tools"]
-        assert "@kirocrew-computer" not in updated["allowedTools"]
-        assert not [t for t in updated["allowedTools"] if t.startswith("@kirocrew-computer/")]
+        assert "@ajcrew-computer" in updated["tools"]
+        assert "@ajcrew-computer" not in updated["allowedTools"]
+        assert not [t for t in updated["allowedTools"] if t.startswith("@ajcrew-computer/")]
         # The other managed servers are unaffected — the carve-out is scoped.
-        assert "@kirocrew-core" in updated["allowedTools"]
-        assert "@kirocrew-cron" in updated["allowedTools"]
+        assert "@ajcrew-core" in updated["allowedTools"]
+        assert "@ajcrew-cron" in updated["allowedTools"]
 
     def test_auto_fix_never_blanket_allows_mediated_secret(self, tmp_path, capsys):
-        """Doctor never pre-approves ``@kirocrew-secrets``, even when it is granted.
+        """Doctor never pre-approves ``@ajcrew-secrets``, even when it is granted.
 
         ``call_api_with_secret`` has to reach ``hooks.on_tool_call``: that approval
         is where the single-use capability the host endpoint redeems is minted. An
@@ -404,29 +404,29 @@ class TestDoctorMcpTools:
         refuse every call. The server is opt-in, so the fixture grants it the way an
         owner would (``tools`` ref present) and checks doctor leaves it un-approved.
         """
-        from kiro_crew.cli_doctor import _NO_BLANKET_ALLOW_MCPS, _doctor_mcp_tools
+        from aj_crew.cli_doctor import _NO_BLANKET_ALLOW_MCPS, _doctor_mcp_tools
 
-        assert "kirocrew-secrets" in _NO_BLANKET_ALLOW_MCPS
-        agent_path = tmp_path / "kirocrew.json"
+        assert "ajcrew-secrets" in _NO_BLANKET_ALLOW_MCPS
+        agent_path = tmp_path / "ajcrew.json"
         _healthy_agent_file(agent_path)
         data = json.loads(agent_path.read_text(encoding="utf-8"))
-        data["tools"] = [*data.get("tools", []), "@kirocrew-secrets"]
+        data["tools"] = [*data.get("tools", []), "@ajcrew-secrets"]
         data["allowedTools"] = []
         agent_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
         with self._mock_probe({}):
             _doctor_mcp_tools(agent_path, [])
         updated = json.loads(agent_path.read_text(encoding="utf-8"))
-        assert "@kirocrew-secrets" not in updated["allowedTools"]
-        assert not [t for t in updated["allowedTools"] if t.startswith("@kirocrew-secrets/")]
-        assert "@kirocrew-core" in updated["allowedTools"]
+        assert "@ajcrew-secrets" not in updated["allowedTools"]
+        assert not [t for t in updated["allowedTools"] if t.startswith("@ajcrew-secrets/")]
+        assert "@ajcrew-core" in updated["allowedTools"]
 
     def test_auto_fix_never_blanket_allows_the_guide_set(self, tmp_path, capsys):
         """The guide set is always on but granted per tool, so doctor mounts its
         ref and never mints the whole-server grant: that would pre-approve a tool
         added to the server later, before anyone reviewed it."""
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         _healthy_agent_file(agent_path)
         data = json.loads(agent_path.read_text(encoding="utf-8"))
         data["tools"] = []
@@ -435,9 +435,9 @@ class TestDoctorMcpTools:
         with self._mock_probe({}):
             _doctor_mcp_tools(agent_path, [])
         updated = json.loads(agent_path.read_text(encoding="utf-8"))
-        assert "@kirocrew-guide" in updated["tools"]
-        assert "@kirocrew-guide" not in updated["allowedTools"]
-        assert "@kirocrew-core" in updated["allowedTools"]
+        assert "@ajcrew-guide" in updated["tools"]
+        assert "@ajcrew-guide" not in updated["allowedTools"]
+        assert "@ajcrew-core" in updated["allowedTools"]
 
     def test_auto_fix_preserves_a_user_made_computer_use_grant(self, tmp_path, capsys):
         """Doctor never MINTS the grant, but never REMOVES a user's own either.
@@ -445,40 +445,40 @@ class TestDoctorMcpTools:
         A user who added the ref owns that decision. Gate pinned OPEN, as in the mint
         test above, so doctor walks the full entry.
         """
-        from kiro_crew import agent
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew import agent
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         _healthy_agent_file(agent_path)
-        gated_open = dict(agent._MANAGED_MCP_SERVERS["kirocrew-computer"])
+        gated_open = dict(agent._MANAGED_MCP_SERVERS["ajcrew-computer"])
         gated_open["spec_gate"] = lambda: True
         issues: list[str] = []
         with (
-            patch.dict(agent._MANAGED_MCP_SERVERS, {"kirocrew-computer": gated_open}),
+            patch.dict(agent._MANAGED_MCP_SERVERS, {"ajcrew-computer": gated_open}),
             self._mock_probe({}),
         ):
             _doctor_mcp_tools(agent_path, issues)
         updated = json.loads(agent_path.read_text(encoding="utf-8"))
-        assert "@kirocrew-computer" in updated["allowedTools"]
+        assert "@ajcrew-computer" in updated["allowedTools"]
 
     def test_probe_exception_does_not_crash(self, tmp_path, capsys):
         """If `probe_server` itself raises (e.g. event-loop oddity), doctor
         prints a warning and returns cleanly instead of propagating."""
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         _write_agent_config(
             agent_path,
-            tools=["@kirocrew-core", "@kirocrew-cron"],
-            allowed=["@kirocrew-core", "@kirocrew-cron"],
+            tools=["@ajcrew-core", "@ajcrew-cron"],
+            allowed=["@ajcrew-core", "@ajcrew-cron"],
             servers={
-                "kirocrew-core": {"command": "/bin/kirocrew", "args": ["mcp-core"]},
-                "kirocrew-cron": {"command": "/bin/kirocrew", "args": ["mcp-cron"]},
+                "ajcrew-core": {"command": "/bin/ajcrew", "args": ["mcp-core"]},
+                "ajcrew-cron": {"command": "/bin/ajcrew", "args": ["mcp-cron"]},
             },
         )
         issues: list[str] = []
         with patch(
-            "kiro_crew.cli_doctor.probe_server",
+            "aj_crew.cli_doctor.probe_server",
             side_effect=RuntimeError("asyncio is on fire"),
         ):
             _doctor_mcp_tools(agent_path, issues)
@@ -487,18 +487,18 @@ class TestDoctorMcpTools:
 
     def test_only_managed_servers_are_probed(self, tmp_path, capsys):
         """Third-party MCPs in the agent config must not be probed — this
-        keeps doctor output focused on Kiro Crew's own servers and avoids
+        keeps doctor output focused on Aj Crew's own servers and avoids
         false negatives for optional MCPs."""
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         _write_agent_config(
             agent_path,
-            tools=["@kirocrew-core", "@kirocrew-cron", "@builder-mcp"],
-            allowed=["@kirocrew-core", "@kirocrew-cron", "@builder-mcp"],
+            tools=["@ajcrew-core", "@ajcrew-cron", "@builder-mcp"],
+            allowed=["@ajcrew-core", "@ajcrew-cron", "@builder-mcp"],
             servers={
-                "kirocrew-core": {"command": "/bin/kirocrew", "args": ["mcp-core"]},
-                "kirocrew-cron": {"command": "/bin/kirocrew", "args": ["mcp-cron"]},
+                "ajcrew-core": {"command": "/bin/ajcrew", "args": ["mcp-core"]},
+                "ajcrew-cron": {"command": "/bin/ajcrew", "args": ["mcp-cron"]},
                 "builder-mcp": {"command": "/bin/builder-mcp"},
             },
         )
@@ -511,24 +511,24 @@ class TestDoctorMcpTools:
             target.tools = []
             return target
 
-        with patch("kiro_crew.cli_doctor.probe_server", side_effect=recording_probe):
+        with patch("aj_crew.cli_doctor.probe_server", side_effect=recording_probe):
             _doctor_mcp_tools(agent_path, issues)
-        assert probed_names == ["kirocrew-cron", "kirocrew-core"]
+        assert probed_names == ["ajcrew-cron", "ajcrew-core"]
         out = capsys.readouterr().out
         assert "@builder-mcp" not in out
 
     def test_malformed_agent_config_does_not_crash(self, tmp_path, capsys):
-        """If kirocrew.json is truncated or otherwise unparseable, doctor
+        """If ajcrew.json is truncated or otherwise unparseable, doctor
         must fall back to an empty config and surface missing-server
         errors cleanly rather than raising out of the MCP section."""
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         # Truncated mid-write, half-written JSON, totally broken content —
         # the exact failure mode the atomic_write change is meant to
         # prevent from ever landing on disk, but we still need doctor to
         # cope if it encounters one (legacy installs, disk corruption).
-        agent_path.write_text('{"tools": ["@kirocrew-c')
+        agent_path.write_text('{"tools": ["@ajcrew-c')
 
         issues: list[str] = []
         with self._mock_probe({}) as probe_mock:
@@ -536,8 +536,8 @@ class TestDoctorMcpTools:
 
         out = capsys.readouterr().out
         # Empty config → both managed servers report missing from mcpServers.
-        assert "@kirocrew-core: ❌ missing from mcpServers" in out
-        assert "@kirocrew-cron: ❌ missing from mcpServers" in out
+        assert "@ajcrew-core: ❌ missing from mcpServers" in out
+        assert "@ajcrew-cron: ❌ missing from mcpServers" in out
         # No probe attempted since no server spec survived the parse failure.
         probe_mock.assert_not_called()
 
@@ -549,9 +549,9 @@ class TestDoctorMcpTools:
         coerce it to an empty config, say what is wrong, and report cleanly,
         same as the truncated case above — and it must never rewrite the
         user's file with the coerced empty config."""
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         agent_path.write_text(content)
 
         issues: list[str] = []
@@ -562,8 +562,8 @@ class TestDoctorMcpTools:
         # The defect itself is named, not just its downstream symptoms.
         assert "agent spec is not a JSON object" in out
         # Empty config → both managed servers report missing from mcpServers.
-        assert "@kirocrew-core: ❌ missing from mcpServers" in out
-        assert "@kirocrew-cron: ❌ missing from mcpServers" in out
+        assert "@ajcrew-core: ❌ missing from mcpServers" in out
+        assert "@ajcrew-cron: ❌ missing from mcpServers" in out
         # No probe attempted since no server spec survived the coercion.
         probe_mock.assert_not_called()
         # The no-clobber contract: doctor diagnoses the broken spec, it never
@@ -582,7 +582,7 @@ class TestDoctorMcpSpecGate:
 
     def _mock_probe(self, seen: list[str]):
         """Patch ``probe_server`` to record which servers doctor launches."""
-        from kiro_crew.mcp_discovery import McpServerInfo
+        from aj_crew.mcp_discovery import McpServerInfo
 
         async def fake(target: McpServerInfo) -> McpServerInfo:
             seen.append(target.name)
@@ -591,24 +591,24 @@ class TestDoctorMcpSpecGate:
             target.error = ""
             return target
 
-        return patch("kiro_crew.cli_doctor.probe_server", side_effect=fake)
+        return patch("aj_crew.cli_doctor.probe_server", side_effect=fake)
 
     def _pin_gate(self, gate):
-        """Return a patch pinning ``kirocrew-computer``'s spec gate to *gate*."""
-        from kiro_crew import agent
+        """Return a patch pinning ``ajcrew-computer``'s spec gate to *gate*."""
+        from aj_crew import agent
 
-        pinned = dict(agent._MANAGED_MCP_SERVERS["kirocrew-computer"])
+        pinned = dict(agent._MANAGED_MCP_SERVERS["ajcrew-computer"])
         pinned["spec_gate"] = gate
-        return patch.dict(agent._MANAGED_MCP_SERVERS, {"kirocrew-computer": pinned})
+        return patch.dict(agent._MANAGED_MCP_SERVERS, {"ajcrew-computer": pinned})
 
     def _config_without_computer(self, path: Path) -> None:
         """Servers as spec emission writes them on a gated-off host: every
         managed always-on server EXCEPT the gated one, refs for all of them
         (emission deliberately leaves the ``tools`` ref alone when it retracts
         the entry, so ref-present-entry-absent is the designed steady state)."""
-        from kiro_crew.mcp_cleanup import ALWAYS_ON_BIN_MCP_SERVERS
+        from aj_crew.mcp_cleanup import ALWAYS_ON_BIN_MCP_SERVERS
 
-        present = [n for n in ALWAYS_ON_BIN_MCP_SERVERS if n != "kirocrew-computer"]
+        present = [n for n in ALWAYS_ON_BIN_MCP_SERVERS if n != "ajcrew-computer"]
         _write_agent_config(
             path,
             tools=[f"@{n}" for n in ALWAYS_ON_BIN_MCP_SERVERS],
@@ -626,9 +626,9 @@ class TestDoctorMcpSpecGate:
         exits 0), no auto-mount of the ref, and the line says WHY the server is
         absent rather than looking like a silent skip.
         """
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         self._config_without_computer(agent_path)
         before = agent_path.read_text(encoding="utf-8")
         issues: list[str] = []
@@ -636,28 +636,28 @@ class TestDoctorMcpSpecGate:
         with self._pin_gate(lambda: False), self._mock_probe(probed):
             _doctor_mcp_tools(agent_path, issues)
         out = capsys.readouterr().out
-        assert "@kirocrew-computer: ℹ️  gated off on this host" in out
+        assert "@ajcrew-computer: ℹ️  gated off on this host" in out
         assert "feature disabled or no driver" in out
-        assert "@kirocrew-computer: ❌" not in out
+        assert "@ajcrew-computer: ❌" not in out
         assert issues == []
         # Nothing mounted, minted, or probed for the gated-off server — and the
         # stale ref emission leaves behind is not reported as "half a grant".
-        assert "kirocrew-computer" not in probed
+        assert "ajcrew-computer" not in probed
         assert "referenced in tools but absent" not in out
         assert agent_path.read_text(encoding="utf-8") == before
 
     def test_gate_open_absent_entry_keeps_the_hard_error(self, tmp_path, capsys):
         """Gate open + entry absent is still a broken install and MUST fail."""
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         self._config_without_computer(agent_path)
         issues: list[str] = []
         with self._pin_gate(lambda: True), self._mock_probe([]):
             _doctor_mcp_tools(agent_path, issues)
         out = capsys.readouterr().out
-        assert "@kirocrew-computer: ❌ missing from mcpServers (re-run `kirocrew setup`)" in out
-        assert "@kirocrew-computer config" in issues
+        assert "@ajcrew-computer: ❌ missing from mcpServers (re-run `ajcrew setup`)" in out
+        assert "@ajcrew-computer config" in issues
 
     def test_gate_raising_is_treated_as_open(self, tmp_path, capsys):
         """A gate that raises PAST ITS OWN HANDLING must not silence the error.
@@ -666,19 +666,19 @@ class TestDoctorMcpSpecGate:
         error, so a gate that cannot be evaluated reports the missing entry. The shipped
         gate's swallowed-error case is pinned below.
         """
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
         def explode() -> bool:
             raise RuntimeError("gate unreadable")
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         self._config_without_computer(agent_path)
         issues: list[str] = []
         with self._pin_gate(explode), self._mock_probe([]):
             _doctor_mcp_tools(agent_path, issues)
         out = capsys.readouterr().out
-        assert "@kirocrew-computer: ❌ missing from mcpServers" in out
-        assert "@kirocrew-computer config" in issues
+        assert "@ajcrew-computer: ❌ missing from mcpServers" in out
+        assert "@ajcrew-computer config" in issues
         assert "gated off" not in out
 
     def test_shipped_gate_swallowing_internal_errors_reads_as_closed(self, tmp_path, capsys):
@@ -687,14 +687,14 @@ class TestDoctorMcpSpecGate:
         ``agent._computer_use_spec_gate`` answers False on internal errors, and emission
         then omits the entry too, so the line matches what the system does.
         """
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.cli_doctor import _doctor_mcp_tools
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         self._config_without_computer(agent_path)
         issues: list[str] = []
         with (
             patch(
-                "kiro_crew.computer_use.enable_state.is_enabled",
+                "aj_crew.computer_use.enable_state.is_enabled",
                 side_effect=RuntimeError("keystone unreadable"),
             ),
             self._mock_probe([]),
@@ -703,7 +703,7 @@ class TestDoctorMcpSpecGate:
             # and answers False — the exact production shape.
             _doctor_mcp_tools(agent_path, issues)
         out = capsys.readouterr().out
-        assert "@kirocrew-computer: ℹ️  gated off on this host" in out
+        assert "@ajcrew-computer: ℹ️  gated off on this host" in out
         assert issues == []
 
     def test_gate_closed_stale_entry_is_not_mounted_or_probed(self, tmp_path, capsys):
@@ -714,14 +714,14 @@ class TestDoctorMcpSpecGate:
         launch), and must not count it as an issue — the next config refresh
         retracts it.
         """
-        from kiro_crew.cli_doctor import _doctor_mcp_tools
-        from kiro_crew.mcp_cleanup import ALWAYS_ON_BIN_MCP_SERVERS
+        from aj_crew.cli_doctor import _doctor_mcp_tools
+        from aj_crew.mcp_cleanup import ALWAYS_ON_BIN_MCP_SERVERS
 
-        agent_path = tmp_path / "kirocrew.json"
+        agent_path = tmp_path / "ajcrew.json"
         present = list(ALWAYS_ON_BIN_MCP_SERVERS)
         _write_agent_config(
             agent_path,
-            tools=[f"@{n}" for n in present if n != "kirocrew-computer"],
+            tools=[f"@{n}" for n in present if n != "ajcrew-computer"],
             allowed=[],
             servers={
                 n: {"command": sys.executable, "args": [f"mcp-{n.split('-', 1)[1]}"]}
@@ -735,12 +735,12 @@ class TestDoctorMcpSpecGate:
         out = capsys.readouterr().out
         assert "stale mcpServers entry" in out
         assert issues == []
-        assert "kirocrew-computer" not in probed
+        assert "ajcrew-computer" not in probed
         # The other always-on servers were still probed — the skip is scoped.
-        assert "kirocrew-core" in probed and "kirocrew-cron" in probed
+        assert "ajcrew-core" in probed and "ajcrew-cron" in probed
         updated = json.loads(agent_path.read_text(encoding="utf-8"))
-        assert "@kirocrew-computer" not in updated["tools"]
-        assert "@kirocrew-computer" not in updated["allowedTools"]
+        assert "@ajcrew-computer" not in updated["tools"]
+        assert "@ajcrew-computer" not in updated["allowedTools"]
 
     def test_governance_denominator_skips_an_absent_gated_off_server(
         self, tmp_path, monkeypatch, capsys
@@ -749,10 +749,10 @@ class TestDoctorMcpSpecGate:
 
         On a governed non-macOS host the gated-off server has no entry to mark,
         so counting it as expected would re-create the same unfixable
-        "re-run `kirocrew setup --agent-only`" loop in this section.
+        "re-run `ajcrew setup --agent-only`" loop in this section.
         """
-        from kiro_crew import cli_doctor
-        from kiro_crew.mcp_cleanup import ALWAYS_ON_BIN_MCP_SERVERS
+        from aj_crew import cli_doctor
+        from aj_crew.mcp_cleanup import ALWAYS_ON_BIN_MCP_SERVERS
 
         monkeypatch.setattr(cli_doctor, "mcp_governance_may_apply", lambda: True)
 
@@ -762,19 +762,19 @@ class TestDoctorMcpSpecGate:
         class _Cfg:
             agent = _Agent()
 
-        monkeypatch.setattr(cli_doctor.KiroCrewConfig, "load", staticmethod(lambda: _Cfg()))
-        spec_path = tmp_path / "kirocrew.json"
+        monkeypatch.setattr(cli_doctor.AjCrewConfig, "load", staticmethod(lambda: _Cfg()))
+        spec_path = tmp_path / "ajcrew.json"
         spec_path.write_text(
             json.dumps(
                 {
                     "mcpServers": {
                         n: {
-                            "command": "kirocrew",
+                            "command": "ajcrew",
                             "args": [f"mcp-{n.split('-', 1)[1]}"],
                             "type": "registry",
                         }
                         for n in ALWAYS_ON_BIN_MCP_SERVERS
-                        if n != "kirocrew-computer"
+                        if n != "ajcrew-computer"
                     }
                 }
             ),

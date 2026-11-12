@@ -14,11 +14,11 @@ from unittest import mock
 import pytest
 from off_loop_helpers import off_loop
 
-from kiro_crew.apps import worker_auto_approve
-from kiro_crew.apps.builtins.issue_radar.backend import crew_runtime as cr
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
-from kiro_crew.crew_log import projection as crew_log_projection
-from kiro_crew.dashboard import chat_runner
+from aj_crew.apps import worker_auto_approve
+from aj_crew.apps.builtins.issue_radar.backend import crew_runtime as cr
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.crew_log import projection as crew_log_projection
+from aj_crew.dashboard import chat_runner
 
 OWNER, REPO = "o", "r"
 
@@ -222,13 +222,13 @@ _UNITS: dict[str, str] = {}
 def _isolated_crew_log(_floor_monkeypatch):
     """Crew log on, in this test's own data home, and no warm state carried over.
 
-    FUNCTION-scoped, so ``KIROCREW_CREW_LOG`` (via ``_floor_monkeypatch``) and the
-    per-test ``KIROCREW_HOME`` never leak into later suites on the worker. Crew ids are
+    FUNCTION-scoped, so ``AJCREW_CREW_LOG`` (via ``_floor_monkeypatch``) and the
+    per-test ``AJCREW_HOME`` never leak into later suites on the worker. Crew ids are
     fresh per test, so ``_UNITS`` is cleared too.
     """
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     crew_log_emit.reset_caches()
     crew_log_projection.forget_slot_folds()
     _UNITS.clear()
@@ -242,12 +242,12 @@ def _isolated_crew_log(_floor_monkeypatch):
 def _unit_for(crew_id: str) -> str:
     """The crew's live unit, created on first use."""
     if crew_id not in _UNITS:
-        from kiro_crew.crew_log.schema import KIND_SESSION
-        from kiro_crew.crew_log.store import CrewLog
+        from aj_crew.crew_log.schema import KIND_SESSION
+        from aj_crew.crew_log.store import CrewLog
 
         sid = f"acp-{crew_id}"
         CrewLog.create(
-            KIND_SESSION, sid, owner="owner", agent="kirocrew", slot=cs.slot_key_for(crew_id)
+            KIND_SESSION, sid, owner="owner", agent="ajcrew", slot=cs.slot_key_for(crew_id)
         )
         _UNITS[crew_id] = sid
     return _UNITS[crew_id]

@@ -1,6 +1,6 @@
 """The knowledge pool keeps Crew's own zero-tool spec clean between boots.
 
-``kirocrew-knowledge.json`` lives in the shared agents directory, where another tool
+``ajcrew-knowledge.json`` lives in the shared agents directory, where another tool
 may rewrite every spec it finds: a launcher that adds its own MCP server to ``tools``,
 ``allowedTools`` and a ``permissions`` block, for one. The pool's confirmation in
 ``AcpWorker.start`` correctly refuses such a spec, so these tests pin the repair that
@@ -24,16 +24,16 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import agent_spec_injections
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp import skill_projection as projection
-from kiro_crew.acp_backends import ACP_BACKEND_KIRO, ACP_BACKEND_OPENCODE
-from kiro_crew.agent_files import KNOWLEDGE_AGENT_FILENAME
-from kiro_crew.agent_materialization import auto_approve, service_agents
-from kiro_crew.config import paths
-from kiro_crew.knowledge import llm_pool
-from kiro_crew.knowledge.llm_pool import AGENT_NAME, AcpWorker
+from aj_crew import agent as agent_mod
+from aj_crew import agent_spec_injections
+from aj_crew.acp import client as acp_client
+from aj_crew.acp import skill_projection as projection
+from aj_crew.acp_backends import ACP_BACKEND_KIRO, ACP_BACKEND_OPENCODE
+from aj_crew.agent_files import KNOWLEDGE_AGENT_FILENAME
+from aj_crew.agent_materialization import auto_approve, service_agents
+from aj_crew.config import paths
+from aj_crew.knowledge import llm_pool
+from aj_crew.knowledge.llm_pool import AGENT_NAME, AcpWorker
 
 #: A value only the injected server's ``env`` carries, so a log line that quotes a
 #: value would show it.
@@ -52,7 +52,7 @@ def agents_dir() -> Path:
 @pytest.fixture
 def workspace(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, agents_dir: Path) -> Path:
     """The pool's cwd, with the native skill projection confined to this test's tree."""
-    monkeypatch.delenv("KIROCREW_NATIVE_SKILL_PROJECTION", raising=False)
+    monkeypatch.delenv("AJCREW_NATIVE_SKILL_PROJECTION", raising=False)
     kiro_home = tmp_path / "kiro-home"
     kiro_home.mkdir()
     work_dir = tmp_path / "workspace"
@@ -176,11 +176,11 @@ class TestRepairKnowledgeAgentSpec:
         _template(agents_dir)
         _inject(_spec_path(agents_dir))
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             assert service_agents.repair_knowledge_agent_spec() is True
 
         messages = [r.getMessage() for r in caplog.records if r.levelno == logging.WARNING]
-        repair = [m for m in messages if "was not the spec Kiro Crew writes" in m]
+        repair = [m for m in messages if "was not the spec Aj Crew writes" in m]
         assert len(repair) == 1
         for key in ("allowedTools", "kiroUpgrade", "mcpServers", "permissions", "tools"):
             assert repr(key) in repair[0]
@@ -209,7 +209,7 @@ class TestRepairKnowledgeAgentSpec:
 
         monkeypatch.setattr(auto_approve, "write_governed_spec", fail)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             assert service_agents.repair_knowledge_agent_spec() is False
         assert any(
             "Could not rewrite the knowledge agent spec" in r.getMessage() for r in caplog.records
@@ -286,7 +286,7 @@ class TestKnowledgeWorkerOnAnInjectedSpec:
         self, agents_dir, workspace, monkeypatch
     ):
         """With the projection switched off kiro-cli loads the named spec itself."""
-        monkeypatch.setenv("KIROCREW_NATIVE_SKILL_PROJECTION", "0")
+        monkeypatch.setenv("AJCREW_NATIVE_SKILL_PROJECTION", "0")
         _template(agents_dir)
         _inject(_spec_path(agents_dir))
 
@@ -578,7 +578,7 @@ class TestARegisteredInjection:
         _template(agents_dir)
         _inject_tool(_spec_path(agents_dir))
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.agent"):
             for _ in range(3):
                 _repair_tolerant()
 
@@ -632,7 +632,7 @@ class TestARegisteredInjection:
         self, agents_dir, workspace, monkeypatch, registered_tool
     ):
         """kiro-cli loads the authored file itself there, so it must be the template."""
-        monkeypatch.setenv("KIROCREW_NATIVE_SKILL_PROJECTION", "0")
+        monkeypatch.setenv("AJCREW_NATIVE_SKILL_PROJECTION", "0")
         template = _template(agents_dir)
         _inject_tool(_spec_path(agents_dir))
 
@@ -649,7 +649,7 @@ class TestARegisteredInjection:
         self, agents_dir, workspace, monkeypatch, registered_tool
     ):
         """Two workers start at once; the other one's repair rewrote the file first."""
-        monkeypatch.setenv("KIROCREW_NATIVE_SKILL_PROJECTION", "0")
+        monkeypatch.setenv("AJCREW_NATIVE_SKILL_PROJECTION", "0")
         template = _template(agents_dir)
         _inject_tool(_spec_path(agents_dir))
         real_repair = llm_pool._repair_agent_spec

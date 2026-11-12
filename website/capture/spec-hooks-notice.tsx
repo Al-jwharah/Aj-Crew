@@ -30,7 +30,7 @@ const sceneParam = params.get('scene')
 const scene: Scene = sceneParam === 'withheld' || sceneParam === 'withheld-none' ? sceneParam : 'run-nowhere'
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 initI18n()
 
 // Each string is the backend's own wording (dashboard/chat_turn/tool_approval.py).

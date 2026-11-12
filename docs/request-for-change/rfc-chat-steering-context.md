@@ -68,7 +68,7 @@ crew member's chat:
 |---|---|
 | KAS | KAS loads every workspace root's `.kiro/steering` tree itself and honours `inclusion` (quoted from #32179); the provider reports `native_steering` (`providers/acp.py`). Per the [2026-10-28 decision](../decisions/2026-10-28-a-kiro-cli-choice-runs-on-kas.md), a Kiro CLI pick also runs here whenever the installed kiro-cli offers its v3 engine |
 | Kiro CLI v2 (no v3 engine) | Crew's projection overlays `chat.disableInheritingDefaultResources` on in the workspace `cli.json` (`preparation.py`, `local[_INHERIT_SETTING] = True`) and, while the recorded preference is to inherit, appends the global glob, `file://.kiro/steering/**/*.md` and `file://AGENTS.md` to its own view (the `if inherited:` block). kiro-cli then loads only the view's `resources`, and re-reads the declared guides for every request (`runtime_spawn_launch.py`, the launch steering record). The decision above schedules v2's removal for the end of November |
-| Claude Code | Crew injects `[Steering resources]` at session start (`session_start.py`) and after a compaction (`turn.py`), through `steering_resources_part`. Only for the Kiro Crew default agent in a non-member chat, only from `kirocrew.json`'s `resources` plus the global and project defaults (`agent_spec.py::_load_steering_resources`), and only `always` files (`every_session_body` withholds `manual`, `auto` and `fileMatch`) |
+| Claude Code | Crew injects `[Steering resources]` at session start (`session_start.py`) and after a compaction (`turn.py`), through `steering_resources_part`. Only for the Aj Crew default agent in a non-member chat, only from `ajcrew.json`'s `resources` plus the global and project defaults (`agent_spec.py::_load_steering_resources`), and only `always` files (`every_session_body` withholds `manual`, `auto` and `fileMatch`) |
 | Codex, OpenCode, Pi, Goose, DeepSeek | No path for the global and project trees (`context._project_steering_delivered`) |
 | Sidebar folder "Additional steering" (`steering_dirs`) | Crew renders `[FOLDER STEERING -- ...]` on every harness (`folder_steering.py`), skipping roots or files the harness already delivers (`inclusion._folder_steering_delivery_snapshot`) |
 | A crew member's chat | Steering rides the member essentials envelope, rebuilt on every warm turn (`turn_message.py`, `if _essentials and not is_new_session`) |
@@ -156,7 +156,7 @@ declared guides), or `briefing` where a member chat's essentials path decides
 per guide.
 
 **One plan, two readers.** The verdicts come from one new function in
-`src/kiro_crew/steering_plan.py`. It applies the gates assembly applies (the
+`src/aj_crew/steering_plan.py`. It applies the gates assembly applies (the
 member-chat essentials path, the Claude Code default-agent gate,
 `_project_steering_delivered`), and where Crew writes the text it reads the writer
 itself rather than a copy of its rules: on Claude Code the documents

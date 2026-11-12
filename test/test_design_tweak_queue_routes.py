@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.apps.builtins.design_tweak.backend import server
+from aj_crew.apps.builtins.design_tweak.backend import server
 
 # ---------------------------------------------------------------------------
 # Fixtures

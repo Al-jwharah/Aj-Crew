@@ -12,7 +12,7 @@
 // above their measured size, and every other chunk gets a 500 KB default. A
 // chunk over its budget fails the build with one actionable line per breach.
 //
-// Reads the `dist/bundle-report.json` that the `kirocrew-bundle-report` plugin
+// Reads the `dist/bundle-report.json` that the `ajcrew-bundle-report` plugin
 // emits in analyze mode (see vite.config.ts), so a normal `npm run build` stays
 // byte-for-byte unaffected -- CI runs the analyze build and then this script.
 import path from 'path'

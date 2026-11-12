@@ -19,16 +19,16 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import kiro_crew.sel as sel_mod
-from kiro_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
-from kiro_crew.platform.tool_paths import (
+import aj_crew.sel as sel_mod
+from aj_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
+from aj_crew.platform.tool_paths import (
     MCP_DOCUMENT_BODY_FIELDS,
     mcp_document_body_keys,
 )
-from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
 
 # Built by concatenation so this file never carries the subcommand line itself.
-_CLI = "kiro" + "crew"
+_CLI = "aj" + "crew"
 _MINT_LINE = f"{_CLI} " + "token"
 _PROSE = (
     "# Dashboard access\n\n"
@@ -36,7 +36,7 @@ _PROSE = (
     f"{_MINT_LINE}\n\n"
     "Paste the printed link into a browser.\n"
 )
-_CORE = "kirocrew-core"
+_CORE = "ajcrew-core"
 _TOOL = "knowledge_add_document"
 
 
@@ -117,7 +117,7 @@ class TestTheListIsExplicit:
             (_CORE, "spawn_continue"): frozenset({"task"}),
             (_CORE, "spawn_steer"): frozenset({"message"}),
             (_CORE, "spawn_sub_agents"): frozenset({"agents[].prompt"}),
-            ("kirocrew-cron", "cron_add"): frozenset({"message"}),
+            ("ajcrew-cron", "cron_add"): frozenset({"message"}),
             (_CORE, "send_message"): frozenset({"text", "title"}),
             (_CORE, "update_message"): frozenset({"text"}),
             (_CORE, "send_notification"): frozenset({"title", "body"}),
@@ -219,7 +219,7 @@ class TestTheBodyKeepsThePathTier:
 
     @pytest.mark.asyncio
     async def test_an_oversized_body_is_still_refused(self) -> None:
-        from kiro_crew.llm_helpers import _MAX_SCANNABLE_TOOL_INPUT_CHARS
+        from aj_crew.llm_helpers import _MAX_SCANNABLE_TOOL_INPUT_CHARS
 
         body = "a" * (_MAX_SCANNABLE_TOOL_INPUT_CHARS + 1)
         approved, rows = await _resolve(_event(_params(content=body)))

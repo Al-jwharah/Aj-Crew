@@ -43,7 +43,7 @@ import { logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/terminal-subcommand'
 
-const PROMPT = '\x1b[36m~/work/KiroCrew\x1b[0m \x1b[35m(main)\x1b[0m \x1b[32m❯\x1b[0m '
+const PROMPT = '\x1b[36m~/work/AjCrew\x1b[0m \x1b[35m(main)\x1b[0m \x1b[32m❯\x1b[0m '
 
 /** Captured verbatim from `gh __complete pr ""` (gh 2.96.0). */
 const GH_PR = [
@@ -113,7 +113,7 @@ function answer({ argv = [], token = '' }) {
 }
 
 const slots = [
-  { key: 's1', title: 'Terminal completion demo', messages: 2, running: false, agent: 'kirocrew', mode: '', created: '2026-08-06T01:00:00Z', last_ts: '2026-08-06T04:00:00Z', folder_id: '' },
+  { key: 's1', title: 'Terminal completion demo', messages: 2, running: false, agent: 'ajcrew', mode: '', created: '2026-08-06T01:00:00Z', last_ts: '2026-08-06T04:00:00Z', folder_id: '' },
 ]
 
 /**
@@ -225,8 +225,8 @@ const THEMES = [
   // `base` is what the stubbed config reports (light/dark); `attr` is the kiro
   // palette the boot effect writes to `data-theme`. Passing one where the other
   // is expected makes the theme assertion hang, not the capture fail loudly.
-  { name: 'dark', base: 'dark', attr: 'kiro-dark' },
-  { name: 'light', base: 'light', attr: 'kiro-light' },
+  { name: 'dark', base: 'dark', attr: 'aj-dark' },
+  { name: 'light', base: 'light', attr: 'aj-light' },
 ]
 
 /** One still per scene: what the menu looks like for each protocol shape. */

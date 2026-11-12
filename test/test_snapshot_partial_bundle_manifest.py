@@ -1,6 +1,6 @@
 """A partial root must carry a component map.
 
-The `kirocrew-partial-` root exists so released versions refuse a selective bundle.
+The `ajcrew-partial-` root exists so released versions refuse a selective bundle.
 This version accepts it, so it must not let `declared is None` fall through to
 all-components behaviour, which is correct for a pre-v3 COMPLETE
 archive and exactly wrong for a partial one.
@@ -13,17 +13,17 @@ import shutil
 import tarfile
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, snapshot_family_paths, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, snapshot_family_paths, unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
     d = tmp_path / "home"
     d.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(d))
-    _setup_fake_kirocrew(d)
+    monkeypatch.setenv("AJCREW_HOME", str(d))
+    _setup_fake_ajcrew(d)
     return d
 
 
@@ -46,7 +46,7 @@ def _archive(tmp_path, roots: dict[str, dict | None]) -> "object":
 
 class TestAPartialRootWithoutAComponentMapIsRefused:
     def test_it_refuses_rather_than_restoring_everything(self, home, tmp_path, capsys):
-        bundle = _archive(tmp_path, {"kirocrew-partial-20260101T000000Z": None})
+        bundle = _archive(tmp_path, {"ajcrew-partial-20260101T000000Z": None})
         rc = snap.restore_main([str(bundle), "--mode", "replace", "--force"])
         assert rc == 1
         out = capsys.readouterr().out
@@ -55,7 +55,7 @@ class TestAPartialRootWithoutAComponentMapIsRefused:
     def test_the_live_tree_is_untouched_by_that_refusal(self, home, tmp_path):
         md = home / "workspace" / "memory"
         (md / "preferences.md").write_text("live state")
-        bundle = _archive(tmp_path, {"kirocrew-partial-20260101T000000Z": None})
+        bundle = _archive(tmp_path, {"ajcrew-partial-20260101T000000Z": None})
         assert snap.restore_main([str(bundle), "--mode", "replace", "--force"]) == 1
         assert (md / "preferences.md").read_text() == "live state"
 
@@ -68,7 +68,7 @@ class TestAPartialRootWithoutAComponentMapIsRefused:
         md = home / "workspace" / "memory"
         (md / "preferences.md").write_text("live state")
         shutil.rmtree(home / "workspace" / "knowledge", ignore_errors=True)
-        bundle = _archive(tmp_path, {"kirocrew-partial-20260101T000000Z": None})
+        bundle = _archive(tmp_path, {"ajcrew-partial-20260101T000000Z": None})
         rc = snap.restore_main(
             [
                 str(bundle),
@@ -107,7 +107,7 @@ class TestANamedComponentTheBundleDoesNotCarryIsRefused:
     """
 
     def test_it_refuses_instead_of_reporting_success(self, home, tmp_path, capsys):
-        bundle = _archive_without_memory(tmp_path, "kirocrew-partial-20260101T000000Z")
+        bundle = _archive_without_memory(tmp_path, "ajcrew-partial-20260101T000000Z")
         rc = snap.restore_main(
             [str(bundle), "--mode", "replace", "--force", "--components", "memory"]
         )
@@ -118,7 +118,7 @@ class TestANamedComponentTheBundleDoesNotCarryIsRefused:
 
     def test_the_live_databases_and_trees_survive(self, home, tmp_path):
         (home / "workspace" / "memory" / "preferences.md").write_text("live state")
-        bundle = _archive_without_memory(tmp_path, "kirocrew-partial-20260101T000000Z")
+        bundle = _archive_without_memory(tmp_path, "ajcrew-partial-20260101T000000Z")
         assert (
             snap.restore_main(
                 [str(bundle), "--mode", "replace", "--force", "--components", "memory"]
@@ -130,7 +130,7 @@ class TestANamedComponentTheBundleDoesNotCarryIsRefused:
         assert (home / "workspace" / "knowledge").is_dir()
 
     def test_nothing_is_moved_into_a_rollback_directory(self, home, tmp_path):
-        bundle = _archive_without_memory(tmp_path, "kirocrew-partial-20260101T000000Z")
+        bundle = _archive_without_memory(tmp_path, "ajcrew-partial-20260101T000000Z")
         snap.restore_main([str(bundle), "--mode", "replace", "--force", "--components", "memory"])
         assert list(home.glob("pre-restore-*")) == []
 
@@ -142,7 +142,7 @@ class TestANamedComponentTheBundleDoesNotCarryIsRefused:
         """
         events: list[tuple[str, str]] = []
         monkeypatch.setattr(snap, "_audit", lambda et, res: events.append((et, res)))
-        bundle = _archive_without_memory(tmp_path, "kirocrew-partial-20260101T000000Z")
+        bundle = _archive_without_memory(tmp_path, "ajcrew-partial-20260101T000000Z")
         snap.restore_main([str(bundle), "--mode", "replace", "--force", "--components", "memory"])
         assert any(
             et == "state_restore_rejected" and "reason=named_component_absent" in res
@@ -156,7 +156,7 @@ class TestANamedComponentTheBundleDoesNotCarryIsRefused:
         rule demanding every declared path would refuse a sound bundle -- a home
         that never wrote `memory_index.db` ships memory with only `memory.db`.
         """
-        bundle = _archive_without_memory(tmp_path, "kirocrew-partial-20260101T000000Z")
+        bundle = _archive_without_memory(tmp_path, "ajcrew-partial-20260101T000000Z")
         rc = snap.restore_main(
             [
                 str(bundle),
@@ -172,7 +172,7 @@ class TestANamedComponentTheBundleDoesNotCarryIsRefused:
 
     def test_a_component_present_only_as_a_tree_counts_as_carried(self, home, tmp_path):
         """`_archive` writes workspace/memory but neither memory database."""
-        bundle = _archive(tmp_path, {"kirocrew-partial-20260101T000000Z": None})
+        bundle = _archive(tmp_path, {"ajcrew-partial-20260101T000000Z": None})
         assert (
             snap._components_absent_from_bundle(_extract_root(bundle, tmp_path), ["memory"]) == []
         )
@@ -187,7 +187,7 @@ class TestANamedComponentTheBundleDoesNotCarryIsRefused:
         bundle = _archive(
             tmp_path,
             {
-                "kirocrew-partial-20260101T000000Z": {
+                "ajcrew-partial-20260101T000000Z": {
                     "version": 3,
                     "components": {"crons": "unresolved"},
                 }
@@ -211,7 +211,7 @@ def _extract_root(bundle, tmp_path):
         bundle = _archive(
             tmp_path,
             {
-                "kirocrew-partial-20260101T000000Z": {
+                "ajcrew-partial-20260101T000000Z": {
                     "version": 3,
                     "components": {"memory": "UNRESOLVED"},
                 }
@@ -225,7 +225,7 @@ def _extract_root(bundle, tmp_path):
     def test_a_complete_root_without_a_map_is_still_accepted(self, home, tmp_path):
         """Pre-v3 complete archives legitimately have no map, and for them
         all-components is the correct reading."""
-        bundle = _archive(tmp_path, {"kirocrew-snapshot-20260101T000000Z": None})
+        bundle = _archive(tmp_path, {"ajcrew-snapshot-20260101T000000Z": None})
         assert snap.restore_main([str(bundle), "--mode", "replace", "--force"]) == 0
 
 
@@ -234,8 +234,8 @@ class TestTwoRootsAreRefusedRatherThanGuessed:
         bundle = _archive(
             tmp_path,
             {
-                "kirocrew-snapshot-20260101T000000Z": {"version": 3, "components": {}},
-                "kirocrew-partial-20260101T000001Z": {"version": 3, "components": {}},
+                "ajcrew-snapshot-20260101T000000Z": {"version": 3, "components": {}},
+                "ajcrew-partial-20260101T000001Z": {"version": 3, "components": {}},
             },
         )
         rc = snap.restore_main([str(bundle), "--mode", "replace", "--force"])
@@ -246,14 +246,14 @@ class TestTwoRootsAreRefusedRatherThanGuessed:
         bundle = _archive(
             tmp_path,
             {
-                "kirocrew-snapshot-20260101T000000Z": {"version": 3, "components": {}},
-                "kirocrew-partial-20260101T000001Z": {"version": 3, "components": {}},
+                "ajcrew-snapshot-20260101T000000Z": {"version": 3, "components": {}},
+                "ajcrew-partial-20260101T000001Z": {"version": 3, "components": {}},
             },
         )
         snap.restore_main([str(bundle), "--mode", "replace", "--force"])
         out = capsys.readouterr().out
-        assert "kirocrew-snapshot-20260101T000000Z" in out
-        assert "kirocrew-partial-20260101T000001Z" in out
+        assert "ajcrew-snapshot-20260101T000000Z" in out
+        assert "ajcrew-partial-20260101T000001Z" in out
 
 
 class TestTextIOPinsUtf8:
@@ -304,8 +304,8 @@ class TestTextIOPinsUtf8:
         """
         import pathlib
 
-        import kiro_crew.snapshot_redact as sr
-        from kiro_crew.apps.builtins.aws_control.backend import backup as app_backup
+        import aj_crew.snapshot_redact as sr
+        from aj_crew.apps.builtins.aws_control.backend import backup as app_backup
 
         parts = pathlib.Path(app_backup.__file__).parent / "backup_parts"
         paths = [

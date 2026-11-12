@@ -33,7 +33,7 @@ jobs:
   # line stops impersonating one.
   pr-hygiene:
     name: PR Hygiene
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
       # The merge commit and its two parents. The diff-base step fetches the
@@ -112,8 +112,8 @@ jobs:
             echo "  Then squash your own commits (never a soft reset plus a commit,"
             echo "  which takes whatever the index holds):"
             echo "    git rebase -i refs/remotes/origin/$BASE_REF, marking later commits 'fixup'."
-            echo "  Or, with the kirocrew-prepare-pr skill, write the message to a file, then"
-            echo "    python3 <kirocrew-prepare-pr skill dir>/scripts/push_guard.py --base $BASE_REF --max-ahead $COMMIT_COUNT --squash <that file>"
+            echo "  Or, with the ajcrew-prepare-pr skill, write the message to a file, then"
+            echo "    python3 <ajcrew-prepare-pr skill dir>/scripts/push_guard.py --base $BASE_REF --max-ahead $COMMIT_COUNT --squash <that file>"
             echo "    (without a file it reads <git-dir>/prepare-pr-commit-msg-<branch>.txt, / as -)."
             echo "    For commits made by hand it refuses first: it counts and lists the paths"
             echo "    it did not commit, and writes them to a list file. Read each one's diff."
@@ -259,7 +259,7 @@ jobs:
           else
             cp .github/scripts/adopted_wheel_copy_check.py "$script"
           fi
-          pins_path=src/kiro_crew/apps/adoption-pins.json
+          pins_path=src/aj_crew/apps/adoption-pins.json
           changes="$(mktemp)"
           git diff --name-status --no-renames "$MERGE_BASE" "$HEAD_SHA" > "$changes"
           pin_files=()

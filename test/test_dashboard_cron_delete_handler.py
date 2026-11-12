@@ -14,8 +14,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.cron import CronStoreBusy
-from kiro_crew.dashboard.handlers.cron import api_cron_delete
+from aj_crew.cron import CronStoreBusy
+from aj_crew.dashboard.handlers.cron import api_cron_delete
 
 
 def _make_app(state):
@@ -50,7 +50,7 @@ class TestApiCronDeleteAudit:
     @pytest.fixture(autouse=True)
     def stub_sel(self):
         # The handler must not retain a duplicate call-site audit.
-        with patch("kiro_crew.dashboard.handlers.cron._sel") as sel_fn:
+        with patch("aj_crew.dashboard.handlers.cron._sel") as sel_fn:
             recorder = MagicMock()
             sel_fn.return_value = recorder
             yield recorder

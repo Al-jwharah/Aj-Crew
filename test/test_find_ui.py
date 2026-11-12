@@ -16,8 +16,8 @@ from typing import Any
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew import guide_catalog, mcp_guide, ui_index
-from kiro_crew.validation import ValidationError
+from aj_crew import guide_catalog, mcp_guide, ui_index
+from aj_crew.validation import ValidationError
 
 #: The packaged docs directory, wherever the index under test lives.
 _PACKAGED_DOCS = ui_index.INDEX_PATH.parent
@@ -37,7 +37,7 @@ def _fresh_cache(_floor_monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
     # every golden at an index written by `gen:ui --out <file>`, so parallel
     # area batches each validate their own index without touching the
     # committed one.
-    alt = os.environ.get("KIROCREW_UI_INDEX")
+    alt = os.environ.get("AJCREW_UI_INDEX")
     if alt:
         _floor_monkeypatch.setattr(ui_index, "INDEX_PATH", Path(alt).resolve())
     # No gateway in these tests: the dashboard-language ask answers "unknown"
@@ -97,7 +97,7 @@ def test_the_sidebar_toggle_is_a_conditional_step_with_its_own_qualifications() 
 
 
 def test_a_legacy_page_title_finds_its_explicit_canonical_location() -> None:
-    top = _top(ui_index.find_ui("kiro crew agents", "en"))  # brand-ok: user query
+    top = _top(ui_index.find_ui("aj crew agents", "en"))  # brand-ok: user query
     assert top["id"] == "tab.capabilities.crews"
     assert top["placements"][0]["route"] == "/capabilities?tab=crews"
     remote = _top(ui_index.find_ui("remote crew", "en"))
@@ -853,7 +853,7 @@ def test_find_ui_needs_no_session_gateway_or_config(monkeypatch: pytest.MonkeyPa
     monkeypatch.setattr(mcp_guide, "_strict_session_key", lambda: ("", "Error: no identity"))
     monkeypatch.setattr(mcp_guide, "_get", boom)
     monkeypatch.setattr(mcp_guide, "_post", boom)
-    import kiro_crew.config.loader as loader
+    import aj_crew.config.loader as loader
 
     monkeypatch.setattr(loader, "load_config", boom, raising=False)
     read: list[Path] = []
@@ -894,7 +894,7 @@ def test_find_ui_adds_the_tabs_live_answer_for_curated_ids_only(
     )
     (call,) = asked
     assert call["path"] == "/api/guide/agent/observe" and call["timeout"] <= 1.5
-    from kiro_crew.guide_catalog import ui_build_manifest
+    from aj_crew.guide_catalog import ui_build_manifest
 
     observable = ui_build_manifest().observable
     assert set(call["body"]["targets"]) <= observable
@@ -1116,7 +1116,7 @@ def test_find_ui_keeps_the_question_language_when_the_dashboard_language_is_unkn
 
 
 def test_find_setting_rows_carry_the_dashboard_label() -> None:
-    from kiro_crew.dashboard.change_cards import localize_setting_rows
+    from aj_crew.dashboard.change_cards import localize_setting_rows
 
     rows = [
         {"setting_id": "developer.webhooks", "label": "Webhooks"},

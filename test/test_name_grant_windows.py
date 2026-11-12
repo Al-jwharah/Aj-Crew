@@ -22,8 +22,8 @@ import subprocess
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew import name_grant, platform_compat
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import name_grant, platform_compat
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 
 @pytest.fixture(autouse=True)

@@ -14,7 +14,7 @@ import json
 import native_skill_projection_helpers
 import pytest
 
-from kiro_crew.acp import skill_projection as projection
+from aj_crew.acp import skill_projection as projection
 
 _prune_on_every_spawn = native_skill_projection_helpers._prune_on_every_spawn
 _no_eager_prune = native_skill_projection_helpers._no_eager_prune

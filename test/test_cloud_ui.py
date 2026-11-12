@@ -6,7 +6,7 @@ import io
 
 import pytest
 
-from kiro_crew.cloud import ui
+from aj_crew.cloud import ui
 
 
 class TestChoiceKeys:

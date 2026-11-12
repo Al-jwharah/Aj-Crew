@@ -26,8 +26,8 @@ from cron_secret_env_helpers import (  # noqa: F401 -- the autouse fixtures regi
     cron_home_fixture,
 )
 
-from kiro_crew.cron import CronService, CronStoreBusy
-from kiro_crew.cron_script import (
+from aj_crew.cron import CronService, CronStoreBusy
+from aj_crew.cron_script import (
     _filter_grant_env,
     _secret_env_precheck,
     compute_secret_env_pin,
@@ -36,11 +36,11 @@ from kiro_crew.cron_script import (
     run_script_sandboxed,
     validate_secret_env_grant,
 )
-from kiro_crew.secrets import SecretVault
+from aj_crew.secrets import SecretVault
 
 
 def _make_script(tmp_path: Path, body: str, name: str = "job.py") -> Path:
-    crons_dir = tmp_path / ".kirocrew" / "crons"
+    crons_dir = tmp_path / ".ajcrew" / "crons"
     crons_dir.mkdir(parents=True, exist_ok=True)
     script = crons_dir / name
     script.write_text(body)
@@ -60,9 +60,9 @@ class TestValidateSecretEnvGrant:
         [
             "PATH",
             "SLACK_BOT_TOKEN",  # _CRON_ENV_DENY member
-            "KIROCREW_INTERNAL_SECRET",
-            "KIROCREW_ANYTHING",
-            "_KIROCREW_SECRET_FILE",
+            "AJCREW_INTERNAL_SECRET",
+            "AJCREW_ANYTHING",
+            "_AJCREW_SECRET_FILE",
             "LD_PRELOAD",
             "DYLD_INSERT_LIBRARIES",
             "PYTHONPATH",
@@ -82,7 +82,7 @@ class TestValidateSecretEnvGrant:
         ],
     )
     def test_protected_names_rejected(self, key):
-        # A leading-underscore name (_KIROCREW_*) fails the grammar check
+        # A leading-underscore name (_AJCREW_*) fails the grammar check
         # first; the rest hit the protected-name check. Both refuse, and the
         # delivery filter drops the same key from a stored grant.
         with pytest.raises(ValueError, match="env-var name"):
@@ -173,7 +173,7 @@ class TestSecretEnvPrecheck:
         assert "MY_TOKEN" in err
 
     def test_resolves_from_vault(self, tmp_path):
-        SecretVault(tmp_path / ".kirocrew").set_sync("slack-sandbox", "xoxb-123")
+        SecretVault(tmp_path / ".ajcrew").set_sync("slack-sandbox", "xoxb-123")
         script = _make_script(tmp_path, "def run(ctx): pass\n")
         spec = str(script) + ":run"
         with patch("pathlib.Path.home", return_value=tmp_path):
@@ -191,10 +191,8 @@ class TestSecretEnvPrecheck:
 class TestRunCommandSandboxedSecretEnv:
     @pytest.fixture(autouse=True)
     def _passthrough_sandbox(self, monkeypatch, posix_test_shell):
-        monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
-        monkeypatch.setattr(
-            "kiro_crew.cron_script._resolve_command_shell", lambda: posix_test_shell
-        )
+        monkeypatch.setattr("aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
+        monkeypatch.setattr("aj_crew.cron_script._resolve_command_shell", lambda: posix_test_shell)
 
     def test_command_grant_fails_closed(self, tmp_path):
         """Grants apply to script jobs only; a command job carrying one means
@@ -224,7 +222,7 @@ class TestRunScriptSandboxedSecretEnv:
         # platform: a benign -X flag inserted after the interpreter. A
         # /usr/bin/env prefix would not exist on Windows (WinError 2).
         monkeypatch.setattr(
-            "kiro_crew.cron_script.wrap_argv",
+            "aj_crew.cron_script.wrap_argv",
             lambda argv, **k: ([argv[0], "-X", "utf8", *argv[1:]], None),
         )
 
@@ -232,8 +230,8 @@ class TestRunScriptSandboxedSecretEnv:
         """A wrap_argv that hands back the argv unmodified (no-backend host
         with the unsandboxed opt-in) loses the crons-dir hiding — a granted
         run must refuse rather than degrade its approved isolation."""
-        monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
-        SecretVault(tmp_path / ".kirocrew").set_sync("slack-sandbox", "xoxb-script")
+        monkeypatch.setattr("aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
+        SecretVault(tmp_path / ".ajcrew").set_sync("slack-sandbox", "xoxb-script")
         script = _make_script(tmp_path, "def run(ctx): pass\n")
         spec = str(script) + ":run"
         grant = {"MY_SANDBOX_TOKEN": "slack-sandbox"}
@@ -258,8 +256,8 @@ class TestRunScriptSandboxedSecretEnv:
             seen["argv"] = list(argv)
             return ([argv[0], "-X", "utf8", *argv[1:]], None)
 
-        monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", recording_wrap)
-        SecretVault(tmp_path / ".kirocrew").set_sync("slack-sandbox", "xoxb-script")
+        monkeypatch.setattr("aj_crew.cron_script.wrap_argv", recording_wrap)
+        SecretVault(tmp_path / ".ajcrew").set_sync("slack-sandbox", "xoxb-script")
         script = _make_script(tmp_path, "def run(ctx): pass\n")
         spec = str(script) + ":run"
         grant = {"MY_SANDBOX_TOKEN": "slack-sandbox"}
@@ -291,8 +289,8 @@ class TestRunScriptSandboxedSecretEnv:
             seen["prelude"] = launcher.read_text(encoding="utf-8").split("\n", 4)
             return ([argv[0], "-X", "utf8", *argv[1:]], None)
 
-        monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", recording_wrap)
-        SecretVault(tmp_path / ".kirocrew").set_sync("slack-sandbox", "xoxb-script")
+        monkeypatch.setattr("aj_crew.cron_script.wrap_argv", recording_wrap)
+        SecretVault(tmp_path / ".ajcrew").set_sync("slack-sandbox", "xoxb-script")
         script = _make_script(tmp_path, "def run(ctx): pass\n")
         spec = str(script) + ":run"
         grant = {"MY_SANDBOX_TOKEN": "slack-sandbox"}
@@ -303,7 +301,7 @@ class TestRunScriptSandboxedSecretEnv:
             )
         assert result["status"] == "ok", result
         launcher_dir = str(seen["launcher_dir"])
-        assert Path(launcher_dir).name.startswith("kirocrew_cron_pin_")
+        assert Path(launcher_dir).name.startswith("ajcrew_cron_pin_")
         assert launcher_dir != tempfile.gettempdir()
         prelude = list(seen["prelude"])  # type: ignore[arg-type]
         assert prelude[0] == "import sys"
@@ -320,7 +318,7 @@ class TestRunScriptSandboxedSecretEnv:
     def test_pending_pin_copied_to_active_fields_fails_closed(self, tmp_path):
         """The domain-separation exploit: a store writer copies a valid
         PENDING pin into the active grant fields. It must not verify."""
-        SecretVault(tmp_path / ".kirocrew").set_sync("slack-sandbox", "xoxb-script")
+        SecretVault(tmp_path / ".ajcrew").set_sync("slack-sandbox", "xoxb-script")
         script = _make_script(tmp_path, "def run(ctx): pass\n")
         spec = str(script) + ":run"
         grant = {"MY_SANDBOX_TOKEN": "slack-sandbox"}
@@ -336,7 +334,7 @@ class TestRunScriptSandboxedSecretEnv:
 
     def test_foreign_job_pin_fails_closed(self, tmp_path):
         """A pin minted for one job must not authorize another job's grant."""
-        SecretVault(tmp_path / ".kirocrew").set_sync("slack-sandbox", "xoxb-script")
+        SecretVault(tmp_path / ".ajcrew").set_sync("slack-sandbox", "xoxb-script")
         script = _make_script(tmp_path, "def run(ctx): pass\n")
         spec = str(script) + ":run"
         grant = {"MY_SANDBOX_TOKEN": "slack-sandbox"}
@@ -353,11 +351,11 @@ class TestRunScriptSandboxedSecretEnv:
         names, so ``_clean_cron_env`` — the env every descendant subprocess
         (notably ``ctx.call_tool``'s MCP server) is built from — strips them,
         while the script's own ``os.environ`` still carries the value."""
-        SecretVault(tmp_path / ".kirocrew").set_sync("slack-sandbox", "xoxb-script")
+        SecretVault(tmp_path / ".ajcrew").set_sync("slack-sandbox", "xoxb-script")
         script = _make_script(
             tmp_path,
             "import os\n"
-            "from kiro_crew.cron_script import Done, _clean_cron_env\n"
+            "from aj_crew.cron_script import Done, _clean_cron_env\n"
             "def run(ctx):\n"
             "    if 'MY_SANDBOX_TOKEN' in _clean_cron_env():\n"
             "        raise Done('LEAKED-TO-DESCENDANTS')\n"
@@ -381,11 +379,11 @@ class TestRunScriptSandboxedSecretEnv:
         assert result["message"] == "sealed"
 
     def test_granted_secret_reaches_script(self, tmp_path):
-        SecretVault(tmp_path / ".kirocrew").set_sync("slack-sandbox", "xoxb-script")
+        SecretVault(tmp_path / ".ajcrew").set_sync("slack-sandbox", "xoxb-script")
         script = _make_script(
             tmp_path,
             "import os\n"
-            "from kiro_crew.cron_script import Done\n"
+            "from aj_crew.cron_script import Done\n"
             "def run(ctx):\n"
             "    # Compare INSIDE the child: echoing the raw value back would\n"
             "    # be scrubbed from the Done message by the grant-value scrub.\n"
@@ -408,7 +406,7 @@ class TestRunScriptSandboxedSecretEnv:
         assert result["message"] == "delivered"
 
     def test_body_rewrite_after_grant_fails_closed(self, tmp_path):
-        SecretVault(tmp_path / ".kirocrew").set_sync("slack-sandbox", "xoxb-script")
+        SecretVault(tmp_path / ".ajcrew").set_sync("slack-sandbox", "xoxb-script")
         script = _make_script(tmp_path, "def run(ctx): pass\n")
         spec = str(script) + ":run"
         canary = tmp_path / "exfil-canary"
@@ -447,7 +445,7 @@ class TestCronServiceSecretEnvGate:
         """A refused grant operation must not invalidate the grant it did not
         replace: minting peeks the next epoch and commits only after the
         store swap, so the existing pin survives a 409."""
-        from kiro_crew.cron_script import peek_grant_epoch
+        from aj_crew.cron_script import peek_grant_epoch
 
         svc = self._service(tmp_path)
         job, spec, pin = self._script_job(svc, cron_home, grant={"MY_TOKEN": "slack-sandbox"})
@@ -469,7 +467,7 @@ class TestCronServiceSecretEnvGate:
         """The agent can write the cron store: a saved copy of a formerly
         valid mapping+pin written back after a revoke must not verify —
         the revoke bumped the grant epoch held in the agent-fenced vault."""
-        from kiro_crew.cron_script import bump_grant_epoch
+        from aj_crew.cron_script import bump_grant_epoch
 
         svc = self._service(tmp_path)
         job, spec, pin = self._script_job(svc, cron_home, grant={"MY_TOKEN": "slack-sandbox"})
@@ -623,7 +621,7 @@ class TestCronServiceSecretEnvGate:
         delete the job, and replay the saved mapping+pin into a re-created
         job. An id with a committed epoch entry bumps on removal regardless
         of what the record shows at delete time."""
-        from kiro_crew.cron_script import commit_grant_epoch, peek_grant_epoch
+        from aj_crew.cron_script import commit_grant_epoch, peek_grant_epoch
 
         svc = self._service(tmp_path)
         spec = _grant_script(cron_home)
@@ -655,7 +653,7 @@ class TestCronServiceSecretEnvGate:
         """A lost/corrupt epoch counter must never quietly restart at 0 —
         that would revive pins an agent saved under low epochs. Verification
         refuses, and bump raises instead of rewriting a fresh map."""
-        from kiro_crew.cron_script import bump_grant_epoch
+        from aj_crew.cron_script import bump_grant_epoch
 
         svc = self._service(tmp_path)
         job, spec, pin = self._script_job(svc, cron_home, grant={"MY_TOKEN": "slack-sandbox"})
@@ -680,7 +678,7 @@ class TestCronServiceSecretEnvGate:
         """A commit whose peeked base was overtaken by a concurrent bump is
         refused — re-committing the bumped value would re-validate the very
         pin that bump meant to kill."""
-        from kiro_crew.cron_script import bump_grant_epoch, commit_grant_epoch, peek_grant_epoch
+        from aj_crew.cron_script import bump_grant_epoch, commit_grant_epoch, peek_grant_epoch
 
         assert commit_grant_epoch("j-cas", peek_grant_epoch("j-cas"), expected_current=0) is True
         bump_grant_epoch("j-cas")  # concurrent revoke/removal -> 2
@@ -694,7 +692,7 @@ class TestCronServiceSecretEnvGate:
         svc = self._service(tmp_path)
         job, spec, pin = self._script_job(svc, cron_home, grant={"MY_TOKEN": "slack-sandbox"})
         svc.update_job(job.id, secret_env={"MY_TOKEN": "slack-sandbox"}, secret_env_pin=pin)
-        with patch("kiro_crew.cron_script._write_grant_epochs", side_effect=OSError("read-only")):
+        with patch("aj_crew.cron_script._write_grant_epochs", side_effect=OSError("read-only")):
             with pytest.raises(OSError):
                 svc.remove_job(job.id, actor="owner", source="test")
         assert CronService(base_dir=svc._dir).get_job(job.id) is not None
@@ -722,7 +720,7 @@ class TestCronServiceSecretEnvGate:
         ran.last_status = "ok"
         ran.last_run_ts = time.time()
 
-        with patch("kiro_crew.cron_script._write_grant_epochs", side_effect=OSError("read-only")):
+        with patch("aj_crew.cron_script._write_grant_epochs", side_effect=OSError("read-only")):
             svc._merge_job_result(ran)
 
         # Still present (the delete was correctly held) ...
@@ -747,7 +745,7 @@ class TestCronServiceSecretEnvGate:
         must never collapse into one (a collapsed bump revives revoked pins)."""
         import threading as _threading
 
-        from kiro_crew.cron_script import _grant_epoch, bump_grant_epoch
+        from aj_crew.cron_script import _grant_epoch, bump_grant_epoch
 
         def worker() -> None:
             for _ in range(20):
@@ -829,7 +827,7 @@ class TestInjectionDefenseInDepth:
         """A hand-edited store could hold a protected key; the delivery
         filter drops it on every path (env preamble and stdin payload), so
         product-internal keys can never be named by a grant."""
-        kept = _filter_grant_env({"_KIROCREW_SECRET_FILE": "evil", "OK_TOKEN": "fine"})
+        kept = _filter_grant_env({"_AJCREW_SECRET_FILE": "evil", "OK_TOKEN": "fine"})
         assert kept == {"OK_TOKEN": "fine"}
 
     def test_forged_plain_hash_pin_is_rejected(self, tmp_path):
@@ -857,7 +855,7 @@ class TestInjectionDefenseInDepth:
             script = _make_script(
                 tmp_path,
                 "import helper\n"
-                "from kiro_crew.cron_script import Done\n"
+                "from aj_crew.cron_script import Done\n"
                 "def run(ctx):\n"
                 "    raise Done(helper.VALUE)\n",
             )
@@ -867,10 +865,10 @@ class TestInjectionDefenseInDepth:
                 spec, "", job_id="job1", grant={"MY_TOKEN": "slack-sandbox"}
             )
             with patch(
-                "kiro_crew.cron_script.wrap_argv",
+                "aj_crew.cron_script.wrap_argv",
                 lambda argv, **k: ([argv[0], "-X", "utf8", *argv[1:]], None),
             ):
-                SecretVault(tmp_path / ".kirocrew").set_sync("slack-sandbox", "xoxb-1")
+                SecretVault(tmp_path / ".ajcrew").set_sync("slack-sandbox", "xoxb-1")
                 result = run_script_sandboxed(
                     spec,
                     "job1",
@@ -889,7 +887,7 @@ class TestMcpSecretRequest:
     """The agent-reachable half: cron_secret_request writes PENDING only."""
 
     def _svc_and_job(self, cron_home=None, *, agent: bool = False):
-        from kiro_crew.config.loader import config_dir as loader_config_dir
+        from aj_crew.config.loader import config_dir as loader_config_dir
 
         svc = CronService(base_dir=loader_config_dir())
         spec = "" if agent else _grant_script(cron_home)
@@ -903,12 +901,12 @@ class TestMcpSecretRequest:
         return svc, job
 
     def _vault(self):
-        from kiro_crew.config.loader import config_dir as loader_config_dir
+        from aj_crew.config.loader import config_dir as loader_config_dir
 
         return SecretVault(loader_config_dir())
 
     def test_request_records_pending_not_active(self, cron_home):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         svc, job = self._svc_and_job(cron_home)
         self._vault().set_sync("slack-sandbox", "xoxb-1")
@@ -930,7 +928,7 @@ class TestMcpSecretRequest:
         unstored secret is accepted as pending exactly like a stored one, so
         an agent cannot enumerate the owner's vault names by guessing.
         Validation happens on the owner-only approval surfaces."""
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         svc, job = self._svc_and_job(cron_home)
         out = mcp_cron._call_tool_locally(
@@ -943,7 +941,7 @@ class TestMcpSecretRequest:
         assert reloaded.secret_env_pending == {"MY_TOKEN": "never-stored"}
 
     def test_request_refuses_agent_job(self):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         svc, job = self._svc_and_job(agent=True)
         self._vault().set_sync("slack-sandbox", "xoxb-1")
@@ -954,7 +952,7 @@ class TestMcpSecretRequest:
         assert out.startswith("Error:")
 
     def test_request_refuses_protected_env_name(self, cron_home):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         svc, job = self._svc_and_job(cron_home)
         self._vault().set_sync("slack-sandbox", "xoxb-1")
@@ -965,7 +963,7 @@ class TestMcpSecretRequest:
         assert out.startswith("Error:")
 
     def test_empty_request_withdraws_pending(self, cron_home):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         svc, job = self._svc_and_job(cron_home)
         self._vault().set_sync("slack-sandbox", "xoxb-1")
@@ -981,7 +979,7 @@ class TestMcpSecretRequest:
         assert reloaded.secret_env_pending_pin == ""
 
     def _pending_request(self, cron_home):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         svc, job = self._svc_and_job(cron_home)
         out = mcp_cron._call_tool_locally(
@@ -998,7 +996,7 @@ class TestMcpSecretRequest:
         [{"withdraw": True}, {"withdraw": True, "secrets": {}}],
     )
     def test_withdraw_withdraws_the_pending_request(self, cron_home, args):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         svc, job = self._pending_request(cron_home)
 
@@ -1011,7 +1009,7 @@ class TestMcpSecretRequest:
         assert reloaded.secret_env_pending_pin == ""
 
     def test_a_mapping_beside_withdraw_false_is_still_recorded_pending(self, cron_home):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         svc, job = self._svc_and_job(cron_home)
 
@@ -1026,7 +1024,7 @@ class TestMcpSecretRequest:
         assert reloaded.secret_env_pending == {"MY_TOKEN": "slack-sandbox"}
 
     def test_withdraw_beside_a_mapping_is_refused_and_keeps_the_request(self, cron_home):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         svc, job = self._pending_request(cron_home)
         before = CronService(base_dir=svc._dir).get_job(job.id)
@@ -1045,7 +1043,7 @@ class TestMcpSecretRequest:
 
     @pytest.mark.parametrize("args", [{}, {"withdraw": False}, {"secrets": None}])
     def test_neither_secrets_nor_withdraw_is_refused(self, cron_home, args):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         svc, job = self._pending_request(cron_home)
 
@@ -1061,12 +1059,12 @@ class TestMcpSecretRequest:
     def test_an_empty_request_for_a_job_out_of_reach_changes_nothing(
         self, cron_home, monkeypatch, args
     ):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         svc, job = self._pending_request(cron_home)
 
         unknown = mcp_cron._call_tool_locally("cron_secret_request", {"job_id": "0123abcd", **args})
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:chat-other")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:chat-other")
         foreign = mcp_cron._call_tool_locally("cron_secret_request", {"job_id": job.id, **args})
 
         assert unknown == mcp_cron._not_found("0123abcd")
@@ -1078,7 +1076,7 @@ class TestMcpSecretRequest:
     def test_an_empty_request_on_a_busy_store_says_so_and_keeps_the_request(
         self, cron_home, monkeypatch, args
     ):
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         svc, job = self._pending_request(cron_home)
 
@@ -1095,7 +1093,7 @@ class TestMcpSecretRequest:
 
     def test_cron_update_cannot_write_active_grant(self, cron_home):
         """The general-purpose MCP update tool must never carry the grant."""
-        from kiro_crew import mcp_cron
+        from aj_crew import mcp_cron
 
         svc, job = self._svc_and_job(cron_home)
         mcp_cron._call_tool_locally(
@@ -1119,15 +1117,15 @@ class TestGrantBodySizeCap:
     could hide executable tail bytes behind the preview truncation."""
 
     def test_grant_cap_never_exceeds_preview_cap(self):
-        from kiro_crew.cron_script import _MAX_GRANTED_SCRIPT_BYTES
-        from kiro_crew.dashboard.handlers.cron import _SCRIPT_SOURCE_MAX_BYTES
+        from aj_crew.cron_script import _MAX_GRANTED_SCRIPT_BYTES
+        from aj_crew.dashboard.handlers.cron import _SCRIPT_SOURCE_MAX_BYTES
 
         assert _MAX_GRANTED_SCRIPT_BYTES <= _SCRIPT_SOURCE_MAX_BYTES
 
     def test_oversized_script_refuses_grant(self, tmp_path):
         """A script past the cap fails the grant path closed (no pin is
         minted for bytes the owner could not have fully previewed)."""
-        SecretVault(tmp_path / ".kirocrew").set_sync("slack-sandbox", "xoxb-1")
+        SecretVault(tmp_path / ".ajcrew").set_sync("slack-sandbox", "xoxb-1")
         big = "# pad\n" * 50_000  # ~300 KiB, over the 256 KiB cap
         script = _make_script(tmp_path, "def run(ctx): pass\n" + big)
         spec = str(script) + ":run"
@@ -1144,12 +1142,12 @@ class TestGrantValueScrubbing:
     @pytest.fixture(autouse=True)
     def _passthrough_sandbox(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.cron_script.wrap_argv",
+            "aj_crew.cron_script.wrap_argv",
             lambda argv, **k: ([argv[0], "-X", "utf8", *argv[1:]], None),
         )
 
     def _run(self, tmp_path, body):
-        SecretVault(tmp_path / ".kirocrew").set_sync("slack-sandbox", "xoxb-leakyvalue")
+        SecretVault(tmp_path / ".ajcrew").set_sync("slack-sandbox", "xoxb-leakyvalue")
         script = _make_script(tmp_path, body)
         spec = str(script) + ":run"
         with patch("pathlib.Path.home", return_value=tmp_path):
@@ -1193,7 +1191,7 @@ class TestGrantValueScrubbing:
     def test_short_secret_is_scrubbed_too(self, tmp_path):
         """A 1-3 char vault value is still a secret: no length threshold may
         exempt it from the diagnostic scrub."""
-        SecretVault(tmp_path / ".kirocrew").set_sync("pin-secret", "7q1")
+        SecretVault(tmp_path / ".ajcrew").set_sync("pin-secret", "7q1")
         script = _make_script(
             tmp_path,
             "import os\n"
@@ -1221,11 +1219,11 @@ class TestGrantValueScrubbing:
         against literals; a vault value that equals one of those tokens must
         not rewrite a successful outcome into a failed one. The diagnostic
         fields still take the scrub."""
-        SecretVault(tmp_path / ".kirocrew").set_sync("word-secret", "done")
+        SecretVault(tmp_path / ".ajcrew").set_sync("word-secret", "done")
         script = _make_script(
             tmp_path,
             "import os\n"
-            "from kiro_crew.cron_script import Done\n"
+            "from aj_crew.cron_script import Done\n"
             "def run(ctx):\n"
             "    raise Done('all ' + os.environ['MY_SANDBOX_WORD'] + ' here')\n",
         )

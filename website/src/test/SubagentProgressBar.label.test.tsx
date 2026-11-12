@@ -51,8 +51,8 @@ function renderBar(store: ReturnType<typeof makeStore>) {
 describe('SubagentProgressBar — spawn_run label', () => {
   it('names a labelled row by its label, and an unlabelled one by its task text', () => {
     const store = makeStore()
-    store.dispatch(sseSubagentSpawn({ slot: SLOT, id: 'a1', task: LONG_TASK, agent: 'kirocrew', label: 'Retry ladder audit' }))
-    store.dispatch(sseSubagentSpawn({ slot: SLOT, id: 'a2', task: LONG_TASK, agent: 'kirocrew' }))
+    store.dispatch(sseSubagentSpawn({ slot: SLOT, id: 'a1', task: LONG_TASK, agent: 'ajcrew', label: 'Retry ladder audit' }))
+    store.dispatch(sseSubagentSpawn({ slot: SLOT, id: 'a2', task: LONG_TASK, agent: 'ajcrew' }))
     const { container } = renderBar(store)
     const names = [...container.querySelectorAll('span.truncate.text-text')].map(s => s.textContent || '')
     const preview = `${LONG_TASK.slice(0, 80)}…`
@@ -70,11 +70,11 @@ describe('SubagentProgressBar — spawn_run label', () => {
   it('keeps the label through the terminal frame and a reconnect snapshot', () => {
     const store = makeStore()
     store.dispatch(sseSubagentSnapshot({
-      id: 'a3', slot: SLOT, task: LONG_TASK, agent: 'kirocrew', label: 'From snapshot',
+      id: 'a3', slot: SLOT, task: LONG_TASK, agent: 'ajcrew', label: 'From snapshot',
       streaming: '', last_tool: '', started: 1_760_000_000,
     }))
     expect(store.getState().chat.subagents.a3.label).toBe('From snapshot')
-    store.dispatch(sseSubagentDone({ slot: SLOT, id: 'a4', elapsed: 3, task: LONG_TASK, agent: 'kirocrew', label: 'From done' }))
+    store.dispatch(sseSubagentDone({ slot: SLOT, id: 'a4', elapsed: 3, task: LONG_TASK, agent: 'ajcrew', label: 'From done' }))
     expect(store.getState().chat.subagents.a4.label).toBe('From done')
   })
 })

@@ -37,7 +37,7 @@ const mockApi = vi.hoisted(() => ({
   agentCatalog: vi.fn(async () => ({ agents: [] })),
   workspaces: vi.fn(async () => ({ workspaces: [] })),
   members: vi.fn(async () => ({ members: [] })),
-  createKirocrewAgent: vi.fn(),
+  createAjcrewAgent: vi.fn(),
   createWorkspace: vi.fn(),
 }))
 vi.mock('../api/client', () => ({ api: mockApi }))

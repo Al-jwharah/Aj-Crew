@@ -28,7 +28,7 @@ class TestRealSlackClientFetchThreadReplies:
 
     @pytest.mark.asyncio
     async def test_returns_messages(self):
-        from kiro_crew.slack.client import RealSlackClient
+        from aj_crew.slack.client import RealSlackClient
 
         web = AsyncMock()
         web.conversations_replies = AsyncMock(
@@ -49,7 +49,7 @@ class TestRealSlackClientFetchThreadReplies:
 
     @pytest.mark.asyncio
     async def test_logs_warning_on_pagination(self):
-        from kiro_crew.slack.client import RealSlackClient
+        from aj_crew.slack.client import RealSlackClient
 
         web = AsyncMock()
         web.conversations_replies = AsyncMock(
@@ -61,7 +61,7 @@ class TestRealSlackClientFetchThreadReplies:
         client = RealSlackClient.__new__(RealSlackClient)
         client._web = web
 
-        with patch("kiro_crew.slack.client.logger") as mock_logger:
+        with patch("aj_crew.slack.client.logger") as mock_logger:
             result = await client.fetch_thread_replies("C1", "100.0")
             assert len(result) == 1
             mock_logger.warning.assert_called_once()
@@ -71,7 +71,7 @@ class TestRealSlackClientFetchThreadReplies:
     async def test_returns_empty_on_error(self):
         import aiohttp
 
-        from kiro_crew.slack.client import RealSlackClient
+        from aj_crew.slack.client import RealSlackClient
 
         web = AsyncMock()
         web.conversations_replies = AsyncMock(
@@ -88,7 +88,7 @@ class TestRealSlackClientFetchThreadReplies:
         messages = [{"user": "U1", "text": "hi"}]
         async with slack_wire(monkeypatch) as wire:
             wire.respond("conversations.replies", {"messages": messages, "response_metadata": {}})
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.client"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.slack.client"):
                 result = await wire.client.fetch_thread_replies("C1", "100.0")
 
         assert result == messages
@@ -98,4 +98,4 @@ class TestRealSlackClientFetchThreadReplies:
             "100.0",
             "200",
         )
-        assert [r.getMessage() for r in caplog.records if r.name == "kiro_crew.slack.client"] == []
+        assert [r.getMessage() for r in caplog.records if r.name == "aj_crew.slack.client"] == []

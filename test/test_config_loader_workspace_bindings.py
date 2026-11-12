@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 from config_loader_helpers import (
-    _kirocrew_config_st,
+    _ajcrew_config_st,
     _load_from_dict,
     _safe_name_st,
     _store_name_st,
@@ -25,10 +25,10 @@ from config_loader_helpers import (
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
-import kiro_crew.config.loader as loader_module
-from kiro_crew.config.loader import (
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+import aj_crew.config.loader as loader_module
+from aj_crew.config.loader import (
+    AjCrewAgentConfig,
+    AjCrewConfig,
     MemoryStoreConfig,
     ResolvedBindings,
     WorkspaceConfig,
@@ -39,10 +39,10 @@ from kiro_crew.config.loader import (
     validate_kiro_agent_references,
     workspace_dir_for,
 )
-from kiro_crew.memory_stores import UnknownMemoryStore, provision_member_memory
+from aj_crew.memory_stores import UnknownMemoryStore, provision_member_memory
 
 # Logger used by the loader module — needed for capturing warnings in tests
-logger = logging.getLogger("kiro_crew.config.loader")
+logger = logging.getLogger("aj_crew.config.loader")
 
 
 # Phase 2: Agent-Workspace Bindings Property Tests
@@ -60,14 +60,14 @@ class TestAgentWorkspaceBindingsProperties:
         self,
         cls_idx: int,
     ) -> None:
-        """All fields of KiroCrewAgentConfig, WorkspaceConfig, and
+        """All fields of AjCrewAgentConfig, WorkspaceConfig, and
         MemoryStoreConfig carry required metadata (label, help).
 
         **Validates: Requirements 1.1, 3.1, 5.1**
         """
         import dataclasses
 
-        classes = [KiroCrewAgentConfig, WorkspaceConfig, MemoryStoreConfig]
+        classes = [AjCrewAgentConfig, WorkspaceConfig, MemoryStoreConfig]
         cls = classes[cls_idx]
 
         fields = dataclasses.fields(cls)
@@ -126,13 +126,13 @@ class TestAgentWorkspaceBindingsProperties:
                     assert result[name].dir == value.get("dir", "workspace")
 
     # Feature: agent-workspace-bindings, Property 10: Config serialization round-trip
-    @given(config=_kirocrew_config_st)
+    @given(config=_ajcrew_config_st)
     @settings(deadline=None)
     def test_config_serialization_round_trip(
         self,
-        config: KiroCrewConfig,
+        config: AjCrewConfig,
     ) -> None:
-        """For any valid KiroCrewConfig with agents/workspaces/stores,
+        """For any valid AjCrewConfig with agents/workspaces/stores,
         to_dict() → load() produces an equivalent instance.
 
         **Validates: Requirements 9.4, 11.5**
@@ -198,11 +198,11 @@ class TestAgentWorkspaceBindingsProperties:
 
     # Feature: agent-workspace-bindings, Property 11: Serialization format correctness
     @pytest.mark.skipif(platform.system() == "Darwin", reason="Hypothesis flaky on macOS CI")
-    @given(config=_kirocrew_config_st)
+    @given(config=_ajcrew_config_st)
     @settings(deadline=None)
     def test_serialization_format_correctness(
         self,
-        config: KiroCrewConfig,
+        config: AjCrewConfig,
     ) -> None:
         """For any config, to_dict() output has agents as dict-of-dicts,
         workspaces values as dicts with dir key, memory_stores as
@@ -341,9 +341,9 @@ class TestAgentWorkspaceBindingsProperties:
 
         **Validates: Requirements 7.1, 7.2, 7.5**
         """
-        config = KiroCrewConfig(
+        config = AjCrewConfig(
             agents={
-                agent_name: KiroCrewAgentConfig(
+                agent_name: AjCrewAgentConfig(
                     kiro_agent=kiro_agent_name,
                     workspace=ws_name,
                     memory_store=store_name,
@@ -377,7 +377,7 @@ class TestAgentWorkspaceBindingsProperties:
         result2 = resolve_agent_bindings(config)
         assert result2.workspace_dir == Path(ws_dir)
         assert result2.memory_store_name == "default"
-        assert result2.kiro_agent == "kirocrew"
+        assert result2.kiro_agent == "ajcrew"
         assert result2.selection_kind == "template"
         assert result2.resolved_alias == ""
         assert result2.model == ""
@@ -406,9 +406,9 @@ class TestAgentWorkspaceBindingsProperties:
         assume(missing_ws != fallback_ws_name)
         assume(missing_store != fallback_store_name)
 
-        config = KiroCrewConfig(
+        config = AjCrewConfig(
             agents={
-                agent_name: KiroCrewAgentConfig(
+                agent_name: AjCrewAgentConfig(
                     kiro_agent="some-agent",
                     workspace=missing_ws,
                     memory_store=missing_store,
@@ -438,7 +438,7 @@ class TestAgentWorkspaceBindingsProperties:
         agents_data=st.dictionaries(
             keys=_safe_name_st,
             values=st.builds(
-                KiroCrewAgentConfig,
+                AjCrewAgentConfig,
                 kiro_agent=st.text(min_size=0, max_size=20),
                 workspace=st.just("default"),
                 memory_store=st.just("default"),
@@ -455,7 +455,7 @@ class TestAgentWorkspaceBindingsProperties:
     @settings(deadline=None)
     def test_kiro_agent_validation_warnings(
         self,
-        agents_data: dict[str, KiroCrewAgentConfig],
+        agents_data: dict[str, AjCrewAgentConfig],
         installed: list[str],
     ) -> None:
         """For configs with kiro_agent values and mock installed agent
@@ -464,7 +464,7 @@ class TestAgentWorkspaceBindingsProperties:
 
         **Validates: Requirements 8.1, 8.2, 8.3**
         """
-        config = KiroCrewConfig(agents=agents_data)
+        config = AjCrewConfig(agents=agents_data)
         installed_set = set(installed)
 
         # Capture warnings
@@ -494,7 +494,7 @@ class TestAgentWorkspaceBindingsProperties:
         for mc_name, mc_agent in agents_data.items():
             if not mc_agent.kiro_agent or mc_agent.kiro_agent in installed_set:
                 # Use precise prefix to avoid substring false positives
-                prefix = f"KiroCrew agent '{mc_name}' references"  # brand-ok: loader log text
+                prefix = f"AjCrew agent '{mc_name}' references"  # brand-ok: loader log text
                 matching = [m for m in log_messages if prefix in m]
                 assert len(matching) == 0, (
                     f"Unexpected warning for agent '{mc_name}' with "
@@ -560,7 +560,7 @@ class TestAgentWorkspaceBindingsProperties:
 
         try:
             with unittest.mock.patch(
-                "kiro_crew.config.loader.config_path",
+                "aj_crew.config.loader.config_path",
                 return_value=tmp,
             ):
                 result = workspace_dir_for(ws_name)
@@ -591,7 +591,7 @@ class TestAgentWorkspaceBindingsProperties:
             keys=_safe_name_st,
             values=st.fixed_dictionaries(
                 {
-                    "kiro_agent": st.sampled_from(["kirocrew", "oncall-agent", "custom", ""]),
+                    "kiro_agent": st.sampled_from(["ajcrew", "oncall-agent", "custom", ""]),
                     "workspace": _safe_name_st,
                     "memory_store": _safe_name_st,
                 },
@@ -618,7 +618,7 @@ class TestAgentWorkspaceBindingsProperties:
 
         for name, raw_entry in agents_data.items():
             parsed = cfg.agents[name]
-            assert isinstance(parsed, KiroCrewAgentConfig)
+            assert isinstance(parsed, AjCrewAgentConfig)
             assert parsed.kiro_agent == raw_entry["kiro_agent"]
             assert parsed.workspace == raw_entry["workspace"]
             assert parsed.memory_store == raw_entry["memory_store"]
@@ -670,7 +670,7 @@ class TestAgentWorkspaceBindingsProperties:
 
         # Req 9.5: agent.default_agent is preserved as kiro agent name
         # in the migrated default agent
-        expected_kiro = legacy_default_agent if legacy_default_agent else "kirocrew"
+        expected_kiro = legacy_default_agent if legacy_default_agent else "ajcrew"
         assert cfg.agents["default"].kiro_agent == expected_kiro
 
         # Req 9.2: Flat workspaces auto-migrated to structured format
@@ -699,10 +699,10 @@ class TestAgentWorkspaceBindingsProperties:
             encoding="utf-8",
         )
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=home),
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
+            unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=home),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file),
         ):
-            cfg = KiroCrewConfig.load()
+            cfg = AjCrewConfig.load()
 
         assert cfg.workspaces == {
             "default": WorkspaceConfig(dir="~/ws"),
@@ -723,17 +723,17 @@ class TestMemoryStoreBindingFloor:
     def test_default_assistant_retains_v1_without_repairing_member_bindings(self, bound) -> None:
         # ``None`` stands for the key being absent from the crew's config entry: the
         # field's own default is the floor, and this pins that the two agree.
-        assert KiroCrewAgentConfig().memory_store == "default"
-        agent_kwargs: dict = {"kiro_agent": "kirocrew", "workspace": "default"}
+        assert AjCrewAgentConfig().memory_store == "default"
+        agent_kwargs: dict = {"kiro_agent": "ajcrew", "workspace": "default"}
         if bound is not None:
             agent_kwargs["memory_store"] = bound
 
-        config = KiroCrewConfig(
+        config = AjCrewConfig(
             agents={
-                "default": KiroCrewAgentConfig(**agent_kwargs),
-                "floor": KiroCrewAgentConfig(**agent_kwargs),
-                "chose": KiroCrewAgentConfig(kiro_agent="kirocrew", memory_store="work"),
-                "broken": KiroCrewAgentConfig(kiro_agent="kirocrew", memory_store="gone"),
+                "default": AjCrewAgentConfig(**agent_kwargs),
+                "floor": AjCrewAgentConfig(**agent_kwargs),
+                "chose": AjCrewAgentConfig(kiro_agent="ajcrew", memory_store="work"),
+                "broken": AjCrewAgentConfig(kiro_agent="ajcrew", memory_store="gone"),
             },
             default_agent="floor",
             workspaces={"default": WorkspaceConfig(dir="workspace")},
@@ -850,8 +850,8 @@ class TestEdgeCases:
         assert result.workspace_dir == Path("my-workspace")
         # Resolves via migrated default agent → memory_store "default"
         assert result.memory_store_name == "default"
-        # Migrated default agent uses "kirocrew" as kiro_agent (no legacy value)
-        assert result.kiro_agent == "kirocrew"
+        # Migrated default agent uses "ajcrew" as kiro_agent (no legacy value)
+        assert result.kiro_agent == "ajcrew"
 
     def test_missing_workspaces_creates_default_entry(self) -> None:
         """Missing workspaces section creates default entry.
@@ -917,7 +917,7 @@ class TestEdgeCases:
             assert cfg.dashboard.folder_sort == "custom", junk
 
     def test_session_sort_loaded_from_config(self) -> None:
-        from kiro_crew.config.sections import SESSION_SORT_MODES
+        from aj_crew.config.sections import SESSION_SORT_MODES
 
         for key in SESSION_SORT_MODES:
             cfg = _load_from_dict({"dashboard": {"session_sort": key}})
@@ -939,7 +939,7 @@ class TestEdgeCases:
     def test_a_build_without_manual_reads_it_as_the_default(self, monkeypatch) -> None:
         """A downgrade breaks nothing: the loader of a build whose key list ends
         before ``manual`` reads a stored ``manual`` as ``date-desc``."""
-        from kiro_crew.config import sections
+        from aj_crew.config import sections
 
         before_manual = tuple(k for k in sections.SESSION_SORT_MODES if k != "manual")
         monkeypatch.setattr(sections, "SESSION_SORT_MODES", before_manual)
@@ -1058,7 +1058,7 @@ class TestUnsatisfiableSubagentCwdRoots(unittest.TestCase):
         return {
             "agents": {
                 "default": {
-                    "kiro_agent": "kirocrew",
+                    "kiro_agent": "ajcrew",
                     "workspace": "default",
                     "memory_store": "default",
                 }
@@ -1066,7 +1066,7 @@ class TestUnsatisfiableSubagentCwdRoots(unittest.TestCase):
             "default_agent": "default",
         }
 
-    def _load(self, data: dict) -> tuple[KiroCrewConfig, dict, bool]:
+    def _load(self, data: dict) -> tuple[AjCrewConfig, dict, bool]:
         """Load *data* from a temp file; return (cfg, on-disk json, migrated)."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             json.dump(data, f)
@@ -1074,10 +1074,10 @@ class TestUnsatisfiableSubagentCwdRoots(unittest.TestCase):
         bak = tmp.with_suffix(".json.bak")
         try:
             with unittest.mock.patch(
-                "kiro_crew.config.loader.config_path",
+                "aj_crew.config.loader.config_path",
                 return_value=tmp,
             ):
-                cfg = KiroCrewConfig.load()
+                cfg = AjCrewConfig.load()
             return (cfg, json.loads(tmp.read_text(encoding="utf-8")), bak.exists())
         finally:
             tmp.unlink(missing_ok=True)
@@ -1161,9 +1161,9 @@ def test_agent_triggers_load() -> None:
     cfg = _load_from_dict(
         {
             "agents": {
-                "oncall": {"kiro_agent": "kirocrew", "triggers": "incident, outage"},
-                "research": {"kiro_agent": "kirocrew", "description": "deep research crew"},
-                "weird": {"kiro_agent": "kirocrew", "triggers": 1},
+                "oncall": {"kiro_agent": "ajcrew", "triggers": "incident, outage"},
+                "research": {"kiro_agent": "ajcrew", "description": "deep research crew"},
+                "weird": {"kiro_agent": "ajcrew", "triggers": 1},
             },
             "default_agent": "oncall",
             "workspaces": {"default": {"dir": "workspace"}},

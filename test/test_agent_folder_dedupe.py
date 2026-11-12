@@ -28,16 +28,16 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_folders, create_rate_limit
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_folders import api_chat_folder_create, create_folder_record
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
-from kiro_crew.mcp_dashboard import TABLE
-from kiro_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.dashboard import chat_folders, create_rate_limit
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_folders import api_chat_folder_create, create_folder_record
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
+from aj_crew.mcp_dashboard import TABLE
+from aj_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
 
 _CALLER = "dashboard:chat-1-100"
 _OPS = {"id": "0000000000a1", "name": "Ops", "parent_id": ""}
@@ -153,18 +153,18 @@ def test_a_refused_create_leaves_no_empty_folder_behind() -> None:
 def test_the_dry_run_names_the_deepest_existing_folder() -> None:
     """The probe runs the create against the folder the new path hangs from."""
     gw = _Gateway([_OPS])
-    gw.run("session_create", {"title": "worker", "folder": "Ops/kirocrew-worker"})
+    gw.run("session_create", {"title": "worker", "folder": "Ops/ajcrew-worker"})
     probe, real = gw.create_posts
     assert probe == {"title": "worker", "agent": "", "dry_run": True, "folder_id": _OPS["id"]}
     assert "dry_run" not in real
-    assert real["folder_id"] == gw.named("kirocrew-worker")[0]["id"]
+    assert real["folder_id"] == gw.named("ajcrew-worker")[0]["id"]
 
 
 def test_an_existing_path_needs_no_preflight() -> None:
     """Nothing would be created, so the one create call is the only call."""
-    worker = {"id": "0000000000b2", "name": "kirocrew-worker", "parent_id": _OPS["id"]}
+    worker = {"id": "0000000000b2", "name": "ajcrew-worker", "parent_id": _OPS["id"]}
     gw = _Gateway([_OPS, worker])
-    gw.run("session_create", {"title": "worker", "folder": "Ops/kirocrew-worker"})
+    gw.run("session_create", {"title": "worker", "folder": "Ops/ajcrew-worker"})
     assert gw.folder_posts == []
     assert [("dry_run" in b) for b in gw.create_posts] == [False]
     assert gw.create_posts[0]["folder_id"] == worker["id"]
@@ -173,10 +173,10 @@ def test_an_existing_path_needs_no_preflight() -> None:
 def test_a_conductor_in_the_persons_folder_nests_its_workers_there() -> None:
     """The reported structure: workers go UNDER the person's Ops, not a fork."""
     gw = _Gateway([_OPS])
-    out = gw.run("session_create", {"title": "worker", "folder": "Ops/kirocrew-worker"})
+    out = gw.run("session_create", {"title": "worker", "folder": "Ops/ajcrew-worker"})
     assert not out.startswith("Error:"), out
     assert len(gw.named("Ops")) == 1, "a second Ops must never be created"
-    (leaf,) = gw.named("kirocrew-worker")
+    (leaf,) = gw.named("ajcrew-worker")
     assert leaf["parent_id"] == _OPS["id"]
 
 
@@ -188,15 +188,15 @@ def test_a_lost_race_reuses_the_winners_folder() -> None:
     """
 
     def _winner_first(gw: _Gateway, body: dict) -> None:
-        if body["name"] == "kirocrew-worker" and not gw.named("kirocrew-worker"):
+        if body["name"] == "ajcrew-worker" and not gw.named("ajcrew-worker"):
             gw.folders.append(
-                {"id": "0000000000c3", "name": "kirocrew-worker", "parent_id": _OPS["id"]}
+                {"id": "0000000000c3", "name": "ajcrew-worker", "parent_id": _OPS["id"]}
             )
 
     gw = _Gateway([_OPS], on_folder_post=_winner_first)
-    out = gw.run("session_create", {"title": "worker", "folder": "Ops/kirocrew-worker"})
+    out = gw.run("session_create", {"title": "worker", "folder": "Ops/ajcrew-worker"})
     assert not out.startswith("Error:"), out
-    assert len(gw.named("kirocrew-worker")) == 1
+    assert len(gw.named("ajcrew-worker")) == 1
     assert gw.create_posts[-1]["folder_id"] == "0000000000c3"
     assert "created folder path" not in out, "this call created nothing"
 
@@ -254,7 +254,7 @@ async def _post_folder(state: DashboardState, body: dict, *, internal: bool) -> 
     app.router.add_post("/api/chat/folders", api_chat_folder_create)
     headers = {"X-Session-Key": _CALLER}
     if internal:
-        headers |= {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "kirocrew-dashboard"}
+        headers |= {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "ajcrew-dashboard"}
     async with TestClient(TestServer(app)) as client:
         resp = await client.post("/api/chat/folders", json=body, headers=headers)
         return resp.status, await resp.json()
@@ -423,7 +423,7 @@ def _member_app(state: DashboardState, *, member: str = _MEMBER) -> web.Applicat
 _INTERNAL = {
     "X-Session-Key": _CALLER,
     "X-Internal-Secret": "s3cret",
-    "X-Internal-Caller": "kirocrew-dashboard",
+    "X-Internal-Caller": "ajcrew-dashboard",
 }
 
 
@@ -442,13 +442,13 @@ async def test_a_member_in_the_persons_folder_creates_its_subfolder_once() -> No
     create_rate_limit.reset_for_tests()
     folders = [dict(_OPS)]
     state = _home_state(folders)
-    status, made = await _member_post(state, {"name": "kirocrew-worker", "parent_id": _OPS["id"]})
+    status, made = await _member_post(state, {"name": "ajcrew-worker", "parent_id": _OPS["id"]})
     assert status == 201, made
     assert made["owner_app"] == _MEMBER, "the new subfolder belongs to the agent"
-    status, again = await _member_post(state, {"name": "kirocrew-worker", "parent_id": _OPS["id"]})
+    status, again = await _member_post(state, {"name": "ajcrew-worker", "parent_id": _OPS["id"]})
     assert status == 200, again
     assert again["id"] == made["id"] and again["reused"] is True
-    assert [f["name"] for f in folders].count("kirocrew-worker") == 1
+    assert [f["name"] for f in folders].count("ajcrew-worker") == 1
     assert all("reused" not in f for f in folders), "the flag is never persisted"
 
 
@@ -459,12 +459,12 @@ async def test_parallel_member_creates_land_one_folder() -> None:
     folders = [dict(_OPS)]
     state = _home_state(folders)
     (s1, a), (s2, b) = await asyncio.gather(
-        _member_post(state, {"name": "kirocrew-worker", "parent_id": _OPS["id"]}),
-        _member_post(state, {"name": "kirocrew-worker", "parent_id": _OPS["id"]}),
+        _member_post(state, {"name": "ajcrew-worker", "parent_id": _OPS["id"]}),
+        _member_post(state, {"name": "ajcrew-worker", "parent_id": _OPS["id"]}),
     )
     assert sorted([s1, s2]) == [200, 201]
     assert a["id"] == b["id"]
-    assert [f["name"] for f in folders].count("kirocrew-worker") == 1
+    assert [f["name"] for f in folders].count("ajcrew-worker") == 1
 
 
 @pytest.mark.asyncio
@@ -483,10 +483,10 @@ async def test_other_person_folders_are_still_refused() -> None:
 async def test_a_person_owned_twin_under_the_home_folder_is_not_reused() -> None:
     """Reuse is for the agent's own folder only; the person's is refused."""
     create_rate_limit.reset_for_tests()
-    twin = {"id": "0000000000a7", "name": "kirocrew-worker", "parent_id": _OPS["id"]}
+    twin = {"id": "0000000000a7", "name": "ajcrew-worker", "parent_id": _OPS["id"]}
     folders = [dict(_OPS), twin]
     status, body = await _member_post(
-        _home_state(folders), {"name": "kirocrew-worker", "parent_id": _OPS["id"]}
+        _home_state(folders), {"name": "ajcrew-worker", "parent_id": _OPS["id"]}
     )
     assert status == 409 and body["code"] == "folder_name_exists"
 
@@ -535,7 +535,7 @@ async def test_a_member_sees_its_home_folder_chain_and_nothing_else() -> None:
 
 def test_the_walk_takes_a_reused_folder_as_found_not_created() -> None:
     """A 200 reuse from the endpoint is a match, never a "created" segment."""
-    winner = {"id": "0000000000b8", "name": "kirocrew-worker", "parent_id": _OPS["id"]}
+    winner = {"id": "0000000000b8", "name": "ajcrew-worker", "parent_id": _OPS["id"]}
 
     posts: list[DashboardRequest] = []
 
@@ -550,7 +550,7 @@ def test_the_walk_takes_a_reused_folder_as_found_not_created() -> None:
     gw = _Gateway([_OPS])
     out = _call(
         "session_create",
-        {"title": "w", "folder": "Ops/kirocrew-worker"},
+        {"title": "w", "folder": "Ops/ajcrew-worker"},
         {"GET /api/{route}": lambda req: gw.get(req.path), "POST /api/{route}": _post},
     )
     assert "created folder path" not in out

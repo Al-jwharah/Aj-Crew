@@ -12,8 +12,8 @@ from types import SimpleNamespace
 import pytest
 from test_warm_task_brief import _FULL_BRIEF, _brief_kinds, _focus, _seen, _thread
 
-from kiro_crew import crew_mode
-from kiro_crew.dashboard import slot_retention, warm_task_brief
+from aj_crew import crew_mode
+from aj_crew.dashboard import slot_retention, warm_task_brief
 
 
 def _crew_mode_chat(monkeypatch, *, user_ago: float | None, goal: bool = True):
@@ -167,7 +167,7 @@ def test_a_crew_mode_worker_never_starts_a_brief(monkeypatch):
 
 def test_an_ordinary_chat_on_a_normal_agent_never_starts_a_brief(monkeypatch):
     state, slot, _ = _crew_mode_chat(monkeypatch, user_ago=2 * 3600)
-    slot.agent = "kirocrew"
+    slot.agent = "ajcrew"
     _seen(state, slot.key, 45 * 60)
     warm_task_brief.handle_focus_frame(state, 1, slot.key)
     assert state._warm_task_brief_tasks == {}

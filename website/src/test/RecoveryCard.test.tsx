@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import RecoveryCard, { INJECT_KIND_OPENS_TURN, injectOpensTurn, parseRecoveryMessage, resolveInjectCard } from '../pages/chat/RecoveryCard'
 
-// Verbatim prefixes from src/kiro_crew/dashboard/state.py. The separator is an
+// Verbatim prefixes from src/aj_crew/dashboard/state.py. The separator is an
 // em dash, not a hyphen — a mismatch is exactly the drift this suite guards.
 const REFUSAL = '[Tool refusal — automatic recovery]'
 const STALLED = '[Stalled turn — automatic recovery]'
@@ -24,7 +24,7 @@ const COMPACTION = '[Context compacted — automatic recovery]'
 function refusalBody(items: string[]): string {
   return [
     REFUSAL,
-    'One or more tool calls in your previous turn were blocked by a Kiro Crew safety policy, which ended the turn early. This was NOT a user action — do not treat it as a cancellation or interruption by the user.',
+    'One or more tool calls in your previous turn were blocked by an Aj Crew safety policy, which ended the turn early. This was NOT a user action — do not treat it as a cancellation or interruption by the user.',
     '',
     'Blocked:',
     ...items.map(i => `  - ${i}`),
@@ -406,7 +406,7 @@ describe('ChatPage – recovery card wiring', () => {
   })
 })
 
-/** Verbatim from SUBAGENT_SYNTHESIS_PREFIX in src/kiro_crew/dashboard/state_parts/injected_turns.py. */
+/** Verbatim from SUBAGENT_SYNTHESIS_PREFIX in src/aj_crew/dashboard/state_parts/injected_turns.py. */
 const SYNTHESIS = '[SYSTEM] Sub-agent synthesis:'
 
 describe('parseRecoveryMessage – sub-agent synthesis', () => {

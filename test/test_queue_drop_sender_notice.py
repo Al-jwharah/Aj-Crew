@@ -28,9 +28,9 @@ from unittest.mock import MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_runner as cr
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard import chat_runner as cr
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import (
     CRON_NOTIFICATION_KIND,
     SUBAGENT_COMPLETION_KIND,
     slot_history_key,

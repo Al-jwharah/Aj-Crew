@@ -278,8 +278,8 @@ describe('agent-switch notice expiry', () => {
 describe('embed tab strip Shift+click "+"', () => {
   function mount(tabs?: string[], activeSlot: string | null = ORIGIN) {
     if (tabs) {
-      sessionStorage.setItem('kirocrew-embed-tabs', JSON.stringify(tabs))
-      sessionStorage.setItem('kirocrew-embed-active-index', '0')
+      sessionStorage.setItem('ajcrew-embed-tabs', JSON.stringify(tabs))
+      sessionStorage.setItem('ajcrew-embed-active-index', '0')
     }
     const store = makeStore(activeSlot)
     const entry = activeSlot ? `/embed/chat/${activeSlot}?sid=${activeSlot}` : '/embed/sessions'
@@ -299,8 +299,8 @@ describe('embed tab strip Shift+click "+"', () => {
   }
   const shiftPlus = () => fireEvent.click(screen.getByLabelText('New tab'), { shiftKey: true })
 
-  const storedTabs = () => JSON.parse(sessionStorage.getItem('kirocrew-embed-tabs') ?? '[]') as string[]
-  const storedIndex = () => Number(sessionStorage.getItem('kirocrew-embed-active-index'))
+  const storedTabs = () => JSON.parse(sessionStorage.getItem('ajcrew-embed-tabs') ?? '[]') as string[]
+  const storedIndex = () => Number(sessionStorage.getItem('ajcrew-embed-active-index'))
 
   it('opens the new tab when the user stayed on theirs', async () => {
     mount()

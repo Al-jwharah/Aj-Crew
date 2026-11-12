@@ -14,13 +14,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.cron import CronJob
-from kiro_crew.dashboard.cron_inject import (
+from aj_crew.cron import CronJob
+from aj_crew.dashboard.cron_inject import (
     ensure_cron_slot,
     inject_cron_result_to_dashboard,
 )
-from kiro_crew.dashboard.session_control import caller_slot_key
-from kiro_crew.session_surface import has_dashboard_surface, set_dashboard_surfaced
+from aj_crew.dashboard.session_control import caller_slot_key
+from aj_crew.session_surface import has_dashboard_surface, set_dashboard_surfaced
 
 
 @pytest.fixture(autouse=True)
@@ -109,7 +109,7 @@ class TestEnsureCronSlot:
             id="member-job",
             name="daily report",
             message="report",
-            agent_id="kirocrew",
+            agent_id="ajcrew",
             member_id="writer",
             memory_store="writer-private",
         )
@@ -266,8 +266,8 @@ async def test_a_turn_in_the_cron_tab_keeps_its_title(monkeypatch):
     """A turn in the tab (here a child's result) runs the auto-titler. With a backend
     that returns no title, its fallback would be the first user row, the run's header
     with its hidden marker; the tab keeps ``Cron: <name>`` instead."""
-    from kiro_crew.dashboard import chat_title
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard import chat_title
+    from aj_crew.dashboard.state import _ChatSlot
 
     state = _make_state()
 
@@ -300,7 +300,7 @@ def _inject_shaped(job):
     fields the pre-create never reads; real values keep them out of the
     redactors as non-strings (same rationale as the sibling module's fake).
     """
-    from kiro_crew.cron import CronJob
+    from aj_crew.cron import CronJob
 
     job.message = "run the sweep"
     job.last_result_ts = 0.0
@@ -339,7 +339,7 @@ class TestPreCreateGuard:
         at the unguarded callsite it reached ``_execute``'s except arm and the run
         died for an amenity. Contained, the run proceeds; having actually
         dispatched, a one-shot is then legitimately consumed."""
-        from kiro_crew.slack.gateway import _pre_create_cron_slot
+        from aj_crew.slack.gateway import _pre_create_cron_slot
 
         state = _make_state()
         job = self._arm_lifecycle(_make_job())
@@ -358,7 +358,7 @@ class TestPreCreateGuard:
         site retains the unexecuted one-shot."""
         import asyncio
 
-        from kiro_crew.slack.gateway import _pre_create_cron_slot
+        from aj_crew.slack.gateway import _pre_create_cron_slot
 
         state = _make_state()
         job = self._arm_lifecycle(_make_job())
@@ -390,7 +390,7 @@ class TestPreCreateGuard:
     async def test_control_normal_first_run_still_binds_through_the_guard(self):
         """The guard changes failure semantics only: the healthy path still
         mints the tab, binds identity, and clears the marker for dispatch."""
-        from kiro_crew.slack.gateway import _pre_create_cron_slot
+        from aj_crew.slack.gateway import _pre_create_cron_slot
 
         state = _make_state()
         job = self._arm_lifecycle(_make_job())
@@ -408,7 +408,7 @@ class TestPreCreateGuard:
         """Benign no-new-deny: the wrapper adds no refusal path of its own —
         eligibility still lives in ensure_cron_slot, an ineligible job gets
         no tab and no marker residue."""
-        from kiro_crew.slack.gateway import _pre_create_cron_slot
+        from aj_crew.slack.gateway import _pre_create_cron_slot
 
         state = _make_state()
         job = self._arm_lifecycle(_make_job(hidden=True))

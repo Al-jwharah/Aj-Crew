@@ -20,7 +20,7 @@ import {
   normalizeTitleRefresh, type CompletionKeepMode, COMPLETION_KEEP_OPTIONS, type VerbosityLevel,
   VERBOSITY_OPTIONS, MEMORY_MODE_OPTIONS, FOLDER_ROOT_EXAMPLE, memoryModeLabels, asMemoryMode,
   asVerbosity, completionKeepLabels, COMPLETION_KEEP_CHARS_MIN, COMPLETION_KEEP_CHARS_MAX,
-  COMPLETION_KEEP_CHARS_DEFAULT, type KirocrewConfigShape, COMPACT_CUSTOM, AUTOCOMPACT_PCT_MIN,
+  COMPLETION_KEEP_CHARS_DEFAULT, type AjcrewConfigShape, COMPACT_CUSTOM, AUTOCOMPACT_PCT_MIN,
   AUTOCOMPACT_PCT_MAX, PREFERRED_LANGUAGE_OPTIONS, preferredLanguageLabels, asPreferredLanguage,
 } from './chatPanelOptions'
 import { useChatPanelDashboard } from './useChatPanelDashboard'
@@ -113,10 +113,10 @@ export function ChatPanel({ basePath }: { basePath?: string } = {}) {
     fvFetchMut, fv, featureVideoLine, dashMut, defaultModeMut,
   } = useChatPanelDashboard({ qc, setPathSaveError, clearOwnPathError, overlay })
 
-  // ── KiroCrew config (server-side) ──
-  const mcQ = useQuery<KirocrewConfigShape>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+  // ── Aj Crew config (server-side) ──
+  const mcQ = useQuery<AjcrewConfigShape>({
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
   const mcCfg = mcQ.data
 
@@ -132,7 +132,7 @@ export function ChatPanel({ basePath }: { basePath?: string } = {}) {
   const profileMut = useMutation({
     mutationFn: ({ path, value }: { path: string; value: string }) =>
       api.patchConfig(path, value),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }),
     onError: () => setSaveError(i18nT('pages.settings.chatPanel.failed_to_save_profile')),
   })
 
@@ -140,7 +140,7 @@ export function ChatPanel({ basePath }: { basePath?: string } = {}) {
   const preventSleep = mcCfg?.dashboard?.prevent_sleep ?? false
   const preventSleepMut = useMutation({
     mutationFn: (v: boolean) => api.patchConfig('dashboard.prevent_sleep', v),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }),
     onError: () => setSaveError(i18nT('pages.settings.chatPanel.failed_to_save_dashboard_config')),
   })
 
@@ -152,7 +152,7 @@ export function ChatPanel({ basePath }: { basePath?: string } = {}) {
   const summaryMut = useMutation({
     mutationFn: (v: boolean) => api.patchConfig('session_summary.enabled', v),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+      qc.invalidateQueries({ queryKey: ['ajcrewConfig'] })
       // The side panel reads the flag from each chat's summary query (its +
       // menu row and Pin Summary), which never goes stale on its own.
       qc.invalidateQueries({ queryKey: ['session-summary'] })
@@ -170,11 +170,11 @@ export function ChatPanel({ basePath }: { basePath?: string } = {}) {
   const shownTitleRefresh = overlay.shown(TITLE_REFRESH_PATH, titleRefresh)
   const titleRefreshMut = useMutation({
     ...overlay.mutationOpts<number>({
-      queryKey: ['kirocrewConfig'],
+      queryKey: ['ajcrewConfig'],
       mutationFn: (v: number) => api.patchConfig(TITLE_REFRESH_PATH, v),
       path: () => TITLE_REFRESH_PATH,
       displayValue: v => v,
-      applyToCache: (cached, v) => setConfigPathValue(cached as KirocrewConfigShape, TITLE_REFRESH_PATH, v),
+      applyToCache: (cached, v) => setConfigPathValue(cached as AjcrewConfigShape, TITLE_REFRESH_PATH, v),
       onFailure: () => {
         setPathSaveError(TITLE_REFRESH_PATH, i18nT('pages.settings.chatPanel.failed_to_save_title_refresh'))
         setChatSaveFailTick(t => t + 1)
@@ -236,7 +236,7 @@ export function ChatPanel({ basePath }: { basePath?: string } = {}) {
     mutationFn: (n: number) => api.patchConfig('agent.soft_stop_budget_secs', n),
     // The failure banner is scoped to this row's path, so a retry clears it.
     onMutate: () => clearOwnPathError('agent.soft_stop_budget_secs'),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }),
     // A failed save keeps the typed number on screen beside the failure, so it
     // can be retried rather than retyped. budgetSeeded stays true, so the
     // render-phase seed does not overwrite it on a later refetch.

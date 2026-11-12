@@ -19,12 +19,12 @@ from apps_registry_helpers import _catalog_absent  # noqa: F401 - fixture
 from apps_registry_helpers import _explicit_registry_execution_admission  # noqa: F401 - fixture
 from apps_registry_helpers import unsandboxed_spawn  # noqa: F401 - fixture
 
-from kiro_crew.apps import registry
-from kiro_crew.apps.registry_pipeline.git_targets import (
+from aj_crew.apps import registry
+from aj_crew.apps.registry_pipeline.git_targets import (
     _GIT_NETWORK_FAILURE_HINT,
     _git_network_failure_hint,
 )
-from kiro_crew.apps.registry_pipeline.subprocess_env import (
+from aj_crew.apps.registry_pipeline.subprocess_env import (
     _git_network_env,
     _proxy_env_has_credentials,
     anonymous_git_env,
@@ -142,7 +142,7 @@ async def test_network_fetch_output_is_english_whatever_the_locale(
     proxy_env, monkeypatch, tmp_path
 ):
     """The missing-ref retry and the hint read git's English wording."""
-    from kiro_crew.apps.registry_pipeline.subprocess_env import _GIT_CLONE_LOCALE
+    from aj_crew.apps.registry_pipeline.subprocess_env import _GIT_CLONE_LOCALE
 
     monkeypatch.setenv("LC_ALL", "de_DE.UTF-8")
     dest = tmp_path / "demo"
@@ -301,7 +301,7 @@ class _FailedClone:
 
 @pytest.mark.asyncio
 async def test_registry_index_clone_gets_the_proxy(plain_proxy_env, monkeypatch):
-    import kiro_crew.apps.registry_pipeline.indexes as indexes
+    import aj_crew.apps.registry_pipeline.indexes as indexes
 
     seen: list[dict[str, str]] = []
 
@@ -326,8 +326,8 @@ async def test_registry_index_clone_gets_the_proxy(plain_proxy_env, monkeypatch)
 
 @pytest.mark.asyncio
 async def test_store_art_blob_clone_gets_the_proxy(plain_proxy_env, monkeypatch, tmp_path):
-    import kiro_crew.apps.registry as reg_mod
-    import kiro_crew.apps.routes as routes
+    import aj_crew.apps.registry as reg_mod
+    import aj_crew.apps.routes as routes
 
     seen: list[dict[str, str]] = []
 
@@ -426,9 +426,9 @@ async def test_proxy_password_forces_the_split_install_fetch(
 async def test_proxy_password_forces_the_split_index_and_blob_fetch(
     proxy_env, monkeypatch, tmp_path
 ):
-    import kiro_crew.apps.registry as reg_mod
-    import kiro_crew.apps.registry_pipeline.indexes as indexes
-    import kiro_crew.apps.routes as routes
+    import aj_crew.apps.registry as reg_mod
+    import aj_crew.apps.registry_pipeline.indexes as indexes
+    import aj_crew.apps.routes as routes
 
     split: list[str] = []
 

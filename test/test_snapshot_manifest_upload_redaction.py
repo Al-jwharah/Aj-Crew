@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import snapshot_redact as redact
+from aj_crew import snapshot_redact as redact
 
 KEY = "AKIAIOSFODNN7EXAMPLE"
 

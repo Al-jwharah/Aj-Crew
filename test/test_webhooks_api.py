@@ -21,8 +21,8 @@ from aiohttp.test_utils import make_mocked_request
 from webhooks_api_helpers import wired_fixture  # noqa: F401
 from webhooks_api_helpers import _bearer, _payload, _req
 
-from kiro_crew import webhooks
-from kiro_crew.dashboard.handlers import hooks as H
+from aj_crew import webhooks
+from aj_crew.dashboard.handlers import hooks as H
 
 
 class TestEveryStoreTouchingHandlerIsGuarded:
@@ -253,7 +253,7 @@ class TestOneTurnPerSessionKey:
         """
         from dataclasses import replace as dataclass_replace
 
-        from kiro_crew.execution_context import (
+        from aj_crew.execution_context import (
             MemoryStoreRef,
             bind_session_execution,
             execution_for_store,
@@ -281,7 +281,7 @@ class TestOneTurnPerSessionKey:
             execution_for_store("", memory_mode="persistent"),
             member_id="id-hook",
             store=MemoryStoreRef("hook-store", "id-hook"),
-            template_id="kirocrew",
+            template_id="ajcrew",
         )
         bind_session_execution(session_key, execution, replace_existing=True, vouch=True)
         assert read_vouched_session_execution(session_key) == execution, "bind vouched nothing"
@@ -562,7 +562,7 @@ class TestVerifyHookToken:
         raw, _secret, entry = webhooks.token_store().create("Review Bot")
         assert H._verify_hook_token(_bearer(raw)) == entry["id"]
 
-        alt = make_mocked_request("POST", "/api/hooks/agent", headers={"x-kirocrew-token": raw})
+        alt = make_mocked_request("POST", "/api/hooks/agent", headers={"x-ajcrew-token": raw})
         assert H._verify_hook_token(alt) == entry["id"]
 
         bare = make_mocked_request("POST", "/api/hooks/agent")
@@ -573,7 +573,7 @@ class TestVerifyHookToken:
         assert H._verify_hook_token(_bearer("wrong")) is None
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("header", ["Authorization", "x-kirocrew-token"])
+    @pytest.mark.parametrize("header", ["Authorization", "x-ajcrew-token"])
     @pytest.mark.parametrize("candidate", ["é", "\udcff", "\ud800"])
     async def test_non_ascii_request_credential_is_unauthorized(
         self, wired, monkeypatch, header: str, candidate: str
@@ -593,7 +593,7 @@ class TestVerifyHookToken:
     def test_legacy_reader_tolerates_non_dict_config(self, monkeypatch):
         cfg = MagicMock()
         cfg.hooks = ["not", "a", "dict"]
-        monkeypatch.setattr(H.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        monkeypatch.setattr(H.AjCrewConfig, "load", staticmethod(lambda: cfg))
         assert H._legacy_hook_token() == ""
 
 
@@ -1147,7 +1147,7 @@ class TestDeliveryPathTypeSafety:
 
     def test_the_redactor_really_does_raise_on_a_non_string(self):
         """Pins the premise, so this stays a real guard and not a style rule."""
-        from kiro_crew.security import redact_exfiltration_urls
+        from aj_crew.security import redact_exfiltration_urls
 
         with pytest.raises(TypeError):
             redact_exfiltration_urls(123)  # type: ignore[arg-type]
@@ -1209,7 +1209,7 @@ class TestTokenMintIsOwnerOnly:
     ``_verify_hook_token`` accepts the bearer this route returns on
     ``POST /api/hooks/agent``, which runs a real agent turn with full tool
     access, so the mint is owner-gated exactly like the closest guarded sibling
-    (``dashboard/agent_admin/crew_records.py::api_kirocrew_agents_create`` ->
+    (``dashboard/agent_admin/crew_records.py::api_ajcrew_agents_create`` ->
     ``handlers/_shared.require_owner_dashboard_request``). These tests hold both
     directions: the callers that legitimately mint today keep minting, and the
     non-owner dashboard session that ordinary token auth admits does not.
@@ -1218,7 +1218,7 @@ class TestTokenMintIsOwnerOnly:
     ``!dashboard`` authenticates with ``app == ""`` and ``sub != owner_id``.
     """
 
-    _MINT = {"label": "Review Bot", "agent": "kirocrew", "require_signature": False}
+    _MINT = {"label": "Review Bot", "agent": "ajcrew", "require_signature": False}
 
     @pytest.mark.asyncio
     async def test_non_owner_dashboard_session_is_refused(self, wired):
@@ -1263,7 +1263,7 @@ class TestTokenMintIsOwnerOnly:
             _req(
                 "POST",
                 "/api/webhooks/tokens",
-                {"label": "Review Bot", "agent": "kirocrew"},
+                {"label": "Review Bot", "agent": "ajcrew"},
                 user="U0THEOWNER",
                 owner_id="U0THEOWNER",
             )
@@ -1274,7 +1274,7 @@ class TestTokenMintIsOwnerOnly:
         assert data["token"].startswith(webhooks.TOKEN_PREFIX)
         assert data["signing_secret"].startswith(webhooks.SIGNING_SECRET_PREFIX)
         assert data["entry"]["label"] == "Review Bot"
-        assert data["entry"]["agent"] == "kirocrew"
+        assert data["entry"]["agent"] == "ajcrew"
 
     @pytest.mark.asyncio
     async def test_standalone_local_install_with_no_owner_still_mints(self, wired):
@@ -1289,7 +1289,7 @@ class TestTokenMintIsOwnerOnly:
             _req(
                 "POST",
                 "/api/webhooks/tokens",
-                {"label": "CI runner", "agent": "kirocrew"},
+                {"label": "CI runner", "agent": "ajcrew"},
                 user="local-app",
                 owner_id="",
             )

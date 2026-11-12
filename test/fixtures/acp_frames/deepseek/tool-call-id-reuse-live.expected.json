@@ -5,12 +5,12 @@
       {
         "kind": "tool_call",
         "raw_tool_params": {
-          "command": "echo kiro-crew-id-reuse-probe",
+          "command": "echo aj-crew-id-reuse-probe",
           "description": "probe turn 2"
         },
         "title": "bash",
         "tool_call_id": "call_0",
-        "tool_input": "{\n  \"command\": \"echo kiro-crew-id-reuse-probe\",\n  \"description\": \"probe turn 2\"\n}",
+        "tool_input": "{\n  \"command\": \"echo aj-crew-id-reuse-probe\",\n  \"description\": \"probe turn 2\"\n}",
         "tool_kind": "other",
         "wire_title": "bash"
       }
@@ -36,13 +36,13 @@
         ],
         "raw_params_trusted": true,
         "raw_tool_params": {
-          "command": "echo kiro-crew-id-reuse-probe",
+          "command": "echo aj-crew-id-reuse-probe",
           "description": "probe turn 2"
         },
         "shell_classified": true,
         "title": "unknown",
         "tool_call_id": "call_0",
-        "tool_input": "{\n  \"command\": \"echo kiro-crew-id-reuse-probe\",\n  \"description\": \"probe turn 2\"\n}"
+        "tool_input": "{\n  \"command\": \"echo aj-crew-id-reuse-probe\",\n  \"description\": \"probe turn 2\"\n}"
       }
     ],
     "frame": "session/request_permission",
@@ -59,9 +59,9 @@
         "kind": "tool_result",
         "tool_call_id": "call_0",
         "tool_final": true,
-        "tool_output": "kiro-crew-id-reuse-probe\n",
-        "tool_output_bytes": 25,
-        "tool_output_digest": "abc8140f26817be74b5c47633dae577ee8e323bcd5039210ee85fdf652b39bd4",
+        "tool_output": "aj-crew-id-reuse-probe\n",
+        "tool_output_bytes": 23,
+        "tool_output_digest": "b3a9dc68eb0497ecdfe5e8623493eebf0770f761549beba7f429e4ea6bb0a717",
         "tool_status": "completed"
       }
     ],
@@ -79,12 +79,12 @@
       {
         "kind": "tool_call",
         "raw_tool_params": {
-          "command": "echo kiro-crew-id-reuse-probe",
+          "command": "echo aj-crew-id-reuse-probe",
           "description": "probe turn 3"
         },
         "title": "bash",
         "tool_call_id": "call_0",
-        "tool_input": "{\n  \"command\": \"echo kiro-crew-id-reuse-probe\",\n  \"description\": \"probe turn 3\"\n}",
+        "tool_input": "{\n  \"command\": \"echo aj-crew-id-reuse-probe\",\n  \"description\": \"probe turn 3\"\n}",
         "tool_kind": "other",
         "wire_title": "bash"
       }
@@ -110,14 +110,14 @@
         ],
         "raw_params_trusted": true,
         "raw_tool_params": {
-          "command": "echo kiro-crew-id-reuse-probe",
+          "command": "echo aj-crew-id-reuse-probe",
           "description": "probe turn 3"
         },
         "request_id": 1,
         "shell_classified": true,
         "title": "unknown",
         "tool_call_id": "call_0",
-        "tool_input": "{\n  \"command\": \"echo kiro-crew-id-reuse-probe\",\n  \"description\": \"probe turn 3\"\n}"
+        "tool_input": "{\n  \"command\": \"echo aj-crew-id-reuse-probe\",\n  \"description\": \"probe turn 3\"\n}"
       }
     ],
     "frame": "session/request_permission",
@@ -134,9 +134,9 @@
         "kind": "tool_result",
         "tool_call_id": "call_0",
         "tool_final": true,
-        "tool_output": "kiro-crew-id-reuse-probe\n",
-        "tool_output_bytes": 25,
-        "tool_output_digest": "abc8140f26817be74b5c47633dae577ee8e323bcd5039210ee85fdf652b39bd4",
+        "tool_output": "aj-crew-id-reuse-probe\n",
+        "tool_output_bytes": 23,
+        "tool_output_digest": "b3a9dc68eb0497ecdfe5e8623493eebf0770f761549beba7f429e4ea6bb0a717",
         "tool_status": "completed"
       }
     ],

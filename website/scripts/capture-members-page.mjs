@@ -45,7 +45,7 @@ async function newPage(theme, viewport = { width: 1280, height: 820 }) {
   await page.route(u => new URL(u).pathname.startsWith('/api/'), route => {
     const path = new URL(route.request().url()).pathname
     if (path === '/api/members') {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ members: MEMBERS, default_agent: 'kirocrew' }) })
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ members: MEMBERS, default_agent: 'ajcrew' }) })
     }
     if (path === '/api/crons') {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ jobs: [
@@ -59,7 +59,7 @@ async function newPage(theme, viewport = { width: 1280, height: 820 }) {
       ] }) })
     }
     if (path === '/api/agents') {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ agents: [], default_agent: 'kirocrew' }) })
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ agents: [], default_agent: 'ajcrew' }) })
     }
     const thread = path.match(/^\/api\/members\/([^/]+)\/thread$/)
     if (thread) {
@@ -124,7 +124,7 @@ async function newPage(theme, viewport = { width: 1280, height: 820 }) {
   const chipGone = !(await page.getByTestId('member-pin-chip').isVisible())
   check('02-thread no pin chip', chipGone, 'header carries no pin chip')
   const drawer = await page.getByTestId('member-drawer').textContent()
-  check('02-thread drawer config', /kirocrew-autofix/.test(drawer || ''), 'agent template shown')
+  check('02-thread drawer config', /ajcrew-autofix/.test(drawer || ''), 'agent template shown')
   check('02-thread shared-memory note', /share one memory/i.test(drawer || ''), 'disclosure present')
   // Activity additions: honest counters + the recorded activity folded by
   // day. Four fixture entries spanning two calendar days (three within the

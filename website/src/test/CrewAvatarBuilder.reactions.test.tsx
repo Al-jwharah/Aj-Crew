@@ -99,7 +99,7 @@ const openFace = () => {
   // The Ghost face tab is offered only while the ghost IS the selected tier
   // (new ghosts are not authorable). From a ghost record the pane is already
   // current, so this is a no-op when the tab is absent.
-  const face = screen.queryByRole('radio', { name: 'Ghost face' })
+  const face = screen.queryByRole('radio', { name: 'Gem face' })
   if (face) fireEvent.click(face)
 }
 /** Reactions is a decoration of the ghost FACE tier, so its tab is only in the
@@ -107,7 +107,7 @@ const openFace = () => {
  *  crew with no override, so reach Reactions the way a user does: select Ghost
  *  face first, then Reactions. (A no-op when Face is already current.) */
 const openReactions = () => {
-  const face = screen.queryByRole('radio', { name: 'Ghost face' })
+  const face = screen.queryByRole('radio', { name: 'Gem face' })
   if (face) fireEvent.click(face)
   fireEvent.click(screen.getByRole('radio', { name: 'Reactions' }))
 }
@@ -281,7 +281,7 @@ describe('CrewAvatarBuilder — Reactions pane', () => {
     // removed, issue #18616), so there is no Ghost face tab to detour through —
     // the picture saves verbatim, carrying no reaction key.
     const { onSave } = mount({ kind: 'image', v: 2 })
-    expect(screen.queryByRole('radio', { name: 'Ghost face' })).toBeNull()
+    expect(screen.queryByRole('radio', { name: 'Gem face' })).toBeNull()
     expect(screen.queryByRole('radio', { name: 'Reactions' })).toBeNull()
     apply()
     const saved = lastSaved(onSave) as Picture
@@ -379,7 +379,7 @@ describe('CrewAvatarBuilder — Reactions pane', () => {
     // Reactions tab is offered. Existing ghost crews keep theirs (covered
     // above); a pack crew's own tiers are unaffected.
     mount({ kind: 'pack', id: 'aurora' })
-    expect(screen.queryByRole('radio', { name: 'Ghost face' })).toBeNull()
+    expect(screen.queryByRole('radio', { name: 'Gem face' })).toBeNull()
     expect(screen.queryByRole('radio', { name: 'Reactions' })).toBeNull()
   })
 
@@ -450,7 +450,7 @@ describe('CrewAvatarBuilder — Reactions pane', () => {
     const picture = mount({ kind: 'image', v: 2 }, { retiredCue: { kind: 'image', states: ['done'] } })
     const pictureNote = screen.getByTestId('avatar-reactions-retired-cue-picture')
     expect(pictureNote.textContent).not.toMatch(/for good/)
-    expect(pictureNote.textContent).toMatch(/Ghost face/)
+    expect(pictureNote.textContent).toMatch(/Gem face/)
     // And it makes no claim about deletion at all, because there is none left to
     // claim: the page carries these keys through a save (see CrewRoster). Three
     // rounds of review went into wording a deletion that should not happen.
@@ -459,7 +459,7 @@ describe('CrewAvatarBuilder — Reactions pane', () => {
     mount({ kind: 'pack', id: 'aurora' }, { retiredCue: { kind: 'pack', states: ['done'] } })
     const packNote = await screen.findByTestId('avatar-reactions-retired-cue-pack')
     expect(packNote.textContent).not.toMatch(/for good/)
-    expect(packNote.textContent).toMatch(/Ghost face/)
+    expect(packNote.textContent).toMatch(/Gem face/)
   })
 
   it('names the states whose sound is going, rather than an unspecified one', () => {

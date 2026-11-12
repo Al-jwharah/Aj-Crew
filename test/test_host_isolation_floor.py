@@ -4,9 +4,9 @@
 the three halves added around it, each of which protects a different piece of the
 operator's machine from a test that forgot to isolate itself:
 
-* the **data home** -- ``KIROCREW_HOME`` pinned per test, plus the ``~/.kiro`` paths
+* the **data home** -- ``AJCREW_HOME`` pinned per test, plus the ``~/.kiro`` paths
   production binds at IMPORT time, which the env var cannot reach;
-* the **workspace root** -- ``KIROCREW_WORKSPACE`` pinned per test, a SEPARATE
+* the **workspace root** -- ``AJCREW_WORKSPACE`` pinned per test, a SEPARATE
   default from the data home that otherwise resolves to the operator's real
   ``~/workplace``;
 * the **system temp directory** -- ``tempfile``'s base redirected per run, with residue
@@ -18,7 +18,7 @@ Two jobs, the same split ``test_host_service_guard.py`` uses:
 * **Behaviour** -- prove each guard is armed, catches what it claims, and stays silent
   on what it must not touch. A guard nobody exercises is a guard that stops working at
   the next refactor without anybody noticing.
-* **Ratchet** -- pin the guarded set against what ``src/kiro_crew`` actually contains,
+* **Ratchet** -- pin the guarded set against what ``src/aj_crew`` actually contains,
   so a NEW import-time ``Path.home()`` binding cannot land unpinned. Same shape as
   ``test_host_service_guard.py``'s ratchet and ``test_spawn_preexec_guard.py``'s
   ``_ALLOWED``.
@@ -53,9 +53,9 @@ from host_isolation_floor_helpers import (
     _root,
 )
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
-_SRC = _REPO_ROOT / "src" / "kiro_crew"
+_SRC = _REPO_ROOT / "src" / "aj_crew"
 
 
 #: The real directories the isolation floor exists to keep tests out of.
@@ -69,7 +69,7 @@ _SRC = _REPO_ROOT / "src" / "kiro_crew"
 #: form is true on all four targets.
 _GUARDED_ROOTS: tuple[pathlib.Path, ...] = (
     pathlib.Path.home() / ".kiro",
-    pathlib.Path.home() / ".kirocrew",
+    pathlib.Path.home() / ".ajcrew",
     pathlib.Path.home() / ".claude.json",
     pathlib.Path.home() / "workplace",
 )
@@ -79,7 +79,7 @@ _GUARDED_ROOTS: tuple[pathlib.Path, ...] = (
 #:
 #: Whatever the operator's ``TMPDIR`` points at, a path under our basetemp is
 #: test-owned by construction -- the floor's fixtures created it. That matters because
-#: a Kiro Crew agent session sets ``TMPDIR`` to its scratch dir under
+#: an Aj Crew agent session sets ``TMPDIR`` to its scratch dir under
 #: ``~/.kiro/crew/scratch/``, so every correctly-pinned home then resolves INSIDE the
 #: guarded ``~/.kiro`` tree while touching nothing of the operator's. The guard asks
 #: whether a pin ESCAPED to the real tree, and a path under our own basetemp did not.
@@ -117,13 +117,13 @@ class TestTheGuardItself:
         assert _inside_a_guarded_root(pathlib.Path.home() / ".kiro" / "crew")
 
     def test_our_own_basetemp_is_test_owned_even_under_a_guarded_root(self, monkeypatch) -> None:
-        """A run whose TMPDIR is a Kiro Crew session scratch dir puts basetemp under
+        """A run whose TMPDIR is an Aj Crew session scratch dir puts basetemp under
         ``~/.kiro``; a pin there must read as isolated, not as an escape."""
         scratch = (
             pathlib.Path.home() / ".kiro" / "crew" / "scratch" / "runtime-x" / "pytest-0"
         ).resolve()
         monkeypatch.setattr(sys.modules[__name__], "_OWN_BASETEMP", scratch)
-        assert not _inside_a_guarded_root(scratch / "i0" / "1-kirocrew-home")
+        assert not _inside_a_guarded_root(scratch / "i0" / "1-ajcrew-home")
         assert _inside_a_guarded_root(pathlib.Path.home() / ".kiro" / "crew")
 
 
@@ -131,21 +131,21 @@ class TestTheGuardItself:
 
 
 class TestTheDataHomeIsPinnedForEveryTestpath:
-    """``KIROCREW_HOME`` must be a tmp dir here, and it must be the SAME one the
+    """``AJCREW_HOME`` must be a tmp dir here, and it must be the SAME one the
     package resolves.
 
     These assertions run against the LIVE fixtures rather than a reconstruction,
     because the thing worth pinning is that the autouse chain actually fired. The
     stakes are specific: ``config_dir()`` is not a read -- it CREATES the home and its
-    marker on first use and can run the one-time ``~/.kirocrew`` -> ``~/.kiro/crew``
+    marker on first use and can run the one-time ``~/.ajcrew`` -> ``~/.kiro/crew``
     migration as a side effect. A test that resolves it unpinned mutates the
     operator's live install.
     """
 
-    def test_kirocrew_home_is_not_the_operators_real_home(self) -> None:
-        home = pathlib.Path(os.environ["KIROCREW_HOME"]).resolve()
+    def test_ajcrew_home_is_not_the_operators_real_home(self) -> None:
+        home = pathlib.Path(os.environ["AJCREW_HOME"]).resolve()
 
-        assert not _inside_a_guarded_root(home), f"KIROCREW_HOME is a real home path: {home}"
+        assert not _inside_a_guarded_root(home), f"AJCREW_HOME is a real home path: {home}"
 
     def test_config_dir_resolves_to_that_same_pinned_home(self) -> None:
         """The env var is only worth pinning if the package actually follows it.
@@ -154,20 +154,20 @@ class TestTheDataHomeIsPinnedForEveryTestpath:
         lifetime, so this also proves the per-test reset of ``_resolved_home`` works --
         without it a home cached by an earlier test on this xdist worker would win.
         """
-        from kiro_crew.config.paths import config_dir
+        from aj_crew.config.paths import config_dir
 
-        assert config_dir().resolve() == pathlib.Path(os.environ["KIROCREW_HOME"]).resolve()
+        assert config_dir().resolve() == pathlib.Path(os.environ["AJCREW_HOME"]).resolve()
 
     def test_a_test_can_still_override_the_home_itself(
         self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The floor is a safety net, not a cage: a test that isolates itself wins."""
-        from kiro_crew.config.paths import config_dir
+        from aj_crew.config.paths import config_dir
 
         mine = tmp_path / "my-own-home"
         mine.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(mine))
-        monkeypatch.setattr("kiro_crew.config.paths._resolved_home", None)
+        monkeypatch.setenv("AJCREW_HOME", str(mine))
+        monkeypatch.setattr("aj_crew.config.paths._resolved_home", None)
 
         assert config_dir().resolve() == mine.resolve()
 
@@ -180,26 +180,26 @@ class TestTheDataHomeIsPinnedForEveryTestpath:
         not on the ``monkeypatch`` fixture the test holds. Before that split, the third
         full-run audit caught ``test_browser_cli_install.py`` calling ``undo()`` to lift
         an ``os.name`` patch and then running ``detect()`` against the operator's real
-        ``~/.kiro/crew``: ``undo()`` had lifted ``KIROCREW_HOME`` with it. Every pin
+        ``~/.kiro/crew``: ``undo()`` had lifted ``AJCREW_HOME`` with it. Every pin
         named here is one the audit saw a real host write through.
         """
         pinned = {
             key: os.environ[key]
             for key in (
-                "KIROCREW_HOME",
-                "KIROCREW_WORKSPACE",
-                "KIROCREW_PROFILE",
-                "KIROCREW_TELEMETRY",
+                "AJCREW_HOME",
+                "AJCREW_WORKSPACE",
+                "AJCREW_PROFILE",
+                "AJCREW_TELEMETRY",
             )
         }
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "mine"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "mine"))
         monkeypatch.setattr(os, "name", os.name)  # the shape the real call site undid
 
         monkeypatch.undo()
 
         for key, value in pinned.items():
             assert os.environ.get(key) == value, f"{key} was unpinned by the test's own undo()"
-        assert not _inside_a_guarded_root(pathlib.Path(os.environ["KIROCREW_HOME"]).resolve())
+        assert not _inside_a_guarded_root(pathlib.Path(os.environ["AJCREW_HOME"]).resolve())
 
     def test_the_floor_is_set_up_before_and_torn_down_after_the_tests_monkeypatch(
         self, request: pytest.FixtureRequest
@@ -221,19 +221,19 @@ class TestTheDataHomeIsPinnedForEveryTestpath:
 
 
 class TestThePlatformProfileIsPinnedForEveryTestpath:
-    """``KIROCREW_PROFILE`` is ``standalone`` for every test, whatever the shell exported.
+    """``AJCREW_PROFILE`` is ``standalone`` for every test, whatever the shell exported.
 
-    A Kiro Crew agent session exports the enterprise ``KIROCREW_PROFILE`` to every child it
+    An Aj Crew agent session exports the enterprise ``AJCREW_PROFILE`` to every child it
     spawns, and a dev box with an SSO marker resolves the same profile on its own. With
     no companion installed that profile FAILS CLOSED: ``current_context()`` raises
     ``PlatformCompositionError``, every governance-gated route answers 500, every gated
     notification is dropped. A pin in ``test/conftest.py`` reaches ``test/`` alone:
-    ``test/`` stays green while 150+ tests under ``src/kiro_crew/apps/builtins/*/tests/``
+    ``test/`` stays green while 150+ tests under ``src/aj_crew/apps/builtins/*/tests/``
     are red on exactly that box. The pin is a rootdir floor, like the data home.
     """
 
     def test_the_profile_is_standalone(self) -> None:
-        assert os.environ.get("KIROCREW_PROFILE") == "standalone"
+        assert os.environ.get("AJCREW_PROFILE") == "standalone"
 
     def test_the_pin_is_an_autouse_fixture_of_the_rootdir_conftest(self) -> None:
         definition = getattr(_root, "_reset_platform_context")
@@ -244,7 +244,7 @@ class TestThePlatformProfileIsPinnedForEveryTestpath:
 
     def test_the_context_composes_the_open_source_default(self) -> None:
         """The observable consequence: no fail-closed refusal on an unbooted process."""
-        from kiro_crew.platform.context import current_context
+        from aj_crew.platform.context import current_context
 
         assert current_context() is not None
 
@@ -259,7 +259,7 @@ class TestNoMetricIsEmittedAtImport:
     ``~/.kiro/crew/metrics`` that wrote every minute for the life of the worker --
     invisible to the per-test leak guard (the thread predates every test) and to the
     per-test env pin (already built). The rootdir conftest now pins
-    ``KIROCREW_TELEMETRY=0`` from process start AND records every module whose
+    ``AJCREW_TELEMETRY=0`` from process start AND records every module whose
     collection flipped ``metrics.provider._ever_built``; this asserts that record.
     """
 
@@ -278,14 +278,14 @@ class TestNoMetricIsEmittedAtImport:
         raise AssertionError("the rootdir conftest is not a registered plugin")
 
     def test_the_process_starts_with_telemetry_pinned_off(self) -> None:
-        assert os.environ.get("KIROCREW_TELEMETRY") == "0"
+        assert os.environ.get("AJCREW_TELEMETRY") == "0"
 
     def test_no_module_built_the_recorder_while_being_collected(self, request) -> None:
         live = self._live_root_conftest(request.config)
         emitters = list(live.IMPORT_TIME_METRIC_EMITTERS)
         assert emitters == [], (
             "importing these test modules emitted a metric (a module-level default "
-            "argument or constant that goes through kiro_crew.metrics): "
+            "argument or constant that goes through aj_crew.metrics): "
             f"{emitters}. Build the value inside the test or fixture instead; an "
             "import-time build binds the exporter to the operator's real data home."
         )
@@ -296,8 +296,8 @@ class TestNoMetricIsEmittedAtImport:
         The hookwrapper is a plain generator: enter it, emit a metric where the module
         import would have, leave it, and the module is recorded and the build undone.
         """
-        from kiro_crew.hooks import ToolHookResult
-        from kiro_crew.metrics import provider
+        from aj_crew.hooks import ToolHookResult
+        from aj_crew.metrics import provider
 
         provider.reset_for_testing()
         monkeypatch.setattr(_root, "IMPORT_TIME_METRIC_EMITTERS", [])
@@ -322,8 +322,8 @@ class TestNoMetricIsEmittedAtImport:
     def test_a_build_that_predates_the_module_is_blamed_on_the_conftest_import(
         self, request, monkeypatch
     ) -> None:
-        from kiro_crew.hooks import ToolHookResult
-        from kiro_crew.metrics import provider
+        from aj_crew.hooks import ToolHookResult
+        from aj_crew.metrics import provider
 
         provider.reset_for_testing()
         monkeypatch.setattr(_root, "IMPORT_TIME_METRIC_EMITTERS", [])
@@ -347,13 +347,13 @@ class TestNoConsentWorkerOutlivesItsTest:
     """The metrics provider's consent-recheck thread is joined before a test's pins lift.
 
     ``get_recorder()`` hands a consent re-read to a daemon thread once per recheck
-    window; that thread runs ``KiroCrewConfig.load()``, which reaches ``config_dir()``
-    and ``mkdir``s whatever ``KIROCREW_HOME`` names AT THAT MOMENT. Nothing resets the
+    window; that thread runs ``AjCrewConfig.load()``, which reaches ``config_dir()``
+    and ``mkdir``s whatever ``AJCREW_HOME`` names AT THAT MOMENT. Nothing resets the
     recorder between tests, so the read can land under the next test's pin and create
     that test's data home from a thread it never started. On Windows that is visible:
     ``os.path.realpath`` keeps its ``\\\\?\\`` prefix when the directory above a
     not-yet-existing path appears between its two lookups, which is how
-    ``test_pathres_loop_starvation.py`` saw ``\\\\?\\...\\<n>-kirocrew-home\\diag`` in one
+    ``test_pathres_loop_starvation.py`` saw ``\\\\?\\...\\<n>-ajcrew-home\\diag`` in one
     build of the sensitive-target set and not the other.
 
     The rootdir conftest's ``tryfirst`` teardown hook joins the worker, bounded, before
@@ -363,15 +363,15 @@ class TestNoConsentWorkerOutlivesItsTest:
 
     @staticmethod
     def _schedule_worker(monkeypatch, load):
-        """Start a real consent worker whose ``KiroCrewConfig.load`` is *load*."""
-        from kiro_crew.metrics import provider
+        """Start a real consent worker whose ``AjCrewConfig.load`` is *load*."""
+        from aj_crew.metrics import provider
 
         scripted = load
 
         class _Config:
             load = staticmethod(scripted)
 
-        monkeypatch.setattr(provider, "KiroCrewConfig", _Config)
+        monkeypatch.setattr(provider, "AjCrewConfig", _Config)
         with provider._lock:
             assert not provider._check_in_flight, "a worker is already in flight; test order?"
             provider._schedule_consent_check_locked()
@@ -391,7 +391,7 @@ class TestNoConsentWorkerOutlivesItsTest:
             # Held on an event, not a sleep: the worker is in flight for exactly as
             # long as this test says, however the scheduler treats either thread.
             assert release.wait(10.0), "the test never released the scripted read"
-            home_seen.append(os.environ.get("KIROCREW_HOME"))
+            home_seen.append(os.environ.get("AJCREW_HOME"))
             raise RuntimeError("scripted: no config to read")
 
         provider, worker = self._schedule_worker(monkeypatch, held_load)
@@ -415,7 +415,7 @@ class TestNoConsentWorkerOutlivesItsTest:
             assert not worker.is_alive()
             # The read finished while THIS test's pin was still in force -- the whole
             # point of joining before any fixture unwinds.
-            assert home_seen == [os.environ["KIROCREW_HOME"]]
+            assert home_seen == [os.environ["AJCREW_HOME"]]
             assert not provider._check_in_flight
         finally:
             release.set()
@@ -437,7 +437,7 @@ class TestNoConsentWorkerOutlivesItsTest:
             failure = _root._join_telemetry_consent_worker()
             assert isinstance(failure, AssertionError)
             assert _root._TELEMETRY_CONSENT_THREAD in str(failure)
-            assert "KIROCREW_HOME" in str(failure)
+            assert "AJCREW_HOME" in str(failure)
             assert worker.is_alive(), "control: the worker was still stuck when reported"
         finally:
             release.set()
@@ -460,22 +460,22 @@ class TestNoConsentWorkerOutlivesItsTest:
 
 
 class TestTheWorkspaceRootIsPinnedForEveryTestpath:
-    """``KIROCREW_WORKSPACE`` must be a tmp dir here, independent of the data home.
+    """``AJCREW_WORKSPACE`` must be a tmp dir here, independent of the data home.
 
     ``config.loader.workspace_root()`` does not derive from ``config_dir()`` -- with
     no override and no saved ``<config_dir>/workspace_dir`` file it falls back to the
-    platform's ``_default_workspace_base()`` plus ``kirocrew-workspace``, which on
-    Linux/macOS is the operator's real ``~/workplace``. Pinning ``KIROCREW_HOME``
+    platform's ``_default_workspace_base()`` plus ``ajcrew-workspace``, which on
+    Linux/macOS is the operator's real ``~/workplace``. Pinning ``AJCREW_HOME``
     alone therefore leaves this resolver unpinned, and any test that reaches an agent
     working directory ``mkdir``s and writes into that real tree.
     """
 
-    def test_kirocrew_workspace_is_not_the_operators_real_workplace(self) -> None:
-        workspace = pathlib.Path(os.environ["KIROCREW_WORKSPACE"]).resolve()
+    def test_ajcrew_workspace_is_not_the_operators_real_workplace(self) -> None:
+        workspace = pathlib.Path(os.environ["AJCREW_WORKSPACE"]).resolve()
 
         assert not _inside_a_guarded_root(
             workspace
-        ), f"KIROCREW_WORKSPACE is a real home path: {workspace}"
+        ), f"AJCREW_WORKSPACE is a real home path: {workspace}"
 
     def test_workspace_root_resolves_to_that_same_pinned_dir(self) -> None:
         """The env var is only worth pinning if the package actually follows it.
@@ -484,69 +484,67 @@ class TestTheWorkspaceRootIsPinnedForEveryTestpath:
         this only needs to prove the env var reaches the resolver -- there is no
         module-global memo to reset alongside it.
         """
-        from kiro_crew.config.loader import workspace_root
+        from aj_crew.config.loader import workspace_root
 
-        assert (
-            workspace_root().resolve() == pathlib.Path(os.environ["KIROCREW_WORKSPACE"]).resolve()
-        )
+        assert workspace_root().resolve() == pathlib.Path(os.environ["AJCREW_WORKSPACE"]).resolve()
 
     def test_a_test_can_still_override_the_workspace_itself(
         self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The floor is a safety net, not a cage: a test that isolates itself wins."""
-        from kiro_crew.config.loader import workspace_root
+        from aj_crew.config.loader import workspace_root
 
         mine = tmp_path / "my-own-workspace"
-        monkeypatch.setenv("KIROCREW_WORKSPACE", str(mine))
+        monkeypatch.setenv("AJCREW_WORKSPACE", str(mine))
 
         assert workspace_root().resolve() == mine.resolve()
 
 
 class TestThePodPlaneIsPinnedForEveryTestpath:
-    """``KIROCREW_POD_ROOT`` / ``KIROCREW_POD_ENV_DIR`` must be tmp dirs here.
+    """``AJCREW_POD_ROOT`` / ``AJCREW_POD_ENV_DIR`` must be tmp dirs here.
 
     A fourth axis, and one the data home cannot reach BY DESIGN:
     ``pod.config.PodConfig.load()`` derives ``pods_dir`` from ``_default_home()`` --
     the operator's real ``~/.kiro/crew/pods`` -- so that a pod process running with
-    its own isolated ``KIROCREW_HOME`` cannot redirect the host's pod registry into
-    a throwaway home, and ``pod_root`` from ``Path.home()/.kirocrew-pods``. A test
+    its own isolated ``AJCREW_HOME`` cannot redirect the host's pod registry into
+    a throwaway home, and ``pod_root`` from ``Path.home()/.ajcrew-pods``. A test
     that boots a pod or records a refusal through an unpinned ``PodConfig.load()``
     therefore writes ``<name>.env`` / ``<name>.refused`` into the developer's real
     pod plane; five full-suite runs left ``viability-*.refused`` notes there.
     """
 
     def test_the_pod_env_dir_is_not_the_operators_real_home(self) -> None:
-        pods_dir = pathlib.Path(os.environ["KIROCREW_POD_ENV_DIR"]).resolve()
+        pods_dir = pathlib.Path(os.environ["AJCREW_POD_ENV_DIR"]).resolve()
 
         assert not _inside_a_guarded_root(
             pods_dir
-        ), f"KIROCREW_POD_ENV_DIR is a real home path: {pods_dir}"
+        ), f"AJCREW_POD_ENV_DIR is a real home path: {pods_dir}"
 
     def test_the_pod_root_is_not_the_operators_real_home(self) -> None:
-        pod_root = pathlib.Path(os.environ["KIROCREW_POD_ROOT"]).resolve()
+        pod_root = pathlib.Path(os.environ["AJCREW_POD_ROOT"]).resolve()
 
         assert not _inside_a_guarded_root(
             pod_root
-        ), f"KIROCREW_POD_ROOT is a real home path: {pod_root}"
+        ), f"AJCREW_POD_ROOT is a real home path: {pod_root}"
 
     def test_pod_config_resolves_to_those_same_pinned_dirs(self) -> None:
         """``load()`` reads the environment fresh, so the pin only has to reach it."""
-        from kiro_crew.pod.config import PodConfig
+        from aj_crew.pod.config import PodConfig
 
         cfg = PodConfig.load()
 
-        assert cfg.pods_dir.resolve() == pathlib.Path(os.environ["KIROCREW_POD_ENV_DIR"]).resolve()
-        assert cfg.pod_root.resolve() == pathlib.Path(os.environ["KIROCREW_POD_ROOT"]).resolve()
+        assert cfg.pods_dir.resolve() == pathlib.Path(os.environ["AJCREW_POD_ENV_DIR"]).resolve()
+        assert cfg.pod_root.resolve() == pathlib.Path(os.environ["AJCREW_POD_ROOT"]).resolve()
         assert not _inside_a_guarded_root(cfg.refusal_file("probe").parent)
 
     def test_a_test_can_still_override_the_pod_plane_itself(
         self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The floor is a safety net, not a cage: a test that isolates itself wins."""
-        from kiro_crew.pod.config import PodConfig
+        from aj_crew.pod.config import PodConfig
 
         mine = tmp_path / "my-own-pods"
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(mine))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(mine))
 
         assert PodConfig.load().pods_dir.resolve() == mine.resolve()
 
@@ -557,22 +555,22 @@ class TestTheFloorSurvivesATestsOwnUndo:
     ``undo()`` reverts every record on the instance it is called on. Around ninety
     tests call it mid-way to drop one of their own patches before a final
     assertion; while the floor patched through the same shared ``monkeypatch``
-    fixture, each of those calls also unpinned ``KIROCREW_HOME`` (and every other
+    fixture, each of those calls also unpinned ``AJCREW_HOME`` (and every other
     floor pin) for the rest of the test -- ``test_session_storage`` then ran
     ``empty_trash()`` against the operator's real trash. The floor now patches
     through its own ``MonkeyPatch`` instance, undone at its own teardown.
     """
 
     def test_undo_does_not_drop_the_data_home_pin(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        pinned = os.environ["KIROCREW_HOME"]
-        monkeypatch.setenv("KIROCREW_FLOOR_PROBE", "1")  # something for undo() to revert
+        pinned = os.environ["AJCREW_HOME"]
+        monkeypatch.setenv("AJCREW_FLOOR_PROBE", "1")  # something for undo() to revert
 
         monkeypatch.undo()
 
         assert (
-            "KIROCREW_FLOOR_PROBE" not in os.environ
+            "AJCREW_FLOOR_PROBE" not in os.environ
         ), "undo() must still revert the test's own records"
-        assert os.environ.get("KIROCREW_HOME") == pinned
+        assert os.environ.get("AJCREW_HOME") == pinned
         assert not _inside_a_guarded_root(pathlib.Path(pinned))
 
     def test_undo_does_not_drop_the_other_pins_either(
@@ -580,9 +578,9 @@ class TestTheFloorSurvivesATestsOwnUndo:
     ) -> None:
         before = {
             k: os.environ.get(k)
-            for k in ("KIROCREW_WORKSPACE", "KIROCREW_POD_ROOT", "KIROCREW_POD_ENV_DIR")
+            for k in ("AJCREW_WORKSPACE", "AJCREW_POD_ROOT", "AJCREW_POD_ENV_DIR")
         }
-        monkeypatch.setenv("KIROCREW_FLOOR_PROBE", "1")
+        monkeypatch.setenv("AJCREW_FLOOR_PROBE", "1")
 
         monkeypatch.undo()
 
@@ -599,13 +597,13 @@ class TestTheAgentSpecHomeIsPinnedForEveryTestpath:
     home does not reach it and neither does ``_SHARED_KIRO_PATHS`` -- whose own ratchet
     docstring records lazy resolvers as outside its scope. Before this floor part
     existed, a suite run inside a throwaway clone rewrote the machine-wide
-    ``kirocrew.json`` with that clone's venv and a per-test data home in ``env``, and
+    ``ajcrew.json`` with that clone's venv and a per-test data home in ``env``, and
     every new session on the machine then failed ``internal_auth_mismatch`` once both
     were deleted.
     """
 
     def test_the_spec_write_target_is_not_the_operators_real_home(self) -> None:
-        from kiro_crew import agent
+        from aj_crew import agent
 
         target = agent.kiro_agents_dir_path().resolve()
 
@@ -639,8 +637,8 @@ class TestTheAgentSpecHomeIsPinnedForEveryTestpath:
         module that binds the name by hand is what proves the reach, not the
         definition site.
         """
-        from kiro_crew.config import paths
-        from kiro_crew.slack import handler
+        from aj_crew.config import paths
+        from aj_crew.slack import handler
 
         assert paths._agents_dir_override is not None, "the floor installed no override"
         assert handler.kiro_agents_dir is paths.kiro_agents_dir, (
@@ -674,7 +672,7 @@ class TestTheAgentSpecHomeIsPinnedForEveryTestpath:
         instead of the tree they just built, which is how an earlier revision of this
         floor broke five test groups at once.
         """
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         monkeypatch.setattr(pathlib.Path, "home", classmethod(lambda cls: tmp_path))
 
@@ -691,13 +689,13 @@ class TestTheAgentSpecHomeIsPinnedForEveryTestpath:
         construction; this pins it so a future edit that re-spells the default in both
         places still has to keep them equal.
         """
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         assert paths.kiro_agents_dir() == paths.ambient_agents_dir()
 
     def test_one_directory_is_shared_across_the_seams(self) -> None:
         """A spec written through one seam has to be readable through another."""
-        from kiro_crew import agent, agent_discovery
+        from aj_crew import agent, agent_discovery
 
         assert agent.KIRO_AGENTS_DIR == agent_discovery._KIRO_AGENTS_DIR
 
@@ -712,7 +710,7 @@ class TestTheAgentSpecHomeIsPinnedForEveryTestpath:
         a linked git worktree -- green in CI, red on a developer machine, which is the
         setup this repo mandates.
         """
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         assert _inside_a_guarded_root(paths.ambient_agents_dir().resolve()), (
             "ambient_agents_dir followed the override; the write guard can no longer "
@@ -722,7 +720,7 @@ class TestTheAgentSpecHomeIsPinnedForEveryTestpath:
             paths.kiro_agents_dir() != paths.ambient_agents_dir()
         ), "the two resolvers agree, so the guard's comparison proves nothing"
 
-        from kiro_crew import agent
+        from aj_crew import agent
 
         assert (
             agent._decline_shared_agent_home(audit=False) is None
@@ -738,9 +736,9 @@ class TestTheAgentSpecHomeIsPinnedForEveryTestpath:
         environment.
         """
         allowed = {
-            "kiro_crew/config/paths.py",
-            "kiro_crew/agent.py",
-            "kiro_crew/agent_parts/shared_home.py",
+            "aj_crew/config/paths.py",
+            "aj_crew/agent.py",
+            "aj_crew/agent_parts/shared_home.py",
         }
         callers = set()
         for path in sorted(_SRC.rglob("*.py")):
@@ -817,7 +815,7 @@ class TestTheAgentSpecHomeIsPinnedForEveryTestpath:
         self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The floor is a safety net, not a cage."""
-        from kiro_crew import agent
+        from aj_crew import agent
 
         mine = tmp_path / "my-own-agents"
         monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", mine)
@@ -837,7 +835,7 @@ class TestTheKiroSessionsDirIsPinnedForEveryTestpath:
     """
 
     def test_the_resolved_dir_is_not_the_operators_real_home(self) -> None:
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         assert not _inside_a_guarded_root(paths.kiro_sessions_dir().resolve())
 
@@ -847,8 +845,8 @@ class TestTheKiroSessionsDirIsPinnedForEveryTestpath:
         ``session_map`` binds ``kiro_sessions_dir`` by name, so this is what proves the
         override reaches a copied function object rather than only the definition site.
         """
-        from kiro_crew import session_map
-        from kiro_crew.config import paths
+        from aj_crew import session_map
+        from aj_crew.config import paths
 
         assert paths._sessions_dir_override is not None, "the floor installed no override"
         assert session_map.kiro_sessions_dir is paths.kiro_sessions_dir, (
@@ -869,20 +867,20 @@ class TestTheKiroSessionsDirIsPinnedForEveryTestpath:
         fixture BODY directly with the module evicted from ``sys.modules``: the only
         way the override can be present afterwards is if the fixture imported it.
         """
-        import kiro_crew.config as config_pkg
+        import aj_crew.config as config_pkg
 
-        original = sys.modules["kiro_crew.config.paths"]
+        original = sys.modules["aj_crew.config.paths"]
         # Restore the package attribute the re-import will overwrite, and the
         # sys.modules entry, when monkeypatch unwinds.
         monkeypatch.setattr(config_pkg, "paths", original)
-        monkeypatch.delitem(sys.modules, "kiro_crew.config.paths")
-        monkeypatch.delitem(sys.modules, "kiro_crew.session_map", raising=False)
+        monkeypatch.delitem(sys.modules, "aj_crew.config.paths")
+        monkeypatch.delitem(sys.modules, "aj_crew.session_map", raising=False)
 
         body = _root._isolate_kiro_sessions_dir
         body = getattr(body, "__wrapped__", body)
         body(lambda name: tmp_path / name, _floor_monkeypatch, tmp_path_factory)
 
-        reimported = importlib.import_module("kiro_crew.config.paths")
+        reimported = importlib.import_module("aj_crew.config.paths")
         assert reimported is not original, "sys.modules eviction did not take"
         assert reimported._sessions_dir_override is not None, (
             "the floor left kiro_sessions_dir() unpinned for a test whose first import "
@@ -897,7 +895,7 @@ class TestTheKiroSessionsDirIsPinnedForEveryTestpath:
         ``Path.home``) and then read the tree they built there; a pin that answered the
         isolation dir regardless would send every one of them to an empty directory.
         """
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         monkeypatch.setenv("KIRO_HOME", str(tmp_path / "relocated"))
         assert paths.kiro_sessions_dir() == tmp_path / "relocated" / "sessions" / "cli"
@@ -909,7 +907,7 @@ class TestTheKiroSessionsDirIsPinnedForEveryTestpath:
         it, so a test cannot reach the real transcript store by spelling the real path
         explicitly.
         """
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         monkeypatch.setenv("KIRO_HOME", str(_root._REAL_KIRO_HOME_AT_START))
         assert not _inside_a_guarded_root(paths.kiro_sessions_dir().resolve())
@@ -921,8 +919,8 @@ class TestTheKiroSessionsDirIsPinnedForEveryTestpath:
         so a test that writes through one seam and reads through the other still sees
         one tree.
         """
-        from kiro_crew import session_map
-        from kiro_crew.config import paths
+        from aj_crew import session_map
+        from aj_crew.config import paths
 
         assert session_map._KIRO_SESSIONS_DIR is not None
         assert session_map._KIRO_SESSIONS_DIR == paths.kiro_sessions_dir()
@@ -931,7 +929,7 @@ class TestTheKiroSessionsDirIsPinnedForEveryTestpath:
         self, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The floor is a safety net, not a cage."""
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         mine = tmp_path / "my-own-sessions"
         monkeypatch.setattr(paths, "_sessions_dir_override", lambda: mine)
@@ -943,7 +941,7 @@ class TestTheSharedKiroPathsArePinned:
     """``~/.kiro`` is kiro-cli's own home -- machine-wide, shared with the real agent.
 
     A test that writes ``~/.kiro/settings/mcp.json`` edits the MCP servers of the
-    operator's LIVE agent, and ``KIROCREW_HOME`` does not help: these paths are bound
+    operator's LIVE agent, and ``AJCREW_HOME`` does not help: these paths are bound
     at import time from ``Path.home()``, before any test could set an env var.
     """
 
@@ -970,7 +968,7 @@ class TestTheSharedKiroPathsArePinned:
         exist. Pinning both is not enough on its own: they must land in the SAME
         directory, which is what this asserts.
         """
-        from kiro_crew.dashboard.handlers import mcp as mcp_mod
+        from aj_crew.dashboard.handlers import mcp as mcp_mod
 
         assert mcp_mod._MCP_LOCK_PATH.parent == mcp_mod._GLOBAL_MCP_JSON.parent
 
@@ -1007,11 +1005,11 @@ class TestTheSharedKiroPathRatchet:
         # fixture. It has to move the whole macOS launchd set together (PLIST_DIR,
         # PLIST_PATH, LOG_DIR, STDOUT_LOG, STDERR_LOG, LIVE_PROGRAM) because both
         # consumers import them by value.
-        ("kiro_crew/service/macos.py", "PLIST_DIR"): "covered by _isolate_launchd_paths",
-        ("kiro_crew/service/macos.py", "LOG_DIR"): "covered by _isolate_launchd_paths",
+        ("aj_crew/service/macos.py", "PLIST_DIR"): "covered by _isolate_launchd_paths",
+        ("aj_crew/service/macos.py", "LOG_DIR"): "covered by _isolate_launchd_paths",
         # The kiro-cli/amazon-q sqlite tuples here are not direct
         # ``Path.home()`` bindings; they are PROJECTIONS over the canonical table in
-        # ``kiro_crew/identity_stores.py`` (``sqlite_dbs(...)`` resolves the home
+        # ``aj_crew/identity_stores.py`` (``sqlite_dbs(...)`` resolves the home
         # inside the call), so they do not match this tripwire's import-time
         # shape and need no exclusion. Their anchor rule ("must name the REAL
         # home"; stub the READER, never move the anchor) is carried forward by
@@ -1022,7 +1020,7 @@ class TestTheSharedKiroPathRatchet:
         # would make every containment test assert against a root that does not ship.
         # Nothing here writes: the module reads the value to bound path resolution.
         (
-            "kiro_crew/apps/builtins/file_explorer/server.py",
+            "aj_crew/apps/builtins/file_explorer/server.py",
             "_HOME",
         ): "security anchor: the browsing allow-list root",
     }
@@ -1132,7 +1130,7 @@ class TestTheTempBaseIsRedirected:
     """
 
     @pytest.mark.skipif(
-        bool(os.environ.get("KIROCREW_TMP_PER_TEST")),
+        bool(os.environ.get("AJCREW_TMP_PER_TEST")),
         reason="per-test diagnostic mode nests the base one level deeper on purpose",
     )
     def test_gettempdir_is_this_runs_own_root(self) -> None:
@@ -1270,7 +1268,7 @@ class TestTheTempResidueReport:
         assert "<-" not in message
 
     @pytest.mark.skipif(
-        bool(os.environ.get("KIROCREW_TMP_PER_TEST")),
+        bool(os.environ.get("AJCREW_TMP_PER_TEST")),
         reason="per-test diagnostic mode gives each test its own base, which is not recorded",
     )
     def test_the_audit_hook_records_a_bare_temp_entry_against_the_running_test(
@@ -1296,7 +1294,7 @@ class TestTheTempResidueReport:
         test forgetting to clean up.
         """
         for name in (
-            "kirocrew-computer-shots",
+            "ajcrew-computer-shots",
             "playwright-transform-cache-1001",
             ".org.chromium.Chromium.AHpK6x",
         ):
@@ -1389,7 +1387,7 @@ class TestTheWorkingDirectoryIsRestored:
 
 
 class TestTheTestLoopIsRetiredBeforeThePinsLift:
-    """What a test's loop leaves behind must finish while ``KIROCREW_HOME`` is pinned.
+    """What a test's loop leaves behind must finish while ``AJCREW_HOME`` is pinned.
 
     pytest-asyncio 0.21 ends the loop with a bare ``loop.close()``: a still-pending
     task's coroutine then runs its ``finally`` blocks at garbage collection, and a
@@ -1500,7 +1498,7 @@ class TestTheTestLoopIsRetiredBeforeThePinsLift:
         body = source[hook_at : source.index("\ndef ", hook_at + 1)]
         assert "_join_test_loop_executor(item)" in body, (
             "the loop retirement is not called from the tryfirst pytest_runtest_teardown "
-            "hook; anywhere later, KIROCREW_HOME may already be unpinned when it runs"
+            "hook; anywhere later, AJCREW_HOME may already be unpinned when it runs"
         )
 
 
@@ -1808,7 +1806,7 @@ class TestGitAutoMaintenanceIsOff:
     @staticmethod
     def _expected_stripped() -> frozenset[str]:
         """What the floor must strip, read from the production list, not from the floor."""
-        from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+        from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
         assert "GIT_CEILING_DIRECTORIES" in _GIT_LOCATION_VARS
         return (_GIT_LOCATION_VARS - {"GIT_CEILING_DIRECTORIES"}) | {"GIT_CONFIG_PARAMETERS"}

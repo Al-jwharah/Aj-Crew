@@ -15,9 +15,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_log_files
-from kiro_crew.cli_log_files import _OwnerOnlyRotatingFileHandler
-from kiro_crew.cli_logging import _FdTrackingRotatingFileHandler
+from aj_crew import cli_log_files
+from aj_crew.cli_log_files import _OwnerOnlyRotatingFileHandler
+from aj_crew.cli_logging import _FdTrackingRotatingFileHandler
 
 
 def _sharing_violation(src, dst):
@@ -111,7 +111,7 @@ def test_the_rollover_resumes_once_the_rename_works(tmp_path: Path, monkeypatch)
 
 def test_the_detached_handler_keeps_records_too(tmp_path: Path, monkeypatch) -> None:
     """The detached gateway's fd-tracking subclass inherits the same rollover."""
-    monkeypatch.setattr("kiro_crew.cli_logging._redirect_fds_to", lambda path, fds=(1, 2): None)
+    monkeypatch.setattr("aj_crew.cli_logging._redirect_fds_to", lambda path, fds=(1, 2): None)
     handler = _FdTrackingRotatingFileHandler(
         tmp_path / "gateway.log", maxBytes=512, backupCount=3, encoding="utf-8"
     )

@@ -15,7 +15,7 @@ from pathlib import Path
 
 from config_loader_helpers import _load_from_dict, _load_from_dict_with_logs
 
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config.loader import AjCrewConfig
 
 
 def test_slack_home_tab_sessions_per_kind_parsed_and_round_trips():
@@ -34,8 +34,8 @@ class TestReactionsEmptyStringFiltering:
     def test_empty_string_reaction_filtered(self, tmp_path: Path) -> None:
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(json.dumps({"slack": {"reactions": {"done": "", "error": "boom"}}}))
-        with unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
-            cfg = KiroCrewConfig.load()
+        with unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
+            cfg = AjCrewConfig.load()
         # Empty string should be dropped
         assert "done" not in cfg.slack.reactions
         # Non-empty value preserved
@@ -48,8 +48,8 @@ class TestReactionsNullSuppression:
     def test_null_reaction_preserved(self, tmp_path: Path) -> None:
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(json.dumps({"slack": {"reactions": {"done": None, "error": "boom"}}}))
-        with unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
-            cfg = KiroCrewConfig.load()
+        with unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
+            cfg = AjCrewConfig.load()
         # null should be preserved (distinct from absent key)
         assert "done" in cfg.slack.reactions
         assert cfg.slack.reactions["done"] is None
@@ -62,8 +62,8 @@ class TestReactionsNullSuppression:
         cfg_file.write_text(
             json.dumps({"slack": {"reactions": {"done": 42, "error": True, "tool": "ok"}}})
         )
-        with unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
-            cfg = KiroCrewConfig.load()
+        with unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
+            cfg = AjCrewConfig.load()
         assert "done" not in cfg.slack.reactions
         assert "error" not in cfg.slack.reactions
         assert cfg.slack.reactions["tool"] == "ok"
@@ -258,7 +258,7 @@ class TestTelegramAllowedUserIdsGuard:
 
 class TestMessagingConfigValidation:
     def test_normalizes_bad_scope_mode_and_clamps_resets(self) -> None:
-        from kiro_crew.config.loader import MessagingConfig
+        from aj_crew.config.loader import MessagingConfig
 
         c = MessagingConfig(
             dm_scope="bogus",
@@ -272,7 +272,7 @@ class TestMessagingConfigValidation:
         assert c.daily_reset_hour == -1
 
     def test_keeps_valid_values(self) -> None:
-        from kiro_crew.config.loader import MessagingConfig
+        from aj_crew.config.loader import MessagingConfig
 
         c = MessagingConfig(
             dm_scope="unified",

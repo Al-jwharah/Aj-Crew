@@ -29,8 +29,8 @@ from session_storage_helpers import (  # noqa: F401 -- fixtures are requested by
     stores_fixture,
 )
 
-from kiro_crew import session_storage
-from kiro_crew.session_storage import SessionIndex, SessionStorageError
+from aj_crew import session_storage
+from aj_crew.session_storage import SessionIndex, SessionStorageError
 
 
 class TestMoveTakesBothHalves:
@@ -735,7 +735,7 @@ class TestManifestPersistenceFailure:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A crash after publish must not expose manifest bytes still only in cache."""
-        from kiro_crew import atomic_write as atomic_write_module
+        from aj_crew import atomic_write as atomic_write_module
 
         batch = tmp_path / "batch"
         batch.mkdir()

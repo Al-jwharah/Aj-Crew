@@ -1,6 +1,6 @@
 """Agent-spec home isolation: the non-default data home arm.
 
-An instance on its own ``KIROCREW_HOME`` writes the shared agents directory only when
+An instance on its own ``AJCREW_HOME`` writes the shared agents directory only when
 no spec there belongs to another home. The KIRO_HOME seam and worktree guard are in
 ``test_agent_home_isolation.py``.
 """
@@ -22,19 +22,19 @@ from agent_home_isolation_helpers import (
 
 # The non-default data home arm
 def test_override_home_declines_shared_write_even_from_durable_checkout(monkeypatch, tmp_path):
-    """A KIROCREW_HOME-override instance must not overwrite existing shared
+    """An AJCREW_HOME-override instance must not overwrite existing shared
     specs.
 
-    A durable checkout on a scratch ``KIROCREW_HOME`` would pin that home into every
+    A durable checkout on a scratch ``AJCREW_HOME`` would pin that home into every
     managed server entry of ``~/.kiro/agents``, and strict identity then fails closed in
     every session. The ephemerality arms never see this shape.
     """
-    from kiro_crew import agent
+    from aj_crew import agent
 
     events = _capture_sel(monkeypatch, agent)
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "scratch-home"))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "scratch-home"))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
@@ -56,14 +56,14 @@ def test_override_home_declines_shared_write_even_from_durable_checkout(monkeypa
 def test_override_home_with_no_existing_spec_still_writes(monkeypatch, tmp_path):
     """A relocated-home install on a spec-less machine is NOT refused.
 
-    Refusing would leave no spec at all and every turn dying at "Mode 'kirocrew' not
+    Refusing would leave no spec at all and every turn dying at "Mode 'ajcrew' not
     found", with ``missing_required_agent_specs`` suppressed by the same guard.
     """
-    from kiro_crew import agent
+    from aj_crew import agent
 
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "relocated-home"))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "relocated-home"))
     _durable_checkout(monkeypatch, agent)
     _pretend_target_is_shared(monkeypatch, agent, tmp_path / "agents")
 
@@ -74,14 +74,14 @@ def test_override_home_declines_when_only_a_sibling_spec_exists(monkeypatch, tmp
     """A surviving SIBLING spec is enough audience to refuse for.
 
     Separate installers write the siblings, so a deleted main beside a surviving
-    ``kirocrew-lite.json`` is reachable; the check covers every ``OWNED_KIRO_AGENT_FILES``.
+    ``ajcrew-lite.json`` is reachable; the check covers every ``OWNED_KIRO_AGENT_FILES``.
     """
-    from kiro_crew import agent
-    from kiro_crew.agent_files import LITE_AGENT_FILENAME
+    from aj_crew import agent
+    from aj_crew.agent_files import LITE_AGENT_FILENAME
 
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "scratch-home"))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "scratch-home"))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
@@ -97,15 +97,15 @@ def test_override_home_declines_when_only_a_sibling_spec_exists(monkeypatch, tmp
 def test_self_pinned_specs_keep_their_writer(monkeypatch, tmp_path):
     """An override-home install keeps refreshing the specs IT wrote.
 
-    Matching the writer's ``env.KIROCREW_HOME`` pin avoids a self-lockout where an
+    Matching the writer's ``env.AJCREW_HOME`` pin avoids a self-lockout where an
     existence check refuses every rebuild after the first write.
     """
-    from kiro_crew import agent
+    from aj_crew import agent
 
     own_home = (tmp_path / "relocated-home").resolve()
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(own_home))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
@@ -117,11 +117,11 @@ def test_self_pinned_specs_keep_their_writer(monkeypatch, tmp_path):
 
 def test_foreign_pinned_specs_refuse(monkeypatch, tmp_path):
     """Specs pinned to a DIFFERENT home are someone else's — refuse."""
-    from kiro_crew import agent
+    from aj_crew import agent
 
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "my-home"))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "my-home"))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
@@ -143,17 +143,17 @@ def test_unc_pin_refuses_without_touching_the_filesystem(monkeypatch, tmp_path):
     import os as os_mod
     from pathlib import Path
 
-    from kiro_crew import agent
+    from aj_crew import agent
 
     own_home = (tmp_path / "my-home").resolve()
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(own_home))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
     (shared / agent.AGENT_FILENAME).write_text(
-        _spec_pinned_to(r"\\attacker\share\kirocrew-home"), encoding="utf-8"
+        _spec_pinned_to(r"\\attacker\share\ajcrew-home"), encoding="utf-8"
     )
     _pretend_target_is_shared(monkeypatch, agent, shared)
 
@@ -185,12 +185,12 @@ def test_symlinked_spec_is_present_and_unvouchable(monkeypatch, tmp_path):
     ``exists()`` follows links, so a planted dangling link would fake absence. The
     no-follow probe and :func:`_spec_path_is_safe` refuse it.
     """
-    from kiro_crew import agent
+    from aj_crew import agent
 
     own_home = (tmp_path / "my-home").resolve()
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(own_home))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
@@ -208,12 +208,12 @@ def test_case_differing_pin_reads_foreign(monkeypatch, tmp_path):
     Homes differing only by case are distinct on case-sensitive filesystems. Writer and
     reader share one resolver, so a self-written pin never differs by case.
     """
-    from kiro_crew import agent
+    from aj_crew import agent
 
     own_home = (tmp_path / "CrewHome").resolve()
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(own_home))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
@@ -232,15 +232,15 @@ def test_resolution_equivalent_pin_reads_foreign(monkeypatch, tmp_path):
     The writer pins the already-resolved ``str(_valid_override_home())``, so a pin that
     matches only through a symlink was written elsewhere and reads foreign.
     """
-    from kiro_crew import agent
+    from aj_crew import agent
 
     own_home = (tmp_path / "real-home").resolve()
     own_home.mkdir()
     alias = tmp_path / "alias-home"
     alias.symlink_to(own_home)
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(own_home))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
@@ -260,12 +260,12 @@ def test_oversized_spec_refuses_before_parsing(monkeypatch, tmp_path):
     """
     import pytest as _pytest
 
-    from kiro_crew import agent
+    from aj_crew import agent
 
     own_home = (tmp_path / "my-home").resolve()
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(own_home))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
@@ -293,12 +293,12 @@ def test_non_regular_spec_refuses_without_opening(monkeypatch, tmp_path):
 
     import pytest as _pytest
 
-    from kiro_crew import agent
+    from aj_crew import agent
 
     own_home = (tmp_path / "my-home").resolve()
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(own_home))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
@@ -338,13 +338,13 @@ def test_spec_growing_after_lstat_fails_closed(monkeypatch, tmp_path):
     The probe returns ``False`` on ``FileTooLargeError`` rather than letting the raise
     abort the boot-path rebuild.
     """
-    from kiro_crew import agent
-    from kiro_crew.hooks import FileTooLargeError
+    from aj_crew import agent
+    from aj_crew.hooks import FileTooLargeError
 
     own_home = (tmp_path / "my-home").resolve()
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(own_home))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
@@ -363,17 +363,17 @@ def test_dashboard_author_stem_is_always_skipped_in_the_home_probe(monkeypatch, 
     """The dashboard-author stem must never drive the shared-home verdict, regardless of
     sidecar confirmation.
 
-    Neither its installer nor a user leftover at the stem pins ``KIROCREW_HOME``, so
+    Neither its installer nor a user leftover at the stem pins ``AJCREW_HOME``, so
     probing it would decline every rebuild. Its provenance is the digest record at the
     gated sites.
     """
-    from kiro_crew import agent
+    from aj_crew import agent
 
     own_home = (tmp_path / "my-home").resolve()
     foreign = (tmp_path / "someone-elses-home").resolve()
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(own_home))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
@@ -384,7 +384,7 @@ def test_dashboard_author_stem_is_always_skipped_in_the_home_probe(monkeypatch, 
     _pretend_target_is_shared(monkeypatch, agent, shared)
 
     # The dashboard-author stem is excluded from the home-pin probe unconditionally (it
-    # carries no KIROCREW_HOME pin on either branch), so the foreign-pinned file at the stem
+    # carries no AJCREW_HOME pin on either branch), so the foreign-pinned file at the stem
     # never declines the rebuild -- the remaining self-pinned spec reads as ours.
     assert agent._existing_specs_are_mine(shared, own_home) is True
 
@@ -399,12 +399,12 @@ def test_unnormalized_spelling_of_own_pin_stays_mine(monkeypatch, tmp_path):
     """
     import os
 
-    from kiro_crew import agent
+    from aj_crew import agent
 
     own_home = (tmp_path / "relocated-home").resolve()
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(own_home))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
@@ -417,11 +417,11 @@ def test_unnormalized_spelling_of_own_pin_stays_mine(monkeypatch, tmp_path):
 
 def test_malformed_specs_refuse(monkeypatch, tmp_path):
     """An unparseable spec proves nothing about ownership — refuse."""
-    from kiro_crew import agent
+    from aj_crew import agent
 
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "my-home"))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "my-home"))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
@@ -440,20 +440,18 @@ def test_custom_server_entries_cannot_vouch_ownership(monkeypatch, tmp_path):
     """
     import json
 
-    from kiro_crew import agent
+    from aj_crew import agent
 
     own_home = (tmp_path / "my-home").resolve()
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(own_home))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
     spec = {
-        "name": "kirocrew",
-        "mcpServers": {
-            "my-custom-server": {"command": "x", "env": {"KIROCREW_HOME": str(own_home)}}
-        },
+        "name": "ajcrew",
+        "mcpServers": {"my-custom-server": {"command": "x", "env": {"AJCREW_HOME": str(own_home)}}},
     }
     (shared / agent.AGENT_FILENAME).write_text(json.dumps(spec), encoding="utf-8")
     _pretend_target_is_shared(monkeypatch, agent, shared)
@@ -469,17 +467,17 @@ def test_garbage_recorded_home_refuses_without_crashing(monkeypatch, tmp_path):
     """
     import json
 
-    from kiro_crew import agent
+    from aj_crew import agent
 
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "my-home"))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "my-home"))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
     spec = {
-        "name": "kirocrew",
-        "mcpServers": {"kirocrew-core": {"command": "x", "env": {"KIROCREW_HOME": "bad\x00home"}}},
+        "name": "ajcrew",
+        "mcpServers": {"ajcrew-core": {"command": "x", "env": {"AJCREW_HOME": "bad\x00home"}}},
     }
     (shared / agent.AGENT_FILENAME).write_text(json.dumps(spec), encoding="utf-8")
     _pretend_target_is_shared(monkeypatch, agent, shared)
@@ -496,22 +494,22 @@ def test_mixed_pins_within_one_spec_refuse(monkeypatch, tmp_path):
     """
     import json
 
-    from kiro_crew import agent
+    from aj_crew import agent
 
     own_home = (tmp_path / "my-home").resolve()
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(own_home))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     shared.mkdir()
     spec = {
-        "name": "kirocrew",
+        "name": "ajcrew",
         "mcpServers": {
-            "kirocrew-core": {"command": "x", "env": {"KIROCREW_HOME": str(own_home)}},
-            "kirocrew-cron": {
+            "ajcrew-core": {"command": "x", "env": {"AJCREW_HOME": str(own_home)}},
+            "ajcrew-cron": {
                 "command": "x",
-                "env": {"KIROCREW_HOME": str(tmp_path / "someone-else")},
+                "env": {"AJCREW_HOME": str(tmp_path / "someone-else")},
             },
         },
     }
@@ -520,7 +518,7 @@ def test_mixed_pins_within_one_spec_refuse(monkeypatch, tmp_path):
 
     assert agent._decline_shared_agent_home() is not None
 
-    spec["mcpServers"]["kirocrew-cron"] = {"command": "x"}
+    spec["mcpServers"]["ajcrew-cron"] = {"command": "x"}
     (shared / agent.AGENT_FILENAME).write_text(json.dumps(spec), encoding="utf-8")
     assert (
         agent._decline_shared_agent_home() is not None
@@ -535,13 +533,13 @@ def test_rebuild_round_trip_keeps_self_ownership(monkeypatch, tmp_path):
     proving ``_managed_mcp_env``'s pin and the ownership read agree, rather
     than both being asserted against hand-fabricated fixtures.
     """
-    from kiro_crew import agent
+    from aj_crew import agent
 
     own_home = tmp_path / "relocated-home"
     own_home.mkdir()
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(own_home))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     _pretend_target_is_shared(monkeypatch, agent, shared)
@@ -569,18 +567,18 @@ def test_rebuild_rechecks_ownership_under_the_lock_before_its_write(monkeypatch,
     shared agents-dir lock, reads the new owner's spec and writes nothing."""
     import json
 
-    from kiro_crew import agent
-    from kiro_crew.agent_materialization import auto_approve
+    from aj_crew import agent
+    from aj_crew.agent_materialization import auto_approve
 
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
+    monkeypatch.delenv("AJCREW_POD", raising=False)
     own_home = tmp_path / "relocated-home"
     own_home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+    monkeypatch.setenv("AJCREW_HOME", str(own_home))
     _durable_checkout(monkeypatch, agent)
     shared = tmp_path / "agents"
     _pretend_target_is_shared(monkeypatch, agent, shared)
-    owner_spec = json.dumps({"name": "kirocrew", "mcpServers": {"kirocrew-cron": {"command": "x"}}})
+    owner_spec = json.dumps({"name": "ajcrew", "mcpServers": {"ajcrew-cron": {"command": "x"}}})
     real_pass = auto_approve.final_ceiling_pass
 
     def owner_writes_first(config):
@@ -602,15 +600,15 @@ def test_rebuild_rechecks_ownership_under_the_lock_before_its_write(monkeypatch,
 def test_rebuild_under_override_home_never_touches_shared_dir(monkeypatch, tmp_path):
     """``rebuild_agent_config`` under an override home must not rewrite an
     existing shared spec — the guard stops the write, not merely warns."""
-    from kiro_crew import agent
+    from aj_crew import agent
 
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "scratch-home"))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "scratch-home"))
     _durable_checkout(monkeypatch, agent)
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    sentinel = '{"name": "kirocrew", "sentinel": "pre-existing"}'
+    sentinel = '{"name": "ajcrew", "sentinel": "pre-existing"}'
     (agents_dir / agent.AGENT_FILENAME).write_text(sentinel, encoding="utf-8")
     _pretend_target_is_shared(monkeypatch, agent, agents_dir)
 
@@ -625,11 +623,11 @@ def test_rebuild_under_override_home_never_touches_shared_dir(monkeypatch, tmp_p
 def test_default_home_instance_still_owns_shared_write(monkeypatch, tmp_path):
     """The other half of the contract: the DEFAULT-home instance keeps
     owning the shared specs — the new arm must not widen into refusing it."""
-    from kiro_crew import agent
+    from aj_crew import agent
 
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_POD", raising=False)
     _durable_checkout(monkeypatch, agent)
     agents_dir = tmp_path / "agents"
     _pretend_target_is_shared(monkeypatch, agent, agents_dir)
@@ -638,16 +636,16 @@ def test_default_home_instance_still_owns_shared_write(monkeypatch, tmp_path):
 
 
 def test_override_equal_to_default_home_still_owns_shared_write(monkeypatch, tmp_path):
-    """A belt-and-braces ``KIROCREW_HOME=<default>`` export IS the default-home
+    """A belt-and-braces ``AJCREW_HOME=<default>`` export IS the default-home
     instance in substance; refusing it would leave its specs never refreshed."""
-    from kiro_crew import agent
-    from kiro_crew.config import paths
+    from aj_crew import agent
+    from aj_crew.config import paths
 
     monkeypatch.delenv("KIRO_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
+    monkeypatch.delenv("AJCREW_POD", raising=False)
     default_home = (tmp_path / "default-home").resolve()
     monkeypatch.setattr(paths, "_resolved_home", default_home)
-    monkeypatch.setenv("KIROCREW_HOME", str(default_home))
+    monkeypatch.setenv("AJCREW_HOME", str(default_home))
     _durable_checkout(monkeypatch, agent)
     _pretend_target_is_shared(monkeypatch, agent, tmp_path / "agents")
 
@@ -656,14 +654,14 @@ def test_override_equal_to_default_home_still_owns_shared_write(monkeypatch, tmp
 
 def test_shared_kiro_agents_writable_predicate(monkeypatch, tmp_path):
     """The paths-level predicate: POD refuses, override refuses, default allows."""
-    from kiro_crew.config import paths
+    from aj_crew.config import paths
 
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "override"))
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "override"))
     assert not paths.shared_kiro_agents_writable()
 
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     assert paths.shared_kiro_agents_writable()
 
-    monkeypatch.setenv("KIROCREW_POD", "1")
+    monkeypatch.setenv("AJCREW_POD", "1")
     assert not paths.shared_kiro_agents_writable(), "the settings-guard predicate is reused"

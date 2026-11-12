@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.acp import codex_sqlite
-from kiro_crew.acp.codex_sqlite import SQLITE_HOME_ENV, seed_private_state
+from aj_crew.acp import codex_sqlite
+from aj_crew.acp.codex_sqlite import SQLITE_HOME_ENV, seed_private_state
 
 STATE = "state_5.sqlite"
 

@@ -123,11 +123,11 @@ def test_the_toolkit_ships_in_the_package(copier: Any) -> None:
     """The wheel and sdist take ``builtin_skills`` files from setup.cfg's package data."""
     cfg = configparser.ConfigParser()
     cfg.read(ROOT / "setup.cfg", encoding="utf-8")
-    raw = cfg.get("options.package_data", "kiro_crew", fallback="")
+    raw = cfg.get("options.package_data", "aj_crew", fallback="")
     globs = [
         line.strip()
         for line in raw.splitlines()
         if line.strip() and not line.strip().startswith("#")
     ]
-    rel = copier.TOOLKIT.relative_to(ROOT / "src" / "kiro_crew").as_posix()
+    rel = copier.TOOLKIT.relative_to(ROOT / "src" / "aj_crew").as_posix()
     assert any(fnmatch(rel, glob) for glob in globs), f"no package-data glob ships {rel}"

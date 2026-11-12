@@ -1,7 +1,7 @@
 """``chat_turn.compose`` binds on the runner what its owners define, and nothing else.
 
 The runner keeps no by-name re-export of most owner names: :func:`chat_turn.compose`
-binds every name an owner binds at runtime onto ``kiro_crew.dashboard.chat_runner``
+binds every name an owner binds at runtime onto ``aj_crew.dashboard.chat_runner``
 (``_bind``), so ``chat_runner.<name>`` resolves for each owner function, class and
 constant, and a test's patch of it reaches every function composed onto the runner. A
 name the runner and an owner both bind must be ONE object, or the import fails. The
@@ -35,8 +35,8 @@ from pathlib import Path
 import pytest
 from test_chat_runner_composition_contract import _BASE_NAMES, _facade_patched_names
 
-import kiro_crew.dashboard.chat_runner as cr
-from kiro_crew.dashboard import chat_turn
+import aj_crew.dashboard.chat_runner as cr
+from aj_crew.dashboard import chat_turn
 
 _OWNER_DIR = Path(chat_turn.__file__).resolve().parent
 
@@ -255,7 +255,7 @@ def test_the_local_import_check_sees_a_dead_one() -> None:
 
 
 def _imported_from_the_runner(sources: list[str]) -> set[str]:
-    """The names *sources* import from ``kiro_crew.dashboard.chat_runner`` by name."""
+    """The names *sources* import from ``aj_crew.dashboard.chat_runner`` by name."""
     found = set()
     for source in sources:
         for node in ast.walk(ast.parse(source)):
@@ -266,8 +266,8 @@ def _imported_from_the_runner(sources: list[str]) -> set[str]:
 
 def test_the_runner_importer_scan_sees_a_by_name_import() -> None:
     sources = [
-        "from kiro_crew.dashboard.chat_runner import a, b as c\n",
-        "from kiro_crew.dashboard import chat_runner\nimport kiro_crew.dashboard.chat_runner\n",
+        "from aj_crew.dashboard.chat_runner import a, b as c\n",
+        "from aj_crew.dashboard import chat_runner\nimport aj_crew.dashboard.chat_runner\n",
     ]
     assert _imported_from_the_runner(sources) == {"a", "b"}
 
@@ -277,9 +277,7 @@ def test_every_name_the_runner_imports_is_read() -> None:
     # pre-filtering avoids parsing ~3,900 irrelevant files that would never match.
     importers = [
         text
-        for path in sorted(
-            (Path(__file__).resolve().parents[1] / "src" / "kiro_crew").rglob("*.py")
-        )
+        for path in sorted((Path(__file__).resolve().parents[1] / "src" / "aj_crew").rglob("*.py"))
         if path.name != "chat_runner.py" and "chat_turn" not in path.parts
         for text in (path.read_text(encoding="utf-8"),)
         if "chat_runner" in text

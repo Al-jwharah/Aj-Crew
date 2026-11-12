@@ -15,15 +15,15 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from kiro_crew.apps.manifest import RESERVED_APP_NAME_CODE
-from kiro_crew.apps.registry import install_from_registry
+from aj_crew.apps.manifest import RESERVED_APP_NAME_CODE
+from aj_crew.apps.registry import install_from_registry
 
 
 @pytest.mark.asyncio
 async def test_reserved_route_name_refused_before_any_setup() -> None:
     with (
-        patch("kiro_crew.apps.registry._resolve_install_entry") as resolve,
-        patch("kiro_crew.apps.registry._clone_build_app", new_callable=AsyncMock) as clone,
+        patch("aj_crew.apps.registry._resolve_install_entry") as resolve,
+        patch("aj_crew.apps.registry._clone_build_app", new_callable=AsyncMock) as clone,
     ):
         result = await install_from_registry("library")
     assert result["ok"] is False
@@ -37,7 +37,7 @@ async def test_reserved_route_name_refused_before_any_setup() -> None:
 
 @pytest.mark.asyncio
 async def test_non_reserved_invalid_name_refused_without_reserved_code() -> None:
-    with patch("kiro_crew.apps.registry._clone_build_app", new_callable=AsyncMock) as clone:
+    with patch("aj_crew.apps.registry._clone_build_app", new_callable=AsyncMock) as clone:
         result = await install_from_registry("Bad_Name!")
     assert result["ok"] is False
     # Kebab-case refusal is not a reservation: no reserved code on the wire.

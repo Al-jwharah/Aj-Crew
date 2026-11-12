@@ -28,8 +28,8 @@ from dashboard_state_ws_helpers import (  # noqa: F401 -- fixtures are requested
     sync_event_loop,
 )
 
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.testing.wait import await_until
 
 
 class TestPeriodicCheckStatusRefresh:
@@ -42,7 +42,7 @@ class TestPeriodicCheckStatusRefresh:
     """
 
     def test_ttl_alias_matches_cache_ttl(self) -> None:
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard.handlers import source_providers
 
         assert source_providers.CHECK_STATUS_TTL_SECS == source_providers._CHECK_TTL_SECS
 
@@ -74,8 +74,8 @@ class TestPeriodicCheckStatusRefresh:
 
     @pytest.mark.asyncio
     async def test_owner_ws_loop_schedules_ttl_paced_refreshes(self, monkeypatch) -> None:
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard.handlers import source_providers
 
         url = "https://github.com/acme/repo/pull/248"
         state = MagicMock()
@@ -156,9 +156,9 @@ class TestPeriodicCheckStatusRefresh:
         """An operator adding or revoking a self-managed host changes which links
         are chips at all, and slot extraction is synchronous -- so the periodic
         loop must push explicitly instead of waiting for message activity."""
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard.handlers import source_providers
-        from kiro_crew.platform import governance_profiles
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard.handlers import source_providers
+        from aj_crew.platform import governance_profiles
 
         state = MagicMock()
         state.owner_id = "U_OWNER"
@@ -248,7 +248,7 @@ class TestPeriodicCheckStatusRefresh:
         """The WS `slots` envelope is rebuilt key-by-key in `_broadcast`, so an
         unforwarded field is silently dropped — which would leave the client with
         no way to notice an allowlist change now that polling was removed."""
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard.handlers import source_providers
 
         sent: list[str] = []
 
@@ -283,8 +283,8 @@ class TestPeriodicCheckStatusRefresh:
         """Slot source-link extraction is synchronous and cannot load the
         allowlist, so a self-hosted MR chip would be missing from the very first
         sidebar push unless the snapshot is warmed first."""
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard.handlers import source_providers
 
         order: list[str] = []
         state = MagicMock()
@@ -354,9 +354,9 @@ class TestPeriodicCheckStatusRefresh:
         """An app token renders no chip status (public or private), so it must
         not spawn the periodic provider driver. Only owner or dashboard-user
         connections do."""
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard import ws_event_scope
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard import ws_event_scope
+        from aj_crew.dashboard.handlers import source_providers
 
         state = MagicMock()
         state.owner_id = "U_OWNER"
@@ -438,8 +438,8 @@ class TestPeriodicCheckStatusRefresh:
         chip status READ-ONLY from the owner-populated caches, so it must NOT
         start the periodic driver — both the status and visibility refreshes run
         the operator's credentials and are owner-only."""
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard.handlers import source_providers
 
         state = MagicMock()
         state.owner_id = "U_OWNER"
@@ -520,8 +520,8 @@ class TestPeriodicCheckStatusRefresh:
         the driver must rotate which URLs it submits first so every chip is
         eventually refreshed instead of the same slot-order prefix winning
         every TTL (deterministic starvation of newer slots)."""
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard.handlers import source_providers
 
         urls = [
             "https://github.com/acme/repo/pull/1",
@@ -604,8 +604,8 @@ class TestPeriodicCheckStatusRefresh:
         """Findings #2: a single transient failure inside a refresh round must
         be logged and swallowed so the driver keeps running, rather than
         silently dying and reverting to the frozen-chip bug it fixes."""
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard.handlers import source_providers
 
         url = "https://github.com/acme/repo/pull/248"
         state = MagicMock()
@@ -704,7 +704,7 @@ class TestTurnBoundarySourceStatus:
     def test_turn_boundary_forces_refresh_for_owner(
         self, state: DashboardState, monkeypatch
     ) -> None:
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard.handlers import source_providers
 
         slot = state.get_or_create_slot("chat-a")
         slot.append("assistant", "opened https://github.com/acme/repo/pull/7", broadcast=False)
@@ -725,7 +725,7 @@ class TestTurnBoundarySourceStatus:
     ) -> None:
         """Status is credential-backed and only owners render it, so a headless
         or non-owner gateway must not spawn provider subprocesses per turn."""
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard.handlers import source_providers
 
         slot = state.get_or_create_slot("chat-a")
         slot.append("assistant", "opened https://github.com/acme/repo/pull/7", broadcast=False)
@@ -748,8 +748,8 @@ class TestTurnBoundarySourceStatus:
         dashboard-user window open (no owner window), NEITHER the credentialed
         status read NOR the visibility probe fires — both run the operator's
         credentials and are owner-only. A non-owner audience triggers nothing."""
-        from kiro_crew.dashboard import state as state_mod  # noqa: F401
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import state as state_mod  # noqa: F401
+        from aj_crew.dashboard.handlers import source_providers
 
         slot = state.get_or_create_slot("chat-a")
         slot.append(
@@ -787,7 +787,7 @@ class TestTurnBoundarySourceStatus:
     ) -> None:
         """A status refresh is best-effort telemetry; it must never be able to
         break the turn-completion path it hangs off."""
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard.handlers import source_providers
 
         slot = state.get_or_create_slot("chat-a")
         slot.append("assistant", "opened https://github.com/acme/repo/pull/7", broadcast=False)
@@ -830,8 +830,8 @@ class TestTurnBoundarySourceStatus:
         """
         from aiohttp import web
 
-        from kiro_crew.dashboard import server
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import server
+        from aj_crew.dashboard.handlers import source_providers
 
         source_providers._status_delta_sinks.clear()
         app = web.Application()
@@ -855,7 +855,7 @@ class TestOnDemandSourceStatus:
         from aiohttp import web
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard.handlers import source_providers
 
         route = "/api/source/pull-request/status/refresh"
         every_chip = ["https://github.com/acme/repo/pull/7", "https://github.com/acme/other/pull/9"]

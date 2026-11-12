@@ -12,8 +12,8 @@ from aiohttp.test_utils import make_mocked_request
 from test_shared_crew_entry_points import ALICE
 from test_shared_crew_entry_points import service as _service
 
-from kiro_crew.shared_crew import routes_admission
-from kiro_crew.shared_crew.admission import OperationKind, OperationState
+from aj_crew.shared_crew import routes_admission
+from aj_crew.shared_crew.admission import OperationKind, OperationState
 
 service = _service
 
@@ -81,7 +81,7 @@ async def test_cancel_applies_then_a_stale_revision_conflicts(service):
 
 @pytest.mark.asyncio
 async def test_a_task_cancel_keeps_the_owner_gate(service, monkeypatch):
-    from kiro_crew.dashboard.handlers import _shared
+    from aj_crew.dashboard.handlers import _shared
 
     work = await _queued(service, operation=OperationKind.TASK)
     denied = web.json_response({"error": "owner only"}, status=403)

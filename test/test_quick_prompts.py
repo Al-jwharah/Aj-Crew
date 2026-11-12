@@ -24,26 +24,26 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.context import ContextBuilder
-from kiro_crew.context_blocks import attributable_user_chars
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.context import ContextBuilder
+from aj_crew.context_blocks import attributable_user_chars
+from aj_crew.dashboard.chat_utils import (
     _BLOCKED_SLASH_COMMANDS,
     _SLASH_COMMANDS,
     SLASH_COMMAND_DESCRIPTIONS,
     is_harness_slash_command,
     user_text_span,
 )
-from kiro_crew.dashboard.handlers.prompts_authoring import MAX_PROMPT_BYTES
-from kiro_crew.memory import MemoryStore
-from kiro_crew.messaging.dispatch_admission import _CANCEL_ALIASES
-from kiro_crew.quick_prompts import (
+from aj_crew.dashboard.handlers.prompts_authoring import MAX_PROMPT_BYTES
+from aj_crew.memory import MemoryStore
+from aj_crew.messaging.dispatch_admission import _CANCEL_ALIASES
+from aj_crew.quick_prompts import (
     _RESERVED_TOKENS,
     _USER_PROMPT_MAX_BYTES,
     QUICK_PROMPTS,
     expand_quick_prompt,
     user_quick_prompt_menu,
 )
-from kiro_crew.skills import SkillsLoader
+from aj_crew.skills import SkillsLoader
 
 _REPO = Path(__file__).resolve().parents[1]
 _MENU_TSX = _REPO / "website" / "src" / "components" / "SlashCommandMenu.tsx"
@@ -229,10 +229,10 @@ class TestDoesNotShadowRealCommands:
         """
         collected: dict[str, set[str]] = {}
         for mod_name in (
-            "kiro_crew.telegram.commands",
-            "kiro_crew.discord.commands",
-            "kiro_crew.teams.commands",
-            "kiro_crew.imessage.commands",
+            "aj_crew.telegram.commands",
+            "aj_crew.discord.commands",
+            "aj_crew.teams.commands",
+            "aj_crew.imessage.commands",
         ):
             mod = importlib.import_module(mod_name)
             aliases: set[str] = set()
@@ -260,10 +260,10 @@ class TestDoesNotShadowRealCommands:
         assert names, "FRONTEND_COMMAND_NAMES not found in SlashCommandMenu.tsx"
         surfaces = set(re.findall(r"'([^']+)'", names.group(1)))
         surfaces |= set(_SLASH_COMMANDS) | set(SLASH_COMMAND_DESCRIPTIONS) | set(_CANCEL_ALIASES)
-        modules = sorted((_REPO / "src" / "kiro_crew").glob("*/commands.py"))
+        modules = sorted((_REPO / "src" / "aj_crew").glob("*/commands.py"))
         assert len(modules) >= 8, "channel command modules moved?"
         for path in modules:
-            mod = importlib.import_module(f"kiro_crew.{path.parent.name}.commands")
+            mod = importlib.import_module(f"aj_crew.{path.parent.name}.commands")
             for attr in dir(mod):
                 value = getattr(mod, attr)
                 if attr.endswith("_ALIASES") and isinstance(value, (set, frozenset)):

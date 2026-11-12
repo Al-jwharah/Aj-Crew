@@ -1,4 +1,4 @@
-"""The digest-verified ffmpeg decoder store (``kiro_crew.stt.decoder``).
+"""The digest-verified ffmpeg decoder store (``aj_crew.stt.decoder``).
 
 Every test here is offline: the network fetch is replaced at
 ``decoder.stream_pinned_payload``, the ONE seam both the whisper weights and the
@@ -8,7 +8,7 @@ a process except the resolver test, which authenticates a tiny shell script
 standing in for the real executable -- the pin is monkeypatched to that
 script's own digest, so the check under test is the real one.
 
-The suite's conftest sets ``KIROCREW_SKIP_MODEL_DOWNLOAD=1`` for every test, so a
+The suite's conftest sets ``AJCREW_SKIP_MODEL_DOWNLOAD=1`` for every test, so a
 test that exercises the fetch has to unset it deliberately; that switch has its
 own test below.
 """
@@ -24,11 +24,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat as _pc
-from kiro_crew import transcribe
-from kiro_crew.stt import decoder
-from kiro_crew.stt import models as stt_models
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import platform_compat as _pc
+from aj_crew import transcribe
+from aj_crew.stt import decoder
+from aj_crew.stt import models as stt_models
+from aj_crew.testing.clock import ManualClock
 
 # ── helpers ──────────────────────────────────────────────────────────────
 
@@ -765,7 +765,7 @@ class TestRetiredDecoderMigration:
     @pytest.mark.asyncio
     async def test_the_resolver_retries_after_a_migration(self, monkeypatch):
         """Nothing resolves, the migration installs the pin, the retry finds it."""
-        from kiro_crew import transcribe_ffmpeg
+        from aj_crew import transcribe_ffmpeg
 
         answers = iter([None, "/store/ffmpeg-test"])
         monkeypatch.setattr(transcribe_ffmpeg, "_open_ffmpeg_for_execution", lambda: next(answers))
@@ -778,7 +778,7 @@ class TestRetiredDecoderMigration:
 
     @pytest.mark.asyncio
     async def test_the_resolver_does_not_retry_without_a_migration(self, monkeypatch):
-        from kiro_crew import transcribe_ffmpeg
+        from aj_crew import transcribe_ffmpeg
 
         calls: list[int] = []
 
@@ -796,7 +796,7 @@ class TestRetiredDecoderMigration:
 
 
 class TestInstallCli:
-    """``python -m kiro_crew.stt.decoder --install-into DIR``, the desktop build's path."""
+    """``python -m aj_crew.stt.decoder --install-into DIR``, the desktop build's path."""
 
     def test_an_unpinned_platform_exits_3_and_writes_nothing(self, monkeypatch, tmp_path, capsys):
         _refuse_network(monkeypatch, "an unpinned platform started a download")

@@ -8,14 +8,14 @@ command reported success.
 from __future__ import annotations
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return tmp_path
 
 
@@ -30,14 +30,14 @@ class TestAnUnsafeDestinationRootRefusesBeforeAnyMutation:
     def _bundle(self, tmp_path, monkeypatch):
         home = tmp_path / "src"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
-        _setup_fake_kirocrew(home)
+        monkeypatch.setenv("AJCREW_HOME", str(home))
+        _setup_fake_ajcrew(home)
         md = home / "workspace" / "memory"
         md.mkdir(parents=True, exist_ok=True)
         (md / "preferences.md").write_text("from the bundle")
         out = tmp_path / "out"
         assert snap.snapshot_main([str(out), "--components", "memory"] + unpinnable_argv()) == 0
-        return next(out.glob("kirocrew-snapshot-*.tar.gz"))
+        return next(out.glob("ajcrew-snapshot-*.tar.gz"))
 
     def _linked_dest(self, tmp_path, name: str, tree: str):
         """A seeded data home whose *tree* root is a symlink pointing outside it.
@@ -50,7 +50,7 @@ class TestAnUnsafeDestinationRootRefusesBeforeAnyMutation:
 
         dest = tmp_path / name
         dest.mkdir()
-        _setup_fake_kirocrew(dest)
+        _setup_fake_ajcrew(dest)
         outside = tmp_path / f"outside-{name}"
         outside.mkdir()
         target = dest / tree
@@ -67,7 +67,7 @@ class TestAnUnsafeDestinationRootRefusesBeforeAnyMutation:
         except (OSError, NotImplementedError):
             pytest.skip("cannot create a directory symlink on this platform")
         original = (dest / "memory.db").read_bytes() if (dest / "memory.db").is_file() else None
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
 
         rc = snap.restore_main(
             [str(bundle), "--components", "memory", "--mode", "replace", "--force"]
@@ -84,7 +84,7 @@ class TestAnUnsafeDestinationRootRefusesBeforeAnyMutation:
             dest, outside = self._linked_dest(tmp_path, "dest2", "workspace/knowledge")
         except (OSError, NotImplementedError):
             pytest.skip("cannot create a directory symlink on this platform")
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
         rc = snap.restore_main(
             [str(bundle), "--components", "memory", "--mode", "merge", "--force"]
         )
@@ -96,8 +96,8 @@ class TestAnUnsafeDestinationRootRefusesBeforeAnyMutation:
         bundle = self._bundle(tmp_path, monkeypatch)
         dest = tmp_path / "clean"
         dest.mkdir()
-        _setup_fake_kirocrew(dest)
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        _setup_fake_ajcrew(dest)
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
         assert (
             snap.restore_main(
                 [str(bundle), "--components", "memory", "--mode", "replace", "--force"]
@@ -113,7 +113,7 @@ class TestAnUnsafeDestinationRootRefusesBeforeAnyMutation:
             dest, _outside = self._linked_dest(tmp_path, "dest3", "workspace/memory")
         except (OSError, NotImplementedError):
             pytest.skip("cannot create a directory symlink on this platform")
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
         snap.restore_main([str(bundle), "--components", "memory", "--mode", "replace", "--force"])
         out = capsys.readouterr().out
         assert "do not resolve inside the data home" in out
@@ -131,7 +131,7 @@ class TestARefusedBackupLeavesNoRollbackDirectory:
         )
         dest = tmp_path / "dest"
         dest.mkdir()
-        _setup_fake_kirocrew(dest)
+        _setup_fake_ajcrew(dest)
         memory = dest / "workspace" / "memory"
         memory.mkdir(parents=True, exist_ok=True)
         (memory / "preferences.md").write_text("live")
@@ -141,7 +141,7 @@ class TestARefusedBackupLeavesNoRollbackDirectory:
             (memory / "linked.md").symlink_to(outside)
         except (OSError, NotImplementedError):
             pytest.skip("cannot create a symlink on this platform")
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
 
         rc = snap.restore_main(
             [str(bundle), "--components", "memory", "--mode", "replace", "--force"]

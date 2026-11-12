@@ -4,7 +4,7 @@
  * Without an entry in `KIND_META` a note falls back to `DEFAULT_META`, which
  * renders a plain bell and the label "Notification". That is not a crash and no
  * other test notices it, so this pins the entry: the kind carries both the
- * gateway's own "a new Kiro Crew is out" notices and an installed app's "a new
+ * gateway's own "a new Aj Crew is out" notices and an installed app's "a new
  * version is published" ones, and neither should read as an unlabelled note.
  */
 import { describe, it, expect } from 'vitest'

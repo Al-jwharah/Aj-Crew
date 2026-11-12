@@ -9,7 +9,7 @@
  * Scene from the query string: ?scene=signed-out|signed-in|restart&theme=dark|light&lang=en
  *   signed-out: the Company SSO form the user signs in with.
  *   signed-in:  the moment between the sign-in landing and the gateway saying so.
- *   restart:    "Signed in. Start Kiro Crew again." once the sign-in landed.
+ *   restart:    "Signed in. Start Aj Crew again." once the sign-in landed.
  */
 import { createRoot } from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -24,7 +24,7 @@ const theme = params.get('theme') || 'dark'
 const scene = params.get('scene') || 'signed-out'
 const lang = params.get('lang') || 'en'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 initI18n(lang)
 
 // What the sign-in-only app's synthetic GET /api/kiro-prerequisite answers. The
@@ -39,7 +39,7 @@ api.kiroPrerequisite = () =>
     lts_login_required: true,
     lts_sign_in_only: true,
     lts_signed_in_restart: scene === 'restart',
-    ...(scene === 'restart' ? { lts_start_command: '/usr/local/bin/kirocrew gateway' } : {}),
+    ...(scene === 'restart' ? { lts_start_command: '/usr/local/bin/ajcrew gateway' } : {}),
   }) as unknown as ReturnType<typeof api.kiroPrerequisite>
 api.kasLoginStatus = () =>
   Promise.resolve(

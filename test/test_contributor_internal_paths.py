@@ -18,19 +18,19 @@ import dataclasses
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.server import (
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.server import (
     _MIXED_INTERNAL_API_PATHS,
     _STRICT_INTERNAL_API_PATHS,
     _mixed_internal_api_paths,
 )
-from kiro_crew.dashboard.token_auth import internal_path_matches
-from kiro_crew.platform import (
+from aj_crew.dashboard.token_auth import internal_path_matches
+from aj_crew.platform import (
     PlatformCompositionError,
     build_default_context,
     set_context,
 )
-from kiro_crew.platform.defaults import DefaultDashboardContributor
+from aj_crew.platform.defaults import DefaultDashboardContributor
 
 _EDITION_PATH = "/api/some-edition-app/agent-surface"
 
@@ -66,11 +66,11 @@ class _Legacy:
 
 
 @pytest.fixture()
-def cfg(tmp_path) -> KiroCrewConfig:
-    return KiroCrewConfig()
+def cfg(tmp_path) -> AjCrewConfig:
+    return AjCrewConfig()
 
 
-def _with(contributor, cfg: KiroCrewConfig) -> None:
+def _with(contributor, cfg: AjCrewConfig) -> None:
     base = build_default_context(cfg)
     set_context(dataclasses.replace(base, dashboard=contributor))
 
@@ -102,7 +102,7 @@ def test_an_admitted_contribution_is_recorded(cfg, caplog) -> None:
     # nothing in the log or in SEL distinguishes a deployment whose auth surface
     # an edition widened from a stock one.
     _with(_Contributor(frozenset({_EDITION_PATH})), cfg)
-    with caplog.at_level("INFO", logger="kiro_crew.dashboard.server"):
+    with caplog.at_level("INFO", logger="aj_crew.dashboard.server"):
         composed = _mixed_internal_api_paths()
     assert internal_path_matches(_EDITION_PATH, composed)
     recorded = [r for r in caplog.records if _EDITION_PATH in r.getMessage()]
@@ -113,7 +113,7 @@ def test_a_stock_build_records_nothing(cfg, caplog) -> None:
     # A public build contributes an empty set, so a line there would say nothing
     # and would appear on every gateway start.
     _with(DefaultDashboardContributor(), cfg)
-    with caplog.at_level("INFO", logger="kiro_crew.dashboard.server"):
+    with caplog.at_level("INFO", logger="aj_crew.dashboard.server"):
         assert _mixed_internal_api_paths() == _MIXED_INTERNAL_API_PATHS
     assert not [
         r for r in caplog.records if "internal-reachable" in r.getMessage()
@@ -180,7 +180,7 @@ def test_a_contributor_without_the_method_contributes_nothing(cfg, caplog) -> No
     # log a warning on every gateway start. Without that distinction the branch is
     # dead code.
     _with(_Legacy(), cfg)
-    with caplog.at_level("WARNING", logger="kiro_crew.dashboard.server"):
+    with caplog.at_level("WARNING", logger="aj_crew.dashboard.server"):
         assert _mixed_internal_api_paths() == _MIXED_INTERNAL_API_PATHS
     assert not [r for r in caplog.records if r.levelname in ("WARNING", "ERROR")]
 
@@ -189,7 +189,7 @@ def test_a_raising_contributor_does_warn(cfg, caplog) -> None:
     # The other side of the same distinction: a contributor that BREAKS is a fault
     # and has to be visible, or the edition's tool fails with no trace of why.
     _with(_Raising(), cfg)
-    with caplog.at_level("WARNING", logger="kiro_crew.dashboard.server"):
+    with caplog.at_level("WARNING", logger="aj_crew.dashboard.server"):
         assert _mixed_internal_api_paths() == _MIXED_INTERNAL_API_PATHS
     assert [r for r in caplog.records if r.levelname == "WARNING"]
 
@@ -201,7 +201,7 @@ def test_an_implemented_contributor_raising_attributeerror_still_warns(cfg, capl
     # ``_cfg`` is None) — so a genuinely broken edition would take the silent
     # "predates the seam" path and contribute nothing with no warning at all.
     _with(_RaisingAttributeError(), cfg)
-    with caplog.at_level("WARNING", logger="kiro_crew.dashboard.server"):
+    with caplog.at_level("WARNING", logger="aj_crew.dashboard.server"):
         assert _mixed_internal_api_paths() == _MIXED_INTERNAL_API_PATHS
     assert [
         r for r in caplog.records if r.levelname == "WARNING"
@@ -223,7 +223,7 @@ def test_a_generator_raising_mid_iteration_does_not_abort_the_gateway(cfg, caplo
         raise RuntimeError("iterator died")
 
     _with(_Contributor(_half_broken()), cfg)
-    with caplog.at_level("WARNING", logger="kiro_crew.dashboard.server"):
+    with caplog.at_level("WARNING", logger="aj_crew.dashboard.server"):
         assert _mixed_internal_api_paths() == _MIXED_INTERNAL_API_PATHS
     assert [r for r in caplog.records if r.levelname == "WARNING"]
 
@@ -265,7 +265,7 @@ def test_both_middleware_sites_compose_through_the_helper() -> None:
     import inspect
     from pathlib import Path
 
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     # The two chains are built by a server_runtime owner server.py composes.
     owners = sorted((Path(server.__file__).parent / "server_runtime").glob("[!_]*.py"))

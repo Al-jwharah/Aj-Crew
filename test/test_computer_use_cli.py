@@ -1,4 +1,4 @@
-"""``kirocrew computer`` — the human-facing CLI, with ``call`` as the new surface.
+"""``ajcrew computer`` — the human-facing CLI, with ``call`` as the new surface.
 
 ``call`` is a debug/repro harness over the ten MCP tools, not an eleventh tool. Two
 properties carry the weight here and both are asserted structurally rather than by
@@ -32,11 +32,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.computer_use import backend as cu_backend
-from kiro_crew.computer_use import cli as cu_cli
-from kiro_crew.computer_use import index as cu_index
-from kiro_crew.computer_use import service as cu_service
-from kiro_crew.computer_use.types import (
+from aj_crew.computer_use import backend as cu_backend
+from aj_crew.computer_use import cli as cu_cli
+from aj_crew.computer_use import index as cu_index
+from aj_crew.computer_use import service as cu_service
+from aj_crew.computer_use.types import (
     ERROR_PREFIX,
     REFUSAL_DISABLED,
     TOOL_CLICK,
@@ -44,23 +44,23 @@ from kiro_crew.computer_use.types import (
     TOOL_GET_STATE,
     TOOL_LIST_APPS,
 )
-from kiro_crew.testing.fake_computer_use import FAKE_FILES_APP
+from aj_crew.testing.fake_computer_use import FAKE_FILES_APP
 
 # ── Fixtures ──
 
 
 @pytest.fixture
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Redirect KIROCREW_HOME so the keystone read lands in a tmp dir."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    """Redirect AJCREW_HOME so the keystone read lands in a tmp dir."""
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return tmp_path
 
 
 @pytest.fixture(autouse=True)
 def no_forged_identity(monkeypatch: pytest.MonkeyPatch) -> None:
     """Never let a developer's real env leak an identity into these tests."""
-    monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-    monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
+    monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+    monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
 
 
 @pytest.fixture

@@ -18,8 +18,8 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const mode = params.get('theme') === 'light' ? 'light' : 'dark'
 localStorage.setItem('mc-theme', mode)
-localStorage.setItem('mc-color-theme', 'kiro')
-document.documentElement.setAttribute('data-theme', mode === 'light' ? 'kiro-light' : 'kiro-dark')
+localStorage.setItem('mc-color-theme', 'aj')
+document.documentElement.setAttribute('data-theme', mode === 'light' ? 'aj-light' : 'aj-dark')
 initI18n('en')
 
 const scan: AgentImportScanResponse = {
@@ -58,7 +58,7 @@ api.onboardingImportApply = async () => {
   await new Promise(resolve => setTimeout(resolve, 2500))
   throw new Error('Import service unavailable')
 }
-api.themeBoot = async () => ({ mode, color: 'kiro' }) as Awaited<ReturnType<typeof api.themeBoot>>
+api.themeBoot = async () => ({ mode, color: 'aj' }) as Awaited<ReturnType<typeof api.themeBoot>>
 api.themes = async () => ({ themes: [] })
 
 const qc = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } })

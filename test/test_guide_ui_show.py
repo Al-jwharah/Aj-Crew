@@ -15,8 +15,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import guide_catalog, ui_index
-from kiro_crew.dashboard.guide_runs import GuideError, GuideStore
+from aj_crew import guide_catalog, ui_index
+from aj_crew.dashboard.guide_runs import GuideError, GuideStore
 
 _REPO = Path(__file__).resolve().parents[1]
 _PLANS_TS = _REPO / "website" / "src" / "uiLocations" / "guidePlans.gen.ts"
@@ -678,21 +678,21 @@ def test_the_delete_crewmate_guide_step_carries_the_pages_caution_key() -> None:
     steps = _steps("agents.delete", "any")
     assert (
         steps[-1]["caution_key"]
-        == "pages.kiroCrewAgentsPage.deleting_a_crew_unbinds_it_from_new_sessions_its"
+        == "pages.ajCrewAgentsPage.deleting_a_crew_unbinds_it_from_new_sessions_its"
     )
     assert all("caution_key" not in s for s in steps[:-1])
 
 
 def test_a_caution_key_off_a_caution_step_is_a_malformed_plan() -> None:
     plan = json.loads(json.dumps(guide_catalog.ui_show_plans()["agents.delete"]))
-    plan["placements"][0]["steps"][1]["caution_key"] = "pages.kiroCrewAgentsPage.danger_zone"
+    plan["placements"][0]["steps"][1]["caution_key"] = "pages.ajCrewAgentsPage.danger_zone"
     assert not guide_catalog._plan_is_well_formed(plan)
 
 
 def test_a_caution_text_key_on_a_non_caution_location_breaks_the_index(tmp_path: Path) -> None:
     real = _index()
     loc = next(x for x in real["locations"] if x["id"] == "chat.older-sessions")
-    loc["caution_key"] = "pages.kiroCrewAgentsPage.deleting_a_crew_unbinds_it_from_new_sessions_its"
+    loc["caution_key"] = "pages.ajCrewAgentsPage.deleting_a_crew_unbinds_it_from_new_sessions_its"
     path = tmp_path / "ui-index.generated.json"
     path.write_text(json.dumps(real), encoding="utf-8")
     out = ui_index.find_ui("older sessions", "en", path=path)

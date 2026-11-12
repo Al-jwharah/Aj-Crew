@@ -21,7 +21,7 @@ const theme = params.get('theme') || 'dark'
 const running = params.get('running') === '1'
 const refuse = params.get('refuse') === '1'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const SLOT = 'chat-embed-composer-capture'
 const transcript = {

@@ -14,12 +14,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from test_transport_permission_floor import _allowed, _client, _handle, _record
 
-from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
+from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
 
 
 @pytest.mark.asyncio
 async def test_handle_approval_mints_mediated_request_capability(monkeypatch):
-    from kiro_crew import mediated_request_capability
+    from aj_crew import mediated_request_capability
 
     tool_args = {
         "secret_name": "WEATHER_API_KEY",
@@ -32,7 +32,7 @@ async def test_handle_approval_mints_mediated_request_capability(monkeypatch):
         tool_call_id="tc-mediated",
         raw_tool_params=tool_args,
         raw_params_trusted=True,
-        mcp_server_name="kirocrew-secrets",
+        mcp_server_name="ajcrew-secrets",
         tool_name="call_api_with_secret",
         mcp_identity_trusted=True,
     )
@@ -57,7 +57,7 @@ async def test_handle_approval_mints_mediated_request_capability(monkeypatch):
     mint.assert_called_once_with(
         session_key="dashboard:member",
         tool_call_id="tc-mediated",
-        mcp_server_name="kirocrew-secrets",
+        mcp_server_name="ajcrew-secrets",
         tool_name="call_api_with_secret",
         tool_args=tool_args,
         identity_trusted=True,
@@ -88,7 +88,7 @@ def _mediated_event(request_id: str, tool_call_id: str) -> AcpEvent:
             "url": "https://api.weather.example/x",
         },
         raw_params_trusted=True,
-        mcp_server_name="kirocrew-secrets",
+        mcp_server_name="ajcrew-secrets",
         tool_name="call_api_with_secret",
         mcp_identity_trusted=True,
     )
@@ -101,7 +101,7 @@ async def test_mediated_capability_is_not_minted_while_the_approval_waits_for_th
     """A grant must not exist before the approval's final checks under the write lock:
     a caller could claim it during the lock wait, and a withdrawal read under the lock
     would then be too late. Withdrawn under the lock, nothing is ever minted."""
-    from kiro_crew import mediated_request_capability, permission_floor
+    from aj_crew import mediated_request_capability, permission_floor
 
     mint = MagicMock(return_value="capability-token")
     monkeypatch.setattr(mediated_request_capability, "mint_for_approved_call", mint)
@@ -131,7 +131,7 @@ async def test_mediated_capability_is_not_minted_while_the_approval_waits_for_th
 async def test_failed_approval_write_revokes_a_grant_already_claimed(monkeypatch):
     """A grant claimed while the approval frame drains is revoked when the write fails,
     so a claimed (active) token from an undelivered approval cannot be consumed."""
-    from kiro_crew import mediated_request_capability as cap
+    from aj_crew import mediated_request_capability as cap
 
     monkeypatch.setattr(cap, "_pending", {})
     monkeypatch.setattr(cap, "_active", {})
@@ -160,7 +160,7 @@ async def test_client_transport_mints_under_the_lock_and_revokes_a_claimed_grant
     monkeypatch, tmp_path
 ):
     """The single-client transport has the same ordering and cleanup."""
-    from kiro_crew import mediated_request_capability as cap
+    from aj_crew import mediated_request_capability as cap
 
     monkeypatch.setattr(cap, "_pending", {})
     monkeypatch.setattr(cap, "_active", {})
@@ -207,7 +207,7 @@ def _seed_grants(cap, monkeypatch):
 @pytest.mark.asyncio
 async def test_cancelling_a_handle_turn_revokes_its_mediated_grants_only(monkeypatch):
     """A soft Stop must not leave an approved, delivered call able to run later."""
-    from kiro_crew import mediated_request_capability as cap
+    from aj_crew import mediated_request_capability as cap
 
     args, claimed = _seed_grants(cap, monkeypatch)
     handle = _handle(session_key="dashboard:member")
@@ -224,7 +224,7 @@ async def test_cancelling_a_handle_turn_revokes_its_mediated_grants_only(monkeyp
 
 @pytest.mark.asyncio
 async def test_cancelling_a_client_turn_revokes_its_mediated_grants_only(monkeypatch, tmp_path):
-    from kiro_crew import mediated_request_capability as cap
+    from aj_crew import mediated_request_capability as cap
 
     args, claimed = _seed_grants(cap, monkeypatch)
     client = _client(tmp_path)
@@ -243,7 +243,7 @@ async def test_a_stop_while_the_handle_approval_waits_for_the_lock_leaves_no_gra
     """An approval with no ``withdraw_if`` (a crew-bound chat click) that waits for
     the write lock while the turn is cancelled must not mint afterwards: the cancel
     already swept the session's grants, so a later mint would outlive the Stop."""
-    from kiro_crew import mediated_request_capability as cap
+    from aj_crew import mediated_request_capability as cap
 
     monkeypatch.setattr(cap, "_pending", {})
     monkeypatch.setattr(cap, "_active", {})
@@ -268,7 +268,7 @@ async def test_a_stop_while_the_handle_approval_waits_for_the_lock_leaves_no_gra
 async def test_a_stop_while_the_client_approval_waits_for_the_lock_leaves_no_grant(
     monkeypatch, tmp_path
 ):
-    from kiro_crew import mediated_request_capability as cap
+    from aj_crew import mediated_request_capability as cap
 
     monkeypatch.setattr(cap, "_pending", {})
     monkeypatch.setattr(cap, "_active", {})
@@ -291,7 +291,7 @@ async def test_a_stop_while_the_client_approval_waits_for_the_lock_leaves_no_gra
 def test_a_cancel_between_the_check_and_the_insert_still_leaves_no_grant(monkeypatch):
     """The generation is read again after the insert, so a cancel that slips in
     between the first check and the insert cannot leave its grant behind."""
-    from kiro_crew import mediated_request_capability as cap
+    from aj_crew import mediated_request_capability as cap
 
     monkeypatch.setattr(cap, "_pending", {})
     monkeypatch.setattr(cap, "_active", {})
@@ -313,7 +313,7 @@ def test_a_cancel_between_the_check_and_the_insert_still_leaves_no_grant(monkeyp
 
 
 def test_cancel_generations_stay_bounded_and_eviction_only_refuses(monkeypatch):
-    from kiro_crew import mediated_request_capability as cap
+    from aj_crew import mediated_request_capability as cap
 
     monkeypatch.setattr(cap, "_pending", {})
     monkeypatch.setattr(cap, "_active", {})
@@ -339,8 +339,8 @@ async def test_a_floor_refused_reprompt_drops_the_earlier_grant_for_its_call_id(
     the grant the first approval minted: ``approve_tool`` has already popped the
     event, so the ``reject_tool`` it delegates to could not invalidate it.
     Mutation guard: without the invalidation in ``approve_tool`` the grant survives."""
-    from kiro_crew import mediated_request_capability as cap
-    from kiro_crew import permission_floor
+    from aj_crew import mediated_request_capability as cap
+    from aj_crew import permission_floor
 
     monkeypatch.setattr(cap, "_pending", {})
     monkeypatch.setattr(cap, "_active", {})

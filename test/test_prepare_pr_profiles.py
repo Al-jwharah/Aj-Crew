@@ -1,8 +1,8 @@
-"""Tests for the kirocrew-prepare-pr project-profile mechanism.
+"""Tests for the ajcrew-prepare-pr project-profile mechanism.
 
 Covers:
-  * resolve_profile.py resolution order (config / kirocrew markers /
-    auto-detect / generic) and the bundled KiroCrew profile contents.
+  * resolve_profile.py resolution order (config / ajcrew markers /
+    auto-detect / generic) and the bundled Aj Crew profile contents.
   * pr_status.py readiness-context override (flag / env / default) and the
     positional-argument stripping that makes it work.
 
@@ -25,9 +25,7 @@ from git_maintenance_helpers import git_maintenance_off_entries
 from skill_script_helpers import load_skill_script
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = (
-    REPO_ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev" / "kirocrew-prepare-pr"
-)
+SKILL_DIR = REPO_ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr"
 SCRIPTS_DIR = SKILL_DIR / "scripts"
 PROFILES_DIR = SKILL_DIR / "profiles"
 
@@ -227,14 +225,14 @@ def test_autodetect_reviewers_from_workflows(tmp_path):
     assert prof["reviewers"][0]["contract"].endswith("codex-review.yml")
 
 
-def test_kirocrew_markers_load_bundled_profile(tmp_path):
+def test_ajcrew_markers_load_bundled_profile(tmp_path):
     (tmp_path / "AUTOSDE.yaml").write_text("rules: []\n")
     wf = tmp_path / ".github" / "workflows"
     wf.mkdir(parents=True)
     (wf / "codex-review.yml").write_text("name: codex\n")
     (wf / "claude-review.yml").write_text("name: claude\n")
     prof = resolve_profile.resolve(str(tmp_path))
-    assert prof["source"] == "kirocrew"
+    assert prof["source"] == "ajcrew"
     assert prof["single_commit"] is True
     assert prof["base_branch"] == "main"
     assert prof["setup"] == ["(cd website && npx playwright install chromium)"]
@@ -248,7 +246,7 @@ def test_kirocrew_markers_load_bundled_profile(tmp_path):
 def test_opus_profile_model_matches_the_ci_workflow():
     """The local reviewer must mirror the model CI actually runs.
 
-    kirocrew-prepare-pr's whole value is that local-green predicts server-green. When the
+    ajcrew-prepare-pr's whole value is that local-green predicts server-green. When the
     profile pinned claude-opus-5 while claude-review.yml had moved to
     opus-4-8, the local gate was reviewing with a different model than the gate
     it claims to mirror. This test fails the next time they diverge.
@@ -273,7 +271,7 @@ def test_opus_profile_model_matches_the_ci_workflow():
     ), f"claude-review.yml's stages disagree on the model: {ci_models}"
     ci_model = ci_models[0]
 
-    data = json.loads((PROFILES_DIR / "kirocrew.json").read_text(encoding="utf-8"))
+    data = json.loads((PROFILES_DIR / "ajcrew.json").read_text(encoding="utf-8"))
     local_model = next(r["model"] for r in data["reviewers"] if r["name"] == "opus")
 
     def _normalize(model_id: str) -> str:
@@ -282,7 +280,7 @@ def test_opus_profile_model_matches_the_ci_workflow():
         return re.sub(r"-(\d)-(\d)$", r"-\1.\2", tail)
 
     assert _normalize(ci_model) == _normalize(local_model), (
-        f"kirocrew-prepare-pr opus reviewer ({local_model}) no longer mirrors "
+        f"ajcrew-prepare-pr opus reviewer ({local_model}) no longer mirrors "
         f"claude-review.yml ({ci_model})"
     )
 
@@ -366,7 +364,7 @@ def test_gate_python_floor_matches_project_metadata():
 
 @pytest.mark.parametrize("version", [(3, 9, 0), (3, 10, 20), (3, 11, 15), (3, 12, 0), (3, 13, 0)])
 def test_first_floor_gate_checks_and_reports_python(version, tmp_path):
-    data = json.loads((PROFILES_DIR / "kirocrew.json").read_text(encoding="utf-8"))
+    data = json.loads((PROFILES_DIR / "ajcrew.json").read_text(encoding="utf-8"))
     argv = shlex.split(data["gates"][0])
     assert argv[:2] == ["python3", "-c"] and len(argv) == 3
     reported_version = ".".join(map(str, version))
@@ -398,7 +396,7 @@ def test_every_floor_command_names_a_real_target():
     script turns a gate into a command-not-found, which reads as a defect in
     the branch under review rather than as rot in the floor.
     """
-    data = json.loads((PROFILES_DIR / "kirocrew.json").read_text(encoding="utf-8"))
+    data = json.loads((PROFILES_DIR / "ajcrew.json").read_text(encoding="utf-8"))
     commands = "\n".join(data["setup"] + data["gates"])
 
     for rel in sorted(set(re.findall(r"\bscripts/[A-Za-z0-9_.-]+\.(?:py|sh)", commands))):
@@ -424,16 +422,16 @@ def test_ci_blocking_scans_are_covered_by_the_floor():
     record rather than an omission.
     """
     run_text = _ci_workflow_run_text()
-    data = json.loads((PROFILES_DIR / "kirocrew.json").read_text(encoding="utf-8"))
+    data = json.loads((PROFILES_DIR / "ajcrew.json").read_text(encoding="utf-8"))
     # Only repeatable verdict-producing gates satisfy the CI floor. A command
     # filed under setup runs once per worktree, so counting it here would let a
-    # future blocking CI check disappear from later kirocrew-prepare-pr passes.
+    # future blocking CI check disappear from later ajcrew-prepare-pr passes.
     floor = "\n".join(data["gates"])
 
     # CI-only capability gate: "Require real FAISS edit invalidation regressions"
     # installs an optional native accelerator in an isolated Linux venv and
     # requires all four versioned cases to pass. The local scoped-test gate
-    # retains those tests with their declared capability skips; kirocrew-prepare-pr does
+    # retains those tests with their declared capability skips; ajcrew-prepare-pr does
     # not provision optional native runtimes, just as it does not grant Linux
     # namespaces or supply the Darwin kernel. Its absence is not FAISS evidence.
     exempt_scripts = {
@@ -475,7 +473,7 @@ def test_ci_blocking_scans_are_covered_by_the_floor():
         "scripts/stamp-distribution.sh",
         # Optional synthetic Qwen measurement, not a blocking score gate. The
         # bounded CI step records unavailable evidence on failure; local
-        # kirocrew-prepare-pr must not download a model or claim a calibration score.
+        # ajcrew-prepare-pr must not download a model or claim a calibration score.
         "scripts/ci-member-memory-benchmark.py",
         # Reports Python advisories against a baseline and cannot fail a build on
         # what it finds, so by this floor's own rule -- only repeatable
@@ -486,7 +484,7 @@ def test_ci_blocking_scans_are_covered_by_the_floor():
         "scripts/check_python_audit.py",
         # Reports route coverage from the dumps the Linux-only `integration` job
         # writes while booting real gateways in-process; it has no verdict
-        # without that run, and kirocrew-prepare-pr does not boot gateways in its
+        # without that run, and ajcrew-prepare-pr does not boot gateways in its
         # repeated static floor -- the layer's proof stays in CI, like E2E.
         "scripts/check_integration_route_coverage.py",
         # Lives under .github/scripts. It runs the same `gen:ui -- --check` the
@@ -496,10 +494,10 @@ def test_ci_blocking_scans_are_covered_by_the_floor():
         # to compare, so the local verdict is the plain check it already holds.
         "scripts/ui_index_freshness.py",
         # Warn-only report (`continue-on-error` in fast-gate.yml) that runs the
-        # test files a pull request adds or changes with KIROCREW_NET_STRICT=1.
+        # test files a pull request adds or changes with AJCREW_NET_STRICT=1.
         # It produces no verdict that can fail a build, so by this floor's own
         # rule it is not a gate; a contributor runs the same check locally with
-        # `KIROCREW_NET_STRICT=1 pytest <the test files>`.
+        # `AJCREW_NET_STRICT=1 pytest <the test files>`.
         "scripts/net_strict_changed.py",
     }
 
@@ -524,8 +522,8 @@ def test_ci_blocking_scans_are_covered_by_the_floor():
 
     missing = sorted(s for s in invoked - exempt_scripts if s not in floor)
     assert not missing, (
-        "ci.yml/fast-gate.yml run these scripts but the kirocrew-prepare-pr floor does not: "
-        f"{missing}. Add them to profiles/kirocrew.json gates[] in their "
+        "ci.yml/fast-gate.yml run these scripts but the ajcrew-prepare-pr floor does not: "
+        f"{missing}. Add them to profiles/ajcrew.json gates[] in their "
         "CI-exact form, or exempt them here with a reason."
     )
 
@@ -572,7 +570,7 @@ def test_ci_blocking_scans_are_covered_by_the_floor():
     )
     assert not tool_missing, (
         f"ci.yml runs these tools but the floor does not: {tool_missing}. "
-        "Add each to profiles/kirocrew.json gates[] in its CI-exact form, or "
+        "Add each to profiles/ajcrew.json gates[] in its CI-exact form, or "
         "add it to exempt_tools here with the reason it is not a local gate."
     )
 
@@ -600,7 +598,7 @@ def test_test_gates_are_diff_scoped_and_carry_a_base_ref():
     than a missing gate. The runner fails closed on an empty base, so the floor's
     job is to always supply one.
     """
-    data = json.loads((PROFILES_DIR / "kirocrew.json").read_text(encoding="utf-8"))
+    data = json.loads((PROFILES_DIR / "ajcrew.json").read_text(encoding="utf-8"))
     gates = data["gates"]
 
     for surface in ("backend", "frontend"):
@@ -631,7 +629,7 @@ def test_scoped_frontend_gate_keeps_the_lanes_npm_test_used_to_carry():
     other two have to appear as gates in their own right or they vanish from the
     floor without anyone deciding that they should.
     """
-    data = json.loads((PROFILES_DIR / "kirocrew.json").read_text(encoding="utf-8"))
+    data = json.loads((PROFILES_DIR / "ajcrew.json").read_text(encoding="utf-8"))
     gates = "\n".join(data["gates"])
     for script in ("jscpd", "test:electron"):
         assert f"run {script}" in gates, (
@@ -683,7 +681,7 @@ def test_floor_typechecks_the_way_ci_does():
     reported 1822). `-p` re-hashes every program file, node_modules included.
     """
     gates = "\n".join(
-        json.loads((PROFILES_DIR / "kirocrew.json").read_text(encoding="utf-8"))["gates"]
+        json.loads((PROFILES_DIR / "ajcrew.json").read_text(encoding="utf-8"))["gates"]
     )
     assert (
         TSC_APP_PROJECT in gates
@@ -761,7 +759,7 @@ def test_named_project_is_the_root_tsconfigs_only_reference():
 
     `tsc -b` on the solution root followed every reference. `-p` does not, so if
     a second project is ever added to `website/tsconfig.json` every caller here
-    (package.json build/typecheck, ci.yml, the kirocrew-prepare-pr floor) would skip it
+    (package.json build/typecheck, ci.yml, the ajcrew-prepare-pr floor) would skip it
     without any of them failing. This test turns that silent skip into a
     decision: extend the callers, or go back to a spelling that follows
     references and re-examine the cache.
@@ -863,9 +861,9 @@ def test_gate_rationale_reference_exists_and_is_pointed_at():
         assert needle in body, f"gate-floor.md no longer covers {needle!r}"
 
 
-def test_bundled_kirocrew_profile_is_valid_json():
-    data = json.loads((PROFILES_DIR / "kirocrew.json").read_text())
-    assert data["name"] == "kirocrew"
+def test_bundled_ajcrew_profile_is_valid_json():
+    data = json.loads((PROFILES_DIR / "ajcrew.json").read_text())
+    assert data["name"] == "ajcrew"
     assert isinstance(data["setup"], list)
     # Every reviewer must carry a served model id (no bare gpt-5.6).
     for r in data["reviewers"]:
@@ -992,8 +990,8 @@ def test_tree_reader_worktree_and_pinned_parity(tmp_path, monkeypatch):
     # Detection functions take reader directly
     assert resolve_profile.detect_gates(wt_reader) == ["python -m pytest -q", "npm run build"]
     assert resolve_profile.detect_gates(pinned_reader) == ["python -m pytest -q", "npm run build"]
-    assert resolve_profile.detect_kirocrew(wt_reader) is False
-    assert resolve_profile.detect_kirocrew(pinned_reader) is False
+    assert resolve_profile.detect_ajcrew(wt_reader) is False
+    assert resolve_profile.detect_ajcrew(pinned_reader) is False
 
     reviewers = resolve_profile.detect_reviewers(wt_reader)
     assert len(reviewers) == 1

@@ -16,10 +16,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from aj_crew import agent as agent_mod
+from aj_crew import agent_discovery
+from aj_crew.dashboard import side_readonly_spec as srs
 from conftest import requires_symlinks
-from kiro_crew import agent as agent_mod
-from kiro_crew import agent_discovery
-from kiro_crew.dashboard import side_readonly_spec as srs
 
 #: A checkout name that needs quoting in JSON (a double quote is not a legal
 #: Windows file name character, so it is left out there).
@@ -420,7 +420,7 @@ def _spy_probes(monkeypatch, marker: str) -> list[str]:
 def _screen_refusing(monkeypatch, marker: str) -> list[str]:
     """Make ``hooks.validate_file_path`` refuse what resolves into *marker*, as the
     Windows UNC gate and link screen do for a share; return the paths it was asked."""
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     asked: list[str] = []
     real = hooks.validate_file_path
@@ -629,7 +629,7 @@ def test_the_agents_dir_memo_never_serves_a_reaped_spec(agents_dir):
 
 
 def test_live_session_agents_are_the_registered_providers_agents():
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     assert gateway._live_session_agents(None) == set()
     side = MagicMock(spec=["_client"])
@@ -641,7 +641,7 @@ def test_live_session_agents_are_the_registered_providers_agents():
 
 
 def test_the_gateway_reaps_in_the_boot_janitor_and_on_the_hourly_wake():
-    from kiro_crew.slack.gateway_runtime import process_entry
+    from aj_crew.slack.gateway_runtime import process_entry
 
     source = Path(process_entry.__file__).read_text(encoding="utf-8")
     janitor = source.index("async def _run_agents_janitor() -> None:")

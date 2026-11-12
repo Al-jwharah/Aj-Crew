@@ -17,8 +17,8 @@ from typing import Any, Callable, Iterator
 
 import pytest
 
-import kiro_crew.history as history_mod
-from kiro_crew.history import ConversationLog
+import aj_crew.history as history_mod
+from aj_crew.history import ConversationLog
 
 
 def _line(role: str, content: str) -> str:
@@ -669,7 +669,7 @@ class TestPreservedMtimeFillRace:
         assert log._path(canonical).stem == bare  # canonical resolves to the legacy file
         log._invalidate_cache(canonical)  # cold cache so recent() takes the tail fill
         # Any positive size below the file's forces the rotation to actually run.
-        monkeypatch.setattr("kiro_crew.history._SESSION_MAX_BYTES", 1)
+        monkeypatch.setattr("aj_crew.history._SESSION_MAX_BYTES", 1)
 
         def rotate() -> None:
             # The real rotation writer: rewrites the file, restores the
@@ -706,7 +706,7 @@ class TestPreservedMtimeFillRace:
             {"role": "user", "content": f"m{i}"} for i in (3, 4, 5)
         ]
         # Any positive size below the file's forces the rotation to actually run.
-        monkeypatch.setattr("kiro_crew.history._SESSION_MAX_BYTES", 1)
+        monkeypatch.setattr("aj_crew.history._SESSION_MAX_BYTES", 1)
         with log._locked(key):
             log._maybe_rotate(log._path(key), key)
         # Rotation at this byte cap keeps only the newest message; a surviving

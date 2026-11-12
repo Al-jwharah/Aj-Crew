@@ -1,7 +1,7 @@
 """The admission layer and the cold-start handshake see the agents slice.
 
-Kiro Crew caps every agent process on a Linux host inside one cgroup,
-``kirocrew-agents.slice``, with a ``memory.high`` the kernel throttles at. Two
+Aj Crew caps every agent process on a Linux host inside one cgroup,
+``ajcrew-agents.slice``, with a ``memory.high`` the kernel throttles at. Two
 things must see that ceiling, and these tests pin both:
 
 * the memory probe behind ``resource_status`` / ``admission_check`` takes the
@@ -28,11 +28,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import kiro_crew.resource_status as rs
-import kiro_crew.sandbox as sb
-import kiro_crew.subagent as sa
-from kiro_crew.acp import runtime as runtime_mod
-from kiro_crew.acp.runtime import (
+import aj_crew.resource_status as rs
+import aj_crew.sandbox as sb
+import aj_crew.subagent as sa
+from aj_crew.acp import runtime as runtime_mod
+from aj_crew.acp.runtime import (
     _INITIALIZE_TIMEOUT,
     _REQUEST_TIMEOUT,
     AcpRequestTimeout,
@@ -59,7 +59,7 @@ def _fabricate_slice(
     high_events: int = 0,
 ) -> Path:
     """Lay the slice out the way systemd's dash-hierarchy does and fill its files."""
-    slice_dir = tmp_path / "kirocrew.slice" / sb._CGROUP_AGENTS_SLICE
+    slice_dir = tmp_path / "ajcrew.slice" / sb._CGROUP_AGENTS_SLICE
     slice_dir.mkdir(parents=True)
     (slice_dir / "memory.high").write_text(f"{high}\n", encoding="utf-8")
     (slice_dir / "memory.max").write_text(f"{maximum}\n", encoding="utf-8")
@@ -321,8 +321,8 @@ class TestAgentCeilingAttribution:
         assert rs._read_agent_ceiling() is None
 
     def test_the_incident_note_names_the_agent_ceiling(self):
-        from kiro_crew.notifications.bus import NotificationBus
-        from kiro_crew.notifications.resource_pressure import ResourcePressureNotifier
+        from aj_crew.notifications.bus import NotificationBus
+        from aj_crew.notifications.resource_pressure import ResourcePressureNotifier
 
         status = rs.probe(self._cfg())
         assert status.available_gb == 0.0
@@ -478,7 +478,7 @@ class TestInitializeHandshakeUnderThrottle:
         """The parent timeout says "retry"; overload must not, or every retry
         layer respawns a fresh kiro-cli into the same throttled slice and the
         cold start is paid again with no more memory than the last time."""
-        from kiro_crew.llm_helpers import acp_error_is_transient
+        from aj_crew.llm_helpers import acp_error_is_transient
 
         assert AcpRequestTimeout.transient is True
         assert AcpRuntimeOverloaded.transient is False

@@ -101,7 +101,7 @@ def _defs_in(path: Path) -> tuple[set[str], dict[str, ast.AST]]:
 
     Resolved by AST, the same choice ``test_windows_gap_list`` makes and for a second
     reason here: collecting these files in a SUBPROCESS cannot be made portable. The
-    suite points each test's ``KIROCREW_HOME`` under a scratch tree that its own
+    suite points each test's ``AJCREW_HOME`` under a scratch tree that its own
     rootdir guard refuses as a child of the live data home, so a child pytest started
     with this session's environment exits before it collects anything.
     """

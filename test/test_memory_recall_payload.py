@@ -6,17 +6,17 @@ import pytest
 from member_memory_helpers import env as _member_env
 from member_memory_helpers import request
 
-from kiro_crew import embeddings, mcp_shared
-from kiro_crew.dashboard.handlers import memory_member
-from kiro_crew.mcp_tools import learn
-from kiro_crew.memory_recall import (
+from aj_crew import embeddings, mcp_shared
+from aj_crew.dashboard.handlers import memory_member
+from aj_crew.mcp_tools import learn
+from aj_crew.memory_recall import (
     MAX_RECALL_PAYLOAD_BYTES,
     _transport_size,
     bound_recall_payload,
     recall_json,
     v2_operating_point,
 )
-from kiro_crew.validation import build_tool_response
+from aj_crew.validation import build_tool_response
 
 env = _member_env
 

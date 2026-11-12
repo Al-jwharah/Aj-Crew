@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.dashboard.channel_handoff import (
+from aj_crew.dashboard.channel_handoff import (
     HANDOFF_QUEUED,
     HANDOFF_REFUSED,
     HANDOFF_STEERED,
@@ -29,10 +29,10 @@ from kiro_crew.dashboard.channel_handoff import (
     REFUSED_UNSAVED_CLOSE,
     ResumedBusyOutcome,
 )
-from kiro_crew.messaging.session_resume import RoutingDecision
-from kiro_crew.teams.client import TeamsInbound
-from kiro_crew.teams.commands import COMMAND_SPEC, build_help_text, parse_command
-from kiro_crew.teams.transport_dispatch import (
+from aj_crew.messaging.session_resume import RoutingDecision
+from aj_crew.teams.client import TeamsInbound
+from aj_crew.teams.commands import COMMAND_SPEC, build_help_text, parse_command
+from aj_crew.teams.transport_dispatch import (
     _NOT_A_SENDER,
     TeamsDispatcher,
     _origin_kwargs,
@@ -173,7 +173,7 @@ def _cfg() -> SimpleNamespace:
         messaging=SimpleNamespace(
             queue_mode="steer", dm_scope="per_user", idle_reset_minutes=0, daily_reset_hour=-1
         ),
-        agent=SimpleNamespace(default_agent="kirocrew", approval_mode="interactive"),
+        agent=SimpleNamespace(default_agent="ajcrew", approval_mode="interactive"),
         teams=SimpleNamespace(soft_threshold_pct=80, hard_threshold_pct=95),
     )
 
@@ -314,9 +314,9 @@ class TestDrain:
         async def _fake_drive(turn, **kw):
             turns.append(turn.user_text)
 
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", _fake_drive)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", _fake_drive)
         monkeypatch.setattr(
-            "kiro_crew.teams.transport_dispatch.inbound_permitted",
+            "aj_crew.teams.transport_dispatch.inbound_permitted",
             lambda _c, **_kw: _true(),
         )
         sessions = _Sessions(_Provider(), busy=False)
@@ -350,16 +350,16 @@ class TestDrain:
         the wrong source both ways: the entry records its own at enqueue time."""
         from dataclasses import replace
 
-        from kiro_crew.start_priority import StartPriority
+        from aj_crew.start_priority import StartPriority
 
         priorities: list[StartPriority] = []
 
         async def _fake_drive(turn, **kw):
             priorities.append(turn.start_priority)
 
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", _fake_drive)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", _fake_drive)
         monkeypatch.setattr(
-            "kiro_crew.teams.transport_dispatch.inbound_permitted",
+            "aj_crew.teams.transport_dispatch.inbound_permitted",
             lambda _c, **_kw: _true(),
         )
         sessions = _Sessions(_Provider())
@@ -387,9 +387,9 @@ class TestDrain:
             return None
 
         monkeypatch.setattr(TeamsDispatcher, "_drain_queue", _spy)
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", _fake_drive)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", _fake_drive)
         monkeypatch.setattr(
-            "kiro_crew.teams.transport_dispatch.inbound_permitted", lambda _c, **_kw: _true()
+            "aj_crew.teams.transport_dispatch.inbound_permitted", lambda _c, **_kw: _true()
         )
         sessions = _Sessions(_Provider(), busy=False)
         d = _dispatcher(sessions, _Client())
@@ -439,9 +439,9 @@ class TestDrainIdentity:
             turns.append(turn)
 
         monkeypatch.setattr(TeamsDispatcher, "handle_message", _spy)
-        monkeypatch.setattr("kiro_crew.teams.transport_dispatch.drive_turn", _fake_drive)
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.drive_turn", _fake_drive)
         monkeypatch.setattr(
-            "kiro_crew.teams.transport_dispatch.inbound_permitted", lambda _c, **_kw: _true()
+            "aj_crew.teams.transport_dispatch.inbound_permitted", lambda _c, **_kw: _true()
         )
         return envelopes, turns
 
@@ -634,15 +634,15 @@ class TestTeamsSharesTheQueueWithOtherTransports:
     @staticmethod
     def _foreign(text: str = "from telegram") -> tuple[str, str, dict]:
         """A queue entry as the TELEGRAM producer records one, built by that producer."""
-        from kiro_crew.telegram.transport_dispatch import _origin_kwargs as tg_kwargs
-        from kiro_crew.telegram.transport_dispatch import _QueuedOrigin as TgOrigin
+        from aj_crew.telegram.transport_dispatch import _origin_kwargs as tg_kwargs
+        from aj_crew.telegram.transport_dispatch import _QueuedOrigin as TgOrigin
 
         origin = TgOrigin(user_id="7", chat_id="70", thread_id="", chat_type="private", username="")
         return ("t0", text, tg_kwargs(origin))
 
     def test_the_producer_tags_every_entry_with_this_channel(self) -> None:
         """Without the tag no peer can name this channel as the owner to wake."""
-        from kiro_crew.messaging.queue_drain import entry_channel
+        from aj_crew.messaging.queue_drain import entry_channel
 
         recorded = _origin_kwargs(self._from(_EMAIL, "CONV", "act-1"))
 
@@ -686,7 +686,7 @@ class TestTeamsSharesTheQueueWithOtherTransports:
         the replay is built on a bare template and every addressing field comes from the
         entry's own origin.
         """
-        from kiro_crew.messaging import queue_drain
+        from aj_crew.messaging import queue_drain
 
         envelopes, _turns = self._patch(monkeypatch)
         sessions = _Sessions(_Provider())
@@ -713,7 +713,7 @@ class TestTeamsSharesTheQueueWithOtherTransports:
         of its OWN channel's turn -- so without the wake that message waits for its owner
         to finish some unrelated turn, and forever if that user goes quiet there.
         """
-        from kiro_crew.messaging import queue_drain
+        from aj_crew.messaging import queue_drain
 
         self._patch(monkeypatch)
         sessions = _Sessions(_Provider())
@@ -825,7 +825,7 @@ class TestABusyResumedSession:
 
     @staticmethod
     def _hand_off(monkeypatch, outcome, handed: list | None = None) -> None:
-        from kiro_crew.dashboard import channel_handoff
+        from aj_crew.dashboard import channel_handoff
 
         async def _hand(state, session_key, text, *, mode, has_attachments, **recipient):
             if handed is not None:
@@ -958,7 +958,7 @@ class TestABusyResumedSession:
             route.return_value = RoutingDecision()  # a concurrent /unlink landed
             return ResumedBusyOutcome(HANDOFF_REFUSED, reason)
 
-        from kiro_crew.dashboard import channel_handoff
+        from aj_crew.dashboard import channel_handoff
 
         monkeypatch.setattr(channel_handoff, "hand_to_resumed_slot", _hand)
         d._run_turn = AsyncMock()  # type: ignore[method-assign]

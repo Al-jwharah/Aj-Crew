@@ -19,7 +19,7 @@ export default function AppSource({ app, sources = [], unlisted = false }: {
     ? app.origin === 'local' ? i18nT('appStoreSources.local') : i18nT('appStoreSources.unknown')
     : registry
       ? registry.label || app._registry
-      : builtin ? i18nT('pages.appsPage.built_in_kirocrew') : sourceLabel(app)
+      : builtin ? i18nT('pages.appsPage.built_in_ajcrew') : sourceLabel(app)
 
   const review = !unlisted ? registry?.review : undefined
 

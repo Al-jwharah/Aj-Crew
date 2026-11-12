@@ -1,4 +1,4 @@
-"""Registration ratchet for the ``kirocrew-panel`` MCP server.
+"""Registration ratchet for the ``ajcrew-panel`` MCP server.
 
 A default agent pays nothing for this capability: no tool-list entry, no context, no
 backend. Only an agent whose own spec names the set may see it. Modelled on
@@ -9,11 +9,11 @@ from __future__ import annotations
 
 import importlib
 
-from kiro_crew import agent, mcp_cleanup, mcp_discovery, onboarding_import
+from aj_crew import agent, mcp_cleanup, mcp_discovery, onboarding_import
 
-PANEL_SERVER = "kirocrew-panel"
+PANEL_SERVER = "ajcrew-panel"
 PANEL_SUBCOMMAND = "mcp-panel"
-PANEL_MODULE = "kiro_crew.mcp_panel"
+PANEL_MODULE = "aj_crew.mcp_panel"
 PANEL_REF = f"@{PANEL_SERVER}"
 
 
@@ -27,7 +27,7 @@ class TestRegistryParity:
 
     def test_named_in_every_managed_registry(self) -> None:
         assert PANEL_SERVER in agent._MANAGED_MCP_SERVERS
-        assert PANEL_SERVER in mcp_cleanup.KIROCREW_BIN_MCP_SERVERS
+        assert PANEL_SERVER in mcp_cleanup.AJCREW_BIN_MCP_SERVERS
         assert mcp_discovery._MANAGED_SERVER_SUBCOMMANDS.get(PANEL_SERVER) == PANEL_SUBCOMMAND
         assert PANEL_SERVER in mcp_discovery._MANAGED_SERVER_NAMES
         assert mcp_discovery._MANAGED_SERVER_TOOL_MODULES.get(PANEL_SERVER) == PANEL_MODULE
@@ -44,7 +44,7 @@ class TestRegistryParity:
     def test_the_name_alone_is_not_ownership(self) -> None:
         """An opt-in name is never purged from the user's global mcp.json.
 
-        Kiro Crew never writes an opt-in server there, so anything found under
+        Aj Crew never writes an opt-in server there, so anything found under
         that name is necessarily the user's own and must be left alone.
         """
         assert PANEL_SERVER not in mcp_cleanup.STALE_MANAGED_MCP_SERVERS
@@ -74,7 +74,7 @@ class TestTheDeclarationSurfacesBeyondTheRegistries:
         """
         from pathlib import Path
 
-        from kiro_crew.agent import _MANAGED_MCP_SERVERS
+        from aj_crew.agent import _MANAGED_MCP_SERVERS
 
         repo = Path(__file__).resolve().parent.parent
         spec = repo / "docs" / "architecture" / "mcp.md"
@@ -98,7 +98,7 @@ class TestTheDeclarationSurfacesBeyondTheRegistries:
         import re
         from pathlib import Path
 
-        from kiro_crew.agent import _MANAGED_MCP_SERVERS
+        from aj_crew.agent import _MANAGED_MCP_SERVERS
 
         repo = Path(__file__).resolve().parent.parent
         spec = repo / "docs" / "system-specs" / "modules" / "mcp-shareability.md"
@@ -123,7 +123,7 @@ class TestTheDeclarationSurfacesBeyondTheRegistries:
         Every ``MCP_*_SCHEMAS`` in ``validation`` must be listed in
         ``security_posture._SCHEMA_REGISTRY_NAMES``.
         """
-        from kiro_crew import security_posture, validation
+        from aj_crew import security_posture, validation
 
         registries = {n for n in dir(validation) if n.startswith("MCP_") and n.endswith("_SCHEMAS")}
         assert registries, "no MCP_*_SCHEMAS found in validation -- this test would be vacuous"
@@ -141,7 +141,7 @@ class TestTheDeclarationSurfacesBeyondTheRegistries:
         well because THAT test names the module only once it already fails, and
         this file is where a reader looks for what registering a server costs.
         """
-        from kiro_crew import security_posture
+        from aj_crew import security_posture
 
         module = f"{PANEL_MODULE.rsplit('.', 1)[-1]}.py"
         sinks = {entry[1] for entry in security_posture._REDACTION_SINKS}
@@ -156,7 +156,7 @@ class TestTheDeclarationSurfacesBeyondTheRegistries:
         deliberately different buckets, and collapsing them would lose the
         distinction between relaying content and scrubbing it.
         """
-        from kiro_crew import security_posture
+        from aj_crew import security_posture
 
         sinks = {entry[1] for entry in security_posture._REDACTION_SINKS}
         assert "agent_panel.py" in sinks
@@ -167,7 +167,7 @@ class TestTheDeclarationSurfacesBeyondTheRegistries:
         The tool gate stops only file tools; a spawned shell bypasses it unless the OS
         sandbox also fences the path. Either tier (read-plus-write or write-only) counts.
         """
-        from kiro_crew import agent_panel, sandbox, security
+        from aj_crew import agent_panel, sandbox, security
 
         placed = (
             set(sandbox._CREW_HIDDEN_LEAVES)
@@ -199,7 +199,7 @@ class TestTheDeclarationSurfacesBeyondTheRegistries:
         which is the failure this asserts against rather than merely detecting a
         blank.
         """
-        from kiro_crew import agent_panel, sandbox
+        from aj_crew import agent_panel, sandbox
 
         assert agent_panel.TEMPLATES_DIRNAME not in sandbox._CREW_SANDBOX_VISIBLE_LEAVES
 
@@ -226,7 +226,7 @@ class TestTheDefaultAgentIsNotGrantedTheSet:
         """
         import json
 
-        from kiro_crew.config.loader import config_package_dir
+        from aj_crew.config.loader import config_package_dir
 
         defaults = json.loads((config_package_dir() / "defaults.json").read_text(encoding="utf-8"))
         agent_defaults = defaults.get("agent", {})
@@ -303,7 +303,7 @@ class TestWhatThisSetGrants:
 
     def test_every_tool_has_a_registered_schema(self) -> None:
         """A tool absent from its server's registry has its args passed through raw."""
-        from kiro_crew.validation import MCP_PANEL_SCHEMAS
+        from aj_crew.validation import MCP_PANEL_SCHEMAS
 
         mcp_panel = importlib.import_module(PANEL_MODULE)
         assert {t["name"] for t in mcp_panel._tool_definitions()} == set(MCP_PANEL_SCHEMAS)
@@ -331,9 +331,9 @@ class TestCallerIdentity:
 
     def test_the_cli_can_launch_it(self) -> None:
         """The spec's command is only useful if the CLI actually dispatches it."""
-        from kiro_crew import cli
+        from aj_crew import cli
 
-        source = importlib.import_module("kiro_crew.cli").__file__
+        source = importlib.import_module("aj_crew.cli").__file__
         assert source is not None
         text = open(source, encoding="utf-8").read()
         assert f'sub.add_parser("{PANEL_SUBCOMMAND}")' in text

@@ -17,14 +17,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.handlers import messaging as mod
-from kiro_crew.discord.transport import DISCORD_CAPABILITIES
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.messaging.renderer import render_options_as_text
-from kiro_crew.teams.transport import TEAMS_CAPABILITIES
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
-from kiro_crew.webex.transport import WEBEX_CAPABILITIES
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.handlers import messaging as mod
+from aj_crew.discord.transport import DISCORD_CAPABILITIES
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.messaging.renderer import render_options_as_text
+from aj_crew.teams.transport import TEAMS_CAPABILITIES
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
+from aj_crew.webex.transport import WEBEX_CAPABILITIES
 
 _TEXT = "Daily digest is ready.\n\n[OPTIONS: Show it | Skip today]"
 
@@ -65,7 +65,7 @@ def _assert_numbered(sent: list[str]) -> None:
 
 @pytest.fixture
 def _quiet_sel():
-    with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+    with patch("aj_crew.sel.sel", return_value=MagicMock()):
         yield
 
 
@@ -122,10 +122,10 @@ async def test_cross_surface_reply_mirror_numbers_the_choices(channel, caps):
     with (
         patch.object(chat_runner, "mirror_is_paused", return_value=False),
         patch(
-            "kiro_crew.dashboard.session_control._read_mirror_binding",
+            "aj_crew.dashboard.session_control._read_mirror_binding",
             return_value=(link, None),
         ),
-        patch("kiro_crew.dashboard.session_control.publication_withheld", return_value=False),
+        patch("aj_crew.dashboard.session_control.publication_withheld", return_value=False),
         patch.object(chat_runner, "_resolve_channel_target", return_value=(link, transport)),
     ):
         await chat_runner._deliver_cross_surface_reply(state, "dashboard:x", _TEXT)

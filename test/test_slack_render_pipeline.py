@@ -32,10 +32,10 @@ import tokenize
 import pytest
 from source_corpus import parsed_candidates
 
-from kiro_crew.messaging.display_safety import slack_mrkdwn_reading
-from kiro_crew.security import redact_credentials
-from kiro_crew.slack import format as slack_format
-from kiro_crew.slack.format import (
+from aj_crew.messaging.display_safety import slack_mrkdwn_reading
+from aj_crew.security import redact_credentials
+from aj_crew.slack import format as slack_format
+from aj_crew.slack.format import (
     CONTINUATION,
     SLACK_MAX_TEXT,
     SLACK_MSG_LIMIT,
@@ -48,7 +48,7 @@ from kiro_crew.slack.format import (
 
 # The conversion primitive nobody outside format.py may call.
 _BANNED_FUNC = "to_slack_mrkdwn"
-_OWNER_MODULE = "kiro_crew/slack/format.py"
+_OWNER_MODULE = "aj_crew/slack/format.py"
 
 # Trailing-comment marker that suppresses a single flagged call.
 _SUPPRESS = "render-ok"
@@ -72,13 +72,13 @@ def _fake_redactor(text: str) -> str:
 
 
 def _src_root() -> pathlib.Path:
-    """Locate the kiro_crew source tree (import-first, repo-path fallback)."""
+    """Locate the aj_crew source tree (import-first, repo-path fallback)."""
     try:
-        import kiro_crew  # noqa: PLC0415
+        import aj_crew  # noqa: PLC0415
 
-        return pathlib.Path(kiro_crew.__file__).resolve().parent
+        return pathlib.Path(aj_crew.__file__).resolve().parent
     except Exception:
-        return pathlib.Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+        return pathlib.Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 
 def _aliases(tree: ast.Module) -> tuple[set[str], set[str]]:
@@ -150,7 +150,7 @@ def find_violations(source: str, path: str = "<source>") -> list[tuple[str, int,
 
 
 def collect_repo_violations() -> list[tuple[str, int, str]]:
-    """Scan every ``kiro_crew/**/*.py`` except the owning module."""
+    """Scan every ``aj_crew/**/*.py`` except the owning module."""
     base = _src_root().parent
     out: list[tuple[str, int, str]] = []
     # A direct call to to_slack_mrkdwn -- bare-imported or reached as
@@ -186,7 +186,7 @@ def test_no_module_converts_slack_markdown_directly() -> None:
             f"  {path}:{lineno}  {name}(...)" for path, lineno, name in violations
         )
         raise AssertionError(
-            "to_slack_mrkdwn called outside kiro_crew/slack/format.py.\n\n"
+            "to_slack_mrkdwn called outside aj_crew/slack/format.py.\n\n"
             "Neither redact-then-convert nor convert-then-redact is safe on its "
             "own (the ANSI strip reassembles split credentials; the 39,000-char "
             "self-truncation cuts them in half). Use render_for_slack() for a "
@@ -205,7 +205,7 @@ def test_no_module_converts_slack_markdown_directly() -> None:
     [
         pytest.param(
             (
-                "from kiro_crew.slack.format import to_slack_mrkdwn as tsm\n"
+                "from aj_crew.slack.format import to_slack_mrkdwn as tsm\n"
                 "def f(t):\n"
                 "    return tsm(t)\n"
             ),
@@ -213,7 +213,7 @@ def test_no_module_converts_slack_markdown_directly() -> None:
         ),
         pytest.param(
             (
-                "import kiro_crew.slack.format as fmt\n"
+                "import aj_crew.slack.format as fmt\n"
                 "def f(t):\n"
                 "    return fmt.to_slack_mrkdwn(t)\n"
             ),
@@ -221,7 +221,7 @@ def test_no_module_converts_slack_markdown_directly() -> None:
         ),
         pytest.param(
             (
-                "from kiro_crew.slack.format import to_slack_mrkdwn\n"
+                "from aj_crew.slack.format import to_slack_mrkdwn\n"
                 "def f():\n"
                 '    return to_slack_mrkdwn("render-ok")\n'
             ),
@@ -243,7 +243,7 @@ def test_detector_flags_the_call(src: str) -> None:
         ),
         pytest.param(
             (
-                "from kiro_crew.slack.format import render_for_slack\n"
+                "from aj_crew.slack.format import render_for_slack\n"
                 "def f(t):\n"
                 "    return render_for_slack(t)\n"
             ),
@@ -251,7 +251,7 @@ def test_detector_flags_the_call(src: str) -> None:
         ),
         pytest.param(
             (
-                "from kiro_crew.slack.format import to_slack_mrkdwn\n"
+                "from aj_crew.slack.format import to_slack_mrkdwn\n"
                 "def f(t):\n"
                 "    return to_slack_mrkdwn(t)  # render-ok: no egress, formats a local preview\n"
             ),
@@ -497,7 +497,7 @@ class TestConvertedSlackDisplayRedaction:
     @staticmethod
     def _narrow_generic_screen(monkeypatch: pytest.MonkeyPatch) -> None:
         """Leave the historical generic readings so Slack defenses stay observable."""
-        from kiro_crew.messaging import display_safety, split
+        from aj_crew.messaging import display_safety, split
 
         further_readings = (display_safety._plain_reading,)
         monkeypatch.setattr(display_safety, "FURTHER_READINGS", further_readings)
@@ -981,7 +981,7 @@ class TestOptionsChoicesAreRedacted:
         credential into a prefix the regex does not match, so redaction has to
         precede the slice -- the same ordering hazard as the conversion ceiling.
         """
-        from kiro_crew.slack.format import OPTIONS_VALUE_LIMIT
+        from aj_crew.slack.format import OPTIONS_VALUE_LIMIT
 
         pad = "p" * (OPTIONS_VALUE_LIMIT - 10)
         blocks = build_options_blocks([pad + _SECRET], redactor=_fake_redactor)
@@ -1014,7 +1014,7 @@ def test_default_redactor_is_the_platform_shim() -> None:
     An injectable redactor is only safe if the DEFAULT is the canonical one --
     otherwise a caller that omits it silently gets no redaction at all.
     """
-    import kiro_crew.slack.format as fmt
+    import aj_crew.slack.format as fmt
 
     src = pathlib.Path(fmt.__file__).read_text(encoding="utf-8")
     assert src.count("redact_via_context") >= 2, (
@@ -1156,7 +1156,7 @@ class TestEmphasisDelimiterRedaction:
         A negated class that admits its own delimiter makes ``[[[[[[...`` quadratic
         (CodeQL ``py/polynomial-redos``). The patterns live in ``messaging.display_safety``.
         """
-        from kiro_crew.messaging import display_safety as fmt
+        from aj_crew.messaging import display_safety as fmt
 
         classes = re.findall(r"\[\^((?:\\.|[^\]\\])*)\]", getattr(fmt, pattern_name).pattern)
         assert len(classes) == len(required), (

@@ -1,6 +1,6 @@
 """An approved launch that pins the gateway's own interpreter survives an upgrade.
 
-``apps/bridges_mcp.py`` rewrites a manifest's bare ``python3`` (and the ``kirocrew``
+``apps/bridges_mcp.py`` rewrites a manifest's bare ``python3`` (and the ``ajcrew``
 host CLI) to ``sys.executable``, inserts the ``deps_boot`` shim by absolute
 path, and writes the package's ``site-packages`` into the declared
 ``PYTHONPATH``. All three live inside the install, which the desktop and CLI
@@ -27,14 +27,14 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.mcp_gateway import hashing, launch_approval
-from kiro_crew.mcp_gateway.hashing import hash_command, launch_token_bytes
+from aj_crew.mcp_gateway import hashing, launch_approval
+from aj_crew.mcp_gateway.hashing import hash_command, launch_token_bytes
 
 
 def _pin_release(monkeypatch: pytest.MonkeyPatch, prefix: Path) -> dict[str, str]:
     """Point the alias inputs at a throwaway release tree; return its spellings."""
     site = prefix / "lib" / "python3.12" / "site-packages"
-    pkg = site / "kiro_crew"
+    pkg = site / "aj_crew"
     interpreter = prefix / "bin" / "python3.12"
     monkeypatch.setattr(hashing.sys, "executable", str(interpreter))
     monkeypatch.setattr(hashing, "_package_dir", lambda: str(pkg))
@@ -68,9 +68,9 @@ def test_interpreter_hash_is_stable_across_releases(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     args = ["-s", str(tmp_path / "apps" / "demo" / "server.py")]
-    old = _pin_release(monkeypatch, tmp_path / "kirocrew" / "0.8.0.2" / "payload")
+    old = _pin_release(monkeypatch, tmp_path / "ajcrew" / "0.8.0.2" / "payload")
     before = hash_command(old["interpreter"], args)
-    new = _pin_release(monkeypatch, tmp_path / "kirocrew" / "0.8.0.3" / "payload")
+    new = _pin_release(monkeypatch, tmp_path / "ajcrew" / "0.8.0.3" / "payload")
     after = hash_command(new["interpreter"], args)
 
     assert before == after
@@ -108,14 +108,14 @@ def test_only_the_three_exact_spellings_fold(
         (rel["site"], hashing._ALIAS_SITE_PACKAGES),
     )
     for token, role in folded:
-        assert launch_token_bytes(token, role).startswith(b"\xffkirocrew-install:")
+        assert launch_token_bytes(token, role).startswith(b"\xffajcrew-install:")
     literal = (
         str(Path(rel["prefix"]) / "bin" / "python3"),  # a sibling under the prefix
         rel["interpreter"].upper(),  # a case variant of the interpreter
         os.sep.join((rel["prefix"], "..", "server")),  # traversal through the prefix
         rel["prefix"],  # the prefix itself
         rel["site"] + os.sep,  # a trailing separator
-        str(Path(rel["site"]) / "kiro_crew" / "apps" / "other.py"),  # another package file
+        str(Path(rel["site"]) / "aj_crew" / "apps" / "other.py"),  # another package file
     )
     for token in literal:
         for role in (
@@ -182,8 +182,8 @@ def test_a_stub_launched_by_its_short_name_hashes_the_gateways_launch_alike(
     the token -- and the two processes reach one digest.
     """
     real_long_path = hashing._windows_long_path
-    long_prefix = tmp_path / "Program Files" / "kirocrew" / "0.8.0.2" / "payload"
-    short_prefix = tmp_path / "PROGRA~1" / "kirocrew" / "0.8.0.2" / "payload"
+    long_prefix = tmp_path / "Program Files" / "ajcrew" / "0.8.0.2" / "payload"
+    short_prefix = tmp_path / "PROGRA~1" / "ajcrew" / "0.8.0.2" / "payload"
     # The gateway: long spellings, hashes the launch it writes.
     gw = _pin_release(monkeypatch, long_prefix)
     launch_args = [gw["deps_boot"], str(tmp_path / "apps" / "demo" / ".deps"), "server.py"]
@@ -244,10 +244,10 @@ def test_no_literal_argv_can_spell_the_alias_encoding(
     rel = _pin_release(monkeypatch, tmp_path / "prefix")
     approved = hash_command(rel["interpreter"], ["-m", "srv"])
     forgeries = (
-        ("\xffkirocrew-install:interpreter\xff", ["-m", "srv"]),
-        ("", ["kirocrew-install:interpreter", "-m", "srv"]),
-        ("kirocrew-install:interpreter", ["-m", "srv"]),
-        ("\x00kirocrew-install:interpreter\x00", ["-m", "srv"]),
+        ("\xffajcrew-install:interpreter\xff", ["-m", "srv"]),
+        ("", ["ajcrew-install:interpreter", "-m", "srv"]),
+        ("ajcrew-install:interpreter", ["-m", "srv"]),
+        ("\x00ajcrew-install:interpreter\x00", ["-m", "srv"]),
     )
     for command, args in forgeries:
         assert hash_command(command, args) != approved
@@ -265,11 +265,11 @@ def test_declared_env_site_packages_segment_folds(
         rel = _pin_release(monkeypatch, tmp_path / version)
         env = {
             "PYTHONPATH": rel["site"] + os.pathsep + stable,
-            "KIROCREW_HOME": str(tmp_path / "h"),
+            "AJCREW_HOME": str(tmp_path / "h"),
         }
         digests.append(hashing.hash_declared_env(env))
     assert digests[0] == digests[1]
-    other = {"PYTHONPATH": str(tmp_path / "elsewhere"), "KIROCREW_HOME": str(tmp_path / "h")}
+    other = {"PYTHONPATH": str(tmp_path / "elsewhere"), "AJCREW_HOME": str(tmp_path / "h")}
     assert hashing.hash_declared_env(other) != digests[0]
 
 
@@ -281,7 +281,7 @@ def test_approval_recorded_under_one_release_admits_the_next(
     env_hash = launch_approval.env_fingerprint({})
     store = tmp_path / "approvals.json"
 
-    old = _pin_release(monkeypatch, tmp_path / "kirocrew" / "0.8.0.2" / "payload")
+    old = _pin_release(monkeypatch, tmp_path / "ajcrew" / "0.8.0.2" / "payload")
     launch_approval.approve(
         {
             "demo": [
@@ -296,7 +296,7 @@ def test_approval_recorded_under_one_release_admits_the_next(
         path=store,
     )
 
-    new = _pin_release(monkeypatch, tmp_path / "kirocrew" / "0.8.0.3" / "payload")
+    new = _pin_release(monkeypatch, tmp_path / "ajcrew" / "0.8.0.3" / "payload")
     approvals = launch_approval.load_approvals(store)
     assert approvals.admits_command("DEMO", hash_command(new["interpreter"], args))
     assert approvals.admits_launch("DEMO", hash_command(new["interpreter"], args), env_hash)
@@ -309,27 +309,27 @@ def test_approval_recorded_under_one_release_admits_the_next(
 def test_host_cli_pin_is_admitted_across_an_upgrade(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """``command: kirocrew`` pinned by ``_pin_host_cli_command`` under 0.8.0.2 admits under 0.8.0.3.
+    """``command: ajcrew`` pinned by ``_pin_host_cli_command`` under 0.8.0.2 admits under 0.8.0.3.
 
     The pin writes ``sys.executable`` into the command AND the versioned
     ``site-packages`` into the declared ``PYTHONPATH``; the approval fingerprint
     covers both halves, so both must fold.
     """
-    from kiro_crew.apps import bridges
+    from aj_crew.apps import bridges
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     store = tmp_path / "approvals.json"
     fingerprints: list[str] = []
     launches: list[tuple[str, list[str], dict[str, str], str]] = []
     for version in ("0.8.0.2", "0.8.0.3"):
-        rel = _pin_release(monkeypatch, tmp_path / "kirocrew" / version / "payload")
+        rel = _pin_release(monkeypatch, tmp_path / "ajcrew" / version / "payload")
         monkeypatch.setattr(sys, "executable", rel["interpreter"])
         monkeypatch.setattr(
             bridges,
-            "kiro_crew_file",
-            lambda r=rel: str(Path(r["site"]) / "kiro_crew" / "__init__.py"),
+            "aj_crew_file",
+            lambda r=rel: str(Path(r["site"]) / "aj_crew" / "__init__.py"),
         )
-        cfg = bridges._pin_host_cli_command("demo", {"command": "kirocrew", "args": ["mcp-core"]})
+        cfg = bridges._pin_host_cli_command("demo", {"command": "ajcrew", "args": ["mcp-core"]})
         assert cfg["command"] == rel["interpreter"]
         assert cfg["env"]["PYTHONPATH"] == rel["site"]
         # The derived-env hash is taken when the operator approves, i.e. under
@@ -373,12 +373,12 @@ def test_the_rewriters_own_spellings_are_the_alias_keys(monkeypatch: pytest.Monk
     ``sys.executable`` and package location -- so the emitted spellings must
     be those strings, on this host, with nothing monkeypatched.
     """
-    from kiro_crew.apps import bridges
+    from aj_crew.apps import bridges
 
     aliases = hashing.install_aliases()
     assert aliases[sys.executable] == hashing._ALIAS_INTERPRETER
     assert aliases[str(bridges._DEPS_BOOT_PATH)] == hashing._ALIAS_DEPS_BOOT
-    cfg = bridges._pin_host_cli_command("demo", {"command": "kirocrew", "args": ["mcp-core"]})
+    cfg = bridges._pin_host_cli_command("demo", {"command": "ajcrew", "args": ["mcp-core"]})
     assert aliases[cfg["command"]] == hashing._ALIAS_INTERPRETER
     assert aliases[cfg["env"]["PYTHONPATH"]] == hashing._ALIAS_SITE_PACKAGES
     assert hashing.install_resident(cfg["command"])
@@ -395,22 +395,22 @@ def test_install_resident_is_the_interpreter_alias_only(
     assert not hashing.install_resident("npx")
 
 
-def test_runs_install_code_needs_the_interpreter_and_kiro_crew_argv(
+def test_runs_install_code_needs_the_interpreter_and_aj_crew_argv(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     rel = _pin_release(monkeypatch, tmp_path / "prefix")
     py = rel["interpreter"]
-    assert hashing.runs_install_code(py, ["-P", "-m", "kiro_crew", "app", "mcp", "demo"])
-    assert hashing.runs_install_code(py, ["-s", "-m", "kiro_crew.mcp_core"])
-    assert hashing.runs_install_code(py, ["-mkiro_crew.apps.x"])
+    assert hashing.runs_install_code(py, ["-P", "-m", "aj_crew", "app", "mcp", "demo"])
+    assert hashing.runs_install_code(py, ["-s", "-m", "aj_crew.mcp_core"])
+    assert hashing.runs_install_code(py, ["-maj_crew.apps.x"])
     assert hashing.runs_install_code(py, [rel["deps_boot"], str(tmp_path / ".deps"), "server.py"])
     # A third-party server that merely runs ON the interpreter is not install code.
     assert not hashing.runs_install_code(py, [str(tmp_path / "apps" / "demo" / "server.py")])
     assert not hashing.runs_install_code(py, ["-m", "some_other_module"])
-    assert not hashing.runs_install_code(py, ["-m", "kiro_crewish"])
-    assert not hashing.runs_install_code(py, ["--mode", "kiro_crew"])
-    # Nor is Kiro Crew code under a foreign interpreter.
-    assert not hashing.runs_install_code(str(tmp_path / "x" / "python3"), ["-m", "kiro_crew"])
+    assert not hashing.runs_install_code(py, ["-m", "aj_crewish"])
+    assert not hashing.runs_install_code(py, ["--mode", "aj_crew"])
+    # Nor is Aj Crew code under a foreign interpreter.
+    assert not hashing.runs_install_code(str(tmp_path / "x" / "python3"), ["-m", "aj_crew"])
 
 
 def test_binary_version_carries_the_code_fingerprint_for_the_interpreter_alias(
@@ -420,11 +420,11 @@ def test_binary_version_carries_the_code_fingerprint_for_the_interpreter_alias(
 
     Both identity consumers -- the pool's registration token and the
     shareability cache's key -- must fold it, or a host-CLI pin
-    (``sys.executable -P -m kiro_crew app mcp <name>``, no file argv) would keep
+    (``sys.executable -P -m aj_crew app mcp <name>``, no file argv) would keep
     its pre-upgrade row across a release that replaced the server's code.
     """
-    import kiro_crew.code_fingerprint as cf
-    from kiro_crew.mcp_gateway import evaluate, stub
+    import aj_crew.code_fingerprint as cf
+    from aj_crew.mcp_gateway import evaluate, stub
 
     rel = _pin_release(monkeypatch, tmp_path / "prefix")
     interpreter = Path(rel["interpreter"])
@@ -433,7 +433,7 @@ def test_binary_version_carries_the_code_fingerprint_for_the_interpreter_alias(
     outside = tmp_path / "elsewhere" / "python3"
     outside.parent.mkdir(parents=True)
     outside.write_bytes(b"#!/bin/sh\nexit 0\n")
-    args = ["-P", "-m", "kiro_crew", "app", "mcp", "demo"]
+    args = ["-P", "-m", "aj_crew", "app", "mcp", "demo"]
 
     monkeypatch.setattr(cf, "code_fingerprint", lambda: "release-A")
     monkeypatch.setattr(evaluate, "code_fingerprint", lambda: "release-A")
@@ -455,7 +455,7 @@ def test_binary_version_carries_the_code_fingerprint_for_the_interpreter_alias(
     assert "+" not in stub.pool_binary_version(str(outside), ["--stdio"])
     assert "code:" not in evaluate._launch_fingerprint(str(outside), ["--stdio"])
     # A third-party app server that merely runs ON the install's interpreter
-    # (``python3 server.py`` rewritten) is not re-keyed by a Kiro Crew release:
+    # (``python3 server.py`` rewritten) is not re-keyed by an Aj Crew release:
     # its code is the file in argv, which the identity fingerprints itself.
     server = tmp_path / "apps" / "demo" / "server.py"
     server.parent.mkdir(parents=True)

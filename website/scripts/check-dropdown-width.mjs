@@ -23,7 +23,7 @@ const TOLERANCE_PX = 1.5
 const CRONS = {
   jobs: [{
     id: 'job-1', name: 'Nightly digest', message: 'summarise the day',
-    schedule: 'every 24 hours', enabled: true, agent: 'kirocrew',
+    schedule: 'every 24 hours', enabled: true, agent: 'ajcrew',
     timezone: 'UTC', cron_expr: '0 2 * * *',
     next_run: Math.floor(Date.now() / 1000) + 3600,
   }],

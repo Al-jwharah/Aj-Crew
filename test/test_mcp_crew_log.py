@@ -1,4 +1,4 @@
-"""The ``kirocrew-crew-log`` MCP server: its tool set, its caps, and its refusals.
+"""The ``ajcrew-crew-log`` MCP server: its tool set, its caps, and its refusals.
 
 Four things are pinned here that no other suite can see:
 
@@ -25,7 +25,7 @@ from unittest.mock import patch
 import mcp_tool_set_checks
 import pytest
 
-from kiro_crew import mcp_crew_log as server
+from aj_crew import mcp_crew_log as server
 
 UNIT = "s-abc123"
 CALLER = "dashboard:chat-owner"
@@ -91,13 +91,13 @@ class TestTheToolSetIsRatcheted(mcp_tool_set_checks.TheDeclaredSetMatchesWhatIsA
             assert not any(verb in name for verb in forbidden), name
 
     def test_every_tool_has_a_schema_so_args_are_never_passed_through_raw(self) -> None:
-        from kiro_crew.validation import MCP_CREW_LOG_SCHEMAS
+        from aj_crew.validation import MCP_CREW_LOG_SCHEMAS
 
         assert set(MCP_CREW_LOG_SCHEMAS) == set(server.TOOLS)
 
     def test_the_projection_names_match_the_folds_the_gateway_serves(self) -> None:
         """The description lists folds without importing storage; drift would lie."""
-        from kiro_crew.crew_log.projection import PROJECTION_NAMES
+        from aj_crew.crew_log.projection import PROJECTION_NAMES
 
         assert server.PROJECTION_NAMES == PROJECTION_NAMES
 
@@ -109,21 +109,21 @@ class TestTheToolSetIsRatcheted(mcp_tool_set_checks.TheDeclaredSetMatchesWhatIsA
         two lists live in different modules because ``mcp_crew_log`` imports ``validation``,
         which is exactly the shape that drifts -- so it is pinned here.
         """
-        from kiro_crew.validation import CREW_LOG_PROJECTION_SCHEMA
+        from aj_crew.validation import CREW_LOG_PROJECTION_SCHEMA
 
         name_field = next(spec for spec in CREW_LOG_PROJECTION_SCHEMA.fields if spec.name == "name")
         assert name_field.allowed == frozenset(server.PROJECTION_NAMES)
 
     def test_the_caller_name_matches_the_one_the_endpoint_recognizes(self) -> None:
-        from kiro_crew.dashboard.handlers.crew_log import CREW_LOG_MCP_CALLER
-        from kiro_crew.dashboard.token_auth import KNOWN_INTERNAL_CALLERS
+        from aj_crew.dashboard.handlers.crew_log import CREW_LOG_MCP_CALLER
+        from aj_crew.dashboard.token_auth import KNOWN_INTERNAL_CALLERS
 
         assert server.SERVER_NAME == CREW_LOG_MCP_CALLER
         assert server.SERVER_NAME in KNOWN_INTERNAL_CALLERS
 
     def test_tools_are_advertised_while_the_flag_is_off(self, monkeypatch) -> None:
         """An agent must learn the flag state from a refusal, not a missing tool."""
-        monkeypatch.setenv("KIROCREW_CREW_LOG", "0")
+        monkeypatch.setenv("AJCREW_CREW_LOG", "0")
         assert len(server._list_tools()) == 3
 
 
@@ -226,7 +226,7 @@ class TestCaps:
         cap and page, not a read bounded only by how big the file happens to be.
         """
         assert server.MAX_READ_LIMIT == 200
-        from kiro_crew.validation import MCP_CREW_LOG_SCHEMAS
+        from aj_crew.validation import MCP_CREW_LOG_SCHEMAS
 
         spec = {f.name: f for f in MCP_CREW_LOG_SCHEMAS["crew_log_read"].fields}
         assert spec["limit"].max_val == 200
@@ -439,18 +439,18 @@ class TestManagedRegistration:
     """A managed server is named in several registries; a half-registered one breaks."""
 
     def test_named_in_every_managed_registry(self) -> None:
-        from kiro_crew import agent, mcp_cleanup, mcp_discovery, onboarding_import
+        from aj_crew import agent, mcp_cleanup, mcp_discovery, onboarding_import
 
         name = server.SERVER_NAME
         assert name in agent._MANAGED_MCP_SERVERS
-        assert name in mcp_cleanup.KIROCREW_BIN_MCP_SERVERS
+        assert name in mcp_cleanup.AJCREW_BIN_MCP_SERVERS
         assert mcp_discovery._MANAGED_SERVER_SUBCOMMANDS.get(name) == "mcp-crew-log"
         assert name in mcp_discovery._MANAGED_SERVER_NAMES
-        assert mcp_discovery._MANAGED_SERVER_TOOL_MODULES.get(name) == "kiro_crew.mcp_crew_log"
+        assert mcp_discovery._MANAGED_SERVER_TOOL_MODULES.get(name) == "aj_crew.mcp_crew_log"
         assert name in onboarding_import._managed_mcp_names()
 
     def test_it_is_an_assignable_set_and_carries_no_auto_approve(self) -> None:
-        from kiro_crew import agent, mcp_cleanup
+        from aj_crew import agent, mcp_cleanup
 
         spec = agent._MANAGED_MCP_SERVERS[server.SERVER_NAME]
         assert spec.get("opt_in") is True
@@ -459,14 +459,14 @@ class TestManagedRegistration:
 
     def test_it_is_registered_as_a_reflexive_tool_module(self) -> None:
         """It calls the strict gate for ``self``; the registry is how that is policed."""
-        from kiro_crew.mcp_core import REFLEXIVE_TOOL_MODULES
+        from aj_crew.mcp_core import REFLEXIVE_TOOL_MODULES
 
         assert "mcp_crew_log.py" in REFLEXIVE_TOOL_MODULES
 
     def test_it_advertises_caller_identity(self) -> None:
         """Without the advertisement gatewayd injects no caller block on a pooled
         backend, and every scoped read fails closed."""
-        from kiro_crew import mcp_discovery
+        from aj_crew import mcp_discovery
 
         assert server.ADVERTISE_CALLER_IDENTITY is True
         assert server.SERVER_NAME in mcp_discovery._MANAGED_SERVERS_CALLER_AWARE

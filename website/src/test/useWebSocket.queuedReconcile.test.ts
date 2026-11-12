@@ -61,7 +61,7 @@ const BG = 'chat-background'
 
 const slotsFrame = (rows: Record<string, unknown>[]) => ({
   type: 'slots',
-  data: rows.map(r => ({ title: 'S', agent: 'kirocrew', ...r })),
+  data: rows.map(r => ({ title: 'S', agent: 'ajcrew', ...r })),
 })
 
 const queuedOf = (slot: string) => globalStore.getState().chat.subagentQueued?.[slot]

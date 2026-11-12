@@ -12,13 +12,13 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import skill_trust
-from kiro_crew import skills as skills_mod
+from aj_crew import skill_trust
+from aj_crew import skills as skills_mod
 
 
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     skill_trust.reset_cache_for_tests()
     yield
     skill_trust.reset_cache_for_tests()

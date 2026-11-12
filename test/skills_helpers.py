@@ -13,9 +13,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.wait import wait_until
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.wait import wait_until
 
 
 @pytest.fixture(autouse=True)
@@ -34,16 +34,16 @@ def _close_skills_loaders(close_skills_loaders):
 def _isolate_extra_paths(_floor_monkeypatch, tmp_path_factory):
     """SkillsLoader.__init__ reads global config for ``skills.extra_paths`` and
     edition-contributed skill roots via the ``extra_skills()`` seam; isolate both
-    so a developer's local ~/.kirocrew extra_paths / composed companion roots
+    so a developer's local ~/.ajcrew extra_paths / composed companion roots
     don't bleed into these hermetic loader tests. Tests that need extra_paths
     pass ``config=``; tests that need edition-root resolution monkeypatch
     ``DefaultMcpToolingProvider.extra_skills``."""
-    from kiro_crew.platform.defaults import DefaultMcpToolingProvider
+    from aj_crew.platform.defaults import DefaultMcpToolingProvider
 
     _floor_monkeypatch.setattr(
-        KiroCrewConfig,
+        AjCrewConfig,
         "load",
-        classmethod(lambda cls: KiroCrewConfig(skills=SkillsConfig(extra_paths=[]))),
+        classmethod(lambda cls: AjCrewConfig(skills=SkillsConfig(extra_paths=[]))),
     )
     _floor_monkeypatch.setattr(DefaultMcpToolingProvider, "extra_skills", lambda self: [])
 

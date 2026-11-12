@@ -18,7 +18,7 @@ from link_unfurl_helpers import _isolate  # noqa: F401
 from link_unfurl_helpers import _public
 from named_cases_helpers import named_cases
 
-from kiro_crew import link_unfurl as lu
+from aj_crew import link_unfurl as lu
 
 # --- vet: scheme / host / port ---------------------------------------------
 

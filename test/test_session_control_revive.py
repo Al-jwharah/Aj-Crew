@@ -29,8 +29,8 @@ from session_control_revive_helpers import (  # noqa: F401 -- the autouse fixtur
     _slot,
 )
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard import session_control as sc
+from aj_crew.testing.wait import async_wait_until
 
 # ── Happy path ───────────────────────────────────────────────────────────────
 
@@ -167,7 +167,7 @@ def test_a_revived_worker_takes_its_creators_posture_only_from_its_creator(
 def test_a_revived_crewmate_worker_is_left_to_its_profile(tmp_path, monkeypatch):
     """A crewmate's own worker takes its Profile Permissions at its first turn, never
     the conductor's Trust: a grant already on the slot would survive that seed."""
-    from kiro_crew.mate_worker import MATE_WORKER_AGENT
+    from aj_crew.mate_worker import MATE_WORKER_AGENT
 
     state = _make_state(tmp_path)
     conductor = _slot(state, "chat-1")
@@ -205,10 +205,10 @@ def test_an_uncorroborated_created_by_claim_is_not_stamped_on_the_revived_slot(
 
     _revive(state, caller, key)
 
-    from kiro_crew.dashboard.session_control_parts.caller_access import (
+    from aj_crew.dashboard.session_control_parts.caller_access import (
         _caller_is_ownership_fenced,
     )
-    from kiro_crew.dashboard.session_control_parts.session_revive import UNVERIFIED_CREATOR
+    from aj_crew.dashboard.session_control_parts.session_revive import UNVERIFIED_CREATOR
 
     revived = state._slots[key]
     assert revived._created_by == UNVERIFIED_CREATOR
@@ -247,7 +247,7 @@ def test_revive_refuses_an_unknown_folder_before_touching_history(tmp_path):
 
 
 def test_revive_may_not_refile_a_session_out_of_a_mate_home(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import mate_folders
+    from aj_crew.dashboard import mate_folders
 
     async def _person(key: str) -> str:
         return ""
@@ -444,8 +444,8 @@ def test_a_send_revive_keeps_the_fence_the_request_was_admitted_under(tmp_path, 
     """``session_send``'s own-worker revive carries the request's admission fence.
     Recomputed from config instead, a conductor whose binding moved mid-request
     reads as an unfenced owner chat and reopens an archive it did not create."""
-    from kiro_crew import mate_worker
-    from kiro_crew.dashboard.session_control_parts import session_revive
+    from aj_crew import mate_worker
+    from aj_crew.dashboard.session_control_parts import session_revive
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -454,7 +454,7 @@ def test_a_send_revive_keeps_the_fence_the_request_was_admitted_under(tmp_path, 
     foreign_key = _archive(state, caller, foreign)
     _lineage(monkeypatch, {foreign_key: "chat-7"})
     conductor = MagicMock(selection_kind="member", template_id=mate_worker.MATE_CONDUCTOR_AGENT)
-    monkeypatch.setattr("kiro_crew.execution_context.read_session_execution", lambda key: conductor)
+    monkeypatch.setattr("aj_crew.execution_context.read_session_execution", lambda key: conductor)
 
     got = asyncio.run(
         session_revive.revive_own_archived_worker(
@@ -530,7 +530,7 @@ def _drift_in_window(monkeypatch, mutate):
 
     Wraps the ``containment`` hook, which sees the built, unpublished slot after the
     transcript read. Also asserts the slot is not resolvable or live while it awaits."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     original = chat_handlers.resume_slot_from_history
     seen: dict = {}
@@ -615,7 +615,7 @@ def test_a_slot_cap_crossed_in_the_window_is_refused_before_publish(tmp_path, mo
 def test_a_cap_crossed_before_the_final_check_is_refused_with_409(tmp_path, monkeypatch, code):
     """The hook passes; an allocation that lands after it is caught by
     ``final_check``, the synchronous last word before the publish."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -824,7 +824,7 @@ def test_revive_raises_every_target_side_code_authorize_target_raises():
 
 
 def test_route_forwards_folder_id_and_fence_to_the_core(monkeypatch):
-    from kiro_crew.dashboard.handlers import session_control as handlers_sc
+    from aj_crew.dashboard.handlers import session_control as handlers_sc
 
     seen: dict = {}
 
@@ -865,7 +865,7 @@ def _none_async():
 def test_route_is_registered_and_strict():
     """Every /api/session-control route must be in the strict-auth list too, or
     the MCP caller's internal secret is ignored and the tool is unreachable."""
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     assert "/api/session-control/revive" in server._STRICT_INTERNAL_API_PATHS
 
@@ -875,9 +875,9 @@ def test_route_is_registered_and_strict():
 
 def _revive_tool(args: dict, routes: dict, caller=None):
     """One ``session_revive`` frame through the dashboard table, in memory."""
-    from kiro_crew.mcp_dashboard import TABLE
-    from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-    from kiro_crew.mcp_tools.table import Caller, ToolContext
+    from aj_crew.mcp_dashboard import TABLE
+    from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+    from aj_crew.mcp_tools.table import Caller, ToolContext
 
     dash = InMemoryDashboardClient(routes)
     ctx = ToolContext(dash, caller or Caller.strict("dashboard:chat-1"))
@@ -897,7 +897,7 @@ def test_mcp_tool_posts_to_the_revive_route_with_the_callers_key():
 
 
 def test_mcp_tool_refuses_a_caller_without_a_strict_key():
-    from kiro_crew.mcp_tools.table import Caller
+    from aj_crew.mcp_tools.table import Caller
 
     out, requests = _revive_tool(
         {"target": "chat-2"},
@@ -1136,7 +1136,7 @@ def test_a_failed_filing_does_not_erase_a_placement_committed_meanwhile(tmp_path
 def test_the_filing_runs_under_the_slot_metadata_txn_lock(tmp_path, monkeypatch):
     """Same lock the folder endpoint serializes its mutate/save/rollback under,
     so a PATCH cannot commit between this call's write and its rollback."""
-    from kiro_crew.dashboard import chat_folders
+    from aj_crew.dashboard import chat_folders
 
     state = _make_state(tmp_path)
     _folder(state, "f1", "Gamma")
@@ -1190,7 +1190,7 @@ def test_a_cancellation_while_waiting_for_the_filing_lock_still_audits_once(tmp_
     the filing waits for a contended ``_slot_meta_txn_lock`` has written nothing
     to roll back but must still leave exactly one allowed SEL record for the
     revive, which the resume core has already committed."""
-    from kiro_crew.dashboard import chat_folders
+    from aj_crew.dashboard import chat_folders
 
     state = _make_state(tmp_path)
     _folder(state, "f1", "Gamma")

@@ -28,8 +28,8 @@ from vector_memory_coverage_helpers import (
     _store,
 )
 
-from kiro_crew import vector_memory as vm
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import vector_memory as vm
+from aj_crew.vector_memory import VectorMemoryStore
 
 
 class TestMigrateV2:
@@ -807,7 +807,7 @@ _VECTOR_B64 = base64.b64encode(struct.pack(f"{_DIM}f", *_VECTOR)).decode("ascii"
 @pytest.fixture
 def _signed_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> VectorMemoryStore:
     """A store with no embedder whose recorded space is the active backend's."""
-    from kiro_crew import embeddings
+    from aj_crew import embeddings
 
     signature = embeddings.embedding_space_signature(_MODEL["model_id"], _DIM)
     monkeypatch.setattr(embeddings, "active_embedding_space_signature", lambda: signature)
@@ -818,7 +818,7 @@ def _signed_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> VectorMemo
 
 
 def _vector_payload(**overrides: object) -> dict:
-    from kiro_crew import embeddings
+    from aj_crew import embeddings
 
     payload: dict = {
         "semantic": [{"key": "pref.editor", "value_json": '"vim"', "embedding": _VECTOR_B64}],
@@ -884,7 +884,7 @@ class TestImportCarriesExportedVectors:
         self, _signed_store: VectorMemoryStore, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A reconcile that lands while the space is judged must not relabel the vector."""
-        from kiro_crew import embeddings
+        from aj_crew import embeddings
 
         signature = _signed_store.recorded_embedding_space()
 
@@ -900,7 +900,7 @@ class TestImportCarriesExportedVectors:
     def test_store_in_another_space_does_not_take_the_vector(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import embeddings
+        from aj_crew import embeddings
 
         signature = embeddings.embedding_space_signature(_MODEL["model_id"], _DIM)
         monkeypatch.setattr(embeddings, "active_embedding_space_signature", lambda: signature)
@@ -921,8 +921,8 @@ class TestImportCarriesExportedVectors:
     def test_export_names_the_model_of_its_vectors(
         self, _signed_store: VectorMemoryStore, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import embeddings
-        from kiro_crew.vector_memory_runtime import bulk_ingest
+        from aj_crew import embeddings
+        from aj_crew.vector_memory_runtime import bulk_ingest
 
         backend = type("Backend", (), {"model_id": _MODEL["model_id"], "dim": _DIM})()
         monkeypatch.setattr(embeddings, "get_shared_embedder", lambda: backend)
@@ -936,8 +936,8 @@ class TestImportCarriesExportedVectors:
         assert bulk_ingest.encode_embedding_blob(None) is None
 
     def test_unrecorded_store_exports_the_bundled_model(self, tmp_path: Path) -> None:
-        from kiro_crew import embeddings
-        from kiro_crew.vector_memory_runtime import bulk_ingest
+        from aj_crew import embeddings
+        from aj_crew.vector_memory_runtime import bulk_ingest
 
         signature, model = bulk_ingest.export_embedding_space(
             _store(tmp_path).recorded_embedding_space()

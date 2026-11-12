@@ -1,4 +1,4 @@
-"""Tests for ``kirocrew desktop metrics``."""
+"""Tests for ``ajcrew desktop metrics``."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_desktop, perf_sampler, platform_compat
+from aj_crew import cli_desktop, perf_sampler, platform_compat
 
 
 def _doc(**over) -> dict:
@@ -53,7 +53,7 @@ class TestGate:
     def test_refuses_without_the_debug_flag(self, monkeypatch, capsys, tmp_path):
         monkeypatch.delenv(perf_sampler.DEBUG_ENV_VAR, raising=False)
         assert cli_desktop.desktop_cmd(_args(tmp_path / "x.json")) == 1
-        assert "KIROCREW_DEBUG" in capsys.readouterr().err
+        assert "AJCREW_DEBUG" in capsys.readouterr().err
 
     def test_an_explicit_falsey_value_is_off(self, monkeypatch, tmp_path):
         monkeypatch.setenv(perf_sampler.DEBUG_ENV_VAR, "0")
@@ -65,7 +65,7 @@ class TestLogDirResolution:
         monkeypatch.setattr(platform_compat, "IS_MACOS", True)
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
         dirs = cli_desktop.desktop_log_dirs({})
-        assert any(d.as_posix().endswith("Library/Logs/KiroCrew") for d in dirs)
+        assert any(d.as_posix().endswith("Library/Logs/AjCrew") for d in dirs)
 
     def test_windows_uses_appdata(self, monkeypatch):
         monkeypatch.setattr(platform_compat, "IS_MACOS", False)
@@ -73,13 +73,13 @@ class TestLogDirResolution:
         # Compared with as_posix so the assertion does not depend on the host
         # separator: str() of a path is backslash-separated on Windows.
         dirs = [d.as_posix() for d in cli_desktop.desktop_log_dirs({"APPDATA": "/roam"})]
-        assert "/roam/kirocrew-desktop/logs" in dirs
+        assert "/roam/ajcrew-desktop/logs" in dirs
 
     def test_linux_honours_xdg_config_home(self, monkeypatch):
         monkeypatch.setattr(platform_compat, "IS_MACOS", False)
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
         dirs = [d.as_posix() for d in cli_desktop.desktop_log_dirs({"XDG_CONFIG_HOME": "/cfg"})]
-        assert "/cfg/kirocrew-desktop/logs" in dirs
+        assert "/cfg/ajcrew-desktop/logs" in dirs
 
     @pytest.mark.parametrize(
         ("is_windows", "env_var"), [(True, "APPDATA"), (False, "XDG_CONFIG_HOME")]
@@ -91,7 +91,7 @@ class TestLogDirResolution:
         names userData after the npm package, so a product-name probe never finds it."""
         monkeypatch.setattr(platform_compat, "IS_MACOS", False)
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", is_windows)
-        logs = tmp_path / "kirocrew-desktop" / "logs"
+        logs = tmp_path / "ajcrew-desktop" / "logs"
         logs.mkdir(parents=True)
         art = logs / cli_desktop.ARTIFACT_NAME
         art.write_text("{}", encoding="utf-8")
@@ -138,7 +138,7 @@ class TestReading:
         monkeypatch.setenv(perf_sampler.DEBUG_ENV_VAR, "1")
         assert cli_desktop.desktop_cmd(_args(tmp_path / "absent.json")) == 3
         err = capsys.readouterr().err
-        assert "KIROCREW_DEBUG" in err, "the usual cause must be named, not just 'not found'"
+        assert "AJCREW_DEBUG" in err, "the usual cause must be named, not just 'not found'"
 
     def test_malformed_json_is_reported_not_raised(self, monkeypatch, capsys, tmp_path):
         monkeypatch.setenv(perf_sampler.DEBUG_ENV_VAR, "1")
@@ -316,8 +316,8 @@ class TestNonNumericValues:
 class TestNightlyProductDirectory:
     """Nightly installs under its own names and so its own log directory.
 
-    packaging/build-desktop.sh passes `-c.productName=KiroCrew Nightly` (the macOS
-    log directory) and `-c.extraMetadata.name=kirocrew-desktop-nightly` (the
+    packaging/build-desktop.sh passes `-c.productName=AjCrew Nightly` (the macOS
+    log directory) and `-c.extraMetadata.name=ajcrew-desktop-nightly` (the
     Windows and Linux one) for nightly stamps, so probing only the release name
     reported "not found" against a nightly app that was recording correctly -- and
     nightly users are the likeliest profilers.
@@ -327,30 +327,30 @@ class TestNightlyProductDirectory:
         monkeypatch.setattr(platform_compat, "IS_MACOS", True)
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
         dirs = [d.as_posix() for d in cli_desktop.desktop_log_dirs({})]
-        assert any(d.endswith("Library/Logs/KiroCrew") for d in dirs)
-        assert any(d.endswith("Library/Logs/KiroCrew Nightly") for d in dirs)
-        assert any(d.endswith("Library/Logs/KiroCrew LTS") for d in dirs)  # brand-ok
+        assert any(d.endswith("Library/Logs/AjCrew") for d in dirs)
+        assert any(d.endswith("Library/Logs/AjCrew Nightly") for d in dirs)
+        assert any(d.endswith("Library/Logs/AjCrew LTS") for d in dirs)  # brand-ok
 
     def test_both_package_directories_are_probed_on_linux(self, monkeypatch):
         monkeypatch.setattr(platform_compat, "IS_MACOS", False)
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
         dirs = [d.as_posix() for d in cli_desktop.desktop_log_dirs({"XDG_CONFIG_HOME": "/cfg"})]
-        assert "/cfg/kirocrew-desktop/logs" in dirs
-        assert "/cfg/kirocrew-desktop-nightly/logs" in dirs
-        assert "/cfg/kirocrew-desktop-lts/logs" in dirs
+        assert "/cfg/ajcrew-desktop/logs" in dirs
+        assert "/cfg/ajcrew-desktop-nightly/logs" in dirs
+        assert "/cfg/ajcrew-desktop-lts/logs" in dirs
 
     def test_both_package_directories_are_probed_on_windows(self, monkeypatch):
         monkeypatch.setattr(platform_compat, "IS_MACOS", False)
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
         dirs = [d.as_posix() for d in cli_desktop.desktop_log_dirs({"APPDATA": "/roam"})]
-        assert "/roam/kirocrew-desktop/logs" in dirs
-        assert "/roam/kirocrew-desktop-nightly/logs" in dirs
-        assert "/roam/kirocrew-desktop-lts/logs" in dirs
+        assert "/roam/ajcrew-desktop/logs" in dirs
+        assert "/roam/ajcrew-desktop-nightly/logs" in dirs
+        assert "/roam/ajcrew-desktop-lts/logs" in dirs
 
     def test_the_newest_artifact_wins_when_both_exist(self, monkeypatch, tmp_path):
         """With both installed, the run just reproduced is the one written last."""
-        release = tmp_path / "KiroCrew"
-        nightly = tmp_path / "KiroCrew Nightly"
+        release = tmp_path / "AjCrew"  # brand-ok: fixture data
+        nightly = tmp_path / "AjCrew Nightly"
         release.mkdir()
         nightly.mkdir()
         old = release / cli_desktop.ARTIFACT_NAME
@@ -373,7 +373,7 @@ class TestNightlyProductDirectory:
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
         assert cli_desktop.desktop_cmd(_args(tmp_path / "absent.json")) == 3
         err = capsys.readouterr().err
-        assert "KiroCrew Nightly" in err, "the nightly path must be discoverable from the error"
+        assert "AjCrew Nightly" in err, "the nightly path must be discoverable from the error"
 
     def test_product_names_stay_in_sync_with_the_packaging_script(self):
         """A rename in build-desktop.sh silently breaks discovery for that build."""
@@ -459,7 +459,7 @@ class TestParserWiring:
     def test_subcommand_dest_does_not_shadow_the_top_level_command(self):
         """A nested dest of "command" silently overwrites the top-level value.
 
-        That exact collision made `kirocrew perf sample` fall through to the
+        That exact collision made `ajcrew perf sample` fall through to the
         argparse help during layer 1, so it is pinned here too.
         """
         parser = argparse.ArgumentParser()

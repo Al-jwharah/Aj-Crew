@@ -106,7 +106,7 @@ function renderSidebar(slots: ChatSlot[], history: ChatHistoryItem[] = []) {
             <ChatSidebar
               slots={slots} activeSlot={null} unreadSlots={[]}
               history={history} historyHasMore={false}
-              defaultAgent="kirocrew" installedAgents={[]}
+              defaultAgent="ajcrew" installedAgents={[]}
             />
           </MemoryRouter>
         </ThemeProvider>
@@ -144,8 +144,8 @@ afterEach(() => {
 describe('chat sidebar memory-mode markers are named for screen readers', () => {
   it('names the incognito and temporary markers on a session row', () => {
     const { container } = renderSidebar([
-      { key: 'k-inc', title: 'private', running: false, messages: 2, agent: 'kirocrew', memory_mode: 'incognito', tags: [], last_ts: LAST_TS },
-      { key: 'k-tmp', title: 'scratch', running: false, messages: 2, agent: 'kirocrew', memory_mode: 'temporary', tags: [], last_ts: LAST_TS },
+      { key: 'k-inc', title: 'private', running: false, messages: 2, agent: 'ajcrew', memory_mode: 'incognito', tags: [], last_ts: LAST_TS },
+      { key: 'k-tmp', title: 'scratch', running: false, messages: 2, agent: 'ajcrew', memory_mode: 'temporary', tags: [], last_ts: LAST_TS },
     ] as unknown as ChatSlot[])
     expect(within(row(container, 'private')).getByRole('img', { name: INCOGNITO })).toBeTruthy()
     expect(within(row(container, 'scratch')).getByRole('img', { name: TEMPORARY })).toBeTruthy()
@@ -153,7 +153,7 @@ describe('chat sidebar memory-mode markers are named for screen readers', () => 
 
   it('names the incognito and temporary markers on an older-session row', () => {
     const { container } = renderSidebar(
-      [{ key: 'k-live', title: 'live', running: false, messages: 2, agent: 'kirocrew', tags: [], last_ts: LAST_TS }] as unknown as ChatSlot[],
+      [{ key: 'k-live', title: 'live', running: false, messages: 2, agent: 'ajcrew', tags: [], last_ts: LAST_TS }] as unknown as ChatSlot[],
       [
         { key: 'h-inc', title: 'old private', last_ts: LAST_TS, memory_mode: 'incognito' },
         { key: 'h-tmp', title: 'old scratch', last_ts: LAST_TS, memory_mode: 'temporary' },

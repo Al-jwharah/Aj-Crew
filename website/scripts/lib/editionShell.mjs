@@ -107,7 +107,7 @@ export function verifyOverlayBytes({ distDir, editionPublicDir, overlayFiles, re
       dist = readFile(join(distDir, file))
     } catch (e) {
       throw new Error(
-        `[kirocrew-edition] overlaid asset '${file}' is missing from the build output ` +
+        `[ajcrew-edition] overlaid asset '${file}' is missing from the build output ` +
           `(${join(distDir, file)}): ${e instanceof Error ? e.message : e}. ` +
           'The emitFile overlay should have written it — the emitFile-over-publicDir ' +
           'precedence this seam relies on may have changed.'
@@ -115,7 +115,7 @@ export function verifyOverlayBytes({ distDir, editionPublicDir, overlayFiles, re
     }
     if (!src.equals(dist)) {
       throw new Error(
-        `[kirocrew-edition] overlaid asset '${file}' in the build output does not match the ` +
+        `[ajcrew-edition] overlaid asset '${file}' in the build output does not match the ` +
           `edition source (${join(editionPublicDir, file)}): the stock publicDir copy appears to ` +
           'have won over the emitted edition asset. The emitFile-over-publicDir precedence this ' +
           'seam relies on is not a documented bundler contract; a Vite/Rolldown upgrade may have ' +
@@ -172,7 +172,7 @@ export function applyBrandingToHtml(html, branding) {
     // The boot-failure panel is shown when the bundle never arrived, so nothing
     // after boot can retarget its "worth reporting at" links. Every link to the
     // stock tracker is rewritten, href and visible text alike.
-    const re = /<a href="https:\/\/github\.com\/kirodotdev\/KiroCrew\/issues"([^>]*)>[^<]*<\/a>/g
+    const re = /<a href="https:\/\/github\.com\/Al-jwharah\/Aj-Crew\/issues"([^>]*)>[^<]*<\/a>/g
     const url = escapeHtml(branding.issuesUrl)
     const patched = out.replace(re, (_m, attrs) => `<a href="${url}"${attrs}>${url}</a>`)
     if (patched === out) {

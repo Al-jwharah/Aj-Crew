@@ -34,16 +34,16 @@ from dev_fleet_server_coverage_helpers import (  # noqa: F401 -- the autouse fix
     _sel_capture,
 )
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew.apps.builtins.dev_fleet import (
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew.apps.builtins.dev_fleet import (
     fleet_state,
     http_api,
     repository,
     runtime,
     worktree_ops,
 )
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import await_until
 
 
 def _raw_request(raw: bytes, *, json_error: Exception | None = None) -> MagicMock:
@@ -655,10 +655,10 @@ async def test_hmac_health_path_is_exempt(monkeypatch):
     ("headers", "secret", "reason"),
     [
         ({}, "", "no app secret configured"),
-        ({}, "s3cr3t", "missing X-KiroCrew-Proxy header"),
-        ({"X-KiroCrew-Proxy": "nocolon"}, "s3cr3t", "malformed X-KiroCrew-Proxy header"),
-        ({"X-KiroCrew-Proxy": "abc:sig"}, "s3cr3t", "invalid timestamp in proxy header"),
-        ({"X-KiroCrew-Proxy": "1:sig"}, "s3cr3t", "proxy signature expired"),
+        ({}, "s3cr3t", "missing X-AjCrew-Proxy header"),
+        ({"X-AjCrew-Proxy": "nocolon"}, "s3cr3t", "malformed X-AjCrew-Proxy header"),
+        ({"X-AjCrew-Proxy": "abc:sig"}, "s3cr3t", "invalid timestamp in proxy header"),
+        ({"X-AjCrew-Proxy": "1:sig"}, "s3cr3t", "proxy signature expired"),
     ],
 )
 async def test_hmac_denials(monkeypatch, headers, secret, reason):
@@ -693,7 +693,7 @@ async def test_hmac_non_ascii_signature_is_a_clean_denial(monkeypatch, codepoint
 
     clock = ManualClock()
     clock.install(monkeypatch, http_api)
-    headers = {"X-KiroCrew-Proxy": f"{int(clock.time())}:{chr(codepoint)}"}
+    headers = {"X-AjCrew-Proxy": f"{int(clock.time())}:{chr(codepoint)}"}
     request = make_mocked_request("GET", "/api/fleet", headers=headers)
     resp = await http_api.hmac_proxy_middleware(request, handler)
     assert resp.status == 401
@@ -733,11 +733,11 @@ async def test_hmac_a_valid_signature_suffixed_with_a_lone_surrogate_is_refused(
 
     # A signature that verifies must be accepted first, so the refusal below is
     # about the appended surrogate and not about a signature that never matched.
-    request.headers = {"X-KiroCrew-Proxy": f"{ts}:{sig}"}
+    request.headers = {"X-AjCrew-Proxy": f"{ts}:{sig}"}
     accepted = await http_api.hmac_proxy_middleware(request, handler)
     assert accepted.status == 200
 
-    request.headers = {"X-KiroCrew-Proxy": f"{ts}:{sig}{chr(0xDCFF)}"}
+    request.headers = {"X-AjCrew-Proxy": f"{ts}:{sig}{chr(0xDCFF)}"}
     resp = await http_api.hmac_proxy_middleware(request, handler)
     assert resp.status == 401
     assert "invalid proxy signature" in json.loads(resp.text)["error"]
@@ -868,7 +868,7 @@ def test_dir_size_bytes_does_not_follow_a_directory_link():
     ``os.DirEntry.is_dir`` to answer like a junction for one path and checks that the
     walk consults ``is_link_or_junction`` before recursing.
     """
-    import kiro_crew.apps.builtins.dev_fleet.fleet_state as fleet_state_mod
+    import aj_crew.apps.builtins.dev_fleet.fleet_state as fleet_state_mod
 
     with tempfile.TemporaryDirectory() as tmp:
         base = Path(tmp)

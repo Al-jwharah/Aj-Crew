@@ -6,10 +6,10 @@ import os
 
 import pytest
 
-from kiro_crew.acp import kas_steering
-from kiro_crew.acp.kas_spec_carry import use_aws_notice
-from kiro_crew.acp.kas_steering import kas_steering_resources, with_kas_steering
-from kiro_crew.testing.links import make_dir_link
+from aj_crew.acp import kas_steering
+from aj_crew.acp.kas_spec_carry import use_aws_notice
+from aj_crew.acp.kas_steering import kas_steering_resources, with_kas_steering
+from aj_crew.testing.links import make_dir_link
 
 GLOB = "file://.kiro/steering/**/*.md"
 
@@ -127,7 +127,7 @@ class TestSteeringResources:
 
 class TestNotices:
     def test_inheritance_off_names_what_still_loads(self, monkeypatch):
-        from kiro_crew.agent_sdk.drivers import acp
+        from aj_crew.agent_sdk.drivers import acp
 
         monkeypatch.setattr(acp, "inherits_default_resources", lambda work_dir: False)
         notice = kas_steering.inheritance_off_notice("/w")

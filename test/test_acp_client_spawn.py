@@ -14,10 +14,10 @@ from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401
 from acp_client_helpers import _stop_stderr_drain
 from spawn_test_helpers import strip_spawn_shim
 
-import kiro_crew.acp.client as acp_client
-from kiro_crew.acp.client import AcpClient, AcpError
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+import aj_crew.acp.client as acp_client
+from aj_crew.acp.client import AcpClient, AcpError
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.testing.ids import UNALLOCATABLE_PID
 
 
 class TestAcpClientInit:
@@ -50,13 +50,13 @@ class TestAcpClientSessionKey:
     async def test_spawn_sets_env_with_session_key(self, tmp_path):
         client = AcpClient(work_dir=tmp_path, session_key="test-key")
         with (
-            patch("kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
             patch(
-                "kiro_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)
+                "aj_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)
             ),
             patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec,
-            patch("kiro_crew.session._track_pid"),
-            patch("kiro_crew.session._track_session_pid"),
+            patch("aj_crew.session._track_pid"),
+            patch("aj_crew.session._track_session_pid"),
         ):
             mock_proc = MagicMock()
             mock_proc.pid = UNALLOCATABLE_PID
@@ -68,7 +68,7 @@ class TestAcpClientSessionKey:
             call_kwargs = mock_exec.call_args
             env = call_kwargs.kwargs.get("env") or call_kwargs[1].get("env")
             assert env is not None
-            assert env["KIROCREW_SESSION_KEY"] == "test-key"
+            assert env["AJCREW_SESSION_KEY"] == "test-key"
 
         await _stop_stderr_drain(client)
 
@@ -76,13 +76,13 @@ class TestAcpClientSessionKey:
     async def test_spawn_sets_env_with_channel_id(self, tmp_path):
         client = AcpClient(work_dir=tmp_path, session_key="k", channel_id="C0ABC123")
         with (
-            patch("kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
             patch(
-                "kiro_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)
+                "aj_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)
             ),
             patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec,
-            patch("kiro_crew.session._track_pid"),
-            patch("kiro_crew.session._track_session_pid"),
+            patch("aj_crew.session._track_pid"),
+            patch("aj_crew.session._track_session_pid"),
         ):
             mock_proc = MagicMock()
             mock_proc.pid = UNALLOCATABLE_PID
@@ -94,8 +94,8 @@ class TestAcpClientSessionKey:
             call_kwargs = mock_exec.call_args
             env = call_kwargs.kwargs.get("env") or call_kwargs[1].get("env")
             assert env is not None
-            assert env["KIROCREW_CHANNEL_ID"] == "C0ABC123"
-            assert env["KIROCREW_SESSION_KEY"] == "k"
+            assert env["AJCREW_CHANNEL_ID"] == "C0ABC123"
+            assert env["AJCREW_SESSION_KEY"] == "k"
 
         await _stop_stderr_drain(client)
 
@@ -112,7 +112,7 @@ class TestAcpClientSessionKey:
         )
         with (
             patch(
-                "kiro_crew.acp.client._resolve_claude_acp_bin",
+                "aj_crew.acp.client._resolve_claude_acp_bin",
                 return_value=(["/usr/bin/node", "/x/acp.js"], ""),
             ),
             # ``_spawn`` fills CLAUDE_CODE_EXECUTABLE from
@@ -121,16 +121,16 @@ class TestAcpClientSessionKey:
             # is about the env being forwarded, not about where ``claude`` lives,
             # so pin the answer instead of depending on the developer's toolchain.
             patch(
-                "kiro_crew.acp.client._resolve_claude_code_executable",
+                "aj_crew.acp.client._resolve_claude_code_executable",
                 return_value="/usr/local/bin/claude",
             ),
             patch(
-                "kiro_crew.acp.client.wrap_argv",
+                "aj_crew.acp.client.wrap_argv",
                 return_value=(["/usr/bin/node", "/x/acp.js"], None),
             ),
             patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec,
-            patch("kiro_crew.session._track_pid"),
-            patch("kiro_crew.session._track_session_pid"),
+            patch("aj_crew.session._track_pid"),
+            patch("aj_crew.session._track_session_pid"),
         ):
             mock_proc = MagicMock()
             mock_proc.pid = UNALLOCATABLE_PID
@@ -152,13 +152,13 @@ class TestAcpClientSessionKey:
     async def test_spawn_no_channel_id_env_absent(self, tmp_path):
         client = AcpClient(work_dir=tmp_path, session_key="k", channel_id=None)
         with (
-            patch("kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
             patch(
-                "kiro_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)
+                "aj_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)
             ),
             patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec,
-            patch("kiro_crew.session._track_pid"),
-            patch("kiro_crew.session._track_session_pid"),
+            patch("aj_crew.session._track_pid"),
+            patch("aj_crew.session._track_session_pid"),
         ):
             mock_proc = MagicMock()
             mock_proc.pid = UNALLOCATABLE_PID
@@ -170,22 +170,22 @@ class TestAcpClientSessionKey:
             call_kwargs = mock_exec.call_args
             env = call_kwargs.kwargs.get("env") or call_kwargs[1].get("env")
             assert env is not None
-            assert "KIROCREW_CHANNEL_ID" not in env
+            assert "AJCREW_CHANNEL_ID" not in env
 
         await _stop_stderr_drain(client)
 
     @pytest.mark.asyncio
     async def test_spawn_channel_id_only_no_session_key(self, tmp_path):
-        clean_env = {k: v for k, v in os.environ.items() if k != "KIROCREW_SESSION_KEY"}
+        clean_env = {k: v for k, v in os.environ.items() if k != "AJCREW_SESSION_KEY"}
         client = AcpClient(work_dir=tmp_path, session_key=None, channel_id="C0ABC123")
         with (
-            patch("kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
             patch(
-                "kiro_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)
+                "aj_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)
             ),
             patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec,
-            patch("kiro_crew.session._track_pid"),
-            patch("kiro_crew.session._track_session_pid"),
+            patch("aj_crew.session._track_pid"),
+            patch("aj_crew.session._track_session_pid"),
             patch.dict(os.environ, clean_env, clear=True),
         ):
             mock_proc = MagicMock()
@@ -198,8 +198,8 @@ class TestAcpClientSessionKey:
             call_kwargs = mock_exec.call_args
             env = call_kwargs.kwargs.get("env") or call_kwargs[1].get("env")
             assert env is not None
-            assert env["KIROCREW_CHANNEL_ID"] == "C0ABC123"
-            assert "KIROCREW_SESSION_KEY" not in env
+            assert env["AJCREW_CHANNEL_ID"] == "C0ABC123"
+            assert "AJCREW_SESSION_KEY" not in env
 
         await _stop_stderr_drain(client)
 
@@ -207,13 +207,13 @@ class TestAcpClientSessionKey:
     async def test_spawn_no_session_key_env_none(self, tmp_path):
         client = AcpClient(work_dir=tmp_path, session_key=None)
         with (
-            patch("kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
             patch(
-                "kiro_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)
+                "aj_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)
             ),
             patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec,
-            patch("kiro_crew.session._track_pid"),
-            patch("kiro_crew.session._track_session_pid"),
+            patch("aj_crew.session._track_pid"),
+            patch("aj_crew.session._track_session_pid"),
         ):
             mock_proc = MagicMock()
             mock_proc.pid = UNALLOCATABLE_PID
@@ -225,7 +225,7 @@ class TestAcpClientSessionKey:
             call_kwargs = mock_exec.call_args
             env = call_kwargs.kwargs.get("env") or call_kwargs[1].get("env")
             assert env is not None, "env should be a dict (SSH_AUTH_SOCK resolution)"
-            assert "KIROCREW_SESSION_KEY" not in env
+            assert "AJCREW_SESSION_KEY" not in env
 
         await _stop_stderr_drain(client)
 
@@ -245,13 +245,13 @@ class TestSpawnStderrDrainCleanup:
         # start a live drain task, so the cleanup below is load-bearing.
         client = AcpClient(work_dir=tmp_path, session_key="k")
         with (
-            patch("kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
             patch(
-                "kiro_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)
+                "aj_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)
             ),
             patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec,
-            patch("kiro_crew.session._track_pid"),
-            patch("kiro_crew.session._track_session_pid"),
+            patch("aj_crew.session._track_pid"),
+            patch("aj_crew.session._track_session_pid"),
         ):
             mock_proc = MagicMock()
             mock_proc.pid = UNALLOCATABLE_PID
@@ -274,13 +274,13 @@ class TestSpawnStderrDrainCleanup:
         # would hide a re-leak, so assert on the task's own state instead.
         client = AcpClient(work_dir=tmp_path, session_key="k")
         with (
-            patch("kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
             patch(
-                "kiro_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)
+                "aj_crew.acp.client.wrap_argv", return_value=(["/usr/bin/kiro-cli", "acp"], None)
             ),
             patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec,
-            patch("kiro_crew.session._track_pid"),
-            patch("kiro_crew.session._track_session_pid"),
+            patch("aj_crew.session._track_pid"),
+            patch("aj_crew.session._track_session_pid"),
         ):
             mock_proc = AsyncMock()
             mock_proc.pid = UNALLOCATABLE_PID
@@ -372,7 +372,7 @@ async def test_failed_live_spawn_cleanup_releases_workspace_when_kill_is_cancell
     async def record_release(descriptor):
         released.append(descriptor)
 
-    with patch("kiro_crew.acp.client.release_bound_agent_workspace", side_effect=record_release):
+    with patch("aj_crew.acp.client.release_bound_agent_workspace", side_effect=record_release):
         with pytest.raises(asyncio.CancelledError):
             await client._cleanup_failed_live_spawn()
 
@@ -389,7 +389,7 @@ class TestAcpClientBackendSelection:
         # Through the gateway's own reset seam rather than by writing the cache: the
         # resolver is injected per test, so each must resolve afresh, and none may
         # leave its answer for the next.
-        from kiro_crew.agent_sdk.drivers.acp import forget_cached_resolution
+        from aj_crew.agent_sdk.drivers.acp import forget_cached_resolution
 
         forget_cached_resolution(ACP_BACKEND_CLAUDE)
         yield
@@ -406,7 +406,7 @@ class TestAcpClientBackendSelection:
         # to this class only; test_sandbox_argv.py (which tests the wrapping
         # itself) is a separate file and is unaffected.
         with patch(
-            "kiro_crew.sandbox._probe_cgroup_scope",
+            "aj_crew.sandbox._probe_cgroup_scope",
             return_value=(False, "disabled-in-test"),
         ):
             yield
@@ -416,26 +416,26 @@ class TestAcpClientBackendSelection:
         client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE)
         with (
             patch(
-                "kiro_crew.acp.client._resolve_claude_acp_bin",
+                "aj_crew.acp.client._resolve_claude_acp_bin",
                 return_value=(
                     ["/usr/local/bin/node", "/usr/local/lib/claude-agent-acp/index.js"],
                     "",
                 ),
             ),
-            patch("kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
             # The claude path also resolves CLAUDE_CODE_EXECUTABLE through the
             # host's ``mise``; the subject here is the argv, so pin the resolver.
             patch(
-                "kiro_crew.acp.client._resolve_claude_code_executable",
+                "aj_crew.acp.client._resolve_claude_code_executable",
                 return_value="/usr/local/bin/claude",
             ),
             patch(
-                "kiro_crew.acp.client.wrap_argv",
+                "aj_crew.acp.client.wrap_argv",
                 side_effect=lambda argv, mode, **kwargs: (argv, None),
             ),
             patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec,
-            patch("kiro_crew.session._track_pid"),
-            patch("kiro_crew.session._track_session_pid"),
+            patch("aj_crew.session._track_pid"),
+            patch("aj_crew.session._track_session_pid"),
         ):
             mock_proc = MagicMock()
             mock_proc.pid = UNALLOCATABLE_PID
@@ -465,17 +465,17 @@ class TestAcpClientBackendSelection:
         client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE)
         with (
             patch(
-                "kiro_crew.acp.client._resolve_claude_acp_bin",
+                "aj_crew.acp.client._resolve_claude_acp_bin",
                 return_value=(["/usr/local/bin/node", "/x/acp.js"], ""),
             ),
-            patch("kiro_crew.acp.client._resolve_claude_code_executable", side_effect=_resolve),
+            patch("aj_crew.acp.client._resolve_claude_code_executable", side_effect=_resolve),
             patch(
-                "kiro_crew.acp.client.wrap_argv",
+                "aj_crew.acp.client.wrap_argv",
                 side_effect=lambda argv, mode, **kwargs: (argv, None),
             ),
             patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec,
-            patch("kiro_crew.session._track_pid"),
-            patch("kiro_crew.session._track_session_pid"),
+            patch("aj_crew.session._track_pid"),
+            patch("aj_crew.session._track_session_pid"),
         ):
             mock_proc = MagicMock()
             mock_proc.pid = UNALLOCATABLE_PID
@@ -494,7 +494,7 @@ class TestAcpClientBackendSelection:
     async def test_spawn_claude_backend_missing_bin_raises(self, tmp_path):
         client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE)
         with (
-            patch("kiro_crew.acp.client._resolve_claude_acp_bin", return_value=(None, "")),
+            patch("aj_crew.acp.client._resolve_claude_acp_bin", return_value=(None, "")),
             patch("asyncio.create_subprocess_exec", new_callable=AsyncMock),
         ):
             with pytest.raises(AcpError, match="claude-agent-acp not found"):
@@ -508,7 +508,7 @@ class TestAcpClientBackendSelection:
         later = str(tmp_path / "later-path")
         client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE)
         with patch(
-            "kiro_crew.acp.client._resolve_claude_acp_bin",
+            "aj_crew.acp.client._resolve_claude_acp_bin",
             return_value=(None, searched),
         ) as resolve:
             with pytest.raises(AcpError) as first:
@@ -530,8 +530,8 @@ class TestAcpClientBackendSelection:
         unsearched = str(tmp_path / "never-checked")
         client = AcpClient(work_dir=tmp_path)
         with (
-            patch("kiro_crew.acp.client._resolve_kiro_bin", return_value=None),
-            patch("kiro_crew.acp.client.known_kiro_cli_dirs", return_value=searched),
+            patch("aj_crew.acp.client._resolve_kiro_bin", return_value=None),
+            patch("aj_crew.acp.client.known_kiro_cli_dirs", return_value=searched),
         ):
             with pytest.raises(AcpError) as raised:
                 await client._spawn()
@@ -560,7 +560,7 @@ class TestAcpClientBackendSelection:
         ``test_spawn_claude_missing_bin_reports_the_cached_search_path``); this
         pins it for the Kiro sibling.
         """
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         injected = str(tmp_path / "appeared-after-the-search")
         resolver_env: dict[str, object] = {}
@@ -580,10 +580,10 @@ class TestAcpClientBackendSelection:
         client = AcpClient(work_dir=tmp_path)
         with (
             patch(
-                "kiro_crew.acp.client._resolve_kiro_bin",
+                "aj_crew.acp.client._resolve_kiro_bin",
                 side_effect=_resolve_then_change_path,
             ),
-            patch("kiro_crew.acp.client.known_kiro_cli_dirs", side_effect=_spy_dirs),
+            patch("aj_crew.acp.client.known_kiro_cli_dirs", side_effect=_spy_dirs),
         ):
             with pytest.raises(AcpError, match="not found") as raised:
                 await client._spawn()
@@ -607,9 +607,9 @@ class TestAcpClientBackendSelection:
         ``handlers/agents.py`` and ``handlers/sessions.py``, none of which needs
         the search set. Omitting the arguments must resolve exactly as before.
         """
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
-        with patch("kiro_crew.acp.client.resolve_kiro_cli", return_value=None) as resolve:
+        with patch("aj_crew.acp.client.resolve_kiro_cli", return_value=None) as resolve:
             assert await client_mod._resolve_kiro_bin_for_spawn() is None
         resolve.assert_called_once_with(environ=None, home=None)
 
@@ -618,14 +618,14 @@ class TestAcpClientBackendSelection:
         """Default (non-claude) backend still spawns `kiro-cli acp --agent <name>`."""
         client = AcpClient(work_dir=tmp_path)
         with (
-            patch("kiro_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
+            patch("aj_crew.acp.client._resolve_kiro_bin", return_value="/usr/bin/kiro-cli"),
             patch(
-                "kiro_crew.acp.client.wrap_argv",
+                "aj_crew.acp.client.wrap_argv",
                 side_effect=lambda argv, mode, **kwargs: (argv, None),
             ),
             patch("asyncio.create_subprocess_exec", new_callable=AsyncMock) as mock_exec,
-            patch("kiro_crew.session._track_pid"),
-            patch("kiro_crew.session._track_session_pid"),
+            patch("aj_crew.session._track_pid"),
+            patch("aj_crew.session._track_session_pid"),
         ):
             mock_proc = MagicMock()
             mock_proc.pid = UNALLOCATABLE_PID
@@ -644,7 +644,7 @@ class TestAcpClientBackendSelection:
     @pytest.mark.asyncio
     async def test_initialize_protocol_version_per_backend(self, tmp_path):
         """kiro expects a date string; claude-agent-acp expects an integer."""
-        from kiro_crew.acp.client import (
+        from aj_crew.acp.client import (
             PROTOCOL_VERSION,
             PROTOCOL_VERSION_CLAUDE,
         )
@@ -816,14 +816,14 @@ class TestSpawnEnvScrub:
         monkeypatch.setenv("WECOM_BOT_ID", "FAKE-wecom-bot")
         monkeypatch.setenv("WECOM_SECRET", "FAKE-wecom-secret")
         monkeypatch.setenv("SLACK_BOT_TOKEN", "xoxb-FAKE")
-        monkeypatch.setenv("KIROCREW_OWNER_ID", "U_FAKE_OWNER")
+        monkeypatch.setenv("AJCREW_OWNER_ID", "U_FAKE_OWNER")
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "FAKE-secret")
         monkeypatch.setenv("SSH_AUTH_SOCK", "/tmp/fake-agent.sock")
         monkeypatch.setenv("PYTHONPATH", "/gateway/pythonpath")
         monkeypatch.setenv("PYTHONHOME", "/gateway/pythonhome")
         # AWS account identity and a benign key are not denied.
         monkeypatch.setenv("AWS_ACCESS_KEY_ID", "FAKE-akid")
-        monkeypatch.setenv("KIROCREW_UNRELATED_KEEPME", "keep-this-value")
+        monkeypatch.setenv("AJCREW_UNRELATED_KEEPME", "keep-this-value")
 
         captured: dict[str, object] = {}
 
@@ -862,7 +862,7 @@ class TestSpawnEnvScrub:
             "WECOM_BOT_ID",
             "WECOM_SECRET",
             "SLACK_BOT_TOKEN",
-            "KIROCREW_OWNER_ID",
+            "AJCREW_OWNER_ID",
             "AWS_SECRET_ACCESS_KEY",
             "PYTHONPATH",
             "PYTHONHOME",
@@ -875,9 +875,9 @@ class TestSpawnEnvScrub:
             assert "SSH_AUTH_SOCK" not in env, "SSH_AUTH_SOCK leaked into ACP child env"
         else:
             assert env.get("SSH_AUTH_SOCK") == "/tmp/fake-agent.sock"
-        assert env.get("KIROCREW_UNRELATED_KEEPME") == "keep-this-value"
+        assert env.get("AJCREW_UNRELATED_KEEPME") == "keep-this-value"
         assert env.get("AWS_ACCESS_KEY_ID") == "FAKE-akid"
-        assert env.get("KIROCREW_RUNTIME_PYTHON") == sys.executable
+        assert env.get("AJCREW_RUNTIME_PYTHON") == sys.executable
 
 
 def test_resolve_spawn_agent_argv_converts_a_refusal_to_acperror(tmp_path):
@@ -886,7 +886,7 @@ def test_resolve_spawn_agent_argv_converts_a_refusal_to_acperror(tmp_path):
     would escape ``ensure_ready``'s transport ladder uncaught, skipping cleanup;
     the helper must convert it to ``AcpError`` (which the ladder catches) while
     keeping the actionable message, and pass a resolvable name straight through."""
-    from kiro_crew.acp.skill_projection import NativeSkillProjection
+    from aj_crew.acp.skill_projection import NativeSkillProjection
 
     client = AcpClient(work_dir=tmp_path, agent="ghost")
     client._native_skill_projection = NativeSkillProjection(

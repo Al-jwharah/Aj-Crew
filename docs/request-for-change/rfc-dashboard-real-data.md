@@ -1,7 +1,7 @@
 ---
 title: Dashboard real data -- a crewmate's Dashboard page shows real values or says it does not, never an invented or stale value presented as real
 status: draft
-author: kirocrew-worker, for the crewmate dashboard audit of 2026-10-30
+author: ajcrew-worker, for the crewmate dashboard audit of 2026-10-30
 created: 2026-10-30
 last-audited: 2026-10-30
 audited-at: 5e7214b942
@@ -82,7 +82,7 @@ Where a fix below needs one of them, it says so.
 
 ### 4.1 B5 -- `dashboard_write` checks shape, not source
 
-Problem. `dashboard_agentic.check_write` (`src/kiro_crew/dashboard_agentic.py`)
+Problem. `dashboard_agentic.check_write` (`src/aj_crew/dashboard_agentic.py`)
 asks, in order: is there a dashboard, does it declare the field, is the field
 agentic, is the value the declared type (`type_holds`), is it shallow enough
 (`AGENTIC_VALUE_DEPTH`), does it match the shape (`shape_problems`), is it JSON,
@@ -102,7 +102,7 @@ Fix. `dashboard_write` takes two more arguments:
 `check_write` refuses `source_missing` when `source` is absent or blank, with the
 same "what to do instead" sentence every refusal carries. The entry stores both.
 The agentic fold keeps them beside the value, and the frame hands them to the page
-as `window.kirocrew` `sources[field]` and `observed_at[field]`, next to the
+as `window.ajcrew` `sources[field]` and `observed_at[field]`, next to the
 existing `written_at` map.
 
 Enforcement: tool (write-time refusal). A crewmate can still write a false
@@ -125,7 +125,7 @@ block and the dashboard skill say `source` is required from the first release.
 ### 4.2 B6 -- hard-coded numbers in `view.html` are not flagged
 
 Problem. `dashboard_save` (`api_dashboard_save` in
-`src/kiro_crew/dashboard/handlers/agent_panel_dashboard.py`) runs the page once
+`src/aj_crew/dashboard/handlers/agent_panel_dashboard.py`) runs the page once
 (`dashboard_verify.verify_page`) and adds `shape_warnings`, `theme_warnings` and
 font warnings (`dashboard/handlers/dashboard_page_checks.py`). None of them looks
 for a number written into the page's visible text. A page that says "12 open
@@ -158,7 +158,7 @@ Rollout: one PR. The dashboard skill gains one sentence on
 
 Problem. The save check runs the page over a synthetic copy of the record
 (`dashboard_synth.synthesize`), never the record itself. The reply's
-`verification` block (`Verification.wire` in `src/kiro_crew/dashboard_verify.py`)
+`verification` block (`Verification.wire` in `src/aj_crew/dashboard_verify.py`)
 already carries `"data": "synthetic"`, so the fact is there. But the field a
 reader looks at is `"status": "passed"`, and no sentence in the reply says what
 passed means. A crewmate then tells the person "the page is verified", and the
@@ -189,7 +189,7 @@ Rollout: one PR, with the skill sentence.
 ### 4.4 B8 -- no contract for a script cron's error
 
 Problem. A script cron writes a page value with `ctx.crew_log_append(type, data)`
-(`src/kiro_crew/cron_script_context.py`). The `custom` fold
+(`src/aj_crew/cron_script_context.py`). The `custom` fold
 (`crew_log/projection_dashboard.py`) keeps the latest record per type with its
 `at` and `writer`. Nothing says how a script reports that its fetch failed. A
 script that catches the error and writes `{"count": 0}`, or a page that reads a
@@ -229,7 +229,7 @@ Rollout: helper and docs in one PR; frame display follows A1/A2.
 
 Problem. The audit wrote that the `workers` fold's `done` comes from turn-end
 classification. That is not quite right. In
-`src/kiro_crew/crew_log/projection_workers.py`, a turn end
+`src/aj_crew/crew_log/projection_workers.py`, a turn end
 (`_turn_end_state`) only ever yields `idle` or `failed`. A row reads `done` only
 when the worker filed `work/recorded` with `status: done` (`work_report`). That
 is a claim; the conductor's acceptance verdict is not read by this fold at all.
@@ -326,7 +326,7 @@ filled in `dashboard_frame.py`.
 ### 5.4 C12 -- the daily review is advisory, and the snapshot sees one screen
 
 Problem. The daily review is prompt text only: `DAILY_PAGE_REVIEW` in
-`src/kiro_crew/dashboard/goal_reminder.py`, mirrored in the dashboard skill's
+`src/aj_crew/dashboard/goal_reminder.py`, mirrored in the dashboard skill's
 "The daily review" section. Nothing records whether it ran or what it found. It
 also does not ask for `dashboard_snapshot`. And `dashboard_snapshot` captures the
 viewport only: `_VIEWPORT` is 1280x800 in `dashboard_verify.py`, and

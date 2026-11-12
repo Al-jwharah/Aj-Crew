@@ -18,14 +18,14 @@ import pytest
 from tmpdir_helpers import SHORT_TMP_PREFIX, short_tmp_base
 from turn_harness import Raise, SlotSpec, TurnRecord, TurnScript, run_turn
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
 
 @pytest.fixture(name="short_tmp_dir")

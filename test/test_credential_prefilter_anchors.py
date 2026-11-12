@@ -25,7 +25,7 @@ from collections.abc import Callable
 
 import pytest
 
-from kiro_crew.security import redaction
+from aj_crew.security import redaction
 
 _CLS = "[A-Za-z0-9_-]"
 _PLAIN = {

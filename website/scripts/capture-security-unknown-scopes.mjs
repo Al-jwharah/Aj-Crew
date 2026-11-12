@@ -100,7 +100,7 @@ async function main() {
       '/api/security/posture': POSTURE,
       '/api/security/denied-commands': DENIED,
       '/api/governance/policy': governance(unknown_profile_scopes, fallback_profiles),
-      '/api/config/kirocrew': { agent: { yolo_duration: '6h', apps_allow_third_party: false } },
+      '/api/config/ajcrew': { agent: { yolo_duration: '6h', apps_allow_third_party: false } },
       '/api/theme/boot': { mode: 'dark', theme: '' },
     })
     console.log(`${PREFIX}-${name}.png`)

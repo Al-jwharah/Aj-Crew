@@ -24,7 +24,7 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 const withVideo = params.get('video') !== '0'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 function feature(id: string, state: MilestoneFeatureItem['state'], send: 'send' | 'prefill' = 'prefill'): MilestoneFeatureItem {
   return {
@@ -61,8 +61,8 @@ a.milestoneEvent = () => Promise.resolve({})
 a.featureVideoLibrary = () => Promise.resolve({
   enabled: true,
   videos: withVideo ? [{
-    id: 'kiro-crew-intro', feature: 'intro', title: 'Kiro Crew in 15 seconds', description: '',
-    src: '/app-assets/feature-videos/kiro-crew-intro.mp4', poster: '/app-assets/feature-videos/kiro-crew-intro.jpg', duration_s: 15,
+    id: 'aj-crew-intro', feature: 'intro', title: 'Aj Crew in 15 seconds', description: '',
+    src: '/app-assets/feature-videos/aj-crew-intro.mp4', poster: '/app-assets/feature-videos/aj-crew-intro.jpg', duration_s: 15,
   }] : [],
 })
 

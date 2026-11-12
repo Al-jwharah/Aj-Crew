@@ -150,7 +150,7 @@ const THUMB_FRAME = 'bg-muted forced-colors:border'
  * then folds down the bubble's remaining height (`liveH`), so the swap is still a
  * box replaced by an identical box. The
  * box also carries the bubble's `message-bubble` and `user-bubble` theme hooks, so
- * a theme that tints the bubble (kiro-light, or a theme pack's
+ * a theme that tints the bubble (aj-light, or a theme pack's
  * `.message-bubble.user-bubble` rule) tints the card identically and the swap
  * stays invisible there too. Keep
  * these values in sync with `UserMessage`'s `bubble` and with `MD_COMPONENTS.p`

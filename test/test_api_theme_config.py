@@ -10,8 +10,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from aiohttp import web
 
-from kiro_crew.config.loader import KiroCrewConfig, _invalidate_config_cache
-from kiro_crew.dashboard.handlers import core as core_mod
+from aj_crew.config.loader import AjCrewConfig, _invalidate_config_cache
+from aj_crew.dashboard.handlers import core as core_mod
 
 
 def _make_cfg(
@@ -25,7 +25,7 @@ def _make_cfg(
     crewmates_onboarded: bool = False,
     translucent_panels: str = "",
 ):
-    """Build a mock KiroCrewConfig with dashboard display fields.
+    """Build a mock AjCrewConfig with dashboard display fields.
 
     Every field the payload builder reads must be set explicitly: a bare
     ``MagicMock`` attribute serializes as a mock, so a field added to
@@ -61,9 +61,9 @@ def _owner_request() -> MagicMock:
 @pytest.mark.parametrize(("edition", "acked"), [("oss", False), ("lts", True)])
 async def test_theme_boot_privacy_acked_follows_the_edition(monkeypatch, edition, acked) -> None:
     """An LTS build reports the Privacy chapter as done, so the SPA never opens it."""
-    monkeypatch.setattr("kiro_crew.edition.EDITION", edition)
+    monkeypatch.setattr("aj_crew.edition.EDITION", edition)
     cfg = _make_cfg(privacy_acked=False)
-    with patch.object(core_mod, "KiroCrewConfig") as mock_cls:
+    with patch.object(core_mod, "AjCrewConfig") as mock_cls:
         mock_cls.load.return_value = cfg
         resp = await core_mod.api_theme_boot(MagicMock(spec=web.Request))
     assert json.loads(resp.body)["privacy_acked"] is acked
@@ -78,11 +78,11 @@ async def test_theme_boot_lts_never_reshows_a_changed_notice(monkeypatch, stored
     below the current notice version, so an LTS build must report the
     current version as well as ``privacy_acked``.
     """
-    from kiro_crew.beacon import PRIVACY_NOTICE_VERSION
+    from aj_crew.beacon import PRIVACY_NOTICE_VERSION
 
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
     cfg = _make_cfg(onboarded=True, privacy_acked=True, privacy_ack_version=stored_version)
-    with patch.object(core_mod, "KiroCrewConfig") as mock_cls:
+    with patch.object(core_mod, "AjCrewConfig") as mock_cls:
         mock_cls.load.return_value = cfg
         resp = await core_mod.api_theme_boot(MagicMock(spec=web.Request))
     body = json.loads(resp.body)
@@ -93,9 +93,9 @@ async def test_theme_boot_lts_never_reshows_a_changed_notice(monkeypatch, stored
 @pytest.mark.asyncio
 async def test_theme_boot_oss_reports_the_stored_notice_version(monkeypatch) -> None:
     """The oss build reports the stored version, so a changed notice is shown once."""
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "oss")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "oss")
     cfg = _make_cfg(onboarded=True, privacy_acked=True, privacy_ack_version=1)
-    with patch.object(core_mod, "KiroCrewConfig") as mock_cls:
+    with patch.object(core_mod, "AjCrewConfig") as mock_cls:
         mock_cls.load.return_value = cfg
         resp = await core_mod.api_theme_boot(MagicMock(spec=web.Request))
     assert json.loads(resp.body)["privacy_ack_version"] == 1
@@ -105,7 +105,7 @@ async def test_theme_boot_oss_reports_the_stored_notice_version(monkeypatch) -> 
 async def test_theme_boot_returns_defaults() -> None:
     """GET /api/theme/boot returns empty defaults when unconfigured."""
     cfg = _make_cfg()
-    with patch.object(core_mod, "KiroCrewConfig") as mock_cls:
+    with patch.object(core_mod, "AjCrewConfig") as mock_cls:
         mock_cls.load.return_value = cfg
         req = MagicMock(spec=web.Request)
         resp = await core_mod.api_theme_boot(req)
@@ -129,19 +129,19 @@ async def test_theme_boot_returns_configured_values() -> None:
     """GET /api/theme/boot returns workspace config values."""
     cfg = _make_cfg(
         theme_mode="dark",
-        theme_color="kiro",
+        theme_color="aj",
         onboarded=True,
         import_onboarded=True,
         translucent_panels="on",
     )
-    with patch.object(core_mod, "KiroCrewConfig") as mock_cls:
+    with patch.object(core_mod, "AjCrewConfig") as mock_cls:
         mock_cls.load.return_value = cfg
         req = MagicMock(spec=web.Request)
         resp = await core_mod.api_theme_boot(req)
     body = json.loads(resp.body)
     assert body == {
         "mode": "dark",
-        "color": "kiro",
+        "color": "aj",
         "language": "",
         "translucent_panels": "on",
         "onboarded": True,
@@ -161,7 +161,7 @@ async def test_theme_config_get() -> None:
         onboarded=True,
         import_onboarded=True,
     )
-    with patch.object(core_mod, "KiroCrewConfig") as mock_cls:
+    with patch.object(core_mod, "AjCrewConfig") as mock_cls:
         mock_cls.load.return_value = cfg
         req = MagicMock(spec=web.Request)
         req.method = "GET"
@@ -190,7 +190,7 @@ async def test_theme_config_get() -> None:
 
 @pytest.fixture()
 def cfg_file(tmp_path, monkeypatch) -> Path:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _invalidate_config_cache()
     return tmp_path / "config.json"
 
@@ -201,8 +201,8 @@ def cfg_file(tmp_path, monkeypatch) -> Path:
 _POPULATED = {
     "agent": {"approval_mode": "interactive", "max_subagents": "lots", "future_knob": 3},
     "agents": {
-        "default": {"kiro_agent": "kirocrew", "workspace": "default", "memory_store": "default"},
-        "writer": {"kiro_agent": "kirocrew", "workspace": "default", "memory_store": "default"},
+        "default": {"kiro_agent": "ajcrew", "workspace": "default", "memory_store": "default"},
+        "writer": {"kiro_agent": "ajcrew", "workspace": "default", "memory_store": "default"},
     },
     "default_agent": "default",
     "dashboard": {"theme_mode": "light", "language": "zh-CN", "default_memory_mode": "bogus"},
@@ -432,10 +432,10 @@ async def test_theme_config_put_no_change_no_write(cfg_file: Path) -> None:
     default-agent migration to write back, which would mask the assertion.
     """
     doc = json.loads(json.dumps(_POPULATED))
-    doc["dashboard"].update({"theme_mode": "dark", "theme_color": "kiro", "onboarded": True})
+    doc["dashboard"].update({"theme_mode": "dark", "theme_color": "aj", "onboarded": True})
     _write(cfg_file, doc)
     before = cfg_file.read_bytes()
-    resp = await _put({"mode": "dark", "color": "kiro", "onboarded": True})
+    resp = await _put({"mode": "dark", "color": "aj", "onboarded": True})
     assert resp.status == 200
     assert cfg_file.read_bytes() == before
 
@@ -497,9 +497,9 @@ async def test_the_put_never_publishes_a_whole_document_save(
     _write(cfg_file, {})
 
     def _refuse(self) -> None:
-        raise AssertionError("api_theme_config called KiroCrewConfig.save()")
+        raise AssertionError("api_theme_config called AjCrewConfig.save()")
 
-    monkeypatch.setattr(KiroCrewConfig, "save", _refuse)
+    monkeypatch.setattr(AjCrewConfig, "save", _refuse)
     resp = await _put({"mode": "dark", "language": "fr"})
     assert resp.status == 200
 
@@ -520,7 +520,7 @@ async def test_theme_boot_exposes_language() -> None:
     token flow completes -- this is what prevents an English flash on load.
     """
     cfg = _make_cfg(language="zh-CN")
-    with patch.object(core_mod, "KiroCrewConfig") as mock_cls:
+    with patch.object(core_mod, "AjCrewConfig") as mock_cls:
         mock_cls.load.return_value = cfg
         req = MagicMock(spec=web.Request)
         resp = await core_mod.api_theme_boot(req)

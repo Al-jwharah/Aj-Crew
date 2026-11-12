@@ -18,12 +18,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.acp import _dispatch as d
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import OUTCOME_SELECTED, JsonRpcMessage
-from kiro_crew.agent_sdk import backends
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.acp import _dispatch as d
+from aj_crew.acp import client as client_mod
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import OUTCOME_SELECTED, JsonRpcMessage
+from aj_crew.agent_sdk import backends
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_COPILOT,
     ACP_BACKEND_DEEPSEEK,
@@ -34,10 +34,10 @@ from kiro_crew.agent_sdk.backends import (
     ACP_BACKEND_STRANDS,
     ACP_BACKENDS_CREW_OAUTH_BRIDGE,
 )
-from kiro_crew.connections import crew_oauth, crew_oauth_proxy
-from kiro_crew.connections.oauth_clients import provider_for_server
-from kiro_crew.kas_env_shim import SHIM_MODULE
-from kiro_crew.mediated_request_capability import ApprovalMint
+from aj_crew.connections import crew_oauth, crew_oauth_proxy
+from aj_crew.connections.oauth_clients import provider_for_server
+from aj_crew.kas_env_shim import SHIM_MODULE
+from aj_crew.mediated_request_capability import ApprovalMint
 
 FRAMES = Path(__file__).parent / "fixtures" / "acp_frames"
 GITHUB_URL = "https://api.githubcopilot.com/mcp/"
@@ -57,7 +57,7 @@ def _clean_proxy():
 def home(tmp_path, monkeypatch):
     data_home = tmp_path / "crew-home"
     data_home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(data_home))
+    monkeypatch.setenv("AJCREW_HOME", str(data_home))
     return data_home
 
 
@@ -67,7 +67,7 @@ def _custody(
     monkeypatch.setattr(crew_oauth, "enabled", lambda: on)
     monkeypatch.setattr(crew_oauth, "_chat_backend", lambda: chat)
     monkeypatch.setattr(crew_oauth, "holds_grant", lambda slug: grant)
-    monkeypatch.setenv("KIROCREW_BOUND_PORT", "8123")
+    monkeypatch.setenv("AJCREW_BOUND_PORT", "8123")
 
 
 def _frames(path: str) -> list[dict]:
@@ -198,7 +198,7 @@ def _client_with_array(monkeypatch, tmp_path, backend: str) -> AcpClient:
     mirror = SimpleNamespace(session_projection=lambda *a, **k: projection)
     monkeypatch.setattr(client_mod, "mirror_for", lambda _backend: mirror)
     monkeypatch.setattr(client_mod, "injection_server_names", lambda *a, **k: frozenset())
-    client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=backend)
+    client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=backend)
     client._session_key = SESSION
     return client
 
@@ -219,7 +219,7 @@ def test_a_bridged_harness_array_carries_the_shim_element(home, monkeypatch, tmp
     (element,) = [e for e in client._resolve_session_mcp_servers() if e["name"] == "github"]
     assert element["type"] == "stdio" and "url" not in element
     assert SHIM_MODULE in element["args"]
-    assert {"name": "KIROCREW_HOME", "value": str(home)} in element["env"]
+    assert {"name": "AJCREW_HOME", "value": str(home)} in element["env"]
     assert GITHUB_URL not in json.dumps(element)
     assert crew_oauth_proxy.is_connection_server(SESSION, "github")
     (written,) = client._crew_bridge_snapshots
@@ -387,17 +387,17 @@ def test_a_ceiling_denying_the_server_refuses_the_dsh_ask_before_any_mint(tmp_pa
     and an allow rule on it grants nothing, since the identity stays untrusted."""
     import dataclasses
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.hooks import (
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.hooks import (
         TOOL_AUTO_APPROVE,
         TOOL_DENY,
         HookManager,
         HooksConfig,
         hook_gate_kwargs,
     )
-    from kiro_crew.platform import context as ctx_mod
-    from kiro_crew.platform.bootstrap import build_default_context
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.platform import context as ctx_mod
+    from aj_crew.platform.bootstrap import build_default_context
+    from aj_crew.platform.governance import parse_policy
 
     _register("probe")
     event = _deepseek_event(None, tmp_path)
@@ -412,7 +412,7 @@ def test_a_ceiling_denying_the_server_refuses_the_dsh_ask_before_any_mint(tmp_pa
         "boot": {"fail_closed": True},
         "mcp": {"mode": "deny", "deny": ["@probe"]},
     }
-    base = build_default_context(KiroCrewConfig.load())
+    base = build_default_context(AjCrewConfig.load())
     ctx_mod.set_context(dataclasses.replace(base, governance=parse_policy(policy)))
     try:
         result = HookManager(HooksConfig(auto_approve_tools=["*"])).on_tool_call(

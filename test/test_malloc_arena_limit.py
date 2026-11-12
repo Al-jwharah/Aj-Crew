@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli, platform_compat
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import cli, platform_compat
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 _M_ARENA_MAX = -8
 
@@ -64,8 +64,8 @@ def test_cap_set_after_threads_started_is_not_reported_applied(
     [
         {"MALLOC_ARENA_MAX": "8"},
         {"GLIBC_TUNABLES": "glibc.malloc.arena_max=6"},
-        {"KIROCREW_MALLOC_ARENA_MAX": "0"},
-        {"KIROCREW_MALLOC_ARENA_MAX": "-1"},
+        {"AJCREW_MALLOC_ARENA_MAX": "0"},
+        {"AJCREW_MALLOC_ARENA_MAX": "-1"},
     ],
 )
 def test_operator_setting_wins_or_opts_out(linux: None, env: dict[str, str]) -> None:
@@ -76,14 +76,14 @@ def test_operator_setting_wins_or_opts_out(linux: None, env: dict[str, str]) -> 
 
 def test_override_value_replaces_default(linux: None) -> None:
     rec = _Recorder()
-    env = {"KIROCREW_MALLOC_ARENA_MAX": "6"}
+    env = {"AJCREW_MALLOC_ARENA_MAX": "6"}
     assert _cap(environ=env, mallopt=rec).applied == 6
     assert rec.calls == [(_M_ARENA_MAX, 6)]
 
 
 def test_garbage_override_falls_back_to_default(linux: None) -> None:
     rec = _Recorder()
-    env = {"KIROCREW_MALLOC_ARENA_MAX": "lots"}
+    env = {"AJCREW_MALLOC_ARENA_MAX": "lots"}
     assert _cap(environ=env, mallopt=rec).applied == platform_compat.GATEWAY_MALLOC_ARENA_MAX
 
 
@@ -122,7 +122,7 @@ def test_log_says_capped_only_when_applied(
     level: int,
     text: str,
 ) -> None:
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.platform_compat"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.platform_compat"):
         platform_compat.log_malloc_arena_cap(result)
     [record] = caplog.records
     assert record.levelno == level
@@ -131,14 +131,14 @@ def test_log_says_capped_only_when_applied(
 
 
 def test_nothing_requested_logs_nothing(caplog: pytest.LogCaptureFixture) -> None:
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.platform_compat"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.platform_compat"):
         platform_compat.log_malloc_arena_cap(platform_compat.MallocArenaCap())
     assert caplog.records == []
 
 
 def _run_child(code: str, tmp_path: Path) -> subprocess.CompletedProcess[str]:
     env = {k: v for k, v in os.environ.items() if k != "MALLOC_ARENA_MAX"}
-    env["KIROCREW_HOME"] = str(tmp_path / "home")
+    env["AJCREW_HOME"] = str(tmp_path / "home")
     env.pop(platform_compat.MALLOC_ARENA_MAX_ENV, None)
     return subprocess.run(
         [sys.executable, "-c", textwrap.dedent(code)],
@@ -153,7 +153,7 @@ def _run_child(code: str, tmp_path: Path) -> subprocess.CompletedProcess[str]:
 
 @pytest.mark.skipif(sys.platform != "linux", reason="glibc arenas are Linux-only")
 def test_gateway_entry_is_single_threaded_at_the_cap(tmp_path: Path) -> None:
-    """The real ``kirocrew gateway`` entry reaches the cap with no extra thread.
+    """The real ``ajcrew gateway`` entry reaches the cap with no extra thread.
 
     glibc only honours the cap while the process is single-threaded, so any
     import or start-up step that spawns a thread above the call silently
@@ -164,7 +164,7 @@ def test_gateway_entry_is_single_threaded_at_the_cap(tmp_path: Path) -> None:
     res = _run_child(
         """
         import sys
-        from kiro_crew import cli, platform_compat
+        from aj_crew import cli, platform_compat
 
         real = platform_compat.limit_malloc_arenas
 
@@ -174,7 +174,7 @@ def test_gateway_entry_is_single_threaded_at_the_cap(tmp_path: Path) -> None:
             raise SystemExit(0)
 
         platform_compat.limit_malloc_arenas = spy
-        sys.argv = ["kirocrew", "gateway"]
+        sys.argv = ["ajcrew", "gateway"]
         cli.main()
         """,
         tmp_path,
@@ -193,7 +193,7 @@ def test_real_glibc_late_cap_is_not_reported_applied(tmp_path: Path) -> None:
     res = _run_child(
         """
         import threading
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         keep, stop = [], threading.Event()
         go = threading.Barrier(13)
@@ -226,7 +226,7 @@ def test_real_glibc_caps_arena_count(tmp_path: Path) -> None:
         pytest.skip("not glibc")
     code = textwrap.dedent("""
         import os, threading
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
         os.environ.pop("MALLOC_ARENA_MAX", None)
         cap = platform_compat.limit_malloc_arenas(environ={}).applied
         assert cap == platform_compat.GATEWAY_MALLOC_ARENA_MAX
@@ -281,7 +281,7 @@ def test_gateway_command_caps_arenas_before_dispatch(monkeypatch: pytest.MonkeyP
 
     monkeypatch.setattr(cli.platform_compat, "limit_malloc_arenas", fake_limit)
     monkeypatch.setattr(cli, "maybe_reexec", fake_reexec)
-    monkeypatch.setattr(cli.sys, "argv", ["kirocrew", "gateway"])
+    monkeypatch.setattr(cli.sys, "argv", ["ajcrew", "gateway"])
     with pytest.raises(_Stop):
         cli.main()
     assert calls == ["limit", "reexec"]
@@ -290,7 +290,7 @@ def test_gateway_command_caps_arenas_before_dispatch(monkeypatch: pytest.MonkeyP
 def test_non_gateway_command_leaves_allocator_alone(monkeypatch: pytest.MonkeyPatch) -> None:
     called: list[int] = []
     monkeypatch.setattr(cli.platform_compat, "limit_malloc_arenas", lambda: called.append(1))
-    monkeypatch.setattr(cli.sys, "argv", ["kirocrew", "--version"])
+    monkeypatch.setattr(cli.sys, "argv", ["ajcrew", "--version"])
     with pytest.raises(SystemExit):
         cli.main()
     assert called == []

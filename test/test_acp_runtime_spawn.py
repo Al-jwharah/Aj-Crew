@@ -20,10 +20,10 @@ from acp_runtime_helpers import _stub_sel_for_permission_tests  # noqa: F401
 from acp_runtime_helpers import _spawn_client_mod
 from spawn_test_helpers import strip_spawn_shim
 
-from kiro_crew.acp.runtime import AcpRuntime, AcpRuntimeError, _ColdStartAdmission
-from kiro_crew.acp.types import ACP_BACKEND_KAS
-from kiro_crew.start_priority import StartPriority
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.runtime import AcpRuntime, AcpRuntimeError, _ColdStartAdmission
+from aj_crew.acp.types import ACP_BACKEND_KAS
+from aj_crew.start_priority import StartPriority
+from aj_crew.testing.wait import await_until
 
 
 def test_runtime_uses_clients_augmented_kiro_bin_resolver():
@@ -32,8 +32,8 @@ def test_runtime_uses_clients_augmented_kiro_bin_resolver():
     shutil.which(PATH) misses it. Read as source: harnesses resolve at call time."""
     import inspect
 
-    import kiro_crew.acp.client as client_mod
-    from kiro_crew.acp.harness import KasHarness, KiroHarness
+    import aj_crew.acp.client as client_mod
+    from aj_crew.acp.harness import KasHarness, KiroHarness
 
     assert hasattr(client_mod, "_resolve_kiro_bin_for_spawn")
     for harness in (KiroHarness, KasHarness):
@@ -49,9 +49,9 @@ async def test_runtime_missing_kiro_bin_reports_the_directories_it_searched(back
 
     Like ``AcpClient._spawn`` (``env.describe_search_path``), it names every directory
     walked: resolution also checks ``%LOCALAPPDATA%\\Kiro-Cli``, ``%ProgramFiles%\\Kiro-Cli``
-    and ``KIROCREW_KIRO_BIN``, so "not found in PATH" would be wrong.
+    and ``AJCREW_KIRO_BIN``, so "not found in PATH" would be wrong.
     """
-    import kiro_crew.acp.client as client_mod
+    import aj_crew.acp.client as client_mod
 
     searched = [os.path.join(os.sep, "managed-bin"), os.path.join(os.sep, "path-bin")]
     unsearched = os.path.join(os.sep, "never-checked")
@@ -77,7 +77,7 @@ async def test_runtime_missing_kiro_bin_reports_the_directories_it_searched(back
     # The remedy travels with the diagnosis, the rule env.MCP_PATH_HINT exists
     # for: a reader who learns the search missed their install needs the one
     # knob that covers it named here, not only in the source.
-    assert "KIROCREW_KIRO_BIN" in message
+    assert "AJCREW_KIRO_BIN" in message
 
 
 async def _wait_for_queued(admission: _ColdStartAdmission, expected: int) -> None:
@@ -94,7 +94,7 @@ async def _wait_for_queued(admission: _ColdStartAdmission, expected: int) -> Non
 
 @pytest.mark.asyncio
 async def test_cold_start_admission_caps_simultaneous_runtime_spawns(monkeypatch):
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     admission = _ColdStartAdmission(limit=2)
     monkeypatch.setattr(runtime_mod, "_cold_start_admission", lambda: admission)
@@ -134,7 +134,7 @@ async def test_cold_start_admission_caps_simultaneous_runtime_spawns(monkeypatch
 
 @pytest.mark.asyncio
 async def test_cold_start_cancellation_releases_active_admission_slot(monkeypatch):
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     admission = _ColdStartAdmission(limit=1)
     monkeypatch.setattr(runtime_mod, "_cold_start_admission", lambda: admission)
@@ -165,7 +165,7 @@ async def test_cold_start_cancellation_releases_active_admission_slot(monkeypatc
 
 @pytest.mark.asyncio
 async def test_cold_start_queued_cancellation_does_not_consume_slot(monkeypatch):
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     admission = _ColdStartAdmission(limit=1)
     monkeypatch.setattr(runtime_mod, "_cold_start_admission", lambda: admission)
@@ -201,7 +201,7 @@ async def test_cold_start_queued_cancellation_does_not_consume_slot(monkeypatch)
 
 @pytest.mark.asyncio
 async def test_cold_start_exception_releases_admission_slot(monkeypatch):
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     admission = _ColdStartAdmission(limit=1)
     monkeypatch.setattr(runtime_mod, "_cold_start_admission", lambda: admission)
@@ -221,7 +221,7 @@ async def test_cold_start_exception_releases_admission_slot(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_runtime_spawn_retries_one_creation_failure_after_backoff(monkeypatch):
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     process = MagicMock()
     sleep = AsyncMock()
@@ -235,7 +235,7 @@ async def test_runtime_spawn_retries_one_creation_failure_after_backoff(monkeypa
 
 
 def test_cold_start_admission_registry_releases_contended_closed_loop(monkeypatch):
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     monkeypatch.setattr(
         runtime_mod,
@@ -281,9 +281,9 @@ async def test_runtime_spawn_passes_installed_path_through_exact_wrappers(
     monkeypatch,
     project_skills,
 ):
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
-    monkeypatch.setenv("KIROCREW_NATIVE_SKILL_PROJECTION", "1" if project_skills else "0")
+    monkeypatch.setenv("AJCREW_NATIVE_SKILL_PROJECTION", "1" if project_skills else "0")
     macos_dir = tmp_path / "Kiro CLI.app" / "Contents" / "MacOS"
     macos_dir.mkdir(parents=True)
     executable = macos_dir / "kiro-cli"
@@ -393,7 +393,7 @@ async def test_bound_macos_runtime_hands_sessions_the_verified_pathname(monkeypa
     identity. The earlier "/dev/fd/<n>" spelling is not resolvable on macOS -- the
     only platform that binds -- so it reached the peer as an unusable cwd.
     """
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     runtime = AcpRuntime(work_dir=tmp_path)
     runtime._bound_workspace_fd = 71
@@ -410,7 +410,7 @@ async def test_bound_macos_runtime_hands_sessions_the_verified_pathname(monkeypa
 
 @pytest.mark.asyncio
 async def test_bound_macos_runtime_rejects_descendant_session_workspace(monkeypatch, tmp_path):
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     runtime = AcpRuntime(work_dir=tmp_path)
     runtime._bound_workspace_fd = 71
@@ -426,7 +426,7 @@ async def test_bound_macos_runtime_rejects_descendant_session_workspace(monkeypa
 
 @pytest.mark.asyncio
 async def test_bound_macos_runtime_rejects_different_session_workspace(monkeypatch, tmp_path):
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     runtime = AcpRuntime(work_dir=tmp_path)
     runtime._bound_workspace_fd = 72
@@ -443,7 +443,7 @@ async def test_bound_macos_runtime_rejects_different_session_workspace(monkeypat
 
 @pytest.mark.asyncio
 async def test_kill_cancellation_still_releases_bound_workspace(monkeypatch, tmp_path):
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     runtime = AcpRuntime(work_dir=tmp_path)
     runtime._bound_workspace_fd = 73

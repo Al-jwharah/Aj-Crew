@@ -23,11 +23,11 @@ from pod_helpers import (  # noqa: F401 -- the fixtures register by import
     requires_posix_pod_lifecycle,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.pod import cli as pod_cli
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod import unit as unit_mod
-from kiro_crew.pod.config import PodConfig
+from aj_crew import platform_compat
+from aj_crew.pod import cli as pod_cli
+from aj_crew.pod import runtime as rt
+from aj_crew.pod import unit as unit_mod
+from aj_crew.pod.config import PodConfig
 
 # The invoking user's REAL home, captured at import time — before the autouse
 # ``_isolate_pod_host_state`` fixture pins HOME to a tmp dir. Used only to assert
@@ -45,7 +45,7 @@ class TestTheUnitFileNeverOutlivesAFailedLoad:
     def _plane(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         unit_file = tmp_path / "pod@.service"
         monkeypatch.setattr(rt.unit_mod, "unit_path", lambda c: unit_file)
-        monkeypatch.setattr(rt.unit_mod, "_kirocrew_argv", lambda: (sys.executable,))
+        monkeypatch.setattr(rt.unit_mod, "_ajcrew_argv", lambda: (sys.executable,))
         monkeypatch.setattr(rt, "require_backend", lambda: None)
         return unit_file
 
@@ -111,7 +111,7 @@ class TestHostStateIsFenced:
     """A pod test must not be able to write the machine's own systemd unit.
 
     `unit_path` reads `Path.home()`, and `_up` -> `install_backend` -> `install_unit`
-    reaches it, so an unfenced test rewrites `kirocrew-pod@.service` with its tmpdir.
+    reaches it, so an unfenced test rewrites `ajcrew-pod@.service` with its tmpdir.
     The PATH is asserted, so the guard never has to clobber the real unit.
     """
 
@@ -132,12 +132,12 @@ class TestHostStateIsFenced:
 
 
 class TestUnitExecSelfHeal:
-    """The unit bakes an absolute kirocrew path; a pruned worktree leaves it
+    """The unit bakes an absolute ajcrew path; a pruned worktree leaves it
     dangling and every start fails EXEC. unit_exec_ok detects that."""
 
     def _cfg_with_unit(self, tmp_path, monkeypatch, exec_line):
-        from kiro_crew.pod import unit as unit_mod
-        from kiro_crew.pod.config import PodConfig
+        from aj_crew.pod import unit as unit_mod
+        from aj_crew.pod.config import PodConfig
 
         monkeypatch.setattr(unit_mod, "unit_path", lambda cfg: tmp_path / "pod@.service")
         # Carries every directive this build REQUIRES (see `_REQUIRED_DIRECTIVES`),
@@ -152,27 +152,27 @@ class TestUnitExecSelfHeal:
         return PodConfig.load()
 
     def test_dangling_binary_detected(self, tmp_path, monkeypatch):
-        from kiro_crew.pod import unit as unit_mod
+        from aj_crew.pod import unit as unit_mod
 
         cfg = self._cfg_with_unit(
             tmp_path,
             monkeypatch,
-            f"ExecStart={(tmp_path / 'gone/.venv/bin/kirocrew').as_posix()} pod _run %i",
+            f"ExecStart={(tmp_path / 'gone/.venv/bin/ajcrew').as_posix()} pod _run %i",
         )
         assert unit_mod.unit_exec_ok(cfg) is False
 
     def test_valid_binary_passes(self, tmp_path, monkeypatch):
-        from kiro_crew.pod import unit as unit_mod
+        from aj_crew.pod import unit as unit_mod
 
-        exe = tmp_path / "kirocrew"
+        exe = tmp_path / "ajcrew"
         exe.write_text("#!/bin/sh\n")
         exe.chmod(0o755)
         cfg = self._cfg_with_unit(tmp_path, monkeypatch, f"ExecStart={exe.as_posix()} pod _run %i")
         assert unit_mod.unit_exec_ok(cfg) is True
 
     def test_missing_unit_file_detected(self, tmp_path, monkeypatch):
-        from kiro_crew.pod import unit as unit_mod
-        from kiro_crew.pod.config import PodConfig
+        from aj_crew.pod import unit as unit_mod
+        from aj_crew.pod.config import PodConfig
 
         monkeypatch.setattr(unit_mod, "unit_path", lambda cfg: tmp_path / "absent@.service")
         assert unit_mod.unit_exec_ok(PodConfig.load()) is False
@@ -182,9 +182,9 @@ class TestUnitExecSelfHeal:
         whatever it installed. Without this, an older unit's ExecStopPost would go
         on racing the pod's own subprocesses (and wiping the HOME on the stop half
         of a Restart=) until someone reinstalled by hand."""
-        from kiro_crew.pod import unit as unit_mod
+        from aj_crew.pod import unit as unit_mod
 
-        exe = tmp_path / "kirocrew"
+        exe = tmp_path / "ajcrew"
         exe.write_text("#!/bin/sh\n")
         exe.chmod(0o755)
         cfg = self._cfg_with_unit(tmp_path, monkeypatch, f"ExecStart={exe.as_posix()} pod _run %i")
@@ -197,31 +197,31 @@ class TestUnitExecSelfHeal:
     def test_what_this_build_renders_is_current(self, cfg, monkeypatch, tmp_path):
         """Guard against the reverse failure: a check that flagged the CURRENT
         template would re-render and daemon-reload on every single `pod up`."""
-        from kiro_crew.pod import unit as unit_mod
+        from aj_crew.pod import unit as unit_mod
 
         monkeypatch.setattr(unit_mod, "unit_path", lambda c: tmp_path / "pod@.service")
         # An executable that exists on every platform the suite runs on — a POSIX
         # path here made unit_exec_ok report "stale" on Windows.
-        monkeypatch.setattr(unit_mod, "_kirocrew_argv", lambda: (sys.executable,))
+        monkeypatch.setattr(unit_mod, "_ajcrew_argv", lambda: (sys.executable,))
         unit_mod.install_unit(cfg)
         assert unit_mod.unit_is_current(cfg) is True
 
     @requires_posix_pod_lifecycle
     def test_spaced_executable_is_quoted_and_current(self, cfg, monkeypatch, tmp_path):
-        from kiro_crew.pod import unit as unit_mod
+        from aj_crew.pod import unit as unit_mod
 
-        exe = tmp_path / "venv with spaces" / "kirocrew"
+        exe = tmp_path / "venv with spaces" / "ajcrew"
         exe.parent.mkdir()
         exe.write_text("#!/bin/sh\n")
         exe.chmod(0o755)
         monkeypatch.setattr(unit_mod, "unit_path", lambda c: tmp_path / "pod@.service")
-        monkeypatch.setattr(unit_mod, "_kirocrew_argv", lambda: (str(exe),))
+        monkeypatch.setattr(unit_mod, "_ajcrew_argv", lambda: (str(exe),))
         rendered = unit_mod.install_unit(cfg).read_text()
         assert 'ExecStart="' in rendered
         assert unit_mod.unit_is_current(cfg) is True
 
     def test_malformed_execstart_is_stale(self, tmp_path, monkeypatch):
-        from kiro_crew.pod import unit as unit_mod
+        from aj_crew.pod import unit as unit_mod
 
         cfg = self._cfg_with_unit(tmp_path, monkeypatch, 'ExecStart="unterminated')
         assert unit_mod.unit_exec_ok(cfg) is False
@@ -250,12 +250,12 @@ class TestUnitExecSelfHeal:
         ]
 
     def test_module_invocation_form_passes(self, tmp_path, monkeypatch):
-        from kiro_crew.pod import unit as unit_mod
+        from aj_crew.pod import unit as unit_mod
 
         cfg = self._cfg_with_unit(
             tmp_path,
             monkeypatch,
-            "ExecStart=python3 -m kiro_crew pod _run %i",
+            "ExecStart=python3 -m aj_crew pod _run %i",
         )
         assert unit_mod.unit_exec_ok(cfg) is True
 
@@ -270,7 +270,7 @@ class TestPlatformGuard:
     """
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse systemctl seams moved verbatim; no test in this class calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse systemctl seams moved verbatim; no test in this class calls monkeypatch.undo()
     def _linux_systemctl_seams(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Keep Linux-shaped probe tests deterministic on Windows and macOS."""
         monkeypatch.setattr(rt, "IS_LINUX", True)
@@ -698,7 +698,7 @@ class TestPlatformGuard:
 class TestSessionBus:
     """``systemctl --user`` needs the per-user systemd instance's bus pointers.
 
-    Under a system unit (``kirocrew service install``) neither ``XDG_RUNTIME_DIR`` nor
+    Under a system unit (``ajcrew service install``) neither ``XDG_RUNTIME_DIR`` nor
     ``DBUS_SESSION_BUS_ADDRESS`` is set. ``_systemctl_env()`` backfills them; when
     the socket is absent ``require_systemd()`` explains the fix.
     """

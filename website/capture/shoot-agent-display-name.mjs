@@ -46,9 +46,9 @@ const CREW = (name, display_name, kiro_agent) => ({
 
 const AGENTS_FIXTURE = {
   agents: [
-    CREW('default', '', 'kirocrew'),
+    CREW('default', '', 'ajcrew'),
     CREW('oncall', 'Oncall Sentinel', 'oncall-agent'),
-    CREW('research', 'Deep Research', 'kirocrew'),
+    CREW('research', 'Deep Research', 'ajcrew'),
   ],
   default_agent: 'default',
 }
@@ -67,7 +67,7 @@ const MEMBERS_FIXTURE = {
     {
       name: 'default', slug: 'default', display_name: '',
       slot_key: '', running: false, last_active_ts: 0, last_message: '',
-      kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default',
+      kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default',
       memory_version: 'v2', memory_owner: 'default', model: '', avatar: {},
       source: '', starred: false, description: '', triggers: '',
       projections: { asOfSeq: -1, values: {} },
@@ -94,9 +94,9 @@ const EXTRA = async (path, route) => {
       const row = (name) => ({
         name, filename: name + '.json', description: '', model: '',
         skills: [], mcp_servers: [], source: 'builtin', package: '',
-        scope: 'global', kirocrew_owned: false, forked_from: '', private_to: '',
+        scope: 'global', ajcrew_owned: false, forked_from: '', private_to: '',
       })
-      return json(route, [row('kirocrew'), row('oncall-agent')]), true
+      return json(route, [row('ajcrew'), row('oncall-agent')]), true
     }
     if (path === '/api/members') return json(route, MEMBERS_FIXTURE), true
     if (path.startsWith('/api/members/')) return json(route, {}), true

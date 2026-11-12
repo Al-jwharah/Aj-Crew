@@ -1,6 +1,6 @@
 """Tests for local_review.py - local/server reviewer CONTRACT PARITY.
 
-The kirocrew-prepare-pr skill's Phase-2 local review is only a real gate if it judges a
+The ajcrew-prepare-pr skill's Phase-2 local review is only a real gate if it judges a
 commit against the same contract the server reviewers use. ``local_review.py``
 gets that by EXTRACTING the contract from the reviewer workflows instead of
 restating it, so these tests hold two properties:
@@ -37,10 +37,10 @@ import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 from skill_script_helpers import load_skill_script
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = REPO_ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev" / "kirocrew-prepare-pr"
+SKILL_DIR = REPO_ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr"
 SCRIPTS_DIR = SKILL_DIR / "scripts"
 PROFILES_DIR = SKILL_DIR / "profiles"
 WORKFLOWS_DIR = REPO_ROOT / ".github" / "workflows"
@@ -61,8 +61,8 @@ local_review = _load("_pp_local_review", "local_review.py")
 #: reach another process, so the child needs the environment variable.
 NO_PYC = {"PYTHONDONTWRITEBYTECODE": "1"}
 
-KIROCREW_PROFILE = json.loads((PROFILES_DIR / "kirocrew.json").read_text(encoding="utf-8"))
-PROFILE_MODELS = {r["name"]: r for r in KIROCREW_PROFILE["reviewers"]}
+AJCREW_PROFILE = json.loads((PROFILES_DIR / "ajcrew.json").read_text(encoding="utf-8"))
+PROFILE_MODELS = {r["name"]: r for r in AJCREW_PROFILE["reviewers"]}
 
 # Local values for the GitHub event expressions the workflows interpolate.
 FAKE_VALUES = {
@@ -279,7 +279,7 @@ def _parity_repo_template(tmp_path_factory):
 
 @pytest.fixture
 def parity_repo(tmp_path, _parity_repo_template):
-    """A synthetic repo that resolve_profile.py recognises as Kiro Crew.
+    """A synthetic repo that resolve_profile.py recognises as Aj Crew.
 
     Carries real copies of both reviewer workflows and both base-ref prompt
     files, a backend AUTOSDE.yaml, and deliberately NO website/AUTOSDE.yaml so
@@ -1108,7 +1108,7 @@ def test_malformed_profile_is_an_environment_error_not_a_traceback(
         local_review.assemble(
             str(parity_repo), "main", str(tmp_path / "out"), str(tmp_path / "stage")
         )
-    assert "cannot read the kirocrew-prepare-pr profile" in str(exc.value)
+    assert "cannot read the ajcrew-prepare-pr profile" in str(exc.value)
     assert "TypeError" in str(exc.value)
 
 
@@ -1820,7 +1820,7 @@ def _check_older_install_hint(parity_repo, tmp_path, old, base_sha, short):
     detached = add[-2]
     # The hint made the directory itself: new, empty, and private to this user.
     assert os.path.dirname(detached) == short
-    assert os.path.basename(detached).startswith("kirocrew-prepare-pr-base-")
+    assert os.path.basename(detached).startswith("ajcrew-prepare-pr-base-")
     assert os.listdir(detached) == []
     if os.name != "nt":
         assert os.stat(detached).st_mode & 0o077 == 0

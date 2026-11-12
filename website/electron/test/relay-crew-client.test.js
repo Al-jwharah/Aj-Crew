@@ -71,7 +71,7 @@ test("sends the local secret only to a literal loopback http origin", async () =
     assert.deepEqual(r, { ok: false, code: "UNAVAILABLE", retryAfter: null }, backendUrl);
     assert.equal(f.calls.length, 0, `${backendUrl}: nothing may be sent`);
   }
-  for (const backendUrl of ["http://127.0.0.1:5476", "http://[::1]:5476", "http://kirocrew.localhost:5476"]) {
+  for (const backendUrl of ["http://127.0.0.1:5476", "http://[::1]:5476", "http://ajcrew.localhost:5476"]) {
     const f = fakeFetch(404, {});
     await call(f.fetchFn, { backendUrl });
     assert.equal(f.calls.length, 1, backendUrl);

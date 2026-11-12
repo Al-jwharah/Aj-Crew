@@ -21,7 +21,7 @@ from skill_script_helpers import load_skill_script
 SKILL_DIR = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "pipeline-conductor"
 )
@@ -381,7 +381,7 @@ class TestOpenPullRequests:
         monkeypatch.setattr(
             mod,
             "gh_json",
-            lambda args: ([api_pull(42, head={"repo": {"full_name": "fork/KiroCrew"}})], None),
+            lambda args: ([api_pull(42, head={"repo": {"full_name": "fork/AjCrew"}})], None),
         )
         assert mod.open_pull_requests(REPO)[0][0]["is_cross_repository"] is True
 

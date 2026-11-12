@@ -26,12 +26,12 @@ import pytest
 from skill_script_helpers import load_skill_script
 from source_corpus import parsed_candidates
 
-from kiro_crew import platform_lock_compat
+from aj_crew import platform_lock_compat
 
 SCRIPT = (
     Path(__file__).resolve().parent.parent
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "five-whys"
     / "scripts"

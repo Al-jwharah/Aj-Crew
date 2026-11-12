@@ -21,7 +21,7 @@ from prompts_helpers import (
     _write_request,
 )
 
-from kiro_crew.dashboard.handlers import api_prompt_detail, api_prompts, api_prompts_create
+from aj_crew.dashboard.handlers import api_prompt_detail, api_prompts, api_prompts_create
 
 
 class TestAppTokenWriteGate:

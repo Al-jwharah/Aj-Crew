@@ -53,7 +53,7 @@ const CREWS = [
 const SSO = { state: 'ok', seconds_remaining: 72000, expires_at: null, reason: 'valid' }
 
 const slot = (key, title, extra = {}) => ({
-  key, title, messages: 8, running: false, agent: 'kirocrew', mode: '',
+  key, title, messages: 8, running: false, agent: 'ajcrew', mode: '',
   memory_mode: 'persistent', folder_id: '', last_message: '',
   source_links: [], source_links_total: 0,
   created: '2026-09-01T01:00:00Z', last_ts: '2026-09-03T20:00:00Z',
@@ -90,17 +90,17 @@ const capabilities = (id) => ({
   local_version: '0.5.0',
   version_match: true,
   agents: [
-    { name: 'kirocrew', description: "The crew's default agent", scope: 'global', model: 'auto' },
+    { name: 'ajcrew', description: "The crew's default agent", scope: 'global', model: 'auto' },
     { name: 'indexer', description: 'Owns the search index', scope: 'global', model: 'auto' },
   ],
-  default_agent: 'kirocrew',
+  default_agent: 'ajcrew',
   models: [
     { model_name: 'auto', display_name: 'Auto', description: 'Let the crew choose', context_window: 0 },
     { model_name: 'opus', display_name: 'Opus 4.8', description: '', context_window: 200000 },
   ],
   effort_levels: ['low', 'medium', 'high'],
-  workspaces: [{ name: 'kirocrew', path: '/home/crew/kirocrew' }],
-  default_workspace: '/home/crew/kirocrew',
+  workspaces: [{ name: 'ajcrew', path: '/home/crew/ajcrew' }],
+  default_workspace: '/home/crew/ajcrew',
   unavailable: {},
 })
 

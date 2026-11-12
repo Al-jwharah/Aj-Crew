@@ -26,8 +26,8 @@ import asyncio
 
 import pytest
 
-from kiro_crew.mcp_gateway import manager as mgr
-from kiro_crew.metrics import events as metric_events
+from aj_crew.mcp_gateway import manager as mgr
+from aj_crew.metrics import events as metric_events
 
 
 def _manager(tmp_path) -> mgr.GatewayManager:
@@ -80,7 +80,7 @@ def recorded(monkeypatch):
     def _fake_histogram(name: str, value: float, attrs: dict, *, unit: str = "1") -> None:
         histograms.append((name, value, dict(attrs)))
 
-    for mod in ("kiro_crew.metrics.events", "kiro_crew.mcp_gateway.manager"):
+    for mod in ("aj_crew.metrics.events", "aj_crew.mcp_gateway.manager"):
         monkeypatch.setattr(f"{mod}.emit_counter", _fake_counter, raising=False)
         monkeypatch.setattr(f"{mod}.emit_histogram", _fake_histogram, raising=False)
     return counters, histograms

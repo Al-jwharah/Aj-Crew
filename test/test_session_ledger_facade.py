@@ -1,11 +1,11 @@
-"""``kiro_crew.session_ledger`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.session_ledger`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.session_ledger`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over two
+``aj_crew.session_ledger`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over two
 owners, lowest layer first: ``session_ledger_layout`` (the vocabulary, the on-disk layout
 and the store lock) and ``session_ledger_control`` (the per-slot control files that govern
 what a fold reads). It keeps the record API itself -- the fold and read, the write, the
 upgrade carry, the legacy-store purge and the snapshot -- and every name an owner defines
-still resolves as ``kiro_crew.session_ledger.<name>``.
+still resolves as ``aj_crew.session_ledger.<name>``.
 
 ``test/test_facade_mirror_guards.py`` holds every mirrored facade to the shared rules. These
 tests pin what is particular to this one: every name the test trees patch through it --
@@ -13,7 +13,7 @@ directly or through another module's binding of it -- reaches every module holdi
 the undo restores all of them; the owner list and its layering; that the facade binds what
 its own code reads and serves the rest, with every served name visible to type checkers;
 that every public name the module held still type-checks through it; that the family logs
-as ``kiro_crew.session_ledger`` and its three errors keep that module name; and that the
+as ``aj_crew.session_ledger`` and its three errors keep that module name; and that the
 facade imports nothing its own code does not account for, the F401 check ``setup.cfg``
 switches off for it.
 """
@@ -34,7 +34,7 @@ import pytest
 import source_corpus
 import test_campaign_facades_base_public_names as base_names
 
-from kiro_crew import _facade_mirror, session_ledger
+from aj_crew import _facade_mirror, session_ledger
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_session_ledger_facade")
 
@@ -43,7 +43,7 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_session_ledger_facade")
 SHARED_FACADE_CHECKS = ("known_seams", "spelling_cases", "corpus_gate", "owner_layering")
 
 FACADE = session_ledger.__name__
-OWNERS = ("kiro_crew.session_ledger_layout", "kiro_crew.session_ledger_control")
+OWNERS = ("aj_crew.session_ledger_layout", "aj_crew.session_ledger_control")
 _SRC = Path(session_ledger.__file__).resolve().parent
 
 #: Names the test trees are known to patch through the facade, one or more per kind of
@@ -115,7 +115,7 @@ def _spellings() -> dict[str, str]:
         if module.endswith(".__init__"):
             module = module.rpartition(".")[0]
         for node in _facade_mirror._module_level_statements(ast.parse(text)):
-            if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew" and not node.level:
+            if isinstance(node, ast.ImportFrom) and node.module == "aj_crew" and not node.level:
                 for alias in node.names:
                     if alias.name == "session_ledger":
                         spellings[f"{module}.{alias.asname or alias.name}"] = FACADE
@@ -129,23 +129,23 @@ def patched_names(source: str) -> set[str]:
 #: Each spelling the patch scan must read, and each it must skip, keyed by case id.
 _SPELLING_CASES = {
     "monkeypatch-alias": (
-        "from kiro_crew import session_ledger as sl\n"
+        "from aj_crew import session_ledger as sl\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(sl, 'A', 1)\n",
         {"A"},
     ),
     "mock-patch-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.session_ledger.B'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.session_ledger.B'):\n        pass\n",
         {"B"},
     ),
     "projection-binding": (
-        "from kiro_crew.crew_log import projection\n"
+        "from aj_crew.crew_log import projection\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(projection.session_ledger, 'C', 1)\n",
         {"C"},
     ),
     "owner-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.session_ledger_control.D'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.session_ledger_control.D'):\n        pass\n",
         set(),
     ),
 }
@@ -206,8 +206,8 @@ def test_a_facade_patch_of_every_scanned_name_reaches_every_module_holding_it() 
 def test_a_facade_patch_of_a_layout_bound_reaches_the_control_owner_reading_it() -> None:
     """``_MAX_ORDERED_UNITS`` is defined by the layout owner and read by the control
     owner's unit-order log: one write through the facade lands in both."""
-    layout = sys.modules["kiro_crew.session_ledger_layout"]
-    control = sys.modules["kiro_crew.session_ledger_control"]
+    layout = sys.modules["aj_crew.session_ledger_layout"]
+    control = sys.modules["aj_crew.session_ledger_control"]
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(session_ledger, "_MAX_ORDERED_UNITS", 3)
         assert (layout._MAX_ORDERED_UNITS, control._MAX_ORDERED_UNITS) == (3, 3)
@@ -230,7 +230,7 @@ def test_the_mirror_indexes_exactly_the_owners_with_no_exclusion_and_no_forward(
 
 
 def test_the_owners_are_every_session_ledger_sibling() -> None:
-    siblings = sorted(f"kiro_crew.{path.stem}" for path in _SRC.glob("session_ledger_*.py"))
+    siblings = sorted(f"aj_crew.{path.stem}" for path in _SRC.glob("session_ledger_*.py"))
     assert siblings == sorted(OWNERS)
 
 
@@ -260,8 +260,8 @@ def _layering_gaps(trees: dict[str, ast.Module]) -> dict[str, list[str]]:
 
 def test_the_layering_check_can_fail() -> None:
     trees = {name: _tree(sys.modules[name]) for name in OWNERS}
-    trees[OWNERS[0]] = ast.parse("from kiro_crew.session_ledger_control import _read_lines\n")
-    trees[OWNERS[1]] = ast.parse("from kiro_crew import session_ledger\n")
+    trees[OWNERS[0]] = ast.parse("from aj_crew.session_ledger_control import _read_lines\n")
+    trees[OWNERS[1]] = ast.parse("from aj_crew import session_ledger\n")
     assert _layering_gaps(trees) == {OWNERS[0]: [OWNERS[1]], OWNERS[1]: [FACADE]}
 
 
@@ -324,10 +324,10 @@ def test_every_served_name_type_checks_through_the_facade() -> None:
 
 def test_the_family_logs_under_the_facade_name() -> None:
     """One logger, still named for the facade module, held by every module that logs, so a
-    ``caplog.at_level(logger="kiro_crew.session_ledger")`` still hears the moved code."""
+    ``caplog.at_level(logger="aj_crew.session_ledger")`` still hears the moved code."""
     assert session_ledger.logger is logging.getLogger(FACADE)
     holders = [m.__name__ for m in _family() if "logger" in vars(m)]
-    assert {FACADE, "kiro_crew.session_ledger_control"} <= set(holders)
+    assert {FACADE, "aj_crew.session_ledger_control"} <= set(holders)
     assert all(vars(sys.modules[h])["logger"] is session_ledger.logger for h in holders)
 
 
@@ -336,7 +336,7 @@ def test_the_family_logs_under_the_facade_name() -> None:
 )
 def test_an_error_is_named_by_the_facade_in_a_traceback(name: str) -> None:
     """A traceback names an exception by its class's dotted name. All three moved to owners
-    and still read as ``kiro_crew.session_ledger.<name>``."""
+    and still read as ``aj_crew.session_ledger.<name>``."""
     error_type = getattr(session_ledger, name)
     assert error_type.__module__ == FACADE
     shown = "".join(traceback.format_exception_only(error_type("refused")))
@@ -393,9 +393,9 @@ def test_the_inventory_check_reports_a_planted_import() -> None:
     of a name that owner does not define, are both reported."""
     planted = (
         _source(session_ledger)
-        + "\nimport pickle\nfrom kiro_crew.session_ledger_layout import _read_lines\n"
+        + "\nimport pickle\nfrom aj_crew.session_ledger_layout import _read_lines\n"
     )
     assert unexpected_imports(planted, _owner_defined(), _facade_reads()) == [
         "pickle",
-        "kiro_crew.session_ledger_layout._read_lines",
+        "aj_crew.session_ledger_layout._read_lines",
     ]

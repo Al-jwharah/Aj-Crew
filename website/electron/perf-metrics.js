@@ -4,7 +4,7 @@
 //
 // Why a recorder and not a query endpoint: `app.getAppMetrics()` is an
 // Electron-main API, so it can only be read from inside this process. The
-// backend CLI (`kirocrew desktop metrics`) is a separate Python process and a
+// backend CLI (`ajcrew desktop metrics`) is a separate Python process and a
 // second Electron instance cannot read the first one's metrics, so there is no
 // way for the CLI to ask the running app for a live sample without introducing
 // a listener. Rather than open one, this module samples on an interval and
@@ -17,7 +17,7 @@
 // unresponsive.
 //
 // Same contract as pyspy-dump.js: strictly best-effort, never throws, and never
-// keeps the app alive. It is OFF unless KIROCREW_DEBUG is set, so a normal user
+// keeps the app alive. It is OFF unless AJCREW_DEBUG is set, so a normal user
 // install writes nothing and pays no sampling cost.
 //
 const fs = require("fs");
@@ -25,9 +25,9 @@ const os = require("os");
 const path = require("path");
 
 const ARTIFACT_NAME = "desktop-metrics.json";
-const DEBUG_ENV_VAR = "KIROCREW_DEBUG";
+const DEBUG_ENV_VAR = "AJCREW_DEBUG";
 
-// Kept in sync with kiro_crew.perf_sampler.profiling_enabled: the desktop and
+// Kept in sync with aj_crew.perf_sampler.profiling_enabled: the desktop and
 // backend halves of the profiler must agree on what "debug" means, or the CLI
 // reads an artifact the app declined to write (or vice versa).
 const TRUTHY = new Set(["1", "true", "yes", "on"]);

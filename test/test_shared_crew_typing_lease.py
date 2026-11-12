@@ -15,30 +15,30 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.sections_shared_crew import SHARED_CREW_BOUNDS, shared_crew_config_from
-from kiro_crew.shared_crew import typing_lease
-from kiro_crew.shared_crew.admission import REASON_HTTP_STATUS, ReasonCode
-from kiro_crew.shared_crew.collab import FRAME_TYPING_LEASE, SERVER_FRAMES
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.config.sections_shared_crew import SHARED_CREW_BOUNDS, shared_crew_config_from
+from aj_crew.shared_crew import typing_lease
+from aj_crew.shared_crew.admission import REASON_HTTP_STATUS, ReasonCode
+from aj_crew.shared_crew.collab import FRAME_TYPING_LEASE, SERVER_FRAMES
+from aj_crew.shared_crew.contracts import (
     DisplaySnapshot,
     Principal,
     PrincipalKind,
     Provenance,
     principal_id_for,
 )
-from kiro_crew.shared_crew.identity import (
+from aj_crew.shared_crew.identity import (
     ACTOR_REQUEST_KEY,
     ActorContext,
     Transport,
     local_operator_principal,
 )
-from kiro_crew.shared_crew.presence import (
+from aj_crew.shared_crew.presence import (
     PresenceRegistry,
     handle_activity_frame,
     release_connection,
 )
-from kiro_crew.shared_crew.preview import PREVIEW_ENV
-from kiro_crew.shared_crew.typing_lease import (
+from aj_crew.shared_crew.preview import PREVIEW_ENV
+from aj_crew.shared_crew.typing_lease import (
     END_CLEARED,
     END_DISCONNECTED,
     END_IDLE,
@@ -46,7 +46,7 @@ from kiro_crew.shared_crew.typing_lease import (
     END_TAKEN_OVER,
     TypingLeaseRegistry,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 BOUND = 30.0
 
@@ -350,8 +350,8 @@ def _actor_middleware():
 def dash_state(tmp_path, monkeypatch):
     from chat_test_helpers import _make_state
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.broadcast_ws_owners = MagicMock()
@@ -361,8 +361,8 @@ def dash_state(tmp_path, monkeypatch):
 
 
 def _client(state) -> TestClient:
-    from kiro_crew.dashboard.chat_handlers import api_chat
-    from kiro_crew.shared_crew.routes_collab import api_shared_crew_typing_lease
+    from aj_crew.dashboard.chat_handlers import api_chat
+    from aj_crew.shared_crew.routes_collab import api_shared_crew_typing_lease
 
     app = web.Application(middlewares=[_actor_middleware()])
     app["state"] = state
@@ -383,8 +383,8 @@ async def test_a_non_holder_send_is_refused_and_the_holder_send_releases(dash_st
     lease.typed("s1", "ws:a", ALICE)
     run_chat = AsyncMock()
     with (
-        patch("kiro_crew.dashboard.chat_handlers._run_chat", new=run_chat),
-        patch("kiro_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_handlers._run_chat", new=run_chat),
+        patch("aj_crew.dashboard.chat_handlers._maybe_auto_title", new=AsyncMock()),
     ):
         async with _client(dash_state) as client:
             status, body = await _post(client, "bob", {"slot": "s1", "message": "bob's draft"})
@@ -424,7 +424,7 @@ async def test_a_steer_into_a_running_turn_is_never_held(dash_state):
     busy.done.return_value = False
     slot.task = busy
     steer = AsyncMock(return_value=web.json_response({"ok": True, "steered": True}))
-    with patch("kiro_crew.dashboard.chat_handlers.steer_into_running_turn", new=steer):
+    with patch("aj_crew.dashboard.chat_handlers.steer_into_running_turn", new=steer):
         async with _client(dash_state) as client:
             status, body = await _post(
                 client, "bob", {"slot": "s1", "message": "stop that", "steer": True}
@@ -450,7 +450,7 @@ async def test_after_the_idle_window_the_send_race_is_the_backstop(dash_state):
     dash_state._shared_crew_typing_lease = lease
     lease.typed("s1", "ws:a", ALICE)
     clock.now += 11
-    from kiro_crew.shared_crew import send_race
+    from aj_crew.shared_crew import send_race
 
     reg = send_race.send_race_for(dash_state)
     granted = await reg.claim("s1", principal=ALICE, base_revision=0)
@@ -543,7 +543,7 @@ def test_only_the_takeover_frame_names_the_previous_holder():
 
 
 def _takeover_client(state) -> TestClient:
-    from kiro_crew.shared_crew import routes_collab
+    from aj_crew.shared_crew import routes_collab
 
     app = web.Application(middlewares=[_actor_middleware()])
     app["state"] = state
@@ -610,7 +610,7 @@ async def test_the_takeover_route_refuses_a_caller_who_is_not_admitted(monkeypat
         request["is_dashboard_user"] = False
         return await handler(request)
 
-    from kiro_crew.shared_crew.routes_collab import api_shared_crew_typing_lease_takeover
+    from aj_crew.shared_crew.routes_collab import api_shared_crew_typing_lease_takeover
 
     app = web.Application(middlewares=[app_token])
     app["state"] = state

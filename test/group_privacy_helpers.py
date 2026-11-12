@@ -1,4 +1,4 @@
-"""Fakes for the group-privacy questions in :mod:`kiro_crew.platform_compat`.
+"""Fakes for the group-privacy questions in :mod:`aj_crew.platform_compat`.
 
 Those questions read the account databases and a directory's POSIX access ACL.
 The pins that drive them state both rather than inherit the test host's: a

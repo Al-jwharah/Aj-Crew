@@ -13,9 +13,9 @@ from types import SimpleNamespace
 
 import pytest
 
+from aj_crew import platform_compat
+from aj_crew.acp import liveness_proc as proc
 from conftest import requires_symlinks
-from kiro_crew import platform_compat
-from kiro_crew.acp import liveness_proc as proc
 
 _NET_HEADER = "  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt\n"
 

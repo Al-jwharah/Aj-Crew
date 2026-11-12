@@ -1,4 +1,4 @@
-"""Behaviour coverage for ``kiro_crew.apps.registry``'s manifests: the manifest cache and
+"""Behaviour coverage for ``aj_crew.apps.registry``'s manifests: the manifest cache and
 its garbage collection, subdirectory containment, the manifest fetch, and resolving,
 merging and enriching a manifest with its install status and trust fields.
 """
@@ -17,9 +17,9 @@ from apps_registry_coverage_helpers import cache_dir_fixture  # noqa: F401
 from apps_registry_coverage_helpers import _fake_sandbox, _FakeProc
 from stray_line_helpers import too_deep_to_decode
 
+from aj_crew.apps import registry
+from aj_crew.apps.registry_pipeline import manifests as manifests_mod
 from conftest import requires_symlinks
-from kiro_crew.apps import registry
-from kiro_crew.apps.registry_pipeline import manifests as manifests_mod
 
 # Manifest cache
 
@@ -848,14 +848,14 @@ class TestMergeManifest:
                 "useCases": ["u"],
                 "configuration": ["c"],
                 "license": "MIT",
-                "minKiroCrewVersion": "0.1.0",
+                "minAjCrewVersion": "0.1.0",
             },
         )
         assert merged["displayName"] == "Demo"
         assert merged["tags"] == ["a"]
         assert merged["useCases"] == ["u"]
         assert merged["configuration"] == ["c"]
-        assert merged["minKiroCrewVersion"] == "0.1.0"
+        assert merged["minAjCrewVersion"] == "0.1.0"
         # Registry-only fields survive.
         assert merged["name"] == "demo" and merged["branch"] == "main"
 
@@ -1013,7 +1013,7 @@ class TestApplyTrustFields:
                 {
                     "name": "demo",
                     "_registry": "third-party",
-                    "_index_author": "kirocrew",
+                    "_index_author": "ajcrew",
                     "verified": True,
                     "provenance": "official",
                     "featured": True,
@@ -1033,9 +1033,9 @@ class TestApplyTrustFields:
     def test_core_row_is_verified_only_from_the_index_author(self):
         rows = registry._apply_trust_fields(
             [
-                {"name": "a", "_index_author": "KiroCrew"},  # brand-ok: see catalog._fold_author
+                {"name": "a", "_index_author": "AjCrew"},  # brand-ok: see catalog._fold_author
                 {"name": "b", "_index_author": "someone-else"},
-                {"name": "c", "_index_author": {"name": "kirocrew"}},
+                {"name": "c", "_index_author": {"name": "ajcrew"}},
             ]
         )
         assert [r["verified"] for r in rows] == [True, False, False]

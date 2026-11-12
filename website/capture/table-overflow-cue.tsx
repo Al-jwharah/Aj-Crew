@@ -11,7 +11,7 @@ import '../src/index.css'
 // remeasure after it sets scrollLeft, since jsdom-free Chromium does lay out.
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'light'
-document.documentElement.dataset.theme = `kiro-${theme}`
+document.documentElement.dataset.theme = `aj-${theme}`
 document.documentElement.dataset.mode = theme
 
 // Eight columns so the row overflows a 390px phone; a mid-glyph clip is what

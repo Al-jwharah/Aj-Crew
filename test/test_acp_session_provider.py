@@ -8,12 +8,12 @@ from unittest.mock import AsyncMock, MagicMock, call
 
 import pytest
 
-from kiro_crew.acp.client import AcpProcessDied
-from kiro_crew.acp.runtime import AcpRuntimeDead
-from kiro_crew.acp.session_handle import WatchdogSettings
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.types import AcpEvent, AcpPromptStats
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.acp.client import AcpProcessDied
+from aj_crew.acp.runtime import AcpRuntimeDead
+from aj_crew.acp.session_handle import WatchdogSettings
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.types import AcpEvent, AcpPromptStats
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
 
 
 def _make_handle(
@@ -158,7 +158,7 @@ class TestAcpSessionProviderLifecycle:
         """A real handle whose cancel runs; destroy is replaced so no transcript is unlinked."""
         import asyncio
 
-        from kiro_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.session_handle import AcpSessionHandle
 
         runtime.send_notification = AsyncMock()
         handle = AcpSessionHandle("sA", asyncio.Queue(), runtime)
@@ -214,7 +214,7 @@ class TestAcpSessionProviderLifecycle:
     async def test_shutdown_owns_runtime_kills_runtime(self):
         # Parent session owns the runtime → kill the whole process, no per-session
         # cancel/destroy dance.
-        from kiro_crew import runtime_ownership as ro
+        from aj_crew import runtime_ownership as ro
 
         ro._reset_for_tests()
         handle = _make_handle(is_turn_active=True)
@@ -421,7 +421,7 @@ class TestAcpSessionProviderToolApproval:
     async def test_reject_tool(self):
         import asyncio
 
-        from kiro_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.session_handle import AcpSessionHandle
 
         # codex records a denial on the handle; an approve would not.
         runtime = _make_runtime(acp_backend="codex")
@@ -506,7 +506,7 @@ class TestAcpSessionProviderErrorPropagation:
     @pytest.mark.asyncio
     async def test_stream_propagates_acp_process_died(self):
         """When runtime dies mid-prompt, AcpProcessDied propagates to caller."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         handle = _make_handle()
 
@@ -534,7 +534,7 @@ class TestAcpSessionProviderErrorPropagation:
         it -- AcpRuntimeDead (an AcpRuntimeError, NOT an AcpError) would
         otherwise escape uncaught. Auth-expiry -> AcpAuthRequired is covered by
         TestAcpSessionProviderRound4Parity."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         handle = _make_handle()
 
@@ -566,7 +566,7 @@ class TestAcpSessionProviderErrorPropagation:
         tool-stall watchdog reads (the runtime clock is process-wide)."""
         import asyncio
 
-        from kiro_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.session_handle import AcpSessionHandle
 
         runtime = _make_runtime()
         handle = AcpSessionHandle("test-session-1", asyncio.Queue(), runtime)
@@ -654,7 +654,7 @@ class TestAcpSessionProviderClientCompat:
         """ensure_ready raises within the AcpError hierarchy (AcpProcessDied) when
         the runtime is dead -- R6: NOT the raw AcpRuntimeError, so callers that
         catch AcpError (chat_runner) see it instead of hitting `except Exception`."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         handle = _make_handle()
         runtime = _make_runtime(alive=False)
@@ -885,15 +885,15 @@ class TestAcpSessionProviderRound4Parity:
         provider.client._agent; mirror AcpClient._agent via the runtime."""
         handle = _make_handle()
         runtime = _make_runtime()
-        runtime._agent = "kirocrew-lite"
+        runtime._agent = "ajcrew-lite"
         provider = AcpSessionProvider(handle, runtime)
-        assert provider._agent == "kirocrew-lite"
+        assert provider._agent == "ajcrew-lite"
 
     @pytest.mark.asyncio
     async def test_stream_events_translates_runtime_dead(self):
         """#3 -- stream_events delegates to stream() so AcpRuntimeDead is
         translated to AcpProcessDied (chat_runner-catchable), not left to escape."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         handle = _make_handle()
 
@@ -912,7 +912,7 @@ class TestAcpSessionProviderRound4Parity:
     @pytest.mark.asyncio
     async def test_stream_events_translates_auth_required(self):
         """#3 -- stream_events -> AcpAuthRequired when runtime saw 'not logged in'."""
-        from kiro_crew.acp.client import AcpAuthRequired
+        from aj_crew.acp.client import AcpAuthRequired
 
         handle = _make_handle()
 
@@ -960,7 +960,7 @@ class TestAcpSessionProviderRound4Parity:
         tool-interrupted / unresponsive-cancel / stale) must NOT return "" — that
         makes AcpProvider.cancel misread it as a timeout and HARD-KILL the shared
         runtime (killing co-tenants). It must fall back to a benign END_TURN."""
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.acp.types import STOP_REASON_END_TURN
 
         handle = _make_handle()
         handle.wait_turn_done = AsyncMock(return_value=True)
@@ -977,7 +977,7 @@ class TestAcpSessionProviderRound4Parity:
         calls it with grace_secs=...) and forward to handle.cancel."""
         import asyncio
 
-        from kiro_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.session_handle import AcpSessionHandle
 
         runtime = _make_runtime()
         runtime.send_notification = AsyncMock()
@@ -1019,7 +1019,7 @@ class TestAcpSessionProviderRuntimeDeadTranslation:
             lambda p: p.set_config_option("effort", "high"),
             lambda p: p.compact(),
             lambda p: p.set_model("m"),
-            lambda p: p.set_mode("kirocrew"),
+            lambda p: p.set_mode("ajcrew"),
         ],
         ids=[
             "approve_tool",
@@ -1033,7 +1033,7 @@ class TestAcpSessionProviderRuntimeDeadTranslation:
     )
     @pytest.mark.asyncio
     async def test_runtime_dead_translates_to_process_died(self, call):
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         handle = _make_handle()
         for m in (
@@ -1056,7 +1056,7 @@ class TestAcpSessionProviderRuntimeDeadTranslation:
     async def test_runtime_dead_when_not_logged_in_is_auth_required(self):
         """AcpRuntimeDead + saw_not_logged_in -> AcpAuthRequired (login prompt),
         mirroring stream()'s auth-aware translation."""
-        from kiro_crew.acp.client import AcpAuthRequired
+        from aj_crew.acp.client import AcpAuthRequired
 
         handle = _make_handle()
         handle.approve_tool = AsyncMock(side_effect=AcpRuntimeDead("dead"))
@@ -1068,7 +1068,7 @@ class TestAcpSessionProviderRuntimeDeadTranslation:
 
     @pytest.mark.asyncio
     async def test_ensure_ready_dead_not_logged_in_is_auth_required(self):
-        from kiro_crew.acp.client import AcpAuthRequired
+        from aj_crew.acp.client import AcpAuthRequired
 
         handle = _make_handle()
         runtime = _make_runtime(alive=False)
@@ -1087,8 +1087,8 @@ class TestAcpSessionProviderContractParity:
         """The base AcpRuntimeError ('turn already active' guard) is OUTSIDE the
         AcpError hierarchy; stream() must translate it to AcpError so callers
         catch it instead of hitting `except Exception`."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.acp.session_handle import AcpRuntimeError
+        from aj_crew.acp.client import AcpError
+        from aj_crew.acp.session_handle import AcpRuntimeError
 
         handle = _make_handle()
 
@@ -1107,7 +1107,7 @@ class TestAcpSessionProviderContractParity:
     async def test_steer_translates_runtime_dead(self):
         """steer() must translate AcpRuntimeDead (completes the exception-contract
         invariant across the whole provider surface)."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         handle = _make_handle()
         handle.steer = AsyncMock(side_effect=AcpRuntimeDead("dead"))
@@ -1126,8 +1126,8 @@ class TestAcpSessionProviderContractParity:
         not a steer that was refused before its first byte: marking that steer
         possibly delivered would make the next turn skip an instruction the
         backend never received."""
-        from kiro_crew.acp.client import AcpProcessDied
-        from kiro_crew.acp.runtime import AcpRuntimeStdinStalled
+        from aj_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.runtime import AcpRuntimeStdinStalled
 
         handle = _make_handle()
         handle.prompt_outstanding_on_stall = True
@@ -1168,7 +1168,7 @@ class TestNewConversation:
     def _runtime_with_new_session(self, alive: bool = True):
         runtime = _make_runtime(alive=alive)
         runtime._work_dir = "/tmp/ws"
-        runtime._agent = "kirocrew"
+        runtime._agent = "ajcrew"
         new_handle = _make_handle(session_id="fresh-session-2")
         runtime.create_session = AsyncMock(return_value=new_handle)
         return runtime, new_handle
@@ -1183,7 +1183,7 @@ class TestNewConversation:
 
         # Fresh session/new on the SAME runtime (cwd+agent from the runtime).
         runtime.create_session.assert_awaited_once_with(
-            cwd="/tmp/ws", agent="kirocrew", memory_mode="persistent", session_key=""
+            cwd="/tmp/ws", agent="ajcrew", memory_mode="persistent", session_key=""
         )
         # Handle swapped to the fresh session → next prompt starts clean.
         assert provider._handle is new_handle
@@ -1230,7 +1230,7 @@ class TestNewConversation:
     def test_the_workflow_provider_passes_the_delete_delay_to_its_session(self):
         """A workflow worker holds an ``AcpProvider``; only its shared-runtime client
         can release a session, and the per-session client ends its sessions as before."""
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         handle = _make_handle()
         provider = AcpProvider.__new__(AcpProvider)
@@ -1295,8 +1295,8 @@ class TestNewConversation:
         Its ``old.destroy()`` is not shown to reclaim the session, so refuse before
         ``session/new``. claude stands in as a registered non-member; the gate reads
         the set, not a name."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKENDS_SESSION_EVICTION
+        from aj_crew.acp.client import AcpError
+        from aj_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKENDS_SESSION_EVICTION
 
         assert ACP_BACKEND_CLAUDE not in ACP_BACKENDS_SESSION_EVICTION
 
@@ -1318,7 +1318,7 @@ class TestNewConversation:
     async def test_allows_codex_now_that_its_teardown_evicts(self):
         """codex joined the eviction set when its teardown became ``session/close``;
         pooled warm reuse is the path that gain was for."""
-        from kiro_crew.acp.types import ACP_BACKEND_CODEX
+        from aj_crew.acp.types import ACP_BACKEND_CODEX
 
         old = _make_handle(session_id="old-session-1")
         runtime, new_handle = self._runtime_with_new_session()
@@ -1351,7 +1351,7 @@ class TestNewConversation:
         the eviction set directly. Pinned because a reader meeting
         ``acp_backend == ""`` naturally hears "unset" and adds a resolution step
         the set does not need -- which is exactly the dead branch this replaced."""
-        from kiro_crew.acp.types import ACP_BACKEND_KIRO, ACP_BACKENDS_SESSION_EVICTION
+        from aj_crew.acp.types import ACP_BACKEND_KIRO, ACP_BACKENDS_SESSION_EVICTION
 
         assert ACP_BACKEND_KIRO == ""
         assert ACP_BACKEND_KIRO in ACP_BACKENDS_SESSION_EVICTION
@@ -1431,7 +1431,7 @@ class TestNewConversation:
         handle: the fresh session is torn down and the call raises so the caller
         (WorkerPool) hard-resets. Committing it would silently run every later
         pooled step on the default model."""
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         old = _make_handle(session_id="old-session-1")
         old.model = "claude-opus-4-8"
@@ -1459,7 +1459,7 @@ class TestLivePathModelEntitlement:
 
     @staticmethod
     def _provider(advertised):
-        from kiro_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.session_provider import AcpSessionProvider
 
         handle = _make_handle()
         handle.available_models = [{"modelId": m, "name": m} for m in advertised]
@@ -1473,7 +1473,7 @@ class TestLivePathModelEntitlement:
 
     @pytest.mark.asyncio
     async def test_explicit_switch_refused_on_live_path(self):
-        from kiro_crew.acp.client import AcpModelUnavailable
+        from aj_crew.acp.client import AcpModelUnavailable
 
         provider, handle = self._provider(["claude-sonnet-4.6", "claude-haiku-4.5"])
 
@@ -1542,7 +1542,7 @@ class TestLivePathModelEntitlement:
     async def test_refusal_stands_when_fresh_probe_still_lacks_model(self):
         """A real downgrade survives revalidation — and the error names the
         FRESH advertised set, not the stale one."""
-        from kiro_crew.acp.client import AcpModelUnavailable
+        from aj_crew.acp.client import AcpModelUnavailable
 
         provider, handle = self._provider(["claude-sonnet-4.6"])
         handle.refresh_available_models = AsyncMock(
@@ -1562,7 +1562,7 @@ class TestLivePathModelEntitlement:
     async def test_refusal_names_stale_set_when_probe_fails(self):
         """An empty probe result is not evidence: the stale verdict stands and
         the error names the only set we actually have."""
-        from kiro_crew.acp.client import AcpModelUnavailable
+        from aj_crew.acp.client import AcpModelUnavailable
 
         provider, handle = self._provider(["claude-sonnet-4.6"])
 
@@ -1577,7 +1577,7 @@ class TestLivePathModelEntitlement:
         """D1: an explicit pick is a user action, so its revalidation passes
         force=True — it must not be refused on a no-evidence failure the picker
         read path may have cached in the shared attempt-clock window."""
-        from kiro_crew.acp.client import AcpModelUnavailable
+        from aj_crew.acp.client import AcpModelUnavailable
 
         provider, handle = self._provider(["claude-sonnet-4.6"])
 
@@ -1590,7 +1590,7 @@ class TestLivePathModelEntitlement:
 
 class TestAdvertisedModelIds:
     def test_extracts_ids_and_tolerates_junk(self):
-        from kiro_crew.acp.client import advertised_model_ids
+        from aj_crew.acp.client import advertised_model_ids
 
         assert advertised_model_ids([{"modelId": "a"}, {"value": "b"}]) == ["a", "b"]
         # Non-list, non-dict members, and blank ids are all dropped rather than
@@ -1601,7 +1601,7 @@ class TestAdvertisedModelIds:
 
 
 #: Where ``AcpSessionHandle.cleanup_transcript_files`` looks up the sessions dir.
-_SESSIONS_DIR_SEAM = "kiro_crew.acp.session_handle_lifecycle.kiro_sessions_dir"
+_SESSIONS_DIR_SEAM = "aj_crew.acp.session_handle_lifecycle.kiro_sessions_dir"
 
 
 class TestAcpSessionProviderCleanupSession:
@@ -1656,7 +1656,7 @@ class TestAcpSessionProviderCleanupSession:
         outside.write_text("{}", encoding="utf-8")
         provider = AcpSessionProvider(_make_handle(), _make_runtime())
 
-        with caplog.at_level("ERROR", logger="kiro_crew.acp.session_handle"):
+        with caplog.at_level("ERROR", logger="aj_crew.acp.session_handle"):
             await provider.cleanup_session("../victim")
 
         assert outside.exists()

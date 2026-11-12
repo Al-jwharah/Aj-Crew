@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import aiohttp
 
-from kiro_crew.cloud.microvm.recipe import GUEST_FRONT_PORT
-from kiro_crew.dashboard import handlers_crew_turn as mod
+from aj_crew.cloud.microvm.recipe import GUEST_FRONT_PORT
+from aj_crew.dashboard import handlers_crew_turn as mod
 
 #: Node ids of the shape the registry really validates: ``mi-`` and 8 to 17 hex
 #: digits. A readable stand-in like ``mi-realcrew0000000`` is not one, so a row
@@ -176,7 +176,7 @@ def _wire_handler(
     reg_none=False,
     inst="__present__",
     status=None,
-    secret_id="kirocrew/crew/l2crew/CONTROL_SECRET",
+    secret_id="ajcrew/crew/l2crew/CONTROL_SECRET",
     secret="s3cret-value",
     crew_name="l2crew",
     record="__match__",
@@ -193,9 +193,9 @@ def _wire_handler(
 
     from aiohttp import web
 
-    import kiro_crew.dashboard.handlers._shared as sh
-    import kiro_crew.dashboard.handlers.source_providers as sp
-    import kiro_crew.dashboard.handlers_instances as hi
+    import aj_crew.dashboard.handlers._shared as sh
+    import aj_crew.dashboard.handlers.source_providers as sp
+    import aj_crew.dashboard.handlers_instances as hi
 
     monkeypatch.setattr(hi, "_guard", lambda request, operation: denied)
     monkeypatch.setattr(sp, "is_owner_dashboard_request", lambda request: owner)
@@ -209,7 +209,7 @@ def _wire_handler(
 
     if inst == "__present__":
         inst = SimpleNamespace(
-            name="Kiro Crew Cloud (l2crew)",
+            name="Aj Crew Cloud (l2crew)",
             provisioner_id="microvm",
             # The row shape the lane really registers: the id is a slug of the
             # launch tag, the node id is in ``ssm_target``. See ``test_crew_turn_proxy._lane_row``.

@@ -19,15 +19,15 @@ from unittest.mock import MagicMock
 import pytest
 from turn_harness import TurnScript, run_turn
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.dashboard.chat_runner import _post_native_question_card
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.chat_runner import _post_native_question_card
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 class _Delivered:
@@ -126,7 +126,7 @@ async def test_native_card_records_needs_input_on_the_slot() -> None:
 async def test_pending_endpoint_rehydrates_the_native_marker() -> None:
     """A reload must route the answer the way the live frame did, so the
     marker rides ``GET /api/ask-question/pending`` with the card."""
-    from kiro_crew.dashboard.handlers.ask_question import api_ask_question_pending
+    from aj_crew.dashboard.handlers.ask_question import api_ask_question_pending
 
     st = _state("chat-1")
     await _post_native_question_card(st, "chat-1", _tool_input())
@@ -275,7 +275,7 @@ def test_the_runner_has_no_bare_question_card_emitter_left() -> None:
     runner or in any ``chat_turn`` owner it composes -- scanning both keeps the
     guard when code moves between them. Counted in ``test_source_pin_budget.py``.
     """
-    from kiro_crew.dashboard import chat_runner, chat_turn
+    from aj_crew.dashboard import chat_runner, chat_turn
 
     sources = [Path(chat_runner.__file__)] + sorted(Path(chat_turn.__file__).parent.glob("*.py"))
     emitters = [

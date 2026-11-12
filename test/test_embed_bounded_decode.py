@@ -3,7 +3,7 @@
 In embedding mode llama.cpp makes every token an output and reserves
 ``n_vocab + n_embd`` floats per output in a buffer sized to the largest batch
 ever decoded and never shrunk (1.19 GB after one 2,048-token input for the
-shipped model). ``_install_bounded_decode`` sets ``kiro_crew_max_decode_tokens``
+shipped model). ``_install_bounded_decode`` sets ``aj_crew_max_decode_tokens``
 to ``n_ubatch`` on a causal, cached, last-token-pooled context, and the vendored
 ``Llama.embed`` then decodes a longer batch in slices of at most that many
 tokens -- the micro-batches llama.cpp splits a single call into -- reading each
@@ -13,11 +13,11 @@ Four groups:
 
 * ``TestInstall`` pins which contexts get the bound, with fakes.
 * ``TestVendoredEmbed`` runs the SHIPPED ``Llama.embed`` source (extracted from
-  ``src/kiro_crew/_vendor/llama_cpp/llama.py``) against a fake causal runtime
+  ``src/aj_crew/_vendor/llama_cpp/llama.py``) against a fake causal runtime
   that clears its pooled outputs on every decode, as llama.cpp does, so a
   vector read after the wrong slice is a different vector. It fails if a
   re-vendor drops the divergence.
-* ``TestRealModel`` runs only when ``KIROCREW_TEST_EMBED_MODEL`` names a GGUF
+* ``TestRealModel`` runs only when ``AJCREW_TEST_EMBED_MODEL`` names a GGUF
   file and the vendored runtime loads; it compares vectors byte for byte.
 * ``test_the_byte_identity_proof_covers_the_vendored_runtime`` runs in CI and
   pins the runtime ``TestRealModel`` last passed on, so a vendored llama.cpp or
@@ -39,8 +39,8 @@ from typing import List, Optional, Union
 
 import pytest
 
-from kiro_crew import embeddings as embeddings_mod
-from kiro_crew.embeddings import LlamaCppEmbedder
+from aj_crew import embeddings as embeddings_mod
+from aj_crew.embeddings import LlamaCppEmbedder
 
 _LAST = embeddings_mod._POOLING_TYPE_LAST
 _MEAN = 1
@@ -69,7 +69,7 @@ class TestInstall:
     def test_a_causal_cached_context_gets_its_micro_batch(self) -> None:
         llm = _fake_llm()
         assert embeddings_mod._install_bounded_decode(llm) is True
-        assert llm.kiro_crew_max_decode_tokens == 512
+        assert llm.aj_crew_max_decode_tokens == 512
 
     def test_an_explicitly_causal_gguf_gets_it(self) -> None:
         llm = _fake_llm(
@@ -98,7 +98,7 @@ class TestInstall:
     )
     def test_any_other_context_keeps_the_single_decode(self, llm: SimpleNamespace) -> None:
         assert embeddings_mod._install_bounded_decode(llm) is False
-        assert not hasattr(llm, "kiro_crew_max_decode_tokens")
+        assert not hasattr(llm, "aj_crew_max_decode_tokens")
 
     def test_an_object_without_a_context_is_left_alone(self) -> None:
         assert embeddings_mod._install_bounded_decode(object()) is False
@@ -117,13 +117,13 @@ class TestInstall:
             def create_embedding(self, texts):
                 return {"data": [{"embedding": [0.1] * 1024} for _ in texts]}
 
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: _LoadedLlama)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: _LoadedLlama)
         model = tmp_path / "model.gguf"
         model.write_bytes(b"g" * (embeddings_mod._GGUF_MIN_BYTES + 100_000))
         embedder = LlamaCppEmbedder(model_path=model)
         try:
             assert embedder.wait_ready(timeout=30)
-            assert _LoadedLlama.instances[0].kiro_crew_max_decode_tokens == embeddings_mod._N_UBATCH
+            assert _LoadedLlama.instances[0].aj_crew_max_decode_tokens == embeddings_mod._N_UBATCH
         finally:
             embedder.close()
 
@@ -237,9 +237,7 @@ def _vendored_embed(runtime: _CausalRuntime):
     """Compile the shipped ``Llama.embed`` and its batch-offset helper against fakes."""
     tree = ast.parse(_VENDORED_LLAMA.read_text(encoding="utf-8"))
     helper = next(
-        n
-        for n in tree.body
-        if isinstance(n, ast.FunctionDef) and n.name == "_kiro_crew_batch_offset"
+        n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == "_aj_crew_batch_offset"
     )
     cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == "Llama")
     embed = next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == "embed")
@@ -284,7 +282,7 @@ class _FakeLlama:
             decode=lambda host_batch: runtime.decode(host_batch.batch),
         )
         if bound is not None:
-            self.kiro_crew_max_decode_tokens = bound
+            self.aj_crew_max_decode_tokens = bound
 
     def n_embd(self) -> int:
         return _N_EMBD
@@ -447,17 +445,17 @@ class TestGateAgainstThePolicy:
         # The loaded runtime still knows what the model is, so no bound is set.
         llm = _fake_llm(memory=memory, metadata=metadata, n_ubatch=policy.n_ubatch)
         assert embeddings_mod._install_bounded_decode(llm) is False
-        assert not hasattr(llm, "kiro_crew_max_decode_tokens")
+        assert not hasattr(llm, "aj_crew_max_decode_tokens")
 
 
-_REAL_MODEL = os.environ.get("KIROCREW_TEST_EMBED_MODEL", "")
+_REAL_MODEL = os.environ.get("AJCREW_TEST_EMBED_MODEL", "")
 
 # What TestRealModel last passed on: every vendored native llama.cpp library and
 # the three binding files the embed path runs, as their vendor-manifest digests,
 # plus the shipped model's pin. Proven on linux_x86_64 with the shipped
 # qwen3-embedding-0.6b.gguf, sha256
 # 06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439.
-_PROVEN_RUNTIME_DIGEST = "f21927a85bc583a0f395251864096a70a9f91396268bcf7c31aa9bb7d765debc"
+_PROVEN_RUNTIME_DIGEST = "420d1a08bec45143b8128cc55510d9a2bcac1fc55e69b86ac6c25360417d9858"
 _EMBED_PATH_BINDINGS = ("llama_cpp/llama.py", "llama_cpp/_internals.py", "llama_cpp/llama_cpp.py")
 _VENDOR_MANIFEST = (
     pathlib.Path(__file__).resolve().parents[1] / "scripts" / "vendor_manifest.sha256"
@@ -468,7 +466,7 @@ def _vendored_runtime_digest() -> str:
     rows = []
     for line in _VENDOR_MANIFEST.read_text(encoding="utf-8").splitlines():
         digest, _, path = line.partition("  ")
-        name = path.removeprefix("src/kiro_crew/_vendor/")
+        name = path.removeprefix("src/aj_crew/_vendor/")
         if name.startswith("llama_cpp_libs/") or name in _EMBED_PATH_BINDINGS:
             rows.append(f"{digest}  {name}")
     rows.append(f"{embeddings_mod._GGUF_SHA256}  shipped-model")
@@ -481,9 +479,9 @@ def test_the_byte_identity_proof_covers_the_vendored_runtime() -> None:
         "The vendored llama.cpp runtime, its embed-path binding or the shipped model "
         "changed since TestRealModel last proved the bounded decode byte-identical to "
         "the single decode, and CI has no model to prove it again. Run "
-        "`KIROCREW_TEST_EMBED_MODEL=<the shipped GGUF, sha256 _GGUF_SHA256> python -m "
+        "`AJCREW_TEST_EMBED_MODEL=<the shipped GGUF, sha256 _GGUF_SHA256> python -m "
         "pytest -n0 test/test_embed_bounded_decode.py::TestRealModel` on this tree; when "
-        f"it passes set _PROVEN_RUNTIME_DIGEST = {current!r} (src/kiro_crew/_vendor/"
+        f"it passes set _PROVEN_RUNTIME_DIGEST = {current!r} (src/aj_crew/_vendor/"
         "README.md, 'Updating the vendored tree')."
     )
 
@@ -496,7 +494,7 @@ def _anon_mib() -> int:
 
 @pytest.mark.skipif(
     not (_REAL_MODEL and pathlib.Path(_REAL_MODEL).is_file()),
-    reason="set KIROCREW_TEST_EMBED_MODEL to a GGUF embedding model to run",
+    reason="set AJCREW_TEST_EMBED_MODEL to a GGUF embedding model to run",
 )
 class TestRealModel:
     def test_vectors_match_and_the_output_buffer_stays_within_one_micro_batch(self) -> None:
@@ -518,7 +516,7 @@ class TestRealModel:
         )
         embeddings_mod._install_metadata_kv_clear(llm)
         assert embeddings_mod._install_bounded_decode(llm)
-        bound = llm.kiro_crew_max_decode_tokens
+        bound = llm.aj_crew_max_decode_tokens
         words = "memory gateway session vector index transcript slot crew".split()
         texts = [
             " ".join(words[(i * 3 + k) % len(words)] for k in range(n))
@@ -526,7 +524,7 @@ class TestRealModel:
         ]
 
         def vectors(limit: int | None) -> list[bytes]:
-            llm.kiro_crew_max_decode_tokens = limit
+            llm.aj_crew_max_decode_tokens = limit
             data = llm.create_embedding(texts)["data"]
             return [struct.pack(f"{len(d['embedding'])}f", *d["embedding"]) for d in data]
 

@@ -19,15 +19,15 @@ import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { serveDist } from './lib/serve-dist.mjs'
-import { stubDashboardApi, json, KIROCREW_CONFIG_FIXTURE, logPageProblems } from './lib/stub-dashboard-api.mjs'
+import { stubDashboardApi, json, AJCREW_CONFIG_FIXTURE, logPageProblems } from './lib/stub-dashboard-api.mjs'
 
 const OUT = resolve(process.argv[2] || '../temp-screenshots/26359')
 mkdirSync(OUT, { recursive: true })
 
 const RADAR = {
   name: 'Radar', slug: 'radar', bound: true, slot_key: 'member-radar', running: false,
-  kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'radar', memory_version: 2, memory_owner: 'Radar',
-  model: '', description: 'Watches CI and the issue queue', source: 'kirocrew',
+  kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'radar', memory_version: 2, memory_owner: 'Radar',
+  model: '', description: 'Watches CI and the issue queue', source: 'ajcrew',
   last_active_ts: Math.floor(Date.now() / 1000) - 30, last_message: 'Nothing new on the nightly.',
 }
 
@@ -53,9 +53,9 @@ async function open(theme, members, path, viewport = { width: 1280, height: 800 
   await stubDashboardApi(page, {
     theme,
     extra: async (p, route) => {
-      if (p === '/api/config/kirocrew') { await json(route, KIROCREW_CONFIG_FIXTURE); return true }
-      if (p === '/api/members') { await json(route, { members, default_agent: 'kirocrew' }); return true }
-      if (p === '/api/agents') { await json(route, { agents: [], default_agent: 'kirocrew' }); return true }
+      if (p === '/api/config/ajcrew') { await json(route, AJCREW_CONFIG_FIXTURE); return true }
+      if (p === '/api/members') { await json(route, { members, default_agent: 'ajcrew' }); return true }
+      if (p === '/api/agents') { await json(route, { agents: [], default_agent: 'ajcrew' }); return true }
       if (p === '/api/teams') { await json(route, { teams: [] }); return true }
       if (/^\/api\/members\/[^/]+\/thread$/.test(p)) { await json(route, { slot_key: 'member-radar', slug: 'radar', member: 'Radar', created: false }); return true }
       if (/^\/api\/members\/[^/]+\/goals$/.test(p)) { await json(route, GOALS); return true }

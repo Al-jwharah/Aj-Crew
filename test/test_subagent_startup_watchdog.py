@@ -13,8 +13,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.providers.base import EVENT_COMPLETE
-from kiro_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.providers.base import EVENT_COMPLETE
+from aj_crew.subagent import SubagentInfo, SubagentManager
 
 
 def _make_manager(startup_timeout: int = 120) -> SubagentManager:
@@ -91,8 +91,8 @@ def test_is_startup_stalled(overrides, expected):
 @pytest.mark.asyncio
 async def test_recovery_execution_resets_the_first_stream_marker():
     """A recovered run must be eligible for its own startup watchdog window."""
-    from kiro_crew.execution_context import execution_for_store
-    from kiro_crew.subagent_persistence import create_agent_folder
+    from aj_crew.execution_context import execution_for_store
+    from aj_crew.subagent_persistence import create_agent_folder
 
     sessions = MagicMock()
     provider = AsyncMock()
@@ -165,7 +165,7 @@ async def test_force_reap_startup_timeout_error_and_tombstone_cause():
 async def test_force_reap_first_prompt_silence_names_the_launched_runtime():
     """A startup reap of a start whose runtime IS up must not claim that no
     runtime launched: it names the unanswered first prompt instead."""
-    from kiro_crew.subagent_manager.monitoring import _FIRST_PROMPT_SILENT_SECS
+    from aj_crew.subagent_manager.monitoring import _FIRST_PROMPT_SILENT_SECS
 
     mgr = _make_manager(startup_timeout=120)
     _neuter_force_reap_collaborators(mgr)
@@ -187,7 +187,7 @@ class TestFirstPromptSilent:
     NOW = 10_000.0
 
     def _silent(self, **overrides):
-        from kiro_crew.subagent_manager.monitoring import _FIRST_PROMPT_SILENT_SECS
+        from aj_crew.subagent_manager.monitoring import _FIRST_PROMPT_SILENT_SECS
 
         base = {
             "_exec_started": self.NOW - 900.0,
@@ -219,7 +219,7 @@ class TestFirstPromptSilent:
     def test_recording_the_pid_restarts_the_window(self, monkeypatch):
         """A handshake longer than the window is not charged to it: the PID
         record restarts the clock, so the start is not silent right after it."""
-        import kiro_crew.subagent as subagent_mod
+        import aj_crew.subagent as subagent_mod
 
         mgr = _make_manager()
         mgr._drain_queue = MagicMock()

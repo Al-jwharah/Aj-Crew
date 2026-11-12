@@ -24,9 +24,9 @@ from unittest.mock import MagicMock, patch
 import ws_event_scoping_helpers
 from ws_event_scoping_helpers import _allowed, _make_slot, _make_state
 
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.dashboard.token_auth import app_token_path_allowed
-from kiro_crew.dashboard.ws_event_scope import (
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.dashboard.token_auth import app_token_path_allowed
+from aj_crew.dashboard.ws_event_scope import (
     build_allowed_event_set,
     filter_slots_for_app,
     ws_event_allowed,
@@ -193,7 +193,7 @@ class TestSlotScopedCrossApp:
         state = _make_state({"mochi-pet": slot})
         manifest = MagicMock()
         manifest.permissions.exposeToApps = ["monitor-app"]
-        with patch("kiro_crew.dashboard.ws_event_scope.get_app_manifest", return_value=manifest):
+        with patch("aj_crew.dashboard.ws_event_scope.get_app_manifest", return_value=manifest):
             assert ws_event_allowed(
                 "chat_chunk", {"slot": "mochi-pet"},
                 app="monitor-app",
@@ -206,7 +206,7 @@ class TestSlotScopedCrossApp:
         state = _make_state({"mochi-pet": slot})
         manifest = MagicMock()
         manifest.permissions.exposeToApps = []  # no opt-in
-        with patch("kiro_crew.dashboard.ws_event_scope.get_app_manifest", return_value=manifest):
+        with patch("aj_crew.dashboard.ws_event_scope.get_app_manifest", return_value=manifest):
             assert ws_event_allowed(
                 "chat_chunk", {"slot": "mochi-pet"},
                 app="monitor-app",
@@ -219,7 +219,7 @@ class TestSlotScopedCrossApp:
         state = _make_state({"mochi-pet": slot})
         manifest = MagicMock()
         manifest.permissions.exposeToApps = ["*"]
-        with patch("kiro_crew.dashboard.ws_event_scope.get_app_manifest", return_value=manifest):
+        with patch("aj_crew.dashboard.ws_event_scope.get_app_manifest", return_value=manifest):
             assert ws_event_allowed(
                 "chat_chunk", {"slot": "mochi-pet"},
                 app="any-app",
@@ -232,7 +232,7 @@ class TestSlotScopedCrossApp:
         state = _make_state({"mochi-pet": slot})
         manifest = MagicMock()
         manifest.permissions.exposeToApps = ["monitor-app"]
-        with patch("kiro_crew.dashboard.ws_event_scope.get_app_manifest", return_value=manifest):
+        with patch("aj_crew.dashboard.ws_event_scope.get_app_manifest", return_value=manifest):
             # monitor-app didn't declare slots:app:mochi-pet
             assert ws_event_allowed(
                 "chat_chunk", {"slot": "mochi-pet"},
@@ -400,7 +400,7 @@ class TestGlobalEvents:
     def test_channel_settings_is_gated_by_owner_not_by_note_source(self):
         """It is not in _SOURCE_FILTERED_EVENTS (it carries no `source` field) but
         it is still attributed -- by its CHANNEL owner."""
-        from kiro_crew.dashboard.ws_event_scope import _SOURCE_FILTERED_EVENTS
+        from aj_crew.dashboard.ws_event_scope import _SOURCE_FILTERED_EVENTS
 
         assert "notification_channel_settings" not in _SOURCE_FILTERED_EVENTS
         state = _make_state()
@@ -482,7 +482,7 @@ class TestGlobalEvents:
 
     def test_channel_owner_helper_matches_the_handler_convention(self):
         """Pin the helper against the derivation messaging.py already uses."""
-        from kiro_crew.dashboard.ws_event_scope import notification_channel_owner
+        from aj_crew.dashboard.ws_event_scope import notification_channel_owner
 
         for channel in ("mochi-pet.alerts", "system.cron", "workflows.x.y"):
             assert notification_channel_owner(channel) == channel.split(".", 1)[0]
@@ -606,9 +606,9 @@ class TestImplicitAllow:
     def test_api_ws_implicit_allow_emits_no_exception(self):
         """SEL audit in implicit allow path must not raise even if SEL is unavailable."""
         # Patch the reference used at call time (token_auth imports sel as _sel_fn
-        # at module load; patching kiro_crew.sel.sel would not affect that binding).
+        # at module load; patching aj_crew.sel.sel would not affect that binding).
         with patch(
-            "kiro_crew.dashboard.token_auth._sel_fn",
+            "aj_crew.dashboard.token_auth._sel_fn",
             side_effect=Exception("sel unavailable"),
         ):
             # Should return True despite SEL failure (audit is best-effort)
@@ -622,7 +622,7 @@ class TestImplicitAllow:
 
 def test_app_token_path_allowed_implicit_ws() -> None:
     """``/api/ws`` is implicitly allowed for all app tokens without an explicit
-    permissions.api declaration: every app that uses KiroCrewClient needs it to
+    permissions.api declaration: every app that uses AjCrewClient needs it to
     connect, and the WS layer filters events per-app via ws_event_scope.py so
     connecting does not grant full event stream access. ``/api/status`` is
     NOT implicitly allowed — it has no equivalent response filter. The
@@ -667,9 +667,9 @@ class TestEmptyAppDeniedClosed:
     def test_empty_app_deny_emits_audit(self):
         # A caller that reaches ws_event_allowed with an empty app must
         # leave an audit trail so the bypass is observable.
-        from kiro_crew.dashboard import ws_event_scope as _wes
+        from aj_crew.dashboard import ws_event_scope as _wes
         state = _make_state()
-        with patch("kiro_crew.sel.sel") as sel_mock:
+        with patch("aj_crew.sel.sel") as sel_mock:
             _wes._sel_last_audit.clear()  # fresh window
             ws_event_allowed(
                 "chat_chunk", {}, app="", allowed_events=_allowed(), state=state,
@@ -752,13 +752,13 @@ class TestSlotsListEvent:
 
 class TestAuditDedup:
     def _clear_cache(self):
-        from kiro_crew.dashboard import ws_event_scope
+        from aj_crew.dashboard import ws_event_scope
         ws_event_scope._sel_last_audit.clear()
 
     def test_first_deny_audited_subsequent_within_window_suppressed(self):
         self._clear_cache()
         state = _make_state()
-        with patch("kiro_crew.sel.sel") as m:
+        with patch("aj_crew.sel.sel") as m:
             for _ in range(5):
                 ws_event_allowed(
                     "notification", {"source": "app:other-app"},
@@ -768,7 +768,7 @@ class TestAuditDedup:
                 )
             # Only one audit emitted for the (app, event_type, reason) tuple.
             assert m.return_value.log_api_access.call_count == 1
-        from kiro_crew.dashboard import ws_event_scope
+        from aj_crew.dashboard import ws_event_scope
 
         # The window keeps the four suppressed denies for the next record to report.
         key = ("mochi-pet", "notification", "notification_scope_denied")
@@ -777,7 +777,7 @@ class TestAuditDedup:
     def test_different_reasons_audited_independently(self):
         self._clear_cache()
         state = _make_state()
-        with patch("kiro_crew.sel.sel") as m:
+        with patch("aj_crew.sel.sel") as m:
             # notification_scope_denied
             ws_event_allowed(
                 "notification", {"source": "app:other-app"},
@@ -791,7 +791,7 @@ class TestAuditDedup:
                 app="mochi-pet", allowed_events=_allowed(), state=state,
             )
             assert m.return_value.log_api_access.call_count == 2
-        from kiro_crew.dashboard import ws_event_scope
+        from aj_crew.dashboard import ws_event_scope
 
         assert set(ws_event_scope._sel_last_audit) == {
             ("mochi-pet", "notification", "notification_scope_denied"),
@@ -824,7 +824,7 @@ class TestPositiveDashboardUserFlag:
 
     def test_dashboard_user_flag_unset_is_treated_as_app(self):
         """If a code path forgets to set _is_dashboard_user, the gate applies."""
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
 
         # Build a minimal state stub with the helper method.
         state = MagicMock(spec=DashboardState)
@@ -836,7 +836,7 @@ class TestPositiveDashboardUserFlag:
         assert state._ws_client_allowed(ws, "totally_made_up", {}) is False
 
     def test_dashboard_user_positive_flag_bypasses_gate(self):
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.state import DashboardState
         state = MagicMock(spec=DashboardState)
         state._slots = {}
         state._ws_client_allowed = DashboardState._ws_client_allowed.__get__(state)
@@ -850,8 +850,8 @@ class TestScopeCheckExceptionAudited:
     """
 
     def test_scope_check_exception_emits_audit(self):
-        from kiro_crew.dashboard import ws_event_scope
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard import ws_event_scope
+        from aj_crew.dashboard.state import DashboardState
         ws_event_scope._sel_last_audit.clear()
         state = MagicMock(spec=DashboardState)
         state._slots = {}
@@ -865,9 +865,9 @@ class TestScopeCheckExceptionAudited:
         }.get(k, default)
         # Force ws_event_allowed to raise
         with patch(
-            "kiro_crew.dashboard.ws_event_scope.ws_event_allowed",
+            "aj_crew.dashboard.ws_event_scope.ws_event_allowed",
             side_effect=RuntimeError("boom"),
-        ), patch("kiro_crew.sel.sel") as sel_mock:
+        ), patch("aj_crew.sel.sel") as sel_mock:
             result = state._ws_client_allowed(ws, "chat_chunk", {"slot": "x"})
             assert result is False
             # The audit was invoked at least once with the scope_check_exception reason.

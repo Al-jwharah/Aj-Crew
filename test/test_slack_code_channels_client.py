@@ -11,9 +11,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.slack import features
-from kiro_crew.slack.code_channels.client import CodeChannelsClient, parse_channel_info
-from kiro_crew.slack.code_channels.models import (
+from aj_crew.slack import features
+from aj_crew.slack.code_channels.client import CodeChannelsClient, parse_channel_info
+from aj_crew.slack.code_channels.models import (
     MAX_TITLE_CHARS,
     CodeChannelApiError,
     CodeChannelRequestError,
@@ -89,7 +89,7 @@ async def test_a_write_to_a_channel_the_policy_refuses_is_never_sent(
 ) -> None:
     """Every ``agents.conversations.*`` write naming a channel asks the channel
     policy first, as the real Slack client's posts do."""
-    from kiro_crew.slack import channel_policy
+    from aj_crew.slack import channel_policy
 
     monkeypatch.setattr(channel_policy, "_verdict", lambda ch: "refused" if ch == "C0GONE" else "")
     client, api = _client({"agents.conversations.setProperties": {"ok": True}})
@@ -167,7 +167,7 @@ async def test_tokens_in_errors_are_redacted_from_logs(caplog: pytest.LogCapture
     # Assembled at runtime so no committed line is token-shaped.
     token = "-".join(("xox" + "b", "1" * 12, "2" * 12, "abcdefghijklmnopqrstuvwx"))
     client, _ = _client({"agents.conversations.create": RuntimeError(f"bad auth {token}")})
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.slack.code_channels.client"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.slack.code_channels.client"):
         with pytest.raises(CodeChannelApiError):
             await client.create(CreateRequest(name="t", session_id="s"))
     assert token not in caplog.text

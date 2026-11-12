@@ -1,4 +1,4 @@
-"""Regression tests for Round-20 findings (KiroCrew PR #6).
+"""Regression tests for Round-20 findings (Aj Crew PR #6).
 
 F1: deploy staging goes through _stage_tree_safe (hook-gated, hardlink-rejecting)
     instead of bare shutil.copytree.
@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 
 _SCRIPTS = Path(__file__).resolve().parents[1] / (
-    "src/kiro_crew/deploy/skills/artifact-deploy"
+    "src/aj_crew/deploy/skills/artifact-deploy"
 )
 
 
@@ -24,7 +24,7 @@ def test_f1_staging_uses_stage_tree_safe_not_copytree():
     """The local-dir staging branch must call _stage_tree_safe; a bare
     shutil.copytree of the source tree bypasses the per-file hook gate and
     hardlink rejection."""
-    deploy = Path(__file__).resolve().parents[1] / "src/kiro_crew/deploy"
+    deploy = Path(__file__).resolve().parents[1] / "src/aj_crew/deploy"
     names = ("handlers_guards.py", "handlers_content.py", "handlers_sites.py", "handlers.py")
     src = "".join((deploy / name).read_text(encoding="utf-8") for name in names)
     # Both the fd-pinned branch and the non-Linux fallback stage via the helper.
@@ -84,7 +84,7 @@ def test_f3_lambda_tag_calls_are_covered():
 
 
 def test_f4_profile_update_delete_redact_default_and_errors():
-    deploy = Path(__file__).resolve().parents[1] / "src/kiro_crew/deploy"
+    deploy = Path(__file__).resolve().parents[1] / "src/aj_crew/deploy"
     names = ("handlers_guards.py", "handlers_content.py", "handlers_sites.py", "handlers.py")
     src = "".join((deploy / name).read_text(encoding="utf-8") for name in names)
     # No handler returns the raw registry default anymore.

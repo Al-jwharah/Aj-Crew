@@ -33,7 +33,7 @@ const folders = [
   { id: 'f2', name: 'Travel plans', order: 1, collapsed: true },
 ]
 const slots = [
-  { key: 's1', title: 'Book the flights', messages: 2, running: false, agent: 'kirocrew', created: '2026-10-30T01:00:00Z', last_ts: '2026-10-30T02:00:00Z', folder_id: 'f2' },
+  { key: 's1', title: 'Book the flights', messages: 2, running: false, agent: 'ajcrew', created: '2026-10-30T01:00:00Z', last_ts: '2026-10-30T02:00:00Z', folder_id: 'f2' },
 ]
 const MODAL = '[role="dialog"]'
 
@@ -48,7 +48,7 @@ let failNext = false
 const extra = async (path, route) => {
   const method = route.request().method()
   if (path === '/api/agents' || path === '/api/chat/agents') {
-    json(route, { agents: [{ name: 'kirocrew', source: 'builtin' }], default_agent: 'kirocrew' })
+    json(route, { agents: [{ name: 'ajcrew', source: 'builtin' }], default_agent: 'ajcrew' })
     return true
   }
   if (path === '/api/chat/folders/f2/icon-preview' && method === 'POST') {

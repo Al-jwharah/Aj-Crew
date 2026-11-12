@@ -21,18 +21,18 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import hooks
-from kiro_crew import session_environment as se
-from kiro_crew.acp._dispatch_parts.permission_requests import build_permission_event
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS
-from kiro_crew.hook_runtime.tool_identity import ToolCall
-from kiro_crew.platform import governance
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.governance import classify_tool_args, gate_decision, parse_policy
-from kiro_crew.platform.governance_parts import matching
-from kiro_crew.platform.guest_paths import (
+from aj_crew import hooks
+from aj_crew import session_environment as se
+from aj_crew.acp._dispatch_parts.permission_requests import build_permission_event
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS
+from aj_crew.hook_runtime.tool_identity import ToolCall
+from aj_crew.platform import governance
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.governance import classify_tool_args, gate_decision, parse_policy
+from aj_crew.platform.governance_parts import matching
+from aj_crew.platform.guest_paths import (
     GuestPath,
     GuestPathParams,
     guest_norm,
@@ -45,7 +45,7 @@ ROOT = "/workspace/app"
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 def _nt_expand(path: str) -> str:
@@ -225,7 +225,7 @@ def test_the_guest_resolves_home_and_variables_literally(tmp_path):
     # path to its root as written. If it ever expanded either, this fails first.
     if os.name == "nt":
         pytest.skip("the guest tool server runs on a Linux guest")
-    from kiro_crew.remote_session.workspace_tools import Workspace
+    from aj_crew.remote_session.workspace_tools import Workspace
 
     ws = Workspace(str(tmp_path))
     for spelling in ("~/x", "$HOME/x"):
@@ -261,7 +261,7 @@ def test_the_tag_reaches_governance_through_the_gate_unchanged(monkeypatch):
         seen.append(kwargs.get("raw_params"))
         return real(*args, **kwargs)
 
-    monkeypatch.setattr("kiro_crew.platform.governance.gate_decision", spy)
+    monkeypatch.setattr("aj_crew.platform.governance.gate_decision", spy)
     _policy(monkeypatch, read={"mode": "deny", "deny": ["/nowhere/**"]})
     _judge("read_file", "x")
     assert seen and isinstance(seen[-1], GuestPathParams) and seen[-1].root == ROOT
@@ -504,7 +504,7 @@ def test_an_unplaced_remote_call_must_pass_both_readings(monkeypatch, reading, t
 
 
 def test_a_trusted_non_workspace_call_on_a_remote_session_keeps_the_gateway_reading():
-    event = _remote_frame("file_send", {"path": "/srv/report.txt"}, server="kirocrew-core")
+    event = _remote_frame("file_send", {"path": "/srv/report.txt"}, server="ajcrew-core")
     assert type(event.raw_tool_params) is dict
 
 
@@ -525,7 +525,7 @@ def test_a_reading_title_on_a_remote_call_is_read_as_the_guest_path(monkeypatch,
     [("/workspace/app/x", True), ("x", False), ("~/x", False), ("$HOME/x", False)],
 )
 def test_a_remote_diff_block_path_is_anchored_as_the_guest_reads_it(diff_path, anchored):
-    from kiro_crew.platform.tool_paths import edit_target_candidates
+    from aj_crew.platform.tool_paths import edit_target_candidates
 
     found = edit_target_candidates(GuestPathParams({}, root=ROOT), diff_path, tool_kind="edit")
     assert found.unanchored is not anchored

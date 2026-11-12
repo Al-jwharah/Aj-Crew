@@ -14,8 +14,8 @@ import types
 
 import pytest
 
-from kiro_crew import skill_usage
-from kiro_crew.skill_usage import SkillUsageLedger
+from aj_crew import skill_usage
+from aj_crew.skill_usage import SkillUsageLedger
 
 #: The one clock these tests use, frozen at the module's own binding.
 _NOW = 1_800_000_000.0

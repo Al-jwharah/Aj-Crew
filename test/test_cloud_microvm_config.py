@@ -9,9 +9,9 @@ import pytest
 import yaml
 from yaml_helpers import load_with
 
-from kiro_crew.cloud.config import CloudConfig
-from kiro_crew.cloud.microvm.api import MAX_LIFETIME_SECONDS
-from kiro_crew.cloud.microvm.config import MicroVmConfig
+from aj_crew.cloud.config import CloudConfig
+from aj_crew.cloud.microvm.api import MAX_LIFETIME_SECONDS
+from aj_crew.cloud.microvm.config import MicroVmConfig
 
 _COMPLETE = {
     # A BASE image, a build role and a recipe bucket: the lane BUILDS a crew's
@@ -20,22 +20,22 @@ _COMPLETE = {
     # is an optional override and is deliberately absent here, so the normal path
     # is the one the fixture exercises.
     "base_image_arn": "arn:aws:lambda:us-east-1:123456789012:microvm-image/al2023-base",
-    "build_role_arn": "arn:aws:iam::123456789012:role/kirocrew-microvm-build",
-    "recipe_bucket": "kirocrew-microvm-recipes-123456789012-us-east-1",
+    "build_role_arn": "arn:aws:iam::123456789012:role/ajcrew-microvm-build",
+    "recipe_bucket": "ajcrew-microvm-recipes-123456789012-us-east-1",
     # The crew bundle ``packaging.build`` produced -- the same artifact the Fargate
     # lane's crew layer is built from. Required on the build path, because a block
     # that can build and names no bundle would register a lane whose every launch
     # fails at preflight.
-    "bundle_dir": "/srv/kirocrew/bundles/demo",
+    "bundle_dir": "/srv/ajcrew/bundles/demo",
     "kms_key_id": "arn:aws:kms:us-east-1:123456789012:key/" "11111111-2222-3333-4444-555555555555",
     # Required, and measured so against real SSM: ``ssm:CreateActivation`` refuses
     # the call with no ``--iam-role``, so a block without this would register a
     # lane whose every launch fails at its first AWS call.
-    "activation_role_arn": "arn:aws:iam::123456789012:role/kirocrew-microvm-crew",
+    "activation_role_arn": "arn:aws:iam::123456789012:role/ajcrew-microvm-crew",
     # The crew's MODEL credential, by reference. Required because the launch tag
     # is minted by the launcher, so a name derived from it cannot exist before
     # the launch that invents it.
-    "identity_secret_ref": "kirocrew/identity/demo-crew",
+    "identity_secret_ref": "ajcrew/identity/demo-crew",
 }
 
 
@@ -86,7 +86,7 @@ class TestCompleteness:
         config = MicroVmConfig.from_mapping(
             _block(
                 base_image_arn=(
-                    "arn:aws:lambda:us-east-1:123456789012:microvm-image/kirocrew-crew-abc"
+                    "arn:aws:lambda:us-east-1:123456789012:microvm-image/ajcrew-crew-abc"
                 )
             )
         )
@@ -145,7 +145,7 @@ class TestTypes:
         wall on this lane, so the default is how much conversation an owner can
         lose by walking away -- and that is a different number from the longest
         lifetime the platform will allow."""
-        from kiro_crew.cloud.microvm.engine import DEFAULT_WALL_SECONDS
+        from aj_crew.cloud.microvm.engine import DEFAULT_WALL_SECONDS
 
         config = MicroVmConfig.from_mapping(_block())
         assert config is not None and config.wall_seconds is None
@@ -231,7 +231,7 @@ class TestCloudConfigWiring:
         record = CloudConfig.load(path)
         assert record.region == "us-west-2"
         config = record.microvm_config()
-        assert config is not None and config.build_role_arn.endswith("kirocrew-microvm-build")
+        assert config is not None and config.build_role_arn.endswith("ajcrew-microvm-build")
 
     def test_an_absent_block_is_no_lane(self, tmp_path):
         path = tmp_path / "cloud.json"
@@ -256,7 +256,7 @@ class TestCloudConfigWiring:
 
 class TestProvisionerRegistration:
     def test_the_lane_is_absent_without_a_block(self, monkeypatch):
-        from kiro_crew.platform import defaults
+        from aj_crew.platform import defaults
 
         monkeypatch.setattr(
             defaults.DefaultRemoteProvisionerProvider, "_microvm_config", staticmethod(lambda: None)
@@ -277,7 +277,7 @@ class TestProvisionerRegistration:
         half serves the lifecycle hooks and reads the wall-clock edges the run
         payload carries, so the offer stands.
         """
-        from kiro_crew.platform import defaults
+        from aj_crew.platform import defaults
 
         config = MicroVmConfig.from_mapping(_block())
         monkeypatch.setattr(
@@ -300,7 +300,7 @@ class TestProvisionerRegistration:
 
     def test_an_incomplete_block_offers_nothing(self, monkeypatch):
         """A row whose every launch is refused is worse than no row."""
-        from kiro_crew.platform import defaults
+        from aj_crew.platform import defaults
 
         monkeypatch.setattr(
             defaults.DefaultRemoteProvisionerProvider,
@@ -321,7 +321,7 @@ class TestProvisionerRegistration:
         later commit should not have to re-derive, so they are built and checked
         here even though nothing publishes them yet.
         """
-        from kiro_crew.platform import defaults
+        from aj_crew.platform import defaults
 
         config = MicroVmConfig.from_mapping(_block())
         assert config is not None
@@ -336,8 +336,8 @@ class TestProvisionerRegistration:
         A caller that names the id explicitly still gets the engine, which is what
         keeps the launch path testable while the row is unpublished.
         """
-        from kiro_crew.cloud.microvm.engine import MicroVmLaunchEngine
-        from kiro_crew.platform import defaults
+        from aj_crew.cloud.microvm.engine import MicroVmLaunchEngine
+        from aj_crew.platform import defaults
 
         config = MicroVmConfig.from_mapping(_block())
         monkeypatch.setattr(
@@ -345,9 +345,7 @@ class TestProvisionerRegistration:
             "_microvm_config",
             staticmethod(lambda: config),
         )
-        monkeypatch.setattr(
-            "kiro_crew.sandbox.require_unaliased_cloud_config", lambda *a, **k: None
-        )
+        monkeypatch.setattr("aj_crew.sandbox.require_unaliased_cloud_config", lambda *a, **k: None)
         engine = defaults.DefaultRemoteProvisionerProvider().engine_for(
             defaults.MICROVM_PROVISIONER_ID
         )
@@ -355,14 +353,14 @@ class TestProvisionerRegistration:
 
     def test_the_steps_do_not_claim_an_instance_is_created(self):
         """The built-in wording is false here: nothing is installed at launch."""
-        from kiro_crew.platform import defaults
+        from aj_crew.platform import defaults
 
         labels = dict(defaults.MICROVM_REMOTE_PROVISIONER.step_labels)
         assert set(labels) == {"preflight", "provision", "signin", "connect"}
         assert "install" not in " ".join(labels.values()).lower()
 
     def test_an_unconfigured_lane_raises_the_same_keyerror_as_an_unknown_one(self, monkeypatch):
-        from kiro_crew.platform import defaults
+        from aj_crew.platform import defaults
 
         monkeypatch.setattr(
             defaults.DefaultRemoteProvisionerProvider, "_microvm_config", staticmethod(lambda: None)
@@ -374,8 +372,8 @@ class TestProvisionerRegistration:
             provider.engine_for("no-such-lane")
 
     def test_a_configured_lane_hands_out_a_microvm_engine(self, monkeypatch):
-        from kiro_crew.cloud.microvm.engine import MicroVmLaunchEngine
-        from kiro_crew.platform import defaults
+        from aj_crew.cloud.microvm.engine import MicroVmLaunchEngine
+        from aj_crew.platform import defaults
 
         config = MicroVmConfig.from_mapping(_block())
         monkeypatch.setattr(
@@ -383,20 +381,18 @@ class TestProvisionerRegistration:
             "_microvm_config",
             staticmethod(lambda: config),
         )
-        monkeypatch.setattr(
-            "kiro_crew.sandbox.require_unaliased_cloud_config", lambda *a, **k: None
-        )
+        monkeypatch.setattr("aj_crew.sandbox.require_unaliased_cloud_config", lambda *a, **k: None)
         engine = defaults.DefaultRemoteProvisionerProvider().engine_for(
             defaults.MICROVM_PROVISIONER_ID
         )
         assert isinstance(engine, MicroVmLaunchEngine)
         assert engine.spec is not None
-        assert engine.spec.build_role_arn.endswith("kirocrew-microvm-build")
+        assert engine.spec.build_role_arn.endswith("ajcrew-microvm-build")
 
     def test_the_ec2_lane_is_untouched(self, monkeypatch):
         """Adding a third lane must not change what the first one hands out."""
-        from kiro_crew.cloud.launch_engine import RealLaunchEngine
-        from kiro_crew.platform import defaults
+        from aj_crew.cloud.launch_engine import RealLaunchEngine
+        from aj_crew.platform import defaults
 
         engine = defaults.DefaultRemoteProvisionerProvider().engine_for(
             defaults.BUILTIN_PROVISIONER_ID
@@ -425,13 +421,13 @@ class TestActivationRoleIsRequired:
         assert config is not None
         assert (
             config.launch_spec().activation_role_arn
-            == "arn:aws:iam::123456789012:role/kirocrew-microvm-crew"
+            == "arn:aws:iam::123456789012:role/ajcrew-microvm-crew"
         )
 
     def test_a_role_name_is_accepted_as_well_as_an_arn(self):
         """The template outputs an ARN; making the operator transcribe a name is
         how a one-character error becomes a launch failure."""
-        config = MicroVmConfig.from_mapping(_block(activation_role_arn="kirocrew-microvm-crew"))
+        config = MicroVmConfig.from_mapping(_block(activation_role_arn="ajcrew-microvm-crew"))
         assert config is not None
 
     def test_it_is_distinct_from_the_execution_role(self):
@@ -468,9 +464,9 @@ class TestTheBaseTemplate:
     def _template() -> str:
         from pathlib import Path
 
-        import kiro_crew.cloud as cloud_pkg
+        import aj_crew.cloud as cloud_pkg
 
-        path = Path(cloud_pkg.__file__).parent / "templates" / "kirocrew-microvm-base.yaml"
+        path = Path(cloud_pkg.__file__).parent / "templates" / "ajcrew-microvm-base.yaml"
         return path.read_text(encoding="utf-8")
 
     def test_the_lane_key_is_retained(self):
@@ -604,7 +600,7 @@ class TestTheConfirmationIsBoundToTheConfigTheSpecComesFrom:
     """
 
     def _with_config(self, monkeypatch, config):
-        from kiro_crew.platform import defaults
+        from aj_crew.platform import defaults
 
         monkeypatch.setattr(
             defaults.DefaultRemoteProvisionerProvider,
@@ -614,7 +610,7 @@ class TestTheConfirmationIsBoundToTheConfigTheSpecComesFrom:
 
     def test_the_confirmed_recipient_is_accepted(self, monkeypatch):
         """Non-vacuity: the launch the operator did confirm must go through."""
-        from kiro_crew.platform import defaults
+        from aj_crew.platform import defaults
 
         config = MicroVmConfig.from_mapping(_block())
         self._with_config(monkeypatch, config)
@@ -626,7 +622,7 @@ class TestTheConfirmationIsBoundToTheConfigTheSpecComesFrom:
 
     def test_a_config_that_changed_after_the_confirmation_is_refused(self, monkeypatch):
         """The operator confirmed one image; the file now names another."""
-        from kiro_crew.platform import defaults
+        from aj_crew.platform import defaults
 
         moved = MicroVmConfig.from_mapping(
             _block(base_image_arn="arn:aws:lambda:us-east-1:aws:microvm-image/other")
@@ -642,7 +638,7 @@ class TestTheConfirmationIsBoundToTheConfigTheSpecComesFrom:
     def test_a_launch_that_confirmed_nothing_is_not_refused(self, monkeypatch):
         """The confirmation is the caller's to supply. A path that sends none is
         not asking for this check and must not be stopped by it."""
-        from kiro_crew.platform import defaults
+        from aj_crew.platform import defaults
 
         config = MicroVmConfig.from_mapping(_block())
         self._with_config(monkeypatch, config)
@@ -656,7 +652,7 @@ class TestTheConfirmationIsBoundToTheConfigTheSpecComesFrom:
         """The recipient is an image and a key id, and the message quotes neither
         back: a refusal is read by whoever is nearby, and the two strings it would
         otherwise carry are what the operator is being asked to go and compare."""
-        from kiro_crew.platform import defaults
+        from aj_crew.platform import defaults
 
         config = MicroVmConfig.from_mapping(_block())
         self._with_config(monkeypatch, config)

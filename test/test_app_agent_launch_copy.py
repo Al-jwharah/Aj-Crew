@@ -17,21 +17,21 @@ from app_bridges_helpers import app_env_fixture  # noqa: F401
 from app_bridges_helpers import _make_app_source
 from turn_harness import ScriptedProvider, SlotSpec, TurnScript, run_turn
 
-from kiro_crew.acp import managed_agent_shadow
-from kiro_crew.acp.session_handle import AcpRuntimeError
-from kiro_crew.acp.skill_projection import project_agent_view
-from kiro_crew.agent_discovery import is_internal_agent_spec, list_agents
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.apps import agent_launch, bridges, manager
-from kiro_crew.apps.agent_launch import (
+from aj_crew.acp import managed_agent_shadow
+from aj_crew.acp.session_handle import AcpRuntimeError
+from aj_crew.acp.skill_projection import project_agent_view
+from aj_crew.agent_discovery import is_internal_agent_spec, list_agents
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.apps import agent_launch, bridges, manager
+from aj_crew.apps.agent_launch import (
     AppAgentLaunchError,
     app_agent_launch_name,
     publish_app_agent_launch,
 )
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.paths import data_home
-from kiro_crew.dashboard.handlers.usage import read_effective_agent
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.paths import data_home
+from aj_crew.dashboard.handlers.usage import read_effective_agent
 
 _APP = "pr-bulk-ops"
 _SPEC = {
@@ -69,7 +69,7 @@ def test_the_copy_is_the_registered_spec_under_the_reserved_name(agents_dir):
     source = _register(agents_dir)
     published = publish_app_agent_launch(_APP, "deploy")
     assert published == app_agent_launch_name(_APP, "deploy")
-    assert published.startswith("kirocrew-app-launch-")
+    assert published.startswith("ajcrew-app-launch-")
     copy = json.loads(_launch_file(agents_dir).read_text())
     assert copy["name"] == published
     assert agent_launch.is_owned_launch_spec(copy)
@@ -118,10 +118,10 @@ def test_the_name_is_a_plain_hash_of_app_and_agent(tmp_path, monkeypatch):
     # so two homes name the same agent the same way.
     names = []
     for home in ("one", "two"):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / home))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / home))
         names.append(app_agent_launch_name(_APP, "deploy"))
     assert names[0] == names[1]
-    assert names[0].startswith("kirocrew-app-launch-")
+    assert names[0].startswith("ajcrew-app-launch-")
 
 
 class TestTheLaunchDirectory:
@@ -133,7 +133,7 @@ class TestTheLaunchDirectory:
     """
 
     def test_it_is_created_empty_and_owner_only(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         path = agent_launch.launch_process_cwd()
         assert path == tmp_path / "home" / "app-agent-launch" / "cwd"
         assert list(path.iterdir()) == []
@@ -142,7 +142,7 @@ class TestTheLaunchDirectory:
         assert agent_launch.launch_process_cwd() == path
 
     def test_a_spec_placed_in_it_refuses_the_launch(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         path = agent_launch.launch_process_cwd()
         agents = path / ".kiro" / "agents"
         agents.mkdir(parents=True)
@@ -152,7 +152,7 @@ class TestTheLaunchDirectory:
         assert raised.value.code == "unverifiable"
 
     def test_a_link_at_its_name_is_refused_not_followed(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         (tmp_path / "home").mkdir()
         (tmp_path / "elsewhere").mkdir()
         try:
@@ -171,14 +171,14 @@ class TestTheLaunchDirectory:
             assert ((tmp_path / "elsewhere").stat().st_mode & 0o777) == 0o755
 
     def test_it_is_sealed_precreated_and_write_fenced(self):
-        from kiro_crew import sandbox, security
+        from aj_crew import sandbox, security
 
         leaf = agent_launch._LAUNCH_DIR_LEAF
         assert leaf in sandbox._CREW_READONLY_LEAVES
         assert leaf not in sandbox._CREW_HIDDEN_LEAVES
         assert leaf in sandbox._CREW_PRECREATE_READONLY_DIR_LEAVES
         assert leaf in sandbox._CREW_NOFOLLOW_READONLY_DIR_LEAVES
-        for prefix in (".kiro/crew", ".kirocrew"):
+        for prefix in (".kiro/crew", ".ajcrew"):
             assert security.is_sensitive_write_path(
                 os.path.join(os.path.expanduser("~"), prefix, leaf, "cwd", "x.json")
             )
@@ -186,10 +186,10 @@ class TestTheLaunchDirectory:
     @pytest.mark.skipif(not hasattr(os, "getuid"), reason="the namespace plan is POSIX-only")
     @pytest.mark.parametrize("mode", ("standard", "cc", "strict"))
     def test_the_linux_sandbox_seals_it_read_only(self, tmp_path, monkeypatch, mode):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         home = tmp_path / "crew-home"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         home.mkdir()
         plan = sandbox._spawn_plan("namespace", mode)
         target = os.path.realpath(home / agent_launch._LAUNCH_DIR_LEAF)
@@ -198,12 +198,12 @@ class TestTheLaunchDirectory:
 
     @pytest.mark.parametrize("mode", ("standard", "cc", "strict"))
     def test_macos_denies_writes_but_not_reads(self, tmp_path, monkeypatch, mode):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         home = tmp_path / "crew-home"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         home.mkdir()
-        from kiro_crew.config.paths import config_dir
+        from aj_crew.config.paths import config_dir
 
         target = os.path.join(str(config_dir()), agent_launch._LAUNCH_DIR_LEAF)
         profile = sandbox._build_seatbelt_profile(mode)
@@ -358,9 +358,9 @@ class TestReportedPathsPointAtTheSession:
         assert update["content"][0]["path"] == os.path.join(str(tmp_path / "checkout"), "f")
 
     def test_the_runtime_maps_a_frame_for_its_session(self, tmp_path):
-        from kiro_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp.runtime import AcpRuntime
 
-        runtime = AcpRuntime(work_dir=str(tmp_path / "work"), launch_agent="kirocrew-app-launch-x")
+        runtime = AcpRuntime(work_dir=str(tmp_path / "work"), launch_agent="ajcrew-app-launch-x")
         launch_dir = str(tmp_path / "launch")
         runtime._launch_process_cwd = launch_dir
         runtime._launch_cwd_roots = (launch_dir,)
@@ -400,7 +400,7 @@ class TestTheProcessStartsInTheLaunchDirectory:
         )
 
     def test_crews_linux_launcher_enters_the_directory_itself(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import launch as launch_mod
+        from aj_crew.acp import launch as launch_mod
 
         monkeypatch.setattr(launch_mod.sys, "platform", "linux")
         host = self._host(tmp_path, launch=True, wrapped=True)
@@ -408,7 +408,7 @@ class TestTheProcessStartsInTheLaunchDirectory:
         assert launch_mod.exec_cwd_options(host) == {"exec_cwd": str(tmp_path / "launch")}
 
     def test_without_crews_launcher_the_process_is_created_in_it(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import launch as launch_mod
+        from aj_crew.acp import launch as launch_mod
 
         for platform, wrapped in (("linux", False), ("darwin", True), ("win32", False)):
             monkeypatch.setattr(launch_mod.sys, "platform", platform)
@@ -416,7 +416,7 @@ class TestTheProcessStartsInTheLaunchDirectory:
             assert launch_mod.process_directory(host) == (str(tmp_path / "launch"), None)
 
     def test_every_other_process_starts_in_its_workspace(self, tmp_path):
-        from kiro_crew.acp import launch as launch_mod
+        from aj_crew.acp import launch as launch_mod
 
         host = self._host(tmp_path, launch=False, wrapped=True)
         assert launch_mod.process_directory(host) == (str(tmp_path / "work"), 7)
@@ -424,9 +424,9 @@ class TestTheProcessStartsInTheLaunchDirectory:
 
     @pytest.mark.skipif(not hasattr(os, "getuid"), reason="the namespace plan is POSIX-only")
     def test_the_plan_carries_the_directory_to_the_launcher(self, tmp_path, monkeypatch):
-        from kiro_crew import sandbox, sandbox_plan
+        from aj_crew import sandbox, sandbox_plan
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew-home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew-home"))
         (tmp_path / "crew-home").mkdir()
         target = str(tmp_path / "launch")
         plan = sandbox._spawn_plan("namespace", "standard", exec_cwd=target)
@@ -436,7 +436,7 @@ class TestTheProcessStartsInTheLaunchDirectory:
 
     @pytest.mark.skipif(not hasattr(os, "statvfs"), reason="POSIX launcher")
     def test_the_launcher_enters_only_a_sealed_empty_directory(self, tmp_path, monkeypatch):
-        from kiro_crew import sandbox_launcher_program as program
+        from aj_crew import sandbox_launcher_program as program
 
         target = tmp_path / "launch"
         target.mkdir()
@@ -472,7 +472,7 @@ class TestTheProcessStartsInTheLaunchDirectory:
     def test_with_no_launch_directory_a_vanished_inherited_one_falls_back_to_the_root(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew import sandbox_launcher_program as program
+        from aj_crew import sandbox_launcher_program as program
 
         inherited = tmp_path / "inherited"
         inherited.mkdir()
@@ -498,7 +498,7 @@ class TestCrewJudgesTheCopyItWrote:
             agent_launch.read_launch_copy(name)
         assert raised.value.code == "unverifiable"
         with pytest.raises(AppAgentLaunchError):
-            agent_launch.read_launch_copy("kirocrew-app-launch-absent")
+            agent_launch.read_launch_copy("ajcrew-app-launch-absent")
 
     def test_the_event_loop_lookups_never_wait_on_a_publication(self):
         # A publication holds the file lock across its reads and writes; the two
@@ -510,8 +510,8 @@ class TestCrewJudgesTheCopyItWrote:
             reader = threading.Thread(
                 target=lambda: answers.append(
                     (
-                        agent_launch.is_search_launch_copy("kirocrew-app-launch-x"),
-                        agent_launch.launch_source_stem("kirocrew-app-launch-x"),
+                        agent_launch.is_search_launch_copy("ajcrew-app-launch-x"),
+                        agent_launch.launch_source_stem("ajcrew-app-launch-x"),
                     )
                 )
             )
@@ -520,7 +520,7 @@ class TestCrewJudgesTheCopyItWrote:
         assert answers == [(False, None)]
 
     def test_pooled_stubs_come_from_the_registered_file(self, agents_dir, tmp_path):
-        from kiro_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp.runtime import AcpRuntime
 
         _register(agents_dir)
         name = publish_app_agent_launch(_APP, "deploy")
@@ -529,14 +529,14 @@ class TestCrewJudgesTheCopyItWrote:
         assert runtime._pool_lookup("deploy") == (f"{_APP}--deploy", {"name": name})
         assert runtime._pool_lookup("other") == ("other", None)
         unpublished = AcpRuntime(
-            agent="deploy", work_dir=str(tmp_path), launch_agent="kirocrew-app-launch-none"
+            agent="deploy", work_dir=str(tmp_path), launch_agent="ajcrew-app-launch-none"
         )
         assert unpublished._pool_lookup("deploy") == (None, None)
         plain = AcpRuntime(agent="deploy", work_dir=str(tmp_path))
         assert plain._pool_lookup("deploy") == ("deploy", None)
 
     def test_a_launch_copy_snapshot_is_never_read_by_name(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import runtime as setup
+        from aj_crew.acp import runtime as setup
 
         seen = {}
         monkeypatch.setattr(
@@ -545,7 +545,7 @@ class TestCrewJudgesTheCopyItWrote:
             lambda overlay, agent, **scope: seen.update(agent=agent, **scope) or [],
         )
         monkeypatch.setattr(setup, "_ref_spec_snapshot", lambda *a: pytest.fail("read by name"))
-        copy = {"name": "kirocrew-app-launch-x"}
+        copy = {"name": "ajcrew-app-launch-x"}
         servers, ref, mcp_json = setup._pooled_session_servers_and_ref_spec(
             tmp_path, f"{_APP}--deploy", ACP_BACKEND_KIRO, tmp_path / "checkout", copy
         )
@@ -612,7 +612,7 @@ def test_a_checkout_spec_of_a_launch_name_does_not_refuse_the_kiro_spawn(tmp_pat
     (project / ".kiro" / "agents").mkdir(parents=True)
     filename = f"{name}.json" if by == "stem" else "innocent.json"
     (project / ".kiro" / "agents" / filename).write_text(json.dumps({"name": name}))
-    assert managed_agent_shadow.managed_agent_shadow_refusal("kirocrew", project) is None
+    assert managed_agent_shadow.managed_agent_shadow_refusal("ajcrew", project) is None
 
 
 def test_a_launch_name_is_refused_as_an_app_agent_name(agents_dir):
@@ -624,10 +624,10 @@ def test_a_launch_name_is_refused_as_an_app_agent_name(agents_dir):
 def test_no_roster_offers_a_launch_copy(agents_dir, monkeypatch):
     _register(agents_dir)
     publish_app_agent_launch(_APP, "deploy")
-    monkeypatch.setattr("kiro_crew.agent_discovery.kiro_agents_dir", lambda: agents_dir)
+    monkeypatch.setattr("aj_crew.agent_discovery.kiro_agents_dir", lambda: agents_dir)
     names = {a.name for a in list_agents(agents_dir=agents_dir)}
     assert "deploy" in names
-    assert not any(n.startswith("kirocrew-app-launch-") for n in names)
+    assert not any(n.startswith("ajcrew-app-launch-") for n in names)
 
     class _Row:
         name = app_agent_launch_name(_APP, "deploy")
@@ -641,8 +641,8 @@ def test_a_launch_copy_runtime_keeps_the_agent_name_governance_binds(tmp_path, m
     # The copy's name is wire-only: kiro-cli is asked for it on --agent and in
     # set_mode, and every other reader -- governance, audit, hooks, usage --
     # sees the agent's own name, so a task profile bound to it still applies.
-    from kiro_crew.acp.runtime import AcpRuntime
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.acp.runtime import AcpRuntime
+    from aj_crew.platform import governance_profiles as gp
 
     profiles = tmp_path / "profiles"
     profiles.mkdir()
@@ -678,7 +678,7 @@ def test_a_launch_copy_runtime_keeps_the_agent_name_governance_binds(tmp_path, m
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("launch", ["kirocrew-app-launch-x", ""], ids=["copy", "plain"])
+@pytest.mark.parametrize("launch", ["ajcrew-app-launch-x", ""], ids=["copy", "plain"])
 async def test_the_session_control_plane_is_read_from_the_spec_kiro_cli_runs(
     tmp_path, monkeypatch, launch
 ):
@@ -687,8 +687,8 @@ async def test_the_session_control_plane_is_read_from_the_spec_kiro_cli_runs(
     # bare name (which a checkout's same-named spec could have fed).
     from types import SimpleNamespace
 
-    from kiro_crew.acp import session_mcp
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp import session_mcp
+    from aj_crew.acp.runtime import AcpRuntime
 
     seen = []
 
@@ -720,14 +720,14 @@ async def test_the_session_control_plane_is_read_from_the_spec_kiro_cli_runs(
 async def test_a_search_copy_without_its_core_element_refuses_without_a_projection(
     tmp_path, monkeypatch
 ):
-    # The copy's skills come only through kirocrew-core's skill_search, so a session
+    # The copy's skills come only through ajcrew-core's skill_search, so a session
     # whose mount withheld that element is refused even when no projection runs.
     from types import SimpleNamespace
 
-    from kiro_crew.acp import session_mcp
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp import session_mcp
+    from aj_crew.acp.runtime import AcpRuntime
 
-    launch = "kirocrew-app-launch-x"
+    launch = "ajcrew-app-launch-x"
     monkeypatch.setattr(
         session_mcp,
         "kiro_control_plane_servers",
@@ -746,18 +746,18 @@ async def test_a_search_copy_without_its_core_element_refuses_without_a_projecti
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("launch", ["kirocrew-app-launch-x", ""], ids=["copy", "plain"])
+@pytest.mark.parametrize("launch", ["ajcrew-app-launch-x", ""], ids=["copy", "plain"])
 async def test_reselecting_the_agent_mid_session_names_the_copy(tmp_path, launch):
     # A mid-session set_mode for the runtime's own agent goes out as the copy,
     # past the projection that would map the bare name to a view built by name.
     from types import SimpleNamespace
 
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
     runtime = AcpRuntime(work_dir=tmp_path, agent="deploy", launch_agent=launch)
     runtime._process = SimpleNamespace(stdin=object())
     runtime._native_skill_projection = SimpleNamespace(
-        request=lambda method, params: {**params, "modeId": "kirocrew-skill-view-view"}
+        request=lambda method, params: {**params, "modeId": "ajcrew-skill-view-view"}
     )
     sent = []
 
@@ -766,18 +766,18 @@ async def test_reselecting_the_agent_mid_session_names_the_copy(tmp_path, launch
 
     runtime._write_request_bounded = capture
     await runtime.send_request("session/set_mode", {"sessionId": "s1", "modeId": "deploy"})
-    expected = launch or "kirocrew-skill-view-view"
+    expected = launch or "ajcrew-skill-view-view"
     assert sent[0]["params"]["modeId"] == expected
 
 
-@pytest.mark.parametrize("launch", ["kirocrew-app-launch-x", ""], ids=["copy", "plain"])
+@pytest.mark.parametrize("launch", ["ajcrew-app-launch-x", ""], ids=["copy", "plain"])
 def test_a_rebuilt_session_is_asked_for_the_same_copy(launch):
     # A reset successor and a compaction restart rebuild the session from
     # allocation_identity; it carries the copy, so the rebuild never falls back
     # to the bare name kiro-cli would resolve project-first.
     from types import SimpleNamespace
 
-    from kiro_crew.session_lifecycle_parts.parked_queue import allocation_identity
+    from aj_crew.session_lifecycle_parts.parked_queue import allocation_identity
 
     owner = SimpleNamespace(get_channel=lambda key: None)
     session = SimpleNamespace(
@@ -797,26 +797,26 @@ def test_a_rebuilt_session_is_asked_for_the_same_copy(launch):
 
 
 def test_only_a_kiro_provider_hands_kiro_cli_the_copy():
-    from kiro_crew.providers.acp_runtime_start import _launch_agent
+    from aj_crew.providers.acp_runtime_start import _launch_agent
 
     class _Provider:
-        app_launch_agent = "kirocrew-app-launch-x"
+        app_launch_agent = "ajcrew-app-launch-x"
         is_kiro_backend = True
 
-    assert _launch_agent(_Provider()) == "kirocrew-app-launch-x"
+    assert _launch_agent(_Provider()) == "ajcrew-app-launch-x"
     _Provider.is_kiro_backend = False
     assert _launch_agent(_Provider()) == ""
 
 
 def test_a_launch_name_is_a_valid_agent_name():
-    from kiro_crew.validation import is_registered_agent_name
+    from aj_crew.validation import is_registered_agent_name
 
     assert is_registered_agent_name(app_agent_launch_name(_APP, "deploy"))
 
 
 def test_an_agent_dropped_from_the_manifest_loses_its_copy(tmp_path, app_env):
-    from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
-    from kiro_crew.apps.manifest import AppManifest
+    from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
+    from aj_crew.apps.manifest import AppManifest
 
     install_app(_make_app_source(tmp_path))
     app_root = app_env["home"] / "apps" / "test-app"
@@ -875,7 +875,7 @@ class _KasProvider(ScriptedProvider):
 
 
 def _bind(ctx):
-    agent = KiroCrewConfig.load().default_agent
+    agent = AjCrewConfig.load().default_agent
     ctx.slot.agent = agent
     ctx.slot.app_agent_owner = f"{_APP}/{agent}"
 
@@ -910,7 +910,7 @@ async def test_a_project_spec_written_between_check_and_spawn_is_not_the_one_lau
     # declaring the agent's bare name -- the check-to-spawn window. The session is
     # still created under the copy's name, whose file holds the app's own spec, and
     # the checkout's spec does not claim that name.
-    agent = KiroCrewConfig.load().default_agent
+    agent = AjCrewConfig.load().default_agent
     _register(agents_dir, agent)
     project = tmp_path / "checkout"
     (project / ".kiro" / "agents").mkdir(parents=True)
@@ -930,9 +930,9 @@ async def test_a_project_spec_written_between_check_and_spawn_is_not_the_one_lau
         config={"agent": {"acp_backend": "kiro"}},
     )
     # The session keeps the agent's own name; kiro-cli is asked for the copy.
-    assert _allocated_agents(record) == [KiroCrewConfig.load().agents[agent].kiro_agent]
+    assert _allocated_agents(record) == [AjCrewConfig.load().agents[agent].kiro_agent]
     [launch] = _allocated_launches(record)
-    assert launch.startswith("kirocrew-app-launch-")
+    assert launch.startswith("ajcrew-app-launch-")
     assert _streamed(record)
     launched = json.loads((agents_dir / f"{launch}.json").read_text())
     assert launched["prompt"] == "the app's prompt"
@@ -946,12 +946,12 @@ async def test_a_checkout_spec_of_a_launch_name_does_not_refuse_the_turn(
 ):
     # No per-turn check of the copy's name against the checkout: kiro-cli never reads
     # a checkout spec for it, so a turn in such a checkout runs as the copy.
-    agent = KiroCrewConfig.load().default_agent
+    agent = AjCrewConfig.load().default_agent
     _register(agents_dir, agent)
     project = tmp_path / "checkout"
     (project / ".kiro" / "agents").mkdir(parents=True)
-    (project / ".kiro" / "agents" / "kirocrew-app-launch-squat.json").write_text(
-        json.dumps({"name": "kirocrew-app-launch-squat", "allowedTools": ["*"]})
+    (project / ".kiro" / "agents" / "ajcrew-app-launch-squat.json").write_text(
+        json.dumps({"name": "ajcrew-app-launch-squat", "allowedTools": ["*"]})
     )
     record = await run_turn(
         TurnScript(message="deploy it", setup=_bind_in(project), provider=_KiroProvider),
@@ -966,7 +966,7 @@ async def test_a_checkout_spec_of_a_launch_name_does_not_refuse_the_turn(
 @pytest.mark.asyncio
 async def test_on_kas_the_turn_keeps_the_bare_name(agents_dir, monkeypatch):
     # KAS takes no agent name: Crew reads the spec it sends, so nothing changes there.
-    agent = KiroCrewConfig.load().default_agent
+    agent = AjCrewConfig.load().default_agent
     _register(agents_dir, agent)
     monkeypatch.setattr(manager, "app_command_agent_refusal", lambda *a: None)
     record = await run_turn(
@@ -976,7 +976,7 @@ async def test_on_kas_the_turn_keeps_the_bare_name(agents_dir, monkeypatch):
     )
     assert _allocated_launches(record) == [None]
     assert _streamed(record)
-    assert not list(agents_dir.glob("kirocrew-app-launch-*"))
+    assert not list(agents_dir.glob("ajcrew-app-launch-*"))
 
 
 @pytest.mark.asyncio
@@ -986,11 +986,11 @@ async def test_an_admitted_turn_binds_its_session_before_the_claim(
 ):
     # The KAS projection reads the registered file by path for a bound session
     # (acp.harness.kas), so the binding exists by the time the session is allocated.
-    from kiro_crew.dashboard.chat_runner import effective_session_key
+    from aj_crew.dashboard.chat_runner import effective_session_key
 
     bindings: dict = {}
     monkeypatch.setattr(agent_launch, "_KAS_BINDINGS", bindings)
-    agent = KiroCrewConfig.load().default_agent
+    agent = AjCrewConfig.load().default_agent
     if not refused:
         _register(agents_dir, agent)
     seen: list = []
@@ -1015,7 +1015,7 @@ async def test_an_admitted_turn_binds_its_session_before_the_claim(
 async def test_a_turn_not_bound_to_the_app_drops_the_keys_binding(agents_dir, monkeypatch):
     # A slot recreated under a deleted app slot's name (or switched to another
     # agent) runs its own agent: the old binding must not decide its projection.
-    from kiro_crew.dashboard.chat_runner import effective_session_key
+    from aj_crew.dashboard.chat_runner import effective_session_key
 
     bindings: dict = {"another-session": (_APP, "deploy")}
     monkeypatch.setattr(agent_launch, "_KAS_BINDINGS", bindings)
@@ -1054,7 +1054,7 @@ async def test_a_turn_whose_copy_cannot_be_written_is_refused(agents_dir, monkey
 async def test_a_claimed_kiro_session_started_as_the_bare_name_is_refused_and_reset(
     agents_dir, monkeypatch
 ):
-    agent = KiroCrewConfig.load().default_agent
+    agent = AjCrewConfig.load().default_agent
     _register(agents_dir, agent)
     monkeypatch.setattr(manager, "app_command_agent_refusal", lambda *a: None)
     record = await run_turn(
@@ -1076,7 +1076,7 @@ async def test_an_unbound_kiro_turn_keeps_its_own_agent(agents_dir):
         config={"agent": {"acp_backend": "kiro"}},
     )
     assert record.allocations and _allocated_launches(record) == [None]
-    assert not list(agents_dir.glob("kirocrew-app-launch-*"))
+    assert not list(agents_dir.glob("ajcrew-app-launch-*"))
 
 
 # ── the copy's skill view ───────────────────────────────────────────────────
@@ -1084,7 +1084,7 @@ async def test_an_unbound_kiro_turn_keeps_its_own_agent(agents_dir):
 
 @pytest.fixture
 def clean_pins(monkeypatch):
-    from kiro_crew import skill_scope_pin
+    from aj_crew import skill_scope_pin
 
     pins: dict = {}
     monkeypatch.setattr(skill_scope_pin, "_PINNED", pins)
@@ -1098,8 +1098,8 @@ def test_the_copy_is_a_skill_view_with_no_skill_resources(agents_dir):
     publish_app_agent_launch(_APP, "deploy")
     copy = json.loads(_launch_file(agents_dir).read_text())
     assert copy["resources"] == ["file://README.md"]
-    assert "kirocrew-core" in copy["mcpServers"]
-    assert "@kirocrew-core/skill_search" in copy["tools"]
+    assert "ajcrew-core" in copy["mcpServers"]
+    assert "@ajcrew-core/skill_search" in copy["tools"]
     assert copy["prompt"] == source["prompt"]
     assert copy["allowedTools"] == source["allowedTools"]
 
@@ -1109,7 +1109,7 @@ def test_a_spec_that_forbids_skill_search_refuses_the_turn(agents_dir):
     _register(
         agents_dir,
         resources=["skill://skills/**/SKILL.md"],
-        mcpServers={"kirocrew-core": {"command": "x", "disabledTools": ["skill_search"]}},
+        mcpServers={"ajcrew-core": {"command": "x", "disabledTools": ["skill_search"]}},
     )
     with pytest.raises(AppAgentLaunchError) as raised:
         publish_app_agent_launch(_APP, "deploy")
@@ -1128,11 +1128,11 @@ async def test_a_checkout_spec_of_the_bare_name_neither_refuses_nor_scopes_the_t
     # before the turn starts. The turn is not refused, and on each allowed backend
     # the session's skill scope comes from the app's registered file, for the
     # skill_search route, dollar skills and the injected directory alike.
-    from kiro_crew import context
-    from kiro_crew.agent_discovery import session_skill_globs
-    from kiro_crew.agent_sdk.provider_identity import PROVIDER_ACP
+    from aj_crew import context
+    from aj_crew.agent_discovery import session_skill_globs
+    from aj_crew.agent_sdk.provider_identity import PROVIDER_ACP
 
-    agent = KiroCrewConfig.load().default_agent
+    agent = AjCrewConfig.load().default_agent
     _register(agents_dir, agent, resources=["skill://app-skills/**/SKILL.md"])
     project = tmp_path / "checkout"
     (project / ".kiro" / "agents").mkdir(parents=True)
@@ -1176,7 +1176,7 @@ async def test_a_checkout_spec_of_the_bare_name_neither_refuses_nor_scopes_the_t
 async def test_a_turn_that_is_not_the_launch_copy_unpins_its_session(agents_dir, clean_pins):
     # The pin is re-decided on every turn of the key: an unbound turn drops it, and
     # an unrelated key keeps its own.
-    from kiro_crew.dashboard.chat_runner import effective_session_key
+    from aj_crew.dashboard.chat_runner import effective_session_key
 
     seen: list[str] = []
 
@@ -1201,7 +1201,7 @@ async def test_a_turn_refused_before_the_claim_keeps_the_running_turns_pin(
 ):
     # A turn that never takes the session (here: its copy cannot be written) must
     # not touch the pin the turn holding the session reads its skills by.
-    from kiro_crew.dashboard.chat_runner import effective_session_key
+    from aj_crew.dashboard.chat_runner import effective_session_key
 
     keys: list[str] = []
 
@@ -1211,13 +1211,13 @@ async def test_a_turn_refused_before_the_claim_keeps_the_running_turns_pin(
         keys.append(key)
         clean_pins[key] = agents_dir / "running.json"
 
-    agent = KiroCrewConfig.load().default_agent
+    agent = AjCrewConfig.load().default_agent
     _register(agents_dir, agent)
 
     def unwritable(target, data):
         raise OSError("read-only file system")
 
-    monkeypatch.setattr("kiro_crew.agent._atomic_json_write", unwritable)
+    monkeypatch.setattr("aj_crew.agent._atomic_json_write", unwritable)
     record = await run_turn(
         TurnScript(message="deploy it", setup=bind_and_pin, provider=_KiroProvider),
         slot=SlotSpec(),
@@ -1230,8 +1230,8 @@ async def test_a_turn_refused_before_the_claim_keeps_the_running_turns_pin(
 def test_the_injected_agent_prompt_is_read_from_the_pinned_file(agents_dir, tmp_path, clean_pins):
     # Crew's [AGENT SYSTEM PROMPT] for a pinned session comes from the app's
     # registered file, not from a checkout spec declaring the same bare name.
-    from kiro_crew import context
-    from kiro_crew.skill_scope_pin import pin_session_skill_spec, pinned_session_skill_spec
+    from aj_crew import context
+    from aj_crew.skill_scope_pin import pin_session_skill_spec, pinned_session_skill_spec
 
     _register(agents_dir, "deploy", prompt="the app's prompt")
     project = tmp_path / "checkout"
@@ -1246,18 +1246,18 @@ def test_the_injected_agent_prompt_is_read_from_the_pinned_file(agents_dir, tmp_
     assert load("deploy", str(project), spec_path=pinned) == "the app's prompt"
 
 
-@pytest.mark.parametrize("launch", ["kirocrew-app-launch-x", ""], ids=["copy", "plain"])
+@pytest.mark.parametrize("launch", ["ajcrew-app-launch-x", ""], ids=["copy", "plain"])
 def test_a_newer_projection_keeps_the_copy_the_spawn_held(tmp_path, launch):
     # A set_mode refresh adopts a fresh preparation, which lists no copy; the
     # copy's view and search verdict carry over, and nothing else changes.
-    from kiro_crew.acp.runtime import AcpRuntime
-    from kiro_crew.acp.skill_projection import NativeSkillProjection
+    from aj_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.skill_projection import NativeSkillProjection
 
     runtime = AcpRuntime(work_dir=tmp_path, agent="deploy", launch_agent=launch)
-    held = NativeSkillProjection({}, specs={"kirocrew-app-launch-x": {"name": "copy"}})
-    held.search_agents.add("kirocrew-app-launch-x")
+    held = NativeSkillProjection({}, specs={"ajcrew-app-launch-x": {"name": "copy"}})
+    held.search_agents.add("ajcrew-app-launch-x")
     assert runtime._adopt_skill_projection(held, 1)
-    fresh = NativeSkillProjection({"kirocrew": "kirocrew-skill-view-a"})
+    fresh = NativeSkillProjection({"ajcrew": "ajcrew-skill-view-a"})
     assert runtime._adopt_skill_projection(fresh, 2)
     if launch:
         assert fresh.specs[launch] == {"name": "copy"}
@@ -1267,13 +1267,13 @@ def test_a_newer_projection_keeps_the_copy_the_spawn_held(tmp_path, launch):
 
 
 def test_the_copy_is_a_search_agent_exactly_when_its_view_is(agents_dir, monkeypatch):
-    # The projection's own verdict decides, not the presence of kirocrew-core: an
-    # unmapped agent whose authored kirocrew-core the mount would hold back keeps
+    # The projection's own verdict decides, not the presence of ajcrew-core: an
+    # unmapped agent whose authored ajcrew-core the mount would hold back keeps
     # its view without search, so its sessions are not refused for it.
     monkeypatch.setattr(agent_launch, "_SEARCH_COPIES", set())
     _register(
         agents_dir,
-        mcpServers={"kirocrew-core": {"command": "x", "disabledTools": ["learn_add"]}},
+        mcpServers={"ajcrew-core": {"command": "x", "disabledTools": ["learn_add"]}},
     )
     name = publish_app_agent_launch(_APP, "deploy")
     assert not agent_launch.is_search_launch_copy(name)
@@ -1290,18 +1290,18 @@ class TestTheCopyRunsTheLaunchSteeringDecision:
     async def test_the_decision_runs_on_the_copys_view(self, tmp_path, monkeypatch, inherits):
         from test_acp_spawn_offload import TestRuntimeProjectedLaunchDocuments as harness
 
-        from kiro_crew.acp import runtime as runtime_facade
+        from aj_crew.acp import runtime as runtime_facade
 
         agents = tmp_path / "copy-agents"
         agents.mkdir()
-        launch = "kirocrew-app-launch-x"
+        launch = "ajcrew-app-launch-x"
         (agents / f"{launch}.json").write_text(
             json.dumps(
                 {
                     "name": launch,
                     "description": agent_launch.OWNER_MARKER,
                     "resources": ["file://.kiro/steering/**/*.md"],
-                    "mcpServers": {"kirocrew-core": {"command": "managed"}},
+                    "mcpServers": {"ajcrew-core": {"command": "managed"}},
                 }
             )
         )

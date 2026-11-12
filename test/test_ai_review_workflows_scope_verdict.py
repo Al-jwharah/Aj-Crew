@@ -76,7 +76,7 @@ class TestTheScopeSurfaceIsResolvedOnce:
         # extraction contract: the fork lane's sed drops anything else, so a
         # reformatted entry narrows the surface it resolves rather than failing.
         assert len(surface) >= 8, surface
-        assert "src/kiro_crew/security/" in surface
+        assert "src/aj_crew/security/" in surface
         assert "scripts/deny_diff.py" in surface
 
     def test_no_workflow_file_is_on_the_surface(self) -> None:

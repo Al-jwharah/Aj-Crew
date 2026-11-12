@@ -34,7 +34,7 @@ const TABS: SidePanelTab[] = [
   { key: 'about', label: 'About', icon: null },
 ]
 
-const KEY = 'kirocrew:sidepanel-tab:test-page'
+const KEY = 'ajcrew:sidepanel-tab:test-page'
 
 /** Surfaces the live query string so a test can assert URL/pane agreement. */
 function UrlProbe() {

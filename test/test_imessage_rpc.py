@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.imessage.rpc (newline-framed JSON-RPC 2.0 over stdio).
+"""Tests for aj_crew.imessage.rpc (newline-framed JSON-RPC 2.0 over stdio).
 
 No real child process is spawned: ``asyncio.create_subprocess_exec`` is replaced
 with a fake whose stdout is a real ``StreamReader`` the test feeds, so the framing
@@ -16,14 +16,14 @@ from typing import Any
 import pytest
 from stray_line_helpers import STRAY_LINES
 
-from kiro_crew.imessage import rpc
-from kiro_crew.imessage.rpc import (
+from aj_crew.imessage import rpc
+from aj_crew.imessage.rpc import (
     STDOUT_LINE_LIMIT,
     JsonRpcPeer,
     RpcError,
     RpcTransportError,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 
 class FakeStdin:
@@ -302,7 +302,7 @@ class TestReaderResilience:
 
         peer = JsonRpcPeer(["imsg", "rpc"], on_notification=handler)
         await peer.start()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.imessage.rpc"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.imessage.rpc"):
             proc.stdout.feed_data(STRAY_LINES[stray]())
             proc.feed({"jsonrpc": "2.0", "method": "after"})
             await _until(lambda: seen == ["after"])
@@ -320,7 +320,7 @@ class TestReaderResilience:
 
         peer = JsonRpcPeer(["imsg", "rpc"], on_notification=handler)
         await peer.start()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.imessage.rpc"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.imessage.rpc"):
             proc.stdout.feed_data(b"\n  \r\n")
             proc.feed({"jsonrpc": "2.0", "method": "after"})
             await _until(lambda: seen == ["after"])

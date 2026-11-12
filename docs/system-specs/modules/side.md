@@ -27,7 +27,7 @@ upstream OpenClaw `/btw` protocol.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  Frontend (KiroCrewWebsite)                                     │
+│  Frontend (AjCrewWebsite)                                     │
 │  ┌────────────┐  ┌────────────────┐  ┌───────────────────────┐ │
 │  │ SideChat   │→ │ chat/side.ts   │← │ useWebSocket          │ │
 │  │ .tsx       │  │ slotSide state │  │ chat.side_result case │ │
@@ -36,7 +36,7 @@ upstream OpenClaw `/btw` protocol.
          │ HTTP                              ▲ WS
          ▼                                  │
 ┌─────────────────────────────────────────────────────────────────┐
-│  Backend (KiroCrew)                                             │
+│  Backend (AjCrew)                                             │
 │  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐ │
 │  │ handlers/    │→ │ side_state   │  │ ws.py                 │ │
 │  │ side.py      │  │ .py          │  │ broadcast_side_result │ │
@@ -266,7 +266,7 @@ final frame, and carries each stored row's id, so a restored panel draws it as t
 live one did. The other error notices a turn can end with are not stored, so after
 a reload such a turn shows its question without the notice, which is also what
 the model holds. A failure no earlier arm catches shows the error's own text when
-Kiro Crew worded it for a person (`AcpError.user_worded`, such as a throttle's
+Aj Crew worded it for a person (`AcpError.user_worded`, such as a throttle's
 retry advice once the retries are spent), and `(side conversation failed — see
 server logs)` otherwise.
 
@@ -527,8 +527,8 @@ approves a tool on the agent's `allowedTools` (and an MCP server's
 `autoApprove`, a `toolsSettings` `allowed*` / `trusted*` grant, a KAS
 `permissions` rule, the `mcp.json` servers `includeMcpJson` pulls in) itself
 and raises no permission request, so under the parent agent's own spec the gate
-below would never see the user's main-chat grants — the shipped `kirocrew` spec
-pre-authorizes `@kirocrew-cron/cron_remove_all` and `@kirocrew-core` wholesale.
+below would never see the user's main-chat grants — the shipped `ajcrew` spec
+pre-authorizes `@ajcrew-cron/cron_remove_all` and `@ajcrew-core` wholesale.
 So every side session runs as `<agent>--readonly`: the resolved agent's spec
 with every backend-side grant emptied (`allowedTools: []`, no
 `mcpServers.*.autoApprove`, no `toolsSettings.*.allowed*`/`trusted*`/`auto*`
@@ -553,7 +553,7 @@ file; its `description` also records that path as a JSON string (`... of
 below find the checkout again. Derived from the live base spec on every turn — project scope first, the
 way kiro-cli resolves `--agent` — off the event loop, written atomically and
 only when the content changed; a runtime resource, never hand-edited. The
-file's `description` starts with the owner marker `Kiro Crew derived read-only
+file's `description` starts with the owner marker `Aj Crew derived read-only
 spec`, and the derived name must resolve to that file and nothing else:
 publication refuses a project-scope spec that declares or is named like the
 derived agent (kiro-cli would load it first), a second user-scope spec
@@ -565,7 +565,7 @@ every spawn roster leaves it out while the spawn gate refuses it with
 `agent_internal` (`subagent.md` § Typed rejections). A kiro-cli that refuses the
 mode because it started before the spec was published gets
 `side_readonly_spec.unavailable_mode_explanation`, which names the base agent
-instead of telling the user to run `kirocrew setup --agent-only` — setup never
+instead of telling the user to run `ajcrew setup --agent-only` — setup never
 writes this file — and says that a new session starts a kiro-cli that lists it,
 and that to spawn the source agent the caller names the base or omits `agent`
 when the base is the default agent. That wording is keyed on the owner marker of the file at the
@@ -1131,7 +1131,7 @@ containment, count-awareness, settle-all on an unusable echo), and
 dispatch — every steering caller fakes that helper, so without it the hook could
 be dead at runtime while all of them stayed green.
 
-Frontend invariants are covered in KiroCrewWebsite under `src/test/`:
+Frontend invariants are covered in AjCrewWebsite under `src/test/`:
 `SideChat.close.test.tsx`, `SideChat.multiturn.test.tsx`,
 `SideChat.refresh.test.tsx`, `SideChat.thinking.test.tsx`,
 `SideChat.steerQueue.test.tsx`, `SideChat.restore.test.tsx` (the reload merge, a
@@ -1159,10 +1159,10 @@ exists this file does not claim one.
 - Context injection: sidecar storage on the parent ``_ChatSlot``
   (per-slot ``_side: SideState | None``) — keeps side messages reachable
   to the side handler without touching the main agent's context builder.
-- Build strategy: native KiroCrew implementation reusing only the
+- Build strategy: native Aj Crew implementation reusing only the
   upstream wire format for the ``chat.side_result`` event.
 - Memory mode: side conversations are born ephemeral and never write to
-  vector store, learn store, KiroCrew session JSONL, or the consolidation
+  vector store, learn store, Aj Crew session JSONL, or the consolidation
   pipeline. Tool calls run under `ToolApprovalPolicy.READ_ONLY`: only a call
   the hook gate's read-only classifier proves read-only executes, and every
   other call — `learn_add` and any other write tool included — is rejected.

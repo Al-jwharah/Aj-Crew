@@ -34,10 +34,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
+from aj_crew.dashboard.handlers import discover as h
+from aj_crew.skill_providers.base import ProviderRegistry, SkillSearchResult
+from aj_crew.skills import SkillsLoader
 from conftest import make_dir_link
-from kiro_crew.dashboard.handlers import discover as h
-from kiro_crew.skill_providers.base import ProviderRegistry, SkillSearchResult
-from kiro_crew.skills import SkillsLoader
 
 _SKILL_MD = "---\nname: cov-skill\ndescription: zzq nonsense payload\n---\n# body\n"
 
@@ -643,7 +643,7 @@ async def test_preview_prefers_agents_md_over_another_markdown_file(
 async def test_search_carries_the_providers_reason_scrubbed(
     state: MagicMock, registry: ProviderRegistry, sel_mock: MagicMock
 ) -> None:
-    from kiro_crew.skill_providers.base import SkillProviderError
+    from aj_crew.skill_providers.base import SkillProviderError
 
     provider = _BundleProvider()
     provider.search = AsyncMock(  # type: ignore[method-assign]
@@ -694,7 +694,7 @@ async def test_install_returns_the_providers_reason(
     sel_mock: MagicMock,
     skills_root: Path,
 ) -> None:
-    from kiro_crew.skill_providers.base import SkillProviderError
+    from aj_crew.skill_providers.base import SkillProviderError
 
     provider = _BundleProvider()
     provider.fetch_skill_bundle = AsyncMock(  # type: ignore[method-assign]
@@ -715,7 +715,7 @@ async def test_install_returns_the_providers_reason(
 async def test_preview_carries_the_providers_reason(
     state: MagicMock, registry: ProviderRegistry, sel_mock: MagicMock
 ) -> None:
-    from kiro_crew.skill_providers.base import SkillProviderError
+    from aj_crew.skill_providers.base import SkillProviderError
 
     provider = _BundleProvider()
     provider.fetch_skill_bundle = AsyncMock(  # type: ignore[method-assign]

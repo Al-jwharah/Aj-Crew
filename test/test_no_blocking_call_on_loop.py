@@ -1,7 +1,7 @@
 """Build gate: no blocking syscall on the asyncio event loop (RFC Phase 1).
 
 A static AST check that fails the build when a known-blocking syscall appears
-lexically inside an ``async def`` body in ``kiro_crew`` source. This is the
+lexically inside an ``async def`` body in ``aj_crew`` source. This is the
 deterministic enforcement the event-loop fault-isolation RFC calls for
 (the ``no-blocking-call-on-event-loop`` rule in ``AUTOSDE.yaml``, whose
 rationale this gate makes deterministic). It complements the judgment-based
@@ -97,7 +97,7 @@ _NESTED_SCOPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)
 
 
 def _src_root() -> pathlib.Path:
-    """Locate the kiro_crew source tree (see ``source_corpus.src_root``)."""
+    """Locate the aj_crew source tree (see ``source_corpus.src_root``)."""
     return src_root()
 
 
@@ -246,7 +246,7 @@ _REQUIRE_ALL = ("async",)
 
 
 def collect_repo_violations() -> list[tuple[str, int, str]]:
-    """Scan every ``kiro_crew/**/*.py`` for on-loop blocking calls."""
+    """Scan every ``aj_crew/**/*.py`` for on-loop blocking calls."""
     base = _src_root().parent
     out: list[tuple[str, int, str]] = []
     for py, src, tree in parsed_candidates(_REQUIRE_ALL):
@@ -276,7 +276,7 @@ def test_no_blocking_call_on_event_loop() -> None:
             "(event-loop fault-isolation RFC, Phase 1 gate).\n"
             "These have no legitimate use on the loop. Offload via "
             "run_in_executor(<pool>, fn, *args) using a pool from "
-            "kiro_crew.executors, or switch to an async API (e.g. "
+            "aj_crew.executors, or switch to an async API (e.g. "
             "asyncio.sleep, asyncio.create_subprocess_exec). If a line is "
             "genuinely safe on the loop, add a trailing '# loop-ok: <reason>' "
             "comment.\n"

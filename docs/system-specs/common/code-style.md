@@ -9,7 +9,7 @@ the second copy of it drifts silently.
 Before adding a constant, check the table for an existing owner. Module-level
 constants are `UPPER_SNAKE_CASE`; private ones are `_UPPER_SNAKE_CASE`.
 
-Paths below are relative to `src/kiro_crew/`.
+Paths below are relative to `src/aj_crew/`.
 
 | Concern | Owning module | Notes |
 |---|---|---|
@@ -18,7 +18,7 @@ Paths below are relative to `src/kiro_crew/`.
 | ACP client timeouts | `acp/client_timeouts.py` | `_INIT_TIMEOUT`, `_DEFAULT_PROMPT_TIMEOUT`, `_READ_TIMEOUT`, `_STALE_TURN_TIMEOUT`, `_TOOL_STALL_TIMEOUT`, `_WAIT_RESPONSE_MAX_TIMEOUT`, `_SEL_AUDIT_TIMEOUT_SECONDS`. |
 | MCP protocol version | `mcp_shared_dispatch.py`; read as `mcp_shared` | The `initialize` reply's `protocolVersion` for the managed stdio servers. `mcp_cron.py` / `mcp_core.py` do not carry their own copy. |
 | Credential keys | `config/loader_credentials.py` | `CRED_*` env-var names plus the `CREDENTIAL_KEYS` tuple. |
-| Dashboard port | `config/loader_credentials.py` | `_DEFAULT_PORT` (5476) and `DASHBOARD_PORT` (honors `KIROCREW_PORT`). `dashboard/origin.py` imports `_DEFAULT_PORT` rather than restating it. |
+| Dashboard port | `config/loader_credentials.py` | `_DEFAULT_PORT` (5476) and `DASHBOARD_PORT` (honors `AJCREW_PORT`). `dashboard/origin.py` imports `_DEFAULT_PORT` rather than restating it. |
 | Hook results and event names | `hooks.py` | `HOOK_PASSTHROUGH` / `HOOK_REPLY` / `HOOK_MODIFY` / `HOOK_INJECT_CONTEXT`, the tool verdicts `TOOL_ALLOW` / `TOOL_AUTO_APPROVE` / `TOOL_DENY`, and `HOOK_EVENT_*` / `HOOK_EVENTS`. |
 | Memory paths and dir names | `memory.py` | `WORKSPACE_DIR_NAME`, `MEMORY_DIR_NAME`, `HISTORY_DIR_NAME`, `PREFERENCES_FILE`, `PROJECTS_FILE`, `INDEX_DB_FILE` (the FTS index *name* only — which directory a given store's index sits in is store policy, owned by `memory_stores.memory_index_path_for`). |
 | Named memory stores | `memory_stores.py` | `MEMORY_STORES_DIR_NAME`, `DEFAULT_MEMORY_STORE`, `MEMORY_DB_FILE` (the vector-store filename, which `vector_memory._DB_FILE` aliases rather than restating), `MEMORY_STORE_NAME_MAX`, `_STORE_NAME_RE`, `_WINDOWS_RESERVED_BASENAMES`; the tree's host-local entries `MEMBER_API_KEY_FILE`, `MEMBER_BACKUPS_DIR_NAME`, `EXECUTION_LOGS_DIR_NAME`, `STORE_BACKUP_DIR_NAME` (which `memory_backup.BACKUP_DIR_NAME` aliases), and the layout predicates `is_host_local_store_state` / `named_store_product_file` the snapshot and export read. A stdlib-only LEAF module, so `security.py` can build its sensitive-path fence from `MEMORY_STORES_DIR_NAME` without a cycle. |
@@ -37,7 +37,7 @@ Paths below are relative to `src/kiro_crew/`.
 | Bytecode-cache GC limits | `pycache_gc.py` | `PYCACHE_MAX_AGE_DAYS`, `PYCACHE_MAX_TOTAL_BYTES`, `PYCACHE_GC_INTERVAL_SECS` (the `<data home>/cache/pycache` TTL, size cap, and periodic-sweep cadence). |
 | Shell audit log cap | `shell_audit_log.py` | `SHELL_AUDIT_LOG_NAME`, `SHELL_AUDIT_LOG_MAX_BYTES` (the file the bundled `postToolUse` hook appends to, and the size at which the session cleanup loop rotates it aside to one `.1` generation). |
 | Slack UX strings and pacing | `slack/handler.py` | `_THINKING`, `_CURSOR`, `_NO_RESPONSE`, `_STATUS_WORKING`, `_TRUNCATION_MARKER`, plus `_EDIT_INTERVAL`, `_APPROVAL_TIMEOUT`, `_SLACK_SECTION_TEXT_LIMIT`, the stall thresholds and the phase debounce. |
-| Cross-cutting shared constants | `constants.py` | `KIROCREW_SPAWNED_ENV`, `ENV_TRUTHY`, `CHAT_TURN_TIMEOUT`, `COMPACT_WAIT_TIMEOUT_SECS` (one budget, shared by manual and automatic compaction; `session.compact_wait_secs` raises it for both, resolved for every caller by `SessionManager.compact_wait_budget_secs()`), the `[OPTIONS:]` parse regexes, `BANNER`, `MAX_BANNER_CHARS` and `ARTIFACT_MAX_CONTENT_BYTES` (bounds `validation.py` — a leaf — must read without importing the service module that enforces them; `artifacts.MAX_CONTENT_BYTES` re-exports the latter). |
+| Cross-cutting shared constants | `constants.py` | `AJCREW_SPAWNED_ENV`, `ENV_TRUTHY`, `CHAT_TURN_TIMEOUT`, `COMPACT_WAIT_TIMEOUT_SECS` (one budget, shared by manual and automatic compaction; `session.compact_wait_secs` raises it for both, resolved for every caller by `SessionManager.compact_wait_budget_secs()`), the `[OPTIONS:]` parse regexes, `BANNER`, `MAX_BANNER_CHARS` and `ARTIFACT_MAX_CONTENT_BYTES` (bounds `validation.py` — a leaf — must read without importing the service module that enforces them; `artifacts.MAX_CONTENT_BYTES` re-exports the latter). |
 | Coder execution | `coder/client.py`, `coder/registry.py`, `constants.py` | CLI deadlines and output bounds belong to the client. Generated workspace-name bounds belong to the registry; `CODER_WORKSPACE_PREFIX_MAX_CHARS` lives in `constants.py`. |
 | Gateway shutdown budget | `gateway_shutdown_budget.py` | Gateway cooperative timeout, service-manager signal margin, and the derived systemd/launchd stop deadline. |
 | Process-wide shutdown signal | `__init__.py` | `shutdown_event`. Background loops `await shutdown_event.wait()` with a timeout instead of a plain `asyncio.sleep`, so they wake instantly on Ctrl-C. |
@@ -55,9 +55,9 @@ Other style rules:
 | Python version | >= 3.12; `from __future__ import annotations` for type hints |
 | Imports | `import logging` plus `logger = logging.getLogger(__name__)`; a split's owner names the original module instead ([Splitting a file](#splitting-a-file)) |
 | Async | `asyncio` throughout; `async def` for all I/O |
-| Module-global asyncio primitives | Never a bare `asyncio.Lock()`/`Event()`/`Queue()` at module scope — it binds to the import-time (or first-use) loop and raises `RuntimeError` from any other loop (Python 3.10+). Use `kiro_crew.loop_lock.LoopBoundLock` for locks, or create the primitive inside the coroutine. CI enforces this (`loop-bound-locks` gate). |
+| Module-global asyncio primitives | Never a bare `asyncio.Lock()`/`Event()`/`Queue()` at module scope — it binds to the import-time (or first-use) loop and raises `RuntimeError` from any other loop (Python 3.10+). Use `aj_crew.loop_lock.LoopBoundLock` for locks, or create the primitive inside the coroutine. CI enforces this (`loop-bound-locks` gate). |
 | Dataclasses | `@dataclass` for data containers |
-| Product name | The product is **Kiro Crew**: two words, a space, capital `K`. Identifiers keep the spelling their own system gave them (the `kirodotdev/KiroCrew` repo slug, `KiroCrew.dmg` artifacts, the `KiroCrew Nightly` OS identifier, the `kirocrew` CLI, `KIROCREW_*` env vars, `kiro_crew` imports). CI gates the lines a change ADDS, so an existing spelling nearby does not exempt a new one; run `BRAND_BASE_REF=origin/main python3 scripts/check_brand_name.py` before pushing. |
+| Product name | The product is **Aj Crew**: two words, a space, capital `A`. Identifiers keep the spelling their own system gave them (the `kirodotdev/KiroCrew` repo slug, `AjCrew.dmg` artifacts, the `AjCrew Nightly` OS identifier, the `ajcrew` CLI, `AJCREW_*` env vars, `aj_crew` imports). CI gates the lines a change ADDS, so an existing spelling nearby does not exempt a new one; run `BRAND_BASE_REF=origin/main python3 scripts/check_brand_name.py` before pushing. |
 | Errors | ACP exceptions live in `acp/transport_errors.py` (re-exported by `acp/client.py`), `acp/session_handle_runtime_contract.py` (re-exported by `acp/session_handle.py`), and `acp/runtime.py` (the binding and session-start errors in `acp/runtime_session_setup.py` and `acp/runtime_session_create.py`, re-exported by it); return error strings at tool boundaries. See [error-handling](error-handling.md). |
 
 ## Comments explain the WHY
@@ -100,7 +100,7 @@ tracked; a marker can re-enter only on an added line, which is what the gate
 judges. Without the env the script prints whole-tree counts and does not enforce.
 
 The rule applies to every comment. The gate enforces it only on added lines of
-`.py` files under `src/kiro_crew` and `test`; comments elsewhere (`website/`, the
+`.py` files under `src/aj_crew` and `test`; comments elsewhere (`website/`, the
 Electron shell, workflow files) are held to the rule by review.
 
 ```bash
@@ -114,8 +114,8 @@ committing:
 
 ```bash
 python3 scripts/check_black_formatting.py && python3 scripts/check_subprocess_encoding.py
-COMMENT_HISTORY_BASE_REF=origin/main python3 scripts/check_comment_history.py && isort src/kiro_crew test conftest.py xdist_budget.py
-flake8 src/kiro_crew test conftest.py xdist_budget.py && mypy src/kiro_crew
+COMMENT_HISTORY_BASE_REF=origin/main python3 scripts/check_comment_history.py && isort src/aj_crew test conftest.py xdist_budget.py
+flake8 src/aj_crew test conftest.py xdist_budget.py && mypy src/aj_crew
 python3 scripts/local-gate.py
 ```
 
@@ -131,7 +131,7 @@ ever shrinks. Prune with `python3 scripts/check_black_formatting.py
 `pyproject.toml` pin (`black==26.10.1`). The read-only check does not need the pin. Format what you touched with
 `black --target-version py310 <paths>`, never the whole tree.
 
-**On macOS, run `mypy --platform linux src/kiro_crew`.** CI type-checks on Linux, and
+**On macOS, run `mypy --platform linux src/aj_crew`.** CI type-checks on Linux, and
 typeshed guards `os.listxattr` / `getxattr` / `setxattr` behind
 `sys.platform == "linux"` even though macOS has them. A bare local run therefore
 reports errors in files you did not touch, and — the half that matters — it MISSES the
@@ -147,7 +147,7 @@ Linux-only errors CI fails on, so a clean local run is a false green.
 
 `setup.cfg` also sets `max_line_length = 100`, ignores E501 (after auto-formatting
 the only long lines left do not matter) and E203 (black's whitespace before `:`),
-and excludes `src/kiro_crew/_vendor` from flake8 entirely. mypy and isort exclude
+and excludes `src/aj_crew/_vendor` from flake8 entirely. mypy and isort exclude
 it too. Never hand-edit vendored code, and never reformat it: the point is a clean
 diff against the upstream wheel at upgrade time.
 
@@ -222,14 +222,14 @@ module owns one job you can name in a sentence and is named for it, as a sibling
 or `packages = find:` leaves it out of the wheel).
 
 **The original module stays the import path**, as a facade over its owners built with
-`src/kiro_crew/_facade_mirror.py` in the shape its docstring shows: the foot imports every
+`src/aj_crew/_facade_mirror.py` in the shape its docstring shows: the foot imports every
 owner, lowest layer first, calls `install()` and sets the module's `__class__` to
 `MirroredModule`, so a write through the facade (a test's `monkeypatch.setattr` or
 `mock.patch` on the old path) lands in every owner that binds the name. A plain re-export
 copies the binding instead, and the patch silently stops reaching the moved code; see
 [testing-conventions](testing-conventions.md#patch-the-defining-module-not-a-re-export).
 `__all__` keeps the list the module had, or is derived from the namespace where it had
-none. A family that already composes through `src/kiro_crew/_facade_compose.py`
+none. A family that already composes through `src/aj_crew/_facade_compose.py`
 (`hook_runtime/`, `dashboard/chat_api/`, `dashboard/server_runtime/` and the other owner
 packages) takes new owners inside its package; start a new compose family only when moved
 functions must run on the facade's own globals, as when a contract pins their `__module__`.
@@ -242,10 +242,10 @@ family keeps two rules:
 - a global that code rebinds at run time (`global name; name = ...`) lives in one owner
   with every function that rebinds it and every reader, since no mirror can follow a
   rebinding. The facade binds no copy, so the mirror serves it live from that owner (a
-  `surface=` facade lists it, as `_SERVED_LIVE` in `src/kiro_crew/dashboard/state.py`
+  `surface=` facade lists it, as `_SERVED_LIVE` in `src/aj_crew/dashboard/state.py`
   does). A reader that cannot live there looks the facade up in `sys.modules` at call
-  time, never by importing it (`_facade()` in `src/kiro_crew/snapshot_components.py` shows
-  the lookup, for the unmirrored `kiro_crew.snapshot`).
+  time, never by importing it (`_facade()` in `src/aj_crew/snapshot_components.py` shows
+  the lookup, for the unmirrored `aj_crew.snapshot`).
 
 `test/test_facade_mirror_guards.py` finds every mirror facade on its own, refuses an owner
 that imports its facade or rebinds a shared global, fails a facade no test patches through,
@@ -267,17 +267,17 @@ an owner's dotted name instead of copying the scan.
 `__module__` to the facade when a pickle, repr or test reads it. Members move to owners as
 functions taking `self`, and the body binds each as a one-line attribute
 (`prompt = _sh_turn.prompt`, or `staticmethod(...)`) under a comment naming the owner,
-with no new mixin or base class (`src/kiro_crew/acp/session_handle_class.py`). A member
+with no new mixin or base class (`src/aj_crew/acp/session_handle_class.py`). A member
 that uses zero-argument `super()`, `__class__` or a name-mangled attribute stays in the
 body. Keep `__module__` and `__qualname__` wherever anything reads them: moved exception
 classes keep the facade's name because error text renders it, and the shared helper
-`kiro_crew._facade_bindings.own_methods(cls, owners)` renames each function the class binds
+`aj_crew._facade_bindings.own_methods(cls, owners)` renames each function the class binds
 from a module in its explicit owner set `<Class>.<name>`. An owner logs under
-the original module's logger, `logging.getLogger("kiro_crew.<original>")`: the log format
+the original module's logger, `logging.getLogger("aj_crew.<original>")`: the log format
 prints the logger name, and `caplog` tests filter on it.
 
 **Registries keyed by path follow the code.** A `_REDACTION_SINKS` row (in
-`src/kiro_crew/security_posture_sinks_*.py`) names the module that redacts that sink; when a split
+`src/aj_crew/security_posture_sinks_*.py`) names the module that redacts that sink; when a split
 moves the redactor calls, re-key the row to the owner that now makes them. The sink test
 in `test/test_security_posture.py` also counts calls in the facade's declared owners, so a
 row left on the facade can stay green while it no longer tells an operator where the sink
@@ -288,7 +288,7 @@ is listed in `NON_EGRESS_REDACTION_MODULES` under a comment giving the reason. E
 list keyed by a path or a module name gets truthful rows in the same commit.
 
 **A new facade or binding test pins identity and reach, never an exact namespace or member
-list.** Each public name the module defined, or imported from `kiro_crew`, before the split
+list.** Each public name the module defined, or imported from `aj_crew`, before the split
 keeps resolving on it, to its home module's object where the facade binds it by import:
 `test/campaign_facade_inventories/<dotted.module>.json` records them for
 `test/test_campaign_facades_base_public_names.py`. Pin names the split adds as a subset
@@ -347,7 +347,7 @@ judged as one call), behind the shrink-only
 
 For a child whose output encoding is knowable — `git`, `gh`, a Python
 interpreter we spawn running our own code — pin the decode with the shared
-definition in `kiro_crew.subprocess_utf8`: splat `**UTF8_TEXT` into the call
+definition in `aj_crew.subprocess_utf8`: splat `**UTF8_TEXT` into the call
 (this keeps the call going through the module's own `subprocess` attribute, so
 tests that patch it by name keep intercepting — and it adds no new spawn
 primitive for `test_spawn_audit` to police). For a Python child, also pin the

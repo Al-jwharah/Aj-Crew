@@ -16,10 +16,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.dashboard.handlers.sessions import _service_wait_ping
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.dashboard.handlers.sessions import _service_wait_ping
 
 
 @pytest.fixture(autouse=True)
@@ -133,7 +133,7 @@ class TestTheKeepaliveNamesWhoEndedIt:
     def _ping(self, state, slot, wait_id: str) -> dict:
         reply: dict = {"ok": True}
         body = {"wait_id": wait_id, "seconds": 300, "remaining": 290}
-        with patch("kiro_crew.dashboard.chat_utils.dashboard_slot_key", return_value=slot.key):
+        with patch("aj_crew.dashboard.chat_utils.dashboard_slot_key", return_value=slot.key):
             _service_wait_ping(state, "known", wait_id, body, reply, None)
         return reply
 
@@ -202,16 +202,16 @@ class TestTheRoute:
         assert target._end_wait_request == "w1"
 
     def test_the_route_is_strict_internal(self):
-        from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
+        from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
 
         assert "/api/session-control/end-wait" in _STRICT_INTERNAL_API_PATHS
 
 
 class TestMcpDispatch:
     def _call(self, reply: dict):
-        from kiro_crew.mcp_dashboard import TABLE
-        from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-        from kiro_crew.mcp_tools.table import Caller, ToolContext
+        from aj_crew.mcp_dashboard import TABLE
+        from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+        from aj_crew.mcp_tools.table import Caller, ToolContext
 
         dash = InMemoryDashboardClient({"POST /api/session-control/end-wait": reply})
         ctx = ToolContext(dash, Caller.strict("dashboard:chat-1"))

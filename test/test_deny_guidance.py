@@ -1,7 +1,7 @@
 """Deny-class classification and the remediation text attached to a refusal.
 
 The classifier reads anchor phrases out of refusal text, so the tests that matter
-drive the REAL producers in :mod:`kiro_crew.security` rather than asserting on
+drive the REAL producers in :mod:`aj_crew.security` rather than asserting on
 copied strings. A pinned copy would keep passing after the producer reworded
 itself, which is the exact failure this guards: the refusal would silently lose
 its guidance and nothing would go red.
@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import deny_guidance as dg
-from kiro_crew import security
-from kiro_crew.dashboard.state import (
+from aj_crew import deny_guidance as dg
+from aj_crew import security
+from aj_crew.dashboard.state import (
     DENY_CAUSE_HOOK_ERROR,
     DENY_CAUSE_INVALID_NAME,
     DENY_CAUSE_POLICY,
@@ -189,7 +189,7 @@ def _rule_tier_reason(rule: security.DeniedCommandRule) -> str:
     """The refusal a rule-tier hit on *rule* produces, from the real producer.
 
     ``_deny_reason`` is the single module-level producer every tier in
-    :mod:`kiro_crew.security` emits through, precisely so the micro-format cannot
+    :mod:`aj_crew.security` emits through, precisely so the micro-format cannot
     drift between them, so calling it is driving the producer rather than pinning
     a copy of its output. The end-to-end tests below additionally go through
     ``is_denied`` with a real command; this form is what lets every one of the
@@ -235,8 +235,8 @@ class TestRuleIdentityRoutesTheRegexTier:
             # Reaching the product's own credential mint. The argv-structural
             # floor enforces these two as well and its note classifies them this
             # way, so the rule tier must not disagree with it.
-            ("credential-exfil-kirocrew-token", dg.DENY_CLASS_SELF_PROTECTION),
-            ("credential-exfil-kirocrew-token-argv", dg.DENY_CLASS_SELF_PROTECTION),
+            ("credential-exfil-ajcrew-token", dg.DENY_CLASS_SELF_PROTECTION),
+            ("credential-exfil-ajcrew-token-argv", dg.DENY_CLASS_SELF_PROTECTION),
             # A rule whose class IS its category's, resolved by the fallback.
             ("credential-exfil-s3-cp", dg.DENY_CLASS_EXFIL_SHAPE),
             ("data-exfil-curl-file-body", dg.DENY_CLASS_EXFIL_SHAPE),
@@ -351,13 +351,13 @@ class TestRuleIdentityRoutesTheRegexTier:
     def test_a_rule_tier_self_protection_refusal_matches_what_the_floor_says(self):
         """Both routes to the same rule must hand back the same guidance.
 
-        ``kirocrew token`` is enforced by the regex tier AND the argv-structural
+        ``ajcrew token`` is enforced by the regex tier AND the argv-structural
         floor. A caller reached through whichever tier happened to answer first
         would otherwise have been told something different about the same action.
         """
-        floor_reason = security.is_denied("kirocrew token", denied_regexes=_builtin_regexes())
+        floor_reason = security.is_denied("ajcrew token", denied_regexes=_builtin_regexes())
         assert floor_reason
-        rule = _rule_by_id("credential-exfil-kirocrew-token")
+        rule = _rule_by_id("credential-exfil-ajcrew-token")
         assert (
             dg.classify_deny(floor_reason)
             == dg.classify_deny(_rule_tier_reason(rule))
@@ -371,10 +371,10 @@ class TestRuleIdentityRoutesTheRegexTier:
         cloud lifecycle) have no row, so their refusal's first line names an id
         the rule index has never seen. The classification therefore rides on the
         note's opening phrase -- the self-protection anchor -- and that is what
-        this pins: were the phrase to drift, ``kirocrew restart`` would be
+        this pins: were the phrase to drift, ``ajcrew restart`` would be
         answered by whatever credential word happened to sit in the command.
         """
-        for command in ("kirocrew restart", "kirocrew -v update", "kirocrew cloud destroy"):
+        for command in ("ajcrew restart", "ajcrew -v update", "ajcrew cloud destroy"):
             reason = security.is_denied(command, denied_regexes=_builtin_regexes())
             assert reason, command
             assert dg._rule_class(reason) is None, command
@@ -716,7 +716,7 @@ class TestStatementTextMatchedInProse:
 
     def test_the_two_agent_facing_documents_carry_the_same_answer(self):
         """The prose lives in three places and must agree on the two next steps."""
-        root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        root = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         for path in (
             root / "builtin_skills" / "blocked-by-policy" / "SKILL.md",
             root / "docs" / "blocked-commands.md",
@@ -879,7 +879,7 @@ class TestRemediationText:
             "in a file",
             "into a file",
             "run that file",
-            "$KIROCREW_SCRATCH",
+            "$AJCREW_SCRATCH",
             "another interpreter and run",
             # Carrying a file's bytes in the body instead of referencing it (exfil).
             "inline instead",
@@ -922,7 +922,7 @@ class TestRemediationText:
         # was extended for lived in BOTH the dict and the skill, so a sweep of the
         # dict alone would have declared it fixed while the trigger-loaded copy
         # still taught it.
-        root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        root = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         surfaces = {
             "blocked-by-policy/SKILL.md": (
                 root / "builtin_skills" / "blocked-by-policy" / "SKILL.md"
@@ -1105,7 +1105,7 @@ class TestRemediationText:
         skill = (
             Path(__file__).resolve().parents[1]
             / "src"
-            / "kiro_crew"
+            / "aj_crew"
             / "builtin_skills"
             / "blocked-by-policy"
             / "SKILL.md"
@@ -1149,7 +1149,7 @@ class TestRemediationText:
         skill = (
             Path(__file__).resolve().parents[1]
             / "src"
-            / "kiro_crew"
+            / "aj_crew"
             / "builtin_skills"
             / "blocked-by-policy"
             / "SKILL.md"
@@ -1170,7 +1170,7 @@ class TestRemediationText:
         ILLUSTRATION of a refused shape, not a command to run, so requiring the
         other surfaces to reproduce it would pin the wrong thing.
         """
-        root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+        root = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
         surfaces = {
             "builtin_skills/blocked-by-policy/SKILL.md": (
                 root / "builtin_skills" / "blocked-by-policy" / "SKILL.md"
@@ -1252,7 +1252,7 @@ class TestCredentialToolHint:
         drops them. Pinned because deleting the resolver along with the
         interpolation would silently blank doctor's vendor line.
         """
-        for server_id in ("creds-agent", "kirocrew-core", "local-chorus-mcp", "mochi:mochi"):
+        for server_id in ("creds-agent", "ajcrew-core", "local-chorus-mcp", "mochi:mochi"):
             rows = [{"server_id": server_id, "description": "vends credentials"}]
             assert dg.credential_vendor_server_ids(rows) == [server_id]
 
@@ -1387,7 +1387,7 @@ class TestResolveHintOnThePublicEdition:
                 raise AssertionError("list_mcp must not run when available() is False")
 
         monkeypatch.setattr(dg, "_HINT_TTL_SECS", 300.0)
-        import kiro_crew.platform.context as ctx_mod
+        import aj_crew.platform.context as ctx_mod
 
         monkeypatch.setattr(ctx_mod, "safe_context_call", lambda fn, **kw: _Manager(), raising=True)
         assert await dg.resolve_credential_tool_hint() == ""
@@ -1425,7 +1425,7 @@ class TestResolveHintOnThePublicEdition:
 
     async def test_lookup_failure_degrades_to_no_hint(self, monkeypatch):
         dg.reset_credential_tool_hint_cache()
-        import kiro_crew.platform.context as ctx_mod
+        import aj_crew.platform.context as ctx_mod
 
         def _boom(fn, **kw):
             raise RuntimeError("composition exploded")
@@ -1544,7 +1544,7 @@ def _isolate_ssh_host_lookups(monkeypatch):
     """Fixture hosts are remote: no DNS, no routing probe, no own-host worker."""
     from denied_commands_security_helpers import _PacketlessProbeSocket
 
-    from kiro_crew.security import argv_floor
+    from aj_crew.security import argv_floor
 
     monkeypatch.setattr(argv_floor, "_resolved_host_verdict", lambda host, **kwargs: False)
     monkeypatch.setattr(argv_floor, "_NETLINK_ADDRS_PUBLISHED", True)
@@ -1556,7 +1556,7 @@ def _isolate_ssh_host_lookups(monkeypatch):
 
 
 def _ssh_hook_result(monkeypatch, options: str):
-    from kiro_crew.hooks import HookManager
+    from aj_crew.hooks import HookManager
 
     # No SSH or osascript is executed.
     _isolate_ssh_host_lookups(monkeypatch)
@@ -1572,19 +1572,19 @@ class TestSshBatchMode:
     """
 
     def test_equivalent_options_pass_the_deny_floor_unchanged(self, monkeypatch):
-        from kiro_crew.hooks import TOOL_DENY
+        from aj_crew.hooks import TOOL_DENY
 
         _, result = _ssh_hook_result(monkeypatch, _SSH_EQUIVALENT)
         assert result.action != TOOL_DENY, result.reason
 
     def test_batchmode_is_not_refused(self, monkeypatch):
-        from kiro_crew.hooks import TOOL_DENY
+        from aj_crew.hooks import TOOL_DENY
 
         _, result = _ssh_hook_result(monkeypatch, "-o BatchMode=yes")
         assert result.action != TOOL_DENY, result.reason
 
     def test_the_stall_hint_proposes_the_same_equivalent(self):
-        from kiro_crew.acp import liveness
+        from aj_crew.acp import liveness
 
         assert liveness._SSH_NONINTERACTIVE_OPTIONS == _SSH_EQUIVALENT
         assert _SSH_EQUIVALENT in liveness.non_interactive_hint("ssh host uptime")

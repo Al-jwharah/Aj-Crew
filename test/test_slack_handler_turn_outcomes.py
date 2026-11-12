@@ -13,18 +13,18 @@ import pytest
 from slack_handler_helpers import _clean_approval_state  # noqa: F401
 from slack_handler_helpers import FakeProvider, FakeSessionManager, _visible_texts, _within_lost_run
 
-from conftest import MockSlackClient
-from kiro_crew.acp.client import AcpError
-from kiro_crew.hooks import HOOK_REPLY
-from kiro_crew.messaging.display_safety import canonicalize_display
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack.handler import (
+from aj_crew.acp.client import AcpError
+from aj_crew.hooks import HOOK_REPLY
+from aj_crew.messaging.display_safety import canonicalize_display
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack.handler import (
     _THINKING,
     ACTIVATION_REVIEW,
     handle_message,
     set_allowed_users,
     set_owner_id,
 )
+from conftest import MockSlackClient
 
 
 class TestStopReasonCompactionFailed:
@@ -35,7 +35,7 @@ class TestStopReasonCompactionFailed:
 
     @pytest.mark.asyncio
     async def test_compaction_failed_resets_the_abandoned_session(self):
-        from kiro_crew.acp.types import STOP_REASON_COMPACTION_FAILED
+        from aj_crew.acp.types import STOP_REASON_COMPACTION_FAILED
 
         slack = MockSlackClient()
         provider = FakeProvider(
@@ -133,7 +133,7 @@ class TestStopReasonUnfinishedTurn:
 
     @pytest.mark.asyncio
     async def test_a_users_stop_keeps_the_session(self):
-        from kiro_crew.acp.types import STOP_REASON_CANCELLED
+        from aj_crew.acp.types import STOP_REASON_CANCELLED
 
         slack = MockSlackClient()
         provider = FakeProvider(
@@ -155,7 +155,7 @@ class TestStopReasonUnfinishedTurn:
 
     @pytest.mark.asyncio
     async def test_a_raised_timeout_keeps_the_streamed_text_and_adds_the_notice(self):
-        from kiro_crew.acp.client import AcpTimeoutError
+        from aj_crew.acp.client import AcpTimeoutError
 
         slack = MockSlackClient()
         provider = _RaisingProvider(
@@ -173,7 +173,7 @@ class TestStopReasonUnfinishedTurn:
 
     @pytest.mark.asyncio
     async def test_a_raised_timeout_with_partial_output_adds_the_notice(self):
-        from kiro_crew.acp.client import AcpTimeoutError
+        from aj_crew.acp.client import AcpTimeoutError
 
         slack = MockSlackClient()
         provider = _RaisingProvider([], AcpTimeoutError(partial_output="half an answer"))
@@ -186,7 +186,7 @@ class TestStopReasonUnfinishedTurn:
 
     @pytest.mark.asyncio
     async def test_a_raised_timeout_resets_the_session_it_held(self):
-        from kiro_crew.acp.client import AcpTimeoutError
+        from aj_crew.acp.client import AcpTimeoutError
 
         slack = MockSlackClient()
         provider = _RaisingProvider([], AcpTimeoutError())
@@ -225,7 +225,7 @@ class TestStopReasonUnfinishedTurn:
 
     @pytest.mark.asyncio
     async def test_at_the_breaker_threshold_a_raised_timeout_resets_once(self):
-        from kiro_crew.acp.client import AcpTimeoutError
+        from aj_crew.acp.client import AcpTimeoutError
 
         slack = MockSlackClient()
         provider = _RaisingProvider(
@@ -313,7 +313,7 @@ class _SequencedProvider(FakeProvider):
 
 
 def _abandoned():
-    from kiro_crew.acp.types import STOP_REASON_COMPACTION_FAILED
+    from aj_crew.acp.types import STOP_REASON_COMPACTION_FAILED
 
     return [LLMEvent(kind="complete", stop_reason=STOP_REASON_COMPACTION_FAILED)]
 
@@ -333,7 +333,7 @@ class TestTransientCompactionRetry:
 
     @pytest.mark.asyncio
     async def test_a_transient_failure_replays_the_message(self):
-        from kiro_crew.slack.handler import _COMPACTION_RETRY_NOTICE, _NO_RESPONSE
+        from aj_crew.slack.handler import _COMPACTION_RETRY_NOTICE, _NO_RESPONSE
 
         slack = MockSlackClient()
         provider = _SequencedProvider([_abandoned(), _answered()], transient=True)
@@ -456,7 +456,7 @@ class TestTransientCompactionRetry:
         """A throttle that keeps firing gets exactly ``_COMPACTION_FAILED_RETRIES``
         replays; the attempt after the last one gives up and posts as the old
         code did."""
-        import kiro_crew.slack.handler as handler_mod
+        import aj_crew.slack.handler as handler_mod
 
         budget = handler_mod._COMPACTION_FAILED_RETRIES
         slack = MockSlackClient()
@@ -468,7 +468,7 @@ class TestTransientCompactionRetry:
         assert provider.turns == budget + 1
         assert sessions.removed.count("reset:thread1") == budget + 1
         assert sessions.replay_gaps[-1] == ("close", "thread1"), "the gap never outlives the turn"
-        from kiro_crew.slack.handler import _NO_RESPONSE
+        from aj_crew.slack.handler import _NO_RESPONSE
 
         assert any(_NO_RESPONSE in t for t in _visible_texts(slack)), "the last attempt posts"
 
@@ -625,15 +625,15 @@ class TestTransientCompactionRetry:
         call takes over the Slack message."""
         import dataclasses
 
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        _real_cfg = KiroCrewConfig.load()
+        _real_cfg = AjCrewConfig.load()
         # The real ``agent`` section, not a stub of it: ``handler._get_default_agent``
         # reads ``load().agent.default_agent`` and caches it in a module global, so a
         # config object carrying only ``slack`` raises unless some earlier test in the
         # same process happened to warm that cache first.
         monkeypatch.setattr(
-            "kiro_crew.slack.handler.KiroCrewConfig.load",
+            "aj_crew.slack.handler.AjCrewConfig.load",
             lambda: dataclasses.replace(
                 _real_cfg,
                 slack=dataclasses.replace(
@@ -667,7 +667,7 @@ class TestTransientCompactionRetry:
         the user's text, never the preamble a previous attempt prepended."""
         from types import SimpleNamespace
 
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         log = MagicMock()
         log.get_metadata.return_value = {}
@@ -708,7 +708,7 @@ class TestTransientCompactionRetry:
         """Pinning, activation, asker and action context all travel with the
         replay -- that is what makes a nested call Slack's own replay rather than
         a re-dispatch that forgets how the message arrived."""
-        import kiro_crew.slack.handler as handler_mod
+        import aj_crew.slack.handler as handler_mod
 
         seen: list[dict] = []
         real = handler_mod.handle_message
@@ -761,9 +761,9 @@ class TestStopReasonCancelled:
     def _ensure_reactions_enabled(self, _floor_monkeypatch):
         import dataclasses
 
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        _real_load = KiroCrewConfig.load
+        _real_load = AjCrewConfig.load
 
         def _patched_load():
             cfg = _real_load()
@@ -771,13 +771,13 @@ class TestStopReasonCancelled:
                 cfg, slack=dataclasses.replace(cfg.slack, reactions_enabled=True)
             )
 
-        _floor_monkeypatch.setattr(KiroCrewConfig, "load", _patched_load)
+        _floor_monkeypatch.setattr(AjCrewConfig, "load", _patched_load)
 
     @pytest.mark.asyncio
     async def test_handler_stop_reason_cancelled_skips_record_success(self):
         """When EVENT_COMPLETE carries stop_reason='cancelled', neither
         record_success nor record_failure should be called."""
-        from kiro_crew.acp.types import STOP_REASON_CANCELLED
+        from aj_crew.acp.types import STOP_REASON_CANCELLED
 
         slack = MockSlackClient()
         provider = FakeProvider(
@@ -813,7 +813,7 @@ class TestStopReasonCancelled:
         """When cancelled, maybe_consolidate must not be called."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.acp.types import STOP_REASON_CANCELLED
+        from aj_crew.acp.types import STOP_REASON_CANCELLED
 
         slack = MockSlackClient()
         provider = FakeProvider(
@@ -846,7 +846,7 @@ class TestStopReasonCancelled:
         """When stop_reason='end_turn', record_success and maybe_consolidate fire."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.acp.types import STOP_REASON_END_TURN
 
         slack = MockSlackClient()
         provider = FakeProvider(
@@ -886,7 +886,7 @@ class TestStopReasonCancelled:
     @pytest.mark.asyncio
     async def test_handler_stop_reason_cancelled_flushes_partial_text(self):
         """Partial text chunks before cancel must be flushed, not dropped."""
-        from kiro_crew.acp.types import STOP_REASON_CANCELLED
+        from aj_crew.acp.types import STOP_REASON_CANCELLED
 
         slack = MockSlackClient()
         provider = FakeProvider(
@@ -916,9 +916,9 @@ class TestLiveTurnPresentationFailure:
     def _ensure_reactions_enabled(self, _floor_monkeypatch):
         import dataclasses
 
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        _real_load = KiroCrewConfig.load
+        _real_load = AjCrewConfig.load
 
         def _patched_load():
             cfg = _real_load()
@@ -926,7 +926,7 @@ class TestLiveTurnPresentationFailure:
                 cfg, slack=dataclasses.replace(cfg.slack, reactions_enabled=True)
             )
 
-        _floor_monkeypatch.setattr(KiroCrewConfig, "load", _patched_load)
+        _floor_monkeypatch.setattr(AjCrewConfig, "load", _patched_load)
 
     @pytest.mark.asyncio
     async def test_progress_card_raise_does_not_render_terminal_error(self):
@@ -1678,7 +1678,7 @@ class _HandlerAsyncio:
 
 def test_native_cancel_at_predelivery_yield_releases_permit(monkeypatch):
     # The finally must not read a local bound only after the pre-delivery yield.
-    import kiro_crew.slack.handler as _h
+    import aj_crew.slack.handler as _h
 
     real_sleep = asyncio.sleep
     state = {"tripped": False}
@@ -1848,7 +1848,7 @@ def test_native_cancel_at_sleep0_after_stream_delivered_books_success(monkeypatc
     provider = FakeProvider([LLMEvent(kind="text_chunk", text="the answer is 42")])
     sessions = _TrackNativeSessions(provider)
 
-    import kiro_crew.slack.handler as _h
+    import aj_crew.slack.handler as _h
 
     real_sleep = asyncio.sleep
     state = {"fired": False}

@@ -1,10 +1,10 @@
 """kiro-cli ``allowedCommands`` entries in Rust's regex syntax, read as Rust reads them.
 
 kiro-cli compiles each entry with Rust's ``regex`` crate and runs a command one
-matches whole without a prompt. Kiro Crew answers the same entries at its own gate
-on KAS and claude (:mod:`kiro_crew.platform.allowed_commands`), so an entry it
-cannot read is a command kiro-cli runs and Kiro Crew refuses under
-``denyByDefault``, and an entry it reads wider than Rust is a command Kiro Crew runs
+matches whole without a prompt. Aj Crew answers the same entries at its own gate
+on KAS and claude (:mod:`aj_crew.platform.allowed_commands`), so an entry it
+cannot read is a command kiro-cli runs and Aj Crew refuses under
+``denyByDefault``, and an entry it reads wider than Rust is a command Aj Crew runs
 and kiro-cli refuses.
 
 The tables are Rust's own answers, taken with ripgrep 15.2, which matches with the
@@ -17,8 +17,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.platform import allowed_commands
-from kiro_crew.platform.allowed_commands import denied_match, matches, parse
+from aj_crew.platform import allowed_commands
+from aj_crew.platform.allowed_commands import denied_match, matches, parse
 
 
 def refusal_reason(entry: object) -> str | None:
@@ -239,7 +239,7 @@ def _nested(groups: int, repeats: int) -> str:
 
 def test_an_entry_rust_finds_too_large_or_too_deep_is_refused() -> None:
     """Rust compiles ``\\w{209}`` and refuses ``\\w{250}`` past its 10 MiB size
-    limit, and refuses ``_nested(28, 8)`` as nested past 250. Kiro Crew stops short
+    limit, and refuses ``_nested(28, 8)`` as nested past 250. Aj Crew stops short
     of both, never past them."""
     assert parse(r"\w{96}") is not None
     assert parse(r"[\w./-]{1,64}") is not None
@@ -262,7 +262,7 @@ def test_an_entry_rust_finds_too_large_or_too_deep_is_refused() -> None:
 )
 def test_a_unicode_class_matches_no_non_ascii_command(entry: str, command: str) -> None:
     """Rust reads ``\\w``, ``\\d``, ``\\b`` and ``(?i)`` by Unicode and matches each
-    of these; Kiro Crew reads them by ASCII, so such an entry grants an all-ASCII
+    of these; Aj Crew reads them by ASCII, so such an entry grants an all-ASCII
     command exactly as Rust does and nothing else."""
     parsed = parse(entry)
     assert parsed is not None and parsed.ascii_only

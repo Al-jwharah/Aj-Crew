@@ -13,7 +13,7 @@ import { i18nT } from '../../i18n/t'
  *
  * WHY THE MANIFEST IS NOT TOUCHED. The obvious fix is VS Code's shape — put `%key%`
  * in `app.json` and resolve it. That was rejected: it REPLACES the English, so every
- * consumer with no catalog starts printing a raw placeholder. `kirocrew app list`
+ * consumer with no catalog starts printing a raw placeholder. `ajcrew app list`
  * (`cli_commands.py`) prints `app.get('displayName')` straight to a terminal, and the
  * same field reaches Slack and the logs. Resolving there would mean a second
  * localisation stack in Python plus a request-scoped locale the backend does not have

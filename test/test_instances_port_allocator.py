@@ -10,7 +10,7 @@ import pytest
 
 class TestPortAllocator:
     def test_rejects_bad_base(self):
-        from kiro_crew.instances.port_allocator import PortAllocator
+        from aj_crew.instances.port_allocator import PortAllocator
 
         with pytest.raises(ValueError):
             PortAllocator(base_port=0)
@@ -22,8 +22,8 @@ class TestPortAllocator:
         not sensitive to OS ephemeral port assignments near 65535.  Real socket
         binding is verified separately in test_is_port_free_detects_live_listener*.
         """
-        import kiro_crew.instances.port_allocator as pa_mod
-        from kiro_crew.instances.port_allocator import PortAllocator
+        import aj_crew.instances.port_allocator as pa_mod
+        from aj_crew.instances.port_allocator import PortAllocator
 
         base = 41000
         # Simulate base as occupied (as if a socket is actively listening there).
@@ -38,7 +38,7 @@ class TestPortAllocator:
         The port is the pane's browser origin, so keeping it keeps localStorage
         settings; ``preferred`` above ``base`` wins over the first-free port.
         """
-        from kiro_crew.instances.port_allocator import PortAllocator
+        from aj_crew.instances.port_allocator import PortAllocator
 
         # Two OS-assigned free ports; the higher one is the "recorded" one.
         socks = []
@@ -61,8 +61,8 @@ class TestPortAllocator:
         The preference is honoured, never enforced. A fixed base (41000) with a
         patched probe keeps this off OS ephemeral ports near 65535.
         """
-        import kiro_crew.instances.port_allocator as pa_mod
-        from kiro_crew.instances.port_allocator import PortAllocator
+        import aj_crew.instances.port_allocator as pa_mod
+        from aj_crew.instances.port_allocator import PortAllocator
 
         base = 41000
         # All ports appear free; the test exercises only the exclude-set and
@@ -84,7 +84,7 @@ class TestPortAllocator:
         On Windows two SO_REUSEADDR sockets can both listen, so the probe uses
         SO_EXCLUSIVEADDRUSE and this test is the live proof on that matrix.
         """
-        from kiro_crew.instances.port_allocator import _is_port_free
+        from aj_crew.instances.port_allocator import _is_port_free
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # The occupier sets SO_REUSEADDR too (as ssh does); the probe must still
@@ -139,8 +139,8 @@ class TestPortAllocator:
         it too (OpenSSH's -L listener does), reads the port as free, and the
         forward becomes a second listener that never gets the traffic.
         """
-        import kiro_crew.instances.port_allocator as pa
-        from kiro_crew import platform_compat as pc
+        import aj_crew.instances.port_allocator as pa
+        from aj_crew import platform_compat as pc
 
         calls: list = []
         monkeypatch.setattr(pc, "IS_WINDOWS", True)
@@ -153,8 +153,8 @@ class TestPortAllocator:
         assert calls[-2:] == [("bind", ("127.0.0.1", 7778)), ("close",)]
 
     def test_windows_probe_reads_exclusive_bind_refusal_as_in_use(self, monkeypatch):
-        import kiro_crew.instances.port_allocator as pa
-        from kiro_crew import platform_compat as pc
+        import aj_crew.instances.port_allocator as pa
+        from aj_crew import platform_compat as pc
 
         calls: list = []
         monkeypatch.setattr(pc, "IS_WINDOWS", True)
@@ -169,8 +169,8 @@ class TestPortAllocator:
 
     def test_windows_probe_without_the_constant_sets_no_reuse_option(self, monkeypatch):
         """No SO_EXCLUSIVEADDRUSE in this build: plain bind, never SO_REUSEADDR."""
-        import kiro_crew.instances.port_allocator as pa
-        from kiro_crew import platform_compat as pc
+        import aj_crew.instances.port_allocator as pa
+        from aj_crew import platform_compat as pc
 
         calls: list = []
         monkeypatch.setattr(pc, "IS_WINDOWS", True)
@@ -181,8 +181,8 @@ class TestPortAllocator:
 
     def test_posix_probe_still_sets_reuseaddr_only(self, monkeypatch):
         """POSIX probe unchanged: SO_REUSEADDR, so TIME_WAIT is not a false positive."""
-        import kiro_crew.instances.port_allocator as pa
-        from kiro_crew import platform_compat as pc
+        import aj_crew.instances.port_allocator as pa
+        from aj_crew import platform_compat as pc
 
         calls: list = []
         monkeypatch.setattr(pc, "IS_WINDOWS", False)
@@ -193,7 +193,7 @@ class TestPortAllocator:
         assert opts == [("setsockopt", socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)]
 
     def test_is_port_free_true_for_unbound_port(self):
-        from kiro_crew.instances.port_allocator import _is_port_free
+        from aj_crew.instances.port_allocator import _is_port_free
 
         # Grab an OS-assigned port, then release it — it is now free to bind.
         # flake-ok: bind-close OS port is the fixed port the free-port probe under test must check; moved verbatim
@@ -212,7 +212,7 @@ class TestPortAllocator:
         client's resolver and the platform's bind precedence pick. The probe must
         therefore clear every loopback address, not just IPv4.
         """
-        from kiro_crew.instances.port_allocator import _is_addr_free, _is_port_free
+        from aj_crew.instances.port_allocator import _is_addr_free, _is_port_free
 
         s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
         s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 1)
@@ -238,7 +238,7 @@ class TestPortAllocator:
         Without this, a host with IPv6 compiled in but ::1 not configured would
         see every candidate port as occupied and connect would never allocate one.
         """
-        import kiro_crew.instances.port_allocator as pa
+        import aj_crew.instances.port_allocator as pa
 
         real_socket = socket.socket
 
@@ -281,7 +281,7 @@ class TestPortAllocator:
         "Free" could hand out a port held on the unprobed family; "in use" would end
         in a port-exhaustion error naming the wrong cause. So it propagates.
         """
-        import kiro_crew.instances.port_allocator as pa
+        import aj_crew.instances.port_allocator as pa
 
         real_socket = socket.socket
 
@@ -314,7 +314,7 @@ class TestPortAllocator:
         Failing closed here would refuse every candidate port on such a host and
         `connect` would never allocate one.
         """
-        import kiro_crew.instances.port_allocator as pa
+        import aj_crew.instances.port_allocator as pa
 
         real_socket = socket.socket
 
@@ -335,7 +335,7 @@ class TestPortAllocator:
 
     def test_allocate_skips_port_held_on_one_loopback_family(self, monkeypatch):
         """The allocator climbs past a port the aggregate probe rejects."""
-        import kiro_crew.instances.port_allocator as pa
+        import aj_crew.instances.port_allocator as pa
 
         base = 41000
         monkeypatch.setattr(

@@ -24,16 +24,16 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 from test_dashboard_chat import _provider_mock
 
-from kiro_crew.acp.types import STOP_REASON_END_TURN
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.dashboard.slot_persistence.turn_marker import (
+from aj_crew.acp.types import STOP_REASON_END_TURN
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.dashboard.slot_persistence.turn_marker import (
     _RESTART_INTERRUPTION_KIND,
     _reconcile_local_turn_marker,
 )
-from kiro_crew.dashboard.state import is_turn_interrupted
-from kiro_crew.history import ConversationLog
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard.state import is_turn_interrupted
+from aj_crew.history import ConversationLog
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.testing.wait import async_wait_until, await_until
 
 _PARTIAL = "Part one of the plan is to "
 
@@ -43,8 +43,8 @@ async def _empty_bg_turn(text, allow_image=False):
 
 
 def _state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.context_builder = None
@@ -80,7 +80,7 @@ async def _start_turn(state, *, finish: bool):
     client.stream_command = _stream
     state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-    from kiro_crew.dashboard.chat import _run_chat
+    from aj_crew.dashboard.chat import _run_chat
 
     slot.append("user", "explain the plan", "msg msg-u")  # as api_chat does before dispatch
     turn = asyncio.ensure_future(_run_chat(state, slot, "explain the plan"))
@@ -158,7 +158,7 @@ def test_a_restart_interrupted_turn_is_recorded_as_before():
 
 
 def test_no_close_row_when_the_turn_already_reads_as_interrupted_or_stopped():
-    from kiro_crew.dashboard.slot_persistence.turn_marker import (
+    from aj_crew.dashboard.slot_persistence.turn_marker import (
         record_close_interruption,
     )
 
@@ -175,6 +175,6 @@ def test_no_close_row_when_the_turn_already_reads_as_interrupted_or_stopped():
 
 
 def _make_state_slot():
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
     return _ChatSlot("s1")

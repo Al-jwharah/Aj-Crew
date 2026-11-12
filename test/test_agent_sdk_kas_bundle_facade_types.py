@@ -4,7 +4,7 @@ The facade serves the installer's names through a :pep:`562` ``__getattr__``.
 mypy reads such a name through the hook's return type, and in an import cycle it
 can read it before that ``-> Any`` is analysed: a call then fails as
 ``Any? not callable``, but only on runs that reach the module in that order
-(``mypy --no-incremental src/kiro_crew/dashboard/change_cards_settings.py`` did,
+(``mypy --no-incremental src/aj_crew/dashboard/change_cards_settings.py`` did,
 at ``backend_install.py``). A ``TYPE_CHECKING`` import of each name gives mypy a
 real type and leaves the runtime import lazy. These tests keep that import equal
 to ``_OWNED`` and prove it never runs.
@@ -15,9 +15,9 @@ from __future__ import annotations
 import ast
 import inspect
 
-from kiro_crew.agent_sdk import kas_bundle as facade
+from aj_crew.agent_sdk import kas_bundle as facade
 
-_OWNER = "kiro_crew.acp.kas_bundle"
+_OWNER = "aj_crew.acp.kas_bundle"
 
 
 def _type_checking_imports(tree: ast.Module) -> set[str]:

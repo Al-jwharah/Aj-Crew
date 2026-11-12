@@ -11,7 +11,7 @@ paying:
    answers ``""``, and the test asserts that too.
 2. **Completeness under a new spec concern.** ``Concern`` is closed and a mirror
    must rule on every member, so a member added there must be either ON the card
-   or recorded in :data:`~kiro_crew.agent_sdk.backend_mcp_ability.OFF_CARD_CONCERNS`
+   or recorded in :data:`~aj_crew.agent_sdk.backend_mcp_ability.OFF_CARD_CONCERNS`
    with the reason it is not. A concern in neither is one nobody decided about.
 3. **Completeness under a new kind or reach.** Every ``ProjectionKind`` and every
    ``PerToolDeny`` member must reach the wire as its own value, and doctor must
@@ -33,10 +33,10 @@ import json
 from pathlib import Path
 from typing import Set
 
-from kiro_crew.acp_backends import selectable_backend_values
-from kiro_crew.agent_sdk import backend_mcp_ability as mcp_mod
-from kiro_crew.agent_sdk.backend_cards import card_payload
-from kiro_crew.providers.mirrors import (
+from aj_crew.acp_backends import selectable_backend_values
+from aj_crew.agent_sdk import backend_mcp_ability as mcp_mod
+from aj_crew.agent_sdk.backend_cards import card_payload
+from aj_crew.providers.mirrors import (
     PROJECTIONS,
     Concern,
     Disposition,
@@ -204,7 +204,7 @@ def test_the_doctor_report_prints_the_declarations_own_values() -> None:
     member of both vocabularies reaches the report as its own value, so a new member is
     printable the moment it is declared and there is nothing to keep in step.
     """
-    from kiro_crew import cli_doctor
+    from aj_crew import cli_doctor
 
     assert not hasattr(cli_doctor, "_PROJECTION_PHRASE"), "the prose table is back"
     assert not hasattr(cli_doctor, "_DENY_PHRASE"), "the prose table is back"
@@ -237,7 +237,7 @@ def _doctor_ability_output(backend: str = "") -> str:
     from contextlib import redirect_stdout
     from types import SimpleNamespace
 
-    from kiro_crew import cli_doctor
+    from aj_crew import cli_doctor
 
     buffer = io.StringIO()
     cfg = SimpleNamespace(agent=SimpleNamespace(acp_backend=backend))
@@ -314,7 +314,7 @@ def test_a_mirror_whose_rulings_raise_answers_nothing_established(monkeypatch) -
     Driven through the real failure: the mirror is registered and its ``rulings()``
     raises, which is what a half-built mirror does.
     """
-    import kiro_crew.providers.mirrors as mirrors_pkg
+    import aj_crew.providers.mirrors as mirrors_pkg
 
     declared_mirror = next(b for b, d in PROJECTIONS.items() if d.kind is ProjectionKind.MIRROR)
     intact = mcp_mod.ability_for(declared_mirror)
@@ -389,7 +389,7 @@ def test_every_reach_is_told_apart_by_both_costs() -> None:
     """Two questions, not one asked twice, and the difference is the control plane.
 
     ``per-call`` costs a whole server -- any server that is not Crew's own -- but Crew
-    refuses the call itself on ``kirocrew-core``, so the session can still report back.
+    refuses the call itself on ``ajcrew-core``, so the session can still report back.
     ``whole-server`` has no per-call identity to match and takes the control plane with
     it. The terminal report words the second consequence, so the second answer has to be
     strictly narrower: collapsing them would put "cannot report back" in front of a
@@ -398,7 +398,7 @@ def test_every_reach_is_told_apart_by_both_costs() -> None:
     Driven from the vocabulary rather than from a table, so a member added to
     ``PerToolDeny`` is ruled on by ``costs_control_plane`` here.
     """
-    from kiro_crew.agent_sdk.backend_mcp_ability import McpAbility
+    from aj_crew.agent_sdk.backend_mcp_ability import McpAbility
 
     def ability(reach: str) -> McpAbility:
         return McpAbility(projection="mirror", per_tool_deny=reach, withheld=(), no_channel=())
@@ -479,9 +479,9 @@ def test_the_spared_servers_are_the_tuple_the_mirrors_use() -> None:
     the control plane lists any: on ``settings-file`` nothing is costed whole, and
     on ``whole-server`` nothing is spared.
     """
-    from kiro_crew.acp import session_mcp
-    from kiro_crew.agent_sdk.backend_mcp_ability import McpAbility
-    from kiro_crew.providers.mirrors import codex, opencode
+    from aj_crew.acp import session_mcp
+    from aj_crew.agent_sdk.backend_mcp_ability import McpAbility
+    from aj_crew.providers.mirrors import codex, opencode
 
     assert codex.CONTROL_PLANE_SERVERS is session_mcp.CONTROL_PLANE_SERVERS
     assert opencode.CONTROL_PLANE_SERVERS is session_mcp.CONTROL_PLANE_SERVERS
@@ -631,7 +631,7 @@ def test_the_wire_carries_only_what_costs_the_reader_something() -> None:
 def test_the_projection_kind_is_known_and_not_sent() -> None:
     """``native`` / ``mirror`` / ``external`` is a ROUTE, so the card does not carry it.
 
-    It stays on :class:`McpAbility` because ``kirocrew doctor`` states it: that reader
+    It stays on :class:`McpAbility` because ``ajcrew doctor`` states it: that reader
     is diagnosing the route. A reader choosing a harness cannot act on it -- no feature
     changes, no risk appears, no setting of theirs stops working -- so it reaches no
     card line, as its own or folded into another.
@@ -690,7 +690,7 @@ def test_the_reason_prose_never_reaches_the_wire() -> None:
 
 def test_a_broker_only_harness_lists_spec_hooks_as_not_applied() -> None:
     """pi gets no spec, and Crew does not fire its hooks, so the card must say so."""
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_PI
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_PI
 
     assert mcp_mod.ability_for(ACP_BACKEND_PI).withheld == ("hooks",)
     assert mcp_mod.ability_payload(ACP_BACKEND_PI)["ineffective"] == ["hooks"]
@@ -703,10 +703,10 @@ def test_a_harness_crew_fires_all_but_pre_tool_use_for_names_only_that_on_its_ca
     """claude's hooks run, but for preToolUse, so its card must not say none of them do.
 
     The mirror still rules the field no-channel: nothing hands the spec to the harness,
-    and ``kirocrew doctor`` reports that route. The card's reader asks whether what
+    and ``ajcrew doctor`` reports that route. The card's reader asks whether what
     they wrote happens, and Crew's turn loop fires every event but preToolUse there.
     """
-    from kiro_crew.agent_sdk.backends import (
+    from aj_crew.agent_sdk.backends import (
         ACP_BACKENDS_CREW_FIRES_SPEC_HOOKS,
         ACP_BACKENDS_CREW_FIRES_SPEC_OBSERVER_HOOKS,
     )

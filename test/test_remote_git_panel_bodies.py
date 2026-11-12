@@ -16,7 +16,7 @@ from test_coder_session_launch import PEM_BEGIN_RSA, PEM_END_RSA, _plain_git_rep
 def test_git_blob_reads_stay_bounded_and_send_no_over_cap_body(tmp_path, monkeypatch, deleted):
     import subprocess
 
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     root, git = _plain_git_repo(tmp_path)
     body = b"a whole line\n" * wt.MAX_READ_BYTES
@@ -82,7 +82,7 @@ def test_git_blob_reads_stay_bounded_and_send_no_over_cap_body(tmp_path, monkeyp
 def test_a_huge_history_or_status_read_is_streamed_to_the_cap(tmp_path, monkeypatch, op):
     import subprocess
 
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     root, git = _plain_git_repo(tmp_path)
     huge = "s" * (2 * wt.MAX_READ_BYTES)
@@ -113,7 +113,7 @@ def test_a_huge_history_or_status_read_is_streamed_to_the_cap(tmp_path, monkeypa
 def test_a_guest_with_timeout_but_no_git_reports_git_missing(tmp_path, monkeypatch):
     import shutil
 
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     timer = shutil.which("timeout")
     if timer is None:
@@ -135,8 +135,8 @@ def test_git_blob_stream_timeout_stops_before_reaping(tmp_path, monkeypatch, pla
     import subprocess
     import threading
 
-    from kiro_crew.remote_session import workspace_tools as wt
-    from kiro_crew.testing.ids import UNALLOCATABLE_PID
+    from aj_crew.remote_session import workspace_tools as wt
+    from aj_crew.testing.ids import UNALLOCATABLE_PID
 
     events = []
     release = threading.Event()
@@ -193,8 +193,8 @@ def _over_cap_lines(prefix, count):
 
 @pytest.mark.parametrize("change", ["insert", "shrink", "both"])
 def test_an_over_cap_tracked_file_sends_no_body_and_no_hunks(tmp_path, change):
-    from kiro_crew.coder.session_browse import _git_diff_from_bodies
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.coder.session_browse import _git_diff_from_bodies
+    from aj_crew.remote_session import workspace_tools as wt
 
     root, git = _plain_git_repo(tmp_path)
     old = _over_cap_lines("original", 2000 if change == "insert" else 3000)
@@ -219,7 +219,7 @@ def test_an_over_cap_tracked_file_sends_no_body_and_no_hunks(tmp_path, change):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX mode bits")
 def test_an_over_cap_file_still_shows_its_mode_and_rename_header(tmp_path):
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     body = _over_cap_lines("original", 3000).decode()
     root, git = _committed_file(tmp_path, "a.sh", body)
@@ -242,7 +242,7 @@ def test_an_over_cap_file_still_shows_its_mode_and_rename_header(tmp_path):
 
 
 def test_a_truncated_reply_carrying_bodies_builds_no_hunks():
-    from kiro_crew.coder.session_browse import _git_diff_from_bodies
+    from aj_crew.coder.session_browse import _git_diff_from_bodies
 
     old = "".join(f"line {i}\n" for i in range(20))
     reply = {"git": True, "path": "f", "truncated": True, "old": old, "new": old[:40]}
@@ -263,8 +263,8 @@ def _committed_file(tmp_path, name="tracked.sh", body="echo hi\n"):
 
 
 def _gateway_diff(root, path, source=None):
-    from kiro_crew.coder.session_browse import _git_diff_from_bodies
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.coder.session_browse import _git_diff_from_bodies
+    from aj_crew.remote_session import workspace_tools as wt
 
     request = {"op": "git_bodies", "path": path}
     if source is not None:
@@ -312,7 +312,7 @@ def test_only_the_owner_execute_bit_makes_a_file_executable_to_git(perm, mode):
     group- or other-execute alone is no mode change."""
     import stat
 
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     assert wt._worktree_mode(stat.S_IFREG | perm) == mode
 
@@ -403,7 +403,7 @@ def test_a_renamed_file_diffs_against_its_source(tmp_path):
 
 
 def test_a_rename_source_is_confined_to_the_workspace(tmp_path):
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     root, git = _committed_file(tmp_path, "a.txt", "x\n")
     ws = wt.Workspace(str(root))
@@ -434,8 +434,8 @@ def test_a_rename_source_is_confined_to_the_workspace(tmp_path):
 def test_git_body_crlf_normalisation_matches_git(
     tmp_path, monkeypatch, attributes, autocrlf, normalise
 ):
-    from kiro_crew.coder.session_browse import _git_diff_from_bodies
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.coder.session_browse import _git_diff_from_bodies
+    from aj_crew.remote_session import workspace_tools as wt
 
     root, git = _plain_git_repo(tmp_path)
     monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
@@ -461,7 +461,7 @@ def test_git_body_crlf_normalisation_matches_git(
 
 
 def test_git_auto_text_keeps_crlf_when_a_nul_is_beyond_binary_probe(tmp_path):
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     root, git = _plain_git_repo(tmp_path)
     (root / ".gitattributes").write_bytes(b"* text=auto\n")
@@ -555,7 +555,7 @@ def test_a_staged_renormalization_of_a_crlf_commit_shows_as_git_does(
 
 
 def wt_browse_bodies(root, path):
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     return wt.browse(wt.Workspace(str(root)), {"op": "git_bodies", "path": path})
 
@@ -567,7 +567,7 @@ def test_a_gitlink_replaced_by_staged_files_is_refused_before_any_diff(
     import shutil
     import subprocess
 
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     root, git = _plain_git_repo(tmp_path)
     (root / "keep.txt").write_text("x\n", encoding="utf-8")
@@ -606,7 +606,7 @@ def test_a_gitlink_replaced_by_staged_files_is_refused_before_any_diff(
 def test_a_gitlink_replaced_by_a_file_uses_the_bounded_worktree_read(tmp_path, monkeypatch, large):
     import subprocess
 
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     root, git = _plain_git_repo(tmp_path)
     (root / "keep.txt").write_text("x\n", encoding="utf-8")
@@ -641,8 +641,8 @@ def test_a_gitlink_replaced_by_a_file_uses_the_bounded_worktree_read(tmp_path, m
 def test_an_over_cap_file_holding_a_pem_sends_no_key_line(tmp_path, side):
     import base64
 
-    from kiro_crew.coder.session_browse import _git_diff_from_bodies
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.coder.session_browse import _git_diff_from_bodies
+    from aj_crew.remote_session import workspace_tools as wt
 
     root, git = _plain_git_repo(tmp_path)
     blob = base64.b64encode(bytes(range(256)) * 4).decode()
@@ -673,9 +673,9 @@ def test_an_indented_pem_with_no_footer_in_a_complete_file_shows_no_key_line(
     import base64
     import secrets
 
-    from kiro_crew.coder import session_browse
-    from kiro_crew.remote_session import workspace_tools as wt
-    from kiro_crew.security import REDACTED_CREDENTIAL_TAG
+    from aj_crew.coder import session_browse
+    from aj_crew.remote_session import workspace_tools as wt
+    from aj_crew.security import REDACTED_CREDENTIAL_TAG
 
     root, git = _plain_git_repo(tmp_path)
     blob = base64.b64encode(secrets.token_bytes(768)).decode()
@@ -704,10 +704,10 @@ def test_an_indented_pem_with_no_footer_in_a_complete_file_shows_no_key_line(
 def test_a_complete_pem_uses_whole_body_redaction(tmp_path):
     import base64
 
-    from kiro_crew.coder.session_browse import _git_diff_from_bodies
-    from kiro_crew.platform import redact_via_context
-    from kiro_crew.remote_session import workspace_tools as wt
-    from kiro_crew.security import REDACTED_CREDENTIAL_TAG
+    from aj_crew.coder.session_browse import _git_diff_from_bodies
+    from aj_crew.platform import redact_via_context
+    from aj_crew.remote_session import workspace_tools as wt
+    from aj_crew.security import REDACTED_CREDENTIAL_TAG
 
     root, _git = _plain_git_repo(tmp_path)
     blob = base64.b64encode(bytes(range(256))).decode()
@@ -733,7 +733,7 @@ def test_a_windows_capped_read_ends_the_writer_by_closing_its_pipe(tmp_path, mon
     process writing (git.exe is a launcher). Closing our end of the pipe at the cap
     is what ends the writer, so a capped read still answers instead of waiting out
     its 30-second deadline. Simulated here by a stop that stops nothing."""
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     root, git = _plain_git_repo(tmp_path)
     (root / "a.txt").write_text("a\n", encoding="utf-8", newline="\n")
@@ -767,9 +767,9 @@ def test_a_read_past_its_deadline_leaves_no_process_behind(tmp_path, monkeypatch
     import signal
     import subprocess
 
-    from kiro_crew.platform_compat_liveness import pid_exists
-    from kiro_crew.remote_session import workspace_tools as wt
-    from kiro_crew.testing.wait import wait_until
+    from aj_crew.platform_compat_liveness import pid_exists
+    from aj_crew.remote_session import workspace_tools as wt
+    from aj_crew.testing.wait import wait_until
 
     if sys.platform != "win32":
         monkeypatch.setattr(wt, "sys", SimpleNamespace(platform="win32"))
@@ -799,8 +799,8 @@ def test_the_tree_stop_runs_taskkill_from_the_system_directory_not_the_environme
 ):
     """``%SystemRoot%`` is the caller's to set, so a ``taskkill.exe`` planted
     under it must not run in place of the system's own."""
-    from kiro_crew.remote_session import workspace_tools as wt
-    from kiro_crew.testing.ids import UNALLOCATABLE_PID
+    from aj_crew.remote_session import workspace_tools as wt
+    from aj_crew.testing.ids import UNALLOCATABLE_PID
 
     ran = []
     monkeypatch.setenv("SystemRoot", str(tmp_path))
@@ -826,7 +826,7 @@ def test_the_tree_stop_runs_taskkill_from_the_system_directory_not_the_environme
     ],
 )
 def test_auto_text_follows_gits_binary_predicate(body, text):
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     assert wt._git_auto_text(body) is text
 
@@ -836,7 +836,7 @@ def test_a_lone_cr_keeps_crlf_bodies_git_did_not_convert(tmp_path, config):
     """Git leaves a file with a lone CR as it is under automatic conversion
     (``core.autocrlf`` or ``text=auto``), so its CRLFs are a real change and the
     bodies must keep them: folding them would hide the diff git reports."""
-    from kiro_crew.remote_session import workspace_tools as wt
+    from aj_crew.remote_session import workspace_tools as wt
 
     root, git = _plain_git_repo(tmp_path)
     if config:

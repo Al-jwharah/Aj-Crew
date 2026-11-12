@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.security.readonly_bash import is_read_only_bash, unsafe_bash_reason
+from aj_crew.security.readonly_bash import is_read_only_bash, unsafe_bash_reason
 
 READ_ONLY_LEADS = [
     "tr a-z A-Z",

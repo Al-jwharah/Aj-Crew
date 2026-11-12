@@ -39,8 +39,8 @@ for (const theme of ['dark', 'light']) {
   const before = (await project.getAttribute('aria-label')) || ''
   const okBefore =
     (await project.isEnabled()) &&
-    before.includes('Project: /home/user/work/KiroCrew') && // brand-ok: KiroCrew is the fixture folder name
-    before.includes('Your next message runs in the project you pick. This reply finishes in KiroCrew.\nLinks in this reply will open in the project you pick.') && // brand-ok: fixture folder name
+    before.includes('Project: /home/user/work/AjCrew') && // brand-ok: AjCrew is the fixture folder name
+    before.includes('Your next message runs in the project you pick. This reply finishes in AjCrew.\nLinks in this reply will open in the project you pick.') && // brand-ok: fixture folder name
     (await agent.isDisabled()) &&
     (await model.isDisabled())
   console.log(`${theme} before: ${okBefore ? 'OK' : 'MISMATCH'} label=${JSON.stringify(before)}`)
@@ -57,7 +57,7 @@ for (const theme of ['dark', 'light']) {
   const okAfter =
     (await project.isEnabled()) &&
     after.includes('Project: /home/user/work/OtherRepo') &&
-    after.includes('This reply finishes in KiroCrew.') && // brand-ok: fixture folder name
+    after.includes('This reply finishes in AjCrew.') && // brand-ok: fixture folder name
     (await page.locator('[data-capture-label]').innerText()).includes(after.split('\n')[0])
   console.log(`${theme} after pick: ${okAfter ? 'OK' : 'MISMATCH'} label=${JSON.stringify(after)}`)
   if (!okAfter) failed = true

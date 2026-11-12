@@ -29,9 +29,9 @@ from unittest.mock import patch
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.computer_use import macos_skylight as sky
-from kiro_crew.computer_use import policy
-from kiro_crew.computer_use.types import (
+from aj_crew.computer_use import macos_skylight as sky
+from aj_crew.computer_use import policy
+from aj_crew.computer_use.types import (
     CLICK_METHOD_AUTO,
     CLICK_METHOD_GLOBAL,
     CLICK_METHOD_SKY_CLICK,
@@ -231,7 +231,7 @@ class TestTheMethodIsShippedButNeverImplicit:
         assert CLICK_METHOD_SKY_CLICK in CLICK_METHODS
 
     def test_auto_NEVER_resolves_to_sky_click(self):
-        from kiro_crew.computer_use import policy
+        from aj_crew.computer_use import policy
 
         for element_index, point in [(0, None), (None, (5.0, 5.0)), (0, (5.0, 5.0))]:
             resolved = policy.resolve_click_method(
@@ -355,7 +355,7 @@ class TestSkyClickIsLeftButtonOnly:
         """
         import inspect
 
-        from kiro_crew.computer_use import macos_driver
+        from aj_crew.computer_use import macos_driver
 
         source = inspect.getsource(macos_driver._sky_click)
         assert "button=req.button" in source

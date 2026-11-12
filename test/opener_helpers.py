@@ -16,7 +16,7 @@ from typing import Callable
 
 import pytest
 
-from kiro_crew import asset_downloader
+from aj_crew import asset_downloader
 
 
 def answer_with(monkeypatch: pytest.MonkeyPatch, urlopen: Callable[..., object]) -> None:

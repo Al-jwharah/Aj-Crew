@@ -17,11 +17,11 @@ import pytest
 from _hot_reload_helpers import change
 from _hot_reload_helpers import write_config as _write
 
-from kiro_crew.config import live
-from kiro_crew.config.live import ConfigWatch
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.subagent import _STALL_IDLE_SECS, _TIMEOUT_SECS, SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import await_until
+from aj_crew.config import live
+from aj_crew.config.live import ConfigWatch
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.subagent import _STALL_IDLE_SECS, _TIMEOUT_SECS, SubagentInfo, SubagentManager
+from aj_crew.testing.wait import await_until
 
 
 def _mgr(max_concurrent: int = 4) -> SubagentManager:
@@ -46,22 +46,22 @@ def _lane_only_admission(mgr: SubagentManager) -> Any:
     pinned admitted because the factory reads the real host probe, which would
     otherwise turn an admission into a defer on a loaded machine.
     """
-    from kiro_crew.taskq.adapters.runner import runner_admission_for
+    from aj_crew.taskq.adapters.runner import runner_admission_for
 
     store, mgr._taskq = mgr._taskq, None
     if store is not None:
         store.close()
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.task_queue_enabled = False
     return runner_admission_for(
         mgr, cfg=cfg, pressure=lambda: SimpleNamespace(admitted=True, reason="")
     )
 
 
-async def _dispatch(new: KiroCrewConfig, *paths: str) -> None:
+async def _dispatch(new: AjCrewConfig, *paths: str) -> None:
     """Run one reload through the watcher's own prefix filter."""
     live.watch().prime(new)
-    await live.watch()._dispatch(change(new, *paths, old=KiroCrewConfig()))
+    await live.watch()._dispatch(change(new, *paths, old=AjCrewConfig()))
 
 
 class TestReconfigureDerivesEveryField:
@@ -69,7 +69,7 @@ class TestReconfigureDerivesEveryField:
     async def test_dispatched_change_updates_each_captured_value(self) -> None:
         mgr = _mgr(max_concurrent=4)
         mgr._global_approval_mode = "interactive"  # the value cached at boot
-        fresh = KiroCrewConfig()
+        fresh = AjCrewConfig()
         fresh.agent.max_subagents = 7
         fresh.agent.subagent_max_turns = 42
         fresh.agent.subagent_timeout_secs = 900
@@ -107,7 +107,7 @@ class TestReconfigureDerivesEveryField:
 
     def test_zero_timeout_and_stall_keep_the_builtin_sentinel(self) -> None:
         mgr = _mgr()
-        fresh = KiroCrewConfig()
+        fresh = AjCrewConfig()
         fresh.agent.subagent_timeout_secs = 0
         fresh.agent.subagent_stall_idle_secs = 0
         mgr.apply_limits(fresh, max_concurrent=4)
@@ -116,30 +116,30 @@ class TestReconfigureDerivesEveryField:
 
     def test_negative_stagger_floors_at_zero(self) -> None:
         mgr = _mgr()
-        fresh = KiroCrewConfig()
+        fresh = AjCrewConfig()
         fresh.agent.subagent_spawn_stagger_secs = -3.0
         mgr.apply_limits(fresh, max_concurrent=4)
         assert mgr._spawn_stagger_secs == 0.0
 
     def test_auto_cap_is_resolved_through_resolve_max_subagents(self) -> None:
         mgr = _mgr(max_concurrent=4)
-        fresh = KiroCrewConfig()
+        fresh = AjCrewConfig()
         fresh.agent.max_subagents = 0  # auto sentinel
-        with patch("kiro_crew.subagent.resolve_max_subagents", return_value=11) as resolve:
+        with patch("aj_crew.subagent.resolve_max_subagents", return_value=11) as resolve:
             mgr.apply_limits(fresh)
         resolve.assert_called_once_with(fresh)
         assert mgr.max_concurrent == 11
 
     def test_cap_resolution_failure_keeps_the_current_cap(self) -> None:
         mgr = _mgr(max_concurrent=4)
-        with patch("kiro_crew.subagent.resolve_max_subagents", side_effect=RuntimeError("x")):
-            mgr.apply_limits(KiroCrewConfig())
+        with patch("aj_crew.subagent.resolve_max_subagents", side_effect=RuntimeError("x")):
+            mgr.apply_limits(AjCrewConfig())
         assert mgr.max_concurrent == 4
 
     @pytest.mark.asyncio
     async def test_untouched_change_is_ignored(self) -> None:
         mgr = _mgr(max_concurrent=4)
-        fresh = KiroCrewConfig()
+        fresh = AjCrewConfig()
         fresh.agent.max_subagents = 7
         await _dispatch(fresh, "agent.model")
         assert mgr.max_concurrent == 4
@@ -153,9 +153,9 @@ class TestReconfigureDerivesEveryField:
         """``session.pool_size`` sizes the auto cap when the spawn floor is off, so a
         change re-resolves it."""
         mgr = _mgr(max_concurrent=4)
-        fresh = KiroCrewConfig()
+        fresh = AjCrewConfig()
         fresh.session.pool_size = 5
-        with patch("kiro_crew.subagent.resolve_max_subagents", return_value=6):
+        with patch("aj_crew.subagent.resolve_max_subagents", return_value=6):
             await _dispatch(fresh, "session.pool_size")
         assert mgr.max_concurrent == 6
 
@@ -163,9 +163,9 @@ class TestReconfigureDerivesEveryField:
     async def test_disabling_the_spawn_floor_recomputes_the_cap(self) -> None:
         """A floor switched off live moves the auto cap onto host memory at once."""
         mgr = _mgr(max_concurrent=4)
-        fresh = KiroCrewConfig()
+        fresh = AjCrewConfig()
         fresh.agent.spawn_min_memory_gb = 0.0
-        with patch("kiro_crew.subagent.resolve_max_subagents", return_value=7):
+        with patch("aj_crew.subagent.resolve_max_subagents", return_value=7):
             await _dispatch(fresh, "agent.spawn_min_memory_gb")
         assert mgr.max_concurrent == 7
 
@@ -176,15 +176,15 @@ class TestReconfigureDerivesEveryField:
         resolved cap, so it must not pay for that probe."""
         mgr = _mgr(max_concurrent=4)
         # First reconfigure establishes the sizing snapshot.
-        baseline = KiroCrewConfig()
-        with patch("kiro_crew.subagent.resolve_max_subagents", return_value=4) as resolve:
+        baseline = AjCrewConfig()
+        with patch("aj_crew.subagent.resolve_max_subagents", return_value=4) as resolve:
             await _dispatch(baseline, "agent.completion_keep")
         resolve.assert_called_once()
 
         # Second reload changes only a non-sizing path -- same sizing fields.
-        changed = KiroCrewConfig()
+        changed = AjCrewConfig()
         changed.agent.completion_keep = "tail"
-        with patch("kiro_crew.subagent.resolve_max_subagents") as resolve2:
+        with patch("aj_crew.subagent.resolve_max_subagents") as resolve2:
             await _dispatch(changed, "agent.completion_keep")
         resolve2.assert_not_called()
         assert mgr.max_concurrent == 4
@@ -193,13 +193,13 @@ class TestReconfigureDerivesEveryField:
     @pytest.mark.asyncio
     async def test_a_sizing_change_still_calls_resolve(self) -> None:
         mgr = _mgr(max_concurrent=4)
-        baseline = KiroCrewConfig()
-        with patch("kiro_crew.subagent.resolve_max_subagents", return_value=4):
+        baseline = AjCrewConfig()
+        with patch("aj_crew.subagent.resolve_max_subagents", return_value=4):
             await _dispatch(baseline, "agent.completion_keep")
 
-        sized = KiroCrewConfig()
+        sized = AjCrewConfig()
         sized.agent.max_subagents = 9
-        with patch("kiro_crew.subagent.resolve_max_subagents", return_value=9) as resolve:
+        with patch("aj_crew.subagent.resolve_max_subagents", return_value=9) as resolve:
             await _dispatch(sized, "agent.max_subagents")
         resolve.assert_called_once_with(sized)
         assert mgr.max_concurrent == 9
@@ -215,7 +215,7 @@ class TestCapChangesAndTheQueue:
         mgr._emit_queue_depth = MagicMock()  # type: ignore[method-assign]
         mgr._queue.append({"task": "queued work", "parent_session_key": "p", "batch_id": ""})
 
-        fresh = KiroCrewConfig()
+        fresh = AjCrewConfig()
         fresh.agent.max_subagents = 5
         mgr.apply_limits(fresh)
 
@@ -229,7 +229,7 @@ class TestCapChangesAndTheQueue:
         mgr = _mgr(max_concurrent=8)
         mgr._drain_queue = MagicMock()  # type: ignore[method-assign]
         mgr._queue.append({"task": "queued"})
-        fresh = KiroCrewConfig()
+        fresh = AjCrewConfig()
         fresh.agent.max_subagents = 3
         mgr.apply_limits(fresh)
         mgr._drain_queue.assert_not_called()
@@ -253,7 +253,7 @@ class TestCapChangesAndTheQueue:
                 mgr._tasks[info.id] = t
             mgr._running_count = 5
 
-            fresh = KiroCrewConfig()
+            fresh = AjCrewConfig()
             fresh.agent.max_subagents = 3
             mgr.apply_limits(fresh)
 
@@ -283,7 +283,7 @@ class TestCapChangeVersusAdaptiveClamp:
     def test_reload_raises_the_ceiling_but_the_adaptive_bound_holds(self) -> None:
         mgr = _mgr(max_concurrent=4)
         mgr.set_effective_cap(2)
-        fresh = KiroCrewConfig()
+        fresh = AjCrewConfig()
         fresh.agent.max_subagents = 8
         mgr.apply_limits(fresh)
         assert mgr.user_max_concurrent == 8
@@ -292,7 +292,7 @@ class TestCapChangeVersusAdaptiveClamp:
     def test_reload_below_the_adaptive_bound_clamps_to_the_new_ceiling(self) -> None:
         mgr = _mgr(max_concurrent=8)
         mgr.set_effective_cap(6)
-        fresh = KiroCrewConfig()
+        fresh = AjCrewConfig()
         fresh.agent.max_subagents = 3
         mgr.apply_limits(fresh)
         assert mgr.max_concurrent == 3
@@ -327,9 +327,9 @@ class TestCapChangeVersusAdaptiveClamp:
     async def test_dispatched_reload_never_shrinks_the_ceiling_to_the_bound(self) -> None:
         mgr = _mgr(max_concurrent=4)
         mgr.set_effective_cap(1)
-        fresh = KiroCrewConfig()
+        fresh = AjCrewConfig()
         fresh.agent.max_subagents = 6
-        with patch("kiro_crew.subagent.resolve_max_subagents", return_value=6):
+        with patch("aj_crew.subagent.resolve_max_subagents", return_value=6):
             await _dispatch(fresh, "agent.max_subagents")
             # A second, unrelated reload takes the "sizing unchanged" path and
             # must keep the USER cap, not adopt the adaptive value as ceiling.
@@ -412,7 +412,7 @@ class TestCapRaiseReachesTheRunnerLane:
         second = await self._park(adm, granted, "c")
         assert granted == [] and adm.lane.waiting == 2
 
-        fresh = KiroCrewConfig()
+        fresh = AjCrewConfig()
         fresh.agent.max_subagents = 4
         mgr.apply_limits(fresh)
 
@@ -470,13 +470,13 @@ class TestEndToEndThroughConfigWatch:
         local = tmp_path / "config.local.json"
         _write(cfg_file, {"agent": {"max_subagents": 4, "subagent_max_turns": 50}})
         with (
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
-            patch("kiro_crew.config.loader.config_local_path", return_value=local),
-            patch("kiro_crew.config.live._WATCH", ConfigWatch(poll_interval_secs=0.05)),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_file),
+            patch("aj_crew.config.loader.config_local_path", return_value=local),
+            patch("aj_crew.config.live._WATCH", ConfigWatch(poll_interval_secs=0.05)),
         ):
             watch = live.watch()
             mgr = _mgr(max_concurrent=4)
-            watch.prime(KiroCrewConfig.load())
+            watch.prime(AjCrewConfig.load())
             _write(cfg_file, {"agent": {"max_subagents": 6, "subagent_max_turns": 9}})
             change = await watch.refresh_now()
 

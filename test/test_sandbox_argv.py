@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.sandbox: Kiro's internal-sandbox delegation, macOS nesting, the
+"""Tests for aj_crew.sandbox: Kiro's internal-sandbox delegation, macOS nesting, the
 agents slice's MemoryHigh, and the absolute paths the wrappers are pinned to.
 ``test_sandbox_argv_profile.py`` holds backend detection, ``wrap_argv``'s routing and the
 Seatbelt profile; ``test_sandbox_argv_launcher_plan.py`` what the namespace plan seals and
@@ -18,9 +18,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 import sandbox_argv_helpers
 
-import kiro_crew.sandbox as sandbox_mod
-from kiro_crew.sandbox import sandbox_exec_argv, wrap_argv
-from kiro_crew.testing.wait import wait_until
+import aj_crew.sandbox as sandbox_mod
+from aj_crew.sandbox import sandbox_exec_argv, wrap_argv
+from aj_crew.testing.wait import wait_until
 
 # Several tests spawn real child interpreters (subprocess.run([sys.executable, ...]));
 # pin the module to a dedicated xdist worker so concurrent cold-starts under -n auto
@@ -46,27 +46,27 @@ class TestKiroInternalSandboxExclusion:
         p = tmp_path / "amazon-internal.json"
         if content is not None:
             p.write_text(content)
-        monkeypatch.setattr("kiro_crew.sandbox._KIRO_INTERNAL_SETTINGS_PATH", str(p))
+        monkeypatch.setattr("aj_crew.sandbox._KIRO_INTERNAL_SETTINGS_PATH", str(p))
         return p
 
     # --- kiro_internal_sandbox_enabled() helper ---
 
     def test_absent_file_is_disabled(self, tmp_path, monkeypatch):
-        from kiro_crew.sandbox import kiro_internal_sandbox_enabled
+        from aj_crew.sandbox import kiro_internal_sandbox_enabled
 
         self._write_settings(tmp_path, monkeypatch, None)
         assert kiro_internal_sandbox_enabled() is False
 
     def test_malformed_json_is_disabled(self, tmp_path, monkeypatch):
-        from kiro_crew.sandbox import kiro_internal_sandbox_enabled
+        from aj_crew.sandbox import kiro_internal_sandbox_enabled
 
         self._write_settings(tmp_path, monkeypatch, "{not json")
         assert kiro_internal_sandbox_enabled() is False
 
     def test_several_values_read_by_the_first(self, tmp_path, monkeypatch):
         """kiro-cli reads the first of several JSON values, so this must too."""
-        import kiro_crew.sandbox_delegation as delegation
-        from kiro_crew.sandbox import kiro_internal_sandbox_enabled
+        import aj_crew.sandbox_delegation as delegation
+        from aj_crew.sandbox import kiro_internal_sandbox_enabled
 
         monkeypatch.setattr(delegation, "_kiro_settings_concat_warned", False)
         self._write_settings(
@@ -80,25 +80,25 @@ class TestKiroInternalSandboxExclusion:
 
     def test_value_then_garbage_is_disabled(self, tmp_path, monkeypatch):
         """Only whole JSON values after the first are read past; junk is not."""
-        from kiro_crew.sandbox import kiro_internal_sandbox_enabled
+        from aj_crew.sandbox import kiro_internal_sandbox_enabled
 
         self._write_settings(tmp_path, monkeypatch, '{"sandbox": true}\n{oops')
         assert kiro_internal_sandbox_enabled() is False
 
     def test_missing_key_is_disabled(self, tmp_path, monkeypatch):
-        from kiro_crew.sandbox import kiro_internal_sandbox_enabled
+        from aj_crew.sandbox import kiro_internal_sandbox_enabled
 
         self._write_settings(tmp_path, monkeypatch, '{"other": true}')
         assert kiro_internal_sandbox_enabled() is False
 
     def test_true_is_enabled(self, tmp_path, monkeypatch):
-        from kiro_crew.sandbox import kiro_internal_sandbox_enabled
+        from aj_crew.sandbox import kiro_internal_sandbox_enabled
 
         self._write_settings(tmp_path, monkeypatch, '{"sandbox": true}')
         assert kiro_internal_sandbox_enabled() is True
 
     def test_false_is_disabled(self, tmp_path, monkeypatch):
-        from kiro_crew.sandbox import kiro_internal_sandbox_enabled
+        from aj_crew.sandbox import kiro_internal_sandbox_enabled
 
         self._write_settings(tmp_path, monkeypatch, '{"sandbox": false}')
         assert kiro_internal_sandbox_enabled() is False
@@ -108,8 +108,8 @@ class TestKiroInternalSandboxExclusion:
     def test_darwin_kiro_spawn_delegates(self, tmp_path, monkeypatch):
         """kiro sandbox ON + darwin + kiro-cli argv -> no seatbelt wrap."""
         self._write_settings(tmp_path, monkeypatch, '{"sandbox": true}')
-        monkeypatch.setattr("kiro_crew.sandbox.sys.platform", "darwin")
-        with patch("kiro_crew.sandbox.detect_backend") as mock_detect:
+        monkeypatch.setattr("aj_crew.sandbox.sys.platform", "darwin")
+        with patch("aj_crew.sandbox.detect_backend") as mock_detect:
             argv, cleanup = wrap_argv(["/usr/local/bin/kiro-cli", "acp"], mode="auto")
         assert "sandbox-exec" not in argv
         assert argv[-2:] == ["/usr/local/bin/kiro-cli", "acp"]
@@ -124,9 +124,9 @@ class TestKiroInternalSandboxExclusion:
     ):
         """Launch-path shape must not erase Kiro's internal-sandbox identity."""
         self._write_settings(tmp_path, monkeypatch, '{"sandbox": true}')
-        monkeypatch.setattr("kiro_crew.sandbox.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.sandbox.sys.platform", "darwin")
         launch = "/Applications/Kiro CLI.app/Contents/MacOS/kiro"
-        with patch("kiro_crew.sandbox.detect_backend") as mock_detect:
+        with patch("aj_crew.sandbox.detect_backend") as mock_detect:
             argv, cleanup = wrap_argv(
                 [launch, "acp"],
                 mode="auto",
@@ -139,7 +139,7 @@ class TestKiroInternalSandboxExclusion:
     def test_darwin_kiro_spawn_delegation_scrubs_env(self, tmp_path, monkeypatch):
         """The delegated spawn keeps the seatbelt path's env scrub."""
         self._write_settings(tmp_path, monkeypatch, '{"sandbox": true}')
-        monkeypatch.setattr("kiro_crew.sandbox.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.sandbox.sys.platform", "darwin")
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "sentinel")
         argv, _ = wrap_argv(["kiro-cli", "acp"], mode="auto")
         # Absolute, not the bare "env": this path applies no Seatbelt of ours, so
@@ -153,11 +153,11 @@ class TestKiroInternalSandboxExclusion:
     def test_darwin_non_kiro_spawn_stays_wrapped(self, tmp_path, monkeypatch):
         """Non-kiro spawns have no internal sandbox — seatbelt stays on."""
         self._write_settings(tmp_path, monkeypatch, '{"sandbox": true}')
-        monkeypatch.setattr("kiro_crew.sandbox.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.sandbox.sys.platform", "darwin")
         with (
-            patch("kiro_crew.sandbox.detect_backend", return_value="sandbox-exec"),
+            patch("aj_crew.sandbox.detect_backend", return_value="sandbox-exec"),
             patch(
-                "kiro_crew.sandbox.sandbox_exec_argv",
+                "aj_crew.sandbox.sandbox_exec_argv",
                 return_value=(["sandbox-exec", "python3"], "/tmp/p.sb"),
             ) as mock_sb,
         ):
@@ -167,13 +167,13 @@ class TestKiroInternalSandboxExclusion:
         assert result == (["sandbox-exec", "python3"], "/tmp/p.sb")
 
     def test_darwin_kiro_disabled_stays_wrapped(self, tmp_path, monkeypatch):
-        """kiro sandbox OFF -> KiroCrew's seatbelt ON (the inverse rule)."""
+        """kiro sandbox OFF -> Aj Crew's seatbelt ON (the inverse rule)."""
         self._write_settings(tmp_path, monkeypatch, '{"sandbox": false}')
-        monkeypatch.setattr("kiro_crew.sandbox.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.sandbox.sys.platform", "darwin")
         with (
-            patch("kiro_crew.sandbox.detect_backend", return_value="sandbox-exec"),
+            patch("aj_crew.sandbox.detect_backend", return_value="sandbox-exec"),
             patch(
-                "kiro_crew.sandbox.sandbox_exec_argv",
+                "aj_crew.sandbox.sandbox_exec_argv",
                 return_value=(["sandbox-exec", "kiro-cli"], "/tmp/p.sb"),
             ) as mock_sb,
         ):
@@ -185,11 +185,11 @@ class TestKiroInternalSandboxExclusion:
     def test_linux_unaffected(self, tmp_path, monkeypatch):
         """Mutual exclusion is macOS-only — Linux namespace path unchanged."""
         self._write_settings(tmp_path, monkeypatch, '{"sandbox": true}')
-        monkeypatch.setattr("kiro_crew.sandbox.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.sandbox.sys.platform", "linux")
         with (
-            patch("kiro_crew.sandbox.detect_backend", return_value="namespace"),
+            patch("aj_crew.sandbox.detect_backend", return_value="namespace"),
             patch(
-                "kiro_crew.sandbox.namespace_argv",
+                "aj_crew.sandbox.namespace_argv",
                 return_value=[
                     sys.executable,
                     *sandbox_mod._LAUNCHER_INTERPRETER_FLAGS,
@@ -206,13 +206,13 @@ class TestKiroInternalSandboxExclusion:
 
     def test_windows_explicit_kiro_backend_delegates_before_backend_probe(self, monkeypatch):
         """Fresh Windows installs use the positively identified Kiro sandbox."""
-        monkeypatch.setattr("kiro_crew.sandbox.sys.platform", "win32")
+        monkeypatch.setattr("aj_crew.sandbox.sys.platform", "win32")
         launch = r"C:\Program Files\Kiro\kiro-cli.exe"
         with (
-            patch("kiro_crew.sel.sel", return_value=MagicMock()),
-            patch("kiro_crew.sandbox.detect_backend") as mock_detect,
+            patch("aj_crew.sel.sel", return_value=MagicMock()),
+            patch("aj_crew.sandbox.detect_backend") as mock_detect,
             patch(
-                "kiro_crew.sandbox.kiro_internal_sandbox_enabled",
+                "aj_crew.sandbox.kiro_internal_sandbox_enabled",
                 side_effect=AssertionError("Windows delegation must not depend on macOS settings"),
             ),
         ):
@@ -229,11 +229,11 @@ class TestKiroInternalSandboxExclusion:
     @pytest.mark.parametrize("classification", [None, False])
     def test_windows_nonclassified_spawn_still_fails_closed(self, monkeypatch, classification):
         """A Kiro-looking basename cannot grant the Windows delegation."""
-        monkeypatch.setattr("kiro_crew.sandbox.sys.platform", "win32")
-        monkeypatch.setattr("kiro_crew.sandbox._allow_unsandboxed_exec", lambda: False)
+        monkeypatch.setattr("aj_crew.sandbox.sys.platform", "win32")
+        monkeypatch.setattr("aj_crew.sandbox._allow_unsandboxed_exec", lambda: False)
         with (
-            patch("kiro_crew.sandbox.detect_backend", return_value="none"),
-            patch("kiro_crew.sel.sel", return_value=MagicMock()),
+            patch("aj_crew.sandbox.detect_backend", return_value="none"),
+            patch("aj_crew.sel.sel", return_value=MagicMock()),
             pytest.raises(sandbox_mod.SandboxUnavailableError),
         ):
             wrap_argv(
@@ -244,11 +244,11 @@ class TestKiroInternalSandboxExclusion:
 
     def test_windows_kiro_with_extra_path_policy_fails_closed(self, monkeypatch):
         """Delegation cannot silently discard Crew-specific path restrictions."""
-        monkeypatch.setattr("kiro_crew.sandbox.sys.platform", "win32")
-        monkeypatch.setattr("kiro_crew.sandbox._allow_unsandboxed_exec", lambda: False)
+        monkeypatch.setattr("aj_crew.sandbox.sys.platform", "win32")
+        monkeypatch.setattr("aj_crew.sandbox._allow_unsandboxed_exec", lambda: False)
         with (
-            patch("kiro_crew.sandbox.detect_backend", return_value="none"),
-            patch("kiro_crew.sel.sel", return_value=MagicMock()),
+            patch("aj_crew.sandbox.detect_backend", return_value="none"),
+            patch("aj_crew.sel.sel", return_value=MagicMock()),
             pytest.raises(sandbox_mod.SandboxUnavailableError),
         ):
             wrap_argv(
@@ -260,11 +260,11 @@ class TestKiroInternalSandboxExclusion:
 
     def test_windows_sel_failure_refuses_delegation(self, monkeypatch):
         """An unaudited Windows delegation falls through to fail-closed policy."""
-        monkeypatch.setattr("kiro_crew.sandbox.sys.platform", "win32")
-        monkeypatch.setattr("kiro_crew.sandbox._allow_unsandboxed_exec", lambda: False)
+        monkeypatch.setattr("aj_crew.sandbox.sys.platform", "win32")
+        monkeypatch.setattr("aj_crew.sandbox._allow_unsandboxed_exec", lambda: False)
         with (
-            patch("kiro_crew.sel.sel", side_effect=RuntimeError("audit down")),
-            patch("kiro_crew.sandbox.detect_backend", return_value="none") as mock_detect,
+            patch("aj_crew.sel.sel", side_effect=RuntimeError("audit down")),
+            patch("aj_crew.sandbox.detect_backend", return_value="none") as mock_detect,
             pytest.raises(sandbox_mod.SandboxUnavailableError),
         ):
             wrap_argv(
@@ -276,13 +276,13 @@ class TestKiroInternalSandboxExclusion:
 
     def test_sel_failure_refuses_delegation_falls_back_to_seatbelt(self, tmp_path, monkeypatch):
         """Audit-or-deny: if the SEL audit cannot be written, the delegation
-        is refused and the spawn falls back to KiroCrew's own seatbelt."""
+        is refused and the spawn falls back to Aj Crew's own seatbelt."""
         self._write_settings(tmp_path, monkeypatch, '{"sandbox": true}')
-        monkeypatch.setattr("kiro_crew.sandbox.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.sandbox.sys.platform", "darwin")
         with (
-            patch("kiro_crew.sel.sel", side_effect=RuntimeError("audit down")),
+            patch("aj_crew.sel.sel", side_effect=RuntimeError("audit down")),
             patch(
-                "kiro_crew.sandbox.sandbox_exec_argv",
+                "aj_crew.sandbox.sandbox_exec_argv",
                 return_value=(["sandbox-exec", "-f", "/tmp/p.sb", "kiro-cli", "acp"], "/tmp/p.sb"),
             ) as mock_sb,
         ):
@@ -293,7 +293,7 @@ class TestKiroInternalSandboxExclusion:
 
     def test_non_dict_json_is_disabled(self, tmp_path, monkeypatch):
         """Valid-but-non-object JSON must resolve to disabled, not raise."""
-        from kiro_crew.sandbox import kiro_internal_sandbox_enabled
+        from aj_crew.sandbox import kiro_internal_sandbox_enabled
 
         for content in ("[]", '"hello"', "null", "123"):
             self._write_settings(tmp_path, monkeypatch, content)
@@ -305,7 +305,7 @@ class TestKiroInternalSandboxExclusion:
 
         HOME is relocated to tmp_path because is_sensitive_path anchors its
         deny list at the user's home directory."""
-        from kiro_crew.sandbox import kiro_internal_sandbox_enabled
+        from aj_crew.sandbox import kiro_internal_sandbox_enabled
 
         monkeypatch.setenv("HOME", str(tmp_path))
         sensitive = tmp_path / ".aws" / "credentials"
@@ -318,7 +318,7 @@ class TestKiroInternalSandboxExclusion:
             if sys.platform == "win32" and getattr(exc, "winerror", None) == 1314:
                 pytest.skip("Windows host has not granted symlink creation privilege")
             raise
-        monkeypatch.setattr("kiro_crew.sandbox._KIRO_INTERNAL_SETTINGS_PATH", str(link))
+        monkeypatch.setattr("aj_crew.sandbox._KIRO_INTERNAL_SETTINGS_PATH", str(link))
         assert kiro_internal_sandbox_enabled() is False
 
     def test_sel_failure_does_not_burn_warn_once_flag(self, tmp_path, monkeypatch, caplog):
@@ -327,25 +327,25 @@ class TestKiroInternalSandboxExclusion:
         import logging
 
         self._write_settings(tmp_path, monkeypatch, '{"sandbox": true}')
-        monkeypatch.setattr("kiro_crew.sandbox.sys.platform", "darwin")
-        monkeypatch.setattr("kiro_crew.sandbox._kiro_delegation_warned", False)
+        monkeypatch.setattr("aj_crew.sandbox.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.sandbox._kiro_delegation_warned", False)
 
         # First call: SEL down -> seatbelt fallback, no delegation warning.
         with (
-            patch("kiro_crew.sel.sel", side_effect=RuntimeError("audit down")),
+            patch("aj_crew.sel.sel", side_effect=RuntimeError("audit down")),
             patch(
-                "kiro_crew.sandbox.sandbox_exec_argv",
+                "aj_crew.sandbox.sandbox_exec_argv",
                 return_value=(["sandbox-exec", "-f", "/tmp/p.sb", "kiro-cli"], "/tmp/p.sb"),
             ),
         ):
             wrap_argv(["kiro-cli", "acp"], mode="auto")
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         assert sb._kiro_delegation_warned is False
 
         # Second call: SEL healthy -> delegation proceeds AND warns once.
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.sandbox"):
-            with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.sandbox"):
+            with patch("aj_crew.sel.sel", return_value=MagicMock()):
                 argv, cleanup = wrap_argv(["kiro-cli", "acp"], mode="auto")
         assert "sandbox-exec" not in argv
         assert cleanup is None
@@ -360,19 +360,19 @@ class TestMacOsNestingDetection:
     Files' ``git status`` / search) and ~40 gateway-boot MCP probes failing with
     "sandbox unavailable ... no OS-level sandbox backend is available on this
     host" on a macOS host whose ``sandbox-exec`` works perfectly when NOT nested
-    — because KiroCrew's own seatbelt had already confined the process tree.
+    — because Aj Crew's own seatbelt had already confined the process tree.
 
     Every test fixes both gate inputs explicitly rather than inheriting whatever
     the test host happens to be: these assertions must not flip between a
     sandboxed dev machine and an unsandboxed CI runner.
     """
 
-    @patch("kiro_crew.sandbox.detect_backend")
+    @patch("aj_crew.sandbox.detect_backend")
     def test_marker_plus_kernel_confirmation_passes_through(self, mock_detect, monkeypatch):
-        monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
+        monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
         monkeypatch.setattr(sandbox_mod, "_macos_sandbox_state", lambda: True)
         argv = ["git", "worktree", "list", "--porcelain"]
-        with patch("kiro_crew.sel.sel"):
+        with patch("aj_crew.sel.sel"):
             result, cleanup = wrap_argv(argv, mode="standard")
         assert result == argv
         assert cleanup is None
@@ -380,7 +380,7 @@ class TestMacOsNestingDetection:
         # EPERMs, and reading that as a host verdict is the bug this fixes.
         mock_detect.assert_not_called()
 
-    @patch("kiro_crew.sandbox.detect_backend")
+    @patch("aj_crew.sandbox.detect_backend")
     def test_the_passthrough_silently_drops_extra_hidden_dirs(
         self, mock_detect, monkeypatch, tmp_path
     ):
@@ -409,9 +409,9 @@ class TestMacOsNestingDetection:
         """
         secret = tmp_path / "provenance"
         secret.mkdir()
-        monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
+        monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
         monkeypatch.setattr(sandbox_mod, "_macos_sandbox_state", lambda: True)
-        with patch("kiro_crew.sel.sel"):
+        with patch("aj_crew.sel.sel"):
             result, cleanup = wrap_argv(
                 ["/usr/bin/npm", "ci"], mode="strict", extra_hidden_dirs=(str(secret),)
             )
@@ -423,12 +423,12 @@ class TestMacOsNestingDetection:
         assert result[-2:] == ["/usr/bin/npm", "ci"]
         mock_detect.assert_not_called()
 
-    @patch("kiro_crew.sandbox.detect_backend", return_value="none")
+    @patch("aj_crew.sandbox.detect_backend", return_value="none")
     def test_forged_marker_without_kernel_confirmation_is_refused(self, mock_detect, monkeypatch):
         # The kernel is authoritative: a marker on a process the kernel says is
         # NOT sandboxed can only have been forged or inherited into an unconfined
         # process, so it must not open the passthrough.
-        monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
+        monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
         monkeypatch.setattr(sandbox_mod, "_macos_sandbox_state", lambda: False)
         monkeypatch.setattr(sandbox_mod, "kiro_internal_sandbox_enabled", lambda: False)
         monkeypatch.setattr(sandbox_mod, "_allow_unsandboxed_exec", lambda: False)
@@ -437,32 +437,32 @@ class TestMacOsNestingDetection:
             wrap_argv(["kiro-cli", "acp"], mode="strict")
         mock_detect.assert_called_once()
 
-    @patch("kiro_crew.sandbox.detect_backend")
+    @patch("aj_crew.sandbox.detect_backend")
     def test_unanswerable_kernel_probe_still_honours_marker(self, mock_detect, monkeypatch):
         # "Cannot answer" is not "not sandboxed". A missing symbol / ABI change
         # must not retroactively invalidate a marker the Linux path honours
         # unconditionally — that would brick in-sandbox spawns wherever the probe
         # is unavailable.
-        monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
+        monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
         # Unknown outer tier, so a `strict` request proves no downgrade and the argv
         # passes through unchanged; a host `standard` would add the env-scrub wrap.
-        monkeypatch.delenv("KIROCREW_SANDBOX_LEVEL", raising=False)
+        monkeypatch.delenv("AJCREW_SANDBOX_LEVEL", raising=False)
         monkeypatch.setattr(sandbox_mod, "_macos_sandbox_state", lambda: None)
-        with patch("kiro_crew.sel.sel"):
+        with patch("aj_crew.sel.sel"):
             result, _ = wrap_argv(["kiro-cli", "acp"], mode="strict")
         assert result == ["kiro-cli", "acp"]
         mock_detect.assert_not_called()
 
-    @patch("kiro_crew.sandbox.detect_backend", return_value="none")
+    @patch("aj_crew.sandbox.detect_backend", return_value="none")
     def test_foreign_outer_sandbox_fails_closed_with_actionable_guidance(
         self, mock_detect, monkeypatch
     ):
-        # Nested under a sandbox KiroCrew did NOT create (no marker): its profile
+        # Nested under a sandbox Aj Crew did NOT create (no marker): its profile
         # is unidentifiable and its environment was never scrubbed by us, so
         # passthrough is refused. The error must still name the REAL cause and a
         # remedy that keeps isolation, not repeat the false "this host has no
         # sandbox backend" claim.
-        monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+        monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
         monkeypatch.setattr(sandbox_mod, "_macos_sandbox_state", lambda: True)
         monkeypatch.setattr(sandbox_mod, "kiro_internal_sandbox_enabled", lambda: False)
         monkeypatch.setattr(sandbox_mod, "_allow_unsandboxed_exec", lambda: False)
@@ -476,11 +476,11 @@ class TestMacOsNestingDetection:
         # even where no sandbox exists at all.
         assert "sandbox_allow_unsandboxed_exec=true" not in msg
 
-    @patch("kiro_crew.sandbox.detect_backend", return_value="none")
+    @patch("aj_crew.sandbox.detect_backend", return_value="none")
     def test_not_nested_still_fails_closed(self, mock_detect, monkeypatch):
         # The passthrough must not weaken the fail-closed guarantee on a host that
         # genuinely has no backend.
-        monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+        monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
         monkeypatch.setattr(sandbox_mod, "_macos_sandbox_state", lambda: False)
         monkeypatch.setattr(sandbox_mod, "kiro_internal_sandbox_enabled", lambda: False)
         monkeypatch.setattr(sandbox_mod, "_allow_unsandboxed_exec", lambda: False)
@@ -488,14 +488,14 @@ class TestMacOsNestingDetection:
         with pytest.raises(RuntimeError, match="Sandbox backend unavailable"):
             wrap_argv(["kiro-cli", "acp"], mode="standard")
 
-    @patch("kiro_crew.sandbox.detect_backend", return_value="sandbox-exec")
+    @patch("aj_crew.sandbox.detect_backend", return_value="sandbox-exec")
     def test_available_backend_still_wraps(self, mock_detect, monkeypatch):
         # With no marker, a working backend must still wrap — the passthrough is
         # not a bypass. Uses a NON-kiro argv so the kiro-delegation path does not
         # intercept.
-        monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+        monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
         monkeypatch.setattr(sandbox_mod, "_macos_sandbox_state", lambda: True)
-        with patch("kiro_crew.sandbox.sandbox_exec_argv") as mock_sb:
+        with patch("aj_crew.sandbox.sandbox_exec_argv") as mock_sb:
             mock_sb.return_value = (["sandbox-exec", "-f", "/tmp/p.sb", "git"], "/tmp/p.sb")
             result = wrap_argv(["git", "status"], mode="standard")
         mock_sb.assert_called_once()
@@ -530,7 +530,7 @@ class TestMacOsNestingDetection:
 @pytest.mark.usefixtures("systemd_run_resolvable")
 class TestAgentSliceMemoryHigh:
     """_ensure_agent_slice_memory_high() reconciles the AGGREGATE MemoryHigh
-    ceiling on kirocrew-agents.slice — bounding the SUM of all concurrent agent
+    ceiling on ajcrew-agents.slice — bounding the SUM of all concurrent agent
     scopes, which the per-scope MemoryMax cannot (N scopes each under their own
     65% cap can still livelock a swapless host together)."""
 
@@ -538,7 +538,7 @@ class TestAgentSliceMemoryHigh:
         # cgroup_scope_argv runs on the gateway event loop, so the
         # reconciliation (config read + systemctl subprocess) must happen in
         # a worker thread, never inline on the caller's thread.
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         self._reset()
         calling_thread: list = []
@@ -550,7 +550,7 @@ class TestAgentSliceMemoryHigh:
 
         try:
             with patch(
-                "kiro_crew.sandbox._ensure_agent_slice_memory_high",
+                "aj_crew.sandbox._ensure_agent_slice_memory_high",
                 side_effect=record_thread,
             ):
                 sb._reconcile_slice_memory_high_off_thread()
@@ -560,7 +560,7 @@ class TestAgentSliceMemoryHigh:
             self._restore()
 
     def test_schedule_during_reconciliation_queues_and_applies(self):
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         self._reset()
         first_started = threading.Event()
@@ -575,7 +575,7 @@ class TestAgentSliceMemoryHigh:
 
         try:
             with patch(
-                "kiro_crew.sandbox._ensure_agent_slice_memory_high",
+                "aj_crew.sandbox._ensure_agent_slice_memory_high",
                 side_effect=slow_reconcile,
             ):
                 sb._reconcile_slice_memory_high_off_thread()
@@ -592,12 +592,12 @@ class TestAgentSliceMemoryHigh:
     def test_thread_start_failure_disarms_without_aborting_the_spawn(self) -> None:
         # Thread exhaustion on the spawn path must not raise (aborting the
         # agent spawn) nor retain the in-flight slot forever.
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         self._reset()
         try:
             with patch(
-                "kiro_crew.sandbox.threading.Thread",
+                "aj_crew.sandbox.threading.Thread",
                 side_effect=RuntimeError("can't start new thread"),
             ):
                 sb._reconcile_slice_memory_high_off_thread()  # must not raise
@@ -609,7 +609,7 @@ class TestAgentSliceMemoryHigh:
             self._restore()
 
     def _reset(self):
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         sb._SLICE_MEMHIGH_APPLIED = None
         sb._SLICE_MEMHIGH_DISABLED = False
@@ -619,7 +619,7 @@ class TestAgentSliceMemoryHigh:
     def _restore(self):
         # Leave the module disarmed, matching the autouse conftest fixture's
         # in-test state (it restores its own snapshot afterwards).
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         sb._SLICE_MEMHIGH_APPLIED = None
         sb._SLICE_MEMHIGH_DISABLED = True
@@ -630,17 +630,17 @@ class TestAgentSliceMemoryHigh:
         # The slice is UID-global (shared by live/dev/pod gateways), so the
         # ceiling is deliberately NOT config-driven: always the host-derived
         # default, so no single instance can lift the others' protection.
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         self._reset()
         try:
             with (
-                patch("kiro_crew.sandbox._default_slice_memory_high_mb", return_value=2048),
+                patch("aj_crew.sandbox._default_slice_memory_high_mb", return_value=2048),
                 patch(
-                    "kiro_crew.sandbox.platform_compat.trusted_system_bin",
+                    "aj_crew.sandbox.platform_compat.trusted_system_bin",
                     return_value="/usr/bin/systemctl",
                 ),
-                patch("kiro_crew.sandbox.subprocess.run") as run,
+                patch("aj_crew.sandbox.subprocess.run") as run,
             ):
                 run.return_value = MagicMock(returncode=0, stderr="", stdout="")
                 sb._ensure_agent_slice_memory_high()
@@ -651,7 +651,7 @@ class TestAgentSliceMemoryHigh:
                 "--user",
                 "set-property",
                 "--runtime",
-                "kirocrew-agents.slice",
+                "ajcrew-agents.slice",
                 "MemoryHigh=2048M",
             ]
             assert sb._SLICE_MEMHIGH_APPLIED == "2048M"
@@ -659,20 +659,20 @@ class TestAgentSliceMemoryHigh:
             self._restore()
 
     def test_steady_state_is_a_noop(self):
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         self._reset()
         try:
             with (
                 patch(
-                    "kiro_crew.sandbox._default_slice_memory_high_mb",
+                    "aj_crew.sandbox._default_slice_memory_high_mb",
                     return_value=2048,
                 ),
                 patch(
-                    "kiro_crew.sandbox.platform_compat.trusted_system_bin",
+                    "aj_crew.sandbox.platform_compat.trusted_system_bin",
                     return_value="/usr/bin/systemctl",
                 ),
-                patch("kiro_crew.sandbox.subprocess.run") as run,
+                patch("aj_crew.sandbox.subprocess.run") as run,
             ):
                 run.return_value = MagicMock(returncode=0, stderr="", stdout="")
                 sb._ensure_agent_slice_memory_high()
@@ -685,17 +685,17 @@ class TestAgentSliceMemoryHigh:
     def test_failure_warns_once_and_disarms(self, caplog):
         import logging
 
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         self._reset()
         try:
             with (
-                patch("kiro_crew.sandbox._default_slice_memory_high_mb", return_value=2048),
+                patch("aj_crew.sandbox._default_slice_memory_high_mb", return_value=2048),
                 patch(
-                    "kiro_crew.sandbox.platform_compat.trusted_system_bin",
+                    "aj_crew.sandbox.platform_compat.trusted_system_bin",
                     return_value="/usr/bin/systemctl",
                 ),
-                patch("kiro_crew.sandbox.subprocess.run") as run,
+                patch("aj_crew.sandbox.subprocess.run") as run,
             ):
                 run.return_value = MagicMock(returncode=1, stderr="Failed to set", stdout="")
                 with caplog.at_level(logging.WARNING):
@@ -713,13 +713,13 @@ class TestAgentSliceMemoryHigh:
     def test_missing_systemctl_warns_and_disarms_without_raising(self, caplog):
         import logging
 
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         self._reset()
         try:
             with (
-                patch("kiro_crew.sandbox._default_slice_memory_high_mb", return_value=2048),
-                patch("kiro_crew.sandbox.platform_compat.trusted_system_bin", return_value=None),
+                patch("aj_crew.sandbox._default_slice_memory_high_mb", return_value=2048),
+                patch("aj_crew.sandbox.platform_compat.trusted_system_bin", return_value=None),
             ):
                 with caplog.at_level(logging.WARNING):
                     sb._ensure_agent_slice_memory_high()
@@ -729,18 +729,18 @@ class TestAgentSliceMemoryHigh:
             self._restore()
 
     def test_cgroup_scope_argv_reconciles_when_available(self):
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         sb._CGROUP_SCOPE_PROBE = None
         try:
             with (
-                patch("kiro_crew.sandbox._probe_cgroup_scope", return_value=(True, "ok")),
+                patch("aj_crew.sandbox._probe_cgroup_scope", return_value=(True, "ok")),
                 patch(
-                    "kiro_crew.sandbox._cgroup_limits_from_config",
+                    "aj_crew.sandbox._cgroup_limits_from_config",
                     return_value=(8192, 8192, 50, 0),
                 ),
-                patch("kiro_crew.sandbox._cpu_controller_delegated", return_value=False),
-                patch("kiro_crew.sandbox._reconcile_slice_memory_high_off_thread") as ensure,
+                patch("aj_crew.sandbox._cpu_controller_delegated", return_value=False),
+                patch("aj_crew.sandbox._reconcile_slice_memory_high_off_thread") as ensure,
             ):
                 out = sb.cgroup_scope_argv(["kiro-cli", "chat"])
             ensure.assert_called_once_with()
@@ -749,7 +749,7 @@ class TestAgentSliceMemoryHigh:
             # name: the reconciliation this test is about still targets the
             # parent, which is what the ceiling is applied to.
             assert any(
-                a.startswith("--slice=kirocrew-agents") and a.endswith(".slice") for a in out
+                a.startswith("--slice=ajcrew-agents") and a.endswith(".slice") for a in out
             ), out
         finally:
             sb._CGROUP_SCOPE_PROBE = None
@@ -757,17 +757,17 @@ class TestAgentSliceMemoryHigh:
     def test_cgroup_scope_argv_skips_reconcile_when_unavailable(self):
         """No delegation -> passthrough argv AND no systemctl side effect (the
         non-Linux / no-delegation degradation path)."""
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         sb._CGROUP_SCOPE_PROBE = None
         sb._CGROUP_WARNED = False
         try:
             with (
                 patch(
-                    "kiro_crew.sandbox._probe_cgroup_scope",
+                    "aj_crew.sandbox._probe_cgroup_scope",
                     return_value=(False, "not Linux"),
                 ),
-                patch("kiro_crew.sandbox._ensure_agent_slice_memory_high") as ensure,
+                patch("aj_crew.sandbox._ensure_agent_slice_memory_high") as ensure,
             ):
                 out = sb.cgroup_scope_argv(["git", "status"])
             ensure.assert_not_called()
@@ -778,7 +778,7 @@ class TestAgentSliceMemoryHigh:
 
     @_POSIX_ONLY
     def test_default_is_host_proportional_with_fallback(self):
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         sixteen_g = 16 * 1024**3
         with patch("os.sysconf", side_effect=lambda n: sixteen_g // 4096 if "PHYS" in n else 4096):
@@ -793,15 +793,15 @@ class TestAgentSliceMemoryHigh:
         # Throttle visibility rides the reconcile worker: every scheduled
         # reconcile also reads memory.events, including the steady state
         # where the MemoryHigh apply itself is a no-op string compare.
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         self._reset()
         done = threading.Event()
         try:
             with (
-                patch("kiro_crew.sandbox._ensure_agent_slice_memory_high") as ensure,
+                patch("aj_crew.sandbox._ensure_agent_slice_memory_high") as ensure,
                 patch(
-                    "kiro_crew.sandbox._check_slice_memory_pressure",
+                    "aj_crew.sandbox._check_slice_memory_pressure",
                     side_effect=lambda: done.set(),
                 ) as check,
             ):
@@ -818,13 +818,13 @@ class TestAgentSliceMemoryHigh:
         # re-arms only after an observation finds the counter stable.
         import logging
 
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         self._reset()
         try:
             readings = iter([0, 3, 5, 5, 7])
             with patch(
-                "kiro_crew.sandbox._slice_memory_events_high",
+                "aj_crew.sandbox._slice_memory_events_high",
                 side_effect=lambda: next(readings),
             ):
                 with caplog.at_level(logging.WARNING):
@@ -845,11 +845,11 @@ class TestAgentSliceMemoryHigh:
         # nonzero FIRST read may predate this process — never warn on it.
         import logging
 
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         self._reset()
         try:
-            with patch("kiro_crew.sandbox._slice_memory_events_high", return_value=42):
+            with patch("aj_crew.sandbox._slice_memory_events_high", return_value=42):
                 with caplog.at_level(logging.WARNING):
                     sb._check_slice_memory_pressure()
             assert not [r for r in caplog.records if "memory.events" in r.getMessage()]
@@ -863,18 +863,18 @@ class TestAgentSliceMemoryHigh:
         # open episode, and warn again only on a genuine later increase.
         import logging
 
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         self._reset()
         sb._SLICE_MEMHIGH_EVENTS_SEEN = 5
         sb._SLICE_MEMHIGH_CLIMB_WARNED = True
         try:
             with caplog.at_level(logging.WARNING):
-                with patch("kiro_crew.sandbox._slice_memory_events_high", return_value=2):
+                with patch("aj_crew.sandbox._slice_memory_events_high", return_value=2):
                     sb._check_slice_memory_pressure()
                 assert sb._SLICE_MEMHIGH_EVENTS_SEEN == 2
                 assert sb._SLICE_MEMHIGH_CLIMB_WARNED is False
-                with patch("kiro_crew.sandbox._slice_memory_events_high", return_value=4):
+                with patch("aj_crew.sandbox._slice_memory_events_high", return_value=4):
                     sb._check_slice_memory_pressure()
             warns = [r for r in caplog.records if "memory.events" in r.getMessage()]
             assert len(warns) == 1
@@ -887,12 +887,12 @@ class TestAgentSliceMemoryHigh:
         # macOS/Windows) must neither warn nor clobber the baseline.
         import logging
 
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         self._reset()
         sb._SLICE_MEMHIGH_EVENTS_SEEN = 5
         try:
-            with patch("kiro_crew.sandbox._slice_memory_events_high", return_value=None):
+            with patch("aj_crew.sandbox._slice_memory_events_high", return_value=None):
                 with caplog.at_level(logging.WARNING):
                     sb._check_slice_memory_pressure()
             assert not [r for r in caplog.records if "memory.events" in r.getMessage()]
@@ -901,32 +901,32 @@ class TestAgentSliceMemoryHigh:
             self._restore()
 
     def test_slice_memory_events_high_reads_counter(self, tmp_path):
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         evt = tmp_path / "memory.events.local"
         evt.write_text("low 0\nhigh 42\nmax 1\noom 0\noom_kill 0\n", encoding="utf-8")
-        with patch("kiro_crew.sandbox._agents_slice_cgroup_dir", return_value=tmp_path):
+        with patch("aj_crew.sandbox._agents_slice_cgroup_dir", return_value=tmp_path):
             assert sb._slice_memory_events_high() == 42
-        with patch("kiro_crew.sandbox._agents_slice_cgroup_dir", return_value=None):
+        with patch("aj_crew.sandbox._agents_slice_cgroup_dir", return_value=None):
             assert sb._slice_memory_events_high() is None
         empty = tmp_path / "no-events"
         empty.mkdir()
-        with patch("kiro_crew.sandbox._agents_slice_cgroup_dir", return_value=empty):
+        with patch("aj_crew.sandbox._agents_slice_cgroup_dir", return_value=empty):
             assert sb._slice_memory_events_high() is None
         evt.write_text("low 0\nhigh notanumber\n", encoding="utf-8")
-        with patch("kiro_crew.sandbox._agents_slice_cgroup_dir", return_value=tmp_path):
+        with patch("aj_crew.sandbox._agents_slice_cgroup_dir", return_value=tmp_path):
             assert sb._slice_memory_events_high() is None
 
     @pytest.mark.skipif(sys.platform != "linux", reason="the resolver is Linux-only")
     def test_slice_memory_events_high_resolves_dash_hierarchy(self, tmp_path):
         """Regression: on the standard systemd layout the agents slice nests
-        under kirocrew.slice (dash-hierarchy), NOT directly under
+        under ajcrew.slice (dash-hierarchy), NOT directly under
         user@<uid>.service. The reader must find memory.events.local through the
         real resolver on that layout — a hardcoded flat path would miss it,
         silently disabling the throttle warning."""
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
-        nested = tmp_path / "kirocrew.slice" / sb._CGROUP_AGENTS_SLICE
+        nested = tmp_path / "ajcrew.slice" / sb._CGROUP_AGENTS_SLICE
         nested.mkdir(parents=True)
         (nested / "memory.events.local").write_text(
             "low 0\nhigh 7\nmax 0\noom 0\noom_kill 0\n", encoding="utf-8"

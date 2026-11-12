@@ -114,7 +114,7 @@ describe('LocalStorageDebug scan', () => {
   it('classifies every known prefix and buckets the rest as static keys', () => {
     seed({
       'vc_heights_chat': 'x',
-      'kirocrew:touched-files:s1': 'x',
+      'ajcrew:touched-files:s1': 'x',
       'mc-cmt-read:42': 'x',
       'mimir-tasks:board': 'x',
       'sort:alpha': 'x',
@@ -128,7 +128,7 @@ describe('LocalStorageDebug scan', () => {
 
     for (const label of [
       'vc_heights_*',
-      'kirocrew:touched-files:*',
+      'ajcrew:touched-files:*',
       'mc-cmt-read:*',
       'mimir-tasks:*',
       'sort:*',
@@ -290,7 +290,7 @@ describe('LocalStorageDebug actions', () => {
       expect(blobs[0].type).toBe('application/json')
       expect(JSON.parse(await blobs[0].text())).toEqual({ alpha: 'one', beta: 'two' })
       expect(names).toHaveLength(1)
-      expect(names[0]).toMatch(/^kirocrew-localstorage-\d+\.json$/)
+      expect(names[0]).toMatch(/^ajcrew-localstorage-\d+\.json$/)
       expect(revoked).toEqual(['blob:ls-debug'])
     } finally {
       clickSpy.mockRestore()

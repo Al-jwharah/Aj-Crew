@@ -16,7 +16,7 @@ from aiohttp import web
 from app_manager_helpers import app_home_fixture  # noqa: F401 - fixture
 from app_manager_helpers import _make_app_source
 
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
 
 
 def _web_app(crons: object | None) -> web.Application:
@@ -39,10 +39,10 @@ class TestUninstallAppInProcess:
         audit = MagicMock()
 
         with (
-            patch("kiro_crew.apps.routes.deregister_app_crons_reporting_failures", deregister),
-            patch("kiro_crew.apps.routes.sel", return_value=audit),
+            patch("aj_crew.apps.routes.deregister_app_crons_reporting_failures", deregister),
+            patch("aj_crew.apps.routes.sel", return_value=audit),
         ):
-            from kiro_crew.apps.routes import uninstall_app_in_process
+            from aj_crew.apps.routes import uninstall_app_in_process
 
             result = await uninstall_app_in_process(
                 _web_app(MagicMock()), "test-app", caller="edition"
@@ -57,7 +57,7 @@ class TestUninstallAppInProcess:
         assert callers == {"edition"}
 
     async def test_an_app_that_is_not_installed_is_a_404(self, app_home):
-        from kiro_crew.apps.routes import uninstall_app_in_process
+        from aj_crew.apps.routes import uninstall_app_in_process
 
         result = await uninstall_app_in_process(_web_app(None), "absent", caller="edition")
 
@@ -71,8 +71,8 @@ class TestUninstallAppInProcess:
         assert install_app(_make_app_source(tmp_path)).ok
         installed = {"name": "test-app", "lifecycle": "locked", "manifest": {}}
 
-        with patch("kiro_crew.apps.routes.get_app", return_value=installed):
-            from kiro_crew.apps.routes import uninstall_app_in_process
+        with patch("aj_crew.apps.routes.get_app", return_value=installed):
+            from aj_crew.apps.routes import uninstall_app_in_process
 
             result = await uninstall_app_in_process(_web_app(None), "test-app", caller="edition")
 

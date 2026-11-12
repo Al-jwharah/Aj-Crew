@@ -11,7 +11,7 @@ surface: it turned into three separate order-dependent CI flake classes
 (#4177, #4789) before the mechanism was found.
 
 The repo-wide conversion (#4800) routed every module-global lock through
-``kiro_crew.loop_lock.LoopBoundLock``, which keeps one inner lock per running
+``aj_crew.loop_lock.LoopBoundLock``, which keeps one inner lock per running
 loop. This gate keeps the *declaration* form of the class extinct: it fails on
 any NEW module-scope ``asyncio.Lock()`` / ``Event()`` / ``Queue()``
 instantiation.
@@ -53,7 +53,7 @@ lifetime is guaranteed.
 
 ## Usage
 
-    python3 scripts/check_loop_bound_locks.py          # scan src/kiro_crew
+    python3 scripts/check_loop_bound_locks.py          # scan src/aj_crew
     python3 scripts/check_loop_bound_locks.py --test   # self-test the rule
 """
 
@@ -65,12 +65,12 @@ import sys
 import tempfile
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCAN_ROOT = os.path.join("src", "kiro_crew")
+SCAN_ROOT = os.path.join("src", "aj_crew")
 MARKER = "loop-lock-ok"
 PRIMITIVES = {"Lock", "Event", "Queue"}
 
 REMEDY = (
-    "Declare it as `kiro_crew.loop_lock.LoopBoundLock()` (locks), or create the "
+    "Declare it as `aj_crew.loop_lock.LoopBoundLock()` (locks), or create the "
     "primitive inside the coroutine that uses it. A module-global that truly "
     f"needs import-time binding can carry a `{MARKER}` comment saying why a "
     "single-loop lifetime is guaranteed."
@@ -297,7 +297,7 @@ _PROBES: list[tuple[str, str, int]] = [
     ),
     (
         "LoopBoundLock is the remedy, not a violation",
-        "from kiro_crew.loop_lock import LoopBoundLock\n_L = LoopBoundLock()\n",
+        "from aj_crew.loop_lock import LoopBoundLock\n_L = LoopBoundLock()\n",
         0,
     ),
     (

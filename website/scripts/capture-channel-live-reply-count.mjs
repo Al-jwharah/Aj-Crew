@@ -51,7 +51,7 @@ for (const theme of ['dark', 'light']) {
   if (await replyButton.count()) { console.log(`${name}: a reply button before any reply`); failed = true; continue }
 
   await page.evaluate(message => {
-    window.dispatchEvent(new CustomEvent('kirocrew-channel', {
+    window.dispatchEvent(new CustomEvent('ajcrew-channel', {
       detail: { type: 'channel_message', data: { channel_id: 'ch1', message } },
     }))
   }, REPLY)

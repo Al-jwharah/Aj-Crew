@@ -9,11 +9,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.dashboard.handlers.cron import _recognize_session
-from kiro_crew.dashboard.handlers.memory import _memory_write_gate
-from kiro_crew.history import is_incognito_transcript
-from kiro_crew.session import SessionManager
+from aj_crew.config import AjCrewConfig
+from aj_crew.dashboard.handlers.cron import _recognize_session
+from aj_crew.dashboard.handlers.memory import _memory_write_gate
+from aj_crew.history import is_incognito_transcript
+from aj_crew.session import SessionManager
 
 
 @pytest.mark.asyncio
@@ -23,7 +23,7 @@ async def test_workflow_memory_recognition_tracks_registration(prefix):
     provider.is_process_alive = lambda: True
     provider.has_active_turn = lambda: False
     provider.runtime_abort_target = lambda: None
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=lambda *args, **kwargs: provider)
+    sessions = SessionManager(AjCrewConfig(), provider_factory=lambda *args, **kwargs: provider)
     state = SimpleNamespace(sessions=sessions, _slots={}, _restricted_keys=set())
     key = f"{prefix}:wf_1:0"
 
@@ -33,7 +33,7 @@ async def test_workflow_memory_recognition_tracks_registration(prefix):
         )
 
     assert (await recognize(key)).status == 400
-    from kiro_crew.execution_context import (
+    from aj_crew.execution_context import (
         ExecutionContext,
         MemoryStoreRef,
         bind_session_execution,
@@ -42,7 +42,7 @@ async def test_workflow_memory_recognition_tracks_registration(prefix):
     await asyncio.to_thread(
         bind_session_execution,
         key,
-        ExecutionContext(None, MemoryStoreRef("default"), "template", "kirocrew"),
+        ExecutionContext(None, MemoryStoreRef("default"), "template", "ajcrew"),
     )
     try:
         await sessions.get_or_create(key)

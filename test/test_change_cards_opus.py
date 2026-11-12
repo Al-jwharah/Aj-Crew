@@ -14,11 +14,11 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew.dashboard import change_cards as cards
-from kiro_crew.dashboard import channel_slots, chat_utils
-from kiro_crew.dashboard.change_cards import CardStore
-from kiro_crew.dashboard.handlers import change_cards as routes
+from aj_crew import change_card_catalog as catalog
+from aj_crew.dashboard import change_cards as cards
+from aj_crew.dashboard import channel_slots, chat_utils
+from aj_crew.dashboard.change_cards import CardStore
+from aj_crew.dashboard.handlers import change_cards as routes
 
 SLOT = "chat-1"
 SK = f"dashboard:{SLOT}"
@@ -222,7 +222,7 @@ def test_setting_the_dashboard_terminal_shell_is_code_exec():
     preview = catalog.build_preview(
         "setting.change",
         p,
-        {"store": catalog.STORE_KIROCREW, "key": "dashboard.terminal.shell", "value": "/bin/bash"},
+        {"store": catalog.STORE_AJCREW, "key": "dashboard.terminal.shell", "value": "/bin/bash"},
         {},
     )
     assert preview["risk"] == catalog.RISK_CODE_EXEC

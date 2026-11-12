@@ -17,9 +17,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard import handlers_instances as handlers
-from kiro_crew.instances.registry import Instance, InstanceDisabledError, InstancesRegistry
-from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager, TunnelState, TunnelStatus
+from aj_crew.dashboard import handlers_instances as handlers
+from aj_crew.instances.registry import Instance, InstanceDisabledError, InstancesRegistry
+from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager, TunnelState, TunnelStatus
 
 
 class _Tunnel:
@@ -80,14 +80,14 @@ class _State:
 
 @pytest.fixture
 def env(tmp_path: Path, monkeypatch):
-    import kiro_crew.instances.port_allocator as pa
-    import kiro_crew.instances.ssh_tunnel_manager as stm
-    from kiro_crew.config import loader
+    import aj_crew.instances.port_allocator as pa
+    import aj_crew.instances.ssh_tunnel_manager as stm
+    from aj_crew.config import loader
 
     # Hermetic ports: both namespaces that probe must answer "free".
     monkeypatch.setattr(stm, "_is_port_free", lambda port, host="127.0.0.1": True)
     monkeypatch.setattr(pa, "_is_port_free", lambda port, host="127.0.0.1": True)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "config.json").write_text(
         json.dumps({"instances": {"enabled": True}}), encoding="utf-8"
     )
@@ -341,7 +341,7 @@ async def test_only_the_owner_may_toggle(env):
 
 @pytest.mark.asyncio
 async def test_startup_revive_skips_a_disabled_crew(env):
-    import kiro_crew.dashboard.server as server
+    import aj_crew.dashboard.server as server
 
     reg, mgr, _ = env
     reg.add(name="B", ssh_host="host-b", instance_id="b", remote_port=7778)
@@ -357,7 +357,7 @@ async def test_startup_revive_skips_a_disabled_crew(env):
 @pytest.mark.asyncio
 async def test_a_chained_crew_under_a_disabled_parent_is_refused(env):
     """Its forward dials the parent's host, so the parent's off switch covers it."""
-    import kiro_crew.dashboard.server as server
+    import aj_crew.dashboard.server as server
 
     reg, mgr, _ = env
     reg.add(

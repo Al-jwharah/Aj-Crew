@@ -33,25 +33,25 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.resources import Resource
 
-from kiro_crew.metrics import destination_filter as df
-from kiro_crew.metrics.local_exporter import JsonlMetricExporter
-from kiro_crew.metrics.temporality import delta_preference
-from kiro_crew.platform.interfaces import OtlpDestination
+from aj_crew.metrics import destination_filter as df
+from aj_crew.metrics.local_exporter import JsonlMetricExporter
+from aj_crew.metrics.temporality import delta_preference
+from aj_crew.platform.interfaces import OtlpDestination
 
 #: Two product metrics and one that is deliberately NOT exported, so "only the
 #: allowed one arrived" is a statement about filtering rather than about an
 #: instrument that happened to be the only one recording.
-ALLOWED = "kirocrew.cron.fires"
-ALSO_ALLOWED = "kirocrew.artifact.created"
-NOT_ALLOWED = "kirocrew.turn.timeout.cause"
-GAUGE = "kirocrew.inventory.crons.active"
+ALLOWED = "ajcrew.cron.fires"
+ALSO_ALLOWED = "ajcrew.artifact.created"
+NOT_ALLOWED = "ajcrew.turn.timeout.cause"
+GAUGE = "ajcrew.inventory.crons.active"
 
-CLIENT_ATTRS = {"ClientType": "kiro-crew"}
+CLIENT_ATTRS = {"ClientType": "aj-crew"}
 
 #: A resource shaped like the live one: a product destination may receive the
 #: first two keys; the rest are install- and host-scoped and must not reach it.
 FULL_RESOURCE = {
-    "service.name": "kirocrew",
+    "service.name": "ajcrew",
     "service.version": "9.9.9",
     "service.instance.id": "install-id-0000",
     "os.type": "linux",
@@ -132,7 +132,7 @@ class _Harness:
             self.exporters[dest.name] = inner
             readers.append(_reader(df.wrap_if_narrowed(dest, inner)))
         self.provider = MeterProvider(metric_readers=readers, resource=Resource(FULL_RESOURCE))
-        self.meter = self.provider.get_meter("kiro_crew")
+        self.meter = self.provider.get_meter("aj_crew")
 
     def record(self, *, gauge_value: "int | None" = None, attrs: "dict | None" = None):
         """Emit one point on each of three counters, plus an observable gauge."""
@@ -222,7 +222,7 @@ class TestTheObservableOutcome:
         points = h.exporters["product"].attrs(ALLOWED)
         assert points, "the allowed metric arrived with no data points"
         for attributes in points:
-            assert attributes.get("ClientType") == "kiro-crew", attributes
+            assert attributes.get("ClientType") == "aj-crew", attributes
 
     def test_the_narrowed_destination_sees_only_its_allowed_resource_keys(self, harness):
         h = harness([_operator(), _product()])
@@ -233,7 +233,7 @@ class TestTheObservableOutcome:
         assert resources, "no resource block reached the narrowed destination"
         for resource in resources:
             assert set(resource) == {"service.name", "service.version"}, resource
-            assert resource["service.name"] == "kirocrew"
+            assert resource["service.name"] == "ajcrew"
 
     def test_the_operator_destination_is_untouched(self, harness):
         """Every metric, no fixed attribute, the full resource -- as today."""
@@ -307,7 +307,7 @@ class TestNearbyInputs:
         """A name no instrument declares is simply never matched. It cannot be a
         hard error here: the allowlist is resolved long before anyone knows which
         instruments a given process will actually record."""
-        h = harness([_operator(), _product(allow=frozenset({"kirocrew.no.such.metric"}))])
+        h = harness([_operator(), _product(allow=frozenset({"ajcrew.no.such.metric"}))])
         h.record()
         h.flush()
 
@@ -336,7 +336,7 @@ class TestNearbyInputs:
         h.flush()
 
         assert h.exporters["product"].attrs(ALLOWED) == [
-            {"kind": "agent", "trigger": "schedule", "ClientType": "kiro-crew"}
+            {"kind": "agent", "trigger": "schedule", "ClientType": "aj-crew"}
         ]
 
     def test_the_destinations_fixed_value_wins_over_one_already_on_the_point(self, harness):
@@ -348,12 +348,12 @@ class TestNearbyInputs:
         collision resolves toward the descriptor, not toward the emitter.
         """
         h = harness([_operator(), _product()])
-        h.record(attrs={"ClientType": "not-kiro-crew"})
+        h.record(attrs={"ClientType": "not-aj-crew"})
         h.flush()
 
-        assert h.exporters["product"].attrs(ALLOWED) == [{"ClientType": "kiro-crew"}]
+        assert h.exporters["product"].attrs(ALLOWED) == [{"ClientType": "aj-crew"}]
         # The operator destination keeps what the call site actually passed.
-        assert h.exporters["operator"].attrs(ALLOWED) == [{"ClientType": "not-kiro-crew"}]
+        assert h.exporters["operator"].attrs(ALLOWED) == [{"ClientType": "not-aj-crew"}]
 
     def test_two_narrowed_destinations_do_not_see_each_others_narrowing(self, harness):
         first = OtlpDestination(
@@ -362,7 +362,7 @@ class TestNearbyInputs:
             frozenset({"metrics"}),
             None,
             frozenset({ALLOWED}),
-            {"ClientType": "kiro-crew"},
+            {"ClientType": "aj-crew"},
             frozenset({"service.name"}),
         )
         second = OtlpDestination(
@@ -470,8 +470,8 @@ class TestRefusedPointAttributes:
         key rather than reading as a constructor failure."""
         import logging
 
-        from kiro_crew.config.loader import TelemetryConfig
-        from kiro_crew.metrics.provider import _build_otlp_reader
+        from aj_crew.config.loader import TelemetryConfig
+        from aj_crew.metrics.provider import _build_otlp_reader
 
         dest = OtlpDestination(
             "refused",

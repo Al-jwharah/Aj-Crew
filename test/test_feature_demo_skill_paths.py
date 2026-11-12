@@ -17,7 +17,7 @@ import pytest
 from skill_script_helpers import load_skill_script
 
 _REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
-_SKILL = _REPO_ROOT / "src/kiro_crew/apps/builtins/dev_fleet/skills/feature-demo-recording"
+_SKILL = _REPO_ROOT / "src/aj_crew/apps/builtins/dev_fleet/skills/feature-demo-recording"
 _REFS = _SKILL / "references"
 
 

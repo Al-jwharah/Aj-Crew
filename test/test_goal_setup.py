@@ -7,10 +7,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import crewmate_prompts
-from kiro_crew.dashboard import goal_setup
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import change_card_catalog as catalog
+from aj_crew import crewmate_prompts
+from aj_crew.dashboard import goal_setup
+from aj_crew.testing.wait import async_wait_until
 
 SNAP = {
     "exists": True,
@@ -87,7 +87,7 @@ def test_the_card_validates_its_fields(bad: dict) -> None:
 
 
 def test_after_shows_the_write_compares_the_fields_the_card_set() -> None:
-    from kiro_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard import change_cards as cards
 
     p = _params(daily=True)
     on = {"schedules": {**SNAP["schedules"], "daily": True}}
@@ -166,8 +166,8 @@ def test_the_kickoff_names_the_goal_that_changed_and_lists_them_all() -> None:
 def test_the_kickoff_ends_with_the_build_your_page_line_while_there_is_no_page(
     monkeypatch,
 ) -> None:
-    from kiro_crew import dashboard_agentic
-    from kiro_crew.dashboard import goal_reminder
+    from aj_crew import dashboard_agentic
+    from aj_crew.dashboard import goal_reminder
 
     kr = {"id": "k00000001", "text": "Pages", "target": "5", "goal_ids": [GOAL_A["id"]]}
     rec = {"goals": [GOAL_A], "key_results": [kr], "schedules": {}}
@@ -297,7 +297,7 @@ def test_every_goal_nudge_quotes_goals_and_milestones_scrubbed() -> None:
 
 class _Slot:
     def __init__(self) -> None:
-        from kiro_crew import members as members_mod
+        from aj_crew import members as members_mod
 
         self.key = "member-dm:scout"
         self.mode = members_mod.DM_SLOT_MODE
@@ -316,9 +316,9 @@ class _State:
 
 
 def test_the_nudge_waits_for_a_busy_thread_then_sends_once(monkeypatch) -> None:
-    from kiro_crew import member_goals
-    from kiro_crew import members as members_mod
-    from kiro_crew.dashboard import goal_reminder, mate_welcome
+    from aj_crew import member_goals
+    from aj_crew import members as members_mod
+    from aj_crew.dashboard import goal_reminder, mate_welcome
 
     slot = _Slot()
     state = _State(slot)
@@ -371,9 +371,9 @@ def test_the_nudge_waits_for_a_busy_thread_then_sends_once(monkeypatch) -> None:
 
 def test_an_applied_capabilities_card_wakes_its_crewmate_to_use_it(monkeypatch) -> None:
     """A card press starts no turn, so the grant must not wait until the user types."""
-    from kiro_crew import member_goals
-    from kiro_crew import members as members_mod
-    from kiro_crew.dashboard import mate_welcome
+    from aj_crew import member_goals
+    from aj_crew import members as members_mod
+    from aj_crew.dashboard import mate_welcome
 
     slot = _Slot()
     slot.running = False

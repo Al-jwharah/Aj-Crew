@@ -17,23 +17,23 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from token_auth_helpers import clear_nonces  # noqa: F401 -- the autouse fixture registers by import
 
-from kiro_crew.dashboard.kiro_relay.caller import (
+from aj_crew.dashboard.kiro_relay.caller import (
     RELAY_HANDOVER_HEADER,
     RELAY_USER_HEADER,
     CrewKind,
     HostBinding,
     published_relay_caller,
 )
-from kiro_crew.dashboard.kiro_relay.ingress import (
+from aj_crew.dashboard.kiro_relay.ingress import (
     RELAY_INGRESS_APP_KEY,
     RelayIngress,
     relay_ingress_middleware,
 )
-from kiro_crew.dashboard.relay_headers import relay_header_strip_middleware
-from kiro_crew.dashboard.server_internal_paths import _STRICT_INTERNAL_API_PATHS
-from kiro_crew.dashboard.token_auth import token_auth_middleware
-from kiro_crew.relay_client.ingress import LoopbackIngress, RelayedRequest
-from kiro_crew.relay_client.protocol import WS_MESSAGE_MAX_BYTES
+from aj_crew.dashboard.relay_headers import relay_header_strip_middleware
+from aj_crew.dashboard.server_internal_paths import _STRICT_INTERNAL_API_PATHS
+from aj_crew.dashboard.token_auth import token_auth_middleware
+from aj_crew.relay_client.ingress import LoopbackIngress, RelayedRequest
+from aj_crew.relay_client.protocol import WS_MESSAGE_MAX_BYTES
 
 pytestmark = pytest.mark.asyncio
 

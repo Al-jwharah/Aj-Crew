@@ -18,11 +18,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
-from kiro_crew.messaging.commands import COMPACT_ACCOUNT_CHANGED_TEXT
-from kiro_crew.session_allocation import SessionClosingError
-from kiro_crew.teams.client import TeamsInbound
-from kiro_crew.teams.transport_dispatch import TeamsDispatcher
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+from aj_crew.messaging.commands import COMPACT_ACCOUNT_CHANGED_TEXT
+from aj_crew.session_allocation import SessionClosingError
+from aj_crew.teams.client import TeamsInbound
+from aj_crew.teams.transport_dispatch import TeamsDispatcher
 
 _EMAIL = "quinn@example.com"
 _SVC = "https://smba.trafficmanager.net/"
@@ -463,6 +463,6 @@ class TestHelpAndAgentResolution:
     def test_explicit_agent_wins_over_the_config_default(self) -> None:
         sessions = _Sessions(_Provider())
         d = _dispatcher(sessions, _Client())
-        assert d._resolve_agent() == "kirocrew"
+        assert d._resolve_agent() == "ajcrew"
         d.agent = "custom-agent"
         assert d._resolve_agent() == "custom-agent"

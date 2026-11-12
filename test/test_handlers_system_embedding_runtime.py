@@ -24,7 +24,7 @@ def _run_collect(
     model_present: bool = True,
 ) -> dict:
     """Run ``_collect_system_metrics``; by default a present model file and an idle embedder."""
-    from kiro_crew.dashboard import handlers_system
+    from aj_crew.dashboard import handlers_system
 
     with (
         patch.object(handlers_system, "_get_static_system_info", return_value={}),

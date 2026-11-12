@@ -9,7 +9,7 @@ import time
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.apps.proxy_auth import raw_request_target, verify_proxy_request
+from aj_crew.apps.proxy_auth import raw_request_target, verify_proxy_request
 
 SECRET = "s3cret-app-key"
 
@@ -161,7 +161,7 @@ def test_raw_request_target_no_query_appends_nothing():
     assert raw_request_target(req) == "/api/vaults"
 
 
-# X-KiroCrew-Principal: the opt-in, request-bound principal claim
+# X-AjCrew-Principal: the opt-in, request-bound principal claim
 
 _REQUEST_ID = "0123456789abcdef0123456789abcdef"
 _BODY = b'{"action":"approve"}'
@@ -177,7 +177,7 @@ def _principal(
     now: int = 1_000,
     request_id: str = _REQUEST_ID,
 ) -> str:
-    from kiro_crew.apps.proxy_auth import sign_proxy_principal_claim
+    from aj_crew.apps.proxy_auth import sign_proxy_principal_claim
 
     return sign_proxy_principal_claim(
         kind=kind,
@@ -200,7 +200,7 @@ def _verify_principal(
     now: float = 1_000,
     replay_cache=None,
 ):
-    from kiro_crew.apps.proxy_auth import ProxyPrincipalReplayCache, verify_proxy_principal_claim
+    from aj_crew.apps.proxy_auth import ProxyPrincipalReplayCache, verify_proxy_principal_claim
 
     return verify_proxy_principal_claim(
         header,
@@ -223,7 +223,7 @@ def _resign(payload: dict, *, method: str = "POST", target: str = "/api/write") 
         .rstrip("=")
     )
     lines = (
-        "kirocrew-proxy-principal-v1",
+        "ajcrew-proxy-principal-v1",
         str(payload.get("issuedAt")),
         method,
         target,
@@ -286,7 +286,7 @@ def test_principal_tampered_claim_fails_the_signature():
 
 
 def test_principal_wrong_secret_fails():
-    from kiro_crew.apps.proxy_auth import ProxyPrincipalReplayCache, verify_proxy_principal_claim
+    from aj_crew.apps.proxy_auth import ProxyPrincipalReplayCache, verify_proxy_principal_claim
 
     assert (
         verify_proxy_principal_claim(
@@ -308,7 +308,7 @@ def test_principal_freshness_window_is_sixty_seconds(verify_at, accepted):
 
 
 def test_principal_request_id_is_accepted_once():
-    from kiro_crew.apps.proxy_auth import ProxyPrincipalReplayCache
+    from aj_crew.apps.proxy_auth import ProxyPrincipalReplayCache
 
     cache = ProxyPrincipalReplayCache()
     header = _principal()
@@ -318,7 +318,7 @@ def test_principal_request_id_is_accepted_once():
 
 def test_principal_rejected_claim_takes_no_cache_entry():
     """A forged claim must not burn the request id of the real one."""
-    from kiro_crew.apps.proxy_auth import ProxyPrincipalReplayCache
+    from aj_crew.apps.proxy_auth import ProxyPrincipalReplayCache
 
     cache = ProxyPrincipalReplayCache()
     encoded, _sig = _principal().rsplit(".", 1)
@@ -327,7 +327,7 @@ def test_principal_rejected_claim_takes_no_cache_entry():
 
 
 def test_principal_replay_cache_refuses_when_full_instead_of_evicting():
-    from kiro_crew.apps.proxy_auth import ProxyPrincipalReplayCache
+    from aj_crew.apps.proxy_auth import ProxyPrincipalReplayCache
 
     cache = ProxyPrincipalReplayCache(max_entries=2)
     assert cache.accept("a" * 32, expires_at=1_060, now=1_000)
@@ -340,7 +340,7 @@ def test_principal_replay_cache_refuses_when_full_instead_of_evicting():
 
 
 def test_principal_replay_cache_needs_a_positive_bound():
-    from kiro_crew.apps.proxy_auth import ProxyPrincipalReplayCache
+    from aj_crew.apps.proxy_auth import ProxyPrincipalReplayCache
 
     with pytest.raises(ValueError):
         ProxyPrincipalReplayCache(max_entries=0)
@@ -421,9 +421,9 @@ def test_principal_non_ascii_signature_is_a_verdict_not_a_type_error():
 
 
 def test_principal_missing_secret_fails_closed(monkeypatch):
-    from kiro_crew.apps.proxy_auth import ProxyPrincipalReplayCache, verify_proxy_principal_claim
+    from aj_crew.apps.proxy_auth import ProxyPrincipalReplayCache, verify_proxy_principal_claim
 
-    monkeypatch.delenv("KIROCREW_PROXY_SECRET", raising=False)
+    monkeypatch.delenv("AJCREW_PROXY_SECRET", raising=False)
     assert (
         verify_proxy_principal_claim(
             _principal(),
@@ -438,7 +438,7 @@ def test_principal_missing_secret_fails_closed(monkeypatch):
 
 
 def test_principal_missing_replay_cache_fails_closed():
-    from kiro_crew.apps.proxy_auth import verify_proxy_principal_claim
+    from aj_crew.apps.proxy_auth import verify_proxy_principal_claim
 
     assert (
         verify_proxy_principal_claim(
@@ -455,9 +455,9 @@ def test_principal_missing_replay_cache_fails_closed():
 
 
 def test_principal_secret_falls_back_to_the_backend_environment(monkeypatch):
-    from kiro_crew.apps.proxy_auth import ProxyPrincipalReplayCache, verify_proxy_principal_claim
+    from aj_crew.apps.proxy_auth import ProxyPrincipalReplayCache, verify_proxy_principal_claim
 
-    monkeypatch.setenv("KIROCREW_PROXY_SECRET", SECRET)
+    monkeypatch.setenv("AJCREW_PROXY_SECRET", SECRET)
     claim = verify_proxy_principal_claim(
         _principal(),
         method="POST",
@@ -479,7 +479,7 @@ def test_principal_signer_refuses_an_invalid_claim(kind, owner_id):
 
 
 def test_principal_signer_refuses_an_empty_secret():
-    from kiro_crew.apps.proxy_auth import sign_proxy_principal_claim
+    from aj_crew.apps.proxy_auth import sign_proxy_principal_claim
 
     with pytest.raises(ValueError):
         sign_proxy_principal_claim(
@@ -495,7 +495,7 @@ def test_principal_signature_comparison_is_constant_time_over_bytes(monkeypatch)
         compared.append((left, right))
         return real(left, right)
 
-    monkeypatch.setattr("kiro_crew.apps.proxy_auth.hmac.compare_digest", record)
+    monkeypatch.setattr("aj_crew.apps.proxy_auth.hmac.compare_digest", record)
     assert _verify_principal(_principal()) is not None
     assert len(compared) == 1
     assert all(isinstance(value, bytes) for value in compared[0])
@@ -504,7 +504,7 @@ def test_principal_signature_comparison_is_constant_time_over_bytes(monkeypatch)
 def _reference_verify(header: str, *, method: str, target: str, body: bytes, now: int):
     """The documented algorithm, written from the API reference without the module.
 
-    A backend that cannot import ``kiro_crew`` implements exactly these steps, so the
+    A backend that cannot import ``aj_crew`` implements exactly these steps, so the
     gateway signer has to stay byte-compatible with them.
     """
     encoded, _, sig = header.rpartition(".")
@@ -513,7 +513,7 @@ def _reference_verify(header: str, *, method: str, target: str, body: bytes, now
     assert payload["version"] == 1
     assert abs(now - payload["issuedAt"]) <= 60
     lines = (
-        "kirocrew-proxy-principal-v1",
+        "ajcrew-proxy-principal-v1",
         str(payload["issuedAt"]),
         method,
         target,

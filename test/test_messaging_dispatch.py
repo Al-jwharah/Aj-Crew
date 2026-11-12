@@ -19,10 +19,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KIRO
-from kiro_crew.messaging import dispatch as D
-from kiro_crew.messaging.dispatch import ChannelTurn, drive_turn
-from kiro_crew.session_allocation import SessionClosingError
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KIRO
+from aj_crew.messaging import dispatch as D
+from aj_crew.messaging.dispatch import ChannelTurn, drive_turn
+from aj_crew.session_allocation import SessionClosingError
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
@@ -258,7 +258,7 @@ def test_every_pipeline_channel_stop_path_records_the_stop() -> None:
     ``note_user_stop`` next to a direct ``provider.cancel``. A channel that
     cancels the provider directly without recording leaves the transient
     compaction replay blind to a Stop issued in the reset gap."""
-    root = Path(__file__).resolve().parents[1] / "src/kiro_crew"
+    root = Path(__file__).resolve().parents[1] / "src/aj_crew"
     checked: list[str] = []
     # A channel's dispatcher is its facade and the owners beside it (``transport_dispatch_*``),
     # judged as one text.
@@ -287,7 +287,7 @@ def test_the_driver_reaches_its_renderer_only_through_the_guarded_surface() -> N
     every declared handler, but the two methods the driver itself calls are the
     ones that carry the hold logic. A driver that starts calling something else
     must widen the guard on purpose, not silently bypass it."""
-    source = (Path(__file__).resolve().parents[1] / "src/kiro_crew/messaging/driver.py").read_text(
+    source = (Path(__file__).resolve().parents[1] / "src/aj_crew/messaging/driver.py").read_text(
         encoding="utf-8"
     )
     used = set(re.findall(r"self\.renderer\.([a-z_]+)", source))
@@ -350,17 +350,17 @@ class TestPureCancelPredicate:
         import importlib
         import pkgutil
 
-        import kiro_crew
+        import aj_crew
 
         found: dict[str, set[str]] = {}
         unreadable: list[str] = []
-        for mod in pkgutil.iter_modules(kiro_crew.__path__):
+        for mod in pkgutil.iter_modules(aj_crew.__path__):
             # `messaging` is the shared layer that OWNS the union rather than a
             # channel that contributes to it, so it is not a mirror of anything.
             if not mod.ispkg or mod.name == "messaging":
                 continue
             try:
-                commands = importlib.import_module(f"kiro_crew.{mod.name}.commands")
+                commands = importlib.import_module(f"aj_crew.{mod.name}.commands")
             except ModuleNotFoundError:
                 continue
             aliases: set[str] = set()
@@ -452,7 +452,7 @@ class TestToollessAgentSpecIsTheBoundary:
     def test_the_regenerated_guest_spec_mounts_no_tools_and_no_servers(self, tmp_path, monkeypatch):
         import json
 
-        from kiro_crew import agent as agent_module
+        from aj_crew import agent as agent_module
 
         monkeypatch.setattr(agent_module, "kiro_agents_dir_path", lambda: tmp_path)
         agent_module._install_guest_agent()
@@ -466,7 +466,7 @@ class TestToollessAgentSpecIsTheBoundary:
 
     def test_the_guest_spec_is_installed_with_the_lite_one(self, tmp_path, monkeypatch):
         """Every rebuild that writes the background agent writes the guest agent."""
-        from kiro_crew import agent as agent_module
+        from aj_crew import agent as agent_module
 
         monkeypatch.setattr(agent_module, "kiro_agents_dir_path", lambda: tmp_path)
         monkeypatch.setattr(agent_module, "_background_agent_model", lambda: "auto")
@@ -479,7 +479,7 @@ class TestToollessAgentSpecIsTheBoundary:
 
 class TestToollessTurnReadsTheGuestSpecOnDisk:
     """The guest spec file, not only its template, decides whether a guest turn
-    runs. Another program can rewrite ``~/.kiro/agents/kirocrew-guest.json``, and a
+    runs. Another program can rewrite ``~/.kiro/agents/ajcrew-guest.json``, and a
     tool it lists in ``allowedTools`` runs with no permission request, so the guard
     reads the file before the spawn and again after it, and refuses the turn, with
     an SEL row and a session reset, whenever either read finds anything mounted."""
@@ -488,7 +488,7 @@ class TestToollessTurnReadsTheGuestSpecOnDisk:
 
     @staticmethod
     def _guest_path() -> Path:
-        from kiro_crew import agent as agent_module
+        from aj_crew import agent as agent_module
 
         agent_module.kiro_agents_dir_path().mkdir(parents=True, exist_ok=True)
         agent_module._install_guest_agent()
@@ -505,7 +505,7 @@ class TestToollessTurnReadsTheGuestSpecOnDisk:
 
     @classmethod
     def _provider(cls) -> SimpleNamespace:
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = AcpClient(
             agent=D.TOOLLESS_TURN_AGENT, work_dir=D._toolless_turn_work_dir(cls._KEY)
@@ -634,14 +634,14 @@ class TestToollessTurnReadsTheGuestSpecOnDisk:
 
 
 class TestBackgroundTurnRefusesATooledLiteSpec:
-    """A ``kirocrew-lite`` turn runs only on a spec that mounts nothing, on every
+    """An ``ajcrew-lite`` turn runs only on a spec that mounts nothing, on every
     turn; otherwise the session is reset and released and the acquire fails, so
     the caller reads it as nothing sent."""
 
     @staticmethod
     def _install_lite(monkeypatch) -> Path:
-        from kiro_crew import agent as agent_module
-        from kiro_crew.agent_materialization.service_agents import _install_lite_agent_fallback
+        from aj_crew import agent as agent_module
+        from aj_crew.agent_materialization.service_agents import _install_lite_agent_fallback
 
         monkeypatch.setattr(agent_module, "_background_agent_model", lambda: "auto")
         monkeypatch.setattr(agent_module, "_background_cc_model", lambda: "auto")
@@ -661,7 +661,7 @@ class TestBackgroundTurnRefusesATooledLiteSpec:
             return self.provider, self.new, False
 
         def get_agent(self, _key: str) -> str:
-            return "kirocrew-lite"
+            return "ajcrew-lite"
 
         async def reset(self, _key: str, **_kw: Any) -> None:
             self.calls.append("reset")
@@ -674,19 +674,19 @@ class TestBackgroundTurnRefusesATooledLiteSpec:
 
     @staticmethod
     def _provider() -> SimpleNamespace:
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
-        client = AcpClient(agent="kirocrew-lite")
+        client = AcpClient(agent="ajcrew-lite")
         client._native_skill_projection = None
         return SimpleNamespace(client=client, last_prompt_stats=None)
 
     async def _run(self, sessions: Any) -> bool:
         from unittest.mock import patch
 
-        from kiro_crew.llm_helpers import background_turn
+        from aj_crew.llm_helpers import background_turn
 
-        with patch("kiro_crew.dashboard.handlers.usage.persist_token_record_async"):
-            async with background_turn(sessions, task="t", agent="kirocrew-lite"):
+        with patch("aj_crew.dashboard.handlers.usage.persist_token_record_async"):
+            async with background_turn(sessions, task="t", agent="ajcrew-lite"):
                 return True
 
     def _tamper(self, monkeypatch, **changes: Any) -> None:
@@ -757,12 +757,12 @@ class TestBackgroundTurnRefusesATooledLiteSpec:
 
         import pytest
 
-        from kiro_crew import agent as agent_module
+        from aj_crew import agent as agent_module
 
         agents = agent_module.kiro_agents_dir_path()
         agents.mkdir(parents=True, exist_ok=True)
         tooled = {
-            "name": "kirocrew-lite",
+            "name": "ajcrew-lite",
             "tools": [],
             "mcpServers": {"creds-agent": {"command": "creds"}},
             "includeMcpJson": False,
@@ -775,14 +775,14 @@ class TestBackgroundTurnRefusesATooledLiteSpec:
         assert sessions.calls == []
 
     def test_a_missing_lite_spec_is_left_to_the_post_start_check(self) -> None:
-        from kiro_crew.agent_sdk.agent_specs import authored_spec_toolless_verdict
+        from aj_crew.agent_sdk.agent_specs import authored_spec_toolless_verdict
 
-        assert authored_spec_toolless_verdict("kirocrew-lite") is None
+        assert authored_spec_toolless_verdict("ajcrew-lite") is None
 
     def test_a_cancellation_during_the_check_releases_the_permit(self, monkeypatch) -> None:
         import pytest
 
-        from kiro_crew import llm_helpers
+        from aj_crew import llm_helpers
 
         async def _cancelled(*_a: Any, **_k: Any) -> bool:
             raise asyncio.CancelledError

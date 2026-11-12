@@ -388,7 +388,7 @@ export function useTipTrigger(isRunning: boolean, suppressed = false, slotKey: s
     if (!isRunning || blocked) return
     const timer = setTimeout(() => {
       if (shownThisTurnRef.current) return
-      const lastShown = safeGetItem('kirocrew.tips.lastShownAt')
+      const lastShown = safeGetItem('ajcrew.tips.lastShownAt')
       if (lastShown && Date.now() - parseInt(lastShown, 10) < clientGateMs) return
       setEnabled(true)
     }, 10000)
@@ -410,7 +410,7 @@ export function useTipTrigger(isRunning: boolean, suppressed = false, slotKey: s
     if (tip && enabled && isRunning && !suppressed && !blocked && !shownThisTurnRef.current) {
       setVisible(true)
       shownThisTurnRef.current = true
-      safeSetItem('kirocrew.tips.lastShownAt', String(Date.now()))
+      safeSetItem('ajcrew.tips.lastShownAt', String(Date.now()))
       // Tell the backend the tip was actually displayed: starts the server-side
       // cadence gate and releases the offered slot (without dismissing), so
       // passive users who never click ✕ don't get the same tip re-served every

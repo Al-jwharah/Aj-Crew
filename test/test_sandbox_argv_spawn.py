@@ -23,10 +23,10 @@ import sandbox_argv_helpers
 from sandbox_argv_helpers import _POSIX_ONLY, _SECCOMP_ALLOW, _SECCOMP_EPERM, _seccomp_verdict
 from test_sandbox_launcher_program import RecordingLibc, payload
 
-import kiro_crew.sandbox as sandbox_mod
-from kiro_crew import sandbox_launcher
-from kiro_crew import sandbox_launcher_program as launcher_program
-from kiro_crew.sandbox import (
+import aj_crew.sandbox as sandbox_mod
+from aj_crew import sandbox_launcher
+from aj_crew import sandbox_launcher_program as launcher_program
+from aj_crew.sandbox import (
     _build_launcher_script,
     _resolve_agent_executable,
     _ssh_supports_accept_new,
@@ -213,7 +213,7 @@ class TestLauncherStdlibShadowing:
 
 
 class TestSignalBroadcastGuard:
-    """seccomp kill(-1) broadcast denial + KIROCREW_HOST_PID export.
+    """seccomp kill(-1) broadcast denial + AJCREW_HOST_PID export.
 
     Redo of the reverted PID-namespace isolation (24c320f6 → 14fb9442): the
     broadcast accident is contained by a static seccomp arg filter instead of
@@ -241,7 +241,7 @@ class TestSignalBroadcastGuard:
 
     @_POSIX_ONLY
     def test_launcher_script_exports_host_pid(self, monkeypatch):
-        """The launcher exports KIROCREW_HOST_PID before fork so the whole
+        """The launcher exports AJCREW_HOST_PID before fork so the whole
         subtree can resolve session_pid files by the recorded pid.
 
         Driven through the program's ``main`` with ``fork`` answering as the
@@ -249,12 +249,12 @@ class TestSignalBroadcastGuard:
         """
         # A stale value main must overwrite, set through monkeypatch so teardown restores
         # the variable: main writes it into the real environment.
-        monkeypatch.setenv("KIROCREW_HOST_PID", "0")
+        monkeypatch.setenv("AJCREW_HOST_PID", "0")
         at_fork: list[str | None] = []
         child_steps: list[str] = []
 
         def _fork() -> int:
-            at_fork.append(os.environ.get("KIROCREW_HOST_PID"))
+            at_fork.append(os.environ.get("AJCREW_HOST_PID"))
             return 0
 
         def _enter_namespaces(_launch, c2p_w, p2c_r) -> None:
@@ -275,14 +275,14 @@ class TestSignalBroadcastGuard:
     def test_kill_broadcast_denied_targeted_allowed_e2e(self, tmp_path):
         """Live e2e through the real launcher: inside the sandbox,
         ``os.kill(-1, 0)`` must fail with EPERM (seccomp) while a targeted
-        ``os.kill(own_pid, 0)`` succeeds and KIROCREW_HOST_PID is present.
+        ``os.kill(own_pid, 0)`` succeeds and AJCREW_HOST_PID is present.
 
         Safe by construction: signal 0 is a pure permission/existence probe —
         no signal is ever delivered, even if the filter were absent.
         """
         if sys.platform != "linux":
             pytest.skip("sandbox launcher is Linux-only")
-        import kiro_crew.sandbox as _sb
+        import aj_crew.sandbox as _sb
 
         if not _sb._probe_unshare():
             # Probes CLONE_NEWUSER|CLONE_NEWNS — fails closed on CI hosts
@@ -300,7 +300,7 @@ class TestSignalBroadcastGuard:
             "    print(f'BROADCAST_OSERROR_{e.errno}')\n"
             "os.kill(os.getpid(), 0)\n"
             "print('TARGETED_OK')\n"
-            "print('HOSTPID_' + ('SET' if os.environ.get('KIROCREW_HOST_PID', '').isdigit() else 'MISSING'))\n"
+            "print('HOSTPID_' + ('SET' if os.environ.get('AJCREW_HOST_PID', '').isdigit() else 'MISSING'))\n"
         )
         launcher = tmp_path / "launcher.py"
         launcher.write_text(_build_launcher_script("standard"))
@@ -325,7 +325,7 @@ class TestSignalBroadcastGuard:
         gid under an identity map, never as root, and the launcher exits with its code."""
         if sys.platform != "linux":
             pytest.skip("sandbox launcher is Linux-only")
-        import kiro_crew.sandbox as _sb
+        import aj_crew.sandbox as _sb
 
         if not _sb._probe_unshare():
             pytest.skip("user+mount namespaces unavailable on this host")
@@ -372,7 +372,7 @@ class TestSandboxExecArgv:
         """The seatbelt wrap must mark the tree, mirroring the Linux launcher.
 
         Without this marker an in-sandbox ``wrap_argv`` call cannot tell that
-        Kiro Crew's own sandbox already confines it, tries to nest, and gets EPERM
+        Aj Crew's own sandbox already confines it, tries to nest, and gets EPERM
         — which then fail-closes every app-backend and MCP spawn. The marker must
         land AFTER the ``-u`` flags (an assignment, not something ``-u`` can drop)
         and BEFORE ``sandbox-exec``.
@@ -411,11 +411,11 @@ class TestSandboxExecArgv:
             if profile_path:
                 os.unlink(profile_path)
 
-    @patch.dict(os.environ, {"PYTHONPATH": "/opt/kirocrew/site-packages", "PYTHONHOME": "/opt/py"})
+    @patch.dict(os.environ, {"PYTHONPATH": "/opt/ajcrew/site-packages", "PYTHONHOME": "/opt/py"})
     def test_strips_python_env_when_requested(self):
         # A foreign Python subprocess (kiro-cli's MCP servers, e.g. ord-mcp) must
-        # NOT inherit Kiro Crew's PYTHONPATH/PYTHONHOME, or it prepends Kiro Crew's
-        # site-packages to sys.path and imports Kiro Crew's fastmcp/cryptography
+        # NOT inherit Aj Crew's PYTHONPATH/PYTHONHOME, or it prepends Aj Crew's
+        # site-packages to sys.path and imports Aj Crew's fastmcp/cryptography
         # instead of its own. strip_python_env=True unsets them.
         argv, profile_path = sandbox_exec_argv(["kiro-cli", "acp"], "strict", strip_python_env=True)
         try:
@@ -425,10 +425,10 @@ class TestSandboxExecArgv:
             if profile_path:
                 os.unlink(profile_path)
 
-    @patch.dict(os.environ, {"PYTHONPATH": "/opt/kirocrew/site-packages", "PYTHONHOME": "/opt/py"})
+    @patch.dict(os.environ, {"PYTHONPATH": "/opt/ajcrew/site-packages", "PYTHONHOME": "/opt/py"})
     def test_preserves_python_env_by_default(self):
-        # Kiro Crew's OWN sandboxed Python subprocesses (cron scripts, app
-        # backends, code-review workers) import kiro_crew via PYTHONPATH, so it
+        # Aj Crew's OWN sandboxed Python subprocesses (cron scripts, app
+        # backends, code-review workers) import aj_crew via PYTHONPATH, so it
         # must be preserved when strip_python_env is not set (regression guard).
         argv, profile_path = sandbox_exec_argv(["python3", "worker.py"], "standard")
         try:
@@ -451,7 +451,7 @@ class TestSandboxExecArgv:
 
 @_POSIX_ONLY
 class TestNamespaceArgv:
-    @patch("kiro_crew.sandbox._resolve_agent_executable", return_value="/usr/local/bin/kiro-cli")
+    @patch("aj_crew.sandbox._resolve_agent_executable", return_value="/usr/local/bin/kiro-cli")
     def test_wraps_with_python_launcher(self, mock_resolve):
         result = namespace_argv(["kiro-cli", "acp"], "strict")
         assert result[0] == sys.executable
@@ -462,7 +462,7 @@ class TestNamespaceArgv:
         assert result[5] == "acp"
         os.unlink(result[3])
 
-    @patch("kiro_crew.sandbox._resolve_agent_executable", return_value="/usr/local/bin/kiro-cli")
+    @patch("aj_crew.sandbox._resolve_agent_executable", return_value="/usr/local/bin/kiro-cli")
     def test_established_target_that_cannot_be_restatted_refuses(self, mock_resolve, tmp_path):
         """A ``_required_targets`` entry whose ``lstat`` now fails must FAIL CLOSED.
 
@@ -489,13 +489,13 @@ class TestNamespaceArgv:
             return []
 
         with (
-            patch("kiro_crew.sandbox._materialize_sealable_ceilings", side_effect=_establish),
-            patch("kiro_crew.sandbox.os.lstat", side_effect=_lstat_fails_for_target),
+            patch("aj_crew.sandbox._materialize_sealable_ceilings", side_effect=_establish),
+            patch("aj_crew.sandbox.os.lstat", side_effect=_lstat_fails_for_target),
         ):
             with pytest.raises(sandbox_mod.SandboxCeilingUnsealable):
                 namespace_argv(["kiro-cli"], "strict")
 
-    @patch("kiro_crew.sandbox._resolve_agent_executable", return_value="/usr/local/bin/kiro-cli")
+    @patch("aj_crew.sandbox._resolve_agent_executable", return_value="/usr/local/bin/kiro-cli")
     def test_launcher_script_is_executable(self, mock_resolve):
         result = namespace_argv(["kiro-cli"], "strict")
         launcher_path = result[3]
@@ -503,7 +503,7 @@ class TestNamespaceArgv:
         assert mode & 0o700 == 0o700
         os.unlink(launcher_path)
 
-    @patch("kiro_crew.sandbox._resolve_agent_executable", return_value="/usr/local/bin/kiro-cli")
+    @patch("aj_crew.sandbox._resolve_agent_executable", return_value="/usr/local/bin/kiro-cli")
     def test_launcher_flags_precede_the_script_path(self, mock_resolve):
         """``-I -S`` must precede the script, or they are script args not flags.
 
@@ -522,7 +522,7 @@ class TestNamespaceArgv:
         finally:
             os.unlink(script)
 
-    @patch("kiro_crew.sandbox._resolve_agent_executable", return_value="/bin/true")
+    @patch("aj_crew.sandbox._resolve_agent_executable", return_value="/bin/true")
     def test_launcher_flags_block_startup_code_execution(self, mock_resolve):
         """End-to-end: the emitted flags must neutralise env-driven startup code.
 
@@ -584,8 +584,8 @@ class TestLauncherCleanupPath:
     every launcher script leaked and the caller tried to ``unlink("-I")``.
     """
 
-    @patch("kiro_crew.sandbox.detect_backend", return_value="namespace")
-    @patch("kiro_crew.sandbox._resolve_agent_executable", return_value="/bin/true")
+    @patch("aj_crew.sandbox.detect_backend", return_value="namespace")
+    @patch("aj_crew.sandbox._resolve_agent_executable", return_value="/bin/true")
     def test_cleanup_path_is_the_script_not_a_flag(self, _mock_resolve, _mock_backend):
         argv, cleanup = wrap_argv(["/bin/true"], mode="standard")
         try:
@@ -622,13 +622,13 @@ class TestPinnedEnvBin:
 
     def test_pins_absolute_path_from_trusted_system_bin(self):
         with patch(
-            "kiro_crew.platform_compat.trusted_system_bin",
+            "aj_crew.platform_compat.trusted_system_bin",
             return_value="/usr/bin/env",
         ):
             assert sandbox_mod._pinned_env_bin() == "/usr/bin/env"
 
     def test_falls_back_to_canonical_location_not_bare_name(self):
-        with patch("kiro_crew.platform_compat.trusted_system_bin", return_value=None):
+        with patch("aj_crew.platform_compat.trusted_system_bin", return_value=None):
             resolved = sandbox_mod._pinned_env_bin()
         assert os.path.isabs(resolved), f"fallback must be absolute, got {resolved!r}"
         assert resolved == "/usr/bin/env"
@@ -679,7 +679,7 @@ class TestAgentExecutableResolver:
         resolver.resolve_executable.return_value = "/opt/agent/bin/kiro-cli"
         context = MagicMock()
         context.agent_executable = resolver
-        with patch("kiro_crew.sandbox.current_context", return_value=context):
+        with patch("aj_crew.sandbox.current_context", return_value=context):
             result = _resolve_agent_executable("/usr/local/bin/kiro-cli")
         assert result == "/opt/agent/bin/kiro-cli"
         resolver.resolve_executable.assert_called_once_with("/usr/local/bin/kiro-cli")
@@ -689,19 +689,19 @@ class TestAgentExecutableResolver:
         resolver.resolve_executable.side_effect = RuntimeError("resolver unavailable")
         context = MagicMock()
         context.agent_executable = resolver
-        with patch("kiro_crew.sandbox.current_context", return_value=context):
+        with patch("aj_crew.sandbox.current_context", return_value=context):
             result = _resolve_agent_executable("/usr/local/bin/kiro-cli")
         assert result == "/usr/local/bin/kiro-cli"
 
     def test_composition_failure_propagates(self):
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         resolver = MagicMock()
         resolver.resolve_executable.side_effect = PlatformCompositionError("companion unavailable")
         context = MagicMock()
         context.agent_executable = resolver
         with (
-            patch("kiro_crew.sandbox.current_context", return_value=context),
+            patch("aj_crew.sandbox.current_context", return_value=context),
             pytest.raises(PlatformCompositionError),
         ):
             _resolve_agent_executable("/usr/local/bin/kiro-cli")
@@ -716,9 +716,9 @@ class TestSandboxNoWarningWhenExpected:
     this preserves the upstream project's "don't spam on expected states" intent.
     """
 
-    @patch("kiro_crew.sandbox._allow_unsandboxed_exec", return_value=True)
-    @patch("kiro_crew.sandbox._allow_no_isolation", return_value=True)
-    @patch("kiro_crew.sandbox.detect_backend", return_value="none")
+    @patch("aj_crew.sandbox._allow_unsandboxed_exec", return_value=True)
+    @patch("aj_crew.sandbox._allow_no_isolation", return_value=True)
+    @patch("aj_crew.sandbox.detect_backend", return_value="none")
     def test_no_sandbox_opted_in_logs_info_not_warning(
         self, mock_detect, mock_optin, mock_allow, caplog
     ):
@@ -726,7 +726,7 @@ class TestSandboxNoWarningWhenExpected:
 
         if hasattr(wrap_argv, "_warned"):
             del wrap_argv._warned  # type: ignore[attr-defined]
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.sandbox"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.sandbox"):
             wrap_argv(["kiro-cli", "acp"], mode="auto")
         warning_msgs = [r for r in caplog.records if r.levelno == logging.WARNING]
         info_msgs = [
@@ -743,15 +743,15 @@ class TestCleanupStaleSandboxProfiles:
 
     def test_removes_dead_pid_profile(self, tmp_path):
         """Profile file whose PID is dead gets removed."""
-        from kiro_crew.sandbox import cleanup_stale_sandbox_profiles
+        from aj_crew.sandbox import cleanup_stale_sandbox_profiles
 
-        run_dir = tmp_path / ".kirocrew" / "run"
+        run_dir = tmp_path / ".ajcrew" / "run"
         run_dir.mkdir(parents=True)
-        stale_file = run_dir / "kirocrew_sandbox_99999_abc123.sb"
+        stale_file = run_dir / "ajcrew_sandbox_99999_abc123.sb"
         stale_file.write_text("(version 1)")
 
-        with patch("kiro_crew.sandbox.config_dir", return_value=tmp_path / ".kirocrew"):
-            with patch("kiro_crew.sandbox.platform_compat.pid_exists", return_value=False):
+        with patch("aj_crew.sandbox.config_dir", return_value=tmp_path / ".ajcrew"):
+            with patch("aj_crew.sandbox.platform_compat.pid_exists", return_value=False):
                 removed = cleanup_stale_sandbox_profiles(
                     legacy_dir=str(tmp_path / "nonexistent"), data_home=sandbox_mod.config_dir()
                 )
@@ -765,17 +765,17 @@ class TestCleanupStaleSandboxProfiles:
         An earlier build copied the whole ~100 MB kiro-cli binary per ACP spawn
         generation into run/kiro-cli-snapshots and exec the copy. Nothing writes
         that tree now, and nothing else can reclaim it (the file sweep only
-        matches kirocrew_sandbox_* files; the tree is on the agent's
+        matches ajcrew_sandbox_* files; the tree is on the agent's
         sensitive-path floor), so an upgraded install would leak it forever.
         """
-        from kiro_crew.sandbox import cleanup_stale_sandbox_profiles
+        from aj_crew.sandbox import cleanup_stale_sandbox_profiles
 
-        home = tmp_path / ".kirocrew"
+        home = tmp_path / ".ajcrew"
         holder = home / "run" / "kiro-cli-snapshots" / "kiro-cli-acp-abc123"
         holder.mkdir(parents=True)
         (holder / "kiro-cli").write_bytes(b"orphaned copy")
 
-        with patch("kiro_crew.sandbox.config_dir", return_value=home):
+        with patch("aj_crew.sandbox.config_dir", return_value=home):
             removed = cleanup_stale_sandbox_profiles(
                 legacy_dir=str(tmp_path / "nonexistent"), data_home=sandbox_mod.config_dir()
             )
@@ -783,7 +783,7 @@ class TestCleanupStaleSandboxProfiles:
         assert not (home / "run" / "kiro-cli-snapshots").exists()
         assert removed == 1
         # The rest of run/ is untouched, and a second pass is a no-op.
-        with patch("kiro_crew.sandbox.config_dir", return_value=home):
+        with patch("aj_crew.sandbox.config_dir", return_value=home):
             assert (
                 cleanup_stale_sandbox_profiles(
                     legacy_dir=str(tmp_path / "nonexistent"), data_home=sandbox_mod.config_dir()
@@ -799,21 +799,21 @@ class TestCleanupStaleSandboxProfiles:
         that fits the once-consumed sandbox launchers would delete it between a
         spawn's cache hit and its exec. The PID in the name is the owner's own.
         """
-        from kiro_crew.sandbox import cleanup_stale_sandbox_profiles
+        from aj_crew.sandbox import cleanup_stale_sandbox_profiles
 
-        run_dir = tmp_path / ".kirocrew" / "run"
+        run_dir = tmp_path / ".ajcrew" / "run"
         run_dir.mkdir(parents=True)
-        dead = [run_dir / "kirocrew_pi_gate_99999_abc.sh", run_dir / "kirocrew_pi_gate_99999.ts"]
+        dead = [run_dir / "ajcrew_pi_gate_99999_abc.sh", run_dir / "ajcrew_pi_gate_99999.ts"]
         for f in dead:
             f.write_text("x")
-        mine_sh = run_dir / f"kirocrew_pi_gate_{os.getpid()}_def.sh"
-        mine_ts = run_dir / f"kirocrew_pi_gate_{os.getpid()}.ts"
+        mine_sh = run_dir / f"ajcrew_pi_gate_{os.getpid()}_def.sh"
+        mine_ts = run_dir / f"ajcrew_pi_gate_{os.getpid()}.ts"
         for f in (mine_sh, mine_ts):
             f.write_text("x")
             old_time = time.time() - 10 * 3600
             os.utime(f, (old_time, old_time))
 
-        with patch("kiro_crew.sandbox.config_dir", return_value=tmp_path / ".kirocrew"):
+        with patch("aj_crew.sandbox.config_dir", return_value=tmp_path / ".ajcrew"):
             removed = cleanup_stale_sandbox_profiles(
                 legacy_dir=str(tmp_path / "nonexistent"), data_home=sandbox_mod.config_dir()
             )
@@ -824,14 +824,14 @@ class TestCleanupStaleSandboxProfiles:
 
     def test_preserves_live_pid_profile(self, tmp_path):
         """Profile file whose PID is alive (current process) is preserved."""
-        from kiro_crew.sandbox import cleanup_stale_sandbox_profiles
+        from aj_crew.sandbox import cleanup_stale_sandbox_profiles
 
-        run_dir = tmp_path / ".kirocrew" / "run"
+        run_dir = tmp_path / ".ajcrew" / "run"
         run_dir.mkdir(parents=True)
-        live_file = run_dir / f"kirocrew_sandbox_{os.getpid()}_xyz789.sb"
+        live_file = run_dir / f"ajcrew_sandbox_{os.getpid()}_xyz789.sb"
         live_file.write_text("(version 1)")
 
-        with patch("kiro_crew.sandbox.config_dir", return_value=tmp_path / ".kirocrew"):
+        with patch("aj_crew.sandbox.config_dir", return_value=tmp_path / ".ajcrew"):
             removed = cleanup_stale_sandbox_profiles(
                 legacy_dir=str(tmp_path / "nonexistent"), data_home=sandbox_mod.config_dir()
             )
@@ -840,15 +840,15 @@ class TestCleanupStaleSandboxProfiles:
         assert removed == 0
 
     def test_ignores_non_sandbox_files(self, tmp_path):
-        """Files not matching kirocrew_sandbox_*.sb pattern are left alone."""
-        from kiro_crew.sandbox import cleanup_stale_sandbox_profiles
+        """Files not matching ajcrew_sandbox_*.sb pattern are left alone."""
+        from aj_crew.sandbox import cleanup_stale_sandbox_profiles
 
-        run_dir = tmp_path / ".kirocrew" / "run"
+        run_dir = tmp_path / ".ajcrew" / "run"
         run_dir.mkdir(parents=True)
         other_file = run_dir / "something_else.txt"
         other_file.write_text("keep me")
 
-        with patch("kiro_crew.sandbox.config_dir", return_value=tmp_path / ".kirocrew"):
+        with patch("aj_crew.sandbox.config_dir", return_value=tmp_path / ".ajcrew"):
             removed = cleanup_stale_sandbox_profiles(
                 legacy_dir=str(tmp_path / "nonexistent"), data_home=sandbox_mod.config_dir()
             )

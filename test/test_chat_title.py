@@ -14,10 +14,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from named_cases_helpers import named_cases
 
-from kiro_crew.acp.transport_errors import AcpTimeoutError
-from kiro_crew.acp.types import STOP_REASON_END_TURN, STOP_REASON_STALE_RECOVER
-from kiro_crew.dashboard import chat_title
-from kiro_crew.dashboard.chat_title import (
+from aj_crew.acp.transport_errors import AcpTimeoutError
+from aj_crew.acp.types import STOP_REASON_END_TURN, STOP_REASON_STALE_RECOVER
+from aj_crew.dashboard import chat_title
+from aj_crew.dashboard.chat_title import (
     _TITLE_LINE_BUDGET,
     _TITLE_LINE_MIN_KEEP,
     _TITLE_MAX_ATTACHMENT_FILES,
@@ -33,9 +33,9 @@ from kiro_crew.dashboard.chat_title import (
     _title_text,
     _validate_title_reply,
 )
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.testing.wait import await_until
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
@@ -75,7 +75,7 @@ def test_prompt_none_when_no_usable_messages():
 
 def test_prompt_strips_image_attachment_before_truncation():
     """A long upload path must not crowd the user's request out of the prompt."""
-    attachment = f"![image](/Users/example/.kirocrew/uploads/{'a' * 240}.jpg)"
+    attachment = f"![image](/Users/example/.ajcrew/uploads/{'a' * 240}.jpg)"
     prompt = _build_title_prompt(
         [{"role": "user", "content": f"{attachment}\n\ncreating titles is failing"}]
     )
@@ -300,7 +300,7 @@ def test_prompt_forbids_fetching_and_forbids_explaining():
     """The naming agent must be told the transcript is data, links are not to be
     opened, and a refusal sentence is never an acceptable reply."""
     prompt = _build_title_prompt(
-        [{"role": "user", "content": "this is the launch blog https://example.com/Intro-Kiro-Crew"}]
+        [{"role": "user", "content": "this is the launch blog https://example.com/Intro-Aj-Crew"}]
     )
     assert prompt is not None
     lowered = prompt.lower()
@@ -332,7 +332,7 @@ def test_refusal_reply_is_rejected_as_prose():
                 "Unable to retrieve the blog post",
                 "Here's a title for your conversation",
                 "It looks like you shared a link",
-                "Kiro Crew launch blog. Review requested",
+                "Aj Crew launch blog. Review requested",
                 "A very long reply that keeps going and going well past any real session title length",
             ],
         ),
@@ -361,7 +361,7 @@ def test_prose_replies_are_rejected(reply):
             "test_real_titles_accepted",
             "reply",
             [
-                "Kiro Crew launch blog",
+                "Aj Crew launch blog",
                 "Node.js upgrade plan",
                 "Ship v1.2 to prod",
                 "Fix title generation bug",
@@ -427,14 +427,14 @@ async def test_generate_title_keeps_real_reply(monkeypatch):
     """Revert guard: the same path must still return a well-formed title."""
 
     async def _fake_oneliner(*_a, **_kw):
-        return "Kiro Crew launch blog"
+        return "Aj Crew launch blog"
 
     monkeypatch.setattr(chat_title, "run_bg_oneliner", _fake_oneliner)
     title = await chat_title._generate_title_via_kiro(
         SimpleNamespace(sessions=SimpleNamespace()),
         [{"role": "user", "content": "this is the launch blog https://example.com/Intro"}],
     )
-    assert title == "Kiro Crew launch blog"
+    assert title == "Aj Crew launch blog"
 
 
 @pytest.mark.asyncio
@@ -532,7 +532,7 @@ def test_prompt_language_slot_is_the_only_insertion():
 )
 def test_ui_language_only_accepts_a_tag_shaped_value(monkeypatch, stored, expected):
     cfg = SimpleNamespace(dashboard=SimpleNamespace(language=stored))
-    monkeypatch.setattr(chat_title.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    monkeypatch.setattr(chat_title.AjCrewConfig, "load", staticmethod(lambda: cfg))
     assert chat_title._ui_language() == expected
 
 
@@ -542,13 +542,13 @@ def test_ui_language_failure_does_not_break_titling(monkeypatch):
     def _boom():
         raise OSError("config unreadable")
 
-    monkeypatch.setattr(chat_title.KiroCrewConfig, "load", staticmethod(_boom))
+    monkeypatch.setattr(chat_title.AjCrewConfig, "load", staticmethod(_boom))
     assert chat_title._ui_language() == ""
 
 
 @pytest.mark.asyncio
 async def test_ui_language_is_read_off_the_event_loop(monkeypatch):
-    """`KiroCrewConfig.load()` is synchronous file IO, which AUTOSDE's
+    """`AjCrewConfig.load()` is synchronous file IO, which AUTOSDE's
     no-blocking-call-on-event-loop rule forbids on the gateway's single loop.
     Assert the resolution actually reaches a worker thread rather than trusting
     the call site to stay correct."""
@@ -591,7 +591,7 @@ async def test_generate_title_applies_the_configured_language(monkeypatch):
 @pytest.mark.parametrize(
     "raw,expected",
     [
-        ('"Kiro Crew launch blog"', "Kiro Crew launch blog"),
+        ('"Aj Crew launch blog"', "Aj Crew launch blog"),
         ("「修复会话标题语言」", "修复会话标题语言"),
         ("“修复会话标题语言”", "修复会话标题语言"),
         ("修复会话标题语言。", "修复会话标题语言"),
@@ -605,10 +605,10 @@ def test_clean_title_strips_full_width_wrappers(raw, expected):
 def test_reveal_prefixes_unchanged_for_spaced_titles():
     """Revert guard on the animation: latin titles still step one word at a
     time, and the caller still owns the final push."""
-    assert chat_title._title_reveal_prefixes("Kiro Crew launch blog") == [
-        "Kiro",
-        "Kiro Crew",
-        "Kiro Crew launch",
+    assert chat_title._title_reveal_prefixes("Aj Crew launch blog") == [
+        "Aj",
+        "Aj Crew",
+        "Aj Crew launch",
     ]
     assert chat_title._title_reveal_prefixes("Standalone") == []
 
@@ -638,7 +638,7 @@ def test_reveal_prefixes_never_split_a_combining_mark():
 def test_reveal_prefixes_never_split_a_grapheme_cluster():
     """Cuts use grapheme boundaries, not code points: a ZWJ family, flag,
     skin-tone, keycap or accented sequence is never left dangling."""
-    from kiro_crew.imessage.plaintext import _joins_previous
+    from aj_crew.imessage.plaintext import _joins_previous
 
     title = "季度报告👨\u200d👩\u200d👧完成"
     prefixes = chat_title._title_reveal_prefixes(title)

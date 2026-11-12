@@ -12,7 +12,7 @@ import { FEATURE_REQUEST_PROMPT_FALLBACK } from '../prompts/featureRequest'
 // goes: a vulnerability to SECURITY.md, a broken install to the Report a Problem
 // dialog, a question to Discussions, the rest to the public issue forms. Every
 // one of those destinations is owned by another file, so each destination is
-// checked against the file that owns it, and the `kirocrew` command against the
+// checked against the file that owns it, and the `ajcrew` command against the
 // CLI parser in test/test_feature_request_skill_routing.py. A renamed template, a
 // moved contact link or a relabelled button then fails here instead of leaving
 // the skill sending users somewhere that no longer exists. The "Request a
@@ -24,7 +24,7 @@ import { FEATURE_REQUEST_PROMPT_FALLBACK } from '../prompts/featureRequest'
 const REPO_ROOT = resolve(__dirname, '../../..')
 const read = (rel: string) => readFileSync(resolve(REPO_ROOT, rel), 'utf-8')
 
-const skill = read('src/kiro_crew/builtin_skills/feature-request/SKILL.md')
+const skill = read('src/aj_crew/builtin_skills/feature-request/SKILL.md')
 const securityPolicy = read('SECURITY.md')
 const templates = readdirSync(resolve(REPO_ROOT, '.github/ISSUE_TEMPLATE'))
 const contactLinks: { name: string; url: string }[] = parse(
@@ -104,7 +104,7 @@ function expectInOrder(where: string, text: string, anchors: string[]) {
   }
 }
 
-const kirocrewCommands = (text: string) => [...text.matchAll(/`kirocrew ([^`]+)`/g)].map((m) => m[1])
+const ajcrewCommands = (text: string) => [...text.matchAll(/`ajcrew ([^`]+)`/g)].map((m) => m[1])
 
 describe('feature-request routing', () => {
   describe.each([
@@ -143,7 +143,7 @@ describe('feature-request routing', () => {
         expect(text).toContain(label)
       }
       expect(flat(text)).toContain(path.join(' › '))
-      expect(text).toContain('kirocrew doctor --bundle')
+      expect(text).toContain('ajcrew doctor --bundle')
     })
   })
 
@@ -203,7 +203,7 @@ describe('feature-request routing', () => {
     ])
   })
 
-  it('cites the same kirocrew commands in the fallback as in the skill', () => {
-    expect(kirocrewCommands(FEATURE_REQUEST_PROMPT_FALLBACK)).toEqual(kirocrewCommands(skill))
+  it('cites the same ajcrew commands in the fallback as in the skill', () => {
+    expect(ajcrewCommands(FEATURE_REQUEST_PROMPT_FALLBACK)).toEqual(ajcrewCommands(skill))
   })
 })

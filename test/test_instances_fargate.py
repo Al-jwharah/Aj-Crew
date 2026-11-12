@@ -3,7 +3,7 @@
 A Fargate crew is reached over the same SSM port-forward an EC2 crew is, aimed
 at an ECS task instead of a box. What differs is everything the box-shaped code
 does AFTER the forward is up: there is no dashboard on the task, so no token can
-be minted, refreshed or validated, no ``kirocrew restart`` can be sent, and the
+be minted, refreshed or validated, no ``ajcrew restart`` can be sent, and the
 card shows a turn URL rather than opening a pane. These tests pin each of those
 absences at the registry, tunnel-manager, handler and diagnostics layers, plus
 the one presence: the turn URL the card copies.
@@ -23,8 +23,8 @@ _EC2_TARGET = "i-0123456789abcdef0"
 
 def _patch_port_probe(monkeypatch) -> None:
     """Both port probes answer "free" so allocation is host-independent."""
-    import kiro_crew.instances.port_allocator as pa
-    import kiro_crew.instances.ssh_tunnel_manager as stm
+    import aj_crew.instances.port_allocator as pa
+    import aj_crew.instances.ssh_tunnel_manager as stm
 
     monkeypatch.setattr(stm, "_is_port_free", lambda port, host="127.0.0.1": True)
     monkeypatch.setattr(pa, "_is_port_free", lambda port, host="127.0.0.1": True)
@@ -51,7 +51,7 @@ class _FakeTunnel:
         aws_profile="",
         aws_region="",
     ):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         self._S = TunnelState
         self.pid = None
@@ -75,7 +75,7 @@ class _FakeTunnel:
 
 def _forbid_mints(monkeypatch):
     """Every mint seam records a call; the tests assert the list stays empty."""
-    import kiro_crew.instances.ssh_tunnel_manager as mod
+    import aj_crew.instances.ssh_tunnel_manager as mod
 
     minted: list[str] = []
 
@@ -88,13 +88,13 @@ def _forbid_mints(monkeypatch):
         return "SSH_TOKEN"
 
     monkeypatch.setattr(mod, "mint_remote_token_ssm", ssm_mint)
-    monkeypatch.setattr("kiro_crew.cloud.ssm.session_manager_plugin_installed", lambda: True)
+    monkeypatch.setattr("aj_crew.cloud.ssm.session_manager_plugin_installed", lambda: True)
     return minted, ssh_mint
 
 
 def _mgr(tmp_path, monkeypatch):
-    from kiro_crew.instances.registry import InstancesRegistry
-    from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+    from aj_crew.instances.registry import InstancesRegistry
+    from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
     _patch_port_probe(monkeypatch)
     minted, ssh_mint = _forbid_mints(monkeypatch)
@@ -120,14 +120,14 @@ def _add_fargate(reg, **overrides):
 
 class TestRegistry:
     def test_fargate_is_a_connection_method_and_forwards_over_ssm(self):
-        from kiro_crew.instances.registry import CONNECTION_METHODS, SSM_TRANSPORT_METHODS
+        from aj_crew.instances.registry import CONNECTION_METHODS, SSM_TRANSPORT_METHODS
 
         assert "fargate" in CONNECTION_METHODS
         assert SSM_TRANSPORT_METHODS == {"ssm", "fargate"}
         assert SSM_TRANSPORT_METHODS < set(CONNECTION_METHODS)
 
     def test_a_fargate_record_stores_and_round_trips_an_ecs_target(self, tmp_path):
-        from kiro_crew.instances.registry import Instance, InstancesRegistry
+        from aj_crew.instances.registry import Instance, InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         inst = _add_fargate(reg)
@@ -144,7 +144,7 @@ class TestRegistry:
         splitter the ``fargate`` transport reads with, so the stored target is
         one that lane can open.
         """
-        from kiro_crew.instances.registry import InstancesRegistry, InvalidInstanceError
+        from aj_crew.instances.registry import InstancesRegistry, InvalidInstanceError
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         with pytest.raises(InvalidInstanceError, match="ECS task target"):
@@ -153,7 +153,7 @@ class TestRegistry:
             _add_fargate(reg, ssm_target="")
 
     def test_a_fargate_record_checks_its_aws_coordinates(self, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry, InvalidInstanceError
+        from aj_crew.instances.registry import InstancesRegistry, InvalidInstanceError
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         with pytest.raises(InvalidInstanceError, match="aws_profile"):
@@ -169,7 +169,7 @@ class TestRegistry:
         whose connect forwards and then dispatches ``aws ssm send-command`` at a
         task with no SSM agent. The refusal names the method that stores it.
         """
-        from kiro_crew.instances.registry import InstancesRegistry, InvalidInstanceError
+        from aj_crew.instances.registry import InstancesRegistry, InvalidInstanceError
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         with pytest.raises(InvalidInstanceError) as exc:
@@ -183,7 +183,7 @@ class TestRegistry:
         Switching the method and the target in one call is therefore a fargate
         record by the time the arm runs, and it persists as one.
         """
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         inst = reg.add(name="EC2 crew", connection_method="ssm", ssm_target=_EC2_TARGET)
@@ -195,7 +195,7 @@ class TestRegistry:
 
     def test_an_ssm_record_cannot_take_an_ecs_target_without_changing_method(self, tmp_path):
         """The same real update() path, with the method left at ``ssm``."""
-        from kiro_crew.instances.registry import InstancesRegistry, InvalidInstanceError
+        from aj_crew.instances.registry import InstancesRegistry, InvalidInstanceError
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         inst = reg.add(name="EC2 crew", connection_method="ssm", ssm_target=_EC2_TARGET)
@@ -211,8 +211,8 @@ class TestRegistry:
 class TestTunnelManager:
     @pytest.mark.asyncio
     async def test_connect_forwards_over_ssm_and_exposes_the_turn_url(self, tmp_path, monkeypatch):
-        from kiro_crew.cloud.connect import FARGATE_TURN_PATH
-        from kiro_crew.instances.constants import DEFAULT_SSM_CONNECT_TIMEOUT_SECS
+        from aj_crew.cloud.connect import FARGATE_TURN_PATH
+        from aj_crew.instances.constants import DEFAULT_SSM_CONNECT_TIMEOUT_SECS
 
         reg, mgr, minted = _mgr(tmp_path, monkeypatch)
         _add_fargate(reg)
@@ -235,8 +235,8 @@ class TestTunnelManager:
 
         Both mint seams record every call. A fargate connect must leave them
         untouched, hold no token, schedule no refresh, and report no TTL: any one
-        of those would be the manager dispatching ``kirocrew token`` at a task
-        that has no ``kirocrew``.
+        of those would be the manager dispatching ``ajcrew token`` at a task
+        that has no ``ajcrew``.
         """
         reg, mgr, minted = _mgr(tmp_path, monkeypatch)
         _add_fargate(reg)
@@ -262,7 +262,7 @@ class TestTunnelManager:
     @pytest.mark.asyncio
     async def test_self_heal_tier_two_re_forwards_instead_of_minting(self, tmp_path, monkeypatch):
         """Tier 1 fails, tier 2 must rebuild again rather than re-mint."""
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr, minted = _mgr(tmp_path, monkeypatch)
         _add_fargate(reg)
@@ -285,7 +285,7 @@ class TestTunnelManager:
 
     @pytest.mark.asyncio
     async def test_restart_remote_is_refused_before_any_command(self, tmp_path, monkeypatch):
-        import kiro_crew.instances.ssh_tunnel_manager as mod
+        import aj_crew.instances.ssh_tunnel_manager as mod
 
         dispatched = []
 
@@ -293,13 +293,13 @@ class TestTunnelManager:
             dispatched.append(a)
             return 0, ""
 
-        monkeypatch.setattr(mod, "run_remote_kirocrew_ssm", run_ssm)
+        monkeypatch.setattr(mod, "run_remote_ajcrew_ssm", run_ssm)
         reg, mgr, _minted = _mgr(tmp_path, monkeypatch)
         _add_fargate(reg)
 
         result = await mgr.restart_remote("fg")
         assert result["ok"] is False
-        assert "no Kiro Crew gateway" in result["message"]
+        assert "no Aj Crew gateway" in result["message"]
         assert dispatched == []
 
     def test_resolve_transport_refuses_an_ec2_id_under_fargate(self, tmp_path, monkeypatch):
@@ -308,8 +308,8 @@ class TestTunnelManager:
         A record edited on disk to carry ``i-...`` under ``fargate`` would
         otherwise open a forward to a box.
         """
-        from kiro_crew.instances.registry import Instance
-        from kiro_crew.instances.validation import SsmValidationError
+        from aj_crew.instances.registry import Instance
+        from aj_crew.instances.validation import SsmValidationError
 
         _reg, mgr, _minted = _mgr(tmp_path, monkeypatch)
         inst = Instance(id="fg", name="x", connection_method="fargate", ssm_target=_EC2_TARGET)
@@ -329,8 +329,8 @@ class TestTunnelManager:
         the shape still exists on disk. Without this guard it would forward and
         fail at the mint with a generic error instead of naming the fix.
         """
-        from kiro_crew.instances.registry import Instance
-        from kiro_crew.instances.validation import SsmValidationError
+        from aj_crew.instances.registry import Instance
+        from aj_crew.instances.validation import SsmValidationError
 
         _reg, mgr, _minted = _mgr(tmp_path, monkeypatch)
         inst = Instance(id="legacy", name="x", connection_method="ssm", ssm_target=_ECS_TARGET)
@@ -414,7 +414,7 @@ class TestTunnelManager:
         await mgr.shutdown()
 
     def test_connect_timeout_is_the_ssm_default(self, tmp_path, monkeypatch):
-        from kiro_crew.instances.constants import DEFAULT_SSM_CONNECT_TIMEOUT_SECS
+        from aj_crew.instances.constants import DEFAULT_SSM_CONNECT_TIMEOUT_SECS
 
         _reg, mgr, _minted = _mgr(tmp_path, monkeypatch)
         assert mgr._connect_timeout_for("fargate") == DEFAULT_SSM_CONNECT_TIMEOUT_SECS
@@ -460,11 +460,11 @@ class _State:
 
 class TestConnectHandler:
     def _enable(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "config.json").write_text(
             json.dumps({"instances": {"enabled": True}}), encoding="utf-8"
         )
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         loader._invalidate_config_cache()
 
@@ -476,9 +476,9 @@ class TestConnectHandler:
         that is up. And a ``token`` key in this body is what an Open button would
         consume, so its absence is asserted too.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         self._enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -517,7 +517,7 @@ class TestDiagnostics:
     def _ready(self, monkeypatch, ready: bool, reason: str):
         from types import SimpleNamespace
 
-        from kiro_crew.cloud import ssm as cloud_ssm
+        from aj_crew.cloud import ssm as cloud_ssm
 
         seen = []
 
@@ -529,7 +529,7 @@ class TestDiagnostics:
         return seen
 
     def test_a_task_that_is_not_ready_stops_the_ladder_with_its_own_reason(self, monkeypatch):
-        from kiro_crew.instances import diagnostics as d
+        from aj_crew.instances import diagnostics as d
 
         seen = self._ready(monkeypatch, False, "exec channel is off; relaunch")
         result = asyncio.run(
@@ -544,7 +544,7 @@ class TestDiagnostics:
         assert seen == [("crews", _TASK, "dev", "eu-west-2")]
 
     def test_no_forward_is_not_connected_and_a_dead_forward_is_tunnel_down(self, monkeypatch):
-        from kiro_crew.instances import diagnostics as d
+        from aj_crew.instances import diagnostics as d
 
         self._ready(monkeypatch, True, "")
         result = asyncio.run(d.diagnose_instance_fargate(_ECS_TARGET, 0))
@@ -568,7 +568,7 @@ class TestDiagnostics:
         assert "dashboard" not in result.reason
 
     def test_a_non_ecs_target_is_unknown_and_reaches_no_aws_call(self, monkeypatch):
-        from kiro_crew.instances import diagnostics as d
+        from aj_crew.instances import diagnostics as d
 
         seen = self._ready(monkeypatch, True, "")
         result = asyncio.run(d.diagnose_instance_fargate(_EC2_TARGET, 5599))

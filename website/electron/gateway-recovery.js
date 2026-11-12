@@ -27,14 +27,14 @@ const path = require("path");
 //   "none"           — no gateway yet, or an adopted holder that could NOT be
 //                      positively identified as local (tunnel / external).
 //   "spawned"        — this app spawned the bundled backend on this port.
-//   "reused-local"   — adopted a local same-family Kiro Crew process.
+//   "reused-local"   — adopted a local same-family Aj Crew process.
 //   "reused-service" — like reused-local, but the holder was SERVICE-classified.
 const GATEWAY_OWNERSHIP_STATES = Object.freeze(["none", "spawned", "reused-local", "reused-service"]);
 
 /**
  * Classify an adopted (reuse-path) gateway into the ownership vocabulary.
  * Positive identification requires BOTH a same-family health answer and a
- * local LISTEN owner ("kirocrew"/"service"); anything less (tunnel, no visible
+ * local LISTEN owner ("ajcrew"/"service"); anything less (tunnel, no visible
  * owner, probe failure) stays "none" — the never-kill/never-respawn external
  * classification. Pure so the classification rule is unit-testable without
  * Electron.
@@ -44,11 +44,11 @@ const GATEWAY_OWNERSHIP_STATES = Object.freeze(["none", "spawned", "reused-local
  *                               decideGatewayAction); only "same-family" is a
  *                               positive family identification.
  * @param {string} o.localOwner  the LISTEN-owner classification for the port
- *                               ("kirocrew" | "service" | "other" | "none" | …).
+ *                               ("ajcrew" | "service" | "other" | "none" | …).
  * @returns {"reused-service" | "reused-local" | "none"}
  */
 function classifyAdoptedGateway({ reason, localOwner }) {
-  const local = reason === "same-family" && (localOwner === "kirocrew" || localOwner === "service");
+  const local = reason === "same-family" && (localOwner === "ajcrew" || localOwner === "service");
   if (!local) return "none";
   return localOwner === "service" ? "reused-service" : "reused-local";
 }
@@ -366,7 +366,7 @@ const INCUMBENT_RECOVERY_BACKOFF_MS = Object.freeze([30_000, 60_000, 120_000]);
 // line is sent once per wait and would otherwise read as a frozen countdown.
 // It says no action is needed, because the splash's only control (close, with
 // its hint) ends the recovery it describes. It stays short: the line is
-// centred over the splash's large white foreground ghost, so every extra
+// centred over the splash's large white foreground gem, so every extra
 // character on its left half is drawn white on white at the default window
 // size.
 const INCUMBENT_RETRY_STATUS = "Previous gateway still exiting — no action needed";
@@ -439,27 +439,27 @@ function unrecoverableGatewayDialog({
   const held = variant === "held";
   return {
     title: probeFailed
-      ? `Kiro Crew: can't verify what's using port ${port}`
+      ? `Aj Crew: can't verify what's using port ${port}`
       : held
-        ? `Kiro Crew: port ${port} is in use`
-        : `Kiro Crew: backend stuck on port ${port}`,
+        ? `Aj Crew: port ${port} is in use`
+        : `Aj Crew: backend stuck on port ${port}`,
     message: probeFailed
-      ? `Kiro Crew could not verify which process owns port ${port}, so it did not `
+      ? `Aj Crew could not verify which process owns port ${port}, so it did not `
         + `risk terminating an unrelated process or starting a second gateway. `
-        + `Quit and reopen Kiro Crew to try again. If the port is still blocked, `
+        + `Quit and reopen Aj Crew to try again. If the port is still blocked, `
         + `restart your computer.`
       : held
-        ? `Another process is holding port ${port}, so Kiro Crew can't reconnect to `
+        ? `Another process is holding port ${port}, so Aj Crew can't reconnect to `
           + `it or start its own backend there. Quit the process using port ${port} `
           + `(the launch log below names it; look for the "port-owner:" line), `
           + `then reopen this app.`
-        : `The Kiro Crew backend is wedged and cannot be stopped. It is in an `
+        : `The Aj Crew backend is wedged and cannot be stopped. It is in an `
           + `uninterruptible state and is still holding port ${port}, so it can't be `
           + `force-stopped or restarted in place. Restart your computer to clear it. `
           + `(This is a known backend hang; see the launch log below for the cause.)`,
     portConflict: false,
     primaryAction: "quit",
-    primaryLabel: isPrimaryWindow ? "Quit Kiro Crew" : "Close",
+    primaryLabel: isPrimaryWindow ? "Quit Aj Crew" : "Close",
     showQuitButton: false,
   };
 }
@@ -542,7 +542,7 @@ const STALE_ASSET_EXIT_CODE = 75;
  *                                      backend. A PATH or dev install that is
  *                                      missing or exits 75 has nothing stale to
  *                                      re-resolve, and a dev machine with no
- *                                      kirocrew at all must never relaunch.
+ *                                      ajcrew at all must never relaunch.
  * @param {number|null} [o.exitCode]    the child's exit status, when it exited.
  * @param {string} [o.spawnErrorCode]   the spawn error's code, when spawn failed.
  * @param {number} [o.attempts=0]       re-resolves already spent on this incident.
@@ -593,21 +593,21 @@ function isStaleBundleSignal({ exitCode = null, spawnErrorCode = "" }) {
   return exitCode === STALE_ASSET_EXIT_CODE || spawnErrorCode === "ENOENT";
 }
 
-// Resolve how to invoke a `kirocrew` SUBCOMMAND through execFile/spawn. Both
+// Resolve how to invoke an `ajcrew` SUBCOMMAND through execFile/spawn. Both
 // the gateway spawn and the lock-holder probe go through here, so the Windows
 // unwrap has one spelling: Node's shell-free execFile/spawn refuses a
-// `.cmd`/`.bat` (spawn EINVAL), so a bundled `bin\kirocrew.cmd` is replaced by
-// the bundled `python.exe` one directory up, run with `-s -P -m kiro_crew`
+// `.cmd`/`.bat` (spawn EINVAL), so a bundled `bin\ajcrew.cmd` is replaced by
+// the bundled `python.exe` one directory up, run with `-s -P -m aj_crew`
 // (`-s`/`-P` keep the user site and the spawn cwd off sys.path, exactly as the
 // shim does). The shim's other job, clearing PYTHONPATH/PYTHONHOME, is done
 // for this unwrapped spawn by buildGatewayEnvironment({ bundled: true }) in
 // gateway-env.js. Any other bin (a POSIX console script, a dev entry point) is
 // called as-is. Pure: `pathMod` defaults to the host's `path`.
 function gatewayCliInvocation(bin, subArgs, pathMod = path) {
-  if (bin.endsWith("kirocrew.cmd")) {
+  if (bin.endsWith("ajcrew.cmd")) {
     return {
       bin: pathMod.resolve(pathMod.dirname(bin), "..", "python.exe"),
-      args: ["-s", "-P", "-m", "kiro_crew", ...subArgs],
+      args: ["-s", "-P", "-m", "aj_crew", ...subArgs],
     };
   }
   return { bin, args: subArgs };

@@ -1,4 +1,4 @@
-"""Tests for the extracted ``kiro_crew.config.validation`` module.
+"""Tests for the extracted ``aj_crew.config.validation`` module.
 
 Covers the schema-introspection helpers, the ``validate_config_data`` entry
 point, and — most importantly — the new ``ConfigCache`` object, whose explicit
@@ -13,13 +13,13 @@ from importlib import metadata
 
 import pytest
 
-from kiro_crew.config import loader as _loader_module
-from kiro_crew.config import validation
+from aj_crew.config import loader as _loader_module
+from aj_crew.config import validation
 
 
 def test_published_metadata_requires_config_validator() -> None:
     """A base install must declare the validator used by the config loader."""
-    requirements = metadata.requires("kirocrew") or []
+    requirements = metadata.requires("ajcrew") or []
     assert any(
         req.lower().startswith("jsonschema") and "extra" not in req.partition(";")[2].lower()
         for req in requirements
@@ -159,7 +159,7 @@ class TestSchemaIntrospectionHelpers:
     def test_every_fail_closed_path_is_a_real_schema_path(self) -> None:
         """The exemption list must not drift from the schema: a name that stops
         matching a declared field would silently exempt nothing."""
-        from kiro_crew.config.schema import JSON_SCHEMA
+        from aj_crew.config.schema import JSON_SCHEMA
 
         for dot_path in validation._FAIL_CLOSED_PATHS:
             node = JSON_SCHEMA
@@ -194,7 +194,7 @@ class TestValidateConfigData:
     def test_unrecognized_top_level_key_warns(self, caplog: pytest.LogCaptureFixture) -> None:
         # Warnings must land on the loader's logger channel, not validation's
         # own __name__ logger (preserves the observable contract).
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data({"totally_unknown_key": 1})
         assert any("unrecognized top-level keys" in r.message for r in caplog.records)
 
@@ -203,14 +203,14 @@ class TestValidateConfigData:
         self,
         caplog: pytest.LogCaptureFixture,
     ) -> None:
-        # ``meta`` is written by KiroCrewConfig.save() itself, so warning about
-        # it means every launch scolds the user for KiroCrew's own bookkeeping —
-        # on stdout of `kirocrew token`, whose URL the user has to copy.
+        # ``meta`` is written by AjCrewConfig.save() itself, so warning about
+        # it means every launch scolds the user for Aj Crew's own bookkeeping —
+        # on stdout of `ajcrew token`, whose URL the user has to copy.
         data = {
             "meta": {"lastTouchedVersion": "1.2.3", "lastTouchedAt": "2026-01-01T00:00:00+00:00"},
             "agent": {"provider": "acp"},
         }
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data(data)
         assert not [r for r in caplog.records if "unrecognized top-level keys" in r.message]
 
@@ -220,7 +220,7 @@ class TestValidateConfigData:
         caplog: pytest.LogCaptureFixture,
     ) -> None:
         # Excluding the reserved keys must not silence the real warning.
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data({"meta": {}, "totally_unknown_key": 1})
         warnings = [r.message for r in caplog.records if "unrecognized top-level keys" in r.message]
         assert warnings and "totally_unknown_key" in warnings[0]
@@ -229,14 +229,14 @@ class TestValidateConfigData:
     def test_warning_logger_name_is_loader_not_validation(self) -> None:
         # Pin the deliberate logger-name choice so an accidental
         # getLogger(__name__) refactor is caught.
-        assert validation.logger.name == "kiro_crew.config.loader"
+        assert validation.logger.name == "aj_crew.config.loader"
 
     @pytest.mark.skipif(not validation._HAS_JSONSCHEMA, reason="jsonschema not installed")
     def test_enum_violation_warns_and_strips_value(self, caplog: pytest.LogCaptureFixture) -> None:
         # agent.provider is an enum field; an out-of-enum value must be warned
         # about and stripped in-place so the loader falls back to the default.
         data = {"agent": {"provider": "not_a_real_provider"}}
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data(data)
         assert any("enum violation" in r.message for r in caplog.records)
         # the invalid value was removed (so the dataclass default applies)
@@ -247,7 +247,7 @@ class TestValidateConfigData:
         # session.timeout_secs is an integer field; a string value is a type
         # mismatch that must be warned about and stripped.
         data = {"session": {"timeout_secs": "not-an-int"}}
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data(data)
         assert any("type mismatch" in r.message for r in caplog.records)
         assert "timeout_secs" not in data.get("session", {})
@@ -258,7 +258,7 @@ class TestValidateConfigData:
         self, caplog: pytest.LogCaptureFixture, spelling: str
     ) -> None:
         data = {"agent": {"streaming": spelling}}
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data(data)
         # Back-compat: the value is still refused, exactly as before.
         assert "streaming" not in data["agent"]
@@ -270,7 +270,7 @@ class TestValidateConfigData:
         self, caplog: pytest.LogCaptureFixture
     ) -> None:
         data = {"agent": {"streaming": "sometimes"}}
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data(data)
         messages = [r.getMessage() for r in caplog.records if "agent.streaming" in r.getMessage()]
         assert messages
@@ -306,7 +306,7 @@ class TestValidateConfigData:
 
 
 class TestLoaderBackCompatReexport:
-    """The C3 symbols remain importable from ``kiro_crew.config.loader``."""
+    """The C3 symbols remain importable from ``aj_crew.config.loader``."""
 
     def test_validate_alias_points_at_validation_impl(self) -> None:
         assert _loader_module._validate_config_data is validation.validate_config_data

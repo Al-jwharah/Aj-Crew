@@ -1,6 +1,6 @@
 """Compare slot-detail render CPU per read: main's row memo against this branch.
 
-Run with the worktree venv, PYTHONPATH=src and an isolated HOME/KIROCREW_HOME,
+Run with the worktree venv, PYTHONPATH=src and an isolated HOME/AJCREW_HOME,
 passing main's ``wire_render.py`` (for example ``git show origin/main:...``):
 
     PYTHONPATH=src .venv/bin/python test/perf/slot_render_bench.py \\
@@ -31,8 +31,8 @@ import time
 from pathlib import Path
 from unittest.mock import patch
 
-from kiro_crew.dashboard import chat_utils as cu
-from kiro_crew.dashboard import wire_render as branch
+from aj_crew.dashboard import chat_utils as cu
+from aj_crew.dashboard import wire_render as branch
 
 
 def corpus(count, tag):

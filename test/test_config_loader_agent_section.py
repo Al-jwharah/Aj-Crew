@@ -18,7 +18,7 @@ import unittest.mock
 import pytest
 from config_loader_helpers import _load_from_dict, _load_from_dict_with_logs
 
-from kiro_crew.config.loader import _HAS_JSONSCHEMA, AgentConfig, KiroCrewConfig
+from aj_crew.config.loader import _HAS_JSONSCHEMA, AgentConfig, AjCrewConfig
 
 # Skip marker for tests that require jsonschema validation
 _requires_jsonschema = pytest.mark.skipif(
@@ -33,10 +33,10 @@ def test_max_subagents_defaults_to_auto_sentinel() -> None:
     computed cap that never regresses below the legacy floor of 3. An explicit
     positive value is preserved verbatim.
     """
-    from kiro_crew.subagent import resolve_max_subagents
+    from aj_crew.subagent import resolve_max_subagents
 
     # Bare dataclass default.
-    assert KiroCrewConfig().agent.max_subagents == 0
+    assert AjCrewConfig().agent.max_subagents == 0
     # Hydrated-from-empty default (loader .get path).
     loaded = _load_from_dict({})
     assert loaded.agent.max_subagents == 0
@@ -52,7 +52,7 @@ def test_sandbox_allow_unsandboxed_exec_loads_from_config() -> None:
     # Direct construction resolves per platform too, so pin one. Both paths must
     # agree — see test_fresh_gateway_boot_does_not_write_itself_a_lockdown.
     with unittest.mock.patch("sys.platform", "linux"):
-        assert KiroCrewConfig().agent.sandbox_allow_unsandboxed_exec is False
+        assert AjCrewConfig().agent.sandbox_allow_unsandboxed_exec is False
     # The undeclared case resolves per platform, so pin one: unpinned, this line
     # would assert the fail-closed default on Linux CI and the permitting one on a
     # Windows dev box. The platform matrix itself lives in
@@ -72,7 +72,7 @@ def test_ssh_auth_sock_forward_is_not_an_agent_config_field() -> None:
     """
     import dataclasses
 
-    from kiro_crew.config.sections import AgentConfig
+    from aj_crew.config.sections import AgentConfig
 
     field_names = {f.name for f in dataclasses.fields(AgentConfig)}
     assert "sandbox_forward_ssh_auth_sock" not in field_names
@@ -88,7 +88,7 @@ def test_max_stop_hook_nudges_loads_from_config_and_round_trips() -> None:
     Without the loader wiring, load() re-defaults it to 100 and save() then
     overwrites the operator's file value.
     """
-    assert KiroCrewConfig().agent.max_stop_hook_nudges == 100
+    assert AjCrewConfig().agent.max_stop_hook_nudges == 100
     assert _load_from_dict({}).agent.max_stop_hook_nudges == 100
     pinned = _load_from_dict({"agent": {"max_stop_hook_nudges": 7}})
     assert pinned.agent.max_stop_hook_nudges == 7
@@ -102,7 +102,7 @@ def test_max_stop_hook_nudges_loads_from_config_and_round_trips() -> None:
 def test_sandbox_allow_unsandboxed_exec_default_resolves_per_platform(monkeypatch) -> None:
     """An UNDECLARED key resolves per platform, INTO the dataclass value.
 
-    :meth:`KiroCrewConfig.save` strips this key unless the operator declared it;
+    :meth:`AjCrewConfig.save` strips this key unless the operator declared it;
     writing it would turn "never decided" into a declaration that outranks the
     platform default. A declared value wins in both directions on every platform.
     """
@@ -119,7 +119,7 @@ def test_sandbox_allow_unsandboxed_exec_default_resolves_per_platform(monkeypatc
     # A declaration outranks the platform in both directions. On Windows a stored
     # false is adopted once as the stale pre-0.6.0 default, so mark that one-shot
     # done: a false written after it is the owner's lockdown.
-    from kiro_crew.config.superseded_defaults import record_adoptions
+    from aj_crew.config.superseded_defaults import record_adoptions
 
     record_adoptions({"agent.sandbox_allow_unsandboxed_exec": False})
     for plat in ("win32", "linux", "darwin"):
@@ -134,8 +134,8 @@ def _saved_agent_section(tmp_path, monkeypatch, cfg) -> dict:
     """Run ``cfg.save()`` against a tmp config dir and return the agent section written."""
     main = tmp_path / "config.json"
     local = tmp_path / "config.local.json"
-    monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: main)
-    monkeypatch.setattr("kiro_crew.config.loader.config_local_path", lambda: local)
+    monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: main)
+    monkeypatch.setattr("aj_crew.config.loader.config_local_path", lambda: local)
     cfg.save()
     return json.loads(main.read_text(encoding="utf-8")).get("agent", {})
 
@@ -144,11 +144,11 @@ def test_save_omits_the_exec_permission_when_it_was_never_declared(tmp_path, mon
     """Absence is load-bearing, so a whole-document write must not materialize it.
 
     An absent ``sandbox_allow_unsandboxed_exec`` means "no decision": it selects the
-    platform default and keeps the ``kirocrew setup`` prompt. Writing ``false`` or
+    platform default and keeps the ``ajcrew setup`` prompt. Writing ``false`` or
     ``true`` would fake a decision; both directions are pinned.
     """
     monkeypatch.setattr("sys.platform", "win32")
-    written = _saved_agent_section(tmp_path, monkeypatch, KiroCrewConfig())
+    written = _saved_agent_section(tmp_path, monkeypatch, AjCrewConfig())
     assert "sandbox_allow_unsandboxed_exec" not in written
     # The rest of the section still lands - the strip is one key, not the section.
     assert "approval_mode" in written
@@ -169,9 +169,9 @@ def test_save_preserves_the_exec_permission_once_declared(tmp_path, monkeypatch)
             json.dumps({"agent": {"sandbox_allow_unsandboxed_exec": declared}}),
             encoding="utf-8",
         )
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda m=main: m)
-        monkeypatch.setattr("kiro_crew.config.loader.config_local_path", lambda ll=local: ll)
-        cfg = KiroCrewConfig()
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda m=main: m)
+        monkeypatch.setattr("aj_crew.config.loader.config_local_path", lambda ll=local: ll)
+        cfg = AjCrewConfig()
         cfg.agent.sandbox_allow_unsandboxed_exec = declared
         cfg.save()
         written = json.loads(main.read_text(encoding="utf-8"))["agent"]
@@ -182,12 +182,12 @@ def test_fresh_boot_write_then_load_keeps_the_platform_default(tmp_path, monkeyp
     """The first-run path is construct -> save -> load, and it must not flip anything.
 
     ``cli_server._gateway`` creates the default config by constructing
-    ``KiroCrewConfig()`` directly, ``save()``-ing it, and reloading. With the key
+    ``AjCrewConfig()`` directly, ``save()``-ing it, and reloading. With the key
     stripped the fresh file carries no decision, so the reload resolves the platform
     default and the host stays both usable and undeclared.
     """
     monkeypatch.setattr("sys.platform", "win32")
-    written = _saved_agent_section(tmp_path, monkeypatch, KiroCrewConfig())
+    written = _saved_agent_section(tmp_path, monkeypatch, AjCrewConfig())
     assert "sandbox_allow_unsandboxed_exec" not in written
     assert _load_from_dict({"agent": written}).agent.sandbox_allow_unsandboxed_exec is True
 
@@ -448,21 +448,21 @@ class TestSoftStopBudget:
 
     def test_soft_stop_budget_too_low(self, caplog) -> None:
         """AgentConfig clamps soft_stop_budget_secs below 0.5 to 0.5 with a warning."""
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             cfg = AgentConfig(soft_stop_budget_secs=0.1)
         assert cfg.soft_stop_budget_secs == 0.5
         assert "out of range" in caplog.text
 
     def test_soft_stop_budget_too_high(self, caplog) -> None:
         """AgentConfig clamps soft_stop_budget_secs above 60.0 to 60.0 with a warning."""
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             cfg = AgentConfig(soft_stop_budget_secs=120.0)
         assert cfg.soft_stop_budget_secs == 60.0
         assert "out of range" in caplog.text
 
     def test_soft_stop_budget_appears_in_schema(self) -> None:
         """Generated config baseline includes soft_stop_budget_secs."""
-        from kiro_crew.config.schema import SCHEMA_REGISTRY
+        from aj_crew.config.schema import SCHEMA_REGISTRY
 
         paths = [e.path for e in SCHEMA_REGISTRY]
         assert "agent.soft_stop_budget_secs" in paths
@@ -511,7 +511,7 @@ class TestDynamicSubagentSizingFields:
 
     @_requires_jsonschema
     def test_deprecated_warning_is_once_per_value(self, monkeypatch, caplog) -> None:
-        from kiro_crew.config import validation
+        from aj_crew.config import validation
 
         monkeypatch.setattr(validation, "_REPORTED_DEPRECATED_FIELDS", set())
 
@@ -519,11 +519,11 @@ class TestDynamicSubagentSizingFields:
             return [
                 record.getMessage()
                 for record in caplog.records
-                if record.name == "kiro_crew.config.loader"
+                if record.name == "aj_crew.config.loader"
                 and "deprecated field 'agent.subagent_cpu_cost_cores'" in record.getMessage()
             ]
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             _load_from_dict({"agent": {"subagent_cpu_cost_cores": 0.8}})
             assert len(notices()) == 1
 
@@ -544,12 +544,12 @@ class TestDynamicSubagentSizingFields:
     @_requires_jsonschema
     @pytest.mark.parametrize("value", [1.0, 1], ids=["float", "int"])
     def test_the_fields_own_default_is_not_announced(self, monkeypatch, caplog, value) -> None:
-        """A config Kiro Crew just created carries the default; warning on it is
+        """A config Aj Crew just created carries the default; warning on it is
         the loader scolding its own write."""
-        from kiro_crew.config import validation
+        from aj_crew.config import validation
 
         monkeypatch.setattr(validation, "_REPORTED_DEPRECATED_FIELDS", set())
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             _load_from_dict({"agent": {"subagent_cpu_cost_cores": value}})
         assert not [r for r in caplog.records if "deprecated field" in r.getMessage()]
 
@@ -557,19 +557,19 @@ class TestDynamicSubagentSizingFields:
     def test_a_fresh_default_config_loads_without_a_deprecation_notice(
         self, monkeypatch, caplog
     ) -> None:
-        """The document the first ``kirocrew gateway`` writes, read straight back."""
-        from kiro_crew.config import validation
+        """The document the first ``ajcrew gateway`` writes, read straight back."""
+        from aj_crew.config import validation
 
         monkeypatch.setattr(validation, "_REPORTED_DEPRECATED_FIELDS", set())
-        fresh = KiroCrewConfig().to_dict()
+        fresh = AjCrewConfig().to_dict()
         assert fresh["agent"]["subagent_cpu_cost_cores"] == 1.0
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             _load_from_dict(fresh)
         assert not [r for r in caplog.records if "deprecated field" in r.getMessage()]
 
     def test_a_bool_is_never_a_numeric_default(self) -> None:
         """``False == 0`` in Python; a deprecated flag set to ``False`` was chosen."""
-        from kiro_crew.config.validation import _is_own_default
+        from aj_crew.config.validation import _is_own_default
 
         assert _is_own_default(1, 1.0)
         assert _is_own_default(False, False)

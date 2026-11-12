@@ -21,12 +21,12 @@ from session_control_helpers import (  # noqa: F401 -- autouse, registers by imp
     _fresh_stop_windows,
 )
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.handlers import session_control as handler
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.handlers import session_control as handler
 
 MEMBER_SESSION = "dashboard:member-radar"
 CHAT_SLOT_SESSION = "dashboard:chat-10-1789623359"
-MEMBER_STORE = "member-kirocrew-conductor-deadbeef"
+MEMBER_STORE = "member-ajcrew-conductor-deadbeef"
 NON_MEMBER_STORE = "default"
 
 
@@ -242,7 +242,7 @@ class TestCarriedFenceVerdict:
         # member did not create is refused at the creator fence, not served.
         from chat_test_helpers import _make_state
 
-        from kiro_crew.dashboard.chat_utils import slot_history_key
+        from aj_crew.dashboard.chat_utils import slot_history_key
 
         state = _make_state(tmp_path)
         caller = state.get_or_create_slot("chat-10-1789623359")
@@ -408,7 +408,7 @@ class TestOwnerCallerReach:
         from chat_test_helpers import _make_state
         from member_memory_helpers import json_payload
 
-        from kiro_crew.dashboard.chat_utils import slot_history_key
+        from aj_crew.dashboard.chat_utils import slot_history_key
 
         state = _make_state(tmp_path)
         caller = state.get_or_create_slot("chat-1")
@@ -420,7 +420,7 @@ class TestOwnerCallerReach:
         async def _no_turn(_state, _slot, _prompt):
             return None
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._run_chat", _no_turn)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._run_chat", _no_turn)
 
         app = web.Application()
         app["state"] = state

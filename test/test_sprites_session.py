@@ -24,18 +24,18 @@ import pytest
 from aiohttp import WSMsgType, web
 from aiohttp.test_utils import TestServer
 
-from kiro_crew.remote_session import wire
-from kiro_crew.remote_session.link import RemoteLink
-from kiro_crew.session_environment import SessionEnvironmentUnavailable
-from kiro_crew.sprites_session import launch as sprites_launch
-from kiro_crew.sprites_session.client import SpritesClient, SpritesError
-from kiro_crew.testing.wait import await_until
+from aj_crew.remote_session import wire
+from aj_crew.remote_session.link import RemoteLink
+from aj_crew.session_environment import SessionEnvironmentUnavailable
+from aj_crew.sprites_session import launch as sprites_launch
+from aj_crew.sprites_session.client import SpritesClient, SpritesError
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="POSIX guest shell")
@@ -209,7 +209,7 @@ async def fake_api(tmp_path):
     finally:
         # Stop guest workers the tests started (setsid'd, so not our children).
         with contextlib.suppress(Exception):
-            sessions = home / ".kirocrew-worker" / "sessions"
+            sessions = home / ".ajcrew-worker" / "sessions"
             for pid_file in sessions.glob("*.pid") if sessions.exists() else []:
                 with contextlib.suppress(Exception):
                     os.kill(int(pid_file.read_text().strip()), 15)
@@ -263,7 +263,7 @@ async def test_a_refused_token_says_so_without_echoing_it(tmp_path):
 async def test_a_blank_working_folder_runs_in_the_sprites_login_home(tmp_path):
     # Blank in the profile: the session's folder is what the sprite reports as
     # its login home, recorded on the row for Files and the terminal.
-    from kiro_crew.config import session_environments as se
+    from aj_crew.config import session_environments as se
 
     assert se.validate_sprites_profiles([{**PROFILE, "workdir": ""}])[0]["workdir"] == ""
     async with fake_api(tmp_path) as (fake, url):
@@ -284,7 +284,7 @@ async def test_a_sprite_is_created_only_under_the_token_its_row_recorded(tmp_pat
         assert used and TOKEN not in used
         envs._token_reader = lambda _name: "other-org/tok-2/another"
         with pytest.raises(SessionEnvironmentUnavailable, match="changed before sprite"):
-            await envs.remote_create(profile, "kirocrew-0123456789abcdef", used=used)
+            await envs.remote_create(profile, "ajcrew-0123456789abcdef", used=used)
         assert envs.registry.all() == []
 
 
@@ -294,13 +294,13 @@ async def test_a_session_gets_a_sprite_and_its_worker_is_dialled_through_the_pro
         envs, seen = _envs(tmp_path, url, fake)
         prepared = await envs.prepare("dashboard:chat-1", "fly-dev")
         row = envs.registry.get("dashboard:chat-1")
-        assert row is not None and row.name.startswith("kirocrew-") and len(row.name) == 25
+        assert row is not None and row.name.startswith("ajcrew-") and len(row.name) == 23
         assert prepared.workspace == row.name and prepared.profile_id == "fly-dev"
         assert (fake.home / "work").is_dir()  # the workdir is created in the sprite
         assert seen and set(seen) == {"SPRITES_TOKEN"}  # the vault entry the profile names
         launch = prepared.launch
         await launch.install()
-        assert (fake.home / ".kirocrew-worker" / "worker.py").exists()
+        assert (fake.home / ".ajcrew-worker" / "worker.py").exists()
         worker_id = launch.new_worker_id()
         secret = wire.new_secret()
         port = await launch.start_worker(worker_id, [sys.executable, "-u", "-c", ENGINE], secret)
@@ -413,7 +413,7 @@ async def test_a_sprite_answering_under_its_name_with_another_id_is_refused(tmp_
         envs, _ = _envs(tmp_path, url, fake)
         prepared = await envs.prepare("dashboard:chat-10", "fly-dev")
         assert envs.registry.get("dashboard:chat-10").resource_id == "sprite-1"
-        # Deleted outside Kiro Crew and another sprite created under the same name.
+        # Deleted outside Aj Crew and another sprite created under the same name.
         fake.sprites[prepared.workspace]["id"] = "sprite-someone-else"
         with pytest.raises(SessionEnvironmentUnavailable, match="another machine"):
             await envs.prepare("dashboard:chat-10", "fly-dev")
@@ -424,8 +424,8 @@ async def test_a_sprite_answering_under_its_name_with_another_id_is_refused(tmp_
 async def test_the_files_panel_and_terminal_reach_the_sprite_without_creating_it(
     tmp_path, monkeypatch
 ):
-    from kiro_crew.coder import session_browse, session_launch
-    from kiro_crew.config import live, paths
+    from aj_crew.coder import session_browse, session_launch
+    from aj_crew.config import live, paths
 
     async with fake_api(tmp_path) as (fake, url):
         envs, _ = _envs(tmp_path, url, fake)
@@ -450,7 +450,7 @@ async def test_the_files_panel_and_terminal_reach_the_sprite_without_creating_it
         assert "notes.txt" in json.dumps(listing)
         # The terminal opens the bridge, naming the vault secret, never the token.
         argv = await session_browse.remote_terminal_argv("dashboard:chat-7")
-        assert "kiro_crew.sprites_session.terminal" in argv
+        assert "aj_crew.sprites_session.terminal" in argv
         assert argv[argv.index("--sprite") + 1] == prepared.workspace
         assert argv[argv.index("--token-secret") + 1] == "SPRITES_TOKEN"
         # ...and the recorded id, which the bridge checks under the token it loads.
@@ -460,8 +460,8 @@ async def test_the_files_panel_and_terminal_reach_the_sprite_without_creating_it
 
 @sync
 async def test_health_and_unsaved_work_never_wake_a_cold_sprite(tmp_path, monkeypatch):
-    from kiro_crew.coder import session_browse, session_launch
-    from kiro_crew.config import live, paths
+    from aj_crew.coder import session_browse, session_launch
+    from aj_crew.config import live, paths
 
     async with fake_api(tmp_path) as (fake, url):
         envs, _ = _envs(tmp_path, url, fake)
@@ -499,8 +499,8 @@ def _client_init(url):
 
 @sync
 async def test_a_sprites_choice_is_prepared_by_the_sprites_provider(monkeypatch, tmp_path):
-    from kiro_crew.coder import session_launch
-    from kiro_crew.config import live, paths
+    from aj_crew.coder import session_launch
+    from aj_crew.config import live, paths
 
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path)
     section = SimpleNamespace(coder_url="", profiles=[], sprites_profiles=[PROFILE])
@@ -527,7 +527,7 @@ async def test_a_sprites_choice_is_prepared_by_the_sprites_provider(monkeypatch,
 @sync
 async def test_a_new_sprite_reports_provisioning_on_the_starting_session(tmp_path):
     # Keyed by the owner, reported on the session whose start clears it.
-    from kiro_crew import session_environment as se
+    from aj_crew import session_environment as se
 
     root, child = "dashboard:root-9", "subagent:child-9"
     se.clear_start_stage(root)
@@ -548,7 +548,7 @@ async def test_a_new_sprite_reports_provisioning_on_the_starting_session(tmp_pat
 
 
 def test_sprites_profiles_validate_and_never_hold_a_token():
-    from kiro_crew.config import session_environments as se
+    from aj_crew.config import session_environments as se
 
     good = {**PROFILE, "workdir": "/workspace/work"}
     assert se.validate_sprites_profiles([good]) == [good]
@@ -572,14 +572,14 @@ def test_sprites_profiles_validate_and_never_hold_a_token():
 
 
 def test_sprites_profiles_are_offered_without_a_coder_url(monkeypatch, tmp_path):
-    from kiro_crew.config import loader, paths
-    from kiro_crew.dashboard.handlers import session_environments as handlers
+    from aj_crew.config import loader, paths
+    from aj_crew.dashboard.handlers import session_environments as handlers
 
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path)
     good = {**PROFILE, "workdir": "/workspace/work"}
     section = SimpleNamespace(coder_url="", profiles=[], sprites_profiles=[good])
     monkeypatch.setattr(
-        loader.KiroCrewConfig,
+        loader.AjCrewConfig,
         "load",
         classmethod(lambda cls: SimpleNamespace(session_environments=section)),
     )
@@ -595,8 +595,8 @@ def test_sprites_profiles_are_offered_without_a_coder_url(monkeypatch, tmp_path)
 
 @sync
 async def test_the_readiness_check_proves_each_token_and_touches_no_sprite(tmp_path, monkeypatch):
-    from kiro_crew.config import paths
-    from kiro_crew.dashboard.handlers import session_environments as handlers
+    from aj_crew.config import paths
+    from aj_crew.dashboard.handlers import session_environments as handlers
 
     async with fake_api(tmp_path) as (fake, url):
         monkeypatch.setattr(paths, "data_home", lambda: tmp_path)
@@ -621,14 +621,14 @@ async def test_the_readiness_check_proves_each_token_and_touches_no_sprite(tmp_p
 
 
 def test_the_terminal_argv_names_the_secret_never_the_token():
-    from kiro_crew.sprites_session.terminal import bridge_argv
+    from aj_crew.sprites_session.terminal import bridge_argv
 
     argv = bridge_argv(
-        "kirocrew-0123456789abcdef", "SPRITES_TOKEN", "/workspace/work", sprite_id="sprite-1"
+        "ajcrew-0123456789abcdef", "SPRITES_TOKEN", "/workspace/work", sprite_id="sprite-1"
     )
     assert argv[-8:] == [
         "--sprite",
-        "kirocrew-0123456789abcdef",
+        "ajcrew-0123456789abcdef",
         "--sprite-id",
         "sprite-1",
         "--token-secret",
@@ -637,14 +637,14 @@ def test_the_terminal_argv_names_the_secret_never_the_token():
         "/workspace/work",
     ]
     assert TOKEN not in " ".join(argv)
-    for bad in ("--api-url=http://evil", "other-sprite", "kirocrew-XYZ"):
+    for bad in ("--api-url=http://evil", "other-sprite", "ajcrew-XYZ"):
         with pytest.raises(ValueError):
             bridge_argv(bad, "SPRITES_TOKEN", "", sprite_id="sprite-1")
     with pytest.raises(ValueError):
-        bridge_argv("kirocrew-0123456789abcdef", "--dir", "", sprite_id="sprite-1")
+        bridge_argv("ajcrew-0123456789abcdef", "--dir", "", sprite_id="sprite-1")
     for bad_id in ("", "--dir", "a b"):
         with pytest.raises(ValueError):
-            bridge_argv("kirocrew-0123456789abcdef", "SPRITES_TOKEN", "", sprite_id=bad_id)
+            bridge_argv("ajcrew-0123456789abcdef", "SPRITES_TOKEN", "", sprite_id=bad_id)
 
 
 @sync
@@ -693,17 +693,17 @@ async def test_the_terminal_bridge_carries_a_tty_session_and_resize(tmp_path, mo
     vault = tmp_path / "vault"
     vault.mkdir()
     # The bridge reads the token from the vault in its own process.
-    from kiro_crew.secrets.vault import SecretVault
+    from aj_crew.secrets.vault import SecretVault
 
-    env = {**os.environ, "KIROCREW_HOME": str(vault)}
-    monkeypatch.setenv("KIROCREW_HOME", str(vault))
+    env = {**os.environ, "AJCREW_HOME": str(vault)}
+    monkeypatch.setenv("AJCREW_HOME", str(vault))
     SecretVault(vault).set_sync("SPRITES_TOKEN", TOKEN)
     proc = await asyncio.create_subprocess_exec(
         sys.executable,
         "-m",
-        "kiro_crew.sprites_session.terminal",
+        "aj_crew.sprites_session.terminal",
         "--sprite",
-        "kirocrew-0123456789abcdef",
+        "ajcrew-0123456789abcdef",
         "--sprite-id",
         "sprite-1",
         "--token-secret",
@@ -755,13 +755,13 @@ async def test_the_terminal_bridge_carries_a_tty_session_and_resize(tmp_path, mo
 
 
 def test_the_bridge_refuses_a_non_loopback_api_override():
-    from kiro_crew.sprites_session.terminal import main
+    from aj_crew.sprites_session.terminal import main
 
     assert (
         main(
             [
                 "--sprite",
-                "kirocrew-0123456789abcdef",
+                "ajcrew-0123456789abcdef",
                 "--sprite-id",
                 "sprite-1",
                 "--token-secret",
@@ -778,7 +778,7 @@ def test_the_bridge_refuses_a_non_loopback_api_override():
 async def test_a_proxy_stream_whose_reader_stalls_stops_receiving(monkeypatch):
     """A consumer that stops reading pauses the pump: frames stay in the
     socket, so the gateway's buffer is bounded by the reader's high-water mark."""
-    from kiro_crew.sprites_session import client as sprites_client
+    from aj_crew.sprites_session import client as sprites_client
 
     monkeypatch.setattr(sprites_client, "_WS_MAX_MSG", 1024)
     received = 0
@@ -827,7 +827,7 @@ async def _async_none(*_args):
 @pytest.mark.asyncio
 async def test_a_cancelled_proxy_dial_closes_its_http_session(monkeypatch):
     """The link's handshake timeout cancels the dial; the session must not leak."""
-    from kiro_crew.sprites_session import client as sprites_client
+    from aj_crew.sprites_session import client as sprites_client
 
     connecting, closed = asyncio.Event(), asyncio.Event()
 

@@ -13,17 +13,17 @@ from contextlib import closing
 from pathlib import Path
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, snapshot_family_source, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, snapshot_family_source, unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
     d = tmp_path / "home"
     d.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(d))
-    _setup_fake_kirocrew(d)
+    monkeypatch.setenv("AJCREW_HOME", str(d))
+    _setup_fake_ajcrew(d)
     return d
 
 
@@ -244,7 +244,7 @@ class TestAFailedTreeReplacementPutsTheTreeBack:
         live_db = home / "memory.db"
         live_db.write_bytes(b"LIVE DATABASE")
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         (payload / "workspace" / "memory").mkdir(parents=True)
         (payload / "workspace" / "memory" / "new.md").write_text("x", encoding="utf-8")
         (payload / "memory.db").write_bytes(_sound_db_bytes(tmp_path / "in1_1.db"))
@@ -257,7 +257,7 @@ class TestAFailedTreeReplacementPutsTheTreeBack:
         def flaky(src, dst, **kw):
             # Fail the incoming copy into the live root; the rollback save and the
             # recovery copies must both go through.
-            if Path(dst) == tree_root and "kirocrew-snapshot-" in str(src):
+            if Path(dst) == tree_root and "ajcrew-snapshot-" in str(src):
                 raise OSError("No space left on device")
             return real(src, dst, **kw)
 
@@ -315,7 +315,7 @@ class TestAFailedTreeReplacementPutsTheTreeBack:
         assert not live_ws.exists(), "premise: no pre-restore workspace tree"
         (home / "skills").mkdir(parents=True, exist_ok=True)
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         (payload / "workspace" / "memory").mkdir(parents=True)
         (payload / "workspace" / "memory" / "new.md").write_text("y", encoding="utf-8")
         (payload / "skills" / "incoming").mkdir(parents=True)
@@ -327,7 +327,7 @@ class TestAFailedTreeReplacementPutsTheTreeBack:
         real = snap._copytree_safe
 
         def flaky(src, dst, **kw):
-            if Path(dst) == home / "skills" and "kirocrew-snapshot-" in str(src):
+            if Path(dst) == home / "skills" and "ajcrew-snapshot-" in str(src):
                 raise OSError("No space left on device")
             return real(src, dst, **kw)
 
@@ -377,7 +377,7 @@ class TestAFailedTreeReplacementPutsTheTreeBack:
         sibling.mkdir(parents=True, exist_ok=True)
         (sibling / "notes.md").write_text("NOT PART OF MEMORY", encoding="utf-8")
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         (payload / "workspace" / "memory").mkdir(parents=True)
         (payload / "workspace" / "memory" / "new.md").write_text("x", encoding="utf-8")
         (payload / "memory.db").write_bytes(_sound_db_bytes(tmp_path / "in2.db"))
@@ -388,7 +388,7 @@ class TestAFailedTreeReplacementPutsTheTreeBack:
         real = snap._copytree_safe
 
         def flaky(src, dst, **kw):
-            if Path(dst) == memory_tree and "kirocrew-snapshot-" in str(src):
+            if Path(dst) == memory_tree and "ajcrew-snapshot-" in str(src):
                 raise OSError("No space left on device")
             return real(src, dst, **kw)
 
@@ -446,7 +446,7 @@ class TestAFailedTreeReplacementPutsTheTreeBack:
         live_db = home / "memory.db"
         live_db.write_bytes(b"LIVE DATABASE")
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         (payload / "workspace" / "memory").mkdir(parents=True)
         (payload / "workspace" / "memory" / "new.md").write_text("x", encoding="utf-8")
         (payload / "memory.db").write_bytes(_sound_db_bytes(tmp_path / "in1_2.db"))
@@ -481,7 +481,7 @@ class TestAFailedTreeReplacementPutsTheTreeBack:
         live_skill.parent.mkdir(parents=True, exist_ok=True)
         live_skill.write_text("my skill", encoding="utf-8")
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         (payload / "skills" / "other").mkdir(parents=True)
         (payload / "skills" / "other" / "SKILL.md").write_text("x", encoding="utf-8")
         bundle = tmp_path / "sk.tar.gz"
@@ -492,7 +492,7 @@ class TestAFailedTreeReplacementPutsTheTreeBack:
 
         def flaky(src, dst, **kw):
             # Fail only the incoming copy into the live skills tree.
-            if Path(dst) == home / "skills" and "kirocrew-snapshot-" in str(src):
+            if Path(dst) == home / "skills" and "ajcrew-snapshot-" in str(src):
                 raise OSError("No space left on device")
             return real(src, dst, **kw)
 
@@ -534,7 +534,7 @@ class TestAFailedTreeReplacementPutsTheTreeBack:
         live.mkdir(parents=True, exist_ok=True)
         (live / "old.md").write_text("old", encoding="utf-8")
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         (payload / "workspace" / "memory").mkdir(parents=True)
         (payload / "workspace" / "memory" / "new.md").write_text("new", encoding="utf-8")
         bundle = tmp_path / "ok.tar.gz"

@@ -31,9 +31,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps.builtins.auto_research import handlers as h
-from kiro_crew.apps.builtins.auto_research.campaign import publication
-from kiro_crew.apps.builtins.auto_research.handlers import (
+from aj_crew.apps.builtins.auto_research import handlers as h
+from aj_crew.apps.builtins.auto_research.campaign import publication
+from aj_crew.apps.builtins.auto_research.handlers import (
     CampaignStatus,
     _get_db,
     create_campaign,
@@ -41,7 +41,7 @@ from kiro_crew.apps.builtins.auto_research.handlers import (
     register_routes,
     update_campaign_status,
 )
-from kiro_crew.on_loop_db import OnLoopDBGuard, OnLoopStoreError
+from aj_crew.on_loop_db import OnLoopDBGuard, OnLoopStoreError
 
 
 @pytest.fixture(autouse=True)
@@ -49,11 +49,11 @@ def _isolate(tmp_path: Path):
     """Isolate DB and research dir per test (same shape as test_auto_research)."""
     with (
         patch(
-            "kiro_crew.apps.builtins.auto_research.handlers.DB_PATH",
+            "aj_crew.apps.builtins.auto_research.handlers.DB_PATH",
             tmp_path / "test.db",
         ),
         patch(
-            "kiro_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR",
+            "aj_crew.apps.builtins.auto_research.handlers.RESEARCH_DIR",
             tmp_path / "research",
         ),
     ):
@@ -65,14 +65,14 @@ class TestOnLoopGuard:
 
     @pytest.mark.asyncio
     async def test_on_loop_get_db_raises_under_strict(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_PERSIST", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_PERSIST", "1")
         with pytest.raises(OnLoopStoreError):
             _get_db()
 
     def test_off_loop_get_db_allowed_under_strict(self, monkeypatch):
         """No running loop (worker thread / executor / CLI) is the sanctioned
         path — strict mode must not flag it."""
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_PERSIST", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_PERSIST", "1")
         conn = _get_db()
         try:
             assert conn.execute("SELECT 1").fetchone()[0] == 1
@@ -83,18 +83,18 @@ class TestOnLoopGuard:
     async def test_on_loop_get_db_warns_in_production_mode(self, monkeypatch, caplog):
         """Strict off (production): the on-loop entry proceeds but logs loudly,
         so a mis-wired call-site is never silent."""
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_PERSIST", "0")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_PERSIST", "0")
         h._ON_LOOP_DB_GUARD.reset_throttle()  # reset throttle window
-        with caplog.at_level("WARNING", logger="kiro_crew.on_loop_db"):
+        with caplog.at_level("WARNING", logger="aj_crew.on_loop_db"):
             conn = _get_db()
             conn.close()
         assert any("event loop" in r.message for r in caplog.records)
 
     @pytest.mark.asyncio
     async def test_on_loop_warning_is_throttled(self, monkeypatch, caplog):
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_PERSIST", "0")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_PERSIST", "0")
         h._ON_LOOP_DB_GUARD.reset_throttle()
-        with caplog.at_level("WARNING", logger="kiro_crew.on_loop_db"):
+        with caplog.at_level("WARNING", logger="aj_crew.on_loop_db"):
             for _ in range(3):
                 conn = _get_db()
                 conn.close()
@@ -756,10 +756,10 @@ class TestWarnThrottleClock:
 
     def test_this_surface_stays_on_the_shared_switch(self):
         """All six call sites here are offloaded, so this surface keeps the
-        shared ``KIROCREW_STRICT_ON_LOOP_PERSIST`` switch and the dev-mode arm --
+        shared ``AJCREW_STRICT_ON_LOOP_PERSIST`` switch and the dev-mode arm --
         a raise means genuinely new drift. The knowledge store deliberately
         differs (its offload backlog is separate); pin that this one does not."""
-        from kiro_crew.on_loop_db import STRICT_ENV
+        from aj_crew.on_loop_db import STRICT_ENV
 
         assert h._ON_LOOP_DB_GUARD._strict_env == STRICT_ENV
         assert h._ON_LOOP_DB_GUARD._include_dev_mode is True

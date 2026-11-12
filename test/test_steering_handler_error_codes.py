@@ -22,8 +22,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-import kiro_crew.dashboard.handlers.steering as steering_mod
-from kiro_crew.dashboard.handlers.steering import (
+import aj_crew.dashboard.handlers.steering as steering_mod
+from aj_crew.dashboard.handlers.steering import (
     STEERING_FILE_MAX_BYTES,
     api_steering_create,
     api_steering_detail,
@@ -40,7 +40,7 @@ def fake_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     (home / ".kiro" / "steering").mkdir(parents=True)
     (home / ".kiro" / "steering" / "a.md").write_text("# A\nbody\n", encoding="utf-8")
     monkeypatch.setenv("HOME", str(home))
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     monkeypatch.setattr(Path, "home", lambda: home)
     return home
 

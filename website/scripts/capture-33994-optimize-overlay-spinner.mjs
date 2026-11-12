@@ -37,7 +37,7 @@ async function run(base, theme, record) {
     theme,
     localStorageEntries: { 'mc-lang': 'en', 'mc-theme': theme, 'mc-onboarded': '1', 'mc-active-slot': SLOT, 'mc-active-slot-chat': SLOT },
     slots: [{ key: SLOT, title: 'Build triage', running: false, messages: 2,
-      agent: 'kirocrew', memory_mode: 'persistent', project: '', folder_id: '',
+      agent: 'ajcrew', memory_mode: 'persistent', project: '', folder_id: '',
       modified: 1788780000, source_links: [], source_links_total: 0 }],
     extra: async (path, route) => {
       if (path === `/api/chat/slots/${SLOT}`) {
@@ -49,7 +49,7 @@ async function run(base, theme, record) {
         await json(route, { links: [], total: 0 })
       } else if (path === '/api/members') {
         // The left dock's roster; the stub's guessed `[]` reads as a load failure.
-        await json(route, { members: [], default_agent: 'kirocrew' })
+        await json(route, { members: [], default_agent: 'ajcrew' })
       } else if (path.startsWith('/api/optimizer/optimize')) {
         // Never answered, so the overlay stays up.
       } else return false

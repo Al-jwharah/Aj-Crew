@@ -30,12 +30,12 @@ from pathlib import Path
 # The capture drives the production spawn path, and that path records telemetry.
 # Under pytest the root conftest pins this for the same reason; this script runs
 # outside pytest, so on a host with telemetry enabled a capture would land in the
-# real histogram. Set before any ``kiro_crew`` import because ``metrics.provider``
+# real histogram. Set before any ``aj_crew`` import because ``metrics.provider``
 # resolves consent on its first build and the env var outranks the config flag.
-os.environ["KIROCREW_TELEMETRY"] = "0"
+os.environ["AJCREW_TELEMETRY"] = "0"
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-# The capture lives under test/ (not src/) so that importing kiro_crew.acp.client
+# The capture lives under test/ (not src/) so that importing aj_crew.acp.client
 # does not add an edge to the agent-sdk boundary baseline. Both this script and the
 # test import it from there.
 sys.path.insert(0, str(REPO_ROOT / "test"))

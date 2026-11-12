@@ -23,8 +23,8 @@ from publish_personal_drive_helpers import (
     _stub_profiles,
 )
 
-from kiro_crew import publish_provider as pp
-from kiro_crew.publish import personal_drive as pd
+from aj_crew import publish_provider as pp
+from aj_crew.publish import personal_drive as pd
 
 # ── what the public edition registers ────────────────────────────────────────
 
@@ -46,8 +46,8 @@ def test_boot_does_not_import_the_publish_stack(monkeypatch):
     it, and the second assertion pins that the copy has not drifted.
 
     Note the setup: the parent package's ATTRIBUTE has to be deleted as well as the
-    ``sys.modules`` entry. `kiro_crew.publish` stays imported and keeps `personal_drive`
-    bound on it, so `from kiro_crew.publish import personal_drive` would resolve that
+    ``sys.modules`` entry. `aj_crew.publish` stays imported and keeps `personal_drive`
+    bound on it, so `from aj_crew.publish import personal_drive` would resolve that
     attribute and never enter the import system -- which made an earlier version of this
     test pass even with the eager import restored.
 
@@ -59,21 +59,21 @@ def test_boot_does_not_import_the_publish_stack(monkeypatch):
     """
     import sys
 
-    import kiro_crew.publish as publish_pkg
-    from kiro_crew.platform.defaults import DefaultPublishRegistry
+    import aj_crew.publish as publish_pkg
+    from aj_crew.platform.defaults import DefaultPublishRegistry
 
-    original = sys.modules.pop("kiro_crew.publish.personal_drive", None)
+    original = sys.modules.pop("aj_crew.publish.personal_drive", None)
     had_attr = hasattr(publish_pkg, "personal_drive")
     if had_attr:
         delattr(publish_pkg, "personal_drive")
     try:
         DefaultPublishRegistry().register_publish_providers()
         assert (
-            "kiro_crew.publish.personal_drive" not in sys.modules
+            "aj_crew.publish.personal_drive" not in sys.modules
         ), "bootstrap imported the provider module; the import must live inside the factory"
     finally:
         if original is not None:
-            sys.modules["kiro_crew.publish.personal_drive"] = original
+            sys.modules["aj_crew.publish.personal_drive"] = original
         if had_attr:
             setattr(publish_pkg, "personal_drive", original)
 
@@ -273,7 +273,7 @@ def test_the_distribution_is_born_with_the_drive_tag(monkeypatch, payload):
 
 
 def test_the_distribution_is_never_born_with_the_deploy_site_tag(monkeypatch, payload):
-    """Carrying kirocrew:site the pooled distribution shows on the deploy site surface,
+    """Carrying ajcrew:site the pooled distribution shows on the deploy site surface,
     where a destroy deletes the drive every artifact lives on. Supplying the final tags on
     create is what removes the window a tag-then-untag left open, and with it the
     cloudfront:UntagResource permission the shipped least-privilege policy never grants."""
@@ -312,9 +312,9 @@ def test_registration_survives_an_unreadable_registry(monkeypatch):
 
 
 def test_the_artifact_store_is_never_imported_at_module_scope():
-    """Ratchet, not decoration. ``kiro_crew.artifacts`` resolves config while it is
+    """Ratchet, not decoration. ``aj_crew.artifacts`` resolves config while it is
     still importing, which installs the platform context, which registers this provider,
-    which imports this module. A module-scope ``from kiro_crew.artifacts import ...``
+    which imports this module. A module-scope ``from aj_crew.artifacts import ...``
     therefore ran against a half-initialised module and every publish died on a
     circular-import ImportError -- it reds the sandbox shard, not this file, so only a
     check like this one stops it coming back as a tidy-up."""
@@ -325,15 +325,14 @@ def test_the_artifact_store_is_never_imported_at_module_scope():
     offenders = [
         node.module
         for node in tree.body  # module scope ONLY -- nested imports are the fix
-        if isinstance(node, ast.ImportFrom)
-        and (node.module or "").startswith("kiro_crew.artifacts")
+        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("aj_crew.artifacts")
     ]
     assert offenders == [], f"module-scope import of {offenders} recreates the cycle"
 
 
 def test_public_edition_registry_wires_the_drive(monkeypatch):
     """The platform seam is the only place the edition names a concrete provider."""
-    from kiro_crew.platform.defaults import DefaultPublishRegistry
+    from aj_crew.platform.defaults import DefaultPublishRegistry
 
     _stub_profiles(monkeypatch, ["alpha"])
     DefaultPublishRegistry().register_publish_providers()

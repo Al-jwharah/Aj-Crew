@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.mcp_gateway.gatewayd import (
+from aj_crew.mcp_gateway.gatewayd import (
     _count_open_fds,
     _read_rss_kb,
     _snapshot_state,
@@ -30,12 +30,12 @@ class TestCountOpenFds:
 
     def test_returns_minus_one_when_the_shared_probe_has_no_value(self) -> None:
         """A None from the shared probe maps to the diagnostic's -1 sentinel."""
-        with patch("kiro_crew.mcp_gateway.gatewayd._shared_count_open_fds", return_value=None):
+        with patch("aj_crew.mcp_gateway.gatewayd._shared_count_open_fds", return_value=None):
             assert _count_open_fds() == -1
 
     def test_passes_the_shared_probe_count_through_unchanged(self) -> None:
         """Delegation is thin: the shared reader's count is returned as-is."""
-        with patch("kiro_crew.mcp_gateway.gatewayd._shared_count_open_fds", return_value=7):
+        with patch("aj_crew.mcp_gateway.gatewayd._shared_count_open_fds", return_value=7):
             assert _count_open_fds() == 7
 
     def test_proc_self_fd_preferred_on_linux(self) -> None:
@@ -60,7 +60,7 @@ class TestReadRssKb:
 
     def test_returns_minus_one_when_all_sources_fail(self) -> None:
         """When the shared reader cannot measure, the diagnostic says so."""
-        with patch("kiro_crew.mcp_gateway.gatewayd._proc_rss_bytes", return_value=0):
+        with patch("aj_crew.mcp_gateway.gatewayd._proc_rss_bytes", return_value=0):
             result = _read_rss_kb()
         assert result == -1
 

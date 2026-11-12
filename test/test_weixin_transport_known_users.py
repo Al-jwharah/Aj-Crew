@@ -13,9 +13,9 @@ from __future__ import annotations
 
 import asyncio
 
-from kiro_crew.weixin import transport as _transport
-from kiro_crew.weixin.client import ITEM_TEXT
-from kiro_crew.weixin.transport import WeixinTransport
+from aj_crew.weixin import transport as _transport
+from aj_crew.weixin.client import ITEM_TEXT
+from aj_crew.weixin.transport import WeixinTransport
 
 # Import the cap when the transport exposes it; fall back to its value otherwise
 # so a transport without the named cap fails this test BEHAVIOURALLY (the set
@@ -99,7 +99,7 @@ def test_overflow_is_disclosed_once_per_snapshot_and_in_the_refusal() -> None:
     # the raw (possibly credential-shaped) target id into SEL's caller field,
     # which is not redacted on persistence; it goes in a fixed caller, and the
     # truncation is named in the redacted resources as a property of the roster.
-    import kiro_crew.weixin.transport as _t
+    import aj_crew.weixin.transport as _t
 
     captured: list[dict] = []
 
@@ -140,7 +140,7 @@ def test_an_oversized_user_id_is_served_but_not_retained() -> None:
     # The byte size of a retained id must be bounded too, but without dropping
     # the message: an over-long id is still dispatched, it is just not remembered
     # as a recent peer. A normal-length id is retained as usual.
-    from kiro_crew.weixin.transport import MAX_RETAINED_USER_ID_LEN
+    from aj_crew.weixin.transport import MAX_RETAINED_USER_ID_LEN
 
     dispatched: list[str] = []
 

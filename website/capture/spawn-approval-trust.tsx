@@ -36,7 +36,7 @@ const theme = params.get('theme') || 'dark'
 const refuse = params.get('refuse')
 const withSubagent = params.get('subagent') === '1'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // Stub the network seam: the capture server has no gateway, and every request
 // the viewer makes on mount is incidental to the card under review.
@@ -77,7 +77,7 @@ const subagents: Record<string, SubagentActivity> = withSubagent
     'sa-capture': {
       id: 'sa-capture',
       task: 'Audit the release notes for the insider build',
-      agent: 'kirocrew',
+      agent: 'ajcrew',
       status: 'pending',
       streaming: '',
       lastTool: '',

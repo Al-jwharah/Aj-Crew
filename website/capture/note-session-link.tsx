@@ -25,7 +25,7 @@ const scene = (params.get('scene') || 'other') as 'other' | 'self'
 const theme = params.get('theme') || 'dark'
 const fixOn = params.get('fix') !== 'off'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 /** Synthetic roster. Slot keys must match `chat-<n>-<unix-ts>` to resolve at all. */
 const HERE = 'chat-1-1788000000'

@@ -17,22 +17,22 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew import session_ledger, session_ledger_control
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import projection_slot_memo as memo_mod
-from kiro_crew.crew_log.projection_readers import _slot_units_for_fold
+from aj_crew import crew_log as lg
+from aj_crew import session_ledger, session_ledger_control
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import projection_slot_memo as memo_mod
+from aj_crew.crew_log.projection_readers import _slot_units_for_fold
 
 SLOT = "member-order-conductor"
 
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     # No background folds: the test reads every origin itself.
     _floor_monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     crew_log_emit.reset_caches()
@@ -56,7 +56,7 @@ def _ordered_clock(_floor_monkeypatch):
     then orders them by id, which is not creation order for ids like ``new-20`` and
     ``old-20``. Pinned at the binding the header writer reads.
     """
-    from kiro_crew.crew_log import store as crew_log_store
+    from aj_crew.crew_log import store as crew_log_store
 
     ticks = itertools.count(1_700_000_000_000, 1_000)
     _floor_monkeypatch.setattr(
@@ -163,7 +163,7 @@ def test_a_skipped_reset_unit_folds_first_once_a_newer_unit_opens(origins):
 def test_an_evicted_unit_a_backward_clock_sorts_last_still_folds_first(origins, monkeypatch):
     """A unit evicted from the order tail whose header a backward clock step sorts
     after the retained units is not the newest by succession, so it stays first."""
-    from kiro_crew.crew_log import store
+    from aj_crew.crew_log import store
 
     # Ids sort in creation order, so the real succession (createdAt, then the store's
     # id tiebreak) names u-3 newest even when a coarse clock gives all three one stamp.
@@ -257,7 +257,7 @@ def test_a_restart_after_a_resets_own_append_reads_only_the_append(monkeypatch):
     Red before the fix: the ledger list put the reset's unrecorded unit FIRST, so its own
     append retired the savepoint and the restart folded every entry of the old unit.
     """
-    from kiro_crew.crew_log import checkpoint as savepoints
+    from aj_crew.crew_log import checkpoint as savepoints
 
     monkeypatch.setattr(savepoints, "MIN_ADVANCE_ENTRIES", 2)
     costs = []

@@ -8,7 +8,7 @@ import type { APIRequestContext } from '@playwright/test'
  * nothing. It now seeds the precondition instead.
  *
  * Seeding is additive (POST /api/chat/slots), never destructive, so unlike the
- * tag-column specs this needs no KIROCREW_E2E_EPHEMERAL guard. Only the missing
+ * tag-column specs this needs no AJCREW_E2E_EPHEMERAL guard. Only the missing
  * slots are created, and each gets a distinct title so the restore assertion
  * cannot pass by comparing two identical strings.
  */

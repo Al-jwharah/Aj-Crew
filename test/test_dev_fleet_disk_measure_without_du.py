@@ -22,7 +22,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.apps.builtins.dev_fleet import fleet_state, runtime
+from aj_crew.apps.builtins.dev_fleet import fleet_state, runtime
 
 # An opaque stand-in for a resolved ``du``. Built from the platform temp dir
 # rather than written as a POSIX literal so the file carries no path that

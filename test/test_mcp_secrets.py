@@ -1,4 +1,4 @@
-"""Unit tests for the sandboxed ``kirocrew-secrets`` MCP forwarder.
+"""Unit tests for the sandboxed ``ajcrew-secrets`` MCP forwarder.
 
 The forwarder holds NO vault access: it POSTs non-secret intent to the host
 ``/api/mediated-secret-request`` over loopback. Network and config seams are mocked.
@@ -13,9 +13,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import mcp_secrets
-from kiro_crew.mcp_caller import SOURCE_ENV, SOURCE_PROTECTED, SOURCE_TOKEN, OwnIdentity
-from kiro_crew.validation import ValidationError
+from aj_crew import mcp_secrets
+from aj_crew.mcp_caller import SOURCE_ENV, SOURCE_PROTECTED, SOURCE_TOKEN, OwnIdentity
+from aj_crew.validation import ValidationError
 
 
 @pytest.fixture(autouse=True)
@@ -158,7 +158,7 @@ def test_posix_never_falls_back_to_tcp(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_windows_sends_over_the_verified_tcp_opener(monkeypatch: pytest.MonkeyPatch) -> None:
     """Windows has no Unix socket: both calls go over loopback TCP, and the hook
     refuses unless the connected peer is this user's recorded gateway."""
-    from kiro_crew import cli_server_peer
+    from aj_crew import cli_server_peer
 
     monkeypatch.setattr(mcp_secrets.platform_compat, "IS_WINDOWS", True)
     monkeypatch.setattr(mcp_secrets, "_resolve_session_key", lambda: "member:alice")
@@ -209,7 +209,7 @@ def test_resolve_session_key_uses_the_signed_session_token(
         lambda: OwnIdentity(session_key="token-sess", source=SOURCE_TOKEN),
         raising=False,
     )
-    monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
+    monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
     assert mcp_secrets._resolve_session_key() == "token-sess"
 
 
@@ -218,11 +218,11 @@ def test_resolve_session_key_real_ladder_keeps_a_revoked_record_a_refusal(
 ) -> None:
     """Through the REAL shared ladder, an explicit invalid protected record
     stops resolution: the ambient env key is never sent."""
-    import kiro_crew.member_memory_auth as member_memory_auth
+    import aj_crew.member_memory_auth as member_memory_auth
 
     monkeypatch.setattr(mcp_secrets, "current_caller", lambda: None)
     monkeypatch.setattr(member_memory_auth, "protected_member_session_for_pid", lambda _pid: "")
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "env-sess")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "env-sess")
     assert mcp_secrets._resolve_session_key() == ""
 
 
@@ -231,14 +231,14 @@ def test_resolve_session_key_real_ladder_keeps_a_raising_probe_a_refusal(
 ) -> None:
     """Through the REAL shared ladder, a protected probe that raises is a
     refusal, never a fall-through to the ambient env key."""
-    import kiro_crew.member_memory_auth as member_memory_auth
+    import aj_crew.member_memory_auth as member_memory_auth
 
     def _raise(_pid: int) -> str:
         raise PermissionError("binding unreadable")
 
     monkeypatch.setattr(mcp_secrets, "current_caller", lambda: None)
     monkeypatch.setattr(member_memory_auth, "protected_member_session_for_pid", _raise)
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "env-sess")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "env-sess")
     assert mcp_secrets._resolve_session_key() == ""
 
 
@@ -297,7 +297,7 @@ def test_resolve_session_key_revoked_record_is_a_hard_refusal(
         lambda: OwnIdentity(session_key="", source=SOURCE_PROTECTED),
         raising=False,
     )
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "env-sess")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "env-sess")
     assert mcp_secrets._resolve_session_key() == ""
 
 
@@ -313,7 +313,7 @@ def test_resolve_session_key_failed_identity_is_a_hard_refusal(
         lambda: OwnIdentity(source=SOURCE_PROTECTED, failed=True),
         raising=False,
     )
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "env-sess")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "env-sess")
     assert mcp_secrets._resolve_session_key() == ""
 
 
@@ -469,7 +469,7 @@ def test_refuses_a_rebound_dashboard_socket_before_sending(monkeypatch: pytest.M
 
     The untrusted ACP harness is an ancestor, so an ancestor check would admit it after
     a socket rebind. Only the kernel facts ``cli_server_peer`` reads are patched."""
-    from kiro_crew import cli_server, cli_server_peer
+    from aj_crew import cli_server, cli_server_peer
 
     monkeypatch.setattr(mcp_secrets, "_resolve_session_key", lambda: "member:alice")
     monkeypatch.setattr(mcp_secrets, "current_caller", lambda: None)
@@ -600,7 +600,7 @@ def test_an_auto_approved_call_mints_no_capability_so_dispatch_refuses() -> None
     ``approve_tool`` is the only minting site, so dispatch refuses the egress; the
     capability gate, not the mount shape, stops it.
     """
-    from kiro_crew import mediated_request_capability as cap
+    from aj_crew import mediated_request_capability as cap
 
     # No approval ran for this call id, so nothing was minted (the auto-approved
     # path bypasses approve_tool). A claim therefore matches no grant.

@@ -2,7 +2,7 @@
 
 ``edition_check`` is the seam through which an installed edition answers for work
 the evaluator cannot read itself. The core names no check: it validates two
-fields, runs ``kirocrew acceptance-check --json <check> <ref>``, and believes the
+fields, runs ``ajcrew acceptance-check --json <check> <ref>``, and believes the
 answer only when the exit code and the printed report agree. Three properties are
 pinned here, each the way the rest of the evaluator's tests pin them:
 
@@ -14,7 +14,7 @@ pinned here, each the way the rest of the evaluator's tests pin them:
   outcome the evaluator cannot vouch for is an ``error``, never ``fail`` or
   ``pass``.
 
-No network and no real ``kirocrew``: ``subprocess.run`` is replaced by a script
+No network and no real ``ajcrew``: ``subprocess.run`` is replaced by a script
 that records every argv and answers from a fixed list. The check name and the
 reference below are placeholders; no edition's real check is named in the core.
 """
@@ -29,14 +29,14 @@ from pathlib import Path
 import pytest
 from skill_script_helpers import load_skill_script
 
-from kiro_crew import work_ledger as wl
-from kiro_crew.skills import _BUILTIN_SKILLS_DIR
+from aj_crew import work_ledger as wl
+from aj_crew.skills import _BUILTIN_SKILLS_DIR
 
 SCRIPT = Path(_BUILTIN_SKILLS_DIR) / "goal-conductor" / "scripts" / "accept_eval.py"
 
 CHECK = "example-review"
 REF = "ITEM-42"
-ARGV = ["kirocrew", "acceptance-check", "--json", CHECK, REF]
+ARGV = ["ajcrew", "acceptance-check", "--json", CHECK, REF]
 
 
 class _Proc:
@@ -154,7 +154,7 @@ def test_the_longest_valid_fields_are_accepted(monkeypatch):
     seen = _wire(mod, monkeypatch, [_Proc(0, _report("pass", check=check, ref=ref))])
     verdict, _ = mod._evaluate(_spec(check=check, ref=ref))
     assert verdict == "pass"
-    assert seen == [["kirocrew", "acceptance-check", "--json", check, ref]]
+    assert seen == [["ajcrew", "acceptance-check", "--json", check, ref]]
 
 
 # --------------------------------------------------------------------------- #
@@ -186,12 +186,12 @@ def test_every_argv_element_is_a_template_literal_or_a_validated_field(monkeypat
     [argv] = seen
     assert argv[0] in mod._SELF_BUILT_COMMANDS
     for element in argv:
-        assert element in {"kirocrew", "acceptance-check", "--json", CHECK, REF}, element
+        assert element in {"ajcrew", "acceptance-check", "--json", CHECK, REF}, element
 
 
-def test_the_self_built_commands_are_exactly_gh_and_kirocrew():
+def test_the_self_built_commands_are_exactly_gh_and_ajcrew():
     mod = _load()
-    assert mod._SELF_BUILT_COMMANDS == {"gh", "kirocrew"}
+    assert mod._SELF_BUILT_COMMANDS == {"gh", "ajcrew"}
 
 
 def test_the_ledger_mirror_uses_the_evaluators_own_patterns():
@@ -236,18 +236,18 @@ def test_a_needs_person_refusal_says_a_person_decides(monkeypatch):
 
 
 def test_exit_2_means_no_edition_provides_the_check(monkeypatch):
-    """The public ``kirocrew`` knows no check: its ``acceptance-check`` exits 2. An
+    """The public ``ajcrew`` knows no check: its ``acceptance-check`` exits 2. An
     edition's command exits 2 too for a check name it does not know. Exit 2 has
-    that one meaning, so the evidence says only that, and names the ``kirocrew``
+    that one meaning, so the evidence says only that, and names the ``ajcrew``
     that answered."""
     mod = _load()
     monkeypatch.setattr(mod.shutil, "which", lambda name: f"/opt/example/bin/{name}")
-    _wire(mod, monkeypatch, [_Proc(2, "", "kirocrew: error: argument <command>: invalid choice")])
+    _wire(mod, monkeypatch, [_Proc(2, "", "ajcrew: error: argument <command>: invalid choice")])
     verdict, evidence = mod._evaluate(_spec())
     assert verdict == "error"
     assert f"no installed edition provides the acceptance check {CHECK!r}:" in evidence
     assert "refused the arguments" not in evidence
-    assert "kirocrew on PATH is /opt/example/bin/kirocrew" in evidence
+    assert "ajcrew on PATH is /opt/example/bin/ajcrew" in evidence
 
 
 def test_exit_4_is_the_editions_could_not_answer(monkeypatch):
@@ -262,13 +262,13 @@ def test_exit_4_is_the_editions_could_not_answer(monkeypatch):
     assert "no installed edition provides" not in evidence
 
 
-def test_an_answer_it_cannot_vouch_for_names_the_kirocrew_on_path(monkeypatch):
+def test_an_answer_it_cannot_vouch_for_names_the_ajcrew_on_path(monkeypatch):
     mod = _load()
     monkeypatch.setattr(mod.shutil, "which", lambda name: None)
     _wire(mod, monkeypatch, [_Proc(0, _report("fail"))])
     verdict, evidence = mod._evaluate(_spec())
     assert verdict == "error"
-    assert "no kirocrew on PATH" in evidence
+    assert "no ajcrew on PATH" in evidence
 
 
 def test_naming_the_binary_never_changes_the_argv(monkeypatch):
@@ -327,9 +327,9 @@ def test_an_outcome_the_evaluator_cannot_vouch_for_is_an_error(monkeypatch, retu
     assert verdict == "error", (returncode, stdout[:80])
 
 
-def test_no_kirocrew_on_path_is_an_error(monkeypatch):
+def test_no_ajcrew_on_path_is_an_error(monkeypatch):
     mod = _load()
-    _wire(mod, monkeypatch, [FileNotFoundError("kirocrew")])
+    _wire(mod, monkeypatch, [FileNotFoundError("ajcrew")])
     verdict, evidence = mod._evaluate(_spec())
     assert verdict == "error"
     assert "not found on PATH" in evidence

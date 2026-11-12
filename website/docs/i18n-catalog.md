@@ -64,7 +64,7 @@ continues to index the stable English text. Run `npm run gen:settings` after
 changing a setting label or its translation key.
 
 That command writes **two** artifacts: the UI registry, and
-`src/kiro_crew/docs/settings-registry.generated.json` — the agent-facing
+`src/aj_crew/docs/settings-registry.generated.json` — the agent-facing
 enumeration bundled into the Python docs package, so the agent can answer "where
 is that setting?" with a working deep link. Both are byte-matched against a live
 extraction by `settingsRegistry.test.ts`, so regenerating is not optional. The
@@ -149,7 +149,7 @@ positive cases from `SUPPORTED_CODES` so a new language is covered automatically
 
 Catalog values never hardcode the displayed product name. They interpolate
 `{{productName}}`, which `initI18n()` supplies to i18next as
-`interpolation.defaultVariables` with the stock value `Kiro Crew`, so the stock
+`interpolation.defaultVariables` with the stock value `Aj Crew`, so the stock
 build renders exactly what a literal would. The indirection exists for
 downstream editions: overriding one variable rebrands every catalog string,
 instead of forking 13 locale files through every upstream sync (see
@@ -168,14 +168,14 @@ Authoring rules that follow:
   is a hard zero), so they keep the literal English name.
 - **Attribution and data-egress copy keeps the literal too.** A string whose
   referent does not change with an edition must not interpolate the name:
-  `app.star_kirocrew_on_github` wraps a hardcoded upstream repo URL, and the
+  `app.star_ajcrew_on_github` wraps a hardcoded upstream repo URL, and the
   survey (`components.sessionPulseSurveyCard.email_disclosure`) and install
   receipts (`privacyDisclosure.installReceipt*`) name the recipient of data
   sent to hardcoded upstream endpoints. Interpolating those would make an
   edition misattribute a link target or where user data goes.
 - **Wire-format identifiers keep their unspaced literal.** The generated
-  Slack app name (`KiroCrew-{{alias}}`) and the webhook signature headers
-  (`X-KiroCrew-Timestamp` / `X-KiroCrew-Signature`) are fixed by the backend,
+  Slack app name (`AjCrew-{{alias}}`) and the webhook signature headers
+  (`X-AjCrew-Timestamp` / `X-AjCrew-Signature`) are fixed by the backend,
   so the UI must spell them exactly whatever the edition renders elsewhere.
 - **A call-time variable of the same name wins** over the default, per
   i18next's merge order — useful when a string names a *different* crew.
@@ -294,7 +294,7 @@ wrong.
 
 An app's `displayName`, `description`, `highlights[]`, `useCases[]`,
 `configuration[]`, and `ui.pages[0].label` live in
-`src/kiro_crew/apps/builtins/<app>/app.json` on the **Python** side, and the App Store
+`src/aj_crew/apps/builtins/<app>/app.json` on the **Python** side, and the App Store
 components interpolate them raw. So they were English in every locale, and the nav rail
 read `Papyrus` while that app's own page header was translated.
 
@@ -305,7 +305,7 @@ Render through its resolvers — `appDisplayName`, `appDescription`, `appPageLab
 
 **It is additive on purpose: `app.json` keeps its English.** The obvious design is VS
 Code's, a `%key%` placeholder inside the manifest, and it was rejected because it
-*replaces* the English. `kirocrew app list` prints `displayName` straight to a terminal
+*replaces* the English. `ajcrew app list` prints `displayName` straight to a terminal
 with no catalog, and `ui_language_tag()` returns `''` whenever the user is on "follow the
 browser" — so resolving there would mean a second localisation stack in Python plus a
 request locale the backend does not have. Keeping the manifest untouched leaves every
@@ -425,7 +425,7 @@ registry a reviewer has to go look up.
 
 The sidebar's **By name** folder order is the standing example, and a deliberate
 one. `naturalNameCompare` in `src/utils/folderTree.ts` and `_chat_folder_natural_key`
-in `src/kiro_crew/mcp_dashboard.py` sort the same way, operation for operation:
+in `src/aj_crew/mcp_dashboard.py` sort the same way, operation for operation:
 only ASCII `A`-`Z` is case-folded, runs of ASCII digits compare by value
 (`01.` < `02.` < `10.`), and every other character compares by UTF-16 code unit.
 Not `compareText`, not `Intl.Collator`, not Python's `locale.strxfrm`.

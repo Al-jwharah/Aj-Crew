@@ -9,8 +9,8 @@ import logging
 
 import pytest
 
-from kiro_crew import history, history_search
-from kiro_crew.history import ConversationLog
+from aj_crew import history, history_search
+from aj_crew.history import ConversationLog
 
 
 class TestForgeReferenceSearch:
@@ -449,9 +449,9 @@ class TestForgeReferenceSearch:
         ending in a digit — the exact reference the query named.
         """
         log = ConversationLog(base_dir=tmp_path)
-        log.append("digit_repo", "assistant", "see kirocrew2#4411 for the fix")
+        log.append("digit_repo", "assistant", "see ajcrew2#4411 for the fix")
 
-        assert {s["key"] for s in log.search_sessions("kirocrew2#4411", 10)} == {"digit_repo"}
+        assert {s["key"] for s in log.search_sessions("ajcrew2#4411", 10)} == {"digit_repo"}
         assert {s["key"] for s in log.search_sessions("#4411", 10)} == {"digit_repo"}
 
     def test_digits_inside_a_longer_number_are_the_one_dropped_case(self, tmp_path):
@@ -542,7 +542,7 @@ class TestForgeReferenceSearch:
             "issues/42",
             "merge_requests/12",
             "kirodotdev/kirocrew#4411",
-            "kirocrew2#4411",
+            "ajcrew2#4411",
             "https://github.com/kirodotdev/kirocrew/pull/4411",
             "https://gitlab.com/grp/proj/-/merge_requests/12",
         ],

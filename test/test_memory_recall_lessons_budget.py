@@ -1,6 +1,6 @@
 """The recall bound drops low-ranked rows before it drops the lessons block."""
 
-from kiro_crew.memory_recall import bound_recall_payload
+from aj_crew.memory_recall import bound_recall_payload
 
 LESSON = "[lesson] In wiki markup a bare double dash starts struck-out text.\n"
 

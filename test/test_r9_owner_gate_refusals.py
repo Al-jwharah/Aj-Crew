@@ -19,7 +19,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.side_state import SideState
+from aj_crew.dashboard.side_state import SideState
 
 pytestmark = pytest.mark.asyncio
 
@@ -57,7 +57,7 @@ async def _assert_owner_only(response) -> None:
 
 
 def _autonudge_app(monkeypatch):
-    from kiro_crew.dashboard.handlers import autonudge
+    from aj_crew.dashboard.handlers import autonudge
 
     svc = MagicMock()
     svc.get_by_id = MagicMock(return_value=None)
@@ -84,7 +84,7 @@ async def _assert_monitor_owner_required(response) -> None:
 
 
 async def test_autonudge_start_refuses_non_owner(monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import autonudge
+    from aj_crew.dashboard.handlers import autonudge
 
     armed = AsyncMock(return_value=(SimpleNamespace(loop_id="l1"), None, 200))
     monkeypatch.setattr(autonudge, "authorize_and_add_nudge", armed)
@@ -190,7 +190,7 @@ _TASKRUNNER_ROUTES = [
     ids=[row[3] for row in _TASKRUNNER_ROUTES],
 )
 async def test_taskrunner_route_refuses_non_owner(method, pattern, url, handler, body) -> None:
-    from kiro_crew.dashboard.handlers import taskrunner
+    from aj_crew.dashboard.handlers import taskrunner
 
     app = web.Application(middlewares=[_non_owner])
     app["state"] = _GateOnlyState()
@@ -236,7 +236,7 @@ _MEMORY_ROUTES = [
 async def test_memory_write_refuses_non_owner(
     monkeypatch, method, pattern, url, handler, body
 ) -> None:
-    from kiro_crew.dashboard.handlers import memory
+    from aj_crew.dashboard.handlers import memory
 
     # Three routes resolve their store before the write gate: a read that loads the
     # markdown tier, or the lesson-store identity check. Both are stubbed so the
@@ -258,7 +258,7 @@ async def test_memory_write_refuses_non_owner(
 
 
 async def test_computer_use_config_refuses_non_owner(monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import computer_use
+    from aj_crew.dashboard.handlers import computer_use
 
     write_state = MagicMock()
     monkeypatch.setattr(computer_use, "_write_state", write_state)
@@ -273,8 +273,8 @@ async def test_computer_use_config_refuses_non_owner(monkeypatch) -> None:
 
 
 async def test_update_apply_refuses_non_owner(monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import updates
-    from kiro_crew.platform import update_provider
+    from aj_crew.dashboard.handlers import updates
+    from aj_crew.platform import update_provider
 
     applied = AsyncMock(return_value=None)
     monkeypatch.setattr(update_provider, "apply_policy_update", applied)
@@ -287,7 +287,7 @@ async def test_update_apply_refuses_non_owner(monkeypatch) -> None:
 
 
 async def test_side_turn_refuses_non_owner(monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import side
+    from aj_crew.dashboard.handlers import side
 
     dispatch = MagicMock(return_value="run-1")
     monkeypatch.setattr(side, "_dispatch_side_turn", dispatch)

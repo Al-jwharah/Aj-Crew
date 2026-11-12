@@ -15,8 +15,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_chat_pins_helpers import _client, _make_app, _make_state, _pin
 
-from kiro_crew.dashboard import chat_pins as chat_pins_module
-from kiro_crew.dashboard.chat_pins import _MAX_PINS_PER_SLOT
+from aj_crew.dashboard import chat_pins as chat_pins_module
+from aj_crew.dashboard.chat_pins import _MAX_PINS_PER_SLOT
 
 # ── Finding 1: Race condition — slot deleted concurrently ──
 
@@ -215,7 +215,7 @@ async def test_load_preserves_legacy_pins_without_mid(tmp_path, monkeypatch):
     """Legacy pins (pre-mid era) without the mid field are preserved on load."""
     import json as _json
 
-    from kiro_crew.dashboard import state as state_module
+    from aj_crew.dashboard import state as state_module
 
     monkeypatch.setattr(state_module, "config_dir", lambda: tmp_path)
 
@@ -479,7 +479,7 @@ async def test_slot_reuse_cross_app_delete_by_query_denial(tmp_path, monkeypatch
         }
     )
     audit = MagicMock()
-    monkeypatch.setattr("kiro_crew.dashboard.chat_pins.sel", lambda: audit)
+    monkeypatch.setattr("aj_crew.dashboard.chat_pins.sel", lambda: audit)
 
     async with _client(tmp_path, state=state, app_name="app-b") as client:
         resp = await client.delete("/api/chat/pins/by-query?slot=slot-reuse&mid=m-old-app-a-two")
@@ -623,7 +623,7 @@ async def test_record_ownership_denial_is_sel_audited(tmp_path, monkeypatch):
         }
     )
     audit = MagicMock()
-    monkeypatch.setattr("kiro_crew.dashboard.chat_pins.sel", lambda: audit)
+    monkeypatch.setattr("aj_crew.dashboard.chat_pins.sel", lambda: audit)
 
     async with _client(tmp_path, state=state, app_name="app-b") as client:
         # Attempt delete — should be denied at record ownership level

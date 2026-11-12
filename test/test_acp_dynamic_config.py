@@ -8,9 +8,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_DEEPSEEK,
     ACP_BACKEND_GOOSE,
@@ -19,8 +19,8 @@ from kiro_crew.acp.types import (
     ACP_BACKENDS_EFFORT_FROM_ADVERTISED_OPTION,
     JsonRpcMessage,
 )
-from kiro_crew.agent_sdk.backends import effort_config_option_id
-from kiro_crew.dashboard.chat_persistence import (
+from aj_crew.agent_sdk.backends import effort_config_option_id
+from aj_crew.dashboard.chat_persistence import (
     _REASONING_EFFORT_FALLBACK,
     _SAFE_EFFORT_RE,
     get_reasoning_effort_ordered,
@@ -160,7 +160,7 @@ class TestSupportsConfigOption:
 
 class TestSyncEffortLevels:
     def test_syncs_levels_to_persistence(self, monkeypatch):
-        import kiro_crew.dashboard.chat_persistence as mod
+        import aj_crew.dashboard.chat_persistence as mod
 
         monkeypatch.setattr(mod, "_reasoning_effort_ordered", list(_KIRO_FALLBACK_ORDER))
         client = AcpClient()
@@ -177,10 +177,10 @@ class TestSyncEffortLevels:
         client._acp_config_options = []
         with (
             patch(
-                "kiro_crew.dashboard.chat_persistence.update_reasoning_effort_values"
+                "aj_crew.dashboard.chat_persistence.update_reasoning_effort_values"
             ) as mock_update,
             patch(
-                "kiro_crew.dashboard.chat_persistence.register_reasoning_effort_values"
+                "aj_crew.dashboard.chat_persistence.register_reasoning_effort_values"
             ) as mock_register,
         ):
             client._sync_effort_levels()
@@ -228,7 +228,7 @@ class TestPerSessionEffortListsKeepGlobalOrder:
 
     @pytest.fixture(autouse=True)
     def _kiro_fallback_order(self, _floor_monkeypatch):
-        import kiro_crew.dashboard.chat_persistence as mod
+        import aj_crew.dashboard.chat_persistence as mod
 
         _floor_monkeypatch.setattr(mod, "_reasoning_effort_ordered", list(_KIRO_FALLBACK_ORDER))
         _floor_monkeypatch.setattr(
@@ -238,7 +238,7 @@ class TestPerSessionEffortListsKeepGlobalOrder:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(("backend", "levels"), _PER_SESSION_EFFORT_LISTS)
     async def test_kiro_slot_keeps_global_order_after_client_sync(self, backend, levels):
-        from kiro_crew.dashboard.handlers.agents import api_effort_levels
+        from aj_crew.dashboard.handlers.agents import api_effort_levels
 
         assert backend in ACP_BACKENDS_EFFORT_FROM_ADVERTISED_OPTION
         client = AcpClient(acp_backend=backend)
@@ -286,7 +286,7 @@ class TestPerSessionEffortListsKeepGlobalOrder:
 
 class TestUpdateReasoningEffortValues:
     def setup_method(self):
-        import kiro_crew.dashboard.chat_persistence as mod
+        import aj_crew.dashboard.chat_persistence as mod
 
         self._mod = mod
         self._orig_values = mod._reasoning_effort_values.copy()
@@ -459,11 +459,11 @@ class TestUpdateReasoningEffortValues:
         assert "minimal" not in get_reasoning_effort_values()
 
     def test_marker_directory_is_inside_existing_hidden_gateway_root(self):
-        from kiro_crew.sandbox import (
+        from aj_crew.sandbox import (
             _CREW_HIDDEN_LEAVES,
             _CREW_PRECREATE_HIDDEN_DIR_LEAVES,
         )
-        from kiro_crew.security.paths import _CREW_SECRET_LEAVES
+        from aj_crew.security.paths import _CREW_SECRET_LEAVES
 
         assert self._mod._VALIDATED_EFFORT_DIR == "crew-panels/validated_effort_levels"
         assert "crew-panels" in _CREW_HIDDEN_LEAVES
@@ -515,8 +515,8 @@ class TestAcpProperties:
 @pytest.mark.asyncio
 async def test_api_effort_levels_global_fallback():
     # No ?slot= → serve the process-global ordered fallback list.
-    import kiro_crew.dashboard.chat_persistence as mod
-    from kiro_crew.dashboard.handlers.agents import api_effort_levels
+    import aj_crew.dashboard.chat_persistence as mod
+    from aj_crew.dashboard.handlers.agents import api_effort_levels
 
     orig_ordered = mod._reasoning_effort_ordered[:]
     try:
@@ -537,8 +537,8 @@ async def test_api_effort_levels_global_fallback():
 async def test_api_effort_levels_per_slot():
     # ?slot= resolves to the slot's live ACP provider; its current-model levels
     # win over the process-global fallback (no cross-slot bleed).
-    import kiro_crew.dashboard.chat_persistence as mod
-    from kiro_crew.dashboard.handlers.agents import api_effort_levels
+    import aj_crew.dashboard.chat_persistence as mod
+    from aj_crew.dashboard.handlers.agents import api_effort_levels
 
     orig_ordered = mod._reasoning_effort_ordered[:]
     try:
@@ -563,8 +563,8 @@ async def test_api_effort_levels_per_slot():
 
 @pytest.mark.asyncio
 async def test_api_effort_levels_slot_without_live_provider_falls_back():
-    import kiro_crew.dashboard.chat_persistence as mod
-    from kiro_crew.dashboard.handlers.agents import api_effort_levels
+    import aj_crew.dashboard.chat_persistence as mod
+    from aj_crew.dashboard.handlers.agents import api_effort_levels
 
     orig_ordered = mod._reasoning_effort_ordered[:]
     try:

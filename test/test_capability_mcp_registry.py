@@ -14,7 +14,7 @@ from unittest.mock import patch
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard.handlers import agents as agents_mod
+from aj_crew.dashboard.handlers import agents as agents_mod
 
 
 class FakeManager:
@@ -50,7 +50,7 @@ class FakeManager:
 
 
 def _patch(mgr):
-    return patch("kiro_crew.dashboard.handlers.agents._capability_manager", return_value=mgr)
+    return patch("aj_crew.dashboard.handlers.agents._capability_manager", return_value=mgr)
 
 
 def _req(path):

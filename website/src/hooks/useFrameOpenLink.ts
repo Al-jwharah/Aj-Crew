@@ -8,7 +8,7 @@ import { useEffect, useRef, type RefObject } from 'react'
  * Those frames are `sandbox="allow-scripts"` with no `allow-popups`, so a
  * `target="_blank"` link inside them is a dead click -- deliberately: a page an
  * agent wrote must not open windows. The page posts
- * `{type: 'kirocrew-dashboard:open', url}` and the host acts only when all hold:
+ * `{type: 'ajcrew-dashboard:open', url}` and the host acts only when all hold:
  *
  * - the message came from one of THIS host's own frames (`event.source`), so
  *   another window posting the same shape is ignored;
@@ -23,7 +23,7 @@ import { useEffect, useRef, type RefObject } from 'react'
  * links): the desktop app's window-open handler hands it to the system browser,
  * and a plain browser opens a tab with no `opener` back into the dashboard.
  */
-export const OPEN_MESSAGE_TYPE = 'kirocrew-dashboard:open'
+export const OPEN_MESSAGE_TYPE = 'ajcrew-dashboard:open'
 
 /** Whether the person just made a gesture inside *frame*. No API counts as no.
  *  Shared with InstancesViewport's pane image-copy relay, which needs the same

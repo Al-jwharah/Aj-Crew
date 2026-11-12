@@ -4,11 +4,11 @@ Pins the paths no other test reaches: an awaitable that completes exactly as a
 no-progress window closes, a best-effort notification cancelled while it waits for
 the write lock, the oversize-line drain's return value and both of its
 ``OversizeLineUnrecoverable`` messages, the per-loop write window, the framing
-constants, and that ``kiro_crew.acp.runtime`` re-exports the very same framing
+constants, and that ``aj_crew.acp.runtime`` re-exports the very same framing
 objects the client defines.
 
-The code is reached only through the ``kiro_crew.acp.client`` /
-``kiro_crew.acp.runtime`` facades, and only names defined there (or attributes of
+The code is reached only through the ``aj_crew.acp.client`` /
+``aj_crew.acp.runtime`` facades, and only names defined there (or attributes of
 the shared ``asyncio`` module) are patched, so these tests hold unchanged before
 and after the definitions move to their owner module.
 """
@@ -19,9 +19,9 @@ import asyncio
 
 import pytest
 
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp import runtime as acp_runtime
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.acp import client as acp_client
+from aj_crew.acp import runtime as acp_runtime
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # Upper bound for an await the test itself must unblock. It exists so a hang fails
 # here by name rather than as pytest's --timeout; no passing run measures it.

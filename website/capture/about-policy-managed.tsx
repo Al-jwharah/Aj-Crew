@@ -94,7 +94,7 @@ if (scene === 'policy') {
 // "couldn't load" error state that appears when no gateway is present.
 const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
 if (scene === 'reused-gateway') {
-  qc.setQueryData(['kirocrewConfig'], { auto_update: true })
+  qc.setQueryData(['ajcrewConfig'], { auto_update: true })
 }
 
 createRoot(document.getElementById('root')!).render(

@@ -14,8 +14,8 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.testing.wait import wait_until
-from kiro_crew.vector_memory import (
+from aj_crew.testing.wait import wait_until
+from aj_crew.vector_memory import (
     EpisodicWriteOutcome,
     SemanticRejectCode,
     VectorMemoryStore,
@@ -484,7 +484,7 @@ class TestLogRejectEvent:
 
         store = opened(VectorMemoryStore(db_path=tmp_path / "mem.db"))
         store.init()
-        with patch("kiro_crew.vector_memory._MAX_AUDITED_REJECTS", 0):
+        with patch("aj_crew.vector_memory._MAX_AUDITED_REJECTS", 0):
             with patch.object(store, "_log_event", wraps=store._log_event) as mock_log:
                 store.log_reject_event(SemanticRejectCode.VALUE_EMPTY, "pref.os", None, "promotion")
                 store.log_reject_event(SemanticRejectCode.VALUE_EMPTY, "pref.os", None, "promotion")
@@ -564,7 +564,7 @@ class TestConflictResolution:
             with id_lock:
                 return next(ids)
 
-        monkeypatch.setattr("kiro_crew.vector_memory.uuid4", synchronized_uuid)
+        monkeypatch.setattr("aj_crew.vector_memory.uuid4", synchronized_uuid)
 
         try:
             with ThreadPoolExecutor(max_workers=2) as executor:
@@ -816,7 +816,7 @@ class TestValueSizeLimit:
         # (+2 JSON quotes), well under the 4096 cap. The escaped dump is 4802
         # bytes: measuring it instead of the raw bytes refuses this value at
         # one sixth of the budget.
-        from kiro_crew.vector_memory import _MAX_VALUE_BYTES
+        from aj_crew.vector_memory import _MAX_VALUE_BYTES
 
         korean = "\ud55c" * 800
         raw_bytes = len(json.dumps(korean, ensure_ascii=False).encode("utf-8"))
@@ -835,7 +835,7 @@ class TestValueSizeLimit:
     def test_over_cap_raw_non_ascii_value_still_refused(self, tmp_path: Path, opened) -> None:
         # 1400 Hangul syllables = 4200 raw bytes (+2 quotes) > 4096: refused,
         # and the message quotes the raw measurement, not the escaped count.
-        from kiro_crew.vector_memory import _MAX_VALUE_BYTES
+        from aj_crew.vector_memory import _MAX_VALUE_BYTES
 
         korean = "\ud55c" * 1400
         raw_bytes = len(json.dumps(korean, ensure_ascii=False).encode("utf-8"))
@@ -865,7 +865,7 @@ class TestValueSizeLimit:
         # compare must not treat an existing 1 and a submitted true as
         # unchanged, or the automated write is silently skipped and the stale
         # value never self-corrects.
-        from kiro_crew.vector_memory import _json_value_equal
+        from aj_crew.vector_memory import _json_value_equal
 
         assert not _json_value_equal("1", "true")
         assert not _json_value_equal("0", "false")
@@ -1023,7 +1023,7 @@ class TestSchemaInit:
     def test_file_permissions(self, tmp_path: Path, opened) -> None:
         import stat
 
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         db_path = tmp_path / "mem.db"
         store = opened(VectorMemoryStore(db_path=db_path))
@@ -1044,7 +1044,7 @@ class TestSchemaInit:
         mode assertion can catch that, because NTFS has no mode bits to read. This
         asserts the call, which is observable everywhere.
         """
-        from kiro_crew import vector_memory as vm
+        from aj_crew import vector_memory as vm
 
         seen: list[str] = []
         real = vm.platform_compat.restrict_to_owner
@@ -1086,7 +1086,7 @@ class TestSchemaInit:
         Committed rows live in ``memory.db-wal``, which SQLite creates at moments no
         caller can hook, so only the parent directory's access can cover it on Windows.
         """
-        from kiro_crew import vector_memory as vm
+        from aj_crew import vector_memory as vm
 
         dirs: list[str] = []
         real = vm.platform_compat.make_owner_only_dir
@@ -1114,7 +1114,7 @@ class TestSchemaInit:
         born with, and it can hold committed rows indefinitely if no checkpoint has
         run -- so an existing install is not repaired by the directory alone.
         """
-        from kiro_crew import vector_memory as vm
+        from aj_crew import vector_memory as vm
 
         db_path = tmp_path / "mem.db"
         first = VectorMemoryStore(db_path=db_path)
@@ -1150,7 +1150,7 @@ class TestSchemaInit:
         On Windows, Bypass Traverse Checking keeps an existing file with a permissive DACL
         reachable inside a tightened directory, so the FAISS index is named explicitly.
         """
-        from kiro_crew import vector_memory as vm
+        from aj_crew import vector_memory as vm
 
         db_path = tmp_path / "mem.db"
         faiss = tmp_path / "memory.faiss"
@@ -1180,7 +1180,7 @@ class TestSchemaInit:
         happened at the end of ``init()``, every schema migration would run against a
         file another local user could concurrently write.
         """
-        from kiro_crew import vector_memory as vm
+        from aj_crew import vector_memory as vm
 
         db_path = tmp_path / "mem.db"
         first = VectorMemoryStore(db_path=db_path)
@@ -1232,7 +1232,7 @@ class TestSchemaInit:
         """
         import stat
 
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         if not platform_compat.IS_POSIX:
             pytest.skip("POSIX mode bits")
@@ -1251,7 +1251,7 @@ class TestSchemaInit:
         catching would log a false "may be readable" warning. Asserting on what reaches the
         helper works on both platforms.
         """
-        from kiro_crew import vector_memory as vm
+        from aj_crew import vector_memory as vm
 
         # Existence is recorded AT CALL TIME, not after init: the pass runs twice and
         # ``close()`` checkpoints the ``-wal``/``-shm`` away, so a sidecar that existed
@@ -1292,7 +1292,7 @@ class TestSchemaInit:
         """
         # The driver the store itself runs on: pysqlite3 on Linux x86_64 (CI), the
         # stdlib elsewhere. Their ProgrammingError classes are unrelated types.
-        from kiro_crew._sqlite_compat import sqlite3
+        from aj_crew._sqlite_compat import sqlite3
 
         store = opened(VectorMemoryStore(db_path=tmp_path / "mem.db"))
         store.init()

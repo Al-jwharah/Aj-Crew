@@ -31,9 +31,9 @@ from member_goals_helpers import (  # noqa: F401 -- the autouse fixtures registe
     _thread,
 )
 
-from kiro_crew import dashboard_frame, mcp_mate, member_goals
-from kiro_crew.agent_files import ASSISTANT_MEMBER_NAME
-from kiro_crew.dashboard import goal_reminder
+from aj_crew import dashboard_frame, mcp_mate, member_goals
+from aj_crew.agent_files import ASSISTANT_MEMBER_NAME
+from aj_crew.dashboard import goal_reminder
 
 PAGE = (
     "<style>@page { size: A4; margin: 0 } .sheet { width: 210mm; height: 297mm }</style>"
@@ -59,7 +59,7 @@ def _setup() -> tuple[FakeState, Any, list[Any]]:
 
 
 def test_an_html_report_is_an_html_artifact_filed_like_a_markdown_one(_floor_monkeypatch) -> None:
-    from kiro_crew import artifacts as artifacts_mod
+    from aj_crew import artifacts as artifacts_mod
 
     state, slot, pushed = _setup()
     body_in = {"kind": "weekly", "title": "Week 41", "html": PAGE}
@@ -84,7 +84,7 @@ def test_an_html_report_is_an_html_artifact_filed_like_a_markdown_one(_floor_mon
 
 
 def test_a_markdown_report_still_saves_and_is_marked_a_report(_floor_monkeypatch) -> None:
-    from kiro_crew import artifacts as artifacts_mod
+    from aj_crew import artifacts as artifacts_mod
 
     state, slot, _pushed = _setup()
     md = "# Month\n\nOn track."
@@ -133,7 +133,7 @@ def test_an_html_report_over_the_dashboard_page_ceiling_is_refused(_floor_monkey
 
 
 def test_the_html_the_crewmate_writes_is_scrubbed(_floor_monkeypatch) -> None:
-    from kiro_crew import artifacts as artifacts_mod
+    from aj_crew import artifacts as artifacts_mod
 
     state, slot, _pushed = _setup()
     page = f"<p>token {TOKEN}</p>"
@@ -148,7 +148,7 @@ def test_a_report_page_takes_the_plain_scrub_exactly(_floor_monkeypatch) -> None
     A report page embeds no raster image by contract, so a base64 run it carries
     anyway (here a seeded blob in a data URI) is redacted as the plain scrub would.
     """
-    from kiro_crew import artifacts as artifacts_mod
+    from aj_crew import artifacts as artifacts_mod
 
     blob = base64.b64encode(random.Random(7).randbytes(300)).decode()
     page = PAGE + f'<img src="data:image/png;base64,{blob}"><p>{TOKEN}</p>'
@@ -163,8 +163,8 @@ def test_a_report_page_takes_the_plain_scrub_exactly(_floor_monkeypatch) -> None
 def test_only_save_report_marks_an_artifact_a_report_and_the_mark_lasts(
     _floor_monkeypatch,
 ) -> None:
-    from kiro_crew import artifacts as artifacts_mod
-    from kiro_crew.artifact_store.records import encode_meta
+    from aj_crew import artifacts as artifacts_mod
+    from aj_crew.artifact_store.records import encode_meta
 
     store = artifacts_mod.get_default_store()
     plain = store.create(name="Plain page", content=PAGE, kind="html")
@@ -183,8 +183,8 @@ def test_a_published_html_report_is_one_frame_that_runs_no_script_and_follows_no
     _floor_monkeypatch,
 ) -> None:
     """The copy a destination serves is as static as the one the viewer opens."""
-    from kiro_crew import artifacts as artifacts_mod
-    from kiro_crew import publish_sync
+    from aj_crew import artifacts as artifacts_mod
+    from aj_crew import publish_sync
 
     store = artifacts_mod.get_default_store()
     plain = store.create(name="Plain page", content=PAGE, kind="html")
@@ -220,7 +220,7 @@ def test_a_published_report_s_links_stay_clickable_and_show_their_url_on_hover(
     _floor_monkeypatch,
 ) -> None:
     """A link in the served copy keeps its href and shows it on hover, as in a session."""
-    from kiro_crew import publish_sync
+    from aj_crew import publish_sync
 
     links = (
         '<p><a href="https://example.org/pr/7?tab=files&amp;x=1">PR 7</a>'

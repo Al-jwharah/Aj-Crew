@@ -26,8 +26,8 @@ from pipeline_conductor_fleet_probe_helpers import (
     transcript,
 )
 
+from aj_crew.testing.clock import ManualClock
 from conftest import make_dir_link
-from kiro_crew.testing.clock import ManualClock
 
 
 @pytest.fixture
@@ -35,7 +35,7 @@ def empty_proc(tmp_path, monkeypatch):
     """A host with nothing running, so host posture never colours a probe test."""
     root = tmp_path / "proc-empty"
     root.mkdir()
-    monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(root))
+    monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(root))
     return root
 
 

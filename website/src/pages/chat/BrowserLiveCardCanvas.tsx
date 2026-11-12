@@ -120,7 +120,7 @@ export async function decode(frame: DecodedBrowserFrame): Promise<ImageBitmap | 
     img.onload = () => { URL.revokeObjectURL(url); resolve(img) }
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('decode')) }
     // An image, not a script: url is a blob: URL made from the frame bytes above.
-    // nosemgrep: semgrep.kirocrew.frontend-external-script-inject
+    // nosemgrep: semgrep.ajcrew.frontend-external-script-inject
     img.src = url
   })
 }

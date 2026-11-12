@@ -21,8 +21,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from overload_fakes import Clock
 
-from kiro_crew.adaptive import controller as ctl_mod
-from kiro_crew.adaptive.controller import (
+from aj_crew.adaptive import controller as ctl_mod
+from aj_crew.adaptive.controller import (
     OUTCOME_ATTRIBUTABLE,
     OUTCOME_NON_CONGESTION,
     OUTCOME_SUCCESS,
@@ -30,7 +30,7 @@ from kiro_crew.adaptive.controller import (
     HostSample,
     classify_run_outcome,
 )
-from kiro_crew.adaptive.policy import (
+from aj_crew.adaptive.policy import (
     ACTION_DECREASE,
     ACTION_FIXED,
     ACTION_HOLD,
@@ -42,10 +42,10 @@ from kiro_crew.adaptive.policy import (
     AdaptivePolicy,
     Decision,
 )
-from kiro_crew.adaptive.signals import Sample
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.mcp_gateway.admission import SpawnGate
-from kiro_crew.metrics.events import (
+from aj_crew.adaptive.signals import Sample
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.mcp_gateway.admission import SpawnGate
+from aj_crew.metrics.events import (
     LOOP_LAG_MS,
     PROCESS_CPU_UTILIZATION,
     PROCESS_RSS_SAMPLED,
@@ -142,8 +142,8 @@ class FakeGate:
         }
 
 
-def _cfg(**agent_over: object) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _cfg(**agent_over: object) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     for k, v in agent_over.items():
         setattr(cfg.agent, k, v)
     return cfg
@@ -153,7 +153,7 @@ def _controller(
     manager: FakeManager,
     gate: Optional[FakeGate] = None,
     *,
-    cfg: Optional[KiroCrewConfig] = None,
+    cfg: Optional[AjCrewConfig] = None,
     host: Optional[HostSample] = None,
     clock: Optional[Clock] = None,
 ) -> tuple[AdaptiveController, Clock]:
@@ -375,7 +375,7 @@ class TestTick:
         def _boom(*_a: object, **_kw: object) -> int:  # pragma: no cover - must never be called
             raise AssertionError("the sizing helper must not bound the climb")
 
-        monkeypatch.setattr("kiro_crew.subagent.compute_max_subagents", _boom)
+        monkeypatch.setattr("aj_crew.subagent.compute_max_subagents", _boom)
         host = HostSample(free_mem_mb=16_000.0, rss_mb=300.0, fd_count=50, fd_limit=1000)
         mgr = FakeManager(user_max=64)
         ctl, clock = _controller(mgr, host=host)
@@ -399,7 +399,7 @@ class TestTick:
         so the worker thread must not touch either.
         """
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             lambda *_a, **_kw: pytest.fail("probe_host must not load config"),
         )
@@ -889,7 +889,7 @@ class TestRunOutcomeClassifier:
 
 
 def _real_manager(max_concurrent: int):
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.subagent import SubagentManager
 
     mgr = SubagentManager(
         sessions=MagicMock(), ctx_builder=MagicMock(), max_concurrent=max_concurrent
@@ -913,7 +913,7 @@ class TestSubagentManagerSeam:
     def test_apply_limits_moves_the_ceiling_not_the_adaptive_bound(self) -> None:
         mgr = _real_manager(10)
         mgr.set_effective_cap(4)
-        fresh = KiroCrewConfig()
+        fresh = AjCrewConfig()
         fresh.agent.max_subagents = 8
         mgr.apply_limits(fresh)
         assert mgr.user_max_concurrent == 8
@@ -940,7 +940,7 @@ class TestSubagentManagerSeam:
     async def test_reconfigure_never_shrinks_the_ceiling_to_the_adaptive_value(self) -> None:
         mgr = _real_manager(10)
         mgr.set_effective_cap(2)
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.max_subagents = 10
         await mgr.reconfigure(cfg)
         await mgr.reconfigure(cfg)  # sizing unchanged -> "keep the cap" path
@@ -953,9 +953,9 @@ class TestSubagentManagerSeam:
 
 class TestGatewaydFrame:
     def test_set_spawn_capacity_frame_moves_the_gate(self) -> None:
-        from kiro_crew.mcp_gateway import gatewayd
-        from kiro_crew.mcp_gateway.admission import Admission
-        from kiro_crew.mcp_gateway.host_budget import HostBudget, HostBudgetLimits
+        from aj_crew.mcp_gateway import gatewayd
+        from aj_crew.mcp_gateway.admission import Admission
+        from aj_crew.mcp_gateway.host_budget import HostBudget, HostBudgetLimits
 
         gate = SpawnGate(4, floor=1, ceiling=8)
         adm = Admission(
@@ -981,7 +981,7 @@ class TestGatewaydFrame:
 
     @pytest.mark.asyncio
     async def test_manager_set_spawn_capacity_uses_the_control_roundtrip(self) -> None:
-        from kiro_crew.mcp_gateway.manager import GatewayManager
+        from aj_crew.mcp_gateway.manager import GatewayManager
 
         mgr = GatewayManager.__new__(GatewayManager)
         mgr._control_roundtrip = AsyncMock(  # type: ignore[method-assign]
@@ -1004,7 +1004,7 @@ class TestGatewaydFrame:
 
 class TestVisibilityAndConfig:
     def test_resource_status_renders_the_controller_state(self, monkeypatch) -> None:
-        from kiro_crew import resource_status as rs
+        from aj_crew import resource_status as rs
 
         mgr = FakeManager(user_max=10)
         ctl, _ = _controller(mgr)
@@ -1026,7 +1026,7 @@ class TestVisibilityAndConfig:
         The regime says how the cap is heading for the user's ceiling, so a cap
         below the max reads as headroom not yet earned rather than a host limit.
         """
-        from kiro_crew import resource_status as rs
+        from aj_crew import resource_status as rs
 
         joined = "\n".join(
             rs.adaptive_summary_lines(
@@ -1056,7 +1056,7 @@ class TestVisibilityAndConfig:
         """End to end: a cut on failing starts, then an idle gateway. The cap
         returns to the fresh-start value (the ceiling), and until it does the
         report names the last cut."""
-        from kiro_crew import resource_status as rs
+        from aj_crew import resource_status as rs
 
         mgr = FakeManager(user_max=9)
         ctl, clock = _controller(mgr, cfg=_cfg(adaptive_slow_start=False))
@@ -1091,7 +1091,7 @@ class TestVisibilityAndConfig:
         assert any(line.startswith("  Last pressure cut:") for line in below)
 
     def test_summary_lists_recent_cap_changes(self) -> None:
-        from kiro_crew import resource_status as rs
+        from aj_crew import resource_status as rs
 
         base = {
             "enabled": True,
@@ -1150,12 +1150,12 @@ class TestVisibilityAndConfig:
         assert ctl_mod.current_state() is None
 
     def test_config_defaults_and_parse(self) -> None:
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         a = cfg.agent
         assert a.adaptive_concurrency is True
         assert a.adaptive_concurrency_mode == "aimd"
         assert (a.adaptive_floor, a.adaptive_initial, a.controller_sample_secs) == (1, 4, 5)
-        from kiro_crew.adaptive.policy import params_from_config
+        from aj_crew.adaptive.policy import params_from_config
 
         policy = params_from_config(cfg, exec_ceiling=10)
         assert policy.decrease_factor == 0.5
@@ -1171,7 +1171,7 @@ class TestVisibilityAndConfig:
     def test_config_parse_clamps(self, tmp_path, monkeypatch) -> None:
         import json
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "config.json").write_text(
             json.dumps(
                 {
@@ -1186,7 +1186,7 @@ class TestVisibilityAndConfig:
             ),
             encoding="utf-8",
         )
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg.agent.adaptive_concurrency is False
         assert cfg.agent.adaptive_concurrency_mode == "aimd"
         assert cfg.agent.adaptive_floor == 1
@@ -1197,7 +1197,7 @@ class TestVisibilityAndConfig:
     def test_live_paths_are_agent_keys_the_schema_knows(self) -> None:
         from dataclasses import fields
 
-        from kiro_crew.config.sections import AgentConfig
+        from aj_crew.config.sections import AgentConfig
 
         known = {f.name for f in fields(AgentConfig)}
         for path in AdaptiveController.LIVE_CONFIG_PATHS:
@@ -1208,7 +1208,7 @@ class TestVisibilityAndConfig:
 def test_public_adaptive_keys_are_operational_controls_only():
     from dataclasses import fields
 
-    from kiro_crew.config.sections import AgentConfig
+    from aj_crew.config.sections import AgentConfig
 
     names = {item.name for item in fields(AgentConfig)}
     assert {name for name in names if name.startswith("adaptive_")} == {

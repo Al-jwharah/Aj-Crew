@@ -39,9 +39,9 @@ def _write_spec(directory: Path, name: str, *, body: str | None = None, age: flo
 
 @pytest.fixture
 def catalog(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    from kiro_crew.agent_discovery_parts import dir_revision, spec_reads
-    from kiro_crew.config import loader_snapshots, paths
-    from kiro_crew.dashboard.handlers import agent_catalog
+    from aj_crew.agent_discovery_parts import dir_revision, spec_reads
+    from aj_crew.config import loader_snapshots, paths
+    from aj_crew.dashboard.handlers import agent_catalog
 
     user_dir = tmp_path / "kiro" / "agents"
     mate_dir = tmp_path / "kiro" / "mates" / "agents"
@@ -125,7 +125,7 @@ def test_memo_off_scans_every_fetch(catalog, monkeypatch) -> None:
     so this holds already; it fails once a gate starts skipping on ``None``.
     The test turns the memo off itself, so it runs on every platform.
     """
-    from kiro_crew.agent_discovery_parts import dir_revision
+    from aj_crew.agent_discovery_parts import dir_revision
 
     monkeypatch.setattr(dir_revision, "AGENTS_DIR_MEMO_ENABLED", False)
     catalog.fetch(3)

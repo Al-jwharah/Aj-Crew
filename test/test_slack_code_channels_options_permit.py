@@ -19,16 +19,16 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from slack_code_channels_helpers import Env, make_env
 
-from kiro_crew.config.loader import ACTIVATION_OFF, ACTIVATION_REVIEW
-from kiro_crew.slack import interactions as ix
-from kiro_crew.slack.code_channels import routing
-from kiro_crew.slack.code_channels.store import Binding
-from kiro_crew.slack.format import (
+from aj_crew.config.loader import ACTIVATION_OFF, ACTIVATION_REVIEW
+from aj_crew.slack import interactions as ix
+from aj_crew.slack.code_channels import routing
+from aj_crew.slack.code_channels.store import Binding
+from aj_crew.slack.format import (
     OPTIONS_ACTION_PREFIX,
     OPTIONS_SEVERAL_BLOCK,
     OPTIONS_SEVERAL_INPUT,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 CODE = "C0CODE"
 ORIGIN = "C0ORIGIN"
@@ -279,7 +279,7 @@ async def test_an_answer_in_a_channel_unbound_by_revocation_runs_no_turn(
 
 
 def test_a_revocation_survives_a_restart_and_a_rebind_clears_it(env: Env, tmp_path: Any) -> None:
-    from kiro_crew.slack.code_channels.store import CodeChannelStore
+    from aj_crew.slack.code_channels.store import CodeChannelStore
 
     _bind(env)
     env.store.drop_binding(CODE)

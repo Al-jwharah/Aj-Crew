@@ -14,17 +14,17 @@ import logging
 
 import pytest
 
-from kiro_crew.acp import runtime_session_load
-from kiro_crew.acp.mcp_session_report import McpSessionReport
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.session_handle_runtime_contract import AcpRuntimeDead, AcpRuntimeError
-from kiro_crew.acp.types import ACP_BACKEND_KAS, METHOD_KAS_MCP_STATUS, JsonRpcMessage
-from kiro_crew.mcp_cleanup import KIROCREW_BIN_MCP_SERVERS
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS, async_wait_until, finished
+from aj_crew.acp import runtime_session_load
+from aj_crew.acp.mcp_session_report import McpSessionReport
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.session_handle_runtime_contract import AcpRuntimeDead, AcpRuntimeError
+from aj_crew.acp.types import ACP_BACKEND_KAS, METHOD_KAS_MCP_STATUS, JsonRpcMessage
+from aj_crew.mcp_cleanup import AJCREW_BIN_MCP_SERVERS
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, async_wait_until, finished
 
 _SID = "sess-mounted"
-_CORE = KIROCREW_BIN_MCP_SERVERS[0]
+_CORE = AJCREW_BIN_MCP_SERVERS[0]
 _CLIENT = {"kiro": {"resource": {"source": {"origin": "client"}}}}
 # Resumed shape, so a failure only unregisters (no backend round trip).
 _PARAMS = {"sessionId": _SID, "mcpServers": [{"name": _CORE}, {"name": "github"}]}

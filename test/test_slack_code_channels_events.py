@@ -15,11 +15,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from slack_code_channels_helpers import OWNER, SELF_USER, Env, make_env, mention
 
-from kiro_crew.config.loader import KiroCrewConfig, MessagingConfig
-from kiro_crew.slack import features
-from kiro_crew.slack.code_channels.classifier import RouteDecision
-from kiro_crew.slack.code_channels.store import Binding
-from kiro_crew.slack.events import SeenCache, _route_message
+from aj_crew.config.loader import AjCrewConfig, MessagingConfig
+from aj_crew.slack import features
+from aj_crew.slack.code_channels.classifier import RouteDecision
+from aj_crew.slack.code_channels.store import Binding
+from aj_crew.slack.events import SeenCache, _route_message
 
 pytestmark = pytest.mark.asyncio
 
@@ -31,7 +31,7 @@ def env(monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> Iterator[Env]:
 
 def _orch(env: Env) -> MagicMock:
     orch = MagicMock()
-    orch._cfg = KiroCrewConfig(messaging=MessagingConfig(use_transport=False))
+    orch._cfg = AjCrewConfig(messaging=MessagingConfig(use_transport=False))
     orch.channel_history = MagicMock()
     orch.channel_history._user_names = {}
     orch.slack = env.slack
@@ -57,8 +57,8 @@ def _orch(env: Env) -> MagicMock:
 
 async def _route(env: Env, event: dict[str, Any], *, is_mention: bool) -> MagicMock:
     orch = _orch(env)
-    with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as handle:
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
+    with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as handle:
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
             await _route_message(orch, event, SeenCache(), is_mention=is_mention)
             await asyncio.sleep(0)
             await asyncio.gather(*list(orch._handler_tasks), return_exceptions=True)
@@ -206,8 +206,8 @@ async def _route_in_bot_thread(env: Env, event: dict[str, Any]) -> MagicMock:
     orch = _orch(env)
     orch.sessions.has_session = MagicMock(side_effect=lambda ts: ts == ROOT_TS)
     orch.sessions.get_session_for_thread = MagicMock(return_value=None)
-    with patch("kiro_crew.slack.events.handle_message", new_callable=AsyncMock) as handle:
-        with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
+    with patch("aj_crew.slack.events.handle_message", new_callable=AsyncMock) as handle:
+        with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
             await _route_message(orch, event, SeenCache(), is_mention=False)
             await asyncio.sleep(0)
             await asyncio.gather(*list(orch._handler_tasks), return_exceptions=True)

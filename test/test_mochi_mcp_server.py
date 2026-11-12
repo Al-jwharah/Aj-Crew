@@ -18,8 +18,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.mochi import mcp_server as ms
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.mochi import mcp_server as ms
 
 
 @pytest.fixture()
@@ -49,7 +49,7 @@ class TestAuditing:
             def log_tool_invocation(self, **kw):
                 captured.append(kw)
 
-        monkeypatch.setattr("kiro_crew.mcp_shared.sel", lambda: _Sel())
+        monkeypatch.setattr("aj_crew.mcp_shared.sel", lambda: _Sel())
         return captured
 
     def test_successful_call_is_logged_as_completed(self, monkeypatch, tmp_path):
@@ -271,7 +271,7 @@ class TestPins:
 
     def test_pin_stops_at_the_service_cap(self, data_dir: Path) -> None:
         """The MCP tool honours PinnedFilesService's MAX_PINS, like the service."""
-        from kiro_crew.apps.builtins.mochi.pinned_files_service import MAX_PINS
+        from aj_crew.apps.builtins.mochi.pinned_files_service import MAX_PINS
 
         store = data_dir / ms._PINNED_FILE
         pins = [{"path": f"/tmp/p{i}.md", "pinnedAt": 1} for i in range(MAX_PINS)]
@@ -442,7 +442,7 @@ class TestQueueMutationLock:
     def test_concurrent_appends_are_not_lost(self, data_dir: Path) -> None:
         import threading
 
-        from kiro_crew.apps.builtins.mochi import queue_file as qf
+        from aj_crew.apps.builtins.mochi import queue_file as qf
 
         path = str(data_dir / "mochi-queue.json")
         now = ms._now_ms() if hasattr(ms, "_now_ms") else 0
@@ -474,7 +474,7 @@ class TestQueueMutationLock:
     def test_lock_file_is_a_sibling_not_the_data_file(self, data_dir: Path) -> None:
         """The lock fd must not be the file being atomically REPLACED — flock
         follows the inode, and the rename swaps inodes out from under it."""
-        from kiro_crew.apps.builtins.mochi import queue_file as qf
+        from aj_crew.apps.builtins.mochi import queue_file as qf
 
         path = data_dir / "mochi-queue.json"
         with qf.queue_mutation(path):

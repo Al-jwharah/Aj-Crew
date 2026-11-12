@@ -21,18 +21,18 @@ from windows_sim import (
     replace_sharing_violation,
 )
 
-from kiro_crew import atomic_write as aw
-from kiro_crew import platform_compat
-from kiro_crew.acp.client import AcpModelUnavailable
-from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard import chat_handlers as ch
-from kiro_crew.dashboard.chat_persistence import get_reasoning_effort_values
-from kiro_crew.dashboard.state import _MAX_PENDING_CONTEXT, DashboardState, _ChatSlot
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import LLMProvider
+from aj_crew import atomic_write as aw
+from aj_crew import platform_compat
+from aj_crew.acp.client import AcpModelUnavailable
+from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard import chat_handlers as ch
+from aj_crew.dashboard.chat_persistence import get_reasoning_effort_values
+from aj_crew.dashboard.state import _MAX_PENDING_CONTEXT, DashboardState, _ChatSlot
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import LLMProvider
 
-MOD = "kiro_crew.dashboard.chat_handlers"
+MOD = "aj_crew.dashboard.chat_handlers"
 
 
 # ── shared fixtures / builders ───────────────────────────────────────────────
@@ -45,7 +45,7 @@ def _sel():
     # The app-isolation denials are written by the shared per-slot decision.
     with (
         patch(f"{MOD}.sel", return_value=fake),
-        patch("kiro_crew.dashboard.slot_ownership.sel", return_value=fake),
+        patch("aj_crew.dashboard.slot_ownership.sel", return_value=fake),
     ):
         yield fake
 
@@ -501,7 +501,7 @@ class TestDenyNonDashboardCaller:
         request["internal_auth"] = True
         # No owner predicate should even be consulted on this path.
         with patch(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request"
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request"
         ) as owner:
             assert ch.deny_non_dashboard_caller(request, "op") is None
             owner.assert_not_called()
@@ -509,7 +509,7 @@ class TestDenyNonDashboardCaller:
     def test_owner_request_is_allowed(self, _sel):
         request = make_mocked_request("POST", "/x")
         with patch(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             return_value=True,
         ):
             assert ch.deny_non_dashboard_caller(request, "op") is None
@@ -518,7 +518,7 @@ class TestDenyNonDashboardCaller:
         request = make_mocked_request("POST", "/x")
         request["user"] = "someone-else"
         with patch(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             return_value=False,
         ):
             resp = ch.deny_non_dashboard_caller(request, "chat_slot_followup")
@@ -531,7 +531,7 @@ class TestDenyNonDashboardCaller:
         _sel.log_api_access.side_effect = RuntimeError("sel down")
         request = make_mocked_request("POST", "/x")
         with patch(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             return_value=False,
         ):
             resp = ch.deny_non_dashboard_caller(request, "op")
@@ -1540,7 +1540,7 @@ class TestSlotFollowup:
     @pytest.mark.asyncio
     async def test_non_owner_is_refused_before_the_slot_lookup(self, _sel):
         with patch(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             return_value=False,
         ):
             status, body = await self._post(

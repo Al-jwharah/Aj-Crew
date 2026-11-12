@@ -2,7 +2,7 @@
 
 Importing the three autouse fixtures gives a module this host-independent setup:
 ``_isolate_pod_host_state`` points ``HOME`` and ``USERPROFILE`` at a scratch directory and
-clears the rootdir conftest's ``KIROCREW_POD_ROOT`` and ``KIROCREW_POD_ENV_DIR`` pins,
+clears the rootdir conftest's ``AJCREW_POD_ROOT`` and ``AJCREW_POD_ENV_DIR`` pins,
 ``_fake_node_toolchain`` resolves node tools under ``NODE_BIN``, and ``_systemd_backend``
 selects the systemd backend on every host. ``cfg_fixture`` is the ``cfg`` fixture
 (``PodConfig.load()``), ``_cp`` builds a ``CompletedProcess``, ``_ready_worktree`` builds a
@@ -17,10 +17,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.pod import provision as prov
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod.config import PodConfig
+from aj_crew import platform_compat
+from aj_crew.pod import provision as prov
+from aj_crew.pod import runtime as rt
+from aj_crew.pod.config import PodConfig
 
 # Stand-in for a version-manager node bin dir (mise/nvm/fnm/volta/asdf install
 # under $HOME). Provisioning resolves ``npm`` to an absolute path there.
@@ -52,18 +52,18 @@ def _isolate_pod_host_state(tmp_path_factory, _floor_monkeypatch: pytest.MonkeyP
     """Keep pod HOST state out of the developer's real home.
 
     ``unit.unit_path`` and ``PodConfig.pods_dir`` resolve through ``Path.home()``,
-    not ``KIROCREW_HOME``; an unpinned ``install_unit`` rewrites the host's real
-    ``kirocrew-pod@.service``. Pins ``HOME`` and ``USERPROFILE`` (Windows reads that).
+    not ``AJCREW_HOME``; an unpinned ``install_unit`` rewrites the host's real
+    ``ajcrew-pod@.service``. Pins ``HOME`` and ``USERPROFILE`` (Windows reads that).
 
-    Clears the rootdir conftest's ``KIROCREW_POD_ROOT`` / ``KIROCREW_POD_ENV_DIR`` pins
+    Clears the rootdir conftest's ``AJCREW_POD_ROOT`` / ``AJCREW_POD_ENV_DIR`` pins
     so these modules test the home-derived defaults, which the ``HOME`` pin keeps
     hermetic. Tests that set any of these themselves still win.
     """
     home = tmp_path_factory.mktemp("pod-host-home")
     _floor_monkeypatch.setenv("HOME", str(home))
     _floor_monkeypatch.setenv("USERPROFILE", str(home))
-    _floor_monkeypatch.delenv("KIROCREW_POD_ROOT", raising=False)
-    _floor_monkeypatch.delenv("KIROCREW_POD_ENV_DIR", raising=False)
+    _floor_monkeypatch.delenv("AJCREW_POD_ROOT", raising=False)
+    _floor_monkeypatch.delenv("AJCREW_POD_ENV_DIR", raising=False)
 
 
 @pytest.fixture(autouse=True)
@@ -90,7 +90,7 @@ def _cp(stdout: str = "", returncode: int = 0, stderr: str = "") -> subprocess.C
 def _ready_worktree(
     root: Path, name: str, *, venv: bool = True, dist: bool = True, flags: bool = True
 ) -> Path:
-    """Build a flat kirocrew worktree checkout (repo root == worktree dir).
+    """Build a flat ajcrew worktree checkout (repo root == worktree dir).
 
     ``flags`` writes a ``cli.py`` declaring the current gateway flags; ``boot`` probes
     the target's source before passing one. ``flags=False`` models an old checkout.
@@ -105,9 +105,9 @@ def _ready_worktree(
         b.write_text("#!/bin/sh\n")
         b.chmod(0o755)
     if dist:
-        (co / "src" / "kiro_crew" / "static" / "dist").mkdir(parents=True, exist_ok=True)
+        (co / "src" / "aj_crew" / "static" / "dist").mkdir(parents=True, exist_ok=True)
     if flags:
-        cli = co / "src" / "kiro_crew" / "cli.py"
+        cli = co / "src" / "aj_crew" / "cli.py"
         cli.parent.mkdir(parents=True, exist_ok=True)
         cli.write_text('gw.add_argument("--no-crons")\ngw.add_argument("--no-tunnel")\n')
     return co

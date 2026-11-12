@@ -23,7 +23,7 @@ let seq = 0
 const tool = (): ChatMessage => ({ role: 'tool', content: '🔧 Running: fs_read', ts: `${++seq}` })
 const runNowhere = (): ChatMessage => ({
   role: 'notice',
-  content: "ℹ️ Agent kirocrew has hooks on postToolUse. This backend does not run an agent's hooks, so they have no effect in this session.",
+  content: "ℹ️ Agent ajcrew has hooks on postToolUse. This backend does not run an agent's hooks, so they have no effect in this session.",
   cls: 'msg msg-info',
   ts: `${++seq}`,
   meta: { kind: 'spec_hooks', spec_hooks_notice: 'run_nowhere' },

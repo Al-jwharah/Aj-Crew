@@ -25,15 +25,15 @@ from overload_integration_glue_helpers import (  # noqa: F401 -- fixtures are re
     store_fixture,
 )
 
-from kiro_crew.on_loop_db import OnLoopStoreError
-from kiro_crew.slack.gateway import GatewayOrchestrator
-from kiro_crew.subagent_manager import admission as admission_mod
-from kiro_crew.taskq import dependency as dep_mod
-from kiro_crew.taskq import model
-from kiro_crew.taskq import store as store_mod
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.taskq.waits import WaitRecord
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.on_loop_db import OnLoopStoreError
+from aj_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.subagent_manager import admission as admission_mod
+from aj_crew.taskq import dependency as dep_mod
+from aj_crew.taskq import model
+from aj_crew.taskq import store as store_mod
+from aj_crew.taskq.store import TaskStore
+from aj_crew.taskq.waits import WaitRecord
+from aj_crew.testing.wait import async_wait_until, await_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -130,7 +130,7 @@ class TestStoreOffLoop:
         import threading
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         sessions = MagicMock()
         sessions.get_pid = MagicMock(return_value=None)
@@ -170,7 +170,7 @@ class TestStoreOffLoop:
         # ARMED: the accept, the window decision, the claim and the
         # registration writes all run on the writer thread; a store call on
         # the loop raises here instead of passing silently.
-        from kiro_crew.dashboard.handlers import messaging
+        from aj_crew.dashboard.handlers import messaging
 
         monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
         before = real_store.loop_thread_calls
@@ -197,7 +197,7 @@ class TestStoreOffLoop:
     async def _manager_with_store(monkeypatch: pytest.MonkeyPatch) -> Any:
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         sessions = MagicMock()
         sessions.get_pid = MagicMock(return_value=None)
@@ -357,7 +357,7 @@ class TestStoreOffLoop:
             approval_mode=None,
         )
         assert mgr._admission.taskq_accept_record(rec) is None
-        monkeypatch.setattr("kiro_crew.subagent.check_memory_available", self._low_memory)
+        monkeypatch.setattr("aj_crew.subagent.check_memory_available", self._low_memory)
         before = store.loop_thread_calls
         await mgr._drain_queue_async()
         await settle_store_writes(store)
@@ -400,7 +400,7 @@ class TestStoreOffLoop:
                 "_preassigned_id": "ghost0",
             }
         ]
-        monkeypatch.setattr("kiro_crew.subagent.check_memory_available", self._low_memory)
+        monkeypatch.setattr("aj_crew.subagent.check_memory_available", self._low_memory)
         before = store.loop_thread_calls
         await mgr._drain_queue_async()
         await settle_store_writes(store)
@@ -452,7 +452,7 @@ class TestStoreOffLoop:
         info = await mgr.continue_conversation_async("conv-1", "again", parent_session_key="web-1")
         assert info is not None and not info.error, info
         # app SpawnSDK
-        from kiro_crew.apps import spawn_sdk
+        from aj_crew.apps import spawn_sdk
 
         class _Agent:
             name = "demo--worker"
@@ -480,8 +480,8 @@ class TestStoreOffLoop:
         """
         import threading
 
-        from kiro_crew.messaging import commands as messaging_commands
-        from kiro_crew.slack import handler as slack_handler
+        from aj_crew.messaging import commands as messaging_commands
+        from aj_crew.slack import handler as slack_handler
 
         mgr = await self._manager_with_store(monkeypatch)
         store = mgr._admission.taskq_store()
@@ -501,7 +501,7 @@ class TestStoreOffLoop:
                 "spawn index the corpus", mgr, "slack:C1:1"
             )
             telegram_reply = await messaging_commands.spawn_task_reply(
-                "index it again", mgr, "telegram:kirocrew:direct:7"
+                "index it again", mgr, "telegram:ajcrew:direct:7"
             )
             await async_wait_until(
                 lambda: asyncio.to_thread(lambda: len(threads) >= 2),
@@ -709,7 +709,7 @@ class TestStoreOffLoop:
         a 409 route, the RSS sweep, the completion frame) is a coroutine on the
         gateway loop.
         """
-        from kiro_crew.dashboard import chat_utils
+        from aj_crew.dashboard import chat_utils
 
         mgr = await self._manager_with_store(monkeypatch)
         store = mgr._admission.taskq_store()
@@ -818,7 +818,7 @@ class TestStoreOffLoop:
         """
         import threading
 
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         mgr = await self._manager_with_store(monkeypatch)
         store = mgr._admission.taskq_store()
@@ -896,7 +896,7 @@ class TestStoreOffLoop:
         though the grant is refused: the run's own terminal write is fenced by
         the generation the ROW now carries, not by the stale one it went in with.
         """
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         mgr = await self._manager_with_store(monkeypatch)
         store = mgr._admission.taskq_store()
@@ -986,7 +986,7 @@ class TestStoreOffLoop:
         land once admission reopens, which is what keeps the guard from trading a
         loosened census for stranded work.
         """
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         mgr = await self._manager_with_store(monkeypatch)
         store = mgr._admission.taskq_store()
@@ -1040,8 +1040,8 @@ class TestStoreOffLoop:
         counter (which no ``except`` can swallow) and the armed guard (this route
         has no exception arm, so an on-loop take would answer 500).
         """
-        from kiro_crew.dashboard.handlers import spawn_resume
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.dashboard.handlers import spawn_resume
+        from aj_crew.subagent import SubagentInfo
 
         mgr = await self._manager_with_store(monkeypatch)
         store = mgr._admission.taskq_store()
@@ -1095,8 +1095,8 @@ class TestStoreOffLoop:
         """
         import inspect
 
-        from kiro_crew.subagent import SubagentInfo
-        from kiro_crew.subagent_manager import monitoring as monitoring_mod
+        from aj_crew.subagent import SubagentInfo
+        from aj_crew.subagent_manager import monitoring as monitoring_mod
 
         mgr = await self._manager_with_store(monkeypatch)
         store = mgr._admission.taskq_store()
@@ -1219,7 +1219,7 @@ class TestStoreOffLoop:
             type(mgr), "_announce_rejection", lambda self, info: announced.append(info) or info
         )
         # Low memory defers every spawn, so the drain takes the parked-defer path.
-        from kiro_crew import subagent as subagent_mod
+        from aj_crew import subagent as subagent_mod
 
         monkeypatch.setattr(subagent_mod, "check_memory_available", lambda *a, **k: (False, 1.2))
         monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)

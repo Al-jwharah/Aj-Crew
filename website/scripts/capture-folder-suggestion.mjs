@@ -26,7 +26,7 @@ import { logPageProblems, stubDashboardApi, json } from './lib/stub-dashboard-ap
 
 const OUT = process.argv[2] || '../temp-screenshots/folder-suggestion'
 const SLOT = 'chat-foldersug'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -36,7 +36,7 @@ const slots = [{
   running: false,
   last_message: 'Root-caused it to the SegmentedControl width spring.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',          // unfiled — the whole precondition for the card
@@ -69,7 +69,7 @@ const detail = {
 
 /** Folders the recommender would have been shown — also the dropdown's options. */
 const folders = [
-  { id: 'f-kc', name: 'Kiro Crew', order: 0, parent_id: '' },
+  { id: 'f-kc', name: 'Aj Crew', order: 0, parent_id: '' },
   { id: 'f-i18n', name: 'i18n', order: 1, parent_id: 'f-kc' },
   { id: 'f-errands', name: 'Errands', order: 2, parent_id: '' },
 ]
@@ -182,7 +182,7 @@ async function main() {
 
   const select = () => page.getByTestId('folder-suggestion-select')
 
-  const NESTED = { folderId: 'f-i18n', folderName: 'i18n', breadcrumb: 'Kiro Crew › i18n' }
+  const NESTED = { folderId: 'f-i18n', folderName: 'i18n', breadcrumb: 'Aj Crew › i18n' }
   const ROOT = { folderId: 'f-errands', folderName: 'Errands', breadcrumb: 'Errands' }
 
   // 1. Nested folder, dark — the common case. The dropdown arrives prefilled
@@ -264,7 +264,7 @@ async function main() {
   await cleanup()
 
   const ok = prefilled === 'f-i18n'
-    && nestedLabel === 'Kiro Crew › i18n'
+    && nestedLabel === 'Aj Crew › i18n'
     && rootLabel === 'Errands'
     && goneAfterAccept
     && goneAfterPickedAccept

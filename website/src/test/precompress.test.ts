@@ -158,7 +158,7 @@ describe('compressDir', () => {
 describe('precompressPlugin', () => {
   it('is a build-only vite plugin', () => {
     const plugin = precompressPlugin()
-    expect(plugin.name).toBe('kirocrew-precompress')
+    expect(plugin.name).toBe('ajcrew-precompress')
     expect(plugin.apply).toBe('build')
     expect(typeof plugin.closeBundle).toBe('function')
   })

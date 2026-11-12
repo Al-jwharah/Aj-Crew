@@ -11,10 +11,10 @@ from typing import Any
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-import kiro_crew.config.loader as loader
-import kiro_crew.dashboard.handlers.messaging as mod
+import aj_crew.config.loader as loader
+import aj_crew.dashboard.handlers.messaging as mod
+from aj_crew.secrets import SecretVault
 from conftest import forget_env_at_teardown
-from kiro_crew.secrets import SecretVault
 
 
 def _vault_value(env: Path, key: str) -> str | None:
@@ -456,18 +456,18 @@ class TestSaveLoadRoundTrip:
         import json
         import os
 
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         (tmp_path / "config.json").write_text(json.dumps({"webex": webex}))
-        old = os.environ.get("KIROCREW_HOME")
-        os.environ["KIROCREW_HOME"] = str(tmp_path)
+        old = os.environ.get("AJCREW_HOME")
+        os.environ["AJCREW_HOME"] = str(tmp_path)
         try:
-            return KiroCrewConfig.load().webex
+            return AjCrewConfig.load().webex
         finally:
             if old is None:
-                os.environ.pop("KIROCREW_HOME", None)
+                os.environ.pop("AJCREW_HOME", None)
             else:
-                os.environ["KIROCREW_HOME"] = old
+                os.environ["AJCREW_HOME"] = old
 
     def test_every_webex_field_survives_a_reload(self, tmp_path: Path) -> None:
         stored = {
@@ -495,7 +495,7 @@ class TestSaveLoadRoundTrip:
         """
         import dataclasses
 
-        from kiro_crew.config.loader import WebexConfig
+        from aj_crew.config.loader import WebexConfig
 
         defaults = WebexConfig()
         # A value that differs from the default for each field's own type.

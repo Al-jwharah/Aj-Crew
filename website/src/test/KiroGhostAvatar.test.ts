@@ -3,7 +3,7 @@
  *
  * Three properties here are load-bearing and cannot be checked by eye:
  *  - the silhouette and eye paths are the SHIPPED mark, read back out of
- *    `src/assets/kiro-ghost-mark.svg`, so the generator cannot drift from the art;
+ *    `src/assets/aj-gem-figure.svg`, so the generator cannot drift from the art;
  *  - tile colors keep a minimum CIEDE2000 distance, because sampling a hue circle
  *    produced pairs ~13 dE apart that read as a rendering bug rather than as two
  *    identities;
@@ -28,7 +28,7 @@ import {
   EYE_A,
   EYE_B,
   TILES,
-  BRAND_PURPLE,
+  BRAND_TILE,
   EYES,
   WORKING_EYES,
   BROWS,
@@ -38,7 +38,7 @@ import {
   type KiroGhostTraits,
 } from '../lib/kiroGhostAvatar'
 
-const MARK = join(__dirname, '..', 'assets', 'kiro-ghost-mark.svg')
+const MARK = join(__dirname, '..', 'assets', 'aj-gem-figure.svg')
 
 /** The fill every piece floating on the tile uses — see the module header. */
 const WHITE_FILL = 'fill="#ffffff"'
@@ -52,7 +52,7 @@ const BARE: KiroGhostTraits = {
   prop: 'none',
   blush: false,
   flip: false,
-  tile: BRAND_PURPLE,
+  tile: BRAND_TILE,
 }
 
 /* ---------- CIEDE2000, for the palette guard only ---------- */
@@ -166,11 +166,11 @@ describe('kiroGhost style', () => {
   })
 
   it('renders a local data URI with no remix claim in its metadata', () => {
-    const svg = createAvatar(kiroGhost, { seed: 'kirocrew' }).toString()
+    const svg = createAvatar(kiroGhost, { seed: 'ajcrew' }).toString()
     // The art is first-party, so DiceBear's "Remix of" rights line must not appear.
     expect(svg).not.toContain('Remix of')
     expect(svg).toContain('Design by')
-    expect(createAvatar(kiroGhost, { seed: 'kirocrew' }).toDataUri()).toMatch(
+    expect(createAvatar(kiroGhost, { seed: 'ajcrew' }).toDataUri()).toMatch(
       /^data:image\/svg\+xml/,
     )
   })
@@ -178,7 +178,7 @@ describe('kiroGhost style', () => {
   it('is deterministic and distinct across seeds', () => {
     const a = createAvatar(kiroGhost, { seed: 'oncall' }).toString()
     expect(createAvatar(kiroGhost, { seed: 'oncall' }).toString()).toBe(a)
-    expect(createAvatar(kiroGhost, { seed: 'kirocrew' }).toString()).not.toBe(a)
+    expect(createAvatar(kiroGhost, { seed: 'ajcrew' }).toString()).not.toBe(a)
   })
 
   it('pins the draw order', () => {
@@ -202,15 +202,15 @@ describe('kiroGhost style', () => {
       flip: false,
       tile: '#ee7e4f',
     })
-    expect(traits('kirocrew')).toEqual({
-      eyes: 'wide',
-      brows: 'angry',
-      mouth: 'cat',
-      accessory: 'cap',
-      prop: 'term',
+    expect(traits('ajcrew')).toEqual({
+      eyes: 'visor',
+      brows: 'none',
+      mouth: 'open',
+      accessory: 'none',
+      prop: 'none',
       blush: false,
       flip: true,
-      tile: '#eeae4f',
+      tile: '#de2121',
     })
     expect(traits('mochi')).toEqual({
       eyes: 'sparkle',
@@ -363,7 +363,7 @@ describe('reaction motions', () => {
     // literals drift silently: a name added on one side is dropped by the other
     // with no test going red, and the user sees a motion that never plays.
     const sections = readFileSync(
-      join(__dirname, '../../../src/kiro_crew/config/sections_agent_fields.py'),
+      join(__dirname, '../../../src/aj_crew/config/sections_agent_fields.py'),
       'utf8',
     )
     const block = /_AVATAR_MOTIONS: dict\[str, tuple\[str, \.\.\.\]\] = \{([\s\S]*?)\n\}/.exec(sections)

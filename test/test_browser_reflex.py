@@ -30,17 +30,17 @@ from typing import Any, Callable
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.browser_harness import budgets
-from kiro_crew.browser_harness import decide as decide_mod
-from kiro_crew.browser_harness import ops, reflex, reflex_space
-from kiro_crew.config.sections import (
+from aj_crew.browser_harness import budgets
+from aj_crew.browser_harness import decide as decide_mod
+from aj_crew.browser_harness import ops, reflex, reflex_space
+from aj_crew.config.sections import (
     DECISION_PROVIDER_ENDPOINT_DEFAULT,
     DecisionProviderConfig,
     DecisionsConfig,
 )
-from kiro_crew.decisions import gate
-from kiro_crew.decisions.types import Answer, Choice, Noul
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.decisions import gate
+from aj_crew.decisions.types import Answer, Choice, Noul
+from aj_crew.testing.clock import ManualClock
 
 SESSION = "dashboard:chat-1"
 
@@ -250,7 +250,7 @@ class Provider:
 def seam(tmp_path, monkeypatch):
     """The real gate over a consented keystone and a recording provider."""
     keystone = tmp_path / "decisions_consent.json"
-    monkeypatch.setattr("kiro_crew.config.loader.decisions_consent_path", lambda: keystone)
+    monkeypatch.setattr("aj_crew.config.loader.decisions_consent_path", lambda: keystone)
     keystone.write_text(
         json.dumps({"enabled": True, "endpoint": DECISION_PROVIDER_ENDPOINT_DEFAULT}),
         encoding="utf-8",
@@ -268,9 +268,9 @@ def seam(tmp_path, monkeypatch):
 
     monkeypatch.setattr(gate, "_snapshot", _config)
     monkeypatch.setattr(
-        "kiro_crew.decisions.capability.is_decisions_denied", lambda *a, **k: state.denied
+        "aj_crew.decisions.capability.is_decisions_denied", lambda *a, **k: state.denied
     )
-    import kiro_crew.decisions.impl_systemone as impl
+    import aj_crew.decisions.impl_systemone as impl
 
     monkeypatch.setattr(impl, "SystemOneProvider", lambda _provider: state.provider)
 

@@ -12,8 +12,8 @@ import logging
 
 import pytest
 
-from kiro_crew.acp import kas_agents, kas_permissions
-from kiro_crew.acp.kas_permissions import (
+from aj_crew.acp import kas_agents, kas_permissions
+from aj_crew.acp.kas_permissions import (
     CREW_ANSWERED_BUILTINS_KEY,
     HOOK_GATEABLE_CAPABILITIES,
     UNPARSEABLE_SHELL_GUARD,
@@ -22,10 +22,10 @@ from kiro_crew.acp.kas_permissions import (
     unprompted_capabilities,
     withhold_hook_gated_auto_approval,
 )
-from kiro_crew.agent_materialization.kiro_hooks import _hook_matcher_ok
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.hook_runtime.hook_dispatch import pre_tool_match_names
-from kiro_crew.hooks import _tool_matches
+from aj_crew.agent_materialization.kiro_hooks import _hook_matcher_ok
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.hook_runtime.hook_dispatch import pre_tool_match_names
+from aj_crew.hooks import _tool_matches
 
 
 @pytest.fixture(autouse=True)
@@ -96,7 +96,7 @@ def test_an_array_form_document_keeps_the_wider_matcher(matcher):
 
 
 def _opencode(title: str, servers: tuple[str, ...]) -> str:
-    from kiro_crew.acp.harness_tool_names import qualified_harness_tool_id
+    from aj_crew.acp.harness_tool_names import qualified_harness_tool_id
 
     return qualified_harness_tool_id("opencode", title, frozenset(servers))
 
@@ -188,7 +188,7 @@ def test_a_live_session_with_no_shell_ask_is_stale_once_a_shell_hook_exists():
 
 def test_a_shell_hook_does_not_make_a_remote_workspace_refuse_the_agent():
     """The guard deny is Crew's own rule, not the author restricting the shell."""
-    from kiro_crew.acp.runtime_remote_workspace import _restricts_replaced_builtins
+    from aj_crew.acp.runtime_remote_workspace import _restricts_replaced_builtins
 
     hooked = kas_agents.to_client_custom_agent("a1", {}, "p", pre_tool_hook_matchers=("*",))
     assert _restricts_replaced_builtins(hooked["permissions"]) is False
@@ -222,7 +222,7 @@ def test_hooks_past_the_cap_are_not_read_and_are_named(form, caplog):
             }
             for i in range(cap + 2)
         ]
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.agent_sdk.spec_hooks"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.agent_sdk.spec_hooks"):
         hooks = spec_hooks.spec_script_hooks("a1", {"hooks": value})
     assert len(hooks) == cap
     assert any("2 more are not read" in r.getMessage() for r in caplog.records)

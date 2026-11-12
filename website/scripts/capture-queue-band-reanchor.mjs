@@ -55,7 +55,7 @@ const slots = [{
   running: false,
   last_message: 'Working through the FAQ…',
   messages: 22,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(now),

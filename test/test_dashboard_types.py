@@ -19,9 +19,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import dashboard_types as dt
-from kiro_crew.crew_log.entry_types import DASHBOARD_FOLD_NAME
-from kiro_crew.crew_log.projection import (
+from aj_crew import dashboard_types as dt
+from aj_crew.crew_log.entry_types import DASHBOARD_FOLD_NAME
+from aj_crew.crew_log.projection import (
     _FOLDS,
     _SLOT_FOLD_ROW_BYTES,
     _TREE_FOLD_ROW_BYTES,
@@ -32,8 +32,8 @@ from kiro_crew.crew_log.projection import (
     SLOT_PROJECTION_NAMES,
     TREE_PROJECTION_NAMES,
 )
-from kiro_crew.crew_log.schema import Entry
-from kiro_crew.dashboard_templates.manifest import FIELD_TYPES
+from aj_crew.crew_log.schema import Entry
+from aj_crew.dashboard_templates.manifest import FIELD_TYPES
 
 
 def _nodes(shape: Any, prefix: str = "") -> list[tuple[str, dict[str, Any]]]:
@@ -77,7 +77,7 @@ _DRIVERS: dict[str, list[tuple[str, dict[str, Any]]]] = {
     "status": [
         (
             "session/opened",
-            {"session_id": "s-1", "agent": "kirocrew", "previous": {"sid": "s-0"}},
+            {"session_id": "s-1", "agent": "ajcrew", "previous": {"sid": "s-0"}},
         ),
         ("turn/started", {"turn": 1, "actor": "user", "depth": 0}),
         ("turn/completed", {"turn": 1, "stop_reason": "end_turn", "error": "a failure"}),
@@ -146,7 +146,7 @@ _DRIVERS: dict[str, list[tuple[str, dict[str, Any]]]] = {
     "otel_session_tree": [
         (
             "session/opened",
-            {"agent": "kirocrew", "slot": "chat-7", "model": "", "resumed": False, "depth": 2},
+            {"agent": "ajcrew", "slot": "chat-7", "model": "", "resumed": False, "depth": 2},
         ),
     ],
 }
@@ -494,7 +494,7 @@ class TestDeclaredNullables:
         hold values, then checked with ``type_holds``. The final coverage assertion names
         the leaves that must be reached, so one that stops being populated fails.
         """
-        from kiro_crew.dashboard_agentic import type_holds
+        from aj_crew.dashboard_agentic import type_holds
 
         driven = {name: _driven_render(name) for name in sorted(_DRIVERS)}
         assert set(_DRIVERS) == {key.partition(".")[0] for key in dt._NULLABLE}, (

@@ -2,7 +2,7 @@
  * Shared types for the per-member projection store.
  *
  * The backend owns the authoritative vocabulary (see
- * src/kiro_crew/eventlog/types.py); these mirror the two WebSocket frame
+ * src/aj_crew/eventlog/types.py); these mirror the two WebSocket frame
  * shapes, the roster baseline block, and the four projected value shapes so
  * the frontend can read a projection without re-deriving it from raw events.
  */

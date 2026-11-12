@@ -9,7 +9,7 @@ that it passes ``False``, that it is inert on a cache-less or closed context,
 and that it does not keep the context alive.
 
 The fake-runtime tests load no model. ``TestRealModelVectors`` runs only when
-``KIROCREW_TEST_EMBED_MODEL`` names a GGUF file and the vendored runtime loads;
+``AJCREW_TEST_EMBED_MODEL`` names a GGUF file and the vendored runtime loads;
 it compares vectors byte for byte against the binding's zeroing clear.
 """
 
@@ -25,8 +25,8 @@ import weakref
 
 import pytest
 
-from kiro_crew import embeddings as embeddings_mod
-from kiro_crew.embeddings import LlamaCppEmbedder
+from aj_crew import embeddings as embeddings_mod
+from aj_crew.embeddings import LlamaCppEmbedder
 
 
 class _FakeContext:
@@ -118,7 +118,7 @@ def test_loaded_model_gets_the_override(tmp_path: pathlib.Path, monkeypatch, nat
         def create_embedding(self, texts):
             return {"data": [{"embedding": [0.1] * 1024} for _ in texts]}
 
-    monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: _LoadedLlama)
+    monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: _LoadedLlama)
     model = tmp_path / "model.gguf"
     model.write_bytes(b"g" * (embeddings_mod._GGUF_MIN_BYTES + 100_000))
     embedder = LlamaCppEmbedder(model_path=model)
@@ -132,12 +132,12 @@ def test_loaded_model_gets_the_override(tmp_path: pathlib.Path, monkeypatch, nat
         embedder.close()
 
 
-_REAL_MODEL = os.environ.get("KIROCREW_TEST_EMBED_MODEL", "")
+_REAL_MODEL = os.environ.get("AJCREW_TEST_EMBED_MODEL", "")
 
 
 @pytest.mark.skipif(
     not (_REAL_MODEL and pathlib.Path(_REAL_MODEL).is_file()),
-    reason="set KIROCREW_TEST_EMBED_MODEL to a GGUF embedding model to run",
+    reason="set AJCREW_TEST_EMBED_MODEL to a GGUF embedding model to run",
 )
 class TestRealModelVectors:
     def test_vectors_match_the_zeroing_clear_byte_for_byte(self) -> None:

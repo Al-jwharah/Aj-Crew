@@ -52,7 +52,7 @@ async def test_a_restricted_on_disk_line_withholds_the_bundle(line_mode):
     line on disk decides. A same-key recreation of a closed restricted tab, or a
     writer tightening the line while this slot still reads persistent, both
     reach here with a slot the callers' own gate lets through."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _state(MSGS)
     state.conversation_log.metadata = {"memory_mode": line_mode}
@@ -64,7 +64,7 @@ async def test_a_restricted_on_disk_line_withholds_the_bundle(line_mode):
 @pytest.mark.asyncio
 async def test_an_unreadable_on_disk_line_withholds_the_bundle():
     """Fail closed: a builder that cannot see the contract ships nothing."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _state(MSGS)
     state.conversation_log.readable = False
@@ -76,7 +76,7 @@ async def test_an_unreadable_on_disk_line_withholds_the_bundle():
 @pytest.mark.asyncio
 async def test_a_line_tightened_during_the_read_withholds_the_bundle():
     """The gate is asked again AFTER the read, so a tightening in between is caught."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     state = _state(MSGS)
     log = state.conversation_log
@@ -98,11 +98,11 @@ async def test_a_line_tightened_during_the_read_withholds_the_bundle():
 async def test_send_handler_refuses_a_slot_whose_line_is_restricted(monkeypatch):
     """The tunnel send maps the builder's refusal to its own slot-gate answer, so a
     persistent slot over a restricted file sends nothing to the peer."""
-    from kiro_crew.dashboard import handlers_instances as hi
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import handlers_instances as hi
+    from aj_crew.dashboard import session_transfer as st
 
     monkeypatch.setattr(
-        hi.KiroCrewConfig,
+        hi.AjCrewConfig,
         "load",
         staticmethod(lambda: SimpleNamespace(instances=SimpleNamespace(enabled=True))),
     )
@@ -153,12 +153,12 @@ async def test_send_handler_refuses_a_slot_whose_line_is_restricted(monkeypatch)
 @pytest.mark.asyncio
 async def test_send_handler_maps_a_busy_transcript_to_the_retryable_503(monkeypatch):
     """A lock the seam could not take is 'retry', not 'not persistent'."""
-    from kiro_crew.dashboard import handlers_instances as hi
-    from kiro_crew.dashboard import session_transfer as st
-    from kiro_crew.history import TranscriptBusy
+    from aj_crew.dashboard import handlers_instances as hi
+    from aj_crew.dashboard import session_transfer as st
+    from aj_crew.history import TranscriptBusy
 
     monkeypatch.setattr(
-        hi.KiroCrewConfig,
+        hi.AjCrewConfig,
         "load",
         staticmethod(lambda: SimpleNamespace(instances=SimpleNamespace(enabled=True))),
     )
@@ -209,11 +209,11 @@ async def test_send_handler_maps_a_busy_transcript_to_the_retryable_503(monkeypa
 async def test_send_handler_rechecks_the_privacy_line_before_the_request(monkeypatch):
     """A line that tightens after the pre-send check, while the body serialises,
     is caught by the recheck the send runs just before the request."""
-    from kiro_crew.dashboard import handlers_instances as hi
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import handlers_instances as hi
+    from aj_crew.dashboard import session_transfer as st
 
     monkeypatch.setattr(
-        hi.KiroCrewConfig,
+        hi.AjCrewConfig,
         "load",
         staticmethod(lambda: SimpleNamespace(instances=SimpleNamespace(enabled=True))),
     )
@@ -275,7 +275,7 @@ def test_the_streaming_writer_matches_json_dumps_byte_for_byte(tmp_path):
     log long enough to cross many chunk boundaries."""
     import io
 
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     events = '{"a":"é 😀"}\r\n' + "x中😀" * 200_000 + "\n"
     bundle = {
@@ -296,7 +296,7 @@ def test_the_streaming_writer_matches_json_dumps_byte_for_byte(tmp_path):
 
 
 def test_the_layer_b_snapshot_is_the_log_byte_for_byte(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     src = _events_file(tmp_path, '{"k":1}\r\n\n{"k":"中"}\n')
     snap = st._snapshot_events_file(src)
@@ -305,7 +305,7 @@ def test_the_layer_b_snapshot_is_the_log_byte_for_byte(tmp_path, monkeypatch):
 
 
 def test_an_unparseable_log_leaves_no_snapshot_behind(tmp_path):
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     src = _events_file(tmp_path, '{"k":1}\n{"k":\n')
 
@@ -314,7 +314,7 @@ def test_an_unparseable_log_leaves_no_snapshot_behind(tmp_path):
 
 
 def test_a_failed_assembly_releases_the_snapshot(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     sid = "s1"
     (tmp_path / f"{sid}.json").write_text(json.dumps({"session_id": sid}), encoding="utf-8")
@@ -336,8 +336,8 @@ def test_a_failed_assembly_releases_the_snapshot(tmp_path, monkeypatch):
 async def test_send_bundle_uploads_the_serialised_file_and_removes_it(tmp_path):
     """With a serialiser the peer receives the file's bytes, never ``json=``;
     each attempt's file is gone afterwards, the retry's included."""
-    import kiro_crew.instances.ssh_tunnel_manager as mod
-    from kiro_crew.dashboard import session_transfer as st
+    import aj_crew.instances.ssh_tunnel_manager as mod
+    from aj_crew.dashboard import session_transfer as st
 
     mgr, _seen, _ = _size_refusing_peer("transfer_layer_b_too_large")
     posted: list[bytes] = []
@@ -407,7 +407,7 @@ async def test_send_bundle_uploads_the_serialised_file_and_removes_it(tmp_path):
 @pytest.mark.asyncio
 async def test_an_upload_the_peer_stops_reading_times_out(tmp_path, monkeypatch):
     """No total timeout, but no progress for ``_TRANSFER_TIMEOUT`` ends it."""
-    import kiro_crew.instances.ssh_tunnel_manager as mod
+    import aj_crew.instances.ssh_tunnel_manager as mod
 
     monkeypatch.setattr(mod, "_TRANSFER_TIMEOUT", 0.05)
     body = tmp_path / "body.json"
@@ -437,7 +437,7 @@ async def test_a_finished_upload_leaves_the_reply_wait_to_the_read_timeout(tmp_p
     runner's, and a deadline shorter than that hop times the UPLOAD out -- the
     sibling test's case, not this one's.
     """
-    import kiro_crew.instances.ssh_tunnel_manager as mod
+    import aj_crew.instances.ssh_tunnel_manager as mod
 
     body = tmp_path / "body.json"
     body.write_bytes(b"{}")
@@ -462,12 +462,12 @@ async def test_a_finished_upload_leaves_the_reply_wait_to_the_read_timeout(tmp_p
 async def test_a_publication_refusal_releases_the_layer_b_snapshot(monkeypatch, refusal):
     """The refusal returns before the send, so the snapshot the bundle carries
     must be removed there too, or every refused attempt leaves one on disk."""
-    from kiro_crew.dashboard import handlers_instances as hi
-    from kiro_crew.dashboard import session_transfer as st
-    from kiro_crew.history import TranscriptBusy, TranscriptWithheld
+    from aj_crew.dashboard import handlers_instances as hi
+    from aj_crew.dashboard import session_transfer as st
+    from aj_crew.history import TranscriptBusy, TranscriptWithheld
 
     monkeypatch.setattr(
-        hi.KiroCrewConfig,
+        hi.AjCrewConfig,
         "load",
         staticmethod(lambda: SimpleNamespace(instances=SimpleNamespace(enabled=True))),
     )
@@ -517,7 +517,7 @@ async def test_a_publication_refusal_releases_the_layer_b_snapshot(monkeypatch, 
 async def test_a_forward_replaced_during_serialisation_gets_nothing(tmp_path):
     """Serialising a large session is the longest await before the request, so a
     tunnel replaced inside it must not receive the body or the credential."""
-    import kiro_crew.instances.ssh_tunnel_manager as mod
+    import aj_crew.instances.ssh_tunnel_manager as mod
 
     mgr, seen, session_factory = _size_refusing_peer("unused")
 
@@ -544,7 +544,7 @@ async def test_a_forward_replaced_during_serialisation_gets_nothing(tmp_path):
 async def test_a_source_withheld_during_serialisation_gets_nothing(tmp_path):
     """The caller's recheck runs after serialising, before the request: a privacy
     line tightened while a large session serialised must stop the send."""
-    import kiro_crew.instances.ssh_tunnel_manager as mod
+    import aj_crew.instances.ssh_tunnel_manager as mod
 
     mgr, seen, session_factory = _size_refusing_peer("unused")
     order: list[str] = []
@@ -576,7 +576,7 @@ async def test_a_source_withheld_during_serialisation_gets_nothing(tmp_path):
 
 
 def test_a_log_that_cannot_be_opened_leaves_no_descriptor(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     opened: list[int] = []
     real_mkstemp = st.tempfile.mkstemp
@@ -598,7 +598,7 @@ def test_a_log_that_cannot_be_opened_leaves_no_descriptor(tmp_path, monkeypatch)
 async def test_a_cleanup_failure_after_a_committed_send_keeps_the_success(monkeypatch):
     """The peer committed the import; failing to remove the staged body must not
     turn that into an error whose retry would duplicate the session."""
-    import kiro_crew.instances.ssh_tunnel_manager as mod
+    import aj_crew.instances.ssh_tunnel_manager as mod
 
     mgr, seen, session_factory = _size_refusing_peer("unused")
 
@@ -619,7 +619,7 @@ async def test_a_cleanup_failure_after_a_committed_send_keeps_the_success(monkey
 async def test_a_peer_reply_is_read_under_a_cap_and_never_buffered_past_it(monkeypatch):
     """A peer that keeps sending is cut off at the cap: the reader stops pulling
     and the reply reads as ``{}``, so the gateway never buffers it without end."""
-    import kiro_crew.instances.ssh_tunnel_manager as mod
+    import aj_crew.instances.ssh_tunnel_manager as mod
 
     monkeypatch.setattr(mod, "_TRANSFER_REPLY_MAX_BYTES", 1000)
     pulled = {"n": 0}
@@ -642,7 +642,7 @@ async def test_a_peer_reply_is_read_under_a_cap_and_never_buffered_past_it(monke
 def test_staging_sweep_removes_only_files_older_than_this_process(monkeypatch, tmp_path):
     """Crash orphans are reclaimed; a live transfer's file, a symlink target and a
     subdirectory are never touched."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     started = 1_000_000.0
     monkeypatch.setattr(st, "_PROCESS_STARTED_AT", started)
@@ -687,7 +687,7 @@ def test_staging_sweep_removes_only_files_older_than_this_process(monkeypatch, t
 def test_a_symlinked_staging_dir_is_never_swept(monkeypatch, tmp_path):
     """A link planted where the staging directory should be must not turn the
     sweep onto the files it points at."""
-    from kiro_crew.dashboard import session_transfer as st
+    from aj_crew.dashboard import session_transfer as st
 
     started = 1_000_000.0
     monkeypatch.setattr(st, "_PROCESS_STARTED_AT", started)
@@ -711,7 +711,7 @@ def test_a_symlinked_staging_dir_is_never_swept(monkeypatch, tmp_path):
 def test_staging_helpers_sweep_orphans_on_first_use(monkeypatch, tmp_path, helper, leaf):
     import importlib.util
 
-    from kiro_crew.dashboard import session_transfer_staging as patched
+    from aj_crew.dashboard import session_transfer_staging as patched
 
     # The autouse isolation fixture replaces both helpers on the imported module,
     # so load a private copy whose helpers are the real ones.

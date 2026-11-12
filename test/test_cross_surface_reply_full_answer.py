@@ -17,16 +17,16 @@ from typing import Any
 import pytest
 from turn_harness import TurnScript, run_turn
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.messaging.egress import channel_egress_parts
-from kiro_crew.messaging.transport import TransportCapabilities
+from aj_crew.dashboard import chat_runner
+from aj_crew.messaging.egress import channel_egress_parts
+from aj_crew.messaging.transport import TransportCapabilities
 
 _DONE = AcpEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_END_TURN)
 _ANSWER = "Here is the full analysis the user asked for."

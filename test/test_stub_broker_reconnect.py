@@ -39,10 +39,10 @@ from pathlib import Path
 import pytest
 from fake_pool_mcp_server import recorded
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.mcp_gateway import transport
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import platform_compat as pc
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway import transport
+from aj_crew.testing.wait import async_wait_until, await_until
 
 _FAKE_SERVER = Path(__file__).with_name("fake_pool_mcp_server.py")
 
@@ -70,7 +70,7 @@ pytestmark = pytest.mark.xdist_group("mcp_gateway")
 def _clean_env() -> dict[str, str]:
     # Drop any inherited channel id: it feeds PoolKey.channel_id, and a value
     # leaking in from the developer's shell would silently change partitioning.
-    return {k: v for k, v in os.environ.items() if k != "KIROCREW_CHANNEL_ID"}
+    return {k: v for k, v in os.environ.items() if k != "AJCREW_CHANNEL_ID"}
 
 
 def _init_frame(req_id: int) -> str:
@@ -113,12 +113,12 @@ async def _spawn_stub(
     session_key: str,
 ) -> asyncio.subprocess.Process:
     """Launch a REAL stub process, exactly as the rewriter's overlay would."""
-    env = {**_clean_env(), "KIROCREW_HOME": str(home)}
-    env["KIROCREW_SESSION_KEY"] = session_key
+    env = {**_clean_env(), "AJCREW_HOME": str(home)}
+    env["AJCREW_SESSION_KEY"] = session_key
     return await asyncio.create_subprocess_exec(
         sys.executable,
         "-m",
-        "kiro_crew.mcp_gateway.stub",
+        "aj_crew.mcp_gateway.stub",
         "--server",
         "fake",
         "--agent",
@@ -142,7 +142,7 @@ async def _spawn_stub(
         # Its own directory, not pytest's: a child inheriting the repository CWD
         # can leave a relative artifact behind in the checkout.
         cwd=str(work_dir),
-        # KIROCREW_HOME redirects the stub's fallback audit log into the test's
+        # AJCREW_HOME redirects the stub's fallback audit log into the test's
         # own tree, so a degradation is observable instead of landing in the
         # developer's real home.
         env=env,
@@ -460,7 +460,7 @@ def _reader_with(*frames: dict) -> asyncio.StreamReader:
 
 
 def _session_with_captured_init(init_result: dict | None) -> object:
-    from kiro_crew.mcp_gateway.stub import StubSession
+    from aj_crew.mcp_gateway.stub import StubSession
 
     session = StubSession()
     session.captured_init = (
@@ -488,7 +488,7 @@ _SERVER_RESULT = {
 @pytest.mark.asyncio
 async def test_replay_accepts_a_generation_that_answers_identically() -> None:
     """The ordinary case: same server, so the session may carry on."""
-    from kiro_crew.mcp_gateway.stub import _REPLAY_OK, _replay_initialize
+    from aj_crew.mcp_gateway.stub import _REPLAY_OK, _replay_initialize
 
     session = _session_with_captured_init(_SERVER_RESULT)
     status, forward, detail = await _replay_initialize(
@@ -511,7 +511,7 @@ async def test_replay_refuses_a_generation_that_answers_differently() -> None:
     REFUSE rather than RETRY: that generation owns the endpoint, so the next
     attempt would get the same answer.
     """
-    from kiro_crew.mcp_gateway.stub import _REPLAY_REFUSE, _replay_initialize
+    from aj_crew.mcp_gateway.stub import _REPLAY_REFUSE, _replay_initialize
 
     moved_on = {**_SERVER_RESULT, "serverInfo": {"name": "other", "version": "9"}}
     session = _session_with_captured_init(_SERVER_RESULT)
@@ -534,7 +534,7 @@ async def test_a_connection_lost_during_replay_is_retryable_not_terminal() -> No
     or may itself die again. Treating it as terminal would spend the session in
     exactly the case the budget was bought for.
     """
-    from kiro_crew.mcp_gateway.stub import _REPLAY_RETRY, _replay_initialize
+    from aj_crew.mcp_gateway.stub import _REPLAY_RETRY, _replay_initialize
 
     closed = asyncio.StreamReader()
     closed.feed_eof()
@@ -558,7 +558,7 @@ async def test_replay_forwards_the_answer_a_session_never_received() -> None:
     There is no earlier answer to compare against and no duplicate to avoid, so
     the replayed reply is the one the caller is owed and must reach it.
     """
-    from kiro_crew.mcp_gateway.stub import _REPLAY_OK, _replay_initialize
+    from aj_crew.mcp_gateway.stub import _REPLAY_OK, _replay_initialize
 
     session = _session_with_captured_init(None)
     status, forward, detail = await _replay_initialize(
@@ -582,7 +582,7 @@ async def test_reconnect_retries_past_a_daemon_that_dies_mid_replay(
     answers. Giving up after the first would lose the session to the very event
     the reconnect exists to survive.
     """
-    from kiro_crew.mcp_gateway import stub as stub_mod
+    from aj_crew.mcp_gateway import stub as stub_mod
 
     monkeypatch.setattr(stub_mod, "_RECONNECT_BACKOFF_START_SECS", 0.01)
     attempts: list[int] = []
@@ -641,7 +641,7 @@ async def test_reconnect_gives_up_within_its_budget(tmp_path: Path, monkeypatch)
     would replace "this session lost its servers" with a stub that never exits
     and never tells kiro-cli the server is done.
     """
-    from kiro_crew.mcp_gateway import stub as stub_mod
+    from aj_crew.mcp_gateway import stub as stub_mod
 
     monkeypatch.setattr(stub_mod, "_RECONNECT_TOTAL_BUDGET_SECS", 0.4)
     monkeypatch.setattr(stub_mod, "_RECONNECT_BACKOFF_START_SECS", 0.05)
@@ -672,7 +672,7 @@ async def test_a_closed_stdin_is_not_a_reconnectable_ending() -> None:
     Treating it as reconnectable would make every normal exit spend the whole
     reconnect budget re-attaching a bridge with nobody left to serve.
     """
-    from kiro_crew.mcp_gateway.stub import StubSession, run_bridge
+    from aj_crew.mcp_gateway.stub import StubSession, run_bridge
 
     session = StubSession()
     stdin = asyncio.StreamReader()
@@ -713,7 +713,7 @@ async def test_a_closed_stdin_is_not_a_reconnectable_ending() -> None:
 
 
 def _session_after(*frames: dict) -> object:
-    from kiro_crew.mcp_gateway.stub import StubSession
+    from aj_crew.mcp_gateway.stub import StubSession
 
     session = StubSession()
     for frame in frames:
@@ -803,7 +803,7 @@ class _NullTransport(asyncio.Transport):
 
 
 def test_abandoned_calls_are_failed_once_when_no_replay_can_answer_them() -> None:
-    from kiro_crew.mcp_gateway.stub import StubSession, _split_abandoned_ids
+    from aj_crew.mcp_gateway.stub import StubSession, _split_abandoned_ids
 
     session = StubSession()
     session.outstanding_ids = [11, 12]
@@ -814,7 +814,7 @@ def test_abandoned_calls_are_failed_once_when_no_replay_can_answer_them() -> Non
 
 def test_an_unanswered_initialize_is_deferred_to_the_replay() -> None:
     """Erroring it here would contradict a replay that answers it for real."""
-    from kiro_crew.mcp_gateway.stub import _split_abandoned_ids
+    from aj_crew.mcp_gateway.stub import _split_abandoned_ids
 
     session = _session_with_captured_init(None)
     session.outstanding_ids = [7, 12]  # type: ignore[attr-defined]
@@ -828,7 +828,7 @@ def test_an_unanswered_initialize_is_deferred_to_the_replay() -> None:
 
 def test_an_already_answered_initialize_is_not_deferred() -> None:
     """The replay swallows that reply, so nobody downstream would answer it."""
-    from kiro_crew.mcp_gateway.stub import _split_abandoned_ids
+    from aj_crew.mcp_gateway.stub import _split_abandoned_ids
 
     session = _session_with_captured_init(_SERVER_RESULT)
     session.outstanding_ids = [7]  # type: ignore[attr-defined]
@@ -861,7 +861,7 @@ async def test_reconnect_refuses_a_daemon_that_ignores_the_poolable_field(
     monkeypatch,
 ) -> None:
     """A private server must never be silently pooled by an older generation."""
-    from kiro_crew.mcp_gateway import stub as stub_mod
+    from aj_crew.mcp_gateway import stub as stub_mod
 
     monkeypatch.setattr(stub_mod, "handshake", _fake_handshake([]))
     session = _session_with_captured_init(_SERVER_RESULT)
@@ -884,7 +884,7 @@ async def test_reconnect_accepts_that_daemon_when_sharing_was_requested(
     monkeypatch,
 ) -> None:
     """A stub that ASKED to share needs no attestation: pooling is what it wanted."""
-    from kiro_crew.mcp_gateway import stub as stub_mod
+    from aj_crew.mcp_gateway import stub as stub_mod
 
     monkeypatch.setattr(stub_mod, "handshake", _fake_handshake(["poolable_ack"]))
     session = _session_with_captured_init(_SERVER_RESULT)
@@ -911,7 +911,7 @@ async def test_reconnect_refuses_a_daemon_of_another_code_generation_at_once(
     accepted register the stub then closes -- against a daemon that is UP and
     will keep answering the same way, before reaching the same terminal exit.
     """
-    from kiro_crew.mcp_gateway import stub as stub_mod
+    from aj_crew.mcp_gateway import stub as stub_mod
 
     # Small enough that the OLD behaviour (retry until the budget is spent)
     # finishes within the test instead of running for ten minutes, large
@@ -958,7 +958,7 @@ async def test_reconnect_still_retries_a_gateway_that_is_not_back_yet(
     A connect failure is the shape of a daemon still being respawned, and that
     is exactly what the budget is bought for.
     """
-    from kiro_crew.mcp_gateway import stub as stub_mod
+    from aj_crew.mcp_gateway import stub as stub_mod
 
     monkeypatch.setattr(stub_mod, "_RECONNECT_BACKOFF_START_SECS", 0.01)
     attempts: list[int] = []
@@ -1002,8 +1002,8 @@ def test_the_reconnect_budget_covers_the_supervisor_s_own_recovery() -> None:
     Asserted against the manager's own constants rather than a copied number, so
     raising the detection cost fails here instead of silently re-breaking it.
     """
-    from kiro_crew.mcp_gateway import manager as mgr
-    from kiro_crew.mcp_gateway import stub as stub_mod
+    from aj_crew.mcp_gateway import manager as mgr
+    from aj_crew.mcp_gateway import stub as stub_mod
 
     floor = mgr._LIVENESS_MAX_CONSECUTIVE_FAILURES * mgr._LIVENESS_PING_INTERVAL_SECS
     assert stub_mod._RECONNECT_TOTAL_BUDGET_SECS > floor, (

@@ -21,8 +21,8 @@ from mcp_discovery_helpers import (  # noqa: F401 -- the autouse fixture registe
     _stub_remote_probe_ssrf_vet,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.mcp_discovery import (
+from aj_crew import platform_compat
+from aj_crew.mcp_discovery import (
     McpServerInfo,
     _cache_probe,
     _get_cached,
@@ -30,7 +30,7 @@ from kiro_crew.mcp_discovery import (
     _probe_cache,
     probe_server,
 )
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.testing.clock import ManualClock
 
 
 class TestProbeServerConsentGate:
@@ -58,9 +58,9 @@ class TestProbeServerConsentGate:
         server = McpServerInfo(name="held", command="true", disabled=True)
 
         with (
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value="/bin/true"),
+            patch("aj_crew.mcp_discovery.shutil.which", return_value="/bin/true"),
             patch(
-                "kiro_crew.mcp_discovery.create_subprocess_limited",
+                "aj_crew.mcp_discovery.create_subprocess_limited",
                 new_callable=AsyncMock,
             ) as mock_spawn,
         ):
@@ -79,7 +79,7 @@ class TestProbeServerConsentGate:
         """
         server = McpServerInfo(name="held-remote", url="https://example.com/mcp", disabled=True)
 
-        with patch("kiro_crew.mcp_discovery._probe_remote", new_callable=AsyncMock) as mock_remote:
+        with patch("aj_crew.mcp_discovery._probe_remote", new_callable=AsyncMock) as mock_remote:
             result = await probe_server(server)
 
         mock_remote.assert_not_awaited()
@@ -97,9 +97,9 @@ class TestProbeServerConsentGate:
         server.disabled = "yes"  # type: ignore[assignment]
 
         with (
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value="/bin/true"),
+            patch("aj_crew.mcp_discovery.shutil.which", return_value="/bin/true"),
             patch(
-                "kiro_crew.mcp_discovery.create_subprocess_limited",
+                "aj_crew.mcp_discovery.create_subprocess_limited",
                 new_callable=AsyncMock,
             ) as mock_spawn,
         ):
@@ -120,7 +120,7 @@ class TestProbeServerConsentGate:
         _cache_probe(probed)
 
         disabled = McpServerInfo(name="was-ok", command="true", disabled=True)
-        with patch("kiro_crew.mcp_discovery.shutil.which", return_value="/bin/true"):
+        with patch("aj_crew.mcp_discovery.shutil.which", return_value="/bin/true"):
             await probe_server(disabled)
 
         status, tools, *_rest = _get_cached("was-ok")
@@ -183,7 +183,7 @@ class TestProbeTempContainment:
         # configured volume instead of ENOSPC-ing the data home.
         import sys
 
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         server = McpServerInfo(
             name="declared-temp",
@@ -209,8 +209,8 @@ class TestProbeTempContainment:
         import sys
         from pathlib import Path
 
-        from kiro_crew import sandbox
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew import sandbox
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -224,7 +224,7 @@ class TestProbeTempContainment:
             captured_wrap.update(k)
             return list(argv), dict(env if env is not None else os.environ), None
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
+        monkeypatch.setattr("aj_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
 
         server = McpServerInfo(
             name="sealed-declared-temp",
@@ -233,7 +233,7 @@ class TestProbeTempContainment:
             env={"TMPDIR": str(sealed)},
         )
         with patch(
-            "kiro_crew.mcp_discovery.create_subprocess_limited",
+            "aj_crew.mcp_discovery.create_subprocess_limited",
             new_callable=AsyncMock,
             side_effect=OSError("stop after env capture"),
         ) as spawn_mock:
@@ -262,8 +262,8 @@ class TestProbeTempContainment:
         # platform default instead of the sealed path.
         import sys
 
-        from kiro_crew import sandbox
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew import sandbox
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -275,7 +275,7 @@ class TestProbeTempContainment:
         def _wrap(argv, *a, env=None, **k):
             return list(argv), dict(env if env is not None else os.environ), None
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
+        monkeypatch.setattr("aj_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
 
         server = McpServerInfo(
             name="sealed-alloc-fail",
@@ -284,7 +284,7 @@ class TestProbeTempContainment:
             env={"TMPDIR": str(sealed)},
         )
         with patch(
-            "kiro_crew.mcp_discovery.create_subprocess_limited",
+            "aj_crew.mcp_discovery.create_subprocess_limited",
             new_callable=AsyncMock,
             side_effect=OSError("stop after env capture"),
         ) as spawn_mock:
@@ -306,8 +306,8 @@ class TestProbeTempContainment:
         """
         import sys
 
-        from kiro_crew import sandbox
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew import sandbox
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -318,7 +318,7 @@ class TestProbeTempContainment:
         def _wrap(argv, *a, env=None, **k):
             return list(argv), dict(env if env is not None else os.environ), None
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
+        monkeypatch.setattr("aj_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
 
         server = McpServerInfo(
             name="sealed-declared-temp-case",
@@ -327,7 +327,7 @@ class TestProbeTempContainment:
             env={declared_key: str(sealed)},
         )
         with patch(
-            "kiro_crew.mcp_discovery.create_subprocess_limited",
+            "aj_crew.mcp_discovery.create_subprocess_limited",
             new_callable=AsyncMock,
             side_effect=OSError("stop after env capture"),
         ) as spawn_mock:
@@ -355,8 +355,8 @@ class TestProbeTempContainment:
         # declared TMP would win the lookup by spelling luck.
         import sys
 
-        from kiro_crew import sandbox
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew import sandbox
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -370,7 +370,7 @@ class TestProbeTempContainment:
         def _wrap(argv, *a, env=None, **k):
             return list(argv), dict(env if env is not None else os.environ), None
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
+        monkeypatch.setattr("aj_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
         monkeypatch.setenv("TMPDIR", "/ambient/tmpdir")
         monkeypatch.setenv("TMP", "/ambient/tmp")
         monkeypatch.setenv("TEMP", "/ambient/temp")
@@ -382,7 +382,7 @@ class TestProbeTempContainment:
             env={"tmpdir": str(chosen)},
         )
         with patch(
-            "kiro_crew.mcp_discovery.create_subprocess_limited",
+            "aj_crew.mcp_discovery.create_subprocess_limited",
             new_callable=AsyncMock,
             side_effect=OSError("stop after env capture"),
         ) as spawn_mock:
@@ -408,8 +408,8 @@ class TestProbeTempContainment:
         import sys
         from pathlib import Path
 
-        from kiro_crew import sandbox
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew import sandbox
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -417,7 +417,7 @@ class TestProbeTempContainment:
         monkeypatch.setattr(sandbox, "config_dir", lambda: home)
         declared = home / "run" / "custom-tmp"
         monkeypatch.setattr(
-            "kiro_crew.mcp_discovery.classify_declared_temp_path",
+            "aj_crew.mcp_discovery.classify_declared_temp_path",
             MagicMock(side_effect=OSError("data home does not resolve to a real directory")),
         )
         captured_wrap: dict = {}
@@ -426,7 +426,7 @@ class TestProbeTempContainment:
             captured_wrap.update(k)
             return list(argv), dict(env if env is not None else os.environ), None
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
+        monkeypatch.setattr("aj_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
 
         server = McpServerInfo(
             name="check-raises",
@@ -436,7 +436,7 @@ class TestProbeTempContainment:
         )
         with caplog.at_level(logging.WARNING):
             with patch(
-                "kiro_crew.mcp_discovery.create_subprocess_limited",
+                "aj_crew.mcp_discovery.create_subprocess_limited",
                 new_callable=AsyncMock,
                 side_effect=OSError("stop after env capture"),
             ) as spawn_mock:
@@ -472,21 +472,21 @@ class TestProbeTempContainment:
         # looking in the wrong place.
         import sys
 
-        from kiro_crew import sandbox
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew import sandbox
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
         monkeypatch.setattr(bt, "config_dir", lambda: home)
         monkeypatch.setattr(sandbox, "config_dir", lambda: home)
         monkeypatch.setattr(
-            "kiro_crew.mcp_discovery.classify_declared_temp_path", MagicMock(return_value=cause)
+            "aj_crew.mcp_discovery.classify_declared_temp_path", MagicMock(return_value=cause)
         )
 
         def _wrap(argv, *a, env=None, **k):
             return list(argv), dict(env if env is not None else os.environ), None
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
+        monkeypatch.setattr("aj_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
         server = McpServerInfo(
             name="refused-" + cause,
             command=sys.executable,
@@ -495,7 +495,7 @@ class TestProbeTempContainment:
         )
         with caplog.at_level(logging.WARNING):
             with patch(
-                "kiro_crew.mcp_discovery.create_subprocess_limited",
+                "aj_crew.mcp_discovery.create_subprocess_limited",
                 new_callable=AsyncMock,
                 side_effect=OSError("stop after env capture"),
             ) as spawn_mock:
@@ -516,22 +516,22 @@ class TestProbeTempContainment:
     ) -> None:
         import sys
 
-        from kiro_crew import sandbox
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew import sandbox
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
         monkeypatch.setattr(bt, "config_dir", lambda: home)
         monkeypatch.setattr(sandbox, "config_dir", lambda: home)
         monkeypatch.setattr(
-            "kiro_crew.mcp_discovery.classify_declared_temp_path",
+            "aj_crew.mcp_discovery.classify_declared_temp_path",
             MagicMock(return_value="sealed"),
         )
 
         def _wrap(argv, *a, env=None, **k):
             return list(argv), dict(env if env is not None else os.environ), None
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
+        monkeypatch.setattr("aj_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
         declared = "/declared/tmp\nFORGED"
         server = McpServerInfo(
             name="newline-refusal",
@@ -541,7 +541,7 @@ class TestProbeTempContainment:
         )
         with caplog.at_level(logging.WARNING):
             with patch(
-                "kiro_crew.mcp_discovery.create_subprocess_limited",
+                "aj_crew.mcp_discovery.create_subprocess_limited",
                 new_callable=AsyncMock,
                 side_effect=OSError("stop after env capture"),
             ):
@@ -566,7 +566,7 @@ class TestProbeTempContainment:
         # (a side effect of patching IS_POSIX) leaks nothing.
         import sys
 
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -627,7 +627,7 @@ class TestProbeTempContainment:
         # on POSIX the finally would double-cover it and mask a regression.
         import sys
 
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -648,7 +648,7 @@ class TestProbeTempContainment:
 
         server = McpServerInfo(name="spawnfail", command=sys.executable, args=["-c", "pass"])
         with patch(
-            "kiro_crew.mcp_discovery.create_subprocess_limited",
+            "aj_crew.mcp_discovery.create_subprocess_limited",
             new_callable=AsyncMock,
             side_effect=OSError("spawn failed"),
         ):
@@ -667,7 +667,7 @@ class TestProbeTempContainment:
         # allocated. Mirrors the backend chokepoint's pruning.
         import sys
 
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -681,7 +681,7 @@ class TestProbeTempContainment:
             env={"TMP": str(tmp_path / "chosen")},
         )
         with patch(
-            "kiro_crew.mcp_discovery.create_subprocess_limited",
+            "aj_crew.mcp_discovery.create_subprocess_limited",
             new_callable=AsyncMock,
             side_effect=OSError("stop after env capture"),
         ) as spawn_mock:
@@ -707,7 +707,7 @@ class TestProbeTempContainment:
         import sys
         from pathlib import Path
 
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -729,11 +729,11 @@ class TestProbeTempContainment:
             captured_wrap.update(k)
             return list(argv), dict(env if env is not None else os.environ), None
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
+        monkeypatch.setattr("aj_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
 
         server = McpServerInfo(name="order-lock", command=sys.executable, args=["-c", "pass"])
         with patch(
-            "kiro_crew.mcp_discovery.create_subprocess_limited",
+            "aj_crew.mcp_discovery.create_subprocess_limited",
             new_callable=AsyncMock,
             side_effect=OSError("stop after env capture"),
         ) as spawn_mock:
@@ -763,7 +763,7 @@ class TestProbeTempContainment:
         # must still run -- wrapped, with inherited temp and no carve-out.
         import sys
 
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -780,7 +780,7 @@ class TestProbeTempContainment:
             captured_wrap.update(k)
             return list(argv), dict(env if env is not None else os.environ), None
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
+        monkeypatch.setattr("aj_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
 
         server = McpServerInfo(name="alloc-fail", command=sys.executable, args=["-c", "pass"])
         result = await probe_server(server)
@@ -792,43 +792,43 @@ class TestProbeTempContainment:
         assert "disk full" not in (result.error or "")
 
     @pytest.mark.asyncio
-    async def test_probe_drops_reserved_kirocrew_namespace_from_spec_env(
+    async def test_probe_drops_reserved_ajcrew_namespace_from_spec_env(
         self, tmp_path, monkeypatch
     ) -> None:
         """SECURITY: the probe is the SIBLING site of the cron tool bridge.
 
-        Both apply a config-declared ``env`` to their own child, so the ``KIROCREW_*``
+        Both apply a config-declared ``env`` to their own child, so the ``AJCREW_*``
         deny lives in the shared sanitizer, not the cron deny-set. A gateway-authored
         value from ``dict(os.environ)`` is still inherited; only the override is refused.
         """
         import sys
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "real-home"))
-        monkeypatch.delenv("KIROCREW_CLI", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "real-home"))
+        monkeypatch.delenv("AJCREW_CLI", raising=False)
 
         server = McpServerInfo(
             name="identity-forger",
             command=sys.executable,
             args=["-c", "pass"],
             env={
-                "KIROCREW_CLI": "1",
-                "KIROCREW_SESSION_KEY": "some-other-session",
-                "KIROCREW_HOME": str(tmp_path / "attacker-home"),
+                "AJCREW_CLI": "1",
+                "AJCREW_SESSION_KEY": "some-other-session",
+                "AJCREW_HOME": str(tmp_path / "attacker-home"),
                 "MCP_TOKEN": "keep-me",
             },
         )
         with patch(
-            "kiro_crew.mcp_discovery.create_subprocess_limited",
+            "aj_crew.mcp_discovery.create_subprocess_limited",
             new_callable=AsyncMock,
             side_effect=OSError("stop after env capture"),
         ) as spawn_mock:
             await probe_server(server)
 
         captured = spawn_mock.call_args.kwargs["env"]
-        assert "KIROCREW_CLI" not in captured
-        assert "KIROCREW_SESSION_KEY" not in captured
+        assert "AJCREW_CLI" not in captured
+        assert "AJCREW_SESSION_KEY" not in captured
         # Inherited value survives; the spec's override of it does not.
-        assert captured["KIROCREW_HOME"] == str(tmp_path / "real-home")
+        assert captured["AJCREW_HOME"] == str(tmp_path / "real-home")
         assert captured["MCP_TOKEN"] == "keep-me"
 
     @pytest.mark.skipif(
@@ -842,7 +842,7 @@ class TestProbeTempContainment:
         # tree-faithful, so the probe's finally DOES reclaim its private dir.
         import sys
 
-        from kiro_crew.mcp_gateway import backend_tmp as bt
+        from aj_crew.mcp_gateway import backend_tmp as bt
 
         home = tmp_path / "home"
         home.mkdir()
@@ -864,8 +864,8 @@ class TestProbeSandboxUnavailable:
 
     @pytest.mark.asyncio
     async def test_sandbox_refusal_is_reported_as_a_probe_limitation(self, monkeypatch) -> None:
-        import kiro_crew.mcp_discovery as md
-        from kiro_crew.sandbox import SandboxUnavailableError
+        import aj_crew.mcp_discovery as md
+        from aj_crew.sandbox import SandboxUnavailableError
 
         monkeypatch.setattr(md, "_probe_sandbox_warned", set())
 
@@ -880,8 +880,8 @@ class TestProbeSandboxUnavailable:
         # (their tools are read in-process), so they cannot exercise this branch.
         server = McpServerInfo(name="playwright-mcp", command="node")
         with (
-            patch("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _refuse),
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value="/usr/bin/node"),
+            patch("aj_crew.mcp_discovery.sandboxed_spawn_argv", _refuse),
+            patch("aj_crew.mcp_discovery.shutil.which", return_value="/usr/bin/node"),
         ):
             result = await probe_server(server)
 
@@ -895,7 +895,7 @@ class TestProbeSandboxUnavailable:
     async def test_a_managed_server_is_still_spawned_when_the_sandbox_works(self) -> None:
         """The spawn is the only thing that proves the server can START.
 
-        The managed invocation can go stale ("command not found: kirocrew"), and only
+        The managed invocation can go stale ("command not found: ajcrew"), and only
         the probe catches it; skipping by server name would cache `ok` for a server
         that cannot run.
         """
@@ -905,10 +905,10 @@ class TestProbeSandboxUnavailable:
             spawned["yes"] = True
             raise RuntimeError("stop at the wrap")
 
-        server = McpServerInfo(name="kirocrew-core", command="kirocrew", args=["mcp-core"])
+        server = McpServerInfo(name="ajcrew-core", command="ajcrew", args=["mcp-core"])
         with (
-            patch("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _wrap),
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value="/usr/bin/kirocrew"),
+            patch("aj_crew.mcp_discovery.sandboxed_spawn_argv", _wrap),
+            patch("aj_crew.mcp_discovery.shutil.which", return_value="/usr/bin/ajcrew"),
         ):
             await probe_server(server)
 
@@ -925,19 +925,19 @@ class TestProbeSandboxUnavailable:
         sandbox could not confine anything on this host anyway — hence fallback,
         never primary.
         """
-        import kiro_crew.mcp_discovery as md
-        from kiro_crew.sandbox import SandboxUnavailableError
+        import aj_crew.mcp_discovery as md
+        from aj_crew.sandbox import SandboxUnavailableError
 
         monkeypatch.setattr(md, "_managed_in_process_warned", set())
 
         def _refuse(*args, **kwargs):
             raise SandboxUnavailableError("no backend", kind="no_backend", detail="not Linux")
 
-        for name, expect_tools in (("kirocrew-core", True), ("kirocrew-cron", True)):
-            server = McpServerInfo(name=name, command="kirocrew", args=["mcp-x"])
+        for name, expect_tools in (("ajcrew-core", True), ("ajcrew-cron", True)):
+            server = McpServerInfo(name=name, command="ajcrew", args=["mcp-x"])
             with (
-                patch("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _refuse),
-                patch("kiro_crew.mcp_discovery.shutil.which", return_value="/usr/bin/kirocrew"),
+                patch("aj_crew.mcp_discovery.sandboxed_spawn_argv", _refuse),
+                patch("aj_crew.mcp_discovery.shutil.which", return_value="/usr/bin/ajcrew"),
             ):
                 result = await probe_server(server)
 
@@ -948,15 +948,15 @@ class TestProbeSandboxUnavailable:
     async def test_a_third_party_server_gets_no_declaration_fallback(self) -> None:
         """Only OUR OWN servers have a declaration to read; a third-party one keeps
         the honest probe-limitation error."""
-        from kiro_crew.sandbox import SandboxUnavailableError
+        from aj_crew.sandbox import SandboxUnavailableError
 
         def _refuse(*args, **kwargs):
             raise SandboxUnavailableError("no backend", kind="no_backend", detail="not Linux")
 
         server = McpServerInfo(name="playwright-mcp", command="node")
         with (
-            patch("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _refuse),
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value="/usr/bin/node"),
+            patch("aj_crew.mcp_discovery.sandboxed_spawn_argv", _refuse),
+            patch("aj_crew.mcp_discovery.shutil.which", return_value="/usr/bin/node"),
         ):
             result = await probe_server(server)
 
@@ -974,12 +974,12 @@ class TestProbeSandboxUnavailable:
         """
         import logging
 
-        import kiro_crew.mcp_discovery as md
+        import aj_crew.mcp_discovery as md
 
         monkeypatch.setattr(md, "_probe_sandbox_warned", set())
         with caplog.at_level(logging.WARNING, logger=md.logger.name):
-            md._warn_probe_sandbox_unavailable_once("kirocrew-core")
-            md._warn_probe_sandbox_unavailable_once("kirocrew-core")
+            md._warn_probe_sandbox_unavailable_once("ajcrew-core")
+            md._warn_probe_sandbox_unavailable_once("ajcrew-core")
 
         warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
         assert len(warnings) == 1, [r.getMessage() for r in warnings]
@@ -1000,32 +1000,32 @@ class TestFirstPartyManagedArgv:
     _INVOCATION = (sys.executable, ["mcp-core"])
 
     def _patch_invocation(self, monkeypatch) -> None:
-        import kiro_crew.mcp_discovery as md
+        import aj_crew.mcp_discovery as md
 
-        monkeypatch.setattr(md, "_resolved_managed_invocation", {"kirocrew-core": self._INVOCATION})
+        monkeypatch.setattr(md, "_resolved_managed_invocation", {"ajcrew-core": self._INVOCATION})
         # Default install: the package-derived managed env is empty.
-        monkeypatch.setattr("kiro_crew.agent._managed_mcp_env", lambda: {})
+        monkeypatch.setattr("aj_crew.agent._managed_mcp_env", lambda: {})
 
     def test_self_derived_managed_argv_is_first_party(self, monkeypatch) -> None:
-        import kiro_crew.mcp_discovery as md
+        import aj_crew.mcp_discovery as md
 
         self._patch_invocation(monkeypatch)
         assert md._is_first_party_managed_argv(
-            "kirocrew-core", self._INVOCATION[0], list(self._INVOCATION[1]), {}
+            "ajcrew-core", self._INVOCATION[0], list(self._INVOCATION[1]), {}
         )
 
     def test_customized_command_under_a_managed_name_is_not(self, monkeypatch) -> None:
         """A managed NAME with user-config command text (the mcp.json-sourced
         case, which ``_fix_stale_managed_command`` never re-resolves) must keep
         the full fail-close + opt-in behavior."""
-        import kiro_crew.mcp_discovery as md
+        import aj_crew.mcp_discovery as md
 
         self._patch_invocation(monkeypatch)
         assert not md._is_first_party_managed_argv(
-            "kirocrew-core", "/home/user/evil-shim", list(self._INVOCATION[1]), {}
+            "ajcrew-core", "/home/user/evil-shim", list(self._INVOCATION[1]), {}
         )
         assert not md._is_first_party_managed_argv(
-            "kirocrew-core", self._INVOCATION[0], ["mcp-core", "--extra"], {}
+            "ajcrew-core", self._INVOCATION[0], ["mcp-core", "--extra"], {}
         )
 
     def test_spec_env_under_a_managed_name_is_not_first_party(self, monkeypatch) -> None:
@@ -1033,11 +1033,11 @@ class TestFirstPartyManagedArgv:
         what code runs), and ``probe_server`` merges the spec's env into the
         child environment — so any key this package did not derive disqualifies
         the spec from the unconfined carve-out."""
-        import kiro_crew.mcp_discovery as md
+        import aj_crew.mcp_discovery as md
 
         self._patch_invocation(monkeypatch)
         assert not md._is_first_party_managed_argv(
-            "kirocrew-core",
+            "ajcrew-core",
             self._INVOCATION[0],
             list(self._INVOCATION[1]),
             {"LD_PRELOAD": "/tmp/evil.so"},
@@ -1045,60 +1045,60 @@ class TestFirstPartyManagedArgv:
 
     def test_the_package_derived_home_pin_still_matches(self, monkeypatch) -> None:
         """Under an override home the managed spec legitimately carries exactly
-        the ``KIROCREW_HOME`` pin this package derived — that must still count
+        the ``AJCREW_HOME`` pin this package derived — that must still count
         as first-party, and any EXTRA key alongside it must not."""
-        import kiro_crew.mcp_discovery as md
+        import aj_crew.mcp_discovery as md
 
         self._patch_invocation(monkeypatch)
-        pin = {"KIROCREW_HOME": "/data/override-home"}
-        monkeypatch.setattr("kiro_crew.agent._managed_mcp_env", lambda: dict(pin))
+        pin = {"AJCREW_HOME": "/data/override-home"}
+        monkeypatch.setattr("aj_crew.agent._managed_mcp_env", lambda: dict(pin))
         assert md._is_first_party_managed_argv(
-            "kirocrew-core", self._INVOCATION[0], list(self._INVOCATION[1]), dict(pin)
+            "ajcrew-core", self._INVOCATION[0], list(self._INVOCATION[1]), dict(pin)
         )
         assert not md._is_first_party_managed_argv(
-            "kirocrew-core",
+            "ajcrew-core",
             self._INVOCATION[0],
             list(self._INVOCATION[1]),
             {**pin, "LD_PRELOAD": "/tmp/evil.so"},
         )
         # A spec MISSING the derived pin is also not the derived invocation.
         assert not md._is_first_party_managed_argv(
-            "kirocrew-core", self._INVOCATION[0], list(self._INVOCATION[1]), {}
+            "ajcrew-core", self._INVOCATION[0], list(self._INVOCATION[1]), {}
         )
 
     def test_the_interpreter_fallback_is_never_first_party(self, monkeypatch) -> None:
-        """`python -s -m kiro_crew` still prepends the child's CWD to sys.path
-        (3.10 has no -P), so a planted `kiro_crew/` tree in an untrusted cwd
+        """`python -s -m aj_crew` still prepends the child's CWD to sys.path
+        (3.10 has no -P), so a planted `aj_crew/` tree in an untrusted cwd
         would shadow the install — only a resolved console-script binary
         qualifies."""
         import sys
 
-        import kiro_crew.mcp_discovery as md
+        import aj_crew.mcp_discovery as md
 
-        fallback = (sys.executable, ["-s", "-m", "kiro_crew", "mcp-core"])
-        monkeypatch.setattr(md, "_resolved_managed_invocation", {"kirocrew-core": fallback})
-        monkeypatch.setattr("kiro_crew.agent._managed_mcp_env", lambda: {})
+        fallback = (sys.executable, ["-s", "-m", "aj_crew", "mcp-core"])
+        monkeypatch.setattr(md, "_resolved_managed_invocation", {"ajcrew-core": fallback})
+        monkeypatch.setattr("aj_crew.agent._managed_mcp_env", lambda: {})
         assert not md._is_first_party_managed_argv(
-            "kirocrew-core", fallback[0], list(fallback[1]), {}
+            "ajcrew-core", fallback[0], list(fallback[1]), {}
         )
 
     def test_third_party_server_is_never_first_party(self, monkeypatch) -> None:
-        import kiro_crew.mcp_discovery as md
+        import aj_crew.mcp_discovery as md
 
         self._patch_invocation(monkeypatch)
         assert not md._is_first_party_managed_argv("playwright-mcp", "node", [], {})
 
     def test_resolution_failure_fails_toward_not_first_party(self, monkeypatch) -> None:
-        import kiro_crew.mcp_discovery as md
+        import aj_crew.mcp_discovery as md
 
         monkeypatch.setattr(md, "_resolved_managed_invocation", {})
 
         def _boom(subcommand):
             raise RuntimeError("no install")
 
-        monkeypatch.setattr("kiro_crew.agent._kirocrew_mcp_invocation", _boom)
+        monkeypatch.setattr("aj_crew.agent._ajcrew_mcp_invocation", _boom)
         assert not md._is_first_party_managed_argv(
-            "kirocrew-core", self._INVOCATION[0], list(self._INVOCATION[1]), {}
+            "ajcrew-core", self._INVOCATION[0], list(self._INVOCATION[1]), {}
         )
 
     @pytest.mark.asyncio
@@ -1113,11 +1113,11 @@ class TestFirstPartyManagedArgv:
             raise RuntimeError("stop at the wrap")
 
         server = McpServerInfo(
-            name="kirocrew-core", command=self._INVOCATION[0], args=list(self._INVOCATION[1])
+            name="ajcrew-core", command=self._INVOCATION[0], args=list(self._INVOCATION[1])
         )
         with (
-            patch("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _capture),
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value=self._INVOCATION[0]),
+            patch("aj_crew.mcp_discovery.sandboxed_spawn_argv", _capture),
+            patch("aj_crew.mcp_discovery.shutil.which", return_value=self._INVOCATION[0]),
         ):
             await probe_server(server)
 
@@ -1136,8 +1136,8 @@ class TestFirstPartyManagedArgv:
 
         server = McpServerInfo(name="playwright-mcp", command="node")
         with (
-            patch("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _capture),
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value="/usr/bin/node"),
+            patch("aj_crew.mcp_discovery.sandboxed_spawn_argv", _capture),
+            patch("aj_crew.mcp_discovery.shutil.which", return_value="/usr/bin/node"),
         ):
             await probe_server(server)
 
@@ -1186,14 +1186,14 @@ class TestProbeRefusesSecretReferences:
         def _no_spawn(*_a, **_kw):
             raise AssertionError("probe spawned a server holding a secret:// reference")
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery._probe_on_private_loop", _no_spawn)
-        monkeypatch.setattr("kiro_crew.mcp_discovery_probe._served_by_gateway", lambda _n: False)
+        monkeypatch.setattr("aj_crew.mcp_discovery._probe_on_private_loop", _no_spawn)
+        monkeypatch.setattr("aj_crew.mcp_discovery_probe._served_by_gateway", lambda _n: False)
         server = McpServerInfo(
             name="srv", command="srv-mcp", env={"API_TOKEN": "secret://NAME", "MODE": "x"}
         )
         out = await probe_server(server)
         # No handshake was attempted, so the status carries no probe verdict.
-        from kiro_crew.mcp_quarantine import FAILING_STATUSES
+        from aj_crew.mcp_quarantine import FAILING_STATUSES
 
         assert out.status not in FAILING_STATUSES and out.status != "ok"
         # The dashboard shows an ``outdated`` row's error as its not-probed
@@ -1215,15 +1215,15 @@ class TestProbeRefusesSecretReferences:
         def _no_cache(*_a, **_kw):
             raise AssertionError("a routed row carries no probe result to cache")
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery._probe_on_private_loop", _no_spawn)
-        monkeypatch.setattr("kiro_crew.mcp_discovery._cache_probe", _no_cache)
+        monkeypatch.setattr("aj_crew.mcp_discovery._probe_on_private_loop", _no_spawn)
+        monkeypatch.setattr("aj_crew.mcp_discovery._cache_probe", _no_cache)
         monkeypatch.setattr(
-            "kiro_crew.agent_materialization.mcp_sources._gateway_routed_names",
+            "aj_crew.agent_materialization.mcp_sources._gateway_routed_names",
             lambda: frozenset({"srv"}),
         )
         server = McpServerInfo(name="srv", command="srv-mcp", env={"API_TOKEN": "secret://NAME"})
         out = await probe_server(server)
-        from kiro_crew.mcp_quarantine import FAILING_STATUSES
+        from aj_crew.mcp_quarantine import FAILING_STATUSES
 
         assert out.status == "routed"
         assert out.error == ""
@@ -1233,7 +1233,7 @@ class TestProbeRefusesSecretReferences:
     async def test_server_the_gateway_does_not_serve_keeps_the_refusal(self, monkeypatch) -> None:
         """Another server being routed does not make this one routed."""
         monkeypatch.setattr(
-            "kiro_crew.agent_materialization.mcp_sources._gateway_routed_names",
+            "aj_crew.agent_materialization.mcp_sources._gateway_routed_names",
             lambda: frozenset({"other"}),
         )
         server = McpServerInfo(name="srv", command="srv-mcp", env={"API_TOKEN": "secret://NAME"})
@@ -1243,11 +1243,11 @@ class TestProbeRefusesSecretReferences:
 
     def test_routing_matches_the_alias_like_the_rebuild(self, monkeypatch) -> None:
         """The routing list may hold the raw name while the row uses the alias."""
-        from kiro_crew.mcp_discovery_probe import _served_by_gateway
-        from kiro_crew.mcp_gateway.secret_uri import mcp_server_alias
+        from aj_crew.mcp_discovery_probe import _served_by_gateway
+        from aj_crew.mcp_gateway.secret_uri import mcp_server_alias
 
         monkeypatch.setattr(
-            "kiro_crew.agent_materialization.mcp_sources._gateway_routed_names",
+            "aj_crew.agent_materialization.mcp_sources._gateway_routed_names",
             lambda: frozenset({"npm:@acme/mcp"}),
         )
         assert _served_by_gateway(mcp_server_alias("npm:@acme/mcp"))
@@ -1255,12 +1255,12 @@ class TestProbeRefusesSecretReferences:
 
     def test_unreadable_routing_answers_not_routed(self, monkeypatch) -> None:
         """Cannot tell means the refusal row and its routing guidance stay."""
-        from kiro_crew.mcp_discovery_probe import _served_by_gateway
+        from aj_crew.mcp_discovery_probe import _served_by_gateway
 
         def _boom() -> frozenset[str]:
             raise RuntimeError("overlay unreadable")
 
         monkeypatch.setattr(
-            "kiro_crew.agent_materialization.mcp_sources._gateway_routed_names", _boom
+            "aj_crew.agent_materialization.mcp_sources._gateway_routed_names", _boom
         )
         assert _served_by_gateway("srv") is False

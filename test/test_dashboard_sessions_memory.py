@@ -12,7 +12,7 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew.dashboard.handlers.sessions import api_sessions_memory
+from aj_crew.dashboard.handlers.sessions import api_sessions_memory
 
 
 class _FakeSlot:
@@ -47,7 +47,7 @@ def _make_request(
 def _row(key: str, pid: int | None) -> dict[str, object]:
     return {
         "key": key,
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "pid": pid,
         "owns_runtime": True,
         "created_at": 1000.0,
@@ -58,7 +58,7 @@ def _row(key: str, pid: int | None) -> dict[str, object]:
 @pytest.fixture(autouse=True)
 def stub_proc(monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep the handler off real /proc — the sampler is unit-tested separately."""
-    from kiro_crew.dashboard import session_memory as sm
+    from aj_crew.dashboard import session_memory as sm
 
     monkeypatch.setattr(sm.sys, "platform", "linux")
     # The sampler hands its already-walked set to _get_rss_tree_mb as pids=, so
@@ -123,7 +123,7 @@ async def test_session_row_carries_channel_from_telemetry_channel_of() -> None:
     The assertion compares against the function's output, NOT a hardcoded string,
     so the test cannot drift from the taxonomy.
     """
-    from kiro_crew.messaging.link import telemetry_channel_of
+    from aj_crew.messaging.link import telemetry_channel_of
 
     key = "dashboard:chat-42"
     request = _make_request([_row(key, 7)])
@@ -138,7 +138,7 @@ async def test_session_row_carries_channel_from_telemetry_channel_of() -> None:
 @pytest.mark.asyncio
 async def test_non_dashboard_session_gets_its_own_channel() -> None:
     """A cron or Slack session must resolve to its own channel, not dashboard."""
-    from kiro_crew.messaging.link import telemetry_channel_of
+    from aj_crew.messaging.link import telemetry_channel_of
 
     key = "cron:daily-check"
     request = _make_request([_row(key, 8)])
@@ -154,11 +154,11 @@ async def test_non_dashboard_session_gets_its_own_channel() -> None:
 @pytest.mark.asyncio
 async def test_non_string_key_does_not_raise_and_still_has_channel() -> None:
     """The production code guards non-string keys with isinstance; prove it."""
-    from kiro_crew.messaging.link import telemetry_channel_of
+    from aj_crew.messaging.link import telemetry_channel_of
 
     row_data = {
         "key": 12345,  # non-string key
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "pid": 9,
         "owns_runtime": True,
         "created_at": 1000.0,
@@ -186,7 +186,7 @@ async def test_session_row_carries_credits_and_turns(
     from datetime import datetime, timezone
     from pathlib import Path
 
-    from kiro_crew.dashboard.handlers import usage
+    from aj_crew.dashboard.handlers import usage
 
     tmp = Path(str(tmp_path))
     now = datetime.now(timezone.utc)
@@ -219,7 +219,7 @@ async def test_session_row_credits_null_when_no_shard_data(
     """A session without shard rows gets credits=null, turns=null — NOT zero."""
     from pathlib import Path
 
-    from kiro_crew.dashboard.handlers import usage
+    from aj_crew.dashboard.handlers import usage
 
     tmp = Path(str(tmp_path))
     tmp.mkdir(exist_ok=True)
@@ -245,9 +245,9 @@ def test_one_descendant_walk_per_distinct_pid(monkeypatch: pytest.MonkeyPatch) -
     hides its walk. The CPU fallback is pinned by
     ``test_the_cpu_total_is_summed_over_the_walked_set``.
     """
-    from kiro_crew.acp import runtime
-    from kiro_crew.dashboard import session_memory as sm
-    from kiro_crew.dashboard.handlers import usage
+    from aj_crew.acp import runtime
+    from aj_crew.dashboard import session_memory as sm
+    from aj_crew.dashboard.handlers import usage
 
     walked: list[int] = []
 
@@ -297,8 +297,8 @@ def test_the_host_parent_map_is_built_once_per_poll(monkeypatch: pytest.MonkeyPa
     Building the map per row would multiply the host scan again. The second assertion
     matters: a map built but not handed down looks identical by call count alone.
     """
-    from kiro_crew.dashboard import session_memory as sm
-    from kiro_crew.dashboard.handlers import usage
+    from aj_crew.dashboard import session_memory as sm
+    from aj_crew.dashboard.handlers import usage
 
     builds: list[int] = []
     host_map = {7: [71], 9: [91]}
@@ -349,11 +349,11 @@ def test_the_cpu_total_is_summed_over_the_walked_set(monkeypatch: pytest.MonkeyP
     walk counter cannot see. ``_subtree_cpu_jiffies`` stays real: stubbing it hides the
     traversal under test.
     """
-    from kiro_crew import platform_compat
-    from kiro_crew import subagent as sa
-    from kiro_crew.acp import runtime
-    from kiro_crew.dashboard import session_memory as sm
-    from kiro_crew.dashboard.handlers import usage
+    from aj_crew import platform_compat
+    from aj_crew import subagent as sa
+    from aj_crew.acp import runtime
+    from aj_crew.dashboard import session_memory as sm
+    from aj_crew.dashboard.handlers import usage
 
     walker_calls: list[int] = []
 
@@ -396,7 +396,7 @@ class TestTheWalkReadsItsEdgesFromTheMap:
     """
 
     def test_it_returns_the_whole_subtree_from_the_map(self) -> None:
-        from kiro_crew.acp import runtime
+        from aj_crew.acp import runtime
 
         tree = {1: [2, 3], 2: [4], 4: [5]}
         assert sorted(runtime._iter_descendant_pids(1, children=tree)) == [1, 2, 3, 4, 5]
@@ -405,7 +405,7 @@ class TestTheWalkReadsItsEdgesFromTheMap:
         """The whole point: a map route that still read per root would keep the
         cost it was introduced to remove, and every other assertion here passes
         either way."""
-        from kiro_crew.acp import runtime
+        from aj_crew.acp import runtime
 
         def refuse(*_a: object, **_k: object) -> object:
             raise AssertionError("the map route must not ask the kernel per root")
@@ -414,7 +414,7 @@ class TestTheWalkReadsItsEdgesFromTheMap:
         assert runtime._iter_descendant_pids(1, children={1: [2]}) == [1, 2]
 
     def test_the_depth_bound_still_holds(self) -> None:
-        from kiro_crew.acp import runtime
+        from aj_crew.acp import runtime
 
         tree = {1: [2], 2: [3], 3: [4]}
         assert runtime._iter_descendant_pids(1, 0, children=tree) == [1]
@@ -424,7 +424,7 @@ class TestTheWalkReadsItsEdgesFromTheMap:
     def test_a_pid_reachable_twice_is_visited_once(self) -> None:
         """A damaged or looping map must terminate and count each pid once, the
         same single-visit rule the kernel route has."""
-        from kiro_crew.acp import runtime
+        from aj_crew.acp import runtime
 
         diamond = {1: [2, 3], 2: [4], 3: [4], 4: [1]}
         order = runtime._iter_descendant_pids(1, children=diamond)
@@ -433,7 +433,7 @@ class TestTheWalkReadsItsEdgesFromTheMap:
 
     def test_a_process_absent_from_the_map_is_the_root_alone(self) -> None:
         """What an unreadable ``children`` file yields on the kernel route."""
-        from kiro_crew.acp import runtime
+        from aj_crew.acp import runtime
 
         assert runtime._iter_descendant_pids(99, children={1: [2]}) == [99]
 
@@ -442,7 +442,7 @@ class TestTheWalkReadsItsEdgesFromTheMap:
     ) -> None:
         """The default path is unchanged: the RSS watchdog and every other caller
         that names no map keep the walk they had."""
-        from kiro_crew.acp import runtime
+        from aj_crew.acp import runtime
 
         asked: list[int] = []
 
@@ -465,8 +465,8 @@ def test_the_stub_count_is_matched_through_the_shared_helper(
     needle is asserted too, not just the call: a helper asked about the wrong
     needle counts the wrong processes while every row still renders.
     """
-    from kiro_crew.dashboard import session_memory as sm
-    from kiro_crew.dashboard.handlers import usage
+    from aj_crew.dashboard import session_memory as sm
+    from aj_crew.dashboard.handlers import usage
 
     asked: list[tuple[int, tuple[str, ...]]] = []
 
@@ -502,11 +502,11 @@ def test_a_session_tree_wider_than_the_walker_ceiling_is_counted_whole(
     A capped ``procs`` looks like an exact count. The CPU total is checked too: it
     reaches the tree through ``_subtree_cpu_jiffies`` and can fall back to the capped walker.
     """
-    from kiro_crew import platform_compat
-    from kiro_crew import subagent as sa
-    from kiro_crew.acp import runtime
-    from kiro_crew.dashboard import session_memory as sm
-    from kiro_crew.dashboard.handlers import usage
+    from aj_crew import platform_compat
+    from aj_crew import subagent as sa
+    from aj_crew.acp import runtime
+    from aj_crew.dashboard import session_memory as sm
+    from aj_crew.dashboard.handlers import usage
 
     wide = platform_compat._SUBTREE_MAX_PROCS + 45
     children = {7: list(range(100, 100 + wide - 1))}

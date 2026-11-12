@@ -15,16 +15,16 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import mcp_discovery
-from kiro_crew.dashboard import mcp_banner_dedupe
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew import mcp_discovery
+from aj_crew.dashboard import mcp_banner_dedupe
+from aj_crew.dashboard.chat_runner import (
     _drain_session_init_oauth_requests,
     _emit_mcp_oauth_request,
     _mark_mcp_oauth_completed,
     _on_mcp_oauth_request,
 )
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.security import oauth_url_contains_credential
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.security import oauth_url_contains_credential
 
 # A consent URL the banner gate rejects: an unlisted IdP whose PKCE and state
 # push the query past the length gate (same shape as test_mcp_oauth_banner's
@@ -193,9 +193,9 @@ async def test_signed_in_then_signed_out_shows_it_again():
 async def test_a_sign_in_seen_only_by_the_session_report_shows_it_again():
     """A connect the init drain or a session load consumed raises no event, so
     the turn-start report publish is what clears the record."""
-    from kiro_crew.acp.mcp_session_report import McpSessionReport
-    from kiro_crew.acp.types import EVENT_MCP_SERVER_INITIALIZED
-    from kiro_crew.dashboard.chat_runner import _publish_session_mcp_report
+    from aj_crew.acp.mcp_session_report import McpSessionReport
+    from aj_crew.acp.types import EVENT_MCP_SERVER_INITIALIZED
+    from aj_crew.dashboard.chat_runner import _publish_session_mcp_report
 
     report = McpSessionReport()
     report.begin_session([])

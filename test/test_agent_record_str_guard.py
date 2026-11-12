@@ -4,7 +4,7 @@
 ``agents.<name>`` key must collapse to the field's declared default at the load
 boundary, exactly as ``model``, ``triggers`` and ``display_name`` already do. A
 wrong-typed key then behaves like an absent key, and no downstream reader has to
-re-derive the type (``kirocrew agent list`` formats four of these with a width
+re-derive the type (``ajcrew agent list`` formats four of these with a width
 spec, where ``None`` / a list / a dict raises ``TypeError`` from ``__format__``).
 """
 
@@ -18,10 +18,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.cli import main
-from kiro_crew.config.fields import field_default
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.sections import KiroCrewAgentConfig
+from aj_crew.cli import main
+from aj_crew.config.fields import field_default
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.sections import AjCrewAgentConfig
 
 # The five fields that had no load-time guard and now collapse to their default;
 # the three that already had one are covered by their own tests
@@ -45,13 +45,13 @@ KEPT_AS_WRITTEN = ("memory_store", "member_id")
 NON_STRINGS = (None, 1, 1.5, True, [], ["a"], {}, {"k": "v"})
 
 
-def _load(data: dict) -> KiroCrewConfig:
+def _load(data: dict) -> AjCrewConfig:
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(data, f)
         tmp = Path(f.name)
     try:
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-            return KiroCrewConfig.load()
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+            return AjCrewConfig.load()
     finally:
         tmp.unlink(missing_ok=True)
 
@@ -59,21 +59,21 @@ def _load(data: dict) -> KiroCrewConfig:
 def _declared_str_fields() -> tuple[str, ...]:
     return tuple(
         f.name
-        for f in dataclasses.fields(KiroCrewAgentConfig)
+        for f in dataclasses.fields(AjCrewAgentConfig)
         if f.type in ("str", str) and f.default is not dataclasses.MISSING
     )
 
 
 class TestSafeStr:
     def test_a_string_is_returned_as_stored(self) -> None:
-        from kiro_crew.config.fields import _safe_str
+        from aj_crew.config.fields import _safe_str
 
         assert _safe_str("x", "d") == "x"
         assert _safe_str("", "d") == ""
 
     @pytest.mark.parametrize("bad", NON_STRINGS, ids=repr)
     def test_a_non_string_falls_back_to_the_default(self, bad: object) -> None:
-        from kiro_crew.config.fields import _safe_str
+        from aj_crew.config.fields import _safe_str
 
         assert _safe_str(bad, "d") == "d"
 
@@ -86,7 +86,7 @@ class TestAgentRecordStrFieldsPinnedAtLoad:
     ) -> None:
         cfg = _load({"agents": {"x": {field_name: bad}}, "default_agent": "x"})
         got = getattr(cfg.agents["x"], field_name)
-        assert got == field_default(KiroCrewAgentConfig, field_name)
+        assert got == field_default(AjCrewAgentConfig, field_name)
         assert isinstance(got, str)
 
     @pytest.mark.parametrize("field_name", PINNED_FIELDS)
@@ -119,13 +119,11 @@ class TestIdentityFieldsStayAsWritten:
     def test_a_non_string_is_not_pinned_to_the_default(self, field_name: str, bad: object) -> None:
         cfg = _load({"agents": {"x": {field_name: bad}}, "default_agent": "x"})
         assert getattr(cfg.agents["x"], field_name) == bad
-        assert getattr(cfg.agents["x"], field_name) != field_default(
-            KiroCrewAgentConfig, field_name
-        )
+        assert getattr(cfg.agents["x"], field_name) != field_default(AjCrewAgentConfig, field_name)
 
 
 class TestCliAgentListSurvivesWrongTypedFields:
-    """``kirocrew agent list`` width-formats four record fields; none of them raises there."""
+    """``ajcrew agent list`` width-formats four record fields; none of them raises there."""
 
     @pytest.mark.parametrize("field_name", ("kiro_agent", "workspace", "memory_store", "source"))
     @pytest.mark.parametrize("bad", (None, [], {}), ids=repr)
@@ -142,8 +140,8 @@ class TestCliAgentListSurvivesWrongTypedFields:
             encoding="utf-8",
         )
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("sys.argv", ["kirocrew", "agent", "list"]),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("sys.argv", ["ajcrew", "agent", "list"]),
         ):
             main()
         out = capsys.readouterr().out

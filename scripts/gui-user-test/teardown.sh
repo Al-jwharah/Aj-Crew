@@ -34,7 +34,7 @@ if [ -f "$GUI_OUT/target.paths" ]; then
         # boot.sh wrote as a regular file (a symlink in its place is a plant, not
         # a marker). Anything else at that path is not ours to remove.
         case "$path" in
-          /tmp/kirocrew-gui-user-test)
+          /tmp/ajcrew-gui-user-test)
             marker="$path/.owned-by-gui-user-test"
             if [ ! -L "$path" ] && [ -d "$path" ] && [ -O "$path" ] \
                && [ ! -L "$marker" ] && [ -f "$marker" ] && [ -O "$marker" ]; then

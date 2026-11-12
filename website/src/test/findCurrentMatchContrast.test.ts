@@ -5,7 +5,7 @@
  * `::highlight(mc-find-current)` sets only a background. Pierre colours each
  * syntax token inline, so without a text colour of its own a code block's
  * current match keeps token colours the orange fill swallows (purple `docker`
- * reads 1.03:1 on it in kiro-dark). One rule scoped to `.code-block` and
+ * reads 1.03:1 on it in aj-dark). One rule scoped to `.code-block` and
  * `.diff-block` gives that match one dark text colour; prose matches keep the
  * page's text colour.
  *

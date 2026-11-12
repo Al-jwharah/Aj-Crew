@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 """check_builtin_skill_scope.py -- keep this repository out of shipped skills.
 
-Every file under ``src/kiro_crew/builtin_skills/`` installs on every machine that
-installs Kiro Crew. A skill body that names THIS repository -- its GitHub slug, a
+Every file under ``src/aj_crew/builtin_skills/`` installs on every machine that
+installs Aj Crew. A skill body that names THIS repository -- its GitHub slug, a
 source path only a dev checkout has, a test file, a workflow file -- is giving an
-instruction that resolves for exactly one reader: someone working on Kiro Crew
+instruction that resolves for exactly one reader: someone working on Aj Crew
 itself. For everyone else it is a dead reference, and for an agent it is worse
 than dead: a confident pointer at a path that does not exist, which the agent
 will try.
 
-``kirocrew-prepare-pr`` already solved this properly and is the pattern this gate keeps:
+``ajcrew-prepare-pr`` already solved this properly and is the pattern this gate keeps:
 repository specifics live in a PROFILE keyed by repository
-(``kirocrew-prepare-pr/profiles/``, resolved by ``resolve_profile.py``), so the skill body
+(``ajcrew-prepare-pr/profiles/``, resolved by ``resolve_profile.py``), so the skill body
 says "run the gate floor" and the profile says what that means here. Anything
 repository-shaped that a skill needs either resolves from the repository being
 acted on, or belongs in a profile, or the skill is not a builtin.
 
 ## Nothing is exempted by record
 
-The rule is absolute: a marker outside ``kirocrew-dev/`` fails. There is no
+The rule is absolute: a marker outside ``ajcrew-dev/`` fails. There is no
 baseline file and no per-file allowance, so the gate has nothing to forgive and
 cannot drift into forgiving everything. A repository shape that a skill genuinely
 needs is a signal to move the specific into a profile, not to record an exception.
@@ -28,14 +28,14 @@ needs is a signal to move the specific into a profile, not to record an exceptio
 Four classes, all of which are only meaningful while working on this repository:
 
 * ``kirodotdev/KiroCrew`` -- this repository by name, including a github.com URL.
-* ``src/kiro_crew/...`` -- a SOURCE-CHECKOUT path. An installed wheel has
-  ``kiro_crew/`` with no ``src/`` prefix, so this form resolves only in a clone.
+* ``src/aj_crew/...`` -- a SOURCE-CHECKOUT path. An installed wheel has
+  ``aj_crew/`` with no ``src/`` prefix, so this form resolves only in a clone.
 * ``test/test_*.py`` -- this repository's test layout.
 * ``.github/workflows/*.yml`` -- this repository's CI.
 
 ## What is deliberately NOT a marker
 
-The PRODUCT surface. ``kirocrew`` CLI commands, ``~/.kiro/crew/...`` runtime
+The PRODUCT surface. ``ajcrew`` CLI commands, ``~/.kiro/crew/...`` runtime
 paths, config keys, dashboard routes, MCP tool names: those ship WITH the skill
 and are correct on every install. Confusing the two would gate the very content
 builtin skills exist to carry, so the rule names repository shapes only and this
@@ -54,24 +54,24 @@ it could not read ships the one file nobody scanned.
 
 Repository paths OUTSIDE the four classes are not caught -- ``website/src/
 styles/theme-palettes.css`` and ``docs/system-specs/...`` are as checkout-only as
-``src/kiro_crew/``, and ``theme-pack-authoring`` legitimately cites the first one
+``src/aj_crew/``, and ``theme-pack-authoring`` legitimately cites the first one
 today. Widening the set means fixing those references in the same breath, which is
 a content change with its own argument to make; this gate covers the four shapes
 that were actually leaking. Read it as "these four shapes are extinct", not as
 "no repository path can reach a skill".
 
-## The kirocrew-dev family is exempt, structurally
+## The ajcrew-dev family is exempt, structurally
 
-``builtin_skills/kirocrew-dev/`` is the family FOR developing this repository --
-``kirocrew-prepare-pr``, ``babysit``, ``writing-tests``, ``kirocrew-worktree-dev`` and
-``dashboard-template``. A Kiro Crew path there is the subject matter, not a leak.
+``builtin_skills/ajcrew-dev/`` is the family FOR developing this repository --
+``ajcrew-prepare-pr``, ``babysit``, ``writing-tests``, ``ajcrew-worktree-dev`` and
+``dashboard-template``. An Aj Crew path there is the subject matter, not a leak.
 That exemption is a directory rule rather than a list of recorded lines on
 purpose: it is a property of what the family IS, so it stays true as
 those skills are edited, where a per-line list would just record today's bytes
 and demand churn on every edit.
 
 It is matched as the family directory DIRECTLY beneath ``builtin_skills/``, not as
-any path segment: a nested ``widgets/kirocrew-dev/`` would otherwise inherit the
+any path segment: a nested ``widgets/ajcrew-dev/`` would otherwise inherit the
 exemption and ship a leak under a name that only looks exempt.
 
 The consequence to be honest about: this gate does NOT judge whether that family
@@ -92,10 +92,10 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SKILL_ROOT = Path("src") / "kiro_crew" / "builtin_skills"
+SKILL_ROOT = Path("src") / "aj_crew" / "builtin_skills"
 
 # The family whose subject matter IS this repository.
-EXEMPT_FAMILY = "kirocrew-dev"
+EXEMPT_FAMILY = "ajcrew-dev"
 
 # One pattern per marker class, kept separate so a violation can name WHICH
 # class it tripped -- "this is a source-checkout path" is actionable where
@@ -105,19 +105,19 @@ MARKER_CLASSES: tuple[tuple[str, str, str], ...] = (
         "repo-slug",
         # NOT preceded by "github.com/": a bare slug ("file it on
         # kirodotdev/KiroCrew") is an instruction only a contributor can act on,
-        # but an https://github.com/kirodotdev/KiroCrew/... URL RESOLVES on every
+        # but an https://github.com/Al-jwharah/Aj-Crew/... URL RESOLVES on every
         # machine because this repository is public, so it is a citation. Treating
         # both alike forces a downgrade -- it turns a fetchable link to the
         # authoritative theming contract into prose an installed reader cannot
         # follow at all -- on every skill that cites the project's own public docs.
         # The lookbehind is deliberately narrow rather than a whole-line
         # exemption: one line can carry both a citation and a real instruction.
-        r"(?<!github\.com/)kirodotdev/KiroCrew",
+        r"(?<!github\.com/)(?:kirodotdev/KiroCrew|Al-jwharah/Aj-Crew)",
         "names this repository as a place to act; a reader elsewhere has no such repo",
     ),
     (
         "checkout-path",
-        r"\bsrc/kiro_crew/[A-Za-z0-9_./-]+",
+        r"\bsrc/aj_crew/[A-Za-z0-9_./-]+",
         "a source-checkout path; an installed wheel has no src/ prefix",
     ),
     (
@@ -134,8 +134,8 @@ MARKER_CLASSES: tuple[tuple[str, str, str], ...] = (
 
 REMEDY = (
     "Resolve it from the repository being acted on, move it into a profile the\n"
-    "way kirocrew-prepare-pr/profiles does, or move the skill under builtin_skills/\n"
-    "kirocrew-dev/ if it is genuinely a skill for developing this repository."
+    "way ajcrew-prepare-pr/profiles does, or move the skill under builtin_skills/\n"
+    "ajcrew-dev/ if it is genuinely a skill for developing this repository."
 )
 
 
@@ -159,8 +159,8 @@ def is_exempt(rel_path: Path) -> bool:
     """Whether ``rel_path`` is inside the family this repository is the subject of.
 
     The family must sit DIRECTLY beneath ``builtin_skills/``. Matching any path
-    segment would exempt a nested ``widgets/kirocrew-dev/SKILL.md``, and matching
-    a prefix would exempt a ``kirocrew-devtools/`` sibling -- both would ship a
+    segment would exempt a nested ``widgets/ajcrew-dev/SKILL.md``, and matching
+    a prefix would exempt an ``ajcrew-devtools/`` sibling -- both would ship a
     leak under a name that merely resembles the exempt one.
     """
     prefix = SKILL_ROOT.parts
@@ -269,31 +269,31 @@ def _report(
 
 _PROBES: tuple[tuple[str, str, int], ...] = (
     ("clean prose", "Open the dashboard and pick a theme.\n", 0),
-    ("product CLI is not a marker", "Run `kirocrew pod up mypod --provision`.\n", 0),
+    ("product CLI is not a marker", "Run `ajcrew pod up mypod --provision`.\n", 0),
     ("runtime path is not a marker", "Scripts live under `~/.kiro/crew/crons/`.\n", 0),
     (
         "installed package path is not a marker",
-        "See `kiro_crew/dashboard/theme_validate.py`.\n",
+        "See `aj_crew/dashboard/theme_validate.py`.\n",
         0,
     ),
     ("repo slug", "File it on kirodotdev/KiroCrew please.\n", 1),
     (
         "a resolvable public URL to this repo is NOT a marker",
-        "See https://github.com/kirodotdev/KiroCrew/blob/main/README.md\n",
+        "See https://github.com/Al-jwharah/Aj-Crew/blob/main/README.md\n",
         0,
     ),
-    ("checkout path", "Edit `src/kiro_crew/dashboard/state.py`.\n", 1),
+    ("checkout path", "Edit `src/aj_crew/dashboard/state.py`.\n", 1),
     ("test path", "Run `test/test_prepare_pr_status.py`.\n", 1),
     ("workflow path", "Wire it into `.github/workflows/ci.yml`.\n", 1),
     ("workflow path, yaml spelling", "See .github/workflows/ci.yaml\n", 1),
     (
         "two classes on one line are both reported",
-        "`src/kiro_crew/x.py` is covered by `test/test_x.py`.\n",
+        "`src/aj_crew/x.py` is covered by `test/test_x.py`.\n",
         2,
     ),
     (
         "two markers on separate lines",
-        "First `src/kiro_crew/a.py`.\nThen `src/kiro_crew/b.py`.\n",
+        "First `src/aj_crew/a.py`.\nThen `src/aj_crew/b.py`.\n",
         2,
     ),
 )
@@ -311,13 +311,13 @@ def self_test() -> int:
     # first precisely so a weakened rule fails before the gate reports green.
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)
-        leak = "Edit `src/kiro_crew/x.py`.\n"
+        leak = "Edit `src/aj_crew/x.py`.\n"
         for rel in (
-            f"{EXEMPT_FAMILY}/kirocrew-prepare-pr/SKILL.md",
-            f"{EXEMPT_FAMILY}/kirocrew-prepare-pr/references/notes.md",
+            f"{EXEMPT_FAMILY}/ajcrew-prepare-pr/SKILL.md",
+            f"{EXEMPT_FAMILY}/ajcrew-prepare-pr/references/notes.md",
             "widgets/SKILL.md",
             f"widgets/{EXEMPT_FAMILY}/SKILL.md",
-            "kirocrew-devtools/SKILL.md",
+            "ajcrew-devtools/SKILL.md",
         ):
             path = root / SKILL_ROOT / rel
             path.parent.mkdir(parents=True, exist_ok=True)
@@ -331,7 +331,7 @@ def self_test() -> int:
         #
         # Creating one can be UNAVAILABLE rather than merely awkward: on Windows
         # it needs SeCreateSymbolicLinkPrivilege, which an ordinary account does
-        # not hold, and this self-test runs from the kirocrew-prepare-pr gate floor on
+        # not hold, and this self-test runs from the ajcrew-prepare-pr gate floor on
         # contributor machines as well as on ubuntu in CI. Letting the OSError
         # escape would abort the gate with a crash instead of a verdict, so the
         # probe is skipped where the privilege is missing and says so -- the same
@@ -348,12 +348,12 @@ def self_test() -> int:
         cases = (
             (
                 f"{EXEMPT_FAMILY}/ body is exempt",
-                f"{SKILL_ROOT.as_posix()}/{EXEMPT_FAMILY}/kirocrew-prepare-pr/SKILL.md"
+                f"{SKILL_ROOT.as_posix()}/{EXEMPT_FAMILY}/ajcrew-prepare-pr/SKILL.md"
                 not in flagged,
             ),
             (
                 f"nested {EXEMPT_FAMILY}/ reference file is exempt",
-                f"{SKILL_ROOT.as_posix()}/{EXEMPT_FAMILY}/kirocrew-prepare-pr/references/notes.md"
+                f"{SKILL_ROOT.as_posix()}/{EXEMPT_FAMILY}/ajcrew-prepare-pr/references/notes.md"
                 not in flagged,
             ),
             (
@@ -366,7 +366,7 @@ def self_test() -> int:
             ),
             (
                 "a look-alike sibling does not inherit the exemption",
-                f"{SKILL_ROOT.as_posix()}/kirocrew-devtools/SKILL.md" in flagged,
+                f"{SKILL_ROOT.as_posix()}/ajcrew-devtools/SKILL.md" in flagged,
             ),
             (
                 "an undecodable body is reported, not skipped",

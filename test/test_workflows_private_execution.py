@@ -9,22 +9,22 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.config.loader import KiroCrewAgentConfig
-from kiro_crew.context import ContextBuilder, release_cached_memory_store, store_of_session
-from kiro_crew.history import ConversationLog
-from kiro_crew.member_memory_auth import (
+from aj_crew.config import AjCrewConfig
+from aj_crew.config.loader import AjCrewAgentConfig
+from aj_crew.context import ContextBuilder, release_cached_memory_store, store_of_session
+from aj_crew.history import ConversationLog
+from aj_crew.member_memory_auth import (
     bind_private_session_store,
     private_memory_store_for_session,
 )
-from kiro_crew.memory_stores import persist_member_config, provision_member_memory
-from kiro_crew.session import SessionManager
-from kiro_crew.workflow_memory import (
+from aj_crew.memory_stores import persist_member_config, provision_member_memory
+from aj_crew.session import SessionManager
+from aj_crew.workflow_memory import (
     WorkflowScope,
     authorize_run,
 )
-from kiro_crew.workflows import agent_exec, agent_pool, service
-from kiro_crew.workflows.store import WorkflowRunStore
+from aj_crew.workflows import agent_exec, agent_pool, service
+from aj_crew.workflows.store import WorkflowRunStore
 
 SCRIPT = """META = {"name": "private execution"}
 async def workflow(ctx):
@@ -74,7 +74,7 @@ def world(monkeypatch, event_loop, tmp_path, close_skills_loaders):
     # every importer of ``world`` left one thread parked for the worker's life.
     from pathlib import Path
 
-    from kiro_crew import context
+    from aj_crew import context
 
     pass  # Member routing does not depend on OS isolation.
     home = tmp_path / "host-home"
@@ -91,12 +91,12 @@ def world(monkeypatch, event_loop, tmp_path, close_skills_loaders):
     monkeypatch.setattr(context, "_prompt_path", lambda **kwargs: prompt)
     templates = home / ".kiro" / "agents"
     templates.mkdir(parents=True)
-    monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", templates)
-    (templates / "kirocrew-lite.json").write_text(
-        '{"name": "kirocrew-lite", "prompt": "Author a valid workflow."}',
+    monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", templates)
+    (templates / "ajcrew-lite.json").write_text(
+        '{"name": "ajcrew-lite", "prompt": "Author a valid workflow."}',
         encoding="utf-8",
     )
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.skills import SkillsLoader
 
     skill_root = home / "skills"
     skill = skill_root / "workflow-fixture"
@@ -113,8 +113,8 @@ def world(monkeypatch, event_loop, tmp_path, close_skills_loaders):
     builder.memory.init()
     stores = {}
     for member in ("alice", "bob"):
-        cfg = KiroCrewConfig.load()
-        cfg.agents[member] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = AjCrewConfig.load()
+        cfg.agents[member] = AjCrewAgentConfig(kiro_agent="ajcrew")
         stores[member] = provision_member_memory(cfg, member)
         persist_member_config(cfg, member, create=True)
         key = f"dashboard:{member}"
@@ -122,7 +122,7 @@ def world(monkeypatch, event_loop, tmp_path, close_skills_loaders):
         log.update_metadata(key, {"memory_store": stores[member]})
         vectors = event_loop.run_until_complete(builder.ensure_store(stores[member]))
         vectors.write_lesson(f"{member.upper()}_LEARNED_MARKER", "tool", None, "test")
-        from kiro_crew.members import member_slug, write_member_rules
+        from aj_crew.members import member_slug, write_member_rules
 
         write_member_rules(
             member_slug(member), member=member, text=f"{member.upper()}_PRIVATE_MARKER"
@@ -134,7 +134,7 @@ def world(monkeypatch, event_loop, tmp_path, close_skills_loaders):
         models.append(model)
         return model
 
-    sessions = SessionManager(KiroCrewConfig.load(), provider_factory=factory)
+    sessions = SessionManager(AjCrewConfig.load(), provider_factory=factory)
 
     async def complete(model, prompt, **kwargs):
         model.prompts.append(prompt)
@@ -219,7 +219,7 @@ def _pending_task_locations():
 async def finished(svc, started, *, budget=WORKFLOW_RUN_BUDGET_SECS):
     assert "run_id" in started, started
     handle = svc.registry.get(started["run_id"])
-    from kiro_crew.testing.workflow_memory_scenario import progress_summary
+    from aj_crew.testing.workflow_memory_scenario import progress_summary
 
     began = asyncio.get_running_loop().time()
     progress = progress_summary(handle.snapshot(include_events=True, include_result=False))
@@ -356,7 +356,7 @@ async def test_member_author_and_restart_rerun_use_owner_record(world, tmp_path)
 
 @pytest.mark.asyncio
 async def test_scope_keeps_captured_member_when_parent_record_changes(world):
-    from kiro_crew.execution_context import bind_session_execution, read_session_execution
+    from aj_crew.execution_context import bind_session_execution, read_session_execution
 
     scope = await WorkflowScope.admit("wf_test", world.builder, "dashboard:alice")
     bind_session_execution(

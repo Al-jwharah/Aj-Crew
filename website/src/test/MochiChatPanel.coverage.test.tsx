@@ -173,7 +173,7 @@ function composer(): HTMLTextAreaElement {
  * flash it, which outlasts the default find window.
  */
 function findOfflineBanner() {
-  return screen.findByText('Kiro Crew disconnected', {}, { timeout: 5000 })
+  return screen.findByText('Aj Crew disconnected', {}, { timeout: 5000 })
 }
 
 /** An approval frame as the gateway pushes it. */
@@ -235,9 +235,9 @@ describe('PinnedSidePanel', () => {
   it('names the pet in the empty hint', () => {
     render(
       <PinnedSidePanel pins={[]} updatedPaths={new Set()} deletedPaths={new Set()}
-        visible petName="Kiro" />,
+        visible petName="Aj" />,
     )
-    expect(screen.getByText('Ask Kiro to pin files you want to track')).toBeInTheDocument()
+    expect(screen.getByText('Ask Aj to pin files you want to track')).toBeInTheDocument()
   })
 
   it('falls back to the default pet name when none is supplied', () => {
@@ -678,7 +678,7 @@ describe('ChatPanel offline banner', () => {
     await renderPanel()
     expect(await findOfflineBanner()).toBeInTheDocument()
     retryConnect.mockResolvedValueOnce({ ok: false, message: 'Gateway refused' })
-    await userEvent.click(screen.getByRole('button', { name: 'Start Kiro Crew' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Start Aj Crew' }))
     expect(await screen.findByText('Gateway refused')).toBeInTheDocument()
   })
 
@@ -687,7 +687,7 @@ describe('ChatPanel offline banner', () => {
     await renderPanel()
     await findOfflineBanner()
     retryConnect.mockRejectedValueOnce(new Error('boom'))
-    await userEvent.click(screen.getByRole('button', { name: 'Start Kiro Crew' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Start Aj Crew' }))
     expect(await screen.findByText(/Timed out/)).toBeInTheDocument()
   })
 
@@ -697,7 +697,7 @@ describe('ChatPanel offline banner', () => {
     await findOfflineBanner()
     emit('onBackendStatus', true)
     await waitFor(() =>
-      expect(screen.queryByText('Kiro Crew disconnected')).not.toBeInTheDocument(),
+      expect(screen.queryByText('Aj Crew disconnected')).not.toBeInTheDocument(),
     )
   })
 })
@@ -725,7 +725,7 @@ describe('ChatPanel context menu', () => {
     menu = await openMenu(container)
     await userEvent.click(menu.getByRole('menuitem', { name: 'Appearance Gallery' }))
     menu = await openMenu(container)
-    await userEvent.click(menu.getByRole('menuitem', { name: 'Kiro Crew Dashboard' }))
+    await userEvent.click(menu.getByRole('menuitem', { name: 'Aj Crew Dashboard' }))
     expect(openSettings).toHaveBeenCalledTimes(1)
     expect(galleryOpen).toHaveBeenCalledTimes(1)
     expect(openDashboard).toHaveBeenCalledTimes(1)
@@ -1185,9 +1185,9 @@ describe('ChatPanel live config and presence', () => {
     backendOnline = false
     await renderPanel()
     emit('onBackendSwitching', true)
-    expect(await screen.findByText('Connecting to Kiro Crew...', {}, { timeout: 5000 }))
+    expect(await screen.findByText('Connecting to Aj Crew...', {}, { timeout: 5000 }))
       .toBeInTheDocument()
-    expect(screen.queryByText('Kiro Crew disconnected')).not.toBeInTheDocument()
+    expect(screen.queryByText('Aj Crew disconnected')).not.toBeInTheDocument()
   })
 })
 

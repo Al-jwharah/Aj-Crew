@@ -16,8 +16,8 @@ from aiohttp.test_utils import make_mocked_request
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-import kiro_crew.apps.route_registry as route_registry_module
-from kiro_crew.apps.route_registry import (
+import aj_crew.apps.route_registry as route_registry_module
+from aj_crew.apps.route_registry import (
     RouteRegistry,
     _compile_pattern,
     _has_params,
@@ -66,7 +66,7 @@ class TestRoutePrefixEnforcement:
         registry = RouteRegistry(mock_app)
 
         # Manually populate internal table (simulates register_app_routes)
-        from kiro_crew.apps.route_registry import _RegisteredRoute
+        from aj_crew.apps.route_registry import _RegisteredRoute
 
         routes = []
         for p in paths:
@@ -230,7 +230,7 @@ class TestHandlerExceptionBoundary:
             raise RuntimeError("Slack MCP tool failed: list_my_channels")
 
         registry = _registry_with(handler)
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.apps.route_registry"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.apps.route_registry"):
             resp = await registry.dispatch(_request())
 
         assert resp.status == 502
@@ -259,7 +259,7 @@ class TestHandlerExceptionBoundary:
 
         registry = _registry_with(handler)
         with (
-            caplog.at_level(logging.WARNING, logger="kiro_crew.apps.route_registry"),
+            caplog.at_level(logging.WARNING, logger="aj_crew.apps.route_registry"),
             pytest.raises(web.HTTPForbidden),
         ):
             await registry.dispatch(_request())

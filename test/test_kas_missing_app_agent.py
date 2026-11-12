@@ -15,17 +15,17 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import members as members_mod
-from kiro_crew.acp import kas_agents as kas_agents_mod
-from kiro_crew.acp.harness import harness_for
-from kiro_crew.acp.harness import kas as kas_mod
-from kiro_crew.acp.session_handle import AcpAgentUnavailable, AcpRuntimeError
-from kiro_crew.acp.types import ACP_BACKEND_KAS
-from kiro_crew.apps import manager as manager_mod
-from kiro_crew.apps.manager import InstalledApp, _write_installed
-from kiro_crew.config import paths as paths_mod
-from kiro_crew.mcp_gateway import session_servers as session_servers_mod
+from aj_crew import agent as agent_mod
+from aj_crew import members as members_mod
+from aj_crew.acp import kas_agents as kas_agents_mod
+from aj_crew.acp.harness import harness_for
+from aj_crew.acp.harness import kas as kas_mod
+from aj_crew.acp.session_handle import AcpAgentUnavailable, AcpRuntimeError
+from aj_crew.acp.types import ACP_BACKEND_KAS
+from aj_crew.apps import manager as manager_mod
+from aj_crew.apps.manager import InstalledApp, _write_installed
+from aj_crew.config import paths as paths_mod
+from aj_crew.mcp_gateway import session_servers as session_servers_mod
 
 APP = "demo-app"
 LABEL = "Demo App"
@@ -36,7 +36,7 @@ def agents_dir(tmp_path, monkeypatch):
     """An isolated data home and an agents directory holding no spec at all."""
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     agents = tmp_path / "agents"
     agents.mkdir()
     monkeypatch.setattr(paths_mod, "kiro_agents_dir", lambda: agents)
@@ -223,7 +223,7 @@ def test_owning_app_lookup_reads_a_builtin_from_its_package_root(agents_dir, tmp
 
 def test_owning_app_lookup_reads_nothing_the_screen_refuses(agents_dir, monkeypatch):
     """No metadata file is read unscreened: a refused ``installed.json`` skips the app."""
-    from kiro_crew import agent_discovery
+    from aj_crew import agent_discovery
 
     _install_app(enabled=False)
     real_screen = manager_mod._screened_spec_path
@@ -281,7 +281,7 @@ def test_owning_app_lookup_screens_an_entry_before_probing_it(agents_dir, monkey
 
 
 def test_chat_row_withholds_resume_for_an_unavailable_agent():
-    from kiro_crew.dashboard.chat_runner import APP_AGENT_REFUSED_KIND, _terminal_error_meta
+    from aj_crew.dashboard.chat_runner import APP_AGENT_REFUSED_KIND, _terminal_error_meta
 
     exc = AcpAgentUnavailable("the reason", agent="worker")
 
@@ -300,7 +300,7 @@ async def test_a_kiro_cli_builtin_agent_is_refused_naming_crews_default_agent(
 
     message = str(caught.value)
     assert f'"{builtin}" is built into kiro-cli and has no safe match on KAS' in message
-    assert 'Pick Kiro Crew\'s default agent "kirocrew" instead' in message
+    assert 'Pick Aj Crew\'s default agent "ajcrew" instead' in message
     assert f"`kiro-cli --agent {builtin}` in this chat's Terminal tab" in message
     assert "Agent Harness" not in message
     assert caught.value.agent == builtin
@@ -324,7 +324,7 @@ async def test_a_default_agent_set_to_a_kiro_cli_builtin_names_the_managed_defau
     agents_dir, tmp_path, monkeypatch
 ):
     """The pick offered is never another agent this refusal turns away."""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     # Through the facade, which patches every holder of the name together.
     monkeypatch.setattr(loader, "default_template", lambda config: "kiro_planner")
@@ -332,4 +332,4 @@ async def test_a_default_agent_set_to_a_kiro_cli_builtin_names_the_managed_defau
     with pytest.raises(AcpAgentUnavailable) as caught:
         await _start("kiro_default", tmp_path)
 
-    assert 'Pick Kiro Crew\'s default agent "kirocrew" instead' in str(caught.value)
+    assert 'Pick Aj Crew\'s default agent "ajcrew" instead' in str(caught.value)

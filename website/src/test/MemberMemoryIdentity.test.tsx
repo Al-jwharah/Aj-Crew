@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, screen, waitFor } from '@testing-library/react'
 import { renderWithProviders } from './helpers'
-import { memberMemoryState } from '../pages/KiroCrewAgentsPage'
+import { memberMemoryState } from '../pages/AjCrewAgentsPage'
 import JobForm from '../components/JobForm'
 import { wakesCrew } from '../components/crew/wakesCrew'
 import type { CronJob } from '../types'

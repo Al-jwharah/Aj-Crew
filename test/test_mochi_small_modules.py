@@ -10,7 +10,7 @@ tooling that is not part of the repository.
 
 from __future__ import annotations
 
-from kiro_crew.apps.builtins.mochi.pet_state_machine import (
+from aj_crew.apps.builtins.mochi.pet_state_machine import (
     ALL_EVENTS,
     ALL_STATES,
     ERROR_TIMEOUT_MS,
@@ -19,11 +19,11 @@ from kiro_crew.apps.builtins.mochi.pet_state_machine import (
     legal_events,
     transition,
 )
-from kiro_crew.apps.builtins.mochi.pet_state_manager import (
+from aj_crew.apps.builtins.mochi.pet_state_manager import (
     WALK_RESTORE_DELAY_MS,
     PetStateManager,
 )
-from kiro_crew.apps.builtins.mochi.soul_loader import (
+from aj_crew.apps.builtins.mochi.soul_loader import (
     BUILTIN_PET_NAMES,
     DEFAULT_SOUL,
     SoulLoader,
@@ -176,7 +176,7 @@ class TestPetStateManager:
         assert calls == [("start", 10), ("end", 30)]
 
     def test_transient_mood_auto_resets(self) -> None:
-        from kiro_crew.apps.builtins.mochi.pet_state_manager import (
+        from aj_crew.apps.builtins.mochi.pet_state_manager import (
             MOOD_DURATION_MS,
             PET_MOOD_CHANNEL,
         )
@@ -192,7 +192,7 @@ class TestPetStateManager:
         assert broadcasts[-1] == (PET_MOOD_CHANNEL, "neutral")
 
     def test_persistent_mood_lingers_until_cleared(self) -> None:
-        from kiro_crew.apps.builtins.mochi.pet_state_manager import MOOD_DURATION_MS
+        from aj_crew.apps.builtins.mochi.pet_state_manager import MOOD_DURATION_MS
 
         mgr, _ = self._mk()
         mgr.set_mood("busy", 0)
@@ -220,8 +220,8 @@ class TestPetStateManager:
         # SEPARATE deadline slots, so arming the mood must not cancel the error
         # recovery, and the error state change must not cancel the mood timer.
         # Staggered so the deadlines don't coincide (both default to 3000ms).
-        from kiro_crew.apps.builtins.mochi.pet_state_machine import ERROR_TIMEOUT_MS
-        from kiro_crew.apps.builtins.mochi.pet_state_manager import MOOD_DURATION_MS
+        from aj_crew.apps.builtins.mochi.pet_state_machine import ERROR_TIMEOUT_MS
+        from aj_crew.apps.builtins.mochi.pet_state_manager import MOOD_DURATION_MS
 
         mgr, _ = self._mk()
         mgr.set_pet_state("idle", 0)
@@ -275,8 +275,10 @@ class TestAppearancePersona:
     def test_the_two_built_ins_read_differently(self) -> None:
         assert persona_for("kiro-ghost") != persona_for("default-mochi")
 
-    def test_ghost_is_kiro_and_cat_is_mochi(self) -> None:
-        assert "ghost" in persona_for("kiro-ghost").lower()
+    def test_gem_is_aj_and_cat_is_mochi(self) -> None:
+        # The pack id predates the gem; the character it names is the Aj gem.
+        assert "gem" in persona_for("kiro-ghost").lower()
+        assert "ghost" not in persona_for("kiro-ghost").lower()
         assert "cat" in persona_for("default-mochi").lower()
 
     def test_unset_pack_is_a_generic_companion(self) -> None:
@@ -313,7 +315,7 @@ class TestAppearancePersona:
         assert "paper crane" in loader.get()
 
     def test_switching_pack_switches_the_default_name(self) -> None:
-        """Picking the ghost must not leave it introducing itself as Mochi."""
+        """Picking the gem must not leave it introducing itself as Mochi."""
         loader = SoulLoader()
         loader.set_appearance("kiro-ghost")
         assert loader.pet_name == BUILTIN_PET_NAMES["kiro-ghost"]

@@ -15,16 +15,16 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
-from kiro_crew.acp.client import (
+from aj_crew.acp.client import (
     _kiro_cli_bundle_binary,
     apply_pod_bundle_spawn,
 )
-from kiro_crew.acp_backends import (
+from aj_crew.acp_backends import (
     ACP_BACKEND_KIRO,
     ACP_BACKENDS_INTERNAL_SANDBOX,
     ACP_BACKENDS_POD_HOME_REMAP,
 )
+from conftest import requires_symlinks
 
 
 def _bundle_layout(tmp_path: Path) -> tuple[str, str]:
@@ -63,7 +63,7 @@ def _symlink_in_local_bin(tmp_path: Path, target: Path) -> Path:
 
 
 def _pod_env(os_home: Path) -> dict[str, str]:
-    return {"KIROCREW_POD": "1", "KIROCREW_OS_HOME": str(os_home)}
+    return {"AJCREW_POD": "1", "AJCREW_OS_HOME": str(os_home)}
 
 
 # ── The decision inside a pod ──────────────────────────────────────────────────
@@ -79,11 +79,11 @@ def test_pod_spawn_swaps_shim_for_bundle_binary_and_takes_crew_sandbox(
     """
     shim, bundle = _bundle_layout(tmp_path)
     argv, delegate = apply_pod_bundle_spawn(
-        [shim, "acp", "--agent", "kirocrew"],
+        [shim, "acp", "--agent", "ajcrew"],
         backend=ACP_BACKEND_KIRO,
         environ=_pod_env(tmp_path / "os-home"),
     )
-    assert argv == [bundle, "acp", "--agent", "kirocrew"]
+    assert argv == [bundle, "acp", "--agent", "ajcrew"]
     # The shim is bypassed, so kiro-cli's internal sandbox never runs: Crew's
     # launcher must wrap the child instead of delegating to it.
     assert delegate is False
@@ -216,9 +216,9 @@ def test_pod_spawn_leaves_an_argv0_dispatching_multiplexer_symlink_unresolved(
     "environ",
     [
         pytest.param({}, id="no-pod-marker"),
-        pytest.param({"KIROCREW_POD": "0"}, id="marker-0"),
-        pytest.param({"KIROCREW_POD": "false"}, id="marker-false"),
-        pytest.param({"KIROCREW_POD": "1"}, id="marker-without-os-home"),
+        pytest.param({"AJCREW_POD": "0"}, id="marker-0"),
+        pytest.param({"AJCREW_POD": "false"}, id="marker-false"),
+        pytest.param({"AJCREW_POD": "1"}, id="marker-without-os-home"),
     ],
 )
 def test_non_pod_spawn_argv_and_wrap_decision_are_unchanged(
@@ -226,12 +226,12 @@ def test_non_pod_spawn_argv_and_wrap_decision_are_unchanged(
 ) -> None:
     """Outside a pod the function is a no-op, including for truthy-but-not-"1" markers.
 
-    ``KIROCREW_POD`` is compared EXACTLY to ``"1"`` (every non-empty string is
-    truthy in Python), and a marker with no ``KIROCREW_OS_HOME`` means no remap
+    ``AJCREW_POD`` is compared EXACTLY to ``"1"`` (every non-empty string is
+    truthy in Python), and a marker with no ``AJCREW_OS_HOME`` means no remap
     happened, so there is nothing to compensate for.
     """
     shim, _bundle = _bundle_layout(tmp_path)
-    original = [shim, "acp", "--agent", "kirocrew"]
+    original = [shim, "acp", "--agent", "ajcrew"]
     argv, delegate = apply_pod_bundle_spawn(
         list(original), backend=ACP_BACKEND_KIRO, environ=environ
     )

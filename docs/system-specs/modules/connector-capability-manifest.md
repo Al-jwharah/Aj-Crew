@@ -12,12 +12,12 @@ fields — without that validator's *implementation* shipping here.
 
 Scope note: this spec governs the *campaign contract* — the shape a manifest
 entry must have, and the order the campaign's provider streams unlock in. It
-does not implement `src/kiro_crew/connections/**` (see
+does not implement `src/aj_crew/connections/**` (see
 [connections.md](connections.md) for that subsystem's shipped behavior) and
-does not implement `src/kiro_crew/knowledge/connectors/**` (see
+does not implement `src/aj_crew/knowledge/connectors/**` (see
 [knowledge.md](knowledge.md)). Current provider slices under
-`src/kiro_crew/connections/control_plane/` and
-`src/kiro_crew/connections/vendors/` implement portions of this contract; the
+`src/aj_crew/connections/control_plane/` and
+`src/aj_crew/connections/vendors/` implement portions of this contract; the
 manifest validator, discovery runner, and live conformance runner remain later
 rounds. When an implementation changes what this spec documents, the owning-spec
 rule applies exactly as it does everywhere else in this tree: the spec is
@@ -42,7 +42,7 @@ one field loses information a validator needs:
 
 - **Evidence axis** — how well-sourced is the claim that this operation
   exists and has this shape? (`source_status`)
-- **Implementation axis** — how far has Kiro Crew actually gotten building
+- **Implementation axis** — how far has Aj Crew actually gotten building
   and verifying it? (`status`)
 
 These mirror, deliberately, the two-axis shape the campaign's own evidence
@@ -63,12 +63,12 @@ it. If a real finding does not fit `user_required` / `official_baseline` /
 `unverified`, the fix is to add a fourth value in a later, explicitly-scoped
 revision of this spec — never to drop the entry the value would have held.
 This applies with equal force to a `blocked` entry: a blocked capability is
-evidence Kiro Crew already possesses, and a `source_status` or `status`
+evidence Aj Crew already possesses, and a `source_status` or `status`
 enum's shape is a schema question, never a reason to discard it.
 
 **`source_status` proves neither implementation nor liveness.**
 `user_required` and `official_baseline` are both claims about *where the
-requirement or its shape came from*, not about whether Kiro Crew has built
+requirement or its shape came from*, not about whether Aj Crew has built
 or verified it — that is exclusively what `status` (below) tracks. An entry
 can be `source_status: user_required` and `status: planned` at the same
 time, and reading the first as evidence toward the second is a category
@@ -358,7 +358,7 @@ blocker: {
 
 ### Discovery is a separate protocol from the manifest, and is required regardless of runner status
 
-The manifest (above) answers "which operations does Kiro Crew intend to
+The manifest (above) answers "which operations does Aj Crew intend to
 support for this provider." A separate, run-time question — "which
 capabilities does a specific authorized account binding actually expose right
 now" — is answered by a **provider-capabilities discovery** exchange, not by
@@ -554,7 +554,7 @@ section governs.
 
 | Stream | Scope |
 |---|---|
-| `W00` | The campaign's foundational contract, covering four distinct deliverables: (1) directory/code audit of the existing connector-relevant surface (`src/kiro_crew/connections/**`, `src/kiro_crew/knowledge/connectors/**`, and related subsystems), (2) the machine-checkable schema/validator contract (the manifest schema, `ConformanceRun`, `EvidenceReceipt` — this document), (3) the campaign's architecture (the DAG in this section, the requirement families it references), and (4) the evidence/runner/CI foundation the later validator/discovery/conformance rounds build on. **This document (W00-S1) covers only the docs portion of (2) and (3)** — the audit (1) and the evidence/runner/CI foundation (4) are separate, not-yet-landed deliverables inside `W00`, not implied complete by this PR. |
+| `W00` | The campaign's foundational contract, covering four distinct deliverables: (1) directory/code audit of the existing connector-relevant surface (`src/aj_crew/connections/**`, `src/aj_crew/knowledge/connectors/**`, and related subsystems), (2) the machine-checkable schema/validator contract (the manifest schema, `ConformanceRun`, `EvidenceReceipt` — this document), (3) the campaign's architecture (the DAG in this section, the requirement families it references), and (4) the evidence/runner/CI foundation the later validator/discovery/conformance rounds build on. **This document (W00-S1) covers only the docs portion of (2) and (3)** — the audit (1) and the evidence/runner/CI foundation (4) are separate, not-yet-landed deliverables inside `W00`, not implied complete by this PR. |
 | `W01` | Shared control plane: binding, auth, policy, reliability. **`W01` is a prerequisite of every provider stream below it** — no provider stream starts ahead of `W01`. |
 | `W02` | GitHub. |
 | `W03` | Gmail, plus the shared Google auth layer Gmail and Drive both need. |

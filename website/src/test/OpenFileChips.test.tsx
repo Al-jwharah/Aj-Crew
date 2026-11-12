@@ -37,7 +37,7 @@ import { api } from '../api/client'
 import { usePanelDocumentActions } from '../hooks/usePanelDocumentActions'
 
 const NOTE = '/home/u/notes/today.md'
-const marker = (path: string) => `<!-- kirocrew:open-file path="${path}" -->`
+const marker = (path: string) => `<!-- ajcrew:open-file path="${path}" -->`
 const reply = `Wrote the note.\n${marker(NOTE)}\n`
 /** The chip's accessible name is its visible text: the label, then the file name. */
 const chipName = (path: string) => `Open file ${path.split('/').pop()}`
@@ -59,7 +59,7 @@ beforeEach(() => {
   md.props.length = 0
   fileRead.fetch.mockReset().mockResolvedValue(okRead('# notes'))
   vi.spyOn(api, 'fileDiff').mockResolvedValue({} as never)
-  delete (window as { __kirocrewPluginHandlesFiles?: boolean }).__kirocrewPluginHandlesFiles
+  delete (window as { __ajcrewPluginHandlesFiles?: boolean }).__ajcrewPluginHandlesFiles
 })
 afterEach(() => { cleanup(); vi.restoreAllMocks() })
 

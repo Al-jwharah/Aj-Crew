@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.connections import owner_servers
+from aj_crew.connections import owner_servers
 
 _URL = "https://docs.example.com/mcp"
 
@@ -57,9 +57,9 @@ def test_record_keeps_other_connections_settings():
 def test_the_row_flag_is_true_only_for_the_owner_record(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "config.json").write_text(
         json.dumps({"connections": {"owner_mcp_servers": {"docs": {"url": _URL}}}}),
         encoding="utf-8",
@@ -82,11 +82,11 @@ def test_the_row_flag_is_false_for_a_name_the_mint_refuses(
 ):
     # A recorded server whose name is a registry slug, or one the agent spec
     # rewrites, is refused by the mint, so its row is never offered a sign-in.
-    from kiro_crew.connections.registry import get_all_providers
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.connections.registry import get_all_providers
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     slug = get_all_providers()[0]["slug"]
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "config.json").write_text(
         json.dumps(
             {"connections": {"owner_mcp_servers": {slug: {"url": _URL}, "a/b": {"url": _URL}}}}
@@ -123,9 +123,9 @@ def test_record_stops_at_the_cap_and_keeps_updating_existing_names(
 
 
 def test_an_unreadable_record_clears_a_cached_flag(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "config.json").write_text("{not json", encoding="utf-8")
     rows = [{"name": "docs", "url": _URL, "ownerSignIn": True}]
 
@@ -137,9 +137,9 @@ def test_an_unreadable_record_clears_a_cached_flag(monkeypatch: pytest.MonkeyPat
 def test_a_malformed_url_row_does_not_break_the_listing(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "config.json").write_text(
         json.dumps({"connections": {"owner_mcp_servers": {"docs": {"url": _URL}}}}),
         encoding="utf-8",

@@ -14,7 +14,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.platform.governance import parse_policy, resolve
+from aj_crew.platform.governance import parse_policy, resolve
 
 EDITIONS = ("oss", "lts")
 
@@ -39,13 +39,13 @@ def _hook_events(*allowed: str) -> dict:
 
 
 def _set_edition(monkeypatch: pytest.MonkeyPatch, value: str) -> bool:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", value)
+    monkeypatch.setattr("aj_crew.edition.EDITION", value)
     return value == "lts"
 
 
 def _install_policy(monkeypatch: pytest.MonkeyPatch, doc: dict | None) -> None:
-    from kiro_crew.platform import context as pc
-    from kiro_crew.platform import governance_profiles
+    from aj_crew.platform import context as pc
+    from aj_crew.platform import governance_profiles
 
     ctx = SimpleNamespace(governance=parse_policy(doc) if doc is not None else None)
     monkeypatch.setattr(pc, "current_context", lambda: ctx)
@@ -89,7 +89,7 @@ class TestKeys:
 class TestWebhookSources:
     @pytest.mark.parametrize("edition", EDITIONS)
     def test_no_policy_refuses_only_in_lts(self, monkeypatch, edition) -> None:
-        from kiro_crew.webhook_sources import (
+        from aj_crew.webhook_sources import (
             SOURCE_AGENT,
             SOURCE_OPS_MISSION_CONTROL,
             source_refusal,
@@ -102,7 +102,7 @@ class TestWebhookSources:
 
     @pytest.mark.parametrize("edition", EDITIONS)
     def test_a_named_source_runs_and_an_unnamed_one_does_not(self, monkeypatch, edition) -> None:
-        from kiro_crew.webhook_sources import source_refusal
+        from aj_crew.webhook_sources import source_refusal
 
         _set_edition(monkeypatch, edition)
         _install_policy(monkeypatch, _webhooks("agent"))
@@ -111,8 +111,8 @@ class TestWebhookSources:
 
     @pytest.mark.parametrize("edition", EDITIONS)
     def test_an_evaluation_error_refuses_only_in_lts(self, monkeypatch, edition) -> None:
-        from kiro_crew.platform import governance_profiles
-        from kiro_crew.webhook_sources import source_refusal
+        from aj_crew.platform import governance_profiles
+        from aj_crew.webhook_sources import source_refusal
 
         lts = _set_edition(monkeypatch, edition)
 
@@ -124,9 +124,9 @@ class TestWebhookSources:
 
     @pytest.mark.parametrize("edition", EDITIONS)
     def test_a_composition_error_propagates_only_in_oss(self, monkeypatch, edition) -> None:
-        from kiro_crew.platform import governance_profiles
-        from kiro_crew.platform.context import PlatformCompositionError
-        from kiro_crew.webhook_sources import source_refusal
+        from aj_crew.platform import governance_profiles
+        from aj_crew.platform.context import PlatformCompositionError
+        from aj_crew.webhook_sources import source_refusal
 
         lts = _set_edition(monkeypatch, edition)
 
@@ -142,7 +142,7 @@ class TestWebhookSources:
 
     @pytest.mark.parametrize("edition", EDITIONS)
     def test_the_core_switch_follows_the_policy(self, monkeypatch, tmp_path: Path, edition) -> None:
-        from kiro_crew import webhooks
+        from aj_crew import webhooks
 
         _set_edition(monkeypatch, edition)
         store = webhooks.WebhookTokenStore(tmp_path)
@@ -160,7 +160,7 @@ class TestWebhookSources:
 class TestHookEvents:
     @pytest.mark.parametrize("edition", EDITIONS)
     def test_the_event_list_is_asked(self, monkeypatch, edition) -> None:
-        from kiro_crew.hook_event_governance import event_refusal
+        from aj_crew.hook_event_governance import event_refusal
 
         _set_edition(monkeypatch, edition)
         _install_policy(monkeypatch, _hook_events("PreToolUse"))
@@ -170,7 +170,7 @@ class TestHookEvents:
         assert event_refusal("s", "") is None
 
     def test_oss_without_a_policy_runs_every_event(self, monkeypatch) -> None:
-        from kiro_crew.hook_event_governance import event_refusal
+        from aj_crew.hook_event_governance import event_refusal
 
         _set_edition(monkeypatch, "oss")
         _install_policy(monkeypatch, None)
@@ -178,8 +178,8 @@ class TestHookEvents:
 
     @pytest.mark.parametrize("edition", EDITIONS)
     def test_an_evaluation_error_refuses_only_in_lts(self, monkeypatch, edition) -> None:
-        from kiro_crew.hook_event_governance import event_refusal
-        from kiro_crew.platform import governance_profiles
+        from aj_crew.hook_event_governance import event_refusal
+        from aj_crew.platform import governance_profiles
 
         lts = _set_edition(monkeypatch, edition)
 
@@ -191,7 +191,7 @@ class TestHookEvents:
 
     @pytest.mark.asyncio
     async def test_run_script_hook_refuses_a_refused_event(self, monkeypatch) -> None:
-        from kiro_crew.hooks import HOOK_EVENT_STOP, ScriptHook, run_script_hook
+        from aj_crew.hooks import HOOK_EVENT_STOP, ScriptHook, run_script_hook
 
         _set_edition(monkeypatch, "oss")
         _install_policy(monkeypatch, _hook_events("PreToolUse"))
@@ -203,7 +203,7 @@ class TestHookEvents:
 
     @pytest.mark.asyncio
     async def test_the_firing_event_is_judged_not_the_live_hook_field(self, monkeypatch) -> None:
-        from kiro_crew.hooks import HOOK_EVENT_PRE_TOOL_USE, ScriptHook, run_script_hook
+        from aj_crew.hooks import HOOK_EVENT_PRE_TOOL_USE, ScriptHook, run_script_hook
 
         _set_edition(monkeypatch, "oss")
         _install_policy(monkeypatch, _hook_events("PreToolUse"))
@@ -217,7 +217,7 @@ class TestHookEvents:
     def test_user_kiro_hooks_of_a_refused_event_are_not_installed(
         self, monkeypatch, tmp_path: Path, edition
     ) -> None:
-        from kiro_crew.agent import _apply_user_kiro_hooks
+        from aj_crew.agent import _apply_user_kiro_hooks
 
         lts = _set_edition(monkeypatch, edition)
         _install_policy(monkeypatch, _hook_events("PreToolUse"))

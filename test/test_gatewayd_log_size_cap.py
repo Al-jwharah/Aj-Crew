@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.mcp_gateway import manager as manager_mod
-from kiro_crew.mcp_gateway.manager import GatewayManager, GatewaySpec
+from aj_crew.mcp_gateway import manager as manager_mod
+from aj_crew.mcp_gateway.manager import GatewayManager, GatewaySpec
 
 
 class _SpawnCaptured(RuntimeError):

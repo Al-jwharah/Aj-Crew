@@ -13,7 +13,7 @@ from types import SimpleNamespace
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard.server import _apply_security_headers
+from aj_crew.dashboard.server import _apply_security_headers
 
 
 def _make_response() -> web.Response:
@@ -432,7 +432,7 @@ class TestApplySecurityHeaders:
         # Focused header-logic test: stub the (separately unit-tested) signed
         # claim reader so we don't re-mint a real token here.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.server.token_embed_parent_port",
+            "aj_crew.dashboard.server.token_embed_parent_port",
             lambda token: 5476 if token else None,
         )
         request = make_mocked_request("GET", "/?token=deadbeef")
@@ -455,7 +455,7 @@ class TestApplySecurityHeaders:
         load falls back to bare frame-ancestors 'self' and the embedded pane
         never renders (the exact blank-pane bug). Reproduced live: a cookie
         carrying the claim must not yield 'self'."""
-        from kiro_crew.dashboard.state import _DEFAULT_PORT
+        from aj_crew.dashboard.state import _DEFAULT_PORT
 
         # Stub the (separately unit-tested) signed-claim reader; the point of
         # THIS test is that the cookie value reaches it (no query token present).
@@ -465,7 +465,7 @@ class TestApplySecurityHeaders:
             seen["token"] = token
             return 5476 if token else None
 
-        monkeypatch.setattr("kiro_crew.dashboard.server.token_embed_parent_port", _fake_reader)
+        monkeypatch.setattr("aj_crew.dashboard.server.token_embed_parent_port", _fake_reader)
         request = make_mocked_request(
             "GET",
             "/",
@@ -489,9 +489,7 @@ class TestApplySecurityHeaders:
         token_auth_middleware stashes the validated parent port on the request
         BEFORE revoking; this reader must prefer it. Simulate: request carries the
         stashed claim but NO usable query token/cookie (reader returns None)."""
-        monkeypatch.setattr(
-            "kiro_crew.dashboard.server.token_embed_parent_port", lambda token: None
-        )
+        monkeypatch.setattr("aj_crew.dashboard.server.token_embed_parent_port", lambda token: None)
         request = make_mocked_request("GET", "/?token=revoked-link-token")
         request["embed_parent_port"] = "5476"  # what the middleware stashed
         resp = _make_response()
@@ -533,7 +531,7 @@ class TestApplySecurityHeaders:
         offers one.
         """
         monkeypatch.setattr(
-            "kiro_crew.dashboard.server._extra_frame_ancestors",
+            "aj_crew.dashboard.server._extra_frame_ancestors",
             lambda request, app: ["http://[::1]:5476", "http://localhost:5476"],
         )
         request = make_mocked_request("GET", "/")
@@ -556,7 +554,7 @@ class TestApplySecurityHeaders:
         default bare frame-ancestors 'self' + X-Frame-Options: SAMEORIGIN. A
         local page that plants an attacker cookie can therefore never inject an
         ancestor origin (clickjacking, CSE SEC-016 / CWE-778)."""
-        from kiro_crew.dashboard.state import _DEFAULT_PORT
+        from aj_crew.dashboard.state import _DEFAULT_PORT
 
         # Real reader (no monkeypatch): the cookie value reaches it and is
         # rejected because it carries no valid signature.

@@ -1,4 +1,4 @@
-"""The ``store`` fixture the :mod:`kiro_crew.artifacts` data-layer tests share.
+"""The ``store`` fixture the :mod:`aj_crew.artifacts` data-layer tests share.
 
 ``test_artifacts.py`` and its ``_kind_inference``, ``_source_root`` and ``_content_token``
 siblings each request ``store``, a fresh store rooted at a temp dir, so it lives in a module
@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.artifacts import ArtifactStore
+from aj_crew.artifacts import ArtifactStore
 
 # ── Fixtures ─────────────────────────────────────────────────────────────────
 

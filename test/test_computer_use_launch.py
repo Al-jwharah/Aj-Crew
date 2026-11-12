@@ -24,12 +24,12 @@ import os
 
 import pytest
 
-from kiro_crew.computer_use import backend as cu_backend
-from kiro_crew.computer_use import index as cu_index
-from kiro_crew.computer_use import policy
-from kiro_crew.computer_use import service as cu_service
-from kiro_crew.computer_use import tools
-from kiro_crew.computer_use.types import (
+from aj_crew.computer_use import backend as cu_backend
+from aj_crew.computer_use import index as cu_index
+from aj_crew.computer_use import policy
+from aj_crew.computer_use import service as cu_service
+from aj_crew.computer_use import tools
+from aj_crew.computer_use.types import (
     ERR_LAUNCH_ALREADY_RUNNING,
     ERROR_PREFIX,
     TOOL_GET_STATE,
@@ -40,8 +40,8 @@ from kiro_crew.computer_use.types import (
     LaunchIdentity,
     NoSuchLaunchTarget,
 )
-from kiro_crew.platform_compat import IS_WINDOWS
-from kiro_crew.testing.fake_computer_use import (
+from aj_crew.platform_compat import IS_WINDOWS
+from aj_crew.testing.fake_computer_use import (
     FAKE_DRAW_APP,
     FAKE_FILES_APP,
     FakeComputerUseBackend,
@@ -58,11 +58,11 @@ _SESSION = "cli_chat"
 def fake_computer_backend(tmp_path, monkeypatch):
     """The shipped fake, registered process-wide, with the keystone enable on.
 
-    ``KIROCREW_HOME`` is redirected first: the dispatcher refuses everything before
+    ``AJCREW_HOME`` is redirected first: the dispatcher refuses everything before
     reaching a driver unless the keystone says enabled, and a developer's real
     ``~/.kiro/crew`` must never decide a test's outcome.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "computer_use.json").write_text(json.dumps({"enabled": True}), encoding="utf-8")
     fake = FakeComputerUseBackend()
     cu_backend.register_computer_use_backend(lambda: fake)
@@ -108,7 +108,7 @@ class TestLaunchResolutionTrust:
         operator's real filesystem — and without the privilege dependence that made three
         of these tests fail on CI's elevated runner, which genuinely can write ``System32``.
         """
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         monkeypatch.setattr(launch_windows, "_protected_roots", lambda: (str(root),))
         monkeypatch.setattr(launch_windows, "_directory_is_writable", lambda _d: writable)
@@ -125,14 +125,14 @@ class TestLaunchResolutionTrust:
 
     @staticmethod
     def _catalog(monkeypatch, entries):
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         monkeypatch.setattr(launch_windows, "installed_apps", lambda: tuple(entries))
         return launch_windows
 
     @staticmethod
     def _entry(key: str, executable: str):
-        from kiro_crew.computer_use.launch_windows import InstalledApp
+        from aj_crew.computer_use.launch_windows import InstalledApp
 
         stem = key[:-4] if key.lower().endswith(".exe") else key
         return InstalledApp(key=key, name=stem, executable=executable, source="test")
@@ -205,7 +205,7 @@ class TestLaunchResolutionTrust:
         live bypasses during development:
 
         * reading the install roots from ``os.environ`` (fixed by
-          :func:`~kiro_crew.computer_use.launch_windows._install_roots_from_registry`);
+          :func:`~aj_crew.computer_use.launch_windows._install_roots_from_registry`);
         * ``platform_compat._windows_system_dirs`` appending
           ``%SystemRoot%\\System32`` *unconditionally* rather than as a fallback, so it
           was added even while ``GetSystemDirectoryW`` answered normally.
@@ -217,8 +217,8 @@ class TestLaunchResolutionTrust:
         level deeper than the file it was checking. A guard test that inspects the wrong
         path is worse than no guard test, since it reads as coverage.
         """
-        from kiro_crew import platform_compat
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew import platform_compat
+        from aj_crew.computer_use import launch_windows
 
         # Both the root itself and the System32 child an env-derived root expands to.
         for relative in ("", "System32", os.path.join("System32", "WindowsPowerShell", "v1.0")):
@@ -257,7 +257,7 @@ class TestLaunchResolutionTrust:
         for writability. This asserts the second, because the first alone would leave the
         two writable directories still under ``System32``.
         """
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         # ``C:\Windows`` must not be a root at all — that is half the fix, and it is
         # assertable without touching anything: the paths under it are rejected at the
@@ -308,7 +308,7 @@ class TestLaunchResolutionTrust:
         real-world holes are still named by the sibling test above, which calls only
         ``_under_protected`` and creates nothing.
         """
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         nested = tmp_path / "Program Files" / "App"
         nested.mkdir(parents=True)
@@ -342,7 +342,7 @@ class TestLaunchResolutionTrust:
         protected root, in a directory reported unwritable, is ACCEPTED — the branch the
         writability change could have broken.
         """
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         root = tmp_path / "Program Files"
         real = self._binary(root, "notepad.exe")
@@ -420,7 +420,7 @@ class TestLaunchResolutionTrust:
         and the protected-root test alone accepted it. The macOS sibling makes the same
         distinction, and a target must fail BOTH questions to be trusted.
         """
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         planted = tmp_path / "app.exe"
         planted.write_bytes(b"MZ")
@@ -438,7 +438,7 @@ class TestLaunchResolutionTrust:
         ``System32\\notepad.exe`` while opening it ``O_RDWR`` is denied. This asserts the real
         binary stays trusted, which an ``os.access``-based check could not.
         """
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         real = os.path.join(os.environ.get("SystemRoot", r"C:\Windows"), "System32", "notepad.exe")
         if not os.path.isfile(real):
@@ -463,7 +463,7 @@ class TestLaunchResolutionTrust:
         The ownership answer is injected rather than staged, because ``takeown`` needs a
         privilege the suite may not have and the rule must hold either way.
         """
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         target = tmp_path / "app.exe"
         target.write_bytes(b"MZ")
@@ -479,7 +479,7 @@ class TestLaunchResolutionTrust:
     def test_an_UNKNOWABLE_owner_fails_CLOSED(self, monkeypatch, tmp_path):
         # ``None`` means "could not determine", which is not evidence that the file belongs
         # to someone else — a filesystem with no security information, or a call that errors.
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         target = tmp_path / "app.exe"
         target.write_bytes(b"MZ")
@@ -489,7 +489,7 @@ class TestLaunchResolutionTrust:
     def test_the_owner_probe_never_raises(self, monkeypatch, tmp_path):
         # It is consulted on every launch, so an exception here would fail the tool call
         # rather than the target. Driven through a missing file and a broken native call.
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         assert launch_windows._owned_by_current_user(str(tmp_path / "absent.exe")) in (
             False,
@@ -506,7 +506,7 @@ class TestLaunchResolutionTrust:
     def test_the_owner_probe_is_a_NO_OP_off_Windows(self, monkeypatch, tmp_path):
         # ``None`` on a non-Windows host, so the module stays importable and the macOS
         # sibling's own ownership rule is the one that applies there.
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         monkeypatch.setattr(launch_windows.platform_compat, "IS_WINDOWS", False)
         assert launch_windows._owned_by_current_user(str(tmp_path)) is None
@@ -514,7 +514,7 @@ class TestLaunchResolutionTrust:
     def test_the_file_write_probe_modifies_nothing(self, tmp_path):
         # It runs on a binary about to be ALLOWED, so it must not damage a real installed
         # application: ``O_RDWR`` with no ``O_TRUNC`` and no write.
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         target = tmp_path / "app.exe"
         target.write_bytes(b"MZ-ORIGINAL-BYTES")
@@ -543,7 +543,7 @@ class TestLaunchResolutionTrust:
         Ownership is scripted to ``False`` so this reaches the open at all: an owned file
         short-circuits earlier, which is the point of that check and is covered separately.
         """
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         def boom(*_args, **_kwargs):
             raise error
@@ -555,7 +555,7 @@ class TestLaunchResolutionTrust:
     def test_an_ACCEPTED_open_means_replaceable_and_closes_the_handle(self, monkeypatch, tmp_path):
         # The positive half: a file the ACL lets this user write is replaceable, and the
         # descriptor is closed rather than leaked into the gateway's table.
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         target = tmp_path / "app.exe"
         target.write_bytes(b"MZ")
@@ -568,7 +568,7 @@ class TestLaunchResolutionTrust:
     def test_the_write_probe_is_removed(self, tmp_path):
         # The probe is only ever created where the launch then refuses, but a leftover
         # file in a system directory would still be litter with our name on it.
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         assert launch_windows._directory_is_writable(str(tmp_path)) is True
         assert list(tmp_path.iterdir()) == []
@@ -582,7 +582,7 @@ class TestLaunchResolutionTrust:
         probes are the operator's real install trees, so "the probe cleans up after
         itself" has to mean the kernel cleans up, not that a later statement does.
         """
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         def never(*_args, **_kwargs):
             raise AssertionError("the probe must not need an explicit unlink on Windows")
@@ -602,7 +602,7 @@ class TestLaunchResolutionTrust:
         back to being removed explicitly. Reporting ``False`` here would TRUST that
         binary — the one wrong answer this predicate must never give.
         """
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         def delete_denied(*_args, **_kwargs):
             raise PermissionError("Access is denied")
@@ -614,7 +614,7 @@ class TestLaunchResolutionTrust:
     def test_an_unwritable_directory_answers_False(self, monkeypatch, tmp_path):
         # Driven through a denial rather than by finding a real unwritable directory, so
         # the fail-closed branches are reachable on any host.
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         def denied(*_args, **_kwargs):
             raise PermissionError("Access is denied")
@@ -626,7 +626,7 @@ class TestLaunchResolutionTrust:
     def test_an_unexpected_probe_error_fails_CLOSED(self, monkeypatch, tmp_path, error):
         # "Assume writable" is the safe answer: the caller refuses the launch. An
         # unreadable directory is not evidence that a binary inside it is trustworthy.
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         def boom(*_args, **_kwargs):
             raise error
@@ -735,7 +735,7 @@ class TestLaunchResolutionTrust:
         # No document, no flag, no URL. A launch that accepted an argument would be a
         # way to hand attacker-chosen input to an arbitrary installed application,
         # which is a different capability from "open the drawing app".
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         seen: list[list[str]] = []
 
@@ -760,7 +760,7 @@ class TestWindowsProtectedRoots:
     @staticmethod
     def _reg(monkeypatch, values, *, open_error=False):
         """Install a fake ``winreg`` whose ``CurrentVersion`` key holds *values*."""
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         class _Reg:
             HKEY_LOCAL_MACHINE = "HKLM"
@@ -850,7 +850,7 @@ class TestWindowsAppPathsReader:
     @staticmethod
     def _reg(monkeypatch, hives, *, open_error=None):
         """Install a fake ``winreg``. *hives* maps a hive name to ``{key: value}``."""
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         class _Key:
             def __init__(self, entries, name=None):
@@ -989,7 +989,7 @@ class TestMacOSCatalogAndResolution:
 
     @staticmethod
     def _roots(monkeypatch, *roots):
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         monkeypatch.setattr(launch_macos, "_APP_ROOTS", tuple(str(r) for r in roots))
         monkeypatch.setattr(launch_macos, "_writable_component", lambda _app: None)
@@ -1074,7 +1074,7 @@ class TestMacOSCatalogAndResolution:
     def test_a_bundle_that_fails_verification_is_REFUSED(self, monkeypatch, tmp_path):
         # The verification is what makes the catalog untrusted input rather than an
         # authority, so a resolved bundle must not be returned when it fails.
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         self._bundle(tmp_path, "Paintbrush")
         monkeypatch.setattr(launch_macos, "_APP_ROOTS", (str(tmp_path),))
@@ -1089,7 +1089,7 @@ class TestMacOSCatalogAndResolution:
         reason ("this user can write…") and omits the unsatisfiable move hint — the bundle
         is already in the catalog root.
         """
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         root = tmp_path / "Applications"
         root.mkdir()
@@ -1111,7 +1111,7 @@ class TestMacOSCatalogAndResolution:
         # writable bundle component are different fixes, so each refusal names its path.
         # The executable case is the drag-install shape: every directory denies creates and
         # the binary itself belongs to this user, so the FILE is named, not its directory.
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         macos = self._bundle(tmp_path, "Paintbrush") / "Contents" / "MacOS"
         paths = {"parent": tmp_path, "directory": macos, "executable": macos / "Paintbrush"}
@@ -1130,7 +1130,7 @@ class TestMacOSCatalogAndResolution:
         # ``os.access`` is forced negative so the create-probe FALLBACK runs and its
         # self-removal is what gets asserted (a writable dir would otherwise short-circuit
         # on ``os.access`` before any file is created — see the no-mtime test below).
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         monkeypatch.setattr(launch_macos.os, "access", lambda *_a, **_k: False)
         assert launch_macos._directory_is_writable(str(tmp_path)) is True
@@ -1144,7 +1144,7 @@ class TestMacOSCatalogAndResolution:
         ``True`` (so the caller still refuses) with no create, no unlink, and no mtime
         change on the operator's directory.
         """
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         assert os.access(str(tmp_path), os.W_OK)  # a directory this user can write
         # Pin the mtime to a fixed point in the past so a create-and-unlink would move it
@@ -1164,7 +1164,7 @@ class TestMacOSCatalogAndResolution:
         that survives an interrupted run. So the moment observed is the handle's close:
         by then the name must already be gone from the operator's directory.
         """
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         monkeypatch.setattr(launch_macos.os, "access", lambda *_a, **_k: False)
         probe = tmp_path / launch_macos._WRITE_PROBE_NAME
@@ -1205,7 +1205,7 @@ class TestMacOSCatalogAndResolution:
         # "Assume writable" is the safe answer, because the caller then REFUSES. A name
         # collision cannot prove unwritability either, so it fails closed too. ``os.access``
         # is forced negative so the create-probe runs and classifies each error itself.
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         monkeypatch.setattr(launch_macos.os, "access", lambda *_a, **_k: False)
 
@@ -1231,7 +1231,7 @@ class TestMacOSBundleVerification:
     def _parent_is_not_stock(self, _floor_monkeypatch):
         # The synthetic parent is a real stock ``/Applications`` on a Mac, which would skip
         # the parent probe these tests assert. test_computer_use_launch_macos_stock.py owns it.
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         _floor_monkeypatch.setattr(
             launch_macos, "_is_stock_applications", lambda _d: False, raising=False
@@ -1239,7 +1239,7 @@ class TestMacOSBundleVerification:
 
     @staticmethod
     def _app():
-        from kiro_crew.computer_use.launch_macos import InstalledApp
+        from aj_crew.computer_use.launch_macos import InstalledApp
 
         return InstalledApp(name="Foo", path="/Applications/Foo.app", source="/Applications")
 
@@ -1254,7 +1254,7 @@ class TestMacOSBundleVerification:
         would mask every directory answer. Their own coverage is the ``_REPLACEABLE`` tests,
         which build a real bundle and inject ownership.
         """
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         monkeypatch.setattr(launch_macos, "_any_executable_is_writable", lambda _d: None)
         monkeypatch.setattr(launch_macos, "_file_is_replaceable", lambda _p: False)
@@ -1269,7 +1269,7 @@ class TestMacOSBundleVerification:
         without ``/Applications`` ever being writable. That bundle passed every check and
         launched agent-authored native code.
         """
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         probed: list[str] = []
 
@@ -1288,7 +1288,7 @@ class TestMacOSBundleVerification:
     def test_an_unwritable_bundle_still_resolves(self, monkeypatch):
         # The positive control: without it the refusal above would also pass on an
         # implementation that refused every bundle.
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         monkeypatch.setattr(launch_macos, "_directory_is_writable", lambda _d: False)
         self._no_writable_executable(monkeypatch)
@@ -1303,7 +1303,7 @@ class TestMacOSBundleVerification:
         target would choose its own examiner. The three locations are therefore fixed, and
         every one of them is under the bundle or its parent.
         """
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         probed: list[str] = []
         monkeypatch.setattr(
@@ -1312,7 +1312,7 @@ class TestMacOSBundleVerification:
         self._no_writable_executable(monkeypatch)
         # A hostile plist, which must change nothing: the reader is not consulted here.
         monkeypatch.setattr(
-            "kiro_crew.computer_use.apps_macos.read_bundle_plist",
+            "aj_crew.computer_use.apps_macos.read_bundle_plist",
             lambda _b: {"CFBundleExecutable": "/tmp/evil"},
         )
         launch_macos._writable_component(self._app())
@@ -1337,7 +1337,7 @@ class TestMacOSBundleVerification:
         also holds the ``Info.plist``, so the same access rewrites ``CFBundleIdentifier``
         and defeats the pre-spawn identity deny as well.
         """
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         monkeypatch.setattr(launch_macos, "_directory_is_writable", lambda d: d.endswith(writable))
         self._no_writable_executable(monkeypatch)
@@ -1359,7 +1359,7 @@ class TestMacOSBundleVerification:
         Real files with real modes rather than an injected answer, because the whole defect
         was that the injected question was the wrong one.
         """
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         bundle = tmp_path / "Foo.app"
         macos = bundle / "Contents" / "MacOS"
@@ -1374,7 +1374,7 @@ class TestMacOSBundleVerification:
     @staticmethod
     def _bundle_on_disk(tmp_path):
         """A real ``Foo.app`` with an executable AND an ``Info.plist``."""
-        from kiro_crew.computer_use.launch_macos import InstalledApp
+        from aj_crew.computer_use.launch_macos import InstalledApp
 
         contents = tmp_path / "Foo.app" / "Contents"
         (contents / "MacOS").mkdir(parents=True)
@@ -1395,7 +1395,7 @@ class TestMacOSBundleVerification:
         Directory creates and the mode bit are both answered "no", so ownership is the only
         signal left and each assertion is attributable to it.
         """
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         real_stat = os.stat
 
@@ -1465,7 +1465,7 @@ class TestMacOSBundleVerification:
         # An unverifiable bundle is refused, never admitted. A bundle with no
         # ``Contents/MacOS`` is not one ``open -a`` could run either, so refusing costs
         # nothing and the alternative is a branch that silently skips the check.
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         bundle = tmp_path / "Foo.app"
         bundle.mkdir()
@@ -1478,7 +1478,7 @@ class TestMacOSBundleVerification:
         # bare ``open``: the bundle is agent-choosable, so the read must keep
         # ``apps_macos``' realpath + sensitive-path re-check + ``O_NOFOLLOW`` path. A
         # second reader here would be a second chance to lose those three.
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         source = inspect.getsource(launch_macos)
         assert "bundle_identity_at" in source
@@ -1502,8 +1502,8 @@ class TestResolvedIdentityReachesThePolicy:
         so the already-running branch is not taken) — the hook for asserting the check on
         the identity the OS publishes once a window exists.
         """
-        from kiro_crew.computer_use import backend as be
-        from kiro_crew.computer_use.policy import PolicyConfig, check_app
+        from aj_crew.computer_use import backend as be
+        from aj_crew.computer_use.policy import PolicyConfig, check_app
 
         spawned: list[str] = []
         seen: list[LaunchIdentity] = []
@@ -1611,7 +1611,7 @@ class TestResolvedIdentityReachesThePolicy:
         """
         import importlib
 
-        module = importlib.import_module(f"kiro_crew.computer_use.{driver_mod}")
+        module = importlib.import_module(f"aj_crew.computer_use.{driver_mod}")
         source = inspect.getsource(module)
         launcher = "launch_windows" if driver_mod == "windows_driver" else "launch_macos"
         assert f"identity={launcher}.target_identity," in source, (
@@ -1646,7 +1646,7 @@ class TestResolvedIdentityReachesThePolicy:
         handed the policy a string the operator's ``someverylongname.exe`` rule cannot
         match, and the denied application spawned. Verified against that revision.
         """
-        from kiro_crew.computer_use import launch_windows
+        from aj_crew.computer_use import launch_windows
 
         real = tmp_path / "SomeVeryLongName.exe"
         real.write_bytes(b"MZ")
@@ -1659,10 +1659,10 @@ class TestResolvedIdentityReachesThePolicy:
     def test_the_macos_key_is_the_BUNDLE_ID(self, monkeypatch):
         # The macOS spelling that matters: the built-in denylist is bundle PREFIXES and
         # the operator's rules are written the way refusals print them.
-        from kiro_crew.computer_use import launch_macos
+        from aj_crew.computer_use import launch_macos
 
         monkeypatch.setattr(
-            "kiro_crew.computer_use.apps_macos.bundle_identity_at",
+            "aj_crew.computer_use.apps_macos.bundle_identity_at",
             lambda _b: ("com.example.Foo", "Foo"),
         )
         who = launch_macos.target_identity("/Applications/Foo.app", "Foo")
@@ -1715,10 +1715,10 @@ class TestLaunchDispatch:
     ):
         # THE launch-specific security assertion. Every other verb resolves an
         # ``AppRef`` from the window list first, so the denylist sees a real identity;
-        # a launch has only the name typed. Kiro Crew's own rule matches on name
+        # a launch has only the name typed. Aj Crew's own rule matches on name
         # substrings, so it fires — and it must fire before a process exists, which
         # is what the empty journal proves.
-        out = _launch("Kiro Crew")
+        out = _launch("Aj Crew")
         assert out.startswith(ERROR_PREFIX)
         assert fake_computer_backend.calls == []
 
@@ -1729,7 +1729,7 @@ class TestLaunchDispatch:
         whose OS-reported identity is denied while its display name is innocuous passes
         it. That identity is knowable BEFORE the spawn — the resolver produced it — so
         the refusal belongs there rather than after the fact: a detached spawn cannot be
-        undone, and refusing afterwards only stops Kiro Crew driving a process it has
+        undone, and refusing afterwards only stops Aj Crew driving a process it has
         already started.
 
         ``launch_app`` appearing alone in the journal, with no ``snapshot`` after it, is
@@ -1740,7 +1740,7 @@ class TestLaunchDispatch:
             AppRef(
                 name="Innocuous",
                 pid=4109,
-                bundle_id="dev.kiro.crew.dashboard",
+                bundle_id="io.github.al-jwharah.ajcrew.dashboard",
                 window_id=8809,
                 window_title="Dashboard",
             ),
@@ -1761,7 +1761,7 @@ class TestLaunchDispatch:
         ``extra_denied_apps``. A pre-spawn check that knew only the DISPLAY name
         (``notepad``) matched neither that nor a bundle-id rule, so the denied app
         started and was refused only once it was running. Verified against that
-        revision: with ``extra_denied_apps: ["dev.kirocrew.fake.draw"]`` the launch
+        revision: with ``extra_denied_apps: ["dev.ajcrew.fake.draw"]`` the launch
         succeeded.
 
         The empty ``apps`` list is the assertion that matters: the fake moves a
@@ -1769,7 +1769,7 @@ class TestLaunchDispatch:
         preceded the spawn rather than following it.
         """
         (tmp_path / "computer_use.json").write_text(
-            json.dumps({"enabled": True, "extra_denied_apps": ["dev.kirocrew.fake.draw"]}),
+            json.dumps({"enabled": True, "extra_denied_apps": ["dev.ajcrew.fake.draw"]}),
             encoding="utf-8",
         )
         out = _launch("Fake Draw")
@@ -1789,8 +1789,8 @@ class TestLaunchDispatch:
         (pre-existing, fail-closed) behaviour on an allow-list written in a spelling the
         caller did not type; this pins the resolved check alone.
         """
-        who = LaunchIdentity(display="Fake Draw", key="dev.kirocrew.fake.draw")
-        for spelling in ("fake draw", "dev.kirocrew.fake.draw"):
+        who = LaunchIdentity(display="Fake Draw", key="dev.ajcrew.fake.draw")
+        for spelling in ("fake draw", "dev.ajcrew.fake.draw"):
             cfg = policy.PolicyConfig(allowed_apps=(spelling,))
             assert tools._launch_refusal(who, cfg) is None, f"allowed_apps={spelling!r} refused"
         # The positive control: an allow-list naming a DIFFERENT app still refuses, so
@@ -1871,7 +1871,7 @@ class TestLaunchDispatch:
         # A verb that starts a process is the largest change this tool set can make,
         # so classifying it as read-only would put it on the same footing as reading
         # a tree.
-        from kiro_crew.computer_use.types import MUTATING_TOOLS, READ_ONLY_TOOLS
+        from aj_crew.computer_use.types import MUTATING_TOOLS, READ_ONLY_TOOLS
 
         assert TOOL_LAUNCH_APP in MUTATING_TOOLS
         assert TOOL_LAUNCH_APP not in READ_ONLY_TOOLS
@@ -1881,7 +1881,7 @@ class TestLaunchDispatch:
         # an ``args`` or ``path`` field would silently widen the verb from "open an
         # application" to "run a program with input", and nothing else in the suite
         # would notice.
-        from kiro_crew.validation import MCP_COMPUTER_SCHEMAS
+        from aj_crew.validation import MCP_COMPUTER_SCHEMAS
 
         fields = {spec.name for spec in MCP_COMPUTER_SCHEMAS[TOOL_LAUNCH_APP].fields}
         assert fields == {"app"}
@@ -1889,7 +1889,7 @@ class TestLaunchDispatch:
     def test_the_advertised_schema_matches_the_validator(self):
         # A tool whose advertised ``required`` list is looser than the validator's
         # teaches the model a call shape that is always refused.
-        from kiro_crew.mcp_computer import _tool_definitions
+        from aj_crew.mcp_computer import _tool_definitions
 
         entry = next(d for d in _tool_definitions() if d["name"] == TOOL_LAUNCH_APP)
         assert entry["inputSchema"]["required"] == ["app"]
@@ -1909,14 +1909,14 @@ def test_the_denylist_probe_shape_reaches_the_self_target_rule():
     # exists yet. That is only sound if the self-target rule can actually fire on a
     # name-only ref — pinned here so a future denylist change that dropped
     # ``name_substrings`` would fail loudly rather than silently open the launch path
-    # to Kiro Crew's own dashboard.
-    probe = AppRef(name="Kiro Crew", pid=0, bundle_id="Kiro Crew", window_title="Kiro Crew")
+    # to Aj Crew's own dashboard.
+    probe = AppRef(name="Aj Crew", pid=0, bundle_id="Aj Crew", window_title="Aj Crew")
     assert policy.denied_rule_for(probe) is not None
 
 
 def test_launch_windows_imports_no_platform_module_at_MODULE_SCOPE():
     """``winreg`` does not exist off Windows, so importing it at module scope would
-    break EVERY test that transitively touches ``kiro_crew`` on the Linux CI fleet.
+    break EVERY test that transitively touches ``aj_crew`` on the Linux CI fleet.
 
     Asserted by AST rather than by importing, because that is the only form that
     fails on a Windows dev box: an ``import winreg`` at module scope succeeds here and
@@ -1927,7 +1927,7 @@ def test_launch_windows_imports_no_platform_module_at_MODULE_SCOPE():
     import ast
     import pathlib
 
-    from kiro_crew.computer_use import launch_windows
+    from aj_crew.computer_use import launch_windows
 
     source = pathlib.Path(launch_windows.__file__).read_text(encoding="utf-8")
     module_scope: set[str] = set()
@@ -1945,7 +1945,7 @@ def test_launch_windows_imports_no_platform_module_at_MODULE_SCOPE():
         "os",
         "subprocess",
         "typing",
-        "kiro_crew",
+        "aj_crew",
     }
 
 
@@ -1953,7 +1953,7 @@ def test_the_fake_launch_catalog_is_disjoint_from_the_running_list():
     # The fake's three launch outcomes are only distinguishable while these two lists
     # disagree; a fixture edit that put the draw app in both would make the
     # successful-launch test unable to fail.
-    from kiro_crew.testing.fake_computer_use import FAKE_APPS, FAKE_LAUNCHABLE
+    from aj_crew.testing.fake_computer_use import FAKE_APPS, FAKE_LAUNCHABLE
 
     assert FAKE_DRAW_APP in FAKE_LAUNCHABLE
     assert FAKE_DRAW_APP not in FAKE_APPS

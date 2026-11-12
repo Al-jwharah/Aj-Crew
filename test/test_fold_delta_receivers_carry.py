@@ -15,10 +15,10 @@ from crew_log_fold_eager_helpers import (  # noqa: F401 - autouse fixture
 )
 from test_crew_log_fold_delta import _publish_now, _Writer
 
-from kiro_crew import conductor_wake
-from kiro_crew.crew_log import bus, eager, fold_delta
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.testing.wait import wait_until
+from aj_crew import conductor_wake
+from aj_crew.crew_log import bus, eager, fold_delta
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.testing.wait import wait_until
 
 FIXTURES = (
     pathlib.Path(__file__).resolve().parent.parent
@@ -92,7 +92,7 @@ def _real_events() -> list[bus.FoldAdvanced]:
 
 
 def _feed() -> "Any":
-    from kiro_crew.dashboard_feed import DashboardFeed, _Cell
+    from aj_crew.dashboard_feed import DashboardFeed, _Cell
 
     changes: list[str] = []
     feed = DashboardFeed(WORK_SLOT, on_change=changes.append)
@@ -185,7 +185,7 @@ def test_dashboard_feed_rereads_a_cell_it_cannot_apply_and_was_handed_no_value()
 
 
 def test_dashboard_feed_reads_again_when_a_gap_lands_during_its_re_read(monkeypatch):
-    from kiro_crew.dashboard_feed import DashboardFeed, _Cell
+    from aj_crew.dashboard_feed import DashboardFeed, _Cell
 
     feed = DashboardFeed(WORK_SLOT)
     feed._cells["work"] = _Cell()

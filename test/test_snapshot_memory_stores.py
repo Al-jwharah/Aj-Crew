@@ -28,13 +28,13 @@ from sqlite3.dump import _iterdump as iter_sql_dump
 from unittest.mock import patch
 
 import pytest
-from test_snapshot import _make_snapshot, _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _make_snapshot, _setup_fake_ajcrew, unpinnable_argv
 
-from kiro_crew import member_memory_backup, platform_compat, portability
-from kiro_crew import snapshot as snap
-from kiro_crew import snapshot_redact as redact
-from kiro_crew.memory import INDEX_DB_FILE
-from kiro_crew.memory_stores import (
+from aj_crew import member_memory_backup, platform_compat, portability
+from aj_crew import snapshot as snap
+from aj_crew import snapshot_redact as redact
+from aj_crew.memory import INDEX_DB_FILE
+from aj_crew.memory_stores import (
     EXECUTION_LOGS_DIR_NAME,
     MEMBER_API_KEY_FILE,
     MEMBER_BACKUPS_DIR_NAME,
@@ -44,9 +44,9 @@ from kiro_crew.memory_stores import (
     is_host_local_store_state,
     named_store_product_file,
 )
-from kiro_crew.security import is_sensitive_path
-from kiro_crew.snapshot import restore_main
-from kiro_crew.testing.wait import wait_until
+from aj_crew.security import is_sensitive_path
+from aj_crew.snapshot import restore_main
+from aj_crew.testing.wait import wait_until
 
 STORE = "acme"
 ROOT = MEMORY_STORES_DIR_NAME
@@ -110,7 +110,7 @@ def _plant_named_store(home: Path, *, rows: int = 3) -> None:
 
 def _seed_store_generation(home: Path, name: str, version: int) -> Path:
     """Create and close a real store so merge tests can check its next initialization."""
-    from kiro_crew.vector_memory import VectorMemoryStore, create_member_database
+    from aj_crew.vector_memory import VectorMemoryStore, create_member_database
 
     directory = home / ROOT / name
     if version == 2:
@@ -172,16 +172,16 @@ def _members(tarball: Path) -> set[str]:
 
 @pytest.fixture(autouse=True)
 def _no_gateway(monkeypatch):
-    monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "0")
+    monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "0")
 
 
 @pytest.fixture
 def src(tmp_path, monkeypatch) -> Path:
     home = tmp_path / "src"
     home.mkdir()
-    _setup_fake_kirocrew(home)
+    _setup_fake_ajcrew(home)
     _plant_named_store(home)
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     return home
 
 
@@ -281,12 +281,12 @@ class TestSnapshotCarriesNamedStores:
 
     def test_the_extraction_filter_drops_what_never_ships(self):
         for rel in HOST_LOCAL_FILES:
-            info = tarfile.TarInfo(f"kirocrew-snapshot-x/{rel}")
+            info = tarfile.TarInfo(f"ajcrew-snapshot-x/{rel}")
             assert snap._data_filter(info) is None, rel
-        kept = snap._data_filter(tarfile.TarInfo(f"kirocrew-snapshot-x/{STORE_MEMORY_FILES[0]}"))
+        kept = snap._data_filter(tarfile.TarInfo(f"ajcrew-snapshot-x/{STORE_MEMORY_FILES[0]}"))
         assert kept is not None
         assert kept.mode == 0o600, "a store's file lands owner-only, as provisioning makes it"
-        d = tarfile.TarInfo(f"kirocrew-snapshot-x/{ROOT}/{STORE}")
+        d = tarfile.TarInfo(f"ajcrew-snapshot-x/{ROOT}/{STORE}")
         d.type = tarfile.DIRTYPE
         assert snap._data_filter(d).mode == 0o700
         # The rejection recorder does not count these as rejections: a deliberate drop in
@@ -294,7 +294,7 @@ class TestSnapshotCarriesNamedStores:
         rejected: list[str] = []
         f = snap._rejection_recording_filter(rejected)
         for rel in HOST_LOCAL_FILES:
-            f(tarfile.TarInfo(f"kirocrew-snapshot-x/{rel}"))
+            f(tarfile.TarInfo(f"ajcrew-snapshot-x/{rel}"))
         assert rejected == []
 
     def test_replace_clears_the_tree_so_the_recorder_watches_it(self):
@@ -306,7 +306,7 @@ class TestRestoreBringsNamedStoresBack:
         tarball = _make_snapshot(src, tmp_path / "out")
         fresh = tmp_path / "fresh"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         assert restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv()) == 0
         for rel in STORE_MEMORY_FILES:
             assert (fresh / rel).is_file(), rel
@@ -319,10 +319,10 @@ class TestRestoreBringsNamedStoresBack:
         tarball = _make_snapshot(src, tmp_path / "out")
         dst = tmp_path / "dst"
         dst.mkdir()
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         stale = dst / ROOT / "stale"
         _make_store_db(stale / MEMORY_DB_FILE, 1)
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         assert restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv()) == 0
         assert (dst / ROOT / STORE / MEMORY_DB_FILE).is_file()
         assert not stale.exists()
@@ -340,9 +340,9 @@ class TestRestoreBringsNamedStoresBack:
         tarball = _make_snapshot(src, tmp_path / "out", ["--components", "memory,workspace"])
         dst = tmp_path / "dst"
         dst.mkdir()
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         _make_store_db(dst / ROOT / "stale" / MEMORY_DB_FILE, 1)
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         assert restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv()) == 0
         assert (dst / ROOT / STORE / MEMORY_DB_FILE).is_file()
         assert not (dst / ROOT / "stale").exists()
@@ -351,12 +351,12 @@ class TestRestoreBringsNamedStoresBack:
         tarball = _make_snapshot(src, tmp_path / "out")
         dst = tmp_path / "dst"
         dst.mkdir()
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         # A second store the destination already has, with its OWN database.
         _plant_named_store(dst)
         _make_store_db(dst / ROOT / STORE / MEMORY_DB_FILE, 7)
         (dst / ROOT / STORE / "lessons.jsonl").unlink()
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         assert restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv()) == 0
         # Kept, not overwritten -- and said so.
         assert _rows(dst / ROOT / STORE / MEMORY_DB_FILE) == 7
@@ -369,8 +369,8 @@ class TestRestoreBringsNamedStoresBack:
         tarball = _make_snapshot(src, tmp_path / "out")
         dst = tmp_path / "dst"
         dst.mkdir()
-        _setup_fake_kirocrew(dst)
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        _setup_fake_ajcrew(dst)
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         assert restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv()) == 0
         assert _rows(dst / ROOT / STORE / MEMORY_DB_FILE) == 3
         for rel in STORE_MEMORY_FILES:
@@ -381,16 +381,16 @@ class TestRestoreBringsNamedStoresBack:
     def test_merge_preserves_store_generations(
         self, tmp_path, monkeypatch, existing, per_file_copy
     ):
-        from kiro_crew.vector_memory import VectorMemoryStore, open_member_database
+        from aj_crew.vector_memory import VectorMemoryStore, open_member_database
 
         source, destination = tmp_path / "source", tmp_path / "destination"
         source.mkdir()
         destination.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(source))
+        monkeypatch.setenv("AJCREW_HOME", str(source))
         for name in (STORE, "other"):
             _seed_store_generation(source, name, 2)
         tarball = _make_snapshot(source, tmp_path / "out", ["--components", "memory"])
-        monkeypatch.setenv("KIROCREW_HOME", str(destination))
+        monkeypatch.setenv("AJCREW_HOME", str(destination))
         kept = destination / ROOT / STORE
         if existing:
             _seed_store_generation(destination, STORE, 1)
@@ -443,9 +443,9 @@ class TestRestoreBringsNamedStoresBack:
                     out.addfile(m)
         dst = tmp_path / "dst"
         dst.mkdir()
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         (dst / "workspace" / "memory" / "keep.md").write_text("live", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         assert restore_main([str(broken), "--mode", "replace", "--force"] + unpinnable_argv()) == 1
         assert (dst / "workspace" / "memory" / "keep.md").is_file(), "nothing moved"
 
@@ -454,11 +454,11 @@ class TestRestoreBringsNamedStoresBack:
 def test_member_single_database_round_trip_includes_committed_wal(
     tmp_path, monkeypatch, archive_kind
 ):
-    from kiro_crew.vector_memory import create_member_database, open_member_database
+    from aj_crew.vector_memory import create_member_database, open_member_database
 
     source, destination = tmp_path / "source", tmp_path / "destination"
     _declare_named_store(source, version=2)
-    monkeypatch.setenv("KIROCREW_HOME", str(source))
+    monkeypatch.setenv("AJCREW_HOME", str(source))
     directory = source / ROOT / STORE
     database = directory / MEMORY_DB_FILE
     create_member_database(database, member_id=STORE, store_id=STORE)
@@ -503,7 +503,7 @@ def test_member_single_database_round_trip_includes_committed_wal(
             if name.startswith(f"{ROOT}/{STORE}/")
         )
     _declare_named_store(destination, version=2)
-    monkeypatch.setenv("KIROCREW_HOME", str(destination))
+    monkeypatch.setenv("AJCREW_HOME", str(destination))
     if archive_kind == "snapshot":
         assert (
             restore_main([str(artifact), "--mode", "replace", "--force"] + unpinnable_argv()) == 0
@@ -571,9 +571,9 @@ class TestAPreTreeBundleLeavesLiveStoresAlone:
         bundle = self._bundle_without_the_tree(src, tmp_path / "out", version=3)
         dst = tmp_path / "dst"
         dst.mkdir()
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         _plant_named_store(dst, rows=5)
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         assert restore_main([str(bundle), "--mode", "replace", "--force"] + unpinnable_argv()) == 0
         assert _rows(dst / ROOT / STORE / MEMORY_DB_FILE) == 5
         assert (dst / ROOT / MEMBER_API_KEY_FILE).is_file()
@@ -586,9 +586,9 @@ class TestAPreTreeBundleLeavesLiveStoresAlone:
         bundle = self._bundle_without_the_tree(src, tmp_path / "out", version=snap.MANIFEST_VERSION)
         dst = tmp_path / "dst"
         dst.mkdir()
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         _plant_named_store(dst, rows=5)
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         assert restore_main([str(bundle), "--mode", "replace", "--force"] + unpinnable_argv()) == 0
         assert not (dst / ROOT / STORE).exists()
         rollback = next((dst / ROOT / MEMBER_BACKUPS_DIR_NAME).glob("pre-restore-*"))
@@ -622,12 +622,12 @@ class TestRedactionKnowsAStoreDatabase:
 class TestTheDashboardExportCarriesNamedStores:
     @pytest.fixture
     def home(self, tmp_path, monkeypatch) -> Path:
-        d = tmp_path / ".kirocrew"
+        d = tmp_path / ".ajcrew"
         d.mkdir()
-        _setup_fake_kirocrew(d)
+        _setup_fake_ajcrew(d)
         _plant_named_store(d)
-        monkeypatch.setenv("KIROCREW_HOME", str(d))
-        with patch("kiro_crew.portability.config_dir", return_value=d):
+        monkeypatch.setenv("AJCREW_HOME", str(d))
+        with patch("aj_crew.portability.config_dir", return_value=d):
             yield d
 
     @staticmethod
@@ -748,10 +748,10 @@ class TestReplaceRefusesWhileAStoreIsOpen:
         tarball = _make_snapshot(src, tmp_path / "out")
         dst = tmp_path / "dst"
         dst.mkdir()
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         _plant_named_store(dst, rows=5)
         (dst / "workspace" / "memory" / "keep.md").write_text("live", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         # What an open V2 store holds for its connection's lifetime.
         fd = member_memory_backup.acquire_store_use_lock(dst / ROOT / STORE / MEMORY_DB_FILE)
         try:
@@ -809,14 +809,14 @@ class TestReplaceRefusesWhileAStoreIsOpen:
         tarball = _make_snapshot(src, tmp_path / "out")
         dst = tmp_path / "dst"
         dst.mkdir()
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         _plant_named_store(dst, rows=5)
         _make_store_db(dst / ROOT / "stale" / MEMORY_DB_FILE, 1)
         lock = dst / ROOT / MEMBER_BACKUPS_DIR_NAME / STORE / ".store-use.lock"
         lock.parent.mkdir(parents=True, exist_ok=True)
         lock.write_bytes(b"")
         before = lock.stat().st_ino
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         assert restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv()) == 0
         assert _rows(dst / ROOT / STORE / MEMORY_DB_FILE) == 3, "the store was replaced"
         assert not (dst / ROOT / "stale").exists(), "a store the archive lacks is gone"
@@ -833,12 +833,12 @@ class TestReplaceRefusesWhileAStoreIsOpen:
 class TestImportValidatesStoreDatabasesBeforeMutating:
     @pytest.fixture
     def home(self, tmp_path, monkeypatch) -> Path:
-        d = tmp_path / ".kirocrew"
+        d = tmp_path / ".ajcrew"
         d.mkdir()
-        _setup_fake_kirocrew(d)
+        _setup_fake_ajcrew(d)
         _plant_named_store(d)
-        monkeypatch.setenv("KIROCREW_HOME", str(d))
-        with patch("kiro_crew.portability.config_dir", return_value=d):
+        monkeypatch.setenv("AJCREW_HOME", str(d))
+        with patch("aj_crew.portability.config_dir", return_value=d):
             yield d
 
     @staticmethod
@@ -899,7 +899,7 @@ class TestThePortabilityRoutesAreOwnerOnly:
 
     @pytest.fixture
     def handlers(self):
-        import kiro_crew.dashboard.handlers.portability as ph
+        import aj_crew.dashboard.handlers.portability as ph
 
         events: list[dict] = []
 
@@ -924,7 +924,7 @@ class TestThePortabilityRoutesAreOwnerOnly:
         ph, _ = handlers
 
         class _Plan:
-            prefix = "kirocrew-export-t"
+            prefix = "ajcrew-export-t"
             created_at = "2026-01-01T00:00:00Z"
             include_sessions = False
             memory_only = False
@@ -987,9 +987,9 @@ class TestNamedStoreRollbackSafety:
         tarball = _make_snapshot(src, tmp_path / "out")
         dst = tmp_path / "dst"
         dst.mkdir()
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         _plant_named_store(dst, rows=5)
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         assert restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv()) == 0
         assert not list(dst.glob(f"pre-restore-*/{ROOT}"))
         saved = next((dst / ROOT / MEMBER_BACKUPS_DIR_NAME).glob("pre-restore-*"))
@@ -1009,7 +1009,7 @@ class TestNamedStoreRollbackSafety:
         dst = tmp_path / "dst"
         dst.mkdir()
         _plant_named_store(dst, rows=5)
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         root = dst / ROOT
         lock = root / MEMBER_BACKUPS_DIR_NAME / STORE / ".store-use.lock"
         lock.write_bytes(b"")
@@ -1049,9 +1049,9 @@ class TestNamedStoreRollbackSafety:
 
     @pytest.mark.skipif(not platform_compat.IS_POSIX, reason="the lifetime lock is POSIX-only")
     def test_named_v1_store_holds_lock_until_close(self, tmp_path, monkeypatch):
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         db = tmp_path / ROOT / STORE / MEMORY_DB_FILE
         store = VectorMemoryStore(db_path=db)
         try:
@@ -1088,7 +1088,7 @@ class TestNamedStoreRollbackSafety:
         _plant_named_store(dst, rows=5)
         alias = tmp_path / "home-alias"
         make_dir_link(alias, real_parent)
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         with patch.object(snap, "_mc_dir", return_value=alias / "home"):
             assert (
                 restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv())
@@ -1104,7 +1104,7 @@ class TestNamedStoreRollbackSafety:
         dst = tmp_path / "dst"
         dst.mkdir()
         _plant_named_store(dst, rows=5)
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         copy = snap._copytree_safe
 
         def fail_store_copy(source, target, **kwargs):
@@ -1128,7 +1128,7 @@ async def test_named_v1_markdown_write_cannot_be_lost_during_replace(
 ):
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers._shared import (
+    from aj_crew.dashboard.handlers._shared import (
         markdown_memory_for_store,
         release_markdown_memory_store,
     )
@@ -1138,7 +1138,7 @@ async def test_named_v1_markdown_write_cannot_be_lost_during_replace(
     (destination / "config.json").write_text(
         json.dumps({"memory_stores": {STORE: {}}}), encoding="utf-8"
     )
-    monkeypatch.setenv("KIROCREW_HOME", str(destination))
+    monkeypatch.setenv("AJCREW_HOME", str(destination))
     if without_admission:
         monkeypatch.setattr(member_memory_backup, "acquire_store_use_lock", lambda path: None)
     state = SimpleNamespace()
@@ -1245,7 +1245,7 @@ def test_merge_keeps_markdown_only_and_empty_store_directories(
         local.parent.mkdir(parents=True, exist_ok=True)
         local.write_text("local memory", encoding="utf-8")
     before = _store_bytes(kept)
-    monkeypatch.setenv("KIROCREW_HOME", str(destination))
+    monkeypatch.setenv("AJCREW_HOME", str(destination))
     if mode == "snapshot":
         assert restore_main([str(archive), "--mode", "merge", "--force"] + unpinnable_argv()) == 0
         assert "kept the existing store" in capsys.readouterr().out
@@ -1264,14 +1264,14 @@ def test_provisioning_waits_for_replace_and_rollback(
     from concurrent.futures import ThreadPoolExecutor
     from contextlib import contextmanager
 
-    from kiro_crew import memory_stores, pinned_fs
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
+    from aj_crew import memory_stores, pinned_fs
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
     destination = tmp_path / "destination"
     destination.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(destination))
-    config = KiroCrewConfig()
-    config.agents["new-member"] = KiroCrewAgentConfig()
+    monkeypatch.setenv("AJCREW_HOME", str(destination))
+    config = AjCrewConfig()
+    config.agents["new-member"] = AjCrewAgentConfig()
     portability._strip_host_local_store_state(src)
     (src / "MANIFEST.json").write_text(json.dumps({"version": snap.MANIFEST_VERSION}))
     pending = threading.Event()
@@ -1290,7 +1290,7 @@ def test_provisioning_waits_for_replace_and_rollback(
     provision = memory_stores.provision_member_memory
     publish = memory_stores.persist_member_config
     if without_namespace:
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
         provision = memory_stores._provision_member_memory
         publish = publish.__wrapped__
@@ -1329,9 +1329,9 @@ def test_provisioning_waits_for_replace_and_rollback(
     assert store.exists() is not without_namespace
     if not without_namespace:
         assert (store / MEMORY_DB_FILE).is_file()
-        from kiro_crew.vector_memory import read_member_database_identity
+        from aj_crew.vector_memory import read_member_database_identity
 
-        member = KiroCrewConfig.load().agents["new-member"]
+        member = AjCrewConfig.load().agents["new-member"]
         assert read_member_database_identity(store / MEMORY_DB_FILE) == (member.member_id, name)
         assert member.memory_store == name
 
@@ -1369,18 +1369,18 @@ def test_file_only_writes_serialize_with_replace(
     from concurrent.futures import ThreadPoolExecutor
     from contextlib import contextmanager, nullcontext
 
-    from kiro_crew import pinned_fs
-    from kiro_crew.learn import Lesson, LessonStore
-    from kiro_crew.memory import MemoryStore
+    from aj_crew import pinned_fs
+    from aj_crew.learn import Lesson, LessonStore
+    from aj_crew.memory import MemoryStore
 
     destination = tmp_path / "destination"
     source = tmp_path / "source"
-    monkeypatch.setenv("KIROCREW_HOME", str(destination))
+    monkeypatch.setenv("AJCREW_HOME", str(destination))
     _declare_named_store(destination, version=version)
     memory = MemoryStore(workspace=destination / ROOT / STORE, memory_version=version)
     lessons = None
     if version == 2:
-        from kiro_crew.vector_memory import create_member_database
+        from aj_crew.vector_memory import create_member_database
 
         for home in (source, destination):
             create_member_database(
@@ -1464,17 +1464,17 @@ def test_file_only_readers_hold_namespace(tmp_path, monkeypatch, kind, without_a
     import inspect
     from contextlib import contextmanager
 
-    from kiro_crew import pinned_fs
-    from kiro_crew.learn import Lesson, LessonStore
-    from kiro_crew.memory import MemoryStore
+    from aj_crew import pinned_fs
+    from aj_crew.learn import Lesson, LessonStore
+    from aj_crew.memory import MemoryStore
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _declare_named_store(tmp_path, version=version)
     directory = tmp_path / ROOT / STORE
     memory = MemoryStore(workspace=directory, memory_version=version)
     lessons = None
     if version == 2:
-        from kiro_crew.vector_memory import create_member_database
+        from aj_crew.vector_memory import create_member_database
 
         create_member_database(directory / MEMORY_DB_FILE, member_id=STORE, store_id=STORE)
         memory.write_preferences("manual preferences")
@@ -1529,10 +1529,10 @@ def test_file_only_readers_hold_namespace(tmp_path, monkeypatch, kind, without_a
 
 
 def test_nested_named_memory_operations_release_namespace_on_failure(tmp_path, monkeypatch):
-    from kiro_crew import memory_stores
-    from kiro_crew.memory import MemoryStore
+    from aj_crew import memory_stores
+    from aj_crew.memory import MemoryStore
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _declare_named_store(tmp_path)
     memory = MemoryStore(workspace=tmp_path / ROOT / STORE)
     memory.init()
@@ -1559,8 +1559,8 @@ async def test_named_lessons_request_offloads_locked_operations(monkeypatch, inl
     from aiohttp import web
     from aiohttp.test_utils import make_mocked_request
 
-    from kiro_crew.dashboard.handlers import cron as handlers
-    from kiro_crew.learn import Lesson
+    from aj_crew.dashboard.handlers import cron as handlers
+    from aj_crew.learn import Lesson
 
     loop_thread = threading.get_ident()
     seen = []
@@ -1625,15 +1625,15 @@ def test_cold_vector_open_waits_until_replace_or_rollback_finishes(
     from concurrent.futures import ThreadPoolExecutor
     from contextlib import contextmanager
 
-    from kiro_crew import memory_stores, pinned_fs
-    from kiro_crew.vector_memory import VectorMemoryStore
+    from aj_crew import memory_stores, pinned_fs
+    from aj_crew.vector_memory import VectorMemoryStore
 
     destination = tmp_path / "destination"
     destination.mkdir()
     (destination / "config.json").write_text(
         json.dumps({"memory_stores": {"cold": {}}}), encoding="utf-8"
     )
-    monkeypatch.setenv("KIROCREW_HOME", str(destination))
+    monkeypatch.setenv("AJCREW_HOME", str(destination))
     database = memory_stores.resolve_store_path("cold")
     assert not database.parent.exists()
     portability._strip_host_local_store_state(src)
@@ -1701,9 +1701,9 @@ def test_cold_vector_open_waits_until_replace_or_rollback_finishes(
 
 @pytest.mark.asyncio
 async def test_ensure_store_refuses_a_declared_store_without_a_directory(tmp_path, monkeypatch):
-    from kiro_crew import context, memory_stores
+    from aj_crew import context, memory_stores
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "config.json").write_text(
         json.dumps({"memory_stores": {"cold": {}}}), encoding="utf-8"
     )

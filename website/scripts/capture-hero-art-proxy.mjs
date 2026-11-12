@@ -71,7 +71,7 @@ const registryApps = [
     origin: 'registry', lifecycle: 'gateway', repo: REPO, _registry: REG, featured: 1,
   },
   {
-    name: 'research-lab', displayName: 'Research Lab', author: 'kirocrew',
+    name: 'research-lab', displayName: 'Research Lab', author: 'ajcrew',
     description: 'A builtin whose absolute hero path must pass through untouched.',
     tags: ['research'], version: '1.4.0', installed: true, enabled: true,
     origin: 'builtin', provenance: 'builtin', verified: true, featured: 2,
@@ -99,7 +99,7 @@ const installedApps = [
     manifest: {
       name: 'research-lab', version: '1.4.0', displayName: 'Research Lab',
       description: 'A builtin whose absolute hero path must pass through untouched.',
-      author: 'kirocrew', tags: ['research'],
+      author: 'ajcrew', tags: ['research'],
       heroImage: '/app-assets/research-lab/hero.svg',
       heroImageDark: '/app-assets/research-lab/hero-dark.svg',
       ui: { pages: [{ route: '/research', label: 'Research', icon: 'Search' }] },
@@ -143,7 +143,7 @@ const API_FIXTURES = {
   }),
   '/api/themes': () => ({ themes: [], installed: [] }),
   '/api/status': () => status,
-  '/api/dashboard/branding': () => ({ bot_name: 'Kiro Crew', avatar: '' }),
+  '/api/dashboard/branding': () => ({ bot_name: 'Aj Crew', avatar: '' }),
   '/api/theme/boot': () => ({ mode: themeMode, theme: '' }),
   '/api/notifications': () => ({ notifications: [], unread: 0 }),
   '/api/chat/slots': () => [],

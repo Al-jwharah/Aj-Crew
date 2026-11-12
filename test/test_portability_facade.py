@@ -1,15 +1,15 @@
-"""``kiro_crew.portability`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.portability`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.portability`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the owners in
+``aj_crew.portability`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the owners in
 its ``_OWNERS``, lowest layer first: ``portability_archive``, ``portability_templates``, ``portability_export`` and ``portability_vetting``. It keeps the import itself:
 :func:`apply_import_zip` and the settings and session merges it runs. Every name an owner defines
-still resolves as ``kiro_crew.portability.<name>``.
+still resolves as ``aj_crew.portability.<name>``.
 
 ``test/test_facade_mirror_guards.py`` holds every mirrored facade to the shared rules. These
 tests pin what is particular to this one: every name the test trees patch through it reaches
 every module holding it, and the scan finds the seams it is known to have; the owner list and
 its layering; that every public name the module held before the split still type-checks
-through it; that the owners log as ``kiro_crew.portability``; that a write of the
+through it; that the owners log as ``aj_crew.portability``; that a write of the
 settings-document cap reaches the export, the vetting and the facade's own readers;
 and the frozen import inventory that stands in for the F401 check
 ``setup.cfg`` switches off for it.
@@ -31,7 +31,7 @@ import pytest
 import source_corpus
 import test_campaign_facades_base_public_names as base_names
 
-from kiro_crew import _facade_mirror, portability
+from aj_crew import _facade_mirror, portability
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_portability_facade")
 
@@ -50,12 +50,12 @@ SHARED_FACADE_CHECKS = (
     "logger_scan_can_fail",
 )
 
-FACADE = "kiro_crew.portability"
+FACADE = "aj_crew.portability"
 OWNERS = (
-    "kiro_crew.portability_archive",
-    "kiro_crew.portability_templates",
-    "kiro_crew.portability_export",
-    "kiro_crew.portability_vetting",
+    "aj_crew.portability_archive",
+    "aj_crew.portability_templates",
+    "aj_crew.portability_export",
+    "aj_crew.portability_vetting",
 )
 
 #: Names the test trees are known to patch through the facade, one or more per kind of
@@ -85,8 +85,8 @@ _KNOWN_SEAMS = frozenset(
 
 #: A test file worth parsing spells the facade itself, never only a ``portability_*`` owner.
 _SPELLS_THE_FACADE = re.compile(
-    r"kiro_crew\.portability(?![\w])"
-    r"|from\s+kiro_crew\s+import\s+(?:\([^)]*?\bportability\b(?!_)|[^\n]*?\bportability\b(?!_))"
+    r"aj_crew\.portability(?![\w])"
+    r"|from\s+aj_crew\s+import\s+(?:\([^)]*?\bportability\b(?!_)|[^\n]*?\bportability\b(?!_))"
 )
 
 #: Every name the facade's import statements bound before its owners moved out. They stay
@@ -145,34 +145,34 @@ def patched_names(source: str) -> set[str]:
 #: Each spelling the patch scan must read, and each it must skip, keyed by case id.
 _SPELLING_CASES = {
     "monkeypatch-from-import": (
-        "from kiro_crew import portability\n"
+        "from aj_crew import portability\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(portability, 'A', 1)\n",
         {"A"},
     ),
     "patch-object-import-as": (
-        "import kiro_crew.portability as facade\n"
+        "import aj_crew.portability as facade\n"
         "from unittest import mock\n"
         "def t():\n    with mock.patch.object(facade, 'B'):\n        pass\n",
         {"B"},
     ),
     "mock-patch-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.portability.C'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.portability.C'):\n        pass\n",
         {"C"},
     ),
     "dotted-setattr": (
-        "def t(monkeypatch):\n    monkeypatch.setattr('kiro_crew.portability.D', 1)\n",
+        "def t(monkeypatch):\n    monkeypatch.setattr('aj_crew.portability.D', 1)\n",
         {"D"},
     ),
     # An owner is not the facade, even bound under the facade's name.
     "owner-named-like-the-facade": (
-        "from kiro_crew import portability_archive as portability\n"
+        "from aj_crew import portability_archive as portability\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(portability, 'X', 1)\n",
         set(),
     ),
     "owner-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.portability_vetting.Y'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.portability_vetting.Y'):\n        pass\n",
         set(),
     ),
 }
@@ -242,9 +242,9 @@ def test_a_facade_write_of_the_settings_document_cap_reaches_every_reader() -> N
     readers = [m for m in _family() if "_MAX_SETTINGS_DOCUMENT_BYTES" in vars(m)]
     assert {m.__name__ for m in readers} >= {
         FACADE,
-        "kiro_crew.portability_archive",
-        "kiro_crew.portability_export",
-        "kiro_crew.portability_vetting",
+        "aj_crew.portability_archive",
+        "aj_crew.portability_export",
+        "aj_crew.portability_vetting",
     }
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(portability, "_MAX_SETTINGS_DOCUMENT_BYTES", sentinel)
@@ -272,14 +272,14 @@ def test_the_mirror_indexes_exactly_the_owners_with_no_exclusion_and_no_forward(
 def test_the_owners_are_every_portability_sibling() -> None:
     assert portability.__file__ is not None
     siblings = sorted(
-        f"kiro_crew.{path.stem}"
+        f"aj_crew.{path.stem}"
         for path in Path(portability.__file__).parent.glob("portability_*.py")
     )
     # ``portability_stream`` is a sibling but not an owner: it builds the export archive,
     # reads every portability name as ``portability.<name>`` at call time and is
     # re-exported by the facade at its foot, so it uses the facade instead of holding
     # a part of it.
-    assert siblings == sorted([*OWNERS, "kiro_crew.portability_stream"])
+    assert siblings == sorted([*OWNERS, "aj_crew.portability_stream"])
 
 
 def _project_imports(tree: ast.Module) -> set[str]:
@@ -308,8 +308,8 @@ def _layering_gaps(trees: dict[str, ast.Module]) -> dict[str, list[str]]:
 
 def test_the_layering_check_can_fail() -> None:
     trees = {name: _tree(sys.modules[name]) for name in OWNERS}
-    trees[OWNERS[0]] = ast.parse("from kiro_crew.portability_vetting import x\n")
-    trees[OWNERS[1]] = ast.parse("import kiro_crew.portability\n")
+    trees[OWNERS[0]] = ast.parse("from aj_crew.portability_vetting import x\n")
+    trees[OWNERS[1]] = ast.parse("import aj_crew.portability\n")
     assert _layering_gaps(trees) == {
         OWNERS[0]: [OWNERS[-1]],
         OWNERS[1]: [FACADE],
@@ -340,15 +340,15 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     owner = OWNERS[0].rpartition(".")[2]
     sources = {
-        root / "pkg" / "caller.py": f"from kiro_crew.{owner} import x\n",
-        root / "other.py": f"from kiro_crew import {owner} as low\n",
-        root / "plain.py": f"import kiro_crew.{owner}\n",
+        root / "pkg" / "caller.py": f"from aj_crew.{owner} import x\n",
+        root / "other.py": f"from aj_crew import {owner} as low\n",
+        root / "plain.py": f"import aj_crew.{owner}\n",
         root / "relative.py": f"from .{owner} import x\n",
         root / "deep" / "up.py": f"from .. import {owner}\n",
-        root / "facade_user.py": "from kiro_crew.portability import x\n",
+        root / "facade_user.py": "from aj_crew.portability import x\n",
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",
@@ -385,7 +385,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for owner in OWNERS:
         for node in _tree(sys.modules[owner]).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -501,11 +501,11 @@ def test_the_inventory_check_reports_a_planted_import() -> None:
     name that owner does not define, are both reported."""
     planted = (
         _source(portability)
-        + "\nimport pickle\nfrom kiro_crew.portability_archive import apply_import_zip\n"
+        + "\nimport pickle\nfrom aj_crew.portability_archive import apply_import_zip\n"
     )
     assert unexpected_imports(planted, _owner_names()) == [
         "pickle",
-        "kiro_crew.portability_archive.apply_import_zip",
+        "aj_crew.portability_archive.apply_import_zip",
     ]
 
 

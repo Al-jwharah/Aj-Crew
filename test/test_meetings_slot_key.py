@@ -14,7 +14,7 @@ from meetings_helpers import (  # noqa: F401
     root_fixture,
 )
 
-from kiro_crew.apps.builtins.meetings.backend.domain import session as sess
+from aj_crew.apps.builtins.meetings.backend.domain import session as sess
 
 
 def test_an_id_inside_the_alphabet_keeps_its_plain_key():

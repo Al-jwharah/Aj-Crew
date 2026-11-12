@@ -60,10 +60,10 @@ parent in the crew log's session tree (the edge an adopt or release moves later,
 same `parent_slot is None` the sidebar reads through `parent_payload`). A worker gets no
 card; the browser's `SessionStatusFrame` mirrors both edges (`created_by` and `parent`)
 and never fetches one for it. The model card also needs the crew log on: with
-`KIROCREW_CREW_LOG` opted out there is nothing to fold, so no card is generated.
+`AJCREW_CREW_LOG` opted out there is nothing to fold, so no card is generated.
 
 Every number on that card comes from the session's own crew log. `build_crew_main` in
-`kiro_crew.crew_main_contract` folds four renders -- `status`, `work`, `usage`,
+`aj_crew.crew_main_contract` folds four renders -- `status`, `work`, `usage`,
 `approvals` -- into `CrewMainDerived`, every value a finished string. Absence is
 three-state in words: a missing key reads `not recorded`, a fold that could not be read
 reads `could not be read`. No value is a percentage, and every count states its
@@ -281,7 +281,7 @@ in-app-browser hand-off below applies. Uploading the same file to Kiro Space is
         └── …
 ```
 
-`meta.json` schema (serialized by `kiro_crew.artifact_store.records`):
+`meta.json` schema (serialized by `aj_crew.artifact_store.records`):
 
 | Field | Type | Notes |
 |---|---|---|
@@ -299,10 +299,10 @@ in-app-browser hand-off below applies. Uploading the same file to Kiro Space is
 
 ## Public API
 
-### Python (`kiro_crew.artifacts`)
+### Python (`aj_crew.artifacts`)
 
 ```python
-from kiro_crew.artifacts import ArtifactStore, get_default_store
+from aj_crew.artifacts import ArtifactStore, get_default_store
 
 store = get_default_store()
 art = store.create(name="CR Queue", content="<table>…</table>", tags=["ops"])
@@ -323,10 +323,10 @@ for isolated test instances.
 
 #### Code ownership
 
-`kiro_crew.artifacts` is the facade every caller imports. It owns the store and
+`aj_crew.artifacts` is the facade every caller imports. It owns the store and
 keeps its whole import surface, re-exporting each moved name with one identity:
-`kiro_crew.artifacts.ArtifactFolderStore` and
-`kiro_crew.artifact_store.folders.ArtifactFolderStore` are the same class. Its
+`aj_crew.artifacts.ArtifactFolderStore` and
+`aj_crew.artifact_store.folders.ArtifactFolderStore` are the same class. Its
 `__all__` is derived from what the module binds plus its forwarding table
 (`_EXPORTS`), minus the forwarding machinery, so a star import exposes every
 public name, the moved and forwarded ones included, and no list of names is kept
@@ -335,23 +335,23 @@ and are imported from their owner.
 
 | Owner | Responsibility |
 |---|---|
-| `kiro_crew.artifacts` | `ArtifactStore` itself: construction and the shared per-root lock, the change listener, `get` and `read_image_bytes`, `list`, and the per-record metadata verbs (pin, webapp expiry, `delete`, impressions, publication, fork metadata and folder), with the member bindings of the owners below. Also the `slug_is_well_formed` predicate, the `get_default_store` / `get_default_folder_store` singletons, and the re-export of every moved name |
-| `kiro_crew.artifacts_disk` | How a store keeps artifacts on disk: the directory layout and slug claiming, the fenced file IO (`_read_text` / `_write_text` / `_read_bytes` / `_write_bytes`) and its pinned, durable primitives, the meta / version / image-asset writes, the lifecycle event append, version listing and pruning, the meta scan and the pinned `rmtree`. Also the caps (`MAX_VERSIONS`, `MAX_CONTENT_BYTES`, `MAX_COMMENTS_PER_ARTIFACT`, `MAX_EVENTS_PER_ARTIFACT`, `MAX_AUTO_WIDGET_ARTIFACTS`), the clock (`_now_iso`), the content token and the content check |
-| `kiro_crew.artifacts_source_link` | The live `source_path` pointer: its allowed roots, the descriptor-pinned read and the write-back, and `relocate` |
-| `kiro_crew.artifacts_writes` | Content writes: `create`, `create_image`, `update` and `settle_blank`, and the `kirocrew.artifact.created` counter |
-| `kiro_crew.artifacts_scans` | Lookups and sweeps over every `meta.json`: by upstream artifact id (one and the batch index), by source path, the kind migration and the auto-widget retention sweep |
-| `kiro_crew.artifacts_comments` | The `comments.json` sidecar: comment CRUD, the provider merge, the anchor rescan and the comment events |
-| `kiro_crew.artifact_store.model` | The error hierarchy, the `EXPECT_ABSENT` generation sentinel and the record dataclasses (`Artifact`, `ArtifactPublication`, `ForkMetadata`, `ArtifactComment`, `ImageMetadata`) |
-| `kiro_crew.artifact_store.rules` | Field limits and grammar (slug, tag, name, description, `source_path`), `slugify`, the kind policy (`_infer_kind`, `detect_editor_kind`, `USER_SELECTABLE_KINDS`), the theme-colour lint, the document-path test and session-scope matching |
-| `kiro_crew.artifact_store.images` | The raster mime allowlist and the standard-library header sniffers |
-| `kiro_crew.artifact_store.records` | The persisted formats: `meta.json` and its tolerant load, the lifecycle event entries (`ALLOWED_EVENT_TYPES`), `comments.json`, and the publication and fork-metadata field allowlists |
-| `kiro_crew.artifact_store.comments` | The comment-thread rules: the forwarding filter, whole-thread cap pruning, the provider merge, the anchor rescan and root-cascade removal |
-| `kiro_crew.artifact_store.folders` | `ArtifactFolderStore` and `artifact_folders.json` |
+| `aj_crew.artifacts` | `ArtifactStore` itself: construction and the shared per-root lock, the change listener, `get` and `read_image_bytes`, `list`, and the per-record metadata verbs (pin, webapp expiry, `delete`, impressions, publication, fork metadata and folder), with the member bindings of the owners below. Also the `slug_is_well_formed` predicate, the `get_default_store` / `get_default_folder_store` singletons, and the re-export of every moved name |
+| `aj_crew.artifacts_disk` | How a store keeps artifacts on disk: the directory layout and slug claiming, the fenced file IO (`_read_text` / `_write_text` / `_read_bytes` / `_write_bytes`) and its pinned, durable primitives, the meta / version / image-asset writes, the lifecycle event append, version listing and pruning, the meta scan and the pinned `rmtree`. Also the caps (`MAX_VERSIONS`, `MAX_CONTENT_BYTES`, `MAX_COMMENTS_PER_ARTIFACT`, `MAX_EVENTS_PER_ARTIFACT`, `MAX_AUTO_WIDGET_ARTIFACTS`), the clock (`_now_iso`), the content token and the content check |
+| `aj_crew.artifacts_source_link` | The live `source_path` pointer: its allowed roots, the descriptor-pinned read and the write-back, and `relocate` |
+| `aj_crew.artifacts_writes` | Content writes: `create`, `create_image`, `update` and `settle_blank`, and the `ajcrew.artifact.created` counter |
+| `aj_crew.artifacts_scans` | Lookups and sweeps over every `meta.json`: by upstream artifact id (one and the batch index), by source path, the kind migration and the auto-widget retention sweep |
+| `aj_crew.artifacts_comments` | The `comments.json` sidecar: comment CRUD, the provider merge, the anchor rescan and the comment events |
+| `aj_crew.artifact_store.model` | The error hierarchy, the `EXPECT_ABSENT` generation sentinel and the record dataclasses (`Artifact`, `ArtifactPublication`, `ForkMetadata`, `ArtifactComment`, `ImageMetadata`) |
+| `aj_crew.artifact_store.rules` | Field limits and grammar (slug, tag, name, description, `source_path`), `slugify`, the kind policy (`_infer_kind`, `detect_editor_kind`, `USER_SELECTABLE_KINDS`), the theme-colour lint, the document-path test and session-scope matching |
+| `aj_crew.artifact_store.images` | The raster mime allowlist and the standard-library header sniffers |
+| `aj_crew.artifact_store.records` | The persisted formats: `meta.json` and its tolerant load, the lifecycle event entries (`ALLOWED_EVENT_TYPES`), `comments.json`, and the publication and fork-metadata field allowlists |
+| `aj_crew.artifact_store.comments` | The comment-thread rules: the forwarding filter, whole-thread cap pruning, the provider merge, the anchor rescan and root-cascade removal |
+| `aj_crew.artifact_store.folders` | `ArtifactFolderStore` and `artifact_folders.json` |
 | `dashboard/handlers/artifacts.py` | The HTTP projection's import path and patch seam: a mirrored facade over the owner modules in `dashboard/handlers/artifacts_parts/` (see [Handler owners](#handler-owners)), which hold request parsing, the owner gate on write routes, the restricted-session gate, SEL audit, response redaction (`_serialize`), the publish governance gates and the live-refresh broadcast |
-| `kiro_crew.mcp_tools.artifacts` | The MCP projection: tool schemas and handlers, which reach the artifact store only through the HTTP API |
+| `aj_crew.mcp_tools.artifacts` | The MCP projection: tool schemas and handlers, which reach the artifact store only through the HTTP API |
 
-`ArtifactStore` keeps its class in `kiro_crew.artifacts`, and its class body binds each
-moved member by name from the `kiro_crew.artifacts_*` owner that holds its body
+`ArtifactStore` keeps its class in `aj_crew.artifacts`, and its class body binds each
+moved member by name from the `aj_crew.artifacts_*` owner that holds its body
 (`create = _artifacts_writes.create`, `_rmtree = staticmethod(_artifacts_disk._rmtree)`).
 The class attribute IS the owner's function, so a patch of a member on the class or on
 an instance reaches every caller, and members still call each other through `self`. A
@@ -362,16 +362,16 @@ as a caller that must pin both generations; `list`, whose module-level `def list
 would shadow the builtin `list` for its whole owner; and `__init__`, which reads the
 facade-only seams. New store code goes to the owner whose responsibility it shares.
 The owners import the facade for type checking only, import each other lowest layer
-first (`artifacts_disk` under the rest), and log on the `kiro_crew.artifacts` logger.
+first (`artifacts_disk` under the rest), and log on the `aj_crew.artifacts` logger.
 `test/test_artifacts_bindings.py` freezes the member inventory (kind, signature,
 owner) and pins the rest of this shape.
 
-No module under `kiro_crew.artifact_store` imports `kiro_crew.artifacts` at import
+No module under `aj_crew.artifact_store` imports `aj_crew.artifacts` at import
 time (`folders` names `ArtifactStore` for type checking only), and none performs
 networking or redaction or touches the filesystem except `ArtifactFolderStore` on
-its own file. `rules` imports `kiro_crew.history` and `kiro_crew.messaging.link`
+its own file. `rules` imports `aj_crew.history` and `aj_crew.messaging.link`
 inside `_strip_session_scope` because both import the facade back. The moved
-error classes (`ArtifactError` and its five subclasses) keep `kiro_crew.artifacts`
+error classes (`ArtifactError` and its five subclasses) keep `aj_crew.artifacts`
 as their `__module__`, so tracebacks and the error types in logs are unchanged;
 the cost is that `inspect.getsource` cannot find them through that name and
 raises `OSError`, and `inspect.getfile` names `artifacts.py` rather than the owner
@@ -380,8 +380,8 @@ dataclasses, the class of `EXPECT_ABSENT` and `ArtifactFolderStore` -- reports
 the owner module that defines it, so the source lookup and a debugger find its
 definition.
 
-The store's seams are patched on `kiro_crew.artifacts`, which binds every one of
-them; its mirror (`kiro_crew._facade_mirror`) sends a write or a delete of one to every
+The store's seams are patched on `aj_crew.artifacts`, which binds every one of
+them; its mirror (`aj_crew._facade_mirror`) sends a write or a delete of one to every
 `artifacts_*` owner that binds the same object, so the moved code that reads it as its
 own global sees the patch: `config_dir`, `_now_iso`,
 `MAX_VERSIONS`, `MAX_CONTENT_BYTES`, `MAX_COMMENTS_PER_ARTIFACT`,
@@ -393,7 +393,7 @@ builds its store on the facade's `config_dir`, so the default
 
 The facade's own methods read the facade's binding of each owner helper, and the
 moved members read their owner module's binding, which the mirror keeps in step with
-a patch through `kiro_crew.artifacts`, so rebinding one there steers the store:
+a patch through `aj_crew.artifacts`, so rebinding one there steers the store:
 `slugify`, `_validate_slug`,
 `_validate_name`, `_validate_description`, `_validate_tags`, `_validate_kind`,
 `_validate_source`, `_validate_source_path`, `_infer_kind`, `detect_editor_kind`,
@@ -406,7 +406,7 @@ makes inside its owner module resolves there: `_session_touched` calls `rules`'
 (`_sniff_jpeg_dimensions`, `_sniff_webp_dimensions`). Owner modules bind their
 own imports too: a directly constructed `ArtifactFolderStore` takes its default
 path from `folders`' `config_dir` and logs through `folders`' `logger`, which is
-the same `kiro_crew.artifacts` logger object.
+the same `aj_crew.artifacts` logger object.
 
 Rule data an owner's own code reads has one binding, in the owner, and the
 facade forwards it instead of holding a copy: `_EXPORTS` maps each such name to
@@ -417,10 +417,10 @@ the mirror serves. The forwarding table is the one the install saw: a name added
 `_EXPORTS` later is answered on a read, but a write or a delete of it acts on the facade
 and its owners (the mirror's creation rule), not on the name's module. A read of a
 forwarded name a patch has deleted from its owner
-raises the facade's own `AttributeError` (`module 'kiro_crew.artifacts' has no
+raises the facade's own `AttributeError` (`module 'aj_crew.artifacts' has no
 attribute ...`), so `hasattr` and `getattr(..., default)` answer as for any missing
 name. A
-patch through `kiro_crew.artifacts` (`monkeypatch`, or `mock.patch` without
+patch through `aj_crew.artifacts` (`monkeypatch`, or `mock.patch` without
 `create`) and a patch of the owner module therefore both reach every reader that
 looks the name up on the owner or the facade when it runs (a module that imports a
 forwarded name by name keeps its own copy, as `code_review_sage`'s report module
@@ -446,7 +446,7 @@ store, so its facade binding is the live one. `MAX_AUTO_WIDGET_ARTIFACTS` is the
 default argument of `prune_auto_widgets`, bound when `artifacts_scans` is imported.
 
 `test_artifacts_refactor_store_contract` derives, from the tests themselves, every
-name a test rebinds on `kiro_crew.artifacts`, and fails when one is neither
+name a test rebinds on `aj_crew.artifacts`, and fails when one is neither
 forwarded nor held by the facade alone with no owner function reading its own
 binding of it. Its listed exceptions are `config_dir`, which `folders` reads for
 a directly constructed `ArtifactFolderStore`, and `get_default_store`, which
@@ -466,9 +466,9 @@ artifact is newest on otherwise identical data.
 ### Kind inference
 
 `store.create()` (and every path that funnels through it — the HTTP create
-route, the `artifact_save` MCP tool, the `kirocrew artifact save` CLI) infers
+route, the `artifact_save` MCP tool, the `ajcrew artifact save` CLI) infers
 `kind` when the caller omits it (`kind=None`), via
-`_infer_kind(content, source_path, explicit)` in `kiro_crew.artifact_store.rules`:
+`_infer_kind(content, source_path, explicit)` in `aj_crew.artifact_store.rules`:
 
 1. **Explicit wins** — a non-empty `kind` argument is used as-is (back-compat).
 2. **Extension** — for file-backed artifacts (`source_path` set): `.md` /
@@ -486,7 +486,7 @@ kinds need the extension signal. This is the safety prerequisite that lets
 agents save markdown deliverables without the mis-save footgun (a markdown
 doc stored as `widget` renders as raw inner HTML).
 
-### MCP tools (`@kirocrew-core/*`)
+### MCP tools (`@ajcrew-core/*`)
 
 | Tool | Purpose |
 |---|---|
@@ -518,18 +518,18 @@ validator) rather than by a pattern of their own, so the tool and the store
 cannot disagree about a tag; the schema fields keep only the count and length
 caps.
 
-### CLI (`kirocrew artifact`)
+### CLI (`ajcrew artifact`)
 
 ```
-kirocrew artifact list [--tag T] [--kind K] [--q SUBSTR]
-kirocrew artifact show <slug> [--version N] [--meta]
-kirocrew artifact save --name N [--slug S] [--kind K] [--content C | --content-file F] [--tags A,B] [--description D]
-kirocrew artifact update <slug> [--content C | --content-file F] [--name N] [--description D] [--tags A,B]
-kirocrew artifact versions <slug>
-kirocrew artifact delete <slug>
+ajcrew artifact list [--tag T] [--kind K] [--q SUBSTR]
+ajcrew artifact show <slug> [--version N] [--meta]
+ajcrew artifact save --name N [--slug S] [--kind K] [--content C | --content-file F] [--tags A,B] [--description D]
+ajcrew artifact update <slug> [--content C | --content-file F] [--name N] [--description D] [--tags A,B]
+ajcrew artifact versions <slug>
+ajcrew artifact delete <slug>
 ```
 
-The CLI proxies through the gateway HTTP API (matches `kirocrew learn`).
+The CLI proxies through the gateway HTTP API (matches `ajcrew learn`).
 `show --version N` takes N of 1 or more; a lower value or a non-number exits 2
 with a message before any request, and a given N always reads that version.
 
@@ -581,14 +581,14 @@ capped at 2 MiB; the store enforces a per-content cap of 25 MiB
 paths never disagree. It lives in the `constants` leaf rather than in `artifacts`
 because `validation` importing `artifacts` closed the cycle `artifacts -> hooks
 -> webhooks -> validation -> artifacts`, which raised ImportError in any process
-whose first `kiro_crew` import reached `artifacts` before `validation`;
+whose first `aj_crew` import reached `artifacts` before `validation`;
 `test_agent_import_hoist.py` pins that `validation` never imports `artifacts`.
 
 **Folders:** `Artifact.folder_id` (`""` = unfiled) is an opaque,
 rename-safe membership id, tolerant-loaded for legacy meta.json.
 `ArtifactStore.set_folder()` is a metadata-only move (NO version bump);
 `list(folder=)` filters (None = all, `""` = unfiled, id = that folder).
-`ArtifactFolderStore` (`kiro_crew.artifact_store.folders`) keeps a flat `parent_id` tree in
+`ArtifactFolderStore` (`aj_crew.artifact_store.folders`) keeps a flat `parent_id` tree in
 `~/.kiro/crew/artifact_folders.json` — create/rename/reparent (cycle- and
 depth-guarded, `MAX_FOLDER_DEPTH` 20)/reorder/delete, breadcrumb, item counts,
 and id-or-path resolution with mkdir -p semantics (`resolve_path`, all-or-nothing
@@ -724,11 +724,11 @@ code for a responsibility goes to its module:
 | `artifact_comments.py` | Comments on a local artifact |
 | `remote_artifacts.py` | Browsing, cloning, forking and reading an artifact a publish provider hosts, and its comments |
 
-The facade is a `kiro_crew._facade_mirror` mirror: a patch of
+The facade is an `aj_crew._facade_mirror` mirror: a patch of
 `handlers.artifacts.<name>` reaches every owner that binds the name, so tests patch
 the facade, never an owner. The owners import each other lowest layer first, in the
 order of the table, never the facade, and log on the
-`kiro_crew.dashboard.handlers.artifacts` logger. A route reports its owner as
+`aj_crew.dashboard.handlers.artifacts` logger. A route reports its owner as
 `__module__`; nothing reads it. `test/test_artifacts_parts_contract.py` pins this
 shape.
 
@@ -1044,7 +1044,7 @@ never written to disk, so the file-backed session-docs scan cannot see it).
 `(message_ts, body)` — the parent message's timestamp plus a fingerprint of the
 widget's body:
 
-- `src/kiro_crew/widget_slug.py` → `derive_widget_body_slug`
+- `src/aj_crew/widget_slug.py` → `derive_widget_body_slug`
 - `website/src/lib/widgetSlug.ts` → `deriveWidgetBodySlug`
 
 Both MUST produce identical output (seed `<ts>#w:<body>`, two FNV-1a passes,
@@ -1237,9 +1237,9 @@ every write-side unit test still green — so test the round-trip
 
 ## Validation & Limits
 
-The field limits and grammar are `kiro_crew.artifact_store.rules`; the content,
-version and auto-widget caps are the store's, defined in `kiro_crew.artifacts_disk`
-and re-exported by `kiro_crew.artifacts`.
+The field limits and grammar are `aj_crew.artifact_store.rules`; the content,
+version and auto-widget caps are the store's, defined in `aj_crew.artifacts_disk`
+and re-exported by `aj_crew.artifacts`.
 
 | Field | Limit |
 |---|---|
@@ -1316,7 +1316,7 @@ migration that rewrites or drops the stranded tags first.
 
 A `dashboard` artifact holds one Bot's layout package — `bound_to`,
 `model`, `view` and `theme` — canonicalised by
-`kiro_crew.artifact_store.dashboard_package` on every write. A missing `theme`,
+`aj_crew.artifact_store.dashboard_package` on every write. A missing `theme`,
 or a `theme` with no `tokens`, is stored as `{"tokens": {}}`, because an MCP
 client can drop an empty object before it arrives; so `dashboard_save` (its MCP
 schema and `DASHBOARD_SAVE_SCHEMA`) takes `theme` as optional, and a bad token
@@ -1415,11 +1415,11 @@ the page's shape in the canonicaliser:
   `model.types`, because
   the model is also the list of fields the controller will push: a name only the
   page knows is a cell nothing ever fills. A name read only through
-  `window.kirocrew.subscribe` is not scanned for — the attribute is static text
+  `window.ajcrew.subscribe` is not scanned for — the attribute is static text
   this validator can read, and a script's argument is not — so the model stays
   the authority on what a page is sent. What is NOT checked is the point of
   the shape — the markup and the script are free and nothing here looks for a
-  dangerous construct. Containment is `kiro_crew.dashboard_frame`, and a page
+  dangerous construct. Containment is `aj_crew.dashboard_frame`, and a page
   cannot loosen that policy by being written differently; a denylist here would
   be a second, weaker gate an author would read as the real one.
 
@@ -1474,8 +1474,8 @@ re-versioned and REBOUND. A revert is exempt for the same reason: it submits a
 past version's whole package and `revert_package` discards the binding in it, so
 the submitted value is one the store was never going to store.
 A Bot composes its own package through the save route — the `dashboard_save`
-MCP tool on `kirocrew-panel` and `POST /api/agent-panel/dashboard/save`
-(`kiro_crew.dashboard.handlers.agent_panel`). The `bound_to` is derived from the
+MCP tool on `ajcrew-panel` and `POST /api/agent-panel/dashboard/save`
+(`aj_crew.dashboard.handlers.agent_panel`). The `bound_to` is derived from the
 vetted caller and never read from the request, so a body carrying `bound_to` or
 `kind` is refused; a declared field name, view block id or theme token key a
 redactor would mask is refused too, before anything is written — every one of
@@ -1569,7 +1569,7 @@ sans-serif` (the body default), `--font-serif: ui-serif, serif` and
 `--font-mono: ui-monospace, monospace`.
 
 **A Bot can look at its own page.** The `dashboard_snapshot` MCP tool on
-`kirocrew-panel` and `GET /api/agent-panel/dashboard/snapshot`
+`ajcrew-panel` and `GET /api/agent-panel/dashboard/snapshot`
 (`handlers/agent_panel_snapshot.py`, no arguments) run the page IN FORCE through the same
 check with `capture=True` and `real_record=True`
 (`member_dashboard_fields.snapshot_package_page`), and the run also takes a PNG of the
@@ -1635,7 +1635,7 @@ unit_for_session_key`), and by the newest unit in succession otherwise: newest
 orders a slot's unrelated chains by their roots' header clock, so a later
 unrelated unit would otherwise feed the page another session's spend.
 
-The `kirocrew-core` MCP tools render the field types and warnings as text
+The `ajcrew-core` MCP tools render the field types and warnings as text
 (`mcp_panel._render_saved`, `_render_rendering`) before the apply instruction.
 
 It costs the gateway little by construction. It runs only for a save of `view.html`,
@@ -1709,7 +1709,7 @@ to this kind would store content no reader can parse.
 - **Atomic writes** — `_write_text()` writes to a `.tmp` sibling and renames,
   so a crash mid-write cannot corrupt `current.html` or `meta.json`.
 - **Tolerant load** — `ArtifactStore._read_meta_file()` hands the parsed file to
-  `decode_meta` in `kiro_crew.artifact_store.records`, which ignores unknown keys
+  `decode_meta` in `aj_crew.artifact_store.records`, which ignores unknown keys
   and supplies defaults for missing keys, so future schema additions don't break
   existing files. A hand-edited `tags` is read as strings: a bare string is one
   tag, a number its text, and a `null`, bool, object or list entry is dropped,
@@ -1735,7 +1735,7 @@ to this kind would store content no reader can parse.
   embedding frame grants: `allow-scripts` only (`AGENT_PAGE_SANDBOX`), the same
   as a Bot's Dashboard frame. A link in the page opens through the host:
   `buildSrcdoc({ linkBridge: true })` turns a `_blank` or bare web link click,
-  and `window.open`, into a `kirocrew-dashboard:open` message, and
+  and `window.open`, into an `ajcrew-dashboard:open` message, and
   `useFrameLinkBridge` opens an `http(s)` URL, or a dashboard path resolved
   against its origin, only on a real click in
   that frame, once per click, with no dialog. The shim decides a click after
@@ -1746,7 +1746,7 @@ to this kind would store content no reader can parse.
   anywhere else since, nor has the pointer reached another frame (focus moving
   between frames fires nothing, so the entry is checked whenever the dashboard
   hears anything and every 200 ms); the pointer is not over another frame, and no click or key in the dashboard or reported by another
-  bridged frame (`kirocrew-dashboard:input`) is within an activation's lifespan
+  bridged frame (`ajcrew-dashboard:input`) is within an activation's lifespan
   (5 s). Otherwise it does not open: an "Open <host>" button
   (`FrameLinkChip`), with the full URL as its title, appears at the frame's top
   right corner and takes focus, and the person's click on it opens the link.
@@ -1885,10 +1885,10 @@ out-of-range versions.
 
 Comments live in a per-artifact `comments.json` sidecar (`ArtifactComment`
 dataclass; threads are one level deep — replies carry the root's id as
-`thread_id`). The file format is `kiro_crew.artifact_store.records`
+`thread_id`). The file format is `aj_crew.artifact_store.records`
 (`decode_comments` / `encode_comments`); the thread rules — the forwarding filter,
 the whole-thread retention cap, the provider merge, the anchor rescan and the
-root-cascade delete — are `kiro_crew.artifact_store.comments`; `ArtifactStore`
+root-cascade delete — are `aj_crew.artifact_store.comments`; `ArtifactStore`
 holds the lock and does the IO. `status` is `open | review | resolved`; `sync_state` tracks
 provider push status (`local_only | pending_push | synced | push_failed`).
 Provider push/reconcile itself is companion-edition-only behavior behind the
@@ -2006,7 +2006,7 @@ a remote widget round-trips back to `kind="widget"` on clone) and `svg` is
 excluded (the file reader has no `.svg` support).
 
 The feature plugs into the existing Knowledge **source framework** rather than
-adding a parallel watcher (see `kiro_crew.knowledge.artifact_ingest`):
+adding a parallel watcher (see `aj_crew.knowledge.artifact_ingest`):
 
 - **One aggregate "Artifacts" source.** A single `sources` row of
   `source_type="artifact"` (uri `artifact://`) appears in the dashboard Sources
@@ -2553,11 +2553,11 @@ code for a responsibility goes to its module:
 | `deploy/handlers_content.py` | What a deploy may publish: the `local_dir` and `artifact_slug` input specs, the allowed-roots confinement, the private staging snapshot, the content digest and size, the pre-publish scan, an artifact's standalone-HTML render and `resolve_webapp_public_dir` |
 | `deploy/handlers_sites.py` | The AWS identity and the site operations: the profile and region specs, `_resolve_profile`, the legacy single-profile config view, and `_do_deploy`, `_do_recall`, `_do_destroy` and `_do_list` |
 
-The facade is a `kiro_crew._facade_mirror` mirror: a patch of `deploy.handlers.<name>`
+The facade is an `aj_crew._facade_mirror` mirror: a patch of `deploy.handlers.<name>`
 reaches every owner that binds the name, so tests patch the facade, never an owner. The
 owners import each other lowest layer first, in the order of the table, never the facade.
-`handlers_sites.py` logs on the `kiro_crew.deploy.handlers` logger, and the two moved
-exception classes keep `kiro_crew.deploy.handlers` as their `__module__`.
+`handlers_sites.py` logs on the `aj_crew.deploy.handlers` logger, and the two moved
+exception classes keep `aj_crew.deploy.handlers` as their `__module__`.
 `test/test_handlers_deploy_facade.py` pins this shape.
 
 ### Teardown Semantics
@@ -2569,7 +2569,7 @@ model:
    in the artifact metadata. The artifact is kept as deploy history.
 
 2. **Manifest expiry (best-effort):** The teardown handler rewrites the S3
-   deploy manifest (`.kirocrew-deploy.json`) with `expires_at=now`,
+   deploy manifest (`.ajcrew-deploy.json`) with `expires_at=now`,
    `persistent=false`. This is a non-destructive S3 PUT using the deployment's
    recorded profile. If credentials are unavailable or the bucket is unreachable,
    the tombstone still stands.
@@ -2636,7 +2636,7 @@ transform stays inside the host's box.
 
 The sidecar's extension is derived **from the allowlisted mime**, never from the
 stored `ext` field, on every read (see [Security](#security)). The allowlist and
-the header sniffers live in `kiro_crew.artifact_store.images`. `delete` removes
+the header sniffers live in `aj_crew.artifact_store.images`. `delete` removes
 the whole artifact directory, so the sidecar needs no separate cleanup.
 
 ### `image` metadata schema
@@ -2706,7 +2706,7 @@ hand-off shows the page's Download failed notice and saves nothing.
   copy. The file panel's Download already has an attachment URL, so inside a
   WebView it downloads that URL directly at any size.
 
-### Auto-registration from chat (`kiro_crew.image_artifacts`)
+### Auto-registration from chat (`aj_crew.image_artifacts`)
 
 Finalized assistant messages are scanned for **local** markdown image references
 and each one is registered, copying the bytes immediately so temp-file cleanup

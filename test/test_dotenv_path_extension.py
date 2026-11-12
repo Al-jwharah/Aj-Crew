@@ -18,9 +18,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import env
-from kiro_crew.config import loader
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew import env
+from aj_crew.config import loader
+from aj_crew.config.loader import AjCrewConfig
 
 SEP = os.pathsep
 
@@ -34,7 +34,7 @@ def _reset_boot_env_state():
     owns. Left behind, a later test's ``ConfigWatch`` in the same worker diffs
     against this file's ``PATH`` line and replays ``credentials.PATH``.
     """
-    from kiro_crew.config.loader_credentials import reset_boot_raw_env, reset_env_owned_keys
+    from aj_crew.config.loader_credentials import reset_boot_raw_env, reset_env_owned_keys
 
     reset_boot_raw_env()
     reset_env_owned_keys()
@@ -71,7 +71,7 @@ def _setup(monkeypatch: pytest.MonkeyPatch, root: Path, lines: list[str], base: 
 
 
 def _load(*, propagate: bool = True) -> None:
-    KiroCrewConfig.__new__(KiroCrewConfig).load_credentials(propagate=propagate)
+    AjCrewConfig.__new__(AjCrewConfig).load_credentials(propagate=propagate)
 
 
 def _path() -> list[str]:
@@ -126,7 +126,7 @@ class TestOnlyAbsoluteDirectoriesPass:
         # shell syntax that .env does not expand. Empty segments are just noise.
         line = SEP.join(["relative/bin", "$HOME/bin", "", good, ""])
         _setup(monkeypatch, tmp_path, [f"PATH={line}"], base)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.env"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.env"):
             _load()
         assert [entry for entry in _path() if entry != base] == [good]
         dropped = [r.getMessage() for r in caplog.records if ".env PATH" in r.getMessage()]
@@ -187,14 +187,14 @@ class TestPathIsASupportedKey:
         _setup(
             monkeypatch,
             tmp_path,
-            [f"PATH={extra}", "KIROCREW_TEST_PLAIN=1"],
+            [f"PATH={extra}", "AJCREW_TEST_PLAIN=1"],
             _dirs(tmp_path, "sys")[0],
         )
         monkeypatch.setattr(loader, "_warned_env_keys", set())
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             _load()
         warned = [r.getMessage() for r in caplog.records if "Unknown key" in r.getMessage()]
-        assert any("Unknown key KIROCREW_TEST_PLAIN " in m for m in warned)
+        assert any("Unknown key AJCREW_TEST_PLAIN " in m for m in warned)
         assert not any("Unknown key PATH " in m for m in warned)
 
 
@@ -203,12 +203,12 @@ class TestNothingElseChanges:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         extra = _dirs(tmp_path, "extra")[0]
-        lines = ["KIROCREW_TEST_HELD=from-env", "KIROCREW_TEST_NEW=from-env", f"PATH={extra}"]
+        lines = ["AJCREW_TEST_HELD=from-env", "AJCREW_TEST_NEW=from-env", f"PATH={extra}"]
         _setup(monkeypatch, tmp_path, lines, _dirs(tmp_path, "sys")[0])
-        monkeypatch.setenv("KIROCREW_TEST_HELD", "from-process")
+        monkeypatch.setenv("AJCREW_TEST_HELD", "from-process")
         _load()
-        assert os.environ["KIROCREW_TEST_HELD"] == "from-process"
-        assert os.environ["KIROCREW_TEST_NEW"] == "from-env"
+        assert os.environ["AJCREW_TEST_HELD"] == "from-process"
+        assert os.environ["AJCREW_TEST_NEW"] == "from-env"
 
     def test_a_lookalike_name_is_the_path_only_where_the_platform_folds_case(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -237,7 +237,7 @@ class TestSeededNamesDoNotOutliveTheTest:
         """``load_credentials`` writes into ``os.environ`` itself, and an undo takes the
         value back out only if one was recorded. Neither name is one the process holds, which
         is the case ``delenv(raising=False)`` records nothing for."""
-        names = ["KIROCREW_TEST_SEED_A", "KIROCREW_TEST_SEED_B"]
+        names = ["AJCREW_TEST_SEED_A", "AJCREW_TEST_SEED_B"]
         assert not [name for name in names if name in os.environ]
         private = pytest.MonkeyPatch()
         try:

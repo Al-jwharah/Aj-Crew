@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.history import ConversationLog, HistoryConsolidator
+from aj_crew.history import ConversationLog, HistoryConsolidator
 
 
 def marker_for(name: str) -> str:
@@ -22,8 +22,8 @@ def marker_for(name: str) -> str:
 
 
 def _consolidator(tmp_path, *, approval_required=True):
-    from kiro_crew.memory import MemoryStore
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.memory import MemoryStore
+    from aj_crew.skills import SkillsLoader
 
     conv_log = ConversationLog(base_dir=tmp_path / "sessions")
     conv_log.init()

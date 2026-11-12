@@ -28,12 +28,12 @@ from taskrunner_helpers import (
     _make_mock_sessions,
 )
 
-import kiro_crew.taskrunner as taskrunner_module
-from kiro_crew.task_models import PROGRESS_FILE
-from kiro_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
-from kiro_crew.testing.wait import await_until
-from kiro_crew.workflows.service import WorkflowService
-from kiro_crew.workflows.store import WorkflowRunStore
+import aj_crew.taskrunner as taskrunner_module
+from aj_crew.task_models import PROGRESS_FILE
+from aj_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
+from aj_crew.testing.wait import await_until
+from aj_crew.workflows.service import WorkflowService
+from aj_crew.workflows.store import WorkflowRunStore
 
 # ── Fixtures ──
 
@@ -800,7 +800,7 @@ class TestWorkflowRunIntegration:
             return_value=[Step(index=1, title="Implement", description="make the change")]
         )
 
-        with patch("kiro_crew.taskrunner.time.time_ns", return_value=123):
+        with patch("aj_crew.taskrunner.time.time_ns", return_value=123):
             first, second = await asyncio.gather(runner.plan("first"), runner.plan("second"))
 
         # plan() awaits before it takes _start_lock, so either call may reach
@@ -992,7 +992,7 @@ class TestParseSteps:
         runner = TaskRunner(sessions=sessions, auto_test=False)
         secret = "ghp_" + "a" * 36
         text = "totally not json " + secret + " " + "x" * 5000
-        with caplog.at_level(logging.ERROR, logger="kiro_crew.task_planner"):
+        with caplog.at_level(logging.ERROR, logger="aj_crew.task_planner"):
             assert runner._parse_tasks(text) == []
         record = next(r for r in caplog.records if "Failed to parse tasks JSON" in r.getMessage())
         message = record.getMessage()
@@ -1129,7 +1129,7 @@ class TestRun:
 
         # First call = decompose (returns JSON), subsequent = step execution
         def _make_stream(text: str):
-            from kiro_crew.providers.base import LLMEvent
+            from aj_crew.providers.base import LLMEvent
 
             async def _stream(message: str):
                 yield LLMEvent(kind="text_chunk", text=text)
@@ -1168,7 +1168,7 @@ class TestRun:
             work_dir=tmp_path,
         )
 
-        with patch("kiro_crew.task_executor.self_review", return_value=True):
+        with patch("aj_crew.task_executor.self_review", return_value=True):
             result = await runner.run(spec)
 
         assert result.status == "completed"
@@ -1194,7 +1194,7 @@ class TestRun:
 
         step_json = json.dumps([{"title": "Broken step", "description": "Will fail"}])
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         decompose_provider = MagicMock()
 

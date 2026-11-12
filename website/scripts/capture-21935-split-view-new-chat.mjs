@@ -39,7 +39,7 @@ mkdirSync(OUT, { recursive: true })
 
 const now = Math.floor(Date.now() / 1000)
 const base_slot = {
-  running: false, last_message: '', agent: 'kirocrew', memory_mode: 'persistent',
+  running: false, last_message: '', agent: 'ajcrew', memory_mode: 'persistent',
   project: '', modified: now, tags: [], source_links: [], source_links_total: 0,
 }
 const slots = [

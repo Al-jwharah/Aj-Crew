@@ -18,14 +18,14 @@ import json
 from pathlib import Path
 from typing import Any
 
-from kiro_crew.dashboard.handlers.telemetry import _aggregate, _Hist
+from aj_crew.dashboard.handlers.telemetry import _aggregate, _Hist
 
 _BOUNDS_A = [10.0, 50.0, 100.0, 500.0, 1000.0]
 _BOUNDS_B = [25.0, 250.0, 2500.0, 25000.0, 250000.0]   # a boundary change
 
-# Anything kirocrew.* that is neither the startup metric nor turn.duration lands
+# Anything ajcrew.* that is neither the startup metric nor turn.duration lands
 # in the generic `other` surface -- the one that forgot the disclosure.
-_OTHER_METRIC = "kirocrew.mcp.backend.acquire.duration"
+_OTHER_METRIC = "ajcrew.mcp.backend.acquire.duration"
 
 
 def _dp(bounds: list[float], bucket: int, count: int, ns: int) -> dict[str, Any]:
@@ -139,9 +139,9 @@ def test_every_published_histogram_carries_the_disclosure(tmp_path):
     shards = _shard(tmp_path, [
         {"name": _OTHER_METRIC,
          "data": {"data_points": [_dp(_BOUNDS_A, 1, count=4, ns=1)]}},
-        {"name": "kirocrew.turn.duration",
+        {"name": "ajcrew.turn.duration",
          "data": {"data_points": [_dp(_BOUNDS_A, 2, count=2, ns=2)]}},
-        {"name": "kirocrew.startup.duration",
+        {"name": "ajcrew.startup.duration",
          "data": {"data_points": [_dp(_BOUNDS_A, 1, count=3, ns=3)]}},
     ])
     res = _aggregate(shards)

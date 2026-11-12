@@ -23,8 +23,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.eval.bench import datasets
-from kiro_crew.eval.bench.datasets import (
+from aj_crew.eval.bench import datasets
+from aj_crew.eval.bench.datasets import (
     SPECS,
     CorpusFetchError,
     DatasetSpec,
@@ -38,7 +38,7 @@ from kiro_crew.eval.bench.datasets import (
 @pytest.fixture()
 def cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Redirect the cache into tmp_path and prove the redirection took."""
-    monkeypatch.setenv("KIROCREW_BENCH_CACHE", str(tmp_path))
+    monkeypatch.setenv("AJCREW_BENCH_CACHE", str(tmp_path))
     assert cache_dir() == tmp_path
     return tmp_path
 
@@ -74,19 +74,19 @@ def _write(path: Path, body: bytes = b'[{"sample_id": "conv-1"}]') -> str:
 def test_cache_override_wins_over_xdg(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Hundreds of MB of third-party data must be relocatable without editing code."""
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "xdg"))
-    monkeypatch.setenv("KIROCREW_BENCH_CACHE", str(tmp_path / "explicit"))
+    monkeypatch.setenv("AJCREW_BENCH_CACHE", str(tmp_path / "explicit"))
     assert cache_dir() == tmp_path / "explicit"
 
 
 def test_cache_dir_falls_back_to_xdg_then_home(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Never under KIROCREW_HOME: `kirocrew snapshot` must not swallow the corpora."""
-    monkeypatch.delenv("KIROCREW_BENCH_CACHE", raising=False)
+    """Never under AJCREW_HOME: `ajcrew snapshot` must not swallow the corpora."""
+    monkeypatch.delenv("AJCREW_BENCH_CACHE", raising=False)
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "xdg"))
-    assert cache_dir() == tmp_path / "xdg" / "kirocrew" / "bench-data"
+    assert cache_dir() == tmp_path / "xdg" / "ajcrew" / "bench-data"
     monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
-    assert cache_dir() == Path.home() / ".cache" / "kirocrew" / "bench-data"
+    assert cache_dir() == Path.home() / ".cache" / "ajcrew" / "bench-data"
 
 
 # ── The refusal that keeps a test suite offline ───────────────────────────────
@@ -98,7 +98,7 @@ def test_missing_file_with_downloads_disabled_names_the_fetch_command(cache: Pat
     with pytest.raises(CorpusFetchError) as exc:
         ensure(spec, allow_download=False)
     msg = str(exc.value)
-    assert "kirocrew bench fetch longmemeval_s" in msg
+    assert "ajcrew bench fetch longmemeval_s" in msg
     assert "downloading is disabled" in msg
     # The size is quoted so nobody starts a 277 MB fetch by surprise.
     assert "277 MB" in msg

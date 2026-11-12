@@ -1,4 +1,4 @@
-"""What ``kirocrew chat``'s permission prompt shows, and the identity it audits.
+"""What ``ajcrew chat``'s permission prompt shows, and the identity it audits.
 
 Hostile text never reaches the terminal, an unverifiable request is refused instead of
 shown, and the canonical MCP identity reaches the shared gate. Shares the
@@ -50,7 +50,7 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
     @staticmethod
     def _direct_tool_call(client, *, path="notes.md", tool_call_id="tc-direct"):
         """Populate the real direct-client provenance caches for an edit call."""
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         event = client._extract_tool_event(
             JsonRpcMessage(
@@ -71,7 +71,7 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
 
     @staticmethod
     def _direct_permission_message(*, tool_call_id="tc-direct", inline_path=None):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         tool_call: dict[str, object] = {
             "toolCallId": tool_call_id,
@@ -103,7 +103,7 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
         # anything a title can influence, so it is subtracted before asserting
         # that NOTHING else escaped: that keeps this a whole-output guarantee
         # instead of narrowing it to one line.
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         title = "Read file\x1b]52;c;aGVsbG8=\x07 please"
         await self._drive(monkeypatch, event=self._event(title=title))
@@ -158,7 +158,7 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
     @pytest.mark.asyncio
     async def test_a_prompt_render_failure_is_explicitly_rejected(self, monkeypatch, capsys):
         """A render bug is not allowed to escape between request and response."""
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         async def broken_prompt(event):
             raise UnicodeEncodeError("utf-8", "\ud800", 0, 1, "surrogate")
@@ -332,7 +332,7 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
     async def test_a_long_path_cannot_push_the_question_off_screen(self, monkeypatch, capsys):
         # The path is attacker-influenceable text on an authorization prompt, so
         # it is capped for the same reason the command line is.
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         flood = "/tmp/" + "a" * (cli_chat._MAX_COMMAND_DISPLAY * 3)
         await self._drive(
@@ -370,7 +370,7 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
         stops draining the backend and freezes the turn the audit is about."""
         import threading
 
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         threads: list = []
         monkeypatch.setattr(sys.stdin, "isatty", lambda: True, raising=False)
@@ -526,7 +526,7 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
         # tty=False never renders the prompt at all, so asserting on its output
         # would pass no matter what this branch does. Escape bytes written to a
         # pipe or a redirected file are literal noise in someone's log.
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         monkeypatch.setattr(sys.stdout, "isatty", lambda: False, raising=False)
         assert cli_chat._terminal_reset() == ""
@@ -563,8 +563,8 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
         hand-building an event with ``shell_classified=True`` would not catch a
         transport that dropped the provenance flag while copying the cache.
         """
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.types import ACP_BACKEND_CLAUDE
 
         client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE)
         self._direct_tool_call(client, path=str(tmp_path / "notes.md"))
@@ -587,8 +587,8 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
         the request goes to the human, exactly like the absolute sibling above;
         only a DELETE's relative target (the call's sole evidence) is refused
         as unverifiable (``tool_paths.PARAMS_ONLY_TARGET_KINDS``)."""
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.types import ACP_BACKEND_CLAUDE
 
         client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE)
         self._direct_tool_call(client, path="notes.md")
@@ -605,8 +605,8 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
         self, monkeypatch, tmp_path
     ):
         """A repeated request cannot replace trusted args with inline prose."""
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.types import ACP_BACKEND_CLAUDE
 
         client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE)
         self._direct_tool_call(client, path="~/.ssh/id_rsa")
@@ -627,8 +627,8 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
     @pytest.mark.asyncio
     async def test_direct_client_cache_miss_stays_fail_closed(self, monkeypatch, tmp_path):
         """Inline permission data cannot manufacture trusted provenance."""
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.types import ACP_BACKEND_CLAUDE
 
         client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE)
         # Absolute so the hook gate has nothing to refuse on the target itself;
@@ -655,8 +655,8 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
         classification. Drives the real parser: a hand-built event with trusted
         identity fields would hide a skipped cache write.
         """
-        from kiro_crew.acp._dispatch import _build_tool_call_event, build_permission_event
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp._dispatch import _build_tool_call_event, build_permission_event
+        from aj_crew.acp.types import JsonRpcMessage
 
         shell_cache: dict[str, bool] = {}
         raw_cache: dict[str, dict] = {}
@@ -714,7 +714,7 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
         unverified must be rejected before any prompt. The prompt for such an
         event would carry only the agent-authored title -- for an edit, no Path
         line -- so approval would consent to an undisclosed write."""
-        from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
+        from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
 
         event = AcpEvent(
             kind=EVENT_PERMISSION_REQUEST,
@@ -743,7 +743,7 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
         `_meta.kiro` identity survived the cache is presented -- the prompt
         shows the non-forgeable server/tool pair, the same args-blind consent
         contract the dashboard's interactive card provides."""
-        from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
+        from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
 
         event = AcpEvent(
             kind=EVENT_PERMISSION_REQUEST,
@@ -819,9 +819,9 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
         # server + tool names must reach HookManager as those fields, so a
         # governance rule naming the canonical mcp__server__tool denies the call
         # -- the backend is rejected and the human is never asked.
-        import kiro_crew.cli_chat as cli_chat
-        import kiro_crew.hooks as hooks_mod
-        from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+        import aj_crew.cli_chat as cli_chat
+        import aj_crew.hooks as hooks_mod
+        from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
 
         seen: list[str] = []
 
@@ -868,9 +868,9 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
         # the call lands on a DIFFERENT thread than the loop's.
         import threading
 
-        import kiro_crew.cli_chat as cli_chat
-        import kiro_crew.hooks as hooks_mod
-        from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+        import aj_crew.cli_chat as cli_chat
+        import aj_crew.hooks as hooks_mod
+        from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
 
         loop_thread = threading.get_ident()
         call_threads: list[int] = []
@@ -908,7 +908,7 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
         # rather than a resolved "not a shell tool". Labelling it ``read`` must not
         # buy it a trip to the human prompt, where the only thing on display would
         # be a title with no command behind it.
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         event = self._event(title="Read a file", tool_kind="read", shell_classified=False)
         assert cli_chat._unverifiable_shell(event) is True
@@ -916,7 +916,7 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
     def test_a_resolved_non_shell_request_is_not_refused(self):
         # The negative control that keeps the deny narrow: a RESOLVED non-shell
         # classification is a real answer, and must still reach the prompt.
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         event = self._event(title="Read a file", tool_kind="read")
         assert cli_chat._unverifiable_shell(event) is False
@@ -927,7 +927,7 @@ class TestChatPermissionRequestConsentSurface(_TestChatPermissionRequestHarness)
         # served over /api/sel/events.
         import types as _types
 
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         secret = "AKIAIOSFODNN7EXAMPLE"
         trace: list = []

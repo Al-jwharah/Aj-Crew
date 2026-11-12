@@ -1,7 +1,7 @@
 ---
 title: A loop the model arms picks no cycle cap; it ends itself with one final report
 status: accepted
-author: kirocrew agent session, directed by iamwhatever
+author: ajcrew agent session, directed by iamwhatever
 created: 2026-11-08
 last-audited: 2026-11-08
 audited-at: 664feb41be
@@ -22,7 +22,7 @@ which rebases onto the base that carries this document. Every citation below
 was read on `origin/main` at `664feb41be`. Citations name a file and the symbol
 in it, not a line number, because the docs lint refuses line citations in prose
 (a line number moves with the next refactor; a symbol name does not). Paths are
-under `src/kiro_crew/` unless they start with `skills/`.
+under `src/aj_crew/` unless they start with `skills/`.
 
 This document lands on its own because it changes what `monitor_start` and the
 two conductors (Bot and Ultra Mode) do by default, and the First Principles lane
@@ -192,7 +192,7 @@ counts. #33385 removes or replaces this text:
   `monitor_start`, `dashboard/session_directive_apply_monitor.py`
   `_monitor_start`): "finite" loop and "call autonudge_stop" wording, replaced
   by "decide from live state, one final report, then stop".
-- `builtin_skills/kirocrew-dev/babysit/SKILL.md` (the comment-aware recipe's
+- `builtin_skills/ajcrew-dev/babysit/SKILL.md` (the comment-aware recipe's
   `max_cycles: 48` and `max_runtime_secs: 14400`, "All three limits must be
   positive and finite") and `skills/self-nudge-loop/SKILL.md` (the fixed
   30-cycle cap for a gated `monitor_start` loop): fixed cycle caps the model

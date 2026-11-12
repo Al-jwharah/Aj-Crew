@@ -9,7 +9,7 @@ import type { ChatMessage } from '../types'
  *
  * `selectContinuable` decides whether the UI OFFERS Continue on an empty
  * composer — mirroring `_has_conversation` in
- * `src/kiro_crew/dashboard/chat_handlers.py`, which authorizes the press under
+ * `src/aj_crew/dashboard/chat_handlers.py`, which authorizes the press under
  * the slot lock. `selectTurnInterrupted` only decides what the button SAYS,
  * mirroring `_is_interrupted` (`chat_api/continue_turn.py`), which makes the same split to pick the
  * continuation body handed to the model.
@@ -174,25 +174,25 @@ describe('selectContinuable', () => {
     // Mirrors `is_quiet_end_row` / `test_not_interrupted_after_a_quiet_end`:
     // [user, tool, tool] is the crash tail too, so only the row's persisted
     // trusted identity may close the turn.
-    const quietMeta = { tool_call_id: 'b', tool_name: 'nothing_to_do', mcp_server: 'kirocrew-core', ends_turn: true }
+    const quietMeta = { tool_call_id: 'b', tool_name: 'nothing_to_do', mcp_server: 'ajcrew-core', ends_turn: true }
     const quiet = state({ messages: [
       msg('user', 'patrol'),
       msg('tool', '🔧 gh pr view', { tool_call_id: 'a' }),
-      msg('tool', '🔧 @kirocrew-core/nothing_to_do', quietMeta),
+      msg('tool', '🔧 @ajcrew-core/nothing_to_do', quietMeta),
     ] })
     expect(selectTurnInterrupted(quiet)).toBe(false)
     // Same identity, no `ends_turn`: the applier refused (a person opened the
     // turn), so the turn is unanswered.
     const refused = state({ messages: [
       msg('user', 'patrol'),
-      msg('tool', '🔧 @kirocrew-core/nothing_to_do', { tool_call_id: 'b', tool_name: 'nothing_to_do', mcp_server: 'kirocrew-core' }),
+      msg('tool', '🔧 @ajcrew-core/nothing_to_do', { tool_call_id: 'b', tool_name: 'nothing_to_do', mcp_server: 'ajcrew-core' }),
     ] })
     expect(selectTurnInterrupted(refused)).toBe(true)
     // A tool row AFTER the quiet end: the model kept working past it, so the
     // quiet-end row no longer closes the turn.
     const laterWork = state({ messages: [
       msg('user', 'patrol'),
-      msg('tool', '🔧 @kirocrew-core/nothing_to_do', quietMeta),
+      msg('tool', '🔧 @ajcrew-core/nothing_to_do', quietMeta),
       msg('tool', '🔧 gh pr view', { tool_call_id: 'c' }),
     ] })
     expect(selectTurnInterrupted(laterWork)).toBe(true)
@@ -212,29 +212,29 @@ describe('selectContinuable', () => {
     // KAS states the server and no tool name, so the applied row carries
     // `mcp_server` + `ends_turn` and nothing else. This is the persisted shape
     // that offered Resume after every patrol quiet end.
-    const kasMeta = { tool_call_id: 'b', mcp_server: 'kirocrew-core', done: true, ends_turn: true }
+    const kasMeta = { tool_call_id: 'b', mcp_server: 'ajcrew-core', done: true, ends_turn: true }
     const kas = state({ messages: [
       msg('nudge', '[auto-nudge cycle 25] patrol'),
-      msg('tool', '🔧 @kirocrew-work/work_ledger_read', { tool_call_id: 'a', mcp_server: 'kirocrew-work' }),
-      msg('tool', '🔧 @kirocrew-core/nothing_to_do', kasMeta),
+      msg('tool', '🔧 @ajcrew-work/work_ledger_read', { tool_call_id: 'a', mcp_server: 'ajcrew-work' }),
+      msg('tool', '🔧 @ajcrew-core/nothing_to_do', kasMeta),
     ] })
     expect(selectTurnInterrupted(kas)).toBe(false)
     // A real interruption on the same backend still offers Resume: the turn
     // died after an ordinary tool, or the quiet end was refused (no stamp).
     const died = state({ messages: [
       msg('nudge', '[auto-nudge cycle 25] patrol'),
-      msg('tool', '🔧 @kirocrew-work/work_ledger_read', { tool_call_id: 'a', mcp_server: 'kirocrew-work' }),
+      msg('tool', '🔧 @ajcrew-work/work_ledger_read', { tool_call_id: 'a', mcp_server: 'ajcrew-work' }),
     ] })
     expect(selectTurnInterrupted(died)).toBe(true)
     const refused = state({ messages: [
       msg('user', 'patrol'),
-      msg('tool', '🔧 @kirocrew-core/nothing_to_do', { tool_call_id: 'b', mcp_server: 'kirocrew-core', done: true }),
+      msg('tool', '🔧 @ajcrew-core/nothing_to_do', { tool_call_id: 'b', mcp_server: 'ajcrew-core', done: true }),
     ] })
     expect(selectTurnInterrupted(refused)).toBe(true)
     // A present identity half that names another tool never closes the turn.
     const wrongTool = state({ messages: [
       msg('user', 'patrol'),
-      msg('tool', '🔧 Run Command', { tool_call_id: 'b', tool_name: 'execute_bash', mcp_server: 'kirocrew-core', ends_turn: true }),
+      msg('tool', '🔧 Run Command', { tool_call_id: 'b', tool_name: 'execute_bash', mcp_server: 'ajcrew-core', ends_turn: true }),
     ] })
     expect(selectTurnInterrupted(wrongTool)).toBe(true)
   })
@@ -388,7 +388,7 @@ describe('selectTurnInterrupted', () => {
   })
 
   // The completed-/compact shapes, mirroring `is_turn_interrupted` in
-  // `src/kiro_crew/dashboard/state_parts/transcript_rows.py` (test_is_interrupted.py pins the same
+  // `src/aj_crew/dashboard/state_parts/transcript_rows.py` (test_is_interrupted.py pins the same
   // five tails). Only the PAIR -- a /compact user row whose compaction result
   // row is present -- reads as finished; the tag alone must not decide (the
   // auto-compaction case above is a real interruption carrying the same row).

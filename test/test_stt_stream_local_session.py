@@ -27,8 +27,8 @@ from stt_stream_helpers import (
     _wait_for_operation,
 )
 
-from kiro_crew import stt
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import stt
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 async def _recv(ws):
@@ -186,10 +186,10 @@ class TestLocalStreamingSession:
     def _install(self, monkeypatch, session, **cfg_kwargs):
         """Point the endpoint at ``local`` with *session* standing in for the recogniser."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg(provider="local", **cfg_kwargs)),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
 
         def _factory(**kwargs):
             session.kwargs = kwargs
@@ -207,7 +207,7 @@ class TestLocalStreamingSession:
         """
         outcomes: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream._emit_end_audit",
+            "aj_crew.dashboard.stt_stream._emit_end_audit",
             lambda caller, *, outcome: outcomes.append(outcome),
         )
         return outcomes
@@ -223,7 +223,7 @@ class TestLocalStreamingSession:
         """
         self._install(monkeypatch, _FakeLocalSession())
         # flake-ok: a real 7 s cap, far above the ready-then-stop exchange it bounds; moved verbatim
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 7)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream._MAX_STREAM_DURATION_SECS", 7)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             ready = await _recv_json(ws)
@@ -375,7 +375,7 @@ class TestLocalStreamingSession:
 
     @pytest.mark.asyncio
     async def test_pcm_and_stop_are_read_while_a_partial_is_still_decoding(self, monkeypatch):
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         decoding = asyncio.Event()
         stopped = asyncio.Event()
@@ -416,7 +416,7 @@ class TestLocalStreamingSession:
 
     @pytest.mark.asyncio
     async def test_an_overflowing_pcm_backlog_reports_one_error(self, monkeypatch):
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         monkeypatch.setattr(stt_stream, "_MAX_LOCAL_BUFFER_BYTES", 2)
         session = self._install(monkeypatch, _FakeLocalSession())
@@ -440,7 +440,7 @@ class TestLocalStreamingSession:
 
     @pytest.mark.asyncio
     async def test_cancelling_the_transport_never_starts_a_final_decode(self, monkeypatch):
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         decoding = asyncio.Event()
         release = asyncio.Event()
@@ -479,7 +479,7 @@ class TestLocalStreamingSession:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("buffered_seconds", [40, 60])
     async def test_readiness_burst_fits_the_backend_inbox(self, monkeypatch, buffered_seconds):
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         session = self._install(monkeypatch, _FakeLocalSession(final_text="complete capture"))
         outcomes = self._record_end_audits(monkeypatch)
@@ -510,7 +510,7 @@ class TestLocalStreamingSession:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("phase", ["partial", "final"])
     async def test_stop_budget_covers_the_active_partial_and_the_final(self, monkeypatch, phase):
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         cfg = _cfg(provider="local", timeout_secs=22)
         budget_started = asyncio.Event()
@@ -586,7 +586,7 @@ class TestLocalStreamingSession:
     async def test_an_empty_final_retracts_the_partial_without_semantic_endpointing(
         self, monkeypatch
     ):
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         self._install(
             monkeypatch,
@@ -815,7 +815,7 @@ class TestLocalStreamingSession:
         is the signal that the load is under way, so it must arrive BEFORE ``ready``.
         """
         self._install(monkeypatch, _FakeLocalSession(pending=None, pending_load=True))
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
@@ -887,7 +887,7 @@ class TestLocalStreamingSession:
         RECONNECTS when it fires, so a single frame at the start of a 148 MB fetch
         would have the client tear the socket down and restart the transfer, forever.
         """
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         model = stt.resolve_model("base")
         gate = asyncio.Event()
@@ -971,7 +971,7 @@ class TestLocalStreamingSession:
         discards it at sixty seconds while this side is still building the context.
         The announce is therefore owed late, and this pins that it arrives.
         """
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         released = asyncio.Event()
 
@@ -1036,7 +1036,7 @@ class TestLocalStreamingSession:
         that is doing nothing -- and a socket that is simply dead -- the whole prepare
         budget. The gate is ``pending_load`` being true, not merely arriving here.
         """
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         released = asyncio.Event()
         reads = {"store": 0}
@@ -1086,7 +1086,7 @@ class TestLocalStreamingSession:
         client disappears turns a resumable first run into one that starts from zero
         every time. Reporting stops, the download does not.
         """
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         gate = asyncio.Event()
         finished: list[bool] = []
@@ -1157,7 +1157,7 @@ class TestLocalStreamingSession:
         calls: list[dict] = []
         fake_sel = MagicMock()
         fake_sel.log_api_access = lambda **kw: calls.append(kw)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.sel", lambda: fake_sel)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             assert (await ws.receive_json())["type"] == "ready"
@@ -1181,7 +1181,7 @@ class TestLocalStreamingSession:
         attempt, which is also why the frame says "still downloading" rather than
         reporting a failure.
         """
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         outcomes = self._record_end_audits(monkeypatch)
         gate = asyncio.Event()
@@ -1220,7 +1220,7 @@ class TestLocalStreamingSession:
         unmatched ``stt_stream_start`` is indistinguishable in the trail from a
         session that is still open.
         """
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         outcomes = self._record_end_audits(monkeypatch)
         model = stt.resolve_model("base")
@@ -1274,7 +1274,7 @@ class TestLocalStreamingSession:
         that point, which makes the end audit the whole of the cleanup, and without
         it the trail shows a voice session that never ended.
         """
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         outcomes = self._record_end_audits(monkeypatch)
 
@@ -1289,7 +1289,7 @@ class TestLocalStreamingSession:
         assert outcomes == ["error"], outcomes
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("module", ["kiro_crew.stt.engine", "kiro_crew.stt.vad"])
+    @pytest.mark.parametrize("module", ["aj_crew.stt.engine", "aj_crew.stt.vad"])
     async def test_a_deferred_numpy_import_failure_still_emits_the_end_audit(
         self, monkeypatch, module
     ):
@@ -1300,7 +1300,7 @@ class TestLocalStreamingSession:
         ``stt_stream_start`` was logged. The import has to sit inside the audited
         setup block, or the trail shows a voice session that never ended.
         """
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         outcomes = self._record_end_audits(monkeypatch)
         # Scoped so conftest teardowns that import the stt modules still find them.
@@ -1378,7 +1378,7 @@ class TestLocalStreamingSession:
         those would leave the panel rendering a progress bar for a transfer that is
         not moving, at the republication cadence, for as long as the wait lasts.
         """
-        from kiro_crew.dashboard import stt_stream
+        from aj_crew.dashboard import stt_stream
 
         gate = asyncio.Event()
 

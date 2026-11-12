@@ -1346,7 +1346,7 @@ when the key changes.** Restrictions are the dangerous half: a persisted rule na
 a tool that no longer exists does not fail loudly, it stops matching. The capability
 the operator switched off comes back on, and nothing at the call site says so.
 
-Kiro Crew resolves tool restrictions at several name-keyed surfaces, at different
+Aj Crew resolves tool restrictions at several name-keyed surfaces, at different
 lifecycle stages, in different shapes:
 
 | Site | Lifecycle stage | Shape | Reachable from code |
@@ -1421,7 +1421,7 @@ their primary use, which a prose-matching refusal would break. A preference that
 cannot misfire is worth more here than an enforcement that can.
 
 The descriptor is not the only prose that states the choice, and the key moves
-only the descriptor. The `kirocrew-dev/babysit` skill, which `config/prompt.md`
+only the descriptor. The `ajcrew-dev/babysit` skill, which `config/prompt.md`
 points every monitoring request at, carries the same rule in its own words ("Use a
 structured monitor only when its typed provider observes every fact needed to
 decide the objective"), and that sentence is true in both positions, so it is left

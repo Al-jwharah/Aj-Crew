@@ -18,9 +18,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.connections import warm
-from kiro_crew.connections.mint import _mints
-from kiro_crew.connections.registry import Provider
+from aj_crew.connections import warm
+from aj_crew.connections.mint import _mints
+from aj_crew.connections.registry import Provider
 
 
 @pytest.fixture(autouse=True)
@@ -223,7 +223,7 @@ async def _rearm_registry():
     Awaiting is the point. Cancelling each task and then clearing the registry synchronously
     drops the only reference to a task that has not yet observed its own cancellation, so the
     loop closes on it, its ``finally`` never runs, and the leak is the exact one
-    :func:`~kiro_crew.connections.warm._settle_invalidation_rearms` exists to close -- a test
+    :func:`~aj_crew.connections.warm._settle_invalidation_rearms` exists to close -- a test
     harness must not reproduce the defect its subject fixes.
 
     Delegated to that production function rather than re-implementing cancel-then-gather here,

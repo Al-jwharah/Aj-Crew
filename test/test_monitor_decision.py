@@ -6,13 +6,13 @@ import pathlib
 
 import pytest
 
-from kiro_crew.monitoring.decision import (
+from aj_crew.monitoring.decision import (
     decide_monitor,
     monitor_budget_reason,
     monitor_stall_reason,
 )
-from kiro_crew.monitoring.github_provider_errors import REASON_SHARED_COOLDOWN
-from kiro_crew.monitoring.models import (
+from aj_crew.monitoring.github_provider_errors import REASON_SHARED_COOLDOWN
+from aj_crew.monitoring.models import (
     DEFAULT_MONITOR_CADENCE_SECS,
     DEFAULT_MONITOR_COALESCE_SECS,
     DEFAULT_MONITOR_REALERT_SECS,
@@ -1245,11 +1245,11 @@ class TestWakeOnTerminal:
         avoid a provider import cycle; this test is the guard that keeps the
         literal from drifting from the classifier that produces them.
         """
-        from kiro_crew.monitoring.decision import (
+        from aj_crew.monitoring.decision import (
             _REVIEW_READY_REASON_CODE,
             _TERMINAL_WAKE_REASON_CODES,
         )
-        from kiro_crew.monitoring.pull_request import (
+        from aj_crew.monitoring.pull_request import (
             PullRequestFacts,
             classify_pull_request_facts,
         )

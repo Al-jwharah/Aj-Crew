@@ -1,9 +1,9 @@
-"""``stt.threads`` and ``KIROCREW_STT_THREADS``: the recogniser's decode thread count.
+"""``stt.threads`` and ``AJCREW_STT_THREADS``: the recogniser's decode thread count.
 
 Covers the one parser every writer shares (``stt.limits.parse_threads``), the
 engine's resolver and its precedence, that a changed count reaches the loaded-context
 key so it takes effect without a restart, and each write path: a hand-edited
-config.json, ``kirocrew config set``. The dashboard endpoint is covered beside its
+config.json, ``ajcrew config set``. The dashboard endpoint is covered beside its
 siblings in ``test_dashboard_handlers_core_coverage.py``.
 
 Every test writes under ``tmp_path``; none touches ``~/.kiro/crew``.
@@ -20,11 +20,11 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.validation import validate_config_data
-from kiro_crew.stt import engine as engine_mod
-from kiro_crew.stt import limits as stt_limits
-from kiro_crew.stt import models
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.validation import validate_config_data
+from aj_crew.stt import engine as engine_mod
+from aj_crew.stt import limits as stt_limits
+from aj_crew.stt import models
 
 # ── parse_threads ──
 
@@ -205,7 +205,7 @@ def test_a_caller_without_a_thread_opinion_keeps_the_setting(loading_engine):
 
 def test_a_session_built_without_threads_keeps_the_setting(loading_engine):
     """`LocalSession` defaults `threads` to no opinion, like `shared_engine`."""
-    from kiro_crew.stt import session as session_mod
+    from aj_crew.stt import session as session_mod
 
     eng = engine_mod.shared_engine(threads=48)
     session_mod.LocalSession()
@@ -222,7 +222,7 @@ def test_a_threads_only_update_leaves_the_bounds_alone(loading_engine):
 def test_a_session_asks_its_engine_for_the_count(loading_engine, monkeypatch):
     """``pending_load`` compares against the key ``prepare`` would build, which must
     use the configured count, or every session would announce a load it never runs."""
-    from kiro_crew.stt.session import LocalSession
+    from aj_crew.stt.session import LocalSession
 
     monkeypatch.setattr(models, "is_present", lambda _m: True)
     session = LocalSession(model_name="base", language="en", threads=64)
@@ -236,14 +236,14 @@ def test_a_session_asks_its_engine_for_the_count(loading_engine, monkeypatch):
 def _loaded_threads(tmp_path: Path, value: object) -> int:
     cfg_file = tmp_path / "config.json"
     cfg_file.write_text(json.dumps({"stt": {"threads": value}}))
-    with unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
-        return KiroCrewConfig.load().stt.threads
+    with unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
+        return AjCrewConfig.load().stt.threads
 
 
 def test_absent_threads_load_as_auto(tmp_path):
     (tmp_path / "config.json").write_text(json.dumps({"stt": {}}))
-    with unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
-        assert KiroCrewConfig.load().stt.threads == stt_limits.THREADS_AUTO
+    with unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
+        assert AjCrewConfig.load().stt.threads == stt_limits.THREADS_AUTO
 
 
 @pytest.mark.parametrize(
@@ -273,17 +273,17 @@ def test_validation_turns_auto_into_the_int_without_a_type_warning(caplog):
 
 
 def _cli_set(home: Path, value: str) -> None:
-    from kiro_crew.cli_config import _config_cmd
+    from aj_crew.cli_config import _config_cmd
 
     args = argparse.Namespace(
         config_action="set", key="stt.threads", value=value, file=None, local=False
     )
     with (
-        patch("kiro_crew.cli_config.config_path", return_value=home / "config.json"),
-        patch("kiro_crew.cli_config.config_local_path", return_value=home / "config.local.json"),
-        patch("kiro_crew.config.loader.config_path", return_value=home / "config.json"),
-        patch("kiro_crew.config.loader.config_dir", return_value=home),
-        patch("kiro_crew.cli_config.sel"),
+        patch("aj_crew.cli_config.config_path", return_value=home / "config.json"),
+        patch("aj_crew.cli_config.config_local_path", return_value=home / "config.local.json"),
+        patch("aj_crew.config.loader.config_path", return_value=home / "config.json"),
+        patch("aj_crew.config.loader.config_dir", return_value=home),
+        patch("aj_crew.cli_config.sel"),
     ):
         _config_cmd(args)
 

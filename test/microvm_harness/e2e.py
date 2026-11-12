@@ -40,15 +40,15 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Optional
 
-from kiro_crew.cloud.microvm import api, states
-from kiro_crew.cloud.microvm.payload import RunHookPayload
-from kiro_crew.cloud.microvm.record import CrewRecord, CrewStore
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.cloud.microvm import api, states
+from aj_crew.cloud.microvm.payload import RunHookPayload
+from aj_crew.cloud.microvm.record import CrewRecord, CrewStore
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 from .fake_microvm_endpoint import FakeMicroVmEndpoint
 from .local_engine import LocalLaunchEngine, docker_available
 
-CREW_HOME = "/home/kirocrew/.kiro/crew"
+CREW_HOME = "/home/ajcrew/.kiro/crew"
 MARKER_RELATIVE = "workspace/microvm-e2e-marker.txt"
 
 #: The one AWS profile this harness ever names.
@@ -59,7 +59,7 @@ MARKER_RELATIVE = "workspace/microvm-e2e-marker.txt"
 #: credentials do not survive the lane's own call path at all. And an empty or
 #: absent profile means the default provider chain, which is the one thing a local
 #: harness must never reach.
-HARNESS_PROFILE = "kirocrew-microvm-harness"
+HARNESS_PROFILE = "ajcrew-microvm-harness"
 
 
 def loopback(url: str) -> str:
@@ -134,7 +134,7 @@ def _aws(args: list[str], *, endpoint_url: str, env: dict[str, str]) -> dict[str
 
     Called directly rather than through ``cloud/aws.py``'s ``run_aws`` on purpose:
     that chokepoint refuses any non-allowlisted ``aws`` call once
-    ``KIROCREW_SESSION_KEY`` is set, which is exactly the environment this harness
+    ``AJCREW_SESSION_KEY`` is set, which is exactly the environment this harness
     runs in. The lane's own code still goes through the chokepoint; only the
     harness's setup calls bypass it.
     """
@@ -175,7 +175,7 @@ def loopback_only_aws(*endpoints: str):
     """Let the lane's OWN AWS calls run, after proving they cannot leave this host.
 
     ``cloud/aws.py``'s chokepoint refuses any non-allowlisted ``aws`` call while
-    ``KIROCREW_SESSION_KEY`` is set, which is correct and is why a launch on any
+    ``AJCREW_SESSION_KEY`` is set, which is correct and is why a launch on any
     lane is a human action run from a terminal. It also means the lane's real code
     cannot execute inside an agent session -- and an e2e that therefore drove
     ``docker`` directly would prove the harness works and say nothing about the
@@ -203,12 +203,12 @@ def loopback_only_aws(*endpoints: str):
             "refusing to run the lane's AWS calls: the only credentials in scope must be "
             f"the harness's own {HARNESS_PROFILE} profile in its own temporary file"
         )
-    saved = os.environ.pop("KIROCREW_SESSION_KEY", None)
+    saved = os.environ.pop("AJCREW_SESSION_KEY", None)
     try:
         yield
     finally:
         if saved is not None:
-            os.environ["KIROCREW_SESSION_KEY"] = saved
+            os.environ["AJCREW_SESSION_KEY"] = saved
 
 
 def _http(url: str, *, timeout: float = 5.0, headers: Optional[dict] = None) -> tuple[int, bytes]:
@@ -260,7 +260,7 @@ def _run_cycle(result: Result, work: Path) -> Result:
         result.facts["control_plane_endpoint"] = plane.endpoint_url
         result.facts["crew_tag"] = tag
         # ── launch, through the LANE's own code ──────────────────────────────
-        # Every MicroVM call below is kiro_crew.cloud.microvm.api, which goes
+        # Every MicroVM call below is aj_crew.cloud.microvm.api, which goes
         # through cloud/aws.py's one `aws` CLI chokepoint, pointed at the loopback
         # fake with --endpoint-url. So what is exercised here is the engine, not
         # the harness: the arguments it builds, the responses it parses, and the
@@ -273,12 +273,12 @@ def _run_cycle(result: Result, work: Path) -> Result:
                 activation_id="00000000-1111-2222-3333-444444444444",
                 activation_code="harness-activation-code",
                 region="us-east-1",
-                identity_secret_ref="kirocrew/identity/harness",
-                control_secret_ref=f"kirocrew/crew/{tag}/CONTROL_SECRET",
+                identity_secret_ref="ajcrew/identity/harness",
+                control_secret_ref=f"ajcrew/crew/{tag}/CONTROL_SECRET",
                 generation=1,
             )
             vm = api.run_microvm(
-                image_identifier="arn:aws:lambda:us-east-1:123456789012:microvm-image/kirocrew",
+                image_identifier="arn:aws:lambda:us-east-1:123456789012:microvm-image/ajcrew",
                 image_version="1",
                 run_hook_payload=payload.encode(),
                 maximum_duration_in_seconds=900,
@@ -340,12 +340,12 @@ def _run_cycle(result: Result, work: Path) -> Result:
                 activation_id="00000000-1111-2222-3333-444444444444",
                 activation_code="harness-activation-code",
                 region="us-east-1",
-                identity_secret_ref="kirocrew/identity/harness",
-                control_secret_ref=f"kirocrew/crew/{tag}/CONTROL_SECRET",
+                identity_secret_ref="ajcrew/identity/harness",
+                control_secret_ref=f"ajcrew/crew/{tag}/CONTROL_SECRET",
                 generation=1,
             )
             again = api.run_microvm(
-                image_identifier="arn:aws:lambda:us-east-1:123456789012:microvm-image/kirocrew",
+                image_identifier="arn:aws:lambda:us-east-1:123456789012:microvm-image/ajcrew",
                 image_version="1",
                 run_hook_payload=payload.encode(),
                 maximum_duration_in_seconds=900,

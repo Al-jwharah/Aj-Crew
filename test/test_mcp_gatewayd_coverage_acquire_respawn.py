@@ -26,11 +26,11 @@ from mcp_gatewayd_coverage_helpers import (  # noqa: F401 -- the autouse fixture
     _pool_key,
 )
 
-from kiro_crew.mcp_caller import CallerContext
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.mcp_gateway.backend import Backend, BackendGone
-from kiro_crew.mcp_gateway.pool import BackendPool, BackendUnavailable
-from kiro_crew.testing.wait import await_until
+from aj_crew.mcp_caller import CallerContext
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway.backend import Backend, BackendGone
+from aj_crew.mcp_gateway.pool import BackendPool, BackendUnavailable
+from aj_crew.testing.wait import await_until
 
 pytestmark = pytest.mark.xdist_group("mcp_gateway")
 
@@ -85,7 +85,7 @@ class TestAcquireBackend:
     async def test_secret_temp_skips_raw_precheck_and_reaches_spawn_backend(
         self, monkeypatch, caplog
     ) -> None:
-        from kiro_crew import sandbox as sandbox_mod
+        from aj_crew import sandbox as sandbox_mod
 
         pool = BackendPool(max_backends=2)
         key = _pool_key(server="secret-temp-mcp")
@@ -119,7 +119,7 @@ class TestAcquireBackend:
 
         monkeypatch.setattr(gw, "resolve_secret_uris", _resolve)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_gateway.gatewayd"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_gateway.gatewayd"):
             await gw._acquire_backend(
                 pool,
                 key,
@@ -136,7 +136,7 @@ class TestAcquireBackend:
 
     @pytest.mark.asyncio
     async def test_sealed_declared_temp_is_removed_before_spawn(self, monkeypatch, caplog) -> None:
-        from kiro_crew import sandbox as sandbox_mod
+        from aj_crew import sandbox as sandbox_mod
 
         pool = BackendPool(max_backends=2)
         key = _pool_key(server="sealed-temp-mcp")
@@ -158,7 +158,7 @@ class TestAcquireBackend:
 
         monkeypatch.setattr(sandbox_mod, "classify_declared_temp_path", _sealed)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_gateway.gatewayd"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_gateway.gatewayd"):
             await gw._acquire_backend(
                 pool,
                 key,
@@ -372,7 +372,7 @@ class TestRespawnBackendForStub:
         seen misbehaving. A private respawn releases no reservation: only
         ``pool.get_or_create`` reserves, and a release would unprotect another connection.
         """
-        from kiro_crew.mcp_gateway import hazards
+        from aj_crew.mcp_gateway import hazards
 
         key = _pool_key(server="respawn-hazard-mcp")
         ledger = hazards.HazardLedger(tmp_path / hazards.HAZARDS_FILENAME)

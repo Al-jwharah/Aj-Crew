@@ -15,7 +15,7 @@ const {
 } = require("../gateway-auth-hint");
 
 test("our own local gateway points at THIS machine", () => {
-  assert.equal(classifyAuthBlock({ localOwner: "kirocrew" }), "local");
+  assert.equal(classifyAuthBlock({ localOwner: "ajcrew" }), "local");
 });
 
 test("a confirmed tunnel (ssh owns the socket) points at the OTHER machine", () => {
@@ -26,7 +26,7 @@ test("a confirmed tunnel (ssh owns the socket) points at the OTHER machine", () 
 
 test("a configured remote host is decisive, whatever the socket says", () => {
   assert.equal(
-    classifyAuthBlock({ localOwner: "kirocrew", remoteHost: "dev-host.example.com" }),
+    classifyAuthBlock({ localOwner: "ajcrew", remoteHost: "dev-host.example.com" }),
     "foreign",
   );
 });
@@ -49,7 +49,7 @@ test("no facts at all yields the hedged verdict, not a guess", () => {
 test("an empty remoteHost does not force the foreign verdict", () => {
   // Guard against treating "" as "a host was configured" — that would mislabel
   // every local-gateway failure as a tunnel.
-  assert.equal(classifyAuthBlock({ localOwner: "kirocrew", remoteHost: "" }), "local");
+  assert.equal(classifyAuthBlock({ localOwner: "ajcrew", remoteHost: "" }), "local");
 });
 
 // ── defaultedPort: a default-port URL must not read as "no port" ────────────
@@ -165,25 +165,25 @@ test("no shell module keys anything off the raw URL.port property", () => {
 //
 // #16258: a packaged AppImage that adopts a local gateway it did not spawn
 // correctly refuses a silent token mint, and the token page then told the user
-// to run `kirocrew token`. But the AppImage installs no `kirocrew` on PATH, so
+// to run `ajcrew token`. But the AppImage installs no `ajcrew` on PATH, so
 // that instruction was unrunnable. The launcher ships inside the image;
 // appImageBundledCliPath resolves its absolute path, which the shell forwards
 // to token-prompt.html as ?cli= and the page names in the LOCAL recovery
 // command (see token-prompt.test.js for the rendered wording).
 
 test("appImageBundledCliPath returns the launcher only for an AppImage", () => {
-  const bundled = "/tmp/.mount_Kiro/resources/backend-dist/kirocrew-backend-x64/bin/kirocrew";
+  const bundled = "/tmp/.mount_Kiro/resources/backend-dist/ajcrew-backend-x64/bin/ajcrew";
   const resolveBundled = () => bundled;
 
   // AppImage ($APPIMAGE set) with an absolute bundled launcher: forward it.
   assert.equal(
-    appImageBundledCliPath({ APPIMAGE: "/home/u/Kiro Crew.AppImage" }, resolveBundled),
+    appImageBundledCliPath({ APPIMAGE: "/home/u/Aj Crew.AppImage" }, resolveBundled),
     bundled,
   );
 });
 
 test("appImageBundledCliPath declines when $APPIMAGE is absent (normal install)", () => {
-  const resolveBundled = () => "/opt/kirocrew/bin/kirocrew";
+  const resolveBundled = () => "/opt/ajcrew/bin/ajcrew";
   assert.equal(appImageBundledCliPath({}, resolveBundled), "");
   assert.equal(appImageBundledCliPath({ APPIMAGE: "" }, resolveBundled), "");
   assert.equal(appImageBundledCliPath({ APPIMAGE: "   " }, resolveBundled), "");
@@ -191,9 +191,9 @@ test("appImageBundledCliPath declines when $APPIMAGE is absent (normal install)"
 });
 
 test("appImageBundledCliPath declines a bare on-PATH launcher name", () => {
-  // When the resolver falls back to a bare `kirocrew`, forwarding it would
+  // When the resolver falls back to a bare `ajcrew`, forwarding it would
   // reintroduce the very on-PATH assumption this fix removes.
-  assert.equal(appImageBundledCliPath({ APPIMAGE: "/home/u/Kiro.AppImage" }, () => "kirocrew"), "");
+  assert.equal(appImageBundledCliPath({ APPIMAGE: "/home/u/Kiro.AppImage" }, () => "ajcrew"), "");
 });
 
 test("appImageBundledCliPath is defensive about the resolver", () => {

@@ -13,8 +13,8 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
-from kiro_crew.whatsapp import commands
-from kiro_crew.whatsapp.commands import (
+from aj_crew.whatsapp import commands
+from aj_crew.whatsapp.commands import (
     COMMANDS,
     WhatsAppCommand,
     command_argument,
@@ -133,7 +133,7 @@ class TestHelpText:
     def test_help_card_is_one_message(self):
         # WhatsApp's own per-message ceiling; the renderer would split a longer
         # card mid-list, which reads as a truncated menu.
-        from kiro_crew.whatsapp.transport import WHATSAPP_CAPABILITIES
+        from aj_crew.whatsapp.transport import WHATSAPP_CAPABILITIES
 
         assert len(help_text()) <= WHATSAPP_CAPABILITIES.max_message_chars
 

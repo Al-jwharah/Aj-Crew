@@ -20,10 +20,10 @@ from issue_radar_crew_store_helpers import (  # noqa: F401 -- the autouse fixtur
     _unit,
 )
 
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log_projection
-from kiro_crew.crew_log.schema import KIND_SESSION
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log_projection
+from aj_crew.crew_log.schema import KIND_SESSION
 
 
 def test_ci_members_and_labels_read_off_bytes_are_re_bounded_by_the_fold():
@@ -31,9 +31,9 @@ def test_ci_members_and_labels_read_off_bytes_are_re_bounded_by_the_fold():
     fold reads bytes off a file: every member is re-bounded to the record tool's own
     type and ceiling, and the label count is capped, so an oversized reading cannot
     make every retained item hold it."""
-    from kiro_crew.crew_log import entry_types
-    from kiro_crew.crew_log import projection as crew_log
-    from kiro_crew.crew_log.schema import Entry
+    from aj_crew.crew_log import entry_types
+    from aj_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log.schema import Entry
 
     data = {
         "crew_id": "c_0a1b2c3d",
@@ -63,8 +63,8 @@ def test_ci_members_and_labels_read_off_bytes_are_re_bounded_by_the_fold():
 def test_rejected_approaches_are_bounded_per_item_newest_kept():
     """Every list the fold retains has a named bound; ``tried`` keeps the newest
     RADAR_TRIED_LIMIT rows of one item, which is what a resume reads."""
-    from kiro_crew.crew_log import projection as crew_log
-    from kiro_crew.crew_log.schema import Entry
+    from aj_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log.schema import Entry
 
     base = {
         "crew_id": "c_0a1b2c3d",
@@ -92,7 +92,7 @@ def test_rejected_approaches_are_bounded_per_item_newest_kept():
 
 
 def _fold_entries(crew_log, datas):
-    from kiro_crew.crew_log.schema import Entry
+    from aj_crew.crew_log.schema import Entry
 
     return crew_log.fold(
         "radar",
@@ -114,7 +114,7 @@ def test_work_items_are_bounded_finished_ones_evicted_first_and_counted(monkeypa
     oldest finish first, never the item just written; an evicted item takes its
     phase history along; and the count is reported so a bounded record is told
     from a complete one."""
-    from kiro_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log import projection as crew_log
 
     monkeypatch.setattr(crew_log, "RADAR_ITEM_LIMIT", 4)
     base = {"crew_id": "c_0a1b2c3d", "owner": OWNER, "repo": REPO, "event_kind": "implement"}
@@ -146,7 +146,7 @@ def test_a_retry_after_eviction_puts_the_item_back_rather_than_deduping_away(mon
     sets, so an evicted item's digest can outlive the item. A retry matching that stale
     digest must APPLY: returning early would leave the crew told its update landed while
     the row is gone."""
-    from kiro_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log import projection as crew_log
 
     monkeypatch.setattr(crew_log, "RADAR_ITEM_LIMIT", 2)
     base = {"crew_id": "c_0a1b2c3d", "owner": OWNER, "repo": REPO, "event_kind": "implement"}
@@ -165,7 +165,7 @@ def test_a_retry_after_eviction_puts_the_item_back_rather_than_deduping_away(mon
 
 
 def test_this_crews_passes_are_bounded_earliest_decided_evicted_and_counted(monkeypatch):
-    from kiro_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log import projection as crew_log
 
     monkeypatch.setattr(crew_log, "RADAR_SKIP_LIMIT", 2)
     base = {"crew_id": "c_0a1b2c3d", "owner": OWNER, "repo": REPO, "event_kind": "skip"}
@@ -187,8 +187,8 @@ def test_this_crews_passes_are_bounded_earliest_decided_evicted_and_counted(monk
 def test_a_ci_reading_keeps_only_the_declared_member_keys():
     """``ci_state`` is merged key by key; an undeclared key would grow the item by
     key without bound, so the fold keeps the declared members and no other."""
-    from kiro_crew.crew_log import entry_types
-    from kiro_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log import entry_types
+    from aj_crew.crew_log import projection as crew_log
 
     base = {
         "crew_id": "c_0a1b2c3d",
@@ -292,8 +292,8 @@ def test_the_folds_text_clamp_is_the_cap_the_record_tool_itself_accepts(tmp_path
     sit AT the largest value the record tool accepts, never below it. Below it, an
     ordinary field the tool took is shortened on every read -- silent corruption of
     state a resume acts on, not a bound."""
-    from kiro_crew.crew_log import projection as crew_log
-    from kiro_crew.validation import MAX_MEDIUM_STRING
+    from aj_crew.crew_log import projection as crew_log
+    from aj_crew.validation import MAX_MEDIUM_STRING
 
     assert (
         crew_log.RADAR_TEXT_LIMIT == MAX_MEDIUM_STRING
@@ -338,7 +338,7 @@ def test_the_item_bound_never_evicts_the_item_that_holds_the_edit(monkeypatch):
     evicting the item in an editing phase makes the rule answer "no editor" and admit a
     second one -- and an append-only log cannot retract the lines the two then write. So
     an editing item is never the victim even when no terminal item is available."""
-    from kiro_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log import projection as crew_log
 
     monkeypatch.setattr(crew_log, "RADAR_ITEM_LIMIT", 3)
     base = {"crew_id": "c_0a1b2c3d", "owner": OWNER, "repo": REPO, "event_kind": "implement"}
@@ -368,7 +368,7 @@ def test_a_retry_whose_item_was_evicted_is_not_vouched_for_by_a_surviving_skip(m
     EITHER survived let the surviving pass stand in for the evicted item, and the
     same-digest retry -- the one thing that would put the item back -- returned early
     and left it missing."""
-    from kiro_crew.crew_log import projection as crew_log
+    from aj_crew.crew_log import projection as crew_log
 
     monkeypatch.setattr(crew_log, "RADAR_ITEM_LIMIT", 2)
     base = {"crew_id": "c_0a1b2c3d", "owner": OWNER, "repo": REPO, "event_kind": "skip"}
@@ -407,8 +407,8 @@ def test_a_unit_recreated_under_its_id_folds_cold_however_far_its_seq_climbed(tm
     Entries go through the emitter, not a store write, which folds first and would
     refresh the cache before the new seq passed the cached one.
     """
-    from kiro_crew.crew_log import eager
-    from kiro_crew.crew_log.store import segment_paths
+    from aj_crew.crew_log import eager
+    from aj_crew.crew_log.store import segment_paths
 
     crew, sid = _live_crew(tmp_path)
     cid = crew["id"]
@@ -447,8 +447,8 @@ def test_the_radar_ci_bounds_and_label_limit_are_the_record_tools_own():
     tool's field specs; this pins the copy so the two cannot drift apart silently."""
     from issue_radar_agent_tools_helpers import RECORD_TOOL, shipped
 
-    from kiro_crew.apps import app_agent_tools
-    from kiro_crew.crew_log import entry_types
+    from aj_crew.apps import app_agent_tools
+    from aj_crew.crew_log import entry_types
 
     specs = {f.name: f for f in app_agent_tools.build_tool_schema(shipped(RECORD_TOOL)).fields}
     assert set(entry_types.RADAR_CI_BOUNDS) == set(entry_types.RADAR_CI_KEYS)

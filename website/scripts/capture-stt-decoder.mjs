@@ -33,7 +33,7 @@ import { serveDist } from './lib/serve-dist.mjs'
 import { json, handleBootRoute } from './lib/boot-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/stt-ffmpeg-decoder'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 /** Headline of the decoder card, and the element the frames are cropped to. */
 const CARD = 'ffmpeg is missing'

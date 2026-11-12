@@ -1,11 +1,11 @@
 # Signing Infrastructure
 
 This directory contains the macOS code signing and notarization scaffolding
-for the Kiro Crew desktop app, using an enterprise code-signing service.
+for the Aj Crew desktop app, using an enterprise code-signing service.
 
 ## Why identifiers are committed here
 
-Kiro Crew is distributed as a signed desktop application under a shared Apple
+Aj Crew is distributed as a signed desktop application under a shared Apple
 Developer identity. The bundle identifier and team ID are required by Apple's
 code signing infrastructure and are not secrets — they're embedded in every
 signed `.app` bundle users download.
@@ -150,7 +150,7 @@ signature does not create a separate trust boundary from that role.
 
 The same key, algorithm and canonical form sign the feature-videos release
 manifest (`scripts/feature-videos/`, schema
-`kirocrew-feature-videos-manifest-v1`). That tool loads `cli-manifest.py` by path
+`ajcrew-feature-videos-manifest-v1`). That tool loads `cli-manifest.py` by path
 and uses its canonical JSON, key-id derivation, runners and `kms_sign_digest`
 rather than carrying copies, so there is one signer to audit. The two schemas
 keep the two verifiers apart; the key grant is one grant, and a principal that
@@ -218,6 +218,6 @@ examples that cite it. Do not replace the KMS key in place: schema v1 pins
 one key. For rotation, first ship an installer revision that trusts both old and
 new public keys, then switch the publisher, and retire the old key only after the
 overlap window. The same key also verifies the gateway's feature-video manifest
-(`src/kiro_crew/platform/feed_trust.py`), so the overlap window has a third
+(`src/aj_crew/platform/feed_trust.py`), so the overlap window has a third
 party in it: the feature-video publisher re-signs every hosted manifest a
 shipped release still reads back before the old key is retired.

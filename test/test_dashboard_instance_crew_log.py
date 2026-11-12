@@ -14,11 +14,11 @@ import json
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.dashboard_templates import catalog, instance
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.dashboard_templates import catalog, instance
 
 SESSION = "acp-dash-1"
 SLOT = "member-fleet"
@@ -62,8 +62,8 @@ def _home(tmp_path, _floor_monkeypatch):
     that calls ``monkeypatch.undo()``, which would hand the rest of that test the real
     data home and the real registry.
     """
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     builtin = tmp_path / "builtin" / "fixture-board"
     builtin.mkdir(parents=True)
     (builtin / "manifest.json").write_text(json.dumps(_manifest()), encoding="utf-8")
@@ -84,7 +84,7 @@ def _open_log() -> None:
     kept would own the write lease it needs -- the pattern the ledger and projection
     suites' fixtures established.
     """
-    CrewLog.create(lg.KIND_SESSION, SESSION, owner="owner", agent="kirocrew", slot=SLOT)
+    CrewLog.create(lg.KIND_SESSION, SESSION, owner="owner", agent="ajcrew", slot=SLOT)
 
 
 def _entries() -> list[dict]:
@@ -172,7 +172,7 @@ def test_a_rebuild_reads_only_this_crewmates_entries():
 
 
 def test_a_change_with_the_crew_log_off_still_lands(monkeypatch):
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "0")
+    monkeypatch.setenv("AJCREW_CREW_LOG", "0")
     crew_log_emit.reset_caches()
     record = instance.adopt(SLUG, "fixture-board", session_id=SESSION)
     # The record is the FILE; the entry is history. So the emitter being off costs the

@@ -16,15 +16,15 @@ from dashboard_state_ws_helpers import (  # noqa: F401 -- fixtures are requested
     sync_event_loop,
 )
 
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state import DashboardState
 
 
 @pytest.mark.parametrize("phase", ["preparing", "global_failed", "member_failed"])
 def test_status_remains_available_during_scoped_memory_recovery(
     state: DashboardState, tmp_path, phase: str
 ) -> None:
-    from kiro_crew.learn import Lesson, LessonStore
-    from kiro_crew.memory_startup import MemoryStartup
+    from aj_crew.learn import Lesson, LessonStore
+    from aj_crew.memory_startup import MemoryStartup
 
     state.lessons = LessonStore(base_dir=tmp_path / "status-lessons")
     state.lessons.save(Lesson("2026-09-08", "Keep the accepted decision", "knowledge"))
@@ -433,7 +433,7 @@ class TestSlotEffectiveAgent:
         ``load()`` left behind, so a developer host with a real agent called
         "researcher" would answer differently from CI.
         """
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         monkeypatch.setattr(
             loader,
@@ -444,12 +444,12 @@ class TestSlotEffectiveAgent:
         monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS_READY", ready)
 
     def test_honored_alias_reports_nothing(self, monkeypatch) -> None:
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         self._pin(
             monkeypatch,
-            aliases={"kirocrew", "researcher"},
-            default_alias="kirocrew",
+            aliases={"ajcrew", "researcher"},
+            default_alias="ajcrew",
             materialized=set(),
         )
         slot = _ChatSlot("s1", agent="researcher")
@@ -460,52 +460,52 @@ class TestSlotEffectiveAgent:
 
     def test_materialized_kiro_agent_reports_nothing(self, monkeypatch) -> None:
         """An app agent lives in ~/.kiro/agents, never in config.agents."""
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         self._pin(
             monkeypatch,
-            aliases={"kirocrew"},
-            default_alias="kirocrew",
+            aliases={"ajcrew"},
+            default_alias="ajcrew",
             materialized={"mochi"},
         )
         slot = _ChatSlot("s1", agent="mochi")
         assert slot.to_dict()["effective_agent"] == ""
 
     def test_unresolvable_agent_names_the_fallback(self, monkeypatch) -> None:
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         self._pin(
             monkeypatch,
-            aliases={"kirocrew"},
-            default_alias="kirocrew",
+            aliases={"ajcrew"},
+            default_alias="ajcrew",
             materialized={"mochi"},
         )
         slot = _ChatSlot("s1", agent="deleted-app")
         d = slot.to_dict()
-        assert d["effective_agent"] == "kirocrew"
+        assert d["effective_agent"] == "ajcrew"
         # Still verbatim: the marker describes, it does not normalize.
         assert d["agent"] == "deleted-app"
 
     def test_blank_agent_reports_nothing(self, monkeypatch) -> None:
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         self._pin(
             monkeypatch,
-            aliases={"kirocrew"},
-            default_alias="kirocrew",
+            aliases={"ajcrew"},
+            default_alias="ajcrew",
             materialized=set(),
         )
         assert _ChatSlot("s1").to_dict()["effective_agent"] == ""
 
     def test_cold_materialized_snapshot_reports_nothing(self, monkeypatch) -> None:
         """The boot window. A cold snapshot cannot see app agents that DO exist."""
-        import kiro_crew.config.loader as loader
-        from kiro_crew.dashboard.state import _ChatSlot
+        import aj_crew.config.loader as loader
+        from aj_crew.dashboard.state import _ChatSlot
 
         self._pin(
             monkeypatch,
-            aliases={"kirocrew"},
-            default_alias="kirocrew",
+            aliases={"ajcrew"},
+            default_alias="ajcrew",
             materialized=set(),
         )
         monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS_READY", False)
@@ -514,7 +514,7 @@ class TestSlotEffectiveAgent:
 
     def test_cold_alias_snapshot_reports_nothing(self, monkeypatch) -> None:
         """No load() has published yet, so there is no fallback name to name."""
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         self._pin(
             monkeypatch,
@@ -528,26 +528,26 @@ class TestSlotEffectiveAgent:
 
     def test_agent_equal_to_the_fallback_reports_nothing(self, monkeypatch) -> None:
         """Nothing diverged: the name requested IS the one answering."""
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         self._pin(
             monkeypatch,
             aliases=set(),
-            default_alias="kirocrew",
+            default_alias="ajcrew",
             materialized=set(),
         )
-        assert loader.resolve_effective_agent("kirocrew") == ""
+        assert loader.resolve_effective_agent("ajcrew") == ""
 
     def test_project_declared_agent_reports_nothing(self, monkeypatch) -> None:
         """A project's own .kiro scope resolves the name; that is not divergence."""
-        import kiro_crew.agent_discovery as discovery
-        import kiro_crew.config.loader as loader
-        from kiro_crew.dashboard.state import _ChatSlot
+        import aj_crew.agent_discovery as discovery
+        import aj_crew.config.loader as loader
+        from aj_crew.dashboard.state import _ChatSlot
 
         self._pin(
             monkeypatch,
-            aliases={"kirocrew"},
-            default_alias="kirocrew",
+            aliases={"ajcrew"},
+            default_alias="ajcrew",
             materialized=set(),
         )
         monkeypatch.setattr(
@@ -561,18 +561,18 @@ class TestSlotEffectiveAgent:
         # Same pinning, a name the warm cache does NOT declare: now it diverges.
         other = _ChatSlot("s2", agent="gone")
         other.project = "/some/checkout"
-        assert other.to_dict()["effective_agent"] == "kirocrew"
+        assert other.to_dict()["effective_agent"] == "ajcrew"
         assert loader is not None
 
     def test_cold_project_cache_reports_nothing(self, monkeypatch) -> None:
         """An uncached project is not evidence of absence."""
-        import kiro_crew.agent_discovery as discovery
-        from kiro_crew.dashboard.state import _ChatSlot
+        import aj_crew.agent_discovery as discovery
+        from aj_crew.dashboard.state import _ChatSlot
 
         self._pin(
             monkeypatch,
-            aliases={"kirocrew"},
-            default_alias="kirocrew",
+            aliases={"ajcrew"},
+            default_alias="ajcrew",
             materialized=set(),
         )
         monkeypatch.setattr(discovery, "cached_project_agent_names", lambda _d: None)
@@ -587,14 +587,14 @@ class TestSlotEffectiveAgent:
         event loop for every slots frame, so reaching either one would be a
         per-frame stall — the kind the loop-stall watchdog blames on chat.
         """
-        import kiro_crew.agent_discovery as discovery
-        import kiro_crew.config.loader as loader
-        from kiro_crew.dashboard.state import _ChatSlot
+        import aj_crew.agent_discovery as discovery
+        import aj_crew.config.loader as loader
+        from aj_crew.dashboard.state import _ChatSlot
 
         self._pin(
             monkeypatch,
-            aliases={"kirocrew"},
-            default_alias="kirocrew",
+            aliases={"ajcrew"},
+            default_alias="ajcrew",
             materialized=set(),
         )
 
@@ -608,17 +608,17 @@ class TestSlotEffectiveAgent:
 
         slot = _ChatSlot("s1", agent="deleted-app")
         slot.project = "/some/checkout"
-        assert slot.to_dict()["effective_agent"] == "kirocrew"
+        assert slot.to_dict()["effective_agent"] == "ajcrew"
 
     def test_project_lookup_failure_reports_nothing(self, monkeypatch) -> None:
         """A broken cache read is "no evidence", never an exception into a frame."""
-        import kiro_crew.agent_discovery as discovery
-        from kiro_crew.dashboard.state import _ChatSlot
+        import aj_crew.agent_discovery as discovery
+        from aj_crew.dashboard.state import _ChatSlot
 
         self._pin(
             monkeypatch,
-            aliases={"kirocrew"},
-            default_alias="kirocrew",
+            aliases={"ajcrew"},
+            default_alias="ajcrew",
             materialized=set(),
         )
 
@@ -632,11 +632,11 @@ class TestSlotEffectiveAgent:
 
     def test_load_publishes_the_alias_snapshot(self, monkeypatch) -> None:
         """`load()` is the publisher, so the resolver never reads config.json."""
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         monkeypatch.setattr(loader, "_CONFIG_AGENT_ALIAS_SNAPSHOT", (frozenset(), "", False))
 
-        cfg = loader.KiroCrewConfig.load()
+        cfg = loader.AjCrewConfig.load()
         aliases, fallback_template, ready = loader.agent_alias_snapshot()
         assert ready is True
         assert aliases == frozenset(cfg.agents)
@@ -652,18 +652,18 @@ class TestSlotEffectiveAgent:
         """
         import dataclasses
 
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         self._pin(
             monkeypatch,
-            aliases={"kirocrew", "researcher"},
-            default_alias="kirocrew",
+            aliases={"ajcrew", "researcher"},
+            default_alias="ajcrew",
             materialized=set(),
         )
-        cfg = loader.KiroCrewConfig()
+        cfg = loader.AjCrewConfig()
         cfg = dataclasses.replace(
             cfg,
-            agents={"default": loader.KiroCrewAgentConfig(kiro_agent="kirocrew")},
+            agents={"default": loader.AjCrewAgentConfig(kiro_agent="ajcrew")},
             default_agent="default",
         )
         loader.publish_agent_alias_snapshot(cfg)
@@ -682,7 +682,7 @@ class TestSlotEffectiveAgent:
         store the session does not use."""
         import dataclasses
 
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         self._pin(
             monkeypatch,
@@ -691,13 +691,13 @@ class TestSlotEffectiveAgent:
             materialized=set(),
         )
         cfg = dataclasses.replace(
-            loader.KiroCrewConfig(),
+            loader.AjCrewConfig(),
             agents={
-                "default": loader.KiroCrewAgentConfig(kiro_agent="worker"),
-                "scribe": loader.KiroCrewAgentConfig(kiro_agent="scribe"),
+                "default": loader.AjCrewAgentConfig(kiro_agent="worker"),
+                "scribe": loader.AjCrewAgentConfig(kiro_agent="scribe"),
             },
             default_agent="scribe",
-            agent=dataclasses.replace(loader.KiroCrewConfig().agent, default_agent="atlas"),
+            agent=dataclasses.replace(loader.AjCrewConfig().agent, default_agent="atlas"),
         )
         loader.publish_agent_alias_snapshot(cfg)
         _aliases, fallback_template, _ = loader.agent_alias_snapshot()
@@ -716,11 +716,11 @@ class TestSlotEffectiveAgent:
         with a stale fallback name, and the fix for that would be a mutex acquired
         once per slot per frame on the event loop.
         """
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         monkeypatch.setattr(loader, "_CONFIG_AGENT_ALIAS_SNAPSHOT", (frozenset(), "", False))
         before = loader.agent_alias_snapshot()
-        loader.publish_agent_alias_snapshot(loader.KiroCrewConfig.load())
+        loader.publish_agent_alias_snapshot(loader.AjCrewConfig.load())
         after = loader.agent_alias_snapshot()
 
         assert isinstance(after, tuple) and len(after) == 3
@@ -734,7 +734,7 @@ class TestChatSlotStopState:
     """Tests for _ChatSlot._stop_state and _stopping property."""
 
     def test_stop_state_default_idle(self) -> None:
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         slot = _ChatSlot("s1")
         assert slot._stop_state == "idle"
@@ -743,7 +743,7 @@ class TestChatSlotStopState:
         assert slot._native_subagent_output == {}
 
     def test_stopping_property_reflects_stop_state(self) -> None:
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         slot = _ChatSlot("s1")
         slot._stop_state = "soft_pending"
@@ -754,7 +754,7 @@ class TestChatSlotStopState:
         assert slot._stopping is False
 
     def test_stopping_setter_compat(self) -> None:
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         slot = _ChatSlot("s1")
         slot._stopping = True
@@ -763,7 +763,7 @@ class TestChatSlotStopState:
         assert slot._stop_state == "idle"
 
     def test_to_dict_includes_stop_state(self) -> None:
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         slot = _ChatSlot("s1")
         d = slot.to_dict()
@@ -788,7 +788,7 @@ class TestSubagentProbeWiring:
         sweep runs on."""
         import inspect
 
-        from kiro_crew.dashboard.chat_utils import wire_session_subagent_probe
+        from aj_crew.dashboard.chat_utils import wire_session_subagent_probe
 
         wire_session_subagent_probe(state)
         state.sessions.set_subagent_probe.assert_called_once()
@@ -844,7 +844,7 @@ class TestSubagentProbeWiring:
         """start_dashboard AND start_api_server wire the probe after the state exists."""
         import inspect
 
-        from kiro_crew.dashboard import server
+        from aj_crew.dashboard import server
 
         for fn in (server.start_dashboard, server.start_api_server):
             src = inspect.getsource(fn)
@@ -895,15 +895,15 @@ class TestCompactCallbackWiring:
         cb = self._captured_callback(state)
 
         with patch(
-            "kiro_crew.dashboard.state.deliver_channel_compaction_notice",
+            "aj_crew.dashboard.state.deliver_channel_compaction_notice",
             new_callable=AsyncMock,
         ) as deliver:
             await cb("slack:1785370133.085469", 92.0, success=True)
-            await cb("discord:kirocrew:direct:u1", 93.0, success=False)
+            await cb("discord:ajcrew:direct:u1", 93.0, success=False)
 
         assert [c.args[1] for c in deliver.await_args_list] == [
             "slack:1785370133.085469",
-            "discord:kirocrew:direct:u1",
+            "discord:ajcrew:direct:u1",
         ]
         assert deliver.await_args_list[1].kwargs["success"] is False
         # The channel leg must not also write into an unrelated dashboard slot.
@@ -915,7 +915,7 @@ class TestCompactCallbackWiring:
         cb = self._captured_callback(state)
 
         with patch(
-            "kiro_crew.dashboard.state.deliver_channel_compaction_notice",
+            "aj_crew.dashboard.state.deliver_channel_compaction_notice",
             new_callable=AsyncMock,
             side_effect=RuntimeError("transport exploded"),
         ) as deliver:
@@ -963,13 +963,13 @@ class TestCompactCallbackWiring:
     @pytest.mark.asyncio
     async def test_an_idle_failure_claims_no_excerpt(self, state: DashboardState) -> None:
         """An idle compaction that failed or reported nothing kept the session as it was."""
-        from kiro_crew.dashboard.state_parts.session_events import (
+        from aj_crew.dashboard.state_parts.session_events import (
             _AUTO_COMPACT_FAILED_NOTICE,
             _AUTO_COMPACT_IDLE_FAILED_NOTICE,
             _AUTO_RECYCLE_NOTICE,
             _RESTART_MEMORY_TAIL,
         )
-        from kiro_crew.session_compaction import (
+        from aj_crew.session_compaction import (
             COMPACT_OUTCOME_COMPACTED_IDLE,
             COMPACT_OUTCOME_RECYCLED,
         )
@@ -1014,7 +1014,7 @@ class TestCompactCallbackWiring:
     @pytest.mark.asyncio
     async def test_an_idle_failure_keeps_the_context_reading(self, state: DashboardState) -> None:
         """A kept session's usage did not drop, so only real compactions reset the meter."""
-        from kiro_crew.session_compaction import (
+        from aj_crew.session_compaction import (
             COMPACT_OUTCOME_COMPACTED,
             COMPACT_OUTCOME_COMPACTED_IDLE,
         )
@@ -1055,7 +1055,7 @@ class TestCompactCallbackWiring:
     async def test_callback_broadcast_runs_even_if_append_fails(
         self, state: DashboardState, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         ws = MagicMock(closed=False)
         ws.send_str = AsyncMock()
@@ -1092,20 +1092,20 @@ class TestCompactCallbackWiring:
 
 def test_folder_breadcrumb_walks_full_ancestry(state):
     state._folders = [
-        {"id": "a", "name": "KiroCrew", "parent_id": ""},
+        {"id": "a", "name": "Aj Crew", "parent_id": ""},
         {"id": "b", "name": "Backend", "parent_id": "a"},
         {"id": "c", "name": "auth-refactor", "parent_id": "b"},
     ]
-    assert state.folder_breadcrumb("c") == "KiroCrew › Backend › auth-refactor"
+    assert state.folder_breadcrumb("c") == "Aj Crew › Backend › auth-refactor"
 
 
 def test_folder_breadcrumb_single_root(state):
-    state._folders = [{"id": "a", "name": "KiroCrew", "parent_id": ""}]
-    assert state.folder_breadcrumb("a") == "KiroCrew"
+    state._folders = [{"id": "a", "name": "Aj Crew", "parent_id": ""}]
+    assert state.folder_breadcrumb("a") == "Aj Crew"
 
 
 def test_folder_breadcrumb_empty_or_unknown_id(state):
-    state._folders = [{"id": "a", "name": "KiroCrew", "parent_id": ""}]
+    state._folders = [{"id": "a", "name": "Aj Crew", "parent_id": ""}]
     assert state.folder_breadcrumb("") == ""
     assert state.folder_breadcrumb("missing") == ""
 
@@ -1140,20 +1140,16 @@ class TestOwnerSourceStatusTransport:
         slot = state.get_or_create_slot("chat-1")
         slot.append("assistant", f"opened {source_url}", "msg")
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.source_providers._session_card_chips_snapshot",
+            "aj_crew.dashboard.handlers.source_providers._session_card_chips_snapshot",
             True,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.state._cached_check_status",
+            "aj_crew.dashboard.state._cached_check_status",
             lambda url: {"ci": "passed", "state": "OPEN"} if url == source_url else None,
         )
-        monkeypatch.setattr("kiro_crew.dashboard.state._repo_is_public", lambda url: True)
-        monkeypatch.setattr(
-            "kiro_crew.dashboard.state._audit_public_status_grant", lambda url: None
-        )
-        monkeypatch.setattr(
-            "kiro_crew.dashboard.state._audit_public_status_denied", lambda url: None
-        )
+        monkeypatch.setattr("aj_crew.dashboard.state._repo_is_public", lambda url: True)
+        monkeypatch.setattr("aj_crew.dashboard.state._audit_public_status_grant", lambda url: None)
+        monkeypatch.setattr("aj_crew.dashboard.state._audit_public_status_denied", lambda url: None)
         monkeypatch.setattr(state, "is_yolo_active", lambda: False)
         sent: list[tuple[object, dict]] = []
         monkeypatch.setattr(
@@ -1224,7 +1220,7 @@ class TestOwnerSourceStatusTransport:
         A pass per audience costs ~600 ms on the event loop for a real sidebar, read as
         ``loop_lag`` pressure. The derived views must equal a full per-audience pass.
         """
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         public_url = "https://github.com/acme/public/pull/1"
         private_url = "https://github.com/acme/private/pull/2"
@@ -1234,22 +1230,18 @@ class TestOwnerSourceStatusTransport:
         slot_b.append("assistant", f"opened {private_url} [OPTIONS: yes | no]", "msg")
         state.get_or_create_slot("chat-c")  # no links at all
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.source_providers._session_card_chips_snapshot",
+            "aj_crew.dashboard.handlers.source_providers._session_card_chips_snapshot",
             True,
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.state._cached_check_status",
+            "aj_crew.dashboard.state._cached_check_status",
             lambda url: {"ci": "passed", "state": "OPEN"},
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.state._repo_is_public", lambda url: url == public_url
+            "aj_crew.dashboard.state._repo_is_public", lambda url: url == public_url
         )
-        monkeypatch.setattr(
-            "kiro_crew.dashboard.state._audit_public_status_grant", lambda url: None
-        )
-        monkeypatch.setattr(
-            "kiro_crew.dashboard.state._audit_public_status_denied", lambda url: None
-        )
+        monkeypatch.setattr("aj_crew.dashboard.state._audit_public_status_grant", lambda url: None)
+        monkeypatch.setattr("aj_crew.dashboard.state._audit_public_status_denied", lambda url: None)
         monkeypatch.setattr(state, "is_yolo_active", lambda: False)
         monkeypatch.setattr(state, "_spawn_ws_send", lambda client, message: None)
 
@@ -1340,7 +1332,7 @@ class TestOwnerSourceStatusTransport:
         # The per-app filter must remove credential-backed chip status even when
         # the general list carries it (widened for dashboard users). Slot
         # metadata stays; ci/state/mergeable go.
-        from kiro_crew.dashboard.ws_event_scope import _strip_source_link_status
+        from aj_crew.dashboard.ws_event_scope import _strip_source_link_status
 
         slot = {
             "key": "chat-1",
@@ -1378,9 +1370,9 @@ class TestOwnerSourceStatusTransport:
     async def test_websocket_initial_status_and_refresh_are_owner_only(
         self, monkeypatch, claims, owner_request
     ) -> None:
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard import ws_event_scope
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard import ws_event_scope
+        from aj_crew.dashboard.handlers import source_providers
 
         # An app token only exists for an INSTALLED, enabled app, so that is the
         # world this test runs in. The connect path resolves enablement off-loop
@@ -1517,9 +1509,9 @@ class TestOwnerSourceStatusTransport:
         run the operator's credentials, so only the owner's connection may
         trigger them. The non-owner renders the owner-populated
         caches read-only."""
-        from kiro_crew.dashboard import ws as dashboard_ws
-        from kiro_crew.dashboard import ws_event_scope
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import ws as dashboard_ws
+        from aj_crew.dashboard import ws_event_scope
+        from aj_crew.dashboard.handlers import source_providers
 
         monkeypatch.setattr(ws_event_scope, "is_app_enabled", lambda _name: True)
         monkeypatch.setattr(ws_event_scope, "get_app_manifest", lambda _name: None)

@@ -1,14 +1,14 @@
 """The rule catalog facade keeps the patch seams the one module had.
 
-``kiro_crew.security.denied_rules`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over
+``aj_crew.security.denied_rules`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over
 the owners ``denied_rules_catalog`` and ``denied_rules_tables``; the pin resolvers, the
 exception surface, the matcher, the refusal producer and the environment tier stay in the facade
 itself. The moved code reads its names as plain module globals, so a patch reaches it only
 because the mirror writes the patch into every module holding the name. Two spellings reach the
-facade: a write on ``kiro_crew.security.denied_rules`` itself, and a write on the package
-``kiro_crew.security`` of a name its ``_EXPORTS`` table lists (each row naming
+facade: a write on ``aj_crew.security.denied_rules`` itself, and a write on the package
+``aj_crew.security`` of a name its ``_EXPORTS`` table lists (each row naming
 ``denied_rules``), which the package forwards here. Every other owner-defined name is reached
-through ``kiro_crew.security.denied_rules`` only.
+through ``aj_crew.security.denied_rules`` only.
 
 ``test/test_facade_mirror_guards.py`` holds every mirrored facade to the shared rules, and its
 corpus counts patches spelled through the facade's own name only. These tests pin what is
@@ -32,9 +32,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-import kiro_crew.security as security
-from kiro_crew import _facade_mirror
-from kiro_crew.security import denied_rules
+import aj_crew.security as security
+from aj_crew import _facade_mirror
+from aj_crew.security import denied_rules
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_denied_rules_facade")
 
@@ -49,8 +49,8 @@ SHARED_FACADE_CHECKS = (
     "reach_rule_can_fail",
 )
 
-FACADE = "kiro_crew.security.denied_rules"
-PACKAGE = "kiro_crew.security"
+FACADE = "aj_crew.security.denied_rules"
+PACKAGE = "aj_crew.security"
 LEAF = "denied_rules"
 SECURITY_DIR = Path(denied_rules.__file__).resolve().parent
 #: The owner modules, in the layer order ``_OWNERS`` must list them.
@@ -105,7 +105,7 @@ def _family_sources() -> dict[str, str]:
 
 def _test_tree_files() -> list[Path]:
     """Every file pytest collects tests or fixtures from: the root conftest, ``test/``,
-    and the test modules and conftests under ``src/kiro_crew/apps/builtins`` -- the same
+    and the test modules and conftests under ``src/aj_crew/apps/builtins`` -- the same
     walk as ``test_facade_mirror_guards._test_tree_files``."""
     root = source_corpus.repo_root()
     test_root = source_corpus.repo_root() / "test"
@@ -115,7 +115,7 @@ def _test_tree_files() -> list[Path]:
         name = path.name
         if rel == "conftest.py" or path.is_relative_to(test_root):
             out.append(path)
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and (
+        elif rel.startswith("src/aj_crew/apps/builtins/") and (
             "/tests/" in rel
             or name.startswith("test_")
             or name.endswith("_test.py")
@@ -133,7 +133,7 @@ def _module_aliases(tree: ast.Module) -> dict[str, str]:
             for alias in node.names:
                 if alias.name in (FACADE, PACKAGE) and alias.asname:
                     aliases[alias.asname] = alias.name
-        elif isinstance(node, ast.ImportFrom) and node.module in ("kiro_crew", PACKAGE):
+        elif isinstance(node, ast.ImportFrom) and node.module in ("aj_crew", PACKAGE):
             for alias in node.names:
                 dotted = f"{node.module}.{alias.name}"
                 if dotted in (FACADE, PACKAGE):
@@ -229,7 +229,7 @@ def _corpus_patched_names() -> dict[str, frozenset[str]]:
 #: Each spelling the patch scan must read, and each it must skip, keyed by case id.
 _SPELLING_CASES = {
     "alias-setattr": (
-        "from kiro_crew.security import denied_rules as gate\n"
+        "from aj_crew.security import denied_rules as gate\n"
         "def test(monkeypatch):\n"
         "    monkeypatch.setattr(gate, '_FLOOR_ENFORCED_RULE_IDS', None)\n",
         {FACADE: {"_FLOOR_ENFORCED_RULE_IDS"}},
@@ -237,26 +237,26 @@ _SPELLING_CASES = {
     "dotted-string": (
         "from unittest import mock\n"
         "def test():\n"
-        "    with mock.patch('kiro_crew.security.denied_rules._deny_matcher'):\n"
+        "    with mock.patch('aj_crew.security.denied_rules._deny_matcher'):\n"
         "        pass\n",
         {FACADE: {"_deny_matcher"}},
     ),
     "package": (
-        "import kiro_crew.security as security\n"
+        "import aj_crew.security as security\n"
         "def test(monkeypatch):\n"
         "    monkeypatch.setattr(security, 'pinned_builtin_command_ids', None)\n"
         "    monkeypatch.setattr(security, 'is_denied', None)\n",
         {PACKAGE: {"pinned_builtin_command_ids", "is_denied"}},
     ),
     "loop": (
-        "from kiro_crew.security import denied_rules\n"
+        "from aj_crew.security import denied_rules\n"
         "def test(monkeypatch):\n"
         "    for name in ('_FLOOR_ENFORCED_RULE_IDS', '_deny_matcher'):\n"
         "        monkeypatch.setattr(denied_rules, name, None)\n",
         {FACADE: {"_FLOOR_ENFORCED_RULE_IDS", "_deny_matcher"}},
     ),
     "owner-not-facade": (
-        "from kiro_crew.security import denied_rules_catalog\n"
+        "from aj_crew.security import denied_rules_catalog\n"
         "def test(monkeypatch):\n"
         "    monkeypatch.setattr(denied_rules_catalog, '_FLOOR_ENFORCED_RULE_IDS', None)\n",
         {},
@@ -345,7 +345,7 @@ def test_a_patch_of_every_scanned_function_reaches_every_holder_and_undoes(
 def test_a_patch_through_the_facade_reaches_the_owner_reading_the_name() -> None:
     """The one seam this file patches through the facade spelling: the floor id set that
     ``floor_enforced_builtin_command_ids`` returns lives in ``denied_rules_tables``, so a
-    write through ``kiro_crew.security.denied_rules`` must reach that owner's code. No other
+    write through ``aj_crew.security.denied_rules`` must reach that owner's code. No other
     test file patches through the facade spelling, so this is the executed proof for it."""
     stand_in = frozenset({"probe-rule-id"})
     original = denied_rules.floor_enforced_builtin_command_ids()
@@ -429,14 +429,14 @@ def _outside_imports() -> dict[str, tuple[str, str]]:
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.Import):
                 for alias in node.names:
-                    if alias.name.startswith("kiro_crew.") and alias.name not in owners:
+                    if alias.name.startswith("aj_crew.") and alias.name not in owners:
                         found.setdefault(alias.asname or alias.name, (alias.name, ""))
                 continue
             if not isinstance(node, ast.ImportFrom):
                 continue
             if node.level == 1:
                 home = f"{PACKAGE}.{node.module}" if node.module else PACKAGE
-            elif node.module and node.module.startswith("kiro_crew"):
+            elif node.module and node.module.startswith("aj_crew"):
                 home = node.module
             else:
                 continue
@@ -458,11 +458,11 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
             for stmt in node.body:
                 if isinstance(stmt, ast.Import):
                     for alias in stmt.names:
-                        if alias.name.startswith("kiro_crew."):
+                        if alias.name.startswith("aj_crew."):
                             out[alias.asname or alias.name] = (alias.name, "")
                 elif (
                     isinstance(stmt, ast.ImportFrom)
-                    and (stmt.module or "").startswith("kiro_crew")
+                    and (stmt.module or "").startswith("aj_crew")
                     and stmt.module not in owners
                 ):
                     for alias in stmt.names:
@@ -472,7 +472,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
     """A served name an owner imports from a project module outside the family is named
-    from its home module under ``TYPE_CHECKING``, so ``from kiro_crew.security.denied_rules
+    from its home module under ``TYPE_CHECKING``, so ``from aj_crew.security.denied_rules
     import <name>`` type-checks; exactly those names.
     None here: no owner imports a project module from outside the family."""
     served = set(_index().exports)

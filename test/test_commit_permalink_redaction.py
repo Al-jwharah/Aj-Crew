@@ -9,8 +9,8 @@ import string
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.security import redact, redact_credentials
-from kiro_crew.security import redaction as _redaction
+from aj_crew.security import redact, redact_credentials
+from aj_crew.security import redaction as _redaction
 
 # The canonical AWS documentation example secret key, never a live credential.
 KEY = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
@@ -128,9 +128,9 @@ def test_no_seeded_commit_fires(template: str) -> None:
                 f"{COMMIT}{KEY}",
                 f"{KEY}{COMMIT}",
                 f"{COMMIT.upper()}{KEY}",
-                f"https://github.com/kirodotdev/KiroCrew/blob/{KEY}",
-                f"https://github.com/kirodotdev/KiroCrew/blob/{COMMIT}/{KEY}",
-                f"https://github.com/kirodotdev/KiroCrew/blob/{COMMIT}/src/{KEY}/gateway.py",
+                f"https://github.com/Al-jwharah/Aj-Crew/blob/{KEY}",
+                f"https://github.com/Al-jwharah/Aj-Crew/blob/{COMMIT}/{KEY}",
+                f"https://github.com/Al-jwharah/Aj-Crew/blob/{COMMIT}/src/{KEY}/gateway.py",
             ],
         ),
         *named_cases(
@@ -166,8 +166,8 @@ def test_seeded_keys_glued_to_a_commit_are_redacted() -> None:
             continue
         for text in (
             f"{COMMIT}{key}",
-            f"https://github.com/kirodotdev/KiroCrew/blob/{COMMIT}/{key}",
-            f"https://github.com/kirodotdev/KiroCrew/blob/{key}",
+            f"https://github.com/Al-jwharah/Aj-Crew/blob/{COMMIT}/{key}",
+            f"https://github.com/Al-jwharah/Aj-Crew/blob/{key}",
             f"{key}{COMMIT}",
         ):
             assert key not in redact_credentials(text)[0], text
@@ -190,18 +190,18 @@ def test_a_standalone_key_holding_hex_digits_is_still_redacted(text: str) -> Non
         (HEAD_HEX_KEY, f"https://evil.example/collect/{HEAD_HEX_KEY}"),
         (HEAD_HEX_KEY, f"{COMMIT}/{HEAD_HEX_KEY}"),
         (HEAD_HEX_KEY, f"{COMMIT}{HEAD_HEX_KEY}"),
-        (HEAD_HEX_KEY, f"https://github.com/kirodotdev/KiroCrew/blob/{HEAD_HEX_KEY}"),
+        (HEAD_HEX_KEY, f"https://github.com/Al-jwharah/Aj-Crew/blob/{HEAD_HEX_KEY}"),
         (TAIL_HEX_KEY, f"{TAIL_HEX_KEY}{COMMIT}"),
         (SLASH_HEX_KEY, f"{SLASH_HEX_KEY}{COMMIT}"),
         (SLASH_HEX_KEY, f"{SLASH_HEX_KEY}{COMMIT[:28]}/README.md"),
         (LEAD_SLASH_KEY, f"{COMMIT[:28]}{LEAD_SLASH_KEY}"),
         (
             LEAD_SLASH_KEY,
-            f"https://github.com/kirodotdev/KiroCrew/blob/{COMMIT[:28]}{LEAD_SLASH_KEY}",
+            f"https://github.com/Al-jwharah/Aj-Crew/blob/{COMMIT[:28]}{LEAD_SLASH_KEY}",
         ),
         (
             HEX_HEAD_KEY,
-            f"https://github.com/kirodotdev/KiroCrew/blob/{COMMIT[:12]}{HEX_HEAD_KEY}",
+            f"https://github.com/Al-jwharah/Aj-Crew/blob/{COMMIT[:12]}{HEX_HEAD_KEY}",
         ),
     ],
 )

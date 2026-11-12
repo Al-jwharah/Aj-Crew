@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.secrets.vault — encrypted vault store."""
+"""Tests for aj_crew.secrets.vault — encrypted vault store."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.secrets.vault import SecretValue, SecretVault
+from aj_crew.secrets.vault import SecretValue, SecretVault
 
 
 @pytest.fixture
@@ -124,7 +124,7 @@ def test_secret_value_opacity() -> None:
 
 def test_denylist_coverage() -> None:
     """The .vault directory is in the agent denylist."""
-    from kiro_crew.security import _CREW_SECRET_LEAVES
+    from aj_crew.security import _CREW_SECRET_LEAVES
 
     assert ".vault" in _CREW_SECRET_LEAVES
 
@@ -199,7 +199,7 @@ def test_restrict_to_owner_called_on_read(tmp_path, monkeypatch):
 
     calls = []
     monkeypatch.setattr(
-        "kiro_crew.secrets.vault.restrict_to_owner",
+        "aj_crew.secrets.vault.restrict_to_owner",
         lambda path: calls.append(str(path)),
     )
     vault._get_or_create_key()
@@ -212,7 +212,7 @@ def test_restrict_to_owner_called_on_read(tmp_path, monkeypatch):
 # GPT 5.6 review flagged (vault.py:217): a prompt-injected agent running as the
 # same UID can `import SecretVault` / `open('.vault/...')` and read plaintext,
 # so "revert until .vault is hidden by every agent OS sandbox". This is a false
-# positive for the Kiro Crew agent path: `.vault` is registered as a keystone
+# positive for the Aj Crew agent path: `.vault` is registered as a keystone
 # leaf in `security._CREW_SECRET_LEAVES`, expanded into `_SENSITIVE_HOME_DIRS`,
 # and enforced by the verb-independent `is_sensitive_path` backstop that every
 # agent file-access surface (hooks.on_tool_call, validate_file_path, artifacts,
@@ -225,7 +225,7 @@ def test_restrict_to_owner_called_on_read(tmp_path, monkeypatch):
 
 def test_vault_dir_is_a_registered_keystone_leaf() -> None:
     """The `.vault` directory is a keystone leaf in security._CREW_SECRET_LEAVES."""
-    from kiro_crew import security
+    from aj_crew import security
 
     assert ".vault" in security._CREW_SECRET_LEAVES
 
@@ -235,14 +235,14 @@ def test_keystone_denies_agent_reads_of_the_vault(tmp_path, monkeypatch) -> None
 
     Covers the exact vectors GPT flagged: the AES key file, the ciphertext
     store, and a scripted open() of an arbitrary file under .vault. Anchor a
-    crew home via KIROCREW_HOME so the keystone-leaf expansion applies, then
+    crew home via AJCREW_HOME so the keystone-leaf expansion applies, then
     assert the enforced predicate returns True for each.
     """
-    from kiro_crew import security
+    from aj_crew import security
 
     crew_home = tmp_path / "crew"
     (crew_home / ".vault").mkdir(parents=True)
-    monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+    monkeypatch.setenv("AJCREW_HOME", str(crew_home))
 
     # The vault writes secrets.enc + .vault_key under <config_dir>/.vault.
     vault_dir = crew_home / ".vault"
@@ -264,11 +264,11 @@ def test_keystone_allows_a_non_vault_sibling(tmp_path, monkeypatch) -> None:
     Guards against the assertion above passing because is_sensitive_path()
     returns True for everything under the crew home.
     """
-    from kiro_crew import security
+    from aj_crew import security
 
     crew_home = tmp_path / "crew"
     (crew_home / ".vault").mkdir(parents=True)
-    monkeypatch.setenv("KIROCREW_HOME", str(crew_home))
+    monkeypatch.setenv("AJCREW_HOME", str(crew_home))
 
     assert not security.is_sensitive_path(str(crew_home / "notes" / "todo.txt"))
 
@@ -283,7 +283,7 @@ def test_vault_dir_is_hidden_by_the_os_sandbox() -> None:
     (macOS); the vault dir must be in every mode's list so the subprocess cannot
     read `.vault/.vault_key` and decrypt.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     for mode_list in (
         sandbox._STRICT_DIRS,
@@ -293,7 +293,7 @@ def test_vault_dir_is_hidden_by_the_os_sandbox() -> None:
         assert (
             ".kiro/crew/.vault" in mode_list
         ), "the vault dir must be OS-sandbox-hidden in every mode"
-        assert ".kirocrew/.vault" in mode_list, "the legacy vault dir path must also be hidden"
+        assert ".ajcrew/.vault" in mode_list, "the legacy vault dir path must also be hidden"
 
 
 # ── get_many: single-load batch read ──
@@ -553,7 +553,7 @@ async def test_a_revisioned_delete_removes_only_the_entry_that_write_stored(
     vault: SecretVault,
 ) -> None:
     """Undo of a saved secret must never delete a value saved over it since."""
-    from kiro_crew.secrets.vault import entry_revision
+    from aj_crew.secrets.vault import entry_revision
 
     first = await vault.set_with_revision("tok", "one")
     assert first == entry_revision(vault._load_entries()["tok"])

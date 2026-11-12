@@ -21,11 +21,11 @@ from pod_helpers import (  # noqa: F401 -- the autouse fixtures register by impo
     _systemd_backend,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.pod import cli as pod_cli
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod.config import PodConfig
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import platform_compat
+from aj_crew.pod import cli as pod_cli
+from aj_crew.pod import runtime as rt
+from aj_crew.pod.config import PodConfig
+from aj_crew.testing.clock import ManualClock
 
 
 class TestOrphanHomes:
@@ -34,7 +34,7 @@ class TestOrphanHomes:
     macOS, which is why the residue accumulated invisibly on Linux."""
 
     def _plane(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PodConfig:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         c = PodConfig.load()
         for n in ("orphan", "running"):
             (c.pod_root / n).mkdir(parents=True)
@@ -54,7 +54,7 @@ class TestOrphanHomes:
         pod_cli._ls(c, argparse.Namespace(json=False))
         out = capsys.readouterr().out
         assert "1 orphaned pod HOME(s)" in out
-        assert "kirocrew pod down orphan" in out
+        assert "ajcrew pod down orphan" in out
 
     def test_the_json_shape_stays_live_pods_only(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
@@ -137,8 +137,8 @@ class TestPrune:
     def _plane(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, orphans: tuple[str, ...]
     ) -> PodConfig:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
         c = PodConfig.load()
         for n in orphans:
             (c.pod_root / n).mkdir(parents=True)
@@ -509,7 +509,7 @@ class TestOrphanSymlinkSafety:
     def test_orphan_homes_never_lists_a_symlink(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         c = PodConfig.load()
         (c.pod_root / "live").mkdir(parents=True)
         (c.pod_root / "alias").symlink_to(c.pod_root / "live")
@@ -519,7 +519,7 @@ class TestOrphanSymlinkSafety:
     def test_cleanup_home_refuses_to_follow_a_symlink(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         c = PodConfig.load()
         victim = c.pod_root / "live"
         victim.mkdir(parents=True)
@@ -540,7 +540,7 @@ class TestOrphanSymlinkSafety:
         real = tmp_path / "real-pods"
         real.mkdir()
         (tmp_path / "pods").symlink_to(real)  # unresolved != resolved spelling
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         c = PodConfig.load()
         (c.pod_root / "demo").mkdir()
         seen: list[Path] = []
@@ -569,7 +569,7 @@ class TestOrphanSymlinkSafety:
         target existence would report a clean reclaim while the link remains
         as residue the orphan scan (which skips symlinks) can never surface
         again. The verification must be lexists on the entry itself."""
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         c = PodConfig.load()
         entry = c.pod_root / "swapped"
         entry.mkdir(parents=True)  # a real dir at pre-check time
@@ -596,7 +596,7 @@ class TestOrphanJunctionSafety:
 
     @staticmethod
     def _plane(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PodConfig:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         c = PodConfig.load()
         c.pod_root.mkdir(parents=True, exist_ok=True)
         return c

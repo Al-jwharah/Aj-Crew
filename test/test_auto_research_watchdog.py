@@ -16,22 +16,22 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from auto_research_helpers import isolate_fixture  # noqa: F401 - fixture
 
-from kiro_crew.apps.builtins.auto_research.handlers import (
+from aj_crew.apps.builtins.auto_research.handlers import (
     CampaignStatus,
     create_campaign,
     get_campaign,
     update_campaign_status,
 )
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.fixtures import one_pool_thread  # noqa: F401 (fixture)
-from kiro_crew.testing.wait import async_wait_until, await_until, default_timeout, finished
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.fixtures import one_pool_thread  # noqa: F401 (fixture)
+from aj_crew.testing.wait import async_wait_until, await_until, default_timeout, finished
 
 # --- Watchdog unresponsive grace ---
 
 
 class TestUnresponsiveDeadline:
     def test_generous_floor_and_scaling(self):
-        from kiro_crew.apps.builtins.auto_research.handlers import (
+        from aj_crew.apps.builtins.auto_research.handlers import (
             _FIRST_CYCLE_GRACE_SECS,
             _unresponsive_deadline,
         )
@@ -75,9 +75,9 @@ class TestWatchdogFailureStandDown:
     async def test_stand_down_settles_campaign_instead_of_reviving(
         self, _isolate: Path, tmp_path: Path, monkeypatch, reason_name: str
     ):
-        from kiro_crew import autonudge
-        from kiro_crew.apps.builtins.auto_research import handlers as h
-        from kiro_crew.autonudge import AutoNudgeService
+        from aj_crew import autonudge
+        from aj_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.autonudge import AutoNudgeService
 
         reason = getattr(autonudge, reason_name)
         svc = AutoNudgeService(base_dir=tmp_path / "autonudge")
@@ -115,8 +115,8 @@ class TestWatchdogFailureStandDown:
             svc.stop()
 
     def test_stand_down_with_done_marker_is_still_a_failure(self, _isolate: Path):
-        from kiro_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
-        from kiro_crew.autonudge import CONSECUTIVE_FAILURE_REASON
+        from aj_crew.apps.builtins.auto_research.handlers import _stalled_campaign_verdict
+        from aj_crew.autonudge import CONSECUTIVE_FAILURE_REASON
 
         cid = "a1b2c3d4"
         findings = _isolate / "research" / cid / "findings"
@@ -136,8 +136,8 @@ class TestWatchdogFailureStandDown:
     async def test_launch_clears_a_stand_down_record(self, monkeypatch, tmp_path):
         """A resumed run must not inherit the previous run's stand-down, which
         the watchdog would otherwise settle as this run's failure."""
-        from kiro_crew.apps.builtins.auto_research import handlers as h
-        from kiro_crew.autonudge import SESSION_START_FAILURE_REASON, AutoNudgeService
+        from aj_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.autonudge import SESSION_START_FAILURE_REASON, AutoNudgeService
 
         svc = AutoNudgeService(base_dir=tmp_path / "autonudge")
         await svc.start()
@@ -162,7 +162,7 @@ class TestWatchdogStopTombstone:
     @pytest.mark.asyncio
     async def test_terminal_status_persistence_runs_off_event_loop(self, monkeypatch):
         """SQLite/sidecar persistence cannot block the watchdog's event loop."""
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         monkeypatch.setattr(
             h,
@@ -204,8 +204,8 @@ class TestWatchdogStopTombstone:
     @pytest.mark.usefixtures("one_pool_thread")
     async def test_cancellation_waits_for_persisted_loop_removal(self, tmp_path, monkeypatch):
         """Shutdown cannot split terminal status from durable loop cleanup."""
-        from kiro_crew.apps.builtins.auto_research import handlers as h
-        from kiro_crew.autonudge import AutoNudgeService
+        from aj_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.autonudge import AutoNudgeService
 
         cid = "a1b2c3d4"
         svc = AutoNudgeService(base_dir=tmp_path)
@@ -270,8 +270,8 @@ class TestWatchdogStopTombstone:
         loop while settlement is still finishing its persistence work. Cleanup
         must not re-resolve the slot and remove that replacement.
         """
-        from kiro_crew.apps.builtins.auto_research import handlers as h
-        from kiro_crew.autonudge import AutoNudgeService
+        from aj_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.autonudge import AutoNudgeService
 
         cid = "a1b2c3d4"
         slot_key = f"research-{cid}"
@@ -321,8 +321,8 @@ class TestWatchdogStopTombstone:
     @pytest.mark.asyncio
     async def test_cancellation_propagates_after_status_write_failure(self, tmp_path, monkeypatch):
         """A failed status write cannot swallow watchdog shutdown."""
-        from kiro_crew.apps.builtins.auto_research import handlers as h
-        from kiro_crew.autonudge import AutoNudgeService
+        from aj_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.autonudge import AutoNudgeService
 
         cid = "a1b2c3d4"
         svc = AutoNudgeService(base_dir=tmp_path)
@@ -379,8 +379,8 @@ class TestWatchdogStopTombstone:
         inline settlement loop onto ``_settle_before_cancellation`` (or any
         later refactor of it) cannot silently drop the reporting path.
         """
-        from kiro_crew.apps.builtins.auto_research import handlers as h
-        from kiro_crew.autonudge import AutoNudgeService
+        from aj_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.autonudge import AutoNudgeService
 
         cid = "a1b2c3d4"
         svc = AutoNudgeService(base_dir=tmp_path)
@@ -437,8 +437,8 @@ class TestWatchdogStopTombstone:
         self, _isolate: Path, monkeypatch
     ):
         """A terminal SQLite commit cannot retain a restartable loop."""
-        from kiro_crew.apps.builtins.auto_research import handlers as h
-        from kiro_crew.autonudge import AutoNudgeService
+        from aj_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.autonudge import AutoNudgeService
 
         campaign = create_campaign(
             {
@@ -505,8 +505,8 @@ class TestWatchdogStopTombstone:
     @pytest.mark.asyncio
     async def test_transient_terminal_loop_removal_is_retried(self, _isolate: Path, monkeypatch):
         """A transient final store failure is retried to durable removal."""
-        from kiro_crew.apps.builtins.auto_research import handlers as h
-        from kiro_crew.autonudge import AutoNudgeService
+        from aj_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.autonudge import AutoNudgeService
 
         campaign = create_campaign(
             {
@@ -568,8 +568,8 @@ class TestWatchdogStopTombstone:
         self, _isolate: Path, monkeypatch
     ):
         """A terminal cleanup failure cannot leave restartable persisted work."""
-        from kiro_crew.apps.builtins.auto_research import handlers as h
-        from kiro_crew.autonudge import AutoNudgeService
+        from aj_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.autonudge import AutoNudgeService
 
         campaign = create_campaign(
             {
@@ -644,8 +644,8 @@ class TestWatchdogStopTombstone:
         self, _isolate: Path, monkeypatch
     ):
         """A resume gets one poll for launch to remove prior-run stop evidence."""
-        from kiro_crew.apps.builtins.auto_research import handlers as h
-        from kiro_crew.autonudge import AUTONUDGE_STOP_REASON
+        from aj_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.autonudge import AUTONUDGE_STOP_REASON
 
         campaign = create_campaign(
             {
@@ -690,8 +690,8 @@ class TestWatchdogStopTombstone:
     async def test_settles_on_first_safe_poll_without_rearming(self, _isolate: Path, monkeypatch):
         """A stop tombstone waits for the worker turn, then outranks expiry
         handling instead of being revived like an app-disable pause."""
-        from kiro_crew.apps.builtins.auto_research import handlers as h
-        from kiro_crew.autonudge import AUTONUDGE_STOP_REASON
+        from aj_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.autonudge import AUTONUDGE_STOP_REASON
 
         campaign = create_campaign(
             {
@@ -797,7 +797,7 @@ class TestWatchdogStopTombstone:
 
 class TestWatchdogFindingHelpers:
     def test_list_cycle_files_sorted_newest_last(self):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         camp = h.create_campaign(
             {
@@ -817,12 +817,12 @@ class TestWatchdogFindingHelpers:
         assert files[-1].name == "cycle_012.json"
 
     def test_list_cycle_files_invalid_id_empty(self):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         assert h._list_cycle_files("../../etc") == []
 
     def test_read_finding_file_redacts(self, tmp_path: Path):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         p = tmp_path / "cycle_001.json"
         p.write_text(json.dumps({"summary": "leaked AKIAIOSFODNN7EXAMPLE here"}))
@@ -830,7 +830,7 @@ class TestWatchdogFindingHelpers:
         assert "AKIAIOSFODNN7EXAMPLE" not in json.dumps(out)
 
     def test_read_finding_file_bad_json_returns_empty(self, tmp_path: Path):
-        from kiro_crew.apps.builtins.auto_research import handlers as h
+        from aj_crew.apps.builtins.auto_research import handlers as h
 
         p = tmp_path / "cycle_001.json"
         p.write_text("not json{{{")

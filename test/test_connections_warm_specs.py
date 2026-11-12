@@ -17,10 +17,10 @@ import connections_warm_helpers
 import pytest
 from connections_warm_helpers import _mimic_spec, _ours_shaped_spec_text, _provider
 
+from aj_crew import security
+from aj_crew.agent_files import AGENT_FILENAME
+from aj_crew.connections import tool_aliases, warm
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew import security
-from kiro_crew.agent_files import AGENT_FILENAME
-from kiro_crew.connections import tool_aliases, warm
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _agents_dir = connections_warm_helpers._agents_dir
@@ -109,16 +109,14 @@ def test_the_warm_sweep_refuses_a_cold_mint_spec_that_shares_the_prefix():
     """A cold spec for a server named ``warm-*`` matches the warm prefix. Deleting it
     would strand a user mid-consent, so the cold ``-<pid>-<8hex>`` shape is refused --
     including a MIXED-CASE alias, which only a shared character class catches."""
-    for cold in ("kirocrew-mint-warm-foo-4821-9ab3c1de", "kirocrew-mint-warm-Foo-4821-9ab3c1de"):
+    for cold in ("ajcrew-mint-warm-foo-4821-9ab3c1de", "ajcrew-mint-warm-Foo-4821-9ab3c1de"):
         assert warm._is_stale_warm_spec(cold, frozenset()) is False
 
 
 def test_the_warm_sweep_drops_a_warm_spec_absent_from_the_plan_and_keeps_the_rest():
-    assert warm._is_stale_warm_spec("kirocrew-mint-warm-notion", frozenset()) is True
+    assert warm._is_stale_warm_spec("ajcrew-mint-warm-notion", frozenset()) is True
     assert (
-        warm._is_stale_warm_spec(
-            "kirocrew-mint-warm-notion", frozenset({"kirocrew-mint-warm-notion"})
-        )
+        warm._is_stale_warm_spec("ajcrew-mint-warm-notion", frozenset({"ajcrew-mint-warm-notion"}))
         is False
     )
     assert warm._is_stale_warm_spec("some-user-agent", frozenset()) is False
@@ -126,7 +124,7 @@ def test_the_warm_sweep_drops_a_warm_spec_absent_from_the_plan_and_keeps_the_res
 
 # ── defect: the sweep trusted a NAME, so it deleted and overwrote files it never wrote ──
 #
-# Warm spec names are FIXED and predictable (``kirocrew-mint-warm-<alias>``), and they live in
+# Warm spec names are FIXED and predictable (``ajcrew-mint-warm-<alias>``), and they live in
 # the user's own agents directory alongside the agents they hand-write. Name shape alone made
 # every such path fair game: a user's agent spec sitting at one was unlinked by the sweep and
 # clobbered by the write. Ownership is now proved from the file's CONTENTS, and a path that
@@ -153,7 +151,7 @@ def test_private_generation_specs_are_not_offered_by_agent_discovery(
     monkeypatch: pytest.MonkeyPatch,
 ):
     """The picker refuses the sensitive run tree even when it is passed as a project."""
-    from kiro_crew import agent_discovery
+    from aj_crew import agent_discovery
 
     work_dir = warm._create_warm_generation_dir()
     private_agents = warm._warm_generation_agents_dir(work_dir)
@@ -676,7 +674,7 @@ def _foreign_spec(agents: Path, stem: str) -> tuple[Path, str]:
 def test_the_sweep_refuses_to_unlink_a_foreign_file_at_a_warm_spec_path(_agents_dir: Path):
     """RED before the ownership check: ``_is_stale_warm_spec`` matched the NAME, so the
     write-time sweep unlinked a user's own agent spec that happened to sit there."""
-    planted, body = _foreign_spec(_agents_dir, "kirocrew-mint-warm-notion")
+    planted, body = _foreign_spec(_agents_dir, "ajcrew-mint-warm-notion")
 
     warm._write_warm_mint_specs(warm._warm_spec_plan([]), _agents_dir)
 
@@ -707,7 +705,7 @@ def test_a_mimic_carrying_only_our_generic_defaults_survives_sweep_and_teardown(
 ):
     """RED before the sentinel: the same mimic at a path no plan wants was unlinked by both
     the write-time sweep and teardown."""
-    planted, body = _mimic_spec(_agents_dir, "kirocrew-mint-warm-notion")
+    planted, body = _mimic_spec(_agents_dir, "ajcrew-mint-warm-notion")
 
     warm._write_warm_mint_specs(warm._warm_spec_plan([]), _agents_dir)
     assert planted.is_file(), "the sweep deleted a mimic"
@@ -722,12 +720,12 @@ def test_the_judge_reads_a_mimic_as_foreign_and_our_own_writer_output_as_ours(
     _agents_dir: Path,
 ):
     """The predicate itself, so the discriminator is pinned independently of the callers."""
-    mimic, _ = _mimic_spec(_agents_dir, "kirocrew-mint-warm-mimic")
+    mimic, _ = _mimic_spec(_agents_dir, "ajcrew-mint-warm-mimic")
     assert warm._warm_spec_is_foreign(mimic) is True
 
-    ours = _agents_dir / "kirocrew-mint-warm-ours.json"
+    ours = _agents_dir / "ajcrew-mint-warm-ours.json"
     ours.write_text(
-        json.dumps(warm._warm_spec_body("kirocrew-mint-warm-ours", {}, "probe")),
+        json.dumps(warm._warm_spec_body("ajcrew-mint-warm-ours", {}, "probe")),
         encoding="utf-8",
     )
     assert warm._warm_spec_is_foreign(ours) is False
@@ -739,7 +737,7 @@ def test_a_dangling_symlink_at_the_spec_path_reads_as_foreign(_agents_dir: Path)
     the writer would replace the link (the sweep would unlink it) -- destroying a path
     occupant this module does not own. The occupied verdict keeps every write and unlink
     away from it."""
-    planted = _agents_dir / "kirocrew-mint-warm-notion.json"
+    planted = _agents_dir / "ajcrew-mint-warm-notion.json"
     planted.symlink_to(_agents_dir / "nowhere" / "target.json")
 
     assert warm._warm_spec_is_foreign(planted) is True
@@ -755,7 +753,7 @@ def test_a_junction_at_the_spec_path_reads_as_foreign(_agents_dir: Path):
     outside = _agents_dir / "outside"
     outside.mkdir()
     (outside / "keep.txt").write_text("not ours", encoding="utf-8")
-    planted = _agents_dir / "kirocrew-mint-warm-notion.json"
+    planted = _agents_dir / "ajcrew-mint-warm-notion.json"
     make_dir_link(planted, outside)
 
     assert warm._warm_spec_is_foreign(planted) is True
@@ -787,7 +785,7 @@ def test_the_write_refuses_to_clobber_a_foreign_file_at_a_planned_spec_path(_age
 
 def test_the_teardown_refuses_to_unlink_a_foreign_file_at_a_warm_spec_path(_agents_dir: Path):
     """RED before the ownership check: teardown swept the whole warm glob by name."""
-    planted, body = _foreign_spec(_agents_dir, "kirocrew-mint-warm-notion")
+    planted, body = _foreign_spec(_agents_dir, "ajcrew-mint-warm-notion")
 
     warm._remove_warm_mint_specs(_agents_dir)
 
@@ -797,9 +795,9 @@ def test_the_teardown_refuses_to_unlink_a_foreign_file_at_a_warm_spec_path(_agen
 
 def test_the_sweep_still_unlinks_a_stale_spec_a_warm_plan_did_write(_agents_dir: Path):
     """The refusal must not cost the sweep its job: our own leftovers still go."""
-    stale = _agents_dir / "kirocrew-mint-warm-gone.json"
+    stale = _agents_dir / "ajcrew-mint-warm-gone.json"
     stale.write_text(
-        json.dumps(warm._warm_spec_body("kirocrew-mint-warm-gone", {}, "stale")),
+        json.dumps(warm._warm_spec_body("ajcrew-mint-warm-gone", {}, "stale")),
         encoding="utf-8",
     )
 
@@ -835,7 +833,7 @@ def test_a_spec_this_module_wrote_is_rewritten_in_place(_agents_dir: Path):
 
 def test_an_unreadable_file_at_a_warm_spec_path_is_left_alone(_agents_dir: Path):
     """Fail closed: a path we cannot prove is ours is not ours. The cost is clutter."""
-    path = _agents_dir / "kirocrew-mint-warm-notion.json"
+    path = _agents_dir / "ajcrew-mint-warm-notion.json"
     path.write_text("{ this is not json", encoding="utf-8")
 
     warm._write_warm_mint_specs(warm._warm_spec_plan([]), _agents_dir)
@@ -867,12 +865,12 @@ def test_a_refusal_is_audited_rather_than_raised(monkeypatch: pytest.MonkeyPatch
 
 # ── the plan's own read of the user's spec goes through the hardened reader ──
 #
-# ``_warm_spec_plan`` read ``kirocrew.json`` with a raw ``_load_json``, which follows a
+# ``_warm_spec_plan`` read ``ajcrew.json`` with a raw ``_load_json``, which follows a
 # symlink and parses whatever it lands on -- so a link planted at the agent-spec path
 # pointed the planner at a file outside the agents dir, and that file's contents then
 # DECIDED the plan: a configured entry whose auth shape differs from the registry's vetoes
 # the provider (``_warm_mintable_entry``). No size cap, no sensitive-target refusal, no SEL
-# denial. The other ``kirocrew.json`` readers were migrated; this one was added after them.
+# denial. The other ``ajcrew.json`` readers were migrated; this one was added after them.
 
 
 @requires_symlinks
@@ -880,7 +878,7 @@ def test_a_sensitive_symlink_at_the_spec_path_never_reaches_the_plan(
     _agents_dir: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ):
     """RED before the migration: the linked file's veto excluded the provider."""
-    from kiro_crew import agent_discovery
+    from aj_crew import agent_discovery
 
     target = tmp_path / "protected.json"
     # A DIVERGENT auth shape, so being read is observable: it would veto the provider.
@@ -904,7 +902,7 @@ def test_a_refused_spec_plans_as_though_nothing_were_configured(
     _agents_dir: Path, monkeypatch: pytest.MonkeyPatch
 ):
     """Refusal degrades exactly like an absent file -- it never fails the planner."""
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     monkeypatch.setattr(hooks, "MAX_FILE_BYTES", 256)
     (_agents_dir / AGENT_FILENAME).write_text(
@@ -934,7 +932,7 @@ def test_a_sensitive_symlink_at_a_warm_spec_path_is_never_judged_ours(
     _agents_dir: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ):
     """RED before the migration: the link was followed, read as ours, and swept."""
-    from kiro_crew import agent_discovery
+    from aj_crew import agent_discovery
 
     target = tmp_path / "protected.json"
     stem = f"{warm._WARM_AGENT_PREFIX}notion"
@@ -958,7 +956,7 @@ def test_an_oversized_spec_at_a_warm_spec_path_is_never_judged_ours(
     _agents_dir: Path, monkeypatch: pytest.MonkeyPatch
 ):
     """The cap is consulted here too: past it, ours-shaped contents still read as foreign."""
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     monkeypatch.setattr(hooks, "MAX_FILE_BYTES", 256)
     stem = f"{warm._WARM_AGENT_PREFIX}notion"

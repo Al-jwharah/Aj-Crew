@@ -43,7 +43,7 @@ function isHttps(url: string): boolean {
   try { return new URL(url).protocol === 'https:' } catch { return false }
 }
 
-/** "Your Chrome", "Edge", "Kiro's browser (headless)": which browser the frame shows. */
+/** "Your Chrome", "Edge", "Aj's browser (headless)": which browser the frame shows. */
 export function browserLabel(kind: BrowserKind | null, headless: boolean): string {
   switch (kind) {
     case 'user_chrome': return i18nT('pages.chat.browserLiveCard.browser_user_chrome')

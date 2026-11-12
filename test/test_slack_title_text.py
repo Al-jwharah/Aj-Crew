@@ -2,7 +2,7 @@
 
 The session catalog titled a conversation with no title of its own from its first
 user message, cut to 80 characters, and a Slack message is stored as Slack sent
-it. The sidebar showed ``how is <https://github.com/kirodotdev/KiroCrew/issues/
+it. The sidebar showed ``how is <https://github.com/Al-jwharah/Aj-Crew/issues/
 21964|gi…`` and the cut-open form was persisted as the title, so it stayed after
 the message scrolled away. ``mrkdwn_title`` reads each construct, the catalog
 converts first and cuts second, and a stored title is read the same way on every
@@ -16,9 +16,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.history import ConversationLog
-from kiro_crew.messaging import sessions_view as sv
-from kiro_crew.mrkdwn_title import is_slack_session_key, slack_title_text
+from aj_crew.history import ConversationLog
+from aj_crew.messaging import sessions_view as sv
+from aj_crew.mrkdwn_title import is_slack_session_key, slack_title_text
 
 _GH = "https://github.com/kirodotdev/KiroCrew/issues/21964"
 #: Kyle's own message from the test workspace, and the title it was stored under.
@@ -98,8 +98,8 @@ class TestEachForm:
             # Cut inside a real label, and inside the URL itself.
             ("read <https://example.com/x|the design do", "read the design do…"),
             (
-                "help with this one <https://github.com/kirodotdev/KiroCrew/iss",
-                "help with this one github.com/kirodotdev/KiroCrew/…",
+                "help with this one <https://github.com/Al-jwharah/Aj-Crew/iss",
+                "help with this one github.com/Al-jwharah/Aj-Crew/…",
             ),
             ("ping <@U12", "ping @someone"),
             # Cut right after the bar: the URL is whole, the label never began.
@@ -110,11 +110,11 @@ class TestEachForm:
         assert slack_title_text(stored) == plain
 
     def test_plain_text_is_unchanged(self) -> None:
-        assert slack_title_text("Fix Kiro Crew issue 21964") == "Fix Kiro Crew issue 21964"
+        assert slack_title_text("Fix Aj Crew issue 21964") == "Fix Aj Crew issue 21964"
         assert slack_title_text("") == ""
 
     def test_slack_keys(self) -> None:
-        from kiro_crew.messaging.link import is_legacy_slack_key
+        from aj_crew.messaging.link import is_legacy_slack_key
 
         assert is_slack_session_key("slack_1792501715.706339")
         assert is_slack_session_key("slack:1792501715.706339")
@@ -127,8 +127,8 @@ class TestEachForm:
                 is_legacy_slack_key(key) or key.startswith(("slack:", "slack_"))
             )
         assert not is_slack_session_key("dashboard:chat-1")
-        assert not is_slack_session_key("telegram:kirocrew:dm:42")
-        assert not is_slack_session_key("unified:kirocrew")
+        assert not is_slack_session_key("telegram:ajcrew:dm:42")
+        assert not is_slack_session_key("unified:ajcrew")
 
 
 # ── Converting a converted title changes nothing ─────────────────────────────
@@ -200,7 +200,7 @@ def test_a_legacy_bare_ts_transcript_is_read_as_slack(tmp_path: Path) -> None:
 def test_restoring_a_slack_tab_reads_its_stored_title_plain() -> None:
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.slot_persistence.metadata_values import _rehydrate_slot_title
+    from aj_crew.dashboard.slot_persistence.metadata_values import _rehydrate_slot_title
 
     slack_tab = SimpleNamespace(key=_SLACK)
     _rehydrate_slot_title(slack_tab, _STORED, titled=True, metadata={})
@@ -211,7 +211,7 @@ def test_restoring_a_slack_tab_reads_its_stored_title_plain() -> None:
 
 
 def test_the_titlers_fallback_reads_a_slack_tabs_message_plain() -> None:
-    from kiro_crew.dashboard.chat_title import (
+    from aj_crew.dashboard.chat_title import (
         _fallback_title_from_messages,
         _is_low_signal_title,
     )
@@ -232,7 +232,7 @@ def test_the_titlers_fallback_reads_a_slack_tabs_message_plain() -> None:
 def test_the_titler_knows_a_slack_tab(key: str, slack: bool) -> None:
     from types import SimpleNamespace
 
-    from kiro_crew.mrkdwn_title import is_slack_slot
+    from aj_crew.mrkdwn_title import is_slack_slot
 
     assert is_slack_slot(SimpleNamespace(key=key)) is slack
 
@@ -318,7 +318,7 @@ def _stored(base: Path, title: object, origin: str | None) -> None:
 def test_a_renamed_slack_title_is_kept_as_typed(tmp_path: Path, origin: str) -> None:
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.slot_persistence.metadata_values import _rehydrate_slot_title
+    from aj_crew.dashboard.slot_persistence.metadata_values import _rehydrate_slot_title
 
     _stored(tmp_path, _TYPED, origin)
     assert _titles(tmp_path)[_SLACK] == _TYPED
@@ -417,8 +417,8 @@ def test_cut_labels_read_as_a_person_wrote_them(stored: str, plain: str) -> None
 
 
 def test_a_row_copied_from_a_slack_thread_titles_as_plain_text() -> None:
-    from kiro_crew.dashboard.chat_title import _fallback_title_from_messages
-    from kiro_crew.mrkdwn_title import SLACK_TEXT_META_KEY
+    from aj_crew.dashboard.chat_title import _fallback_title_from_messages
+    from aj_crew.mrkdwn_title import SLACK_TEXT_META_KEY
 
     copied = [{"role": "user", "content": _RAW, "meta": {SLACK_TEXT_META_KEY: True}}]
     assert _fallback_title_from_messages(copied) == "how is kirodotdev/KiroCrew#21964 looking"
@@ -427,8 +427,8 @@ def test_a_row_copied_from_a_slack_thread_titles_as_plain_text() -> None:
 def test_the_slack_text_mark_is_the_gateways_alone() -> None:
     # A client-supplied row meta cannot claim it (stripped like the other
     # host-written provenance keys).
-    from kiro_crew.dashboard.chat_handlers import RESERVED_ROW_META_KEYS
-    from kiro_crew.mrkdwn_title import SLACK_TEXT_META_KEY
+    from aj_crew.dashboard.chat_handlers import RESERVED_ROW_META_KEYS
+    from aj_crew.mrkdwn_title import SLACK_TEXT_META_KEY
 
     assert SLACK_TEXT_META_KEY in RESERVED_ROW_META_KEYS
 
@@ -439,10 +439,10 @@ async def test_link_to_dashboard_marks_the_copied_user_rows(
 ) -> None:
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard import chat_persistence
-    from kiro_crew.mrkdwn_title import SLACK_TEXT_META_KEY
-    from kiro_crew.slack.handler import _SLACK_TS_META
-    from kiro_crew.slack.interactions_options import _import_thread_to_slot
+    from aj_crew.dashboard import chat_persistence
+    from aj_crew.mrkdwn_title import SLACK_TEXT_META_KEY
+    from aj_crew.slack.handler import _SLACK_TS_META
+    from aj_crew.slack.interactions_options import _import_thread_to_slot
 
     monkeypatch.setattr(chat_persistence, "save_slot_off_loop", AsyncMock())
     slot = MagicMock(key="chat-7")

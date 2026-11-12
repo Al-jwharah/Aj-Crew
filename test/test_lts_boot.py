@@ -18,15 +18,15 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew import lts_boot
-from kiro_crew.dashboard import lts_gate_middleware as gate_mw
-from kiro_crew.kiro_prerequisite import PrerequisiteStatus, ProcessResult
-from kiro_crew.platform.context import PlatformCompositionError
+from aj_crew import lts_boot
+from aj_crew.dashboard import lts_gate_middleware as gate_mw
+from aj_crew.kiro_prerequisite import PrerequisiteStatus, ProcessResult
+from aj_crew.platform.context import PlatformCompositionError
 
 
 @pytest.fixture
 def lts(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 @pytest.fixture
@@ -67,7 +67,7 @@ class FakeService:
 def fake_service(monkeypatch: pytest.MonkeyPatch) -> type[FakeService]:
     FakeService.instances = []
     FakeService.status = PrerequisiteStatus(platform="linux", installed=True)
-    monkeypatch.setattr("kiro_crew.kiro_prerequisite.KiroPrerequisiteService", FakeService)
+    monkeypatch.setattr("aj_crew.kiro_prerequisite.KiroPrerequisiteService", FakeService)
     return FakeService
 
 
@@ -77,10 +77,10 @@ def _set(fake: type[FakeService], **fields: Any) -> None:
 
 @pytest.fixture
 def vault_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
-    from kiro_crew.auth.store import TokenStore
+    from aj_crew.auth.store import TokenStore
 
     store = TokenStore(tmp_path / "vault")
-    monkeypatch.setattr("kiro_crew.auth.bridge.default_token_store", lambda: store)
+    monkeypatch.setattr("aj_crew.auth.bridge.default_token_store", lambda: store)
     monkeypatch.delenv("KIRO_API_KEY", raising=False)
     return store
 
@@ -94,7 +94,7 @@ def empty_vault(vault_store: Any) -> None:
 def vault_signed_in(vault_store: Any) -> None:
     from datetime import datetime, timedelta, timezone
 
-    from kiro_crew.auth.store import KasToken
+    from aj_crew.auth.store import KasToken
 
     vault_store.save(
         KasToken(
@@ -159,7 +159,7 @@ async def test_no_sign_in_exits_with_no_companion_installed(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     # The login gate keys off the build's edition, not a companion.
-    monkeypatch.setattr("kiro_crew.platform.discovery.plugin_entry_points", lambda: [])
+    monkeypatch.setattr("aj_crew.platform.discovery.plugin_entry_points", lambda: [])
     with pytest.raises(SystemExit) as exc:
         await lts_boot.require_kiro_login()
     assert exc.value.code == lts_boot.EXIT_CODE
@@ -174,7 +174,7 @@ async def test_no_sign_in_exits_with_no_companion_installed(
         ("unreachable", "can reach the governance service"),
         ("refused", "as an account of your organisation"),
         ("not_eligible", "Identity Center"),
-        ("account_changed", "changed while Kiro Crew was running"),
+        ("account_changed", "changed while Aj Crew was running"),
         ("bad_rules", "Ask your administrator"),
     ],
 )
@@ -185,7 +185,7 @@ def test_a_failed_policy_names_the_fix_for_its_cause(
     cause: str,
     needle: str,
 ) -> None:
-    from kiro_crew.platform import enterprise_policy_fetch as epf
+    from aj_crew.platform import enterprise_policy_fetch as epf
 
     monkeypatch.setattr(epf, "_last_failure", (cause, "the recorded failure"))
     with pytest.raises(SystemExit):
@@ -200,7 +200,7 @@ def test_an_earlier_failures_cause_is_not_reused(
 ) -> None:
     # A fetch that failed as unreachable and was recovered by the cache must not lend
     # its fix sentence to a later, unrelated composition failure.
-    from kiro_crew.platform import enterprise_policy_fetch as epf
+    from aj_crew.platform import enterprise_policy_fetch as epf
 
     monkeypatch.setattr(epf, "_last_failure", ("unreachable", "could not be reached"))
     with pytest.raises(SystemExit):
@@ -213,7 +213,7 @@ def test_an_earlier_failures_cause_is_not_reused(
 def _real_service(tmp_path: Path, whoami: ProcessResult) -> tuple[Any, list[list[str]]]:
     from kiro_prerequisite_helpers import _make_executable, _no_audit
 
-    from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+    from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
     executable = tmp_path / ".local" / "bin" / "kiro-cli"
     _make_executable(executable)
@@ -261,7 +261,7 @@ async def test_a_whoami_timeout_carries_its_failure(tmp_path: Path) -> None:
 @pytest.mark.asyncio
 async def test_oss_checks_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "kiro_crew.kiro_prerequisite.KiroPrerequisiteService",
+        "aj_crew.kiro_prerequisite.KiroPrerequisiteService",
         MagicMock(side_effect=AssertionError("oss must not probe at boot")),
     )
     assert await lts_boot.require_kiro_login() is None
@@ -305,10 +305,10 @@ def test_gate_refuses_to_install_without_a_login(lts: None) -> None:
 
 
 def _bare_orchestrator(monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> Any:
-    from kiro_crew import session
-    from kiro_crew.metrics import sessions as session_metrics
-    from kiro_crew.slack import gateway
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew import session
+    from aj_crew.metrics import sessions as session_metrics
+    from aj_crew.slack import gateway
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     orch = GatewayOrchestrator.__new__(GatewayOrchestrator)
     orch._background_tasks = set()
@@ -361,12 +361,12 @@ async def test_oss_gateway_boots_on_without_a_login_check(
         pass
 
     monkeypatch.setattr(
-        "kiro_crew.kiro_prerequisite.KiroPrerequisiteService",
+        "aj_crew.kiro_prerequisite.KiroPrerequisiteService",
         MagicMock(side_effect=AssertionError("oss must not probe at boot")),
     )
     orch = _bare_orchestrator(monkeypatch, tmp_path)
     monkeypatch.setattr(orch, "_init_services", AsyncMock(side_effect=ReachedServices))
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     monkeypatch.setattr(gateway.cautious_boot, "initialize", AsyncMock())
     with pytest.raises(ReachedServices):
@@ -385,9 +385,9 @@ async def test_api_server_without_a_login_exits_before_the_bind(
 ) -> None:
     # A caller that hands in no verified service gets the same check, still
     # before the TCP site starts.
-    import kiro_crew.config.loader as _loader
-    import kiro_crew.dashboard.server as _srv
-    import kiro_crew.dashboard.state as _st
+    import aj_crew.config.loader as _loader
+    import aj_crew.dashboard.server as _srv
+    import aj_crew.dashboard.state as _st
 
     monkeypatch.setattr(_st, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(_srv, "data_home", lambda: tmp_path)
@@ -395,7 +395,7 @@ async def test_api_server_without_a_login_exits_before_the_bind(
     site_start = AsyncMock()
     monkeypatch.setattr(web.TCPSite, "start", site_start)
 
-    from kiro_crew.dashboard.server import start_api_server
+    from aj_crew.dashboard.server import start_api_server
 
     with pytest.raises(SystemExit) as exc:
         await start_api_server(sessions=MagicMock(), crons=MagicMock(), lessons=MagicMock(), port=0)
@@ -414,7 +414,7 @@ def test_failed_policy_exits_with_the_fix(lts: None, capsys: pytest.CaptureFixtu
     assert exc.value.code == lts_boot.EXIT_CODE
     err = capsys.readouterr().err
     assert "governance rules" in err and "central policy unreachable" in err
-    assert "start Kiro Crew again" in err
+    assert "start Aj Crew again" in err
 
 
 def test_oss_policy_failure_is_left_to_the_caller(capsys: pytest.CaptureFixture[str]) -> None:
@@ -438,7 +438,7 @@ async def test_run_gateway_with_a_failed_policy_exits_before_the_orchestrator(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     # run_gateway runs on the facade's globals, so the patch surface is the facade.
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     def failed_policy(_cfg: Any) -> None:
         raise PlatformCompositionError("central policy unreachable")
@@ -462,16 +462,16 @@ def test_cli_with_a_failed_policy_exits_before_the_gateway(
     tcp_listens: list[Any],
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from kiro_crew import cli, cli_server
+    from aj_crew import cli, cli_server
 
     def failed_policy(_cfg: Any) -> None:
         raise PlatformCompositionError("central policy unreachable")
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(cli, "boot_platform", failed_policy)
     # Signed in, so the failure is the rules, not the sign-in: it exits as before
     # (the signed-out start is test_lts_signin_gateway.py).
-    monkeypatch.setattr("kiro_crew.lts_signin_gateway.signed_in", lambda: True)
+    monkeypatch.setattr("aj_crew.lts_signin_gateway.signed_in", lambda: True)
     monkeypatch.setattr(cli, "maybe_reexec", lambda _argv: None)
     # Process-wide side effects of a real gateway start that this test skips.
     monkeypatch.setattr(
@@ -481,7 +481,7 @@ def test_cli_with_a_failed_policy_exits_before_the_gateway(
     monkeypatch.setattr(
         cli_server, "_gateway", MagicMock(side_effect=AssertionError("must not start"))
     )
-    monkeypatch.setattr(cli.sys, "argv", ["kirocrew", "gateway", "--test-mode", "--no-open"])
+    monkeypatch.setattr(cli.sys, "argv", ["ajcrew", "gateway", "--test-mode", "--no-open"])
     with pytest.raises(SystemExit) as exc:
         cli.main()
     assert exc.value.code == lts_boot.EXIT_CODE
@@ -491,7 +491,7 @@ def test_cli_with_a_failed_policy_exits_before_the_gateway(
 
 @pytest.mark.asyncio
 async def test_a_clear_signed_out_whoami_reads_as_no_sign_in(tmp_path: Path) -> None:
-    from kiro_crew.kiro_prerequisite import _WHOAMI_SIGNED_OUT_MARKER
+    from aj_crew.kiro_prerequisite import _WHOAMI_SIGNED_OUT_MARKER
 
     signed_out = ProcessResult(ok=False, returncode=1, output=_WHOAMI_SIGNED_OUT_MARKER)
     service, _calls = _real_service(tmp_path, signed_out)

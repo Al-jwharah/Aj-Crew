@@ -15,9 +15,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.constants import CHAT_TURN_TIMEOUT
-from kiro_crew.dashboard import turn_dispatch as td
-from kiro_crew.testing.wait import await_until
+from aj_crew.constants import CHAT_TURN_TIMEOUT
+from aj_crew.dashboard import turn_dispatch as td
+from aj_crew.testing.wait import await_until
 
 
 def _slot() -> MagicMock:
@@ -35,7 +35,7 @@ def _state() -> MagicMock:
 def _patch_configured_ceiling(monkeypatch, value: object, *, acp: float = 7200.0) -> None:
     """Point ``chat_turn_timeout_secs`` at a synthetic config + ACP ceiling.
 
-    ``KiroCrewConfig`` is imported at module scope, so the module attribute is
+    ``AjCrewConfig`` is imported at module scope, so the module attribute is
     what the code under test resolves. Passing ``value=None`` simulates config
     being unavailable entirely.
     """
@@ -47,7 +47,7 @@ def _patch_configured_ceiling(monkeypatch, value: object, *, acp: float = 7200.0
         cfg = MagicMock()
         cfg.agent.chat_turn_timeout_secs = value
         holder.load.return_value = cfg
-    monkeypatch.setattr(td, "KiroCrewConfig", holder)
+    monkeypatch.setattr(td, "AjCrewConfig", holder)
 
 
 class TestBoundedIntCoercion:
@@ -62,7 +62,7 @@ class TestBoundedIntCoercion:
     """
 
     def test_numeric_string_below_the_floor_is_clamped(self) -> None:
-        from kiro_crew.config.loader import (
+        from aj_crew.config.loader import (
             CHAT_TURN_TIMEOUT_MAX,
             CHAT_TURN_TIMEOUT_MIN,
             _safe_int,
@@ -74,7 +74,7 @@ class TestBoundedIntCoercion:
         )
 
     def test_numeric_string_above_the_ceiling_is_clamped(self) -> None:
-        from kiro_crew.config.loader import (
+        from aj_crew.config.loader import (
             CHAT_TURN_TIMEOUT_MAX,
             CHAT_TURN_TIMEOUT_MIN,
             _safe_int,
@@ -86,7 +86,7 @@ class TestBoundedIntCoercion:
         )
 
     def test_integral_float_is_clamped_too(self) -> None:
-        from kiro_crew.config.loader import (
+        from aj_crew.config.loader import (
             LOOP_STALL_EXIT_AFTER_MAX,
             LOOP_STALL_EXIT_AFTER_MIN,
             _safe_int,
@@ -98,7 +98,7 @@ class TestBoundedIntCoercion:
         )
 
     def test_in_range_value_is_untouched(self) -> None:
-        from kiro_crew.config.loader import (
+        from aj_crew.config.loader import (
             CHAT_TURN_TIMEOUT_MAX,
             CHAT_TURN_TIMEOUT_MIN,
             _safe_int,
@@ -108,7 +108,7 @@ class TestBoundedIntCoercion:
 
     def test_callers_without_bounds_are_unaffected(self) -> None:
         """The clamp is opt-in; the dozens of existing call sites must not shift."""
-        from kiro_crew.config.loader import _safe_int
+        from aj_crew.config.loader import _safe_int
 
         assert _safe_int("1", 7200) == 1
         assert _safe_int("nonsense", 42) == 42
@@ -320,9 +320,9 @@ class TestTimeoutCard:
         import json
         from pathlib import Path
 
-        import kiro_crew
+        import aj_crew
 
-        registry = Path(kiro_crew.__file__).parent / "docs" / "settings-registry.generated.json"
+        registry = Path(aj_crew.__file__).parent / "docs" / "settings-registry.generated.json"
         rows = json.loads(registry.read_text(encoding="utf-8"))["settings"]
         row = next(r for r in rows if r.get("configKey") == "agent.chat_turn_timeout_secs")
         assert row["label"].startswith(td.TURN_TIME_LIMIT_SETTING)

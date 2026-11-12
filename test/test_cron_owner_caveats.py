@@ -12,8 +12,8 @@ import uuid
 
 import pytest
 
-from kiro_crew.cron import CronService, cron_job_id_from_session_key, cron_session_key_is_stable
-from kiro_crew.mcp_cron import (
+from aj_crew.cron import CronService, cron_job_id_from_session_key, cron_session_key_is_stable
+from aj_crew.mcp_cron import (
     _SCOPED_EMPTY,
     _call_tool_inner,
     _ephemeral_authority_caveat,
@@ -29,8 +29,8 @@ def _unique_name() -> str:
 @pytest.fixture(autouse=True)
 def _isolate_cron_store(monkeypatch, tmp_path):
     """Route all CronService() instances to tmp_path for test isolation."""
-    monkeypatch.setattr("kiro_crew.cron._DEFAULT_DIR", tmp_path)
-    monkeypatch.setattr("kiro_crew.mcp_cron.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.cron._DEFAULT_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.mcp_cron.config_dir", lambda: tmp_path)
 
 
 class TestSessionKeyStabilityPredicate:
@@ -88,7 +88,7 @@ class TestOwnerUnusableCaveat:
         assert "sub-agent's conversation" in out
         # The whole point is that the loss is immediate, not deferred to reaping.
         assert "starting now" in out
-        assert "kirocrew cron adopt abc12345" in out
+        assert "ajcrew cron adopt abc12345" in out
 
     def test_the_subagent_caveat_tells_the_user_rather_than_the_model_to_adopt(self):
         """``self-protection-cron-adopt`` denies the command to the agent.
@@ -107,7 +107,7 @@ class TestOwnerUnusableCaveat:
         out = _owner_unusable_caveat(svc, f"cron:{caller.id}:run5678", "abc12345")
         assert "never match again" in out
         assert "Tell the user" in out
-        assert "kirocrew cron adopt abc12345" in out
+        assert "ajcrew cron adopt abc12345" in out
 
     def test_a_multi_agent_cron_caller_is_not_warned(self):
         """The false positive GPT flagged: 2 colons, but a DURABLE per-agent key."""
@@ -180,7 +180,7 @@ class TestEphemeralAuthorityCaveat:
     def test_a_command_or_script_job_is_never_warned(self, persistent):
         """The flag cannot produce the bad state for these, so the warning is noise.
 
-        A script cron is launched with ``KIROCREW_SESSION_KEY=cron:<job_id>``
+        A script cron is launched with ``AJCREW_SESSION_KEY=cron:<job_id>``
         unconditionally and a command cron issues no MCP call at all.
         """
         assert (
@@ -195,8 +195,8 @@ class TestCronAddSurfacesTheCaveat:
     """End to end through the tool, including that it is NOT a refusal."""
 
     def test_a_subagent_still_gets_its_job_and_also_gets_told(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "subagent:conv-42")
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "subagent:conv-42")
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = _unique_name()
 
         result = _call_tool_inner("cron_add", {"name": name, "message": "hi", "every": 120})
@@ -209,11 +209,11 @@ class TestCronAddSurfacesTheCaveat:
         assert len(jobs) == 1
         assert jobs[0].session_key == "subagent:conv-42"
         # The caveat names the real id, so the fix is copy-pasteable.
-        assert f"kirocrew cron adopt {jobs[0].id}" in result
+        assert f"ajcrew cron adopt {jobs[0].id}" in result
 
     def test_an_ephemeral_agent_job_is_flagged_at_creation(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:chat-9")
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:chat-9")
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = _unique_name()
 
         result = _call_tool_inner(
@@ -226,8 +226,8 @@ class TestCronAddSurfacesTheCaveat:
 
     def test_the_ordinary_case_stays_exactly_as_it_was(self, monkeypatch):
         """A chat tab creating a default job gets no extra sentence at all."""
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:chat-9")
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:chat-9")
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = _unique_name()
 
         result = _call_tool_inner("cron_add", {"name": name, "message": "hi", "every": 120})
@@ -237,8 +237,8 @@ class TestCronAddSurfacesTheCaveat:
 
     def test_both_caveats_can_appear_together(self, monkeypatch):
         """A sub-agent scheduling an ephemeral agent job earns both, not one."""
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "subagent:conv-42")
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "subagent:conv-42")
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = _unique_name()
 
         result = _call_tool_inner(
@@ -254,8 +254,8 @@ class TestCronUpdateSurfacesTheCaveat:
     """The sibling mutation site: the flag is writable here too."""
 
     def test_flipping_persistence_off_via_update_is_flagged(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:chat-9")
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:chat-9")
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = _unique_name()
         _call_tool_inner("cron_add", {"name": name, "message": "hi", "every": 120})
         job_id = [j for j in CronService().list_jobs() if j.name == name][0].id
@@ -266,8 +266,8 @@ class TestCronUpdateSurfacesTheCaveat:
         assert "persistent_session is false" in result
 
     def test_an_ordinary_update_stays_quiet(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:chat-9")
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:chat-9")
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         name = _unique_name()
         _call_tool_inner("cron_add", {"name": name, "message": "hi", "every": 120})
         job_id = [j for j in CronService().list_jobs() if j.name == name][0].id
@@ -285,7 +285,7 @@ class TestRefusalsNameTheWayBack:
         assert "job not found" in out.lower()
         assert out.startswith("Error:")
         assert "do not report it as proof the job is gone" in out
-        assert "kirocrew cron adopt abc12345" in out
+        assert "ajcrew cron adopt abc12345" in out
 
     def test_not_found_asks_the_user_to_adopt(self):
         assert "ask the user to run" in _not_found("abc12345")
@@ -304,7 +304,7 @@ class TestRefusalsNameTheWayBack:
     def test_scoped_empty_denies_being_an_empty_registry(self):
         assert "NOT an empty registry" in _SCOPED_EMPTY
         assert "do not report that no cron jobs exist" in _SCOPED_EMPTY
-        assert "kirocrew cron adopt" in _SCOPED_EMPTY
+        assert "ajcrew cron adopt" in _SCOPED_EMPTY
 
     def test_scoped_empty_asks_the_user_to_adopt(self):
         assert "ask the user to run" in _SCOPED_EMPTY

@@ -42,8 +42,8 @@ const now = Date.now() / 1000
 const REPLY_B = 'Option B collapses the sidebar under 900px and keeps the composer full width.'
 
 const slots = [
-  { key: 'pane-a', title: 'Design notes', running: false, last_message: 'Working through phase one…', messages: 2, agent: 'kirocrew', memory_mode: 'persistent', modified: Math.floor(now) },
-  { key: 'pane-b', title: 'Release checklist', running: false, last_message: 'Summarized the layout options.', messages: 2, agent: 'kirocrew', memory_mode: 'persistent', modified: Math.floor(now) - 60 },
+  { key: 'pane-a', title: 'Design notes', running: false, last_message: 'Working through phase one…', messages: 2, agent: 'ajcrew', memory_mode: 'persistent', modified: Math.floor(now) },
+  { key: 'pane-b', title: 'Release checklist', running: false, last_message: 'Summarized the layout options.', messages: 2, agent: 'ajcrew', memory_mode: 'persistent', modified: Math.floor(now) - 60 },
 ]
 
 const detailA = {

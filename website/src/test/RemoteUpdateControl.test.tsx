@@ -248,7 +248,7 @@ describe('RemoteUpdateControl', () => {
     })
     renderWithProviders(<RemoteUpdateControl instanceId="old" name="Old box" />)
     expect(await screen.findByText(/^Old box ran its update, but its restart failed: systemd refused$/)).toBeInTheDocument()
-    expect(screen.getByText(/Old box keeps running the version it had until it restarts\. Run kirocrew restart on that crew/)).toBeInTheDocument()
+    expect(screen.getByText(/Old box keeps running the version it had until it restarts\. Run ajcrew restart on that crew/)).toBeInTheDocument()
     // Exit 0 from the update does not prove an install, so no message claims one.
     expect(screen.queryByText(/new version is installed|old version/i)).toBeNull()
     expect(screen.queryByText(/for example its network or sign-in/)).toBeNull()

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Command Bar is a builtin App Store app (`kiro_crew/apps/builtins/command_bar/`) that replaces
+Command Bar is a builtin App Store app (`aj_crew/apps/builtins/command_bar/`) that replaces
 the dashboard's quick-search surface with a launcher: the reader types a command rather than a
 query. It is the first app to ship with **no backend at all** — no subprocess, no port, no
 proxy, no routes. Its whole surface is a code-split React chunk in the dashboard bundle, so it
@@ -100,7 +100,7 @@ the role — otherwise the row cannot explain itself, and typing `qa` surfaced a
 "reviewer" with no highlight anywhere that read as a wrong result. That is the answer
 `foldersProvider` already gives when an ancestry path is why a folder surfaced, with one
 difference that matters: the identity is GLOSSED ("also called qa-bot"), because a bare second
-name under a different title reads as a possible second Bot, where `kirocrew › oss`
+name under a different title reads as a possible second Bot, where `ajcrew › oss`
 self-evidently reads as a path. The highlight offsets are recomputed against the glossed
 string, since the gloss shifts every position. The description is rendered on every other row
 and deliberately never matched — that would make this a content search over prose, and the row

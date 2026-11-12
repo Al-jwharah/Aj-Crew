@@ -22,9 +22,9 @@ from pod_helpers import (  # noqa: F401 -- the fixtures register by import
     requires_posix_pod_lifecycle,
 )
 
-from kiro_crew.pod import cli as pod_cli
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod.config import PodConfig
+from aj_crew.pod import cli as pod_cli
+from aj_crew.pod import runtime as rt
+from aj_crew.pod.config import PodConfig
 
 
 class TestAuditEvents:
@@ -173,9 +173,9 @@ class TestUpVerb:
         ready: bool = True,
         dist: bool = True,
     ) -> PodConfig:
-        monkeypatch.setenv("KIROCREW_POD_WORKTREES_ROOT", str(tmp_path / "wts"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_WORKTREES_ROOT", str(tmp_path / "wts"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
         # Force git resolution to miss so the root fallback resolves deterministically.
         monkeypatch.setattr(rt, "_git_worktrees", lambda ref: {})
         monkeypatch.setattr(rt, "require_backend", lambda: None)

@@ -28,28 +28,28 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import constants as kc_constants
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp.client import (
+from aj_crew import constants as kc_constants
+from aj_crew.acp import client as acp_client
+from aj_crew.acp.client import (
     _DEFAULT_PROMPT_TIMEOUT,
     _PROMPT_TIMEOUT_MARGIN_SECS,
     _effective_prompt_timeout,
     resolve_prompt_timeout,
     resolve_prompt_timeout_for_deadline,
 )
-from kiro_crew.config.loader import (
+from aj_crew.config.loader import (
     CHAT_TURN_TIMEOUT_MAX,
     CHAT_TURN_TIMEOUT_MIN,
-    KiroCrewConfig,
+    AjCrewConfig,
     _clamp_security_bounds,
     _safe_int,
 )
-from kiro_crew.constants import SUBAGENT_TIMEOUT_SECS
-from kiro_crew.dashboard import turn_dispatch as td
+from aj_crew.constants import SUBAGENT_TIMEOUT_SECS
+from aj_crew.dashboard import turn_dispatch as td
 
 
 def _patch_loaded_ceiling(monkeypatch, value: object, subagent: object = 60) -> None:
-    """Patch ``KiroCrewConfig.load`` on the CLASS.
+    """Patch ``AjCrewConfig.load`` on the CLASS.
 
     The resolver imports the class lazily inside the function and
     ``turn_dispatch`` holds a module-scope reference — both resolve to the same
@@ -66,7 +66,7 @@ def _patch_loaded_ceiling(monkeypatch, value: object, subagent: object = 60) -> 
         def _raise(cls):  # noqa: ANN001
             raise RuntimeError("no config here")
 
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_raise))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(_raise))
         return
     cfg = SimpleNamespace(
         agent=SimpleNamespace(
@@ -74,7 +74,7 @@ def _patch_loaded_ceiling(monkeypatch, value: object, subagent: object = 60) -> 
             subagent_timeout_secs=subagent,
         )
     )
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
 
 
 class TestResolvePromptTimeout:
@@ -296,7 +296,7 @@ class TestTransportEntryPointsResolveNone:
     def test_session_handle_prompt_defaults_to_none(self) -> None:
         import inspect
 
-        from kiro_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.session_handle import AcpSessionHandle
 
         sig = inspect.signature(AcpSessionHandle.prompt)
         assert sig.parameters["timeout"].default is None

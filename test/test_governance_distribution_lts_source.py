@@ -28,14 +28,14 @@ from governance_distribution_helpers import (
     _write_policy,
 )
 
-from kiro_crew.platform import governance
-from kiro_crew.platform import policy_distribution as pd
-from kiro_crew.platform.context import PlatformCompositionError
-from kiro_crew.platform.enterprise_policy_translate import TRANSLATION_TAG
+from aj_crew.platform import governance
+from aj_crew.platform import policy_distribution as pd
+from aj_crew.platform.context import PlatformCompositionError
+from aj_crew.platform.enterprise_policy_translate import TRANSLATION_TAG
 
 _ELSEWHERE = "https://elsewhere.example.invalid/policy.json"
 
-#: A value for every ``KIROCREW_POLICY_*`` distribution setting, each one different from
+#: A value for every ``AJCREW_POLICY_*`` distribution setting, each one different from
 #: the default and each one a loosening or a redirect if it were honoured.
 _LOCAL_ENV = {
     pd.POLICY_URL_ENV: _ELSEWHERE,
@@ -55,7 +55,7 @@ def _one_signed_in_profile(_floor_monkeypatch):
     """Every document and the vault name one profile, so the profile half of the source
     identity matches. The fake transport here stands in for the control plane; the
     profile binding itself is tested in ``test_enterprise_policy_fetch.py``."""
-    from kiro_crew.platform import enterprise_policy_fetch as epf
+    from aj_crew.platform import enterprise_policy_fetch as epf
 
     _floor_monkeypatch.setattr(epf, "document_scope", lambda body: "one-profile")
     _floor_monkeypatch.setattr(epf, "signed_in_scope", lambda: "one-profile")
@@ -64,7 +64,7 @@ def _one_signed_in_profile(_floor_monkeypatch):
 
 @pytest.fixture(name="lts")
 def lts_fixture(monkeypatch):
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 def _set_local_env(monkeypatch) -> None:
@@ -142,7 +142,7 @@ class TestBoot:
         home = _write_policy(
             tmp_path / "home.json", "home-file", distribution={"source": _ELSEWHERE}
         )
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(local))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(local))
         monkeypatch.setattr(governance, "_policy_home_path", lambda: home)
         _set_local_env(monkeypatch)
         seen: list = []
@@ -159,7 +159,7 @@ class TestBoot:
         local = _write_policy(
             tmp_path / "local.json", "local-file", distribution={"on_unavailable": "degrade"}
         )
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(local))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(local))
         _set_local_env(monkeypatch)
         _lts_transport(transport, _failing_fetcher(TimeoutError("endpoint down")))
 
@@ -214,7 +214,7 @@ class TestFetchedDocument:
             "local-file",
             distribution={"source": _ELSEWHERE, "refresh_interval_secs": 60},
         )
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(local))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(local))
         _lts_transport(transport, _static_fetcher(pd.FetchedPolicy(body=_body("central"))))
 
         ceiling = governance.load_security_policy()

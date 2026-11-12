@@ -117,11 +117,11 @@ export function isFiller(s) {
  *     they all render on `/settings?tab=display`, one of the gated surfaces.
  */
 export const ALWAYS_LATIN = [
-  // glossary.json `dnt`, plus the spaced display name `Kiro Crew`, which is NOT a
+  // glossary.json `dnt`, plus the spaced display name `Aj Crew`, which is NOT a
   // glossary term (see glossary.json) but must still be stripped before leak
   // detection or the `Crew` half orphans as a reportable Latin run.
-  'AWS', 'Discord', 'Docker', 'Git', 'GitHub', 'GitLab', 'JSON', 'Kiro', 'Kiro Crew',
-  'KiroCrew',
+  'AWS', 'Discord', 'Docker', 'Git', 'GitHub', 'GitLab', 'JSON', 'Kiro', 'Aj Crew',
+  'AjCrew', // brand-ok: glossary term
   // Connections launch-set provider brands (registry names; DNT proper nouns).
   // Asana joins because its pre-registered entry is now visible in the gallery
   // regardless of the launch gate, so its brand renders on `capabilities-mcp`.
@@ -267,7 +267,7 @@ export function dntViolations(text, terms) {
       //
       // The upper-case twin of that exemption: an ALL-CAPS hit touching `_` is a
       // SCREAMING_SNAKE identifier, where caps is the correct spelling —
-      // `PLAYWRIGHT_MCP_EXTENSION_TOKEN`, `KIROCREW_OWNER_ID`. Both are env var
+      // `PLAYWRIGHT_MCP_EXTENSION_TOKEN`, `AJCREW_OWNER_ID`. Both are env var
       // names quoted verbatim in settings copy, and every one of the 9 shipped
       // catalogs carries them, so without this the gate opens with 18 findings it
       // must not have. Requiring BOTH the all-caps form and an adjacent underscore
@@ -533,7 +533,7 @@ export function scanDocument(opts) {
       // Prose only. A text node that is a single whitespace-free token is an
       // IDENTIFIER — an agent name, a slug, a filename, a config key — and the
       // casing convention there is the machine's, not the translator's. Without
-      // this, the agent named `kirocrew` reads as a mangled `KiroCrew` on every
+      // this, the agent named `ajcrew` reads as a mangled `AjCrew` on every (brand-ok: glossary term)
       // surface that lists it. The accepted blind spot: a genuinely mistranslated
       // DNT term standing alone in its own element is missed.
       if (!/\s/.test(text.trim())) continue

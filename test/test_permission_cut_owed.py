@@ -16,7 +16,7 @@ import pytest
 from chat_test_helpers import _make_state
 from turn_harness import APPROVED, SlotSpec, TurnScript, run_turn
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
@@ -25,8 +25,8 @@ from kiro_crew.acp.types import (
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.dashboard.chat_runner import _flush_segment
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.chat_runner import _flush_segment
+from aj_crew.dashboard.state import _ChatSlot
 
 _MESSAGE = (
     "The **358-method hosted suite and three source reviews are running**. "

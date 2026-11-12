@@ -17,8 +17,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import pinned_session_order as pso
-from kiro_crew.testing.wait import await_until, default_timeout, until_parked
+from aj_crew.dashboard import pinned_session_order as pso
+from aj_crew.testing.wait import await_until, default_timeout, until_parked
 
 # ── Store rules ──
 
@@ -109,9 +109,9 @@ class TestStoreRules:
 
 
 def _app(state) -> web.Application:
-    from kiro_crew.dashboard.chat import api_chat_slots
-    from kiro_crew.dashboard.chat_folders import api_chat_slot_pin
-    from kiro_crew.dashboard.chat_manual_order import api_chat_manual_order
+    from aj_crew.dashboard.chat import api_chat_slots
+    from aj_crew.dashboard.chat_folders import api_chat_slot_pin
+    from aj_crew.dashboard.chat_manual_order import api_chat_manual_order
 
     app = web.Application()
     app["state"] = state
@@ -124,8 +124,8 @@ def _app(state) -> web.Application:
 def _state(tmp_path, monkeypatch, keys=("a", "b", "c", "d")):
     from chat_test_helpers import _make_state
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_manual_order.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.chat_manual_order.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     for key in keys:
         slot = state.get_or_create_slot(key)
@@ -212,7 +212,7 @@ async def test_a_move_landing_during_another_moves_disk_write_waits_for_it(
 ) -> None:
     """Two moves overlapping across the awaited disk write: the second waits for
     the first to land and moves the order it left, so neither move is lost."""
-    from kiro_crew.dashboard import chat_manual_order as cmo
+    from aj_crew.dashboard import chat_manual_order as cmo
 
     state = _state(tmp_path, monkeypatch)
     loop = asyncio.get_running_loop()
@@ -374,7 +374,7 @@ async def test_a_list_past_the_key_bound_is_refused(tmp_path, monkeypatch) -> No
     [
         # The MCP loopback helpers always send the secret; whatever component
         # they name, the origin is an agent's, never the person's browser.
-        {"X-Internal-Secret": "s", "X-Internal-Caller": "kirocrew-dashboard"},
+        {"X-Internal-Secret": "s", "X-Internal-Caller": "ajcrew-dashboard"},
         {"X-Internal-Secret": "s"},
         {"X-Internal-Secret": "s", "X-Session-Key": "dashboard:a"},
     ],
@@ -400,7 +400,7 @@ async def test_an_app_or_member_caller_cannot_write_the_manual_order(tmp_path, m
     state = _state(tmp_path, monkeypatch)
     for principal in ("some-app", "member:ops"):
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_manual_order.folder_principal",
+            "aj_crew.dashboard.chat_manual_order.folder_principal",
             lambda _state, _req, p=principal: p,
         )
         async with TestClient(TestServer(_app(state))) as client:
@@ -415,7 +415,7 @@ async def test_the_writer_itself_refuses_any_caller_but_the_browser(tmp_path, mo
     """The rule lives in the one function that writes, not only in the route."""
     from aiohttp.test_utils import make_mocked_request
 
-    from kiro_crew.dashboard.chat_manual_order import _write_manual_order
+    from aj_crew.dashboard.chat_manual_order import _write_manual_order
 
     state = _state(tmp_path, monkeypatch)
     agent = make_mocked_request(
@@ -435,7 +435,7 @@ async def test_a_write_that_fails_on_disk_changes_no_rank(tmp_path, monkeypatch,
     """Memory changes only after the file write lands, so the order on screen is
     the one a restart loads: a failed write answers 500 and leaves every row's
     manual_rank, the revision and the stored flag as they were."""
-    from kiro_crew.dashboard.chat_manual_order import ensure_manual_order_loaded
+    from aj_crew.dashboard.chat_manual_order import ensure_manual_order_loaded
 
     state = _state(tmp_path, monkeypatch)
     order = state.manual_session_order
@@ -467,14 +467,14 @@ async def test_a_write_that_fails_on_disk_changes_no_rank(tmp_path, monkeypatch,
 
 @pytest.mark.asyncio
 async def test_a_scoped_caller_reads_no_manual_ranks(tmp_path, monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers.updates import _without_pin_ranks
-    from kiro_crew.dashboard.ws_event_scope import _strip_pin_rank
+    from aj_crew.dashboard.handlers.updates import _without_pin_ranks
+    from aj_crew.dashboard.ws_event_scope import _strip_pin_rank
 
     state = _state(tmp_path, monkeypatch)
     async with TestClient(TestServer(_app(state))) as client:
         await _post(client, {"op": "seed", "keys": ["b", "a"]})
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.folder_principal", lambda _state, _req: "some-app"
+            "aj_crew.dashboard.chat_handlers.folder_principal", lambda _state, _req: "some-app"
         )
         rows = await _rows(client)
         assert rows and all("manual_rank" not in row and "manual_rev" not in row for row in rows)
@@ -487,7 +487,7 @@ async def test_a_scoped_caller_reads_no_manual_ranks(tmp_path, monkeypatch) -> N
 async def test_a_manual_order_survives_a_gateway_restart(tmp_path, monkeypatch) -> None:
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard.chat_folders import load_pinned_order_after_listen
+    from aj_crew.dashboard.chat_folders import load_pinned_order_after_listen
 
     first = _state(tmp_path, monkeypatch)
     async with TestClient(TestServer(_app(first))) as client:
@@ -545,11 +545,11 @@ async def test_pinning_and_unpinning_leave_the_manual_order_alone(tmp_path, monk
 
 def test_the_manual_file_is_fenced_with_the_pinned_one(tmp_path, monkeypatch) -> None:
     """No sandbox change: the fence covers the directory both files live in."""
-    from kiro_crew import sandbox
-    from kiro_crew.security.paths import is_sensitive_path
+    from aj_crew import sandbox
+    from aj_crew.security.paths import is_sensitive_path
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    from kiro_crew.config.paths import config_dir
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    from aj_crew.config.paths import config_dir
 
     assert is_sensitive_path(str(pso.manual_store_path(config_dir())))
     assert pso.manual_store_path(config_dir()).parent.name in sandbox._CREW_HIDDEN_LEAVES

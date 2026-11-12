@@ -21,9 +21,9 @@ from issue_radar_crew_store_helpers import (  # noqa: F401 -- the autouse fixtur
     _isolated_crew_log,
 )
 
-from kiro_crew import atomic_write as atomic_write_module
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew import atomic_write as atomic_write_module
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
 
 OWNER, REPO = "acme", "widgets"
 

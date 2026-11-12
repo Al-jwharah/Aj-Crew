@@ -7,7 +7,7 @@ Date: 2026-10-27
 
 **Crew Mode** is a per-chat switch in the composer. Turning it on runs that chat on
 the conductor template named by `agent.crew_mode_agent` (default
-`kirocrew-conductor`); it is the ordinary agent switch, with a persisted stamp so the
+`ajcrew-conductor`); it is the ordinary agent switch, with a persisted stamp so the
 chat is known as Crew Mode. There is no `"crew"` slot mode and no new chat-creation
 field. The switch can be turned off until the chat's first message and is locked
 after it.

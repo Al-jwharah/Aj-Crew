@@ -1,6 +1,6 @@
 """Golden transcripts of the native Slack handler, one recorded digest per scenario.
 
-Each ``_scenario_*`` drives callbacks and helpers of ``kiro_crew.slack.handler`` against
+Each ``_scenario_*`` drives callbacks and helpers of ``aj_crew.slack.handler`` against
 the shared recording doubles in ``slack_handler_composition_contract_helpers.py``, plus
 the dashboard and history doubles defined here where it needs them, and the SHA-256 of
 its transcript (what reaches Slack, the SEL ledger, the stats counters, the session
@@ -31,12 +31,12 @@ from slack_handler_composition_contract_helpers import (  # noqa: F401 -- the fi
     world_fixture,
 )
 
-from kiro_crew.acp.client import AcpError, AcpProcessDied, AcpPromptBusy, AcpTimeoutError
-from kiro_crew.acp.types import STOP_REASON_COMPACTION_FAILED
-from kiro_crew.config.loader import ACTIVATION_REVIEW
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack import handler
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.acp.client import AcpError, AcpProcessDied, AcpPromptBusy, AcpTimeoutError
+from aj_crew.acp.types import STOP_REASON_COMPACTION_FAILED
+from aj_crew.config.loader import ACTIVATION_REVIEW
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack import handler
+from aj_crew.testing.wait import async_wait_until
 
 # ── golden scenarios ──────────────────────────────────────────────────────────
 
@@ -201,7 +201,7 @@ async def _scenario_interactive_timeout(log):
 
 
 async def _scenario_hook_deny_and_flag(log):
-    from kiro_crew.hooks import HookManager, HooksConfig
+    from aj_crew.hooks import HookManager, HooksConfig
 
     hooks = HookManager(HooksConfig.from_dict({"auto_deny_tools": ["danger*"]}))
     cb = _ContextBuilder(log, hooks)
@@ -365,7 +365,7 @@ async def _scenario_cmd_sessions(log):
 
 
 async def _scenario_mention_prefixed_bang(log):
-    await _command(log, "<@UBOT|kirocrew> !voice")
+    await _command(log, "<@UBOT|ajcrew> !voice")
 
 
 async def _scenario_interaction_edges(log):
@@ -476,7 +476,7 @@ async def _scenario_linked_thread_routes_to_slot(log):
 
     log.monkeypatch.setattr(handler, "append_and_surface", _surface)
     log.monkeypatch.setattr(
-        "kiro_crew.dashboard.session_control.containment_meta", lambda state, slot: {"linked": 1}
+        "aj_crew.dashboard.session_control.containment_meta", lambda state, slot: {"linked": 1}
     )
     slot = _Slot("chat-2", running=True)
     log.monkeypatch.setattr(handler, "_dashboard_state", _Dashboard(log, {}, linked=slot))
@@ -514,7 +514,7 @@ async def _scenario_keyword_commands(log):
 
 
 async def _scenario_privacy_modifiers(log):
-    from kiro_crew.messaging import privacy_mode
+    from aj_crew.messaging import privacy_mode
 
     async def _apply(mode, session_key, **kwargs):
         log.add("privacy.apply_mode", mode=mode, key=session_key, source=kwargs.get("source"))
@@ -640,8 +640,8 @@ class _ConversationLog:
 async def _scenario_turn_with_history(log):
     """A cold start in a thread: replayed history, the cancelled-turn preamble, the
     thread-replies block, re-injection consumed, the replies watermark moved."""
-    from kiro_crew.hooks import HookManager, HooksConfig
-    from kiro_crew.slack.thread_replies import ThreadReplies
+    from aj_crew.hooks import HookManager, HooksConfig
+    from aj_crew.slack.thread_replies import ThreadReplies
 
     def _replay(conversation_log, session_key, *, model_window=None):
         log.add("history.replay", key=session_key, model_window=model_window)
@@ -715,7 +715,7 @@ async def _scenario_agent_commands(log):
     agents = log.tmp / "agents"
     agents.mkdir()
     (agents / "kiro-foo.json").write_text('{"name": "foo-declared"}', encoding="utf-8")
-    (agents / "kirocrew-lite.json").write_text("{}", encoding="utf-8")
+    (agents / "ajcrew-lite.json").write_text("{}", encoding="utf-8")
     project = log.tmp / "proj"
     (project / ".kiro" / "agents").mkdir(parents=True)
     (project / ".kiro" / "agents" / "baz.json").write_text('{"name": "baz"}', encoding="utf-8")
@@ -829,7 +829,7 @@ async def _scenario_reasoning_only(log):
 
 
 async def _scenario_hook_auto_reply(log):
-    from kiro_crew.hooks import AutoReplyHook, HookManager, HooksConfig
+    from aj_crew.hooks import AutoReplyHook, HookManager, HooksConfig
 
     hooks = HookManager(
         HooksConfig(auto_replies=[AutoReplyHook(pattern="ping", reply="pong", exact=True)])
@@ -878,8 +878,8 @@ async def _scenario_cancelled_messages(log):
 
 
 async def _scenario_turn_ceiling_and_shutdown(log):
-    from kiro_crew.messaging import turn_ceiling
-    from kiro_crew.session import SessionClosingError
+    from aj_crew.messaging import turn_ceiling
+    from aj_crew.session import SessionClosingError
 
     class _Refused(turn_ceiling.TurnCeilingExceeded):
         announce = True
@@ -907,7 +907,7 @@ async def _scenario_turn_ceiling_and_shutdown(log):
 
 
 async def _scenario_shared_runtime_deaths(log):
-    from kiro_crew import runtime_death
+    from aj_crew import runtime_death
 
     log.monkeypatch.setattr(runtime_death, "caused_by_this_session", lambda client: False)
     try:
@@ -981,27 +981,27 @@ SCENARIOS = {
 #: scenario sends, audits, counts or asks of the session manager changes its digest; the
 #: failure prints the transcript it produced.
 _GOLDEN_DIGESTS: dict[str, str] = {
-    "agent_commands": "53f8669524467a6e0535e78cb6d7c76320d2941050133cf251e8840208e5e878",
+    "agent_commands": "b8bf10a7b755d79c8428d915dd9649b530409b12112a07c90961a8cc636c097b",
     "append_refused_then_rotated": "9c1eedd5bddda91331b57115e526c08f99efd760808df9e158568d09f55d2bbc",
     "auto_approval_mode": "306f8e3b049b7630c658941173cf939e4750de03c8159847a66848808b034fec",
     "builders_and_filters": "e83b3068f914e362d4738a90e786aa0065c719f516678efb0b6a72daee1eab84",
     "cancelled_messages": "ecbdff98df1658e87972dc20679d6c3eb80d050a383a74f39f4ee06478c68c3a",
     "cancelled_stop_reason": "a597b2ba7db789e3eab7fad4e42c9ee89391d8c4010e01ae5c3f943a0e107a64",
     "cmd_allowed_denied": "0802fc63efe6e37f62e532419b17548240110c89100b8b4925703f80306e2621",
-    "cmd_allowlist_and_channel": "0b64b0c42209ad4e75596212067a1b7fd2c7dabdba488324355a4cdcca3f9d43",
+    "cmd_allowlist_and_channel": "174f166d7f0f1e9961f832fb09915e2727838c8b0fb4ea7590994b72cd1f3964",
     "cmd_compact": "b70200b397f2c31b14e23658e410ed24509d3db9a8581262cd721a2892793431",
-    "cmd_dashboard_bad_duration": "38a7cb5332a1ba5ff255ec3303f56379bdd35ad259fede729cbba8f807d1b162",
-    "cmd_link_to_dashboard_unavailable": "3a7c8916de8eec9ddf603e7ccaaa8d892e682a9f5d7a56783277ea8e64955fdd",
+    "cmd_dashboard_bad_duration": "a2c944f2d06653172a7a34f2e2a5517f2c58b1eecafadbf11f709733c3bb05e8",
+    "cmd_link_to_dashboard_unavailable": "6f7650827e26177e4c25d7aa8e5cf6c16100736994822663ea444c405ef226ae",
     "cmd_owner_only_denied": "91655cbd5755fc47ca671f71bff1ef08fb9e5bd93da44cfa302a56330f569275",
     "cmd_sessions": "637197868fc541a4013406679648954e232c2467f86a34afcee2c9c09ba8bf15",
     "cmd_status": "99a5ab8189db5fc1241f21fd9fbc161a6696609d0597bd78cd183b445e00a763",
-    "cmd_stop_no_session": "de5c5a671702ba32d7a8fef5d2528b07a3803d772f21f8d5a0aa64206f5b1d42",
-    "cmd_stop_running": "1698b578b632c700afdb4c0a717b6ae66493a42dda13e6a9be522506f133262e",
-    "cmd_ta_and_project": "da91983c4edfed45f574c7c82096c52ab7f94d02aa2b005a8abb698c9b15e58b",
+    "cmd_stop_no_session": "0f573c63e3526515a90e359bf210dc52e141b1204f82ce8db2f65be878875aa1",
+    "cmd_stop_running": "615cc5ccd35b8c21aec0a1a731972bc9395a45784ac865ec408b23d455c7ce43",
+    "cmd_ta_and_project": "ac34fcad51cb044e4ce8212e38f7ae8a6f66c1c26ba4b00d6550e02e24f50c7e",
     "cmd_title": "5f25036c41f40fff19e669411f763e9568c27bac69821dd769da1e49c536e205",
-    "cmd_unknown_bang": "3ac3bfd77e7207cdf6a0a2d5c394d7acdcf42c7833ef8f49d17bdd4ff17ddc4a",
-    "cmd_voice": "3688c2b4bd978ee8cd953b840db52c9d27ad24eb6bf9e5746c5832ba9b8ad95e",
-    "cmd_yolo_status": "5370a104288a5f4cd6c22a392cc9c04d006d7cf1bcdaaf60ff4a95a1a6b2ee16",
+    "cmd_unknown_bang": "9024464cd5f332cfc00e3151f12581486b0d4ceb0e4db623be94da4fbaba098e",
+    "cmd_voice": "94a96b9a4852d19300cfc56d1c5ee35829d1ce1234ed8c7d710f92148d11b7c1",
+    "cmd_yolo_status": "b79e7693f2e7468b1ca1fda7550804318998ba573dd6778ee991508ccb909561",
     "comment_hold_and_brackets_at_end": "d0fd5228d627cd7a7c7a9e9d340cb7b82f6227512a6004c2045d9b77ce25722f",
     "compaction_failed_permanent": "12425d478afceb49e320ea9ea894199006a9905edf42d2467d43daba9d7881db",
     "compaction_failed_transient_replay": "0288ec1f38a1eb4f4ab8c73ca19cf7f7434715a6671b2c14b4a0ff046dbc0e51",
@@ -1015,7 +1015,7 @@ _GOLDEN_DIGESTS: dict[str, str] = {
     "error_timeout": "608f9764fe3ed40a4e758a69d881f2c829e08a6aa89302e9f007a1c1b463db44",
     "error_unexpected": "ae7bc265f3ffd8441f818df443f1586b1e0f3c6d2009d7b707220f0b6e92829a",
     "hook_auto_reply": "f976c5ff2c752a2259381bcfd9fbf6e2fb72ca95fcdb1bbfa53c5ddf98f68f53",
-    "hook_deny_and_flag": "e79ac03814431a60817e2f4e734ec3230ea3140c0af85e289184df6bec622b88",
+    "hook_deny_and_flag": "c857af1a8027f41d32a9ad3a6854cbf63269d7bcf01f5374909ddfa7c753c805",
     "interaction_edges": "80e9ab4e4ba623f57a0360df952f7d6c787348fc81ff69368bbfcfb2ce22bc8f",
     "interactive_approve": "b20c7df4968528b252f984f62503202294c5c0caa75eb04be3231f2310ef5110",
     "interactive_approve_answered": "08dd0d7d62480853b98cff28fa65d158d327339f2dd69ed2b74fbbbfe8c6356a",
@@ -1025,8 +1025,8 @@ _GOLDEN_DIGESTS: dict[str, str] = {
     "keyword_commands": "2acbad12808587a76ab0d64101da6d512b3ba8f0bc1f28ed2dab246d7a88b386",
     "linked_approval": "fd9f6840aa0486ea1af5d8380a8c28c5803407faed28e6271913603adb0d5fd4",
     "linked_dashboard_session": "2c49bd5afefcf913c1ab6a60bdeed6a7a3c21e826e5ffa985f0abe3e6959c0f9",
-    "linked_thread_routes_to_slot": "0a481316843499aaa985a421a16e4c2510f5a1ff7b1a9a56e9f6cf4a37832e6e",
-    "mention_prefixed_bang": "48e18741859e097ccf60e7d04b6c70546baa391b3451b065b997348a4a5d7734",
+    "linked_thread_routes_to_slot": "6acaabff3c05f9e77b2559faa8cce077637d3fd96641bc5492c0615ff5a8c764",
+    "mention_prefixed_bang": "e5afd00caac090d047d52216b970982ac0af1d7028e8ca73b8334274832b80b6",
     "pinned_answer": "28c748b1cf0d80d87ab2efccaf102d311fcc583d2a63992bc2fb86a5fb829016",
     "presentation_raises": "648684b8c85a999655782b4553854eea6e4b85302ecf65951643680add824f8d",
     "privacy_modifiers": "4d2844c96b28e07a815c7e1b3d2e943d5bd70e3fb7457dd4106f6cf4781d12ec",

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { DragEvent as ReactDragEvent } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 
-import kiroFileChomper from '../assets/kiro-file-chomper.png'
+import ajFileChomper from '../assets/aj-file-chomper.png'
 import { i18nT } from '../i18n/t'
 import { carriesFiles } from '../lib/fileDrag'
 
@@ -138,7 +138,7 @@ export default function ChatDropOverlay({
             transition={{ duration: reduceMotion ? 0 : 0.14, ease: 'easeOut' }}
           >
             <motion.img
-              src={kiroFileChomper}
+              src={ajFileChomper}
               alt=""
               draggable={false}
               aria-hidden="true"

@@ -30,7 +30,7 @@ const SHOT = process.argv[3] || 'healthy'
 mkdirSync(OUT, { recursive: true })
 
 const R = (name, displayName) => ({
-  name, displayName, version: '1.0.0', author: 'kirocrew',
+  name, displayName, version: '1.0.0', author: 'ajcrew',
   description: `${displayName} fixture registry app.`, tags: [],
 })
 const registryApps = [

@@ -29,15 +29,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from conftest import requires_symlinks
-from kiro_crew import hooks
-from kiro_crew.hooks import FileTooLargeError
-from kiro_crew.taskrunner import (
+from aj_crew import hooks
+from aj_crew.hooks import FileTooLargeError
+from aj_crew.taskrunner import (
     Step,
     TaskRunner,
     _read_spec_prefix,
     _read_spec_text,
 )
+from conftest import requires_symlinks
 
 # A wait on state that MUST arrive but whose latency the host owns (a thread hop,
 # an fsync). It returns as soon as the state is observed.
@@ -59,7 +59,7 @@ def _protected_secret(tmp_path: Path, monkeypatch) -> Path:
     # Path.home() reads USERPROFILE on Windows and never HOME; pin both.
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    from kiro_crew.security import is_sensitive_path
+    from aj_crew.security import is_sensitive_path
 
     secret = tmp_path / ".aws" / "credentials"
     secret.parent.mkdir()
@@ -212,7 +212,7 @@ class TestSpecReadAudit:
     @pytest.fixture
     def audit_log(self, monkeypatch):
         audit = MagicMock()
-        monkeypatch.setattr("kiro_crew.taskrunner.sel", lambda: audit)
+        monkeypatch.setattr("aj_crew.taskrunner.sel", lambda: audit)
         return audit.log_tool_invocation
 
     def test_records_allowed_without_content(self, tmp_path: Path, audit_log, max_chars):

@@ -67,7 +67,7 @@ def test_every_field_the_guide_documents_is_a_real_fargate_config_field(
     renamed or dropped field reddens this test instead of leaving the guide
     pointing at a key the reader's edit would then be ignored for.
     """
-    from kiro_crew.cloud.config import FargateConfig
+    from aj_crew.cloud.config import FargateConfig
 
     real = {f.name for f in dataclasses.fields(FargateConfig)}
     documented = {

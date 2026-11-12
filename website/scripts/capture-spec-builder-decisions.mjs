@@ -25,15 +25,15 @@ const OUT = process.argv[2] || '/tmp/spec-builder-decisions'
 mkdirSync(OUT, { recursive: true })
 
 const NAME = 'codex-acp-oauth'
-const SPEC_DIR = '/proj/KiroCrew/.kiro/specs/' + NAME
+const SPEC_DIR = '/proj/AjCrew/.kiro/specs/' + NAME
 
 const REQUIREMENTS = `# Requirements — pluggable ACP backend
 
 ## Glossary
 
-- **ACP**: Agent Client Protocol — the JSON-RPC 2.0 over stdio protocol Kiro Crew
+- **ACP**: Agent Client Protocol — the JSON-RPC 2.0 over stdio protocol Aj Crew
   speaks to an agent subprocess.
-- **Gateway**: the long-running Kiro Crew process that owns sessions, config,
+- **Gateway**: the long-running Aj Crew process that owns sessions, config,
   approvals, and the dashboard.
 - **LLMProvider**: the internal provider ABC. \`agent.provider\` selects it and
   stays fixed at \`acp\`; this feature does not add a second LLMProvider.
@@ -73,7 +73,7 @@ const detail = {
   phase: 'requirements',
   status: 'planning',
   running: false,
-  working_dir: '/proj/KiroCrew',
+  working_dir: '/proj/AjCrew',
   spec_dir: SPEC_DIR,
   spec_type: 'feature',
   slot_key: 'spec-builder-' + NAME + '-1',

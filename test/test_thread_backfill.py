@@ -16,8 +16,8 @@ classes are dropped. What remains is the ungated refactor:
 
 from __future__ import annotations
 
-from kiro_crew.dashboard.chat_runner import drain_pending_context
-from kiro_crew.session_map import SessionMap
+from aj_crew.dashboard.chat_runner import drain_pending_context
+from aj_crew.session_map import SessionMap
 
 _BOUND_THREAD = "1700.42"
 _BOUND_CHANNEL = "C999"
@@ -54,7 +54,7 @@ class TestPersistMapReconnect:
     def test_persist_map_survives_reload(self, tmp_path, monkeypatch):
         """The thread->session reverse index is rebuilt from persisted _data on
         load, so a thread reply resolves to its session after a restart."""
-        monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
         sm = SessionMap()
         sm.set_slack_link("dashboard:chat-3-99", _BOUND_THREAD, _BOUND_CHANNEL)
         assert sm.get_session_for_thread(_BOUND_THREAD) == "dashboard:chat-3-99"

@@ -22,9 +22,9 @@ from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 from chat_test_helpers import _make_state
 
-from kiro_crew.config.loader import KiroCrewAgentConfig
-from kiro_crew.dashboard.handlers import members as m
-from kiro_crew.eventlog import types as eventlog_types
+from aj_crew.config.loader import AjCrewAgentConfig
+from aj_crew.dashboard.handlers import members as m
+from aj_crew.eventlog import types as eventlog_types
 
 CREW = "code-reviewer"
 SLUG = "code-reviewer"
@@ -49,7 +49,7 @@ HANDLERS = [
 
 def _fake_cfg():
     return SimpleNamespace(
-        agents={CREW: KiroCrewAgentConfig(kiro_agent="kirocrew", description="d", model="m1")},
+        agents={CREW: AjCrewAgentConfig(kiro_agent="ajcrew", description="d", model="m1")},
         default_agent=CREW,
         memory_stores={},
         workspaces={"default": SimpleNamespace(dir="workspace")},
@@ -70,7 +70,7 @@ def _request(tmp_path, path, match, *, owner_id, app_claim, user):
 
 
 async def _call(handler, req):
-    with patch.object(m.KiroCrewConfig, "load", return_value=_fake_cfg()):
+    with patch.object(m.AjCrewConfig, "load", return_value=_fake_cfg()):
         resp = await handler(req)
     return resp.status, json.loads(resp.body)
 
@@ -122,9 +122,9 @@ async def test_non_owner_is_refused_before_any_read(tmp_path, handler, path, mat
         raise AssertionError("a refused caller must not reach the config or the event log")
 
     with (
-        patch.object(m.KiroCrewConfig, "load", side_effect=_no_read),
+        patch.object(m.AjCrewConfig, "load", side_effect=_no_read),
         patch.object(m, "load_config_with_content_stamp", side_effect=_no_read),
-        patch("kiro_crew.eventlog.service.get_service", side_effect=_no_read),
+        patch("aj_crew.eventlog.service.get_service", side_effect=_no_read),
     ):
         resp = await handler(req)
     assert resp.status == 403
@@ -187,8 +187,8 @@ def test_other_dashboard_frames_still_reach_a_non_owner_socket(tmp_path, monkeyp
 
 @pytest.mark.asyncio
 async def test_the_baseline_replay_records_its_grant(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import ws_event_scope
-    from kiro_crew.eventlog.service import get_service
+    from aj_crew.dashboard import ws_event_scope
+    from aj_crew.eventlog.service import get_service
 
     state = _make_state(tmp_path)
     ws = _WS()
@@ -225,7 +225,7 @@ def test_the_connect_baseline_is_sent_to_the_owner_socket_only():
     projections the same way, so it must sit under the owner predicate rather
     than the dashboard-user flag.
     """
-    source = (Path(__file__).resolve().parents[1] / "src/kiro_crew/dashboard/ws.py").read_text(
+    source = (Path(__file__).resolve().parents[1] / "src/aj_crew/dashboard/ws.py").read_text(
         encoding="utf-8"
     )
     call_at = source.index("await state.send_members_subscribed(ws)")

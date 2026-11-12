@@ -1,10 +1,10 @@
 """The branches of the sandbox, task-queue and liveness rows, pinned by their output.
 
-Driven through ``kiro_crew.cli_doctor``, the name every caller uses, and through the
+Driven through ``aj_crew.cli_doctor``, the name every caller uses, and through the
 probes the rows read: module attributes shared with the owning subsystem
 (``cli_doctor.sandbox.<probe>``, ``platform_compat.IS_LINUX``) or the seams the
 facade forwards (``cli_doctor._read_linux_proc_self``). The expected text is the
-report as it printed before the rows moved into ``kiro_crew.doctor_checks``.
+report as it printed before the rows moved into ``aj_crew.doctor_checks``.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_doctor, platform_compat
+from aj_crew import cli_doctor, platform_compat
 
 EXPECTED: dict[str, str] = {
     "aliases:accounted-confined": (
@@ -101,11 +101,11 @@ EXPECTED: dict[str, str] = {
     ),
     "backend:foreign": (
         "  backend:     ⚠️  an outer sandbox already confines this process\n"
-        "               Kiro Crew cannot nest its own sandbox inside it. Launch the gateway outside that\n"
-        "               sandbox to hand isolation back to Kiro Crew's own profile.\n"
+        "               Aj Crew cannot nest its own sandbox inside it. Launch the gateway outside that\n"
+        "               sandbox to hand isolation back to Aj Crew's own profile.\n"
         "               If you ran this from an agent's shell, that outer sandbox is the agent sandbox\n"
-        "               itself and nothing needs changing: run `kirocrew doctor` from your own terminal\n"
-        "               to check the gateway.\n"
+        "               itself and nothing needs changing: run `ajcrew doctor` from your own terminal to\n"
+        "               check the gateway.\n"
     ),
     "backend:linux-refusal:False": ("  backend:     ❌ none — denied by policy\n"),
     "backend:linux-refusal:True": (
@@ -125,7 +125,7 @@ EXPECTED: dict[str, str] = {
         "  backend:     ⏭  cannot be verified from this shell\n"
         "               This shell is already confined inside a child user namespace with seccomp\n"
         "               filtering, so its nested CLONE_NEWUSER refusal cannot establish the host's\n"
-        "               support; run `kirocrew doctor` from an unconfined shell instead.\n"
+        "               support; run `ajcrew doctor` from an unconfined shell instead.\n"
     ),
     "backend:working": ("  backend:     ✅ namespace\n"),
     "posture:operator": (
@@ -159,7 +159,7 @@ EXPECTED: dict[str, str] = {
         "               No backend is available and no opt-in is declared, so MCP servers, app backends\n"
         "               and the provider CLIs will report a sandbox error. Set\n"
         "               agent.sandbox_allow_unsandboxed_exec=true to allow unconfined execution, or run\n"
-        "               `kirocrew setup` to be walked through the decision.\n"
+        "               `ajcrew setup` to be walked through the decision.\n"
     ),
 }
 
@@ -191,11 +191,11 @@ def test_the_per_lsm_apparmor_label_is_read_first(monkeypatch) -> None:
     _fake_proc(
         monkeypatch,
         {
-            "/proc/self/attr/apparmor/current": "kirocrew-userns (enforce)\x00\n",
+            "/proc/self/attr/apparmor/current": "ajcrew-userns (enforce)\x00\n",
             "/proc/self/attr/current": AssertionError("read the fallback"),
         },
     )
-    assert cli_doctor._process_apparmor_confinement() == "kirocrew-userns (enforce)"
+    assert cli_doctor._process_apparmor_confinement() == "ajcrew-userns (enforce)"
 
 
 def test_the_bare_attr_is_the_fallback_label(monkeypatch) -> None:
@@ -483,7 +483,7 @@ def test_no_alias_prints_nothing(monkeypatch, capsys) -> None:
 
 @pytest.fixture
 def task_home(tmp_path, monkeypatch) -> Path:
-    import kiro_crew.config.paths as paths
+    import aj_crew.config.paths as paths
 
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path)
     (tmp_path / "tasks").mkdir()
@@ -513,7 +513,7 @@ def test_a_quarantined_task_store_is_named_once_per_copy(task_home, capsys) -> N
 
 
 def test_an_unopenable_task_store_is_an_issue(task_home, capsys, monkeypatch) -> None:
-    from kiro_crew.taskq import TaskStore, TaskStoreUnavailable
+    from aj_crew.taskq import TaskStore, TaskStoreUnavailable
 
     db = task_home / "tasks" / "tasks.db"
     db.write_bytes(b"")
@@ -536,7 +536,7 @@ def test_an_unopenable_task_store_is_an_issue(task_home, capsys, monkeypatch) ->
 
 
 def test_the_task_store_rows_and_warnings(task_home, capsys, monkeypatch) -> None:
-    from kiro_crew.taskq import TaskStore
+    from aj_crew.taskq import TaskStore
 
     (task_home / "tasks" / "tasks.db").write_bytes(b"")
     monkeypatch.setattr(

@@ -1,4 +1,4 @@
-"""Tests for model attribution in kiro_crew.dashboard.handlers.usage.
+"""Tests for model attribution in aj_crew.dashboard.handlers.usage.
 
 Covers the wrapper walk that finds a session's model and the warning a billed
 row with no model raises. The rest of the module's tests live in test_usage.py.
@@ -15,15 +15,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.dashboard.handlers.usage as usage_mod
-from kiro_crew.dashboard.handlers.usage import (
+import aj_crew.dashboard.handlers.usage as usage_mod
+from aj_crew.dashboard.handlers.usage import (
     _resolve_model,
     persist_token_record,
     read_effective_agent,
     read_effective_model,
     read_turn_model,
 )
-from kiro_crew.wrapper_chain import WRAPPER_CHAIN_MAX_NODES, wrapper_chain
+from aj_crew.wrapper_chain import WRAPPER_CHAIN_MAX_NODES, wrapper_chain
 
 # ── model attribution through wrapper layers ────────────────────────────
 #
@@ -102,8 +102,8 @@ class TestWalkReachesTheModelRegardlessOfDepth:
 
     def test_agent_is_read_off_the_runtime_below_deep_wrapping(self):
         source, handle = _documented_shape(5)
-        handle._runtime._agent = "kirocrew-lite"
-        assert read_effective_agent(source) == "kirocrew-lite"
+        handle._runtime._agent = "ajcrew-lite"
+        assert read_effective_agent(source) == "ajcrew-lite"
 
     def test_session_model_still_outranks_the_runtime_model_when_wrapped(self):
         # _runtime is walked after the whole _handle subtree, so the process-level
@@ -134,10 +134,10 @@ def _default_model_session(extra_layers: int, *, resolved: str = "auto") -> obje
     ``_resolved_model_id``. ``extra_layers`` wrappers sit on top, as in
     :func:`_documented_shape`.
     """
-    from kiro_crew.acp.runtime import AcpRuntime
-    from kiro_crew.acp.session_handle import AcpSessionHandle
-    from kiro_crew.acp.session_provider import AcpSessionProvider
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.providers.acp import AcpProvider
 
     runtime = object.__new__(AcpRuntime)
     handle = object.__new__(AcpSessionHandle)
@@ -323,8 +323,8 @@ class TestBlankModelBilledRowIsLoud:
         # it ignores (num_turns, duration_ms) must stay free here.
         from dataclasses import fields
 
-        from kiro_crew.acp.types import TurnUsage
-        from kiro_crew.llm_helpers import usage_has_billing
+        from aj_crew.acp.types import TurnUsage
+        from aj_crew.llm_helpers import usage_has_billing
 
         now = datetime.now().astimezone()
         for field in fields(TurnUsage):
@@ -407,20 +407,20 @@ class TestBillingStatsHolderWalkReachesTheRunner:
 
     @pytest.mark.parametrize("extra_layers", [0, 2, 4, 12])
     def test_runner_is_reached_through_every_layer_count(self, extra_layers):
-        from kiro_crew.llm_helpers import _billing_stat_holders, _billing_stats
+        from aj_crew.llm_helpers import _billing_stat_holders, _billing_stats
 
         source, runner = self._deep_provider(extra_layers)
         assert any(node is runner for node in _billing_stat_holders(source))
         assert _billing_stats(source) is runner.last_prompt_stats
 
     def test_nearest_wrapper_is_still_first(self):
-        from kiro_crew.llm_helpers import _billing_stat_holders
+        from aj_crew.llm_helpers import _billing_stat_holders
 
         source, _runner = self._deep_provider(3)
         assert _billing_stat_holders(source)[0] is source
 
     def test_cycle_terminates_with_each_node_once(self):
-        from kiro_crew.llm_helpers import _billing_stat_holders
+        from aj_crew.llm_helpers import _billing_stat_holders
 
         a = _Node("a")
         b = _Node("b", provider=a)
@@ -430,7 +430,7 @@ class TestBillingStatsHolderWalkReachesTheRunner:
         assert len(chain) == 2 and chain[0] is a and chain[1] is b
 
     def test_attribute_synthesizing_source_hits_the_guard(self):
-        from kiro_crew import llm_helpers
+        from aj_crew import llm_helpers
 
         chain = llm_helpers._billing_stat_holders(MagicMock())
         assert len(chain) == llm_helpers._WRAPPER_WALK_MAX_NODES

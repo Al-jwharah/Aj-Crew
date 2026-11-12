@@ -18,10 +18,10 @@ from unittest.mock import AsyncMock
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.acp.mcp_reattempt import MAX_ATTEMPTS, is_recoverable_auth_failure
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_handle import BUCKET_CAP, AcpSessionHandle
-from kiro_crew.acp.types import ACP_BACKEND_KAS, METHOD_KAS_MCP_STATUS, JsonRpcMessage
+from aj_crew.acp.mcp_reattempt import MAX_ATTEMPTS, is_recoverable_auth_failure
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_handle import BUCKET_CAP, AcpSessionHandle
+from aj_crew.acp.types import ACP_BACKEND_KAS, METHOD_KAS_MCP_STATUS, JsonRpcMessage
 
 _NO_CREDS = "JSON-RPC error: -32603 No AWS credentials available"
 
@@ -355,7 +355,7 @@ async def test_the_turn_start_re_attempts_a_waiting_server():
 
 
 def test_the_report_names_the_server_for_a_new_session_only_once_the_budget_is_spent():
-    from kiro_crew.acp.mcp_session_report import McpSessionReport
+    from aj_crew.acp.mcp_session_report import McpSessionReport
 
     handle = _handle([])
     handle._mcp_report = McpSessionReport()
@@ -369,7 +369,7 @@ def test_the_report_names_the_server_for_a_new_session_only_once_the_budget_is_s
 
 
 def test_a_host_without_the_reset_names_the_server_at_once():
-    from kiro_crew.acp.mcp_session_report import McpSessionReport
+    from aj_crew.acp.mcp_session_report import McpSessionReport
 
     handle = _handle([])
     handle._runtime = SimpleNamespace(begin_mcp_sign_in=lambda *_: False)
@@ -381,7 +381,7 @@ def test_a_host_without_the_reset_names_the_server_at_once():
 
 
 def test_a_kiro_cli_session_names_a_credential_failure_for_a_new_session():
-    from kiro_crew.acp.mcp_session_report import McpSessionReport
+    from aj_crew.acp.mcp_session_report import McpSessionReport
 
     runtime = AcpRuntime()  # kiro-cli: no per-server reset
     runtime._session_queues["s1"] = asyncio.Queue()

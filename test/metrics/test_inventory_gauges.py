@@ -1,4 +1,4 @@
-"""Tests for the kirocrew.inventory.* observable instrument contract.
+"""Tests for the ajcrew.inventory.* observable instrument contract.
 
 Four layers, mirroring the module's structure:
   * raw readers — a real value from a crafted source, and None (never a raise)
@@ -20,8 +20,8 @@ from unittest.mock import patch
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
-from kiro_crew.metrics import inventory_gauges as ig
-from kiro_crew.metrics.schema import validate_name
+from aj_crew.metrics import inventory_gauges as ig
+from aj_crew.metrics.schema import validate_name
 
 # ---------------------------------------------------------------------------
 # helpers
@@ -83,7 +83,7 @@ def _nudge_service(tmp_path, active_flags):
     classes means a rename fails at this line. Construction alone touches no event
     loop -- only `start()` does -- so this stays safe in a sync test.
     """
-    from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
+    from aj_crew.autonudge import AutoNudgeService, NudgeLoop
 
     service = AutoNudgeService(base_dir=tmp_path)
     for i, active in enumerate(active_flags):
@@ -98,7 +98,7 @@ def _nudge_service(tmp_path, active_flags):
 
 
 def test_active_crons_counts_only_unpaused_jobs(tmp_path, monkeypatch):
-    from kiro_crew import cron
+    from aj_crew import cron
 
     monkeypatch.setattr(cron, "_DEFAULT_DIR", tmp_path, raising=False)
     _write_crons(
@@ -114,7 +114,7 @@ def test_active_crons_counts_only_unpaused_jobs(tmp_path, monkeypatch):
 
 
 def test_active_crons_missing_store_is_a_genuine_zero(tmp_path, monkeypatch):
-    from kiro_crew import cron
+    from aj_crew import cron
 
     ig.reset_for_testing()
     try:
@@ -136,7 +136,7 @@ def test_active_crons_unparseable_store_is_a_gap_AND_a_counted_fault(tmp_path, m
     confusion probe.failures exists to resolve -- so the present-but-unreadable
     case counts a failure, unlike the missing-store case above.
     """
-    from kiro_crew import cron
+    from aj_crew import cron
 
     ig.reset_for_testing()
     try:
@@ -150,7 +150,7 @@ def test_active_crons_unparseable_store_is_a_gap_AND_a_counted_fault(tmp_path, m
 
 def test_unparseable_crons_publishes_the_failure_series_and_no_count(tmp_path, monkeypatch):
     """End to end: the fault is visible as DATA, not only as a missing gauge."""
-    from kiro_crew import cron
+    from aj_crew import cron
 
     ig.reset_for_testing()
     try:
@@ -171,21 +171,21 @@ def test_unparseable_crons_publishes_the_failure_series_and_no_count(tmp_path, m
 
 def test_monitor_loops_counts_armed_loops_only(tmp_path):
     service = _nudge_service(tmp_path, [True, False, True])
-    with patch("kiro_crew.autonudge.get_instance", return_value=service):
+    with patch("aj_crew.autonudge.get_instance", return_value=service):
         assert ig.read_active_monitor_loops() == 2
 
 
 def test_monitor_loops_service_absent_yields_none_but_running_empty_yields_zero(tmp_path):
     """The None-vs-zero split this module exists to preserve, on one probe."""
-    with patch("kiro_crew.autonudge.get_instance", return_value=None):
+    with patch("aj_crew.autonudge.get_instance", return_value=None):
         assert ig.read_active_monitor_loops() is None
-    with patch("kiro_crew.autonudge.get_instance", return_value=_nudge_service(tmp_path, [])):
+    with patch("aj_crew.autonudge.get_instance", return_value=_nudge_service(tmp_path, [])):
         assert ig.read_active_monitor_loops() == 0
 
 
 def test_monitor_loop_probe_reads_the_real_registry_shape(tmp_path):
     """Pin the two private names the probe reaches into, so a rename fails here."""
-    from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
+    from aj_crew.autonudge import AutoNudgeService, NudgeLoop
 
     service = AutoNudgeService(base_dir=tmp_path)
     assert isinstance(service._loops, dict), "AutoNudgeService._loops is no longer a dict"
@@ -199,7 +199,7 @@ def test_monitor_loop_probe_reads_the_real_registry_shape(tmp_path):
 
 
 def test_installed_skills_counts_the_loader_listing(tmp_path):
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew.skills import SkillsLoader
 
     for name in ("alpha", "beta", "gamma"):
         skill = tmp_path / name
@@ -300,14 +300,14 @@ def test_ttl_cached_never_propagates_a_probe_exception():
 
 
 def test_memory_migrated_reports_the_config_bit():
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.memory.migrated = True
-    with patch.object(KiroCrewConfig, "load", return_value=cfg):
+    with patch.object(AjCrewConfig, "load", return_value=cfg):
         assert ig.read_memory_migrated() == 1
     cfg.memory.migrated = False
-    with patch.object(KiroCrewConfig, "load", return_value=cfg):
+    with patch.object(AjCrewConfig, "load", return_value=cfg):
         assert ig.read_memory_migrated() == 0
 
 
@@ -318,9 +318,9 @@ def test_every_declared_toggle_resolves_against_a_real_config():
     runtime behavior (a missing series beats a fabricated "off") but would hide a
     typo forever. This is the ratchet that makes the omission observable.
     """
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     for key, section_name, field_name in ig.CONFIG_TOGGLES:
         section = getattr(cfg, section_name, None)
         assert section is not None, f"toggle {key!r}: no config section {section_name!r}"
@@ -341,10 +341,10 @@ def test_config_toggle_keys_are_unique_and_exclude_the_tautologies():
 
 
 def test_config_toggles_reports_zero_and_one():
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
-    with patch.object(KiroCrewConfig, "load", return_value=cfg):
+    cfg = AjCrewConfig()
+    with patch.object(AjCrewConfig, "load", return_value=cfg):
         toggles = ig.read_config_toggles()
     assert toggles
     assert set(toggles) == {key for key, _, _ in ig.CONFIG_TOGGLES}
@@ -352,11 +352,11 @@ def test_config_toggles_reports_zero_and_one():
 
 
 def test_config_toggles_omits_an_unresolvable_key():
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     with patch.object(ig, "CONFIG_TOGGLES", (("ghost", "telemetry", "no_such_field"),)):
-        with patch.object(KiroCrewConfig, "load", return_value=cfg):
+        with patch.object(AjCrewConfig, "load", return_value=cfg):
             assert ig.read_config_toggles() is None
 
 
@@ -374,7 +374,7 @@ def _make_knowledge_db(root, source_count):
     permanently CACHED gap indistinguishable from "never ingested". Going through
     the real store makes this test the place a schema rename fails.
     """
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.store import KnowledgeStore
 
     db_dir = root / "workspace" / "knowledge"
     db_dir.mkdir(parents=True)
@@ -398,7 +398,7 @@ def test_knowledge_documents_counts_sources(tmp_path):
     _make_knowledge_db(tmp_path, 12)
     ig.reset_for_testing()
     try:
-        with patch("kiro_crew.config.paths.config_dir", return_value=tmp_path):
+        with patch("aj_crew.config.paths.config_dir", return_value=tmp_path):
             assert ig.read_knowledge_documents() == 12, (
                 f"the probe could not count {ig.KNOWLEDGE_SOURCES_TABLE!r} in a schema "
                 "KnowledgeStore itself created; read_knowledge_documents would gap forever"
@@ -411,7 +411,7 @@ def test_knowledge_probe_never_creates_the_database(tmp_path):
     """A telemetry probe must not bring a subsystem into existence."""
     ig.reset_for_testing()
     try:
-        with patch("kiro_crew.config.paths.config_dir", return_value=tmp_path):
+        with patch("aj_crew.config.paths.config_dir", return_value=tmp_path):
             assert ig.read_knowledge_documents() is None
         assert not (tmp_path / "workspace" / "knowledge" / "knowledge.db").exists()
         assert not (tmp_path / "workspace").exists()
@@ -451,7 +451,7 @@ def test_knowledge_probe_opens_read_only(tmp_path):
     ig.reset_for_testing()
     try:
         with (
-            patch("kiro_crew.config.paths.config_dir", return_value=tmp_path),
+            patch("aj_crew.config.paths.config_dir", return_value=tmp_path),
             patch.object(driver, "connect", _spy),
         ):
             assert ig.read_knowledge_documents() == 1, "the probe did not run"
@@ -462,7 +462,7 @@ def test_knowledge_probe_opens_read_only(tmp_path):
 
 
 def test_lessons_counts_saved_lessons(tmp_path):
-    from kiro_crew.learn import Lesson, LessonStore
+    from aj_crew.learn import Lesson, LessonStore
 
     store = LessonStore(base_dir=tmp_path)
     store.save(Lesson(ts="2026-01-01T00:00:00Z", rule="always X", category="preference"))
@@ -476,7 +476,7 @@ def test_lessons_counts_saved_lessons(tmp_path):
 
 
 def test_lessons_absent_file_is_a_genuine_zero(tmp_path):
-    from kiro_crew.learn import LessonStore
+    from aj_crew.learn import LessonStore
 
     ig.reset_for_testing()
     try:
@@ -492,21 +492,21 @@ def test_lessons_absent_file_is_a_genuine_zero(tmp_path):
 
 
 def test_mcp_classes_split_managed_from_user_added():
-    from kiro_crew.mcp_discovery import _MANAGED_SERVER_NAMES
+    from aj_crew.mcp_discovery import _MANAGED_SERVER_NAMES
 
     managed = sorted(_MANAGED_SERVER_NAMES)
     assert managed, "the managed-server constant must not be empty"
     agent_cfg = {"mcpServers": {name: {} for name in managed[:2]}}
     by_source = {"user": {"acme-internal-tool": {}, "some-other-server": {}}}
-    with patch("kiro_crew.mcp_discovery._load_agent_config", return_value=agent_cfg):
-        with patch("kiro_crew.mcp_discovery._load_mcp_json_by_source", return_value=by_source):
+    with patch("aj_crew.mcp_discovery._load_agent_config", return_value=agent_cfg):
+        with patch("aj_crew.mcp_discovery._load_mcp_json_by_source", return_value=by_source):
             classes = ig.read_mcp_server_classes()
     assert classes == {ig.MCP_CLASS_FIRST_PARTY: 2, ig.MCP_CLASS_THIRD_PARTY: 2}
 
 
 def test_mcp_classes_empty_roster_yields_none():
-    with patch("kiro_crew.mcp_discovery._load_agent_config", return_value={}):
-        with patch("kiro_crew.mcp_discovery._load_mcp_json_by_source", return_value={}):
+    with patch("aj_crew.mcp_discovery._load_agent_config", return_value={}):
+        with patch("aj_crew.mcp_discovery._load_mcp_json_by_source", return_value={}):
             assert ig.read_mcp_server_classes() is None
 
 
@@ -514,7 +514,7 @@ def test_mcp_first_party_set_is_the_installer_constant_not_a_local_copy():
     """Reusing mcp_discovery's constant is what stops a silent drift."""
     import inspect
 
-    from kiro_crew.mcp_discovery import _MANAGED_SERVER_NAMES
+    from aj_crew.mcp_discovery import _MANAGED_SERVER_NAMES
 
     source = inspect.getsource(ig.read_mcp_server_classes)
     assert "_MANAGED_SERVER_NAMES" in source
@@ -534,7 +534,7 @@ def _hooks_home(monkeypatch, tmp_path):
     so the patch has to land on the owning module rather than on a name bound
     into ``webhooks``.
     """
-    from kiro_crew.config import paths
+    from aj_crew.config import paths
 
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path)
     return tmp_path / "hooks.json"
@@ -660,7 +660,7 @@ def test_registered_webhooks_top_level_non_object_holds_no_registrations(tmp_pat
 def test_registered_webhook_count_agrees_with_the_dashboard_listing(tmp_path, monkeypatch):
     """The gauge and the surface a user reads must not disagree on what counts as
     a registration, which is why both reduce through the same owner."""
-    from kiro_crew.dashboard.handlers import hooks_webhook_intake as intake
+    from aj_crew.dashboard.handlers import hooks_webhook_intake as intake
 
     path = _hooks_home(monkeypatch, tmp_path)
     monkeypatch.setattr(intake, "_HOOK_STORE_PATH", path, raising=False)
@@ -695,22 +695,21 @@ def test_no_hook_identifier_or_summary_is_restated_in_this_module():
 
 
 def _roster_config(agents):
-    """A real ``KiroCrewConfig`` whose ``agents`` are real crew records."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.config.sections_session import KiroCrewAgentConfig
+    """A real ``AjCrewConfig`` whose ``agents`` are real crew records."""
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.config.sections_session import AjCrewAgentConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        name: KiroCrewAgentConfig(kiro_agent="kirocrew", **fields)
-        for name, fields in agents.items()
+        name: AjCrewAgentConfig(kiro_agent="ajcrew", **fields) for name, fields in agents.items()
     }
     return cfg
 
 
 def _read_members_with(cfg):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    with patch.object(KiroCrewConfig, "load", return_value=cfg):
+    with patch.object(AjCrewConfig, "load", return_value=cfg):
         return ig.read_members()
 
 
@@ -721,18 +720,18 @@ def test_members_empty_roster_is_a_genuine_zero():
 def test_members_counts_only_crewmates_the_person_created():
     cfg = _roster_config(
         {
-            "atlas": {"source": "kirocrew", "member_id": "atlas"},
-            "Dr. Eggbot": {"source": "kirocrew", "member_id": "dr-eggbot"},
-            "nova": {"source": "kirocrew", "member_id": "nova-2"},
+            "atlas": {"source": "ajcrew", "member_id": "atlas"},
+            "Dr. Eggbot": {"source": "ajcrew", "member_id": "dr-eggbot"},
+            "nova": {"source": "ajcrew", "member_id": "nova-2"},
             # Shipped with the product, not made by the person.
             "mate": {"source": "builtin", "member_id": "mate"},
             # Written by the package sync.
-            "kirocrew-oncall": {"source": "package", "member_id": "oncall"},
+            "ajcrew-oncall": {"source": "package", "member_id": "oncall"},
             # A legacy crew-manager row with no member memory allocated.
-            "legacy": {"source": "kirocrew"},
-            "blank-id": {"source": "kirocrew", "member_id": "   "},
+            "legacy": {"source": "ajcrew"},
+            "blank-id": {"source": "ajcrew", "member_id": "   "},
             # The reserved main member is never a created crewmate.
-            "default": {"source": "kirocrew", "member_id": "default"},
+            "default": {"source": "ajcrew", "member_id": "default"},
         }
     )
     assert _read_members_with(cfg) == 3
@@ -742,11 +741,11 @@ def test_members_skips_a_row_the_roster_cannot_address():
     """A name or member id the roster drops never reaches the count either."""
     cfg = _roster_config(
         {
-            "atlas": {"source": "kirocrew", "member_id": "atlas"},
+            "atlas": {"source": "ajcrew", "member_id": "atlas"},
             # member_slug refuses an id that is not a slug, so the roster skips it.
-            "broken": {"source": "kirocrew", "member_id": "Not A Slug!"},
+            "broken": {"source": "ajcrew", "member_id": "Not A Slug!"},
             # Not a dispatchable member name.
-            "": {"source": "kirocrew", "member_id": "empty"},
+            "": {"source": "ajcrew", "member_id": "empty"},
         }
     )
     assert _read_members_with(cfg) == 1
@@ -756,7 +755,7 @@ def test_members_count_agrees_with_the_roster_dashboard_created_rule():
     """The gauge and the Crewmates roster share ONE predicate, so they cannot drift."""
     import inspect
 
-    from kiro_crew.dashboard.handlers import members_roster
+    from aj_crew.dashboard.handlers import members_roster
 
     assert "is_person_created_crewmate" in inspect.getsource(members_roster.api_members)
     assert "count_person_created_crewmates" in inspect.getsource(ig.read_members)
@@ -764,11 +763,11 @@ def test_members_count_agrees_with_the_roster_dashboard_created_rule():
 
 def test_members_unreadable_config_is_a_gap_and_a_counted_fault():
     """A config read that raises yields no observation, never a crash or a fake 0."""
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     ig.reset_for_testing()
     try:
-        with patch.object(KiroCrewConfig, "load", side_effect=OSError("unreadable")):
+        with patch.object(AjCrewConfig, "load", side_effect=OSError("unreadable")):
             metrics = _collect()
         assert ig.GAUGE_MEMBERS not in metrics or not metrics[ig.GAUGE_MEMBERS]
         failures = {dp.attributes["probe"]: dp.value for dp in metrics[ig.GAUGE_PROBE_FAILURES]}
@@ -785,7 +784,7 @@ def test_members_half_read_config_is_a_gap_not_a_false_count():
     decrease (often a false 0) as data.
     """
     for flag in ("_base_unreadable", "_overlay_unreadable"):
-        cfg = _roster_config({"atlas": {"source": "kirocrew", "member_id": "atlas"}})
+        cfg = _roster_config({"atlas": {"source": "ajcrew", "member_id": "atlas"}})
         setattr(cfg, flag, True)
         ig.reset_for_testing()
         try:
@@ -797,12 +796,12 @@ def test_members_half_read_config_is_a_gap_not_a_false_count():
 
 def test_members_publishes_a_bare_count_with_no_name_attribute():
     secret = "acme-secret-crewmate"
-    cfg = _roster_config({secret: {"source": "kirocrew", "member_id": "acme"}})
-    from kiro_crew.config.loader import KiroCrewConfig
+    cfg = _roster_config({secret: {"source": "ajcrew", "member_id": "acme"}})
+    from aj_crew.config.loader import AjCrewConfig
 
     ig.reset_for_testing()
     try:
-        with patch.object(KiroCrewConfig, "load", return_value=cfg):
+        with patch.object(AjCrewConfig, "load", return_value=cfg):
             metrics = _collect()
         (point,) = metrics[ig.GAUGE_MEMBERS]
         assert point.value == 1
@@ -907,10 +906,10 @@ def test_no_mcp_server_name_reaches_any_attribute():
     """The privacy ratchet: a user's roster classifies, then is discarded."""
     secret = "acme-confidential-internal-mcp"
     with patch(
-        "kiro_crew.mcp_discovery._load_agent_config",
+        "aj_crew.mcp_discovery._load_agent_config",
         return_value={"mcpServers": {secret: {}}},
     ):
-        with patch("kiro_crew.mcp_discovery._load_mcp_json_by_source", return_value={}):
+        with patch("aj_crew.mcp_discovery._load_mcp_json_by_source", return_value={}):
             metrics = _collect()
     points = metrics.get(ig.GAUGE_MCP_SERVERS) or []
     assert points, "the MCP gauge must still publish a count"
@@ -1062,10 +1061,10 @@ def test_registration_failure_is_swallowed(caplog):
         def __getattr__(self, name):
             raise RuntimeError("no instruments for you")
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.metrics.inventory_gauges"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.metrics.inventory_gauges"):
         ig.register_inventory_gauges(_HostileMeter())  # must not raise
     logged = [
-        r.getMessage() for r in caplog.records if r.name == "kiro_crew.metrics.inventory_gauges"
+        r.getMessage() for r in caplog.records if r.name == "aj_crew.metrics.inventory_gauges"
     ]
     assert logged == ["inventory gauge registration failed: no instruments for you"]
 
@@ -1084,7 +1083,7 @@ def test_reporter_claim_is_unconditional():
     like a host that stopped exporting -- silent, and indistinguishable from
     healthy. That makes the call SITE the invariant, so it is pinned here instead
     of left to review: it shipped inside ``_init_autonudge()``, which returns early
-    under ``KIROCREW_AUTONUDGE=0``, and one env var darkened all eight gauges.
+    under ``AJCREW_AUTONUDGE=0``, and one env var darkened all eight gauges.
 
     ``try`` is allowed (telemetry is best-effort and must not block boot); a
     conditional or a loop is not, because that is the shape a feature flag arrives
@@ -1093,7 +1092,7 @@ def test_reporter_claim_is_unconditional():
     import ast
     from pathlib import Path
 
-    from kiro_crew.slack import gateway as gateway_mod
+    from aj_crew.slack import gateway as gateway_mod
 
     gateway_path = Path(gateway_mod.__file__)
     paths = [gateway_path, *sorted((gateway_path.parent / "gateway_runtime").glob("*.py"))]
@@ -1130,16 +1129,16 @@ def test_reporter_claim_is_unconditional():
 
 
 def _enable_telemetry(monkeypatch):
-    monkeypatch.setenv("KIROCREW_TELEMETRY", "1")
+    monkeypatch.setenv("AJCREW_TELEMETRY", "1")
 
 
 def test_live_build_registers_inventory_gauges(monkeypatch):
-    from kiro_crew.metrics import provider as provider_mod
+    from aj_crew.metrics import provider as provider_mod
 
     _enable_telemetry(monkeypatch)
     provider_mod.reset_for_testing()
     try:
-        with patch("kiro_crew.metrics.inventory_gauges.register_inventory_gauges") as register:
+        with patch("aj_crew.metrics.inventory_gauges.register_inventory_gauges") as register:
             rec = provider_mod.get_recorder()
             assert rec.enabled
             register.assert_called_once()
@@ -1148,13 +1147,13 @@ def test_live_build_registers_inventory_gauges(monkeypatch):
 
 
 def test_gauge_registration_failure_keeps_telemetry_alive(monkeypatch):
-    from kiro_crew.metrics import provider as provider_mod
+    from aj_crew.metrics import provider as provider_mod
 
     _enable_telemetry(monkeypatch)
     provider_mod.reset_for_testing()
     try:
         with patch(
-            "kiro_crew.metrics.inventory_gauges.register_inventory_gauges",
+            "aj_crew.metrics.inventory_gauges.register_inventory_gauges",
             side_effect=RuntimeError("boom"),
         ):
             rec = provider_mod.get_recorder()
@@ -1165,16 +1164,16 @@ def test_gauge_registration_failure_keeps_telemetry_alive(monkeypatch):
 
 def test_inventory_failure_does_not_cost_the_process_gauges(monkeypatch):
     """Separate try blocks: one subsystem's probe cannot dark the other's."""
-    from kiro_crew.metrics import provider as provider_mod
+    from aj_crew.metrics import provider as provider_mod
 
     _enable_telemetry(monkeypatch)
     provider_mod.reset_for_testing()
     try:
         with patch(
-            "kiro_crew.metrics.inventory_gauges.register_inventory_gauges",
+            "aj_crew.metrics.inventory_gauges.register_inventory_gauges",
             side_effect=RuntimeError("boom"),
         ):
-            with patch("kiro_crew.metrics.process_gauges.register_process_gauges") as process:
+            with patch("aj_crew.metrics.process_gauges.register_process_gauges") as process:
                 rec = provider_mod.get_recorder()
                 assert rec.enabled
                 process.assert_called_once()

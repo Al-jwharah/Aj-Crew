@@ -10,12 +10,12 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from test_remote_git_proxy import FrameLink, HttpBackendUpstream
 
-from kiro_crew.coder.remote_worker import RemoteWorkerLaunch
-from kiro_crew.platform import context, governance_profiles
-from kiro_crew.platform.governance import parse_policy
-from kiro_crew.providers import acp
-from kiro_crew.remote_session import git_gateway
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.coder.remote_worker import RemoteWorkerLaunch
+from aj_crew.platform import context, governance_profiles
+from aj_crew.platform.governance import parse_policy
+from aj_crew.providers import acp
+from aj_crew.remote_session import git_gateway
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def governance(tmp_path, monkeypatch):
     ctx = SimpleNamespace(governance=None)
     monkeypatch.setattr(context, "current_context", lambda: ctx)
     audit = Mock()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: audit)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: audit)
     return ctx, audit
 
 
@@ -141,7 +141,7 @@ async def test_proxy_start_without_agent_starts_no_worker(tmp_path, monkeypatch,
     ("agent", "owning_app", "crew"),
     # Denied by the agent's own profile, then by the owning app's (whose agent
     # allows), then by a crew member's own profile when the template allows.
-    [("researcher", "", ""), ("builder", "mailer", ""), ("kirocrew", "", "researcher")],
+    [("researcher", "", ""), ("builder", "mailer", ""), ("ajcrew", "", "researcher")],
 )
 async def test_provider_carries_agent_through_background_start_to_audited_channel(
     tmp_path, monkeypatch, governance, agent, owning_app, crew
@@ -177,17 +177,17 @@ async def test_provider_carries_agent_through_background_start_to_audited_channe
     remote = SimpleNamespace(
         launch=launch, workdir="/workspace/app", profile_name="Dev", created=False
     )
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     # The start gate prepares a remote workspace once Session Environments is set up,
     # which needs the developer flag.
-    monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    monkeypatch.setenv("AJCREW_DEV_MODE", "1")
     section = SimpleNamespace(coder_url="https://coder.example", profiles=[])
     monkeypatch.setattr(live, "snapshot", lambda: SimpleNamespace(session_environments=section))
     prepare = AsyncMock(return_value=remote)
-    monkeypatch.setattr("kiro_crew.coder.session_launch.prepare_for_session", prepare)
-    monkeypatch.setattr("kiro_crew.session_environment.remember_remote_workspace", Mock())
-    monkeypatch.setattr("kiro_crew.session_environment.report_start_stage", Mock())
+    monkeypatch.setattr("aj_crew.coder.session_launch.prepare_for_session", prepare)
+    monkeypatch.setattr("aj_crew.session_environment.remember_remote_workspace", Mock())
+    monkeypatch.setattr("aj_crew.session_environment.report_start_stage", Mock())
     runtime = Mock()
     runtime.spawn = AsyncMock(side_effect=StopBeforeSpawn)
     monkeypatch.setattr(acp, "AcpRuntime", Mock(return_value=runtime))

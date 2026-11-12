@@ -1,6 +1,6 @@
 """The launcher's pinned mounts at their edges: what the pin skips, follows and refuses.
 
-``kiro_crew.sandbox_launcher_parts.pinned_mounts`` holds the launcher program's checked
+``aj_crew.sandbox_launcher_parts.pinned_mounts`` holds the launcher program's checked
 mounts and the no-follow pin every hiding mount goes through. The suites that drive whole
 stages reach the common paths; these pin the edges a stage reaches only on an odd host
 shape, against real files under ``tmp_path``: a target that names no leaf, a name spelled
@@ -19,7 +19,7 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import RecordingLibc, launch, refusal
 
-from kiro_crew import sandbox_launcher_program as program
+from aj_crew import sandbox_launcher_program as program
 
 #: The pin holds a descriptor on a link itself (``O_PATH``), which only Linux has; the
 #: namespace launcher runs nowhere else.

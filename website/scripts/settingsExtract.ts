@@ -366,7 +366,7 @@ function extractStringProp(source: string, propName: string): string | undefined
   // duplicates DEFAULT_PRODUCT_NAME in `src/i18n/index.ts`: importing that
   // module here would drag i18next and every catalog into a build-time
   // script for one constant.
-  if (tMatch) return getEnCatalog()[tMatch[1]]?.replaceAll('{{productName}}', 'Kiro Crew')
+  if (tMatch) return getEnCatalog()[tMatch[1]]?.replaceAll('{{productName}}', 'Aj Crew')
   return undefined
 }
 
@@ -702,7 +702,7 @@ export function buildAgentRegistry(entries: SettingEntry[]): AgentSettingEntry[]
 
 /**
  * Serialize the agent-facing registry bundled into the Python docs package
- * (`src/kiro_crew/docs/settings-registry.generated.json`).
+ * (`src/aj_crew/docs/settings-registry.generated.json`).
  *
  * Emitted from the SAME extraction pass as `settingsRegistry.gen.ts` so the
  * agent's enumeration cannot describe a different set of controls than the

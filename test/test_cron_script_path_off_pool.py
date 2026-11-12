@@ -11,9 +11,9 @@ import asyncio
 
 import pytest
 
-import kiro_crew.security.paths as security_paths
-from kiro_crew import cron_script, mcp_cron_vet
-from kiro_crew.security import PathResolutionStalled, is_unverifiable_path_refusal
+import aj_crew.security.paths as security_paths
+from aj_crew import cron_script, mcp_cron_vet
+from aj_crew.security import PathResolutionStalled, is_unverifiable_path_refusal
 
 
 @pytest.fixture

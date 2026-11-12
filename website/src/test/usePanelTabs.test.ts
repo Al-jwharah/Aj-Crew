@@ -400,24 +400,24 @@ describe('usePanelTabs', () => {
 
   it('keeps a folder tab while files open in separate de-duplicated tabs', () => {
     const { result } = renderHook(() => usePanelTabs(null, mock.descriptors))
-    act(() => result.current.openFolder('/Users/me/workspace/KiroCrew', 'chat-a'))
+    act(() => result.current.openFolder('/Users/me/workspace/AjCrew', 'chat-a'))
     expect(result.current.activeTab).toMatchObject({
-      id: 'folder:/Users/me/workspace/KiroCrew', kind: 'folder', title: 'KiroCrew', slot: 'chat-a',
+      id: 'folder:/Users/me/workspace/AjCrew', kind: 'folder', title: 'AjCrew', slot: 'chat-a', // brand-ok: fixture data
     })
     // Re-opening the same directory focuses the existing tab, not a duplicate.
-    act(() => result.current.openFolder('/Users/me/workspace/KiroCrew'))
+    act(() => result.current.openFolder('/Users/me/workspace/AjCrew'))
     expect(result.current.tabs).toHaveLength(1)
 
     // A file opens beside the tree instead of replacing it, and becomes active.
-    act(() => result.current.openFile('/Users/me/workspace/KiroCrew/README.md', 'v1'))
+    act(() => result.current.openFile('/Users/me/workspace/AjCrew/README.md', 'v1'))
     expect(result.current.tabs.map(t => t.id)).toEqual([
-      'folder:/Users/me/workspace/KiroCrew',
-      'file:/Users/me/workspace/KiroCrew/README.md',
+      'folder:/Users/me/workspace/AjCrew',
+      'file:/Users/me/workspace/AjCrew/README.md',
     ])
-    expect(result.current.activeId).toBe('file:/Users/me/workspace/KiroCrew/README.md')
+    expect(result.current.activeId).toBe('file:/Users/me/workspace/AjCrew/README.md')
 
     // Opening the same path again activates and refreshes the existing tab.
-    act(() => result.current.openFile('/Users/me/workspace/KiroCrew/README.md', 'v2'))
+    act(() => result.current.openFile('/Users/me/workspace/AjCrew/README.md', 'v2'))
     expect(result.current.tabs).toHaveLength(2)
     expect(result.current.activeTab?.content).toBe('v2')
   })

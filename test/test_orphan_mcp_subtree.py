@@ -26,7 +26,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 _POSIX_ONLY = pytest.mark.skipif(
     sys.platform == "win32", reason="POSIX process-management semantics only; see issue #2041"
@@ -34,7 +34,7 @@ _POSIX_ONLY = pytest.mark.skipif(
 
 # Root of the orphaned tree: a marked MCP launcher that passes the sweep gate.
 _ROOT = 500
-_ROOT_CMDLINE = b"python3\x00kirocrew_sandbox_x.py"
+_ROOT_CMDLINE = b"python3\x00ajcrew_sandbox_x.py"
 
 # The leaked chain hanging off it.
 _UNMARKED_INTERMEDIATE = 501
@@ -82,7 +82,7 @@ class TestOrphanMcpSubtreeReap:
         my_pgid: int = 1000,
     ) -> list[int]:
         """Run the sweep over _ROOT and return the PIDs killed in the subtree."""
-        from kiro_crew.session_pid import kill_orphan_mcps
+        from aj_crew.session_pid import kill_orphan_mcps
 
         argv_map = argv or {}
         # By default the live token equals the one the walk captured.
@@ -94,26 +94,26 @@ class TestOrphanMcpSubtreeReap:
             patch("os.killpg"),
             patch("os.kill"),
             patch("os.getpid", return_value=1),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(Path, "read_bytes", lambda self: _ROOT_CMDLINE),
-            patch("kiro_crew.session_pid._build_child_map", return_value={}),
-            patch("kiro_crew.session_pid._orphan_descendants", return_value=descendants),
+            patch("aj_crew.session_pid._build_child_map", return_value={}),
+            patch("aj_crew.session_pid._orphan_descendants", return_value=descendants),
             patch(
-                "kiro_crew.session_pid._pid_cmdline",
+                "aj_crew.session_pid._pid_cmdline",
                 side_effect=lambda pid: argv_map.get(pid, b"npm\x00exec\x00pkg@latest"),
             ),
             patch(
-                "kiro_crew.session_pid._pid_start_token",
+                "aj_crew.session_pid._pid_start_token",
                 # The ROOT consults this too now (its own recycle guard), so it
                 # must answer stably for _ROOT as well as for each descendant.
                 side_effect=lambda pid: token_map.get(pid, f"tok-{pid}"),
             ),
             patch(
-                "kiro_crew.session_pid._env_has_kirocrew_marker",
+                "aj_crew.session_pid._env_has_ajcrew_marker",
                 side_effect=lambda pid: pid in marked,
             ),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda pid, _sig: subtree_kills.append(pid),
             ),
         ):
@@ -141,10 +141,10 @@ class TestOrphanMcpSubtreeReap:
         assert killed.index(_MARKED_LEAF) < killed.index(_UNMARKED_INTERMEDIATE)
 
     def test_descendant_without_env_marker_is_spared(self) -> None:
-        """Positive identity per member: no KIROCREW_SPAWNED, no kill."""
+        """Positive identity per member: no AJCREW_SPAWNED, no kill."""
         killed = self._run(
             _pairs(_UNMARKED_INTERMEDIATE, _MARKED_LEAF),
-            marked={_ROOT, _MARKED_LEAF},  # intermediate is NOT Kiro-Crew-spawned
+            marked={_ROOT, _MARKED_LEAF},  # intermediate is NOT Aj-Crew-spawned
         )
 
         assert _UNMARKED_INTERMEDIATE not in killed
@@ -156,7 +156,7 @@ class TestOrphanMcpSubtreeReap:
         killed = self._run(
             _pairs(gateway_pid, _MARKED_LEAF),
             marked={_ROOT, gateway_pid, _MARKED_LEAF},
-            argv={gateway_pid: b"python3\x00-m\x00kiro_crew.cli\x00gateway"},
+            argv={gateway_pid: b"python3\x00-m\x00aj_crew.cli\x00gateway"},
         )
 
         assert gateway_pid not in killed, "never signal a peer gateway"
@@ -178,7 +178,7 @@ class TestOrphanMcpSubtreeReap:
         budget rather than cap - 1 -- and when it consumes all of it the root is
         deliberately left alive (see TestBudgetExhaustionSparesRoot).
         """
-        from kiro_crew.session_pid import _ORPHAN_SWEEP_MAX_KILLS
+        from aj_crew.session_pid import _ORPHAN_SWEEP_MAX_KILLS
 
         pids = list(range(600, 600 + _ORPHAN_SWEEP_MAX_KILLS + 10))
         killed = self._run(_pairs(*pids), marked={_ROOT, *pids})
@@ -197,7 +197,7 @@ class TestOrphanMcpSubtreeReap:
 
     def test_subtree_enumerated_before_root_dies(self) -> None:
         """Enumeration must precede the root signal, or the links are gone."""
-        from kiro_crew.session_pid import kill_orphan_mcps
+        from aj_crew.session_pid import kill_orphan_mcps
 
         order: list[str] = []
         with (
@@ -205,17 +205,17 @@ class TestOrphanMcpSubtreeReap:
             patch("os.getpgid", return_value=_ROOT),
             patch("os.killpg", side_effect=lambda *_a: order.append("killpg")),
             patch("os.getpid", return_value=1),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(Path, "read_bytes", lambda self: _ROOT_CMDLINE),
-            patch("kiro_crew.session_pid._build_child_map", return_value={}),
+            patch("aj_crew.session_pid._build_child_map", return_value={}),
             patch(
-                "kiro_crew.session_pid._orphan_descendants",
+                "aj_crew.session_pid._orphan_descendants",
                 side_effect=lambda _pid, _map: order.append("enumerate") or [],
             ),
             # The root's own recycle guard reads this twice; a stable answer
             # means "not recycled", which is what this test is about.
-            patch("kiro_crew.session_pid._pid_start_token", return_value="tok-root"),
-            patch("kiro_crew.session_pid.platform_compat.kill_pid"),
+            patch("aj_crew.session_pid._pid_start_token", return_value="tok-root"),
+            patch("aj_crew.session_pid.platform_compat.kill_pid"),
         ):
             mock_sys.platform = "linux"
             kill_orphan_mcps([_ROOT])
@@ -224,18 +224,18 @@ class TestOrphanMcpSubtreeReap:
 
     def test_child_map_is_built_once_per_sweep(self) -> None:
         """One /proc pass for the whole sweep, not one per candidate root."""
-        from kiro_crew.session_pid import kill_orphan_mcps
+        from aj_crew.session_pid import kill_orphan_mcps
 
         with (
             patch("os.getpgrp", return_value=1000),
             patch("os.getpgid", side_effect=lambda pid: pid),
             patch("os.killpg"),
             patch("os.getpid", return_value=1),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(Path, "read_bytes", lambda self: _ROOT_CMDLINE),
-            patch("kiro_crew.session_pid._build_child_map", return_value={}) as mock_map,
-            patch("kiro_crew.session_pid._orphan_descendants", return_value=[]),
-            patch("kiro_crew.session_pid.platform_compat.kill_pid"),
+            patch("aj_crew.session_pid._build_child_map", return_value={}) as mock_map,
+            patch("aj_crew.session_pid._orphan_descendants", return_value=[]),
+            patch("aj_crew.session_pid.platform_compat.kill_pid"),
         ):
             mock_sys.platform = "linux"
             kill_orphan_mcps([_ROOT, 510, 511])
@@ -244,16 +244,16 @@ class TestOrphanMcpSubtreeReap:
 
     def test_child_map_not_built_when_no_mcp_orphan_is_confirmed(self) -> None:
         """A sweep that confirms nothing pays for no /proc pass."""
-        from kiro_crew.session_pid import kill_orphan_mcps
+        from aj_crew.session_pid import kill_orphan_mcps
 
         with (
             patch("os.getpgrp", return_value=1000),
             patch("os.getpgid", return_value=_ROOT),
             patch("os.getpid", return_value=1),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             # argv matching no sweep class at all
             patch.object(Path, "read_bytes", lambda self: b"cat\x00/etc/hosts"),
-            patch("kiro_crew.session_pid._build_child_map") as mock_map,
+            patch("aj_crew.session_pid._build_child_map") as mock_map,
         ):
             mock_sys.platform = "linux"
             kill_orphan_mcps([_ROOT])
@@ -266,22 +266,22 @@ class TestPidRecycleGuard:
     """A recycled PID must never inherit a doomed descendant's verdict.
 
     The crash this rules out: the root's ``killpg`` reaps a descendant,
-    the kernel hands that PID to a NEW Kiro-Crew-spawned worker, and the stale
+    the kernel hands that PID to a NEW Aj-Crew-spawned worker, and the stale
     entry SIGKILLs a live process that passes every other gate.
     """
 
     def _kill(self, walk_token: str | None, live_token: str | None) -> list[int]:
-        from kiro_crew.session_pid import _kill_orphan_mcp_descendants
+        from aj_crew.session_pid import _kill_orphan_mcp_descendants
 
         killed: list[int] = []
         with (
             patch("os.getpid", return_value=1),
             patch("os.getpgrp", return_value=1000),
-            patch("kiro_crew.session_pid._pid_cmdline", return_value=b"npm\x00exec\x00p@latest"),
-            patch("kiro_crew.session_pid._env_has_kirocrew_marker", return_value=True),
-            patch("kiro_crew.session_pid._pid_start_token", return_value=live_token),
+            patch("aj_crew.session_pid._pid_cmdline", return_value=b"npm\x00exec\x00p@latest"),
+            patch("aj_crew.session_pid._env_has_ajcrew_marker", return_value=True),
+            patch("aj_crew.session_pid._pid_start_token", return_value=live_token),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda pid, _sig: killed.append(pid),
             ),
         ):
@@ -317,30 +317,30 @@ class TestOrphanMcpSubtreeHelper:
     """Direct cover for _kill_orphan_mcp_descendants edge cases."""
 
     def test_zero_budget_kills_nothing(self) -> None:
-        from kiro_crew.session_pid import _kill_orphan_mcp_descendants
+        from aj_crew.session_pid import _kill_orphan_mcp_descendants
 
-        with patch("kiro_crew.session_pid.platform_compat.kill_pid") as mock_kill:
+        with patch("aj_crew.session_pid.platform_compat.kill_pid") as mock_kill:
             killed = _kill_orphan_mcp_descendants(_pairs(_MARKED_LEAF), root=_ROOT, budget=0)
 
         assert killed == 0
         mock_kill.assert_not_called()
 
     def test_empty_descendants_kills_nothing(self) -> None:
-        from kiro_crew.session_pid import _kill_orphan_mcp_descendants
+        from aj_crew.session_pid import _kill_orphan_mcp_descendants
 
-        with patch("kiro_crew.session_pid.platform_compat.kill_pid") as mock_kill:
+        with patch("aj_crew.session_pid.platform_compat.kill_pid") as mock_kill:
             killed = _kill_orphan_mcp_descendants([], root=_ROOT, budget=10)
 
         assert killed == 0
         mock_kill.assert_not_called()
 
     def test_never_signals_pid_one_or_self(self) -> None:
-        from kiro_crew.session_pid import _kill_orphan_mcp_descendants
+        from aj_crew.session_pid import _kill_orphan_mcp_descendants
 
         with (
             patch("os.getpid", return_value=4242),
             patch("os.getpgrp", return_value=9999),
-            patch("kiro_crew.session_pid.platform_compat.kill_pid") as mock_kill,
+            patch("aj_crew.session_pid.platform_compat.kill_pid") as mock_kill,
         ):
             killed = _kill_orphan_mcp_descendants(_pairs(1, 0, 4242, 9999), root=_ROOT, budget=10)
 
@@ -348,20 +348,20 @@ class TestOrphanMcpSubtreeHelper:
         mock_kill.assert_not_called()
 
     def _kill_one(self, **overrides: object) -> int:
-        from kiro_crew.session_pid import _kill_orphan_mcp_descendants
+        from aj_crew.session_pid import _kill_orphan_mcp_descendants
 
         marker = overrides.get("marker", True)
         with (
             patch("os.getpid", return_value=1),
             patch("os.getpgrp", return_value=1000),
-            patch("kiro_crew.session_pid._pid_cmdline", return_value=b"npm\x00exec\x00p@latest"),
-            patch("kiro_crew.session_pid._env_has_kirocrew_marker", return_value=marker),
-            patch("kiro_crew.session_pid._pid_start_token", return_value="tok-502"),
+            patch("aj_crew.session_pid._pid_cmdline", return_value=b"npm\x00exec\x00p@latest"),
+            patch("aj_crew.session_pid._env_has_ajcrew_marker", return_value=marker),
+            patch("aj_crew.session_pid._pid_start_token", return_value="tok-502"),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=overrides.get("kill_side_effect"),
             ),
-            patch("kiro_crew.session_pid._sel_orphan_mcp_subtree_kill") as mock_sel,
+            patch("aj_crew.session_pid._sel_orphan_mcp_subtree_kill") as mock_sel,
         ):
             killed = _kill_orphan_mcp_descendants(_pairs(_MARKED_LEAF), root=_ROOT, budget=10)
             self._sel = mock_sel
@@ -385,15 +385,15 @@ class TestOrphanMcpSubtreeHelper:
         assert killed == 0
 
     def test_signal_passed_is_sigkill(self) -> None:
-        from kiro_crew.session_pid import _kill_orphan_mcp_descendants
+        from aj_crew.session_pid import _kill_orphan_mcp_descendants
 
         with (
             patch("os.getpid", return_value=1),
             patch("os.getpgrp", return_value=1000),
-            patch("kiro_crew.session_pid._pid_cmdline", return_value=b"npm\x00exec\x00p@latest"),
-            patch("kiro_crew.session_pid._env_has_kirocrew_marker", return_value=True),
-            patch("kiro_crew.session_pid._pid_start_token", return_value="tok-502"),
-            patch("kiro_crew.session_pid.platform_compat.kill_pid") as mock_kill,
+            patch("aj_crew.session_pid._pid_cmdline", return_value=b"npm\x00exec\x00p@latest"),
+            patch("aj_crew.session_pid._env_has_ajcrew_marker", return_value=True),
+            patch("aj_crew.session_pid._pid_start_token", return_value="tok-502"),
+            patch("aj_crew.session_pid.platform_compat.kill_pid") as mock_kill,
         ):
             _kill_orphan_mcp_descendants(_pairs(_MARKED_LEAF), root=_ROOT, budget=10)
 
@@ -412,15 +412,15 @@ class TestOrphanDescendantWalk:
     """
 
     def test_walks_depth_first_preorder(self) -> None:
-        from kiro_crew.session_pid import _orphan_descendants
+        from aj_crew.session_pid import _orphan_descendants
 
         # 11 must have TWO children, or reversing the grandchild push order is a
         # no-op and the ordering is not actually pinned.
         child_map = {10: [11, 20], 11: [12, 13], 20: [21]}
         with (
-            patch("kiro_crew.session_pid._prune_from_orphan_walk", return_value=False),
+            patch("aj_crew.session_pid._prune_from_orphan_walk", return_value=False),
             patch(
-                "kiro_crew.session_pid._pid_parent_and_token",
+                "aj_crew.session_pid._pid_parent_and_token",
                 side_effect=_stat_from(child_map),
             ),
         ):
@@ -431,12 +431,12 @@ class TestOrphanDescendantWalk:
 
     def test_carries_each_members_start_token(self) -> None:
         """The token is captured HERE so the kill can detect PID recycling."""
-        from kiro_crew.session_pid import _orphan_descendants
+        from aj_crew.session_pid import _orphan_descendants
 
         with (
-            patch("kiro_crew.session_pid._prune_from_orphan_walk", return_value=False),
+            patch("aj_crew.session_pid._prune_from_orphan_walk", return_value=False),
             patch(
-                "kiro_crew.session_pid._pid_parent_and_token",
+                "aj_crew.session_pid._pid_parent_and_token",
                 side_effect=_stat_from({10: [11]}),
             ),
         ):
@@ -445,13 +445,13 @@ class TestOrphanDescendantWalk:
         assert walked == [(11, "tok-11")]
 
     def test_cycle_cannot_spin_the_walk(self) -> None:
-        from kiro_crew.session_pid import _orphan_descendants
+        from aj_crew.session_pid import _orphan_descendants
 
         cyclic = {10: [11], 11: [10]}
         with (
-            patch("kiro_crew.session_pid._prune_from_orphan_walk", return_value=False),
+            patch("aj_crew.session_pid._prune_from_orphan_walk", return_value=False),
             patch(
-                "kiro_crew.session_pid._pid_parent_and_token",
+                "aj_crew.session_pid._pid_parent_and_token",
                 side_effect=_stat_from(cyclic),
             ),
         ):
@@ -460,9 +460,9 @@ class TestOrphanDescendantWalk:
         assert [pid for pid, _ in walked] == [11]
 
     def test_childless_root_yields_nothing(self) -> None:
-        from kiro_crew.session_pid import _orphan_descendants
+        from aj_crew.session_pid import _orphan_descendants
 
-        with patch("kiro_crew.session_pid._prune_from_orphan_walk", return_value=False):
+        with patch("aj_crew.session_pid._prune_from_orphan_walk", return_value=False):
             assert _orphan_descendants(10, {}) == []
 
 
@@ -472,7 +472,7 @@ class TestGatewaySubtreePrune:
 
     The crash this rules out: the walk is flat, so excluding a peer
     gateway by its own argv still enumerates its live workers. Those carry
-    KIROCREW_SPAWNED and no gateway marker of their own, so each passes the
+    AJCREW_SPAWNED and no gateway marker of their own, so each passes the
     per-member gate and would be SIGKILLed -- crashing that pod's sessions.
     """
 
@@ -483,22 +483,22 @@ class TestGatewaySubtreePrune:
 
     _MAP = {_ROOT_PID: [_GATEWAY_PID, _SIBLING_PID], _GATEWAY_PID: [_WORKER_PID]}
     _ARGV = {
-        _GATEWAY_PID: b"python3\x00-m\x00kiro_crew.cli\x00gateway",
+        _GATEWAY_PID: b"python3\x00-m\x00aj_crew.cli\x00gateway",
         # The worker's OWN argv carries no gateway marker -- this is the trap.
-        _WORKER_PID: b"python3\x00-m\x00kiro_crew.mcp_gateway.stub\x00--server\x00x",
+        _WORKER_PID: b"python3\x00-m\x00aj_crew.mcp_gateway.stub\x00--server\x00x",
         _SIBLING_PID: b"npm\x00exec\x00some-pkg@latest",
     }
 
     def _walk(self) -> list[int]:
-        from kiro_crew.session_pid import _orphan_descendants
+        from aj_crew.session_pid import _orphan_descendants
 
         with (
             patch(
-                "kiro_crew.session_pid._pid_cmdline",
+                "aj_crew.session_pid._pid_cmdline",
                 side_effect=lambda pid: self._ARGV.get(pid, b"npm\x00exec\x00x@latest"),
             ),
             patch(
-                "kiro_crew.session_pid._pid_parent_and_token",
+                "aj_crew.session_pid._pid_parent_and_token",
                 side_effect=_stat_from(self._MAP),
             ),
         ):
@@ -517,16 +517,16 @@ class TestGatewaySubtreePrune:
 
     def test_unreadable_argv_prunes_rather_than_descends(self) -> None:
         """Identity that cannot be established is not a licence to descend."""
-        from kiro_crew.session_pid import _prune_from_orphan_walk
+        from aj_crew.session_pid import _prune_from_orphan_walk
 
-        with patch("kiro_crew.session_pid._pid_cmdline", return_value=b""):
+        with patch("aj_crew.session_pid._pid_cmdline", return_value=b""):
             assert _prune_from_orphan_walk(999999) is True
 
     def test_ordinary_process_is_not_pruned(self) -> None:
-        from kiro_crew.session_pid import _prune_from_orphan_walk
+        from aj_crew.session_pid import _prune_from_orphan_walk
 
         with patch(
-            "kiro_crew.session_pid._pid_cmdline",
+            "aj_crew.session_pid._pid_cmdline",
             return_value=b"npm\x00exec\x00some-pkg@latest",
         ):
             assert _prune_from_orphan_walk(700) is False
@@ -538,10 +538,10 @@ class TestPidCmdline:
 
     def test_off_linux_returns_empty_without_spawning(self) -> None:
         """Off Linux every consumer's verdict is already 'refuse'."""
-        from kiro_crew.session_pid import _pid_cmdline
+        from aj_crew.session_pid import _pid_cmdline
 
         with (
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch("subprocess.check_output") as mock_run,
         ):
             mock_sys.platform = "darwin"
@@ -550,10 +550,10 @@ class TestPidCmdline:
         mock_run.assert_not_called()
 
     def test_unreadable_proc_is_empty(self) -> None:
-        from kiro_crew.session_pid import _pid_cmdline
+        from aj_crew.session_pid import _pid_cmdline
 
         with (
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(Path, "read_bytes", side_effect=OSError),
         ):
             mock_sys.platform = "linux"
@@ -578,7 +578,7 @@ class TestStaleMapEdge:
     _MAP = {_ROOT_PID: [_RECYCLED, _HEALTHY]}
 
     def _walk(self, live_ppid_of_recycled: int | None) -> list[int]:
-        from kiro_crew.session_pid import _orphan_descendants
+        from aj_crew.session_pid import _orphan_descendants
 
         def _stat(pid: int) -> tuple[int | None, str | None]:
             if pid == self._RECYCLED:
@@ -588,8 +588,8 @@ class TestStaleMapEdge:
             return (None, None)
 
         with (
-            patch("kiro_crew.session_pid._prune_from_orphan_walk", return_value=False),
-            patch("kiro_crew.session_pid._pid_parent_and_token", side_effect=_stat),
+            patch("aj_crew.session_pid._prune_from_orphan_walk", return_value=False),
+            patch("aj_crew.session_pid._pid_parent_and_token", side_effect=_stat),
         ):
             return [pid for pid, _ in _orphan_descendants(self._ROOT_PID, self._MAP)]
 
@@ -611,7 +611,7 @@ class TestStaleMapEdge:
 
     def test_children_of_a_dropped_edge_are_not_enumerated(self) -> None:
         """Dropping a stale edge drops whatever the snapshot hung beneath it."""
-        from kiro_crew.session_pid import _orphan_descendants
+        from aj_crew.session_pid import _orphan_descendants
 
         grandchild = 803
         child_map = {self._ROOT_PID: [self._RECYCLED], self._RECYCLED: [grandchild]}
@@ -622,8 +622,8 @@ class TestStaleMapEdge:
             return (self._RECYCLED, f"tok-{pid}")
 
         with (
-            patch("kiro_crew.session_pid._prune_from_orphan_walk", return_value=False),
-            patch("kiro_crew.session_pid._pid_parent_and_token", side_effect=_stat),
+            patch("aj_crew.session_pid._prune_from_orphan_walk", return_value=False),
+            patch("aj_crew.session_pid._pid_parent_and_token", side_effect=_stat),
         ):
             walked = [pid for pid, _ in _orphan_descendants(self._ROOT_PID, child_map)]
 
@@ -640,15 +640,15 @@ class TestWalkIsIterative:
     """
 
     def test_a_chain_far_past_the_recursion_limit_is_walked(self) -> None:
-        from kiro_crew.session_pid import _orphan_descendants
+        from aj_crew.session_pid import _orphan_descendants
 
         depth = sys.getrecursionlimit() * 3
         chain = {pid: [pid + 1] for pid in range(9000, 9000 + depth)}
 
         with (
-            patch("kiro_crew.session_pid._prune_from_orphan_walk", return_value=False),
+            patch("aj_crew.session_pid._prune_from_orphan_walk", return_value=False),
             patch(
-                "kiro_crew.session_pid._pid_parent_and_token",
+                "aj_crew.session_pid._pid_parent_and_token",
                 side_effect=_stat_from(chain),
             ),
         ):
@@ -677,25 +677,25 @@ class TestPidParentAndToken:
         return root
 
     def test_reads_ppid_and_starttime_from_one_stat(self, tmp_path: Path, linux: None) -> None:
-        from kiro_crew.session_pid import _pid_parent_and_token
+        from aj_crew.session_pid import _pid_parent_and_token
 
         root = self._table(tmp_path, self._STAT)
         # field 22 (starttime) is the 20th token after the last ')'
         assert _pid_parent_and_token(801, root) == (800, "22")
 
     def test_off_linux_is_unproven(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.session_pid import _pid_parent_and_token
+        from aj_crew.session_pid import _pid_parent_and_token
 
         monkeypatch.setattr(platform_compat.sys, "platform", "darwin")
         assert _pid_parent_and_token(801) == (None, None)
 
     def test_vanished_pid_is_unproven(self, tmp_path: Path, linux: None) -> None:
-        from kiro_crew.session_pid import _pid_parent_and_token
+        from aj_crew.session_pid import _pid_parent_and_token
 
         assert _pid_parent_and_token(801, tmp_path) == (None, None)
 
     def test_malformed_stat_is_unproven(self, tmp_path: Path, linux: None) -> None:
-        from kiro_crew.session_pid import _pid_parent_and_token
+        from aj_crew.session_pid import _pid_parent_and_token
 
         root = self._table(tmp_path, b"no parens here")
         assert _pid_parent_and_token(801, root) == (None, None)
@@ -720,7 +720,7 @@ class TestRootRecycleGuard:
         pgid_after: int | None = None,
     ) -> dict[str, list[object]]:
         """Run one sweep over _ROOT; report which signals were delivered."""
-        from kiro_crew.session_pid import kill_orphan_mcps
+        from aj_crew.session_pid import kill_orphan_mcps
 
         signals: dict[str, list[object]] = {"killpg": [], "kill": [], "descendants": []}
         # Only the ROOT's reads are sequenced (pre-scan, then post-scan); every
@@ -749,18 +749,18 @@ class TestRootRecycleGuard:
             patch("os.killpg", side_effect=lambda pg, _s: signals["killpg"].append(pg)),
             patch("os.kill", side_effect=lambda p, _s: signals["kill"].append(p)),
             patch("os.getpid", return_value=1),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(Path, "read_bytes", lambda self: _ROOT_CMDLINE),
-            patch("kiro_crew.session_pid._build_child_map", return_value={}),
+            patch("aj_crew.session_pid._build_child_map", return_value={}),
             patch(
-                "kiro_crew.session_pid._orphan_descendants",
+                "aj_crew.session_pid._orphan_descendants",
                 return_value=_pairs(_MARKED_LEAF),
             ),
-            patch("kiro_crew.session_pid._pid_start_token", side_effect=_token),
-            patch("kiro_crew.session_pid._pid_cmdline", return_value=b"npm\x00exec\x00p@latest"),
-            patch("kiro_crew.session_pid._env_has_kirocrew_marker", return_value=True),
+            patch("aj_crew.session_pid._pid_start_token", side_effect=_token),
+            patch("aj_crew.session_pid._pid_cmdline", return_value=b"npm\x00exec\x00p@latest"),
+            patch("aj_crew.session_pid._env_has_ajcrew_marker", return_value=True),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, _s: signals["descendants"].append(p),
             ),
         ):
@@ -805,7 +805,7 @@ class TestRootRecycleGuard:
 
     def test_identity_is_captured_before_the_subtree_scan(self) -> None:
         """Capturing it after the scan would prove nothing about the gap."""
-        from kiro_crew.session_pid import kill_orphan_mcps
+        from aj_crew.session_pid import kill_orphan_mcps
 
         order: list[str] = []
         with (
@@ -813,18 +813,18 @@ class TestRootRecycleGuard:
             patch("os.getpgid", return_value=_ROOT),
             patch("os.killpg"),
             patch("os.getpid", return_value=1),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(Path, "read_bytes", lambda self: _ROOT_CMDLINE),
             patch(
-                "kiro_crew.session_pid._build_child_map",
+                "aj_crew.session_pid._build_child_map",
                 side_effect=lambda: order.append("scan") or {},
             ),
-            patch("kiro_crew.session_pid._orphan_descendants", return_value=[]),
+            patch("aj_crew.session_pid._orphan_descendants", return_value=[]),
             patch(
-                "kiro_crew.session_pid._pid_start_token",
+                "aj_crew.session_pid._pid_start_token",
                 side_effect=lambda _p: order.append("token") or "tok-root",
             ),
-            patch("kiro_crew.session_pid.platform_compat.kill_pid"),
+            patch("aj_crew.session_pid.platform_compat.kill_pid"),
         ):
             mock_sys.platform = "linux"
             kill_orphan_mcps([_ROOT])
@@ -842,7 +842,7 @@ class TestDescendantsBeforeRoot:
     """
 
     def _order(self) -> list[str]:
-        from kiro_crew.session_pid import kill_orphan_mcps
+        from aj_crew.session_pid import kill_orphan_mcps
 
         order: list[str] = []
         with (
@@ -851,23 +851,23 @@ class TestDescendantsBeforeRoot:
             patch("os.killpg", side_effect=lambda *_a: order.append("root")),
             patch("os.kill", side_effect=lambda *_a: order.append("root")),
             patch("os.getpid", return_value=1),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(Path, "read_bytes", lambda self: _ROOT_CMDLINE),
-            patch("kiro_crew.session_pid._build_child_map", return_value={}),
+            patch("aj_crew.session_pid._build_child_map", return_value={}),
             patch(
-                "kiro_crew.session_pid._orphan_descendants",
+                "aj_crew.session_pid._orphan_descendants",
                 return_value=_pairs(_MARKED_LEAF),
             ),
             # Must agree with _pairs(): a constant here reads as "recycled" for
             # every descendant and silently skips the whole subtree.
             patch(
-                "kiro_crew.session_pid._pid_start_token",
+                "aj_crew.session_pid._pid_start_token",
                 side_effect=lambda pid: f"tok-{pid}",
             ),
-            patch("kiro_crew.session_pid._pid_cmdline", return_value=b"npm\x00exec\x00p@latest"),
-            patch("kiro_crew.session_pid._env_has_kirocrew_marker", return_value=True),
+            patch("aj_crew.session_pid._pid_cmdline", return_value=b"npm\x00exec\x00p@latest"),
+            patch("aj_crew.session_pid._env_has_ajcrew_marker", return_value=True),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda *_a: order.append("descendant"),
             ),
         ):
@@ -893,7 +893,7 @@ class TestBudgetExhaustionSparesRoot:
     """
 
     def _run_with(self, descendant_count: int) -> dict[str, list[object]]:
-        from kiro_crew.session_pid import kill_orphan_mcps
+        from aj_crew.session_pid import kill_orphan_mcps
 
         signals: dict[str, list[object]] = {"root": [], "descendants": []}
         pids = list(range(600, 600 + descendant_count))
@@ -903,20 +903,20 @@ class TestBudgetExhaustionSparesRoot:
             patch("os.killpg", side_effect=lambda pg, _s: signals["root"].append(pg)),
             patch("os.kill", side_effect=lambda p, _s: signals["root"].append(p)),
             patch("os.getpid", return_value=1),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(Path, "read_bytes", lambda self: _ROOT_CMDLINE),
-            patch("kiro_crew.session_pid._build_child_map", return_value={}),
-            patch("kiro_crew.session_pid._orphan_descendants", return_value=_pairs(*pids)),
+            patch("aj_crew.session_pid._build_child_map", return_value={}),
+            patch("aj_crew.session_pid._orphan_descendants", return_value=_pairs(*pids)),
             # Must agree with _pairs(): a constant here reads as "recycled" for
             # every descendant and silently skips the whole subtree.
             patch(
-                "kiro_crew.session_pid._pid_start_token",
+                "aj_crew.session_pid._pid_start_token",
                 side_effect=lambda pid: f"tok-{pid}",
             ),
-            patch("kiro_crew.session_pid._pid_cmdline", return_value=b"npm\x00exec\x00p@latest"),
-            patch("kiro_crew.session_pid._env_has_kirocrew_marker", return_value=True),
+            patch("aj_crew.session_pid._pid_cmdline", return_value=b"npm\x00exec\x00p@latest"),
+            patch("aj_crew.session_pid._env_has_ajcrew_marker", return_value=True),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=lambda p, _s: signals["descendants"].append(p),
             ),
         ):
@@ -925,7 +925,7 @@ class TestBudgetExhaustionSparesRoot:
         return signals
 
     def test_root_survives_when_the_subtree_spends_the_budget(self) -> None:
-        from kiro_crew.session_pid import _ORPHAN_SWEEP_MAX_KILLS
+        from aj_crew.session_pid import _ORPHAN_SWEEP_MAX_KILLS
 
         signals = self._run_with(_ORPHAN_SWEEP_MAX_KILLS + 5)
 
@@ -949,7 +949,7 @@ class TestRootEvidenceRevalidated:
         still_eligible: bool = True,
         pgid_after: int | None = None,
     ) -> list[object]:
-        from kiro_crew.session_pid import kill_orphan_mcps
+        from aj_crew.session_pid import kill_orphan_mcps
 
         root_signals: list[object] = []
         eligible = iter([True, still_eligible])
@@ -967,16 +967,16 @@ class TestRootEvidenceRevalidated:
             patch("os.killpg", side_effect=lambda pg, _s: root_signals.append(pg)),
             patch("os.kill", side_effect=lambda p, _s: root_signals.append(p)),
             patch("os.getpid", return_value=1),
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(Path, "read_bytes", lambda self: _ROOT_CMDLINE),
-            patch("kiro_crew.session_pid._build_child_map", return_value={}),
-            patch("kiro_crew.session_pid._orphan_descendants", return_value=[]),
-            patch("kiro_crew.session_pid._pid_start_token", return_value="tok-stable"),
+            patch("aj_crew.session_pid._build_child_map", return_value={}),
+            patch("aj_crew.session_pid._orphan_descendants", return_value=[]),
+            patch("aj_crew.session_pid._pid_start_token", return_value="tok-stable"),
             patch(
-                "kiro_crew.session_pid._is_sweepable_orphan_mcp",
+                "aj_crew.session_pid._is_sweepable_orphan_mcp",
                 side_effect=lambda *_a: next(eligible),
             ),
-            patch("kiro_crew.session_pid.platform_compat.kill_pid"),
+            patch("aj_crew.session_pid.platform_compat.kill_pid"),
         ):
             mock_sys.platform = "linux"
             kill_orphan_mcps([_ROOT])

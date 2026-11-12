@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 /**
- * The `kirocrew-conductor` page, driven rather than read.
+ * The `ajcrew-conductor` page, driven rather than read.
  *
  * The page ships in the Python package and runs in a sandboxed frame, so its script
  * is exercised here the way `projectReportPage.test.ts` drives its own: set
- * `window.kirocrew` as the frame does, insert the markup, run the script.
+ * `window.ajcrew` as the frame does, insert the markup, run the script.
  *
  * Three sources feed it, and each case checks one: the `work` fold's items, the
  * conductor's agentic `needs_you` lines, and its own `panel` note. Every value is
@@ -16,7 +16,7 @@ import { resolve } from 'node:path'
 
 const TEMPLATE = resolve(
   __dirname,
-  '../../../src/kiro_crew/dashboard_templates/builtin/kirocrew-conductor/template.html',
+  '../../../src/aj_crew/dashboard_templates/builtin/ajcrew-conductor/template.html',
 )
 const RAW = readFileSync(TEMPLATE, 'utf-8')
 
@@ -46,7 +46,7 @@ function item(over: Record<string, unknown> = {}) {
 }
 
 function setState(fields: Record<string, unknown>, agentic: string[] = ['needs_you']) {
-  ;(window as unknown as { kirocrew: unknown }).kirocrew = {
+  ;(window as unknown as { ajcrew: unknown }).ajcrew = {
     fields,
     agentic,
     seq: 1,
@@ -76,13 +76,13 @@ function mount(fields: Record<string, unknown>, agentic: string[] = ['needs_you'
 /** Refill the mounted document without running its script again. */
 function refill(fields: Record<string, unknown>, agentic: string[] = ['needs_you']) {
   publish(fields, agentic)
-  window.dispatchEvent(new Event('kirocrew-dashboard'))
+  window.dispatchEvent(new Event('ajcrew-dashboard'))
 }
 
 const text = (sel: string) => document.querySelector(sel)?.textContent ?? ''
 const all = (sel: string) => Array.from(document.querySelectorAll(sel))
 
-describe('kirocrew-conductor page', () => {
+describe('ajcrew-conductor page', () => {
   it('keeps stable nodes on refill and animates only new work', () => {
     const frameCallbacks: FrameRequestCallback[] = []
     const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
@@ -375,7 +375,7 @@ describe('kirocrew-conductor page', () => {
     })
     mount({ items: [], needs_you: ['Approve the push'] })
     ;(document.querySelector('#cb-you button.reply') as HTMLButtonElement).click()
-    expect(sent).toEqual([{ type: 'kirocrew-dashboard:act', text: 'About "Approve the push": ' }])
+    expect(sent).toEqual([{ type: 'ajcrew-dashboard:act', text: 'About "Approve the push": ' }])
     spy.mockRestore()
   })
 

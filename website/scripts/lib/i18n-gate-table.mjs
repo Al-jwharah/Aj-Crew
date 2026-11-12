@@ -180,7 +180,7 @@ export const CHECKS = [
   {
     // Built-in app metadata is owned by `app.json` on the Python side, and
     // `APP_MANIFEST_KEY` localises it WITHOUT replacing the manifest's English --
-    // so `kirocrew app list` keeps printing English by construction rather than by
+    // so `ajcrew app list` keeps printing English by construction rather than by
     // a fallback. The price of that design is two copies of the same sentence, and
     // this is what stops them drifting: edit a `description` in `app.json` and,
     // unchecked, the CLI shows the new words while the dashboard shows the old ones

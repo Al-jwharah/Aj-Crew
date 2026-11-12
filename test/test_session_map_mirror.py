@@ -15,7 +15,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.messaging.link import (
+from aj_crew.messaging.link import (
     UNBIND_REASON_PRUNED_STALE,
     UNBIND_REASON_UNSPECIFIED,
     ChannelLink,
@@ -23,20 +23,20 @@ from kiro_crew.messaging.link import (
     legacy_dashboard_mirror_key,
     release_conversation_location,
 )
-from kiro_crew.session import SessionManager, _opt_out_key
-from kiro_crew.session_map import (
+from aj_crew.session import SessionManager, _opt_out_key
+from aj_crew.session_map import (
     MIRROR_OPT_OUT_FLAG,
     ConversationOwnershipConflict,
     SessionMap,
     set_unbind_listener,
 )
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.fixture()
 def session_map(tmp_path):
     """A SessionMap backed by a temp directory."""
-    with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+    with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
         yield SessionMap()
 
 
@@ -251,7 +251,7 @@ class TestRecordedPrincipal:
         stored with its admission byte-for-byte and reads back verifying for that
         session; a link that names a peer but carries no admission is stored
         UNSIGNED and stays that way -- the refusal at send is the point."""
-        from kiro_crew.mirror_admission import sign_mirror_admission, verify_mirror_admission
+        from aj_crew.mirror_admission import sign_mirror_admission, verify_mirror_admission
 
         link = ChannelLink(channel_type="discord", channel_id="dm-9", principal="42")
         signed = dataclasses.replace(link, admission=sign_mirror_admission(self._KEY, link))
@@ -272,7 +272,7 @@ class TestRecordedPrincipal:
         """The map neither repairs nor rejects a bad admission -- that is the
         reader's job, and repairing here is exactly the laundering a generic
         signer would do."""
-        from kiro_crew.mirror_admission import verify_mirror_admission
+        from aj_crew.mirror_admission import verify_mirror_admission
 
         planted = ChannelLink(
             channel_type="discord", channel_id="dm-9", principal="42", admission="f" * 64
@@ -436,7 +436,7 @@ class TestLegacyFallback:
         surviving thread id, nor by the legacy ``dashboard:`` row it falls back to:
         neither is the row the clear removed, and both would read as "still bound"
         and make the rollback skip the restore it promised."""
-        key = "discord:kirocrew:direct:7"
+        key = "discord:ajcrew:direct:7"
         session_map.set(key, "sid-abc")
         session_map.set_slack_link(key, "ts-9", "C9")
         assert session_map.get_mirror_link(key) is not None  # synthesized Slack link
@@ -607,7 +607,7 @@ class TestClearMirrorLinksAt:
         # resurrect the stale binding on the next gateway start.
         session_map.set_mirror_link("dashboard:chat-1", self.LINK)
         session_map.clear_mirror_links_at(self.LINK)
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             reloaded = SessionMap()
         assert reloaded.find_mirror_sessions(self.LINK) == []
 
@@ -719,7 +719,7 @@ class TestReleaseConversationLocation:
 
 class TestPrunePreservesMirror:
     def test_mirror_only_entry_survives_prune(self, tmp_path):
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             sm = SessionMap()
             # No sid yet, no Slack thread — only a non-Slack mirror binding.
             sm.set_mirror_link(
@@ -738,7 +738,7 @@ class TestPrunePreservesMirror:
         """
         key = "dashboard:chat-1"
         link = ChannelLink(channel_type="discord", channel_id="dm-1")
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             sm = SessionMap()
             sm.set(key, "sid-that-no-longer-exists")
             sm.set_mirror_link(key, link, accepts_inbound=True)
@@ -746,7 +746,7 @@ class TestPrunePreservesMirror:
             assert sm.get_mirror_link(key) == link
             assert sm.mirror_accepts_inbound(key) is True
             assert (sm._data.get(key) or {}).get("sid") == ""
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             reloaded = SessionMap()
         # The repair reached disk, so the next startup does not redo it.
         assert reloaded.get_mirror_link(key) == link
@@ -760,20 +760,20 @@ class TestPrunePreservesMirror:
         the next reply in it starts a new conversation.
         """
         key = "dashboard:chat-1"
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             sm = SessionMap()
             sm.set(key, "sid-that-no-longer-exists")
             sm.set_slack_link(key, "1700000000.000100", "C123")
             assert sm.prune() == 0
             assert (sm._data.get(key) or {}).get("sid") == ""
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             reloaded = SessionMap()
         assert reloaded.get_session_for_thread("1700000000.000100") == key
         assert not (reloaded._data.get(key) or {}).get("sid")
 
     def test_stale_sid_with_no_binding_is_still_collected(self, tmp_path):
         """Repair is for entries that carry state; a bare stale row is garbage."""
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             sm = SessionMap()
             sm.set("dashboard:chat-1", "sid-that-no-longer-exists")
             assert sm.prune() == 1
@@ -783,11 +783,11 @@ class TestPrunePreservesMirror:
         """Prune only touches entries whose session file is gone."""
         key = "dashboard:chat-1"
         link = ChannelLink(channel_type="discord", channel_id="dm-1")
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             sm = SessionMap()
             sm.set(key, "sid-alive")
             sm.set_mirror_link(key, link, accepts_inbound=True)
-            with patch("kiro_crew.session_map._kiro_sessions_dir", return_value=tmp_path):
+            with patch("aj_crew.session_map._kiro_sessions_dir", return_value=tmp_path):
                 (tmp_path / "sid-alive.json").write_text("{}", encoding="utf-8")
                 assert sm.prune() == 0
             assert (sm._data.get(key) or {}).get("sid") == "sid-alive"
@@ -798,21 +798,21 @@ class TestPrunePreservesMirror:
 class TestPersistence:
     def test_inbound_resume_marker_round_trips_to_disk(self, tmp_path):
         link = ChannelLink(channel_type="discord", channel_id="dm-1")
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             sm = SessionMap()
             sm.set_mirror_link("dashboard:chat-1", link, accepts_inbound=True)
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             sm2 = SessionMap()
             assert sm2.find_mirror_sessions(link, inbound_only=True) == ["dashboard:chat-1"]
 
     def test_mirror_round_trips_to_disk(self, tmp_path):
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             sm = SessionMap()
             sm.set_mirror_link(
                 "dashboard:chat-1",
                 ChannelLink(channel_type="telegram", channel_id="777", thread_id=None),
             )
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             sm2 = SessionMap()
             got = sm2.get_mirror_link("dashboard:chat-1")
             assert got == ChannelLink(channel_type="telegram", channel_id="777", thread_id=None)
@@ -823,8 +823,8 @@ class TestLegacyDashboardSpelling:
     binding written under the old ``dashboard:<safe key>`` spelling must still
     resolve and still be clearable, so an existing link is not orphaned."""
 
-    CHANNEL = "telegram:kirocrew:direct:7"
-    LEGACY = "dashboard:telegram_kirocrew_direct_7"
+    CHANNEL = "telegram:ajcrew:direct:7"
+    LEGACY = "dashboard:telegram_ajcrew_direct_7"
 
     def test_read_falls_back_to_legacy_row(self, session_map):
         link = ChannelLink(channel_type="telegram", channel_id="7")
@@ -992,7 +992,7 @@ class TestConversationOwnership:
         gone after the next restart — the fork would come back on reboot only.
         """
         session_map.set_mirror_link("dashboard:brand-new", self.LINK, accepts_inbound=True)
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             reloaded = SessionMap()
         assert reloaded.find_mirror_sessions(self.LINK, inbound_only=True) == [
             "dashboard:brand-new"
@@ -1013,9 +1013,9 @@ class TestBatchedSave:
         writes = []
         with patch.object(session_map, "_write", side_effect=lambda: writes.append(1)):
             with session_map.batched_save():
-                session_map.set_mirror_link("telegram:kirocrew:direct:7", self.LINK)
-                session_map.set_flag("telegram:kirocrew:direct:7", MIRROR_OPT_OUT_FLAG, True)
-                session_map.set("telegram:kirocrew:direct:7", "sid-1")
+                session_map.set_mirror_link("telegram:ajcrew:direct:7", self.LINK)
+                session_map.set_flag("telegram:ajcrew:direct:7", MIRROR_OPT_OUT_FLAG, True)
+                session_map.set("telegram:ajcrew:direct:7", "sid-1")
         assert writes == [1]
 
     def test_the_write_still_happens_when_the_block_raises(self, session_map):
@@ -1023,7 +1023,7 @@ class TestBatchedSave:
         with patch.object(session_map, "_write", side_effect=lambda: writes.append(1)):
             with pytest.raises(RuntimeError):
                 with session_map.batched_save():
-                    session_map.set_mirror_link("telegram:kirocrew:direct:7", self.LINK)
+                    session_map.set_mirror_link("telegram:ajcrew:direct:7", self.LINK)
                     raise RuntimeError("mid-sequence failure")
         # Leaving the mutation only in memory would lose it on the next restart.
         assert writes == [1]
@@ -1033,7 +1033,7 @@ class TestBatchedSave:
         with patch.object(session_map, "_write", side_effect=lambda: writes.append(1)):
             with session_map.batched_save():
                 with session_map.batched_save():
-                    session_map.set_mirror_link("telegram:kirocrew:direct:7", self.LINK)
+                    session_map.set_mirror_link("telegram:ajcrew:direct:7", self.LINK)
                 assert writes == []  # inner exit must not write
         assert writes == [1]
 
@@ -1041,15 +1041,15 @@ class TestBatchedSave:
         writes = []
         with patch.object(session_map, "_write", side_effect=lambda: writes.append(1)):
             with session_map.batched_save():
-                session_map.get_mirror_link("telegram:kirocrew:direct:7")
+                session_map.get_mirror_link("telegram:ajcrew:direct:7")
         assert writes == []
 
     def test_the_batched_data_actually_reaches_disk(self, session_map, tmp_path):
-        key = "telegram:kirocrew:direct:7"
+        key = "telegram:ajcrew:direct:7"
         with session_map.batched_save():
             session_map.set_mirror_link(key, self.LINK)
             session_map.set_flag(key, MIRROR_OPT_OUT_FLAG, True)
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             reloaded = SessionMap()
         assert reloaded.get_mirror_link(key) == self.LINK
         assert reloaded.get_flag(key, MIRROR_OPT_OUT_FLAG) is True
@@ -1067,14 +1067,14 @@ class TestAutomaticMirrorOptOut:
     LINK = ChannelLink(channel_type="telegram", channel_id="7")
 
     def test_opt_out_survives_a_reload(self, session_map, tmp_path):
-        session_map.set_flag("telegram:kirocrew:direct:7", MIRROR_OPT_OUT_FLAG, True)
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        session_map.set_flag("telegram:ajcrew:direct:7", MIRROR_OPT_OUT_FLAG, True)
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             reloaded = SessionMap()
-        assert reloaded.get_flag("telegram:kirocrew:direct:7", MIRROR_OPT_OUT_FLAG) is True
+        assert reloaded.get_flag("telegram:ajcrew:direct:7", MIRROR_OPT_OUT_FLAG) is True
 
     def test_clearing_the_binding_does_not_clear_the_opt_out(self, session_map):
         """The two are independent: unlink does both, and only one must persist."""
-        key = "telegram:kirocrew:direct:7"
+        key = "telegram:ajcrew:direct:7"
         session_map.set_flag(key, MIRROR_OPT_OUT_FLAG, True)
         session_map.set_mirror_link(key, self.LINK)
         assert session_map.clear_mirror_link(key) is True
@@ -1097,11 +1097,11 @@ class TestAutomaticMirrorOptOut:
         undo the user's "off" unprompted — and each rotated generation strands its
         own row that pruning is forbidden to collect.
         """
-        assert _opt_out_key("telegram:kirocrew:direct:7:gen3") == "telegram:kirocrew:direct:7"
-        assert _opt_out_key("telegram:kirocrew:direct:7") == "telegram:kirocrew:direct:7"
+        assert _opt_out_key("telegram:ajcrew:direct:7:gen3") == "telegram:ajcrew:direct:7"
+        assert _opt_out_key("telegram:ajcrew:direct:7") == "telegram:ajcrew:direct:7"
         assert (
-            _opt_out_key("telegram:kirocrew:forum:-100123:5:gen9")
-            == "telegram:kirocrew:forum:-100123:5"
+            _opt_out_key("telegram:ajcrew:forum:-100123:5:gen9")
+            == "telegram:ajcrew:forum:-100123:5"
         )
         # Outside the canonical grammar there is no generation to strip.
         assert _opt_out_key("dashboard:chat-9") == "dashboard:chat-9"
@@ -1113,21 +1113,19 @@ class TestAutomaticMirrorOptOut:
         canonical grammar — so a parser-only rule would leave every unified
         conversation keyed per generation, which is the bug being fixed.
         """
-        assert _opt_out_key("unified:kirocrew:gen3") == "unified:kirocrew"
-        assert _opt_out_key("unified:kirocrew") == "unified:kirocrew"
+        assert _opt_out_key("unified:ajcrew:gen3") == "unified:ajcrew"
+        assert _opt_out_key("unified:ajcrew") == "unified:ajcrew"
         # A trailing segment that merely starts with "gen" is not a generation.
-        assert _opt_out_key("telegram:kirocrew:direct:general") == (
-            "telegram:kirocrew:direct:general"
-        )
+        assert _opt_out_key("telegram:ajcrew:direct:general") == ("telegram:ajcrew:direct:general")
 
     def test_every_generation_shares_one_flag_row(self, session_map):
         """Bucket-keying is what bounds the unprunable rows to one per chat."""
         for gen in ("", ":gen1", ":gen2", ":gen7"):
             session_map.set_flag(
-                _opt_out_key(f"telegram:kirocrew:direct:7{gen}"), MIRROR_OPT_OUT_FLAG, True
+                _opt_out_key(f"telegram:ajcrew:direct:7{gen}"), MIRROR_OPT_OUT_FLAG, True
             )
         flagged = [k for k, e in session_map._data.items() if e.get("flags")]
-        assert flagged == ["telegram:kirocrew:direct:7"]
+        assert flagged == ["telegram:ajcrew:direct:7"]
 
     def test_a_refusal_stored_under_the_old_generation_key_is_still_honoured(self, session_map):
         """Upgrading must not silently restore mirroring.
@@ -1137,7 +1135,7 @@ class TestAutomaticMirrorOptOut:
         fix for the expiry bug would itself deliver the expiry bug, once.
         """
         mgr = _manager_over(session_map)
-        key = "telegram:kirocrew:direct:7:gen3"
+        key = "telegram:ajcrew:direct:7:gen3"
         session_map.set_flag(key, MIRROR_OPT_OUT_FLAG, True)
         assert mgr.mirror_opt_out(key) is True
 
@@ -1148,18 +1146,18 @@ class TestAutomaticMirrorOptOut:
         this change exists to remove, and leaves an unprunable row per generation.
         """
         mgr = _manager_over(session_map)
-        session_map.set_flag("telegram:kirocrew:direct:7:gen3", MIRROR_OPT_OUT_FLAG, True)
-        assert mgr.mirror_opt_out("telegram:kirocrew:direct:7:gen3") is True
+        session_map.set_flag("telegram:ajcrew:direct:7:gen3", MIRROR_OPT_OUT_FLAG, True)
+        assert mgr.mirror_opt_out("telegram:ajcrew:direct:7:gen3") is True
         # Promoted to the bucket, and the generation row retired with it.
-        assert session_map.get_flag("telegram:kirocrew:direct:7", MIRROR_OPT_OUT_FLAG) is True
-        assert session_map.get_flag("telegram:kirocrew:direct:7:gen3", MIRROR_OPT_OUT_FLAG) is False
+        assert session_map.get_flag("telegram:ajcrew:direct:7", MIRROR_OPT_OUT_FLAG) is True
+        assert session_map.get_flag("telegram:ajcrew:direct:7:gen3", MIRROR_OPT_OUT_FLAG) is False
         # And it now survives the rotation that would have dropped it.
-        assert mgr.mirror_opt_out("telegram:kirocrew:direct:7:gen4") is True
+        assert mgr.mirror_opt_out("telegram:ajcrew:direct:7:gen4") is True
 
     def test_withdrawing_also_retires_the_old_generation_key(self, session_map):
         """Otherwise a legacy refusal outlives the withdrawal that cleared it."""
         mgr = _manager_over(session_map)
-        key = "telegram:kirocrew:direct:7:gen3"
+        key = "telegram:ajcrew:direct:7:gen3"
         session_map.set_flag(key, MIRROR_OPT_OUT_FLAG, True)
         mgr.set_mirror_opt_out(key, False)
         assert mgr.mirror_opt_out(key) is False
@@ -1171,15 +1169,15 @@ class TestAutomaticMirrorOptOut:
         would leak a row per session into a map rewritten whole on every mutation.
         """
         for flag in ("pinned", "muted"):
-            key = f"slack:kirocrew:{flag}"
+            key = f"slack:ajcrew:{flag}"
             session_map.set_flag(key, flag, True)
         assert session_map.prune() == 2
-        assert session_map.get_flag("slack:kirocrew:pinned", "pinned") is False
-        assert session_map.get_flag("slack:kirocrew:muted", "muted") is False
+        assert session_map.get_flag("slack:ajcrew:pinned", "pinned") is False
+        assert session_map.get_flag("slack:ajcrew:muted", "muted") is False
 
     def test_a_stale_sid_is_still_collected_when_the_flag_is_unlisted(self, session_map):
         """The repair branch is for the listed flags only, not for any flag at all."""
-        key = "slack:kirocrew:direct:7"
+        key = "slack:ajcrew:direct:7"
         session_map.set(key, "sid-that-no-longer-exists")
         session_map.set_flag(key, "pinned", True)
         assert session_map.prune() == 1
@@ -1192,7 +1190,7 @@ class TestAutomaticMirrorOptOut:
         the setting silently reverts at the next restart and the user's next
         message lands on the default they had just switched off.
         """
-        key = "telegram:kirocrew:direct:7"
+        key = "telegram:ajcrew:direct:7"
         session_map.set_flag(key, MIRROR_OPT_OUT_FLAG, True)
         assert session_map.prune() == 0
         assert session_map.get_flag(key, MIRROR_OPT_OUT_FLAG) is True
@@ -1205,12 +1203,12 @@ class TestAutomaticMirrorOptOut:
         predicate — and deleting it would take the opt-out with it, silently
         restoring mirroring on the next message.
         """
-        key = "telegram:kirocrew:direct:7"
+        key = "telegram:ajcrew:direct:7"
         session_map.set(key, "sid-that-no-longer-exists")
         session_map.set_flag(key, MIRROR_OPT_OUT_FLAG, True)
         assert session_map.prune() == 0
         assert session_map.get_flag(key, MIRROR_OPT_OUT_FLAG) is True
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             reloaded = SessionMap()
         # The repair reached disk, so the next startup does not redo it.
         assert reloaded.get_flag(key, MIRROR_OPT_OUT_FLAG) is True
@@ -1239,7 +1237,7 @@ def unbind_calls():
 @pytest.fixture()
 def sel_events():
     """Capture every SEL event the map emits during a removal."""
-    with patch("kiro_crew.session_map.sel") as fake_sel:
+    with patch("aj_crew.session_map.sel") as fake_sel:
         fake_sel.return_value.log_api_access = MagicMock()
         yield fake_sel.return_value.log_api_access
 
@@ -1375,7 +1373,7 @@ class TestPruneRemovesThroughTheChokePoint:
         session_map.set_mirror_link(key, INBOUND_LINK, accepts_inbound=True)
         # Stand in for a future edit to the predicate: the entry becomes
         # collectable while still holding the binding prune would take with it.
-        monkeypatch.setattr("kiro_crew.session_map._survives_prune", lambda entry: False)
+        monkeypatch.setattr("aj_crew.session_map._survives_prune", lambda entry: False)
 
         assert session_map.prune() == 1
         assert key not in session_map._data
@@ -1408,7 +1406,7 @@ class TestPruneRemovesThroughTheChokePoint:
         Prune runs from ``start_pool`` on the loop: per-key audits, zero loop-thread
         writes, one coalesced flush afterwards.
         """
-        import kiro_crew.session_map as mod
+        import aj_crew.session_map as mod
 
         loop_thread = threading.current_thread()
         replace_threads: list[threading.Thread] = []
@@ -1444,7 +1442,7 @@ class TestPruneRemovesThroughTheChokePoint:
         key = "dashboard:chat-1"
         session_map.set_slack_link(key, "1700000000.000100", "C123")
         assert session_map.get_session_for_thread("1700000000.000100") == key
-        monkeypatch.setattr("kiro_crew.session_map._survives_prune", lambda entry: False)
+        monkeypatch.setattr("aj_crew.session_map._survives_prune", lambda entry: False)
 
         assert session_map.prune() == 1
         assert session_map.get_session_for_thread("1700000000.000100") is None
@@ -1509,7 +1507,7 @@ class TestAnnouncementIsBestEffort:
 
         set_unbind_listener(_explode)
         try:
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.session_map"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.session_map"):
                 session_map.set_mirror_link("dashboard:chat-1", INBOUND_LINK, accepts_inbound=True)
                 assert session_map.clear_mirror_link("dashboard:chat-1") is True
         finally:
@@ -1524,7 +1522,7 @@ class TestAnnouncementIsBestEffort:
         _manager_over(session_map).set_unbind_listener(lambda key, link, reason: calls.append(key))
         try:
             session_map.set_mirror_link("dashboard:chat-1", INBOUND_LINK, accepts_inbound=True)
-            with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+            with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
                 other = SessionMap()
             other.clear_mirror_link("dashboard:chat-1")
         finally:
@@ -1561,7 +1559,7 @@ class TestAuditDoesNotBlockTheLoop:
 
         session_map.set_mirror_link("dashboard:chat-1", INBOUND_LINK, accepts_inbound=True)
         try:
-            with patch("kiro_crew.session_map.sel", _blocking_sel):
+            with patch("aj_crew.session_map.sel", _blocking_sel):
                 started = time.monotonic()
                 session_map.clear_mirror_link("dashboard:chat-1", reason="dashboard_unlink")
                 elapsed = time.monotonic() - started
@@ -1581,8 +1579,8 @@ class TestAuditDoesNotBlockTheLoop:
     @pytest.mark.asyncio
     async def test_an_audit_failure_is_isolated_and_logged_at_warning(self, session_map, caplog):
         session_map.set_mirror_link("dashboard:chat-1", INBOUND_LINK, accepts_inbound=True)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_map"):
-            with patch("kiro_crew.session_map.sel", side_effect=RuntimeError("sel down")):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_map"):
+            with patch("aj_crew.session_map.sel", side_effect=RuntimeError("sel down")):
                 # The removal still commits despite the broken sink.
                 assert session_map.clear_mirror_link("dashboard:chat-1") is True
                 await async_wait_until(
@@ -1600,7 +1598,7 @@ class TestAuditDoesNotBlockTheLoop:
         fake.log_api_access = lambda **kw: calls.append(kw)
 
         session_map.set_mirror_link("dashboard:chat-1", INBOUND_LINK, accepts_inbound=True)
-        with patch("kiro_crew.session_map.sel", return_value=fake):
+        with patch("aj_crew.session_map.sel", return_value=fake):
             session_map.clear_mirror_link("dashboard:chat-1", reason="dashboard_unlink")
 
         assert len(calls) == 1
@@ -1613,7 +1611,7 @@ class TestReasonIsNormalizedAtTheChokePoint:
 
     def test_an_unknown_reason_is_normalized_and_warned(self, session_map, unbind_calls, caplog):
         session_map.set_mirror_link("dashboard:chat-1", INBOUND_LINK, accepts_inbound=True)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_map"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_map"):
             session_map.clear_mirror_link("dashboard:chat-1", reason="totally_made_up")
 
         assert unbind_calls == [("dashboard:chat-1", INBOUND_LINK, UNBIND_REASON_UNSPECIFIED)]
@@ -1667,7 +1665,7 @@ class TestGetRepairsRatherThanUnbinds:
         session_map.set_mirror_link(key, INBOUND_LINK, accepts_inbound=True)
         assert session_map.get(key) is None
 
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             reloaded = SessionMap()
 
         assert reloaded.get_mirror_link(key) == INBOUND_LINK

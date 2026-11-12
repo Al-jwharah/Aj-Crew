@@ -20,14 +20,14 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.recall_pool as rp
-from kiro_crew import platform_compat
-from kiro_crew.consolidation_write_child import ChildUnavailable
-from kiro_crew.recall_pool import RecallPool
-from kiro_crew.vector_memory import VectorMemoryStore
-from kiro_crew.vector_memory_runtime import episodic_search as episodic_mod
-from kiro_crew.vector_memory_runtime import lessons as lessons_mod
-from kiro_crew.vector_memory_runtime import semantic as semantic_mod
+import aj_crew.recall_pool as rp
+from aj_crew import platform_compat
+from aj_crew.consolidation_write_child import ChildUnavailable
+from aj_crew.recall_pool import RecallPool
+from aj_crew.vector_memory import VectorMemoryStore
+from aj_crew.vector_memory_runtime import episodic_search as episodic_mod
+from aj_crew.vector_memory_runtime import lessons as lessons_mod
+from aj_crew.vector_memory_runtime import semantic as semantic_mod
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="POSIX signals and /proc")
 
@@ -142,7 +142,7 @@ class TestSwitch:
         cfg = MagicMock()
         cfg.memory.recall_pool_processes = raw
         cfg.memory.recall_pool_worker_max_mb = 3072
-        monkeypatch.setattr("kiro_crew.config.loader.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", lambda: cfg)
         assert rp.settings() == expected
 
     def test_a_reading_is_reused_briefly(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -151,7 +151,7 @@ class TestSwitch:
         cfg.memory.recall_pool_processes = 2
         cfg.memory.recall_pool_worker_max_mb = 4096
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load", lambda: loads.append(1) or cfg
+            "aj_crew.config.loader.AjCrewConfig.load", lambda: loads.append(1) or cfg
         )
         clock = [50.0]
         monkeypatch.setattr(rp, "_now", lambda: clock[0])
@@ -164,7 +164,7 @@ class TestSwitch:
         assert len(loads) == 2
 
     def test_config_defaults_and_bounds(self, tmp_path: Path) -> None:
-        from kiro_crew.config.section_builders import _build_memory_config
+        from aj_crew.config.section_builders import _build_memory_config
 
         default = _build_memory_config({})
         assert default.recall_pool_processes == 0
@@ -236,7 +236,7 @@ class TestEndToEnd:
     @staticmethod
     def _collected(read):
         """What a turn's two collectors hold after *read*, from a seeded omission record."""
-        from kiro_crew import context_omissions, injection_receipts
+        from aj_crew import context_omissions, injection_receipts
 
         with context_omissions.collect() as omissions, injection_receipts.collect() as receipts:
             # A record an earlier render of the same tier left behind in this build.
@@ -281,7 +281,7 @@ class TestEndToEnd:
     def test_a_stale_query_vector_ranks_by_keyword_like_the_gateway(
         self, store, pool, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.vector_memory_runtime.embedding import _RecallQuery
+        from aj_crew.vector_memory_runtime.embedding import _RecallQuery
 
         stale = _RecallQuery(_vector(QUERY), store.space_generation + 7, "other-space")
         expected = lessons_mod.get_lessons_context(store, **_lessons_kwargs(recall_query=stale))
@@ -319,7 +319,7 @@ class TestEndToEnd:
         The child reads the same config as the gateway, so with the switch on in the
         file it would offload its own reads and start grandchildren, level after level.
         """
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         path = config_path()
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -505,7 +505,7 @@ class TestFallback:
 
 class TestReceiptReplay:
     def test_replay_records_known_kinds_inside_a_collection(self) -> None:
-        from kiro_crew import injection_receipts
+        from aj_crew import injection_receipts
 
         with injection_receipts.collect() as sink:
             injection_receipts.replay(
@@ -522,14 +522,14 @@ class TestReceiptReplay:
         }
 
     def test_replay_outside_a_collection_is_a_no_op(self) -> None:
-        from kiro_crew import injection_receipts
+        from aj_crew import injection_receipts
 
         injection_receipts.replay({"lessons": {"ids": ["lesson.a"], "omitted": 0}})
 
     def test_malformed_records_from_a_child_never_fail_a_read(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import context_omissions, injection_receipts
+        from aj_crew import context_omissions, injection_receipts
 
         with context_omissions.collect() as omitted, injection_receipts.collect() as receipts:
             rp._replay_records({"omissions": {"cleared": 7, "set": [1]}, "receipts": "x"})
@@ -596,7 +596,7 @@ class TestServeLoopInProcess:
     def test_every_kind_answers_and_unknown_kinds_are_refused(
         self, store, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.delenv("KIROCREW_RECALL_POOL_MAX_RSS_MB", raising=False)
+        monkeypatch.delenv("AJCREW_RECALL_POOL_MAX_RSS_MB", raising=False)
         embed_reply = {"op": "embed_result", "vector": _vector(QUERY), "generation": 0}
         stdin = self._lines(
             self._job(store, "semantic", {"query_text": QUERY, "cap": 1500, "facts_only": True}, 1),
@@ -643,7 +643,7 @@ class TestServeLoopInProcess:
     def test_a_job_that_cannot_open_its_store_reports_an_error(
         self, store, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.delenv("KIROCREW_RECALL_POOL_MAX_RSS_MB", raising=False)
+        monkeypatch.delenv("AJCREW_RECALL_POOL_MAX_RSS_MB", raising=False)
         job = self._job(store, "semantic", {"query_text": QUERY})
         job["db_path"] = "/proc/no-such-dir/memory.db"
         out = io.BytesIO()
@@ -654,7 +654,7 @@ class TestServeLoopInProcess:
     def test_a_read_that_raises_is_relayed_not_fatal(
         self, store, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.delenv("KIROCREW_RECALL_POOL_MAX_RSS_MB", raising=False)
+        monkeypatch.delenv("AJCREW_RECALL_POOL_MAX_RSS_MB", raising=False)
 
         def boom(*_a, **_k):
             raise RuntimeError("scoring blew up")
@@ -669,7 +669,7 @@ class TestServeLoopInProcess:
     def test_a_child_past_its_limit_says_so_and_stops(
         self, store, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_RECALL_POOL_MAX_RSS_MB", "1")
+        monkeypatch.setenv("AJCREW_RECALL_POOL_MAX_RSS_MB", "1")
         stdin = self._lines(
             self._job(store, "lessons", {"query_text": QUERY, "background": True}, 1),
             {"op": "embed_result", "vector": _vector(QUERY), "generation": 0},
@@ -682,7 +682,7 @@ class TestServeLoopInProcess:
         assert frames[1]["recycle"] is True
 
     def test_a_malformed_line_ends_the_loop(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.delenv("KIROCREW_RECALL_POOL_MAX_RSS_MB", raising=False)
+        monkeypatch.delenv("AJCREW_RECALL_POOL_MAX_RSS_MB", raising=False)
         out = io.BytesIO()
         assert rp._serve(io.BytesIO(b"{not json\n"), out) == 1
 
@@ -693,7 +693,7 @@ class TestServeLoopInProcess:
     def test_an_unreadable_resident_size_never_recycles(
         self, store, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_RECALL_POOL_MAX_RSS_MB", "1")
+        monkeypatch.setenv("AJCREW_RECALL_POOL_MAX_RSS_MB", "1")
         monkeypatch.setattr(rp, "_rss_mb", lambda: None)
         stdin = self._lines(
             self._job(store, "nonsense", {}, 1), self._job(store, "nonsense", {}, 2)
@@ -764,7 +764,7 @@ class TestKeptStoreConfig:
     def test_an_unchanged_config_leaves_the_resident_sets_alone(
         self, store, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.delenv("KIROCREW_RECALL_POOL_MAX_RSS_MB", raising=False)
+        monkeypatch.delenv("AJCREW_RECALL_POOL_MAX_RSS_MB", raising=False)
         calls: list[int] = []
         real = VectorMemoryStore.reconfigure
 

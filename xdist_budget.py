@@ -30,14 +30,14 @@ import pathlib
 import socket
 import warnings
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
-_MAX_WORKERS_ENV = "KIROCREW_MAX_TEST_WORKERS"
-_SLOT_DIR_ENV = "KIROCREW_TEST_SLOT_DIR"
+_MAX_WORKERS_ENV = "AJCREW_MAX_TEST_WORKERS"
+_SLOT_DIR_ENV = "AJCREW_TEST_SLOT_DIR"
 #: Set to ``1`` to run an explicit ``-n N`` WITHOUT claiming host slots. The one
 #: documented way past the shared pool, for someone who owns the whole host and
 #: knows it; everything else that asks for N workers waits its turn in the pool.
-_EXPLICIT_BYPASS_ENV = "KIROCREW_TEST_SLOTS_BYPASS"
+_EXPLICIT_BYPASS_ENV = "AJCREW_TEST_SLOTS_BYPASS"
 #: xdist's own ceiling for ``-n auto``. Read here because this hook replaces
 #: xdist's default implementation rather than running alongside it.
 _XDIST_ENV_CAP = "PYTEST_XDIST_AUTO_NUM_WORKERS"
@@ -157,7 +157,7 @@ def _slot_root() -> pathlib.Path:
     override = os.environ.get(_SLOT_DIR_ENV)
     if override:
         return pathlib.Path(override)
-    return pathlib.Path.home() / ".cache" / "kirocrew" / "test-slots"
+    return pathlib.Path.home() / ".cache" / "ajcrew" / "test-slots"
 
 
 def _host_key() -> str:
@@ -170,7 +170,7 @@ def _host_key() -> str:
 def _slot_dir() -> pathlib.Path:
     """Where concurrent pytest runs ON THIS HOST contend for worker capacity.
 
-    Deliberately host-global and *not* derived from ``KIROCREW_HOME``: the point
+    Deliberately host-global and *not* derived from ``AJCREW_HOME``: the point
     is that two worktrees -- which have different homes and know nothing about
     each other -- still coordinate over the one thing they truly share, the
     machine's cores and RAM.
@@ -405,7 +405,7 @@ def _claim_worker_slots(capacity: int, cap: int, shared: int | None = None) -> i
         root = _slot_root()
         slot_dir = _slot_dir()
         # Refuse a symlink at either level: the root is caller-supplied via
-        # KIROCREW_TEST_SLOT_DIR and could redirect our writes.
+        # AJCREW_TEST_SLOT_DIR and could redirect our writes.
         if root.exists() and root.is_symlink():
             return min(capacity, cap)
         slot_dir.mkdir(parents=True, exist_ok=True)
@@ -437,7 +437,7 @@ def _claim_worker_slots(capacity: int, cap: int, shared: int | None = None) -> i
             #
             # Say so, though. Silently dropping to one worker is a suite that takes an
             # hour for a reason nobody can see, and the fix -- point
-            # KIROCREW_TEST_SLOT_DIR somewhere writable -- is only obvious once the cause
+            # AJCREW_TEST_SLOT_DIR somewhere writable -- is only obvious once the cause
             # is named.
             warnings.warn(
                 "xdist worker budget: cannot create a slot file under "
@@ -505,14 +505,14 @@ def resolve_workers() -> int:
 
     **Per-run cap** -- the most this single run may take, the tightest of:
 
-    1. ``KIROCREW_MAX_TEST_WORKERS``, default 32. The optimal worker count for this
+    1. ``AJCREW_MAX_TEST_WORKERS``, default 32. The optimal worker count for this
        suite plateaus around 24-32 and then *regresses*: every extra worker re-imports
        the full app (aiohttp/boto3/numpy/pdfplumber/transcribe) and writes its own
        ``.coverage.*`` file to combine at the end. Measured on a 64-core host:
        156s @ 64 workers vs 92s @ 32 workers (-41%).
     2. ``PYTEST_XDIST_AUTO_NUM_WORKERS``, xdist's OWN knob. Honoured as a ceiling
        because this hook, being ``firstresult``, runs instead of xdist's default
-       implementation and would otherwise discard it silently -- and Kiro Crew itself
+       implementation and would otherwise discard it silently -- and Aj Crew itself
        seeds that variable with a memory-aware cap at every agent spawn boundary
        (``resource_status.inject_xdist_auto_cap``). A run that inherits a deliberate
        cap must not be handed more workers than it asked for.
@@ -528,8 +528,8 @@ def resolve_workers() -> int:
     each running ``-n auto`` on a 10-core box previously took 10 workers *each*,
     and the resulting swap thrash produced a load average of ~590 with zero
     tests completing in 21 minutes. Now each run holds a lock per worker it
-    intends to spawn (under ``~/.cache/kirocrew/test-slots/<hostname>``, root
-    overridable with ``KIROCREW_TEST_SLOT_DIR``): a run alone takes the whole
+    intends to spawn (under ``~/.cache/ajcrew/test-slots/<hostname>``, root
+    overridable with ``AJCREW_TEST_SLOT_DIR``): a run alone takes the whole
     machine, and a later run takes only what is unlocked. The locks are held for
     the process's lifetime and released by the kernel when it exits, so an
     orphaned or terminated run frees its share with no cleanup logic at all.
@@ -580,7 +580,7 @@ def claim_explicit_workers(requested: int) -> int:
     No memory reading lowers a lone run's N: the caller chose it. Floors at one
     worker, like every other path here.
 
-    ``KIROCREW_TEST_SLOTS_BYPASS=1`` skips the claim and returns N unchanged.
+    ``AJCREW_TEST_SLOTS_BYPASS=1`` skips the claim and returns N unchanged.
     """
     if requested < 1 or os.environ.get(_EXPLICIT_BYPASS_ENV) == "1":
         return requested

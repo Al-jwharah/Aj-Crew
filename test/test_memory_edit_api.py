@@ -9,7 +9,7 @@ from aiohttp.test_utils import TestClient, TestServer
 from member_memory_helpers import env as _member_env
 from member_memory_helpers import request
 
-from kiro_crew.dashboard.handlers import memory_edit
+from aj_crew.dashboard.handlers import memory_edit
 
 env = _member_env
 

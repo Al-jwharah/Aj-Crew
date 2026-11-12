@@ -22,10 +22,10 @@ from eager_spawn_helpers import (  # noqa: F401 -- fixtures are used by name
     _prime,
 )
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.session import SpeculativeResumeRefused
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.session import SpeculativeResumeRefused
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture(autouse=True)
@@ -64,7 +64,7 @@ async def test_a_start_that_did_not_fail_reports_none_once(allocation):
     slot = _ChatSlot("t1")
     state = _mock_state(slot)
     state.sessions.get_or_create = AsyncMock(**allocation)
-    with patch.object(chat_runner.KiroCrewConfig, "load", _native_resume_cfg()):
+    with patch.object(chat_runner.AjCrewConfig, "load", _native_resume_cfg()):
         task, ended = _arm_respawn(state, slot)
         try:
             await await_until(task, what="the respawn")
@@ -80,7 +80,7 @@ async def test_a_start_that_failed_reports_its_exception_once():
     state = _mock_state(slot)
     failure = RuntimeError("the agent's initialize handshake failed")
     state.sessions.get_or_create = AsyncMock(side_effect=failure)
-    with patch.object(chat_runner.KiroCrewConfig, "load", _native_resume_cfg()):
+    with patch.object(chat_runner.AjCrewConfig, "load", _native_resume_cfg()):
         task, ended = _arm_respawn(state, slot)
         await await_until(task, what="the respawn")
     state.sessions.get_or_create.assert_awaited_once()
@@ -101,7 +101,7 @@ async def test_a_cancelled_start_reports_nothing(cancelled_by):
         await asyncio.Event().wait()
 
     state.sessions.get_or_create = AsyncMock(side_effect=_held_until_cancelled)
-    with patch.object(chat_runner.KiroCrewConfig, "load", _native_resume_cfg()):
+    with patch.object(chat_runner.AjCrewConfig, "load", _native_resume_cfg()):
         task, ended = _arm_respawn(state, slot)
         newer: asyncio.Task | None = None
         try:

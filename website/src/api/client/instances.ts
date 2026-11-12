@@ -214,7 +214,7 @@ export function createInstancesEndpoints({ get, post, del, patch, j, jfetch: fet
         ok: boolean
         message: string
       }>,
-    /** Start the crew's own `kirocrew update` (then a restart once its
+    /** Start the crew's own `ajcrew update` (then a restart once its
      *  in-flight work is done) as a background job. The remote command is a
      *  fixed literal. `force` ("Restart now", after a job stopped short of its
      *  restart) skips the update and restarts without waiting. A

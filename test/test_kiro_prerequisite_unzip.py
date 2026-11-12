@@ -15,8 +15,8 @@ from kiro_prerequisite_helpers import _agents_dir_never_the_real_home  # noqa: F
 from kiro_prerequisite_helpers import _isolate_agent_specs  # noqa: F401
 from kiro_prerequisite_helpers import _make_executable, _no_audit
 
-from kiro_crew import kiro_prerequisite_candidate, platform_compat
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService, ProcessResult
+from aj_crew import kiro_prerequisite_candidate, platform_compat
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService, ProcessResult
 
 
 async def _version_only(_command: str, args: list[str], **_kwargs: Any) -> ProcessResult:

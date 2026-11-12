@@ -18,11 +18,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import sandbox as sandbox_mod
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp import kas_agents as kas_agents_mod
-from kiro_crew.acp.harness import (
+from aj_crew import agent as agent_mod
+from aj_crew import sandbox as sandbox_mod
+from aj_crew.acp import client as client_mod
+from aj_crew.acp import kas_agents as kas_agents_mod
+from aj_crew.acp.harness import (
     CodexHarness,
     HarnessAdapter,
     KasHarness,
@@ -31,10 +31,10 @@ from kiro_crew.acp.harness import (
     SpawnContext,
     harness_for,
 )
-from kiro_crew.acp.harness import kas as kas_mod
-from kiro_crew.acp.harness._common import KIRO_FAMILY_ALIASES
-from kiro_crew.acp.kas_transport import METHOD_KAS_AUTH_GET_ACCESS_TOKEN
-from kiro_crew.acp.types import (
+from aj_crew.acp.harness import kas as kas_mod
+from aj_crew.acp.harness._common import KIRO_FAMILY_ALIASES
+from aj_crew.acp.kas_transport import METHOD_KAS_AUTH_GET_ACCESS_TOKEN
+from aj_crew.acp.types import (
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
@@ -44,9 +44,9 @@ from kiro_crew.acp.types import (
     METHOD_SESSION_TERMINATE,
     METHOD_SESSION_UPDATE,
 )
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_LAUNCH
-from kiro_crew.config import paths as paths_mod
-from kiro_crew.mcp_gateway import session_servers as session_servers_mod
+from aj_crew.agent_sdk.backends import ACP_BACKEND_LAUNCH
+from aj_crew.config import paths as paths_mod
+from aj_crew.mcp_gateway import session_servers as session_servers_mod
 
 ALL_BACKENDS = [ACP_BACKEND_KIRO, ACP_BACKEND_KAS, ACP_BACKEND_CODEX]
 
@@ -124,7 +124,7 @@ def test_the_registry_serves_every_backend_it_claims_to():
     A harness added to the table without the message being regenerated from it would
     tell an operator the runtime serves fewer hosts than it does.
     """
-    from kiro_crew.acp.harness import _HARNESSES
+    from aj_crew.acp.harness import _HARNESSES
 
     assert set(_HARNESSES) == set(ALL_BACKENDS)
     with pytest.raises(ValueError) as exc:
@@ -219,8 +219,8 @@ async def test_kiro_spawn_refuses_when_fork_governance_is_unresolved(
     A fork's on-disk allowedTools / autoApprove bypass the approval gate, so
     proceeding would run grants nobody checked.
     """
-    from kiro_crew.acp.session_handle import AcpRuntimeError
-    from kiro_crew.agent import ForkGovernanceUnresolved
+    from aj_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew.agent import ForkGovernanceUnresolved
 
     def _boom(agent, work_dir):
         raise ForkGovernanceUnresolved("governance pending")
@@ -253,7 +253,7 @@ async def test_kiro_spawn_refuses_a_workspace_overlapping_the_agents_tree(
     found_binary, kiro_gates_pass, monkeypatch, tmp_path
 ):
     """The overlap is the one way left to rewrite a spec under delegated sandboxing."""
-    from kiro_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew.acp.session_handle import AcpRuntimeError
 
     monkeypatch.setattr(
         sandbox_mod,
@@ -314,7 +314,7 @@ async def test_kas_spawn_reports_the_auth_owner_it_chose(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("backend", ALL_BACKENDS)
 async def test_a_missing_binary_aborts_the_spawn(monkeypatch, tmp_path, backend):
-    from kiro_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew.acp.session_handle import AcpRuntimeError
 
     async def _no_bin(*, environ, home):
         return ""
@@ -342,7 +342,7 @@ def test_kiro_injects_the_api_key_and_kas_strips_it(monkeypatch):
     vault credential. A caller that does not name the auth owner gets the
     Crew-owned strip.
     """
-    from kiro_crew.config import loader as loader_mod
+    from aj_crew.config import loader as loader_mod
 
     calls: list[str] = []
     monkeypatch.setattr(
@@ -366,7 +366,7 @@ def test_cli_owned_kas_relay_is_handed_the_api_key(monkeypatch, tmp_path):
     the launcher's "You are not logged in". Driven through the real loader, so
     the inherited value and the data home's ``.env`` fallback are both covered.
     """
-    from kiro_crew.config import loader as loader_mod
+    from aj_crew.config import loader as loader_mod
 
     harness = harness_for(ACP_BACKEND_KAS)
 
@@ -462,7 +462,7 @@ async def test_kas_reads_workspace_mcp_settings_beside_the_session(
     kas_projection_stubbed, monkeypatch, tmp_path
 ):
     """A session opened in another checkout is finished from THAT checkout's files."""
-    from kiro_crew.acp.kas_permissions import CREW_SETTINGS_MCP_KEY
+    from aj_crew.acp.kas_permissions import CREW_SETTINGS_MCP_KEY
 
     monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", tmp_path / "absent-global.json")
     monkeypatch.setattr(kas_agents_mod, "build_kas_custom_agents", lambda *_a, **_kw: [{"id": "a"}])
@@ -482,7 +482,7 @@ async def test_kas_stamps_the_servers_the_spec_declares(
     kas_projection_stubbed, monkeypatch, tmp_path
 ):
     """A declared server hoisted to the session-level array is still the agent's."""
-    from kiro_crew.acp.kas_permissions import CREW_SETTINGS_MCP_KEY
+    from aj_crew.acp.kas_permissions import CREW_SETTINGS_MCP_KEY
 
     monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", tmp_path / "absent-global.json")
     monkeypatch.setattr(kas_agents_mod, "build_kas_custom_agents", lambda *_a, **_kw: [{"id": "a"}])
@@ -499,7 +499,7 @@ async def test_kas_does_not_keep_legacy_mcp_json_for_a_spec_that_states_the_key(
     kas_projection_stubbed, monkeypatch, tmp_path
 ):
     """The fixture's spec has no opt-in key; one that states it is not kept."""
-    from kiro_crew.acp.kas_permissions import CREW_SETTINGS_MCP_KEY
+    from aj_crew.acp.kas_permissions import CREW_SETTINGS_MCP_KEY
 
     monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", tmp_path / "absent-global.json")
     monkeypatch.setattr(kas_agents_mod, "build_kas_custom_agents", lambda *_a, **_kw: [{"id": "a"}])
@@ -515,8 +515,8 @@ async def test_kas_does_not_keep_legacy_mcp_json_for_a_checkout_spec(
     kas_projection_stubbed, monkeypatch, tmp_path
 ):
     """The list names user-level files; a checkout's spec of a listed name is not one."""
-    from kiro_crew.acp import kas_mcp_json_legacy
-    from kiro_crew.acp.kas_permissions import CREW_SETTINGS_MCP_KEY
+    from aj_crew.acp import kas_mcp_json_legacy
+    from aj_crew.acp.kas_permissions import CREW_SETTINGS_MCP_KEY
 
     monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", tmp_path / "absent-global.json")
     monkeypatch.setattr(kas_agents_mod, "build_kas_custom_agents", lambda *_a, **_kw: [{"id": "b"}])
@@ -537,7 +537,7 @@ async def test_a_checkout_spec_session_still_records_the_list(
     kas_projection_stubbed, monkeypatch, tmp_path
 ):
     """The first KAS session records the list whatever spec it runs."""
-    from kiro_crew.acp import kas_mcp_json_legacy
+    from aj_crew.acp import kas_mcp_json_legacy
 
     monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", tmp_path / "absent-global.json")
     monkeypatch.setattr(kas_agents_mod, "build_kas_custom_agents", lambda *_a, **_kw: [{"id": "b"}])
@@ -557,7 +557,7 @@ async def test_kas_names_an_unreadable_global_mcp_json_in_the_session_notice(
     kas_projection_stubbed, monkeypatch, tmp_path
 ):
     """A UTF-16 global mcp.json gets the same reason kiro-cli's refusal gives."""
-    from kiro_crew.acp.session_mcp import _named_path
+    from aj_crew.acp.session_mcp import _named_path
 
     settings = tmp_path / "mcp.json"
     settings.write_bytes(b"\xff\xfe" + json.dumps({"mcpServers": {"x": {}}}).encode("utf-16-le"))
@@ -565,7 +565,7 @@ async def test_kas_names_an_unreadable_global_mcp_json_in_the_session_notice(
     monkeypatch.setattr(kas_agents_mod, "build_kas_custom_agents", lambda *_a, **_kw: [{"id": "a"}])
     extras = await harness_for(ACP_BACKEND_KAS).session_extras("a", work_dir=str(tmp_path))
     assert extras.withheld_credentials_notice == (
-        f"⚠ Kiro Crew could not read the global MCP settings ({_named_path(settings)})"
+        f"⚠ Aj Crew could not read the global MCP settings ({_named_path(settings)})"
         " because it is saved as UTF-16; re-save it as UTF-8. Its MCP server settings"
         " may not apply to this session."
     )
@@ -592,7 +592,7 @@ async def test_kas_names_a_glob_it_cannot_match_and_keeps_the_server(
         "⚠ disabledTools pattern `fs_[rw]*` for `own` can't be applied on KAS,"
         " so that tool stays on."
     )
-    from kiro_crew.acp.kas_settings_mcp import finish_settings_mcp
+    from aj_crew.acp.kas_settings_mcp import finish_settings_mcp
 
     (agent,) = extras.custom_agents
     sent = finish_settings_mcp(agent)
@@ -625,8 +625,8 @@ async def test_kas_projects_nothing_without_an_agent(tmp_path):
 @pytest.mark.asyncio
 async def test_kas_projection_refuses_ungoverned_fork_grants(monkeypatch, tmp_path):
     """The projection TRANSMITS the spec's grants, so it gets the spawn's gate."""
-    from kiro_crew.acp.session_handle import AcpRuntimeError
-    from kiro_crew.agent import ForkGovernanceUnresolved
+    from aj_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew.agent import ForkGovernanceUnresolved
 
     def _boom(agent, work_dir):
         raise ForkGovernanceUnresolved("governance pending")
@@ -645,8 +645,8 @@ async def test_kas_projection_refuses_an_untranslatable_spec(
     For a restricted agent that runs a BROADER agent than the caller asked for,
     so the failure is loud rather than a fallback.
     """
-    from kiro_crew.acp.kas_agents import KasAgentTranslationError
-    from kiro_crew.acp.session_handle import AcpRuntimeError
+    from aj_crew.acp.kas_agents import KasAgentTranslationError
+    from aj_crew.acp.session_handle import AcpRuntimeError
 
     def _boom(
         d, a, spec, *, stub_server_names, member_dispatch, crew_panel=False, session_key="", **_kw
@@ -694,7 +694,7 @@ async def test_kas_member_dispatch_subtracts_the_dashboard_server(
 
     Left in, an identity-less spec declaration could shadow the member-keyed one.
     """
-    from kiro_crew.members import MEMBER_DISPATCH_SERVER
+    from aj_crew.members import MEMBER_DISPATCH_SERVER
 
     seen: list[frozenset] = []
 
@@ -724,7 +724,7 @@ async def test_kas_extras_carry_the_managed_invocations_resolved_off_the_loop(
     def _build(
         d, a, spec, *, stub_server_names, member_dispatch, crew_panel=False, session_key="", **_kw
     ):
-        return [{"id": a, "mcpServers": {"kirocrew-core": {"command": "kc"}, "tp": {}}}]
+        return [{"id": a, "mcpServers": {"ajcrew-core": {"command": "kc"}, "tp": {}}}]
 
     def _managed(name, *, include_opt_in=False):
         looked_up.append((name, threading.get_ident() != loop_thread))
@@ -734,8 +734,8 @@ async def test_kas_extras_carry_the_managed_invocations_resolved_off_the_loop(
     monkeypatch.setattr(agent_mod, "managed_mcp_spec_entry", _managed)
 
     extras = await harness_for(ACP_BACKEND_KAS).session_extras("a", work_dir=str(tmp_path))
-    assert extras.managed_entries == {"kirocrew-core": {"command": "/opt/kc", "args": ["mcp-core"]}}
-    assert looked_up == [("kirocrew-core", True)], "resolved once, off the loop thread"
+    assert extras.managed_entries == {"ajcrew-core": {"command": "/opt/kc", "args": ["mcp-core"]}}
+    assert looked_up == [("ajcrew-core", True)], "resolved once, off the loop thread"
 
 
 @pytest.mark.asyncio
@@ -780,7 +780,7 @@ def test_the_reader_loop_answers_through_the_harness_that_claimed_the_method():
     """
     import inspect as _inspect
 
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
     reader = _inspect.getsource(AcpRuntime._reader_loop)
     assert "self._answer_host_request(msg.id, msg.method" in reader
@@ -811,7 +811,7 @@ def test_kiro_keeps_its_legacy_notification_drain():
 
 
 def test_kas_stages_status_and_catalog_and_requires_readiness():
-    from kiro_crew.acp.types import METHOD_KAS_MCP_STATUS, METHOD_KAS_TOOLS_CHANGED
+    from aj_crew.acp.types import METHOD_KAS_MCP_STATUS, METHOD_KAS_TOOLS_CHANGED
 
     aliases = harness_for(ACP_BACKEND_KAS).notification_aliases
     assert aliases.session_update == KIRO_FAMILY_ALIASES.session_update
@@ -855,7 +855,7 @@ def test_session_update_accepts_both_spellings():
     kiro-cli sends the standard method and its ``_kiro.dev`` alias for the same
     event, and which one arrives depends on the CLI version.
     """
-    from kiro_crew.acp.types import METHOD_KIRO_SESSION_UPDATE, METHOD_SESSION_UPDATE
+    from aj_crew.acp.types import METHOD_KIRO_SESSION_UPDATE, METHOD_SESSION_UPDATE
 
     assert set(KIRO_FAMILY_ALIASES.session_update) == {
         METHOD_SESSION_UPDATE,
@@ -865,7 +865,7 @@ def test_session_update_accepts_both_spellings():
 
 def test_all_three_mcp_init_methods_are_staged():
     """A missing one is dropped as ownerless instead of staged for the session."""
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         METHOD_MCP_OAUTH_REQUEST,
         METHOD_MCP_SERVER_INIT_FAILURE,
         METHOD_MCP_SERVER_INITIALIZED,
@@ -914,7 +914,7 @@ def test_the_kiro_family_still_asks_by_construction(backend):
     Asserted against ``acp_tool_gate`` rather than a harness member, because that
     is who the drivers ask.
     """
-    from kiro_crew import acp_tool_gate
+    from aj_crew import acp_tool_gate
 
     assert acp_tool_gate.routing_for(backend) is acp_tool_gate.Routing.AGENT_SPEC
     assert acp_tool_gate.permission_config_for(backend) == ("", "")
@@ -927,7 +927,7 @@ def test_codex_is_made_to_ask_by_a_session_write():
     option is the only boundary. ``read-only`` still permits passive reads; what
     makes that survivable is the OS-boundary credential mask, not this option.
     """
-    from kiro_crew import acp_tool_gate
+    from aj_crew import acp_tool_gate
 
     routing = acp_tool_gate.routing_for(ACP_BACKEND_CODEX)
     assert routing is acp_tool_gate.Routing.SESSION_CONFIG
@@ -937,7 +937,7 @@ def test_codex_is_made_to_ask_by_a_session_write():
 @pytest.mark.parametrize("backend", ALL_BACKENDS)
 def test_no_host_is_left_unverified(backend):
     """``UNVERIFIED`` refuses, so a host resolving to it cannot start a session."""
-    from kiro_crew import acp_tool_gate
+    from aj_crew import acp_tool_gate
 
     assert acp_tool_gate.routing_for(backend) is not acp_tool_gate.Routing.UNVERIFIED
 
@@ -994,8 +994,8 @@ def test_the_kiro_lookup_is_total():
     """
     import inspect
 
-    from kiro_crew.acp import harness as pkg
-    from kiro_crew.acp.harness import _HARNESSES
+    from aj_crew.acp import harness as pkg
+    from aj_crew.acp.harness import _HARNESSES
 
     assert ACP_BACKEND_KIRO in _HARNESSES
     assert _HARNESSES[ACP_BACKEND_KIRO] is KiroHarness
@@ -1014,7 +1014,7 @@ def test_the_runtime_resolves_the_kiro_harness_without_spawning():
     and reading its host's answers must not raise, must not require an argument
     the caller did not have before, and must not touch the filesystem.
     """
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
     rt = AcpRuntime(work_dir="/tmp", acp_backend=ACP_BACKEND_KIRO)
     harness = rt._harness
@@ -1033,7 +1033,7 @@ def test_reads_markdown_agent_specs_is_a_membership_answer(backend):
     answers False, so a host that reads the form joins
     ``ACP_BACKENDS_MARKDOWN_AGENT_SPECS`` and the Kiro path gains no branch.
     """
-    from kiro_crew.acp.types import ACP_BACKENDS_MARKDOWN_AGENT_SPECS
+    from aj_crew.acp.types import ACP_BACKENDS_MARKDOWN_AGENT_SPECS
 
     assert harness_for(backend).reads_markdown_agent_specs is (
         backend in ACP_BACKENDS_MARKDOWN_AGENT_SPECS
@@ -1047,7 +1047,7 @@ def test_a_projection_only_bare_runtime_still_resolves_its_host():
     ``object.__new__``, setting the two fields they care about. The harness lookup
     has to survive that, or those callers would have gained a failure mode too.
     """
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
     rt = object.__new__(AcpRuntime)
     rt._acp_backend = ACP_BACKEND_KAS
@@ -1060,7 +1060,7 @@ def test_a_projection_only_bare_runtime_still_resolves_its_host():
 def _harness_modules() -> list[str]:
     """Every module in the harness package, read off the directory so a new host's
     file is covered the moment it exists."""
-    from kiro_crew.acp import harness as pkg
+    from aj_crew.acp import harness as pkg
 
     found = sorted(path.stem for path in Path(pkg.__file__).parent.glob("*.py"))
     assert {"base", "_common", "kiro", "kas", "codex", "claude", "pi", "__init__"} <= set(found)
@@ -1074,11 +1074,11 @@ def test_no_harness_module_imports_the_runtime(module):
     The one exception is the error type from ``session_handle``, imported inside
     function bodies. Per-process host adapters follow the same rule.
     """
-    from kiro_crew.acp import harness as pkg
+    from aj_crew.acp import harness as pkg
 
     path = Path(pkg.__file__).parent / f"{module}.py"
     source = path.read_text(encoding="utf-8")
-    assert "kiro_crew.acp.runtime" not in source, f"{module} imports the runtime"
+    assert "aj_crew.acp.runtime" not in source, f"{module} imports the runtime"
 
 
 @pytest.mark.parametrize("backend", ALL_BACKENDS)
@@ -1107,7 +1107,7 @@ def test_a_harness_reaches_its_helpers_through_their_defining_module(module):
     aiming there would run the real filesystem work and the real credential store
     while believing it had stubbed them.
     """
-    from kiro_crew.acp import harness as pkg
+    from aj_crew.acp import harness as pkg
 
     source = (Path(pkg.__file__).parent / f"{module}.py").read_text(encoding="utf-8")
     for helper in ("ensure_agent_materialized", "require_fork_governance"):
@@ -1126,7 +1126,7 @@ def test_the_kiro_family_passes_the_requested_mcp_array_through(backend):
     the seam existed. Identity, not equality: an equal copy would also pass a
     byte compare today and would hide a host that started rebuilding the list.
     """
-    requested = [{"name": "kirocrew-core", "command": "x"}]
+    requested = [{"name": "ajcrew-core", "command": "x"}]
     out = harness_for(backend).session_mcp_servers(requested, agent_capabilities={})
     assert out is requested
 
@@ -1183,9 +1183,9 @@ async def test_codex_spawns_with_a_credential_mask_on_the_plan(monkeypatch, tmp_
     The same assertion the registry-wide ratchet makes structurally, made here
     against a real plan so a harness that names the field without filling it fails.
     """
-    from kiro_crew import acp_tool_gate as gate_mod
-    from kiro_crew.acp import client as client_mod
-    from kiro_crew.acp.harness import codex as codex_mod
+    from aj_crew import acp_tool_gate as gate_mod
+    from aj_crew.acp import client as client_mod
+    from aj_crew.acp.harness import codex as codex_mod
 
     monkeypatch.setattr(
         client_mod, "_resolve_codex_acp_bin", lambda: (["/n/node", "/p/index.js"], "/s")
@@ -1226,7 +1226,7 @@ def test_the_runtime_asks_the_host_on_both_session_start_paths():
     refuses does not merely fail to add tools -- it takes them away from a
     conversation that already had them.
     """
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
     for method in (AcpRuntime.create_session, AcpRuntime.load_session):
         source = inspect.getsource(method)
@@ -1241,7 +1241,7 @@ def test_the_runtime_retains_the_handshakes_agent_capabilities():
     harness that narrowed to nothing on an unknown host would strip every tool
     from every session.
     """
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
     rt = AcpRuntime(work_dir="/tmp", acp_backend=ACP_BACKEND_KIRO)
     assert rt._agent_capabilities == {}
@@ -1260,7 +1260,7 @@ async def test_the_kiro_family_needs_no_credential_mask(
     Their privileged tools ask by construction, so there is nothing for an OS
     boundary to compensate for.
     """
-    from kiro_crew.acp.harness import kas as kas_module
+    from aj_crew.acp.harness import kas as kas_module
 
     async def _vault():
         return False
@@ -1283,8 +1283,8 @@ def test_the_spawn_mask_reaches_the_sandbox(tmp_path):
 
     import acp_launch_capture as capture_mod
 
-    from kiro_crew.acp import runtime as runtime_mod
-    from kiro_crew.acp.harness import codex as codex_mod
+    from aj_crew.acp import runtime as runtime_mod
+    from aj_crew.acp.harness import codex as codex_mod
 
     hidden = ("/opt/creds/.codex",)
     exposed = ("/opt/creds/.codex/config.toml",)
@@ -1317,8 +1317,8 @@ def test_an_enforced_host_may_not_spawn_without_a_mask():
     """
     import inspect as _inspect
 
-    from kiro_crew import acp_tool_gate
-    from kiro_crew.acp.harness import _HARNESSES
+    from aj_crew import acp_tool_gate
+    from aj_crew.acp.harness import _HARNESSES
 
     for backend, harness_cls in _HARNESSES.items():
         routing = acp_tool_gate.routing_for(backend)
@@ -1368,7 +1368,7 @@ async def test_the_kiro_family_ignores_the_sandbox_tier(
     Both ask by construction and carry no mask, so there is nothing for a tier to
     invalidate.
     """
-    from kiro_crew.acp.harness import kas as kas_module
+    from aj_crew.acp.harness import kas as kas_module
 
     async def _vault():
         return False
@@ -1391,7 +1391,7 @@ async def test_codex_refuses_a_tier_that_would_drop_its_mask(monkeypatch, tmp_pa
     child it must refuse rather than spawn: the mask is its only compensating
     control, and `wrap_argv` would drop it on the floor.
     """
-    from kiro_crew.acp import client as client_mod
+    from aj_crew.acp import client as client_mod
 
     async def _refuse(*_args, **_kwargs):
         raise RuntimeError("sandbox floor refused")
@@ -1411,8 +1411,8 @@ def test_an_enforced_host_must_consult_the_sandbox_tier():
     ``wrap_argv`` drops the mask on the ``off`` tier and on a backend-less host with
     unsandboxed exec. Vacuous until an enforced host joins; read off the class.
     """
-    from kiro_crew import acp_tool_gate
-    from kiro_crew.acp.harness import _HARNESSES
+    from aj_crew import acp_tool_gate
+    from aj_crew.acp.harness import _HARNESSES
 
     for backend, harness_cls in _HARNESSES.items():
         if acp_tool_gate.routing_for(backend) is acp_tool_gate.Routing.AGENT_SPEC:
@@ -1426,7 +1426,7 @@ def test_an_enforced_host_must_consult_the_sandbox_tier():
 
 def _runtime_module():
     """Imported lazily: the runtime pulls in the client, and this file is a leaf."""
-    from kiro_crew.acp import runtime as runtime_mod
+    from aj_crew.acp import runtime as runtime_mod
 
     return runtime_mod
 
@@ -1440,7 +1440,7 @@ def _runtime_module():
 
 
 def _process_adapters():
-    from kiro_crew.acp.harness import _PROCESS_ADAPTERS
+    from aj_crew.acp.harness import _PROCESS_ADAPTERS
 
     return _PROCESS_ADAPTERS
 
@@ -1453,8 +1453,8 @@ def test_every_per_process_host_has_an_adapter_and_no_runtime_harness():
     served by two different launch paths. ``harness_for`` keeps refusing them by
     name, which is the runtime's error mode.
     """
-    from kiro_crew.acp.harness import ProcessAdapter, process_adapter_for
-    from kiro_crew.agent_sdk.backends import ACP_BACKENDS_ACP_RUNTIME, ACP_BACKENDS_KNOWN
+    from aj_crew.acp.harness import ProcessAdapter, process_adapter_for
+    from aj_crew.agent_sdk.backends import ACP_BACKENDS_ACP_RUNTIME, ACP_BACKENDS_KNOWN
 
     per_process = ACP_BACKENDS_KNOWN - ACP_BACKENDS_ACP_RUNTIME
     assert set(_process_adapters()) == per_process
@@ -1468,7 +1468,7 @@ def test_every_per_process_host_has_an_adapter_and_no_runtime_harness():
 
 def test_the_client_keeps_its_own_arm_for_every_runtime_served_host():
     """kiro-cli, KAS and codex reach the client's kiro-cli arm, as they always have."""
-    from kiro_crew.acp.harness import process_adapter_for
+    from aj_crew.acp.harness import process_adapter_for
 
     for backend in ALL_BACKENDS:
         assert process_adapter_for(backend) is None
@@ -1480,7 +1480,7 @@ def test_each_launch_gets_a_fresh_adapter():
     A shared instance would hand one session's gate nonce or routing seed to the
     next session's child.
     """
-    from kiro_crew.acp.harness import process_adapter_for
+    from aj_crew.acp.harness import process_adapter_for
 
     for backend in sorted(_process_adapters()):
         assert process_adapter_for(backend) is not process_adapter_for(backend)
@@ -1496,7 +1496,7 @@ def test_the_kiro_client_spawn_never_consults_a_process_adapter(tmp_path):
 
     import acp_launch_capture as capture_mod
 
-    from kiro_crew.acp.harness import ProcessAdapter
+    from aj_crew.acp.harness import ProcessAdapter
 
     def _forbidden(*_args, **_kwargs):
         raise AssertionError("the Kiro construction path reached a process adapter")
@@ -1516,7 +1516,7 @@ def test_the_kiro_client_spawn_never_consults_a_process_adapter(tmp_path):
 @pytest.fixture
 def _fresh_resolution():
     """Forget every cached host resolution before and after, through the public seam."""
-    from kiro_crew.agent_sdk.drivers.acp import forget_cached_resolution
+    from aj_crew.agent_sdk.drivers.acp import forget_cached_resolution
 
     backends = sorted(_process_adapters())
     for backend in backends:
@@ -1528,7 +1528,7 @@ def _fresh_resolution():
 
 def _goose_context(tmp_path, client):
     return SpawnContext(
-        agent="kirocrew",
+        agent="ajcrew",
         work_dir=tmp_path,
         model=None,
         environ={},
@@ -1550,11 +1550,11 @@ def test_a_self_served_host_resolves_the_binary_it_is_pointed_at(
     import asyncio
     from unittest.mock import AsyncMock
 
-    from kiro_crew import acp_tool_gate
-    from kiro_crew.acp import launch as launch_mod
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.acp.harness import process_adapter_for
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_GOOSE, launch_for
+    from aj_crew import acp_tool_gate
+    from aj_crew.acp import launch as launch_mod
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.acp.harness import process_adapter_for
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_GOOSE, launch_for
 
     fake_binary = launch_mod._normalize_exe_casing(sys.executable) or sys.executable
     monkeypatch.setenv(launch_for(ACP_BACKEND_GOOSE).bin_env_var, sys.executable)
@@ -1580,10 +1580,10 @@ def test_a_missing_self_served_binary_names_its_install_command(
     """The refusal carries the remedy, and what was searched, before any child starts."""
     import asyncio
 
-    from kiro_crew.acp import client as acp_client
-    from kiro_crew.acp.harness import process_adapter_for
-    from kiro_crew.acp.transport_errors import AcpError
-    from kiro_crew.agent_sdk.backends import launch_for
+    from aj_crew.acp import client as acp_client
+    from aj_crew.acp.harness import process_adapter_for
+    from aj_crew.acp.transport_errors import AcpError
+    from aj_crew.agent_sdk.backends import launch_for
 
     launch = launch_for(backend)
     empty = tmp_path / "empty-bin"

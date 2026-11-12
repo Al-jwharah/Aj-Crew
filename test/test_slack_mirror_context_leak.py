@@ -8,7 +8,7 @@ and uses _prepare_mirror_msg() for the Slack mirror. Without the fix,
 
 from __future__ import annotations
 
-from kiro_crew.dashboard.chat_runner import _prepare_mirror_msg
+from aj_crew.dashboard.chat_runner import _prepare_mirror_msg
 
 
 class TestPrepareMirrorMsg:
@@ -45,7 +45,7 @@ class TestPrepareMirrorMsg:
         """
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.chat_runner import drain_pending_context
+        from aj_crew.dashboard.chat_runner import drain_pending_context
 
         user_msg = "Hello, please investigate"
 

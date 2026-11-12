@@ -24,15 +24,15 @@ import pytest
 from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
 from telegram_helpers import _dispatcher
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.messaging import queue_drain
-from kiro_crew.messaging.queue_drain import drain_when_free, register_drain, reset_drains
-from kiro_crew.session import SessionManager
-from kiro_crew.telegram.transport import TelegramInboundMessage
-from kiro_crew.telegram.transport_dispatch import _inbound_origin
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.config import AjCrewConfig
+from aj_crew.messaging import queue_drain
+from aj_crew.messaging.queue_drain import drain_when_free, register_drain, reset_drains
+from aj_crew.session import SessionManager
+from aj_crew.telegram.transport import TelegramInboundMessage
+from aj_crew.telegram.transport_dispatch import _inbound_origin
+from aj_crew.testing.wait import async_wait_until
 
-_KEY = "unified:kirocrew"
+_KEY = "unified:ajcrew"
 _SLOT = ("telegram", _KEY)
 
 
@@ -205,7 +205,7 @@ class TestDrainWhenFree:
             drained.append(key)
 
         register_drain("telegram", _drain)
-        mgr = SessionManager(KiroCrewConfig(), provider_factory=_factory)
+        mgr = SessionManager(AjCrewConfig(), provider_factory=_factory)
         try:
             await mgr.get_or_create(_KEY)  # the holder
             key = mgr._fold_key(_KEY)
@@ -302,8 +302,8 @@ class TestTheClientCloseRetiresTheDrain:
     ) -> None:
         """The channel is disabled while a retry waits on a held lease. When the lease
         frees, the retry must not reach the closed dispatcher and answer on it."""
-        from kiro_crew.messaging.spawn_approval_delivery import register_channel_delivery
-        from kiro_crew.telegram.gateway import _client_close_hook
+        from aj_crew.messaging.spawn_approval_delivery import register_channel_delivery
+        from aj_crew.telegram.gateway import _client_close_hook
 
         d, cli, sess = _dispatcher({7}, dm_scope="unified")
         await _queue_one(d, sess, "hello")
@@ -322,20 +322,20 @@ class TestTheClientCloseRetiresTheDrain:
         assert [e[1] for e in sess.queued] == ["hello"], "the message is left queued"
 
     def test_the_close_also_retires_spawn_approval_delivery(self) -> None:
-        from kiro_crew.messaging.spawn_approval_delivery import (
+        from aj_crew.messaging.spawn_approval_delivery import (
             register_channel_delivery,
             resolve_channel_delivery,
         )
-        from kiro_crew.telegram.gateway import _client_close_hook
+        from aj_crew.telegram.gateway import _client_close_hook
 
         d, _cli, _sess = _dispatcher({7})
         register_channel_delivery("telegram", d.deliver_spawn_approval)
         _client_close_hook(d, d.deliver_spawn_approval)()
-        assert resolve_channel_delivery("telegram:kirocrew:direct:7") is None
+        assert resolve_channel_delivery("telegram:ajcrew:direct:7") is None
 
     def test_an_old_clients_close_keeps_a_restarted_dispatchers_drain(self) -> None:
         """A restart registers the replacement before the old client's close runs."""
-        from kiro_crew.telegram.gateway import _client_close_hook
+        from aj_crew.telegram.gateway import _client_close_hook
 
         old, _c1, _s1 = _dispatcher({7})
         new, _c2, _s2 = _dispatcher({7})  # registers itself, replacing ``old``

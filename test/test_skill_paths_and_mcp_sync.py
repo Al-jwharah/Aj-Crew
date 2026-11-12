@@ -38,14 +38,14 @@ class TestApiSessionsRestartMcpSync:
     @pytest.mark.asyncio
     async def test_syncs_new_servers_before_restart(self):
         """The serialized sync should run and the count appear in the response."""
-        from kiro_crew.dashboard.handlers.sessions import api_sessions_restart
+        from aj_crew.dashboard.handlers.sessions import api_sessions_restart
 
         fake_server = MagicMock()
         request = _make_restart_request()
 
         with (
-            patch("kiro_crew.dashboard.handlers.sessions._reset_all_sessions", new_callable=AsyncMock, return_value=2),
-            patch("kiro_crew.dashboard.handlers.sessions.sync_discovered_servers", return_value=[fake_server]),
+            patch("aj_crew.dashboard.handlers.sessions._reset_all_sessions", new_callable=AsyncMock, return_value=2),
+            patch("aj_crew.dashboard.handlers.sessions.sync_discovered_servers", return_value=[fake_server]),
         ):
             resp = await api_sessions_restart(request)
 
@@ -58,13 +58,13 @@ class TestApiSessionsRestartMcpSync:
         """If MCP sync raises, restart must still proceed — but the reset must
         NOT be marked as applied (the on-disk config may still be stale, so
         clearing the staleness banner would acknowledge a change never applied)."""
-        from kiro_crew.dashboard.handlers.sessions import api_sessions_restart
+        from aj_crew.dashboard.handlers.sessions import api_sessions_restart
 
         request = _make_restart_request()
 
         with (
-            patch("kiro_crew.dashboard.handlers.sessions._reset_all_sessions", new_callable=AsyncMock, return_value=1) as reset,
-            patch("kiro_crew.dashboard.handlers.sessions.sync_discovered_servers", side_effect=RuntimeError("boom")),
+            patch("aj_crew.dashboard.handlers.sessions._reset_all_sessions", new_callable=AsyncMock, return_value=1) as reset,
+            patch("aj_crew.dashboard.handlers.sessions.sync_discovered_servers", side_effect=RuntimeError("boom")),
         ):
             resp = await api_sessions_restart(request)
 
@@ -77,13 +77,13 @@ class TestApiSessionsRestartMcpSync:
     @pytest.mark.asyncio
     async def test_no_servers_to_sync(self):
         """When nothing needed syncing, synced count is 0 (and restart still runs)."""
-        from kiro_crew.dashboard.handlers.sessions import api_sessions_restart
+        from aj_crew.dashboard.handlers.sessions import api_sessions_restart
 
         request = _make_restart_request()
 
         with (
-            patch("kiro_crew.dashboard.handlers.sessions._reset_all_sessions", new_callable=AsyncMock, return_value=0),
-            patch("kiro_crew.dashboard.handlers.sessions.sync_discovered_servers", return_value=[]) as mock_sync,
+            patch("aj_crew.dashboard.handlers.sessions._reset_all_sessions", new_callable=AsyncMock, return_value=0),
+            patch("aj_crew.dashboard.handlers.sessions.sync_discovered_servers", return_value=[]) as mock_sync,
         ):
             resp = await api_sessions_restart(request)
 
@@ -94,14 +94,14 @@ class TestApiSessionsRestartMcpSync:
     @pytest.mark.asyncio
     async def test_multiple_servers_synced(self):
         """Multiple discovered servers should all be counted."""
-        from kiro_crew.dashboard.handlers.sessions import api_sessions_restart
+        from aj_crew.dashboard.handlers.sessions import api_sessions_restart
 
         request = _make_restart_request()
         servers = [MagicMock(), MagicMock(), MagicMock()]
 
         with (
-            patch("kiro_crew.dashboard.handlers.sessions._reset_all_sessions", new_callable=AsyncMock, return_value=1),
-            patch("kiro_crew.dashboard.handlers.sessions.sync_discovered_servers", return_value=servers),
+            patch("aj_crew.dashboard.handlers.sessions._reset_all_sessions", new_callable=AsyncMock, return_value=1),
+            patch("aj_crew.dashboard.handlers.sessions.sync_discovered_servers", return_value=servers),
         ):
             resp = await api_sessions_restart(request)
 

@@ -29,7 +29,7 @@ import { logPageProblems, stubDashboardApi, json } from './lib/stub-dashboard-ap
 
 const OUT = process.argv[2] || '../temp-screenshots/blocked-link-chip-host-only'
 const SLOT = 'chat-blocked-link-chip'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 // Prove the wire shape the dashboard renders, not a copy: the one-record case is
 // the backend fixture the unit test renders.
 const oneOne = JSON.parse(readFileSync(fileURLToPath(new URL('../src/test/fixtures/blockedLinkOneOne.json', import.meta.url)), 'utf8'))
@@ -45,7 +45,7 @@ const slots = [{
   running: false,
   last_message: 'Two of the links were blocked',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

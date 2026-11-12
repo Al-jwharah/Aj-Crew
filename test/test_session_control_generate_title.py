@@ -16,13 +16,13 @@ from unittest.mock import MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_title, create_rate_limit
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.mcp_dashboard import TABLE
-from kiro_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.dashboard import chat_title, create_rate_limit
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.mcp_dashboard import TABLE
+from aj_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
 
 _LINK = "slack:1786300000.000100"
 
@@ -281,8 +281,8 @@ def test_manual_regenerate_still_calls_the_model_while_memory_is_critical(tmp_pa
     from types import SimpleNamespace
     from unittest.mock import AsyncMock
 
-    import kiro_crew.resource_status as resource_status
-    from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+    import aj_crew.resource_status as resource_status
+    from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
 
     class _Session:
         served_model = ""
@@ -568,7 +568,7 @@ def test_route_renders_the_window_as_429(tmp_path, monkeypatch, persisted):
 def test_the_route_is_registered_strict_internal():
     """An unlisted session-control path falls through to cookie auth, and the
     MCP caller's secret is then ignored in production."""
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     assert "/api/session-control/generate-title" in server._STRICT_INTERNAL_API_PATHS
 
@@ -596,7 +596,7 @@ def test_tool_carries_the_verified_key_and_reports_the_new_title():
 def test_tool_waits_longer_than_the_default_for_the_model_call():
     """Mutation guard: the default 30 s wait would time out a slow titling call
     the route still completes."""
-    from kiro_crew import mcp_dashboard
+    from aj_crew import mcp_dashboard
 
     assert mcp_dashboard.GENERATE_TITLE_TIMEOUT_SECS > 30
     assert mcp_dashboard.GENERATE_TITLE_TIMEOUT_SECS < create_rate_limit.WINDOW_SECS

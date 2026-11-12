@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.subagent import SubagentManager
+from aj_crew.subagent import SubagentManager
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -167,7 +167,7 @@ class TestSpawnParkedOnApprovalIsObservable:
         mgr = _manager(approval)
         # Captured at root, not at a named logger: the coordinator modules
         # receive ``logger`` by injection (``bind_component_globals``), so the
-        # record is emitted under ``kiro_crew.subagent`` rather than under
+        # record is emitted under ``aj_crew.subagent`` rather than under
         # ``admission``'s own module name. What matters to the operator is that
         # SOME record names the run and the gate.
         try:
@@ -201,15 +201,15 @@ class TestSpawnParkedOnApprovalIsObservable:
 class TestParkedRunIsVisibleOnBothReadPaths:
     """Both /api/spawn shapes must carry the wait, not just the list one.
 
-    A blocking ``kirocrew spawn run`` polls the SINGLE-run status endpoint
+    A blocking ``ajcrew spawn run`` polls the SINGLE-run status endpoint
     (``/api/spawn/<id>``) every 2s, not the list, so a wait reported only on the
     list would leave that caller on "waiting for result..." with no reason.
     """
 
     def _payload_flag(self, *, awaiting: bool, exec_started: float | None) -> bool:
         """What the two handlers now emit, via their shared predicate."""
-        from kiro_crew.dashboard.handlers.messaging import _awaiting_spawn_approval
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.dashboard.handlers.messaging import _awaiting_spawn_approval
+        from aj_crew.subagent import SubagentInfo
 
         info = SubagentInfo(id="parked01", task="Return only the result of 1+1")
         info._awaiting_approval = awaiting
@@ -241,7 +241,7 @@ class TestParkedRunIsVisibleOnBothReadPaths:
         import inspect
         from pathlib import Path
 
-        import kiro_crew.dashboard.handlers.messaging as messaging
+        import aj_crew.dashboard.handlers.messaging as messaging
 
         # The facade composes the read paths from its messaging_api owners, so the
         # ratchet reads the facade and every owner, and fails if a read path lives
@@ -272,7 +272,7 @@ class TestParkedRunIsVisibleOnBothReadPaths:
         """The blocking CLI must tell the user, and only once per run."""
         from pathlib import Path
 
-        import kiro_crew.cli_commands_gateway_api as cli
+        import aj_crew.cli_commands_gateway_api as cli
 
         src = Path(cli.__file__).read_text(encoding="utf-8")
         assert 'status.get("awaiting_approval")' in src, (
@@ -290,7 +290,7 @@ class TestParkedRunIsVisibleOnBothReadPaths:
         nothing and is waiting on a human misinforms the agent at exactly the
         moment it is trying to reconcile.
         """
-        from kiro_crew.mcp_tools import spawn as spawn_tools
+        from aj_crew.mcp_tools import spawn as spawn_tools
 
         def _fake_get(path: str) -> dict:
             assert path == "/api/spawn?queued=1"
@@ -314,7 +314,7 @@ class TestParkedRunIsVisibleOnBothReadPaths:
 
     def test_mcp_spawn_list_still_says_running_for_a_live_run(self, monkeypatch) -> None:  # type: ignore[no-untyped-def]
         """The awaiting-approval status must not swallow the ordinary one."""
-        from kiro_crew.mcp_tools import spawn as spawn_tools
+        from aj_crew.mcp_tools import spawn as spawn_tools
 
         monkeypatch.setattr(
             spawn_tools.mcp_core,

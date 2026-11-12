@@ -30,9 +30,9 @@ from mcp_gateway_backend_coverage_helpers import (
     _settle_lease,
 )
 
-from kiro_crew.mcp_caller import CALLER_META_KEY, CallerContext
-from kiro_crew.mcp_gateway import backend as backend_mod
-from kiro_crew.mcp_gateway.backend import Backend
+from aj_crew.mcp_caller import CALLER_META_KEY, CallerContext
+from aj_crew.mcp_gateway import backend as backend_mod
+from aj_crew.mcp_gateway.backend import Backend
 
 
 def _releases(backend: Backend) -> list[dict]:

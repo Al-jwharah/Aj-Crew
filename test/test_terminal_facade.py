@@ -1,8 +1,8 @@
 """The terminal handler facade keeps the patch seams and the import surface the one module had.
 
-``kiro_crew.dashboard.handlers.terminal`` is a mirror facade (:mod:`kiro_crew._facade_mirror`)
-over the ``kiro_crew.dashboard.handlers.terminal_<role>`` owners. Routes, the handlers
-package and tests still reach every name as ``kiro_crew.dashboard.handlers.terminal.<name>``,
+``aj_crew.dashboard.handlers.terminal`` is a mirror facade (:mod:`aj_crew._facade_mirror`)
+over the ``aj_crew.dashboard.handlers.terminal_<role>`` owners. Routes, the handlers
+package and tests still reach every name as ``aj_crew.dashboard.handlers.terminal.<name>``,
 and the moved code reads its names as plain module globals, so a patch through the facade
 reaches that code only because the mirror writes it into every module holding the name.
 
@@ -23,21 +23,21 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard.handlers import terminal
+from aj_crew import _facade_mirror
+from aj_crew.dashboard.handlers import terminal
 
-FACADE = "kiro_crew.dashboard.handlers.terminal"
+FACADE = "aj_crew.dashboard.handlers.terminal"
 HANDLERS_DIR = Path(terminal.__file__).resolve().parent
 
 #: The owners, lowest layer first: each imports only owners listed before it.
 _OWNERS = (
-    "kiro_crew.dashboard.handlers.terminal_session",
-    "kiro_crew.dashboard.handlers.terminal_shell",
-    "kiro_crew.dashboard.handlers.terminal_transport",
-    "kiro_crew.dashboard.handlers.terminal_lifecycle",
-    "kiro_crew.dashboard.handlers.terminal_placement",
-    "kiro_crew.dashboard.handlers.terminal_complete",
-    "kiro_crew.dashboard.handlers.terminal_routes",
+    "aj_crew.dashboard.handlers.terminal_session",
+    "aj_crew.dashboard.handlers.terminal_shell",
+    "aj_crew.dashboard.handlers.terminal_transport",
+    "aj_crew.dashboard.handlers.terminal_lifecycle",
+    "aj_crew.dashboard.handlers.terminal_placement",
+    "aj_crew.dashboard.handlers.terminal_complete",
+    "aj_crew.dashboard.handlers.terminal_routes",
 )
 
 
@@ -58,7 +58,7 @@ def test_the_owners_are_every_terminal_sibling_in_layer_order() -> None:
     """A ``terminal_*.py`` module the facade does not list would hold names a patch
     through the facade never reaches, so the sibling set and the owner tuple agree."""
     siblings = {
-        f"kiro_crew.dashboard.handlers.{path.stem}" for path in HANDLERS_DIR.glob("terminal_*.py")
+        f"aj_crew.dashboard.handlers.{path.stem}" for path in HANDLERS_DIR.glob("terminal_*.py")
     }
     assert set(_OWNERS) == siblings
     assert _index().owners == _OWNERS
@@ -74,7 +74,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
         tree = ast.parse(Path(sys.modules[owner].__file__).read_text(encoding="utf-8"))
         for node in tree.body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in _OWNERS:
+                if not node.module.startswith("aj_crew") or node.module in _OWNERS:
                     continue
                 for alias in node.names:
                     found.setdefault(alias.asname or alias.name, (node.module, alias.name))
@@ -96,7 +96,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
     """An owner holds these and the facade serves them, so ``from
-    kiro_crew.dashboard.handlers.terminal import config_path`` type-checks only because the
+    aj_crew.dashboard.handlers.terminal import config_path`` type-checks only because the
     facade names each one from its home under ``TYPE_CHECKING``; exactly those."""
     served = set(_index().exports)
     expected = {name: home for name, home in _home_imports().items() if name in served}
@@ -113,8 +113,8 @@ def test_the_owners_log_under_the_facade_name() -> None:
         if "logger" in vars(sys.modules[owner])
     }
     assert set(loggers) == {
-        "kiro_crew.dashboard.handlers.terminal_lifecycle",
-        "kiro_crew.dashboard.handlers.terminal_routes",
+        "aj_crew.dashboard.handlers.terminal_lifecycle",
+        "aj_crew.dashboard.handlers.terminal_routes",
     }
     assert all(found is terminal.logger for found in loggers.values())
 
@@ -124,7 +124,7 @@ def test_a_facade_patch_of_the_config_read_reaches_the_owner_gate(
 ) -> None:
     """``terminal._get_config`` is patched through the facade across the terminal suite;
     the gate that reads it lives in ``terminal_session`` and sees the patch."""
-    session = importlib.import_module("kiro_crew.dashboard.handlers.terminal_session")
+    session = importlib.import_module("aj_crew.dashboard.handlers.terminal_session")
     monkeypatch.setattr(terminal, "_enabled_cache", [True, float("-inf")])
     monkeypatch.setattr(terminal, "_get_config", lambda request: {"enabled": False})
     assert session._get_config is terminal._get_config

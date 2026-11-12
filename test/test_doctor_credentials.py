@@ -1,6 +1,6 @@
 """The doctor Credentials section — the self-service answer to "AWS is unavailable".
 
-Advisory by construction: an unconfigured AWS profile is not a Kiro Crew fault, so
+Advisory by construction: an unconfigured AWS profile is not an Aj Crew fault, so
 every case here also asserts that ``issues`` stays empty. A regression that made
 this section blocking would turn ``doctor`` red on every host that does not use
 AWS.
@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_doctor
+from aj_crew import cli_doctor
 
 
 @pytest.fixture
@@ -266,7 +266,7 @@ class TestCredentialsSection:
         """The section must not READ a single byte out of ``~/.aws``.
 
         That directory is fenced from the agent by the sensitive-path floor, and
-        ``kirocrew doctor`` is reachable from a tool call — so parsing the config
+        ``ajcrew doctor`` is reachable from a tool call — so parsing the config
         here would hand back through a diagnostic exactly what the floor refuses
         directly. Existence probes are fine; opening is not. Asserted on the OPEN
         rather than on the printed output, because "no secret appeared in stdout"
@@ -550,7 +550,7 @@ class TestTheProbeDoesNotFollowARelocatedConfig:
 
 
 class TestNeitherProbeResolvesThroughPath:
-    """The probes run under an OPERATOR's ``kirocrew doctor``, outside the sandbox.
+    """The probes run under an OPERATOR's ``ajcrew doctor``, outside the sandbox.
 
     A gateway's ``PATH`` can legitimately lead with a directory the agent itself
     can write — a worktree venv's ``bin``, ``~/.local/bin`` — so resolving a bare
@@ -598,7 +598,7 @@ class TestOperatorCopyPointsSomewhereReachable:
         """Neither of the earlier two spellings existed for a pip-installed operator.
 
         The dashboard has no Docs surface at all (packaged docs are reached as
-        GitHub links), and ``src/kiro_crew/...`` is a repo path absent from a wheel
+        GitHub links), and ``src/aj_crew/...`` is a repo path absent from a wheel
         install. Asserting on the URL alone would not catch a regression that ADDED
         a dead pointer beside it, so both dead spellings are asserted absent.
         """
@@ -615,7 +615,7 @@ class TestOperatorCopyPointsSomewhereReachable:
             cli_doctor._BLOCKED_COMMANDS_DOC_URL in line for line in out.splitlines()
         ), "the URL is split across lines and cannot be copied out"
         assert "dashboard's Docs" not in out, "points at a surface the dashboard lacks"
-        assert "src/kiro_crew/docs/blocked-commands.md." not in out, "bare repo path"
+        assert "src/aj_crew/docs/blocked-commands.md." not in out, "bare repo path"
         assert issues == []
 
     def test_the_profiles_row_aligns_with_its_siblings(self, fake_home, monkeypatch, capsys):
@@ -682,7 +682,7 @@ class TestVendorLineIsFailSoft:
         assert cli_doctor._credential_vendor_line() == ""
 
     def test_a_lookup_error_degrades_to_no_line(self, monkeypatch):
-        import kiro_crew.platform.context as ctx_mod
+        import aj_crew.platform.context as ctx_mod
 
         def _boom(fn, **kw):
             raise RuntimeError("composition exploded")

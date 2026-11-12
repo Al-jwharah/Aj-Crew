@@ -16,15 +16,15 @@ from unittest.mock import MagicMock
 import pytest
 from real_dashboard_state import settle_notification_writes
 
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.dashboard.state_parts import dashboard_services
-from kiro_crew.notifications import bridge_egress
-from kiro_crew.notifications.bridge import BridgeDispatcher
-from kiro_crew.notifications.bridge_slack import SlackBridgeSink, render_slack_parts
-from kiro_crew.notifications.bus import NotificationPayload
-from kiro_crew.notifications.rate_limit import RATE_LIMIT_BURST
-from kiro_crew.notifications.settings import ChannelSettings
-from kiro_crew.slack.format import SLACK_MAX_TEXT, escape_mrkdwn
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state_parts import dashboard_services
+from aj_crew.notifications import bridge_egress
+from aj_crew.notifications.bridge import BridgeDispatcher
+from aj_crew.notifications.bridge_slack import SlackBridgeSink, render_slack_parts
+from aj_crew.notifications.bus import NotificationPayload
+from aj_crew.notifications.rate_limit import RATE_LIMIT_BURST
+from aj_crew.notifications.settings import ChannelSettings
+from aj_crew.slack.format import SLACK_MAX_TEXT, escape_mrkdwn
 
 _SECRET = "AKIAIOSFODNN7EXAMPLE"
 _EXFIL_URL = "https://evil.example.com/steal?data=" + "A" * 250
@@ -67,13 +67,13 @@ def _settle_writes():
 @pytest.fixture()
 def sel_log(monkeypatch) -> _Sel:
     log = _Sel()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: log)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: log)
     return log
 
 
 @pytest.fixture()
 def settings(monkeypatch, tmp_path) -> ChannelSettings:
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
     store = ChannelSettings()
     store.update("system.cron", deliver_to=["slack"])
     return store
@@ -110,8 +110,8 @@ class TestExitCriterion:
     async def test_critical_note_lands_as_a_redacted_owner_dm_with_paired_records(
         self, monkeypatch, tmp_path, sel_log
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
         slack = _FakeSlack()
         state = DashboardState(
             sessions=MagicMock(count=0),
@@ -156,10 +156,10 @@ class TestExitCriterion:
         self, monkeypatch, tmp_path, sel_log
     ):
         """The local sink pops ``publisher_session``; the bridge must still see it."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             lambda scope, item, *, session_key, **kw: SimpleNamespace(
                 permitted=session_key == "_host", reason="session denied"
             ),
@@ -198,7 +198,7 @@ class TestGovernance:
     async def test_a_denied_scope_sends_nothing_and_is_audited(
         self, monkeypatch, settings, sel_log, scope
     ):
-        monkeypatch.setattr("kiro_crew.platform.governance_profiles.vet_and_audit", _deny(scope))
+        monkeypatch.setattr("aj_crew.platform.governance_profiles.vet_and_audit", _deny(scope))
         slack = _FakeSlack()
         dispatcher = _dispatcher(settings, slack)
         dispatcher.schedule(_note())
@@ -218,7 +218,7 @@ class TestGovernance:
             seen.append(session_key)
             return SimpleNamespace(permitted=session_key == "_host", reason="session denied")
 
-        monkeypatch.setattr("kiro_crew.platform.governance_profiles.vet_and_audit", _vet)
+        monkeypatch.setattr("aj_crew.platform.governance_profiles.vet_and_audit", _vet)
         slack = _FakeSlack()
         dispatcher = _dispatcher(settings, slack)
         dispatcher.schedule(_note(), publisher="dashboard:slot-1")
@@ -234,7 +234,7 @@ class TestGovernance:
         def _boom(*a, **kw):
             raise RuntimeError("profile store unreadable")
 
-        monkeypatch.setattr("kiro_crew.platform.governance_profiles.vet_and_audit", _boom)
+        monkeypatch.setattr("aj_crew.platform.governance_profiles.vet_and_audit", _boom)
         slack = _FakeSlack()
         dispatcher = _dispatcher(settings, slack)
         dispatcher.schedule(_note())
@@ -245,7 +245,7 @@ class TestGovernance:
 
     def test_a_decision_without_permitted_denies(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             lambda *a, **kw: SimpleNamespace(),
         )
         assert bridge_egress.vet_delivery("slack", _note())
@@ -257,7 +257,7 @@ class TestGovernance:
             seen.append((session_key, app))
             return SimpleNamespace(permitted=app != "demo", reason="app denied")
 
-        monkeypatch.setattr("kiro_crew.platform.governance_profiles.vet_and_audit", _vet)
+        monkeypatch.setattr("aj_crew.platform.governance_profiles.vet_and_audit", _vet)
         assert bridge_egress.vet_delivery("slack", _note(source="app:demo")) == "app denied"
         assert seen == [("_host", ""), ("_host", ""), ("_host", "demo")]
         seen.clear()
@@ -269,8 +269,8 @@ class TestSubjects:
     """The gateway resolves every session a note names before governance sees it."""
 
     def _state(self, monkeypatch, tmp_path) -> DashboardState:
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
         state = DashboardState(
             sessions=MagicMock(count=0),
             crons=MagicMock(),
@@ -338,7 +338,7 @@ class TestSubjects:
     ):
         state = self._state(monkeypatch, tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             lambda scope, item, *, session_key, **kw: SimpleNamespace(
                 permitted=not session_key.startswith("dashboard:"), reason="dashboard denied"
             ),
@@ -383,8 +383,8 @@ class TestKeyedCommit:
     async def test_a_failed_keyed_rewrite_sends_nothing_through_the_bus(
         self, monkeypatch, tmp_path, sel_log
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
         slack = _FakeSlack()
         state = DashboardState(
             sessions=MagicMock(count=0),
@@ -451,7 +451,7 @@ class TestTransport:
     async def test_the_per_transport_budget_caps_a_firehose(self, monkeypatch, settings, sel_log):
         # Freeze the limiter's clock so no token refills mid-test.
         monkeypatch.setattr(
-            "kiro_crew.notifications.rate_limit.time", SimpleNamespace(monotonic=lambda: 1000.0)
+            "aj_crew.notifications.rate_limit.time", SimpleNamespace(monotonic=lambda: 1000.0)
         )
         slack = _FakeSlack()
         dispatcher = _dispatcher(settings, slack)

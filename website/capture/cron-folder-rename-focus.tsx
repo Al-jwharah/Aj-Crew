@@ -16,7 +16,7 @@ import { initI18n } from '../src/i18n/all'
 import '../src/index.css'
 
 const theme = new URLSearchParams(location.search).get('theme') || 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 function Scene() {
   const [name, setName] = useState('Nightly jobs')

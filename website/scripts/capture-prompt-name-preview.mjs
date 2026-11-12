@@ -6,7 +6,7 @@
  * Same shape as capture-profile-fallback-banner.mjs: serves the REAL built SPA
  * (website/dist) behind a loopback server and answers /api/** from the shared
  * fixture router. Nothing here talks to a gateway, which is the point — a bare
- * `vite` harness proxies /api to whatever KIROCREW_PORT names.
+ * `vite` harness proxies /api to whatever AJCREW_PORT names.
  *
  * Five frames, because the change has two halves and the second one only shows
  * up in a language other than English:

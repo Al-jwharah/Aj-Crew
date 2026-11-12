@@ -26,9 +26,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from member_memory_helpers import write_member_home
 
-from kiro_crew.config import loader
-from kiro_crew.config.loader import KiroCrewConfig, config_dir
-from kiro_crew.cron import CronJob, CronSchedule
+from aj_crew.config import loader
+from aj_crew.config.loader import AjCrewConfig, config_dir
+from aj_crew.cron import CronJob, CronSchedule
 
 _REPLY = "Agent response here"
 
@@ -90,14 +90,14 @@ def _kiro_provider(session_key=None, agent=None, channel_id=None, **kwargs):
 
 def _manager(order: list[str] | None = None):
     """A real session manager whose session starts are logged into *order*."""
-    from kiro_crew.session import SessionManager
+    from aj_crew.session import SessionManager
 
     def _factory(session_key=None, **kwargs):
         if order is not None:
             order.append(f"start:{session_key}")
         return _kiro_provider(session_key, **kwargs)
 
-    return SessionManager(KiroCrewConfig(), provider_factory=_factory)
+    return SessionManager(AjCrewConfig(), provider_factory=_factory)
 
 
 class _ChildTeardown:
@@ -136,7 +136,7 @@ def _log_the_gate(manager, order: list[str]) -> None:
 
 def _dashboard_state(manager, prerequisites: _Prerequisites) -> MagicMock:
     """The dashboard state the gateway holds, with the check installed as the dashboard does."""
-    from kiro_crew.dashboard.chat_runner import install_acquire_identity_check
+    from aj_crew.dashboard.chat_runner import install_acquire_identity_check
 
     state = MagicMock()
     state.get_slot = MagicMock(return_value=None)
@@ -170,7 +170,7 @@ def _route_acquires(gw, manager, acquire_error: BaseException | None = None) -> 
 
 
 def _make_gw(prerequisites: _Prerequisites, manager):
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gw = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gw.sessions = MagicMock()
@@ -205,15 +205,15 @@ async def _run_cron(gw, job):
     """Run *job* through the real ``_cron_callback`` captured from ``_init_cron``."""
     captured_cb = None
     with (
-        patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
+        patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
         patch(
-            "kiro_crew.slack.gateway.run_in_embed_pool",
+            "aj_crew.slack.gateway.run_in_embed_pool",
             AsyncMock(return_value=("full prompt", None)),
         ),
-        patch("kiro_crew.slack.gateway.stream_and_collect", AsyncMock(return_value=_REPLY)),
-        patch("kiro_crew.slack.gateway.persist_token_record_async", AsyncMock()),
-        patch("kiro_crew.slack.gateway.sel"),
-        patch("kiro_crew.slack.gateway.build_cron_session_context") as mock_ctx,
+        patch("aj_crew.slack.gateway.stream_and_collect", AsyncMock(return_value=_REPLY)),
+        patch("aj_crew.slack.gateway.persist_token_record_async", AsyncMock()),
+        patch("aj_crew.slack.gateway.sel"),
+        patch("aj_crew.slack.gateway.build_cron_session_context") as mock_ctx,
     ):
         mock_ctx.return_value = (f"cron:{job.id}", job.message)
 
@@ -285,11 +285,11 @@ async def test_an_unchanged_account_acquires_without_a_sweep() -> None:
 
 @pytest.mark.asyncio
 async def test_a_sequence_step_runs_the_gate_before_its_acquire(monkeypatch) -> None:
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     write_member_home(config_dir(), "alpha", "beta")
     loader._invalidate_config_cache()
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     # Resolution reads ``live.snapshot() or self._cfg``; pin both to the test config
     # so the two crew aliases are visible without a live config watcher.
     monkeypatch.setattr(gateway.live, "snapshot", lambda: cfg)
@@ -446,7 +446,7 @@ async def test_a_sign_out_an_earlier_sweep_finished_is_left_alone() -> None:
 async def test_one_cron_fire_sweeps_a_sign_out_and_later_fires_leave_it_alone(
     tmp_path, sel_private_root
 ) -> None:
-    from kiro_crew import kiro_prerequisite as kp
+    from aj_crew import kiro_prerequisite as kp
 
     manager = _manager()
     children = _ChildTeardown({"cron:keyed": ("run-keyed",)})

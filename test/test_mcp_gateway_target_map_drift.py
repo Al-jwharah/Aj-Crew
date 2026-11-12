@@ -6,7 +6,7 @@ afterwards. ``_start_locked`` adopts any process answering ``pong``, so a daemon
 that outlived a ``stub_servers`` change keeps serving a map that predates it --
 for as long as it holds the socket. Observed in the field as a 25-day-old daemon
 whose env knew only ``excalidraw`` and ``pdf``: every session's
-``kirocrew-core`` stub registered, pre-flighted ``ensure_backend``, was refused
+``ajcrew-core`` stub registered, pre-flighted ``ensure_backend``, was refused
 for an unknown target, and died in 0.2s, removing that server's whole tool
 surface with no durable record anywhere.
 
@@ -28,9 +28,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.mcp_gateway.gatewayd import _TargetUnknown, resolvable_target_stems
-from kiro_crew.mcp_gateway.manager import GatewayManager, GatewaySpec
-from kiro_crew.mcp_gateway.stub import (
+from aj_crew.mcp_gateway.gatewayd import _TargetUnknown, resolvable_target_stems
+from aj_crew.mcp_gateway.manager import GatewayManager, GatewaySpec
+from aj_crew.mcp_gateway.stub import (
     TARGET_UNKNOWN_REASON,
     fallback_counts,
     log_fallback,
@@ -52,13 +52,13 @@ def test_stems_strip_the_prefix_and_the_args_hash() -> None:
     reduce to one stem -- otherwise a daemon carrying only the disambiguated
     entry would read as not serving the server at all."""
     env = {
-        "KIROCREW_MCP_TARGET_KIROCREW_CORE": "kirocrew mcp-core",
-        "KIROCREW_MCP_TARGET_KIROCREW_CORE__61774e2023ff185e": "kirocrew mcp-core",
-        "KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf --stdio",
+        "AJCREW_MCP_TARGET_AJCREW_CORE": "ajcrew mcp-core",
+        "AJCREW_MCP_TARGET_AJCREW_CORE__61774e2023ff185e": "ajcrew mcp-core",
+        "AJCREW_MCP_TARGET_PDF": "npx -y server-pdf --stdio",
         "PATH": "/usr/bin",
-        "KIROCREW_HOME": "/home/x/.kiro/crew",
+        "AJCREW_HOME": "/home/x/.kiro/crew",
     }
-    assert resolvable_target_stems(env) == ["KIROCREW_CORE", "PDF"]
+    assert resolvable_target_stems(env) == ["AJCREW_CORE", "PDF"]
 
 
 def test_the_legacy_prefix_still_counts_as_coverage() -> None:
@@ -80,12 +80,12 @@ def test_required_stems_come_from_the_spec_the_rewriter_just_computed() -> None:
     the check cannot disagree with what a spawn would actually have applied."""
     mgr = _manager(
         {
-            "KIROCREW_MCP_TARGET_KIROCREW_CORE": "kirocrew mcp-core",
-            "KIROCREW_MCP_TARGET_KIROCREW_CORE__deadbeef": "kirocrew mcp-core",
-            "KIROCREW_MCP_TARGET_EXCALIDRAW": "node x.js",
+            "AJCREW_MCP_TARGET_AJCREW_CORE": "ajcrew mcp-core",
+            "AJCREW_MCP_TARGET_AJCREW_CORE__deadbeef": "ajcrew mcp-core",
+            "AJCREW_MCP_TARGET_EXCALIDRAW": "node x.js",
         }
     )
-    assert mgr._required_target_stems() == {"KIROCREW_CORE", "EXCALIDRAW"}
+    assert mgr._required_target_stems() == {"AJCREW_CORE", "EXCALIDRAW"}
 
 
 # ------------------------------------------------------------- the drift report
@@ -96,22 +96,22 @@ def test_the_field_case_is_reported(caplog) -> None:
     env knows only the two servers it was spawned with."""
     mgr = _manager(
         {
-            "KIROCREW_MCP_TARGET_KIROCREW_CORE": "kirocrew mcp-core",
-            "KIROCREW_MCP_TARGET_EXCALIDRAW": "node x.js",
-            "KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf --stdio",
+            "AJCREW_MCP_TARGET_AJCREW_CORE": "ajcrew mcp-core",
+            "AJCREW_MCP_TARGET_EXCALIDRAW": "node x.js",
+            "AJCREW_MCP_TARGET_PDF": "npx -y server-pdf --stdio",
         }
     )
     with caplog.at_level(logging.WARNING):
         assert mgr._adoption_drift({"type": "pong", "targets": ["EXCALIDRAW", "PDF"]}) == [
-            "KIROCREW_CORE"
+            "AJCREW_CORE"
         ]
-    assert "KIROCREW_CORE" in caplog.text
+    assert "AJCREW_CORE" in caplog.text
     assert "STALE" in caplog.text
 
 
 def test_a_covering_daemon_is_silent(caplog) -> None:
     """No warning on the healthy path, or the signal is worthless."""
-    mgr = _manager({"KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf --stdio"})
+    mgr = _manager({"AJCREW_MCP_TARGET_PDF": "npx -y server-pdf --stdio"})
     with caplog.at_level(logging.WARNING):
         assert mgr._adoption_drift({"type": "pong", "targets": ["PDF"]}) == []
     assert caplog.text == ""
@@ -120,10 +120,10 @@ def test_a_covering_daemon_is_silent(caplog) -> None:
 def test_a_superset_daemon_is_also_silent(caplog) -> None:
     """Coverage is a SUPERSET test: a daemon serving more than this spec needs is
     fine (another agent's servers), and must not be flagged."""
-    mgr = _manager({"KIROCREW_MCP_TARGET_PDF": "npx -y server-pdf --stdio"})
+    mgr = _manager({"AJCREW_MCP_TARGET_PDF": "npx -y server-pdf --stdio"})
     with caplog.at_level(logging.WARNING):
         assert (
-            mgr._adoption_drift({"type": "pong", "targets": ["PDF", "EXCALIDRAW", "KIROCREW_CORE"]})
+            mgr._adoption_drift({"type": "pong", "targets": ["PDF", "EXCALIDRAW", "AJCREW_CORE"]})
             == []
         )
     assert caplog.text == ""
@@ -133,9 +133,9 @@ def test_a_daemon_that_cannot_report_is_flagged_as_unverifiable(caplog) -> None:
     """The pre-upgrade survivor omits ``targets`` entirely -- and that is exactly
     the class of daemon that carries a stale map, so silence would hide the one
     case this exists to catch."""
-    mgr = _manager({"KIROCREW_MCP_TARGET_KIROCREW_CORE": "kirocrew mcp-core"})
+    mgr = _manager({"AJCREW_MCP_TARGET_AJCREW_CORE": "ajcrew mcp-core"})
     with caplog.at_level(logging.WARNING):
-        assert mgr._adoption_drift({"type": "pong"}) == ["KIROCREW_CORE"]
+        assert mgr._adoption_drift({"type": "pong"}) == ["AJCREW_CORE"]
     assert "does not report its target map" in caplog.text
 
 
@@ -166,8 +166,8 @@ def test_the_stub_side_string_matches_the_daemon_that_sends_it() -> None:
     silently going dead."""
     reason = str(
         _TargetUnknown(
-            "no target mapping for server 'kirocrew-core'; "
-            "set KIROCREW_MCP_TARGET_<SERVER> env var or pass a target_resolver"
+            "no target mapping for server 'ajcrew-core'; "
+            "set AJCREW_MCP_TARGET_<SERVER> env var or pass a target_resolver"
         )
     )
     assert TARGET_UNKNOWN_REASON in reason
@@ -178,7 +178,7 @@ def test_an_untagged_target_unknown_still_degrades() -> None:
     untagged target-unknown. This must route to the fallback exec, not exit."""
     assert (
         must_degrade_unknown_target(
-            "no target mapping for server 'kirocrew-core'; "
+            "no target mapping for server 'ajcrew-core'; "
             "set MC_MCP_TARGET_<SERVER> env var or pass a target_resolver"
         )
         is True
@@ -188,9 +188,9 @@ def test_an_untagged_target_unknown_still_degrades() -> None:
 def test_the_legacy_env_prefix_spelling_does_not_break_the_match() -> None:
     """Only the stable leading clause is matched. The remedy clause names an env
     prefix that HAS changed across versions (``MC_MCP_TARGET_`` ->
-    ``KIROCREW_MCP_TARGET_``), so matching the whole sentence would miss exactly
+    ``AJCREW_MCP_TARGET_``), so matching the whole sentence would miss exactly
     the old daemons this exists for."""
-    for spelling in ("MC_MCP_TARGET_", "KIROCREW_MCP_TARGET_"):
+    for spelling in ("MC_MCP_TARGET_", "AJCREW_MCP_TARGET_"):
         assert must_degrade_unknown_target(
             f"no target mapping for server 'x'; set {spelling}<SERVER> env var"
         )
@@ -227,20 +227,20 @@ def test_a_missing_reason_is_not_treated_as_unknown_target() -> None:
 
 
 class _Args:
-    server = "kirocrew-core"
-    agent = "kirocrew"
+    server = "ajcrew-core"
+    agent = "ajcrew"
     channel_id = ""
-    target_command = "/x/kirocrew"
+    target_command = "/x/ajcrew"
 
 
 def _counts_in(tmp_path, monkeypatch, records):
     """Write `records` through the real writer, then aggregate them."""
     monkeypatch.setattr(
-        "kiro_crew.mcp_gateway.stub._fallback_log_path",
+        "aj_crew.mcp_gateway.stub._fallback_log_path",
         lambda: tmp_path / "stub_fallback.jsonl",
     )
     for reason, terminal in records:
-        log_fallback(reason, "uuid-x", "kirocrew:kirocrew-core", _Args(), terminal=terminal)
+        log_fallback(reason, "uuid-x", "ajcrew:ajcrew-core", _Args(), terminal=terminal)
     return fallback_counts()
 
 
@@ -253,10 +253,10 @@ def test_a_terminal_record_does_not_inflate_the_fallback_rate(tmp_path, monkeypa
         [("at capacity", False), ("terminal:backend spawn failed: ENOMEM", True)],
     )
     assert c["total"] == 1
-    assert c["by_server"] == {"kirocrew-core": 1}
+    assert c["by_server"] == {"ajcrew-core": 1}
     assert c["by_reason"] == {"at capacity": 1}
     assert c["terminal_total"] == 1
-    assert c["terminal_by_server"] == {"kirocrew-core": 1}
+    assert c["terminal_by_server"] == {"ajcrew-core": 1}
 
 
 def test_a_terminal_reason_does_not_leak_into_by_reason(tmp_path, monkeypatch):
@@ -288,7 +288,7 @@ def test_a_record_predating_the_flag_still_counts_as_a_fallback(tmp_path, monkey
         json.dumps({"ts": time.time(), "reason": "at capacity", "server": "pdf"}) + "\n",
         encoding="utf-8",
     )
-    monkeypatch.setattr("kiro_crew.mcp_gateway.stub._fallback_log_path", lambda: log)
+    monkeypatch.setattr("aj_crew.mcp_gateway.stub._fallback_log_path", lambda: log)
     c = fallback_counts()
     assert c["total"] == 1
     assert c["terminal_total"] == 0

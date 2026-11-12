@@ -8,13 +8,13 @@ answers with an ephemeral secret on every boot. The mask source for that leaf is
 so the copy fails with ``Permission denied`` instead.
 
 These tests drive the launcher program's own stages --
-:func:`~kiro_crew.sandbox_launcher_program.enter_namespaces` and
-:func:`~kiro_crew.sandbox_launcher_program.place_masks` -- with the shared stand-in
+:func:`~aj_crew.sandbox_launcher_program.enter_namespaces` and
+:func:`~aj_crew.sandbox_launcher_program.place_masks` -- with the shared stand-in
 libc from ``test_sandbox_launcher_program``: a real bind needs a user namespace, which a
 nested sandbox cannot create. The libc here also accepts the private tmpfs and records
 each bind's source mode and bytes at mount time, since that inode is what the sandboxed
 process reads through the bind. Each tier's unreadable set is the one its plan carries
-(:func:`kiro_crew.sandbox._spawn_plan`). The key's mask is then sealed: its stand-in is
+(:func:`aj_crew.sandbox._spawn_plan`). The key's mask is then sealed: its stand-in is
 created mode 0 in a private tmpfs stage mounted in the launcher's namespace only, bound
 through the launcher's own descriptor while it is non-dumpable, its bind is remounted
 read-only, and the stage is detached, so no same-uid process keeps a writable path to
@@ -34,7 +34,7 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import CoveringLibc, launch, payload
 
-from kiro_crew import sandbox, sandbox_launcher_program, sandbox_plan
+from aj_crew import sandbox, sandbox_launcher_program, sandbox_plan
 
 program = sandbox_launcher_program
 
@@ -116,7 +116,7 @@ class _SealingLibc(CoveringLibc):
 @pytest.fixture(autouse=True)
 def _pin_ssh_accept_new(monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep ``_spawn_plan`` from spawning a real ``ssh -V``."""
-    monkeypatch.setattr("kiro_crew.sandbox._ssh_supports_accept_new", lambda: True)
+    monkeypatch.setattr("aj_crew.sandbox._ssh_supports_accept_new", lambda: True)
 
 
 @pytest.fixture(autouse=True)

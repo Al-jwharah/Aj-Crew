@@ -2,7 +2,7 @@
 
 A dashboard token's subject is fixed at mint time as ``owner_id or
 <bootstrap subject>`` and token refresh re-mints from the incoming subject, so
-a session signed in before ``KIROCREW_OWNER_ID`` was configured carries
+a session signed in before ``AJCREW_OWNER_ID`` was configured carries
 ``local-app`` / ``local-startup`` forever. Once an owner exists the owner gate
 denies that subject — correctly — and these tests pin that the denial is
 labelled ``401 stale_session_reauth`` so the dashboard can prompt a re-sign-in,
@@ -25,7 +25,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 
-from kiro_crew.dashboard.handlers import source_providers as source
+from aj_crew.dashboard.handlers import source_providers as source
 
 STALE = source.STALE_OWNER_SESSION_CODE
 
@@ -97,7 +97,7 @@ def test_every_other_denied_caller_keeps_the_generic_response(kwargs) -> None:
 
 
 def _owner_minted_token(subject: str, *, owner_mint: bool = True) -> str:
-    from kiro_crew.dashboard.token_auth_tokens import generate_token, owner_mint_extra
+    from aj_crew.dashboard.token_auth_tokens import generate_token, owner_mint_extra
 
     return generate_token(subject, extra=owner_mint_extra() if owner_mint else None)
 
@@ -136,7 +136,7 @@ def test_owner_minted_app_token_keeps_generic() -> None:
 
 
 def test_owner_mint_claim_survives_refresh_token_round_trip() -> None:
-    from kiro_crew.dashboard.refresh_tokens import (
+    from aj_crew.dashboard.refresh_tokens import (
         generate_refresh_token,
         refresh_token_owner_minted,
     )
@@ -251,14 +251,14 @@ async def test_slack_dashboard_link_marks_only_the_owner(
 ) -> None:
     """The owner's own Slack link carries the owner-mint claim; an allowlisted
     user's link does not."""
-    from kiro_crew.dashboard.token_auth_tokens import token_owner_minted_unverified
-    from kiro_crew.slack import allowlist, handler
+    from aj_crew.dashboard.token_auth_tokens import token_owner_minted_unverified
+    from aj_crew.slack import allowlist, handler
 
     monkeypatch.setattr(handler, "_owner_id", loaded_owner)
     if env_owner is None:
-        monkeypatch.delenv("KIROCREW_OWNER_ID", raising=False)
+        monkeypatch.delenv("AJCREW_OWNER_ID", raising=False)
     else:
-        monkeypatch.setenv("KIROCREW_OWNER_ID", env_owner)
+        monkeypatch.setenv("AJCREW_OWNER_ID", env_owner)
     minted: list[str] = []
     real = allowlist.generate_token
 
@@ -329,7 +329,7 @@ async def test_owner_matching_caller_is_unaffected(monkeypatch) -> None:
 def test_chat_gate_labels_stale_bootstrap_denial() -> None:
     """The Trust/YOLO switch gate (chat mode / slot approve / worktree /
     followup all share ``deny_non_dashboard_caller``)."""
-    from kiro_crew.dashboard import chat_handlers as ch
+    from aj_crew.dashboard import chat_handlers as ch
 
     request = _mocked_request()
     with patch.object(ch, "sel", return_value=MagicMock()):
@@ -338,7 +338,7 @@ def test_chat_gate_labels_stale_bootstrap_denial() -> None:
 
 
 def test_chat_gate_keeps_generic_denial_for_plain_non_owner() -> None:
-    from kiro_crew.dashboard import chat_handlers as ch
+    from aj_crew.dashboard import chat_handlers as ch
 
     request = _mocked_request(user="U_SOMEONE_ELSE")
     with patch.object(ch, "sel", return_value=MagicMock()):
@@ -347,7 +347,7 @@ def test_chat_gate_keeps_generic_denial_for_plain_non_owner() -> None:
 
 
 def test_ask_question_gate_labels_stale_bootstrap_denial() -> None:
-    from kiro_crew.dashboard.handlers import ask_question as aq
+    from aj_crew.dashboard.handlers import ask_question as aq
 
     request = _mocked_request()
     with patch.object(aq, "sel", return_value=MagicMock()):
@@ -356,7 +356,7 @@ def test_ask_question_gate_labels_stale_bootstrap_denial() -> None:
 
 
 def test_cloud_gate_labels_stale_bootstrap_denial() -> None:
-    from kiro_crew.dashboard import handlers_cloud as cloud
+    from aj_crew.dashboard import handlers_cloud as cloud
 
     request = _mocked_request()
     with patch.object(cloud, "_audit", MagicMock()):
@@ -369,7 +369,7 @@ def test_cloud_gate_labels_stale_bootstrap_denial() -> None:
 
 @pytest.mark.asyncio
 async def test_mcp_apps_gate_labels_stale_bootstrap_denial() -> None:
-    from kiro_crew.dashboard.handlers import mcp_apps
+    from aj_crew.dashboard.handlers import mcp_apps
 
     @web.middleware
     async def fake_auth(request, handler):
@@ -396,7 +396,7 @@ async def test_mcp_apps_gate_labels_stale_bootstrap_denial() -> None:
 
 @pytest.mark.asyncio
 async def test_agents_gate_labels_stale_bootstrap_denial() -> None:
-    from kiro_crew.dashboard.handlers import agents
+    from aj_crew.dashboard.handlers import agents
 
     request = _mocked_request()
     with patch.object(agents, "_sel", return_value=MagicMock()):
@@ -407,7 +407,7 @@ async def test_agents_gate_labels_stale_bootstrap_denial() -> None:
 
 @pytest.mark.asyncio
 async def test_aws_consent_gate_labels_stale_bootstrap_denial() -> None:
-    from kiro_crew.dashboard.handlers import aws_consent as consent_handlers
+    from aj_crew.dashboard.handlers import aws_consent as consent_handlers
 
     request = _mocked_request()
     with patch.object(consent_handlers.aws_consent, "audit_decision", MagicMock()):
@@ -420,7 +420,7 @@ async def test_aws_consent_gate_labels_stale_bootstrap_denial() -> None:
 async def test_instances_search_gate_labels_stale_bootstrap_denial(monkeypatch) -> None:
     """The federated-search deny site, driven through the real handler with the
     route's outer feature gate passed so the owner check is what answers."""
-    from kiro_crew.dashboard import handlers_instances as hi
+    from aj_crew.dashboard import handlers_instances as hi
 
     monkeypatch.setattr(hi, "_guard", lambda request, operation: None)
     monkeypatch.setattr(hi, "_audit", MagicMock())

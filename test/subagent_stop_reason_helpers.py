@@ -13,9 +13,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.wait import async_wait_until
 
 
 def _text(text: str) -> SimpleNamespace:
@@ -99,7 +99,7 @@ _RUN_CEILING = 60.0
 
 
 async def _spawn_and_wait(mgr: SubagentManager, task: str = "do work") -> SubagentInfo:
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn(task)
         assert info is not None
         await asyncio.wait_for(mgr._tasks[info.id], _RUN_CEILING)

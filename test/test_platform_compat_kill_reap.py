@@ -19,8 +19,8 @@ import types
 import pytest
 from platform_compat_helpers import _fake_windows_bins
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.testing.wait import wait_until
+from aj_crew import platform_compat as pc
+from aj_crew.testing.wait import wait_until
 
 # Each test starts with the macOS libc and libproc handle caches unbuilt and puts them
 # back after, as every test of the test_platform_compat family does (see conftest.py).
@@ -160,7 +160,7 @@ class TestKillAsyncVariants:
     variants.
 
     The async wrappers exist so async call sites can offload the blocking
-    Windows ``taskkill`` spawn to :func:`kiro_crew.executors.subprocess_executor`
+    Windows ``taskkill`` spawn to :func:`aj_crew.executors.subprocess_executor`
     without stalling the event loop. The POSIX branch dispatches inline to the
     sync ``kill_pid`` / ``kill_process_tree`` (``os.kill`` / ``os.killpg`` are
     non-blocking, and preserving the same callable keeps existing tests that
@@ -246,7 +246,7 @@ class TestKillAsyncVariants:
         monkeypatch.setattr(pc.subprocess, "run", fake_run)
 
         # Patch the `subprocess_executor` name bound in the platform_compat
-        # module namespace (top-level `from kiro_crew.executors import ...`)
+        # module namespace (top-level `from aj_crew.executors import ...`)
         # to return our sentinel.
         monkeypatch.setattr(pc, "subprocess_executor", lambda: sentinel)
 

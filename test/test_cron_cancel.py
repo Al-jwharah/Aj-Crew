@@ -30,18 +30,18 @@ from test_cron_reaper import (
     _retain_torn_down,
 )
 
-from kiro_crew import cron as cron_module
-from kiro_crew import platform_compat
-from kiro_crew.cron import CronJob, CronSchedule, CronService, CronStoreBusy, _RunClaim
-from kiro_crew.cron_history import CronHistoryStore
-from kiro_crew.cron_script import (
+from aj_crew import cron as cron_module
+from aj_crew import platform_compat
+from aj_crew.cron import CronJob, CronSchedule, CronService, CronStoreBusy, _RunClaim
+from aj_crew.cron_history import CronHistoryStore
+from aj_crew.cron_script import (
     _CANCELLED_PROC_JOBS,
     _RUNNING_PROCS,
     kill_running_process,
     run_command_sandboxed,
 )
-from kiro_crew.dashboard.handlers.cron import api_cron_cancel
-from kiro_crew.testing.wait import LoopHop, await_until, finished, wait_until
+from aj_crew.dashboard.handlers.cron import api_cron_cancel
+from aj_crew.testing.wait import LoopHop, await_until, finished, wait_until
 
 
 @pytest.fixture(autouse=True)
@@ -104,7 +104,7 @@ class TestCronServiceCancel:
         refresh_calls: list[str] = []
         svc._push_refresh = refresh_calls.append
 
-        with patch("kiro_crew.sel.sel") as mock_sel, patch.object(svc, "_save"):
+        with patch("aj_crew.sel.sel") as mock_sel, patch.object(svc, "_save"):
             assert await svc.cancel("run1") is True
 
         assert job.last_status == "error"
@@ -132,7 +132,7 @@ class TestCronServiceCancel:
         sessions = _mock_sessions()
         svc._sessions = sessions
 
-        job = _make_job("script1", script="~/.kirocrew/crons/x.py:run")
+        job = _make_job("script1", script="~/.ajcrew/crons/x.py:run")
         svc._jobs = [job]
         svc._claims["script1"] = _RunClaim(
             trigger="scheduled",
@@ -141,8 +141,8 @@ class TestCronServiceCancel:
         )
 
         with (
-            patch("kiro_crew.cron_script.kill_running_process", return_value=True) as mock_kill,
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.cron_script.kill_running_process", return_value=True) as mock_kill,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
         ):
             assert await svc.cancel("script1") is True
@@ -171,7 +171,7 @@ class TestCronServiceCancel:
             task=MagicMock(done=MagicMock(return_value=False)),
         )
 
-        with patch("kiro_crew.sel.sel"), patch.object(svc, "_save"):
+        with patch("aj_crew.sel.sel"), patch.object(svc, "_save"):
             await svc.cancel("run2")
 
         assert job.consecutive_failures == 3
@@ -208,14 +208,14 @@ class TestCronServiceCancel:
         )
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="4821903"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="4821903"),
             _isolated_leader(),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._kill_escaped_children"),
             patch(
-                "kiro_crew.platform_compat.kill_process_group",
+                "aj_crew.platform_compat.kill_process_group",
                 side_effect=ValueError(
                     "kill_process_group: refusing broadcast/self process group 5151"
                 ),
@@ -268,13 +268,13 @@ class TestCronServiceCancel:
         )
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="4821903"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="4821903"),
             _isolated_leader(),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             assert await svc.cancel("popped") is True
 
@@ -315,16 +315,16 @@ class TestCronServiceCancel:
         )
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="4821903"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="4821903"),
             _isolated_leader(),
             # Liveness is read after identity (see ``process_survived``); pinned so
             # the verdict does not depend on what the host runs under a made-up pid.
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             assert await svc.cancel("survived") is True
 
@@ -362,14 +362,14 @@ class TestCronServiceCancel:
         )
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="4821903"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="4821903"),
             _isolated_leader(),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             assert await svc.cancel("torn") is True
 
@@ -385,7 +385,7 @@ class TestCronServiceCancel:
         svc = CronService(base_dir=None, on_job=AsyncMock())
         svc._sessions = _mock_sessions()
 
-        with caplog.at_level("WARNING", logger="kiro_crew.cron"):
+        with caplog.at_level("WARNING", logger="aj_crew.cron"):
             assert await svc._sigkill_sessions("cron:quiet", [], who="Cancel") is None
 
         assert "Cancel: no session found for cron:quiet" in caplog.text
@@ -442,10 +442,10 @@ class TestCronServiceCancel:
         )
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             patch.object(svc._history, "append", AsyncMock(side_effect=_append)),
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
         ):
             mock_sel().log_tool_invocation.side_effect = lambda **_: events.append("audit")
             assert await svc.cancel("fenced") is True
@@ -511,16 +511,16 @@ class TestCronServiceCancel:
         )
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="4821903"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="4821903"),
             _isolated_leader(),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.pgroup_exists", return_value=False),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
-            caplog.at_level("WARNING", logger="kiro_crew.cron"),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.pgroup_exists", return_value=False),
+            patch("aj_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            caplog.at_level("WARNING", logger="aj_crew.cron"),
         ):
             assert await svc.cancel("late") is True
 
@@ -763,15 +763,15 @@ class TestCronServiceCancel:
             svc._sessions._sessions[key] = session
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="4821903"),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
-            patch("kiro_crew.platform_compat.pgroup_exists", return_value=False),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="4821903"),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.pgroup_exists", return_value=False),
             _isolated_leader(),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
         ):
             assert await svc.cancel("seq1") is True
 
@@ -812,12 +812,12 @@ class TestSubprocessRegistry:
         svc._sessions = sessions
 
         with (
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="12345"),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="12345"),
+            patch("aj_crew.acp.client._kill_escaped_children"),
             patch("os.getpgid", return_value=1, create=True),
             patch(
-                "kiro_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)
+                "aj_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)
             ) as pid_kill,
         ):
             handles = svc._session_process_handles("cron:guard")
@@ -851,13 +851,13 @@ class TestSubprocessRegistry:
 
         with (
             patch(
-                "kiro_crew.cron_script.wrap_argv",
+                "aj_crew.cron_script.wrap_argv",
                 # ``**k``, not a fixed ``mode``: this passthrough stands in for whatever
                 # keyword set the caller uses, so it pins the identity behaviour under test
                 # and not the wrap's signature.
                 side_effect=lambda argv, **k: (argv, None),
             ),
-            patch("kiro_crew.cron_script.cgroup_scope_argv", side_effect=lambda argv: argv),
+            patch("aj_crew.cron_script.cgroup_scope_argv", side_effect=lambda argv: argv),
             patch(
                 # The shell probe (_resolve_command_shell) also calls wrap_argv to
                 # sandbox-route its POSIX-strict test. On macOS where /bin/sh is bash
@@ -865,7 +865,7 @@ class TestSubprocessRegistry:
                 # and returns None, aborting before the subprocess is spawned. Patch
                 # the resolver to return a known-good shell so the registry/cancel
                 # mechanics under test can actually run.
-                "kiro_crew.cron_script._resolve_command_shell",
+                "aj_crew.cron_script._resolve_command_shell",
                 return_value="/bin/sh",
             ),
         ):
@@ -908,16 +908,16 @@ class TestSubprocessRegistry:
         monkeypatch.chdir(tmp_path)  # the spawn inherits CWD; see the test above
         with (
             patch(
-                "kiro_crew.cron_script.wrap_argv",
+                "aj_crew.cron_script.wrap_argv",
                 # ``**k`` for the reason the test above gives: a passthrough pins the
                 # identity behaviour, not the keyword set the caller passes.
                 side_effect=lambda argv, **k: (argv, None),
             ),
-            patch("kiro_crew.cron_script.cgroup_scope_argv", side_effect=lambda argv: argv),
+            patch("aj_crew.cron_script.cgroup_scope_argv", side_effect=lambda argv: argv),
             patch(
                 # Bypass the runtime shell probe (which itself spawns a child) — the
                 # test is about the registry, not shell fingerprinting.
-                "kiro_crew.cron_script._resolve_command_shell",
+                "aj_crew.cron_script._resolve_command_shell",
                 return_value=posix_test_shell,
             ),
         ):
@@ -1011,7 +1011,7 @@ async def _cancel_mid_run_then_tick(svc: CronService, job_id: str, started: asyn
     The tick takes a run's claim before it returns, so the claim table is the
     dispatch record: a second claim after the cancel is the job running again.
     """
-    with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+    with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
         await svc._on_timer()
         await await_until(started, what="started")
         assert await svc.cancel(job_id) is True
@@ -1230,7 +1230,7 @@ class TestCancelledOneShotIsParked:
             assert parked is not None
             assert (parked.enabled, parked.auto_paused, parked.user_paused) == pause
             assert parked.last_error.startswith("Cancelled by user")
-            with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+            with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
                 await reloaded._on_timer()
             assert job.id not in reloaded._claims
         finally:
@@ -1254,7 +1254,7 @@ class TestCancelledOneShotIsParked:
             "remind-once", "msg", at_ts=time.time() - 1, delete_after_run=delete_after_run
         )
         try:
-            with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+            with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
                 await svc._on_timer()
                 # No await since the tick, so the run task has not taken its first step.
                 assert svc._claims[job.id].started_monotonic is None
@@ -1271,7 +1271,7 @@ class TestCancelledOneShotIsParked:
             parked = reloaded.get_job(job.id)
             assert parked is not None
             assert (parked.enabled, parked.auto_paused, parked.user_paused) == (False, False, True)
-            with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+            with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
                 await reloaded._on_timer()
             assert job.id not in reloaded._claims
         finally:
@@ -1327,7 +1327,7 @@ class TestCancelledOneShotIsParked:
         busy_calls, timeouts = [0], []
         self._busy_lock(svc, busy_calls, timeouts)
         try:
-            with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+            with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
                 await svc._on_timer()
                 await await_until(started, what="started")
                 busy_calls[0], timeouts[:] = -1, []
@@ -1536,7 +1536,7 @@ class TestCancelledOneShotIsParked:
         svc._merge_terminal_state_locked = merge_after_the_change  # type: ignore[method-assign]
         note, message, live_after = _CANCEL_REPORTS[change]
         try:
-            with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+            with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
                 await svc._on_timer()
                 await await_until(started, what="started")
                 if change == "paused_before_cancel_then_busy":
@@ -1594,7 +1594,7 @@ class TestCancelledOneShotIsParked:
         busy_calls: list[int] = [0]
         self._busy_lock(svc, busy_calls, [])
         try:
-            with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+            with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
                 await svc._on_timer()
                 await await_until(started, what="started")
                 busy_calls[0] = -1
@@ -1629,7 +1629,7 @@ class TestCancelledOneShotIsParked:
         assert live is not None
         live.created_ts = live.last_run_ts = time.time() - 7200  # due on the first tick
         try:
-            with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+            with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
                 await svc._on_timer()
                 await await_until(started, what="started")
                 assert await svc.cancel(job.id) is True

@@ -18,9 +18,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.harness import harness_for
-from kiro_crew.acp.runtime import AcpRuntime, AcpToolSurfaceBindingError, AcpWorkspaceBindingError
-from kiro_crew.acp.types import (
+from aj_crew.acp.harness import harness_for
+from aj_crew.acp.runtime import AcpRuntime, AcpToolSurfaceBindingError, AcpWorkspaceBindingError
+from aj_crew.acp.types import (
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
@@ -30,7 +30,7 @@ from kiro_crew.acp.types import (
     ACP_BACKENDS_TOOL_SEARCH_OVERLAY,
     KAS_CLIENT_CAPABILITIES,
 )
-from kiro_crew.agent_sdk.tool_search import (
+from aj_crew.agent_sdk.tool_search import (
     TOOL_SEARCH_DEFAULT_MIN_PCT,
     TOOL_SEARCH_DEFAULT_MIN_TOKENS,
     ToolSearchSettings,
@@ -38,7 +38,7 @@ from kiro_crew.agent_sdk.tool_search import (
     spec_grants_tool_search,
     with_client_meta_settings,
 )
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.providers.acp import AcpProvider
 
 # ── the grant predicate ──
 
@@ -141,12 +141,12 @@ class TestKasNeverDefer:
     ``enabled`` says, so a spec without the loader must list its tools there."""
 
     TOOLS = {
-        "kirocrew-core": ["memory_recall", "skill_search", "skill_fetch"],
+        "ajcrew-core": ["memory_recall", "skill_search", "skill_fetch"],
         "example-app:example-mcp": ["read_state", "write_state"],
     }
 
     def _ids(self, spec):
-        from kiro_crew.agent_sdk.tool_search import kas_never_defer_ids
+        from aj_crew.agent_sdk.tool_search import kas_never_defer_ids
 
         return kas_never_defer_ids(spec, self.TOOLS.get)
 
@@ -155,16 +155,16 @@ class TestKasNeverDefer:
         assert self._ids(spec) == ["example-app:example-mcp::read_state"]
 
     def test_a_whole_server_grant_expands_from_the_known_list(self):
-        assert self._ids({"tools": ["@kirocrew-core"]}) == [
-            "kirocrew-core::memory_recall",
-            "kirocrew-core::skill_fetch",
-            "kirocrew-core::skill_search",
+        assert self._ids({"tools": ["@ajcrew-core"]}) == [
+            "ajcrew-core::memory_recall",
+            "ajcrew-core::skill_fetch",
+            "ajcrew-core::skill_search",
         ]
 
     def test_a_tool_glob_expands_to_its_matches(self):
-        assert self._ids({"tools": ["@kirocrew-core/skill_*"]}) == [
-            "kirocrew-core::skill_fetch",
-            "kirocrew-core::skill_search",
+        assert self._ids({"tools": ["@ajcrew-core/skill_*"]}) == [
+            "ajcrew-core::skill_fetch",
+            "ajcrew-core::skill_search",
         ]
 
     def test_a_server_with_no_known_list_contributes_nothing(self):
@@ -212,13 +212,13 @@ class TestHandshakeNeverDefer:
     """The KAS ``initialize`` request built from the projected spawn spec."""
 
     def _caps(self, monkeypatch, spec):
-        from kiro_crew.acp import kas_secret_storage, runtime_spawn_launch
+        from aj_crew.acp import kas_secret_storage, runtime_spawn_launch
 
         monkeypatch.setattr(kas_secret_storage, "persistence_enabled", lambda: False)
         monkeypatch.setattr(
             runtime_spawn_launch,
             "_known_server_tool_names",
-            {"kirocrew-core": ["memory_recall", "skill_search"]}.get,
+            {"ajcrew-core": ["memory_recall", "skill_search"]}.get,
             raising=False,
         )
         rt = AcpRuntime(acp_backend=ACP_BACKEND_KAS)
@@ -228,16 +228,16 @@ class TestHandshakeNeverDefer:
         return caps["_meta"]["kiro"]["settings"]["toolSearch"]
 
     def test_a_spec_without_the_loader_keeps_its_mcp_tools_direct(self, monkeypatch):
-        wire = self._caps(monkeypatch, {"tools": ["@kirocrew-core", "@srv/one"]})
+        wire = self._caps(monkeypatch, {"tools": ["@ajcrew-core", "@srv/one"]})
         assert wire["enabled"] is False
         assert wire["neverDefer"] == [
-            "kirocrew-core::memory_recall",
-            "kirocrew-core::skill_search",
+            "ajcrew-core::memory_recall",
+            "ajcrew-core::skill_search",
             "srv::one",
         ]
 
     def test_a_spec_with_the_loader_still_defers(self, monkeypatch):
-        wire = self._caps(monkeypatch, {"tools": ["tool_search", "@kirocrew-core"]})
+        wire = self._caps(monkeypatch, {"tools": ["tool_search", "@ajcrew-core"]})
         assert wire == {"enabled": True, "minPct": 5, "minTokens": 50_000}
 
     def test_an_unreadable_spec_lists_nothing(self, monkeypatch):
@@ -250,8 +250,8 @@ class TestKnownServerToolNames:
     def test_a_crew_server_is_never_imported_into_the_gateway(self, monkeypatch):
         """Its declaration module sits in an agent-writable package, so the
         handshake reads the probe cache and imports nothing."""
-        from kiro_crew import mcp_discovery
-        from kiro_crew.acp.runtime_spawn_launch import _known_server_tool_names
+        from aj_crew import mcp_discovery
+        from aj_crew.acp.runtime_spawn_launch import _known_server_tool_names
 
         reads: list[str] = []
 
@@ -264,17 +264,17 @@ class TestKnownServerToolNames:
         monkeypatch.setattr(
             mcp_discovery, "_get_cached", lambda name: ("unknown", [], "", 0.0, "handshake")
         )
-        assert _known_server_tool_names("kirocrew-guide") is None
+        assert _known_server_tool_names("ajcrew-guide") is None
         assert reads == []
 
     def test_an_unknown_server_answers_none(self):
-        from kiro_crew.acp.runtime_spawn_launch import _known_server_tool_names
+        from aj_crew.acp.runtime_spawn_launch import _known_server_tool_names
 
         assert _known_server_tool_names("no-such-server-for-this-test") is None
 
     def test_a_third_party_server_answers_from_the_probe_cache(self, monkeypatch):
-        from kiro_crew import mcp_discovery
-        from kiro_crew.acp.runtime_spawn_launch import _known_server_tool_names
+        from aj_crew import mcp_discovery
+        from aj_crew.acp.runtime_spawn_launch import _known_server_tool_names
 
         monkeypatch.setattr(
             mcp_discovery,
@@ -338,7 +338,7 @@ class TestMembership:
 
 
 def _build_provider(backend: str, **kwargs) -> AcpProvider:
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider(acp_backend=backend, **kwargs)
     provider._client = MagicMock()
     provider._client.backend = backend
@@ -388,10 +388,10 @@ class TestProviderChannels:
         class _Stop(Exception):
             pass
 
-        monkeypatch.setattr("kiro_crew.providers.acp.AcpRuntime", _Runtime)
+        monkeypatch.setattr("aj_crew.providers.acp.AcpRuntime", _Runtime)
         provider = _build_provider(backend, tool_search=True)
         provider._client._work_dir = MagicMock()
-        provider._client._agent = "kirocrew"
+        provider._client._agent = "ajcrew"
         provider._client._resume_session_id = ""
 
         async def run():
@@ -412,7 +412,7 @@ class TestProviderChannels:
         """
         provider = _build_provider(ACP_BACKEND_KAS, tool_search=True)
         provider._client._work_dir = "/tmp/ws"
-        provider._client._agent = "kirocrew"
+        provider._client._agent = "ajcrew"
         provider._client._sandbox_mode = "auto"
         provider._client._extra_env = {}
         provider._client._mcp_gateway_overlay = None
@@ -445,9 +445,9 @@ class TestProviderChannels:
             return next(runtimes)
 
         with (
-            patch("kiro_crew.providers.acp.AcpRuntime", side_effect=build),
+            patch("aj_crew.providers.acp.AcpRuntime", side_effect=build),
             patch(
-                "kiro_crew.providers.acp.AcpSessionProvider",
+                "aj_crew.providers.acp.AcpSessionProvider",
                 side_effect=lambda handle, runtime, **kw: MagicMock(
                     _handle=handle, _runtime=runtime, resumed=False
                 ),
@@ -465,7 +465,7 @@ class TestProviderChannels:
 
 class TestEveryKasCapableConstructorThreadsTheSetting:
     def test_companion_runtime_kwargs_mirror_the_parent_setting(self):
-        from kiro_crew.session_allocation import _collect_parent_runtime_kwargs
+        from aj_crew.session_allocation import _collect_parent_runtime_kwargs
 
         settings = ToolSearchSettings(True, 5, 50_000)
         provider = MagicMock()
@@ -485,7 +485,7 @@ class TestEveryKasCapableConstructorThreadsTheSetting:
     def test_the_capability_is_declared_on_the_provider_contract(self):
         """H14: read off ``LLMProvider``, never probed for a private name. The base
         answers None; the ACP provider answers its resolved settings."""
-        from kiro_crew.providers.base import LLMProvider
+        from aj_crew.providers.base import LLMProvider
 
         assert "tool_search_settings" in vars(LLMProvider)
         assert isinstance(vars(LLMProvider)["tool_search_settings"], property)
@@ -497,7 +497,7 @@ class TestEveryKasCapableConstructorThreadsTheSetting:
         assert provider.tool_search_settings is None
 
     def test_companion_runtime_kwargs_stay_silent_without_a_toggle(self):
-        from kiro_crew.session_allocation import _collect_parent_runtime_kwargs
+        from aj_crew.session_allocation import _collect_parent_runtime_kwargs
 
         provider = MagicMock()
         provider._client = MagicMock(backend=ACP_BACKEND_KAS)
@@ -512,7 +512,7 @@ class TestEveryKasCapableConstructorThreadsTheSetting:
         derived from the same ``agent.tool_search*`` config as the foreground."""
         import inspect
 
-        from kiro_crew import session_background
+        from aj_crew import session_background
 
         source = inspect.getsource(session_background)
         assert "tool_search=ToolSearchSettings.from_config(" in source
@@ -523,8 +523,8 @@ class TestProjectedSpawnSpecRead:
         """A checkout that skipped setup has no managed spec yet; reading it as
         absent would decide "no loader" for the process while the projection,
         moments later, materializes a spec that grants one."""
-        from kiro_crew.acp import kas_agents as kas_agents_mod
-        from kiro_crew.acp import runtime as runtime_mod
+        from aj_crew.acp import kas_agents as kas_agents_mod
+        from aj_crew.acp import runtime as runtime_mod
 
         calls: list[str] = []
         monkeypatch.setattr(
@@ -540,16 +540,16 @@ class TestProjectedSpawnSpecRead:
             ],
         )
         rt = object.__new__(AcpRuntime)
-        rt._agent = "kirocrew"
+        rt._agent = "ajcrew"
         rt._derived_spec_snapshot = None
         assert rt._projected_spawn_spec() == {"tools": ["tool_search"]}
-        assert calls == ["materialize:kirocrew", "load:kirocrew"]
+        assert calls == ["materialize:ajcrew", "load:ajcrew"]
 
     def test_a_derived_snapshot_is_used_without_any_read(self, monkeypatch):
         from types import SimpleNamespace
 
-        from kiro_crew.acp import kas_agents as kas_agents_mod
-        from kiro_crew.acp import runtime as runtime_mod
+        from aj_crew.acp import kas_agents as kas_agents_mod
+        from aj_crew.acp import runtime as runtime_mod
 
         monkeypatch.setattr(
             runtime_mod,
@@ -562,13 +562,13 @@ class TestProjectedSpawnSpecRead:
             lambda *a: (_ for _ in ()).throw(AssertionError("must not read")),
         )
         rt = object.__new__(AcpRuntime)
-        rt._agent = "kirocrew-worker"
+        rt._agent = "ajcrew-worker"
         rt._derived_spec_snapshot = SimpleNamespace(spec={"tools": ["fs_read"]})
         assert rt._projected_spawn_spec() == {"tools": ["fs_read"]}
 
     def test_an_unreadable_spec_grants_nothing(self, monkeypatch):
-        from kiro_crew.acp import kas_agents as kas_agents_mod
-        from kiro_crew.acp import runtime as runtime_mod
+        from aj_crew.acp import kas_agents as kas_agents_mod
+        from aj_crew.acp import runtime as runtime_mod
 
         monkeypatch.setattr(runtime_mod, "ensure_agent_materialized", lambda agent: None)
         monkeypatch.setattr(
@@ -577,7 +577,7 @@ class TestProjectedSpawnSpecRead:
             lambda *a: (_ for _ in ()).throw(FileNotFoundError("gone")),
         )
         rt = object.__new__(AcpRuntime)
-        rt._agent = "kirocrew"
+        rt._agent = "ajcrew"
         rt._derived_spec_snapshot = None
         assert rt._projected_spawn_spec() is None
         assert spec_grants_tool_search(None) is False
@@ -628,7 +628,7 @@ class TestLoaderReachabilityOnSharedProcess:
         ],
     )
     def test_a_later_agent_on_the_shared_process(self, wire, agents, refused):
-        rt = _bare_runtime(agent="kirocrew", wire=wire)
+        rt = _bare_runtime(agent="ajcrew", wire=wire)
         if refused:
             with pytest.raises(AcpToolSurfaceBindingError, match="worker"):
                 rt._refuse_if_loader_unreachable("worker", agents)
@@ -644,21 +644,21 @@ class TestLoaderReachabilityOnSharedProcess:
         """The process decision was made from the spec as it stood at spawn; a later
         projection of the SAME agent that has since lost the grant would run
         deferred with no loader, so the name buys no bypass."""
-        rt = _bare_runtime(agent="kirocrew", wire=self.ON)
+        rt = _bare_runtime(agent="ajcrew", wire=self.ON)
         with pytest.raises(AcpToolSurfaceBindingError):
-            rt._refuse_if_loader_unreachable("kirocrew", [{"id": "kirocrew", "tools": []}])
+            rt._refuse_if_loader_unreachable("ajcrew", [{"id": "ajcrew", "tools": []}])
         # The unchanged spec, as projected (possibly widened), passes.
         rt._refuse_if_loader_unreachable(
-            "kirocrew", [{"id": "kirocrew", "tools": ["tool_search", "@kirocrew-dashboard"]}]
+            "ajcrew", [{"id": "ajcrew", "tools": ["tool_search", "@ajcrew-dashboard"]}]
         )
 
     def test_the_projection_seam_itself_refuses_so_both_start_paths_are_covered(self):
         """``create_session`` and ``load_session`` both take their payload from
         ``_kas_custom_agents``; judging it there is what makes a resumed session
         on a deferral-enabled process as safe as a new one."""
-        from kiro_crew.acp.harness.base import SessionExtras
+        from aj_crew.acp.harness.base import SessionExtras
 
-        rt = _bare_runtime(agent="kirocrew", wire=self.ON)
+        rt = _bare_runtime(agent="ajcrew", wire=self.ON)
         rt._mcp_gateway_overlay = None
         rt._work_dir = None
         harness = MagicMock()

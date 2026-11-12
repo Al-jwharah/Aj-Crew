@@ -19,11 +19,11 @@ from mcp_discovery_helpers import (  # noqa: F401 -- the autouse fixture registe
     _stub_remote_probe_ssrf_vet,
 )
 
-from kiro_crew import mcp_cleanup
-from kiro_crew.mcp_discovery import (
+from aj_crew import mcp_cleanup
+from aj_crew.mcp_discovery import (
+    SCOPE_AJCREW,
     SCOPE_CC_GLOBAL,
     SCOPE_KIRO_GLOBAL,
-    SCOPE_KIROCREW,
     McpServerInfo,
     _load_mcp_json_by_source,
     _scope_priority,
@@ -117,25 +117,25 @@ class TestListServers:
         _clear_cache()
 
     def test_list_merges_installed_config(self, tmp_path, monkeypatch) -> None:
-        """defaults.json has no mcpServers; installed kirocrew.json does."""
+        """defaults.json has no mcpServers; installed ajcrew.json does."""
         agent_dir = tmp_path / "agents"
         agent_dir.mkdir()
-        (agent_dir / "defaults.json").write_text(json.dumps({"name": "kirocrew"}))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        (agent_dir / "defaults.json").write_text(json.dumps({"name": "ajcrew"}))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         kiro_dir = tmp_path / ".kiro" / "agents"
         kiro_dir.mkdir(parents=True)
-        installed = {"mcpServers": {"kirocrew-cron": {"command": "kirocrew", "args": ["mcp-cron"]}}}
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(installed))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        installed = {"mcpServers": {"ajcrew-cron": {"command": "ajcrew", "args": ["mcp-cron"]}}}
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(installed))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         # The installed-config branch resolves ``kiro_agents_dir()``, which reads
         # ``Path.home`` in ``config.paths`` -- NOT the name patched above. Point the
         # binding this module holds at the tmp tree instead, or the assertion below is
         # answered by whatever the operator's own ~/.kiro/agents happens to contain.
-        monkeypatch.setattr("kiro_crew.mcp_discovery.kiro_agents_dir", lambda: kiro_dir)
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "nope.json",))
+        monkeypatch.setattr("aj_crew.mcp_discovery.kiro_agents_dir", lambda: kiro_dir)
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "nope.json",))
         servers = list_servers()
         names = {s.name for s in servers}
-        assert "kirocrew-cron" in names
+        assert "ajcrew-cron" in names
 
     def test_list_from_agent_config(self, tmp_path, monkeypatch) -> None:
         agent_dir = tmp_path / "agents"
@@ -147,16 +147,16 @@ class TestListServers:
             }
         }
         (agent_dir / "defaults.json").write_text(json.dumps(cfg))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         servers = list_servers()
         names = {s.name for s in servers}
         assert "my-server" in names
         assert "other-srv" in names
 
     def test_list_empty_no_config(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "nope.json",))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "nope.json",))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         servers = list_servers()
         assert servers == []
 
@@ -165,12 +165,12 @@ class TestListServers:
         agent_dir.mkdir()
         cfg = {"mcpServers": {"agent-srv": {"command": "a"}}}
         (agent_dir / "defaults.json").write_text(json.dumps(cfg))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         mcp_json = tmp_path / "mcp.json"
         mcp_json.write_text(
             json.dumps({"mcpServers": {"ext-srv": {"command": "b", "args": ["--x"]}}})
         )
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
         servers = list_servers()
         names = {s.name for s in servers}
         assert "agent-srv" in names
@@ -184,10 +184,10 @@ class TestListServers:
         agent_dir.mkdir()
         cfg = {"mcpServers": {"shared": {"command": "agent-cmd"}}}
         (agent_dir / "defaults.json").write_text(json.dumps(cfg))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         mcp_json = tmp_path / "mcp.json"
         mcp_json.write_text(json.dumps({"mcpServers": {"shared": {"command": "mcp-cmd"}}}))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
         servers = list_servers()
         shared = [s for s in servers if s.name == "shared"]
         assert len(shared) == 1
@@ -201,20 +201,20 @@ class TestListServers:
         cfg = {
             "mcpServers": {
                 "npm:@playwright/mcp": {
-                    "command": "kirocrew",
+                    "command": "ajcrew",
                     "args": ["mcp-playwright-proxy"],
                 },
                 "playwright-mcp": {
-                    "command": "kirocrew",
+                    "command": "ajcrew",
                     "args": ["mcp-playwright-proxy"],
                 },
                 "plain-srv": {"command": "p"},
             }
         }
         (agent_dir / "defaults.json").write_text(json.dumps(cfg))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "nope.json",))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "nope.json",))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         servers = list_servers()
         names = [s.name for s in servers]
         assert names.count("playwright-mcp") == 1
@@ -232,24 +232,24 @@ class TestListServers:
             }
         }
         (agent_dir / "defaults.json").write_text(json.dumps(cfg))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "x",))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "x",))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         servers = list_servers()
         names = {s.name for s in servers}
         assert "enabled-srv" in names
         assert "disabled-srv" not in names
 
-    def test_list_surfaces_kirocrew_disabled_servers_as_disabled_rows(
+    def test_list_surfaces_ajcrew_disabled_servers_as_disabled_rows(
         self, tmp_path, monkeypatch
     ) -> None:
-        """KiroCrew-scope disabled entries get a row marked disabled.
+        """Aj Crew-scope disabled entries get a row marked disabled.
 
         Consent-disabled installs/custom adds land with ``disabled: true``
-        in the KiroCrew scope; the table's enable action is the consent
+        in the Aj Crew scope; the table's enable action is the consent
         step, so the row must exist."""
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         mcp_json = tmp_path / "mcp.json"
         mcp_json.write_text(
             json.dumps(
@@ -261,7 +261,7 @@ class TestListServers:
                 }
             )
         )
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
         servers = list_servers()
         by_name = {s.name: s for s in servers}
         assert "active" in by_name
@@ -269,9 +269,9 @@ class TestListServers:
         # The disabled entry is present but flagged — and never probed.
         assert "inactive" in by_name
         assert by_name["inactive"].disabled is True
-        assert by_name["inactive"].presence["kirocrew"] is False
+        assert by_name["inactive"].presence["ajcrew"] is False
 
-    def test_kirocrew_disabled_row_survives_agent_mirror(self, tmp_path, monkeypatch) -> None:
+    def test_ajcrew_disabled_row_survives_agent_mirror(self, tmp_path, monkeypatch) -> None:
         """The row still surfaces when config sync mirrored the disable.
 
         Custom-add/install config sync writes the consent-disabled entry
@@ -287,9 +287,9 @@ class TestListServers:
         mcp_json.write_text(
             json.dumps({"mcpServers": {"pending": {"command": "a", "disabled": True}}})
         )
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         servers = [s for s in list_servers() if s.name == "pending"]
         assert len(servers) == 1
         assert servers[0].disabled is True
@@ -298,23 +298,23 @@ class TestListServers:
     async def test_probe_all_never_probes_disabled_rows(self, tmp_path, monkeypatch) -> None:
         """Consent-disabled rows are excluded from probing — a probe would
         spawn the server process the user has not yet consented to run."""
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         mcp_json = tmp_path / "mcp.json"
         mcp_json.write_text(
             json.dumps(
                 {"mcpServers": {"pending": {"command": "definitely-not-run", "disabled": True}}}
             )
         )
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
         probed: list[str] = []
 
         async def fake_probe(server):
             probed.append(server.name)
             return server
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.probe_server", fake_probe)
-        from kiro_crew.mcp_discovery import probe_all
+        monkeypatch.setattr("aj_crew.mcp_discovery.probe_server", fake_probe)
+        from aj_crew.mcp_discovery import probe_all
 
         await probe_all()
         assert "pending" not in probed
@@ -347,13 +347,13 @@ class TestListServers:
                 }
             )
         )
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.mcp_discovery._MCP_SOURCES",
-            ((store, SCOPE_KIROCREW), (shared_mcp, shared_scope)),
+            "aj_crew.mcp_discovery._MCP_SOURCES",
+            ((store, SCOPE_AJCREW), (shared_mcp, shared_scope)),
         )
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (store, shared_mcp))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (store, shared_mcp))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         by_name = {s.name: s for s in list_servers()}
         assert set(by_name) == {"github", "figma"}
         assert by_name["figma"].disabled is True
@@ -397,13 +397,13 @@ class TestListServers:
                 }
             )
         )
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.mcp_discovery._MCP_SOURCES",
-            ((store, SCOPE_KIROCREW), (shared_mcp, shared_scope)),
+            "aj_crew.mcp_discovery._MCP_SOURCES",
+            ((store, SCOPE_AJCREW), (shared_mcp, shared_scope)),
         )
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (store, shared_mcp))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (store, shared_mcp))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         by_name = {s.name: s for s in list_servers()}
         assert set(by_name) == {"broken", "remote", "flood", "fine", "leaky"}
         for row in by_name.values():
@@ -441,15 +441,15 @@ class TestListServers:
         if servers is None:
             servers = {"figma": {"command": "npx", "disabled": disabled_value}}
         shared_mcp.write_text(json.dumps({"mcpServers": servers}))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.mcp_discovery._MCP_SOURCES",
-            ((store, SCOPE_KIROCREW), (shared_mcp, SCOPE_KIRO_GLOBAL)),
+            "aj_crew.mcp_discovery._MCP_SOURCES",
+            ((store, SCOPE_AJCREW), (shared_mcp, SCOPE_KIRO_GLOBAL)),
         )
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (store, shared_mcp))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.mcp_cleanup._invalid_disabled_reported", set())
-        monkeypatch.setattr("kiro_crew.mcp_cleanup._invalid_disabled_cap_reached", False)
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (store, shared_mcp))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.mcp_cleanup._invalid_disabled_reported", set())
+        monkeypatch.setattr("aj_crew.mcp_cleanup._invalid_disabled_cap_reached", False)
         return shared_mcp
 
     @staticmethod
@@ -521,9 +521,9 @@ class TestListServers:
             s.status = "ok"
             return s
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.probe_server", fake_probe)
-        monkeypatch.setattr("kiro_crew.mcp_discovery._spawn_excluded", lambda: set())
-        from kiro_crew.mcp_discovery import probe_all
+        monkeypatch.setattr("aj_crew.mcp_discovery.probe_server", fake_probe)
+        monkeypatch.setattr("aj_crew.mcp_discovery._spawn_excluded", lambda: set())
+        from aj_crew.mcp_discovery import probe_all
 
         rows = {s.name: s for s in await probe_all()}
         assert probed == ["github"], (value, probed)
@@ -569,15 +569,15 @@ class TestListServers:
                 }
             )
         )
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.mcp_discovery._MCP_SOURCES",
-            ((store, SCOPE_KIROCREW), (shared_mcp, SCOPE_KIRO_GLOBAL)),
+            "aj_crew.mcp_discovery._MCP_SOURCES",
+            ((store, SCOPE_AJCREW), (shared_mcp, SCOPE_KIRO_GLOBAL)),
         )
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (store, shared_mcp))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.mcp_cleanup._invalid_disabled_reported", set())
-        monkeypatch.setattr("kiro_crew.mcp_cleanup._invalid_disabled_cap_reached", False)
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (store, shared_mcp))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.mcp_cleanup._invalid_disabled_reported", set())
+        monkeypatch.setattr("aj_crew.mcp_cleanup._invalid_disabled_cap_reached", False)
         rows = {s.name: s for s in list_servers()}
         assert {n for n, s in rows.items() if s.disabled} == {"figma", "linear", "github"}
         # A real ``true`` somewhere: the switch is the story.
@@ -621,15 +621,15 @@ class TestListServers:
                 }
             )
         )
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.mcp_discovery._MCP_SOURCES",
-            ((store, SCOPE_KIROCREW), (shared_mcp, SCOPE_CC_GLOBAL)),
+            "aj_crew.mcp_discovery._MCP_SOURCES",
+            ((store, SCOPE_AJCREW), (shared_mcp, SCOPE_CC_GLOBAL)),
         )
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (store, shared_mcp))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.mcp_cleanup._invalid_disabled_reported", set())
-        monkeypatch.setattr("kiro_crew.mcp_cleanup._invalid_disabled_cap_reached", False)
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (store, shared_mcp))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.mcp_cleanup._invalid_disabled_reported", set())
+        monkeypatch.setattr("aj_crew.mcp_cleanup._invalid_disabled_cap_reached", False)
         rows = {s.name: s for s in list_servers()}
         assert rows["figma"].disabled is True
         assert rows["figma"].disabled_reason == "invalid"
@@ -641,13 +641,13 @@ class TestListServers:
         self, tmp_path, monkeypatch
     ) -> None:
         """Step 3c records WHICH kind of scope muted the row: any scope but the
-        Kiro Crew store is "shared" -- a disable the dashboard cannot lift by
+        Aj Crew store is "shared" -- a disable the dashboard cannot lift by
         editing the store. The ``GET /api/mcp`` stamping holds only the
         Kiro-global and store maps, so a server disabled in a PROVIDER global and
         in the store is, to it, a store-only disable: without the row's verdict it
         offered the consent step, whose Apply lifted the store flag and left the
         provider-global one standing. Store-only stays a consent row."""
-        from kiro_crew.dashboard.handlers.mcp import _stamp_config_state
+        from aj_crew.dashboard.handlers.mcp import _stamp_config_state
 
         agent_dir = tmp_path / "agents"
         agent_dir.mkdir(exist_ok=True)
@@ -667,13 +667,13 @@ class TestListServers:
         cc_global.write_text(
             json.dumps({"mcpServers": {"figma": {"command": "npx", "disabled": True}}})
         )
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.mcp_discovery._MCP_SOURCES",
-            ((store, SCOPE_KIROCREW), (cc_global, SCOPE_CC_GLOBAL)),
+            "aj_crew.mcp_discovery._MCP_SOURCES",
+            ((store, SCOPE_AJCREW), (cc_global, SCOPE_CC_GLOBAL)),
         )
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (store, cc_global))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (store, cc_global))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         rows = {s.name: s for s in list_servers()}
         assert rows["figma"].disabled is True and rows["figma"].disabled_in_shared is True
         assert rows["weather"].disabled is True and rows["weather"].disabled_in_shared is False
@@ -686,7 +686,7 @@ class TestListServers:
         assert figma["disabledIn"] == "shared"
         assert figma["disabledInFile"] is None
         assert "disabledInShared" not in figma
-        assert weather["disabledIn"] == "kirocrew"
+        assert weather["disabledIn"] == "ajcrew"
 
     def test_non_boolean_disabled_reads_as_disabled_at_every_read(
         self, tmp_path, monkeypatch, caplog
@@ -721,15 +721,15 @@ class TestListServers:
                 }
             )
         )
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.mcp_discovery._MCP_SOURCES",
-            ((store, SCOPE_KIROCREW), (shared_mcp, SCOPE_KIRO_GLOBAL)),
+            "aj_crew.mcp_discovery._MCP_SOURCES",
+            ((store, SCOPE_AJCREW), (shared_mcp, SCOPE_KIRO_GLOBAL)),
         )
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (store, shared_mcp))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.mcp_cleanup._invalid_disabled_reported", set())
-        monkeypatch.setattr("kiro_crew.mcp_cleanup._invalid_disabled_cap_reached", False)
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (store, shared_mcp))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.mcp_cleanup._invalid_disabled_reported", set())
+        monkeypatch.setattr("aj_crew.mcp_cleanup._invalid_disabled_cap_reached", False)
         with caplog.at_level(logging.WARNING):
             rows = {s.name: s for s in list_servers()}
         # Step 1 mutes the agent entry (no scope copy, so no row -- as for a
@@ -796,7 +796,7 @@ class TestListServers:
         reported individually -- not a line per refused server, and nothing on a
         re-read. A refused pair gets no entry anywhere, so the cap bounds the
         retention itself, not just the count of lines."""
-        monkeypatch.setattr("kiro_crew.mcp_cleanup.INVALID_DISABLED_LEDGER_CAP", 3)
+        monkeypatch.setattr("aj_crew.mcp_cleanup.INVALID_DISABLED_LEDGER_CAP", 3)
         servers = {f"s{i}": {"command": "npx", "disabled": f"no-{i}"} for i in range(5)}
         self._seed_shared_scope(tmp_path, monkeypatch, None, servers=servers)
         with caplog.at_level(logging.WARNING):
@@ -901,8 +901,8 @@ class TestListServers:
         disabled row must come back -- as ``status="disabled"`` with no spawn --
         rather than vanish until the next page load. Enabled rows are probed
         exactly as before, and the order is ``list_servers``' own."""
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         mcp_json = tmp_path / "mcp.json"
         mcp_json.write_text(
             json.dumps(
@@ -915,7 +915,7 @@ class TestListServers:
                 }
             )
         )
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
         spawned: list[str] = []
 
         async def fake_probe(server):
@@ -924,8 +924,8 @@ class TestListServers:
             server.status = "ok"
             return server
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.probe_server", fake_probe)
-        from kiro_crew.mcp_discovery import probe_all
+        monkeypatch.setattr("aj_crew.mcp_discovery.probe_server", fake_probe)
+        from aj_crew.mcp_discovery import probe_all
 
         rows = await probe_all()
         assert [s.name for s in rows] == ["alpha", "pending", "zulu"]
@@ -943,14 +943,14 @@ class TestListServers:
     ) -> None:
         """The early return for an empty spawn set still reports the disabled
         rows -- a config of nothing but disabled servers is not an empty panel."""
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         mcp_json = tmp_path / "mcp.json"
         mcp_json.write_text(
             json.dumps({"mcpServers": {"pending": {"command": "x", "disabled": True}}})
         )
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
-        from kiro_crew.mcp_discovery import probe_all
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
+        from aj_crew.mcp_discovery import probe_all
 
         rows = await probe_all()
         assert [(s.name, s.status) for s in rows] == [("pending", "disabled")]
@@ -968,7 +968,7 @@ class TestListServers:
                             "command": "a",
                             "env": {"API_TOKEN": "secret://X"},
                             "disabled": True,
-                            "x-kirocrew-withheld": True,
+                            "x-ajcrew-withheld": True,
                         }
                     }
                 }
@@ -980,9 +980,9 @@ class TestListServers:
                 {"mcpServers": {"srv": {"command": "a", "env": {"API_TOKEN": "secret://X"}}}}
             )
         )
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         rows = [s for s in list_servers() if s.name == "srv"]
         assert len(rows) == 1 and not rows[0].disabled
 
@@ -995,9 +995,9 @@ class TestListServers:
         )
         mcp_json = tmp_path / "mcp.json"
         mcp_json.write_text(json.dumps({"mcpServers": {"srv": {"command": "b"}}}))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         assert not any(s.name == "srv" for s in list_servers())
 
     def test_dashboard_disabled_server_keeps_a_disabled_row(self, tmp_path, monkeypatch) -> None:
@@ -1017,13 +1017,13 @@ class TestListServers:
         store.write_text(json.dumps({"mcpServers": {}}))
         kiro_mcp = tmp_path / "kiro.json"
         kiro_mcp.write_text(json.dumps({"mcpServers": {"srv": {"disabled": True}}}))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.mcp_discovery._MCP_SOURCES",
-            ((store, SCOPE_KIROCREW), (kiro_mcp, SCOPE_KIRO_GLOBAL)),
+            "aj_crew.mcp_discovery._MCP_SOURCES",
+            ((store, SCOPE_AJCREW), (kiro_mcp, SCOPE_KIRO_GLOBAL)),
         )
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (store, kiro_mcp))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (store, kiro_mcp))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         rows = [s for s in list_servers() if s.name == "srv"]
         assert len(rows) == 1
         assert rows[0].disabled is True
@@ -1042,9 +1042,9 @@ class TestListServers:
         mcp_json.write_text(
             json.dumps({"mcpServers": {"srv": {"disabled": True, "disabledTools": ["t1"]}}})
         )
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (mcp_json,))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         servers = list_servers()
         assert len(servers) == 1
         assert servers[0].disabled_tools == ["t1"]
@@ -1062,9 +1062,9 @@ class TestListServers:
             }
         }
         (agent_dir / "defaults.json").write_text(json.dumps(cfg))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "x",))
-        monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "x",))
+        monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
         servers = list_servers()
         assert len(servers) == 1
         s = servers[0]
@@ -1079,7 +1079,7 @@ class TestListServers:
         agent_dir = tmp_path / "agents"
         agent_dir.mkdir()
         (agent_dir / "defaults.json").write_text(json.dumps({"mcpServers": {}}))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         _clear_cache()
 
         kiro_mcp = tmp_path / "kiro_mcp.json"
@@ -1088,13 +1088,13 @@ class TestListServers:
                 {"mcpServers": {"shared": {"command": "kiro"}, "kiro-only": {"command": "k"}}}
             )
         )
-        kirocrew_mcp = tmp_path / "kirocrew_mcp.json"
-        kirocrew_mcp.write_text(
+        ajcrew_mcp = tmp_path / "ajcrew_mcp.json"
+        ajcrew_mcp.write_text(
             json.dumps(
-                {"mcpServers": {"shared": {"command": "kirocrew"}, "mc-only": {"command": "m"}}}
+                {"mcpServers": {"shared": {"command": "ajcrew"}, "mc-only": {"command": "m"}}}
             )
         )
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (kiro_mcp, kirocrew_mcp))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (kiro_mcp, ajcrew_mcp))
 
         servers = list_servers()
         names = {s.name for s in servers}
@@ -1109,14 +1109,14 @@ class TestListServers:
         agent_dir = tmp_path / "agents"
         agent_dir.mkdir()
         (agent_dir / "defaults.json").write_text(json.dumps({"mcpServers": {}}))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         _clear_cache()
 
         bad = tmp_path / "bad.json"
         bad.write_text("{invalid json")
         good = tmp_path / "good.json"
         good.write_text(json.dumps({"mcpServers": {"srv": {"command": "x"}}}))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (bad, good))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (bad, good))
 
         servers = list_servers()
         assert any(s.name == "srv" for s in servers)
@@ -1126,14 +1126,14 @@ class TestListServers:
         agent_dir = tmp_path / "agents"
         agent_dir.mkdir()
         (agent_dir / "defaults.json").write_text(json.dumps({"mcpServers": {}}))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         _clear_cache()
 
         bad = tmp_path / "bad.json"
         bad.write_text(json.dumps({"mcpServers": ["not", "a", "dict"]}))
         good = tmp_path / "good.json"
         good.write_text(json.dumps({"mcpServers": {"srv": {"command": "x"}}}))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (bad, good))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (bad, good))
 
         servers = list_servers()
         assert any(s.name == "srv" for s in servers)
@@ -1143,23 +1143,23 @@ class TestListServers:
         agent_dir = tmp_path / "agents"
         agent_dir.mkdir()
         (agent_dir / "defaults.json").write_text(json.dumps({"mcpServers": {}}))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         _clear_cache()
 
         blocked = tmp_path / "blocked.json"
         blocked.write_text("{}")
         good = tmp_path / "good.json"
         good.write_text(json.dumps({"mcpServers": {"srv": {"command": "x"}}}))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (blocked, good))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (blocked, good))
 
-        original = __import__("kiro_crew.hooks", fromlist=["safe_read_file"]).safe_read_file
+        original = __import__("aj_crew.hooks", fromlist=["safe_read_file"]).safe_read_file
 
         def _mock_safe_read(path: str) -> str:
             if "blocked" in path:
                 raise PermissionError("Blocked: sensitive path")
             return original(path)
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.safe_read_file", _mock_safe_read)
+        monkeypatch.setattr("aj_crew.mcp_discovery.safe_read_file", _mock_safe_read)
 
         servers = list_servers()
         assert any(s.name == "srv" for s in servers)
@@ -1175,13 +1175,13 @@ class TestExtraScopeSeam:
         agent_dir = tmp_path / "agents"
         agent_dir.mkdir()
         (agent_dir / "defaults.json").write_text(json.dumps({"mcpServers": {}}))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         _clear_cache()
 
         cc = tmp_path / "cc.json"
         cc.write_text(json.dumps({"mcpServers": {"companion-srv": {"command": "x"}}}))
         # OSS default: seam contributes nothing.
-        monkeypatch.setattr("kiro_crew.mcp_discovery._extra_scope_sources", lambda: [])
+        monkeypatch.setattr("aj_crew.mcp_discovery._extra_scope_sources", lambda: [])
 
         by_source = _load_mcp_json_by_source()
         assert by_source.get("ccGlobal") == {}
@@ -1192,13 +1192,13 @@ class TestExtraScopeSeam:
         agent_dir = tmp_path / "agents"
         agent_dir.mkdir()
         (agent_dir / "defaults.json").write_text(json.dumps({"mcpServers": {}}))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         _clear_cache()
 
         cc = tmp_path / "cc.json"
         cc.write_text(json.dumps({"mcpServers": {"companion-srv": {"command": "x"}}}))
         monkeypatch.setattr(
-            "kiro_crew.mcp_discovery._extra_scope_sources", lambda: [(cc, "ccGlobal")]
+            "aj_crew.mcp_discovery._extra_scope_sources", lambda: [(cc, "ccGlobal")]
         )
 
         by_source = _load_mcp_json_by_source()
@@ -1215,13 +1215,13 @@ class TestExtraScopeSeam:
         agent_dir = tmp_path / "agents"
         agent_dir.mkdir()
         (agent_dir / "defaults.json").write_text(json.dumps({"mcpServers": {}}))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         _clear_cache()
 
         vendor = tmp_path / "vendor.json"
         vendor.write_text(json.dumps({"mcpServers": {"vendor-srv": {"command": "x"}}}))
         monkeypatch.setattr(
-            "kiro_crew.mcp_discovery._extra_scope_sources",
+            "aj_crew.mcp_discovery._extra_scope_sources",
             lambda: [(vendor, "vendorGlobal")],
         )
 
@@ -1246,7 +1246,7 @@ class TestExtraScopeSeam:
         _CORE_SCOPE_ORDER fix (ccGlobal dropped from the core tuple)."""
         # _scope_priority orders core scopes first, seam scopes in the tail.
         by_source = {
-            SCOPE_KIROCREW: {},
+            SCOPE_AJCREW: {},
             SCOPE_KIRO_GLOBAL: {"shared-srv": {"command": "kiro"}},
             SCOPE_CC_GLOBAL: {"shared-srv": {"command": "cc"}},
         }
@@ -1260,7 +1260,7 @@ class TestExtraScopeSeam:
         agent_dir = tmp_path / "agents"
         agent_dir.mkdir()
         (agent_dir / "defaults.json").write_text(json.dumps({"mcpServers": {}}))
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         _clear_cache()
 
         kiro_mcp = tmp_path / "kiro.json"
@@ -1275,12 +1275,10 @@ class TestExtraScopeSeam:
                 {"mcpServers": {"shared-srv": {"command": "x", "disabledTools": ["cc-tool"]}}}
             )
         )
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_SOURCES", ((kiro_mcp, SCOPE_KIRO_GLOBAL),))
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (kiro_mcp,))
         monkeypatch.setattr(
-            "kiro_crew.mcp_discovery._MCP_SOURCES", ((kiro_mcp, SCOPE_KIRO_GLOBAL),)
-        )
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (kiro_mcp,))
-        monkeypatch.setattr(
-            "kiro_crew.mcp_discovery._extra_scope_sources", lambda: [(cc_mcp, "ccGlobal")]
+            "aj_crew.mcp_discovery._extra_scope_sources", lambda: [(cc_mcp, "ccGlobal")]
         )
 
         server = next(s for s in list_servers() if s.name == "shared-srv")

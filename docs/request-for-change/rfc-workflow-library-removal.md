@@ -1,7 +1,7 @@
 ---
 title: Remove a saved workflow -- a tombstone takes it out of every list and run path, and its revisions, lineage and slug stay
 status: in-progress
-author: jeeshofone, with kirocrew-worker
+author: jeeshofone, with ajcrew-worker
 created: 2026-10-23
 last-audited: 2026-10-28
 audited-at: 33590d6f58
@@ -30,7 +30,7 @@ superseded-by: []
     synchronization stay non-goals.
   - §13 open question 3, "Should deletion be permanent, soft-delete, or
     archive-only". Section 4 answers it: a soft delete, kept as a tombstone,
-    that Kiro Crew offers no undo for. It meets the amended document's §13 closing rule
+    that Aj Crew offers no undo for. It meets the amended document's §13 closing rule
     that any deletion design must preserve the meaning of lineage and completed
     run snapshots.
 
@@ -42,20 +42,20 @@ superseded-by: []
 
 ## 1. Problem
 
-Once a workflow is saved to the library, nothing in Kiro Crew removes it. At
-`33590d6f58`, `WorkflowDefinitionLibrary` in `src/kiro_crew/workflows/library.py`
+Once a workflow is saved to the library, nothing in Aj Crew removes it. At
+`33590d6f58`, `WorkflowDefinitionLibrary` in `src/aj_crew/workflows/library.py`
 has `create`, `update`, `get`, `list` and `search`, and no removal.
 `/api/workflows/definitions/{workflow_ref}` answers GET and PATCH only
-(`_register_mcp_routes` in `src/kiro_crew/dashboard/server_runtime/mcp_routes.py`).
+(`_register_mcp_routes` in `src/aj_crew/dashboard/server_runtime/mcp_routes.py`).
 A stale workflow keeps its row in Customize > Workflows, still runs from
 `/workflow <slug>`, is still offered to agents by `workflow_library_list`, and,
 when it is a Python workflow, still seeds intent authoring as a reference
 example.
 
 The only way out is to move its JSON file out of
-`<KIROCREW_HOME>/workflow_library/` by hand. That breaks lineage, which the
+`<AJCREW_HOME>/workflow_library/` by hand. That breaks lineage, which the
 amended document asks every deletion design to keep. `save_definition` in
-`src/kiro_crew/workflows/service.py` checks a `derived_from` reference against
+`src/aj_crew/workflows/service.py` checks a `derived_from` reference against
 `list()`, and `promote_run_definition` saves through it. Once the parent's file
 is gone, a draft or a completed run adapted from that parent is refused with
 "workflow lineage does not resolve to a saved revision".
@@ -201,7 +201,7 @@ The editor shows a **Remove from library** button, set apart from the save
 button. The confirmation names the workflow and says, before anything is
 removed:
 
-- that Kiro Crew cannot undo the removal;
+- that Aj Crew cannot undo the removal;
 - that the workflow leaves the library and agents stop suggesting it;
 - that the command the library lists it under stops working and stays
   reserved, so a new workflow cannot take that name and gets a numbered one

@@ -16,7 +16,7 @@ vi.mock('../api/client', async importOriginal => {
         reason: 'ready',
         endpoint_configured: true,
         env_override: false,
-        env_var: 'KIROCREW_TELEMETRY_DISABLED',
+        env_var: 'AJCREW_TELEMETRY_DISABLED',
       }),
       collectionStatus: vi.fn().mockResolvedValue({ enabled: false, env_pinned: false }),
     },

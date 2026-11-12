@@ -1,18 +1,18 @@
-"""GATE: Kiro Crew core does not depend on the aws-control app's code.
+"""GATE: Aj Crew core does not depend on the aws-control app's code.
 
 The aws-control app, with its crew runtime, bundle builder and image build
 scripts, is leaving this repository whole. That is only possible while nothing
-outside ``src/kiro_crew/apps/builtins/`` imports it. A core feature that needs
-something the app ships asks a seam in :mod:`kiro_crew.apps.seams`, and the app
+outside ``src/aj_crew/apps/builtins/`` imports it. A core feature that needs
+something the app ships asks a seam in :mod:`aj_crew.apps.seams`, and the app
 fills it from its own ``seams.py``. The scans are the shared ones in
 ``test/core_app_independence.py``.
 
 Two properties are pinned:
 
-1. **No core module imports the app.** Every module under ``src/kiro_crew``
+1. **No core module imports the app.** Every module under ``src/aj_crew``
    outside ``apps/builtins/``, and every script under ``scripts/``, is parsed.
    ``import``, ``from ... import`` (relative ones resolved), ``from
-   kiro_crew.apps.builtins import aws_control``, ``importlib.import_module`` and
+   aj_crew.apps.builtins import aws_control``, ``importlib.import_module`` and
    ``__import__`` with a literal name are all in scope, and the probes below fail
    if any of those forms stops being caught.
 2. **The strings that still name the package are a pinned, shrinking list.** A
@@ -36,10 +36,10 @@ import pytest
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_core_aws_control_decoupling")
 
-APP_PACKAGE = "kiro_crew.apps.builtins.aws_control"
+APP_PACKAGE = "aj_crew.apps.builtins.aws_control"
 APP_NAME = "aws_control"
 
-#: (path relative to ``src/kiro_crew``, the literal): the string constants outside
+#: (path relative to ``src/aj_crew``, the literal): the string constants outside
 #: the app that still name its package, each with why it is not a seam. These are
 #: the sensitive-store read allowlist (an app may not add itself to it) and the
 #: security-posture tables that exempt or classify named app files (core's audit
@@ -73,9 +73,10 @@ def core_trees() -> dict[Path, ast.AST]:
 
 def test_no_core_module_or_script_imports_the_app(core_trees):
     offenders = independence.core_app_imports(core_trees, APP_PACKAGE)
-    assert not offenders, (
-        "core imports the aws-control app; ask a seam in kiro_crew.apps.seams instead:\n"
-        + "\n".join(offenders)
+    assert (
+        not offenders
+    ), "core imports the aws-control app; ask a seam in aj_crew.apps.seams instead:\n" + "\n".join(
+        offenders
     )
 
 
@@ -97,23 +98,23 @@ def test_the_strings_naming_the_package_are_the_pinned_list(core_trees):
 @pytest.mark.parametrize(
     ("source", "importer", "is_package"),
     [
-        ("import kiro_crew.apps.builtins.aws_control.backend.accounts", "kiro_crew.x", False),
-        ("from kiro_crew.apps.builtins.aws_control import seams", "kiro_crew.x", False),
-        ("from kiro_crew.apps.builtins import aws_control", "kiro_crew.x", False),
-        ("from ..apps.builtins.aws_control import seams", "kiro_crew.cloud.y", False),
-        ("from .builtins.aws_control import seams", "kiro_crew.apps.y", False),
-        ("from .builtins import aws_control", "kiro_crew.apps", True),
+        ("import aj_crew.apps.builtins.aws_control.backend.accounts", "aj_crew.x", False),
+        ("from aj_crew.apps.builtins.aws_control import seams", "aj_crew.x", False),
+        ("from aj_crew.apps.builtins import aws_control", "aj_crew.x", False),
+        ("from ..apps.builtins.aws_control import seams", "aj_crew.cloud.y", False),
+        ("from .builtins.aws_control import seams", "aj_crew.apps.y", False),
+        ("from .builtins import aws_control", "aj_crew.apps", True),
         (
-            "import importlib\nimportlib.import_module('kiro_crew.apps.builtins.aws_control.x')",
-            "kiro_crew.x",
+            "import importlib\nimportlib.import_module('aj_crew.apps.builtins.aws_control.x')",
+            "aj_crew.x",
             False,
         ),
-        ("__import__('kiro_crew.apps.builtins.aws_control')", "kiro_crew.x", False),
+        ("__import__('aj_crew.apps.builtins.aws_control')", "aj_crew.x", False),
         (
             "from typing import TYPE_CHECKING\n"
             "if TYPE_CHECKING:\n"
-            "    from kiro_crew.apps.builtins.aws_control.backend import storage",
-            "kiro_crew.x",
+            "    from aj_crew.apps.builtins.aws_control.backend import storage",
+            "aj_crew.x",
             False,
         ),
     ],
@@ -125,13 +126,13 @@ def test_the_scan_catches_every_import_form(source, importer, is_package):
 @pytest.mark.parametrize(
     "source",
     [
-        "from kiro_crew.apps import seams",
-        "from kiro_crew.apps.builtins import BUILTIN_NAMES",
-        "import kiro_crew.apps.builtins.aws_control_other",
+        "from aj_crew.apps import seams",
+        "from aj_crew.apps.builtins import BUILTIN_NAMES",
+        "import aj_crew.apps.builtins.aws_control_other",
     ],
 )
 def test_the_scan_leaves_other_imports_alone(source):
-    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "kiro_crew.x", False)
+    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "aj_crew.x", False)
 
 
 def test_the_string_scan_skips_docstrings_but_not_paths():

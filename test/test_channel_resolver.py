@@ -9,12 +9,12 @@ from unittest.mock import AsyncMock
 import aiohttp
 import pytest
 
-from kiro_crew.slack.channel_resolver import (
+from aj_crew.slack.channel_resolver import (
     _CACHE_FILENAME,
     _CACHE_TTL_SECS,
     ChannelNameResolver,
 )
-from kiro_crew.slack.client import RealSlackClient
+from aj_crew.slack.client import RealSlackClient
 
 
 def _make_slack(channels: list[dict] | Exception | None = None) -> AsyncMock:
@@ -211,7 +211,7 @@ class TestDiskCache:
         the event loop thread. The file it writes is still the merged map."""
         import threading
 
-        import kiro_crew.slack.channel_resolver as resolver_mod
+        import aj_crew.slack.channel_resolver as resolver_mod
 
         cache_path = tmp_path / _CACHE_FILENAME
         resolver = ChannelNameResolver(cache_path=cache_path)

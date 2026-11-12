@@ -20,9 +20,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from cron_gateway_integration_helpers import _make_command_job, _make_gw, _make_script_job
 
-from kiro_crew.executors import CronQueueTimeout
-from kiro_crew.slack import gateway as gw_mod
-from kiro_crew.slack.gateway_runtime.cron_dispatch import CronClaimTimeDenied, CronVetOverran
+from aj_crew.executors import CronQueueTimeout
+from aj_crew.slack import gateway as gw_mod
+from aj_crew.slack.gateway_runtime.cron_dispatch import CronClaimTimeDenied, CronVetOverran
 
 
 class _GuardSet(set):

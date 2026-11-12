@@ -12,8 +12,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from subagent_helpers import _mock_ctx_builder_auto_spawn, _mock_sessions
 
-from kiro_crew.execution_context import execution_for_store
-from kiro_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.execution_context import execution_for_store
+from aj_crew.subagent import SubagentInfo, SubagentManager
 
 
 @pytest.mark.asyncio
@@ -30,7 +30,7 @@ async def test_the_subagent_session_carries_its_owning_app(app, expected) -> Non
         app=app,
     )
     manager._log_spawned(info)
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         await manager._run_inner(info, "subagent:app01")
     sessions.get_or_create.assert_awaited_once()
     kwargs = sessions.get_or_create.call_args.kwargs
@@ -48,8 +48,8 @@ async def test_session_allocation_hands_the_slot_app_to_the_provider(monkeypatch
     session with."""
     from test_session import _mock_provider_factory
 
-    from kiro_crew import session
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew import session
+    from aj_crew.config.loader import AjCrewConfig
 
     monkeypatch.setattr(session, "_is_acp_provider", lambda _provider: True)
     made = []
@@ -61,7 +61,7 @@ async def test_session_allocation_hands_the_slot_app_to_the_provider(monkeypatch
         made.append(provider)
         return provider
 
-    mgr = session.SessionManager(KiroCrewConfig(), provider_factory=factory)
+    mgr = session.SessionManager(AjCrewConfig(), provider_factory=factory)
     try:
         kwargs = {"app_name": app_name} if app_name else {}
         await mgr.get_or_create("dashboard:app-owned-alloc", **kwargs)
@@ -77,8 +77,8 @@ async def test_an_owning_app_alone_governs_the_session_without_its_model(monkeyp
     session's model is resolved as for no app, as the spawn path reports it."""
     from test_session import _mock_provider_factory
 
-    from kiro_crew import session
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew import session
+    from aj_crew.config.loader import AjCrewConfig
 
     monkeypatch.setattr(session, "_is_acp_provider", lambda _provider: True)
     seen_apps: list[str] = []
@@ -98,7 +98,7 @@ async def test_an_owning_app_alone_governs_the_session_without_its_model(monkeyp
         made.append(provider)
         return provider
 
-    mgr = session.SessionManager(KiroCrewConfig(), provider_factory=factory)
+    mgr = session.SessionManager(AjCrewConfig(), provider_factory=factory)
     try:
         await mgr.get_or_create("subagent:app-owned", owning_app="mailer")
         mgr.release("subagent:app-owned")

@@ -1,8 +1,8 @@
 """``ContextBuilder`` keeps every member it had, and each moved one is bound from its owner.
 
-The bodies of most builder methods live in ``kiro_crew.context_assembly`` owner modules:
+The bodies of most builder methods live in ``aj_crew.context_assembly`` owner modules:
 each is a module-level function there whose first parameter is ``self`` (or a plain
-function for a static method), and the class in :mod:`kiro_crew.context` binds it by name
+function for a static method), and the class in :mod:`aj_crew.context` binds it by name
 (``m = _owner.m``, or ``staticmethod(_owner.f)``). The builder's state stays on the
 instance, so class and instance patches of a member keep applying. This file pins that
 binding:
@@ -26,14 +26,14 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import context as ctx
-from kiro_crew.context import ContextBuilder
+from aj_crew import context as ctx
+from aj_crew.context import ContextBuilder
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_context_assembly_bindings")
 
 SHARED_BINDINGS_CHECKS = ("the_class_only_scan_can_fail",)
 
-_PACKAGE = "kiro_crew.context_assembly"
+_PACKAGE = "aj_crew.context_assembly"
 
 #: Member -> (kind, coroutine, owner). Kind and coroutine are BASE's; the owner is the
 #: module that holds the body now ("context" for a member still defined in the class).
@@ -129,7 +129,7 @@ def test_each_member_keeps_its_kind_coroutine_and_owner(name: str) -> None:
     fn = _member_function(name)
     assert inspect.iscoroutinefunction(fn) is coroutine
     if owner == "context":
-        assert fn.__module__ == "kiro_crew.context"
+        assert fn.__module__ == "aj_crew.context"
         assert fn.__qualname__ == f"ContextBuilder.{name}"
     else:
         assert fn.__module__ == f"{_PACKAGE}.{owner}"
@@ -138,7 +138,7 @@ def test_each_member_keeps_its_kind_coroutine_and_owner(name: str) -> None:
 
 def test_the_bound_members_are_the_owner_functions_through_the_facade() -> None:
     """The facade re-exports nothing in their place: a member reached through
-    ``kiro_crew.context.ContextBuilder`` is the owner's own function object."""
+    ``aj_crew.context.ContextBuilder`` is the owner's own function object."""
     for name, (kind, _, owner) in _MEMBERS.items():
         if owner == "context" or kind == "data":
             continue

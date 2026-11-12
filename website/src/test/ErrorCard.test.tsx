@@ -235,7 +235,7 @@ describe('ErrorCard — member agent file changed', () => {
 })
 
 describe('ErrorCard — sibling capability refusals', () => {
-  const vars = { file: 'reviewer-private.json', project: '/work/reviewer-project', name: 'reviewer', field: i18nT('pages.kiroCrewAgentsPage.built_from') }
+  const vars = { file: 'reviewer-private.json', project: '/work/reviewer-project', name: 'reviewer', field: i18nT('pages.ajCrewAgentsPage.built_from') }
   const cases = [
     { code: 'parent_identity_changed', copy: 'capabilities_parent_changed', button: 'open_crewmate' },
     { code: 'foreign_private_copy', copy: 'capabilities_foreign_copy', button: 'open_crewmate' },
@@ -289,7 +289,7 @@ describe('ErrorCard — sibling capability refusals', () => {
   it('names no empty mate when the foreign-copy row carries no member', () => {
     render(<ErrorCard content="foreign_private_copy: x" meta={{ code: 'foreign_private_copy', member: '' }} />)
     const card = screen.getByTestId('error-card')
-    const field = i18nT('pages.kiroCrewAgentsPage.built_from')
+    const field = i18nT('pages.ajCrewAgentsPage.built_from')
     expect(card).toHaveTextContent(i18nT('pages.chat.errorCard.capabilities_foreign_copy_unnamed', { field }))
     expect(card).not.toHaveTextContent(i18nT('pages.chat.errorCard.capabilities_foreign_copy', { name: '', field }))
   })
@@ -540,7 +540,7 @@ describe('ErrorCard — feature request refused for a usage limit', () => {
   })
 
   it('says kiro-cli is missing, not that usage ran out, on a kiro-cli refusal', () => {
-    const missing = '❌ kiro-cli not found (searched 2 directories: /a, /b). Install it from https://kiro.dev/cli/, or point KIROCREW_KIRO_BIN at the binary.'
+    const missing = '❌ kiro-cli not found (searched 2 directories: /a, /b). Install it from https://kiro.dev/cli/, or point AJCREW_KIRO_BIN at the binary.'
     render(<ErrorCard content={missing} onContinue={() => undefined} featureRequestFormUrl={FEATURE_REQUEST_FORM_URL} kiroCliMissing />)
     const card = screen.getByTestId('error-card')
     expect(card).toHaveTextContent('kiro-cli not found')
@@ -562,7 +562,7 @@ describe('ErrorCard — feature request refused for a usage limit', () => {
 
   it('points at the repo\'s feature_request issue template, not a blank issue', () => {
     const url = new URL(FEATURE_REQUEST_FORM_URL)
-    expect(url.origin + url.pathname).toBe('https://github.com/kirodotdev/KiroCrew/issues/new')
+    expect(url.origin + url.pathname).toBe('https://github.com/Al-jwharah/Aj-Crew/issues/new')
     expect(url.searchParams.get('template')).toBe('feature_request.yml')
   })
 
@@ -593,11 +593,11 @@ describe('ErrorCard — a session start that failed twice in a row', () => {
     // The backend's own sentence stays first -- it carries the diagnostic.
     expect(card).toHaveTextContent(prose)
     const hint = screen.getByTestId('error-card-session-start-repeat-hint')
-    expect(hint).toHaveTextContent(i18nT('pages.chat.errorCard.session_start_repeat_hint', { command: 'kirocrew restart' }))
+    expect(hint).toHaveTextContent(i18nT('pages.chat.errorCard.session_start_repeat_hint', { command: 'ajcrew restart' }))
     // The command is the one thing to copy, so it is a code chip at body weight,
     // not a muted footnote (the only remaining next step must not be the least
     // visible thing on the card).
-    expect(screen.getByTestId('error-card-restart-command')).toHaveTextContent('kirocrew restart')
+    expect(screen.getByTestId('error-card-restart-command')).toHaveTextContent('ajcrew restart')
     expect(screen.getByTestId('error-card-restart-command').tagName).toBe('CODE')
     expect(hint.className).not.toMatch(/text-muted/)
     expect(screen.queryByTestId('error-card-continue')).toBeNull()
@@ -621,7 +621,7 @@ describe('ErrorCard — a session start that failed twice in a row', () => {
       expect(copyButton()).toHaveAccessibleName(i18nT('components.settingRef.copyCommand'))
       fireEvent.click(copyButton())
       await waitFor(() => expect(copyButton()).toHaveAccessibleName(i18nT('components.settingRef.copied')))
-      expect(clipboard.copyCode).toHaveBeenCalledWith('kirocrew restart')
+      expect(clipboard.copyCode).toHaveBeenCalledWith('ajcrew restart')
     })
 
     it('reports a dead clipboard instead of painting a tick', async () => {
@@ -684,7 +684,7 @@ describe('ErrorCard — a session start that failed twice in a row', () => {
       expect(screen.queryByTestId('error-card-restarting')).toBeNull()
       // One next step beside the button that can still work, never the plain
       // terminal hint (which would read as "the button is pointless").
-      expect(screen.getByTestId('error-card-restart-retry-hint')).toHaveTextContent(i18nT('pages.chat.errorCard.restart_gateway_retry_hint', { command: 'kirocrew restart', button: i18nT('pages.settings.aboutPanel.restart_gateway') }))
+      expect(screen.getByTestId('error-card-restart-retry-hint')).toHaveTextContent(i18nT('pages.chat.errorCard.restart_gateway_retry_hint', { command: 'ajcrew restart', button: i18nT('pages.settings.aboutPanel.restart_gateway') }))
       // The retry is the same disruptive restart, so its cost line stays in view.
       expect(screen.getByTestId('error-card-session-start-restart-hint')).toHaveTextContent(i18nT('pages.chat.errorCard.session_start_repeat_restart_hint'))
       expect(screen.queryByTestId('error-card-session-start-repeat-hint')).toBeNull()
@@ -704,7 +704,7 @@ describe('ErrorCard — a session start that failed twice in a row', () => {
       expect(notice).toHaveTextContent('Cannot restart: invalid gateway launcher path')
       expect(screen.queryByTestId('error-card-restarting')).toBeNull()
       // Pressing again would meet the same refusal: the terminal is the one next step.
-      expect(screen.getByTestId('error-card-session-start-repeat-hint')).toHaveTextContent('kirocrew restart')
+      expect(screen.getByTestId('error-card-session-start-repeat-hint')).toHaveTextContent('ajcrew restart')
       expect(screen.queryByTestId('error-card-restart-retry-hint')).toBeNull()
       expect(screen.queryByTestId('error-card-restart-refused-hint')).toBeNull()
       expect(screen.queryByTestId('error-card-restart-gateway')).toBeNull()
@@ -750,8 +750,8 @@ describe('ErrorCard — a session start that failed twice in a row', () => {
       // One instruction, addressed to whoever runs the gateway: the command
       // is theirs to run, so the viewer is not ALSO told to run it.
       const refused = screen.getByTestId('error-card-restart-refused-hint')
-      expect(refused).toHaveTextContent(i18nT('pages.chat.errorCard.restart_gateway_refused_hint', { command: 'kirocrew restart' }))
-      expect(within(refused).getByTestId('error-card-restart-command')).toHaveTextContent('kirocrew restart')
+      expect(refused).toHaveTextContent(i18nT('pages.chat.errorCard.restart_gateway_refused_hint', { command: 'ajcrew restart' }))
+      expect(within(refused).getByTestId('error-card-restart-command')).toHaveTextContent('ajcrew restart')
       expect(screen.queryByTestId('error-card-session-start-repeat-hint')).toBeNull()
       expect(screen.queryByTestId('error-card-session-start-restart-hint')).toBeNull()
       expect(screen.queryByTestId('error-card-restart-gateway')).toBeNull()

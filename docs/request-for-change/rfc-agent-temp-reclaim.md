@@ -17,14 +17,14 @@ superseded-by: []
 Agents leave directories in `/tmp` and cannot remove them. The deny row
 `local-destructive-rm-rf-root` refuses `rm -rf` on any absolute path, and the
 other ways to delete a tree are respellings the `blocked-by-policy` skill tells
-agents not to try. This RFC proposes a `tmp_reclaim` tool and a
-`kirocrew tmp reclaim` command. Both remove a named temp tree only after the
+agents not to try. This RFC proposes a `tmp_reclaim` tool and an
+`ajcrew tmp reclaim` command. Both remove a named temp tree only after the
 gateway has checked that the tree is the caller's to remove and that nothing is
 using it. The deny rules stay as they are.
 
 ## Summary
 
-- One reclaim routine, `kiro_crew.temp_reclaim`, decides per path whether it
+- One reclaim routine, `aj_crew.temp_reclaim`, decides per path whether it
   may go and removes it by descriptor through `pinned_fs.remove_tree_pinned`.
 - It accepts two scopes. The caller's own scratch tree can be removed at any
   time. A child of `/tmp` or `/var/tmp` can be removed when the user owns it,
@@ -33,7 +33,7 @@ using it. The deny rules stay as they are.
 - Agents reach the routine through the gateway, which runs outside the agent
   sandbox. Inside the sandbox, `/proc` shows 13 of the user's 1,273 processes,
   so a check run there cannot show that a tree is unused.
-- People reach it through `kirocrew tmp reclaim` in their own terminal.
+- People reach it through `ajcrew tmp reclaim` in their own terminal.
 - No deny row, floor or approval classifier changes.
 
 ## Motivation
@@ -42,7 +42,7 @@ using it. The deny rules stay as they are.
 
 Measured at `c6789799df` on one Linux host.
 
-- `src/kiro_crew/security/denied_rules_catalog.py` defines
+- `src/aj_crew/security/denied_rules_catalog.py` defines
   `local-destructive-rm-rf-root` with the pattern `rm -rf /.*`. Its description
   says the row is for deletion "rooted at the filesystem root", but the pattern
   matches every absolute target, so `rm -rf /tmp/kc-c3-home` is refused too.
@@ -104,7 +104,7 @@ there.
 - Changing or narrowing any deny row or floor, including the over-wide
   `rm -rf /.*` pattern. That is a separate decision with its own review lane.
 - A background reaper for `/tmp`. Reporting `/tmp` headroom and an optional
-  reaper are a separate workstream (`kirocrew doctor`,
+  reaper are a separate workstream (`ajcrew doctor`,
   `doctor_checks/resources.py`).
 - Moving test homes out of `/tmp`. The conftest change that makes a per-run
   home under `$TMPDIR` and keeps caches shared is a separate workstream. It
@@ -124,7 +124,7 @@ there.
    socket or device. The path, after `realpath`, is not a temp root itself.
 2. **Scope.** The resolved path is in one of these two scopes:
    - **S1, own scratch.** It lies strictly inside the caller's own scratch
-     tree. For an agent, that is the `$KIROCREW_SCRATCH` directory and the
+     tree. For an agent, that is the `$AJCREW_SCRATCH` directory and the
      per-process `$TMPDIR` directories the gateway allocated for the caller's
      session tree (`AcpRuntime.work_scratch_dir`, the allocations in
      `agent_scratch.allocate_scratch`). The admission check is the same one
@@ -183,12 +183,12 @@ leftover, `/tmp/p14-floor.B10Z` with 57,858 entries, takes 0.6 seconds for a
 
 ### Surfaces
 
-- **`tmp_reclaim` on `kirocrew-core`.** Arguments are `paths` (1 to 20
+- **`tmp_reclaim` on `ajcrew-core`.** Arguments are `paths` (1 to 20
   strings) and `dry_run` (default false). The tool posts to a new gateway
   route, `POST /api/tmp/reclaim`. The gateway takes the caller's session from
   the request's caller identity (`mcp_caller.CallerContext`) and runs the
   routine with S1 bound to that session's tree. The result is one line per
-  path. The default agent config grants the whole `@kirocrew-core` server
+  path. The default agent config grants the whole `@ajcrew-core` server
   in `allowedTools` (`config/defaults.json`), so `tmp_reclaim` runs with no
   approval card, the same as `artifact_delete` today. This is deliberate.
   The tool reaches nothing the agent's sandbox could not already delete
@@ -196,7 +196,7 @@ leftover, `/tmp/p14-floor.B10Z` with 57,858 entries, takes 0.6 seconds for a
   trees in place. The safety rests on steps 2 to 6, not on a person reading
   each call. No approval rule changes. Open question 5 asks whether to carve
   the tool out of the server-wide grant instead.
-- **`kirocrew tmp reclaim <path>... [--dry-run] [--json]`.** It runs the same
+- **`ajcrew tmp reclaim <path>... [--dry-run] [--json]`.** It runs the same
   routine in-process with scope S2 only, for a person in their own terminal.
   Run inside an agent sandbox, it finds unreadable processes and keeps every
   S2 tree with `unprovable`, and its message points at `tmp_reclaim`. Exit 0
@@ -257,7 +257,7 @@ refusal's second line, which only explains a refusal, should name the tool.
 
 ### Phase 1: the routine and the CLI
 
-`kiro_crew/temp_reclaim.py` and `kirocrew tmp reclaim`, with the `.cache/uv`
+`aj_crew/temp_reclaim.py` and `ajcrew tmp reclaim`, with the `.cache/uv`
 regenerable rule scoped to reclaim, so the sweep's quarantine behaviour does
 not change.
 
@@ -273,7 +273,7 @@ Exit criteria:
 ### Phase 2: the gateway route and `tmp_reclaim`
 
 Exit criteria:
-- An agent in a pod removes a tree it made under its own `$KIROCREW_SCRATCH`
+- An agent in a pod removes a tree it made under its own `$AJCREW_SCRATCH`
   and a `/tmp` tree it made more than 30 minutes earlier.
 - The same agent is refused, with the named reason, on another session's
   scratch directory, on a tree a background `sleep` holds open, and on a
@@ -329,8 +329,8 @@ binding. The Phase 2 pod checks above are the end-to-end proof.
    source, such as the launcher reporting each sandbox's open working
    directories.
 2. **Is 30 minutes the right idle bar?** A worker that sleeps between fleet
-   wakes can leave a shared home idle for hours. Requiring a Kiro Crew marker
-   in S2, such as `.cache/kirocrew`, would narrow the scope to test homes at
+   wakes can leave a shared home idle for hours. Requiring an Aj Crew marker
+   in S2, such as `.cache/ajcrew`, would narrow the scope to test homes at
    the cost of other leftovers like `e5scratch`.
 3. **Should the refusal for `local-destructive-rm-rf-*` name `tmp_reclaim`
    on its second line?** That line explains a refusal and changes no
@@ -341,11 +341,11 @@ binding. The Phase 2 pod checks above are the end-to-end proof.
    it. The proposal is Linux-only until there is demand.
 5. **Should `tmp_reclaim` keep an approval card?** `allowedTools` has no
    exclusion syntax, so there are two ways to get one. The default could list
-   every other core tool instead of `"@kirocrew-core"`, or the tool could go
+   every other core tool instead of `"@ajcrew-core"`, or the tool could go
    on the operator confirm list, `hooks.confirm_tools`. A confirm-list
    pattern that names one tool withholds that whole server's static grant
    (`docs/architecture/mcp.md`), so the second route sends every
-   `kirocrew-core` call through the gate, not only `tmp_reclaim`. Either way
+   `ajcrew-core` call through the gate, not only `tmp_reclaim`. Either way
    it is an approval-rule change, and it would make agents ask before every
    cleanup. This RFC proposes no card and leaves the choice to the security
    owners.

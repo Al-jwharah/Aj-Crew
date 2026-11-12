@@ -28,8 +28,8 @@ from stt_engine_helpers import (
     _stub_urlopen,
 )
 
-from kiro_crew.stt import engine as engine_mod
-from kiro_crew.stt import models
+from aj_crew.stt import engine as engine_mod
+from aj_crew.stt import models
 
 
 def test_a_verified_download_lands_at_the_final_path(monkeypatch, tmp_path):
@@ -377,7 +377,7 @@ async def test_the_load_path_records_the_digest_stage(monkeypatch, tmp_path):
     into hash / load / first-decode. So this asserts the wiring rather than the
     recorder.
     """
-    from kiro_crew.stt import telemetry as telemetry_mod
+    from aj_crew.stt import telemetry as telemetry_mod
 
     monkeypatch.setattr(engine_mod, "_engine", None)
     monkeypatch.setattr(engine_mod, "probe", lambda: engine_mod.Availability(True))
@@ -416,7 +416,7 @@ async def test_a_first_run_download_is_not_filed_as_digest_time(monkeypatch, tmp
     hashing -- and the stage exists to name the cost paid on EVERY load. A download is
     its own stage with its own progress surface.
     """
-    from kiro_crew.stt import telemetry as telemetry_mod
+    from aj_crew.stt import telemetry as telemetry_mod
 
     monkeypatch.setattr(engine_mod, "_engine", None)
     monkeypatch.setattr(engine_mod, "probe", lambda: engine_mod.Availability(True))

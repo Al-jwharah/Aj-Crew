@@ -3,8 +3,8 @@
 Failure shape pinned here: the supervisor kills and respawns gatewayd ~10 times in
 35 minutes and the endpoint was absent for ~10 minutes. The per-session stub
 gave up after its 60s budget and took the terminal exit; kiro-cli logged
-``Transport to MCP server 'kirocrew-core' is closed`` and -- because it never
-re-mounts a closed server -- every later kirocrew-core call in those long-lived
+``Transport to MCP server 'ajcrew-core' is closed`` and -- because it never
+re-mounts a closed server -- every later ajcrew-core call in those long-lived
 sessions hung for hours. A stub that had kept waiting would have re-attached.
 
 These tests pin the budget to the supervisor's own timing (so it cannot drift
@@ -20,9 +20,9 @@ import json
 
 import pytest
 
-from kiro_crew.mcp_gateway import manager as manager_mod
-from kiro_crew.mcp_gateway import stub as stub_mod
-from kiro_crew.mcp_gateway.shutdown_budget import TOTAL_SHUTDOWN_BUDGET_SECS
+from aj_crew.mcp_gateway import manager as manager_mod
+from aj_crew.mcp_gateway import stub as stub_mod
+from aj_crew.mcp_gateway.shutdown_budget import TOTAL_SHUTDOWN_BUDGET_SECS
 
 _SERVER_RESULT = {
     "protocolVersion": "2024-11-05",
@@ -154,7 +154,7 @@ async def _run_reconnect(session: stub_mod.StubSession):  # noqa: ANN202
 def test_budget_is_at_least_ten_minutes() -> None:
     assert stub_mod._RECONNECT_TOTAL_BUDGET_SECS >= 600.0, (
         "a 60s-class budget is what lost every long-lived session its "
-        "kirocrew-core tools on 2026-09-12"
+        "ajcrew-core tools on 2026-09-12"
     )
     assert stub_mod._RECONNECT_TOTAL_BUDGET_SECS > 5 * _OLD_BUDGET_SECS
 
@@ -164,7 +164,7 @@ def test_budget_equals_the_spawn_queue_wait_default() -> None:
     the stub keeps the transport open for this budget. The stub reads no config,
     so the two are coupled by value at the key's DEFAULT: whoever raises the
     default must raise the constant with it."""
-    from kiro_crew.config.sections import McpGatewayConfig
+    from aj_crew.config.sections import McpGatewayConfig
 
     assert stub_mod._RECONNECT_TOTAL_BUDGET_SECS == float(McpGatewayConfig().spawn_queue_wait_secs)
 
@@ -334,7 +334,7 @@ async def test_backoff_doubles_from_start_and_caps_at_the_max(monkeypatch) -> No
 async def test_not_back_yet_log_carries_elapsed_and_remaining(monkeypatch, caplog) -> None:
     clock = _install_clock(monkeypatch)
     monkeypatch.setattr(stub_mod, "handshake", _absent_until(clock, back_at=30.0))
-    caplog.set_level("INFO", logger="kiro_crew.mcp_gateway.stub")
+    caplog.set_level("INFO", logger="aj_crew.mcp_gateway.stub")
 
     attached = await _run_reconnect(_session_with_captured_init())
 

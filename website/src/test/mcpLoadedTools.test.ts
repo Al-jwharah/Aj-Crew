@@ -39,15 +39,15 @@ describe('deriveLoadedMcpTools', () => {
   it('counts an MCP tool a tool message shows was called, with no tool_search output', () => {
     const set = deriveLoadedMcpTools([
       // The default backend: the server is stamped, the tool is named only by the title.
-      { role: 'tool', content: '🔧 @kirocrew-core/learn_list', cls: '', meta: { mcp_server: 'kirocrew-core' } },
+      { role: 'tool', content: '🔧 @ajcrew-core/learn_list', cls: '', meta: { mcp_server: 'ajcrew-core' } },
       // Both halves stamped.
       { role: 'tool', content: '✅ Ping', cls: '', meta: { mcp_server: 'p223rs', tool_name: 'p223rs_ping' } },
       // A built-in names a tool but no server: not an MCP tool.
       { role: 'tool', content: '🔧 Run Command', cls: '', meta: { tool_name: 'execute_bash' } },
       // A shell call's title is the model's own text; without the stamped server it names nothing.
-      { role: 'tool', content: '🔧 @kirocrew-core/session_send', cls: '', meta: { kind: 'execute' } },
+      { role: 'tool', content: '🔧 @ajcrew-core/session_send', cls: '', meta: { kind: 'execute' } },
     ])
-    expect([...set].sort()).toEqual(['kirocrew-core::learn_list', 'p223rs::p223rs_ping'])
+    expect([...set].sort()).toEqual(['ajcrew-core::learn_list', 'p223rs::p223rs_ping'])
   })
 })
 

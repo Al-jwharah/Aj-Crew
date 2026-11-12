@@ -150,7 +150,7 @@ const SUBCOMMAND_RE = /^[a-z][a-z0-9-]*$/
 const SUBCOMMAND_TOOLS = new Set([
   'git', 'gh', 'npm', 'npx', 'pnpm', 'yarn', 'make', 'docker', 'docker-compose', 'kubectl', 'helm',
   'cargo', 'go', 'pip', 'pip3', 'uv', 'poetry', 'brew', 'apt', 'apt-get', 'systemctl', 'aws',
-  'terraform', 'gradle', 'mvn', 'bundle', 'rake', 'rails', 'kirocrew',
+  'terraform', 'gradle', 'mvn', 'bundle', 'rake', 'rails', 'ajcrew',
 ])
 /** A script named by extension (``ledger.py``, ``deploy.sh``): its own first
  *  bare word is the action it performs, like a tool's sub-command. */

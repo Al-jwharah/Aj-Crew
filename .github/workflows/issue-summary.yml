@@ -57,7 +57,7 @@
 #   of plain text on one issue, which a maintainer can delete.
 #
 # ONE COMMENT, EDITED IN PLACE. The comment carries a marker
-# (`<!-- kirocrew-issue-summary -->`); a re-run PATCHes the existing bot comment
+# (`<!-- ajcrew-issue-summary -->`); a re-run PATCHes the existing bot comment
 # instead of appending, so `workflow_dispatch` rehearsals and retries never turn
 # the thread into a wall of bot posts.
 #
@@ -130,12 +130,12 @@ jobs:
     # running on ubuntu-latest.
     #
     # Off the fleet is not the same as on the standard pool: this takes the
-    # `kirocrew-runners` group, which has no actor allowlist, so the
+    # `ajcrew-runners` group, which has no actor allowlist, so the
     # availability bug above cannot recur. Named by its runner LABEL rather
     # than by `group:`, because the group belongs to the kirodotdev
     # organization and a fork cannot reach it; the `||` leg keeps a fork on
     # the hosted image instead of waiting forever for a runner.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 10
     # Job-level permissions REPLACE the workflow default: no `contents` here,
     # because nothing is checked out.
@@ -154,7 +154,7 @@ jobs:
         || (secrets.ISSUE_TRIAGE_BEDROCK_ROLE_ARN != '' && secrets.ISSUE_TRIAGE_BEDROCK_ROLE_ARN
         || secrets.SHIP_REPORT_BEDROCK_ROLE_ARN) }}
       DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && 'true' || '' }}
-      MARKER: "<!-- kirocrew-issue-summary -->"
+      MARKER: "<!-- ajcrew-issue-summary -->"
     steps:
       - name: Collect issue and duplicate candidates
         id: collect
@@ -233,7 +233,7 @@ jobs:
             # byte-for-byte. The form field is labelled with the joined spelling,
             # so respelling it here would stop every section from matching and
             # report "none" on a report that did use the form.
-            [ "### KiroCrew version",  # brand-ok: literal form heading, must match byte-for-byte
+            [ "### AjCrew version",  # brand-ok: literal form heading, must match byte-for-byte
               "### Release channel", "### How is it installed?",
               "### Platform", "### What happened", "### Steps to reproduce",
               "### Relevant log output" ]
@@ -283,7 +283,7 @@ jobs:
 
           # Quoted heredoc: nothing in the prompt is shell-expanded.
           cat > instructions.txt <<'PROMPT'
-          You are a triage assistant for the Kiro Crew repository — a Python gateway
+          You are a triage assistant for the Aj Crew repository — a Python gateway
           plus a React/TypeScript dashboard that runs AI coding agents. Summarize ONE
           newly opened issue for the maintainers, who have not read it yet.
 

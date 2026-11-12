@@ -71,10 +71,10 @@ from typing import Any
 import pytest
 from runtime_reconcile_helpers import _LeaseHolder, _reconciler, _refusals
 
-from kiro_crew import runtime_ownership as ro
-from kiro_crew import runtime_reconcile as rr
-from kiro_crew.apps import backend as bmod
-from kiro_crew.testing.ids import unallocatable_pids
+from aj_crew import runtime_ownership as ro
+from aj_crew import runtime_reconcile as rr
+from aj_crew.apps import backend as bmod
+from aj_crew.testing.ids import unallocatable_pids
 
 # Fake slice pids no OS can issue: ``_unowned`` drops ``os.getpid()`` from the
 # agent slice, so a literal placed there as a fake candidate disappears whenever
@@ -523,7 +523,7 @@ def test_the_marker_read_answers_from_a_fixture_process_table(tmp_path: Path) ->
     everywhere would satisfy every refusal test above and mean nothing."""
     proc = tmp_path / "4242"
     proc.mkdir()
-    (proc / "environ").write_bytes(b"PATH=/usr/bin\0KIROCREW_SPAWNED=1\0")
+    (proc / "environ").write_bytes(b"PATH=/usr/bin\0AJCREW_SPAWNED=1\0")
     assert rr.process_is_ours(4242, proc_root=tmp_path) is True
 
     other = tmp_path / "4243"
@@ -543,7 +543,7 @@ def test_the_wiring_reads_a_recycled_identity_out_of_the_real_registry_file(
     ``<gw>:<pid>:<token>`` form, then answers the live identity lookup with a
     different token for one pid and the recorded token for the other.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -569,9 +569,9 @@ def test_the_wiring_reads_a_recycled_identity_out_of_the_real_registry_file(
         real_retract(rows)  # type: ignore[arg-type]
 
     monkeypatch.setattr(rr, "_retract_session_rows", _recording_retract)
-    monkeypatch.setattr("kiro_crew.session_scope_reap.instance_slice_pids", lambda: {5001, 5002})
+    monkeypatch.setattr("aj_crew.session_scope_reap.instance_slice_pids", lambda: {5001, 5002})
     monkeypatch.setattr(
-        "kiro_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_ALIVE
+        "aj_crew.platform_compat.pid_liveness", lambda pid: platform_compat.PID_ALIVE
     )
 
     reconciler = rr.build_reconciler(active_pids=lambda: set(), notify_dead=lambda pid: None)
@@ -676,7 +676,7 @@ def test_an_absent_backend_pidfile_is_an_empty_set_not_a_refusal(
     possible way for this module to do nothing at all.
     """
     missing = tmp_path / "gateway.sock"
-    monkeypatch.setattr("kiro_crew.runtime_reconcile.configured_socket_path", lambda: str(missing))
+    monkeypatch.setattr("aj_crew.runtime_reconcile.configured_socket_path", lambda: str(missing))
     assert rr._mcp_backend_pids() == set(), "an absent pidfile means nothing is hosted"
 
     # A file that EXISTS and cannot be read is still a refusal: presenting every
@@ -720,7 +720,7 @@ def test_a_backend_this_gateway_spawned_is_owned_and_never_reaches_the_gate(
     And a backend whose child has exited is out of the answer, so it is not reported
     as a dead runtime.
     """
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     # The backend the table holds (_owned) and the unclaimed neighbour (_unclaimed)
     # both run in the slice, so both are drawn from unallocatable_pids; the crashed
@@ -793,7 +793,7 @@ def test_a_forking_launchers_server_child_is_owned_through_the_real_membership_w
     faked so the test does not depend on a live ``/proc`` tree. The assertion that this
     FAILS without the union is the positive control below.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -858,7 +858,7 @@ def test_without_the_children_union_the_server_child_would_be_unowned(
     leak the union closes. If this test ever reports ``unowned_alive == 0`` the union
     has stopped being load-bearing and the test above proves nothing.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     _root, _child = unallocatable_pids(2)
     home = tmp_path / "home"
@@ -925,7 +925,7 @@ def test_the_app_backend_table_claims_only_a_running_child_this_gateway_spawned(
     reader is ever consulted, so a reused pid's current children can never be claimed
     on behalf of a dead launcher.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     children_calls: list[int] = []
 
@@ -969,7 +969,7 @@ def test_a_forking_launcher_claims_its_root_and_the_roots_direct_children(
     therefore contributes the root AND that root's direct children (the server), so
     the server is owned rather than reading as a leak on every pass.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(
         platform_compat, "_proc_children", lambda pid: [8801] if pid == 5601 else []
@@ -999,7 +999,7 @@ def test_a_grandchild_of_a_forking_launcher_root_is_not_claimed(
     direct children once and never walks the tree, so a grandchild (a child of the
     server, not of the root) is never in the answer.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     # 5602 -> [8802]; 8802 -> [9999]. A tree walk would reach 9999; a direct-children
     # read of the ROOT alone returns only 8802.
@@ -1033,7 +1033,7 @@ def test_a_non_forking_record_claims_only_its_root(
     forking, both leave the root as the server itself. The default-False record must
     contribute its root only, and the children reader must never be consulted for it.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     walked: list[int] = []
 
@@ -1062,7 +1062,7 @@ def test_an_oserror_reading_children_leaves_the_forking_root_claimed_alone(
     claimed on its own rather than the whole record being dropped (which would make a
     live launcher parent read as a leak).
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     def _boom(pid: int) -> list[int]:
         raise OSError("proc read failed")
@@ -1253,8 +1253,8 @@ def test_process_age_comes_from_the_process_start_not_the_procfs_inode(
     Pinned against the repository's own helper rather than a recomputation of it,
     and against this live process, whose age is genuinely non-zero.
     """
-    from kiro_crew import session_pid
-    from kiro_crew.session_pid import _pid_age_seconds
+    from aj_crew import session_pid
+    from aj_crew.session_pid import _pid_age_seconds
 
     # One sampled "now" for both readings. On Windows and macOS each reading dates
     # the start against its own ``time.time()`` call, taken after its own
@@ -1288,7 +1288,7 @@ class _FrozenClock:
 
 def _windows_filetime(unix_instant: float) -> str:
     """*unix_instant* encoded as ``get_process_start_id`` reports it on Windows."""
-    from kiro_crew.session_pid import (
+    from aj_crew.session_pid import (
         _FILETIME_TICKS_PER_SECOND,
         _FILETIME_UNIX_EPOCH_OFFSET_SECONDS,
     )
@@ -1307,7 +1307,7 @@ def test_windows_age_floor_reads_the_filetime_and_withholds_a_young_runtime(
     than :data:`DEFAULT_MIN_AGE_SECS` must still be held by the floor, and an
     unreadable age must still read as too young to touch.
     """
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     now = 1_700_000_000.0
     # young_pid enters the slice via ``_reconciler(kernel={young_pid})``, so ``_unowned``
@@ -1348,14 +1348,14 @@ def test_windows_reconciler_has_no_kill_population_whatever_the_age(
     """
     import sys
 
-    from kiro_crew import sandbox
-    from kiro_crew.session_scope_reap import instance_slice_pids
+    from aj_crew import sandbox
+    from aj_crew.session_scope_reap import instance_slice_pids
 
     assert rr.RECLAIM_PLATFORM is (sys.platform == "linux")
 
     # A populated agent slice, so the platform is the only thing that empties it.
-    instance = "kirocrew-agents-t0k3n.slice"
-    scope = tmp_path / "kirocrew.slice" / sandbox._CGROUP_AGENTS_SLICE / instance / "a.scope"
+    instance = "ajcrew-agents-t0k3n.slice"
+    scope = tmp_path / "ajcrew.slice" / sandbox._CGROUP_AGENTS_SLICE / instance / "a.scope"
     scope.mkdir(parents=True)
     (scope / "cgroup.procs").write_text("4242\n", encoding="utf-8")
     monkeypatch.setattr(sandbox, "_USER_MANAGER_CGROUP_BASE", str(tmp_path))
@@ -1467,7 +1467,7 @@ def test_the_audit_seam_reaches_sel_and_cannot_break_a_pass(
         def log_tool_invocation(self, **kwargs: Any) -> None:
             logged.append(kwargs)
 
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: _Sel())
     rr._sel_reconcile_kill(4242, "killed", "because")
     assert logged and logged[0]["tool_name"] == "runtime_reconcile"
     assert logged[0]["tool_kind"] == "process_kill"
@@ -1477,7 +1477,7 @@ def test_the_audit_seam_reaches_sel_and_cannot_break_a_pass(
     def boom() -> Any:
         raise RuntimeError("sel is down")
 
-    monkeypatch.setattr("kiro_crew.sel.sel", boom)
+    monkeypatch.setattr("aj_crew.sel.sel", boom)
     rr._sel_reconcile_kill(4242, "killed", "because")  # must not raise
 
 

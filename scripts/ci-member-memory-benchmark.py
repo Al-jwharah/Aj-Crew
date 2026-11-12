@@ -20,7 +20,7 @@ def main() -> None:
     provenance_path = output / "provenance.json"
     tracked = (
         subprocess.check_output(
-            ["git", "ls-files", "-z", "src/kiro_crew", "scripts/ci-member-memory-benchmark.py"],
+            ["git", "ls-files", "-z", "src/aj_crew", "scripts/ci-member-memory-benchmark.py"],
             timeout=30,
         )
         .decode("utf-8")
@@ -32,7 +32,7 @@ def main() -> None:
         if name and name.endswith(".py"):
             payload = Path(name).read_bytes().replace(b"\r\n", b"\n")
             hashes[name] = hashlib.sha256(payload).hexdigest()
-        elif name.startswith("src/kiro_crew/_vendor/llama_cpp_libs/linux_x86_64/"):
+        elif name.startswith("src/aj_crew/_vendor/llama_cpp_libs/linux_x86_64/"):
             native_hashes[name] = hashlib.sha256(Path(name).read_bytes()).hexdigest()
     versions = {}
     for name in ("numpy", "diskcache", "faiss-cpu"):
@@ -64,7 +64,7 @@ def main() -> None:
 
     save()
     try:
-        from kiro_crew import embeddings, vector_memory
+        from aj_crew import embeddings, vector_memory
 
         manager = embeddings.ModelDownloadManager()
         provenance["pinned_model_sha256"] = embeddings._GGUF_SHA256
@@ -87,7 +87,7 @@ def main() -> None:
             [  # noqa: E501  # nosemgrep: python.lang.security.audit.dangerous-subprocess-use-tainted-env-args.dangerous-subprocess-use-tainted-env-args
                 sys.executable,
                 "-m",
-                "kiro_crew.eval.bench.member_v2",
+                "aj_crew.eval.bench.member_v2",
                 "--model-path",
                 str(manager.target),
                 "--json",
@@ -100,7 +100,7 @@ def main() -> None:
         if report["model"]["sha256"] != actual:
             raise RuntimeError("Benchmark report used a different model")
         provenance["report_sha256"] = hashlib.sha256(report_path.read_bytes()).hexdigest()
-        from kiro_crew.eval.bench.member_v2 import structural_failures
+        from aj_crew.eval.bench.member_v2 import structural_failures
 
         failures = structural_failures(report)
         provenance["structural_failures"] = failures
@@ -123,7 +123,7 @@ def main() -> None:
 
 def validate_completed_structures() -> None:
     """Make measured structural failures authoritative while model availability is optional."""
-    from kiro_crew.eval.bench.member_v2 import structural_failures
+    from aj_crew.eval.bench.member_v2 import structural_failures
 
     output = Path(os.environ["MEMBER_BENCHMARK_OUTPUT"])
     try:

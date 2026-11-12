@@ -7,7 +7,7 @@ import { useLanguageGeneration } from '../../i18n/useLanguageGeneration'
 
 /**
  * The main chat's "You paused the crew" row (`meta.kind === 'crew_paused_notice'`,
- * written by `src/kiro_crew/dashboard/handlers/crew_pause.py` when the person
+ * written by `src/aj_crew/dashboard/handlers/crew_pause.py` when the person
  * presses Pause all). `meta.stopped` is how many crew members the pause stopped.
  * The row's English `content` is only a fallback for channel mirrors and SSE
  * readers; here the copy comes from the catalog. Same visual grammar as

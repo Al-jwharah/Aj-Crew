@@ -17,7 +17,7 @@ the confinement the launcher exists to establish.
 The spawned userns probe already followed this rule; these tests hold the
 launcher to it too, so the two pre-confinement scripts cannot drift apart again.
 
-The launcher is ``kiro_crew.sandbox_launcher_program``, and the file a spawn runs is
+The launcher is ``aj_crew.sandbox_launcher_program``, and the file a spawn runs is
 that module's source with one plan line substituted
 (``test_sandbox_launcher_program.py`` holds that). So:
 
@@ -52,8 +52,8 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import payload, refusal
 
-from kiro_crew import sandbox_launcher, sandbox_launcher_program, sandbox_plan
-from kiro_crew.sandbox import _PROBE_SHIM_CODE
+from aj_crew import sandbox_launcher, sandbox_launcher_program, sandbox_plan
+from aj_crew.sandbox import _PROBE_SHIM_CODE
 
 program = sandbox_launcher_program
 
@@ -197,7 +197,7 @@ def test_a_rendered_launcher_never_imports_ctypes_util(tmp_path: Path) -> None:
     plan = sandbox_plan.plan_confinement(
         sandbox_plan.SandboxRequest(tier="strict"), sandbox_plan.PlanHost(home=str(tmp_path))
     )
-    script = tmp_path / "kirocrew_sandbox_libc_load.py"
+    script = tmp_path / "ajcrew_sandbox_libc_load.py"
     script.write_text(sandbox_launcher.render_namespace_launcher(plan), encoding="utf-8")
     driver = (
         "import importlib.util, sys\n"

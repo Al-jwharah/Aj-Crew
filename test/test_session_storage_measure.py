@@ -29,10 +29,10 @@ from session_storage_helpers import (  # noqa: F401 -- fixtures are requested by
     stores_fixture,
 )
 
+from aj_crew import session_storage
+from aj_crew.history import transcript_stem
+from aj_crew.session_storage import SessionIndex, SessionStorageError
 from conftest import requires_symlinks
-from kiro_crew import session_storage
-from kiro_crew.history import transcript_stem
-from kiro_crew.session_storage import SessionIndex, SessionStorageError
 
 
 def _multi_index(stem_to_sid: dict[str, str], active: set[str] | None = None) -> SessionIndex:
@@ -152,10 +152,10 @@ def _crew_log(unit_id: str, slot: str, *, closed: bool = True) -> int:
     """
     from crew_log_type_helpers import minimal_data
 
-    from kiro_crew.crew_log import CrewLog
-    from kiro_crew.crew_log.schema import KIND_SESSION
+    from aj_crew.crew_log import CrewLog
+    from aj_crew.crew_log.schema import KIND_SESSION
 
-    log = CrewLog.create(KIND_SESSION, unit_id, owner="default", agent="kirocrew", slot=slot)
+    log = CrewLog.create(KIND_SESSION, unit_id, owner="default", agent="ajcrew", slot=slot)
     log.append("session/opened", minimal_data(KIND_SESSION, "session/opened"), src="gateway")
     if closed:
         log.append("session/closed", {"reason": "destroyed"}, src="gateway")
@@ -168,8 +168,8 @@ def _crew_log(unit_id: str, slot: str, *, closed: bool = True) -> int:
 
 
 def _crew_log_exists(unit_id: str) -> bool:
-    from kiro_crew.crew_log import CrewLog
-    from kiro_crew.crew_log.schema import KIND_SESSION
+    from aj_crew.crew_log import CrewLog
+    from aj_crew.crew_log.schema import KIND_SESSION
 
     return CrewLog.exists(KIND_SESSION, unit_id)
 
@@ -210,7 +210,7 @@ class TestCrewLogsAreTheSessions:
     def test_trash_stages_them_outside_the_batch_and_restore_puts_them_back(
         self, stores: tuple[Path, Path]
     ) -> None:
-        from kiro_crew.crew_log.store import crew_log_trash_root
+        from aj_crew.crew_log.store import crew_log_trash_root
 
         crew_home, _ = stores
         _transcript(crew_home, "dashboard_chat-1", size=50, age_days=40)
@@ -239,7 +239,7 @@ class TestCrewLogsAreTheSessions:
     def test_emptying_the_trash_removes_the_staged_crew_logs(
         self, stores: tuple[Path, Path]
     ) -> None:
-        from kiro_crew.crew_log.store import crew_log_trash_root
+        from aj_crew.crew_log.store import crew_log_trash_root
 
         crew_home, _ = stores
         _transcript(crew_home, "dashboard_chat-1", size=50, age_days=40)
@@ -280,8 +280,8 @@ class TestCrewLogsAreTheSessions:
     ) -> None:
         from crew_log_type_helpers import minimal_data
 
-        from kiro_crew.crew_log import CrewLog
-        from kiro_crew.crew_log.schema import KIND_SESSION
+        from aj_crew.crew_log import CrewLog
+        from aj_crew.crew_log.schema import KIND_SESSION
 
         crew_home, _ = stores
         _transcript(crew_home, "dashboard_chat-1", size=50, age_days=40)
@@ -310,7 +310,7 @@ class TestCrewLogsAreTheSessions:
         Read as empty, the restore would put the transcript back, drop the manifest
         entry, and leave the staged units with nothing that lists or restores them.
         """
-        from kiro_crew.crew_log.store import crew_log_trash_root
+        from aj_crew.crew_log.store import crew_log_trash_root
 
         crew_home, _ = stores
         live = crew_home / "sessions" / "dashboard_chat-1.jsonl"
@@ -354,7 +354,7 @@ class TestCrewLogsAreTheSessions:
         attached to no row. So an incomplete crew-log scan refuses the whole move; the
         storage report, a read, still answers with what it could list.
         """
-        from kiro_crew.crew_log import store as crew_store
+        from aj_crew.crew_log import store as crew_store
 
         crew_home, _ = stores
         live = crew_home / "sessions" / "dashboard_chat-1.jsonl"
@@ -423,7 +423,7 @@ class TestCrewLogsAreTheSessions:
         """
         import threading
 
-        from kiro_crew.crew_log import store as crew_store
+        from aj_crew.crew_log import store as crew_store
 
         crew_home, _ = stores
         live = crew_home / "sessions" / "dashboard_chat-1.jsonl"
@@ -472,7 +472,7 @@ class TestCrewLogsAreTheSessions:
     ) -> None:
         import threading
 
-        from kiro_crew.crew_log import store as crew_store
+        from aj_crew.crew_log import store as crew_store
 
         crew_home, _ = stores
         _transcript(crew_home, "dashboard_chat-1", size=50, age_days=40)
@@ -507,8 +507,8 @@ class TestCrewLogsAreTheSessions:
         """
         from crew_log_type_helpers import minimal_data
 
-        from kiro_crew.crew_log import CrewLog
-        from kiro_crew.crew_log.schema import KIND_SESSION
+        from aj_crew.crew_log import CrewLog
+        from aj_crew.crew_log.schema import KIND_SESSION
 
         crew_home, _ = stores
         _transcript(crew_home, "dashboard_chat-1", size=50, age_days=40)
@@ -557,9 +557,9 @@ class TestCrewLogsAreTheSessions:
         """
         from crew_log_type_helpers import minimal_data
 
-        from kiro_crew.crew_log import CrewLog
-        from kiro_crew.crew_log import store as crew_store
-        from kiro_crew.crew_log.schema import KIND_SESSION
+        from aj_crew.crew_log import CrewLog
+        from aj_crew.crew_log import store as crew_store
+        from aj_crew.crew_log.schema import KIND_SESSION
 
         failing = {"on": False}
         handles: list = []
@@ -587,8 +587,8 @@ class TestCrewLogsAreTheSessions:
 
     @staticmethod
     def _held(unit_id: str) -> bool:
-        from kiro_crew.crew_log.schema import KIND_SESSION
-        from kiro_crew.crew_log.store import TRASH_HOLD_FILE, unit_dir_for
+        from aj_crew.crew_log.schema import KIND_SESSION
+        from aj_crew.crew_log.store import TRASH_HOLD_FILE, unit_dir_for
 
         directory = unit_dir_for(KIND_SESSION, unit_id)
         return directory is not None and (directory / TRASH_HOLD_FILE).exists()
@@ -603,7 +603,7 @@ class TestCrewLogsAreTheSessions:
         and restoring the session once the failure has passed makes it whole and lets
         the unit age out again.
         """
-        from kiro_crew.crew_log import store as crew_store
+        from aj_crew.crew_log import store as crew_store
 
         crew_home, _ = stores
         live = crew_home / "sessions" / "dashboard_chat-1.jsonl"
@@ -645,7 +645,7 @@ class TestCrewLogsAreTheSessions:
         unheld unit is collectable. Once the restore commits the holds are released and
         the same sweep collects them, so the hold lasts exactly as long as the restore.
         """
-        from kiro_crew.crew_log import store as crew_store
+        from aj_crew.crew_log import store as crew_store
 
         crew_home, _ = stores
         live = crew_home / "sessions" / "dashboard_chat-1.jsonl"
@@ -685,8 +685,8 @@ class TestCrewLogsAreTheSessions:
         Published with a hold that is not on disk, a power loss would bring the unit back
         unheld and the sweep could expire it while its transcript is still in the trash.
         """
-        from kiro_crew.crew_log import store as crew_store
-        from kiro_crew.crew_log.store import crew_log_trash_root
+        from aj_crew.crew_log import store as crew_store
+        from aj_crew.crew_log.store import crew_log_trash_root
 
         crew_home, _ = stores
         live = crew_home / "sessions" / "dashboard_chat-1.jsonl"
@@ -715,7 +715,7 @@ class TestCrewLogsAreTheSessions:
     def test_emptying_the_batch_releases_a_held_unit(
         self, stores: tuple[Path, Path], monkeypatch
     ) -> None:
-        from kiro_crew.crew_log.store import crew_log_trash_root
+        from aj_crew.crew_log.store import crew_log_trash_root
 
         crew_home, _ = stores
         _transcript(crew_home, "dashboard_chat-1", size=50, age_days=40)
@@ -738,8 +738,8 @@ class TestCrewLogsAreTheSessions:
         self, stores: tuple[Path, Path]
     ) -> None:
         """The manifest is agent-writable; its uid must never become a ``..`` path."""
-        from kiro_crew.crew_log.schema import KIND_SESSION
-        from kiro_crew.crew_log.store import crew_log_root, crew_log_trash_root
+        from aj_crew.crew_log.schema import KIND_SESSION
+        from aj_crew.crew_log.store import crew_log_root, crew_log_trash_root
 
         crew_home, _ = stores
         _transcript(crew_home, "dashboard_chat-1", size=50, age_days=40)
@@ -770,7 +770,7 @@ class TestCrewLogsAreTheSessions:
         self, stores: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A failed move puts the crew logs back; one it cannot is listed, never lost."""
-        from kiro_crew.crew_log.store import crew_log_trash_root
+        from aj_crew.crew_log.store import crew_log_trash_root
 
         crew_home, _ = stores
         _transcript(crew_home, "dashboard_chat-1", size=50, age_days=40)
@@ -822,7 +822,7 @@ class TestCrewLogsAreTheSessions:
     def test_empty_refuses_a_batch_holding_crew_logs_its_manifest_does_not_list(
         self, stores: tuple[Path, Path]
     ) -> None:
-        from kiro_crew.crew_log.store import crew_log_trash_root
+        from aj_crew.crew_log.store import crew_log_trash_root
 
         crew_home, _ = stores
         _transcript(crew_home, "dashboard_chat-1", size=50, age_days=40)
@@ -844,7 +844,7 @@ class TestCrewLogsAreTheSessions:
         self, stores: tuple[Path, Path]
     ) -> None:
         """The batch directory is agent-writable; its absence approves nothing."""
-        from kiro_crew.crew_log.store import crew_log_trash_root
+        from aj_crew.crew_log.store import crew_log_trash_root
 
         crew_home, _ = stores
         _transcript(crew_home, "dashboard_chat-1", size=50, age_days=40)
@@ -969,7 +969,7 @@ class TestScanCache:
         first = tmp_path / "home-a"
         (first / "sessions").mkdir(parents=True)
         (first / "kiro" / "sessions" / "cli").mkdir(parents=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(first))
+        monkeypatch.setenv("AJCREW_HOME", str(first))
         monkeypatch.setenv("KIRO_HOME", str(first / "kiro"))
         _cli_half(first / "kiro", "aaaa1111", log_bytes=32, age_days=40)
         assert len(session_storage.list_units(_index())) == 1
@@ -977,7 +977,7 @@ class TestScanCache:
         second = tmp_path / "home-b"
         (second / "sessions").mkdir(parents=True)
         (second / "kiro" / "sessions" / "cli").mkdir(parents=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(second))
+        monkeypatch.setenv("AJCREW_HOME", str(second))
         monkeypatch.setenv("KIRO_HOME", str(second / "kiro"))
 
         assert session_storage.list_units(_index()) == [], "an empty store must read as empty"
@@ -1200,7 +1200,7 @@ class TestBuckets:
 
 class TestTrashAccounting:
     def test_missing_stores_report_zero(self, tmp_path: Path, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "absent-crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "absent-crew"))
         monkeypatch.setenv("KIRO_HOME", str(tmp_path / "absent-kiro"))
 
         report = session_storage.measure(_index(), now=_NOW)

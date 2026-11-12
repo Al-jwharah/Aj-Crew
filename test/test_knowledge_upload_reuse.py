@@ -19,8 +19,8 @@ import pytest
 from aiohttp import FormData, web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import knowledge as kn
-from kiro_crew.knowledge.store import IngestionGate, KnowledgeStore
+from aj_crew.dashboard.handlers import knowledge as kn
+from aj_crew.knowledge.store import IngestionGate, KnowledgeStore
 
 
 @pytest.fixture()
@@ -257,7 +257,7 @@ async def test_manual_resync_holds_the_gate_until_the_task_has_claimed(
     maintenance window cannot open while the claim is undecided, and the task's
     own ingest still takes its own hold (the creating hold is not inherited)."""
     monkeypatch.setattr(kn, "_sel_log", lambda *a, **k: None)
-    from kiro_crew.knowledge.ingestion import IngestionPipeline
+    from aj_crew.knowledge.ingestion import IngestionPipeline
 
     path = tmp_path / "notes.md"
     path.write_text("# notes\n", encoding="utf-8")

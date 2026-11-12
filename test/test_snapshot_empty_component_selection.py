@@ -11,23 +11,23 @@ import json
 import tarfile
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
     d = tmp_path / "home"
     d.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(d))
-    _setup_fake_kirocrew(d)
+    monkeypatch.setenv("AJCREW_HOME", str(d))
+    _setup_fake_ajcrew(d)
     return d
 
 
 class TestManifestOutputCannotDriveTheTerminal:
     def test_escape_sequences_in_manifest_fields_are_neutralised(self, tmp_path, capsys):
-        snapdir = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        snapdir = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         snapdir.mkdir()
         hostile = "\x1b[2J\x1b[Hrestored OK"
         (snapdir / "MANIFEST.json").write_text(
@@ -47,7 +47,7 @@ class TestManifestOutputCannotDriveTheTerminal:
         assert "\x1b" not in out, "an escape sequence from the manifest reached stdout"
 
     def test_ordinary_fields_still_render(self, tmp_path, capsys):
-        snapdir = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        snapdir = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         snapdir.mkdir()
         (snapdir / "MANIFEST.json").write_text(
             json.dumps({"created_at": "2026-01-01", "purpose": "backup"}),
@@ -70,17 +70,17 @@ class TestAnExplicitButEmptyComponentListIsRefused:
         """The damage was retention counting an empty bundle as the newest backup."""
         out = tmp_path / "out"
         out.mkdir()
-        existing = out / "kirocrew-snapshot-20260101T000000Z.tar.gz"
+        existing = out / "ajcrew-snapshot-20260101T000000Z.tar.gz"
         with tarfile.open(existing, "w:gz") as tf:
             payload = tmp_path / "p"
             payload.mkdir()
-            tf.add(str(payload), arcname="kirocrew-snapshot-20260101T000000Z")
+            tf.add(str(payload), arcname="ajcrew-snapshot-20260101T000000Z")
         assert snap.snapshot_main([str(out), "--components", ",", "--keep", "1"]) == 1
         assert existing.is_file(), "a refused run must not prune a real backup"
 
     def test_restore_refuses_rather_than_reporting_a_no_op(self, home, tmp_path, capsys):
         bundle = tmp_path / "b.tar.gz"
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         payload.mkdir()
         with tarfile.open(bundle, "w:gz") as tf:
             tf.add(str(payload), arcname=payload.name)

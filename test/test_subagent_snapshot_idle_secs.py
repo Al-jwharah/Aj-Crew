@@ -23,8 +23,8 @@ from types import SimpleNamespace
 # Importing the handlers package first resolves the cycle in the direction
 # every green consumer uses, and keeps this file collectable when a
 # pytest-xdist worker imports it before any other dashboard module.
-import kiro_crew.dashboard.handlers  # noqa: F401
-from kiro_crew.dashboard.ws import _subagent_replay_has_owner, build_subagent_snapshot
+import aj_crew.dashboard.handlers  # noqa: F401
+from aj_crew.dashboard.ws import _subagent_replay_has_owner, build_subagent_snapshot
 
 
 def _agent(**over):
@@ -33,7 +33,7 @@ def _agent(**over):
         id="a1",
         parent_session_key="dashboard:main",
         task="do a thing",
-        agent="kirocrew",
+        agent="ajcrew",
         resolved_model="model-1",
         requested_model="",
         streaming_text="",
@@ -82,7 +82,7 @@ def test_the_rest_of_the_frame_is_unchanged():
     data = build_subagent_snapshot(_agent(stalled=True), now=1000.0)
     assert data["id"] == "a1"
     assert data["task"] == "do a thing"
-    assert data["agent"] == "kirocrew"
+    assert data["agent"] == "ajcrew"
     assert data["model"] == "model-1"
     assert data["last_tool"] == "Running: sleep 600"
     assert data["tool_count"] == 3

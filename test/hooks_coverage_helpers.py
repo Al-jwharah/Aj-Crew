@@ -1,4 +1,4 @@
-"""Helpers shared by the ``kiro_crew.hooks`` coverage tests.
+"""Helpers shared by the ``aj_crew.hooks`` coverage tests.
 
 ``test_hooks_coverage.py`` and its ``_internal_reads``, ``_hook_manager`` and
 ``_file_branches`` siblings import these by name: the ``_IS_WINDOWS`` flag, a byte-exact
@@ -51,5 +51,5 @@ def _staged_sibling(directory: Path, base: str) -> bool:
     ``Path.iterdir`` uses ``scandir``, so it does not re-enter a patched
     ``os.stat``.
     """
-    prefix = f".{base}.kirocrew-"
+    prefix = f".{base}.ajcrew-"
     return any(p.name.startswith(prefix) for p in directory.iterdir())

@@ -16,9 +16,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import resource_status
-from kiro_crew.dashboard import cautious_boot, crash_dump_store
-from kiro_crew.dashboard.cautious_boot import (
+from aj_crew import resource_status
+from aj_crew.dashboard import cautious_boot, crash_dump_store
+from aj_crew.dashboard.cautious_boot import (
     MAX_DELAY_SECS,
     MILD_DELAY_SECS,
     RECENT_DUMP_MAX_AGE_SECS,
@@ -27,7 +27,7 @@ from kiro_crew.dashboard.cautious_boot import (
     initialize,
     pause_before,
 )
-from kiro_crew.dashboard.crash_dump_store import (
+from aj_crew.dashboard.crash_dump_store import (
     DUMP_PREFIX,
     DUMP_SUFFIX,
     HEALTHY_MARKER_NAME,
@@ -48,7 +48,7 @@ class _DashCfg:
 
 
 class _Cfg:
-    """Minimal stand-in for KiroCrewConfig — only what _evaluate reads."""
+    """Minimal stand-in for AjCrewConfig — only what _evaluate reads."""
 
     def __init__(self, cautious: bool = True) -> None:
         self.dashboard = _DashCfg(cautious)
@@ -79,7 +79,7 @@ def _create_stacked_dump(dumps_dir: Path, *, age_secs: float = 0.0) -> Path:
     """Create a dump with real stack content (a wedge), aged *age_secs*."""
     p = dumps_dir / f"{DUMP_PREFIX}20260810T010000Z{DUMP_SUFFIX}"
     p.write_text(
-        "# Kiro Crew loop-stall crash dump — opened 20260810T010000Z\n"
+        "# Aj Crew loop-stall crash dump — opened 20260810T010000Z\n"
         "# PID: 12345\n"
         "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n"
         "\n"
@@ -97,7 +97,7 @@ def _create_header_only_dump(dumps_dir: Path) -> Path:
     """Create a header-only dump (clean exit — no wedge)."""
     p = dumps_dir / f"{DUMP_PREFIX}20260810T020000Z{DUMP_SUFFIX}"
     p.write_text(
-        "# Kiro Crew loop-stall crash dump — opened 20260810T020000Z\n"
+        "# Aj Crew loop-stall crash dump — opened 20260810T020000Z\n"
         "# PID: 12345\n"
         "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n"
         "\n",
@@ -284,12 +284,12 @@ class TestInitializeAndPause:
 
 class TestConfigKey:
     def test_dashboard_config_defaults_on(self):
-        from kiro_crew.config.loader import DashboardConfig
+        from aj_crew.config.loader import DashboardConfig
 
         assert DashboardConfig().cautious_boot is True
 
     def test_loader_rejects_non_bool(self):
-        from kiro_crew.config.loader import _safe_bool
+        from aj_crew.config.loader import _safe_bool
 
         assert _safe_bool("yes", True) is True  # non-bool → default
         assert _safe_bool(False, True) is False
@@ -308,7 +308,7 @@ def _create_owned_dump(
     """A stacked dump whose header carries the full identity triple."""
     p = dumps_dir / f"{DUMP_PREFIX}20260810T030000Z{DUMP_SUFFIX}"
     p.write_text(
-        "# Kiro Crew loop-stall crash dump — opened 20260810T030000Z\n"
+        "# Aj Crew loop-stall crash dump — opened 20260810T030000Z\n"
         f"# PID: {pid} @ {domain} start={start_id}\n"
         "# If thread stacks appear below, the event loop wedged and faulthandler fired.\n"
         "\n"
@@ -457,7 +457,7 @@ class TestHealthyMarkerIsReadDefensively:
 class TestMarkerWriteDoesNotGateReadiness:
     """The write is dispatched, not awaited.
 
-    ``start_dashboard`` returning is what publishes ``KIROCREW_READY``, so
+    ``start_dashboard`` returning is what publishes ``AJCREW_READY``, so
     anything awaited after ``state.ready = True`` can hold readiness open. On
     a data home mounted over a stalled network share that is unbounded, and a
     supervisor waiting on the ready line respawns into the same hang.
@@ -467,7 +467,7 @@ class TestMarkerWriteDoesNotGateReadiness:
     async def test_a_stalled_write_does_not_block_the_caller(self, monkeypatch):
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard import server
+        from aj_crew.dashboard import server
 
         blocked = threading.Event()
         entered = threading.Event()
@@ -494,7 +494,7 @@ class TestMarkerWriteDoesNotGateReadiness:
     async def test_a_completed_write_stops_being_tracked(self, monkeypatch, dumps_dir):
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard import server
+        from aj_crew.dashboard import server
 
         monkeypatch.setattr(server, "record_healthy_boot", lambda *_a, **_k: None)
         state = SimpleNamespace(_background_tasks=set())

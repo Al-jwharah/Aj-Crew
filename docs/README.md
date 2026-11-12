@@ -1,8 +1,8 @@
-# Kiro Crew Documentation
+# Aj Crew Documentation
 
 **This directory is the contributor and architecture documentation.** It is not
 shipped to users: the docs that ship inside the Python package live in
-[`../src/kiro_crew/docs/`](../src/kiro_crew/docs/README.md), and frontend-specific
+[`../src/aj_crew/docs/`](../src/aj_crew/docs/README.md), and frontend-specific
 docs live in [`../website/docs/`](../website/docs/README.md).
 
 New here? Start with [guides/install.md](guides/install.md), then
@@ -12,12 +12,12 @@ New here? Start with [guides/install.md](guides/install.md), then
 
 | Directory | What it is for |
 |---|---|
-| [guides/](guides/README.md) | Install, run, and operate Kiro Crew. Task-oriented. |
+| [guides/](guides/README.md) | Install, run, and operate Aj Crew. Task-oriented. |
 | [architecture/](architecture/README.md) | How the system fits together, one doc per cross-cutting concern. |
 | [feature-map/](feature-map/README.md) | Every dashboard feature, mapped to the nav path, page, and handler that own it. A lookup index. |
 | [build/](build/README.md) | Packaging, signing, and releasing. |
 | [ci/](ci/README.md) | Everything that gates a pull request. |
-| [app-kit/](app-kit/README.md) | Building apps that run inside Kiro Crew (third-party developer docs). |
+| [app-kit/](app-kit/README.md) | Building apps that run inside Aj Crew (third-party developer docs). |
 | [system-specs/](system-specs/README.md) | Change-control contracts. The doc a code change MUST update in the same commit. |
 | [request-for-change/](request-for-change/README.md) | Proposals and decision records for large or contested changes, plus the dated implementation plans that execute them under [plans/](request-for-change/plans/README.md). |
 | [decisions/](decisions/README.md) | The append-only record of product and design decisions a person on the team made. One immutable file per decision; grep it before changing a user-facing label, placement or behaviour. |
@@ -47,16 +47,16 @@ commit**. Concretely:
    does not exist, a renamed doc whose filename is hardcoded in code, a git
    conflict marker left at the start of a line, and a section link (`#anchor`) in
    this tree that no heading or `<a id>` produces. It walks four trees: this one,
-   the packaged [`../src/kiro_crew/docs/`](../src/kiro_crew/docs/README.md),
+   the packaged [`../src/aj_crew/docs/`](../src/aj_crew/docs/README.md),
    [`../website/docs/`](../website/docs/README.md), and the markdown a builtin app
-   ships under `src/kiro_crew/apps/builtins/`. That fourth tree is link-checked and
+   ships under `src/aj_crew/apps/builtins/`. That fourth tree is link-checked and
    fact-checked but exempt from the index rules, because an app's README, agent
    briefs and `SKILL.md` files are curated by its `app.json` rather than by a
    documentation index.
 
 Two constraints that are easy to miss:
 
-- **`src/kiro_crew/docs/` filenames are an API.** That tree is packaged, is read at
+- **`src/aj_crew/docs/` filenames are an API.** That tree is packaged, is read at
   runtime by `tips.py` (gated by `tips_allowlist.py`), and specific filenames are
   hardcoded in dashboard Settings panels. Renaming a file there is a code change.
   The tree is also flat by design: `setup.cfg`'s `package_data` glob does not

@@ -206,7 +206,7 @@ const PROBE_REFRESH_MS = 30_000
  * actually run are selectable — that set is read from `GET /api/config/schema`
  * (`enumValues`), which the backend resolves per request from
  * `acp_backends.selectable_backend_values()`, the same owner
- * `PATCH /api/config/kirocrew` validates against. So the enabled options and the
+ * `PATCH /api/config/ajcrew` validates against. So the enabled options and the
  * values the wire accepts cannot disagree, and a build that ships another agent
  * lights it up here with no frontend change.
  *
@@ -372,8 +372,8 @@ export function AgentBackendTab() {
   const inRouter = useInRouterContext()
 
   const cfgQ = useQuery<{ agent?: { acp_backend?: string } }>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
 
   /**
@@ -415,7 +415,7 @@ export function AgentBackendTab() {
    * must degrade to auto-only, not to the old backend's ids.
    */
   const applyBackendSwitchSideEffects = () => {
-    qc.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+    qc.invalidateQueries({ queryKey: ['ajcrewConfig'] })
     // The model list is the NEW backend's now. `/api/models` re-reads
     // `agent.acp_backend` on every call, so the server side needs no restart;
     // only the frontend cache did, because `['available-models']` is refetched
@@ -904,7 +904,7 @@ export function AgentBackendTab() {
    * The EXCEPTION to that rule, where the agent has one, or `''`.
    *
    * `per-call` is the one reach that spares Crew's own servers: it refuses the call
-   * itself there, so `kirocrew-core` keeps working tool by tool and the session can
+   * itself there, so `ajcrew-core` keeps working tool by tool and the session can
    * still reply. Rendered directly under the rule and labelled as its exception,
    * because two sentences that qualify each other without saying so read as a
    * contradiction.
@@ -1478,7 +1478,7 @@ export function AgentBackendTab() {
             risk they take on. The three that named a route Crew takes -- whose disk
             holds the transcript, which registry fills the model picker, which channel
             carries a slash command -- are recorded off the card in
-            `agent_sdk/backend_cards.py` and stated in `kirocrew doctor`.
+            `agent_sdk/backend_cards.py` and stated in `ajcrew doctor`.
 
             A plain line rather than a disclosure: one line needs no toggle, and the
             toggle's label was a heading for a list that no longer exists. */}
@@ -1498,7 +1498,7 @@ export function AgentBackendTab() {
           reviewer's. It is right here because there is nothing for the hand-off to
           destroy: this panel has no editable field and no draft. It is a row list, a
           read-only detail and two buttons, and the one value it writes goes straight
-          to `PATCH /api/config/kirocrew` -- so navigating to the chat can only cost
+          to `PATCH /api/config/ajcrew` -- so navigating to the chat can only cost
           the highlight, which is re-derived from the saved backend on return. Every
           failure that reaches this notice (a refused PATCH, a failed re-probe, a
           clipboard the browser would not grant) is also one an agent can act on with

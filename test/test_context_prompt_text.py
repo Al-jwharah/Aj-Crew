@@ -13,11 +13,11 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.context import ContextBuilder
-from kiro_crew.hooks import HookManager, HooksConfig
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.context import ContextBuilder
+from aj_crew.hooks import HookManager, HooksConfig
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 # Each context-builder file keeps this xdist group; ``test_context_memory_lessons``'s ratchet
 # walks the package through the shared ``source_corpus`` (one memoised file list per
@@ -70,7 +70,7 @@ class TestMultibyteSanitization:
 
     def test_multibyte_table_covers_all_chars(self):
         """Translation table handles all listed multi-byte chars."""
-        from kiro_crew.context import _MULTIBYTE_TABLE
+        from aj_crew.context import _MULTIBYTE_TABLE
 
         sample = "\u2014 \u2013 \u2018 \u2019 \u201c \u201d \u2026 \u00a0 \u2022"
         result = sample.translate(_MULTIBYTE_TABLE)
@@ -78,7 +78,7 @@ class TestMultibyteSanitization:
 
 
 class TestCurrentDateTimezone:
-    """[CURRENT DATE] injection must honour KiroCrewConfig.timezone, so LLMs
+    """[CURRENT DATE] injection must honour AjCrewConfig.timezone, so LLMs
     see the user's local time rather than the gateway host TZ (often UTC)."""
 
     def _make_builder(self, tmp_path):
@@ -93,7 +93,7 @@ class TestCurrentDateTimezone:
         builder = self._make_builder(tmp_path)
         # The PUBLISHED default, not a config load: get_local_tz reads the
         # snapshot so prompt assembly does no config I/O on the event loop.
-        with patch("kiro_crew.cron.published_config_timezone", return_value="Asia/Tokyo"):
+        with patch("aj_crew.cron.published_config_timezone", return_value="Asia/Tokyo"):
             ctx = builder.build_session_context()
         # Tokyo is JST/UTC+9; %Z renders "JST"
         assert "[CURRENT DATE]" in ctx
@@ -102,7 +102,7 @@ class TestCurrentDateTimezone:
 
     def test_current_date_falls_back_to_utc_when_config_empty(self, tmp_path):
         builder = self._make_builder(tmp_path)
-        with patch("kiro_crew.cron.published_config_timezone", return_value=""):
+        with patch("aj_crew.cron.published_config_timezone", return_value=""):
             ctx = builder.build_session_context()
         date_line = [ln for ln in ctx.splitlines() if ln.startswith("[CURRENT DATE]")][0]
         assert "UTC" in date_line
@@ -112,7 +112,7 @@ class TestLoadSteeringResources:
     """Tests for _load_steering_resources."""
 
     def test_loads_md_files_from_resources(self, tmp_path):
-        from kiro_crew.context import _load_steering_resources
+        from aj_crew.context import _load_steering_resources
 
         steering_dir = tmp_path / ".kiro" / "steering"
         steering_dir.mkdir(parents=True)
@@ -122,7 +122,7 @@ class TestLoadSteeringResources:
         agents_dir.mkdir(parents=True)
         import json
 
-        (agents_dir / "kirocrew.json").write_text(
+        (agents_dir / "ajcrew.json").write_text(
             json.dumps({"resources": ["file://.kiro/steering/**/*.md"]})
         )
 
@@ -133,7 +133,7 @@ class TestLoadSteeringResources:
         assert "Always be nice." in result
 
     def test_returns_empty_when_no_config(self, tmp_path):
-        from kiro_crew.context import _load_steering_resources
+        from aj_crew.context import _load_steering_resources
 
         with patch("pathlib.Path.home", return_value=tmp_path):
             result = _load_steering_resources()
@@ -141,7 +141,7 @@ class TestLoadSteeringResources:
         assert result == ""
 
     def test_skips_sensitive_paths(self, tmp_path):
-        from kiro_crew.context import _load_steering_resources
+        from aj_crew.context import _load_steering_resources
 
         # Create a .md file in a sensitive location
         ssh_dir = tmp_path / ".ssh"
@@ -152,7 +152,7 @@ class TestLoadSteeringResources:
         agents_dir.mkdir(parents=True)
         import json
 
-        (agents_dir / "kirocrew.json").write_text(json.dumps({"resources": ["file://.ssh/*.md"]}))
+        (agents_dir / "ajcrew.json").write_text(json.dumps({"resources": ["file://.ssh/*.md"]}))
 
         with patch("pathlib.Path.home", return_value=tmp_path):
             result = _load_steering_resources()
@@ -173,7 +173,7 @@ class TestLoadSteeringResources:
         (steering_dir / "rules.md").write_text("# My Rules\nSTEERING_MARKER_XYZ")
         agents_dir = tmp_path / ".kiro" / "agents"
         agents_dir.mkdir(parents=True)
-        (agents_dir / "kirocrew.json").write_text(
+        (agents_dir / "ajcrew.json").write_text(
             json.dumps({"resources": ["file://.kiro/steering/**/*.md"]})
         )
 
@@ -202,13 +202,13 @@ class TestKeepVisibleMarkerRule:
     channel agent following the rule would show users the literal marker text."""
 
     def test_marker_documented_in_dashboard_rules_only(self):
-        from kiro_crew.context import _CRITICAL_RULES, _CRITICAL_RULES_CHANNEL
+        from aj_crew.context import _CRITICAL_RULES, _CRITICAL_RULES_CHANNEL
 
         assert "<!-- keep-visible -->" in _CRITICAL_RULES
         assert "<!-- keep-visible -->" not in _CRITICAL_RULES_CHANNEL
 
     def test_prefers_restructuring_over_marker(self):
-        from kiro_crew.context import _CRITICAL_RULES, _CRITICAL_RULES_CHANNEL
+        from aj_crew.context import _CRITICAL_RULES, _CRITICAL_RULES_CHANNEL
 
         clause = "Prefer restructuring the turn so the deliverable IS its last message"
         assert clause in _CRITICAL_RULES
@@ -217,7 +217,7 @@ class TestKeepVisibleMarkerRule:
 
 def test_critical_rules_forbid_assuming_a_persons_gender():
     """A named person whose pronouns were never given is not called "he"."""
-    from kiro_crew.context import _CRITICAL_RULES, _CRITICAL_RULES_CHANNEL
+    from aj_crew.context import _CRITICAL_RULES, _CRITICAL_RULES_CHANNEL
 
     rule = "Do not assume anyone's gender."
     assert rule in _CRITICAL_RULES
@@ -226,8 +226,8 @@ def test_critical_rules_forbid_assuming_a_persons_gender():
 
 def test_critical_rules_require_a_live_read_before_any_status_claim():
     """Every agent is told to read external state live, with any provider's tool."""
-    from kiro_crew.context import _CRITICAL_RULES_VARIANTS
-    from kiro_crew.context_assembly.output_contract import _LIVE_STATE_RULE
+    from aj_crew.context import _CRITICAL_RULES_VARIANTS
+    from aj_crew.context_assembly.output_contract import _LIVE_STATE_RULE
 
     assert "read it live in this turn with whatever tool that system offers" in _LIVE_STATE_RULE
     assert "Never report status from memory" in _LIVE_STATE_RULE
@@ -238,21 +238,21 @@ def test_critical_rules_require_a_live_read_before_any_status_claim():
 @pytest.mark.parametrize(
     ("agent", "session_key"),
     [
-        ("kirocrew", "dashboard:a"),
-        ("kirocrew-conductor", "dashboard:b"),
-        ("kirocrew-pipeline-conductor", "dashboard:c"),
-        ("kirocrew-worker", "dashboard:d"),
-        ("kirocrew-mate-conductor", "dashboard:e"),
-        ("kirocrew-mate-worker", "dashboard:f"),
-        ("kirocrew-worker", "cron:g"),
-        ("kirocrew", "subagent:h"),
+        ("ajcrew", "dashboard:a"),
+        ("ajcrew-conductor", "dashboard:b"),
+        ("ajcrew-pipeline-conductor", "dashboard:c"),
+        ("ajcrew-worker", "dashboard:d"),
+        ("ajcrew-mate-conductor", "dashboard:e"),
+        ("ajcrew-mate-worker", "dashboard:f"),
+        ("ajcrew-worker", "cron:g"),
+        ("ajcrew", "subagent:h"),
     ],
 )
 def test_shared_base_rules_tell_every_crew_agent_to_ask_only_when_needed(
     tmp_path, monkeypatch, agent, session_key
 ):
     """Conductor, worker, Bot and Ultra Mode all start from the critical-rules block."""
-    from kiro_crew import context as ctx_mod
+    from aj_crew import context as ctx_mod
 
     rule = "Ask a person only when human involvement is truly required."
     for variant in ctx_mod._CRITICAL_RULES_VARIANTS:

@@ -18,28 +18,28 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 
-from kiro_crew.config.sections_shared_crew import SharedCrewConfig, shared_crew_config_from
-from kiro_crew.dashboard import tailnet_direct, tailnet_localapi
-from kiro_crew.dashboard.origin import check_origin
-from kiro_crew.dashboard.tailnet import ForwardedPeer
-from kiro_crew.dashboard.tailnet_direct import (
+from aj_crew.config.sections_shared_crew import SharedCrewConfig, shared_crew_config_from
+from aj_crew.dashboard import tailnet_direct, tailnet_localapi
+from aj_crew.dashboard.origin import check_origin
+from aj_crew.dashboard.tailnet import ForwardedPeer
+from aj_crew.dashboard.tailnet_direct import (
     DirectGate,
     SelfNode,
     admission_refusal,
     parse_status,
     parse_whois,
 )
-from kiro_crew.dashboard.tailnet_localapi import Answer
-from kiro_crew.dashboard.token_auth import token_auth_middleware
-from kiro_crew.shared_crew import access, capabilities, people, wiring
-from kiro_crew.shared_crew.contracts import ACTOR_REQUEST_KEY, PrincipalKind, Provenance
-from kiro_crew.shared_crew.identity import direct_principal
+from aj_crew.dashboard.tailnet_localapi import Answer
+from aj_crew.dashboard.token_auth import token_auth_middleware
+from aj_crew.shared_crew import access, capabilities, people, wiring
+from aj_crew.shared_crew.contracts import ACTOR_REQUEST_KEY, PrincipalKind, Provenance
+from aj_crew.shared_crew.identity import direct_principal
 
 
 @pytest.fixture(autouse=True)
 def _shared_crew_preview_on(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
     """These tests cover the preview's behaviour; the gate itself has its own tests."""
-    _floor_monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    _floor_monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
 
 
 OWNER_IP = "100.64.0.1"
@@ -102,11 +102,11 @@ class FakeWhois:
 
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
-    import kiro_crew.dashboard.revocation_gen as rg
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.dashboard.revocation_gen as rg
+    import aj_crew.dashboard.token_auth as ta
 
     monkeypatch = _floor_monkeypatch
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     monkeypatch.setattr(rg, "_gen", 0)
     monkeypatch.setattr(ta, "_revoked_store_singleton", None)
     ta._state.clear_all()
@@ -303,8 +303,8 @@ def test_one_user_on_two_nodes_is_one_principal_named_by_display_name():
 
 
 def test_serve_and_the_listener_give_one_person_one_principal_and_budget():
-    from kiro_crew.shared_crew.access_set import principal_ids_for
-    from kiro_crew.shared_crew.identity import derive_principal
+    from aj_crew.shared_crew.access_set import principal_ids_for
+    from aj_crew.shared_crew.identity import derive_principal
 
     serve = derive_principal(
         internal=False,
@@ -367,7 +367,7 @@ async def test_a_local_process_dialling_its_own_tailnet_address_is_refused(
 @pytest.mark.asyncio
 async def test_an_app_cookie_on_the_owners_device_keeps_its_app_scope():
     """An app UI's cookie session runs the token flow; it never becomes the owner."""
-    from kiro_crew.dashboard.token_auth import generate_token
+    from aj_crew.dashboard.token_auth import generate_token
 
     app_cookie = generate_token("local-app", app="notes")
     client = await _client(_gate())
@@ -448,7 +448,7 @@ async def test_forged_tailscale_user_headers_are_ignored():
 @pytest.mark.asyncio
 async def test_a_forged_relay_header_never_reaches_a_direct_listener_handler():
     """The direct listener serves the dashboard chain, whose relay-header strip runs first."""
-    from kiro_crew.dashboard.relay_headers import is_relay_header, relay_header_strip_middleware
+    from aj_crew.dashboard.relay_headers import is_relay_header, relay_header_strip_middleware
 
     seen: list[list[str]] = []
 
@@ -674,7 +674,7 @@ async def test_an_event_stream_on_the_direct_listener_is_reverified_too(monkeypa
         wrapped.append(request.path)
         return await real(request, *a, **kw)
 
-    monkeypatch.setattr("kiro_crew.dashboard.tailnet_direct.run_with_reverify", spy)
+    monkeypatch.setattr("aj_crew.dashboard.tailnet_direct.run_with_reverify", spy)
     client = await _client(_gate(("alice@example.com",)))
     try:
         status, _ = await _get(client, _direct("100.64.0.5"))
@@ -686,7 +686,7 @@ async def test_an_event_stream_on_the_direct_listener_is_reverified_too(monkeypa
 
 @pytest.mark.asyncio
 async def test_direct_session_cannot_mint_a_bearer_link():
-    from kiro_crew.dashboard.handlers._shared import _caller_bounds
+    from aj_crew.dashboard.handlers._shared import _caller_bounds
 
     request = make_mocked_request("POST", "/api/auth/mobile-link")
     request["auth_tailnet_direct"] = True
@@ -780,8 +780,8 @@ def test_unavailable_daemon_reports_a_reason(answer, reason):
 
 @pytest.mark.asyncio
 async def test_turning_the_flag_off_binds_nothing(monkeypatch):
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard import tailnet_direct_listener
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard import tailnet_direct_listener
 
     started: list[str] = []
 
@@ -791,7 +791,7 @@ async def test_turning_the_flag_off_binds_nothing(monkeypatch):
 
     monkeypatch.setattr(tailnet_direct, "start_sites", fake_start_sites)
     monkeypatch.setattr(tailnet_direct.tailnet_localapi, "status", _status_answer)
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.dashboard.shared_crew.tailnet_direct = False
     resolution = await tailnet_direct_listener.resolve(cfg, PORT, True)
     assert resolution.state == "off" and resolution.gate is None
@@ -805,11 +805,11 @@ async def test_turning_the_flag_off_binds_nothing(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_flag_off_still_publishes_the_owner_so_phone_setup_admits_them(monkeypatch):
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard import tailnet, tailnet_direct_listener
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard import tailnet, tailnet_direct_listener
 
     monkeypatch.setattr(tailnet_direct.tailnet_localapi, "status", _status_answer)
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.dashboard.shared_crew.tailnet_direct = False
     cfg.dashboard.tailscale.enabled = True
     resolution = await tailnet_direct_listener.resolve(cfg, PORT, True)
@@ -819,10 +819,10 @@ async def test_flag_off_still_publishes_the_owner_so_phone_setup_admits_them(mon
 
 @pytest.mark.asyncio
 async def test_a_widened_bind_does_not_start_the_direct_listener():
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard import tailnet_direct_listener
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard import tailnet_direct_listener
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg = dataclasses.replace(
         cfg,
         dashboard=dataclasses.replace(
@@ -836,10 +836,10 @@ async def test_a_widened_bind_does_not_start_the_direct_listener():
 
 @pytest.mark.asyncio
 async def test_the_default_config_binds_no_direct_listener():
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard import tailnet_direct_listener
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard import tailnet_direct_listener
 
-    resolution = await tailnet_direct_listener.resolve(KiroCrewConfig(), PORT, True)
+    resolution = await tailnet_direct_listener.resolve(AjCrewConfig(), PORT, True)
     assert resolution.gate is None
     assert resolution.state != tailnet_direct.STATE_ACTIVE
 
@@ -953,7 +953,7 @@ def test_a_path_cli_outside_the_vetted_locations_is_never_run(monkeypatch, tmp_p
     planted.write_text("#!/bin/sh\n")
     planted.chmod(0o755)
     monkeypatch.setattr(tailnet_localapi.shutil, "which", lambda _name: str(planted))
-    from kiro_crew.dashboard import tailnet
+    from aj_crew.dashboard import tailnet
 
     monkeypatch.setattr(tailnet, "_CLI_CANDIDATE_PATHS", ())
     assert tailnet_localapi.cli_candidates() == []
@@ -1035,7 +1035,7 @@ def test_macsys_localapi_reads_a_root_owned_port_and_token(monkeypatch):
 
 @pytest.fixture()
 def _live():
-    from kiro_crew.dashboard import tailnet_live_allowlist
+    from aj_crew.dashboard import tailnet_live_allowlist
 
     tailnet_live_allowlist.reset_for_tests()
     yield tailnet_live_allowlist

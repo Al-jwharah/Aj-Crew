@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Dynamic capabilities: a per-crewmate preview switch, off by default.
 
-Stored on the crewmate's own record (``KiroCrewAgentConfig.dynamic_capabilities``)
+Stored on the crewmate's own record (``AjCrewAgentConfig.dynamic_capabilities``)
 and set on its Profile card; there is no global key. With a
 crewmate's flag off, that crewmate's crewmate-driven capability path is
 withheld: find_capabilities is refused at its route (403, read on every call so a
@@ -22,9 +22,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import crewmate_dynamic_capabilities as dyn
-from kiro_crew import crewmate_prompts, mcp_mate
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
+from aj_crew import crewmate_dynamic_capabilities as dyn
+from aj_crew import crewmate_prompts, mcp_mate
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
 
 @pytest.fixture
@@ -36,12 +36,12 @@ def off():
 def roster(monkeypatch):
     """Two crewmates on one roster, the per-crewmate read live (no override)."""
     dyn._override = None
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        "Atlas": KiroCrewAgentConfig(member_id="atlas", kiro_agent="Atlas"),
-        "Briar": KiroCrewAgentConfig(member_id="briar", kiro_agent="Briar"),
+        "Atlas": AjCrewAgentConfig(member_id="atlas", kiro_agent="Atlas"),
+        "Briar": AjCrewAgentConfig(member_id="briar", kiro_agent="Briar"),
     }
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
     return cfg
 
 
@@ -49,11 +49,11 @@ def roster(monkeypatch):
 
 
 def test_a_new_crewmate_starts_off_and_there_is_no_global_key():
-    from kiro_crew.config import loader
-    from kiro_crew.dashboard.handlers import core
+    from aj_crew.config import loader
+    from aj_crew.dashboard.handlers import core
 
-    assert KiroCrewAgentConfig().dynamic_capabilities is False
-    assert not hasattr(KiroCrewConfig().dashboard, "crewmate_dynamic_capabilities")
+    assert AjCrewAgentConfig().dynamic_capabilities is False
+    assert not hasattr(AjCrewConfig().dashboard, "crewmate_dynamic_capabilities")
     assert "dashboard.crewmate_dynamic_capabilities" not in core._EDITABLE_CONFIG
     # A config that still carries the old key loads, and the key is not read.
     built = loader._build_dashboard_config(set(), {"crewmate_dynamic_capabilities": True})
@@ -61,7 +61,7 @@ def test_a_new_crewmate_starts_off_and_there_is_no_global_key():
 
 
 def test_the_flag_is_read_from_the_record(tmp_path, monkeypatch):
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     path = tmp_path / "config.json"
     path.write_text(
@@ -89,7 +89,7 @@ def test_the_flag_is_read_from_the_record(tmp_path, monkeypatch):
     loader._invalidate_config_cache()
     dyn._override = None
     try:
-        agents = loader.KiroCrewConfig.load().agents
+        agents = loader.AjCrewConfig.load().agents
         assert [agents[n].dynamic_capabilities for n in ("Atlas", "Briar", "Cove")] == [
             True,
             False,
@@ -122,7 +122,7 @@ def test_a_worker_names_its_crewmate_by_member_id(roster):
 
 
 def _thread(agent: str):
-    from kiro_crew import members as members_mod
+    from aj_crew import members as members_mod
 
     return SimpleNamespace(mode=members_mod.DM_SLOT_MODE, agent=agent, executor="")
 
@@ -130,13 +130,13 @@ def _thread(agent: str):
 def test_off_the_conductor_still_lists_both_capability_tools():
     """The flag does not ride the session tool policy.
 
-    The pooled ``kirocrew-mate`` server caches a session's tool policy with no
+    The pooled ``ajcrew-mate`` server caches a session's tool policy with no
     way to drop it, so a tool cut there would stay cut after the user turned the
     preview on. The flag is read at each tool's route instead.
     """
     import inspect
 
-    from kiro_crew.dashboard.handlers.sessions_parts import tool_policy
+    from aj_crew.dashboard.handlers.sessions_parts import tool_policy
 
     assert "crewmate_dynamic_capabilities" not in inspect.getsource(tool_policy)
     names = {t["name"] for t in mcp_mate._list_tools()}
@@ -149,10 +149,10 @@ def test_off_the_conductor_still_lists_both_capability_tools():
 def routes(monkeypatch):
     from guide_route_helpers import FakeState, agent, run_guide_app
 
-    from kiro_crew import members as members_mod
-    from kiro_crew.dashboard.handlers import guide as guide_routes
-    from kiro_crew.dashboard.handlers import member_capability_catalog as catalog_routes
-    from kiro_crew.dashboard.handlers import member_self as self_routes
+    from aj_crew import members as members_mod
+    from aj_crew.dashboard.handlers import guide as guide_routes
+    from aj_crew.dashboard.handlers import member_capability_catalog as catalog_routes
+    from aj_crew.dashboard.handlers import member_self as self_routes
 
     class _Null:
         def log_api_access(self, **_kw):
@@ -191,7 +191,7 @@ def test_off_the_catalog_route_refuses_with_dynamic_capabilities_off(off, routes
 
 
 def test_off_the_other_crewmate_cards_are_still_proposed(off, routes, monkeypatch):
-    from kiro_crew.dashboard.handlers import change_cards
+    from aj_crew.dashboard.handlers import change_cards
 
     seen: list[str] = []
 
@@ -202,7 +202,7 @@ def test_off_the_other_crewmate_cards_are_still_proposed(off, routes, monkeypatc
         return web.json_response({"kind": kind})
 
     monkeypatch.setattr(change_cards, "propose_for_caller", propose)
-    from kiro_crew.dashboard.handlers.member_self import SELF_PROPOSALS
+    from aj_crew.dashboard.handlers.member_self import SELF_PROPOSALS
 
     status, _ = routes("propose", {"request": "model", "params": {"model": "m"}})
     assert (status, seen) == (200, [SELF_PROPOSALS["model"]])
@@ -223,7 +223,7 @@ def _report(text):
     ],
 )
 def test_off_a_worker_gap_asks_with_request_capabilities_and_no_catalog(off, reply):
-    from kiro_crew.dashboard import mate_thread_wakes
+    from aj_crew.dashboard import mate_thread_wakes
 
     prompt = mate_thread_wakes.report_prompt(_report(reply))
     assert "request_capabilities" in prompt and "find_capabilities" not in prompt
@@ -233,12 +233,12 @@ def test_off_a_worker_gap_asks_with_request_capabilities_and_no_catalog(off, rep
 
 
 def test_off_a_crewmate_cannot_raise_the_card_through_propose_change(off, monkeypatch):
-    from kiro_crew.dashboard.handlers import change_cards
+    from aj_crew.dashboard.handlers import change_cards
 
     crew_slot = SimpleNamespace(mode="member-dm", agent="pixel", executor="")
     other_slot = SimpleNamespace(mode="", agent="", executor="")
     monkeypatch.setattr(
-        "kiro_crew.dashboard.mate_thread_wakes.is_crewmate_thread",
+        "aj_crew.dashboard.mate_thread_wakes.is_crewmate_thread",
         lambda slot: slot is crew_slot,
     )
     slots = {"crew": crew_slot, "other": other_slot}
@@ -248,7 +248,7 @@ def test_off_a_crewmate_cannot_raise_the_card_through_propose_change(off, monkey
     # The main assistant asked to add a tool to a crewmate still proposes it.
     assert refuse(req, "other", "dashboard:other") is False
     # A crewmate's own worker is refused too.
-    from kiro_crew import members
+    from aj_crew import members
 
     members.note_crewmate_worker_session("dashboard:w-dyn")
     assert refuse(req, "other", "dashboard:w-dyn") is True
@@ -260,9 +260,9 @@ def test_off_a_crewmate_cannot_raise_the_card_through_propose_change(off, monkey
 
 
 def _complete_capabilities_card(monkeypatch, member="pixel"):
-    from kiro_crew import change_card_catalog as catalog
-    from kiro_crew.dashboard import goal_setup
-    from kiro_crew.dashboard.handlers import change_cards
+    from aj_crew import change_card_catalog as catalog
+    from aj_crew.dashboard import goal_setup
+    from aj_crew.dashboard.handlers import change_cards
 
     nudged: list[str] = []
     store = SimpleNamespace(complete_apply=lambda rec, **kw: None)
@@ -304,9 +304,9 @@ def test_off_no_capabilities_added_nudge(off, monkeypatch):
 
 def test_the_worker_is_asked_for_the_missing_capability_line_either_way(off, monkeypatch):
     """Off, the conductor still asks with request_capabilities, so a gap stays named."""
-    from kiro_crew import agent as agent_mod
-    from kiro_crew import mate_worker
-    from kiro_crew.agent_materialization import service_agents
+    from aj_crew import agent as agent_mod
+    from aj_crew import mate_worker
+    from aj_crew.agent_materialization import service_agents
 
     written: dict = {}
     monkeypatch.setattr(agent_mod, "build_agent_config", lambda *a, **k: {"prompt": "Base."})
@@ -319,16 +319,16 @@ def test_the_worker_is_asked_for_the_missing_capability_line_either_way(off, mon
 
 
 def test_off_the_conductor_prompt_names_no_catalog(off, monkeypatch, tmp_path):
-    from kiro_crew import context as ctx
-    from kiro_crew import member_mate_tools
-    from kiro_crew.context_assembly import member
+    from aj_crew import context as ctx
+    from aj_crew import member_mate_tools
+    from aj_crew.context_assembly import member
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    cfg = ctx.KiroCrewConfig()
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    cfg = ctx.AjCrewConfig()
     cfg.agents["Ada"] = SimpleNamespace(
         description="", triggers="", kiro_agent="", workspace="", member_id=""
     )
-    monkeypatch.setattr(ctx.KiroCrewConfig, "load", staticmethod(lambda *a, **k: cfg))
+    monkeypatch.setattr(ctx.AjCrewConfig, "load", staticmethod(lambda *a, **k: cfg))
     monkeypatch.setattr(member_mate_tools, "binding_has_mate_tools", lambda *a, **k: True)
     monkeypatch.setattr(member, "binding_has_mate_tools", lambda *a, **k: True, raising=False)
     text = member.build_member_section("Ada")
@@ -359,8 +359,8 @@ def test_the_off_pieces_are_the_pieces_from_before_the_preview():
 
 @pytest.fixture
 def mate_home(tmp_path, monkeypatch):
-    from kiro_crew import mate_capabilities
-    from kiro_crew.config import paths
+    from aj_crew import mate_capabilities
+    from aj_crew.config import paths
 
     user, mates = tmp_path / "agents", tmp_path / "mates" / "agents"
     user.mkdir()
@@ -388,15 +388,15 @@ def mate_home(tmp_path, monkeypatch):
 
 
 def _fresh_worker(mates):
-    from kiro_crew import mate_worker
+    from aj_crew import mate_worker
 
-    base = {"name": "kirocrew-mate-worker", "prompt": "Worker.", "mcpServers": {}, "tools": []}
+    base = {"name": "ajcrew-mate-worker", "prompt": "Worker.", "mcpServers": {}, "tools": []}
     own = json.loads((mates / "pixel.json").read_text(encoding="utf-8"))
     return mate_worker.merge_worker_spec(base, mate_worker.worker_additions(base, own))
 
 
 def test_off_a_skill_added_in_advanced_settings_reaches_a_fresh_worker(off, mate_home):
-    from kiro_crew import mate_capabilities as mc
+    from aj_crew import mate_capabilities as mc
 
     catalog = {"kiro-user/release": "skill://release/SKILL.md"}
     revision = mc._revision(json.loads((mate_home / "pixel.json").read_text(encoding="utf-8")))
@@ -413,7 +413,7 @@ def test_off_a_skill_added_in_advanced_settings_reaches_a_fresh_worker(off, mate
 
 
 def test_off_a_custom_template_still_configures_the_worker(off, mate_home):
-    from kiro_crew import mate_worker_kit
+    from aj_crew import mate_worker_kit
 
     ask = {"template": "release-bot"}
     preview = mate_worker_kit.preview("pixel", ask)
@@ -441,7 +441,7 @@ def test_per_crewmate_routes(roster, routes_for):
 
 
 def test_per_crewmate_gap_line(roster):
-    from kiro_crew.dashboard import mate_thread_wakes
+    from aj_crew.dashboard import mate_thread_wakes
 
     roster.agents["Atlas"].dynamic_capabilities = True
     gap = _report("MISSING CAPABILITY: jira -- tickets")
@@ -452,8 +452,8 @@ def test_per_crewmate_gap_line(roster):
 
 
 def test_per_crewmate_propose_change(roster, monkeypatch):
-    from kiro_crew import members
-    from kiro_crew.dashboard.handlers import change_cards
+    from aj_crew import members
+    from aj_crew.dashboard.handlers import change_cards
 
     roster.agents["Atlas"].dynamic_capabilities = True
     slots = {"a": _thread("Atlas"), "b": _thread("Briar"), "w": SimpleNamespace(key="w")}
@@ -476,11 +476,11 @@ def test_per_crewmate_nudge(roster, monkeypatch):
 
 
 def test_per_crewmate_hand_off_summary(roster, monkeypatch):
-    from kiro_crew import execution_context, mate_capabilities
-    from kiro_crew import mate_capability_catalog as catalog_mod
-    from kiro_crew import mate_worker
-    from kiro_crew.dashboard import change_cards as cards_mod
-    from kiro_crew.dashboard import crewmate_approval, crewmate_dispatch_capabilities
+    from aj_crew import execution_context, mate_capabilities
+    from aj_crew import mate_capability_catalog as catalog_mod
+    from aj_crew import mate_worker
+    from aj_crew.dashboard import change_cards as cards_mod
+    from aj_crew.dashboard import crewmate_approval, crewmate_dispatch_capabilities
 
     roster.agents["Atlas"].dynamic_capabilities = True
     rec = SimpleNamespace(
@@ -500,12 +500,12 @@ def test_per_crewmate_hand_off_summary(roster, monkeypatch):
 
 
 def test_per_crewmate_conductor_prompt(roster, monkeypatch, tmp_path):
-    from kiro_crew import context as ctx
-    from kiro_crew import member_mate_tools
-    from kiro_crew.context_assembly import member
+    from aj_crew import context as ctx
+    from aj_crew import member_mate_tools
+    from aj_crew.context_assembly import member
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    cfg = ctx.KiroCrewConfig()
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    cfg = ctx.AjCrewConfig()
     for name, flag in (("Atlas", True), ("Briar", False)):
         cfg.agents[name] = SimpleNamespace(
             description="",
@@ -515,8 +515,8 @@ def test_per_crewmate_conductor_prompt(roster, monkeypatch, tmp_path):
             member_id="",
             dynamic_capabilities=flag,
         )
-    monkeypatch.setattr(ctx.KiroCrewConfig, "load", staticmethod(lambda *a, **k: cfg))
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
+    monkeypatch.setattr(ctx.AjCrewConfig, "load", staticmethod(lambda *a, **k: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
     monkeypatch.setattr(member_mate_tools, "binding_has_mate_tools", lambda *a, **k: True)
     monkeypatch.setattr(member, "binding_has_mate_tools", lambda *a, **k: True, raising=False)
     assert "find_capabilities" in member.build_member_section("Atlas")
@@ -529,10 +529,10 @@ def routes_for(monkeypatch):
     """POST a crewmate route from crewmate *name*'s own thread."""
     from guide_route_helpers import FakeState, agent, run_guide_app
 
-    from kiro_crew import members as members_mod
-    from kiro_crew.dashboard.handlers import guide as guide_routes
-    from kiro_crew.dashboard.handlers import member_capability_catalog as catalog_routes
-    from kiro_crew.dashboard.handlers import member_self as self_routes
+    from aj_crew import members as members_mod
+    from aj_crew.dashboard.handlers import guide as guide_routes
+    from aj_crew.dashboard.handlers import member_capability_catalog as catalog_routes
+    from aj_crew.dashboard.handlers import member_self as self_routes
 
     class _Null:
         def log_api_access(self, **_kw):
@@ -572,16 +572,16 @@ class TestTheProfileSwitchWritesOneCrewmate:
     @pytest.fixture(autouse=True)
     def _owner_caller(self, _floor_monkeypatch):
         _floor_monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             lambda request: True,
         )
 
     @pytest.fixture()
     def two(self):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         for name in ("Atlas", "Briar"):
-            cfg.agents[name] = KiroCrewAgentConfig(
-                kiro_agent="kirocrew", workspace="default", memory_store="default"
+            cfg.agents[name] = AjCrewAgentConfig(
+                kiro_agent="ajcrew", workspace="default", memory_store="default"
             )
         cfg.save()
 
@@ -589,10 +589,10 @@ class TestTheProfileSwitchWritesOneCrewmate:
     def _app():
         from aiohttp import web
 
-        from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
+        from aj_crew.dashboard.handlers import api_ajcrew_agent_update
 
         app = web.Application()
-        app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+        app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
         return app
 
     @pytest.mark.asyncio
@@ -606,6 +606,6 @@ class TestTheProfileSwitchWritesOneCrewmate:
             assert bad.status == 400
             assert (await bad.json())["code"] == "invalid_dynamic_capabilities"
 
-        agents = KiroCrewConfig.load().agents
+        agents = AjCrewConfig.load().agents
         assert agents["Atlas"].dynamic_capabilities is True
         assert agents["Briar"].dynamic_capabilities is False

@@ -21,8 +21,8 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.sandbox as sb
-from kiro_crew.config.loader import _WARNED_RESOURCE_LIMIT_KEYS, ResourceLimitsConfig
+import aj_crew.sandbox as sb
+from aj_crew.config.loader import _WARNED_RESOURCE_LIMIT_KEYS, ResourceLimitsConfig
 
 
 @pytest.fixture(autouse=True)
@@ -47,14 +47,14 @@ def _wrap(
     """``cgroup_scope_argv(["kiro-cli", "chat"])`` against *raw* ``resource_limits``."""
     extra = []
     if default_mem_mb is not None:
-        extra.append(patch("kiro_crew.sandbox._default_max_memory_mb", return_value=default_mem_mb))
+        extra.append(patch("aj_crew.sandbox._default_max_memory_mb", return_value=default_mem_mb))
     with (
-        patch("kiro_crew.sandbox._probe_cgroup_scope", return_value=(available, "test")),
-        patch("kiro_crew.platform_compat.trusted_system_bin", return_value="/usr/bin/systemd-run"),
-        patch("kiro_crew.sandbox._reconcile_slice_memory_high_off_thread"),
-        patch("kiro_crew.sandbox._cpu_controller_delegated", return_value=cpu),
+        patch("aj_crew.sandbox._probe_cgroup_scope", return_value=(available, "test")),
+        patch("aj_crew.platform_compat.trusted_system_bin", return_value="/usr/bin/systemd-run"),
+        patch("aj_crew.sandbox._reconcile_slice_memory_high_off_thread"),
+        patch("aj_crew.sandbox._cpu_controller_delegated", return_value=cpu),
         patch(
-            "kiro_crew.config.loader._raw_config",
+            "aj_crew.config.loader._raw_config",
             return_value={} if raw is None else {"resource_limits": raw},
         ),
     ):
@@ -136,15 +136,15 @@ class TestScopeArgv:
     def test_one_scope_start_reads_the_config_once(self):
         """Every limit on the scope comes from one parse of ``config.json``."""
         with (
-            patch("kiro_crew.sandbox._probe_cgroup_scope", return_value=(True, "test")),
+            patch("aj_crew.sandbox._probe_cgroup_scope", return_value=(True, "test")),
             patch(
-                "kiro_crew.platform_compat.trusted_system_bin",
+                "aj_crew.platform_compat.trusted_system_bin",
                 return_value="/usr/bin/systemd-run",
             ),
-            patch("kiro_crew.sandbox._reconcile_slice_memory_high_off_thread"),
-            patch("kiro_crew.sandbox._cpu_controller_delegated", return_value=True),
+            patch("aj_crew.sandbox._reconcile_slice_memory_high_off_thread"),
+            patch("aj_crew.sandbox._cpu_controller_delegated", return_value=True),
             patch(
-                "kiro_crew.config.loader._raw_config",
+                "aj_crew.config.loader._raw_config",
                 return_value={
                     "resource_limits": {
                         "max_memory_mb": 10000,
@@ -162,7 +162,7 @@ class TestScopeArgv:
     def test_name_scope_unit_still_names_the_result(self):
         named = _wrap({"max_memory_mb": 10000}, token="deadbeef")
         at = named.index("--unit")
-        assert named[at + 1] == "kirocrew-rt-deadbeef.scope"
+        assert named[at + 1] == "ajcrew-rt-deadbeef.scope"
         assert at < named.index("--")
         assert "MemoryHigh=9000M" in named
 
@@ -189,7 +189,7 @@ def _slice(tmp_path: Path, *, tree_high: int, own_high: int | None) -> Path:
     """A slice whose subtree counted *tree_high* ``high`` events, *own_high* of
     them its own (``None``: a kernel without ``memory.events.local``).
     Usage stays well under the slice ceiling, so only the counter can trip."""
-    d = tmp_path / "kirocrew.slice" / sb._CGROUP_AGENTS_SLICE
+    d = tmp_path / "ajcrew.slice" / sb._CGROUP_AGENTS_SLICE
     d.mkdir(parents=True, exist_ok=True)
     (d / "memory.high").write_text(f"{20 * GIB}\n", encoding="utf-8")
     (d / "memory.max").write_text(f"{26 * GIB}\n", encoding="utf-8")
@@ -229,7 +229,7 @@ class TestSliceProbesCountOnlyTheSliceOwnCeiling:
 
     def test_the_climb_warning_ignores_scope_events(self, tmp_path, caplog):
         _slice(tmp_path, tree_high=10, own_high=0)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.sandbox"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.sandbox"):
             sb._check_slice_memory_pressure()
             _slice(tmp_path, tree_high=500, own_high=0)
             sb._check_slice_memory_pressure()
@@ -246,7 +246,7 @@ class TestSliceProbesCountOnlyTheSliceOwnCeiling:
         _slice(tmp_path, tree_high=500, own_high=None)
         assert sb.agents_slice_throttling() is False
         assert sb._slice_memory_events_high() is None
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.sandbox"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.sandbox"):
             sb._check_slice_memory_pressure()
             sb._check_slice_memory_pressure()
         assert "high counter climbed" not in caplog.text

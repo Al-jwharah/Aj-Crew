@@ -26,7 +26,7 @@ import pytest
 from skill_script_helpers import load_skill_script
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = ROOT / "src" / "kiro_crew" / "builtin_skills" / "living-ui"
+SKILL_DIR = ROOT / "src" / "aj_crew" / "builtin_skills" / "living-ui"
 EXAMPLE = SKILL_DIR / "examples" / "build-queue.html"
 COPIER = ROOT / "scripts" / "copy_living_ui_blocks.py"
 WIDGET_SRCDOC = ROOT / "website" / "src" / "lib" / "widgetSrcdoc.ts"

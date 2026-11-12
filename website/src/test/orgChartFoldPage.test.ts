@@ -16,7 +16,7 @@ import { resolve } from 'node:path'
 
 const TEMPLATE = resolve(
   __dirname,
-  '../../../src/kiro_crew/dashboard_templates/builtin/org-chart/template.html',
+  '../../../src/aj_crew/dashboard_templates/builtin/org-chart/template.html',
 )
 
 const RAW = readFileSync(TEMPLATE, 'utf-8')
@@ -97,7 +97,7 @@ const added: Array<[string, EventListenerOrEventListenerObject]> = []
 
 /** Mount the page with *items* as the fold's boards, and run its script. */
 function mount(items: unknown[]) {
-  ;(window as unknown as { kirocrew: unknown }).kirocrew = {
+  ;(window as unknown as { ajcrew: unknown }).ajcrew = {
     fields: { items, omitted: 0, spenders_omitted: 0, last_entry_at: new Date(NOW).toISOString() },
     agentic: [],
     seq: 1,
@@ -116,9 +116,9 @@ function mount(items: unknown[]) {
   }
 }
 
-/** A host push: the page's `kirocrew-dashboard` listener re-renders on the next tick. */
+/** A host push: the page's `ajcrew-dashboard` listener re-renders on the next tick. */
 function push() {
-  window.dispatchEvent(new Event('kirocrew-dashboard'))
+  window.dispatchEvent(new Event('ajcrew-dashboard'))
   vi.advanceTimersByTime(1)
 }
 

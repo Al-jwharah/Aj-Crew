@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard.handlers import themes as th
+from aj_crew.dashboard.handlers import themes as th
 
 # The bound applied at the clone-failure site in _clone_github.
 _CLONE_BOUND = 200

@@ -9,16 +9,16 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import embeddings as emb
-from kiro_crew import executors as pools
-from kiro_crew.testing.wait import (
+from aj_crew import embeddings as emb
+from aj_crew import executors as pools
+from aj_crew.testing.wait import (
     FALLBACK_TIMEOUT_SECS,
     async_wait_until,
     await_until,
     default_timeout,
     wait_until,
 )
-from kiro_crew.vector_memory import VectorMemoryStore, open_member_database
+from aj_crew.vector_memory import VectorMemoryStore, open_member_database
 
 
 async def _finished(coro, what: str, *, timeout: float | None = None):
@@ -356,7 +356,7 @@ async def test_server_deadline_retains_running_worker_admission(
         with pytest.raises(asyncio.TimeoutError):
             await await_until(task, what="the recall deadline")
         assert len(entered_recall_pool) == 1
-        admission = asyncio.get_running_loop()._kirocrew_recall_admission
+        admission = asyncio.get_running_loop()._ajcrew_recall_admission
         assert admission._value == pools._MAX_EMBED_WORKERS - 1
         assert await pools.run_in_embed_pool(lambda: "prompt") == "prompt"
     finally:
@@ -386,7 +386,7 @@ def test_model_digest_cached_until_file_changes(tmp_path, monkeypatch):
 async def test_http_deadline_wraps_real_recall_handler(
     monkeypatch, cold_open, entered_recall_pool, expire_recall_deadline
 ):
-    from kiro_crew.dashboard.handlers import memory, memory_member
+    from aj_crew.dashboard.handlers import memory, memory_member
 
     release, entered, finished = threading.Event(), threading.Event(), threading.Event()
     seen = []
@@ -449,7 +449,7 @@ def test_embedding_signature_preserves_existing_encoding():
 @pytest.mark.asyncio
 @pytest.mark.parametrize("cached", [False, True])
 async def test_ensure_store_aligns_off_loop_outside_cache_lock(tmp_path, monkeypatch, cached):
-    from kiro_crew import context
+    from aj_crew import context
 
     store = VectorMemoryStore(db_path=tmp_path / "memory.db", embedding_dim=2)
     await asyncio.to_thread(store.init)
@@ -485,11 +485,11 @@ async def test_store_opened_after_apply_snapshot_before_config_gets_new_width(
 
     from member_memory_helpers import write_member_home
 
-    from kiro_crew import context
-    from kiro_crew.config import loader
-    from kiro_crew.dashboard.handlers import memory
+    from aj_crew import context
+    from aj_crew.config import loader
+    from aj_crew.dashboard.handlers import memory
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     config = write_member_home(tmp_path, "late")
     config["memory"] = {"embedding_dim": 2}
     (tmp_path / "config.json").write_text(json.dumps(config), encoding="utf-8")
@@ -516,7 +516,7 @@ async def test_store_opened_after_apply_snapshot_before_config_gets_new_width(
     opened = []
 
     async def open_before_write(path, dim):
-        assert loader.KiroCrewConfig.load().memory.embedding_dim == 2
+        assert loader.AjCrewConfig.load().memory.embedding_dim == 2
         assert not candidate._serving
         late = await context.ContextBuilder.ensure_store("member-late")
         opened.append(late)
@@ -533,7 +533,7 @@ async def test_store_opened_after_apply_snapshot_before_config_gets_new_width(
         )
         assert opened, memory.reembed_progress().snapshot()
         assert candidate._serving
-        assert loader.KiroCrewConfig.load().memory.embedding_dim == 3
+        assert loader.AjCrewConfig.load().memory.embedding_dim == 3
         assert opened[0]._embedding_dim == 3
         assert await asyncio.to_thread(
             opened[0].recorded_embedding_space
@@ -550,8 +550,8 @@ async def test_registered_recall_route_has_server_deadline(monkeypatch, expire_r
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import memory_member
-    from kiro_crew.dashboard.routes import memory as routes
+    from aj_crew.dashboard.handlers import memory_member
+    from aj_crew.dashboard.routes import memory as routes
 
     entered = asyncio.Event()
     cancelled = asyncio.Event()

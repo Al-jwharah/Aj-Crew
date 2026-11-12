@@ -19,17 +19,17 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.discovery import discover_builtin_apps
-from kiro_crew.apps.execution import _BUILTINS_DIR
-from kiro_crew.apps.manager import (
+from aj_crew.apps.discovery import discover_builtin_apps
+from aj_crew.apps.execution import _BUILTINS_DIR
+from aj_crew.apps.manager import (
     APP_MANIFEST_FILENAME,
     _validate_source_path,
     get_app_manifest,
     install_app,
     update_app,
 )
-from kiro_crew.apps.manifest import AppManifest, PlatformConfig
-from kiro_crew.apps.routes import _client_install_manifest
+from aj_crew.apps.manifest import AppManifest, PlatformConfig
+from aj_crew.apps.routes import _client_install_manifest
 
 #: The names a manifest may use for ``platform.os``, with the ``sys.platform`` each reaches.
 _CANONICAL_OS = (("macos", "darwin"), ("linux", "linux"), ("windows", "win32"))
@@ -86,9 +86,9 @@ def _make_source(root: Path, version: str = "1.0.0", **platform: object) -> Path
 @pytest.fixture()
 def app_home(tmp_path, monkeypatch):
     """An isolated data home that admits the synthetic third-party app these tests install."""
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     (home / "config.json").write_text(
         json.dumps({"agent": {"apps_allow_third_party": True}}), encoding="utf-8"
     )

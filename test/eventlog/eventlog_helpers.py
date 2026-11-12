@@ -11,8 +11,8 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
-# flake-ok: pre-existing per-test data home pin on the shared monkeypatch, moved verbatim; the one monkeypatch.undo(), in test_eventlog_legacy_fold.py, re-pins KIROCREW_HOME after it
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- the per-test data home pin of the member event log suites, moved verbatim; the one test that calls monkeypatch.undo() re-pins KIROCREW_HOME itself
+# flake-ok: pre-existing per-test data home pin on the shared monkeypatch, moved verbatim; the one monkeypatch.undo(), in test_eventlog_legacy_fold.py, re-pins AJCREW_HOME after it
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- the per-test data home pin of the member event log suites, moved verbatim; the one test that calls monkeypatch.undo() re-pins AJCREW_HOME itself
 def _isolated_home(tmp_path, monkeypatch):
     """Every test writes into its own data home, never the live one.
 
@@ -20,5 +20,5 @@ def _isolated_home(tmp_path, monkeypatch):
     from the data home rather than taking one. Repointing the home is therefore
     what isolates a test, and it is the same fixture the crew log's own suites use.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield

@@ -11,8 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from conftest import CREDENTIAL_STRADDLE_SHAPES
-from kiro_crew.messaging.display_safety import (
+from aj_crew.messaging.display_safety import (
     _INTERIOR_RUN_PIECES,
     _balanced_link_reading,
     _first_close_reading,
@@ -23,8 +22,9 @@ from kiro_crew.messaging.display_safety import (
     safe_split_offset,
     severs_a_credential,
 )
-from kiro_crew.messaging.renderer import _default_redactor
-from kiro_crew.telegram.renderer import _strip_hr
+from aj_crew.messaging.renderer import _default_redactor
+from aj_crew.telegram.renderer import _strip_hr
+from conftest import CREDENTIAL_STRADDLE_SHAPES
 
 
 class TestTheOracleIsAsStrongAsTheSendPath:
@@ -562,7 +562,7 @@ class TestInteriorRunBoundMutation:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Patching the bound back to 4 shows the pre-fix miss."""
-        import kiro_crew.messaging.display_safety as ds
+        import aj_crew.messaging.display_safety as ds
 
         monkeypatch.setattr(ds, "_INTERIOR_RUN_PIECES", 4)
         redact = self._link_token_redactor

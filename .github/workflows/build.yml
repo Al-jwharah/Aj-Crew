@@ -34,7 +34,7 @@ jobs:
     # exact tree, so that push path is the macOS desktop build only. Any other
     # push to main builds everything.
     if: github.event_name != 'push' || vars.MERGE_QUEUE_ENABLED != 'true' || github.actor != 'github-merge-queue[bot]'
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || github.event_name == 'merge_group' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || github.event_name == 'merge_group' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -60,9 +60,9 @@ jobs:
 
       - name: Stage frontend into package
         run: |
-          rm -rf src/kiro_crew/static/dist
-          mkdir -p src/kiro_crew/static
-          cp -R website/dist src/kiro_crew/static/dist
+          rm -rf src/aj_crew/static/dist
+          mkdir -p src/aj_crew/static
+          cp -R website/dist src/aj_crew/static/dist
 
       # Build the sdist too, not just the wheel: `--wheel` alone reads
       # package_data and never evaluates MANIFEST.in, so a MANIFEST regression
@@ -77,7 +77,7 @@ jobs:
       - name: Verify wheel installs cleanly
         run: |
           pip install dist/*.whl
-          kirocrew --version
+          ajcrew --version
 
       # The PR-time vendored-lib gate. Without it the only such gate on a PR is
       # the pytest guard, which MODELS MANIFEST.in rather than executing it — so
@@ -117,7 +117,7 @@ jobs:
   #
   # This is the SAME assembly packaging/build-desktop.sh's build_backend_windows
   # performs, minus the voice extras: PBS runtime, pip install, the relocatable
-  # bin/kirocrew.cmd shim, then packaging/precompile_windows.py for the measured
+  # bin/ajcrew.cmd shim, then packaging/precompile_windows.py for the measured
   # gateway import closure. The extras are deliberately omitted -- they add a
   # pywhispercpp + numpy download for a code path the gateway boot never reaches
   # -- which is why the pyc floor below is passed explicitly rather than left at
@@ -143,11 +143,11 @@ jobs:
   # (build-wheel's skip then skips this job through `needs`).
   build-windows-installer:
     name: Build Windows Installer (x64)
-    # `kirocrew-runners-windows` larger-runner group, targeted by GROUP not
+    # `ajcrew-runners-windows` larger-runner group, targeted by GROUP not
     # label; see "The Windows larger-runner group" in
     # docs/ci/ci-and-reviews.md.
     runs-on:
-      group: kirocrew-runners-windows
+      group: ajcrew-runners-windows
     # Consumes build-wheel's artifact rather than building its own wheel: that
     # job already stages the frontend dist into the package before building, so
     # its wheel is the one users install. Building a second wheel here would add
@@ -204,7 +204,7 @@ jobs:
           if ($pbs.Count -lt 1) {
             throw "uv installed no cpython-3.12 windows-x86_64 interpreter under $(uv python dir)."
           }
-          $out = "website/electron/backend-dist/kirocrew-backend"
+          $out = "website/electron/backend-dist/ajcrew-backend"
           New-Item -ItemType Directory -Force (Split-Path $out) | Out-Null
           Copy-Item -Recurse -LiteralPath $pbs[0].FullName -Destination $out
           # PBS marks itself externally managed; pip refuses to install into it
@@ -224,16 +224,16 @@ jobs:
           # PYTHONPATH/PYTHONHOME are cleared under setlocal so a dev shell's
           # checkout is never imported into the bundled backend.
           New-Item -ItemType Directory -Force (Join-Path $out "bin") | Out-Null
-          Set-Content -Encoding ascii -LiteralPath (Join-Path $out "bin\kirocrew.cmd") `
-            -Value @('@echo off', 'setlocal', 'set "PYTHONPATH="', 'set "PYTHONHOME="', '"%~dp0..\python.exe" -s -P -m kiro_crew %*')
-          # pip's Scripts\kirocrew.exe embeds this runner's absolute python.exe
+          Set-Content -Encoding ascii -LiteralPath (Join-Path $out "bin\ajcrew.cmd") `
+            -Value @('@echo off', 'setlocal', 'set "PYTHONPATH="', 'set "PYTHONHOME="', '"%~dp0..\python.exe" -s -P -m aj_crew %*')
+          # pip's Scripts\ajcrew.exe embeds this runner's absolute python.exe
           # path, so it fails with "Fatal error in launcher" once installed
           # anywhere else. Replace it with the same relocatable shim:
           # Scripts\ sits one level below the bundle root, like bin\.
           Remove-Item -Force -ErrorAction SilentlyContinue `
-            -LiteralPath (Join-Path $out "Scripts\kirocrew.exe"), (Join-Path $out "Scripts\kirocrew-script.py")
-          Set-Content -Encoding ascii -LiteralPath (Join-Path $out "Scripts\kirocrew.cmd") `
-            -Value @('@echo off', 'setlocal', 'set "PYTHONPATH="', 'set "PYTHONHOME="', '"%~dp0..\python.exe" -s -P -m kiro_crew %*')
+            -LiteralPath (Join-Path $out "Scripts\ajcrew.exe"), (Join-Path $out "Scripts\ajcrew-script.py")
+          Set-Content -Encoding ascii -LiteralPath (Join-Path $out "Scripts\ajcrew.cmd") `
+            -Value @('@echo off', 'setlocal', 'set "PYTHONPATH="', 'set "PYTHONHOME="', '"%~dp0..\python.exe" -s -P -m aj_crew %*')
           # Every other pip console script in Scripts\ has the same frozen
           # shebang; turn each into a relocatable <name>.cmd, as
           # build_backend_windows does. Native uv.exe is left alone.
@@ -241,7 +241,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "relocating the Scripts launchers failed." }
           # Self-containment gate, same as the packaging script's: a missing
           # dependency must fail here, not at gateway boot.
-          & $python -s -P -m kiro_crew --version
+          & $python -s -P -m aj_crew --version
           if ($LASTEXITCODE -ne 0) {
             throw "the bundled backend is NOT self-contained under PYTHONNOUSERSITE=1."
           }
@@ -249,7 +249,7 @@ jobs:
           # which is what the script's pyc floor then verifies survived into the
           # installed artifact.
           $env:PYTHONDONTWRITEBYTECODE = "1"
-          & $python -s packaging/precompile_windows.py --root $out --module kiro_crew.cli_server
+          & $python -s packaging/precompile_windows.py --root $out --module aj_crew.cli_server
           if ($LASTEXITCODE -ne 0) { throw "precompiling the gateway import closure failed." }
           Remove-Item Env:PYTHONDONTWRITEBYTECODE
 
@@ -266,7 +266,7 @@ jobs:
       # -MinStartupPycs 750 rather than the script's 1000 default: that default
       # describes the FULL release bundle, which also carries the voice extras
       # (pywhispercpp, numpy) this job omits. Measured on the core closure of
-      # kiro_crew.cli_server, precompile emits about 990 sources, so 750 is a
+      # aj_crew.cli_server, precompile emits about 990 sources, so 750 is a
       # floor with headroom for the win32 closure differing from the measured one
       # while still catching what the assertion exists for: bytecode filtered out
       # of the artifact, or the launcher redirecting imports into an empty user
@@ -306,7 +306,7 @@ jobs:
   # platform unconditionally.
   desktop-matrix:
     name: Resolve desktop matrix
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || github.event_name == 'merge_group' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-kirocrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || github.event_name == 'merge_group' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) && format('codebuild-ajcrew-gha-linux-{0}-{1}', github.run_id, github.run_attempt) || github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     # The work is seconds: a shallow checkout, a depth-1 fetch of one base SHA
     # and a paths-filter. 5, not the 15 ci.yml's `changes` resolver carries --
     # that one's `fetch-depth: 0` full-history fetch is what has run past 5 on
@@ -337,7 +337,7 @@ jobs:
         id: runner
         env:
           ELIGIBLE: ${{ github.repository == 'kirodotdev/KiroCrew' && contains(fromJSON(vars.CODEBUILD_ACTOR_IDS || '[]'), github.actor_id) && (github.event_name == 'push' || github.event_name == 'merge_group' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize') && github.event.pull_request.head.repo.full_name == github.repository)) }}
-          LABEL: codebuild-kirocrew-gha-linux-${{ github.run_id }}-${{ github.run_attempt }}
+          LABEL: codebuild-ajcrew-gha-linux-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           if [ "$ELIGIBLE" = "true" ]; then
             echo "linux_x64_runner=$LABEL instance-size:large" >> "$GITHUB_OUTPUT"
@@ -404,10 +404,10 @@ jobs:
               - 'setup.cfg'
               - 'setup.py'
               - 'MANIFEST.in'
-              - 'src/kiro_crew/__main__.py'
-              - 'src/kiro_crew/cli_server.py'
-              - 'src/kiro_crew/cli_server_*.py'
-              - 'src/kiro_crew/testing/**'
+              - 'src/aj_crew/__main__.py'
+              - 'src/aj_crew/cli_server.py'
+              - 'src/aj_crew/cli_server_*.py'
+              - 'src/aj_crew/testing/**'
       - id: compute
         env:
           EVENT: ${{ github.event_name }}
@@ -446,7 +446,7 @@ jobs:
     # resolver output is ever empty. A fleet label is spelled here from this
     # job's own `github.run_attempt`, not read from the output: a re-run of this
     # job alone does not re-run the resolver, so its label names a past attempt.
-    runs-on: ${{ matrix.os == 'ubuntu-22.04' && (startsWith(needs.desktop-matrix.outputs.linux_x64_runner, 'codebuild-') && format('codebuild-kirocrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.desktop-matrix.outputs.linux_x64_runner || 'ubuntu-22.04') || matrix.os }}
+    runs-on: ${{ matrix.os == 'ubuntu-22.04' && (startsWith(needs.desktop-matrix.outputs.linux_x64_runner, 'codebuild-') && format('codebuild-ajcrew-gha-linux-{0}-{1} instance-size:large', github.run_id, github.run_attempt) || needs.desktop-matrix.outputs.linux_x64_runner || 'ubuntu-22.04') || matrix.os }}
     # macOS bills at 10x, so an unbounded hang here is the costliest in the repo.
     # Its healthy build already takes ~35 min, so it gets 60 and Linux keeps 45.
     timeout-minutes: ${{ matrix.os == 'macos-15' && 60 || 45 }}
@@ -532,7 +532,7 @@ jobs:
         with:
           name: macos-install-smoke-evidence
           path: |
-            ${{ runner.temp }}/kirocrew-smoke-*/logs/*
+            ${{ runner.temp }}/ajcrew-smoke-*/logs/*
             ~/Library/Logs/*/gateway-launch.log
           if-no-files-found: warn
           retention-days: 14

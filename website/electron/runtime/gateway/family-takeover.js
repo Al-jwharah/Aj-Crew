@@ -54,7 +54,7 @@ function createFamilyTakeover({
     // offers it the orphan stop first. The prompt names
     // one thing, the gateway, and says where the command runs, in the wording of
     // the stuck-gateway dialog (holder-decision.js).
-    const stopCommand = `kirocrew stop --port ${PORT}`;
+    const stopCommand = `ajcrew stop --port ${PORT}`;
     const step = holder ? `Stop the ${other.displayName} gateway` : `Quit ${other.displayName}`;
     const retry = holder ? "I stopped it — Retry" : "I quit it — Retry";
     const how = holder
@@ -78,7 +78,7 @@ function createFamilyTakeover({
         // not read as the same prompt again.
         message: holder && round > 1
           ? `${other.displayName} is still running.`
-          : `${other.displayName} (${otherVersion}) is already running with your Kiro Crew data.`,
+          : `${other.displayName} (${otherVersion}) is already running with your Aj Crew data.`,
         detail: (round === 1
           ? `${step}, then choose “${retry}”.`
           : `${other.displayName} was still running a moment ago. ${step}, then choose “${retry}”.`) + how,
@@ -116,9 +116,9 @@ function createFamilyTakeover({
     glog(`gateway on :${PORT} is ${other.appName}'s (${otherVersion}) but outlived its app, offering to stop it`);
     const { response } = await dialog.showMessageBox({
       type: "warning",
-      title: `A ${other.displayName} gateway is running`,
-      message: `A ${other.displayName} gateway (${otherVersion}) is still running with your Kiro Crew data.`,
-      detail: `It kept running after the app that started it quit, so quitting ${other.displayName} would not stop it. Only one Kiro Crew app can use ~/.kiro/crew at a time.\n\nStop and continue stops that gateway with kirocrew stop --port ${PORT} and starts this app's gateway. Anything it was still doing is stopped with it.`,
+      title: `An ${other.displayName} gateway is running`,
+      message: `An ${other.displayName} gateway (${otherVersion}) is still running with your Aj Crew data.`,
+      detail: `It kept running after the app that started it quit, so quitting ${other.displayName} would not stop it. Only one Aj Crew app can use ~/.kiro/crew at a time.\n\nStop and continue stops that gateway with ajcrew stop --port ${PORT} and starts this app's gateway. Anything it was still doing is stopped with it.`,
       buttons: ["Stop and continue", "Cancel"],
       defaultId: 0,
       cancelId: 1,
@@ -153,8 +153,8 @@ function createFamilyTakeover({
     const { response } = await dialog.showMessageBox({
       type: "warning",
       title: `${other.displayName} is running`,
-      message: `${other.displayName} (${decision.otherVersion}) is already running with your Kiro Crew data.`,
-      detail: `Only one Kiro Crew app can use ~/.kiro/crew at a time. Quit ${other.displayName} and continue here?`,
+      message: `${other.displayName} (${decision.otherVersion}) is already running with your Aj Crew data.`,
+      detail: `Only one Aj Crew app can use ~/.kiro/crew at a time. Quit ${other.displayName} and continue here?`,
       buttons: [`Quit ${other.displayName} & Continue`, "Cancel"],
       defaultId: 0,
       cancelId: 1,

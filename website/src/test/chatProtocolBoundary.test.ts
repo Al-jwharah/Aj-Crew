@@ -101,11 +101,11 @@ describe('the protocol surface apps import', () => {
   })
 
   it('is exported by the vendor stub apps actually resolve', () => {
-    // `@kirocrew/app-sdk` resolves to a stub that re-exports the host module by NAME. A name the
+    // `@ajcrew/app-sdk` resolves to a stub that re-exports the host module by NAME. A name the
     // barrel exports and the stub omits is not a missing convenience: the browser fails to
     // instantiate the module, so an app importing it does not load. Two hand-written lists cannot
     // be kept in agreement by review alone.
-    const stub = read(resolve(SRC, '..', 'public', 'vendor', 'kirocrew-app-sdk.mjs'))
+    const stub = read(resolve(SRC, '..', 'public', 'vendor', 'ajcrew-app-sdk.mjs'))
     // BOTH barrels: scoping this to the protocol barrel is what let four chat
     // exports sit in the app surface with no stub entry, each one a load-time
     // failure for any app that imported it.

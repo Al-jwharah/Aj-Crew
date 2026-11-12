@@ -30,7 +30,7 @@ import { focusEntry, frameInputs, hostInput } from '../hooks/useFrameLinkBridge'
 vi.mock('../api/client')
 vi.mock('../hooks/useNearViewport', () => ({ useNearViewport: () => true }))
 
-const OPEN = 'kirocrew-dashboard:open'
+const OPEN = 'ajcrew-dashboard:open'
 const LINK = 'https://github.com/example-org/repo/pull/7'
 const BODY = `<a href="${LINK}" target="_blank" rel="noopener noreferrer">PR</a>`
 

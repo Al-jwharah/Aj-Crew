@@ -32,7 +32,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.mcp_shared as mcp_shared
+import aj_crew.mcp_shared as mcp_shared
 
 GATEWAY_PORT = 47211
 
@@ -43,8 +43,8 @@ GATEWAY_PORT = 47211
 @pytest.fixture
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """A data home with a ``run/`` dir, and no inherited port variables."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    for name in ("KIROCREW_PORT", "KIROCREW_BOUND_PORT", "KIROCREW_BOUND_HOST"):
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    for name in ("AJCREW_PORT", "AJCREW_BOUND_PORT", "AJCREW_BOUND_HOST"):
         monkeypatch.delenv(name, raising=False)
     (tmp_path / "run").mkdir(mode=0o700)
     return tmp_path
@@ -79,7 +79,7 @@ def policy_state(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(mcp_shared, "_included_tools_by_session", {})
     audit = MagicMock()
     monkeypatch.setattr(mcp_shared, "sel", lambda: audit)
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:chat-1-1")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:chat-1-1")
     return audit
 
 
@@ -113,7 +113,7 @@ class TestNegativeCacheRecovery:
 
     @pytest.fixture
     def gateway(self, home, policy_state, monkeypatch):
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", str(GATEWAY_PORT))
+        monkeypatch.setenv("AJCREW_BOUND_PORT", str(GATEWAY_PORT))
         _publish_secret(home, GATEWAY_PORT, "synthetic-credential-A")
         urlopen = MagicMock()
         monkeypatch.setattr(mcp_shared, "loopback_urlopen", urlopen)
@@ -207,7 +207,7 @@ class TestNegativeCacheRecovery:
         gateway.side_effect = urllib.error.URLError("connection refused")
         mcp_shared._resolve_tool_policy("dashboard:chat-2-2")
         clock.now += mcp_shared._NEGATIVE_CACHE_PROBE_INTERVAL
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
         monkeypatch.setattr(mcp_shared, "_policy_session_key", lambda: "")
         mcp_shared._resolve_tool_policy()
         assert gateway.call_count == 1

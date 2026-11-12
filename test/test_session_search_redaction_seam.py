@@ -28,11 +28,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import security
-from kiro_crew.dashboard import handlers_instances as hi
-from kiro_crew.dashboard.handlers import _shared
-from kiro_crew.dashboard.handlers import sessions as hs
-from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+from aj_crew import security
+from aj_crew.dashboard import handlers_instances as hi
+from aj_crew.dashboard.handlers import _shared
+from aj_crew.dashboard.handlers import sessions as hs
+from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
 #: The redacted field set, spelled out HERE rather than read from
 #: ``_shared.SESSION_SEARCH_TEXT_FIELDS``. Iterating the constant under test
@@ -96,7 +96,7 @@ def _request(state):
 
 def _enable_instances(monkeypatch):
     monkeypatch.setattr(
-        hi.KiroCrewConfig,
+        hi.AjCrewConfig,
         "load",
         staticmethod(lambda: SimpleNamespace(instances=SimpleNamespace(enabled=True))),
     )

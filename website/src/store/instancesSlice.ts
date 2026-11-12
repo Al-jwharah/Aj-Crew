@@ -168,7 +168,7 @@ interface CrewFormState {
    */
   launch?: CrewLaunchDraft | null
   /**
-   * The desktop app's `kirocrew://remote-crew/add` link the add form's values
+   * The desktop app's `ajcrew://remote-crew/add` link the add form's values
    * started from, or `null`. While it is set the form starts from it when `add`
    * holds nothing, and says the values came from a link. Dropping the add values
    * drops it too, so a successful add or a cleared form never brings the link's
@@ -217,7 +217,7 @@ interface InstancesState {
    *  warm entry is dropped.
    *  Optional because tests preload partial slices. */
   connectError?: Record<string, string>
-  /** A `kirocrew://chat?crew=` link waiting for that crew's pane to be ready
+  /** An `ajcrew://chat?crew=` link waiting for that crew's pane to be ready
    *  (see lib/crewDeepLink.ts). One in total: a newer link replaces
    *  it, and any switch to another pane drops it. */
   pendingPaneSlot: PendingPaneSlot | null
@@ -336,7 +336,7 @@ const instancesSlice = createSlice({
       if (action.payload === null && state.crewForms.addLink) state.crewForms.addLink = null
     },
     /**
-     * A `kirocrew://remote-crew/add` link: the add form starts from these values
+     * An `ajcrew://remote-crew/add` link: the add form starts from these values
      * the next time it mounts, in place of whatever it held, so the newest link
      * wins. Form state only: nothing is saved and nothing connects.
      */

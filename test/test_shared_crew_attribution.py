@@ -13,14 +13,14 @@ import pytest
 from chat_test_helpers import _make_state
 from shared_crew_host_isolation import host_isolation  # noqa: F401
 
-from kiro_crew.dashboard import state as state_module
-from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.slot_persistence import metadata_codec as codec
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.history import carry_unowned_metadata
-from kiro_crew.shared_crew import attribution as attr
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.dashboard import state as state_module
+from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.slot_persistence import metadata_codec as codec
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.history import carry_unowned_metadata
+from aj_crew.shared_crew import attribution as attr
+from aj_crew.shared_crew.contracts import (
     MESSAGE_AUTHOR_META_KEY,
     SESSION_ATTRIBUTION_META_KEY,
     ActorContext,
@@ -30,8 +30,8 @@ from kiro_crew.shared_crew.contracts import (
     SessionAttribution,
     Transport,
 )
-from kiro_crew.shared_crew.identity import tailnet_principal
-from kiro_crew.shared_crew.owner import owner_principal
+from aj_crew.shared_crew.identity import tailnet_principal
+from aj_crew.shared_crew.owner import owner_principal
 
 
 class _AttrSlot(_ChatSlot):
@@ -50,7 +50,7 @@ BOB = tailnet_principal("bob@example.com", "phone.tail.ts.net", Provenance.TAILS
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(state_module, "_ChatSlot", _AttrSlot)
     return _make_state(tmp_path)
 
@@ -260,7 +260,7 @@ def _sender_slot(*rows: dict):
 
 
 def test_sender_line_is_absent_for_a_solo_owner() -> None:
-    from kiro_crew.shared_crew.identity import local_operator_principal
+    from aj_crew.shared_crew.identity import local_operator_principal
 
     owner = local_operator_principal("local-app")
     first, second = _row(owner), _row(owner, "again")
@@ -268,7 +268,7 @@ def test_sender_line_is_absent_for_a_solo_owner() -> None:
 
 
 def test_sender_line_names_a_second_person_and_then_the_owner() -> None:
-    from kiro_crew.shared_crew.identity import local_operator_principal
+    from aj_crew.shared_crew.identity import local_operator_principal
 
     ana = tailnet_principal(
         "ana@example.com", "ana-laptop", Provenance.TAILSCALE_LISTENER, display_name="Ana"
@@ -309,9 +309,9 @@ async def test_the_agent_prompt_carries_the_sender_and_the_row_keeps_the_text(
     from chat_test_helpers import drain_background_tasks
     from test_chat_runner_folder_steering import _turn_state
 
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.shared_crew.identity import local_operator_principal
-    from kiro_crew.testing.wait import finished
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.shared_crew.identity import local_operator_principal
+    from aj_crew.testing.wait import finished
 
     state = _turn_state(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("sender-chat")

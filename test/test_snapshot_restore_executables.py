@@ -1,6 +1,6 @@
 """What a CLI restore does with bundle content that runs a shell command on its own.
 
-A bundle can come from someone else, so `kirocrew restore` applies the dashboard
+A bundle can come from someone else, so `ajcrew restore` applies the dashboard
 import's rule: a command or script cron is restored paused (a command failing the
 `cron_add` vet is dropped), and a script hook is restored disabled. Message-only
 crons and skill-only hooks are left as they are. The dashboard import gets the hook
@@ -20,7 +20,7 @@ import pytest
 import snapshot_helpers
 from snapshot_helpers import unpinnable_argv
 
-from kiro_crew.snapshot import restore_main, snapshot_main
+from aj_crew.snapshot import restore_main, snapshot_main
 
 _no_gateway = snapshot_helpers._no_gateway
 
@@ -53,7 +53,7 @@ HOOKS = {
 
 def _write_bundle(path: Path, files: dict[str, str], *, components: bool = True) -> Path:
     """A restorable tarball holding *files*; ``components=False`` is a pre-map bundle."""
-    root = "kirocrew-snapshot-20260101T000000Z"
+    root = "ajcrew-snapshot-20260101T000000Z"
     manifest: dict = {"version": 4 if components else 2, "purpose": "backup"}
     if components:
         manifest["components"] = {"crons": "unresolved", "config": "unresolved"}
@@ -86,7 +86,7 @@ def _full_bundle(tmp_path: Path, *, components: bool = True) -> Path:
 
 def _restore(bundle: Path, home: Path, monkeypatch, *extra: str) -> int:
     home.mkdir(exist_ok=True)
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     return restore_main([str(bundle), "--force", *extra] + unpinnable_argv())
 
 
@@ -180,7 +180,7 @@ def test_merge_restore_does_not_hang_on_a_fifo_cron_store(tmp_path, monkeypatch)
 def test_deeply_nested_hooks_and_crons_do_not_abort_the_dashboard_import(tmp_path):
     import zipfile
 
-    import kiro_crew.portability as port
+    import aj_crew.portability as port
 
     deep = "[" * 20000 + "]" * 20000
     z = tmp_path / "deep.zip"
@@ -192,7 +192,7 @@ def test_deeply_nested_hooks_and_crons_do_not_abort_the_dashboard_import(tmp_pat
     target.mkdir()
     (target / "hooks.json").write_text('{"hooks": []}')
     with patch.object(port, "config_dir", return_value=target):
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
             summary = port.apply_import_zip(z, mode="merge")
     assert "disabled_hooks" not in summary
     assert json.loads((target / "hooks.json").read_text()) == {"hooks": []}
@@ -242,7 +242,7 @@ def test_a_name_that_cannot_be_encoded_is_printed_escaped(tmp_path, monkeypatch,
 
 
 def test_a_failed_staging_rewrite_refuses_cleanly(tmp_path, monkeypatch, capsys):
-    import kiro_crew.portability_vetting as pv
+    import aj_crew.portability_vetting as pv
 
     def boom(*a, **k):
         raise OSError(28, "No space left on device")
@@ -287,7 +287,7 @@ def test_components_crons_only_still_pauses(tmp_path, monkeypatch):
 def test_dashboard_import_disables_script_hooks(tmp_path):
     import zipfile
 
-    import kiro_crew.portability as port
+    import aj_crew.portability as port
 
     z = tmp_path / "imp.zip"
     with zipfile.ZipFile(str(z), "w") as zf:
@@ -296,7 +296,7 @@ def test_dashboard_import_disables_script_hooks(tmp_path):
     target = tmp_path / "target_mc"
     target.mkdir()
     with patch.object(port, "config_dir", return_value=target):
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
             summary = port.apply_import_zip(z, mode="merge")
     hooks = json.loads((target / "hooks.json").read_text())
     by_id = {h["id"]: h for h in hooks["hooks"]}
@@ -314,7 +314,7 @@ def test_local_snapshot_names_credential_components(tmp_path, monkeypatch, capsy
     home = tmp_path / "home"
     home.mkdir()
     (home / "config.json").write_text("{}")
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     assert snapshot_main([str(tmp_path / "out"), *extra] + unpinnable_argv()) == 0
     out = capsys.readouterr().out
     assert "uncertified for sharing" in out

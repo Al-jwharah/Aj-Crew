@@ -88,7 +88,7 @@ describe('query-param consumer (no basePath) — the path seam is opt-in', () =>
   })
 
   it('restores the remembered tab by writing ?tab=, not a path', () => {
-    sessionStorage.setItem('kirocrew:sidepanel-tab:test-query-consumer', 'about')
+    sessionStorage.setItem('ajcrew:sidepanel-tab:test-query-consumer', 'about')
     renderAt('/developer')
     expect(screen.getByTestId('pane').textContent).toBe('about')
     expect(loc()).toBe('/developer?tab=about')

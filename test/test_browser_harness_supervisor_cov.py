@@ -24,9 +24,9 @@ from typing import Any
 import pytest
 from tmpdir_helpers import SHORT_TMP_PREFIX, short_tmp_base
 
-from kiro_crew.browser_harness import HARNESS_VERSION, chromium, credentials, discover, supervisor
-from kiro_crew.browser_harness.supervisor import HarnessSupervisor
-from kiro_crew.testing.wait import await_until
+from aj_crew.browser_harness import HARNESS_VERSION, chromium, credentials, discover, supervisor
+from aj_crew.browser_harness.supervisor import HarnessSupervisor
+from aj_crew.testing.wait import await_until
 
 POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="pipe fds and AF_UNIX are POSIX")
 
@@ -205,7 +205,7 @@ def test_an_unreadable_config_falls_back_to_the_providers_defaults(tmp_path: Pat
 def test_a_broken_provider_seam_reads_as_no_provider_but_a_composition_error_raises(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    from kiro_crew.platform.context import PlatformCompositionError
+    from aj_crew.platform.context import PlatformCompositionError
 
     def broken() -> Any:
         raise RuntimeError("seam blew up")
@@ -462,7 +462,7 @@ async def test_a_start_cancelled_after_launch_stops_the_browser_and_closes_the_r
     monkeypatch.setattr(sup, "_launch_chromium", _launch)
     task = asyncio.ensure_future(sup._start())
     await await_until(relay.started, what="the relay to start")
-    assert sup.status()["detail"] == "connecting to Kiro's Chromium"
+    assert sup.status()["detail"] == "connecting to Aj's Chromium"
     task.cancel()
     with pytest.raises(asyncio.CancelledError):
         await task
@@ -581,7 +581,7 @@ async def test_user_browser_url_names_what_the_person_must_do(
     assert url == "ws://127.0.0.1:9/devtools/browser/a"
 
 
-# ── Kiro's Chromium launchers ──
+# ── Aj's Chromium launchers ──
 
 
 @pytest.mark.asyncio
@@ -965,7 +965,7 @@ async def test_no_stray_check_without_a_runtime_dir(tmp_path: Path) -> None:
 def test_the_audit_row_names_domains_up_to_its_cap_and_never_raises(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    from kiro_crew import sel as sel_module
+    from aj_crew import sel as sel_module
 
     rows: list[dict[str, Any]] = []
 
@@ -1016,12 +1016,12 @@ class _BrowserSection:
 def test_the_default_config_reader_tolerates_every_section_shape(
     monkeypatch: pytest.MonkeyPatch, section: Any, expected: dict[str, Any]
 ) -> None:
-    from kiro_crew import config
+    from aj_crew import config
 
     class _Loaded:
         browser = section
 
-    monkeypatch.setattr(config.KiroCrewConfig, "load", lambda: _Loaded())
+    monkeypatch.setattr(config.AjCrewConfig, "load", lambda: _Loaded())
     assert supervisor._default_config_reader() == expected
 
 
@@ -1181,7 +1181,7 @@ async def test_no_start_launches_kiros_chromium_while_a_redownload_replaces_it(
     monkeypatch.setattr(sup, "_choose", lambda state: _choice("kiro_chromium"))
 
     async def _must_not_launch(*_a: Any, **_kw: Any) -> Any:
-        raise AssertionError("Kiro's Chromium launched during its own replacement")
+        raise AssertionError("Aj's Chromium launched during its own replacement")
 
     monkeypatch.setattr(sup, "_launch_chromium", _must_not_launch)
     await sup.stop_for_chromium_replace()

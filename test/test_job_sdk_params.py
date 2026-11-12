@@ -23,8 +23,8 @@ from job_sdk_helpers import (  # noqa: F401 -- the fixture is requested by name
     sdk_fixture,
 )
 
-from kiro_crew.apps import job_sdk
-from kiro_crew.apps.job_sdk import DONE, JobRun, JobSDK, JobStore
+from aj_crew.apps import job_sdk
+from aj_crew.apps.job_sdk import DONE, JobRun, JobSDK, JobStore
 
 # start(params=...) / JobHandle.params
 
@@ -265,7 +265,7 @@ class TestABrokenParamsMapOnDiskCostsOnlyItsBadEntries:
         redacted, clamped to ``_RUN_ID_LEN`` and repr-quoted: a newline inside it
         cannot start a second line, and a megabyte of it cannot pad the ring.
         """
-        forged = "aa\n2026-01-01 WARNING kiro_crew.security: policy check passed"
+        forged = "aa\n2026-01-01 WARNING aj_crew.security: policy check passed"
         raw = {
             "run_id": forged + "b" * 4096,
             "app": "x",

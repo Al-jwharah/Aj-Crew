@@ -16,11 +16,11 @@ from unittest.mock import AsyncMock
 from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
 from telegram_helpers import FakeProvider, _dispatcher
 
-from kiro_crew.messaging.link import ChannelLink, legacy_dashboard_mirror_key
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.session_map import ConversationOwnershipConflict
-from kiro_crew.telegram.commands import parse_command
-from kiro_crew.telegram.transport import TelegramInboundMessage
+from aj_crew.messaging.link import ChannelLink, legacy_dashboard_mirror_key
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.session_map import ConversationOwnershipConflict
+from aj_crew.telegram.commands import parse_command
+from aj_crew.telegram.transport import TelegramInboundMessage
 
 
 class TestLinkCommand:
@@ -28,12 +28,12 @@ class TestLinkCommand:
         # Compat-only spelling: bindings written before session identity was
         # unified live on dashboard:<channel key with non-word chars folded>.
         assert (
-            legacy_dashboard_mirror_key("telegram:kirocrew:direct:8743158320:gen3")
-            == "dashboard:telegram_kirocrew_direct_8743158320_gen3"
+            legacy_dashboard_mirror_key("telegram:ajcrew:direct:8743158320:gen3")
+            == "dashboard:telegram_ajcrew_direct_8743158320_gen3"
         )
         assert (
-            legacy_dashboard_mirror_key("telegram:kirocrew:direct:7")
-            == "dashboard:telegram_kirocrew_direct_7"
+            legacy_dashboard_mirror_key("telegram:ajcrew:direct:7")
+            == "dashboard:telegram_ajcrew_direct_7"
         )
 
     def test_parse_link_unlink(self) -> None:
@@ -222,11 +222,11 @@ class TestAutomaticOriginMirror:
         from aiohttp import web
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.crew_log import emit, projection
-        from kiro_crew.crew_log.resolve import unit_for_session_key
-        from kiro_crew.dashboard.handlers import work_ledger as ledger_routes
+        from aj_crew.crew_log import emit, projection
+        from aj_crew.crew_log.resolve import unit_for_session_key
+        from aj_crew.dashboard.handlers import work_ledger as ledger_routes
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
         monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
         monkeypatch.setattr(FakeProvider, "session_id", "acp-owner-dm-turn", raising=False)
@@ -286,7 +286,7 @@ class TestAutomaticOriginMirror:
         ``previous_sid``, consumed after ``get_or_create`` returns, so the successor's
         log cites the one it replaces. A store without the accessor hands over
         nothing, never a raise."""
-        from kiro_crew.crew_log import emit as crew_log_emit
+        from aj_crew.crew_log import emit as crew_log_emit
 
         opened: list[tuple[str, str]] = []
         monkeypatch.setattr(
@@ -309,8 +309,8 @@ class TestAutomaticOriginMirror:
         """The Telegram twin of the Discord restart pin: with no live session before
         the claim and nothing captured, the slot's newest store on disk is cited, and
         the determination reaches ``on_session_opened`` with it."""
-        from kiro_crew.crew_log import emit as crew_log_emit
-        from kiro_crew.history import transcript_stem
+        from aj_crew.crew_log import emit as crew_log_emit
+        from aj_crew.history import transcript_stem
 
         opened: list[tuple[str, str, Any]] = []
         monkeypatch.setattr(
@@ -346,8 +346,8 @@ class TestAutomaticOriginMirror:
         its repr."""
         from types import SimpleNamespace
 
-        from kiro_crew.crew_log import emit as crew_log_emit
-        from kiro_crew.dashboard.channel_slots import channel_slot_name
+        from aj_crew.crew_log import emit as crew_log_emit
+        from aj_crew.dashboard.channel_slots import channel_slot_name
 
         stated: list[str] = []
         monkeypatch.setattr(
@@ -449,9 +449,9 @@ class TestAutomaticOriginMirror:
         # session with no thread. The STORE reads that row as no mirror (a Slack
         # mirror is never synthesized without a thread), so the first turn's bind
         # lands; a Slack binding that names a thread is deliberate and is left alone.
-        from kiro_crew.session_map import SessionMap
+        from aj_crew.session_map import SessionMap
 
-        monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
         store = SessionMap()
         d, _cli, sess = _dispatcher({7})
         sess.get_mirror_link = store.get_mirror_link
@@ -526,7 +526,7 @@ class TestAutomaticOriginMirror:
         sess.set_mirror_link = _refuse  # type: ignore[method-assign]
         self._turn(d, text="hello world")
         assert cli.final_text() == "Answer: hello world"
-        assert sess.successes == ["telegram:kirocrew:direct:7"]
+        assert sess.successes == ["telegram:ajcrew:direct:7"]
 
     def test_the_binding_write_stays_on_the_loop_thread(self) -> None:
         # The write is BOUNDED — one whole-map rewrite, on a conversation's first

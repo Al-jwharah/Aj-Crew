@@ -17,8 +17,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.knowledge.folder_watcher import FolderWatcher
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.folder_watcher import FolderWatcher
+from aj_crew.knowledge.store import KnowledgeStore
 
 
 def _row(store: KnowledgeStore, source_id: str, file_path: str) -> dict | None:

@@ -19,10 +19,10 @@ import asyncio
 import pytest
 from windows_sim import replace_sharing_violation
 
-from kiro_crew import atomic_write as aw
-from kiro_crew import platform_compat
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import atomic_write as aw
+from aj_crew import platform_compat
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.testing.clock import ManualClock
 
 
 @pytest.fixture(autouse=True)
@@ -233,7 +233,7 @@ def test_an_exhausted_budget_raises_after_one_warning(tmp_path, monkeypatch, _ma
     target.write_text("old\n")
     src.write_text("new\n")
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.atomic_write"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.atomic_write"):
         with replace_sharing_violation(match="session.jsonl", times=10_000):
             with pytest.raises(PermissionError):
                 aw.replace_with_retry(src, target, budget_s=1.0)

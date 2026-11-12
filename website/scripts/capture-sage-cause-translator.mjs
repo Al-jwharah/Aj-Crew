@@ -67,7 +67,7 @@ const CAUSES = [
   {
     id: 'runtime-not-importable',
     pr: 42,
-    error: 'the reviewer cannot run: the ACP runtime (kiro_crew.acp.runtime) is not'
+    error: 'the reviewer cannot run: the ACP runtime (aj_crew.acp.runtime) is not'
       + ' importable in this install',
     expect: 'this install cannot load the agent runtime it needs',
   },
@@ -91,9 +91,9 @@ const CAUSES = [
     pr: 45,
     error: "Agent spec 'code-review-sage-reviewer' is not installed: kiro-cli found no"
       + " 'code-review-sage-reviewer.json' in /home/u/.kiro/agents. Every turn fails"
-      + ' until it is restored — repair with `kirocrew setup --agent-only --clean`,'
+      + ' until it is restored — repair with `ajcrew setup --agent-only --clean`,'
       + ' then restart the gateway.',
-    expect: 'repair with `kirocrew setup --agent-only --clean`',
+    expect: 'repair with `ajcrew setup --agent-only --clean`',
     verbatim: true,
   },
   {

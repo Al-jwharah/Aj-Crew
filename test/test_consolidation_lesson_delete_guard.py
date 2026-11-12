@@ -23,12 +23,12 @@ from unittest.mock import MagicMock
 import pytest
 from member_memory_helpers import declare_v2_store
 
-from kiro_crew.history import HistoryConsolidator
-from kiro_crew.lesson_validation import (
+from aj_crew.history import HistoryConsolidator
+from aj_crew.lesson_validation import (
     LESSON_APPLIES_ALWAYS,
     LESSON_APPLIES_ON_TOPIC,
 )
-from kiro_crew.vector_memory import (
+from aj_crew.vector_memory import (
     VectorMemoryStore,
     _lesson_key,
     open_member_database,
@@ -42,7 +42,7 @@ def _v1_store(tmp_path) -> VectorMemoryStore:
 
 
 def _v2_store(tmp_path, monkeypatch) -> VectorMemoryStore:
-    from kiro_crew import memory_stores
+    from aj_crew import memory_stores
 
     monkeypatch.setattr(memory_stores, "memory_stores_root", lambda: tmp_path / "stores")
     directory = declare_v2_store(tmp_path, "member-alice")
@@ -195,7 +195,7 @@ def test_allowed_delete_compare_and_deletes_against_the_checked_body(
 
         monkeypatch.setattr(store, "get_semantic", _stale_read)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.history"):
             _consolidator(store)._write_structured_memory(_delete_result(key), key="s1")
 
         # The stored body never matched the checked body, so nothing was deleted.
@@ -237,7 +237,7 @@ def test_absent_lesson_key_delete_is_refused_not_unconditional(
 
         monkeypatch.setattr(store, "delete_semantic", _record_delete)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.history"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.history"):
             _consolidator(store)._write_structured_memory(_delete_result(key), key="s1")
 
         assert called == [], "an absent lesson key must be refused, not sent to delete_semantic"

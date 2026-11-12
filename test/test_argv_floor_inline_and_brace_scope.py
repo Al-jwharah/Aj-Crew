@@ -5,7 +5,7 @@ two argv-floor predicates and none of those was the action the predicate exists
 to stop:
 
 * ``_is_credential_mint`` denied every inline Python program (``python -c``,
-  ``python - <<'PY'``) that MENTIONED ``kiro_crew`` -- usually as the path of the
+  ``python - <<'PY'``) that MENTIONED ``aj_crew`` -- usually as the path of the
   file a patch script was editing -- or used ``getattr``/``eval``/``importlib``
   anywhere.  143 denials; 1 command contained the word ``token``; 0 minted.
 * ``_is_self_kill`` read every brace group (``--jq '{state}'``, ``awk '{print $1}'``)
@@ -31,9 +31,9 @@ from typing import TypeVar
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew import security
-from kiro_crew.security import argv_floor, inline_payload
-from kiro_crew.security.shell_normalizer import (
+from aj_crew import security
+from aj_crew.security import argv_floor, inline_payload
+from aj_crew.security.shell_normalizer import (
     _SCRIPT_EXECUTES_RE,
     _data_consumer_command_disqualified,
     _glob_could_expand_to,
@@ -41,7 +41,7 @@ from kiro_crew.security.shell_normalizer import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-_MINT = "credential-exfil-kirocrew-token"
+_MINT = "credential-exfil-ajcrew-token"
 _KILL = "self-protection-kill"
 
 #: The peers the own-host seed's UDP-connect trick names: RFC 5737 TEST-NET-2 and
@@ -133,7 +133,7 @@ def _own_host_seed_connects_nothing(monkeypatch) -> Iterator[list[tuple[int, obj
 
 
 class _ProductTree:
-    """The product modules under ``src/kiro_crew``, parsed on demand.
+    """The product modules under ``src/aj_crew``, parsed on demand.
 
     The tree is ~60 MB of source: parsing all of it is eleven seconds and a
     gigabyte of AST, and the two derivations below each did so on their own.
@@ -152,7 +152,7 @@ class _ProductTree:
 
     def __init__(self, src: Path) -> None:
         self.paths: dict[str, Path] = {}
-        for path in sorted((src / "kiro_crew").rglob("*.py")):
+        for path in sorted((src / "aj_crew").rglob("*.py")):
             rel = path.relative_to(src).with_suffix("")
             # Vendored code and the tree's own tests (``tests/``, ``container_tests/``,
             # ``test_*.py``) are not producers: a fixture that writes a fake ``.secret``
@@ -249,62 +249,62 @@ class TestInlinePayloadNamesTheMintSurface:
         [
             # A patch script editing a product file: the package appears only as a path.
             "python3 - <<'PY'\nfrom pathlib import Path\n"
-            "p = Path('src/kiro_crew/platform/governance.py')\n"
+            "p = Path('src/aj_crew/platform/governance.py')\n"
             "s = p.read_text()\np.write_text(s.replace('a', 'b'))\nPY",
             # A syntax check of a product file.
-            "python3 -c \"import ast; ast.parse(open('src/kiro_crew/security.py').read())\"",
+            "python3 -c \"import ast; ast.parse(open('src/aj_crew/security.py').read())\"",
             # A dev one-liner importing an unrelated product module.
-            "python3 -c 'from kiro_crew.acp._dispatch import parse_session_update as f; "
+            "python3 -c 'from aj_crew.acp._dispatch import parse_session_update as f; "
             "import inspect; print(inspect.signature(f))'",
-            ".venv/bin/python -c 'from kiro_crew.platform.governance import BreakGlass; "
+            ".venv/bin/python -c 'from aj_crew.platform.governance import BreakGlass; "
             "print(BreakGlass)'",
             # Loading a test module by path -- importlib is not a mint.
-            "cd /w/kirocrew-wt-x && python3 -c 'import importlib.util, pathlib; "
+            "cd /w/ajcrew-wt-x && python3 -c 'import importlib.util, pathlib; "
             'p = pathlib.Path("test/test_parity.py"); '
             's = importlib.util.spec_from_file_location("t", p); print(s)\'',
             # getattr / eval / exec / b64decode one-liners next to a product path.
-            "cd /w/kirocrew-wt-x && python3 -c \"import json; print(getattr(json, 'dumps'))\"",
-            "python3 -c 'print(eval(\"1+1\"))' src/kiro_crew/x.py",
+            "cd /w/ajcrew-wt-x && python3 -c \"import json; print(getattr(json, 'dumps'))\"",
+            "python3 -c 'print(eval(\"1+1\"))' src/aj_crew/x.py",
             "python3 - <<'EOF'\nimport base64\nprint(base64.b64decode('aGVsbG8='))\nEOF",
             # A mention of the credential words outside an import is a mention.
-            "python3 -c \"print('kiro_crew docs mention the token verb')\"",
+            "python3 -c \"print('aj_crew docs mention the token verb')\"",
             "python3 -c \"print('the gateway keeps its secret in .local_secret')\"",
             "python3 -c 'import secrets; print(secrets.token_hex(8))'",
             # ``secrets`` (the stdlib module) next to a product import is not the word.
-            "python3 -c 'import secrets; from kiro_crew.acp import client; print(secrets)'",
+            "python3 -c 'import secrets; from aj_crew.acp import client; print(secrets)'",
             # A product module named ``secrets`` is a path or an import, not the reader word.
             'python3 -c "from pathlib import Path; '
-            "p = Path('src/kiro_crew/dashboard/handlers/secrets.py'); print(p.read_text()[:10])\"",
-            "python3 -c 'from kiro_crew.dashboard.handlers import secrets; print(secrets)'",
-            # The bare package import reaches nothing: kiro_crew/__init__ imports no CLI.
-            "python3 -c 'import kiro_crew; print(kiro_crew.__file__)'",
+            "p = Path('src/aj_crew/dashboard/handlers/secrets.py'); print(p.read_text()[:10])\"",
+            "python3 -c 'from aj_crew.dashboard.handlers import secrets; print(secrets)'",
+            # The bare package import reaches nothing: aj_crew/__init__ imports no CLI.
+            "python3 -c 'import aj_crew; print(aj_crew.__file__)'",
             # A dynamic runner handed some OTHER name is generic code, even next to a product
             # import or a product path: ``__import__("os").environ`` is a common idiom.
-            "python3 -c \"import runpy; runpy.run_path('src/kiro_crew/../../scripts/x.py')\"",
+            "python3 -c \"import runpy; runpy.run_path('src/aj_crew/../../scripts/x.py')\"",
             "python3 -c \"import runpy; runpy.run_module(mod_name='json', run_name='__main__')\"",
             "python3 -c \"import importlib; m = importlib.import_module('json'); "
-            "print(m.dumps({'p': 'src/kiro_crew/x.py'}))\"",
-            "python3 - <<'PY'\nfrom kiro_crew.acp.client import _opencode_agent_permissions\n"
+            "print(m.dumps({'p': 'src/aj_crew/x.py'}))\"",
+            "python3 - <<'PY'\nfrom aj_crew.acp.client import _opencode_agent_permissions\n"
             "env = {**__import__('os').environ, 'X': '1'}\nPY",
             # A code loader on some OTHER file is a patch-script idiom; the program name in a
             # subprocess argv is the interpreter-argv companion rule's business, not a load.
             "python3 -c \"exec(open('patch.py').read())\"",
-            "python3 -c \"from pathlib import Path; exec(Path('/w/kirocrew-scratch/x.py').read_text())\"",
-            "python3 -c \"import subprocess; print(subprocess.run(['kirocrew','status']))\"",
+            "python3 -c \"from pathlib import Path; exec(Path('/w/ajcrew-scratch/x.py').read_text())\"",
+            "python3 -c \"import subprocess; print(subprocess.run(['ajcrew','status']))\"",
             # A directory NAMED for the product is not the console script: the loader loads
             # the file under it.
-            "python3 -c \"import runpy; runpy.run_path('/home/dev/kirocrew/scripts/gen_docs.py')\"",
-            "py -3 -c \"import runpy; runpy.run_path(r'C:\\Users\\dev\\kirocrew\\scripts\\gen_docs.py')\"",
-            "python3 -c \"exec(open('/home/dev/kirocrew/scripts/x.py').read())\"",
+            "python3 -c \"import runpy; runpy.run_path('/home/dev/ajcrew/scripts/gen_docs.py')\"",
+            "py -3 -c \"import runpy; runpy.run_path(r'C:\\Users\\dev\\ajcrew\\scripts\\gen_docs.py')\"",
+            "python3 -c \"exec(open('/home/dev/ajcrew/scripts/x.py').read())\"",
             # A loader string is asked the SAME questions as the payload, so the same
             # things stay allowed inside it: an unrelated product import with no
             # credential word, and a product path with no import at all.
-            "python -c \"exec('from kiro_crew.acp import client; print(client)')\"",
-            "python -c \"exec('print(open(\\\\'src/kiro_crew/x.py\\\\').read()[:10])')\"",
+            "python -c \"exec('from aj_crew.acp import client; print(client)')\"",
+            "python -c \"exec('print(open(\\\\'src/aj_crew/x.py\\\\').read()[:10])')\"",
             # A loader on one file and the program name as PROSE in the next statement are
             # two allowed idioms; the name has to sit inside the loader's own statement.
-            "python3 -c \"import runpy; runpy.run_path('scripts/collect_env.py'); print('kirocrew env snapshot done')\"",
-            "python3 - <<'PY'\nimport runpy\nrunpy.run_path('scripts/collect_env.py')\nprint('kirocrew env snapshot done')\nPY",
+            "python3 -c \"import runpy; runpy.run_path('scripts/collect_env.py'); print('ajcrew env snapshot done')\"",
+            "python3 - <<'PY'\nimport runpy\nrunpy.run_path('scripts/collect_env.py')\nprint('ajcrew env snapshot done')\nPY",
         ],
     )
     def test_a_payload_that_only_mentions_the_package_is_allowed(self, cmd):
@@ -315,92 +315,92 @@ class TestInlinePayloadNamesTheMintSurface:
         "cmd",
         [
             # The CLI dispatch, in every import spelling.
-            "python -c 'import kiro_crew.cli as c; c.main()'",
-            "python -c 'from kiro_crew import cli; cli.main()'",
-            "python -c 'from kiro_crew.cli import main; main()'",
-            "python -c 'import kiro_crew.__main__'",
+            "python -c 'import aj_crew.cli as c; c.main()'",
+            "python -c 'from aj_crew import cli; cli.main()'",
+            "python -c 'from aj_crew.cli import main; main()'",
+            "python -c 'import aj_crew.__main__'",
             # The module implementing the token subcommand, and the token producers.
-            "python -c 'from kiro_crew.cli_server import _token; _token(None)'",
-            "python -c 'from kiro_crew.dashboard.token_auth import generate_token'",
-            "python -c 'import kiro_crew.dashboard.token_secret as s; print(s._get_secret())'",
-            "python -c 'from kiro_crew.dashboard import token_auth'",
-            "python -c 'from kiro_crew.instances.token_mint import build_remote_token_command'",
+            "python -c 'from aj_crew.cli_server import _token; _token(None)'",
+            "python -c 'from aj_crew.dashboard.token_auth import generate_token'",
+            "python -c 'import aj_crew.dashboard.token_secret as s; print(s._get_secret())'",
+            "python -c 'from aj_crew.dashboard import token_auth'",
+            "python -c 'from aj_crew.instances.token_mint import build_remote_token_command'",
             # The SECOND credential: the internal secret ``/api/token/local`` accepts, read
             # through product code past the sensitive-path floor that fences the file.
-            "python -c 'from kiro_crew.config.loader import read_local_secret; "
+            "python -c 'from aj_crew.config.loader import read_local_secret; "
             "print(read_local_secret(5476))'",
-            "python -c 'from kiro_crew.instances import run_marker; print(run_marker.read_secret(5476))'",
+            "python -c 'from aj_crew.instances import run_marker; print(run_marker.read_secret(5476))'",
             # ... and the module whose PATH names it.
-            "python -c 'from kiro_crew.dashboard import token_secret'",
+            "python -c 'from aj_crew.dashboard import token_secret'",
             # The whole route: import the reader, present the secret to the mint endpoint.
             # Both the reader's name and the endpoint carry the word.
             "python3 - <<'PY'\nimport urllib.request\n"
-            "from kiro_crew.config.loader import read_local_secret\n"
+            "from aj_crew.config.loader import read_local_secret\n"
             "s = read_local_secret(5476)\n"
             "r = urllib.request.Request('http://127.0.0.1:5476/api/token/local', "
             "headers={'X-Internal-Secret': s})\nprint(urllib.request.urlopen(r).read())\nPY",
             # The package anywhere in an ``import`` list is imported.
-            "python -c 'import os, kiro_crew.instances.run_marker as r; print(r.read_secret(5476))'",
-            "python -c 'import sys, os, kiro_crew.config.loader as l; print(l.read_local_secret(1))'",
+            "python -c 'import os, aj_crew.instances.run_marker as r; print(r.read_secret(5476))'",
+            "python -c 'import sys, os, aj_crew.config.loader as l; print(l.read_local_secret(1))'",
             # ... across a Python line continuation, which joins the lines before the
             # statement is read.
-            "python -c 'import os, \\\nkiro_crew.config.loader as l; print(l.read_local_secret(1))'",
-            "python -c 'from kiro_crew.config.loader \\\n    import read_local_secret; print(read_local_secret(1))'",
+            "python -c 'import os, \\\naj_crew.config.loader as l; print(l.read_local_secret(1))'",
+            "python -c 'from aj_crew.config.loader \\\n    import read_local_secret; print(read_local_secret(1))'",
             # A decoded literal is asked the same questions as the payload.
-            # (``import kiro_crew.instances.run_marker as r; print(r.read_secret(5476))``)
+            # (``import aj_crew.instances.run_marker as r; print(r.read_secret(5476))``)
             "python -c 'import base64; exec(base64.b64decode("
-            '"aW1wb3J0IGtpcm9fY3Jldy5pbnN0YW5jZXMucnVuX21hcmtlciBhcyByOyBwcmludChyLnJlYWRfc2VjcmV0KDU0NzYpKQ=="))\'',
-            # (``runpy.run_module('kiro_crew', run_name='__main__')``)
+            '"aW1wb3J0IGFqX2NyZXcuaW5zdGFuY2VzLnJ1bl9tYXJrZXIgYXMgcjsgcHJpbnQoci5yZWFkX3NlY3JldCg1NDc2KSk="))\'',
+            # (``runpy.run_module('aj_crew', run_name='__main__')``)
             "python -c 'import base64; exec(base64.b64decode("
-            '"cnVucHkucnVuX21vZHVsZSgna2lyb19jcmV3JywgcnVuX25hbWU9J19fbWFpbl9fJyk="))\'',
+            '"cnVucHkucnVuX21vZHVsZSgnYWpfY3JldycsIHJ1bl9uYW1lPSdfX21haW5fXycp"))\'',
             # The reader's name spelled in pieces is folded before matching.
-            'python -c "from kiro_crew.config import loader; '
+            'python -c "from aj_crew.config import loader; '
             "print(getattr(loader, 'read_local_' + 'secret')(5476))\"",
             # The price of the word: a product import next to a variable named ``secret``.
-            "python3 -c 'from kiro_crew.acp._frame_record import scrub_frame; "
+            "python3 -c 'from aj_crew.acp._frame_record import scrub_frame; "
             'secret = "Basic abc="; print(scrub_frame({"Authorization": secret}))\'',
             # The stdin forms of the same.
-            "python3 - <<'PY'\nfrom kiro_crew.dashboard.token_auth import generate_token\nPY",
-            "python3 < src/kiro_crew/cli.py",
-            "echo 'import kiro_crew.cli' | python3 -",
+            "python3 - <<'PY'\nfrom aj_crew.dashboard.token_auth import generate_token\nPY",
+            "python3 < src/aj_crew/cli.py",
+            "echo 'import aj_crew.cli' | python3 -",
             # A module name split across concatenated pieces is folded before matching.
-            "python -c \"__import__('kiro_crew.c' + 'li').cli.main()\"",
-            "python -c \"m = 'kiro_crew.' + 'cli_server'; __import__(m)\"",
-            # ``python -m kiro_crew token`` spelled as a dynamic runner call: the package
+            "python -c \"__import__('aj_crew.c' + 'li').cli.main()\"",
+            "python -c \"m = 'aj_crew.' + 'cli_server'; __import__(m)\"",
+            # ``python -m aj_crew token`` spelled as a dynamic runner call: the package
             # name is bare (no dotted surface) and ``__main__`` is a separate literal, so
             # only the runner-plus-package-name reach catches it.
             "python3 -c \"import runpy,sys; sys.argv=['x','token']; "
-            "runpy.run_module('kiro_crew', run_name='__main__')\"",
-            "python3 -c \"import runpy; runpy.run_module('kiro_crew', run_name='__main__')\"",
-            "python3 -c \"import importlib; importlib.import_module('kiro_crew').cli.main()\"",
-            "python3 -c \"__import__('kiro_crew')\"",
+            "runpy.run_module('aj_crew', run_name='__main__')\"",
+            "python3 -c \"import runpy; runpy.run_module('aj_crew', run_name='__main__')\"",
+            "python3 -c \"import importlib; importlib.import_module('aj_crew').cli.main()\"",
+            "python3 -c \"__import__('aj_crew')\"",
             # The name as a keyword argument, in either order.
-            "python3 -c \"import runpy; runpy.run_module(mod_name='kiro_crew', run_name='__main__')\"",
-            "python3 -c \"import runpy; runpy.run_module(run_name='__main__', mod_name='kiro_crew')\"",
+            "python3 -c \"import runpy; runpy.run_module(mod_name='aj_crew', run_name='__main__')\"",
+            "python3 -c \"import runpy; runpy.run_module(run_name='__main__', mod_name='aj_crew')\"",
             # ... and behind a NESTED call in an earlier argument.
-            "python3 -c \"import runpy; runpy.run_module(run_name=str('__main__'), mod_name='kiro_crew')\"",
-            "python3 -c \"import importlib; importlib.import_module(package=None, name=str('kiro_crew')).cli.main()\"",
-            "python3 -c \"import importlib; importlib.import_module(name='kiro_crew').cli.main()\"",
-            "python3 -c \"__import__(name='kiro_crew')\"",
+            "python3 -c \"import runpy; runpy.run_module(run_name=str('__main__'), mod_name='aj_crew')\"",
+            "python3 -c \"import importlib; importlib.import_module(package=None, name=str('aj_crew')).cli.main()\"",
+            "python3 -c \"import importlib; importlib.import_module(name='aj_crew').cli.main()\"",
+            "python3 -c \"__import__(name='aj_crew')\"",
             # The argument spelled in pieces is folded before the runner is matched.
-            "python3 -c \"import runpy; runpy.run_module('kiro_' + 'crew', run_name='__main__')\"",
-            "python3 - <<'PY'\nimport runpy\nrunpy.run_module('kiro_crew', run_name='__main__')\nPY",
+            "python3 -c \"import runpy; runpy.run_module('aj_' + 'crew', run_name='__main__')\"",
+            "python3 - <<'PY'\nimport runpy\nrunpy.run_module('aj_crew', run_name='__main__')\nPY",
             # The mint hidden in a base64 literal is decoded and read.
-            "python -c 'import base64; exec(base64.b64decode(\"aW1wb3J0IGtpcm9fY3Jldy5jbGk=\"))'",
-            "python -c 'import os,base64; os.system(base64.b64decode(\"a2lyb2NyZXcgdG9rZW4=\").decode())'",
+            "python -c 'import base64; exec(base64.b64decode(\"aW1wb3J0IGFqX2NyZXcuY2xp\"))'",
+            "python -c 'import os,base64; os.system(base64.b64decode(\"YWpjcmV3IHRva2Vu\").decode())'",
             # The INSTALLED CONSOLE SCRIPT run through a code loader: its text is
-            # ``kiro_crew._bootstrap.main()``, the dispatch, against a ``sys.argv`` the payload
+            # ``aj_crew._bootstrap.main()``, the dispatch, against a ``sys.argv`` the payload
             # chose.  Resolved by ``which``, by path, by ``runpy.run_path``, folded, in a
             # heredoc, and one base64 decode away.
-            "python3 -c \"import sys,shutil; sys.argv=['x','token']; exec(open(shutil.which('kirocrew')).read())\"",
-            "python3 -c \"exec(open(shutil.which('kirocrew')).read())\"",
-            "python3 -c \"exec(open('/opt/venv/bin/kirocrew').read())\"",
-            "python3 -c \"import runpy,shutil; runpy.run_path(shutil.which('kiro-crew'), run_name='__main__')\"",
-            "python3 -c \"eval(compile(open(shutil.which('kirocrew')).read(), 'k', 'exec'))\"",
-            "python3 -c \"exec(open(shutil.which('kiro' + 'crew')).read())\"",
-            "python3 - <<'PY'\nimport shutil\nexec(open(shutil.which('kirocrew')).read())\nPY",
-            "python3 -c \"exec(__import__('base64').b64decode('ZXhlYyhvcGVuKHNodXRpbC53aGljaCgna2lyb2NyZXcnKSkucmVhZCgpKQ=='))\"",
-            "python3 -c \"exec(open(r'C:\\venv\\Scripts\\kirocrew.exe').read())\"",
+            "python3 -c \"import sys,shutil; sys.argv=['x','token']; exec(open(shutil.which('ajcrew')).read())\"",
+            "python3 -c \"exec(open(shutil.which('ajcrew')).read())\"",
+            "python3 -c \"exec(open('/opt/venv/bin/ajcrew').read())\"",
+            "python3 -c \"import runpy,shutil; runpy.run_path(shutil.which('aj-crew'), run_name='__main__')\"",
+            "python3 -c \"eval(compile(open(shutil.which('ajcrew')).read(), 'k', 'exec'))\"",
+            "python3 -c \"exec(open(shutil.which('aj' + 'crew')).read())\"",
+            "python3 - <<'PY'\nimport shutil\nexec(open(shutil.which('ajcrew')).read())\nPY",
+            "python3 -c \"exec(__import__('base64').b64decode('ZXhlYyhvcGVuKHNodXRpbC53aGljaCgnYWpjcmV3JykpLnJlYWQoKSk='))\"",
+            "python3 -c \"exec(open(r'C:\\venv\\Scripts\\ajcrew.exe').read())\"",
             # A legible product import INSIDE a loader string: the unwrapped statement is
             # denied above, and one ``exec`` deeper it is the same statement.  Its
             # ``from`` sits after the opening quote, where a statement-start anchor over
@@ -408,25 +408,25 @@ class TestInlinePayloadNamesTheMintSurface:
             # same questions, with its string delimiters peeled.  Single quotes, double
             # quotes, a raw prefix, a triple-quoted heredoc body, nested through
             # ``compile``, and the import-list form.
-            "python -c \"exec('from kiro_crew.config.loader import read_local_secret; "
+            "python -c \"exec('from aj_crew.config.loader import read_local_secret; "
             "print(read_local_secret(5476))')\"",
-            "python -c 'exec(\"from kiro_crew.config.loader import read_local_secret; "
+            "python -c 'exec(\"from aj_crew.config.loader import read_local_secret; "
             "print(read_local_secret(5476))\")'",
-            "python -c \"exec(r'from kiro_crew.config.loader import read_local_secret')\"",
-            "python -c \"exec(compile('import os, kiro_crew.config.loader as l; "
+            "python -c \"exec(r'from aj_crew.config.loader import read_local_secret')\"",
+            "python -c \"exec(compile('import os, aj_crew.config.loader as l; "
             "l.read_local_secret(1)', 'x', 'exec'))\"",
-            "python3 - <<'PY'\nexec('''\nfrom kiro_crew.config.loader import read_local_secret\n"
+            "python3 - <<'PY'\nexec('''\nfrom aj_crew.config.loader import read_local_secret\n"
             "print(read_local_secret(1))\n''')\nPY",
             # Python allows a NEWLINE inside parentheses, so the load is still ONE
             # statement when spelled across lines -- and a ``;`` inside a comment is not a
             # statement separator either.  A pairing bounded by the statement reads all
             # four as a mention; the loader's own argument text crosses the line breaks
             # because the call does.
-            "python3 -c \"exec(\\n    open(shutil.which('kirocrew')).read()\\n)\"",
-            "python3 -c \"exec(open(shutil.which(\\n    'kirocrew'\\n)).read())\"",
+            "python3 -c \"exec(\\n    open(shutil.which('ajcrew')).read()\\n)\"",
+            "python3 -c \"exec(open(shutil.which(\\n    'ajcrew'\\n)).read())\"",
             "python3 - <<'PY'\nimport runpy, shutil\nrunpy.run_path(\n"
-            "    shutil.which('kirocrew'),\n    run_name='__main__',\n)\nPY",
-            "python3 -c \"exec(open(  # pick it up; then run it\\n    shutil.which('kirocrew')\\n).read())\"",
+            "    shutil.which('ajcrew'),\n    run_name='__main__',\n)\nPY",
+            "python3 -c \"exec(open(  # pick it up; then run it\\n    shutil.which('ajcrew')\\n).read())\"",
         ],
     )
     def test_a_payload_that_names_the_mint_surface_is_denied(self, cmd):
@@ -438,14 +438,14 @@ class TestInlinePayloadNamesTheMintSurface:
         # both appear", and not "both appear in one statement".  The argument text is the
         # only subject that answers all three of: the name two levels down inside
         # ``which(...)``, a mention in the next statement, and a call spelled across lines.
-        loaded = "exec(open(shutil.which('kirocrew')).read())"
-        mentioned = "runpy.run_path('scripts/collect_env.py'); print('kirocrew done')"
-        across_lines = "exec(\n    open(shutil.which('kirocrew')).read()\n)"
+        loaded = "exec(open(shutil.which('ajcrew')).read())"
+        mentioned = "runpy.run_path('scripts/collect_env.py'); print('ajcrew done')"
+        across_lines = "exec(\n    open(shutil.which('ajcrew')).read()\n)"
         assert inline_payload._inline_payload_reaches_cli(loaded)
         assert inline_payload._inline_payload_reaches_cli(across_lines)
         assert not inline_payload._inline_payload_reaches_cli(mentioned)
         assert inline_payload._code_loader_arguments(loaded) == (
-            "open(shutil.which('kirocrew')).read()",
+            "open(shutil.which('ajcrew')).read()",
         )
         # The mention sits OUTSIDE the loader's parentheses.
         assert inline_payload._code_loader_arguments(mentioned) == ("'scripts/collect_env.py'",)
@@ -457,10 +457,10 @@ class TestInlinePayloadNamesTheMintSurface:
         # depth instead over-reads both ends of that: it denies this mention, and it is
         # not what catches a quoted paren HIDING the program -- the assertion below is.
         assert not inline_payload._inline_payload_reaches_cli(
-            "exec(open('a(b').read()); x = 'kirocrew'"
+            "exec(open('a(b').read()); x = 'ajcrew'"
         )
         assert inline_payload._inline_payload_reaches_cli(
-            "exec(open([')', shutil.which('kirocrew')][1]).read())"
+            "exec(open([')', shutil.which('ajcrew')][1]).read())"
         )
 
     def test_the_bounds_bound_the_walk_and_not_the_verdict(self):
@@ -469,23 +469,23 @@ class TestInlinePayloadNamesTheMintSurface:
         # input. What must NOT follow is a shorter verdict: past either bound the call has
         # not been seen to close, so it is judged on everything left. Truncating the slice
         # to the bound is how a name sitting past it would read as "handed something else".
-        past_nesting = "exec(" + "f(" * 200 + "'kirocrew'"
-        past_scan = "exec(" + "x" * 20000 + "'kirocrew'"
+        past_nesting = "exec(" + "f(" * 200 + "'ajcrew'"
+        past_scan = "exec(" + "x" * 20000 + "'ajcrew'"
         for payload in (past_nesting, past_scan):
             assert inline_payload._inline_payload_reaches_cli(payload), payload[:40]
             # The name is past the bound and still inside the judged argument.
-            assert "'kirocrew'" in inline_payload._code_loader_arguments(payload)[0]
+            assert "'ajcrew'" in inline_payload._code_loader_arguments(payload)[0]
         # A call that DOES close inside the bounds is judged on its own argument only.
-        assert inline_payload._code_loader_arguments("exec(open('p.py').read()); 'kirocrew'") == (
+        assert inline_payload._code_loader_arguments("exec(open('p.py').read()); 'ajcrew'") == (
             "open('p.py').read()",
         )
 
     def test_a_loader_string_is_asked_the_payload_questions(self):
         # The statement inside the string begins after the quote; the delimiters are peeled
         # so the statement-start anchor sees it.  Nested loaders recurse.
-        wrapped = "exec('from kiro_crew.config.loader import read_local_secret; f()')"
-        nested = "exec(compile('import kiro_crew.config.loader as l; l.read_local_secret(1)', 'x', 'exec'))"
-        plain = "exec('from kiro_crew.acp import client')"
+        wrapped = "exec('from aj_crew.config.loader import read_local_secret; f()')"
+        nested = "exec(compile('import aj_crew.config.loader as l; l.read_local_secret(1)', 'x', 'exec'))"
+        plain = "exec('from aj_crew.acp import client')"
         assert inline_payload._inline_payload_reaches_cli(wrapped)
         assert inline_payload._inline_payload_reaches_cli(nested)
         assert not inline_payload._inline_payload_reaches_cli(plain)
@@ -500,46 +500,46 @@ class TestInlinePayloadNamesTheMintSurface:
         )
 
     def test_the_verb_gated_module_form_is_untouched(self):
-        # `-m kiro_crew token` and `-c <payload naming the package> token` keep their own
+        # `-m aj_crew token` and `-c <payload naming the package> token` keep their own
         # verb-gated check; the inline gate is the addition for the verb-less forms.
-        assert _rule_of("python -m kiro_crew token") == _MINT
-        assert _rule_of("python -c 'from kiro_crew.acp import x' token") == _MINT
-        assert _rule_of("python -m kiro_crew doctor") is None
+        assert _rule_of("python -m aj_crew token") == _MINT
+        assert _rule_of("python -c 'from aj_crew.acp import x' token") == _MINT
+        assert _rule_of("python -m aj_crew doctor") is None
 
     def test_base64_literals_are_decoded_from_the_command_as_submitted(self):
         """The floor reads a lower-cased view; base64 is case-sensitive and does not survive it."""
-        raw = "python -c 'exec(b64decode(\"aW1wb3J0IGtpcm9fY3Jldy5jbGk=\"))'"
-        assert inline_payload._decoded_b64_literals(raw) == ("import kiro_crew.cli",)
+        raw = "python -c 'exec(b64decode(\"aW1wb3J0IGFqX2NyZXcuY2xp\"))'"
+        assert inline_payload._decoded_b64_literals(raw) == ("import aj_crew.cli",)
         # The lower-cased literal decodes to noise, never to the name -- which is why
         # ``is_denied`` hands the mint predicate the raw text, and why a caller with only
         # the lower-cased text sees the literal fold in nothing.
-        assert not any("kiro_crew" in d for d in inline_payload._decoded_b64_literals(raw.lower()))
+        assert not any("aj_crew" in d for d in inline_payload._decoded_b64_literals(raw.lower()))
         assert not argv_floor._is_credential_mint(raw.lower())
         assert argv_floor._is_credential_mint(raw.lower(), raw_text=raw)
 
     def test_string_concatenation_is_folded_before_matching(self):
-        assert "kiro_crew.cli" in inline_payload._fold_inline_literals(
-            "__import__('kiro_crew.c' + 'li')"
+        assert "aj_crew.cli" in inline_payload._fold_inline_literals(
+            "__import__('aj_crew.c' + 'li')"
         )
-        assert "kiro_crew.cli_server" in inline_payload._fold_inline_literals(
-            "x = 'kiro_' + 'crew.' + 'cli_server'"
+        assert "aj_crew.cli_server" in inline_payload._fold_inline_literals(
+            "x = 'aj_' + 'crew.' + 'cli_server'"
         )
         # Python concatenates across quote kinds, so the fold does too.
-        assert "kiro_crew.cli" in inline_payload._fold_inline_literals("'kiro_crew.c' + \"li\"")
+        assert "aj_crew.cli" in inline_payload._fold_inline_literals("'aj_crew.c' + \"li\"")
         # A ``+`` between a literal and a NAME is not folded; nothing is invented.
-        assert "kiro_crew.cli" not in inline_payload._fold_inline_literals("'kiro_crew.c' + li")
+        assert "aj_crew.cli" not in inline_payload._fold_inline_literals("'aj_crew.c' + li")
         # Implicit concatenation -- adjacent literals with nothing but whitespace between
         # them -- is the same join in Python, so it is the same fold.
-        assert "kiro_crew.cli" in inline_payload._fold_inline_literals("'kiro_crew.c' 'li'")
-        assert "kiro_crew.cli" in inline_payload._fold_inline_literals("'kiro_crew.c'  \"li\"")
+        assert "aj_crew.cli" in inline_payload._fold_inline_literals("'aj_crew.c' 'li'")
+        assert "aj_crew.cli" in inline_payload._fold_inline_literals("'aj_crew.c'  \"li\"")
         # A comma is two arguments, not one string.
-        assert "kiro_crew.cli" not in inline_payload._fold_inline_literals("'kiro_crew.c', 'li'")
+        assert "aj_crew.cli" not in inline_payload._fold_inline_literals("'aj_crew.c', 'li'")
         assert (
-            _rule_of("python -c \"import importlib; importlib.import_module('kiro_' 'crew.cli')\"")
+            _rule_of("python -c \"import importlib; importlib.import_module('aj_' 'crew.cli')\"")
             == _MINT
         )
-        assert _rule_of("python -c \"m='kiro_crew.c' 'li'; __import__(m)\"") == _MINT
-        assert _rule_of("python -c \"print('kiro_crew' ' docs mention token')\"") is None
+        assert _rule_of("python -c \"m='aj_crew.c' 'li'; __import__(m)\"") == _MINT
+        assert _rule_of("python -c \"print('aj_crew' ' docs mention token')\"") is None
 
     def test_the_fold_and_decode_are_complete(self):
         """No count cap an attacker can pad past: a 500-piece name folds whole, and the
@@ -558,13 +558,13 @@ class TestInlinePayloadNamesTheMintSurface:
             for n in range(200)
         )
         assert len(inline_payload._decoded_b64_literals(handed)) == 200
-        pieces = " + ".join(f"'{c}'" for c in "kiro_crew.cli")
+        pieces = " + ".join(f"'{c}'" for c in "aj_crew.cli")
         assert _rule_of(f'python -c "__import__({pieces})"') == _MINT
         decoys = ", ".join(f"'{'QUJD' * 4}'" for _ in range(70))
         assert (
             _rule_of(
                 f"python -c 'import os,base64; x = [{decoys}]; "
-                'os.system(base64.b64decode("a2lyb2NyZXcgdG9rZW4=").decode())\''
+                'os.system(base64.b64decode("YWpjcmV3IHRva2Vu").decode())\''
             )
             == _MINT
         )
@@ -574,16 +574,16 @@ class TestInlinePayloadNamesTheMintSurface:
         [
             # A product import INSIDE a code loader's string runs exactly as the bare
             # statement does.
-            "python -c \"exec('from kiro_crew.config.loader import read_local_secret; print(read_local_secret(5476))')\"",
-            "python -c \"exec('import os, kiro_crew.config.loader as l; print(l.read_local_secret(1))')\"",
-            "python -c \"eval(compile('from kiro_crew.instances import run_marker; run_marker.read_secret(1)', 'x', 'exec'))\"",
+            "python -c \"exec('from aj_crew.config.loader import read_local_secret; print(read_local_secret(5476))')\"",
+            "python -c \"exec('import os, aj_crew.config.loader as l; print(l.read_local_secret(1))')\"",
+            "python -c \"eval(compile('from aj_crew.instances import run_marker; run_marker.read_secret(1)', 'x', 'exec'))\"",
         ],
     )
     def test_a_product_import_inside_a_loader_string_is_denied(self, cmd):
         assert _rule_of(cmd) == _MINT, cmd
 
     def test_a_quoted_import_without_a_loader_is_prose(self):
-        assert _rule_of("python -c \"print('from kiro_crew.acp import x; token docs')\"") is None
+        assert _rule_of("python -c \"print('from aj_crew.acp import x; token docs')\"") is None
 
     def test_the_mint_surface_covers_every_token_producer_in_the_tree(self, product_tree):
         """Every module that can produce a dashboard token is in reach of the gate -- derived
@@ -646,7 +646,7 @@ class TestInlinePayloadNamesTheMintSurface:
                 if used & key_names and used & opens:
                     seeds.add(mod)
                     break
-        assert seeds == {"kiro_crew.dashboard.token_secret"}, seeds
+        assert seeds == {"aj_crew.dashboard.token_secret"}, seeds
 
         def importers_of(targets: set[str], names: set[str] | None = None) -> list[tuple[str, str]]:
             # Every ``from X import y [as z]`` in the tree for each target X: the re-export
@@ -683,7 +683,7 @@ class TestInlinePayloadNamesTheMintSurface:
         for mod, seed_names in list(hop1_producers.items()):
             hop1_producers[mod] = producers_in(mod, seed_names) | seed_names
         assert "generate_token" in hop1_producers.get(
-            "kiro_crew.dashboard.token_auth_tokens", set()
+            "aj_crew.dashboard.token_auth_tokens", set()
         ), hop1_producers
         # Hop 2: every module that imports one of those producers.
         hop2 = [
@@ -741,7 +741,7 @@ class TestInlinePayloadNamesTheMintSurface:
             assert inline_payload._inline_payload_reaches_cli(
                 f"import {entry_module}"
             ), entry_module
-            assert re.match(r"kiro_crew\.", entry_module), entry_module
+            assert re.match(r"aj_crew\.", entry_module), entry_module
 
     def test_the_credential_word_covers_every_local_secret_reader_in_the_tree(self, product_tree):
         """Every function that READS the internal secret is in reach of the gate -- derived
@@ -788,8 +788,8 @@ class TestInlinePayloadNamesTheMintSurface:
                 if used & file_names:
                     readers.append((mod, node.name))
         # The derivation reaches the two readers the gate was narrowed past.
-        assert ("kiro_crew.config.loader_locations", "read_local_secret") in readers, readers
-        assert ("kiro_crew.instances.run_marker", "read_secret") in readers, readers
+        assert ("aj_crew.config.loader_locations", "read_local_secret") in readers, readers
+        assert ("aj_crew.instances.run_marker", "read_secret") in readers, readers
         # Namers that hand no credential to a caller.  A NEW name landing here has to be
         # added with its reason, or carry ``secret`` / ``token`` so the gate covers it.
         not_readers = {
@@ -812,34 +812,34 @@ class TestInlinePayloadNamesTheMintSurface:
 
     def test_a_mention_is_not_a_reach(self):
         for mention in (
-            "import kiro_crew",
-            "from kiro_crew.acp import client",
-            "from kiro_crew.security import is_denied",
-            "path = 'src/kiro_crew/cli_help.py'",
-            "print('kiro_crew tokens')",
-            "import kiro_crew.clients",
+            "import aj_crew",
+            "from aj_crew.acp import client",
+            "from aj_crew.security import is_denied",
+            "path = 'src/aj_crew/cli_help.py'",
+            "print('aj_crew tokens')",
+            "import aj_crew.clients",
             # `cli` as a fragment of another word after a product import is not the module.
-            "from kiro_crew import security as s; print('restart is blocked by kiro-cli')",
-            "from kiro_crew.acp import client; print(client.cli_help)",
+            "from aj_crew import security as s; print('restart is blocked by kiro-cli')",
+            "from aj_crew.acp import client; print(client.cli_help)",
             # the verb in a string with no product import
-            "print('kirocrew token docs')",
+            "print('ajcrew token docs')",
             # a product import next to `tokens` (LLM tokens), not `token`
-            "from kiro_crew.acp import client; print(client.max_tokens)",
+            "from aj_crew.acp import client; print(client.max_tokens)",
             # a product import next to the stdlib `secrets` module, not `secret`
-            "import secrets; from kiro_crew.acp import client; print(secrets.choice('ab'))",
+            "import secrets; from aj_crew.acp import client; print(secrets.choice('ab'))",
             # the package later in an import list, with no credential word
-            "import os, kiro_crew.acp.client as c; print(c)",
+            "import os, aj_crew.acp.client as c; print(c)",
         ):
             assert not inline_payload._inline_payload_reaches_cli(mention), mention
 
     def test_a_split_base64_literal_is_folded_then_decoded(self):
-        # `a2lyb2NyZXcgdG9rZW4=` is `kirocrew token`; split across two pieces it must still read.
-        raw = 'python -c \'import os,base64; os.system(base64.b64decode("a2lyb2Ny" + "ZXcgdG9rZW4=").decode())\''
-        assert inline_payload._decoded_b64_literals(raw) == ("kirocrew token",)
+        # `YWpjcmV3IHRva2Vu` is `ajcrew token`; split across two pieces it must still read.
+        raw = 'python -c \'import os,base64; os.system(base64.b64decode("YWpjcmV3" + "IHRva2Vu").decode())\''
+        assert inline_payload._decoded_b64_literals(raw) == ("ajcrew token",)
         assert _rule_of(raw) == _MINT
         # ... and split by implicit concatenation, which Python joins the same way.
-        adjacent = 'python -c \'import os,base64; os.system(base64.b64decode("a2lyb2Ny" "ZXcgdG9rZW4=").decode())\''
-        assert inline_payload._decoded_b64_literals(adjacent) == ("kirocrew token",)
+        adjacent = 'python -c \'import os,base64; os.system(base64.b64decode("YWpjcmV3" "IHRva2Vu").decode())\''
+        assert inline_payload._decoded_b64_literals(adjacent) == ("ajcrew token",)
         assert _rule_of(adjacent) == _MINT
 
 
@@ -850,13 +850,13 @@ class TestBraceExpansionMirrorsBash:
         "pattern,name,expected",
         [
             ("p{k,k}ill", "pkill", True),
-            ("kiro{c..c}rew", "kirocrew", True),
-            ("kiro{a..z}rew", "kirocrew", True),
-            ("kiro{x,y}few", "kirocrew", False),
+            ("aj{c..c}rew", "ajcrew", True),
+            ("aj{a..z}rew", "ajcrew", True),
+            ("aj{x,y}few", "ajcrew", False),
             # No top-level comma and not a sequence: bash leaves the braces literal.
             ("{state}", "pkill", False),
             ("{print $1}", "pkill", False),
-            ("{directory}", "kirocrew", False),
+            ("{directory}", "ajcrew", False),
             ("{pkill}", "pkill", False),
             # Alternatives are exact words, not "anything".
             ("{m:.mergeable,s:.state}", "pkill", False),
@@ -900,24 +900,24 @@ class TestBraceExpansionMirrorsBash:
         aborts.  Past ``_BRACE_NESTING_CAP`` a group reads as ``.*`` -- the fail-closed
         direction -- and the command is still judged.
         """
-        from kiro_crew.security.shell_normalizer import _BRACE_NESTING_CAP
+        from aj_crew.security.shell_normalizer import _BRACE_NESTING_CAP
 
         # Literal groups all the way down: bash leaves every one of them literal, so
         # the word starts with ``{`` and cannot be the program -- and the gate says so
         # instead of raising.
         literal_deep = "{" * 600 + "pkill" + "}" * 600
         assert _glob_could_expand_to(literal_deep, frozenset({"pkill"})) is False
-        assert _rule_of(f"{literal_deep} -f kirocrew") is None
+        assert _rule_of(f"{literal_deep} -f ajcrew") is None
         # Alternatives all the way down: past the cap the inner group is ``.*``, so a
         # name it could produce is matched conservatively rather than analysed.
         alt_deep = "{a," * 600 + "pkill" + "}" * 600
         assert _glob_could_expand_to(alt_deep, frozenset({"pkill"})) is True
-        assert _rule_of(f"{alt_deep} -f kirocrew") == _KILL
+        assert _rule_of(f"{alt_deep} -f ajcrew") == _KILL
         # Under the cap the exact semantics hold; at the cap the same shape is read
         # conservatively.
         # (Nested alternations also spend the alternation budget, so "under" is under
         # both caps.)
-        from kiro_crew.security.shell_normalizer import _BRACE_GROUP_BUDGET
+        from aj_crew.security.shell_normalizer import _BRACE_GROUP_BUDGET
 
         levels = min(_BRACE_NESTING_CAP, _BRACE_GROUP_BUDGET) - 1
         under = "{a," * levels + "b" + "}" * levels
@@ -946,10 +946,10 @@ class TestBraceExpansionMirrorsBash:
         pair lookup per ``{``, whether it re-derives the table or rescans a suffix)
         reads 16x for 4x the input and fails here at any size, on any host.
         """
-        from kiro_crew.security import shell_normalizer
+        from aj_crew.security import shell_normalizer
 
         assert shell_normalizer._brace_pairs("{a,{b}}c{") == {0: 6, 3: 5}
-        assert _glob_to_regex("{{{kirocrew") == re.escape("{{{kirocrew")
+        assert _glob_to_regex("{{{ajcrew") == re.escape("{{{ajcrew")
 
         # Delegating stand-ins on the two module globals the translation is wired through:
         # ``_glob_could_expand_to`` reads ``_glob_to_regex`` from the module, and the
@@ -1000,11 +1000,11 @@ class TestBraceExpansionMirrorsBash:
         monkeypatch.setattr(shell_normalizer, "_glob_to_regex", counting_to_regex)
 
         def judge(braces: int) -> int:
-            hostile = "{" * braces + "kirocrew"
+            hostile = "{" * braces + "ajcrew"
             visits[0] = 0
-            assert _glob_could_expand_to(hostile, frozenset({"kirocrew"})) is False
+            assert _glob_could_expand_to(hostile, frozenset({"ajcrew"})) is False
             assert _rule_of(f"{hostile} token") is None
-            assert _rule_of(f"{hostile} -f kirocrew") is None
+            assert _rule_of(f"{hostile} -f ajcrew") is None
             return visits[0]
 
         small_visits = judge(3_000)
@@ -1043,14 +1043,14 @@ class TestBraceExpansionMirrorsBash:
         exit.  Past ``_BRACE_GROUP_BUDGET`` a group reads as ``.*``, so the word is judged
         as "could be anything" -- over-matching a protected name, never missing one.
         """
-        from kiro_crew.security.shell_normalizer import _BRACE_GROUP_BUDGET
+        from aj_crew.security.shell_normalizer import _BRACE_GROUP_BUDGET
 
         def judge() -> None:
             for shape in ("{*,*}", "{*,**}", "{*,a*}"):
                 # Past the budget the run reads as ``.*``: it could be ``pkill``, so denied.
                 word = shape * 17 + "ill"
                 assert _glob_could_expand_to(word, frozenset({"pkill"})) is True
-                assert _rule_of(f"{word} -f kirocrew") == _KILL
+                assert _rule_of(f"{word} -f ajcrew") == _KILL
                 # A run that cannot end like a protected name is still answered, fast.
                 assert _glob_could_expand_to(shape * 17 + "zz", frozenset({"pkill"})) is False
                 # The property itself, structurally: what ``re`` is handed carries at most
@@ -1089,11 +1089,11 @@ class TestBraceExpansionMirrorsBash:
                 "test_a_quoted_brace_program_next_to_a_product_path_is_allowed",
                 "cmd",
                 [
-                    "gh pr view 9362 --repo o/KiroCrew --json state --jq '{state,mergeStateStatus}'",
-                    "gh api repos/o/KiroCrew/x --jq '{m:.mergeable,s:.mergeStateStatus}'",
-                    "awk '{print $1, $2}' f.txt; gh run view 1 --repo o/KiroCrew",
-                    "R=$KIROCREW_SCRATCH/r; join <(awk '{print $1}' \"$R/a\") <(awk '{print $1}' \"$R/b\")",
-                    "printf 'x: {directory}' > note; sed -i '1r /w/kirocrew-scratch/epd.py' f.py",
+                    "gh pr view 9362 --repo o/AjCrew --json state --jq '{state,mergeStateStatus}'",
+                    "gh api repos/o/AjCrew/x --jq '{m:.mergeable,s:.mergeStateStatus}'",
+                    "awk '{print $1, $2}' f.txt; gh run view 1 --repo o/AjCrew",
+                    "R=$AJCREW_SCRATCH/r; join <(awk '{print $1}' \"$R/a\") <(awk '{print $1}' \"$R/b\")",
+                    "printf 'x: {directory}' > note; sed -i '1r /w/ajcrew-scratch/epd.py' f.py",
                 ],
             ),
             *named_cases(
@@ -1101,13 +1101,13 @@ class TestBraceExpansionMirrorsBash:
                 "cmd",
                 [
                     # Filesystem inspectors describe their arguments; a glob among them is a filename.
-                    "ls -d /w/KiroCrew-ws/* /h/w/KiroCrew-ws/* 2>/dev/null",
-                    "stat /w/kirocrew-wt-x/* | head",
-                    "du -sh /w/kirocrew/*",
+                    "ls -d /w/AjCrew-ws/* /h/w/AjCrew-ws/* 2>/dev/null",
+                    "stat /w/ajcrew-wt-x/* | head",
+                    "du -sh /w/ajcrew/*",
                     # A glob among a file mover's arguments is a path, whatever follows the
                     # operator glued to it.
-                    "cp $KIROCREW_SCRATCH/retro/*; gh api repos/o/KiroCrew/issues/1/comments",
-                    "S=$KIROCREW_SCRATCH; mkdir -p $S/r; cp /tmp/a.txt $S/r/*; git diff origin/main -- src/kiro_crew",
+                    "cp $AJCREW_SCRATCH/retro/*; gh api repos/o/AjCrew/issues/1/comments",
+                    "S=$AJCREW_SCRATCH; mkdir -p $S/r; cp /tmp/a.txt $S/r/*; git diff origin/main -- src/aj_crew",
                 ],
             ),
             *named_cases(
@@ -1120,15 +1120,15 @@ class TestBraceExpansionMirrorsBash:
                     # prefix, so it cannot be the verb; the body (``hostname``) is harmless.  Every
                     # row was confirmed newly-refused by the scope review of the revision that read
                     # the whole word as ``.*``.
-                    "tar czf logs_$(hostname)_*.tar.gz -C /w/kirocrew-scratch/logs .",
-                    "zip -q /tmp/bench.zip bench_`hostname`_*.json /w/kirocrew-scratch/notes.md",
+                    "tar czf logs_$(hostname)_*.tar.gz -C /w/ajcrew-scratch/logs .",
+                    "zip -q /tmp/bench.zip bench_`hostname`_*.json /w/ajcrew-scratch/notes.md",
                     "gh run download 12345678 --pattern coverage_$(hostname)_* --repo kirodotdev/KiroCrew",
-                    "install -m 644 report_$(hostname)_*.log /w/kirocrew-scratch/archive/",
+                    "install -m 644 report_$(hostname)_*.log /w/ajcrew-scratch/archive/",
                     # The Windows spellings: a PowerShell ``$()`` subexpression is the same opener.
-                    "Copy-Item report_$(hostname)_*.log \\\\nas\\kirocrew\\archive\\",
-                    "Move-Item logs_$(hostname)_*.log C:\\kirocrew-scratch\\archive\\",
-                    "Compress-Archive -Path logs_$(hostname)_*.log -DestinationPath C:\\kirocrew-scratch\\logs.zip",
-                    "Get-ChildItem logs_$(hostname)_*.log C:\\kirocrew-scratch\\logs",
+                    "Copy-Item report_$(hostname)_*.log \\\\nas\\ajcrew\\archive\\",
+                    "Move-Item logs_$(hostname)_*.log C:\\ajcrew-scratch\\archive\\",
+                    "Compress-Archive -Path logs_$(hostname)_*.log -DestinationPath C:\\ajcrew-scratch\\logs.zip",
+                    "Get-ChildItem logs_$(hostname)_*.log C:\\ajcrew-scratch\\logs",
                 ],
             ),
             *named_cases(
@@ -1136,7 +1136,7 @@ class TestBraceExpansionMirrorsBash:
                 "cmd",
                 [
                     # A read-and-copy routine that ends by counting matches across the copies.
-                    "C=/h/.kiro/crew/workspace/kirocrew-session-captures/behavior-$(date -u +%Y%m%dT%H%M%SZ); "
+                    "C=/h/.kiro/crew/workspace/ajcrew-session-captures/behavior-$(date -u +%Y%m%dT%H%M%SZ); "
                     'mkdir -p "$C/transcripts" "$C/gateway" && chmod 700 "$C"; '
                     "R='s/eyJ[A-Za-z0-9._-]{10,}/<jwt>/g'; "
                     'sed -E "$R" /h/.kiro/crew/sessions/d.jsonl > "$C/transcripts/d.jsonl"; '
@@ -1144,11 +1144,11 @@ class TestBraceExpansionMirrorsBash:
                     'echo "$C"; du -sh "$C" | cut -f1; find "$C" -type f | wc -l; '
                     'grep -c -E \'eyJ[A-Za-z0-9._-]{10,}\' "$C"/transcripts/* "$C"/gateway/* '
                     "| grep -v ':0$' || echo none",
-                    'C=/tmp/kirocrew-export; grep -c -E "a" "$C"/transcripts/* "$C"/gateway/*',
-                    "grep -e foo -e bar /tmp/a/* /w/kirocrew/state.json",
-                    "echo -e 'a b' /tmp/x/* /w/kirocrew/gateway.log",
-                    "cat -E /tmp/x/* /w/kirocrew/gateway.log",
-                    "tail -n 3 /tmp/x/?* /w/kirocrew/gateway.log",
+                    'C=/tmp/ajcrew-export; grep -c -E "a" "$C"/transcripts/* "$C"/gateway/*',
+                    "grep -e foo -e bar /tmp/a/* /w/ajcrew/state.json",
+                    "echo -e 'a b' /tmp/x/* /w/ajcrew/gateway.log",
+                    "cat -E /tmp/x/* /w/ajcrew/gateway.log",
+                    "tail -n 3 /tmp/x/?* /w/ajcrew/gateway.log",
                 ],
             ),
         ],
@@ -1160,9 +1160,9 @@ class TestBraceExpansionMirrorsBash:
     @pytest.mark.parametrize(
         "cmd",
         [
-            "p{k,k}ill -f kirocrew",
-            "kiro{c..c}rew token",
-            "{pkill,true} -f kirocrew",
+            "p{k,k}ill -f ajcrew",
+            "aj{c..c}rew token",
+            "{pkill,true} -f ajcrew",
         ],
     )
     def test_a_brace_group_that_expands_to_the_program_is_still_denied(self, cmd):
@@ -1179,8 +1179,8 @@ class TestAGlobArgumentIsNotAKillProgram:
                 [
                     # The same shape with a kill in the BODY is still a kill: the payload walk
                     # judges the body wherever in the word it sits.
-                    "tar czf x_$(pkill -f kirocrew).tgz .",
-                    "zip -q out.zip a_`pkill -f kirocrew`_*",
+                    "tar czf x_$(pkill -f ajcrew).tgz .",
+                    "zip -q out.zip a_`pkill -f ajcrew`_*",
                 ],
             ),
             *named_cases(
@@ -1188,33 +1188,33 @@ class TestAGlobArgumentIsNotAKillProgram:
                 "cmd",
                 [
                     # A wildcard word that RUNS: in program position, or handed to a wrapper.
-                    "* -f kirocrew",
-                    "/usr/bin/* -f kirocrew",
-                    "?* -f kirocrew",
-                    "** -f kirocrew",
-                    "cd /usr/bin; * -f kirocrew",
-                    "sudo * -f kirocrew",
-                    "ls /tmp/*; * -f kirocrew",
-                    "p* -f kirocrew",
-                    "*kill -f kirocrew",
-                    "pk?ll -f kirocrew",
-                    "[p]kill -f kirocrew",
+                    "* -f ajcrew",
+                    "/usr/bin/* -f ajcrew",
+                    "?* -f ajcrew",
+                    "** -f ajcrew",
+                    "cd /usr/bin; * -f ajcrew",
+                    "sudo * -f ajcrew",
+                    "ls /tmp/*; * -f ajcrew",
+                    "p* -f ajcrew",
+                    "*kill -f ajcrew",
+                    "pk?ll -f ajcrew",
+                    "[p]kill -f ajcrew",
                     # A kill after a benign wildcard read is judged on its own.
-                    "grep -E x /tmp/a/* /w/kirocrew/log; pkill -f kirocrew",
-                    "ls /w/kirocrew/* && killall kirocrew",
-                    "sh -c 'grep -e x /tmp/x/*; pk?ll -f kirocrew'",
+                    "grep -E x /tmp/a/* /w/ajcrew/log; pkill -f ajcrew",
+                    "ls /w/ajcrew/* && killall ajcrew",
+                    "sh -c 'grep -e x /tmp/x/*; pk?ll -f ajcrew'",
                     # sed's ``e`` command, and output piped into an executor, still withdraw it.
-                    "sed -e e /tmp/x/* /w/kirocrew/log",
-                    "sed -n 'p;e' /tmp/x/* /w/kirocrew/log",
-                    "sed --expression=e /tmp/x/* /w/kirocrew/log",
-                    "grep -e x /tmp/a/* /w/kirocrew/log | sh",
-                    "echo -e /usr/bin/* -f kirocrew | sh",
-                    "echo -e pkill -f kirocrew | xargs",
-                    "awk -e 'BEGIN{system(ARGV[1]\" -f \"ARGV[2])}' /usr/bin/* kirocrew",
+                    "sed -e e /tmp/x/* /w/ajcrew/log",
+                    "sed -n 'p;e' /tmp/x/* /w/ajcrew/log",
+                    "sed --expression=e /tmp/x/* /w/ajcrew/log",
+                    "grep -e x /tmp/a/* /w/ajcrew/log | sh",
+                    "echo -e /usr/bin/* -f ajcrew | sh",
+                    "echo -e pkill -f ajcrew | xargs",
+                    "awk -e 'BEGIN{system(ARGV[1]\" -f \"ARGV[2])}' /usr/bin/* ajcrew",
                     # sed's ``e`` command behind a custom-delimiter address (``-`` is the
                     # delimiter here), which runs the matched file's text.
-                    r"sed '\-.-e' /tmp/x/* /w/kirocrew/log",
-                    r"sed '\- -e' /tmp/x/* /w/kirocrew/log",
+                    r"sed '\-.-e' /tmp/x/* /w/ajcrew/log",
+                    r"sed '\- -e' /tmp/x/* /w/ajcrew/log",
                 ],
             ),
         ],
@@ -1226,20 +1226,20 @@ class TestAGlobArgumentIsNotAKillProgram:
         "cmd,rule",
         [
             # A symlink literally named with the operator: after quote removal the token
-            # is ``/tmp/kirocrew;`` and reads like a closed argv.  The verb that follows is
+            # is ``/tmp/ajcrew;`` and reads like a closed argv.  The verb that follows is
             # still scanned, so the mint is denied.
-            ("'/tmp/kirocrew;' token", _MINT),
-            ('"kirocrew;" token', _MINT),
-            ("'pkill;' -f kirocrew", _KILL),
-            ('"/usr/bin/pkill&&" -f kirocrew', _KILL),
+            ("'/tmp/ajcrew;' token", _MINT),
+            ('"ajcrew;" token', _MINT),
+            ("'pkill;' -f ajcrew", _KILL),
+            ('"/usr/bin/pkill&&" -f ajcrew', _KILL),
             # The over-denial this buys: a real boundary glued to the protected name is
             # read as if the next command's words were its arguments.  Safe direction.
-            ("kirocrew; echo token", _MINT),
-            ("pkill; echo kirocrew", _KILL),
+            ("ajcrew; echo token", _MINT),
+            ("pkill; echo ajcrew", _KILL),
             # The glued-operator PROGRAM spelling: the target follows it.
-            ("x;pkill -f kirocrew", _KILL),
-            ("x;kirocrew token", _MINT),
-            ("sudo pkill -f kirocrew", _KILL),
+            ("x;pkill -f ajcrew", _KILL),
+            ("x;ajcrew token", _MINT),
+            ("sudo pkill -f ajcrew", _KILL),
         ],
     )
     def test_a_quoted_trailing_operator_does_not_close_the_argv(self, cmd, rule):
@@ -1266,27 +1266,27 @@ class TestAGlobArgumentIsNotAKillProgram:
         # Parameter expansion is literal too.
         assert _glob_to_regex("${X}_*") == r"\$\{X\}_.*"
         # The body is judged on its own, wherever it sits.
-        assert _rule_of("{$(pkill -f kirocrew),x} y") == _KILL
-        assert _rule_of("echo foo_$(pkill -f kirocrew)") == _KILL
+        assert _rule_of("{$(pkill -f ajcrew),x} y") == _KILL
+        assert _rule_of("echo foo_$(pkill -f ajcrew)") == _KILL
 
     @pytest.mark.parametrize(
         "cmd",
         [
             # The body of a substitution RUNS before the consumer sees a word: no
             # data-consumer program excuses it.
-            "ls $(kirocrew update)",
-            "cp $(kirocrew restart) /tmp",
-            "rm -f $(kirocrew gateway restart)",
-            "echo $(kirocrew token)",
-            "ls `kirocrew token`",
-            'cat "$(kirocrew token)"',
+            "ls $(ajcrew update)",
+            "cp $(ajcrew restart) /tmp",
+            "rm -f $(ajcrew gateway restart)",
+            "echo $(ajcrew token)",
+            "ls `ajcrew token`",
+            'cat "$(ajcrew token)"',
             # ... wherever in the word the body sits.
-            "ls {$(pkill -f kirocrew),y}",
-            "mv {$(pkill -f kirocrew),x}.log /tmp/",
-            "cp {a,$(pkill -f kirocrew)} /tmp",
-            "ls {$(kirocrew update),y}",
-            "ls x$(kirocrew update)",
-            "cat /tmp/`kirocrew token`",
+            "ls {$(pkill -f ajcrew),y}",
+            "mv {$(pkill -f ajcrew),x}.log /tmp/",
+            "cp {a,$(pkill -f ajcrew)} /tmp",
+            "ls {$(ajcrew update),y}",
+            "ls x$(ajcrew update)",
+            "cat /tmp/`ajcrew token`",
         ],
     )
     def test_a_substitution_under_a_data_consumer_is_not_exempt(self, cmd):
@@ -1295,22 +1295,22 @@ class TestAGlobArgumentIsNotAKillProgram:
     @pytest.mark.parametrize(
         "cmd",
         [
-            "ls $(pwd)/src/kiro_crew",
-            "echo $(date) kirocrew docs",
-            "cp $(git rev-parse --show-toplevel)/src/kiro_crew/x.py /tmp/",
+            "ls $(pwd)/src/aj_crew",
+            "echo $(date) ajcrew docs",
+            "cp $(git rev-parse --show-toplevel)/src/aj_crew/x.py /tmp/",
             # A substitution INSIDE a filename glob: the word reads as ``.*`` (so it
             # "could be" the verb), but it is a filename under a mover, and the body
             # (``hostname``) is harmless.  Confirmed newly-refused by the scope review
             # of an earlier revision, which refused every substitution-carrying word.
-            "cp report_$(hostname)_*.log /w/kirocrew-scratch/archive/",
-            "mv $(date +%F)_*.log /w/kirocrew-scratch/",
-            "ls report_`hostname`_* /w/kirocrew/",
+            "cp report_$(hostname)_*.log /w/ajcrew-scratch/archive/",
+            "mv $(date +%F)_*.log /w/ajcrew-scratch/",
+            "ls report_`hostname`_* /w/ajcrew/",
             # A substitution as the first alternative of a BRACE GROUP: the word is two
             # filenames, the body (``date``) is walked on its own.  Confirmed newly-refused
             # by the scope review of an earlier revision.
-            "mv {$(date +%F),current}.log /w/kirocrew-scratch/archive/",
-            "rsync -a {$(date +%F),default}.conf /w/kirocrew-scratch/etc/",
-            "cp {$(hostname),local}.log /w/kirocrew-scratch/",
+            "mv {$(date +%F),current}.log /w/ajcrew-scratch/archive/",
+            "rsync -a {$(date +%F),default}.conf /w/ajcrew-scratch/etc/",
+            "cp {$(hostname),local}.log /w/ajcrew-scratch/",
         ],
     )
     def test_a_harmless_substitution_under_a_data_consumer_is_allowed(self, cmd):
@@ -1352,20 +1352,20 @@ class TestAnOptionDashEIsNotSedsExecuteCommand:
         assert _SCRIPT_EXECUTES_RE.search(word) is not None, word
 
     def test_an_option_alone_keeps_the_exemption(self):
-        tokens = ["grep", "-c", "-e", "a", "/tmp/x/*", "/tmp/kirocrew/y"]
+        tokens = ["grep", "-c", "-e", "a", "/tmp/x/*", "/tmp/ajcrew/y"]
         assert _data_consumer_command_disqualified(tokens) is False
         assert _data_consumer_command_disqualified([*tokens[:3], "e", *tokens[3:]]) is True
 
     @pytest.mark.parametrize(
         "shape",
         [
-            "grep {} x /tmp/a/* /w/kirocrew/log",
-            "cat {} /tmp/x/* /w/kirocrew/gateway.log",
-            "echo {} pkill -f kirocrew",
-            "grep {} x kirocrew token",
-            "sed {} e /tmp/x/* /w/kirocrew/log",
-            "grep {} x /tmp/a/* /w/kirocrew/log | sh",
-            "grep {} x /tmp/a/*; pkill -f kirocrew",
+            "grep {} x /tmp/a/* /w/ajcrew/log",
+            "cat {} /tmp/x/* /w/ajcrew/gateway.log",
+            "echo {} pkill -f ajcrew",
+            "grep {} x ajcrew token",
+            "sed {} e /tmp/x/* /w/ajcrew/log",
+            "grep {} x /tmp/a/* /w/ajcrew/log | sh",
+            "grep {} x /tmp/a/*; pkill -f ajcrew",
         ],
     )
     def test_the_verdict_does_not_depend_on_the_option(self, shape):
@@ -1393,4 +1393,4 @@ class TestTheOwnHostSeedIsInertHere:
         peers = {peer for _family, peer in _own_host_seed_connects_nothing}
         assert peers == _DOCUMENTATION_PEERS, peers
         # The rsync row above is what first reached the seed in this module.
-        assert _rule_of("rsync -a {$(date +%F),default}.conf /w/kirocrew-scratch/etc/") is None
+        assert _rule_of("rsync -a {$(date +%F),default}.conf /w/ajcrew-scratch/etc/") is None

@@ -30,10 +30,10 @@ import threading
 
 import pytest
 
-from kiro_crew.apps import manager as app_manager
-from kiro_crew.config import loader as L
-from kiro_crew.config import validation
-from kiro_crew.config.loader import _KNOWN_CONFIG_SECTIONS, CONFIG_RESERVED_TOP_KEYS, KiroCrewConfig
+from aj_crew.apps import manager as app_manager
+from aj_crew.config import loader as L
+from aj_crew.config import validation
+from aj_crew.config.loader import _KNOWN_CONFIG_SECTIONS, CONFIG_RESERVED_TOP_KEYS, AjCrewConfig
 
 _UNRECOGNIZED = "unrecognized top-level keys"
 
@@ -80,7 +80,7 @@ class TestAppOwnedSectionsAreNotUnrecognized:
         _write_app(apps_root, installed=True)
         monkeypatch.setattr(app_manager, "apps_dir", lambda: apps_root)
         app_manager.refresh_app_config_keys()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data({"secretary": {"channel": "slack"}})
         assert _unrecognized_warnings(caplog) == []
 
@@ -93,7 +93,7 @@ class TestAppOwnedSectionsAreNotUnrecognized:
         _write_app(apps_root, installed=True)
         monkeypatch.setattr(app_manager, "apps_dir", lambda: apps_root)
         data = {"secretary": {"channel": "slack"}}
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data(dict(data))
             assert len(_unrecognized_warnings(caplog)) == 1
             app_manager.refresh_app_config_keys()
@@ -110,7 +110,7 @@ class TestAppOwnedSectionsAreNotUnrecognized:
         _write_app(apps_root, installed=False)
         monkeypatch.setattr(app_manager, "apps_dir", lambda: apps_root)
         app_manager.refresh_app_config_keys()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data({"secretary": {"channel": "slack"}})
         warnings = _unrecognized_warnings(caplog)
         assert warnings and "secretary" in warnings[0]
@@ -269,8 +269,8 @@ class TestAppOwnedSectionsAreNotUnrecognized:
         apps_root = tmp_path / "apps"
         _write_app(apps_root, installed=True)
         monkeypatch.setattr(app_manager, "apps_dir", lambda: apps_root)
-        from kiro_crew.platform import discovery
-        from kiro_crew.platform.admission import PluginManifest
+        from aj_crew.platform import discovery
+        from aj_crew.platform.admission import PluginManifest
 
         monkeypatch.setattr(
             discovery,
@@ -296,8 +296,8 @@ class TestAppOwnedSectionsAreNotUnrecognized:
         validation._CONFIG_CACHE.clear()
 
         caplog.clear()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-            cfg = KiroCrewConfig.load()
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+            cfg = AjCrewConfig.load()
         assert cfg._extra_sections["secretary"] == {"channel": "slack"}
         assert cfg._extra_sections["companion-owned"] == {"enabled": True}
         assert _unrecognized_warnings(caplog) == []
@@ -315,7 +315,7 @@ class TestAppOwnedSectionsAreNotUnrecognized:
         monkeypatch.setattr(app_manager, "refresh_app_config_keys", _io_forbidden)
         monkeypatch.setattr(app_manager, "_scan_installed_app_config_keys", _io_forbidden)
         await asyncio.sleep(0)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data({"secretary": {"channel": "slack"}})
         assert _unrecognized_warnings(caplog) == []
 
@@ -337,8 +337,8 @@ class TestAppOwnedSectionsAreNotUnrecognized:
     def test_validation_never_calls_discovery_or_filesystem_paths(
         self, monkeypatch, caplog: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.platform import admission as admission_mod
-        from kiro_crew.platform import discovery as discovery_mod
+        from aj_crew.platform import admission as admission_mod
+        from aj_crew.platform import discovery as discovery_mod
 
         def _must_not_run(*_args, **_kwargs):
             raise AssertionError("validation attempted discovery I/O")
@@ -352,7 +352,7 @@ class TestAppOwnedSectionsAreNotUnrecognized:
         monkeypatch.setattr(admission_mod, "_read_plugin_manifest", _must_not_run)
 
         validation._CONFIG_CACHE.clear()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data(
                 {"secretary": {"channel": "slack"}, "aim_update": {"enabled": True}}
             )
@@ -361,7 +361,7 @@ class TestAppOwnedSectionsAreNotUnrecognized:
     @pytest.mark.skipif(not validation._HAS_JSONSCHEMA, reason="jsonschema not installed")
     def test_dev_fleet_section_is_not_reported(self, caplog: pytest.LogCaptureFixture) -> None:
         data = {"agent": {"provider": "acp"}, "dev_fleet": {"repo_path": "/opt/kc"}}
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data(data)
         assert _unrecognized_warnings(caplog) == []
 
@@ -371,7 +371,7 @@ class TestAppOwnedSectionsAreNotUnrecognized:
     ) -> None:
         # Excluding the app-owned set must not widen into silencing real typos.
         data = {"dev_fleet": {"repo_path": "/opt/kc"}, "totally_unknown_key": 1}
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data(data)
         warnings = _unrecognized_warnings(caplog)
         assert warnings and "totally_unknown_key" in warnings[0]
@@ -388,7 +388,7 @@ class TestAppOwnedSectionsAreNotUnrecognized:
         discovery on anything else, so a scalar written by hand must keep the one
         warning that says it is being ignored.
         """
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data({"agent": {"provider": "acp"}, "dev_fleet": malformed})
         warnings = _unrecognized_warnings(caplog)
         assert warnings and "dev_fleet" in warnings[0]
@@ -406,8 +406,8 @@ class TestAppOwnedSectionsAreNotUnrecognized:
         monkeypatch.setattr(L, "config_dir", lambda: tmp_path)
         monkeypatch.setattr(L, "config_local_path", lambda: tmp_path / "config.local.json")
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-            KiroCrewConfig.load()
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+            AjCrewConfig.load()
         assert _unrecognized_warnings(caplog) == []
 
 
@@ -422,7 +422,7 @@ class TestAppOwnedSectionsRoundTrip:
         monkeypatch.setattr(L, "config_dir", lambda: tmp_path)
         monkeypatch.setattr(L, "config_local_path", lambda: tmp_path / "config.local.json")
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg._extra_sections.get("dev_fleet") == {"repo_path": "/opt/kc"}
         assert cfg.to_dict().get("dev_fleet") == {"repo_path": "/opt/kc"}
 
@@ -441,10 +441,10 @@ class TestEveryAppOwnedKeyHasAReader:
         assert validation._APP_OWNED_TOP_KEYS == frozenset({"dev_fleet"})
 
     def test_dev_fleet_reads_repo_path_from_the_config_file(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.apps.builtins.dev_fleet import repository as repository_mod
+        from aj_crew.apps.builtins.dev_fleet import repository as repository_mod
 
         (tmp_path / "config.json").write_text(json.dumps({"dev_fleet": {"repo_path": "/opt/kc"}}))
         monkeypatch.setattr(L, "config_dir", lambda: tmp_path)
-        monkeypatch.delenv("KIROCREW_DEVFLEET_REPO", raising=False)
+        monkeypatch.delenv("AJCREW_DEVFLEET_REPO", raising=False)
 
         assert repository_mod._configured_main_repo() == "/opt/kc"

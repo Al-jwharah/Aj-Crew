@@ -86,7 +86,7 @@ const LOCAL_BUILTIN = {
   installedAt: '2026-07-01T00:00:00Z', origin: 'builtin', resources: 'gateway', lifecycle: 'locked',
   manifest: {
     name: 'meetings', version: '1.0.0', displayName: 'Meetings',
-    description: 'Local manifest copy.', author: 'kirocrew',
+    description: 'Local manifest copy.', author: 'ajcrew',
     // Local taxonomy and NO artwork: the catalog row below carries different
     // tags and a content-addressed icon, so which source won is observable.
     tags: ['productivity'],
@@ -94,7 +94,7 @@ const LOCAL_BUILTIN = {
 }
 
 const SERVER_BUILTIN_ROW = {
-  name: 'meetings', displayName: 'Meetings', author: 'Kiro Crew',
+  name: 'meetings', displayName: 'Meetings', author: 'Aj Crew',
   description: 'Curated catalog copy.', version: '1.2.0',
   tags: ['code-review'], installed: true, enabled: true, updateAvailable: false,
   origin: 'builtin', lifecycle: 'locked', provenance: 'builtin', verified: true,
@@ -212,8 +212,8 @@ describe('AppsPage — builtin rows come from the catalog', () => {
     // no install coordinates, so rendering the generic Install card would
     // offer a control that cannot work.
     const catalogOnlyBuiltin = {
-      name: 'future-app', displayName: 'Future App', author: 'Kiro Crew',
-      description: 'Ships in a newer Kiro Crew.', version: '9.9.9',
+      name: 'future-app', displayName: 'Future App', author: 'Aj Crew',
+      description: 'Ships in a newer Aj Crew.', version: '9.9.9',
       installed: false, updateAvailable: false,
       source: { type: 'builtin' },
     }

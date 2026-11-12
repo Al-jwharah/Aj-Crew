@@ -42,15 +42,15 @@ import { json } from './lib/boot-api.mjs'
 import { serveDist } from './lib/serve-dist.mjs'
 import { stubDashboardApi, logPageProblems } from './lib/stub-dashboard-api.mjs'
 
-const OUT = process.argv[2] || join(process.env.KIROCREW_SCRATCH || '/tmp', 'crewmate-card-rail-exit')
+const OUT = process.argv[2] || join(process.env.AJCREW_SCRATCH || '/tmp', 'crewmate-card-rail-exit')
 const DIST = process.argv[3]
 mkdirSync(OUT, { recursive: true })
 
 const now = Math.floor(Date.now() / 1000)
 const RADAR = {
   name: 'Radar', slug: 'radar', bound: true, slot_key: 'member-radar', running: false,
-  kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'radar', memory_version: 2, memory_owner: 'Radar',
-  model: '', description: 'Triage new GitHub issues every morning', source: 'kirocrew',
+  kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'radar', memory_version: 2, memory_owner: 'Radar',
+  model: '', description: 'Triage new GitHub issues every morning', source: 'ajcrew',
   last_active_ts: now - 30, last_message: 'Quiet morning: three new issues, one needs a decision.',
 }
 const SLOTS = [{ key: 'member-radar', title: 'Radar', mode: 'member', created: new Date((now - 86400) * 1000).toISOString(), last_ts: new Date((now - 30) * 1000).toISOString(), running: false, agent: 'Radar' }]
@@ -62,11 +62,11 @@ const NAME = 'Scribe'
 const CREW_BOARD = JSON.parse(readFileSync(new URL('./fixtures/crew-board-empty.json', import.meta.url), 'utf8'))
 
 const extraFor = (members) => async (path, route) => {
-  if (path === '/api/members') { await json(route, { members, default_agent: 'kirocrew' }); return true }
+  if (path === '/api/members') { await json(route, { members, default_agent: 'ajcrew' }); return true }
   if (path === '/api/crew-board') { await json(route, CREW_BOARD); return true }
   if (path === '/api/teams') { await json(route, { teams: [] }); return true }
-  if (path === '/api/agents/installed') { await json(route, [{ name: 'kirocrew', kiro_agent: 'kirocrew', scope: 'global' }]); return true }
-  if (path === '/api/agents/catalog') { await json(route, { agents: [{ name: 'kirocrew', selection_kind: 'template', kiro_agent: 'kirocrew', scope: 'global' }], default_agent: 'kirocrew' }); return true }
+  if (path === '/api/agents/installed') { await json(route, [{ name: 'ajcrew', kiro_agent: 'ajcrew', scope: 'global' }]); return true }
+  if (path === '/api/agents/catalog') { await json(route, { agents: [{ name: 'ajcrew', selection_kind: 'template', kiro_agent: 'ajcrew', scope: 'global' }], default_agent: 'ajcrew' }); return true }
   if (path === '/api/slack/config') { await json(route, { configured: false, connected: false }); return true }
   if (/^\/api\/members\/[^/]+\/thread$/.test(path)) { await json(route, { slot_key: 'member-radar', slug: 'radar', member: 'Radar', created: false }); return true }
   if (/^\/api\/members\/[^/]+\/activity$/.test(path)) { await json(route, { slug: 'radar', member: 'Radar', capped: false, entries: [] }); return true }

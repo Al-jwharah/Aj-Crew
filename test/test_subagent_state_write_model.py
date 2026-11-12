@@ -53,7 +53,7 @@ _NESTED_SCOPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)
 #: re-derive, so a commit that moves a site on or off the loop updates its row.
 _WRITE_SITES: dict[tuple[str, str, str], tuple[int, str]] = {
     (
-        "kiro_crew/shared_crew/tailscale_invite_store.py",
+        "aj_crew/shared_crew/tailscale_invite_store.py",
         "set_display",
         "update_state",
     ): (
@@ -62,12 +62,12 @@ _WRITE_SITES: dict[tuple[str, str, str], tuple[int, str]] = {
         "rewrites invites.json, serialized by that store's _LOCK",
     ),
     (
-        "kiro_crew/execution_context.py",
+        "aj_crew/execution_context.py",
         "bind_session_execution",
         "update_execution_context",
     ): (1, "off loop at every call site; serialized by the callee's unconditional lock"),
     (
-        "kiro_crew/subagent_manager/continuation.py",
+        "aj_crew/subagent_manager/continuation.py",
         "_release_disk_sync",
         "update_state",
     ): (
@@ -76,17 +76,17 @@ _WRITE_SITES: dict[tuple[str, str, str], tuple[int, str]] = {
         "holds the conversation until the worker lands; inherits the per-agent lock",
     ),
     (
-        "kiro_crew/subagent_persistence_state.py",
+        "aj_crew/subagent_persistence_state.py",
         "create_agent_folder",
         "update_execution_context",
     ): (1, "on loop; the one acquire that can wait, bounded by the spawn and admission path"),
     (
-        "kiro_crew/subagent_persistence_state.py",
+        "aj_crew/subagent_persistence_state.py",
         "create_agent_folder",
         "_atomic_write(state.json)",
     ): (1, "creation path; writes the initial file before any writer can race"),
     (
-        "kiro_crew/subagent_persistence_tombstones.py",
+        "aj_crew/subagent_persistence_tombstones.py",
         "write_finished_result",
         "state_writer",
     ): (
@@ -95,22 +95,22 @@ _WRITE_SITES: dict[tuple[str, str, str], tuple[int, str]] = {
         "serialized by update_state's per-agent lock",
     ),
     (
-        "kiro_crew/subagent_persistence_state.py",
+        "aj_crew/subagent_persistence_state.py",
         "promote_retention",
         "state_writer",
     ): (1, "on loop; fenced by a non-blocking probe of the state lock, RETRYABLE on contention"),
     (
-        "kiro_crew/subagent_persistence_state.py",
+        "aj_crew/subagent_persistence_state.py",
         "tighten_run_memory_mode",
         "update_execution_context",
     ): (1, "off loop through to_thread; serialized by the callee's unconditional lock"),
     (
-        "kiro_crew/subagent_persistence_state.py",
+        "aj_crew/subagent_persistence_state.py",
         "update_execution_context",
         "_atomic_write(state.json)",
     ): (2, "the writer's own rewrite, inside the lock it holds for read and write"),
     (
-        "kiro_crew/subagent_persistence_state.py",
+        "aj_crew/subagent_persistence_state.py",
         "update_state",
         "_atomic_write(state.json)",
     ): (
@@ -118,7 +118,7 @@ _WRITE_SITES: dict[tuple[str, str, str], tuple[int, str]] = {
         "the writer's own rewrite; off-loop callers hold the lock, on-loop sites are listed here",
     ),
     (
-        "kiro_crew/subagent_persistence_state.py",
+        "aj_crew/subagent_persistence_state.py",
         "write_run_agent",
         "update_execution_context",
     ): (1, "off loop pre-run write; serialized by the callee's unconditional lock"),
@@ -128,7 +128,7 @@ _WRITE_SITES: dict[tuple[str, str, str], tuple[int, str]] = {
 def _import_aliases(tree: ast.Module) -> dict[str, str]:
     """Map local names bound to a writer back to the real name.
 
-    ``from kiro_crew.subagent_persistence import update_state as write`` must
+    ``from aj_crew.subagent_persistence import update_state as write`` must
     still resolve, or one aliased import silently defeats the gate.
     """
     aliases: dict[str, str] = {name: name for name in _WRITER_NAMES}
@@ -265,7 +265,7 @@ def _module_key(path: PurePath, base: PurePath) -> str:
 
 
 def collect_repo_write_sites() -> list[tuple[str, str, str, bool, int]]:
-    """Scan every ``kiro_crew/**/*.py`` for whole-file ``state.json`` write sites."""
+    """Scan every ``aj_crew/**/*.py`` for whole-file ``state.json`` write sites."""
     base = src_root().parent
     out: list[tuple[str, str, str, bool, int]] = []
     for py, text, tree in parsed_candidates(require_any=_REQUIRE_ANY):
@@ -361,7 +361,7 @@ def test_every_census_entry_still_exists() -> None:
 #: gate's verdict. So each gate is driven here against a census or a site list
 #: that MUST fail it. Dropping an assertion above reddens one of these.
 _PINNED_SITE = (
-    "kiro_crew/subagent_persistence_state.py",
+    "aj_crew/subagent_persistence_state.py",
     "promote_retention",
     "state_writer",
 )
@@ -395,7 +395,7 @@ def test_the_census_gate_fails_when_a_recorded_count_disagrees(
 def test_the_stale_entry_gate_fails_on_a_phantom_entry(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    phantom = ("kiro_crew/nowhere.py", "gone", "update_state")
+    phantom = ("aj_crew/nowhere.py", "gone", "update_state")
     _patch_census(monkeypatch, {**_WRITE_SITES, phantom: (1, "records nothing live")})
     with pytest.raises(AssertionError, match="nowhere.py"):
         test_every_census_entry_still_exists()
@@ -407,7 +407,7 @@ def test_the_coroutine_gate_fails_on_a_write_in_a_coroutine_body(
     monkeypatch.setattr(
         sys.modules[__name__],
         "collect_repo_write_sites",
-        lambda: [("kiro_crew/x.py", "run", "update_state", True, 7)],
+        lambda: [("aj_crew/x.py", "run", "update_state", True, 7)],
     )
     with pytest.raises(AssertionError, match="async def"):
         test_no_state_write_directly_in_a_coroutine_body()
@@ -434,7 +434,7 @@ def _labels(source: str) -> list[str]:
             id="test_finds_an_attribute_spelled_call",
         ),
         pytest.param(
-            "from kiro_crew.subagent_persistence import update_state as write\n"
+            "from aj_crew.subagent_persistence import update_state as write\n"
             "def f(a):\n"
             "    write(a, keep=True)\n",
             "update_state",
@@ -520,21 +520,21 @@ def test_is_not_a_write_site(src: str) -> None:
         # The census is keyed on forward slashes, so a backslash spelling would
         # miss every entry and red this gate on one platform only.
         pytest.param(
-            PureWindowsPath(r"C:\repo\src\kiro_crew\subagent_manager\continuation.py"),
+            PureWindowsPath(r"C:\repo\src\aj_crew\subagent_manager\continuation.py"),
             PureWindowsPath(r"C:\repo\src"),
-            "kiro_crew/subagent_manager/continuation.py",
+            "aj_crew/subagent_manager/continuation.py",
             id="test_module_key_normalises_a_windows_separator",
         ),
         pytest.param(
-            PurePosixPath("/repo/src/kiro_crew/subagent_persistence.py"),
+            PurePosixPath("/repo/src/aj_crew/subagent_persistence.py"),
             PurePosixPath("/repo/src"),
-            "kiro_crew/subagent_persistence.py",
+            "aj_crew/subagent_persistence.py",
             id="test_module_key_keeps_a_posix_path_unchanged",
         ),
         pytest.param(
-            PurePosixPath("/elsewhere/kiro_crew/x.py"),
+            PurePosixPath("/elsewhere/aj_crew/x.py"),
             PurePosixPath("/repo/src"),
-            "/elsewhere/kiro_crew/x.py",
+            "/elsewhere/aj_crew/x.py",
             id="test_module_key_falls_back_to_the_whole_path_off_base",
         ),
     ],

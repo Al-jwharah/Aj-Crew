@@ -28,9 +28,9 @@ from work_ledger_projection_helpers import (
     _Slot,
 )
 
-from kiro_crew import work_ledger as wl
-from kiro_crew.crew_log import projection
-from kiro_crew.dashboard.handlers import work_ledger as routes
+from aj_crew import work_ledger as wl
+from aj_crew.crew_log import projection
+from aj_crew.dashboard.handlers import work_ledger as routes
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _isolated = work_ledger_projection_helpers._isolated
@@ -44,13 +44,13 @@ def test_an_append_the_waiter_gave_up_on_never_lands(monkeypatch):
     """The queued job is held back until after the waiter gave up, then run as
     the writer would run it. The abandoned entry must not land: a write the
     caller was told failed would otherwise come back on the next rebuild."""
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog, emit
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog, emit
 
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     emit.reset_caches()
     try:
-        CrewLog.create(lg.KIND_SESSION, "u-slow", owner="raymond", agent="kirocrew", slot=CONDUCTOR)
+        CrewLog.create(lg.KIND_SESSION, "u-slow", owner="raymond", agent="ajcrew", slot=CONDUCTOR)
         held: list[tuple[Any, Any]] = []
         real_submit = emit._submit
         monkeypatch.setattr(
@@ -196,11 +196,11 @@ async def test_cancelled_report_drains_its_append_before_reraising(monkeypatch):
 
 
 def test_a_reused_slot_folds_only_its_latest_board():
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     unit = CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     first = {
         "slot": CONDUCTOR,
@@ -265,12 +265,12 @@ def test_a_reused_slot_folds_only_its_latest_board():
 
 
 def test_parked_entries_keep_within_the_item_bound(monkeypatch):
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     monkeypatch.setattr(projection, "WORK_ITEM_LIMIT", 2)
     unit = CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     unit.append(
         "work/recorded",
@@ -347,11 +347,11 @@ def _cache_files(slot: str) -> dict[str, bytes]:
 
 
 def test_a_rebuild_that_fails_part_way_leaves_the_cache_as_it_was(monkeypatch):
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     conductor = CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     mine = {"slot": CONDUCTOR, "actor": "conductor", "by": CONDUCTOR}
     conductor.append(
@@ -394,11 +394,11 @@ def test_a_rebuild_that_fails_part_way_leaves_the_cache_as_it_was(monkeypatch):
 
 
 def test_a_generationless_board_is_dropped_when_a_stamped_one_opens_the_slot():
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     unit = CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     old = {"slot": CONDUCTOR, "actor": "conductor", "by": CONDUCTOR}  # no generation at all
     unit.append(
@@ -448,11 +448,11 @@ async def test_an_unconfirmed_bind_spelled_with_the_dashboard_prefix_is_undone(m
 
 
 def test_a_rebuild_recreates_the_identity_breadcrumb():
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     unit = CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     mine = {"slot": CONDUCTOR, "actor": "conductor", "by": CONDUCTOR, "generation": "gen-0001"}
     unit.append(
@@ -755,8 +755,8 @@ async def test_a_rebuild_reproduces_the_stores_stamps_and_event_ids(monkeypatch)
 
 def test_fold_fallback_event_id_matches_the_stores_report_id():
     """A legacy entry without an explicit id uses the store's exact formula."""
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     wl.ensure_conductor(CONDUCTOR, goal="ship it")
     created = wl.apply_conductor_action(
@@ -771,7 +771,7 @@ def test_fold_fallback_event_id_matches_the_stores_report_id():
     )["event"]
 
     unit = CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     mine = {"slot": CONDUCTOR, "actor": "conductor", "by": CONDUCTOR}
     unit.append(
@@ -815,11 +815,11 @@ def test_fold_fallback_event_id_matches_the_stores_report_id():
 
 
 def test_a_rebuild_refuses_while_a_units_header_cannot_be_read():
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog, store
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog, store
 
     unit = CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     unit.append(
         "work/recorded",
@@ -844,12 +844,12 @@ def test_a_rebuild_refuses_while_a_units_header_cannot_be_read():
 def test_the_session_tree_checkpoint_folder_never_refuses_a_rebuild():
     """The session tree saves its checkpoint in a folder beside the units. It is not a
     unit, so a rebuild goes ahead with it there."""
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog, store
-    from kiro_crew.crew_log.session_tree_projection_checkpoint import _checkpoint_path
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog, store
+    from aj_crew.crew_log.session_tree_projection_checkpoint import _checkpoint_path
 
     unit = CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     goal = {"slot": CONDUCTOR, "actor": "conductor", "by": CONDUCTOR, "action": "goal"}
     unit.append("work/recorded", {**goal, "goal": "g", "round": 1}, src="gateway")

@@ -32,10 +32,10 @@ import pytest
 from crew_log_drain import assert_drained
 from off_loop_helpers import off_loop
 
-from kiro_crew.crew_log import crew_log_path, emit
-from kiro_crew.crew_log.projection import fold_approvals
-from kiro_crew.crew_log.store import CrewLog
-from kiro_crew.subagent import HostSpawnDecision, SpawnApprovalUnreachable, SubagentManager
+from aj_crew.crew_log import crew_log_path, emit
+from aj_crew.crew_log.projection import fold_approvals
+from aj_crew.crew_log.store import CrewLog
+from aj_crew.subagent import HostSpawnDecision, SpawnApprovalUnreachable, SubagentManager
 
 SESSION = "acp-spawn-approval-1"
 ASKING_TURN = 6
@@ -49,7 +49,7 @@ pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 @pytest.fixture(autouse=True)
 def _isolated_crew_log(tmp_path, monkeypatch):
     """Every test writes into its own data home with the crew log switched on."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
     emit.reset_caches()
@@ -103,7 +103,7 @@ def _folded() -> dict:
 def _open_session() -> None:
     emit.on_session_opened(
         SESSION,
-        agent="kirocrew",
+        agent="ajcrew",
         slot="chat-7",
         model="claude-opus-5",
         cwd="/home/dev/project",
@@ -191,7 +191,7 @@ async def _settle(info) -> None:  # type: ignore[no-untyped-def]
 @pytest.fixture
 def _pinned_parent(monkeypatch):
     """Resolve every spawn's parent key to this test's crew-log unit."""
-    from kiro_crew.crew_log import resolve
+    from aj_crew.crew_log import resolve
 
     monkeypatch.setattr(resolve, "unit_for_session_key", lambda _sessions, _key: SESSION)
 
@@ -287,7 +287,7 @@ async def test_an_answer_the_callback_gave_with_nobody_asked_is_the_hosts(_pinne
     Red before: the gate wrote ``by``/``cause`` empty after any normal return, which
     reads as a person deciding.
     """
-    from kiro_crew.constants import DENY_CAUSE_APPROVAL_TIMEOUT
+    from aj_crew.constants import DENY_CAUSE_APPROVAL_TIMEOUT
 
     _open_session()
 
@@ -315,7 +315,7 @@ async def test_a_prompt_no_surface_received_is_a_host_decline_with_its_cause(_pi
     The request is still written: the gate DID ask, and a reader who sees only the
     refusal cannot tell an undeliverable prompt from a spawn nobody asked about.
     """
-    from kiro_crew.constants import DENY_CAUSE_APPROVAL_UNDELIVERABLE
+    from aj_crew.constants import DENY_CAUSE_APPROVAL_UNDELIVERABLE
 
     _open_session()
 
@@ -343,7 +343,7 @@ async def test_a_callback_that_raised_is_a_host_decline_with_its_own_cause(_pinn
     No PreToolUse hook runs on this path, so the hook-error cause would send a
     reader to a gate that never ran; the prompt simply failed to be delivered.
     """
-    from kiro_crew.constants import DENY_CAUSE_APPROVAL_UNDELIVERABLE
+    from aj_crew.constants import DENY_CAUSE_APPROVAL_UNDELIVERABLE
 
     _open_session()
 
@@ -404,7 +404,7 @@ async def test_an_unresolvable_parent_writes_neither_half(_pinned_parent, monkey
     Checked as a PAIR: a decision written without its request would read to the
     fold as an unmatched decision about a session that never asked.
     """
-    from kiro_crew.crew_log import resolve
+    from aj_crew.crew_log import resolve
 
     monkeypatch.setattr(resolve, "unit_for_session_key", lambda _sessions, _key: "")
     _open_session()
@@ -462,7 +462,7 @@ def test_the_decision_helper_is_a_no_op_for_a_request_that_was_not_written():
     ``ManagerComponent`` because a running child's tool prompts owe the log the
     same pair, so this reaches it through the gate, the asker under test here.
     """
-    from kiro_crew.subagent_manager.admission.gate import _GateMixin
+    from aj_crew.subagent_manager.admission.gate import _GateMixin
 
     _open_session()
     _GateMixin._record_crew_log_approval_decided(
@@ -482,8 +482,8 @@ def test_a_spawn_pinned_at_turn_zero_writes_neither_half():
     ``turn/started``, so the request helper writes nothing and hands back the
     empty origin -- which makes the closer write nothing too.
     """
-    from kiro_crew.subagent_manager.admission.gate import _GateMixin
-    from kiro_crew.subagent_manager.admission.gate_reporting import (
+    from aj_crew.subagent_manager.admission.gate import _GateMixin
+    from aj_crew.subagent_manager.admission.gate_reporting import (
         _record_crew_log_spawn_approval_requested,
     )
 

@@ -770,13 +770,13 @@
       "input": {
         "kind": "execute",
         "rawInput": {
-          "command": "cd \"$KIROCREW_SCRATCH/codex\" && git ls-files | grep -i parse_command | head"
+          "command": "cd \"$AJCREW_SCRATCH/codex\" && git ls-files | grep -i parse_command | head"
         }
       },
       "expect": {
         "action": null,
         "more": 0,
-        "title": "cd \"$KIROCREW_SCRATCH/codex\" && git ls-files | grep -i parse_command | head",
+        "title": "cd \"$AJCREW_SCRATCH/codex\" && git ls-files | grep -i parse_command | head",
         "kind": "execute",
         "derived": false
       }
@@ -786,13 +786,13 @@
       "input": {
         "kind": "execute",
         "rawInput": {
-          "command": "echo \"SCRATCH=$KIROCREW_SCRATCH\"; ls"
+          "command": "echo \"SCRATCH=$AJCREW_SCRATCH\"; ls"
         }
       },
       "expect": {
         "action": null,
         "more": 0,
-        "title": "echo \"SCRATCH=$KIROCREW_SCRATCH\"; ls",
+        "title": "echo \"SCRATCH=$AJCREW_SCRATCH\"; ls",
         "kind": "execute",
         "derived": false
       }
@@ -2989,7 +2989,7 @@
     {
       "name": "Running: @server/tool is MCP, not a shell",
       "input": {
-        "title": "Running: @kirocrew-core/wait",
+        "title": "Running: @ajcrew-core/wait",
         "rawInput": {
           "seconds": 60
         }
@@ -3788,15 +3788,15 @@
       "name": "search kind with no pattern keeps title (tool_search)",
       "input": {
         "kind": "search",
-        "title": "Loading tool: kirocrew-core::spawn_run",
+        "title": "Loading tool: ajcrew-core::spawn_run",
         "rawInput": {
-          "tool_id": "kirocrew-core::spawn_run"
+          "tool_id": "ajcrew-core::spawn_run"
         }
       },
       "expect": {
         "action": null,
         "more": 0,
-        "title": "Loading tool: kirocrew-core::spawn_run",
+        "title": "Loading tool: ajcrew-core::spawn_run",
         "kind": "search",
         "derived": false
       }
@@ -3846,9 +3846,9 @@
       "name": "MCP @server/tool with salient target",
       "input": {
         "kind": "other",
-        "title": "@kirocrew-core/session_send",
+        "title": "@ajcrew-core/session_send",
         "rawInput": {
-          "target": "member-kirocrew-conductor",
+          "target": "member-ajcrew-conductor",
           "message": "Please pick up the connections pre-registration issue and open the pull request when the probes pass",
           "_meta": {}
         }
@@ -3857,10 +3857,10 @@
         "action": {
           "type": "mcp",
           "tool": "session_send",
-          "arg": "member-kirocrew-conductor"
+          "arg": "member-ajcrew-conductor"
         },
         "more": 0,
-        "title": "Session send: member-kirocrew-conductor",
+        "title": "Session send: member-ajcrew-conductor",
         "kind": "other",
         "derived": true
       }
@@ -3869,7 +3869,7 @@
       "name": "MCP Running: @server/tool, kind unknown, no string arg",
       "input": {
         "kind": "unknown",
-        "title": "Running: @kirocrew-core/spawn_run",
+        "title": "Running: @ajcrew-core/spawn_run",
         "rawInput": {
           "tasks": [
             "a",
@@ -3894,7 +3894,7 @@
       "name": "MCP empty args",
       "input": {
         "kind": "other",
-        "title": "@kirocrew-core/session_ledger_read",
+        "title": "@ajcrew-core/session_ledger_read",
         "rawInput": {}
       },
       "expect": {
@@ -3914,7 +3914,7 @@
       "input": {
         "kind": "other",
         "title": "artifact_folder_create",
-        "mcpServer": "kirocrew-core",
+        "mcpServer": "ajcrew-core",
         "toolName": "artifact_folder_create",
         "rawInput": {
           "name": "Research",
@@ -3959,7 +3959,7 @@
       "name": "MCP pooled server___tool name, free-text key is not named",
       "input": {
         "kind": "other",
-        "title": "kirocrew-core___wait",
+        "title": "ajcrew-core___wait",
         "rawInput": {
           "seconds": 300,
           "reason": "Waiting for CI on PR-1"
@@ -4045,7 +4045,7 @@
       "name": "MCP long arg is cut at 60 chars",
       "input": {
         "kind": "other",
-        "title": "@kirocrew-core/send_message",
+        "title": "@ajcrew-core/send_message",
         "rawInput": {
           "message": "Please pick up the connections pre-registration issue and open the pull request when the probes pass"
         }
@@ -4088,7 +4088,7 @@
       "name": "MCP purpose key is never the salient arg",
       "input": {
         "kind": "other",
-        "title": "@kirocrew-core/autonudge_stop",
+        "title": "@ajcrew-core/autonudge_stop",
         "rawInput": {
           "__tool_use_purpose": "stop the loop"
         }

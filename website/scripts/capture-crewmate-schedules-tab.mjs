@@ -31,12 +31,12 @@ import { json } from './lib/boot-api.mjs'
 import { serveDist } from './lib/serve-dist.mjs'
 import { stubDashboardApi, logPageProblems } from './lib/stub-dashboard-api.mjs'
 
-const OUT = process.argv[2] || join(process.env.KIROCREW_SCRATCH || '/tmp', 'crew18721-shots')
+const OUT = process.argv[2] || join(process.env.AJCREW_SCRATCH || '/tmp', 'crew18721-shots')
 mkdirSync(OUT, { recursive: true })
 
 const member = (name, extra = {}) => ({
   name, slug: name, bound: true, slot_key: `member-${name}`, running: false,
-  kiro_agent: 'kirocrew', workspace: 'default', memory_store: `member-${name}`,
+  kiro_agent: 'ajcrew', workspace: 'default', memory_store: `member-${name}`,
   model: '', ...extra,
 })
 const MEMBERS = [
@@ -49,13 +49,13 @@ const MEMBERS = [
 
 const now = Math.floor(Date.now() / 1000)
 const JOBS = [
-  { id: 'cron-triage', name: 'Triage new issues', message: 'Triage anything new in the issue queue and label it.', enabled: true, schedule: 'At 9:00 AM UTC', agent: 'kirocrew', member_id: 'radar', last_run_ts: now - 10800, next_run_ts: now + 75600, last_status: 'ok' },
-  { id: 'cron-sweep', name: 'Sweep stale PRs', message: 'List pull requests with no activity for seven days.', enabled: false, schedule: 'every 6h', agent: 'kirocrew', member_id: 'radar', last_run_ts: now - 540000, last_status: 'ok' },
-  { id: 'cron-notes', name: 'Weekly notes', message: 'Write the weekly summary into the crew notes.', enabled: true, schedule: 'At 5:00 PM UTC, only on Friday', agent: 'kirocrew', member_id: 'scribe', last_run_ts: now - 172800, next_run_ts: now + 259200, last_status: 'ok' },
+  { id: 'cron-triage', name: 'Triage new issues', message: 'Triage anything new in the issue queue and label it.', enabled: true, schedule: 'At 9:00 AM UTC', agent: 'ajcrew', member_id: 'radar', last_run_ts: now - 10800, next_run_ts: now + 75600, last_status: 'ok' },
+  { id: 'cron-sweep', name: 'Sweep stale PRs', message: 'List pull requests with no activity for seven days.', enabled: false, schedule: 'every 6h', agent: 'ajcrew', member_id: 'radar', last_run_ts: now - 540000, last_status: 'ok' },
+  { id: 'cron-notes', name: 'Weekly notes', message: 'Write the weekly summary into the crew notes.', enabled: true, schedule: 'At 5:00 PM UTC, only on Friday', agent: 'ajcrew', member_id: 'scribe', last_run_ts: now - 172800, next_run_ts: now + 259200, last_status: 'ok' },
   // No `member_id`: these belong to nobody, so no crewmate's tab may claim them. They
   // are here to prove that, and to keep /schedule's own count at five.
-  { id: 'cron-backup', name: 'Nightly backup check', message: 'Confirm last night backup completed.', enabled: true, schedule: 'every 24h', agent: 'kirocrew', member_id: '', next_run_ts: now + 43200 },
-  { id: 'cron-digest', name: 'Morning digest', message: 'Post the overnight digest.', enabled: true, schedule: 'At 7:30 AM UTC', agent: 'kirocrew', member_id: '', next_run_ts: now + 19800 },
+  { id: 'cron-backup', name: 'Nightly backup check', message: 'Confirm last night backup completed.', enabled: true, schedule: 'every 24h', agent: 'ajcrew', member_id: '', next_run_ts: now + 43200 },
+  { id: 'cron-digest', name: 'Morning digest', message: 'Post the overnight digest.', enabled: true, schedule: 'At 7:30 AM UTC', agent: 'ajcrew', member_id: '', next_run_ts: now + 19800 },
 ]
 
 const { srv, base } = await serveDist()
@@ -69,7 +69,7 @@ function check(name, ok, detail = '') {
 
 /** Answers the routes this feature reads; everything else falls to the shared stub. */
 const extra = async (path, route) => {
-  if (path === '/api/members') { await json(route, { members: MEMBERS, default_agent: 'kirocrew' }); return true }
+  if (path === '/api/members') { await json(route, { members: MEMBERS, default_agent: 'ajcrew' }); return true }
   if (path === '/api/crons') { await json(route, { jobs: JOBS }); return true }
   // A bare ARRAY: `api.cronFolders()` returns the parsed body straight to
   // `groupJobsByFolder`, which maps over it. `{folders: []}` crashes the Schedule
@@ -79,7 +79,7 @@ const extra = async (path, route) => {
   // Answered because other surfaces on the page read it. The Schedules tab does NOT:
   // it lists only what is attributed to the open crewmate, so which crew is the
   // default changes nothing there.
-  if (path === '/api/default-agent') { await json(route, { default_agent: 'kirocrew' }); return true }
+  if (path === '/api/default-agent') { await json(route, { default_agent: 'ajcrew' }); return true }
   const thread = path.match(/^\/api\/members\/([^/]+)\/thread$/)
   if (thread) {
     const slug = decodeURIComponent(thread[1])

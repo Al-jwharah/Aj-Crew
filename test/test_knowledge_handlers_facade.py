@@ -1,9 +1,9 @@
 """The Knowledge Library handlers' facade keeps the patch seams the one module had.
 
-``kiro_crew.dashboard.handlers.knowledge`` is a mirror facade (:mod:`kiro_crew._facade_mirror`)
-over the ``kiro_crew.dashboard.handlers.knowledge_<role>`` owners and keeps no code of its own.
+``aj_crew.dashboard.handlers.knowledge`` is a mirror facade (:mod:`aj_crew._facade_mirror`)
+over the ``aj_crew.dashboard.handlers.knowledge_<role>`` owners and keeps no code of its own.
 Callers, tests and documents still reach every name as
-``kiro_crew.dashboard.handlers.knowledge.<name>``, and the moved code reads its names as plain
+``aj_crew.dashboard.handlers.knowledge.<name>``, and the moved code reads its names as plain
 module globals, so a patch through the facade reaches that code only because the mirror writes
 it into every module holding the name.
 
@@ -31,9 +31,9 @@ import pytest
 import source_corpus
 from aiohttp import web
 
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard.handlers import knowledge
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror
+from aj_crew.dashboard.handlers import knowledge
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_knowledge_handlers_facade")
 
@@ -41,8 +41,8 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_knowledge_handlers_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.dashboard.handlers.knowledge"
-OWNER_PREFIX = "kiro_crew.dashboard.handlers.knowledge_"
+FACADE = "aj_crew.dashboard.handlers.knowledge"
+OWNER_PREFIX = "aj_crew.dashboard.handlers.knowledge_"
 HANDLERS_DIR = Path(knowledge.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
 
@@ -195,7 +195,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for path in _owner_paths().values():
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -219,7 +219,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
     """An owner binds these by import, so the facade names each one from its home module
-    under ``TYPE_CHECKING`` and ``from kiro_crew.dashboard.handlers.knowledge import
+    under ``TYPE_CHECKING`` and ``from aj_crew.dashboard.handlers.knowledge import
     HybridRetriever`` type-checks."""
     served = set(_index().exports)
     expected = {name: home for name, home in _home_imports().items() if name in served}
@@ -239,7 +239,7 @@ def test_the_family_logs_under_the_facade_name() -> None:
 
 
 def test_the_facade_runs_as_a_module(tmp_path: Path) -> None:
-    """``python -m kiro_crew.dashboard.handlers.knowledge`` imports cleanly: the mirror
+    """``python -m aj_crew.dashboard.handlers.knowledge`` imports cleanly: the mirror
     installs on ``__main__`` too, because every member binds one logger by name."""
     env = dict(os.environ)
     src = str(Path(knowledge.__file__).resolve().parents[3])

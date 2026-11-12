@@ -27,11 +27,11 @@ resolved Open questions and Alternative F describe the proposed design and
 results observed on an unmerged branch. Where they name `platform/agentcore_aws.py`,
 `platform/agentcore_sigv4.py`, `/api/agentcore/*` routes, `apply_agentcore_runtime`,
 a login withhold in `rebuild_agent_config()`, or the
-`kirocrew-ec2-boundary-agentcore` boundary, none of these exist on main.
+`ajcrew-ec2-boundary-agentcore` boundary, none of these exist on main.
 
 ## Summary
 
-Give each Kiro Crew agent a first-class **Amazon Bedrock AgentCore
+Give each Aj Crew agent a first-class **Amazon Bedrock AgentCore
 Identity** workload identity, and use **AgentCore Gateway** as the
 outbound token-vending plane for MCP tools. Crew does not implement
 OAuth, RFC 8693, or a token vault. The companion edition registers the
@@ -41,7 +41,7 @@ stays byte-identical and never imports AWS.
 
 A fleet picks **exactly one** posture in `security_policy.json`, and
 that posture is what the copyable cloud **Policy.json pair** must
-match — the launcher document (`iam.policy_json()` / `kirocrew cloud
+match — the launcher document (`iam.policy_json()` / `ajcrew cloud
 iam-policy`) plus the instance-role fragment
 (`iam.agentcore_instance_policy_document`):
 
@@ -70,7 +70,7 @@ token-vending seam.
 |---|---|---|
 | `IdentityProvider` (`platform/interfaces.py`) | SSO status, preflight, MCP credential-watch paths | Not consumed as a principal. `whoami` / `issuer` are **RESERVED** (`RESERVED_METHODS` in `platform/context.py`) |
 | `DefaultIdentityProvider` | Delegates to `sso_status.py` stubs (`available: false`) | No SSO, no JWT, no workload |
-| `McpToolingProvider.extra_mcp_servers()` | ADD-only MCP specs merged into `kirocrew.json` | Static at rebuild time. No per-session `Authorization` |
+| `McpToolingProvider.extra_mcp_servers()` | ADD-only MCP specs merged into `ajcrew.json` | Static at rebuild time. No per-session `Authorization` |
 | `kiro_oauth_wire_entry` (`mcp_utils.py`) | Translates remote MCP OAuth hints for kiro-cli | Operator-managed client credentials, not AgentCore |
 | MCP `headers` on URL servers (`mcp_discovery.py`) | Static headers from config | A baked bearer is a live credential in an agent-readable file |
 | Dashboard tokens (`dashboard/token_auth_tokens.py`) | HMAC-SHA256, IP-pinned, single-use | Not an OIDC JWT. Cannot satisfy Gateway `CUSTOM_JWT` |
@@ -87,7 +87,7 @@ At that snapshot, a grep of `src/`, `website/src/`, and `docs/` found **no**
 1. **The Crew agent has no identity AgentCore can name.** Gateway policy,
    CloudTrail, and the Identity token vault key on a workload identity.
    Today the caller is "whatever IAM role the host has," which cannot
-   distinguish `kirocrew` from a sibling agent, a cron job, or a
+   distinguish `ajcrew` from a sibling agent, a cron job, or a
    compromised local process.
 2. **Outbound tool credentials are operator-local secrets.** Slack bot
    tokens, GitHub PATs, and static MCP `Authorization` headers live on
@@ -108,8 +108,8 @@ Two AWS services, not one:
 **AgentCore Identity** is the workload identity directory and token
 vault.
 
-- A **workload identity** names an agent (`kirocrew`, later
-  `kirocrew-<agent_id>`).
+- A **workload identity** names an agent (`ajcrew`, later
+  `ajcrew-<agent_id>`).
 - `GetWorkloadAccessToken` / `ForJWT` / `ForUserId` mint an opaque
   **workload access token** bound to `(workload, user)`.
 - That token is **first-party only**. It authorizes AgentCore Identity
@@ -149,7 +149,7 @@ it calls Identity APIs.
   `GetWorkloadAccessTokenForJWT`. Use `ForUserId` only with a
   core-derived, partitioned subject.
 - Inject Gateway inbound credentials **per session**, never into
-  `~/.kiro/agents/kirocrew.json`.
+  `~/.kiro/agents/ajcrew.json`.
 - Public edition remains complete standalone: no AWS SDK, no AgentCore
   import, no new default-on egress, no Cognito/SSO reintroduction.
 - Fail closed. A missing companion, expired JWT, or Identity error
@@ -181,7 +181,7 @@ it calls Identity APIs.
   `1`, matching `knowledge` / `dashboard` / `jail`.
 - A public `config.json` AgentCore block. Agent-writable config cannot
   be the trust root for workload name, gateway URL, or region.
-- Re-versioning the immutable `kirocrew-ec2-boundary` in place.
+- Re-versioning the immutable `ajcrew-ec2-boundary` in place.
   Widening that document is a new named boundary, opt-in at launch.
 - Running both postures at once. `workload` and `login` are
   alternatives, not layers.
@@ -197,10 +197,10 @@ it calls Identity APIs.
 Operator / channel user
         │  dashboard token, Slack user id, companion SSO JWT
         ▼
-Kiro Crew gateway (local, ACP → kiro-cli)
+Aj Crew gateway (local, ACP → kiro-cli)
         │
         ├─ AgentIdentityProvider.workload_identity()
-        │     standalone AgentCore workload "kirocrew"
+        │     standalone AgentCore workload "ajcrew"
         │
         ├─ AgentIdentityProvider.vend_workload_access_token(principal)
         │     Identity: GetWorkloadAccessToken*  (see posture)
@@ -236,14 +236,14 @@ Two tokens, two audiences, never interchangeable:
 
 The operator-facing document today is `iam.policy_json()` — the
 indented JSON the dashboard copies (`GET /api/cloud/iam-policy`) and
-`kirocrew cloud iam-policy` prints. It is the **launcher** policy
+`ajcrew cloud iam-policy` prints. It is the **launcher** policy
 (CloudFormation, tagged EC2, PassRole, SSM, source bucket, STS). It
 is **not** what the running instance can do.
 
 A deployed Crew process assumes the instance role. That role is
 capped by the content-fixed permissions boundary
-`kirocrew-ec2-boundary` (`iam.boundary_policy_document`): SSM-core +
-`s3:GetObject` on `kirocrew-src-<account>-*`. A boundary is a
+`ajcrew-ec2-boundary` (`iam.boundary_policy_document`): SSM-core +
+`s3:GetObject` on `ajcrew-src-<account>-*`. A boundary is a
 ceiling, not a grant. Adding `bedrock-agentcore:InvokeGateway` to
 the launcher Policy.json alone does nothing for a box that is
 already running: the boundary still denies it. The boundary is
@@ -257,7 +257,7 @@ agreement, not one:
 |---|---|---|
 | `iam.policy_json()` | Operator pastes into IAM for the **launch** principal | Must be able to PassRole an instance role that *may* carry AgentCore |
 | Instance role grant (inline or attached) | Launch template / companion | The actual `InvokeGateway` / `GetWorkloadAccessToken*` allow |
-| `kirocrew-ec2-boundary` (or a new named successor) | Admin, once per account | Ceiling. Must list any AgentCore action the grant uses |
+| `ajcrew-ec2-boundary` (or a new named successor) | Admin, once per account | Ceiling. Must list any AgentCore action the grant uses |
 | `security_policy.json` | Fleet trust root (keystone) | Picks the posture. Agent cannot weaken it |
 
 `capabilities.agentcore` grows an inner posture, still a data row
@@ -286,49 +286,49 @@ in the same CloudFormation stack that creates the instance.
 - Resource: `AWS::BedrockAgentCore::WorkloadIdentity` (CDK L2:
   `aws_bedrockagentcore.WorkloadIdentity`). Same resource, two
   front-ends. The public wheel does not depend on `aws-cdk-lib`.
-- Name: `kirocrew-<StackTag>` so two crews in one account do not
+- Name: `ajcrew-<StackTag>` so two crews in one account do not
   collide. Hand-rolled fleets may still use the bare name
-  `kirocrew`.
+  `ajcrew`.
 - The instance role receives the posture grant automatically
   (`AWS::IAM::Policy`). Operators do not paste the instance
   Policy.json onto a CFN-launched box.
-- systemd gets `KIROCREW_AGENTCORE_POSTURE`,
-  `KIROCREW_AGENTCORE_WORKLOAD_NAME`, and optional
-  `KIROCREW_AGENTCORE_GATEWAY_URL`. A non-`none` posture installs
-  `kirocrew[agentcore]` (`boto3`) via `install.sh --agentcore`.
+- systemd gets `AJCREW_AGENTCORE_POSTURE`,
+  `AJCREW_AGENTCORE_WORKLOAD_NAME`, and optional
+  `AJCREW_AGENTCORE_GATEWAY_URL`. A non-`none` posture installs
+  `ajcrew[agentcore]` (`boto3`) via `install.sh --agentcore`.
   Settings PUT and standalone boot also `ensure_extra()` when the
   home policy or env posture is already `workload`/`login`, so a
   box that skipped the CFN flag still gets boto3. The in-repo extra
   (`platform/agentcore_aws.py`) reads those env vars (workload name
-  defaults to `kirocrew` when only the policy is set) and the
+  defaults to `ajcrew` when only the policy is set) and the
   Gateway MCP URL from `capabilities.agentcore.gateway_url` (Settings
-  / policy first) or `KIROCREW_AGENTCORE_GATEWAY_URL`. It calls
+  / policy first) or `AJCREW_AGENTCORE_GATEWAY_URL`. It calls
   `GetWorkloadAccessToken*` through a lazy boto3 client.
   Public core never imports the `bedrock-agentcore` SDK package and
-  never registers `kirocrew.plugins`.
+  never registers `ajcrew.plugins`.
 - Opt-in: `AgentCorePosture=none` (default) is the historical
-  launch. `kirocrew cloud launch --agentcore-posture workload`
+  launch. `ajcrew cloud launch --agentcore-posture workload`
   creates the AWS identity at deploy time. See-and-configure
   lives on **that crew's** Settings → Security → Agent identity
   (`GET`/`PUT /api/agentcore/identity`), not on the hub's Remote
   Crew launcher. The same pane verifies the Gateway, lists targets
   and the data-plane tool catalog, and can Sync a DEFAULT target
   (`GET`/`POST /api/agentcore/gateway`, owner-only). Instance IAM
-  grants inspect on `gateway/*`; Invoke stays on `kirocrew-*`.
+  grants inspect on `gateway/*`; Invoke stays on `ajcrew-*`.
   `ListOauth2CredentialProviders` is not on this pane. A fleet
   override or signed policy is refused.
 - Stack delete removes the identity. The launcher Policy.json
   grows `CreateWorkloadIdentity` / `DeleteWorkloadIdentity` /
   `GetWorkloadIdentity` / tag verbs, still scoped to
-  `kirocrew` / `kirocrew-*`. It still does **not** grow
+  `ajcrew` / `ajcrew-*`. It still does **not** grow
   `InvokeGateway`.
 
 #### Posture `workload` — deployed Crew can start
 
-Use this on a `kirocrew cloud launch` box (or any companion-managed
+Use this on an `ajcrew cloud launch` box (or any companion-managed
 host) that should reach Gateway **without** an interactive login.
 
-- Register a standalone workload identity `kirocrew-<StackTag>`
+- Register a standalone workload identity `ajcrew-<StackTag>`
   (not Gateway-managed) via the CloudFormation resource above.
 - Gateway inbound is **IAM** (`authorizerType: AWS_IAM`). The
   instance role is the caller. Action:
@@ -337,7 +337,7 @@ host) that should reach Gateway **without** an interactive login.
   `bedrock-agentcore:GetWorkloadAccessToken` (and, for unattended
   job-owner binding only,
   `GetWorkloadAccessTokenForUserId`) scoped to
-  `workload-identity-directory/default/workload-identity/kirocrew`.
+  `workload-identity-directory/default/workload-identity/ajcrew`.
 - **Deny** `GetWorkloadAccessTokenForJWT` on this role: there is no
   user JWT in this posture, and leaving ForJWT allowed invites a
   planted-token confused deputy.
@@ -356,15 +356,15 @@ pastes the document. The launcher document grows only the verbs
 needed to *stand up* an AgentCore-capable box:
 
 - `iam:CreatePolicy` + `iam:GetPolicy` on the **new** boundary
-  ARN (`kirocrew-ec2-boundary-agentcore`), still no
+  ARN (`ajcrew-ec2-boundary-agentcore`), still no
   `CreatePolicyVersion` / `Delete*`.
 - `iam:CreateRole` `ArnLike` on **either**
-  `kirocrew-ec2-boundary` or `kirocrew-ec2-boundary-agentcore`.
+  `ajcrew-ec2-boundary` or `ajcrew-ec2-boundary-agentcore`.
 - `bedrock-agentcore:CreateWorkloadIdentity` (and Get/Delete/Tag)
-  on `workload-identity/kirocrew` and `kirocrew-*`.
-- Existing path-scoped `PassRole` of `/kirocrew-ec2/kirocrew-ec2-*` roles.
+  on `workload-identity/ajcrew` and `ajcrew-*`.
+- Existing path-scoped `PassRole` of `/ajcrew-ec2/ajcrew-ec2-*` roles.
 
-The dashboard / `kirocrew cloud iam-policy` grows a **second,
+The dashboard / `ajcrew cloud iam-policy` grows a **second,
 labeled** document — the instance-role fragment — from
 `iam.agentcore_instance_policy_document(posture)`. Copying the
 launcher JSON onto the instance role, or the instance JSON onto
@@ -372,7 +372,7 @@ the launch principal, is a misconfiguration the copy UI must
 not invite.
 
 The instance boundary does **not** silently grow. A new named
-boundary (`kirocrew-ec2-boundary-agentcore`) is the **union**
+boundary (`ajcrew-ec2-boundary-agentcore`) is the **union**
 ceiling: existing SSM-core + source-bucket read, plus every
 AgentCore action either posture's instance grant may use
 (`GetWorkloadAccessToken`, `ForUserId`, `ForJWT`,
@@ -380,7 +380,7 @@ AgentCore action either posture's instance grant may use
 document is still what turns a verb on. One successor name
 covers both postures so a fleet can switch `security_policy.json`
 without minting a third boundary. New launches opt in; existing
-instances stay on `kirocrew-ec2-boundary` and cannot reach
+instances stay on `ajcrew-ec2-boundary` and cannot reach
 Gateway. No `CreatePolicyVersion` of the original document.
 
 #### Posture `login` — Gateway catalog only, user must sign in
@@ -392,7 +392,7 @@ human has to be present.
   IdP JWT after login. The instance role does **not** receive
   `InvokeGateway` or `GetWorkloadAccessTokenForUserId`.
 - If Crew must mint a workload token after login, the role may have
-  `GetWorkloadAccessTokenForJWT` only, scoped to `kirocrew`.
+  `GetWorkloadAccessTokenForJWT` only, scoped to `ajcrew`.
   ForUserId is **denied** in IAM.
 - **Override Kiro defaults at rebuild time.** When posture is
   `login` and `capabilities.agentcore` is enabled,
@@ -403,8 +403,8 @@ human has to be present.
   - `~/.kiro/crew/mcp.json` user servers
   - leftover non-managed entries in the merge base
 
-  It still emits the managed Crew servers (`kirocrew-core`,
-  `kirocrew-cron`, `kirocrew-computer` when its spec_gate is open)
+  It still emits the managed Crew servers (`ajcrew-core`,
+  `ajcrew-cron`, `ajcrew-computer` when its spec_gate is open)
   and the Gateway URL-only spec. Those are not "Kiro defaults";
   they are Crew's own process. A `@server` ref whose entry was
   withheld mounts nothing — same control as the computer-use
@@ -440,14 +440,14 @@ ARNs are fleet-pinned, never `*`):
   ],
   "Resource": [
     "arn:aws:bedrock-agentcore:*:*:workload-identity-directory/default",
-    "arn:aws:bedrock-agentcore:*:*:workload-identity-directory/default/workload-identity/kirocrew"
+    "arn:aws:bedrock-agentcore:*:*:workload-identity-directory/default/workload-identity/ajcrew"
   ]
 },
 {
   "Sid": "AgentCoreGateway",
   "Effect": "Allow",
   "Action": ["bedrock-agentcore:InvokeGateway"],
-  "Resource": "arn:aws:bedrock-agentcore:*:*:gateway/kirocrew-*"
+  "Resource": "arn:aws:bedrock-agentcore:*:*:gateway/ajcrew-*"
 },
 {
   "Sid": "DenyJwtPathOnWorkloadPosture",
@@ -466,7 +466,7 @@ Login-mode excerpt:
   "Action": ["bedrock-agentcore:GetWorkloadAccessTokenForJWT"],
   "Resource": [
     "arn:aws:bedrock-agentcore:*:*:workload-identity-directory/default",
-    "arn:aws:bedrock-agentcore:*:*:workload-identity-directory/default/workload-identity/kirocrew"
+    "arn:aws:bedrock-agentcore:*:*:workload-identity-directory/default/workload-identity/ajcrew"
   ]
 },
 {
@@ -493,16 +493,16 @@ the MCP header-injection site, governance, redaction, and SEL. It ships
 `DefaultAgentIdentityProvider` (all methods empty / `enabled() ==
 False`).
 
-An **opt-in extra** (`kirocrew[agentcore]`, boto3 only) implements
+An **opt-in extra** (`ajcrew[agentcore]`, boto3 only) implements
 `AgentIdentityProvider` in-tree as `AwsAgentIdentityProvider` so a
 deployed box can vend. IaC (`install.sh --agentcore`, the EC2
 template) installs it; a later policy or Settings configure
 force-installs the same extra into the gateway interpreter.
 Bootstrap swaps only `agent_identity` on a standalone profile — it
 does not flip to a companion and does not register
-`kirocrew.plugins`.
+`ajcrew.plugins`.
 
-The enterprise companion (separate package, `kirocrew.plugins` entry
+The enterprise companion (separate package, `ajcrew.plugins` entry
 point) remains the home for operator IdP JWT annotation, Cognito /
 SSO, and Gateway/target control-plane registration.
 
@@ -613,7 +613,7 @@ analogous to `mcp_gateway` declared-env forwarding
    (not present with an empty header). Fail closed.
 3. The bearer is written to a `0600` session sidecar that kiro-cli /
    the MCP stub reads as transport headers. It is never merged into
-   `~/.kiro/agents/kirocrew.json`.
+   `~/.kiro/agents/ajcrew.json`.
 4. The Gateway server is **unpooled** in v1 (`pool_identity` would have
    to include the bearer, which re-partitions on every refresh and
    leaks a credential into a hash input). Per-session spawn is the
@@ -761,12 +761,12 @@ dependency. Standalone behavior byte-identical.
 Exit: `test_platform_cpp_seam_coverage.py` lists the new slot;
 `enabled()` is False; unknown/absent posture with `enabled: true`
 fails closed; no `bedrock-agentcore` SDK import under
-`src/kiro_crew/` (boto3 stays inside the opt-in extra).
+`src/aj_crew/` (boto3 stays inside the opt-in extra).
 
 ### Phase 1b — Policy.json pair, boundary successor, login withhold
 
 > **Not on main.** Phases 1b through 4 are proposed. Their deliverables
-> (instance policy helper, `kirocrew-ec2-boundary-agentcore`, login withhold,
+> (instance policy helper, `ajcrew-ec2-boundary-agentcore`, login withhold,
 > AWS adapter, Gateway attach, consent flow) are absent from main;
 > `cloud/iam.py` defines a single `BOUNDARY_NAME`.
 
@@ -774,17 +774,17 @@ Public-core JSON only (no AgentCore SDK):
 
 - `iam.agentcore_instance_policy_document(posture)` emits the
   instance-role fragment for `workload` or `login`.
-- New named boundary `kirocrew-ec2-boundary-agentcore` (SSM-core +
+- New named boundary `ajcrew-ec2-boundary-agentcore` (SSM-core +
   source-bucket read + the AgentCore ceiling for that posture).
-  Original `kirocrew-ec2-boundary` stays byte-identical.
+  Original `ajcrew-ec2-boundary` stays byte-identical.
 - Launcher Policy.json / CloudFormation `AllowedPattern` accept
   **either** boundary name. Still no `CreatePolicyVersion`.
-- Dashboard / `kirocrew cloud iam-policy` can copy the
+- Dashboard / `ajcrew cloud iam-policy` can copy the
   posture-correct instance document as a labeled sibling of the
   launcher document.
 - `rebuild_agent_config()` withholds Kiro-global, seam-global,
   crew-store, and leftover non-managed servers when posture is
-  `login` and the capability is on. Managed `kirocrew-*` still
+  `login` and the capability is on. Managed `ajcrew-*` still
   emit. Gateway stays out of the agent file; attach writes a session
   sidecar (bearer JWT or URL-only OAuth challenge).
 - Posture-vs-IAM mismatch probe fails closed (no Gateway emit,
@@ -815,7 +815,7 @@ rebuilt agent file. Unpooled. Expiry drains a bearer sidecar's ACP
 child (not the mcp_gateway pool). Fail closed on a missing URL.
 
 Exit: a login session with a Gateway URL lists the server (bearer or
-OAuth challenge); a session without a URL does not; `kirocrew.json`
+OAuth challenge); a session without a URL does not; `ajcrew.json`
 contains no `Authorization` header.
 
 ### Phase 4 — Human 3LO consent + unattended policy
@@ -831,7 +831,7 @@ an allowlisted GET `/api/agentcore/consent` link; unknown hosts return
 `status().vaultedOwnerToken` writes a deny sidecar (`disabled: true`).
 SEL `agentcore.consent_url` / `agentcore.unattended_denied` log
 host+path / session+subject only — never token bytes.
-`GetWorkloadAccessToken*` is the `kirocrew[agentcore]` extra
+`GetWorkloadAccessToken*` is the `ajcrew[agentcore]` extra
 (Task 7), not Phase 5 `GetResourceOauth2Token`.
 
 Exit: an unknown consent host is refused; a cron job cannot OBO as an
@@ -847,7 +847,7 @@ same principal rules, same redaction. Do not start this phase to
 
 - Standalone / public wheel: no new default imports, no new MCP server,
   no new default-on capability, no config migration. The `agentcore`
-  extra is opt-in (`pip install kirocrew[agentcore]` / IaC).
+  extra is opt-in (`pip install ajcrew[agentcore]` / IaC).
 - Companion: additive. A companion that does not override
   `agent_identity` inherits the Default (disabled).
 - Existing static remote MCP servers and `kiro_oauth_wire_entry` are
@@ -869,7 +869,7 @@ same principal rules, same redaction. Do not start this phase to
 - **Do not fail open** to a shared service-account token when JWT
   vending fails.
 - **Do not re-introduce Cognito / RUM ids / enterprise SSO** into
-  `src/kiro_crew/`. Discovery URLs live in the companion.
+  `src/aj_crew/`. Discovery URLs live in the companion.
 - Computer use stays ungoverned and in-band. This RFC does not add
   `computer_use.*` scopes.
 - Sensitive-path matchers must cover any later keystone file on both
@@ -883,18 +883,18 @@ same principal rules, same redaction. Do not start this phase to
 > status.
 
 Verified in a scratch AWS account in `us-east-1` against a tagged
-`kirocrew:e2e=true` stack: an AWS_IAM Gateway (READY), a standalone
+`ajcrew:e2e=true` stack: an AWS_IAM Gateway (READY), a standalone
 workload identity, a Lambda target, and an MCP_SERVER target.
 
 Verified live:
 
 - Control-plane catalog + Settings verify: READY, AWS_IAM, URL match,
-  `kirocrew-*` invoke scope, tools/list `echo-hello___echo_hello`.
+  `ajcrew-*` invoke scope, tools/list `echo-hello___echo_hello`.
 - Workload SigV4 localhost proxy: MCP initialize, `tools/list`, and
   `tools/call` (`{"message":"hello proxy"}`).
 - Unsigned Gateway and WAT-as-`Authorization` both 401. WAT vends
   (opaque). `vend_gateway_inbound_token` without a user JWT is `None`.
-- Policy `gateway_url` wins over `KIROCREW_AGENTCORE_GATEWAY_URL`.
+- Policy `gateway_url` wins over `AJCREW_AGENTCORE_GATEWAY_URL`.
 - Identity GET/PUT and catalog GET/verify (owner); app tokens 403.
   Lambda Sync returns `not_syncable`.
 - Workload rebuild emits the proxy URL only. Login rebuild withholds.
@@ -904,16 +904,16 @@ Closed after the run:
 
 - GetGatewayTarget omits `targetType`; `mcp.lambda` was labeled `MCP`.
   Catalog now infers `LAMBDA`.
-- Settings-only default name `kirocrew` does not match a created
-  `kirocrew-e2e` (`AccessDenied`: identity does not belong to caller
+- Settings-only default name `ajcrew` does not match a created
+  `ajcrew-e2e` (`AccessDenied`: identity does not belong to caller
   account). Settings now authors `capabilities.agentcore.workload_name`.
 - Login attach used `gateway_mcp_spec()`, which rewrites to the proxy
   when env posture is still `workload`. Login sidecars now always use
   the https Gateway URL.
 - Catalog/verify now probes `GetWorkloadAccessToken` and discards the
-  body. A standalone `kirocrew-e2e` is `ok`; a Gateway-linked
+  body. A standalone `ajcrew-e2e` is `ok`; a Gateway-linked
   service identity is `service_linked`; the default
-  `kirocrew` is `identity_denied`. Login skips the probe
+  `ajcrew` is `identity_denied`. Login skips the probe
   (`login_needs_sign_in`). The token never enters the snapshot.
 - Login sidecar `Authorization` is RFC 6750 `Bearer` (live-checked).
 - `resolved_posture()` is policy-first like URL and name. Leftover
@@ -926,17 +926,17 @@ Closed on the production-ready pass:
   ceiling and AWS adapter (`apply_agentcore_runtime`) and rebuilds
   the agent config. `restart_required` stays true only when that
   apply cannot attach the extra.
-- Settings-only empty no longer invents `kirocrew`. PUT posture-on
+- Settings-only empty no longer invents `ajcrew`. PUT posture-on
   without a name is 400 `workload_name_required`; the UI disables
   Save until a name is set. Launch env posture without a systemd
   name still uses the RFC default.
-- Successor-boundary Invoke stays `kirocrew-*`. Catalog
+- Successor-boundary Invoke stays `ajcrew-*`. Catalog
   `invoke_scope` is now credential-proved: tools/list through the
   SigV4 proxy greens any Gateway this crew can actually call, so a
   pasted existing Gateway is not falsely red. Prefix is the
   fallback when tools were not proved. A data-plane 401/403 is
-  `invoke_denied` even on a `kirocrew-*` id.
-- Instance-role-only IAM (`kirocrew-e2e-instance` assumed from a
+  `invoke_denied` even on an `ajcrew-*` id.
+- Instance-role-only IAM (`ajcrew-e2e-instance` assumed from a
   named IAM user, policy from `agentcore_instance_policy_document(
   "workload")`): WAT `ok`, all nine catalog checks green, tools/list
   and `SynchronizeGatewayTargets` accepted. Admin keys were not in
@@ -953,11 +953,11 @@ Closed on the agent-path honesty pass:
 
 - Catalog / Verify `tools/list` uses `ensure_workload_proxy` and an
   unsigned localhost POST — the same path rebuild writes into
-  `kirocrew.json`. A green tools check is no longer a direct SigV4
+  `ajcrew.json`. A green tools check is no longer a direct SigV4
   to the Gateway hostname. Proxy start failure is
   `proxy_unavailable`. Isolated rebuild of a workload spec persists
   `http://127.0.0.1:<port>/mcp`. Live under assumed-role
-  `kirocrew-e2e-instance`: snapshot `via=proxy`, both targets'
+  `ajcrew-e2e-instance`: snapshot `via=proxy`, both targets'
   tools listed, `gateway_mcp_spec()` listen URL
   `http://127.0.0.1:<port>/mcp`, and `tools/call`
   `echo-hello___echo_hello` succeeded through that listener.
@@ -969,9 +969,9 @@ Closed on the OOTB session-inject pass:
   SigV4 listen URL when identity is on, so `session/new` outranks a
   stale agent-file port after a gateway restart. A companion https
   spec (unsigned Gateway hostname) still injects `[]`.
-- The proxy prefers `127.0.0.1:18765` so a rebuilt `kirocrew.json`
+- The proxy prefers `127.0.0.1:18765` so a rebuilt `ajcrew.json`
   survives a restart when that port is free.
-  `KIROCREW_AGENTCORE_PROXY_PORT` overrides; bind failure falls
+  `AJCREW_AGENTCORE_PROXY_PORT` overrides; bind failure falls
   back to ephemeral and session inject carries the live URL.
 - Isolated kiro-cli 2.20.1 `session/new` rejects `{name, url}` and
   `{name, disabled: true}` (`untagged enum McpServer`). HTTP inject
@@ -979,7 +979,7 @@ Closed on the OOTB session-inject pass:
   there is no bearer). Deny retracts with a disabled HTTP
   placeholder. Confirmed: `type: http` + `headers: []` accepts
   `session/new`; the earlier shape closed the connection. Live
-  inject+MCP under assumed-role `kirocrew-e2e-instance` bound
+  inject+MCP under assumed-role `ajcrew-e2e-instance` bound
   `127.0.0.1:18765`, listed both targets' tools, and
   `echo-hello___echo_hello` returned `hello ootb`.   Isolated
   `KIRO_HOME` did not write `~/.kiro/agents`. Isolated kiro-cli
@@ -990,7 +990,7 @@ Closed on the OOTB session-inject pass:
 
 Closed on the existing-Gateway honesty pass:
 
-- Catalog `invoke_scope` no longer fails a working non-`kirocrew-*`
+- Catalog `invoke_scope` no longer fails a working non-`ajcrew-*`
   Gateway. If tools/list just succeeded via the SigV4 proxy, this
   credential invoked it. Prefix remains the unproved fallback.
   Settings copy is credential-honest (this crew's AWS credentials),
@@ -1016,27 +1016,27 @@ Closed on the leftover-validation pass (live, 2026-08-28):
 
 - **Desktop / PEP 668.** Host Homebrew Python 3.14 is
   `EXTERNALLY-MANAGED`, not a venv, and has no boto3.
-  `python3 -m pip install kirocrew[agentcore]` exits 1 with the
+  `python3 -m pip install ajcrew[agentcore]` exits 1 with the
   PEP 668 error (no `--break-system-packages`). The worktree venv
   reports `extra_available` / `extra_code=ok`. Settings
   `no_install_channel` is the correct desktop answer.
 - **Phase 5 `GetResourceOauth2Token`.**
   `ListOauth2CredentialProviders` is empty in this account. A WAT
-  for standalone `kirocrew-e2e` vends. `GetResourceOauth2Token`
+  for standalone `ajcrew-e2e` vends. `GetResourceOauth2Token`
   against a missing provider is `ValidationException` ("invalid
   type or does not exist"). Gateway MCP tools already list and
   call without Crew becoming a token broker. Phase 5 stays out.
 - **Invoke `gateway/*`.** Created IAM Gateway
-  an existing-customer Gateway (not `kirocrew-*`) + public MCP
+  an existing-customer Gateway (not `ajcrew-*`) + public MCP
   target. Admin/laptop credentials: catalog `invoke_scope` green
   via proxy (`via=proxy`, 3 tools). Assumed
-  `kirocrew-e2e-instance`: inspect `ok`, tools `tools_denied`,
+  `ajcrew-e2e-instance`: inspect `ok`, tools `tools_denied`,
   `invoke_denied`. Settings customers with their own creds do not
   need a wider CFN grant. A CFN-launched box still cannot Invoke a
-  non-`kirocrew-*` Gateway unless the operator attaches that ARN.
-  Successor boundary stays `kirocrew-*`.
-- **Login / CUSTOM_JWT.** Tagged Cognito pool `kirocrew-e2e-oidc`
-  (test IdP, not product SSO) + Gateway `kirocrew-e2e-jwt`.
+  non-`ajcrew-*` Gateway unless the operator attaches that ARN.
+  Successor boundary stays `ajcrew-*`.
+- **Login / CUSTOM_JWT.** Tagged Cognito pool `ajcrew-e2e-oidc`
+  (test IdP, not product SSO) + Gateway `ajcrew-e2e-jwt`.
   Discovery URL is public. Unsigned initialize is 401. A Cognito
   **IdToken** with Gateway `allowedAudience` = app client id
   initializes 200 and `tools/list` returns the three
@@ -1055,7 +1055,7 @@ Closed on the leftover-validation pass (live, 2026-08-28):
 
 The companion could inject a Gateway MCP server with a static header
 via `extra_mcp_servers()` today. That cannot do per-session OBO,
-refresh, or keep the bearer out of `kirocrew.json`. Acceptable as a
+refresh, or keep the bearer out of `ajcrew.json`. Acceptable as a
 manual operator escape hatch; not the integration.
 
 ### B. boto3 AgentCore client in the public core (rejected)
@@ -1090,7 +1090,7 @@ should present identity, not become a token broker.
 Adopted in the design; the `workload` posture's runtime path is not on main.
 
 This is no longer a fallback: it **is** the deployed-box posture.
-IAM inbound lets a `kirocrew cloud launch` instance invoke Gateway
+IAM inbound lets an `ajcrew cloud launch` instance invoke Gateway
 at boot with no login. The public-core `probe_instance_invoke_gateway()`
 is a no-op that returns False; a companion must override it.
 Fail-closed there means no mismatch was detected, not that IAM inbound
@@ -1111,7 +1111,7 @@ name are not on main.
    Tokens never enter the rendered agent JSON. `session/new` injects
    the inbound sidecar. Header-proxy MCP not implemented.
 2. **One workload vs per-agent-config workloads.** v1 is one
-   `kirocrew` workload. A later `kirocrew-<agent_id>` split is
+   `ajcrew` workload. A later `ajcrew-<agent_id>` split is
    additive (new identities, same protocol).
 3. **Dashboard route.** Resolved: sibling
    `GET`/`PUT /api/agentcore/identity` on **this crew's** Settings →
@@ -1124,7 +1124,7 @@ name are not on main.
    Code Interpreter session, it must use this RFC's workload identity
    rather than minting a second one.
 6. **Boundary successor vs parameterized name.** v1 uses a second
-   exact name (`kirocrew-ec2-boundary-agentcore`) so the original
+   exact name (`ajcrew-ec2-boundary-agentcore`) so the original
    document stays immutable. Confirm the CloudFormation
    `PermissionsBoundaryArn` `AllowedPattern` can list both names
    without weakening the create-once story.
@@ -1146,7 +1146,7 @@ name are not on main.
 - [`mcp.md`](../architecture/mcp.md) — MCP merge, `spec_gate`
   withhold, stateless tools
 - [`cloud.md`](../system-specs/modules/cloud.md) — launcher
-  Policy.json, immutable `kirocrew-ec2-boundary`, create-once
+  Policy.json, immutable `ajcrew-ec2-boundary`, create-once
   `CreatePolicy` (never `CreatePolicyVersion`)
 - [`injected-messages.md`](../system-specs/common/injected-messages.md)
   — cron / subagent envelopes are not the user

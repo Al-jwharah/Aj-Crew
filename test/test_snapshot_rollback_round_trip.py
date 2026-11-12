@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from test_snapshot import unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 class TestRecoveryRefusesToSaveATreeItCannotCopyWhole:

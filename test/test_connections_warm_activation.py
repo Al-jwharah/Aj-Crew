@@ -22,10 +22,10 @@ import pytest
 from connections_warm_helpers import _claim, _provider, _result, _returns, _Runtime, _SessionHandle
 from oauth_url_corpus import OPERATOR_EXTENSION_OAUTH_URLS
 
-from kiro_crew import security
-from kiro_crew.agent_files import AGENT_FILENAME
-from kiro_crew.connections import mint, warm
-from kiro_crew.connections.mint import _mints
+from aj_crew import security
+from aj_crew.agent_files import AGENT_FILENAME
+from aj_crew.connections import mint, warm
+from aj_crew.connections.mint import _mints
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _agents_dir = connections_warm_helpers._agents_dir

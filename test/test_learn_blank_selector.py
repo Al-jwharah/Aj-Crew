@@ -1,6 +1,6 @@
 """A blank ``learn`` argument is refused before it can touch a lesson.
 
-Every rule contains the empty string, so a blank ``kirocrew learn remove``
+Every rule contains the empty string, so a blank ``ajcrew learn remove``
 selector (an unset ``"$VAR"``) would match every lesson, and a blank
 ``learn add`` would save a lesson with no rule. The CLI refuses both with exit
 2, and both stores' delete refuses a blank substring itself, so no other caller
@@ -15,9 +15,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew import cli_commands
-from kiro_crew.learn import LessonStore
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import cli_commands
+from aj_crew.learn import LessonStore
+from aj_crew.vector_memory import VectorMemoryStore
 
 BLANKS = ["", "   ", "\t\n"]
 
@@ -52,7 +52,7 @@ def test_cli_remove_refuses_a_blank_selector_and_keeps_every_lesson(
         with (
             patch.object(cli_commands, "VectorMemoryStore", return_value=store),
             patch.object(cli_commands, "LessonStore", return_value=jsonl),
-            patch.object(cli_commands.KiroCrewConfig, "load", return_value=MagicMock()),
+            patch.object(cli_commands.AjCrewConfig, "load", return_value=MagicMock()),
             pytest.raises(SystemExit) as exc,
         ):
             cli_commands._learn(args)
@@ -71,7 +71,7 @@ def test_cli_add_refuses_a_blank_rule_before_any_store(capsys, blank) -> None:
     with (
         patch.object(cli_commands, "VectorMemoryStore", vs_cls),
         patch.object(cli_commands, "LessonStore", return_value=MagicMock()),
-        patch.object(cli_commands.KiroCrewConfig, "load", return_value=MagicMock()),
+        patch.object(cli_commands.AjCrewConfig, "load", return_value=MagicMock()),
         pytest.raises(SystemExit) as exc,
     ):
         cli_commands._learn(args)

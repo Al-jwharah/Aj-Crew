@@ -1,4 +1,4 @@
-"""Branch coverage for :mod:`kiro_crew.onboarding_import` helpers.
+"""Branch coverage for :mod:`aj_crew.onboarding_import` helpers.
 
 Focuses on the malformed-input, partial-import and refusal paths that the
 behavioural suite in ``test_onboarding_import.py`` and its topic files does not reach: config
@@ -22,9 +22,9 @@ from typing import Any
 import pytest
 from onboarding_import_coverage_helpers import _reasons, _scan
 
-from kiro_crew import onboarding_apply, onboarding_plan, onboarding_scan
-from kiro_crew.onboarding_sources import hermes as hermes_source
-from kiro_crew.onboarding_sources import lineage as lineage_source
+from aj_crew import onboarding_apply, onboarding_plan, onboarding_scan
+from aj_crew.onboarding_sources import hermes as hermes_source
+from aj_crew.onboarding_sources import lineage as lineage_source
 
 # Keep apply_import's MCP sidecar lock off the real ~/.kiro/settings (see the
 # shared fixture in test/conftest.py).
@@ -32,7 +32,7 @@ pytestmark = pytest.mark.usefixtures("isolate_mcp_host_paths")
 
 
 def _api() -> ModuleType:
-    return importlib.import_module("kiro_crew.onboarding_import")
+    return importlib.import_module("aj_crew.onboarding_import")
 
 
 class TestJson5AndFrontmatter:
@@ -126,14 +126,14 @@ class TestScalarHelpers:
         "raw, expected",
         [
             (5, ""),
-            ("kirocrew-core", ""),
+            ("ajcrew-core", ""),
             # The joined spelling is load-bearing here, not prose: rejection is
             # `name.casefold() in managed_mcp_names()` over the registry's
             # `_managed_mcp_names`, so this case is what proves
             # a managed name survives case-folding. Rewording it would delete the
             # only coverage of that branch. The marker must sit on the offending
             # line itself -- the gate scans per line, not per block.
-            ("KiroCrew-Cron", ""),  # brand-ok
+            ("AjCrew-Cron", ""),  # brand-ok
             ("..", ""),
             ("a" * 129, ""),
             ("plain", "plain"),
@@ -307,7 +307,7 @@ class TestConfigProjection:
 
         onboarding_plan._add_mcp_configs(
             scan,
-            [{"mcpServers": {"kirocrew-core": {"command": "x"}, "..": {"command": "y"}}}],
+            [{"mcpServers": {"ajcrew-core": {"command": "x"}, "..": {"command": "y"}}}],
         )
 
         assert _reasons(scan) >= {"managed_server_excluded", "invalid_server_name"}

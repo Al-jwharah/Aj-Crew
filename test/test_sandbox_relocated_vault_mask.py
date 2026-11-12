@@ -1,4 +1,4 @@
-"""The secret vault under a relocated ``KIROCREW_HOME`` is masked like the default-home vault.
+"""The secret vault under a relocated ``AJCREW_HOME`` is masked like the default-home vault.
 
 The tier lists name the vault only at its two ``$HOME``-joined spellings, so a data home
 outside ``$HOME`` needs the resolved ``config_dir()/.vault`` added the way the relocated
@@ -12,7 +12,7 @@ import sys
 
 import pytest
 
-from kiro_crew import sandbox, sandbox_plan
+from aj_crew import sandbox, sandbox_plan
 
 _MODES = ("standard", "cc", "strict")
 _POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="POSIX sandbox backends only")
@@ -27,18 +27,18 @@ def _tmp_home(monkeypatch: pytest.MonkeyPatch, tmp_path, *, relocated: bool) -> 
     home = tmp_path / "home"
     home.mkdir()
     monkeypatch.setenv("HOME", str(home))
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
+    monkeypatch.delenv("AJCREW_POD", raising=False)
     if relocated:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "relocated-crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "relocated-crew"))
     else:
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
     return str(home)
 
 
 def _store_fake_secret() -> str:
     """Store a fake secret through the real vault and return the vault directory."""
-    from kiro_crew.config.paths import config_dir
-    from kiro_crew.secrets.vault import SecretVault
+    from aj_crew.config.paths import config_dir
+    from aj_crew.secrets.vault import SecretVault
 
     SecretVault(config_dir()).set_sync("r18_fake", "not-a-real-secret")
     vault_dir = os.path.join(str(config_dir()), ".vault")
@@ -98,8 +98,8 @@ def test_default_home_vault_masks_are_unchanged(backend, mode, tmp_path, monkeyp
 
 @_POSIX_ONLY
 def test_vault_save_and_load_round_trip_under_relocated_home(tmp_path, monkeypatch) -> None:
-    from kiro_crew.config.paths import config_dir
-    from kiro_crew.secrets.vault import SecretVault
+    from aj_crew.config.paths import config_dir
+    from aj_crew.secrets.vault import SecretVault
 
     _tmp_home(monkeypatch, tmp_path, relocated=True)
     _store_fake_secret()

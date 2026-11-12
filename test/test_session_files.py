@@ -11,19 +11,19 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import session_files
-from kiro_crew.dashboard.session_files import (
+from aj_crew.dashboard import session_files
+from aj_crew.dashboard.session_files import (
     _change_paths,
     api_project_session_files,
     newest_first,
 )
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.history import ConversationLog
 
 
 @pytest.fixture()
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.sel") as m:
+    with patch("aj_crew.dashboard.handlers.sel") as m:
         m.return_value = MagicMock()
         yield m.return_value
 

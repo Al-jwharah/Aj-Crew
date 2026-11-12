@@ -26,10 +26,10 @@ from native_skill_projection_helpers import (
     _metadata_file,
 )
 
+from aj_crew.acp import skill_projection as projection
+from aj_crew.hooks import FileTooLargeError
+from aj_crew.testing.wait import wait_until
 from conftest import requires_symlinks
-from kiro_crew.acp import skill_projection as projection
-from kiro_crew.hooks import FileTooLargeError
-from kiro_crew.testing.wait import wait_until
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _no_eager_prune = native_skill_projection_helpers._no_eager_prune
@@ -105,11 +105,11 @@ def test_generated_view_keeps_lifecycle_ownership_out_of_the_agent_spec(native_t
     prepared = projection.prepare_native_skill_projection(project)
     alias_path = _alias_file(agents, prepared)
     view = json.loads(alias_path.read_text(encoding="utf-8"))
-    assert not any(str(key).startswith("x-kirocrew-") for key in view)
+    assert not any(str(key).startswith("x-ajcrew-") for key in view)
     metadata = json.loads(_metadata_file(agents, prepared).read_text(encoding="utf-8"))
     assert metadata[projection._MANAGED_MARKER] == projection._MANAGED_MARKER_VALUE
     assert metadata[projection._MANAGED_CREW_HOME] == (home.parent / "crew").as_posix()
-    assert "x-kirocrew-work-dir" not in metadata
+    assert "x-ajcrew-work-dir" not in metadata
     assert metadata[projection._MANAGED_AGENT] == "custom"
     assert metadata[projection._MANAGED_SOURCE] == (agents / "custom.json").as_posix()
     assert (
@@ -270,7 +270,7 @@ def test_a_held_lease_stays_readable_so_it_only_keeps_the_aliases_it_names(nativ
 
     # The lease naming `mine` is HELD by this process for prepared's lifetime.
     assert _alias_is_live(agents, mine) is True
-    assert _alias_is_live(agents, "kirocrew-skill-view-notnamedhere") is False
+    assert _alias_is_live(agents, "ajcrew-skill-view-notnamedhere") is False
     assert prepared is not None
 
 
@@ -286,7 +286,7 @@ def test_a_lease_is_never_published_past_the_bound_its_reader_enforces(native_tr
     """
     _home, agents, _project = native_tree
     cap = projection._PROJECTION_LEASE_MAX_ALIASES
-    at_cap = {f"kirocrew-skill-view-{n:024x}" for n in range(cap)}
+    at_cap = {f"ajcrew-skill-view-{n:024x}" for n in range(cap)}
 
     stack = projection._acquire_projection_lease(agents, at_cap)
     try:
@@ -295,12 +295,12 @@ def test_a_lease_is_never_published_past_the_bound_its_reader_enforces(native_tr
         assert len(records) == 1
         assert len(records[0].read_bytes()) <= projection._PROJECTION_LEASE_MAX_BYTES
         # A record AT the cap is admitted, so it keeps only what it names.
-        assert _alias_is_live(agents, "kirocrew-skill-view-notnamedhere") is False
+        assert _alias_is_live(agents, "ajcrew-skill-view-notnamedhere") is False
     finally:
         stack.close()
 
     with pytest.raises(OSError, match="exceed its reader's bound"):
-        projection._acquire_projection_lease(agents, at_cap | {"kirocrew-skill-view-onemore"})
+        projection._acquire_projection_lease(agents, at_cap | {"ajcrew-skill-view-onemore"})
 
 
 def test_prune_spares_a_legacy_alias_that_may_be_mid_publish(native_tree, monkeypatch):
@@ -1062,8 +1062,8 @@ def test_same_crew_home_matches_across_symlinked_home_spellings(tmp_path):
     linked = tmp_path / "home"
     linked.symlink_to(real, target_is_directory=True)
 
-    recorded = (linked / ".kirocrew").as_posix()
-    current = (real / ".kirocrew").as_posix()
+    recorded = (linked / ".ajcrew").as_posix()
+    current = (real / ".ajcrew").as_posix()
     assert recorded != current, "the two spellings must be literally distinct for the test"
 
     assert projection._same_crew_home(recorded, current)
@@ -1104,11 +1104,11 @@ def test_same_crew_home_never_resolves_an_untrusted_path_on_windows(monkeypatch)
 
     # A bare UNC spelling, a local path that could be a junction to UNC, and an
     # ordinary differing local path: none is resolved, each stays foreign.
-    assert not projection._same_crew_home(r"\\attacker\share\.kirocrew", r"C:\Users\u\.kirocrew")
-    assert not projection._same_crew_home(r"C:\local-link\.kirocrew", r"C:\Users\u\.kirocrew")
-    assert not projection._same_crew_home(r"C:\other\.kirocrew", r"C:\Users\u\.kirocrew")
+    assert not projection._same_crew_home(r"\\attacker\share\.ajcrew", r"C:\Users\u\.ajcrew")
+    assert not projection._same_crew_home(r"C:\local-link\.ajcrew", r"C:\Users\u\.ajcrew")
+    assert not projection._same_crew_home(r"C:\other\.ajcrew", r"C:\Users\u\.ajcrew")
     # A literally identical value still matches without resolving.
-    assert projection._same_crew_home(r"C:\Users\u\.kirocrew", r"C:\Users\u\.kirocrew")
+    assert projection._same_crew_home(r"C:\Users\u\.ajcrew", r"C:\Users\u\.ajcrew")
     assert calls == [], "no untrusted path may reach os.path.realpath on Windows"
 
 
@@ -1121,10 +1121,10 @@ def test_same_crew_home_falls_back_to_literal_comparison_when_resolution_fails(m
     monkeypatch.setattr(projection.os.path, "realpath", _boom)
 
     # Identical strings still match without ever reaching realpath.
-    assert projection._same_crew_home("/home/u/.kirocrew", "/home/u/.kirocrew")
+    assert projection._same_crew_home("/home/u/.ajcrew", "/home/u/.ajcrew")
     # Different strings cannot be proven equal once resolution is unavailable, so
     # they stay foreign -- the pre-fix behaviour, which never widens this home.
-    assert not projection._same_crew_home("/home/u/.kirocrew", "/local/home/u/.kirocrew")
+    assert not projection._same_crew_home("/home/u/.ajcrew", "/local/home/u/.ajcrew")
 
 
 @pytest.mark.skipif(

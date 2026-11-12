@@ -31,7 +31,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 ROOT = Path(__file__).resolve().parents[1]
 RELEASE = ROOT / ".github" / "workflows" / "release.yml"
@@ -55,7 +55,7 @@ def _run_step(tmp_path: Path, changelog: str, *, channel: str = "stable", versio
     script = tmp_path / "extract.py"
     script.write_text(_extract_step_script(), encoding="utf-8")
     # The environment is INHERITED, with only PYTHONPATH overridden so the child
-    # can import `kiro_crew.changelog` from a cwd that is not the checkout.
+    # can import `aj_crew.changelog` from a cwd that is not the checkout.
     # Handing it a from-scratch dict instead drops SystemRoot on Windows, and
     # Winsock cannot initialize without it: `import asyncio` in the child then
     # raises WinError 10106 before the script under test runs at all.

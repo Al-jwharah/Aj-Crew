@@ -11,7 +11,7 @@ CLOSED stdin (``DEVNULL``) unless the caller explicitly passes a body descriptor
 import subprocess
 from types import SimpleNamespace
 
-from kiro_crew.deploy import engine
+from aj_crew.deploy import engine
 
 
 def _capture_run_limited(monkeypatch):

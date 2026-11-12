@@ -16,22 +16,22 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from test_coder_session_launch import URL, FakeCoder, _config, _home, sync
 
-from kiro_crew import session_environment as se
-from kiro_crew.coder import session_browse, session_launch
-from kiro_crew.coder.client import CoderClient, CoderClientError
-from kiro_crew.coder.registry import WorkspaceBindingRegistry
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.handlers import session_environments as handlers
-from kiro_crew.dashboard.handlers import terminal
-from kiro_crew.session_environment import SessionEnvironmentUnavailable
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import session_environment as se
+from aj_crew.coder import session_browse, session_launch
+from aj_crew.coder.client import CoderClient, CoderClientError
+from aj_crew.coder.registry import WorkspaceBindingRegistry
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.handlers import session_environments as handlers
+from aj_crew.dashboard.handlers import terminal
+from aj_crew.session_environment import SessionEnvironmentUnavailable
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 def _scripted(*outcomes):
@@ -264,8 +264,8 @@ async def test_a_remote_session_whose_workspace_never_started_can_move_here(tmp_
 async def test_a_switch_waits_for_a_first_start_in_flight(tmp_path, monkeypatch):
     """A cold start holds the session switch lock while it creates the workspace;
     a switch queued behind it reads the created workspace and is refused."""
-    from kiro_crew.llm_helpers_parts.model_fallback import slot_switch_session_lock
-    from kiro_crew.testing.wait import until_parked
+    from aj_crew.llm_helpers_parts.model_fallback import slot_switch_session_lock
+    from aj_crew.testing.wait import until_parked
 
     async with _client(tmp_path, monkeypatch) as client:
         slot = client.slot
@@ -336,9 +336,7 @@ async def test_browse_endpoint_maps_failures(tmp_path, monkeypatch):
 async def test_a_save_made_under_an_old_working_folder_is_refused(tmp_path, monkeypatch):
     """The route hands the folder to the writer and maps its refusal; the check
     itself runs against the writer's own resolved target (test_coder_session_browse)."""
-    monkeypatch.setattr(
-        "kiro_crew.sel.sel", lambda: SimpleNamespace(log_api_access=lambda **k: None)
-    )
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: SimpleNamespace(log_api_access=lambda **k: None))
     async with _client(tmp_path, monkeypatch) as client:
         seen: list[object] = []
 
@@ -361,9 +359,7 @@ async def test_a_save_made_under_an_old_working_folder_is_refused(tmp_path, monk
 
 @sync
 async def test_write_endpoint_maps_conflict_and_success(tmp_path, monkeypatch):
-    monkeypatch.setattr(
-        "kiro_crew.sel.sel", lambda: SimpleNamespace(log_api_access=lambda **k: None)
-    )
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: SimpleNamespace(log_api_access=lambda **k: None))
     async with _client(tmp_path, monkeypatch) as client:
         fake_write = _scripted(
             {"error": "the file changed since it was opened", "conflict": True},
@@ -403,14 +399,14 @@ async def test_check_endpoint_reports_sign_in_and_each_profile(tmp_path, monkeyp
             [_config(coder_url=""), _config(), _config(profiles=[_config().profiles[0], gpu])]
         )
         monkeypatch.setattr(
-            KiroCrewConfig, "load", lambda: SimpleNamespace(session_environments=next(configs))
+            AjCrewConfig, "load", lambda: SimpleNamespace(session_environments=next(configs))
         )
         monkeypatch.setattr(session_launch.CoderSessionEnvironments, "_client", lambda self: fake)
         # Git login rows come from their own reader; pinned here so this test reads
         # only the Coder half (the stubbed config iterator feeds the Coder reads).
         git = {"github.com": "signed_in"}
         monkeypatch.setattr(
-            "kiro_crew.remote_session.git_gateway.git_readiness", AsyncMock(return_value=git)
+            "aj_crew.remote_session.git_gateway.git_readiness", AsyncMock(return_value=git)
         )
         body = await (await client.post("/check")).json()
         assert body == {
@@ -448,13 +444,13 @@ async def test_check_endpoint_reports_a_missing_coder_cli_instead_of_failing(tmp
 
     async with _client(tmp_path, monkeypatch) as client:
         monkeypatch.setattr(
-            KiroCrewConfig, "load", lambda: SimpleNamespace(session_environments=_config())
+            AjCrewConfig, "load", lambda: SimpleNamespace(session_environments=_config())
         )
         monkeypatch.setattr(session_launch.CoderSessionEnvironments, "_client", missing)
         # The git login rows do not depend on Coder: they come back here too.
         git = {"github.com": "withheld"}
         monkeypatch.setattr(
-            "kiro_crew.remote_session.git_gateway.git_readiness", AsyncMock(return_value=git)
+            "aj_crew.remote_session.git_gateway.git_readiness", AsyncMock(return_value=git)
         )
         resp = await client.post("/check")
         assert resp.status == 200
@@ -476,13 +472,13 @@ async def test_a_missing_coder_cli_keeps_the_other_providers_readiness(tmp_path,
     git = {"github.com": "signed_in"}
     async with _client(tmp_path, monkeypatch) as client:
         monkeypatch.setattr(
-            KiroCrewConfig, "load", lambda: SimpleNamespace(session_environments=_config())
+            AjCrewConfig, "load", lambda: SimpleNamespace(session_environments=_config())
         )
         monkeypatch.setattr(session_launch.CoderSessionEnvironments, "_client", missing)
         monkeypatch.setattr(handlers, "_check_sprites", AsyncMock(return_value=sprites_row))
         monkeypatch.setattr(handlers, "_check_boxd", AsyncMock(return_value=boxd_row))
         monkeypatch.setattr(
-            "kiro_crew.remote_session.git_gateway.git_readiness", AsyncMock(return_value=git)
+            "aj_crew.remote_session.git_gateway.git_readiness", AsyncMock(return_value=git)
         )
         body = await (await client.post("/check")).json()
     assert body["coder"]["ok"] is False
@@ -512,7 +508,7 @@ async def test_templates_endpoint_lists_the_deployment_templates(tmp_path, monke
         fake = TemplateListingCoder()
         configs = iter([_config(coder_url=""), _config(), _config()])
         monkeypatch.setattr(
-            KiroCrewConfig, "load", lambda: SimpleNamespace(session_environments=next(configs))
+            AjCrewConfig, "load", lambda: SimpleNamespace(session_environments=next(configs))
         )
         monkeypatch.setattr(session_launch.CoderSessionEnvironments, "_client", lambda self: fake)
         body = await (await client.get("/templates")).json()
@@ -560,7 +556,7 @@ async def test_workspaces_endpoint_lists_owned_rows_and_reports_an_unreadable_re
 async def test_an_unreadable_vm_registry_is_reported_not_listed_as_empty(
     tmp_path, monkeypatch, provider
 ):
-    from kiro_crew.config.session_environments import VM_REGISTRY_FILES
+    from aj_crew.config.session_environments import VM_REGISTRY_FILES
 
     async with _client(tmp_path, monkeypatch) as client:
         # Its machines and deletion deadlines still exist; an empty list would hide them.
@@ -600,7 +596,7 @@ async def test_terminal_remote_slot_never_falls_back_to_a_local_shell(tmp_path, 
     async def cloud(key):
         raise session_browse.CloudSandboxOnly("this session runs in a Kiro Cloud Sessions sandbox")
 
-    # A Kiro Cloud chat has no shell Kiro Crew can reach, and never will: the tab
+    # A Kiro Cloud chat has no shell Aj Crew can reach, and never will: the tab
     # parks instead of redialing an outage that is not one.
     monkeypatch.setattr(session_browse, "remote_terminal_argv", cloud)
     argv, why, code = await terminal._remote_terminal_argv(request, "main")
@@ -624,7 +620,7 @@ async def test_the_title_poller_never_reports_gateway_paths_for_a_workspace_shel
 
     from terminal_handler_helpers import _make_session
 
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.testing.wait import async_wait_until
 
     ws = AsyncMock()
     ws.closed = False
@@ -659,9 +655,9 @@ def test_a_workspace_shell_gets_the_scrubbed_coder_environment(monkeypatch):
     monkeypatch.setenv("CODER_URL", "https://other.example")
     monkeypatch.setenv("CODER_CONFIG_DIR", "/elsewhere")
     monkeypatch.setenv("HOME_MARKER_FOR_TEST", "kept")
-    env = terminal._remote_pty_env({"TERM": "xterm-256color", "KIROCREW_TERMINAL": "1"})
+    env = terminal._remote_pty_env({"TERM": "xterm-256color", "AJCREW_TERMINAL": "1"})
     assert not any(name.startswith("CODER_") for name in env)
-    assert env["TERM"] == "xterm-256color" and env["KIROCREW_TERMINAL"] == "1"
+    assert env["TERM"] == "xterm-256color" and env["AJCREW_TERMINAL"] == "1"
     assert env["HOME_MARKER_FOR_TEST"] == "kept"
 
 
@@ -679,7 +675,7 @@ async def test_flag_off_placement_read_skips_an_unreadable_choices_store(tmp_pat
         assert r.status == 500 and (await r.json())["code"] == "choices_unreadable"
         # Flag off: every chat runs here, so the store is never read and a local
         # chat's Files and Terminal are not locked by it.
-        monkeypatch.delenv("KIROCREW_DEV_MODE")
+        monkeypatch.delenv("AJCREW_DEV_MODE")
         r = await client.get("/s/main")
         assert r.status == 200 and (await r.json())["profile"] is None
 
@@ -689,7 +685,7 @@ async def test_a_local_terminal_for_a_remote_chat_is_refused_without_remote_slot
     tmp_path, monkeypatch
 ):
     _home(monkeypatch, tmp_path)
-    from kiro_crew.dashboard import chat_utils
+    from aj_crew.dashboard import chat_utils
 
     monkeypatch.setattr(chat_utils, "effective_session_key", lambda slot: f"dashboard:{slot.key}")
     request = SimpleNamespace(
@@ -711,7 +707,7 @@ async def test_a_local_terminal_for_a_remote_chat_is_refused_without_remote_slot
     why, code = await terminal._local_terminal_refusal(request, "main")
     assert "Could not read" in why and code == "terminal_placement_unavailable"
     # ...and is never read while it is off.
-    monkeypatch.delenv("KIROCREW_DEV_MODE")
+    monkeypatch.delenv("AJCREW_DEV_MODE")
     assert await terminal._local_terminal_refusal(request, "main") == ("", "")
 
 
@@ -719,7 +715,7 @@ async def test_a_local_terminal_for_a_remote_chat_is_refused_without_remote_slot
 async def test_terminal_socket_refuses_a_local_shell_for_a_remote_chat(tmp_path, monkeypatch):
     from terminal_handler_helpers import _make_app
 
-    from kiro_crew.dashboard import chat_utils
+    from aj_crew.dashboard import chat_utils
 
     _home(monkeypatch, tmp_path)
     monkeypatch.setattr(chat_utils, "effective_session_key", lambda slot: f"dashboard:{slot.key}")
@@ -803,7 +799,7 @@ async def test_a_live_local_shell_is_closed_when_its_chat_is_bound(tmp_path, mon
     shells parks the connected tab with the wrong-machine code."""
     from terminal_handler_helpers import _make_app
 
-    from kiro_crew.dashboard import chat_utils
+    from aj_crew.dashboard import chat_utils
 
     _home(monkeypatch, tmp_path)
     monkeypatch.setattr(chat_utils, "effective_session_key", lambda slot: f"dashboard:{slot.key}")
@@ -837,7 +833,7 @@ async def test_a_shell_still_opening_when_its_chat_is_bound_is_closed(tmp_path, 
     reads the placement again once it publishes and closes itself."""
     from terminal_handler_helpers import _make_app
 
-    from kiro_crew.dashboard import chat_utils
+    from aj_crew.dashboard import chat_utils
 
     _home(monkeypatch, tmp_path)
     monkeypatch.setattr(chat_utils, "effective_session_key", lambda slot: f"dashboard:{slot.key}")
@@ -899,7 +895,7 @@ async def test_a_terminal_reconnects_to_its_shell_after_its_chat_is_closed(tmp_p
     redial reattaches that same shell instead of being refused forever."""
     from terminal_handler_helpers import _make_app
 
-    from kiro_crew.dashboard import chat_utils
+    from aj_crew.dashboard import chat_utils
 
     _home(monkeypatch, tmp_path)
     monkeypatch.setattr(chat_utils, "effective_session_key", lambda slot: f"dashboard:{slot.key}")
@@ -951,7 +947,7 @@ async def test_a_gone_chats_shell_dying_mid_dial_opens_no_new_local_shell(tmp_pa
     and the takeover, the dial is refused rather than spawning a fresh shell."""
     from terminal_handler_helpers import _make_app
 
-    from kiro_crew.dashboard import chat_utils
+    from aj_crew.dashboard import chat_utils
 
     _home(monkeypatch, tmp_path)
     monkeypatch.setattr(chat_utils, "effective_session_key", lambda slot: f"dashboard:{slot.key}")
@@ -1033,7 +1029,7 @@ async def test_a_failing_pty_test_leaves_no_shell_running(tmp_path, monkeypatch)
 @sync
 async def test_the_git_views_are_unreachable_with_the_developer_flag_off(tmp_path, monkeypatch):
     """The Git panel's three reads go through the real browse path and choices
-    gate: with KIROCREW_DEV_MODE off a chat bound to a remote profile reads as
+    gate: with AJCREW_DEV_MODE off a chat bound to a remote profile reads as
     local, so every git op answers ``not_remote`` and nothing reaches a guest.
     Removing the flag check from the choices gate fails this test."""
     async with _client(tmp_path, monkeypatch) as client:
@@ -1044,7 +1040,7 @@ async def test_the_git_views_are_unreachable_with_the_developer_flag_off(tmp_pat
             raise AssertionError("flag off must not reach the workspace")
 
         monkeypatch.setattr(session_browse, "_ask", never_asked)
-        monkeypatch.delenv("KIROCREW_DEV_MODE")
+        monkeypatch.delenv("AJCREW_DEV_MODE")
         for query in ("op=git_status", "op=git_log", "op=git_diff&path=a.py&from=b.py"):
             resp = await client.get("/b/main?" + query)
             assert resp.status == 409, query
@@ -1087,8 +1083,8 @@ async def test_a_cloud_chat_stays_a_cloud_sandbox_once_its_profile_is_gone(
     """The row's recorded ``kiro_cloud`` decides before any profile lookup: a deleted
     or reused profile id never sends a cloud chat's files, health or terminal to
     Coder or to another provider, and the terminal parks instead of redialing."""
-    from kiro_crew.config import live
-    from kiro_crew.dashboard import chat_utils
+    from aj_crew.config import live
+    from aj_crew.dashboard import chat_utils
 
     section = _config(**{"profiles": [], "kiro_cloud_profiles": [], **profiles})
     monkeypatch.setattr(live, "snapshot", lambda: SimpleNamespace(session_environments=section))

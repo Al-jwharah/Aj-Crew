@@ -49,7 +49,7 @@ const OK: SaveResult = { ok: true, restart_required: false, verify_warning: '' }
 
 const CREATE_BOT_URL = 'https://developer.webex.com/my-apps/new/bot'
 const SETUP_GUIDE =
-  'https://github.com/kirodotdev/KiroCrew/blob/main/src/kiro_crew/docs/webex-integration.md'
+  'https://github.com/Al-jwharah/Aj-Crew/blob/main/src/aj_crew/docs/webex-integration.md'
 
 /** Configured, not connected, nothing stored — the most branch-rich start. */
 function config(over: Partial<WebexConfigData> = {}): WebexConfigData {
@@ -200,7 +200,7 @@ describe('WebexPanel read-only session', () => {
 
     expect(
       screen.getByText(
-        'Webex settings are managed on the machine running Kiro Crew and are read-only from remote sessions.',
+        'Webex settings are managed on the machine running Aj Crew and are read-only from remote sessions.',
       ),
     ).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Save Webex settings' })).not.toBeInTheDocument()

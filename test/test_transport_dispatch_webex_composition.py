@@ -1,8 +1,8 @@
 """Composition contract between ``WebexDispatcher`` and its ``transport_dispatch_*`` owners.
 
-``kiro_crew.webex.transport_dispatch`` keeps the dispatcher's state, its front door and
+``aj_crew.webex.transport_dispatch`` keeps the dispatcher's state, its front door and
 the constructs repository guards read in that file, and binds the functions of the owner
-modules beside it (``kiro_crew.webex.transport_dispatch_<role>``) as class attributes.
+modules beside it (``aj_crew.webex.transport_dispatch_<role>``) as class attributes.
 What this file pins is what a caller of the dispatcher observes independently of where
 each rule lives:
 
@@ -55,8 +55,8 @@ from webex_dispatch_helpers import (
     _inbound,
 )
 
-import kiro_crew.webex.transport_dispatch as td
-from kiro_crew.messaging.queue_drain import reset_drains
+import aj_crew.webex.transport_dispatch as td
+from aj_crew.messaging.queue_drain import reset_drains
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_webex_transport_dispatch")
 
@@ -70,7 +70,7 @@ SHARED_FACADE_CHECKS = (
 )
 
 
-FACADE = "kiro_crew.webex.transport_dispatch"
+FACADE = "aj_crew.webex.transport_dispatch"
 FACADE_PATH = Path(td.__file__).resolve()
 PACKAGE_DIR = FACADE_PATH.parent
 SRC = FACADE_PATH.parents[1]
@@ -558,13 +558,13 @@ def _imported_modules(nodes: list[ast.stmt]) -> list[str]:
 def test_the_import_scan_reads_what_runs_at_load_and_nothing_under_type_checking() -> None:
     planted = (
         f"from {FACADE} import a\n"
-        "import kiro_crew.dashboard.state\n"
+        "import aj_crew.dashboard.state\n"
         "if TYPE_CHECKING:\n"
-        "    from kiro_crew.webex import transport_dispatch_origin\n"
+        "    from aj_crew.webex import transport_dispatch_origin\n"
     )
     loaded = _imported_modules(_module_level_imports(ast.parse(planted)))
-    assert FACADE in loaded and "kiro_crew.dashboard.state" in loaded
-    assert "kiro_crew.webex.transport_dispatch_origin" not in loaded
+    assert FACADE in loaded and "aj_crew.dashboard.state" in loaded
+    assert "aj_crew.webex.transport_dispatch_origin" not in loaded
 
 
 def test_an_owner_imports_only_owners_below_it() -> None:
@@ -598,15 +598,13 @@ def test_every_owner_logs_under_the_facades_name() -> None:
 
 def test_dashboard_imports_stay_call_time() -> None:
     """The dashboard imports the channel packages on its boot path, so a channel
-    module reaches ``kiro_crew.dashboard`` only inside the function that needs it."""
+    module reaches ``aj_crew.dashboard`` only inside the function that needs it."""
     sources = {"transport_dispatch": FACADE_PATH.read_text(encoding="utf-8"), **_owner_sources()}
     for stem, source in sources.items():
         loaded = _imported_modules(_module_level_imports(ast.parse(source)))
-        assert not [m for m in loaded if m.startswith("kiro_crew.dashboard")], stem
+        assert not [m for m in loaded if m.startswith("aj_crew.dashboard")], stem
     # Non-vacuous: the dashboard-link handler does import the dashboard, inside its body.
-    assert "kiro_crew.dashboard.token_auth" in inspect.getsource(
-        _owner("commands")._handle_dashboard
-    )
+    assert "aj_crew.dashboard.token_auth" in inspect.getsource(_owner("commands")._handle_dashboard)
 
 
 def _instance_fields() -> set[str]:
@@ -713,7 +711,7 @@ def test_the_sync_io_gate_reports_a_blocking_call_planted_in_each_coroutine_owne
 
 
 def test_the_gate_reach_check_tells_a_blind_spelling_from_a_seen_one() -> None:
-    blind = "from kiro_crew.webex.transport_dispatch import time\n\n\nasync def f():\n    pass\n"
+    blind = "from aj_crew.webex.transport_dispatch import time\n\n\nasync def f():\n    pass\n"
     assert _from_imported_sync_io_modules(blind) == {"time"}
     planted, line = _with_blocking_call(blind, "time.sleep(1)")
     assert line not in {f for f, _fam, _prov in _sync_io_gate()._violations_in_source(planted)}
@@ -739,7 +737,7 @@ _FACADE_PINNED = {
     "the mirror admission": "test_channel_transport_outbound_authz: sign_mirror_admission(",
     "the context-usage read": "test_reinjection_gate: check_context_usage beside drive_turn(",
     "a hand-rolled rotation": "test_messaging_pre_turn: no maybe_rotate( in transport_dispatch.py",
-    "an agent-SDK import": "check_agent_sdk_boundary: kiro_crew.acp / kiro_crew.providers",
+    "an agent-SDK import": "check_agent_sdk_boundary: aj_crew.acp / aj_crew.providers",
 }
 _FORBIDDEN_IN_THE_FACADE_TOO = frozenset({"a hand-rolled rotation", "an agent-SDK import"})
 
@@ -770,7 +768,7 @@ def _facade_pinned_shapes(source: str) -> list[str]:
         "an agent-SDK import": any(
             m == root or m.startswith(f"{root}.")
             for m in imported
-            for root in ("kiro_crew.acp", "kiro_crew.providers")
+            for root in ("aj_crew.acp", "aj_crew.providers")
         ),
     }
     assert held.keys() == _FACADE_PINNED.keys()
@@ -791,7 +789,7 @@ _PLANTED = {
         "def f(self, k, p):\n    return self.sessions.check_context_usage(k, p)\n"
     ),
     "a hand-rolled rotation": "def f(c, k):\n    return c.maybe_rotate(k)\n",
-    "an agent-SDK import": "import kiro_crew.acp\n",
+    "an agent-SDK import": "import aj_crew.acp\n",
 }
 
 
@@ -833,10 +831,10 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     sources = {
         root / "pkg" / "caller.py": f"from {FACADE}_commands import _ttl_spec\n",
-        root / "other.py": "from kiro_crew.webex import transport_dispatch_origin as low\n",
+        root / "other.py": "from aj_crew.webex import transport_dispatch_origin as low\n",
         root / "webex" / "relative.py": "from .transport_dispatch_origin import _route_of\n",
         root / "webex" / "deep" / "up.py": "from .. import transport_dispatch_interactions\n",
         root / "facade_user.py": f"from {FACADE} import WebexDispatcher\n",

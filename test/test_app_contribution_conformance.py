@@ -20,7 +20,7 @@ import pathlib
 
 import pytest
 
-from kiro_crew.apps.manifest import AppManifest
+from aj_crew.apps.manifest import AppManifest
 
 FIXTURE = pathlib.Path(__file__).parent / "fixtures" / "contributed_commands_conformance.json"
 CASES = json.loads(FIXTURE.read_text(encoding="utf-8"))["cases"]

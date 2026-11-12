@@ -157,14 +157,14 @@ describe("a focused showMainWindow is reached only from user gestures", () => {
       /app\.on\("second-instance", \([^)]*\) => \{[^}]*?windows\?\.showMainWindow\(\{ focus: true \}\);\s*\}\);/,
       "relaunching the app",
     );
-    // A kirocrew:// link the user clicked: the bare-link raise and the
+    // An ajcrew:// link the user clicked: the bare-link raise and the
     // session-route raise inside deliverDeepLink.
     const deliver = mainJs.match(/function deliverDeepLink\(route\) \{[\s\S]*?\n\}/);
     assert.ok(deliver, "deliverDeepLink is defined in main.js");
     assert.equal(
       (deliver[0].match(/showMainWindow\(\{ focus: true \}\)/g) || []).length,
       2,
-      "opening a kirocrew:// link",
+      "opening an ajcrew:// link",
     );
     assert.match(
       WINDOW_LIFECYCLE_JS,

@@ -21,9 +21,9 @@ import pytest
 from aiohttp.test_utils import make_mocked_request
 from dashboard_owner_helpers import NoConfiguredOwner
 
-from kiro_crew.apps.builtins.issue_radar.backend import github_client as gh
-from kiro_crew.apps.builtins.issue_radar.backend import routes, store
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.apps.builtins.issue_radar.backend import github_client as gh
+from aj_crew.apps.builtins.issue_radar.backend import routes, store
+from aj_crew.testing.wait import default_timeout
 
 
 def _merge(*args, ui_language: str = "", **kwargs):

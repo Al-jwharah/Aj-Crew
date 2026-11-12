@@ -13,9 +13,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import vector_memory
-from kiro_crew.cli_bench import bench_cmd
-from kiro_crew.eval.bench.lesson_recall import (
+from aj_crew import vector_memory
+from aj_crew.cli_bench import bench_cmd
+from aj_crew.eval.bench.lesson_recall import (
     KEYWORD_ONLY_EMBEDDER_ID,
     LESSON_QUERY_CLASSES,
     LessonGoldenSet,
@@ -26,8 +26,8 @@ from kiro_crew.eval.bench.lesson_recall import (
     format_lesson_report,
     run_lesson_recall,
 )
-from kiro_crew.eval.bench.toy_embedder import TOY_EMBEDDER_ID
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.eval.bench.toy_embedder import TOY_EMBEDDER_ID
+from aj_crew.vector_memory import VectorMemoryStore
 
 
 class _Args:
@@ -287,7 +287,7 @@ class TestCli:
     def test_real_embedder_refuses_when_warmup_times_out(
         self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.knowledge.embedder as emb
+        import aj_crew.knowledge.embedder as emb
 
         monkeypatch.setattr(emb.InProcessEmbedder, "wait_ready", lambda self, timeout=None: False)
         assert bench_cmd(self._args(real_embedder=True, no_embeddings=False)) == 1

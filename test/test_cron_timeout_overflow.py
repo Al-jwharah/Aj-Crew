@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.cron import CronService
+from aj_crew.cron import CronService
 
 
 def _refusal(fn, *args, **kwargs) -> str:
@@ -42,7 +42,7 @@ def test_the_app_sdk_refuses_an_infinite_timeout_with_value_error(
     tmp_path: Path, field: str
 ) -> None:
     """The app cron SDK reads both fields before the store does, the same way."""
-    from kiro_crew.apps.cron_sdk import CronSDK
+    from aj_crew.apps.cron_sdk import CronSDK
 
     svc = CronService(base_dir=tmp_path)
     sdk = CronSDK("some-app", svc)

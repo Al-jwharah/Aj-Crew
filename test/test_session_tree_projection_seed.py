@@ -5,7 +5,7 @@ or spawns serves what it has and says the reconciliation is incomplete; an insta
 out a unit removed while the scan ran; and a failed seed's re-attempt is armed on a timer
 that re-arms when it fires early and stands down when the store or the projection moved.
 Each test drives the code synchronously: the store's readers are patched through
-``kiro_crew.crew_log.store`` and the timer is a recording stand-in, so nothing here waits
+``aj_crew.crew_log.store`` and the timer is a recording stand-in, so nothing here waits
 on a clock or a thread.
 """
 
@@ -18,19 +18,19 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.crew_log import session_tree_projection as stp
-from kiro_crew.crew_log import store as crew_store
-from kiro_crew.crew_log.session_tree import EdgeRecord, OpenedRecord, _ScanFaults
-from kiro_crew.crew_log.session_tree_projection import SessionTreeProjection
-from kiro_crew.session_ledger import _store_name
+from aj_crew.crew_log import session_tree_projection as stp
+from aj_crew.crew_log import store as crew_store
+from aj_crew.crew_log.session_tree import EdgeRecord, OpenedRecord, _ScanFaults
+from aj_crew.crew_log.session_tree_projection import SessionTreeProjection
+from aj_crew.session_ledger import _store_name
 
 
 @pytest.fixture
 def proj(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[SessionTreeProjection]:
     """A projection over a data home of this test's own, with a pool that runs nothing."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     pool = type("_Pool", (), {"submit": staticmethod(lambda *a, **k: None)})
-    monkeypatch.setattr("kiro_crew.executors.maintenance_executor", lambda: pool)
+    monkeypatch.setattr("aj_crew.executors.maintenance_executor", lambda: pool)
     stp.reset_for_tests()
     projection = SessionTreeProjection()
     yield projection

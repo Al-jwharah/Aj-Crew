@@ -21,10 +21,10 @@ from member_essential_context_helpers import (
     _write_template,
 )
 
+from aj_crew import member_essential_context as _mec
+from aj_crew.agent_sdk.provider_identity import PROVIDER_ACP
+from aj_crew.member_essential_context import MemberEssentialContextError
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew import member_essential_context as _mec
-from kiro_crew.agent_sdk.provider_identity import PROVIDER_ACP
-from kiro_crew.member_essential_context import MemberEssentialContextError
 
 # Fixtures shared with the sibling modules, bound by assignment so pytest registers
 # them for the tests in this module.
@@ -101,7 +101,7 @@ def test_linked_steering_entry_is_screened_before_its_target_is_probed(env, tmp_
     ``entry.is_dir()`` follows the link; on Windows a UNC target would be an
     outbound SMB probe, so the gate must run first and short-circuit it.
     """
-    from kiro_crew import member_essential_context as mec
+    from aj_crew import member_essential_context as mec
 
     steering = Path.home() / ".kiro" / "steering"
     steering.mkdir(parents=True, exist_ok=True)
@@ -272,7 +272,7 @@ def test_a_refused_declared_source_still_refuses_when_the_envelope_is_over_budge
 
 def test_guides_whose_names_do_not_fit_are_counted_by_the_short_notice():
     """When the core leaves no room to list every left-out guide, they are counted."""
-    from kiro_crew.context_assembly.member import _fit_member_guides_into_envelope
+    from aj_crew.context_assembly.member import _fit_member_guides_into_envelope
 
     guides = [(f"/project/context/{'n' * 200}-{i}.md", "g") for i in range(40)]
     core = ("template#prompt", "c" * 63_200)
@@ -316,7 +316,7 @@ def test_absent_declared_literal_resource_is_skipped_with_a_note(env):
     AIM templates declare ``file://AGENTS.md`` and a subagent starts in an empty
     folder, so the absent file is the ordinary case, not an attack.
     """
-    from kiro_crew.member_essential_context import (
+    from aj_crew.member_essential_context import (
         ESSENTIAL_MISSING_SKIP_SOURCE,
         documents_for_member,
     )
@@ -340,7 +340,7 @@ def test_absent_declared_literal_resource_is_skipped_with_a_note(env):
 
 
 def test_present_declared_resources_add_no_missing_note(env):
-    from kiro_crew.member_essential_context import (
+    from aj_crew.member_essential_context import (
         ESSENTIAL_MISSING_SKIP_SOURCE,
         documents_for_member,
     )
@@ -351,7 +351,7 @@ def test_present_declared_resources_add_no_missing_note(env):
 
 def test_projected_resources_skip_an_absent_file_in_an_empty_cwd(env, tmp_path):
     """A subagent's empty working folder has no README.md; KAS loads nothing for it."""
-    from kiro_crew.member_essential_context import projected_resource_documents
+    from aj_crew.member_essential_context import projected_resource_documents
 
     cwd = tmp_path / "subagent_0001"
     cwd.mkdir()
@@ -425,12 +425,12 @@ def test_absolute_declared_resource_through_a_home_link_into_managed_state_still
     The declared spelling sits under home, so only the resolved path shows it is a
     configured workspace's ``memory/`` folder outside home; that must refuse, not skip.
     """
-    from kiro_crew.config.loader import KiroCrewConfig, WorkspaceConfig
+    from aj_crew.config.loader import AjCrewConfig, WorkspaceConfig
 
     workspace = tmp_path / "external-workspace"
     (workspace / "memory").mkdir(parents=True)
     (workspace / "memory" / "notes.md").write_text("MANAGED_MEMORY_BODY", encoding="utf-8")
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.workspaces["external"] = WorkspaceConfig(dir=str(workspace))
     cfg.save()
     make_dir_link(Path.home() / "workplace", workspace)
@@ -545,8 +545,8 @@ def test_declared_literal_under_an_unsearchable_directory_still_refuses(env):
 
 def test_absent_managed_literal_resource_still_refuses(env):
     """A missing managed-state path keeps its refusal rather than becoming a skip."""
-    from kiro_crew.config import config_dir
-    from kiro_crew.member_essential_context import documents_for_member
+    from aj_crew.config import config_dir
+    from aj_crew.member_essential_context import documents_for_member
 
     project = config_dir() / "workspace"
     agents = project / ".kiro" / "agents"

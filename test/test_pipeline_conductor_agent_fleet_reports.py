@@ -901,7 +901,7 @@ class TestFleetProbeNoProgress(FleetProbeHarness):
         mod = self._mod()
         proc = self._proc(tmp_path, "7001", b"pytest\x00-n4\x00test/x.py\x00", None)
         cfg = self._config(tmp_path, monkeypatch, [], fleet_worktrees=[str(tmp_path / "fleet")])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "BANNED pid=7001" in out and "cwd=unknown" in out
         assert "banned 1 | foreign 0" in out
@@ -916,7 +916,7 @@ class TestFleetProbeNoProgress(FleetProbeHarness):
             tmp_path, "8001", b"pytest\x00-n4\x00test/x.py\x00", tmp_path / "anywhere"
         )
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "BANNED pid=8001" in out and "cwd=unknown" in out
         assert "banned 1 | foreign 0" in out
@@ -933,7 +933,7 @@ class TestFleetProbeNoProgress(FleetProbeHarness):
             tmp_path, "9001", b"pytest\x00-n4\x00--token\x00secret-token\x00test/x.py\x00", mine
         )
         cfg = self._config(tmp_path, monkeypatch, [], fleet_worktrees=[str(mine)])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         out = self._run(mod, cfg, capsys)
         assert "pid=9001" in out
         assert "secret-token" not in out
@@ -1051,7 +1051,7 @@ class TestFleetProbeCompatibility(FleetProbeHarness):
             "MemTotal:       65805864 kB\nMemAvailable:   12582912 kB\n", encoding="ascii"
         )
         cfg = self._config(tmp_path, monkeypatch, [])
-        monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc))
+        monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc))
         assert "mem 12G" in self._run(mod, cfg, capsys)
 
     def test_block_shaped_content_classifies_like_a_string(self, tmp_path, capsys, monkeypatch):

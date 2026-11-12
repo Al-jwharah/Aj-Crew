@@ -21,11 +21,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.cron import CronService
-from kiro_crew.cron_history import CronRunRecord
-from kiro_crew.dashboard import token_auth
-from kiro_crew.dashboard.handlers import cron as h
-from kiro_crew.dashboard.handlers import cron_runs
+from aj_crew.cron import CronService
+from aj_crew.cron_history import CronRunRecord
+from aj_crew.dashboard import token_auth
+from aj_crew.dashboard.handlers import cron as h
+from aj_crew.dashboard.handlers import cron_runs
 
 pytestmark = pytest.mark.asyncio
 
@@ -40,7 +40,7 @@ def svc(tmp_path) -> CronService:
 
 @pytest.fixture(autouse=True)
 def _quiet_sel(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     _floor_monkeypatch.setattr(sel_mod, "sel", lambda: MagicMock())
     _floor_monkeypatch.setattr(

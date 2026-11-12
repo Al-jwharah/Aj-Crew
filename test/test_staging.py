@@ -1,4 +1,4 @@
-"""Tests for :mod:`kiro_crew.staging`.
+"""Tests for :mod:`aj_crew.staging`.
 
 Everything runs against a monkeypatched data home under ``tmp_path``; the real
 ``<data home>/staging`` is never touched.
@@ -20,12 +20,12 @@ from pathlib import Path
 import portability_helpers
 import pytest
 
-from kiro_crew import staging
+from aj_crew import staging
 
 # Fixtures reused by the import-extraction regression lock below, aliased from the
 # shared helper module (the suite's house pattern) so pytest resolves
-# ``patched_config_dir`` and the ``fake_kirocrew_home`` it depends on.
-fake_kirocrew_home = portability_helpers.fake_kirocrew_home
+# ``patched_config_dir`` and the ``fake_ajcrew_home`` it depends on.
+fake_ajcrew_home = portability_helpers.fake_ajcrew_home
 patched_config_dir = portability_helpers.patched_config_dir
 
 _POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
@@ -44,7 +44,7 @@ def home(monkeypatch, tmp_path: Path) -> Path:
     root = tmp_path / "home"
     root.mkdir()
     monkeypatch.setattr(staging, "config_dir", lambda: root)
-    monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+    monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
     return root
 
 
@@ -120,14 +120,14 @@ class TestStagingDir:
 class TestVisibleInSandboxToo:
     """The leaf is VISIBLE (unmasked), matching its destinations (the ``snapshots``
     archive leaf and the data home a restore/import installs into). So an agent
-    shelling out to ``kirocrew snapshot``/``restore`` from inside the sandbox stages
+    shelling out to ``ajcrew snapshot``/``restore`` from inside the sandbox stages
     on real disk exactly like the gateway -- there is no mask to avoid and no
     tmpfs-fallback branch. The resolver returns the real root whether or not the
     sandbox marker is set.
     """
 
     def test_staging_dir_is_the_root_even_in_sandbox(self, home: Path, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
+        monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
 
         path = staging.staging_dir()
 
@@ -414,15 +414,15 @@ class TestTheLargeSitesStageUnderTheDataHome:
     def test_snapshot_build_stages_under_the_staging_root(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from test_snapshot import _setup_fake_kirocrew
+        from test_snapshot import _setup_fake_ajcrew
 
-        from kiro_crew import snapshot as snap
-        from kiro_crew import snapshot_build
+        from aj_crew import snapshot as snap
+        from aj_crew import snapshot_build
 
         data_home = tmp_path / "home"
         data_home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(data_home))
-        _setup_fake_kirocrew(data_home)
+        monkeypatch.setenv("AJCREW_HOME", str(data_home))
+        _setup_fake_ajcrew(data_home)
         expected_root = (data_home / staging.STAGING_DIRNAME).resolve()
 
         seen_dirs: list[str | None] = []
@@ -455,7 +455,7 @@ class TestTheLargeSitesStageUnderTheDataHome:
         """
         from unittest.mock import patch
 
-        from kiro_crew import portability
+        from aj_crew import portability
 
         zip_bytes, _ = portability.create_export_zip()
 
@@ -474,8 +474,8 @@ class TestTheLargeSitesStageUnderTheDataHome:
 
         monkeypatch.setattr(portability.tempfile, "TemporaryDirectory", _spy)
 
-        with patch("kiro_crew.portability.config_dir", return_value=target):
-            with patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+        with patch("aj_crew.portability.config_dir", return_value=target):
+            with patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
                 portability.apply_import_zip(zip_path, mode="replace")
 
         assert seen_dirs, "the import never opened an extraction TemporaryDirectory"

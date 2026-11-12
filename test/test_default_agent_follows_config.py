@@ -2,7 +2,7 @@
 
 The default agent is what a new thread in Slack runs when nothing names one. The
 handler kept it in ``_cached_default_agent``, loaded once and written only by the
-local ``!agent`` command, so a write from the dashboard, ``kirocrew config set``
+local ``!agent`` command, so a write from the dashboard, ``ajcrew config set``
 or an editor never reached a running gateway.
 
 Every test moves the value through a real ``ConfigWatch`` reload and the appliers
@@ -22,19 +22,19 @@ from unittest.mock import patch
 import pytest
 from _hot_reload_helpers import point_loader_at, sel_outcomes, write_config
 
-import kiro_crew.slack.gateway as gw
-from kiro_crew.config.live import ConfigWatch, Subscription
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.slack import handler as slack_handler
-from kiro_crew.slack.gateway import GatewayOrchestrator
+import aj_crew.slack.gateway as gw
+from aj_crew.config.live import ConfigWatch, Subscription
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.slack import handler as slack_handler
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 _AUTHORIZATION = "slack.authorization_config_change"
 
 
 def _orchestrator() -> GatewayOrchestrator:
     """A Slack-less orchestrator: its appliers are registered, nothing connects."""
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U_OWNER"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U_OWNER"}):
         return GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
 
 
@@ -67,9 +67,9 @@ def _config(
     open_channels: Sequence[str] = (),
     default_agent: str = "",
     discarded: Iterable[str] = (),
-) -> KiroCrewConfig:
+) -> AjCrewConfig:
     """What the loader answers: the two settings these tests move, and what it discarded."""
-    base = KiroCrewConfig()
+    base = AjCrewConfig()
     return replace(
         base,
         slack=replace(base.slack, open_channels=list(open_channels)),
@@ -106,7 +106,7 @@ class _Rig:
         held = self.watch._stale.get(id(sub))
         return held[1] if held else frozenset()
 
-    async def reload(self, cfg: KiroCrewConfig) -> None:
+    async def reload(self, cfg: AjCrewConfig) -> None:
         """One watcher cycle whose load answers *cfg*."""
         self.served = cfg
         await asyncio.wait_for(self.watch.refresh_now(), timeout=30)
@@ -141,7 +141,7 @@ async def test_a_default_agent_written_while_running_reaches_the_next_slack_thre
     monkeypatch.setattr(slack_handler, "_cached_default_agent", None)
     orch = _orchestrator()
     watch, _ = _watch_of(orch, "agent.default_agent")
-    watch.prime(KiroCrewConfig.load())
+    watch.prime(AjCrewConfig.load())
 
     assert slack_handler._get_agent_for_session("slack:T1:1") == "alpha"
 
@@ -159,7 +159,7 @@ async def test_a_thread_override_still_wins_over_a_changed_default(tmp_path, mon
     monkeypatch.setitem(slack_handler._thread_agents, "slack:T3:3", "pinned")
     orch = _orchestrator()
     watch, _ = _watch_of(orch, "agent.default_agent")
-    watch.prime(KiroCrewConfig.load())
+    watch.prime(AjCrewConfig.load())
 
     assert slack_handler._get_agent_for_session("slack:T0:0") == "alpha"
     write_config(cfg_path, {"agent": {"default_agent": "beta"}})
@@ -233,7 +233,7 @@ async def test_an_unrelated_agent_change_leaves_the_default_alone(tmp_path, monk
     monkeypatch.setattr(slack_handler, "_cached_default_agent", "alpha")
     orch = _orchestrator()
     watch, _ = _watch_of(orch, "agent.default_agent")
-    watch.prime(KiroCrewConfig.load())
+    watch.prime(AjCrewConfig.load())
 
     write_config(cfg_path, {"agent": {"default_agent": "beta", "max_channels": 2}})
     reload = await asyncio.wait_for(watch.refresh_now(), timeout=30)

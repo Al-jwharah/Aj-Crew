@@ -67,8 +67,8 @@ export function usePanelDocumentActions({ tabsCtl, slotRef, queryClient, showAct
   // file's text. Bypassed entirely when the IntelliJ plugin handles file opens
   // — the user wanted IDE-native, not in-dashboard.
   const openFile = useCallback(async (filePath: string, opts?: { replaceId?: string; line?: number; endLine?: number; diffMode?: boolean; canReplace?: () => boolean; slot?: string | null }) => {
-    try { window.dispatchEvent(new CustomEvent('kirocrew-file-open', { detail: { path: filePath } })) } catch { /* the IDE bridge is optional; the dashboard path below still runs */ }
-    if ((window as unknown as { __kirocrewPluginHandlesFiles?: boolean }).__kirocrewPluginHandlesFiles) return
+    try { window.dispatchEvent(new CustomEvent('ajcrew-file-open', { detail: { path: filePath } })) } catch { /* the IDE bridge is optional; the dashboard path below still runs */ }
+    if ((window as unknown as { __ajcrewPluginHandlesFiles?: boolean }).__ajcrewPluginHandlesFiles) return
     // Capture the slot BEFORE awaiting the read — the same discipline as
     // `saveFile`. `tabsCtl` was bound at the click, so the tab lands in the
     // INITIATING slot's bucket; stamping it with whatever slot is active once
@@ -124,8 +124,8 @@ export function usePanelDocumentActions({ tabsCtl, slotRef, queryClient, showAct
   // tab identity and initial mode differ. Honours the IntelliJ file-bridge the
   // same way openFile does.
   const openWorkingTreeDiff = useCallback(async (filePath: string, opts?: { slot?: string | null }) => {
-    try { window.dispatchEvent(new CustomEvent('kirocrew-file-open', { detail: { path: filePath } })) } catch { /* ignore */ }
-    if ((window as unknown as { __kirocrewPluginHandlesFiles?: boolean }).__kirocrewPluginHandlesFiles) return
+    try { window.dispatchEvent(new CustomEvent('ajcrew-file-open', { detail: { path: filePath } })) } catch { /* ignore */ }
+    if ((window as unknown as { __ajcrewPluginHandlesFiles?: boolean }).__ajcrewPluginHandlesFiles) return
     const slot = opts?.slot !== undefined ? opts.slot : (slotRef.current ?? null)
     try {
       const [read] = await Promise.all([

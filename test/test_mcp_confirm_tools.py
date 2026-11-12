@@ -18,14 +18,14 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.hooks import (
+from aj_crew.hooks import (
     TOOL_ALLOW,
     TOOL_AUTO_APPROVE,
     TOOL_DENY,
     HookManager,
     HooksConfig,
 )
-from kiro_crew.platform import governance
+from aj_crew.platform import governance
 
 # ── config parsing ────────────────────────────────────────────────────────────
 
@@ -53,7 +53,7 @@ def test_confirm_tools_drops_non_string_entries() -> None:
 
 def test_confirm_tools_is_restart_marked() -> None:
     """The static grants are rebuilt at restart, so a saved change must say so."""
-    from kiro_crew.config.schema import requires_restart
+    from aj_crew.config.schema import requires_restart
 
     assert requires_restart("hooks.confirm_tools")
     assert not requires_restart("hooks.auto_approve_tools")
@@ -63,7 +63,7 @@ def test_confirm_tools_is_restart_marked() -> None:
 @pytest.mark.parametrize("junk", ['"@atlassian"', "{}", "null", "3"])
 def test_a_malformed_confirm_list_in_a_real_load_is_unknown(tmp_path, monkeypatch, junk) -> None:
     """Validation keeps the malformed value, and a key the operator wrote reads as unknown."""
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     _home(
         tmp_path,
@@ -79,7 +79,7 @@ def test_a_malformed_confirm_list_in_a_real_load_is_unknown(tmp_path, monkeypatc
 
 def test_confirm_tools_survives_a_real_load(tmp_path, monkeypatch) -> None:
     """The declared schema node keeps a list with a stray entry instead of stripping it."""
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     _home(tmp_path, monkeypatch, base='{"hooks": {"confirm_tools": ["@atlassian", 3]}}')
     monkeypatch.setattr(live, "snapshot", lambda: None)
@@ -135,9 +135,9 @@ def test_server_requires_confirmation_does_not_match(patterns: tuple[str, ...]) 
 
 def _home(tmp_path, monkeypatch, *, base: str | None = None, local: str | None = None):
     """A scratch Crew home holding the given ``config.json`` / ``config.local.json`` text."""
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     if base is not None:
         (home / "config.json").write_text(base, encoding="utf-8")
     if local is not None:
@@ -152,13 +152,13 @@ _TORN_WITH_KEY = '{"hooks": {"confirm_tools": ["@atlassian/*"]},}'
 
 
 def _failing_load(monkeypatch) -> None:
-    from kiro_crew.config import live, loader
+    from aj_crew.config import live, loader
 
     def _boom(*_a, **_k):
         raise OSError("config unreadable")
 
     monkeypatch.setattr(live, "snapshot", lambda: None)
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: _boom()))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(lambda cls, *a, **k: _boom()))
 
 
 def test_confirm_tool_patterns_failed_read_of_a_file_naming_the_key_is_unknown(
@@ -170,10 +170,10 @@ def test_confirm_tool_patterns_failed_read_of_a_file_naming_the_key_is_unknown(
 
 
 def _counting_load(monkeypatch) -> list[int]:
-    """Spy on ``KiroCrewConfig.load``: delegate to the real one, count the calls."""
-    from kiro_crew.config import live, loader
+    """Spy on ``AjCrewConfig.load``: delegate to the real one, count the calls."""
+    from aj_crew.config import live, loader
 
-    real = loader.KiroCrewConfig.__dict__["load"].__func__
+    real = loader.AjCrewConfig.__dict__["load"].__func__
     calls: list[int] = []
 
     def load(cls):
@@ -181,7 +181,7 @@ def _counting_load(monkeypatch) -> list[int]:
         return real(cls)
 
     monkeypatch.setattr(live, "snapshot", lambda: None)
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(load))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(load))
     monkeypatch.setattr(governance, "_CONFIRM_PATTERNS_MEMO", None, raising=False)
     return calls
 
@@ -224,8 +224,8 @@ def test_confirm_tool_patterns_reloads_after_an_in_process_save_the_fingerprint_
     tmp_path, monkeypatch
 ) -> None:
     """A save() invalidates the loader cache; the memo follows it, not the file stamp alone."""
-    from kiro_crew.config import loader
-    from kiro_crew.config.loader_document import _invalidate_config_cache
+    from aj_crew.config import loader
+    from aj_crew.config.loader_document import _invalidate_config_cache
 
     home = _home(tmp_path, monkeypatch, base='{"hooks": {"confirm_tools": ["@atlassian"]}}')
     calls = _counting_load(monkeypatch)
@@ -280,7 +280,7 @@ class _Cfg:
 def test_confirm_tool_patterns_reads_the_hooks_section(
     tmp_path, monkeypatch, hooks, expected
 ) -> None:
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     _home(tmp_path, monkeypatch)
     monkeypatch.setattr(live, "snapshot", lambda: _Cfg(hooks))
@@ -299,7 +299,7 @@ _DEGRADED_LOADS = [
 def test_confirm_tool_patterns_degraded_load_of_a_file_naming_the_key_is_unknown(
     tmp_path, monkeypatch, degraded, base_unreadable
 ) -> None:
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     _home(tmp_path, monkeypatch, base=_TORN_WITH_KEY)
     cfg = _Cfg({}, degraded=degraded, base_unreadable=base_unreadable)
@@ -312,7 +312,7 @@ def test_confirm_tool_patterns_degraded_load_without_the_key_is_empty(
     tmp_path, monkeypatch, degraded, base_unreadable
 ) -> None:
     """The key unset in every file: a degraded load changes nothing."""
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     _home(tmp_path, monkeypatch, base=_TORN_WITHOUT_KEY, local='{"skills": {}}')
     cfg = _Cfg({}, degraded=degraded, base_unreadable=base_unreadable)
@@ -321,7 +321,7 @@ def test_confirm_tool_patterns_degraded_load_without_the_key_is_empty(
 
 
 def test_confirm_tool_patterns_key_in_the_local_overlay_is_unknown(tmp_path, monkeypatch) -> None:
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     _home(tmp_path, monkeypatch, base='{"hooks": {}}', local='{"hooks": {"confirm_tools": [')
     monkeypatch.setattr(live, "snapshot", lambda: _Cfg({}, degraded={"*"}))
@@ -330,7 +330,7 @@ def test_confirm_tool_patterns_key_in_the_local_overlay_is_unknown(tmp_path, mon
 
 def test_confirm_tool_patterns_unreadable_bytes_are_unknown(tmp_path, monkeypatch) -> None:
     """Bytes that cannot be read cannot show the key unset."""
-    from kiro_crew.config import live, loader
+    from aj_crew.config import live, loader
 
     _home(tmp_path, monkeypatch, base="{}")
 
@@ -343,7 +343,7 @@ def test_confirm_tool_patterns_unreadable_bytes_are_unknown(tmp_path, monkeypatc
 
 
 def test_confirm_tool_patterns_unrelated_degraded_section_still_reads(monkeypatch) -> None:
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     cfg = _Cfg({"confirm_tools": ["@jira"]}, degraded={"telegram"})
     monkeypatch.setattr(live, "snapshot", lambda: cfg)
@@ -354,7 +354,7 @@ def test_confirm_tool_patterns_stale_degradation_flag_reads_the_values(
     tmp_path, monkeypatch
 ) -> None:
     """The loader keeps a repaired tear flagged; files that parse again are read as written."""
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     _home(tmp_path, monkeypatch, base='{"hooks": {"confirm_tools": ["@jira"]}}')
     cfg = _Cfg({"confirm_tools": ["@jira"]}, degraded={"*", "*config.json"})
@@ -368,7 +368,7 @@ def test_confirm_tool_patterns_keeps_the_watchers_last_good_list_through_a_tear(
     tmp_path, monkeypatch
 ) -> None:
     """A tear that never names the key leaves the list the gate is still applying."""
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     _home(tmp_path, monkeypatch, base=_TORN_WITHOUT_KEY)
     cfg = _Cfg({"confirm_tools": ["@jira"]}, degraded={"*", "*config.json"})
@@ -381,7 +381,7 @@ def test_confirm_tool_patterns_non_object_hooks_in_a_file_naming_the_key_is_unkn
     tmp_path, monkeypatch, hooks_value
 ) -> None:
     """An overlay whose ``hooks`` is not an object hides the base file's list."""
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     _home(
         tmp_path,
@@ -399,18 +399,18 @@ def test_trailing_comma_config_withholds_static_grants(tmp_path, monkeypatch) ->
     Read as "no patterns" that would write the blanket grant a confirm list in
     the broken file was there to withhold, so the chokepoint withholds it.
     """
-    from kiro_crew.config import live, loader
+    from aj_crew.config import live, loader
 
     _home(tmp_path, monkeypatch, base=_TORN_WITH_KEY)
     monkeypatch.setattr(live, "snapshot", lambda: None)
-    loaded = loader.KiroCrewConfig.load()
+    loaded = loader.AjCrewConfig.load()
     assert not (loaded.hooks or {}).get("confirm_tools")
     assert governance._confirm_tool_patterns() is None
     assert not governance.may_skip_gate_now("@atlassian")
     assert not governance.may_skip_gate_now("@github")
 
 
-_CREW_GRANTS = ("@kirocrew-core", "@kirocrew-cron/cron_list", "@kirocrew-guide/find_ui")
+_CREW_GRANTS = ("@ajcrew-core", "@ajcrew-cron/cron_list", "@ajcrew-guide/find_ui")
 
 
 def test_trailing_comma_config_without_the_key_keeps_static_grants(tmp_path, monkeypatch) -> None:
@@ -419,11 +419,11 @@ def test_trailing_comma_config_without_the_key_keeps_static_grants(tmp_path, mon
     Only an operator who wrote ``confirm_tools`` can have asked for a prompt, so
     a tear in a file that never names it behaves as the key unset does.
     """
-    from kiro_crew.config import live, loader
+    from aj_crew.config import live, loader
 
     _home(tmp_path, monkeypatch, base=_TORN_WITHOUT_KEY)
     monkeypatch.setattr(live, "snapshot", lambda: None)
-    loaded = loader.KiroCrewConfig.load()
+    loaded = loader.AjCrewConfig.load()
     assert loaded.degraded_sections, "the trailing comma must degrade the load"
     assert governance._confirm_tool_patterns() == ()
     for ref in (*_CREW_GRANTS, "@atlassian", "@github/create_issue"):
@@ -509,37 +509,37 @@ def _rebuild(
     tmp_path, monkeypatch, servers: dict, patterns, *, template: dict | None = None
 ) -> dict:
     """Rebuild the agent spec; ``patterns=_LIVE`` reads the real config instead of a stub."""
-    from kiro_crew.agent import rebuild_agent_config
+    from aj_crew.agent import rebuild_agent_config
 
     agent_dir = tmp_path / "agents"
     agent_dir.mkdir()
-    (agent_dir / "defaults.json").write_text(json.dumps(template or {"name": "kirocrew"}))
+    (agent_dir / "defaults.json").write_text(json.dumps(template or {"name": "ajcrew"}))
     (agent_dir / "prompt.md").write_text("prompt")
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
     kiro_dir = tmp_path / ".kiro" / "agents"
     kiro_dir.mkdir(parents=True)
     settings_dir = tmp_path / ".kiro" / "settings"
     settings_dir.mkdir(parents=True)
     (settings_dir / "mcp.json").write_text(json.dumps({"mcpServers": servers}))
-    monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", kiro_dir)
-    monkeypatch.setattr("kiro_crew.agent._KIRO_MCP_JSON", settings_dir / "mcp.json")
-    monkeypatch.setattr("kiro_crew.agent._CC_MCP_JSON", tmp_path / "nonexistent_cc.json")
-    monkeypatch.setattr("kiro_crew.agent._KIROCREW_BIN", "/usr/bin/kirocrew")
+    monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", kiro_dir)
+    monkeypatch.setattr("aj_crew.agent._KIRO_MCP_JSON", settings_dir / "mcp.json")
+    monkeypatch.setattr("aj_crew.agent._CC_MCP_JSON", tmp_path / "nonexistent_cc.json")
+    monkeypatch.setattr("aj_crew.agent._AJCREW_BIN", "/usr/bin/ajcrew")
     monkeypatch.setattr("shutil.which", lambda cmd, path=None: f"/usr/bin/{cmd}")
     if patterns is not _LIVE:
         _patterns(monkeypatch, patterns)
 
     rebuild_agent_config()
-    return json.loads((kiro_dir / "kirocrew.json").read_text(encoding="utf-8"))
+    return json.loads((kiro_dir / "ajcrew.json").read_text(encoding="utf-8"))
 
 
 def test_rebuild_on_a_torn_config_without_the_key_keeps_crew_grants(tmp_path, monkeypatch) -> None:
-    """Broken config.json, key unset: the template's ``@kirocrew-*`` grants are kept."""
-    from kiro_crew.config import live
+    """Broken config.json, key unset: the template's ``@ajcrew-*`` grants are kept."""
+    from aj_crew.config import live
 
     _home(tmp_path, monkeypatch, base=_TORN_WITHOUT_KEY)
     monkeypatch.setattr(live, "snapshot", lambda: None)
-    template = {"name": "kirocrew", "allowedTools": list(_CREW_GRANTS)}
+    template = {"name": "ajcrew", "allowedTools": list(_CREW_GRANTS)}
     data = _rebuild(
         tmp_path, monkeypatch, {"atlassian": {"command": "atl"}}, _LIVE, template=template
     )
@@ -551,15 +551,15 @@ def test_rebuild_on_a_torn_config_naming_the_key_withholds_crew_grants(
     tmp_path, monkeypatch
 ) -> None:
     """The key in a file that does not parse: the list is unknown, so nothing is granted."""
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     _home(tmp_path, monkeypatch, base=_TORN_WITH_KEY)
     monkeypatch.setattr(live, "snapshot", lambda: None)
-    template = {"name": "kirocrew", "allowedTools": list(_CREW_GRANTS)}
+    template = {"name": "ajcrew", "allowedTools": list(_CREW_GRANTS)}
     data = _rebuild(
         tmp_path, monkeypatch, {"atlassian": {"command": "atl"}}, _LIVE, template=template
     )
-    assert "@kirocrew-core" in data["tools"]
+    assert "@ajcrew-core" in data["tools"]
     assert not [ref for ref in data["allowedTools"] if ref.startswith("@")]
 
 
@@ -602,11 +602,11 @@ def test_rebuild_drops_the_emitted_auto_approve_for_a_named_server(tmp_path, mon
 def test_rebuild_strips_a_grant_left_from_an_earlier_build(tmp_path, monkeypatch) -> None:
     _rebuild(tmp_path, monkeypatch, {"atlassian": {"command": "atl"}}, ())
     # The same tree rebuilt after the operator opts in.
-    from kiro_crew.agent import rebuild_agent_config
+    from aj_crew.agent import rebuild_agent_config
 
     _patterns(monkeypatch, ("@atlassian",))
     rebuild_agent_config()
-    data = json.loads((tmp_path / ".kiro" / "agents" / "kirocrew.json").read_text(encoding="utf-8"))
+    data = json.loads((tmp_path / ".kiro" / "agents" / "ajcrew.json").read_text(encoding="utf-8"))
     assert "@atlassian" in data["tools"]
     assert not [ref for ref in data["allowedTools"] if ref.startswith("@atlassian")]
 
@@ -646,11 +646,11 @@ def test_a_pattern_the_gate_applies_always_withholds_the_static_grant(pattern: s
 def test_dashboard_enable_withholds_the_grant_for_a_named_server(tmp_path, monkeypatch) -> None:
     from unittest.mock import patch
 
-    from kiro_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
+    from aj_crew.dashboard.handlers.mcp import _sync_mcp_to_agent
 
-    agent_cfg = tmp_path / "kirocrew.json"
+    agent_cfg = tmp_path / "ajcrew.json"
     agent_cfg.write_text(
-        json.dumps({"name": "kirocrew", "mcpServers": {}, "tools": [], "allowedTools": []})
+        json.dumps({"name": "ajcrew", "mcpServers": {}, "tools": [], "allowedTools": []})
     )
     mcp_json = tmp_path / "mcp.json"
     mcp_json.write_text(
@@ -665,10 +665,8 @@ def test_dashboard_enable_withholds_the_grant_for_a_named_server(tmp_path, monke
     )
     _patterns(monkeypatch, ("@atlassian",))
     with (
-        patch("kiro_crew.dashboard.handlers.mcp._GLOBAL_MCP_JSON", mcp_json),
-        patch(
-            "kiro_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg
-        ),
+        patch("aj_crew.dashboard.handlers.mcp._GLOBAL_MCP_JSON", mcp_json),
+        patch("aj_crew.dashboard.handlers.agents._installed_agent_config", return_value=agent_cfg),
     ):
         _sync_mcp_to_agent("atlassian", enabled=True)
         _sync_mcp_to_agent("github", enabled=True)
@@ -736,17 +734,17 @@ def test_confirm_tools_unknown_is_not_serialized() -> None:
 
 
 def _boot_hook_manager() -> HookManager:
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.hooks import hooks_config_from_config_dict
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.hooks import hooks_config_from_config_dict
 
-    return HookManager(hooks_config_from_config_dict(KiroCrewConfig.load().hooks))
+    return HookManager(hooks_config_from_config_dict(AjCrewConfig.load().hooks))
 
 
 def test_boot_on_a_torn_overlay_naming_the_key_keeps_the_call_on_the_gate(
     tmp_path, monkeypatch
 ) -> None:
     """The load keeps the base grant and drops the torn overlay's confirm list."""
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     _home(
         tmp_path,
@@ -764,7 +762,7 @@ def test_boot_on_a_torn_overlay_with_a_base_confirm_list_keeps_the_call_on_the_g
     tmp_path, monkeypatch
 ) -> None:
     """The base file's own list survives the load, but the overlay's patterns are lost."""
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     _home(
         tmp_path,
@@ -794,7 +792,7 @@ def test_gate_unknown_list_outranks_the_patterns_it_kept() -> None:
 def test_boot_on_a_torn_overlay_without_the_key_keeps_operator_grants(
     tmp_path, monkeypatch
 ) -> None:
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     _home(
         tmp_path,
@@ -821,7 +819,7 @@ def _gate_through_a_live_tear(
     A tear the watcher rides out keeps the previous snapshot, so the diff is empty
     and nothing rebuilds the gate's ``HooksConfig``: its flag stays as it was built.
     """
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     _home(tmp_path, monkeypatch, base=json.dumps({"hooks": hooks}), local=local)
     kept = _Cfg(dict(hooks), degraded=degraded)
@@ -866,7 +864,7 @@ def test_a_whole_config_under_the_watcher_keeps_operator_grants(tmp_path, monkey
 
 
 def test_an_unreadable_watcher_keeps_the_call_on_the_gate(monkeypatch) -> None:
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     def _boom():
         raise RuntimeError("watcher unreadable")
@@ -897,18 +895,18 @@ def test_an_unattended_crew_write_call_asks_while_the_list_is_unknown() -> None:
     of running, and a read-only call is still settled by the classifier.
     """
     mgr = HookManager(
-        HooksConfig(auto_approve_tools=["@kirocrew-core/*"], confirm_tools_unknown=True)
+        HooksConfig(auto_approve_tools=["@ajcrew-core/*"], confirm_tools_unknown=True)
     )
-    assert _mcp_call(mgr, "kirocrew-core", "artifact_delete") == TOOL_ALLOW
+    assert _mcp_call(mgr, "ajcrew-core", "artifact_delete") == TOOL_ALLOW
 
 
 def _reload(manager: HookManager, hooks: dict, monkeypatch) -> MagicMock:
     from types import SimpleNamespace
 
-    from kiro_crew import hooks as hooks_mod
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew import hooks as hooks_mod
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.hooks = hooks  # type: ignore[assignment]
     sel_obj = MagicMock()
     monkeypatch.setattr(hooks_mod, "sel", lambda: sel_obj)
@@ -1018,8 +1016,8 @@ def test_a_non_object_overlay_hooks_in_a_real_load_is_unknown(
     tmp_path, monkeypatch, overlay
 ) -> None:
     """An overlay's non-object ``hooks`` replaces the base list; validation keeps the evidence."""
-    from kiro_crew.config import live
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config import live
+    from aj_crew.config.loader import AjCrewConfig
 
     _home(
         tmp_path,
@@ -1028,7 +1026,7 @@ def test_a_non_object_overlay_hooks_in_a_real_load_is_unknown(
         local=overlay,
     )
     monkeypatch.setattr(live, "snapshot", lambda: None)
-    loaded = KiroCrewConfig.load()
+    loaded = AjCrewConfig.load()
     assert loaded.hooks == {} and "hooks" in loaded.degraded_sections
     assert governance._confirm_tool_patterns() is None
     assert not governance.may_skip_gate_now("@atlassian")

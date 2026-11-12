@@ -28,7 +28,7 @@ from conductor_wake_helpers import (
     _Svc,
 )
 
-from kiro_crew import conductor_wake, work_ledger
+from aj_crew import conductor_wake, work_ledger
 
 WORKER_C = "chat-worker-c"
 
@@ -53,10 +53,10 @@ def _batching_service(tmp_path, monkeypatch, *, window: float = _BATCH_WINDOW):
     real one does, so ``fire_now`` re-setting it is what opens the window. The caller runs
     the tick the window armed by calling ``_timer`` itself.
     """
-    import kiro_crew.autonudge as autonudge
-    from kiro_crew import irq
+    import aj_crew.autonudge as autonudge
+    from aj_crew import irq
 
-    monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
     monkeypatch.setenv(conductor_wake.WAKE_BATCH_ENV, str(window))
     arms: list[float | None] = []
     delivered: list[int] = []
@@ -248,8 +248,8 @@ def test_the_window_never_arms_past_the_loops_own_deadline():
     to fire would delay the loop's own scheduled tick by the difference -- a pull-forward
     that pushed work back.
     """
-    from kiro_crew.autonudge_service import firing
-    from kiro_crew.autonudge_service.model import NudgeLoop
+    from aj_crew.autonudge_service import firing
+    from aj_crew.autonudge_service.model import NudgeLoop
 
     now = 1_000.0
     loop = NudgeLoop(id="L", slot_key=CONDUCTOR, message="m", idle_secs=3600)

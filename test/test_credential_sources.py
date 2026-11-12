@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import json
 
-from kiro_crew.security.credential_sources import (
+from aj_crew.security.credential_sources import (
     CredentialEvidence,
     bounded_credential_records,
     credential_records,
     revalidate_credential_record,
     tool_output_fingerprints,
 )
-from kiro_crew.security.redaction import redact_credentials_with_records
+from aj_crew.security.redaction import redact_credentials_with_records
 
 _SECRET = "wJalrXUtnFEMI" + "/K7MDENG/bPxRfiCY" + "EXAMPLEKEY"
 _TOKEN = "FwoGZXIvYXdzEBYaD" + "Hk2b3lp" + "Q2xBd0VR"
@@ -112,9 +112,9 @@ def _tool_update(text: str) -> dict:
 def test_both_tool_result_parsers_fingerprint_credentials(tmp_path):
     """kiro-cli results go through AcpClient, others through _dispatch: both
     must carry fingerprints, or a card's Source reads "not recorded"."""
-    from kiro_crew.acp._dispatch import _build_tool_result_event
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.acp.types import JsonRpcMessage
+    from aj_crew.acp._dispatch import _build_tool_result_event
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.acp.types import JsonRpcMessage
 
     msg = JsonRpcMessage(method="session/update", params={"update": _tool_update(_CREDS_FILE)})
     client_event = AcpClient(work_dir=tmp_path)._extract_tool_call_update(msg)
@@ -134,7 +134,7 @@ def test_a_result_read_back_from_the_kiro_session_file_is_fingerprinted(tmp_path
     must fingerprint them too, or the card's Source stays empty."""
     import json
 
-    from kiro_crew.acp.client import AcpClient
+    from aj_crew.acp.client import AcpClient
 
     monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
     session_dir = tmp_path / ".kiro" / "sessions" / "cli"
@@ -217,7 +217,7 @@ def test_a_collapsed_tool_call_id_records_no_credential_source() -> None:
     identifies exactly one call."""
     from pathlib import Path
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     source = "\n".join(
         turn_file.read_text(encoding="utf-8")
@@ -234,7 +234,7 @@ def test_a_collapsed_tool_call_id_records_no_credential_source() -> None:
 def test_a_command_or_path_with_an_invisible_character_is_not_a_source() -> None:
     """U+202E and friends make the shown text differ from what runs, so a value
     carrying one never becomes a source or a pre-fill, at birth or on reload."""
-    from kiro_crew.security.credential_sources import _tool_source, revalidate_credential_record
+    from aj_crew.security.credential_sources import _tool_source, revalidate_credential_record
 
     bidi = "cat ~/.aws/credentials \u202e#"
     assert _tool_source(json.dumps({"command": bidi}), is_shell=True) is None

@@ -32,7 +32,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard.handlers import api_file_write, discover
+from aj_crew.dashboard.handlers import api_file_write, discover
 
 pytestmark = pytest.mark.asyncio
 
@@ -42,7 +42,7 @@ NON_OWNER = "U0NONOWNER"
 @pytest.fixture(autouse=True)
 def _quiet_sel():
     with (
-        patch("kiro_crew.sel.sel", return_value=MagicMock()),
+        patch("aj_crew.sel.sel", return_value=MagicMock()),
         patch.object(discover, "_sel", return_value=MagicMock()),
     ):
         yield
@@ -67,7 +67,7 @@ def steering_doc(tmp_path: Path) -> Path:
 
 
 async def test_file_write_refuses_a_non_owner(steering_doc: Path) -> None:
-    from kiro_crew.dashboard.handlers import files
+    from aj_crew.dashboard.handlers import files
 
     with patch.object(files, "_probe_request_path", wraps=files._probe_request_path) as probe:
         async with TestClient(TestServer(_file_write_app())) as client:

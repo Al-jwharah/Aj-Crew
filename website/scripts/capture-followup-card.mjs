@@ -18,7 +18,7 @@ import { mkdirSync } from 'node:fs'
 const BASE = process.argv[2] || 'http://127.0.0.1:6802'
 const OUT = process.argv[3] || '../temp-screenshots/followup-suggest'
 const SLOT = 'chat-followup'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -28,7 +28,7 @@ const slots = [{
   running: false,
   last_message: 'Added the token-bucket limiter and its tests.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),
@@ -65,7 +65,7 @@ const ITEMS = [
     description:
       'The upload endpoint is bounded now, but /api/ws still accepts unlimited concurrent upgrades from one caller.',
     prompt:
-      'In src/kiro_crew/dashboard/ws.py, apply the same token-bucket limiter added to the upload handler to the WebSocket upgrade path. Reuse the limiter helper rather than duplicating it, cap concurrent sockets per caller, and add tests for the reject path.',
+      'In src/aj_crew/dashboard/ws.py, apply the same token-bucket limiter added to the upload handler to the WebSocket upgrade path. Reuse the limiter helper rather than duplicating it, cap concurrent sockets per caller, and add tests for the reject path.',
     branch: 'feat/ws-rate-limit',
   },
   {
@@ -79,7 +79,7 @@ const ITEMS = [
     title: 'Document the limiter defaults',
     description: 'The new limits are undocumented, so operators cannot tune them.',
     prompt:
-      'Document the upload rate-limiter defaults and their config keys in src/kiro_crew/docs/configuration.md, including how to raise them for a trusted deployment.',
+      'Document the upload rate-limiter defaults and their config keys in src/aj_crew/docs/configuration.md, including how to raise them for a trusted deployment.',
     branch: 'docs/rate-limit-defaults',
   },
 ]

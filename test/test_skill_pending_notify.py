@@ -21,8 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import skills as S
-from kiro_crew.skills import AutoSkillProvenance, PendingApprovalRefused, SkillsLoader
+from aj_crew import skills as S
+from aj_crew.skills import AutoSkillProvenance, PendingApprovalRefused, SkillsLoader
 
 
 @pytest.fixture()
@@ -192,7 +192,7 @@ def test_consumed_hook_not_fired_when_update_cleanup_leaves_candidate(loader, mo
             return  # swallow, like rmtree with a locked file inside
         return real_rmtree(path, *args, **kwargs)
 
-    monkeypatch.setattr("kiro_crew.skills.shutil.rmtree", _locked_rmtree)
+    monkeypatch.setattr("aj_crew.skills.shutil.rmtree", _locked_rmtree)
     seen: list[dict] = []
     S.set_pending_consumed_hook(seen.append)
     assert loader.approve_pending_update_checked("cand-locked") == "auto/cand-locked"

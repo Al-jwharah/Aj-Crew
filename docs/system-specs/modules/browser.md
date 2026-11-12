@@ -35,7 +35,7 @@ agent turn ──MCP browser(op, args)──▶ ops ──▶ supervisor.call(<h
 | The `browser` MCP tool's ops, the snapshot walker and the op route that also drives the card | `mcp_tools/browser.py`, `ops.py`, `snapshot_walker.js` in that package; `dashboard/handlers/browser_ops.py` |
 | The live card in the transcript | `BrowserLiveCard*.tsx` under the chat page, the `useBrowserLive*` hooks, and the binary-frame branch of `useWebSocket.ts` |
 | Settings → Browser and the Preview tab | `website/src/pages/settings/Browser*.tsx`, `config/sections_browser.py`, `website/src/components/WebPreviewPanel*.tsx` |
-| What goes into Kiro's Chromium before the first op: the edition credential seam | `credentials.py` and `credential_files.py` in that package; the `browser_credentials` platform slot |
+| What goes into Aj's Chromium before the first op: the edition credential seam | `credentials.py` and `credential_files.py` in that package; the `browser_credentials` platform slot |
 | Screenshot directory, retired keys, doctor row, Preview tab's native view | `browser_snapshots.py`, `config/resolution.py`, `doctor_checks/install.py`, `website/electron/browser-view.js` |
 
 One supervisor per gateway owns the daemon and the relay. One relay connection
@@ -97,13 +97,13 @@ therefore still install. A failed interpreter check fails the install at
 `installing_harness`; it does not fall back to pip.
 The copied dependencies use the runtime's releases rather than the lock's, and
 nothing hash-checks this copy. Until the gateway takes it, the runtime tree has
-the gateway's own exposure: only the `kiro_crew` package directory is sealed
+the gateway's own exposure: only the `aj_crew` package directory is sealed
 ([security](security.md), the packaged install directory). The driver's installed
 code is always under the sealed prefix, so later runtime edits or pruning cannot
 change it. Nothing is built, so the pillow check does not apply. The pip path
 reads the marker's source, independent of the venv's Python layout, and rebuilds
 a runtime-filled venv rather than repairing or reusing its packages.
-Kiro's own Chromium (Chrome for Testing `154.0.8037.0`, the build Playwright's
+Aj's own Chromium (Chrome for Testing `154.0.8037.0`, the build Playwright's
 `chromium-1244` ships, fetched from Google's bucket and then Playwright's CDN,
 which alone hosts linux-arm64) is downloaded into the same prefix for hosts with
 no usable Chrome (`chromium.py`). The prefix is a `READONLY` crew-home leaf, so
@@ -138,10 +138,10 @@ flag on the dashboard state): a failure is not retried; it stays visible as the
 failed `install_job` and Install is the retry. While it runs, `GET
 /api/browser/status` reports `installing: true` and `install_job.status:
 "running"`, and an Install press gets the usual `409`. It never runs in a process
-carrying `PYTEST_CURRENT_TEST`, `CI`, `KIROCREW_E2E_EPHEMERAL` or
-`KIROCREW_FAKE_ACP_TEST_MODE` (the last marks a fake-agent test rig started outside
+carrying `PYTEST_CURRENT_TEST`, `CI`, `AJCREW_E2E_EPHEMERAL` or
+`AJCREW_FAKE_ACP_TEST_MODE` (the last marks a fake-agent test rig started outside
 pytest and CI, such as the GUI user test's `gateway --test-mode`; any value but
-empty/`0`/`false`/`no`/`off`); there is no config key. `KIROCREW_SKIP_MODEL_DOWNLOAD`
+empty/`0`/`false`/`no`/`off`); there is no config key. `AJCREW_SKIP_MODEL_DOWNLOAD`
 does not skip it: a real cloud microVM gateway sets that.
 
 The daemon starts with a scrubbed environment built by one function and pinned
@@ -241,8 +241,8 @@ auto-install (see the driver section).
 |---|---|---|
 | macOS, Linux desktop, Windows with Chrome | the user's Chrome | enable `chrome://inspect/#remote-debugging` once, then Allow |
 | Windows without Chrome | Edge | same |
-| Server, no display, remote gateway | Kiro's Chromium, `--headless=new --remote-debugging-pipe --user-data-dir=<data-home>/browser-profile` (`--remote-debugging-port=0` on Windows only) | none |
-| Chrome's `RemoteDebuggingAllowed` policy is off | Kiro's Chromium | none |
+| Server, no display, remote gateway | Aj's Chromium, `--headless=new --remote-debugging-pipe --user-data-dir=<data-home>/browser-profile` (`--remote-debugging-port=0` on Windows only) | none |
+| Chrome's `RemoteDebuggingAllowed` policy is off | Aj's Chromium | none |
 
 A snap-packaged Chromium is skipped: snap confinement breaks the debugging port.
 
@@ -253,11 +253,11 @@ lacks `ippValidateAttributes`, `cupsFindDestDefault`, `cupsFindDestSupported` or
 the debugging pipe. There `chromium.wanted_build` picks the same version's
 `chrome-headless-shell` (the `{build}` in both download URLs), which links no
 libcups, and keeps it in `chromium/154.0.8037.0-headless-shell/` beside the full
-build's directory. Everything that reads or fetches Kiro's Chromium goes through
+build's directory. Everything that reads or fetches Aj's Chromium goes through
 that one answer: `chromium_state` (so on such a host a full build already on
 disk reads as not downloaded, and the startup auto-install fetches the shell),
 `download_chromium`, and therefore the executable the supervisor launches, with
-the same flags. The shell has no window, so on such a host Kiro's Chromium is
+the same flags. The shell has no window, so on such a host Aj's Chromium is
 always headless: `supervisor._choose` reports a `kiro_chromium` choice as
 headless even when a display and a windowed pin would otherwise give it one, so
 status, the live card and the startup warm never offer a window it cannot show. `libcups.py` decides from the filesystem alone: the first
@@ -268,27 +268,27 @@ needs no binutils. No libcups found, or none readable, is no evidence and keeps
 the full build; macOS and Windows always get the full build. A version bump
 re-reads `libcups.REQUIRED_SYMBOLS` from the new build's
 `nm -D --undefined-only`.
-On macOS and Linux Kiro's Chromium speaks CDP over `--remote-debugging-pipe`
+On macOS and Linux Aj's Chromium speaks CDP over `--remote-debugging-pipe`
 (fds 3 and 4, moved into place by `/bin/sh` before `exec`), so it opens no port
 at all; Python cannot hand a Windows child fds 3 and 4, so there it keeps an
 ephemeral port, reachable by any local process (security table).
-`--no-sandbox` is added only when the gateway runs as root. Kiro's Chromium is
+`--no-sandbox` is added only when the gateway runs as root. Aj's Chromium is
 always launched with `--use-mock-keychain --password-store=basic`: its network
 service otherwise fetches the cookie-encryption key from the OS keystore, and on a
 fresh Chrome for Testing that is a macOS Keychain (or Linux keyring) prompt a headless
 browser can never answer, behind which every `http(s)` navigation -- loopback included
 -- hangs forever while `data:` pages still load. The key stays in memory; the profile
-it protects is Kiro's own hidden leaf. Kiro's profile is a
+it protects is Kiro's own hidden leaf. Aj's profile is a
 `HIDDEN` crew-home leaf: cookies from a takeover login stay there and the agent
-cannot read the file. Tabs do not survive a relaunch of Kiro's Chromium: before
+cannot read the file. Tabs do not survive a relaunch of Aj's Chromium: before
 each launch the supervisor removes the profile's session files
 (`Default/Sessions/` and the older `Current`/`Last` `Session`/`Tabs` files), so
 pages from closed chats are not reopened; cookies and logins are kept. The
 user's own Chrome or Edge is never touched. `browser.choice` (`auto|user_chrome|kiro_chromium|headless`)
 overrides the order by hand.
 
-A Kiro's Chromium that exits before the daemon answers fails the start at once
-with `Kiro's Chromium exited with code <n>`. On macOS and Linux its stderr goes
+An Aj's Chromium that exits before the daemon answers fails the start at once
+with `Aj's Chromium exited with code <n>`. On macOS and Linux its stderr goes
 to a pipe of the gateway's own, drained for the browser's whole life (only the
 newest 4 KiB kept, in memory), and its last stderr lines follow, redacted, so a
 missing shared library is named by the loader's own report rather than by a
@@ -300,7 +300,7 @@ step ("click Allow in Chrome") until it is answered.
 
 ### Credentials
 
-Kiro's Chromium starts with an empty profile, so on a headless or remote host a
+Aj's Chromium starts with an empty profile, so on a headless or remote host a
 site behind a sign-in the agent cannot perform (a device-bound login, a hardware
 key) is a wall the person has to climb by takeover every time. An edition that
 already holds the user's session fills it (`browser_harness/credentials.py`):
@@ -345,7 +345,7 @@ next navigation tries again. **The person's own Chrome or Edge is never filled**
 start on either records `skipped` / `user_browser` and the provider is not called.
 
 **Session cookies.** Every cookie is set WITHOUT `expires`, so nothing the provider
-supplies is written into Kiro's profile on disk and all of it is gone when the
+supplies is written into Aj's profile on disk and all of it is gone when the
 browser closes (verified: CDP reports the cookie `session: true`). Expiry still
 counts: a cookie whose `expires` has passed is dropped. A cookie a re-pull omits
 stays until the browser closes.
@@ -399,7 +399,7 @@ sandbox policy.
 
 **Accepted residuals.** (i) The agent can browse as the signed-in user on those
 sites, and a page's own script reads non-`httpOnly` cookies as it always would;
-what is withheld is the value as data. (ii) On Windows Kiro's Chromium keeps its
+what is withheld is the value as data. (ii) On Windows Aj's Chromium keeps its
 debugging port (see Security), so a local process that finds it can read the
 cookies the same way it could already drive the browser. (iii) One browser serves
 every chat on the gateway, so the provider's cookies reach every agent browsing
@@ -416,8 +416,8 @@ undo a page already read.
   are 404 before anything is forwarded. The sandbox does not fence loopback, so
   a process the agent runs CAN find the port by probing; the secret is what it
   does not have -- it is in the daemon's environment and nowhere else. The
-  upstream is a websocket (the user's Chrome; Kiro's Chromium on Windows) or the
-  debugging pipe (Kiro's Chromium elsewhere).
+  upstream is a websocket (the user's Chrome; Aj's Chromium on Windows) or the
+  debugging pipe (Aj's Chromium elsewhere).
 - **Disjoint ids.** Every daemon request is renumbered and mapped back on reply,
   so several clients never collide; the relay's own requests use ids from
   1,000,000,000 up.
@@ -697,7 +697,7 @@ One card per turn, attached to the turn's first `browser` call (anchor =
 folded. A browser row is recognised by the stamped `tool_name` when there is one
 (`browser` or a server-qualified `…/browser`, `…::browser`, `…___browser`) and
 otherwise by its pill text, which for the managed-MCP tool reads
-`🔧 @kirocrew-core/browser` -- the `@server/tool` form every MCP call arrives in; a new `turn_id` closes the previous record as done. Takeover grows the
+`🔧 @ajcrew-core/browser` -- the `@server/tool` form every MCP call arrives in; a new `turn_id` closes the previous record as done. Takeover grows the
 same element; it never swaps in another component. Frames are decoded from the
 binary message (the TS mirror of `decode_frame`, every field checked), acked ONCE
 per `(stream, seq)` even when no live turn shows them (so the relay never
@@ -772,10 +772,10 @@ the intentional 404 (no recording) stays quiet.
 | Login needed | "Take over to sign in" |
 | Error | the thumbnail and `detail` through `ErrorNotice` |
 
-The Allow face's "Use Kiro's own browser instead" opens `/settings/browser`.
+The Allow face's "Use Aj's own browser instead" opens `/settings/browser`.
 
 **Reopening a finished card.** A turn's end stops the screencast, but the agent's
-tab stays open (headless and Kiro's own Chromium as much as the person's Chrome),
+tab stays open (headless and Aj's own Chromium as much as the person's Chrome),
 so the done line offers **Open live** (the button, or a click on the thumbnail)
 while that tab is still there. `POST /api/browser/live/reopen`
 `{session_key, turn_id}` calls `LiveHub.reopen`: it restarts the screencast on the
@@ -916,7 +916,7 @@ same-origin`.
 
 ### The tool
 
-`browser` is one MCP tool in the `kirocrew-core` shim with fifteen ops
+`browser` is one MCP tool in the `ajcrew-core` shim with fifteen ops
 (`browser_harness.ops.OPS`), not a tool namespace. The shim runs two gates before
 anything leaves the process: `capabilities.browse` governance (a denial refuses
 outright; there is no other browser) and the navigate gate (public http(s) only,
@@ -1048,7 +1048,7 @@ An optional add-on: with no decision model, or with any of its gates closed, eve
 op runs exactly as the table above says. `browser_harness/decide.py`
 (`BrowserDecisions`, set on `OpContext.decisions` by the op route with the caller's
 own session key) is the only browser module that reaches the decision seam, and it
-imports `kiro_crew.decisions` inside functions only and names no provider: every
+imports `aj_crew.decisions` inside functions only and names no provider: every
 request goes through `decisions.gate.decide` and the provider registry
 (`docs/system-specs/modules/decisions.md`, section 15, owns the point, its scopes
 and its gates). Three uses:
@@ -1147,7 +1147,7 @@ hold as one long frame; most animation loops clamp their frame step. A held page
 drops input, so the page runs before the input and the target check happens after
 that. A tab whose browser refuses the hold runs the call as `step` and says so; the
 extension-attached user Chrome cannot open a CDP session at all, so
-`virtual_time` is measured on Kiro's Chromium only.
+`virtual_time` is measured on Aj's Chromium only.
 
 The result is a summary: `stop`, `mode`, `steps`, `moves`, `recent` (last 20),
 `actions` (count per label), `decisions`, `decision_ms_avg`, `seconds`, `rate`
@@ -1237,7 +1237,7 @@ one, and logins happen during takeover.
 
 `browser_snapshots.py` names the one directory the `screenshot` op writes to:
 `<data-home>/browser-snapshots` (`snapshot_dir()`), derived from `config_dir()`
-so an isolated `KIROCREW_HOME` stays isolated. Each `screenshot` first prunes the
+so an isolated `AJCREW_HOME` stays isolated. Each `screenshot` first prunes the
 directory's `shot-*.png` past a day or past the newest 200, sparing any younger
 than five minutes (`prune()`); the gateway is its only writer. It is never inside a working
 directory by construction, which is why `messaging/outbound_files.py` admits it
@@ -1273,7 +1273,7 @@ One card and two controls; everything else is under a collapsed More group.
   live view in chat and shown only when `status.credentials.provider` is non-null
   (an edition supplies a sign-in provider; the public build never renders it). It
   reads the EFFECTIVE `credentials.enabled` (the edition's default while the key is
-  unset); its info tip says the sign-in goes to Kiro's own browser only, never the
+  unset); its info tip says the sign-in goes to Aj's own browser only, never the
   person's Chrome. The status line follows `credentials.state`: `applied` is
   "N cookies applied" (`credentials.applied`), `needs_refresh` is the provider's
   own `provider_status.message` verbatim (a catalog line when it gave none),
@@ -1282,7 +1282,7 @@ One card and two controls; everything else is under a collapsed More group.
   not index it (recorded in `settingsCoverage.test.ts`); its `configKey` still
   anchors key links.
   A write to any `browser.credentials.*` path re-reads the status: turned on
-  or changed it reads `pending` until the next page Kiro's Chromium opens
+  or changed it reads `pending` until the next page Aj's Chromium opens
   applies it, turned off it reads `disabled` (cookies already set stay until
   the browser closes; see Credentials). No cookie value is ever shown.
 - **More** (a collapsible `SettingsSection`, which a deep link opens): Quality
@@ -1296,7 +1296,7 @@ One card and two controls; everything else is under a collapsed More group.
   refresh: true}` so a Chromium already on disk is REPLACED, the repair for a
   damaged copy; the ordinary install keeps a whole one. The route reserves the
   job and closes the start gate at once; the job's first step,
-  `HarnessSupervisor.stop_for_chromium_replace`, stops Kiro's own Chromium if it
+  `HarnessSupervisor.stop_for_chromium_replace`, stops Aj's own Chromium if it
   runs (never the person's Chrome) before anything is installed, and every start
   that would launch it is refused until the job ends, with the detail "Kiro's
   Chromium is being redownloaded".
@@ -1331,7 +1331,7 @@ Allow, else every 15 s; `supervisor.status()` plus `installing`, `install_job
 {status: running|succeeded|failed|interrupted, stage, error_detail}`,
 `chromium.downloaded` and `platform`) and `POST /api/browser/install|test|disconnect`,
 all owner-only and refusing the internal secret; writes go through
-`PATCH /api/config/kirocrew` one path at a time. Every control carries its
+`PATCH /api/config/ajcrew` one path at a time. Every control carries its
 `configKey` except Run with no window, the second view of `browser.choice`: it
 anchors by label, so a `key:browser.choice` link lands on the Which browser
 picker only. Every string is in the i18n catalog (`pages.settings.browserPanel.*`).
@@ -1391,7 +1391,7 @@ dashboard text input would look alive and receive no keystrokes.
 
 ### Doctor
 
-`kirocrew doctor` prints one informational row (`_doctor_browser_leftover` in
+`ajcrew doctor` prints one informational row (`_doctor_browser_leftover` in
 `doctor_checks/install.py`) when the prefix an earlier version's browser CLI
 installer wrote (`_LEFTOVER_BROWSER_CLI_LEAF` under the data home) is still on
 disk: it names the directory and says it can be deleted. Doctor never deletes or
@@ -1407,14 +1407,14 @@ modifies it, and the row is silent when the directory is absent.
 | Agent types a password | `type` and printable `press_key` refuse password fields, resolved through open shadow roots; the frame masks them (boxes clipped to the frame, shadow roots walked) |
 | Frames show logged-in pages | owner websockets only; never written to disk except as a requested `screenshot` |
 | Another local process uses the relay | loopback, ephemeral port, AND a per-start secret on every path (404 without it); the URL with the secret is given only to the daemon. The sandbox does not fence loopback, so the secret, not the port, is the control |
-| Another local process reaches the browser's own debugging endpoint | Kiro's Chromium on macOS/Linux has none: it speaks CDP over `--remote-debugging-pipe`. **Accepted residual, Windows:** Kiro's Chromium keeps `--remote-debugging-port=0` (Python cannot hand a Windows child fds 3 and 4), so any local process can drive it. **Accepted residual, the user's own Chrome/Edge:** its debugging port is the user's, enabled by them; Chrome 144+ raises a fresh "Allow remote debugging?" sheet for every new connection, so a second client needs a second click the person would see |
+| Another local process reaches the browser's own debugging endpoint | Aj's Chromium on macOS/Linux has none: it speaks CDP over `--remote-debugging-pipe`. **Accepted residual, Windows:** Aj's Chromium keeps `--remote-debugging-port=0` (Python cannot hand a Windows child fds 3 and 4), so any local process can drive it. **Accepted residual, the user's own Chrome/Edge:** its debugging port is the user's, enabled by them; Chrome 144+ raises a fresh "Allow remote debugging?" sheet for every new connection, so a second client needs a second click the person would see |
 | The daemon's socket leaves the hidden leaf | a data home too deep for the AF_UNIX path limit is refused, never relocated to system temp |
 | Another chat drives the tab a person has taken over | every op binds to the calling session's own tab under one gateway-wide lock; a takeover fences that session's tab, and a tab another session owns is never streamed to this session's card |
 | A takeover lands inside an agent op | the claim and the op route share a per-session fence: the claim cancels the op in flight and is confirmed only once the route has left it |
 | An agent-written `pip/` or `venv/` package in the gateway's cwd runs on Install or the startup auto-install | both installer spawns run `python -I` with `PYTHON*`/`PIP_*` scrubbed and the prefix as cwd |
 | The relay URL (and its secret) goes to a corporate proxy | `NO_PROXY` always carries the loopback names |
 | Agent spells a password one key at a time | `press_key` with a printable key runs the same focused-password-field refusal as `type`; named keys and Ctrl/Meta chords stay allowed so the agent can leave the field |
-| Agent reads Kiro's profile cookies or the daemon's IPC credential | `HIDDEN` leaves in every sandbox mode |
+| Agent reads Aj's profile cookies or the daemon's IPC credential | `HIDDEN` leaves in every sandbox mode |
 | Agent reads injected credentials | the gateway applies them over the relay before the daemon starts; no route reads or writes cookies; status, logs and SEL carry counts and codes only; the person's own Chrome is never written to. An edition keeps its own source files hidden with its sandbox policy |
 | A provider widens what it may set | off unless `browser.credentials.enabled`; cookies outside BOTH its declared domains and `browser.credentials.domains` are dropped; every cookie is a session cookie; the provider adds no launch switch |
 | A provider reads a file the agent planted | `credential_files.read_source_file`: `O_NOFOLLOW`, `fstat` on the open descriptor, owner uid, no group/other bits, size cap |
@@ -1441,11 +1441,11 @@ masked because a leftover file still holds the owner's sessions.
 
 ### Related
 
-- [web-browse](../../../src/kiro_crew/builtin_skills/web-browse/SKILL.md) for
+- [web-browse](../../../src/aj_crew/builtin_skills/web-browse/SKILL.md) for
   opening a page so the user can see it.
-- [web-verify](../../../src/kiro_crew/builtin_skills/web-verify/SKILL.md) for
+- [web-verify](../../../src/aj_crew/builtin_skills/web-verify/SKILL.md) for
   screenshotting a front-end change as evidence.
-- [web-preview](../../../src/kiro_crew/builtin_skills/web-preview/SKILL.md) for
+- [web-preview](../../../src/aj_crew/builtin_skills/web-preview/SKILL.md) for
   the Preview tab.
 - [computer-use](computer-use.md) for the screencast pattern the live view
   follows (`computer_use_frame` to owner websockets).

@@ -24,8 +24,8 @@ superseded-by: []
 
 ## 1. Summary
 
-Kiro Crew exports OpenTelemetry **metrics** only. The issue asks for **traces**: point Langfuse, or any OTLP
-backend, at Kiro Crew with an endpoint and an auth header, and see per-session and per-agent traces with model,
+Aj Crew exports OpenTelemetry **metrics** only. The issue asks for **traces**: point Langfuse, or any OTLP
+backend, at Aj Crew with an endpoint and an auth header, and see per-session and per-agent traces with model,
 usage, latency and cost.
 
 This RFC proposes:
@@ -51,11 +51,11 @@ This RFC proposes:
 
 - The OTel API and SDK are core dependencies (`setup.cfg`). The `otlp` extra pins
   `opentelemetry-exporter-otlp-proto-http`, which also ships the span exporter.
-- `src/kiro_crew/metrics/` provides a MeterProvider, a local JSONL sink, and an attribute guard
+- `src/aj_crew/metrics/` provides a MeterProvider, a local JSONL sink, and an attribute guard
   (`metrics/schema.py::validate_attrs`). Its OTLP egress is gated per host by `metrics/otlp_governance.py`
   (`capabilities.telemetry` → `otlp_hosts`; fails closed; SEL-audited).
 - Metrics OTLP headers come from environment variables named in `headers_env`
-  (`_destination_headers` in `src/kiro_crew/metrics/provider.py`). A literal header value in config is refused.
+  (`_destination_headers` in `src/aj_crew/metrics/provider.py`). A literal header value in config is refused.
 - There is no TracerProvider and no span anywhere in `src/`.
   [telemetry-otlp-export.md](../guides/telemetry-otlp-export.md) says so under "Traces are not exported".
 
@@ -70,13 +70,13 @@ This RFC proposes:
 
 ### 2.3 What the backends actually report
 
-Measured from the parsers in `src/kiro_crew/acp/_dispatch.py` and the live captures under
+Measured from the parsers in `src/aj_crew/acp/_dispatch.py` and the live captures under
 `test/fixtures/acp_frames/`:
 
 | Harness | Tokens per turn | Cost | Per-model-call boundaries |
 |---|---|---|---|
 | Kiro (kiro-cli) | none: the prompt response carries only `stopReason` (`parse_prompt_token_usage`) | credits, per model call, summed per turn (`parse_metadata`) | an end marker per call, no start |
-| Kiro Agent | none | credits, a whole-turn total (`_apply_kas_turn_completion` in `src/kiro_crew/acp/session_handle_kas.py`) | intervals only up to the first displayed chunk |
+| Kiro Agent | none | credits, a whole-turn total (`_apply_kas_turn_completion` in `src/aj_crew/acp/session_handle_kas.py`) | intervals only up to the first displayed chunk |
 | Claude Code | input, output and cache counts | USD, session-cumulative, diffed to per turn | none |
 | codex, opencode, copilot, goose | present in captures | opencode only: USD | none |
 
@@ -113,7 +113,7 @@ So per-generation spans cannot be built honestly, and tokens are missing for the
   - **R2 (anchors).** A run root that can outlive a process is a short anchor span. Children are parented to it by
     deterministic id, so nothing is held open and a restart loses nothing. Each run kind ends with an
     `<kind> outcome <status>` marker.
-  - **R3 (roll-ups).** `kirocrew.usage.*_total` goes on spans that end after all of their children (a blocking
+  - **R3 (roll-ups).** `ajcrew.usage.*_total` goes on spans that end after all of their children (a blocking
     spawn, workflow, phase, Ultra Mode item, outcome markers), never as `gen_ai.usage.*`.
   - **R4 (single-cause join).** A turn whose only cause is one finished async run joins that run's trace: a
     workflow's completion turn, a sub-agent's completion-event turn, or a wake answering one report. A turn with
@@ -125,7 +125,7 @@ So per-generation spans cannot be built honestly, and tokens are missing for the
     sessionId … including their enclosing traces"
     ([sessions](https://langfuse.com/docs/observability/features/sessions)). So every span carries its **root's**
     `session.id` (a keyed hash of the Crew session key, stable across ACP recycles), and its own session goes in
-    `kirocrew.session_key_hash`.
+    `ajcrew.session_key_hash`.
 - **No session-level trace or anchor.** Chats last days and hold hundreds of turns. `session.id` already groups them:
   in Langfuse's Sessions view, and in CloudWatch by filtering or grouping `attributes.session.id` in Transaction
   Search or Logs Insights (the key CloudWatch's own sessions view reads is verified in phase 2).
@@ -146,15 +146,15 @@ invoke_agent <agent>                      invoke_agent <agent>
 
 An async child stays a child of its short, already-ended spawn span. Both Langfuse and X-Ray draw it past the
 parent's end in the same waterfall. Cron runs root at a `cron <job>` anchor. Channel turns are plain session turns
-with `kirocrew.channel`.
+with `ajcrew.channel`.
 
 ### 5.2 Two layers
 
 **Layer 1: the ACP turn (universal).**
-- `invoke_agent` opens in `AcpSessionProvider.stream` (`src/kiro_crew/acp/session_provider.py`) for kiro and
+- `invoke_agent` opens in `AcpSessionProvider.stream` (`src/aj_crew/acp/session_provider.py`) for kiro and
   Kiro Agent, and in the `AcpClient` stream path for Claude and direct clients.
-- Both hold the Crew session key as `_session_key` (`src/kiro_crew/acp/session_provider.py`,
-  `src/kiro_crew/acp/client_class.py`).
+- Both hold the Crew session key as `_session_key` (`src/aj_crew/acp/session_provider.py`,
+  `src/aj_crew/acp/client_class.py`).
 - `agent.provider` is `enum=["acp"]`, so no turn bypasses this layer.
 - With no surface span open, the turn becomes a root with a minted id.
 
@@ -162,13 +162,13 @@ with `kirocrew.channel`.
 
 | Engine | Entry | Surfaces |
 |---|---|---|
-| Dashboard runner | `_run_chat` in `src/kiro_crew/dashboard/chat_runner.py` | chat, Bot DMs, worker sessions, queue drain, regenerate and rewind, forks, monitor wakes on dashboard slots, linked Slack threads, Issue Radar, Spec Builder |
-| Channel driver | `TurnDriver.run` in `src/kiro_crew/messaging/driver.py` | Slack, Telegram, Discord, Teams, Webex, WeCom, Weixin, WhatsApp, iMessage, Feishu; monitor wakes on channel slots |
-| Collect helper | `stream_and_collect` in `src/kiro_crew/llm_helpers_parts/turn_stream.py` | cron agent jobs, Bot heartbeat and check-ins, workflow agent calls, side chat, threads, apps |
-| Background helper | `background_turn` / `run_bg_oneliner` in `src/kiro_crew/llm_helpers_parts/background_turns.py` | titles, summaries, consolidation |
-| Sub-agent runner | `_run_inner_impl` in `src/kiro_crew/subagent_manager/run_turn.py` | `spawn_run`, `spawn_sub_agents`, continue, retry |
-| Webhook runner | `_run_hook_inner` in `src/kiro_crew/dashboard/handlers/hooks.py` | inbound webhooks, `register_hook` callbacks |
-| Task runner | the step loop's `client.stream` in `src/kiro_crew/task_executor.py` | task-runner steps |
+| Dashboard runner | `_run_chat` in `src/aj_crew/dashboard/chat_runner.py` | chat, Bot DMs, worker sessions, queue drain, regenerate and rewind, forks, monitor wakes on dashboard slots, linked Slack threads, Issue Radar, Spec Builder |
+| Channel driver | `TurnDriver.run` in `src/aj_crew/messaging/driver.py` | Slack, Telegram, Discord, Teams, Webex, WeCom, Weixin, WhatsApp, iMessage, Feishu; monitor wakes on channel slots |
+| Collect helper | `stream_and_collect` in `src/aj_crew/llm_helpers_parts/turn_stream.py` | cron agent jobs, Bot heartbeat and check-ins, workflow agent calls, side chat, threads, apps |
+| Background helper | `background_turn` / `run_bg_oneliner` in `src/aj_crew/llm_helpers_parts/background_turns.py` | titles, summaries, consolidation |
+| Sub-agent runner | `_run_inner_impl` in `src/aj_crew/subagent_manager/run_turn.py` | `spawn_run`, `spawn_sub_agents`, continue, retry |
+| Webhook runner | `_run_hook_inner` in `src/aj_crew/dashboard/handlers/hooks.py` | inbound webhooks, `register_hook` callbacks |
+| Task runner | the step loop's `client.stream` in `src/aj_crew/task_executor.py` | task-runner steps |
 
 Turns with no model call get their own spans: script and command cron runs, standalone compaction, and reset.
 
@@ -185,7 +185,7 @@ Each step is a child span of the turn:
 - **Compaction.**
 - **Retries**, one `invoke_agent` per attempt.
 - **Derived model-call steps**, at the boundary the dashboard already derives
-  (the crew-log step boundary in `src/kiro_crew/dashboard/chat_turn/stream_chunks.py`), marked `derived` and never
+  (the crew-log step boundary in `src/aj_crew/dashboard/chat_turn/stream_chunks.py`), marked `derived` and never
   carrying usage.
 - **Links** (not parents) for asynchronous causes: `session_send` and broadcast, steer, workflow launch, and the
   queued sender.
@@ -196,8 +196,8 @@ Boundaries no harness exposes are listed in §11.
 ### 5.4 Sub-agents
 
 - A sub-agent's turns are **children of the spawn tool span, in the parent turn's trace**. They use the origin the
-  crew log already records (`remember_child_origin` in `src/kiro_crew/crew_log/emit_runtime.py`) and
-  `SubagentInfo.parent_session_key` (`src/kiro_crew/subagent_parts/run_record.py`).
+  crew log already records (`remember_child_origin` in `src/aj_crew/crew_log/emit_runtime.py`) and
+  `SubagentInfo.parent_session_key` (`src/aj_crew/subagent_parts/run_record.py`).
 - The spawn tool span exists at admission, so an async child can be parented to it even after the parent turn has
   ended. `spawn_continue` and retries are new children of the same origin.
 - The completion-event turn joins the parent's trace (R4). Native child agents of kiro-cli and Claude stay inside the
@@ -205,40 +205,40 @@ Boundaries no harness exposes are listed in §11.
 
 ### 5.5 Ultra Mode and Bot conductors
 
-Ultra Mode runs a conductor (`kirocrew-conductor`) that dispatches worker sessions (`kirocrew-worker`) and tracks
+Ultra Mode runs a conductor (`ajcrew-conductor`) that dispatches worker sessions (`ajcrew-worker`) and tracks
 them on the work ledger. A Bot (crewmate) conductor uses the same machinery with the `mate_root` stamps
-(`WORKER_FIELD` and `MATE_ROOT_FIELD` in `src/kiro_crew/crew_mode.py`). Both are covered, distinguished by
-`kirocrew.crew.root_kind`.
+(`WORKER_FIELD` and `MATE_ROOT_FIELD` in `src/aj_crew/crew_mode.py`). Both are covered, distinguished by
+`ajcrew.crew.root_kind`.
 
 **Decision proposed: one trace per round** (the default; `traces_ultra_mode: "turn"` keeps per-turn traces and links).
 A whole round renders as one waterfall, the same experience as a workflow:
 
 ```
 ultra round <N>                         anchor; trace = (conductor, goal, round)
-  invoke_agent kirocrew-conductor       person, patrol or wake turns
-    chat ; execute_tool work_dispatch   -> kirocrew.work.create / bind spans
+  invoke_agent ajcrew-conductor       person, patrol or wake turns
+    chat ; execute_tool work_dispatch   -> ajcrew.work.create / bind spans
   work_item <item_id>                   anchor per item
-    invoke_agent kirocrew-worker        chat ; execute_tool ... ; kirocrew.work.report
+    invoke_agent ajcrew-worker        chat ; execute_tool ... ; ajcrew.work.report
     work_item outcome <state>           verdict, fails, roll-up totals
   ultra round outcome <state>
 ```
 
 - **Why a round, not a turn or a goal.** Neither backend draws links as a waterfall, which rules out a trace per
   turn. A goal can run for weeks, past X-Ray's 7-day window. A round is the conductor's own dispatch unit, and R2
-  and R5 handle a long round. Rounds of one goal share `kirocrew.work.goal_id` and link in order.
+  and R5 handle a long round. Rounds of one goal share `ajcrew.work.goal_id` and link in order.
 - **IDs.** The round trace is `H(trace.ultra, conductor key, goal_id, round, continuation)`, the item anchor is
   `H(work.item, item_id, generation)`, and each outcome is keyed by the ledger's own `work_event_id`.
   - `goal_id` is a new random id the work ledger mints when a new goal is set. Until it exists, the board
     generation plus the goal's item-count base stand in.
 - **No goal text** in names or attributes. The round is named `ultra round N`.
 - **Sessions:** every span carries the conductor's `session.id` (R6). Worker sessions are found by
-  `kirocrew.session_key_hash` and `kirocrew.crew.root`.
+  `ajcrew.session_key_hash` and `ajcrew.crew.root`.
 
 Producers:
 
 - **Every ledger write goes through one function**, `on_work_recorded`
-  (`src/kiro_crew/crew_log/emit_surfaces.py`). It handles all eleven actions and the worker's `work_report`.
-  Each write becomes a `kirocrew.work.<action>` span in the acting turn, with attributes only: `item_id`, round,
+  (`src/aj_crew/crew_log/emit_surfaces.py`). It handles all eleven actions and the worker's `work_report`.
+  Each write becomes an `ajcrew.work.<action>` span in the acting turn, with attributes only: `item_id`, round,
   generation, state, verdict, fail count, closed-vocabulary status and reason, and the PR number. No title,
   acceptance, decision, summary or artifact text.
 - **Worker creation** (`session_create`, `work_dispatch`, `session_fork`) is a span in the conductor's turn. The
@@ -249,7 +249,7 @@ Producers:
 - **Handoff, adopt, release and hand-back on close** are manager-change spans: old and new manager (hashed), plus a
   link.
 - **Patrol health** (stale, orphaned, pending-overdue counts) goes on the patrol turn.
-- **Filtering:** `kirocrew.crew.root` selects a whole run; `kirocrew.work.item_id` selects one item across the
+- **Filtering:** `ajcrew.crew.root` selects a whole run; `ajcrew.work.item_id` selects one item across the
   conductor and its worker.
 
 ### 5.6 Span names
@@ -287,7 +287,7 @@ workflow <name>
   and no phase id, so the span ends at the next phase or at the run's end, and its identity is the 1-based phase
   ordinal. An optional `phase_index` key on `phase_started` and `agent_started` lets external producers skip
   recounting. That changes the workflow event contract, so the workflows spec is updated in the same commit.
-- **The completion turn joins the run's trace.** `inject_workflow_result` (`src/kiro_crew/dashboard/workflow_inject.py`)
+- **The completion turn joins the run's trace.** `inject_workflow_result` (`src/aj_crew/dashboard/workflow_inject.py`)
   starts a turn to report the finished run. That turn's only cause is the run, so it takes the run's `trace_id`
   with the `workflow` root as its parent, keeps its own `turn_id` as an attribute, and links back to the launching
   turn.
@@ -301,13 +301,13 @@ One documented derivation, so core, a #24884 hook consumer and an ACP tap all co
 thing. It ships as one module with a conformance fixture (inputs → ids).
 
 ```
-H(kind, p1..pn) = sha256("kirocrew.v1|" + ns + "|" + kind + "|" + esc(p1) + "|" + ... + "|" + esc(pn))
+H(kind, p1..pn) = sha256("ajcrew.v1|" + ns + "|" + kind + "|" + esc(p1) + "|" + ... + "|" + esc(pn))
 span_id  = first 16 hex of H        (if all zero, hex 16..31)
 trace_id = first 32 hex of H(trace.<kind>, ...), except a turn trace, which is turn_id itself
 esc(p)   = "%" -> "%25", "|" -> "%7C"
 ```
 
-- `ns` is a random per-install trace namespace, exported raw as the resource attribute `kirocrew.trace_ns`.
+- `ns` is a random per-install trace namespace, exported raw as the resource attribute `ajcrew.trace_ns`.
 - It exists because several inputs are unique only within one install: workflow ids are sequential (`wf_000123`),
   work-item and cron run ids are 8 hex.
 
@@ -330,8 +330,8 @@ esc(p)   = "%" -> "%25", "|" -> "%7C"
 
 **Option B** produces traces without core spans. It is what the live trace above came from.
 - **An ACP tap**: a stdio proxy configured in place of the harness binary. For kiro-cli that is the existing
-  `KIROCREW_KIRO_BIN` override, and launch trust is "the CLI runs". It reads `session/prompt` (with #24884's
-  `_meta.kirocrew`), tool-call updates, permission requests, metering, cost and stop reasons, and emits spans with
+  `AJCREW_KIRO_BIN` override, and launch trust is "the CLI runs". It reads `session/prompt` (with #24884's
+  `_meta.ajcrew`), tool-call updates, permission requests, metering, cost and stop reasons, and emits spans with
   the §5.8 ids. It drops all content.
 - **#24884's hooks**: `AgentSpawn`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse` and `Stop`, carrying Crew's
   turn, session, tool and workflow identities.
@@ -366,30 +366,30 @@ esc(p)   = "%" -> "%25", "|" -> "%7C"
 ## 6. Correlation IDs
 
 Every span carries whichever of these exist for it. Names are #24884's
-(`docs/guides/hook-correlation-contract.md` on that branch), with a `kirocrew.` prefix and the same meaning.
+(`docs/guides/hook-correlation-contract.md` on that branch), with an `ajcrew.` prefix and the same meaning.
 #24884 notes `agent_id` is a workflow agent call, distinct from `subagent_id`, and this design keeps that split.
 
 - **Raw** means a random value that reveals nothing.
 - **Hashed** means HMAC-SHA256, truncated, keyed from the install's vault (`secrets/vault.py`'s `derive_subkey`;
   imported, not edited), and stable per install.
-- **The local JSONL sink keeps both forms.** Raw values under `kirocrew.local.*` sit next to the hashed ones. The OTLP
-  exporter wrapper strips `kirocrew.local.*` before export. So a user with no backend, including a #24884 hook
+- **The local JSONL sink keeps both forms.** Raw values under `ajcrew.local.*` sit next to the hashed ones. The OTLP
+  exporter wrapper strips `ajcrew.local.*` before export. So a user with no backend, including a #24884 hook
   consumer holding raw session keys, can join locally, and raw keys never leave the host.
 
 | Attribute | Minted by | #24884 emits it | Exported as |
 |---|---|---|---|
-| `kirocrew.turn_id` | dashboard turn entry; else the tracer | yes | raw |
-| `kirocrew.event_id` | #24884's hook firing | yes | raw |
-| `kirocrew.session_key_hash` (this span's own session); `session.id` = the trace root's (R6) | slot key | yes (raw) | hashed |
-| `kirocrew.parent_session_key_hash` | creator, sub-agent parent, fork source | yes (workflows only) | hashed |
-| `kirocrew.acp_session_id` | the backend | yes | raw |
-| `kirocrew.tool_call_id` | the backend | yes | raw |
-| `kirocrew.subagent_id` | sub-agent admission | named, not produced | raw |
-| `kirocrew.workflow_run_id`, `kirocrew.agent_id`, `kirocrew.launched_workflow_run_id` | workflow runner | yes | raw |
-| `kirocrew.work.item_id`, `.round`, `.generation` | work ledger (`it_` + 8 random hex, `src/kiro_crew/work_ledger_store.py`) | no | raw |
-| `kirocrew.work.conductor_hash`, `kirocrew.crew.root`, `kirocrew.crew.dispatcher`, `kirocrew.crew.root_kind` | slot stamps | no | hashed (kind raw) |
-| `kirocrew.cron.job_id`, `kirocrew.cron.run_id` | cron service | no | raw |
-| `kirocrew.channel`, `kirocrew.channel_thread_hash` | channel adapters | no | kind raw; thread hashed |
+| `ajcrew.turn_id` | dashboard turn entry; else the tracer | yes | raw |
+| `ajcrew.event_id` | #24884's hook firing | yes | raw |
+| `ajcrew.session_key_hash` (this span's own session); `session.id` = the trace root's (R6) | slot key | yes (raw) | hashed |
+| `ajcrew.parent_session_key_hash` | creator, sub-agent parent, fork source | yes (workflows only) | hashed |
+| `ajcrew.acp_session_id` | the backend | yes | raw |
+| `ajcrew.tool_call_id` | the backend | yes | raw |
+| `ajcrew.subagent_id` | sub-agent admission | named, not produced | raw |
+| `ajcrew.workflow_run_id`, `ajcrew.agent_id`, `ajcrew.launched_workflow_run_id` | workflow runner | yes | raw |
+| `ajcrew.work.item_id`, `.round`, `.generation` | work ledger (`it_` + 8 random hex, `src/aj_crew/work_ledger_store.py`) | no | raw |
+| `ajcrew.work.conductor_hash`, `ajcrew.crew.root`, `ajcrew.crew.dispatcher`, `ajcrew.crew.root_kind` | slot stamps | no | hashed (kind raw) |
+| `ajcrew.cron.job_id`, `ajcrew.cron.run_id` | cron service | no | raw |
+| `ajcrew.channel`, `ajcrew.channel_thread_hash` | channel adapters | no | kind raw; thread hashed |
 
 ## 7. Credits, usage and Langfuse
 
@@ -398,11 +398,11 @@ Every span carries whichever of these exist for it. Names are #24884's
 - **Kiro:** credits from `meteringUsage`, summed per turn; the last frame arrives before the prompt result.
 - **Kiro Agent:** a whole-turn total, assigned rather than added, so replays at session load are ignored.
 - **Claude and opencode:** session-cumulative USD, diffed per turn.
-- **`TurnUsage`** (`src/kiro_crew/acp/types.py`) holds all of these. The metrics side already records
-  `kirocrew.turn.credits` (`TURN_CREDITS_METRIC` in `src/kiro_crew/metrics/turns.py`).
+- **`TurnUsage`** (`src/aj_crew/acp/types.py`) holds all of these. The metrics side already records
+  `ajcrew.turn.credits` (`TURN_CREDITS_METRIC` in `src/aj_crew/metrics/turns.py`).
 - **Sub-agent and workflow-agent spend** is recorded once, on their own turns, never in the parent's turn.
 - **Built-in child agents** of kiro-cli and Claude run inside the parent turn, and their spend cannot be split.
-- **Cancelled turns** may have partial credits and are marked `kirocrew.usage.complete=false`.
+- **Cancelled turns** may have partial credits and are marked `ajcrew.usage.complete=false`.
 
 ### 7.2 Attributes
 
@@ -412,12 +412,12 @@ fields that were empty in the live CloudWatch trace, wherever the harness report
 - `gen_ai.request.model`, `gen_ai.response.model` (only a resolved id, never `"auto"`), and
   `gen_ai.usage.input_tokens` / `output_tokens` when reported. The GenAI conventions define these on both agent and
   inference spans.
-- `kirocrew.usage.credits`, `kirocrew.usage.cost_usd` (when reported), `kirocrew.usage.model_calls`,
-  `kirocrew.usage.complete`.
+- `ajcrew.usage.credits`, `ajcrew.usage.cost_usd` (when reported), `ajcrew.usage.model_calls`,
+  `ajcrew.usage.complete`.
 - The Langfuse keys below, on `chat` only.
 
-`workflow` and `phase` spans end after their children, so they carry exact roll-ups: `kirocrew.usage.credits_total`,
-`*_tokens_total`, `cost_usd_total` and `kirocrew.models`. They deliberately carry no `gen_ai.usage.*`, so no backend
+`workflow` and `phase` spans end after their children, so they carry exact roll-ups: `ajcrew.usage.credits_total`,
+`*_tokens_total`, `cost_usd_total` and `ajcrew.models`. They deliberately carry no `gen_ai.usage.*`, so no backend
 counts the same spend twice. A sub-agent run carries its own credits the same way.
 
 The same spend appears on `invoke_agent` and on its `chat`. Langfuse counts usage only on generations, so it is
@@ -429,7 +429,7 @@ counted once there. A query that sums every span must filter on `chat`.
 - I found no AWS page that maps Transaction Search's token and model fields to attribute keys. They correspond to
   the conventions' `gen_ai.usage.*` and `gen_ai.request.model`. Phase 2 verifies this against a live Transaction
   Search.
-- Credits are a `kirocrew.*` attribute. Filter on it in Transaction Search, or sum it with Logs Insights over the
+- Credits are an `ajcrew.*` attribute. Filter on it in Transaction Search, or sum it with Logs Insights over the
   `aws/spans` log group, filtered to `chat` spans. Phase 2's guide ships that query.
 
 ### 7.3 Langfuse mapping
@@ -449,7 +449,7 @@ From [Langfuse's OpenTelemetry mapping](https://langfuse.com/docs/opentelemetry/
 - **Crew ships no credits-to-USD rate.** Credit prices differ by plan ([pricing](https://kiro.dev/pricing/),
   [add-on credits](https://kiro.dev/docs/billing/add-on-credits/)), so one rate would read as authoritative and be
   wrong for most users.
-- **Vendor-neutral:** `gen_ai.*`, `session.id` and `kirocrew.*`. **Langfuse-only:** the three `langfuse.observation.*`
+- **Vendor-neutral:** `gen_ai.*`, `session.id` and `ajcrew.*`. **Langfuse-only:** the three `langfuse.observation.*`
   keys, on the `chat` span only, which other backends ignore. Opt-in content adds `langfuse.observation.input` and
   `.output` on `chat` (§9.1).
 
@@ -518,7 +518,7 @@ It takes SigV4, which AWS recommends, or, since 2026-11, an X-Ray API key sent a
 Content capture is designed here and built in phase 9. Until a switch is on, nothing in this section runs.
 
 **Switches.** Five booleans, each `false` by default and each independent. They are flat `traces_capture_*` keys
-on `telemetry`, matching how `TelemetryConfig` (`src/kiro_crew/config/sections_telemetry.py`) already names its
+on `telemetry`, matching how `TelemetryConfig` (`src/aj_crew/config/sections_telemetry.py`) already names its
 sub-features (`otlp_endpoint`, `beacon_enabled`) and the `traces_*` keys in §8:
 
 | Setting | Attribute | Span |
@@ -537,7 +537,7 @@ sub-features (`otlp_endpoint`, `beacon_enabled`) and the `traces_*` keys in §8:
   repository. Phase 9 re-checks the names, because Development attributes can still change.
 - **Values follow the conventions' message schema** (`role` plus `parts`), serialized as a JSON string where the SDK
   cannot set a structured value.
-- **`gen_ai.system_instructions` is not captured.** Kiro Crew's system prompt carries memory and lessons, which no
+- **`gen_ai.system_instructions` is not captured.** Aj Crew's system prompt carries memory and lessons, which no
   category above covers.
 - **The switches add no names.** Tool and MCP names still follow Q2, so with MCP names off an MCP call's captured
   arguments sit on a span still named `execute_tool mcp`.
@@ -545,13 +545,13 @@ sub-features (`otlp_endpoint`, `beacon_enabled`) and the `traces_*` keys in §8:
 **Secrets are never recorded.** Every captured string goes through this pipeline, in this order, and no setting
 skips a step:
 
-1. **Credential pass:** `redact_via_context` (`src/kiro_crew/platform/context.py`), the companion-aware egress
+1. **Credential pass:** `redact_via_context` (`src/aj_crew/platform/context.py`), the companion-aware egress
    redactor. It replaces credentials and exfiltration URLs in place, so the rest of the text survives. The
    whole-value `[REDACTED]` of `validate_attrs` would blank almost every prompt, so it is not used for content.
 2. **Path pass,** only while `traces_capture_file_paths` is off: `redact_local_paths`
-   (`src/kiro_crew/security/redaction.py`) replaces absolute host paths with `[redacted-path]`.
+   (`src/aj_crew/security/redaction.py`) replaces absolute host paths with `[redacted-path]`.
 3. **Size caps:** 8,192 characters per attribute and 32,768 per span, as module constants. A cut value ends in
-   `…[truncated <n> chars]`, and the span lists the cut keys in `kirocrew.capture.truncated`. Redaction runs before
+   `…[truncated <n> chars]`, and the span lists the cut keys in `ajcrew.capture.truncated`. Redaction runs before
    the cut, so a cap can never split a secret and leave half of it unredacted. Once a span's budget is spent, later
    attributes are dropped and listed the same way.
 
@@ -588,17 +588,17 @@ Each phase is default off and independently shippable. Phase 2 is where Langfuse
 
 | Phase | Scope | Exit criteria (testable) | Size |
 |---|---|---|---|
-| 1a | Tracing package, local JSONL sink, correlation IDs, the §5.8 id module and its conformance fixture, layer-1 `invoke_agent` with `chat` / `user.prompt` / `turn.complete` / `execute_tool`, spend on agent and chat spans, error status, dashboard root, `session.id` per R6: **a complete plain session turn** | Off: no trace SDK import and no thread. A replayed turn from each engine yields an `invoke_agent` with `session.id`. A Kiro replay yields `usage_details={"credits":…}` and no token keys. A Claude replay yields per-turn USD on both spans. Every id matches the fixture; a session-load tool replay emits nothing. `kirocrew.local.*` is in the file. A planted prompt or credential appears in no attribute. A dashboard turn and a Bot DM each reproduce the §5.1 session tree, and two sessions with the same tool call id stay apart. | ~1,100 lines |
+| 1a | Tracing package, local JSONL sink, correlation IDs, the §5.8 id module and its conformance fixture, layer-1 `invoke_agent` with `chat` / `user.prompt` / `turn.complete` / `execute_tool`, spend on agent and chat spans, error status, dashboard root, `session.id` per R6: **a complete plain session turn** | Off: no trace SDK import and no thread. A replayed turn from each engine yields an `invoke_agent` with `session.id`. A Kiro replay yields `usage_details={"credits":…}` and no token keys. A Claude replay yields per-turn USD on both spans. Every id matches the fixture; a session-load tool replay emits nothing. `ajcrew.local.*` is in the file. A planted prompt or credential appears in no attribute. A dashboard turn and a Bot DM each reproduce the §5.1 session tree, and two sessions with the same tool call id stay apart. | ~1,100 lines |
 | 1b | Sub-agent nesting (blocking and async); the completion-event join; the generic run-root helpers (R2–R5); Ultra Mode and Bot root/item attributes | A blocking child sits under `spawn_sub_agents`. An async child sits under its ended `spawn_run` span. Its completion turn has the parent's `trace_id`, and two batched completions give a root with two links. Every span in the trace carries the parent's `session.id`. A span-budget overflow starts a linked continuation. A worker turn carries its root and item. | ~700 |
-| 2 | OTLP export, vault and env headers, `OTEL_*` vars, governance gate; guide with Langfuse and CloudWatch (API key, collector) walkthroughs and the credits query | Loopback wire test receives spans. A denied host receives nothing. An env endpoint without the switch sends nothing. No header value is logged. `kirocrew.local.*` is absent on the wire. One manual run against Transaction Search shows model and tokens on a Claude turn. | ~750 |
+| 2 | OTLP export, vault and env headers, `OTEL_*` vars, governance gate; guide with Langfuse and CloudWatch (API key, collector) walkthroughs and the credits query | Loopback wire test receives spans. A denied host receives nothing. An env endpoint without the switch sends nothing. No header value is logged. `ajcrew.local.*` is absent on the wire. One manual run against Transaction Search shows model and tokens on a Claude turn. | ~750 |
 | 2b | Native SigV4 for CloudWatch (`otlp-aws` extra) | A known-answer signature over a fixed body and clock. Signed headers appear in no log record. An unresolvable profile stops export with one warning and keeps the local sink. | ~300 |
 | 3 | Surface roots for channels, cron (including script runs), heartbeat, background, webhooks, task runner; `workflow` / `phase` / `workflow outcome` spans and roll-ups; optional `phase_index`; the completion turn in the run's trace; retry attempts | Each engine gets a root with its trigger. A script cron gets a run span and no `chat` span. A three-phase workflow replay reproduces the live trace's tree. The completion turn has the run's `trace_id` and a link to its launcher. A resumed run re-emits no exported span. | ~950 |
 | 4 | Steps: approvals with wait time, derived model steps, queue wait, steer, send, broadcast and workflow-launch links, in-turn compaction | An approval's `wait_ms` equals the injected delay. A queued turn links to its sender. No step span carries usage. | ~600 |
 | 5 | Ultra Mode round traces (§5.5): round and item anchors and outcomes, `goal_id` on the ledger header, ledger-write and report spans, worker creation, report → wake links, manager changes, patrol health; needs only phase 1b | A two-round replay gives two linked round traces sharing `goal_id`. A worker turn's parent is its item anchor. A restart mid-round re-derives the same ids and re-emits nothing. A batched wake carries one link per report. Ledger spans carry none of the planted free-text sentinels. A Bot root gives `root_kind=mate`. | ~950 |
 | 6 | Session lifecycle: create, adopt, close, reset, compaction, model/harness/conductor switch; parent-session links | A session's spans share one `session.id` across an ACP session recycle. | ~500 |
 | 7 | Settings UI behind a Feature Preview, secret card | The preview off hides the block. Saving stores a vault reference, never the value. | ~400 |
-| 8 | Adopt #24884's `telemetry_context` turn id and `event_id` when it merges; `traceparent` in prompt `_meta` | With #24884 merged, a dashboard span's `kirocrew.turn_id` equals the hook payload's `turn_id`. | ~150 |
-| 9 | Opt-in content capture (§9.1): the five `traces_capture_*` switches, the redaction pipeline and caps, the `langfuse.observation.input` / `.output` mirror, Settings rows in phase 7's Traces block, and the `_REDACTION_SINKS` registration; needs phases 1a, 2 and 7, its own PR under Sensitive Change Review | All switches off: no content attribute in the file or on the wire. Each switch on adds only its own attribute. With every switch on, a planted credential and exfiltration URL appear in no attribute. With file paths off, a planted `/home/<user>/…` path reads `[redacted-path]`; with it on, the path is kept. An over-cap value ends in the truncation marker and is listed in `kirocrew.capture.truncated`. The local file and a loopback OTLP receiver hold the same content. No config key or env var skips the credential pass. | ~500 + SCR |
+| 8 | Adopt #24884's `telemetry_context` turn id and `event_id` when it merges; `traceparent` in prompt `_meta` | With #24884 merged, a dashboard span's `ajcrew.turn_id` equals the hook payload's `turn_id`. | ~150 |
+| 9 | Opt-in content capture (§9.1): the five `traces_capture_*` switches, the redaction pipeline and caps, the `langfuse.observation.input` / `.output` mirror, Settings rows in phase 7's Traces block, and the `_REDACTION_SINKS` registration; needs phases 1a, 2 and 7, its own PR under Sensitive Change Review | All switches off: no content attribute in the file or on the wire. Each switch on adds only its own attribute. With every switch on, a planted credential and exfiltration URL appear in no attribute. With file paths off, a planted `/home/<user>/…` path reads `[redacted-path]`; with it on, the path is kept. An over-cap value ends in the truncation marker and is listed in `ajcrew.capture.truncated`. The local file and a loopback OTLP receiver hold the same content. No config key or env var skips the credential pass. | ~500 + SCR |
 
 Phases 2b, 3, 4, 5 and 6 can all run in parallel after phase 2. A plain session turn and sub-agent nesting are
 complete in phase 1, and the Ultra Mode round waterfall needs only phase 1b's helpers. Phase 9 needs phases 1a, 2
@@ -622,12 +622,12 @@ Not traced, and why:
 - **Built-in child agents of kiro-cli and Claude:** they run inside the parent turn, with spend not split out.
 - **MCP server internals:** stdio servers are started by kiro-cli, so only the round trip is visible.
 - **Approvals of tools kiro-cli auto-approves:** these never reach Crew.
-- **`kirocrew chat` CLI turns:** a separate short-lived process with no tracer.
+- **`ajcrew chat` CLI turns:** a separate short-lived process with no tracer.
 - **Hook script execution time:** `hook_runtime/*` is SCR-watched.
 - **Ultra Mode across Crew instances:** joins only on the raw `item_id`, since hashed keys differ per install.
 - **A worker that crashes without reporting:** appears only in the patrol's stale count.
 - **Temperature and other request parameters:** Crew never sets or sees them.
-- **Token fields on `phase` and `workflow`:** empty by design; totals are `kirocrew.*_total`.
+- **Token fields on `phase` and `workflow`:** empty by design; totals are `ajcrew.*_total`.
 - **gRPC export:** X-Ray's endpoint is HTTP-only anyway.
 
 ## 12. Backward compatibility
@@ -668,8 +668,8 @@ Each open one has a proposed safe default that applies until a maintainer decide
   attribute at all;* `item_id` joins everything.
 - **Q4. Langfuse-only keys.** *Default: on, on the `chat` span only.* Without them, Kiro credits do not reach
   Langfuse's usage view.
-- **Q6. Tracer scope name.** `opentelemetry.instrumentation.kirocrew` would let AgentCore Evaluations' generic
-  framework support classify the spans. *Default: `kiro_crew`;* switch only if Evaluations is wanted.
+- **Q6. Tracer scope name.** `opentelemetry.instrumentation.ajcrew` would let AgentCore Evaluations' generic
+  framework support classify the spans. *Default: `aj_crew`;* switch only if Evaluations is wanted.
 - **Q7. Workflow names in span names** (`workflow <name>`, `phase <title>`, `<phase>:<label>`). These are
   script-authored structure, but free text. *Default: on, capped at 64 characters and passed through
   `validate_attrs`, with a switch to use ordinals instead.*

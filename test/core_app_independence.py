@@ -1,18 +1,18 @@
 """The scanner behind every "core does not depend on built-in app X" gate.
 
 A built-in app can leave this repository whole only while nothing outside
-``src/kiro_crew/apps/builtins/`` reaches it. Each app's gate
+``src/aj_crew/apps/builtins/`` reaches it. Each app's gate
 (``test_core_<app>_decoupling.py``) calls the two scans here with its own package
 and names, so a later app adds a gate of a few lines, never another scanner.
 
 - :func:`core_app_imports` reports every core module or script that imports the
   app's package: ``import``, ``from ... import`` (relative ones resolved), ``from
-  kiro_crew.apps.builtins import <app>``, and ``importlib.import_module`` /
+  aj_crew.apps.builtins import <app>``, and ``importlib.import_module`` /
   ``__import__`` with a literal name.
 - :func:`core_name_strings` reports every non-docstring string constant that
   names the app, except the reasoned rows a gate passes as ``allowed``.
 
-"Core" is every module under ``src/kiro_crew`` outside the skipped trees below,
+"Core" is every module under ``src/aj_crew`` outside the skipped trees below,
 plus every script under ``scripts/``.
 """
 
@@ -23,9 +23,9 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "src" / "kiro_crew"
+SRC = ROOT / "src" / "aj_crew"
 
-#: Trees under ``src/kiro_crew`` no gate reads: the builtin apps themselves, and
+#: Trees under ``src/aj_crew`` no gate reads: the builtin apps themselves, and
 #: generated or vendored code.
 _SKIPPED = ("apps/builtins/", "static/", "_vendor/")
 
@@ -136,7 +136,7 @@ def core_trees(names: Iterable[str]) -> dict[Path, ast.AST]:
 
 
 def _label(path: Path) -> str:
-    """*path* relative to ``src/kiro_crew`` for a core module, to the repo root otherwise."""
+    """*path* relative to ``src/aj_crew`` for a core module, to the repo root otherwise."""
     if path.is_relative_to(SRC):
         return path.relative_to(SRC).as_posix()
     return path.relative_to(ROOT).as_posix()
@@ -164,7 +164,7 @@ def core_name_strings(
 ) -> tuple[list[str], set[tuple[str, str]]]:
     """The core strings naming the app: ``(unexpected, allowed rows found)``.
 
-    *allowed* holds ``(path relative to src/kiro_crew, literal)`` rows a gate keeps
+    *allowed* holds ``(path relative to src/aj_crew, literal)`` rows a gate keeps
     on purpose, each with its reason at the gate. A row matched is returned in the
     second item, so the gate can fail on one that is gone; every other hit is an
     ``"<path>:<line>: <literal>"`` line in the first.

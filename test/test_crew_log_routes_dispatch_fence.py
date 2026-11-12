@@ -39,9 +39,9 @@ from crew_log_routes_helpers import (
     _turn,
 )
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.dashboard.handlers import crew_log as routes
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.dashboard.handlers import crew_log as routes
 
 # --------------------------------------------------------------------------- #
 # The agent's door: the unit-keyed routes and who may walk through them
@@ -50,7 +50,7 @@ from kiro_crew.dashboard.handlers import crew_log as routes
 
 def test_the_caller_name_is_pinned_to_the_mcp_servers_own(monkeypatch):
     """Two modules name one component; a rename on one side must fail here."""
-    from kiro_crew.mcp_crew_log import SERVER_NAME
+    from aj_crew.mcp_crew_log import SERVER_NAME
 
     assert routes.CREW_LOG_MCP_CALLER == SERVER_NAME
 
@@ -68,14 +68,14 @@ def test_the_enable_hint_says_to_unset_the_flag_not_to_set_it():
 def test_the_enable_hint_names_the_env_file_the_gateway_reads(monkeypatch, tmp_path):
     """An agent is told to edit this file, so naming the wrong one wastes the turn.
 
-    The file read is ``config.loader.env_path()``, which follows ``KIROCREW_HOME``; a
+    The file read is ``config.loader.env_path()``, which follows ``AJCREW_HOME``; a
     hint that hardcodes the default home sends an operator with another home to an
     inert file, and the flag appears not to work.
     """
-    from kiro_crew.config.loader import env_path
+    from aj_crew.config.loader import env_path
 
     home = tmp_path / "elsewhere"
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     hint = routes.crew_log_enable_hint()
     assert str(env_path()).startswith(str(home))
     assert (
@@ -85,11 +85,11 @@ def test_the_enable_hint_names_the_env_file_the_gateway_reads(monkeypatch, tmp_p
 
 
 def test_the_session_ledger_refusal_names_the_env_file_the_gateway_reads(monkeypatch, tmp_path):
-    from kiro_crew import session_ledger
-    from kiro_crew.constants import env_file_display
+    from aj_crew import session_ledger
+    from aj_crew.constants import env_file_display
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "elsewhere"))
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "0")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "elsewhere"))
+    monkeypatch.setenv("AJCREW_CREW_LOG", "0")
     with pytest.raises(session_ledger.LedgerUnavailable) as caught:
         session_ledger._require_crew_log("s-any")
     assert env_file_display() in str(caught.value)
@@ -114,9 +114,9 @@ def test_every_crew_log_off_refusal_names_the_env_file_the_gateway_reads(
     import importlib
     import inspect
 
-    from kiro_crew import session_ledger
-    from kiro_crew.dashboard.handlers import work_ledger
-    from kiro_crew.mcp_tools import ledger as mcp_ledger
+    from aj_crew import session_ledger
+    from aj_crew.dashboard.handlers import work_ledger
+    from aj_crew.mcp_tools import ledger as mcp_ledger
 
     module = {
         "session_ledger": session_ledger,
@@ -132,7 +132,7 @@ def test_every_crew_log_off_refusal_names_the_env_file_the_gateway_reads(
 
 def test_the_page_reader_is_the_one_shared_implementation():
     """One implementation, so the browser door and the agent door cannot differ."""
-    from kiro_crew.crew_log import read as shared
+    from aj_crew.crew_log import read as shared
 
     assert routes.MAX_PAGE_REFS == shared.MAX_PAGE_REFS
     assert routes._read_page.__module__ == routes.__name__
@@ -286,14 +286,14 @@ class TestTheDispatchFence:
         assert len(lines) >= 2, lines
         lines[1] = b'{"not": "an entry"}'
         child_log.write_bytes(b"\n".join(lines))
-        from kiro_crew.crew_log import read as crew_log_read
+        from aj_crew.crew_log import read as crew_log_read
 
         crew_log_read._TREE._heads.clear()
 
         request = _as_conductor(
             f"/api/crew-log/units/{GRANDCHILD_UNIT}/page", match={"unit": GRANDCHILD_UNIT}
         )
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.handlers.crew_log"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.handlers.crew_log"):
             response = asyncio.run(routes.api_crew_log_unit_page(request))
         assert response.status == 403
         # The wire carries only the ordinary refusal.
@@ -311,7 +311,7 @@ class TestTheDispatchFence:
         request = _as_conductor(
             f"/api/crew-log/units/{STRANGER_UNIT}/page", match={"unit": STRANGER_UNIT}
         )
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.handlers.crew_log"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.handlers.crew_log"):
             response = asyncio.run(routes.api_crew_log_unit_page(request))
         assert response.status == 403
         assert "does not fall inside that scope" in json.loads(response.text)["error"]
@@ -334,12 +334,12 @@ class TestTheDispatchFence:
         lines = child_log.read_bytes().split(b"\n")
         lines[1] = b'{"not": "an entry"}'
         child_log.write_bytes(b"\n".join(lines))
-        from kiro_crew.crew_log import read as crew_log_read
+        from aj_crew.crew_log import read as crew_log_read
 
         crew_log_read._TREE._heads.clear()
         # The first request seeded the session tree projection from the intact log;
         # drop it so the second request reads the damaged store as a new process does.
-        from kiro_crew.crew_log import session_tree_projection
+        from aj_crew.crew_log import session_tree_projection
 
         session_tree_projection.reset_for_tests()
 
@@ -365,13 +365,13 @@ class TestTheDispatchFence:
         assert len(lines) >= 2, lines
         lines[1] = b'{"not": "an entry"}'
         child_log.write_bytes(b"\n".join(lines))
-        from kiro_crew.crew_log import read as crew_log_read
+        from aj_crew.crew_log import read as crew_log_read
 
         crew_log_read._TREE._heads.clear()
 
         # ``list_session_units`` builds its dispatch view only when a slot is in scope,
         # so without scope_slot this fault is never reached.
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.crew_log.session_tree"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.crew_log.session_tree"):
             first = crew_log_read.list_session_units(limit=50, scope_slot=CONDUCTOR_SLOT)
             second = crew_log_read.list_session_units(limit=50, scope_slot=CONDUCTOR_SLOT)
 
@@ -481,7 +481,7 @@ class TestTheDispatchFence:
         """
         _flag_on(monkeypatch)
         _dispatch_tree()
-        from kiro_crew.crew_log import read as crew_log_read
+        from aj_crew.crew_log import read as crew_log_read
 
         real = crew_log_read.projections.fold_session
 
@@ -579,7 +579,7 @@ class TestTheDispatchFence:
         assert first_kept > 1, "a trim that keeps seq 1 is not a trim"
         (directory / f"log.{first_kept}.jsonl").write_text("".join(kept), encoding="utf-8")
         head.unlink()
-        from kiro_crew.crew_log import read as crew_log_read
+        from aj_crew.crew_log import read as crew_log_read
 
         crew_log_read.reset_class_bundles()
 
@@ -632,7 +632,7 @@ class TestTheDispatchFence:
         assert len(moves) == 1, f"expected one move to damage, got {moves}"
         lines[moves[0]] = "{not json at all\n"
         head.write_text("".join(lines), encoding="utf-8")
-        from kiro_crew.crew_log import read as crew_log_read
+        from aj_crew.crew_log import read as crew_log_read
 
         crew_log_read.reset_class_bundles()
 
@@ -715,7 +715,7 @@ class TestTheDispatchFence:
         """
         _flag_on(monkeypatch)
         _dispatch_tree()
-        from kiro_crew.crew_log import read as crew_log_read
+        from aj_crew.crew_log import read as crew_log_read
 
         real = crew_log_read.dispatch_view
         seen: dict[str, bool] = {}
@@ -912,7 +912,7 @@ class TestTheDispatchFence:
     def test_a_request_naming_another_component_is_refused(self, monkeypatch):
         """The route serves ONE internal caller; the header is validated, not trusted."""
         _flag_on(monkeypatch)
-        request = _internal_request("/api/crew-log/sessions", caller="kirocrew-dashboard")
+        request = _internal_request("/api/crew-log/sessions", caller="ajcrew-dashboard")
         response = asyncio.run(routes.api_crew_log_sessions(request))
         assert response.status == 403
         assert routes.CREW_LOG_MCP_CALLER in json.loads(response.text)["error"]
@@ -1010,7 +1010,7 @@ class TestTheGrantIsRecheckedAfterTheRead:
         _flag_on(monkeypatch)
         _dispatch_tree()
         slot = _Slot()
-        from kiro_crew.crew_log import read as crew_log_read
+        from aj_crew.crew_log import read as crew_log_read
 
         real = crew_log_read.recorded_class
         calls = []
@@ -1220,7 +1220,7 @@ class TestTheOffloadHelperOwnsTheOrder:
         an unparsed entry type is the deployment's.
         """
         _flag_on(monkeypatch)
-        from kiro_crew.crew_log.errors import CrewLogError
+        from aj_crew.crew_log.errors import CrewLogError
 
         shaped: list = []
 
@@ -1316,7 +1316,7 @@ class TestTheOffloadHelperOwnsTheOrder:
         """
         _flag_on(monkeypatch)
         _dispatch_tree()
-        from kiro_crew.crew_log.errors import CrewLogError
+        from aj_crew.crew_log.errors import CrewLogError
 
         def _refusing(*args, **kwargs):
             raise CrewLogError("bad unit id", code="invalid_id")

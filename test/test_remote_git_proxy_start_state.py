@@ -14,9 +14,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.coder import remote_worker
-from kiro_crew.coder.remote_worker import RemoteWorkerError, RemoteWorkerLaunch
-from kiro_crew.remote_session import git_proxy
+from aj_crew.coder import remote_worker
+from aj_crew.coder.remote_worker import RemoteWorkerError, RemoteWorkerLaunch
+from aj_crew.remote_session import git_proxy
 
 
 class _Shell:
@@ -85,7 +85,7 @@ async def test_a_running_proxy_reads_as_starting_and_marks_nothing(monkeypatch):
         async def serve(self):
             await asyncio.Event().wait()
 
-    monkeypatch.setattr("kiro_crew.remote_session.git_gateway.GitProxyChannel", Channel)
+    monkeypatch.setattr("aj_crew.remote_session.git_gateway.GitProxyChannel", Channel)
     launch.begin_git_proxy("dashboard:s", agent="researcher", link_factory=lambda *a, **k: link)
     await asyncio.wait_for(launch._git_proxy_start, 30)
     try:
@@ -101,7 +101,7 @@ async def test_a_running_proxy_reads_as_starting_and_marks_nothing(monkeypatch):
 async def test_a_guest_that_ends_before_its_first_frame_marks_its_start_failed(monkeypatch, heard):
     """A guest that refuses to start (another build's gateway, no python) ends
     its link without a frame: git's wait for it ends then, not at its bound."""
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.testing.wait import async_wait_until
 
     launch, shell = _launch()
     start = AsyncMock(return_value=1)
@@ -116,7 +116,7 @@ async def test_a_guest_that_ends_before_its_first_frame_marks_its_start_failed(m
         async def serve(self):
             return None
 
-    monkeypatch.setattr("kiro_crew.remote_session.git_gateway.GitProxyChannel", Channel)
+    monkeypatch.setattr("aj_crew.remote_session.git_gateway.GitProxyChannel", Channel)
     launch.begin_git_proxy("dashboard:s", agent="researcher", link_factory=lambda *a, **k: link)
     await asyncio.wait_for(launch._git_proxy_start, 30)
     argv = start.await_args.args[1]

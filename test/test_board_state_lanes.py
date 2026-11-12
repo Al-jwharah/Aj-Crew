@@ -15,8 +15,8 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state, _make_tags_app
 
-from kiro_crew.dashboard.chat_tags import _VALID_STATE_KEYS, _normalize_column
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.chat_tags import _VALID_STATE_KEYS, _normalize_column
+from aj_crew.dashboard.state import _ChatSlot
 
 
 class TestNormalizeStateColumn:
@@ -83,7 +83,7 @@ class TestNormalizeStateColumn:
 class TestStateColumnRoutes:
     @pytest.mark.asyncio
     async def test_create_state_lane_round_trips(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -99,7 +99,7 @@ class TestStateColumnRoutes:
 
     @pytest.mark.asyncio
     async def test_create_unknown_lane_rejected_400(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -114,7 +114,7 @@ class TestStateColumnRoutes:
         # nothing to write. Critically, the refusal must not touch slot.tags:
         # falling through to the status-tag swap would reassign a workflow tag
         # the lane never filtered by.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -140,7 +140,7 @@ class TestStateColumnRoutes:
     async def test_tag_columns_still_accept_drops_alongside_lanes(self, tmp_path, monkeypatch):
         # Lanes and tag columns coexist on one board; adding lanes must not
         # disturb the tag columns' drag behaviour.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -159,7 +159,7 @@ class TestStateColumnRoutes:
             ).json()
             from unittest.mock import patch
 
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.post("/api/chat/slots/s1/drop", json={"column_id": col["id"]})
             data = await resp.json()
             assert data["ok"] is True
@@ -175,7 +175,7 @@ class TestStateLaneUniqueness:
     async def test_creating_an_existing_lane_returns_it_instead_of_duplicating(
         self, tmp_path, monkeypatch
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -201,7 +201,7 @@ class TestStateLaneUniqueness:
     ):
         # The race a client-side "is it missing?" check cannot close: both
         # requests are in flight before either has persisted.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -220,7 +220,7 @@ class TestStateLaneUniqueness:
 
     @pytest.mark.asyncio
     async def test_distinct_lanes_are_unaffected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -241,7 +241,7 @@ class TestStateLaneUniqueness:
     async def test_update_onto_an_occupied_lane_is_refused(self, tmp_path, monkeypatch):
         # Sibling of the create hole: retargeting a lane column onto a state that
         # is already taken would duplicate it just as effectively.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -267,7 +267,7 @@ class TestStateLaneUniqueness:
     async def test_updating_a_lane_to_its_own_key_is_allowed(self, tmp_path, monkeypatch):
         # The exclude_id carve-out: a column must not collide with itself, or a
         # no-op rename of a lane would be refused.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:

@@ -22,9 +22,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import SessionManager
-from kiro_crew.subagent import SubagentInfo
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import SessionManager
+from aj_crew.subagent import SubagentInfo
 
 #: Ceiling for a wait that only fails on a hang, so a regression fails by name.
 _HANG_CEILING_S = 30
@@ -51,7 +51,7 @@ def _provider_factory() -> Any:
 
 
 def _gateway(sessions: SessionManager) -> Any:
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gateway = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gateway.sessions = sessions
@@ -100,7 +100,7 @@ class _ParentNextTurn:
 
 async def _drive(route: str, key: str) -> tuple[Any, Any, _ParentNextTurn, SessionManager]:
     """Time an injection out under *route* while the parent's next turn waits."""
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     gateway = _gateway(sessions)
     parent_turn = _ParentNextTurn(sessions, key)
     injected_into: list[Any] = []
@@ -125,7 +125,7 @@ async def _drive(route: str, key: str) -> tuple[Any, Any, _ParentNextTurn, Sessi
     info.done = True
     with (
         patch.object(sessions, "reset", side_effect=reset_until_successor_is_live),
-        patch("kiro_crew.slack.gateway._MAX_INJECT_ATTEMPTS", 1),
+        patch("aj_crew.slack.gateway._MAX_INJECT_ATTEMPTS", 1),
     ):
         if route == "cron":
             # The cron run's own session, left to its workers: the route
@@ -188,7 +188,7 @@ async def test_a_timed_out_injection_leaves_the_parents_next_turn_running(route,
 @pytest.mark.asyncio
 async def test_the_owner_fenced_cancel_still_reaches_the_callers_own_turn():
     """The fence narrows the cancel to the caller; it does not disable it."""
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     try:
         provider, _is_new, _resumed = await sessions.get_or_create("cron:job-2")
         outcome = await sessions.cancel_current("cron:job-2", owner_task=asyncio.current_task())

@@ -17,15 +17,15 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app
 from chat_test_helpers import _make_state as _make_full_state
 
-from kiro_crew.dashboard.chat_delivery import (
+from aj_crew.dashboard.chat_delivery import (
     QUOTE_FIELD_MAX_LEN,
     QUOTE_TEXT_MAX_LEN,
     queue_entry_view,
     queue_for_next_turn,
     quote_meta,
 )
-from kiro_crew.dashboard.chat_utils import carries_attachments
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.chat_utils import carries_attachments
+from aj_crew.dashboard.state import DashboardState
 
 _QUOTE = {
     "role": "assistant",
@@ -92,7 +92,7 @@ class TestQuoteMeta:
         assert "AKIAIOSFODNN7EXAMPLE" not in out["quote"]["text"]
 
     def test_a_user_row_s_record_survives_the_emit_redaction_and_another_role_s_does_not(self):
-        from kiro_crew.dashboard.chat_utils import _redact_meta_for_role
+        from aj_crew.dashboard.chat_utils import _redact_meta_for_role
 
         meta = {"quote": {"role": "user", "text": "key AKIAIOSFODNN7EXAMPLE here"}, "sendId": "s-1"}
         assert (
@@ -105,7 +105,7 @@ class TestQuoteMeta:
     def test_a_user_row_s_record_is_still_bounded_on_emit(self):
         # A transcript line is attacker-writable: an oversized or malformed
         # record is dropped at emit, not passed through because the row is a user's.
-        from kiro_crew.dashboard.chat_utils import _redact_meta_for_role
+        from aj_crew.dashboard.chat_utils import _redact_meta_for_role
 
         huge = {"quote": {"role": "user", "text": "x" * (QUOTE_TEXT_MAX_LEN + 1)}, "sendId": "s-1"}
         out = _redact_meta_for_role("user", huge)
@@ -127,8 +127,8 @@ class TestQuoteRidesTheQueue:
         state = _make_state()
         slot = state.get_or_create_slot("chat-1")
         with (
-            patch("kiro_crew.dashboard.session_control.containment_meta", return_value={}),
-            patch("kiro_crew.dashboard.chat_delivery.start_queue_persist"),
+            patch("aj_crew.dashboard.session_control.containment_meta", return_value={}),
+            patch("aj_crew.dashboard.chat_delivery.start_queue_persist"),
         ):
             qid = queue_for_next_turn(
                 state, slot, "> Three things landed.\n\nwhy?", quote=dict(_QUOTE)
@@ -146,8 +146,8 @@ class TestQuoteRidesTheQueue:
         state = _make_state()
         slot = state.get_or_create_slot("chat-1")
         with (
-            patch("kiro_crew.dashboard.session_control.containment_meta", return_value={}),
-            patch("kiro_crew.dashboard.chat_delivery.start_queue_persist"),
+            patch("aj_crew.dashboard.session_control.containment_meta", return_value={}),
+            patch("aj_crew.dashboard.chat_delivery.start_queue_persist"),
         ):
             qid = queue_for_next_turn(state, slot, "plain")
         entry = next(e for e in slot._queue if e["id"] == qid)
@@ -180,12 +180,12 @@ class TestQuoteRidesTheQueue:
 
 
 def _busy_state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_full_state(tmp_path)
     state.broadcast_ws = MagicMock()
     slot = state.get_or_create_slot("busy-chat")
     slot._turn_admission_reserved = True  # force the busy queue path
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", MagicMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", MagicMock())
     return state, slot
 
 
@@ -294,9 +294,9 @@ class TestQuoteThroughTheHandler:
         attachment lists, so no tab shows the blockquote as text."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+        from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_full_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("requeue")
@@ -317,7 +317,7 @@ class TestQuoteThroughTheHandler:
 
 class TestQueueEditPrunesTheQuote:
     def _entry(self, content, meta):
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         slot = _ChatSlot("s1")
         qid = slot.queue_append(content, meta=dict(meta))
@@ -342,7 +342,7 @@ class TestQueueEditPrunesTheQuote:
         """Quoting a message that itself shows an attachment marker: an edit
         that drops one of THIS entry's attachments renumbers the body's markers
         only, leaves the block byte-for-byte, and keeps the card."""
-        from kiro_crew.dashboard.slot_queue_repository import quote_block
+        from aj_crew.dashboard.slot_queue_repository import quote_block
 
         # The quoted message named the SAME file this entry attaches, so a
         # whole-text prune would read the block's marker as this entry's own.
@@ -360,7 +360,7 @@ class TestQueueEditPrunesTheQuote:
         assert entry["meta"]["quote"] == quoted
 
     def test_quote_block_mirrors_the_client_serialization(self):
-        from kiro_crew.dashboard.slot_queue_repository import quote_block
+        from aj_crew.dashboard.slot_queue_repository import quote_block
 
         assert quote_block(_QUOTE) == self._BLOCK
         assert (
@@ -384,7 +384,7 @@ class TestQueuedSendKeepsItsTab:
     async def test_the_busy_path_records_the_sending_tab_and_language(self, tmp_path, monkeypatch):
         from aiohttp import web
 
-        from kiro_crew.dashboard.guide_observe import observation_hub_for
+        from aj_crew.dashboard.guide_observe import observation_hub_for
 
         state, slot = _busy_state(tmp_path, monkeypatch)
         app = _make_app(state)

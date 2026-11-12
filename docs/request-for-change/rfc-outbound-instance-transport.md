@@ -27,7 +27,7 @@ Every transport that exists today reaches a peer the same way: spawn a child tha
 holds open a **local port-forward**, then bootstrap the peer's dashboard token by
 **executing a command on the peer's host** over that same credential. That is
 true of all three methods on main at `18f9984b0` — `("ssh", "ssm", "fargate")`
-(`src/kiro_crew/instances/registry.py`). The consequence is that reachability
+(`src/aj_crew/instances/registry.py`). The consequence is that reachability
 is welded to host-level access: to see a peer's dashboard you must also be able
 to run a command as a user on its host, and someone must hold the SSH key or the
 IAM permission that allows it.
@@ -35,7 +35,7 @@ IAM permission that allows it.
 This RFC does not propose a new product surface. It proposes a transport **below
 an existing choke point**. Every peer interaction in the tree already funnels
 through one method — `SshTunnelManager.proxy_request`
-(`src/kiro_crew/instances/ssh_tunnel_manager.py`) — so the dashboard proxy
+(`src/aj_crew/instances/ssh_tunnel_manager.py`) — so the dashboard proxy
 route, the peer slot read and the capability probe do not need
 to know how bytes reach the peer. What a new transport owes them is a small
 contract: a reachable local origin, a credential, a status, and a teardown.
@@ -54,13 +54,13 @@ removing SSM costs.
 
 An `ssh` instance needs a key that logs a user into the host. An `ssm` instance
 needs `ssm:StartSession` plus `ssm:SendCommand`, because the dashboard token is
-minted by running `kirocrew token` on the peer through `sudo -u <user> -i`
-(`_mint_for`, `src/kiro_crew/instances/ssh_tunnel_manager.py`). In both
+minted by running `ajcrew token` on the peer through `sudo -u <user> -i`
+(`_mint_for`, `src/aj_crew/instances/ssh_tunnel_manager.py`). In both
 cases the permission that makes the pane load is a permission to **execute
 code** on someone else's machine. An owner who only wants to see a crew's
 dashboard cannot be granted less.
 
-This is also why the transport fails in ways that have nothing to do with Kiro
+This is also why the transport fails in ways that have nothing to do with Aj
 Crew. `StartSession` is treated by AWS as an interactive human action; a fleet
 whose operator profile can read every instance can still be unable to open a
 single tunnel, and the failure surfaces as an opaque proxy error rather than as
@@ -81,7 +81,7 @@ because the transport lives outside the process that depends on it.
 the second: its child *is* the SSM port-forward, aimed at an ECS task, and it
 answers "no token" where the others mint one. The result is that
 `connection_method` is now branched on in `_resolve_transport`
-(`src/kiro_crew/instances/ssh_tunnel_manager.py`), in the mint, in connect,
+(`src/aj_crew/instances/ssh_tunnel_manager.py`), in the mint, in connect,
 in both self-heal tiers, in diagnostics and in restart. Adding a fourth arm to
 each of those chains is how a seam becomes unmaintainable. The refactor in §3.1
 is therefore part of this proposal, not a follow-up to it.
@@ -102,7 +102,7 @@ This RFC is small because it changes one layer and leaves four contracts alone.
 
 - **`proxy_request` stays the only way to talk to a peer.** Its callers
   (`api_instances_proxy` and `read_peer_slots`, both in
-  `src/kiro_crew/dashboard/handlers_instances_peer.py`) are not touched.
+  `src/aj_crew/dashboard/handlers_instances_peer.py`) are not touched.
 - **The peer's own token auth stays the authorisation boundary.** An outbound
   transport does not introduce a second way to be authorised to a dashboard; it
   changes only how the token is obtained.
@@ -119,12 +119,12 @@ This RFC is small because it changes one layer and leaves four contracts alone.
 ### 3.1 Extract the transport seam first (behaviour unchanged but for §3.9)
 
 Introduce a `PeerTransport` protocol in a new module
-`src/kiro_crew/instances/transports/` with one implementation per method, and
+`src/aj_crew/instances/transports/` with one implementation per method, and
 make `SshTunnelManager` hold a resolved transport instead of re-branching on a
 string. The protocol is exactly what the **eighteen** existing branch sites need.
 Counted at `18f9984b0` as every comparison of the method string (`==`, `!=`, `in`)
-on the gateway side: fifteen in `src/kiro_crew/instances/ssh_tunnel_manager.py`
-and three in `src/kiro_crew/instances/registry.py`, spread over record
+on the gateway side: fifteen in `src/aj_crew/instances/ssh_tunnel_manager.py`
+and three in `src/aj_crew/instances/registry.py`, spread over record
 validation, `_resolve_transport`, the mint, connect, both self-heal tiers,
 diagnostics and restart. An earlier revision of this document said eight, which
 does not match the code at the revision it claims to audit; the figure above is
@@ -134,7 +134,7 @@ Those eighteen sites collapse onto six protocol members:
 
 | Member | Answers |
 |---|---|
-| `validate(inst)` | the per-method field validation, which today is split across `Instance.validate` (`src/kiro_crew/instances/registry.py`, the `ssh` and `fargate` arms plus the method-membership check) and `_resolve_transport` |
+| `validate(inst)` | the per-method field validation, which today is split across `Instance.validate` (`src/aj_crew/instances/registry.py`, the `ssh` and `fargate` arms plus the method-membership check) and `_resolve_transport` |
 | `open(inst, local_port)` | bring up reach; return a handle the manager can poll and kill |
 | `mint(inst)` | return a dashboard token, or declare that this method has none (the `fargate` answer) |
 | `describe_target()` | the human-facing target string used in messages |
@@ -193,7 +193,7 @@ running a command on the peer. Instead:
 
 1. the local gateway sends a `MINT` frame on the authenticated channel;
 2. the peer's own agent calls its **local** mint directly — the same code path
-   `kirocrew token` uses — and returns the token over the channel;
+   `ajcrew token` uses — and returns the token over the channel;
 3. the local gateway stores it exactly as it stores an SSH- or SSM-minted token,
    and the existing refresh timer keeps working.
 
@@ -245,7 +245,7 @@ path, and a transport that can reach a peer but never recover it is not a
 replacement (see §5.4). It is safe to add to a "no remote exec" design precisely
 because it is parameterless and self-scoped: the peer restarts its own gateway
 unit or refuses, and the frame cannot express anything else. Contrast today's
-`restart_remote` (`src/kiro_crew/instances/ssh_tunnel_manager.py`), which builds
+`restart_remote` (`src/aj_crew/instances/ssh_tunnel_manager.py`), which builds
 and dispatches a real command line over the transport's own credential.
 
 ### 3.6 Enrolment and identity
@@ -430,7 +430,7 @@ today's behaviour and only bites when an owner turns it on.
 `InstancesConfig` gains `allowed_methods`, defaulting to every registered method.
 It is enforced at two points, and never by failing the load:
 
-- **Create and update.** `Instance.validate()` (`src/kiro_crew/instances/registry.py`,
+- **Create and update.** `Instance.validate()` (`src/aj_crew/instances/registry.py`,
   the check the add and update paths already run) rejects a method outside the
   list, so the API cannot create or edit a non-compliant record.
 - **Connect.** The connect path refuses a record whose method is not allowed,
@@ -443,7 +443,7 @@ writes it back unchanged. Failing the load would take the whole fleet view down;
 skipping the record would let the next save drop it from `instances.json`, which
 is silent data loss. The quarantine state is what keeps such a record from
 looking legitimate: it is visible, not connectable, and says why. The
-add-instance form offers only allowed methods, and `kirocrew doctor` reports the
+add-instance form offers only allowed methods, and `ajcrew doctor` reports the
 effective posture and every quarantined record so an owner can evidence it.
 
 An owner under policy sets `["outbound"]`. The other three then fail closed rather
@@ -454,7 +454,7 @@ writable through the same surface it constrains is not a control. The two files
 are already in different protection classes, and the asymmetry is what makes the
 placement work rather than a preference:
 `~/.kiro/crew/config.json` is listed in the write-protected home paths
-(`src/kiro_crew/security/paths_lists.py`), so the agent's file-edit tool cannot modify
+(`src/aj_crew/security/paths_lists.py`), so the agent's file-edit tool cannot modify
 it; `~/.kiro/crew/instances.json`, which holds the records and therefore
 `hub_url`, appears in no security path at all and is agent-writable by design —
 registering a crew is ordinary agent work. Putting `allowed_methods` and the hub
@@ -528,7 +528,7 @@ than discover it during an incident.
 
 ### 5.7 The posture must be visible where a reviewer looks
 
-`kirocrew doctor` proving the stance is necessary and not sufficient. A CLI
+`ajcrew doctor` proving the stance is necessary and not sufficient. A CLI
 invocation is something the owner runs and then retells; a review asks to see the
 control. The dashboard already has the surface for exactly this shape of fact:
 Settings → Security renders a row per control from `GET /api/security/posture`,
@@ -538,7 +538,7 @@ operator is never told a control covers nothing when it may well be active.
 
 The effective transport posture is that shape of fact, so it is registered as a
 control rather than written as prose: an entry in `_CONTROLS`
-(`src/kiro_crew/security_posture_controls.py`) whose items are the methods
+(`src/aj_crew/security_posture_controls.py`) whose items are the methods
 `allowed_methods` currently permits. `SecurityPanel` already states the dividing
 line this follows — every control whose posture is a count belongs in the
 registry, and the panel itself carries only qualitative descriptions.
@@ -625,7 +625,7 @@ Six PRs, each independently revertible. The full task list is
    The guide carries the enrolment, revocation, conformity checklist (§5.5) and the
    break-glass cost (§5.6).
 6. **Owner-facing entry and diagnosis** — the add-instance option and its
-   method-filtered form, `kirocrew doctor` checks, and per-method diagnosis. What
+   method-filtered form, `ajcrew doctor` checks, and per-method diagnosis. What
    is deliberately *not* here: nothing a phase-3 record needs in order to render
    correctly, which is why §3.9, the locale strings and §5.7 sit earlier.
 

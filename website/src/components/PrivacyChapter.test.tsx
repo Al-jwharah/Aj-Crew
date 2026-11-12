@@ -37,7 +37,7 @@ const BEACON_ON = {
   reason_code: 'ready',
   endpoint_configured: true,
   env_override: false,
-  env_var: 'KIROCREW_TELEMETRY_DISABLED',
+  env_var: 'AJCREW_TELEMETRY_DISABLED',
   governance_override: false,
 }
 
@@ -46,7 +46,7 @@ const BEACON_ON = {
 let stored = { recording: true, beacon: true }
 function statusFromStore() {
   beaconStatus.mockImplementation(async () => ({ ...BEACON_ON, enabled: stored.beacon }))
-  collectionStatus.mockImplementation(async () => ({ enabled: stored.recording, env_pinned: false, env_var: 'KIROCREW_TELEMETRY' }))
+  collectionStatus.mockImplementation(async () => ({ enabled: stored.recording, env_pinned: false, env_var: 'AJCREW_TELEMETRY' }))
   patchConfig.mockImplementation(async (path: string, value: unknown) => {
     if (path === 'telemetry.enabled') stored.recording = value as boolean
     if (path === 'telemetry.beacon_enabled') stored.beacon = value as boolean
@@ -173,7 +173,7 @@ describe('PrivacyChapter', () => {
 
     await screen.findByText('What is collected')
     fireEvent.click(await readyButton('Turn off'))
-    expect(await screen.findByText(/config.local.json in the .* data folder \(~\/\.kiro\/crew unless KIROCREW_HOME is set\) keeps it on/)).toBeInTheDocument()
+    expect(await screen.findByText(/config.local.json in the .* data folder \(~\/\.kiro\/crew unless AJCREW_HOME is set\) keeps it on/)).toBeInTheDocument()
     // No host to hide the chapter: a chat hand-off would land out of reach.
     expect(screen.queryByRole('button', { name: 'Ask the agent' })).not.toBeInTheDocument()
     expect(onContinue).not.toHaveBeenCalled()
@@ -206,13 +206,13 @@ describe('PrivacyChapter', () => {
   })
 
   it('Turn off names the env var that keeps recording on', async () => {
-    collectionStatus.mockImplementation(async () => ({ enabled: true, env_pinned: true, env_var: 'KIROCREW_TELEMETRY' }))
+    collectionStatus.mockImplementation(async () => ({ enabled: true, env_pinned: true, env_var: 'AJCREW_TELEMETRY' }))
     const onContinue = vi.fn()
     renderWithProviders(<PrivacyChapter open onContinue={onContinue} />)
 
     await screen.findByText('What is collected')
     fireEvent.click(await readyButton('Turn off'))
-    expect(await screen.findByText(/the KIROCREW_TELEMETRY environment variable keeps it on/)).toBeInTheDocument()
+    expect(await screen.findByText(/the AJCREW_TELEMETRY environment variable keeps it on/)).toBeInTheDocument()
     expect(onContinue).not.toHaveBeenCalled()
   })
 
@@ -376,7 +376,7 @@ describe('PrivacyChapter', () => {
 
     stored = { recording: false, beacon: true }
     beaconStatus.mockImplementation(async () => ({ ...BEACON_ON, governance_override: true, would_send: false }))
-    collectionStatus.mockImplementation(async () => ({ enabled: false, env_pinned: false, env_var: 'KIROCREW_TELEMETRY' }))
+    collectionStatus.mockImplementation(async () => ({ enabled: false, env_pinned: false, env_var: 'AJCREW_TELEMETRY' }))
     renderWithProviders(<PrivacyChapter open onContinue={vi.fn()} />)
     expect(await screen.findByTestId('privacy-off-reason')).toHaveTextContent('administrator')
     expect(screen.queryByTestId('privacy-change-later')).not.toBeInTheDocument()

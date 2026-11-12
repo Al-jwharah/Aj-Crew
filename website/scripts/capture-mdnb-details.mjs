@@ -72,7 +72,7 @@ async function shoot(browser, base, doc, { file, edit = false }) {
   await page.waitForTimeout(600)
 
   const applied = await page.evaluate(() => document.documentElement.dataset.theme || '')
-  if (applied !== 'kiro-dark') throw new Error(`theme mismatch: wanted kiro-dark, got ${applied || '(none)'}`)
+  if (applied !== 'aj-dark') throw new Error(`theme mismatch: wanted aj-dark, got ${applied || '(none)'}`)
 
   if (edit) {
     // Expand the first disclosure (clicking its summary only toggles — the

@@ -10,14 +10,14 @@ from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F4
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 from acp_client_helpers import _stop_stderr_drain  # noqa: F401 - re-exported
 
-from kiro_crew.acp.client import (
+from aj_crew.acp.client import (
     AcpClient,
     AcpError,
     _format_acp_error,
 )
-from kiro_crew.acp.types import JSONRPC_METHOD_NOT_FOUND
-from kiro_crew.agent_sdk import host_auth
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.types import JSONRPC_METHOD_NOT_FOUND
+from aj_crew.agent_sdk import host_auth
+from aj_crew.testing.wait import await_until
 
 
 def _scripted_process(lines, *, returncode=None):
@@ -128,7 +128,7 @@ class TestWaitForResponseDeferral:
         assert m1.id == 88
 
     def test_session_timeout_progress_names_missing_failed_and_oauth_servers(self, tmp_path):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient(work_dir=tmp_path)
         client._mcp_notifications = [
@@ -162,7 +162,7 @@ class TestWaitForResponseDeferral:
         against, the count is reported as ``roster unknown`` instead of the
         timeout reading as a bare budget.
         """
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient(work_dir=tmp_path)
         client._mcp_notifications = [
@@ -189,7 +189,7 @@ class TestWaitForResponseDeferral:
         The buffer is cleared only at the end of ``_initialize_session``, so the fallback
         still holds old frames; the summary must honour ``_begin_session_report``'s floor.
         """
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient(work_dir=tmp_path)
         roster = [{"name": "ready"}]
@@ -260,7 +260,7 @@ class TestWaitForResponseActivityDeadline:
         proc.returncode = None
         client._process = proc
 
-        monkeypatch.setattr("kiro_crew.acp.client.time.monotonic", fake_monotonic)
+        monkeypatch.setattr("aj_crew.acp.client.time.monotonic", fake_monotonic)
 
         result = await await_until(asyncio.ensure_future(client._wait_for_response(4, timeout=0.1)))
         assert result == {"loaded": True}
@@ -290,7 +290,7 @@ class TestWaitForResponseActivityDeadline:
         proc.returncode = None
         client._process = proc
 
-        monkeypatch.setattr("kiro_crew.acp.client.time.monotonic", fake_monotonic)
+        monkeypatch.setattr("aj_crew.acp.client.time.monotonic", fake_monotonic)
 
         with pytest.raises(AcpError):
             await await_until(asyncio.ensure_future(client._wait_for_response(1, timeout=0.1)))
@@ -327,7 +327,7 @@ class TestProcessMessageUnknownServerRequest:
         ],
     )
     def test_process_message_classification(self, tmp_path, msg_id, method, params, expected):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient(work_dir=tmp_path)
         msg = JsonRpcMessage(id=msg_id, method=method, params=params)
@@ -335,7 +335,7 @@ class TestProcessMessageUnknownServerRequest:
 
     @pytest.mark.asyncio
     async def test_reject_sends_method_not_found_error(self, tmp_path):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient(work_dir=tmp_path)
         client._process = _scripted_process([])
@@ -352,17 +352,17 @@ class TestProcessMessageUnknownServerRequest:
 
     @pytest.mark.asyncio
     async def test_reject_noop_when_no_id(self, tmp_path, caplog):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient(work_dir=tmp_path)
         client._process = _scripted_process([])
         msg = JsonRpcMessage(id=None, method="terminal/create", params={})
 
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.client"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.client"):
             await client._reject_unknown_server_request(msg)
         # A notification has no id to answer, so nothing is written or reported.
         assert client._process.stdin.write.call_count == 0
-        assert [r.getMessage() for r in caplog.records if r.name == "kiro_crew.acp.client"] == []
+        assert [r.getMessage() for r in caplog.records if r.name == "aj_crew.acp.client"] == []
 
 
 class TestFormatAcpError:
@@ -407,7 +407,7 @@ class TestFormatAcpError:
         assert "unavailable on the backend" in out
         assert "'opus'" in out
         assert "model picker" in out
-        # Must NOT point at ~/.claude/settings.json — Kiro Crew never reads it;
+        # Must NOT point at ~/.claude/settings.json — Aj Crew never reads it;
         # the model lives in config.json / the agent spec.
         assert "settings.json" not in out
         assert "config.json" in out
@@ -442,7 +442,7 @@ class TestFormatAcpError:
         assert "abc-123" in out
 
     def test_advertised_model_still_reads_as_capacity(self):
-        from kiro_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.client import _is_transient_raw_error
 
         # The model IS on offer, so a rejection really is a transient blip and
         # must keep the capacity wording (and stay retryable).
@@ -453,7 +453,7 @@ class TestFormatAcpError:
         assert _is_transient_raw_error(err, ["opus", "sonnet"]) is True
 
     def test_unentitled_model_is_terminal_not_retried(self):
-        from kiro_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.client import _is_transient_raw_error
 
         # The retry verdict must move with the wording -- retrying a model the
         # account was never offered just reproduces the same rejection.
@@ -464,7 +464,7 @@ class TestFormatAcpError:
         assert _is_transient_raw_error(err, []) is True
 
     def test_unentitled_match_is_case_insensitive(self):
-        from kiro_crew.acp.client import _is_transient_raw_error
+        from aj_crew.acp.client import _is_transient_raw_error
 
         # An entitled-but-differently-cased model must not be called unentitled.
         err = {"code": -32603, "message": "x", "data": "The model 'Opus' is not available."}
@@ -597,7 +597,7 @@ class TestFormatAcpError:
             "message": "weird upstream",
             "data": "leak: AKIAIOSFODNN7EXAMPLE",
         }
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
             _format_acp_error(err)
 
         warnings = [r for r in caplog.records if "sensitive content" in r.getMessage()]
@@ -825,7 +825,7 @@ class TestFormatAcpError:
         assert "Prompt error: {" not in out
         # The string fallback in llm_helpers classifies both the raw wrapper
         # and the rewrite, so a path that lost the structured flag still retries.
-        from kiro_crew.llm_helpers import is_transient_backend_error
+        from aj_crew.llm_helpers import is_transient_backend_error
 
         assert is_transient_backend_error(str(err["data"])) is True
         assert is_transient_backend_error(out) is True
@@ -945,7 +945,7 @@ class TestCompactionFailureDetail:
     shape, redacted, because it lands on a chat row."""
 
     def test_prefers_a_named_reason(self):
-        from kiro_crew.acp.client import compaction_failure_detail
+        from aj_crew.acp.client import compaction_failure_detail
 
         assert (
             compaction_failure_detail({"status": {"type": "failed", "reason": "too large"}})
@@ -953,7 +953,7 @@ class TestCompactionFailureDetail:
         )
 
     def test_reads_a_nested_error_object(self):
-        from kiro_crew.acp.client import compaction_failure_detail
+        from aj_crew.acp.client import compaction_failure_detail
 
         detail = compaction_failure_detail(
             {"status": {"type": "failed"}, "error": {"message": "throttled"}}
@@ -961,14 +961,14 @@ class TestCompactionFailureDetail:
         assert detail == "throttled"
 
     def test_falls_back_to_the_raw_shape(self):
-        from kiro_crew.acp.client import compaction_failure_detail
+        from aj_crew.acp.client import compaction_failure_detail
 
         detail = compaction_failure_detail({"status": {"type": "failed"}})
         assert "no reason reported" in detail
         assert "failed" in detail
 
     def test_is_bounded_and_redacted(self):
-        from kiro_crew.acp.client import (
+        from aj_crew.acp.client import (
             _COMPACTION_DETAIL_MAX_CHARS,
             compaction_failure_detail,
         )
@@ -986,7 +986,7 @@ class TestCompactionFailureDetail:
         frame carried exactly that, which rendered as "Compaction failed: error"
         — no cause on the row and nothing to grep server-side. Falling through
         to the raw shape is strictly more evidence than the word."""
-        from kiro_crew.acp.client import compaction_failure_detail
+        from aj_crew.acp.client import compaction_failure_detail
 
         detail = compaction_failure_detail({"kind": "summarization_failed", "error": "error"})
         assert detail != "error"
@@ -996,7 +996,7 @@ class TestCompactionFailureDetail:
         """The nested pair is the shape KAS reports a throttle in. The machine
         reason identifies the fault; the sentence is the one that tells the
         reader what to do about it, so the sentence wins."""
-        from kiro_crew.acp.client import compaction_failure_detail
+        from aj_crew.acp.client import compaction_failure_detail
 
         detail = compaction_failure_detail(
             {
@@ -1018,7 +1018,7 @@ class TestKasSummarizationFailureLogging:
 
     @staticmethod
     def _bare_handle():
-        from kiro_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.session_handle import AcpSessionHandle
 
         handle = AcpSessionHandle.__new__(AcpSessionHandle)
         handle._compaction_failed_at = None
@@ -1044,7 +1044,7 @@ class TestKasSummarizationFailureLogging:
             },
         }
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.session_handle"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.session_handle"):
             events = handle._handle_kas_session_info(update)
 
         assert any("KAS summarization failed" in r.getMessage() for r in caplog.records)

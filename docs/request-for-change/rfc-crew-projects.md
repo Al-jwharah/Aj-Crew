@@ -427,7 +427,7 @@ Verified at `5cd92ff99`:
   reproduce the same library on a second install short of re-adding every
   source by hand.
 * A Jira source provider exists for chip sources
-  (`src/kiro_crew/dashboard/source_providers/jira.py`), but no Jira,
+  (`src/aj_crew/dashboard/source_providers/jira.py`), but no Jira,
   Confluence, or ServiceNow reader is wired into a Project, and there is no
   manifest format that names external context sources.
 * **Sessions have no grouping concept.** `slot.project` ties one session to
@@ -606,7 +606,7 @@ Provider tiers:
    entries (a Jira "space", a Linear team) and item-level pins (one ticket)
    are both just provider config — `items:` narrows scope, it does not change
    the shape.
-3. **Third-party providers**: a Kiro Crew app can contribute a provider the same
+3. **Third-party providers**: an Aj Crew app can contribute a provider the same
    way apps contribute skills and crons today, and a generic `mcp` provider
    wraps any MCP server as a source (weaker caching/search federation, but an
    escape hatch for long-tail systems).
@@ -878,7 +878,7 @@ An install that never creates a project sees no new behavior.
 
 1. **Third-party provider packaging** (blocks P2): sources are pluggable
    behind the provider SPI — decided. What remains open is how *third-party*
-   providers ship: as Kiro Crew app contributions (like skills/crons today), as
+   providers ship: as Aj Crew app contributions (like skills/crons today), as
    the generic `mcp` provider only, or both. App-contributed providers get
    full caching/search federation but need a trust story; the `mcp` provider
    is weaker but needs no new packaging surface.

@@ -15,8 +15,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.dashboard import handlers_system, system_windows_probes
-from kiro_crew.dashboard.system_windows_probes import (
+from aj_crew.dashboard import handlers_system, system_windows_probes
+from aj_crew.dashboard.system_windows_probes import (
     _MibIfRow2,
     _parse_process_rows,
     _sum_interface_octets,
@@ -85,14 +85,14 @@ def _collect_on_windows(
 class TestWindowsMcpProcessCount:
     def test_counts_kiro_cli_and_sandbox_processes(self) -> None:
         rows = [
-            (10, r"C:\Python\python.exe C:\Users\u\.kiro\crew\run\kirocrew_sandbox_a.py"),
-            (20, r"C:\Users\u\.local\bin\kiro-cli.exe acp --agent kirocrew"),
+            (10, r"C:\Python\python.exe C:\Users\u\.kiro\crew\run\ajcrew_sandbox_a.py"),
+            (20, r"C:\Users\u\.local\bin\kiro-cli.exe acp --agent ajcrew"),
             (21, r'"C:\Users\u\.local\bin\kiro-cli.exe" chat'),
             (22, r"C:\Users\u\.local\bin\Kiro-CLI.EXE acp"),
         ]
         data, calls = _collect_on_windows(rows=rows, octets=[(0, 0)])
 
-        assert calls == [("kirocrew_sandbox", "kiro-cli")]
+        assert calls == [("ajcrew_sandbox", "kiro-cli")]
         assert data["mcp_processes"] == {"sandbox": 1, "kiro_cli": 3}
         assert data["mcp_total"] == 4
 
@@ -102,7 +102,7 @@ class TestWindowsMcpProcessCount:
         assert data["mcp_total"] == 0
 
     def test_dedups_a_process_matching_both_signatures(self) -> None:
-        rows = [(7, "python.exe kirocrew_sandbox_x.py kiro-cli.exe acp")]
+        rows = [(7, "python.exe ajcrew_sandbox_x.py kiro-cli.exe acp")]
         data, _ = _collect_on_windows(rows=rows, octets=[(0, 0)])
 
         assert data["mcp_processes"] == {"sandbox": 1, "kiro_cli": 1}
@@ -151,7 +151,7 @@ class TestProcessRowParsing:
         assert _parse_process_rows("Get-CimInstance : Access denied") is None
 
     def test_wql_literal_matches_pattern_characters_literally(self) -> None:
-        assert _wql_literal("kirocrew_sandbox") == "%kirocrew[_]sandbox%"
+        assert _wql_literal("ajcrew_sandbox") == "%ajcrew[_]sandbox%"
         assert _wql_literal("a[b'c") == "%a[[]b''c%"
 
 

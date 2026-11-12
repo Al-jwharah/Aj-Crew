@@ -24,9 +24,9 @@ import pytest
 from crew_log_core_helpers import CREW, SESSION, _code, _crew, _log_bytes, _raises, _session
 from crew_log_type_helpers import minimal_data
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, Ref
-from kiro_crew.session_ledger import _store_name
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, Ref
+from aj_crew.session_ledger import _store_name
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _isolated_home = crew_log_core_helpers._isolated_home
@@ -151,7 +151,7 @@ def test_session_header_round_trips_including_its_crew_thread_anchor():
         "owner": CREW,
         "task": "port the gate",
         "pack": "review",
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "slot": "chat-7",
         "thread": {"crew": CREW, "seq": 120},
         "cwd": "/w/repo",
@@ -452,7 +452,7 @@ def test_the_ownership_registry_is_the_documented_partition():
 
 #: The session log's complete vocabulary. Spelled out in full rather than derived
 #: from the ownership registry, so a domain that quietly loses an action is caught --
-#: the registry is prefix-based and would not notice. ``KIROCREW_CREW_LOG`` defaults
+#: the registry is prefix-based and would not notice. ``AJCREW_CREW_LOG`` defaults
 #: on, so installs hold these types and a change to them needs the additive rule or
 #: a migration; this tuple is what makes such a change deliberate rather than silent.
 SESSION_VOCABULARY: tuple[str, ...] = (

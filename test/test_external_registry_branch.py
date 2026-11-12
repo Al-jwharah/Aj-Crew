@@ -24,7 +24,7 @@ from external_registry_helpers import _catalog_absent  # noqa: F401
 from external_registry_helpers import _explicit_registry_execution_admission  # noqa: F401
 from external_registry_helpers import cache_dir_fixture  # noqa: F401
 
-from kiro_crew.apps.registry import get_registry_app
+from aj_crew.apps.registry import get_registry_app
 
 # Operator-configured registry branch overrides per-app declarations
 
@@ -38,7 +38,7 @@ class TestConfiguredBranchOverride:
         # anticipation of an eventual merge) must NOT win over the branch the
         # operator configured — the index was read from the configured branch,
         # so the declared one describes a state that does not exist there yet.
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         async def _fake_index(repo, branch):
             return [{"name": "eager-app", "subdirectory": "apps/eager", "branch": "main"}]
@@ -50,7 +50,7 @@ class TestConfiguredBranchOverride:
             repo = "https://github.com/acme/apps"
             branch = "develop"
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.registry"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.apps.registry"):
             entries = await reg._fetch_and_cache_external_registry(_Reg())
         assert entries[0]["branch"] == "develop"
         # The cached copy carries the override too — install reads the cache.
@@ -70,7 +70,7 @@ class TestConfiguredBranchOverride:
     ):
         # An entry omitting a branch still inherits the configured one, and no
         # divergence warning fires for it.
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         async def _fake_index(repo, branch):
             return [{"name": "plain-app", "subdirectory": "apps/plain"}]
@@ -82,7 +82,7 @@ class TestConfiguredBranchOverride:
             repo = "https://github.com/acme/apps"
             branch = "develop"
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.registry"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.apps.registry"):
             entries = await reg._fetch_and_cache_external_registry(_Reg())
         assert entries[0]["branch"] == "develop"
         assert not [r for r in caplog.records if "declares branch" in r.getMessage()]
@@ -91,7 +91,7 @@ class TestConfiguredBranchOverride:
     async def test_matching_declared_branch_does_not_warn(self, cache_dir, monkeypatch, caplog):
         # A declaration that AGREES with the configured branch is not a
         # divergence — the warning must fire only on a genuine mismatch.
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         async def _fake_index(repo, branch):
             return [{"name": "same-app", "subdirectory": "apps/same", "branch": "develop"}]
@@ -103,7 +103,7 @@ class TestConfiguredBranchOverride:
             repo = "https://github.com/acme/apps"
             branch = "develop"
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.registry"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.apps.registry"):
             entries = await reg._fetch_and_cache_external_registry(_Reg())
         assert entries[0]["branch"] == "develop"
         assert not [r for r in caplog.records if "declares branch" in r.getMessage()]
@@ -114,7 +114,7 @@ class TestConfiguredBranchOverride:
         # repository, about which the configured registry branch carries no
         # information. The override must not touch it (and must not warn) —
         # forcing reg.branch there would clone a ref the app repo may not have.
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         async def _fake_index(repo, branch):
             return [
@@ -133,7 +133,7 @@ class TestConfiguredBranchOverride:
             repo = "https://github.com/acme/apps"
             branch = "develop"
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.registry"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.apps.registry"):
             entries = await reg._fetch_and_cache_external_registry(_Reg())
         assert entries[0]["branch"] == "main"
         assert not [r for r in caplog.records if "declares branch" in r.getMessage()]
@@ -143,7 +143,7 @@ class TestConfiguredBranchOverride:
         # A cross-repo entry with no usable declared branch (absent or an
         # explicit JSON null) still inherits the configured branch, so None
         # can never flow to the clone coordinates.
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         async def _fake_index(repo, branch):
             return [
@@ -172,7 +172,7 @@ class TestConfiguredBranchOverride:
         # listing refresh (ignore_ttl), so the repair must happen at read time.
         from types import SimpleNamespace
 
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         configured_reg = SimpleNamespace(
             name="acme", repo="https://github.com/acme/apps", branch="develop"
@@ -192,11 +192,11 @@ class TestConfiguredBranchOverride:
         mock_config = MagicMock()
         mock_config.registries = [configured_reg]
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._load_registry_file",
+            "aj_crew.apps.registry._load_registry_file",
             lambda: [],
         )
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
 
@@ -221,7 +221,7 @@ class TestManifestBranchGate:
     async def test_branch_mismatch_skips_fast_path(self, tmp_path):
         """Persistent clone on branch A must NOT supply its manifest when
         the entry requests branch B."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         clone_url = "https://example.com/target-app.git"
 
@@ -254,20 +254,20 @@ class TestManifestBranchGate:
 
         with (
             patch(
-                "kiro_crew.apps.registry.app_source_dir",
+                "aj_crew.apps.registry.app_source_dir",
                 return_value=clone_dir,
             ),
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
             patch(
-                "kiro_crew.apps.registry.wrap_argv",
+                "aj_crew.apps.registry.wrap_argv",
                 lambda argv, **k: (list(argv), None),
             ),
             patch(
-                "kiro_crew.apps.registry.cgroup_scope_argv",
+                "aj_crew.apps.registry.cgroup_scope_argv",
                 side_effect=lambda a: a,
             ),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_exec,
             ),
             patch("tempfile.mkdtemp", return_value=str(tmp_path / "throwaway")),
@@ -295,7 +295,7 @@ class TestManifestBranchGate:
     async def test_same_branch_serves_fast_path(self, tmp_path):
         """Persistent clone with matching origin AND branch still serves its
         local manifest (fast path preserved)."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         matching_url = "https://example.com/matching-app.git"
 
@@ -327,19 +327,19 @@ class TestManifestBranchGate:
 
         with (
             patch(
-                "kiro_crew.apps.registry.app_source_dir",
+                "aj_crew.apps.registry.app_source_dir",
                 return_value=clone_dir,
             ),
             patch(
-                "kiro_crew.apps.registry.wrap_argv",
+                "aj_crew.apps.registry.wrap_argv",
                 side_effect=lambda a, mode="standard", **_k: (a, None),
             ),
             patch(
-                "kiro_crew.apps.registry.cgroup_scope_argv",
+                "aj_crew.apps.registry.cgroup_scope_argv",
                 side_effect=lambda a: a,
             ),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_exec,
             ),
         ):
@@ -360,7 +360,7 @@ class TestManifestBranchGate:
     async def test_unreadable_branch_fails_closed(self, tmp_path):
         """If .git/HEAD is missing (detached or corrupt), the fast path is NOT
         used — fail closed to throwaway clone."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         matching_url = "https://example.com/target-app.git"
 
@@ -389,20 +389,20 @@ class TestManifestBranchGate:
 
         with (
             patch(
-                "kiro_crew.apps.registry.app_source_dir",
+                "aj_crew.apps.registry.app_source_dir",
                 return_value=clone_dir,
             ),
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
             patch(
-                "kiro_crew.apps.registry.wrap_argv",
+                "aj_crew.apps.registry.wrap_argv",
                 lambda argv, **k: (list(argv), None),
             ),
             patch(
-                "kiro_crew.apps.registry.cgroup_scope_argv",
+                "aj_crew.apps.registry.cgroup_scope_argv",
                 side_effect=lambda a: a,
             ),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_exec,
             ),
             patch("tempfile.mkdtemp", return_value=str(tmp_path / "throwaway")),
@@ -429,7 +429,7 @@ class TestManifestBranchGate:
     async def test_detached_head_fails_closed(self, tmp_path):
         """Detached HEAD (raw SHA in .git/HEAD) → fail closed, throwaway clone
         used even though origin matches."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         matching_url = "https://example.com/target-app.git"
 
@@ -461,20 +461,20 @@ class TestManifestBranchGate:
 
         with (
             patch(
-                "kiro_crew.apps.registry.app_source_dir",
+                "aj_crew.apps.registry.app_source_dir",
                 return_value=clone_dir,
             ),
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
             patch(
-                "kiro_crew.apps.registry.wrap_argv",
+                "aj_crew.apps.registry.wrap_argv",
                 lambda argv, **k: (list(argv), None),
             ),
             patch(
-                "kiro_crew.apps.registry.cgroup_scope_argv",
+                "aj_crew.apps.registry.cgroup_scope_argv",
                 side_effect=lambda a: a,
             ),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_exec,
             ),
             patch("tempfile.mkdtemp", return_value=str(tmp_path / "throwaway")),
@@ -504,7 +504,7 @@ class TestManifestBranchGate:
 
         UnicodeDecodeError is not an OSError, so an OSError handler alone misses it.
         """
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         matching_url = "https://example.com/target-app.git"
 
@@ -540,20 +540,20 @@ class TestManifestBranchGate:
 
         with (
             patch(
-                "kiro_crew.apps.registry.app_source_dir",
+                "aj_crew.apps.registry.app_source_dir",
                 return_value=clone_dir,
             ),
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
             patch(
-                "kiro_crew.apps.registry.wrap_argv",
+                "aj_crew.apps.registry.wrap_argv",
                 lambda argv, **k: (list(argv), None),
             ),
             patch(
-                "kiro_crew.apps.registry.cgroup_scope_argv",
+                "aj_crew.apps.registry.cgroup_scope_argv",
                 side_effect=lambda a: a,
             ),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_exec,
             ),
             patch("tempfile.mkdtemp", return_value=str(tmp_path / "throwaway")),
@@ -605,7 +605,7 @@ class TestDetachedHeadNeverMovedAside:
         """A tag-pinned (detached HEAD) checkout must not be moved aside just
         because the requested branch differs from the (unreadable) current
         state — it must fall through to the pull path instead."""
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         origin_url = "https://example.com/tag-pinned-app.git"
         dest = tmp_path / "app-sources" / "tag-pinned-app"
@@ -628,18 +628,18 @@ class TestDetachedHeadNeverMovedAside:
 
         log_lines: list[str] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.cgroup_scope_argv",
+                "aj_crew.apps.registry.cgroup_scope_argv",
                 side_effect=lambda a: a,
             ),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_create_subprocess,
             ),
             patch(
-                "kiro_crew.apps.registry._clone_origin_url",
+                "aj_crew.apps.registry._clone_origin_url",
                 new=AsyncMock(return_value=origin_url),
             ),
         ):
@@ -669,7 +669,7 @@ class TestDetachedHeadNeverMovedAside:
     async def test_repeated_installs_detached_head_no_stale_accumulation(self, tmp_path):
         """Opus 4.8 tag-pinned case: repeated installs of a detached-HEAD
         checkout must never accumulate .stale-* siblings."""
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         origin_url = "https://example.com/tag-pinned-app.git"
         dest = tmp_path / "app-sources" / "tag-pinned-app"
@@ -690,18 +690,18 @@ class TestDetachedHeadNeverMovedAside:
         for _ in range(2):
             log_lines: list[str] = []
             with (
-                patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-                patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+                patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+                patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
                 patch(
-                    "kiro_crew.apps.registry.cgroup_scope_argv",
+                    "aj_crew.apps.registry.cgroup_scope_argv",
                     side_effect=lambda a: a,
                 ),
                 patch(
-                    "kiro_crew.apps.registry.create_subprocess_limited",
+                    "aj_crew.apps.registry.create_subprocess_limited",
                     side_effect=_fake_create_subprocess,
                 ),
                 patch(
-                    "kiro_crew.apps.registry._clone_origin_url",
+                    "aj_crew.apps.registry._clone_origin_url",
                     new=AsyncMock(return_value=origin_url),
                 ),
             ):
@@ -721,7 +721,7 @@ class TestDetachedHeadNeverMovedAside:
     async def test_known_branch_mismatch_moves_aside_with_fresh_mtime(self, tmp_path):
         """Control: a CONCRETELY read differing branch still moves aside for
         re-clone with a refreshed mtime."""
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         origin_url = "https://example.com/branched-app.git"
         dest = tmp_path / "app-sources" / "branched-app"
@@ -756,18 +756,18 @@ class TestDetachedHeadNeverMovedAside:
         log_lines: list[str] = []
         pending_cleanup: list[Path] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.cgroup_scope_argv",
+                "aj_crew.apps.registry.cgroup_scope_argv",
                 side_effect=lambda a: a,
             ),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_create_subprocess,
             ),
             patch(
-                "kiro_crew.apps.registry._clone_origin_url",
+                "aj_crew.apps.registry._clone_origin_url",
                 new=AsyncMock(return_value=origin_url),
             ),
         ):
@@ -807,7 +807,7 @@ class TestReadCloneBranchBoundedRead:
 
         The read runs through ``hooks.safe_read_prefix``, so the proof is the ``n``
         argument that reader receives, not a ``builtins.open`` read size."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         clone_dir = tmp_path / "clone"
         (clone_dir / ".git").mkdir(parents=True)
@@ -819,7 +819,7 @@ class TestReadCloneBranchBoundedRead:
             encoding="utf-8",
         )
 
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         real_prefix = hooks.safe_read_prefix
         limit_args: list[int] = []
@@ -845,7 +845,7 @@ class TestReadCloneBranchBoundedRead:
     def test_head_content_filling_the_bound_fails_closed(self, tmp_path):
         """A ``ref:`` line padded exactly to the byte bound is treated as
         malformed (possible mid-token truncation) and returns None."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         clone_dir = tmp_path / "clone"
         (clone_dir / ".git").mkdir(parents=True)
@@ -859,7 +859,7 @@ class TestReadCloneBranchBoundedRead:
     def test_normal_head_still_reads_the_branch(self, tmp_path):
         """Control: a well-formed short HEAD still resolves to its branch —
         the bound rejects only oversized/hostile content."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         clone_dir = tmp_path / "clone"
         (clone_dir / ".git").mkdir(parents=True)
@@ -873,7 +873,7 @@ class TestReadCloneBranchBoundedRead:
         """A ``.git/HEAD`` symlinked to a huge file is still bounded — the read
         follows the link but stops at the limit, and the oversized content
         fails closed."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         clone_dir = tmp_path / "clone"
         (clone_dir / ".git").mkdir(parents=True)
@@ -895,8 +895,8 @@ class TestReadCloneBranchBoundedRead:
         ``hooks.safe_read_prefix`` resolves the link and refuses a target
         ``is_sensitive_path`` flags, so the read fails closed to None even though the
         target holds a valid ``ref:`` line."""
-        from kiro_crew import hooks
-        from kiro_crew.apps import registry as reg
+        from aj_crew import hooks
+        from aj_crew.apps import registry as reg
 
         # A secret file that resolves to a *sensitive* path. Its content is a
         # perfectly valid HEAD line, so if the read followed the link it would
@@ -936,8 +936,8 @@ class TestReadCloneBranchBoundedRead:
         a path whose resolved target is sensitive, so EVERY call site (loose
         ref, ``packed-refs``, provenance HEAD) is contained, not just the
         branch read."""
-        from kiro_crew import hooks
-        from kiro_crew.apps import registry as reg
+        from aj_crew import hooks
+        from aj_crew.apps import registry as reg
 
         secret = tmp_path / "id_rsa"
         secret.write_text("PRIVATE KEY MATERIAL\n", encoding="utf-8")
@@ -969,7 +969,7 @@ class TestResolvedCloneCommitBoundedRead:
     """
 
     def test_oversized_head_fails_closed_without_unbounded_read(self, tmp_path):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         clone = tmp_path / "clone"
         (clone / ".git").mkdir(parents=True)
@@ -978,7 +978,7 @@ class TestResolvedCloneCommitBoundedRead:
         # single 40/64-char SHA line.
         head_file.write_text("f" * (2 * 1024 * 1024), encoding="utf-8")
 
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         real_prefix = hooks.safe_read_prefix
         limit_args: list[int] = []
@@ -1001,7 +1001,7 @@ class TestResolvedCloneCommitBoundedRead:
         """``packed-refs`` is checkout-resident, so its read is bounded — an
         oversized file is not slurped whole. Asserted by counting the largest
         ``read(n)`` on that file: the unbounded original reads it all."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         clone = tmp_path / "clone"
         git_dir = clone / ".git"
@@ -1011,7 +1011,7 @@ class TestResolvedCloneCommitBoundedRead:
         # A multi-MiB packed-refs — far past the bound, no matching ref line.
         packed.write_text("x" * (4 * 1024 * 1024), encoding="utf-8")
 
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         real_prefix = hooks.safe_read_prefix
         packed_read_args: list[int] = []
@@ -1039,7 +1039,7 @@ class TestResolvedCloneCommitBoundedRead:
     def test_normal_detached_head_still_resolves(self, tmp_path):
         """Control: a well-formed detached HEAD still yields its SHA — the
         bound rejects only oversized content."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         clone = tmp_path / "clone"
         (clone / ".git").mkdir(parents=True)
@@ -1060,7 +1060,7 @@ class TestCommitPinnedSkipsReconvergenceRead:
     async def test_pinned_install_never_calls_read_clone_branch(self, tmp_path):
         """With ``commit`` set, ``_read_clone_branch`` is never invoked even
         though a ``.git`` checkout on a DIFFERENT branch is present."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         dest = tmp_path / "app-sources" / "pinned-app"
         (dest / ".git").mkdir(parents=True)
@@ -1091,9 +1091,9 @@ class TestCommitPinnedSkipsReconvergenceRead:
             # Origin verified identical so the origin gate passes and control
             # reaches the (commit-gated) reconvergence block.
             patch.object(reg, "_clone_origin_url", new=AsyncMock(return_value=git_url)),
-            patch("kiro_crew.apps.registry.app_source_dir", return_value=dest),
+            patch("aj_crew.apps.registry.app_source_dir", return_value=dest),
             patch(
-                "kiro_crew.apps.registry.is_clone_host_trusted",
+                "aj_crew.apps.registry.is_clone_host_trusted",
                 return_value=True,
             ),
         ):
@@ -1117,7 +1117,7 @@ class TestCommitPinnedSkipsReconvergenceRead:
     async def test_branch_tracking_install_does_call_read_clone_branch(self, tmp_path):
         """Control: with ``commit`` unset, the reconvergence read DOES run —
         proving the skip is specific to the pinned path, not a dead gate."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         dest = tmp_path / "app-sources" / "tracking-app"
         (dest / ".git").mkdir(parents=True)
@@ -1133,9 +1133,9 @@ class TestCommitPinnedSkipsReconvergenceRead:
             # Origin verified identical (the check that precedes the
             # reconvergence read) so the branch path is actually reached.
             patch.object(reg, "_clone_origin_url", new=AsyncMock(return_value=git_url)),
-            patch("kiro_crew.apps.registry.app_source_dir", return_value=dest),
+            patch("aj_crew.apps.registry.app_source_dir", return_value=dest),
             patch(
-                "kiro_crew.apps.registry.is_clone_host_trusted",
+                "aj_crew.apps.registry.is_clone_host_trusted",
                 return_value=True,
             ),
         ):

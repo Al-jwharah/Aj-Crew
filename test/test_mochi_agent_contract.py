@@ -17,8 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.builtins.mochi import mcp_server, soul_loader
-from kiro_crew.apps.builtins.mochi import watchlist_file as wf
+from aj_crew.apps.builtins.mochi import mcp_server, soul_loader
+from aj_crew.apps.builtins.mochi import watchlist_file as wf
 
 AGENTS = Path(soul_loader.__file__).parent / "agents"
 SKILLS = AGENTS / "skills"
@@ -84,7 +84,7 @@ class TestUpdatePlanSchemaMatchesTheImplementation:
     """The schema is what the model sees; apply_update is what runs."""
 
     def test_every_declared_key_is_honoured(self):
-        from kiro_crew.apps.builtins.mochi import queue_file as qf
+        from aj_crew.apps.builtins.mochi import queue_file as qf
 
         declared = set(_tool("update_plan")["inputSchema"]["properties"])
         source = Path(qf.__file__).read_text(encoding="utf-8")
@@ -204,7 +204,7 @@ class TestSkillsAreReachable:
 class TestSpawnPromptsDoNotOverclaim:
     def test_the_replan_spawn_loads_the_replan_skill(self):
         """It loaded mochi-plan, which has no replan section — full price, wrong map."""
-        from kiro_crew.apps.builtins.mochi import hooks
+        from aj_crew.apps.builtins.mochi import hooks
 
         prompt = hooks.MochiRuntime.replan_prompt(object())
         assert str(soul_loader.skill_path("mochi-replan")) in prompt
@@ -213,7 +213,7 @@ class TestSpawnPromptsDoNotOverclaim:
     def test_the_background_preamble_does_not_promise_slack(self):
         """Naming a Slack tool while telling the agent not to doubt its tools is
         an instruction to hallucinate: Slack is only present if the user granted it."""
-        from kiro_crew.apps.builtins.mochi.queue_poller import _BG_PREAMBLE
+        from aj_crew.apps.builtins.mochi.queue_poller import _BG_PREAMBLE
 
         assert "get_messages" not in _BG_PREAMBLE
 

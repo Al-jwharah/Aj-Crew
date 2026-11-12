@@ -22,22 +22,22 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import agent
-from kiro_crew import work_ledger as wl
-from kiro_crew.agent_files import (
+from aj_crew import agent
+from aj_crew import work_ledger as wl
+from aj_crew.agent_files import (
     CONDUCTOR_AGENT_FILENAME,
     LEDGER_CONDUCTOR_AGENT_FILENAME,
     PIPELINE_CONDUCTOR_AGENT_FILENAME,
     SECURITY_CONDUCTOR_AGENT_FILENAME,
 )
-from kiro_crew.agent_materialization import conductor_agents
-from kiro_crew.crew_log import projection
-from kiro_crew.crew_log.entry_types import WORK_ENTRY_TYPE
-from kiro_crew.crew_log.schema import Entry
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.handlers import session_control as send_routes
-from kiro_crew.dashboard.handlers import work_ledger as routes
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.agent_materialization import conductor_agents
+from aj_crew.crew_log import projection
+from aj_crew.crew_log.entry_types import WORK_ENTRY_TYPE
+from aj_crew.crew_log.schema import Entry
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.handlers import session_control as send_routes
+from aj_crew.dashboard.handlers import work_ledger as routes
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 #: Every conductor spec the materializer writes: installer, file, and the charter
 #: its prompt opens with.
@@ -73,24 +73,22 @@ def _install(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, installer: str, fi
     """Run one conductor installer against a minimal template and read its spec."""
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
+        "aj_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
     )
     monkeypatch.setattr(
         agent,
         "build_agent_config",
         lambda: {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "prompt": "file://x",
             "mcpServers": {
-                "kirocrew-core": {"command": "/resolved/kirocrew", "args": ["mcp-core"]},
+                "ajcrew-core": {"command": "/resolved/ajcrew", "args": ["mcp-core"]},
             },
-            "tools": ["@kirocrew-core"],
+            "tools": ["@ajcrew-core"],
             "allowedTools": [],
         },
     )
-    monkeypatch.setattr(
-        agent, "_kirocrew_mcp_invocation", lambda sub: ("/resolved/kirocrew", [sub])
-    )
+    monkeypatch.setattr(agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/ajcrew", [sub]))
     monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: True)
     assert getattr(agent, installer)() is True
     return json.loads((tmp_path / filename).read_text(encoding="utf-8"))
@@ -104,8 +102,8 @@ def test_every_conductor_spec_mounts_the_work_server(
     tmp_path, monkeypatch, installer, filename, charter
 ):
     data = _install(tmp_path, monkeypatch, installer, filename)
-    assert data["mcpServers"]["kirocrew-work"]["args"] == ["mcp-work"]
-    assert "@kirocrew-work" in data["tools"]
+    assert data["mcpServers"]["ajcrew-work"]["args"] == ["mcp-work"]
+    assert "@ajcrew-work" in data["tools"]
 
 
 @pytest.mark.parametrize(("installer", "filename", "charter"), _CONDUCTORS)
@@ -122,9 +120,9 @@ def test_every_conductor_spec_auto_approves_the_base_work_verbs(
     for verb in agent._CONDUCTOR_BASE_WORK_GRANTS:
         assert verb in allowed, verb
     nested = filename in (CONDUCTOR_AGENT_FILENAME, LEDGER_CONDUCTOR_AGENT_FILENAME)
-    assert ("@kirocrew-work/work_report" in allowed) is nested
+    assert ("@ajcrew-work/work_report" in allowed) is nested
     match = data["permissions"]["rules"][0]["match"]
-    assert "kirocrew-work/work_ledger_record" in match
+    assert "ajcrew-work/work_ledger_record" in match
 
 
 @pytest.mark.parametrize(("installer", "filename", "charter"), _CONDUCTORS)
@@ -164,7 +162,7 @@ def test_the_protocol_names_the_four_steps() -> None:
 def test_the_mount_is_unconditional() -> None:
     """No caller can build a conductor spec without the work server."""
     assert list(inspect.signature(conductor_agents._conductor_mcp_servers).parameters) == ["config"]
-    assert "kirocrew-work" in conductor_agents._conductor_mcp_servers({})
+    assert "ajcrew-work" in conductor_agents._conductor_mcp_servers({})
 
 
 # -- the real path: record and report reach the Dashboard tab's fold ------------
@@ -201,9 +199,9 @@ async def test_a_pipeline_conductor_item_lands_on_a_workstreams_board(tmp_path, 
         "_install_pipeline_conductor_agent",
         PIPELINE_CONDUCTOR_AGENT_FILENAME,
     )
-    assert "@kirocrew-work/work_ledger_record" in spec["allowedTools"]
+    assert "@ajcrew-work/work_ledger_record" in spec["allowedTools"]
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     routes._BOARD_LOCKS._locks.clear()
 
     async def _recognized(*a: Any, **k: Any) -> None:
@@ -289,7 +287,7 @@ async def _board_with_blocked_item(
     tmp_path, monkeypatch, recorded: list[dict[str, Any]], *, reason: str | None = None
 ):
     """goal + create + bind + a blocked report, through the real routes."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     routes._BOARD_LOCKS._locks.clear()
 
     async def _recognized(*a: Any, **k: Any) -> None:

@@ -28,14 +28,14 @@ mkdirSync(OUT, { recursive: true })
 const folders = [
   {
     id: 'f1', name: 'Platform', icon: '🚀', order: 0, collapsed: false,
-    project_dir: '/srv/repos/kirocrew',
+    project_dir: '/srv/repos/ajcrew',
     steering_dirs: ['/srv/org-standards/steering', '/srv/security-rules'],
   },
   { id: 'f1a', name: 'Backend', icon: '🧩', order: 0, collapsed: false, parent_id: 'f1' },
 ]
 
 const slot = (key, title, folder_id, last_ts) => ({
-  key, title, messages: 4, running: false, agent: 'kirocrew',
+  key, title, messages: 4, running: false, agent: 'ajcrew',
   created: '2026-07-20T01:00:00Z', last_ts, folder_id,
 })
 
@@ -56,8 +56,8 @@ async function main() {
   const page = await context.newPage()
 
   const agentsRoster = {
-    agents: [{ name: 'kirocrew', source: 'builtin' }],
-    default_agent: 'kirocrew',
+    agents: [{ name: 'ajcrew', source: 'builtin' }],
+    default_agent: 'ajcrew',
   }
   const extra = async (path, route) => {
     if (path === '/api/agents' || path === '/api/chat/agents') {

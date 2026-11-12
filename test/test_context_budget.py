@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from kiro_crew import context as ctx
+from aj_crew import context as ctx
 
 
 def test_global_cap_is_one_shared_budget():

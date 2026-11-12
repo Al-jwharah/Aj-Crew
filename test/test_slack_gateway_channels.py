@@ -23,23 +23,23 @@ from slack_gateway_helpers import (
     _make_orchestrator,
 )
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.slack import gateway as gw
-from kiro_crew.slack.gateway import GatewayOrchestrator
-from kiro_crew.testing.wait import await_until
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.slack import gateway as gw
+from aj_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.testing.wait import await_until
 
 
 class TestInboundReplayResolvesItsSpoolWhenScheduled:
     """The detached replay pass reads the spool THIS boot resolved, not a later one.
 
     The pass reads the spool on a worker thread, which may run after the test's
-    ``KIROCREW_HOME`` pin is gone and write a lock into the REAL data home. So
+    ``AJCREW_HOME`` pin is gone and write a lock into the REAL data home. So
     ``spool_path()`` is resolved on the loop when ``_replay_spooled_inbound`` is scheduled.
     """
 
     @pytest.mark.asyncio
     async def test_the_spool_path_is_fixed_when_the_task_is_created(self, monkeypatch, tmp_path):
-        from kiro_crew.messaging import inbound_spool
+        from aj_crew.messaging import inbound_spool
 
         seen: list[Path | None] = []
 
@@ -50,13 +50,13 @@ class TestInboundReplayResolvesItsSpoolWhenScheduled:
         monkeypatch.setattr(inbound_spool, "replay_spooled", _record)
         monkeypatch.setattr(gw, "_channel_transport_permitted", lambda member: False)
         boot_home = tmp_path / "boot-home"
-        monkeypatch.setenv("KIROCREW_HOME", str(boot_home))
+        monkeypatch.setenv("AJCREW_HOME", str(boot_home))
         orch = _make_orchestrator()
 
         await orch._start_channel_transports()
         # The environment moves on BEFORE the detached task gets its first step --
         # the shape a finished test's teardown has from the task's point of view.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "later-home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "later-home"))
         replay = orch._inbound_replay_task
         assert replay is not None
         await await_until(replay)
@@ -70,8 +70,8 @@ class TestInboundReplayResolvesItsSpoolWhenScheduled:
     async def test_replay_uses_live_slack_client_without_global_registration(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew.messaging import inbound_spool
-        from kiro_crew.slack.transport import SlackTransport
+        from aj_crew.messaging import inbound_spool
+        from aj_crew.slack.transport import SlackTransport
 
         seen: list[dict[str, object]] = []
 
@@ -158,7 +158,7 @@ class TestUnreadyChannelBadge:
     """
 
     def _orch_with(self, **sections):
-        from kiro_crew.messaging.registry import ChannelDescriptor
+        from aj_crew.messaging.registry import ChannelDescriptor
 
         orch = _make_orchestrator()
         orch.dashboard_state = MagicMock()
@@ -228,11 +228,11 @@ class TestChannelTransportStartGate:
     def _install_policy(self, policy_body):
         import dataclasses
 
-        from kiro_crew.platform import context as ctx_mod
-        from kiro_crew.platform.bootstrap import build_default_context
-        from kiro_crew.platform.governance import parse_policy
+        from aj_crew.platform import context as ctx_mod
+        from aj_crew.platform.bootstrap import build_default_context
+        from aj_crew.platform.governance import parse_policy
 
-        base = build_default_context(KiroCrewConfig.load())
+        base = build_default_context(AjCrewConfig.load())
         ceiling = parse_policy(policy_body) if policy_body is not None else None
         ctx_mod.set_context(dataclasses.replace(base, governance=ceiling))
 
@@ -253,10 +253,10 @@ class TestChannelTransportStartGate:
         assert isinstance(stack, _cl.ExitStack)  # documents the contract
         # The registry rewrite (PR ③) removed the module-level maybe_start_*
         # bindings from slack.gateway — the roster now comes from
-        # kiro_crew.channels. Tests inject a descriptor tuple through
+        # aj_crew.channels. Tests inject a descriptor tuple through
         # _start_channel_transports(descriptors=...) instead of patching names;
         # the mocks and every assertion below are unchanged.
-        from kiro_crew.messaging.registry import ChannelDescriptor
+        from aj_crew.messaging.registry import ChannelDescriptor
 
         mocks = {
             "wecom": AsyncMock(),
@@ -270,8 +270,8 @@ class TestChannelTransportStartGate:
         return mocks
 
     def teardown_method(self):
-        from kiro_crew.platform import context as ctx_mod
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import context as ctx_mod
+        from aj_crew.platform import governance_profiles as gp
 
         ctx_mod.reset_context()
         gp.reset_store()
@@ -335,7 +335,7 @@ class TestChannelTransportStartGate:
         import contextlib
         import json
 
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         # Policy ALLOWS telegram + discord, but a surface:host profile narrows to
         # discord only → telegram must NOT start. This exercises the full
@@ -382,7 +382,7 @@ class TestChannelTransportStartGate:
     async def test_disabled_transport_not_evaluated_for_governance(self, monkeypatch):
         import contextlib
 
-        from kiro_crew.slack import gateway as gw
+        from aj_crew.slack import gateway as gw
 
         # Enabled-only eval: a config-disabled transport is NEVER passed to the
         # governance gate (avoids a spurious deny-SEL for a channel that would
@@ -574,7 +574,7 @@ class TestUncredentialedProbeRatchet:
     """Keep collapsed enable predicates and their skip-reason probes aligned."""
 
     def test_every_rostered_channel_is_accounted_for(self) -> None:
-        from kiro_crew.channels import builtin_channel_descriptors
+        from aj_crew.channels import builtin_channel_descriptors
 
         rostered = {descriptor.channel_type for descriptor in builtin_channel_descriptors()}
         accounted = set(_uncredentialed_probe_operands()) | set(_UNCREDENTIALED_PROBE_EXEMPTIONS)
@@ -711,14 +711,14 @@ class TestChannelSkipReasonAtTransportStart:
         creds: dict[str, str],
         cfg_mut: tuple[tuple[str, str, object], ...] = (),
     ) -> GatewayOrchestrator:
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         for section, attr, value in cfg_mut:
             setattr(getattr(cfg, section), attr, value)
         with patch.object(cfg, "load_credentials", return_value=creds):
             return GatewayOrchestrator(cfg)
 
     async def _start(self, orch: GatewayOrchestrator, monkeypatch) -> None:
-        from kiro_crew.slack import gateway as gw
+        from aj_crew.slack import gateway as gw
 
         warn = gw.warn_if_channel_uncredentialed
 
@@ -732,7 +732,7 @@ class TestChannelSkipReasonAtTransportStart:
         # `_start_channel_transports` detaches `_replay_spooled_inbound` as a
         # background task on purpose (a slow platform send must not hold the
         # gateway's start open), so it can still be resolving `data_home()` on
-        # the event loop after this test's `KIROCREW_HOME` pin is torn down —
+        # the event loop after this test's `AJCREW_HOME` pin is torn down —
         # the same "background worker resolves its path when it runs" class as
         # the safety-override breadcrumb publisher. Drain it here the same way
         # `_shutdown()` does, so no write happens once the pin is gone.
@@ -743,7 +743,7 @@ class TestChannelSkipReasonAtTransportStart:
                 await await_until(replay)
 
     def _channel_records(self, caplog) -> list[logging.LogRecord]:
-        names = {f"kiro_crew.{c}.gateway" for c in _UNCREDENTIALED_CHANNEL_TYPES}
+        names = {f"aj_crew.{c}.gateway" for c in _UNCREDENTIALED_CHANNEL_TYPES}
         return [r for r in caplog.records if r.name in names]
 
     @pytest.mark.asyncio
@@ -754,7 +754,7 @@ class TestChannelSkipReasonAtTransportStart:
         self, caplog, monkeypatch, channel, names, forbidden, full_creds, full_cfg_mut
     ) -> None:
         orch = self._build(
-            creds={"KIROCREW_OWNER_ID": "U_OWNER"},
+            creds={"AJCREW_OWNER_ID": "U_OWNER"},
             cfg_mut=((channel, "enabled", True),),
         )
         with caplog.at_level(logging.WARNING):
@@ -763,7 +763,7 @@ class TestChannelSkipReasonAtTransportStart:
         # Exactly one WARNING, on this channel's own gateway logger, and no
         # cross-talk onto any sibling channel's logger.
         assert len(records) == 1
-        assert records[0].name == f"kiro_crew.{channel}.gateway"
+        assert records[0].name == f"aj_crew.{channel}.gateway"
         assert records[0].levelno == logging.WARNING
         msg = records[0].getMessage()
         for name in names:
@@ -817,7 +817,7 @@ class TestChannelSkipReasonAtTransportStart:
         self, caplog, monkeypatch, channel, creds, cfg_mut, named, not_named, present_values
     ) -> None:
         orch = self._build(
-            creds={"KIROCREW_OWNER_ID": "U_OWNER", **creds},
+            creds={"AJCREW_OWNER_ID": "U_OWNER", **creds},
             cfg_mut=((channel, "enabled", True), *cfg_mut),
         )
         with caplog.at_level(logging.WARNING):
@@ -842,7 +842,7 @@ class TestChannelSkipReasonAtTransportStart:
     ) -> None:
         # Even with every credential present: disabled means silence.
         orch = self._build(
-            creds={"KIROCREW_OWNER_ID": "U_OWNER", **full_creds},
+            creds={"AJCREW_OWNER_ID": "U_OWNER", **full_creds},
             cfg_mut=full_cfg_mut,
         )
         with caplog.at_level(logging.WARNING):
@@ -857,7 +857,7 @@ class TestChannelSkipReasonAtTransportStart:
         self, caplog, monkeypatch, channel, names, forbidden, full_creds, full_cfg_mut
     ) -> None:
         orch = self._build(
-            creds={"KIROCREW_OWNER_ID": "U_OWNER", **full_creds},
+            creds={"AJCREW_OWNER_ID": "U_OWNER", **full_creds},
             cfg_mut=((channel, "enabled", True), *full_cfg_mut),
         )
         assert getattr(orch, f"_{channel}_enabled") is True  # flag really computed
@@ -874,7 +874,7 @@ class TestChannelSkipReasonAtTransportStart:
         # operator to a field that does not gate the channel.
         orch = self._build(
             creds={
-                "KIROCREW_OWNER_ID": "U_OWNER",
+                "AJCREW_OWNER_ID": "U_OWNER",
                 "MICROSOFT_APP_ID": "teams-app-id-value",
                 "MICROSOFT_APP_PASSWORD": "teams-password-value",
             },
@@ -895,7 +895,7 @@ class TestChannelSkipReasonAtTransportStart:
         # warning at config-load time — pointing the operator at
         # TELEGRAM_BOT_TOKEN here would misname the actual blocker.
         orch = self._build(
-            creds={"KIROCREW_OWNER_ID": "U_OWNER"},
+            creds={"AJCREW_OWNER_ID": "U_OWNER"},
             cfg_mut=(
                 ("telegram", "enabled", True),
                 ("telegram", "accounts", {"legacy-bot": object()}),

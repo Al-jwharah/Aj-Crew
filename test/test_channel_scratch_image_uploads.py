@@ -1,6 +1,6 @@
 """Every channel renderer sends inline images from the session's own scratch dir.
 
-The agent is told to stage screenshots under ``$KIROCREW_SCRATCH``, which is never
+The agent is told to stage screenshots under ``$AJCREW_SCRATCH``, which is never
 under the working directory. Each channel that uploads local images therefore
 hands that one directory to extraction beside the cwd, and nothing wider: not the
 managed scratch root, not another runtime's scratch, not a path that reaches
@@ -19,8 +19,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from aj_crew import agent_scratch
 from conftest import requires_symlinks
-from kiro_crew import agent_scratch
 
 #: A real 2x2 PNG: WhatsApp decodes what it accepts, so a magic-bytes-only stub
 #: would be refused there for a reason unrelated to the root.
@@ -44,8 +44,8 @@ def layout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Path,
     """An isolated data home, a project cwd, and two allocated scratch dirs."""
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    monkeypatch.delenv("KIROCREW_SCRATCH_ROOT", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    monkeypatch.delenv("AJCREW_SCRATCH_ROOT", raising=False)
     cwd = tmp_path / "project"
     cwd.mkdir()
     mine = agent_scratch.allocate_scratch("runtime")
@@ -58,7 +58,7 @@ def layout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Path,
 
 
 def _slack(cwd: str, scratch: str) -> Send:
-    from kiro_crew.slack.renderer import SlackRenderer
+    from aj_crew.slack.renderer import SlackRenderer
 
     r = SlackRenderer(MagicMock(), "C1", "t1", reactions_enabled=False, show_thinking=False)
     r.authorize_upload_root(cwd, scratch_root=scratch)
@@ -71,8 +71,8 @@ def _slack(cwd: str, scratch: str) -> Send:
 
 
 def _discord(cwd: str, scratch: str) -> Send:
-    from kiro_crew.discord.renderer import DiscordRenderer
-    from kiro_crew.discord.transport import DISCORD_CAPABILITIES
+    from aj_crew.discord.renderer import DiscordRenderer
+    from aj_crew.discord.transport import DISCORD_CAPABILITIES
 
     r = DiscordRenderer(
         MagicMock(), "chan1", DISCORD_CAPABILITIES, session_key="discord:u1", uploads_allowed=True
@@ -87,8 +87,8 @@ def _discord(cwd: str, scratch: str) -> Send:
 
 
 def _telegram(cwd: str, scratch: str) -> Send:
-    from kiro_crew.telegram.renderer import TelegramRenderer
-    from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
+    from aj_crew.telegram.renderer import TelegramRenderer
+    from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
 
     r = TelegramRenderer(MagicMock(), 42, TELEGRAM_CAPABILITIES, session_key="telegram:1")
     r.authorize_upload_root(cwd, scratch_root=scratch)
@@ -101,8 +101,8 @@ def _telegram(cwd: str, scratch: str) -> Send:
 
 
 def _webex(cwd: str, scratch: str) -> Send:
-    from kiro_crew.webex.renderer import WebexRenderer
-    from kiro_crew.webex.transport import WEBEX_CAPABILITIES
+    from aj_crew.webex.renderer import WebexRenderer
+    from aj_crew.webex.transport import WEBEX_CAPABILITIES
 
     r = WebexRenderer(MagicMock(), "ROOM", WEBEX_CAPABILITIES, uploads_allowed=True)
     r.authorize_upload_root(cwd, scratch_root=scratch)
@@ -115,8 +115,8 @@ def _webex(cwd: str, scratch: str) -> Send:
 
 
 def _wecom(cwd: str, scratch: str) -> Send:
-    from kiro_crew.wecom.renderer import WeComRenderer
-    from kiro_crew.wecom.transport import WECOM_CAPABILITIES
+    from aj_crew.wecom.renderer import WeComRenderer
+    from aj_crew.wecom.transport import WECOM_CAPABILITIES
 
     r = WeComRenderer(
         MagicMock(),
@@ -136,8 +136,8 @@ def _wecom(cwd: str, scratch: str) -> Send:
 
 
 def _teams(cwd: str, scratch: str) -> Send:
-    from kiro_crew.teams.renderer import TeamsRenderer
-    from kiro_crew.teams.transport import TEAMS_CAPABILITIES
+    from aj_crew.teams.renderer import TeamsRenderer
+    from aj_crew.teams.transport import TEAMS_CAPABILITIES
 
     r = TeamsRenderer(
         MagicMock(),
@@ -157,8 +157,8 @@ def _teams(cwd: str, scratch: str) -> Send:
 
 
 def _feishu(cwd: str, scratch: str) -> Send:
-    from kiro_crew.feishu.renderer import FeishuRenderer
-    from kiro_crew.feishu.transport import FEISHU_CAPABILITIES
+    from aj_crew.feishu.renderer import FeishuRenderer
+    from aj_crew.feishu.transport import FEISHU_CAPABILITIES
 
     r = FeishuRenderer(MagicMock(), "om_1", FEISHU_CAPABILITIES, uploads_allowed=True)
     r.authorize_upload_root(cwd, scratch_root=scratch)
@@ -183,8 +183,8 @@ class _WhatsAppTransport:
 
 
 def _whatsapp(cwd: str, scratch: str) -> Send:
-    from kiro_crew.messaging.transport import TransportCapabilities
-    from kiro_crew.whatsapp.turn_renderer import WhatsAppRenderer
+    from aj_crew.messaging.transport import TransportCapabilities
+    from aj_crew.whatsapp.turn_renderer import WhatsAppRenderer
 
     caps = TransportCapabilities(max_message_chars=4096, max_buttons=0, files_outbound=True)
 

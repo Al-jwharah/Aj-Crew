@@ -5,7 +5,7 @@ the dashboard's app startup hook disarms the crons of an app the gateway will
 not run -- so one corrupt file made every launch exit with code 1 and nothing
 served the dashboard port. Startup now renames the file to a timestamped
 ``crons.json.corrupt-<utc>`` copy, runs on an empty store, and says so on the
-dashboard and in ``kirocrew doctor``.
+dashboard and in ``ajcrew doctor``.
 
 Every test drives a REAL ``CronService`` over a real malformed file. The bytes
 are asserted unchanged in the copy, because "never rewrite the original" is the
@@ -23,11 +23,11 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import web
 
-import kiro_crew.apps.hooks_integration as hooks_mod
-from kiro_crew.apps.bridges import disarm_app_crons_for_execution
-from kiro_crew.apps.route_registry import RouteRegistry
-from kiro_crew.cron import CronService, CronStoreUnreadable
-from kiro_crew.cron_service.store import quarantine_copies, quarantine_unreadable_store
+import aj_crew.apps.hooks_integration as hooks_mod
+from aj_crew.apps.bridges import disarm_app_crons_for_execution
+from aj_crew.apps.route_registry import RouteRegistry
+from aj_crew.cron import CronService, CronStoreUnreadable
+from aj_crew.cron_service.store import quarantine_copies, quarantine_unreadable_store
 
 # Invalid JSON part-way through a real-looking store, like a truncated or
 # hand-edited file: the job above the break is what a user wants back.
@@ -63,9 +63,9 @@ def test_the_copy_is_behind_the_same_fence_as_the_store(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The copy holds session keys and commands, so the agent's file tools must refuse it."""
-    from kiro_crew.security import is_sensitive_path
+    from aj_crew.security import is_sensitive_path
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     store = _write_malformed(tmp_path)
     assert is_sensitive_path(str(store))
 
@@ -106,7 +106,7 @@ def test_a_read_error_leaves_the_file_where_it_is(tmp_path: Path) -> None:
 def test_a_second_quarantine_in_the_same_second_does_not_overwrite_the_first(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr("kiro_crew.cron_service.store.time.strftime", lambda *_a: "STAMP")
+    monkeypatch.setattr("aj_crew.cron_service.store.time.strftime", lambda *_a: "STAMP")
     store = _write_malformed(tmp_path)
     first = quarantine_unreadable_store(store)
     store.write_bytes(b"{second")
@@ -156,7 +156,7 @@ async def test_a_lock_that_cannot_be_opened_does_not_abort_create(
     def _denied(*_a: object, **_k: object) -> None:
         raise PermissionError(13, "Permission denied")
 
-    monkeypatch.setattr("kiro_crew.cron_service.store.platform_compat.open_lock_file", _denied)
+    monkeypatch.setattr("aj_crew.cron_service.store.platform_compat.open_lock_file", _denied)
 
     svc = await CronService.create(base_dir=tmp_path, quarantine_unreadable=True)
 
@@ -183,10 +183,10 @@ async def test_the_boot_disarm_that_crashed_startup_now_succeeds(tmp_path: Path)
 async def test_the_gateway_init_records_the_copy_and_the_dashboard_says_so(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     _write_malformed(tmp_path)
-    monkeypatch.setattr("kiro_crew.slack.gateway.data_home", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.slack.gateway.data_home", lambda: tmp_path)
     gw = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gw.dashboard_state = None
     gw._no_crons = True
@@ -202,11 +202,11 @@ async def test_the_gateway_init_records_the_copy_and_the_dashboard_says_so(
     kind, title, body = gw.dashboard_state.notify.call_args.args
     assert kind == "cron"
     assert str(copies[0]) in body
-    assert "crons.json" in body and "kirocrew doctor" in body
+    assert "crons.json" in body and "ajcrew doctor" in body
 
 
 def test_no_notice_when_nothing_was_moved() -> None:
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gw = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gw.dashboard_state = MagicMock()
@@ -229,7 +229,7 @@ async def test_a_denied_app_over_an_unreadable_store_does_not_abort_startup(
     _write_malformed(tmp_path)
     svc = CronService(base_dir=tmp_path)
     info = {"name": "probe-app", "enabled": True, "manifest": {"name": "probe-app"}}
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(hooks_mod, "_lifecycle_dispatcher", SimpleNamespace())
     monkeypatch.setattr(hooks_mod, "_route_registry", RouteRegistry(web.Application()))
     monkeypatch.setattr(hooks_mod, "list_apps", lambda: [info])
@@ -253,28 +253,28 @@ async def test_an_unopenable_store_lock_does_not_abort_the_startup_hook(
     def _denied(*_a: object, **_k: object) -> None:
         raise PermissionError(13, "Permission denied")
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(hooks_mod, "_lifecycle_dispatcher", SimpleNamespace())
     monkeypatch.setattr(hooks_mod, "_route_registry", RouteRegistry(web.Application()))
     monkeypatch.setattr(hooks_mod, "list_apps", lambda: [info])
     monkeypatch.setattr(hooks_mod, "_app_hook_root", lambda _name: tmp_path / "apps" / "probe-app")
     monkeypatch.setattr(hooks_mod, "app_execution_denied", lambda *a, **kw: "untrusted")
-    monkeypatch.setattr("kiro_crew.cron_service.store.platform_compat.open_lock_file", _denied)
+    monkeypatch.setattr("aj_crew.cron_service.store.platform_compat.open_lock_file", _denied)
 
     await hooks_mod.on_gateway_startup(cron_service=svc)
 
     assert (tmp_path / "crons.json").read_bytes() == _MALFORMED
 
 
-# ── kirocrew doctor ──────────────────────────────────────────────────────────
+# ── ajcrew doctor ──────────────────────────────────────────────────────────
 
 
 def test_doctor_names_the_copy_and_how_to_restore_it(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from kiro_crew.doctor_checks import workload
+    from aj_crew.doctor_checks import workload
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     moved = quarantine_unreadable_store(_write_malformed(tmp_path))
     assert moved is not None
     issues: list[str] = []
@@ -284,7 +284,7 @@ def test_doctor_names_the_copy_and_how_to_restore_it(
     out = capsys.readouterr().out
     assert out.count("Cron Jobs") == 1
     assert repr(str(moved)) in out  # printed inert, so a Windows path is escaped
-    assert "kirocrew stop" in out
+    assert "ajcrew stop" in out
     assert str(tmp_path / "crons.json") in out
     assert any("set aside" in issue for issue in issues)
 
@@ -296,9 +296,9 @@ def test_doctor_prints_a_planted_control_sequence_inert(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """A file name carrying an OSC 52 clipboard write must not reach the terminal raw."""
-    from kiro_crew.doctor_checks import workload
+    from aj_crew.doctor_checks import workload
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     folder = tmp_path / "cron-history" / "quarantine"
     folder.mkdir(parents=True)
     (folder / "crons.json.corrupt-\x1b]52;c;cmVwbGFjZWQ=\x07").write_bytes(b"{")
@@ -313,9 +313,9 @@ def test_doctor_prints_a_planted_control_sequence_inert(
 def test_doctor_is_silent_without_a_copy(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from kiro_crew.doctor_checks import workload
+    from aj_crew.doctor_checks import workload
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     issues: list[str] = []
 
     workload._doctor_cron_health(issues)

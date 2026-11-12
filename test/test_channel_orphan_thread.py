@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.channel import _MAX_MESSAGES, Channel
+from aj_crew.channel import _MAX_MESSAGES, Channel
 
 
 @pytest.mark.asyncio

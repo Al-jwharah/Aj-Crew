@@ -1,4 +1,4 @@
-"""The MCP page's measured numbers: kiro_crew.mcp_gateway.footprint.
+"""The MCP page's measured numbers: aj_crew.mcp_gateway.footprint.
 
 Every figure is read from a fixture process table, so the arithmetic is pinned
 on readings, never on a constant. A process with no PSS reading turns both
@@ -12,9 +12,9 @@ import base64
 import json
 from pathlib import Path
 
-from kiro_crew.dashboard.handlers.gateway_footprint import _specs  # noqa: F401  (import guard)
-from kiro_crew.mcp_gateway import STUB_MODULE, footprint
-from kiro_crew.mcp_gateway.footprint import ServerSpec
+from aj_crew.dashboard.handlers.gateway_footprint import _specs  # noqa: F401  (import guard)
+from aj_crew.mcp_gateway import STUB_MODULE, footprint
+from aj_crew.mcp_gateway.footprint import ServerSpec
 
 KIB = 1024
 
@@ -191,7 +191,7 @@ def test_a_slash_named_server_is_read_under_its_alias(tmp_path: Path) -> None:
     """A stub's ``--server`` and a pool row carry the alias; a spec keyed by the
     raw ``npm:@acme/one`` name must still be the same server."""
     specs = {"npm:@acme/one": ServerSpec(launches=(("npx", "-y", "@acme/one"),), shareable=True)}
-    from kiro_crew.mcp_utils import mcp_server_alias
+    from aj_crew.mcp_utils import mcp_server_alias
 
     alias = mcp_server_alias("npm:@acme/one")
     _proc(tmp_path, 100, 1, ["kiro-cli", "acp"], 50)

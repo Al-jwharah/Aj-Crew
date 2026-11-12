@@ -17,13 +17,13 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew import mcp_grant
-from kiro_crew.agent_sdk import backends
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk.capabilities import UNKNOWN_BACKEND_CAPABILITIES, capabilities_for
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.connections import get_provider, mint, status
-from kiro_crew.dashboard.handlers import connections
+from aj_crew import mcp_grant
+from aj_crew.agent_sdk import backends
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.agent_sdk.capabilities import UNKNOWN_BACKEND_CAPABILITIES, capabilities_for
+from aj_crew.config import AjCrewConfig
+from aj_crew.connections import get_provider, mint, status
+from aj_crew.dashboard.handlers import connections
 
 GITHUB_MCP_URL = "https://api.githubcopilot.com/mcp/"
 _REGULAR_FILE_STAT = Path(__file__).stat()
@@ -54,14 +54,14 @@ def _on_backend(monkeypatch: pytest.MonkeyPatch, backend: str, member: str | Non
     fake = SimpleNamespace(
         agent=SimpleNamespace(acp_backend=backend, member_acp_backend=member or backend)
     )
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls, *a, **kw: fake))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **kw: fake))
 
 
 @pytest.fixture()
 def isolated(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setattr(status, "_CONNECTION_STATE_PATH", tmp_path / "connected-since.json")
     monkeypatch.setattr(status, "_UNPERSISTED_RECORD", None)
     monkeypatch.setattr(status, "get_visible_providers", _visible)
@@ -105,7 +105,7 @@ def test_the_crewmate_route_does_not_decide(monkeypatch) -> None:
 
 
 def test_a_real_config_load_answers_from_the_chat_backend(isolated) -> None:
-    resolved = KiroCrewConfig.load().agent.acp_backend
+    resolved = AjCrewConfig.load().agent.acp_backend
     expected = capabilities_for(resolved).honors_remote_mcp_oauth
     assert status.chat_backend_honors_preregistered_oauth() is expected
 
@@ -114,7 +114,7 @@ def test_an_unreadable_config_makes_no_claim(monkeypatch) -> None:
     def _boom(cls, *a, **kw):
         raise OSError("unreadable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_boom))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_boom))
     assert status.chat_backend_honors_preregistered_oauth() is True
 
 
@@ -177,7 +177,7 @@ async def test_kas_marks_a_connected_dcr_row_sign_in_in_chat(isolated, monkeypat
 @pytest.mark.asyncio
 async def test_kas_leaves_a_crew_held_row_without_the_caveat(isolated, monkeypatch):
     # Crew's proxy already serves KAS chats, so "type github in a chat" is false.
-    from kiro_crew.connections import crew_oauth
+    from aj_crew.connections import crew_oauth
 
     _on_backend(monkeypatch, ACP_BACKEND_KAS)
     monkeypatch.setattr(crew_oauth, "owns", lambda slug: slug == "github")
@@ -211,7 +211,7 @@ def test_an_unreadable_config_claims_no_kas_chat(monkeypatch) -> None:
     def _boom(cls, *a, **kw):
         raise OSError("unreadable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_boom))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_boom))
     assert status.chat_backend_is_kas() is False
 
 

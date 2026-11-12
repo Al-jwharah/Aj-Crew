@@ -19,29 +19,29 @@ import textwrap
 from pathlib import Path
 from types import ModuleType
 
-from kiro_crew import _sqlite_compat
+from aj_crew import _sqlite_compat
 
 # Every module whose module-level ``sqlite3`` is the resolver's binding (the backup
 # facade serves the one its conversation-export part binds).
 IMPORT_SITES = (
-    "kiro_crew._sqlite_compat",
-    "kiro_crew.vector_memory",
-    "kiro_crew.snapshot",
-    "kiro_crew.snapshot_redact",
-    "kiro_crew.portability",
-    "kiro_crew.knowledge.store",
-    "kiro_crew.knowledge.store_parts.fulltext_index",
-    "kiro_crew.knowledge.store_parts.schema_migrations",
-    "kiro_crew.knowledge.store_parts.source_rows",
-    "kiro_crew.knowledge.retrieval",
-    "kiro_crew.metrics.inventory_gauges",
-    "kiro_crew.dashboard.handlers.kiro_usage_api",
-    "kiro_crew.apps.builtins.aws_control.backend.backup",
-    "kiro_crew.apps.builtins.aws_control.backend.backup_parts.conversations",
+    "aj_crew._sqlite_compat",
+    "aj_crew.vector_memory",
+    "aj_crew.snapshot",
+    "aj_crew.snapshot_redact",
+    "aj_crew.portability",
+    "aj_crew.knowledge.store",
+    "aj_crew.knowledge.store_parts.fulltext_index",
+    "aj_crew.knowledge.store_parts.schema_migrations",
+    "aj_crew.knowledge.store_parts.source_rows",
+    "aj_crew.knowledge.retrieval",
+    "aj_crew.metrics.inventory_gauges",
+    "aj_crew.dashboard.handlers.kiro_usage_api",
+    "aj_crew.apps.builtins.aws_control.backend.backup",
+    "aj_crew.apps.builtins.aws_control.backend.backup_parts.conversations",
 )
 
 REPO_SRC = Path(__file__).resolve().parents[1] / "src"
-SRC_ROOT = REPO_SRC / "kiro_crew"
+SRC_ROOT = REPO_SRC / "aj_crew"
 
 
 def test_husk_pysqlite3_resolves_to_stdlib(monkeypatch):
@@ -79,7 +79,7 @@ def test_every_import_site_survives_a_husk(tmp_path):
     """With a husk installed, every site binds stdlib sqlite3 and can open a db.
 
     A fresh interpreter, because the husk must be in place before the first
-    ``import kiro_crew`` and a reload would otherwise leak into other tests.
+    ``import aj_crew`` and a reload would otherwise leak into other tests.
     Drop the ``connect`` probe from the resolver and this fails on the first
     site with the AttributeError the gateway crash reported.
     """
@@ -97,7 +97,7 @@ def test_every_import_site_survives_a_husk(tmp_path):
             assert module.sqlite3 is sqlite3, name
             module.sqlite3.connect(':memory:').close()
         """).format(sites=IMPORT_SITES)
-    env = dict(os.environ, KIROCREW_HOME=str(tmp_path), KIRO_HOME=str(tmp_path / "kiro"))
+    env = dict(os.environ, AJCREW_HOME=str(tmp_path), KIRO_HOME=str(tmp_path / "kiro"))
     env.update(TMPDIR=str(tmp_path), TMP=str(tmp_path), TEMP=str(tmp_path))
     # Test the tree this file lives in, not whichever checkout an editable
     # install happens to point at.

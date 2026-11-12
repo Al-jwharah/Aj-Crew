@@ -21,8 +21,8 @@ const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 const locked = params.get('locked') !== '0'
 
 localStorage.setItem('mc-theme', theme)
-localStorage.setItem('mc-color-theme', 'kiro')
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+localStorage.setItem('mc-color-theme', 'aj')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const LIVE_PAGE = {
   instance_version: 2,
@@ -31,7 +31,7 @@ const LIVE_PAGE = {
   // from the "awaiting first page" state to the live frame view, making the
   // locked badge appear ABOVE the rendered content rather than over an error view.
   html: '<!doctype html><title>Board</title><p>Board</p>',
-  rendered_html: '<!doctype html><title>Board</title><script>window.parent.postMessage({type:"kirocrew-dashboard:ready"},"*")</script><p>Board</p>',
+  rendered_html: '<!doctype html><title>Board</title><script>window.parent.postMessage({type:"ajcrew-dashboard:ready"},"*")</script><p>Board</p>',
   manifest: {
     id: 'fixture-board',
     version: 1,

@@ -53,7 +53,7 @@ describe('DevFleetPage', () => {
   // on this page reveals that the managed code is not the running code.
   it('warns when the install serving the dashboard is not the managed checkout', async () => {
     mockFleet({
-      serving_install_reason: 'this dashboard is served by the install at /Applications/KiroCrew.app/Contents/Resources/backend-dist/kirocrew-backend-arm64/lib/python3.12/site-packages/kiro_crew, which is not inside the checkout Dev Fleet manages (/Users/dev/kirocrew).',
+      serving_install_reason: 'this dashboard is served by the install at /Applications/AjCrew.app/Contents/Resources/backend-dist/ajcrew-backend-arm64/lib/python3.12/site-packages/aj_crew, which is not inside the checkout Dev Fleet manages (/Users/dev/ajcrew).',
       worktrees: [{ name: 'main', is_main: true, running: false, has_dist: true, behind: 0 }],
     })
     renderPage()
@@ -83,7 +83,7 @@ describe('DevFleetPage', () => {
     mockFleet({
       serving_install_reason: 'served by an install outside the managed checkout.',
       main_repo_inferred: true,
-      main_repo: '/Users/dev/kirocrew',
+      main_repo: '/Users/dev/ajcrew',
       worktrees: [{ name: 'main', is_main: true, running: false, has_dist: true, behind: 0 }],
     })
     renderPage()

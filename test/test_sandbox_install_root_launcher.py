@@ -24,8 +24,8 @@ pytestmark = pytest.mark.skipif(
 
 from test_sandbox_launcher_program import RecordingLibc, launch, payload, refusal  # noqa: E402
 
-from kiro_crew import sandbox  # noqa: E402
-from kiro_crew import sandbox_launcher_program as program  # noqa: E402
+from aj_crew import sandbox  # noqa: E402
+from aj_crew import sandbox_launcher_program as program  # noqa: E402
 
 _MS_BIND = 4096
 _MS_REMOUNT = 32
@@ -34,12 +34,12 @@ _MS_RDONLY = 1
 
 def _managed_venv(tmp_path: Path) -> tuple[Path, Path]:
     """A versioned venv reached through a ``-current`` link, as the updater lays it out."""
-    versioned = tmp_path / "crew-venv-2" / "lib" / "python3.12" / "site-packages" / "kiro_crew"
+    versioned = tmp_path / "crew-venv-2" / "lib" / "python3.12" / "site-packages" / "aj_crew"
     (versioned / "static" / "dist").mkdir(parents=True)
     (versioned / "__init__.py").write_text("", encoding="utf-8")
     current = tmp_path / "crew-venv-current"
     current.symlink_to(tmp_path / "crew-venv-2", target_is_directory=True)
-    lexical = current / "lib" / "python3.12" / "site-packages" / "kiro_crew"
+    lexical = current / "lib" / "python3.12" / "site-packages" / "aj_crew"
     return lexical, versioned
 
 
@@ -60,7 +60,7 @@ def test_both_spellings_of_a_linked_install_are_sealed_without_refusal(tmp_path:
 
 
 def test_a_direct_site_packages_install_is_sealed_without_refusal(tmp_path: Path) -> None:
-    package = tmp_path / "venv" / "lib" / "python3.12" / "site-packages" / "kiro_crew"
+    package = tmp_path / "venv" / "lib" / "python3.12" / "site-packages" / "aj_crew"
     package.mkdir(parents=True)
     targets = list(sandbox._install_root_targets_cached.__wrapped__(str(package)))
     assert targets == [str(package)]

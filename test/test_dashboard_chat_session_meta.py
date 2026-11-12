@@ -29,7 +29,7 @@ async def _seed_metadata(log, key: str, fields: dict) -> None:
 class TestSessionRename:
     @pytest.mark.asyncio
     async def test_rename_success(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slot_title = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -47,7 +47,7 @@ class TestSessionRename:
 
     @pytest.mark.asyncio
     async def test_rename_not_found(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         async with TestClient(TestServer(_make_app(state))) as client:
@@ -56,7 +56,7 @@ class TestSessionRename:
 
     @pytest.mark.asyncio
     async def test_rename_empty_title(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("s1")
 
@@ -66,7 +66,7 @@ class TestSessionRename:
 
     @pytest.mark.asyncio
     async def test_rename_invalid_json(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("s1")
 
@@ -80,7 +80,7 @@ class TestSessionRename:
 
     @pytest.mark.asyncio
     async def test_rename_truncates_at_200(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slot_title = MagicMock()
         state.get_or_create_slot("s1")
@@ -97,7 +97,7 @@ class TestSessionRename:
     @pytest.mark.asyncio
     async def test_resumed_session_preserves_title(self, tmp_path, monkeypatch):
         """Resumed session should set _titled=True so auto-title doesn't overwrite."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:s1", "user", "hello")
@@ -117,7 +117,7 @@ class TestSessionRename:
         """Regression: resume must restore tags AND the auto-tag once-flag.
         Without the flag, resuming a session whose auto-tag the user removed
         re-runs maybe_auto_tag on the next message and silently re-adds it."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:s1", "user", "hello")
@@ -145,7 +145,7 @@ class TestSessionRename:
         """FAIL-OPEN: if tags.json failed to load (vocabulary UNKNOWN), resume
         must NOT prune — pruning against an unknown vocab would wipe every
         assignment and the next save persists the loss."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state._tags = []
         state._tags_authoritative = False  # load_tags() hit a parse/I/O error
@@ -168,7 +168,7 @@ class TestSessionRename:
         fine as []) IS authoritative: resume must prune the dangling id, or a
         crash between the vocab commit and slot cleanup would resurrect the
         deleted tag id on this slot forever."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state._tags = []
         state._tags_authoritative = True  # tags.json parsed OK as []
@@ -187,7 +187,7 @@ class TestSessionRename:
         """load_tags() marks the vocabulary authoritative on a clean parse
         (including a legitimately-empty []) and NOT authoritative on a parse
         failure — the signal the restore-time pruning fail-open relies on."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         # Legitimately-empty vocabulary: parsed OK -> authoritative.
@@ -222,7 +222,7 @@ class TestSessionRename:
 class TestSessionColor:
     @pytest.mark.asyncio
     async def test_set_color_success(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         state.get_or_create_slot("s1")
@@ -238,7 +238,7 @@ class TestSessionColor:
 
     @pytest.mark.asyncio
     async def test_set_color_null(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -253,7 +253,7 @@ class TestSessionColor:
 
     @pytest.mark.asyncio
     async def test_set_color_not_found(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         async with TestClient(TestServer(_make_app(state))) as client:
@@ -262,7 +262,7 @@ class TestSessionColor:
 
     @pytest.mark.asyncio
     async def test_set_color_invalid_json(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("s1")
 
@@ -276,7 +276,7 @@ class TestSessionColor:
 
     @pytest.mark.asyncio
     async def test_set_color_negative_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("s1")
 
@@ -293,7 +293,7 @@ class TestSessionColor:
         ],
     )
     async def test_set_color_rejected(self, tmp_path, monkeypatch, color_index):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("s1")
 
@@ -303,7 +303,7 @@ class TestSessionColor:
 
     @pytest.mark.asyncio
     async def test_set_color_zero(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -323,9 +323,9 @@ class TestSessionColor:
         ],
     )
     def test_color_persisted(self, tmp_path, monkeypatch, color_index):
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.color_index = color_index
@@ -338,9 +338,9 @@ class TestSessionColor:
         assert meta.get("color_index") == color_index
 
     def test_color_null_not_persisted(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hello")
@@ -353,7 +353,7 @@ class TestSessionColor:
 
     @pytest.mark.asyncio
     async def test_set_color_hex_success_and_lowercased(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         state.get_or_create_slot("s1")
@@ -372,7 +372,7 @@ class TestSessionColor:
         "bad", ["#GGGGGG", "#abc", "abcdef", "#abcdef00", 123, True, ["#abcdef"]]
     )
     async def test_set_color_hex_malformed_rejected(self, tmp_path, monkeypatch, bad):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("s1")
 
@@ -383,7 +383,7 @@ class TestSessionColor:
 
     @pytest.mark.asyncio
     async def test_color_hex_and_index_mutually_exclusive(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -405,7 +405,7 @@ class TestSessionColor:
     @pytest.mark.asyncio
     async def test_color_index_only_patch_keeps_existing_hex_when_null(self, tmp_path, monkeypatch):
         """An index-only PATCH with null must not silently null a hex (in-body gating)."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -418,7 +418,7 @@ class TestSessionColor:
 
     @pytest.mark.asyncio
     async def test_color_hex_null_clears(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         slot = state.get_or_create_slot("s1")
@@ -433,7 +433,7 @@ class TestSessionColor:
 
     @pytest.mark.asyncio
     async def test_color_hex_in_to_dict(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.color_hex = "#0a0b0c"
@@ -441,9 +441,9 @@ class TestSessionColor:
 
     @pytest.mark.asyncio
     async def test_color_hex_persisted_in_history(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.color_hex = "#0a0b0c"
@@ -464,7 +464,7 @@ class TestTitleGenerationSessionLeak:
 
     @pytest.mark.asyncio
     async def test_background_session_destroyed_on_stream_error(self, tmp_path):
-        from kiro_crew.dashboard.chat import _generate_title_via_kiro
+        from aj_crew.dashboard.chat import _generate_title_via_kiro
 
         state = _make_state(tmp_path)
 
@@ -489,8 +489,8 @@ class TestTitleGenerationSessionLeak:
 
     @pytest.mark.asyncio
     async def test_permission_request_rejected_during_title_gen(self, tmp_path):
-        from kiro_crew.dashboard.chat import _generate_title_via_kiro
-        from kiro_crew.providers.base import (
+        from aj_crew.dashboard.chat import _generate_title_via_kiro
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_PERMISSION_REQUEST,
             EVENT_TEXT_CHUNK,
@@ -519,8 +519,8 @@ class TestTitleGenerationSessionLeak:
 
     @pytest.mark.asyncio
     async def test_complete_event_breaks_stream(self, tmp_path):
-        from kiro_crew.dashboard.chat import _generate_title_via_kiro
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat import _generate_title_via_kiro
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         state = _make_state(tmp_path)
         mock_client = MagicMock()
@@ -559,9 +559,9 @@ class TestColorTheme:
         ],
     )
     async def test_color_theme(self, tmp_path, monkeypatch, color_theme, stored):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
-        with patch("kiro_crew.dashboard.chat_handlers._run_chat", new=AsyncMock()):
+        with patch("aj_crew.dashboard.chat_handlers._run_chat", new=AsyncMock()):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/chat?ws=1",
@@ -572,11 +572,11 @@ class TestColorTheme:
 
     @pytest.mark.asyncio
     async def test_color_theme_cleared_to_empty(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("theme-slot")
         slot.color_theme = "custom-mypack"
-        with patch("kiro_crew.dashboard.chat_handlers._run_chat", new=AsyncMock()):
+        with patch("aj_crew.dashboard.chat_handlers._run_chat", new=AsyncMock()):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/chat?ws=1",
@@ -588,11 +588,11 @@ class TestColorTheme:
     @pytest.mark.asyncio
     async def test_color_theme_not_cleared_when_absent(self, tmp_path, monkeypatch):
         """Omitting color_theme from body must not reset an existing theme."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("theme-slot")
         slot.color_theme = "custom-mypack"
-        with patch("kiro_crew.dashboard.chat_handlers._run_chat", new=AsyncMock()):
+        with patch("aj_crew.dashboard.chat_handlers._run_chat", new=AsyncMock()):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/chat?ws=1",

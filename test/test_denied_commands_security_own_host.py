@@ -15,10 +15,10 @@ import pytest
 from denied_commands_security_helpers import _own_address_probe_stays_local  # noqa: F401
 from denied_commands_security_helpers import _REAL_RESOLVED_HOST_VERDICT, _denied_by
 
-from kiro_crew import security
-from kiro_crew.security import argv_floor as _argv_floor
-from kiro_crew.security import argv_floor_hosts as _argv_floor_hosts
-from kiro_crew.testing.wait import async_wait_until, wait_until
+from aj_crew import security
+from aj_crew.security import argv_floor as _argv_floor
+from aj_crew.security import argv_floor_hosts as _argv_floor_hosts
+from aj_crew.testing.wait import async_wait_until, wait_until
 
 # This file replaces ctypes.CDLL, find_library or a cached libc handle for a test,
 # so the shared macOS handle caches are put back after each one (see conftest.py).
@@ -38,7 +38,7 @@ class TestSandboxEscapeSshSelfOwnHost:
     _RULE = "sandbox-escape-ssh-self"
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
     def _pin_own_host_cache(self, monkeypatch):
         # The same pin as ``TestSandboxEscapeSshSelf``'s. None of that class's
         # parametrized deny cases target the machine's own hostname dynamically --
@@ -46,7 +46,7 @@ class TestSandboxEscapeSshSelfOwnHost:
         # hint -- so a fixed cache with the resolved-once latch set covers them,
         # and it keeps ``_own_host_names``
         # from seeding the module globals and spawning the real
-        # ``kirocrew-own-host-resolve`` getfqdn/getaddrinfo daemon thread (a
+        # ``ajcrew-own-host-resolve`` getfqdn/getaddrinfo daemon thread (a
         # no-test-side-effects violation, plus leaked global state for the
         # worker). ``_OWN_HOST_RESOLVE_DONE`` short-circuits ``_own_host_names``
         # before the lock, so there is no seed and no thread; monkeypatch
@@ -78,7 +78,7 @@ class TestSandboxEscapeSshSelfOwnHost:
     def test_floor_spawns_no_dns_resolver_thread(self):
         # With the own-host cache pinned by the autouse fixture, evaluating a
         # representative allow case through the floor must NOT spawn the real
-        # ``kirocrew-own-host-resolve`` daemon (DONE=True short-circuits
+        # ``ajcrew-own-host-resolve`` daemon (DONE=True short-circuits
         # ``_own_host_names`` before the thread).
         #
         # Scoped to threads that appear DURING the call, because the claim is
@@ -88,12 +88,12 @@ class TestSandboxEscapeSshSelfOwnHost:
         # mDNS latency this branch's boot matrix surfaced), so one of their daemons
         # can still be alive here under any test order -- a neighbour's leftover is
         # not this floor spawning one.
-        before = {id(t) for t in threading.enumerate() if t.name == "kirocrew-own-host-resolve"}
+        before = {id(t) for t in threading.enumerate() if t.name == "ajcrew-own-host-resolve"}
         assert _denied_by("ssh far-host.example.com uptime") is None
         spawned = [
             t
             for t in threading.enumerate()
-            if t.name == "kirocrew-own-host-resolve" and id(t) not in before
+            if t.name == "ajcrew-own-host-resolve" and id(t) not in before
         ]
         assert not spawned, "the DNS-enrichment daemon thread was spawned during the floor scan"
 
@@ -259,7 +259,7 @@ class TestSandboxEscapeSshSelfOwnHost:
         assert "203.0.113.66" in resolved
         assert _argv_floor._NETLINK_ADDRS_PUBLISHED is True
 
-    _RESOLVER_THREAD = "kirocrew-own-host-resolve"
+    _RESOLVER_THREAD = "ajcrew-own-host-resolve"
 
     @classmethod
     def _resolvers_now(cls) -> set[int]:
@@ -348,7 +348,7 @@ class TestSandboxEscapeSshSelfOwnHost:
 
     @staticmethod
     def _hook(monkeypatch, warm):
-        from kiro_crew.dashboard import server as _server
+        from aj_crew.dashboard import server as _server
 
         monkeypatch.setattr(_server, "warm_own_host_names", warm)
 
@@ -531,7 +531,7 @@ class TestSandboxEscapeSshSelfOwnHost:
                 # The threading patch is module-wide, so unrelated thread
                 # constructions land here too -- count only this layer's
                 # verdict workers.
-                if kwargs.get("name") == "kirocrew-host-verdict":
+                if kwargs.get("name") == "ajcrew-host-verdict":
                     started.append(kwargs.get("name", ""))
 
             def start(self):
@@ -563,7 +563,7 @@ class TestSandboxEscapeSshSelfOwnHost:
 
         class _RecordingThread:
             def __init__(self, *args, **kwargs):
-                if kwargs.get("name") == "kirocrew-host-verdict":
+                if kwargs.get("name") == "ajcrew-host-verdict":
                     started.append(kwargs.get("args", ("",))[0])
 
             def start(self):
@@ -952,7 +952,7 @@ class TestSandboxEscapeSshSelfOwnHost:
 
         class _RecordingThread:
             def __init__(self, *args, **kwargs):
-                if kwargs.get("name") == "kirocrew-host-verdict":
+                if kwargs.get("name") == "ajcrew-host-verdict":
                     started.append(kwargs.get("name", ""))
 
             def start(self):
@@ -1095,7 +1095,7 @@ class TestHostAddressesPlatformReaders:
     def test_windows_reader_walks_synthetic_adapter_chain(self, monkeypatch):
         import ctypes
 
-        from kiro_crew.security import host_addresses as ha
+        from aj_crew.security import host_addresses as ha
 
         keepalive: list = []
         writer = self._win_chain(keepalive)
@@ -1108,7 +1108,7 @@ class TestHostAddressesPlatformReaders:
     def test_windows_reader_error_paths_are_empty(self, monkeypatch):
         import ctypes
 
-        from kiro_crew.security import host_addresses as ha
+        from aj_crew.security import host_addresses as ha
 
         monkeypatch.setattr(sys, "platform", "win32")
         # Hard error: any code other than buffer-overflow aborts the sweep.
@@ -1195,7 +1195,7 @@ class TestHostAddressesPlatformReaders:
     def test_darwin_reader_walks_synthetic_ifaddrs_chain(self, monkeypatch):
         import ctypes
 
-        from kiro_crew.security import host_addresses as ha
+        from aj_crew.security import host_addresses as ha
 
         keepalive: list = []
         head = self._darwin_chain(keepalive)
@@ -1208,7 +1208,7 @@ class TestHostAddressesPlatformReaders:
     def test_darwin_reader_error_paths_are_empty(self, monkeypatch):
         import ctypes
 
-        from kiro_crew.security import host_addresses as ha
+        from aj_crew.security import host_addresses as ha
 
         monkeypatch.setattr(sys, "platform", "darwin")
         fake = self._fake_libc(0, rc=-1)
@@ -1228,7 +1228,7 @@ class TestHostAddressesPlatformReaders:
     def test_linux_netlink_dump_reads_own_addresses(self, monkeypatch):
         import socket
 
-        from kiro_crew.security import host_addresses as ha
+        from aj_crew.security import host_addresses as ha
 
         if sys.platform.startswith("linux") and hasattr(socket, "AF_NETLINK"):
             # Kernel-local RTM_GETADDR dump: loopback is always assigned.
@@ -1244,7 +1244,7 @@ class TestHostAddressesPlatformReaders:
         import socket
         import struct as _struct
 
-        from kiro_crew.security import host_addresses as ha
+        from aj_crew.security import host_addresses as ha
 
         def msg(msg_type, payload=b"", flags=0):
             return _struct.pack("=LHHLL", 16 + len(payload), msg_type, flags, 0, 0) + payload
@@ -1299,7 +1299,7 @@ class TestHostAddressesPlatformReaders:
         import socket
         import struct as _struct
 
-        from kiro_crew.security import host_addresses as ha
+        from aj_crew.security import host_addresses as ha
 
         def rec(msg_type, family, attrs):
             body = bytes([family]) + bytes(7)  # ifaddrmsg

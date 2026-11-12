@@ -16,8 +16,8 @@ from __future__ import annotations
 import json
 from unittest.mock import patch
 
-from kiro_crew import mcp_shared
-from kiro_crew.mcp_tools import spawn as spawn_tools
+from aj_crew import mcp_shared
+from aj_crew.mcp_tools import spawn as spawn_tools
 
 _DETAIL = "low memory: 2.2 GB available, need 2.5 GB (0.50 GB for this start)"
 
@@ -140,7 +140,7 @@ class TestSpawnSubAgentsNamesTheDeferral:
         def _get(path: str, **_kw: object) -> dict:
             return dict(status)
 
-        monkeypatch.setenv("KIROCREW_SPAWN_SUB_AGENTS_MAX_WAIT", "60")
+        monkeypatch.setenv("AJCREW_SPAWN_SUB_AGENTS_MAX_WAIT", "60")
         with (
             patch.object(spawn_tools.mcp_core, "_post", side_effect=_post) as post,
             patch.object(spawn_tools.mcp_core, "_get", side_effect=_get),
@@ -252,7 +252,7 @@ class TestSpawnSubAgentsListsEveryUnreadChild:
         def _get(path: str, **_kw: object) -> dict:
             return dict(status)
 
-        monkeypatch.setenv("KIROCREW_SPAWN_SUB_AGENTS_MAX_WAIT", "60")
+        monkeypatch.setenv("AJCREW_SPAWN_SUB_AGENTS_MAX_WAIT", "60")
         with (
             patch.object(spawn_tools.mcp_core, "_post", side_effect=_post),
             patch.object(spawn_tools.mcp_core, "_get", side_effect=_get),
@@ -345,7 +345,7 @@ class TestSpawnSubAgentsWaitsOnlyForStartedWork:
                 "reason_detail": "low memory: 1.1 GB available, need 4 GB",
             }
 
-        monkeypatch.setenv("KIROCREW_SPAWN_SUB_AGENTS_MAX_WAIT", "7200")
+        monkeypatch.setenv("AJCREW_SPAWN_SUB_AGENTS_MAX_WAIT", "7200")
         with (
             patch.object(spawn_tools.mcp_core, "_post", side_effect=_post),
             patch.object(spawn_tools.mcp_core, "_get", side_effect=_get),
@@ -404,7 +404,7 @@ class TestSpawnSubAgentsWaitsOutACapacityQueue:
                 return {"id": "c1", "done": False, "queued": True, "reason": "concurrency_limit"}
             return {"id": "c1", "done": True, "result": "C"}
 
-        monkeypatch.setenv("KIROCREW_SPAWN_SUB_AGENTS_MAX_WAIT", "7200")
+        monkeypatch.setenv("AJCREW_SPAWN_SUB_AGENTS_MAX_WAIT", "7200")
         with (
             patch.object(spawn_tools.mcp_core, "_post", side_effect=_post),
             patch.object(spawn_tools.mcp_core, "_get", side_effect=_get),
@@ -550,13 +550,13 @@ class TestSpawnSubAgentsReleasesDeferredMembers:
                 "reason_detail": _DETAIL,
             }
 
-        monkeypatch.setenv("KIROCREW_SPAWN_SUB_AGENTS_MAX_WAIT", "7200")
+        monkeypatch.setenv("AJCREW_SPAWN_SUB_AGENTS_MAX_WAIT", "7200")
         with (
             patch.object(spawn_tools.mcp_core, "_post", side_effect=_post),
             patch.object(spawn_tools.mcp_core, "_get", side_effect=_get),
             patch.object(spawn_tools.mcp_core, "time", _Time),
             patch.object(spawn_tools.mcp_core, "_resolve_session_key", return_value=parent),
-            patch("kiro_crew.mcp_core.sel"),
+            patch("aj_crew.mcp_core.sel"),
         ):
             out = _settle(
                 spawn_tools.spawn_sub_agents(

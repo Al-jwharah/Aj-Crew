@@ -19,10 +19,10 @@ import pytest
 from slack_handler_helpers import FakeProvider, FakeSessionManager
 from slack_wire_helpers import slack_wire
 
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack.handler import _build_phase_emojis, handle_message, phase_emojis
+from aj_crew.slack.renderer import SlackRenderer
 from conftest import MockSlackClient
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack.handler import _build_phase_emojis, handle_message, phase_emojis
-from kiro_crew.slack.renderer import SlackRenderer
 
 _ACK = "eyes"
 _ERROR = "scream"
@@ -197,8 +197,8 @@ class TestController:
     @pytest.mark.asyncio
     async def test_a_reply_faster_than_the_ack_still_takes_the_ack_down(self, monkeypatch):
         """The reply-time remove must not overtake a slow ack add."""
-        from kiro_crew.slack.handler import StatusReactionController
-        from kiro_crew.testing.wait import until_parked
+        from aj_crew.slack.handler import StatusReactionController
+        from aj_crew.testing.wait import until_parked
 
         gate = asyncio.Event()
 
@@ -227,7 +227,7 @@ class TestController:
 
     @pytest.mark.asyncio
     async def test_disabled_adds_nothing_even_on_error(self):
-        from kiro_crew.slack.handler import StatusReactionController
+        from aj_crew.slack.handler import StatusReactionController
 
         slack = MockSlackClient()
         ctrl = StatusReactionController(slack, "C1", "msg1", enabled=False)
@@ -257,7 +257,7 @@ class TestPhaseTable:
 class TestBangCommands:
     @pytest.mark.asyncio
     async def test_title_replies_instead_of_reacting(self, monkeypatch):
-        import kiro_crew.slack.handler as h
+        import aj_crew.slack.handler as h
 
         monkeypatch.setattr(h, "_owner_id", "U1")
         slack = MockSlackClient()

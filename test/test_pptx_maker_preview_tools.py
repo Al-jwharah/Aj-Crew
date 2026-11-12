@@ -21,7 +21,7 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.apps.builtins.pptx_maker.backend import pdftoppm_shim, preview_tools
+from aj_crew.apps.builtins.pptx_maker.backend import pdftoppm_shim, preview_tools
 
 pdfium = pytest.importorskip(
     "pypdfium2",
@@ -190,7 +190,7 @@ class TestLauncherInstall:
     def test_launcher_runs_from_a_path_the_shell_would_mangle(
         self, tmp_path: Path, hostile: str
     ) -> None:
-        """KIROCREW_HOME is user-chosen, so the launcher must survive its characters.
+        """AJCREW_HOME is user-chosen, so the launcher must survive its characters.
 
         Inside POSIX double quotes ``$`` and backticks still expand, so a data home
         like ``/tmp/my $home/`` yielded a launcher whose interpreter path had the
@@ -281,7 +281,7 @@ class TestLauncherInstall:
         (ok, message), launcher, _ = self._install_as_windows(tmp_path, "pt_日本", "cp437")
         assert ok is False
         assert "cp437" in message
-        assert "KIROCREW_HOME" in message
+        assert "AJCREW_HOME" in message
         assert not launcher.exists()
 
     def test_a_refused_install_removes_the_earlier_launcher(self, tmp_path: Path) -> None:

@@ -23,13 +23,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import platform_compat_links
-from kiro_crew.acp import kas_extract_repair, runtime_liveness, runtime_spawn_entry
-from kiro_crew.acp.kas_extract_repair import AcpKasExtractBroken
-from kiro_crew.acp.session_handle import AcpRuntimeDead
-from kiro_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.identity_stores import state_db_candidates
-from kiro_crew.testing.links import make_dir_link
+from aj_crew import platform_compat_links
+from aj_crew.acp import kas_extract_repair, runtime_liveness, runtime_spawn_entry
+from aj_crew.acp.kas_extract_repair import AcpKasExtractBroken
+from aj_crew.acp.session_handle import AcpRuntimeDead
+from aj_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.identity_stores import state_db_candidates
+from aj_crew.testing.links import make_dir_link
 
 _VERSION = "3.1.0-191a57181648c1baf0df554635a918f5b63d30aaf16cd6389da726e3e2313fa9"
 
@@ -307,7 +307,7 @@ def test_a_remote_workspace_does_not_revive_after_the_move(tmp_path: Path) -> No
 
 
 def test_the_provider_translates_the_message_into_one_error() -> None:
-    from kiro_crew.providers.acp_runtime_start import _kas_extract_failure
+    from aj_crew.providers.acp_runtime_start import _kas_extract_failure
 
     def runtime(backend: str, message: str) -> SimpleNamespace:
         return SimpleNamespace(acp_backend=backend, kas_extract_broken_message=lambda: message)
@@ -358,11 +358,11 @@ def test_marker_is_latched_when_the_session_keeps_no_stderr(tmp_path: Path) -> N
 
 
 def test_a_degraded_config_read_moves_nothing(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
-    cfg = loader.KiroCrewConfig()
+    cfg = loader.AjCrewConfig()
     assert cfg.agent.kas_repair_kiro_cli_extract is True
-    _floor_monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    _floor_monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(lambda cls: cfg))
     assert kas_extract_repair._repair_enabled() is True
     _floor_monkeypatch.setattr(cfg, "_overlay_unreadable", True)
     assert kas_extract_repair._repair_enabled() is False
@@ -372,8 +372,8 @@ def test_a_degraded_config_read_moves_nothing(_floor_monkeypatch: pytest.MonkeyP
 
 
 def _real_kiro_cli() -> str | None:
-    """The kiro-cli binary named by ``KIROCREW_TEST_KIRO_CLI``; opt-in only, never PATH."""
-    named = os.environ.get("KIROCREW_TEST_KIRO_CLI", "")
+    """The kiro-cli binary named by ``AJCREW_TEST_KIRO_CLI``; opt-in only, never PATH."""
+    named = os.environ.get("AJCREW_TEST_KIRO_CLI", "")
     return named if named and os.access(named, os.X_OK) else None
 
 
@@ -442,7 +442,7 @@ def _relay_initialize(kiro_cli: str, home: Path) -> subprocess.CompletedProcess[
 def test_real_kiro_cli_broken_extract_is_repaired(tmp_path: Path) -> None:
     kiro_cli = _real_kiro_cli()
     if kiro_cli is None:
-        pytest.skip("opt-in: set KIROCREW_TEST_KIRO_CLI to a kiro-cli binary to run this")
+        pytest.skip("opt-in: set AJCREW_TEST_KIRO_CLI to a kiro-cli binary to run this")
     if sys.platform != "linux":
         pytest.skip("measured on Linux; the data dir layout differs elsewhere")
     home = tmp_path / "home"
@@ -478,7 +478,7 @@ def test_real_kiro_cli_broken_extract_is_repaired(tmp_path: Path) -> None:
 def test_only_a_kas_runtime_takes_the_repairing_start(
     _floor_monkeypatch: pytest.MonkeyPatch, backend: str, expected: str
 ) -> None:
-    from kiro_crew.acp import runtime as runtime_mod
+    from aj_crew.acp import runtime as runtime_mod
 
     rt = object.__new__(runtime_mod.AcpRuntime)
     rt._acp_backend = backend

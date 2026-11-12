@@ -27,7 +27,7 @@ from __future__ import annotations
 import asyncio
 import threading
 
-from kiro_crew import sel as sel_mod
+from aj_crew import sel as sel_mod
 
 
 def test_warm_sel_singleton_initializes_off_the_event_loop(tmp_path, monkeypatch):
@@ -138,7 +138,7 @@ def test_start_paths_warm_sel_singleton_before_ready() -> None:
     """
     import inspect
 
-    from kiro_crew.dashboard import server as _srv
+    from aj_crew.dashboard import server as _srv
 
     helper_src = inspect.getsource(sel_mod.warm_sel_singleton)
     assert (
@@ -246,7 +246,7 @@ def test_audit_denied_hops_off_the_loop_only_when_the_warm_failed(monkeypatch):
     ``sel()`` and ``asyncio.to_thread`` replaced by recorders."""
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard import server as server_mod
+    from aj_crew.dashboard import server as server_mod
 
     calls: list[str] = []
 

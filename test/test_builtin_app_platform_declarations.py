@@ -35,7 +35,7 @@ out to a tool". It is whether the gateway must spawn a BACKEND CHILD PROCESS:
   process and spawns nothing, so the absent Windows sandbox backend is not on
   its path;
 * `backend.entryPoint` present -> `apps/backend.py` spawns the child through
-  `sandbox.wrap_argv` WITHOUT the `first_party_fixed_argv` carve-out, and Kiro
+  `sandbox.wrap_argv` WITHOUT the `first_party_fixed_argv` carve-out, and Aj
   Crew has no native Windows sandbox backend, so on native Windows that spawn
   needs the operator's `agent.sandbox_allow_unsandboxed_exec=true` (or
   `agent.sandbox='off'`). `dev_fleet` ships with `windows` declared while in this
@@ -55,8 +55,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.execution import _BUILTINS_DIR
-from kiro_crew.apps.manifest import PlatformConfig
+from aj_crew.apps.execution import _BUILTINS_DIR
+from aj_crew.apps.manifest import PlatformConfig
 
 #: Apps whose manifest declares `backend.entryPoint`, so the gateway spawns a
 #: separate backend process for them. On native Windows that spawn is gated on
@@ -177,7 +177,7 @@ def test_apps_needing_a_backend_child_are_pinned(manifests: dict[str, dict]) -> 
 
 
 def test_every_app_with_tests_is_a_package() -> None:
-    """`setup.cfg` collects `src/kiro_crew/apps/builtins`, so tests/ must be packages.
+    """`setup.cfg` collects `src/aj_crew/apps/builtins`, so tests/ must be packages.
 
     Seven apps ship a module named `test_manifest.py`. Two folders of the same
     basename that are not packages collide on module name and fail collection

@@ -11,7 +11,7 @@
  *
  * Mock conventions follow `ChannelPageCoverage.test.tsx`: the api client is the
  * single seam, auto-mocked, with every method this page touches pointed at a
- * resolved value -- except `kirocrewAgents`, which is the failure under test.
+ * resolved value -- except `ajcrewAgents`, which is the failure under test.
  */
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { screen, fireEvent, waitFor } from '@testing-library/react'
@@ -30,7 +30,7 @@ beforeAll(() => {
 type Raw = Record<string, unknown>
 
 const member = (over: Raw = {}): Raw => ({
-  id: 'a1', role: 'Researcher', agent_name: 'kirocrew',
+  id: 'a1', role: 'Researcher', agent_name: 'ajcrew',
   state: 'listening', listen_mode: 'mention', approval_policy: 'writes', ...over,
 })
 
@@ -39,7 +39,7 @@ const channel = (over: Raw = {}): Raw => ({
 })
 
 const ROSTER = [
-  { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'built-in', source: 'kirocrew' },
+  { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'built-in', source: 'ajcrew' },
   { name: 'oncall', kiro_agent: 'oncall-agent', workspace: 'oncall', memory_store: 'oncall-kb', description: 'paging', source: 'package' },
 ]
 
@@ -51,7 +51,7 @@ beforeEach(() => {
   vi.mocked(api).channelPresets = vi.fn().mockResolvedValue({})
   vi.mocked(api).channelAddAgent = vi.fn().mockResolvedValue({ ok: true })
   // The failure under test: the roster endpoint is down.
-  vi.mocked(api).kirocrewAgents = vi.fn().mockRejectedValue(new Error('gateway restarting'))
+  vi.mocked(api).ajcrewAgents = vi.fn().mockRejectedValue(new Error('gateway restarting'))
   vi.mocked(api).agentCatalog = vi.fn().mockRejectedValue(new Error('gateway restarting'))
 })
 
@@ -81,9 +81,9 @@ describe('ChannelPage Add Agent roster failure (#5990)', () => {
     await openAddAgentPicker()
     await waitFor(() => expect(screen.getByText('Retry')).toBeInTheDocument())
 
-    vi.mocked(api).kirocrewAgents = vi.fn().mockResolvedValue({ agents: ROSTER, default_agent: 'kirocrew' })
+    vi.mocked(api).ajcrewAgents = vi.fn().mockResolvedValue({ agents: ROSTER, default_agent: 'ajcrew' })
 
-    vi.mocked(api).agentCatalog = vi.fn().mockResolvedValue({ agents: ROSTER, default_agent: 'kirocrew' })
+    vi.mocked(api).agentCatalog = vi.fn().mockResolvedValue({ agents: ROSTER, default_agent: 'ajcrew' })
     fireEvent.click(screen.getByText('Retry'))
 
     // Constant trigger, so before this change there was no path back at all.

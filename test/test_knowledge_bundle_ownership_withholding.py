@@ -23,8 +23,8 @@ from knowledge_bundle_ownership_helpers import (  # noqa: F401 -- fixtures are r
     importer_fixture,
 )
 
-from kiro_crew.knowledge import store as store_module
-from kiro_crew.knowledge.store import BUNDLE_STATE_KEY_COL
+from aj_crew.knowledge import store as store_module
+from aj_crew.knowledge.store import BUNDLE_STATE_KEY_COL
 
 
 class TestWithholdingIsNeverSilent:

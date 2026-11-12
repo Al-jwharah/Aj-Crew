@@ -21,9 +21,9 @@ import textwrap
 import types
 from pathlib import Path
 
-import kiro_crew.dashboard.server as server
-from kiro_crew.dashboard import server_runtime
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew.dashboard.server as server
+from aj_crew.dashboard import server_runtime
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 _FACADE = server.__name__
 _FACADE_PATH = Path(server.__file__).resolve()
@@ -207,7 +207,7 @@ def _type_checking_nodes(tree: ast.Module) -> set[int]:
 
 def _owner_runtime_edges(source: str, package: str) -> list[int]:
     """Lines where an owner imports a project module outside ``TYPE_CHECKING`` at
-    module level: the server, a sibling owner, or anything else under ``kiro_crew``."""
+    module level: the server, a sibling owner, or anything else under ``aj_crew``."""
     tree = ast.parse(source)
     guarded = _type_checking_nodes(tree)
     module_level = {id(sub) for node in tree.body for sub in ast.walk(node)}
@@ -221,7 +221,7 @@ def _owner_runtime_edges(source: str, package: str) -> list[int]:
         {
             node.lineno
             for node, target in _import_targets(tree, package)
-            if _within(target, "kiro_crew")
+            if _within(target, "aj_crew")
             and id(node) not in guarded
             and id(node) in module_level
             and id(node) not in function_bodies

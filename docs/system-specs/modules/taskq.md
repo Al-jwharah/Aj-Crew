@@ -1,10 +1,10 @@
-# Task Queue (`kiro_crew/taskq/`)
+# Task Queue (`aj_crew/taskq/`)
 
 ## Overview
 
 `taskq` is the durable store and state machine under persistent, row-backed
 work the gateway accepts and owes an outcome for. A persistent subagent spawn is
-written to `$KIROCREW_HOME/tasks/tasks.db` **before** its id is returned; a
+written to `$AJCREW_HOME/tasks/tasks.db` **before** its id is returned; a
 gateway that crashes finds the row on restart, settles what the previous
 incarnation left active, and dispatches what never started. Memory pressure
 defers a row instead of refusing it. Incognito and Temporary work, and an
@@ -27,7 +27,7 @@ Files:
 |---|---|
 | `model.py` | `TaskRecord`, the state vocabulary (`STATES`), the one validated `TRANSITIONS` table, `check_transition`, side-effect classes, lease/backoff constants. |
 | `store.py` | `TaskStore`, the import path of the store and the class that binds its members from the `store_*` owners below. It keeps open/journal selection and corrupt-file quarantine, the writer thread (`run` / `post`), the unstarted-row index, write-before-ack `accept` / `insert_if_absent` and the lane a new row is filed under (`_lane_in_tx`), atomic `claim` and leases, generation-fenced writes (`transition`, `advance`, `finish`, `record_progress`, `restamp_accepted_by`), `cancel` (from anywhere non-terminal, or conditional on `only_from` / `generation`), the deferral beside `claim` (`defer`, `expedite` (a deferral ended early, with no event) and `deferred_longer_than`, the parked time those two write), the owed-report reads (`finish(report_owed=)`, `mark_reported`, `owed_reports`), `doctor_lines`, and network-filesystem detection. It re-exports `TaskStoreUnavailable`. |
-| `store_vocab.py` | What every owner shares: `TaskStoreUnavailable` (its `__module__` stays `kiro_crew.taskq.store`), `_typed_read` (a read's `sqlite3.Error` becomes `TaskStoreUnavailable`), and the state-set SQL fragments several owners filter on. |
+| `store_vocab.py` | What every owner shares: `TaskStoreUnavailable` (its `__module__` stays `aj_crew.taskq.store`), `_typed_read` (a read's `sqlite3.Error` becomes `TaskStoreUnavailable`), and the state-set SQL fragments several owners filter on. |
 | `store_events.py` | The `task_events` log: `_append_event_in_tx` (each write's own event), `append_event`, `events`, `latest_events`, `lost_owner_recoveries`. |
 | `store_waits.py` | The wait-row writes and reads behind `waits.WaitLedger`: `enter_wait`, `update_wait`, `wake_wait`, `children_of`, `waiting_rows`, `orphaned_children`. |
 | `store_reads.py` | Row reads: `get`, `state_of`, the dispatch reads (`fetch_dispatchable`, `fetch_dispatchable_fair`, `pending_lanes`, `next_eligible_at`), the pending listings (`list_pending`, `fetch_pending_by_batch`), the counts (`count_pending`, `count`, `count_by_state`, `oldest_wait_secs`), `list_rows`, `active_rows`, and `overdue_unleased_rows` (the doctor's stranded-row read). |
@@ -55,10 +55,10 @@ annotation cannot spell its keyword-only signature, so its binding could only be
 inferred.
 
 `store.py` is a plain facade: an owner reads its globals in its own namespace, so a name a
-test patches through `kiro_crew.taskq.store` (`detect_network_filesystem`,
+test patches through `aj_crew.taskq.store` (`detect_network_filesystem`,
 `_linux_mount_type`) must be one only `store.py` reads. `_STORE_OWNERS` lists the modules
 lowest layer first; each imports only modules before it and never `store.py` at run time,
-and an owner that logs does so under the `kiro_crew.taskq.store` logger. `store.py` re-exports every module-level name it bound as one file.
+and an owner that logs does so under the `aj_crew.taskq.store` logger. `store.py` re-exports every module-level name it bound as one file.
 `test/test_store_taskq_bindings.py` pins the member inventory, the binding, the layering
 and that patch rule. A new store method goes to the owner whose row names its
 responsibility, with one binding line under that owner's header in the class and a row in
@@ -286,7 +286,7 @@ wake), and pure, so it is the one wait that does NOT follow the
 (3) times per row, after which the next lost owner ends the row `failed`
 (§ Reconcile-first boot); `unknown`
 rows go to `unknown_side_effect`. Every terminal `transition()` and every
-`cancel()` emits `kirocrew.taskq.completions{outcome=<state>}`. A
+`cancel()` emits `ajcrew.taskq.completions{outcome=<state>}`. A
 subagent run is `unknown` unless its caller says otherwise: its task is
 arbitrary and may have pushed a PR. No blind replay of send/pay/submit.
 
@@ -348,7 +348,7 @@ the connection accessor by a module-level `on_loop_db.OnLoopDBGuard` (label
 `task store`), which is where a check has to live to catch the interprocedural
 case `scripts/check_sync_io_in_async.py` cannot see -- an `async def` that calls
 a plain helper that runs the query. Its switch is this surface's own
-`taskq.store.STRICT_ON_LOOP_ENV` (`KIROCREW_STRICT_ON_LOOP_TASK_STORE`), NOT
+`taskq.store.STRICT_ON_LOOP_ENV` (`AJCREW_STRICT_ON_LOOP_TASK_STORE`), NOT
 `on_loop_db.STORE_STRICT_ENV`, so arming a task-queue test does not also arm the
 knowledge store's tracked backlog; `dev_mode_arms_strict=False` for the reason
 `knowledge/store.py` gives. Unarmed it is one throttled WARNING with a stack and
@@ -726,7 +726,7 @@ database last (`test_stale_journal_is_quarantined_with_the_corrupt_file`); a
 sidecar that cannot move is named in the warning, never a reason to raise.
 The store then recreates the schema, logs once
 at warning level and records the fact on `TaskStore.quarantined_to` /
-`warnings`; `kirocrew doctor` reports any quarantined copy beside the live
+`warnings`; `ajcrew doctor` reports any quarantined copy beside the live
 file. Work accepted only into the old file is not recovered. Locked, busy,
 disk-full, read-only, `unable to open` and a schema NEWER than this build stay
 refusals (`sqlite_quarantine.is_damaged_database_error` matches only those exact phrases), and doctor's
@@ -1104,14 +1104,14 @@ credit the drain picks with. With one lane pending the fair order is exactly
 `fetch_dispatchable`'s FIFO.
 
 Metrics: a lane key is a session key and so never a metric attribute (the
-`kirocrew.taskq.*` attribute sets are closed). Per-lane depth is exposed as
+`ajcrew.taskq.*` attribute sets are closed). Per-lane depth is exposed as
 data instead: `GET /api/spawn/lanes` (`admission.lane_snapshot_async()`): per-lane
 `queued` / `running` / `waiting` / `weight`, the scheduler credit, and the
 `CapacityView` (`cap_total`, `roots_cap`, `running`, `child_reserve`,
 `reserve_active`, `waiting_parents`, `lifted_from`). A live run counts once:
 `waiting` when it has released its slot, else `running`. Its resume entry in the
 window (`entry_is_resident_resume`) is not also counted as `queued`. A closed
-`lane_kind ∈ {system, session}` attribute on `kirocrew.taskq.depth` is left to
+`lane_kind ∈ {system, session}` attribute on `ajcrew.taskq.depth` is left to
 the health sampler.
 
 ### Per-person lanes (Shared Crew)
@@ -1212,7 +1212,7 @@ reversal) is passed by `taskq_open` → `open_default_store(journal_mode=)` →
 `TaskStore(network_fs=None|False|True)`: `auto` detects, the other two force
 the mode and skip detection (a forced `delete` still warns, naming the key).
 The store never refuses to open over the filesystem. `store.doctor_lines()` renders depth,
-oldest wait and the warnings for `kirocrew doctor` (`doctor_checks/workload.py` prints
+oldest wait and the warnings for `ajcrew doctor` (`doctor_checks/workload.py` prints
 them under the task-store section).
 
 The same section names stranded rows: `store.overdue_unleased_rows(3600)` returns every
@@ -1728,15 +1728,15 @@ factory, and binds every name it bound as one file from the owners beside it:
 
 | Module | Owns |
 |---|---|
-| `runner_vocab.py` | What every runner piece shares: `lane_for`, the row-id scheme (`step_task_id`, `run_task_id`, `workflow_task_id`) and `owner_of`, the row params (`PARAM_LANE`, `PARAM_SAFE_RETRY`, `PARAM_ACCEPTED_BY`), the lane modes, the `UNCLAIMED` / `INPUT_WAIT_ONLY` fences, `RUNNER_RECOVERY_ADAPTERS`, the admit timing bounds, the durable-answer bound (`_answer_detail`), and the three refusals, whose `__module__` stays `kiro_crew.taskq.adapters.runner`. |
+| `runner_vocab.py` | What every runner piece shares: `lane_for`, the row-id scheme (`step_task_id`, `run_task_id`, `workflow_task_id`) and `owner_of`, the row params (`PARAM_LANE`, `PARAM_SAFE_RETRY`, `PARAM_ACCEPTED_BY`), the lane modes, the `UNCLAIMED` / `INPUT_WAIT_ONLY` fences, `RUNNER_RECOVERY_ADAPTERS`, the admit timing bounds, the durable-answer bound (`_answer_detail`), and the three refusals, whose `__module__` stays `aj_crew.taskq.adapters.runner`. |
 | `runner_lane.py` | `RunnerLane`, the FIFO gate bounded by the live effective cap. |
 | `runner_handle.py` | `Admitted`, the claimed row's handle. |
 
 `_RUNNER_OWNERS` lists them lowest layer first. Each imports only modules before
 it and never `runner.py` at run time (`runner_handle` names `RunnerAdmission` for
 type checkers only), and an owner that logs does so under the
-`kiro_crew.taskq.adapters.runner` logger. An owner reads its own namespace, so a
-name a test patches through `kiro_crew.taskq.adapters.runner` (`_ADOPT_SCAN_PAGE`,
+`aj_crew.taskq.adapters.runner` logger. An owner reads its own namespace, so a
+name a test patches through `aj_crew.taskq.adapters.runner` (`_ADOPT_SCAN_PAGE`,
 `adopt_orphaned_rows`) must be one only `runner.py` reads. New lane or handle work
 goes to its owner, and a new row-vocabulary name to `runner_vocab.py`;
 `test/test_runner_facade.py` pins the layering, the logger, the class modules and
@@ -1909,7 +1909,7 @@ ARGUMENT (`await self._db(store.enter_wait, …)`, `await store.run(store.finish
 sweep over discarded-call statements, not a text search. A sweep matching only
 `store.<method>` UNDER-reports it: the write is also handed over as a bound
 `WaitLedger` method and as the bridge's own `taskq_advance`, so both spellings are
-in scope below. **The sweep's SCOPE is the whole of `src/kiro_crew`, not the
+in scope below. **The sweep's SCOPE is the whole of `src/aj_crew`, not the
 packages that hold the store.** The first pass over `taskq/` and
 `subagent_manager/` alone was itself a defect of this list: `execute_task`,
 `_execute_single_task` and `admitted_agent_fn` are CONSUMERS of a handle, so they
@@ -2098,8 +2098,8 @@ startup), so later edits require restart. Fairness settings (`lane_weights`,
 - `test_taskq_state_machine.py`: 15 states, every edge in one table, terminals have no exits (except `unknown_side_effect→done|failed`), cancel from every non-terminal state, record round-trip; `steps_to` over every state pair — each step an edge `check_transition` accepts, no identity, no terminal intermediate; and the DIRECTION it refuses: `running→queued` / `running→admitted` / `starting→queued` answer nothing although two legal edges join each, the surviving two-step set is exactly `admitted → starting → {running, recovering, retry_wait}`, and `admitted→recovering` stays available because that is the mark a `session/new` timeout writes before any stream event.
 - `test_subagent_dependency_mark.py`: the dependency park against a row whose `starting` write was lost — the whole park lands (`admitted→starting→running→waiting_dependency`, a real wait record, zero `rejected_transition`), the next boot asks the side-effect class instead of requeueing blind, a cancel in the claim window still fences the replay as `stale_result`, and both marks reach ONE store method (`TaskStore.advance`); on `journal_mode=delete` with a competing writer every read is `TaskStoreUnavailable` and `taskq_mark` stays a debug-level best effort rather than raising into the spawn path; a refused terminal write on a parked row is logged with the row's real state.
 - `test_taskq_store.py`: `apply_schema` is one shape at `SCHEMA_VERSION` (fresh file has `wait_json`, `lane`, both indexes) and a second apply changes nothing; a newer-stamped file is refused; ids only after commit; an injected write failure raises `TaskStoreUnavailable` and commits nothing (not even the batch's first row); duplicate id / idempotency key refuse; locked past busy timeout refuses rather than hangs; network FS → `delete` journal + warning; defer keeps `queued` but ineligible; a conditional `cancel` refuses a row that left `only_from` (`rejected_transition`, and the row's own owner still settles it) and one whose generation moved although the state is still acceptable (`stale_result`, and the same call under the row's real generation cancels), while the unconditional form still ends `starting` and `running`.
-- `test_store_taskq_bindings.py`: every `TaskStore` member keeps its kind and signature and IS its owner's function; no bound function needs a class body; owners import only earlier layers and never `store.py` at run time, and nothing else in `src/` imports one; each owner's `Writes:` / `Reads:` line is what its methods touch; `TaskStoreUnavailable` renders under `kiro_crew.taskq.store`; every module-level name `store.py` bound as one file still resolves on it to the owner's object; a subclass's `super()` reaches a moved member; and no name a test tree patches through `kiro_crew.taskq.store` is read by an owner.
-- `test_runner_facade.py`: the runner owners are exactly the `runner_*` siblings in `_RUNNER_OWNERS` order, import only earlier layers and never `runner.py` at run time, and nothing else in `src/` imports one; an owner that logs uses the `kiro_crew.taskq.adapters.runner` logger; the refusals render under that path; every name the one-module file bound still resolves on `runner.py` to its owner's object, and `__all__` is unchanged; no name the test trees patch through `runner.py` is read by an owner.
+- `test_store_taskq_bindings.py`: every `TaskStore` member keeps its kind and signature and IS its owner's function; no bound function needs a class body; owners import only earlier layers and never `store.py` at run time, and nothing else in `src/` imports one; each owner's `Writes:` / `Reads:` line is what its methods touch; `TaskStoreUnavailable` renders under `aj_crew.taskq.store`; every module-level name `store.py` bound as one file still resolves on it to the owner's object; a subclass's `super()` reaches a moved member; and no name a test tree patches through `aj_crew.taskq.store` is read by an owner.
+- `test_runner_facade.py`: the runner owners are exactly the `runner_*` siblings in `_RUNNER_OWNERS` order, import only earlier layers and never `runner.py` at run time, and nothing else in `src/` imports one; an owner that logs uses the `aj_crew.taskq.adapters.runner` logger; the refusals render under that path; every name the one-module file bound still resolves on `runner.py` to its owner's object, and `__all__` is unchanged; no name the test trees patch through `runner.py` is read by an owner.
 - `test_store_taskq_owner_paths.py`: the failure arms of the moved writes and of the deferral beside them, on a real store: an `append_event`, `defer`, `expedite`, `update_wait` or `wake_wait` whose `COMMIT` fails raises `TaskStoreUnavailable` and leaves the row and its events as they were; an event whose `data_json` is not JSON reads back as an empty dict, and a deferral whose `until` is unreadable counts no parked time.
 - `test_taskq_claim_fencing.py`: two real threads on separate connections, 40 rows → each row won exactly once; stale generation `finish` is a no-op with a `stale_result` event; terminal never regresses; duplicate completion no-op; cancel before/after claim and during run all end `cancelled`.
 - `test_taskq_reconcile.py`: crash at queued / admitted / running / result-written-not-acked → nothing lost, terminals kept, `admitted→queued`, class-driven recovery, cancelled never revives, idempotent; legacy import fields and idempotency.

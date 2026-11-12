@@ -42,7 +42,7 @@ from test_cli_manifest_signature import (  # noqa: F401  (fixtures are looked up
     test_key,
 )
 
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = ROOT / "cli.sh"
@@ -56,13 +56,13 @@ def signing_key(test_key: SigningKey) -> SigningKey:  # noqa: F811 -- pytest fix
 
 
 ONLY_BINARY = "--only-binary=:all:"
-OPT_IN_ENV = "KIROCREW_ALLOW_SOURCE_BUILDS"
+OPT_IN_ENV = "AJCREW_ALLOW_SOURCE_BUILDS"
 
 # pip's exact wording when binary-only resolution finds no usable release, as
 # printed for a dependency the wheel pulls in (captured from a real run).
 NO_WHEEL_LOG = (
     "ERROR: Could not find a version that satisfies the requirement numpy>=1.21,<3 "
-    "(from kirocrew) (from versions: 1.26.0, 1.26.4, 2.0.2, 2.2.6)\n"
+    "(from ajcrew) (from versions: 1.26.0, 1.26.4, 2.0.2, 2.2.6)\n"
     "ERROR: No matching distribution found for numpy>=1.21,<3\n"
 )
 NETWORK_LOG = (
@@ -74,7 +74,7 @@ NETWORK_LOG = (
 # with no wheel for this libc or arch reads like an index that does not carry it.
 VERSIONS_NONE_LOG = (
     "ERROR: Could not find a version that satisfies the requirement numpy>=1.21,<3 "
-    "(from kirocrew) (from versions: none)\n"
+    "(from ajcrew) (from versions: none)\n"
     "ERROR: No matching distribution found for numpy>=1.21,<3\n"
 )
 
@@ -117,19 +117,19 @@ case "$1" in
       done
     fi
     if [ -n "${FAKE_PIP_FAIL_WITH:-}" ]; then
-      rm -rf "$FAKE_PIPX_VENVS/kirocrew"
+      rm -rf "$FAKE_PIPX_VENVS/ajcrew"
       if [ -n "${FAKE_PIPX_RESIDUE:-}" ]; then
         # Leave something `rm -rf` cannot remove as a non-root user: a file
         # inside a directory with no write bit.
-        mkdir -p "$FAKE_PIPX_VENVS/kirocrew/stuck"
-        : > "$FAKE_PIPX_VENVS/kirocrew/stuck/pin"
-        chmod 555 "$FAKE_PIPX_VENVS/kirocrew/stuck"
+        mkdir -p "$FAKE_PIPX_VENVS/ajcrew/stuck"
+        : > "$FAKE_PIPX_VENVS/ajcrew/stuck/pin"
+        chmod 555 "$FAKE_PIPX_VENVS/ajcrew/stuck"
       fi
       cat "$FAKE_PIP_FAIL_WITH" >&2; exit 1
     fi
-    mkdir -p "$FAKE_PIPX_VENVS/kirocrew/bin"
-    printf 'home = fresh\\n' > "$FAKE_PIPX_VENVS/kirocrew/pyvenv.cfg"
-    printf 'fresh\\n' > "$FAKE_PIPX_VENVS/kirocrew/bin/kirocrew"
+    mkdir -p "$FAKE_PIPX_VENVS/ajcrew/bin"
+    printf 'home = fresh\\n' > "$FAKE_PIPX_VENVS/ajcrew/pyvenv.cfg"
+    printf 'fresh\\n' > "$FAKE_PIPX_VENVS/ajcrew/bin/ajcrew"
     if [ -n "${FAKE_PIPX_DONE:-}" ]; then : > "$FAKE_PIPX_DONE"; fi ;;
   environment)
     case "${3:-}" in
@@ -151,13 +151,13 @@ if [ -n "${FAKE_PIP_FAIL_WITH:-}" ]; then cat "$FAKE_PIP_FAIL_WITH" >&2; exit 1;
 # A real wheel install lands the console script and an importable package. The
 # venv root is two levels up from this `bin/pip`. FAKE_PIP_INSTALL_EMPTY=1
 # reproduces the field failure: pip exits 0 but the venv holds only pip (no
-# `bin/kirocrew`, no importable `kiro_crew`), as a rebuilt venv was observed to.
+# `bin/ajcrew`, no importable `aj_crew`), as a rebuilt venv was observed to.
 _venv_bin="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 _venv_root="$(dirname -- "$_venv_bin")"
 if [ -z "${FAKE_PIP_INSTALL_EMPTY:-}" ]; then
-  printf '#!/bin/sh\\necho kirocrew\\n' > "$_venv_root/bin/kirocrew"
-  chmod 755 "$_venv_root/bin/kirocrew"
-  : > "$_venv_root/.kiro_crew_installed"
+  printf '#!/bin/sh\\necho ajcrew\\n' > "$_venv_root/bin/ajcrew"
+  chmod 755 "$_venv_root/bin/ajcrew"
+  : > "$_venv_root/.aj_crew_installed"
 fi
 """
 
@@ -175,7 +175,7 @@ if [ "${1:-}" = "-m" ] && [ "${2:-}" = "venv" ]; then
   cp "$FAKE_PIP_SCRIPT" "$3/bin/pip"
   chmod 755 "$3/bin/pip"
   # The venv's interpreter is this wrapper, not the base one: cli.sh verifies
-  # the rebuilt venv with `$VENV/bin/python -I -c 'import kiro_crew'`, which the
+  # the rebuilt venv with `$VENV/bin/python -I -c 'import aj_crew'`, which the
   # base interpreter would always fail. The wrapper answers that import from the
   # marker the fake pip writes on a successful install, and defers everything
   # else to the real interpreter.
@@ -184,13 +184,13 @@ if [ "${1:-}" = "-m" ] && [ "${2:-}" = "venv" ]; then
   chmod 755 "$3/bin/python" "$3/bin/python3"
   exit 0
 fi
-# The rebuilt-venv import check (`-I -c 'import kiro_crew'`, and the legacy
+# The rebuilt-venv import check (`-I -c 'import aj_crew'`, and the legacy
 # cleanup's unflagged form): succeed only when the fake pip marked the install.
 if { [ "${1:-}" = "-I" ] && [ "${2:-}" = "-c" ]; } || [ "${1:-}" = "-c" ]; then
   case " $* " in
-    *"import kiro_crew"*)
+    *"import aj_crew"*)
       _self_bin="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-      [ -f "$(dirname -- "$_self_bin")/.kiro_crew_installed" ] && exit 0 || exit 1 ;;
+      [ -f "$(dirname -- "$_self_bin")/.aj_crew_installed" ] && exit 0 || exit 1 ;;
   esac
 fi
 exec "$FAKE_REAL_PYTHON" "$@"
@@ -265,7 +265,7 @@ def _prepare_installer(
     pipx_venvs.mkdir()
     if existing_pipx_venv:
         _write_existing_pipx_venv(
-            pipx_venvs / "kirocrew", injected=injected, runpip_added=runpip_added
+            pipx_venvs / "ajcrew", injected=injected, runpip_added=runpip_added
         )
     env = os.environ.copy()
     env.pop(OPT_IN_ENV, None)
@@ -284,7 +284,7 @@ def _prepare_installer(
         {
             "PATH": path,
             "HOME": str(run_root / "home"),
-            "KIROCREW_HOME": str(run_root / "data-home"),
+            "AJCREW_HOME": str(run_root / "data-home"),
             "FAKE_CDN_ROOT": str(cdn),
             "FAKE_ARGV_FILE": str(argv_file),
             "FAKE_PIPX_VENVS": str(pipx_venvs),
@@ -303,27 +303,27 @@ def _prepare_installer(
 
 def _write_existing_pipx_venv(old: Path, *, injected: bool, runpip_added: bool) -> None:
     """A working install from an earlier run: pyvenv.cfg is what cli.sh keys
-    on, bin/kirocrew is the launcher pipx's symlink points at, and
+    on, bin/ajcrew is the launcher pipx's symlink points at, and
     pipx_metadata.json records any `pipx inject`ed packages."""
     (old / "bin").mkdir(parents=True)
     (old / "pyvenv.cfg").write_text("home = old\n", encoding="utf-8")
-    (old / "bin" / "kirocrew").write_text("old\n", encoding="utf-8")
+    (old / "bin" / "ajcrew").write_text("old\n", encoding="utf-8")
     injections = {"extra": {"package": "extra"}} if injected else {}
     (old / "pipx_metadata.json").write_text(
-        json.dumps({"main_package": {"package": "kirocrew"}, "injected_packages": injections}),
+        json.dumps({"main_package": {"package": "ajcrew"}, "injected_packages": injections}),
         encoding="utf-8",
     )
     if injected:
         (old / "bin" / "extra").write_text("injected\n", encoding="utf-8")
     if runpip_added:
-        # `pipx runpip kirocrew install <pkg>` puts files in the venv that
+        # `pipx runpip ajcrew install <pkg>` puts files in the venv that
         # pipx_metadata.json never records.
         site = old / "lib" / "site-packages"
         site.mkdir(parents=True)
         (site / "added_by_runpip.py").write_text("ADDED = True\n", encoding="utf-8")
     # Real venvs hold symlinks (bin/python -> the interpreter); the rollback
     # copy must keep them as symlinks, not follow them.
-    (old / "bin" / "python").symlink_to("kirocrew")
+    (old / "bin" / "python").symlink_to("ajcrew")
 
 
 def _run_installer(
@@ -388,7 +388,7 @@ def test_venv_branch_passes_binary_only_before_the_wheel(
 def test_the_opt_in_restores_the_compile_fallback(
     tmp_path: Path, signing_key: SigningKey, with_pipx: bool
 ) -> None:
-    """KIROCREW_ALLOW_SOURCE_BUILDS=1 removes the flag and adds nothing in its
+    """AJCREW_ALLOW_SOURCE_BUILDS=1 removes the flag and adds nothing in its
     place: no empty `--pip-args=` for pipx, no empty word for pip."""
     result, argv = _run_installer(
         tmp_path / "case", signing_key, with_pipx=with_pipx, extra_env={OPT_IN_ENV: "1"}
@@ -450,8 +450,8 @@ def test_no_wheel_failure_names_platform_packages_and_remedy(
     assert "not a supported platform" not in err
     assert f"{OPT_IN_ENV}=1" in err
     # And still ends on the branch's own failure line, so the exit path is unchanged.
-    assert "kirocrew-install: installing the wheel" in err
-    assert "Installed kirocrew" not in result.stdout
+    assert "ajcrew-install: installing the wheel" in err
+    assert "Installed ajcrew" not in result.stdout
 
 
 @pytest.mark.parametrize("with_pipx", [True, False], ids=["pipx", "venv"])
@@ -469,7 +469,7 @@ def test_other_pip_failures_keep_the_generic_message(
     assert "Network is unreachable" in result.stderr
     assert "no prebuilt wheel" not in result.stderr
     assert "wheels' floor" not in result.stderr
-    assert "kirocrew-install: installing the wheel" in result.stderr
+    assert "ajcrew-install: installing the wheel" in result.stderr
 
 
 def test_the_no_wheel_report_is_silent_when_compiling_was_opted_in(
@@ -504,7 +504,7 @@ def test_venv_failure_still_restores_the_previous_install(
     venv.mkdir(parents=True)
     (venv / "pyvenv.cfg").write_text("home = /previous\n", encoding="utf-8")
     (venv / "bin").mkdir()
-    (venv / "bin" / "kirocrew").write_text("#!/bin/sh\necho previous\n", encoding="utf-8")
+    (venv / "bin" / "ajcrew").write_text("#!/bin/sh\necho previous\n", encoding="utf-8")
     data_home.mkdir(parents=True)
 
     result, _argv = _run_installer(case, signing_key, with_pipx=False, fail_with=NO_WHEEL_LOG)
@@ -521,8 +521,8 @@ def _existing_managed_venv(case: Path) -> Path:
     venv = case / "run" / "data-home-venv"
     (venv / "bin").mkdir(parents=True)
     (venv / "pyvenv.cfg").write_text("home = /previous\n", encoding="utf-8")
-    (venv / "bin" / "kirocrew").write_text("#!/bin/sh\necho previous\n", encoding="utf-8")
-    (venv / "bin" / "kirocrew").chmod(0o755)
+    (venv / "bin" / "ajcrew").write_text("#!/bin/sh\necho previous\n", encoding="utf-8")
+    (venv / "bin" / "ajcrew").chmod(0o755)
     data_home.mkdir(parents=True)
     return venv
 
@@ -531,7 +531,7 @@ def test_venv_rebuild_that_lands_a_bare_venv_restores_the_previous_install(
     tmp_path: Path, signing_key: SigningKey
 ) -> None:
     """A pip step that EXITS ZERO but leaves the rebuilt venv without an
-    importable ``kiro_crew`` or a ``bin/kirocrew`` console script (a rebuilt
+    importable ``aj_crew`` or a ``bin/ajcrew`` console script (a rebuilt
     managed venv holding only pip) is NOT a usable install and must not be
     committed. The post-install verification runs while the rollback is still
     armed, so such a rebuild restores the previous install instead of disarming
@@ -545,11 +545,11 @@ def test_venv_rebuild_that_lands_a_bare_venv_restores_the_previous_install(
     )
 
     assert result.returncode == 1
-    assert "left no usable kirocrew" in result.stderr
+    assert "left no usable ajcrew" in result.stderr
     assert "The previous install was restored" in result.stderr
     # The working copy is back at the venv path, whole, and the backup is gone.
     assert (venv / "pyvenv.cfg").read_text(encoding="utf-8") == "home = /previous\n"
-    assert (venv / "bin" / "kirocrew").read_text(encoding="utf-8") == "#!/bin/sh\necho previous\n"
+    assert (venv / "bin" / "ajcrew").read_text(encoding="utf-8") == "#!/bin/sh\necho previous\n"
     assert not list(case.glob("run/data-home-venv.pre-rebuild.*"))
 
 
@@ -557,7 +557,7 @@ def test_venv_rebuild_that_lands_a_usable_venv_commits_and_drops_the_backup(
     tmp_path: Path, signing_key: SigningKey
 ) -> None:
     """The verification is a gate, not a block: a rebuild whose pip DID land a
-    usable kirocrew (bin/kirocrew present and kiro_crew importable) commits
+    usable ajcrew (bin/ajcrew present and aj_crew importable) commits
     normally -- the new venv is in place and the pre-rebuild backup is removed."""
     case = tmp_path / "case"
     venv = _existing_managed_venv(case)
@@ -565,8 +565,8 @@ def test_venv_rebuild_that_lands_a_usable_venv_commits_and_drops_the_backup(
     result, _argv = _run_installer(case, signing_key, with_pipx=False)
 
     assert result.returncode == 0, result.stderr
-    assert (venv / "bin" / "kirocrew").read_text(encoding="utf-8") == "#!/bin/sh\necho kirocrew\n"
-    assert (venv / ".kiro_crew_installed").exists()
+    assert (venv / "bin" / "ajcrew").read_text(encoding="utf-8") == "#!/bin/sh\necho ajcrew\n"
+    assert (venv / ".aj_crew_installed").exists()
     assert not list(case.glob("run/data-home-venv.pre-rebuild.*"))
 
 
@@ -576,7 +576,7 @@ def test_venv_rebuild_verifies_before_dropping_the_backup() -> None:
     backup deleted, so a failure still reaches the restore. Pin that order in
     cli.sh so a later edit cannot move the verify past the commit."""
     body = INSTALLER.read_text(encoding="utf-8")
-    verify = body.index("import kiro_crew' >/dev/null 2>&1; then")
+    verify = body.index("import aj_crew' >/dev/null 2>&1; then")
     commit = body.index("# Committed: the wheel landed and imports")
     disarm = body.index("_VENV_MOVED=0\n  trap 'rm -rf \"$TMP\"' EXIT INT TERM")
     assert verify < commit < disarm, (verify, commit, disarm)
@@ -587,7 +587,7 @@ def test_pipx_failure_restores_the_previous_install(
 ) -> None:
     """pipx's own install path deletes the package venv on any failure, so a
     binary-only refusal over an existing install would otherwise take the
-    working `kirocrew` down with it. The installer copies the venv aside first
+    working `ajcrew` down with it. The installer copies the venv aside first
     and puts the copy back when pipx fails -- everything in it, including what
     pipx's metadata records (`pipx inject`) and what it does not (`pipx runpip`),
     symlinks kept as symlinks."""
@@ -602,16 +602,16 @@ def test_pipx_failure_restores_the_previous_install(
         runpip_added=True,
     )
 
-    venv = case / "run" / "pipx-venvs" / "kirocrew"
+    venv = case / "run" / "pipx-venvs" / "ajcrew"
     assert result.returncode == 1
     assert "The previous install was restored" in result.stderr
     assert (venv / "pyvenv.cfg").read_text(encoding="utf-8") == "home = old\n"
-    assert (venv / "bin" / "kirocrew").read_text(encoding="utf-8") == "old\n"
+    assert (venv / "bin" / "ajcrew").read_text(encoding="utf-8") == "old\n"
     assert (venv / "bin" / "extra").read_text(encoding="utf-8") == "injected\n"
     assert (venv / "lib" / "site-packages" / "added_by_runpip.py").exists()
     assert (venv / "bin" / "python").is_symlink()
-    assert os.readlink(venv / "bin" / "python") == "kirocrew"
-    assert not list(case.glob("run/pipx-venvs/kirocrew.pre-rebuild.*"))
+    assert os.readlink(venv / "bin" / "python") == "ajcrew"
+    assert not list(case.glob("run/pipx-venvs/ajcrew.pre-rebuild.*"))
 
 
 def test_pipx_success_drops_the_backup(tmp_path: Path, signing_key: SigningKey) -> None:
@@ -620,10 +620,10 @@ def test_pipx_success_drops_the_backup(tmp_path: Path, signing_key: SigningKey) 
     case = tmp_path / "case"
     result, _argv = _run_installer(case, signing_key, with_pipx=True, existing_pipx_venv=True)
 
-    venv = case / "run" / "pipx-venvs" / "kirocrew"
+    venv = case / "run" / "pipx-venvs" / "ajcrew"
     assert result.returncode == 0, result.stderr
     assert (venv / "pyvenv.cfg").read_text(encoding="utf-8") == "home = fresh\n"
-    assert not list(case.glob("run/pipx-venvs/kirocrew.pre-rebuild.*"))
+    assert not list(case.glob("run/pipx-venvs/ajcrew.pre-rebuild.*"))
 
 
 def test_pipx_first_install_has_nothing_to_back_up(tmp_path: Path, signing_key: SigningKey) -> None:
@@ -655,13 +655,13 @@ def test_pipx_reinstall_runs_in_place_and_keeps_what_metadata_does_not_record(
         runpip_added=True,
     )
 
-    venv = case / "run" / "pipx-venvs" / "kirocrew"
+    venv = case / "run" / "pipx-venvs" / "ajcrew"
     assert result.returncode == 0, result.stderr
     assert (venv / "pyvenv.cfg").read_text(encoding="utf-8") == "home = fresh\n"
     if injected:
         assert (venv / "bin" / "extra").read_text(encoding="utf-8") == "injected\n"
     assert (venv / "lib" / "site-packages" / "added_by_runpip.py").exists()
-    assert not list(case.glob("run/pipx-venvs/kirocrew.pre-rebuild.*"))
+    assert not list(case.glob("run/pipx-venvs/ajcrew.pre-rebuild.*"))
 
 
 def test_pipx_failed_rollback_copy_aborts_before_pipx_runs(
@@ -681,14 +681,14 @@ def test_pipx_failed_rollback_copy_aborts_before_pipx_runs(
         cp_fails=True,
     )
 
-    venv = case / "run" / "pipx-venvs" / "kirocrew"
+    venv = case / "run" / "pipx-venvs" / "ajcrew"
     assert result.returncode == 1
     assert "could not copy the existing install aside for rollback" in result.stderr
     assert "Nothing was changed" in result.stderr
     assert argv == [], argv  # pipx install was never invoked
     assert (venv / "pyvenv.cfg").read_text(encoding="utf-8") == "home = old\n"
     assert (venv / "bin" / "extra").read_text(encoding="utf-8") == "injected\n"
-    assert not list(case.glob("run/pipx-venvs/kirocrew.pre-rebuild.*"))
+    assert not list(case.glob("run/pipx-venvs/ajcrew.pre-rebuild.*"))
 
 
 def test_pipx_never_inspects_metadata_to_decide_the_rollback() -> None:
@@ -734,7 +734,7 @@ def test_pipx_second_run_waits_and_never_restores_a_stale_snapshot(
         fail_with="ERROR: No matching distribution found for numpy\n",
         extra_env={"FAKE_PIPX_VENVS": env_a["FAKE_PIPX_VENVS"], "FAKE_PIPX_WAIT_FOR": str(a_done)},
     )
-    venv = Path(env_a["FAKE_PIPX_VENVS"]) / "kirocrew"
+    venv = Path(env_a["FAKE_PIPX_VENVS"]) / "ajcrew"
     # A runs through the same bounded runner as every other installer run
     # (own session, whole process tree killed and reaped on timeout), on a
     # worker thread so B can be started while A is inside pipx. A hang
@@ -752,17 +752,17 @@ def test_pipx_second_run_waits_and_never_restores_a_stale_snapshot(
     assert "The previous install was restored" in result_b.stderr, result_b.stderr
     # The venv holds A's finished update, not the pre-A tree B would have
     # snapshotted without the lock.
-    assert (venv / "bin" / "kirocrew").read_text(encoding="utf-8") == "fresh\n"
+    assert (venv / "bin" / "ajcrew").read_text(encoding="utf-8") == "fresh\n"
     assert (venv / "pyvenv.cfg").read_text(encoding="utf-8") == "home = fresh\n"
     # ... with everything A's in-place reinstall preserved.
     assert (venv / "lib" / "site-packages" / "added_by_runpip.py").exists()
-    assert not list(venv.parent.glob("kirocrew.pre-rebuild.*"))
+    assert not list(venv.parent.glob("ajcrew.pre-rebuild.*"))
     # B did wait for A rather than racing it (A's pipx wrote "fresh"; B's fake
     # deletes the venv, so what B restored was its snapshot of "fresh").
     assert "waiting for it to finish" in result_b.stdout, result_b.stdout
     # The lock is a plain file beside the venv, left in place (pipx lists
     # directories only, so it is invisible to `pipx list`).
-    assert (venv.parent / "kirocrew.install.lock").is_file()
+    assert (venv.parent / "ajcrew.install.lock").is_file()
 
 
 def test_pipx_restore_never_claims_success_over_residue(
@@ -793,19 +793,19 @@ def test_pipx_restore_never_claims_success_over_residue(
         assert result.returncode != 0
         assert argv, "pipx install was never invoked"
         assert "The previous install was restored" in result.stderr, result.stderr
-        venv = pipx_venvs / "kirocrew"
+        venv = pipx_venvs / "ajcrew"
         # The working copy is back at the venv path, whole -- nothing nested.
-        assert (venv / "bin" / "kirocrew").read_text(encoding="utf-8") == "old\n"
+        assert (venv / "bin" / "ajcrew").read_text(encoding="utf-8") == "old\n"
         assert (venv / "bin" / "extra").read_text(encoding="utf-8") == "injected\n"
         assert not (venv / "stuck").exists()
-        assert not list(venv.glob("kirocrew.*")), "a tree was nested inside the venv"
-        assert not list(pipx_venvs.glob("kirocrew.pre-rebuild.*"))
+        assert not list(venv.glob("ajcrew.*")), "a tree was nested inside the venv"
+        assert not list(pipx_venvs.glob("ajcrew.pre-rebuild.*"))
         # The residue that could not be deleted was moved aside, not lost.
-        discarded = list(pipx_venvs.glob("kirocrew.failed.*"))
+        discarded = list(pipx_venvs.glob("ajcrew.failed.*"))
         assert len(discarded) == 1, discarded
         assert (discarded[0] / "stuck" / "pin").exists()
     finally:
-        for stuck in pipx_venvs.glob("kirocrew*/stuck"):
+        for stuck in pipx_venvs.glob("ajcrew*/stuck"):
             stuck.chmod(0o755)  # let tmp_path be cleaned up
 
 

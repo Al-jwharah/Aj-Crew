@@ -18,8 +18,8 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 from non_utf8_comm import BAD_COMM, write_stat
 
-from kiro_crew import platform_compat
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew import platform_compat
+from aj_crew.testing.ids import UNALLOCATABLE_PID
 
 
 class TestSignalOrphanedRuntimeGroup:
@@ -32,7 +32,7 @@ class TestSignalOrphanedRuntimeGroup:
     @staticmethod
     def _identity(monkeypatch, live: dict[int, str | None]) -> None:
         """What each pid's start id reads as at the instant of the signal."""
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(sp.platform_compat, "get_process_start_id", lambda pid: live.get(pid))
 
@@ -45,7 +45,7 @@ class TestSignalOrphanedRuntimeGroup:
         one. Both must satisfy the same assertions, so every test that checks
         delivery runs against both.
         """
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         sent: list[tuple[int, int]] = []
         if seam == "kill":
@@ -77,7 +77,7 @@ class TestSignalOrphanedRuntimeGroup:
 
     @pytest.mark.parametrize("seam", ["kill", "pidfd"])
     def test_signals_each_vouched_member_by_identity(self, monkeypatch, seam) -> None:
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(
             sp, "_marked_group_members", lambda pgid, inst, **_k: {101: "a", 102: "b"}
@@ -106,7 +106,7 @@ class TestSignalOrphanedRuntimeGroup:
         """
         import errno as errno_mod
 
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(sp, "_marked_group_members", lambda pgid, inst, **_k: {101: "a"})
         self._identity(monkeypatch, {101: "a"})
@@ -132,7 +132,7 @@ class TestSignalOrphanedRuntimeGroup:
         """`pidfd_send_signal` is 5.1 and `pidfd_open` is 5.3, so they can differ."""
         import errno as errno_mod
 
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(sp, "_marked_group_members", lambda pgid, inst, **_k: {101: "a"})
         self._identity(monkeypatch, {101: "a"})
@@ -157,7 +157,7 @@ class TestSignalOrphanedRuntimeGroup:
         window the descriptor exists to close, so the member is skipped and left
         to the sweep instead.
         """
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(sp, "_marked_group_members", lambda pgid, inst, **_k: {101: "a"})
         self._identity(monkeypatch, {101: "a"})
@@ -184,7 +184,7 @@ class TestSignalOrphanedRuntimeGroup:
         introduced to remove: here the number changes hands AT the open, and only
         the correct order notices.
         """
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(sp, "_marked_group_members", lambda pgid, inst, **_k: {101: "a"})
         live = {101: "a"}
@@ -216,7 +216,7 @@ class TestSignalOrphanedRuntimeGroup:
         so the check is binding rather than merely recent; on the fallback it is
         the same re-read as before. Neither may signal the newcomer.
         """
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(
             sp, "_marked_group_members", lambda pgid, inst, **_k: {101: "a", 102: "b"}
@@ -231,7 +231,7 @@ class TestSignalOrphanedRuntimeGroup:
     def test_escalation_re_signals_only_the_members_it_vouched(self, monkeypatch, seam) -> None:
         """A vouched member still alive under the same start id is the proof, and
         the only target."""
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(
             sp, "_marked_group_members", lambda pgid, inst, **_k: {101: "a", 103: "c"}
@@ -253,7 +253,7 @@ class TestSignalOrphanedRuntimeGroup:
         """Every runtime is a marked session leader, so a fresh one on the reused
         number vouches as well as the old did. Only the members the SIGTERM saw
         can tell them apart; none alive under their start id means not ours."""
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         # 101 is alive but under a NEW start id: the pid was reused.
         monkeypatch.setattr(
@@ -270,7 +270,7 @@ class TestSignalOrphanedRuntimeGroup:
     def test_escalation_refuses_when_a_vouched_member_has_no_readable_identity(
         self, monkeypatch
     ) -> None:
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(sp, "_marked_group_members", lambda pgid, inst, **_k: {101: None})
         kill = MagicMock()
@@ -281,7 +281,7 @@ class TestSignalOrphanedRuntimeGroup:
 
     def test_a_member_with_no_readable_identity_is_never_signalled(self, monkeypatch) -> None:
         """Nothing to compare at the instant of the signal means no signal."""
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(sp, "_marked_group_members", lambda pgid, inst, **_k: {101: None})
         kill = MagicMock()
@@ -291,7 +291,7 @@ class TestSignalOrphanedRuntimeGroup:
         kill.assert_not_called()
 
     def test_no_vouching_member_sends_nothing(self, monkeypatch) -> None:
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(sp, "_marked_group_members", lambda pgid, inst, **_k: {})
         kill = MagicMock()
@@ -303,7 +303,7 @@ class TestSignalOrphanedRuntimeGroup:
     def test_a_refused_signal_does_not_abort_the_teardown(self, monkeypatch) -> None:
         """The caller is mid-teardown; an error here would skip its state clearing
         and PID pruning. The sweep retries a refused member on its own cadence."""
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(sp, "_marked_group_members", lambda pgid, inst, **_k: {101: "a"})
         self._identity(monkeypatch, {101: "a"})
@@ -315,7 +315,7 @@ class TestSignalOrphanedRuntimeGroup:
         assert sp._signal_orphaned_runtime_group(100, 15, "inst") == {}
 
     def test_a_member_that_exited_under_us_counts_as_nothing(self, monkeypatch) -> None:
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(sp, "_marked_group_members", lambda pgid, inst, **_k: {101: "a"})
         self._identity(monkeypatch, {101: "a"})
@@ -329,7 +329,7 @@ class TestSignalOrphanedRuntimeGroup:
     @pytest.mark.parametrize("pgid", [0, 1])
     def test_refuses_a_broadcast_group(self, monkeypatch, pgid) -> None:
         """A member listing keyed on 0 or 1 would be a listing of the wrong thing."""
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         members = MagicMock(return_value={101: "a"})
         monkeypatch.setattr(sp, "_marked_group_members", members)
@@ -343,7 +343,7 @@ class TestSignalOrphanedRuntimeGroup:
     def test_refuses_to_signal_without_an_instance(self, monkeypatch) -> None:
         """No incarnation pin, no authority: the number plus the generic marker
         cannot tell this spawns's group from a fresh runtime's on a recycled pid."""
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         members = MagicMock(return_value={101: "a"})
         monkeypatch.setattr(sp, "_marked_group_members", members)
@@ -355,7 +355,7 @@ class TestSignalOrphanedRuntimeGroup:
         kill.assert_not_called()
 
     def test_refuses_our_own_group(self, monkeypatch) -> None:
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         kill = MagicMock()
         monkeypatch.setattr(sp.os, "kill", kill)
@@ -379,9 +379,7 @@ class TestMarkedGroupMembers:
         for pid, (state, pgrp, inst) in rows.items():
             write_stat(tmp_path, pid, comm=comm, state=state, pgrp=pgrp, start_ticks=pid * 10)
             (tmp_path / str(pid) / "environ").write_bytes(
-                b"KIROCREW_SPAWNED=1\x00KIROCREW_SPAWN_INSTANCE="
-                + inst.encode()
-                + b"\x00PATH=/bin\x00"
+                b"AJCREW_SPAWNED=1\x00AJCREW_SPAWN_INSTANCE=" + inst.encode() + b"\x00PATH=/bin\x00"
             )
         (tmp_path / "self").mkdir()  # a non-digit entry, skipped
         return tmp_path
@@ -390,7 +388,7 @@ class TestMarkedGroupMembers:
     def test_only_live_marked_members_of_the_group_count(
         self, tmp_path, monkeypatch, comm: bytes
     ) -> None:
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         # The reader is Linux-gated, and the fixture supplies the /proc shape it
         # reads, so pin the platform rather than skipping: a skip would leave the
@@ -408,7 +406,7 @@ class TestMarkedGroupMembers:
             comm=comm,
         )
         monkeypatch.setattr(
-            sp, "_env_has_kirocrew_marker", lambda pid, proc_root=None: pid in (101, 102, 105)
+            sp, "_env_has_ajcrew_marker", lambda pid, proc_root=None: pid in (101, 102, 105)
         )
         monkeypatch.setattr(sp, "_tracked_child_has_runtime_identity", lambda pid: True)
 
@@ -421,13 +419,13 @@ class TestMarkedGroupMembers:
         self, tmp_path, monkeypatch
     ) -> None:
         """A second read may already name another process, so it is never taken."""
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(sp.sys, "platform", "linux")
         root = self._fake_proc(tmp_path, {101: ("S", 100, "ours"), 102: ("S", 100, "ours")})
         stat = (root / "102" / "stat").read_bytes()
         (root / "102" / "stat").write_bytes(stat.replace(b" 1020 ", b" notticks "))
-        monkeypatch.setattr(sp, "_env_has_kirocrew_marker", lambda pid, proc_root=None: True)
+        monkeypatch.setattr(sp, "_env_has_ajcrew_marker", lambda pid, proc_root=None: True)
         monkeypatch.setattr(sp, "_tracked_child_has_runtime_identity", lambda pid: True)
         monkeypatch.setattr(sp, "_pid_start_token", lambda pid: "a stranger's start")
 
@@ -438,21 +436,21 @@ class TestMarkedGroupMembers:
         self, tmp_path, monkeypatch
     ) -> None:
         """A detached survivor that merely inherited the marker."""
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(sp.sys, "platform", "linux")
         root = self._fake_proc(tmp_path, {101: ("S", 100, "ours")})
-        monkeypatch.setattr(sp, "_env_has_kirocrew_marker", lambda pid, proc_root=None: True)
+        monkeypatch.setattr(sp, "_env_has_ajcrew_marker", lambda pid, proc_root=None: True)
         monkeypatch.setattr(sp, "_tracked_child_has_runtime_identity", lambda pid: False)
 
         assert sp._marked_group_members(100, "ours", proc_root=root) == {}
 
     def test_env_spawn_instance_reads_the_value_and_fails_closed(self, tmp_path) -> None:
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         root = self._fake_proc(tmp_path, {101: ("S", 100, "abc123")})
         (tmp_path / "202").mkdir()
-        (tmp_path / "202" / "environ").write_bytes(b"KIROCREW_SPAWNED=1\x00")
+        (tmp_path / "202" / "environ").write_bytes(b"AJCREW_SPAWNED=1\x00")
         assert sp._env_spawn_instance(101, root) == "abc123"
         assert sp._env_spawn_instance(202, root) is None  # marker but no instance
         assert sp._env_spawn_instance(303, root) is None  # unreadable
@@ -464,11 +462,11 @@ class TestMarkedGroupMembers:
         gate rejects all of them and the reap would reach nothing. A caller that
         turns the gate off keeps the group and instance checks unchanged.
         """
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(sp.sys, "platform", "linux")
         root = self._fake_proc(tmp_path, {101: ("S", 100, "ours"), 104: ("S", 200, "ours")})
-        monkeypatch.setattr(sp, "_env_has_kirocrew_marker", lambda pid, proc_root=None: True)
+        monkeypatch.setattr(sp, "_env_has_ajcrew_marker", lambda pid, proc_root=None: True)
         # The default gate is what an app backend's tree fails.
         monkeypatch.setattr(sp, "_tracked_child_has_runtime_identity", lambda pid: False)
 
@@ -485,7 +483,7 @@ class TestMarkedGroupMembers:
 
     def test_the_public_non_runtime_entry_point_turns_the_gate_off(self, monkeypatch) -> None:
         """signal_orphaned_spawn_group differs from the ACP path in exactly one way."""
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         seen: dict[str, object] = {}
 
@@ -514,7 +512,7 @@ class TestMarkedGroupMembers:
         "everything there refused the signal" -- collapsing them is how a refusal
         comes to read as a completed reap.
         """
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         monkeypatch.setattr(sp, "_marked_group_members", lambda pgid, inst, **_k: {101: "a"})
         monkeypatch.setattr(sp, "_pid_start_token", lambda pid: "a")
@@ -533,7 +531,7 @@ class TestMarkedGroupMembers:
 
     def test_the_public_entry_point_keeps_every_other_refusal(self, monkeypatch) -> None:
         """A relaxed argv gate must not relax the group or instance guards."""
-        from kiro_crew import session_pid as sp
+        from aj_crew import session_pid as sp
 
         members = MagicMock(return_value={101: "a"})
         monkeypatch.setattr(sp, "_marked_group_members", members)
@@ -551,7 +549,7 @@ class TestMarkedGroupMembers:
 class TestResetStateUntracksParentPid:
     def test_reset_state_untracks_parent_pid(self) -> None:
         """Verify _reset_state calls _untrack_pid with the saved PID."""
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = AcpClient.__new__(AcpClient)
         client._process = None
@@ -570,14 +568,14 @@ class TestResetStateUntracksParentPid:
         client._oauth_emitted_servers = set()
         # _reset_state restarts the per-process cost baseline on this object
         # (always present in production: __init__ assigns it unconditionally).
-        from kiro_crew.acp.types import AcpPromptStats
+        from aj_crew.acp.types import AcpPromptStats
 
         client.last_prompt_stats = AcpPromptStats()
         mock_task = Mock()
         mock_task.done.return_value = False
         client._stderr_task = mock_task
 
-        with patch("kiro_crew.session._untrack_pid") as mock_untrack:
+        with patch("aj_crew.session._untrack_pid") as mock_untrack:
             client._reset_state()
 
         assert client._pid is None
@@ -591,8 +589,8 @@ class TestResetStateUntracksParentPid:
         spawned since can hold it. With the spawn token in hand, _reset_state
         retires the line that names this process and never the lines that merely
         carry the number."""
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.types import AcpPromptStats
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.types import AcpPromptStats
 
         client = AcpClient.__new__(AcpClient)
         client._process = None
@@ -619,10 +617,10 @@ class TestResetStateUntracksParentPid:
         def _never(*_a):
             raise AssertionError("prefix-matched untrack ran although a token was held")
 
-        monkeypatch.setattr("kiro_crew.session_pid._pid_gone_or_unmanaged", lambda pid: True)
-        monkeypatch.setattr("kiro_crew.session_pid._untrack_root_by_identity", _by_identity)
-        monkeypatch.setattr("kiro_crew.session._untrack_pid", _never)
-        monkeypatch.setattr("kiro_crew.session._untrack_session_pid", _never)
+        monkeypatch.setattr("aj_crew.session_pid._pid_gone_or_unmanaged", lambda pid: True)
+        monkeypatch.setattr("aj_crew.session_pid._untrack_root_by_identity", _by_identity)
+        monkeypatch.setattr("aj_crew.session._untrack_pid", _never)
+        monkeypatch.setattr("aj_crew.session._untrack_session_pid", _never)
 
         client._reset_state()
 
@@ -633,14 +631,14 @@ class TestResetStateUntracksParentPid:
 class TestSyncKillProvider:
     def test_no_pid_returns_early(self) -> None:
         """Provider with no client/_proc/_active_proc PID → early return."""
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
         provider = MagicMock(spec=["_client", "_proc", "_active_proc"])
         provider._client = None
         provider._proc = None
         provider._active_proc = None
 
-        with patch("kiro_crew.session_pid.platform_compat.kill_pid") as mock_kill:
+        with patch("aj_crew.session_pid.platform_compat.kill_pid") as mock_kill:
             _sync_kill_provider(provider)
 
         mock_kill.assert_not_called()
@@ -656,7 +654,7 @@ class TestSyncKillProvider:
         through the POSIX escalation loop (kill_pid is recorded, not real, so
         the loop runs both iterations deterministically), then reaps the child.
         """
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
         proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
         try:
@@ -674,7 +672,7 @@ class TestSyncKillProvider:
                 return True
 
             with patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=fake_kill,
             ):
                 _sync_kill_provider(provider)
@@ -691,7 +689,7 @@ class TestSyncKillProvider:
     )
     def test_posix_already_dead_on_sigterm(self) -> None:
         """ProcessLookupError on first signal → early return (already dead)."""
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
         provider = MagicMock(spec=["_client", "_proc", "_active_proc"])
         provider._client = None
@@ -711,11 +709,11 @@ class TestSyncKillProvider:
         # reads as gone, as the signal's ProcessLookupError says, and the root's
         # reap observed rather than run.
         with (
-            patch("kiro_crew.session_pid.platform_compat.pgroup_of", return_value=None),
-            patch("kiro_crew.session_pid._reap_provider_root"),
-            patch("kiro_crew.session_pid.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.session_pid.platform_compat.pgroup_of", return_value=None),
+            patch("aj_crew.session_pid._reap_provider_root"),
+            patch("aj_crew.session_pid.platform_compat.pid_exists", return_value=False),
             patch(
-                "kiro_crew.session_pid.platform_compat.kill_pid",
+                "aj_crew.session_pid.platform_compat.kill_pid",
                 side_effect=fake_kill,
             ),
         ):
@@ -730,7 +728,7 @@ def test_sync_windows_tree_refusal_never_falls_back_to_root_only(
     monkeypatch: pytest.MonkeyPatch, drain_error: bool, caplog: pytest.LogCaptureFixture
 ) -> None:
     """A failed tree drain keeps its scope; killing only the root is not cleanup."""
-    from kiro_crew.session_pid import _sync_kill_provider
+    from aj_crew.session_pid import _sync_kill_provider
 
     pid, start = 4321, "recorded-creation"
     provider = MagicMock(spec=["_client", "_proc", "_active_proc"])
@@ -786,10 +784,10 @@ class TestPidGoneOrUnmanaged:
     """
 
     def test_dead_pid_is_safe_to_untrack(self) -> None:
-        from kiro_crew.session_pid import _pid_gone_or_unmanaged
+        from aj_crew.session_pid import _pid_gone_or_unmanaged
 
         with patch(
-            "kiro_crew.platform_compat.pid_liveness",
+            "aj_crew.platform_compat.pid_liveness",
             return_value=platform_compat.PID_DEAD,
         ):
             assert _pid_gone_or_unmanaged(4242) is True
@@ -799,7 +797,7 @@ class TestPidGoneOrUnmanaged:
         # is a managed agent: it may be an un-reaped survivor, and the periodic
         # sweep re-validates ownership before reaping. This is the fail-safe
         # direction — we never untrack something that is still alive here.
-        from kiro_crew.session_pid import _pid_gone_or_unmanaged
+        from aj_crew.session_pid import _pid_gone_or_unmanaged
 
         assert _pid_gone_or_unmanaged(os.getpid()) is False
 
@@ -808,19 +806,19 @@ class TestPidGoneOrUnmanaged:
         # PID_UNSIGNALABLE, which we treat as "retain" (the sweep re-validates
         # ownership off the hot path). Never orphaning a live survivor is the
         # invariant; a retained-but-recycled PID is harmless.
-        from kiro_crew.session_pid import _pid_gone_or_unmanaged
+        from aj_crew.session_pid import _pid_gone_or_unmanaged
 
         with patch(
-            "kiro_crew.platform_compat.pid_liveness",
+            "aj_crew.platform_compat.pid_liveness",
             return_value=platform_compat.PID_UNSIGNALABLE,
         ):
             assert _pid_gone_or_unmanaged(4242) is False
 
     def test_alive_pid_is_retained(self) -> None:
-        from kiro_crew.session_pid import _pid_gone_or_unmanaged
+        from aj_crew.session_pid import _pid_gone_or_unmanaged
 
         with patch(
-            "kiro_crew.platform_compat.pid_liveness",
+            "aj_crew.platform_compat.pid_liveness",
             return_value=platform_compat.PID_ALIVE,
         ):
             assert _pid_gone_or_unmanaged(4242) is False

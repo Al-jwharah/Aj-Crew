@@ -1,4 +1,4 @@
-"""The orphaned temp-pack reaper (``kiro_crew.git_tmp_packs``).
+"""The orphaned temp-pack reaper (``aj_crew.git_tmp_packs``).
 
 A fetch killed by a subprocess timeout leaves its in-progress
 ``tmp_pack_*`` behind, and at the status refresher's pace that can fill a
@@ -20,8 +20,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import git_tmp_packs
-from kiro_crew.git_tmp_packs import TMP_PACK_MAX_AGE_S, reap_stale_tmp_packs
+from aj_crew import git_tmp_packs
+from aj_crew.git_tmp_packs import TMP_PACK_MAX_AGE_S, reap_stale_tmp_packs
 
 _OLD = 10 * TMP_PACK_MAX_AGE_S  # comfortably past any threshold under test
 
@@ -193,7 +193,7 @@ class TestStatusRefresherCallSite:
 
     @pytest.fixture
     def refresher_cycle(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-        from kiro_crew.apps.builtins.dev_fleet import (
+        from aj_crew.apps.builtins.dev_fleet import (
             fleet_state,
             repository,
             runtime,
@@ -292,8 +292,8 @@ async def test_update_fetch_reaps_stale_tmp_packs_after_a_timed_out_fetch(
     # hours, and each one its deadline kills leaves a tmp_pack_* behind. The
     # shared fetch helper must reap the stale ones on the timeout path too, and
     # leave a fresh (possibly in-flight) pack alone.
-    from kiro_crew.dashboard.handlers import updates_check
-    from kiro_crew.platform import update_fetch
+    from aj_crew.dashboard.handlers import updates_check
+    from aj_crew.platform import update_fetch
 
     clone, pack_dir = _plain_clone(tmp_path)
     old = _plant(pack_dir, "tmp_pack_killed_earlier", age_s=_OLD)

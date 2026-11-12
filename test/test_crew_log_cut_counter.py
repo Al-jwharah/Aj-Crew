@@ -18,13 +18,13 @@ from typing import Any
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import store as crew_log_store
-from kiro_crew.crew_log.errors import CrewLogError, CutUnaccounted
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import store as crew_log_store
+from aj_crew.crew_log.errors import CrewLogError, CutUnaccounted
 
 SLOT = "chat-cutcounter"
 UNIT = "acp-cut-unit"
@@ -36,8 +36,8 @@ OTHER = "acp-cut-other"
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch: pytest.MonkeyPatch):
     """Own data home, crew log on, and no warm fold carried between tests."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     _floor_monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     crew_log_emit.reset_caches()
     crew_log_eager.stop_for_tests()
@@ -64,7 +64,7 @@ def _a_completed_cut(directory) -> None:
 
 
 def _unit(unit_id: str, *, slot: str = SLOT) -> None:
-    CrewLog.create(lg.KIND_SESSION, unit_id, owner="owner", agent="kirocrew", slot=slot)
+    CrewLog.create(lg.KIND_SESSION, unit_id, owner="owner", agent="ajcrew", slot=slot)
 
 
 def _dir(unit_id: str) -> Path:
@@ -613,13 +613,13 @@ def _cheap_writes(monkeypatch):
     EVIDENCE a savepoint records, so paying 256 emitter round trips to reach one would
     buy nothing.
     """
-    from kiro_crew.crew_log import checkpoint as savepoints
+    from aj_crew.crew_log import checkpoint as savepoints
 
     monkeypatch.setattr(savepoints, "MIN_ADVANCE_ENTRIES", 2)
 
 
 def _savepoint(unit_id: str) -> "dict[str, Any]":
-    from kiro_crew.crew_log import checkpoint as savepoints
+    from aj_crew.crew_log import checkpoint as savepoints
 
     path = savepoints.slot_checkpoint_path(lg.KIND_SESSION, unit_id, "ledger")
     return json.loads(path.read_text(encoding="utf-8"))
@@ -924,7 +924,7 @@ def test_a_savepoint_cannot_be_written_or_admitted_from_a_mid_cut_reading(_cheap
     # A cut opens and does not close: the counter is in flight from here on.
     crew_log_store._open_cut(_dir(UNIT))
 
-    from kiro_crew.crew_log import checkpoint as savepoint_module
+    from aj_crew.crew_log import checkpoint as savepoint_module
 
     handle = CrewLog.open(lg.KIND_SESSION, UNIT)
     assert handle.cuts() is None, "the unit states nothing while its cut is in flight"
@@ -968,7 +968,7 @@ def test_a_cut_after_an_interrupted_one_never_re_issues_the_count_it_left(_cheap
     _a_completed_cut(directory)
     settled = crew_log_store.read_cuts(directory)
 
-    from kiro_crew.crew_log import checkpoint as savepoint_module
+    from aj_crew.crew_log import checkpoint as savepoint_module
 
     handle = CrewLog.open(lg.KIND_SESSION, UNIT)
 
@@ -1002,7 +1002,7 @@ def test_a_cut_after_a_lost_counter_starts_past_every_count_it_could_have_issued
     _a_completed_cut(directory)
     settled = crew_log_store.read_cuts(directory)
 
-    from kiro_crew.crew_log import checkpoint as savepoint_module
+    from aj_crew.crew_log import checkpoint as savepoint_module
 
     handle = CrewLog.open(lg.KIND_SESSION, UNIT)
 
@@ -1090,8 +1090,8 @@ def test_a_rollback_that_cannot_account_for_its_cut_is_retryable_not_a_refusal(m
     On a read-only filesystem the rollback declines to truncate. A ``CrewLogError`` would
     make the writer drop the event; :class:`IndeterminateAppend` makes it retry.
     """
-    from kiro_crew.crew_log import writer as crew_log_writer
-    from kiro_crew.crew_log.errors import IndeterminateAppend
+    from aj_crew.crew_log import writer as crew_log_writer
+    from aj_crew.crew_log.errors import IndeterminateAppend
 
     _unit(UNIT)
     handle = CrewLog.open(lg.KIND_SESSION, UNIT)
@@ -1183,7 +1183,7 @@ def test_a_counter_that_cannot_be_read_is_not_evidence_that_it_was_retired(_chea
         crew_log_store._cuts_path = real_cuts_path  # type: ignore[assignment]
         crew_log_store._write_cuts = real_write  # type: ignore[assignment]
 
-    from kiro_crew.crew_log import checkpoint as savepoint_module
+    from aj_crew.crew_log import checkpoint as savepoint_module
 
     handle = CrewLog.open(lg.KIND_SESSION, UNIT)
 
@@ -1206,7 +1206,7 @@ def test_a_torn_tail_repair_that_cannot_account_for_its_cut_keeps_the_event(_che
     The torn-tail cut runs inside `append`, and the write-behind drops on `CrewLogError`.
     `CutUnaccounted` is an `OSError` so the append is retried once the lock lifts.
     """
-    from kiro_crew.crew_log import writer as crew_log_writer
+    from aj_crew.crew_log import writer as crew_log_writer
 
     _unit(UNIT)
     _ledger(UNIT, goal="g", event="BEFORE-THE-TEAR", event_kind="progress")
@@ -1319,7 +1319,7 @@ def test_a_lost_rename_on_a_filesystem_that_cannot_sync_a_directory_proves_nothi
         crew_log_store.fsync_dir = real_sync  # type: ignore[assignment]
         crew_log_store.atomic_write = real_atomic  # type: ignore[assignment]
 
-    from kiro_crew.crew_log import checkpoint as savepoint_module
+    from aj_crew.crew_log import checkpoint as savepoint_module
 
     handle = CrewLog.open(lg.KIND_SESSION, UNIT)
 

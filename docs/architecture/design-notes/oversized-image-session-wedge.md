@@ -32,12 +32,12 @@ stored bytes have to be rewritten or the conversation is over.
 |---|---|
 | `acp/prompt_blocks.py` | images entering a PROMPT (what a user attaches) |
 | `mcp_gateway/image_budget.py` | images an MCP TOOL returns |
-| `computer_use/types.py` `MAX_SCREENSHOT_MAX_PX` | Kiro Crew's own window captures, bounded by the inline cap |
+| `computer_use/types.py` `MAX_SCREENSHOT_MAX_PX` | Aj Crew's own window captures, bounded by the inline cap |
 
 The path that escapes all three: an agent writes a screenshot to disk, then
 opens it with kiro-cli's built-in `read` tool in Image mode. That tool reads the
 file itself and writes raw bytes straight into kiro-cli's own transcript, so no
-Kiro Crew code is on the path and there is nothing to intercept.
+Aj Crew code is on the path and there is nothing to intercept.
 
 This is why the cap has to hold on the FILE, before it is read. Note that no
 launch option can guarantee it: a `fullPage` capture takes the whole document
@@ -63,9 +63,9 @@ The same repair runs from a terminal against the transcript directly:
 
 ```bash
 # Dry run first -- it changes nothing and prints what it would rewrite:
-python -m kiro_crew.session_image_repair ~/.kiro/sessions/cli/<session-id>.jsonl
+python -m aj_crew.session_image_repair ~/.kiro/sessions/cli/<session-id>.jsonl
 # Then, with the session ENDED (not merely idle -- see below):
-python -m kiro_crew.session_image_repair --apply ~/.kiro/sessions/cli/<session-id>.jsonl
+python -m aj_crew.session_image_repair --apply ~/.kiro/sessions/cli/<session-id>.jsonl
 ```
 
 Notes on what it does and does not do:
@@ -110,7 +110,7 @@ Notes on what it does and does not do:
   tool payload that merely looks like a block is the acceptable direction.
 - An image with no compliant rendition becomes a text marker rather than being
   left in place. Losing one image beats losing every later turn.
-- It is not a sweeper and not a `kirocrew` subcommand, on purpose: it rewrites
+- It is not a sweeper and not an `ajcrew` subcommand, on purpose: it rewrites
   another tool's data directory, so it stays an explicit operator action. The
   dashboard's "Repair images and resume" button is that explicit operator action
   -- a human pressing "repair this session" -- so wiring the module behind it

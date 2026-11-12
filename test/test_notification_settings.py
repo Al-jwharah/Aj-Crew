@@ -9,15 +9,15 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.messaging import (
+from aj_crew.dashboard.handlers.messaging import (
     api_notification_channel_settings,
     api_notification_channels,
 )
-from kiro_crew.dashboard.notification_coordinator import unread_count
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.notifications.bridge import BRIDGE_TRANSPORTS
-from kiro_crew.notifications.bus import MONITOR_CHANNEL
-from kiro_crew.notifications.settings import (
+from aj_crew.dashboard.notification_coordinator import unread_count
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.notifications.bridge import BRIDGE_TRANSPORTS
+from aj_crew.notifications.bus import MONITOR_CHANNEL
+from aj_crew.notifications.settings import (
     PROTECTED_CHANNELS,
     ChannelSettings,
     ChannelSettingsError,
@@ -27,13 +27,13 @@ from kiro_crew.notifications.settings import (
 
 @pytest.fixture()
 def settings(monkeypatch, tmp_path) -> ChannelSettings:
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
     return ChannelSettings()
 
 
 def _make_state(monkeypatch, tmp_path) -> DashboardState:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),
@@ -44,7 +44,7 @@ def _make_state(monkeypatch, tmp_path) -> DashboardState:
 
 class TestChannelSettingsStore:
     def test_mute_persists_and_reloads(self, monkeypatch, tmp_path):
-        monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
         s = ChannelSettings()
         s.update("system.heartbeat", muted=True)
         # Fresh instance reads back from disk
@@ -76,7 +76,7 @@ class TestChannelSettingsStore:
         settings.update("system.approval", priority="critical")
 
     def test_corrupt_file_falls_back_to_defaults(self, monkeypatch, tmp_path):
-        monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
         (tmp_path / "notification_settings.json").write_text("{not json", encoding="utf-8")
         s = ChannelSettings()
         assert s.all_settings() == {}
@@ -330,7 +330,7 @@ class TestReviewRegressions:
         def boom(*args, **kwargs):
             raise OSError("disk full")
 
-        monkeypatch.setattr("kiro_crew.notifications.settings.atomic_write", boom)
+        monkeypatch.setattr("aj_crew.notifications.settings.atomic_write", boom)
         with pytest.raises(OSError):
             settings.update("a.b", muted=False)
         # Memory still reflects the last successfully persisted state
@@ -363,7 +363,7 @@ class TestReviewRegressions:
         """apply()/get() must not block on the writer lock: with the lock
         held (simulating a worker-thread update mid-write), reads and
         apply still complete."""
-        import kiro_crew.notifications.settings as mod
+        import aj_crew.notifications.settings as mod
 
         settings.update("a.b", muted=True)
         with mod._lock:  # writer holds the lock across its file write
@@ -388,7 +388,7 @@ class TestSeedMonitorFromAgent:
 
     @pytest.fixture(autouse=True)
     def _config_dir(self, monkeypatch, tmp_path):
-        monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
 
     def test_agent_mute_seeds_monitor_without_writing_at_load(self, tmp_path):
         _write_settings(tmp_path, {"system.agent": {"muted": True}})
@@ -551,7 +551,7 @@ class TestImportedSettings:
         assert dropped == 1
 
     def test_channels_past_the_cap_are_dropped_and_counted(self):
-        from kiro_crew.notifications.settings import _MAX_IMPORT_CHANNELS
+        from aj_crew.notifications.settings import _MAX_IMPORT_CHANNELS
 
         extra = 7
         raw = {f"app.c{i:04d}": {"muted": True} for i in range(_MAX_IMPORT_CHANNELS + extra)}
@@ -615,7 +615,7 @@ class TestImportedSettings:
     ):
         """A transient read error after the swap read as {} and the next update wrote
         that empty baseline over the restored mutes."""
-        from kiro_crew.notifications import settings as mod
+        from aj_crew.notifications import settings as mod
 
         settings.update("system.heartbeat", muted=True)
         restored = {"app.z": {"muted": True}}

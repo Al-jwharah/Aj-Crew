@@ -28,8 +28,8 @@ from session_pool_helpers import (  # noqa: F401 -- the autouse fixture register
     _make_provider,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.testing.wait import async_wait_until, finished
+from aj_crew import platform_compat
+from aj_crew.testing.wait import async_wait_until, finished
 
 # ---------------------------------------------------------------------------
 # _pool_health_loop
@@ -40,7 +40,7 @@ class TestPoolHealthLoop:
     @pytest.mark.asyncio
     async def test_removes_dead_provider_and_replenishes(self):
         """Dead provider is removed during health sweep, replenish triggered."""
-        mgr, _ = _make_manager(pool_agent="kirocrew")
+        mgr, _ = _make_manager(pool_agent="ajcrew")
         dead = _make_provider()
         dead.is_process_alive.return_value = False
         dead.exit_code = 1
@@ -68,7 +68,7 @@ class TestPoolHealthLoop:
     @pytest.mark.asyncio
     async def test_removes_expired_provider(self):
         """TTL-expired provider is removed during health sweep."""
-        mgr, _ = _make_manager(pool_agent="kirocrew", pool_ttl_secs=60)
+        mgr, _ = _make_manager(pool_agent="ajcrew", pool_ttl_secs=60)
         stale = _make_provider()
         mgr._warm_pool.put_nowait((stale, time.monotonic() - 120))
         mgr._schedule_replenish = MagicMock()
@@ -93,7 +93,7 @@ class TestPoolHealthLoop:
     @pytest.mark.asyncio
     async def test_keeps_healthy_provider(self):
         """Healthy provider at target survives health sweep with no churn."""
-        mgr, _ = _make_manager(pool_size=1, pool_agent="kirocrew")
+        mgr, _ = _make_manager(pool_size=1, pool_agent="ajcrew")
         healthy = _make_provider()
         mgr._warm_pool.put_nowait((healthy, time.monotonic()))
         mgr._schedule_replenish = MagicMock()
@@ -118,7 +118,7 @@ class TestPoolHealthLoop:
     @pytest.mark.asyncio
     async def test_empty_pool_schedules_replenish(self):
         """Empty pool self-heals: sweep schedules a refill instead of skipping."""
-        mgr, _ = _make_manager(pool_agent="kirocrew")
+        mgr, _ = _make_manager(pool_agent="ajcrew")
         mgr._schedule_replenish = MagicMock()
 
         call_count = 0
@@ -139,7 +139,7 @@ class TestPoolHealthLoop:
     @pytest.mark.asyncio
     async def test_under_target_pool_schedules_replenish(self):
         """A short-but-healthy pool is a deficit: sweep schedules a refill."""
-        mgr, _ = _make_manager(pool_size=3, pool_agent="kirocrew")
+        mgr, _ = _make_manager(pool_size=3, pool_agent="ajcrew")
         healthy = _make_provider()
         mgr._warm_pool.put_nowait((healthy, time.monotonic()))
         mgr._schedule_replenish = MagicMock()
@@ -153,7 +153,7 @@ class TestPoolHealthLoop:
     @pytest.mark.asyncio
     async def test_at_target_pool_does_not_replenish(self):
         """A full healthy pool has no deficit: sweep schedules nothing."""
-        mgr, _ = _make_manager(pool_size=2, pool_agent="kirocrew")
+        mgr, _ = _make_manager(pool_size=2, pool_agent="ajcrew")
         for _ in range(2):
             mgr._warm_pool.put_nowait((_make_provider(), time.monotonic()))
         mgr._schedule_replenish = MagicMock()
@@ -180,7 +180,7 @@ class TestPoolHealthLoop:
     @pytest.mark.asyncio
     async def test_mixed_healthy_and_dead(self):
         """Only dead providers removed; healthy ones re-enqueued in order."""
-        mgr, _ = _make_manager(pool_agent="kirocrew")
+        mgr, _ = _make_manager(pool_agent="ajcrew")
         healthy1 = _make_provider()
         dead = _make_provider()
         dead.is_process_alive.return_value = False
@@ -218,7 +218,7 @@ class TestPoolHealthLoop:
 class TestPoolPids:
     def test_returns_pids_from_pool(self):
         """Extracts PIDs from pooled providers."""
-        mgr, _ = _make_manager(pool_agent="kirocrew")
+        mgr, _ = _make_manager(pool_agent="ajcrew")
         p1 = _make_provider()
         p1.client = MagicMock()
         p1.client._pid = 1234
@@ -235,13 +235,13 @@ class TestPoolPids:
         assert mgr._warm_pool.qsize() == 2
 
     def test_empty_pool_returns_empty_set(self):
-        mgr, _ = _make_manager(pool_agent="kirocrew")
+        mgr, _ = _make_manager(pool_agent="ajcrew")
 
         assert mgr._pool_pids() == set()
 
     def test_skips_provider_without_client(self):
         """Provider with no client attr is skipped, not crashed."""
-        mgr, _ = _make_manager(pool_agent="kirocrew")
+        mgr, _ = _make_manager(pool_agent="ajcrew")
         p = _make_provider()
         del p.client  # no client attribute
         mgr._warm_pool.put_nowait((p, time.monotonic()))
@@ -253,7 +253,7 @@ class TestPoolPids:
 
     def test_skips_non_int_pid(self):
         """Provider with non-int PID is skipped."""
-        mgr, _ = _make_manager(pool_agent="kirocrew")
+        mgr, _ = _make_manager(pool_agent="ajcrew")
         p = _make_provider()
         p.client = MagicMock()
         p.client._pid = None
@@ -266,7 +266,7 @@ class TestPoolPids:
 
     def test_includes_sweep_pids_during_health_check(self):
         """PIDs temporarily out of queue during health sweep are still visible."""
-        mgr, _ = _make_manager(pool_agent="kirocrew")
+        mgr, _ = _make_manager(pool_agent="ajcrew")
         # Simulate health loop having drained providers
         mgr._pool_sweep_pids = {1111, 2222}
 
@@ -295,13 +295,13 @@ class TestDiscardReaping:
     async def test_survivor_after_noop_shutdown_is_hard_killed(self):
         """Graceful shutdown returning cleanly is not proof the process died —
         a still-alive process must be hard-killed."""
-        mgr, _ = _make_manager(pool_agent="kirocrew", pool_ttl_secs=1)
+        mgr, _ = _make_manager(pool_agent="ajcrew", pool_ttl_secs=1)
         survivor = _make_provider()
         survivor.is_process_alive = MagicMock(return_value=True)
         self._expired_entry(mgr, survivor)
 
-        with patch("kiro_crew.session._sync_kill_provider") as mock_kill:
-            pooled = await mgr._drain_and_claim("kirocrew")
+        with patch("aj_crew.session._sync_kill_provider") as mock_kill:
+            pooled = await mgr._drain_and_claim("ajcrew")
 
         assert pooled is None
         survivor.shutdown.assert_awaited_once()
@@ -311,13 +311,13 @@ class TestDiscardReaping:
     async def test_exited_process_is_not_hard_killed(self):
         """No hard kill when the process actually exited — its PID may already
         be recycled by an unrelated process."""
-        mgr, _ = _make_manager(pool_agent="kirocrew", pool_ttl_secs=1)
+        mgr, _ = _make_manager(pool_agent="ajcrew", pool_ttl_secs=1)
         clean = _make_provider()
         clean.is_process_alive = MagicMock(return_value=False)
         self._expired_entry(mgr, clean)
 
-        with patch("kiro_crew.session._sync_kill_provider") as mock_kill:
-            result = await mgr._drain_and_claim("kirocrew")
+        with patch("aj_crew.session._sync_kill_provider") as mock_kill:
+            result = await mgr._drain_and_claim("ajcrew")
 
         clean.shutdown.assert_awaited_once()
         mock_kill.assert_not_called()
@@ -327,14 +327,14 @@ class TestDiscardReaping:
     @pytest.mark.asyncio
     async def test_shutdown_failure_falls_back_to_hard_kill(self):
         """A raising shutdown must not be swallowed into a leak."""
-        mgr, _ = _make_manager(pool_agent="kirocrew", pool_ttl_secs=1)
+        mgr, _ = _make_manager(pool_agent="ajcrew", pool_ttl_secs=1)
         broken = _make_provider()
         broken.is_process_alive = MagicMock(return_value=True)
         broken.shutdown = AsyncMock(side_effect=RuntimeError("protocol close failed"))
         self._expired_entry(mgr, broken)
 
-        with patch("kiro_crew.session._sync_kill_provider") as mock_kill:
-            pooled = await mgr._drain_and_claim("kirocrew")
+        with patch("aj_crew.session._sync_kill_provider") as mock_kill:
+            pooled = await mgr._drain_and_claim("ajcrew")
 
         assert pooled is None
         mock_kill.assert_called_once_with(broken)
@@ -344,16 +344,16 @@ class TestDiscardReaping:
         """A shutdown that never returns must not stall the discard path
         (the health sweep is a single task — a wedge would disable TTL
         enforcement for the whole pool)."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         monkeypatch.setattr(SessionManager, "_POOL_DISCARD_TIMEOUT", 0.05)
-        mgr, _ = _make_manager(pool_agent="kirocrew", pool_ttl_secs=1)
+        mgr, _ = _make_manager(pool_agent="ajcrew", pool_ttl_secs=1)
         wedged = _make_provider()
         wedged.is_process_alive = MagicMock(return_value=True)
 
         async def _never_returns() -> None:
             # flake-ok: pre-existing never-returning shutdown stand-in, moved verbatim; the discard path's own timeout ends it
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- the stub shutdown that never returns, moved verbatim; the test asserts the discard timeout bounds it
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- the stub shutdown that never returns, moved verbatim; the test asserts the discard timeout bounds it
             await asyncio.sleep(3600)
 
         wedged.shutdown = _never_returns
@@ -372,10 +372,10 @@ class TestDiscardReaping:
         # spare capacity.
         with (
             ThreadPoolExecutor(max_workers=1) as private_executor,
-            patch("kiro_crew.session._sync_kill_provider") as mock_kill,
-            patch("kiro_crew.session.subprocess_executor", return_value=private_executor),
+            patch("aj_crew.session._sync_kill_provider") as mock_kill,
+            patch("aj_crew.session.subprocess_executor", return_value=private_executor),
         ):
-            pooled = await finished(mgr._drain_and_claim("kirocrew"), "the drain and claim")
+            pooled = await finished(mgr._drain_and_claim("ajcrew"), "the drain and claim")
 
         assert pooled is None
         mock_kill.assert_called_once_with(wedged)
@@ -383,12 +383,12 @@ class TestDiscardReaping:
     @pytest.mark.asyncio
     async def test_health_sweep_hard_kills_expired_survivor(self):
         """The periodic sweep applies the same escalation as the claim path."""
-        mgr, _ = _make_manager(pool_agent="kirocrew", pool_ttl_secs=1)
+        mgr, _ = _make_manager(pool_agent="ajcrew", pool_ttl_secs=1)
         survivor = _make_provider()
         survivor.is_process_alive = MagicMock(return_value=True)
         self._expired_entry(mgr, survivor)
 
-        with patch("kiro_crew.session._sync_kill_provider") as mock_kill:
+        with patch("aj_crew.session._sync_kill_provider") as mock_kill:
             await mgr._sweep_warm_pool_once()
 
         survivor.shutdown.assert_awaited_once()
@@ -403,7 +403,7 @@ class TestDiscardReaping:
         and the dead-provider branch below. All three are still reaped."""
         import logging
 
-        mgr, _ = _make_manager(pool_agent="kirocrew", pool_ttl_secs=60)
+        mgr, _ = _make_manager(pool_agent="ajcrew", pool_ttl_secs=60)
         stale = _make_provider()
         stale.is_process_alive = MagicMock(return_value=True)
         stale_dead = _make_provider()
@@ -415,8 +415,8 @@ class TestDiscardReaping:
         mgr._warm_pool.put_nowait((stale_dead, time.monotonic() - 120))
         mgr._warm_pool.put_nowait((dead, time.monotonic()))
 
-        with patch("kiro_crew.session._sync_kill_provider"):
-            with caplog.at_level(logging.INFO, logger="kiro_crew.session"):
+        with patch("aj_crew.session._sync_kill_provider"):
+            with caplog.at_level(logging.INFO, logger="aj_crew.session"):
                 await mgr._sweep_warm_pool_once()
 
         ttl_records = [
@@ -439,14 +439,14 @@ class TestDiscardReaping:
         """A provider stand-in whose pid resolves to a non-int (Mock coerces
         to 1 via __index__) or to pid<=1 must never be signaled — an unguarded
         kill would SIGTERM init / the CI container entrypoint."""
-        from kiro_crew.session_pid import _sync_kill_provider
+        from aj_crew.session_pid import _sync_kill_provider
 
         mock_provider = _make_provider()  # _client._pid auto-resolves to a Mock
         pid_one = _make_provider()
         pid_one._client = SimpleNamespace(_pid=1)
 
-        caplog.set_level(logging.DEBUG, logger="kiro_crew.session_pid")
-        with patch("kiro_crew.session_pid.platform_compat.kill_pid") as mock_kill:
+        caplog.set_level(logging.DEBUG, logger="aj_crew.session_pid")
+        with patch("aj_crew.session_pid.platform_compat.kill_pid") as mock_kill:
             _sync_kill_provider(mock_provider)
             _sync_kill_provider(pid_one)
 
@@ -454,7 +454,7 @@ class TestDiscardReaping:
         refusals = [
             r.getMessage()
             for r in caplog.records
-            if r.name == "kiro_crew.session_pid"
+            if r.name == "aj_crew.session_pid"
             and r.getMessage().startswith("_sync_kill_provider: refusing to signal invalid pid")
         ]
         # Both stand-ins were turned away by the pid guard, not by some later gate.
@@ -486,10 +486,10 @@ class TestDiscardReaping:
             provider.is_process_alive = MagicMock(return_value=False)
             provider.shutdown = AsyncMock()  # "ran" but killed nothing
 
-            mgr, _ = _make_manager(pool_agent="kirocrew", pool_ttl_secs=1)
+            mgr, _ = _make_manager(pool_agent="ajcrew", pool_ttl_secs=1)
             self._expired_entry(mgr, provider)
 
-            await mgr._drain_and_claim("kirocrew")
+            await mgr._drain_and_claim("ajcrew")
 
             await async_wait_until(
                 lambda: proc.poll() is not None,
@@ -521,10 +521,10 @@ class TestDiscardReaping:
             provider.is_process_alive = MagicMock(side_effect=lambda: proc.poll() is None)
             provider.shutdown = AsyncMock()  # graceful close that kills nothing
 
-            mgr, _ = _make_manager(pool_agent="kirocrew", pool_ttl_secs=1)
+            mgr, _ = _make_manager(pool_agent="ajcrew", pool_ttl_secs=1)
             self._expired_entry(mgr, provider)
 
-            pooled = await mgr._drain_and_claim("kirocrew")
+            pooled = await mgr._drain_and_claim("ajcrew")
             assert pooled is None
 
             await async_wait_until(
@@ -543,7 +543,7 @@ class TestDiscardReaping:
         teardown), the fallback must carry the kill on a dedicated thread —
         never inline on the event loop, where ``_sync_kill_provider`` blocks
         (``os.waitpid`` / ``taskkill``) and can trip the loop watchdog."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         dead_executor = ThreadPoolExecutor(max_workers=1)
         dead_executor.shutdown(wait=True)
@@ -557,8 +557,8 @@ class TestDiscardReaping:
 
         provider = _make_provider()
         with (
-            patch("kiro_crew.session.subprocess_executor", return_value=dead_executor),
-            patch("kiro_crew.session._sync_kill_provider", side_effect=_record_thread),
+            patch("aj_crew.session.subprocess_executor", return_value=dead_executor),
+            patch("aj_crew.session._sync_kill_provider", side_effect=_record_thread),
         ):
             SessionManager._dispatch_hard_kill(provider)
 
@@ -572,7 +572,7 @@ class TestDiscardReaping:
         """The health sweep discards several providers in one pass — a
         hard-kill failure for one provider must not escape and skip the
         discard of the remaining providers (that would re-leak them)."""
-        mgr, _ = _make_manager(pool_agent="kirocrew", pool_ttl_secs=1)
+        mgr, _ = _make_manager(pool_agent="ajcrew", pool_ttl_secs=1)
         first = _make_provider()
         first.is_process_alive = MagicMock(return_value=True)
         second = _make_provider()
@@ -587,7 +587,7 @@ class TestDiscardReaping:
             if provider is first:
                 raise RuntimeError("kill blew up")
 
-        with patch("kiro_crew.session._sync_kill_provider", side_effect=_kill):
+        with patch("aj_crew.session._sync_kill_provider", side_effect=_kill):
             await mgr._sweep_warm_pool_once()
 
         assert (

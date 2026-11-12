@@ -16,7 +16,7 @@ from chat_test_helpers import _make_app, _make_state
 class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_regenerate_keeps_the_reply_and_stashes_variant(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
@@ -27,7 +27,7 @@ class TestRegenerateAndVariants:
         async def _capture(*a, **kw):
             captured.extend(list(slot._pending_variants))
 
-        with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_capture):
+        with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_capture):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post("/api/chat/slots/s1/regenerate")
                 assert resp.status == 200
@@ -39,7 +39,7 @@ class TestRegenerateAndVariants:
 
     @pytest.mark.asyncio
     async def test_regenerate_rejects_when_running(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
@@ -60,7 +60,7 @@ class TestRegenerateAndVariants:
 
     @pytest.mark.asyncio
     async def test_regenerate_requires_prior_assistant(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "only user")
@@ -70,7 +70,7 @@ class TestRegenerateAndVariants:
 
     @pytest.mark.asyncio
     async def test_switch_variant_updates_content(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
@@ -91,7 +91,7 @@ class TestRegenerateAndVariants:
         """A reply that ran tools keeps its variants on its first row and its stats
         on its last; showing an older variant must not stamp the first row, which
         the page would then read as the end of the turn."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
@@ -112,7 +112,7 @@ class TestRegenerateAndVariants:
 
     @pytest.mark.asyncio
     async def test_switch_variant_index_out_of_range(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("assistant", "v1")
@@ -124,14 +124,14 @@ class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_regenerate_passes_hint_to_run_chat(self, tmp_path, monkeypatch):
         """_run_chat should receive a non-empty regenerate_hint kwarg."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
         slot.append("assistant", "reply")
         slot.drain()
         mock_run = AsyncMock()
-        with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=mock_run):
+        with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=mock_run):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post("/api/chat/slots/s1/regenerate")
                 assert resp.status == 200
@@ -144,7 +144,7 @@ class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_regenerate_preserves_existing_variants(self, tmp_path, monkeypatch):
         """When assistant already has variants[], regenerate keeps them and adds current."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
@@ -160,7 +160,7 @@ class TestRegenerateAndVariants:
         async def _capture(*a, **kw):
             captured.extend(list(slot._pending_variants))
 
-        with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_capture):
+        with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_capture):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post("/api/chat/slots/s1/regenerate")
                 assert resp.status == 200
@@ -170,7 +170,7 @@ class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_regenerate_when_active_is_old_variant_no_dup(self, tmp_path, monkeypatch):
         """If user switched back to v1 then regenerates, v1 should not be appended twice."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
@@ -186,7 +186,7 @@ class TestRegenerateAndVariants:
         async def _capture(*a, **kw):
             captured.extend(list(slot._pending_variants))
 
-        with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_capture):
+        with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_capture):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post("/api/chat/slots/s1/regenerate")
                 assert resp.status == 200
@@ -196,9 +196,9 @@ class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_regenerate_caps_variants(self, tmp_path, monkeypatch):
         """Variant list is capped; oldest entries drop when over _MAX_VARIANTS."""
-        from kiro_crew.dashboard.chat import _MAX_VARIANTS
+        from aj_crew.dashboard.chat import _MAX_VARIANTS
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
@@ -212,7 +212,7 @@ class TestRegenerateAndVariants:
         async def _capture(*a, **kw):
             captured.extend(list(slot._pending_variants))
 
-        with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_capture):
+        with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_capture):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post("/api/chat/slots/s1/regenerate")
                 assert resp.status == 200
@@ -227,9 +227,9 @@ class TestRegenerateAndVariants:
         """A full list (the flush appends the new reply past the stash) with the
         user reading its oldest version: that version is the reply being
         replaced, so the cap drops the oldest OTHER version, never it."""
-        from kiro_crew.dashboard.chat import _MAX_VARIANTS
+        from aj_crew.dashboard.chat import _MAX_VARIANTS
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
@@ -243,7 +243,7 @@ class TestRegenerateAndVariants:
         async def _capture(*a, **kw):
             captured.extend(list(slot._pending_variants))
 
-        with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_capture):
+        with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_capture):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post("/api/chat/slots/s1/regenerate")
                 assert resp.status == 200
@@ -257,8 +257,8 @@ class TestRegenerateAndVariants:
     def test_cap_keeping_shown_falls_back_to_the_text_when_the_index_is_stale(self):
         """A ``variant_idx`` that does not point at the shown text: the newest
         entry holding that text is the one kept."""
-        from kiro_crew.dashboard.chat import _MAX_VARIANTS
-        from kiro_crew.dashboard.chat_regenerate import _cap_keeping_shown
+        from aj_crew.dashboard.chat import _MAX_VARIANTS
+        from aj_crew.dashboard.chat_regenerate import _cap_keeping_shown
 
         full = [{"content": f"v{i}"} for i in range(_MAX_VARIANTS + 2)]
         kept = [v["content"] for v in _cap_keeping_shown(full, "v1", 5)]
@@ -270,7 +270,7 @@ class TestRegenerateAndVariants:
 
     @pytest.mark.asyncio
     async def test_regenerate_rejects_missing_slot(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post("/api/chat/slots/nonexistent/regenerate")
@@ -278,7 +278,7 @@ class TestRegenerateAndVariants:
 
     @pytest.mark.asyncio
     async def test_regenerate_rejects_empty_user_message(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "")
@@ -291,14 +291,14 @@ class TestRegenerateAndVariants:
     async def test_regenerate_empty_turn_keeps_the_previous_reply(self, tmp_path, monkeypatch):
         """A Regenerate whose turn ends before any reply -- refused,
         cancelled, failed -- leaves the previous reply in the window and on disk."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
         slot.append("assistant", "old")
         slot.drain()
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat import _history_key_for, _save_slot_to_history
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat import _history_key_for, _save_slot_to_history
 
         _save_slot_to_history(state, slot)
 
@@ -306,7 +306,7 @@ class TestRegenerateAndVariants:
             # The turn's end, as ``_end_turn_tail`` runs it, with no reply.
             await chat_runner.settle_regenerate(state, slot)
 
-        with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_empty_turn):
+        with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_empty_turn):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post("/api/chat/slots/s1/regenerate")
                 assert resp.status == 200
@@ -321,14 +321,14 @@ class TestRegenerateAndVariants:
     async def test_regenerate_replaces_the_reply_once_a_new_one_exists(self, tmp_path, monkeypatch):
         """A turn that produced a reply replaces the previous one in the window and
         on disk, and keeps it as a variant."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
         slot.append("assistant", "old")
         slot.drain()
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat import _history_key_for, _save_slot_to_history
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat import _history_key_for, _save_slot_to_history
 
         _save_slot_to_history(state, slot)
 
@@ -338,7 +338,7 @@ class TestRegenerateAndVariants:
             _save_slot_to_history(state, slot)
             await chat_runner.settle_regenerate(state, slot)
 
-        with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_turn):
+        with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_turn):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post("/api/chat/slots/s1/regenerate")
                 assert resp.status == 200
@@ -356,14 +356,14 @@ class TestRegenerateAndVariants:
         """A Regenerate that saved only ``Compacting...`` and ended keeps the
         previous reply. The next Regenerate re-runs that reply, not the notice
         row, so a success keeps it as a version instead of dropping it."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
         slot.append("assistant", "old")
         slot.drain()
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat import _history_key_for, _save_slot_to_history
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat import _history_key_for, _save_slot_to_history
 
         _save_slot_to_history(state, slot)
 
@@ -379,14 +379,14 @@ class TestRegenerateAndVariants:
             await chat_runner.settle_regenerate(state, slot)
 
         async with TestClient(TestServer(_make_app(state))) as client:
-            with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_notice_only_turn):
+            with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_notice_only_turn):
                 resp = await client.post("/api/chat/slots/s1/regenerate")
                 assert resp.status == 200
                 await slot.task
             assert [m["content"] for m in slot.messages] == ["hi", "old", "Compacting..."]
             persisted = state.conversation_log.read_messages(_history_key_for(slot.key))
             assert (persisted[-1].get("meta") or {}).get("kind") == "compaction"
-            with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_turn):
+            with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_turn):
                 resp = await client.post("/api/chat/slots/s1/regenerate")
                 assert resp.status == 200
                 await slot.task
@@ -396,7 +396,7 @@ class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_save_slot_redacts_variants(self, tmp_path, monkeypatch):
         """Variants written to disk must have credentials/exfil URLs redacted."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
@@ -408,7 +408,7 @@ class TestRegenerateAndVariants:
         ]
         slot.messages[-1]["variant_idx"] = 1
         slot.drain()
-        from kiro_crew.dashboard.chat import _history_key_for, _save_slot_to_history
+        from aj_crew.dashboard.chat import _history_key_for, _save_slot_to_history
 
         _save_slot_to_history(state, slot)
         key = _history_key_for(slot.key)
@@ -421,7 +421,7 @@ class TestRegenerateAndVariants:
 
     @pytest.mark.asyncio
     async def test_switch_variant_rejects_when_running(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("assistant", "v2")
@@ -445,7 +445,7 @@ class TestRegenerateAndVariants:
 
     @pytest.mark.asyncio
     async def test_switch_variant_missing_slot(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post("/api/chat/slots/none/switch-variant", json={"index": 0})
@@ -453,7 +453,7 @@ class TestRegenerateAndVariants:
 
     @pytest.mark.asyncio
     async def test_switch_variant_no_variants(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("assistant", "plain")  # no variants[]
@@ -463,7 +463,7 @@ class TestRegenerateAndVariants:
 
     @pytest.mark.asyncio
     async def test_switch_variant_invalid_json_body(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("assistant", "v1")
@@ -474,7 +474,7 @@ class TestRegenerateAndVariants:
 
     @pytest.mark.asyncio
     async def test_switch_variant_non_int_index(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("assistant", "v1")
@@ -488,9 +488,9 @@ class TestRegenerateAndVariants:
         # api_chat_slot_edit_resend parsed the body but never checked
         # isinstance(dict); a valid-JSON array/scalar reached body.get("index")
         # and raised AttributeError -> 500. Must be 400, like switch_variant.
-        from kiro_crew.dashboard.chat import api_chat_slot_edit_resend
+        from aj_crew.dashboard.chat import api_chat_slot_edit_resend
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("s1")
         app = web.Application()
@@ -508,7 +508,7 @@ class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_regenerate_clears_pending_on_task_error(self, tmp_path, monkeypatch):
         """If _run_chat raises, _pending_variants must be cleared to prevent leak."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
@@ -518,7 +518,7 @@ class TestRegenerateAndVariants:
         async def _boom(*a, **kw):
             raise RuntimeError("llm blew up")
 
-        with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_boom):
+        with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_boom):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post("/api/chat/slots/s1/regenerate")
                 assert resp.status == 200
@@ -530,7 +530,7 @@ class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_flush_segment_attaches_pending_variants(self, tmp_path, monkeypatch):
         """_flush_segment should attach _pending_variants to the new assistant message."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
@@ -539,7 +539,7 @@ class TestRegenerateAndVariants:
             {"content": "old v1", "ts": "t1"},
             {"content": "old v2", "ts": "t2"},
         ]
-        from kiro_crew.dashboard.chat import _flush_segment
+        from aj_crew.dashboard.chat import _flush_segment
 
         _flush_segment(state, slot, "new reply", broadcast=False)
         last = slot.messages[-1]
@@ -551,7 +551,7 @@ class TestRegenerateAndVariants:
 
     @pytest.mark.asyncio
     async def test_switch_variant_negative_index(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("assistant", "v1")
@@ -563,7 +563,7 @@ class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_regenerate_only_system_and_assistant(self, tmp_path, monkeypatch):
         """Regenerate should fail if there's no user message (only system + assistant)."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("system", "you are helpful")
@@ -575,11 +575,11 @@ class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_flush_segment_no_pending_no_variants(self, tmp_path, monkeypatch):
         """Normal flush without pending variants should not add variants field."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
-        from kiro_crew.dashboard.chat import _flush_segment
+        from aj_crew.dashboard.chat import _flush_segment
 
         _flush_segment(state, slot, "reply", broadcast=False)
         last = slot.messages[-1]
@@ -588,7 +588,7 @@ class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_switch_variant_missing_index_key(self, tmp_path, monkeypatch):
         """Request body without 'index' key should return 400."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("assistant", "v1")
@@ -600,7 +600,7 @@ class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_restore_preserves_variants(self, tmp_path, monkeypatch):
         """Variants written to disk should be restored via production code path."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
@@ -611,7 +611,7 @@ class TestRegenerateAndVariants:
         ]
         slot.messages[-1]["variant_idx"] = 1
         slot.drain()
-        from kiro_crew.dashboard.chat import _save_slot_to_history, restore_recent_sessions
+        from aj_crew.dashboard.chat import _save_slot_to_history, restore_recent_sessions
 
         _save_slot_to_history(state, slot)
         # Clear in-memory state and restore via production path
@@ -627,7 +627,7 @@ class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_regenerate_clears_pending_on_cancel(self, tmp_path, monkeypatch):
         """If user stops a regeneration (cancel), _pending_variants must be cleared."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
@@ -641,7 +641,7 @@ class TestRegenerateAndVariants:
             await release.wait()
 
         try:
-            with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_hang):
+            with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_hang):
                 async with TestClient(TestServer(_make_app(state))) as client:
                     resp = await client.post("/api/chat/slots/s1/regenerate")
                     assert resp.status == 200
@@ -659,7 +659,7 @@ class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_prepare_messages_redacts_variant_content(self, tmp_path, monkeypatch):
         """Variant content exposed via API must have credentials redacted."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
@@ -668,7 +668,7 @@ class TestRegenerateAndVariants:
             {"content": "AKIAIOSFODNN7EXAMPLE leaked key", "ts": "t1"},
             {"content": "safe", "ts": "t2"},
         ]
-        from kiro_crew.dashboard.chat import _prepare_messages
+        from aj_crew.dashboard.chat import _prepare_messages
 
         prepared = _prepare_messages(slot.messages, False, live_child="")
         ai = [m for m in prepared if m.get("role") == "assistant"][0]
@@ -678,7 +678,7 @@ class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_switch_variant_corrupt_entry(self, tmp_path, monkeypatch):
         """If a variant entry is not a dict, switch-variant should return 400."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("assistant", "v1")
@@ -690,7 +690,7 @@ class TestRegenerateAndVariants:
     @pytest.mark.asyncio
     async def test_concurrent_regenerate_one_succeeds_one_409(self, tmp_path, monkeypatch):
         """Two simultaneous regenerate requests: one gets 200, the other gets 409."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.append("user", "hi")
@@ -703,7 +703,7 @@ class TestRegenerateAndVariants:
             await release.wait()
 
         try:
-            with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_hang):
+            with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_hang):
                 async with TestClient(TestServer(_make_app(state))) as client:
                     r1, r2 = await asyncio.gather(
                         client.post("/api/chat/slots/s1/regenerate"),

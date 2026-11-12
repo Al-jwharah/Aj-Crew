@@ -1,7 +1,7 @@
 """``GET /api/agents`` ships an explicit allowlist, never the whole record.
 
 Building each row with ``{**dataclasses.asdict(agent_cfg)}`` would make its
-response contract "every field ``KiroCrewAgentConfig`` has, plus every field
+response contract "every field ``AjCrewAgentConfig`` has, plus every field
 anyone adds later", automatically — a field added by someone who never looked
 at this endpoint would ship to the browser by omission. Both row sources use an
 explicit allowlist instead, mirroring the rule ``handlers/members_roster.py`` already
@@ -9,7 +9,7 @@ documents for ``GET /api/members``.
 
 These tests are the half that keeps it converted. The key set is pinned as a
 literal, and a separate ratchet compares that literal against the live record
-so a field added to ``KiroCrewAgentConfig`` fails here rather than silently
+so a field added to ``AjCrewAgentConfig`` fails here rather than silently
 appearing in the response — which is the whole point of the change: the default
 becomes "nothing unless someone adds it".
 """
@@ -27,8 +27,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.sections import KiroCrewAgentConfig, _safe_avatar
-from kiro_crew.dashboard.handlers.agents import (
+from aj_crew.config.sections import AjCrewAgentConfig, _safe_avatar
+from aj_crew.dashboard.handlers.agents import (
     _agent_roster_row,
     _carries_mask,
     _name_would_be_masked,
@@ -40,7 +40,7 @@ from kiro_crew.dashboard.handlers.agents import (
 # are handler-added;
 # the rest are allowlisted record fields. Changing this set is a
 # network-boundary contract change: check the frontend consumers first
-# (``website/src/components/AgentSelector.tsx`` declares the ``KiroCrewAgent``
+# (``website/src/components/AgentSelector.tsx`` declares the ``AjCrewAgent``
 # interface the dashboard reads).
 ROSTER_ROW_KEYS = frozenset(
     {
@@ -102,7 +102,7 @@ WITHHELD_RECORD_FIELDS = frozenset(
         # written once by the import's create, rendered by nothing yet.
         "imported",
         # Same home and same reason: the profile card's Dynamic capabilities
-        # preview switch (``kiro_crew.crewmate_dynamic_capabilities``).
+        # preview switch (``aj_crew.crewmate_dynamic_capabilities``).
         "dynamic_capabilities",
     }
 )
@@ -110,10 +110,10 @@ WITHHELD_RECORD_FIELDS = frozenset(
 
 def _make_app() -> web.Application:
     """Minimal aiohttp app with just the roster endpoint."""
-    from kiro_crew.dashboard.handlers import api_kirocrew_agents
+    from aj_crew.dashboard.handlers import api_ajcrew_agents
 
     app = web.Application()
-    app.router.add_get("/api/agents", api_kirocrew_agents)
+    app.router.add_get("/api/agents", api_ajcrew_agents)
     return app
 
 
@@ -128,14 +128,14 @@ def _seed_config_with_every_field_set() -> dict:
     return {
         "agents": {
             "roster-probe": {
-                "kiro_agent": "kirocrew",
+                "kiro_agent": "ajcrew",
                 "workspace": "probe-ws",
                 "memory_store": "probe-ms",
                 "model": "claude-opus-5",
                 "reasoning_effort": "high",
                 "description": "probe description",
                 "triggers": "probe triggers",
-                "source": "kirocrew",
+                "source": "ajcrew",
                 "session_color": "#abcdef",
                 # Withheld — must NOT appear in the response.
                 "member_id": "member-roster-probe",
@@ -159,7 +159,7 @@ class TestRosterRowKeySet:
         """A ``cfg.agents`` row carries the allowlist and nothing else."""
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config_with_every_field_set()), encoding="utf-8")
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(_make_app())) as client:
                 resp = await client.get("/api/agents")
                 assert resp.status == 200
@@ -192,16 +192,16 @@ class TestRosterRowKeySet:
         answer for the whole response.
         """
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.agents.active_project_dir",
+            "aj_crew.dashboard.handlers.agents.active_project_dir",
             lambda state, key: "/probe/project",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.agents.project_agent_names",
+            "aj_crew.dashboard.handlers.agents.project_agent_names",
             lambda project_dir, **kw: frozenset({"project-only-agent"}),
         )
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(_seed_config_with_every_field_set()), encoding="utf-8")
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             app = _make_app()
             # Truthy state with no conversation log: the handler then takes
             # the project-scan branch and skips the usage re-sort.
@@ -240,11 +240,11 @@ class TestRosterRowKeySet:
             request["app"] = "probe-app"
             return await handler(request)
 
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             app = web.Application(middlewares=[_as_app])
-            from kiro_crew.dashboard.handlers import api_kirocrew_agents
+            from aj_crew.dashboard.handlers import api_ajcrew_agents
 
-            app.router.add_get("/api/agents", api_kirocrew_agents)
+            app.router.add_get("/api/agents", api_ajcrew_agents)
             async with TestClient(TestServer(app)) as client:
                 resp = await client.get("/api/agents")
                 assert resp.status == 200
@@ -259,16 +259,16 @@ class TestRosterRowIsAnAllowlistNotASpread:
     """The property that survives the record growing."""
 
     def test_record_field_added_later_is_not_shipped_by_omission(self) -> None:
-        """Every ``KiroCrewAgentConfig`` field is either allowlisted or withheld.
+        """Every ``AjCrewAgentConfig`` field is either allowlisted or withheld.
 
         This is the ratchet. It fails when a field is ADDED to the record, and
         that failure is the feature: the author has to decide whether the
         browser should see it, instead of a spread deciding for them.
         """
-        record_fields = {f.name for f in dataclasses.fields(KiroCrewAgentConfig)}
+        record_fields = {f.name for f in dataclasses.fields(AjCrewAgentConfig)}
         unclassified = record_fields - ROSTER_ROW_KEYS - WITHHELD_RECORD_FIELDS
         assert not unclassified, (
-            f"KiroCrewAgentConfig grew {sorted(unclassified)}. GET /api/agents is an "
+            f"AjCrewAgentConfig grew {sorted(unclassified)}. GET /api/agents is an "
             "explicit allowlist (#8454), so decide deliberately: add the field to "
             "_agent_roster_row AND ROSTER_ROW_KEYS if the dashboard needs it, or to "
             "WITHHELD_RECORD_FIELDS if it must not leave the process."
@@ -298,7 +298,7 @@ class TestRosterRowIsAnAllowlistNotASpread:
             non-default field after defaulted ones is a hard
             ``TypeError: non-default argument 'avatar' follows default argument``
             at class-creation time. That error was this probe's, not the record's:
-            ``KiroCrewAgentConfig()`` instantiates fine on a clean tree.
+            ``AjCrewAgentConfig()`` instantiates fine on a clean tree.
             """
             if f.default_factory is not dataclasses.MISSING:
                 return dataclasses.field(default_factory=f.default_factory)
@@ -306,10 +306,10 @@ class TestRosterRowIsAnAllowlistNotASpread:
 
         grown = dataclasses.make_dataclass(
             "GrownAgentConfig",
-            [(f.name, f.type, _clone(f)) for f in dataclasses.fields(KiroCrewAgentConfig)]
+            [(f.name, f.type, _clone(f)) for f in dataclasses.fields(AjCrewAgentConfig)]
             + [("secret_future_field", str, dataclasses.field(default="must-not-ship"))],
         )
-        row = _agent_roster_row("grown", "global", cast(KiroCrewAgentConfig, grown()), redact=False)
+        row = _agent_roster_row("grown", "global", cast(AjCrewAgentConfig, grown()), redact=False)
         assert set(row) == ROSTER_ROW_KEYS
         assert "secret_future_field" not in row
         assert "must-not-ship" not in json.dumps(row)
@@ -334,8 +334,8 @@ class TestUnshowableValuesAreMasked:
     # "the sentinel, exactly".
     RECORD_FIELDS_SHIPPED = tuple(sorted(ROSTER_ROW_KEYS - HANDLER_ADDED_KEYS - {"avatar"}))
 
-    def _full(self) -> KiroCrewAgentConfig:
-        return KiroCrewAgentConfig(
+    def _full(self) -> AjCrewAgentConfig:
+        return AjCrewAgentConfig(
             kiro_agent=self.PROBE,
             workspace=f"ws-{self.PROBE}",
             memory_store=f"ms-{self.PROBE}",
@@ -367,7 +367,7 @@ class TestUnshowableValuesAreMasked:
         PRESERVE it: an echoed `""` would read as a genuine edit and overwrite the
         stored value, which was a real defect in an earlier revision.
         """
-        cfg = KiroCrewAgentConfig()
+        cfg = AjCrewAgentConfig()
         object.__setattr__(cfg, field, {"nested": "object"})
         row = _agent_roster_row("probe", "global", cfg, redact=redact)
         assert _carries_mask(row[field])
@@ -381,7 +381,7 @@ class TestUnshowableValuesAreMasked:
         exceptions BY NAME means another non-string field cannot appear without
         this test failing.
         """
-        cfg = KiroCrewAgentConfig()
+        cfg = AjCrewAgentConfig()
         object.__setattr__(cfg, "description", {"nested": "object"})
         for redact in (False, True):
             row = _agent_roster_row("probe", "global", cfg, redact=redact)
@@ -399,7 +399,7 @@ class TestUnshowableValuesAreMasked:
         A GLOBAL row's name is its only handle -- it addresses
         ``/api/agents/{name}`` for edit and delete and keys the usage sort -- and
         masking it for a non-app caller would buy nothing, since the same names
-        are readable unmasked from ``GET /api/config/kirocrew`` as the ``agents``
+        are readable unmasked from ``GET /api/config/ajcrew`` as the ``agents``
         map's KEYS (``_masked_config_dict`` masks only schema-``sensitive``
         VALUES).
 
@@ -410,16 +410,16 @@ class TestUnshowableValuesAreMasked:
         opaque replacement identifier is needed.
         """
         # Global + owner: verbatim, because it is addressable.
-        g = _agent_roster_row(f"crew-{self.PROBE}", "global", KiroCrewAgentConfig(), redact=False)
+        g = _agent_roster_row(f"crew-{self.PROBE}", "global", AjCrewAgentConfig(), redact=False)
         assert g["name"] == f"crew-{self.PROBE}"
         assert g["scope"] == "global"
         # Global + app token: masked, because an app cannot reach those routes.
-        ga = _agent_roster_row(f"crew-{self.PROBE}", "global", KiroCrewAgentConfig(), redact=True)
+        ga = _agent_roster_row(f"crew-{self.PROBE}", "global", AjCrewAgentConfig(), redact=True)
         assert _carries_mask(ga["name"])
         # Project: masked for BOTH callers, because nothing addresses a project row.
         for redact in (False, True):
             p = _agent_roster_row(
-                f"crew-{self.PROBE}", "project", KiroCrewAgentConfig(), redact=redact
+                f"crew-{self.PROBE}", "project", AjCrewAgentConfig(), redact=redact
             )
             assert _carries_mask(p["name"]), f"project name unmasked at redact={redact}"
             assert p["scope"] == "project"
@@ -427,21 +427,21 @@ class TestUnshowableValuesAreMasked:
         # normal project agents stay selectable.
         for scope in ("global", "project"):
             for redact in (False, True):
-                row = _agent_roster_row("my-agent", scope, KiroCrewAgentConfig(), redact=redact)
+                row = _agent_roster_row("my-agent", scope, AjCrewAgentConfig(), redact=redact)
                 assert row["name"] == "my-agent"
 
     @pytest.mark.parametrize("redact", [False, True])
     def test_benign_content_is_never_altered(self, redact: bool) -> None:
         """A mask that swallows legitimate text is a rendering bug, not hardening."""
-        cfg = KiroCrewAgentConfig(description="a plain crew", triggers="use for triage")
-        row = _agent_roster_row("kirocrew", "global", cfg, redact=redact)
+        cfg = AjCrewAgentConfig(description="a plain crew", triggers="use for triage")
+        row = _agent_roster_row("ajcrew", "global", cfg, redact=redact)
         assert row["description"] == "a plain crew"
         assert row["triggers"] == "use for triage"
-        assert row["name"] == "kirocrew"
+        assert row["name"] == "ajcrew"
 
     def test_both_caller_classes_ship_the_same_key_set(self) -> None:
         """Only values differ. A caller-dependent KEY set would be a second contract."""
-        cfg = KiroCrewAgentConfig(description="d", triggers="t")
+        cfg = AjCrewAgentConfig(description="d", triggers="t")
         owner = _agent_roster_row("probe", "global", cfg, redact=False)
         app = _agent_roster_row("probe", "global", cfg, redact=True)
         assert set(owner) == set(app) == ROSTER_ROW_KEYS
@@ -464,10 +464,10 @@ class TestAvatarIsShapeAllowlistedNotMasked:
             "probe",
             "global",
             cast(
-                KiroCrewAgentConfig,
+                AjCrewAgentConfig,
                 types.SimpleNamespace(
                     **{
-                        **{f.name: "" for f in dataclasses.fields(KiroCrewAgentConfig)},
+                        **{f.name: "" for f in dataclasses.fields(AjCrewAgentConfig)},
                         "avatar": {"kind": "ghost", "traits": {"eyes": self.PROBE}},
                     }
                 ),
@@ -495,10 +495,10 @@ class TestAvatarIsShapeAllowlistedNotMasked:
                 "probe",
                 "global",
                 cast(
-                    KiroCrewAgentConfig,
+                    AjCrewAgentConfig,
                     types.SimpleNamespace(
                         **{
-                            **{f.name: "" for f in dataclasses.fields(KiroCrewAgentConfig)},
+                            **{f.name: "" for f in dataclasses.fields(AjCrewAgentConfig)},
                             "avatar": record,
                         }
                     ),
@@ -527,10 +527,10 @@ class TestAvatarIsShapeAllowlistedNotMasked:
             "probe",
             "global",
             cast(
-                KiroCrewAgentConfig,
+                AjCrewAgentConfig,
                 types.SimpleNamespace(
                     **{
-                        **{f.name: "" for f in dataclasses.fields(KiroCrewAgentConfig)},
+                        **{f.name: "" for f in dataclasses.fields(AjCrewAgentConfig)},
                         "avatar": {
                             "kind": "ghost",
                             "motions": {"done": "bounce", "error": self.PROBE},
@@ -556,10 +556,10 @@ class TestAvatarIsShapeAllowlistedNotMasked:
             "probe",
             "global",
             cast(
-                KiroCrewAgentConfig,
+                AjCrewAgentConfig,
                 types.SimpleNamespace(
                     **{
-                        **{f.name: "" for f in dataclasses.fields(KiroCrewAgentConfig)},
+                        **{f.name: "" for f in dataclasses.fields(AjCrewAgentConfig)},
                         "avatar": {"kind": "image", "v": 17, "file": self.FILE_PIN},
                     }
                 ),
@@ -616,10 +616,10 @@ class TestAvatarIsShapeAllowlistedNotMasked:
             "probe",
             "global",
             cast(
-                KiroCrewAgentConfig,
+                AjCrewAgentConfig,
                 types.SimpleNamespace(
                     **{
-                        **{f.name: "" for f in dataclasses.fields(KiroCrewAgentConfig)},
+                        **{f.name: "" for f in dataclasses.fields(AjCrewAgentConfig)},
                         "avatar": {"kind": "image", "file": "../../etc/passwd"},
                     }
                 ),
@@ -633,10 +633,10 @@ class TestAvatarIsShapeAllowlistedNotMasked:
             "probe",
             "global",
             cast(
-                KiroCrewAgentConfig,
+                AjCrewAgentConfig,
                 types.SimpleNamespace(
                     **{
-                        **{f.name: "" for f in dataclasses.fields(KiroCrewAgentConfig)},
+                        **{f.name: "" for f in dataclasses.fields(AjCrewAgentConfig)},
                         "avatar": {"kind": "nonsense", "evil": self.PROBE},
                     }
                 ),
@@ -667,7 +667,7 @@ class TestCredentialShapedNamesAreRefusedAtCreation:
         for candidate in (self.PROBE, f"https://x.example/?token={self.PROBE}"):
             assert _name_would_be_masked(candidate) is True
             assert _roster_mask(candidate) != candidate
-        for benign in ("oncall", "kirocrew", "crew-7", "release manager"):
+        for benign in ("oncall", "ajcrew", "crew-7", "release manager"):
             assert _name_would_be_masked(benign) is False
             assert _roster_mask(benign) == benign
 
@@ -688,8 +688,8 @@ class TestCredentialShapedNamesAreRefusedAtCreation:
         seed = _seed_config_with_every_field_set()
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(seed), encoding="utf-8")
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-            from kiro_crew.dashboard.handlers import api_kirocrew_agents_create
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+            from aj_crew.dashboard.handlers import api_ajcrew_agents_create
 
             @web.middleware
             async def _owner(request: web.Request, handler):  # type: ignore[no-untyped-def]
@@ -699,11 +699,9 @@ class TestCredentialShapedNamesAreRefusedAtCreation:
 
             app = web.Application(middlewares=[_owner])
             app["state"] = types.SimpleNamespace(owner_id="owner-1", conversation_log=None)
-            app.router.add_post("/api/agents", api_kirocrew_agents_create)
+            app.router.add_post("/api/agents", api_ajcrew_agents_create)
             async with TestClient(TestServer(app)) as client:
-                resp = await client.post(
-                    "/api/agents", json={"name": bad, "kiro_agent": "kirocrew"}
-                )
+                resp = await client.post("/api/agents", json={"name": bad, "kiro_agent": "ajcrew"})
                 assert resp.status == 400, await resp.text()
                 payload = await resp.json()
                 assert payload["code"] == "invalid_member_name"
@@ -714,8 +712,8 @@ class TestCredentialShapedNamesAreRefusedAtCreation:
         seed = _seed_config_with_every_field_set()
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(seed), encoding="utf-8")
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-            from kiro_crew.dashboard.handlers import api_kirocrew_agents_create
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+            from aj_crew.dashboard.handlers import api_ajcrew_agents_create
 
             # POST is owner-gated (`_require_owner`), so the caller must BE the
             # owner for the request to reach the name check at all.
@@ -727,11 +725,11 @@ class TestCredentialShapedNamesAreRefusedAtCreation:
 
             app = web.Application(middlewares=[_owner])
             app["state"] = types.SimpleNamespace(owner_id="owner-1", conversation_log=None)
-            app.router.add_post("/api/agents", api_kirocrew_agents_create)
+            app.router.add_post("/api/agents", api_ajcrew_agents_create)
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
                     "/api/agents",
-                    json={"name": self.PROBE, "kiro_agent": "kirocrew"},
+                    json={"name": self.PROBE, "kiro_agent": "ajcrew"},
                 )
                 assert resp.status == 400, await resp.text()
                 payload = await resp.json()
@@ -761,15 +759,15 @@ class TestCallerClassIsTheOwnerPredicate:
             request["user"] = user
             return await handler(request)
 
-        from kiro_crew.dashboard.handlers import api_kirocrew_agents
+        from aj_crew.dashboard.handlers import api_ajcrew_agents
 
         app = web.Application(middlewares=[_identity])
         app["state"] = types.SimpleNamespace(owner_id=owner_id, conversation_log=None)
-        app.router.add_get("/api/agents", api_kirocrew_agents)
+        app.router.add_get("/api/agents", api_ajcrew_agents)
         return app
 
     async def _name_for(self, app: web.Application, tmp: Path) -> str:
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.get("/api/agents")
                 assert resp.status == 200
@@ -823,7 +821,7 @@ class TestCallerClassIsTheOwnerPredicate:
         "not a mask", and lets `_safe_avatar` persist the sentinel over the stored
         trait. Any string anywhere inside the value must count.
         """
-        from kiro_crew.dashboard.handlers.core import _SENSITIVE_MASK
+        from aj_crew.dashboard.handlers.core import _SENSITIVE_MASK
 
         assert _carries_mask({"kind": "ghost", "traits": {"eyes": _SENSITIVE_MASK}}) is True
         assert _carries_mask({"kind": "ghost", "traits": {"eyes": f"{_SENSITIVE_MASK} x"}}) is True
@@ -835,7 +833,7 @@ class TestCallerClassIsTheOwnerPredicate:
     @pytest.mark.asyncio
     async def test_an_echoed_avatar_does_not_overwrite_a_masked_trait(self, tmp_path: Path) -> None:
         """End to end: the sentinel never reaches config.json through the nest."""
-        from kiro_crew.dashboard.handlers.core import _SENSITIVE_MASK
+        from aj_crew.dashboard.handlers.core import _SENSITIVE_MASK
 
         seed = _seed_config_with_every_field_set()
         stored = f"eyes-{self.PROBE}"
@@ -843,16 +841,16 @@ class TestCallerClassIsTheOwnerPredicate:
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(seed), encoding="utf-8")
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp),
             unittest.mock.patch(
-                "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+                "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
                 lambda request: True,
             ),
         ):
-            from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
+            from aj_crew.dashboard.handlers import api_ajcrew_agent_update
 
             app = web.Application()
-            app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+            app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
             async with TestClient(TestServer(app)) as client:
                 put = await client.put(
                     "/api/agents/roster-probe",
@@ -879,17 +877,17 @@ class TestMaskIsTreatedAsUnchangedOnWrite:
         uses for the mutating agent endpoints.
         """
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             lambda request: True,
         )
 
     def test_the_sentinel_is_the_one_the_config_endpoint_uses(self) -> None:
         """Not a private copy: drift would silently break the round-trip rule."""
-        from kiro_crew.dashboard.handlers.core import _SENSITIVE_MASK
+        from aj_crew.dashboard.handlers.core import _SENSITIVE_MASK
 
         assert _carries_mask(_SENSITIVE_MASK)
         row = _agent_roster_row(
-            "probe", "global", KiroCrewAgentConfig(description=f"see {self.PROBE}"), redact=False
+            "probe", "global", AjCrewAgentConfig(description=f"see {self.PROBE}"), redact=False
         )
         assert row["description"] == _SENSITIVE_MASK
 
@@ -906,7 +904,7 @@ class TestMaskIsTreatedAsUnchangedOnWrite:
         the redaction glyphs plus the addition over the stored original -- the data
         loss this rule exists to stop.
         """
-        from kiro_crew.dashboard.handlers.core import _SENSITIVE_MASK
+        from aj_crew.dashboard.handlers.core import _SENSITIVE_MASK
 
         assert _carries_mask(_SENSITIVE_MASK) is True
         assert _carries_mask(f"{_SENSITIVE_MASK} and also X") is True
@@ -921,18 +919,18 @@ class TestMaskIsTreatedAsUnchangedOnWrite:
         masked trigger -> editor appends text -> PUT must NOT persist the sentinel
         plus the text.
         """
-        from kiro_crew.dashboard.handlers.core import _SENSITIVE_MASK
+        from aj_crew.dashboard.handlers.core import _SENSITIVE_MASK
 
         seed = _seed_config_with_every_field_set()
         stored = f"use when {self.PROBE}"
         seed["agents"]["roster-probe"]["triggers"] = stored
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(seed), encoding="utf-8")
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-            from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+            from aj_crew.dashboard.handlers import api_ajcrew_agent_update
 
             app = web.Application()
-            app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+            app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
             async with TestClient(TestServer(app)) as client:
                 put = await client.put(
                     "/api/agents/roster-probe",
@@ -960,15 +958,15 @@ class TestMaskIsTreatedAsUnchangedOnWrite:
         seed["agents"]["roster-probe"]["triggers"] = stored_triggers
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(seed), encoding="utf-8")
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-            from kiro_crew.dashboard.handlers import (
-                api_kirocrew_agent_update,
-                api_kirocrew_agents,
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+            from aj_crew.dashboard.handlers import (
+                api_ajcrew_agent_update,
+                api_ajcrew_agents,
             )
 
             app = web.Application()
-            app.router.add_get("/api/agents", api_kirocrew_agents)
-            app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+            app.router.add_get("/api/agents", api_ajcrew_agents)
+            app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
             async with TestClient(TestServer(app)) as client:
                 resp = await client.get("/api/agents")
                 rows = {a["name"]: a for a in (await resp.json())["agents"]}
@@ -1007,15 +1005,15 @@ class TestMaskIsTreatedAsUnchangedOnWrite:
         seed["agents"]["roster-probe"]["triggers"] = f"first {self.PROBE}"
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(seed), encoding="utf-8")
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-            from kiro_crew.dashboard.handlers import (
-                api_kirocrew_agent_update,
-                api_kirocrew_agents,
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+            from aj_crew.dashboard.handlers import (
+                api_ajcrew_agent_update,
+                api_ajcrew_agents,
             )
 
             app = web.Application()
-            app.router.add_get("/api/agents", api_kirocrew_agents)
-            app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+            app.router.add_get("/api/agents", api_ajcrew_agents)
+            app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
             async with TestClient(TestServer(app)) as client:
                 rows = {
                     a["name"]: a for a in (await (await client.get("/api/agents")).json())["agents"]
@@ -1044,12 +1042,12 @@ class TestMaskIsTreatedAsUnchangedOnWrite:
         seed = _seed_config_with_every_field_set()
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(seed), encoding="utf-8")
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-            from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
-            from kiro_crew.dashboard.handlers.core import _SENSITIVE_MASK
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+            from aj_crew.dashboard.handlers import api_ajcrew_agent_update
+            from aj_crew.dashboard.handlers.core import _SENSITIVE_MASK
 
             app = web.Application()
-            app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+            app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
             async with TestClient(TestServer(app)) as client:
                 put = await client.put(
                     "/api/agents/roster-probe",
@@ -1075,11 +1073,11 @@ class TestMaskIsTreatedAsUnchangedOnWrite:
         seed["agents"]["roster-probe"]["triggers"] = f"use when {self.PROBE}"
         tmp = tmp_path / "config.json"
         tmp.write_text(json.dumps(seed), encoding="utf-8")
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-            from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+            from aj_crew.dashboard.handlers import api_ajcrew_agent_update
 
             app = web.Application()
-            app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+            app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
             async with TestClient(TestServer(app)) as client:
                 put = await client.put(
                     "/api/agents/roster-probe", json={"triggers": "an actual new value"}

@@ -337,7 +337,7 @@ describe('PierreWorkspaceTreeImpl — data loading', () => {
       // all: it is shown in forward-slash form, every segment breakable. A
       // POSIX name that merely contains a backslash is not Windows-shaped and
       // stays as it is.
-      expect(breakAtSlashes('C:\\Users\\dev\\KiroCrew')).toBe('C:/\u200bUsers/\u200bdev/\u200bKiroCrew')
+      expect(breakAtSlashes('C:\\Users\\dev\\AjCrew')).toBe('C:/\u200bUsers/\u200bdev/\u200bAjCrew')
       expect(breakAtSlashes('\\\\share\\team\\repo')).toBe('/\u200b/\u200bshare/\u200bteam/\u200brepo')
       expect(breakAtSlashes('/home/dev/weird\\name')).toBe('/\u200bhome/\u200bdev/\u200bweird\\name')
       // Reading order: sentence, path, then the hand-off -- never the hand-off

@@ -16,21 +16,21 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp import kas_bundle as kas_bundle_install
-from kiro_crew.acp.harness import kas as kas_harness
-from kiro_crew.acp.harness.base import SpawnContext
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.agent_sdk.backend_cards import card_payload
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.acp import client as client_mod
+from aj_crew.acp import kas_bundle as kas_bundle_install
+from aj_crew.acp.harness import kas as kas_harness
+from aj_crew.acp.harness.base import SpawnContext
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.agent_sdk.backend_cards import card_payload
+from aj_crew.dashboard import chat_runner
+from aj_crew.providers.acp import AcpProvider
 
 KAS_FRAMES = Path(__file__).resolve().parent / "fixtures" / "acp_frames" / "kas"
 #: A custom agent bound with customAgents + set_mode on KAS 0.66.43 (kiro-cli 2.32.0).
 OLD_CAPTURE = KAS_FRAMES / "saved-spec-live.jsonl"
 #: The crewmate worker kit, whose added prompt KAS 0.66.58 (kiro-cli 2.33.1) followed.
 NEW_CAPTURE = KAS_FRAMES / "worker-kit-live.jsonl"
-AGENTS = [{"id": "kirocrew"}]
+AGENTS = [{"id": "ajcrew"}]
 
 
 def _header(path: Path) -> dict:
@@ -130,7 +130,7 @@ def test_a_session_carries_it_only_when_it_registered_custom_agents(agents, warn
     harness = kas_harness.KasHarness()
     harness.agent_prompt_notice = kas_harness.kas_agent_prompt_issue(OLD)
     handle = SimpleNamespace()
-    harness.record_session_projection(handle, agents, "kirocrew")
+    harness.record_session_projection(handle, agents, "ajcrew")
     assert bool(handle.kas_agent_prompt_notice) is warns
 
 

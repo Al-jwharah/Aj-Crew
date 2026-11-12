@@ -12,10 +12,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew.acp import session_mcp
-from kiro_crew.acp.harness.codex import CodexHarness
-from kiro_crew.providers.mirrors.codex import codex_projection
+from aj_crew import agent as agent_mod
+from aj_crew.acp import session_mcp
+from aj_crew.acp.harness.codex import CodexHarness
+from aj_crew.providers.mirrors.codex import codex_projection
 
 #: What codex-acp 1.11.0's ``initialize`` actually answered. Used as the live
 #: advertisement in these tests so they exercise the same input the client feeds
@@ -23,10 +23,10 @@ from kiro_crew.providers.mirrors.codex import codex_projection
 _CODEX_1_11_CAPS = {"acp": False, "http": True, "sse": False}
 
 
-_CORE = {"command": "/opt/kirocrew", "args": ["mcp-core"]}
+_CORE = {"command": "/opt/ajcrew", "args": ["mcp-core"]}
 
 
-_CRON = {"command": "/opt/kirocrew", "args": ["mcp-cron"]}
+_CRON = {"command": "/opt/ajcrew", "args": ["mcp-cron"]}
 
 
 @pytest.fixture
@@ -43,7 +43,7 @@ def agents_dir(tmp_path, monkeypatch):
     # these tests supply it (or leave it absent) rather than read the machine's.
     monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", tmp_path / "settings-mcp.json")
     monkeypatch.setattr(session_mcp, "ensure_agent_materialized", lambda _a: True)
-    managed = {"kirocrew-core": dict(_CORE), "kirocrew-cron": dict(_CRON)}
+    managed = {"ajcrew-core": dict(_CORE), "ajcrew-cron": dict(_CRON)}
     monkeypatch.setattr(
         session_mcp,
         "managed_mcp_spec_entry",
@@ -54,10 +54,10 @@ def agents_dir(tmp_path, monkeypatch):
 
 
 def _write_spec(agents_dir: Path, *, servers: dict, tools: list | None) -> None:
-    spec: dict = {"name": "kirocrew", "mcpServers": servers}
+    spec: dict = {"name": "ajcrew", "mcpServers": servers}
     if tools is not None:
         spec["tools"] = tools
-    (agents_dir / "kirocrew.json").write_text(json.dumps(spec), encoding="utf-8")
+    (agents_dir / "ajcrew.json").write_text(json.dumps(spec), encoding="utf-8")
 
 
 def _by_name(elements: list[dict]) -> dict[str, dict]:
@@ -88,7 +88,7 @@ def _codex_session_array(
     array are two halves of one answer and a caller usually wants both.
     """
     projection = codex_projection(
-        "kirocrew",
+        "ajcrew",
         session_key=session_key,
         channel_id=channel_id,
         stub_server_names=stub_names,

@@ -21,12 +21,12 @@ vi.mock('../api/client', () => ({
     updateCron: vi.fn(),
     createCron: vi.fn(),
     models: vi.fn().mockResolvedValue({ models: [] }),
-    kirocrewAgents: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
+    ajcrewAgents: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
     chatFolders: vi.fn(),
     // The picker's folder ORDER comes from this read (dashboard.folder_sort);
     // unanswered it fails and the form says so, which the folder-list cases
     // below must not be mistaken for.
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
   },
 }))
 
@@ -45,7 +45,7 @@ function makeJob(overrides: Partial<CronJob> = {}): CronJob {
 
 beforeEach(() => {
   vi.mocked(api.chatFolders).mockResolvedValue(FOLDERS)
-  vi.mocked(api.kirocrewConfig).mockResolvedValue({ dashboard: { folder_sort: 'custom' } })
+  vi.mocked(api.ajcrewConfig).mockResolvedValue({ dashboard: { folder_sort: 'custom' } })
 })
 
 describe('the chat-folder picker', () => {
@@ -344,7 +344,7 @@ describe('the chat-folder picker', () => {
 
 describe('the folder order behind the picker', () => {
   it('lists the folders in the order the sidebar draws them', async () => {
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ dashboard: { folder_sort: 'name' } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ dashboard: { folder_sort: 'name' } })
     renderWithProviders(<JobForm layout="vertical" agents={[]} onSaved={() => {}} />)
     await userEvent.click(await screen.findByLabelText('Chat folder'))
     const rows = (await screen.findAllByRole('option')).map(o => o.textContent)
@@ -358,7 +358,7 @@ describe('the folder order behind the picker', () => {
     // different list than the one the reader chose -- so it is said, with the
     // server's own words, next to the picker it explains. The list itself still
     // loads: the order is a view over it, never a condition for it.
-    vi.mocked(api.kirocrewConfig).mockRejectedValue(new Error('gateway restarting'))
+    vi.mocked(api.ajcrewConfig).mockRejectedValue(new Error('gateway restarting'))
     renderWithProviders(<JobForm layout="vertical" agents={[]} onSaved={() => {}} />)
     const notice = await screen.findByTestId('job-folder-order-unavailable')
     expect(notice).toHaveAttribute('role', 'alert')
@@ -382,7 +382,7 @@ describe('the folder order behind the picker', () => {
   it('says nothing about the order while Hide in chat suspends the picker', async () => {
     // A disabled picker lists nothing the reader can choose from, so the order
     // it would have drawn in is not theirs to care about.
-    vi.mocked(api.kirocrewConfig).mockRejectedValue(new Error('gateway restarting'))
+    vi.mocked(api.ajcrewConfig).mockRejectedValue(new Error('gateway restarting'))
     renderWithProviders(<JobForm layout="vertical" agents={[]} onSaved={() => {}} />)
     await screen.findByTestId('job-folder-order-unavailable')
     await userEvent.click(screen.getByLabelText('Hide in chat'))

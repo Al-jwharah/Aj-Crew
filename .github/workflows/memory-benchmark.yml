@@ -125,14 +125,14 @@ jobs:
         # from the previous vector space. That is the correct outcome: those
         # numbers are not comparable.
         run: |
-          DIGEST="$(python3 -c 'from kiro_crew import embeddings; print(embeddings._GGUF_SHA256)')"
+          DIGEST="$(python3 -c 'from aj_crew import embeddings; print(embeddings._GGUF_SHA256)')"
           case "$DIGEST" in
             [0-9a-f][0-9a-f]*) ;;
             *) echo "::error::could not read the model digest (got '$DIGEST')"; exit 1 ;;
           esac
           # Derived, not hardcoded: the cache path must follow the code's own idea
           # of where the model lives or the cache silently stops covering it.
-          MODEL_DIR="$(python3 -c 'from kiro_crew import embeddings; print(embeddings.default_model_path().parent)')"
+          MODEL_DIR="$(python3 -c 'from aj_crew import embeddings; print(embeddings.default_model_path().parent)')"
           echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
           echo "path=$MODEL_DIR" >> "$GITHUB_OUTPUT"
 
@@ -152,13 +152,13 @@ jobs:
         env:
           # The harness's own test suite sets this to keep unit tests from pulling
           # 639 MB. Here the download is the point, so make its absence explicit.
-          KIROCREW_SKIP_MODEL_DOWNLOAD: ""
+          AJCREW_SKIP_MODEL_DOWNLOAD: ""
         run: |
           python3 - <<'PY'
           import asyncio
           import sys
 
-          from kiro_crew import embeddings
+          from aj_crew import embeddings
 
           mgr = embeddings.ModelDownloadManager()
           if mgr.model_ready():
@@ -176,7 +176,7 @@ jobs:
         # Checksum-verified against a pinned upstream revision. A mismatch is a
         # hard failure: a corpus that changed underneath a stored baseline turns
         # a regression into a mystery.
-        run: kirocrew bench fetch locomo10
+        run: ajcrew bench fetch locomo10
 
       - name: Run the benchmark
         env:
@@ -192,7 +192,7 @@ jobs:
           # No --toy-embedder: the harness refuses to run when the real model is
           # not resident, so a failed model download fails here loudly instead of
           # quietly measuring substring overlap.
-          kirocrew bench retrieval locomo10 \
+          ajcrew bench retrieval locomo10 \
             --timeline "$TIMELINE" \
             $SLICE \
             --out-dir reports \
@@ -218,7 +218,7 @@ jobs:
     # Use the larger-runner label upstream; forks cannot reach the org group.
     # "Larger runners for the review lanes and CodeQL" in
     # docs/ci/ci-and-reviews.md.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     timeout-minutes: 15
     permissions:
       contents: write
@@ -268,7 +268,7 @@ jobs:
                 # mismatch prints "not comparable" instead of a plausible number.
                 # 2>&1: a report that cannot be read is refused on stderr, and the
                 # reason belongs in comparison.md beside the other sections.
-                kirocrew bench compare "$OLD" "$NEW" 2>&1 || true
+                ajcrew bench compare "$OLD" "$NEW" 2>&1 || true
               fi
               echo
             done

@@ -57,7 +57,7 @@ const slots = TITLES.map((title, i) => ({
   title,
   messages: 4,
   running: false,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   created: '2026-07-20T01:00:00Z',
   last_ts: new Date(Date.parse('2026-07-29T21:00:00Z') - i * 3600_000).toISOString(),
   folder_id: '',

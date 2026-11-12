@@ -14,15 +14,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.eval.bench import datasets
-from kiro_crew.eval.bench.adapters.locomo import load_locomo_file
-from kiro_crew.eval.bench.corpus import (
+from aj_crew.eval.bench import datasets
+from aj_crew.eval.bench.adapters.locomo import load_locomo_file
+from aj_crew.eval.bench.corpus import (
     CAT_ADVERSARIAL,
     CAT_SINGLE_HOP,
     BenchInstance,
     BenchQuery,
 )
-from kiro_crew.eval.bench.retrieval import RetrievalAggregate
+from aj_crew.eval.bench.retrieval import RetrievalAggregate
 
 
 def _instance(queries: list[BenchQuery]) -> BenchInstance:
@@ -43,7 +43,7 @@ def _query(qid: str, *, unanswerable: bool, gold: bool = True) -> BenchQuery:
 
 def test_the_two_exclusion_reasons_are_counted_separately() -> None:
     """Both reasons are population-level counts, and they add up to the total."""
-    from kiro_crew.eval.bench.retrieval import aggregate
+    from aj_crew.eval.bench.retrieval import aggregate
 
     inst = _instance(
         [
@@ -62,7 +62,7 @@ def test_the_two_exclusion_reasons_are_counted_separately() -> None:
 
 def test_the_summary_names_the_reason_that_actually_applies() -> None:
     """The single gold-flavoured clause was wrong for the larger population."""
-    from kiro_crew.eval.bench.run import _excluded_phrase
+    from aj_crew.eval.bench.run import _excluded_phrase
 
     phrase = _excluded_phrase(
         RetrievalAggregate(
@@ -80,14 +80,14 @@ def test_the_summary_names_the_reason_that_actually_applies() -> None:
 
 def test_no_clause_is_printed_when_nothing_was_excluded() -> None:
     """A clean corpus must not grow an empty parenthesis."""
-    from kiro_crew.eval.bench.run import _excluded_phrase
+    from aj_crew.eval.bench.run import _excluded_phrase
 
     assert _excluded_phrase(RetrievalAggregate(scored_queries=10)) == ""
 
 
 def test_only_the_reason_that_occurred_is_named() -> None:
     """A corpus with no dangling gold must not report a zero for it."""
-    from kiro_crew.eval.bench.run import _excluded_phrase
+    from aj_crew.eval.bench.run import _excluded_phrase
 
     phrase = _excluded_phrase(
         RetrievalAggregate(
@@ -101,7 +101,7 @@ def test_only_the_reason_that_occurred_is_named() -> None:
 def test_the_json_report_carries_both_counts() -> None:
     """A reader of the stored report must be able to split the denominator too."""
     source = Path(
-        __import__("kiro_crew.eval.bench.run", fromlist=["run"]).__file__ or ""
+        __import__("aj_crew.eval.bench.run", fromlist=["run"]).__file__ or ""
     ).read_text(encoding="utf-8")
     effective = [ln for ln in source.splitlines() if not ln.lstrip().startswith("#")]
     assert any('"skipped_missing_gold"' in ln for ln in effective)

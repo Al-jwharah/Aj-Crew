@@ -18,8 +18,8 @@ from typing import Any
 import pytest
 from platform_compat_coverage_helpers import _Fn
 
-from kiro_crew import platform_compat as pc
-from kiro_crew import platform_compat_links as pcl
+from aj_crew import platform_compat as pc
+from aj_crew import platform_compat_links as pcl
 
 
 def _kernel32(monkeypatch: pytest.MonkeyPatch, **entry_points: Any) -> None:

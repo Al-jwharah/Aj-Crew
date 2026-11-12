@@ -90,8 +90,8 @@ describe('SkillsTab', () => {
   it('renders a row per skill with its loaded_by_agents pill', async () => {
     mockApi.skills.mockResolvedValue([
       {
-        key: 'foo', name: 'foo', description: 'a foo skill', source: 'kirocrew',
-        loaded_by_agents: ['kirocrew', 'kirocrew-lite'],
+        key: 'foo', name: 'foo', description: 'a foo skill', source: 'ajcrew',
+        loaded_by_agents: ['ajcrew', 'ajcrew-lite'],
       },
     ])
     renderWithQuery()
@@ -106,7 +106,7 @@ describe('SkillsTab', () => {
     // An inert "Refresh skills" reads as unavailable; while the refetch runs its
     // name says it is busy instead. It stays focusable, so a keyboard user's
     // focus is not dropped to the page for the whole refresh.
-    const rows = [{ key: 'foo', name: 'foo', description: 'a foo skill', source: 'kirocrew', loaded_by_agents: [] }]
+    const rows = [{ key: 'foo', name: 'foo', description: 'a foo skill', source: 'ajcrew', loaded_by_agents: [] }]
     mockApi.skills.mockResolvedValue(rows)
     renderWithQuery()
     const idle = await screen.findByRole('button', { name: 'Refresh skills' })
@@ -133,7 +133,7 @@ describe('SkillsTab', () => {
   })
 
   it('says a failed refresh failed instead of keeping the last list silently', async () => {
-    const rows = [{ key: 'foo', name: 'foo', description: 'a foo skill', source: 'kirocrew', loaded_by_agents: [] }]
+    const rows = [{ key: 'foo', name: 'foo', description: 'a foo skill', source: 'ajcrew', loaded_by_agents: [] }]
     mockApi.skills.mockResolvedValue(rows)
     renderWithQuery()
     const idle = await screen.findByRole('button', { name: 'Refresh skills' })
@@ -149,7 +149,7 @@ describe('SkillsTab', () => {
 
   it('shows singular form when exactly one agent loads the skill', async () => {
     mockApi.skills.mockResolvedValue([
-      { key: 'solo', name: 'solo', description: 'lone', source: 'kirocrew', loaded_by_agents: ['only-one'] },
+      { key: 'solo', name: 'solo', description: 'lone', source: 'ajcrew', loaded_by_agents: ['only-one'] },
     ])
     renderWithQuery()
     await waitFor(() => expect(screen.getByText(/Loaded by 1 agent$/)).toBeInTheDocument())
@@ -157,8 +157,8 @@ describe('SkillsTab', () => {
 
   it('selected row has no border (regression: selection should not draw a border)', async () => {
     mockApi.skills.mockResolvedValue([
-      { key: 'a', name: 'a', description: 'first', source: 'kirocrew', loaded_by_agents: [] },
-      { key: 'b', name: 'b', description: 'second', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'a', name: 'a', description: 'first', source: 'ajcrew', loaded_by_agents: [] },
+      { key: 'b', name: 'b', description: 'second', source: 'ajcrew', loaded_by_agents: [] },
     ])
     renderWithQuery()
 
@@ -178,7 +178,7 @@ describe('SkillsTab', () => {
 
   it('skill list is its own scroll box', async () => {
     mockApi.skills.mockResolvedValue([
-      { key: 'a', name: 'a', description: 'first', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'a', name: 'a', description: 'first', source: 'ajcrew', loaded_by_agents: [] },
     ])
     renderWithQuery()
 
@@ -188,7 +188,7 @@ describe('SkillsTab', () => {
 
   it('omits the pill when loaded_by_agents is empty', async () => {
     mockApi.skills.mockResolvedValue([
-      { key: 'unloaded', name: 'unloaded', description: 'no one', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'unloaded', name: 'unloaded', description: 'no one', source: 'ajcrew', loaded_by_agents: [] },
     ])
     renderWithQuery()
     await waitFor(() => expect(screen.getByText('Unloaded')).toBeInTheDocument())
@@ -215,7 +215,7 @@ describe('SkillsTab', () => {
 
   it('auto-selects the first skill and renders the directory browser (no modal)', async () => {
     mockApi.skills.mockResolvedValue([
-      { key: 'demo', name: 'demo', description: 'demo skill', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'demo', name: 'demo', description: 'demo skill', source: 'ajcrew', loaded_by_agents: [] },
     ])
     renderWithQuery()
 
@@ -228,8 +228,8 @@ describe('SkillsTab', () => {
 
   it('switches the browser when another skill row is clicked', async () => {
     mockApi.skills.mockResolvedValue([
-      { key: 'first', name: 'first', description: 'one', source: 'kirocrew', loaded_by_agents: [] },
-      { key: 'second', name: 'second', description: 'two', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'first', name: 'first', description: 'one', source: 'ajcrew', loaded_by_agents: [] },
+      { key: 'second', name: 'second', description: 'two', source: 'ajcrew', loaded_by_agents: [] },
     ])
     renderWithQuery()
 
@@ -244,7 +244,7 @@ describe('SkillsTab', () => {
     mockApi.skills.mockResolvedValue([
       {
         key: 'agent-loaded', name: 'agent-loaded',
-        description: 'has agents', source: 'kirocrew',
+        description: 'has agents', source: 'ajcrew',
         loaded_by_agents: ['alpha-agent', 'beta-agent'],
       },
     ])
@@ -258,7 +258,7 @@ describe('SkillsTab', () => {
 
   it('Delete button confirms and dispatches the deleteSkill mutation', async () => {
     mockApi.skills.mockResolvedValue([
-      { key: 'doomed', name: 'doomed', description: 'will go', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'doomed', name: 'doomed', description: 'will go', source: 'ajcrew', loaded_by_agents: [] },
     ])
     mockApi.skill.mockResolvedValue({ name: 'doomed', content: '---\nname: doomed\n---\n', hash: 'h-doomed' })
     mockApi.deleteSkill.mockResolvedValue({ ok: true })
@@ -276,7 +276,7 @@ describe('SkillsTab', () => {
 
   it('cancels a pending delete when history switches to the budget view', async () => {
     mockApi.skills.mockResolvedValue([
-      { key: 'doomed', name: 'doomed', description: 'will go', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'doomed', name: 'doomed', description: 'will go', source: 'ajcrew', loaded_by_agents: [] },
     ])
     mockApi.skillsBudget.mockResolvedValue({ window_days: 30, total_chars: 0, rows: [] })
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -299,7 +299,7 @@ describe('SkillsTab', () => {
   it('renders the full delete question for a long skill key in a wrapping body', async () => {
     const key = `auto/${'long-skill-'.repeat(35)}suffix`
     mockApi.skills.mockResolvedValue([
-      { key, name: key, description: 'long target', source: 'kirocrew', loaded_by_agents: [] },
+      { key, name: key, description: 'long target', source: 'ajcrew', loaded_by_agents: [] },
     ])
     renderWithQuery()
     fireEvent.click(await screen.findByText('Delete'))
@@ -313,8 +313,8 @@ describe('SkillsTab', () => {
 
   it('deletes the skill named when confirmation opened after selection changes', async () => {
     mockApi.skills.mockResolvedValue([
-      { key: 'doomed', name: 'doomed', description: 'will go', source: 'kirocrew', loaded_by_agents: [] },
-      { key: 'other', name: 'other', description: 'keep', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'doomed', name: 'doomed', description: 'will go', source: 'ajcrew', loaded_by_agents: [] },
+      { key: 'other', name: 'other', description: 'keep', source: 'ajcrew', loaded_by_agents: [] },
     ])
     mockApi.deleteSkill.mockResolvedValue({ ok: true })
     renderWithQuery()
@@ -329,7 +329,7 @@ describe('SkillsTab', () => {
 
   it('keeps a pending delete dialog rendered while the skills list reloads', async () => {
     mockApi.skills.mockResolvedValue([
-      { key: 'doomed', name: 'doomed', description: 'will go', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'doomed', name: 'doomed', description: 'will go', source: 'ajcrew', loaded_by_agents: [] },
     ])
     const { qc } = renderWithQuery()
     fireEvent.click(await screen.findByText('Delete'))
@@ -345,8 +345,8 @@ describe('SkillsTab', () => {
     // The first read serves the list; later reads never answer, so the cache
     // shows what the rollback left rather than a refetch.
     mockApi.skills.mockResolvedValueOnce([
-      { key: 'doomed', name: 'doomed', description: 'will go', source: 'kirocrew', loaded_by_agents: [] },
-      { key: 'gone', name: 'gone', description: 'deleted elsewhere', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'doomed', name: 'doomed', description: 'will go', source: 'ajcrew', loaded_by_agents: [] },
+      { key: 'gone', name: 'gone', description: 'deleted elsewhere', source: 'ajcrew', loaded_by_agents: [] },
     ]).mockImplementation(() => new Promise(() => {}))
     let refuse!: (e: Error) => void
     mockApi.deleteSkill.mockImplementation(() => new Promise((_, reject) => { refuse = reject }))
@@ -366,9 +366,9 @@ describe('SkillsTab', () => {
     // The first read serves the list; later reads never answer, so the cache
     // shows what the optimistic removal left rather than a refetch.
     mockApi.skills.mockResolvedValueOnce([
-      { key: 'doomed', name: 'doomed', description: 'will go', source: 'kirocrew', loaded_by_agents: [] },
-      { key: 'second', name: 'second', description: 'two', source: 'kirocrew', loaded_by_agents: [] },
-      { key: 'third', name: 'third', description: 'three', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'doomed', name: 'doomed', description: 'will go', source: 'ajcrew', loaded_by_agents: [] },
+      { key: 'second', name: 'second', description: 'two', source: 'ajcrew', loaded_by_agents: [] },
+      { key: 'third', name: 'third', description: 'three', source: 'ajcrew', loaded_by_agents: [] },
     ]).mockImplementation(() => new Promise(() => {}))
     let land!: (v: { ok: boolean }) => void
     mockApi.deleteSkill.mockImplementation(() => new Promise(resolve => { land = resolve }))
@@ -384,9 +384,9 @@ describe('SkillsTab', () => {
     expect(screen.getByTestId('dir-browser')).toHaveAttribute('data-skill', 'third')
   })
 
-  it('Edit button enters edit mode for kirocrew-sourced skills', async () => {
+  it('Edit button enters edit mode for ajcrew-sourced skills', async () => {
     mockApi.skills.mockResolvedValue([
-      { key: 'editable', name: 'editable', description: 'fixme', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'editable', name: 'editable', description: 'fixme', source: 'ajcrew', loaded_by_agents: [] },
     ])
     mockApi.skill.mockResolvedValue({
       name: 'editable',
@@ -411,8 +411,8 @@ describe('SkillsTab', () => {
     // Regression: entering edit mode then filtering the skill out of the list
     // must NOT auto-reselect another skill and discard unsaved form input.
     mockApi.skills.mockResolvedValue([
-      { key: 'editable', name: 'editable', description: 'fixme', source: 'kirocrew', loaded_by_agents: [] },
-      { key: 'other', name: 'other', description: 'second', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'editable', name: 'editable', description: 'fixme', source: 'ajcrew', loaded_by_agents: [] },
+      { key: 'other', name: 'other', description: 'second', source: 'ajcrew', loaded_by_agents: [] },
     ])
     mockApi.skill.mockResolvedValue({
       name: 'editable',
@@ -451,11 +451,11 @@ describe('SkillsTab', () => {
     expect(screen.queryByText('Delete')).not.toBeInTheDocument()
   })
 
-  it('does NOT show Edit/Delete for a Kiro Crew row outside the skills folder (owned: false)', async () => {
-    // A skill reached through skills.extra_paths lists as source 'kirocrew',
+  it('does NOT show Edit/Delete for an Aj Crew row outside the skills folder (owned: false)', async () => {
+    // A skill reached through skills.extra_paths lists as source 'ajcrew',
     // but Edit/Delete write into the skills folder, so the row is read-only.
     mockApi.skills.mockResolvedValue([
-      { key: 'x', name: 'x', description: 'extra-x', source: 'kirocrew', owned: false, loaded_by_agents: [] },
+      { key: 'x', name: 'x', description: 'extra-x', source: 'ajcrew', owned: false, loaded_by_agents: [] },
     ])
     renderWithQuery()
 
@@ -471,7 +471,7 @@ describe('SkillsTab create gate and coded refusal', () => {
   // header "Create New Skill" button is rendered DISABLED, so it must not be
   // clicked until a skill row is on screen.
   const ONE_SKILL = [
-    { key: 'existing', name: 'existing', description: 'here already', source: 'kirocrew', loaded_by_agents: [] },
+    { key: 'existing', name: 'existing', description: 'here already', source: 'ajcrew', loaded_by_agents: [] },
   ]
 
   // Katakana as code-point escapes: the repo forbids CJK literals in source, and
@@ -683,7 +683,7 @@ describe('SkillsTab create gate and coded refusal', () => {
 
 describe('SkillsTab update/delete failure surfacing', () => {
   const SKILL = [
-    { key: 'fragile', name: 'fragile', description: 'breaks on save', source: 'kirocrew', loaded_by_agents: [] },
+    { key: 'fragile', name: 'fragile', description: 'breaks on save', source: 'ajcrew', loaded_by_agents: [] },
   ]
 
   /** Render, wait for auto-select, and enter the detail editor. */
@@ -768,7 +768,7 @@ describe('SkillsTab update/delete failure surfacing', () => {
     // not pop back up after the save succeeds.
     const TWO = [
       ...SKILL,
-      { key: 'other', name: 'other', description: 'still here', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'other', name: 'other', description: 'still here', source: 'ajcrew', loaded_by_agents: [] },
     ]
     mockApi.skills.mockResolvedValueOnce(TWO).mockImplementation(() => new Promise(() => {}))
     mockApi.deleteSkill.mockRejectedValue(new Error('permission denied'))
@@ -796,7 +796,7 @@ describe('SkillsTab update/delete failure surfacing', () => {
     // sitting in the list unexplained.
     const TWO = [
       ...SKILL,
-      { key: 'other', name: 'other', description: 'still here', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'other', name: 'other', description: 'still here', source: 'ajcrew', loaded_by_agents: [] },
     ]
     mockApi.skills.mockResolvedValueOnce(TWO).mockImplementation(() => new Promise(() => {}))
     let rejectDelete: (e: Error) => void = () => {}
@@ -834,7 +834,7 @@ describe('SkillsTab update/delete failure surfacing', () => {
     try {
       const TWO = [
         ...SKILL,
-        { key: 'other', name: 'other', description: 'still here', source: 'kirocrew', loaded_by_agents: [] },
+        { key: 'other', name: 'other', description: 'still here', source: 'ajcrew', loaded_by_agents: [] },
       ]
       mockApi.skills.mockResolvedValueOnce(TWO).mockImplementation(() => new Promise(() => {}))
       let rejectDelete: (e: Error) => void = () => {}
@@ -881,7 +881,7 @@ describe('SkillsTab update/delete failure surfacing', () => {
     try {
       const TWO = [
         ...SKILL,
-        { key: 'other', name: 'other', description: 'still here', source: 'kirocrew', loaded_by_agents: [] },
+        { key: 'other', name: 'other', description: 'still here', source: 'ajcrew', loaded_by_agents: [] },
       ]
       mockApi.skills.mockResolvedValue(TWO)
       const { qc } = renderWithQuery()
@@ -1261,7 +1261,7 @@ describe('SkillsTab update/delete failure surfacing', () => {
   it('retires the delete failure when the user moves to another skill', async () => {
     const TWO = [
       ...SKILL,
-      { key: 'other', name: 'other', description: 'still here', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'other', name: 'other', description: 'still here', source: 'ajcrew', loaded_by_agents: [] },
     ]
     mockApi.skills.mockResolvedValueOnce(TWO).mockImplementation(() => new Promise(() => {}))
     mockApi.deleteSkill.mockRejectedValue(new Error('permission denied'))
@@ -1302,7 +1302,7 @@ describe('SkillsTab update/delete failure surfacing', () => {
     // error must surface once the editor closes.
     const TWO = [
       ...SKILL,
-      { key: 'other', name: 'other', description: 'still here', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'other', name: 'other', description: 'still here', source: 'ajcrew', loaded_by_agents: [] },
     ]
     mockApi.skills.mockResolvedValueOnce(TWO).mockImplementation(() => new Promise(() => {}))
     let rejectDelete: (e: Error) => void = () => {}
@@ -1371,7 +1371,7 @@ describe('SkillsTab update/delete failure surfacing', () => {
     try {
       const TWO = [
         ...SKILL,
-        { key: 'other', name: 'other', description: 'still here', source: 'kirocrew', loaded_by_agents: [] },
+        { key: 'other', name: 'other', description: 'still here', source: 'ajcrew', loaded_by_agents: [] },
       ]
       mockApi.skills.mockResolvedValueOnce(TWO).mockImplementation(() => new Promise(() => {}))
       let rejectDelete: (e: Error) => void = () => {}
@@ -1407,7 +1407,7 @@ describe('SkillsTab update/delete failure surfacing', () => {
     // delete's onSuccess would clear the second's failure notice.
     const TWO = [
       ...SKILL,
-      { key: 'other', name: 'other', description: 'still here', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'other', name: 'other', description: 'still here', source: 'ajcrew', loaded_by_agents: [] },
     ]
     mockApi.skills.mockResolvedValueOnce(TWO).mockImplementation(() => new Promise(() => {}))
     mockApi.deleteSkill.mockImplementation(() => new Promise(() => {}))
@@ -1446,7 +1446,7 @@ describe('SkillsTab update/delete failure surfacing', () => {
     // must therefore KEEP the retained failure, which then displays.
     const TWO = [
       ...SKILL,
-      { key: 'other', name: 'other', description: 'still here', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'other', name: 'other', description: 'still here', source: 'ajcrew', loaded_by_agents: [] },
     ]
     mockApi.skills.mockResolvedValueOnce(TWO).mockImplementation(() => new Promise(() => {}))
     let rejectDelete: (e: Error) => void = () => {}
@@ -1478,7 +1478,7 @@ describe('SkillsTab update/delete failure surfacing', () => {
     // fail silently and discards the draft.
     const TWO = [
       ...SKILL,
-      { key: 'other', name: 'other', description: 'still here', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'other', name: 'other', description: 'still here', source: 'ajcrew', loaded_by_agents: [] },
     ]
     mockApi.skills.mockResolvedValueOnce(TWO).mockImplementation(() => new Promise(() => {}))
     let resolveDelete: (v: unknown) => void = () => {}
@@ -1516,7 +1516,7 @@ describe('SkillsTab update/delete failure surfacing', () => {
     // must not unmount it.
     const TWO = [
       ...SKILL,
-      { key: 'other', name: 'other', description: 'still here', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'other', name: 'other', description: 'still here', source: 'ajcrew', loaded_by_agents: [] },
     ]
     mockApi.skills.mockResolvedValueOnce(TWO).mockImplementation(() => new Promise(() => {}))
     let resolveDelete: (v: unknown) => void = () => {}
@@ -1545,7 +1545,7 @@ describe('SkillsTab update/delete failure surfacing', () => {
     // keep its live cursor/hover affordance while doing nothing.
     const TWO = [
       ...SKILL,
-      { key: 'other', name: 'other', description: 'still here', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'other', name: 'other', description: 'still here', source: 'ajcrew', loaded_by_agents: [] },
     ]
     mockApi.skills.mockResolvedValue(TWO)
     mockApi.updateSkill.mockImplementation(() => new Promise(() => {}))
@@ -1599,7 +1599,7 @@ describe('SkillsTab update/delete failure surfacing', () => {
     try {
       const TWO = [
         ...SKILL,
-        { key: 'other', name: 'other', description: 'still here', source: 'kirocrew', loaded_by_agents: [] },
+        { key: 'other', name: 'other', description: 'still here', source: 'ajcrew', loaded_by_agents: [] },
       ]
       mockApi.skills.mockResolvedValueOnce(TWO).mockImplementation(() => new Promise(() => {}))
       let rejectDelete: (e: Error) => void = () => {}
@@ -1746,7 +1746,7 @@ describe('SkillsTab update/delete failure surfacing', () => {
   it('ignores row clicks while a save is in flight, keeping the editor mounted', async () => {
     const TWO = [
       ...SKILL,
-      { key: 'other', name: 'other', description: 'still here', source: 'kirocrew', loaded_by_agents: [] },
+      { key: 'other', name: 'other', description: 'still here', source: 'ajcrew', loaded_by_agents: [] },
     ]
     mockApi.skills.mockResolvedValue(TWO)
     mockApi.updateSkill.mockImplementation(() => new Promise(() => {}))

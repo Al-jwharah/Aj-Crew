@@ -22,7 +22,7 @@ pytestmark = pytest.mark.skipif(sys.platform != "linux", reason="Docker detectio
 
 
 def _clear_cache() -> None:
-    from kiro_crew.sandbox import is_docker_container
+    from aj_crew.sandbox import is_docker_container
 
     is_docker_container.cache_clear()
 
@@ -31,7 +31,7 @@ def _clear_cache() -> None:
 
 
 class TestIsDockerContainer:
-    """Unit tests for :func:`kiro_crew.sandbox.is_docker_container`."""
+    """Unit tests for :func:`aj_crew.sandbox.is_docker_container`."""
 
     def setup_method(self) -> None:
         _clear_cache()
@@ -41,7 +41,7 @@ class TestIsDockerContainer:
 
     def test_dockerenv_file_present(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """``/.dockerenv`` present → primary Docker signal."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         monkeypatch.setattr(sandbox.os.path, "exists", lambda p: p == "/.dockerenv")
         monkeypatch.delenv("CONTAINER", raising=False)
@@ -49,7 +49,7 @@ class TestIsDockerContainer:
 
     def test_containerenv_file_present(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """/run/.containerenv present → Podman OCI marker."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         monkeypatch.setattr(sandbox.os.path, "exists", lambda p: p == "/run/.containerenv")
         monkeypatch.delenv("CONTAINER", raising=False)
@@ -57,7 +57,7 @@ class TestIsDockerContainer:
 
     def test_container_env_var_oci(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """``CONTAINER=oci`` env var → Podman rootless signal."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         monkeypatch.setattr(sandbox.os.path, "exists", lambda _p: False)
         monkeypatch.setenv("CONTAINER", "oci")
@@ -65,7 +65,7 @@ class TestIsDockerContainer:
 
     def test_container_env_var_non_oci_ignored(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Other ``CONTAINER`` values don't trigger the fast path."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         monkeypatch.setattr(sandbox.os.path, "exists", lambda _p: False)
         monkeypatch.setenv("CONTAINER", "lxc")
@@ -76,7 +76,7 @@ class TestIsDockerContainer:
 
     def test_cgroup_contains_docker(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """/proc/1/cgroup with 'docker' → fallback detection."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         monkeypatch.setattr(sandbox.os.path, "exists", lambda _p: False)
         monkeypatch.delenv("CONTAINER", raising=False)
@@ -86,7 +86,7 @@ class TestIsDockerContainer:
 
     def test_cgroup_contains_containerd(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """/proc/1/cgroup with 'containerd' → containerd-managed container."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         monkeypatch.setattr(sandbox.os.path, "exists", lambda _p: False)
         monkeypatch.delenv("CONTAINER", raising=False)
@@ -96,7 +96,7 @@ class TestIsDockerContainer:
 
     def test_cgroup_contains_kubepods(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """/proc/1/cgroup with 'kubepods' → Kubernetes pod."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         monkeypatch.setattr(sandbox.os.path, "exists", lambda _p: False)
         monkeypatch.delenv("CONTAINER", raising=False)
@@ -106,7 +106,7 @@ class TestIsDockerContainer:
 
     def test_bare_metal_linux(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """No container markers → False on a normal Linux host."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         monkeypatch.setattr(sandbox.os.path, "exists", lambda _p: False)
         monkeypatch.delenv("CONTAINER", raising=False)
@@ -116,7 +116,7 @@ class TestIsDockerContainer:
 
     def test_cgroup_unreadable_returns_false(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Unreadable /proc/1/cgroup → False (fail-safe, not an exception)."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         monkeypatch.setattr(sandbox.os.path, "exists", lambda _p: False)
         monkeypatch.delenv("CONTAINER", raising=False)
@@ -125,7 +125,7 @@ class TestIsDockerContainer:
 
     def test_result_is_cached(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """lru_cache means the probe runs only once per process."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         calls: list[str] = []
 
@@ -150,11 +150,11 @@ class TestWrapArgvDockerGuidance:
 
     def _patch_no_backend_docker(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Patch sandbox state: no backend, inside container, not macOS sandbox."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         monkeypatch.setattr(sandbox, "detect_backend", lambda **_kw: "none")
         monkeypatch.setattr(sandbox, "_allow_unsandboxed_exec", lambda: False)
-        monkeypatch.setattr(sandbox, "_inside_kirocrew_sandbox", lambda: False)
+        monkeypatch.setattr(sandbox, "_inside_ajcrew_sandbox", lambda: False)
         monkeypatch.setattr(sandbox, "_inside_macos_sandbox", lambda: False)
         monkeypatch.setattr(sandbox, "is_docker_container", lambda: True)
         monkeypatch.setattr(
@@ -169,7 +169,7 @@ class TestWrapArgvDockerGuidance:
 
     def test_docker_guidance_mentions_seccomp(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Error message references the seccomp option."""
-        from kiro_crew.sandbox import SandboxUnavailableError, wrap_argv
+        from aj_crew.sandbox import SandboxUnavailableError, wrap_argv
 
         self._patch_no_backend_docker(monkeypatch)
         with pytest.raises(SandboxUnavailableError) as exc_info:
@@ -179,19 +179,19 @@ class TestWrapArgvDockerGuidance:
     def test_docker_guidance_mentions_allow_unsandboxed(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Error message references KIROCREW_ALLOW_UNSANDBOXED."""
-        from kiro_crew.sandbox import SandboxUnavailableError, wrap_argv
+        """Error message references AJCREW_ALLOW_UNSANDBOXED."""
+        from aj_crew.sandbox import SandboxUnavailableError, wrap_argv
 
         self._patch_no_backend_docker(monkeypatch)
         with pytest.raises(SandboxUnavailableError) as exc_info:
             wrap_argv(["kiro-cli", "chat"], mode="auto")
-        assert "KIROCREW_ALLOW_UNSANDBOXED" in str(exc_info.value)
+        assert "AJCREW_ALLOW_UNSANDBOXED" in str(exc_info.value)
 
     def test_docker_guidance_does_not_say_install_backend(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Docker guidance must NOT tell users to 'install a supported sandbox backend'."""
-        from kiro_crew.sandbox import SandboxUnavailableError, wrap_argv
+        from aj_crew.sandbox import SandboxUnavailableError, wrap_argv
 
         self._patch_no_backend_docker(monkeypatch)
         with pytest.raises(SandboxUnavailableError) as exc_info:
@@ -200,7 +200,7 @@ class TestWrapArgvDockerGuidance:
 
     def test_docker_error_kind_is_no_backend(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Error kind is 'no_backend', not 'transient' or 'foreign_sandbox'."""
-        from kiro_crew.sandbox import SandboxUnavailableError, wrap_argv
+        from aj_crew.sandbox import SandboxUnavailableError, wrap_argv
 
         self._patch_no_backend_docker(monkeypatch)
         with pytest.raises(SandboxUnavailableError) as exc_info:
@@ -211,12 +211,12 @@ class TestWrapArgvDockerGuidance:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """On bare-metal Linux without user namespaces the generic message is used."""
-        from kiro_crew import sandbox
-        from kiro_crew.sandbox import SandboxUnavailableError, wrap_argv
+        from aj_crew import sandbox
+        from aj_crew.sandbox import SandboxUnavailableError, wrap_argv
 
         monkeypatch.setattr(sandbox, "detect_backend", lambda **_kw: "none")
         monkeypatch.setattr(sandbox, "_allow_unsandboxed_exec", lambda: False)
-        monkeypatch.setattr(sandbox, "_inside_kirocrew_sandbox", lambda: False)
+        monkeypatch.setattr(sandbox, "_inside_ajcrew_sandbox", lambda: False)
         monkeypatch.setattr(sandbox, "_inside_macos_sandbox", lambda: False)
         monkeypatch.setattr(sandbox, "is_docker_container", lambda: False)
         # The guidance branch is chosen by reading the REAL
@@ -239,7 +239,7 @@ class TestWrapArgvDockerGuidance:
         with pytest.raises(SandboxUnavailableError) as exc_info:
             wrap_argv(["kiro-cli", "chat"], mode="auto")
         assert "install a supported sandbox backend" in str(exc_info.value)
-        assert "KIROCREW_ALLOW_UNSANDBOXED" not in str(exc_info.value)
+        assert "AJCREW_ALLOW_UNSANDBOXED" not in str(exc_info.value)
 
     def test_apparmor_restricted_host_gets_profile_guidance(
         self, monkeypatch: pytest.MonkeyPatch
@@ -251,12 +251,12 @@ class TestWrapArgvDockerGuidance:
         happens to run the suite — which is how the generic case came to fail on
         Ubuntu runners while passing locally.
         """
-        from kiro_crew import sandbox
-        from kiro_crew.sandbox import SandboxUnavailableError, wrap_argv
+        from aj_crew import sandbox
+        from aj_crew.sandbox import SandboxUnavailableError, wrap_argv
 
         monkeypatch.setattr(sandbox, "detect_backend", lambda **_kw: "none")
         monkeypatch.setattr(sandbox, "_allow_unsandboxed_exec", lambda: False)
-        monkeypatch.setattr(sandbox, "_inside_kirocrew_sandbox", lambda: False)
+        monkeypatch.setattr(sandbox, "_inside_ajcrew_sandbox", lambda: False)
         monkeypatch.setattr(sandbox, "_inside_macos_sandbox", lambda: False)
         monkeypatch.setattr(sandbox, "is_docker_container", lambda: False)
         monkeypatch.setattr(sandbox, "_apparmor_userns_restricted", lambda: True)
@@ -278,4 +278,4 @@ class TestWrapArgvDockerGuidance:
         message = str(exc_info.value)
         assert "apparmor_restrict_unprivileged_userns" in message
         # The profile is offered before the opt-out, and the opt-out is still named.
-        assert message.index("kirocrew service install") < message.index("last resort")
+        assert message.index("ajcrew service install") < message.index("last resort")

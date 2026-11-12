@@ -26,7 +26,7 @@ const locale = params.get('locale') || 'de'
 const panelWidth = Number(params.get('panel') || 360)
 
 document.documentElement.dataset.mode = theme
-document.documentElement.dataset.theme = theme === 'light' ? 'kiro-light' : 'kiro-dark'
+document.documentElement.dataset.theme = theme === 'light' ? 'aj-light' : 'aj-dark'
 
 initI18n(locale)
 

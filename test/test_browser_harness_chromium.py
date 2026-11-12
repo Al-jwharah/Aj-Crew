@@ -1,4 +1,4 @@
-"""Kiro's Chromium download (``browser_harness/chromium.py``) against an in-test archive."""
+"""Aj's Chromium download (``browser_harness/chromium.py``) against an in-test archive."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.browser_harness import chromium, install, libcups
+from aj_crew.browser_harness import chromium, install, libcups
 
 _PLATFORM = "linux64"
 _EXE_REL = "chrome-linux64/chrome"

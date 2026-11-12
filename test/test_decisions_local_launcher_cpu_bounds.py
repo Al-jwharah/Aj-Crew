@@ -28,9 +28,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.testing.wait import async_wait_until, await_until
 
-_SERVERS = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "decisions" / "local_servers"
+_SERVERS = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "decisions" / "local_servers"
 _PLUMB = _SERVERS / "plumb_cpu.py"
 _LAYA = _SERVERS / "laya_cpu.py"
 _STRANDS = _SERVERS / "strands_decider_cpu.py"

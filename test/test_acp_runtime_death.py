@@ -16,8 +16,8 @@ from acp_runtime_helpers import _pinned_kiro_cli_version  # noqa: F401
 from acp_runtime_helpers import _stub_sel_for_permission_tests  # noqa: F401
 from acp_runtime_helpers import _make_runtime, _next, _register, _start_reader, _stop_reader
 
-from kiro_crew.acp.runtime import AcpRuntimeDead
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.runtime import AcpRuntimeDead
+from aj_crew.testing.wait import await_until
 
 # ── Process death propagation ──
 
@@ -78,7 +78,7 @@ def _track_untracks(monkeypatch, rt_mod, *, pid_exists: bool):
 @pytest.mark.asyncio
 async def test_observed_exit_retires_registry_entries_once_reaped(monkeypatch):
     """EOF on a root that the child watcher then reaps: both entries are dropped."""
-    import kiro_crew.acp.runtime as rt_mod
+    import aj_crew.acp.runtime as rt_mod
 
     rt, reader, proc = _make_runtime()
     rt._spawn_start_token = "tok-4242"
@@ -114,7 +114,7 @@ async def test_observed_exit_keeps_tracking_while_the_root_still_runs(monkeypatc
     """A closed stdout is not an exit. A root that never exits within the reap
     window, or one whose pid still answers after the wait, stays tracked -- an
     untracked live process is invisible to every reaper for the host's uptime."""
-    import kiro_crew.acp.runtime as rt_mod
+    import aj_crew.acp.runtime as rt_mod
 
     # Wait times out: the process closed its pipe and kept running.
     rt, reader, proc = _make_runtime()
@@ -123,7 +123,7 @@ async def test_observed_exit_keeps_tracking_while_the_root_still_runs(monkeypatc
 
     async def _never_exits():
         # flake-ok: pre-existing stand-in proc.wait that never returns inside the 50 ms reap window, moved verbatim; tracked for a de-flake pass
-        # nosemgrep: kirocrew.test-sleep-as-barrier -- the stubbed proc.wait's own hang, which the reap timeout cuts, moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-sleep-as-barrier -- the stubbed proc.wait's own hang, which the reap timeout cuts, moved verbatim; tracked for a de-flake pass
         await asyncio.sleep(10)
 
     proc.wait = _never_exits
@@ -158,7 +158,7 @@ async def test_eof_inside_an_oversize_line_retires_the_same_way(monkeypatch):
     """The other observed-EOF return: stdout closes mid-oversize-line. Same
     confirmed exit, same retirement -- a sibling left to the sweep would carry
     the very 300s window the empty-line branch closes."""
-    import kiro_crew.acp.runtime as rt_mod
+    import aj_crew.acp.runtime as rt_mod
 
     rt, reader, proc = _make_runtime()
     rt._spawn_start_token = "tok-4242"
@@ -181,7 +181,7 @@ async def test_eof_inside_an_oversize_line_retires_the_same_way(monkeypatch):
 async def test_observed_exit_on_windows_drains_the_tree_instead(monkeypatch):
     """A Windows descendant has no registry line of its own, so the confirmed
     exit drains the root's tree, which retires the root's lines itself."""
-    import kiro_crew.acp.runtime as rt_mod
+    import aj_crew.acp.runtime as rt_mod
 
     rt, reader, proc = _make_runtime()
     calls = _track_untracks(monkeypatch, rt_mod, pid_exists=False)
@@ -207,7 +207,7 @@ async def test_observed_exit_on_windows_drains_the_tree_instead(monkeypatch):
 # ── Death-log severity: deliberate teardown vs genuine death ──
 #
 # A warm-pool TTL recycle tears runtimes down via kill() on a schedule; logging
-# that at the same severity and shape as a crash made `kirocrew logs` misreport
+# that at the same severity and shape as a crash made `ajcrew logs` misreport
 # routine recycling as process death. These tests pin the split: kill() → INFO,
 # every genuine death path → WARNING, and the state transitions identical.
 
@@ -226,7 +226,7 @@ def _neuter_kill_side_effects(monkeypatch, proc):
     ``terminate_windows_asyncio_tree``, since that populates ``returncode``, and with the
     same bound so a child that never exits fails instead of hanging.
     """
-    import kiro_crew.acp.runtime as rt_mod
+    import aj_crew.acp.runtime as rt_mod
 
     proc.wait = AsyncMock(return_value=0)
 
@@ -260,7 +260,7 @@ async def test_deliberate_kill_logs_info_and_still_fails_pending_futures(caplog,
     fut: asyncio.Future = asyncio.get_event_loop().create_future()
     rt._pending_requests[7] = fut
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
         await rt.kill(expected=True)
 
     records = _death_records(caplog)
@@ -283,7 +283,7 @@ async def test_kill_default_is_unexpected_and_warns(caplog, monkeypatch):
     rt, _, proc = _make_runtime()
     _neuter_kill_side_effects(monkeypatch, proc)
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
         await rt.kill()
 
     assert [r.levelname for r in _death_records(caplog)] == ["WARNING"]
@@ -301,7 +301,7 @@ async def test_kill_reason_lands_in_death_log_and_summary(caplog, monkeypatch):
     rt, _, proc = _make_runtime()
     _neuter_kill_side_effects(monkeypatch, proc)
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
         await rt.kill(expected=True, reason="warm mint teardown")
 
     records = _death_records(caplog)
@@ -340,7 +340,7 @@ async def test_death_summary_redacts_credentials_from_stderr_tail(caplog, monkey
     secret = "ghp_0123456789abcdefghijklmnopqrstuvwxyzAB"
     rt._stderr_lines = [f"auth error: token {secret} rejected"]
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
         await rt.kill(expected=True, reason="warm mint teardown")
 
     summary = rt.death_summary()
@@ -364,7 +364,7 @@ async def test_kill_refuses_info_downgrade_when_process_already_exited(caplog, m
     _neuter_kill_side_effects(monkeypatch, proc)
     proc.returncode = 1  # process already exited on its own; _dead still False
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
         await rt.kill(expected=True)
 
     records = _death_records(caplog)
@@ -384,7 +384,7 @@ async def test_unexpected_process_exit_still_warns_with_diagnostic_shape(caplog)
     rt._pending_requests[3] = fut
     task = await _start_reader(rt)
     try:
-        with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
             reader.feed_eof()  # empty readline → process exited
             with pytest.raises(AcpRuntimeDead):
                 await await_until(fut, what="the pending request's future")
@@ -426,7 +426,7 @@ async def test_kill_of_live_runtime_labels_the_unreaped_returncode(caplog, monke
     _neuter_kill_side_effects(monkeypatch, proc)
     assert proc.returncode is None  # live: nothing has reaped it
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
         await rt.kill(reason="displaced by a new allocation")
 
     msg = _death_records(caplog)[0].getMessage()
@@ -455,7 +455,7 @@ async def test_kill_amends_the_summary_once_the_reap_completes(
 
     proc.wait = _wait
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
         await rt.kill(expected=expected, reason="warm mint teardown")
 
     summary = rt.death_summary()
@@ -489,7 +489,7 @@ async def test_reap_amendment_leaves_the_stderr_tail_untouched(caplog, monkeypat
 
     proc.wait = _wait
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
         await rt.kill(reason="displaced by a new allocation")
 
     summary = rt.death_summary()
@@ -520,7 +520,7 @@ async def test_reap_amendment_leaves_the_reason_untouched(caplog, monkeypatch):
 
     proc.wait = _wait
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
         await rt.kill(reason="reaping a dead runtime")
 
     summary = rt.death_summary()
@@ -539,7 +539,7 @@ async def test_the_windows_branch_amends_the_summary_too(caplog, monkeypatch):
     a turn's error and a cron's ``last_error``."""
     import logging
 
-    import kiro_crew.acp.runtime as rt_mod
+    import aj_crew.acp.runtime as rt_mod
 
     rt, _, proc = _make_runtime()
     _neuter_kill_side_effects(monkeypatch, proc)
@@ -551,7 +551,7 @@ async def test_the_windows_branch_amends_the_summary_too(caplog, monkeypatch):
 
     proc.wait = _wait
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
         await rt.kill(expected=True, reason="warm mint teardown")
 
     summary = rt.death_summary()
@@ -574,7 +574,7 @@ async def test_a_slow_windows_drain_is_one_warning_and_keeps_the_process(caplog,
     """
     import logging
 
-    import kiro_crew.acp.runtime as rt_mod
+    import aj_crew.acp.runtime as rt_mod
 
     rt, _, proc = _make_runtime()
     _neuter_kill_side_effects(monkeypatch, proc)
@@ -586,7 +586,7 @@ async def test_a_slow_windows_drain_is_one_warning_and_keeps_the_process(caplog,
 
     monkeypatch.setattr(rt_mod.platform_compat, "terminate_windows_asyncio_tree", _drain_is_slow)
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
         with pytest.raises(rt_mod.platform_compat.WindowsTreeDrainPending):
             await rt.kill(reason="failed session setup cleanup")
 
@@ -595,7 +595,7 @@ async def test_a_slow_windows_drain_is_one_warning_and_keeps_the_process(caplog,
     records = [
         r
         for r in caplog.records
-        if r.name == "kiro_crew.acp.runtime" and "cleanup sweep" in r.getMessage()
+        if r.name == "aj_crew.acp.runtime" and "cleanup sweep" in r.getMessage()
     ]
     assert len(records) == 1, [r.getMessage() for r in caplog.records]
     assert records[0].levelname == "WARNING"
@@ -603,7 +603,7 @@ async def test_a_slow_windows_drain_is_one_warning_and_keeps_the_process(caplog,
     assert "4242" in records[0].getMessage()
     assert "3 member" in records[0].getMessage()
     assert not [
-        r for r in caplog.records if r.name == "kiro_crew.acp.runtime" and r.exc_info
+        r for r in caplog.records if r.name == "aj_crew.acp.runtime" and r.exc_info
     ], "a slow drain still logged a traceback"
 
 
@@ -615,7 +615,7 @@ async def test_an_unconfirmed_windows_drain_leaves_the_placeholder(caplog, monke
     tree was never drained would state an exit this runtime cannot vouch for."""
     import logging
 
-    import kiro_crew.acp.runtime as rt_mod
+    import aj_crew.acp.runtime as rt_mod
 
     rt, _, proc = _make_runtime()
     _neuter_kill_side_effects(monkeypatch, proc)
@@ -626,7 +626,7 @@ async def test_an_unconfirmed_windows_drain_leaves_the_placeholder(caplog, monke
 
     monkeypatch.setattr(rt_mod.platform_compat, "terminate_windows_asyncio_tree", _drain_fails)
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
         with pytest.raises(OSError):
             await rt.kill(reason="warm mint teardown")
 
@@ -649,7 +649,7 @@ async def test_no_amendment_when_the_status_was_already_known(caplog, monkeypatc
     proc.returncode = 1  # already exited: the status was read at mark time
     rt._stderr_lines = ["child said [returncode=<not reaped>] on its way out"]
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
         await rt.kill(reason="reaping a dead runtime")
 
     summary = rt.death_summary()
@@ -666,7 +666,7 @@ async def test_kill_keeps_the_label_when_no_status_ever_arrives(caplog, monkeypa
     ``test_an_unconfirmed_windows_drain_leaves_the_placeholder``."""
     import logging
 
-    import kiro_crew.acp.runtime as rt_mod
+    import aj_crew.acp.runtime as rt_mod
 
     rt, _, proc = _make_runtime()
     _neuter_kill_side_effects(monkeypatch, proc)
@@ -679,13 +679,13 @@ async def test_kill_keeps_the_label_when_no_status_ever_arrives(caplog, monkeypa
 
     async def _never():
         # flake-ok: pre-existing stand-in proc.wait that never returns inside the 10 ms reap window, moved verbatim; tracked for a de-flake pass
-        # nosemgrep: kirocrew.test-sleep-as-barrier -- the stubbed proc.wait's own hang, which the reap timeout cuts, moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-sleep-as-barrier -- the stubbed proc.wait's own hang, which the reap timeout cuts, moved verbatim; tracked for a de-flake pass
         await asyncio.sleep(3600)
 
     proc.wait = _never
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
-        from kiro_crew import platform_compat
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
+        from aj_crew import platform_compat
 
         if platform_compat.IS_WINDOWS:
             # The owned-handle drain cannot confirm an exit. It preserves the
@@ -711,7 +711,7 @@ async def test_death_of_a_never_spawned_runtime_says_no_process(caplog, monkeypa
     _neuter_kill_side_effects(monkeypatch, proc)
     rt._process = None  # spawn never completed
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
         await rt.kill(reason="reaping a dead shared subagent runtime before respawn")
 
     msg = _death_records(caplog)[0].getMessage()
@@ -728,7 +728,7 @@ async def test_reader_crash_on_a_running_child_does_not_print_returncode_none(ca
 
     rt, _, _ = _make_runtime()
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.acp.runtime"):
         rt._mark_dead("reader crash: boom")
 
     msg = _death_records(caplog)[0].getMessage()
@@ -767,7 +767,7 @@ async def test_exit_reason_does_not_promote_the_last_stderr_line_to_a_cause():
     assert msg == "process exited (rc=1)"
     assert "sandbox dir" not in msg
     assert "warming up" not in msg
-    assert "kirocrew doctor" not in msg
+    assert "ajcrew doctor" not in msg
 
 
 def test_exit_reason_names_the_signal_that_ended_the_child():
@@ -799,10 +799,10 @@ def test_exit_reason_enospc_points_at_doctor():
     rt._stderr_lines = ["mkdir: cannot create directory: No space left on device (os error 28)"]
     msg = rt._exit_reason(1)
     assert "No space left on device" in msg
-    assert "kirocrew doctor" in msg
+    assert "ajcrew doctor" in msg
     # Case-insensitive: the marker's spelling varies by libc / language runtime.
     rt._stderr_lines = ["ENOSPC: no space left on device, mkdir '/run/user/1000/tmpx'"]
-    assert "kirocrew doctor" in rt._exit_reason(1)
+    assert "ajcrew doctor" in rt._exit_reason(1)
 
 
 def test_exit_reason_eagain_points_at_the_task_ceilings():
@@ -831,14 +831,14 @@ def test_exit_reason_finds_a_signature_that_is_not_the_last_line():
         "mkdir: cannot create directory: No space left on device",
         "shutting down",
     ]
-    assert "kirocrew doctor" in rt._exit_reason(1)
+    assert "ajcrew doctor" in rt._exit_reason(1)
 
 
 def test_exit_reason_redacts_credentials_and_exfil_urls_in_a_proven_cause():
     """Redaction is unconditional and lands BEFORE the cut, so a long line
     cannot leave a secret's first half in the shown prefix. Asserted on a line
     that DOES earn the cause slot, since that is the text the card carries."""
-    import kiro_crew.acp.runtime as rt_mod
+    import aj_crew.acp.runtime as rt_mod
 
     rt, _reader, _proc = _make_runtime()
     payload = "A" * 80
@@ -862,7 +862,7 @@ def test_exit_reason_redacts_the_demoted_tail_too(caplog):
     """The debug log is a real sink, so the line demoted to it is redacted on
     the same pass -- a secret must not survive by being merely unpromoted."""
     rt, _reader, _proc = _make_runtime()
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.acp.runtime"):
         rt._stderr_lines = ["boom Authorization: Bearer AKIAIOSFODNN7EXAMPLE"]
         rt._exit_reason(1)
     assert "exit stderr tail" in caplog.text
@@ -870,7 +870,7 @@ def test_exit_reason_redacts_the_demoted_tail_too(caplog):
 
 
 def test_exit_reason_cause_is_bounded_to_one_line():
-    from kiro_crew.acp import runtime as rt_mod
+    from aj_crew.acp import runtime as rt_mod
 
     assert rt_mod._STDERR_REASON_TAIL_CHARS == 200
     rt, _reader, _proc = _make_runtime()
@@ -888,13 +888,13 @@ def test_exit_reason_enospc_hint_survives_the_tail_cap():
     """The signature is matched on the whole line and the HINT is appended after
     the cut, so a line long enough to be trimmed cannot push the operator's
     pointer out of the message that pointer is the whole purpose of."""
-    from kiro_crew.acp import runtime as rt_mod
+    from aj_crew.acp import runtime as rt_mod
 
     rt, _reader, _proc = _make_runtime()
     rt._stderr_lines = ["z" * rt_mod._STDERR_REASON_TAIL_CHARS + " No space left on device"]
     msg = rt._exit_reason(1)
     assert "No space left on device" not in msg
-    assert "kirocrew doctor" in msg
+    assert "ajcrew doctor" in msg
 
 
 class TestAcpRuntimePidTracking:
@@ -908,8 +908,8 @@ class TestAcpRuntimePidTracking:
         proc.wait = AsyncMock(return_value=0)
 
         calls: dict[str, list[int]] = {"pid": [], "session": []}
-        import kiro_crew.acp.runtime as rt_mod
-        import kiro_crew.session_pid as pid_mod
+        import aj_crew.acp.runtime as rt_mod
+        import aj_crew.session_pid as pid_mod
 
         def untrack(kind, pid):
             calls[kind].append(pid)
@@ -948,7 +948,7 @@ class TestAcpRuntimePidTracking:
         proc.wait = AsyncMock(return_value=0)
         rt._spawn_start_token = "tok-a"
 
-        import kiro_crew.acp.runtime as rt_mod
+        import aj_crew.acp.runtime as rt_mod
 
         if rt_mod.platform_compat.IS_WINDOWS:
             pytest.skip("the Windows owned drain retires under its pin; covered separately")
@@ -983,7 +983,7 @@ class TestAcpRuntimePidTracking:
         proc.wait = AsyncMock(return_value=0)
         rt._spawn_start_token = "tok-a"
 
-        import kiro_crew.acp.runtime as rt_mod
+        import aj_crew.acp.runtime as rt_mod
 
         if rt_mod.platform_compat.IS_WINDOWS:
             pytest.skip("the Windows owned drain retires under its pin; covered separately")
@@ -1016,7 +1016,7 @@ class TestAcpRuntimePidTracking:
         proc.wait = AsyncMock(return_value=0)
 
         calls: dict[str, list[int]] = {"pid": [], "session": []}
-        import kiro_crew.acp.runtime as rt_mod
+        import aj_crew.acp.runtime as rt_mod
 
         monkeypatch.setattr(rt_mod, "_untrack_pid", lambda p: calls["pid"].append(p))
         monkeypatch.setattr(rt_mod, "_untrack_session_pid", lambda p: calls["session"].append(p))

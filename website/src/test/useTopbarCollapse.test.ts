@@ -320,7 +320,7 @@ describe('useTopbarCollapse', () => {
 
       await act(async () => {
         need = 540
-        root.dataset.theme = 'kiro-dark'
+        root.dataset.theme = 'aj-dark'
         await flush()
       })
       expect(result.current.right).toBe(4)

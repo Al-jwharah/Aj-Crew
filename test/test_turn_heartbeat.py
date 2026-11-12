@@ -22,9 +22,9 @@ from typing import Any
 import pytest
 from chat_runner_coverage_helpers import _complete, _drive, _runner_state, _slot
 
-from kiro_crew.dashboard.state_parts.dashboard_services import _websocket_for
-from kiro_crew.dashboard.turn_heartbeat import HEARTBEAT_INTERVAL_S, TurnHeartbeat
-from kiro_crew.dashboard.websocket_hub import WebSocketHub
+from aj_crew.dashboard.state_parts.dashboard_services import _websocket_for
+from aj_crew.dashboard.turn_heartbeat import HEARTBEAT_INTERVAL_S, TurnHeartbeat
+from aj_crew.dashboard.websocket_hub import WebSocketHub
 
 #: Heartbeat frames per run at fixed shapes, so a change to the tick's volume
 #: shows up as a diff in review. Keys name (turns, sockets, fake seconds run).

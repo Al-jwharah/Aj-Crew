@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 288" width="1200" height="288" fill="none">
-  <rect width="1200" height="288" fill="#1a1b26"/>
-  <line x1="0" y1="144" x2="1200" y2="144" stroke="#2a2b3d" stroke-width="0.5"/>
-  <line x1="600" y1="0" x2="600" y2="288" stroke="#2a2b3d" stroke-width="0.5"/>
+  <rect width="1200" height="288" fill="#161e1c"/>
+  <line x1="0" y1="144" x2="1200" y2="144" stroke="#23302d" stroke-width="0.5"/>
+  <line x1="600" y1="0" x2="600" y2="288" stroke="#23302d" stroke-width="0.5"/>
   <circle cx="600" cy="144" r="110" fill="#059669" opacity="0.07"/>
   <circle cx="600" cy="144" r="60" fill="#10b981" opacity="0.08"/>
   <!-- left: the scanned project tree -->

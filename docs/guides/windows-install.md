@@ -1,8 +1,8 @@
-# Installing & Testing Kiro Crew on Windows
+# Installing & Testing Aj Crew on Windows
 
-Kiro Crew runs **natively on Windows** through the desktop installer or a
+Aj Crew runs **natively on Windows** through the desktop installer or a
 supported Python **source install**. The cross-platform process / signal /
-file-lock / metrics behavior is routed through `kiro_crew.platform_compat`, so
+file-lock / metrics behavior is routed through `aj_crew.platform_compat`, so
 macOS + Linux behavior is unchanged and the same code path also runs on Windows.
 
 Existing Memory V1 members remain usable on native Windows. New Crew Members
@@ -14,7 +14,7 @@ lock.
 ## Desktop installer
 
 CI's Windows lane (`build-windows.yml`) builds a Windows desktop app: an NSIS
-`KiroCrew Setup <version>.exe` with the backend bundled (no separate Python
+`AjCrew Setup <version>.exe` with the backend bundled (no separate Python
 install needed). It has its own workflow rather than being a leg of
 `build-desktop.yml` because Authenticode signing has to happen *during* the
 build — the installer compresses its own already-signed executable — so that job
@@ -23,7 +23,7 @@ Current status:
 
 - **Published on every channel — nightly, insider and stable.** The `latest/`
   alias is the human download:
-  `https://download.crew.kiro.dev/desktop/<channel>/latest/KiroCrew-Setup.exe`.
+  `https://<your-release-host>/desktop/<channel>/latest/AjCrew-Setup.exe`.
   A stable release republishes the already-signed installer it verified at
   insider time rather than rebuilding it. If a Windows build fails, that release
   simply ships without an installer instead of holding up the other platforms.
@@ -43,8 +43,8 @@ Current status:
   lane verifies the signature before the bytes become immutable.
 - **Settings command hints are proved against the installed bundle**
   (`.github/scripts/test-windows-installer.ps1`). The bundled interpreter prints
-  `kiro_crew.agent._resolve_kirocrew_bin()`, which must equal
-  `<install>\resources\backend-dist\kirocrew-backend\bin\kirocrew.cmd`, and that value
+  `aj_crew.agent._resolve_ajcrew_bin()`, which must equal
+  `<install>\resources\backend-dist\ajcrew-backend\bin\ajcrew.cmd`, and that value
   goes to `config_set_hints_for_launcher`; the PowerShell and cmd prefixes are asserted
   exactly. The script then resets `skills.extra_paths` through the bundled CLI before each of
   three runs (Windows PowerShell 5.1, PowerShell 7, and a `.cmd` driver under `cmd /s /c`)
@@ -62,7 +62,7 @@ Current status:
   elevated install under Program Files instead. The restored native flow does
   not expose the former custom destination, desktop-shortcut, or start-with-
   Windows controls. The per-user default is what
-  keeps a nightly install (`KiroCrew Nightly`) side by side with a stable one
+  keeps a nightly install (`AjCrew Nightly`) side by side with a stable one
   rather than replacing it; nightly additionally pins its own `nsis.guid` so
   the two channels do not share an uninstall registry key, and its own
   `win.appId` so they do not share a shortcut **AppUserModelID**. That last one
@@ -73,26 +73,26 @@ Current status:
   deregisters the identity the *other* channel's desktop and Start Menu
   shortcuts still carry, and the shell then reports that app as relocated or
   missing even though its `.exe` is untouched. Either mode leaves
-  the Kiro Crew home alone (`deleteAppDataOnUninstall` stays false, and
+  the Aj Crew home alone (`deleteAppDataOnUninstall` stays false, and
   `~/.kiro/crew` is outside the install directory).
 - **Auto-updates stay visible without becoming interactive** — after the app
   stops its local gateway and closes, the update path skips Welcome, install
   scope, and Finish, but leaves the native NSIS extraction page on screen with
-  real progress. At 100% it reopens Kiro Crew and closes automatically. A
+  real progress. At 100% it reopens Aj Crew and closes automatically. A
   persistent message on that progress page warns that the handoff can take
-  several minutes; a Windows notification tells the user to reopen Kiro Crew
+  several minutes; a Windows notification tells the user to reopen Aj Crew
   from the Start menu if the relaunch does not happen. New clients call
   `quitAndInstall(false, true)` so NSIS is visible;
   the installer also converts a legacy `/S --updated` launch back to this same
   visible path, which covers the first upgrade from clients that predate the
   change.
-- **Guided Kiro Crew artwork** — the welcome and finish pages use the existing
-  Kiro Crew logo and ghost family in the native NSIS sidebar, and intermediate
+- **Guided Aj Crew artwork** — the welcome and finish pages use the existing
+  Aj Crew logo and ghost family in the native NSIS sidebar, and intermediate
   pages retain a compact branded header. Buttons, progress, install-mode copy,
   keyboard behavior, and localization remain the standard Windows experience.
   On a fresh install, the Finish page also says that the default Kiro agent
   needs Kiro CLI, names `kiro-cli login`, and links to the official external
-  setup guide before offering to launch Kiro Crew. The installer performs
+  setup guide before offering to launch Aj Crew. The installer performs
   neither prerequisite step. Auto-updates still skip this page.
   Native page boundaries use a short Win32 alpha-blended cross-fade and honor
   Windows' client-area animation setting. The fade contains no timer-driven
@@ -121,17 +121,17 @@ Current status:
   It is guarded on `isUpdated`, because an auto-update runs the same uninstaller
   and the cache is what the next update diffs against to avoid re-downloading the
   whole installer. And the path is **per channel**: stable resolves
-  `kirocrew-desktop-updater`, nightly `kirocrew-desktop-nightly-updater`
+  `ajcrew-desktop-updater`, nightly `ajcrew-desktop-nightly-updater`
   (`build-desktop.sh` overrides `extraMetadata.name`), so uninstalling one
   channel cannot touch the other's pending download or window state. An install
-  predating that split leaves a shared `kirocrew-electron-mac-updater` behind,
+  predating that split leaves a shared `ajcrew-electron-mac-updater` behind,
   which is deliberately NOT removed for the same reason — it may still belong to
   the other channel. **Your settings survive that rename**: the first launch after
   it carries over your update channel, remote hosts, hotkey and window position,
   so an Insider install is not quietly moved to Stable. A preference you have
   already changed is never overwritten.
   **Deliberately kept:** `~/.kiro/crew` — sessions, memory,
-  the database and config. Delete it by hand to remove Kiro Crew's data too.
+  the database and config. Delete it by hand to remove Aj Crew's data too.
   Also kept, because it belongs to a different product:
   `%LOCALAPPDATA%\Kiro-Cli`.
 - **Integrated Windows chrome** — the desktop shell uses the
@@ -140,7 +140,7 @@ Current status:
   palette remains centered on the window, and native minimize/maximize/close
   controls remain on the right.
 - **Precompiled Windows gateway startup** — packaging traces the real
-  `kiro_crew.cli_server` import after pruning and ships hash-based (unchecked) bytecode for
+  `aj_crew.cli_server` import after pruning and ships hash-based (unchecked) bytecode for
   that import closure beside its sources, plus the `lark_oapi` closure the Feishu
   channel imports on the gateway loop. Windows consumes those caches directly,
   avoiding the thousand-file cache-population burst that otherwise overlaps
@@ -151,7 +151,7 @@ Current status:
   and hash each `.py` in *addition* to reading the `.pyc`, which costs many
   extra cold file opens and seconds of boot time on a cold file cache.
   The macOS caches (its own traced closure, plus the standard library and the
-  `kiro_crew` package whole) are checked-hash: a codesigned bundle that does not
+  `aj_crew` package whole) are checked-hash: a codesigned bundle that does not
   show this cost. The loading screen retains its extended
   Windows handoff window as a slow-machine fallback; a child exit or spawn error
   still fails immediately and includes the launch-log cause.
@@ -161,7 +161,7 @@ Current status:
   handoff. **This runs on every qualifying PR.** `build.yml`'s installer job
   bundles a real python-build-standalone runtime carrying the wheel `build-wheel`
   produced, so the script's gateway leg has an interpreter to start and the job
-  runs without `-SkipGatewayValidation`. `KIROCREW_KIRO_BIN` points at the
+  runs without `-SkipGatewayValidation`. `AJCREW_KIRO_BIN` points at the
   fake ACP backend inside that same payload, so readiness needs no model and no
   sign-in. The job also enforces the native installer's performance ceiling
   against a real payload rather than a stub, and its install-location contract.
@@ -175,15 +175,15 @@ Current status:
   claimed an owned subdirectory rather than the pre-existing directory it was
   pointed at, that a Start Menu shortcut targets the executable THIS install
   wrote, that the bundled CLI runs, that the staged KAS engine root is in the
-  installed tree and the installed `kirocrew kas status` reports it `(built
-  into the app)` when `KIROCREW_BUNDLED_KAS_DIR` names it, that the installed
+  installed tree and the installed `ajcrew kas status` reports it `(built
+  into the app)` when `AJCREW_BUNDLED_KAS_DIR` names it, that the installed
   gateway answers `/api/health`, and that a silent uninstall removes the
   registration, the install-info key and the tree. `build-windows.yml` is `workflow_call`-only from `nightly.yml` and
   `release.yml` plus a `workflow_dispatch` packaging probe, so this leg costs a
   PR nothing and a packaging change that only breaks a real install is caught by
   the next nightly — or before merge by dispatching that probe. There is **no
   `PATH` edit to check**: the installer makes none, so the CLI is exercised at
-  `resources\backend-dist\kirocrew-backend\bin\kirocrew.cmd` rather than by name.
+  `resources\backend-dist\ajcrew-backend\bin\ajcrew.cmd` rather than by name.
 - **The fail-closed sandbox opt-in contract IS checked per PR.**
   `test/test_windows_fail_closed_optin.py` runs on `windows-latest` in the
   `backend-test-windows` shards and again in a dedicated
@@ -210,7 +210,7 @@ The source install below remains the fully supported path.
 
 No admin is required — everything installs user-scoped under `%USERPROFILE%`.
 
-Avoid the Microsoft Store `python` alias stub: Kiro Crew's interpreter finder
+Avoid the Microsoft Store `python` alias stub: Aj Crew's interpreter finder
 (`platform_compat.find_python_interpreter`) rejects it, but a Store-only `python`
 on `PATH` can still confuse other tooling. Prefer a real CPython install.
 
@@ -219,8 +219,8 @@ on `PATH` can still confuse other tooling. Prefer a real CPython install.
 From a clone, in PowerShell:
 
 ```powershell
-git clone https://github.com/kirodotdev/KiroCrew.git
-cd kirocrew
+git clone https://github.com/Al-jwharah/Aj-Crew.git
+cd Aj-Crew
 .\make.ps1 build
 ```
 
@@ -260,29 +260,29 @@ python -m pip install --upgrade pip
 #  `pip install -e .` pulls it in.)
 pip install -e ".[voice]"
 # Then stage the build as the served dashboard (a junction to website\dist):
-python -m kiro_crew.frontend stage .
+python -m aj_crew.frontend stage .
 ```
 
 Then:
 
 ```powershell
-kirocrew kas install   # the built-in KAS engine this release pins (optional)
-kirocrew setup
-kirocrew gateway
+ajcrew kas install   # the built-in KAS engine this release pins (optional)
+ajcrew setup
+ajcrew gateway
 ```
 
-`kirocrew kas install` downloads the KAS engine this release pins into the data
+`ajcrew kas install` downloads the KAS engine this release pins into the data
 home, so the built-in engine route (`agent.kas_bundle`, off by default) can be
 turned on with no further download. A source build does not run it for you; the
 desktop installer already carries the engine inside the app. `install.ps1` is
 the cloud path's thin client and runs no gateway on this machine: the instance
 it launches installs with `install.sh`, which downloads the engine by default.
 
-Open the dashboard URL printed by the gateway. On first launch, Kiro Crew checks
+Open the dashboard URL printed by the gateway. On first launch, Aj Crew checks
 the **Windows gateway host** for a runnable and authenticated Kiro CLI. If it is
 missing, follow the link to the official Kiro CLI setup guide and install it
 yourself; if it is signed out, run `kiro-cli login` (or the organization SSO
-command shown by the setup page) yourself. Kiro Crew does not download a remote
+command shown by the setup page) yourself. Aj Crew does not download a remote
 installer or start a login process. The dashboard opens automatically after its
 read-only `kiro-cli whoami` probe succeeds. Run the prerequisite steps on the
 gateway machine, which may be different from the computer running the browser.
@@ -292,20 +292,20 @@ independently of the gateway's inherited `PATH`. Installing it while the desktop
 gateway is already running is therefore picked up by the setup page's next
 automatic check; neither a gateway restart nor a Windows reboot is required.
 
-`kirocrew` lands in `.venv\Scripts\`. If a launched (non-shell)
-gateway can't find the built-in `kirocrew-cron` / `kirocrew-core` MCP servers,
+`ajcrew` lands in `.venv\Scripts\`. If a launched (non-shell)
+gateway can't find the built-in `ajcrew-cron` / `ajcrew-core` MCP servers,
 that dir is appended to the MCP spawn `PATH` automatically
 (`env.augmented_path`), and the managed-server invocation falls back to
-`python -m kiro_crew <sub>` when the `kirocrew.exe` wrapper isn't resolvable.
-In the desktop bundle the relocatable `bin\kirocrew.cmd` shim is preferred
-over `Scripts\kirocrew.exe` (whose embedded interpreter path names the build
-machine) and is unwrapped to `<root>\python.exe -P -s -m kiro_crew <sub>` when
+`python -m aj_crew <sub>` when the `ajcrew.exe` wrapper isn't resolvable.
+In the desktop bundle the relocatable `bin\ajcrew.cmd` shim is preferred
+over `Scripts\ajcrew.exe` (whose embedded interpreter path names the build
+machine) and is unwrapped to `<root>\python.exe -P -s -m aj_crew <sub>` when
 spawned.
 
 ## Kiro sandbox delegation and the unsandboxed-exec opt-in
 
-Windows has no Kiro Crew OS sandbox backend. The official Kiro CLI does have its
-own sandbox, so Kiro Crew delegates the Kiro CLI chat backend, model list, account
+Windows has no Aj Crew OS sandbox backend. The official Kiro CLI does have its
+own sandbox, so Aj Crew delegates the Kiro CLI chat backend, model list, account
 identity and usage reads to it automatically.
 
 **The default chat harness, KAS, runs UNCONFINED on Windows.** KAS has no OS
@@ -319,12 +319,12 @@ With the opt-out below declared, a KAS chat is refused with a message naming
 
 Everything else — scripts, hooks, third-party ACP backends, app backends, MCP
 probes and the `gh`/`glab` provider CLIs — has no proven internal sandbox to
-delegate to, and on Windows there is nothing installable that would give Kiro Crew
+delegate to, and on Windows there is nothing installable that would give Aj Crew
 one: no Linux user namespace, no macOS `sandbox-exec`. **Those paths therefore run
 UNCONFINED by default on Windows.** That is this platform's documented default,
 not a bypass you enabled and not a failure. It means an agent-driven subprocess
 can read your home directory, including `.aws` and `.ssh`, with no OS
-confinement; Kiro Crew still scrubs credential environment variables and records
+confinement; Aj Crew still scrubs credential environment variables and records
 every such spawn in the audit log, but it cannot stop a hostile repo or document
 from reading files.
 
@@ -339,7 +339,7 @@ at `%USERPROFILE%\.kiro\crew\config.json`:
 A declared value always wins over the platform default, in either direction, and
 a `sandbox.min_level` governance floor overrides both fleet-wide.
 
-**`kirocrew setup` surfaces this decision.** Because Windows has no OS-level
+**`ajcrew setup` surfaces this decision.** Because Windows has no OS-level
 sandbox backend, the wizard detects that and states the exposure once, then offers
 to refuse those spawns. It defaults to **no** — leaving the platform default in
 place — and writes nothing unless you answer yes, so the choice stays yours and
@@ -347,7 +347,7 @@ the key stays undeclared. The JSON above is the manual equivalent if you skipped
 the prompt or run setup non-interactively; a non-interactive run still prints the
 notice, so an unattended install is told what its posture is.
 
-`kirocrew doctor` reports the effective state under **Sandbox** — whether these
+`ajcrew doctor` reports the effective state under **Sandbox** — whether these
 spawns are refused, unconfined because you declared it, or unconfined because of
 the platform default.
 
@@ -374,26 +374,26 @@ while the other 503s. Concretely:
 
 | Feature | Status on Windows |
 |---------|-------------------|
-| Core gateway / chat / dashboard | works without `sandbox_allow_unsandboxed_exec`. The default KAS harness runs unconfined under this platform's default (declare `sandbox_allow_unsandboxed_exec=false` to refuse it); the Kiro CLI harness delegates to Kiro CLI's built-in sandbox. The parent scrubs sensitive environment variables either way. A source install with a built `website/dist` is linked into `src/kiro_crew/static/dist` at gateway start via a **directory junction** (`platform_compat.symlink_or_junction`), which needs no privilege; a symlink there would need `SeCreateSymbolicLinkPrivilege` and would leave a non-elevated install serving the "not built" page |
+| Core gateway / chat / dashboard | works without `sandbox_allow_unsandboxed_exec`. The default KAS harness runs unconfined under this platform's default (declare `sandbox_allow_unsandboxed_exec=false` to refuse it); the Kiro CLI harness delegates to Kiro CLI's built-in sandbox. The parent scrubs sensitive environment variables either way. A source install with a built `website/dist` is linked into `src/aj_crew/static/dist` at gateway start via a **directory junction** (`platform_compat.symlink_or_junction`), which needs no privilege; a symlink there would need `SeCreateSymbolicLinkPrivilege` and would leave a non-elevated install serving the "not built" page |
 | Project skills (`<project>/.kiro/skills`) | not yet — Python on Windows does not expose handle-relative directory traversal that can reject every reparse point before resolving it. Catalog, consent and loading fail closed before canonicalizing the project path, preventing a raced junction to a UNC share from initiating SMB authentication. Global and installed skills continue to work. |
 | Theme-pack install, detail, assets, overlays, topbars, and removal | works — opened pack files are contained with `GetFinalPathNameByHandleW`; descriptor resolution fails closed instead of trusting a pathname-only check |
 | LLM cron jobs (the `message` kind) | works |
 | Script cron jobs | run unconfined under this platform's default (declare `sandbox_allow_unsandboxed_exec=false` to refuse them) — they run through `wrap_argv`, which permits them on Windows because no backend is installable. With that opt-out declared the job fails with a message naming the setting |
-| Command cron jobs (`sh -c "…"`) | not supported on Windows — the stored command is vetted under POSIX-sh semantics, and Windows ships no shell whose language matches: cmd.exe is not POSIX at all, and Git-for-Windows's `sh.exe` is bash. Routing a string vetted for one language through a shell that widens it is the hazard, so the resolver refuses rather than picking a shell. (Brace expansion is refused separately, at storage time and on every fire; the refusal here rests on the shell language being wider than the one the vet was written against.) Creating one (`cron_add`, `kirocrew cron add --command`, an app's manifest or cron SDK) is refused up front with that explanation and stores nothing; a command cron that arrives by import is kept and fails closed with the same explanation when it fires. Use a **script cron** or an LLM `message` cron on this platform |
-| Script hooks (Customize → Hooks) | run unconfined under this platform's default (declare `sandbox_allow_unsandboxed_exec=false` to refuse them) (like script crons — the hook command routes through `wrap_argv`, which permits them on Windows because no backend is installable; with that opt-out declared the hook returns that message as its `error`). They run in **cmd.exe** language: a hook `command` runs as `%ComSpec% /c "<command>"`, so read the context env vars as `%KIROCREW_HOOK_EVENT%` / `%KIROCREW_HOOK_CONTEXT%` (not `$VAR`), and group arguments with double quotes only (cmd.exe gives `'…'` no meaning). The line reaches cmd.exe verbatim, so a quoted interpreter path with a space works. A hook authored on macOS/Linux is not portable and must be rewritten |
+| Command cron jobs (`sh -c "…"`) | not supported on Windows — the stored command is vetted under POSIX-sh semantics, and Windows ships no shell whose language matches: cmd.exe is not POSIX at all, and Git-for-Windows's `sh.exe` is bash. Routing a string vetted for one language through a shell that widens it is the hazard, so the resolver refuses rather than picking a shell. (Brace expansion is refused separately, at storage time and on every fire; the refusal here rests on the shell language being wider than the one the vet was written against.) Creating one (`cron_add`, `ajcrew cron add --command`, an app's manifest or cron SDK) is refused up front with that explanation and stores nothing; a command cron that arrives by import is kept and fails closed with the same explanation when it fires. Use a **script cron** or an LLM `message` cron on this platform |
+| Script hooks (Customize → Hooks) | run unconfined under this platform's default (declare `sandbox_allow_unsandboxed_exec=false` to refuse them) (like script crons — the hook command routes through `wrap_argv`, which permits them on Windows because no backend is installable; with that opt-out declared the hook returns that message as its `error`). They run in **cmd.exe** language: a hook `command` runs as `%ComSpec% /c "<command>"`, so read the context env vars as `%AJCREW_HOOK_EVENT%` / `%AJCREW_HOOK_CONTEXT%` (not `$VAR`), and group arguments with double quotes only (cmd.exe gives `'…'` no meaning). The line reaches cmd.exe verbatim, so a quoted interpreter path with a space works. A hook authored on macOS/Linux is not portable and must be rewritten |
 | Pull-request source drawer provider fetch/check/resolve | runs unconfined under this platform's default (declare `sandbox_allow_unsandboxed_exec=false` to refuse it), like script crons and hooks. The drawer keeps its own async, sandbox-routed spawn (`source_providers.runner._run_json`); Windows has no OS sandbox backend, so it reaches the same no-backend policy, and `sandbox_allow_unsandboxed_exec` resolves true on win32. With that opt-out declared, `sandboxed_spawn_argv` refuses with a message naming the setting. The provider-CLI **trust** check applies here too (see Issue Radar below), and the allowlisted executable, env allowlist, output cap, timeout and audit still bound every call |
-| Issue Radar | works — its `gh` spawn is not sandbox-routed, so the trust check is the only gate, and that is answered by reading the binary's Windows ACL (`kiro_crew.windows_acl`) in place of the POSIX `st_uid` + write-bit walk, which reports nothing on this platform. Refused when any principal outside `{you, SYSTEM, Administrators, TrustedInstaller}` can replace the binary or a parent directory, or when the security descriptor is unreadable. An **elevated** gateway (the built-in `Administrator` account, or a "Run as administrator" launch) is not refused for being elevated: Windows has no OS sandbox in this codebase, so the agent's shell already holds the gateway's full token and a refusal would remove the feature without removing any exposure — the same ACL walk applies, keyed on the gateway user's SID. GitHub only on this platform unless `glab` is installed. **If a `gh` you trust is refused**, the override variables (`KIROCREW_ISSUE_RADAR_GH`, `KIROCREW_GH_BIN`) re-enter the same check rather than bypassing it, so the recourse is to install `gh` somewhere only you and the system can write — a per-user `%LOCALAPPDATA%` install is accepted — or to file an issue quoting the refusal, which names the offending principal or the ACE type it could not evaluate |
+| Issue Radar | works — its `gh` spawn is not sandbox-routed, so the trust check is the only gate, and that is answered by reading the binary's Windows ACL (`aj_crew.windows_acl`) in place of the POSIX `st_uid` + write-bit walk, which reports nothing on this platform. Refused when any principal outside `{you, SYSTEM, Administrators, TrustedInstaller}` can replace the binary or a parent directory, or when the security descriptor is unreadable. An **elevated** gateway (the built-in `Administrator` account, or a "Run as administrator" launch) is not refused for being elevated: Windows has no OS sandbox in this codebase, so the agent's shell already holds the gateway's full token and a refusal would remove the feature without removing any exposure — the same ACL walk applies, keyed on the gateway user's SID. GitHub only on this platform unless `glab` is installed. **If a `gh` you trust is refused**, the override variables (`AJCREW_ISSUE_RADAR_GH`, `AJCREW_GH_BIN`) re-enter the same check rather than bypassing it, so the recourse is to install `gh` somewhere only you and the system can write — a per-user `%LOCALAPPDATA%` install is accepted — or to file an issue quoting the refusal, which names the offending principal or the ACE type it could not evaluate |
 | Spec Builder | works, except **Duplicate** — crash-safe copy publication pins a staging directory and uses the platform's atomic no-replace rename (`renameat2(RENAME_NOREPLACE)` on Linux, `renameatx_np(RENAME_EXCL)` on macOS). Windows provides neither that native contract nor CPython's directory-descriptor operations, so the backend reports the capability as unavailable and the dashboard omits Duplicate instead of falling back to a check-then-rename race or a junction-prone path write. Approval, per-task runs, labels, archive/restore, chat, and whole-plan execution work normally |
 | Code Review Sage | works: the worker prompts hand the session the absolute interpreter the gateway runs on (`python_command()` returns `sys.executable`) and tell it never to substitute a bare `python3`, so the `python3`-is-not-on-Windows hazard does not arise. The reviewer runs on **kiro-cli by default** (the shared review runtime uses kiro-cli unless `agent.acp_backend` names a backend it serves; a backend such as `claude` runs each task on a client of its own), and the kiro-cli spawn delegates to Kiro CLI's built-in sandbox, so declaring `agent.sandbox_allow_unsandboxed_exec=false` or a `sandbox.min_level` floor does not refuse it. The no-backend refusal applies only when another backend is declared explicitly (KAS, Codex, or a client backend such as `claude`): that spawn runs unconfined under this platform's default, and with the opt-out or floor set it refuses with a message naming the setting |
 | Dashboard terminal tab title | not on Windows — the tab keeps its default title. The live label (the running command, else the cwd basename) reads the foreground process group with POSIX `tcgetpgrp` and the shell's cwd from `/proc` (or `lsof`), and ConPTY offers neither, so `_session_title` and `_session_cwd` in `dashboard/handlers/terminal.py` return nothing here. The same cwd probe also feeds path completion, which has no cwd here, and the path on terminal output handed to chat, which falls back to the directory the terminal started in rather than the one you `cd` to. Command completion does not run here either: its probe in `dashboard/terminal_commands.py` is POSIX-only. The terminal session itself is unaffected |
 | Browser automation (`browser` tool) | works (Settings → Browser installs the engine; your own Chrome or Edge via `chrome://inspect/#remote-debugging`, or Kiro's headless Chromium) |
-| `kirocrew pod` (isolated worktree test gateways) | works, through **Task Scheduler**, unelevated. A pod is a per-user disposable gateway, so `sc.exe` is the wrong tool twice over (it needs `SeCreateServiceNamePrivilege` and installs a machine-wide LocalSystem service); `schtasks.exe` creates a task in your own namespace with no elevation, matching `systemd --user` and launchd's `gui/<uid>`. A task carries no environment block, so the action is a generated `.cmd` wrapper under `KIROCREW_POD_ENV_DIR` that pins the pod plane and re-enters `kirocrew pod _run <name>` — a plane path containing a double quote or a newline is refused at `pod up`, since cmd.exe cannot quote it. The memory and fork-bomb ceiling IS enforced here, by a Job object attached to the gateway while it is still suspended (the same `resource_limits` config and the same seam the agent-subprocess path uses), but it is not parity with the Linux cgroup: the process bound counts processes where `TasksMax` counts threads, and there is no CPU cap. Two limits remain, neither of them silent: **no restart on crash** (Task Scheduler retries a failed *start*, not a non-zero exit, so a crashed pod stays down; the wrapper records the boot's exit code and `pod ls` / `pod up` read it as the crash signal), and **`pod api` refuses** because its authenticated request travels over the pod's private AF_UNIX dashboard socket with no TCP fallback and CPython here has no `AF_UNIX` — use `pod token` plus your own client against the loopback port. `pod up/down/ls/status/token/url/logs/prune/provision/scenarios` all work. Two Windows-specific mechanics worth knowing: `schtasks` output is **localized**, so the backend never parses it (liveness, the pid and the last result come from files the supervised process itself writes, and `schtasks` is used only where its exit code is the answer), and Windows has no `exec`, so the gateway is supervised as the wrapper's child with its pid plus creation-time identity recorded — that is what keeps `port_owner`'s ownership proof honest here. If `pod up` reports that your user cannot create a scheduled task, that is Group Policy, a disabled `Schedule` service, or a principal without `TASK_CREATE`; there is no non-admin workaround |
+| `ajcrew pod` (isolated worktree test gateways) | works, through **Task Scheduler**, unelevated. A pod is a per-user disposable gateway, so `sc.exe` is the wrong tool twice over (it needs `SeCreateServiceNamePrivilege` and installs a machine-wide LocalSystem service); `schtasks.exe` creates a task in your own namespace with no elevation, matching `systemd --user` and launchd's `gui/<uid>`. A task carries no environment block, so the action is a generated `.cmd` wrapper under `AJCREW_POD_ENV_DIR` that pins the pod plane and re-enters `ajcrew pod _run <name>` — a plane path containing a double quote or a newline is refused at `pod up`, since cmd.exe cannot quote it. The memory and fork-bomb ceiling IS enforced here, by a Job object attached to the gateway while it is still suspended (the same `resource_limits` config and the same seam the agent-subprocess path uses), but it is not parity with the Linux cgroup: the process bound counts processes where `TasksMax` counts threads, and there is no CPU cap. Two limits remain, neither of them silent: **no restart on crash** (Task Scheduler retries a failed *start*, not a non-zero exit, so a crashed pod stays down; the wrapper records the boot's exit code and `pod ls` / `pod up` read it as the crash signal), and **`pod api` refuses** because its authenticated request travels over the pod's private AF_UNIX dashboard socket with no TCP fallback and CPython here has no `AF_UNIX` — use `pod token` plus your own client against the loopback port. `pod up/down/ls/status/token/url/logs/prune/provision/scenarios` all work. Two Windows-specific mechanics worth knowing: `schtasks` output is **localized**, so the backend never parses it (liveness, the pid and the last result come from files the supervised process itself writes, and `schtasks` is used only where its exit code is the answer), and Windows has no `exec`, so the gateway is supervised as the wrapper's child with its pid plus creation-time identity recorded — that is what keeps `port_owner`'s ownership proof honest here. If `pod up` reports that your user cannot create a scheduled task, that is Group Policy, a disabled `Schedule` service, or a principal without `TASK_CREATE`; there is no non-admin workaround |
 | Vector memory / embeddings | works — embeddings run **in-process** through the vendored llama-cpp-python (`_vendor/llama_cpp_libs/win_amd64`), which loads the Qwen3-Embedding-0.6B GGUF from `~/.kiro/crew/models`. No remote endpoint, no Docker and no Ollama server is involved on any platform |
 | STT (whisper / optional cloud transcription) | works |
 | Voice reply | works out of the box on the default `system` provider: it drives `System.Speech` through Windows PowerShell 5.1, needs no install, and deliberately does NOT route through `wrap_argv`, so the missing sandbox backend does not block it. `polly` DOES route through `wrap_argv` and therefore runs unconfined under this platform's default; declare `sandbox_allow_unsandboxed_exec=false` and synthesis returns no audio, with the log naming that setting |
-| `kirocrew cloud` tunnel (remote dashboard) | works — `kirocrew cloud connect` (alias `tunnel`) forwards the dashboard over an AWS Systems Manager session, not OpenSSH, so there is no SSH client requirement. It needs the AWS [Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) on the machine you run `kirocrew cloud connect` from. The built-in installer covers macOS/Linux only, so on Windows install the plugin from AWS's page yourself |
+| `ajcrew cloud` tunnel (remote dashboard) | works — `ajcrew cloud connect` (alias `tunnel`) forwards the dashboard over an AWS Systems Manager session, not OpenSSH, so there is no SSH client requirement. It needs the AWS [Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) on the machine you run `ajcrew cloud connect` from. The built-in installer covers macOS/Linux only, so on Windows install the plugin from AWS's page yourself |
 | Instances SSH tunnel (`ssh -N -L` transport) | not yet — needs the OpenSSH client on `PATH` and a signal-handling audit |
-| MCP server tool listing (dashboard MCP page, `kirocrew doctor`) | **built-in servers work, no opt-in** — `kirocrew-core` / `-cron` / `-computer` are probed for real: their command line is derived entirely inside the package (never user-config text), so the first-party carve-out spawns the handshake probe unconfined (env-scrubbed, SEL-audited as `unconfined`) even with no sandbox backend. When that probe cannot run (a transient sandbox failure, a governance sandbox floor, or a customized command for the server), the listing falls back to reading the package's own tool declaration and logs a WARNING noting that `ok` then means "declared" rather than "handshake succeeded". A **third-party** server has no declaration to read and never gets the carve-out, so its listing needs the `agent.sandbox_allow_unsandboxed_exec` opt-in — its binary is named by config and spawning it is what the sandbox exists to confine. The third-party server itself is unaffected: kiro-cli launches it from the agent config without this probe, so its tools still work in chat |
+| MCP server tool listing (dashboard MCP page, `ajcrew doctor`) | **built-in servers work, no opt-in** — `ajcrew-core` / `-cron` / `-computer` are probed for real: their command line is derived entirely inside the package (never user-config text), so the first-party carve-out spawns the handshake probe unconfined (env-scrubbed, SEL-audited as `unconfined`) even with no sandbox backend. When that probe cannot run (a transient sandbox failure, a governance sandbox floor, or a customized command for the server), the listing falls back to reading the package's own tool declaration and logs a WARNING noting that `ok` then means "declared" rather than "handshake succeeded". A **third-party** server has no declaration to read and never gets the carve-out, so its listing needs the `agent.sandbox_allow_unsandboxed_exec` opt-in — its binary is named by config and spawning it is what the sandbox exists to confine. The third-party server itself is unaffected: kiro-cli launches it from the agent config without this probe, so its tools still work in chat |
 | MCP gateway (opt-in, OFF by default) | works — a named-pipe transport replaces the AF_UNIX socket, and the peer check uses `GetNamedPipeClientProcessId` + a SID comparison in place of `SO_PEERCRED`. Still opt-in: set `mcp_gateway.enabled` to turn it on |
 | Papyrus (LaTeX editor, opt-in builtin) | works, and compiling and git run unconfined under this platform's default — unlike official Kiro, these processes have no proven internal sandbox, so `wrap_argv` applies the ordinary Windows no-backend policy, which permits them. With `sandbox_allow_unsandboxed_exec=false` declared, compile and clone/commit/push/pull answer a clear 422 (`compiler_sandbox_unavailable` / `git_sandbox_unavailable`) naming the remedy rather than a bare "internal error". The managed Tectonic compiler is Windows-pinned (`x86_64-pc-windows-msvc`); Windows-on-ARM has no upstream asset and keeps the manual install path |
 | Computer use — **reading** (`computer_list_apps`, `computer_get_state`) | works, still behind the operator's one keystone opt-in (Settings → Computer Use). Reads the UI Automation tree of a window and can attach a `PrintWindow` screenshot. Two Windows-specific limits: a **non-elevated gateway cannot see an elevated window** (UIPI, and the secure desktop is unreachable to any application — a security property, not a gap), and a window drawn on a swapchain surface **cannot be captured**, so WindowsTerminal returns a tree with no screenshot rather than a blank image. Walking is also markedly slower than macOS — a large Chromium window costs hundreds of milliseconds at the node budget — so raise `max_tree_nodes` deliberately |
@@ -510,7 +510,7 @@ exact fail-open that loses writes. Non-blocking `try_acquire_lock` already used
 `fcntl.flock` takes no timeout, so a bare POSIX acquire waits on a holder without
 limit. That is not a wait but a **hang**, and on the boot path it cannot be told
 apart from a slow start: `agents_spec_lock` → `file_lock(wait=True)` → `flock`
-leaves the gateway alive with no port bound, no `KIROCREW_READY` line and nothing
+leaves the gateway alive with no port bound, no `AJCREW_READY` line and nothing
 logged at WARNING or ERROR, so an operator and a health check both keep waiting.
 
 POSIX therefore polls `LOCK_NB` up to the same `_LOCK_TIMEOUT_SECS` and raises
@@ -544,10 +544,10 @@ platform-neutral names.
 
 ### The five-whys log lock follows the same rule
 
-`src/kiro_crew/builtin_skills/five-whys/scripts/five_whys.py` serializes each
+`src/aj_crew/builtin_skills/five-whys/scripts/five_whys.py` serializes each
 mutating command on a `<log>.lock` sidecar, and it cannot import
 `platform_compat`: a skill script is copied out of
-the package and run as a bare `python3` file, so `kiro_crew` is usually not on
+the package and run as a bare `python3` file, so `aj_crew` is usually not on
 its path. Its `_flock` therefore applies the rule above itself, with the
 helper's poll interval and ceiling. On Windows it polls
 `LK_NBLCK` every `_LOCK_POLL_SECS` until the holder lets go, so a second
@@ -563,7 +563,7 @@ Windows and would replace that message. POSIX keeps its kernel-blocking
 `test/test_five_whys_windows_lock.py` pins the wait against a fake CRT that
 gives up on the blocking code as `_locking` does, pins the poll interval and
 ceiling to the helper's, and its source scan fails any module under
-`src/kiro_crew` that passes `LK_LOCK` or `LK_RLCK`.
+`src/aj_crew` that passes `LK_LOCK` or `LK_RLCK`.
 
 ## `os.kill(pid, 0)` is a process killer here, not a liveness probe
 
@@ -584,7 +584,7 @@ Windows they ask `OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION)` instead of
 signalling anything.
 
 `test/test_windows_kill_probe_audit.py` enforces this as a tripwire rather than a
-convention: it walks the AST of every module under `src/kiro_crew` and fails on a
+convention: it walks the AST of every module under `src/aj_crew` and fails on a
 raw signal-0 probe until the author either routes it through the shim or records
 the site in `GATED_PROBES` with a justification for why it can never execute on
 Windows. A second test rejects allowlist entries whose code has since moved or
@@ -748,22 +748,22 @@ stay Windows-skipped in `test/windows-expected-failures.txt`.
 
 The desktop app is a window around the gateway, not the gateway itself. On a
 host where that window cannot render — a VMware or VirtualBox guest reached over
-RDP, a VDI session, a server nobody signs in to — `kirocrew gateway` runs the
+RDP, a VDI session, a server nobody signs in to — `ajcrew gateway` runs the
 same server and dashboard with no Electron process at all, and you use the
 dashboard from a browser. Try this when the desktop window still fails after the
 software-rendering relaunch described under [Troubleshooting](#troubleshooting).
 
-1. **Start the gateway.** From a source install, run `kirocrew gateway`. The
+1. **Start the gateway.** From a source install, run `ajcrew gateway`. The
    desktop installer does not add the CLI to `PATH`, so from a desktop install
    call the bundled shim by its full path:
 
    ```powershell
-   & "<install dir>\resources\backend-dist\kirocrew-backend\bin\kirocrew.cmd" gateway
+   & "<install dir>\resources\backend-dist\ajcrew-backend\bin\ajcrew.cmd" gateway
    ```
 
    Leave that window open; closing it stops the gateway.
 2. **Open the dashboard.** In a second shell on the same host, run
-   `kirocrew token` (the same shim, with `token` in place of `gateway`) and open
+   `ajcrew token` (the same shim, with `token` in place of `gateway`) and open
    the link it prints within five minutes.
 3. **Stay signed in.** The link sets an access cookie and a 30-day refresh
    cookie, and the dashboard rotates both before the access cookie expires, so
@@ -776,7 +776,7 @@ app while this gateway is serving, the app reuses it instead of starting a
 second one, so you can switch between the browser and the app without stopping
 anything.
 
-What this does **not** give you is supervision. `kirocrew service install` has
+What this does **not** give you is supervision. `ajcrew service install` has
 no Windows backend: it prints that service management is supported only on
 systemd and launchd. A gateway started this way stops when you sign out or close
 its window, does not start at boot, and is not restarted if it exits. Windows
@@ -793,14 +793,14 @@ supervision is a separate piece of work, proposed in
   relaunches itself once with software rendering
   (`--in-process-gpu --use-angle=swiftshader`) when the GPU process dies
   before the dashboard has loaded, and keeps that choice for the installed
-  version under `gpuSoftwareFallback` in `%APPDATA%\kirocrew-desktop\config.json`; a
+  version under `gpuSoftwareFallback` in `%APPDATA%\ajcrew-desktop\config.json`; a
   new version tries hardware rendering again once. The launch log then reads
   `gpu: software rendering ACTIVE`. `--no-sandbox` is never applied: if the
   relaunched app still cannot start, every Chromium child is being blocked
   (typically an endpoint-security DLL injected into every process), which is a
   different failure and needs a process exclusion for the app, not a rendering
   switch.
-- **A gray/blank window that exits, while `kirocrew gateway` plus a browser
+- **A gray/blank window that exits, while `ajcrew gateway` plus a browser
   work fine** — that "different failure" above, seen from the other side:
   Chromium cannot start a sandboxed child process on this device at all, so the
   software-rendering relaunch does not help, because rendering is not what is
@@ -813,8 +813,8 @@ supervision is a separate piece of work, proposed in
   off, and has a button that opens this section. An older version shows only
   the black window; the log lines below are the same either way.
 
-  `gateway-launch.log` (in `%APPDATA%\kirocrew-desktop\logs\`; a nightly install
-  uses `kirocrew-desktop-nightly`) shows `renderer died` lines up to the reload
+  `gateway-launch.log` (in `%APPDATA%\ajcrew-desktop\logs\`; a nightly install
+  uses `ajcrew-desktop-nightly`) shows `renderer died` lines up to the reload
   limit. The exit code they carry is commonly `-2147483645`, which
   `chromium.log` beside it echoes as `exit_code=-2147483645`; that value is
   `0x80000003` (`STATUS_BREAKPOINT`) in hex, and Event Viewer may show it as
@@ -832,7 +832,7 @@ supervision is a separate piece of work, proposed in
 
   **First, confirm the sandbox is the failing component:** launch once with
   `--no-sandbox`. If the dashboard loads, continue below. If it still fails the
-  sandbox is *not* the cause — try `KIROCREW_DISABLE_GPU=1` for a failing
+  sandbox is *not* the cause — try `AJCREW_DISABLE_GPU=1` for a failing
   GPU/rendering path, then a reinstall for a damaged install; an
   endpoint-security exclusion cannot fix either. Do not keep `--no-sandbox`
   either way: it removes renderer, GPU and utility isolation for every child
@@ -841,11 +841,11 @@ supervision is a separate piece of work, proposed in
   <details>
   <summary>How to pass a flag or set the variable on Windows</summary>
 
-  **Fully exit Kiro Crew first.** This step is not optional: the app is
+  **Fully exit Aj Crew first.** This step is not optional: the app is
   single-instance, and a second launch hands its arguments to the instance
   already running and then exits, so the flag is silently ignored while the
   broken window still appears. Close it from the tray icon, then confirm no
-  `KiroCrew.exe` remains in Task Manager > Details.
+  `AjCrew.exe` remains in Task Manager > Details.
 
   **A one-off launch with a flag** — open Command Prompt and run the executable
   with the flag, so nothing about the installed shortcut changes. To get the
@@ -855,19 +855,19 @@ supervision is a separate piece of work, proposed in
   stable per-user install (`perMachine: false`, no choice of directory) it is:
 
   ```
-  "%LOCALAPPDATA%\Programs\KiroCrew\KiroCrew.exe" --no-sandbox
+  "%LOCALAPPDATA%\Programs\AjCrew\AjCrew.exe" --no-sandbox
   ```
 
   **A one-off launch with the variable**, in the same Command Prompt window, so
   it applies to that launch only:
 
   ```
-  set KIROCREW_DISABLE_GPU=1
-  "%LOCALAPPDATA%\Programs\KiroCrew\KiroCrew.exe"
+  set AJCREW_DISABLE_GPU=1
+  "%LOCALAPPDATA%\Programs\AjCrew\AjCrew.exe"
   ```
 
-  To keep `KIROCREW_DISABLE_GPU` for a host that genuinely has no usable GPU,
-  make it durable with `setx KIROCREW_DISABLE_GPU 1` (no elevation needed; it
+  To keep `AJCREW_DISABLE_GPU` for a host that genuinely has no usable GPU,
+  make it durable with `setx AJCREW_DISABLE_GPU 1` (no elevation needed; it
   applies to new processes, so restart the app) or through **System Properties >
   Environment Variables**. Do **not** make `--no-sandbox` durable this way —
   editing the shortcut's Target keeps an isolation downgrade in place
@@ -877,7 +877,7 @@ supervision is a separate piece of work, proposed in
 
   </details>
 
-  **The fix is a process exclusion for the Kiro Crew executable** in the
+  **The fix is a process exclusion for the Aj Crew executable** in the
   endpoint security product managing the device. That addresses the cause and
   leaves the sandbox intact. To identify what to exclude, open Event Viewer >
   Windows Logs > Application and read the faulting module name in the
@@ -905,11 +905,11 @@ supervision is a separate piece of work, proposed in
 - **Desktop gateway recovery refuses to force-stop the port** - the Electron
   launcher uses `netstat -ano` to identify the listener, PowerShell
   (`Get-CimInstance`) with a WMIC fallback to read its command line, and
-  `taskkill /F /PID` only after confirming a Kiro Crew executable or
-  `python -m kiro_crew` process. Localized listener-state text is ignored.
+  `taskkill /F /PID` only after confirming an Aj Crew executable or
+  `python -m aj_crew` process. Localized listener-state text is ignored.
   SSH forwards and unrelated processes are never terminated, and a failed or
   timed-out `netstat` probe is treated as unknown rather than as a free port.
-- **`port-owner: :5476 held by NON-KiroCrew pid=...` naming our own
+- **`port-owner: :5476 held by NON-AjCrew pid=...` naming our own
   `python.exe`** - the launcher binds Windows gateway identity to the executable
   path it resolved. An install reached through a directory junction (a Toolbox
   `current` link) spells that path one way while Windows reports the running
@@ -921,7 +921,7 @@ supervision is a separate piece of work, proposed in
   `python.exe` the resolver never selected, at any other location, stays
   foreign: the shell still adopts a same-family gateway there, but never claims
   or kills it. Update to a build that includes this fix; until then, end every
-  `kirocrew` process in Task Manager and relaunch the app.
+  `ajcrew` process in Task Manager and relaunch the app.
 - **`ModuleNotFoundError: No module named 'fcntl'`** — you installed a
   branch/commit that predates the Windows port. `fcntl` is a Unix-only Python
   stdlib module; it cannot be pip-installed on Windows. Update to a build that
@@ -931,7 +931,7 @@ supervision is a separate piece of work, proposed in
 - **"Python was not found" (Microsoft Store)** — a bare `python`/`python3` was
   resolving the Store alias stub; install a real CPython and ensure it precedes
   the stub on `PATH`.
-- **`kirocrew stop` reports "No Kiro Crew gateway currently running"** — a
+- **`ajcrew stop` reports "No Aj Crew gateway currently running"** — a
   localized Windows edition is *not* the cause: `find_listening_pids` identifies
   a listening row by its wildcard foreign address (`0.0.0.0:0` / `[::]:0`), which
   no edition translates, and treats the English `LISTENING` literal only as a
@@ -949,5 +949,5 @@ supervision is a separate piece of work, proposed in
 - [README](../../README.md) — quick-start Platforms note
 - [install](install.md) — the build-target table shared with macOS and Linux
 - [platform-compat](../system-specs/common/platform-compat.md) — the cross-platform shim table
-- `src/kiro_crew/platform_compat.py` — the cross-platform shim
+- `src/aj_crew/platform_compat.py` — the cross-platform shim
 - `make.ps1` — the Windows build driver

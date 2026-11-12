@@ -8,13 +8,13 @@ import subprocess
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS, await_until
+from aj_crew import platform_compat
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, await_until
 
 
 class TestDiagnostics:
     def _set_probes(self, monkeypatch, ssh, remote, local):
-        from kiro_crew.instances import diagnostics as diag
+        from aj_crew.instances import diagnostics as diag
 
         async def _ssh(h, connect_timeout_secs=10.0):
             return ssh
@@ -30,7 +30,7 @@ class TestDiagnostics:
         monkeypatch.setattr(diag, "_probe_local_forward", _loc)
 
     def test_ladder_first_broken_link(self, monkeypatch):
-        from kiro_crew.instances.diagnostics import (
+        from aj_crew.instances.diagnostics import (
             NOT_CONNECTED,
             OK,
             REMOTE_DOWN,
@@ -54,13 +54,13 @@ class TestDiagnostics:
         assert asyncio.run(diagnose_instance("cd-1-alias", 7777, 0)).code == NOT_CONNECTED
 
     def test_invalid_host_short_circuits(self):
-        from kiro_crew.instances.diagnostics import UNKNOWN, diagnose_instance
+        from aj_crew.instances.diagnostics import UNKNOWN, diagnose_instance
 
         r = asyncio.run(diagnose_instance("-obadhost", 7777, 7778))
         assert r.code == UNKNOWN and r.probes == []
 
     def test_probe_helpers_via_mocked_subprocess(self, monkeypatch):
-        from kiro_crew.instances import diagnostics as diag
+        from aj_crew.instances import diagnostics as diag
 
         class FakeProc:
             def __init__(self, rc, out=b""):
@@ -110,7 +110,7 @@ class TestDiagnostics:
         already tuned instances.connect_timeout_secs for must not be
         misreported as unreachable just because the probe never saw that
         tuning."""
-        from kiro_crew.instances import diagnostics as diag
+        from aj_crew.instances import diagnostics as diag
 
         captured = {}
 
@@ -156,7 +156,7 @@ class TestDiagnostics:
         assert captured["kw"].get("stdin") is asyncio.subprocess.DEVNULL
 
     def test_probe_local_forward(self):
-        from kiro_crew.instances import diagnostics as diag
+        from aj_crew.instances import diagnostics as diag
 
         # no port -> False without connecting
         assert asyncio.run(diag._probe_local_forward(0)) is False
@@ -173,7 +173,7 @@ class TestDiagnostics:
 
 class TestTunnelStatus:
     def test_to_dict_includes_diagnosis_only_when_set(self):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         # no diagnosis -> key absent
         d = TunnelStatus("cd-1", TunnelState.CONNECTED, local_port=7778, remote_port=7777).to_dict()
@@ -194,7 +194,7 @@ class TestTunnelStatus:
         """
         import asyncio as aio
 
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
 
         entered = aio.Event()
         release = aio.Event()
@@ -232,7 +232,7 @@ class TestTunnelStatus:
         """
         import asyncio as aio
 
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
 
         class _Boom(_SshTunnel):
             async def _terminate(self):
@@ -259,7 +259,7 @@ _SSM_TARGET = "i-0123456789abcdef0"
 
 
 def _ssm_node_online(monkeypatch):
-    from kiro_crew.instances import diagnostics as diag
+    from aj_crew.instances import diagnostics as diag
 
     async def _online(*a, **k):
         return diag._NODE_ONLINE
@@ -286,8 +286,8 @@ class TestSsmRemoteCauses:
         ids=["denied", "throttled"],
     )
     async def test_a_refused_send_command_is_named_without_arns(self, monkeypatch, stderr, code):
-        from kiro_crew.cloud import aws
-        from kiro_crew.instances import diagnostics as diag
+        from aj_crew.cloud import aws
+        from aj_crew.instances import diagnostics as diag
 
         _ssm_node_online(monkeypatch)
 
@@ -306,8 +306,8 @@ class TestSsmRemoteCauses:
 
     @pytest.mark.asyncio
     async def test_an_unknown_remote_user_names_the_remote_user_field(self, monkeypatch):
-        from kiro_crew.cloud import ssm
-        from kiro_crew.instances import diagnostics as diag
+        from aj_crew.cloud import ssm
+        from aj_crew.instances import diagnostics as diag
 
         _ssm_node_online(monkeypatch)
 
@@ -331,7 +331,7 @@ class TestSsmRemoteProbeSnippet:
     """The real rung-2 snippet, run in a local sh against a planted home, picks the cause."""
 
     def _home(self, tmp_path, *, markers=(), launcher=None):
-        from kiro_crew.config.paths import CONFIG_DIR_NAME
+        from aj_crew.config.paths import CONFIG_DIR_NAME
 
         bin_dir = tmp_path / "bin"
         bin_dir.mkdir()
@@ -354,8 +354,8 @@ class TestSsmRemoteProbeSnippet:
             exe.chmod(0o755)
 
     def _run_snippet_locally(self, monkeypatch, home, **env):
-        from kiro_crew.cloud import ssm
-        from kiro_crew.instances import diagnostics as diag
+        from aj_crew.cloud import ssm
+        from aj_crew.instances import diagnostics as diag
 
         async def _send(target, command, profile, region, run_as, timeout_secs):
             proc = await asyncio.to_thread(
@@ -382,7 +382,7 @@ class TestSsmRemoteProbeSnippet:
         [
             (
                 ("gateway-6100.bin", "gateway-7777.bin"),
-                ".local/bin/kirocrew",
+                ".local/bin/ajcrew",
                 "",
                 5476,
                 "remote_wrong_port",
@@ -390,16 +390,16 @@ class TestSsmRemoteProbeSnippet:
             ),
             (
                 ("gateway-7777.home",),
-                ".local/bin/kirocrew",
+                ".local/bin/ajcrew",
                 "",
                 5476,
                 "remote_wrong_port",
                 ("port 7777, not 5476",),
             ),
-            ((), None, "", 5476, "remote_not_installed", ("user ec2-user", "Remote kirocrew")),
+            ((), None, "", 5476, "remote_not_installed", ("user ec2-user", "Remote ajcrew")),
             (
                 ("gateway-6100.bin",),
-                ".kirocrew-app/.venv/bin/kirocrew",
+                ".ajcrew-app/.venv/bin/ajcrew",
                 "",
                 5476,
                 "remote_down",
@@ -408,24 +408,24 @@ class TestSsmRemoteProbeSnippet:
             (("gateway-5476.bin",), None, "", 5476, "remote_down", ()),
             (
                 ("gateway-5476.bin", "gateway-7777.bin"),
-                ".local/bin/kirocrew",
+                ".local/bin/ajcrew",
                 "",
                 5476,
                 "remote_down",
                 (),
             ),
-            ((), "opt/kc/kirocrew", "~/opt/kc/kirocrew", 5476, "remote_down", ()),
+            ((), "opt/kc/ajcrew", "~/opt/kc/ajcrew", 5476, "remote_down", ()),
             (
                 ("gateway-5476.bin",),
-                ".local/bin/kirocrew",
-                "~/opt/kc/kirocrew",
+                ".local/bin/ajcrew",
+                "~/opt/kc/ajcrew",
                 5476,
                 "remote_not_installed",
                 (),
             ),
             (("gateway-7777.bin",), None, "", 7777, "not_connected", ()),
-            ((), "bin/kirocrew", "kirocrew", 5476, "remote_down", ()),
-            ((), "kirocrew-elsewhere", "kirocrew-elsewhere", 5476, "remote_not_installed", ()),
+            ((), "bin/ajcrew", "ajcrew", 5476, "remote_down", ()),
+            ((), "ajcrew-elsewhere", "ajcrew-elsewhere", 5476, "remote_not_installed", ()),
         ],
         ids=[
             "live-marker-port",
@@ -444,7 +444,7 @@ class TestSsmRemoteProbeSnippet:
     async def test_the_snippet_tells_the_causes_apart(
         self, tmp_path, monkeypatch, markers, launcher, remote_bin, remote_port, code, named
     ):
-        from kiro_crew.instances import diagnostics as diag
+        from aj_crew.instances import diagnostics as diag
 
         _ssm_node_online(monkeypatch)
         self._home(tmp_path, markers=markers, launcher=launcher)
@@ -455,16 +455,16 @@ class TestSsmRemoteProbeSnippet:
             assert text in res.reason
 
     @pytest.mark.asyncio
-    async def test_a_marker_under_an_exported_kirocrew_home_means_installed(
+    async def test_a_marker_under_an_exported_ajcrew_home_means_installed(
         self, tmp_path, monkeypatch
     ):
-        """The mint reads ``$KIROCREW_HOME``'s marker first, so the probe does too."""
-        from kiro_crew.instances import diagnostics as diag
+        """The mint reads ``$AJCREW_HOME``'s marker first, so the probe does too."""
+        from aj_crew.instances import diagnostics as diag
 
         _ssm_node_online(monkeypatch)
         self._home(tmp_path)
         (tmp_path / "elsewhere" / "run").mkdir(parents=True)
-        (tmp_path / "elsewhere" / "run" / "gateway-5476.bin").write_text("/opt/kc/bin/kirocrew\n")
-        self._run_snippet_locally(monkeypatch, tmp_path, KIROCREW_HOME=str(tmp_path / "elsewhere"))
+        (tmp_path / "elsewhere" / "run" / "gateway-5476.bin").write_text("/opt/kc/bin/ajcrew\n")
+        self._run_snippet_locally(monkeypatch, tmp_path, AJCREW_HOME=str(tmp_path / "elsewhere"))
         res = await diag.diagnose_instance_ssm(_SSM_TARGET, 5476, 0)
         assert res.code == "remote_down", res.reason

@@ -18,9 +18,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import name_grant
-from kiro_crew.acp.types import AcpEvent
-from kiro_crew.slack.gateway import (
+from aj_crew import name_grant
+from aj_crew.acp.types import AcpEvent
+from aj_crew.slack.gateway import (
     _HEARTBEAT_KEEP_INJECTION,
     GatewayOrchestrator,
     _build_heartbeat_hooks,
@@ -106,18 +106,18 @@ class _Gate:
 
 def _install_context(monkeypatch, **replacements) -> None:
     """Install a standalone platform context with some adapters replaced."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.platform import build_default_context
-    from kiro_crew.platform.context import set_context
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.platform import build_default_context
+    from aj_crew.platform.context import set_context
 
-    ctx = dataclasses.replace(build_default_context(KiroCrewConfig()), **replacements)
+    ctx = dataclasses.replace(build_default_context(AjCrewConfig()), **replacements)
     set_context(ctx)
-    monkeypatch.setattr("kiro_crew.platform.bootstrap._BOOTED", True, raising=False)
+    monkeypatch.setattr("aj_crew.platform.bootstrap._BOOTED", True, raising=False)
 
 
 @pytest.fixture()
 def _reset_ctx():
-    from kiro_crew.platform.context import set_context
+    from aj_crew.platform.context import set_context
 
     yield
     set_context(None)
@@ -138,7 +138,7 @@ class TestHeartbeatHooksCarryDeniedState:
     """
 
     def test_scoped_hooks_snapshot_live_denied_state(self) -> None:
-        from kiro_crew.hooks import HookManager, HooksConfig, UserDeniedPattern
+        from aj_crew.hooks import HookManager, HooksConfig, UserDeniedPattern
 
         primary = HookManager(HooksConfig())
         # Simulate a live opt-out mutation hot-reloaded into the primary manager.
@@ -163,11 +163,11 @@ class TestHeartbeatHooksCarryDeniedState:
 
 
 class TestHeartbeatSafeTools:
-    def test_canonical_core_reads_are_the_kirocrew_core_set(self) -> None:
+    def test_canonical_core_reads_are_the_ajcrew_core_set(self) -> None:
         """Spot-check core reads every heartbeat task should reasonably need. Each is
-        served by ``kirocrew-core``, the one server the heartbeat spec always mounts;
-        ``cron_list`` lives on ``kirocrew-cron``, which heartbeat never mounts."""
-        from kiro_crew.slack.gateway import _HEARTBEAT_SAFE_CORE_MCP_TOOLS
+        served by ``ajcrew-core``, the one server the heartbeat spec always mounts;
+        ``cron_list`` lives on ``ajcrew-cron``, which heartbeat never mounts."""
+        from aj_crew.slack.gateway import _HEARTBEAT_SAFE_CORE_MCP_TOOLS
 
         expected = {
             "learn_list",
@@ -184,14 +184,14 @@ class TestHeartbeatSafeTools:
     def test_canonical_builtins_are_trusted(self) -> None:
         """The trusted channel's own built-in spellings (``fs_read``, not the ``Read``
         title) come from the hooks allowlist."""
-        from kiro_crew.hooks import _HOST_READ_ONLY_BUILTIN_TOOLS
+        from aj_crew.hooks import _HOST_READ_ONLY_BUILTIN_TOOLS
 
         for name in ["fs_read", "grep", "glob"]:
             assert name in _HOST_READ_ONLY_BUILTIN_TOOLS, name
 
     def test_write_tools_excluded(self) -> None:
         """Write/mutating tools must NOT be in the core read mapping."""
-        from kiro_crew.slack.gateway import _HEARTBEAT_SAFE_CORE_MCP_TOOLS
+        from aj_crew.slack.gateway import _HEARTBEAT_SAFE_CORE_MCP_TOOLS
 
         for name in [
             "send_message",
@@ -211,7 +211,7 @@ class TestHeartbeatSafeTools:
 
     def test_title_spellings_are_not_core_names(self) -> None:
         """Display-title spellings are not names the trusted channel ever stamps."""
-        from kiro_crew.slack.gateway import _HEARTBEAT_SAFE_CORE_MCP_TOOLS
+        from aj_crew.slack.gateway import _HEARTBEAT_SAFE_CORE_MCP_TOOLS
 
         for name in ["Read", "Grep", "Glob", "WorkspaceSearch"]:
             assert name not in _HEARTBEAT_SAFE_CORE_MCP_TOOLS, name
@@ -234,9 +234,9 @@ class TestIsHeartbeatSafeTool:
     def test_untrusted_identity_denies_even_an_allowlisted_name(self) -> None:
         """No ``_meta`` identity, no approval — whatever the fields or title say."""
         assert not _is_heartbeat_safe_tool(_builtin("fs_read", trusted=False))
-        assert not _is_heartbeat_safe_tool(_mcp("kirocrew-core", "learn_list", trusted=False))
+        assert not _is_heartbeat_safe_tool(_mcp("ajcrew-core", "learn_list", trusted=False))
         assert not _is_heartbeat_safe_tool(_make_event("Read"))
-        assert not _is_heartbeat_safe_tool(_make_event("Running: @kirocrew-core/learn_list"))
+        assert not _is_heartbeat_safe_tool(_make_event("Running: @ajcrew-core/learn_list"))
 
     def test_title_never_decides(self) -> None:
         """A forged title over an unrecognised trusted identity is denied, and a
@@ -254,7 +254,7 @@ class TestIsHeartbeatSafeTool:
         """No built-in ever carries a server, so a server-qualified ``fs_read`` can only
         be an MCP server claiming that name."""
         assert not _is_heartbeat_safe_tool(_mcp("some-mcp", "fs_read"))
-        assert not _is_heartbeat_safe_tool(_mcp("kirocrew-core", "grep"))
+        assert not _is_heartbeat_safe_tool(_mcp("ajcrew-core", "grep"))
 
     def test_trusted_web_builtins_approve(self) -> None:
         """``web_fetch`` / ``web_search`` are in ``hooks._HOST_READ_ONLY_BUILTIN_TOOLS``,
@@ -263,25 +263,25 @@ class TestIsHeartbeatSafeTool:
         assert _is_heartbeat_safe_tool(_builtin("web_search"))
 
     def test_core_mcp_read_on_its_owning_server_approves(self) -> None:
-        assert _is_heartbeat_safe_tool(_mcp("kirocrew-core", "learn_list"))
-        assert _is_heartbeat_safe_tool(_mcp("kirocrew-core", "spawn_list"))
-        assert _is_heartbeat_safe_tool(_mcp("kirocrew-core", "local_knowledge_search"))
+        assert _is_heartbeat_safe_tool(_mcp("ajcrew-core", "learn_list"))
+        assert _is_heartbeat_safe_tool(_mcp("ajcrew-core", "spawn_list"))
+        assert _is_heartbeat_safe_tool(_mcp("ajcrew-core", "local_knowledge_search"))
 
     def test_core_mcp_read_on_the_wrong_or_no_server_denies(self) -> None:
         """A name in the core read set alone is not approval: the name must come
-        from ``kirocrew-core``, and a same-named tool on another server is denied."""
+        from ``ajcrew-core``, and a same-named tool on another server is denied."""
         assert not _is_heartbeat_safe_tool(_mcp("evil-mcp", "learn_list"))
-        assert not _is_heartbeat_safe_tool(_mcp("kirocrew-core", "cron_list"))
-        assert not _is_heartbeat_safe_tool(_mcp("kirocrew-cron", "cron_list"))
-        assert not _is_heartbeat_safe_tool(_mcp("kirocrew-cron", "learn_list"))
+        assert not _is_heartbeat_safe_tool(_mcp("ajcrew-core", "cron_list"))
+        assert not _is_heartbeat_safe_tool(_mcp("ajcrew-cron", "cron_list"))
+        assert not _is_heartbeat_safe_tool(_mcp("ajcrew-cron", "learn_list"))
         assert not _is_heartbeat_safe_tool(
             _make_event("learn_list", tool_name="learn_list", trusted=True)
         )
 
     def test_core_write_tools_denied(self) -> None:
-        assert not _is_heartbeat_safe_tool(_mcp("kirocrew-core", "send_message"))
-        assert not _is_heartbeat_safe_tool(_mcp("kirocrew-core", "cron_add"))
-        assert not _is_heartbeat_safe_tool(_mcp("kirocrew-core", "learn_add"))
+        assert not _is_heartbeat_safe_tool(_mcp("ajcrew-core", "send_message"))
+        assert not _is_heartbeat_safe_tool(_mcp("ajcrew-core", "cron_add"))
+        assert not _is_heartbeat_safe_tool(_mcp("ajcrew-core", "learn_add"))
         assert not _is_heartbeat_safe_tool(_mcp("builder-mcp", "CodeReviewWriteActions"))
 
     def test_unknown_read_shaped_names_denied(self) -> None:
@@ -293,7 +293,7 @@ class TestIsHeartbeatSafeTool:
             "get_all_credentials",
             "list_env_secrets",
         ]:
-            assert not _is_heartbeat_safe_tool(_mcp("kirocrew-core", name)), name
+            assert not _is_heartbeat_safe_tool(_mcp("ajcrew-core", name)), name
             assert not _is_heartbeat_safe_tool(_builtin(name)), name
 
 
@@ -449,14 +449,14 @@ def _no_name_grant_refusal(monkeypatch) -> None:
     async def _ok(event):
         return None
 
-    monkeypatch.setattr("kiro_crew.slack.gateway.name_grant.refusal_for_event", _ok)
+    monkeypatch.setattr("aj_crew.slack.gateway.name_grant.refusal_for_event", _ok)
 
 
 class TestHeartbeatApproval:
     @pytest.mark.asyncio
     async def test_approves_allowlisted_tool(self, orchestrator, monkeypatch) -> None:
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
         event = _builtin("fs_read", title="Read")
         assert await orchestrator._heartbeat_approval(event) is True
         # Approvals must also emit a SEL audit event (security-controls
@@ -467,7 +467,7 @@ class TestHeartbeatApproval:
         assert kwargs["source"] == "heartbeat"
         # Audit must record which agent was making the call so operators can
         # filter heartbeat decisions distinctly from other unattended sessions.
-        assert kwargs["agent"] == "kirocrew-heartbeat"
+        assert kwargs["agent"] == "ajcrew-heartbeat"
         # The row names the identity the decision keyed on, not the display title.
         assert kwargs["tool_name"] == "fs_read"
         assert kwargs["metadata"]["reason"] == "in_heartbeat_safe_tools"
@@ -479,44 +479,44 @@ class TestHeartbeatApproval:
     @pytest.mark.asyncio
     async def test_audit_label_is_server_qualified_for_mcp(self, orchestrator, monkeypatch) -> None:
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
-        assert await orchestrator._heartbeat_approval(_mcp("kirocrew-core", "learn_list")) is True
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
+        assert await orchestrator._heartbeat_approval(_mcp("ajcrew-core", "learn_list")) is True
         assert sel_mock.log_tool_invocation.call_args.kwargs["tool_name"] == (
-            "kirocrew-core/learn_list"
+            "ajcrew-core/learn_list"
         )
 
     @pytest.mark.asyncio
     async def test_trusted_deny_keeps_the_trusted_label(self, orchestrator, monkeypatch) -> None:
         """A trusted identity is the judged input on the deny path too."""
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
         event = _make_event(
-            "Read", tool_name="cron_add", mcp_server_name="kirocrew-core", trusted=True
+            "Read", tool_name="cron_add", mcp_server_name="ajcrew-core", trusted=True
         )
         assert await orchestrator._heartbeat_approval(event) is False
         kwargs = sel_mock.log_tool_invocation.call_args.kwargs
         assert kwargs["outcome"] == "denied"
-        assert kwargs["tool_name"] == "kirocrew-core/cron_add"
+        assert kwargs["tool_name"] == "ajcrew-core/cron_add"
 
     @pytest.mark.asyncio
     async def test_rejects_untrusted_allowlisted_title(self, orchestrator, monkeypatch) -> None:
         """A title spelled like a safe tool, with no trusted identity, is denied and
         audited under the (redacted) title it arrived with."""
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
-        event = _make_event("Running: @kirocrew-core/learn_list", request_id="req-untrusted")
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
+        event = _make_event("Running: @ajcrew-core/learn_list", request_id="req-untrusted")
         assert await orchestrator._heartbeat_approval(event) is False
         kwargs = sel_mock.log_tool_invocation.call_args.kwargs
         assert kwargs["outcome"] == "denied"
-        assert kwargs["tool_name"] == "Running: @kirocrew-core/learn_list"
+        assert kwargs["tool_name"] == "Running: @ajcrew-core/learn_list"
         assert kwargs["metadata"]["reason"] == "no_trusted_identity"
 
     @pytest.mark.asyncio
     async def test_rejects_unknown_read_shaped_tool(self, orchestrator, monkeypatch) -> None:
         """Strict allowlist: unknown tool with a read-shaped name still rejects."""
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
-        event = _mcp("kirocrew-core", "get_session_status")
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
+        event = _mcp("ajcrew-core", "get_session_status")
         assert await orchestrator._heartbeat_approval(event) is False
         sel_mock.log_tool_invocation.assert_called_once()
         kwargs = sel_mock.log_tool_invocation.call_args.kwargs
@@ -526,7 +526,7 @@ class TestHeartbeatApproval:
     @pytest.mark.asyncio
     async def test_rejects_write_tool(self, orchestrator, monkeypatch) -> None:
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
         event = _make_event("send_message", request_id="req-write")
         assert await orchestrator._heartbeat_approval(event) is False
         # SEL must record the deny so operators can audit blocked calls
@@ -534,7 +534,7 @@ class TestHeartbeatApproval:
         kwargs = sel_mock.log_tool_invocation.call_args.kwargs
         assert kwargs["outcome"] == "denied"
         assert kwargs["source"] == "heartbeat"
-        assert kwargs["agent"] == "kirocrew-heartbeat"
+        assert kwargs["agent"] == "ajcrew-heartbeat"
         assert kwargs["tool_name"] == "send_message"
         assert kwargs["request_id"] == "req-write"
         assert kwargs["metadata"]["reason"] == "no_trusted_identity"
@@ -543,12 +543,12 @@ class TestHeartbeatApproval:
     async def test_rejects_trusted_write_tool(self, orchestrator, monkeypatch) -> None:
         """A trusted identity off the allowlist is denied as not allowlisted."""
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
-        event = _mcp("kirocrew-core", "send_message")
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
+        event = _mcp("ajcrew-core", "send_message")
         assert await orchestrator._heartbeat_approval(event) is False
         kwargs = sel_mock.log_tool_invocation.call_args.kwargs
         assert kwargs["outcome"] == "denied"
-        assert kwargs["tool_name"] == "kirocrew-core/send_message"
+        assert kwargs["tool_name"] == "ajcrew-core/send_message"
         assert kwargs["metadata"]["reason"] == "not_in_heartbeat_safe_tools"
 
     @pytest.mark.asyncio
@@ -559,8 +559,8 @@ class TestHeartbeatApproval:
         this backend, not that one name is missing from the allowlist."""
         import logging
 
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: MagicMock())
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.gateway"):
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: MagicMock())
+        with caplog.at_level(logging.WARNING, logger="aj_crew.slack.gateway"):
             assert await orchestrator._heartbeat_approval(_make_event("fs_read")) is False
         messages = [r.getMessage() for r in caplog.records]
         assert any("published no trusted tool identity" in m for m in messages), messages
@@ -569,7 +569,7 @@ class TestHeartbeatApproval:
     @pytest.mark.asyncio
     async def test_rejects_empty_title(self, orchestrator, monkeypatch) -> None:
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
         event = _make_event("")
         assert await orchestrator._heartbeat_approval(event) is False
 
@@ -579,18 +579,18 @@ class TestHeartbeatApproval:
     ) -> None:
         """LLM-originated tool titles MUST be redacted before reaching any
         external surface, including the ``logger.warning`` on the deny path
-        — KiroCrew logs surface in the dashboard. Per security-controls
+        — Aj Crew logs surface in the dashboard. Per security-controls
         guideline: never trust LLM output. (review-bot finding on rev 6.)
         """
         import logging
 
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
         # Title carries an AWS access key (a polled CR comment or ticket
         # body could mention one, and the tool-name path is LLM-controlled).
         bad_title = "tool_with_secret AKIAIOSFODNN7EXAMPLE inside"
         event = _make_event(bad_title)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.gateway"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.slack.gateway"):
             await orchestrator._heartbeat_approval(event)
         # The raw AWS key body must NOT appear in any log record produced
         # by this callback — redact_credentials should have replaced it.
@@ -609,7 +609,7 @@ class TestHeartbeatApproval:
         """
         sel_mock = MagicMock()
         sel_mock.log_tool_invocation.side_effect = RuntimeError("sel down")
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
         deny_event = _make_event("send_message")
         assert await orchestrator._heartbeat_approval(deny_event) is False
 
@@ -624,7 +624,7 @@ class TestHeartbeatApproval:
         """
         sel_mock = MagicMock()
         sel_mock.log_tool_invocation.side_effect = RuntimeError("sel down")
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
         approve_event = _builtin("fs_read")
         assert await orchestrator._heartbeat_approval(approve_event) is False
 
@@ -640,12 +640,12 @@ class TestHeartbeatApproval:
         approve path was unreachable and the tool auto-approved unaudited. With
         ``critical=True`` the write is synchronous and raises, so we deny.
         """
-        from kiro_crew.sel import SecurityEventLog
+        from aj_crew.sel import SecurityEventLog
 
         SecurityEventLog._instance = None
         SecurityEventLog._initialized = False
         real_sel = SecurityEventLog(base_dir=tmp_path)
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: real_sel)
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: real_sel)
 
         real_os_open = os.open
 
@@ -669,7 +669,7 @@ class TestHeartbeatShellNameGrant:
     @pytest.mark.asyncio
     async def test_clean_shell_approves(self, orchestrator, monkeypatch) -> None:
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
         _no_name_grant_refusal(monkeypatch)
         assert await orchestrator._heartbeat_approval(_shell("ls -la")) is True
         kwargs = sel_mock.log_tool_invocation.call_args.kwargs
@@ -681,16 +681,16 @@ class TestHeartbeatShellNameGrant:
         """A shadowed program name downgrades to deny: this session has no approver
         to fall through to."""
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
         refusal = name_grant.Refusal(name_grant.SHADOWED, "ls resolves to an agent-writable path")
 
         async def _refuse(event):
             return refusal
 
         declines: list[dict] = []
-        monkeypatch.setattr("kiro_crew.slack.gateway.name_grant.refusal_for_event", _refuse)
+        monkeypatch.setattr("aj_crew.slack.gateway.name_grant.refusal_for_event", _refuse)
         monkeypatch.setattr(
-            "kiro_crew.slack.gateway.name_grant.log_decline",
+            "aj_crew.slack.gateway.name_grant.log_decline",
             lambda **kw: declines.append(kw),
         )
         assert await orchestrator._heartbeat_approval(_shell("ls -la")) is False
@@ -709,16 +709,16 @@ class TestHeartbeatShellNameGrant:
         import logging
 
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
         refusal = name_grant.Refusal(name_grant.WINDOWS_UNMODELLED, "lookup not modelled")
 
         async def _refuse(event):
             return refusal
 
         declines: list[dict] = []
-        monkeypatch.setattr("kiro_crew.slack.gateway.name_grant.refusal_for_event", _refuse)
+        monkeypatch.setattr("aj_crew.slack.gateway.name_grant.refusal_for_event", _refuse)
         monkeypatch.setattr(
-            "kiro_crew.slack.gateway.name_grant.log_decline",
+            "aj_crew.slack.gateway.name_grant.log_decline",
             lambda **kw: declines.append(kw),
         )
         name_grant._DECLINE_NOTICES.clear()
@@ -747,14 +747,14 @@ class TestHeartbeatShellNameGrant:
         self, orchestrator, monkeypatch
     ) -> None:
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
         calls: list[object] = []
 
         async def _record(event):
             calls.append(event)
             return None
 
-        monkeypatch.setattr("kiro_crew.slack.gateway.name_grant.refusal_for_event", _record)
+        monkeypatch.setattr("aj_crew.slack.gateway.name_grant.refusal_for_event", _record)
         assert await orchestrator._heartbeat_approval(_shell("git status")) is False
         assert calls == []
 
@@ -773,14 +773,14 @@ class TestHeartbeatHooks:
     """
 
     def _user_hooks(self, **cfg):
-        from kiro_crew.hooks import HookManager, HooksConfig
+        from aj_crew.hooks import HookManager, HooksConfig
 
         return HookManager(HooksConfig(**cfg))
 
     def test_drops_user_auto_approve_tools(self) -> None:
         """User's auto_approve_tools must NOT carry into heartbeat hooks."""
-        from kiro_crew.hooks import TOOL_AUTO_APPROVE
-        from kiro_crew.slack.gateway import _build_heartbeat_hooks
+        from aj_crew.hooks import TOOL_AUTO_APPROVE
+        from aj_crew.slack.gateway import _build_heartbeat_hooks
 
         # User has a wide auto-approve list — this is the threat scenario.
         user = self._user_hooks(auto_approve_tools=["*", "Write*", "cron_*"])
@@ -803,29 +803,29 @@ class TestHeartbeatHooks:
 
         Heartbeat denies should be at least as strict as the user config.
         """
-        from kiro_crew.hooks import TOOL_DENY
-        from kiro_crew.slack.gateway import _build_heartbeat_hooks
+        from aj_crew.hooks import TOOL_DENY
+        from aj_crew.slack.gateway import _build_heartbeat_hooks
 
         user = self._user_hooks(auto_deny_tools=["dangerous_tool"])
         hb = _build_heartbeat_hooks(user)
         assert hb.on_tool_call("dangerous_tool").action == TOOL_DENY
 
     def test_does_not_inherit_bundled_auto_approve(self) -> None:
-        """The bundled ``kirocrew browse *`` patterns from HooksConfig.from_dict
+        """The bundled ``ajcrew browse *`` patterns from HooksConfig.from_dict
         must not carry into the heartbeat-scoped hooks.
 
         Heartbeat does not browse — anything outside the heartbeat allowlist
         should reach _heartbeat_approval.
         """
-        from kiro_crew.hooks import TOOL_AUTO_APPROVE, HookManager, HooksConfig
-        from kiro_crew.slack.gateway import _build_heartbeat_hooks
+        from aj_crew.hooks import TOOL_AUTO_APPROVE, HookManager, HooksConfig
+        from aj_crew.slack.gateway import _build_heartbeat_hooks
 
         # User config goes through from_dict → bundled patterns merged in.
         user = HookManager(HooksConfig.from_dict({}))
         hb = _build_heartbeat_hooks(user)
-        # The bundled "kirocrew browse *" pattern would auto-approve this in
+        # The bundled "ajcrew browse *" pattern would auto-approve this in
         # the user-scoped hooks, but must NOT in the heartbeat scope.
-        assert hb.on_tool_call("Running: kirocrew browse foo").action != TOOL_AUTO_APPROVE
+        assert hb.on_tool_call("Running: ajcrew browse foo").action != TOOL_AUTO_APPROVE
 
     @staticmethod
     def _mcp_read(mgr, server: str, tool: str) -> str:
@@ -843,8 +843,8 @@ class TestHeartbeatHooks:
         the title or a read-only shell command reaches ``_heartbeat_approval``
         instead: ``kind`` and the title are agent-influenced and this session has
         no approver behind the gate."""
-        from kiro_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE
-        from kiro_crew.slack.gateway import _build_heartbeat_hooks
+        from aj_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE
+        from aj_crew.slack.gateway import _build_heartbeat_hooks
 
         user = self._user_hooks()
         hb = _build_heartbeat_hooks(user)
@@ -861,8 +861,8 @@ class TestHeartbeatHooks:
         assert hb.on_tool_call("Running: ls -la", **shell).action == TOOL_ALLOW
 
     def test_deferring_reads_never_widens_a_deny(self) -> None:
-        from kiro_crew.hooks import TOOL_DENY
-        from kiro_crew.slack.gateway import _build_heartbeat_hooks
+        from aj_crew.hooks import TOOL_DENY
+        from aj_crew.slack.gateway import _build_heartbeat_hooks
 
         hb = _build_heartbeat_hooks(self._user_hooks())
         assert (
@@ -873,27 +873,27 @@ class TestHeartbeatHooks:
         )
 
     @pytest.mark.parametrize(
-        ("server", "tool"), [("kirocrew-core", "artifact_delete"), ("atlassian", "createJiraIssue")]
+        ("server", "tool"), [("ajcrew-core", "artifact_delete"), ("atlassian", "createJiraIssue")]
     )
     def test_preserves_user_confirm_tools(self, server: str, tool: str) -> None:
         """A confirm-listed MCP call labelled read reaches ``_heartbeat_approval``."""
-        from kiro_crew.hooks import TOOL_AUTO_APPROVE
-        from kiro_crew.slack.gateway import _build_heartbeat_hooks
+        from aj_crew.hooks import TOOL_AUTO_APPROVE
+        from aj_crew.slack.gateway import _build_heartbeat_hooks
 
         hb = _build_heartbeat_hooks(self._user_hooks(confirm_tools=[f"@{server}/{tool}"]))
         assert self._mcp_read(hb, server, tool) != TOOL_AUTO_APPROVE
         assert hb._config.confirm_tools == [f"@{server}/{tool}"]  # noqa: SLF001
 
     def test_preserves_an_unknown_confirm_list(self) -> None:
-        from kiro_crew.hooks import TOOL_AUTO_APPROVE
-        from kiro_crew.slack.gateway import _build_heartbeat_hooks
+        from aj_crew.hooks import TOOL_AUTO_APPROVE
+        from aj_crew.slack.gateway import _build_heartbeat_hooks
 
         hb = _build_heartbeat_hooks(self._user_hooks(confirm_tools_unknown=True))
         assert self._mcp_read(hb, "atlassian", "getJiraIssue") != TOOL_AUTO_APPROVE
         assert hb._config.confirm_tools_unknown  # noqa: SLF001
 
     def test_a_read_the_confirm_list_does_not_name_is_unchanged(self) -> None:
-        from kiro_crew.slack.gateway import _build_heartbeat_hooks
+        from aj_crew.slack.gateway import _build_heartbeat_hooks
 
         listed = _build_heartbeat_hooks(self._user_hooks(confirm_tools=["@atlassian/create*"]))
         unset = _build_heartbeat_hooks(self._user_hooks())
@@ -944,7 +944,7 @@ class TestRecordedWire:
         assert _is_heartbeat_safe_tool(event) is True
         _no_name_grant_refusal(monkeypatch)
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
         assert await orchestrator._heartbeat_approval(event) is True
         kwargs = sel_mock.log_tool_invocation.call_args.kwargs
         assert kwargs["outcome"] == "auto_approved"
@@ -968,8 +968,8 @@ class TestRecordedWire:
         assert event.tool_name == ""
         assert _is_heartbeat_safe_tool(event) is False
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.gateway"):
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
+        with caplog.at_level(logging.WARNING, logger="aj_crew.slack.gateway"):
             assert await orchestrator._heartbeat_approval(event) is False
         kwargs = sel_mock.log_tool_invocation.call_args.kwargs
         assert kwargs["outcome"] == "denied"
@@ -988,8 +988,8 @@ class TestRecordedWire:
 
         event = _shell("ls", tool_name="", trusted=True)
         sel_mock = MagicMock()
-        monkeypatch.setattr("kiro_crew.slack.gateway.sel", lambda: sel_mock)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.gateway"):
+        monkeypatch.setattr("aj_crew.slack.gateway.sel", lambda: sel_mock)
+        with caplog.at_level(logging.WARNING, logger="aj_crew.slack.gateway"):
             assert await orchestrator._heartbeat_approval(event) is False
         assert sel_mock.log_tool_invocation.call_args.kwargs["metadata"]["reason"] == (
             "no_trusted_identity"

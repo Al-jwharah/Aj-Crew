@@ -31,18 +31,18 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.browser_harness import decide as decide_mod
-from kiro_crew.browser_harness import helper_worker, ops, reflex, reflex_space
-from kiro_crew.config.sections import (
+from aj_crew.browser_harness import decide as decide_mod
+from aj_crew.browser_harness import helper_worker, ops, reflex, reflex_space
+from aj_crew.config.sections import (
     DECISION_PROVIDER_ENDPOINT_DEFAULT,
     DecisionProviderConfig,
     DecisionsConfig,
 )
-from kiro_crew.decisions import gate
-from kiro_crew.decisions import provider as provider_mod
-from kiro_crew.decisions.provider import Capabilities
-from kiro_crew.decisions.types import Answer, Choice, Noul
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.decisions import gate
+from aj_crew.decisions import provider as provider_mod
+from aj_crew.decisions.provider import Capabilities
+from aj_crew.decisions.types import Answer, Choice, Noul
+from aj_crew.testing.wait import async_wait_until
 
 SESSION = "dashboard:chat-1"
 FAST = Capabilities(max_in_flight=8, latency_ms=50)
@@ -491,7 +491,7 @@ class _RegistryProvider:
 @pytest.fixture
 def real_gate(tmp_path, monkeypatch):
     keystone = tmp_path / "decisions_consent.json"
-    monkeypatch.setattr("kiro_crew.config.loader.decisions_consent_path", lambda: keystone)
+    monkeypatch.setattr("aj_crew.config.loader.decisions_consent_path", lambda: keystone)
     keystone.write_text(
         json.dumps({"enabled": True, "endpoint": DECISION_PROVIDER_ENDPOINT_DEFAULT}),
         encoding="utf-8",
@@ -507,7 +507,7 @@ def real_gate(tmp_path, monkeypatch):
             )
         ),
     )
-    monkeypatch.setattr("kiro_crew.decisions.capability.is_decisions_denied", lambda *a, **k: False)
+    monkeypatch.setattr("aj_crew.decisions.capability.is_decisions_denied", lambda *a, **k: False)
 
     def _register(spec):
         monkeypatch.setattr(provider_mod, "select", lambda *a, **k: spec)

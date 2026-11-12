@@ -14,7 +14,7 @@ import asyncio
 
 import pytest
 
-from kiro_crew.apps import host_exec_grants as heg
+from aj_crew.apps import host_exec_grants as heg
 
 
 @pytest.fixture
@@ -55,14 +55,14 @@ def test_write_installed_never_grants_and_revokes_on_disable(crew_home, monkeypa
     of builtins, which reads back a forgeable installed.json, so minting from
     ``enabled`` there would let a forged record plus a restart produce a real grant.
     It only revokes when a write leaves the app disabled."""
-    from kiro_crew.apps import manager_records as mr
-    from kiro_crew.apps.manager_records import InstalledApp
+    from aj_crew.apps import manager_records as mr
+    from aj_crew.apps.manager_records import InstalledApp
 
     app = crew_home / "apps" / "dev-fleet"
     app.mkdir(parents=True)
     # Patch the shared name through the apps.manager facade, never on the owner
     # module directly (the facade-mirror guard forbids the latter).
-    monkeypatch.setattr("kiro_crew.apps.manager.app_dir", lambda name: crew_home / "apps" / name)
+    monkeypatch.setattr("aj_crew.apps.manager.app_dir", lambda name: crew_home / "apps" / name)
 
     # A write with enabled=True (as the boot re-registration of a forged record does)
     # must NOT produce a grant.
@@ -83,7 +83,7 @@ def test_disable_revokes_even_when_record_already_reads_disabled(crew_home, monk
     """A sandboxed shell can forge enabled:false in installed.json. An owner disable
     must still revoke a grant minted by a real earlier enable, even though disable_app
     takes its already-disabled early return."""
-    from kiro_crew.apps import manager_activation as ma
+    from aj_crew.apps import manager_activation as ma
 
     app = crew_home / "apps" / "dev-fleet"
     app.mkdir(parents=True)
@@ -91,7 +91,7 @@ def test_disable_revokes_even_when_record_already_reads_disabled(crew_home, monk
         '{"name":"dev-fleet","version":"1","origin":"builtin","enabled":false}',
         encoding="utf-8",
     )
-    monkeypatch.setattr("kiro_crew.apps.manager.app_dir", lambda name: crew_home / "apps" / name)
+    monkeypatch.setattr("aj_crew.apps.manager.app_dir", lambda name: crew_home / "apps" / name)
 
     heg.grant_host_exec("dev-fleet")
     assert heg.host_exec_granted("dev-fleet") is True
@@ -115,7 +115,7 @@ def test_filesystem_errors_are_contained(crew_home, monkeypatch):
 
 
 def test_pod_gate_denies_without_a_grant_and_allows_with_one(crew_home, monkeypatch):
-    from kiro_crew.apps.builtins.dev_fleet import agent_pod_api
+    from aj_crew.apps.builtins.dev_fleet import agent_pod_api
 
     monkeypatch.setattr(agent_pod_api, "host_exec_granted", heg.host_exec_granted)
 

@@ -1,4 +1,4 @@
-"""PATCH /api/config/kirocrew and ``dashboard.remote_editor.*``.
+"""PATCH /api/config/ajcrew and ``dashboard.remote_editor.*``.
 
 Settings → Display → Remote editor. Both values become part of the file-path
 menus' ``<editor>://vscode-remote/ssh-remote+<host><path>`` link, so the write

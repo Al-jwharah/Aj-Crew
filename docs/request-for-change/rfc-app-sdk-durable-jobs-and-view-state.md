@@ -2,7 +2,7 @@
 title: App SDK durable jobs and view state
 status: partial
 revision: v1
-author: Kiro Crew
+author: Aj Crew
 created: 2026-09-06
 last-audited: 2026-10-05
 audited-at: e281ecaf33
@@ -24,7 +24,7 @@ The run-lifecycle boundary is also discussed in
 
 `AppContext` exposes `cron`, `events`, `storage`, and `spawn` when their
 permissions allow them, and `job: JobSDK` when the manifest sets
-`permissions.jobs` (`src/kiro_crew/apps/context.py`, `AppContext` and
+`permissions.jobs` (`src/aj_crew/apps/context.py`, `AppContext` and
 `build_app_context`). So the gateway side has a durable job service. The
 frontend has no matching `useAppJob` hook: the barrel exports app API, event,
 metadata, navigation, and chat surfaces (`website/src/app-sdk/index.ts`,
@@ -35,7 +35,7 @@ not exported from the barrel.
 The remaining gap is the frontend: an app that follows a durable job must still
 write its own client-side reattachment, because no shared hook supplies it.
 
-`CronSDK` is a separate app-scoped scheduling surface (`src/kiro_crew/apps/cron_sdk.py`,
+`CronSDK` is a separate app-scoped scheduling surface (`src/aj_crew/apps/cron_sdk.py`,
 `CronSDK`). It does not establish a job-run registry for app-initiated HTTP
 work.
 
@@ -45,7 +45,7 @@ work.
 
 AWS Control declares `"jobs": true` in its `app.json`. `_handle_backup_run`
 starts the backup as a Job SDK run and returns its run id without waiting for it
-to finish (`src/kiro_crew/apps/builtins/aws_control/backend/routes_parts/backups.py`,
+to finish (`src/aj_crew/apps/builtins/aws_control/backend/routes_parts/backups.py`,
 `_handle_backup_run`). The in-flight fact therefore lives on the server: a
 reload, a navigation away, or a second tab still sees it. The runner still
 records completed backup metadata through `_record_run`, and `last_runs` reads
@@ -67,12 +67,12 @@ query. That reattachment is AWS Control's own code, not an SDK hook.
 
 Code Review Sage implements its own durable review-run registry. Its backend
 stores lightweight run descriptors in `_RUNS`, writes the registry to
-`runs.json`, and reloads it at startup (`_RUNS` in `src/kiro_crew/apps/builtins/code_review_sage/backend/routes.py`;
-`_runs_file`, `_save_runs`, and `_load_runs` in `src/kiro_crew/apps/builtins/code_review_sage/backend/routes_parts/registry.py`). On load,
+`runs.json`, and reloads it at startup (`_RUNS` in `src/aj_crew/apps/builtins/code_review_sage/backend/routes.py`;
+`_runs_file`, `_save_runs`, and `_load_runs` in `src/aj_crew/apps/builtins/code_review_sage/backend/routes_parts/registry.py`). On load,
 `_load_runs` marks a persisted `running` review as `interrupted` because the
 in-process driver did not survive the restart. The test
 `test_orphaned_running_becomes_interrupted_on_load` enforces that recovery
-rule (`src/kiro_crew/apps/builtins/code_review_sage/tests/test_backend_routes.py`).
+rule (`src/aj_crew/apps/builtins/code_review_sage/tests/test_backend_routes.py`).
 
 That recovery is load-bearing: leaving an orphaned run marked running would
 advertise work that no process can complete and could block follow-up actions.
@@ -82,7 +82,7 @@ The registry is an app implementation, not an App SDK surface.
 
 Dev Fleet tracks run descriptors in the module-memory `_RUNS` registry and
 keeps active tasks and subprocesses in `_ACTIVE_RUNS`
-(`src/kiro_crew/apps/builtins/dev_fleet/runtime.py`, `_RUNS` and `_ACTIVE_RUNS`).
+(`src/aj_crew/apps/builtins/dev_fleet/runtime.py`, `_RUNS` and `_ACTIVE_RUNS`).
 Its fleet payload overlays `sync_run_id` and per-worktree provision run IDs at
 request time in `_with_live_run_pointers`; `DevFleetPage` uses those pointers
 to reattach a mounted page to a current run (`http_api.py`,
@@ -102,16 +102,16 @@ cannot imply that its original process is still executable.
 `JobSDK` records the liveness of the gateway process. `_ORIGIN` is minted once per
 gateway process, a run's worker is a thread in that process, and `reconcile`
 resolves every non-terminal record whose origin is not the current `_ORIGIN`
-(`src/kiro_crew/apps/job_sdk.py`, `_ORIGIN`, `JobSDK.start`, `JobSDK._execute`, and
+(`src/aj_crew/apps/job_sdk.py`, `_ORIGIN`, `JobSDK.start`, `JobSDK._execute`, and
 `JobSDK.reconcile`). Staleness is decided by one question: whether the gateway
 process that minted the record survived.
 
 An app declaring `backend.entryPoint` does not execute its work in that process.
 `start_app_backend` spawns the backend under `popen_limited` as a separate OS
 process with its own interpreter and rlimit profile
-(`src/kiro_crew/apps/backend.py`, `start_app_backend`), and that app's teardown
+(`src/aj_crew/apps/backend.py`, `start_app_backend`), and that app's teardown
 hook runs on the backend's own aiohttp application rather than the gateway's
-(`src/kiro_crew/apps/builtins/dev_fleet/app.json`, `backend.entryPoint`;
+(`src/aj_crew/apps/builtins/dev_fleet/app.json`, `backend.entryPoint`;
 `dev_fleet/server.py`, `dev_fleet_cleanup` registered on `on_cleanup`).
 `JobSDK.register` binds a kind to a Python callable held in the gateway
 (`job_sdk.py`, `JobSDK.register`), so a runner defined in a backend process has no
@@ -142,10 +142,10 @@ two separate facts, and the public view serves both.
 sets under a single lock acquisition, so the two fields describe one instant;
 `live` is live-table membership — claimed at start, dropped after the terminal
 write — the same authority that `cancel` and `reconcile` already consult
-(`src/kiro_crew/apps/job_sdk.py`, `JobSDK.cancelling_and_live_ids`).
+(`src/aj_crew/apps/job_sdk.py`, `JobSDK.cancelling_and_live_ids`).
 `_public_view` serves that as the boolean `live` field, computed at read time
 from memory — nothing new is persisted, and `origin` and `pid` stay withheld
-(`src/kiro_crew/apps/job_routes.py`, `_public_view`). A record whose terminal
+(`src/aj_crew/apps/job_routes.py`, `_public_view`). A record whose terminal
 write failed twice and a record minted by another gateway process both read
 `live: false`, which is what lets an API consumer tell a stale `running`
 record from real work between the reconciliation passes that would eventually

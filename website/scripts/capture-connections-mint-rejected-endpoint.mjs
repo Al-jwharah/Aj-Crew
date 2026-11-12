@@ -29,7 +29,7 @@ import { json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-ap
 const OUT = process.argv[2] || '../temp-screenshots/connections-mint-rejected-endpoint'
 const SLUG = 'notion'
 const ENDPOINT = 'auth.example-idp.com/realms/dev/authorize'
-const GUIDE_URL = 'https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/connecting-remote-oauth-mcp-server.md#if-the-host-is-not-recognized-the-oauth-endpoint-allowlist'
+const GUIDE_URL = 'https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/guides/connecting-remote-oauth-mcp-server.md#if-the-host-is-not-recognized-the-oauth-endpoint-allowlist'
 /** Strings from the rejected URL that must NEVER appear on the card. */
 const NEVER_ON_SCREEN = ['https://', 'access_token', 'AKIAIOSFODNN7EXAMPLE', 'code_challenge', '?']
 
@@ -42,9 +42,9 @@ const entry = () => ({
   status: 'error',
   error: 'authorization required',
   tools: [],
-  source: 'kirocrew',
+  source: 'ajcrew',
   enabled: true,
-  kirocrewManaged: true,
+  ajcrewManaged: true,
 })
 
 async function frame(browser, base, { name, endpoint, expectText, expectAlso = [], forbidText, expectLink }) {
@@ -56,7 +56,7 @@ async function frame(browser, base, { name, endpoint, expectText, expectAlso = [
   await stubDashboardApi(page, {
     slots: [],
     extra: async (path, route) => {
-      if (path === '/api/config/kirocrew') return json(route, { connections_ui: true }), true
+      if (path === '/api/config/ajcrew') return json(route, { connections_ui: true }), true
       if (path === '/api/mcp' || path === '/api/mcp/probe') {
         return json(route, scene.installed ? [entry()] : []), true
       }

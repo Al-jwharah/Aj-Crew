@@ -2,8 +2,8 @@
 
 import pytest
 
-from kiro_crew.apps import manager
-from kiro_crew.testing.fixtures import seeded_home
+from aj_crew.apps import manager
+from aj_crew.testing.fixtures import seeded_home
 
 
 def test_apps_installed_fixture_is_read_by_app_manager(

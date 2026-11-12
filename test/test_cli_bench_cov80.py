@@ -26,7 +26,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.cli_bench import (
+from aj_crew.cli_bench import (
     DEFAULT_OUT_DIR,
     _bench_dispatch,
     _load_corpus,
@@ -51,7 +51,7 @@ def _spec(dataset: str, variant: str) -> Any:
 @pytest.fixture()
 def parser() -> argparse.ArgumentParser:
     """A top-level parser with the real ``bench`` subcommand wired in."""
-    root = argparse.ArgumentParser(prog="kirocrew")
+    root = argparse.ArgumentParser(prog="ajcrew")
     register_bench_parser(root.add_subparsers(dest="command"))
     return root
 
@@ -162,7 +162,7 @@ class TestDispatchRouting:
         assert _bench_dispatch(_Args()) == 2
         # Errors go to stderr so a redirected report never holds them.
         cap = capsys.readouterr()
-        assert "usage: kirocrew bench" in cap.err
+        assert "usage: ajcrew bench" in cap.err
         assert cap.out == ""
 
     def test_unknown_action_returns_two(self, capsys: pytest.CaptureFixture[str]) -> None:
@@ -172,7 +172,7 @@ class TestDispatchRouting:
     def test_list_prints_the_corpus_table(
         self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setattr("kiro_crew.eval.bench.datasets.describe", lambda: "zibble-table")
+        monkeypatch.setattr("aj_crew.eval.bench.datasets.describe", lambda: "zibble-table")
         assert _bench_dispatch(_Args(bench_action="list")) == 0
         assert "zibble-table" in capsys.readouterr().out
 
@@ -183,14 +183,14 @@ class TestDispatchRouting:
         tmp_path: Any,
     ) -> None:
         target = tmp_path / "zibble.json"
-        monkeypatch.setattr("kiro_crew.eval.bench.datasets.ensure", lambda key: target)
+        monkeypatch.setattr("aj_crew.eval.bench.datasets.ensure", lambda key: target)
         assert _bench_dispatch(_Args(bench_action="fetch", corpus="locomo10")) == 0
         assert f"ready: {target}" in capsys.readouterr().out
 
     def test_fetch_reports_a_download_failure_without_a_traceback(
         self, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.eval.bench import datasets
+        from aj_crew.eval.bench import datasets
 
         def _boom(key: str) -> None:
             raise datasets.CorpusFetchError("zibble checksum mismatch")
@@ -213,7 +213,7 @@ class TestLoadCorpus:
     def test_a_locomo_spec_goes_through_the_locomo_adapter(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Any
     ) -> None:
-        from kiro_crew.eval.bench import adapters, datasets
+        from aj_crew.eval.bench import adapters, datasets
 
         spec = _spec(dataset="locomo", variant="")
         path = tmp_path / "zibble.json"
@@ -233,7 +233,7 @@ class TestLoadCorpus:
     def test_any_other_spec_goes_through_the_longmemeval_adapter(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Any
     ) -> None:
-        from kiro_crew.eval.bench import adapters, datasets
+        from aj_crew.eval.bench import adapters, datasets
 
         spec = _spec(dataset="longmemeval", variant="s")
         monkeypatch.setitem(datasets.SPECS, "zibblecorpus", spec)
@@ -259,12 +259,12 @@ class TestBenchCmdCatchSites:
         def _boom(args: object) -> int:
             raise OSError("zibble read-only file system")
 
-        monkeypatch.setattr("kiro_crew.cli_bench._bench_dispatch", _boom)
+        monkeypatch.setattr("aj_crew.cli_bench._bench_dispatch", _boom)
         assert bench_cmd(_Args(bench_action="retrieval")) == 1
         assert "error: zibble read-only file system" in capsys.readouterr().err
 
     def test_a_clean_dispatch_code_passes_straight_through(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setattr("kiro_crew.cli_bench._bench_dispatch", lambda args: 0)
+        monkeypatch.setattr("aj_crew.cli_bench._bench_dispatch", lambda args: 0)
         assert bench_cmd(_Args(bench_action="list")) == 0

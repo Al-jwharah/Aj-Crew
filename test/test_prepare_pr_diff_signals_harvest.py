@@ -16,7 +16,7 @@ import pytest
 from skill_script_helpers import load_skill_script
 
 ROOT = Path(__file__).resolve().parent.parent
-PREPARE_PR = ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev" / "kirocrew-prepare-pr"
+PREPARE_PR = ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr"
 SCRIPT = PREPARE_PR / "scripts" / "diff_signals.py"
 WORKFLOW = ROOT / ".github" / "workflows" / "pr-hygiene.yml"
 

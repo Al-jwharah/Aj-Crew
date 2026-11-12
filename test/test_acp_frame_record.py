@@ -24,12 +24,12 @@ from types import SimpleNamespace
 import pytest
 from stray_line_helpers import cyclic_gc_quiesced  # noqa: F401 - fixture
 
-from kiro_crew import security_posture
-from kiro_crew.acp import _frame_record
-from kiro_crew.acp import client as client_module
-from kiro_crew.acp import runtime as runtime_module
-from kiro_crew.acp_backends import ACP_BACKEND_KIRO, ACP_BACKENDS_KNOWN
-from kiro_crew.testing.wait import await_until
+from aj_crew import security_posture
+from aj_crew.acp import _frame_record
+from aj_crew.acp import client as client_module
+from aj_crew.acp import runtime as runtime_module
+from aj_crew.acp_backends import ACP_BACKEND_KIRO, ACP_BACKENDS_KNOWN
+from aj_crew.testing.wait import await_until
 
 # The recorder is POSIX-only (see the module docstring of ``_frame_record``):
 # every test here exercises the pinned-descriptor path. The one Windows
@@ -1835,8 +1835,8 @@ def test_two_event_loops_share_one_writer_and_one_byte_budget(monkeypatch, tmp_p
 def test_the_recording_switch_is_scrubbed_from_agent_children(monkeypatch) -> None:
     """Both spawn paths build the child env through
     ``scrub_agent_subprocess_env``; the switch must not survive it, or a nested
-    Kiro Crew would record into the same per-backend file as this gateway."""
-    from kiro_crew.sandbox import scrub_agent_subprocess_env
+    Aj Crew would record into the same per-backend file as this gateway."""
+    from aj_crew.sandbox import scrub_agent_subprocess_env
 
     env = {_frame_record.ENV_RECORD_FRAMES: "/somewhere", "PATH": "/usr/bin"}
     scrubbed = scrub_agent_subprocess_env(env)

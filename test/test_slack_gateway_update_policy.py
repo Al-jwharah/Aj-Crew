@@ -29,13 +29,13 @@ class TestProviderFailureDoesNotFallBackToLegacy:
 
     @pytest.mark.asyncio
     async def test_provider_raising_does_not_run_legacy(self, monkeypatch):
-        from kiro_crew.platform.update_provider import CommandProvider
+        from aj_crew.platform.update_provider import CommandProvider
 
         orch = _make_orchestrator()
         orch.dashboard_state = _mock_dashboard_state()
 
         provider = CommandProvider(check_command="c", apply_command="a")
-        monkeypatch.setattr("kiro_crew.platform.update_provider.resolve_provider", lambda: provider)
+        monkeypatch.setattr("aj_crew.platform.update_provider.resolve_provider", lambda: provider)
         boom = AsyncMock(side_effect=RuntimeError("provider exploded"))
         monkeypatch.setattr(orch, "_check_for_updates_via_provider", boom)
         legacy = AsyncMock()
@@ -57,7 +57,7 @@ class TestProviderFailureDoesNotFallBackToLegacy:
         def _boom():
             raise RuntimeError("policy unreadable")
 
-        monkeypatch.setattr("kiro_crew.platform.update_provider.resolve_provider", _boom)
+        monkeypatch.setattr("aj_crew.platform.update_provider.resolve_provider", _boom)
         legacy = AsyncMock()
         monkeypatch.setattr(orch, "_check_for_updates_legacy", legacy)
 
@@ -73,9 +73,9 @@ class TestProviderStateIsPublishedBeforeNotifying:
 
     @pytest.mark.asyncio
     async def test_auto_update_off_publishes_state_before_notifying(self, monkeypatch):
-        import kiro_crew.dashboard.handlers as handlers
-        import kiro_crew.platform.update_governance as gov
-        from kiro_crew.platform.update_provider import UpdateCheckResult
+        import aj_crew.dashboard.handlers as handlers
+        import aj_crew.platform.update_governance as gov
+        from aj_crew.platform.update_provider import UpdateCheckResult
 
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
@@ -89,14 +89,14 @@ class TestProviderStateIsPublishedBeforeNotifying:
         cfg.auto_update = False
         # A real provider: the method asserts isinstance(provider, UpdateProvider),
         # which a bare MagicMock does not satisfy.
-        from kiro_crew.platform.update_provider import CommandProvider
+        from aj_crew.platform.update_provider import CommandProvider
 
         provider = CommandProvider(check_command="c", apply_command="a")
         provider.check = AsyncMock(  # type: ignore[method-assign]
             return_value=UpdateCheckResult(available=True, remote_version="9.9.9")
         )
 
-        with patch("kiro_crew.config.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.config.AjCrewConfig.load", return_value=cfg):
             await orch._check_for_updates_via_provider(provider)
 
         # The badge must be able to see it, not just the log. `check_status` is
@@ -112,9 +112,9 @@ class TestProviderStateIsPublishedBeforeNotifying:
     async def test_provider_check_publishes_command_ownership_when_up_to_date(self, monkeypatch):
         """The status frame must say a command owns updates even when the
         provider finds nothing and no dashboard-side check has run."""
-        import kiro_crew.dashboard.handlers as handlers
-        import kiro_crew.platform.update_governance as gov
-        from kiro_crew.platform.update_provider import CommandProvider, UpdateCheckResult
+        import aj_crew.dashboard.handlers as handlers
+        import aj_crew.platform.update_governance as gov
+        from aj_crew.platform.update_provider import CommandProvider, UpdateCheckResult
 
         orch = _make_orchestrator()
         orch.dashboard_state = _mock_dashboard_state()
@@ -131,9 +131,9 @@ class TestProviderStateIsPublishedBeforeNotifying:
 
     @pytest.mark.asyncio
     async def test_auto_update_busy_defers_provider_apply(self, monkeypatch):
-        import kiro_crew.dashboard.handlers as handlers
-        import kiro_crew.platform.update_governance as gov
-        from kiro_crew.platform.update_provider import CommandProvider, UpdateCheckResult
+        import aj_crew.dashboard.handlers as handlers
+        import aj_crew.platform.update_governance as gov
+        from aj_crew.platform.update_provider import CommandProvider, UpdateCheckResult
 
         orch = _make_orchestrator()
         orch.dashboard_state = _mock_dashboard_state()
@@ -151,7 +151,7 @@ class TestProviderStateIsPublishedBeforeNotifying:
         )
         provider.apply = AsyncMock(return_value=True)  # type: ignore[method-assign]
 
-        with patch("kiro_crew.config.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.config.AjCrewConfig.load", return_value=cfg):
             await orch._check_for_updates_via_provider(provider)
 
         provider.apply.assert_not_awaited()
@@ -167,8 +167,8 @@ class TestMandatoryUpdateOnWheelInstall:
 
     @pytest.mark.asyncio
     async def test_mandatory_update_on_wheel_auto_applies(self, monkeypatch):
-        import kiro_crew.dashboard.handlers as handlers
-        import kiro_crew.platform.update_governance as gov
+        import aj_crew.dashboard.handlers as handlers
+        import aj_crew.platform.update_governance as gov
 
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
@@ -186,7 +186,7 @@ class TestMandatoryUpdateOnWheelInstall:
             {
                 "update_available": True,
                 "can_apply": False,
-                "managed_by": "kirocrew",
+                "managed_by": "ajcrew",
                 # A feed-checkable wheel carries an installer command; that is
                 # what distinguishes it from an externally-managed install.
                 "remediation": {
@@ -201,9 +201,7 @@ class TestMandatoryUpdateOnWheelInstall:
         monkeypatch.setattr(gov, "min_version", lambda: "9.9.9")
         # Only the managed venv may self-update automatically. Runtime
         # ownership covers both stamped and older unstamped managed installs.
-        monkeypatch.setattr(
-            "kiro_crew.platform.wheel_engine.running_from_managed_venv", lambda: True
-        )
+        monkeypatch.setattr("aj_crew.platform.wheel_engine.running_from_managed_venv", lambda: True)
 
         apply_called = AsyncMock()
         monkeypatch.setattr(orch, "_auto_apply_update", apply_called)
@@ -223,8 +221,8 @@ class TestMandatoryUpdateOnWheelInstall:
         """A wheel install below the floor but with NO newer build available
         must NOT apply — applying would reinstall the same below-floor version
         and execv-restart into the same state forever. It notifies instead."""
-        import kiro_crew.dashboard.handlers as handlers
-        import kiro_crew.platform.update_governance as gov
+        import aj_crew.dashboard.handlers as handlers
+        import aj_crew.platform.update_governance as gov
 
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
@@ -238,7 +236,7 @@ class TestMandatoryUpdateOnWheelInstall:
             {
                 "update_available": False,  # floor pinned above the latest build
                 "can_apply": False,
-                "managed_by": "kirocrew",
+                "managed_by": "ajcrew",
                 "remediation": {
                     "kind": "command",
                     "message": "Re-run the installer to upgrade.",
@@ -249,9 +247,7 @@ class TestMandatoryUpdateOnWheelInstall:
         monkeypatch.setattr(handlers, "_do_update_check", _noop_check)
         monkeypatch.setattr(gov, "update_required", lambda _v: True)
         monkeypatch.setattr(gov, "min_version", lambda: "9.9.9")
-        monkeypatch.setattr(
-            "kiro_crew.platform.wheel_engine.running_from_managed_venv", lambda: True
-        )
+        monkeypatch.setattr("aj_crew.platform.wheel_engine.running_from_managed_venv", lambda: True)
 
         wheel_apply_called = AsyncMock()
         monkeypatch.setattr(orch, "_auto_apply_update", AsyncMock())
@@ -269,10 +265,10 @@ class TestMandatoryUpdateOnWheelInstall:
         notify rather than run it, even when a floor mandates the update.
 
         A plain pip install (not pipx, not the managed venv) must be pointed at
-        the in-place `pip install -U kirocrew` upgrade, NOT at `kirocrew update`
+        the in-place `pip install -U ajcrew` upgrade, NOT at `ajcrew update`
         — that command re-runs the installer and leaves a second copy."""
-        import kiro_crew.dashboard.handlers as handlers
-        import kiro_crew.platform.update_governance as gov
+        import aj_crew.dashboard.handlers as handlers
+        import aj_crew.platform.update_governance as gov
 
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
@@ -286,7 +282,7 @@ class TestMandatoryUpdateOnWheelInstall:
             {
                 "update_available": False,
                 "can_apply": False,
-                "managed_by": "kirocrew",
+                "managed_by": "ajcrew",
                 "remediation": {
                     "kind": "command",
                     "message": "Re-run the installer to upgrade.",
@@ -298,18 +294,18 @@ class TestMandatoryUpdateOnWheelInstall:
         monkeypatch.setattr(gov, "update_required", lambda _v: True)
         monkeypatch.setattr(gov, "min_version", lambda: "9.9.9")
         monkeypatch.setattr(
-            "kiro_crew.platform.wheel_engine.running_from_managed_venv", lambda: False
+            "aj_crew.platform.wheel_engine.running_from_managed_venv", lambda: False
         )
         # Not pipx either: the plain-pip shape, where the installer re-run is the bug.
-        monkeypatch.setattr("kiro_crew.platform.wheel_engine.running_from_pipx", lambda: False)
+        monkeypatch.setattr("aj_crew.platform.wheel_engine.running_from_pipx", lambda: False)
         # The hint prefers the signed pinned wheel; this test exercises the
         # verification-FAILURE report, so make the manifest fetch raise cleanly.
-        from kiro_crew.platform.wheel_engine import WheelUpdateError
+        from aj_crew.platform.wheel_engine import WheelUpdateError
 
         def _no_manifest(*a, **k):
             raise WheelUpdateError("no CDN in test")
 
-        monkeypatch.setattr("kiro_crew.platform.wheel_engine.fetch_verified_manifest", _no_manifest)
+        monkeypatch.setattr("aj_crew.platform.wheel_engine.fetch_verified_manifest", _no_manifest)
 
         # The install-shape probe stats the filesystem, so it must run off the
         # event loop. Spy on asyncio.to_thread and record the functions it ran.
@@ -342,10 +338,10 @@ class TestMandatoryUpdateOnWheelInstall:
         warning = " ".join(r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING)
         assert "download.crew.kiro.dev/cli/" in warning
         assert "--extra-index-url" not in warning
-        assert "/simple/ -U kirocrew" not in warning
-        assert "-U kirocrew" not in warning
-        assert "kirocrew restart" in warning
-        assert "run `kirocrew update`" not in warning
+        assert "/simple/ -U ajcrew" not in warning
+        assert "-U ajcrew" not in warning
+        assert "ajcrew restart" in warning
+        assert "run `ajcrew update`" not in warning
         # The shape probes AND the channel-keyed hint build are dispatched to a
         # worker thread in one closure, not run on the event loop.
         assert "_resolve_hint" in offloaded
@@ -354,15 +350,15 @@ class TestMandatoryUpdateOnWheelInstall:
     async def test_floor_warning_redacts_cdn_userinfo_from_the_logged_hint(
         self, monkeypatch, caplog
     ):
-        """A userinfo-bearing KIROCREW_CDN_BASE (user:pass@host) passes
+        """A userinfo-bearing AJCREW_CDN_BASE (user:pass@host) passes
         _SAFE_CDN_BASE_RE, so the plain-pip verification-failure report embeds it
         in its manual-install URL. This log line is a durable, dashboard-served
         surface, so the credential must be redacted from the LOGGED string —
         while the note the user is shown (via non_managed_pip_update_hint) still
         carries the real base."""
-        import kiro_crew.dashboard.handlers as handlers
-        import kiro_crew.platform.update_governance as gov
-        from kiro_crew.platform.update_layout import non_managed_pip_update_hint
+        import aj_crew.dashboard.handlers as handlers
+        import aj_crew.platform.update_governance as gov
+        from aj_crew.platform.update_layout import non_managed_pip_update_hint
 
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
@@ -376,7 +372,7 @@ class TestMandatoryUpdateOnWheelInstall:
             {
                 "update_available": False,
                 "can_apply": False,
-                "managed_by": "kirocrew",
+                "managed_by": "ajcrew",
                 "remediation": {
                     "kind": "command",
                     "message": "Re-run the installer to upgrade.",
@@ -388,21 +384,21 @@ class TestMandatoryUpdateOnWheelInstall:
         monkeypatch.setattr(gov, "update_required", lambda _v: True)
         monkeypatch.setattr(gov, "min_version", lambda: "9.9.9")
         monkeypatch.setattr(
-            "kiro_crew.platform.wheel_engine.running_from_managed_venv", lambda: False
+            "aj_crew.platform.wheel_engine.running_from_managed_venv", lambda: False
         )
-        monkeypatch.setattr("kiro_crew.platform.wheel_engine.running_from_pipx", lambda: False)
+        monkeypatch.setattr("aj_crew.platform.wheel_engine.running_from_pipx", lambda: False)
         # The hint prefers the signed pinned wheel; with no CDN in the test it
         # takes the verification-FAILURE report, whose manual-install URL embeds
         # the CDN base — so make the manifest fetch raise cleanly.
-        from kiro_crew.platform.wheel_engine import WheelUpdateError
+        from aj_crew.platform.wheel_engine import WheelUpdateError
 
         def _no_manifest(*a, **k):
             raise WheelUpdateError("no CDN in test")
 
-        monkeypatch.setattr("kiro_crew.platform.wheel_engine.fetch_verified_manifest", _no_manifest)
+        monkeypatch.setattr("aj_crew.platform.wheel_engine.fetch_verified_manifest", _no_manifest)
         # A credential-bearing CDN base. _SAFE_CDN_BASE_RE admits userinfo, so
         # without redaction it would reach the dashboard-served log.
-        monkeypatch.setenv("KIROCREW_CDN_BASE", "https://user:s3cr3t@cdn.example.invalid")
+        monkeypatch.setenv("AJCREW_CDN_BASE", "https://user:s3cr3t@cdn.example.invalid")
 
         monkeypatch.setattr(orch, "_auto_apply_update", AsyncMock())
         monkeypatch.setattr(orch, "_auto_apply_wheel_update", AsyncMock())
@@ -434,9 +430,9 @@ class TestMandatoryUpdateOnWheelInstall:
     ):
         """An agent can read this log line, and the plain-pip upgrade and the
         restart after it are the user's to run, so both branches say where."""
-        import kiro_crew.dashboard.handlers as handlers
-        import kiro_crew.platform.update_governance as gov
-        from kiro_crew.platform.update_layout import PipUpgradeHint
+        import aj_crew.dashboard.handlers as handlers
+        import aj_crew.platform.update_governance as gov
+        from aj_crew.platform.update_layout import PipUpgradeHint
 
         orch = _make_orchestrator()
         orch.dashboard_state = _mock_dashboard_state()
@@ -449,7 +445,7 @@ class TestMandatoryUpdateOnWheelInstall:
             {
                 "update_available": False,
                 "can_apply": False,
-                "managed_by": "kirocrew",
+                "managed_by": "ajcrew",
                 "remediation": {"kind": "command", "message": "m", "command": "c"},
             }
         )
@@ -457,12 +453,12 @@ class TestMandatoryUpdateOnWheelInstall:
         monkeypatch.setattr(gov, "update_required", lambda _v: True)
         monkeypatch.setattr(gov, "min_version", lambda: "9.9.9")
         monkeypatch.setattr(
-            "kiro_crew.platform.wheel_engine.running_from_managed_venv", lambda: False
+            "aj_crew.platform.wheel_engine.running_from_managed_venv", lambda: False
         )
-        monkeypatch.setattr("kiro_crew.platform.wheel_engine.running_from_pipx", lambda: False)
+        monkeypatch.setattr("aj_crew.platform.wheel_engine.running_from_pipx", lambda: False)
         monkeypatch.setattr(
-            "kiro_crew.platform.update_layout.non_managed_pip_update_hint",
-            lambda _channel=None: (PipUpgradeHint(command=command, note=note), "kirocrew restart"),
+            "aj_crew.platform.update_layout.non_managed_pip_update_hint",
+            lambda _channel=None: (PipUpgradeHint(command=command, note=note), "ajcrew restart"),
         )
         monkeypatch.setattr(orch, "_auto_apply_update", AsyncMock())
         monkeypatch.setattr(orch, "_auto_apply_wheel_update", AsyncMock())
@@ -476,11 +472,11 @@ class TestMandatoryUpdateOnWheelInstall:
 
     @pytest.mark.asyncio
     async def test_mandatory_update_on_pipx_keeps_the_update_pointer(self, monkeypatch, caplog):
-        """A pipx install below the floor keeps the `kirocrew update` pointer —
+        """A pipx install below the floor keeps the `ajcrew update` pointer —
         its installer re-run upgrades the pipx venv in place, so the pip hint
         does not apply."""
-        import kiro_crew.dashboard.handlers as handlers
-        import kiro_crew.platform.update_governance as gov
+        import aj_crew.dashboard.handlers as handlers
+        import aj_crew.platform.update_governance as gov
 
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
@@ -494,7 +490,7 @@ class TestMandatoryUpdateOnWheelInstall:
             {
                 "update_available": False,
                 "can_apply": False,
-                "managed_by": "kirocrew",
+                "managed_by": "ajcrew",
                 "remediation": {
                     "kind": "command",
                     "message": "Re-run the installer to upgrade.",
@@ -506,9 +502,9 @@ class TestMandatoryUpdateOnWheelInstall:
         monkeypatch.setattr(gov, "update_required", lambda _v: True)
         monkeypatch.setattr(gov, "min_version", lambda: "9.9.9")
         monkeypatch.setattr(
-            "kiro_crew.platform.wheel_engine.running_from_managed_venv", lambda: False
+            "aj_crew.platform.wheel_engine.running_from_managed_venv", lambda: False
         )
-        monkeypatch.setattr("kiro_crew.platform.wheel_engine.running_from_pipx", lambda: True)
+        monkeypatch.setattr("aj_crew.platform.wheel_engine.running_from_pipx", lambda: True)
 
         monkeypatch.setattr(orch, "_auto_apply_update", AsyncMock())
         monkeypatch.setattr(orch, "_auto_apply_wheel_update", AsyncMock())
@@ -519,17 +515,17 @@ class TestMandatoryUpdateOnWheelInstall:
         ds.push_refresh.assert_called_once_with("update_available")
         assert handlers._update_info.get("update_available") is True
         warning = " ".join(r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING)
-        assert "run `kirocrew update`" in warning
+        assert "run `ajcrew update`" in warning
         assert "--extra-index-url" not in warning
-        assert "/simple/ -U kirocrew" not in warning
+        assert "/simple/ -U ajcrew" not in warning
 
     @pytest.mark.asyncio
     async def test_mandatory_update_on_externally_managed_does_not_badge(self, monkeypatch):
         """A dmg/appimage/docker install below the floor has no `can_apply`
         AND no remediation command — it updates via its own surface, so
-        the CLI 'run kirocrew update' badge must NOT light."""
-        import kiro_crew.dashboard.handlers as handlers
-        import kiro_crew.platform.update_governance as gov
+        the CLI 'run ajcrew update' badge must NOT light."""
+        import aj_crew.dashboard.handlers as handlers
+        import aj_crew.platform.update_governance as gov
 
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
@@ -560,8 +556,8 @@ class TestMandatoryUpdateOnWheelInstall:
 
     @pytest.mark.asyncio
     async def test_mandatory_update_on_git_still_auto_applies(self, monkeypatch):
-        import kiro_crew.dashboard.handlers as handlers
-        import kiro_crew.platform.update_governance as gov
+        import aj_crew.dashboard.handlers as handlers
+        import aj_crew.platform.update_governance as gov
 
         orch = _make_orchestrator()
         orch.dashboard_state = _mock_dashboard_state()
@@ -602,8 +598,8 @@ class TestMandatoryUpdateOnWheelInstall:
         the checkout to every intermediate commit without `__version__` advancing. The git
         branch reads `version_newer`, so no newer build means notify.
         """
-        import kiro_crew.dashboard.handlers as handlers
-        import kiro_crew.platform.update_governance as gov
+        import aj_crew.dashboard.handlers as handlers
+        import aj_crew.platform.update_governance as gov
 
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
@@ -647,8 +643,8 @@ class TestMandatoryUpdateOnWheelInstall:
         a reset would discard its local commits. Requiring both keeps it on the notify
         path instead of relying on the late ahead-count refusal.
         """
-        import kiro_crew.dashboard.handlers as handlers
-        import kiro_crew.platform.update_governance as gov
+        import aj_crew.dashboard.handlers as handlers
+        import aj_crew.platform.update_governance as gov
 
         orch = _make_orchestrator()
         ds = _mock_dashboard_state()
@@ -694,8 +690,8 @@ class TestMandatoryUpdateOnWheelInstall:
         """
         import logging
 
-        import kiro_crew.dashboard.handlers as handlers
-        import kiro_crew.platform.update_governance as gov
+        import aj_crew.dashboard.handlers as handlers
+        import aj_crew.platform.update_governance as gov
 
         async def _noop_check():
             return None

@@ -12,14 +12,14 @@ from unittest.mock import Mock
 
 import pytest
 
-from kiro_crew.config.live import ConfigChange
-from kiro_crew.slack import gateway
+from aj_crew.config.live import ConfigChange
+from aj_crew.slack import gateway
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 def config(url="", **lists):
@@ -32,7 +32,7 @@ async def test_disabled_coder_does_not_import_or_start_retention(monkeypatch):
     real_import = builtins.__import__
 
     def checked_import(name, *args, **kwargs):
-        assert not name.startswith("kiro_crew.coder"), "disabled Coder imported"
+        assert not name.startswith("aj_crew.coder"), "disabled Coder imported"
         return real_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "__import__", checked_import)
@@ -46,7 +46,7 @@ async def test_disabled_coder_does_not_import_or_start_retention(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_late_configuration_activates_retention_once_after_readiness(monkeypatch):
-    from kiro_crew.coder import retention
+    from aj_crew.coder import retention
 
     started = asyncio.Event()
     parked = asyncio.Event()
@@ -111,17 +111,17 @@ def test_config_applier_subscribes_the_activation_callback(monkeypatch):
 def test_retention_is_not_imported_on_gateway_boot_and_activation_follows_ready():
     boot = ast.parse(textwrap.dedent(inspect.getsource(gateway.run_gateway)))
     assert not any(
-        isinstance(node, ast.ImportFrom) and (node.module or "").startswith("kiro_crew.coder")
+        isinstance(node, ast.ImportFrom) and (node.module or "").startswith("aj_crew.coder")
         for node in ast.walk(boot)
     )
     source = inspect.getsource(gateway.GatewayOrchestrator.run)
-    assert source.index('print(f"KIROCREW_READY:') < source.index("_start_coder_retention(")
+    assert source.index('print(f"AJCREW_READY:') < source.index("_start_coder_retention(")
     assert "_start_coder_retention(live.snapshot() or self._cfg)" in source
 
 
 @pytest.mark.asyncio
 async def test_test_mode_never_activates_compute(monkeypatch):
-    from kiro_crew.coder import retention
+    from aj_crew.coder import retention
 
     parked = asyncio.Event()
 
@@ -147,7 +147,7 @@ async def test_test_mode_never_activates_compute(monkeypatch):
 async def _retention_runs_for(section_cfg, monkeypatch):
     """Start retention for *section_cfg*; return whether its task is still held once
     the sweeper starts or the task ends, whichever comes first."""
-    from kiro_crew.coder import retention
+    from aj_crew.coder import retention
 
     started = asyncio.Event()
     parked = asyncio.Event()
@@ -190,13 +190,13 @@ async def test_registry_only_boot_sweeps_and_shutdown_keeps_owned_vms(
     from datetime import datetime, timezone
     from unittest.mock import AsyncMock
 
-    from kiro_crew.boxd_session.launch import BoxdSessionEnvironments
-    from kiro_crew.coder import retention
-    from kiro_crew.config import paths
-    from kiro_crew.session_environments import persistent_vm
-    from kiro_crew.session_environments import retention as vm_retention
-    from kiro_crew.session_environments.persistent_vm import SessionResource, stamp
-    from kiro_crew.sprites_session import launch as sprites_launch
+    from aj_crew.boxd_session.launch import BoxdSessionEnvironments
+    from aj_crew.coder import retention
+    from aj_crew.config import paths
+    from aj_crew.session_environments import persistent_vm
+    from aj_crew.session_environments import retention as vm_retention
+    from aj_crew.session_environments.persistent_vm import SessionResource, stamp
+    from aj_crew.sprites_session import launch as sprites_launch
 
     cfg = config(sprites_profiles=[], boxd_profiles=[])
     monkeypatch.setattr(gateway.live, "snapshot", lambda: cfg)
@@ -296,8 +296,8 @@ async def test_registry_metadata_failure_keeps_retention_enabled(tmp_path, monke
     from pathlib import Path
     from unittest.mock import AsyncMock
 
-    from kiro_crew.coder import retention
-    from kiro_crew.config import paths
+    from aj_crew.coder import retention
+    from aj_crew.config import paths
 
     cfg = config()
     monkeypatch.setattr(gateway.live, "snapshot", lambda: cfg)
@@ -335,8 +335,8 @@ async def test_config_save_during_registry_probe_still_activates_retention(
     import threading
     from unittest.mock import AsyncMock
 
-    from kiro_crew.coder import retention
-    from kiro_crew.config import paths
+    from aj_crew.coder import retention
+    from aj_crew.config import paths
 
     cfg = config()
     monkeypatch.setattr(gateway.live, "snapshot", lambda: cfg)

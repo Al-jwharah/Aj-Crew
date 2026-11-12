@@ -1,7 +1,7 @@
 """The skill projection's side directory is readable inside the sandbox and never writable from it.
 
 ``<data_home>/skill-projection/`` holds the ownership sidecars and the view ledger
-that ``source_agent_name`` maps a stored ``kirocrew-skill-view-*`` name back through
+that ``source_agent_name`` maps a stored ``ajcrew-skill-view-*`` name back through
 -- the agent a resumed conversation then runs as, with that agent's grants -- plus
 the lease records and the publication lock that decide which views the prune keeps.
 A sandboxed process that could write there would pick the agent a later resume runs
@@ -18,12 +18,12 @@ import sys
 
 import pytest
 
-from kiro_crew import sandbox, sandbox_plan, security
-from kiro_crew.acp import skill_projection
+from aj_crew import sandbox, sandbox_plan, security
+from aj_crew.acp import skill_projection
 
 _LEAF = skill_projection._PROJECTION_SIDE_DIR_NAME
 _MODES = ("standard", "cc", "strict")
-_CREW_PREFIXES = (".kiro/crew", ".kirocrew")
+_CREW_PREFIXES = (".kiro/crew", ".ajcrew")
 _POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="POSIX launcher only")
 
 
@@ -83,7 +83,7 @@ def test_macos_denies_writes_but_not_reads(mode: str, prefix: str) -> None:
 
 
 @pytest.mark.parametrize("prefix", _CREW_PREFIXES)
-@pytest.mark.parametrize("inside", ("", "/metadata/kirocrew-skill-view-" + "a" * 24 + ".json"))
+@pytest.mark.parametrize("inside", ("", "/metadata/ajcrew-skill-view-" + "a" * 24 + ".json"))
 def test_the_agent_file_tools_may_read_it_but_not_write_it(prefix: str, inside: str) -> None:
     target = os.path.join("~", prefix, _LEAF) + inside
     assert security.is_sensitive_write_path(target)
@@ -94,7 +94,7 @@ def test_the_precreated_directory_is_what_the_projection_then_publishes_into(
     tmp_path, monkeypatch
 ) -> None:
     """An empty pre-created directory reads as no record, no lease and no ledger."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     sandbox._materialize_sealable_ceilings()
     side = tmp_path / _LEAF
     assert side.is_dir() and not any(side.iterdir())
@@ -102,8 +102,8 @@ def test_the_precreated_directory_is_what_the_projection_then_publishes_into(
     agents = tmp_path / "agents"
     agents.mkdir()
     assert skill_projection._scan_projection_leases(agents) == (set(), False)
-    assert skill_projection._sidecar_record(agents, "kirocrew-skill-view-" + "a" * 24) == (
+    assert skill_projection._sidecar_record(agents, "ajcrew-skill-view-" + "a" * 24) == (
         None,
-        side / "metadata" / ("kirocrew-skill-view-" + "a" * 24 + ".json"),
+        side / "metadata" / ("ajcrew-skill-view-" + "a" * 24 + ".json"),
         None,
     )

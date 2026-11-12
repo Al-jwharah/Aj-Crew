@@ -7,9 +7,9 @@ Two layers are under test:
    still exists (other call sites use it) and its guarantees are unchanged.
 2. The stateless ``set_project`` path. ``_call_tool_inner`` does not resolve
    session identity or POST to the gateway: it VALIDATES its input
-   and returns a session directive (see ``kiro_crew.session_directive``). The
+   and returns a session directive (see ``aj_crew.session_directive``). The
    session-aware consumer applies it via
-   ``kiro_crew.dashboard.session_directive_apply.apply_session_directive``,
+   ``aj_crew.dashboard.session_directive_apply.apply_session_directive``,
    which is exercised directly here against a fake slot + state.
 """
 
@@ -20,15 +20,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import mcp_core, session_directive
-from kiro_crew.dashboard.session_directive_apply import apply_session_directive
+from aj_crew import mcp_core, session_directive
+from aj_crew.dashboard.session_directive_apply import apply_session_directive
 
 # ───────────────────────────── _resolve_session_key_strict ─────────────────
 
 
 class TestResolveSessionKeyStrict:
-    """Strict resolver: the ``KIROCREW_SESSION_KEY`` env var, or the direct
-    ``KIROCREW_HOST_PID`` -> ``session_pid_<pid>.txt`` lookup — the latter
+    """Strict resolver: the ``AJCREW_SESSION_KEY`` env var, or the direct
+    ``AJCREW_HOST_PID`` -> ``session_pid_<pid>.txt`` lookup — the latter
     ONLY when the gateway-written HMAC sidecar verifies. The /proc ancestor
     WALK the lenient resolver uses is dropped, and an unsigned or forged
     file is refused."""
@@ -36,10 +36,10 @@ class TestResolveSessionKeyStrict:
     def _signed_env(self, monkeypatch, tmp_path, pid: str, session_key: str):
         """Simulate the sandbox: env key stripped, HOST_PID set, and a
         gateway-published (signed) mapping on disk."""
-        from kiro_crew import session_pid_sig
+        from aj_crew import session_pid_sig
 
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.setenv("KIROCREW_HOST_PID", pid)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.setenv("AJCREW_HOST_PID", pid)
         (tmp_path / "sel_hmac.key").write_bytes(b"k" * 32)
         with patch.object(session_pid_sig, "config_dir", return_value=tmp_path), \
              patch.object(
@@ -50,22 +50,22 @@ class TestResolveSessionKeyStrict:
             session_pid_sig.publish_session_pid(int(pid), session_key)
 
     def test_env_var_used(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:slot-B")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:slot-B")
         assert mcp_core._resolve_session_key_strict() == "dashboard:slot-B"
 
     def test_returns_empty_when_only_pid_walk_would_match(self, monkeypatch):
         """Lenient resolver would walk /proc and find a session_pid_*.txt;
         strict returns "" so the caller can refuse."""
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
         assert mcp_core._resolve_session_key_strict() == ""
 
     def test_env_var_wins_over_host_pid(self, monkeypatch, tmp_path):
         """When both identities are present the env var is authoritative."""
-        from kiro_crew import session_pid_sig
+        from aj_crew import session_pid_sig
 
         self._signed_env(monkeypatch, tmp_path, "4242", "dashboard:file-slot")
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:env-slot")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:env-slot")
         with patch.object(session_pid_sig, "config_dir", return_value=tmp_path), \
              patch.object(
                  session_pid_sig,
@@ -77,7 +77,7 @@ class TestResolveSessionKeyStrict:
     def test_signed_host_pid_mapping_accepted(self, monkeypatch, tmp_path):
         """Sandboxed session: env key stripped, launcher-declared HOST_PID
         maps to a gateway-published signed mapping — accepted."""
-        from kiro_crew import session_pid_sig
+        from aj_crew import session_pid_sig
 
         self._signed_env(
             monkeypatch, tmp_path, "4242", "dashboard:chat-32-1784855955"
@@ -97,10 +97,10 @@ class TestResolveSessionKeyStrict:
         """FORGERY: an agent writes a bare session_pid_<pid>.txt pointing at
         another slot's key. Without the HMAC sidecar (which requires the
         agent-unreadable SEL key) the strict resolver must refuse."""
-        from kiro_crew import session_pid_sig
+        from aj_crew import session_pid_sig
 
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.setenv("KIROCREW_HOST_PID", "4242")
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.setenv("AJCREW_HOST_PID", "4242")
         (tmp_path / "sel_hmac.key").write_bytes(b"k" * 32)
         (tmp_path / "session_pid_4242.txt").write_text(
             "dashboard:victim-slot", encoding="utf-8"
@@ -116,7 +116,7 @@ class TestResolveSessionKeyStrict:
     def test_replayed_sidecar_for_other_pid_refused(self, monkeypatch, tmp_path):
         """REPLAY: a subagent copies the parent's .txt/.sig pair under its own
         pid. The pid is bound into the MAC, so verification must fail."""
-        from kiro_crew import session_pid_sig
+        from aj_crew import session_pid_sig
 
         (tmp_path / "sel_hmac.key").write_bytes(b"k" * 32)
         with patch.object(session_pid_sig, "config_dir", return_value=tmp_path), \
@@ -133,8 +133,8 @@ class TestResolveSessionKeyStrict:
                 (tmp_path / f"session_pid_1000.{ext}").read_text(encoding="utf-8"),
                 encoding="utf-8",
             )
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.setenv("KIROCREW_HOST_PID", "2000")
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.setenv("AJCREW_HOST_PID", "2000")
         with patch.object(session_pid_sig, "config_dir", return_value=tmp_path), \
              patch.object(
                  session_pid_sig,
@@ -155,10 +155,10 @@ class TestResolveSessionKeyStrict:
         ],
     )
     def test_unpublished_host_pid_resolves_to_no_key(self, monkeypatch, tmp_path, host_pid):
-        from kiro_crew import session_pid_sig
+        from aj_crew import session_pid_sig
 
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.setenv("KIROCREW_HOST_PID", host_pid)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.setenv("AJCREW_HOST_PID", host_pid)
         with patch.object(session_pid_sig, "config_dir", return_value=tmp_path), \
              patch.object(
                  session_pid_sig,
@@ -169,10 +169,10 @@ class TestResolveSessionKeyStrict:
 
     def test_verifier_failure_returns_empty(self, monkeypatch):
         """Any error inside verification fails closed to ''."""
-        from kiro_crew import session_pid_sig
+        from aj_crew import session_pid_sig
 
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.setenv("KIROCREW_HOST_PID", "4242")
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.setenv("AJCREW_HOST_PID", "4242")
         with patch.object(
             session_pid_sig, "verify_session_pid", side_effect=OSError("boom")
         ):
@@ -198,13 +198,13 @@ class TestSetProjectTool:
         }
 
     def test_empty_path_without_clear_rejected(self):
-        from kiro_crew.validation import ValidationError
+        from aj_crew.validation import ValidationError
 
         with pytest.raises(ValidationError, match="required.*clear=true"):
             mcp_core._call_tool_inner("set_project", {"path": ""})
 
     def test_non_string_path_raises_validation_error(self):
-        from kiro_crew.validation import ValidationError
+        from aj_crew.validation import ValidationError
 
         with pytest.raises(ValidationError):
             mcp_core._call_tool_inner("set_project", {"path": 123})
@@ -308,7 +308,7 @@ class TestSetProjectAbsolutePathShapes:
         ],
     )
     def test_non_absolute_path_still_rejected(self, path):
-        from kiro_crew.validation import ValidationError
+        from aj_crew.validation import ValidationError
 
         with pytest.raises(ValidationError, match="invalid format"):
             mcp_core._call_tool_inner("set_project", {"path": path})
@@ -381,10 +381,10 @@ class TestSetProjectApplier:
     async def test_sensitive_path_denied_without_mutating_slot(self, tmp_path, monkeypatch):
         slot = _FakeSlot(project="/existing/project")
         state = _FakeState()
-        # _set_project imports sensitive_path_refusal lazily from kiro_crew.security,
+        # _set_project imports sensitive_path_refusal lazily from aj_crew.security,
         # so patch it on the source module.
         monkeypatch.setattr(
-            "kiro_crew.security.sensitive_path_refusal", lambda *a, **k: "Blocked: x"
+            "aj_crew.security.sensitive_path_refusal", lambda *a, **k: "Blocked: x"
         )
         result = await apply_session_directive(
             state,
@@ -400,7 +400,7 @@ class TestSetProjectApplier:
 
     @pytest.mark.asyncio
     async def test_a_resolver_stall_is_refused_with_the_stall_wording(self, tmp_path, monkeypatch):
-        from kiro_crew import security
+        from aj_crew import security
 
         def stalled(*args, **kwargs):
             raise security.PathResolutionStalled("/x", "/x")
@@ -425,11 +425,11 @@ class TestSetProjectApplier:
         in-process (never through the HTTP endpoint), so the overlap check
         must also live here or the refusal regresses to spawn time on every
         channel surface. The patch targets the source module because
-        _set_project imports it lazily from kiro_crew.sandbox."""
+        _set_project imports it lazily from aj_crew.sandbox."""
         slot = _FakeSlot(project="/existing/project")
         state = _FakeState()
         monkeypatch.setattr(
-            "kiro_crew.sandbox.voice_runtime_workspace_conflict",
+            "aj_crew.sandbox.voice_runtime_workspace_conflict",
             lambda *a, **k: "macOS agent workspace overlaps the protected voice runtime",
         )
         result = await apply_session_directive(
@@ -478,10 +478,10 @@ class _SelSpy:
 def sel_spy(monkeypatch):
     """Replace the SEL singleton so directive audits are captured, not written.
 
-    ``_audit`` does ``from kiro_crew.sel import sel; sel().log_tool_invocation``,
+    ``_audit`` does ``from aj_crew.sel import sel; sel().log_tool_invocation``,
     so patching the factory on the source module intercepts every path."""
     spy = _SelSpy()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: spy)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: spy)
     return spy
 
 
@@ -493,10 +493,10 @@ class TestApplierAuditAndFailSoft:
     async def test_success_emits_one_mcp_directive_event(self, tmp_path, monkeypatch, sel_spy):
         """A valid set_project audits source='mcp-directive', the tool name, and
         outcome='success' — and the recent-projects offload actually fires."""
-        monkeypatch.setattr("kiro_crew.security.sensitive_path_refusal", lambda *a, **k: None)
+        monkeypatch.setattr("aj_crew.security.sensitive_path_refusal", lambda *a, **k: None)
         saved: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers._save_recent_project",
+            "aj_crew.dashboard.chat_handlers._save_recent_project",
             lambda rp: saved.append(rp),
         )
         slot = _FakeSlot(project="")
@@ -520,7 +520,7 @@ class TestApplierAuditAndFailSoft:
     async def test_denied_path_audits_denied_and_returns_error(self, tmp_path, monkeypatch, sel_spy):
         """A sensitive-path block raises ``_DirectiveDenied`` internally; the
         wrapper audits outcome='denied' and returns the fixed error string."""
-        monkeypatch.setattr("kiro_crew.security.sensitive_path_refusal", lambda *a, **k: "Blocked: x")
+        monkeypatch.setattr("aj_crew.security.sensitive_path_refusal", lambda *a, **k: "Blocked: x")
         slot = _FakeSlot(project="/existing")
         state = _FakeState()
         result = await apply_session_directive(
@@ -554,9 +554,9 @@ class TestApplierAuditAndFailSoft:
         def _boom() -> object:
             raise RuntimeError("autonudge exploded")
 
-        # _monitor_start does `from kiro_crew.autonudge import get_instance`
+        # _monitor_start does `from aj_crew.autonudge import get_instance`
         # then calls it first — patch the source symbol so it raises.
-        monkeypatch.setattr("kiro_crew.autonudge.get_instance", _boom)
+        monkeypatch.setattr("aj_crew.autonudge.get_instance", _boom)
         slot = _FakeSlot()
         state = _FakeState()
         result = await apply_session_directive(
@@ -571,7 +571,7 @@ class TestApplierAuditAndFailSoft:
         """A sensitive path is refused BEFORE it is resolved/stat'ed, so a
         nonexistent sensitive path cannot be probed via the not-a-directory
         error. Still audited denied, and never leaks the isdir outcome."""
-        monkeypatch.setattr("kiro_crew.security.sensitive_path_refusal", lambda *a, **k: "Blocked: x")
+        monkeypatch.setattr("aj_crew.security.sensitive_path_refusal", lambda *a, **k: "Blocked: x")
         probed: list[str] = []
 
         def _no_stat(p):
@@ -599,7 +599,7 @@ class TestApplierAuditAndFailSoft:
     ):
         """These two act on a dashboard SLOT card and require a connected
         dashboard tab. A cron / Slack / sub-agent caller should not get a card."""
-        monkeypatch.setattr("kiro_crew.security.sensitive_path_refusal", lambda *a, **k: None)
+        monkeypatch.setattr("aj_crew.security.sensitive_path_refusal", lambda *a, **k: None)
         slot = _FakeSlot(project="/original")
         state = _FakeState()
         args = {
@@ -614,7 +614,7 @@ class TestApplierAuditAndFailSoft:
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        "session_key", ["telegram:kirocrew:direct:123:gen1", "slack:C123.456", "discord:guild1:chan2"]
+        "session_key", ["telegram:ajcrew:direct:123:gen1", "slack:C123.456", "discord:guild1:chan2"]
     )
     async def test_set_project_works_on_channel_sessions(
         self, session_key, tmp_path, monkeypatch, sel_spy
@@ -622,7 +622,7 @@ class TestApplierAuditAndFailSoft:
         """set_project should apply its CWD effect on any user-facing surface
         (Telegram, Slack, Discord) — not just dashboard. Only suggest_followup
         and ask_question are dashboard-only (they render UI cards)."""
-        monkeypatch.setattr("kiro_crew.security.sensitive_path_refusal", lambda *a, **k: None)
+        monkeypatch.setattr("aj_crew.security.sensitive_path_refusal", lambda *a, **k: None)
         slot = _FakeSlot(project="/original")
         state = _FakeState()
         result = await apply_session_directive(
@@ -647,7 +647,7 @@ class TestApplierAuditAndFailSoft:
     ):
         """A cron/sub-agent turn borrows its destination slot and session key;
         producer provenance must still prevent it from retargeting that slot."""
-        monkeypatch.setattr("kiro_crew.security.sensitive_path_refusal", lambda *a, **k: None)
+        monkeypatch.setattr("aj_crew.security.sensitive_path_refusal", lambda *a, **k: None)
         slot = _FakeSlot(project="/original")
         result = await apply_session_directive(
             _FakeState(),
@@ -685,7 +685,7 @@ class TestApplierAuditAndFailSoft:
         project: a cron turn can run on a user's dashboard slot
         (session="origin" injection) and a sub-agent shares its parent's slot,
         so allowing them would silently repoint the user's own session."""
-        monkeypatch.setattr("kiro_crew.security.sensitive_path_refusal", lambda *a, **k: None)
+        monkeypatch.setattr("aj_crew.security.sensitive_path_refusal", lambda *a, **k: None)
         slot = _FakeSlot(project="/original")
         state = _FakeState()
         result = await apply_session_directive(
@@ -702,7 +702,7 @@ class TestApplierAuditAndFailSoft:
     ):
         """Some appliers RETURN a readable failure instead of raising (invalid
         project dir). The audit must reflect that, not blanket 'success'."""
-        monkeypatch.setattr("kiro_crew.security.sensitive_path_refusal", lambda *a, **k: None)
+        monkeypatch.setattr("aj_crew.security.sensitive_path_refusal", lambda *a, **k: None)
         slot = _FakeSlot(project="/original")
         state = _FakeState()
         missing = str(tmp_path / "definitely-not-a-directory")
@@ -731,8 +731,8 @@ class TestApplierAuditAndFailSoft:
             def get_by_slot(self, _b):
                 return _Loop()
 
-        monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: _Svc())
-        monkeypatch.setattr("kiro_crew.autonudge.binding_key_for", lambda sk: "bind-1")
+        monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: _Svc())
+        monkeypatch.setattr("aj_crew.autonudge.binding_key_for", lambda sk: "bind-1")
         slot = _FakeSlot()
         state = _FakeState()
         result = await apply_session_directive(

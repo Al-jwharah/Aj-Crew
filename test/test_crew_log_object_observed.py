@@ -19,20 +19,20 @@ import pytest
 from crew_log_drain import assert_drained
 from off_loop_helpers import off_loop
 
-from kiro_crew import crew_log as lg
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.crew_log import CrewLog, CrewLogError
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log.entry_types import (
+from aj_crew import crew_log as lg
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.crew_log import CrewLog, CrewLogError
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log.entry_types import (
     OBJECT_PRODUCER_PROBE,
     OBJECT_PRODUCERS,
     SESSION_ENTRY_TYPES,
     validate_data,
 )
-from kiro_crew.crew_log.schema import KIND_SESSION, MAX_ENTRY_BYTES
-from kiro_crew.monitoring.controller import MonitorController
-from kiro_crew.monitoring.github_pull_request import GitHubPullRequestProbeResult
-from kiro_crew.monitoring.models import (
+from aj_crew.crew_log.schema import KIND_SESSION, MAX_ENTRY_BYTES
+from aj_crew.monitoring.controller import MonitorController
+from aj_crew.monitoring.github_pull_request import GitHubPullRequestProbeResult
+from aj_crew.monitoring.models import (
     MonitorBudgets,
     MonitorDecision,
     MonitorDispatchResult,
@@ -53,7 +53,7 @@ ENTRY_TYPE = "object/observed"
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Own data home, crew log on, and no writer state carried between tests."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(crew_log_emit.CREW_LOG_ENV, "1")
     crew_log_emit.reset_caches()
     yield
@@ -63,7 +63,7 @@ def _isolated_home(tmp_path, monkeypatch):
 
 def _unit(unit_id: str = SESSION) -> None:
     """Create the owner session's crew log and drop the handle so it holds no lease."""
-    CrewLog.create(KIND_SESSION, unit_id, owner="owner", agent="kirocrew", slot=SLOT)
+    CrewLog.create(KIND_SESSION, unit_id, owner="owner", agent="ajcrew", slot=SLOT)
 
 
 def _observed(unit_id: str = SESSION) -> list:
@@ -327,7 +327,7 @@ async def test_a_resolver_failure_is_logged_and_never_reaches_the_tick(tmp_path,
         tmp_path, [_result(fingerprint="fp-1")], owner=_broken
     )
 
-    with caplog.at_level(logging.ERROR, logger="kiro_crew.monitoring.controller"):
+    with caplog.at_level(logging.ERROR, logger="aj_crew.monitoring.controller"):
         verdict = await controller.tick(loop, now=160.0)
 
     assert verdict.decision is MonitorDecision.RECORD_ONLY

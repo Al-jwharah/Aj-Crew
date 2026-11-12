@@ -1,6 +1,6 @@
 """No test patches a name an ACP facade forwards with ``create=True``.
 
-``kiro_crew.acp.client`` and ``kiro_crew.acp.runtime`` forward a write or delete of a
+``aj_crew.acp.client`` and ``aj_crew.acp.runtime`` forward a write or delete of a
 moved name to the owner module that defines it. ``mock.patch`` restores a name the
 facade does not hold by deleting it and then, finding it gone, writing its original
 back -- unless ``create`` is true, in which case it skips that write and the owner loses
@@ -33,8 +33,8 @@ from unittest import mock
 import pytest
 from stale_package_attribute import package_attribute_replaced
 
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp import runtime as acp_runtime
+from aj_crew.acp import client as acp_client
+from aj_crew.acp import runtime as acp_runtime
 
 # The scan parses every test file once per module; keep it on one worker.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_acp_refactor_create_guard")
@@ -43,7 +43,7 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_acp_refactor_create_guard")
 _FACADES = {module.__name__: module for module in (acp_client, acp_runtime)}
 _DYNAMIC = "<dynamic>"
 _REPO = Path(__file__).resolve().parents[1]
-_SRC = _REPO / "src" / "kiro_crew"
+_SRC = _REPO / "src" / "aj_crew"
 
 #: What a ``mock.patch`` callable resolves to, per module that provides one: the
 #: standard library, its PyPI backport, and pytest-mock's ``mocker`` fixture.
@@ -334,20 +334,20 @@ def _create_patches(tree: ast.Module) -> list[tuple[int, str, str]]:
     return found
 
 
-#: ``from kiro_crew import acp`` (or ``acp as X``), also inside a parenthesized list.
-_FROM_IMPORT_ACP = re.compile(r"from\s+kiro_crew\s+import\s+\(?[\w\s,]*?\bacp\b(?!_)")
+#: ``from aj_crew import acp`` (or ``acp as X``), also inside a parenthesized list.
+_FROM_IMPORT_ACP = re.compile(r"from\s+aj_crew\s+import\s+\(?[\w\s,]*?\bacp\b(?!_)")
 
 
 def _worth_parsing(text: str) -> bool:
     """Whether a test file could hold a patch of a facade at all: it mentions a patch
-    and a facade's module path, or imports the ``kiro_crew.acp`` package itself."""
+    and a facade's module path, or imports the ``aj_crew.acp`` package itself."""
     if "patch" not in text:
         return False
-    return "kiro_crew.acp" in text or _FROM_IMPORT_ACP.search(text) is not None
+    return "aj_crew.acp" in text or _FROM_IMPORT_ACP.search(text) is not None
 
 
-_IMPORT_CLIENT = "from kiro_crew.acp import client\n"
-_IMPORT_RUNTIME = "from kiro_crew.acp import runtime\n"
+_IMPORT_CLIENT = "from aj_crew.acp import client\n"
+_IMPORT_RUNTIME = "from aj_crew.acp import runtime\n"
 _FROM_MOCK = "from unittest import mock\n"
 _CLIENT = acp_client.__name__
 _RUNTIME = acp_runtime.__name__
@@ -415,7 +415,7 @@ _CASES: list[tuple[str, list[str]]] = [
         [_MOVED],
     ),
     (
-        _FROM_MOCK + f'_MOD = "kiro_crew.other"\nmock.patch(f"{{_MOD}}.{_MOVED}", create=True)',
+        _FROM_MOCK + f'_MOD = "aj_crew.other"\nmock.patch(f"{{_MOD}}.{_MOVED}", create=True)',
         [],
     ),
     (_FROM_MOCK + f'import os\nmock.patch(f"{{os.__name__}}.{_MOVED}", create=True)', []),
@@ -477,7 +477,7 @@ _CASES: list[tuple[str, list[str]]] = [
     ),
     # the owner itself is not the facade: its own binding is restored by assignment
     (
-        "from kiro_crew.acp import runtime_process_tree\n"
+        "from aj_crew.acp import runtime_process_tree\n"
         + _FROM_MOCK
         + f'mock.patch.object(runtime_process_tree, "{_MOVED}", create=True)',
         [],
@@ -518,9 +518,9 @@ _CASES: list[tuple[str, list[str]]] = [
         [_DYNAMIC],
     ),
     (
-        "import kiro_crew.acp\n"
+        "import aj_crew.acp\n"
         + _FROM_MOCK
-        + f'h = getattr(kiro_crew.acp, "client")\nmock.patch.object(h, "{_MOVED}", create=True)',
+        + f'h = getattr(aj_crew.acp, "client")\nmock.patch.object(h, "{_MOVED}", create=True)',
         [_DYNAMIC],
     ),
     (
@@ -559,28 +559,27 @@ _CASES: list[tuple[str, list[str]]] = [
     ),
     # a rebound string constant: the binding that spells a facade path wins
     (
-        _FROM_MOCK
-        + f'T = "kiro_crew.other.x"\nT = "{_CLIENT}.{_MOVED}"\nmock.patch(T, create=True)',
+        _FROM_MOCK + f'T = "aj_crew.other.x"\nT = "{_CLIENT}.{_MOVED}"\nmock.patch(T, create=True)',
         [_MOVED],
     ),
     (
-        _FROM_MOCK + 'T = "kiro_crew.other.x"\nT = "kiro_crew.other.y"\nmock.patch(T, create=True)',
+        _FROM_MOCK + 'T = "aj_crew.other.x"\nT = "aj_crew.other.y"\nmock.patch(T, create=True)',
         [],
     ),
     # import_module of a relative name with its package
     (
-        _FROM_MOCK + 'import importlib\nh = importlib.import_module(".client", "kiro_crew.acp")\n'
+        _FROM_MOCK + 'import importlib\nh = importlib.import_module(".client", "aj_crew.acp")\n'
         f'mock.patch.object(h, "{_MOVED}", create=True)',
         [_MOVED],
     ),
     (
-        _FROM_MOCK + 'import importlib\nh = importlib.import_module(".other", "kiro_crew.acp")\n'
+        _FROM_MOCK + 'import importlib\nh = importlib.import_module(".other", "aj_crew.acp")\n'
         f'mock.patch.object(h, "{_MOVED}", create=True)',
         [],
     ),
     # the facade as an attribute of the package imported by name
     (
-        "from kiro_crew import acp\n"
+        "from aj_crew import acp\n"
         + _FROM_MOCK
         + f'mock.patch.object(acp.client, "{_MOVED}", create=True)',
         [_MOVED],
@@ -591,15 +590,15 @@ _CASES: list[tuple[str, list[str]]] = [
         [_MOVED],
     ),
     (
-        "import kiro_crew.acp\n"
+        "import aj_crew.acp\n"
         + _FROM_MOCK
-        + f'mock.patch.object(kiro_crew.acp.client, "{_MOVED}", create=True)',
+        + f'mock.patch.object(aj_crew.acp.client, "{_MOVED}", create=True)',
         [_MOVED],
     ),
     (
-        "import kiro_crew.acp.runtime\n"
+        "import aj_crew.acp.runtime\n"
         + _FROM_MOCK
-        + f'mock.patch.object(kiro_crew.acp.runtime, "{_MOVED_RT}", create=True)',
+        + f'mock.patch.object(aj_crew.acp.runtime, "{_MOVED_RT}", create=True)',
         [_MOVED_RT],
     ),
 ]
@@ -626,7 +625,7 @@ def test_no_src_module_binds_a_facade_at_module_level() -> None:
     bound: list[str] = []
     for path in sorted(_SRC.rglob("*.py")):
         text = path.read_text(encoding="utf-8")
-        if "kiro_crew.acp" not in text:
+        if "aj_crew.acp" not in text:
             continue
         for node in ast.parse(text).body:
             if isinstance(node, ast.Import):
@@ -635,11 +634,11 @@ def test_no_src_module_binds_a_facade_at_module_level() -> None:
                     for alias in node.names
                     if alias.name in _FACADES and alias.asname
                 ]
-            elif isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.acp":
+            elif isinstance(node, ast.ImportFrom) and node.module == "aj_crew.acp":
                 bound += [
                     f"{path.name}:{node.lineno}"
                     for alias in node.names
-                    if f"kiro_crew.acp.{alias.name}" in _FACADES
+                    if f"aj_crew.acp.{alias.name}" in _FACADES
                 ]
     assert bound == [], bound
 
@@ -652,7 +651,7 @@ def test_the_premise_create_true_through_the_facade_unbinds_the_owner(split: boo
     attribute can name another copy once an earlier test in the worker imports it
     fresh, so reading the attribute would make this check depend on test order.
     """
-    owner = "kiro_crew.acp.runtime_process_tree"
+    owner = "aj_crew.acp.runtime_process_tree"
     with package_attribute_replaced(owner) if split else nullcontext():
         runtime_process_tree = importlib.import_module(owner)
         original = vars(runtime_process_tree)["_is_our_child"]
@@ -670,17 +669,17 @@ def test_every_must_flag_case_passes_the_prefilter() -> None:
     flagged = [source for source, expected in _CASES if expected]
     assert flagged and [source for source in flagged if not _worth_parsing(source)] == []
     assert not _worth_parsing(
-        "from unittest import mock\nfrom kiro_crew import agent_state\n"
+        "from unittest import mock\nfrom aj_crew import agent_state\n"
         "mock.patch.object(agent_state, 'x')\n"
     )
     assert _worth_parsing(
-        "from unittest import mock\nfrom kiro_crew.acp import (\n    client,\n)\n"
+        "from unittest import mock\nfrom aj_crew.acp import (\n    client,\n)\n"
         "mock.patch.object(client, 'x')\n"
     )
     assert not _worth_parsing("from unittest import mock\nmock.patch.object(json, 'x')\n")
-    assert not _worth_parsing("from kiro_crew.acp import client\n")
-    assert _worth_parsing("from kiro_crew import acp\nmock.patch.object(acp.client, 'x')\n")
-    assert not _worth_parsing("from kiro_crew import acp_tool_gate\nmock.patch.object(x, 'y')\n")
+    assert not _worth_parsing("from aj_crew.acp import client\n")
+    assert _worth_parsing("from aj_crew import acp\nmock.patch.object(acp.client, 'x')\n")
+    assert not _worth_parsing("from aj_crew import acp_tool_gate\nmock.patch.object(x, 'y')\n")
 
 
 def test_no_test_patches_a_forwarded_name_that_it_may_create() -> None:

@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from kiro_crew.dashboard import side_context as sc
-from kiro_crew.dashboard.side_state import SideState
+from aj_crew.dashboard import side_context as sc
+from aj_crew.dashboard.side_state import SideState
 
 
 def _slot(messages):
@@ -124,7 +124,7 @@ def test_side_prompt_states_no_tools_on_a_harness_without_the_read_only_allowanc
 def test_first_turn_states_the_boundary_again_right_before_the_question():
     """The first-turn envelope carries the boundary twice: in the system
     envelope and again as the last block before ``User:``."""
-    from kiro_crew.dashboard.side_prompts import (
+    from aj_crew.dashboard.side_prompts import (
         SIDE_BOUNDARY_PROMPT,
         SIDE_BOUNDARY_PROMPT_NO_TOOLS,
     )
@@ -153,7 +153,7 @@ def test_first_turn_carries_the_dashboard_rendering_contract():
     and becomes buttons). It sits with the instructions, before the parent
     snapshot — framing, not history — and the diff-block rule is left out
     because a side turn cannot change a file."""
-    from kiro_crew.context import _CRITICAL_RULES_HEAD, _CRITICAL_RULES_TAIL
+    from aj_crew.context import _CRITICAL_RULES_HEAD, _CRITICAL_RULES_TAIL
 
     messages = [_msg("user", "deploy the alpha stack"), _msg("assistant", "Deployed.")]
     out = sc.build_side_message(_slot(messages), "and beta?", is_first_turn=True)
@@ -184,7 +184,7 @@ def test_reply_style_follows_the_verbosity_setting():
     """``dashboard.verbosity`` binds a side reply as it binds a main reply: the
     ``[RESPONSE PREFERENCES]`` block is present for a non-default level, absent
     for ``default``, and absent when the turn has no config to read it from."""
-    from kiro_crew.context_assembly.sections import _RESPONSE_PREFERENCES_HEADER
+    from aj_crew.context_assembly.sections import _RESPONSE_PREFERENCES_HEADER
 
     concise = sc.build_side_message(_slot([]), "q", is_first_turn=True, cfg=_cfg("concise"))
     assert _RESPONSE_PREFERENCES_HEADER in concise

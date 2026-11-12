@@ -18,7 +18,7 @@ finds a different occupant. A link that was already there is the same link at
 both looks and passes; a directory replaced by a link is not, and refuses.
 
 The cases run the launcher program's own stages
-(``kiro_crew.sandbox_launcher_program``) in-process against real files, through
+(``aj_crew.sandbox_launcher_program``) in-process against real files, through
 the sibling suite's harness (``test_sandbox_mount_pinned_target``), whose stand-in
 libc makes a bind hide its target so the post-mount name check runs for real.
 
@@ -41,7 +41,7 @@ import pytest
 from test_sandbox_launcher_program import identity, launch, payload, refusal, rendered_payload
 from test_sandbox_mount_pinned_target import _Bed, _Libc, _run, _window_bed
 
-from kiro_crew import sandbox, sandbox_launcher, sandbox_launcher_program
+from aj_crew import sandbox, sandbox_launcher, sandbox_launcher_program
 
 program = sandbox_launcher_program
 

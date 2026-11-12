@@ -1,4 +1,4 @@
-"""``kirocrew app disable`` / ``uninstall``: the name is checked before any cleanup.
+"""``ajcrew app disable`` / ``uninstall``: the name is checked before any cleanup.
 
 Both verbs clean up an app's crons, skills, agents and MCP servers by joining its
 name onto a data-home path. ``disable_app`` and ``uninstall_app`` refuse a name
@@ -18,7 +18,7 @@ from unittest.mock import patch
 import pytest
 from cli_commands_coverage_helpers import _ns
 
-from kiro_crew import cli_commands as cc
+from aj_crew import cli_commands as cc
 
 _BAD_NAMES = ["..", "../other", "a/b", "a\\b", ".", "", "C:", "c:demo"]
 
@@ -35,19 +35,19 @@ def _ok(name: str = "demo") -> Any:
 def lifecycle_mocks() -> Any:
     """Every collaborator of the two verbs, with no gateway answering."""
     with (
-        patch("kiro_crew.cli_commands._run_app_action_through_gateway", return_value=False) as gw,
-        patch("kiro_crew.cli_commands._cleanup_app_crons_from_scheduler") as cleanup,
-        patch("kiro_crew.cli_commands.deregister_app", return_value=_registration()) as deregister,
-        patch("kiro_crew.cli_commands.trust_grant_removal_blocked", return_value="") as grant,
-        patch("kiro_crew.cli_commands.disable_app", return_value=_ok()) as disable,
-        patch("kiro_crew.cli_commands.uninstall_app", return_value=_ok()) as uninstall,
-        patch("kiro_crew.cli_commands._app_declares_backend", return_value=False),
-        patch("kiro_crew.cli_commands.recorded_backend_port", return_value=None),
+        patch("aj_crew.cli_commands._run_app_action_through_gateway", return_value=False) as gw,
+        patch("aj_crew.cli_commands._cleanup_app_crons_from_scheduler") as cleanup,
+        patch("aj_crew.cli_commands.deregister_app", return_value=_registration()) as deregister,
+        patch("aj_crew.cli_commands.trust_grant_removal_blocked", return_value="") as grant,
+        patch("aj_crew.cli_commands.disable_app", return_value=_ok()) as disable,
+        patch("aj_crew.cli_commands.uninstall_app", return_value=_ok()) as uninstall,
+        patch("aj_crew.cli_commands._app_declares_backend", return_value=False),
+        patch("aj_crew.cli_commands.recorded_backend_port", return_value=None),
         patch(
-            "kiro_crew.cli_commands.discard_app_session_pointers",
+            "aj_crew.cli_commands.discard_app_session_pointers",
             return_value=SimpleNamespace(dropped=0, deferred=False, error=""),
         ) as pointers,
-        patch("kiro_crew.cli_commands._print_pointer_cleanup"),
+        patch("aj_crew.cli_commands._print_pointer_cleanup"),
     ):
         yield SimpleNamespace(
             gateway=gw,
@@ -77,7 +77,7 @@ def test_dotdot_disable_leaves_data_home_links_alone(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Real files: skill cleanup for ``..`` would walk the data home itself."""
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     (home / "skills").mkdir(parents=True)
     target = tmp_path / "linked"
     target.mkdir()
@@ -86,16 +86,16 @@ def test_dotdot_disable_leaves_data_home_links_alone(
         os.symlink(target, link, target_is_directory=True)
     except OSError:
         pytest.skip("this host cannot create directory symlinks")
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
 
     # Skill cleanup runs for real; the other deregistration steps and cron
     # cleanup reach outside the data home, so they are stubbed.
     with (
-        patch("kiro_crew.cli_commands._run_app_action_through_gateway", return_value=False),
-        patch("kiro_crew.cli_commands._cleanup_app_crons_from_scheduler"),
-        patch("kiro_crew.apps.bridges._deregister_agents", return_value=0),
-        patch("kiro_crew.apps.bridges._deregister_crons"),
-        patch("kiro_crew.apps.bridges._deregister_mcp_servers", return_value=0),
+        patch("aj_crew.cli_commands._run_app_action_through_gateway", return_value=False),
+        patch("aj_crew.cli_commands._cleanup_app_crons_from_scheduler"),
+        patch("aj_crew.apps.bridges._deregister_agents", return_value=0),
+        patch("aj_crew.apps.bridges._deregister_crons"),
+        patch("aj_crew.apps.bridges._deregister_mcp_servers", return_value=0),
         pytest.raises(SystemExit),
     ):
         cc._handle_app(_ns(app_action="disable", name=".."))

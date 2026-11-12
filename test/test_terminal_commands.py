@@ -17,9 +17,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from aj_crew.dashboard import terminal_commands as tc
+from aj_crew.testing.wait import finished
 from conftest import host_abs
-from kiro_crew.dashboard import terminal_commands as tc
-from kiro_crew.testing.wait import finished
 
 
 @pytest.fixture(autouse=True)
@@ -446,7 +446,7 @@ class TestSanitizedPath:
         # over the genuine tool.
         proj = tmp_path / "repo"
         (proj / "bin").mkdir(parents=True)
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(proj))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(proj))
         monkeypatch.setattr(tc, "_is_trusted_dir", lambda _d: True)
         usr_bin = host_abs("usr", "bin")
         monkeypatch.setenv("PATH", os.pathsep.join([str(proj / "bin"), usr_bin]))
@@ -469,7 +469,7 @@ class TestSanitizedPath:
         sysbin = tmp_path / "sysbin"
         sysbin.mkdir()
         (sysbin / "gh").symlink_to(planted)
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(proj))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(proj))
         monkeypatch.setattr(tc.os, "stat", _stat_chain(os.geteuid()))
         monkeypatch.setenv("PATH", str(sysbin))
         assert tc._resolve("gh") is None
@@ -512,7 +512,7 @@ class TestSanitizedPath:
     ):
         # The lookup is imported lazily inside the function, so patch the module it
         # comes from. Raising must produce the None sentinel, not ().
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         def boom():
             raise OSError("workspace unreadable")
@@ -521,7 +521,7 @@ class TestSanitizedPath:
         assert tc._agent_writable_roots() is None
 
     def test_an_uncanonicalizable_root_yields_no_roots(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path / "proj"))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path / "proj"))
         monkeypatch.setattr(
             tc.os.path, "realpath", lambda *_a, **_k: (_ for _ in ()).throw(OSError()),
         )
@@ -1161,9 +1161,9 @@ class TestRunProbe:
         # finds, so an inherited value survives into the child and trips the
         # `leaked-` assertion below.
         monkeypatch.setenv("GRADLE_OPTS", "leaked-GRADLE_OPTS")
-        # `KIROCREW_SANDBOX_TOOL` is named below too. The chokepoint OVERWRITES it, so
+        # `AJCREW_SANDBOX_TOOL` is named below too. The chokepoint OVERWRITES it, so
         # a parent value reaching the child would mean that stamp stopped replacing it.
-        monkeypatch.setenv("KIROCREW_SANDBOX_TOOL", "leaked-KIROCREW_SANDBOX_TOOL")
+        monkeypatch.setenv("AJCREW_SANDBOX_TOOL", "leaked-AJCREW_SANDBOX_TOOL")
         # HOME keeps the `leaked-` marker but must be an ABSOLUTE path: on hosts
         # where the userns sandbox is unavailable the probe child runs unsandboxed
         # and inherits pytest's CWD (the repo root), and the workspace resolver
@@ -1176,7 +1176,7 @@ class TestRunProbe:
         assert out is not None
         assert "leaked-" not in out
         # And the allowlist really is minimal. The extras are not ours: the sandbox
-        # launcher injects its own markers (`KIROCREW_*`, `GIT_SSH_COMMAND`,
+        # launcher injects its own markers (`AJCREW_*`, `GIT_SSH_COMMAND`,
         # `GRADLE_OPTS`) and the shell adds `PWD`/`SHLVL`/`_`, so they are named
         # rather than blanket-allowed — a NEW name appearing here should fail this
         # and be looked at.
@@ -1187,16 +1187,16 @@ class TestRunProbe:
         # wrote. That the launcher always writes it is pinned from the shipped
         # launcher source by
         # test_sandbox_gradle_daemon.py::test_sets_the_flag_when_gradle_opts_is_absent.
-        # `KIROCREW_SANDBOX_TOOL` is the tool-tree marker the chokepoint stamps on every
+        # `AJCREW_SANDBOX_TOOL` is the tool-tree marker the chokepoint stamps on every
         # tree it spawns, for the runtime reconciler to read back.
-        # `_KIROCREW_USERNS_FAILURE` is the Linux launcher's permanent userns verdict,
+        # `_AJCREW_USERNS_FAILURE` is the Linux launcher's permanent userns verdict,
         # written only when this process recorded one (a sandboxed host, or one whose
         # kernel refuses unshare). `_set_inherited_userns_failure` overwrites or drops
         # any parent value, so it never carries an inherited one.
-        sandbox_injected = {"KIROCREW_HOST_PID", "KIROCREW_SANDBOX_ACTIVE",
-                            "KIROCREW_SANDBOX_LEVEL", "KIROCREW_SANDBOX_TOOL",
-                            "KIROCREW_SPAWNED", "GIT_SSH_COMMAND", "GRADLE_OPTS",
-                            "_KIROCREW_USERNS_FAILURE"}
+        sandbox_injected = {"AJCREW_HOST_PID", "AJCREW_SANDBOX_ACTIVE",
+                            "AJCREW_SANDBOX_LEVEL", "AJCREW_SANDBOX_TOOL",
+                            "AJCREW_SPAWNED", "GIT_SSH_COMMAND", "GRADLE_OPTS",
+                            "_AJCREW_USERNS_FAILURE"}
         shell_added = {"PWD", "SHLVL", "_"}
         # macOS injects __CF_USER_TEXT_ENCODING into every spawned process
         # unconditionally (CoreFoundation per-user encoding preference). This is

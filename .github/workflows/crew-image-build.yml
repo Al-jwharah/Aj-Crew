@@ -33,7 +33,7 @@ name: Crew Image Build
 #
 # WHO OWNS IT. Everything this lane builds and runs is the aws-control app's: the
 # recipes under its crew/runtime/ and the producers and planner under its
-# crew/scripts/. Kiro Crew core does not depend on any of it, so this file leaves
+# crew/scripts/. Aj Crew core does not depend on any of it, so this file leaves
 # the repository together with that app (docs/system-specs/modules/aws-control.md).
 
 on:
@@ -45,7 +45,7 @@ on:
       # The recipes themselves, their .dockerignore, container/requirements.txt,
       # the container/ tree the base image COPYs, and the supervisor module the
       # layer producer imports to recompute a bundle digest -- all under here.
-      - "src/kiro_crew/apps/builtins/aws_control/crew/runtime/**"
+      - "src/aj_crew/apps/builtins/aws_control/crew/runtime/**"
       # The producers this lane invokes, and the file that decides what to
       # invoke them with. A glob rather than a list of names on purpose: which
       # scripts get run is DERIVED from what the recipes cite, so a name written
@@ -55,8 +55,8 @@ on:
       # not drag a 1.5 GB build onto a pull request that cannot affect it.
       # test_crew_image_build_plan.py holds every cited producer to being matched
       # by one of these patterns, and an unrelated script to NOT being matched.
-      - "src/kiro_crew/apps/builtins/aws_control/crew/scripts/build*image*.sh"
-      - "src/kiro_crew/apps/builtins/aws_control/crew/scripts/crew_image_build_plan.py"
+      - "src/aj_crew/apps/builtins/aws_control/crew/scripts/build*image*.sh"
+      - "src/aj_crew/apps/builtins/aws_control/crew/scripts/crew_image_build_plan.py"
       # The wheel the base image installs is built from a checkout by its
       # producer, so the packaging surface can break the build: what gets built
       # (pyproject.toml, setup.py), what ships in it (MANIFEST.in), and the
@@ -71,9 +71,9 @@ on:
   # The paths above are NOT provably complete, and this is the honest backstop
   # rather than a claim that they are. The build reaches outside the repository
   # -- a Debian package set, PyPI, and the pinned kiro-cli tarball -- and the
-  # image's own `import kiro_crew.cli` can be broken by any module in that
+  # image's own `import aj_crew.cli` can be broken by any module in that
   # import graph. That last one is already exercised by every backend lane on
-  # every PR, so widening the trigger to `src/kiro_crew/**` would run a
+  # every PR, so widening the trigger to `src/aj_crew/**` would run a
   # ~3-minute build on nearly every pull request to re-check something already
   # covered. A weekly run catches the rest without that cost.
   schedule:
@@ -90,14 +90,14 @@ concurrency:
 jobs:
   build:
     name: Build every crew image recipe
-    # `kirocrew-runners` larger-runner group, reached by its runner LABEL rather
+    # `ajcrew-runners` larger-runner group, reached by its runner LABEL rather
     # than by GROUP. A fork PR into this repository arrives on `pull_request`,
     # which executes here, so it takes the group too; the fallback is for a fork
     # running this file in its own repository, where an organization runner group
     # is unreachable and a job asking for a label no runner there carries would
     # wait out GitHub's pending limit instead of running. See "Larger runners
     # for the review lanes and CodeQL" in docs/ci/ci-and-reviews.md.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     # A fork that enables Actions should not spend its own minutes on a weekly
     # lane it never asked for; a fork's pull_request runs are unaffected.
     # It also skips while the PR is a draft; `ready_for_review` above runs it
@@ -115,7 +115,7 @@ jobs:
       REGISTRY: 127.0.0.1:5000
       REGISTRY_CONTAINER: crew-image-build-registry
       # The planner, which the recipes' producers sit beside.
-      BUILD_PLAN: src/kiro_crew/apps/builtins/aws_control/crew/scripts/crew_image_build_plan.py
+      BUILD_PLAN: src/aj_crew/apps/builtins/aws_control/crew/scripts/crew_image_build_plan.py
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -182,7 +182,7 @@ jobs:
             echo "::group::${role} ${path} via ${producer}"
             case "$role" in
               base)
-                TAG="${REGISTRY}/kirocrew-crew-base:ci"
+                TAG="${REGISTRY}/ajcrew-crew-base:ci"
                 # The producer builds the wheel, stages it, builds the image and
                 # cross-checks that the image does not lie about its own
                 # architecture. All of that is coverage this lane gets for free

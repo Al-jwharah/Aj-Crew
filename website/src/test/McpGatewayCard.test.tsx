@@ -8,11 +8,11 @@ describe('backendRowKey', () => {
 
   it('falls back to the row index when pid is null so keys stay unique', () => {
     // Two just-spawned backends of the same server both have pid=null; keying on
-    // pid alone would collide to "kirocrew-core-null" and trigger React key warnings.
-    const a = backendRowKey({ server: 'kirocrew-core', pid: null }, 0)
-    const b = backendRowKey({ server: 'kirocrew-core', pid: null }, 1)
-    expect(a).toBe('kirocrew-core-i0')
-    expect(b).toBe('kirocrew-core-i1')
+    // pid alone would collide to "ajcrew-core-null" and trigger React key warnings.
+    const a = backendRowKey({ server: 'ajcrew-core', pid: null }, 0)
+    const b = backendRowKey({ server: 'ajcrew-core', pid: null }, 1)
+    expect(a).toBe('ajcrew-core-i0')
+    expect(b).toBe('ajcrew-core-i1')
     expect(a).not.toBe(b)
   })
 })

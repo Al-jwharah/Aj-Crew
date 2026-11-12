@@ -18,12 +18,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from body_stream_helpers import attach_body
 
-from kiro_crew.dashboard import chat_cards
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.history import ConversationLog
-from kiro_crew.vector_memory import LessonWriteOutcome, LessonWriteResult
+from aj_crew.dashboard import chat_cards
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.history import ConversationLog
+from aj_crew.vector_memory import LessonWriteOutcome, LessonWriteResult
 
-_CRON_LOGGER = "kiro_crew.dashboard.handlers.cron"
+_CRON_LOGGER = "aj_crew.dashboard.handlers.cron"
 SLOT = "chat-1"
 AGENT_KEY = "dashboard_chat-1"
 
@@ -123,7 +123,7 @@ class TestLessonsRouteDrawsTheRow:
         slot: Any = None,
     ) -> tuple[Any, MagicMock]:
         """With ``slot``, the real ``record_lesson_saved`` draws into that slot."""
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         request = MagicMock()
         state = MagicMock()
@@ -152,7 +152,7 @@ class TestLessonsRouteDrawsTheRow:
             patch.object(cron, "_embed_lesson_bounded", return_value=None),
             patch.object(cron, "_sel"),
             patch(
-                "kiro_crew.dashboard.session_control.caller_slot_key",
+                "aj_crew.dashboard.session_control.caller_slot_key",
                 return_value=slot_key,
             ),
             patch.object(chat_cards, "load_conversation_window", new=AsyncMock()),
@@ -199,13 +199,13 @@ class TestLessonsRouteDrawsTheRow:
         }
 
     async def test_the_helper_swallows_a_failure(self, caplog: pytest.LogCaptureFixture) -> None:
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         request = MagicMock()
         request.get = lambda key, default=None: True if key == "internal_auth" else default
         with (
             caplog.at_level(logging.WARNING, logger=_CRON_LOGGER),
-            patch("kiro_crew.dashboard.session_control.caller_slot_key", return_value=SLOT),
+            patch("aj_crew.dashboard.session_control.caller_slot_key", return_value=SLOT),
             patch.object(
                 chat_cards,
                 "load_conversation_window",

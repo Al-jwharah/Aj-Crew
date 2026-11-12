@@ -24,7 +24,7 @@ vi.mock('../components/AgentSelector', () => ({ default: () => <select data-test
 vi.mock('../api/client', () => ({
   api: {
     taskRunnerStatus: vi.fn().mockResolvedValue({ running: false, available: true, runs: [] }),
-    kirocrewAgents: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
+    ajcrewAgents: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
     agentCatalog: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
     refineStatus: vi.fn().mockResolvedValue({ status: 'idle', text: '', error: '' }),
     cancelTaskRunner: vi.fn().mockResolvedValue({ ok: true }),

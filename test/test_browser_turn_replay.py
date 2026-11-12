@@ -25,14 +25,14 @@ from aiohttp.test_utils import TestClient, TestServer
 from browser_live_helpers import FakeRelay, frame_event, make_stream
 from PIL import Image
 
-from kiro_crew.browser_harness import live_hub as lh
-from kiro_crew.browser_harness import recording as rc
-from kiro_crew.browser_harness import screencast as sc
-from kiro_crew.browser_harness.takeover import parse_input_event
-from kiro_crew.dashboard.handlers import browser_live as live_mod
-from kiro_crew.dashboard.handlers.sessions_parts import slot_teardown
-from kiro_crew.dashboard.routes import browser_live as route_slice
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.browser_harness import live_hub as lh
+from aj_crew.browser_harness import recording as rc
+from aj_crew.browser_harness import screencast as sc
+from aj_crew.browser_harness.takeover import parse_input_event
+from aj_crew.dashboard.handlers import browser_live as live_mod
+from aj_crew.dashboard.handlers.sessions_parts import slot_teardown
+from aj_crew.dashboard.routes import browser_live as route_slice
+from aj_crew.testing.wait import async_wait_until
 
 pytestmark = pytest.mark.asyncio
 
@@ -61,7 +61,7 @@ class Clock:
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     rc.reset_recorder()
     lh.reset_live_hub()
     yield
@@ -523,7 +523,7 @@ async def test_hiding_a_settled_recorder_cast_puts_it_back_on_the_ladder_picture
 
 async def test_the_hub_sink_records_through_the_real_recorder(tmp_path: Path) -> None:
     """The real recorder behind the hub's sink: ``records`` follows an open turn."""
-    from kiro_crew.browser_harness import live_hub
+    from aj_crew.browser_harness import live_hub
 
     rec, store, _clock = make_recorder(tmp_path)
     hub = SimpleNamespace(recorder=rec)
@@ -896,7 +896,7 @@ def test_recording_off_records_nothing(tmp_path: Path) -> None:
 
 
 def test_the_config_section_drives_the_recorder() -> None:
-    from kiro_crew.config.sections import BrowserConfig
+    from aj_crew.config.sections import BrowserConfig
 
     cfg = SimpleNamespace(
         browser=BrowserConfig.from_raw(
@@ -1174,8 +1174,8 @@ async def test_the_recordings_root_is_hidden_from_every_sandbox_and_file_tool() 
     skip; the root is created on a session's first recorded turn, so it must also
     be precreated for the mask to have a name to bind over.
     """
-    from kiro_crew import sandbox
-    from kiro_crew.security.paths import sensitive_home_dirs
+    from aj_crew import sandbox
+    from aj_crew.security.paths import sensitive_home_dirs
 
     assert rc.RECORDINGS_DIRNAME in sandbox._CREW_HIDDEN_LEAVES
     assert rc.RECORDINGS_DIRNAME in sandbox._CREW_PRECREATE_HIDDEN_DIR_LEAVES

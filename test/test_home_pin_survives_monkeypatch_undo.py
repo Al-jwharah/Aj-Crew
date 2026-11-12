@@ -2,9 +2,9 @@
 
 Three barriers, tested here because each one alone has a hole the next one covers:
 
-1. The rootdir ``KIROCREW_HOME`` pin uses a PRIVATE ``pytest.MonkeyPatch``, so a test
+1. The rootdir ``AJCREW_HOME`` pin uses a PRIVATE ``pytest.MonkeyPatch``, so a test
    calling ``undo()`` on the shared function-scoped instance cannot pop it.
-2. ``conftest`` sets ``KIROCREW_HOME`` at IMPORT time when it is unset, so "unset" --
+2. ``conftest`` sets ``AJCREW_HOME`` at IMPORT time when it is unset, so "unset" --
    the state that makes ``config.paths`` fall through to ``~/.kiro/crew`` -- is not a
    reachable state for any fixture, patched or not.
 3. ``pytest_configure`` refuses the session outright when the variable names a real
@@ -30,17 +30,17 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.config.loader import config_dir
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.config.loader import config_dir
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
 #: The homes the suite must refuse, stated HERE rather than imported from the rootdir
 #: conftest. Reading its private tuple would make these tests agree with whatever that
 #: list happens to say; naming the paths independently is what lets them catch an entry
-#: being dropped from it. ~/.kirocrew is the deprecated location and still holds real
+#: being dropped from it. ~/.ajcrew is the deprecated location and still holds real
 #: data on installs predating the move, so it is just as destructive a target.
-_GUARDED_HOMES = (Path.home() / ".kiro" / "crew", Path.home() / ".kirocrew")
+_GUARDED_HOMES = (Path.home() / ".kiro" / "crew", Path.home() / ".ajcrew")
 
 
 def _real_home() -> Path:
@@ -53,13 +53,13 @@ def _real_home() -> Path:
 def test_undo_on_the_shared_monkeypatch_does_not_unpin_the_data_home(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    pinned = os.environ["KIROCREW_HOME"]
+    pinned = os.environ["AJCREW_HOME"]
     assert Path(pinned).resolve() != _real_home().resolve()
 
-    monkeypatch.setenv("KIROCREW_SOME_UNRELATED_VAR", "1")
+    monkeypatch.setenv("AJCREW_SOME_UNRELATED_VAR", "1")
     monkeypatch.undo()
 
-    assert os.environ.get("KIROCREW_HOME") == pinned
+    assert os.environ.get("AJCREW_HOME") == pinned
     assert config_dir().resolve() != _real_home().resolve()
     assert str(config_dir().resolve()).startswith(str(Path(pinned).resolve()))
 
@@ -73,8 +73,8 @@ def test_a_test_can_still_override_the_pin_with_its_own_setenv(
     nothing can override, which would break every test that chooses its own home.
     """
     mine = tmp_path / "my-home"
-    monkeypatch.setenv("KIROCREW_HOME", str(mine))
-    import kiro_crew.config.paths as paths
+    monkeypatch.setenv("AJCREW_HOME", str(mine))
+    import aj_crew.config.paths as paths
 
     monkeypatch.setattr(paths, "_resolved_home", None, raising=False)
     assert config_dir().resolve() == mine.resolve()
@@ -88,8 +88,8 @@ def test_shared_undo_preserves_every_host_path_and_spawn_guard(monkeypatch) -> N
     """
     import asyncio.base_events
 
-    from kiro_crew import agent_state, sandbox, subagent_persistence
-    from kiro_crew.config import paths
+    from aj_crew import agent_state, sandbox, subagent_persistence
+    from aj_crew.config import paths
 
     root = _load_root_conftest()
     targets = [
@@ -120,16 +120,16 @@ def test_shared_undo_preserves_every_host_path_and_spawn_guard(monkeypatch) -> N
     env = {
         key: os.environ.get(key)
         for key in (
-            "KIROCREW_HOME",
-            "KIROCREW_WORKSPACE",
+            "AJCREW_HOME",
+            "AJCREW_WORKSPACE",
             "XDG_CONFIG_HOME",
             "KIRO_HOME",
-            "KIROCREW_SKIP_MODEL_DOWNLOAD",
-            "KIROCREW_TELEMETRY",
+            "AJCREW_SKIP_MODEL_DOWNLOAD",
+            "AJCREW_TELEMETRY",
             "OLLAMA_MODELS",
         )
     }
-    monkeypatch.setenv("KIROCREW_SOME_UNRELATED_VAR", "1")
+    monkeypatch.setenv("AJCREW_SOME_UNRELATED_VAR", "1")
     monkeypatch.undo()
 
     for module, attr, value in protected:
@@ -182,9 +182,9 @@ def test_the_import_time_floor_leaves_no_unset_state_to_fall_back_from() -> None
     probe = (
         "import sys; sys.path.insert(0, %r)\n"
         "import conftest, os\n"
-        "print(os.environ['KIROCREW_HOME'])\n" % str(_REPO_ROOT)
+        "print(os.environ['AJCREW_HOME'])\n" % str(_REPO_ROOT)
     )
-    env = {k: v for k, v in os.environ.items() if k != "KIROCREW_HOME"}
+    env = {k: v for k, v in os.environ.items() if k != "AJCREW_HOME"}
     # An inherited temp base may itself be the live Crew home. The import-time
     # floor must choose from its own platform candidates and never ask
     # tempfile's environment-sensitive default where to create the directory.
@@ -213,18 +213,18 @@ def test_an_operator_chosen_home_is_left_alone() -> None:
     The floor covers only the unset case. Overriding a value the operator chose would
     silently move where a debugging run writes.
     """
-    chosen = "/tmp/kirocrew-operator-chosen-home"
+    chosen = "/tmp/ajcrew-operator-chosen-home"
     probe = (
         "import sys; sys.path.insert(0, %r)\n"
         "import conftest, os\n"
-        "print(os.environ['KIROCREW_HOME'])\n" % str(_REPO_ROOT)
+        "print(os.environ['AJCREW_HOME'])\n" % str(_REPO_ROOT)
     )
     out = subprocess.run(
         [sys.executable, "-c", probe],
         capture_output=True,
         **UTF8_TEXT,
         cwd=str(_REPO_ROOT),
-        env={**os.environ, "KIROCREW_HOME": chosen},
+        env={**os.environ, "AJCREW_HOME": chosen},
         timeout=120,
     )
     assert out.returncode == 0, out.stderr
@@ -232,12 +232,12 @@ def test_an_operator_chosen_home_is_left_alone() -> None:
 
 
 def _probe_inherited_home(tmp_path: Path, *, agent: bool) -> "tuple[Path, Path, str]":
-    """Import the rootdir conftest in a child whose ``KIROCREW_HOME`` is its live home.
+    """Import the rootdir conftest in a child whose ``AJCREW_HOME`` is its live home.
 
     The child's ``HOME`` is a directory under ``tmp_path``, so the "live" home it
     inherits is that fake home's ``.kiro/crew`` and the operator's real one is never
-    named. ``agent`` adds the ``KIROCREW_SCRATCH`` every gateway-spawned agent carries.
-    Returns the fake live home, the child's ``TMPDIR`` and the ``KIROCREW_HOME`` the
+    named. ``agent`` adds the ``AJCREW_SCRATCH`` every gateway-spawned agent carries.
+    Returns the fake live home, the child's ``TMPDIR`` and the ``AJCREW_HOME`` the
     child ended up with.
     """
     home = tmp_path / "h"
@@ -248,12 +248,12 @@ def _probe_inherited_home(tmp_path: Path, *, agent: bool) -> "tuple[Path, Path, 
     probe = (
         "import sys; sys.path.insert(0, %r)\n"
         "import conftest, os\n"
-        "print(os.environ['KIROCREW_HOME'])\n" % str(_REPO_ROOT)
+        "print(os.environ['AJCREW_HOME'])\n" % str(_REPO_ROOT)
     )
-    env = {k: v for k, v in os.environ.items() if k != "KIROCREW_SCRATCH"}
-    env.update({"HOME": str(home), "KIROCREW_HOME": str(live), "TMPDIR": str(tmpdir)})
+    env = {k: v for k, v in os.environ.items() if k != "AJCREW_SCRATCH"}
+    env.update({"HOME": str(home), "AJCREW_HOME": str(live), "TMPDIR": str(tmpdir)})
     if agent:
-        env["KIROCREW_SCRATCH"] = str(tmpdir)
+        env["AJCREW_SCRATCH"] = str(tmpdir)
     out = subprocess.run(
         [sys.executable, "-c", probe],
         capture_output=True,
@@ -283,7 +283,7 @@ def test_an_agent_that_inherits_the_live_home_gets_a_floor_under_tmpdir(tmp_path
 
 
 def test_a_person_who_exports_the_live_home_still_reaches_the_refusal(tmp_path: Path) -> None:
-    """Without ``KIROCREW_SCRATCH`` the value is a choice, so it is kept for the guard to refuse."""
+    """Without ``AJCREW_SCRATCH`` the value is a choice, so it is kept for the guard to refuse."""
     live, _tmpdir, chosen = _probe_inherited_home(tmp_path, agent=False)
     assert chosen == str(live)
 
@@ -301,15 +301,15 @@ def test_a_floor_inside_a_managed_scratch_tree_passes_the_guard() -> None:
     own = live / "scratch" / "runtime-0"
     other = live / "scratch" / "runtime-1"
     with mock.patch.object(floor_home, "_OWN_SCRATCH_DIRS", (own.resolve(),)):
-        with mock.patch.dict(os.environ, {"KIROCREW_HOME": str(own / "kc-pytest-u-1-home-x")}):
+        with mock.patch.dict(os.environ, {"AJCREW_HOME": str(own / "kc-pytest-u-1-home-x")}):
             root._refuse_a_real_data_home()
         # Another session's tree is live data to this run: the suite deletes there.
-        with mock.patch.dict(os.environ, {"KIROCREW_HOME": str(other / "kc-pytest-u-2-home-y")}):
-            with pytest.raises(pytest.UsageError, match="env -u KIROCREW_HOME"):
+        with mock.patch.dict(os.environ, {"AJCREW_HOME": str(other / "kc-pytest-u-2-home-y")}):
+            with pytest.raises(pytest.UsageError, match="env -u AJCREW_HOME"):
                 root._refuse_a_real_data_home()
     with mock.patch.object(floor_home, "_OWN_SCRATCH_DIRS", ((live / "scratch").resolve(),)):
-        with mock.patch.dict(os.environ, {"KIROCREW_HOME": str(live / "scratch")}):
-            with pytest.raises(pytest.UsageError, match="env -u KIROCREW_HOME"):
+        with mock.patch.dict(os.environ, {"AJCREW_HOME": str(live / "scratch")}):
+            with pytest.raises(pytest.UsageError, match="env -u AJCREW_HOME"):
                 root._refuse_a_real_data_home()
 
 
@@ -374,7 +374,7 @@ def _load_root_conftest():
 def test_the_guard_refuses_every_shape_that_reaches_live_data(shape: str) -> None:
     """The guard is exercised IN-PROCESS, never by aiming a real session at live data.
 
-    Deliberately not a subprocess. Spawning ``pytest`` with ``KIROCREW_HOME`` set to
+    Deliberately not a subprocess. Spawning ``pytest`` with ``AJCREW_HOME`` set to
     the operator's real home makes the guard under test the ONLY thing standing between
     the suite and live data, and it is already too late by then: the child loads the
     real ``config.json`` before ``pytest_configure`` runs, so the read side reaches
@@ -393,7 +393,7 @@ def test_the_guard_refuses_every_shape_that_reaches_live_data(shape: str) -> Non
         "home_itself": Path.home(),
         "child": live / "workspace",
     }[shape]
-    with mock.patch.dict(os.environ, {"KIROCREW_HOME": str(target)}):
+    with mock.patch.dict(os.environ, {"AJCREW_HOME": str(target)}):
         with pytest.raises(pytest.UsageError, match="live data home"):
             root._refuse_a_real_data_home()
 
@@ -401,14 +401,14 @@ def test_the_guard_refuses_every_shape_that_reaches_live_data(shape: str) -> Non
 def test_the_guard_accepts_a_scratch_home(tmp_path: Path) -> None:
     """The refusal must not be so broad that no session can run at all."""
     root = _load_root_conftest()
-    with mock.patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path / "scratch")}):
+    with mock.patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path / "scratch")}):
         root._refuse_a_real_data_home()
 
 
 def test_the_deprecated_home_is_guarded_too() -> None:
-    """``~/.kirocrew`` predates the move and still holds real data on old installs."""
+    """``~/.ajcrew`` predates the move and still holds real data on old installs."""
     root = _load_root_conftest()
-    with mock.patch.dict(os.environ, {"KIROCREW_HOME": str(_GUARDED_HOMES[1])}):
+    with mock.patch.dict(os.environ, {"AJCREW_HOME": str(_GUARDED_HOMES[1])}):
         with pytest.raises(pytest.UsageError, match="live data home"):
             root._refuse_a_real_data_home()
 
@@ -416,16 +416,16 @@ def test_the_deprecated_home_is_guarded_too() -> None:
 def test_the_guarded_homes_match_what_the_product_resolves() -> None:
     """The conftest's literals must name the homes the product actually uses.
 
-    The guard cannot import ``kiro_crew`` (the rootdir conftest is imported before
+    The guard cannot import ``aj_crew`` (the rootdir conftest is imported before
     every collection), so it spells the two paths literally. This is the cross-check
     that keeps them honest: a future data-home move would otherwise update
     ``config.paths`` and leave a fail-open guard naming a directory nobody uses.
     """
     root = _load_root_conftest()
-    from kiro_crew.config import paths
+    from aj_crew.config import paths
 
     with mock.patch.dict(os.environ, {}, clear=False):
-        os.environ.pop("KIROCREW_HOME", None)
+        os.environ.pop("AJCREW_HOME", None)
         paths._resolved_home = None
         default_home = paths._default_home()
     assert default_home.resolve() in {p.resolve() for p in root._REAL_DATA_HOMES}
@@ -435,7 +435,7 @@ def test_the_guarded_homes_match_what_the_product_resolves() -> None:
 
         account_home = Path(pwd.getpwuid(os.getuid()).pw_dir)
         if account_home.resolve() != Path.home().resolve():
-            expected.update((account_home / ".kiro" / "crew", account_home / ".kirocrew"))
+            expected.update((account_home / ".kiro" / "crew", account_home / ".ajcrew"))
     # Equality catches both a missing live-home guard and an unintended extra refusal root.
     assert expected == set(root._REAL_DATA_HOMES)
 

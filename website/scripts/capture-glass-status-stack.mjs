@@ -4,8 +4,8 @@
  * Command Center dock, the held-delivery line and the queued-message card, all
  * raised at once above the composer over a dense transcript. Photographs the
  * REAL built SPA (website/dist) over a stubbed dashboard API in both
- * polarities -- `dark` IS the kiro-dark theme (the default colour theme is
- * `kiro`, so the `dark` mode resolves to `data-theme="kiro-dark"`), the theme
+ * polarities -- `dark` IS the aj-dark theme (the default colour theme is
+ * `kiro`, so the `dark` mode resolves to `data-theme="aj-dark"`), the theme
  * whose queued card used to carry its own colour override -- and asserts that every one of those panes renders a
  * backdrop blur layer -- the thing the old `bg-accent/10` / `bg-card` boxes
  * never had. Scenes:
@@ -46,7 +46,7 @@ const slots = [{
   running: true,
   last_message: 'Working through the stack.',
   messages: 40,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',
@@ -81,13 +81,13 @@ const FRAMES = {
     { id: 't4', text: 'Convert the workflow bar', completed: false },
     { id: 't5', text: 'Photograph the stack', completed: false },
   ] } } },
-  spawnA: { type: 'subagent_spawn', data: { slot: SLOT, id: 'ag-1', task: 'Review the dock from a new-user perspective', agent: 'kirocrew' } },
-  spawnB: { type: 'subagent_spawn', data: { slot: SLOT, id: 'ag-2', task: 'Measure the tint over the transcript', agent: 'kirocrew' } },
+  spawnA: { type: 'subagent_spawn', data: { slot: SLOT, id: 'ag-1', task: 'Review the dock from a new-user perspective', agent: 'ajcrew' } },
+  spawnB: { type: 'subagent_spawn', data: { slot: SLOT, id: 'ag-2', task: 'Measure the tint over the transcript', agent: 'ajcrew' } },
   toolA: { type: 'subagent_tool', data: { slot: SLOT, id: 'ag-1', tool: 'read website/src/components/Glass.tsx', turns: 3, tool_count: 7 } },
   wfStart: { type: 'workflow_run_event', data: { run_id: 'wf-glass', session_key: SLOT, type: 'run_started', ts: now(), data: { name: 'Glass status stack review' } } },
   wfPhase: { type: 'workflow_run_event', data: { run_id: 'wf-glass', session_key: SLOT, type: 'phase_started', ts: now(), data: { title: 'Photograph both polarities' } } },
   queued: { type: 'queue_push', data: { slot: SLOT, content: '等你这轮跑完，把浅色也截一遍。', ts: new Date().toISOString(), queue_id: 'q-glass-1' } },
-  queued2: { type: 'queue_push', data: { slot: SLOT, content: '然后把 kiro-dark 也拍一张，队列卡片那行。', ts: new Date().toISOString(), queue_id: 'q-glass-2' } },
+  queued2: { type: 'queue_push', data: { slot: SLOT, content: '然后把 aj-dark 也拍一张，队列卡片那行。', ts: new Date().toISOString(), queue_id: 'q-glass-2' } },
   queued3: { type: 'queue_push', data: { slot: SLOT, content: '最后展开任务面板和 workflow 那一行。', ts: new Date().toISOString(), queue_id: 'q-glass-3' } },
   delivered: { type: 'queue_push', data: { slot: SLOT, content: '[Subagent completion event] ag-0 finished: the dock reads as one material now.', ts: new Date().toISOString(), queue_id: 'q-glass-9' } },
 }
@@ -161,8 +161,8 @@ async function main() {
   }
 
   // `theme` is the MODE the stub seeds (`mc-theme`); the colour theme stays the
-  // default `kiro`, so these two resolve to `kiro-dark` and `kiro-light`. A
-  // colour-theme id here would compose to `data-theme="kiro-kiro-dark"` -- no palette.
+  // default `kiro`, so these two resolve to `aj-dark` and `aj-light`. A
+  // colour-theme id here would compose to `data-theme="kiro-aj-dark"` -- no palette.
   for (const theme of ['dark', 'light']) {
     // -- stack: everything raised ------------------------------------------
     {

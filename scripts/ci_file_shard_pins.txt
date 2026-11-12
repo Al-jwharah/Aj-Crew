@@ -2,15 +2,15 @@
 # From 6 run(s). Each listed file runs on the shard named; every
 # other file keeps its path-hash shard (scripts/ci_file_shards.py).
 # shards: 8
-7 src/kiro_crew/apps/builtins/auto_improvement/tests/test_auto_improvement_members.py
-4 src/kiro_crew/apps/builtins/aws_control/crew/packaging/tests/test_pipeline_composition.py
-4 src/kiro_crew/apps/builtins/aws_control/crew/packaging/tests/test_report_ownership_and_budgets.py
-2 src/kiro_crew/apps/builtins/aws_control/crew/packaging/tests/test_transaction_cleanup_and_scan_budget.py
-2 src/kiro_crew/apps/builtins/code_review_sage/tests/test_review_driver.py
-4 src/kiro_crew/apps/builtins/ops_mission_control/tests/test_routes.py
-5 src/kiro_crew/apps/builtins/ops_mission_control/tests/test_routes_composition_contract.py
-4 src/kiro_crew/apps/builtins/spec_builder/tests/test_routes_handoff.py
-1 src/kiro_crew/apps/builtins/workflows/tests/test_workflows_server_coverage.py
+7 src/aj_crew/apps/builtins/auto_improvement/tests/test_auto_improvement_members.py
+4 src/aj_crew/apps/builtins/aws_control/crew/packaging/tests/test_pipeline_composition.py
+4 src/aj_crew/apps/builtins/aws_control/crew/packaging/tests/test_report_ownership_and_budgets.py
+2 src/aj_crew/apps/builtins/aws_control/crew/packaging/tests/test_transaction_cleanup_and_scan_budget.py
+2 src/aj_crew/apps/builtins/code_review_sage/tests/test_review_driver.py
+4 src/aj_crew/apps/builtins/ops_mission_control/tests/test_routes.py
+5 src/aj_crew/apps/builtins/ops_mission_control/tests/test_routes_composition_contract.py
+4 src/aj_crew/apps/builtins/spec_builder/tests/test_routes_handoff.py
+1 src/aj_crew/apps/builtins/workflows/tests/test_workflows_server_coverage.py
 4 test/gui_user/test_friction.py
 6 test/gui_user/test_scenarios_and_report.py
 8 test/metrics/test_business_counters.py

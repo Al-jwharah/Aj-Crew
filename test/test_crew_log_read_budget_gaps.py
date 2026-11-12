@@ -18,26 +18,26 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, checkpoint
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import read_budget
-from kiro_crew.crew_log import store as crew_log_store
-from kiro_crew.crew_log.schema import KIND_MEMBER, Ref
-from kiro_crew.eventlog.log import MemberLog
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, checkpoint
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import read_budget
+from aj_crew.crew_log import store as crew_log_store
+from aj_crew.crew_log.schema import KIND_MEMBER, Ref
+from aj_crew.eventlog.log import MemberLog
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 SLOT = "chat-readbudget-gaps"
 BIG = 8 * read_budget.K
-SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     _floor_monkeypatch.delenv(read_budget.MODE_ENV, raising=False)
     _floor_monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     crew_log_emit.reset_caches()
@@ -214,8 +214,8 @@ def test_child_process_reads_of_every_kind_are_not_counted():
     read_budget.mark_gateway_process()
     child = (
         "import json\n"
-        "from kiro_crew import crew_log as lg\n"
-        "from kiro_crew.crew_log import CrewLog, checkpoint, projection, read_budget\n"
+        "from aj_crew import crew_log as lg\n"
+        "from aj_crew.crew_log import CrewLog, checkpoint, projection, read_budget\n"
         "h = CrewLog.open(lg.KIND_SESSION, 'acp-big')\n"
         "h.page(None, 10); h.get(5); list(h.iter_from(1))\n"
         "projection.fold_session('acp-big', ('status',))\n"

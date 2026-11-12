@@ -31,10 +31,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-import kiro_crew.dashboard.handlers.files as files_mod
-from kiro_crew import platform_compat
-from kiro_crew.atomic_write import atomic_write
-from kiro_crew.dashboard.handlers.files import api_directory_upload
+import aj_crew.dashboard.handlers.files as files_mod
+from aj_crew import platform_compat
+from aj_crew.atomic_write import atomic_write
+from aj_crew.dashboard.handlers.files import api_directory_upload
 
 
 def _make_app() -> web.Application:
@@ -109,7 +109,7 @@ async def test_directory_upload_still_writes_for_the_owner(tmp_path: Path, mock_
 @pytest.fixture()
 def mock_sel():
     """Stub the SEL audit sink so upload audit calls don't blow up."""
-    with patch("kiro_crew.dashboard.handlers.files._sel") as m:
+    with patch("aj_crew.dashboard.handlers.files._sel") as m:
         instance = MagicMock()
         m.return_value = instance
         yield instance
@@ -135,7 +135,7 @@ async def _upload_raw_filename(
     filename: str,
 ) -> aiohttp.ClientResponse:
     """Send the filename verbatim instead of applying FormData's quoting."""
-    boundary = "kirocrew-directory-upload-test"
+    boundary = "ajcrew-directory-upload-test"
     body = (
         f"--{boundary}\r\n".encode()
         + (
@@ -426,7 +426,7 @@ async def test_control_character_filename_is_rejected_on_every_platform(
 async def test_empty_filename_is_rejected_as_invalid_filename(
     tmp_path: Path, mock_sel, disposition: str
 ) -> None:
-    boundary = "kirocrew-directory-upload-test"
+    boundary = "ajcrew-directory-upload-test"
     body = (
         f"--{boundary}\r\nContent-Disposition: {disposition}\r\n"
         "Content-Type: text/plain\r\n\r\nmust not be published\r\n"
@@ -512,7 +512,7 @@ async def test_iwork_document_refusal_names_the_export_remedy(tmp_path: Path, mo
 
 @pytest.mark.asyncio
 async def test_size_limit_is_enforced(tmp_path: Path, mock_sel, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.files.upload_max_bytes", lambda: 8)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.files.upload_max_bytes", lambda: 8)
     async with TestClient(TestServer(_make_app())) as client:
         resp = await _upload(
             client, directory=str(tmp_path), content=b"way too many bytes", filename="big.txt"
@@ -590,7 +590,7 @@ async def test_sensitive_directory_is_rejected(tmp_path: Path, mock_sel, monkeyp
     sensitive_dir = tmp_path / "sensitive"
     sensitive_dir.mkdir()
     monkeypatch.setattr(
-        "kiro_crew.hooks.is_sensitive_path",
+        "aj_crew.hooks.is_sensitive_path",
         lambda p: os.path.realpath(p) == os.path.realpath(str(sensitive_dir)),
     )
     async with TestClient(TestServer(_make_app())) as client:
@@ -664,14 +664,14 @@ async def test_path_traversal_in_filename_lands_inside_target_dir(tmp_path: Path
 
 @pytest.fixture()
 def crew_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """A ``KIROCREW_HOME`` override, exercising the REAL ``is_sensitive_path``
+    """An ``AJCREW_HOME`` override, exercising the REAL ``is_sensitive_path``
     gate rather than a monkeypatched stand-in: the keystone leaves
     (``security_policy.json``, ``profiles``, ``admission_policy.json``,
     ``computer_use.json``) live directly under this directory once the
     env var is set, the same way they would under a real crew data home."""
     home = tmp_path / "crew_home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     return home
 
 

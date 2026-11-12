@@ -22,9 +22,9 @@ from session_usage_helpers import (
     _reset_usage_globals,
 )
 
-import kiro_crew.dashboard.handlers.sessions as sessions_mod
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import finished
+import aj_crew.dashboard.handlers.sessions as sessions_mod
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import finished
 
 
 def _park_scrape_for_an_hour(monkeypatch) -> None:
@@ -48,11 +48,11 @@ class TestScrapeIsTheAutomaticFallback:
     """
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture, moved verbatim; no test of the class calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture, moved verbatim; no test of the class calls monkeypatch.undo()
     def _reset(self, monkeypatch):
         _reset_usage_globals()
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.sessions.wrap_argv",
+            "aj_crew.dashboard.handlers.sessions.wrap_argv",
             lambda argv, **k: (list(argv), None),
         )
         # The API path yields no plan -- the case that falls through to the scrape.
@@ -84,7 +84,7 @@ class TestScrapeIsTheAutomaticFallback:
         assert sessions_mod._usage_cache.get("credits_plan") == 10000.0
 
     def test_there_is_no_opt_in_left_to_consult(self):
-        from kiro_crew.config.sections import DashboardConfig
+        from aj_crew.config.sections import DashboardConfig
 
         assert not hasattr(sessions_mod, "_text_scrape_enabled")
         assert "usage_text_scrape_enabled" not in DashboardConfig.__dataclass_fields__
@@ -262,11 +262,11 @@ class TestUnavailableReasonNamesTheRealRemedy:
     """
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture, moved verbatim; no test of the class calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture, moved verbatim; no test of the class calls monkeypatch.undo()
     def _reset(self, monkeypatch):
         _reset_usage_globals()
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.sessions.wrap_argv",
+            "aj_crew.dashboard.handlers.sessions.wrap_argv",
             lambda argv, **k: (list(argv), None),
         )
         monkeypatch.setattr(
@@ -528,12 +528,12 @@ class TestSpawnSuppressesConsoleWindow:
     """
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture, moved verbatim; no test of the class calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture, moved verbatim; no test of the class calls monkeypatch.undo()
     def _bypass_sandbox_wrap(self, monkeypatch):
         # wrap_argv cold-probes the OS sandbox and can raise on a host with no
         # backend; the creationflags on the spawn is what these tests assert on.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.sessions.wrap_argv",
+            "aj_crew.dashboard.handlers.sessions.wrap_argv",
             lambda argv, **k: (list(argv), None),
         )
 
@@ -606,18 +606,18 @@ class TestChatAgentEnginesParse:
     """The engine list is read from the selector's own ``[possible values]`` line."""
 
     def test_lists_the_selector_values(self):
-        from kiro_crew.kiro_cli import chat_agent_engines
+        from aj_crew.kiro_cli import chat_agent_engines
 
         assert chat_agent_engines(_HELP_WITH_V2) == ("v2", "v1", "v3")
 
     def test_a_later_options_values_are_not_the_selectors(self):
         # `--mode` lists "v2" here on purpose: only the selector's block counts.
-        from kiro_crew.kiro_cli import chat_agent_engines
+        from aj_crew.kiro_cli import chat_agent_engines
 
         assert chat_agent_engines(_HELP_WITHOUT_V2) == ("v3", "v1")
 
     def test_no_selector_is_empty(self):
-        from kiro_crew.kiro_cli import chat_agent_engines
+        from aj_crew.kiro_cli import chat_agent_engines
 
         assert chat_agent_engines("Usage: kiro-cli chat [OPTIONS]\n  --agent <AGENT>\n") == ()
 
@@ -632,7 +632,7 @@ class TestUsageScrapeEngineFollowsTheInstalledKiroCli:
     @staticmethod
     def _no_sandbox(monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.sessions.wrap_argv",
+            "aj_crew.dashboard.handlers.sessions.wrap_argv",
             lambda argv, **k: (list(argv), None),
         )
 
@@ -656,7 +656,7 @@ class TestUsageScrapeEngineFollowsTheInstalledKiroCli:
             "--agent-engine",
             "v2",
             "--agent",
-            "kirocrew-lite",
+            "ajcrew-lite",
             "/usage",
         ]
 
@@ -673,7 +673,7 @@ class TestUsageScrapeEngineFollowsTheInstalledKiroCli:
             "chat",
             "--no-interactive",
             "--agent",
-            "kirocrew-lite",
+            "ajcrew-lite",
             "/usage",
         ]
 
@@ -716,7 +716,7 @@ class TestRefreshWithV2Retired:
     def _setup(self, _floor_monkeypatch):
         _reset_usage_globals()
         _floor_monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.sessions.wrap_argv",
+            "aj_crew.dashboard.handlers.sessions.wrap_argv",
             lambda argv, **k: (list(argv), None),
         )
         _floor_monkeypatch.setattr(

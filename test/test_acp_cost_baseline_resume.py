@@ -17,8 +17,8 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import AcpPromptStats
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import AcpPromptStats
 
 # ── AcpPromptStats: begin / restore / apply ──────────────────────────────
 
@@ -42,7 +42,7 @@ class TestBaselineRules:
     def test_restore_without_a_baseline_adopts_the_first_reading(self, caplog):
         stats = AcpPromptStats()
         stats.restore_cost_session("s1")
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.types"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.types"):
             stats.apply_cost_cumulative(5.00)
         assert stats.cost_usd == 0.0
         assert math.isclose(stats.cost_session_usd, 5.00)
@@ -132,7 +132,7 @@ class TestClientRestartSequence:
         )
 
     async def _restart_process(self, client: AcpClient) -> None:
-        with patch("kiro_crew.session._untrack_pid"):
+        with patch("aj_crew.session._untrack_pid"):
             client._reset_state()
         self._attach_process(client)
 

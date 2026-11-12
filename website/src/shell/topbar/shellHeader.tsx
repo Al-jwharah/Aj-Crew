@@ -1,9 +1,9 @@
 import { useEffect, useState, lazy, Suspense, type ReactNode } from 'react'
 import { TOPBAR_FOCUS_Z, TOPBAR_Z } from '../../lib/themeDecorLayer'
-import { kiroUsageSegment } from './kiroUsageReadout'
+import { kiroUsageSegment, usageNeedsAttention } from './kiroUsageReadout'
 import { metricsSegment, MetricsErrorNotice } from './metricsReadout'
 import { ResourcePostureChip } from './resourcePostureChip'
-import { Bell, Fullscreen, Menu, Plug, Unplug } from 'lucide-react'
+import { Bell, Fullscreen, Menu, PanelLeft, Plug, Search, Unplug } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { isWinElectron } from '../../lib/electron'
 import { setNativeBadgeCount } from '../platform/electronBridge'
@@ -156,6 +156,7 @@ export function ShellHeader({ shell }: { shell: AppShell }) {
     setKiroUsageOpen, kiroUsageState, usageSegmentHidden, metrics, capsuleCollapsed, setCapsuleCollapsed,
     capsuleLayoutPulse, pulseCapsuleLayout, sysMetrics, metricsProbeRef, metricsGroupRef, setReportProblemOpen,
     requestFeature, toggleNav, mobileSingle, membersRoute, membersBarPending, mobileNavOpen, topbarSearch,
+    simpleLayout, effectiveCollapsed,
   } = shell
   // Every Explore surface below mounts only while its Feature Preview is on.
   // Turning it off closes an open sheet; turning it on reads milestones once.
@@ -163,7 +164,16 @@ export function ShellHeader({ shell }: { shell: AppShell }) {
   useExplorePreviewSwitch(explore)
   // Desktop only: the phone form has no full-width search to hide (its centre
   // track is already `auto`), and its layout is not this setting's to change.
-  const searchHidden = !isMobile && !topbarSearch
+  // Simple layout (desktop): the bar keeps the sidebar toggle, search and
+  // notifications. The search box becomes an icon beside the bell, the
+  // readouts fold behind the connection glyph, and focus mode, Request a
+  // Feature and Report a problem are reached from the command palette (focus
+  // mode keeps its chord). Whatever needs the person still shows: offline,
+  // resource pressure, a credits limit or lost sign-in, a metrics error, an
+  // update.
+  const searchHidden = !isMobile && (!topbarSearch || simpleLayout)
+  const searchLabel = slotOwners['quick-search'] ? i18nT('app.open_command_bar') : i18nT('app.search_sessions_files_and_commands')
+  const searchTitle = slotOwners['quick-search'] ? i18nT('app.open_command_bar') : i18nT('app.search_everywhere_k')
   return (
     <>
       {/* The one Milestones panel; the top-bar indicator, the phone menu row
@@ -249,6 +259,22 @@ export function ShellHeader({ shell }: { shell: AppShell }) {
               labels therefore consumes the GROUP's width -- which its collapse
               ladder responds to -- instead of eating the centred search's. */}
           {!isMobile && isWinElectron && <WindowsTitlebarMenu />}
+          {simpleLayout && (
+            <button
+              type="button"
+              data-testid="simple-sidebar-toggle"
+              onClick={() => toggleNav()}
+              className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-muted transition-colors hover:bg-bg-hover hover:text-text"
+              aria-label={effectiveCollapsed ? i18nT('app.expand_sidebar') : i18nT('app.collapse_sidebar')}
+              aria-expanded={!effectiveCollapsed}
+              title={effectiveCollapsed ? i18nT('app.expand_sidebar') : i18nT('app.collapse_sidebar')}
+            >
+              {/* One glyph for both states: the label and aria-expanded carry
+                  the state, and the group's contents (which the bar's collapse
+                  ladder measures) do not change on a toggle. */}
+              <PanelLeft size={16} />
+            </button>
+          )}
 
           {/* Route-history Back/Forward (#8258). Desktop layout only: on mobile
               the platform owns Back (left-edge swipe), and the drill-in surfaces
@@ -335,7 +361,10 @@ export function ShellHeader({ shell }: { shell: AppShell }) {
             the toggle, and gives the freed width to the side tracks. The
             command palette's keyboard trigger (useCommandPalette) still opens
             search, or the owning app's launcher. */}
-        {!isMobile && (
+        {/* Simple layout: the centre track is empty (its two controls moved,
+            see above); the spacer is the bar's third in-flow child. */}
+        {simpleLayout && <span aria-hidden="true" data-topbar-overlay data-testid="simple-topbar-centre" className="w-0" />}
+        {!isMobile && !simpleLayout && (
           <div data-topbar-overlay className="flex items-center gap-1.5 min-w-0">
           {/* The trigger IS a Liquid Glass pane (components/Glass.tsx, chip
               recipe) rendered as the button, the same material as the
@@ -569,6 +598,10 @@ export function ShellHeader({ shell }: { shell: AppShell }) {
             }
             if (!capsuleCollapsed) {
             if (!isMobile) segments.push(metricsSegment(metrics, seg))
+            }
+            // Simple layout: a credits reading that needs the person (limit
+            // reached, sign-in lost, read failed) shows through the fold.
+            if (!capsuleCollapsed || (simpleLayout && usageNeedsAttention(kiroUsageState))) {
             const usage = kiroUsageSegment({ kiroUsageState, usageSegmentHidden, setKiroUsageOpen }, seg, isMobile)
             if (usage) segments.push(usage)
             }
@@ -618,7 +651,7 @@ export function ShellHeader({ shell }: { shell: AppShell }) {
               </motion.div>
             )
           })()}
-          {!isMobile && <MetricsErrorNotice metrics={metrics} />}
+          {!isMobile && <MetricsErrorNotice metrics={metrics} throughFold={simpleLayout} />}
           {/* Explore (RFC "Milestones for New-User Feature Discovery" 4.6): its
               own pill next to the readout capsule (after the capsule's own
               metrics notice), not a capsule segment, so the capsule's row of
@@ -649,7 +682,7 @@ export function ShellHeader({ shell }: { shell: AppShell }) {
               channel chip that opens the same Report a Problem flow. Its own
               bordered pill (28px tall, 12px radius), separated from the readout
               capsule (item 2.3). */}
-          {!isMobile && (
+          {!isMobile && !simpleLayout && (
             <span className="tb-drop-feedback flex items-center">
               <FeedbackPill
                 onRequestFeature={requestFeature}
@@ -665,6 +698,18 @@ export function ShellHeader({ shell }: { shell: AppShell }) {
               update pill up the group would hold three controls, so it stands
               down (the chat page's ⋯ menu carries an Explore row). */}
           {explore && isMobile && !updateAvailable && <MilestonesIndicator compact />}
+          {simpleLayout && (
+            <button
+              type="button"
+              data-testid="simple-search"
+              onClick={commandPalette.openPalette}
+              className="flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-muted transition-colors hover:bg-bg-hover hover:text-text"
+              aria-label={searchLabel}
+              title={searchTitle}
+            >
+              <Search size={16} />
+            </button>
+          )}
           <NotificationsBellButton />
           </div>
         </div>

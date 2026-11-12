@@ -19,8 +19,8 @@ import aiohttp
 import pytest
 from slack_sdk.errors import SlackApiError
 
-from kiro_crew.slack.client import RealSlackClient, SlackClientOps
-from kiro_crew.slack.scope_probe import (
+from aj_crew.slack.client import RealSlackClient, SlackClientOps
+from aj_crew.slack.scope_probe import (
     UNREADABLE_ERRORS,
     log_probe_failure,
     warn_unreadable_tracked_channels,
@@ -79,7 +79,7 @@ class TestWarnUnreadableTrackedChannels:
         def notify(kind, title, body, **kwargs):
             notes.append((kind, title, body, kwargs))
 
-        with caplog.at_level("WARNING", logger="kiro_crew.slack.scope_probe"):
+        with caplog.at_level("WARNING", logger="aj_crew.slack.scope_probe"):
             result = await warn_unreadable_tracked_channels(slack, {"C_PRIV"}, notify=notify)
 
         assert result == {"C_PRIV": "missing_scope"}
@@ -96,7 +96,7 @@ class TestWarnUnreadableTrackedChannels:
     @pytest.mark.asyncio
     async def test_channel_not_found_warns(self, caplog):
         slack = ProbeStubClient({"C_GONE": "channel_not_found"})
-        with caplog.at_level("WARNING", logger="kiro_crew.slack.scope_probe"):
+        with caplog.at_level("WARNING", logger="aj_crew.slack.scope_probe"):
             result = await warn_unreadable_tracked_channels(slack, {"C_GONE"})
         assert result == {"C_GONE": "channel_not_found"}
         assert any("channel_not_found" in rec.getMessage() for rec in caplog.records)
@@ -105,7 +105,7 @@ class TestWarnUnreadableTrackedChannels:
     async def test_readable_channel_is_silent(self, caplog):
         slack = ProbeStubClient({"C_OK": None})
         notes: list[tuple] = []
-        with caplog.at_level("WARNING", logger="kiro_crew.slack.scope_probe"):
+        with caplog.at_level("WARNING", logger="aj_crew.slack.scope_probe"):
             result = await warn_unreadable_tracked_channels(
                 slack, {"C_OK"}, notify=lambda *a, **k: notes.append(a)
             )
@@ -117,7 +117,7 @@ class TestWarnUnreadableTrackedChannels:
     async def test_non_definitive_error_codes_do_not_warn(self, caplog):
         # ratelimited / not_in_channel etc. are not proof of a stale grant.
         slack = ProbeStubClient({"C_RATE": "ratelimited", "C_MEM": "not_in_channel"})
-        with caplog.at_level("WARNING", logger="kiro_crew.slack.scope_probe"):
+        with caplog.at_level("WARNING", logger="aj_crew.slack.scope_probe"):
             result = await warn_unreadable_tracked_channels(slack, {"C_RATE", "C_MEM"})
         assert result == {}
         assert not [r for r in caplog.records if r.levelname == "WARNING"]
@@ -209,7 +209,7 @@ class TestRealSlackClientProbe:
 class TestInteractionsProbeHook:
     @pytest.mark.asyncio
     async def test_probe_helper_schedules_task(self, monkeypatch):
-        from kiro_crew.slack import interactions
+        from aj_crew.slack import interactions
 
         slack = ProbeStubClient({"C_NEW": "missing_scope"})
         tasks: set = set()
@@ -223,7 +223,7 @@ class TestInteractionsProbeHook:
 
     @pytest.mark.asyncio
     async def test_probe_helper_noop_without_slack(self, monkeypatch):
-        from kiro_crew.slack import interactions
+        from aj_crew.slack import interactions
 
         tasks: set = set()
         orch = SimpleNamespace(slack=None, dashboard_state=None, _handler_tasks=tasks)
@@ -233,7 +233,7 @@ class TestInteractionsProbeHook:
 
     @pytest.mark.asyncio
     async def test_probe_helper_noop_on_empty_set(self, monkeypatch):
-        from kiro_crew.slack import interactions
+        from aj_crew.slack import interactions
 
         tasks: set = set()
         orch = SimpleNamespace(
@@ -278,17 +278,17 @@ class TestProbeFailureIsRetrieved:
         task.add_done_callback(tasks.discard)
         task.add_done_callback(log_probe_failure)
         del task
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.scope_probe"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.slack.scope_probe"):
             reports = await _settle_and_collect(tasks)
         assert reports == []
         assert not tasks
-        [record] = [r for r in caplog.records if r.name == "kiro_crew.slack.scope_probe"]
+        [record] = [r for r in caplog.records if r.name == "aj_crew.slack.scope_probe"]
         assert record.levelno == logging.WARNING
         assert isinstance(record.exc_info[1], TypeError)
 
     @pytest.mark.asyncio
     async def test_interactions_probe_failure_logs_and_does_not_leak(self, monkeypatch, caplog):
-        from kiro_crew.slack import interactions
+        from aj_crew.slack import interactions
 
         tasks: set = set()
         orch = SimpleNamespace(
@@ -296,11 +296,11 @@ class TestProbeFailureIsRetrieved:
         )
         monkeypatch.setattr(interactions, "_orch", orch)
         interactions._probe_tracked_channel_scope({"C_NEW"})
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.scope_probe"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.slack.scope_probe"):
             reports = await _settle_and_collect(tasks)
         assert reports == []
         assert not tasks
-        [record] = [r for r in caplog.records if r.name == "kiro_crew.slack.scope_probe"]
+        [record] = [r for r in caplog.records if r.name == "aj_crew.slack.scope_probe"]
         assert isinstance(record.exc_info[1], TypeError)
 
     @pytest.mark.asyncio
@@ -308,10 +308,10 @@ class TestProbeFailureIsRetrieved:
         task = asyncio.create_task(asyncio.sleep(10))
         task.add_done_callback(log_probe_failure)
         task.cancel()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.slack.scope_probe"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.slack.scope_probe"):
             await asyncio.gather(task, return_exceptions=True)
             await asyncio.sleep(0)
-        assert not [r for r in caplog.records if r.name == "kiro_crew.slack.scope_probe"]
+        assert not [r for r in caplog.records if r.name == "aj_crew.slack.scope_probe"]
 
 
 def test_unreadable_errors_are_the_definitive_codes():

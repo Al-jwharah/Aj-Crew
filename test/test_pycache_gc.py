@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.pycache_gc import _fd_traversal_supported, prune_pycache
+from aj_crew.pycache_gc import _fd_traversal_supported, prune_pycache
 
 _no_symlinks = pytest.mark.skipif(
     sys.platform == "win32", reason="symlink creation needs elevation on Windows"
@@ -165,7 +165,7 @@ def test_platform_without_dir_fd_support_is_a_noop(tmp_path, monkeypatch):
     instead of degrading to the racy walk.
     """
     tmp_path = tmp_path.resolve()
-    from kiro_crew import pycache_gc
+    from aj_crew import pycache_gc
 
     victim = _write(tmp_path, "m.pyc", age_days=400)
     monkeypatch.setattr(pycache_gc, "_fd_traversal_supported", lambda: False)
@@ -182,7 +182,7 @@ def test_size_cap_sweep_revalidates_root(tmp_path, monkeypatch):
     the re-open with O_NOFOLLOW fails and nothing outside is touched.
     """
     tmp_path = tmp_path.resolve()
-    from kiro_crew import pycache_gc
+    from aj_crew import pycache_gc
 
     root = tmp_path / "cache"
     _write(root, "a/m1.pyc", size=40, age_days=3)
@@ -237,11 +237,11 @@ def test_symlinked_ancestor_component_refused(tmp_path):
 def test_arbitrary_pycache_prefix_is_not_adopted(tmp_path, monkeypatch):
     """A user-set PYTHONPYCACHEPREFIX must never become the deletion root.
 
-    Only Kiro Crew's own configured cache directory is ever pruned; an active
+    Only Aj Crew's own configured cache directory is ever pruned; an active
     prefix pointing elsewhere is ignored (those mirrors are not ours to
     manage).
     """
-    from kiro_crew import pycache_gc
+    from aj_crew import pycache_gc
 
     configured = tmp_path / "crew" / "cache" / "pycache"
     foreign = tmp_path / "somewhere" / "else"
@@ -253,7 +253,7 @@ def test_arbitrary_pycache_prefix_is_not_adopted(tmp_path, monkeypatch):
 
 def test_matching_pycache_prefix_form_is_honored(tmp_path, monkeypatch):
     """When the active prefix IS the configured dir, its path form wins."""
-    from kiro_crew import pycache_gc
+    from aj_crew import pycache_gc
 
     configured = tmp_path / "crew" / "cache" / "pycache"
     configured.mkdir(parents=True)

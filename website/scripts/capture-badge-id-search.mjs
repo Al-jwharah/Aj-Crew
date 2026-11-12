@@ -25,7 +25,7 @@ const PREFIX = process.argv[3] || 'after'
 mkdirSync(OUT, { recursive: true })
 
 const base_slot = {
-  messages: 6, running: false, agent: 'kirocrew',
+  messages: 6, running: false, agent: 'ajcrew',
   created: '2026-08-30T01:00:00Z', last_ts: '2026-08-30T14:00:00Z', folder_id: '',
 }
 

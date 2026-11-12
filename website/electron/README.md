@@ -1,7 +1,7 @@
-# Kiro Crew Desktop (Electron)
+# Aj Crew Desktop (Electron)
 
-Desktop shell for the Kiro Crew web dashboard on macOS, Linux, and Windows. It
-automatically starts `kirocrew gateway` and connects to `localhost:5476`.
+Desktop shell for the Aj Crew web dashboard on macOS, Linux, and Windows. It
+automatically starts `ajcrew gateway` and connects to `localhost:5476`.
 
 ## Quick Start
 
@@ -22,7 +22,7 @@ The app will:
    may be unavailable and offers Continue or Quit, with instructions to stop the
    old gateway before reopening the app. When that gateway is a macOS orphan
    (launchd is its parent but runs no job for it, so nothing restarts it), it
-   also offers Stop and restart, which runs `kirocrew stop --port <port>` and
+   also offers Stop and restart, which runs `ajcrew stop --port <port>` and
    starts the bundled backend. It does not restart or force-stop the gateway
    without the user's choice. Remote tunnels, separate CLI installs, unknown
    owners, same or newer versions, Windows, and moved AppImages retain existing
@@ -31,7 +31,7 @@ The app will:
    app's own data-folder gateway (`gateway.lock` names its pid and that pid holds
    the lock) and it keeps failing for 15 seconds, offer Stop and restart or Quit
    (see [the desktop app guide](../../docs/build/desktop-app.md#how-the-app-finds-and-launches-the-backend))
-3. Launch `kirocrew gateway` when needed
+3. Launch `ajcrew gateway` when needed
 4. Show a loading screen while the backend boots. A live bundled backend gets an
    extended Windows cold-start window; a child that actually exits still fails
    immediately with its launch-log cause.
@@ -130,11 +130,11 @@ cd electron
 npm install
 npx electron-builder --mac --dir
 APP_DIR=$([ "$(uname -m)" = "arm64" ] && echo "dist/mac-arm64" || echo "dist/mac")
-sudo rm -rf /Applications/KiroCrew.app
-sudo cp -R "$APP_DIR/KiroCrew.app" /Applications/KiroCrew.app
+sudo rm -rf /Applications/AjCrew.app
+sudo cp -R "$APP_DIR/AjCrew.app" /Applications/AjCrew.app
 ```
 
-Launch via Spotlight (Cmd+Space → "KiroCrew"), Dock, or `open /Applications/KiroCrew.app`.
+Launch via Spotlight (Cmd+Space → `AjCrew`), Dock, or `open /Applications/AjCrew.app`.
 Right-click the Dock icon → Options → Keep in Dock to pin it.
 
 ## Build `.dmg`
@@ -175,10 +175,10 @@ Notes:
   build produces a working unsigned installer. (Setting only some of the five
   variables is treated as a misconfiguration and fails the build.)
 - The result is an assisted (non-one-click, per-user) NSIS installer,
-  `KiroCrew Setup <version>.exe` (nightly builds:
-  `KiroCrew Nightly Setup <version>.exe`), in `website/electron/dist/`.
+  `AjCrew Setup <version>.exe` (nightly builds:
+  `AjCrew Nightly Setup <version>.exe`), in `website/electron/dist/`.
 - The pinned electron-builder NSIS template is patched during `npm install` to
-  expose Kiro Crew's staged-payload publish hook. On a normal same-volume
+  expose Aj Crew's staged-payload publish hook. On a normal same-volume
   per-user install it renames the large `resources` / `locales` trees into place
   and copies only the small root remainder; per-machine installs keep the
   upstream copy path so files inherit the Program Files ACL. Cross-volume or
@@ -188,10 +188,10 @@ Notes:
   build-time caches rather than generating thousands of files under Defender.
   Unchecked rather than checked so the loader does not also re-read and re-hash
   every `.py` it imports, which cost a median 12.5 s per cold boot; macOS's
-  caches (its own traced closure, plus the standard library and `kiro_crew`
+  caches (its own traced closure, plus the standard library and `aj_crew`
   whole) are checked-hash.
 - The native welcome/finish sidebar and the header used on intermediate pages
-  carry the Kiro Crew logo and ghost artwork. The standard NSIS controls and
+  carry the Aj Crew logo and ghost artwork. The standard NSIS controls and
   localized instructions remain native. Page boundaries use a short Win32
   alpha-blended cross-fade that follows the system client-area animation setting;
   extraction itself stays on the native progress page without timer-driven art.
@@ -211,21 +211,21 @@ After pulling new code and rebuilding (`npm run build`):
 # Rebuild and reinstall the desktop app
 cd electron && npx electron-builder --mac --dir
 APP_DIR=$([ "$(uname -m)" = "arm64" ] && echo "dist/mac-arm64" || echo "dist/mac")
-sudo rm -rf /Applications/KiroCrew.app
-sudo cp -R "$APP_DIR/KiroCrew.app" /Applications/KiroCrew.app
+sudo rm -rf /Applications/AjCrew.app
+sudo cp -R "$APP_DIR/AjCrew.app" /Applications/AjCrew.app
 
 # Restart the gateway (service-aware)
-kirocrew restart
+ajcrew restart
 ```
 
 ## Uninstall
 
 ```bash
 # Remove the desktop app
-sudo rm -rf /Applications/KiroCrew.app
+sudo rm -rf /Applications/AjCrew.app
 
 # Stop and remove the managed gateway service, if installed
-kirocrew service uninstall
+ajcrew service uninstall
 ```
 
 ## Remote Tunnel Mode (Headless CDE)
@@ -247,7 +247,7 @@ below).
    ```
    Or use a macOS LaunchAgent (see `../../docs/guides/assets/`).
 
-2. `kirocrew` installed on the remote host. The default auto-discovers across common
+2. `ajcrew` installed on the remote host. The default auto-discovers across common
    install layouts — no configuration needed unless you installed somewhere unusual.
 
 ### Configure
@@ -258,19 +258,19 @@ Remote host settings are **per-port** — each window can have its own remote ho
 
 1. The modal shows which port it's configuring (e.g. "Remote host for :5476")
 2. Enter your remote host's hostname or SSH config alias (e.g. `myhost.example.com` or `clouddesk`)
-3. Leave the binary path at the default unless you installed kirocrew somewhere
+3. Leave the binary path at the default unless you installed ajcrew somewhere
    unusual. The default tries, in order:
-   - `~/.toolbox/bin/kirocrew` (toolbox install — recommended)
-   - `~/.local/bin/kirocrew` (install.sh / source install)
-   - `~/.kirocrew-app/.venv/bin/kirocrew` (one-liner installer venv)
+   - `~/.toolbox/bin/ajcrew` (toolbox install — recommended)
+   - `~/.local/bin/ajcrew` (install.sh / source install)
+   - `~/.ajcrew-app/.venv/bin/ajcrew` (one-liner installer venv)
 4. Optionally set a **Remote port** if the gateway port on the remote host differs
    from the window's local port (default: same as the window's port)
-5. Optionally set a **Remote PATH** if kirocrew needs additional directories
+5. Optionally set a **Remote PATH** if ajcrew needs additional directories
    (default: `~/.toolbox/bin:/usr/bin:/bin`)
 6. Optionally tick **Keep an SSH tunnel to this crew open** (macOS and Linux).
    The checkbox appears only for the port the app launched on, and never on
    Windows; another window's form carries its stored choice over unchanged.
-   The app then runs `kirocrew desktop tunnel`, which holds the forward from the
+   The app then runs `ajcrew desktop tunnel`, which holds the forward from the
    window's port to the crew's with the same supervisor and backoff Remote Crew uses
    inside a gateway. A dropped forward is rebuilt on its own, and waking the
    machine from sleep rebuilds it at once. Leave it unticked if something else
@@ -292,7 +292,7 @@ Remote host settings are **per-port** — each window can have its own remote ho
 - Window 1 on `:5476` — local gateway, no remote host needed
 - Window 2 on `:7778` — SSH tunnel to another host, remote host configured
 
-The app will SSH into the configured remote host and run `kirocrew token` on
+The app will SSH into the configured remote host and run `ajcrew token` on
 each launch to get a fresh JWT — no manual paste required.
 
 ### Token flow (per window)
@@ -301,13 +301,13 @@ each launch to get a fresh JWT — no manual paste required.
 1. Read `<data home>/run/gateway-<port>-<bind address>.secret` (`:` written as `_`)
    for every loopback family the window's host can reach: v4 (`127.0.0.1`,
    `0.0.0.0`) and v6 (`::1`, `::`). A literal host (`127.0.0.1` / `[::1]`) needs
-   its own family; `localhost` / `kirocrew.localhost` (the default backend URL is
+   its own family; `localhost` / `ajcrew.localhost` (the default backend URL is
    `http://localhost:<port>`) need BOTH, carrying the same secret (one gateway
    generation). Then call `/api/token/local` on that port. A missing family, or
    families covered by different secrets, means refuse, not fall back: the
    home-wide `.local_secret` is not consulted here.
 2. If remote host configured for this port:
-   SSH: export PATH=<remotePath> KIROCREW_PORT=<port>; <bin> token
+   SSH: export PATH=<remotePath> AJCREW_PORT=<port>; <bin> token
 3. Fallback: show manual token prompt
 ```
 
@@ -338,7 +338,7 @@ port will use it automatically. Names are stored in `remoteHosts[port].defaultNa
 ### Config file
 
 Settings are persisted via `electron-store`. On macOS the file is
-`~/Library/Application Support/KiroCrew/config.json`; on Linux and Windows, use
+`~/Library/Application Support/AjCrew/config.json`; on Linux and Windows, use
 **Open Config File** to reveal the platform-specific application-data path:
 
 ```json
@@ -346,7 +346,7 @@ Settings are persisted via `electron-store`. On macOS the file is
   "remoteHosts": {
     "5476": {
       "host": "myhost.example.com",
-      "binPath": "~/.toolbox/bin/kirocrew",
+      "binPath": "~/.toolbox/bin/ajcrew",
       "remotePort": "",
       "remotePath": "",
       "defaultName": "Cloud"
@@ -372,10 +372,10 @@ left as the user set it.
 | "SSH token fetch failed" | Check `ssh -o BatchMode=yes YOUR_HOST true` works from Terminal: the fetch runs ssh non-interactively (`-n`, `BatchMode=yes`), so the host must authenticate without a prompt |
 | "ssh client not found: …" | Install the OpenSSH client. The app takes ssh only from the system directories (`/usr/bin`, `/bin`, `/usr/sbin`, `/sbin`, `/run/current-system/sw/bin`; on Windows the in-box `System32\OpenSSH\ssh.exe`), never from `PATH` |
 | "ssh YOUR_HOST timed out after N s" | Raise `sshTimeoutMs` in the config file; ssh's `ConnectTimeout` is sized from it |
-| "kirocrew binary not found in any of …" | Install Kiro Crew through a [supported install path](../../docs/guides/install.md#install-paths), or set a custom path |
+| "ajcrew binary not found in any of …" | Install Aj Crew through a [supported install path](../../docs/guides/install.md#install-paths), or set a custom path |
 | "command not found: kiro-cli" | Set Remote PATH to include `~/.toolbox/bin` (default does this) |
 | "command not found: dirname" | Remote PATH missing `/usr/bin` — reset to default or add it |
-| Token fetched but 403 | Restart the remote gateway — `ssh host kirocrew restart` |
+| Token fetched but 403 | Restart the remote gateway — `ssh host ajcrew restart` |
 | Wrong window refreshed | Focus the target window first (use the Connection menu, not the tray) |
 
 ## Notes
@@ -406,8 +406,8 @@ left as the user set it.
 - **GPU rendering.** Hardware acceleration is on by default, except in a
   Windows RDP session (`SESSIONNAME` starting with `RDP-`), where it starts
   off. The decision, first match wins (`disable-gpu.js`):
-  `KIROCREW_DISABLE_GPU=0` (or `false`/`no`/`off`) or `--enable-gpu` keeps it
-  on, including over RDP; `KIROCREW_DISABLE_GPU=1` or `--disable-gpu` turns it
+  `AJCREW_DISABLE_GPU=0` (or `false`/`no`/`off`) or `--enable-gpu` keeps it
+  on, including over RDP; `AJCREW_DISABLE_GPU=1` or `--disable-gpu` turns it
   off for a launch; otherwise an RDP session turns it off; otherwise it stays
   on. On Windows, if the GPU process dies before the dashboard
   has loaded, the app relaunches itself once with software rendering
@@ -415,7 +415,7 @@ left as the user set it.
   that setting for the current app version under `gpuSoftwareFallback` in
   `config.json`; a new version tries hardware rendering again once
   (`gpu-crash-fallback.js`). The software-mode boot drops the opt-in's
-  `--disable-software-rasterizer` so `KIROCREW_DISABLE_GPU=1` cannot veto
+  `--disable-software-rasterizer` so `AJCREW_DISABLE_GPU=1` cannot veto
   SwiftShader. Remove the key to retry hardware rendering sooner.
 - **Dead renderer.** When the dashboard's renderer process dies, the app
   reloads it up to three times a minute (`renderer-recovery.js`). When that
@@ -423,7 +423,7 @@ left as the user set it.
   (`renderer-exhausted-notice.js`); native because no renderer is left to
   draw an error page. On Windows, when the renderer exited with
   `0x80000003` before any dashboard document had loaded, the dialog's heading
-  names the cause ("Security software is blocking Kiro Crew's window.") and it
+  names the cause ("Security software is blocking Aj Crew's window.") and it
   explains that Chromium's sandboxed child processes are being blocked on
   the device, names the supported fix (a process exclusion for the
   executable in the software that blocks them) and opens the Windows guide,
@@ -433,15 +433,15 @@ left as the user set it.
   "has a dashboard document loaded in this run"; there is one such latch.
   No sandbox switch is ever applied.
 - External links open in your default browser
-- **`kirocrew://` links.** The installer registers the scheme, and `deep-link.js`
+- **`ajcrew://` links.** The installer registers the scheme, and `deep-link.js`
   accepts exactly four shapes, refusing everything else with a logged reason:
-  `kirocrew://` (bring the window forward), `kirocrew://chat?sid=<slot key>`
-  (open that session; what `kirocrew open` builds),
-  `kirocrew://chat?crew=<crew id>&sid=<slot key>` (open that session on a
-  remote crew), `kirocrew://apps/detail/<name>` (show that app's detail page,
+  `ajcrew://` (bring the window forward), `ajcrew://chat?sid=<slot key>`
+  (open that session; what `ajcrew open` builds),
+  `ajcrew://chat?crew=<crew id>&sid=<slot key>` (open that session on a
+  remote crew), `ajcrew://apps/detail/<name>` (show that app's detail page,
   so a companion program can send the user to its app without a walk through
   the store) and
-  `kirocrew://remote-crew/add?host=<ssh host>[&user=<u>][&port=<n>][&name=<label>]`
+  `ajcrew://remote-crew/add?host=<ssh host>[&user=<u>][&port=<n>][&name=<label>]`
   (open Settings → Remote Crew with its add form filled in, so a page listing
   the user's machines can hand one over). The
   route is rebuilt from the validated pieces, never copied from the URL, and a

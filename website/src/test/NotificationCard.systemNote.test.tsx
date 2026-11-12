@@ -28,7 +28,7 @@ describe('a gateway-written note', () => {
     await i18next.changeLanguage('zh-CN')
     renderWithProviders(<NotificationCard n={note({ i18n: { id, params: { surface: 'discord' } } })} />)
     const copy = zh.components.notifications.systemNote
-    const body = copy[`${id}_body`].replace('{{surface}}', 'discord').replace('{{productName}}', 'Kiro Crew')
+    const body = copy[`${id}_body`].replace('{{surface}}', 'discord').replace('{{productName}}', 'Aj Crew')
     expect(screen.getByText(copy[`${id}_title`])).toBeInTheDocument()
     expect(screen.getByText(body.slice(0, 140))).toBeInTheDocument()
   })

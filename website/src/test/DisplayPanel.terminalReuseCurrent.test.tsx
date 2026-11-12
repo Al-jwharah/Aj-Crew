@@ -15,9 +15,9 @@ import { renderWithProviders } from './helpers'
  * still opens a fresh tab.
  */
 
-const { patchConfigMock, kirocrewConfigMock } = vi.hoisted(() => ({
+const { patchConfigMock, ajcrewConfigMock } = vi.hoisted(() => ({
   patchConfigMock: vi.fn((_path: string, _value: unknown) => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(() => Promise.resolve({})),
+  ajcrewConfigMock: vi.fn(() => Promise.resolve({})),
 }))
 
 vi.mock('../api/client', () => {
@@ -33,7 +33,7 @@ vi.mock('../api/client', () => {
   }
   return {
     api: {
-      kirocrewConfig: kirocrewConfigMock,
+      ajcrewConfig: ajcrewConfigMock,
       patchConfig: patchConfigMock,
       installTheme: vi.fn(() => Promise.resolve({ ok: true })),
     },
@@ -100,7 +100,7 @@ import { DisplayPanel } from '../pages/settings/DisplayPanel'
 const KEY = 'dashboard.terminal.reuse_current'
 
 function seed(reuse: unknown) {
-  kirocrewConfigMock.mockImplementation(() =>
+  ajcrewConfigMock.mockImplementation(() =>
     Promise.resolve({
       dashboard: { terminal: reuse === undefined ? {} : { reuse_current: reuse } },
     }),

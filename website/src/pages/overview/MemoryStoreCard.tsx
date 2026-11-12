@@ -148,7 +148,7 @@ export default function MemoryStoreCard({
   const shown = store || active
   const selected = rows.find(s => s.name === shown)
   const storeLabel = (summary: MemoryStoreSummary) => summary.is_default
-    ? i18nT('pages.kiroCrewAgentsPage.global_memory_v1')
+    ? i18nT('pages.ajCrewAgentsPage.global_memory_v1')
     : summary.owner_member
       ? i18nT('memoryV2.member_store_label', { member: summary.owner_member, version: PRIVATE_MEMORY_VERSION })
       : summary.name

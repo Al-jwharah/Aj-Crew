@@ -3,7 +3,7 @@
 Shared by ``test/test_acp_frame_replay.py`` (read-only) and
 ``scripts/update_acp_frame_snapshots.py`` (the writer), since a test must not create
 files in the repo (AUTOSDE ``no-test-side-effects``). It lives under ``test/`` because
-importing ``kiro_crew.acp._dispatch`` from ``src/`` would grow the
+importing ``aj_crew.acp._dispatch`` from ``src/`` would grow the
 ``check_agent_sdk_boundary.py`` baseline.
 """
 
@@ -15,7 +15,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from kiro_crew.acp._dispatch import (
+from aj_crew.acp._dispatch import (
     agent_version_from_init,
     build_permission_event,
     classify_notification,
@@ -29,11 +29,11 @@ from kiro_crew.acp._dispatch import (
     parse_usage_cost,
     parse_usage_update,
 )
-from kiro_crew.acp.elicitation import ElicitationParseError, parse_elicitation_request
-from kiro_crew.acp.engine_fallback import normalize_kiro_v2
-from kiro_crew.acp.harness.pi_steer import steer_echo_seq
-from kiro_crew.acp.types import AcpEvent, JsonRpcMessage
-from kiro_crew.acp_backends import POLICY_ID_BY_BACKEND
+from aj_crew.acp.elicitation import ElicitationParseError, parse_elicitation_request
+from aj_crew.acp.engine_fallback import normalize_kiro_v2
+from aj_crew.acp.harness.pi_steer import steer_echo_seq
+from aj_crew.acp.types import AcpEvent, JsonRpcMessage
+from aj_crew.acp_backends import POLICY_ID_BY_BACKEND
 
 
 def fixture_dir_name(backend: str) -> str:
@@ -217,15 +217,15 @@ def replay_frames(
     The crew log flag is forced on (parsers record byte count and digest only then),
     here so the writer and the test agree, and restored for other tests.
     """
-    prior = os.environ.get("KIROCREW_CREW_LOG")
-    os.environ["KIROCREW_CREW_LOG"] = "1"
+    prior = os.environ.get("AJCREW_CREW_LOG")
+    os.environ["AJCREW_CREW_LOG"] = "1"
     try:
         return _replay(frames, gate_envelope_nonce=gate_envelope_nonce)
     finally:
         if prior is None:
-            os.environ.pop("KIROCREW_CREW_LOG", None)
+            os.environ.pop("AJCREW_CREW_LOG", None)
         else:
-            os.environ["KIROCREW_CREW_LOG"] = prior
+            os.environ["AJCREW_CREW_LOG"] = prior
 
 
 def _replay(

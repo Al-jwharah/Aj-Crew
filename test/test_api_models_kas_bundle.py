@@ -21,13 +21,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 from aiohttp import web
 
-from kiro_crew import model_registry
-from kiro_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk import kas_model_catalog as catalog
-from kiro_crew.auth.service import KasLoginService
-from kiro_crew.auth.store import KasToken, TokenStore
-from kiro_crew.dashboard.handlers import agents
-from kiro_crew.dashboard.handlers import models_kas_bundle as bundle
+from aj_crew import model_registry
+from aj_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.agent_sdk import kas_model_catalog as catalog
+from aj_crew.auth.service import KasLoginService
+from aj_crew.auth.store import KasToken, TokenStore
+from aj_crew.dashboard.handlers import agents
+from aj_crew.dashboard.handlers import models_kas_bundle as bundle
 
 
 @pytest.fixture(autouse=True)
@@ -138,7 +138,7 @@ class TestTheList:
     async def test_cold_starts_the_background_probe_and_a_recording_does_not(
         self, ready, monkeypatch
     ):
-        from kiro_crew.dashboard.handlers import models_cold_probe
+        from aj_crew.dashboard.handlers import models_cold_probe
 
         calls: list[str] = []
         monkeypatch.setattr(
@@ -227,7 +227,7 @@ class TestDispatchFromApiModels:
             raise AssertionError("_entitled_kiro_models ran on the bundle route")
 
         with (
-            patch.object(agents.KiroCrewConfig, "load", return_value=_cfg(ACP_BACKEND_KAS, True)),
+            patch.object(agents.AjCrewConfig, "load", return_value=_cfg(ACP_BACKEND_KAS, True)),
             patch.object(agents, "reject_if_kiro_unverified", _gate_must_not_run),
             patch.object(agents, "_fetch_kiro_catalog", _spawn_must_not_run),
             patch.object(agents, "_entitled_kiro_models", _narrowing_must_not_run),
@@ -244,7 +244,7 @@ class TestDispatchFromApiModels:
             return sentinel
 
         with (
-            patch.object(agents.KiroCrewConfig, "load", return_value=_cfg(ACP_BACKEND_KAS, False)),
+            patch.object(agents.AjCrewConfig, "load", return_value=_cfg(ACP_BACKEND_KAS, False)),
             patch.object(agents, "reject_if_kiro_unverified", _gate),
         ):
             resp = await agents.api_models(_request())
@@ -257,7 +257,7 @@ class TestDispatchFromApiModels:
             return sentinel
 
         with (
-            patch.object(agents.KiroCrewConfig, "load", return_value=_cfg(ACP_BACKEND_KIRO, True)),
+            patch.object(agents.AjCrewConfig, "load", return_value=_cfg(ACP_BACKEND_KIRO, True)),
             patch.object(agents, "reject_if_kiro_unverified", _gate),
         ):
             resp = await agents.api_models(_request())
@@ -269,7 +269,7 @@ class TestTheRecordingFollowsTheVault:
     """A select is what ONE account is served. The recording carries the vault
     identity its request went out under and the picker serves it only while the
     vault still names that account -- read from the vault itself, so it holds for
-    a sign-in written by the dashboard's service and for ``kirocrew kas login`` /
+    a sign-in written by the dashboard's service and for ``ajcrew kas login`` /
     ``kas logout`` in a shell (another process, the same vault) alike."""
 
     @staticmethod
@@ -289,7 +289,7 @@ class TestTheRecordingFollowsTheVault:
     @pytest.fixture
     def vault(self, tmp_path, monkeypatch) -> TokenStore:
         """A real vault the handler reads through ``auth.bridge``, engine installed."""
-        from kiro_crew.auth import bridge
+        from aj_crew.auth import bridge
 
         store = TokenStore(tmp_path)
         monkeypatch.setattr(bridge, "default_token_store", lambda: store)
@@ -306,7 +306,7 @@ class TestTheRecordingFollowsTheVault:
         await self._record_under_the_vault()
         rows = _body(await bundle.api_models_kas_bundle(_request()))
         assert [r["model_name"] for r in rows] == ["auto", "model-a"]
-        # The service ``kirocrew kas logout`` / ``kas login`` build, in this test's
+        # The service ``ajcrew kas logout`` / ``kas login`` build, in this test's
         # process: nothing tells the picker, the vault's identity is what it reads.
         shell = KasLoginService(vault)
         await shell.logout("social")

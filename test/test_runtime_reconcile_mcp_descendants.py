@@ -2,7 +2,7 @@
 
 A session's ``kiro-cli`` starts its MCP servers with its own environment, so every
 server, the workflow runner a server detaches and each agent that runner starts
-carry the runtime's ``KIROCREW_SPAWN_INSTANCE``. None of them is in a record, and
+carry the runtime's ``AJCREW_SPAWN_INSTANCE``. None of them is in a record, and
 the agents have harness argv, so the live-owner spawn-instance condition is the one
 thing that keeps them alive while their session's runtime serves. The orphaned
 side of the same shape must still be reaped: once the runtime is gone, its
@@ -23,7 +23,7 @@ from __future__ import annotations
 import pytest
 from runtime_reconcile_helpers import _reconciler, _refusals
 
-from kiro_crew.testing.ids import unallocatable_pids
+from aj_crew.testing.ids import unallocatable_pids
 
 (
     _USER_MANAGER,

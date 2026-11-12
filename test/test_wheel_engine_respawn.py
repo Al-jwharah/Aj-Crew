@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.platform import wheel_engine
-from kiro_crew.platform.wheel_engine import (
+from aj_crew.platform import wheel_engine
+from aj_crew.platform.wheel_engine import (
     ManagedVenvLayout,
     WheelUpdateError,
     managed_venv_layout,
@@ -21,7 +21,7 @@ from kiro_crew.platform.wheel_engine import (
     running_from_managed_venv,
     running_from_pipx,
 )
-from kiro_crew.platform_compat import IS_POSIX
+from aj_crew.platform_compat import IS_POSIX
 
 # The engine is POSIX-only by construction: cli.sh is a POSIX installer, and
 # running_from_managed_venv() answers False on Windows, so no production path
@@ -36,15 +36,15 @@ class TestLayoutAndDetection:
     def test_layout_honours_venv_override(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        monkeypatch.setenv("KIROCREW_VENV", str(tmp_path / "custom-venv"))
+        monkeypatch.setenv("AJCREW_VENV", str(tmp_path / "custom-venv"))
         layout = managed_venv_layout()
         assert layout.legacy == tmp_path / "custom-venv"
         assert layout.stable_link == tmp_path / "custom-venv-current"
 
     def test_layout_defaults_beside_data_home(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.delenv("KIROCREW_VENV", raising=False)
+        monkeypatch.delenv("AJCREW_VENV", raising=False)
         layout = managed_venv_layout()
-        from kiro_crew.config.paths import data_home
+        from aj_crew.config.paths import data_home
 
         assert layout.legacy == Path(f"{str(data_home()).rstrip('/')}-venv")
 
@@ -92,7 +92,7 @@ class TestLayoutAndDetection:
         exe.symlink_to(base_python)
         # Every real versioned install carries the console script; the
         # positive-identification rule keys on it.
-        (tree / "bin" / "kirocrew").write_text("")
+        (tree / "bin" / "ajcrew").write_text("")
         layout = ManagedVenvLayout(
             legacy=tmp_path / "crew-venv", stable_link=tmp_path / "crew-venv-current"
         )
@@ -133,7 +133,7 @@ class TestRunningFromPipx:
     def test_detects_a_pipx_venv_by_its_metadata_file(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        venv = tmp_path / "pipx-venvs" / "kirocrew"
+        venv = tmp_path / "pipx-venvs" / "ajcrew"
         venv.mkdir(parents=True)
         (venv / "pipx_metadata.json").write_text("{}")
         monkeypatch.setattr(sys, "prefix", str(venv))
@@ -176,11 +176,11 @@ class TestRespawnExecutable:
         new_exe.chmod(0o755)
         # A genuinely promoted tree always carries the console script; the
         # positive-identification rule keys on it.
-        (new_tree / "bin" / "kirocrew").write_text("")
+        (new_tree / "bin" / "ajcrew").write_text("")
         stable = tmp_path / "crew-venv-current"
         stable.symlink_to(new_tree)
 
-        monkeypatch.setenv("KIROCREW_VENV", str(legacy))
+        monkeypatch.setenv("AJCREW_VENV", str(legacy))
         monkeypatch.setattr(sys, "executable", str(old_exe))
         assert respawn_executable() == str(Path(os.path.realpath(stable)) / "bin" / "python3")
 
@@ -200,7 +200,7 @@ class TestRespawnExecutable:
         stable = tmp_path / "crew-venv-current"
         stable.symlink_to(outside)
 
-        monkeypatch.setenv("KIROCREW_VENV", str(legacy))
+        monkeypatch.setenv("AJCREW_VENV", str(legacy))
         monkeypatch.setattr(sys, "executable", str(exe))
         assert respawn_executable() == str(
             exe
@@ -213,7 +213,7 @@ class TestRespawnExecutable:
         (legacy / "bin").mkdir(parents=True)
         exe = legacy / "bin" / "python3"
         exe.write_text("")
-        monkeypatch.setenv("KIROCREW_VENV", str(legacy))
+        monkeypatch.setenv("AJCREW_VENV", str(legacy))
         monkeypatch.setattr(sys, "executable", str(exe))
         assert respawn_executable() == str(exe)
 
@@ -239,11 +239,11 @@ class TestRespawnExecutable:
         new_exe = new_tree / "bin" / "python3"
         new_exe.write_text("")
         new_exe.chmod(0o755)
-        (new_tree / "bin" / "kirocrew").write_text("")
+        (new_tree / "bin" / "ajcrew").write_text("")
         stable = tmp_path / "crew-venv-current"
         stable.symlink_to(new_tree)
 
-        monkeypatch.setenv("KIROCREW_VENV", str(legacy))
+        monkeypatch.setenv("AJCREW_VENV", str(legacy))
         monkeypatch.setattr(sys, "executable", str(old_exe))
         assert respawn_executable() == str(Path(os.path.realpath(stable)) / "bin" / "python3")
 
@@ -253,9 +253,9 @@ class TestRespawnExecutable:
         nested = home / "venv"
         (nested / "bin").mkdir(parents=True)
         (nested / "bin" / "python3").write_text("")
-        (nested / "bin" / "kirocrew").write_text("")
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
-        monkeypatch.delenv("KIROCREW_VENV", raising=False)
+        (nested / "bin" / "ajcrew").write_text("")
+        monkeypatch.setenv("AJCREW_HOME", str(home))
+        monkeypatch.delenv("AJCREW_VENV", raising=False)
         monkeypatch.setattr(sys, "executable", str(nested / "bin" / "python3"))
         return home
 
@@ -275,7 +275,7 @@ class TestRespawnExecutable:
         new_exe = new_tree / "bin" / "python3"
         new_exe.write_text("")
         new_exe.chmod(0o755)
-        (new_tree / "bin" / "kirocrew").write_text("")
+        (new_tree / "bin" / "ajcrew").write_text("")
         stable = tmp_path / "crew-venv-current"
         stable.symlink_to(new_tree)
         shutil.rmtree(home / "venv")
@@ -298,7 +298,7 @@ class TestRespawnExecutable:
         exe = new_tree / "bin" / "python3"
         exe.write_text("")
         exe.chmod(0o755)
-        (new_tree / "bin" / "kirocrew").write_text("")
+        (new_tree / "bin" / "ajcrew").write_text("")
         return new_tree
 
     def test_unusable_stable_link_after_migration_uses_legacy_tree(
@@ -371,7 +371,7 @@ class TestReexecExecutableParameter:
         monkeypatch: pytest.MonkeyPatch,
         nonbundled_python_without_user_site,
     ) -> None:
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         # The real call mutates os.environ (UTF-8 pinning) before exec; with
         # execv mocked the process KEEPS RUNNING, so the mutation would leak
@@ -386,20 +386,20 @@ class TestReexecExecutableParameter:
             captured["argv"] = argv
 
         monkeypatch.setattr(os, "execv", fake_execv)
-        platform_compat.reexec_python_module("kiro_crew", ["--flag"], executable="/x/bin/python3")
+        platform_compat.reexec_python_module("aj_crew", ["--flag"], executable="/x/bin/python3")
         assert captured["path"] == "/x/bin/python3"
         argv = captured["argv"]
         assert isinstance(argv, list)
-        assert argv[1:5] == ["-s", "-P", "-m", "kiro_crew"]
+        assert argv[1:5] == ["-s", "-P", "-m", "aj_crew"]
         assert argv[5:] == ["--flag"]
 
     def test_reexec_defaults_to_sys_executable(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         monkeypatch.setattr(platform_compat, "_ensure_utf8_process_environment", lambda: None)
         captured: dict[str, object] = {}
         monkeypatch.setattr(os, "execv", lambda p, a: captured.update(path=p))
-        platform_compat.reexec_python_module("kiro_crew", [])
+        platform_compat.reexec_python_module("aj_crew", [])
         assert captured["path"] == sys.executable
 
 
@@ -407,7 +407,7 @@ class TestLauncherRepoint:
     def _layout(self, tmp_path: Path) -> ManagedVenvLayout:
         legacy = tmp_path / "crew-venv"
         (legacy / "bin").mkdir(parents=True)
-        (legacy / "bin" / "kirocrew").write_text("")
+        (legacy / "bin" / "ajcrew").write_text("")
         return ManagedVenvLayout(legacy=legacy, stable_link=tmp_path / "crew-venv-current")
 
     def test_repoints_managed_launcher_through_stable_link(
@@ -416,12 +416,12 @@ class TestLauncherRepoint:
         layout = self._layout(tmp_path)
         home = tmp_path / "home"
         (home / ".local" / "bin").mkdir(parents=True)
-        launcher = home / ".local" / "bin" / "kirocrew"
-        launcher.symlink_to(layout.legacy / "bin" / "kirocrew")
+        launcher = home / ".local" / "bin" / "ajcrew"
+        launcher.symlink_to(layout.legacy / "bin" / "ajcrew")
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
 
         assert wheel_engine.repoint_launcher_symlink(layout) is True
-        assert os.readlink(launcher) == str(layout.stable_link / "bin" / "kirocrew")
+        assert os.readlink(launcher) == str(layout.stable_link / "bin" / "ajcrew")
 
     def test_leaves_foreign_launcher_alone(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
@@ -431,13 +431,13 @@ class TestLauncherRepoint:
         (home / ".local" / "bin").mkdir(parents=True)
         foreign = tmp_path / "pipx-venv" / "bin"
         foreign.mkdir(parents=True)
-        (foreign / "kirocrew").write_text("")
-        launcher = home / ".local" / "bin" / "kirocrew"
-        launcher.symlink_to(foreign / "kirocrew")
+        (foreign / "ajcrew").write_text("")
+        launcher = home / ".local" / "bin" / "ajcrew"
+        launcher.symlink_to(foreign / "ajcrew")
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
 
         assert wheel_engine.repoint_launcher_symlink(layout) is False
-        assert os.readlink(launcher) == str(foreign / "kirocrew")
+        assert os.readlink(launcher) == str(foreign / "ajcrew")
 
     def test_regular_file_launcher_untouched(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
@@ -445,7 +445,7 @@ class TestLauncherRepoint:
         layout = self._layout(tmp_path)
         home = tmp_path / "home"
         (home / ".local" / "bin").mkdir(parents=True)
-        launcher = home / ".local" / "bin" / "kirocrew"
+        launcher = home / ".local" / "bin" / "ajcrew"
         launcher.write_text("#!/bin/sh\n")  # an operator's wrapper script
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
 

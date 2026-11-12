@@ -24,7 +24,7 @@ from service_helpers import (  # noqa: F401 -- fixtures are found by name
     _restart_settle_without_waiting,
 )
 
-from kiro_crew.service.common import Platform
+from aj_crew.service.common import Platform
 
 
 class TestLinuxServiceScopesUninstall:
@@ -40,7 +40,7 @@ class TestLinuxServiceScopesUninstall:
 
     @pytest.fixture(autouse=True)
     def _not_root(self, _floor_monkeypatch, tmp_path):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         _floor_monkeypatch.setattr(svc_linux.os, "geteuid", lambda: 1000, raising=False)
         _floor_monkeypatch.setenv("USER", "tester")
@@ -62,13 +62,13 @@ class TestLinuxServiceScopesUninstall:
     # -- uninstall ---------------------------------------------------------
 
     def test_uninstall_removes_a_user_unit_via_the_user_manager(self, tmp_path):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         fragment = tmp_path / ".config" / "systemd" / "user" / _UNIT
         fragment.parent.mkdir(parents=True)
         fragment.write_text(_OURS_UNIT_TEXT, encoding="utf-8")
         run = _fake_systemctl(system=None, user=_RUNNING, user_fragment=str(fragment))
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.uninstall()
 
         assert report.system == "not installed"
@@ -80,13 +80,13 @@ class TestLinuxServiceScopesUninstall:
         assert all("sudo" not in c for c in run.calls), run.calls
 
     def test_uninstall_with_nothing_installed_removes_nothing_and_says_so(self, capsys):
-        from kiro_crew.service import controller
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import controller
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=None, user=None)
         with (
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=run),
-            patch("kiro_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=run),
+            patch("aj_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
             patch.object(svc_linux, "remove_apparmor_profile", return_value=MagicMock(message="")),
         ):
             report = svc_linux.uninstall()
@@ -102,10 +102,10 @@ class TestLinuxServiceScopesUninstall:
         assert "stopped and removed" not in out
 
     def test_uninstall_leaves_an_unreachable_user_scope_alone_and_names_it(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=None, user_bus_error=_NO_BUS)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.uninstall()
 
         assert report.system == "not installed"
@@ -137,8 +137,8 @@ class TestLinuxServiceScopesUninstall:
     def test_uninstall_removes_both_scopes_and_the_controller_names_each(
         self, tmp_path, monkeypatch, capsys
     ):
-        from kiro_crew.service import controller
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import controller
+        from aj_crew.service import linux as svc_linux
 
         system_unit = tmp_path / "etc" / _UNIT
         system_unit.parent.mkdir(parents=True)
@@ -149,8 +149,8 @@ class TestLinuxServiceScopesUninstall:
         fragment.write_text(_OURS_UNIT_TEXT, encoding="utf-8")
         run = _fake_systemctl(system=_DEAD, user=_RUNNING, user_fragment=str(fragment))
         with (
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=run),
-            patch("kiro_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=run),
+            patch("aj_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
             patch.object(svc_linux, "remove_apparmor_profile", return_value=MagicMock(message="")),
         ):
             rc = controller.uninstall_service()
@@ -160,7 +160,7 @@ class TestLinuxServiceScopesUninstall:
         assert ["systemctl", "--user", "stop", _UNIT] in run.calls
         assert not fragment.exists()
         out = capsys.readouterr().out
-        assert "✅ kirocrew service stopped and removed." in out
+        assert "✅ ajcrew service stopped and removed." in out
         assert f"system scope: removed ({system_unit})" in out
         assert f"user scope: removed ({fragment})" in out
 
@@ -170,8 +170,8 @@ class TestLinuxServiceScopesUninstall:
         """The system scope is already torn down by the time the user unit file is
         unlinked, so a failure there must not raise: the controller would exit
         before printing the system line and before removing the AppArmor grant."""
-        from kiro_crew.service import controller
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import controller
+        from aj_crew.service import linux as svc_linux
 
         system_unit = tmp_path / "etc" / _UNIT
         system_unit.parent.mkdir()
@@ -188,12 +188,12 @@ class TestLinuxServiceScopesUninstall:
             return MagicMock(message="AppArmor profile removed", ok=True)
 
         with (
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=run),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=run),
             patch(
-                "kiro_crew.service.linux.os.unlink",
+                "aj_crew.service.linux.os.unlink",
                 side_effect=PermissionError("Operation not permitted"),
             ),
-            patch("kiro_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
+            patch("aj_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
             patch.object(svc_linux, "remove_apparmor_profile", remove_profile),
         ):
             rc = controller.uninstall_service()
@@ -218,8 +218,8 @@ class TestLinuxServiceScopesUninstall:
         """The unit file is gone, but the manager refused the reload, so it still
         holds the old definition: the scope is unfinished (exit 1), not removed,
         and the headline never says `stopped and removed`."""
-        from kiro_crew.service import controller
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import controller
+        from aj_crew.service import linux as svc_linux
 
         fragment = tmp_path / ".config" / "systemd" / "user" / _UNIT
         fragment.parent.mkdir(parents=True)
@@ -230,7 +230,7 @@ class TestLinuxServiceScopesUninstall:
             user_fragment=str(fragment),
             overrides={"daemon-reload": self._REFUSED_RELOAD},
         )
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.uninstall()
 
         assert not fragment.exists()
@@ -251,8 +251,8 @@ class TestLinuxServiceScopesUninstall:
             overrides={"daemon-reload": self._REFUSED_RELOAD},
         )
         with (
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=run),
-            patch("kiro_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=run),
+            patch("aj_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
             patch.object(svc_linux, "remove_apparmor_profile", return_value=MagicMock(message="")),
         ):
             rc = controller.uninstall_service()
@@ -265,16 +265,16 @@ class TestLinuxServiceScopesUninstall:
     def test_a_rejected_system_daemon_reload_marks_the_scope_unfinished(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
-        unit_path = tmp_path / "kirocrew.service"
+        unit_path = tmp_path / "ajcrew.service"
         unit_path.write_text("")
         monkeypatch.setattr(svc_linux, "UNIT_PATH", unit_path)
         monkeypatch.setattr(svc_linux, "_SYSTEMD_BOOTED_DIR", tmp_path)
         run = _fake_systemctl(
             system=_DEAD, user=None, overrides={"daemon-reload": self._REFUSED_RELOAD}
         )
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.uninstall()
 
         assert ["sudo", "systemctl", "daemon-reload"] in run.calls
@@ -288,22 +288,22 @@ class TestLinuxServiceScopesUninstall:
     def test_an_undecodable_overrides_file_is_kept_and_the_system_scope_still_reloads(
         self, tmp_path, monkeypatch
     ):
-        """``/etc/kirocrew/kirocrew.env`` is operator-edited by design, and one
+        """``/etc/ajcrew/ajcrew.env`` is operator-edited by design, and one
         saved in latin-1 is not UTF-8. It is not our untouched seed, so it stays,
         and the scope still reaches its closing ``daemon-reload``."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
-        unit_path = tmp_path / "kirocrew.service"
+        unit_path = tmp_path / "ajcrew.service"
         unit_path.write_text("")
-        env_file = tmp_path / "etc-kirocrew" / "kirocrew.env"
+        env_file = tmp_path / "etc-ajcrew" / "ajcrew.env"
         env_file.parent.mkdir()
-        env_file.write_bytes(b"# Kiro Crew overrides\nNOTE=caf\xe9\n")
+        env_file.write_bytes(b"# Aj Crew overrides\nNOTE=caf\xe9\n")
         monkeypatch.setattr(svc_linux, "UNIT_PATH", unit_path)
         monkeypatch.setattr(svc_linux, "ENV_DIR", env_file.parent)
         monkeypatch.setattr(svc_linux, "ENV_FILE_PATH", env_file)
         monkeypatch.setattr(svc_linux, "_SYSTEMD_BOOTED_DIR", tmp_path)
         run = _fake_systemctl(system=_DEAD, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             try:
                 report = svc_linux.uninstall()
             except UnicodeDecodeError as exc:
@@ -319,7 +319,7 @@ class TestLinuxServiceScopesUninstall:
     ):
         """The not-loaded arm (`_remove_stale_owned`): the reload is the step that
         makes the manager forget the file, so a refused one is unfinished too."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         system_unit = tmp_path / "etc" / _UNIT
         system_unit.parent.mkdir()
@@ -329,7 +329,7 @@ class TestLinuxServiceScopesUninstall:
         run = _fake_systemctl(
             system=None, user=None, overrides={"daemon-reload": self._REFUSED_RELOAD}
         )
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.uninstall()
 
         assert report.system.startswith(
@@ -355,8 +355,8 @@ class TestLinuxServiceScopesUninstall:
         not take, so the unit is still loaded and possibly running. Its file must
         stay -- unlinking it would leave a running gateway with no unit to find it
         by -- and the report must say so rather than `removed`."""
-        from kiro_crew.service import controller
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import controller
+        from aj_crew.service import linux as svc_linux
 
         fragment = tmp_path / ".config" / "systemd" / "user" / _UNIT
         fragment.parent.mkdir(parents=True)
@@ -368,8 +368,8 @@ class TestLinuxServiceScopesUninstall:
             overrides={"stop": self._REFUSED_STOP},
         )
         with (
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=run),
-            patch("kiro_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=run),
+            patch("aj_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
             patch.object(svc_linux, "remove_apparmor_profile", return_value=MagicMock(message="")),
         ):
             report = svc_linux.uninstall()
@@ -388,12 +388,12 @@ class TestLinuxServiceScopesUninstall:
         assert not any(c[-1:] == ["daemon-reload"] for c in run.calls), run.calls
         assert rc == 1
         out = capsys.readouterr().out
-        assert "No kirocrew service was removed." in out
+        assert "No ajcrew service was removed." in out
         assert "   system scope: not installed" in out
         assert "   ⚠️ user scope: left in place (" in out
 
     def test_a_refused_user_disable_after_a_successful_stop_still_keeps_the_file(self, tmp_path):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         fragment = tmp_path / "user" / _UNIT
         fragment.parent.mkdir()
@@ -402,7 +402,7 @@ class TestLinuxServiceScopesUninstall:
         run = _fake_systemctl(
             system=None, user=_RUNNING, user_fragment=str(fragment), overrides={"disable": refused}
         )
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.uninstall()
 
         assert fragment.exists()
@@ -417,8 +417,8 @@ class TestLinuxServiceScopesUninstall:
         """The same guard on the sibling branch: a system unit whose sudo'd stop the
         manager refuses is not `rm -f`'d, the warning lands on the SYSTEM line, and
         the user scope is still queried and reported."""
-        from kiro_crew.service import controller
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import controller
+        from aj_crew.service import linux as svc_linux
 
         system_unit = tmp_path / "etc" / _UNIT
         system_unit.parent.mkdir()
@@ -426,8 +426,8 @@ class TestLinuxServiceScopesUninstall:
         monkeypatch.setattr(svc_linux, "UNIT_PATH", system_unit)
         run = _fake_systemctl(system=_RUNNING, user=None, overrides={"stop": self._REFUSED_STOP})
         with (
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=run),
-            patch("kiro_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=run),
+            patch("aj_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
             patch.object(svc_linux, "remove_apparmor_profile", return_value=MagicMock(message="")),
         ):
             report = svc_linux.uninstall()
@@ -454,8 +454,8 @@ class TestLinuxServiceScopesUninstall:
         file beside the account's own running user unit. The system scope cannot
         be touched without root, but that must not abort the call before the user
         unit -- the one this account CAN remove -- is torn down."""
-        from kiro_crew.service import controller
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import controller
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setattr(svc_linux.sys, "platform", "linux")
         monkeypatch.setattr(svc_linux.shutil, "which", lambda name: None)
@@ -468,8 +468,8 @@ class TestLinuxServiceScopesUninstall:
         fragment.write_text(_OURS_UNIT_TEXT, encoding="utf-8")
         run = _fake_systemctl(system=_DEAD, user=_RUNNING, user_fragment=str(fragment))
         with (
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=run),
-            patch("kiro_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=run),
+            patch("aj_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
             patch.object(svc_linux, "remove_apparmor_profile", return_value=MagicMock(message="")),
         ):
             rc = controller.uninstall_service()
@@ -481,7 +481,7 @@ class TestLinuxServiceScopesUninstall:
         assert not any(c[0] == "sudo" for c in run.calls), run.calls
         assert rc == 1
         out = capsys.readouterr().out
-        assert "✅ kirocrew service stopped and removed." in out
+        assert "✅ ajcrew service stopped and removed." in out
         assert "   ⚠️ system scope: left in place (privilege unavailable: " in out
         assert "'sudo' was not found" in out
         assert f"   user scope: removed ({fragment})" in out
@@ -494,7 +494,7 @@ class TestLinuxServiceScopesUninstall:
         `systemctl` verb fails the same way and `/run/systemd/system` does not
         exist. No manager runs on such a host, so nothing can be running under the
         unit -- the file is removed, as the base did."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setattr(svc_linux, "_SYSTEMD_BOOTED_DIR", tmp_path / "run-systemd-absent")
         system_unit = tmp_path / "etc" / _UNIT
@@ -510,7 +510,7 @@ class TestLinuxServiceScopesUninstall:
                 return subprocess.CompletedProcess(list(argv), 1, "", no_pid1 + "\n")
             return res
 
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.uninstall()
 
         assert report.system == f"removed ({system_unit})"
@@ -527,7 +527,7 @@ class TestLinuxServiceScopesUninstall:
         running, but this shell cannot reach it (a sandbox: `Permission denied`).
         Whether the unit is running cannot be confirmed from here, so nothing is
         removed and the line says so."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         booted = tmp_path / "run-systemd"
         booted.mkdir()
@@ -545,7 +545,7 @@ class TestLinuxServiceScopesUninstall:
                 return subprocess.CompletedProcess(list(argv), 1, "", denied + "\n")
             return res
 
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.uninstall()
 
         assert system_unit.exists()
@@ -561,8 +561,8 @@ class TestLinuxServiceScopesUninstall:
         is not `loaded` and then unlinking would leave the gateway running with no
         unit to find it by -- so nothing is stopped, disabled or unlinked, and the
         operator is told the step that makes it removable."""
-        from kiro_crew.service import controller
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import controller
+        from aj_crew.service import linux as svc_linux
 
         system_unit = tmp_path / "etc" / _UNIT
         system_unit.parent.mkdir()
@@ -570,8 +570,8 @@ class TestLinuxServiceScopesUninstall:
         monkeypatch.setattr(svc_linux, "UNIT_PATH", system_unit)
         run = _fake_systemctl(system=_RUNNING, user=None, system_load="masked")
         with (
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=run),
-            patch("kiro_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=run),
+            patch("aj_crew.service.controller.current_platform", return_value=Platform.SYSTEMD),
             patch.object(svc_linux, "remove_apparmor_profile", return_value=MagicMock(message="")),
         ):
             report = svc_linux.uninstall()
@@ -581,7 +581,7 @@ class TestLinuxServiceScopesUninstall:
         assert not any("rm" in c or "stop" in c or "disable" in c for c in run.calls), run.calls
         assert report.system == (
             "left in place (an active unit whose load state is masked: unmask and stop it "
-            "first, then run `kirocrew service uninstall` again)"
+            "first, then run `ajcrew service uninstall` again)"
         )
         assert report.unfinished == frozenset({"system"})
         assert rc == 1
@@ -590,14 +590,14 @@ class TestLinuxServiceScopesUninstall:
         )
 
     def test_a_running_masked_user_unit_is_refused_whole(self, tmp_path):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(
             system=None, user=_RUNNING, user_fragment="/dev/null", user_load="masked"
         )
         with (
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=run),
-            patch("kiro_crew.service.linux.os.unlink") as unlink,
+            patch("aj_crew.service.linux.subprocess.run", side_effect=run),
+            patch("aj_crew.service.linux.os.unlink") as unlink,
         ):
             report = svc_linux.uninstall()
 
@@ -613,10 +613,10 @@ class TestLinuxServiceScopesUninstall:
         """A user unit deleted and daemon-reloaded while running answers
         `LoadState=not-found ActiveState=active`: that is a running gateway, not
         "nothing here", and `disable` / unlink have nothing to act on."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=None, user=_RUNNING, user_load="not-found")
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.uninstall()
 
         assert report.user.startswith("left in place (an active unit whose load state is not-found")

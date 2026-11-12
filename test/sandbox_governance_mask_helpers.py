@@ -12,7 +12,7 @@ import sys
 
 import pytest
 
-from kiro_crew import sandbox
+from aj_crew import sandbox
 
 _POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="POSIX launcher only")
 

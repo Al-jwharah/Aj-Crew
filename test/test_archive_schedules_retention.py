@@ -14,11 +14,11 @@ import pytest
 from chat_test_helpers import _make_state
 from test_coder_retention import FakeCoder, _envs
 
-from kiro_crew.coder import retention
-from kiro_crew.dashboard.chat_handlers import api_chat_slots_cleanup, close_slot
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.history import ConversationLog
-from kiro_crew.testing.wait import await_until
+from aj_crew.coder import retention
+from aj_crew.dashboard.chat_handlers import api_chat_slots_cleanup, close_slot
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.history import ConversationLog
+from aj_crew.testing.wait import await_until
 
 pytestmark = pytest.mark.asyncio
 
@@ -26,7 +26,7 @@ pytestmark = pytest.mark.asyncio
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Archive retention runs only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 def _state(tmp_path):
@@ -53,7 +53,7 @@ async def _archive(state, slot, path):
 @pytest.fixture
 def scheduled(monkeypatch):
     """Record every hand-off instead of reaching Coder."""
-    monkeypatch.setattr("kiro_crew.autonudge._INSTANCE", None)
+    monkeypatch.setattr("aj_crew.autonudge._INSTANCE", None)
     calls: list[tuple[str, ...]] = []
     monkeypatch.setattr(
         retention, "schedule_archived", lambda keys, notify=None: calls.append(tuple(keys))
@@ -73,7 +73,7 @@ async def test_a_history_resume_hands_the_session_key_to_retention(
     tmp_path, scheduled, monkeypatch
 ):
     # Reopening keeps the workspace even when no message ever starts it.
-    from kiro_crew.dashboard.chat_handlers import resume_slot_from_history
+    from aj_crew.dashboard.chat_handlers import resume_slot_from_history
 
     reopened: list[tuple[str, ...]] = []
 
@@ -109,7 +109,7 @@ async def test_a_resume_whose_deletion_cannot_be_cancelled_is_refused_and_rearch
     # A tab edited only through Files never restarts, so nothing would retry a
     # failed cancellation: the resume refuses, retryably, and the still-closed
     # session goes back on retention.
-    from kiro_crew.dashboard.chat_handlers import resume_slot_from_history
+    from aj_crew.dashboard.chat_handlers import resume_slot_from_history
 
     async def keep(keys):
         return "its boxd machine's deletion could not be cancelled; try again"
@@ -131,7 +131,7 @@ async def test_a_refused_revive_of_an_open_session_does_not_archive_it(
     # A revive of a session that was never closed (only unloaded) takes the
     # refusal window through its hook. Refused after the cancellation ran, it
     # must not put an open session's workspace on retention.
-    from kiro_crew.dashboard.chat_handlers import ResumeRefusal, resume_slot_from_history
+    from aj_crew.dashboard.chat_handlers import ResumeRefusal, resume_slot_from_history
 
     reopened: list[tuple[str, ...]] = []
 
@@ -170,15 +170,13 @@ async def test_a_close_whose_key_a_replacement_took_schedules_nothing(
     # A recreate that lands mid-close owns the key now: its workspace must not be
     # stopped or stamped for deletion because the ORIGINAL tab was dismissed.
     state, slot, _key = _state(tmp_path)
-    monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_handlers._slot_still_ours", lambda *_a, **_k: False
-    )
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._slot_still_ours", lambda *_a, **_k: False)
     await close_slot(state, slot, slot.key)
     assert scheduled == []
 
 
 async def test_a_tab_close_stops_and_stamps_the_sessions_workspace(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.autonudge._INSTANCE", None)
+    monkeypatch.setattr("aj_crew.autonudge._INSTANCE", None)
     state, slot, key = _state(tmp_path)
     fake = FakeCoder()
     envs = _envs(tmp_path / "coder-home", fake)

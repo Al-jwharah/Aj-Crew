@@ -18,10 +18,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import credential_patterns as _cred
-from kiro_crew.decisions import log as log_mod
-from kiro_crew.decisions.points import message_steer as ms
-from kiro_crew.decisions.types import Answer
+from aj_crew import credential_patterns as _cred
+from aj_crew.decisions import log as log_mod
+from aj_crew.decisions.points import message_steer as ms
+from aj_crew.decisions.types import Answer
 
 #: An AWS key id assembled from the prefix list rather than written out, for the
 #: reason ``test_decisions_gate`` gives: a contiguous key-shaped literal is refused
@@ -42,7 +42,7 @@ def answer(monkeypatch):
                 return None
             return {ms.QUESTION_ID: Answer(id=ms.QUESTION_ID, value=value, p=p)}
 
-        monkeypatch.setattr("kiro_crew.decisions.decide", _decide)
+        monkeypatch.setattr("aj_crew.decisions.decide", _decide)
         return asked
 
     return _install
@@ -51,7 +51,7 @@ def answer(monkeypatch):
 @pytest.fixture(autouse=True)
 def no_turn_budget(monkeypatch):
     """The shipped ceiling: 0, so a test that wants turn text raises it itself."""
-    monkeypatch.setattr("kiro_crew.decisions.history_budget_chars", lambda: 0)
+    monkeypatch.setattr("aj_crew.decisions.history_budget_chars", lambda: 0)
 
 
 @pytest.fixture
@@ -122,7 +122,7 @@ class TestEveryRefusalKeepsTheShippedPath:
         async def _decide(point, state, questions, **kwargs):
             return {ms.QUESTION_ID: Answer(id=ms.QUESTION_ID, value="interrupt", p=0.9)}
 
-        monkeypatch.setattr("kiro_crew.decisions.decide", _decide)
+        monkeypatch.setattr("aj_crew.decisions.decide", _decide)
         assert await ms.steer_or_queue("hello") is None
 
     @pytest.mark.asyncio
@@ -130,7 +130,7 @@ class TestEveryRefusalKeepsTheShippedPath:
         async def _decide(point, state, questions, **kwargs):
             raise RuntimeError("transport")
 
-        monkeypatch.setattr("kiro_crew.decisions.decide", _decide)
+        monkeypatch.setattr("aj_crew.decisions.decide", _decide)
         assert await ms.steer_or_queue("hello") is None
 
     @pytest.mark.asyncio
@@ -138,7 +138,7 @@ class TestEveryRefusalKeepsTheShippedPath:
         async def _decide(point, state, questions, **kwargs):
             raise asyncio.CancelledError
 
-        monkeypatch.setattr("kiro_crew.decisions.decide", _decide)
+        monkeypatch.setattr("aj_crew.decisions.decide", _decide)
         with pytest.raises(asyncio.CancelledError):
             await ms.steer_or_queue("hello")
 
@@ -147,7 +147,7 @@ class TestEveryRefusalKeepsTheShippedPath:
         def _raise():
             raise OSError("keystone")
 
-        monkeypatch.setattr("kiro_crew.decisions.history_budget_chars", _raise)
+        monkeypatch.setattr("aj_crew.decisions.history_budget_chars", _raise)
         asked = answer(ms.CHOICE_QUEUE)
         decided = await ms.steer_or_queue("stop")
         assert decided is not None and decided["choice"] == ms.CHOICE_QUEUE
@@ -168,7 +168,7 @@ class TestTheRunningTurnIsSpentOutOfTheConsentedCeiling:
 
     @pytest.mark.asyncio
     async def test_a_raised_ceiling_buys_the_request_and_the_activity(self, answer, monkeypatch):
-        monkeypatch.setattr("kiro_crew.decisions.history_budget_chars", lambda: 2000)
+        monkeypatch.setattr("aj_crew.decisions.history_budget_chars", lambda: 2000)
         asked = answer(ms.CHOICE_QUEUE)
         await ms.steer_or_queue(
             "and bump the version",
@@ -310,7 +310,7 @@ class TestTheTurnTextIsRedacted:
         def _raise(_text):
             raise RuntimeError("scanner")
 
-        monkeypatch.setattr("kiro_crew.security.pass_compose.compose", _raise)
+        monkeypatch.setattr("aj_crew.security.pass_compose.compose", _raise)
         assert (
             ms.redacted("anything at all", 100) == ""
         ), "no cleaned text is the only safe answer for text about to leave the machine"
@@ -337,7 +337,7 @@ class TestNoSingleRowDecidesHowMuchTextIsScanned:
         The bound is asserted on the same row, because the budget's clip runs
         AFTER the scanners: without it this 6.5 KB row reaches them entire.
         """
-        from kiro_crew.decisions import gate as gate_mod
+        from aj_crew.decisions import gate as gate_mod
 
         room = ms.MAX_ACTIVITY_CHARS
         # The key ends 1481 characters from the row's end, so the budget's own cut
@@ -462,7 +462,7 @@ class TestAnOverLongRequestIsDroppedNotCut:
     """A request longer than one bounded scan is left out, never cut and never read."""
 
     def test_a_huge_request_is_never_read_by_the_redactors(self, monkeypatch):
-        from kiro_crew import security
+        from aj_crew import security
 
         scanned: list[int] = []
         real = security.redact_with_findings
@@ -506,7 +506,7 @@ class TestAnOverLongCrossingRowIsSkippedNotScanned:
     """A crossing activity row longer than one bounded scan never reaches the redactors."""
 
     def test_a_huge_crossing_row_is_never_read_and_adds_nothing(self, monkeypatch):
-        from kiro_crew import security
+        from aj_crew import security
 
         scanned: list[int] = []
         real = security.redact_with_findings
@@ -575,7 +575,7 @@ class TestTheOutcomeRow:
         assert ms.record_outcome("s", {"turn_id": "t", "choice": "queue", "latency_ms": 1}) is None
 
     def test_the_point_is_one_this_build_ships(self):
-        from kiro_crew.decisions.gate import DECISION_POINT_NAMES
+        from aj_crew.decisions.gate import DECISION_POINT_NAMES
 
         assert ms.POINT in DECISION_POINT_NAMES, "an absent name is refused by the gate"
 

@@ -21,7 +21,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import files as files_mod
+from aj_crew.dashboard.handlers import files as files_mod
 
 SECRET = "OWNERPRIVATEBYTES-7f3a"
 NON_OWNER = "U_ALLOWED_TEAMMATE"
@@ -213,7 +213,7 @@ async def test_file_search_offloads_a_cold_sel_write(planted, monkeypatch):
     # A failed startup warm leaves construction to the first caller, which is key
     # load plus a tail read of the log. On the event loop that is a stall, so the
     # cold path has to take a worker thread.
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     hops: list[str] = []
 

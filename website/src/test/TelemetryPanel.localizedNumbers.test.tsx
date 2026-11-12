@@ -38,7 +38,7 @@ const resp = (over: Record<string, unknown> = {}) => ({
   turn: { ...stat({ count: 80 }), outcome: { ok: 80 }, fault_rate: 0 },
   context: null,
   other: [{
-    name: 'kirocrew.tool.call.duration', kind: 'histogram', count: 45,
+    name: 'ajcrew.tool.call.duration', kind: 'histogram', count: 45,
     mean_ms: 1500, p50_ms: 1500, p90_ms: 2400, min_ms: 12, max_ms: 3100,
     other_generations: 0, total_count: 45,
   }],
@@ -68,8 +68,8 @@ describe('telemetry numbers in the active language', () => {
     await i18next.changeLanguage('de')
     vi.mocked(api.telemetryStartup).mockResolvedValue(resp() as never)
     render(<TelemetryPanel />, { wrapper: Wrapper })
-    await waitFor(() => expect(screen.getByText('kirocrew.tool.call.duration')).toBeInTheDocument())
-    const row = screen.getByText('kirocrew.tool.call.duration').closest('div')!
+    await waitFor(() => expect(screen.getByText('ajcrew.tool.call.duration')).toBeInTheDocument())
+    const row = screen.getByText('ajcrew.tool.call.duration').closest('div')!
     const expected = fmtUnit(1.5, 'second', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
     expect(expected).toContain(',')
     expect(row.textContent).toContain(expected)

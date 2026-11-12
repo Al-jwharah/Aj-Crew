@@ -1,12 +1,12 @@
-"""Packaged-install path of the Kiro Crew installer: launcher shim and MCP cleanup.
+"""Packaged-install path of the Aj Crew installer: launcher shim and MCP cleanup.
 
 A dev or source tree satisfies these properties by accident, so they are tested
 against a fake packaged layout:
 
 - The desktop bundle's launcher must resolve by walking up from
-  ``kiro_crew.__file__``. A miss falls back to the bare ``"kirocrew"``, which is
-  not on ``PATH`` in a bundle, and the config build then DROPS ``kirocrew-core``
-  and ``kirocrew-cron``. A live ``mcp-core`` handshake still passes in that case,
+  ``aj_crew.__file__``. A miss falls back to the bare ``"ajcrew"``, which is
+  not on ``PATH`` in a bundle, and the config build then DROPS ``ajcrew-core``
+  and ``ajcrew-cron``. A live ``mcp-core`` handshake still passes in that case,
   so the tests check the wiring: the command must be an absolute executable path.
 - ``clean_stale_managed_mcp()`` purges a superseded predecessor's entries only
   when an edition registers it through the import-source seam.
@@ -24,19 +24,19 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew
-import kiro_crew.agent as agent
-import kiro_crew.mcp_cleanup as mcp_cleanup
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.context import reset_context, set_context
-from kiro_crew.platform.interfaces import ImportSource
+import aj_crew
+import aj_crew.agent as agent
+import aj_crew.mcp_cleanup as mcp_cleanup
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.context import reset_context, set_context
+from aj_crew.platform.interfaces import ImportSource
 
-# The ~/.local/bin symlink shim is POSIX-only: on Windows pip's Scripts\kirocrew.exe
+# The ~/.local/bin symlink shim is POSIX-only: on Windows pip's Scripts\ajcrew.exe
 # is the launcher and a symlink needs Developer Mode. A Windows no-op test covers that.
 _posix_shim_only = pytest.mark.skipif(
     sys.platform == "win32",
-    reason="POSIX ~/.local/bin symlink shim; Windows uses pip's Scripts\\kirocrew.exe",
+    reason="POSIX ~/.local/bin symlink shim; Windows uses pip's Scripts\\ajcrew.exe",
 )
 
 
@@ -60,7 +60,7 @@ def _install_superseded(
                 )
             ]
 
-    base = build_default_context(KiroCrewConfig())
+    base = build_default_context(AjCrewConfig())
     set_context(dataclasses.replace(base, import_sources=_Provider()))
 
 
@@ -85,13 +85,13 @@ def _repository_boundary_at_tmp_path(tmp_path: Path) -> None:
 def _fake_bundle_launcher(tmp_path: Path) -> Path:
     """The desktop bundle's launcher, at the root of a python-build-standalone tree.
 
-    The path comes from :func:`agent._kirocrew_bin_subpath`, the same helper the
+    The path comes from :func:`agent._ajcrew_bin_subpath`, the same helper the
     resolver uses, so the fixture cannot drift from the layout under test (or from
-    the per-OS naming: ``bin/kirocrew`` on POSIX, ``Scripts\\kirocrew.exe`` on
+    the per-OS naming: ``bin/ajcrew`` on POSIX, ``Scripts\\ajcrew.exe`` on
     Windows).
     """
-    root = tmp_path / "backend-dist" / "kirocrew-backend"
-    launcher = agent._kirocrew_bin_subpath(root)
+    root = tmp_path / "backend-dist" / "ajcrew-backend"
+    launcher = agent._ajcrew_bin_subpath(root)
     launcher.parent.mkdir(parents=True, exist_ok=True)
     launcher.write_text("#!/bin/sh\nexit 0\n")
     launcher.chmod(0o755)
@@ -120,19 +120,19 @@ def _simulate_bundled_app(monkeypatch, launcher: Path) -> None:
 
     Nothing marks the bundle at runtime — it is an ordinary python-build-standalone
     interpreter — so what distinguishes it is WHERE the package sits: the
-    resolver's walk-up from ``kiro_crew.__file__`` is what reaches the bundle's
+    resolver's walk-up from ``aj_crew.__file__`` is what reaches the bundle's
     launcher. Point the package at the bundle's ``site-packages`` so that walk runs
     against the shipped layout, reject every other candidate so the test does not
-    depend on the tree it runs in, and leave nothing named ``kirocrew`` on PATH.
+    depend on the tree it runs in, and leave nothing named ``ajcrew`` on PATH.
     """
     root = launcher.parent.parent
-    pkg_init = root / "lib" / "python3.12" / "site-packages" / "kiro_crew" / "__init__.py"
+    pkg_init = root / "lib" / "python3.12" / "site-packages" / "aj_crew" / "__init__.py"
     pkg_init.parent.mkdir(parents=True, exist_ok=True)
     pkg_init.touch()
-    monkeypatch.setattr(agent, "_KIROCREW_BIN", "", raising=False)
-    monkeypatch.setattr(kiro_crew, "__file__", str(pkg_init))
+    monkeypatch.setattr(agent, "_AJCREW_BIN", "", raising=False)
+    monkeypatch.setattr(aj_crew, "__file__", str(pkg_init))
     monkeypatch.setattr(agent, "_bin_is_usable", lambda p: str(p) == str(launcher))
-    # `kirocrew` is not on PATH; only absolute paths resolve.
+    # `ajcrew` is not on PATH; only absolute paths resolve.
     monkeypatch.setattr(
         agent.shutil, "which", lambda c, **kw: c if str(c).startswith("/") else None
     )
@@ -141,20 +141,20 @@ def _simulate_bundled_app(monkeypatch, launcher: Path) -> None:
 # Bundled launcher resolution
 def test_resolver_finds_the_bundled_launcher(tmp_path, monkeypatch):
     """In the desktop bundle, the walk-up from the package must reach the
-    bundle's own launcher instead of the bare ``"kirocrew"`` sentinel."""
+    bundle's own launcher instead of the bare ``"ajcrew"`` sentinel."""
     launcher = _fake_bundle_launcher(tmp_path)
     _simulate_bundled_app(monkeypatch, launcher)
 
-    resolved = agent._resolve_kirocrew_bin()
+    resolved = agent._resolve_ajcrew_bin()
 
     assert resolved == str(launcher), (
-        "bundled app must resolve to its own launcher, not bare 'kirocrew' " f"(got {resolved!r})"
+        "bundled app must resolve to its own launcher, not bare 'ajcrew' " f"(got {resolved!r})"
     )
 
 
 # Managed MCP servers kept in the desktop bundle
 def test_managed_servers_survive_in_the_desktop_bundle(tmp_path, monkeypatch):
-    """build_agent_config() must give kirocrew-core/kirocrew-cron an absolute,
+    """build_agent_config() must give ajcrew-core/ajcrew-cron an absolute,
     existing, executable command — the exact predicate the rebuild validation
     loop uses to KEEP (vs. drop) a server."""
     launcher = _fake_bundle_launcher(tmp_path)
@@ -163,23 +163,21 @@ def test_managed_servers_survive_in_the_desktop_bundle(tmp_path, monkeypatch):
 
     with ExitStack() as stack:
         stack.enter_context(
-            patch("kiro_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json")
+            patch("aj_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json")
         )
         _missing_overrides = tmp_path / "missing_overrides.json"
-        stack.enter_context(patch.multiple("kiro_crew.agent", _BUNDLED_CFG_DIR=cfg_dir))
+        stack.enter_context(patch.multiple("aj_crew.agent", _BUNDLED_CFG_DIR=cfg_dir))
         stack.enter_context(
-            patch("kiro_crew.agent._user_overrides_path", return_value=_missing_overrides)
+            patch("aj_crew.agent._user_overrides_path", return_value=_missing_overrides)
         )
+        stack.enter_context(patch("aj_crew.agent._prompt_path", return_value=cfg_dir / "prompt.md"))
         stack.enter_context(
-            patch("kiro_crew.agent._prompt_path", return_value=cfg_dir / "prompt.md")
-        )
-        stack.enter_context(
-            patch("kiro_crew.agent._mc_config_path", return_value=tmp_path / "missing_mc.json")
+            patch("aj_crew.agent._mc_config_path", return_value=tmp_path / "missing_mc.json")
         )
         config = agent.build_agent_config()
 
     servers = config.get("mcpServers", {})
-    for name in ("kirocrew-core", "kirocrew-cron"):
+    for name in ("ajcrew-core", "ajcrew-cron"):
         assert name in servers, f"{name} missing from generated config"
         cmd = servers[name]["command"]
         assert cmd == str(launcher), f"{name} command should be the bundle launcher, got {cmd!r}"
@@ -192,16 +190,16 @@ def test_managed_servers_survive_in_the_desktop_bundle(tmp_path, monkeypatch):
 
 # Shim install: mirrors install.sh for install paths that skip it (the app)
 @_posix_shim_only
-def test_ensure_kirocrew_on_path_creates_shim(tmp_path, monkeypatch):
-    """A bundled app with no `kirocrew` on PATH must get a shim pointing at the
+def test_ensure_ajcrew_on_path_creates_shim(tmp_path, monkeypatch):
+    """A bundled app with no `ajcrew` on PATH must get a shim pointing at the
     bundle's launcher."""
     exe = _fake_bundle_launcher(tmp_path)
     _simulate_bundled_app(monkeypatch, exe)
     bin_dir = tmp_path / "localbin"
 
-    created = agent.ensure_kirocrew_on_path(bin_dir=bin_dir)
+    created = agent.ensure_ajcrew_on_path(bin_dir=bin_dir)
 
-    link = bin_dir / "kirocrew"
+    link = bin_dir / "ajcrew"
     assert created == str(link)
     assert link.is_symlink()
     assert os.path.realpath(link) == os.path.realpath(exe)
@@ -209,31 +207,31 @@ def test_ensure_kirocrew_on_path_creates_shim(tmp_path, monkeypatch):
 
 
 @_posix_shim_only
-def test_ensure_kirocrew_on_path_idempotent(tmp_path, monkeypatch):
+def test_ensure_ajcrew_on_path_idempotent(tmp_path, monkeypatch):
     """Re-running setup when the shim is already correct is a no-op."""
     exe = _fake_bundle_launcher(tmp_path)
     _simulate_bundled_app(monkeypatch, exe)
     bin_dir = tmp_path / "localbin"
 
-    assert agent.ensure_kirocrew_on_path(bin_dir=bin_dir) is not None
-    assert agent.ensure_kirocrew_on_path(bin_dir=bin_dir) is None
-    assert os.path.realpath(bin_dir / "kirocrew") == os.path.realpath(exe)
+    assert agent.ensure_ajcrew_on_path(bin_dir=bin_dir) is not None
+    assert agent.ensure_ajcrew_on_path(bin_dir=bin_dir) is None
+    assert os.path.realpath(bin_dir / "ajcrew") == os.path.realpath(exe)
 
 
-def test_ensure_kirocrew_on_path_is_noop_on_windows(tmp_path, monkeypatch):
+def test_ensure_ajcrew_on_path_is_noop_on_windows(tmp_path, monkeypatch):
     """On Windows the symlink shim is skipped without touching the filesystem:
-    pip's Scripts\\kirocrew.exe is the launcher, and the symlink raises WinError
+    pip's Scripts\\ajcrew.exe is the launcher, and the symlink raises WinError
     1314 without Developer Mode."""
     monkeypatch.setattr(agent.platform_compat, "IS_WINDOWS", True)
     bin_dir = tmp_path / "localbin"
 
-    with patch.object(agent, "_resolve_kirocrew_bin", return_value=str(tmp_path / "kc")):
-        assert agent.ensure_kirocrew_on_path(bin_dir=bin_dir) is None
+    with patch.object(agent, "_resolve_ajcrew_bin", return_value=str(tmp_path / "kc")):
+        assert agent.ensure_ajcrew_on_path(bin_dir=bin_dir) is None
     assert not bin_dir.exists()
 
 
 # First-run setup on the gateway path: shim every start, purge once.
-# The desktop app launches `kirocrew gateway`, never `kirocrew setup`.
+# The desktop app launches `ajcrew gateway`, never `ajcrew setup`.
 def _seed_global_mcp(path: Path) -> None:
     """Write a global mcp.json with stale predecessor entries for first-run tests."""
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -241,8 +239,8 @@ def _seed_global_mcp(path: Path) -> None:
         json.dumps(
             {
                 "mcpServers": {
-                    "kirocrew-core": {"command": "kirocrew", "args": ["mcp-core"]},
-                    "kirocrew-cron": {"command": "kirocrew", "args": ["mcp-cron"]},
+                    "ajcrew-core": {"command": "ajcrew", "args": ["mcp-core"]},
+                    "ajcrew-cron": {"command": "ajcrew", "args": ["mcp-cron"]},
                     "predecessor-core": {
                         "command": "/old/Predecessor/bin/predecessor",
                         "args": ["mcp-core"],
@@ -284,10 +282,10 @@ def test_first_run_delivers_shim_and_purge(tmp_path, monkeypatch):
 
     agent.run_first_run_setup()
 
-    link = tmp_path / ".local" / "bin" / "kirocrew"
+    link = tmp_path / ".local" / "bin" / "ajcrew"
     assert link.is_symlink() and os.path.realpath(link) == os.path.realpath(exe)
     remaining = set(json.loads(mcp.read_text(encoding="utf-8"))["mcpServers"])
-    assert {"predecessor-core", "predecessor-cron", "kirocrew-core", "kirocrew-cron"}.isdisjoint(
+    assert {"predecessor-core", "predecessor-cron", "ajcrew-core", "ajcrew-cron"}.isdisjoint(
         remaining
     )
     assert "ai-community-slack-mcp" in remaining
@@ -298,7 +296,7 @@ def test_first_run_removes_a_generated_conductor_skill(tmp_path, monkeypatch):
     exe = _fake_bundle_launcher(tmp_path)
     _sandbox_first_run(tmp_path, monkeypatch, exe)
     skills_root = tmp_path / "skills"
-    monkeypatch.setattr("kiro_crew.skills.skills_dir", lambda: skills_root)
+    monkeypatch.setattr("aj_crew.skills.skills_dir", lambda: skills_root)
     skill = skills_root / "conductor" / "SKILL.md"
     skill.parent.mkdir(parents=True)
     fixture = Path(__file__).parent / "fixtures" / "retired_conductor_skill" / "select-crew-v2.md"
@@ -331,7 +329,7 @@ def test_first_run_purge_is_one_time(tmp_path, monkeypatch):
     assert mcp.read_text(encoding="utf-8") == before
     assert "predecessor-core" in set(json.loads(mcp.read_text(encoding="utf-8"))["mcpServers"])
     # but the shim is still ensured on every start
-    assert (tmp_path / ".local" / "bin" / "kirocrew").is_symlink()
+    assert (tmp_path / ".local" / "bin" / "ajcrew").is_symlink()
 
 
 def test_first_run_is_best_effort(tmp_path, monkeypatch):
@@ -345,8 +343,8 @@ def test_first_run_is_best_effort(tmp_path, monkeypatch):
     def _raise_purge():
         raise RuntimeError("purge boom")
 
-    monkeypatch.setattr(agent, "ensure_kirocrew_on_path", _raise)
-    monkeypatch.setattr("kiro_crew.mcp_cleanup.clean_stale_managed_mcp", _raise_purge)
+    monkeypatch.setattr(agent, "ensure_ajcrew_on_path", _raise)
+    monkeypatch.setattr("aj_crew.mcp_cleanup.clean_stale_managed_mcp", _raise_purge)
 
     # Must not propagate — gateway startup cannot be broken by setup failures.
     agent.run_first_run_setup()
@@ -365,7 +363,7 @@ def _spy_backfill(monkeypatch, calls, *, raises=None):
             raise raises
         return ["command-bar"]
 
-    monkeypatch.setattr("kiro_crew.apps.manager.backfill_default_on_builtins", _fake)
+    monkeypatch.setattr("aj_crew.apps.manager.backfill_default_on_builtins", _fake)
 
 
 def test_first_run_runs_the_default_on_backfill(tmp_path, monkeypatch):
@@ -426,36 +424,36 @@ def test_first_run_survives_a_failing_backfill(tmp_path, monkeypatch):
 
 # Resolver: the running interpreter is never the answer
 def test_resolver_never_returns_the_interpreter(tmp_path, monkeypatch):
-    """The resolver must return a ``kirocrew`` launcher, never whatever
+    """The resolver must return an ``ajcrew`` launcher, never whatever
     interpreter happens to be running — a source install with the launcher only
     on PATH must resolve through PATH."""
-    path_bin = tmp_path / "kirocrew"
+    path_bin = tmp_path / "ajcrew"
     path_bin.write_text("#!/bin/sh\n")
     path_bin.chmod(0o755)
     interp = tmp_path / "python-interp"  # the running interpreter
     interp.write_text("x")
     interp.chmod(0o755)
-    monkeypatch.setattr(agent, "_KIROCREW_BIN", "", raising=False)
+    monkeypatch.setattr(agent, "_AJCREW_BIN", "", raising=False)
     monkeypatch.setattr(sys, "executable", str(interp))
     # venv + bin-walk find nothing usable; only PATH resolves to path_bin.
     monkeypatch.setattr(agent, "_bin_is_usable", lambda p: str(p) == str(path_bin))
     monkeypatch.setattr(
-        agent.shutil, "which", lambda c, **kw: str(path_bin) if c == "kirocrew" else None
+        agent.shutil, "which", lambda c, **kw: str(path_bin) if c == "ajcrew" else None
     )
 
-    resolved = agent._resolve_kirocrew_bin()
+    resolved = agent._resolve_ajcrew_bin()
     assert resolved == str(path_bin)
     assert resolved != str(interp), "the resolver must not return sys.executable"
 
 
-# ensure_kirocrew_on_path edge cases
+# ensure_ajcrew_on_path edge cases
 def test_ensure_shim_noop_when_no_binary(tmp_path, monkeypatch):
-    monkeypatch.setattr(agent, "_KIROCREW_BIN", "", raising=False)
+    monkeypatch.setattr(agent, "_AJCREW_BIN", "", raising=False)
     monkeypatch.setattr(agent, "_bin_is_usable", lambda p: False)
     monkeypatch.setattr(agent.shutil, "which", lambda c, **kw: None)
     bin_dir = tmp_path / "localbin"
-    assert agent.ensure_kirocrew_on_path(bin_dir=bin_dir) is None
-    assert not (bin_dir / "kirocrew").exists()
+    assert agent.ensure_ajcrew_on_path(bin_dir=bin_dir) is None
+    assert not (bin_dir / "ajcrew").exists()
 
 
 @_posix_shim_only
@@ -467,32 +465,28 @@ def test_ensure_shim_refreshes_stale_symlink(tmp_path, monkeypatch):
     stale = tmp_path / "old-binary"
     stale.write_text("x")
     stale.chmod(0o755)
-    (bin_dir / "kirocrew").symlink_to(stale)
+    (bin_dir / "ajcrew").symlink_to(stale)
 
-    created = agent.ensure_kirocrew_on_path(bin_dir=bin_dir)
-    assert created == str(bin_dir / "kirocrew")
-    assert os.path.realpath(bin_dir / "kirocrew") == os.path.realpath(exe)
+    created = agent.ensure_ajcrew_on_path(bin_dir=bin_dir)
+    assert created == str(bin_dir / "ajcrew")
+    assert os.path.realpath(bin_dir / "ajcrew") == os.path.realpath(exe)
 
 
 def test_ensure_shim_noop_when_already_on_path(tmp_path, monkeypatch):
     exe = _fake_bundle_launcher(tmp_path)
-    monkeypatch.setattr(agent, "_KIROCREW_BIN", "", raising=False)
+    monkeypatch.setattr(agent, "_AJCREW_BIN", "", raising=False)
     monkeypatch.setattr(agent, "_bin_is_usable", lambda p: str(p) == str(exe))
-    # `kirocrew` already resolves on PATH to the SAME binary.
-    monkeypatch.setattr(
-        agent.shutil, "which", lambda c, **kw: str(exe) if c == "kirocrew" else None
-    )
+    # `ajcrew` already resolves on PATH to the SAME binary.
+    monkeypatch.setattr(agent.shutil, "which", lambda c, **kw: str(exe) if c == "ajcrew" else None)
     bin_dir = tmp_path / "localbin"
-    assert agent.ensure_kirocrew_on_path(bin_dir=bin_dir) is None
-    assert not (bin_dir / "kirocrew").exists()
+    assert agent.ensure_ajcrew_on_path(bin_dir=bin_dir) is None
+    assert not (bin_dir / "ajcrew").exists()
 
 
-# ensure_kirocrew_on_path never links into a linked git worktree:
-# `git worktree remove` deletes its .venv, and a dangling shim breaks `kirocrew` machine-wide.
-def _checkout_with_kirocrew(
-    root: Path, *, linked_worktree: bool, bare_parent: bool = False
-) -> Path:
-    """Build a fake checkout at *root* whose venv holds a `kirocrew` entrypoint.
+# ensure_ajcrew_on_path never links into a linked git worktree:
+# `git worktree remove` deletes its .venv, and a dangling shim breaks `ajcrew` machine-wide.
+def _checkout_with_ajcrew(root: Path, *, linked_worktree: bool, bare_parent: bool = False) -> Path:
+    """Build a fake checkout at *root* whose venv holds an `ajcrew` entrypoint.
 
     ``linked_worktree`` chooses the repository marker: a ``.git`` FILE with a
     ``gitdir:`` pointer (what `git worktree add` writes) versus a ``.git``
@@ -500,7 +494,7 @@ def _checkout_with_kirocrew(
     **bare** repo produces — ``<repo>.git/worktrees/<name>``, with no ``.git``
     path component — verified against real git, not assumed.
     """
-    binary = root / ".venv" / "bin" / "kirocrew"
+    binary = root / ".venv" / "bin" / "ajcrew"
     binary.parent.mkdir(parents=True, exist_ok=True)
     binary.write_text("#!/bin/sh\nexit 0\n")
     binary.chmod(0o755)
@@ -514,28 +508,28 @@ def _checkout_with_kirocrew(
 
 def _resolve_to(monkeypatch, binary: Path) -> None:
     """Make resolution land on *binary* and leave nothing else on PATH."""
-    monkeypatch.setattr(agent, "_KIROCREW_BIN", "", raising=False)
-    monkeypatch.setattr(agent, "_resolve_kirocrew_bin", lambda: str(binary))
+    monkeypatch.setattr(agent, "_AJCREW_BIN", "", raising=False)
+    monkeypatch.setattr(agent, "_resolve_ajcrew_bin", lambda: str(binary))
     monkeypatch.setattr(agent.shutil, "which", lambda c, **kw: None)
 
 
 def test_in_linked_git_worktree_distinguishes_marker_kind(tmp_path):
     """The detector answers on the nearest marker: `.git` file vs `.git` dir."""
-    wt = _checkout_with_kirocrew(tmp_path / "wt-feature", linked_worktree=True)
-    clone = _checkout_with_kirocrew(tmp_path / "clone", linked_worktree=False)
+    wt = _checkout_with_ajcrew(tmp_path / "wt-feature", linked_worktree=True)
+    clone = _checkout_with_ajcrew(tmp_path / "clone", linked_worktree=False)
 
     assert agent._in_linked_git_worktree(wt) is True
     assert agent._in_linked_git_worktree(clone) is False
     # No marker of its own: the walk answers on the ordinary-clone boundary the
     # module fixture pins at tmp_path, so there is nothing to decline.
-    assert agent._in_linked_git_worktree(tmp_path / "nowhere" / "bin" / "kirocrew") is False
+    assert agent._in_linked_git_worktree(tmp_path / "nowhere" / "bin" / "ajcrew") is False
 
 
 def test_in_linked_git_worktree_matches_a_bare_repo_pointer(tmp_path):
     """A bare repo's git dir IS the repo dir, so its worktree pointer carries no
     `.git` component (`/…/myrepo.git/worktrees/<name>`). Matching on `/.git/`
     would miss it and reopen the bypass."""
-    wt = _checkout_with_kirocrew(tmp_path / "wt-from-bare", linked_worktree=True, bare_parent=True)
+    wt = _checkout_with_ajcrew(tmp_path / "wt-from-bare", linked_worktree=True, bare_parent=True)
     pointer = (tmp_path / "wt-from-bare" / ".git").read_text()
     assert "/.git/worktrees/" not in pointer, "fixture must reproduce the bare shape"
 
@@ -546,7 +540,7 @@ def test_in_linked_git_worktree_ignores_a_submodule_pointer(tmp_path):
     """`/worktrees/` must not be so loose that a submodule matches: submodules
     write `gitdir: ../.git/modules/<name>`, a different subtree."""
     root = tmp_path / "sub"
-    binary = root / ".venv" / "bin" / "kirocrew"
+    binary = root / ".venv" / "bin" / "ajcrew"
     binary.parent.mkdir(parents=True)
     binary.write_text("#!/bin/sh\nexit 0\n")
     binary.chmod(0o755)
@@ -558,12 +552,12 @@ def test_in_linked_git_worktree_ignores_a_submodule_pointer(tmp_path):
 @_posix_shim_only
 def test_ensure_shim_declines_a_worktree_target(tmp_path, monkeypatch):
     """A venv inside a linked worktree must never become the global launcher."""
-    binary = _checkout_with_kirocrew(tmp_path / "wt-feature", linked_worktree=True)
+    binary = _checkout_with_ajcrew(tmp_path / "wt-feature", linked_worktree=True)
     _resolve_to(monkeypatch, binary)
     bin_dir = tmp_path / "localbin"
 
-    assert agent.ensure_kirocrew_on_path(bin_dir=bin_dir) is None
-    assert not (bin_dir / "kirocrew").exists(), "worktree venv must not be linked"
+    assert agent.ensure_ajcrew_on_path(bin_dir=bin_dir) is None
+    assert not (bin_dir / "ajcrew").exists(), "worktree venv must not be linked"
 
 
 @_posix_shim_only
@@ -571,62 +565,62 @@ def test_ensure_shim_declines_a_symlink_pointing_into_a_worktree(tmp_path, monke
     """The ancestry walk is lexical, so a target that is ITSELF a symlink into a
     worktree must be resolved first — otherwise its own parents carry no `.git`
     marker and the worktree is waved through."""
-    real = _checkout_with_kirocrew(tmp_path / "wt-feature", linked_worktree=True)
+    real = _checkout_with_ajcrew(tmp_path / "wt-feature", linked_worktree=True)
     # A PATH-style indirection outside any repo, pointing into the worktree.
     link_dir = tmp_path / "elsewhere"
     link_dir.mkdir()
-    link = link_dir / "kirocrew"
+    link = link_dir / "ajcrew"
     link.symlink_to(real)
     assert agent._in_linked_git_worktree(link) is False, "lexical walk cannot see through it"
 
     _resolve_to(monkeypatch, link)
     bin_dir = tmp_path / "localbin"
 
-    assert agent.ensure_kirocrew_on_path(bin_dir=bin_dir) is None
-    assert not (bin_dir / "kirocrew").exists()
+    assert agent.ensure_ajcrew_on_path(bin_dir=bin_dir) is None
+    assert not (bin_dir / "ajcrew").exists()
 
 
 @_posix_shim_only
 def test_ensure_shim_declines_a_bare_repo_worktree_target(tmp_path, monkeypatch):
     """Same refusal for a worktree of a bare repo, whose pointer has no `.git`."""
-    binary = _checkout_with_kirocrew(
+    binary = _checkout_with_ajcrew(
         tmp_path / "wt-from-bare", linked_worktree=True, bare_parent=True
     )
     _resolve_to(monkeypatch, binary)
     bin_dir = tmp_path / "localbin"
 
-    assert agent.ensure_kirocrew_on_path(bin_dir=bin_dir) is None
-    assert not (bin_dir / "kirocrew").exists()
+    assert agent.ensure_ajcrew_on_path(bin_dir=bin_dir) is None
+    assert not (bin_dir / "ajcrew").exists()
 
 
 @_posix_shim_only
 def test_ensure_shim_links_an_ordinary_clone_target(tmp_path, monkeypatch):
     """Negative control: the same setup in a normal clone still gets linked, so
     the guard rejects worktrees specifically rather than disabling the shim."""
-    binary = _checkout_with_kirocrew(tmp_path / "clone", linked_worktree=False)
+    binary = _checkout_with_ajcrew(tmp_path / "clone", linked_worktree=False)
     _resolve_to(monkeypatch, binary)
     bin_dir = tmp_path / "localbin"
 
-    created = agent.ensure_kirocrew_on_path(bin_dir=bin_dir)
+    created = agent.ensure_ajcrew_on_path(bin_dir=bin_dir)
 
-    assert created == str(bin_dir / "kirocrew")
-    assert os.path.realpath(bin_dir / "kirocrew") == os.path.realpath(binary)
+    assert created == str(bin_dir / "ajcrew")
+    assert os.path.realpath(bin_dir / "ajcrew") == os.path.realpath(binary)
 
 
 @_posix_shim_only
 def test_ensure_shim_keeps_a_working_shim_when_target_is_a_worktree(tmp_path, monkeypatch):
     """An existing, working shim survives a resolution that lands in a worktree."""
-    good = _checkout_with_kirocrew(tmp_path / "clone", linked_worktree=False)
+    good = _checkout_with_ajcrew(tmp_path / "clone", linked_worktree=False)
     bin_dir = tmp_path / "localbin"
     bin_dir.mkdir()
-    (bin_dir / "kirocrew").symlink_to(good)
+    (bin_dir / "ajcrew").symlink_to(good)
 
-    worktree_binary = _checkout_with_kirocrew(tmp_path / "wt-feature", linked_worktree=True)
+    worktree_binary = _checkout_with_ajcrew(tmp_path / "wt-feature", linked_worktree=True)
     _resolve_to(monkeypatch, worktree_binary)
 
-    assert agent.ensure_kirocrew_on_path(bin_dir=bin_dir) is None
-    assert os.path.realpath(bin_dir / "kirocrew") == os.path.realpath(good)
-    assert os.path.exists(bin_dir / "kirocrew"), "shim must not be left dangling"
+    assert agent.ensure_ajcrew_on_path(bin_dir=bin_dir) is None
+    assert os.path.realpath(bin_dir / "ajcrew") == os.path.realpath(good)
+    assert os.path.exists(bin_dir / "ajcrew"), "shim must not be left dangling"
 
 
 # clean_stale_managed_mcp: edge cases and the argv-based playwright purge
@@ -647,7 +641,7 @@ def test_clean_stale_non_utf8_json_untouched(tmp_path, monkeypatch):
     # The global mcp.json is shared with other tools; bytes that are not UTF-8
     # read like bad JSON: nothing is removed and the file is left as it was.
     p = tmp_path / "mcp.json"
-    raw = b'{"mcpServers": {"kirocrew-core": {"command": "caf\xe9"}}}'
+    raw = b'{"mcpServers": {"ajcrew-core": {"command": "caf\xe9"}}}'
     p.write_bytes(raw)
     monkeypatch.setattr(mcp_cleanup, "_KIRO_MCP_JSON", p)
 
@@ -683,10 +677,10 @@ def test_clean_stale_purges_deleted_playwright_proxy(tmp_path, monkeypatch):
         json.dumps(
             {
                 "mcpServers": {
-                    "@playwright/mcp": {"command": "kirocrew", "args": ["mcp-playwright-proxy"]},
-                    # A live kirocrew verb, NOT in KIROCREW_BIN_MCP_SERVERS: the
-                    # purge matches the deleted VERB, not anything kirocrew launches.
-                    "operator-own-server": {"command": "kirocrew", "args": ["mcp-core"]},
+                    "@playwright/mcp": {"command": "ajcrew", "args": ["mcp-playwright-proxy"]},
+                    # A live ajcrew verb, NOT in AJCREW_BIN_MCP_SERVERS: the
+                    # purge matches the deleted VERB, not anything ajcrew launches.
+                    "operator-own-server": {"command": "ajcrew", "args": ["mcp-core"]},
                     "ai-community-slack-mcp": {"command": "ai-community-slack-mcp", "args": []},
                 }
             },
@@ -700,7 +694,7 @@ def test_clean_stale_purges_deleted_playwright_proxy(tmp_path, monkeypatch):
 
     assert "@playwright/mcp" not in remaining
     assert "@playwright/mcp" in removed
-    assert "operator-own-server" in remaining  # other kirocrew-launched verb kept
+    assert "operator-own-server" in remaining  # other ajcrew-launched verb kept
     assert "ai-community-slack-mcp" in remaining  # user server kept
 
 
@@ -714,7 +708,7 @@ def _stale_mcp_doc() -> str:
     return json.dumps(
         {
             "mcpServers": {
-                "kirocrew-core": {"command": "kirocrew", "args": ["mcp-core"]},
+                "ajcrew-core": {"command": "ajcrew", "args": ["mcp-core"]},
                 "ai-community-slack-mcp": {"command": "ai-community-slack-mcp", "args": []},
             }
         },
@@ -735,7 +729,7 @@ def test_clean_stale_never_rewrites_the_file_in_place(tmp_path, monkeypatch):
     monkeypatch.setattr(mcp_cleanup, "_KIRO_MCP_JSON", p)
 
     with open(p, encoding="utf-8") as before:
-        assert mcp_cleanup.clean_stale_managed_mcp() == ["kirocrew-core"]
+        assert mcp_cleanup.clean_stale_managed_mcp() == ["ajcrew-core"]
         before.seek(0)
         assert before.read() == original  # the old inode was never touched
 
@@ -751,7 +745,7 @@ def test_clean_stale_keeps_the_files_permissions(tmp_path, monkeypatch):
     os.chmod(p, 0o640)
     monkeypatch.setattr(mcp_cleanup, "_KIRO_MCP_JSON", p)
 
-    assert mcp_cleanup.clean_stale_managed_mcp() == ["kirocrew-core"]
+    assert mcp_cleanup.clean_stale_managed_mcp() == ["ajcrew-core"]
     assert os.stat(p).st_mode & 0o7777 == 0o640
 
 
@@ -765,9 +759,9 @@ def test_clean_stale_keeps_a_symlinked_mcp_json_a_symlink(tmp_path, monkeypatch)
     link.symlink_to(real)
     monkeypatch.setattr(mcp_cleanup, "_KIRO_MCP_JSON", link)
 
-    assert mcp_cleanup.clean_stale_managed_mcp() == ["kirocrew-core"]
+    assert mcp_cleanup.clean_stale_managed_mcp() == ["ajcrew-core"]
     assert link.is_symlink()
-    assert "kirocrew-core" not in json.loads(real.read_text(encoding="utf-8"))["mcpServers"]
+    assert "ajcrew-core" not in json.loads(real.read_text(encoding="utf-8"))["mcpServers"]
 
 
 @_posix_inode_semantics
@@ -789,7 +783,7 @@ def test_first_run_no_global_mcp(tmp_path, monkeypatch):
     marker, mcp = _sandbox_first_run(tmp_path, monkeypatch, exe)
     # No global mcp.json at all (clean fresh install).
     agent.run_first_run_setup()
-    assert (tmp_path / ".local" / "bin" / "kirocrew").is_symlink()
+    assert (tmp_path / ".local" / "bin" / "ajcrew").is_symlink()
     assert marker.exists()  # marker written even with nothing to purge
     assert not mcp.exists()  # purge must not create a global mcp.json
 
@@ -804,7 +798,7 @@ def test_rebuild_purge_drops_proxy_entry_even_when_marker_exists(tmp_path):
     config: dict = {
         "mcpServers": {
             "playwright-mcp": {
-                "command": "kirocrew",
+                "command": "ajcrew",
                 "args": ["mcp-playwright-proxy"],
             },
             "user-server": {"command": "npx", "args": ["some-tool"]},
@@ -835,7 +829,7 @@ def test_rebuild_purge_strips_the_per_tool_spelling_and_duplicates(tmp_path):
     config: dict = {
         "mcpServers": {
             "playwright-mcp": {
-                "command": "kirocrew",
+                "command": "ajcrew",
                 "args": ["mcp-playwright-proxy"],
             },
             "playwright-mcpx": {"command": "npx", "args": ["some-tool"]},
@@ -884,7 +878,7 @@ def test_rebuild_purge_drops_reinjected_entry_on_second_rebuild():
     base_config: dict = {
         "mcpServers": {
             "playwright-mcp": {
-                "command": "kirocrew",
+                "command": "ajcrew",
                 "args": ["mcp-playwright-proxy"],
             },
         },
@@ -896,7 +890,7 @@ def test_rebuild_purge_drops_reinjected_entry_on_second_rebuild():
 
     # Simulate re-injection from ~/.kiro/crew/mcp.json on next rebuild.
     base_config["mcpServers"]["playwright-mcp"] = {
-        "command": "kirocrew",
+        "command": "ajcrew",
         "args": ["mcp-playwright-proxy"],
     }
     base_config["tools"].append("@playwright-mcp")
@@ -910,12 +904,12 @@ def test_rebuild_purge_drops_reinjected_entry_on_second_rebuild():
 def test_in_ephemeral_tree_matches_the_runtime_mount(tmp_path):
     """An AppImage's `/tmp/.mount_<name>XXXXXX` tree disappears on exit, so a
     launcher aimed into it dangles. Matched on the `.mount_` path component."""
-    mount = tmp_path / ".mount_KiroCrewAbc123"
-    binary = mount / "resources" / "backend-dist" / "kirocrew-backend" / "bin" / "kirocrew"
+    mount = tmp_path / ".mount_AjCrewAbc123"
+    binary = mount / "resources" / "backend-dist" / "ajcrew-backend" / "bin" / "ajcrew"
     assert agent._in_ephemeral_tree(binary) is True
     # A durable install is not condemned by the same check.
-    assert agent._in_ephemeral_tree(Path("/opt/KiroCrew/resources/bin/kirocrew")) is False
-    assert agent._in_ephemeral_tree(tmp_path / "clone" / "bin" / "kirocrew") is False
+    assert agent._in_ephemeral_tree(Path("/opt/AjCrew/resources/bin/ajcrew")) is False
+    assert agent._in_ephemeral_tree(tmp_path / "clone" / "bin" / "ajcrew") is False
 
 
 def test_in_ephemeral_tree_honors_appdir(tmp_path):
@@ -923,36 +917,36 @@ def test_in_ephemeral_tree_honors_appdir(tmp_path):
     even when the path carries no `.mount_` component (a custom TMPDIR, or a
     runtime that changes its prefix)."""
     appdir = tmp_path / "some-extracted-dir"
-    binary = appdir / "bin" / "kirocrew"
+    binary = appdir / "bin" / "ajcrew"
     env = {"APPDIR": str(appdir)}
     assert agent._in_ephemeral_tree(binary, env) is True
     # Outside $APPDIR, the same env must not condemn an unrelated path.
-    assert agent._in_ephemeral_tree(tmp_path / "elsewhere" / "kirocrew", env) is False
+    assert agent._in_ephemeral_tree(tmp_path / "elsewhere" / "ajcrew", env) is False
 
 
 def test_shim_declines_an_appimage_mount_target(tmp_path, monkeypatch):
-    """The guard's payoff: ensure_kirocrew_on_path() runs on EVERY gateway start,
-    so without it an AppImage re-creates a dangling ~/.local/bin/kirocrew every
+    """The guard's payoff: ensure_ajcrew_on_path() runs on EVERY gateway start,
+    so without it an AppImage re-creates a dangling ~/.local/bin/ajcrew every
     time. Declining leaves whatever already worked in place."""
-    mount = tmp_path / ".mount_KiroCrewXyz789"
-    binary = mount / "bin" / "kirocrew"
+    mount = tmp_path / ".mount_AjCrewXyz789"
+    binary = mount / "bin" / "ajcrew"
     binary.parent.mkdir(parents=True)
     binary.write_text("#!/bin/sh\nexit 0\n")
     binary.chmod(0o755)
     _resolve_to(monkeypatch, binary)
 
     bin_dir = tmp_path / "localbin"
-    assert agent.ensure_kirocrew_on_path(bin_dir) is None
-    assert not (bin_dir / "kirocrew").exists()
+    assert agent.ensure_ajcrew_on_path(bin_dir) is None
+    assert not (bin_dir / "ajcrew").exists()
 
 
 def test_launcher_whose_venv_is_gone_is_not_usable(tmp_path):
-    """A clone's `bin/kirocrew` can survive its deleted `.venv`: readable and
+    """A clone's `bin/ajcrew` can survive its deleted `.venv`: readable and
     executable, but it fails at run time, so it must not be published."""
     root = tmp_path / "kc-work-dir"
-    launcher = root / "bin" / "kirocrew"
+    launcher = root / "bin" / "ajcrew"
     launcher.parent.mkdir(parents=True)
-    launcher.write_text('#!/bin/sh\nexec "$(dirname "$0")/../.venv/bin/python" -m kiro_crew "$@"\n')
+    launcher.write_text('#!/bin/sh\nexec "$(dirname "$0")/../.venv/bin/python" -m aj_crew "$@"\n')
     launcher.chmod(0o755)
 
     assert agent._bin_is_usable(launcher) is False
@@ -972,13 +966,13 @@ def test_console_script_inside_a_venv_stays_usable(tmp_path):
     sibling. Resolving `<parent>/../.venv` from there probes a nested `.venv/.venv`
     that never exists and would reject the most common source install -- dropping
     the built-in MCP servers, because resolution then falls through to the bare
-    "kirocrew" sentinel."""
+    "ajcrew" sentinel."""
     venv = tmp_path / "checkout" / ".venv"
     (venv / "bin").mkdir(parents=True)
     (venv / "bin" / "python").write_text("")
     (venv / "bin" / "python").chmod(0o755)  # a real interpreter is executable
-    script = venv / "bin" / "kirocrew"
-    script.write_text(f"#!{venv}/bin/python\nfrom kiro_crew.cli import main\n")
+    script = venv / "bin" / "ajcrew"
+    script.write_text(f"#!{venv}/bin/python\nfrom aj_crew.cli import main\n")
     script.chmod(0o755)
 
     assert agent._bin_is_usable(script) is True
@@ -994,9 +988,9 @@ def test_console_script_is_judged_by_its_own_shebang(tmp_path):
     python.parent.mkdir(parents=True)
     python.write_text("")
     python.chmod(0o755)  # a real interpreter is executable
-    script = tmp_path / "localbin" / "kirocrew"
+    script = tmp_path / "localbin" / "ajcrew"
     script.parent.mkdir(parents=True)
-    script.write_text(f"#!{python}\nfrom kiro_crew.cli import main\n")
+    script.write_text(f"#!{python}\nfrom aj_crew.cli import main\n")
     script.chmod(0o755)
 
     assert agent._bin_is_usable(script) is True
@@ -1008,9 +1002,9 @@ def test_console_script_is_judged_by_its_own_shebang(tmp_path):
 def test_env_shebang_is_not_treated_as_an_interpreter_path(tmp_path):
     """`#!/usr/bin/env python3` names the FINDER, not the interpreter, so it says
     nothing about a specific path and must not be tested as one."""
-    script = tmp_path / "bin" / "kirocrew"
+    script = tmp_path / "bin" / "ajcrew"
     script.parent.mkdir(parents=True)
-    script.write_text("#!/usr/bin/env python3\nfrom kiro_crew.cli import main\n")
+    script.write_text("#!/usr/bin/env python3\nfrom aj_crew.cli import main\n")
     script.chmod(0o755)
 
     assert agent._bin_is_usable(script) is True
@@ -1019,13 +1013,13 @@ def test_env_shebang_is_not_treated_as_an_interpreter_path(tmp_path):
 def test_launcher_naming_no_interpreter_stays_usable(tmp_path):
     """A launcher that names no interpreter of ours — a compiled entry point, or a
     plain script — must not be condemned by the check above."""
-    plain = tmp_path / "bin" / "kirocrew"
+    plain = tmp_path / "bin" / "ajcrew"
     plain.parent.mkdir(parents=True)
     plain.write_text("#!/bin/sh\nexit 0\n")
     plain.chmod(0o755)
     assert agent._bin_is_usable(plain) is True
 
-    compiled = tmp_path / "bin" / "kirocrew.exe"
+    compiled = tmp_path / "bin" / "ajcrew.exe"
     compiled.write_bytes(b"MZ\x90\x00compiled-launcher")
     assert agent._bin_is_usable(compiled) is True
 
@@ -1054,7 +1048,7 @@ def _foreign_working_launcher(tmp_path):
     interpreter = venv_bin / "python3"
     interpreter.write_text("")
     interpreter.chmod(0o755)
-    launcher = venv_bin / "kirocrew"
+    launcher = venv_bin / "ajcrew"
     launcher.write_text(f"#!{interpreter}\nprint('cli.sh install')\n")
     launcher.chmod(0o755)
     return launcher
@@ -1073,25 +1067,25 @@ def test_gateway_start_leaves_another_installs_working_launcher(tmp_path, monkey
     foreign = _foreign_working_launcher(tmp_path)
     bin_dir = tmp_path / "localbin"
     bin_dir.mkdir()
-    link = bin_dir / "kirocrew"
+    link = bin_dir / "ajcrew"
     link.symlink_to(foreign)
 
-    assert agent.ensure_kirocrew_on_path(bin_dir=bin_dir) is None
+    assert agent.ensure_ajcrew_on_path(bin_dir=bin_dir) is None
     assert os.path.realpath(link) == os.path.realpath(foreign)
 
 
 @_posix_shim_only
 def test_explicit_setup_claims_the_name(tmp_path, monkeypatch):
-    """`kirocrew setup` names an install deliberately, so it MAY take over."""
+    """`ajcrew setup` names an install deliberately, so it MAY take over."""
     exe = _fake_bundle_launcher(tmp_path)
     _simulate_bundled_app_honest(monkeypatch, tmp_path, exe)
     foreign = _foreign_working_launcher(tmp_path)
     bin_dir = tmp_path / "localbin"
     bin_dir.mkdir()
-    link = bin_dir / "kirocrew"
+    link = bin_dir / "ajcrew"
     link.symlink_to(foreign)
 
-    created = agent.ensure_kirocrew_on_path(bin_dir=bin_dir, claim_existing=True)
+    created = agent.ensure_ajcrew_on_path(bin_dir=bin_dir, claim_existing=True)
 
     assert created == str(link)
     assert os.path.realpath(link) == os.path.realpath(exe)
@@ -1104,10 +1098,10 @@ def test_gateway_start_repairs_a_dangling_launcher(tmp_path, monkeypatch):
     _simulate_bundled_app_honest(monkeypatch, tmp_path, exe)
     bin_dir = tmp_path / "localbin"
     bin_dir.mkdir()
-    link = bin_dir / "kirocrew"
-    link.symlink_to(tmp_path / "reaped" / "bin" / "kirocrew")
+    link = bin_dir / "ajcrew"
+    link.symlink_to(tmp_path / "reaped" / "bin" / "ajcrew")
 
-    created = agent.ensure_kirocrew_on_path(bin_dir=bin_dir)
+    created = agent.ensure_ajcrew_on_path(bin_dir=bin_dir)
 
     assert created == str(link)
     assert os.path.realpath(link) == os.path.realpath(exe)
@@ -1120,15 +1114,15 @@ def test_gateway_start_replaces_launcher_whose_interpreter_vanished(tmp_path, mo
     _simulate_bundled_app_honest(monkeypatch, tmp_path, exe)
     stale_bin = tmp_path / "reaped-venv" / "bin"
     stale_bin.mkdir(parents=True)
-    stale = stale_bin / "kirocrew"
+    stale = stale_bin / "ajcrew"
     stale.write_text(f"#!{stale_bin / 'python3'}\n")  # interpreter never created
     stale.chmod(0o755)
     bin_dir = tmp_path / "localbin"
     bin_dir.mkdir()
-    link = bin_dir / "kirocrew"
+    link = bin_dir / "ajcrew"
     link.symlink_to(stale)
 
-    created = agent.ensure_kirocrew_on_path(bin_dir=bin_dir)
+    created = agent.ensure_ajcrew_on_path(bin_dir=bin_dir)
 
     assert created == str(link)
     assert os.path.realpath(link) == os.path.realpath(exe)
@@ -1148,15 +1142,15 @@ _posix_exec_bit_only = pytest.mark.skipif(
 def test_interpreter_that_is_not_executable_is_not_usable(tmp_path):
     """A present-but-non-executable interpreter fails at exec time (EACCES), so
     the launcher naming it is as dead as one naming a reaped path -- existence
-    alone must not qualify, or gateway startup would decline to repair a
-    `kirocrew` that cannot run."""
+    alone must not qualify, or gateway startup would decline to repair an
+    `ajcrew` that cannot run."""
     python = tmp_path / "venvless" / "bin" / "python3"
     python.parent.mkdir(parents=True)
     python.write_text("")
     python.chmod(0o644)  # readable, NOT executable
-    script = tmp_path / "localbin" / "kirocrew"
+    script = tmp_path / "localbin" / "ajcrew"
     script.parent.mkdir(parents=True)
-    script.write_text(f"#!{python}\nfrom kiro_crew.cli import main\n")
+    script.write_text(f"#!{python}\nfrom aj_crew.cli import main\n")
     script.chmod(0o755)
 
     assert agent._bin_is_usable(script) is False
@@ -1170,35 +1164,35 @@ def test_gateway_start_does_not_shadow_a_working_launcher_elsewhere_on_path(tmp_
     """Ownership is about the NAME on PATH, not one directory.
 
     A pipx bin dir, /usr/local/bin, or a distro package can own a working
-    `kirocrew` while ~/.local/bin holds none. Creating one there would shadow it
+    `ajcrew` while ~/.local/bin holds none. Creating one there would shadow it
     or be shadowed by it depending on PATH order -- not a choice an unattended
     gateway start gets to make.
     """
     exe = _fake_bundle_launcher(tmp_path)
     foreign = _foreign_working_launcher(tmp_path)
     _simulate_bundled_app_honest(monkeypatch, tmp_path, exe)
-    # `kirocrew` resolves on PATH to the other install, and nothing is in bin_dir.
+    # `ajcrew` resolves on PATH to the other install, and nothing is in bin_dir.
     monkeypatch.setattr(
-        agent.shutil, "which", lambda c, **kw: str(foreign) if c == "kirocrew" else None
+        agent.shutil, "which", lambda c, **kw: str(foreign) if c == "ajcrew" else None
     )
     bin_dir = tmp_path / "localbin"
 
-    assert agent.ensure_kirocrew_on_path(bin_dir=bin_dir) is None
-    assert not (bin_dir / "kirocrew").exists()
+    assert agent.ensure_ajcrew_on_path(bin_dir=bin_dir) is None
+    assert not (bin_dir / "ajcrew").exists()
 
 
 @_posix_shim_only
 def test_explicit_setup_may_shadow_a_launcher_elsewhere_on_path(tmp_path, monkeypatch):
-    """`kirocrew setup` names this install, so it may publish into bin_dir."""
+    """`ajcrew setup` names this install, so it may publish into bin_dir."""
     exe = _fake_bundle_launcher(tmp_path)
     foreign = _foreign_working_launcher(tmp_path)
     _simulate_bundled_app_honest(monkeypatch, tmp_path, exe)
     monkeypatch.setattr(
-        agent.shutil, "which", lambda c, **kw: str(foreign) if c == "kirocrew" else None
+        agent.shutil, "which", lambda c, **kw: str(foreign) if c == "ajcrew" else None
     )
     bin_dir = tmp_path / "localbin"
 
-    created = agent.ensure_kirocrew_on_path(bin_dir=bin_dir, claim_existing=True)
+    created = agent.ensure_ajcrew_on_path(bin_dir=bin_dir, claim_existing=True)
 
-    assert created == str(bin_dir / "kirocrew")
-    assert os.path.realpath(bin_dir / "kirocrew") == os.path.realpath(exe)
+    assert created == str(bin_dir / "ajcrew")
+    assert os.path.realpath(bin_dir / "ajcrew") == os.path.realpath(exe)

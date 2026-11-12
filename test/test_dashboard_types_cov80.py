@@ -1,4 +1,4 @@
-"""Tests for :mod:`kiro_crew.dashboard._types`.
+"""Tests for :mod:`aj_crew.dashboard._types`.
 
 ``_types`` exists so the dashboard's many modules share ONE ``TYPE_CHECKING``
 block instead of repeating the same eight service imports. Two properties make
@@ -10,7 +10,7 @@ dashboard import and reintroduce the circular-import problem the module avoids.
 
 from __future__ import annotations
 
-from kiro_crew.dashboard import _types
+from aj_crew.dashboard import _types
 
 
 def test_all_names_the_shared_dashboard_services() -> None:

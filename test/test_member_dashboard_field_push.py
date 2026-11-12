@@ -14,9 +14,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.artifact_store import dashboard_package as dp
-from kiro_crew.crew_log import bus as crew_log_bus
-from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+from aj_crew.artifact_store import dashboard_package as dp
+from aj_crew.crew_log import bus as crew_log_bus
+from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
 SLOT = "chat-1-1790000000"
 
@@ -277,14 +277,14 @@ class TestTheModelBecomesTheManifest:
         """``_trusted_page`` gates the TEMPLATE render path on this field. A renderable
         source here would be this translation vouching for a page the repository did not
         ship -- and a package's page is trusted for a different reason entirely."""
-        from kiro_crew.dashboard_templates import instance as instance_store
+        from aj_crew.dashboard_templates import instance as instance_store
 
         assert mdf.package_manifest(package()).source not in instance_store.RENDERABLE_SOURCES
 
     def test_every_package_data_type_maps_to_a_manifest_type(self) -> None:
         """Enumerated from the catalog rather than from a list copied out of it, so a
         type the data line adds fails here instead of silently becoming a string."""
-        from kiro_crew.dashboard_templates.manifest import FIELD_TYPES
+        from aj_crew.dashboard_templates.manifest import FIELD_TYPES
 
         for name in dp.data_type_catalog():
             assert name in mdf._TYPE_MAP, f"the data type {name!r} has no manifest shape"
@@ -314,7 +314,7 @@ class TestACustomValueRidesTheSameSubscription:
         feed at module scope, since the gateway imports it before the socket binds. So
         the two spellings are pinned to each other instead: a rename on one side would
         otherwise leave a page subscribed to a fold nothing publishes, silently."""
-        from kiro_crew import dashboard_feed
+        from aj_crew import dashboard_feed
 
         assert mdf.AGENTIC_FOLD == dashboard_feed.AGENTIC_FOLD
 

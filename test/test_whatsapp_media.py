@@ -25,7 +25,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.whatsapp.media import (
+from aj_crew.whatsapp.media import (
     CARRIER_FIELDS,
     INGESTIBLE_KINDS,
     KIND_AUDIO,

@@ -15,7 +15,7 @@
 // to respect: main-process arbitration is not a popup blocker.
 //
 // `isElectron` is a module-load const derived from the preload bridge, so the
-// shell is faked by seeding `window.kirocrew` in a hoisted block — the real
+// shell is faked by seeding `window.ajcrew` in a hoisted block — the real
 // derivation in src/lib/electron.ts is what runs, exactly as
 // App.linuxElectron.test.tsx does it. The browser-side assertions live in
 // ConnectionsPage.coverage.connect.test.tsx ("the approval tab") and are untouched by
@@ -43,7 +43,7 @@ const connectionsTest = vi.fn()
 
 // Must run before src/lib/electron.ts is imported (module-level consts).
 vi.hoisted(() => {
-  ;(window as unknown as { kirocrew: { isElectron: boolean; platform: string } }).kirocrew = {
+  ;(window as unknown as { ajcrew: { isElectron: boolean; platform: string } }).ajcrew = {
     isElectron: true,
     platform: 'darwin',
   }

@@ -25,8 +25,8 @@ import aiohttp
 import pytest
 from aiohttp import web
 
-from kiro_crew.dashboard import listener_guard as lg
-from kiro_crew.dashboard.listener_guard import (
+from aj_crew.dashboard import listener_guard as lg
+from aj_crew.dashboard.listener_guard import (
     ACCEPT_FAILED_MESSAGE,
     LISTENER_LOST_EXIT_CODE,
     ListenerGuard,
@@ -34,7 +34,7 @@ from kiro_crew.dashboard.listener_guard import (
     listener_guard_exit_code,
     probe_target,
 )
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 IS_WINDOWS = sys.platform == "win32"
 
@@ -580,7 +580,7 @@ def test_gateway_shutdown_consults_listener_guard_exit_code() -> None:
     non-zero status. Without this the "alive but not listening" state would
     exit 0 and no supervisor would relaunch the gateway.
     """
-    from kiro_crew.dashboard.stale_asset_watchdog import (
+    from aj_crew.dashboard.stale_asset_watchdog import (
         STALE_ASSET_EXIT_CODE,
         shutdown_exit_code,
     )
@@ -615,7 +615,7 @@ def test_gateway_exit_path_composes_both_exit_codes() -> None:
     import inspect
     import textwrap
 
-    from kiro_crew.slack import gateway as gw
+    from aj_crew.slack import gateway as gw
 
     source = textwrap.dedent(inspect.getsource(gw.GatewayOrchestrator._shutdown_and_exit))
 
@@ -653,7 +653,7 @@ def test_both_gateway_entrypoints_arm_the_listener_guard() -> None:
     """
     import inspect
 
-    from kiro_crew.dashboard import server as srv
+    from aj_crew.dashboard import server as srv
 
     for entrypoint in (srv.start_dashboard, srv.start_api_server):
         source = inspect.getsource(entrypoint)
@@ -672,7 +672,7 @@ async def test_cleanup_detaches_the_guard_before_the_sites_close() -> None:
     """
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard import server as srv
+    from aj_crew.dashboard import server as srv
 
     app = web.Application()
     app.router.add_get("/api/live", _live)
@@ -728,7 +728,7 @@ async def test_guard_is_armed_on_windows_only(monkeypatch: Any) -> None:
     """
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard import server as srv
+    from aj_crew.dashboard import server as srv
 
     async with _Served() as served:
         assert served.site is not None
@@ -762,7 +762,7 @@ async def test_arming_an_inert_site_double_is_a_no_op(monkeypatch: Any) -> None:
     """
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard import server as srv
+    from aj_crew.dashboard import server as srv
 
     class _InertSite:
         """web.SockSite-shaped double: no _server, serves nothing."""
@@ -793,7 +793,7 @@ async def test_reserved_socket_guard_requires_bind_factory() -> None:
     loopback callbacks. Refusing at construction beats arming a guard whose
     recovery weakens the port.
     """
-    from kiro_crew.dashboard.server import _bind_once
+    from aj_crew.dashboard.server import _bind_once
 
     app = web.Application()
     app.router.add_get("/api/live", _live)
@@ -817,7 +817,7 @@ async def test_reserved_socket_recovery_rebinds_through_the_factory() -> None:
     boot shape — so the rebound listener carries the reservation's full
     option set by construction rather than a ``TCPSite`` approximation.
     """
-    from kiro_crew.dashboard.server import _bind_once
+    from aj_crew.dashboard.server import _bind_once
 
     factory_calls: list[tuple[str, int]] = []
 

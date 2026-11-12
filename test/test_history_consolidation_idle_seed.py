@@ -19,9 +19,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import history as history_mod
-from kiro_crew.history import ConversationLog, HistoryConsolidator
-from kiro_crew.session_map import SessionMap
+from aj_crew import history as history_mod
+from aj_crew.history import ConversationLog, HistoryConsolidator
+from aj_crew.session_map import SessionMap
 
 STEM = "dashboard_chat-left-behind"
 LIVE = "dashboard:chat-left-behind"
@@ -141,7 +141,7 @@ async def test_channel_private_only_in_the_session_map_is_not_seeded(tmp_path, m
 @pytest.mark.asyncio
 async def test_a_seeded_backlog_drains_a_few_per_sweep_without_starving(tmp_path):
     """Many stale seeds must not all start in the first sweep after a restart."""
-    from kiro_crew.history_consolidation import _SEEDED_PER_SWEEP
+    from aj_crew.history_consolidation import _SEEDED_PER_SWEEP
 
     _log, consolidator = _restarted(tmp_path, unconsolidated=True)
     consolidator._activity_seeded = True
@@ -236,7 +236,7 @@ async def test_legacy_slack_file_and_canonical_key_share_one_run(tmp_path):
 async def test_a_refused_seed_waits_an_idle_window_and_is_kept(tmp_path):
     """A refused seed (private after the scan, or inside its retry backoff) is not
     re-sent every sweep, and is not forgotten: a backoff that expires is retried."""
-    from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
+    from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
 
     _log, consolidator = _restarted(tmp_path, unconsolidated=True)
     consolidator._activity_seeded = True
@@ -283,17 +283,17 @@ async def test_a_seeded_session_looks_up_the_receipt_committed_before_restart(
     """A V2 member-memory pass commits a receipt keyed on the session key, then
     the gateway stops before the transcript is marked. After the restart the
     seeded pass must ask for THAT receipt, so it finds it and appends nothing."""
-    from kiro_crew.context import ContextBuilder
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.context import ContextBuilder
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
     class _Stop(Exception):
         pass
 
     execution = ExecutionContext(
-        "member-id", MemoryStoreRef("member-store", "member-id"), "member", "kirocrew", "persistent"
+        "member-id", MemoryStoreRef("member-store", "member-id"), "member", "ajcrew", "persistent"
     )
-    monkeypatch.setattr("kiro_crew.execution_context.read_session_execution", lambda _k: execution)
-    monkeypatch.setattr("kiro_crew.memory_stores.memory_store_version", lambda _store: 2)
+    monkeypatch.setattr("aj_crew.execution_context.read_session_execution", lambda _k: execution)
+    monkeypatch.setattr("aj_crew.memory_stores.memory_store_version", lambda _store: 2)
     asked: list[str] = []
     vectors = MagicMock()
     vectors.algorithm_version = "v2"
@@ -670,7 +670,7 @@ async def test_the_seed_helpers_ride_out_a_windows_sharing_violation(tmp_path, m
     """
     from windows_sim import replace_sharing_violation
 
-    from kiro_crew import atomic_write, platform_compat
+    from aj_crew import atomic_write, platform_compat
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
     monkeypatch.setattr(atomic_write, "_REPLACE_BACKOFF_SECONDS", 0)

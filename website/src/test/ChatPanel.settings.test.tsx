@@ -4,11 +4,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 
-const { patchConfigMock, tipsStatusMock, tipsFeedbackMock, kirocrewConfigMock, modelsMock } = vi.hoisted(() => ({
+const { patchConfigMock, tipsStatusMock, tipsFeedbackMock, ajcrewConfigMock, modelsMock } = vi.hoisted(() => ({
   patchConfigMock: vi.fn(() => Promise.resolve({})),
   tipsStatusMock: vi.fn(() => Promise.resolve({ enabled_config: true, opted_out: false })),
   tipsFeedbackMock: vi.fn(() => Promise.resolve({ ok: true })),
-  kirocrewConfigMock: vi.fn(() => Promise.resolve({
+  ajcrewConfigMock: vi.fn(() => Promise.resolve({
     agent: { completion_keep: 'head', completion_keep_chars: 3000, model: 'auto', reasoning_effort: '' },
   })),
   modelsMock: vi.fn(() => Promise.resolve([
@@ -23,7 +23,7 @@ vi.mock('../api/client', () => ({
     dashboardConfig: () => Promise.resolve({ restore_sessions: false, restore_window_minutes: 30, merge_queued_messages: false, widget_density: 'more' }),
     voiceConfig: () => Promise.resolve({ enabled: false, voice: 'Ruth', engine: 'neural', rate: '100%', autoSpeak: false, aws_profile: '', region: '' }),
     sttConfig: () => Promise.resolve({ enabled: false, provider: '', model: '', available: false, streaming: false, transcribe_region: '', transcribe_profile: '', language_code: 'en-US', models: {}, language_codes: [] }),
-    kirocrewConfig: kirocrewConfigMock,
+    ajcrewConfig: ajcrewConfigMock,
     models: modelsMock,
     patchConfig: patchConfigMock,
     updateDashboardConfig: () => Promise.resolve({}),

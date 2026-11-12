@@ -22,9 +22,9 @@ from monitor_controller_helpers import (
     _result,
 )
 
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.monitoring.controller import MonitorController
-from kiro_crew.monitoring.models import (
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.monitoring.controller import MonitorController
+from aj_crew.monitoring.models import (
     MonitorBudgets,
     MonitorDecision,
     MonitorDispatchResult,

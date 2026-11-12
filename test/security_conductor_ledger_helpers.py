@@ -19,7 +19,7 @@ from skill_script_helpers import load_skill_script
 SCRIPT = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "security-conductor"
     / "scripts"
@@ -70,7 +70,7 @@ def a_finding(mod, db: Path, capsys, *, surface="security.is_denied", title="fen
         "--severity",
         "High",
         "--path",
-        "src/kiro_crew/security.py",
+        "src/aj_crew/security.py",
     )
     return int(out_json(capsys)["id"])
 

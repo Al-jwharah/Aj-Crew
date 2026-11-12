@@ -11,7 +11,7 @@ import ctypes
 
 import pytest
 
-import kiro_crew.subagent as subagent
+import aj_crew.subagent as subagent
 
 # This file replaces ctypes.CDLL, find_library or a cached libc handle for a test,
 # so the shared macOS handle caches are put back after each one (see conftest.py).
@@ -105,7 +105,7 @@ class _LoadedMacLibc(_FakeLibc):
 
 
 def _present_as_loaded_mac(monkeypatch) -> None:
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     for name in ("LINUX", "WINDOWS", "MACOS"):
         monkeypatch.setattr(platform_compat, "IS_" + name, name == "MACOS")
@@ -129,7 +129,7 @@ def test_spawn_floor_reads_host_available_mib_not_the_loose_sum(monkeypatch):
     Tight (``host_available_mib``): 1000 + 50 + min(inactive, external) 600 = 1650 MiB; the
     loose sum is 2050 MiB. A 1.75 GB floor between them defers only on the tight figure.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     _present_as_loaded_mac(monkeypatch)
     assert platform_compat.host_available_mib() == 1650

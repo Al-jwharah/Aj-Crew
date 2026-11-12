@@ -35,7 +35,7 @@ const now = Math.floor(Date.now() / 1000)
 const folders = [{ id: FID, name: 'Alpha', order: 0, collapsed: false }]
 const slots = [{
   key: ORIGIN, title: 'Origin session', running: false, last_message: '',
-  messages: 3, agent: 'kirocrew', memory_mode: 'persistent', project: '',
+  messages: 3, agent: 'ajcrew', memory_mode: 'persistent', project: '',
   modified: now, tags: [], source_links: [], source_links_total: 0,
 }]
 const tags = [{ id: BLOCKED, name: 'Blocked', color: '#e11', order: 0, status: true }]
@@ -58,7 +58,7 @@ async function main() {
       const key = `chat-new-${createSeq}`
       await json(route, {
         key, title: '', running: false, messages: 0,
-        agent: 'kirocrew', folder_id: FID, modified: now, tags: [],
+        agent: 'ajcrew', folder_id: FID, modified: now, tags: [],
       })
       return true
     }

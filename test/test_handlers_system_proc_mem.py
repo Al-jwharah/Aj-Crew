@@ -18,7 +18,7 @@ def _run_collect() -> dict:
     Every other block in the collector is individually wrapped in try/except, so
     it degrades to a missing value rather than failing this test.
     """
-    from kiro_crew.dashboard import handlers_system
+    from aj_crew.dashboard import handlers_system
 
     with (
         patch.object(handlers_system, "_get_static_system_info", return_value={}),
@@ -36,7 +36,7 @@ def _run_collect() -> dict:
 
 class TestProcessMemoryFields:
     def test_live_and_peak_come_from_their_own_readers(self) -> None:
-        from kiro_crew.dashboard import handlers_system
+        from aj_crew.dashboard import handlers_system
 
         with (
             patch.object(
@@ -60,7 +60,7 @@ class TestProcessMemoryFields:
         one, mirroring the user report of a 1.66 GB reading on a process whose
         real residency was far lower.
         """
-        from kiro_crew.dashboard import handlers_system
+        from aj_crew.dashboard import handlers_system
 
         with (
             patch.object(
@@ -80,7 +80,7 @@ class TestProcessMemoryFields:
     def test_a_failing_reader_degrades_to_zero_without_dropping_the_field(self) -> None:
         # The dashboard renders whatever keys arrive, so a missing key and a 0
         # are different failures. Keep both keys present.
-        from kiro_crew.dashboard import handlers_system
+        from aj_crew.dashboard import handlers_system
 
         with (
             patch.object(

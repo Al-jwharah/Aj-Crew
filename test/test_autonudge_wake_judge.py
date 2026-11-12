@@ -17,15 +17,15 @@ import pytest
 from autonudge_wake_judge_helpers import _restore_judge_process_globals  # noqa: F401 - fixture
 from autonudge_wake_judge_helpers import _owner_dashboard_identity
 
-from kiro_crew import autonudge_judge as judge
-from kiro_crew.autonudge import (
+from aj_crew import autonudge_judge as judge
+from aj_crew.autonudge import (
     _JUDGE_QUIET_STREAK_FLOOR_DEFAULT,
     _MAX_QUIET_STREAK,
     AutoNudgeService,
     MonitorState,
     NudgeLoop,
 )
-from kiro_crew.irq import Outcome
+from aj_crew.irq import Outcome
 
 
 class TestTheBriefIsCredentialScrubbed:
@@ -63,13 +63,13 @@ class TestTheBriefIsCredentialScrubbed:
         asyncio.run(main())
 
     def test_the_decode_entrance_scrubs(self) -> None:
-        from kiro_crew import autonudge as _autonudge
+        from aj_crew import autonudge as _autonudge
 
         out = _autonudge._bounded_judge_spec({"wake_when": self.SECRET})
         assert "sk-live-AbCd1234567890abcdefghij" not in out["wake_when"]
 
     def test_a_target_carrying_a_credential_is_scrubbed(self) -> None:
-        from kiro_crew import autonudge as _autonudge
+        from aj_crew import autonudge as _autonudge
 
         out = _autonudge.scrubbed_judge_spec(
             {"targets": ["https://api.example.com/x?token=ghp_AbCd1234567890abcdefghijklmn"]}
@@ -78,7 +78,7 @@ class TestTheBriefIsCredentialScrubbed:
 
     def test_a_clean_forge_target_is_untouched(self) -> None:
         """The scrub cannot be allowed to break a legitimate watch."""
-        from kiro_crew import autonudge as _autonudge
+        from aj_crew import autonudge as _autonudge
 
         url = "https://github.com/kirodotdev/KiroCrew/pull/12787"
         out = _autonudge.scrubbed_judge_spec({"targets": [url], "wake_when": "a check goes red"})
@@ -91,7 +91,7 @@ class TestTheBriefIsCredentialScrubbed:
         Clipping first would leave the marker free to land over the bound, so the order
         is load-bearing and the bound is asserted on the scrubbed value.
         """
-        from kiro_crew import autonudge as _autonudge
+        from aj_crew import autonudge as _autonudge
 
         bound = _autonudge._JUDGE_MAX_CRITERION_CHARS
         raw = ("x" * (bound - 20)) + " Bearer sk-live-AbCd1234567890abcdefghij"
@@ -111,8 +111,8 @@ class TestThePublishedKeysReachTheDashboardReader:
 
     @staticmethod
     def _published(**loop_kwargs: Any) -> dict:
-        from kiro_crew.autonudge import NudgeLoop, new_goal_token
-        from kiro_crew.dashboard.handlers.autonudge import _serialize_for_legacy_reader
+        from aj_crew.autonudge import NudgeLoop, new_goal_token
+        from aj_crew.dashboard.handlers.autonudge import _serialize_for_legacy_reader
 
         loop = NudgeLoop(
             id="l1",
@@ -173,7 +173,7 @@ class TestNudgeWakeConfigSection:
 
     def test_the_shipped_default_is_the_lane_resolver_s_own_fallback(self) -> None:
         """An install that never wrote the key takes ``auto``."""
-        from kiro_crew.config.sections import DecisionsConfig
+        from aj_crew.config.sections import DecisionsConfig
 
         assert DecisionsConfig().nudge_wake.provider == "auto"
         assert DecisionsConfig.from_raw({}).nudge_wake.provider == "auto"
@@ -185,7 +185,7 @@ class TestNudgeWakeConfigSection:
         the number because its probe path answers the same question, and a copy here
         would be a second literal to keep in step.
         """
-        from kiro_crew.config.sections import DecisionsConfig
+        from aj_crew.config.sections import DecisionsConfig
 
         assert DecisionsConfig().nudge_wake.quiet_streak_floor == 0
         # The binding this section relies on: the engine's default IS the probe's.
@@ -193,7 +193,7 @@ class TestNudgeWakeConfigSection:
 
     def test_the_engine_resolves_the_sentinel_to_the_shipped_floor(self) -> None:
         """A stored 0 becomes the probe's floor, through the engine's real reader."""
-        from kiro_crew.config.sections import DecisionsConfig
+        from aj_crew.config.sections import DecisionsConfig
 
         stored = DecisionsConfig.from_raw({}).nudge_wake
 
@@ -201,7 +201,7 @@ class TestNudgeWakeConfigSection:
             decisions = DecisionsConfig(nudge_wake=stored)
 
         service = AutoNudgeService.__new__(AutoNudgeService)
-        with patch("kiro_crew.config.live.snapshot", return_value=_Snapshot()):
+        with patch("aj_crew.config.live.snapshot", return_value=_Snapshot()):
             assert service._judge_quiet_streak_floor() == _MAX_QUIET_STREAK
 
     @pytest.mark.parametrize(
@@ -222,7 +222,7 @@ class TestNudgeWakeConfigSection:
     def test_the_lane_is_normalised_so_the_saved_config_says_what_is_in_force(
         self, raw: dict, expected: str
     ) -> None:
-        from kiro_crew.config.sections import DecisionsConfig
+        from aj_crew.config.sections import DecisionsConfig
 
         assert DecisionsConfig.from_raw({"nudge_wake": raw}).nudge_wake.provider == expected
 
@@ -243,7 +243,7 @@ class TestNudgeWakeConfigSection:
     def test_the_floor_is_coerced_without_ever_reading_as_unbounded(
         self, raw: dict, stored: int
     ) -> None:
-        from kiro_crew.config.sections import DecisionsConfig
+        from aj_crew.config.sections import DecisionsConfig
 
         assert DecisionsConfig.from_raw({"nudge_wake": raw}).nudge_wake.quiet_streak_floor == stored
 
@@ -253,7 +253,7 @@ class TestNudgeWakeConfigSection:
         ``config.json`` is agent-writable, and a floor that could be raised would be a
         second way to silence a watch with no new code -- only a number.
         """
-        from kiro_crew.config.sections import DecisionsConfig
+        from aj_crew.config.sections import DecisionsConfig
 
         stored = DecisionsConfig.from_raw({"nudge_wake": {"quiet_streak_floor": 9999}}).nudge_wake
 
@@ -261,13 +261,13 @@ class TestNudgeWakeConfigSection:
             decisions = DecisionsConfig(nudge_wake=stored)
 
         service = AutoNudgeService.__new__(AutoNudgeService)
-        with patch("kiro_crew.config.live.snapshot", return_value=_Snapshot()):
+        with patch("aj_crew.config.live.snapshot", return_value=_Snapshot()):
             assert service._judge_quiet_streak_floor() == _JUDGE_QUIET_STREAK_FLOOR_DEFAULT
 
     @pytest.mark.parametrize("section", [None, "jev", 7, [], True])
     def test_a_non_object_section_reads_as_the_defaults(self, section: object) -> None:
         """A hand-edited config.json must not stop the gateway booting."""
-        from kiro_crew.config.sections import DecisionsConfig
+        from aj_crew.config.sections import DecisionsConfig
 
         got = DecisionsConfig.from_raw({"nudge_wake": section}).nudge_wake
         assert got.provider == "auto"
@@ -275,7 +275,7 @@ class TestNudgeWakeConfigSection:
 
     def test_registering_the_section_did_not_disturb_the_rest_of_decisions(self) -> None:
         """The sibling keys still parse, including alongside a judge section."""
-        from kiro_crew.config.sections import DecisionsConfig
+        from aj_crew.config.sections import DecisionsConfig
 
         got = DecisionsConfig.from_raw(
             {
@@ -301,7 +301,7 @@ class TestTheHttpArmingRouteCarriesTheBrief:
     def _app(self, monkeypatch, fake_svc):
         from aiohttp import web
 
-        from kiro_crew.dashboard.handlers import autonudge as _handler
+        from aj_crew.dashboard.handlers import autonudge as _handler
 
         monkeypatch.setattr(_handler, "_autonudge_get", lambda: fake_svc)
         state = MagicMock()
@@ -414,7 +414,7 @@ class TestTheLoopPayloadPublishesNoEvidence:
     """
 
     def _payload(self, **judge_kw):
-        from kiro_crew.dashboard.handlers.autonudge import _serialize_for_legacy_reader
+        from aj_crew.dashboard.handlers.autonudge import _serialize_for_legacy_reader
 
         loop = NudgeLoop(id="l1", slot_key="chat-1-1", message="patrol chat-2-2", **judge_kw)
         return _serialize_for_legacy_reader(loop)
@@ -522,7 +522,7 @@ class TestTheReadingHappensBeforeTheJudge:
         one stored by the tick before it -- a fresh service per tick has no previous
         reading and could only ever answer "changed".
         """
-        import kiro_crew.autonudge as _an
+        import aj_crew.autonudge as _an
 
         async def on_fire(loop: NudgeLoop) -> bool:
             return True
@@ -546,7 +546,7 @@ class TestTheReadingHappensBeforeTheJudge:
 
     @staticmethod
     def _observation(**fields: Any):
-        from kiro_crew.probes import gh_pr
+        from aj_crew.probes import gh_pr
 
         base: dict[str, Any] = {
             "repo": "acme/widgets",
@@ -574,7 +574,7 @@ class TestTheReadingHappensBeforeTheJudge:
         which publishes the reading on the probe, and then returns the kernel's own
         verdict. Pinning only one of the two would test a state the code cannot reach.
         """
-        import kiro_crew.autonudge as _an
+        import aj_crew.autonudge as _an
 
         async def on_fire(loop: NudgeLoop) -> bool:
             return True
@@ -611,7 +611,7 @@ class TestTheReadingHappensBeforeTheJudge:
         self, tmp_path, monkeypatch
     ) -> None:
         """A close without a merge ends on a question, so it must not read as done."""
-        from kiro_crew.monitoring.models import MonitorOutcome
+        from aj_crew.monitoring.models import MonitorOutcome
 
         _quiet, loop, _calls = self._drive(
             tmp_path, monkeypatch, Outcome.QUIET, True, self._observation(state="CLOSED")
@@ -642,8 +642,8 @@ class TestTheReadingHappensBeforeTheJudge:
         the record's observation field has no other writer on this path -- so an
         owner's criterion about their pull request would be read against nothing.
         """
-        from kiro_crew import autonudge_judge as _judge
-        from kiro_crew.probes import gh_pr
+        from aj_crew import autonudge_judge as _judge
+        from aj_crew.probes import gh_pr
 
         remark = gh_pr.Remark(
             kind="review",
@@ -850,7 +850,7 @@ class TestTheReadingHappensBeforeTheJudge:
         The write is awaited on a staged copy; one that will not land publishes nothing
         and fires, since a reading the record could not keep is no ground for quiet.
         """
-        import kiro_crew.autonudge as _an
+        import aj_crew.autonudge as _an
 
         async def on_fire(loop: NudgeLoop) -> bool:
             return True
@@ -888,7 +888,7 @@ class TestTheReadingHappensBeforeTheJudge:
         User input cancels the tick at that await, so the baseline advances with the
         VERDICT, not the publish, or a comment nobody judged would read as seen.
         """
-        import kiro_crew.autonudge as _an
+        import aj_crew.autonudge as _an
 
         async def on_fire(loop: NudgeLoop) -> bool:
             return True
@@ -930,7 +930,7 @@ class TestTheReadingHappensBeforeTheJudge:
         A retarget clears ``judge_pr_seen`` inside the commit's await, so an
         unconditional commit would put the old question's baseline back.
         """
-        import kiro_crew.autonudge as _an
+        import aj_crew.autonudge as _an
 
         async def on_fire(loop: NudgeLoop) -> bool:
             return True
@@ -1009,7 +1009,7 @@ class TestTheReadingHappensBeforeTheJudge:
         writes of its own. A write with the new baseline while memory holds the old one
         can only be the commit.
         """
-        import kiro_crew.autonudge as _an
+        import aj_crew.autonudge as _an
 
         async def on_fire(loop: NudgeLoop) -> bool:
             return True
@@ -1049,7 +1049,7 @@ class TestTheReadingHappensBeforeTheJudge:
         The commit reaches memory only after disk, so a refused write leaves both as
         they were.
         """
-        import kiro_crew.autonudge as _an
+        import aj_crew.autonudge as _an
 
         async def on_fire(loop: NudgeLoop) -> bool:
             return True
@@ -1088,7 +1088,7 @@ class TestTheReadingHappensBeforeTheJudge:
         An empty baseline matches nothing on disk, so the next tick would call every
         remark in the horizon new until a write lands.
         """
-        import kiro_crew.autonudge as _an
+        import aj_crew.autonudge as _an
 
         async def on_fire(loop: NudgeLoop) -> bool:
             return True
@@ -1129,7 +1129,7 @@ class TestTheReadingHappensBeforeTheJudge:
         Publish-then-rollback leaves a window where another writer lands the NEW baseline.
         Memory changes only after the write, so any snapshot before the refusal is prior.
         """
-        import kiro_crew.autonudge as _an
+        import aj_crew.autonudge as _an
 
         async def on_fire(loop: NudgeLoop) -> bool:
             return True
@@ -1175,7 +1175,7 @@ class TestTheReadingHappensBeforeTheJudge:
         ``notify_cycle_landed`` clears the start-failure streak without the lock, so it can
         land mid-write; copying the whole staged snapshot back would restore the streak.
         """
-        import kiro_crew.autonudge as _an
+        import aj_crew.autonudge as _an
 
         async def on_fire(loop: NudgeLoop) -> bool:
             return True
@@ -1226,7 +1226,7 @@ class TestTheReadingHappensBeforeTheJudge:
         The snapshot writer raises the cancel only after the executor write settles, so
         the record already carries the committed baseline.
         """
-        import kiro_crew.autonudge as _an
+        import aj_crew.autonudge as _an
 
         async def on_fire(loop: NudgeLoop) -> bool:
             return True
@@ -1276,8 +1276,8 @@ class TestTheReadingHappensBeforeTheJudge:
         Tick 1 commits one remark, tick 2 adds a second but its write is refused, and
         tick 3 must stamp ``first_seen_this_tick`` only on the second.
         """
-        import kiro_crew.autonudge as _an
-        from kiro_crew.probes import gh_pr
+        import aj_crew.autonudge as _an
+        from aj_crew.probes import gh_pr
 
         async def on_fire(loop: NudgeLoop) -> bool:
             return True
@@ -1344,7 +1344,7 @@ class TestTheReadingHappensBeforeTheJudge:
 
     def test_a_changed_reading_still_delivers_with_no_judge(self, tmp_path, monkeypatch) -> None:
         """A digest that moved is a subject that moved, so the turn is spent."""
-        from kiro_crew.probes import gh_pr
+        from aj_crew.probes import gh_pr
 
         first = self._observation()
         changed = self._observation(
@@ -1362,7 +1362,7 @@ class TestTheReadingHappensBeforeTheJudge:
         A fetch failing the same way twice matches byte for byte about the read half only.
         Wholeness uses the drop path's ``pr_target_is_unread`` rule, so they agree.
         """
-        from kiro_crew.probes import gh_pr
+        from aj_crew.probes import gh_pr
 
         partial = self._observation(
             status=gh_pr.STATUS_PARTIAL,
@@ -1382,7 +1382,7 @@ class TestTheReadingHappensBeforeTheJudge:
         ``observed_at`` is the clock and a remark's ``age_s`` grows every tick, so a
         digest carrying either would call every reading a change.
         """
-        import kiro_crew.autonudge as _an
+        import aj_crew.autonudge as _an
 
         base = {
             "target": "o/r#1",

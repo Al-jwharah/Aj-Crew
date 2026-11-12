@@ -64,7 +64,7 @@ vi.mock('../api/client', () => ({
 }))
 vi.mock('../hooks/useVoiceInput', () => ({ useVoiceInput: () => ({ recording: false, transcribing: false, toggle: vi.fn() }), voiceInputSupported: false }))
 vi.mock('../hooks/useBranding', () => ({ useBranding: () => ({ botName: 'Test', avatar: '' }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: () => ({ agents: [{ name: 'kirocrew' }, { name: 'researcher' }], defaultAgent: 'kirocrew' }) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: () => ({ agents: [{ name: 'ajcrew' }, { name: 'researcher' }], defaultAgent: 'ajcrew' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span> }))
 vi.mock('../components/WelcomeView', () => ({ default: () => null }))
 vi.mock('../components/MarkdownPanel', () => ({ default: () => null }))
@@ -88,7 +88,7 @@ function makeStore() {
     preloadedState: {
       dashboard: {
         status: null,
-        slots: [{ key: 'slot-a', messages: 0, running: false, mode: '', agent: 'kirocrew', model: 'claude-opus-5', project: '/home/user/old-proj', pending_approval: false, waiting_for_input: false, last_activity_ts: undefined }],
+        slots: [{ key: 'slot-a', messages: 0, running: false, mode: '', agent: 'ajcrew', model: 'claude-opus-5', project: '/home/user/old-proj', pending_approval: false, waiting_for_input: false, last_activity_ts: undefined }],
         unreadSlots: [], refreshTrigger: 0, approvalMode: 'normal',
         subagentRunning: {}, subagentDetails: {}, subagentText: {},
       } as unknown as RootState['dashboard'],
@@ -243,7 +243,7 @@ describe('ChatPage — switch labels update without a slot-list round trip (#452
   it('agent pick writes agent AND workspace to the store without a slot-list round trip (#5120)', async () => {
     const store = await renderChat()
     const slotsFetchesBeforePick = vi.mocked(api.chatSlots).mock.calls.length
-    const chip = screen.getByTitle(/^Agent: kirocrew(?:\s|$)/)
+    const chip = screen.getByTitle(/^Agent: ajcrew(?:\s|$)/)
     await act(async () => { fireEvent.click(chip) })
     const option = await waitFor(() => screen.getByRole('option', { name: /researcher/ }))
     await act(async () => { fireEvent.click(option) })
@@ -263,14 +263,14 @@ describe('ChatPage — switch labels update without a slot-list round trip (#452
   it('keeps the pre-switch agent when the agent switch fails (#5120)', async () => {
     vi.mocked(api.chatSlotAgent).mockRejectedValueOnce(new Error('boom'))
     const store = await renderChat()
-    const chip = screen.getByTitle(/^Agent: kirocrew(?:\s|$)/)
+    const chip = screen.getByTitle(/^Agent: ajcrew(?:\s|$)/)
     await act(async () => { fireEvent.click(chip) })
     const option = await waitFor(() => screen.getByRole('option', { name: /researcher/ }))
     await act(async () => { fireEvent.click(option) })
 
     await waitFor(() => expect(api.chatSlotAgent).toHaveBeenCalled())
-    expect(store.getState().dashboard.slots.find(s => s.key === 'slot-a')?.agent).toBe('kirocrew')
-    expect(screen.getByTitle(/^Agent: kirocrew(?:\s|$)/)).toBeTruthy()
+    expect(store.getState().dashboard.slots.find(s => s.key === 'slot-a')?.agent).toBe('ajcrew')
+    expect(screen.getByTitle(/^Agent: ajcrew(?:\s|$)/)).toBeTruthy()
   })
 })
 

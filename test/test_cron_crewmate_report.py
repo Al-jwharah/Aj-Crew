@@ -16,13 +16,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import mate_worker
-from kiro_crew import members as members_mod
-from kiro_crew.cron import CronJob
-from kiro_crew.dashboard import mate_thread_wakes as wakes
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew import mate_worker
+from aj_crew import members as members_mod
+from aj_crew.cron import CronJob
+from aj_crew.dashboard import mate_thread_wakes as wakes
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
-CAPTURED = ExecutionContext("alpha", MemoryStoreRef("member-alpha", "alpha"), "member", "kirocrew")
+CAPTURED = ExecutionContext("alpha", MemoryStoreRef("member-alpha", "alpha"), "member", "ajcrew")
 
 
 class _State:
@@ -49,7 +49,7 @@ class _State:
 def woken(monkeypatch):
     """Every hidden turn the flush starts, as ``(thread key, prompt)``."""
     turns: list[tuple[str, str]] = []
-    from kiro_crew.dashboard import mate_welcome
+    from aj_crew.dashboard import mate_welcome
 
     monkeypatch.setattr(mate_welcome, "app_is_stopping", lambda state: False)
     monkeypatch.setattr(
@@ -91,7 +91,7 @@ async def _settle():
 
 async def _deliver(state, job, result, rh):
     """The cron's own delivery, cut short after the dedupe by ``silent``."""
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     gw = gateway.GatewayOrchestrator.__new__(gateway.GatewayOrchestrator)
     gw.dashboard_state = state
@@ -147,7 +147,7 @@ async def test_an_identical_crewmate_cron_result_wakes_nobody(monkeypatch, woken
 @pytest.mark.asyncio
 async def test_a_cron_that_is_no_crewmates_never_wakes_a_thread(monkeypatch, woken):
     state = _State()
-    template = ExecutionContext(None, MemoryStoreRef("default"), "template", "kirocrew")
+    template = ExecutionContext(None, MemoryStoreRef("default"), "template", "ajcrew")
     plain = _job(member_id="", execution_context=template.to_record(), silent=True)
     await _deliver(state, plain, "changed", "new")
     # A crewmate still on a shared template ran no worker turn either.

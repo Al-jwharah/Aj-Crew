@@ -30,11 +30,11 @@ from queue_depth_reconcile_helpers import (
     _until,
 )
 
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
-from kiro_crew.subagent_manager.admission.types import WINDOW_ENTRY_RECOVERING
-from kiro_crew.taskq import KIND_SUBAGENT, model
-from kiro_crew.taskq.reconcile import reconcile_on_boot
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+from aj_crew.subagent_manager.admission.types import WINDOW_ENTRY_RECOVERING
+from aj_crew.taskq import KIND_SUBAGENT, model
+from aj_crew.taskq.reconcile import reconcile_on_boot
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 

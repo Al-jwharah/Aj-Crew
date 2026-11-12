@@ -1,6 +1,6 @@
 # Crew log reference
 
-**Local page, not a mirror.** This directory is Kiro Crew's own documentation and
+**Local page, not a mirror.** This directory is Aj Crew's own documentation and
 has no upstream source, so a re-fetch of the `kiro-cli/` mirror must leave it
 alone. It is marked as a named exception in [the Reference index](../README.md).
 
@@ -29,11 +29,11 @@ and frame that serve them, read
 | [member-event-log](../../system-specs/modules/member-event-log.md) | The canonical `member`-kind vocabulary, projections, migration, and multi-writer adapter. |
 | [reading-and-writing.md](reading-and-writing.md) | Reader API, writer rules, ownership, and the fail-soft emitter. |
 | [errors.md](errors.md) | Every `CrewLogError` code, its trigger, and what a caller does about it. |
-| [reading-from-an-agent.md](reading-from-an-agent.md) | The read-only `kirocrew-crew-log` MCP server: its three tools, their caps and codes, who may read what, and the one-line agent-spec grant. |
+| [reading-from-an-agent.md](reading-from-an-agent.md) | The read-only `ajcrew-crew-log` MCP server: its three tools, their caps and codes, who may read what, and the one-line agent-spec grant. |
 
 ## Glossary
 
-**crew log** — the storage layer (`kiro_crew.crew_log`): a file format, the rules for
+**crew log** — the storage layer (`aj_crew.crew_log`): a file format, the rules for
 who may write what, and the read-back paths. "Append-only log" names the same
 thing; these pages say *crew log* throughout.
 
@@ -155,7 +155,7 @@ unit's history or forge a line into its own. The crew log's own code opens the f
 directly and is unaffected.
 
 **Session emission is on by default.** The session emitter writes unless
-`KIROCREW_CREW_LOG` is set to a falsy value (`0`, `false`, `no` or `off`). A value it
+`AJCREW_CREW_LOG` is set to a falsy value (`0`, `false`, `no` or `off`). A value it
 does not recognise (a typo such as `fasle`) also switches it off, and the gateway logs
 a warning naming the value. With the
 flag off it creates no `session` unit and no session emit path reaches storage, and

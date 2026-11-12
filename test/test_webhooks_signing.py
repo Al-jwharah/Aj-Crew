@@ -23,8 +23,8 @@ import pytest
 from aiohttp.test_utils import make_mocked_request
 from body_stream_helpers import BodyStreamPayload
 
-from kiro_crew import webhooks
-from kiro_crew.dashboard.handlers import hooks as H
+from aj_crew import webhooks
+from aj_crew.dashboard.handlers import hooks as H
 
 
 def _as_owner(req):
@@ -77,7 +77,7 @@ def wired(tmp_path, monkeypatch):
     monkeypatch.setattr(H, "_HOOK_STORE_PATH", Path(tmp_path) / "hooks.json")
     monkeypatch.setattr(H, "_sel", lambda: MagicMock())
     monkeypatch.setattr(H, "_legacy_hook_token", lambda: "")
-    monkeypatch.setattr(H, "_installed_agent_names", lambda: {"kirocrew"})
+    monkeypatch.setattr(H, "_installed_agent_names", lambda: {"ajcrew"})
     webhooks._reset_auth_throttle()
     webhooks._reset_signature_replay()
     yield Path(tmp_path)
@@ -660,7 +660,7 @@ class TestReadEndpointNeverLeaksTheSecret:
 
     @pytest.mark.asyncio
     async def test_create_returns_the_secret_once_next_to_the_token(self, wired):
-        req = _as_owner(_json_post("/api/webhooks/tokens", {"label": "Review Bot", "agent": "kirocrew"}))
+        req = _as_owner(_json_post("/api/webhooks/tokens", {"label": "Review Bot", "agent": "ajcrew"}))
         resp = await H.api_webhook_token_create(req)
         assert resp.status == 201
         data = json.loads(resp.body.decode("utf-8"))
@@ -680,7 +680,7 @@ class TestReadEndpointNeverLeaksTheSecret:
         req = _as_owner(_json_post("/api/webhooks/tokens", {
                 "label": "CI runner",
                 "require_signature": False,
-                "agent": "kirocrew",
+                "agent": "ajcrew",
             }))
         resp = await H.api_webhook_token_create(req)
         assert resp.status == 201

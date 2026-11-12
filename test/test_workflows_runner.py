@@ -17,8 +17,8 @@ import types
 
 import pytest
 
-from kiro_crew.testing.wait import async_wait_until, await_until
-from kiro_crew.workflows.runner import RunResult, WorkflowRunner
+from aj_crew.testing.wait import async_wait_until, await_until
+from aj_crew.workflows.runner import RunResult, WorkflowRunner
 
 pytestmark = pytest.mark.asyncio
 
@@ -276,7 +276,7 @@ async def test_in_run_authoring_and_its_script_share_one_deadline(monkeypatch) -
     """Authoring spends the run's budget: an author that answers only after the
     ceiling has passed leaves the script no time, so the run ends at the ceiling
     instead of giving the script a second full ceiling."""
-    from kiro_crew.workflows import runner as runner_mod
+    from aj_crew.workflows import runner as runner_mod
 
     clock = {"now": 1000.0}
     fake_time = types.SimpleNamespace(**vars(time))  # every other name is the real one

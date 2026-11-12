@@ -19,9 +19,9 @@ from types import SimpleNamespace
 import pytest
 from aiohttp import web
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import crewmate_prompts
-from kiro_crew.dashboard import crewmate_worker_reload as reload_mod
+from aj_crew import change_card_catalog as catalog
+from aj_crew import crewmate_prompts
+from aj_crew.dashboard import crewmate_worker_reload as reload_mod
 
 
 class _Provider:
@@ -65,7 +65,7 @@ def _state(*keys: str):
 @pytest.fixture
 def reloads(monkeypatch):
     """Record each teardown the reload runs, as the tab menu's Reload session would."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     seen: list[tuple[str, object]] = []
 
@@ -79,7 +79,7 @@ def reloads(monkeypatch):
     monkeypatch.setattr(chat_handlers, "reload_slot_session", fake_reload)
     monkeypatch.setattr(chat_handlers, "_switch_target_busy", lambda *a: False)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_utils.effective_session_key", lambda slot: "dashboard_" + slot.key
+        "aj_crew.dashboard.chat_utils.effective_session_key", lambda slot: "dashboard_" + slot.key
     )
     monkeypatch.setattr(reload_mod, "RETRY_SECS", 0)
     return seen
@@ -108,7 +108,7 @@ def test_a_worker_not_running_is_left_to_its_next_spawn(reloads):
 
 def test_a_worker_still_cold_starting_keeps_the_reload_owed(reloads, monkeypatch):
     """No provider yet, but its first turn is in flight: it spawns on the old kit."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _state("w1")
     state.sessions.providers.clear()
@@ -149,7 +149,7 @@ def test_a_busy_worker_is_reloaded_once_its_turn_ends(reloads):
 def test_the_capabilities_route_schedules_the_reload(monkeypatch):
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers import agent_capabilities as route
+    from aj_crew.dashboard.handlers import agent_capabilities as route
 
     scheduled: list[str] = []
 
@@ -162,7 +162,7 @@ def test_the_capabilities_route_schedules_the_reload(monkeypatch):
 
     monkeypatch.setattr(route, "require_owner_dashboard_request", owner)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.crewmate_worker_reload.schedule_reload_workers",
+        "aj_crew.dashboard.crewmate_worker_reload.schedule_reload_workers",
         lambda state, member: scheduled.append(member),
     )
 
@@ -183,8 +183,8 @@ def test_the_capabilities_route_schedules_the_reload(monkeypatch):
 
 
 def _complete(monkeypatch, kind, params):
-    from kiro_crew.dashboard import goal_setup
-    from kiro_crew.dashboard.handlers import change_cards
+    from aj_crew.dashboard import goal_setup
+    from aj_crew.dashboard.handlers import change_cards
 
     nudged: list[tuple[str, str]] = []
     store = SimpleNamespace(complete_apply=lambda rec, **kw: None)
@@ -235,8 +235,8 @@ def test_applying_card_1_wakes_the_conductor_for_card_2(monkeypatch):
 
 def test_a_card_turning_on_another_crewmate_wakes_nobody_in_this_thread(monkeypatch):
     """Scout raised a card for Briar: Scout's held request and session stay as they are."""
-    from kiro_crew.dashboard import goal_setup
-    from kiro_crew.dashboard.handlers import member_self
+    from aj_crew.dashboard import goal_setup
+    from aj_crew.dashboard.handlers import member_self
 
     conductor = SimpleNamespace(key="member-scout", agent="scout")
     state = SimpleNamespace(get_slot=lambda key: conductor if key == "member-scout" else None)
@@ -245,9 +245,7 @@ def test_a_card_turning_on_another_crewmate_wakes_nobody_in_this_thread(monkeypa
         raise AssertionError("raised a held request")
 
     monkeypatch.setattr(member_self, "continue_after_opt_in", never)
-    monkeypatch.setattr(
-        "kiro_crew.dashboard.mate_thread_wakes.is_crewmate_thread", lambda slot: True
-    )
+    monkeypatch.setattr("aj_crew.dashboard.mate_thread_wakes.is_crewmate_thread", lambda slot: True)
 
     async def go():
         goal_setup.schedule_tool_access_nudge(
@@ -264,8 +262,8 @@ def test_a_card_turning_on_another_crewmate_wakes_nobody_in_this_thread(monkeypa
 
 @pytest.mark.parametrize("held_raised", [True, False], ids=["raised", "not_raised"])
 def test_turn_on_raises_the_held_request_then_reloads_and_wakes(monkeypatch, held_raised):
-    from kiro_crew.dashboard import goal_setup
-    from kiro_crew.dashboard.handlers import member_self
+    from aj_crew.dashboard import goal_setup
+    from aj_crew.dashboard.handlers import member_self
 
     order: list[str] = []
     conductor = SimpleNamespace(key="member-scout", agent="scout")
@@ -286,10 +284,8 @@ def test_turn_on_raises_the_held_request_then_reloads_and_wakes(monkeypatch, hel
 
     monkeypatch.setattr(reload_mod, "reload_if_idle", fake_reload)
     monkeypatch.setattr(goal_setup, "_schedule", fake_schedule)
-    monkeypatch.setattr(
-        "kiro_crew.dashboard.mate_thread_wakes.is_crewmate_thread", lambda slot: True
-    )
-    monkeypatch.setattr("kiro_crew.members.member_slug", lambda m: m)
+    monkeypatch.setattr("aj_crew.dashboard.mate_thread_wakes.is_crewmate_thread", lambda slot: True)
+    monkeypatch.setattr("aj_crew.members.member_slug", lambda m: m)
 
     async def go():
         goal_setup.schedule_tool_access_nudge(
@@ -313,7 +309,7 @@ def test_turn_on_raises_the_held_request_then_reloads_and_wakes(monkeypatch, hel
 
 def test_card_2_is_the_unchanged_capabilities_card(monkeypatch):
     """Card 2 is ``request_capabilities``' own card: its kind and its nudge, untouched."""
-    from kiro_crew import crewmate_dynamic_capabilities as dyn
+    from aj_crew import crewmate_dynamic_capabilities as dyn
 
     dyn._override = True
     got = _complete(monkeypatch, catalog.KIND_CREWMATE_CAPABILITIES, {"member": "scout"})
@@ -324,7 +320,7 @@ def test_card_2_is_the_unchanged_capabilities_card(monkeypatch):
 
 def test_a_turn_that_starts_inside_the_teardown_leaves_the_reload_owed(reloads, monkeypatch):
     """The fast probe said idle, the teardown's own check saw a turn: owed, not done."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     async def refused(state, slot, name, **_kw):
         return web.json_response({"code": "turn_in_flight"}, status=409)
@@ -347,7 +343,7 @@ def test_a_slot_replaced_under_the_same_key_is_gone(reloads):
 
 
 def test_a_reload_that_raises_or_is_refused_leaves_nothing_owed(reloads, monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _state("w1")
     slot = state._slots["w1"]
@@ -375,16 +371,16 @@ def test_a_queued_message_counts_as_busy(reloads):
 
 
 def test_the_workers_of_a_crewmate_are_its_own_worker_records(monkeypatch):
-    from kiro_crew import execution_context
-    from kiro_crew.config import loader
-    from kiro_crew.dashboard import chat_utils
-    from kiro_crew.mate_worker import MATE_WORKER_AGENT
+    from aj_crew import execution_context
+    from aj_crew.config import loader
+    from aj_crew.dashboard import chat_utils
+    from aj_crew.mate_worker import MATE_WORKER_AGENT
 
     state = _state("mine", "theirs", "chat", "broken", "none")
     records = {
         "mine": SimpleNamespace(template_id=MATE_WORKER_AGENT, member_id="m-scout"),
         "theirs": SimpleNamespace(template_id=MATE_WORKER_AGENT, member_id="m-briar"),
-        "chat": SimpleNamespace(template_id="kirocrew", member_id="m-scout"),
+        "chat": SimpleNamespace(template_id="ajcrew", member_id="m-scout"),
         "none": None,
     }
 
@@ -396,7 +392,7 @@ def test_the_workers_of_a_crewmate_are_its_own_worker_records(monkeypatch):
     roster = SimpleNamespace(
         agents={"Scout": SimpleNamespace(member_id="m-scout"), "Nemo": SimpleNamespace()}
     )
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(lambda cls: roster))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(lambda cls: roster))
     monkeypatch.setattr(chat_utils, "slot_history_key", lambda slot: slot.key)
     monkeypatch.setattr(execution_context, "read_session_execution", read)
     assert reload_mod._workers_of(state, "Scout") == [state._slots["mine"]]

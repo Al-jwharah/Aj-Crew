@@ -12,7 +12,7 @@ import React from 'react'
 
 vi.mock('../../api/client', () => ({
   api: {
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     patchConfig: vi.fn(),
   },
 }))
@@ -27,7 +27,7 @@ const wrap = (ui: React.ReactElement) => render(<QueryClientProvider client={qc}
 beforeEach(() => {
   vi.clearAllMocks()
   qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  vi.mocked(api.kirocrewConfig).mockResolvedValue({})
+  vi.mocked(api.ajcrewConfig).mockResolvedValue({})
   vi.mocked(api.patchConfig).mockResolvedValue({ ok: true })
 })
 
@@ -37,12 +37,12 @@ describe('useCrewmateThreadsFlag', () => {
       wrapper: ({ children }) => <QueryClientProvider client={qc}>{children}</QueryClientProvider>,
     })
     expect(result.current.on).toBe(false)
-    await waitFor(() => expect(api.kirocrewConfig).toHaveBeenCalled())
+    await waitFor(() => expect(api.ajcrewConfig).toHaveBeenCalled())
     expect(result.current.on).toBe(false)
     expect(result.current.failed).toBe(false)
 
     qc.clear()
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ dashboard: { crewmate_threads: true } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ dashboard: { crewmate_threads: true } })
     const on = renderHook(() => useCrewmateThreadsFlag(), {
       wrapper: ({ children }) => <QueryClientProvider client={qc}>{children}</QueryClientProvider>,
     })
@@ -50,26 +50,26 @@ describe('useCrewmateThreadsFlag', () => {
   })
 
   it('a failed read is reported as failed, not as off, and retry re-reads', async () => {
-    vi.mocked(api.kirocrewConfig).mockRejectedValueOnce(new Error('boom'))
+    vi.mocked(api.ajcrewConfig).mockRejectedValueOnce(new Error('boom'))
     const { result } = renderHook(() => useCrewmateThreadsFlag(), {
       wrapper: ({ children }) => <QueryClientProvider client={qc}>{children}</QueryClientProvider>,
     })
     await waitFor(() => expect(result.current.failed).toBe(true))
     // Nothing cached: not known to be on, so no control is offered.
     expect(result.current.on).toBe(false)
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ dashboard: { crewmate_threads: true } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ dashboard: { crewmate_threads: true } })
     result.current.retry()
     await waitFor(() => expect(result.current.on).toBe(true))
     expect(result.current.failed).toBe(false)
   })
 
   it('a refetch that fails keeps the last known value', async () => {
-    vi.mocked(api.kirocrewConfig).mockResolvedValueOnce({ dashboard: { crewmate_threads: true } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValueOnce({ dashboard: { crewmate_threads: true } })
     const { result } = renderHook(() => useCrewmateThreadsFlag(), {
       wrapper: ({ children }) => <QueryClientProvider client={qc}>{children}</QueryClientProvider>,
     })
     await waitFor(() => expect(result.current.on).toBe(true))
-    vi.mocked(api.kirocrewConfig).mockRejectedValueOnce(new Error('blip'))
+    vi.mocked(api.ajcrewConfig).mockRejectedValueOnce(new Error('blip'))
     result.current.retry()
     await waitFor(() => expect(result.current.failed).toBe(true))
     // The flag was on; a blip does not turn it off under the user.
@@ -93,11 +93,11 @@ describe('CrewmatesSection', () => {
     fireEvent.click(toggle)
     await waitFor(() => expect(api.patchConfig).toHaveBeenCalledWith('dashboard.crewmate_threads', true))
     // The shared config query is refetched, so the Members page's hook sees the new value.
-    await waitFor(() => expect(api.kirocrewConfig).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(api.ajcrewConfig).toHaveBeenCalledTimes(2))
   })
 
   it('a failed config read is said, with a retry that re-reads and enables the switch', async () => {
-    vi.mocked(api.kirocrewConfig).mockRejectedValueOnce(new Error('boom'))
+    vi.mocked(api.ajcrewConfig).mockRejectedValueOnce(new Error('boom'))
     wrap(<CrewmatesSection />)
     await screen.findByTestId('crewmates-config-error')
     expect(screen.getByText("Couldn't load the bot settings.")).toBeInTheDocument()

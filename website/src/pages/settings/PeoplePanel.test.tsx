@@ -11,7 +11,7 @@ import { sharedCrewKeys } from '../../hooks/sharedCrew/sharedCrewSocket'
 import { tailscaleInvitesKey } from './TailscaleInvites'
 
 vi.mock('../../api/client', () => ({
-  api: { sharedCrewPeople: vi.fn(), sharedCrewCapabilities: vi.fn(), sharedCrewMode: vi.fn(), tailscaleInvites: vi.fn(), sharedCrewSsm: vi.fn(), tailscaleRevokeInvite: vi.fn(), sharedCrewSetPersonDisplay: vi.fn(), kirocrewConfig: vi.fn(), patchConfig: vi.fn() },
+  api: { sharedCrewPeople: vi.fn(), sharedCrewCapabilities: vi.fn(), sharedCrewMode: vi.fn(), tailscaleInvites: vi.fn(), sharedCrewSsm: vi.fn(), tailscaleRevokeInvite: vi.fn(), sharedCrewSetPersonDisplay: vi.fn(), ajcrewConfig: vi.fn(), patchConfig: vi.fn() },
 }))
 vi.mock('../../components/settingRef/useConfigSchema', () => {
   const schema = new Map([
@@ -28,7 +28,7 @@ vi.mock('../../utils/clipboard', () => ({ copyToClipboard: copy }))
 const people = vi.mocked(api.sharedCrewPeople)
 const caps = vi.mocked(api.sharedCrewCapabilities)
 const modeApi = vi.mocked(api.sharedCrewMode)
-const configApi = vi.mocked(api.kirocrewConfig)
+const configApi = vi.mocked(api.ajcrewConfig)
 const patchApi = vi.mocked(api.patchConfig)
 const invitesApi = vi.mocked(api.tailscaleInvites)
 
@@ -636,7 +636,7 @@ describe('PeoplePanel connect card, owner rows and Advanced', () => {
     await waitFor(() => expect(copy).toHaveBeenCalledTimes(1))
     const text = copy.mock.calls[0][0]
     expect(text.split('\n')).toEqual([
-      'Mac Studio invited you to Kiro Crew.',
+      'Mac Studio invited you to Aj Crew.',
       '1. Accept the invitation Tailscale emailed you',
       '2. Open Crew: http://100.64.0.1:5476/',
       '',
@@ -829,7 +829,7 @@ describe('PeoplePanel connect card, owner rows and Advanced', () => {
     patchApi.mockImplementationOnce(() => new Promise(resolve => { finishPatch = resolve }) as ReturnType<typeof api.patchConfig>)
     configApi
       .mockResolvedValueOnce(stale as never)
-      .mockImplementationOnce(() => new Promise(resolve => { finishRefetch = resolve }) as ReturnType<typeof api.kirocrewConfig>)
+      .mockImplementationOnce(() => new Promise(resolve => { finishRefetch = resolve }) as ReturnType<typeof api.ajcrewConfig>)
     await mountOwner()
     const admission = () => screen.getByRole('switch', { name: 'Fair admission' })
     const expectLocked = (locked: boolean) => {

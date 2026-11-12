@@ -56,12 +56,12 @@ from governance_distribution_helpers import (
     pd_format_exc,
 )
 
-from kiro_crew import security
-from kiro_crew.platform import governance
-from kiro_crew.platform import governance_health as health
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform import policy_distribution as pd
-from kiro_crew.platform.context import PlatformCompositionError, current_context
+from aj_crew import security
+from aj_crew.platform import governance
+from aj_crew.platform import governance_health as health
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform import policy_distribution as pd
+from aj_crew.platform.context import PlatformCompositionError, current_context
 
 # ──────────────────────────────────────────────────────────────────────────
 # The parsed declaration
@@ -70,7 +70,7 @@ from kiro_crew.platform.context import PlatformCompositionError, current_context
 
 class TestPolicyDistributionParsing:
     def test_a_full_block_round_trips(self):
-        source = "https://config.corp.example/kirocrew/policy.json"
+        source = "https://config.corp.example/ajcrew/policy.json"
         ceiling = governance.parse_policy(
             _doc(
                 distribution={
@@ -323,7 +323,7 @@ class TestTransport:
             "http://localhost/policy.json",
             "http://[::1]:9443/policy.json",
             "https://config.corp.example/policy.json",
-            "file:///etc/kirocrew/policy.json",
+            "file:///etc/ajcrew/policy.json",
         ],
     )
     def test_permitted_transports(self, url):
@@ -845,7 +845,7 @@ class TestLoadSecurityPolicyPrecedence:
         local = _write_policy(
             tmp_path / "local.json", "local-file", tools={"mode": "deny", "deny": ["*"]}
         )
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(local))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(local))
         monkeypatch.setenv(
             pd.POLICY_URL_ENV, _file_source(tmp_path / "central.json", "central-push")
         )
@@ -863,7 +863,7 @@ class TestLoadSecurityPolicyPrecedence:
         local = _write_policy(
             tmp_path / "local.json", "local-file", tools={"mode": "deny", "deny": ["danger"]}
         )
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(local))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(local))
         monkeypatch.setenv(
             pd.POLICY_URL_ENV, _file_source(tmp_path / "central.json", "central-push")
         )
@@ -989,7 +989,7 @@ class TestLiveRefresh:
         """A 304 means "nothing newer than the CACHE", not "you are already running it".
 
         The cache is written by other processes too — gatewayd's per-app-call reload,
-        an app backend's boot, and the ``kirocrew policy fetch`` the operator guide
+        an app backend's boot, and the ``ajcrew policy fetch`` the operator guide
         recommends for verifying a rollout. Without this, one ``policy fetch`` would
         cache v2 and this poller would then report ``unchanged`` forever while the
         gateway kept enforcing v1: the live-refresh guarantee silently withdrawn,
@@ -1197,7 +1197,7 @@ class TestCeilingSwapInvalidatesProfiles:
         Every profile is composed against a ceiling; serving one composed against
         the retired ceiling would apply a narrowing nobody currently declares.
         """
-        from kiro_crew.platform.context import governance_generation
+        from aj_crew.platform.context import governance_generation
 
         (profiles_dir / "host.json").write_text(
             json.dumps({"name": "host", "bind": {"type": "surface", "id": "host"}}),
@@ -1248,7 +1248,7 @@ class TestCeilingSwapInvalidatesProfiles:
 
 
 class TestTheDetailNeverNamesTheEndpoint:
-    """``kirocrew policy fetch`` is an ordinary shell command an agent can run.
+    """``ajcrew policy fetch`` is an ordinary shell command an agent can run.
 
     Every other consumer of these messages — the gateway log, a boot abort — is an
     operator surface and wants the address.
@@ -1284,7 +1284,7 @@ class TestTheDetailNeverNamesTheEndpoint:
         _cache_raw(b"{ not a policy", source=secret)
         dist = governance.PolicyDistribution(source=secret)
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.platform.policy_distribution"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.platform.policy_distribution"):
             pd._from_cache_on_outage(dist, pd.read_cache(), "the endpoint was down")
 
         emitted = "\n".join(r.getMessage() + (pd_format_exc(r) or "") for r in caplog.records)
@@ -1307,7 +1307,7 @@ class TestTheDetailNeverNamesTheEndpoint:
         # reason ("already attempted"), which never carries the endpoint's text at all.
         monkeypatch.setattr(pd, "_claim_fetch_slot", lambda window: True)
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.platform.policy_distribution"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.platform.policy_distribution"):
             with pytest.raises(PlatformCompositionError) as caught:
                 pd.load_distributed_policy(governance.PolicyDistribution(source=source))
 
@@ -1329,7 +1329,7 @@ class TestTheDetailNeverNamesTheEndpoint:
 
     def test_an_echoed_request_header_is_substituted_by_value(self, transport, monkeypatch):
         """``security.redact`` recognises credential SHAPES, and
-        ``KIROCREW_POLICY_HEADERS`` is deliberately arbitrary: an opaque ``X-Fleet-Key``
+        ``AJCREW_POLICY_HEADERS`` is deliberately arbitrary: an opaque ``X-Fleet-Key``
         matches no pattern anyone can write. What makes it tractable is that the value is
         not a pattern to us — we sent it, so we can substitute the string itself."""
         opaque = "zqf7Wm2pLx9Kd4Rt8Nv1Ba6Ce0Yh"  # matches no known credential shape
@@ -1380,7 +1380,7 @@ class TestTheDetailNeverNamesTheEndpoint:
         _cache_raw(b"{ not a policy", source=source)
         declared = governance.PolicyDistribution(source=source)
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.platform.policy_distribution"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.platform.policy_distribution"):
             pd.load_distributed_policy(declared)
 
         emitted = "\n".join(r.getMessage() + (pd_format_exc(r) or "") for r in caplog.records)

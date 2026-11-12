@@ -13,15 +13,15 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.channels import builtin_channel_descriptors
-from kiro_crew.messaging import registry
-from kiro_crew.messaging.link import (
+from aj_crew.channels import builtin_channel_descriptors
+from aj_crew.messaging import registry
+from aj_crew.messaging.link import (
     CHANNEL_SESSION_NAMESPACES,
     assert_colon_free,
     build_dm_session_key,
     parse_session_key,
 )
-from kiro_crew.messaging.registry import ChannelDescriptor
+from aj_crew.messaging.registry import ChannelDescriptor
 
 
 class TestRegistryRoster:
@@ -42,16 +42,16 @@ class TestRegistryRoster:
 
     def test_channel_type_matches_each_transport_class(self) -> None:
         """The descriptor id and the transport's channel_type must be ONE fact."""
-        from kiro_crew.discord.transport import DiscordTransport
-        from kiro_crew.feishu.transport import FeishuTransport
-        from kiro_crew.imessage.transport import IMessageTransport
-        from kiro_crew.slack.transport import SlackTransport
-        from kiro_crew.teams.transport import TeamsTransport
-        from kiro_crew.telegram.transport import TelegramTransport
-        from kiro_crew.webex.transport import WebexTransport
-        from kiro_crew.wecom.transport import WeComTransport
-        from kiro_crew.weixin.transport import WeixinTransport
-        from kiro_crew.whatsapp.transport import WhatsAppTransport
+        from aj_crew.discord.transport import DiscordTransport
+        from aj_crew.feishu.transport import FeishuTransport
+        from aj_crew.imessage.transport import IMessageTransport
+        from aj_crew.slack.transport import SlackTransport
+        from aj_crew.teams.transport import TeamsTransport
+        from aj_crew.telegram.transport import TelegramTransport
+        from aj_crew.webex.transport import WebexTransport
+        from aj_crew.wecom.transport import WeComTransport
+        from aj_crew.weixin.transport import WeixinTransport
+        from aj_crew.whatsapp.transport import WhatsAppTransport
 
         transports = {
             t.channel_type: t

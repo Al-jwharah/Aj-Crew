@@ -47,7 +47,7 @@ const channel = (id, name, status) => ({
   web_url: `https://slack.com/app_redirect?channel=${id}&team=T0TEAM1`,
 })
 const row = (key, title, ago, extra = {}) => ({
-  key, title, running: false, messages: 4, agent: 'kirocrew', last_ts: iso(ago), last_turn_ts: iso(ago),
+  key, title, running: false, messages: 4, agent: 'ajcrew', last_ts: iso(ago), last_turn_ts: iso(ago),
   folder_id: '', last_message: 'Pushed the fix and opened the pull request.', source_links: [], source_links_total: 0,
   ...extra,
 })

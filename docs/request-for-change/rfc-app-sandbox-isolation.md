@@ -41,7 +41,7 @@ slots are app-scoped. The residual risk is inside what an app is granted:
   storage, request rate).
 
 We need per-app resource ownership and quotas so one app cannot destroy another
-app's state or degrade the user's Kiro Crew experience.
+app's state or degrade the user's Aj Crew experience.
 
 ---
 
@@ -128,7 +128,7 @@ App tokens already contain `"app": "mochi-pet"` in the HMAC payload. No token fo
 ### Backward Compatibility
 
 - Dashboard users (tokens without `app` field) bypass all app restrictions — full access as today.
-- Apps using legacy auth (`kirocrewSecret.ts` headers, no app identity) are treated as dashboard users — no restrictions. This is the correct fallback for old gateways.
+- Apps using legacy auth (`ajcrewSecret.ts` headers, no app identity) are treated as dashboard users — no restrictions. This is the correct fallback for old gateways.
 - Phase 2+ enforcement is opt-in per gateway version. Old gateways ignore the `app` field.
 
 ### SDK Impact

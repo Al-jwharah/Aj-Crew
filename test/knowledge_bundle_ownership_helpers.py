@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.knowledge.store import BUNDLE_STATE_KEY_COL, KnowledgeStore
+from aj_crew.knowledge.store import BUNDLE_STATE_KEY_COL, KnowledgeStore
 
 #: The aggregate source these pins use. It is the AGENT aggregate because that is the
 #: one table a bundle restores: nothing reaps agent state by absence, so a restored row

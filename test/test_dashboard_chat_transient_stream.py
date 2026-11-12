@@ -24,9 +24,9 @@ class TestRunChatTransientRetryStreamFailure:
     async def test_transient_pre_token_retries_then_recovers_no_reset(self, tmp_path, monkeypatch):
         """A transient 5xx before any token streams is retried on the SAME live
         session (no reset); the second attempt succeeds."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         call_count = 0
 
@@ -56,7 +56,7 @@ class TestRunChatTransientRetryStreamFailure:
         assert any("Connection unstable" in t for t in self._err_texts(slot))
         # ... and the notice is TAGGED, which is the only thing telling the UI a
         # recovery is pending; without it a stale pill re-runs the queued choice.
-        from kiro_crew.dashboard.chat_utils import TRANSIENT_RETRY_KIND
+        from aj_crew.dashboard.chat_utils import TRANSIENT_RETRY_KIND
 
         _hiccups = [
             m
@@ -80,9 +80,9 @@ class TestRunChatTransientRetryStreamFailure:
 
         The partial is kept, a recovery notice is shown, and a continue instruction (not
         the original prompt) is re-queued; nothing is retracted."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         call_count = 0
         captured: list = []
@@ -145,10 +145,10 @@ class TestRunChatTransientRetryStreamFailure:
         assistant message) and the message is NOT re-queued. Under the
         append-only design the partial + a retry notice are shown regardless of
         eligibility; only the re-queue is gated."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         call_count = 0
 
@@ -201,9 +201,9 @@ class TestRunChatTransientRetryStreamFailure:
         model resumes from where it stopped instead of blindly re-running the
         tool. Exactly one post-token recovery fires, the partial is preserved,
         and the continue instruction (not the original prompt) is re-queued."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import (
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import (
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
             EVENT_TOOL_CALL,
@@ -268,10 +268,10 @@ class TestRunChatTransientRetryStreamFailure:
         the one-shot allowance (the flag is set only when a recovery is actually
         enqueued). A LATER genuine user turn on the same slot can therefore still
         recover once."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         # ── Turn 1: Stop active → suppressed post-token transient. ──
         async def _stream_suppressed(msg):
@@ -294,7 +294,7 @@ class TestRunChatTransientRetryStreamFailure:
         # And the row says so: nothing resumes, so it is the TERMINAL notice
         # (give-up text + token, no retry kind) — never a pending "resuming…"
         # the dashboard would draw as a soft notice with no way to continue.
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             TRANSIENT_GIVE_UP_TEXT,
             TRANSIENT_NOTICE_GIVE_UP,
             TRANSIENT_RETRY_KIND,
@@ -341,10 +341,10 @@ class TestRunChatTransientRetryStreamFailure:
         The recovery turn inherits the already-consumed allowance (it is not
         refreshed for the recover message), so the post-token branch is skipped
         and a clean terminal error surfaces instead of a second recovery."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.dashboard.chat_runner import _POSTTOKEN_RECOVER_MSG
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat_runner import _POSTTOKEN_RECOVER_MSG
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         captured: list = []
 
@@ -383,8 +383,8 @@ class TestRunChatTransientRetryStreamFailure:
     async def test_auth_error_fails_fast_no_retry(self, tmp_path, monkeypatch):
         """An auth failure is excluded from the transient set — it fails fast
         with a clean error and is never retried (a retry can't fix a token)."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
 
         call_count = 0
 
@@ -429,8 +429,8 @@ class TestRunChatTransientRetryStreamFailure:
             _run,
         )
 
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
         _events, failure = await _run(_handle([ERROR_CHUNK_2_0, END_TURN]))
         assert failure is not None
@@ -444,7 +444,7 @@ class TestRunChatTransientRetryStreamFailure:
             raise failure
 
         state = self._make_state(tmp_path, monkeypatch)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
         self._wire_sessions(state, self._client(_stream))
         slot = state.get_or_create_slot("s1")
         slot._titled = True
@@ -469,9 +469,9 @@ class TestRunChatTransientRetryStreamFailure:
     ):
         """Persistent transient 5xx is retried up to the budget, then surfaces a
         clean ❌ error while leaving the session resumable (never reset)."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.llm_helpers import TRANSIENT_RETRIES
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.llm_helpers import TRANSIENT_RETRIES
 
         call_count = 0
 
@@ -485,7 +485,7 @@ class TestRunChatTransientRetryStreamFailure:
         # fallback_model="" (disabled): this test pins the PRE-FEATURE ladder
         # (the default is now "auto", which would walk the fallback branch —
         # that branch has its own class, TestRunChatModelFallback).
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
         client = self._client(_stream)
         self._wire_sessions(state, client)
         slot = state.get_or_create_slot("s1")
@@ -508,8 +508,8 @@ class TestRunChatTransientRetryStreamFailure:
     @staticmethod
     def _connection_drop():
         """A network-path drop raised through the real ACP raise path."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.acp.transport_errors import _raise_acp_error
+        from aj_crew.acp.client import AcpError
+        from aj_crew.acp.transport_errors import _raise_acp_error
 
         try:
             _raise_acp_error(
@@ -534,14 +534,14 @@ class TestRunChatTransientRetryStreamFailure:
         with one standing retry notice rather than one per extra attempt. A
         runner recovery turn replays as a different inject kind and gets the
         same single notice."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat_utils import (
             _SYNTHETIC_RECOVERY_MSGS,
             TRANSIENT_NOTICE_META_KEY,
             TRANSIENT_NOTICE_RETRYING,
         )
-        from kiro_crew.llm_helpers import TRANSIENT_RETRIES
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.llm_helpers import TRANSIENT_RETRIES
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         drop_attempts = TRANSIENT_RETRIES + 3
         call_count = 0
@@ -555,7 +555,7 @@ class TestRunChatTransientRetryStreamFailure:
             yield LLMEvent(kind=EVENT_COMPLETE)
 
         state = self._make_state(tmp_path, monkeypatch)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
         client = self._client(_stream)
         self._wire_sessions(state, client)
         slot = state.get_or_create_slot("s1")
@@ -600,8 +600,8 @@ class TestRunChatTransientRetryStreamFailure:
         advances, so the result does not depend on the host's uptime."""
         import types
 
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.llm_helpers import CONNECTION_RECOVERY_WINDOW_SECS, TRANSIENT_RETRIES
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.llm_helpers import CONNECTION_RECOVERY_WINDOW_SECS, TRANSIENT_RETRIES
 
         step = CONNECTION_RECOVERY_WINDOW_SECS / 5
         clock = {"now": 10_000.0}
@@ -616,9 +616,9 @@ class TestRunChatTransientRetryStreamFailure:
             yield  # pragma: no cover
 
         state = self._make_state(tmp_path, monkeypatch)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
-        import kiro_crew.dashboard.chat_runner as runner_mod
-        import kiro_crew.llm_helpers as helpers_mod
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
+        import aj_crew.dashboard.chat_runner as runner_mod
+        import aj_crew.llm_helpers as helpers_mod
 
         for mod in (runner_mod, helpers_mod):
             fake = types.SimpleNamespace(
@@ -649,9 +649,9 @@ class TestRunChatTransientRetryStreamFailure:
     async def test_provider_5xx_keeps_fixed_budget_inside_window(self, tmp_path, monkeypatch):
         """A provider 5xx answer is not a network drop: it keeps the fixed
         TRANSIENT_RETRIES count even while the recovery window is open."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.llm_helpers import TRANSIENT_RETRIES
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.llm_helpers import TRANSIENT_RETRIES
 
         call_count = 0
 
@@ -664,7 +664,7 @@ class TestRunChatTransientRetryStreamFailure:
             yield  # pragma: no cover
 
         state = self._make_state(tmp_path, monkeypatch)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._agent_fallback_chain", lambda: ())
         client = self._client(_stream)
         self._wire_sessions(state, client)
         slot = state.get_or_create_slot("s1")
@@ -683,9 +683,9 @@ class TestRunChatTransientRetryStreamFailure:
 
         The happy-path reset runs only on completion, so a leaked counter would fail the
         next 5xx (e.g. after Continue) with zero retries."""
-        from kiro_crew.acp.client import AcpError
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.acp.client import AcpError
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         # ── Cycle 1: persistent 5xx exhausts the budget → terminal ❌. ──
         async def _always_fail(msg):

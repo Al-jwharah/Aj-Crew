@@ -14,8 +14,8 @@ import os
 
 import pytest
 
-from kiro_crew import hooks as hooks_mod
-from kiro_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY, HookManager, HooksConfig
+from aj_crew import hooks as hooks_mod
+from aj_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY, HookManager, HooksConfig
 
 
 def _judge(

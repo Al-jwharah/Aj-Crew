@@ -1,4 +1,4 @@
-// kirocrew:// deep-link handler: the Electron-side half of deep-link.js.
+// ajcrew:// deep-link handler: the Electron-side half of deep-link.js.
 //
 // Owns the things the pure resolver cannot: registering the scheme with the
 // OS, listening for the ways a URL arrives (`open-url` on macOS, argv on

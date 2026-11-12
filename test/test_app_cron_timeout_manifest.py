@@ -20,17 +20,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import kiro_crew.apps.execution as execution_mod
-from kiro_crew import cron as seams
-from kiro_crew.apps.bridges import (
+import aj_crew.apps.execution as execution_mod
+from aj_crew import cron as seams
+from aj_crew.apps.bridges import (
     _app_crons_path,
     _register_crons,
     load_app_cron_defs,
     register_app_crons_with_service,
 )
-from kiro_crew.apps.manifest import AppManifest, CronEntry
-from kiro_crew.cron import CronService
-from kiro_crew.cron_service.fields import build_job
+from aj_crew.apps.manifest import AppManifest, CronEntry
+from aj_crew.cron import CronService
+from aj_crew.cron_service.fields import build_job
 
 APP = "test-app"
 SHORT = "refresh"
@@ -64,11 +64,11 @@ def _script_cron(**extra) -> dict:
 @pytest.fixture()
 def home(tmp_path, monkeypatch):
     """An isolated crew home with one installed app bundle that ships a script."""
-    root = tmp_path / "kirocrew-home"
+    root = tmp_path / "ajcrew-home"
     bundle = root / "apps" / APP
     bundle.mkdir(parents=True)
     (root / "crons").mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(root))
+    monkeypatch.setenv("AJCREW_HOME", str(root))
     (bundle / "job.py").write_text("def run(ctx):\n    return 'ok'\n", encoding="utf-8")
     (bundle / "app.json").write_text(
         json.dumps(
@@ -82,7 +82,7 @@ def home(tmp_path, monkeypatch):
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr("kiro_crew.apps.bridges._registration_denied", lambda *a, **k: False)
+    monkeypatch.setattr("aj_crew.apps.bridges._registration_denied", lambda *a, **k: False)
     monkeypatch.setattr(execution_mod, "third_party_execution_allowed", lambda: True)
     return root
 
@@ -155,7 +155,7 @@ class TestEachLayerCarriesTheField:
         sdk = MagicMock()
         sdk.list_jobs.return_value = []
         sdk.add_job_if_absent_async = AsyncMock(return_value=MagicMock(id="job-1"))
-        with patch("kiro_crew.apps.bridges.CronSDK", return_value=sdk):
+        with patch("aj_crew.apps.bridges.CronSDK", return_value=sdk):
             asyncio.run(register_app_crons_with_service(APP, MagicMock()))
         kwargs = sdk.add_job_if_absent_async.call_args.kwargs
         assert (kwargs["timeout"], kwargs["timeout_secs"]) == (60, 65)
@@ -169,7 +169,7 @@ class TestEachLayerCarriesTheField:
         sdk = MagicMock()
         sdk.list_jobs.return_value = []
         sdk.add_job_if_absent_async = AsyncMock(return_value=MagicMock(id="job-1"))
-        with patch("kiro_crew.apps.bridges.CronSDK", return_value=sdk):
+        with patch("aj_crew.apps.bridges.CronSDK", return_value=sdk):
             asyncio.run(register_app_crons_with_service(APP, MagicMock()))
         kwargs = sdk.add_job_if_absent_async.call_args.kwargs
         assert (kwargs["timeout"], kwargs["timeout_secs"]) == (0, 0)

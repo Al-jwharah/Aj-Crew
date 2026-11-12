@@ -6,7 +6,7 @@
 > [`../rfc-durable-run-coordinator.md`](../rfc-durable-run-coordinator.md) is
 > `superseded` by
 > [`../rfc-overload-resilience.md`](../rfc-overload-resilience.md), which ships
-> the same store as `src/kiro_crew/taskq/`. Read it only as the intent behind
+> the same store as `src/aj_crew/taskq/`. Read it only as the intent behind
 > that store.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use
@@ -131,11 +131,11 @@ exceptions.
 
 **Files:**
 
-- Create: `src/kiro_crew/run_coordinator/models.py`
-- Create: `src/kiro_crew/run_coordinator/memory.py`
-- Create: `src/kiro_crew/run_coordinator/__init__.py`
+- Create: `src/aj_crew/run_coordinator/models.py`
+- Create: `src/aj_crew/run_coordinator/memory.py`
+- Create: `src/aj_crew/run_coordinator/__init__.py`
 - Create: `test/test_run_coordinator_contract.py`
-- Modify: `src/kiro_crew/subagent_parts/manager.py` (`SubagentManager.__init__`, for the optional
+- Modify: `src/aj_crew/subagent_parts/manager.py` (`SubagentManager.__init__`, for the optional
   `coordinator=` injection)
 - Modify: `docs/request-for-change/rfc-durable-run-coordinator.md`
 
@@ -156,7 +156,7 @@ exceptions.
 - [ ] **Step 2: Run the contract test and verify RED.**
 
   Run `python -m pytest test/test_run_coordinator_contract.py -n0 -q`.
-  Expected: collection fails because `kiro_crew.run_coordinator` does not exist.
+  Expected: collection fails because `aj_crew.run_coordinator` does not exist.
 
 - [ ] **Step 3: Implement typed models and in-memory submission.**
 
@@ -201,11 +201,11 @@ exceptions.
 
 **Files:**
 
-- Create: `src/kiro_crew/subagent_lifecycle.py`
-- Create: `src/kiro_crew/subagent_scheduler.py`
+- Create: `src/aj_crew/subagent_lifecycle.py`
+- Create: `src/aj_crew/subagent_scheduler.py`
 - Create: `test/test_subagent_lifecycle.py`
 - Create: `test/test_subagent_scheduler.py`
-- Modify: `src/kiro_crew/subagent.py`
+- Modify: `src/aj_crew/subagent.py`
 - Modify: `test/test_subagent_reap_race.py`
 - Modify: `test/test_subagent_scale.py`
 - Modify: `docs/system-specs/modules/subagent.md`
@@ -263,11 +263,11 @@ exceptions.
 
 **Files:**
 
-- Create: `src/kiro_crew/run_coordinator/sqlite.py`
-- Create: `src/kiro_crew/run_coordinator/legacy.py`
+- Create: `src/aj_crew/run_coordinator/sqlite.py`
+- Create: `src/aj_crew/run_coordinator/legacy.py`
 - Create: `test/test_run_coordinator_sqlite.py`
 - Modify: `test/test_run_coordinator_contract.py`
-- Modify: `src/kiro_crew/security.py`
+- Modify: `src/aj_crew/security.py`
 - Modify: `test/test_security.py`
 - Modify: `docs/system-specs/modules/security.md`
 - Modify: `docs/system-specs/modules/subagent.md`
@@ -322,9 +322,9 @@ exceptions.
 
 **Files:**
 
-- Modify: `src/kiro_crew/mcp_tools/spawn.py`
-- Modify: `src/kiro_crew/dashboard/handlers/messaging.py`
-- Modify: `src/kiro_crew/subagent.py`
+- Modify: `src/aj_crew/mcp_tools/spawn.py`
+- Modify: `src/aj_crew/dashboard/handlers/messaging.py`
+- Modify: `src/aj_crew/subagent.py`
 - Create: `test/test_run_coordinator_admission.py`
 - Modify: `test/test_subagent_scale.py`
 - Modify: `docs/architecture/mcp.md`
@@ -375,9 +375,9 @@ exceptions.
 
 **Files:**
 
-- Create: `src/kiro_crew/run_coordinator/delivery.py`
-- Modify: `src/kiro_crew/subagent.py`
-- Modify: `src/kiro_crew/slack/gateway.py`
+- Create: `src/aj_crew/run_coordinator/delivery.py`
+- Modify: `src/aj_crew/subagent.py`
+- Modify: `src/aj_crew/slack/gateway.py`
 - Modify: `docs/system-specs/common/injected-messages.md`
 - Modify: `docs/system-specs/modules/messaging.md`
 - Modify: `docs/system-specs/modules/subagent.md`
@@ -431,9 +431,9 @@ exceptions.
 
 **Files:**
 
-- Modify: `src/kiro_crew/run_coordinator/legacy.py`
-- Create: `src/kiro_crew/run_coordinator/recovery.py`
-- Modify: `src/kiro_crew/subagent.py`
+- Modify: `src/aj_crew/run_coordinator/legacy.py`
+- Create: `src/aj_crew/run_coordinator/recovery.py`
+- Modify: `src/aj_crew/subagent.py`
 - Create: `test/test_run_coordinator_recovery.py`
 - Modify: `test/test_subagent_persistence.py`
 - Modify: `docs/system-specs/modules/subagent.md`

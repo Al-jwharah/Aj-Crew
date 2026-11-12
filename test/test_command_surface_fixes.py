@@ -26,17 +26,17 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.discord import commands as dcmd
-from kiro_crew.discord import transport_dispatch as dtd
-from kiro_crew.discord.session_resume import RoutingDecision
-from kiro_crew.discord.transport import DISCORD_CAPABILITIES
-from kiro_crew.discord.transport_dispatch import DiscordDispatcher
-from kiro_crew.hooks import HookResult
-from kiro_crew.messaging import dispatch as D
-from kiro_crew.messaging.dispatch import ChannelTurn, drive_turn
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.session_allocation import SessionClosingError
-from kiro_crew.telegram import commands as tcmd
+from aj_crew.discord import commands as dcmd
+from aj_crew.discord import transport_dispatch as dtd
+from aj_crew.discord.session_resume import RoutingDecision
+from aj_crew.discord.transport import DISCORD_CAPABILITIES
+from aj_crew.discord.transport_dispatch import DiscordDispatcher
+from aj_crew.hooks import HookResult
+from aj_crew.messaging import dispatch as D
+from aj_crew.messaging.dispatch import ChannelTurn, drive_turn
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.session_allocation import SessionClosingError
+from aj_crew.telegram import commands as tcmd
 
 # ── 1. An unrecognized ``!command`` (and the prose that must not trip it) ───
 
@@ -329,7 +329,7 @@ async def test_a_real_command_still_runs(permitted: None) -> None:
     await dispatcher.handle_message(_inbound("!help"))
 
     assert len(client.sent) == 1
-    assert "Kiro Crew" in client.sent[0]
+    assert "Aj Crew" in client.sent[0]
     assert "isn't a command" not in client.sent[0]
 
 

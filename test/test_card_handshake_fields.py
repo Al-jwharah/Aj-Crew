@@ -16,17 +16,17 @@ from typing import Dict, Iterator, Tuple
 
 import pytest
 
-from kiro_crew.acp.client_turn_control import steer_unadvertised_issue
-from kiro_crew.acp.types import steering_advertised
-from kiro_crew.agent_sdk import backends
-from kiro_crew.agent_sdk.backend_cards import (
+from aj_crew.acp.client_turn_control import steer_unadvertised_issue
+from aj_crew.acp.types import steering_advertised
+from aj_crew.agent_sdk import backends
+from aj_crew.agent_sdk.backend_cards import (
     ADVERTISED_BY_HARNESS,
     ADVERTISED_FIELD_BY_LINE,
     LINE_MID_TURN_STEER,
     USER_FACING_LINES,
     card_for,
 )
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.providers.acp import AcpProvider
 
 FRAMES = Path(__file__).resolve().parent / "fixtures" / "acp_frames"
 CLAUDE = backends.ACP_BACKEND_CLAUDE

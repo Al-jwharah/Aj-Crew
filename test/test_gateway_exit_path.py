@@ -26,11 +26,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import cli as cli_mod
-from kiro_crew import eventlog_hooks
-from kiro_crew import session as session_mod
-from kiro_crew import skill_usage
-from kiro_crew.slack import gateway as gw
+from aj_crew import cli as cli_mod
+from aj_crew import eventlog_hooks
+from aj_crew import session as session_mod
+from aj_crew import skill_usage
+from aj_crew.slack import gateway as gw
 
 
 @pytest.fixture
@@ -289,7 +289,7 @@ async def test_the_force_exit_is_backstopped_by_a_deadline(monkeypatch, seams) -
 
 
 def test_the_deadline_never_cuts_a_drain_keeping_to_its_bound() -> None:
-    from kiro_crew import sel as sel_mod
+    from aj_crew import sel as sel_mod
 
     bounds = 2 * sel_mod._HARD_EXIT_FLUSH_TIMEOUT_SECS + eventlog_hooks.SHUTDOWN_DRAIN_SECONDS + 2.0
     assert gw._FORCE_EXIT_DEADLINE_SECS > bounds
@@ -378,7 +378,7 @@ class _NoExitOs:
 async def test_the_exit_path_runs_every_drain_and_exits_once(
     monkeypatch, seams, caplog, drain_fails: str
 ) -> None:
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     no_exit = _NoExitOs()
     monkeypatch.setattr(gw, "os", no_exit)
@@ -399,7 +399,7 @@ async def test_the_exit_path_runs_every_drain_and_exits_once(
     orch._sign_in_refresher_task = None
     orch._shutdown = AsyncMock(side_effect=RuntimeError("teardown wedged"))
 
-    with caplog.at_level("DEBUG", logger="kiro_crew.slack.gateway"):
+    with caplog.at_level("DEBUG", logger="aj_crew.slack.gateway"):
         await orch._shutdown_and_exit()
 
     no_exit._exit.assert_called_once_with(0)
@@ -435,7 +435,7 @@ async def test_the_exit_path_persists_skill_hits_accepted_inside_the_debounce_wi
     # The gateway leaves through os._exit, which skips atexit and kills the
     # daemon flush thread. A hit record() accepted inside the 60 s window must
     # still be on disk once _shutdown_and_exit has run.
-    from kiro_crew.skill_usage import SkillUsageLedger
+    from aj_crew.skill_usage import SkillUsageLedger
 
     monkeypatch.setattr(skill_usage, "_live_ledgers", weakref.WeakSet())
     no_exit = _NoExitOs()
@@ -483,7 +483,7 @@ async def test_a_wedged_skill_usage_flush_cannot_hold_the_exit(monkeypatch, seam
 async def test_the_exit_path_releases_shared_crew_slices_a_timed_out_shutdown_skipped(
     monkeypatch, seams
 ) -> None:
-    from kiro_crew.shared_crew import admission_gate
+    from aj_crew.shared_crew import admission_gate
 
     no_exit = _NoExitOs()
     monkeypatch.setattr(gw, "os", no_exit)
@@ -535,7 +535,7 @@ def _graceful_exit_seams(monkeypatch: pytest.MonkeyPatch) -> _NoExitOs:
     monkeypatch.setattr(gw, "flush_audit_queue_before_hard_exit", AsyncMock())
     monkeypatch.setattr(cli_mod, "drain_log_queue_before_hard_exit", AsyncMock())
     monkeypatch.setattr(skill_usage, "flush_all_for_shutdown", MagicMock(return_value=True))
-    from kiro_crew.shared_crew import admission_gate
+    from aj_crew.shared_crew import admission_gate
 
     monkeypatch.setattr(admission_gate, "shutdown_cleanup", AsyncMock(return_value=0))
     return no_exit
@@ -627,7 +627,7 @@ async def test_the_exit_path_marks_the_clean_exit_last_before_its_hard_exit(
 ) -> None:
     # A teardown that wedges and is then killed never reaches the mark, so its
     # header-only crash dump is kept as the trace of that death.
-    from kiro_crew.dashboard import crash_dump_store
+    from aj_crew.dashboard import crash_dump_store
 
     order: list[str] = []
     no_exit = _graceful_exit_seams(monkeypatch)
@@ -650,7 +650,7 @@ async def test_a_force_exit_claimed_during_the_clean_exit_mark_still_owns_the_ex
     # The mark is awaited off the loop, so a second signal can land while it is
     # written; the graceful exit must then park instead of exiting over the force
     # thread's drains.
-    from kiro_crew.dashboard import crash_dump_store
+    from aj_crew.dashboard import crash_dump_store
 
     no_exit = _graceful_exit_seams(monkeypatch)
     orch = _bare_orchestrator()

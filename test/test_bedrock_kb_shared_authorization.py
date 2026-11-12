@@ -15,7 +15,7 @@ from types import SimpleNamespace
 import pytest
 from test_bedrock_kb_connector import FakeClient, FakeClientError, _add_source, _hit
 
-from kiro_crew.knowledge.connectors import bedrock_kb
+from aj_crew.knowledge.connectors import bedrock_kb
 
 # Cold costs the module's own comment gives: the AWS CLI STS probe takes
 # ~0.5-1.5s, the boto STS verify a round trip more.

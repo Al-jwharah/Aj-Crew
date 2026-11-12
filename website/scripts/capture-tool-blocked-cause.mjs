@@ -23,7 +23,7 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/tool-blocked-cause'
 const SLOT = 'chat-tool-blocked'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -32,7 +32,7 @@ const CARD_WAIT = { selector: '[data-testid="recovery-card"]' }
 const PREFIX = '[Tool blocked — reason sent to the agent]'
 const CAUSE = 'invalid_name'
 const NOTICE = [
-  '[Kiro Crew host notice] The tool call you just made was blocked before it ran.',
+  '[Aj Crew host notice] The tool call you just made was blocked before it ran.',
   '',
   'Blocked: fs_read_file — the tool name is not one this host exposes.',
   '',
@@ -47,7 +47,7 @@ const slots = [
     running: false,
     last_message: 'Re-reading the file with the tool this host exposes.',
     messages: 4,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     memory_mode: 'persistent',
     project: PROJECT,
     modified: Math.floor(Date.now() / 1000),

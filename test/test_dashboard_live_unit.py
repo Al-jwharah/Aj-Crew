@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from types import SimpleNamespace
 
-from kiro_crew.crew_log import projection, resolve
-from kiro_crew.dashboard.handlers import member_dashboard as md
+from aj_crew.crew_log import projection, resolve
+from aj_crew.dashboard.handlers import member_dashboard as md
 
 SLOT = "member-x.memory-member-x-0123"
 UNITS = ("sess_live", "later-chain-a", "later-chain-b")

@@ -23,23 +23,23 @@ from eager_spawn_helpers import (  # noqa: F401 -- fixtures are used by name
     _stub_factory,
 )
 
-from kiro_crew.config.loader import (
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+from aj_crew.config.loader import (
+    AjCrewAgentConfig,
+    AjCrewConfig,
     MemoryStoreConfig,
     ResolvedBindings,
 )
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_runner import _eager_spawn, schedule_eager_spawn
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.session import FirstTurnState
-from kiro_crew.start_priority import StartPriority
-from kiro_crew.testing.wait import until_parked
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_runner import _eager_spawn, schedule_eager_spawn
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.session import FirstTurnState
+from aj_crew.start_priority import StartPriority
+from aj_crew.testing.wait import until_parked
 
 
-def _cfg_with_store(name: str, *, version: int, owner: str = "") -> KiroCrewConfig:
-    cfg = KiroCrewConfig(
-        agents={"default": KiroCrewAgentConfig()},
+def _cfg_with_store(name: str, *, version: int, owner: str = "") -> AjCrewConfig:
+    cfg = AjCrewConfig(
+        agents={"default": AjCrewAgentConfig()},
         memory_stores={
             "default": MemoryStoreConfig(),
             name: MemoryStoreConfig(memory_version=version, owner_member=owner),
@@ -49,13 +49,13 @@ def _cfg_with_store(name: str, *, version: int, owner: str = "") -> KiroCrewConf
     return cfg
 
 
-def _private_alice_cfg() -> KiroCrewConfig:
+def _private_alice_cfg() -> AjCrewConfig:
     return _cfg_with_store("member-alice", version=2, owner="alice")
 
 
-def _private_default_member_cfg() -> KiroCrewConfig:
+def _private_default_member_cfg() -> AjCrewConfig:
     cfg = _private_alice_cfg()
-    cfg.agents["alice"] = KiroCrewAgentConfig(memory_store="member-alice")
+    cfg.agents["alice"] = AjCrewAgentConfig(memory_store="member-alice")
     cfg.default_agent = "alice"
     return cfg
 
@@ -70,7 +70,7 @@ def _unresolved_bindings() -> ResolvedBindings:
     return bindings
 
 
-def _unresolved_member_cfg() -> KiroCrewConfig:
+def _unresolved_member_cfg() -> AjCrewConfig:
     return _cfg(True).return_value
 
 
@@ -89,7 +89,7 @@ class TestScheduleEagerSpawn:
     def test_config_loader_parses_eager_spawn(self, tmp_path):
         """The loader's explicit SessionConfig construction must carry the flag.
 
-        The dataclass field alone is not enough: KiroCrewConfig.load() builds
+        The dataclass field alone is not enough: AjCrewConfig.load() builds
         SessionConfig with per-field parsing, and a field missing there is
         silently dropped on load — then the boot-time migration write-back
         saves the dataclass default over the user's setting. Caught live.
@@ -102,8 +102,8 @@ class TestScheduleEagerSpawn:
         def _load(data: dict, name: str):
             tmp = tmp_path / name
             tmp.write_text(json.dumps(data))
-            with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-                return chat_runner.KiroCrewConfig.load()
+            with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+                return chat_runner.AjCrewConfig.load()
 
         assert _load({"session": {"eager_spawn": False}}, "off.json").session.eager_spawn is False
         assert _load({}, "empty.json").session.eager_spawn is True  # default on
@@ -118,7 +118,7 @@ class TestScheduleEagerSpawn:
         slot = _ChatSlot("t1")
         state = _mock_state(slot)
         _prime(False)
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             schedule_eager_spawn(state, slot)
         assert slot._eager_spawn_task is None
 
@@ -156,7 +156,7 @@ class TestEagerSpawn:
         state = _mock_state(slot)
         bindings = _bindings(agent="wfe-oncall", alias="wfe-oncall")
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", return_value=bindings),
         ):
             await _eager_spawn(state, slot)
@@ -198,7 +198,7 @@ class TestEagerSpawn:
         state = _mock_state(slot)
         cfg = make_cfg()
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", return_value=cfg),
+            patch.object(chat_runner.AjCrewConfig, "load", return_value=cfg),
             patch.object(
                 chat_runner, "resolve_agent_bindings", return_value=make_bindings()
             ) as resolve,
@@ -220,7 +220,7 @@ class TestEagerSpawn:
         state = _mock_state(slot)
         cfg = _cfg_with_store("legacy-v1", version=1)
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", return_value=cfg),
+            patch.object(chat_runner.AjCrewConfig, "load", return_value=cfg),
             patch.object(
                 chat_runner,
                 "resolve_agent_bindings",
@@ -237,8 +237,8 @@ class TestEagerSpawn:
 
     @pytest.mark.asyncio
     async def test_private_assignment_blocks_legacy_speculation_without_slot_metadata(self):
-        from kiro_crew.member_memory_auth import bind_private_session_store
-        from kiro_crew.memory_stores import provision_member_memory
+        from aj_crew.member_memory_auth import bind_private_session_store
+        from aj_crew.memory_stores import provision_member_memory
 
         slot = _ChatSlot("private-history")
         slot.agent = "legacy"
@@ -246,10 +246,10 @@ class TestEagerSpawn:
         key = chat_runner.effective_session_key(slot)
 
         def seed():
-            cfg = KiroCrewConfig.load()
+            cfg = AjCrewConfig.load()
             cfg.session.eager_spawn = True
-            cfg.agents["writer"] = KiroCrewAgentConfig()
-            cfg.agents["legacy"] = KiroCrewAgentConfig()
+            cfg.agents["writer"] = AjCrewAgentConfig()
+            cfg.agents["legacy"] = AjCrewAgentConfig()
             store = provision_member_memory(cfg, "writer")
             cfg.save()
             bind_private_session_store(key, store)
@@ -278,7 +278,7 @@ class TestEagerSpawn:
             return None
 
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner.asyncio, "to_thread", side_effect=_switch_store),
         ):
             await _eager_spawn(state, slot)
@@ -310,7 +310,7 @@ class TestEagerSpawn:
             return result
 
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)),
+            patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)),
             patch.object(chat_runner, "resolve_agent_bindings", side_effect=resolve),
         ):
             await _eager_spawn(state, slot)
@@ -327,7 +327,7 @@ class TestEagerSpawn:
         slot = _ChatSlot("t1")
         state = _mock_state(slot)
         state.get_slot = MagicMock(return_value=_ChatSlot("t1"))  # different object
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             await _eager_spawn(state, slot)
         assert chat_runner._armed_prefetches == {}
         state.sessions.get_or_create.assert_not_awaited()
@@ -348,7 +348,7 @@ class TestEagerSpawn:
         slot._pending_reset_history_key = "dashboard:t1"
         state = _mock_state(slot)
         try:
-            with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+            with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
                 await _eager_spawn(state, slot)
         finally:
             _turn.set_result(None)
@@ -363,7 +363,7 @@ class TestEagerSpawn:
         slot.project = str(tmp_path)
         slot._pending_reset_history_key = "dashboard:t1"
         state = _mock_state(slot)
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             await _eager_spawn(state, slot)
         state.sessions.reset.assert_awaited_once_with("dashboard:t1", skip_if_busy=True)
         assert slot._pending_reset_history_key is None
@@ -374,7 +374,7 @@ class TestEagerSpawn:
         slot = _ChatSlot("t1")
         state = _mock_state(slot)
         state.sessions.get_or_create = AsyncMock(side_effect=RuntimeError("spawn failed"))
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             await _eager_spawn(state, slot)  # must not raise
         # A failed agent start counts toward the background-start cap, and the
         # admission reservation is given back.
@@ -390,7 +390,7 @@ class TestEagerSpawn:
         race)."""
         slot = _ChatSlot("t1")
         state = _mock_state(slot)
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             await _eager_spawn(state, slot)
         assert state.sessions.get_or_create.await_args.kwargs["speculative"] is True
 
@@ -398,14 +398,14 @@ class TestEagerSpawn:
     async def test_resumable_key_refusal_is_clean(self):
         """SpeculativeResumeRefused is an expected outcome, not an error: the
         real first turn must be the one that resumes."""
-        from kiro_crew.session import SpeculativeResumeRefused
+        from aj_crew.session import SpeculativeResumeRefused
 
         slot = _ChatSlot("t1")
         state = _mock_state(slot)
         state.sessions.get_or_create = AsyncMock(
             side_effect=SpeculativeResumeRefused("dashboard:t1")
         )
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             await _eager_spawn(state, slot)  # must not raise
         # A refusal is not a failed start: the slot stays clear of the cap.
         assert getattr(slot, "_eager_spawn_failures", 0) == 0
@@ -429,7 +429,7 @@ class TestEagerSpawn:
             return (MagicMock(), True, False)
 
         state.sessions.get_or_create = AsyncMock(side_effect=_create_then_delete)
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             await _eager_spawn(state, slot)
         assert chat_runner._armed_prefetches == {}
         key = state.sessions.get_or_create.await_args.args[0]
@@ -455,7 +455,7 @@ class TestEagerSpawn:
             return (MagicMock(), True, False)
 
         state.sessions.get_or_create = AsyncMock(side_effect=_create_then_switch)
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             await _eager_spawn(state, slot)
         assert chat_runner._armed_prefetches == {}
         key = state.sessions.get_or_create.await_args.args[0]
@@ -470,7 +470,7 @@ class TestEagerSpawn:
         slot.project = str(tmp_path)
         state = _mock_state(slot)
         state.sessions.remove = AsyncMock()
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             await _eager_spawn(state, slot)
         assert list(chat_runner._armed_prefetches) == ["dashboard:t1"]
         state.sessions.remove.assert_not_awaited()
@@ -499,7 +499,7 @@ class TestEagerSpawn:
             return (MagicMock(), False, False)
 
         state.sessions.get_or_create = AsyncMock(side_effect=_lose_race_and_switch)
-        with patch.object(chat_runner.KiroCrewConfig, "load", _cfg(True)):
+        with patch.object(chat_runner.AjCrewConfig, "load", _cfg(True)):
             await _eager_spawn(state, slot)
         state.sessions.remove.assert_not_awaited()
         # Semaphore still released so the winner's next turn isn't blocked.
@@ -508,23 +508,23 @@ class TestEagerSpawn:
 
 
 class TestTtftMetric:
-    """kirocrew.chat.first_token.duration — user message → first visible token."""
+    """ajcrew.chat.first_token.duration — user message → first visible token."""
 
     def test_emits_histogram_with_attribution_attrs(self):
         rec = MagicMock()
-        with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+        with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
             chat_runner._emit_ttft_metric(0.0, "dashboard:chat-1-x", is_new=True, resumed=False)
         assert rec.histogram.call_count == 1
         name = rec.histogram.call_args.args[0]
         attrs = rec.histogram.call_args.kwargs["attrs"]
-        assert name == "kirocrew.chat.first_token.duration"
+        assert name == "ajcrew.chat.first_token.duration"
         assert attrs["first_turn"] is True
         assert attrs["resumed"] is False
         assert rec.histogram.call_args.kwargs["unit"] == "ms"
 
     def test_recorder_failure_is_swallowed(self):
         """Best-effort: a metrics outage must never break the chat stream."""
-        with patch("kiro_crew.metrics.provider.get_recorder", side_effect=RuntimeError("boom")):
+        with patch("aj_crew.metrics.provider.get_recorder", side_effect=RuntimeError("boom")):
             chat_runner._emit_ttft_metric(0.0, "dashboard:chat-1-x", is_new=False, resumed=True)
 
 
@@ -534,9 +534,9 @@ class TestSpeculativeGetOrCreate:
 
     @pytest.fixture
     def cfg(self):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        c = KiroCrewConfig()
+        c = AjCrewConfig()
         c.agent.provider = "acp"
         c.session.pool_size = 0
         return c
@@ -546,7 +546,7 @@ class TestSpeculativeGetOrCreate:
         """A speculative creator registers is_new=True; the next real
         get_or_create claims it (was_new=True) and consumes it. This is the
         end-to-end invariant that keeps first-turn context injection alive."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(cfg, provider_factory=_stub_factory())
         key = "dashboard:eager-x"
@@ -567,7 +567,7 @@ class TestSpeculativeGetOrCreate:
     async def test_speculative_claim_does_not_consume(self, cfg):
         """A speculative call landing on an already-armed live session must
         read the flag without consuming it (repeat eager signals)."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(cfg, provider_factory=_stub_factory())
         key = "dashboard:eager-y"
@@ -587,11 +587,11 @@ class TestSpeculativeGetOrCreate:
         .jsonl in the (patched, isolated) kiro sessions dir or the guard is
         never exercised.
         """
-        from kiro_crew.session import SessionManager, SpeculativeResumeRefused
+        from aj_crew.session import SessionManager, SpeculativeResumeRefused
 
         sessions_dir = tmp_path / "kiro-sessions"
         sessions_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.session_map._kiro_sessions_dir", lambda: sessions_dir)
+        monkeypatch.setattr("aj_crew.session_map._kiro_sessions_dir", lambda: sessions_dir)
         sid = "prior-sid-1234"
         (sessions_dir / f"{sid}.json").write_text("{}")
         (sessions_dir / f"{sid}.jsonl").write_text("x" * 32)
@@ -611,7 +611,7 @@ class TestSpeculativeGetOrCreate:
         not a hardcoded False."""
         import asyncio
 
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(cfg, provider_factory=_stub_factory())
         key = "dashboard:eager-race"
@@ -643,7 +643,7 @@ class TestSpeculativeGetOrCreate:
         still receives was_new=True."""
         import asyncio
 
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(cfg, provider_factory=_stub_factory())
         key = "dashboard:eager-cancel"
@@ -671,7 +671,7 @@ class TestProjectSetWiring:
         from aiohttp import web
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard.chat import api_chat_slot_agent
+        from aj_crew.dashboard.chat import api_chat_slot_agent
 
         slot = _ChatSlot("t1")
         state = MagicMock(spec=DashboardState)
@@ -689,14 +689,14 @@ class TestProjectSetWiring:
         app.router.add_post("/api/chat/slots/{slot}/agent", api_chat_slot_agent)
         with (
             patch(
-                "kiro_crew.dashboard.chat_handlers._reset_slot_session_or_warn",
+                "aj_crew.dashboard.chat_handlers._reset_slot_session_or_warn",
                 new=AsyncMock(return_value=True),
             ),
-            patch("kiro_crew.dashboard.chat_handlers.save_slot_off_loop", new=AsyncMock()),
-            patch("kiro_crew.dashboard.chat_handlers.schedule_eager_spawn") as sched,
+            patch("aj_crew.dashboard.chat_handlers.save_slot_off_loop", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat_handlers.schedule_eager_spawn") as sched,
         ):
             async with TestClient(TestServer(app)) as client:
-                resp = await client.post("/api/chat/slots/t1/agent", json={"agent": "kirocrew"})
+                resp = await client.post("/api/chat/slots/t1/agent", json={"agent": "ajcrew"})
                 assert resp.status == 200
             # No owner identity on this request, so BACKGROUND (test_start_priority
             # pins the owner case).
@@ -707,7 +707,7 @@ class TestProjectSetWiring:
         from aiohttp import web
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard.chat import api_chat_slot_project
+        from aj_crew.dashboard.chat import api_chat_slot_project
 
         slot = _ChatSlot("t1")
         state = MagicMock(spec=DashboardState)
@@ -723,8 +723,8 @@ class TestProjectSetWiring:
         app["state"] = state
         app.router.add_post("/api/chat/slots/{slot}/project", api_chat_slot_project)
         with (
-            patch("kiro_crew.dashboard.chat_handlers._save_recent_project"),
-            patch("kiro_crew.dashboard.chat_handlers.schedule_eager_spawn") as sched,
+            patch("aj_crew.dashboard.chat_handlers._save_recent_project"),
+            patch("aj_crew.dashboard.chat_handlers.schedule_eager_spawn") as sched,
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -740,7 +740,7 @@ class TestProjectSetWiring:
         from aiohttp import web
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard.chat import api_chat_slot_project
+        from aj_crew.dashboard.chat import api_chat_slot_project
 
         slot = _ChatSlot("t1")
         slot.project = str(tmp_path)
@@ -751,8 +751,8 @@ class TestProjectSetWiring:
         app["state"] = state
         app.router.add_post("/api/chat/slots/{slot}/project", api_chat_slot_project)
         with (
-            patch("kiro_crew.dashboard.chat_handlers._save_recent_project"),
-            patch("kiro_crew.dashboard.chat_handlers.schedule_eager_spawn") as sched,
+            patch("aj_crew.dashboard.chat_handlers._save_recent_project"),
+            patch("aj_crew.dashboard.chat_handlers.schedule_eager_spawn") as sched,
         ):
             async with TestClient(TestServer(app)) as client:
                 resp = await client.post(
@@ -768,9 +768,9 @@ class TestSpeculativeResumeHandover:
 
     @pytest.fixture
     def cfg(self):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        c = KiroCrewConfig()
+        c = AjCrewConfig()
         c.agent.provider = "acp"
         c.session.pool_size = 0
         return c
@@ -780,7 +780,7 @@ class TestSpeculativeResumeHandover:
         SessionMap.get does not self-prune it (mirrors the refusal test)."""
         sessions_dir = tmp_path / "kiro-sessions"
         sessions_dir.mkdir(exist_ok=True)
-        monkeypatch.setattr("kiro_crew.session_map._kiro_sessions_dir", lambda: sessions_dir)
+        monkeypatch.setattr("aj_crew.session_map._kiro_sessions_dir", lambda: sessions_dir)
         (sessions_dir / f"{sid}.json").write_text("{}")
         (sessions_dir / f"{sid}.jsonl").write_text("x" * 32)
         mgr._session_map.set(key, sid)
@@ -792,7 +792,7 @@ class TestSpeculativeResumeHandover:
         creator performs the load and, when it actually resumes, registers
         with the first-turn flag armed. (A load that does NOT resume is
         rejected pre-registration — pinned by TestSpecResumeFallbackMapGuard.)"""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         def factory(session_key=None, agent=None, channel_id=None, **kwargs):
             m = AsyncMock()
@@ -807,7 +807,7 @@ class TestSpeculativeResumeHandover:
             m.client._session_id = "prior-sid-a"
             return m
 
-        monkeypatch.setattr("kiro_crew.providers.acp.AcpProvider", object)
+        monkeypatch.setattr("aj_crew.providers.acp.AcpProvider", object)
         mgr = SessionManager(cfg, provider_factory=factory)
         key = "dashboard:prefetch-a"
         self._resumable(mgr, key, tmp_path, monkeypatch)
@@ -825,7 +825,7 @@ class TestSpeculativeResumeHandover:
         """The load-observed resumed=True is armed at registration and handed
         to the first real claimant exactly once — the invariant that keeps the
         real first turn's history-injection decision correct."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         sid = "prior-sid-9999"
 
@@ -845,9 +845,9 @@ class TestSpeculativeResumeHandover:
         # get_or_create gates the resumed sample on isinstance(provider,
         # AcpProvider); widen the class so the stub passes without spawning a
         # real ACP process.
-        monkeypatch.setattr("kiro_crew.providers.acp.AcpProvider", object)
+        monkeypatch.setattr("aj_crew.providers.acp.AcpProvider", object)
 
-        from kiro_crew.session import SessionManager  # noqa: F811
+        from aj_crew.session import SessionManager  # noqa: F811
 
         mgr = SessionManager(cfg, provider_factory=factory)
         key = "dashboard:prefetch-b"
@@ -874,7 +874,7 @@ class TestSpeculativeResumeHandover:
     async def test_speculative_claimant_reads_resumed_without_consuming(self, cfg):
         """A repeat speculative call on an armed session must not consume
         either marker (repeat focus signals)."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(cfg, provider_factory=_stub_factory())
         key = "dashboard:prefetch-c"
@@ -890,7 +890,7 @@ class TestSpeculativeResumeHandover:
     async def test_fresh_speculative_create_does_not_arm_resumed(self, cfg):
         """No mapping → the speculative creator starts fresh and must not
         claim a resume it never performed."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager(cfg, provider_factory=_stub_factory())
         key = "dashboard:prefetch-d"
@@ -920,7 +920,7 @@ class TestIllegalFirstTurnStateUnrepresentable:
         """The old fields are gone from ``_Session``: with one field there is
         no second marker to desynchronize, and the old constructor kwargs are
         rejected rather than silently accepted."""
-        from kiro_crew.session import _Session
+        from aj_crew.session import _Session
 
         sess = _Session(provider=AsyncMock())
         assert not hasattr(sess, "is_new")

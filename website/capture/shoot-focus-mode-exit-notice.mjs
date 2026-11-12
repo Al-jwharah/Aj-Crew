@@ -34,7 +34,7 @@ mkdirSync(OUT, { recursive: true })
 const SLOT = 'chat-1-1'
 const slots = [{
   key: SLOT, title: 'Focus mode', running: false, last_message: 'Focus mode',
-  messages: 1, agent: 'kirocrew', memory_mode: 'persistent', project: 'default',
+  messages: 1, agent: 'ajcrew', memory_mode: 'persistent', project: 'default',
   modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
 }]
 const slotDetail = { running: false, has_more: false, total: 0, queue: [], messages: [] }

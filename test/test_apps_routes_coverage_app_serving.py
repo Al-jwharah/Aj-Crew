@@ -30,16 +30,16 @@ from apps_routes_coverage_helpers import (
 )
 from test_update_provider import _UNALLOCATABLE_PID
 
-import kiro_crew.apps.routes as routes_mod
-from conftest import requires_symlinks
-from kiro_crew import platform_compat
-from kiro_crew.apps.manager import enable_app
-from kiro_crew.apps.routes import (
+import aj_crew.apps.routes as routes_mod
+from aj_crew import platform_compat
+from aj_crew.apps.manager import enable_app
+from aj_crew.apps.routes import (
     _get_app_secret,
     _resolve_app_backend_url,
     invalidate_app_secret_cache,
 )
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from conftest import requires_symlinks
 
 # POST /api/apps/{name}/open
 
@@ -682,11 +682,11 @@ async def test_api_proxy_signs_and_forwards_to_backend(
     """End-to-end proxy hop against an in-process loopback backend.
 
     Verifies the three things the proxy owes the app backend: the
-    ``X-KiroCrew-Proxy`` HMAC (validated with the app's own secret by the
+    ``X-AjCrew-Proxy`` HMAC (validated with the app's own secret by the
     shipped verifier), the preserved ``/api/`` prefix + query string, and that
     user credentials are stripped rather than forwarded.
     """
-    from kiro_crew.apps.proxy_auth import verify_proxy_request
+    from aj_crew.apps.proxy_auth import verify_proxy_request
 
     home = _setup_env(tmp_path, monkeypatch)
     _install(tmp_path)
@@ -735,7 +735,7 @@ async def test_api_proxy_signs_and_forwards_to_backend(
     assert "Cookie" not in seen["headers"]
     assert "Authorization" not in seen["headers"]
     assert verify_proxy_request(
-        seen["headers"]["X-KiroCrew-Proxy"],
+        seen["headers"]["X-AjCrew-Proxy"],
         method="POST",
         target="/api/echo?a=1",
         body=b'{"hello":1}',

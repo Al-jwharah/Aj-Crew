@@ -1,8 +1,8 @@
-"""``kiro_crew.mcp_dashboard`` keeps the patch seams and the namespace the one module had.
+"""``aj_crew.mcp_dashboard`` keeps the patch seams and the namespace the one module had.
 
-``kiro_crew.mcp_dashboard`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the
+``aj_crew.mcp_dashboard`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the
 flat ``mcp_dashboard_*.py`` owners. Callers, tests and documents still reach every name as
-``kiro_crew.mcp_dashboard.<name>``, and the moved code reads its names as plain module
+``aj_crew.mcp_dashboard.<name>``, and the moved code reads its names as plain module
 globals, so a patch through the facade reaches that code only because the mirror writes
 it into every module holding the name.
 
@@ -27,7 +27,7 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror, mcp_dashboard
+from aj_crew import _facade_mirror, mcp_dashboard
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_mcp_dashboard_facade")
 
@@ -35,7 +35,7 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_mcp_dashboard_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams",)
 
-FACADE = "kiro_crew.mcp_dashboard"
+FACADE = "aj_crew.mcp_dashboard"
 SRC_DIR = Path(mcp_dashboard.__file__).resolve().parent
 
 #: Names the test trees are known to patch through the facade: the redactor every tool
@@ -67,7 +67,7 @@ def _test_tree_files() -> list[Path]:
         rel = path.relative_to(root).as_posix()
         if rel == "conftest.py" or rel.startswith("test/"):
             found.append(path)
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and (
+        elif rel.startswith("src/aj_crew/apps/builtins/") and (
             "/tests/" in rel or path.name.startswith("test_") or path.name == "conftest.py"
         ):
             found.append(path)
@@ -79,9 +79,9 @@ def _spellings() -> dict[str, str]:
     spellings = {FACADE: FACADE}
     for path, _text, tree in source_corpus.parsed_candidates(require_any=("mcp_dashboard",)):
         rel = path.relative_to(source_corpus.src_root()).with_suffix("")
-        module = ".".join(("kiro_crew", *rel.parts)).removesuffix(".__init__")
+        module = ".".join(("aj_crew", *rel.parts)).removesuffix(".__init__")
         for node in tree.body:
-            if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew":
+            if isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
                 for alias in node.names:
                     if alias.name == "mcp_dashboard" and module != FACADE:
                         spellings[f"{module}.{alias.asname or alias.name}"] = FACADE
@@ -134,7 +134,7 @@ def test_the_owners_are_the_mcp_dashboard_siblings_in_layer_order() -> None:
     """``_OWNERS`` names every ``mcp_dashboard_*.py`` sibling, and each owner imports only
     owners listed before it: the order the facade loads them and a read resolves in."""
     owners = list(_index().owners)
-    on_disk = {f"kiro_crew.{p.stem}": p for p in SRC_DIR.glob("mcp_dashboard_*.py")}
+    on_disk = {f"aj_crew.{p.stem}": p for p in SRC_DIR.glob("mcp_dashboard_*.py")}
     assert len(on_disk) == 7
     assert sorted(owners) == sorted(on_disk)
     late: dict[str, list[str]] = {}
@@ -206,7 +206,7 @@ def test_every_project_name_the_facade_serves_is_imported_for_type_checkers() ->
     served_project: dict[str, tuple[str, str]] = {}
     for name, owner in _index().exports.items():
         home = _from_imports(_owner_source(owner), type_checking=False).get(name)
-        if home and home[0].split(".")[0] == "kiro_crew" and home[0] not in family:
+        if home and home[0].split(".")[0] == "aj_crew" and home[0] not in family:
             served_project[name] = home
     assert served_project, "no served name is a project import, so this case measured nothing"
     assert checking == served_project
@@ -214,7 +214,7 @@ def test_every_project_name_the_facade_serves_is_imported_for_type_checkers() ->
         assert getattr(importlib.import_module(home), imported) is getattr(mcp_dashboard, name)
 
 
-def _owner_imports(tree: ast.Module, owners: set[str], package: str = "kiro_crew") -> set[str]:
+def _owner_imports(tree: ast.Module, owners: set[str], package: str = "aj_crew") -> set[str]:
     """The owners a module's syntax tree imports, at any depth, in every spelling: an
     absolute or a relative ``import``/``from ... import`` (resolved against *package*, the
     importing module's package), and a constant ``importlib.import_module(...)`` or
@@ -256,22 +256,22 @@ def _package_of(path: Path) -> str:
 @pytest.mark.parametrize(
     ("source", "package"),
     [
-        ("from kiro_crew.mcp_dashboard_references import _get_rows", "kiro_crew"),
-        ("from kiro_crew import mcp_dashboard_references", "kiro_crew"),
-        ("import kiro_crew.mcp_dashboard_references", "kiro_crew"),
-        ("from .mcp_dashboard_references import _get_rows", "kiro_crew"),
-        ("from . import mcp_dashboard_references", "kiro_crew"),
-        ("from ..mcp_dashboard_references import _get_rows", "kiro_crew.dashboard"),
-        ("def f():\n    from .mcp_dashboard_references import _get_rows", "kiro_crew"),
+        ("from aj_crew.mcp_dashboard_references import _get_rows", "aj_crew"),
+        ("from aj_crew import mcp_dashboard_references", "aj_crew"),
+        ("import aj_crew.mcp_dashboard_references", "aj_crew"),
+        ("from .mcp_dashboard_references import _get_rows", "aj_crew"),
+        ("from . import mcp_dashboard_references", "aj_crew"),
+        ("from ..mcp_dashboard_references import _get_rows", "aj_crew.dashboard"),
+        ("def f():\n    from .mcp_dashboard_references import _get_rows", "aj_crew"),
         (
-            "import importlib\nimportlib.import_module('kiro_crew.mcp_dashboard_references')",
-            "kiro_crew",
+            "import importlib\nimportlib.import_module('aj_crew.mcp_dashboard_references')",
+            "aj_crew",
         ),
         (
-            "from importlib import import_module\nimport_module('kiro_crew.mcp_dashboard_references')",
-            "kiro_crew",
+            "from importlib import import_module\nimport_module('aj_crew.mcp_dashboard_references')",
+            "aj_crew",
         ),
-        ("__import__('kiro_crew.mcp_dashboard_references')", "kiro_crew"),
+        ("__import__('aj_crew.mcp_dashboard_references')", "aj_crew"),
     ],
 )
 def test_the_owner_import_reader_sees_every_spelling(source: str, package: str) -> None:
@@ -279,13 +279,13 @@ def test_the_owner_import_reader_sees_every_spelling(source: str, package: str) 
     caught, and the facade's own import path is not."""
     owners = set(_index().owners)
     assert _owner_imports(ast.parse(source), owners, package) == {
-        "kiro_crew.mcp_dashboard_references"
+        "aj_crew.mcp_dashboard_references"
     }
-    assert _owner_imports(ast.parse("from kiro_crew import mcp_dashboard"), owners) == set()
+    assert _owner_imports(ast.parse("from aj_crew import mcp_dashboard"), owners) == set()
 
 
 def test_no_module_outside_the_family_imports_an_owner() -> None:
-    """The product reaches the owners only through ``kiro_crew.mcp_dashboard``, so the checks
+    """The product reaches the owners only through ``aj_crew.mcp_dashboard``, so the checks
     and allowlists keyed on that import path still see every caller, and moving a name
     between owners stays invisible to the rest of the package. Any spelling counts:
     absolute, relative, or a constant ``importlib.import_module``/``__import__`` call."""

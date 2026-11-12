@@ -11,8 +11,8 @@ import re
 
 import pytest
 
-from kiro_crew import mcp_work
-from kiro_crew.acp.types import (
+from aj_crew import mcp_work
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     PROVIDER_LABEL_CLAUDE,
@@ -20,22 +20,22 @@ from kiro_crew.acp.types import (
     PROVIDER_LABEL_DEFAULT,
     PROVIDER_LABEL_KAS,
 )
-from kiro_crew.agent_sdk.kas_tool_names import (
+from aj_crew.agent_sdk.kas_tool_names import (
     KAS_MCP_TOOL_ID_MAX_LEN,
     KAS_TOOL_UNAVAILABLE_RE,
     is_kas_provider_label,
     kas_mcp_display_name,
     kas_mcp_tool_id,
 )
-from kiro_crew.context import ContextBuilder
-from kiro_crew.context_assembly import tool_names
-from kiro_crew.learn import LessonStore
-from kiro_crew.mcp_tools import build_tool_names
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.context import ContextBuilder
+from aj_crew.context_assembly import tool_names
+from aj_crew.learn import LessonStore
+from aj_crew.mcp_tools import build_tool_names
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
-WORK = "kirocrew-work"
-CORE = "kirocrew-core"
+WORK = "ajcrew-work"
+CORE = "ajcrew-core"
 
 
 @pytest.fixture(autouse=True)
@@ -121,8 +121,8 @@ class TestActiveToolContract:
     @pytest.mark.parametrize(
         ("agent", "needed"),
         [
-            ("kirocrew-worker", ("work_brief", "work_report")),
-            ("kirocrew-conductor", ("work_ledger_record",)),
+            ("ajcrew-worker", ("work_brief", "work_report")),
+            ("ajcrew-conductor", ("work_ledger_record",)),
         ],
     )
     def test_every_work_tool_the_session_needs_has_a_qualified_direct_name(
@@ -144,7 +144,7 @@ class TestActiveToolContract:
     def test_a_minimal_session_start_carries_the_block_too(self, tmp_path):
         context = _builder(tmp_path).build_session_context(
             session_key="dashboard:chat-kas-2",
-            agent="kirocrew-worker",
+            agent="ajcrew-worker",
             provider_type=PROVIDER_LABEL_KAS,
             minimal_context=True,
         )
@@ -163,7 +163,7 @@ class TestActiveToolContract:
         the block must follow the provider."""
         from types import SimpleNamespace
 
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         class _Provider(AcpProvider):
             def __init__(self) -> None:
@@ -173,19 +173,19 @@ class TestActiveToolContract:
             "go",
             True,
             session_key="dashboard:chat-kas-4",
-            agent="kirocrew-worker",
+            agent="ajcrew-worker",
             provider_type=PROVIDER_LABEL_DEFAULT,
             context_provider=_Provider(),
         )
         assert ("[TOOL NAMES]" in message) is expected
 
     def test_the_post_compaction_reinjection_carries_the_block(self, tmp_path):
-        from kiro_crew.context_assembly import turn as _turn
+        from aj_crew.context_assembly import turn as _turn
 
         parts = _turn.post_compaction_parts(
             _builder(tmp_path),
             session_key="dashboard:chat-kas-3",
-            agent="kirocrew-worker",
+            agent="ajcrew-worker",
             project=None,
             mode="",
             is_cc=False,
@@ -220,7 +220,7 @@ class TestOtherHarnessesAreUnchanged:
     def test_no_block_off_kas(self, tmp_path, provider_type):
         assert tool_names.tool_names_block(provider_type) == ""
         context = _builder(tmp_path).build_session_context(
-            session_key="dashboard:chat-v2", agent="kirocrew-worker", provider_type=provider_type
+            session_key="dashboard:chat-v2", agent="ajcrew-worker", provider_type=provider_type
         )
         assert "[TOOL NAMES]" not in context
 
@@ -237,8 +237,8 @@ class TestKasNamingRule:
     @pytest.mark.parametrize(
         ("server", "tool", "expected"),
         [
-            ("kirocrew-work", "work_report", "mcp_kirocrew_work_work_report"),
-            ("kirocrew-core", "memory_recall", "mcp_kirocrew_core_memory_recall"),
+            ("ajcrew-work", "work_report", "mcp_ajcrew_work_work_report"),
+            ("ajcrew-core", "memory_recall", "mcp_ajcrew_core_memory_recall"),
             ("My Server", "Do.Thing", "mcp_my_server_dothing"),
             ("docs.server", "x-y", "mcp_docsserver_x_y"),
         ],
@@ -250,7 +250,7 @@ class TestKasNamingRule:
         assert len(kas_mcp_tool_id("s", "t" * 200)) == KAS_MCP_TOOL_ID_MAX_LEN
 
     def test_display_name(self):
-        assert kas_mcp_display_name("kirocrew-work", "work_report") == "@kirocrew-work/work_report"
+        assert kas_mcp_display_name("ajcrew-work", "work_report") == "@ajcrew-work/work_report"
 
     def test_every_crew_tool_id_is_under_the_cap(self):
         """Direct Crew tool names fit without truncation in the native-name helper."""

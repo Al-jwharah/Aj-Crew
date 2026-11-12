@@ -386,7 +386,7 @@ export const AUDITED_PRIMITIVES = Object.freeze({
  * out, Deny, Deploy anyway, Clear selection) is plain `point`, since the
  * warning says what it deletes is gone for good. It never makes a site
  * pointable: that takes a reviewed primitive. `REMOVAL_LABEL_RE` in
- * src/kiro_crew/guide_catalog.py is the same rule for `ui.find`.
+ * src/aj_crew/guide_catalog.py is the same rule for `ui.find`.
  */
 export const CAUTION_LABEL_RE = /\b(?:delete|remove|uninstall|erase|reset|wipe|purge|destroy)\b|\bclear\s+(?:all|data|everything|history|cache|memory)\b/i
 /**

@@ -35,7 +35,7 @@ def _logged_broadcast_failure(caplog) -> BaseException:
 
 def test_leading_edge_serialization_failure_names_the_offender(tmp_path, monkeypatch):
     """The immediate (leading-edge) broadcast annotates the raising TypeError."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _poison_slots_projection(state)
 
@@ -55,7 +55,7 @@ def test_trailing_flush_serialization_failure_names_the_offender(tmp_path, monke
     Both timing branches converge on _do_slots_broadcast, so the diagnostic
     covers them by construction — this pins the trailing half of that claim.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _poison_slots_projection(state)
 
@@ -76,11 +76,11 @@ def test_flush_failure_during_unwind_leaves_the_body_exception_unmasked(
     reports a broken projection, so it goes to the log and the RuntimeError
     reaches the caller as raised.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _poison_slots_projection(state)
 
-    with caplog.at_level("ERROR", logger="kiro_crew.dashboard.state"):
+    with caplog.at_level("ERROR", logger="aj_crew.dashboard.state"):
         with pytest.raises(RuntimeError, match="boom") as excinfo:
             with state.suspend_slots_push():
                 state.push_slots_update()  # queue the owed push
@@ -94,11 +94,11 @@ def test_flush_failure_during_unwind_leaves_the_body_exception_unmasked(
 
 def test_flush_failure_on_a_clean_exit_is_logged_with_its_offender(tmp_path, monkeypatch, caplog):
     """A failing exit flush after a clean body is logged, not raised."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _poison_slots_projection(state)
 
-    with caplog.at_level("ERROR", logger="kiro_crew.dashboard.state"):
+    with caplog.at_level("ERROR", logger="aj_crew.dashboard.state"):
         with state.suspend_slots_push():
             state.push_slots_update()  # queue the owed push
 
@@ -108,7 +108,7 @@ def test_flush_failure_on_a_clean_exit_is_logged_with_its_offender(tmp_path, mon
 
 def test_healthy_flush_is_unchanged_by_the_diagnostics(tmp_path, monkeypatch):
     """Benign control: the hoisted dump changes nothing on the happy path."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     seen: list[str] = []
     state._broadcast = lambda note: seen.append(note.get("_type"))  # type: ignore[method-assign]
@@ -134,7 +134,7 @@ def _poisoned_slots() -> list[dict]:
 
 def test_ws_frame_serialization_failure_names_the_offender():
     """The dashboard-user WS frame annotates its dump failure with the offender."""
-    from kiro_crew.dashboard.state import _slots_ws_frame
+    from aj_crew.dashboard.state import _slots_ws_frame
 
     with pytest.raises(TypeError) as excinfo:
         _slots_ws_frame(
@@ -155,7 +155,7 @@ def test_ws_frame_serialization_failure_names_the_offender():
 
 def test_ws_frame_failure_outside_slots_exonerates_the_slot_list():
     """A clean-slots note is evidence too: the offender is in the envelope extras."""
-    from kiro_crew.dashboard.state import _slots_ws_frame
+    from aj_crew.dashboard.state import _slots_ws_frame
 
     with pytest.raises(TypeError) as excinfo:
         _slots_ws_frame(
@@ -175,7 +175,7 @@ def test_ws_frame_failure_outside_slots_exonerates_the_slot_list():
 
 def test_ws_frame_healthy_roundtrip_unchanged():
     """Benign control: the wrapped dump produces the same frame."""
-    from kiro_crew.dashboard.state import _slots_ws_frame
+    from aj_crew.dashboard.state import _slots_ws_frame
 
     frame = json.loads(
         _slots_ws_frame(
@@ -208,9 +208,9 @@ async def test_rest_slots_get_serialization_failure_names_the_offender(tmp_path,
     """GET /api/chat/slots annotates its dump failure instead of a bare TypeError."""
     from aiohttp.test_utils import make_mocked_request
 
-    from kiro_crew.dashboard.chat_handlers import api_chat_slots
+    from aj_crew.dashboard.chat_handlers import api_chat_slots
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
     _poison_slots_projection(state)
 
@@ -232,7 +232,7 @@ async def test_rest_slots_get_healthy_response_is_unchanged(tmp_path, monkeypatc
     from aiohttp.test_utils import TestClient, TestServer
     from chat_test_helpers import _make_app
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     state = _make_state(tmp_path / "sessions")
 
     async with TestClient(TestServer(_make_app(state))) as client:
@@ -257,9 +257,9 @@ async def test_ws_connect_snapshot_failure_is_logged_with_the_offender(
     """
     import logging
 
-    from kiro_crew.dashboard import ws as dashboard_ws
+    from aj_crew.dashboard import ws as dashboard_ws
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
     state = MagicMock()
     state.owner_id = "U_OWNER"
@@ -309,7 +309,7 @@ async def test_ws_connect_snapshot_failure_is_logged_with_the_offender(
     monkeypatch.setattr(dashboard_ws, "_check_ws_origin", lambda request: None)
     monkeypatch.setattr(dashboard_ws.web, "WebSocketResponse", lambda **kwargs: fake_ws)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.ws"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.ws"):
         result = await dashboard_ws.api_ws(Request())  # type: ignore[arg-type]
 
     assert result is fake_ws
@@ -325,7 +325,7 @@ async def test_ws_connect_snapshot_failure_is_logged_with_the_offender(
 
 def test_note_helper_path_label_and_degradation():
     """The path label lands in every message; a shape surprise degrades, never raises."""
-    from kiro_crew.dashboard.state import _slots_serialization_note
+    from aj_crew.dashboard.state import _slots_serialization_note
 
     assert _slots_serialization_note([], path="x") == (
         "[x] slot list fails serialization; no offending entry found"

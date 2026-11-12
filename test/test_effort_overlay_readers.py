@@ -17,9 +17,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.acp_cli_overlay import _read_cli_overlay, _write_cli_overlay
+from aj_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.acp_cli_overlay import _read_cli_overlay, _write_cli_overlay
 
 MODEL = "claude-opus-5.5"
 LEVELS = ["low", "medium", "high", "xhigh", "max"]
@@ -91,7 +91,7 @@ class TestKasLeavesTheSharedFileAlone:
         _kas_wire(provider, push_error=RuntimeError("effortLevel refused"))
 
         with patch(
-            "kiro_crew.dashboard.chat_persistence.get_reasoning_effort_values",
+            "aj_crew.dashboard.chat_persistence.get_reasoning_effort_values",
             return_value=frozenset(LEVELS),
         ):
             with pytest.raises(RuntimeError, match="effortLevel refused"):

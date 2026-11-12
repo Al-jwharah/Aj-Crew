@@ -23,9 +23,9 @@ import pytest
 from test_sandbox_launcher_program import RecordingLibc, launch
 from test_sandbox_mount_source_sweep import _pin
 
-from kiro_crew import sandbox_launcher_program as program
-from kiro_crew import sandbox_mount_sweep
-from kiro_crew.sandbox import _cleanup_stale_sandbox_mount_sources
+from aj_crew import sandbox_launcher_program as program
+from aj_crew import sandbox_mount_sweep
+from aj_crew.sandbox import _cleanup_stale_sandbox_mount_sources
 
 pytestmark = pytest.mark.skipif(
     not sys.platform.startswith("linux"), reason="the namespace launcher is Linux-only"

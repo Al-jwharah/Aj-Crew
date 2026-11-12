@@ -18,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat, sandbox, sandbox_spawn
-from kiro_crew.platform_compat_proctable import ProcessStartIdentity
+from aj_crew import platform_compat, sandbox, sandbox_spawn
+from aj_crew.platform_compat_proctable import ProcessStartIdentity
 
 pytestmark = pytest.mark.skipif(
     sys.platform != "linux", reason="the namespace launcher is Linux-only"
@@ -31,7 +31,7 @@ _CHILD = 41002
 
 def _launcher_spawn() -> tuple[list[str], str]:
     """The argv and script a real namespace wrap returns, for the recorder."""
-    script = "/run/kirocrew_sandbox_1_ab.py"
+    script = "/run/ajcrew_sandbox_1_ab.py"
     return [sys.executable, *sandbox._LAUNCHER_INTERPRETER_FLAGS, script, "kiro-cli", "acp"], script
 
 
@@ -151,15 +151,15 @@ def test_a_genuine_launcher_spawn_is_recorded(monkeypatch):
     assert sandbox_spawn._NAMESPACE_LAUNCHERS == {_LAUNCHER: f"start-{_LAUNCHER}"}
 
 
-_SCRIPT = "/run/kirocrew_sandbox_1_ab.py"
+_SCRIPT = "/run/ajcrew_sandbox_1_ab.py"
 
 
 @pytest.mark.parametrize(
     "argv, script",
     [
         # sandbox off: the wrap generated no script, whatever the harness is named.
-        (["/opt/kirocrew_sandbox_custom", "acp"], None),
-        (["/opt/kirocrew_sandbox_custom", "acp"], "/opt/kirocrew_sandbox_custom"),
+        (["/opt/ajcrew_sandbox_custom", "acp"], None),
+        (["/opt/ajcrew_sandbox_custom", "acp"], "/opt/ajcrew_sandbox_custom"),
         # a script that is not one the wrap generates
         ([sys.executable, "-I", "-S", "/run/other.py", "kiro-cli"], "/run/other.py"),
         # the argv does not run the generated script

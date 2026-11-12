@@ -1,7 +1,7 @@
 ---
 title: Cap how many attended chat turns run at once, at the one dispatch every send and Resume reaches
 status: draft
-author: kirocrew agent session, directed by jeeshofone
+author: ajcrew agent session, directed by jeeshofone
 created: 2026-11-02
 last-audited: 2026-11-02
 audited-at: d6d40e23a2
@@ -26,9 +26,9 @@ This document recommends one attended-turn semaphore, held by `DashboardState` b
 
 ### Current state on main
 
-- `SessionManager._start_sem` holds a permit from runtime spawn until the session's MCP servers have reported (`src/kiro_crew/cold_start_sizing.py`). It paces boots, not turns.
-- Many dashboard turns are started by `spawn_guarded_turn` (`src/kiro_crew/dashboard/turn_dispatch.py`), which sets only the wall-clock ceiling. Its callers on main are `chat_api/chat_send.py`, `chat_turn/queue_drain.py`, `chat_turn/queue_cycle.py`, `mate_welcome.py` and `slack/gateway_runtime/nudge_dashboard_fire.py`.
-- A second path starts a turn without `spawn_guarded_turn`: `_ChatSlot.enqueue_or_run_prompt` (`src/kiro_crew/dashboard/state_parts/chat_slot.py`) runs a prompt on an idle slot with a bare `asyncio.create_task(run_chat_coro(...))`. Its callers on main are `session_deliver.py`, `slack/gateway_runtime/result_egress.py`, `server_runtime/workflow_startup.py` and the issue radar's `crew_runtime_session.py`.
+- `SessionManager._start_sem` holds a permit from runtime spawn until the session's MCP servers have reported (`src/aj_crew/cold_start_sizing.py`). It paces boots, not turns.
+- Many dashboard turns are started by `spawn_guarded_turn` (`src/aj_crew/dashboard/turn_dispatch.py`), which sets only the wall-clock ceiling. Its callers on main are `chat_api/chat_send.py`, `chat_turn/queue_drain.py`, `chat_turn/queue_cycle.py`, `mate_welcome.py` and `slack/gateway_runtime/nudge_dashboard_fire.py`.
+- A second path starts a turn without `spawn_guarded_turn`: `_ChatSlot.enqueue_or_run_prompt` (`src/aj_crew/dashboard/state_parts/chat_slot.py`) runs a prompt on an idle slot with a bare `asyncio.create_task(run_chat_coro(...))`. Its callers on main are `session_deliver.py`, `slack/gateway_runtime/result_egress.py`, `server_runtime/workflow_startup.py` and the issue radar's `crew_runtime_session.py`.
 - Other producers call `_run_chat` directly with neither helper: `chat_regenerate.py`, `chat_rewind.py`, `chat_turn/slash_commands.py`, `handlers/taskrunner.py`, `openai_compat.py`, the spec builder's `runtime.py` and Slack inbound. Every one of them passes the exit guard of `_run_chat` in `dashboard/chat_runner.py`, which already calls `gate_turn`.
 - `shared_crew.turn_gate.gate_turn` applies Shared Crew fair admission (per-principal and Crew-wide active limits from `EffectiveLimits`) when `shared_crew.admission_enabled` is true. It is off by default, so on a default install it is a pass-through.
 - `run_background_turn` (`state_parts/dashboard_services.py`) waits on `_bg_turn_sema` only when `slot.unattended`, and passes an attended slot straight through. Only some send paths wrap a turn in it; the queue drain does not.
@@ -63,7 +63,7 @@ This document recommends one attended-turn semaphore, held by `DashboardState` b
 
 ### 1.2 Where it is taken
 
-The permit is taken inside the `guarded` wrapper of `_run_chat` (`dashboard/chat_runner.py`), around the same call that runs `gate_turn`, and released in that wrapper's `finally`. Every turn producer listed above reaches this wrapper, so no call site changes and none can bypass it. Unattended slots skip the permit and stay under `run_background_turn` as today. Unattended turns started on paths that do not call `run_background_turn` (the queue drain, for one) stay uncapped; that gap is out of scope here. A guard test asserts that the wrapper takes the permit for an attended slot and that no module under `src/kiro_crew/` runs a turn's body without going through `_run_chat`.
+The permit is taken inside the `guarded` wrapper of `_run_chat` (`dashboard/chat_runner.py`), around the same call that runs `gate_turn`, and released in that wrapper's `finally`. Every turn producer listed above reaches this wrapper, so no call site changes and none can bypass it. Unattended slots skip the permit and stay under `run_background_turn` as today. Unattended turns started on paths that do not call `run_background_turn` (the queue drain, for one) stay uncapped; that gap is out of scope here. A guard test asserts that the wrapper takes the permit for an attended slot and that no module under `src/aj_crew/` runs a turn's body without going through `_run_chat`.
 
 Nesting with fair admission: the attended permit is taken first, then `gate_turn`. When admission is off, `gate_turn` passes through and only the permit applies. When admission is on and queues the turn, the turn holds its attended permit while it waits there. This keeps one ordering rule (the attended queue's, §1.3) and cannot invert it, at the cost of a permit sitting idle while admission holds the turn. Open question 3 asks whether admission-on installs should skip the attended cap instead.
 

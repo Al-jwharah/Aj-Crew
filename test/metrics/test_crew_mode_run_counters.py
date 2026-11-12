@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.metrics import crew_mode as m
+from aj_crew.metrics import crew_mode as m
 
 
 @pytest.fixture
@@ -86,30 +86,30 @@ class _State:
 
 
 def test_a_board_is_crew_mode_when_its_slot_is_a_live_root(_floor_monkeypatch) -> None:
-    from kiro_crew import crew_mode
+    from aj_crew import crew_mode
 
     _floor_monkeypatch.setattr(crew_mode, "known_roots", lambda: frozenset())
-    state = _State(root=_Slot("kirocrew-conductor"), plain=_Slot("kirocrew"))
+    state = _State(root=_Slot("ajcrew-conductor"), plain=_Slot("ajcrew"))
     assert m.board_is_crew_mode(state, "root") is True
     assert m.board_is_crew_mode(state, "plain") is False
     assert m.board_is_crew_mode(state, "missing") is False
 
 
 def test_a_closed_root_the_gateway_remembers_still_counts(_floor_monkeypatch) -> None:
-    from kiro_crew import crew_mode
+    from aj_crew import crew_mode
 
     _floor_monkeypatch.setattr(crew_mode, "known_roots", lambda: frozenset({"gone"}))
     assert m.board_is_crew_mode(_State(), "gone") is True
 
 
 def test_a_fault_in_the_root_test_answers_false(_floor_monkeypatch) -> None:
-    from kiro_crew import crew_mode
+    from aj_crew import crew_mode
 
     def _boom() -> frozenset[str]:
         raise RuntimeError("no roots")
 
     _floor_monkeypatch.setattr(crew_mode, "known_roots", _boom)
-    assert m.board_is_crew_mode(_State(root=_Slot("kirocrew-conductor")), "root") is False
+    assert m.board_is_crew_mode(_State(root=_Slot("ajcrew-conductor")), "root") is False
 
 
 def test_a_turned_on_chat_counts_how_and_whether_it_is_a_repeat(emitted) -> None:

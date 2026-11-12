@@ -1,4 +1,4 @@
-"""Coverage tests for kiro_crew.memory — module path helpers, legacy-migration
+"""Coverage tests for aj_crew.memory — module path helpers, legacy-migration
 detection, the combined legacy read/write split, history pruning + decay, and the
 FTS error-swallowing paths.
 
@@ -12,8 +12,8 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.memory import (
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.memory import (
     MemoryStore,
     legacy_memory_present,
     memory_dir,
@@ -24,10 +24,10 @@ from kiro_crew.memory import (
 
 @pytest.fixture()
 def fake_config_dir(tmp_path, monkeypatch):
-    """Point kiro_crew.memory's config_dir() at an isolated tmp dir."""
+    """Point aj_crew.memory's config_dir() at an isolated tmp dir."""
     root = tmp_path / "cfg"
     root.mkdir()
-    monkeypatch.setattr("kiro_crew.memory.config_dir", lambda: root)
+    monkeypatch.setattr("aj_crew.memory.config_dir", lambda: root)
     return root
 
 
@@ -192,8 +192,8 @@ def test_history_retention_is_version_scoped(tmp_path, monkeypatch, version, req
         def now(cls, tz=None):
             return cls(2026, 9, 7, 12, tzinfo=tz)
 
-    monkeypatch.setattr("kiro_crew.memory.datetime", Clock)
-    from kiro_crew.vector_memory import create_member_database, open_member_database
+    monkeypatch.setattr("aj_crew.memory.datetime", Clock)
+    from aj_crew.vector_memory import create_member_database, open_member_database
 
     tier = None
     if version == 2:
@@ -241,7 +241,7 @@ def test_prepared_v2_tier_invalidates_old_decayed_history_cache(tmp_path, reques
     path = tmp_path / "memory" / "history" / "2000-01-01.md"
     path.write_text("# 2000-01-01\n#### note\nOriginal durable evidence.", encoding="utf-8")
     assert store.read_recent_history() == ""
-    from kiro_crew.vector_memory import create_member_database, open_member_database
+    from aj_crew.vector_memory import create_member_database, open_member_database
 
     database = tmp_path / "memory_stores" / "member-alice" / "memory.db"
     create_member_database(database, member_id="alice", store_id="member-alice")

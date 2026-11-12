@@ -16,9 +16,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import history_listing_memo, history_search
-from kiro_crew.history import ConversationLog
-from kiro_crew.history_search import SessionCatalogProjection, listing_row
+from aj_crew import history_listing_memo, history_search
+from aj_crew.history import ConversationLog
+from aj_crew.history_search import SessionCatalogProjection, listing_row
 
 _MTIME_NS = 1_700_000_000 * 10**9
 _META = {"_type": "metadata", "created_at": "2026-01-01T00:00:00"}

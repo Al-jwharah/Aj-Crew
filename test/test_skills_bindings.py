@@ -1,7 +1,7 @@
 """``SkillsLoader`` keeps every member it had, and each moved body is bound from its owner.
 
 The loader's state stays on the instance; a member whose body moved lives as a module
-function of the same name in a ``kiro_crew.skills_<role>`` owner, and the class binds it
+function of the same name in an ``aj_crew.skills_<role>`` owner, and the class binds it
 (``member = _owner.member``, or ``staticmethod(_owner.member)``). This file pins that
 binding contract for the whole facade family:
 
@@ -12,13 +12,13 @@ binding contract for the whole facade family:
   attribute, which only work inside a class body;
 * each owner imports only owners listed before it;
 * each owner's docstring names the instance fields its members write and read, and each
-  owner logs on the facade's ``kiro_crew.skills`` logger;
+  owner logs on the facade's ``aj_crew.skills`` logger;
 * a moved exception or enum keeps the facade's ``__module__``, which a traceback names it
   by, and every other moved class keeps its owner's;
 * the facade mirror serves only the two pending-queue hooks, and a patched walk,
   catalog or tool-read bound reaches the owner that reads it.
 
-``test_facade_mirror_guards.py`` checks, for every mirrored facade, ``kiro_crew.skills``
+``test_facade_mirror_guards.py`` checks, for every mirrored facade, ``aj_crew.skills``
 included, that the family holds one object per name, that no owner imports its facade,
 and that every name the test trees patch through the facade reaches its readers.
 
@@ -39,10 +39,10 @@ from typing import Any
 
 import pytest
 
-import kiro_crew.skills as sk
-from kiro_crew import _facade_mirror
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.wait import wait_until
+import aj_crew.skills as sk
+from aj_crew import _facade_mirror
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.wait import wait_until
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_skills_bindings")
 
@@ -196,8 +196,8 @@ _MEMBERS: dict[str, tuple[str, object, str]] = {
 _CATALOG_SETTLE_SECS = 30.0
 
 _SERVED = {
-    "_PENDING_CONSUMED_HOOK": "kiro_crew.skills_auto_model",
-    "_PENDING_STAGED_HOOK": "kiro_crew.skills_auto_model",
+    "_PENDING_CONSUMED_HOOK": "aj_crew.skills_auto_model",
+    "_PENDING_STAGED_HOOK": "aj_crew.skills_auto_model",
 }
 
 
@@ -222,7 +222,7 @@ def _self_functions(
     statics = {
         name
         for name, (kind, _co, home) in _MEMBERS.items()
-        if kind == "staticmethod" and home and f"kiro_crew.{home}" == owner
+        if kind == "staticmethod" and home and f"aj_crew.{home}" == owner
     }
     return [
         node
@@ -255,16 +255,16 @@ def test_each_member_keeps_its_kind_shape_and_owner(name: str) -> None:
     fn = _member_function(name)
     shape = inspect.iscoroutinefunction(fn) or (inspect.isasyncgenfunction(fn) and "agen")
     assert (shape or False) == coroutine
-    assert fn.__module__ == f"kiro_crew.{owner}"
+    assert fn.__module__ == f"aj_crew.{owner}"
     if owner != "skills":
-        assert vars(sys.modules[f"kiro_crew.{owner}"])[name] is fn
+        assert vars(sys.modules[f"aj_crew.{owner}"])[name] is fn
 
 
 def test_every_owner_is_listed_in_the_facade() -> None:
     homes = {owner for _kind, _co, owner in _MEMBERS.values() if owner and owner != "skills"}
     listed = {name.rsplit(".", 1)[-1] for name in sk._OWNERS}
     assert homes <= listed
-    assert all(name.startswith("kiro_crew.skills_") for name in sk._OWNERS)
+    assert all(name.startswith("aj_crew.skills_") for name in sk._OWNERS)
 
 
 @pytest.mark.parametrize("owner", sk._OWNERS)
@@ -307,9 +307,9 @@ def _owner_imports(tree: ast.Module) -> set[str]:
         if isinstance(node, ast.ImportFrom) and node.module:
             if node.module in owners:
                 found.add(node.module)
-            elif node.module == "kiro_crew":
+            elif node.module == "aj_crew":
                 found.update(
-                    f"kiro_crew.{a.name}" for a in node.names if f"kiro_crew.{a.name}" in owners
+                    f"aj_crew.{a.name}" for a in node.names if f"aj_crew.{a.name}" in owners
                 )
         elif isinstance(node, ast.Import):
             found.update(a.name for a in node.names if a.name in owners)
@@ -318,14 +318,14 @@ def _owner_imports(tree: ast.Module) -> set[str]:
 
 def test_the_owner_import_scan_can_fail() -> None:
     tree = ast.parse(
-        "from kiro_crew.skills_discovery import _within_any\n"
-        "from kiro_crew import skills_review as _review, pinned_fs\n"
-        "import kiro_crew.skills_selection\n"
+        "from aj_crew.skills_discovery import _within_any\n"
+        "from aj_crew import skills_review as _review, pinned_fs\n"
+        "import aj_crew.skills_selection\n"
     )
     assert _owner_imports(tree) == {
-        "kiro_crew.skills_discovery",
-        "kiro_crew.skills_review",
-        "kiro_crew.skills_selection",
+        "aj_crew.skills_discovery",
+        "aj_crew.skills_review",
+        "aj_crew.skills_selection",
     }
 
 
@@ -404,11 +404,11 @@ def test_each_owner_names_the_fields_it_writes_and_reads(owner: str) -> None:
 
 @pytest.mark.parametrize("owner", sk._OWNERS)
 def test_owners_log_under_the_facade_logger(owner: str) -> None:
-    """caplog and filters key on ``kiro_crew.skills``; an owner's own ``__name__`` logger
+    """caplog and filters key on ``aj_crew.skills``; an owner's own ``__name__`` logger
     is a sibling of it, not a child, so its DEBUG records would fall outside them."""
     module = sys.modules[owner]
     assert getattr(module, "logger", sk.logger) is sk.logger
-    assert sk.logger is logging.getLogger("kiro_crew.skills")
+    assert sk.logger is logging.getLogger("aj_crew.skills")
 
 
 def _moved_classes() -> dict[str, tuple[type, str]]:
@@ -423,7 +423,7 @@ def _moved_classes() -> dict[str, tuple[type, str]]:
 
 def test_a_moved_exception_keeps_the_facade_module_name() -> None:
     """A traceback, and an error chain rendered as ``module.qualname``, names a raised class
-    by its ``__module__``, so a moved exception or enum keeps ``kiro_crew.skills``. A moved
+    by its ``__module__``, so a moved exception or enum keeps ``aj_crew.skills``. A moved
     data class keeps its owner's: no repr, log line or pickle in the tree reads it."""
     classes = _moved_classes()
     named = {
@@ -433,7 +433,7 @@ def test_a_moved_exception_keeps_the_facade_module_name() -> None:
     }
     assert named == {"PendingApprovalRefused", "PendingDismissRefused"}
     for name, (cls, home) in sorted(classes.items()):
-        assert cls.__module__ == ("kiro_crew.skills" if name in named else home), name
+        assert cls.__module__ == ("aj_crew.skills" if name in named else home), name
 
 
 # --------------------------------------------------------------------------- #
@@ -473,7 +473,7 @@ def test_every_served_name_is_defined_by_its_owner_and_declared_for_type_checker
 def test_a_hook_global_is_read_and_written_on_its_one_owner(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    owner = sys.modules["kiro_crew.skills_auto_model"]
+    owner = sys.modules["aj_crew.skills_auto_model"]
     seen: list[dict] = []
     monkeypatch.setattr(sk, "_PENDING_STAGED_HOOK", sk._PENDING_STAGED_HOOK)
     sk.set_pending_staged_hook(seen.append)
@@ -501,7 +501,7 @@ def test_a_patched_walk_bound_reaches_the_walk_that_owns_it(
 
     assert names() == ["family/leaf"]
     monkeypatch.setattr(sk, "_PROJECT_SKILL_MAX_DEPTH", 1)
-    assert sys.modules["kiro_crew.skills_discovery"]._PROJECT_SKILL_MAX_DEPTH == 1
+    assert sys.modules["aj_crew.skills_discovery"]._PROJECT_SKILL_MAX_DEPTH == 1
     assert names() == []
 
 
@@ -522,7 +522,7 @@ def test_a_patched_catalog_bound_reaches_the_catalog(
 
         monkeypatch.setattr(loader, "_request_catalog_refresh", lambda _key: _NeverDone())
         monkeypatch.setattr(sk, "_COLD_CATALOG_WAIT_SECS", 0.0)
-        assert sys.modules["kiro_crew.skills_discovery"]._COLD_CATALOG_WAIT_SECS == 0.0
+        assert sys.modules["aj_crew.skills_discovery"]._COLD_CATALOG_WAIT_SECS == 0.0
         assert loader._iter() == []
         assert loader.catalog_status() == "building"
         assert waits == []
@@ -557,7 +557,7 @@ def test_a_patched_tool_read_bound_reaches_the_read_credit(
         )
         assert loader.resolve_tool_read_keys("planted_reader", {"path": str(skill)}) == []
         monkeypatch.setattr(sk, "_CONTENT_READ_TOOLS", frozenset({"planted_reader"}))
-        assert sys.modules["kiro_crew.skills_body_reads"]._CONTENT_READ_TOOLS == {"planted_reader"}
+        assert sys.modules["aj_crew.skills_body_reads"]._CONTENT_READ_TOOLS == {"planted_reader"}
         assert loader.resolve_tool_read_keys("planted_reader", {"path": str(skill)}) == ["alpha"]
     finally:
         loader.close()

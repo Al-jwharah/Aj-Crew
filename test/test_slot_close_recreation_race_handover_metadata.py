@@ -26,10 +26,10 @@ from slot_close_recreation_race_helpers import (
     _slot_with_committed_and_uncommitted_rows,
 )
 
-from kiro_crew import members as members_mod
-from kiro_crew.dashboard import chat_handlers as handlers
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew import members as members_mod
+from aj_crew.dashboard import chat_handlers as handlers
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.testing.wait import await_until, finished
 
 # the hand-over keeps the replacement's own metadata
 #

@@ -1,4 +1,4 @@
-"""``kirocrew stop``/``restart``/``doctor`` see and stop the MCP gateway daemon.
+"""``ajcrew stop``/``restart``/``doctor`` see and stop the MCP gateway daemon.
 
 The daemon is a session leader the gateway's SIGTERM never reaches; its own
 owner-liveness exit is on a 15 s interval, and a restart spawns the next gateway
@@ -21,9 +21,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew import cli_doctor, cli_server, platform_compat
-from kiro_crew.code_fingerprint import code_fingerprint
-from kiro_crew.mcp_gateway import daemon_control as dc
+from aj_crew import cli_doctor, cli_server, platform_compat
+from aj_crew.code_fingerprint import code_fingerprint
+from aj_crew.mcp_gateway import daemon_control as dc
 
 _POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="AF_UNIX listener")
 
@@ -367,7 +367,7 @@ class TestTheWindowsStopPathIsReachable:
         monkeypatch.setattr(
             platform_compat,
             "process_command_line",
-            lambda pid: "python.exe -m kiro_crew.mcp_gateway.gatewayd",
+            lambda pid: "python.exe -m aj_crew.mcp_gateway.gatewayd",
         )
         monkeypatch.setattr(dc.transport, "singleton_lock_free", lambda p: True)
         monkeypatch.setattr(platform_compat, "pid_exists", lambda pid: False)
@@ -405,7 +405,7 @@ class TestTheWindowsStopPathIsReachable:
         first call takes the mtime rule (no trusted git), which puts the two
         sides on different rules and turns the mismatch into "another install".
         """
-        import kiro_crew.code_fingerprint as fp_mod
+        import aj_crew.code_fingerprint as fp_mod
 
         monkeypatch.setattr(fp_mod, "code_fingerprint", lambda: "b4cf148542b8e6a5")
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
@@ -424,9 +424,9 @@ class TestTheWindowsStopPathIsReachable:
 
 class TestConfiguredSocketPath:
     def test_a_configured_socket_path_wins(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.mcp_gateway.socket_path = "/srv/crew/custom.sock"
         cfg.save()
         assert dc.configured_socket_path() == Path("/srv/crew/custom.sock")
@@ -437,7 +437,7 @@ class TestConfiguredSocketPath:
     def test_the_zero_argument_readers_use_the_configured_path(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """`kirocrew stop` and `doctor` call these with no argument; a moved
+        """`ajcrew stop` and `doctor` call these with no argument; a moved
         socket must not make them report "absent" for a running daemon."""
         seen: list[Path] = []
         monkeypatch.setattr(dc, "configured_socket_path", lambda: Path("/srv/crew/custom.sock"))
@@ -472,7 +472,7 @@ class TestStopDaemon:
         monkeypatch.setattr(
             platform_compat,
             "process_command_line",
-            lambda pid: "python -m kiro_crew.mcp_gateway.gatewayd",
+            lambda pid: "python -m aj_crew.mcp_gateway.gatewayd",
         )
         killed: list[int] = []
         monkeypatch.setattr(
@@ -489,7 +489,7 @@ class TestStopDaemon:
         monkeypatch.setattr(
             platform_compat,
             "process_command_line",
-            lambda pid: "python -m kiro_crew.mcp_gateway.gatewayd",
+            lambda pid: "python -m aj_crew.mcp_gateway.gatewayd",
         )
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
         monkeypatch.setattr(platform_compat, "process_start_time", lambda pid: "7777")
@@ -507,7 +507,7 @@ class TestStopDaemon:
         monkeypatch.setattr(
             platform_compat,
             "process_command_line",
-            lambda pid: "python -m kiro_crew.mcp_gateway.gatewayd",
+            lambda pid: "python -m aj_crew.mcp_gateway.gatewayd",
         )
         monkeypatch.setattr(platform_compat, "process_start_time", lambda pid: "1000")
         # The pinned kill reports the identity did not hold: nothing was sent.
@@ -521,7 +521,7 @@ class TestStopDaemon:
         monkeypatch.setattr(
             platform_compat,
             "process_command_line",
-            lambda pid: "python -m kiro_crew.mcp_gateway.gatewayd",
+            lambda pid: "python -m aj_crew.mcp_gateway.gatewayd",
         )
         sent: list[tuple[int, str, int]] = []
         # The pin is the token the DAEMON reported; the local read only CONFIRMS
@@ -548,7 +548,7 @@ class TestStopDaemon:
         monkeypatch.setattr(
             platform_compat,
             "process_command_line",
-            lambda pid: "python -m kiro_crew.mcp_gateway.gatewayd",
+            lambda pid: "python -m aj_crew.mcp_gateway.gatewayd",
         )
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", windows)
         monkeypatch.setattr(platform_compat, "process_start_time", lambda pid: "1000")
@@ -573,7 +573,7 @@ class TestStopDaemon:
         monkeypatch.setattr(
             platform_compat,
             "process_command_line",
-            lambda pid: "python -m kiro_crew.mcp_gateway.gatewayd",
+            lambda pid: "python -m aj_crew.mcp_gateway.gatewayd",
         )
         monkeypatch.setattr(platform_compat, "process_start_time", lambda pid: "1000")
         monkeypatch.setattr(platform_compat, "kill_pid_pinned", lambda pid, start, sig: True)
@@ -586,7 +586,7 @@ class TestStopDaemon:
         monkeypatch.setattr(
             platform_compat,
             "process_command_line",
-            lambda pid: "python -m kiro_crew.mcp_gateway.gatewayd",
+            lambda pid: "python -m aj_crew.mcp_gateway.gatewayd",
         )
 
         def denied(pid, start, sig):
@@ -676,7 +676,7 @@ class TestDoctorShowsTheDaemonRevision:
         cli_doctor._doctor_mcp_gateway_daemon(issues)
         out = capsys.readouterr().out
         assert "❌" in out and "old-checkout" in out and "GONE" in out
-        assert "kirocrew restart" in out
+        assert "ajcrew restart" in out
         assert issues == ["MCP gateway daemon runs a different code revision than this install"]
 
     @pytest.mark.parametrize(
@@ -695,7 +695,7 @@ class TestDoctorShowsTheDaemonRevision:
         theirs: str,
     ) -> None:
         """A git revision and an mtime stamp name two installs, not a stale daemon."""
-        import kiro_crew.code_fingerprint as fp_mod
+        import aj_crew.code_fingerprint as fp_mod
 
         monkeypatch.setattr(fp_mod, "code_fingerprint", lambda: mine)
         info = dc.DaemonInfo(Path("s"), 9999, 4242, theirs, ("CORE",))
@@ -706,7 +706,7 @@ class TestDoctorShowsTheDaemonRevision:
         out = capsys.readouterr().out
         assert "another install" in out and theirs in out and mine in out
         assert "gateway (pid 4242)" in out, "a stale owner must be nameable to stop"
-        assert "❌" not in out and "kirocrew restart" not in out
+        assert "❌" not in out and "ajcrew restart" not in out
         assert issues == []
 
     @pytest.mark.parametrize("owner_pid", [0, 4242], ids=["no-owner", "owner-gone"])
@@ -717,7 +717,7 @@ class TestDoctorShowsTheDaemonRevision:
         owner_pid: int,
     ) -> None:
         """With no live owner, this install's gateway may have adopted it, so it stays an issue."""
-        import kiro_crew.code_fingerprint as fp_mod
+        import aj_crew.code_fingerprint as fp_mod
 
         monkeypatch.setattr(fp_mod, "code_fingerprint", lambda: "b4cf148542b8e6a5")
         info = dc.DaemonInfo(Path("s"), 9999, owner_pid, "mtime:4c5de10efc166d5e", ("CORE",))
@@ -726,14 +726,14 @@ class TestDoctorShowsTheDaemonRevision:
         issues: list[str] = []
         cli_doctor._doctor_mcp_gateway_daemon(issues)
         out = capsys.readouterr().out
-        assert "another install" not in out and "kirocrew restart" in out
+        assert "another install" not in out and "ajcrew restart" in out
         assert issues == ["MCP gateway daemon runs a different code revision than this install"]
 
     def test_same_scheme_mismatch_is_still_an_issue(
         self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """Two wheel builds both stamp mtimes, so a mismatch there is a stale daemon."""
-        import kiro_crew.code_fingerprint as fp_mod
+        import aj_crew.code_fingerprint as fp_mod
 
         monkeypatch.setattr(fp_mod, "code_fingerprint", lambda: "mtime:new")
         info = dc.DaemonInfo(Path("s"), 9999, 4242, "mtime:old", ("CORE",))
@@ -741,7 +741,7 @@ class TestDoctorShowsTheDaemonRevision:
         monkeypatch.setattr(platform_compat, "pid_exists", lambda pid: True)
         issues: list[str] = []
         cli_doctor._doctor_mcp_gateway_daemon(issues)
-        assert "kirocrew restart" in capsys.readouterr().out
+        assert "ajcrew restart" in capsys.readouterr().out
         assert issues == ["MCP gateway daemon runs a different code revision than this install"]
 
     def test_a_pre_fingerprint_daemon_is_named_as_such(
@@ -805,7 +805,7 @@ class TestDoctorSaysNotRunningOnlyForVerifiedAbsence:
         assert "unverified" in out and "endpoint owner not confirmed" in out
 
     def test_every_inconclusive_outcome_has_a_doctor_reason(self) -> None:
-        from kiro_crew.doctor_checks.mcp import _DAEMON_PROBE_REASONS
+        from aj_crew.doctor_checks.mcp import _DAEMON_PROBE_REASONS
 
         assert set(_DAEMON_PROBE_REASONS) == dc.PROBE_OUTCOMES - {dc.PROBE_OK, dc.PROBE_ABSENT}
 

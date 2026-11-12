@@ -663,8 +663,8 @@ describe('DevFleetPage', () => {
     // path is missing that the user never chose.
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(screen.queryByText('Discovery Error')).not.toBeInTheDocument()
-    expect(screen.getByText('No Kiro Crew checkout found')).toBeInTheDocument()
-    expect(screen.getByText(/KIROCREW_DEVFLEET_REPO=/)).toBeInTheDocument()
+    expect(screen.getByText('No Aj Crew checkout found')).toBeInTheDocument()
+    expect(screen.getByText(/AJCREW_DEVFLEET_REPO=/)).toBeInTheDocument()
     // Controls that act on a fleet which does not exist yet are suppressed:
     // rendering them invites a click whose only answer is a failure toast.
     expect(screen.queryByText('Prune merged')).not.toBeInTheDocument()
@@ -1322,7 +1322,7 @@ describe('DevFleetPage restart handshake', () => {
     // The message restart_detached returns when the loaded agent predates the
     // graceful-restart contract: an instruction the operator has to act on, so it
     // must survive long enough to be read and copied.
-    const RESTART_ERR = "loaded launchd restart contract is outdated; re-run `kirocrew service install`"
+    const RESTART_ERR = "loaded launchd restart contract is outdated; re-run `ajcrew service install`"
     const FLEET_LIVE = {
       gateway_service_active: true,
       worktrees: [
@@ -1346,7 +1346,7 @@ describe('DevFleetPage restart handshake', () => {
     const banner = await screen.findByTestId('gateway-restart-error')
     // The remedy survives in full, not truncated or summarised away.
     expect(banner.textContent).toContain('restart contract is outdated')
-    expect(banner.textContent).toContain('kirocrew service install')
+    expect(banner.textContent).toContain('ajcrew service install')
     // Dismissable, so it does not become permanent furniture.
     fireEvent.click(within(banner).getByLabelText('Dismiss'))
     await waitFor(() => expect(screen.queryByTestId('gateway-restart-error')).toBeNull())
@@ -1371,8 +1371,8 @@ describe('DevFleetPage restart handshake', () => {
       if (u.includes('/make-live')) {
         return Promise.resolve(new Response(JSON.stringify({
           ok: true, cutover: true, staged_only: true, target: '/wt/main',
-          manual_restart: 'sudo systemctl restart kirocrew',
-          notice: 'main is now the live target. Run `sudo systemctl restart kirocrew` to finish the cutover.',
+          manual_restart: 'sudo systemctl restart ajcrew',
+          notice: 'main is now the live target. Run `sudo systemctl restart ajcrew` to finish the cutover.',
         }), { status: 200 }))
       }
       if (u.includes('/health')) { healthPolled = true; return Promise.resolve(new Response('{}', { status: 200 })) }
@@ -1400,7 +1400,7 @@ describe('DevFleetPage restart handshake', () => {
     const FLEET = {
       gateway_service_active: false,
       staged_target: '/wt/feature',
-      manual_restart: 'kirocrew restart',
+      manual_restart: 'ajcrew restart',
       worktrees: [
         { name: 'main', is_main: true, running: false, has_dist: true, behind: 0, is_live: true, is_staged: false, path: '/wt/main' },
         { name: 'feature', is_main: false, running: false, has_dist: true, behind: 0, is_live: false, is_staged: true, path: '/wt/feature' },
@@ -1426,7 +1426,7 @@ describe('DevFleetPage restart handshake', () => {
     // automatically" is a promise the staged path does not keep.
     const FLEET = {
       gateway_service_active: false,
-      manual_restart: 'kirocrew restart',
+      manual_restart: 'ajcrew restart',
       worktrees: [
         { name: 'main', is_main: true, running: false, has_dist: true, behind: 0, is_live: false, path: '/wt/main' },
       ],

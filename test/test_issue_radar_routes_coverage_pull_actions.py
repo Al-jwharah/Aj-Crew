@@ -29,8 +29,8 @@ from issue_radar_routes_coverage_helpers import (
     _writable,
 )
 
-from kiro_crew.apps.builtins.issue_radar.backend import github_client as gh
-from kiro_crew.apps.builtins.issue_radar.backend import routes, store
+from aj_crew.apps.builtins.issue_radar.backend import github_client as gh
+from aj_crew.apps.builtins.issue_radar.backend import routes, store
 
 # ── pull-request actions ─────────────────────────────────────────────────────
 

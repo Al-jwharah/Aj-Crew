@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import kiro_crew
-from kiro_crew.dashboard import handlers_instances as hi
+import aj_crew
+from aj_crew.dashboard import handlers_instances as hi
 
 
 class _Req:
@@ -52,7 +52,7 @@ def _request(state, instance_id="nobita", app="", user="local-app"):
 
 def _enable_instances(monkeypatch):
     monkeypatch.setattr(
-        hi.KiroCrewConfig,
+        hi.AjCrewConfig,
         "load",
         staticmethod(lambda: SimpleNamespace(instances=SimpleNamespace(enabled=True))),
     )
@@ -73,7 +73,7 @@ def _state(replies, *, raises: set[str] | None = None):
 def _all_ok(**overrides):
     """Every capability read succeeding, in each endpoint's REAL reply shape."""
     replies = {
-        "/api/version": (True, {"version": kiro_crew.__version__}),
+        "/api/version": (True, {"version": aj_crew.__version__}),
         # A dict with the list under a key, next to a sibling default — this is
         # what `GET /api/agents` actually answers with.
         "/api/agents": (True, {"agents": [{"name": "coder"}], "default_agent": "coder"}),
@@ -229,7 +229,7 @@ class TestPeerApprovalState:
     async def test_a_non_owner_dashboard_subject_is_refused(self, monkeypatch):
         _enable_instances(monkeypatch)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             lambda _r: False,
         )
         state = _state({"/api/status": (True, {"yolo": True})})
@@ -258,13 +258,13 @@ class TestVersionGate:
 
         data = await _body(await hi.api_instances_capabilities(_request(state)))
 
-        assert data["version"] == kiro_crew.__version__
-        assert data["local_version"] == kiro_crew.__version__
+        assert data["version"] == aj_crew.__version__
+        assert data["local_version"] == aj_crew.__version__
         assert data["version_match"] is True
 
     async def test_patch_compatible_peer_registers_advertised_effort(self, monkeypatch):
         _enable_instances(monkeypatch)
-        monkeypatch.setattr(kiro_crew, "__version__", "0.8.0")
+        monkeypatch.setattr(aj_crew, "__version__", "0.8.0")
         register_levels = MagicMock(side_effect=lambda values: values)
         monkeypatch.setattr(hi, "register_reasoning_effort_values", register_levels)
         state = _state(
@@ -321,7 +321,7 @@ class TestVersionGate:
 
     async def test_a_non_release_build_id_still_matches_by_equality(self, monkeypatch):
         _enable_instances(monkeypatch)
-        monkeypatch.setattr(kiro_crew, "__version__", "build-abc")
+        monkeypatch.setattr(aj_crew, "__version__", "build-abc")
         state = _state(_all_ok(**{"/api/version": (True, {"version": "build-abc"})}))
 
         data = await _body(await hi.api_instances_capabilities(_request(state)))
@@ -335,7 +335,7 @@ class TestVersionGate:
     )
     async def test_a_mismatch_names_which_side_is_newer(self, monkeypatch, peer, behind, ahead):
         _enable_instances(monkeypatch)
-        monkeypatch.setattr(kiro_crew, "__version__", "0.9.0")
+        monkeypatch.setattr(aj_crew, "__version__", "0.9.0")
         state = _state(_all_ok(**{"/api/version": (True, {"version": peer})}))
 
         data = await _body(await hi.api_instances_capabilities(_request(state)))
@@ -476,7 +476,7 @@ class TestGates:
 
     async def test_the_feature_flag_is_enforced(self, monkeypatch):
         monkeypatch.setattr(
-            hi.KiroCrewConfig,
+            hi.AjCrewConfig,
             "load",
             staticmethod(lambda: SimpleNamespace(instances=SimpleNamespace(enabled=False))),
         )
@@ -509,7 +509,7 @@ class TestGates:
         """
         _enable_instances(monkeypatch)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             lambda _r: False,
         )
 
@@ -538,7 +538,7 @@ class TestPeerCapabilityCarrier:
     """The carrier is a closed path set, not a widening of the proxy fence."""
 
     def test_the_path_set_holds_exactly_the_five_reads(self):
-        from kiro_crew.instances.ssh_tunnel_manager import _PEER_CAPABILITY_PATHS
+        from aj_crew.instances.ssh_tunnel_manager import _PEER_CAPABILITY_PATHS
 
         assert _PEER_CAPABILITY_PATHS == frozenset(
             {
@@ -562,7 +562,7 @@ class TestPeerCapabilityCarrier:
         is a programming error and must not degrade into a soft "unavailable"
         that reads like an offline peer.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         mgr = SshTunnelManager.__new__(SshTunnelManager)
         mgr._peer_target = MagicMock()
@@ -579,7 +579,7 @@ class TestPeerCapabilityCarrier:
         socket: the fake raises on entry and the call degrades to the ordinary
         ``capability_unreachable`` answer after the timeout has been captured.
         """
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         mgr = stm.SshTunnelManager.__new__(stm.SshTunnelManager)
         # This carrier re-reads the forward it resolved before it spends the
@@ -612,13 +612,13 @@ class TestPeerCapabilityCarrier:
         an 8s client budget kills every cold read and reports a healthy peer as
         unreachable, which reads as an empty remote model picker.
         """
-        from kiro_crew.acp.session_handle import _READ_PATH_PROBE_DEADLINE_SECS
-        from kiro_crew.dashboard.handlers.agents import _LIST_MODELS_SUBPROCESS_TIMEOUT_SECS
-        from kiro_crew.instances.constants import (
+        from aj_crew.acp.session_handle import _READ_PATH_PROBE_DEADLINE_SECS
+        from aj_crew.dashboard.handlers.agents import _LIST_MODELS_SUBPROCESS_TIMEOUT_SECS
+        from aj_crew.instances.constants import (
             DEFAULT_CAPABILITY_PROXY_TIMEOUT_SECS,
             DEFAULT_MODELS_CAPABILITY_PROXY_TIMEOUT_SECS,
         )
-        from kiro_crew.sandbox import _SANDBOX_BACKEND_PROBE_TIMEOUT_SECS
+        from aj_crew.sandbox import _SANDBOX_BACKEND_PROBE_TIMEOUT_SECS
 
         # Each term is the named production bound of one cold-path step:
         # sandbox-backend detection, `kiro-cli chat --list-models`, and the
@@ -639,7 +639,7 @@ class TestPeerCapabilityCarrier:
     @pytest.mark.asyncio
     async def test_the_cheap_reads_keep_the_short_budget(self, monkeypatch):
         """The four state-backed reads still settle at the 8s budget."""
-        from kiro_crew.instances.constants import DEFAULT_CAPABILITY_PROXY_TIMEOUT_SECS
+        from aj_crew.instances.constants import DEFAULT_CAPABILITY_PROXY_TIMEOUT_SECS
 
         for path in ("/api/version", "/api/agents", "/api/effort-levels", "/api/workspaces"):
             total = await self._timeout_used_for(path, monkeypatch)
@@ -672,7 +672,7 @@ def _manager_answering(monkeypatch, replies: dict[str, tuple[int, object]]):
     *replies* maps a capability path to ``(status, json_body)``; the carrier's
     own status mapping and body parsing run unmodified against it.
     """
-    from kiro_crew.instances import ssh_tunnel_manager as stm
+    from aj_crew.instances import ssh_tunnel_manager as stm
 
     mgr = stm.SshTunnelManager.__new__(stm.SshTunnelManager)
     # This carrier re-reads the forward it resolved before it spends the credential,

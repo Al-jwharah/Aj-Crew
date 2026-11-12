@@ -14,7 +14,7 @@ import asyncio
 
 import pytest
 
-from kiro_crew.dashboard.handlers import mcp as mcp_mod
+from aj_crew.dashboard.handlers import mcp as mcp_mod
 
 
 class _FakeServer:
@@ -50,7 +50,7 @@ def _install_probe_all(monkeypatch, *, delay: float, calls: list[int]):
 
     # The probe imports probe_all in-function (documented circular-import
     # workaround), so the patch must land on the source module.
-    monkeypatch.setattr("kiro_crew.mcp_discovery.probe_all", _probe_all)
+    monkeypatch.setattr("aj_crew.mcp_discovery.probe_all", _probe_all)
 
 
 @pytest.mark.asyncio
@@ -178,7 +178,7 @@ async def test_a_failing_probe_does_not_wedge_later_probes(monkeypatch, probe_en
         calls.append(1)
         raise RuntimeError("probe exploded")
 
-    monkeypatch.setattr("kiro_crew.mcp_discovery.probe_all", _boom)
+    monkeypatch.setattr("aj_crew.mcp_discovery.probe_all", _boom)
 
     # _run_mcp_probe swallows and logs — a boot path must not die on this.
     await mcp_mod._bg_mcp_probe(None)

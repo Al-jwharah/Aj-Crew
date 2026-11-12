@@ -1,7 +1,7 @@
 """First-party fixed-argv carve-out in the no-backend fail-close branch.
 
 ``agent.sandbox_allow_unsandboxed_exec`` is one boolean that conflated two
-decisions on a host with no sandbox backend: allowing Kiro Crew's OWN managed
+decisions on a host with no sandbox backend: allowing Aj Crew's OWN managed
 MCP servers to spawn (argv fully derived inside this package) and unconfining
 the ``mode="strict"`` hostile-input paths. The ``first_party_fixed_argv``
 carve-out lets the first class proceed — unconfined but env-scrubbed, loudly
@@ -37,10 +37,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import kiro_crew.sandbox as sandbox_mod
-from kiro_crew.sandbox import SandboxUnavailableError, reset_backend, wrap_argv
+import aj_crew.sandbox as sandbox_mod
+from aj_crew.sandbox import SandboxUnavailableError, reset_backend, wrap_argv
 
-_ARGV = ["/opt/kirocrew/bin/kirocrew", "mcp-core"]
+_ARGV = ["/opt/ajcrew/bin/ajcrew", "mcp-core"]
 
 
 @pytest.fixture(autouse=True)
@@ -52,11 +52,11 @@ def clean_state(monkeypatch):
     preempts the code under test), clear the in-sandbox marker, and reset every
     per-process warning sentinel these tests assert on.
     """
-    monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
-    monkeypatch.delenv("KIROCREW_ALLOW_UNSANDBOXED", raising=False)
+    monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
+    monkeypatch.delenv("AJCREW_ALLOW_UNSANDBOXED", raising=False)
     monkeypatch.setattr(
-        "kiro_crew.sandbox._KIRO_INTERNAL_SETTINGS_PATH",
-        "/nonexistent/kirocrew-test/amazon-internal.json",
+        "aj_crew.sandbox._KIRO_INTERNAL_SETTINGS_PATH",
+        "/nonexistent/ajcrew-test/amazon-internal.json",
     )
     for func, attr in (
         (sandbox_mod._warn_first_party_unconfined_once, "_warned"),
@@ -81,7 +81,7 @@ def no_backend(monkeypatch):
 
 class TestCarveOutAllowedPath:
     def test_passthrough_ends_with_original_argv_and_no_cleanup(self, no_backend):
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             wrapped, cleanup = wrap_argv(_ARGV, mode="standard", first_party_fixed_argv=True)
         assert cleanup is None
         assert wrapped[-len(_ARGV):] == _ARGV
@@ -94,7 +94,7 @@ class TestCarveOutAllowedPath:
         # PATH lookup — rather than the host's filesystem layout. The
         # no-candidate Windows shape is covered by the test below.
         monkeypatch.setattr(sandbox_mod, "_ENV_BINARY_CANDIDATES", (sys.executable,))
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             wrapped, _ = wrap_argv(_ARGV, mode="standard", first_party_fixed_argv=True)
         assert wrapped[0] == sys.executable
         assert "AWS_SECRET_ACCESS_KEY" in wrapped[: -len(_ARGV)]
@@ -110,14 +110,14 @@ class TestCarveOutAllowedPath:
         """
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "sentinel")
         monkeypatch.setattr(sandbox_mod, "_ENV_BINARY_CANDIDATES", ())
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             wrapped, cleanup = wrap_argv(_ARGV, mode="standard", first_party_fixed_argv=True)
         assert wrapped == _ARGV
         assert cleanup is None
 
     def test_sel_unconfined_event_is_emitted(self, no_backend):
         sel_instance = MagicMock()
-        with patch("kiro_crew.sel.sel", return_value=sel_instance):
+        with patch("aj_crew.sel.sel", return_value=sel_instance):
             wrap_argv(_ARGV, mode="standard", first_party_fixed_argv=True)
         assert sel_instance.log_tool_invocation.call_count == 1
         kwargs = sel_instance.log_tool_invocation.call_args.kwargs
@@ -136,13 +136,13 @@ class TestCarveOutAllowedPath:
         brick built-in tooling on a host that has no safer alternative."""
         sel_instance = MagicMock()
         sel_instance.log_tool_invocation.side_effect = OSError("disk full")
-        with patch("kiro_crew.sel.sel", return_value=sel_instance):
+        with patch("aj_crew.sel.sel", return_value=sel_instance):
             wrapped, cleanup = wrap_argv(_ARGV, mode="standard", first_party_fixed_argv=True)
         assert wrapped[-len(_ARGV) :] == _ARGV
         assert cleanup is None
 
     def test_security_warning_fires_exactly_once_per_process(self, no_backend, caplog):
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             with caplog.at_level(logging.WARNING, logger=sandbox_mod.logger.name):
                 wrap_argv(_ARGV, mode="standard", first_party_fixed_argv=True)
                 wrap_argv(_ARGV, mode="standard", first_party_fixed_argv=True)
@@ -158,7 +158,7 @@ class TestCarveOutAllowedPath:
 class TestCarveOutStillRaises:
     def test_no_flag_keeps_fail_close(self, no_backend):
         sel_instance = MagicMock()
-        with patch("kiro_crew.sel.sel", return_value=sel_instance):
+        with patch("aj_crew.sel.sel", return_value=sel_instance):
             with pytest.raises(SandboxUnavailableError) as exc_info:
                 wrap_argv(_ARGV, mode="standard")
         assert exc_info.value.kind == "no_backend"
@@ -174,7 +174,7 @@ class TestCarveOutStillRaises:
         monkeypatch.setattr(
             sandbox_mod, "_last_unshare_failure", (True, "fork EAGAIN", "retry")
         )
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             with pytest.raises(SandboxUnavailableError) as exc_info:
                 wrap_argv(_ARGV, mode="standard", first_party_fixed_argv=True)
         assert exc_info.value.kind == "transient"
@@ -183,7 +183,7 @@ class TestCarveOutStillRaises:
         """A foreign outer sandbox means the host's sandbox is FINE; the remedy
         is config-level, never an unconfined bypass."""
         monkeypatch.setattr(sandbox_mod, "_inside_macos_sandbox", lambda: True)
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             with pytest.raises(SandboxUnavailableError) as exc_info:
                 wrap_argv(_ARGV, mode="standard", first_party_fixed_argv=True)
         assert exc_info.value.kind == "foreign_sandbox"
@@ -197,10 +197,10 @@ class TestCarveOutStillRaises:
         ``_governance_sandbox_floor_active`` — see the same governed host.
         """
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.governance_floor_ordinal",
+            "aj_crew.platform.governance_profiles.governance_floor_ordinal",
             lambda scope, **kwargs: "strict",
         )
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             with pytest.raises(SandboxUnavailableError):
                 wrap_argv(_ARGV, mode="standard", first_party_fixed_argv=True)
 
@@ -227,13 +227,13 @@ class TestGovernanceFloorOverridesTheOptIn:
         monkeypatch.setattr(sandbox_mod, "detect_backend", lambda config_mode="auto": "none")
         monkeypatch.setattr(sandbox_mod, "_allow_unsandboxed_exec", lambda: True)
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.governance_floor_ordinal",
+            "aj_crew.platform.governance_profiles.governance_floor_ordinal",
             lambda scope, **kwargs: "strict",
         )
 
     def test_governed_host_raises_even_though_the_opt_in_is_set(self, governed):
         """A governance floor overrides the opt-in: no bare argv under these conditions."""
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             with pytest.raises(SandboxUnavailableError) as exc_info:
                 wrap_argv(_ARGV, mode="strict")
         assert exc_info.value.kind == "no_backend"
@@ -245,7 +245,7 @@ class TestGovernanceFloorOverridesTheOptIn:
         key that is deliberately powerless here.
         """
         sel_instance = MagicMock()
-        with patch("kiro_crew.sel.sel", return_value=sel_instance):
+        with patch("aj_crew.sel.sel", return_value=sel_instance):
             with pytest.raises(SandboxUnavailableError) as exc_info:
                 wrap_argv(_ARGV, mode="strict")
         message = str(exc_info.value)
@@ -263,7 +263,7 @@ class TestGovernanceFloorOverridesTheOptIn:
         that relies on the opt-in and must keep working byte-for-byte."""
         monkeypatch.setattr(sandbox_mod, "detect_backend", lambda config_mode="auto": "none")
         monkeypatch.setattr(sandbox_mod, "_allow_unsandboxed_exec", lambda: True)
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             assert wrap_argv(_ARGV, mode="strict") == (_ARGV, None)
 
     def test_governed_host_without_the_opt_in_keeps_its_original_message(
@@ -274,10 +274,10 @@ class TestGovernanceFloorOverridesTheOptIn:
         monkeypatch.setattr(sandbox_mod, "detect_backend", lambda config_mode="auto": "none")
         monkeypatch.setattr(sandbox_mod, "_allow_unsandboxed_exec", lambda: False)
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.governance_floor_ordinal",
+            "aj_crew.platform.governance_profiles.governance_floor_ordinal",
             lambda scope, **kwargs: "strict",
         )
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             with pytest.raises(SandboxUnavailableError) as exc_info:
                 wrap_argv(_ARGV, mode="strict")
         assert "allow_unsandboxed_exec is not set" in str(exc_info.value)
@@ -294,10 +294,10 @@ class TestGovernanceFloorOverridesTheOptIn:
         monkeypatch.setattr(sandbox_mod, "detect_backend", lambda config_mode="auto": "none")
         monkeypatch.setattr(sandbox_mod, "_allow_unsandboxed_exec", lambda: True)
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.governance_floor_ordinal",
+            "aj_crew.platform.governance_profiles.governance_floor_ordinal",
             lambda scope, **kwargs: "off",
         )
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             assert wrap_argv(_ARGV, mode="standard") == (_ARGV, None)
 
     def test_every_tier_above_the_loosest_denies(self, monkeypatch):
@@ -307,17 +307,17 @@ class TestGovernanceFloorOverridesTheOptIn:
         monkeypatch.setattr(sandbox_mod, "_allow_unsandboxed_exec", lambda: True)
         for tier in ("standard", "cc", "strict"):
             monkeypatch.setattr(
-                "kiro_crew.platform.governance_profiles.governance_floor_ordinal",
+                "aj_crew.platform.governance_profiles.governance_floor_ordinal",
                 lambda scope, _tier=tier, **kwargs: _tier,
             )
-            with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+            with patch("aj_crew.sel.sel", return_value=MagicMock()):
                 with pytest.raises(SandboxUnavailableError):
                     wrap_argv(_ARGV, mode="standard")
 
     def test_message_does_not_promise_that_built_in_spawns_keep_running(self, governed):
         """A governed host withholds the first-party carve-out as well, so the
         guidance must not tell an operator built-in tooling is unaffected."""
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             with pytest.raises(SandboxUnavailableError) as exc_info:
                 wrap_argv(_ARGV, mode="strict")
         message = str(exc_info.value)
@@ -331,7 +331,7 @@ class TestFlagIsOtherwiseInert:
         byte-identical behavior for all callers, flag or no flag."""
         monkeypatch.setattr(sandbox_mod, "detect_backend", lambda config_mode="auto": "none")
         monkeypatch.setattr(sandbox_mod, "_allow_unsandboxed_exec", lambda: True)
-        with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+        with patch("aj_crew.sel.sel", return_value=MagicMock()):
             with_flag = wrap_argv(_ARGV, mode="standard", first_party_fixed_argv=True)
             without_flag = wrap_argv(_ARGV, mode="standard")
         assert with_flag == without_flag == (_ARGV, None)

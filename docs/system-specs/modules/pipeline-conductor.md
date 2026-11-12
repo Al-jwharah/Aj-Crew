@@ -1,6 +1,6 @@
 # Pipeline Conductor
 
-`kirocrew-pipeline-conductor` is a generated kiro-cli agent that runs one
+`ajcrew-pipeline-conductor` is a generated kiro-cli agent that runs one
 issue/PR pipeline on one repository as a supervised worker fleet. It picks up
 queued work items, stands up one worker session per item, patrols the fleet with
 one deterministic probe call per cycle, verifies claimed results independently,
@@ -34,12 +34,12 @@ Publishing never changes permissions. See [artifacts](artifacts.md).
 
 | File | Role |
 |---|---|
-| `src/kiro_crew/agent_parts/spec_prompts.py` | `_PIPELINE_CONDUCTOR_SYSTEM_PROMPT` |
-| `src/kiro_crew/agent_parts/spec_grants.py` | `_PIPELINE_CONDUCTOR_CORE_GRANTS`, `_PIPELINE_CONDUCTOR_DASHBOARD_GRANTS` |
-| `src/kiro_crew/agent_materialization/conductor_agents.py` | `_install_pipeline_conductor_agent` |
-| `src/kiro_crew/agent_files.py` | `PIPELINE_CONDUCTOR_AGENT_FILENAME`, and its membership in `OWNED_KIRO_AGENT_FILES` |
-| `src/kiro_crew/subagent_parts/agent_policy.py` | `UNADVERTISED_AGENTS` — the conductor is never offered in a rendered agent roster (read through `kiro_crew.subagent`) |
-| `src/kiro_crew/builtin_skills/pipeline-conductor/SKILL.md` | The operating procedure: pipeline spec, claim preflight, work-order brief, probe cycle and action table, intervention ladder, adjudication and override protocol, admission table, credit rules, `conductor-status/v1`, cleanup |
+| `src/aj_crew/agent_parts/spec_prompts.py` | `_PIPELINE_CONDUCTOR_SYSTEM_PROMPT` |
+| `src/aj_crew/agent_parts/spec_grants.py` | `_PIPELINE_CONDUCTOR_CORE_GRANTS`, `_PIPELINE_CONDUCTOR_DASHBOARD_GRANTS` |
+| `src/aj_crew/agent_materialization/conductor_agents.py` | `_install_pipeline_conductor_agent` |
+| `src/aj_crew/agent_files.py` | `PIPELINE_CONDUCTOR_AGENT_FILENAME`, and its membership in `OWNED_KIRO_AGENT_FILES` |
+| `src/aj_crew/subagent_parts/agent_policy.py` | `UNADVERTISED_AGENTS` — the conductor is never offered in a rendered agent roster (read through `aj_crew.subagent`) |
+| `src/aj_crew/builtin_skills/pipeline-conductor/SKILL.md` | The operating procedure: pipeline spec, claim preflight, work-order brief, probe cycle and action table, intervention ladder, adjudication and override protocol, admission table, credit rules, `conductor-status/v1`, cleanup |
 | `.../pipeline-conductor/scripts/claim_preflight.py` | One claim verdict per candidate item |
 | `.../pipeline-conductor/scripts/coverage_filter.py` | The batch open-PR exclusion for the queue build |
 | `.../pipeline-conductor/scripts/fleet_probe.py` | The batch patrol probe: its entry point, the patrol cycle and the session-store lookup it uses, config validation, the `/proc` walk that builds a `BANNED` line, and the `cmd=` redactor; it loads the two modules below by path and re-exports their names |
@@ -47,26 +47,26 @@ Publishing never changes permissions. See [artifacts](artifacts.md).
 | `.../pipeline-conductor/scripts/fleet_probe_processes.py` | A module `fleet_probe.py` loads, never run on its own: the probe's process side, meaning the banned command shapes, reading a runner's argv, the kernel's view of a pid's binary, and process ownership |
 | `.../pipeline-conductor/scripts/credit_spend.py` | Per-item credit rollup and budget verdict |
 | `.../pipeline-conductor/scripts/spec_check.py` | The spec's closed-value fields, checked once before the run arms |
-| `src/kiro_crew/dashboard/session_control.py` (facade over `src/kiro_crew/dashboard/session_control_parts/`) | Worker-session stand-up and control: `create_session` (`session_create.py`), `send_to_target` (`session_messaging.py`), `read_messages` (`session_status.py`), `stop_target` (`turn_control.py`), `authorize_target` (`target_authorization.py`) |
-| `src/kiro_crew/session_ledger.py` | The conductor's durable item table and the `[work ledger]` snapshot it must not mistake for the record |
+| `src/aj_crew/dashboard/session_control.py` (facade over `src/aj_crew/dashboard/session_control_parts/`) | Worker-session stand-up and control: `create_session` (`session_create.py`), `send_to_target` (`session_messaging.py`), `read_messages` (`session_status.py`), `stop_target` (`turn_control.py`), `authorize_target` (`target_authorization.py`) |
+| `src/aj_crew/session_ledger.py` | The conductor's durable item table and the `[work ledger]` snapshot it must not mistake for the record |
 
 ## The generated agent
 
 `_install_pipeline_conductor_agent` runs on the same boot path that installs the
-other managed agent specs, writing `kirocrew-pipeline-conductor.json` atomically
+other managed agent specs, writing `ajcrew-pipeline-conductor.json` atomically
 into the kiro agents directory. It derives from `build_agent_config` and then
 narrows, and each narrowing is a permission decision:
 
 - **Tools:** `execute_bash`, `fs_read`, `web_fetch`, `session`, `report`,
-  `tool_search`, plus the `@kirocrew-core` and `@kirocrew-dashboard` servers.
+  `tool_search`, plus the `@ajcrew-core` and `@ajcrew-dashboard` servers.
   Neither `fs_write` nor `code` is mounted, which is what makes "never does the
   work" structural.
 - **`allowedTools` is verb by verb, never a whole server.** The conductor ingests
   untrusted content by design (issue text, PR bodies) on unattended cycles, so a
   server-wide grant would let that content start persistent work or spawn
   arbitrary subagents with nobody in the loop.
-- **`mcpServers` is narrowed** to `kirocrew-core` and a hand-built
-  `kirocrew-dashboard` entry. That entry carries `type` in registry mode (a
+- **`mcpServers` is narrowed** to `ajcrew-core` and a hand-built
+  `ajcrew-dashboard` entry. That entry carries `type` in registry mode (a
   registry-mode client silently drops an entry without it) and the managed MCP
   env (without the data-home pin the shim reads the default home while the
   gateway runs under an override).
@@ -306,11 +306,11 @@ credential store is therefore refused through the link (`refused spec: Blocked:
 access to sensitive path: …`, exit 2) rather than parsed.
 
 The normal startup invokes this script with the ACP-injected
-`KIROCREW_RUNTIME_PYTHON` using `-I -B`, so the interpreter already carries Kiro
+`AJCREW_RUNTIME_PYTHON` using `-I -B`, so the interpreter already carries Aj
 Crew while isolated mode keeps ambient import paths and bytecode writes out. A
 manual invocation under a foreign interpreter can still miss the gate import; in
 that case the script re-execs itself once under the injected runtime or an
-interpreter discovered beside the `kirocrew` launcher, and the child's verdict is
+interpreter discovered beside the `ajcrew` launcher, and the child's verdict is
 the invocation's verdict. Refusal is what remains when the gate is reachable from
 no interpreter, because an unenforceable read precondition cannot degrade to a
 plain file read.
@@ -399,7 +399,7 @@ invisible unless it keeps its own list.
   about 25 hours, renewals included. A wake cannot replace its own loop: while
   the loop runs `monitor_start` is refused, and once the wake stops it
   `_refuse_stale_wake_arm` in
-  `src/kiro_crew/dashboard/session_directive_apply_monitor.py` refuses the
+  `src/aj_crew/dashboard/session_directive_apply_monitor.py` refuses the
   replacement. So the conductor asks for a renewal on the `10% or less left`
   budget line and re-arms in the turn the person's own message starts; the
   skill's Startup step 4 is the procedure. With no reply the patrol ends at its
@@ -451,12 +451,12 @@ pipeline conductor auto-approves `work_ledger_read` and `work_ledger_record`; th
 worker verbs stay gated.
 
 One sibling agent shares this one's installer mechanics and nothing else:
-`kirocrew-conductor` (the `goal-conductor` skill) decomposes a free-form goal and
-tracks its items in the work ledger. `kirocrew-ledger-conductor` is a deprecated
+`ajcrew-conductor` (the `goal-conductor` skill) decomposes a free-form goal and
+tracks its items in the work ledger. `ajcrew-ledger-conductor` is a deprecated
 alias emitting that same spec under the flow's old name for one release. Both
 narrow `mcpServers`, withhold every file-writing tool, grant verb by verb and
 derive `permissions` from the filtered list; all of them mount
-`kirocrew-work`.
+`ajcrew-work`.
 
 ## Tests that pin this
 

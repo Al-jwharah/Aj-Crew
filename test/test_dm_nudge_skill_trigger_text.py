@@ -1,7 +1,7 @@
 """A DM auto-nudge matches skill triggers on the loop's own message.
 
 ``_fire_dm_nudge`` delivers a nudge as a synthetic inbound whose text starts with
-Kiro Crew's ``[auto-nudge cycle N]`` header. The Discord and Webex dispatchers
+Aj Crew's ``[auto-nudge cycle N]`` header. The Discord and Webex dispatchers
 carry the loop's message to ``build_message`` as ``skill_trigger_text``, so a
 trigger made of the header's words cannot load a skill into every cycle. A typed
 message names no trigger text, so its own text is what triggers read.
@@ -18,8 +18,8 @@ from webex_dispatch_helpers import FakeClient, FakeCtx, FakeProvider, FakeSessio
 from webex_dispatch_helpers import _dispatcher as _webex_dispatcher
 from webex_dispatch_helpers import _inbound
 
-from kiro_crew.acp.types import EVENT_COMPLETE, AcpEvent
-from kiro_crew.messaging.transport import InboundMessage
+from aj_crew.acp.types import EVENT_COMPLETE, AcpEvent
+from aj_crew.messaging.transport import InboundMessage
 
 _TAGGED = "[auto-nudge cycle 1]\nkeep checking"
 

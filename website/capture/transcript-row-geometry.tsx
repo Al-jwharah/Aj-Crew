@@ -53,7 +53,7 @@ const params = new URLSearchParams(location.search)
 const scene = params.get('scene') === 'before' ? 'before' : 'after'
 const theme = params.get('theme') || 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // The completion cards mount MarkdownRenderer when expanded, which probes
 // path-like inline code and unfurls links. Neither endpoint exists here, and a
@@ -95,11 +95,11 @@ const store = configureStore({
       },
       subagents: {
         a1: {
-          id: 'a1', task: 'audit the transcript cards', agent: 'kirocrew',
+          id: 'a1', task: 'audit the transcript cards', agent: 'ajcrew',
           status: 'running', streaming: '', lastTool: 'fs_read', startedAt: 0, elapsed: 4200,
         },
         a2: {
-          id: 'a2', task: 'audit the turn grouping', agent: 'kirocrew',
+          id: 'a2', task: 'audit the turn grouping', agent: 'ajcrew',
           status: 'done', streaming: '', lastTool: '', startedAt: 0, elapsed: 9100,
         },
       },
@@ -144,7 +144,7 @@ const WF_COMPLETION = [
 
 const SA_COMPLETION = [
   '[Subagent completion event]',
-  'Agent `a1` (kirocrew) completed ✅',
+  'Agent `a1` (ajcrew) completed ✅',
   'Task: Audit the transcript cards',
   '',
   'Reported per-component props and root classes.',

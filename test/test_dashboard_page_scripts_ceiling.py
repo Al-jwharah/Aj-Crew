@@ -22,8 +22,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.dashboard.handlers import member_dashboard as md
-from kiro_crew.platform import governance as gov
+from aj_crew.dashboard.handlers import member_dashboard as md
+from aj_crew.platform import governance as gov
 
 
 def _ruleset(mode: str, allow: tuple[str, ...] = (), deny: tuple[str, ...] = ()) -> Any:
@@ -46,7 +46,7 @@ def ceiling(monkeypatch):
 
     def _install(control: Any, *, governed: bool = True, profile_permits: bool = True) -> None:
 
-        from kiro_crew.platform import governance_profiles as profiles_mod
+        from aj_crew.platform import governance_profiles as profiles_mod
 
         monkeypatch.setattr(
             gov, "last_composed_ceiling", lambda: _ceiling_with(control, governed=governed)
@@ -116,7 +116,7 @@ class TestTheProfileIsAskedTooNotJustThePolicy:
     def test_a_profile_that_cannot_be_resolved_gets_NO_scripts(self, monkeypatch) -> None:
         """FAILS CLOSED on the profile half as it already did on the policy half: a
         page runs only when both were read and both restrict nothing."""
-        from kiro_crew.platform import governance_profiles as profiles_mod
+        from aj_crew.platform import governance_profiles as profiles_mod
 
         monkeypatch.setattr(
             gov, "last_composed_ceiling", lambda: _ceiling_with(None, governed=False)
@@ -135,7 +135,7 @@ class TestTheProfileIsAskedTooNotJustThePolicy:
         True for exactly the agent a `surface: dashboard` profile restricts.
         """
 
-        from kiro_crew.platform import governance_profiles as profiles_mod
+        from aj_crew.platform import governance_profiles as profiles_mod
 
         asked: list[str] = []
 
@@ -159,7 +159,7 @@ class TestTheProfileIsAskedTooNotJustThePolicy:
         so any probe it happens to allow reads as "unrestricted" while the restriction
         is still there. The question is whether the scope is RESTRICTED AT ALL, and a
         deny-mode ruleset naming anything is."""
-        from kiro_crew.platform import governance_profiles as profiles_mod
+        from aj_crew.platform import governance_profiles as profiles_mod
 
         monkeypatch.setattr(
             gov, "last_composed_ceiling", lambda: _ceiling_with(None, governed=False)
@@ -179,7 +179,7 @@ class TestTheProfileIsAskedTooNotJustThePolicy:
     ) -> None:
         """The limit: a profile is bound for its own reasons, and one that says nothing
         about egress restricts no egress."""
-        from kiro_crew.platform import governance_profiles as profiles_mod
+        from aj_crew.platform import governance_profiles as profiles_mod
 
         monkeypatch.setattr(
             gov, "last_composed_ceiling", lambda: _ceiling_with(None, governed=False)
@@ -199,7 +199,7 @@ class TestTheProfileIsAskedTooNotJustThePolicy:
         sends to its Slack fallback -- so a key built from the slot alone skips every
         dashboard-bound profile and the page runs script the operator restricted.
         """
-        from kiro_crew.platform import governance_profiles as profiles_mod
+        from aj_crew.platform import governance_profiles as profiles_mod
 
         key = md.governance_session_key("member-atlas")
         assert profiles_mod._infer_surface(key) == "dashboard", (
@@ -228,7 +228,7 @@ class TestTheProfileIsAskedTooNotJustThePolicy:
         Whatever profile is bound (dashboard-bound or default), a restricting profile
         withholds the grant; parameterised so a new surface is not left ungoverned.
         """
-        from kiro_crew.platform import governance_profiles as profiles_mod
+        from aj_crew.platform import governance_profiles as profiles_mod
 
         bound = gov.Profile(
             name=surface or "default",
@@ -268,7 +268,7 @@ class TestTheUngovernedDefaults:
     ) -> None:
         """In an LTS build an unnamed ``network.egress`` is the built-in
         baseline (off), so the page stays static (RFC D3)."""
-        monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+        monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
         ceiling(None, governed=False)
         assert md.owner_agent_egress_unrestricted() is False
 

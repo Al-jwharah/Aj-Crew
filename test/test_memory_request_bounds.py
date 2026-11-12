@@ -23,7 +23,7 @@ from handlers_memory_coverage_helpers import (  # noqa: F401 -- the autouse fixt
     _store,
 )
 
-import kiro_crew.dashboard.handlers.memory as mem_mod
+import aj_crew.dashboard.handlers.memory as mem_mod
 
 # A JSON integer too large for a float. The parameters spell it ``HUGE`` so
 # their test ids stay short; ``_loads`` expands it before parsing.
@@ -72,7 +72,7 @@ class TestPromoteBounds:
     async def test_unsafe_threshold_is_bounded(
         self, raw: str, expected: tuple[int, float], caplog: pytest.LogCaptureFixture
     ) -> None:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.handlers.memory"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.handlers.memory"):
             status, promote = await _promote(raw)
         assert status == 200
         promote.assert_called_once_with(*expected)
@@ -95,7 +95,7 @@ class TestPromoteBounds:
     async def test_threshold_in_bounds_is_forwarded_unchanged(
         self, raw: str, expected: tuple[int, float], caplog: pytest.LogCaptureFixture
     ) -> None:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.handlers.memory"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.handlers.memory"):
             status, promote = await _promote(raw)
         assert status == 200
         promote.assert_called_once_with(*expected)

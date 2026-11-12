@@ -1,8 +1,8 @@
-"""The composition contract of ``kiro_crew.dashboard.chat_persistence_parts``.
+"""The composition contract of ``aj_crew.dashboard.chat_persistence_parts``.
 
 The dashboard slot save and restore orchestration lives in the parts of this package and
-runs on the globals of ``kiro_crew.dashboard.chat_persistence``, which composes them with
-``kiro_crew._facade_compose.compose``. ``test_chat_persistence_composition_contract.py``
+runs on the globals of ``aj_crew.dashboard.chat_persistence``, which composes them with
+``aj_crew._facade_compose.compose``. ``test_chat_persistence_composition_contract.py``
 pins the facade's surface, its ``slot_persistence`` rule owners and the bytes a save
 writes; this file pins what the composition must keep true:
 
@@ -31,10 +31,10 @@ from types import SimpleNamespace
 
 import composition_contract_checks
 
-from kiro_crew.dashboard import chat_persistence as cp
+from aj_crew.dashboard import chat_persistence as cp
 
-FACADE = "kiro_crew.dashboard.chat_persistence"
-PARTS_PACKAGE = "kiro_crew.dashboard.chat_persistence_parts"
+FACADE = "aj_crew.dashboard.chat_persistence"
+PARTS_PACKAGE = "aj_crew.dashboard.chat_persistence_parts"
 PARTS_DIR = Path(cp.__file__).resolve().with_name("chat_persistence_parts")
 #: The parts the facade composes, in the order it passes them.
 PARTS = ("save_transaction", "restore_drivers", "slot_builders", "member_store")
@@ -122,17 +122,17 @@ _CONFTEST_RESETS = frozenset(
 )
 
 #: A part's runtime project import: what a module-level statement evaluates when it loads.
-_RUNTIME_PROJECT_IMPORTS = {("restore_drivers", "kiro_crew.dashboard.state", "SlotOrigin")}
+_RUNTIME_PROJECT_IMPORTS = {("restore_drivers", "aj_crew.dashboard.state", "SlotOrigin")}
 
 #: The saves only the save transaction (and the facade) may start.
 _SAVERS = frozenset({"save_slot_off_loop", "_save_slot_to_history", "save_all_slots_to_history"})
 
 #: The rule-owner modules the facade binds by alias; parts read them through its globals.
 _OWNER_ALIASES = {
-    "_metadata_codec": "kiro_crew.dashboard.slot_persistence.metadata_codec",
-    "_metadata_line": "kiro_crew.dashboard.slot_persistence.metadata_line",
-    "_transcript_merge": "kiro_crew.dashboard.slot_persistence.transcript_merge",
-    "_write_guards": "kiro_crew.dashboard.slot_persistence.write_guards",
+    "_metadata_codec": "aj_crew.dashboard.slot_persistence.metadata_codec",
+    "_metadata_line": "aj_crew.dashboard.slot_persistence.metadata_line",
+    "_transcript_merge": "aj_crew.dashboard.slot_persistence.transcript_merge",
+    "_write_guards": "aj_crew.dashboard.slot_persistence.write_guards",
 }
 
 #: Every name the facade's import statements bound before the parts were composed.
@@ -140,7 +140,7 @@ _BASE_IMPORTS = frozenset("""
     ARTIFACT_SLUG_RE ATTACHMENT_LIST_MAX_ITEMS ATTACHMENT_PATH_MAX_LEN AUTOCOMPACT_PCT_MAX
     AUTOCOMPACT_PCT_MIN Any CHAT_ENTRY_CACHE_BYTES_DEFAULT CHAT_ENTRY_CACHE_ENTRIES_DEFAULT
     COLOR_HEX_RE Callable ConversationLog DashboardState EFFORT_LEVELS EFFORT_VALUES
-    EXECUTION_CONTEXT_KEY HUMAN_TURN_META_KEY ImageBudget Iterable Iterator KiroCrewConfig
+    EXECUTION_CONTEXT_KEY HUMAN_TURN_META_KEY ImageBudget Iterable Iterator AjCrewConfig
     MEMORY_MODES METADATA_LINE_CORRUPT Mapping OrderedDict Path RESTORE_SLOT_BUDGET
     ROWS_ONLY_DEFERRED_META_KEYS ROWS_ONLY_OWNED_META_KEYS SLOT_OWNED_META_KEYS
     STRICTEST_MEMORY_MODE Sequence SlotOrigin UnknownMemoryStore _ChatSlot
@@ -319,7 +319,7 @@ class TestPackage(
             node
             for node in tree.body
             if isinstance(node, ast.ImportFrom)
-            and node.module == "kiro_crew._facade_compose"
+            and node.module == "aj_crew._facade_compose"
             and [(a.name, a.asname) for a in node.names] == [("compose", "_facade_compose")]
         ]
         calls = [
@@ -346,7 +346,7 @@ class TestPackage(
             i
             for i, node in enumerate(body)
             if isinstance(node, ast.ImportFrom)
-            and (node.module or "").startswith("kiro_crew.dashboard.slot_persistence")
+            and (node.module or "").startswith("aj_crew.dashboard.slot_persistence")
         )
         assert compose_at < owners_at
 
@@ -488,10 +488,10 @@ class TestPlacement:
                     for sub in node.body:
                         assert isinstance(sub, ast.ImportFrom) and sub.module == FACADE, stem
                     continue
-                if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("kiro_crew"):
+                if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("aj_crew"):
                     runtime |= {(stem, node.module, alias.name) for alias in node.names}
                 elif isinstance(node, ast.Import):
-                    assert not any(a.name.startswith("kiro_crew") for a in node.names), stem
+                    assert not any(a.name.startswith("aj_crew") for a in node.names), stem
         assert runtime == _RUNTIME_PROJECT_IMPORTS
 
     def test_no_part_binds_the_facades_process_state(self) -> None:

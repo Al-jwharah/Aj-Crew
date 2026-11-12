@@ -5,17 +5,17 @@ Date: 2026-11-09
 
 ## Decision
 
-When `kirocrew cloud launch` has no usable saved launch and finds `kirocrew-<tag>` stacks, it
-offers one only when that stack is neither failed nor in progress and a live Kiro Crew instance
+When `ajcrew cloud launch` has no usable saved launch and finds `ajcrew-<tag>` stacks, it
+offers one only when that stack is neither failed nor in progress and a live Aj Crew instance
 carries its tag, and it names every other stack as not offered with the
-`kirocrew cloud status --tag <tag>` for the Region and profile it searched; "Create a new
+`ajcrew cloud status --tag <tag>` for the Region and profile it searched; "Create a new
 installation" is the default, `--yes` keeps no found stack, and a saved launch keeps its
 default.
 
 ## Why
 
 - Pressing Enter resumed a stack whose instance was gone, one another run was still creating,
-  or one merely named `kirocrew-…`.
+  or one merely named `ajcrew-…`.
 - Nothing yet tells this installation's own stack whose record was lost from another person's,
   and keeping one makes it the stack `destroy` acts on.
 - A stack left out is still named, because it may be billing or be this installation's own

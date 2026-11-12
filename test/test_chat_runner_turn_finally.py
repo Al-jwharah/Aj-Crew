@@ -43,12 +43,12 @@ from turn_harness import (
     run_turn,
 )
 
-from kiro_crew import runtime_death
-from kiro_crew.acp.transport_errors import AcpAuthRequired, AcpError, AcpProcessDied
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN, AcpEvent
-from kiro_crew.crew_log import emit
-from kiro_crew.llm_helpers import PromptBusyExhaustedError
-from kiro_crew.session_allocation import SessionClosingError
+from aj_crew import runtime_death
+from aj_crew.acp.transport_errors import AcpAuthRequired, AcpError, AcpProcessDied
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN, AcpEvent
+from aj_crew.crew_log import emit
+from aj_crew.llm_helpers import PromptBusyExhaustedError
+from aj_crew.session_allocation import SessionClosingError
 
 _REPLY = AcpEvent(kind=EVENT_TEXT_CHUNK, text="the reply")
 _DONE = AcpEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_END_TURN)

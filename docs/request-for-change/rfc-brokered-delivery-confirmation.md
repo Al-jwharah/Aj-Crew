@@ -1,7 +1,7 @@
 ---
 title: Commit a brokered inline-collected result on the parent turn's outcome, not on a relay acknowledgement
 status: draft
-author: kirocrew agent session, directed by jeeshofone
+author: ajcrew agent session, directed by jeeshofone
 created: 2026-10-28
 last-audited: 2026-10-28
 audited-at: ea38bdd5e5
@@ -18,23 +18,23 @@ Status: draft. Acceptance requested from a maintainer of the MCP broker and the 
 
 ## Summary
 
-A blocking `spawn_sub_agents` call returns its children's results inline. [#17684](https://github.com/kirodotdev/KiroCrew/pull/17684) stops those results from also arriving as `[Subagent completion event]` turns, and it decides when a returned result counts as delivered. On the unbrokered path it records a mark when `respond()` wrote the whole frame into kiro-cli's pipe, holds that mark under the parent attempt that spawned the child, and confirms it only when that attempt lands. On the brokered path (a `kirocrew-core` stubbed through `mcp_gateway.stub_servers`) a reply marks nothing today, so every child's completion is also delivered: a duplicate turn, never a loss.
+A blocking `spawn_sub_agents` call returns its children's results inline. [#17684](https://github.com/kirodotdev/KiroCrew/pull/17684) stops those results from also arriving as `[Subagent completion event]` turns, and it decides when a returned result counts as delivered. On the unbrokered path it records a mark when `respond()` wrote the whole frame into kiro-cli's pipe, holds that mark under the parent attempt that spawned the child, and confirms it only when that attempt lands. On the brokered path (an `ajcrew-core` stubbed through `mcp_gateway.stub_servers`) a reply marks nothing today, so every child's completion is also delivered: a duplicate turn, never a loss.
 
 Issue #18743 asks how a brokered reply should earn the same suppression. Two answers were considered. One is a brokered acknowledgement: the stub confirms each relayed frame back through the broker to the backend, and the commit waits for it. The other is to commit on the parent turn's own outcome, which #17684 already does for the unbrokered path.
 
-This document recommends the second. A brokered reply records a pending mark under its spawning attempt exactly as an unbrokered one does, with `written` replaced by a new `relayed` reason that means "handed to the broker". The mark is confirmed when the attempt lands and kiro-cli's own ACP stream reported that tool call `completed`; anything else revokes it. No frame on the MCP relay path changes, no `kirocrew.*` key travels anywhere, and the only new state is a `call_id` on each held mark and a capped per-attempt set of completed call ids, both dropped when the attempt settles.
+This document recommends the second. A brokered reply records a pending mark under its spawning attempt exactly as an unbrokered one does, with `written` replaced by a new `relayed` reason that means "handed to the broker". The mark is confirmed when the attempt lands and kiro-cli's own ACP stream reported that tool call `completed`; anything else revokes it. No frame on the MCP relay path changes, no `ajcrew.*` key travels anywhere, and the only new state is a `call_id` on each held mark and a capped per-attempt set of completed call ids, both dropped when the attempt settles.
 
 ## Motivation
 
 ### The gap
 
-Behind the broker, the `kirocrew-core` backend writes its `tools/call` response to its own stdout. The broker relays it to the session's stub, and the stub writes it into kiro-cli's stdin. Two hops follow the backend's write: broker to stub, and stub to kiro-cli. If either loses the frame (kiro-cli stops reading mid-relay, the stub dies after the backend wrote), a result that was already marked delivered reaches the parent turn by neither path.
+Behind the broker, the `ajcrew-core` backend writes its `tools/call` response to its own stdout. The broker relays it to the session's stub, and the stub writes it into kiro-cli's stdin. Two hops follow the backend's write: broker to stub, and stub to kiro-cli. If either loses the frame (kiro-cli stops reading mid-relay, the stub dies after the backend wrote), a result that was already marked delivered reaches the parent turn by neither path.
 
-#17684 closes this for itself by marking nothing on a brokered reply (`on_answered(written)` is True only when `respond()` in `mcp_shared_wire.py` wrote the whole frame into the client's pipe, never for a pooled backend). So the gap is not a loss today. It is a cost: a stubbed `kirocrew-core` pays one redundant model turn per child, which is the cost #17684 exists to remove. Stubbing `kirocrew-core` is off by default (`stub_servers` defaults to empty in `config/integration_sections.py`) and is blocked on this issue.
+#17684 closes this for itself by marking nothing on a brokered reply (`on_answered(written)` is True only when `respond()` in `mcp_shared_wire.py` wrote the whole frame into the client's pipe, never for a pooled backend). So the gap is not a loss today. It is a cost: a stubbed `ajcrew-core` pays one redundant model turn per child, which is the cost #17684 exists to remove. Stubbing `ajcrew-core` is off by default (`stub_servers` defaults to empty in `config/integration_sections.py`) and is blocked on this issue.
 
 ### Evidence
 
-A live run on an earlier #17684 head (real kiro-cli 2.29.0, brokered `kirocrew-core`, two dashboard turns and one cron turn, recorded in a comment on #17684) relayed 29 brokered responses. Every one confirmed `delivered:true`, none came back false or timed out, and the write-to-empty-pipe drain measured p50 0.02 ms, p95 1.09 ms, max 1.11 ms.
+A live run on an earlier #17684 head (real kiro-cli 2.29.0, brokered `ajcrew-core`, two dashboard turns and one cron turn, recorded in a comment on #17684) relayed 29 brokered responses. Every one confirmed `delivered:true`, none came back false or timed out, and the write-to-empty-pipe drain measured p50 0.02 ms, p95 1.09 ms, max 1.11 ms.
 
 No frame has been observed lost on these hops, and no user has reported such a loss. The case for this work rests on the failure mode and on the duplicate-turn cost, not on an incident.
 
@@ -53,7 +53,7 @@ No frame has been observed lost on these hops, and no user has reported such a l
 - Changing any frame the broker, the stub or a backend sends or reads.
 - Confirming delivery for MCP tools other than the inline-collecting `spawn_sub_agents` call. No other call has an outcome hook today.
 - Making a pooled backend's write count as `written`. `written` keeps its #17684 meaning.
-- Turning `stub_servers` on for `kirocrew-core` by default. That stays an operator choice; this document only removes the reason it is blocked.
+- Turning `stub_servers` on for `ajcrew-core` by default. That stays an operator choice; this document only removes the reason it is blocked.
 - `spawn_run` delivery, deferring completions while a parent turn is busy ([#17898](https://github.com/kirodotdev/KiroCrew/issues/17898)), and the dashboard-born tab's own window ([#23495](https://github.com/kirodotdev/KiroCrew/issues/23495)).
 
 ## 1. Design
@@ -108,7 +108,7 @@ The stub confirms each relayed `tools/call` response back through the broker to 
 | | Brokered acknowledgement | Parent turn's outcome (recommended) |
 |---|---|---|
 | What it proves | the stub wrote the frame into kiro-cli's pipe | kiro-cli reported the call `completed` with its `call_id`, and the turn landed |
-| New wire surface | a capability, an offer field on forwarded `tools/call`, a stub answer line, a backend reply | none on any MCP frame; two optional fields on Kiro Crew's own `mark-collected` body |
+| New wire surface | a capability, an offer field on forwarded `tools/call`, a stub answer line, a backend reply | none on any MCP frame; two optional fields on Aj Crew's own `mark-collected` body |
 | New state | per-connection confirmation table in the broker; waiter pool in the backend | a `call_id` on each held mark and a capped per-attempt set of completed call ids |
 | Third-party servers | must never see the offer field, so the broker must strip it per backend | untouched |
 | Event loop | the stub's pipe-drain wait must not block its loop; the backend waiter must be bounded and timed out | no new wait |
@@ -121,7 +121,7 @@ The acknowledgement commits sooner. Nothing in the delivery path benefits from t
 
 ### 2.2 Keep marking nothing on a brokered reply
 
-This is #17684's position and costs one redundant turn per child on a stubbed `kirocrew-core`. It stays the fallback: a backend or gateway that does not speak `relayed` behaves this way (section 5).
+This is #17684's position and costs one redundant turn per child on a stubbed `ajcrew-core`. It stays the fallback: a backend or gateway that does not speak `relayed` behaves this way (section 5).
 
 ## 3. Bounds
 
@@ -132,7 +132,7 @@ This is #17684's position and costs one redundant turn per child on a stubbed `k
 | Point from #18743 | Answer |
 |---|---|
 | Confirmation is asked only for calls that need it (a call with an outcome hook) | Only a call whose `DeferredTool` carries `on_answered` sends a mark. Today that is the inline-collecting `spawn_sub_agents` call alone. Every other call is relayed exactly as now. |
-| A third-party MCP server never sees a `kirocrew.*` key | Nothing is added to any MCP frame. `relayed` travels only on the `mark-collected` HTTP body from `kirocrew-core` to its own gateway. |
+| A third-party MCP server never sees an `ajcrew.*` key | Nothing is added to any MCP frame. `relayed` travels only on the `mark-collected` HTTP body from `ajcrew-core` to its own gateway. |
 | Every new table and waiter is bounded in bytes and count | One field per held mark and one per-attempt set, both capped and dropped at settle (section 3). No waiter is added. |
 | No blocking probe runs on an event loop | There is no probe. `on_answered` reads the return of a write it already made, and the `completed` check reads ACP events the gateway already parses. |
 | Mixed old and new installs read silence as a drop | Each version mix ends in "deliver the completion" (section 5). |
@@ -142,20 +142,20 @@ This is #17684's position and costs one redundant turn per child on a stubbed `k
 
 One implementation PR, after #17684 merges, since it extends #17684's `mark-collected` route and `on_answered` contract.
 
-| Backend (`kirocrew-core`) | Gateway | Result |
+| Backend (`ajcrew-core`) | Gateway | Result |
 |---|---|---|
 | old | old or new | no mark on a brokered reply; completions delivered |
 | new | old | the old gateway does not read `relayed` and records nothing, since it records only `written: true`; completions delivered |
 | new | new | `relayed` mark held under the spawning attempt; confirmed on landing, revoked otherwise |
 
-The new-backend, old-gateway row depends on #17684's rule that a mark without `written: true` changes nothing. The implementation PR keeps that rule and pins that a body without `written: true` flags nothing under the predecessor contract. A gateway and its `kirocrew-core` normally share a version, so the mixed rows only occur during a restart.
+The new-backend, old-gateway row depends on #17684's rule that a mark without `written: true` changes nothing. The implementation PR keeps that rule and pins that a body without `written: true` flags nothing under the predecessor contract. A gateway and its `ajcrew-core` normally share a version, so the mixed rows only occur during a restart.
 
 The wire contracts #17684's spec marks as changeable until this issue (the `/api/spawn` inline fields, the commit body, `DeferredTool.on_answered`) change by an optional `relayed` field and a `call_id` field on the commit body, the `call_id` in the returned result text, and `on_answered` taking a reason instead of a bool. The states table in `docs/system-specs/modules/subagent.md` keeps its rows. Its commit trigger on the brokered path moves from "nothing" to "the spawning attempt's landing", and the implementation PR names that row.
 
 Phases:
 
 1. **Phase 1: `relayed` marks.** `on_answered` reports `relayed` for a pooled write that returned without error; `api_spawn_mark_collected` records it under the spawning attempt; `settle_turn` confirms it only with the matching `completed` update. Every engine that calls `note_turn_landed` also forwards the completed `spawn_sub_agents` call ids it saw: `turn_bracket.py`, `cron_turn.py`, the Telegram `turn_engine.py` and `task_executor.py`. Exit criteria: a brokered `spawn_sub_agents` call whose parent turn lands injects no completion turn; a stub killed after the backend's write, whose error frames let the turn land, injects every completion; one whose turn is cancelled, stopped or reaped after the backend's write injects every completion; a gateway without the field ignores it.
-2. **Phase 2: unblock stubbing `kirocrew-core`.** Remove the #18743 reference in `docs/system-specs/modules/subagent.md` (the pooled-backend line under the inline-collection section, added by #17684). Exit criteria: a live run with `kirocrew-core` stubbed, with a cron and a channel parent, matches #17684's unbrokered manual-verification table.
+2. **Phase 2: unblock stubbing `ajcrew-core`.** Remove the #18743 reference in `docs/system-specs/modules/subagent.md` (the pooled-backend line under the inline-collection section, added by #17684). Exit criteria: a live run with `ajcrew-core` stubbed, with a cron and a channel parent, matches #17684's unbrokered manual-verification table.
 
 Either phase can be abandoned alone. Without Phase 1, the system keeps #17684's behaviour.
 
@@ -167,4 +167,4 @@ Either phase can be abandoned alone. Without Phase 1, the system keeps #17684's 
 
 1. Should `relayed` and `written` collapse into one reason now that both are settled by landing? Keeping both preserves the record of how far a frame got, which helps when diagnosing a revoke. This document keeps both.
 2. The case in section 1.3 where kiro-cli reports a result `completed` but it never reaches the model is covered by neither design. It is out of scope here; a fix would belong in kiro-cli.
-3. Matching the `completed` update by `call_id` in the output text assumes kiro-cli passes `kirocrew-core`'s text through `rawOutput` unchanged, which `tool_result_events.py` reads today. If a backend other than kiro-cli summarizes tool output, the match fails and the mark is revoked: a duplicate, never a loss. The implementation PR records which harnesses pass the match.
+3. Matching the `completed` update by `call_id` in the output text assumes kiro-cli passes `ajcrew-core`'s text through `rawOutput` unchanged, which `tool_result_events.py` reads today. If a backend other than kiro-cli summarizes tool output, the match fails and the mark is revoked: a duplicate, never a loss. The implementation PR records which harnesses pass the match.

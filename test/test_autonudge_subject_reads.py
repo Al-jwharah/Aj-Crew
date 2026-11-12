@@ -15,17 +15,17 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import MONITOR_TERMINAL_REASON, AutoNudgeService, NudgeLoop
-from kiro_crew.autonudge_service import subject_reads, timers
-from kiro_crew.autonudge_service.subject_reads import (
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import MONITOR_TERMINAL_REASON, AutoNudgeService, NudgeLoop
+from aj_crew.autonudge_service import subject_reads, timers
+from aj_crew.autonudge_service.subject_reads import (
     SUBJECT_READ_SECS,
     _wake_fingerprint,
     hold_tick,
     sleep_until_cycle,
 )
-from kiro_crew.monitoring.models import MonitorOutcome
-from kiro_crew.probes import gh_pr
+from aj_crew.monitoring.models import MonitorOutcome
+from aj_crew.probes import gh_pr
 
 PR_URL = "https://github.com/acme/widgets/pull/7"
 
@@ -282,7 +282,7 @@ async def test_a_held_or_inactive_loop_is_not_read_during_its_sleep(slept, monke
 
 @pytest.fixture(autouse=True)
 def _enable(_floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    _floor_monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.fixture(autouse=True)

@@ -5,8 +5,8 @@
 
 # Vendored third-party code (llama-cpp-python, MIT) — upstream source we must
 # not modify; carries its own urllib use in optional multimodal helpers that
-# KiroCrew never calls. Mirrors the .woke.yml and lint excludes for _vendor.
-src/kiro_crew/_vendor/
+# Aj Crew never calls. Mirrors the .woke.yml and lint excludes for _vendor.
+src/aj_crew/_vendor/
 
 # Deliberately-vulnerable fixtures for the custom rules in semgrep/. They are
 # exercised ONLY by the `semgrep --test` harness step (which targets the

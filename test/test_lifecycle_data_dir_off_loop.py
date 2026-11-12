@@ -25,9 +25,9 @@ from unittest import mock
 
 import pytest
 
-import kiro_crew.apps.hooks_integration as hooks_mod
-import kiro_crew.apps.lifecycle as lifecycle_mod
-from kiro_crew.apps.lifecycle import LifecycleDispatcher
+import aj_crew.apps.hooks_integration as hooks_mod
+import aj_crew.apps.lifecycle as lifecycle_mod
+from aj_crew.apps.lifecycle import LifecycleDispatcher
 
 _APP = "data-dir-app"
 
@@ -73,7 +73,7 @@ def harness(tmp_path: Path):
         return True
 
     with (
-        mock.patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}),
+        mock.patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}),
         mock.patch.object(lifecycle_mod, "app_dir", lambda name: root),
         mock.patch.object(hooks_mod, "app_dir", lambda name: root),
         mock.patch.object(Path, "mkdir", _recording_mkdir),

@@ -15,8 +15,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.prompt_blocks import build_prompt_blocks
-from kiro_crew.slack.files import process_slack_files
+from aj_crew.acp.prompt_blocks import build_prompt_blocks
+from aj_crew.slack.files import process_slack_files
 
 
 def _png() -> bytes:

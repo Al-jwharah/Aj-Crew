@@ -35,7 +35,7 @@ const slots = [{
   running: true,
   last_message: 'Spawned 2 subagent(s).',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',
@@ -102,7 +102,7 @@ async function main() {
   const started = Date.now() / 1000 - 95
   for (const [id, label] of [['a1b2c3d4', LABEL], ['e5f6a7b8', '']]) {
     wsServer.send(JSON.stringify({ type: 'subagent_snapshot', data: {
-      slot: SLOT, id, agent: 'kirocrew', task: TASK, ...(label ? { label } : {}),
+      slot: SLOT, id, agent: 'ajcrew', task: TASK, ...(label ? { label } : {}),
       last_tool: 'Reading: src/uploader/retry.py', started, streaming: '', tool_count: 4,
     } }))
   }

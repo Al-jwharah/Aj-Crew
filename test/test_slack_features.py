@@ -1,4 +1,4 @@
-"""``kiro_crew.slack.features``: the Slack Code switches and code-channel defaults.
+"""``aj_crew.slack.features``: the Slack Code switches and code-channel defaults.
 
 Pins the shared contract other work codes against: the switch readers fail
 closed, the defaults normalize, and the resolution order for a new code-channel
@@ -12,10 +12,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.section_builders import _build_slack_config
-from kiro_crew.slack import features
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.section_builders import _build_slack_config
+from aj_crew.slack import features
+from aj_crew.testing.wait import async_wait_until
 
 _FOLDERS = [
     {"id": "aaaaaaaaaaaa", "name": "Dev", "parent_id": "", "project_dir": "/repo/dev"},
@@ -43,7 +43,7 @@ _FAKE_SCOPE = "fake:write"
 
 @pytest.fixture
 def fake_switch(monkeypatch: pytest.MonkeyPatch) -> str:
-    from kiro_crew import slack_manifest
+    from aj_crew import slack_manifest
 
     monkeypatch.setitem(slack_manifest.FEATURE_SCOPES, _FAKE, _FAKE_SCOPE)
     monkeypatch.setattr(slack_manifest, "FEATURES", tuple(slack_manifest.FEATURE_SCOPES))
@@ -57,7 +57,7 @@ def _slack(**switches: object) -> SimpleNamespace:
 
 class TestSwitches:
     def test_defaults_are_off(self) -> None:
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         assert features.code_channels_enabled(cfg) is False
         assert features.code_channel_defaults(cfg) == features.CodeChannelDefaults()
         assert features.code_channel_defaults(cfg).is_empty
@@ -80,7 +80,7 @@ class TestSwitches:
         assert features.manifest_features(_slack(not_registered=True)) == frozenset()
 
     def test_reader_accepts_full_config_or_slack_section(self) -> None:
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.slack = _build_slack_config({"code_channels": True})
         assert features.code_channels_toggle(cfg) is True
         assert features.code_channels_toggle(cfg.slack) is True
@@ -193,8 +193,8 @@ class TestResolution:
         assert got.folder_id is None
         assert got.folder_path == features.AUTO_FOLDER_NAME == "Code channels"
         assert got.folder_auto_create is True
-        assert (got.agent, got.agent_source) == ("kirocrew-conductor", "folder")
-        assert features.AUTO_FOLDER_AGENT == "kirocrew-conductor"
+        assert (got.agent, got.agent_source) == ("ajcrew-conductor", "folder")
+        assert features.AUTO_FOLDER_AGENT == "ajcrew-conductor"
         assert (got.project_dir, got.folder_missing) == (None, False)
 
     def test_an_existing_auto_folder_is_used_and_not_recreated(self) -> None:
@@ -378,7 +378,7 @@ class TestConnectProbe:
     def _run(self, client: _Client) -> None:
         import asyncio
 
-        from kiro_crew.slack import scope_probe
+        from aj_crew.slack import scope_probe
 
         asyncio.run(scope_probe.refresh_capabilities(client, probe_code_channels=True))
 
@@ -445,7 +445,7 @@ class TestReconnectHook:
         import asyncio
         from types import SimpleNamespace
 
-        from kiro_crew.slack import events, scope_probe
+        from aj_crew.slack import events, scope_probe
 
         calls: list[object] = []
 
@@ -454,9 +454,9 @@ class TestReconnectHook:
             probes.append(probe_code_channels)
 
         probes: list[bool] = []
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.slack = _build_slack_config({"code_channels": True})
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
         monkeypatch.setattr(scope_probe, "refresh_capabilities", _probe)
         orch = SimpleNamespace(
             dashboard_state=None, _socket_client=SimpleNamespace(message_listeners=[])

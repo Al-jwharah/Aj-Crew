@@ -1,4 +1,4 @@
-"""Tests for ``chat_folder_update`` on the kirocrew-dashboard server.
+"""Tests for ``chat_folder_update`` on the ajcrew-dashboard server.
 
 The tool renames a sidebar folder and sets its icon and color through the
 existing ``PATCH /api/chat/folders/{id}`` route. The tool cases run one
@@ -17,17 +17,17 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import mcp_dashboard
-from kiro_crew.dashboard.chat_folders import api_chat_folder_update
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.mcp_dashboard import TABLE
-from kiro_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.validation import ValidationError
+from aj_crew import mcp_dashboard
+from aj_crew.dashboard.chat_folders import api_chat_folder_update
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.mcp_dashboard import TABLE
+from aj_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.validation import ValidationError
 
 _FOLDERS = [
-    {"id": "aaaaaaaaaaaa", "name": "kirocrew", "parent_id": ""},
+    {"id": "aaaaaaaaaaaa", "name": "ajcrew", "parent_id": ""},
     {"id": "bbbbbbbbbbbb", "name": "0811", "parent_id": "aaaaaaaaaaaa"},
     {"id": "cccccccccccc", "name": "Travel", "parent_id": ""},
 ]
@@ -62,12 +62,12 @@ def _run(
 
 class TestWrites:
     def test_renames_by_path(self) -> None:
-        out, writes = _run({"folder": "kirocrew/0811", "name": "Sept"})
+        out, writes = _run({"folder": "ajcrew/0811", "name": "Sept"})
         (req,) = writes
         assert (req.method, req.path) == ("PATCH", "/api/chat/folders/bbbbbbbbbbbb")
         assert req.body == {"name": "Sept"}
         assert req.session_key == "dashboard:chat-1-100"
-        assert "kirocrew/0811" in out and "renamed to `Sept`" in out
+        assert "ajcrew/0811" in out and "renamed to `Sept`" in out
 
     def test_sets_icon_and_color_by_id(self) -> None:
         out, writes = _run({"folder": "cccccccccccc", "icon": "✈️", "color": "#22C55E"})
@@ -116,7 +116,7 @@ class TestRefusals:
         "args,code,error,why",
         [
             pytest.param(
-                {"folder": "kirocrew", "name": "Travel"},
+                {"folder": "ajcrew", "name": "Travel"},
                 "folder_name_exists",
                 "a sibling folder already has that name",
                 "cannot be told apart by path",
@@ -159,7 +159,7 @@ class TestRefusals:
         assert writes == []
 
     def test_name_too_long_after_redaction_is_refused(self) -> None:
-        with patch("kiro_crew.mcp_dashboard.redact", side_effect=lambda s: s + "x" * 200):
+        with patch("aj_crew.mcp_dashboard.redact", side_effect=lambda s: s + "x" * 200):
             out, writes = _run({"folder": "Travel", "name": "short"})
         assert out.startswith("Error:") and "too long after redaction" in out
         assert writes == []
@@ -173,10 +173,10 @@ class TestRefusals:
 
 
 def test_the_tool_is_blocked_for_channel_agents() -> None:
-    from kiro_crew.channel import CHANNEL_AGENT_BLOCKED_TOOLS, _blocked_tool_named
+    from aj_crew.channel import CHANNEL_AGENT_BLOCKED_TOOLS, _blocked_tool_named
 
     assert "chat_folder_update" in CHANNEL_AGENT_BLOCKED_TOOLS
-    assert _blocked_tool_named("kirocrew-dashboard___chat_folder_update") is True
+    assert _blocked_tool_named("ajcrew-dashboard___chat_folder_update") is True
 
 
 # -- The endpoint's sibling-name rule, decided under the folder-store lock --
@@ -243,7 +243,7 @@ async def _patch_folder(
     app.router.add_patch("/api/chat/folders/{id}", api_chat_folder_update)
     headers = {"X-Session-Key": caller_key}
     if internal:
-        headers |= {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "kirocrew-dashboard"}
+        headers |= {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "ajcrew-dashboard"}
     async with TestClient(TestServer(app)) as client:
         resp = await client.patch(f"/api/chat/folders/{fid}", json=body, headers=headers)
         return resp.status, await resp.json()
@@ -356,7 +356,7 @@ def test_the_move_tool_explains_a_same_name_refusal() -> None:
     )
     out = TABLE.call(
         "chat_folder_move",
-        {"folder": "kirocrew/0811", "new_parent": "root"},
+        {"folder": "ajcrew/0811", "new_parent": "root"},
         ToolContext(dash, _CALLER),
     )
     assert out.startswith("Error:") and "cannot be told" in out and "Rename one" in out

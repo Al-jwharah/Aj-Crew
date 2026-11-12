@@ -38,15 +38,15 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.autonudge_service.model import SERVICE_SHUTTING_DOWN_MESSAGE
-from kiro_crew.dashboard.handlers import autonudge as h
-from kiro_crew.monitoring.models import MonitorState
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.autonudge_service.model import SERVICE_SHUTTING_DOWN_MESSAGE
+from aj_crew.dashboard.handlers import autonudge as h
+from aj_crew.monitoring.models import MonitorState
 
 
 @pytest.fixture(autouse=True)
 def _enable(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.fixture(scope="session")
@@ -163,7 +163,7 @@ async def test_the_next_automatic_nudge_is_a_full_interval_after_the_manual_turn
 
     # Freeze the clock only for the re-arm, so the assertion is an equality
     # rather than a tolerance window a slow host could widen past.
-    monkeypatch.setattr("kiro_crew.autonudge.time.time", lambda: 1_700_000_000.0)
+    monkeypatch.setattr("aj_crew.autonudge.time.time", lambda: 1_700_000_000.0)
     svc.notify_turn_complete(loop.slot_key)
 
     assert loop.next_due_ts == 1_700_000_000.0 + 300
@@ -741,7 +741,7 @@ async def test_fire_now_refuses_closed_mutation_admission_without_arming(
     svc_base_dir,
 ) -> None:
     """The timer guard's no-op must never be reported as a successful fire."""
-    from kiro_crew.autonudge_service.model import SERVICE_SHUTTING_DOWN_MESSAGE
+    from aj_crew.autonudge_service.model import SERVICE_SHUTTING_DOWN_MESSAGE
 
     svc, loop = _svc_with_loop(svc_base_dir)
     svc._accepting_mutations = False
@@ -762,7 +762,7 @@ async def test_route_maps_the_shutdown_refusal_to_a_literal_503(
     monkeypatch, sel_mock: MagicMock
 ) -> None:
     """The HTTP arm preserves both the shutdown status and machine code."""
-    from kiro_crew.autonudge_service.model import SERVICE_SHUTTING_DOWN_MESSAGE
+    from aj_crew.autonudge_service.model import SERVICE_SHUTTING_DOWN_MESSAGE
 
     loop = NudgeLoop(id="lp-1", slot_key="chat-1-111", message="check", idle_secs=300)
     svc = _FakeSvc([loop])

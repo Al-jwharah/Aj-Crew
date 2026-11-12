@@ -28,17 +28,17 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state, stub_readonly_spec_publisher
 
-from kiro_crew.dashboard.handlers.side import (
+from aj_crew.dashboard.handlers.side import (
     api_side_close,
     api_side_open,
     api_side_queue_cancel,
     api_side_queue_edit,
     api_side_turn,
 )
-from kiro_crew.dashboard.side_state import MAX_SIDE_QUEUE, SideState
-from kiro_crew.dashboard.ws import broadcast_side_queue, broadcast_side_result
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard.side_state import MAX_SIDE_QUEUE, SideState
+from aj_crew.dashboard.ws import broadcast_side_queue, broadcast_side_result
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.fixture(autouse=True)
@@ -130,7 +130,7 @@ def _install_gated_stream(
         return "answer"
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side.stream_and_collect", _fake_stream
+        "aj_crew.dashboard.handlers.side.stream_and_collect", _fake_stream
     )
     return seen
 
@@ -476,7 +476,7 @@ async def test_a_stale_task_cannot_drain_a_newer_sides_queue(tmp_path, monkeypat
     close/reopen replaced the sidecar. Matching only on ``is_complete`` would let
     it pop the NEW side's queue and dispatch a turn the new run never asked for.
     """
-    from kiro_crew.dashboard.handlers.side import _drain_side_queue
+    from aj_crew.dashboard.handlers.side import _drain_side_queue
 
     state = _make_state(tmp_path)
     _capture_broadcasts(state)
@@ -488,7 +488,7 @@ async def test_a_stale_task_cannot_drain_a_newer_sides_queue(tmp_path, monkeypat
 
     dispatched: list[str] = []
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side._dispatch_side_turn",
+        "aj_crew.dashboard.handlers.side._dispatch_side_turn",
         lambda state, slot, question: dispatched.append(question) or "run-x",
     )
 
@@ -656,7 +656,7 @@ async def test_a_consumed_steer_is_settled_and_not_requeued(tmp_path, monkeypatc
         return "answer"
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side.stream_and_collect", _fake_stream
+        "aj_crew.dashboard.handlers.side.stream_and_collect", _fake_stream
     )
 
     app = _make_side_app(state)
@@ -675,7 +675,7 @@ async def test_a_failed_drain_puts_the_entry_back_instead_of_dropping_it(
 ):
     """The card is already retired on the client when the drain pops it, so a
     dispatch failure must return the text to the queue, not just report."""
-    from kiro_crew.dashboard.handlers.side import _drain_side_queue
+    from aj_crew.dashboard.handlers.side import _drain_side_queue
 
     state = _make_state(tmp_path)
     events = _capture_broadcasts(state)
@@ -689,7 +689,7 @@ async def test_a_failed_drain_puts_the_entry_back_instead_of_dropping_it(
         raise RuntimeError("dispatch exploded")
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side._dispatch_side_turn", _boom
+        "aj_crew.dashboard.handlers.side._dispatch_side_turn", _boom
     )
 
     _drain_side_queue(state, parent, "run-1")
@@ -701,7 +701,7 @@ async def test_a_failed_drain_puts_the_entry_back_instead_of_dropping_it(
 
 @pytest.mark.asyncio
 async def test_a_failed_drain_preserves_a_requeued_steers_identity(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.handlers.side import _drain_side_queue
+    from aj_crew.dashboard.handlers.side import _drain_side_queue
 
     state = _make_state(tmp_path)
     events = _capture_broadcasts(state)
@@ -714,7 +714,7 @@ async def test_a_failed_drain_preserves_a_requeued_steers_identity(tmp_path, mon
     def _boom(*_a, **_k):
         raise RuntimeError("dispatch exploded")
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side._dispatch_side_turn", _boom)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side._dispatch_side_turn", _boom)
 
     _drain_side_queue(state, parent, "run-1")
 
@@ -805,7 +805,7 @@ async def test_a_stale_consumption_echo_cannot_settle_a_replacement_sidecar(
     settle the NEW sidecar's pending steer would mean that steer is never
     requeued — the question disappears with no card and no answer.
     """
-    from kiro_crew.dashboard.handlers.side import _run_side_turn
+    from aj_crew.dashboard.handlers.side import _run_side_turn
 
     state = _make_state(tmp_path)
     _capture_broadcasts(state)
@@ -835,7 +835,7 @@ async def test_a_stale_consumption_echo_cannot_settle_a_replacement_sidecar(
         return "answer"
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side.stream_and_collect", _fake_stream
+        "aj_crew.dashboard.handlers.side.stream_and_collect", _fake_stream
     )
 
     await _run_side_turn(state, parent, "run-old", "q", is_first_turn=True)
@@ -953,7 +953,7 @@ async def test_ledger_capacity_evicts_terminal_entries_but_never_a_pending_one(t
     Terminal entries are the only safe thing to evict, and declining is correct
     only when every slot is genuinely in flight.
     """
-    from kiro_crew.dashboard.side_state import (
+    from aj_crew.dashboard.side_state import (
         MAX_STEER_LEDGER,
         STEER_CONSUMED,
         STEER_PENDING,
@@ -992,7 +992,7 @@ async def test_an_unproven_steer_is_not_committed_so_it_cannot_duplicate(tmp_pat
     requeued the entry and the queue ran it as a real turn — so the same question
     appeared twice: once as the optimistic chip, once as the genuine submission.
     """
-    from kiro_crew.dashboard.side_state import STEER_PENDING
+    from aj_crew.dashboard.side_state import STEER_PENDING
 
     side = SideState(open=True)
     side.last_run_id = "run-1"
@@ -1024,7 +1024,7 @@ async def test_an_unproven_steer_is_not_committed_so_it_cannot_duplicate(tmp_pat
 async def test_the_head_insert_is_bounded_like_every_other_queue_write(tmp_path):
     """`queue_insert_front` is bounded like every other queue write, so repeated
     unconsumed steers cannot grow the queue past MAX_SIDE_QUEUE."""
-    from kiro_crew.dashboard.side_state import MAX_SIDE_QUEUE
+    from aj_crew.dashboard.side_state import MAX_SIDE_QUEUE
 
     side = SideState(open=True)
     for i in range(MAX_SIDE_QUEUE):
@@ -1046,7 +1046,7 @@ async def test_a_steer_is_declined_when_its_requeue_could_not_fit(tmp_path):
     delivered, so the refusal belongs at acceptance — where the caller can fall
     through to the queue and the user still sees an answer.
     """
-    from kiro_crew.dashboard.side_state import MAX_SIDE_QUEUE
+    from aj_crew.dashboard.side_state import MAX_SIDE_QUEUE
 
     side = SideState(open=True)
     # One slot left.
@@ -1074,7 +1074,7 @@ def test_every_queued_steer_response_hands_back_a_correlation_handle():
     import ast
     import inspect
 
-    from kiro_crew.dashboard.handlers import side as side_mod
+    from aj_crew.dashboard.handlers import side as side_mod
 
     tree = ast.parse(inspect.getsource(side_mod.api_side_turn))
     offenders = []
@@ -1109,7 +1109,7 @@ async def test_a_requeued_steer_card_names_the_steer_it_came_from(tmp_path, monk
     own RAW text, so cancelling a credential-bearing steer would restore the scrubbed
     rendering — permanently corrupted.
     """
-    from kiro_crew.dashboard.handlers.side import _requeue_unconsumed_side_steers
+    from aj_crew.dashboard.handlers.side import _requeue_unconsumed_side_steers
 
     state = _make_state(tmp_path)
     frames = _capture_broadcasts(state)
@@ -1152,7 +1152,7 @@ async def test_a_new_submit_does_not_overtake_a_queue_on_an_idle_side(tmp_path, 
         return "run-next"
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side._dispatch_side_turn", _fake_dispatch
+        "aj_crew.dashboard.handlers.side._dispatch_side_turn", _fake_dispatch
     )
 
     app = _make_side_app(state)
@@ -1178,8 +1178,8 @@ async def test_an_auth_failure_holds_the_queue_instead_of_draining_it(tmp_path, 
     "hold the queue intact instead"); ``/side`` must not disagree. An unconsumed steer is
     still requeued — it was never delivered either — so only the DISPATCH is withheld.
     """
-    from kiro_crew.acp.client import AcpAuthRequired
-    from kiro_crew.dashboard.handlers.side import _run_side_turn
+    from aj_crew.acp.client import AcpAuthRequired
+    from aj_crew.dashboard.handlers.side import _run_side_turn
 
     state = _make_state(tmp_path)
     _capture_broadcasts(state)
@@ -1203,10 +1203,10 @@ async def test_an_auth_failure_holds_the_queue_instead_of_draining_it(tmp_path, 
         raise AcpAuthRequired("kiro-cli is not signed in")
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.side.stream_and_collect", _auth_fails
+        "aj_crew.dashboard.handlers.side.stream_and_collect", _auth_fails
     )
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner._mark_kiro_signed_out", lambda *_a, **_k: None
+        "aj_crew.dashboard.chat_runner._mark_kiro_signed_out", lambda *_a, **_k: None
     )
 
     await _run_side_turn(state, parent, "run-auth", "q", is_first_turn=True)
@@ -1227,7 +1227,7 @@ async def test_an_ordinary_submit_cannot_spend_a_slot_reserved_for_a_steer(tmp_p
     requeue then had nowhere to land, losing a question already reported as
     delivered.
     """
-    from kiro_crew.dashboard.side_state import MAX_SIDE_QUEUE
+    from aj_crew.dashboard.side_state import MAX_SIDE_QUEUE
 
     side = SideState(open=True)
     sid = side.steer_register("in flight")
@@ -1399,7 +1399,7 @@ def test_a_bare_kas_echo_lets_the_sidecar_render_its_steer():
     learned it had been delivered. That is the INVERSE of the main chat's symptom on
     the identical input, which is why it earns its own pin at this level.
     """
-    from kiro_crew.dashboard.side_state import STEER_CONSUMED, SideState
+    from aj_crew.dashboard.side_state import STEER_CONSUMED, SideState
 
     side = SideState(open=True)
     side.steer_register("use QUIC")

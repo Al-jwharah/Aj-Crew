@@ -66,7 +66,7 @@ for (const theme of ['dark', 'light']) {
   // The palette is asserted, not assumed: an unset preference resolves to the
   // HOST's mode, so a frame can otherwise claim a theme it does not carry.
   const applied = await page.evaluate(() => document.documentElement.getAttribute('data-theme'))
-  if (applied !== (theme === 'light' ? 'kiro-light' : 'kiro-dark')) {
+  if (applied !== (theme === 'light' ? 'aj-light' : 'aj-dark')) {
     fail(theme, `data-theme=${applied} does not match the frame name`)
   }
 

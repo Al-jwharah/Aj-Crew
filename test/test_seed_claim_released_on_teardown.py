@@ -2,7 +2,7 @@
 synchronous one that bypasses the client's shutdown.
 
 ``AcpClient.shutdown`` hands back the ``settings.local.json`` registrations a
-client took in :mod:`kiro_crew.acp.seed_provenance` (``_discard_claude_settings_seed``
+client took in :mod:`aj_crew.acp.seed_provenance` (``_discard_claude_settings_seed``
 and ``_reset_state``). A provider torn down through ``_dispatch_hard_kill`` reaches
 ``session_pid._sync_kill_provider`` instead and never runs ``shutdown``, so that
 path has to hand them back itself. Without that hand-back the client's live owner
@@ -27,15 +27,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import model_registry as mr
-from kiro_crew import runtime_ownership as ro
-from kiro_crew import session_pid
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp import seed_provenance as sp
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-from kiro_crew.session_pid import _sync_kill_provider
+from aj_crew import model_registry as mr
+from aj_crew import runtime_ownership as ro
+from aj_crew import session_pid
+from aj_crew.acp import client as acp_client
+from aj_crew.acp import seed_provenance as sp
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.session_pid import _sync_kill_provider
 
 _SERVED = [
     "global.anthropic.claude-opus-5[1m]",
@@ -57,7 +57,7 @@ _LIVE_START_ID = "live-process-incarnation"
 def _pinned_kiro_cli_version(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
     """Pin the kiro-cli release the spec ``permissions`` gate believes is installed."""
     _floor_monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
 
@@ -314,7 +314,7 @@ class TestTeardownTouchesNothingItDoesNotHold:
     def test_a_sibling_teardown_does_not_release_the_owners_claim(self, tmp_path, monkeypatch):
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         owner = _client(tmp_path, model=_SERVED[0])

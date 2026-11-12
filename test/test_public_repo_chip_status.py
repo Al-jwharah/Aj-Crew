@@ -14,8 +14,8 @@ import time
 
 import pytest
 
-import kiro_crew.dashboard.handlers.source_providers as source
-from kiro_crew.dashboard.state import _project_source_links
+import aj_crew.dashboard.handlers.source_providers as source
+from aj_crew.dashboard.state import _project_source_links
 
 PR_URL = "https://github.com/acme/repo/pull/7"
 PR_URL_2 = "https://github.com/other/proj/pull/3"
@@ -77,7 +77,7 @@ def _clear_caches():
     source._check_update_callbacks.clear()
     # Reset the public-status-grant SEL dedup so one test's grant does not
     # suppress another's audit assertion.
-    import kiro_crew.dashboard.state as _state_mod
+    import aj_crew.dashboard.state as _state_mod
 
     _state_mod._PUBLIC_STATUS_GRANT_AUDIT.clear()
     _state_mod._PUBLIC_STATUS_DENY_AUDIT.clear()
@@ -639,7 +639,7 @@ def test_non_owner_public_status_grant_is_sel_audited(monkeypatch):
     # is an access-control decision and MUST leave an SEL allow event
     # (AUTOSDE backend-security-controls: grants, not only denials). Owner and
     # app-token paths do NOT go through this grant, so they emit nothing here.
-    import kiro_crew.dashboard.state as state_mod
+    import aj_crew.dashboard.state as state_mod
 
     state_mod._PUBLIC_STATUS_GRANT_AUDIT.clear()
     state_mod._PUBLIC_STATUS_DENY_AUDIT.clear()

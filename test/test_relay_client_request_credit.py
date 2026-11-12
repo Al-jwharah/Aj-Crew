@@ -38,17 +38,17 @@ from relay_client_helpers import (
     valid_message,
 )
 
-from kiro_crew.relay_client import ingress as ingress_module
-from kiro_crew.relay_client.client import RelayClient
-from kiro_crew.relay_client.connection import RelayTimings
-from kiro_crew.relay_client.ingress import RelayedRequest
-from kiro_crew.relay_client.protocol import (
+from aj_crew.relay_client import ingress as ingress_module
+from aj_crew.relay_client.client import RelayClient
+from aj_crew.relay_client.connection import RelayTimings
+from aj_crew.relay_client.ingress import RelayedRequest
+from aj_crew.relay_client.protocol import (
     BODY_CHUNK_RAW_BYTES,
     REQUEST_CREDIT_INITIAL_BYTES,
 )
-from kiro_crew.relay_client.streams import HttpStream
-from kiro_crew.relay_client.token_source import HostCredential
-from kiro_crew.testing.wait import async_wait_until, await_until, until_parked
+from aj_crew.relay_client.streams import HttpStream
+from aj_crew.relay_client.token_source import HostCredential
+from aj_crew.testing.wait import async_wait_until, await_until, until_parked
 
 pytestmark = pytest.mark.asyncio
 

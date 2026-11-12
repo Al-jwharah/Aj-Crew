@@ -13,7 +13,7 @@
  * which a builtin page mounts for itself via `AppScopedApiProvider`; app identity
  * is published for every builtin page by BuiltinAppRoute).
  *
- * Backend contract: see kiro_crew/apps/builtins/workflows/server.py and the run
+ * Backend contract: see aj_crew/apps/builtins/workflows/server.py and the run
  * event schema in docs/system-specs/modules/workflows.md.
  */
 import { useCallback, useMemo, useRef, useState } from 'react'
@@ -36,7 +36,7 @@ import { i18nT } from '../../i18n/t'
 export { groupByPhase, latestBudget }
 export type { WfEvent, AgentRow, PhaseGroup }
 
-// Proxied base for the workflows builtin-app backend (KiroCrew reverse-proxies
+// Proxied base for the workflows builtin-app backend (Aj Crew reverse-proxies
 // /apps/workflows/api/* to the app's HTTP server). A refusal throws the shared
 // ApiError, so the page shows the server's sentence and can read its `code`.
 const API_BASE = '/apps/workflows/api'

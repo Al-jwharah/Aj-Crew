@@ -3,7 +3,7 @@
 The GitHub provider stream's first slice: the per-operation **instance data**
 for every operation the campaign tracks on GitHub, plus the GitHub-specific
 **wire parsing** that reads GitHub's own API surface. This is the owning doc for
-`src/kiro_crew/connections/vendors/github/`.
+`src/aj_crew/connections/vendors/github/`.
 
 Scope note: this slice is data and GitHub-specific parsing only. It builds no
 request, holds no credential, and performs no I/O. Real authorization and
@@ -12,7 +12,7 @@ interfaces; a test double is never a production-ready claim. What this slice
 consumes from single sources it does not own:
 
 - the shared control plane's `Effect` vocabulary and its RUN-01 `ErrorClass`
-  taxonomy, from `kiro_crew.connections.control_plane` (the seam this stream
+  taxonomy, from `aj_crew.connections.control_plane` (the seam this stream
   stacks on); the manifest-entry field schema, from
   [connector-capability-manifest.md](connector-capability-manifest.md);
 - the governance scope catalog, from [governance.md](governance.md) — this
@@ -45,7 +45,7 @@ Two invariants are enforced at import time, fail-closed, the same shape the
 governance engine uses for an unknown matcher:
 
 - **Every `policy` value is `None` or an exact-string member of the live
-  `kiro_crew.platform.governance.SCOPE_CATALOG`.** `None` means that layer
+  `aj_crew.platform.governance.SCOPE_CATALOG`.** `None` means that layer
   imposes no additional scope; a non-member fails the import. This stream
   registers no scope.
 - **A `read` effect carries the `NONE_READ` idempotency class, and a mutating

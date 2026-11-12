@@ -112,7 +112,7 @@ class FakeMarketClient:
     calls: list[str] = field(default_factory=list)
 
     def resolve_install(self, ref: str, version: int | None) -> Any:
-        from kiro_crew.apps.marketplace_install import ResolvedApp
+        from aj_crew.apps.marketplace_install import ResolvedApp
 
         self.calls.append("resolve")
         return ResolvedApp(
@@ -127,7 +127,7 @@ class FakeMarketClient:
         )
 
     def get_download(self, ref: str, version: int) -> Any:
-        from kiro_crew.apps.marketplace_install import ListingDownload
+        from aj_crew.apps.marketplace_install import ListingDownload
 
         self.calls.append("download")
         return ListingDownload(
@@ -148,7 +148,7 @@ def _tree(root: Path) -> set[str]:
 
 
 def _outside_staging(home: Path) -> set[str]:
-    from kiro_crew.apps.marketplace_install import market_staging_root
+    from aj_crew.apps.marketplace_install import market_staging_root
 
     staging = market_staging_root()
     return {
@@ -184,7 +184,7 @@ _HOSTILE = {
 
 @pytest.mark.parametrize("case", sorted(_HOSTILE))
 def test_hostile_zip_is_refused_and_nothing_lands_outside_staging(case, app_home, tmp_path):
-    from kiro_crew.apps.marketplace_install import (
+    from aj_crew.apps.marketplace_install import (
         MarketInstallError,
         market_staging_root,
         prepare_market_install,
@@ -204,7 +204,7 @@ def test_hostile_zip_is_refused_and_nothing_lands_outside_staging(case, app_home
 
 
 def test_too_many_entries_is_refused(app_home):
-    from kiro_crew.apps.marketplace_install import MarketInstallError, prepare_market_install
+    from aj_crew.apps.marketplace_install import MarketInstallError, prepare_market_install
 
     extra = [(_entry(f"many/{i}.txt"), b"x") for i in range(2001)]
     client = FakeMarketClient(payload=_zip_with(extra))
@@ -215,7 +215,7 @@ def test_too_many_entries_is_refused(app_home):
 
 def test_under_declared_entry_count_is_refused(app_home):
     """The end record says 5 entries; the central directory really holds 2,006."""
-    from kiro_crew.apps.marketplace_install import MarketInstallError, prepare_market_install
+    from aj_crew.apps.marketplace_install import MarketInstallError, prepare_market_install
 
     raw = bytearray(_zip_with([(_entry(f"many/{i}.txt"), b"x") for i in range(2001)]))
     eocd = raw.rfind(b"PK\x05\x06")
@@ -228,7 +228,7 @@ def test_under_declared_entry_count_is_refused(app_home):
 
 
 def test_sha256_mismatch_is_refused_before_unpack(app_home):
-    from kiro_crew.apps.marketplace_install import (
+    from aj_crew.apps.marketplace_install import (
         MarketInstallError,
         market_staging_root,
         prepare_market_install,
@@ -246,7 +246,7 @@ def test_sha256_mismatch_is_refused_before_unpack(app_home):
 
 
 def test_download_hash_that_differs_from_resolved_set_is_refused(app_home):
-    from kiro_crew.apps.marketplace_install import MarketInstallError, prepare_market_install
+    from aj_crew.apps.marketplace_install import MarketInstallError, prepare_market_install
 
     client = FakeMarketClient(payload=_zip(_app_files()), download_sha="1" * 64)
     with pytest.raises(MarketInstallError) as err:
@@ -256,7 +256,7 @@ def test_download_hash_that_differs_from_resolved_set_is_refused(app_home):
 
 
 def test_oversized_download_is_refused_while_streaming(app_home):
-    from kiro_crew.apps.marketplace_install import MarketInstallError, prepare_market_install
+    from aj_crew.apps.marketplace_install import MarketInstallError, prepare_market_install
 
     payload = b"\0" * (25 * 1024 * 1024 + 1)
     client = FakeMarketClient(payload=payload)
@@ -267,7 +267,7 @@ def test_oversized_download_is_refused_while_streaming(app_home):
 
 @pytest.mark.parametrize("url", ["http://downloads.example.test/signed", "file:///x"])
 def test_signed_url_must_be_https(url, app_home):
-    from kiro_crew.apps.marketplace_install import MarketInstallError, prepare_market_install
+    from aj_crew.apps.marketplace_install import MarketInstallError, prepare_market_install
 
     client = FakeMarketClient(payload=_zip(_app_files()), url=url)
     with pytest.raises(MarketInstallError) as err:
@@ -277,7 +277,7 @@ def test_signed_url_must_be_https(url, app_home):
 
 
 def test_confirm_data_says_permissions_are_declared_not_enforced(app_home):
-    from kiro_crew.apps.marketplace_install import prepare_market_install
+    from aj_crew.apps.marketplace_install import prepare_market_install
 
     payload = _zip(_app_files())
     prepared = prepare_market_install(FakeMarketClient(payload=payload), REF)
@@ -312,7 +312,7 @@ _MCP_SERVER = {"tickets": {"command": "node", "args": ["server.js"]}}
     ["undeclared_cron", "undeclared_mcp_server", "undeclared_agent", "cron_prefix_only"],
 )
 def test_folder_capability_missing_from_resolved_permissions_is_refused(case, app_home):
-    from kiro_crew.apps.marketplace_install import (
+    from aj_crew.apps.marketplace_install import (
         MarketInstallError,
         market_staging_root,
         prepare_market_install,
@@ -342,7 +342,7 @@ def test_folder_capability_missing_from_resolved_permissions_is_refused(case, ap
 
 
 def test_declared_mcp_server_is_listed_in_confirm(app_home):
-    from kiro_crew.apps.marketplace_install import prepare_market_install
+    from aj_crew.apps.marketplace_install import prepare_market_install
 
     files = _app_files(_manifest(mcpServers=_MCP_SERVER))
     files["server.js"] = b"// server\n"
@@ -359,9 +359,9 @@ def test_declared_mcp_server_is_listed_in_confirm(app_home):
 
 
 def test_fresh_marketplace_install_is_disabled_and_registers_nothing(app_home, monkeypatch):
-    from kiro_crew.apps import backend, bridges, bridges_crons, manager
-    from kiro_crew.apps.manager import _read_installed, get_app
-    from kiro_crew.apps.marketplace_install import complete_market_install, prepare_market_install
+    from aj_crew.apps import backend, bridges, bridges_crons, manager
+    from aj_crew.apps.manager import _read_installed, get_app
+    from aj_crew.apps.marketplace_install import complete_market_install, prepare_market_install
 
     sources_written: list[str] = []
     real_write = manager._write_installed
@@ -401,11 +401,11 @@ def test_fresh_marketplace_install_is_disabled_and_registers_nothing(app_home, m
     assert meta.sourceUrl == ""
     # No cron file, no backend process, no agent or skill links.
     assert not bridges_crons._app_crons_path(APP_NAME).exists()
-    from kiro_crew.apps.backend_runtime import tracking
+    from aj_crew.apps.backend_runtime import tracking
 
     assert APP_NAME not in tracking._processes
     assert tracking.get_app_backend_port(APP_NAME) is None
-    # The staging copy is gone; Kiro Crew keeps its own.
+    # The staging copy is gone; Aj Crew keeps its own.
     assert not staging_dir.exists()
     # The first durable record already names the listing: no record ever
     # names the staging folder, which a local-folder grant would admit.
@@ -413,8 +413,8 @@ def test_fresh_marketplace_install_is_disabled_and_registers_nothing(app_home, m
 
 
 def test_install_time_trust_check_uses_the_listing_coordinate(app_home):
-    from kiro_crew.apps.manager import get_app
-    from kiro_crew.apps.marketplace_install import complete_market_install, prepare_market_install
+    from aj_crew.apps.manager import get_app
+    from aj_crew.apps.marketplace_install import complete_market_install, prepare_market_install
 
     _write_agent_config(
         app_home,
@@ -432,7 +432,7 @@ def test_install_time_trust_check_uses_the_listing_coordinate(app_home):
 
 
 def test_malformed_market_source_is_refused_by_install_app(app_home, tmp_path):
-    from kiro_crew.apps.manager import get_app, install_app
+    from aj_crew.apps.manager import get_app, install_app
 
     src = tmp_path / "src" / APP_NAME
     src.mkdir(parents=True)
@@ -446,8 +446,8 @@ def test_malformed_market_source_is_refused_by_install_app(app_home, tmp_path):
 
 
 def test_install_without_explicit_yes_installs_nothing(app_home):
-    from kiro_crew.apps.manager import get_app
-    from kiro_crew.apps.marketplace_install import complete_market_install, prepare_market_install
+    from aj_crew.apps.manager import get_app
+    from aj_crew.apps.marketplace_install import complete_market_install, prepare_market_install
 
     prepared = prepare_market_install(FakeMarketClient(payload=_zip(_app_files())), REF)
     result = complete_market_install(prepared, confirmed=False)
@@ -458,8 +458,8 @@ def test_install_without_explicit_yes_installs_nothing(app_home):
 
 
 def test_listing_name_must_match_manifest_name(app_home):
-    from kiro_crew.apps.manager import get_app
-    from kiro_crew.apps.marketplace_install import complete_market_install, prepare_market_install
+    from aj_crew.apps.manager import get_app
+    from aj_crew.apps.marketplace_install import complete_market_install, prepare_market_install
 
     payload = _zip(_app_files(_manifest(name="other-app")))
     prepared = prepare_market_install(FakeMarketClient(payload=payload), REF)
@@ -481,7 +481,7 @@ def _install_market_record(tmp_path: Path, source: str = f"market:{REF}@3") -> N
     Built without the marketplace installer on purpose, so this contract is
     pinned at the trust gate itself, whichever installer wrote the record.
     """
-    from kiro_crew.apps.manager import _read_installed, _write_installed, install_app
+    from aj_crew.apps.manager import _read_installed, _write_installed, install_app
 
     src = tmp_path / "market-src" / APP_NAME
     src.mkdir(parents=True)
@@ -503,7 +503,7 @@ def _install_market_record(tmp_path: Path, source: str = f"market:{REF}@3") -> N
 
 @pytest.mark.parametrize("source", ["market:x", "market:acme/x", f"market:{REF}@0", "market:"])
 def test_malformed_market_source_is_denied_even_with_local_trust(source, app_home, tmp_path):
-    from kiro_crew.apps.manager import enable_app, get_app
+    from aj_crew.apps.manager import enable_app, get_app
 
     _write_agent_config(app_home, {"apps_allow_third_party": False})
     _install_market_record(tmp_path, source=source)
@@ -526,7 +526,7 @@ def test_malformed_market_source_is_denied_even_with_local_trust(source, app_hom
 
 
 def test_local_trust_grant_does_not_admit_a_marketplace_app(app_home, tmp_path):
-    from kiro_crew.apps.manager import enable_app, get_app
+    from aj_crew.apps.manager import enable_app, get_app
 
     _write_agent_config(app_home, {"apps_allow_third_party": False})
     _install_market_record(tmp_path)
@@ -550,8 +550,8 @@ def test_local_trust_grant_does_not_admit_a_marketplace_app(app_home, tmp_path):
 
 
 def test_marketplace_app_offers_its_own_trust_coordinate(app_home, tmp_path):
-    from kiro_crew.apps.manager import get_app
-    from kiro_crew.apps.registry import resolve_installed_trust_repository
+    from aj_crew.apps.manager import get_app
+    from aj_crew.apps.registry import resolve_installed_trust_repository
 
     _write_agent_config(app_home, {"apps_allow_third_party": False})
     _install_market_record(tmp_path)
@@ -564,7 +564,7 @@ def test_marketplace_app_offers_its_own_trust_coordinate(app_home, tmp_path):
 
 
 def test_per_app_marketplace_grant_admits_the_app(app_home, tmp_path):
-    from kiro_crew.apps.manager import enable_app
+    from aj_crew.apps.manager import enable_app
 
     _write_agent_config(app_home, {"apps_allow_third_party": False})
     _install_market_record(tmp_path)

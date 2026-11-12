@@ -53,7 +53,7 @@ const guides = params.get('guides') === '1'
  * top-edge rule does to it, which the three-line prompts cannot show.
  */
 const tall = params.get('tall') === '1'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 /**
  * Deliberately MULTI-LINE prompts. A one-line prompt is the single case where

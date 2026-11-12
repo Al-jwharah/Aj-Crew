@@ -14,13 +14,13 @@ import json
 
 import conductor_agent_checks
 
-from kiro_crew import agent, subagent
-from kiro_crew.agent_files import (
+from aj_crew import agent, subagent
+from aj_crew.agent_files import (
     OWNED_KIRO_AGENT_FILES,
     SECURITY_CONDUCTOR_AGENT_FILENAME,
 )
-from kiro_crew.agent_sdk.drivers.acp import derived_agent_permissions
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.agent_sdk.drivers.acp import derived_agent_permissions
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 #: A release that accepts a spec ``permissions`` block, and one that refuses it,
 #: expressed against the floor so raising it cannot strand these tests.
@@ -33,13 +33,13 @@ def _pin_spec_permissions_cli(monkeypatch, which):
     """Pin what the shared writer gate believes the installed kiro-cli is.
 
     ``_write_derived_permissions`` reads ``installed_kiro_cli_version``
-    function-locally from ``kiro_crew.kiro_cli``, so the patch lands there.
+    function-locally from ``aj_crew.kiro_cli``, so the patch lands there.
     Without it CI's absent binary reads as "unknown" and the field is withheld,
     failing a shared permissions assertion for a host reason. ``which`` is
     ``"accepts"``, ``"refuses"`` or ``"unknown"``.
     """
     version = {"accepts": _ACCEPTS, "refuses": _REFUSES, "unknown": None}[which]
-    monkeypatch.setattr("kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: version)
+    monkeypatch.setattr("aj_crew.kiro_cli.installed_kiro_cli_version", lambda: version)
 
 
 def _stub_environment(
@@ -51,21 +51,21 @@ def _stub_environment(
         agent,
         "build_agent_config",
         lambda: {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "prompt": "file://x",
             "mcpServers": {
-                "kirocrew-core": {"command": "/resolved/kirocrew", "args": ["mcp-core"]},
+                "ajcrew-core": {"command": "/resolved/ajcrew", "args": ["mcp-core"]},
                 "builder-mcp": {"command": "/x/builder", "args": []},
             },
-            "tools": ["fs_write", "@kirocrew-core"],
-            "allowedTools": ["@kirocrew-core"],
+            "tools": ["fs_write", "@ajcrew-core"],
+            "allowedTools": ["@ajcrew-core"],
             "permissions": _INHERITED_PERMISSIONS,
         },
     )
     monkeypatch.setattr(
         agent,
-        "_kirocrew_mcp_invocation",
-        lambda sub: ("/resolved/kirocrew", [sub]),
+        "_ajcrew_mcp_invocation",
+        lambda sub: ("/resolved/ajcrew", [sub]),
     )
     monkeypatch.setattr(agent, "_may_auto_approve", may_auto_approve or (lambda ref: True))
 
@@ -85,7 +85,7 @@ class TestSecurityConductorInstaller(
 
     def test_identity_and_charter(self, tmp_path, monkeypatch):
         data = self._install(tmp_path, monkeypatch)
-        assert data["name"] == "kirocrew-security-conductor"
+        assert data["name"] == "ajcrew-security-conductor"
         prompt = " ".join(data["prompt"].split())
         assert "ONE security audit on ONE target" in prompt
         assert "security-conductor" in prompt  # the skill is the procedure
@@ -99,7 +99,7 @@ class TestSecurityConductorInstaller(
         """A conductor is dispatched by name by an operator, never offered in a
         roster: advertising it invites a caller to hand it work it cannot do,
         since it has no file-writing tool."""
-        assert "kirocrew-security-conductor" in subagent.UNADVERTISED_AGENTS
+        assert "ajcrew-security-conductor" in subagent.UNADVERTISED_AGENTS
 
     def test_prompt_names_the_three_child_roles(self, tmp_path, monkeypatch):
         """The fleet's shape is the design: an auditor per surface, an
@@ -108,7 +108,7 @@ class TestSecurityConductorInstaller(
         prompt = " ".join(self._install(tmp_path, monkeypatch)["prompt"].split())
         for role in ("Auditor", "Verifier", "Fixer"):
             assert role in prompt, role
-        assert "kirocrew-prepare-pr" in prompt  # the fixer's own procedure
+        assert "ajcrew-prepare-pr" in prompt  # the fixer's own procedure
 
     def test_prompt_closes_a_child_once_its_item_is_terminal(self, tmp_path, monkeypatch):
         """Four child roles reach a terminal verdict and the loop is stopped for each
@@ -189,26 +189,26 @@ class TestSecurityConductorInstaller(
         auditors' findings -- on unattended cycles."""
         data = self._install(tmp_path, monkeypatch)
         allowed = set(data["allowedTools"])
-        assert "@kirocrew-dashboard/session_create" in allowed
-        assert "@kirocrew-dashboard/session_read_message" in allowed
+        assert "@ajcrew-dashboard/session_create" in allowed
+        assert "@ajcrew-dashboard/session_read_message" in allowed
         # The roster read: narrower than the transcript read above, and asked on
         # every unattended cycle, so it is granted rather than gated.
-        assert "@kirocrew-dashboard/session_status" in allowed
+        assert "@ajcrew-dashboard/session_status" in allowed
         # A dispatcher does not manage folders (rfc-crewmate-workers-under-the-crewmate.md).
         assert not [g for g in allowed if "chat_folder_" in g]
         for gated in (
-            "@kirocrew-dashboard/session_send",
+            "@ajcrew-dashboard/session_send",
             # The fan-out write, withheld on session_send's own reason: the
             # fan-out changes how many sessions ingested text reaches, not
             # whether anything bounds what is sent.
-            "@kirocrew-dashboard/session_broadcast",
-            "@kirocrew-dashboard/session_stop",
-            "@kirocrew-dashboard/chat_folder_move_session",
-            "@kirocrew-dashboard",
+            "@ajcrew-dashboard/session_broadcast",
+            "@ajcrew-dashboard/session_stop",
+            "@ajcrew-dashboard/chat_folder_move_session",
+            "@ajcrew-dashboard",
             "execute_bash",
         ):
             assert gated not in allowed, gated
-        assert "@kirocrew-dashboard" in data["tools"]  # mounted, so gated verbs still work
+        assert "@ajcrew-dashboard" in data["tools"]  # mounted, so gated verbs still work
         assert "execute_bash" in data["tools"]
 
     def test_core_grants_are_named_verbs_never_the_whole_server(self, tmp_path, monkeypatch):
@@ -218,19 +218,19 @@ class TestSecurityConductorInstaller(
         under a session-level trust grant."""
         data = self._install(tmp_path, monkeypatch)
         allowed = set(data["allowedTools"])
-        assert "@kirocrew-core/monitor_start" in allowed
-        assert "@kirocrew-core/resource_status" in allowed
-        assert "@kirocrew-core/session_ledger_record" in allowed
-        assert "@kirocrew-core/ask_question" in allowed
+        assert "@ajcrew-core/monitor_start" in allowed
+        assert "@ajcrew-core/resource_status" in allowed
+        assert "@ajcrew-core/session_ledger_record" in allowed
+        assert "@ajcrew-core/ask_question" in allowed
         for gated in (
-            "@kirocrew-core",
-            "@kirocrew-core/task_run",
-            "@kirocrew-core/workflow_run",
-            "@kirocrew-core/cron_add",
-            "@kirocrew-core/spawn_run",
+            "@ajcrew-core",
+            "@ajcrew-core/task_run",
+            "@ajcrew-core/workflow_run",
+            "@ajcrew-core/cron_add",
+            "@ajcrew-core/spawn_run",
         ):
             assert gated not in allowed, gated
-        assert "@kirocrew-core" in data["tools"]
+        assert "@ajcrew-core" in data["tools"]
 
     def test_grants_match_the_pipeline_conductor(self, tmp_path, monkeypatch):
         """The tuples are SHARED, not copied: the security set is the pipeline
@@ -242,7 +242,7 @@ class TestSecurityConductorInstaller(
         security = json.loads(
             (tmp_path / SECURITY_CONDUCTOR_AGENT_FILENAME).read_text(encoding="utf-8")
         )
-        from kiro_crew.agent_files import PIPELINE_CONDUCTOR_AGENT_FILENAME
+        from aj_crew.agent_files import PIPELINE_CONDUCTOR_AGENT_FILENAME
 
         pipeline = json.loads(
             (tmp_path / PIPELINE_CONDUCTOR_AGENT_FILENAME).read_text(encoding="utf-8")
@@ -258,7 +258,7 @@ class TestSecurityConductorInstaller(
         skill = (
             Path(__file__).resolve().parents[1]
             / "src"
-            / "kiro_crew"
+            / "aj_crew"
             / "builtin_skills"
             / "security-conductor"
             / "SKILL.md"
@@ -269,24 +269,24 @@ class TestSecurityConductorInstaller(
         assert "**Do not manage folders.**" in text
 
     def test_mcp_servers_are_narrowed(self, tmp_path, monkeypatch):
-        """kirocrew-core plus the hand-built dashboard and work entries the shared
+        """ajcrew-core plus the hand-built dashboard and work entries the shared
         conductor base mounts; inherited third-party servers are dropped."""
         data = self._install(tmp_path, monkeypatch)
         assert set(data["mcpServers"]) == {
-            "kirocrew-core",
-            "kirocrew-dashboard",
-            "kirocrew-work",
+            "ajcrew-core",
+            "ajcrew-dashboard",
+            "ajcrew-work",
         }
-        assert data["mcpServers"]["kirocrew-dashboard"]["args"] == ["mcp-dashboard"]
-        assert data["mcpServers"]["kirocrew-work"]["args"] == ["mcp-work"]
+        assert data["mcpServers"]["ajcrew-dashboard"]["args"] == ["mcp-dashboard"]
+        assert data["mcpServers"]["ajcrew-work"]["args"] == ["mcp-work"]
 
     def test_the_work_server_is_mounted_with_the_base_grants(self, tmp_path, monkeypatch):
         """Every conductor records its items in the work ledger: each auditor,
         verifier and fixer is a ledger row, and the skill's findings ledger stays
         its detail. The conductor verbs are granted; the worker verbs are not."""
         data = self._install(tmp_path, monkeypatch)
-        assert "@kirocrew-work" in data["tools"]
-        work = [ref for ref in data["allowedTools"] if "kirocrew-work" in ref]
+        assert "@ajcrew-work" in data["tools"]
+        work = [ref for ref in data["allowedTools"] if "ajcrew-work" in ref]
         assert work == list(agent._CONDUCTOR_BASE_WORK_GRANTS)
         assert agent._CONDUCTOR_WORK_LEDGER_PROTOCOL in data["prompt"]
         assert data["prompt"].startswith(agent._SECURITY_CONDUCTOR_SYSTEM_PROMPT)
@@ -298,7 +298,7 @@ class TestSecurityConductorInstaller(
         data = self._install(
             tmp_path,
             monkeypatch,
-            may_auto_approve=lambda ref: ref != "@kirocrew-core/monitor_start",
+            may_auto_approve=lambda ref: ref != "@ajcrew-core/monitor_start",
         )
         rules = json.dumps(data["permissions"])
         assert "monitor_start" not in rules
@@ -340,8 +340,8 @@ class TestSecurityConductorInstaller(
         data = self._install(
             tmp_path,
             monkeypatch,
-            may_auto_approve=lambda ref: ref != "@kirocrew-core/monitor_start",
+            may_auto_approve=lambda ref: ref != "@ajcrew-core/monitor_start",
         )
-        assert "@kirocrew-core/monitor_start" not in data["allowedTools"]
+        assert "@ajcrew-core/monitor_start" not in data["allowedTools"]
         withheld = [e for e in events if e.get("operation") == "mcp_auto_approve_withheld"]
         assert withheld and withheld[0]["source"] == "_install_security_conductor_agent"

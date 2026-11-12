@@ -181,14 +181,14 @@ const cloudSessionNoticeKey = (meta: ChatMessage['meta']): string => {
  *  one: a single timed-out start is host weather and the first Resume is the
  *  retry it deserves; the second identical failure is the signal that nothing
  *  a retry can change is wrong. Mirrors `_SESSION_START_REPEAT_REFUSAL_AT` in
- *  `src/kiro_crew/dashboard/chat_handlers.py`. */
+ *  `src/aj_crew/dashboard/chat_handlers.py`. */
 export const SESSION_START_REPEAT_REFUSAL_AT = 2
 
 /**
  * How many session starts in a row failed at the tail of the transcript.
  *
  * Mirrors `session_start_failure_streak` in
- * `src/kiro_crew/dashboard/chat_api/continue_turn.py` -- the two must agree, or the card
+ * `src/aj_crew/dashboard/chat_api/continue_turn.py` -- the two must agree, or the card
  * hides a Resume the server would honour (or offers one it refuses). Walks back
  * from the newest row counting `error` rows of the `session_start_failed` kind.
  * Rows that are not the conversation's floor are walked past -- tool rows,
@@ -277,7 +277,7 @@ export interface ErrorCardProps {
   onOpenDefaultModel?: () => void
   /**
    * The fix affordance for an `auth_required` row: deep link to the Kiro
-   * sign-in card in Settings, where the user signs in to Kiro Crew's own
+   * sign-in card in Settings, where the user signs in to Aj Crew's own
    * identity again. Offered INSTEAD of Continue for the same reason as the
    * entitlement actions -- a retry hits the same signed-out wall -- and on
    * EVERY such row, because a lapsed sign-in is settled state the user still
@@ -401,7 +401,7 @@ function restartHint(variant: keyof typeof RESTART_HINT_KEYS = 'terminal'): Reac
   // The retry line quotes the button by its own catalog label, so the words
   // always match what the shared RestartGatewayButton actually shows.
   const button = i18nT('pages.settings.aboutPanel.restart_gateway')
-  const text = i18nT(key, { command: 'kirocrew restart', button })
+  const text = i18nT(key, { command: 'ajcrew restart', button })
   const marked = i18nT(key, { command: '\u0000', button })
   const at = marked.indexOf('\u0000')
   if (at < 0) return text
@@ -661,7 +661,7 @@ export const ErrorCard = memo(function ErrorCard({
       file: String(refusalMeta?.file ?? ''),
       project: String(refusalMeta?.project ?? ''),
       name: String(refusalMeta?.member ?? ''),
-      field: i18nT('pages.kiroCrewAgentsPage.built_from'),
+      field: i18nT('pages.ajCrewAgentsPage.built_from'),
     }
     const FixIcon = refusal.fix === 'member' ? Settings : ShieldCheck
     return (

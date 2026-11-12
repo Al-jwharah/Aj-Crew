@@ -22,9 +22,9 @@ from member_session_control_helpers import (  # noqa: F401 -- the fixture is req
     _member_tab,
 )
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.state import SlotOrigin
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.state import SlotOrigin
 
 
 class TestPrivateStoreCallerIsolation:
@@ -40,17 +40,17 @@ class TestPrivateStoreCallerIsolation:
 
         from member_memory_helpers import forget_declared_stores, write_member_home
 
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.config.sections import ResolvedBindings
-        from kiro_crew.execution_context import resolve_member_execution
-        from kiro_crew.history import ConversationLog
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.config.sections import ResolvedBindings
+        from aj_crew.execution_context import resolve_member_execution
+        from aj_crew.history import ConversationLog
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         write_member_home(tmp_path, "radar", "peer")
         forget_declared_stores(monkeypatch)
         state = _make_state(tmp_path)
         state.conversation_log = ConversationLog()
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
         def resolve(_cfg, name, *_args, **_kwargs):
             # A blank name resolves as a TEMPLATE binding on the global store, so
@@ -93,7 +93,7 @@ class TestPrivateStoreCallerIsolation:
 
     def _member_caller(self, state, cfg):
         """A crew member's DM slot, bound to its own private store."""
-        from kiro_crew.execution_context import bind_session_execution, resolve_member_execution
+        from aj_crew.execution_context import bind_session_execution, resolve_member_execution
 
         caller = _member_tab(state)
         execution = resolve_member_execution(cfg, "radar")
@@ -204,7 +204,7 @@ class TestPrivateStoreCallerIsolation:
         # A caller's execution record is writable transcript metadata, so an unvouched
         # claim to a peer's store is refused. The next test differs ONLY in that
         # `bind_session_execution` wrote the identity, so this process vouches for it.
-        from kiro_crew.execution_context import resolve_member_execution
+        from aj_crew.execution_context import resolve_member_execution
 
         state, cfg = self._prepare(tmp_path, monkeypatch)
         peer_execution = resolve_member_execution(cfg, "radar")
@@ -233,10 +233,10 @@ class TestPrivateStoreCallerIsolation:
         # to be checked against, collapsing the admission's two sources into one.
         from pathlib import Path
 
-        from kiro_crew import execution_context
-        from kiro_crew import session_agent_selection as sas
-        from kiro_crew.config.sections import ResolvedBindings
-        from kiro_crew.execution_context import (
+        from aj_crew import execution_context
+        from aj_crew import session_agent_selection as sas
+        from aj_crew.config.sections import ResolvedBindings
+        from aj_crew.execution_context import (
             bind_session_execution,
             read_session_execution,
             resolve_member_execution,
@@ -288,7 +288,7 @@ class TestPrivateStoreCallerIsolation:
         # `bind_session_execution`, so this process vouches for it and the record
         # agrees. Without this twin the refusal above could be a blanket break
         # rather than a conditional one.
-        from kiro_crew.execution_context import bind_session_execution, resolve_member_execution
+        from aj_crew.execution_context import bind_session_execution, resolve_member_execution
 
         state, cfg = self._prepare(tmp_path, monkeypatch)
         peer_execution = resolve_member_execution(cfg, "radar")
@@ -312,8 +312,8 @@ class TestPrivateStoreCallerIsolation:
         # this process's vouch, and the only thing that ever binds such a tab is
         # `_pin_private_agent_assignment`; if it publishes without vouching, every
         # conductor tab the owner opens on a member is refused for its whole life.
-        from kiro_crew.dashboard.chat_persistence import _pin_private_agent_assignment
-        from kiro_crew.execution_context import read_vouched_session_execution
+        from aj_crew.dashboard.chat_persistence import _pin_private_agent_assignment
+        from aj_crew.execution_context import read_vouched_session_execution
 
         state, cfg = self._prepare(tmp_path, monkeypatch)
         caller = state.get_or_create_slot("chat-34-1789000000")
@@ -331,8 +331,8 @@ class TestPrivateStoreCallerIsolation:
 
     def _fork_onto(self, state, parent, child_name):
         """Bind *child_name* the way a fork does, from *parent*'s recorded identity."""
-        from kiro_crew.dashboard import chat_fork
-        from kiro_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard import chat_fork
+        from aj_crew.dashboard.chat_utils import effective_session_key
 
         source = (
             effective_session_key(parent),
@@ -359,8 +359,8 @@ class TestPrivateStoreCallerIsolation:
         # member, it has no durable copy for a restart to re-vouch from, and a
         # conversation with messages cannot be re-pinned from the agent picker.
         # The carried vouch must survive a second generation too.
-        from kiro_crew.dashboard.chat_persistence import _pin_private_agent_assignment
-        from kiro_crew.execution_context import read_vouched_session_execution
+        from aj_crew.dashboard.chat_persistence import _pin_private_agent_assignment
+        from aj_crew.execution_context import read_vouched_session_execution
 
         state, cfg = self._prepare(tmp_path, monkeypatch)
         parent = state.get_or_create_slot("chat-40-1789000000")
@@ -389,8 +389,8 @@ class TestPrivateStoreCallerIsolation:
         # admission re-establishes its own. The durable copy written when the
         # gateway vouched the source is the gateway's word in that window, so a
         # fork made then still carries it.
-        from kiro_crew import execution_context
-        from kiro_crew.dashboard.chat_persistence import _pin_private_agent_assignment
+        from aj_crew import execution_context
+        from aj_crew.dashboard.chat_persistence import _pin_private_agent_assignment
 
         state, cfg = self._prepare(tmp_path, monkeypatch)
         parent = state.get_or_create_slot("chat-43-1789000000")
@@ -412,8 +412,8 @@ class TestPrivateStoreCallerIsolation:
         # vouched has nothing to carry, and a source that rewrote its own record
         # to a peer's store copies that store into the fork while the gateway's
         # word still names its own, so neither fork may open a worker.
-        from kiro_crew.dashboard.chat_persistence import _pin_private_agent_assignment
-        from kiro_crew.execution_context import (
+        from aj_crew.dashboard.chat_persistence import _pin_private_agent_assignment
+        from aj_crew.execution_context import (
             bind_session_execution,
             read_session_execution,
             read_vouched_session_execution,
@@ -450,8 +450,8 @@ class TestPrivateStoreCallerIsolation:
         """A member tab the owner pinned, with a settled transcript an agent can fork."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.dashboard import chat_fork
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard import chat_fork
+        from aj_crew.dashboard.chat_persistence import (
             _pin_private_agent_assignment,
             _save_slot_to_history,
         )
@@ -478,7 +478,7 @@ class TestPrivateStoreCallerIsolation:
     ):
         # `session_fork` reaches the same binder as the owner's Fork button, so a
         # member forking its own vouched conversation hands the child that vouch.
-        from kiro_crew.execution_context import read_vouched_session_execution
+        from aj_crew.execution_context import read_vouched_session_execution
 
         state, cfg = self._prepare(tmp_path, monkeypatch)
         parent = self._seed_member_tab(state, cfg, "chat-47-1789000000", "radar", monkeypatch)
@@ -518,8 +518,8 @@ class TestPrivateStoreCallerIsolation:
         # A restart empties the vouched map. The next GATE-VERIFIED admission re-vouches,
         # keyed on the verified `member-<slug>` key, which the session cannot rewrite.
         # So this create is admitted with NO owner re-selection.
-        from kiro_crew import execution_context
-        from kiro_crew.execution_context import read_vouched_session_execution
+        from aj_crew import execution_context
+        from aj_crew.execution_context import read_vouched_session_execution
 
         state, cfg = self._prepare(tmp_path, monkeypatch)
         caller, execution = self._member_caller(state, cfg)
@@ -546,8 +546,8 @@ class TestPrivateStoreCallerIsolation:
         #  (c) `member-radar` with its own member ids but the PEER's `store.store_id`,
         #      which `ExecutionContext.__post_init__` and `MemoryStoreRef` both admit;
         #      the re-vouch checks `radar`'s store from CONFIG and refuses.
-        from kiro_crew import execution_context
-        from kiro_crew.execution_context import (
+        from aj_crew import execution_context
+        from aj_crew.execution_context import (
             read_vouched_session_execution,
             resolve_member_execution,
             revouch_at_verified_admission,
@@ -584,7 +584,7 @@ class TestPrivateStoreCallerIsolation:
         # as its own slug `radar` but `store.store_id` pointed at the PEER's store.
         # This is the shape the member-id agreement check alone would pass; the
         # config store-identity comparison is what refuses it.
-        from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+        from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
         radar_execution = resolve_member_execution(cfg, "radar")
         forged_store_id = ExecutionContext(
@@ -616,8 +616,8 @@ class TestPrivateStoreCallerIsolation:
         # restores the same dispatch. Kept alongside the gate-verified self-heal
         # above: both restore the capability after a restart, and neither removes
         # it outright.
-        from kiro_crew import execution_context
-        from kiro_crew.execution_context import bind_session_execution
+        from aj_crew import execution_context
+        from aj_crew.execution_context import bind_session_execution
 
         state, cfg = self._prepare(tmp_path, monkeypatch)
         caller, execution = self._member_caller(state, cfg)
@@ -638,7 +638,7 @@ class TestPrivateStoreCallerIsolation:
     ):
         # The shipped capability: an owner dispatching a member worker. Removing
         # this would need an RFC, so the narrowing keeps it.
-        from kiro_crew.execution_context import read_session_execution
+        from aj_crew.execution_context import read_session_execution
 
         state, _cfg = self._prepare(tmp_path, monkeypatch)
         caller = state.get_or_create_slot("chat-owner")
@@ -659,15 +659,15 @@ class TestPrivateStoreCallerIsolation:
         # the selection namespace differs.
         from pathlib import Path
 
-        from kiro_crew.config.sections import ResolvedBindings
-        from kiro_crew.execution_context import read_session_execution
+        from aj_crew.config.sections import ResolvedBindings
+        from aj_crew.execution_context import read_session_execution
 
         state, cfg = self._prepare(tmp_path, monkeypatch)
         caller, execution = self._member_caller(state, cfg)
         member_resolve = sc.resolve_agent_bindings
 
         def resolve(_cfg, name, *args, **kwargs):
-            if name != "kirocrew-worker":
+            if name != "ajcrew-worker":
                 return member_resolve(_cfg, name, *args, **kwargs)
             return ResolvedBindings(
                 workspace_dir=Path("workspace"),
@@ -681,7 +681,7 @@ class TestPrivateStoreCallerIsolation:
         monkeypatch.setattr(sc, "resolve_agent_bindings", resolve)
         result = asyncio.run(
             sc.create_session(
-                state, caller_session_key=slot_history_key(caller), agent="kirocrew-worker"
+                state, caller_session_key=slot_history_key(caller), agent="ajcrew-worker"
             )
         )
         child = state.get_slot(result["target"])
@@ -693,7 +693,7 @@ class TestPrivateStoreCallerIsolation:
     def test_a_member_still_creates_a_same_store_worker(
         self, tmp_path, monkeypatch, _fresh_create_budget
     ):
-        from kiro_crew.execution_context import read_session_execution
+        from aj_crew.execution_context import read_session_execution
 
         state, cfg = self._prepare(tmp_path, monkeypatch)
         caller, execution = self._member_caller(state, cfg)
@@ -707,7 +707,7 @@ class TestPrivateStoreCallerIsolation:
     ):
         # Same-store, reached through the EXPLICIT selection branch rather than by
         # inheritance: the admission is the store, not which branch resolved it.
-        from kiro_crew.execution_context import read_session_execution
+        from aj_crew.execution_context import read_session_execution
 
         state, cfg = self._prepare(tmp_path, monkeypatch)
         caller, execution = self._member_caller(state, cfg)
@@ -724,7 +724,7 @@ class TestPrivateStoreCallerIsolation:
         # The authorization is about PRIVATE stores only. A cron creating an
         # ordinary global-store worker is the cron operating model, and refusing
         # it would break the surface rather than narrow it.
-        from kiro_crew.execution_context import read_session_execution
+        from aj_crew.execution_context import read_session_execution
 
         state, _cfg = self._prepare(tmp_path, monkeypatch)
         caller = self._cron_caller(state)
@@ -742,7 +742,7 @@ class TestPrivateStoreCallerIsolation:
         # its own birth) AND the child is private. The own-store authority admits
         # it, so a grandchild on the same member store is still reachable -- a fix
         # that keyed only on the fence would kill recursive dispatch outright.
-        from kiro_crew.execution_context import bind_session_execution, read_session_execution
+        from aj_crew.execution_context import bind_session_execution, read_session_execution
 
         state, cfg = self._prepare(tmp_path, monkeypatch)
         _member, execution = self._member_caller(state, cfg)
@@ -764,8 +764,8 @@ class TestPrivateStoreCallerIsolation:
         # restarts, and the child's own-store dispatch must still be admitted.
         # The child's key is not a member DM key, so its trust source is the
         # durable vouch record the birth wrote in the sandbox-masked vouch directory.
-        from kiro_crew import execution_context
-        from kiro_crew.execution_context import (
+        from aj_crew import execution_context
+        from aj_crew.execution_context import (
             read_session_execution,
             read_vouched_session_execution,
         )
@@ -793,8 +793,8 @@ class TestPrivateStoreCallerIsolation:
         # rewrites its own record to name a PEER's store after a restart still
         # disagrees with what the gateway recorded at its birth, so nothing is
         # re-vouched and the create is refused.
-        from kiro_crew import execution_context
-        from kiro_crew.execution_context import (
+        from aj_crew import execution_context
+        from aj_crew.execution_context import (
             read_vouched_session_execution,
             resolve_member_execution,
         )
@@ -821,9 +821,9 @@ class TestPrivateStoreCallerIsolation:
         # vouches, in a directory every sandbox masks and no file tool opens,
         # and withdrawn where a deliberate withdrawal happens. A child that turns
         # incognito keeps no restart-surviving authority behind.
-        from kiro_crew._durable_vouch import durable_vouch_path, read_durable_vouch
-        from kiro_crew.config.paths import data_home
-        from kiro_crew.execution_context import bind_session_execution, read_session_execution
+        from aj_crew._durable_vouch import durable_vouch_path, read_durable_vouch
+        from aj_crew.config.paths import data_home
+        from aj_crew.execution_context import bind_session_execution, read_session_execution
 
         state, cfg = self._prepare(tmp_path, monkeypatch)
         member, execution = self._member_caller(state, cfg)
@@ -831,8 +831,8 @@ class TestPrivateStoreCallerIsolation:
         child_key = slot_history_key(state.get_slot(born["target"]))
 
         path = durable_vouch_path(child_key)
-        from kiro_crew import sandbox
-        from kiro_crew.security import sensitive_home_dirs
+        from aj_crew import sandbox
+        from aj_crew.security import sensitive_home_dirs
 
         leaf = path.parent.name
         assert path.parent == data_home() / leaf
@@ -854,8 +854,8 @@ class TestPrivateStoreCallerIsolation:
         # Every other withdrawal takes the durable copy with it too: an explicit
         # clear (the hook path's per-request withdrawal, a failed fork) and a
         # deleted transcript. Otherwise each such key leaves a vouch file for good.
-        from kiro_crew._durable_vouch import read_durable_vouch
-        from kiro_crew.execution_context import clear_session_execution
+        from aj_crew._durable_vouch import read_durable_vouch
+        from aj_crew.execution_context import clear_session_execution
 
         state, cfg = self._prepare(tmp_path, monkeypatch)
         member, _execution = self._member_caller(state, cfg)
@@ -878,7 +878,7 @@ class TestPrivateStoreCallerIsolation:
 class TestShadowedTemplateDispatch:
     """``agent_kind`` lets a caller dispatch the TEMPLATE a same-named crew member shadows.
 
-    Shape: ``kirocrew-worker`` is enrolled as a member with a private store while the
+    Shape: ``ajcrew-worker`` is enrolled as a member with a private store while the
     conductor's thread is on the shared store, so the bare name is refused
     ``memory_delegation_denied``. ``agent_kind="template"`` means "the template, on my
     own memory". The only valid kind is ``template``, and it requires ``agent``.
@@ -891,16 +891,16 @@ class TestShadowedTemplateDispatch:
 
         from member_memory_helpers import forget_declared_stores, write_member_home
 
-        from kiro_crew.config.sections import ResolvedBindings
-        from kiro_crew.execution_context import (
+        from aj_crew.config.sections import ResolvedBindings
+        from aj_crew.execution_context import (
             ExecutionContext,
             MemoryStoreRef,
             bind_session_execution,
             resolve_member_execution,
         )
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         # `worker` is a crew member enrolled with a private store.
         write_member_home(tmp_path, "worker")
         forget_declared_stores(monkeypatch)
@@ -980,7 +980,7 @@ class TestShadowedTemplateDispatch:
 
         state, caller, _conductor, _calls = self._prepare(tmp_path, monkeypatch)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.session_control"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.session_control"):
             with pytest.raises(sc.SessionControlError) as error:
                 asyncio.run(
                     sc.create_session(
@@ -1016,8 +1016,8 @@ class TestShadowedTemplateDispatch:
 
         from member_memory_helpers import forget_declared_stores
 
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.execution_context import bind_session_execution, resolve_member_execution
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.execution_context import bind_session_execution, resolve_member_execution
 
         state, caller, _conductor, _calls = self._prepare(tmp_path, monkeypatch)
         # Declare the conductor as a V1 crew member on its own named store, beside
@@ -1029,14 +1029,14 @@ class TestShadowedTemplateDispatch:
         config["agents"]["conductor"] = {"memory_store": "conductor-notes"}
         config_path.write_text(json.dumps(config), encoding="utf-8")
         forget_declared_stores(monkeypatch)
-        legacy = resolve_member_execution(KiroCrewConfig.load(), "conductor")
+        legacy = resolve_member_execution(AjCrewConfig.load(), "conductor")
         # The exact shape the cause must not misname: id-less, on a private store.
         assert legacy.member_id is None
         assert legacy.store.store_id == "conductor-notes"
         caller.memory_store = legacy.store.legacy_name
         bind_session_execution(slot_history_key(caller), legacy, replace_existing=True)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.session_control"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.session_control"):
             with pytest.raises(sc.SessionControlError) as error:
                 asyncio.run(
                     sc.create_session(
@@ -1067,10 +1067,10 @@ class TestShadowedTemplateDispatch:
         # stock worker's name is shadowed by a private-memory crew member. The
         # bare name must still dispatch the TEMPLATE on the caller's own store
         # instead of being refused `memory_delegation_denied`.
-        from kiro_crew.dashboard.session_control_parts import session_create
-        from kiro_crew.execution_context import MemoryStoreRef, read_session_execution
+        from aj_crew.dashboard.session_control_parts import session_create
+        from aj_crew.execution_context import MemoryStoreRef, read_session_execution
 
-        assert session_create._STOCK_WORKER_AGENT == "kirocrew-worker"
+        assert session_create._STOCK_WORKER_AGENT == "ajcrew-worker"
         state, caller, _conductor, calls = self._prepare(tmp_path, monkeypatch)
         # `_prepare` enrolls the shadowing member as `worker`; name it the stock worker.
         monkeypatch.setattr(session_create, "_STOCK_WORKER_AGENT", "worker")
@@ -1106,7 +1106,7 @@ class TestShadowedTemplateDispatch:
     def test_the_template_kind_dispatches_the_worker_on_the_callers_own_store(
         self, tmp_path, monkeypatch, _fresh_create_budget
     ):
-        from kiro_crew.execution_context import MemoryStoreRef, read_session_execution
+        from aj_crew.execution_context import MemoryStoreRef, read_session_execution
 
         state, caller, conductor, calls = self._prepare(tmp_path, monkeypatch)
 
@@ -1150,7 +1150,7 @@ class TestShadowedTemplateDispatch:
 
         from member_memory_helpers import make_request
 
-        from kiro_crew.dashboard.handlers.session_control import api_session_control_create
+        from aj_crew.dashboard.handlers.session_control import api_session_control_create
 
         state, caller, _conductor, _calls = self._prepare(tmp_path, monkeypatch)
 
@@ -1226,8 +1226,8 @@ class TestShadowedTemplateDispatch:
         ``worker`` is a member on ``member-worker`` and also an installed template. The
         bare name is refused; the stated kind lands on the caller's shared store.
         """
-        from kiro_crew.config import loader
-        from kiro_crew.execution_context import MemoryStoreRef, read_session_execution
+        from aj_crew.config import loader
+        from aj_crew.execution_context import MemoryStoreRef, read_session_execution
 
         state, caller, conductor, _calls = self._prepare(tmp_path, monkeypatch, fake_resolver=False)
         assert sc.resolve_agent_bindings is loader.resolve_agent_bindings

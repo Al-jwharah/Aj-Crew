@@ -21,9 +21,9 @@ from taskrunner_helpers import (
     _make_mock_sessions,
 )
 
-from kiro_crew.task_models import PROGRESS_FILE
-from kiro_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.task_models import PROGRESS_FILE
+from aj_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # ── Resource management ──
 
@@ -508,7 +508,7 @@ class TestCheckpointResume:
             ]
         )
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         decompose_provider = MagicMock()
 
@@ -550,7 +550,7 @@ class TestCheckpointResume:
             sessions=sessions, auto_test=False, on_notify=_on_notify, work_dir=tmp_path
         )
 
-        with patch("kiro_crew.task_executor.self_review", return_value=True):
+        with patch("aj_crew.task_executor.self_review", return_value=True):
             result = await runner.run(spec)
 
         assert result.status == "completed"
@@ -579,7 +579,7 @@ class TestCheckpointResume:
         sessions = _make_mock_sessions()
         step_json = json.dumps([{"title": "Create file", "description": "Create foo.py"}])
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         decompose_provider = MagicMock()
 
@@ -614,7 +614,7 @@ class TestCheckpointResume:
 
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path, fresh=True)
 
-        with patch("kiro_crew.task_executor.self_review", return_value=True):
+        with patch("aj_crew.task_executor.self_review", return_value=True):
             result = await runner.run(spec)
 
         assert result.status == "completed"
@@ -646,8 +646,8 @@ class TestSessionRecovery:
         """A drain-stall death carries ambiguous_delivery: the buffered step prompt
         may already have run, so the retry must resume from current state instead
         of re-stating the task verbatim (which would re-run its tools)."""
-        from kiro_crew.acp.client import AcpProcessDied
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.acp.client import AcpProcessDied
+        from aj_crew.providers.base import LLMEvent
 
         sessions = _make_mock_sessions()
         prompts: list[str] = []
@@ -697,8 +697,8 @@ class TestSessionRecovery:
         """The hint must clear only AFTER the hint-bearing prompt is delivered: if a
         later turn fails before it streams, the next retry must still carry the
         resume hint rather than fall back to a verbatim replay."""
-        from kiro_crew.acp.client import AcpProcessDied
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.acp.client import AcpProcessDied
+        from aj_crew.providers.base import LLMEvent
 
         sessions = _make_mock_sessions()
         prompts: list[str] = []
@@ -745,8 +745,8 @@ class TestSessionRecovery:
     @pytest.mark.asyncio
     async def test_process_died_recovers(self, tmp_path: Path) -> None:
         """AcpProcessDied → recovers and completes step."""
-        from kiro_crew.acp.client import AcpProcessDied
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.acp.client import AcpProcessDied
+        from aj_crew.providers.base import LLMEvent
 
         sessions = _make_mock_sessions()
         call_count = 0
@@ -791,7 +791,7 @@ class TestSessionRecovery:
     @pytest.mark.asyncio
     async def test_process_death_does_not_consume_logic_retry(self, tmp_path: Path) -> None:
         """Process dies once then logic fails — should still get full 3 logic attempts."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         sessions = _make_mock_sessions()
         call_count = 0
@@ -833,7 +833,7 @@ class TestSessionRecovery:
         ambiguous death KEEPS the resume hint: a Resume or retry restarts the
         step at attempt 1 in the same work dir, where its prompt may already
         have run, so the restarted prompt still opens with "do not restart"."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         sessions = _make_mock_sessions()
 
@@ -866,7 +866,7 @@ class TestSessionRecovery:
     async def test_a_loop_detected_give_up_keeps_the_resume_hint(self, tmp_path: Path) -> None:
         """Only a normally completed attempt clears the hint, so a step that
         dies ambiguously and then fails on a repeated error still carries it."""
-        from kiro_crew.acp.client import AcpProcessDied
+        from aj_crew.acp.client import AcpProcessDied
 
         sessions = _make_mock_sessions()
         provider = MagicMock()
@@ -902,8 +902,8 @@ class TestSessionRecovery:
         the attempt number, so the "continue" error text never renders; the
         retry must still open by inspecting state instead of restating a step
         whose tool (a push) may already have run."""
-        from kiro_crew.acp.client import AcpProcessDied
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.acp.client import AcpProcessDied
+        from aj_crew.providers.base import LLMEvent
 
         sessions = _make_mock_sessions()
         prompts: list[str] = []
@@ -935,7 +935,7 @@ class TestSessionRecovery:
     async def test_a_replan_after_a_possibly_run_step_says_so(self, tmp_path: Path) -> None:
         """The automatic replan after a give-up sees the resume hint, so the new
         tasks do not restate possibly-executed work as fresh."""
-        from kiro_crew.task_models import RESUME_HINT
+        from aj_crew.task_models import RESUME_HINT
 
         runner = TaskRunner(sessions=_make_mock_sessions(), auto_test=False, work_dir=tmp_path)
         runner._decompose = AsyncMock(return_value=[])
@@ -966,7 +966,7 @@ class TestSessionRecovery:
             yield LLMEvent(kind="text_chunk", text="ok")
             yield LLMEvent(kind="complete")
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         provider.stream = _fail_twice_then_succeed
         provider.approve_tool = AsyncMock()
@@ -989,7 +989,7 @@ class TestSessionRecovery:
     @pytest.mark.asyncio
     async def test_mid_stream_context_overflow_compacts(self, tmp_path: Path) -> None:
         """Context ≥90% during tool call → compact and retry without burning attempt."""
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         sessions = _make_mock_sessions()
         call_count = 0
@@ -1037,8 +1037,8 @@ class TestSessionRecovery:
     @pytest.mark.asyncio
     async def test_mid_stream_context_overflow_exceeds_max_recoveries(self, tmp_path: Path) -> None:
         """Compaction exceeds MAX_RECOVERIES → task fails."""
-        from kiro_crew.providers.base import LLMEvent
-        from kiro_crew.task_executor import MAX_RECOVERIES
+        from aj_crew.providers.base import LLMEvent
+        from aj_crew.task_executor import MAX_RECOVERIES
 
         sessions = _make_mock_sessions()
 
@@ -1077,7 +1077,7 @@ class TestSessionRecovery:
     @pytest.mark.asyncio
     async def test_mid_stream_compaction_failure_falls_back_to_reset(self, tmp_path: Path) -> None:
         """Compaction raises → falls back to session reset, then retries."""
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         sessions = _make_mock_sessions()
         call_count = 0
@@ -1121,7 +1121,7 @@ class TestSessionRecovery:
     @pytest.mark.asyncio
     async def test_task_result_redacts_credentials(self, tmp_path: Path) -> None:
         """Final task.result must have credentials redacted."""
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         sessions = _make_mock_sessions()
         provider = MagicMock()
@@ -1155,7 +1155,7 @@ class TestExtractLesson:
     @pytest.mark.asyncio
     async def test_extract_lesson_saves(self, tmp_path: Path) -> None:
         """Failed step → lesson extracted and saved."""
-        from kiro_crew.learn import LessonStore
+        from aj_crew.learn import LessonStore
 
         store = LessonStore(base_dir=tmp_path)
         sessions = _make_mock_sessions()
@@ -1190,7 +1190,7 @@ class TestExtractLesson:
     @pytest.mark.asyncio
     async def test_volatile_lesson_is_not_reported_as_learned(self, tmp_path: Path) -> None:
         """A refused JSONL write must not notify or update the run ledger."""
-        from kiro_crew.learn import LessonStore
+        from aj_crew.learn import LessonStore
 
         store = LessonStore(base_dir=tmp_path)
         sessions = _make_mock_sessions()
@@ -1219,7 +1219,7 @@ class TestExtractLesson:
     @pytest.mark.asyncio
     async def test_private_volatile_lesson_is_not_reported_as_learned(self, tmp_path: Path) -> None:
         """A refused private vector write must not notify or update the run ledger."""
-        from kiro_crew.vector_memory import LessonWriteOutcome, LessonWriteResult
+        from aj_crew.vector_memory import LessonWriteOutcome, LessonWriteResult
 
         sessions = _make_mock_sessions()
         runner = TaskRunner(sessions=sessions, auto_test=False, work_dir=tmp_path)
@@ -1232,10 +1232,10 @@ class TestExtractLesson:
 
         with (
             patch(
-                "kiro_crew.member_memory_auth.read_private_session_store",
+                "aj_crew.member_memory_auth.read_private_session_store",
                 return_value="member-store",
             ),
-            patch("kiro_crew.context.inherit_session_memory", new=AsyncMock()),
+            patch("aj_crew.context.inherit_session_memory", new=AsyncMock()),
             patch.object(
                 runner,
                 "_call_llm_for_lesson",
@@ -1246,7 +1246,7 @@ class TestExtractLesson:
                 },
             ),
             patch(
-                "kiro_crew.taskrunner.run_in_embed_pool",
+                "aj_crew.taskrunner.run_in_embed_pool",
                 new=AsyncMock(
                     return_value=LessonWriteResult(
                         LessonWriteOutcome.REFUSED,
@@ -1277,7 +1277,7 @@ class TestExtractLesson:
     @pytest.mark.asyncio
     async def test_extract_lesson_invalid_response(self, tmp_path: Path) -> None:
         """Invalid Bedrock response → no lesson saved."""
-        from kiro_crew.learn import LessonStore
+        from aj_crew.learn import LessonStore
 
         store = LessonStore(base_dir=tmp_path)
         sessions = _make_mock_sessions()
@@ -1293,7 +1293,7 @@ class TestExtractLesson:
     @pytest.mark.asyncio
     async def test_extract_lesson_missing_rule_key(self, tmp_path: Path) -> None:
         """LLM returns dict without 'rule' → no lesson saved."""
-        from kiro_crew.learn import LessonStore
+        from aj_crew.learn import LessonStore
 
         store = LessonStore(base_dir=tmp_path)
         sessions = _make_mock_sessions()
@@ -1313,7 +1313,7 @@ class TestExtractLesson:
 class TestHistoryIntegration:
     def test_log_task(self, tmp_path: Path) -> None:
         """Completed step → entries in ConversationLog."""
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         conv_log = ConversationLog(base_dir=tmp_path)
         conv_log.init()
@@ -1357,7 +1357,7 @@ class TestHistoryIntegration:
 
         step_json = json.dumps([{"title": "One step", "description": "d"}])
 
-        from kiro_crew.providers.base import LLMEvent
+        from aj_crew.providers.base import LLMEvent
 
         decompose_provider = MagicMock()
 

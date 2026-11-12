@@ -1,9 +1,9 @@
 /* ── Ultra Mode surfaces (code name: Crew Mode) ──
-   One solid accent from the theme, `--ultra-accent`, is the ghost's colour and
+   One solid accent from the theme, `--ultra-accent`, is the gem's colour and
    every icon's. It is the theme's `--aim` pulled toward the strongest text
    colour so it holds contrast on idle, hover and selected rows in light and
    dark (the composer chip while off stays grey). The words "Ultra Mode" alone (the sidebar eyebrow, the composer chip
-   while on, the welcome title) wear a purple-to-blue text gradient, from the
+   while on, the welcome title) wear a two-stop text gradient, from the
    theme's `--aim` to its `--info`. Nothing here covers other UI: each rule
    colours the element it is set on. */
 
@@ -11,17 +11,17 @@
   --ultra-accent: color-mix(in srgb, var(--aim) 72%, var(--text-strong, var(--text)));
 }
 
-/* The ghost badge: a solid accent disc. */
+/* The gem badge: a solid accent disc. */
 .crew-grad {
   background-color: var(--aim);
   color: var(--aim-fg);
 }
 
-/* The "Ultra Mode" words. The purple stop is the theme's `--aim` and the blue
+/* The "Ultra Mode" words. The first stop is the theme's `--aim` and the second
    stop its `--info`, pulled 15% and 40% toward the strongest text colour, so
    the two ends stay far apart in hue. Measured >= 4.5:1 for each stop on the
-   page and on idle, hover and selected rows in the light, dark, kiro-light and
-   kiro-dark themes, and >= 5.2:1 on the pressed chip, whose tint is kept light
+   page and on idle, hover and selected rows in the light, dark, aj-light and
+   aj-dark themes, and >= 5.2:1 on the pressed chip, whose tint is kept light
    (12%, 16% on hover or press) for it. */
 .crew-grad-text,
 .crew-eyebrow-text,
@@ -49,11 +49,11 @@ html:root .liquid-glass.crew-chip[aria-pressed="true"] .crew-chip-text {
 }
 
 /* The Sessions row's ULTRA MODE tag: the same two stops, laid out
-   purple -> blue -> purple on a tile twice the tag's width. While the crew
+   aim -> info -> aim on a tile twice the tag's width. While the crew
    works, `CrewEyebrow` slides the tile one width per loop (Framer Motion,
    background-position only), so every frame shows only colours between the
    two measured stops and the loop has no seam. At rest the position is 0,
-   which is the static purple-to-blue look. */
+   which is the static two-stop look. */
 .crew-eyebrow-text {
   background-image: linear-gradient(
     90deg,

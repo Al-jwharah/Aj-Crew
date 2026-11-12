@@ -187,7 +187,7 @@ export default function SearchableSelect({
     // user's choice.
     filteredCount: filter.trim() && filtered.length > 0 ? 1 : 0,
     // An exact value or label match wins over the top row: a row whose label
-    // merely CONTAINS the typed text (e.g. "Inherit (kirocrew)") must not shadow
+    // merely CONTAINS the typed text (e.g. "Inherit (ajcrew)") must not shadow
     // the option the user typed in full. Only real options qualify: the
     // free-text row's value IS the typed text and stays an offer, not a default.
     onEnterSingleMatch: () => {

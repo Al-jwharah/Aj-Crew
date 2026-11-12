@@ -1,7 +1,7 @@
 ---
 title: A crewmate's harness follows Settings → Agent Harness when the person has not picked one
 status: partial
-author: iamwhatever, with kirocrew-worker
+author: iamwhatever, with ajcrew-worker
 created: 2026-11-04
 last-audited: 2026-11-09
 audited-at: 0cc173d74a
@@ -14,7 +14,7 @@ superseded-by: []
 
 # RFC: A crewmate's harness follows Settings → Agent Harness when unset
 
-- Status: partial, accepted on 2026-11-09 by the owner. The owner decided the direction on 2026-11-04: crewmates can run on different harnesses, and a crewmate the person has not pinned follows Settings → Agent Harness (`agent.acp_backend`). The owner also decided O1 to O5 in section 5.0 the same day. Merged: [#29442](https://github.com/kirodotdev/KiroCrew/pull/29442) (this RFC), [#30116](https://github.com/kirodotdev/KiroCrew/pull/30116) (revision), [#29509](https://github.com/kirodotdev/KiroCrew/pull/29509) (Bot harness follows Settings), [#29498](https://github.com/kirodotdev/KiroCrew/pull/29498) (picker), [#29490](https://github.com/kirodotdev/KiroCrew/pull/29490) (Codex worker chats), [#29495](https://github.com/kirodotdev/KiroCrew/pull/29495) (KAS `disabledTools`), [#32849](https://github.com/kirodotdev/KiroCrew/pull/32849) (layered Agent Harness page), [#33540](https://github.com/kirodotdev/KiroCrew/pull/33540) (bell note names exact items). Checked against `origin/main` `0cc173d74a`, section 7: Phases 4 (Settings line, fallback and moved notices), 5 (Codex workers) and 6 (pin to KAS) are on main. Phase 1 is on main except the `kirocrew doctor` advisory row for a stored `agent.member_acp_backend`. Phase 2 is open: `mate_worker.py`, `dashboard/chat_turn/turn_failures.py` and `config/loader_builders.py` still tell a person to set `agent.member_acp_backend`. Phase 3 is on main except the harness field in `CrewEditorNextDialog` and `inherited_reason`; the preview flag is gone and the list is narrowed. Phase 7 is partial: model saves are judged on the effective harness, but the start-time drop of an invalid own model and the editor's "Not available on <harness>" note were not found.
+- Status: partial, accepted on 2026-11-09 by the owner. The owner decided the direction on 2026-11-04: crewmates can run on different harnesses, and a crewmate the person has not pinned follows Settings → Agent Harness (`agent.acp_backend`). The owner also decided O1 to O5 in section 5.0 the same day. Merged: [#29442](https://github.com/kirodotdev/KiroCrew/pull/29442) (this RFC), [#30116](https://github.com/kirodotdev/KiroCrew/pull/30116) (revision), [#29509](https://github.com/kirodotdev/KiroCrew/pull/29509) (Bot harness follows Settings), [#29498](https://github.com/kirodotdev/KiroCrew/pull/29498) (picker), [#29490](https://github.com/kirodotdev/KiroCrew/pull/29490) (Codex worker chats), [#29495](https://github.com/kirodotdev/KiroCrew/pull/29495) (KAS `disabledTools`), [#32849](https://github.com/kirodotdev/KiroCrew/pull/32849) (layered Agent Harness page), [#33540](https://github.com/kirodotdev/KiroCrew/pull/33540) (bell note names exact items). Checked against `origin/main` `0cc173d74a`, section 7: Phases 4 (Settings line, fallback and moved notices), 5 (Codex workers) and 6 (pin to KAS) are on main. Phase 1 is on main except the `ajcrew doctor` advisory row for a stored `agent.member_acp_backend`. Phase 2 is open: `mate_worker.py`, `dashboard/chat_turn/turn_failures.py` and `config/loader_builders.py` still tell a person to set `agent.member_acp_backend`. Phase 3 is on main except the harness field in `CrewEditorNextDialog` and `inherited_reason`; the preview flag is gone and the list is narrowed. Phase 7 is partial: model saves are judged on the effective harness, but the start-time drop of an invalid own model and the editor's "Not available on <harness>" note were not found.
 - Decided 2026-11-09 by the owner: single-tool switches on a harness that cannot honour them stay warning-only. Crew does no gateway-side filtering of those tools and does not block the toggle for now.
 - Amended 2026-11-05: the owner changed two rules (O6, O7) and added one (O8) in section 5.0. A pin to a harness this gateway can start but that cannot run a full crewmate no longer runs there; it shows an error and runs on KAS (5.8). A pin this gateway cannot start still refuses (H17). A crewmate's default model follows the harness it lands on (5.9). The same PR updates H17 in `harness-parity.md` and `AUTOSDE.yaml`. This amendment does not change the status field.
 - Tracking issue: [#21910](https://github.com/kirodotdev/KiroCrew/issues/21910)
@@ -117,7 +117,7 @@ When KAS itself is not selectable (an oss policy denies `kas`), steps 1 and 3 cr
 
 ### 5.2 An explicitly stored `agent.member_acp_backend`
 
-A stored non-empty value keeps winning over `agent.acp_backend` (tier 2), with today's resolution, including `"kiro"` → KAS (O1). Nobody who set it sees a change. A stored `"kas"` counts as explicit too: Kiro Crew cannot tell a hand-written `"kas"` from one an older build or a support instruction wrote, so it does not guess.
+A stored non-empty value keeps winning over `agent.acp_backend` (tier 2), with today's resolution, including `"kiro"` → KAS (O1). Nobody who set it sees a change. A stored `"kas"` counts as explicit too: Aj Crew cannot tell a hand-written `"kas"` from one an older build or a support instruction wrote, so it does not guess.
 
 **Settings shows it (O1).** Settings → Agent Harness (`website/src/pages/developer/AgentBackendTab.tsx`) gets a read-only "Crewmates run on" line under the harness picker. It names the harness the crewmate route resolves to and its source, one of:
 
@@ -130,7 +130,7 @@ A stored non-empty value keeps winning over `agent.acp_backend` (tier 2), with t
 
 Per-crewmate pins are not listed there; the line says "crewmates with their own harness keep it" and links the crewmates page. The value comes from one new read-only field, `crewmate_harness: {backend, source}`, on the config response the Agent Harness panel already loads. The resolver of 5.1 returns `source` beside the value, so the panel never re-derives it.
 
-It is deprecated: the field's schema description says so and names the pin and Settings → Agent Harness as the replacements, and `kirocrew doctor` adds the same tier-2 line as an advisory row. `member_acp_backend_declared()` (`config/loader_document.py`) already answers "stored", so no new disk read is needed.
+It is deprecated: the field's schema description says so and names the pin and Settings → Agent Harness as the replacements, and `ajcrew doctor` adds the same tier-2 line as an advisory row. `member_acp_backend_declared()` (`config/loader_document.py`) already answers "stored", so no new disk read is needed.
 
 ### 5.3 An inherited value that cannot carry a crewmate
 
@@ -165,7 +165,7 @@ Not chosen: requiring tier-3 values to be in `ACP_BACKENDS_MATE_WORKER_KIT` too.
 - **D6 floor.** In an LTS build the floor is KAS and Kiro CLI is selectable only when a remote rule names it. Step 1 maps an allowed Kiro CLI pick to KAS, and steps 1 and 3 land on KAS, so the crewmate route lands on the LTS floor. A KAS that cannot start on its route still stops the gateway at boot (D6), and nothing here falls back to kiro.
 - **Per-session KAS refusal.** The open LTS work in [#29284](https://github.com/kirodotdev/KiroCrew/pull/29284) refuses a crewmate session on KAS when the kiro-cli that hosts it is unavailable. This design produces KAS on the same paths, so that refusal applies unchanged. Either PR can land first.
 - **Governance harness locks.** Policy narrows `selectable_backends()`. Every tier still crosses either `resolve_selected_backend` (tiers 0, 2, 3) or the pin's pre-gate check (tier 1), and both read `selectable_backends()` per call. A locked-out inherited harness degrades through the gate as any explicit value does. A locked-out pin cannot start, so it refuses as today (H17). The KAS of a 5.8 fallback still crosses the gate, so the lock and the D6 floor still decide what runs.
-- The edition is read only through `kiro_crew.edition.is_lts()` inside the existing gate. This design adds no edition read.
+- The edition is read only through `aj_crew.edition.is_lts()` inside the existing gate. This design adds no edition read.
 
 ### 5.6 Harness-parity compliance (`AUTOSDE.yaml` rule `harness-parity`)
 

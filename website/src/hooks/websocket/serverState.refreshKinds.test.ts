@@ -11,8 +11,8 @@ import { invalidateRefreshQueries, TURN_END_CRON_REFRESH_MS, __resetTurnEndCronR
 
 const KEYS = [
   ['cron-jobs'], ['crons', 'crew-wake', 'ada'], ['cron-history-all'],
-  ['agents-installed'], ['kirocrew-agents'], ['kirocrew-agents', 'members-roster'],
-  ['default-agent'], ['agent-templates'], ['workspaces'], ['kirocrewConfig'],
+  ['agents-installed'], ['ajcrew-agents'], ['ajcrew-agents', 'members-roster'],
+  ['default-agent'], ['agent-templates'], ['workspaces'], ['ajcrewConfig'],
   ['resolved-model'], ['agent-resolved-model'], ['artifacts', 'all-tags'], ['artifact-folders'],
 ]
 
@@ -62,11 +62,11 @@ describe('invalidateRefreshQueries', () => {
   })
 
   it('still refetches a listed cache whose last read failed', async () => {
-    const fetches = await observeAll(['artifacts/all-tags', 'kirocrewConfig'])
+    const fetches = await observeAll(['artifacts/all-tags', 'ajcrewConfig'])
     invalidateRefreshQueries(qc, ['cron_history'])
     await settle()
     expect(refetched(fetches)).toEqual([
-      'artifacts/all-tags', 'cron-history-all', 'cron-jobs', 'crons/crew-wake/ada', 'kirocrewConfig',
+      'ajcrewConfig', 'artifacts/all-tags', 'cron-history-all', 'cron-jobs', 'crons/crew-wake/ada',
     ])
   })
 

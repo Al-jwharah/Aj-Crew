@@ -62,13 +62,13 @@ vi.mock('../pages/chat/ChatSettings', () => ({
 
 const serverConfig: { dashboard: Record<string, unknown> } = { dashboard: {} }
 const patchConfig = vi.fn(async () => ({ ok: true }))
-const kirocrewConfig = vi.fn(async () => ({ dashboard: { ...serverConfig.dashboard } }))
+const ajcrewConfig = vi.fn(async () => ({ dashboard: { ...serverConfig.dashboard } }))
 vi.mock('../api/client', () => ({
   SEARCH_MIN_CHARS: 2,
   api: new Proxy({} as Record<string, unknown>, {
     get: (_t, name: string) => {
       if (name === 'patchConfig') return patchConfig
-      if (name === 'kirocrewConfig') return kirocrewConfig
+      if (name === 'ajcrewConfig') return ajcrewConfig
       return vi.fn().mockResolvedValue([])
     },
   }),
@@ -114,7 +114,7 @@ function renderSidebar(staleCollapseMs: number) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity, refetchOnMount: false }, mutations: { retry: false } } })
   qc.setQueryData(['chat-folders'], FOLDERS)
   serverConfig.dashboard = {}
-  qc.setQueryData(['kirocrewConfig'], { dashboard: {} })
+  qc.setQueryData(['ajcrewConfig'], { dashboard: {} })
   return render(
     <QueryClientProvider client={qc}>
       <Provider store={store}>
@@ -140,7 +140,7 @@ async function openDormantPresets(findByTestId: (id: string) => Promise<HTMLElem
   return { group, radios }
 }
 
-beforeEach(() => { localStorage.clear(); patchConfig.mockClear(); kirocrewConfig.mockClear() })
+beforeEach(() => { localStorage.clear(); patchConfig.mockClear(); ajcrewConfig.mockClear() })
 afterEach(() => vi.clearAllMocks())
 
 describe('chat sidebar — dormant-collapse presets announce the checked threshold (#21486)', () => {

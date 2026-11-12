@@ -13,11 +13,11 @@ import asyncio
 
 import pytest
 
-from kiro_crew.decisions import gate as gate_mod
-from kiro_crew.decisions.points import memory_recall as recall_mod
-from kiro_crew.decisions.points import message_steer as steer_mod
-from kiro_crew.decisions.points import model_route as route_mod
-from kiro_crew.decisions.points import skills_select as skills_mod
+from aj_crew.decisions import gate as gate_mod
+from aj_crew.decisions.points import memory_recall as recall_mod
+from aj_crew.decisions.points import message_steer as steer_mod
+from aj_crew.decisions.points import model_route as route_mod
+from aj_crew.decisions.points import skills_select as skills_mod
 
 #: A vendor token the gate's table carries, placed so the 2000-char clip lands
 #: ten characters into it.
@@ -33,7 +33,7 @@ def captured(monkeypatch):
         calls.append((state, questions, kwargs))
         return None
 
-    monkeypatch.setattr("kiro_crew.decisions.decide", _decide)
+    monkeypatch.setattr("aj_crew.decisions.decide", _decide)
     return calls
 
 

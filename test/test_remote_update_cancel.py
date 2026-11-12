@@ -11,7 +11,7 @@ import asyncio
 
 import pytest
 
-from kiro_crew.instances.remote_update import RemoteUpdateJobs
+from aj_crew.instances.remote_update import RemoteUpdateJobs
 
 
 @pytest.mark.asyncio

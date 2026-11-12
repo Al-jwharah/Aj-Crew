@@ -24,11 +24,11 @@ from unittest.mock import ANY, AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import runtime_death
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.dashboard.handlers import messaging as messaging_handlers
-from kiro_crew.slack import gateway as gw_mod
-from kiro_crew.subagent import HostSpawnDecision, SubagentInfo
+from aj_crew import runtime_death
+from aj_crew.config import AjCrewConfig
+from aj_crew.dashboard.handlers import messaging as messaging_handlers
+from aj_crew.slack import gateway as gw_mod
+from aj_crew.subagent import HostSpawnDecision, SubagentInfo
 
 #: Every wait in these tests is on a condition; this is only the lost-run guard.
 _LOST_RUN_SECS = 30.0
@@ -173,7 +173,7 @@ class _Done:
         monkeypatch.setattr(runtime_death, "caused_by_this_session", lambda _client: True)
 
         orch = gw_mod.GatewayOrchestrator(
-            KiroCrewConfig(),
+            AjCrewConfig(),
             no_crons=True,
             no_open=True,
             credentials={gw_mod.CRED_OWNER_ID: "U_OWNER"},

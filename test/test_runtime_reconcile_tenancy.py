@@ -25,9 +25,9 @@ from runtime_reconcile_helpers import (
     _reconciler,
 )
 
-from kiro_crew import runtime_ownership as ro
-from kiro_crew import runtime_reconcile as rr
-from kiro_crew.testing.ids import unallocatable_pids
+from aj_crew import runtime_ownership as ro
+from aj_crew import runtime_reconcile as rr
+from aj_crew.testing.ids import unallocatable_pids
 
 #: Fake slice pids no OS can issue. ``_unowned`` drops ``os.getpid()``, which a
 #: literal placed in the agent slice can equal on an xdist worker, dropping that
@@ -65,7 +65,7 @@ async def test_the_scope_reaper_does_not_stop_a_unit_holding_a_tenanted_pid(
     """
     from unittest.mock import patch
 
-    from kiro_crew import session_scope_reap as reap
+    from aj_crew import session_scope_reap as reap
 
     ro._reset_for_tests()
     scope = tmp_path / "run-tenant.scope"
@@ -142,7 +142,7 @@ async def test_a_tenant_arriving_after_the_survey_abandons_the_whole_reclaim(
     """
     from unittest.mock import patch
 
-    from kiro_crew import session_scope_reap as reap
+    from aj_crew import session_scope_reap as reap
 
     ro._reset_for_tests()
     scope = tmp_path / "run-late.scope"
@@ -195,7 +195,7 @@ def test_the_scope_reaper_releases_every_barrier_after_a_successful_stop(
     """
     from unittest.mock import patch
 
-    from kiro_crew import session_scope_reap as reap
+    from aj_crew import session_scope_reap as reap
 
     ro._reset_for_tests()
     scope = tmp_path / "run-clear.scope"
@@ -412,7 +412,7 @@ def test_an_identity_that_changes_during_the_descendant_walk_spares_the_root(
     Checking at the door is not enough, which is the rule the sibling teardown states
     for itself: before EVERY signal, not once up front.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     live = {"token": "THE-PROCESS-WE-VERIFIED"}
     signalled: list[int] = []
@@ -423,7 +423,7 @@ def test_an_identity_that_changes_during_the_descendant_walk_spares_the_root(
         # its members are legitimately signalled, and only the root is spared.
         live["token"] = "A-REPLACEMENT-RUNTIME"
 
-    monkeypatch.setattr("kiro_crew.acp.client._get_child_pids", lambda pid: [5511])
+    monkeypatch.setattr("aj_crew.acp.client._get_child_pids", lambda pid: [5511])
     monkeypatch.setattr(session_pid, "_is_managed_agent_process", lambda pid: True)
     monkeypatch.setattr(platform_compat, "get_process_start_id", lambda pid: live["token"])
     # The child really is our descendant in this scenario, so the ancestry edge the
@@ -444,11 +444,11 @@ def test_a_pinned_identity_that_differs_at_the_door_signals_nothing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The first of the two checks: a pid that already moved is not walked at all."""
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     signalled: list[int] = []
     monkeypatch.setattr(
-        "kiro_crew.acp.client._get_child_pids",
+        "aj_crew.acp.client._get_child_pids",
         lambda pid: pytest.fail("a pid that already moved must not even be walked"),
     )
     monkeypatch.setattr(session_pid, "_is_managed_agent_process", lambda pid: True)
@@ -468,10 +468,10 @@ def test_an_unreadable_identity_withholds_a_pinned_kill(
     decides whether to RETRACT a record. Here it decides whether to kill, and the two
     directions cannot share an answer.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     signalled: list[int] = []
-    monkeypatch.setattr("kiro_crew.acp.client._get_child_pids", lambda pid: [])
+    monkeypatch.setattr("aj_crew.acp.client._get_child_pids", lambda pid: [])
     monkeypatch.setattr(session_pid, "_is_managed_agent_process", lambda pid: True)
     monkeypatch.setattr(platform_compat, "get_process_start_id", lambda pid: None)
     monkeypatch.setattr(platform_compat, "kill_pid", lambda pid, sig: signalled.append(pid))
@@ -488,10 +488,10 @@ def test_an_unpinned_kill_behaves_exactly_as_before(
     Without this, the pin could have become a fail-closed default that silently
     stopped four older sweeps from killing anything.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     signalled: list[int] = []
-    monkeypatch.setattr("kiro_crew.acp.client._get_child_pids", lambda pid: [5541])
+    monkeypatch.setattr("aj_crew.acp.client._get_child_pids", lambda pid: [5541])
     monkeypatch.setattr(session_pid, "_is_managed_agent_process", lambda pid: True)
     # Unreadable on purpose: a caller with no captured identity has nothing to
     # compare, so this must not be read as a mismatch.
@@ -550,7 +550,7 @@ def test_an_identity_that_changes_while_descendants_are_read_spares_the_children
     was already ours, so the children found while it was ours are still killed. Here,
     during the read, so the list itself belongs to a stranger and nothing is killed.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     live = {"token": "OURS"}
     signalled: list[int] = []
@@ -560,7 +560,7 @@ def test_an_identity_that_changes_while_descendants_are_read_spares_the_children
         live["token"] = "A-REPLACEMENT-RUNTIME"
         return [5611, 5612]
 
-    monkeypatch.setattr("kiro_crew.acp.client._get_child_pids", _children)
+    monkeypatch.setattr("aj_crew.acp.client._get_child_pids", _children)
     monkeypatch.setattr(session_pid, "_is_managed_agent_process", lambda pid: True)
     monkeypatch.setattr(platform_compat, "get_process_start_id", lambda pid: live["token"])
     # Both children ARE under the root, so the capture's ancestry guard admits them and
@@ -594,7 +594,7 @@ def test_a_child_whose_identity_changes_before_its_signal_is_spared(
 
     The root's three checks cannot cover this: they are about the root's number.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     tokens = {5710: "ROOT", 5711: "CHILD-ONE", 5712: "CHILD-TWO"}
     signalled: list[int] = []
@@ -605,7 +605,7 @@ def test_a_child_whose_identity_changes_before_its_signal_is_spared(
         # hands right after -- which is 5711's moment, not the root's.
         tokens[5711] = "A-DIFFERENT-PROCESS"
 
-    monkeypatch.setattr("kiro_crew.acp.client._get_child_pids", lambda pid: [5711, 5712])
+    monkeypatch.setattr("aj_crew.acp.client._get_child_pids", lambda pid: [5711, 5712])
     monkeypatch.setattr(session_pid, "_is_managed_agent_process", lambda pid: True)
     monkeypatch.setattr(platform_compat, "get_process_start_id", lambda pid: tokens.get(pid))
     # Both children are genuinely under the root here; the capture's ancestry check
@@ -629,10 +629,10 @@ def test_a_child_with_no_readable_identity_is_spared_when_pinned(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Fail-closed per child: this comparison authorizes a signal, so unknown withholds."""
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     signalled: list[int] = []
-    monkeypatch.setattr("kiro_crew.acp.client._get_child_pids", lambda pid: [5721])
+    monkeypatch.setattr("aj_crew.acp.client._get_child_pids", lambda pid: [5721])
     monkeypatch.setattr(session_pid, "_is_managed_agent_process", lambda pid: True)
     # The root reads, the child does not.
     monkeypatch.setattr(
@@ -674,7 +674,7 @@ async def test_the_periodic_sweep_does_not_hand_a_late_tenants_pid_to_the_kill_p
     def _late_tenant_on_5801(pid: int, epoch: int) -> bool:
         return pid != 5801 and real_commit(pid, epoch)
 
-    with patch("kiro_crew.process_identity.commit_runtime_teardown", _late_tenant_on_5801):
+    with patch("aj_crew.process_identity.commit_runtime_teardown", _late_tenant_on_5801):
         await service._sweep_periodic_pids()
 
     assert recorded["pid_kills"] == [5802], (
@@ -713,8 +713,8 @@ async def test_the_cron_reaper_reports_a_tenant_that_claimed_after_the_gate() ->
     """
     from unittest.mock import patch
 
-    from kiro_crew.cron import CronService
-    from kiro_crew.process_identity import ProcessHandle
+    from aj_crew.cron import CronService
+    from aj_crew.process_identity import ProcessHandle
 
     ro._reset_for_tests()
     handle = ProcessHandle(pid=5821, start_id="abc", pgid=5821, child_pids={})
@@ -733,9 +733,9 @@ async def test_the_cron_reaper_reports_a_tenant_that_claimed_after_the_gate() ->
         return None
 
     with (
-        patch("kiro_crew.cron.kill_verified_process", fake_kill),
-        patch("kiro_crew.session.child_process_helpers", lambda: (None, None, None)),
-        patch("kiro_crew.process_identity.commit_runtime_teardown", lambda pid, epoch: False),
+        patch("aj_crew.cron.kill_verified_process", fake_kill),
+        patch("aj_crew.session.child_process_helpers", lambda: (None, None, None)),
+        patch("aj_crew.process_identity.commit_runtime_teardown", lambda pid, epoch: False),
     ):
         failure = await CronService._sigkill_session(_Svc(), "cron:job", handle, who="Reaper")
 
@@ -757,10 +757,10 @@ def test_a_child_whose_ancestry_cannot_be_proven_is_never_captured(
     Walking the parent chain back to the root is what rules it out: whatever is
     captured was provably in this tree at that moment.
     """
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
 
     signalled: list[int] = []
-    monkeypatch.setattr("kiro_crew.acp.client._get_child_pids", lambda pid: [5911, 5912])
+    monkeypatch.setattr("aj_crew.acp.client._get_child_pids", lambda pid: [5911, 5912])
     monkeypatch.setattr(session_pid, "_is_managed_agent_process", lambda pid: True)
     monkeypatch.setattr(platform_compat, "get_process_start_id", lambda pid: f"id-{pid}")
     # 5911 is still ours. 5912's number belongs to a process outside this tree by the
@@ -790,10 +790,10 @@ def test_the_ancestry_walk_follows_a_chain_and_refuses_a_cycle() -> None:
     """
     from unittest.mock import patch
 
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     chain = {9003: 9002, 9002: 9001, 9001: 1}
-    with patch("kiro_crew.platform_compat.get_ppid", lambda pid: chain.get(pid, -1)):
+    with patch("aj_crew.platform_compat.get_ppid", lambda pid: chain.get(pid, -1)):
         assert session_pid._is_our_descendant(9003, 9001) is True, "a grandchild is ours"
         assert session_pid._is_our_descendant(9003, 9999) is False, "a stranger's root is not"
 
@@ -804,14 +804,14 @@ def test_the_ancestry_walk_follows_a_chain_and_refuses_a_cycle() -> None:
         reads.append(pid)
         return loop.get(pid, -1)
 
-    with patch("kiro_crew.platform_compat.get_ppid", _looping):
+    with patch("aj_crew.platform_compat.get_ppid", _looping):
         assert session_pid._is_our_descendant(9011, 9001) is False, "a cycle answers no"
     # The walk limit alone would also answer no, so what the cycle guard adds is
     # STOPPING: two reads, not one per allowed step. Asserting only the verdict would
     # let the guard be removed with the test still green.
     assert reads == [9011, 9012], f"a cycle is detected on its second link; {reads}"
 
-    with patch("kiro_crew.platform_compat.get_ppid", lambda pid: -1):
+    with patch("aj_crew.platform_compat.get_ppid", lambda pid: -1):
         assert session_pid._is_our_descendant(9021, 9001) is False, "an unreadable link answers no"
 
 
@@ -830,8 +830,8 @@ async def test_the_orphan_reconcile_audits_a_barrier_refusal_as_refused(
     """
     from unittest.mock import MagicMock, patch
 
-    from kiro_crew.subagent import SubagentManager
-    from kiro_crew.subagent_persistence import create_agent_folder, update_state
+    from aj_crew.subagent import SubagentManager
+    from aj_crew.subagent_persistence import create_agent_folder, update_state
 
     ro._reset_for_tests()
     rows: list[str] = []
@@ -845,10 +845,10 @@ async def test_the_orphan_reconcile_audits_a_barrier_refusal_as_refused(
     update_state("barriered-orphan", pid=5931)
 
     with (
-        # ``kiro_crew.subagent.sel``, not ``kiro_crew.sel.sel``: every ``*_impl`` is
+        # ``aj_crew.subagent.sel``, not ``aj_crew.sel.sel``: every ``*_impl`` is
         # rebound onto ``subagent``'s globals, so that is where the name resolves.
-        patch("kiro_crew.subagent.sel", lambda: _Sel()),
-        patch("kiro_crew.process_identity.commit_runtime_teardown", lambda pid, epoch: False),
+        patch("aj_crew.subagent.sel", lambda: _Sel()),
+        patch("aj_crew.process_identity.commit_runtime_teardown", lambda pid, epoch: False),
         patch.object(manager, "_is_pid_alive", return_value=True),
         patch.object(manager, "_is_orphan_process", return_value=True),
         patch.object(manager, "_kill_orphan_pid") as mock_kill,

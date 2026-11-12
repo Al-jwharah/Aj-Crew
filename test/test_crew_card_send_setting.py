@@ -24,68 +24,68 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.config.paths import config_dir
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.config.paths import config_dir
 
 
 @pytest.fixture(autouse=True)
 def _owner_caller(_floor_monkeypatch):
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
 
 class TestConfigField:
     def test_defaults_to_off(self):
-        assert KiroCrewAgentConfig(kiro_agent="x").dashboard_card_send is False
+        assert AjCrewAgentConfig(kiro_agent="x").dashboard_card_send is False
 
     def test_round_trips_through_save_and_load(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["loud"] = KiroCrewAgentConfig(kiro_agent="kirocrew", dashboard_card_send=True)
-        cfg.agents["plain"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = AjCrewConfig.load()
+        cfg.agents["loud"] = AjCrewAgentConfig(kiro_agent="ajcrew", dashboard_card_send=True)
+        cfg.agents["plain"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         cfg.save()
-        again = KiroCrewConfig.load()
+        again = AjCrewConfig.load()
         assert again.agents["loud"].dashboard_card_send is True
         assert again.agents["plain"].dashboard_card_send is False
 
     @pytest.mark.parametrize("junk", ["true", "yes", 1, [True], {"on": 1}, None])
     def test_non_bool_in_config_reads_as_the_default(self, junk):
         """config.json is hand-editable: only a real bool may change the switch."""
-        cfg = KiroCrewConfig.load()
-        cfg.agents["weird"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = AjCrewConfig.load()
+        cfg.agents["weird"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         cfg.save()
         path = config_dir() / "config.json"
         data = json.loads(path.read_text(encoding="utf-8"))
         data["agents"]["weird"]["dashboard_card_send"] = junk
         path.write_text(json.dumps(data), encoding="utf-8")
-        assert KiroCrewConfig.load().agents["weird"].dashboard_card_send is False
+        assert AjCrewConfig.load().agents["weird"].dashboard_card_send is False
 
     def test_a_record_without_the_key_is_off(self):
         """Every crewmate that exists today has no key; none of them opts in."""
-        cfg = KiroCrewConfig.load()
-        cfg.agents["old"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = AjCrewConfig.load()
+        cfg.agents["old"] = AjCrewAgentConfig(kiro_agent="ajcrew")
         cfg.save()
         path = config_dir() / "config.json"
         data = json.loads(path.read_text(encoding="utf-8"))
         data["agents"]["old"].pop("dashboard_card_send", None)
         path.write_text(json.dumps(data), encoding="utf-8")
-        assert KiroCrewConfig.load().agents["old"].dashboard_card_send is False
+        assert AjCrewConfig.load().agents["old"].dashboard_card_send is False
 
 
 def _crud_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
+    from aj_crew.dashboard.handlers import api_ajcrew_agent_update
 
     app = web.Application()
-    app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+    app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
     return app
 
 
 @pytest.fixture()
 def seeded_agent():
-    cfg = KiroCrewConfig.load()
-    cfg.agents["existing"] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew", workspace="default", memory_store="default"
+    cfg = AjCrewConfig.load()
+    cfg.agents["existing"] = AjCrewAgentConfig(
+        kiro_agent="ajcrew", workspace="default", memory_store="default"
     )
     cfg.save()
     return "existing"
@@ -99,17 +99,17 @@ class TestUpdateEndpoint:
                 f"/api/agents/{seeded_agent}", json={"dashboard_card_send": False}
             )
             assert off.status == 200
-            assert KiroCrewConfig.load().agents[seeded_agent].dashboard_card_send is False
+            assert AjCrewConfig.load().agents[seeded_agent].dashboard_card_send is False
             on = await client.put(f"/api/agents/{seeded_agent}", json={"dashboard_card_send": True})
             assert on.status == 200
-        assert KiroCrewConfig.load().agents[seeded_agent].dashboard_card_send is True
+        assert AjCrewConfig.load().agents[seeded_agent].dashboard_card_send is True
 
     @pytest.mark.asyncio
     async def test_other_updates_leave_the_switch_alone(self, seeded_agent):
         async with TestClient(TestServer(_crud_app())) as client:
             await client.put(f"/api/agents/{seeded_agent}", json={"dashboard_card_send": False})
             await client.put(f"/api/agents/{seeded_agent}", json={"starred": True})
-        stored = KiroCrewConfig.load().agents[seeded_agent]
+        stored = AjCrewConfig.load().agents[seeded_agent]
         assert stored.dashboard_card_send is False
         assert stored.starred is True
 
@@ -123,13 +123,13 @@ class TestUpdateEndpoint:
             )
             assert resp.status == 400
             assert (await resp.json())["code"] == "invalid_dashboard_card_send"
-        stored = KiroCrewConfig.load().agents[seeded_agent]
+        stored = AjCrewConfig.load().agents[seeded_agent]
         assert stored.dashboard_card_send is False
         assert stored.workspace == "default"
 
 
 def _members_app(state) -> web.Application:
-    from kiro_crew.dashboard.handlers.members import api_members
+    from aj_crew.dashboard.handlers.members import api_members
 
     @web.middleware
     async def _auth(request: web.Request, handler):
@@ -148,15 +148,15 @@ class TestRosterCarriesTheSwitch:
     async def test_roster_rows_carry_the_switch(self, tmp_path):
         fake = SimpleNamespace(
             agents={
-                "loud": KiroCrewAgentConfig(kiro_agent="loud", dashboard_card_send=True),
-                "plain": KiroCrewAgentConfig(kiro_agent="plain"),
+                "loud": AjCrewAgentConfig(kiro_agent="loud", dashboard_card_send=True),
+                "plain": AjCrewAgentConfig(kiro_agent="plain"),
             },
             default_agent="plain",
             memory_stores={},
             degraded_sections=frozenset(),
         )
         state = _make_state(tmp_path)
-        with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=fake):
+        with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=fake):
             async with TestClient(TestServer(_members_app(state))) as client:
                 resp = await client.get("/api/members")
                 assert resp.status == 200

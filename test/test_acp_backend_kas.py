@@ -20,9 +20,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.types import (
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_GOOSE,
@@ -37,11 +37,11 @@ from kiro_crew.acp.types import (
     PROVIDER_LABEL_DEFAULT,
     PROVIDER_LABEL_KAS,
 )
-from kiro_crew.acp_backends import STORED_BACKEND_KIRO as KIRO_STORED
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.providers import acp as providers_acp
-from kiro_crew.providers.acp import AcpProvider, provider_label
-from kiro_crew.session import SessionManager
+from aj_crew.acp_backends import STORED_BACKEND_KIRO as KIRO_STORED
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.providers import acp as providers_acp
+from aj_crew.providers.acp import AcpProvider, provider_label
+from aj_crew.session import SessionManager
 
 #: The backends served by AcpRuntime rather than by one AcpClient per session,
 #: stated independently of the frozenset the provider property reads. A test that
@@ -62,7 +62,7 @@ REPORTS_TURN_USAGE = {
 
 def _build_provider(backend: str) -> AcpProvider:
     """Mirror test_acp_provider's helper: construct without spawning anything."""
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider(acp_backend=backend)
     provider._client = MagicMock()
     provider._client.backend = backend
@@ -164,13 +164,13 @@ class TestUnknownBackendRejected:
     """A typo must fail loudly rather than silently driving kiro-cli."""
 
     def test_unknown_backend_raises(self):
-        with patch("kiro_crew.providers.acp.AcpClient"):
+        with patch("aj_crew.providers.acp.AcpClient"):
             with pytest.raises(ValueError) as exc:
                 AcpProvider(acp_backend="bogus")
         assert "bogus" in str(exc.value)
 
     def test_error_names_the_accepted_values(self):
-        with patch("kiro_crew.providers.acp.AcpClient"):
+        with patch("aj_crew.providers.acp.AcpClient"):
             with pytest.raises(ValueError) as exc:
                 AcpProvider(acp_backend="Kas")  # case matters
         message = str(exc.value)
@@ -242,21 +242,21 @@ class TestConfigThreading:
     """
 
     def test_default_config_is_kas(self):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         assert cfg.agent.acp_backend == ACP_BACKEND_KAS
         provider = cfg.create_provider_factory()(session_key="test:default", agent="")
         assert provider.is_kas_backend is True
         assert provider.is_kiro_backend is False
 
     def test_configured_kas_reaches_the_provider(self):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.acp_backend = ACP_BACKEND_KAS
         provider = cfg.create_provider_factory()(session_key="test:kas", agent="")
         assert provider.is_kas_backend is True
         assert provider.client.backend == ACP_BACKEND_KAS
 
 
-def _load_agent_config(agent_data: dict, tmp_path: Path) -> KiroCrewConfig:
+def _load_agent_config(agent_data: dict, tmp_path: Path) -> AjCrewConfig:
     """Load a real config file, so the load constructor itself is exercised.
 
     Written under pytest's ``tmp_path`` so an interrupted worker cannot strand
@@ -264,8 +264,8 @@ def _load_agent_config(agent_data: dict, tmp_path: Path) -> KiroCrewConfig:
     """
     cfg_file = tmp_path / "config.json"
     cfg_file.write_text(json.dumps({"agent": agent_data}), encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=cfg_file):
-        return KiroCrewConfig.load()
+    with patch("aj_crew.config.loader.config_path", return_value=cfg_file):
+        return AjCrewConfig.load()
 
 
 class TestConfigRoundTrip:
@@ -333,10 +333,10 @@ class TestConfigRoundTrip:
 
     def test_the_member_remap_is_logged_once(self, tmp_path, monkeypatch, caplog):
         """The remap is visible: one info line names the stored and the used value."""
-        from kiro_crew.config import loader_builders
+        from aj_crew.config import loader_builders
 
         monkeypatch.setattr(loader_builders, "_member_remap_logged", False)
-        with caplog.at_level("INFO", logger="kiro_crew.config.loader"):
+        with caplog.at_level("INFO", logger="aj_crew.config.loader"):
             _load_agent_config({"member_acp_backend": KIRO_STORED}, tmp_path)
             _load_agent_config({"member_acp_backend": KIRO_STORED}, tmp_path)
         lines = [r.getMessage() for r in caplog.records if "member_acp_backend" in r.getMessage()]
@@ -387,12 +387,12 @@ class TestConfigRoundTrip:
         assert cfg.agent.acp_backend == ACP_BACKEND_KIRO
 
     def test_masked_config_response_reports_the_resolved_default(self, tmp_path):
-        """GET /api/config/kirocrew must name the harness actually in use.
+        """GET /api/config/ajcrew must name the harness actually in use.
 
         The dashboard reads ``agent.acp_backend`` from the masked response, which
         is built from ``to_dict()``.
         """
-        from kiro_crew.dashboard.handlers.core import _masked_config_dict
+        from aj_crew.dashboard.handlers.core import _masked_config_dict
 
         cfg = _load_agent_config({}, tmp_path)
         assert _masked_config_dict(cfg)["agent"]["acp_backend"] == ACP_BACKEND_KAS
@@ -411,18 +411,18 @@ class TestSaveKeepsAnAbsentChoiceAbsent:
         d = tmp_path / "crew"
         d.mkdir()
         with (
-            patch("kiro_crew.config.loader.config_path", return_value=d / "config.json"),
+            patch("aj_crew.config.loader.config_path", return_value=d / "config.json"),
             patch(
-                "kiro_crew.config.loader.config_local_path",
+                "aj_crew.config.loader.config_local_path",
                 return_value=d / "config.local.json",
             ),
-            patch("kiro_crew.config.loader.config_dir", return_value=d),
-            patch("kiro_crew.cli_config.config_path", return_value=d / "config.json"),
+            patch("aj_crew.config.loader.config_dir", return_value=d),
+            patch("aj_crew.cli_config.config_path", return_value=d / "config.json"),
             patch(
-                "kiro_crew.cli_config.config_local_path",
+                "aj_crew.cli_config.config_local_path",
                 return_value=d / "config.local.json",
             ),
-            patch("kiro_crew.cli_config.sel"),
+            patch("aj_crew.cli_config.sel"),
         ):
             yield d
 
@@ -433,23 +433,23 @@ class TestSaveKeepsAnAbsentChoiceAbsent:
     def test_config_get_reports_the_default_on_a_new_install(self, home, capsys):
         import argparse
 
-        from kiro_crew.cli_config import _run_config_cmd
+        from aj_crew.cli_config import _run_config_cmd
 
         (home / "config.json").write_text(json.dumps({"agent": {}}), encoding="utf-8")
         _run_config_cmd(argparse.Namespace(config_action="get", key="agent.acp_backend"))
         assert capsys.readouterr().out.strip() == ACP_BACKEND_KAS
 
     def test_the_boot_default_write_stores_no_choice(self, home):
-        # No file yet: the boot path's ``KiroCrewConfig().save()``.
-        KiroCrewConfig().save()
+        # No file yet: the boot path's ``AjCrewConfig().save()``.
+        AjCrewConfig().save()
         assert "acp_backend" not in self._agent_on_disk(home)
-        assert KiroCrewConfig.load().agent.acp_backend == ACP_BACKEND_KAS
+        assert AjCrewConfig.load().agent.acp_backend == ACP_BACKEND_KAS
 
     def test_a_full_save_of_an_absent_choice_keeps_it_absent(self, home):
         (home / "config.json").write_text(
             json.dumps({"agent": {"streaming": False}}), encoding="utf-8"
         )
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg.to_dict()["agent"]["acp_backend"] == ACP_BACKEND_KAS
         cfg.save()
         agent = self._agent_on_disk(home)
@@ -460,16 +460,16 @@ class TestSaveKeepsAnAbsentChoiceAbsent:
         (home / "config.json").write_text(
             json.dumps({"agent": {"acp_backend": KIRO_STORED}}), encoding="utf-8"
         )
-        KiroCrewConfig.load().save()
+        AjCrewConfig.load().save()
         assert self._agent_on_disk(home)["acp_backend"] == KIRO_STORED
-        assert KiroCrewConfig.load().agent.acp_backend == ACP_BACKEND_KIRO
+        assert AjCrewConfig.load().agent.acp_backend == ACP_BACKEND_KIRO
 
     def test_a_kiro_member_backend_stays_kiro_on_disk(self, home):
         """Reading the member "kiro" as KAS never rewrites the stored value."""
         (home / "config.json").write_text(
             json.dumps({"agent": {"member_acp_backend": KIRO_STORED}}), encoding="utf-8"
         )
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg.agent.member_acp_backend == ACP_BACKEND_KAS
         cfg.save()
         assert self._agent_on_disk(home)["member_acp_backend"] == KIRO_STORED
@@ -480,7 +480,7 @@ class TestSaveKeepsAnAbsentChoiceAbsent:
             json.dumps({"agent": {"acp_backend": "", "member_acp_backend": ""}}),
             encoding="utf-8",
         )
-        KiroCrewConfig.load().save()
+        AjCrewConfig.load().save()
         agent = self._agent_on_disk(home)
         assert agent["acp_backend"] == ""
         assert agent["member_acp_backend"] == ""
@@ -493,14 +493,14 @@ class TestSaveKeepsAnAbsentChoiceAbsent:
         keys = ("acp_backend", "member_acp_backend")
         base_agent = {} if stored is None else dict.fromkeys(keys, stored)
         (home / "config.json").write_text(json.dumps({"agent": base_agent}), encoding="utf-8")
-        overlay_agent = KiroCrewConfig.load().to_dict()["agent"] if whole_agent_overlay else {}
+        overlay_agent = AjCrewConfig.load().to_dict()["agent"] if whole_agent_overlay else {}
         overlay_agent.update(dict.fromkeys(keys, KIRO_STORED))
         overlay_agent["streaming"] = False
         (home / "config.local.json").write_text(
             json.dumps({"agent": overlay_agent}), encoding="utf-8"
         )
 
-        KiroCrewConfig.load().save()
+        AjCrewConfig.load().save()
 
         saved = json.loads((home / "config.json").read_text(encoding="utf-8"))
         agent = saved.get("agent", {})
@@ -513,7 +513,7 @@ class TestSaveKeepsAnAbsentChoiceAbsent:
     def test_config_set_kiro_stores_kiro_and_get_prints_kiro(self, home, capsys):
         import argparse
 
-        from kiro_crew.cli_config import _run_config_cmd
+        from aj_crew.cli_config import _run_config_cmd
 
         (home / "config.json").write_text(json.dumps({"agent": {}}), encoding="utf-8")
         _run_config_cmd(
@@ -522,7 +522,7 @@ class TestSaveKeepsAnAbsentChoiceAbsent:
             )
         )
         assert self._agent_on_disk(home)["acp_backend"] == KIRO_STORED
-        assert KiroCrewConfig.load().agent.acp_backend == ACP_BACKEND_KIRO
+        assert AjCrewConfig.load().agent.acp_backend == ACP_BACKEND_KIRO
         capsys.readouterr()
         _run_config_cmd(argparse.Namespace(config_action="get", key="agent.acp_backend"))
         assert capsys.readouterr().out.strip() == KIRO_STORED
@@ -537,11 +537,11 @@ class TestSaveKeepsAnAbsentChoiceAbsent:
         (home / "config.local.json").write_text(
             json.dumps({"agent": {"acp_backend": KIRO_STORED}}), encoding="utf-8"
         )
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg.to_dict()["agent"]["acp_backend"] == KIRO_STORED
         cfg.save()
         assert "acp_backend" not in self._agent_on_disk(home)
-        assert KiroCrewConfig.load().agent.acp_backend == ACP_BACKEND_KIRO
+        assert AjCrewConfig.load().agent.acp_backend == ACP_BACKEND_KIRO
 
 
 class TestBackendThreading:
@@ -599,13 +599,13 @@ class TestCompanionRuntimeInheritsBackend:
 class TestNoImportCycle:
     """``config.loader`` must import standalone, before anything ACP.
 
-    Importing ``kiro_crew.acp.types`` here runs the package init, which imports this module
+    Importing ``aj_crew.acp.types`` here runs the package init, which imports this module
     back. A fresh interpreter is used because in-process tests already imported it.
     """
 
     def test_config_loader_imports_alone(self):
         proc = subprocess.run(
-            [sys.executable, "-X", "utf8", "-c", "import kiro_crew.config.loader"],
+            [sys.executable, "-X", "utf8", "-c", "import aj_crew.config.loader"],
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -621,7 +621,7 @@ class TestNoImportCycle:
                 "-X",
                 "utf8",
                 "-c",
-                "import kiro_crew.config.loader as m;"
+                "import aj_crew.config.loader as m;"
                 "print(m._normalize_acp_backend(''), m._normalize_acp_backend('nope'), sep='|')",
             ],
             capture_output=True,
@@ -643,7 +643,7 @@ class TestAKiroCliPickRunsOnKasOnceV3IsConfirmed:
 
     @pytest.fixture
     def registry(self, monkeypatch):
-        from kiro_crew.agent_sdk import backends
+        from aj_crew.agent_sdk import backends
 
         monkeypatch.setattr(backends, "_selectable", set(backends._selectable))
         monkeypatch.setattr(backends, "_host_unservable", {})
@@ -702,7 +702,7 @@ class TestAProcessOutsideTheGatewayReachesTheSameVerdict:
 
     @pytest.fixture
     def registry(self, monkeypatch):
-        from kiro_crew.agent_sdk import backends
+        from aj_crew.agent_sdk import backends
 
         monkeypatch.setattr(backends, "_selectable", set(backends._selectable))
         monkeypatch.setattr(backends, "_host_unservable", {})
@@ -713,15 +713,15 @@ class TestAProcessOutsideTheGatewayReachesTheSameVerdict:
     def _stored_is_kiro(self, monkeypatch, is_kiro=True, bundle=False):
         """Stub the cheap stored-value reads the helper gates the probe on."""
         monkeypatch.setattr(
-            "kiro_crew.config.loader_document.acp_backend_stored_as_kiro", lambda: is_kiro
+            "aj_crew.config.loader_document.acp_backend_stored_as_kiro", lambda: is_kiro
         )
         monkeypatch.setattr(
-            "kiro_crew.config.loader_document.acp_backend_bundle_route", lambda: bundle
+            "aj_crew.config.loader_document.acp_backend_bundle_route", lambda: bundle
         )
 
     def _probe(self, monkeypatch, verdict):
         """Make the one bounded probe answer *verdict* without a real spawn."""
-        monkeypatch.setattr("kiro_crew.agent_sdk.kas_engine_verdict", lambda: verdict)
+        monkeypatch.setattr("aj_crew.agent_sdk.kas_engine_verdict", lambda: verdict)
 
     def test_a_confirmed_v3_probe_moves_the_pick_onto_kas(self, tmp_path, registry, monkeypatch):
         """No floor ran, but the per-process probe confirms v3 and promotes."""
@@ -740,7 +740,7 @@ class TestAProcessOutsideTheGatewayReachesTheSameVerdict:
     def test_a_non_kiro_stored_backend_spends_no_probe(self, registry, monkeypatch, stored):
         """A user who never picked Kiro CLI pays no spawn: the probe is not run.
 
-        This is the existing-experience guard -- every ``kirocrew chat`` on a
+        This is the existing-experience guard -- every ``ajcrew chat`` on a
         default / kas / claude / codex backend must start exactly as it did.
         """
         self._stored_is_kiro(monkeypatch, is_kiro=False)
@@ -748,7 +748,7 @@ class TestAProcessOutsideTheGatewayReachesTheSameVerdict:
         def _boom():
             raise AssertionError(f"must not probe for a non-kiro stored backend {stored!r}")
 
-        monkeypatch.setattr("kiro_crew.agent_sdk.kas_engine_verdict", _boom)
+        monkeypatch.setattr("aj_crew.agent_sdk.kas_engine_verdict", _boom)
         registry.ensure_kiro_cli_kas_verdict()
         assert registry.kiro_cli_offers_kas() is False
         # Not marked probed either, so a later load for a different config may re-check.
@@ -767,7 +767,7 @@ class TestAProcessOutsideTheGatewayReachesTheSameVerdict:
         def _boom():
             raise AssertionError("must not probe on the bundle route")
 
-        monkeypatch.setattr("kiro_crew.agent_sdk.kas_engine_verdict", _boom)
+        monkeypatch.setattr("aj_crew.agent_sdk.kas_engine_verdict", _boom)
         registry.ensure_kiro_cli_kas_verdict()
         assert registry.kiro_cli_offers_kas() is False
         assert registry._kiro_cli_kas_probed is False
@@ -798,7 +798,7 @@ class TestAProcessOutsideTheGatewayReachesTheSameVerdict:
             calls["n"] += 1
             return (None, None)
 
-        monkeypatch.setattr("kiro_crew.agent_sdk.kas_engine_verdict", _verdict)
+        monkeypatch.setattr("aj_crew.agent_sdk.kas_engine_verdict", _verdict)
         registry.ensure_kiro_cli_kas_verdict()
         registry.ensure_kiro_cli_kas_verdict()
         assert calls["n"] == 1
@@ -811,7 +811,7 @@ class TestAProcessOutsideTheGatewayReachesTheSameVerdict:
         def _boom():
             raise AssertionError("must not probe when evidence is already recorded")
 
-        monkeypatch.setattr("kiro_crew.agent_sdk.kas_engine_verdict", _boom)
+        monkeypatch.setattr("aj_crew.agent_sdk.kas_engine_verdict", _boom)
         registry.ensure_kiro_cli_kas_verdict()
         assert registry.kiro_cli_offers_kas() is True
 
@@ -823,7 +823,7 @@ class TestAProcessOutsideTheGatewayReachesTheSameVerdict:
         def _boom():
             raise AssertionError("must not probe when KAS is not selectable")
 
-        monkeypatch.setattr("kiro_crew.agent_sdk.kas_engine_verdict", _boom)
+        monkeypatch.setattr("aj_crew.agent_sdk.kas_engine_verdict", _boom)
         try:
             registry.ensure_kiro_cli_kas_verdict()
         finally:
@@ -844,7 +844,7 @@ class TestAProcessOutsideTheGatewayReachesTheSameVerdict:
                 calls["n"] += 1
             return (True, None)
 
-        monkeypatch.setattr("kiro_crew.agent_sdk.kas_engine_verdict", _verdict)
+        monkeypatch.setattr("aj_crew.agent_sdk.kas_engine_verdict", _verdict)
 
         def _run():
             # A bounded barrier: if a sibling thread failed to start, this raises

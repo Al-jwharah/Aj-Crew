@@ -1,6 +1,6 @@
 """The runtime floor that keeps a host on kiro-cli when its kiro-cli cannot serve KAS.
 
-``kirocrew doctor`` reads ``kiro-cli acp --help`` to report whether the KAS engine
+``ajcrew doctor`` reads ``kiro-cli acp --help`` to report whether the KAS engine
 exists. The same probe gates boot: KAS configured on a kiro-cli without the engine
 falls back to kiro-cli with a logged notice, and the dashboard's KAS row names what
 the update must bring.
@@ -21,15 +21,15 @@ from typing import Any, cast
 
 import pytest
 
-from kiro_crew import kiro_cli
-from kiro_crew import kiro_prerequisite as probe_facade
-from kiro_crew import kiro_prerequisite_process as probe_runner
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp.kas_transport import KAS_RELAY_ENGINE, KAS_RELAY_ENGINE_FLAG
-from kiro_crew.agent_sdk import backend_install
-from kiro_crew.agent_sdk import backends as registry
-from kiro_crew.agent_sdk.drivers import acp as acp_driver
-from kiro_crew.platform import bootstrap
+from aj_crew import kiro_cli
+from aj_crew import kiro_prerequisite as probe_facade
+from aj_crew import kiro_prerequisite_process as probe_runner
+from aj_crew.acp import client as client_mod
+from aj_crew.acp.kas_transport import KAS_RELAY_ENGINE, KAS_RELAY_ENGINE_FLAG
+from aj_crew.agent_sdk import backend_install
+from aj_crew.agent_sdk import backends as registry
+from aj_crew.agent_sdk.drivers import acp as acp_driver
+from aj_crew.platform import bootstrap
 
 KAS = registry.ACP_BACKEND_KAS
 KIRO = registry.ACP_BACKEND_KIRO
@@ -157,12 +157,12 @@ class TestBootFloor:
         assert cfg.agent.acp_backend == KIRO
         assert KAS not in registry.selectable_backends()
         assert notice is not None
-        assert "Kiro Crew is using kiro-cli instead" in notice
+        assert "Aj Crew is using kiro-cli instead" in notice
         assert f"no {KAS_RELAY_ENGINE_FLAG} flag" in notice
         assert notice in caplog.text
 
     def test_bundle_route_never_probes_kiro_cli(self, monkeypatch, pinned_cli, kas_selectable):
-        """agent.kas_bundle spawns Kiro Crew's own engine, so an old kiro-cli on PATH is
+        """agent.kas_bundle spawns Aj Crew's own engine, so an old kiro-cli on PATH is
         not a fact about this host's KAS; the floor must not move the user off it."""
         calls = _help(monkeypatch, _OLD_HELP)
         cfg = _cfg(KAS)
@@ -197,7 +197,7 @@ class TestBootFloor:
         self, monkeypatch, pinned_cli, kas_selectable
     ):
         """A Bot following Claude Code can still fall back to KAS, so KAS is probed."""
-        from kiro_crew.config.loader_builders import mark_member_backend_inherited
+        from aj_crew.config.loader_builders import mark_member_backend_inherited
 
         _help(monkeypatch, _OLD_HELP)
         monkeypatch.setattr(registry, "_baseline", {KIRO, KAS, "claude"})
@@ -211,7 +211,7 @@ class TestBootFloor:
     def test_a_stored_member_harness_with_no_kas_pin_never_probes(
         self, monkeypatch, pinned_cli, kas_selectable
     ):
-        from kiro_crew.config.loader_builders import mark_member_backend_inherited
+        from aj_crew.config.loader_builders import mark_member_backend_inherited
 
         calls = _help(monkeypatch, _OLD_HELP)
         cfg = _cfg(acp_backend=KIRO, member_acp_backend=KIRO)
@@ -250,7 +250,7 @@ class TestGatewayBootDoesNotWaitForTheFloor:
     """The floor spawns ``acp --help``; the gateway must bind without waiting for it."""
 
     def test_the_floor_is_scheduled_not_awaited(self, monkeypatch):
-        from kiro_crew.slack import gateway
+        from aj_crew.slack import gateway
 
         release = threading.Event()
         seen = []
@@ -275,9 +275,9 @@ class TestGatewayBootDoesNotWaitForTheFloor:
         assert seen == [cfg]
 
     def test_declaration_documents_are_read_only_off_loop(self, monkeypatch):
-        from kiro_crew.agent_sdk import kas_floor_wait
-        from kiro_crew.config import loader
-        from kiro_crew.slack import gateway
+        from aj_crew.agent_sdk import kas_floor_wait
+        from aj_crew.config import loader
+        from aj_crew.slack import gateway
 
         reads = []
 
@@ -305,7 +305,7 @@ class TestGatewayBootDoesNotWaitForTheFloor:
         asyncio.run(_boot())
 
     def test_a_failing_floor_is_logged_and_contained(self, monkeypatch, caplog):
-        from kiro_crew.slack import gateway
+        from aj_crew.slack import gateway
 
         def _boom(_cfg, **_kwargs):
             raise RuntimeError("probe exploded")
@@ -392,7 +392,7 @@ class TestDefaultNoticeWording:
         assert cfg.agent.acp_backend == KIRO
         assert registry.kiro_cli_pick_backend() == KIRO
         assert notice is not None
-        assert notice.startswith("Kiro CLI is selected, but Kiro Crew could not check ")
+        assert notice.startswith("Kiro CLI is selected, but Aj Crew could not check ")
         assert "no trusted kiro-cli was found" in notice
         assert notice in caplog.text
 
@@ -440,9 +440,9 @@ class TestDefaultNoticeWording:
         main_declared,
         member_declared,
     ):
-        from kiro_crew.agent_sdk import kas_floor_wait
-        from kiro_crew.config import loader
-        from kiro_crew.slack import gateway
+        from aj_crew.agent_sdk import kas_floor_wait
+        from aj_crew.config import loader
+        from aj_crew.slack import gateway
 
         _help(monkeypatch, _OLD_HELP)
         reads = []
@@ -487,10 +487,10 @@ class TestABotThatMayLandOnKasWaitsForTheFloor:
     def test_the_member_wait_is_armed_and_held_only_for_an_inherited_harness(
         self, monkeypatch, inherited
     ):
-        from kiro_crew.agent_sdk import kas_floor_wait
-        from kiro_crew.config import loader
-        from kiro_crew.config.loader_builders import mark_member_backend_inherited
-        from kiro_crew.slack import gateway
+        from aj_crew.agent_sdk import kas_floor_wait
+        from aj_crew.config import loader
+        from aj_crew.config.loader_builders import mark_member_backend_inherited
+        from aj_crew.slack import gateway
 
         armed, released = [], []
         monkeypatch.setattr(kas_floor_wait, "arm_kas_floor_wait", lambda _t, **kw: armed.append(kw))
@@ -528,8 +528,8 @@ class TestAKiroCliPickWaitsForTheFloor:
         ],
     )
     def test_main_role_gating(self, monkeypatch, main, declared, stored_kiro, waits):
-        from kiro_crew.config import loader, loader_document
-        from kiro_crew.slack import gateway
+        from aj_crew.config import loader, loader_document
+        from aj_crew.slack import gateway
 
         monkeypatch.setattr(loader, "acp_backend_declared", lambda: declared)
         monkeypatch.setattr(loader, "member_acp_backend_declared", lambda: True)
@@ -539,11 +539,11 @@ class TestAKiroCliPickWaitsForTheFloor:
     def test_a_spawn_on_a_kiro_cli_pick_waits_and_lands_on_kas(
         self, monkeypatch, pinned_cli, kas_selectable
     ):
-        from kiro_crew.agent_sdk import kas_floor_wait
-        from kiro_crew.agent_sdk.kas_floor_wait import await_kas_floor_verdict
-        from kiro_crew.config import loader, loader_document
-        from kiro_crew.members import select_provider_backend
-        from kiro_crew.slack import gateway
+        from aj_crew.agent_sdk import kas_floor_wait
+        from aj_crew.agent_sdk.kas_floor_wait import await_kas_floor_verdict
+        from aj_crew.config import loader, loader_document
+        from aj_crew.members import select_provider_backend
+        from aj_crew.slack import gateway
 
         _help(monkeypatch, _NEW_HELP)
         # The bound must outlast any scheduling delay, so only the verdict releases.
@@ -585,9 +585,9 @@ class TestAKiroCliPickWaitsForTheFloor:
         assert asyncio.run(_run()) == KAS
 
     def test_the_gateway_passes_the_kiro_pick_to_the_floor(self, monkeypatch):
-        from kiro_crew.agent_sdk import kas_floor_wait
-        from kiro_crew.config import loader, loader_document
-        from kiro_crew.slack import gateway
+        from aj_crew.agent_sdk import kas_floor_wait
+        from aj_crew.config import loader, loader_document
+        from aj_crew.slack import gateway
 
         seen: list[dict] = []
         monkeypatch.setattr(loader, "acp_backend_declared", lambda: True)
@@ -611,15 +611,15 @@ class TestSpawnWaitsForADefaultedFloor:
 
     @pytest.fixture(autouse=True)
     def _disarm(self, _floor_monkeypatch):
-        from kiro_crew.agent_sdk import kas_floor_wait
+        from aj_crew.agent_sdk import kas_floor_wait
 
         _floor_monkeypatch.setattr(kas_floor_wait, "_armed", None)
 
     @staticmethod
     def _gated_floor(monkeypatch, *, declared):
         """A real floor on an old kiro-cli whose verdict waits on the returned event."""
-        from kiro_crew.config import loader
-        from kiro_crew.slack import gateway
+        from aj_crew.config import loader
+        from aj_crew.slack import gateway
 
         release = threading.Event()
 
@@ -636,8 +636,8 @@ class TestSpawnWaitsForADefaultedFloor:
     @staticmethod
     async def _spawn(cfg, key="dashboard:chat"):
         """What a spawn path does: wait at the gate for its role, then pick the backend."""
-        from kiro_crew.agent_sdk.kas_floor_wait import await_kas_floor_verdict
-        from kiro_crew.members import is_member_session_key, select_provider_backend
+        from aj_crew.agent_sdk.kas_floor_wait import await_kas_floor_verdict
+        from aj_crew.members import is_member_session_key, select_provider_backend
 
         await await_kas_floor_verdict(member=is_member_session_key(key))
         return select_provider_backend(key, cfg.agent.member_acp_backend, cfg.agent.acp_backend)
@@ -666,7 +666,7 @@ class TestSpawnWaitsForADefaultedFloor:
     def test_member_dm_on_a_defaulted_member_backend_waits_and_main_does_not(
         self, monkeypatch, pinned_cli, kas_selectable
     ):
-        from kiro_crew.members import DM_SLOT_KEY_PREFIX
+        from aj_crew.members import DM_SLOT_KEY_PREFIX
 
         _help(monkeypatch, _OLD_HELP)
         gateway, release = self._gated_floor(monkeypatch, declared=False)
@@ -696,10 +696,10 @@ class TestSpawnWaitsForADefaultedFloor:
     def test_explicit_kas_does_not_wait(
         self, monkeypatch, pinned_cli, kas_selectable, explicit_member
     ):
-        from kiro_crew.agent_sdk import kas_floor_wait
-        from kiro_crew.config import loader
-        from kiro_crew.members import DM_SLOT_KEY_PREFIX
-        from kiro_crew.slack import gateway
+        from aj_crew.agent_sdk import kas_floor_wait
+        from aj_crew.config import loader
+        from aj_crew.members import DM_SLOT_KEY_PREFIX
+        from aj_crew.slack import gateway
 
         _help(monkeypatch, _OLD_HELP)
         # The lost-run bound must expire before the gate can release on timeout.
@@ -749,7 +749,7 @@ class TestSpawnWaitsForADefaultedFloor:
         assert asyncio.run(_run()) == KAS
 
     def test_release_preserves_the_deadline_and_other_role(self):
-        from kiro_crew.agent_sdk import kas_floor_wait
+        from aj_crew.agent_sdk import kas_floor_wait
 
         async def _run():
             verdict = asyncio.get_running_loop().create_future()
@@ -775,7 +775,7 @@ class TestSpawnWaitsForADefaultedFloor:
         asyncio.run(_run())
 
     def test_another_floor_cannot_release_the_armed_roles(self):
-        from kiro_crew.agent_sdk import kas_floor_wait
+        from aj_crew.agent_sdk import kas_floor_wait
 
         async def _run():
             loop = asyncio.get_running_loop()
@@ -794,7 +794,7 @@ class TestSpawnWaitsForADefaultedFloor:
 
     @pytest.mark.parametrize("cancelled", [False, True])
     def test_a_failed_or_cancelled_verdict_releases_waiters(self, cancelled):
-        from kiro_crew.agent_sdk import kas_floor_wait
+        from aj_crew.agent_sdk import kas_floor_wait
 
         async def _run():
             verdict = asyncio.get_running_loop().create_future()
@@ -815,7 +815,7 @@ class TestSpawnWaitsForADefaultedFloor:
         asyncio.run(_run())
 
     def test_a_foreign_loop_costs_no_wait(self):
-        from kiro_crew.agent_sdk import kas_floor_wait
+        from aj_crew.agent_sdk import kas_floor_wait
 
         async def _arm():
             verdict = asyncio.get_running_loop().create_future()
@@ -830,7 +830,7 @@ class TestSpawnWaitsForADefaultedFloor:
         asyncio.run(_wait())
 
     def test_a_landed_verdict_costs_no_wait(self):
-        from kiro_crew.agent_sdk import kas_floor_wait
+        from aj_crew.agent_sdk import kas_floor_wait
 
         async def _run():
             verdict = asyncio.get_running_loop().create_future()
@@ -843,7 +843,7 @@ class TestSpawnWaitsForADefaultedFloor:
         asyncio.run(_run())
 
     def test_the_wait_is_bounded_by_the_probe_timeout(self, monkeypatch):
-        from kiro_crew.agent_sdk import kas_floor_wait
+        from aj_crew.agent_sdk import kas_floor_wait
 
         assert kas_floor_wait.KAS_FLOOR_WAIT_SECS == kiro_cli._KAS_HELP_PROBE_TIMEOUT_SECS
         monkeypatch.setattr(kas_floor_wait, "KAS_FLOOR_WAIT_SECS", 0.0)
@@ -866,9 +866,9 @@ class TestTaskRunBootstrapWaitsForTheFloor:
     def test_a_task_run_started_before_the_verdict_lands_on_kiro_cli(
         self, monkeypatch, pinned_cli, kas_selectable
     ):
-        from kiro_crew.agent_sdk import kas_floor_wait
-        from kiro_crew.members import select_provider_backend
-        from kiro_crew.session_allocation_parts import companions
+        from aj_crew.agent_sdk import kas_floor_wait
+        from aj_crew.members import select_provider_backend
+        from aj_crew.session_allocation_parts import companions
 
         _help(monkeypatch, _OLD_HELP)
         cfg = _cfg()
@@ -916,14 +916,14 @@ class TestSharedBackgroundWaitsForTheFloor:
     ):
         from unittest.mock import AsyncMock, Mock
 
-        from kiro_crew.acp import runtime
-        from kiro_crew.agent_sdk import kas_floor_wait
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.acp import runtime
+        from aj_crew.agent_sdk import kas_floor_wait
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
         _help(monkeypatch, _OLD_HELP)
         monkeypatch.setattr(kas_floor_wait, "_armed", None)
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.acp_backend = KAS
         cfg.agent.member_acp_backend = KAS
         handle = object()
@@ -973,9 +973,9 @@ class TestAWaitingColdStartUsesTheFactoryInForce:
     """A factory installed while a cold start waits for the verdict is the one it calls."""
 
     def test_the_factory_swapped_during_the_wait_builds_the_provider(self, kas_selectable):
-        from kiro_crew.agent_sdk import kas_floor_wait
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.session import SessionManager
+        from aj_crew.agent_sdk import kas_floor_wait
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.session import SessionManager
 
         calls: list[str] = []
 
@@ -990,7 +990,7 @@ class TestAWaitingColdStartUsesTheFactoryInForce:
             return _build
 
         async def _run():
-            manager = SessionManager(KiroCrewConfig())
+            manager = SessionManager(AjCrewConfig())
             manager._provider_factory = _factory("pre-verdict")
             loop = asyncio.get_running_loop()
             verdict = loop.create_future()
@@ -1002,7 +1002,7 @@ class TestAWaitingColdStartUsesTheFactoryInForce:
                 entered.set()
                 await real_wait(**kwargs)
 
-            from kiro_crew.session_allocation_parts import get_or_create as goc
+            from aj_crew.session_allocation_parts import get_or_create as goc
 
             goc.await_kas_floor_verdict = _wait
             try:
@@ -1028,11 +1028,11 @@ class TestOffLoopRunnerWaitsForTheFloor:
     def test_an_agent_runner_step_before_the_verdict_lands_on_kiro_cli(
         self, monkeypatch, pinned_cli, kas_selectable
     ):
-        from kiro_crew.agent_sdk import kas_floor_wait
-        from kiro_crew.apps.builtins.auto_improvement.spine.agent_runner import (
+        from aj_crew.agent_sdk import kas_floor_wait
+        from aj_crew.apps.builtins.auto_improvement.spine.agent_runner import (
             SessionAgentRunner,
         )
-        from kiro_crew.members import select_provider_backend
+        from aj_crew.members import select_provider_backend
 
         _help(monkeypatch, _OLD_HELP)
         cfg = _cfg()
@@ -1096,14 +1096,14 @@ class TestOffLoopRunnerWaitsForTheFloor:
         assert results and not results[0].ok
 
     def test_no_armed_gate_costs_the_runner_no_wait(self, monkeypatch):
-        from kiro_crew.agent_sdk import kas_floor_wait
+        from aj_crew.agent_sdk import kas_floor_wait
 
         monkeypatch.setattr(kas_floor_wait, "_armed", None)
         # Returns at once: nothing armed, so no loop is consulted.
         kas_floor_wait.wait_kas_floor_verdict_blocking()
 
     def test_a_caller_on_the_arming_loop_is_never_blocked(self, monkeypatch):
-        from kiro_crew.agent_sdk import kas_floor_wait
+        from aj_crew.agent_sdk import kas_floor_wait
 
         monkeypatch.setattr(kas_floor_wait, "_armed", None)
 
@@ -1129,16 +1129,16 @@ class TestAResolvedKiroIdIsNeverMovedAgain:
         import json as _json
         from unittest.mock import patch
 
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.members import select_provider_backend
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.members import select_provider_backend
 
         registry.confirm_kiro_cli_offers_kas()
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(
             _json.dumps({"agent": {"member_acp_backend": "not-a-backend"}}), encoding="utf-8"
         )
-        with patch("kiro_crew.config.loader.config_path", return_value=cfg_file):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_path", return_value=cfg_file):
+            cfg = AjCrewConfig.load()
         assert cfg.agent.member_acp_backend == KIRO
         # Every re-resolution of that floor keeps it.
         assert registry.resolve_selected_backend(cfg.agent.member_acp_backend) == KIRO
@@ -1159,9 +1159,9 @@ class TestTheVerdictReachesTheLiveFactory:
     """A confirmed v3 verdict reloads the live config before any spawn is released."""
 
     def _run_floor(self, monkeypatch, *, help_text):
-        from kiro_crew.agent_sdk import kas_floor_wait
-        from kiro_crew.config import live, loader, loader_document
-        from kiro_crew.slack import gateway
+        from aj_crew.agent_sdk import kas_floor_wait
+        from aj_crew.config import live, loader, loader_document
+        from aj_crew.slack import gateway
 
         _help(monkeypatch, help_text)
         monkeypatch.setattr(loader, "acp_backend_declared", lambda: True)
@@ -1208,15 +1208,15 @@ class TestTheVerdictReachesTheLiveFactory:
         import json as _json
         from unittest.mock import patch
 
-        from kiro_crew.config.live import diff_config_docs
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.live import diff_config_docs
+        from aj_crew.config.loader import AjCrewConfig
 
         cfg_file = tmp_path / "config.json"
         cfg_file.write_text(_json.dumps({"agent": {"acp_backend": "kiro"}}), encoding="utf-8")
-        with patch("kiro_crew.config.loader.config_path", return_value=cfg_file):
-            before = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_path", return_value=cfg_file):
+            before = AjCrewConfig.load()
             registry.confirm_kiro_cli_offers_kas()
-            after = KiroCrewConfig.load()
+            after = AjCrewConfig.load()
         assert before.agent.acp_backend == KIRO and after.agent.acp_backend == KAS
         assert "agent.acp_backend" in diff_config_docs(before.to_dict(), after.to_dict())
 
@@ -1238,7 +1238,7 @@ class TestTheProbeRunsTheSpawnBinary:
         binary = bin_dir / "kiro-cli"
         monkeypatch.setenv("HOME", str(home))
         monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}/usr/bin{os.pathsep}/bin")
-        monkeypatch.delenv("KIROCREW_KIRO_BIN", raising=False)
+        monkeypatch.delenv("AJCREW_KIRO_BIN", raising=False)
         monkeypatch.delenv(kiro_cli.BUNDLED_KIRO_DIR_ENV, raising=False)
         # The fixed macOS install directories would find a real install.
         monkeypatch.setattr(kiro_cli, "_MACOS_SYSTEM_DIRS", ())

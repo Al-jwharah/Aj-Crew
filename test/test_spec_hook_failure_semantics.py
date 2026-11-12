@@ -24,12 +24,12 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-import kiro_crew.hooks as hooks_mod
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.hooks import HOOK_EVENT_PRE_TOOL_USE, ScriptHook, ScriptHookStore
+import aj_crew.config.paths as paths_mod
+import aj_crew.hooks as hooks_mod
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.hooks import HOOK_EVENT_PRE_TOOL_USE, ScriptHook, ScriptHookStore
 
 _AGENT = "a1"
 
@@ -45,8 +45,8 @@ def _fresh_cache():
 def _passthrough_sandbox(_floor_monkeypatch):
     # A plain shell spawn, so each assertion turns on the deny gate and the exit
     # code, not on the host's sandbox backend.
-    _floor_monkeypatch.setattr("kiro_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
-    _floor_monkeypatch.setattr("kiro_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
+    _floor_monkeypatch.setattr("aj_crew.sandbox.wrap_argv", lambda argv, **k: (list(argv), None))
+    _floor_monkeypatch.setattr("aj_crew.sandbox.cgroup_scope_argv", lambda argv: list(argv))
 
 
 @pytest.fixture
@@ -89,7 +89,7 @@ def _gate(tmp_path: Path, store: ScriptHookStore) -> str | None:
 
 
 def test_a_deny_listed_user_spec_hook_runs_and_the_tool_goes_ahead(tmp_path, agents_dir):
-    from kiro_crew.security import is_denied
+    from aj_crew.security import is_denied
 
     command, sentinel = _deny_listed(tmp_path, "spec")
     assert is_denied(command), "precondition: the command matches a default deny rule"
@@ -104,7 +104,7 @@ def test_a_governance_pinned_rule_still_refuses_a_user_spec_hook(tmp_path, agent
     # runs. A refused spec hook blocks the tool, with the refusal as the reason
     # (P0-12): the guard never gave a verdict.
     monkeypatch.setattr(
-        "kiro_crew.security.pinned_builtin_command_ids",
+        "aj_crew.security.pinned_builtin_command_ids",
         lambda: {"local-destructive-chmod-777"},
     )
     command, sentinel = _deny_listed(tmp_path, "pinned")
@@ -167,8 +167,8 @@ def test_a_spec_hook_that_exits_2_still_blocks(tmp_path, agents_dir):
 
 
 def test_a_spec_linked_in_from_outside_the_agents_dir_stays_vetted(tmp_path, monkeypatch):
-    from kiro_crew.agent_sdk.spec_hooks import _user_dir_origin
-    from kiro_crew.config import paths
+    from aj_crew.agent_sdk.spec_hooks import _user_dir_origin
+    from aj_crew.config import paths
 
     agents = tmp_path / "agents"
     agents.mkdir()

@@ -20,7 +20,7 @@ vi.mock('../api/client', async importOriginal => {
     ...mod,
     api: {
       ...mod.api,
-      kirocrewConfig: vi.fn().mockResolvedValue({
+      ajcrewConfig: vi.fn().mockResolvedValue({
         dashboard: { user_role: '', user_technical_level: '' },
       }),
       patchConfig: vi.fn().mockResolvedValue({}),
@@ -32,13 +32,13 @@ vi.mock('../api/client', async importOriginal => {
         reason_code: 'ready',
         endpoint_configured: true,
         env_override: false,
-        env_var: 'KIROCREW_TELEMETRY_DISABLED',
+        env_var: 'AJCREW_TELEMETRY_DISABLED',
         governance_override: false,
       }),
       collectionStatus: vi.fn().mockResolvedValue({
         enabled: true,
         env_pinned: false,
-        env_var: 'KIROCREW_TELEMETRY',
+        env_var: 'AJCREW_TELEMETRY',
       }),
     },
   }
@@ -105,7 +105,7 @@ describe('OnboardingFlow / PrivacyChapter - keyboard focus on first-run dialogs'
   it('Customize step 2 (About you): every Tab stop shows a visible ring', () => {
     renderWithProviders(<OnboardingFlow initialOpen onComplete={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
-    expect(screen.getByText('Tell Kiro about you')).toBeInTheDocument()
+    expect(screen.getByText('Tell Aj about you')).toBeInTheDocument()
     assertEveryStopShowsARing(screen.getByRole('dialog'))
   })
 

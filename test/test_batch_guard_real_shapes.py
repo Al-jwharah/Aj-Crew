@@ -19,7 +19,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, EVENT_TOOL_CALL, AcpEvent, JsonRpcMessage
+from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, EVENT_TOOL_CALL, AcpEvent, JsonRpcMessage
 
 _ITEM = "it_16e4c6ed"
 _TS = "07:30:45Z"
@@ -27,12 +27,12 @@ _SHA = "d25f0e89912c9713fdbb7a1ed451c75b840a2c6a"
 #: An item id a same-batch create returns.
 _NEW_ITEM = "it_7c0ffee1"
 _KEY = "chat-5018-1793952328"
-_WORK = "kirocrew-work"
-_DASH = "kirocrew-dashboard"
+_WORK = "ajcrew-work"
+_DASH = "ajcrew-dashboard"
 
 
 def _guard():
-    return importlib.import_module("kiro_crew.acp.batch_guard")
+    return importlib.import_module("aj_crew.acp.batch_guard")
 
 
 def _args(**fields) -> str:
@@ -232,12 +232,12 @@ def test_each_read_and_write_pair_is_refused_naming_the_value(
         ({"tool_name": "work_ledger_read", "mcp_server_name": _WORK}, "read"),
         ({"tool_name": "work_ledger_record", "mcp_server_name": _WORK}, "write"),
         ({"tool_name": "session_send", "mcp_server_name": _DASH}, "write"),
-        ({"tool_name": "@kirocrew-work/work_ledger_read"}, "read"),
-        ({"tool_name": "@kirocrew-dashboard/session_send"}, "write"),
+        ({"tool_name": "@ajcrew-work/work_ledger_read"}, "read"),
+        ({"tool_name": "@ajcrew-dashboard/session_send"}, "write"),
         # A bare qualified KAS id carries no server: unclassified, as on main.
-        ({"tool_name": "mcp_kirocrew_work_work_ledger_read"}, ""),
-        ({"tool_name": "mcp_kirocrew_work_work_ledger_record"}, ""),
-        ({"tool_name": "mcp_kirocrew_dashboard_session_send"}, ""),
+        ({"tool_name": "mcp_ajcrew_work_work_ledger_read"}, ""),
+        ({"tool_name": "mcp_ajcrew_work_work_ledger_record"}, ""),
+        ({"tool_name": "mcp_ajcrew_dashboard_session_send"}, ""),
         ({"tool_name": "fs_append"}, "write"),
         ({"tool_name": "mcp_example_other_tool"}, ""),
     ],
@@ -254,15 +254,15 @@ def test_the_shapes_writes_are_withheld_from_auto_approval(monkeypatch):
         "rules": [
             {
                 "capability": "mcp",
-                "match": ["kirocrew-work/*", "kirocrew-dashboard/*"],
+                "match": ["ajcrew-work/*", "ajcrew-dashboard/*"],
                 "effect": "allow",
             }
         ]
     }
     _policy, refs = guard.withhold_write_auto_approval(policy)
-    assert "@kirocrew-work/work_ledger_record" in refs
-    assert "@kirocrew-dashboard/session_send" in refs
-    assert "@kirocrew-work/work_ledger_read" not in refs
+    assert "@ajcrew-work/work_ledger_record" in refs
+    assert "@ajcrew-dashboard/session_send" in refs
+    assert "@ajcrew-work/work_ledger_read" not in refs
 
 
 # -- demo: the real approval path --
@@ -313,7 +313,7 @@ def _ask(request_id: int, call_id: str, server: str, tool: str, raw_input: dict)
 
 
 def _handle():
-    from kiro_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.session_handle import AcpSessionHandle
 
     runtime = MagicMock()
     runtime.send_response = AsyncMock()
@@ -375,7 +375,7 @@ async def test_a_native_steer_makes_its_ids_seen(monkeypatch):
 async def test_a_client_native_steer_makes_its_ids_seen(tmp_path, monkeypatch):
     # The client transport's default `_session/steer` path feeds the guard too.
     monkeypatch.setattr(_guard(), "guard_settings", lambda: (True, ()))
-    from kiro_crew.acp.client import AcpClient
+    from aj_crew.acp.client import AcpClient
 
     client = AcpClient(work_dir=tmp_path)
     client._batch_window.set_feeding(True)
@@ -389,9 +389,9 @@ async def test_a_client_native_steer_makes_its_ids_seen(tmp_path, monkeypatch):
 @pytest.mark.asyncio
 async def test_a_client_pi_steer_makes_its_ids_seen_only_when_sent(tmp_path, monkeypatch):
     monkeypatch.setattr(_guard(), "guard_settings", lambda: (True, ()))
-    from kiro_crew.acp import pi_steer_turn
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.acp.client_turn_control import ACP_BACKEND_PI
+    from aj_crew.acp import pi_steer_turn
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.acp.client_turn_control import ACP_BACKEND_PI
 
     client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_PI)
     client._batch_window.set_feeding(True)
@@ -524,8 +524,8 @@ def test_a_handle_learns_a_result_streamed_before_an_outputless_terminal(monkeyp
 def test_a_client_learns_a_result_streamed_before_an_outputless_terminal(tmp_path, monkeypatch):
     monkeypatch.setattr(_guard(), "guard_settings", lambda: (True, ()))
     guard = _guard()
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.acp.client_tool_events import _extract_tool_call_update
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.acp.client_tool_events import _extract_tool_call_update
 
     client = AcpClient(work_dir=tmp_path)
     window = client._batch_window

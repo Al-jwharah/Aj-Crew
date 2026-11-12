@@ -2,7 +2,7 @@
 
 A name an owner module's own code reads -- a field limit, a grammar, the event-type
 vocabulary, a folder limit, a per-format image sniffer -- has one binding, in that
-owner. :mod:`kiro_crew.artifacts` forwards it: a read answers from the owner, a write
+owner. :mod:`aj_crew.artifacts` forwards it: a read answers from the owner, a write
 or a delete lands in the owner, and the facade's own code reads it off the owner too.
 These tests pin each half of that, the machinery that makes it true for type
 checkers and for a loaded owner, and that importing the facade loads every owner.
@@ -23,9 +23,9 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import artifact_store
-from kiro_crew import artifacts as art_mod
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import artifact_store
+from aj_crew import artifacts as art_mod
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 _FACADE_SOURCE = Path(inspect.getfile(art_mod))
 #: The facade and the ``artifacts_*`` owners its ``ArtifactStore`` binds members from.
@@ -108,7 +108,7 @@ def test_a_write_and_a_delete_through_the_facade_reach_the_owner(
 @pytest.mark.parametrize(
     "patcher",
     [
-        lambda new: mock.patch("kiro_crew.artifacts.MAX_TAGS", new),
+        lambda new: mock.patch("aj_crew.artifacts.MAX_TAGS", new),
         lambda new: mock.patch.object(art_mod, "MAX_TAGS", new),
     ],
     ids=["mock.patch", "mock.patch.object"],
@@ -193,7 +193,7 @@ def test_the_bare_read_check_can_fail() -> None:
     assert (
         _bare_loads(
             "if TYPE_CHECKING:\n"
-            "    from kiro_crew.artifact_store.rules import MAX_TAGS\n"
+            "    from aj_crew.artifact_store.rules import MAX_TAGS\n"
             "def f(tags):\n"
             "    return len(tags) > _rules.MAX_TAGS\n"
         )
@@ -250,7 +250,7 @@ def test_a_loaded_owner_is_read_without_import_module() -> None:
         assert owner.MAX_TAGS is original
         assert refused.call_count == 0
         with pytest.raises(AssertionError, match="resolution imported"):
-            art_mod._module("kiro_crew._artifacts_absent_owner_probe")
+            art_mod._module("aj_crew._artifacts_absent_owner_probe")
         assert refused.call_count == 1
 
 
@@ -264,7 +264,7 @@ def test_importing_the_facade_loads_every_owner(tmp_path: Path) -> None:
     assert len(owners) >= 6 and set(art_mod._EXPORTS.values()) <= set(owners)
     code = (
         "import sys\n"
-        "import kiro_crew.artifacts\n"
+        "import aj_crew.artifacts\n"
         f"print(','.join(m for m in {owners!r} if m not in sys.modules))\n"
     )
     env = dict(os.environ)

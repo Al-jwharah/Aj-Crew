@@ -7,7 +7,7 @@ import sqlite3
 
 import pytest
 
-from kiro_crew.knowledge.dedup import (
+from aj_crew.knowledge.dedup import (
     DocRef,
     _match_reason,
     dedup_document,
@@ -16,8 +16,8 @@ from kiro_crew.knowledge.dedup import (
     normalize_filename,
     pick_winner,
 )
-from kiro_crew.knowledge.embedder import floats_to_bytes
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.embedder import floats_to_bytes
+from aj_crew.knowledge.store import KnowledgeStore
 
 
 def _mk_store(tmp_path) -> KnowledgeStore:
@@ -226,7 +226,7 @@ class TestPriority:
         assert pick_winner(upload_docx, folder_pdf)[0].source_id == "f"
 
     def test_format_rank_ordering(self):
-        from kiro_crew.knowledge.dedup import _format_rank
+        from aj_crew.knowledge.dedup import _format_rank
         assert _format_rank("a.docx") > _format_rank("a.pdf")
         assert _format_rank("a.md") >= _format_rank("a.docx")
         # unknown extension and no extension both fall back to the default rank,
@@ -732,7 +732,7 @@ class TestOneDocumentManyLocations:
         the folder vocabulary's 'done' becomes invisible to it, and identical content
         then lands again under a second uri as a duplicate.
         """
-        from kiro_crew.knowledge.agent_source import find_document_by_hash
+        from aj_crew.knowledge.agent_source import find_document_by_hash
         store = _mk_store(tmp_path)
         try:
             agg = store.add_source(name="Auto-added", source_type="agent",
@@ -953,7 +953,7 @@ class TestOneDocumentManyLocations:
         into one reference spanning both documents' items, so a later collapse treats
         them as a single thing and removing one takes the other's indexed copy too.
         """
-        from kiro_crew.knowledge.dedup import enumerate_docs
+        from aj_crew.knowledge.dedup import enumerate_docs
         store = _mk_store(tmp_path)
         try:
             agg = store.add_source(name="Artifacts", source_type="artifact",
@@ -983,7 +983,7 @@ class TestOneDocumentManyLocations:
         """An unattended pass must not delete a document on a similarity judgement."""
         from unittest.mock import patch
 
-        from kiro_crew.knowledge.dedup import DedupAction, DocRef, dedup_sweep
+        from aj_crew.knowledge.dedup import DedupAction, DocRef, dedup_sweep
         store = _mk_store(tmp_path)
 
         def _ref(sid: str, stype: str, name: str, iid: str, h: str) -> DocRef:
@@ -1001,7 +1001,7 @@ class TestOneDocumentManyLocations:
                             loser=_ref("l2", "upload", "b.md", "i4", "h3"),
                             reason="fuzzy:0.9700"),
             ]
-            import kiro_crew.knowledge.dedup as dd
+            import aj_crew.knowledge.dedup as dd
             with patch.object(dd, "enumerate_docs", return_value=[]), \
                  patch.object(dd, "find_duplicates", return_value=fake), \
                  patch.object(dd, "_audit_collapse"), \
@@ -1023,7 +1023,7 @@ class TestOneDocumentManyLocations:
         With the mtime gate, removing the survivor takes the content out of the
         Library while the duplicate file is still on disk and nothing re-reads it.
         """
-        from kiro_crew.knowledge.dedup import dedup_sweep
+        from aj_crew.knowledge.dedup import dedup_sweep
         store = _mk_store(tmp_path)
         try:
             folder = store.add_source(name="docs", source_type="local_folder",
@@ -1109,7 +1109,7 @@ class TestOneDocumentManyLocations:
         """
         store = _mk_store(tmp_path)
         try:
-            from kiro_crew.knowledge.dedup import _collapse_doc
+            from aj_crew.knowledge.dedup import _collapse_doc
             a = store.add_source(name="A", source_type="local_folder",
                                  uri=str(tmp_path / "a"))
             b = store.add_source(name="B", source_type="local_folder",
@@ -1201,7 +1201,7 @@ def _find_duplicates_reference(store, docs, threshold):
     every input. Copied verbatim from the original implementation so the equivalence
     tests compare against the behaviour being replaced, not against the new code.
     """
-    import kiro_crew.knowledge.dedup as dd
+    import aj_crew.knowledge.dedup as dd
 
     actions = []
     removed = set()
@@ -1245,7 +1245,7 @@ class TestSweepIsNotQuadratic:
     @staticmethod
     def _doc(idx, name, *, content_hash=None, embedding_sig=None, item_ids=None,
              source_id=None, source_type="local_file", recency=None):
-        from kiro_crew.knowledge.dedup import DocRef
+        from aj_crew.knowledge.dedup import DocRef
         return DocRef(
             source_id=source_id if source_id is not None else f"s{idx}",
             source_type=source_type, filename=name,
@@ -1297,7 +1297,7 @@ class TestSweepIsNotQuadratic:
     def test_equivalence_with_reference_over_random_corpora(self):
         import random
 
-        import kiro_crew.knowledge.dedup as dd
+        import aj_crew.knowledge.dedup as dd
 
         store = object()  # embeddings are cached on the DocRefs, so the store is unused
         for seed in range(40):
@@ -1315,7 +1315,7 @@ class TestSweepIsNotQuadratic:
         """Names >= 200 chars trigger SequenceMatcher autojunk. quick_ratio/ratio can
         only shrink under autojunk, so the upper-bound chain still never drops a
         matching pair -- verify the optimized output still equals the reference."""
-        import kiro_crew.knowledge.dedup as dd
+        import aj_crew.knowledge.dedup as dd
 
         base = "Engineering Roadmap " + ("alpha beta gamma delta " * 12)  # > 200 chars
         assert len(base) >= 200
@@ -1358,7 +1358,7 @@ class TestSweepIsNotQuadratic:
         bucketing and must prune by filename alone."""
         import math as _math
 
-        import kiro_crew.knowledge.dedup as dd
+        import aj_crew.knowledge.dedup as dd
 
         n = 2000
         names = self._distinct_names(n)
@@ -1403,7 +1403,7 @@ class TestSweepIsNotQuadratic:
         exact-content and identical-stem matches are unaffected; and
         ``max_fuzzy_bucket=None`` (the CLI/MCP backfill) never caps.
         """
-        import kiro_crew.knowledge.dedup as dd
+        import aj_crew.knowledge.dedup as dd
 
         # A single embedding_sig bucket of distinct cross-source near-named stems that
         # WOULD build a large near-stem adjacency if the pass ran.
@@ -1438,7 +1438,7 @@ class TestSweepIsNotQuadratic:
         """Skipping the near-match pass for an oversized bucket must NOT drop the
         cheap tiers: exact-content duplicates and identical-stem fuzzy matches in that
         same bucket still collapse."""
-        import kiro_crew.knowledge.dedup as dd
+        import aj_crew.knowledge.dedup as dd
 
         docs = []
         # Padding so the bucket exceeds a small cap, all distinct non-matching names.
@@ -1473,7 +1473,7 @@ class TestSweepIsNotQuadratic:
         """At the boundary: a bucket of exactly ``max_fuzzy_bucket`` distinct stems is
         NOT skipped, so the result equals the uncapped (dense) output; one more stem
         trips the skip. This pins the cap's comparison as strictly ``>``."""
-        import kiro_crew.knowledge.dedup as dd
+        import aj_crew.knowledge.dedup as dd
 
         def corpus(n):
             out = []
@@ -1508,7 +1508,7 @@ class TestSweepIsNotQuadratic:
         source-blind adjacency builder would run ratio() on ~n^2 pairs and store a
         quadratic link map; the source guard must drive both to zero.
         """
-        import kiro_crew.knowledge.dedup as dd
+        import aj_crew.knowledge.dedup as dd
 
         n = 1000
         docs = []
@@ -1550,7 +1550,7 @@ class TestSweepIsNotQuadratic:
         """The same-source guard must not drop a legitimate cross-source near-match:
         the identical dated series split across TWO folders still collapses, and its
         output equals the dense reference."""
-        import kiro_crew.knowledge.dedup as dd
+        import aj_crew.knowledge.dedup as dd
 
         docs = []
         for folder in ("A", "B"):
@@ -1575,7 +1575,7 @@ class TestSweepIsNotQuadratic:
         in doc-index order. A pair whose index-order ratio clears the floor only in
         one direction must still be surfaced -- the candidate filter takes the max of
         both orders."""
-        import kiro_crew.knowledge.dedup as dd
+        import aj_crew.knowledge.dedup as dd
 
         vec = [1.0, 0.0, 0.0]
 
@@ -1598,7 +1598,7 @@ class TestSweepIsNotQuadratic:
     def test_result_matches_brute_force_on_a_mixed_db(self, tmp_path):
         """End-to-end against a real KnowledgeStore: the optimized find_duplicates
         over enumerate_docs must equal the dense reference over the same docs."""
-        import kiro_crew.knowledge.dedup as dd
+        import aj_crew.knowledge.dedup as dd
 
         store = _mk_store(tmp_path)
         try:
@@ -1628,7 +1628,7 @@ class TestSweepIsNotQuadratic:
         placeholder files, scanned PDFs with no extractable text. The candidate
         generator must not emit its n*(n-1)/2 pairs, which the same-source guard would
         reject anyway, or the scheduled sweep exhausts memory."""
-        import kiro_crew.knowledge.dedup as dd
+        import aj_crew.knowledge.dedup as dd
 
         n = 4000
         docs = [dd.DocRef(
@@ -1651,7 +1651,7 @@ class TestSweepIsNotQuadratic:
         must never hold the whole n*(n-1)/2 pair graph at once: each document's
         candidate list is produced and consumed on its own, so peak storage is one
         document's candidates, not millions of pairs."""
-        import kiro_crew.knowledge.dedup as dd
+        import aj_crew.knowledge.dedup as dd
 
         per_folder = 2000
         docs = []
@@ -1677,7 +1677,7 @@ class TestSweepIsNotQuadratic:
         """Two documents that reference the same item set are one physical item, not
         two documents; _match_reason rejects them on the shared item id, so the
         candidate generator must not emit the pair either."""
-        import kiro_crew.knowledge.dedup as dd
+        import aj_crew.knowledge.dedup as dd
 
         docs = [
             dd.DocRef(source_id="sA", source_type="local_file", filename="x.md",
@@ -1697,7 +1697,7 @@ def test_collapse_audit_names_the_document_not_the_source(monkeypatch) -> None:
     """An artifact loser has no file path; the audit names it, not a whole source."""
     from unittest.mock import MagicMock
 
-    import kiro_crew.knowledge.dedup as dedup_mod
+    import aj_crew.knowledge.dedup as dedup_mod
 
     recorder = MagicMock()
     monkeypatch.setattr(dedup_mod, "sel", lambda: recorder)

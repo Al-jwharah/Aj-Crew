@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.autonudge import NUDGE_RENEW_DUE_SHARE, NudgeLoop, nudge_cycle_header
+from aj_crew.autonudge import NUDGE_RENEW_DUE_SHARE, NudgeLoop, nudge_cycle_header
 
 NOW = 1_800_000_000.0
 

@@ -1,8 +1,8 @@
 """The shared LLM turn helpers' facade keeps the patch seams the one module had.
 
-``kiro_crew.llm_helpers`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the
-owners in ``kiro_crew.llm_helpers_parts``. Callers, tests and documents still reach every
-name as ``kiro_crew.llm_helpers.<name>``, and the moved code reads its names as plain
+``aj_crew.llm_helpers`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the
+owners in ``aj_crew.llm_helpers_parts``. Callers, tests and documents still reach every
+name as ``aj_crew.llm_helpers.<name>``, and the moved code reads its names as plain
 module globals, so a patch through the facade reaches that code only because the mirror
 writes it into every module holding the name.
 
@@ -31,9 +31,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror, llm_helpers
-from kiro_crew.agent_sdk.drivers import acp_turn_vocab
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror, llm_helpers
+from aj_crew.agent_sdk.drivers import acp_turn_vocab
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_llm_helpers_facade")
 
@@ -41,8 +41,8 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_llm_helpers_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.llm_helpers"
-PARTS = "kiro_crew.llm_helpers_parts"
+FACADE = "aj_crew.llm_helpers"
+PARTS = "aj_crew.llm_helpers_parts"
 PARTS_DIR = Path(llm_helpers.__file__).resolve().parent / "llm_helpers_parts"
 _THIS_FILE = Path(__file__).resolve()
 
@@ -63,7 +63,7 @@ _KNOWN_SEAMS = frozenset(
         "run_bg_oneliner",
         "transient_retry_delay",
         "FALLBACK_CANDIDATE_ATTEMPTS",
-        "KiroCrewConfig",
+        "AjCrewConfig",
         "is_sensitive_bash_command",
         "_sel",
         "time",
@@ -73,21 +73,21 @@ _KNOWN_SEAMS = frozenset(
 #: Where each name of the agent SDK's turn vocabulary is defined: the facade's owners
 #: read these by value, so each must be that very object.
 _VOCABULARY_HOMES = {
-    "AcpAuthRequired": "kiro_crew.acp.client",
-    "AcpError": "kiro_crew.acp.client",
-    "AcpPromptBusy": "kiro_crew.acp.client",
-    "advertised_model_ids": "kiro_crew.acp.client",
-    "EVENT_STEER_CONSUMED": "kiro_crew.acp.types",
-    "PROVIDER_LABEL_DEFAULT": "kiro_crew.acp.types",
-    "TurnUsage": "kiro_crew.acp.types",
-    "EVENT_COMPLETE": "kiro_crew.providers.base",
-    "EVENT_PERMISSION_REQUEST": "kiro_crew.providers.base",
-    "EVENT_TEXT_CHUNK": "kiro_crew.providers.base",
-    "EVENT_TOOL_CALL": "kiro_crew.providers.base",
-    "EVENT_TOOL_RESULT": "kiro_crew.providers.base",
-    "LLMEvent": "kiro_crew.providers.base",
-    "LLMProvider": "kiro_crew.providers.base",
-    "resolve_billing_stats": "kiro_crew.providers.base",
+    "AcpAuthRequired": "aj_crew.acp.client",
+    "AcpError": "aj_crew.acp.client",
+    "AcpPromptBusy": "aj_crew.acp.client",
+    "advertised_model_ids": "aj_crew.acp.client",
+    "EVENT_STEER_CONSUMED": "aj_crew.acp.types",
+    "PROVIDER_LABEL_DEFAULT": "aj_crew.acp.types",
+    "TurnUsage": "aj_crew.acp.types",
+    "EVENT_COMPLETE": "aj_crew.providers.base",
+    "EVENT_PERMISSION_REQUEST": "aj_crew.providers.base",
+    "EVENT_TEXT_CHUNK": "aj_crew.providers.base",
+    "EVENT_TOOL_CALL": "aj_crew.providers.base",
+    "EVENT_TOOL_RESULT": "aj_crew.providers.base",
+    "LLMEvent": "aj_crew.providers.base",
+    "LLMProvider": "aj_crew.providers.base",
+    "resolve_billing_stats": "aj_crew.providers.base",
 }
 
 
@@ -215,7 +215,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for path in _owner_paths().values():
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -238,7 +238,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
-    """At BASE the module bound these by import, so ``from kiro_crew.llm_helpers import
+    """At BASE the module bound these by import, so ``from aj_crew.llm_helpers import
     fire_tool_hooks`` type-checked. Now an owner holds them, so the facade names each one
     from its home module under ``TYPE_CHECKING``, and exactly those."""
     served = set(_index().exports)
@@ -259,7 +259,7 @@ def test_the_family_logs_under_the_facade_name() -> None:
 
 
 def test_the_facade_runs_as_a_module(tmp_path: Path) -> None:
-    """``python -m kiro_crew.llm_helpers`` imported cleanly before the split; the mirror
+    """``python -m aj_crew.llm_helpers`` imported cleanly before the split; the mirror
     installs on ``__main__`` too, because every member binds one logger by name."""
     env = dict(os.environ)
     src = str(Path(llm_helpers.__file__).resolve().parents[1])
@@ -288,7 +288,7 @@ def test_the_turn_vocabulary_is_the_acp_layers_own_objects() -> None:
     ]
     assert wrong == []
     assert llm_helpers.AcpError is getattr(
-        importlib.import_module("kiro_crew.acp.client"), "AcpError"
+        importlib.import_module("aj_crew.acp.client"), "AcpError"
     )
 
 
@@ -337,44 +337,44 @@ def _imports(text: str, module: str, target: str, *, is_package: bool = False) -
 
 
 def _runtime_importers_of(dotted: str) -> list[str]:
-    """Modules under ``src/kiro_crew`` that import *dotted* outside ``if TYPE_CHECKING:``."""
+    """Modules under ``src/aj_crew`` that import *dotted* outside ``if TYPE_CHECKING:``."""
     leaf = dotted.rpartition(".")[2]
     found = []
     for path, text, _tree in source_corpus.parsed_candidates(require_any=(leaf,)):
         rel = path.relative_to(source_corpus.src_root()).with_suffix("")
         is_package = rel.name == "__init__"
-        module = ".".join(("kiro_crew", *rel.parts)).removesuffix(".__init__")
+        module = ".".join(("aj_crew", *rel.parts)).removesuffix(".__init__")
         if module != dotted and _imports(text, module, dotted, is_package=is_package):
             found.append(module)
     return sorted(found)
 
 
-_SIBLING = "kiro_crew.agent_sdk.drivers.sibling"
+_SIBLING = "aj_crew.agent_sdk.drivers.sibling"
 
 
 @pytest.mark.parametrize(
     ("text", "flagged"),
     [
-        ("from kiro_crew.agent_sdk.drivers.acp_turn_vocab import AcpError\n", True),
-        ("from kiro_crew.agent_sdk.drivers import acp_turn_vocab\n", True),
-        ("import kiro_crew.agent_sdk.drivers.acp_turn_vocab\n", True),
-        ("import kiro_crew.agent_sdk.drivers.acp_turn_vocab as vocab\n", True),
+        ("from aj_crew.agent_sdk.drivers.acp_turn_vocab import AcpError\n", True),
+        ("from aj_crew.agent_sdk.drivers import acp_turn_vocab\n", True),
+        ("import aj_crew.agent_sdk.drivers.acp_turn_vocab\n", True),
+        ("import aj_crew.agent_sdk.drivers.acp_turn_vocab as vocab\n", True),
         ("from .acp_turn_vocab import AcpError\n", True),
         ("from . import acp_turn_vocab\n", True),
         (
-            "import importlib\nimportlib.import_module('kiro_crew.agent_sdk.drivers.acp_turn_vocab')\n",
+            "import importlib\nimportlib.import_module('aj_crew.agent_sdk.drivers.acp_turn_vocab')\n",
             True,
         ),
-        ("__import__('kiro_crew.agent_sdk.drivers.acp_turn_vocab')\n", True),
-        ("def f():\n    from kiro_crew.agent_sdk.drivers.acp_turn_vocab import AcpError\n", True),
+        ("__import__('aj_crew.agent_sdk.drivers.acp_turn_vocab')\n", True),
+        ("def f():\n    from aj_crew.agent_sdk.drivers.acp_turn_vocab import AcpError\n", True),
         (
-            "if TYPE_CHECKING:\n    from kiro_crew.agent_sdk.drivers.acp_turn_vocab import LLMEvent\n",
+            "if TYPE_CHECKING:\n    from aj_crew.agent_sdk.drivers.acp_turn_vocab import LLMEvent\n",
             False,
         ),
-        ("from kiro_crew.agent_sdk.drivers.acp_vocab import AcpError\n", False),
-        ("from kiro_crew.agent_sdk.drivers import acp_vocab\n", False),
+        ("from aj_crew.agent_sdk.drivers.acp_vocab import AcpError\n", False),
+        ("from aj_crew.agent_sdk.drivers import acp_vocab\n", False),
         ("from .acp_vocab import AcpError\n", False),
-        ("# kiro_crew.agent_sdk.drivers.acp_turn_vocab\nNAME = 'acp_turn_vocab'\n", False),
+        ("# aj_crew.agent_sdk.drivers.acp_turn_vocab\nNAME = 'acp_turn_vocab'\n", False),
     ],
 )
 def test_the_importer_scan_reads_every_spelling(text: str, flagged: bool) -> None:
@@ -386,7 +386,7 @@ def test_the_importer_scan_reads_every_spelling(text: str, flagged: bool) -> Non
 def test_only_the_owners_import_the_turn_vocabulary() -> None:
     """The vocabulary is the owners' one window onto the ACP layer, not a new way for
     the rest of the tree to reach it: outside ``if TYPE_CHECKING:``, only modules of
-    ``kiro_crew.llm_helpers_parts`` import it."""
+    ``aj_crew.llm_helpers_parts`` import it."""
     importers = _runtime_importers_of(acp_turn_vocab.__name__)
     assert f"{PARTS}.turn_stream" in importers, "the importer scan went blind"
     assert [name for name in importers if not name.startswith(f"{PARTS}.")] == []

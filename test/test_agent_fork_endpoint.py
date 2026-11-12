@@ -18,16 +18,16 @@ import pytest
 from aiohttp import web
 from sidecar_fault_helpers import fail_one_sidecar_read
 
-from kiro_crew import agent_state
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, config_path
-from kiro_crew.dashboard.handlers.agents import api_agent_fork
+from aj_crew import agent_state
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, config_path
+from aj_crew.dashboard.handlers.agents import api_agent_fork
 
 
 @pytest.fixture(autouse=True)
 def _owner_caller(monkeypatch):
     """Run past the owner boundary; owner-auth has its own coverage elsewhere."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -55,8 +55,8 @@ def _write_template(agents_dir, stem: str, **extra) -> None:
 
 def _seed_config(crew: str, kiro_agent: str) -> None:
     """Persist a config.json (in the isolated home) with one crew bound to a template."""
-    cfg = KiroCrewConfig()
-    cfg.agents = {crew: KiroCrewAgentConfig(kiro_agent=kiro_agent)}
+    cfg = AjCrewConfig()
+    cfg.agents = {crew: AjCrewAgentConfig(kiro_agent=kiro_agent)}
     cfg.default_agent = crew
     cfg.save()
 
@@ -68,7 +68,7 @@ async def test_fork_happy_path(tmp_path):
     _write_template(agents_dir, "mytemplate")
     _seed_config("design-crew", "mytemplate")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("mytemplate", {"crew": "design-crew"}))
 
     assert resp.status == 200
@@ -90,7 +90,7 @@ async def test_fork_happy_path(tmp_path):
         "private_to": "design-crew",
     }
     # Rebind persisted to config.json.
-    reloaded = KiroCrewConfig.load()
+    reloaded = AjCrewConfig.load()
     assert reloaded.agents["design-crew"].kiro_agent == "design-crew"
 
 
@@ -102,7 +102,7 @@ async def test_fork_copies_model_managed(tmp_path):
     _seed_config("crew-a", "mytemplate")
     agent_state.set_model_managed("mytemplate", True)
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("mytemplate", {"crew": "crew-a"}))
 
     assert resp.status == 200
@@ -121,13 +121,13 @@ async def test_fork_a_failed_model_read_fails_and_unwinds(tmp_path, monkeypatch)
     agent_state.set_model_managed("mytemplate", True)
     fail_one_sidecar_read(monkeypatch, "get_model_managed", "mytemplate")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("mytemplate", {"crew": "crew-a"}))
 
     assert resp.status == 500
     assert json.loads(resp.text)["code"] == "bookkeeping_failed"
     assert not (agents_dir / "crew-a.json").exists()
-    assert KiroCrewConfig.load().agents["crew-a"].kiro_agent == "mytemplate"
+    assert AjCrewConfig.load().agents["crew-a"].kiro_agent == "mytemplate"
 
 
 @pytest.mark.asyncio
@@ -140,7 +140,7 @@ async def test_fork_collision_gets_numeric_suffix(tmp_path):
     # Crew name "design crew" sanitizes to "design-crew", which is taken.
     _seed_config("design crew", "mytemplate")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("mytemplate", {"crew": "design crew"}))
 
     assert resp.status == 200
@@ -158,7 +158,7 @@ async def test_fork_idempotent_second_call(tmp_path):
     _write_template(agents_dir, "mytemplate")
     _seed_config("c", "mytemplate")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         first = await api_agent_fork(_fork_request("mytemplate", {"crew": "c"}))
         assert first.status == 200
         # The crew now points at its copy "c"; a repeat fork-before-edit call
@@ -178,7 +178,7 @@ async def test_fork_unknown_template_404(tmp_path):
     agents_dir.mkdir()
     _seed_config("crew-a", "whatever")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("nonexistent", {"crew": "crew-a"}))
 
     assert resp.status == 404
@@ -192,7 +192,7 @@ async def test_fork_unknown_crew_404(tmp_path):
     _write_template(agents_dir, "mytemplate")
     _seed_config("crew-a", "mytemplate")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("mytemplate", {"crew": "ghost-crew"}))
 
     assert resp.status == 404
@@ -205,7 +205,7 @@ async def test_fork_invalid_json_400(tmp_path):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("mytemplate", None, bad_json=True))
 
     assert resp.status == 400
@@ -216,7 +216,7 @@ async def test_fork_non_object_body_400(tmp_path):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("mytemplate", ["not", "an", "object"]))
 
     assert resp.status == 400
@@ -227,7 +227,7 @@ async def test_fork_missing_crew_400(tmp_path):
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("mytemplate", {"crew": "   "}))
 
     assert resp.status == 400
@@ -244,14 +244,14 @@ async def test_fork_stale_binding_409(tmp_path):
     _write_template(agents_dir, "newtemplate")
     _seed_config("design-crew", "newtemplate")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("oldtemplate", {"crew": "design-crew"}))
 
     assert resp.status == 409
     assert json.loads(resp.text)["code"] == "stale_binding"
     # Nothing forked, nothing rebound.
     assert not (agents_dir / "design-crew.json").exists()
-    assert KiroCrewConfig.load().agents["design-crew"].kiro_agent == "newtemplate"
+    assert AjCrewConfig.load().agents["design-crew"].kiro_agent == "newtemplate"
 
 
 @pytest.mark.asyncio
@@ -263,7 +263,7 @@ async def test_fork_bounds_overlong_crew_name(tmp_path):
     _write_template(agents_dir, "mytemplate")
     _seed_config(crew, "mytemplate")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("mytemplate", {"crew": crew}))
 
     assert resp.status == 200
@@ -283,9 +283,9 @@ async def test_fork_bookkeeping_failure_compensates(tmp_path):
     _seed_config("design-crew", "mytemplate")
 
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir),
         patch(
-            "kiro_crew.dashboard.handlers.agents.agent_state.set_fork_info",
+            "aj_crew.dashboard.handlers.agents.agent_state.set_fork_info",
             side_effect=RuntimeError("sidecar unavailable"),
         ),
     ):
@@ -307,15 +307,15 @@ async def test_fork_name_skips_another_crews_dangling_binding(tmp_path):
     _write_template(agents_dir, "mytemplate")
     # other-crew's binding dangles: no alpha.json exists, so a copy named
     # "alpha" would resolve for other-crew the moment it is created.
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        "alpha": KiroCrewAgentConfig(kiro_agent="mytemplate"),
-        "other-crew": KiroCrewAgentConfig(kiro_agent="alpha"),
+        "alpha": AjCrewAgentConfig(kiro_agent="mytemplate"),
+        "other-crew": AjCrewAgentConfig(kiro_agent="alpha"),
     }
     cfg.default_agent = "alpha"
     cfg.save()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("mytemplate", {"crew": "alpha"}))
 
     assert resp.status == 200
@@ -329,7 +329,7 @@ async def test_fork_name_skips_another_crews_dangling_binding(tmp_path):
 async def test_fork_name_skips_the_legacy_default_agent_fallback(tmp_path):
     """`agent.default_agent` — the legacy global fallback — is a resolvable
     reference like any binding: a dangling one must not capture the new copy."""
-    from kiro_crew.config.loader import config_path, update_config_locked
+    from aj_crew.config.loader import config_path, update_config_locked
 
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
@@ -342,7 +342,7 @@ async def test_fork_name_skips_the_legacy_default_agent_fallback(tmp_path):
 
     update_config_locked(config_path(), mutate=_inject_fallback)
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("mytemplate", {"crew": "design-crew"}))
 
     assert resp.status == 200
@@ -378,9 +378,9 @@ async def test_fork_rollback_keeps_a_foreign_bound_copy(tmp_path):
         raise RuntimeError("sidecar unavailable")
 
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir),
         patch(
-            "kiro_crew.dashboard.handlers.agents.agent_state.set_fork_info",
+            "aj_crew.dashboard.handlers.agents.agent_state.set_fork_info",
             side_effect=_bind_then_fail,
         ),
     ):
@@ -401,8 +401,8 @@ async def test_fork_suffixes_past_reserved_windows_basename(tmp_path):
     agents_dir.mkdir()
     _write_template(agents_dir, "mytemplate")
     _seed_config("con", "mytemplate")
-    from kiro_crew.agent import agents_spec_lock
-    from kiro_crew.dashboard.handlers import agents
+    from aj_crew.agent import agents_spec_lock
+    from aj_crew.dashboard.handlers import agents
 
     # Include the real advisory-lock file in the pre-operation snapshot.
     with agents_spec_lock(agents_dir):
@@ -410,7 +410,7 @@ async def test_fork_suffixes_past_reserved_windows_basename(tmp_path):
     before = {p.name: p.read_bytes() for p in agents_dir.iterdir()}
 
     with (
-        patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir),
+        patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir),
         patch.object(agents, "_write_spec_file", wraps=agents._write_spec_file) as writer,
     ):
         resp = await api_agent_fork(_fork_request("mytemplate", {"crew": "con"}))
@@ -444,12 +444,12 @@ async def test_fork_suffixes_past_the_kas_reserved_ids(tmp_path, crew):
     generated name suffixes past it, whether or not ``<crew>.json`` exists."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _write_template(agents_dir, "kirocrew")
-    _seed_config(crew, "kirocrew")
+    _write_template(agents_dir, "ajcrew")
+    _seed_config(crew, "ajcrew")
     assert not (agents_dir / f"{crew}.json").exists()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
-        resp = await api_agent_fork(_fork_request("kirocrew", {"crew": crew}))
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+        resp = await api_agent_fork(_fork_request("ajcrew", {"crew": crew}))
 
     assert resp.status == 200
     body = json.loads(resp.text)
@@ -457,10 +457,10 @@ async def test_fork_suffixes_past_the_kas_reserved_ids(tmp_path, crew):
     assert not (agents_dir / f"{crew}.json").exists()
     assert json.loads((agents_dir / f"{crew}-2.json").read_text())["name"] == f"{crew}-2"
     assert agent_state.get_fork_info(f"{crew}-2") == {
-        "forked_from": "kirocrew",
+        "forked_from": "ajcrew",
         "private_to": crew,
     }
-    assert KiroCrewConfig.load().agents[crew].kiro_agent == f"{crew}-2"
+    assert AjCrewConfig.load().agents[crew].kiro_agent == f"{crew}-2"
 
 
 @pytest.mark.asyncio
@@ -469,11 +469,11 @@ async def test_fork_reserved_id_match_is_case_sensitive(tmp_path):
     crew of that name keeps its own stem."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
-    _write_template(agents_dir, "kirocrew")
-    _seed_config("Default", "kirocrew")
+    _write_template(agents_dir, "ajcrew")
+    _seed_config("Default", "ajcrew")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
-        resp = await api_agent_fork(_fork_request("kirocrew", {"crew": "Default"}))
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+        resp = await api_agent_fork(_fork_request("ajcrew", {"crew": "Default"}))
 
     assert resp.status == 200
     assert json.loads(resp.text)["template"] == "Default"
@@ -482,23 +482,23 @@ async def test_fork_reserved_id_match_is_case_sensitive(tmp_path):
 
 @pytest.mark.asyncio
 async def test_fork_suffixes_past_managed_agent_stems_even_when_absent(tmp_path):
-    """A crew named like a Kiro Crew-managed spec (kirocrew-lite) must not claim
-    kirocrew-lite.json while that file is missing: the boot rebuild regenerates
+    """A crew named like an Aj Crew-managed spec (ajcrew-lite) must not claim
+    ajcrew-lite.json while that file is missing: the boot rebuild regenerates
     it and would overwrite the crew's private customization."""
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
     _write_template(agents_dir, "mytemplate")
-    _seed_config("kirocrew-lite", "mytemplate")
-    assert not (agents_dir / "kirocrew-lite.json").exists()
+    _seed_config("ajcrew-lite", "mytemplate")
+    assert not (agents_dir / "ajcrew-lite.json").exists()
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
-        resp = await api_agent_fork(_fork_request("mytemplate", {"crew": "kirocrew-lite"}))
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+        resp = await api_agent_fork(_fork_request("mytemplate", {"crew": "ajcrew-lite"}))
 
     assert resp.status == 200
     body = json.loads(resp.text)
-    assert body["template"] == "kirocrew-lite-2"
-    assert not (agents_dir / "kirocrew-lite.json").exists()
-    assert (agents_dir / "kirocrew-lite-2.json").exists()
+    assert body["template"] == "ajcrew-lite-2"
+    assert not (agents_dir / "ajcrew-lite.json").exists()
+    assert (agents_dir / "ajcrew-lite-2.json").exists()
 
 
 def test_write_spec_file_unlinks_failed_create(tmp_path):
@@ -506,11 +506,11 @@ def test_write_spec_file_unlinks_failed_create(tmp_path):
     name — the failed exclusive create is unlinked."""
     from unittest.mock import ANY  # noqa: F401 — parity with module style
 
-    from kiro_crew.dashboard.handlers.agents import _write_spec_file
+    from aj_crew.dashboard.handlers.agents import _write_spec_file
 
     dest = tmp_path / "newspec.json"
     with patch(
-        "kiro_crew.dashboard.handlers.agents.sanitize_agent_config_governance",
+        "aj_crew.dashboard.handlers.agents.sanitize_agent_config_governance",
         side_effect=RuntimeError("disk full mid-serialize"),
     ):
         with pytest.raises(RuntimeError):
@@ -560,7 +560,7 @@ async def test_fork_prunes_stale_sidecar_state_on_reused_name(tmp_path):
     agent_state.set_cc_model("design-crew", "stale-model-pin")
     agent_state.set_model_managed("design-crew", True)
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("mytemplate", {"crew": "design-crew"}))
 
     assert resp.status == 200
@@ -579,7 +579,7 @@ async def test_fork_clears_a_stale_refresh_failure(tmp_path, monkeypatch):
     rebind sees an uncorroborated fork and records it as failed; the endpoint
     re-runs the refresh after the rebind persisted, so the committed fork is
     re-corroborated instead of left blocked at the spawn gate."""
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     agents_dir = tmp_path / "agents"
     agents_dir.mkdir()
@@ -589,7 +589,7 @@ async def test_fork_clears_a_stale_refresh_failure(tmp_path, monkeypatch):
     # in the failure set before the endpoint returns.
     monkeypatch.setattr(agent_mod, "_fork_refresh_failed", frozenset({"design-crew"}))
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("mytemplate", {"crew": "design-crew"}))
         assert resp.status == 200
         # The post-rebind refresh rebuilt the failure set with the binding
@@ -610,7 +610,7 @@ async def test_fork_ambiguous_refusal_names_the_claimant_files(tmp_path):
     )
     _seed_config("design-crew", "mytemplate")
 
-    with patch("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir):
+    with patch("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir):
         resp = await api_agent_fork(_fork_request("mytemplate", {"crew": "design-crew"}))
 
     assert resp.status == 409

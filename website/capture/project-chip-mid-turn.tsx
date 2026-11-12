@@ -28,7 +28,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 // ?locked=1 mounts the chip as ChatPage does while sub-agents are attached.
 const locked = params.get('locked') === '1'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 initI18n(params.get('lang') || 'en')
 
 store.dispatch(setActiveSlot('capture-slot'))
@@ -38,7 +38,7 @@ function Scene() {
   const [value, setValue] = useState('')
   const [label, setLabel] = useState('')
   const [clicks, setClicks] = useState(0)
-  const [project, setProject] = useState('/home/user/work/KiroCrew')
+  const [project, setProject] = useState('/home/user/work/AjCrew')
   useEffect(() => {
     const chip = document.querySelector('[data-capture-root] button[aria-label^="Project: "]')
     setLabel(chip?.getAttribute('aria-label') || '(chip not found)')
@@ -60,7 +60,7 @@ function Scene() {
           setClicks(c => c + 1)
           setProject('/home/user/work/OtherRepo')
         }}
-        agentName="kirocrew"
+        agentName="ajcrew"
         onAgentClick={() => {}}
         modelName="claude-sonnet-4"
         onModelClick={() => {}}

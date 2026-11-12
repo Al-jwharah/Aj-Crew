@@ -6,9 +6,9 @@ import struct
 import pytest
 from member_memory_helpers import declare_v2_store
 
-from kiro_crew import embeddings as emb
-from kiro_crew import memory_stores
-from kiro_crew.vector_memory import VectorMemoryStore, open_member_database
+from aj_crew import embeddings as emb
+from aj_crew import memory_stores
+from aj_crew.vector_memory import VectorMemoryStore, open_member_database
 
 
 @pytest.fixture
@@ -165,7 +165,7 @@ async def test_loop_waits_for_migration_proof_after_config_write(migration, monk
     import asyncio
     import threading
 
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     config, model, stores = migration
     config.write_text(
@@ -325,8 +325,8 @@ def test_legacy_ids_beside_a_pooled_id_are_not_adopted(migration, monkeypatch):
 
 
 def test_identity_metadata_is_typed_and_round_trips(migration, monkeypatch):
-    from kiro_crew.config import loader
-    from kiro_crew.config.schema import JSON_SCHEMA
+    from aj_crew.config import loader
+    from aj_crew.config.schema import JSON_SCHEMA
 
     config, model, _stores = migration
     stamp = list(emb._model_file_stamp(model))
@@ -345,7 +345,7 @@ def test_identity_metadata_is_typed_and_round_trips(migration, monkeypatch):
         encoding="utf-8",
     )
     monkeypatch.setattr(loader, "config_path", lambda: config)
-    loaded = loader.KiroCrewConfig.load()
+    loaded = loader.AjCrewConfig.load()
     assert loaded.memory.embed_model_stamp == stamp
     assert loaded.memory.embed_model_legacy_ids == labels
     loaded.save()
@@ -362,7 +362,7 @@ def test_identity_metadata_is_typed_and_round_trips(migration, monkeypatch):
 async def test_apply_clears_same_identity_inheritance(migration, monkeypatch):
     import asyncio
 
-    from kiro_crew.dashboard.handlers import memory
+    from aj_crew.dashboard.handlers import memory
 
     config, model, _stores = migration
     identity = await asyncio.to_thread(emb._custom_model_id, model, "")
@@ -423,7 +423,7 @@ def test_unavailable_loaded_model_stamp_reconciles_normally(migration, monkeypat
 async def test_aligned_unlinked_model_keeps_vectors_and_warm_store(migration, monkeypatch):
     import asyncio
 
-    from kiro_crew import context
+    from aj_crew import context
 
     config, model, stores = migration
     config.write_text(
@@ -454,7 +454,7 @@ def test_legacy_inheritance_warns_and_status_names_rebuild(migration, monkeypatc
     import asyncio
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers import memory
+    from aj_crew.dashboard.handlers import memory
 
     config, model, stores = migration
     config.write_text(
@@ -502,7 +502,7 @@ async def test_apply_rebuilds_inherited_vectors_only_after_config_succeeds(
     import asyncio
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers import memory
+    from aj_crew.dashboard.handlers import memory
 
     config, model, stores = migration
     monkeypatch.setattr(memory, "config_path", lambda: config)
@@ -605,7 +605,7 @@ async def test_apply_captures_inheritance_at_config_commit(migration, monkeypatc
     import asyncio
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers import memory
+    from aj_crew.dashboard.handlers import memory
 
     config, model, stores = migration
     config.write_text(
@@ -696,7 +696,7 @@ def test_legacy_identity_status_and_alignment_validate_labels(
     import asyncio
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers import memory
+    from aj_crew.dashboard.handlers import memory
 
     config, model, stores = migration
     identity = emb._custom_model_id(model, "")
@@ -748,7 +748,7 @@ def test_legacy_identity_status_and_alignment_validate_labels(
 async def test_model_config_write_returns_validated_prior_inheritance(
     migration, monkeypatch, labels, expected
 ):
-    from kiro_crew.dashboard.handlers import memory
+    from aj_crew.dashboard.handlers import memory
 
     config, model, _stores = migration
     config.write_text(json.dumps({"memory": {"embed_model_legacy_ids": labels}}), encoding="utf-8")

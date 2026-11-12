@@ -16,19 +16,19 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.config.loader import KiroCrewAgentConfig
+from aj_crew.config.loader import AjCrewAgentConfig
 
 
 @pytest.fixture(autouse=True)
 def _owner_caller(_floor_monkeypatch):
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
 
 def _members_app(state) -> web.Application:
-    from kiro_crew.dashboard.handlers.members import api_members
+    from aj_crew.dashboard.handlers.members import api_members
 
     @web.middleware
     async def _auth(request: web.Request, handler):
@@ -46,10 +46,10 @@ def _fake_config():
     return SimpleNamespace(
         agents={
             # Mate as first_crewmate creates it: built in, with its member id.
-            "mate": KiroCrewAgentConfig(
-                kiro_agent="kirocrew-mate-conductor", source="builtin", member_id="mate"
+            "mate": AjCrewAgentConfig(
+                kiro_agent="ajcrew-mate-conductor", source="builtin", member_id="mate"
             ),
-            "alpha": KiroCrewAgentConfig(kiro_agent="alpha"),
+            "alpha": AjCrewAgentConfig(kiro_agent="alpha"),
         },
         default_agent="",
         memory_stores={},
@@ -65,12 +65,12 @@ async def _rows(state) -> dict[str, dict]:
 
 @pytest.mark.asyncio
 async def test_mate_row_reports_the_welcome_marker_before_and_after_the_claim(tmp_path):
-    from kiro_crew import members as members_mod
-    from kiro_crew.dashboard.mate_welcome import claim_greeting_marker
+    from aj_crew import members as members_mod
+    from aj_crew.dashboard.mate_welcome import claim_greeting_marker
 
     fake = _fake_config()
     state = _make_state(tmp_path)
-    with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=fake):
+    with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=fake):
         slug = members_mod.member_slug("mate", fake)
         unowed = await _rows(state)
         assert members_mod.mark_welcome_owed("mate", config=fake) is True
@@ -95,9 +95,9 @@ async def test_a_marker_that_cannot_be_checked_leaves_the_field_off(tmp_path):
     fake = _fake_config()
     state = _make_state(tmp_path)
     with (
-        patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=fake),
+        patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=fake),
         patch(
-            "kiro_crew.dashboard.mate_welcome.greeting_marker_path",
+            "aj_crew.dashboard.mate_welcome.greeting_marker_path",
             side_effect=OSError("unreadable"),
         ),
     ):

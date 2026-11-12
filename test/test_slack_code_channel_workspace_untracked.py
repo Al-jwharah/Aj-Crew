@@ -9,9 +9,9 @@ import os
 
 import pytest
 
-from kiro_crew import pinned_fs
-from kiro_crew.slack.code_channels.workspace import diff as diff_mod
-from kiro_crew.slack.code_channels.workspace.diff import OMITTED, render_untracked
+from aj_crew import pinned_fs
+from aj_crew.slack.code_channels.workspace import diff as diff_mod
+from aj_crew.slack.code_channels.workspace.diff import OMITTED, render_untracked
 
 #: Whether this platform renders an untracked file's content (see the parent module).
 UNTRACKED_RENDERED = pinned_fs.supports_pinned_walk()
@@ -76,7 +76,7 @@ def test_render_untracked_closes_every_descriptor_it_opens(tmp_path):
 )
 def test_untracked_reads_walk_through_the_shared_pinned_walk(tmp_path, monkeypatch):
     """The gateway's read outside the sandbox is confined by ONE mechanism:
-    :mod:`kiro_crew.pinned_fs`, never a private copy of its directory walk."""
+    :mod:`aj_crew.pinned_fs`, never a private copy of its directory walk."""
     root = tmp_path / "tree"
     (root / "d").mkdir(parents=True)
     (root / "d" / "a.txt").write_text("hi\n", newline="\n")

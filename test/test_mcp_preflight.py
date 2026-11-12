@@ -10,10 +10,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.mcp_discovery import McpServerInfo
-from kiro_crew.mcp_gateway import preflight as pf
-from kiro_crew.mcp_gateway import verdict_cache as vc
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.mcp_discovery import McpServerInfo
+from aj_crew.mcp_gateway import preflight as pf
+from aj_crew.mcp_gateway import verdict_cache as vc
+from aj_crew.testing.wait import async_wait_until
 
 # The identities the pre-flight really sends, not copies of them. A double keyed
 # by hardcoded names answers nothing when a name changes, and the pre-flight then
@@ -237,7 +237,7 @@ class TestCacheDegradesSafely:
         ``install_sink`` loads this file during startup, so an escaping decode
         error is not a degraded dashboard row — it is a daemon that never binds.
         """
-        from kiro_crew.mcp_gateway import hazards
+        from aj_crew.mcp_gateway import hazards
 
         (tmp_path / hazards.HAZARDS_FILENAME).write_bytes(
             b'{"schema": 1, "servers": {"a\xff\xfe": {}}}'
@@ -292,7 +292,7 @@ def patch_probe(monkeypatch: pytest.MonkeyPatch):
         # scope, so it holds its own reference and patching the source module
         # would leave the real prober in place — the test would pass while
         # spawning nothing, or spawn for real.
-        import kiro_crew.mcp_gateway.preflight as pf_mod
+        import aj_crew.mcp_gateway.preflight as pf_mod
 
         monkeypatch.setattr(pf_mod, "probe_server", fake)
         return fake
@@ -343,7 +343,7 @@ class TestEvaluateOnlyWhatChanged:
 
     @pytest.mark.asyncio
     async def test_cached_identity_is_not_re_provoked(self, patch_probe, tmp_path) -> None:
-        from kiro_crew.mcp_gateway import evaluate as ev
+        from aj_crew.mcp_gateway import evaluate as ev
 
         fake = patch_probe({_ID_A: ("ok", {}), _ID_B: ("ok", {})})
         server = _server()
@@ -359,7 +359,7 @@ class TestEvaluateOnlyWhatChanged:
 
     @pytest.mark.asyncio
     async def test_changed_command_is_re_provoked(self, patch_probe, tmp_path) -> None:
-        from kiro_crew.mcp_gateway import evaluate as ev
+        from aj_crew.mcp_gateway import evaluate as ev
 
         fake = patch_probe({_ID_A: ("ok", {}), _ID_B: ("ok", {})})
         await ev.evaluate_new_servers([_server()], tmp_path)
@@ -382,8 +382,8 @@ class TestEvaluateOnlyWhatChanged:
         """
         import asyncio
 
-        from kiro_crew.mcp_discovery import PROBE_MAX_CONCURRENCY
-        from kiro_crew.mcp_gateway import evaluate as ev
+        from aj_crew.mcp_discovery import PROBE_MAX_CONCURRENCY
+        from aj_crew.mcp_gateway import evaluate as ev
 
         live = 0
         peak = 0
@@ -422,7 +422,7 @@ class TestEvaluateOnlyWhatChanged:
         would freeze the server at ``unknown`` for good. It must cost the spawns
         again rather than become permanently unevaluated.
         """
-        from kiro_crew.mcp_gateway import evaluate as ev
+        from aj_crew.mcp_gateway import evaluate as ev
 
         fake = patch_probe(
             {_ID_A: ("error", None), _ID_B: ("error", None)}
@@ -440,7 +440,7 @@ class TestEvaluateOnlyWhatChanged:
     @pytest.mark.asyncio
     async def test_a_successful_verdict_is_still_cached(self, patch_probe, tmp_path) -> None:
         """The other side of the rule: only failure is exempt from caching."""
-        from kiro_crew.mcp_gateway import evaluate as ev
+        from aj_crew.mcp_gateway import evaluate as ev
 
         fake = patch_probe({_ID_A: ("ok", {}), _ID_B: ("ok", {})})
         await ev.evaluate_new_servers([_server()], tmp_path)
@@ -460,7 +460,7 @@ class TestEvaluateOnlyWhatChanged:
         row is skipped by every later pass. So a divergence is re-derived each pass,
         which lets the measure button clear a wrong row.
         """
-        from kiro_crew.mcp_gateway import evaluate as ev
+        from aj_crew.mcp_gateway import evaluate as ev
 
         fake = patch_probe(
             {_ID_A: ("ok", {"tools": {}}), _ID_B: ("ok", {"prompts": {}})}
@@ -486,8 +486,8 @@ class TestEvaluateOnlyWhatChanged:
         discard its return), so the row is stored to be shown, yet never suppresses the
         next measurement.
         """
-        from kiro_crew.mcp_gateway import evaluate as ev
-        from kiro_crew.mcp_gateway.verdict_cache import load_cache
+        from aj_crew.mcp_gateway import evaluate as ev
+        from aj_crew.mcp_gateway.verdict_cache import load_cache
 
         patch_probe({_ID_A: ("ok", {"tools": {}}), _ID_B: ("ok", {"prompts": {}})})
         await ev.evaluate_new_servers([_server()], tmp_path)
@@ -500,7 +500,7 @@ class TestEvaluateOnlyWhatChanged:
     @pytest.mark.asyncio
     async def test_disabled_server_is_never_spawned(self, patch_probe, tmp_path) -> None:
         """Probing IS the act consent gates; a disabled row must not be provoked."""
-        from kiro_crew.mcp_gateway import evaluate as ev
+        from aj_crew.mcp_gateway import evaluate as ev
 
         fake = patch_probe({_ID_A: ("ok", {}), _ID_B: ("ok", {})})
         server = _server()
@@ -512,7 +512,7 @@ class TestEvaluateOnlyWhatChanged:
     @pytest.mark.asyncio
     async def test_pass_budget_is_respected(self, patch_probe, tmp_path) -> None:
         """Twenty newly added MCPs must not cost forty spawns in one request."""
-        from kiro_crew.mcp_gateway import evaluate as ev
+        from aj_crew.mcp_gateway import evaluate as ev
 
         fake = patch_probe({_ID_A: ("ok", {}), _ID_B: ("ok", {})})
         servers = [McpServerInfo(name=f"s{i}", command="/bin/true") for i in range(20)]
@@ -528,7 +528,7 @@ class TestEvaluateOnlyWhatChanged:
         against the constant cannot catch a change to it — the expectation moves
         with the value — so the intended outcome is spelled out here.
         """
-        from kiro_crew.mcp_gateway import evaluate as ev
+        from aj_crew.mcp_gateway import evaluate as ev
 
         assert ev.MAX_EVALUATIONS_PER_PASS == 2
         assert ev.MAX_EVALUATIONS_PER_PASS * 2 == 4, "processes spawned per full pass"
@@ -543,7 +543,7 @@ class TestEvaluateOnlyWhatChanged:
         ``probe_all`` excludes consent-disabled rows, so pruning missing entries would
         drop every disabled server's still-valid measurement.
         """
-        from kiro_crew.mcp_gateway import evaluate as ev
+        from aj_crew.mcp_gateway import evaluate as ev
 
         patch_probe({_ID_A: ("ok", {}), _ID_B: ("ok", {})})
         await ev.evaluate_new_servers([_server()], tmp_path)
@@ -563,7 +563,7 @@ class TestEvaluateOnlyWhatChanged:
         so the row count follows the number of configured servers rather than the
         number of times any of them changed.
         """
-        from kiro_crew.mcp_gateway import evaluate as ev
+        from aj_crew.mcp_gateway import evaluate as ev
 
         patch_probe({_ID_A: ("ok", {}), _ID_B: ("ok", {})})
         for _ in range(5):
@@ -580,7 +580,7 @@ class TestEvaluateOnlyWhatChanged:
         ``initialize`` result to every co-tenant. Synchronous because ``identity_for``
         refuses to run on the event loop (production uses ``asyncio.to_thread``).
         """
-        from kiro_crew.mcp_gateway.evaluate import identity_for
+        from aj_crew.mcp_gateway.evaluate import identity_for
 
         exe = tmp_path / "server-bin"
         exe.write_text("#!/bin/sh\necho v1\n", encoding="utf-8")
@@ -601,7 +601,7 @@ class TestEvaluateOnlyWhatChanged:
         hit for ever and a server that BECAME caller-sensitive would keep its
         clean verdict.
         """
-        from kiro_crew.mcp_gateway.evaluate import identity_for
+        from aj_crew.mcp_gateway.evaluate import identity_for
 
         script = tmp_path / "server.py"
         script.write_text("print('v1')\n", encoding="utf-8")
@@ -619,7 +619,7 @@ class TestEvaluateOnlyWhatChanged:
         Otherwise the key would change between passes for a server whose argv
         merely looks path-like, and every pass would re-spawn it.
         """
-        from kiro_crew.mcp_gateway.evaluate import identity_for
+        from aj_crew.mcp_gateway.evaluate import identity_for
 
         srv = McpServerInfo(
             name="s", command="/bin/sh", args=["--port", "8080", "/nope/missing.py"]
@@ -628,7 +628,7 @@ class TestEvaluateOnlyWhatChanged:
 
     def test_env_is_hashed_by_the_same_helper_the_pool_uses(self, tmp_path) -> None:
         """So a rotating credential does not look like a different server here."""
-        from kiro_crew.mcp_gateway.evaluate import identity_for
+        from aj_crew.mcp_gateway.evaluate import identity_for
 
         a = McpServerInfo(name="s", command="/bin/true", env={"AWS_SECRET_ACCESS_KEY": "one"})
         b = McpServerInfo(name="s", command="/bin/true", env={"AWS_SECRET_ACCESS_KEY": "two"})
@@ -978,7 +978,7 @@ class TestOnePassAtATime:
     async def test_a_second_pass_does_not_erase_the_first_pass_rows(
         self, tmp_path, monkeypatch
     ) -> None:
-        import kiro_crew.mcp_gateway.evaluate as ev
+        import aj_crew.mcp_gateway.evaluate as ev
 
         started: list[str] = []
         release = asyncio.Event()
@@ -1032,7 +1032,7 @@ class TestProgressArrivesDuringThePass:
     async def test_the_hook_fires_before_the_last_measurement_finishes(
         self, tmp_path, monkeypatch
     ) -> None:
-        import kiro_crew.mcp_gateway.evaluate as ev
+        import aj_crew.mcp_gateway.evaluate as ev
 
         gate = asyncio.Event()
         seen: list[tuple[int, int, int]] = []
@@ -1080,7 +1080,7 @@ class TestMeasuredIsCountedApartFromAttempted:
     async def test_a_preflight_that_could_not_run_advances_only_the_attempt_count(
         self, tmp_path, monkeypatch
     ) -> None:
-        import kiro_crew.mcp_gateway.evaluate as ev
+        import aj_crew.mcp_gateway.evaluate as ev
 
         seen: list[tuple[int, int, int]] = []
 
@@ -1125,7 +1125,7 @@ class TestMeasuredIsCountedApartFromAttempted:
         every server in the configuration takes the ``ran=False`` branch and the
         readout must not claim it measured all of them.
         """
-        import kiro_crew.mcp_gateway.evaluate as ev
+        import aj_crew.mcp_gateway.evaluate as ev
 
         seen: list[tuple[int, int, int]] = []
 
@@ -1204,7 +1204,7 @@ class TestMalformedToolNames:
         arrangement in which a raised TypeError would take the already-measured
         rows down with it.
         """
-        import kiro_crew.mcp_gateway.evaluate as ev
+        import aj_crew.mcp_gateway.evaluate as ev
 
         real = pf.preflight
 
@@ -1271,7 +1271,7 @@ class TestOneServerCannotEndThePass:
         Built as a real payload rather than a synthetic ``raise`` so the test fails
         if the projection stops recursing OR if the boundary is removed.
         """
-        import kiro_crew.mcp_gateway.evaluate as ev
+        import aj_crew.mcp_gateway.evaluate as ev
 
         deep: dict = {}
         node = deep
@@ -1318,7 +1318,7 @@ class TestOneServerCannotEndThePass:
         self, tmp_path, monkeypatch
     ) -> None:
         """Shutdown must stay shutdown, not become 'this server is unmeasurable'."""
-        import kiro_crew.mcp_gateway.evaluate as ev
+        import aj_crew.mcp_gateway.evaluate as ev
 
         async def route(server):
             raise asyncio.CancelledError()
@@ -1338,7 +1338,7 @@ class TestOneServerCannotEndThePass:
         Its ``command`` is unvalidated config JSON (here a dict), and hashing it for
         the identity must not raise outside the per-server boundary. The healthy
         neighbour is measured; the disabled row is neither spawned nor given a verdict."""
-        import kiro_crew.mcp_gateway.evaluate as ev
+        import aj_crew.mcp_gateway.evaluate as ev
 
         spawned: list[str] = []
 
@@ -1439,7 +1439,7 @@ class TestSupersededRowIsNotReadable:
         Upgraded server, version known on both sides, and the re-measure fails --
         so nothing is written back. The store must end up with no row for it.
         """
-        import kiro_crew.mcp_gateway.evaluate as ev
+        import aj_crew.mcp_gateway.evaluate as ev
 
         seed = vc.VerdictCache(tmp_path / vc.VERDICT_CACHE_FILENAME)
         seed.load()
@@ -1500,7 +1500,7 @@ class TestVersionIsNotLoggedRaw:
     @pytest.mark.parametrize(
         "hostile",
         [
-            "9.9\nWARNING kirocrew: forged entry",
+            "9.9\nWARNING ajcrew: forged entry",
             "9.9\rforged",
             "9.9\x1b[31mrecoloured\x1b[0m",
             "9.9\x00hidden",
@@ -1509,7 +1509,7 @@ class TestVersionIsNotLoggedRaw:
         ],
     )
     def test_no_control_character_reaches_the_log(self, tmp_path, caplog, hostile) -> None:
-        with caplog.at_level(logging.INFO, logger="kiro_crew.mcp_gateway.verdict_cache"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.mcp_gateway.verdict_cache"):
             assert self._drop(tmp_path, "1.0", hostile) is None
 
         assert caplog.records, "the drop must still be logged"
@@ -1525,7 +1525,7 @@ class TestVersionIsNotLoggedRaw:
 
     def test_the_version_is_still_reported_for_diagnosis(self, tmp_path, caplog) -> None:
         """Escaping, not omitting -- the operator still sees what the server said."""
-        with caplog.at_level(logging.INFO, logger="kiro_crew.mcp_gateway.verdict_cache"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.mcp_gateway.verdict_cache"):
             assert self._drop(tmp_path, "1.0.0", "2.0.0") is None
         line = " ".join(r.getMessage() for r in caplog.records)
         assert "1.0.0" in line and "2.0.0" in line, line
@@ -1533,7 +1533,7 @@ class TestVersionIsNotLoggedRaw:
 
     def test_an_overlong_version_is_bounded(self, tmp_path, caplog) -> None:
         """``%r`` escapes but does not bound length; one field is not a wall of text."""
-        with caplog.at_level(logging.INFO, logger="kiro_crew.mcp_gateway.verdict_cache"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.mcp_gateway.verdict_cache"):
             assert self._drop(tmp_path, "1.0", "9." + "A" * 10_000) is None
         line = " ".join(r.getMessage() for r in caplog.records)
         assert len(line) < 2 * vc._VERSION_LOG_LEN_CAP + 200, f"unbounded: {len(line)} chars"
@@ -1557,7 +1557,7 @@ class TestBudgetedPassYields:
         that first waits on it. pytest-asyncio gives each test its own loop, so
         touching the shared instance leaks state between tests in both directions.
         """
-        import kiro_crew.mcp_gateway.evaluate as ev
+        import aj_crew.mcp_gateway.evaluate as ev
 
         monkeypatch.setattr(ev, "_PASS_LOCK", asyncio.Lock())
 
@@ -1565,7 +1565,7 @@ class TestBudgetedPassYields:
     async def test_a_budgeted_call_serves_stored_rows_while_a_pass_runs(
         self, tmp_path, monkeypatch
     ) -> None:
-        import kiro_crew.mcp_gateway.evaluate as ev
+        import aj_crew.mcp_gateway.evaluate as ev
 
         srv = McpServerInfo(name="known-mcp", command="/bin/true")
         seed = vc.VerdictCache(tmp_path / vc.VERDICT_CACHE_FILENAME)
@@ -1605,7 +1605,7 @@ class TestBudgetedPassYields:
         Two operator passes must still serialize or they clobber each other's rows,
         which is the reason the lock exists.
         """
-        import kiro_crew.mcp_gateway.evaluate as ev
+        import aj_crew.mcp_gateway.evaluate as ev
 
         async def ok(server):
             return SimpleNamespace(ran=True, caller_sensitive=False, reasons=())
@@ -1636,7 +1636,7 @@ class TestBudgetedPassYields:
     @pytest.mark.asyncio
     async def test_yielding_does_not_invent_a_verdict(self, tmp_path, monkeypatch) -> None:
         """A server with no stored row stays absent, so it reads as unmeasured."""
-        import kiro_crew.mcp_gateway.evaluate as ev
+        import aj_crew.mcp_gateway.evaluate as ev
 
         async def ok(server):
             return SimpleNamespace(ran=True, caller_sensitive=False, reasons=())

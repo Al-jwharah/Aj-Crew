@@ -20,8 +20,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.mcp_gateway import rewriter
-from kiro_crew.mcp_gateway.rewriter import rewrite_agents
+from aj_crew.mcp_gateway import rewriter
+from aj_crew.mcp_gateway.rewriter import rewrite_agents
 
 # The running interpreter: absolute, exists, and executable on every CI
 # platform, so the fixture passes the resolver's absolute-path exec check

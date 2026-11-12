@@ -25,7 +25,7 @@ const LONG_BENIGN_QUERY =
   'title=' + 'Bug%20report%20'.repeat(8) +
   '&body=' + 'Steps%20to%20reproduce%20and%20expected%20behavior%20go%20here.%20'.repeat(4) +
   '&labels=bug,triage,needs-repro'
-const ISSUE_URL = `https://github.com/kirodotdev/KiroCrew/issues/new?${LONG_BENIGN_QUERY}`
+const ISSUE_URL = `https://github.com/Al-jwharah/Aj-Crew/issues/new?${LONG_BENIGN_QUERY}`
 
 /** Asserts the whole input survives untouched. */
 function expectKept(url: string): void {
@@ -55,7 +55,7 @@ describe('sanitizeExfiltrationUrls: no shape waives redaction of model-authored 
 
   it('redacts it when the host case differs', () => {
     // RFC 4343 leaves DNS host case insignificant; with no waiver it changes nothing.
-    expectRedacted(`https://GitHub.com/kirodotdev/KiroCrew/issues/new?${LONG_BENIGN_QUERY}`)
+    expectRedacted(`https://GitHub.com/Al-jwharah/Aj-Crew/issues/new?${LONG_BENIGN_QUERY}`)
   })
 
   it('keeps a short query at any host, so only the length signal moved', () => {
@@ -84,7 +84,7 @@ describe('sanitizeExfiltrationUrls: the length signal applies to every host', ()
   // With no exempt shape they prove the simpler and stronger property: a >=200-char
   // query is redacted wherever it appears, with no path, port or scheme exception.
   it('redacts a long query at this project own repository', () => {
-    expectRedacted(`https://github.com/kirodotdev/KiroCrew/settings?${LONG_BENIGN_QUERY}`)
+    expectRedacted(`https://github.com/Al-jwharah/Aj-Crew/settings?${LONG_BENIGN_QUERY}`)
   })
 
   it('redacts an explicit port on github.com', () => {
@@ -114,7 +114,7 @@ describe('sanitizeExfiltrationUrls: no pattern signal is waived', () => {
   // These predate the carve-out and outlive it. Each puts a pattern signal in a
   // prefill-shaped URL to this project's own tracker and asserts it still redacts,
   // independent of the length signal.
-  const validPrefix = 'https://github.com/kirodotdev/KiroCrew/issues/new?body='
+  const validPrefix = 'https://github.com/Al-jwharah/Aj-Crew/issues/new?body='
 
   it('redacts a base64 blob inside the validated shape', () => {
     expectRedacted(`${validPrefix}${'A'.repeat(48)}`)
@@ -174,7 +174,7 @@ describe('sanitizeExfiltrationUrls: both spellings of a prose body are redacted'
   // `isPrefilledIssueUrl` waiver; a validated shape no longer earns an exception,
   // because the shape of a URL says nothing about who authored it.
   const PLUS_PROSE_URL =
-    'https://github.com/kirodotdev/KiroCrew/issues/new?title=Dashboard+chat+drops+long+links' +
+    'https://github.com/Al-jwharah/Aj-Crew/issues/new?title=Dashboard+chat+drops+long+links' +
     '&body=The+dashboard+chat+redaction+fires+on+ordinary+prefilled+issue+links+and+replaces' +
     '+them+with+a+placeholder&labels=bug'
 

@@ -24,17 +24,17 @@ from autonudge_helpers import _enable  # noqa: F401
 from autonudge_helpers import svc_fixture  # noqa: F401
 from autonudge_shutdown_drain_helpers import _LOST_RUN_SECS, _wait_until
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import (
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import (
     AutoNudgeService,
     NudgeAdmissionRefused,
     NudgeLoop,
 )
-from kiro_crew.monitoring.models import (
+from aj_crew.monitoring.models import (
     MonitorBudgets,
     MonitorDispatchResult,
 )
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.mark.asyncio
@@ -381,7 +381,7 @@ def test_drain_grace_fits_inside_the_signal_margin():
     """The window is spent AFTER the graceful budget has already been cancelled, so
     it comes out of the SIGTERM-to-SIGKILL margin along with the rest of teardown.
     A window as long as the margin would hand the exit back to the supervisor."""
-    from kiro_crew import gateway_shutdown_budget as budget
+    from aj_crew import gateway_shutdown_budget as budget
 
     assert _an._DRAIN_CANCEL_GRACE_SECS == budget.PERSISTENCE_DRAIN_GRACE_SECS
     assert 0 < budget.PERSISTENCE_DRAIN_GRACE_SECS < budget.SIGNAL_MARGIN_SECS / 2

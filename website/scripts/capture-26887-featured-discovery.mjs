@@ -4,7 +4,7 @@
  *
  * Runs the REAL built SPA (website/dist) behind the shared loopback static
  * server with every /api/** call answered from fixtures. The featured rows are
- * read from the bundled `src/kiro_crew/data/discovery_featured.json`, so the
+ * read from the bundled `src/aj_crew/data/discovery_featured.json`, so the
  * pictures show the list that ships. A base build never asks for them and
  * renders the old empty dialog, which is the "before" picture.
  *
@@ -28,7 +28,7 @@ const SIZES = { desktop: { width: 1440, height: 900 }, mobile: { width: 390, hei
 mkdirSync(OUT, { recursive: true })
 
 const FEATURED = JSON.parse(readFileSync(
-  fileURLToPath(new URL('../../src/kiro_crew/data/discovery_featured.json', import.meta.url)), 'utf8'))
+  fileURLToPath(new URL('../../src/aj_crew/data/discovery_featured.json', import.meta.url)), 'utf8'))
 
 const skillRows = FEATURED.skills.map(e => ({
   description: '', tags: [], installs: 0, installed: false, author: '', repo_url: '',

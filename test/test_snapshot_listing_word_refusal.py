@@ -1,8 +1,8 @@
-"""`kirocrew snapshot list` must not write a backup into `./list/`.
+"""`ajcrew snapshot list` must not write a backup into `./list/`.
 
 The output directory is an optional positional, so a bare `list` (the verb a user
 reaches for instead of `--list`) would be taken as a directory: the command would
-exit 0, write `./list/kirocrew-snapshot-<ts>.tar.gz` into the current working
+exit 0, write `./list/ajcrew-snapshot-<ts>.tar.gz` into the current working
 directory -- inside a repository, where it can be committed -- and prune it with the
 default `--keep 7`.
 """
@@ -14,8 +14,8 @@ from pathlib import Path
 import pytest
 import snapshot_helpers
 
-from kiro_crew import cli
-from kiro_crew.snapshot import snapshot_main
+from aj_crew import cli
+from aj_crew.snapshot import snapshot_main
 
 _no_gateway = snapshot_helpers._no_gateway
 
@@ -24,7 +24,7 @@ _no_gateway = snapshot_helpers._no_gateway
 def cwd(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     work = tmp_path / "work"
     work.mkdir()
     monkeypatch.chdir(work)
@@ -32,7 +32,7 @@ def cwd(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def _run_cli(argv: list[str], monkeypatch: pytest.MonkeyPatch) -> object:
-    monkeypatch.setattr("sys.argv", ["kirocrew"] + argv)
+    monkeypatch.setattr("sys.argv", ["ajcrew"] + argv)
     try:
         cli.main()
         return 0

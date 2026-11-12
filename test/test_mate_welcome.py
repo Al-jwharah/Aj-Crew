@@ -1,6 +1,6 @@
 """Mate's first welcome: once-only, crewmate threads only, a hidden kickoff.
 
-Each guard in :mod:`kiro_crew.dashboard.mate_welcome` has a test here that
+Each guard in :mod:`aj_crew.dashboard.mate_welcome` has a test here that
 fails when the guard is removed: the owed record a create writes (Mate's
 first-crewmate step, or a ``first_greeting`` create; a member that arrived any
 other way never greets), the marker claim (two calls
@@ -21,9 +21,9 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.agent_files import ASSISTANT_MEMBER_NAME
-from kiro_crew.dashboard import mate_welcome as cg
-from kiro_crew.members import (
+from aj_crew.agent_files import ASSISTANT_MEMBER_NAME
+from aj_crew.dashboard import mate_welcome as cg
+from aj_crew.members import (
     DM_SLOT_MODE,
     WELCOME_KIND_GOAL,
     mark_welcome_owed,
@@ -76,7 +76,7 @@ _ROWS = {
 def roster():
     """The configured roster; a test narrows it by reassigning ``.agents``."""
     loaded = SimpleNamespace(agents=_ROWS)
-    with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=loaded):
+    with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=loaded):
         yield loaded
 
 
@@ -263,7 +263,7 @@ class TestGoalWelcome:
         self, tmp_path, dispatched, roster
     ):
         """The create card writes the goal into the goal record, not the description."""
-        from kiro_crew import member_goals
+        from aj_crew import member_goals
 
         roster.agents = {**_ROWS, "scout": SimpleNamespace(display_name="Scout", description="")}
         state = _make_state(tmp_path)
@@ -288,7 +288,7 @@ class TestHiddenKickoff:
             seen.append((message, kwargs))
             _slot.append("assistant", "Hi, I'm Mate. What should I call you?", "msg")
 
-        with patch("kiro_crew.dashboard.chat._run_chat", fake_run_chat):
+        with patch("aj_crew.dashboard.chat._run_chat", fake_run_chat):
             assert await cg.maybe_start_first_greeting(state, MATE_SLUG) == cg.STARTED
             assert slot.task is not None
             await slot.task
@@ -316,7 +316,7 @@ class TestHiddenKickoff:
             seen.append((message, kwargs))
             _slot.append("assistant", "I'm Reviewer. Review your PRs, right?", "msg")
 
-        with patch("kiro_crew.dashboard.chat._run_chat", fake_run_chat):
+        with patch("aj_crew.dashboard.chat._run_chat", fake_run_chat):
             assert await cg.maybe_start_first_greeting(state, OTHER_SLUG) == cg.STARTED
             await slot.task
         kickoff = cg.goal_kickoff(_ROWS["code-reviewer"], "code-reviewer")
@@ -415,7 +415,7 @@ class TestWelcomeLanguage:
         assert cg.hidden_turn_language("zh-CN") == "zh-CN"
 
     def test_every_hidden_preamble_carries_the_sentence_that_gets_swapped(self):
-        from kiro_crew import crewmate_prompts
+        from aj_crew import crewmate_prompts
 
         for key in ("welcome.preamble", "wake.preamble"):
             assert crewmate_prompts.text(key).count(cg.LANGUAGE_DEFAULT) == 1, key
@@ -429,13 +429,13 @@ class TestWelcomeLanguage:
 
 
 def crewmate_prompts_wake() -> str:
-    from kiro_crew import crewmate_prompts
+    from aj_crew import crewmate_prompts
 
     return crewmate_prompts.text("wake.preamble")
 
 
 def _greet_app(state) -> web.Application:
-    from kiro_crew.dashboard.handlers.members import api_member_greet
+    from aj_crew.dashboard.handlers.members import api_member_greet
 
     @web.middleware
     async def _auth(request: web.Request, handler):

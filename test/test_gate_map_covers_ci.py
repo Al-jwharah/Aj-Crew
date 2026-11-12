@@ -18,13 +18,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = (
-    ROOT
-    / "src"
-    / "kiro_crew"
-    / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
-    / "scripts"
+    ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr" / "scripts"
 )
 WORKFLOWS = ROOT / ".github" / "workflows"
 GATE_MAP = json.loads((SCRIPTS / "gate_map.json").read_text(encoding="utf-8"))

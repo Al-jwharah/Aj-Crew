@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.slack.gateway — GatewayOrchestrator coverage.
+"""Tests for aj_crew.slack.gateway — GatewayOrchestrator coverage.
 
 This file covers construction, the dedup hash, the DM-open retry, service
 initialization, the tool-approval callback, result delivery and graceful shutdown.
@@ -31,17 +31,17 @@ from slack_gateway_helpers import (
     _within_lost_run,
 )
 
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.monitoring.models import (
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.monitoring.models import (
     MonitorActionCompletion,
     MonitorActionDisposition,
     MonitorState,
 )
-from kiro_crew.slack import gateway as gw
-from kiro_crew.slack.gateway import _EPOCH_WINDOW_SECS, GatewayOrchestrator, _result_hash
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS, async_wait_until, await_until
+from aj_crew.slack import gateway as gw
+from aj_crew.slack.gateway import _EPOCH_WINDOW_SECS, GatewayOrchestrator, _result_hash
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, async_wait_until, await_until
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Tests: __init__ and constructor
@@ -87,21 +87,21 @@ class TestGatewayOrchestratorInit:
         assert orch.dashboard_state is None
 
     def test_tracking_channels_from_config(self):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.slack.tracking_channels = [{"channel_id": "C1"}, {"channel_id": "C2"}]
         with patch.object(cfg, "load_credentials", return_value={"owner_id": "U1"}):
             orch = GatewayOrchestrator(cfg)
         assert orch._tracking_channels == {"C1", "C2"}
 
     def test_open_channels_from_config(self):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.slack.open_channels = ["C_OPEN"]
         with patch.object(cfg, "load_credentials", return_value={}):
             orch = GatewayOrchestrator(cfg)
         assert "C_OPEN" in orch._open_channels
 
     def test_stale_allowed_users_pruned(self):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.slack.allowed_users = [{"slack_id": "U_STALE"}]
         with patch.object(
             cfg,
@@ -109,7 +109,7 @@ class TestGatewayOrchestratorInit:
             return_value={
                 "SLACK_APP_TOKEN": "xapp-t",
                 "SLACK_BOT_TOKEN": "xoxb-t",
-                "KIROCREW_OWNER_ID": "U_OWNER",
+                "AJCREW_OWNER_ID": "U_OWNER",
             },
         ):
             orch = GatewayOrchestrator(cfg)
@@ -186,7 +186,7 @@ class TestOpenDmWithRetry:
         These tests assert the retry COUNT and the final result, never the delay, so
         the 5s this class spent asleep bought no coverage. The retry loop still runs.
         """
-        monkeypatch.setattr("kiro_crew.slack.retry.asyncio.sleep", AsyncMock(return_value=None))
+        monkeypatch.setattr("aj_crew.slack.retry.asyncio.sleep", AsyncMock(return_value=None))
 
     @pytest.mark.asyncio
     async def test_success_first_attempt(self):
@@ -267,28 +267,28 @@ class TestInitServices:
 
     def test_init_services_creates_all(self):
         orch = _make_orchestrator(slack_enabled=True)
-        with patch("kiro_crew.slack.gateway.MemoryStore") as mock_mem:
+        with patch("aj_crew.slack.gateway.MemoryStore") as mock_mem:
             mock_mem_inst = MagicMock()
             mock_mem_inst.init = MagicMock()
             mock_mem_inst.rebuild_index = MagicMock(return_value=5)
             mock_mem.return_value = mock_mem_inst
-            with patch("kiro_crew.vector_memory.VectorMemoryStore") as mock_vm:
+            with patch("aj_crew.vector_memory.VectorMemoryStore") as mock_vm:
                 mock_vm_inst = MagicMock()
                 mock_vm_inst.init = MagicMock()
                 mock_vm.return_value = mock_vm_inst
-                with patch("kiro_crew.slack.gateway.SkillsLoader"):
-                    with patch("kiro_crew.slack.gateway.HookManager"):
-                        with patch("kiro_crew.slack.gateway.LessonStore"):
-                            with patch("kiro_crew.slack.gateway.ContextBuilder"):
-                                with patch("kiro_crew.slack.gateway.ConversationLog") as mock_cl:
+                with patch("aj_crew.slack.gateway.SkillsLoader"):
+                    with patch("aj_crew.slack.gateway.HookManager"):
+                        with patch("aj_crew.slack.gateway.LessonStore"):
+                            with patch("aj_crew.slack.gateway.ContextBuilder"):
+                                with patch("aj_crew.slack.gateway.ConversationLog") as mock_cl:
                                     mock_cl_inst = MagicMock()
                                     mock_cl_inst.init = MagicMock()
                                     mock_cl.return_value = mock_cl_inst
-                                    with patch("kiro_crew.slack.gateway.SessionManager"):
-                                        with patch("kiro_crew.slack.gateway.HistoryConsolidator"):
-                                            with patch("kiro_crew.slack.gateway.ChannelHistory"):
+                                    with patch("aj_crew.slack.gateway.SessionManager"):
+                                        with patch("aj_crew.slack.gateway.HistoryConsolidator"):
+                                            with patch("aj_crew.slack.gateway.ChannelHistory"):
                                                 with patch(
-                                                    "kiro_crew.agent.rebuild_agent_config",
+                                                    "aj_crew.agent.rebuild_agent_config",
                                                     return_value=Path("/tmp/a"),
                                                 ):
                                                     with patch(
@@ -315,28 +315,28 @@ class TestInitServices:
 
     def test_init_services_dashboard_only_mode(self):
         orch = _make_orchestrator(slack_enabled=False)
-        with patch("kiro_crew.slack.gateway.MemoryStore") as mock_mem:
+        with patch("aj_crew.slack.gateway.MemoryStore") as mock_mem:
             mock_mem_inst = MagicMock()
             mock_mem_inst.init = MagicMock()
             mock_mem_inst.rebuild_index = MagicMock(return_value=0)
             mock_mem.return_value = mock_mem_inst
-            with patch("kiro_crew.vector_memory.VectorMemoryStore") as mock_vm:
+            with patch("aj_crew.vector_memory.VectorMemoryStore") as mock_vm:
                 mock_vm_inst = MagicMock()
                 mock_vm_inst.init = MagicMock()
                 mock_vm.return_value = mock_vm_inst
-                with patch("kiro_crew.slack.gateway.SkillsLoader"):
-                    with patch("kiro_crew.slack.gateway.HookManager"):
-                        with patch("kiro_crew.slack.gateway.LessonStore"):
-                            with patch("kiro_crew.slack.gateway.ContextBuilder"):
-                                with patch("kiro_crew.slack.gateway.ConversationLog") as mock_cl:
+                with patch("aj_crew.slack.gateway.SkillsLoader"):
+                    with patch("aj_crew.slack.gateway.HookManager"):
+                        with patch("aj_crew.slack.gateway.LessonStore"):
+                            with patch("aj_crew.slack.gateway.ContextBuilder"):
+                                with patch("aj_crew.slack.gateway.ConversationLog") as mock_cl:
                                     mock_cl_inst = MagicMock()
                                     mock_cl_inst.init = MagicMock()
                                     mock_cl.return_value = mock_cl_inst
-                                    with patch("kiro_crew.slack.gateway.SessionManager"):
-                                        with patch("kiro_crew.slack.gateway.HistoryConsolidator"):
-                                            with patch("kiro_crew.slack.gateway.ChannelHistory"):
+                                    with patch("aj_crew.slack.gateway.SessionManager"):
+                                        with patch("aj_crew.slack.gateway.HistoryConsolidator"):
+                                            with patch("aj_crew.slack.gateway.ChannelHistory"):
                                                 with patch(
-                                                    "kiro_crew.agent.rebuild_agent_config",
+                                                    "aj_crew.agent.rebuild_agent_config",
                                                     return_value=Path("/tmp/a"),
                                                 ):
                                                     with patch(
@@ -392,7 +392,7 @@ class TestInteractiveApproval:
         event.title = "dangerous command"
         event.tool_input = ""
         event.tool_purpose = ""
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
             result = await callback(event, "")
         assert result is True
 
@@ -407,7 +407,7 @@ class TestInteractiveApproval:
         event.title = "cmd"
         event.tool_input = ""
         event.tool_purpose = ""
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=True):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=True):
             result = await callback(event, "")
         assert result is True
 
@@ -425,7 +425,7 @@ class TestInteractiveApproval:
         event.title = "rm -rf /"
         event.tool_input = ""
         event.tool_purpose = ""
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
             result = await callback(event, "")
         assert result is False
         ds.request_approval.assert_awaited_once()
@@ -448,8 +448,8 @@ class TestInteractiveApproval:
         event.title = "safe cmd"
         event.tool_input = ""
         event.tool_purpose = ""
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.sel.sel") as mock_sel:
                 mock_sel.return_value.log_api_access = MagicMock()
                 result = await callback(event, "")
         assert result is True
@@ -474,7 +474,7 @@ class TestInteractiveApproval:
         event.tool_input = ""
         event.tool_purpose = ""
 
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             result = await callback(event, "dashboard:parent-slot")
 
@@ -502,7 +502,7 @@ class TestInteractiveApproval:
         event.tool_input = ""
         event.tool_purpose = "review changes"
 
-        with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.sel.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             result = await callback(event, "dashboard:parent-slot")
 
@@ -544,8 +544,8 @@ class TestInteractiveApproval:
         event.tool_purpose = ""
         # The prompt answers "deny", so a True result could only come from implicit trust.
         ds.request_approval = AsyncMock(return_value=False)
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-            with patch("kiro_crew.sel.sel") as mock_sel:
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+            with patch("aj_crew.sel.sel") as mock_sel:
                 mock_sel.return_value.log_api_access = MagicMock()
                 result = await callback(event, "")
         assert result is False
@@ -557,7 +557,7 @@ class TestInteractiveApproval:
     @pytest.mark.asyncio
     async def test_auto_approve_sources_config(self):
         """Source in auto_approve_sources config → auto-approve."""
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.hooks = {"auto_approve_sources": ["cron"]}
         with patch.object(cfg, "load_credentials", return_value={}):
             orch = GatewayOrchestrator(cfg)
@@ -570,7 +570,7 @@ class TestInteractiveApproval:
         event.title = "auto"
         event.tool_input = ""
         event.tool_purpose = ""
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
             result = await callback(event, "")
         assert result is True
 
@@ -588,9 +588,9 @@ class TestDeliverResult:
         orch = _make_orchestrator()
         orch.slack = MagicMock()
         orch.dashboard_state = _mock_dashboard_state()
-        with caplog.at_level(logging.INFO, logger="kiro_crew.slack.gateway"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.slack.gateway"):
             await orch._deliver_result("Title", "summary", "result", "silent")
-        messages = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.slack.gateway"]
+        messages = [r.getMessage() for r in caplog.records if r.name == "aj_crew.slack.gateway"]
         assert "Title (silent): summary" in messages
         orch.dashboard_state.notify.assert_not_called()
         assert orch.slack.method_calls == []
@@ -619,7 +619,7 @@ class TestDeliverResult:
         slot = _ChatSlot("my-slot")
         ds.resolve_slot = MagicMock(return_value=slot)
         orch.dashboard_state = ds
-        with patch("kiro_crew.slack.gateway.sel") as mock_sel:
+        with patch("aj_crew.slack.gateway.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             await orch._deliver_result("Title", "task", "result", "dashboard:my-slot")
         ds.resolve_slot.assert_called_with("my-slot")
@@ -649,7 +649,7 @@ class TestDeliverResult:
         ds = real_dashboard_state(tmp_path)
         feed = open_feed(ds)
         orch.dashboard_state = ds
-        with patch("kiro_crew.slack.gateway.sel") as mock_sel:
+        with patch("aj_crew.slack.gateway.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             await orch._deliver_result("Title", "task", "result", deliver)
         mock_sel.return_value.log_api_access.assert_called_once_with(
@@ -682,7 +682,7 @@ class TestDeliverResult:
         # The deliver tag is agent-writable, so the named channel must be tracked
         # (or be the owner's own DM channel) before an unattended report is posted
         # into it — see test_slack_heartbeat_channel_deliver.py for the refusals.
-        monkeypatch.setattr("kiro_crew.slack.gateway.is_tracked_channel", lambda c: c == "C123")
+        monkeypatch.setattr("aj_crew.slack.gateway.is_tracked_channel", lambda c: c == "C123")
         orch = _make_orchestrator(slack_enabled=True, owner_id="U1")
         mock_slack = MockSlackClient()
         orch.slack = mock_slack
@@ -715,7 +715,7 @@ class TestDeliverResult:
         slot.queue_depth = 0
         ds.resolve_slot = MagicMock(return_value=slot)
         orch.dashboard_state = ds
-        with patch("kiro_crew.slack.gateway.sel") as mock_sel:
+        with patch("aj_crew.slack.gateway.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             await orch._deliver_result("Title", "task", "result", "prompt:dashboard:s1")
         slot.enqueue_or_run_prompt.assert_called_once()
@@ -737,7 +737,7 @@ class TestDeliverResult:
         slot.queue_depth = 2
         ds.resolve_slot = MagicMock(return_value=slot)
         orch.dashboard_state = ds
-        with patch("kiro_crew.slack.gateway.sel") as mock_sel:
+        with patch("aj_crew.slack.gateway.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             await orch._deliver_result("Title", "task", "result", "prompt:dashboard:s1")
         assert slot.enqueue_or_run_prompt.call_args.args[0] == "Title\n\nresult"
@@ -756,7 +756,7 @@ class TestShutdown:
     def test_autonudge_service_has_a_declared_default(self):
         """`_init_autonudge` returns before assigning when the flag is off.
 
-        With `KIROCREW_AUTONUDGE=0` and no declared default, every
+        With `AJCREW_AUTONUDGE=0` and no declared default, every
         `if self.autonudge_svc:` in the loop-CRUD handlers raises AttributeError.
         """
         orch = _make_orchestrator()
@@ -817,9 +817,9 @@ class TestShutdown:
         self, tmp_path, monkeypatch
     ):
         """A close still reaches the closed service until the dashboard is gone."""
-        from kiro_crew import autonudge as autonudge_module
+        from aj_crew import autonudge as autonudge_module
 
-        monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+        monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
         service = AutoNudgeService(base_dir=tmp_path)
         await _within_lost_run(service.start(), "the AutoNudge test service start")
         observed: list[tuple[bool, object | None]] = []
@@ -850,9 +850,9 @@ class TestShutdown:
         self, tmp_path, monkeypatch
     ):
         """The owned teardown task has the same publication boundary."""
-        from kiro_crew import autonudge as autonudge_module
+        from aj_crew import autonudge as autonudge_module
 
-        monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+        monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
         service = AutoNudgeService(base_dir=tmp_path)
         await _within_lost_run(service.start(), "the interrupted AutoNudge test start")
         drained = asyncio.Event()
@@ -1079,9 +1079,9 @@ class TestShutdown:
         ``release`` threading event and sets ``finished`` once the real store write
         has landed.
         """
-        from kiro_crew import autonudge as autonudge_module
+        from aj_crew import autonudge as autonudge_module
 
-        monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+        monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
         monkeypatch.setattr(gw, "GRACEFUL_SHUTDOWN_SECS", graceful_secs)
         monkeypatch.setattr(gw, "PERSISTENCE_DRAIN_GRACE_SECS", 0.05)
         monkeypatch.setattr(autonudge_module, "_DRAIN_CANCEL_GRACE_SECS", 0.05)
@@ -1174,7 +1174,7 @@ class TestShutdown:
             return await real_settle(deadline)
 
         monkeypatch.setattr(service, "settle_admitted_writes", recording_settle)
-        caplog.set_level("WARNING", logger="kiro_crew.autonudge")
+        caplog.set_level("WARNING", logger="aj_crew.autonudge")
         try:
             if under_graceful_bound:
                 shutdown = asyncio.create_task(orch._shutdown())
@@ -1213,7 +1213,7 @@ class TestShutdown:
             await asyncio.Event().wait()
 
         orch._stop_services_and_sessions = endless_teardown
-        caplog.set_level("WARNING", logger="kiro_crew.autonudge")
+        caplog.set_level("WARNING", logger="aj_crew.autonudge")
         try:
             shutdown = asyncio.create_task(orch._shutdown())
             await _within_lost_run(teardown_entered.wait(), "the teardown after the drain cut")
@@ -1396,7 +1396,7 @@ class TestShutdown:
         """A turn cut by close_all() saves its partial reply as it unwinds; the hard
         exit after shutdown must not beat that save."""
         monkeypatch.setattr(
-            "kiro_crew.gateway_shutdown_budget.DASHBOARD_TURN_UNWIND_SECS", 5.0, raising=False
+            "aj_crew.gateway_shutdown_budget.DASHBOARD_TURN_UNWIND_SECS", 5.0, raising=False
         )
         order: list[str] = []
         closed = asyncio.Event()
@@ -1443,7 +1443,7 @@ class TestShutdown:
     @pytest.mark.asyncio
     async def test_shutdown_never_cancels_or_outwaits_a_hung_dashboard_turn(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.gateway_shutdown_budget.DASHBOARD_TURN_UNWIND_SECS", 0.2, raising=False
+            "aj_crew.gateway_shutdown_budget.DASHBOARD_TURN_UNWIND_SECS", 0.2, raising=False
         )
         turn = asyncio.create_task(asyncio.Event().wait())
         orch = self._orch_with_dashboard_turn(turn)
@@ -1539,7 +1539,7 @@ class TestShutdown:
             return list(cmd), {}, None
 
         with (
-            patch.dict("os.environ", {"KIROCREW_PROJECT_DIR": str(tmp_path)}, clear=False),
+            patch.dict("os.environ", {"AJCREW_PROJECT_DIR": str(tmp_path)}, clear=False),
             patch.object(gw, "sandboxed_spawn_argv_async", side_effect=fake_prepare),
             patch.object(
                 gw,
@@ -1600,7 +1600,7 @@ class TestShutdown:
     async def test_shutdown_leaves_the_clean_exit_mark_to_the_exit_path(self):
         # The teardown after the disarm can still wedge and be killed, so the mark
         # waits for the exit path's last step, and _shutdown() never writes it.
-        from kiro_crew.dashboard import crash_dump_store
+        from aj_crew.dashboard import crash_dump_store
 
         order: list[str] = []
         orch = _make_orchestrator()

@@ -29,10 +29,10 @@ from test_work_ledger_tools import (  # noqa: F401 - the autouse fixtures ride a
     two_by_two,
 )
 
-from kiro_crew import work_ledger as wl
-from kiro_crew.dashboard import crew_work
-from kiro_crew.dashboard.handlers import work_ledger_board as board
-from kiro_crew.dashboard.handlers import work_ledger_worker as worker_routes
+from aj_crew import work_ledger as wl
+from aj_crew.dashboard import crew_work
+from aj_crew.dashboard.handlers import work_ledger_board as board
+from aj_crew.dashboard.handlers import work_ledger_worker as worker_routes
 
 OWNER = "owner-subject"
 
@@ -45,7 +45,7 @@ def _the_crew_log_takes_it(_floor_monkeypatch):
 @pytest.fixture(autouse=True)
 def _ticking_clock(_floor_monkeypatch):
     # Stamps are seconds-precision; a clock that ticks per write keeps reports apart.
-    from kiro_crew import work_ledger_store, work_ledger_writes
+    from aj_crew import work_ledger_store, work_ledger_writes
 
     start = datetime(2026, 11, 6, 7, 0, tzinfo=timezone.utc)
     ticks = iter(range(10_000))

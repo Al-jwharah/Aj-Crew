@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.config.loader as loader_module
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
+import aj_crew.config.loader as loader_module
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
 
 class TestConfigCache:
@@ -23,7 +23,7 @@ class TestConfigCache:
     @pytest.fixture(autouse=True)
     def _reset_cache(self):
         # Each test starts with a clean module-level cache and leaves one behind.
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.config.loader import _invalidate_config_cache
 
         _invalidate_config_cache()
         yield
@@ -32,7 +32,7 @@ class TestConfigCache:
     # Canonical scaffold so the one-shot write-back migration (which calls
     # save() and would invalidate the cache mid-test) does not fire.
     _CANON = {
-        "agents": {"default": {"kiro_agent": "kirocrew"}},
+        "agents": {"default": {"kiro_agent": "ajcrew"}},
         "default_agent": "default",
         "workspaces": {"default": {"dir": "~/workspace"}},
     }
@@ -57,16 +57,16 @@ class TestConfigCache:
             return real_validate(data)
 
         with (
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_file),
             patch(
-                "kiro_crew.config.loader.config_local_path",
+                "aj_crew.config.loader.config_local_path",
                 return_value=tmp_path / "config.local.json",
             ),
-            patch("kiro_crew.config.loader._validate_config_data", _counting),
+            patch("aj_crew.config.loader._validate_config_data", _counting),
         ):
-            KiroCrewConfig.load()
-            KiroCrewConfig.load()
-            KiroCrewConfig.load()
+            AjCrewConfig.load()
+            AjCrewConfig.load()
+            AjCrewConfig.load()
         # Validated once; subsequent loads served from cache.
         assert calls["n"] == 1
 
@@ -78,11 +78,11 @@ class TestConfigCache:
         cfg_file = tmp_path / "config.json"
         local = tmp_path / "config.local.json"
         with (
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
-            patch("kiro_crew.config.loader.config_local_path", return_value=local),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_file),
+            patch("aj_crew.config.loader.config_local_path", return_value=local),
         ):
             self._write(cfg_file, {"agent": {"model": "model-a"}})
-            first = KiroCrewConfig.load()
+            first = AjCrewConfig.load()
             assert first.agent.model == "model-a"
             # Rewrite with different content (model value differs in length, so
             # the size component of the fingerprint changes); also force a distinct
@@ -90,7 +90,7 @@ class TestConfigCache:
             self._write(cfg_file, {"agent": {"model": "model-bbbb"}})
             st = cfg_file.stat()
             _os.utime(cfg_file, ns=(st.st_atime_ns + 1_000_000_000, st.st_mtime_ns + 1_000_000_000))
-            second = KiroCrewConfig.load()
+            second = AjCrewConfig.load()
         assert second.agent.model == "model-bbbb"
 
     def test_atomic_replacement_identity_busts_same_size_fingerprint(self, tmp_path: Path) -> None:
@@ -98,7 +98,7 @@ class TestConfigCache:
         import os as _os
         from unittest.mock import patch
 
-        from kiro_crew.config.loader import (
+        from aj_crew.config.loader import (
             _config_fingerprint,
             update_config_locked,
             write_config_atomically,
@@ -111,8 +111,8 @@ class TestConfigCache:
             "dashboard": {"default_memory_mode": "incognito"},
         }
         with (
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
-            patch("kiro_crew.config.loader.config_local_path", return_value=local),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_file),
+            patch("aj_crew.config.loader.config_local_path", return_value=local),
         ):
             write_config_atomically(cfg_file, document)
             before_stat = cfg_file.stat()
@@ -150,15 +150,15 @@ class TestConfigCache:
         cfg_file = tmp_path / "config.json"
         local = tmp_path / "config.local.json"
         with (
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
-            patch("kiro_crew.config.loader.config_local_path", return_value=local),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_file),
+            patch("aj_crew.config.loader.config_local_path", return_value=local),
         ):
             self._write(cfg_file, {"agent": {"yolo": False}})
-            cfg = KiroCrewConfig.load()
+            cfg = AjCrewConfig.load()
             assert cfg.agent.dangerously_skip_permissions is False
             cfg.agent.dangerously_skip_permissions = True
             cfg.save()
-            reloaded = KiroCrewConfig.load()
+            reloaded = AjCrewConfig.load()
         assert reloaded.agent.dangerously_skip_permissions is True
 
     def test_returned_config_is_independent(self, tmp_path: Path) -> None:
@@ -169,16 +169,16 @@ class TestConfigCache:
         cfg_file = tmp_path / "config.json"
         local = tmp_path / "config.local.json"
         with (
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
-            patch("kiro_crew.config.loader.config_local_path", return_value=local),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_file),
+            patch("aj_crew.config.loader.config_local_path", return_value=local),
         ):
             self._write(cfg_file, {"agent": {"model": "orig-model"}})
-            first = KiroCrewConfig.load()
+            first = AjCrewConfig.load()
             assert first.agent.model == "orig-model"
             # In-place mutation, as settings handlers do.
-            first.agents["injected"] = KiroCrewAgentConfig(kiro_agent="x")
+            first.agents["injected"] = AjCrewAgentConfig(kiro_agent="x")
             first.agent.model = "MUTATED"
-            second = KiroCrewConfig.load()
+            second = AjCrewConfig.load()
         assert "injected" not in second.agents
         assert second.agent.model == "orig-model"
 
@@ -211,19 +211,19 @@ class TestConfigCache:
             return content
 
         with (
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
-            patch("kiro_crew.config.loader.config_local_path", return_value=local),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_file),
+            patch("aj_crew.config.loader.config_local_path", return_value=local),
             patch.object(Path, "read_text", _read_then_write),
         ):
-            first = KiroCrewConfig.load()  # reads v0, writer swaps to v1 mid-read
+            first = AjCrewConfig.load()  # reads v0, writer swaps to v1 mid-read
             # First load returns the v0 it actually read (acceptable).
             assert first.agent.model == "v0"
         # Next load must re-read and see v1 — NOT serve stale v0 from a poisoned cache.
         with (
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
-            patch("kiro_crew.config.loader.config_local_path", return_value=local),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_file),
+            patch("aj_crew.config.loader.config_local_path", return_value=local),
         ):
-            second = KiroCrewConfig.load()
+            second = AjCrewConfig.load()
         assert second.agent.model == "v1", "stale config served from poisoned cache"
 
 
@@ -231,49 +231,49 @@ class TestConfigWriteProtection:
     """config.json / config.local.json are WRITE-protected (reads allowed)."""
 
     def test_config_json_is_write_protected(self) -> None:
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
-        # Data home moved to ~/.kiro/crew; the legacy ~/.kirocrew stays gated too.
+        # Data home moved to ~/.kiro/crew; the legacy ~/.ajcrew stays gated too.
         assert is_sensitive_write_path("~/.kiro/crew/config.json")
         assert is_sensitive_write_path(str(Path.home() / ".kiro" / "crew" / "config.json"))
-        assert is_sensitive_write_path("~/.kirocrew/config.json")
-        assert is_sensitive_write_path(str(Path.home() / ".kirocrew" / "config.json"))
+        assert is_sensitive_write_path("~/.ajcrew/config.json")
+        assert is_sensitive_write_path(str(Path.home() / ".ajcrew" / "config.json"))
 
     def test_config_local_json_is_write_protected(self) -> None:
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         assert is_sensitive_write_path("~/.kiro/crew/config.local.json")
         assert is_sensitive_write_path(str(Path.home() / ".kiro" / "crew" / "config.local.json"))
-        assert is_sensitive_write_path("~/.kirocrew/config.local.json")
-        assert is_sensitive_write_path(str(Path.home() / ".kirocrew" / "config.local.json"))
+        assert is_sensitive_write_path("~/.ajcrew/config.local.json")
+        assert is_sensitive_write_path(str(Path.home() / ".ajcrew" / "config.local.json"))
 
     def test_config_json_reads_still_allowed(self) -> None:
-        from kiro_crew.security import is_sensitive_bash_command, is_sensitive_path
+        from aj_crew.security import is_sensitive_bash_command, is_sensitive_path
 
         assert is_sensitive_path("~/.kiro/crew/config.json") is False
         assert is_sensitive_bash_command("cat ~/.kiro/crew/config.json") is None
-        assert is_sensitive_path("~/.kirocrew/config.json") is False
-        assert is_sensitive_bash_command("cat ~/.kirocrew/config.json") is None
+        assert is_sensitive_path("~/.ajcrew/config.json") is False
+        assert is_sensitive_bash_command("cat ~/.ajcrew/config.json") is None
 
     def test_write_protection_superset_of_sensitive(self) -> None:
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         assert is_sensitive_write_path("~/.aws/credentials")
         assert is_sensitive_write_path("~/.kiro/crew/security_policy.json")
-        assert is_sensitive_write_path("~/.kirocrew/security_policy.json")
+        assert is_sensitive_write_path("~/.ajcrew/security_policy.json")
 
-    def test_non_config_kirocrew_file_not_write_protected(self) -> None:
-        from kiro_crew.security import is_sensitive_write_path
+    def test_non_config_ajcrew_file_not_write_protected(self) -> None:
+        from aj_crew.security import is_sensitive_write_path
 
         assert is_sensitive_write_path("~/.kiro/crew/sessions.db") is False
-        assert is_sensitive_write_path("~/.kirocrew/sessions.db") is False
+        assert is_sensitive_write_path("~/.ajcrew/sessions.db") is False
 
 
 class TestConfigEditToolBlocked:
     """The file-edit tool gate (HookManager.on_tool_call) denies edits to config."""
 
     def _hooks(self):
-        from kiro_crew.hooks import HookManager, HooksConfig
+        from aj_crew.hooks import HookManager, HooksConfig
 
         return HookManager(HooksConfig())
 
@@ -281,7 +281,7 @@ class TestConfigEditToolBlocked:
         result = self._hooks().on_tool_call(
             "Editing config.json",
             tool_kind="edit",
-            raw_params={"path": "~/.kirocrew/config.json"},
+            raw_params={"path": "~/.ajcrew/config.json"},
         )
         assert result.action == "deny"
         assert "write-protected config" in (result.reason or "")
@@ -290,7 +290,7 @@ class TestConfigEditToolBlocked:
         result = self._hooks().on_tool_call(
             "config.json",
             tool_kind="read",
-            raw_params={"path": "~/.kirocrew/config.json"},
+            raw_params={"path": "~/.ajcrew/config.json"},
         )
         assert result.action != "deny"
 
@@ -298,7 +298,7 @@ class TestConfigEditToolBlocked:
         result = self._hooks().on_tool_call(
             "Editing notes.md",
             tool_kind="edit",
-            raw_params={"path": "~/.kirocrew/workspace/notes.md"},
+            raw_params={"path": "~/.ajcrew/workspace/notes.md"},
         )
         assert result.action != "deny"
 
@@ -313,7 +313,7 @@ class TestSaveRoundTripPreservesAllSections:
     lost it the first time the gateway started."""
 
     def test_to_dict_includes_previously_dropped_sections(self) -> None:
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         td = cfg.to_dict()
         for key in ("knowledge", "heartbeat", "snapshot_dir", "watchdog"):
             assert key in td, f"to_dict() dropped {key} — save() would delete it"
@@ -336,8 +336,8 @@ class TestSaveRoundTripPreservesAllSections:
             json.dump(cfg_data, f)
             tmp = Path(f.name)
         try:
-            with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-                KiroCrewConfig.load()  # migration write-back save fires
+            with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+                AjCrewConfig.load()  # migration write-back save fires
             after = json.loads(tmp.read_text(encoding="utf-8"))
             assert after.get("knowledge", {}).get("pool_idle_ttl_secs") == 0
             assert after.get("heartbeat", {}).get("default_deliver") == "dashboard"

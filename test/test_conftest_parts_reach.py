@@ -839,7 +839,7 @@ def _test_tree_files(root: Path) -> Iterator[Path]:
         rel = path.relative_to(root).as_posix()
         if not (
             path.is_relative_to(test_root)
-            or (rel.startswith("src/kiro_crew/apps/builtins/") and "/tests/" in rel)
+            or (rel.startswith("src/aj_crew/apps/builtins/") and "/tests/" in rel)
         ):
             continue
         if rel in _CONFTESTS or path.name.startswith("conftest_"):
@@ -1130,7 +1130,7 @@ def _load_root_conftest():
 
 _root = _load_root_conftest()
 """
-_IN_APP = "src/kiro_crew/apps/builtins/app/tests"
+_IN_APP = "src/aj_crew/apps/builtins/app/tests"
 #: shape -> (directory, conftest the shape reaches, test text with a ``{name}`` slot).
 _SHAPES: dict[str, tuple[str, str, str]] = {
     "helper_handle": (

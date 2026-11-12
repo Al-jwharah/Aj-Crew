@@ -9,9 +9,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-import kiro_crew.dashboard.handlers.workflows as workflow_handlers
-from kiro_crew.dashboard.change_cards_readers import WORKFLOW_DIFF_MAX
-from kiro_crew.dashboard.handlers.workflows import (
+import aj_crew.dashboard.handlers.workflows as workflow_handlers
+from aj_crew.dashboard.change_cards_readers import WORKFLOW_DIFF_MAX
+from aj_crew.dashboard.handlers.workflows import (
     api_workflow_definition_get,
     api_workflow_definition_remove,
     api_workflow_definition_run,

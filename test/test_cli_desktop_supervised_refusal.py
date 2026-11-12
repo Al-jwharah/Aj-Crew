@@ -1,4 +1,4 @@
-"""``kirocrew stop`` and ``kirocrew restart`` leave the desktop app's gateway alone.
+"""``ajcrew stop`` and ``ajcrew restart`` leave the desktop app's gateway alone.
 
 The desktop app starts its gateway again when the gateway goes away, so a stop
 from the CLI is undone and a restart races the app. Like a systemd/launchd unit,
@@ -14,23 +14,23 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.gateway_lock import LockProbeError
-from kiro_crew.service.common import RestartReport
+from aj_crew.gateway_lock import LockProbeError
+from aj_crew.service.common import RestartReport
 
 # Pids no test signals: every process here is a patched probe.
 _GATEWAY = 2**22 + 31
 _SHIM = 2**22 + 32
 _APP = 2**22 + 33
 
-_MAC_APP = "/Applications/Kiro Crew.app/Contents"
+_MAC_APP = "/Applications/Aj Crew.app/Contents"
 _MAC_GATEWAY = f"{_MAC_APP}/Resources/backend-dist/bin/python3.12"
-_MAC_ELECTRON = f"{_MAC_APP}/MacOS/Kiro Crew"
+_MAC_ELECTRON = f"{_MAC_APP}/MacOS/Aj Crew"
 
-_WIN_APP = r"C:\Users\u\AppData\Local\Programs\Kiro Crew"
+_WIN_APP = r"C:\Users\u\AppData\Local\Programs\Aj Crew"
 # Windows reports no executable path here, so the probes answer from the command line.
 _WIN_CMDLINES = {
-    _GATEWAY: rf'"{_WIN_APP}\resources\backend-dist\python.exe" -m kiro_crew',
-    _APP: rf'"{_WIN_APP}\Kiro Crew.exe"',
+    _GATEWAY: rf'"{_WIN_APP}\resources\backend-dist\python.exe" -m aj_crew',
+    _APP: rf'"{_WIN_APP}\Aj Crew.exe"',
 }
 
 
@@ -39,22 +39,22 @@ def _probes(paths: dict[int, str], parents: dict[int, int], *, cmdlines=None):
     cmdlines = cmdlines or {}
     return [
         patch(
-            "kiro_crew.cli_server.platform_compat.process_executable_path",
+            "aj_crew.cli_server.platform_compat.process_executable_path",
             side_effect=lambda pid: paths.get(pid),
         ),
         patch(
-            "kiro_crew.cli_server.platform_compat.process_command_line",
+            "aj_crew.cli_server.platform_compat.process_command_line",
             side_effect=lambda pid: cmdlines.get(pid, ""),
         ),
         patch(
-            "kiro_crew.cli_server.platform_compat.get_ppid",
+            "aj_crew.cli_server.platform_compat.get_ppid",
             side_effect=lambda pid: parents.get(pid, -1),
         ),
     ]
 
 
 def _supervisor(paths, parents, *, cmdlines=None):
-    from kiro_crew import cli_server
+    from aj_crew import cli_server
 
     with contextlib.ExitStack() as es:
         for p in _probes(paths, parents, cmdlines=cmdlines):
@@ -69,23 +69,23 @@ class TestDesktopSupervisorPid:
 
     def test_the_linux_app_that_spawned_the_bundle_is_found(self):
         paths = {
-            _GATEWAY: "/opt/Kiro Crew/resources/backend-dist/bin/python3",
-            _APP: "/opt/Kiro Crew/kiro-crew",
+            _GATEWAY: "/opt/Aj Crew/resources/backend-dist/bin/python3",
+            _APP: "/opt/Aj Crew/aj-crew",
         }
         assert _supervisor(paths, {_GATEWAY: _APP}) == _APP
 
     def test_windows_reads_both_command_lines(self):
-        root = r"C:\Users\u\AppData\Local\Programs\Kiro Crew"
+        root = r"C:\Users\u\AppData\Local\Programs\Aj Crew"
         cmdlines = {
-            _GATEWAY: rf'"{root}\resources\backend-dist\python\python.exe" -P -m kiro_crew gateway',
-            _APP: rf'"{root.upper()}\Kiro Crew.exe" --some-flag',
+            _GATEWAY: rf'"{root}\resources\backend-dist\python\python.exe" -P -m aj_crew gateway',
+            _APP: rf'"{root.upper()}\Aj Crew.exe" --some-flag',
         }
         assert _supervisor({}, {_GATEWAY: _APP}, cmdlines=cmdlines) == _APP
 
     def test_a_launcher_shim_inside_the_bundle_is_skipped(self):
         paths = {
             _GATEWAY: _MAC_GATEWAY,
-            _SHIM: f"{_MAC_APP}/Resources/backend-dist/bin/kirocrew",
+            _SHIM: f"{_MAC_APP}/Resources/backend-dist/bin/ajcrew",
             _APP: _MAC_ELECTRON,
         }
         assert _supervisor(paths, {_GATEWAY: _SHIM, _SHIM: _APP}) == _APP
@@ -101,7 +101,7 @@ class TestDesktopSupervisorPid:
             # A user-session subreaper that adopted the orphan.
             "/usr/lib/systemd/systemd",
             # A different install of the app.
-            "/Applications/Other Kiro Crew.app/Contents/MacOS/Kiro Crew",
+            "/Applications/Other Aj Crew.app/Contents/MacOS/Aj Crew",
             # A pid reused by something else, or an unreadable parent.
             "",
         ],
@@ -116,7 +116,7 @@ class TestDesktopSupervisorPid:
 
     def test_the_search_is_bounded(self):
         """A chain of bundle processes longer than the depth names nobody."""
-        shim = f"{_MAC_APP}/Resources/backend-dist/bin/kirocrew"
+        shim = f"{_MAC_APP}/Resources/backend-dist/bin/ajcrew"
         chain = [_GATEWAY + 100 + i for i in range(10)]
         paths = {_GATEWAY: _MAC_GATEWAY, **{pid: shim for pid in chain}}
         parents = {_GATEWAY: chain[0], **dict(zip(chain, chain[1:]))}
@@ -131,37 +131,37 @@ def _run(verb: str, *, owner, paths, parents, cli_port=None, listeners=()):
     whether the command went on to find a gateway to signal; with ``--port`` the
     refusal makes one lookup of its own first. ``signal`` records any kill.
     """
-    from kiro_crew import cli_server
+    from aj_crew import cli_server
 
     mock_sel = MagicMock()
     lookup = MagicMock(return_value=list(listeners))
     stack = [
-        patch("kiro_crew.cli_server.sel", return_value=mock_sel),
-        patch("kiro_crew.cli_server._config_dir_owner", return_value=owner),
-        patch("kiro_crew.cli_server.service_controller.stop_service", return_value=False),
+        patch("aj_crew.cli_server.sel", return_value=mock_sel),
+        patch("aj_crew.cli_server._config_dir_owner", return_value=owner),
+        patch("aj_crew.cli_server.service_controller.stop_service", return_value=False),
         patch(
-            "kiro_crew.cli_server.service_controller.restart_service",
+            "aj_crew.cli_server.service_controller.restart_service",
             return_value=RestartReport(),
         ),
-        patch("kiro_crew.cli_server.service_controller.is_service_active", return_value=False),
-        patch("kiro_crew.cli_server.service_controller.installed_unit_path", return_value=None),
-        patch("kiro_crew.cli_server.service_controller.service_alias_holder", return_value=None),
-        patch("kiro_crew.cli_server.platform_compat.find_listening_pids", lookup),
+        patch("aj_crew.cli_server.service_controller.is_service_active", return_value=False),
+        patch("aj_crew.cli_server.service_controller.installed_unit_path", return_value=None),
+        patch("aj_crew.cli_server.service_controller.service_alias_holder", return_value=None),
+        patch("aj_crew.cli_server.platform_compat.find_listening_pids", lookup),
         patch(
-            "kiro_crew.cli_server.platform_compat.listening_pid_tool_available",
+            "aj_crew.cli_server.platform_compat.listening_pid_tool_available",
             return_value=True,
         ),
         # The existing path, when reached, stops here: nothing answers.
-        patch("kiro_crew.cli_server._report_authenticated_shutdown", return_value=False),
-        patch("kiro_crew.cli_server._refuse_if_lock_held", side_effect=SystemExit(1)),
-        patch("kiro_crew.cli_server._spawn_detached_gateway"),
-        patch("kiro_crew.cli_server.os.kill", side_effect=AssertionError("signalled")),
+        patch("aj_crew.cli_server._report_authenticated_shutdown", return_value=False),
+        patch("aj_crew.cli_server._refuse_if_lock_held", side_effect=SystemExit(1)),
+        patch("aj_crew.cli_server._spawn_detached_gateway"),
+        patch("aj_crew.cli_server.os.kill", side_effect=AssertionError("signalled")),
         patch(
-            "kiro_crew.cli_server.platform_compat.kill_process_tree",
+            "aj_crew.cli_server.platform_compat.kill_process_tree",
             side_effect=AssertionError("signalled"),
         ),
         patch(
-            "kiro_crew.cli_server._request_gateway_shutdown",
+            "aj_crew.cli_server._request_gateway_shutdown",
             side_effect=AssertionError("asked to shut down"),
         ),
         *_probes(paths, parents),
@@ -195,8 +195,8 @@ class TestRefusal:
         # Only the refusal's own check of the targeted port, never the kill path.
         assert lookup.call_count == (0 if cli_port is None else 1)
         out = capsys.readouterr().out
-        assert f"The Kiro Crew desktop app (pid {_APP}) runs this gateway (pid {_GATEWAY})" in out
-        assert f"`kirocrew {verb}` will not kill it" in out
+        assert f"The Aj Crew desktop app (pid {_APP}) runs this gateway (pid {_GATEWAY})" in out
+        assert f"`ajcrew {verb}` will not kill it" in out
         calls = mock_sel.log_api_access.call_args_list
         assert len(calls) == 1
         assert calls[0].kwargs["operation"] == f"gateway_{verb}"
@@ -214,7 +214,7 @@ class TestRefusal:
         _run("restart", owner=(_GATEWAY, True), **_SUPERVISED)
         out = capsys.readouterr().out
         assert "Settings → About → Restart gateway" in out
-        assert "quit the app and run `kirocrew restart` again" in out
+        assert "quit the app and run `ajcrew restart` again" in out
 
     @pytest.mark.parametrize("verb", ["stop", "restart"])
     @pytest.mark.parametrize(
@@ -251,11 +251,11 @@ class TestRefusal:
 
     def test_the_apps_own_pinned_stop_is_not_refused(self):
         """``stop --port N --expect-pid P`` is how the app itself stops a gateway."""
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         with (
-            patch("kiro_crew.cli_server._config_dir_owner") as owner,
-            patch("kiro_crew.cli_server._stop_expected_pid") as pinned,
+            patch("aj_crew.cli_server._config_dir_owner") as owner,
+            patch("aj_crew.cli_server._stop_expected_pid") as pinned,
         ):
             cli_server._stop(5476, expect_pid=_GATEWAY)
 
@@ -272,17 +272,17 @@ class TestWindowsHeldLockUsesTheRunRecord:
     """
 
     def _refuse(self, verb, *, held=True, recorded=_GATEWAY):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         mock_sel = MagicMock()
         probe = LockProbeError(Path("gateway.lock"), PermissionError(13, "denied"), held=held)
         with contextlib.ExitStack() as es:
             for p in _probes({}, {_GATEWAY: _APP}, cmdlines=_WIN_CMDLINES):
                 es.enter_context(p)
-            es.enter_context(patch("kiro_crew.cli_server.sel", return_value=mock_sel))
-            es.enter_context(patch("kiro_crew.cli_server.lock_holder", side_effect=probe))
+            es.enter_context(patch("aj_crew.cli_server.sel", return_value=mock_sel))
+            es.enter_context(patch("aj_crew.cli_server.lock_holder", side_effect=probe))
             record = es.enter_context(
-                patch("kiro_crew.cli_server._recorded_gateway_pid", return_value=recorded)
+                patch("aj_crew.cli_server._recorded_gateway_pid", return_value=recorded)
             )
             refused = cli_server._refuse_desktop_supervised(verb, 5476, explicit_port=False)
         return refused, mock_sel, record
@@ -313,12 +313,12 @@ class TestWindowsHeldLockUsesTheRunRecord:
         mock_sel.log_api_access.assert_not_called()
 
     def test_without_a_port_the_held_lock_names_nobody(self):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         probe = LockProbeError(Path("gateway.lock"), PermissionError(13, "denied"), held=True)
         with (
-            patch("kiro_crew.cli_server.lock_holder", side_effect=probe),
-            patch("kiro_crew.cli_server._recorded_gateway_pid") as record,
+            patch("aj_crew.cli_server.lock_holder", side_effect=probe),
+            patch("aj_crew.cli_server._recorded_gateway_pid") as record,
         ):
             assert cli_server._config_dir_owner() is None
         record.assert_not_called()

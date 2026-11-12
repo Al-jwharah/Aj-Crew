@@ -6,7 +6,7 @@ Supersedes: 2026-10-02-conductor-introduces-itself-in-every-chat.md
 
 ## Decision
 
-Every `kirocrew-conductor` chat introduces itself in plain words and reports with a live task board that puts "Needs you" first, wherever it is opened; when its Dashboard tab shows `goal-board` or `work-kanban`, that tab is the task board, and the chat reply carries only the "Needs you" lines and one line on what changed and what is next, with no in-chat "Task board" widget and no `task-dashboard` artifact written.
+Every `ajcrew-conductor` chat introduces itself in plain words and reports with a live task board that puts "Needs you" first, wherever it is opened; when its Dashboard tab shows `goal-board` or `work-kanban`, that tab is the task board, and the chat reply carries only the "Needs you" lines and one line on what changed and what is next, with no in-chat "Task board" widget and no `task-dashboard` artifact written.
 
 ## Why
 

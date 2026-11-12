@@ -4,7 +4,7 @@ const { buildGatewayEnvironment } = require("../../gateway-env");
 const { isPathFallback } = require("../../find-bin");
 const { gatewayCliInvocation } = require("../../gateway-recovery");
 
-// `kirocrew stop --port` sends SIGTERM and waits for the port itself.
+// `ajcrew stop --port` sends SIGTERM and waits for the port itself.
 const STUCK_GATEWAY_STOP_TIMEOUT_MS = 30_000;
 
 /**
@@ -15,7 +15,7 @@ const STUCK_GATEWAY_STOP_TIMEOUT_MS = 30_000;
  * lock at all.
  *
  * Every CLI call runs the backend binary the launch would spawn, under the same
- * scrubbed environment, and never inherits KIROCREW_PORT.
+ * scrubbed environment, and never inherits AJCREW_PORT.
  */
 function createHomeLock({
   fs,
@@ -23,7 +23,7 @@ function createHomeLock({
   execFile,
   app,
   processObj,
-  home: KIROCREW_HOME,
+  home: AJCREW_HOME,
   port: PORT,
   isWindows: IS_WIN,
   log: glog,
@@ -40,7 +40,7 @@ function createHomeLock({
   // ever proven there.
   async function holdsHomeGatewayLock(pid) {
     if (IS_WIN) return false;
-    const lockFile = path.join(KIROCREW_HOME, "gateway.lock");
+    const lockFile = path.join(AJCREW_HOME, "gateway.lock");
     let recorded = NaN;
     try {
       recorded = parseInt(String(fs.readFileSync(lockFile, "utf8")).trim(), 10);
@@ -64,7 +64,7 @@ function createHomeLock({
     return await holdsHomeGatewayLock(pids[0]) ? pids[0] : 0;
   }
 
-  // Run `kirocrew stop --port PORT` with `extraArgs` and resolve whether it
+  // Run `ajcrew stop --port PORT` with `extraArgs` and resolve whether it
   // exited 0. The stop runs the same bundled binary the launch path spawns, so
   // it must inherit the same scrubbed environment: a bundled Python left with
   // an inherited PYTHONPATH/PYTHONHOME from a dev shell would import checkout
@@ -72,19 +72,19 @@ function createHomeLock({
   // strips those for a bundled binary (gateway-env.js), detecting bundled the
   // same way the spawn does (resolveGatewayBin lands under backend-dist).
   function runCliStop(extraArgs, label) {
-    const { KIROCREW_PORT: _ignored, ...cleanEnv } = processObj.env;
+    const { AJCREW_PORT: _ignored, ...cleanEnv } = processObj.env;
     const bin = resolveGatewayBin();
     const bundled = bin.includes("backend-dist");
     return new Promise((resolve) => {
       execFile(bin, ["stop", "--port", String(PORT), ...extraArgs], {
         timeout: STUCK_GATEWAY_STOP_TIMEOUT_MS,
         windowsHide: true,
-        env: buildGatewayEnvironment({ ...cleanEnv, KIROCREW_HOME }, { bundled, platform: processObj.platform }),
+        env: buildGatewayEnvironment({ ...cleanEnv, AJCREW_HOME }, { bundled, platform: processObj.platform }),
       }, (error, stdout, stderr) => {
         const output = `${stdout || ""}${stderr || ""}`.trim();
         const said = output ? `: ${output.slice(0, 200)}` : "";
-        if (error) glog(`${label}: \`kirocrew stop --port ${PORT}\` failed: ${error.message}${said}`);
-        else glog(`${label}: \`kirocrew stop --port ${PORT}\` finished${said}`);
+        if (error) glog(`${label}: \`ajcrew stop --port ${PORT}\` failed: ${error.message}${said}`);
+        else glog(`${label}: \`ajcrew stop --port ${PORT}\` finished${said}`);
         resolve(!error);
       });
     });
@@ -102,7 +102,7 @@ function createHomeLock({
   // Run the very command the stale and orphan dialogs name for PORT, for a
   // gateway nothing restarts. No --expect-pid: it pins its signal with a pidfd,
   // which only Linux has, and these holders are macOS orphans. The CLI still
-  // signals only a Kiro Crew listener on PORT and refuses one the desktop app
+  // signals only an Aj Crew listener on PORT and refuses one the desktop app
   // runs. The caller re-proves the holder right before it calls this.
   function runPortStop() {
     return runCliStop([], "orphaned gateway");
@@ -111,7 +111,7 @@ function createHomeLock({
   /**
    * Ask the CLI who holds this home's `gateway.lock`, SOCKET-INDEPENDENTLY.
    *
-   * `kirocrew gateway-pid` resolves the incumbent through the backend's
+   * `ajcrew gateway-pid` resolves the incumbent through the backend's
    * `lock_holder` oracle — the same one `stop --expect-pid`/`restart` use — so
    * it names a draining gateway that has already released its LISTEN socket but
    * still holds the lock. That is the identity `snapshotGatewayPortPids` (lsof /
@@ -139,15 +139,15 @@ function createHomeLock({
    * is missing), a probe that ran to completion without printing JSON (a
    * backend that fails on import), an answer that names no known holder
    * (holder=indeterminate), and a packaged app's refusal to run a
-   * PATH-fallback `kirocrew`.
+   * PATH-fallback `ajcrew`.
    *
    * @returns {Promise<{verdict:"captured"|"released"|"held"|"unverified"|"refused", pid:number|null}>}
    */
   function probeLockHolderPid() {
-    const { KIROCREW_PORT: _ignored, ...cleanEnv } = processObj.env;
+    const { AJCREW_PORT: _ignored, ...cleanEnv } = processObj.env;
     const bin = resolveGatewayBin();
     // The same refusal spawnGateway applies: a packaged Windows app with no
-    // backend at a probed path does not run whatever `kirocrew` PATH names.
+    // backend at a probed path does not run whatever `ajcrew` PATH names.
     // Refused, not a guess: every later attempt resolves the same PATH entry.
     if (IS_WIN && app.isPackaged && isPathFallback(bin)) {
       glog(`liveness: lock probe REFUSED: no bundled backend — a packaged app does not run ${bin} from PATH`);
@@ -159,7 +159,7 @@ function createHomeLock({
       execFile(probeBin, probeArgs, {
         timeout: STUCK_GATEWAY_STOP_TIMEOUT_MS,
         windowsHide: true,
-        env: buildGatewayEnvironment({ ...cleanEnv, KIROCREW_HOME }, { bundled, platform: processObj.platform }),
+        env: buildGatewayEnvironment({ ...cleanEnv, AJCREW_HOME }, { bundled, platform: processObj.platform }),
       }, (error, stdout) => {
         let payload = null;
         try { payload = JSON.parse(String(stdout || "").trim()); }
@@ -170,11 +170,11 @@ function createHomeLock({
           // or no error at all) repeats on every attempt.
           const timedOut = Boolean(error) && (error.killed === true || error.code === "ETIMEDOUT");
           if (timedOut) {
-            glog(`liveness: \`kirocrew gateway-pid\` gave no usable answer (timed out: ${error.message}) — cannot name the incumbent via the lock this time`);
+            glog(`liveness: \`ajcrew gateway-pid\` gave no usable answer (timed out: ${error.message}) — cannot name the incumbent via the lock this time`);
             resolve({ verdict: "unverified", pid: null });
             return;
           }
-          glog(`liveness: lock probe REFUSED: \`kirocrew gateway-pid\` gave no usable answer${error ? ` (${error.message})` : " (exit 0, no JSON)"} — retrying cannot change that, surfacing the error`);
+          glog(`liveness: lock probe REFUSED: \`ajcrew gateway-pid\` gave no usable answer${error ? ` (${error.message})` : " (exit 0, no JSON)"} — retrying cannot change that, surfacing the error`);
           resolve({ verdict: "refused", pid: null });
           return;
         }

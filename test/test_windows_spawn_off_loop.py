@@ -27,11 +27,11 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import platform_compat_offloop_spawn as offloop
-from kiro_crew.platform_compat_native import IS_WINDOWS
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew import platform_compat_offloop_spawn as offloop
+from aj_crew.platform_compat_native import IS_WINDOWS
+from aj_crew.testing.wait import await_until, finished
 
-_SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+_SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 #: How long a held factory waits before giving up. A lost-run bound only: the
 #: tests release the factory themselves, and a factory still held at this bound
@@ -373,7 +373,7 @@ def test_windows_loop_keeps_running_inside_create_process(
 def test_windows_cancel_inside_create_process_reaps_the_child(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     async def body(held: _HeldFactory) -> None:
         spawn = asyncio.ensure_future(
@@ -402,8 +402,8 @@ def test_windows_cancel_inside_create_process_reaps_the_child(
 def test_windows_owned_session_spawn_runs_create_process_off_the_loop(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew import platform_compat
-    from kiro_crew.sandbox_rlimit import RLIMIT_PROFILE_SESSION_HOST, create_subprocess_limited
+    from aj_crew import platform_compat
+    from aj_crew.sandbox_rlimit import RLIMIT_PROFILE_SESSION_HOST, create_subprocess_limited
 
     async def body(held: _HeldFactory) -> None:
         loop_thread = threading.get_ident()

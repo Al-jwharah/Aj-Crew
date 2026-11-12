@@ -16,11 +16,11 @@ import pytest
 import yaml
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import cli_setup, slack_manifest
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.section_builders import _build_slack_config
-from kiro_crew.security import scan_exfiltration_urls
-from kiro_crew.slack.features import manifest_features
+from aj_crew import cli_setup, slack_manifest
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.section_builders import _build_slack_config
+from aj_crew.security import scan_exfiltration_urls
+from aj_crew.slack.features import manifest_features
 
 COMBOS = slack_manifest.feature_sets()
 _CC = frozenset({slack_manifest.CODE_CHANNELS})
@@ -42,7 +42,7 @@ _FAKE_LINES = {
 @pytest.fixture
 def fake_switch(monkeypatch: pytest.MonkeyPatch) -> str:
     """Register ``fake_switch`` exactly as a new switch would be registered."""
-    from kiro_crew.security import exfil
+    from aj_crew.security import exfil
 
     raw = slack_manifest.raw_template()
     for old, new in _FAKE_LINES.items():
@@ -55,8 +55,8 @@ def fake_switch(monkeypatch: pytest.MonkeyPatch) -> str:
     return _FAKE
 
 
-def _cfg(**slack: object) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _cfg(**slack: object) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     cfg.slack = _build_slack_config(dict(slack))
     return cfg
 
@@ -92,7 +92,7 @@ class TestRendering:
         # Byte-pinned: the digest of the payload before the manifest became
         # toggle-aware. A change here changes every default install's deep link.
         digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
-        assert digest == "bca5f538a73e541d77d4b00dbc5a39b48b499baa514358b3474010c36c984d11"
+        assert digest == "a5e0c5467861b8add3f5c63564e43e6be946ace6e5eb49d4335ebd1d25c057db"
 
     def test_unknown_feature_names_are_ignored(self) -> None:
         assert slack_manifest.render("x", features={"bogus"}) == slack_manifest.render("x")
@@ -168,9 +168,9 @@ class TestEmittersAgree:
     def test_cli_and_endpoint_render_the_same_bytes(
         self, slack: dict, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        import kiro_crew.dashboard.handlers.messaging as mod
+        import aj_crew.dashboard.handlers.messaging as mod
 
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: _cfg(**slack)))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: _cfg(**slack)))
         cli_setup._manifest(alias="someone")
         cli_out = capsys.readouterr().out
         resp = asyncio.run(
@@ -195,7 +195,7 @@ class TestExfilExemption:
     def test_a_variant_that_fails_to_build_costs_only_its_own_link(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.security import exfil
+        from aj_crew.security import exfil
 
         real = slack_manifest.stripped_template
 
@@ -236,33 +236,33 @@ class TestExistingAppKeepsItsCommand:
     @pytest.mark.parametrize(
         "command,alias",
         [
-            ("kirocrew", "kirocrew"),
-            ("kirocrew-jdoe", "jdoe"),
-            ("crew", "kirocrew"),
-            ("kirocrew-", "kirocrew"),
+            ("ajcrew", "ajcrew"),
+            ("ajcrew-jdoe", "jdoe"),
+            ("crew", "ajcrew"),
+            ("ajcrew-", "ajcrew"),
         ],
     )
     def test_alias_for_command(self, command: str, alias: str) -> None:
         assert slack_manifest.alias_for_command(command) == alias
 
     def test_render_takes_the_saved_command_and_ignores_a_bad_one(self) -> None:
-        assert "/crew\n" in slack_manifest.render("kirocrew", command="crew")
-        assert "/kirocrew\n" in slack_manifest.render("kirocrew", command="Bad Command!")
+        assert "/crew\n" in slack_manifest.render("ajcrew", command="crew")
+        assert "/ajcrew\n" in slack_manifest.render("ajcrew", command="Bad Command!")
 
     @pytest.mark.parametrize(
         "saved,name,slash",
         [
-            ("kirocrew-jdoe", "KiroCrew-jdoe", "/kirocrew-jdoe"),  # brand-ok: manifest app name
-            ("crew", "KiroCrew-kirocrew", "/crew"),  # brand-ok: manifest app name
+            ("ajcrew-jdoe", "AjCrew-jdoe", "/ajcrew-jdoe"),  # brand-ok: manifest app name
+            ("crew", "AjCrew-ajcrew", "/crew"),  # brand-ok: manifest app name
         ],
     )
     def test_endpoint_renders_for_this_install(
         self, saved: str, name: str, slash: str, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.dashboard.handlers.messaging as mod
+        import aj_crew.dashboard.handlers.messaging as mod
 
         cfg = _cfg(command=saved, code_channels=True)
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg))
         resp = asyncio.run(
             mod.api_slack_manifest(make_mocked_request("GET", "/api/slack/manifest"))
         )
@@ -311,7 +311,7 @@ class TestRegisteringASwitch:
     def test_config_and_the_settings_page_follow(self, fake_switch: str) -> None:
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard import slack_code_settings as scs
+        from aj_crew.dashboard import slack_code_settings as scs
 
         cfg = SimpleNamespace(
             slack=SimpleNamespace(agent_sessions=False, code_channels=False, fake_switch=True)

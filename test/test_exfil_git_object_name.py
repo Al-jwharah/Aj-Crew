@@ -18,8 +18,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
-from kiro_crew.security.exfil import _exfil_blob_hit
+from aj_crew.security import redact_exfiltration_urls, scan_exfiltration_urls
+from aj_crew.security.exfil import _exfil_blob_hit
 
 # Invented values: the SHA-1 of the empty tree and a 64-hex (SHA-256 / app
 # secret) shaped run.
@@ -55,7 +55,7 @@ class TestObjectNamesAreKept:
         assert not _redacted(_url("from=" + SHA1 + "&to=" + SHA1[::-1]))
 
     def test_redact_with_records_keeps_the_link(self) -> None:
-        from kiro_crew.security.exfil import redact_exfiltration_urls_with_records
+        from aj_crew.security.exfil import redact_exfiltration_urls_with_records
 
         url = _url("commit=" + SHA1)
         result, warnings, records = redact_exfiltration_urls_with_records(f"link {url}")

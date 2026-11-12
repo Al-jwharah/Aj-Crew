@@ -29,15 +29,15 @@ import { json } from './lib/boot-api.mjs'
 import { serveDist } from './lib/serve-dist.mjs'
 import { stubDashboardApi, logPageProblems } from './lib/stub-dashboard-api.mjs'
 
-const OUT = process.argv[2] || join(process.env.KIROCREW_SCRATCH || '/tmp', 'crew23003-shots')
+const OUT = process.argv[2] || join(process.env.AJCREW_SCRATCH || '/tmp', 'crew23003-shots')
 mkdirSync(OUT, { recursive: true })
 
 const now = Math.floor(Date.now() / 1000)
 const iso = (secsAgo) => new Date((now - secsAgo) * 1000).toISOString()
 const member = (name, extra = {}) => ({
   name, slug: name, bound: true, slot_key: `member-${name}`, running: false,
-  kiro_agent: 'kirocrew', workspace: 'default', memory_store: `member-${name}`,
-  memory_version: 2, memory_owner: name, model: '', source: 'kirocrew', ...extra,
+  kiro_agent: 'ajcrew', workspace: 'default', memory_store: `member-${name}`,
+  memory_version: 2, memory_owner: name, model: '', source: 'ajcrew', ...extra,
 })
 const MEMBERS = [
   member('scout', { display_name: 'Scout', kiro_agent: 'research', last_active_ts: now - 5400, last_message: 'Same conclusion as our #3202.' }),
@@ -45,7 +45,7 @@ const MEMBERS = [
 ]
 const AGENTS = MEMBERS.map((m) => ({
   name: m.name, display_name: m.display_name, kiro_agent: m.kiro_agent, workspace: m.workspace,
-  memory_store: m.memory_store, model: m.model, source: 'kirocrew',
+  memory_store: m.memory_store, model: m.model, source: 'ajcrew',
   description: m.name === 'scout'
     ? 'Research crewmate. Reads papers, repos and docs, then writes short briefs with sources.'
     : 'Backend crewmate. Owns the gateway, the ACP client and the session store.',
@@ -81,10 +81,10 @@ const SCOUT_MACHINERY = [
 // this harness is about the Sessions tab, so nothing else on the page has
 // anything to show, and each shape is the one its reader iterates.
 const EXACT = {
-  '/api/members': { members: MEMBERS, default_agent: 'kirocrew' },
-  '/api/agents': { agents: AGENTS, default_agent: 'kirocrew' },
+  '/api/members': { members: MEMBERS, default_agent: 'ajcrew' },
+  '/api/agents': { agents: AGENTS, default_agent: 'ajcrew' },
   '/api/agents/resolved-model': { model: '', resolved: '' },
-  '/api/default-agent': { default_agent: 'kirocrew' },
+  '/api/default-agent': { default_agent: 'ajcrew' },
   '/api/crons': { jobs: [] },
   '/api/cron-folders': [],
   '/api/autonudge': { enabled: true, loops: [] },

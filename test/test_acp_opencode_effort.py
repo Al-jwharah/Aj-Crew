@@ -17,11 +17,11 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.acp.client import _is_config_value_rejection
-from kiro_crew.acp.transport_errors import AcpError
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.agent_sdk import backends as sdk_backends
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_OPENCODE
+from aj_crew.acp.client import _is_config_value_rejection
+from aj_crew.acp.transport_errors import AcpError
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.agent_sdk import backends as sdk_backends
+from aj_crew.agent_sdk.backends import ACP_BACKEND_OPENCODE
 
 CAPTURE = Path(__file__).parent / "fixtures" / "acp_frames" / "opencode" / "effort-live.jsonl"
 THINK = "stub/think-1"
@@ -47,7 +47,7 @@ def _options(frame: dict) -> list[dict]:
 
 def _provider(tmp_path, options: list[dict]):
     """An ``AcpProvider`` on opencode with one captured ``configOptions`` array stored."""
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     provider = AcpProvider(acp_backend=ACP_BACKEND_OPENCODE, work_dir=tmp_path, model=THINK)
     provider._client._acp_config_options = copy.deepcopy(options)
@@ -109,7 +109,7 @@ def test_the_shared_runtime_handle_drops_default_too() -> None:
     """``AcpSessionHandle`` reads the same captured select and answers the same levels."""
     from types import SimpleNamespace
 
-    from kiro_crew.acp.session_handle_model_selection import get_valid_effort_levels
+    from aj_crew.acp.session_handle_model_selection import get_valid_effort_levels
 
     handle = SimpleNamespace(
         _runtime=SimpleNamespace(acp_backend=ACP_BACKEND_OPENCODE),

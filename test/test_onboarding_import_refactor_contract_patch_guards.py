@@ -26,7 +26,7 @@ import pytest
 import source_corpus
 from onboarding_import_refactor_contract_helpers import _ENGINE_MODULES
 
-from kiro_crew import onboarding_import
+from aj_crew import onboarding_import
 
 # Keep apply_import's MCP sidecar lock off the real ~/.kiro/settings (see the
 # shared fixture in test/conftest.py).
@@ -47,7 +47,7 @@ pytestmark = pytest.mark.usefixtures("isolate_mcp_host_paths")
 # the literal ``False``. The one exemption is ``_CREATE_PATCH_ALLOWLIST``, which the
 # scan must equal exactly.
 
-_FACADE = "kiro_crew.onboarding_import"
+_FACADE = "aj_crew.onboarding_import"
 
 #: Reported in place of a mirrored name the source only computes at runtime.
 _DYNAMIC = "<dynamic>"
@@ -207,7 +207,7 @@ def _bindings(tree: ast.Module) -> _Bindings:
                     bindings.mock_modules.add(bound)
                 elif node.module == "importlib" and alias.name == "import_module":
                     bindings.importers.add(bound)
-                elif node.module == "kiro_crew" and alias.name == "onboarding_import":
+                elif node.module == "aj_crew" and alias.name == "onboarding_import":
                     bindings.facades.add(bound)
 
     # Module-level string constants, each bound exactly once, resolved in order.
@@ -422,8 +422,8 @@ def _alias_case(import_line: str, patcher: str) -> str:
     """The three call spellings of one patch binding, each passing ``create=True``."""
     return (
         f"{import_line}\n"
-        "from kiro_crew import onboarding_import\n"
-        f'{patcher}("kiro_crew.onboarding_import._MAX_FILES", 1, create=True)\n'
+        "from aj_crew import onboarding_import\n"
+        f'{patcher}("aj_crew.onboarding_import._MAX_FILES", 1, create=True)\n'
         f'{patcher}.object(onboarding_import, "_toml", None, create=True)\n'
         f"{patcher}.multiple(onboarding_import, create=True, _MAX_DB_ROWS=1)\n"
     )
@@ -431,7 +431,7 @@ def _alias_case(import_line: str, patcher: str) -> str:
 
 _ALIAS_HITS = [(3, "_MAX_FILES"), (4, "_toml"), (5, "_MAX_DB_ROWS")]
 
-_MOCK = "from unittest import mock\nfrom kiro_crew import onboarding_import, onboarding_scan\n"
+_MOCK = "from unittest import mock\nfrom aj_crew import onboarding_import, onboarding_scan\n"
 
 #: id -> (synthetic source, the ``(line, name)`` hits it must produce). Each rule the
 #: guard enforces has a case it must flag and a case it must ignore.
@@ -473,7 +473,7 @@ _GUARD_CASES: dict[str, tuple[str, list[tuple[int, str]]]] = {
     "decorator/flag": (
         "from unittest.mock import patch as X\n"
         + _MOCK
-        + '@X("kiro_crew.onboarding_import._MAX_FILES", 1, create=True)\n'
+        + '@X("aj_crew.onboarding_import._MAX_FILES", 1, create=True)\n'
         '@X.object(onboarding_import, "_toml", None, create=True)\n'
         "def test_decorated():\n    pass\n",
         [(4, "_MAX_FILES"), (5, "_toml")],
@@ -481,32 +481,32 @@ _GUARD_CASES: dict[str, tuple[str, list[tuple[int, str]]]] = {
     "decorator/ignore: no create": (
         "from unittest.mock import patch as X\n"
         + _MOCK
-        + '@X("kiro_crew.onboarding_import._MAX_FILES", 1)\n'
+        + '@X("aj_crew.onboarding_import._MAX_FILES", 1)\n'
         '@X.object(onboarding_import, "_toml", None)\n'
         "def test_decorated():\n    pass\n",
         [],
     ),
     # 3. f-string targets built from the facade's __name__ or a module constant.
     "f-string/flag": (
-        _MOCK + 'FACADE = "kiro_crew.onboarding_import"\n'
+        _MOCK + 'FACADE = "aj_crew.onboarding_import"\n'
         'mock.patch(f"{onboarding_import.__name__}._MAX_FILES", 1, create=True)\n'
         'mock.patch(f"{FACADE}._is_link_like", None, create=True)\n',
         [(4, "_MAX_FILES"), (5, "_is_link_like")],
     ),
     "f-string/ignore: the owner's name, not the facade's": (
-        _MOCK + 'OWNER = "kiro_crew.onboarding_scan"\n'
+        _MOCK + 'OWNER = "aj_crew.onboarding_scan"\n'
         'mock.patch(f"{onboarding_scan.__name__}._MAX_FILES", 1, create=True)\n'
         'mock.patch(f"{OWNER}._MAX_FILES", 1, create=True)\n',
         [],
     ),
     # 4. Concatenation onto a module constant.
     "concatenation/flag": (
-        _MOCK + 'FACADE = "kiro_crew.onboarding_import"\n'
+        _MOCK + 'FACADE = "aj_crew.onboarding_import"\n'
         'mock.patch(FACADE + "._MAX_FILES", 1, create=True)\n',
         [(4, "_MAX_FILES")],
     ),
     "concatenation/ignore: onto the owner's name": (
-        _MOCK + 'OWNER = "kiro_crew.onboarding_scan"\n'
+        _MOCK + 'OWNER = "aj_crew.onboarding_scan"\n'
         'mock.patch(OWNER + "._MAX_FILES", 1, create=True)\n',
         [],
     ),
@@ -515,7 +515,7 @@ _GUARD_CASES: dict[str, tuple[str, list[tuple[int, str]]]] = {
         _MOCK + "mock.patch.object(\n"
         '    target=onboarding_import, attribute="_MAX_FILES", new=1, create=True\n'
         ")\n"
-        'mock.patch(target="kiro_crew.onboarding_import._toml", new=None, create=True)\n'
+        'mock.patch(target="aj_crew.onboarding_import._toml", new=None, create=True)\n'
         "mock.patch.multiple(target=onboarding_import, create=True, _MAX_DB_ROWS=1)\n",
         [(3, "_MAX_FILES"), (6, "_toml"), (7, "_MAX_DB_ROWS")],
     ),
@@ -550,21 +550,21 @@ _GUARD_CASES: dict[str, tuple[str, list[tuple[int, str]]]] = {
     # 7. create=False, and no create at all, are the safe spellings.
     "create-false/flag: the same patches with create=True": (
         _MOCK + 'mock.patch.object(onboarding_import, "_MAX_FILES", 1, create=True)\n'
-        'mock.patch("kiro_crew.onboarding_import._toml", None, create=True)\n',
+        'mock.patch("aj_crew.onboarding_import._toml", None, create=True)\n',
         [(3, "_MAX_FILES"), (4, "_toml")],
     ),
     "create-false/ignore": (
         _MOCK + 'mock.patch.object(onboarding_import, "_MAX_FILES", 1, create=False)\n'
-        'mock.patch("kiro_crew.onboarding_import._toml", None, create=False)\n'
+        'mock.patch("aj_crew.onboarding_import._toml", None, create=False)\n'
         "mock.patch.multiple(onboarding_import, create=False, _MAX_DB_ROWS=1)\n"
         'mock.patch.object(onboarding_import, "_MAX_FILES", 1)\n',
         [],
     ),
     # 8. On the facade, a name the source only computes at runtime is a hit.
     "dynamic/flag": (
-        _MOCK + 'FACADE = "kiro_crew.onboarding_import"\n'
+        _MOCK + 'FACADE = "aj_crew.onboarding_import"\n'
         "mock.patch.object(onboarding_import, name, 1, create=True)\n"
-        'mock.patch(f"kiro_crew.onboarding_import.{name}", 1, create=True)\n'
+        'mock.patch(f"aj_crew.onboarding_import.{name}", 1, create=True)\n'
         'mock.patch(FACADE + "." + name, 1, create=True)\n'
         "mock.patch.multiple(onboarding_import, create=True, **names)\n",
         [(4, _DYNAMIC), (5, _DYNAMIC), (6, _DYNAMIC), (7, _DYNAMIC)],
@@ -581,7 +581,7 @@ _GUARD_CASES: dict[str, tuple[str, list[tuple[int, str]]]] = {
         "import sys\n"
         "import unittest.mock\n"
         "from unittest import mock\n"
-        "from kiro_crew import onboarding_import\n"
+        "from aj_crew import onboarding_import\n"
         "m = unittest.mock\n"
         "m2 = m\n"
         "p = mock.patch\n"
@@ -589,8 +589,8 @@ _GUARD_CASES: dict[str, tuple[str, list[tuple[int, str]]]] = {
         "multi = p.multiple\n"
         'lm = il.import_module("unittest.mock")\n'
         'sm = sys.modules["unittest.mock"]\n'
-        'm2.patch("kiro_crew.onboarding_import._MAX_FILES", 1, create=True)\n'
-        'p("kiro_crew.onboarding_import._toml", None, create=True)\n'
+        'm2.patch("aj_crew.onboarding_import._MAX_FILES", 1, create=True)\n'
+        'p("aj_crew.onboarding_import._toml", None, create=True)\n'
         'patcher(onboarding_import, "_MAX_FILES", 1, create=True)\n'
         "multi(onboarding_import, create=True, _MAX_DB_ROWS=1)\n"
         'lm.patch.object(onboarding_import, "_toml", None, create=True)\n'
@@ -598,7 +598,7 @@ _GUARD_CASES: dict[str, tuple[str, list[tuple[int, str]]]] = {
         'late(onboarding_import, "_MAX_FILES", 1, create=True)\n'
         "late = patcher\n"
         "load = il.import_module\n"
-        'load("unittest.mock").patch("kiro_crew.onboarding_import._toml", None, create=True)\n',
+        'load("unittest.mock").patch("aj_crew.onboarding_import._toml", None, create=True)\n',
         [
             (13, "_MAX_FILES"),
             (14, "_toml"),
@@ -614,13 +614,13 @@ _GUARD_CASES: dict[str, tuple[str, list[tuple[int, str]]]] = {
         "import importlib as il\n"
         "import requests\n"
         "from unittest import mock\n"
-        "from kiro_crew import onboarding_import\n"
+        "from aj_crew import onboarding_import\n"
         "m = requests\n"
         "p = requests.patch\n"
         "patcher = mock.MagicMock\n"
         'lm = il.import_module("requests")\n'
-        'm.patch("kiro_crew.onboarding_import._MAX_FILES", 1, create=True)\n'
-        'p("kiro_crew.onboarding_import._toml", None, create=True)\n'
+        'm.patch("aj_crew.onboarding_import._MAX_FILES", 1, create=True)\n'
+        'p("aj_crew.onboarding_import._toml", None, create=True)\n'
         'patcher(onboarding_import, "_MAX_FILES", 1, create=True)\n'
         'lm.patch.object(onboarding_import, "_toml", None, create=True)\n',
         [],
@@ -635,11 +635,11 @@ _GUARD_CASES: dict[str, tuple[str, list[tuple[int, str]]]] = {
         'mock.patch.object(m, "_toml", None, create=True)\n'
         "m = oi\n"
         "oi = onboarding_import\n"
-        'loaded = importlib.import_module("kiro_crew.onboarding_import")\n'
+        'loaded = importlib.import_module("aj_crew.onboarding_import")\n'
         'mock.patch.object(loaded, "_toml", None, create=True)\n'
         'mock.patch.object(load(onboarding_import.__name__), "_toml", None, create=True)\n'
         'mock.patch.object(_api(), "_toml", None, create=True)\n'
-        'mock.patch.object(sys.modules["kiro_crew.onboarding_import"], "_toml", create=True)\n',
+        'mock.patch.object(sys.modules["aj_crew.onboarding_import"], "_toml", create=True)\n',
         [(8, "_toml"), (12, "_toml"), (13, "_toml"), (14, "_toml"), (15, "_toml")],
     ),
     "facade-alias/ignore: aliases of the owner": (
@@ -647,7 +647,7 @@ _GUARD_CASES: dict[str, tuple[str, list[tuple[int, str]]]] = {
         "oi = onboarding_scan\n"
         "m = oi\n"
         'mock.patch.object(m, "_MAX_FILES", 1, create=True)\n'
-        'loaded = importlib.import_module("kiro_crew.onboarding_scan")\n'
+        'loaded = importlib.import_module("aj_crew.onboarding_scan")\n'
         'mock.patch.object(loaded, "_MAX_FILES", 1, create=True)\n',
         [],
     ),
@@ -675,8 +675,8 @@ def test_a_hit_is_attributed_to_the_test_that_holds_it() -> None:
         "    def test_decorated(self):\n"
         "        pass\n"
         "    def test_inline(self):\n"
-        '        mock.patch("kiro_crew.onboarding_import._MAX_FILES", 1, create=True)\n'
-        'mock.patch("kiro_crew.onboarding_import._MAX_FILES", 1, create=True)\n'
+        '        mock.patch("aj_crew.onboarding_import._MAX_FILES", 1, create=True)\n'
+        'mock.patch("aj_crew.onboarding_import._MAX_FILES", 1, create=True)\n'
     )
     hits = mirrored_create_patches(ast.parse(source), onboarding_import._EXPORTS)
     assert [hit.scope for hit in hits] == [
@@ -768,7 +768,7 @@ def facade_rebinds(tree: ast.Module, names: Collection[str]) -> set[str]:
     A rebind is a ``patch``, ``patch.object`` or ``patch.multiple`` call or
     decorator the create guard resolves to the facade, or a ``setattr`` /
     ``delattr`` on any receiver (``monkeypatch``, the builtins) whose target is the
-    facade with a static attribute name or a dotted ``kiro_crew.onboarding_import``
+    facade with a static attribute name or a dotted ``aj_crew.onboarding_import``
     string. ``patch.dict`` is not one: it mutates the shared object in place, so
     every holder sees it. A name the source only computes at runtime is skipped.
     """
@@ -807,20 +807,20 @@ def _other_holders(name: str) -> list[str]:
 _REBIND_PROBE = (
     "import importlib\n"
     "from unittest import mock\n"
-    "import kiro_crew.onboarding_import as backend\n"
-    "from kiro_crew import onboarding_import, onboarding_sources\n"
+    "import aj_crew.onboarding_import as backend\n"
+    "from aj_crew import onboarding_import, onboarding_sources\n"
     "def _api():\n"
-    '    return importlib.import_module("kiro_crew.onboarding_import")\n'
+    '    return importlib.import_module("aj_crew.onboarding_import")\n'
     "def test_probe(monkeypatch, name):\n"
     "    api = _api()\n"
     # Must flag: each spelling of a rebind on the facade.
     '    monkeypatch.setattr(api, "_managed_mcp_names", frozenset)\n'
     '    monkeypatch.setattr(backend, "CATEGORY_IDS", ())\n'
-    '    monkeypatch.setattr("kiro_crew.onboarding_import.STRATEGY_SKIP", "rename")\n'
+    '    monkeypatch.setattr("aj_crew.onboarding_import.STRATEGY_SKIP", "rename")\n'
     '    monkeypatch.delattr(onboarding_import, "_SOURCE_ID_RE")\n'
     '    setattr(onboarding_import, "split_frontmatter", None)\n'
     '    mock.patch.object(onboarding_import, "_sources", dict)\n'
-    '    mock.patch("kiro_crew.onboarding_import.CONFLICT_STRATEGIES", ())\n'
+    '    mock.patch("aj_crew.onboarding_import.CONFLICT_STRATEGIES", ())\n'
     '    mock.patch.multiple(onboarding_import, STRATEGY_RENAME="r")\n'
     # Must ignore: the owner, an attribute of a module the facade shares, a name
     # computed at runtime, an in-place dict patch and the owner's dotted name.
@@ -828,7 +828,7 @@ _REBIND_PROBE = (
     '    monkeypatch.setattr(onboarding_import.platform_compat, "IS_WINDOWS", True)\n'
     "    monkeypatch.setattr(onboarding_import, name, None)\n"
     "    mock.patch.dict(onboarding_import._EXPORTS, {})\n"
-    '    mock.patch("kiro_crew.onboarding_scan.CATEGORY_IDS", ())\n'
+    '    mock.patch("aj_crew.onboarding_scan.CATEGORY_IDS", ())\n'
 )
 
 

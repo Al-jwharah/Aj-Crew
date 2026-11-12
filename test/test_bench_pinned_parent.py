@@ -33,7 +33,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.eval.bench.safepath import (
+from aj_crew.eval.bench.safepath import (
     UnsafePathError,
     _supports_pinned_walk,
     open_write_nofollow,
@@ -53,7 +53,7 @@ def test_a_component_swapped_after_resolution_is_refused(tmp_path: Path) -> None
     the state the caller is in when an attacker wins the resolve-to-openat window.
     Simulating it another way would test the simulation.
     """
-    from kiro_crew.eval.bench.safepath import _open_in_pinned_parent
+    from aj_crew.eval.bench.safepath import _open_in_pinned_parent
 
     victim_dir = tmp_path / "elsewhere"
     victim_dir.mkdir()
@@ -126,7 +126,7 @@ def test_the_unpinned_path_refuses_a_linked_ancestor_instead_of_following_it(
     race. That residual is documented on `_revalidate_unpinned`.
     """
     monkeypatch.setattr(
-        "kiro_crew.eval.bench.safepath._supports_pinned_walk", lambda: False
+        "aj_crew.eval.bench.safepath._supports_pinned_walk", lambda: False
     )
 
     victim_dir = tmp_path / "elsewhere"
@@ -153,7 +153,7 @@ def test_the_unpinned_path_still_writes_through_real_directories(
 ) -> None:
     """Refusing a linked ancestor must not refuse the ordinary case as well."""
     monkeypatch.setattr(
-        "kiro_crew.eval.bench.safepath._supports_pinned_walk", lambda: False
+        "aj_crew.eval.bench.safepath._supports_pinned_walk", lambda: False
     )
     out = tmp_path / "reports"
     out.mkdir()

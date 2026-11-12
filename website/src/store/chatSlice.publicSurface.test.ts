@@ -98,7 +98,7 @@ const CONSTANTS: Record<string, unknown> = {
   OLDER_WALK_PAGE_LIMIT: 100,
   PANE_HYDRATE_LIMIT: 50,
   PENDING_OPEN_LEASE_MS: 10_000,
-  QUIET_END_SERVER: 'kirocrew-core',
+  QUIET_END_SERVER: 'ajcrew-core',
   QUIET_END_TOOL: 'nothing_to_do',
   REFRESH_LIMIT_CEILING: 500,
   SLOT_DETAIL_MAX_LIMIT: 500,

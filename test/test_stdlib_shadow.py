@@ -2,13 +2,13 @@
 
 Background
 ----------
-``python -m kiro_crew`` puts the working directory at ``sys.path[0]``, ahead
+``python -m aj_crew`` puts the working directory at ``sys.path[0]``, ahead
 of the standard library. A ``~/concurrent/`` directory in a user's home (an
 unpacked Python 2 ``futures`` backport) was therefore imported INSTEAD of the
-stdlib package by ``kirocrew doctor`` and ``kirocrew gateway`` run from the
+stdlib package by ``ajcrew doctor`` and ``ajcrew gateway`` run from the
 home directory, and the only symptom was ``TypeError:
 ThreadPoolExecutor.__init__() got an unexpected keyword argument
-'thread_name_prefix'`` from deep inside ``kiro_crew.executors`` -- three rounds
+'thread_name_prefix'`` from deep inside ``aj_crew.executors`` -- three rounds
 of misdiagnosis (PYTHONPATH, a Python 2 site-packages, ``.pth`` files) before
 ``concurrent.__file__`` was printed.
 
@@ -17,7 +17,7 @@ Two things are pinned here:
 * The bundled launchers pass ``-P`` (``PYTHONSAFEPATH``), so the launch
   directory never reaches ``sys.path`` and the whole class of stdlib-named
   stray directories is inert.
-* The process entries (``python -m kiro_crew``, the console script) refuse to
+* The process entries (``python -m aj_crew``, the console script) refuse to
   start with a named cause when a probed stdlib module still resolves from a
   launch directory, ``PYTHONPATH`` or site-packages -- the paths ``-P`` does
   not cover, and every install that is not the bundle.
@@ -41,7 +41,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import __version__, stdlib_shadow, version_line
+from aj_crew import __version__, stdlib_shadow, version_line
 
 _SRC = Path(__file__).resolve().parent.parent / "src"
 _BUILD_DESKTOP = _SRC.parent / "packaging" / "build-desktop.sh"
@@ -50,8 +50,8 @@ _GATEWAY_RECOVERY = _SRC.parent / "website" / "electron" / "gateway-recovery.js"
 _BUILD_YML = _SRC.parent / ".github" / "workflows" / "build.yml"
 _WIN_INSTALLER_TEST = _SRC.parent / ".github" / "scripts" / "test-windows-installer.ps1"
 _WIN_SMOKE = _SRC.parent / "scripts" / "smoke-windows-install.ps1"
-_CLI_SERVER = _SRC / "kiro_crew" / "cli_server_restart.py"
-SHIM_IN_BUILD_YML = "'\"%~dp0..\\python.exe\" -s -P -m kiro_crew %*'"
+_CLI_SERVER = _SRC / "aj_crew" / "cli_server_restart.py"
+SHIM_IN_BUILD_YML = "'\"%~dp0..\\python.exe\" -s -P -m aj_crew %*'"
 
 
 def _import_roots(path: str) -> set[str]:
@@ -93,11 +93,11 @@ def _child_env(tmp_path: Path) -> dict[str, str]:
     # PYTHONPATH names this checkout's src so the child runs the code under
     # test even when the installed package is another checkout; a PYTHONPATH
     # entry is also one of the roots the guard classifies, so it must NOT be
-    # reported for holding kiro_crew.
+    # reported for holding aj_crew.
     return {
         **os.environ,
         "PYTHONPATH": str(_SRC),
-        "KIROCREW_HOME": str(tmp_path / "kc-home"),
+        "AJCREW_HOME": str(tmp_path / "kc-home"),
         "PYTHONIOENCODING": "utf-8",
     }
 
@@ -115,7 +115,7 @@ def _run(argv: list[str], cwd: Path, tmp_path: Path) -> subprocess.CompletedProc
 
 
 _PROBE = (
-    "from kiro_crew.stdlib_shadow import find_shadowed_stdlib; "
+    "from aj_crew.stdlib_shadow import find_shadowed_stdlib; "
     "print(repr([(s.name, s.entry_kind) for s in find_shadowed_stdlib()]))"
 )
 
@@ -191,7 +191,7 @@ class TestDetection:
         assert ast.literal_eval(res.stdout.strip()) == []
 
     def test_stdlib_package_directory_as_launch_dir_is_not_a_shadow(self, tmp_path: Path) -> None:
-        """``cd <stdlib>/concurrent && python -m kiro_crew``: the real
+        """``cd <stdlib>/concurrent && python -m aj_crew``: the real
         ``concurrent/__init__.py`` lies INSIDE the launch entry but was not
         provided BY it -- the finder only loads ``<entry>/<name>/__init__.py``.
         A containment test attributed it to the launch directory and refused a
@@ -199,7 +199,7 @@ class TestDetection:
         res = _run(["-c", _PROBE], _stdlib_concurrent_dir(), tmp_path)
         assert res.returncode == 0, res.stderr
         assert ast.literal_eval(res.stdout.strip()) == []
-        started = _run(["-m", "kiro_crew", "--version"], _stdlib_concurrent_dir(), tmp_path)
+        started = _run(["-m", "aj_crew", "--version"], _stdlib_concurrent_dir(), tmp_path)
         assert started.returncode == 0, started.stderr
         assert started.stdout == f"{version_line()}\n"
 
@@ -315,9 +315,9 @@ class TestEntryRefusal:
     def test_module_entry_refuses_from_shadowing_directory(
         self, shadowing_home: Path, tmp_path: Path
     ) -> None:
-        """``python -m kiro_crew`` run from the stray directory names the cause and
+        """``python -m aj_crew`` run from the stray directory names the cause and
         exits 2 instead of printing a version string it would later contradict."""
-        res = _run(["-m", "kiro_crew", "--version"], shadowing_home, tmp_path)
+        res = _run(["-m", "aj_crew", "--version"], shadowing_home, tmp_path)
         assert res.returncode == stdlib_shadow.SHADOW_EXIT_STATUS, res.stdout + res.stderr
         assert "Refusing to start" in res.stderr
         assert "concurrent -> '" in res.stderr
@@ -328,14 +328,14 @@ class TestEntryRefusal:
         self, shadowing_home: Path, tmp_path: Path
     ) -> None:
         """What the launchers' ``-P`` buys: the same directory, a normal start."""
-        res = _run(["-P", "-m", "kiro_crew", "--version"], shadowing_home, tmp_path)
+        res = _run(["-P", "-m", "aj_crew", "--version"], shadowing_home, tmp_path)
         assert res.returncode == 0, res.stderr
         assert res.stdout == f"{version_line()}\n"
 
     def test_bootstrap_refuses_before_importing_cli(
         self, monkeypatch: pytest.MonkeyPatch, capsys
     ) -> None:
-        from kiro_crew import _bootstrap
+        from aj_crew import _bootstrap
 
         shadow = stdlib_shadow.ShadowedModule("json", "/x/json/__init__.py", "/x", "PYTHONPATH")
         monkeypatch.setattr(stdlib_shadow, "find_shadowed_stdlib", lambda: [shadow])
@@ -344,7 +344,7 @@ class TestEntryRefusal:
             raise AssertionError("cli imported despite a shadowed stdlib")
 
         monkeypatch.setattr(_bootstrap, "_import_cli", _must_not_import)
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "doctor"])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "doctor"])
         with pytest.raises(SystemExit) as exc:
             _bootstrap.main()
         assert exc.value.code == stdlib_shadow.SHADOW_EXIT_STATUS
@@ -355,7 +355,7 @@ class TestEntryRefusal:
 
 class TestDoctorRow:
     def test_shadow_is_an_issue(self, monkeypatch: pytest.MonkeyPatch, capsys) -> None:
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         shadow = stdlib_shadow.ShadowedModule(
             "concurrent", "/home/u/concurrent/__init__.py", "/home/u", "launch directory"
@@ -369,7 +369,7 @@ class TestDoctorRow:
         assert issues == ["stdlib shadowed"]
 
     def test_clean_is_not_an_issue(self, monkeypatch: pytest.MonkeyPatch, capsys) -> None:
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         monkeypatch.setattr(stdlib_shadow, "find_shadowed_stdlib", lambda: [])
         issues: list[str] = []
@@ -384,19 +384,19 @@ class TestLaunchersPassSafePath:
 
     def test_posix_launcher(self) -> None:
         text = _BUILD_DESKTOP.read_text(encoding="utf-8")
-        m = re.search(r"cat > \"\$out/bin/kirocrew\" <<'LAUNCH'\n(.*?)\nLAUNCH\n", text, re.DOTALL)
+        m = re.search(r"cat > \"\$out/bin/ajcrew\" <<'LAUNCH'\n(.*?)\nLAUNCH\n", text, re.DOTALL)
         assert m, "POSIX launcher heredoc not found"
         assert re.search(
-            r'^exec "\$DIR/python3\.12" -s -P -m kiro_crew "\$@"$', m.group(1), re.M
+            r'^exec "\$DIR/python3\.12" -s -P -m aj_crew "\$@"$', m.group(1), re.M
         ), m.group(1)
 
     def test_windows_cmd_shim(self) -> None:
         text = _BUILD_DESKTOP.read_text(encoding="utf-8")
-        assert 'python.exe" -s -P -m kiro_crew %%*' in text
+        assert 'python.exe" -s -P -m aj_crew %%*' in text
 
     def test_electron_windows_direct_spawn(self) -> None:
         recovery = _GATEWAY_RECOVERY.read_text(encoding="utf-8")
-        assert 'args: ["-s", "-P", "-m", "kiro_crew", ...subArgs],' in recovery
+        assert 'args: ["-s", "-P", "-m", "aj_crew", ...subArgs],' in recovery
         supervisor = _GATEWAY_SUPERVISOR.read_text(encoding="utf-8")
         assert re.search(
             r"\{ bin: spawnBin, args: spawnArgs \} = gatewayCliInvocation\(\s*bin,\s*\[\"gateway\"",
@@ -412,12 +412,12 @@ class TestLaunchersPassSafePath:
         build_yml = _BUILD_YML.read_text(encoding="utf-8")
         assert SHIM_IN_BUILD_YML in build_yml
         installer = _WIN_INSTALLER_TEST.read_text(encoding="utf-8")
-        assert '"-s", "-P", "-m", "kiro_crew", "gateway"' in installer
+        assert '"-s", "-P", "-m", "aj_crew", "gateway"' in installer
         smoke = _WIN_SMOKE.read_text(encoding="utf-8")
-        assert '"-s", "-P", "-m", "kiro_crew", "gateway"' in smoke
+        assert '"-s", "-P", "-m", "aj_crew", "gateway"' in smoke
 
     def test_every_self_launch_enters_the_module_with_safe_path(self) -> None:
-        """Every place Kiro Crew spawns or execs ITSELF through `-m kiro_crew...`
+        """Every place Aj Crew spawns or execs ITSELF through `-m aj_crew...`
         passes `-P`: the launchers, the restart re-exec, the pod unit, the
         dev-fleet CLI, the jail re-exec, the setup respawn, the test harness, the
         container supervisor, the MCP gatewayd and the computer-use overlay. A
@@ -426,9 +426,9 @@ class TestLaunchersPassSafePath:
         line breaks, and matching the dotted submodule spellings and the module
         constants (`_GATEWAYD_MODULE`, `OVERLAY_MODULE`, `_STUB_MODULE`) as well
         as the literal package."""
-        pattern = re.compile(r'"-m",\s*(?:"kiro_crew|_GATEWAYD_MODULE|OVERLAY_MODULE|_STUB_MODULE)')
+        pattern = re.compile(r'"-m",\s*(?:"aj_crew|_GATEWAYD_MODULE|OVERLAY_MODULE|_STUB_MODULE)')
         offenders: list[str] = []
-        for path in (_SRC / "kiro_crew").rglob("*.py"):
+        for path in (_SRC / "aj_crew").rglob("*.py"):
             posix = path.as_posix()
             if "/tests/" in posix or "/container_tests/" in posix or path.name.startswith("test_"):
                 continue
@@ -449,16 +449,16 @@ class TestLaunchersPassSafePath:
         assert not offenders, "\n".join(offenders)
 
     def test_home_cwd_respawn_keeps_home_off_sys_path(self) -> None:
-        """`_spawn_detached_gateway` is the one in-process `-m kiro_crew` fallback
+        """`_spawn_detached_gateway` is the one in-process `-m aj_crew` fallback
         that hardcodes `cwd=Path.home()` -- the exact launch shape of the field
         failure -- so it passes `-P` like the launchers do."""
         text = _CLI_SERVER.read_text(encoding="utf-8")
-        assert 'isolated_python_argv("-P", "-m", "kiro_crew", "gateway")' in text
+        assert 'isolated_python_argv("-P", "-m", "aj_crew", "gateway")' in text
 
     def test_self_containment_probes_use_the_shipped_argv(self) -> None:
         """The build's self-containment check runs the exact launcher argv, so a
         flag the launcher passes that the probe omits is a contract nobody
         verified at build time."""
         text = _BUILD_DESKTOP.read_text(encoding="utf-8")
-        assert '"$out/bin/python3.12" -s -P -m kiro_crew --version' in text
-        assert '"$out/python.exe" -s -P -m kiro_crew --version' in text
+        assert '"$out/bin/python3.12" -s -P -m aj_crew --version' in text
+        assert '"$out/python.exe" -s -P -m aj_crew --version' in text

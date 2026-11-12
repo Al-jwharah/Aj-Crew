@@ -15,14 +15,14 @@ import asyncio
 from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kiro_crew.cron import CronJob, CronSchedule
-from kiro_crew.slack.gateway import _GateTally
+from aj_crew.cron import CronJob, CronSchedule
+from aj_crew.slack.gateway import _GateTally
 
 GateScript = list[tuple[str, bool, bool]]
 
 # The two wire spellings a send_message call arrives under.
-SEND_KIRO_CLI = ("Running: @kirocrew-core/send_message", True, False)
-SEND_ACP = ("mcp__kirocrew-core__send_message", True, False)
+SEND_KIRO_CLI = ("Running: @ajcrew-core/send_message", True, False)
+SEND_ACP = ("mcp__ajcrew-core__send_message", True, False)
 READ = ("Read README.md", True, False)
 BLOCKED = ("echo hi", False, True)
 
@@ -33,7 +33,7 @@ def _run_silent_cron(gate: GateScript, reply: str = "", runs: int = 1) -> CronJo
     Each turn replays *gate* and returns *reply* as the model's prose -- empty
     by default, which is the shape a silent job's turn actually has.
     """
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gw = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gw.sessions = MagicMock()
@@ -74,8 +74,8 @@ def _run_silent_cron(gate: GateScript, reply: str = "", runs: int = 1) -> CronJo
     captured_cb = None
 
     with (
-        patch("kiro_crew.slack.gateway.stream_and_collect", fake_stream),
-        patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
+        patch("aj_crew.slack.gateway.stream_and_collect", fake_stream),
+        patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
     ):
 
         def capture_cron(on_job=None, **kw):
@@ -146,7 +146,7 @@ def test_tally_keeps_the_bare_placeholder_for_a_turn_that_did_nothing() -> None:
 
 def test_a_refused_send_message_is_not_a_delivery() -> None:
     tally = _GateTally()
-    tally.note("Running: @kirocrew-core/send_message", False, True)
+    tally.note("Running: @ajcrew-core/send_message", False, True)
 
     assert tally.delivered is False
     assert tally.empty_reply_placeholder() == "_No response._"

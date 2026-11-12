@@ -9,7 +9,7 @@ so there is no key to declare, edit or document. Two things are pinned:
   schema, the config PATCH allowlist and the schema registry -- so no surface can
   offer or accept it again by accident.
 * LEGACY TOLERANCE -- a ``config.json`` written while the key existed (by
-  ``kirocrew config set`` or the config PATCH) must load without error. The loader
+  ``ajcrew config set`` or the config PATCH) must load without error. The loader
   keeps an unmodelled nested key in ``_extra_keys`` and round-trips it on save, so
   the operator's file is neither rejected nor silently rewritten; it warns about
   nothing, because a nested unknown key is preserved rather than reported.
@@ -22,11 +22,11 @@ import logging
 
 import pytest
 
-from kiro_crew.config import loader as L
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.schema import SCHEMA_REGISTRY
-from kiro_crew.config.sections import DashboardConfig
-from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+from aj_crew.config import loader as L
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.schema import SCHEMA_REGISTRY
+from aj_crew.config.sections import DashboardConfig
+from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
 FIELD = "dashboard.usage_text_scrape_enabled"
 LEAF = "usage_text_scrape_enabled"
@@ -54,7 +54,7 @@ def test_a_config_still_carrying_the_key_loads_and_keeps_it(cfg_home, caplog):
     )
     caplog.set_level(logging.WARNING)
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     # Loaded, the modelled sibling intact, the stale key parked with the other
     # unmodelled keys rather than read into the dataclass.
@@ -80,15 +80,15 @@ async def test_the_config_patch_refuses_the_key(cfg_home) -> None:
     from aiohttp.test_utils import TestClient, TestServer
     from dashboard_owner_helpers import as_owner
 
-    from kiro_crew.dashboard.handlers import api_kirocrew_config_patch
+    from aj_crew.dashboard.handlers import api_ajcrew_config_patch
 
     cfg_home.write_text(json.dumps({"dashboard": {}}), encoding="utf-8")
     app = web.Application()
-    app.router.add_patch("/api/config/kirocrew", api_kirocrew_config_patch)
+    app.router.add_patch("/api/config/ajcrew", api_ajcrew_config_patch)
     # The route is owner-gated, so the field-not-editable answer is only reached
     # as the owner; a non-owner would land on the gate first.
     async with TestClient(TestServer(as_owner(app))) as c:
-        resp = await c.patch("/api/config/kirocrew", json={"path": FIELD, "value": True})
+        resp = await c.patch("/api/config/ajcrew", json={"path": FIELD, "value": True})
         assert resp.status == 400, await resp.text()
     written = json.loads(cfg_home.read_text(encoding="utf-8"))
     assert LEAF not in written["dashboard"]

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard import create_rate_limit as rl
+from aj_crew.dashboard import create_rate_limit as rl
 
 
 @pytest.fixture(autouse=True)

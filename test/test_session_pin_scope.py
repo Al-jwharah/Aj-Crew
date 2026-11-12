@@ -21,8 +21,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.dashboard.origin import is_direct_local_request, is_proxied_request
-from kiro_crew.security_posture import build_posture_snapshot
+from aj_crew.dashboard.origin import is_direct_local_request, is_proxied_request
+from aj_crew.security_posture import build_posture_snapshot
 
 
 def _req(remote: str, headers: dict[str, str] | None = None):
@@ -52,7 +52,7 @@ class TestProxiedPredicate:
         """The case an earlier, loopback-scoped version of this got wrong.
 
         An nginx box / container bridge / LAN jump host in front of a widened
-        ``KIROCREW_BIND`` presents a NON-loopback peer — but that peer is the
+        ``AJCREW_BIND`` presents a NON-loopback peer — but that peer is the
         proxy, not the client, so the address is just as shared. Reporting it as
         per-client would reproduce the untrue claim this predicate removes.
         """
@@ -74,7 +74,7 @@ def _pin_detail() -> str:
 @pytest.fixture(autouse=True)
 def _reset_pin_bindings():
     """Isolate the binding table — it is process-global by design."""
-    from kiro_crew.dashboard import token_auth
+    from aj_crew.dashboard import token_auth
 
     state = token_auth._state
     before = dict(state._peer_bindings)
@@ -92,7 +92,7 @@ def _live() -> float:
 class TestPostureReportsEffectivePinScope:
     def test_nothing_pinned_is_reported_as_not_known_yet_not_as_effective(self) -> None:
         """A pin nobody is exercising is not evidence the pin works."""
-        from kiro_crew.dashboard.token_auth import proxied_pin_observed
+        from aj_crew.dashboard.token_auth import proxied_pin_observed
 
         assert proxied_pin_observed() is None
         detail = _pin_detail()
@@ -101,7 +101,7 @@ class TestPostureReportsEffectivePinScope:
         assert "Per-client" not in detail
 
     def test_direct_bind_reports_per_client(self) -> None:
-        from kiro_crew.dashboard.token_auth import bind_token_ip, proxied_pin_observed
+        from aj_crew.dashboard.token_auth import bind_token_ip, proxied_pin_observed
 
         bind_token_ip("t-direct", "203.0.113.7", _live(), False)
         assert proxied_pin_observed() is False
@@ -109,7 +109,7 @@ class TestPostureReportsEffectivePinScope:
 
     def test_proxied_bind_reports_shared_pin(self) -> None:
         """A proxied bind reports the pin as SHARED, not per-client."""
-        from kiro_crew.dashboard.token_auth import bind_token_ip, proxied_pin_observed
+        from aj_crew.dashboard.token_auth import bind_token_ip, proxied_pin_observed
 
         bind_token_ip("t-proxied", "127.0.0.1", _live(), True)
         assert proxied_pin_observed() is True
@@ -119,7 +119,7 @@ class TestPostureReportsEffectivePinScope:
 
     def test_one_live_proxied_binding_dominates(self) -> None:
         """SHARED while ANY live session is proxied — the dangerous state wins."""
-        from kiro_crew.dashboard.token_auth import bind_token_ip, proxied_pin_observed
+        from aj_crew.dashboard.token_auth import bind_token_ip, proxied_pin_observed
 
         bind_token_ip("t-direct", "203.0.113.7", _live(), False)
         bind_token_ip("t-proxied", "127.0.0.1", _live(), True)
@@ -133,7 +133,7 @@ class TestPostureReportsEffectivePinScope:
         direct ones remain, the row has to say per-client again — a stale SHARED
         is the same class of untrue claim this row exists to remove.
         """
-        from kiro_crew.dashboard.token_auth import bind_token_ip, proxied_pin_observed
+        from aj_crew.dashboard.token_auth import bind_token_ip, proxied_pin_observed
 
         bind_token_ip("t-proxied", "127.0.0.1", time.time() - 1, True)  # already expired
         bind_token_ip("t-direct", "203.0.113.7", _live(), False)
@@ -141,14 +141,14 @@ class TestPostureReportsEffectivePinScope:
         assert "Per-client" in _pin_detail()
 
     def test_all_sessions_expired_reports_not_known_rather_than_stale(self) -> None:
-        from kiro_crew.dashboard.token_auth import bind_token_ip, proxied_pin_observed
+        from aj_crew.dashboard.token_auth import bind_token_ip, proxied_pin_observed
 
         bind_token_ip("t-proxied", "127.0.0.1", time.time() - 1, True)
         assert proxied_pin_observed() is None
 
     def test_answer_does_not_depend_on_when_eviction_ran(self) -> None:
         """Expiry is filtered directly, so lazy eviction cannot change the report."""
-        from kiro_crew.dashboard import token_auth
+        from aj_crew.dashboard import token_auth
 
         token_auth.bind_token_ip("t-proxied", "127.0.0.1", time.time() - 1, True)
         before_evict = token_auth.proxied_pin_observed()
@@ -157,7 +157,7 @@ class TestPostureReportsEffectivePinScope:
 
     def test_observation_never_changes_the_binding_itself(self) -> None:
         """The flag is reporting only — check_ip must be unaffected by it."""
-        from kiro_crew.dashboard.token_auth import bind_token_ip, check_token_ip
+        from aj_crew.dashboard.token_auth import bind_token_ip, check_token_ip
 
         bind_token_ip("t-proxied", "127.0.0.1", _live(), True)
         assert check_token_ip("t-proxied", "127.0.0.1") is True

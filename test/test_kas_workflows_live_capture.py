@@ -17,9 +17,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.acp import kas_wire
-from kiro_crew.kas_workflows import wire
-from kiro_crew.kas_workflows.mirror import RunMirror
+from aj_crew.acp import kas_wire
+from aj_crew.kas_workflows import wire
+from aj_crew.kas_workflows.mirror import RunMirror
 
 CAPTURE = Path(__file__).parent / "fixtures" / "acp_frames" / "kas" / "workflow-run-live.jsonl"
 
@@ -91,7 +91,7 @@ def test_list_recipes_reads_the_workspace_recipe_and_the_bundled_ones(capture) -
     _meta, frames = capture
     recipes = wire.parse_recipes(_result_with(frames, "recipes"))
     by_name = {r.name: r for r in recipes}
-    ours = by_name["kirocrew-capture"]
+    ours = by_name["ajcrew-capture"]
     assert ours.launchable and not ours.read_only
     assert ours.scope("/work") == wire.RECIPE_SCOPE_WORKSPACE
     assert [n.id for n in ours.plan] == ["note", "ask"]
@@ -107,7 +107,7 @@ def test_the_recipes_changed_push_carries_the_same_recipes_as_list_recipes(captu
     pushed = {r.name: r for r in wire.parse_recipes(pushes[-1])}
     listed = {r.name: r for r in wire.parse_recipes(_result_with(frames, "recipes"))}
     assert pushed.keys() == listed.keys()
-    ours = pushed["kirocrew-capture"]
+    ours = pushed["ajcrew-capture"]
     assert ours.scope("/work") == wire.RECIPE_SCOPE_WORKSPACE
     assert [n.id for n in ours.plan] == ["note", "ask"]
 

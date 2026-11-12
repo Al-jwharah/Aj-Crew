@@ -44,15 +44,15 @@ from overload_fakes import (
     wait_taskq_open,
 )
 
-import kiro_crew.subagent as subagent_mod
-from kiro_crew import taskq
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.schema import requires_restart
-from kiro_crew.subagent import SubagentManager, _SharingPlan
-from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
-from kiro_crew.subagent_manager.admission.types import MemoryWait
-from kiro_crew.subagent_wait_reasons import QUEUED_REASON_LOW_MEMORY, QUEUED_WAIT_EXPIRED_TEXT
-from kiro_crew.testing.wait import await_until
+import aj_crew.subagent as subagent_mod
+from aj_crew import taskq
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.schema import requires_restart
+from aj_crew.subagent import SubagentManager, _SharingPlan
+from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+from aj_crew.subagent_manager.admission.types import MemoryWait
+from aj_crew.subagent_wait_reasons import QUEUED_REASON_LOW_MEMORY, QUEUED_WAIT_EXPIRED_TEXT
+from aj_crew.testing.wait import await_until
 
 pytestmark = [pytest.mark.timeout(60), pytest.mark.usefixtures("healthy_host_memory")]
 
@@ -64,11 +64,11 @@ _ADMIT = 30.0
 # floor is 2.0 GiB, so a host with 2.5 GiB free fits no dedicated start and one
 # with 3.0 GiB fits exactly one.
 _NEAR_FLOOR = 2.5
-_SAMPLER_SECS = "kiro_crew.subagent_manager.admission.memory_wake.MEMORY_SAMPLER_SECS"
+_SAMPLER_SECS = "aj_crew.subagent_manager.admission.memory_wake.MEMORY_SAMPLER_SECS"
 
 
-def _cfg(*, bound: int = 1800, weights: dict[str, int] | None = None) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _cfg(*, bound: int = 1800, weights: dict[str, int] | None = None) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     cfg.agent.subagent_cost_gb = 0.5
     cfg.agent.subagent_queue_max_wait_secs = bound
     cfg.agent.lane_weights = dict(weights or {})
@@ -88,7 +88,7 @@ class _Host:
         self.done: list[tuple[str, dict[str, Any]]] = []
         self.queued: dict[str, list[dict[str, Any]]] = {}
         self.delivered: list[Any] = []
-        self.cfgs: dict[str, KiroCrewConfig] = {}
+        self.cfgs: dict[str, AjCrewConfig] = {}
         self.sel = MagicMock()
         # The most recent delay the sampler asked the loop for (set by _host's
         # call_later wrapper). None until the sampler arms for the first time.
@@ -215,14 +215,14 @@ async def _host(
     monkeypatch,
     *,
     free_gb: float = 8.0,
-    cfg: KiroCrewConfig | None = None,
+    cfg: AjCrewConfig | None = None,
 ):
     # The sampler's timer is off the clock: an event's wake is then the only
     # thing that can start a waiting spawn in time, and a sampler test fires
     # its tick itself (``_Host.tick``).
     monkeypatch.setattr(_SAMPLER_SECS, 3600.0)
     cfgs = {"cfg": cfg or _cfg()}
-    monkeypatch.setattr(KiroCrewConfig, "load", lambda: cfgs["cfg"])
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: cfgs["cfg"])
     monkeypatch.setattr(subagent_mod, "Stats", MagicMock())
     monkeypatch.setattr(SpawnAdmissionCoordinator, "open_store_off_loop", True)
     monkeypatch.setattr(SpawnAdmissionCoordinator, "pump_off_loop", True)
@@ -616,7 +616,7 @@ class TestTheMaxWaitStillEndsAHeldStart:
         # wake that put the gateway floor back would keep it parked until the
         # admit wait although its reserve fits.
         async with _host(monkeypatch) as h:
-            floor = KiroCrewConfig().agent.spawn_min_memory_gb
+            floor = AjCrewConfig().agent.spawn_min_memory_gb
             assert floor > 1.0
             h.free["gb"] = 1.5
             h.mgr._memory_waits["mem-r"] = MemoryWait(
@@ -652,7 +652,7 @@ class TestTheShareIsLive:
         # The share reads the weights through the pump's TTL'd config read; with
         # the TTL at 0 a changed config is what the very next read sees.
         monkeypatch.setattr(
-            "kiro_crew.subagent_manager.admission.fairness.FAIRNESS_SETTINGS_TTL_SECS", 0.0
+            "aj_crew.subagent_manager.admission.fairness.FAIRNESS_SETTINGS_TTL_SECS", 0.0
         )
         async with _host(monkeypatch) as h:
             a1 = await h.spawn(_A, "a1")
@@ -713,7 +713,7 @@ class TestWhatAWaitWrites:
         """A wake writes nothing, but each deferral the gate itself decides -- the
         first, and every re-check at the admit wait that still finds the host
         short -- writes one WARNING and one ``deferred_low_memory`` SEL row."""
-        caplog.set_level(logging.DEBUG, logger="kiro_crew.subagent")
+        caplog.set_level(logging.DEBUG, logger="aj_crew.subagent")
 
         def deferral_warnings() -> int:
             return sum(

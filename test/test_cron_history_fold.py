@@ -9,9 +9,9 @@ percentages move every run reads as a job doing different work each time.
 
 from __future__ import annotations
 
-from kiro_crew.mcp_cron import _NOOP_RE as NOOP_RE
-from kiro_crew.mcp_cron import _fold_runs as fold_runs
-from kiro_crew.mcp_cron import _normalize_summary as normalize_summary
+from aj_crew.mcp_cron import _NOOP_RE as NOOP_RE
+from aj_crew.mcp_cron import _fold_runs as fold_runs
+from aj_crew.mcp_cron import _normalize_summary as normalize_summary
 
 
 def _runs(*summaries: str, failures: int = 0) -> list[dict[str, object]]:

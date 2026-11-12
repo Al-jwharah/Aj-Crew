@@ -1,4 +1,4 @@
-"""Slack approval prompts in :mod:`kiro_crew.slack.handler`, from the request to the click.
+"""Slack approval prompts in :mod:`aj_crew.slack.handler`, from the request to the click.
 
 Pins ``handle_interaction``'s guards, the claimed region, dashboard-linked approvals, the
 approval block builder and ``_request_approval``'s post, resolve and timeout arms.
@@ -20,9 +20,9 @@ from slack_handler_coverage_helpers import (  # noqa: F401 -- fixtures are reque
     slack_fixture,
 )
 
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack import handler as h
 from conftest import MockSlackClient
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack import handler as h
 
 #: Lost-run ceiling for a wait the test itself must end (a park, a click it
 #: delivers). These paths make no executor hop. Timed wait by wait: at most 0.06 s,
@@ -94,7 +94,7 @@ class TestHandleInteractionGuards:
         slack.fetch_thread_replies = AsyncMock(return_value=[{"user": "U1"}])
         fake_map = MagicMock()
         fake_map.get_session_for_thread.return_value = ""
-        monkeypatch.setattr("kiro_crew.session.SessionMap", lambda: fake_map)
+        monkeypatch.setattr("aj_crew.session.SessionMap", lambda: fake_map)
         out = await h.handle_interaction(
             "C1", "m1", h._ACTION_TRUST, "U1", "t1", slack=slack, sessions=sessions
         )
@@ -109,7 +109,7 @@ class TestHandleInteractionGuards:
         def _boom():
             raise RuntimeError("no map")
 
-        monkeypatch.setattr("kiro_crew.session.SessionMap", _boom)
+        monkeypatch.setattr("aj_crew.session.SessionMap", _boom)
         out = await h.handle_interaction("C1", "m1", h._ACTION_TRUST, "U1", "t1", slack=slack)
         assert out is None
         assert not h.is_slack_session_trusted("t1")
@@ -635,7 +635,7 @@ class TestApprovalTimeoutInbandNotice:
         assert not h._pending_approvals
 
     def test_steer_bound_mirrors_the_dashboard_runner(self):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         assert h._STEER_NOTICE_BOUND_SECS == chat_runner._STEER_NOTICE_BOUND_SECS
 

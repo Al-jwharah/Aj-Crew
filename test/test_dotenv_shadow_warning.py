@@ -15,10 +15,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config import loader
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config import loader
+from aj_crew.config.loader import AjCrewConfig
 
-_LOGGER = "kiro_crew.config.loader"
+_LOGGER = "aj_crew.config.loader"
 
 
 def _reset(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -42,7 +42,7 @@ def _setup(monkeypatch: pytest.MonkeyPatch, root: Path, lines: list[str]) -> Non
 
 
 def _load() -> None:
-    KiroCrewConfig.__new__(KiroCrewConfig).load_credentials()
+    AjCrewConfig.__new__(AjCrewConfig).load_credentials()
 
 
 def _shadow_lines(caplog: pytest.LogCaptureFixture) -> list[str]:
@@ -118,7 +118,7 @@ def test_an_empty_credential_in_the_environment_is_named_though_the_gateway_uses
     _setup(monkeypatch, tmp_path, [f"{key}=from-dotenv"])
     monkeypatch.setenv(key, "")
     with caplog.at_level(logging.WARNING, logger=_LOGGER):
-        creds = KiroCrewConfig.__new__(KiroCrewConfig).load_credentials()
+        creds = AjCrewConfig.__new__(AjCrewConfig).load_credentials()
     # The overlay skips an empty environment value, so the gateway itself uses the
     # .env credential, but children still inherit the empty one: that is reported.
     assert creds[key] == "from-dotenv"

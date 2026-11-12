@@ -32,16 +32,16 @@ from issue_radar_crew_runtime_helpers import (  # noqa: F401 -- the autouse fixt
     _runtime_modules,
 )
 
-import kiro_crew.sel as sel_mod
-from kiro_crew import platform_compat
-from kiro_crew.apps import teardown
-from kiro_crew.apps.builtins.issue_radar.backend import crew_runtime as cr
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
-from kiro_crew.apps.builtins.issue_radar.backend import watch as watch_mod
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_utils_slots import effective_session_key
-from kiro_crew.safety_override import reset_singleton, safety_override
-from kiro_crew.testing.wait import async_wait_until
+import aj_crew.sel as sel_mod
+from aj_crew import platform_compat
+from aj_crew.apps import teardown
+from aj_crew.apps.builtins.issue_radar.backend import crew_runtime as cr
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.apps.builtins.issue_radar.backend import watch as watch_mod
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_utils_slots import effective_session_key
+from aj_crew.safety_override import reset_singleton, safety_override
+from aj_crew.testing.wait import async_wait_until
 
 
 class _PolicyStore:
@@ -379,7 +379,7 @@ class TestWatchGating(unittest.IsolatedAsyncioTestCase):
     """The two gates in ``watch.py`` and the difference between them."""
 
     def _watch(self):
-        from kiro_crew.apps.builtins.issue_radar.backend import watch
+        from aj_crew.apps.builtins.issue_radar.backend import watch
 
         watch._crews_suspended = False
         return watch
@@ -524,7 +524,7 @@ class TestDisablingTheAppRevokesInline(unittest.IsolatedAsyncioTestCase):
         ``create=True``: core may lack the registry, and the app must then work on the
         sweep alone; patching it in lets the test check the registered callable.
         """
-        from kiro_crew.apps import teardown
+        from aj_crew.apps import teardown
 
         registry: dict[str, Any] = {}
         patch = mock.patch.object(
@@ -604,7 +604,7 @@ class TestDisablingTheAppRevokesInline(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.slot._trust_scope, "")
 
     async def test_the_sweep_still_suspends_a_flag_flipped_behind_our_back(self):
-        """The BACKSTOP. ``kirocrew app disable`` runs in another process and an
+        """The BACKSTOP. ``ajcrew app disable`` runs in another process and an
         ``installed.json`` can be edited on disk, so neither can reach an in-process
         hook. The sweep is the only thing that catches those, and it must keep
         working with no hook registered at all."""
@@ -666,7 +666,7 @@ class TestDisablingTheAppRevokesInline(unittest.IsolatedAsyncioTestCase):
         The absence is SIMULATED rather than read off the real module, so this keeps
         testing the degradation path after core lands the registry.
         """
-        from kiro_crew.apps import teardown
+        from aj_crew.apps import teardown
 
         with mock.patch.object(teardown, "register_app_disable_hook", None, create=True):
             self.assertFalse(cr.install_app_disable_hook(self.state))
@@ -840,7 +840,7 @@ class TestSelRootIsolation(unittest.IsolatedAsyncioTestCase):
     """
 
     def setUp(self):
-        if getattr(sel_mod._default_dir, "__module__", "") == "kiro_crew.sel":
+        if getattr(sel_mod._default_dir, "__module__", "") == "aj_crew.sel":
             # The rootdir conftest displaces ``_default_dir`` with a
             # session-scoped closure; the ORIGINAL still installed means that
             # isolation never ran (raw ``python -m unittest``, or pytest from

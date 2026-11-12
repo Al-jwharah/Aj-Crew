@@ -26,8 +26,8 @@ import string
 
 import pytest
 
-from kiro_crew.security import redact, redact_credentials
-from kiro_crew.security import redaction_patterns as _rp
+from aj_crew.security import redact, redact_credentials
+from aj_crew.security import redaction_patterns as _rp
 
 TAG = "[REDACTED: credential]"
 

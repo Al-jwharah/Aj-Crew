@@ -10,21 +10,21 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.config import loader
-from kiro_crew.config import sections_shared_crew as config
-from kiro_crew.shared_crew import admission_entry as entry
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import containment as c
-from kiro_crew.shared_crew.admission import Liveness, OperationKind, OperationState, ReasonCode
-from kiro_crew.shared_crew.contracts import Principal
-from kiro_crew.shared_crew.work_store import WorkStore
-from kiro_crew.taskq.store import TaskStore
+from aj_crew.config import loader
+from aj_crew.config import sections_shared_crew as config
+from aj_crew.shared_crew import admission_entry as entry
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import containment as c
+from aj_crew.shared_crew.admission import Liveness, OperationKind, OperationState, ReasonCode
+from aj_crew.shared_crew.contracts import Principal
+from aj_crew.shared_crew.work_store import WorkStore
+from aj_crew.taskq.store import TaskStore
 
 
 @pytest.fixture(autouse=True)
 def _shared_crew_preview(_floor_monkeypatch):
     """These cases pin the preview-on reader (``shared_crew.preview``)."""
-    _floor_monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    _floor_monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
 
 
 BUDGET = Principal.system("limits-test").id
@@ -120,7 +120,7 @@ async def test_accepted_turn_settles_if_slice_apply_fails(service, monkeypatch, 
 
 
 def test_hard_probe_requires_enabled_slices(monkeypatch):
-    from kiro_crew import platform_compat, sandbox
+    from aj_crew import platform_compat, sandbox
 
     monkeypatch.setattr(c, "sys", type("Platform", (), {"platform": "linux"}))
     monkeypatch.setattr(sandbox, "_probe_cgroup_scope", lambda: (True, ""))
@@ -136,8 +136,8 @@ def test_hard_probe_requires_enabled_slices(monkeypatch):
 async def test_queue_drain_excludes_cancelled_text(service, tmp_path, monkeypatch, cancelled_index):
     from chat_test_helpers import _make_state
 
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard import chat_runner as runner
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard import chat_runner as runner
 
     state = _make_state(tmp_path)
     state.subagents = None
@@ -150,9 +150,9 @@ async def test_queue_drain_excludes_cancelled_text(service, tmp_path, monkeypatc
     victim = accepted[cancelled_index].work
     await service.cancel(victim.work_id, expected_revision=victim.revision)
     monkeypatch.setattr(ag, "_SERVICE", service)
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.dashboard.merge_queued_messages = True
-    monkeypatch.setattr(runner.KiroCrewConfig, "load", lambda: cfg)
+    monkeypatch.setattr(runner.AjCrewConfig, "load", lambda: cfg)
     captured = []
 
     def run(_state, _slot, prompt, **kwargs):

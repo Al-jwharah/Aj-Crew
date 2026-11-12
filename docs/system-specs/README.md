@@ -24,7 +24,7 @@ Two root-level specs sit outside the tiers:
   re-introduce, the modules that are deliberately inert, and the fork's intentional UX
   divergences.
 - [post-launch-removals.md](post-launch-removals.md) — the migration scaffolding to
-  delete once no legacy data can exist (today only the legacy `~/.kirocrew`
+  delete once no legacy data can exist (today only the legacy `~/.ajcrew`
   security-path spelling).
 
 ## Related, outside this tree

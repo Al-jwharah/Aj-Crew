@@ -12,15 +12,15 @@ from member_memory_helpers import make_request
 from test_session import _alive_provider_factory
 from test_subagent_turn_identity import _child
 
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.dashboard.handlers import cron, memory_member
-from kiro_crew.history import is_incognito_transcript
-from kiro_crew.messaging.identity import publish_turn_identity
-from kiro_crew.session import SessionManager
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.config import AjCrewConfig
+from aj_crew.dashboard.handlers import cron, memory_member
+from aj_crew.history import is_incognito_transcript
+from aj_crew.messaging.identity import publish_turn_identity
+from aj_crew.session import SessionManager
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.wait import await_until, finished
 
 env = _member_env
 
@@ -31,7 +31,7 @@ env = _member_env
 )
 async def test_registered_child_member_memory_and_teardown(env, tmp_path, monkeypatch, key):
     """Real ordinary identity publication and manager lifecycle."""
-    from kiro_crew import context
+    from aj_crew import context
 
     monkeypatch.setattr(context, "_vector_stores", dict(env.tiers))
     monkeypatch.setattr(context, "_memory_stores", {})
@@ -46,12 +46,12 @@ async def test_registered_child_member_memory_and_teardown(env, tmp_path, monkey
             provider.member_context = True
             return provider
 
-        sessions = SessionManager(KiroCrewConfig(), provider_factory=provider_factory)
+        sessions = SessionManager(AjCrewConfig(), provider_factory=provider_factory)
         env.state.sessions = sessions
         manager = SubagentManager(sessions=sessions, ctx_builder=SimpleNamespace())
         env.state.subagents = manager
         if key.startswith("subagent:"):
-            from kiro_crew.subagent_persistence import create_agent_folder
+            from aj_crew.subagent_persistence import create_agent_folder
 
             info = SubagentInfo(
                 id=key.split(":", 1)[1], task="test", parent_session_key="dashboard:alice"
@@ -134,7 +134,7 @@ async def test_registered_child_member_memory_and_teardown(env, tmp_path, monkey
 @pytest.mark.asyncio
 async def test_shared_handle_recognition_ends_at_unregister(tmp_path):
     """Use the real runtime registry/handle destructor without launching a model."""
-    sessions = SessionManager(KiroCrewConfig())
+    sessions = SessionManager(AjCrewConfig())
     manager = SubagentManager(sessions=sessions, ctx_builder=SimpleNamespace())
     key = "subagent:shared-child"
     runtime = AcpRuntime(work_dir=tmp_path)
@@ -154,7 +154,7 @@ async def test_shared_handle_recognition_ends_at_unregister(tmp_path):
         id="shared-child", task="test", parent_session_key="dashboard:parent", cwd=str(tmp_path)
     )
     manager._agents[info.id] = info
-    provider = await manager._create_shared_session(info, key, "kirocrew")
+    provider = await manager._create_shared_session(info, key, "ajcrew")
     # The identity kwargs are what this test is about; the session-start gate
     # also passes three runtime-owned callbacks (`on_gate_queued`,
     # `on_gate_acquired`, `late_adopter`) whose identity is per-call, so they
@@ -166,7 +166,7 @@ async def test_shared_handle_recognition_ends_at_unregister(tmp_path):
     assert callable(start_kwargs.pop("late_adopter", None))
     assert start_kwargs == {
         "cwd": str(tmp_path),
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "session_key": key,
         "memory_mode": "persistent",
     }
@@ -232,7 +232,7 @@ async def test_shared_handle_recognition_ends_at_unregister(tmp_path):
 )
 async def test_unknown_headless_keys_refuse(tmp_path, key):
     state = SimpleNamespace(
-        sessions=SessionManager(KiroCrewConfig()), _slots={}, _restricted_keys=set()
+        sessions=SessionManager(AjCrewConfig()), _slots={}, _restricted_keys=set()
     )
     response = await cron._recognize_session(
         state, key, "test", blocks_persisted_mode=is_incognito_transcript
@@ -245,7 +245,7 @@ async def test_unknown_headless_keys_refuse(tmp_path, key):
 @pytest.mark.parametrize("mode", ["incognito", "temporary"])
 async def test_live_registration_does_not_override_restricted_policy(env, mode):
     key = "subagent:restricted-child"
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_alive_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_alive_provider_factory())
     env.state.sessions = sessions
     env.state._restricted_keys.add(key)
     env.state._slots["restricted-child"] = SimpleNamespace(
@@ -272,7 +272,7 @@ async def test_live_registration_does_not_override_restricted_policy(env, mode):
 @pytest.mark.parametrize("mode", ["incognito", "temporary"])
 async def test_live_archived_dashboard_still_checks_persisted_mode(env, mode):
     key = "dashboard:archived"
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_alive_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_alive_provider_factory())
     env.state.sessions = sessions
     await asyncio.to_thread(env.history.update_metadata, key, {"memory_mode": mode})
     try:
@@ -292,13 +292,13 @@ async def test_live_archived_dashboard_still_checks_persisted_mode(env, mode):
 @pytest.mark.parametrize("kind", ["subagent", "continued", "nested", "workflow"])
 async def test_live_child_checks_origin_privacy_without_child_markers(env, mode, kind):
     """A real live allocation and its originating run must not erase parent policy."""
-    from kiro_crew.workflow_memory import WorkflowScope
+    from aj_crew.workflow_memory import WorkflowScope
 
     parent = "dashboard:parent"
     env.state._slots["parent"] = SimpleNamespace(
         is_restricted=mode != "persistent", blocks_reads=mode == "temporary"
     )
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_alive_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_alive_provider_factory())
     manager = SubagentManager(sessions=sessions, ctx_builder=SimpleNamespace())
     env.state.sessions = sessions
     env.state.subagents = manager
@@ -317,11 +317,11 @@ async def test_live_child_checks_origin_privacy_without_child_markers(env, mode,
         manager._agents[info.id] = info
         key = info.conversation_key or f"subagent:{info.id}"
     else:
-        from kiro_crew.dashboard.handlers._shared import (
+        from aj_crew.dashboard.handlers._shared import (
             live_session_memory_mode,
             resolve_session_memory_mode,
         )
-        from kiro_crew.execution_context import execution_from_record, read_session_execution
+        from aj_crew.execution_context import execution_from_record, read_session_execution
 
         # Admission and route recognition use the same gateway-owned builder.
         admitted_context = env.state.context_builder
@@ -381,14 +381,14 @@ async def test_live_child_checks_origin_privacy_without_child_markers(env, mode,
 @pytest.mark.parametrize("origin_state", ["missing", "corrupt", "archived", "parentless"])
 async def test_headless_birth_authority_survives_origin_loss(env, origin_state):
     parent = "dashboard:archived-parent"
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_alive_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_alive_provider_factory())
     manager = SubagentManager(sessions=sessions, ctx_builder=SimpleNamespace())
     env.state.sessions = sessions
     env.state.subagents = manager
     run_id = f"origin-check-{origin_state}"
     key = f"subagent:{run_id}"
     if origin_state != "missing":
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.subagent_persistence import create_agent_folder
 
         run_folder = await asyncio.to_thread(
             create_agent_folder,
@@ -424,11 +424,11 @@ async def test_headless_birth_authority_survives_origin_loss(env, origin_state):
 async def test_gateway_spawn_freezes_mode_and_enforces_it_after_parent_change(
     env, mode, parent_change
 ):
-    from kiro_crew.dashboard.handlers import messaging
-    from kiro_crew.dashboard.state import DashboardState
-    from kiro_crew.subagent_persistence import read_run_memory_mode
+    from aj_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.state import DashboardState
+    from aj_crew.subagent_persistence import read_run_memory_mode
 
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_alive_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_alive_provider_factory())
     manager = SubagentManager(sessions=sessions, ctx_builder=None, is_yolo=lambda: True)
     state = DashboardState(sessions, None, None, 0, subagents=manager, conversation_log=env.history)
     parent = "dashboard:parent"
@@ -509,8 +509,8 @@ async def test_memory_mode_reads_a_run_record_only_for_minted_workflow_prefixes(
     borrow it. ``wf-scope:run7`` falls to the persisted-transcript probe, finds nothing
     and is refused like any other unregistered key.
     """
-    from kiro_crew import execution_context, subagent_persistence, workflow_memory
-    from kiro_crew.dashboard.handlers import _shared
+    from aj_crew import execution_context, subagent_persistence, workflow_memory
+    from aj_crew.dashboard.handlers import _shared
 
     looked_up: list[str] = []
 

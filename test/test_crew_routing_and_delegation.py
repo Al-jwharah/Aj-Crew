@@ -18,7 +18,7 @@ import json
 
 import pytest
 
-from kiro_crew.trigger_match import MIN_TRIGGER_OVERLAP, rank_triggered, trigger_score, words_of
+from aj_crew.trigger_match import MIN_TRIGGER_OVERLAP, rank_triggered, trigger_score, words_of
 
 # ── the shared primitive ──
 
@@ -101,7 +101,7 @@ class TestRanking:
         """
         import inspect
 
-        from kiro_crew import skills
+        from aj_crew import skills
 
         src = inspect.getsource(skills.SkillsLoader.get_triggered_skills)
         assert "trigger_score(" in src, "the loader must delegate, not re-implement"
@@ -113,7 +113,7 @@ class TestRanking:
 
 def _materialize_private_stores(config):
     """Create readable, empty owned stores for routing execution fixtures."""
-    from kiro_crew.memory_stores import provision_member_memory
+    from aj_crew.memory_stores import provision_member_memory
 
     for member in config.agents:
         if member != config.default_agent:
@@ -124,13 +124,13 @@ def _materialize_private_stores(config):
 @pytest.fixture
 def crew_config(tmp_path, monkeypatch):
     """A roster with two crews on two silos, plus the default crew."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "config.json").write_text(
         json.dumps(
             {
-                "default_agent": "kirocrew",
+                "default_agent": "ajcrew",
                 "agents": {
-                    "kirocrew": {},
+                    "ajcrew": {},
                     "coding crew": {
                         "triggers": "fix the bug, review the pull request",
                         "description": "Owns the codebase",
@@ -143,11 +143,11 @@ def crew_config(tmp_path, monkeypatch):
             }
         )
     )
-    from kiro_crew.config import loader as loader_mod
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config import loader as loader_mod
+    from aj_crew.config.loader import AjCrewConfig
 
     loader_mod._invalidate_config_cache()
-    config = KiroCrewConfig.load()
+    config = AjCrewConfig.load()
     _materialize_private_stores(config)
     yield config
     loader_mod._invalidate_config_cache()
@@ -157,7 +157,7 @@ class TestRouteCrew:
     def test_broken_member_does_not_hide_ranked_healthy_matches(self, crew_config, monkeypatch):
         from dataclasses import replace
 
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         legacy = replace(
             crew_config.agents["coding crew"],
@@ -167,7 +167,7 @@ class TestRouteCrew:
         crew_config.agents = {"legacy": legacy, **crew_config.agents}
         for name in ("legacy", "coding crew", "email crew"):
             crew_config.agents[name].triggers = "fix the bug"
-        monkeypatch.setattr(mcp_core.KiroCrewConfig, "load", lambda: crew_config)
+        monkeypatch.setattr(mcp_core.AjCrewConfig, "load", lambda: crew_config)
 
         out = json.loads(mcp_core._do_route_crew("fix the bug"))
 
@@ -181,10 +181,10 @@ class TestRouteCrew:
         assert "memory_store" not in out["unavailable"][0]
 
     def test_all_unavailable_is_distinct_from_no_trigger_match(self, crew_config, monkeypatch):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         crew_config.agents["coding crew"].memory_store = "default"
-        monkeypatch.setattr(mcp_core.KiroCrewConfig, "load", lambda: crew_config)
+        monkeypatch.setattr(mcp_core.AjCrewConfig, "load", lambda: crew_config)
         out = json.loads(mcp_core._do_route_crew("fix the bug"))
         assert out["matches"] == []
         assert [item["crew"] for item in out["unavailable"]] == ["coding crew"]
@@ -198,8 +198,8 @@ class TestRouteCrew:
     ):
         from unittest.mock import Mock
 
-        from kiro_crew import mcp_core
-        from kiro_crew.memory_stores import UnknownMemoryStore
+        from aj_crew import mcp_core
+        from aj_crew.memory_stores import UnknownMemoryStore
 
         secret = "AKIAIOSFODNN7EXAMPLE"
         reason = f"private memory unavailable: /home/alice/private/memory.db {secret} " + "x" * 1200
@@ -227,7 +227,7 @@ class TestRouteCrew:
     def test_unrelated_binding_errors_are_not_silenced(self, crew_config, monkeypatch, named):
         from unittest.mock import Mock
 
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         monkeypatch.setattr(
             mcp_core, "resolve_agent_bindings", Mock(side_effect=RuntimeError("binding defect"))
@@ -239,7 +239,7 @@ class TestRouteCrew:
                 mcp_core._do_route_crew("fix the bug")
 
     def test_a_coding_task_routes_to_the_coding_crew_and_names_its_store(self, crew_config):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         out = json.loads(mcp_core._do_route_crew("please fix the bug in the parser"))
         assert [m["crew"] for m in out["matches"]] == ["coding crew"]
@@ -247,34 +247,34 @@ class TestRouteCrew:
         assert out["matches"][0]["description"] == "Owns the codebase"
 
     def test_an_email_task_routes_to_the_email_crew(self, crew_config):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         out = json.loads(mcp_core._do_route_crew("draft a reply to this inbox thread"))
         assert [m["crew"] for m in out["matches"]] == ["email crew"]
         assert out["matches"][0]["memory_store"] == crew_config.agents["email crew"].memory_store
 
     def test_no_match_reports_the_default_and_no_crew(self, crew_config):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         out = json.loads(mcp_core._do_route_crew("what is the weather in Tokyo"))
         assert out["matches"] == []
-        assert out["default_agent"] == "kirocrew"
+        assert out["default_agent"] == "ajcrew"
 
     def test_the_default_crew_is_never_a_routing_target(self, crew_config):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         out = json.loads(mcp_core._do_route_crew("fix the bug"))
-        assert all(m["crew"] != "kirocrew" for m in out["matches"])
+        assert all(m["crew"] != "ajcrew" for m in out["matches"])
 
     def test_an_empty_task_is_refused(self, crew_config):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         assert "error" in json.loads(mcp_core._do_route_crew("   "))
 
 
 class TestDelegationCarriesTheCrewsStore:
     def test_each_crew_resolves_to_its_own_store_and_they_differ(self, crew_config):
-        from kiro_crew.config.loader import resolve_agent_bindings
+        from aj_crew.config.loader import resolve_agent_bindings
 
         coding = resolve_agent_bindings(crew_config, "coding crew").memory_store_name
         email = resolve_agent_bindings(crew_config, "email crew").memory_store_name
@@ -289,7 +289,7 @@ class TestDelegationCarriesTheCrewsStore:
         resolves to the default store, so the delegation runs against the
         operator's own memory. This is why delegation has its own parameter.
         """
-        from kiro_crew.context import _target_key
+        from aj_crew.context import _target_key
 
         store = crew_config.agents["coding crew"].memory_store
         _, via_crew = _target_key(None, store)
@@ -300,7 +300,7 @@ class TestDelegationCarriesTheCrewsStore:
     def test_the_schema_accepts_a_crew_name_containing_a_space(self):
         """Crew creation only strips the name, so a regex here would refuse a
         crew the operator can see in their own roster."""
-        from kiro_crew.validation import SPAWN_RUN_SCHEMA, validate_tool_args
+        from aj_crew.validation import SPAWN_RUN_SCHEMA, validate_tool_args
 
         cleaned = validate_tool_args(
             {"task": "fix the bug", "crew": "coding crew"}, SPAWN_RUN_SCHEMA
@@ -308,7 +308,7 @@ class TestDelegationCarriesTheCrewsStore:
         assert cleaned.get("crew") == "coding crew"
 
     def test_subagent_info_carries_a_store_and_defaults_to_the_global_one(self):
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         assert SubagentInfo(id="a", task="t").memory_store == ""
         assert SubagentInfo(id="a", task="t", memory_store="coding").memory_store == "coding"
@@ -318,9 +318,9 @@ class TestDelegationCarriesTheCrewsStore:
         """Legacy V1 named stores retain their own keyword/Markdown fallback."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.config.sections import MemoryStoreConfig
-        from kiro_crew.context import prepare_store_vectors
-        from kiro_crew.memory_stores import memory_store_dir_for
+        from aj_crew.config.sections import MemoryStoreConfig
+        from aj_crew.context import prepare_store_vectors
+        from aj_crew.memory_stores import memory_store_dir_for
 
         crew_config.memory_stores["legacy"] = MemoryStoreConfig()
         crew_config.save()
@@ -348,8 +348,8 @@ class TestDelegationCarriesTheCrewsStore:
     @pytest.mark.asyncio
     async def test_a_named_store_is_actually_stood_up(self, crew_config, monkeypatch):
         """The other direction: the guard must not have made it a no-op."""
-        from kiro_crew import context as ctx_mod
-        from kiro_crew.context import ContextBuilder, prepare_store_vectors
+        from aj_crew import context as ctx_mod
+        from aj_crew.context import ContextBuilder, prepare_store_vectors
 
         # This test opens the real owned store but never starts a provider.
         # Host sandbox capability is covered by the member execution tests.
@@ -385,7 +385,7 @@ class TestTheMembersRosterCarriesIdentity:
         import importlib
         import inspect
 
-        from kiro_crew.dashboard.handlers import members as members_handler
+        from aj_crew.dashboard.handlers import members as members_handler
 
         src = inspect.getsource(members_handler)
         src += "".join(
@@ -413,12 +413,12 @@ class TestTheSpawnEndpointActuallyDelegates:
     @staticmethod
     def _spawn_call(body: dict, cfg_payload: dict, tmp_path, monkeypatch):
         """Drive `api_spawn` with *body* and return the kwargs `spawn` got."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "config.json").write_text(json.dumps(cfg_payload))
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         loader_mod._invalidate_config_cache()
-        _materialize_private_stores(loader_mod.KiroCrewConfig.load())
+        _materialize_private_stores(loader_mod.AjCrewConfig.load())
         cov = pytest.importorskip("test_handlers_messaging_coverage")
         mgr = cov._mgr()
         mgr.spawn.return_value = cov._info()
@@ -427,11 +427,11 @@ class TestTheSpawnEndpointActuallyDelegates:
         return resp, mgr
 
     _CFG = {
-        "default_agent": "kirocrew",
+        "default_agent": "ajcrew",
         "agents": {
-            "kirocrew": {"kiro_agent": "kirocrew"},
-            "coding": {"kiro_agent": "kirocrew", "triggers": "fix"},
-            "email": {"kiro_agent": "kirocrew", "triggers": "draft"},
+            "ajcrew": {"kiro_agent": "ajcrew"},
+            "coding": {"kiro_agent": "ajcrew", "triggers": "fix"},
+            "email": {"kiro_agent": "ajcrew", "triggers": "draft"},
         },
     }
 
@@ -479,10 +479,10 @@ class TestTheSpawnEndpointActuallyDelegates:
         exactly as it does for a member that has triggers.
         """
         cfg = {
-            "default_agent": "kirocrew",
+            "default_agent": "ajcrew",
             "agents": {
-                "kirocrew": {"kiro_agent": "kirocrew"},
-                "builder": {"kiro_agent": "kirocrew", "triggers": "  "},
+                "ajcrew": {"kiro_agent": "ajcrew"},
+                "builder": {"kiro_agent": "ajcrew", "triggers": "  "},
             },
         }
         resp, mgr = self._spawn_call({"task": "x", "crew": "builder"}, cfg, tmp_path, monkeypatch)
@@ -497,7 +497,7 @@ class TestTheSpawnEndpointActuallyDelegates:
         import importlib
         import inspect
 
-        from kiro_crew.mcp_tools import spawn as spawn_tool
+        from aj_crew.mcp_tools import spawn as spawn_tool
 
         src = "".join(
             inspect.getsource(importlib.import_module(name))
@@ -513,7 +513,7 @@ class TestTheSpawnEndpointActuallyDelegates:
         so the handler reading it is the contract."""
         import inspect
 
-        from kiro_crew.mcp_tools import spawn as spawn_tool
+        from aj_crew.mcp_tools import spawn as spawn_tool
 
         src = inspect.getsource(spawn_tool)
         assert 'args.get("crew")' in src, "the handler must READ the field"
@@ -522,7 +522,7 @@ class TestTheSpawnEndpointActuallyDelegates:
     def test_the_advertised_tool_accepts_a_named_member(self):
         from jsonschema import validate
 
-        from kiro_crew.mcp_tools import spawn as spawn_tool
+        from aj_crew.mcp_tools import spawn as spawn_tool
 
         tool = next(item for item in spawn_tool.schemas() if item["name"] == "spawn_run")
         schema = tool["inputSchema"]
@@ -541,9 +541,9 @@ class TestTheSpawnEndpointActuallyDelegates:
         import re
         from pathlib import Path
 
-        import kiro_crew
+        import aj_crew
 
-        root = Path(kiro_crew.__file__).parent
+        root = Path(aj_crew.__file__).parent
         for rel in (
             "mcp_tools/control.py",
             "mcp_tools/control_parts/schemas.py",
@@ -584,13 +584,13 @@ class TestASymlinkCannotAliasTwoCrewsOntoOneSilo:
 
     @pytest.fixture
     def aliased(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "config.json").write_text(
             json.dumps({"memory_stores": {"acme": {}, "finance": {}}})
         )
-        from kiro_crew.config import loader as loader_mod
-        from kiro_crew.memory_stores import ensure_memory_store_dir
-        from kiro_crew.platform_compat import symlink_or_junction
+        from aj_crew.config import loader as loader_mod
+        from aj_crew.memory_stores import ensure_memory_store_dir
+        from aj_crew.platform_compat import symlink_or_junction
 
         loader_mod._invalidate_config_cache()
         finance = ensure_memory_store_dir("finance")
@@ -608,7 +608,7 @@ class TestASymlinkCannotAliasTwoCrewsOntoOneSilo:
         ),
     )
     def test_every_resolver_refuses_the_alias(self, aliased, resolver):
-        from kiro_crew import memory_stores as ms
+        from aj_crew import memory_stores as ms
 
         with pytest.raises(ms.UnknownMemoryStore):
             getattr(ms, resolver)("acme")
@@ -616,7 +616,7 @@ class TestASymlinkCannotAliasTwoCrewsOntoOneSilo:
     def test_the_lesson_store_refuses_it_too(self, aliased):
         """Its owner carve-out used the same parent equality, so it accepted the
         alias and would have appended one crew's corrections to another's file."""
-        from kiro_crew.learn import _is_owned_store_root
+        from aj_crew.learn import _is_owned_store_root
 
         assert _is_owned_store_root(aliased.parent / "acme") is False
         assert _is_owned_store_root(aliased) is True, "the real store must still be owned"
@@ -624,17 +624,17 @@ class TestASymlinkCannotAliasTwoCrewsOntoOneSilo:
     def test_the_legitimate_store_is_unaffected(self, aliased):
         """The check must not refuse a root reached through a symlinked ANCESTOR
         (``/tmp`` is one on macOS) -- the root is resolved before the join."""
-        from kiro_crew.memory_stores import resolve_store_path
+        from aj_crew.memory_stores import resolve_store_path
 
         assert resolve_store_path("finance") == aliased / "memory.db"
 
     def test_a_store_that_does_not_exist_yet_still_resolves(self, tmp_path, monkeypatch):
         """``strict=False`` resolution returns the composed path, so a store being
         created for the first time is identical to itself and passes."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "config.json").write_text(json.dumps({"memory_stores": {"fresh": {}}}))
-        from kiro_crew.config import loader as loader_mod
-        from kiro_crew.memory_stores import resolve_store_path
+        from aj_crew.config import loader as loader_mod
+        from aj_crew.memory_stores import resolve_store_path
 
         loader_mod._invalidate_config_cache()
         try:

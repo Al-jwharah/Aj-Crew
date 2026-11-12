@@ -9,15 +9,15 @@ const path = require("node:path");
 const hook = require("../scripts/universal-backend-dist.js").default;
 const pkg = require("../package.json");
 
-const PRODUCT = "Kiro Crew";
+const PRODUCT = "Aj Crew";
 
 function makeApp(dist, dirName, withBackend) {
   const resources = path.join(dist, dirName, `${PRODUCT}.app`, "Contents", "Resources");
   fs.mkdirSync(resources, { recursive: true });
   if (withBackend) {
-    const tree = path.join(resources, "backend-dist", "kirocrew-backend-x64", "bin");
+    const tree = path.join(resources, "backend-dist", "ajcrew-backend-x64", "bin");
     fs.mkdirSync(tree, { recursive: true });
-    fs.writeFileSync(path.join(tree, "kirocrew"), "x64 backend");
+    fs.writeFileSync(path.join(tree, "ajcrew"), "x64 backend");
   }
   return path.join(dist, dirName);
 }
@@ -54,7 +54,7 @@ describe("universal-backend-dist afterPack hook", () => {
       await run(merged);
       assert.equal(
         fs.readFileSync(
-          path.join(backendOf(merged), "kirocrew-backend-x64", "bin", "kirocrew"),
+          path.join(backendOf(merged), "ajcrew-backend-x64", "bin", "ajcrew"),
           "utf8",
         ),
         "x64 backend",

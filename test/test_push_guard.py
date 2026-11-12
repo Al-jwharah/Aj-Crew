@@ -1,7 +1,7 @@
-"""Tests for the kirocrew-prepare-pr push_guard.py stale-base detection.
+"""Tests for the ajcrew-prepare-pr push_guard.py stale-base detection.
 
-Verifies that the push_guard script (src/kiro_crew/builtin_skills/kirocrew-dev/
-kirocrew-prepare-pr/scripts/push_guard.py) correctly refuses to push when:
+Verifies that the push_guard script (src/aj_crew/builtin_skills/ajcrew-dev/
+ajcrew-prepare-pr/scripts/push_guard.py) correctly refuses to push when:
 - The branch has no common history with origin/<base> (orphan / disconnected)
 - The commit count exceeds --max-ahead (implausibly many commits for a PR)
 - The fetch of origin/<base> fails (network error → fail closed)

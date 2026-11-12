@@ -18,18 +18,18 @@ set -euo pipefail
 #    "Restart & Update". An unattended run will stop at "found" and look stuck —
 #    that is the design working, not a hang.
 #  - backend-dist: the packaged app resolves its gateway via find-bin.js, which
-#    falls back to a PATH `kirocrew`. This script therefore stubs an EMPTY
+#    falls back to a PATH `ajcrew`. This script therefore stubs an EMPTY
 #    backend-dist to satisfy electron-builder's extraResources (which errors on
 #    a missing source dir) instead of building the ~500MB backend bundle.
-#    Have `kirocrew` on PATH (toolbox install) so a gateway can start. We
-#    isolate with a temp KIROCREW_HOME + the BETA flavor (port 7788) so this
+#    Have `ajcrew` on PATH (toolbox install) so a gateway can start. We
+#    isolate with a temp AJCREW_HOME + the BETA flavor (port 7788) so this
 #    never touches your real :7777 gateway.
 #  - The feed is http://127.0.0.1 (loopback is exempt from App Transport
 #    Security, and buildFeedBase permits http ONLY on loopback). If the updater
 #    refuses the http feed, add to package.json build.mac:
 #    "extendInfo": { "NSAppTransportSecurity": { "NSAllowsLocalNetworking": true } }
 #
-# Env overrides: PORT (8799), OUT (/tmp/kirocrew-ota), NODE (node).
+# Env overrides: PORT (8799), OUT (/tmp/ajcrew-ota), NODE (node).
 # ============================================================================
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -37,7 +37,7 @@ ELECTRON="$(cd "$HERE/.." && pwd)"
 cd "$ELECTRON"
 
 PORT="${PORT:-8799}"
-OUT="${OUT:-/tmp/kirocrew-ota}"
+OUT="${OUT:-/tmp/ajcrew-ota}"
 NODE="${NODE:-node}"
 INSTALLED_VER="1.0.0"
 UPDATE_VER="1.0.1"
@@ -50,14 +50,14 @@ rm -rf "$OUT"; mkdir -p "$OUT/update" "$OUT/installed" "$OUT/home"
 
 # electron-builder's extraResources errors if `from: backend-dist` is missing.
 # We do NOT want the ~500MB backend bundle for a feed/swap test, and
-# find-bin.js falls back to a PATH `kirocrew`, so an empty dir is sufficient.
+# find-bin.js falls back to a PATH `ajcrew`, so an empty dir is sufficient.
 # Only created if absent, and never deleted (a real bundle must survive).
 if [ ! -d backend-dist ]; then
   echo ">>> stubbing empty backend-dist (gateway will resolve from PATH)"
   mkdir -p backend-dist
   echo "placeholder for local OTA testing; real bundles come from packaging/build-desktop.sh" \
     > backend-dist/.ota-test-placeholder
-  command -v kirocrew >/dev/null || echo "    WARNING: no kirocrew on PATH — the app may not reach initAutoUpdate"
+  command -v ajcrew >/dev/null || echo "    WARNING: no ajcrew on PATH — the app may not reach initAutoUpdate"
 fi
 
 # --- Signing identity -------------------------------------------------------
@@ -69,7 +69,7 @@ fi
 # build. The update can therefore never satisfy it, and Squirrel refuses the
 # install with:
 #
-#   Code signature at URL .../KiroCrew.app/ did not pass validation:
+#   Code signature at URL .../AjCrew.app/ did not pass validation:
 #   code failed to satisfy specified code requirement(s)
 #   (domain: SQRLCodeSignatureErrorDomain, code: -1)
 #
@@ -85,7 +85,7 @@ fi
 # lane). The keychain is deleted on exit.
 OTA_KEYCHAIN="${TMPDIR:-/tmp}/ota-signing.keychain-db"
 OTA_KEYCHAIN_PASS="ota-test"
-OTA_IDENTITY="KiroCrew OTA Test Signing"
+OTA_IDENTITY="Aj Crew OTA Test Signing"
 
 cleanup_keychain() {
   security delete-keychain "$OTA_KEYCHAIN" 2>/dev/null || true
@@ -108,7 +108,7 @@ distinguished_name = dn
 x509_extensions = v3
 prompt = no
 [dn]
-CN = KiroCrew OTA Test Signing
+CN = Aj Crew OTA Test Signing
 [v3]
 basicConstraints = critical,CA:false
 keyUsage = critical,digitalSignature
@@ -214,7 +214,7 @@ build_dir() {  # $1 = version -> unpacked .app in dist/ ; echoes the .app path
     cache_dir_name="$("$NODE" -p "require('./package.json').name.toLowerCase() + '-updater'")"
     cat > "$app/Contents/Resources/app-update.yml" <<YML
 provider: generic
-url: https://updates.crew.kiro.dev/feed/stable/
+url: https://updates.ajcrew.invalid/feed/stable/
 updaterCacheDirName: ${cache_dir_name}
 YML
     echo "    wrote app-update.yml (dir target does not emit it)" >&2
@@ -308,9 +308,9 @@ Installed: $INST_APP   (version $INSTALLED_VER)
 
 Run the installed app pointed at the local feed (new terminal, or here):
 
-  KIROCREW_UPDATE_FEED="http://127.0.0.1:$PORT/feed" \\
-  KIROCREW_FLAVOR=beta \\
-  KIROCREW_HOME="$OUT/home" \\
+  AJCREW_UPDATE_FEED="http://127.0.0.1:$PORT/feed" \\
+  AJCREW_FLAVOR=beta \\
+  AJCREW_HOME="$OUT/home" \\
   "$INST_BIN" 2>&1 | tee $OUT/app.log
 
 What to observe (filter "[update]"), and WHAT YOU MUST CLICK:

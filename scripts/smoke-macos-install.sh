@@ -20,9 +20,9 @@
 #   * The REAL app, launched from its own executable, boots the packaged gateway
 #     and that gateway answers /api/health.
 #   * The bundled KAS engine hand-off (BUNDLE_KAS=0 skips): the gateway child
-#     the shell spawned carries KIROCREW_BUNDLED_KAS_DIR naming the installed
+#     the shell spawned carries AJCREW_BUNDLED_KAS_DIR naming the installed
 #     backend-dist/kas/ root (gateway-env.js `bundledKasEnvironment`), and the
-#     installed `kirocrew kas status`, run with that environment, reports the
+#     installed `ajcrew kas status`, run with that environment, reports the
 #     engine as `(built into the app)` from inside that root. The shell runs
 #     nothing from the root at boot, so the child's environment plus the
 #     backend's own reader are the whole hand-off; electron-builder moving or
@@ -33,9 +33,9 @@
 #     installed tree and reports the pinned release from
 #     packaging/kiro-cli-version, the Electron supervisor's hand-off
 #     (gateway-env.js: stat, run `--version`, then export
-#     KIROCREW_BUNDLED_KIRO_DIR + KIRO_NO_AUTO_UPDATE) reached the gateway
+#     AJCREW_BUNDLED_KIRO_DIR + KIRO_NO_AUTO_UPDATE) reached the gateway
 #     child, the launch log carries no probe fall-through line, and the
-#     installed `kirocrew doctor` resolves that copy on its kiro-cli row.
+#     installed `ajcrew doctor` resolves that copy on its kiro-cli row.
 #
 # WHAT IS DELIBERATELY NOT ASSERTED: code signature and notarization. This job
 # runs on the UNSIGNED build (the sign job is a later, release-only stage), so
@@ -91,7 +91,7 @@ bounded() {
 # (`ps eww` prints each process's environment on macOS).
 smoke_gateway_pids() {
   ps -axo pid= | while read -r pid; do
-    if ps eww -p "$pid" 2>/dev/null | grep -q "KIROCREW_HOME=$HOME_DIR"; then echo "$pid"; fi
+    if ps eww -p "$pid" 2>/dev/null | grep -q "AJCREW_HOME=$HOME_DIR"; then echo "$pid"; fi
   done
 }
 
@@ -106,7 +106,7 @@ fi
 DMG="${found[0]}"
 echo "▶ Installer under test: $(basename "$DMG")"
 
-WORK="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/kirocrew-smoke-XXXXXX")"
+WORK="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/ajcrew-smoke-XXXXXX")"
 MOUNT="$WORK/mnt"
 APPS="$WORK/Applications"
 HOME_DIR="$WORK/home"
@@ -146,7 +146,7 @@ APP="$APPS/$APP_NAME"
 echo "▶ Installed $APP_NAME into $APPS"
 
 # The executable name comes from the bundle's own Info.plist, never from a
-# hardcoded product name: the nightly channel ships as "KiroCrew Nightly".
+# hardcoded product name: the nightly channel ships as "AjCrew Nightly".
 EXECUTABLE="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Contents/Info.plist")"
 APP_BIN="$APP/Contents/MacOS/$EXECUTABLE"
 test -x "$APP_BIN" || { echo "ERROR: app executable missing: $APP_BIN" >&2; exit 1; }
@@ -158,8 +158,8 @@ case "$(uname -m)" in
   x86_64) ARCH_SUFFIX=x64 ;;
   *) echo "ERROR: unsupported runner arch $(uname -m)" >&2; exit 1 ;;
 esac
-BACKEND="$RESOURCES/backend-dist/kirocrew-backend-$ARCH_SUFFIX"
-LAUNCHER="$BACKEND/bin/kirocrew"
+BACKEND="$RESOURCES/backend-dist/ajcrew-backend-$ARCH_SUFFIX"
+LAUNCHER="$BACKEND/bin/ajcrew"
 PYTHON="$BACKEND/bin/python3.12"
 for required in "$BACKEND" "$LAUNCHER" "$PYTHON"; do
   test -e "$required" || { echo "ERROR: installed backend payload incomplete; missing $required" >&2; exit 1; }
@@ -172,7 +172,7 @@ echo "▶ Installed launcher reports: $launcher_version"
 # universal app its Node carries both slices, and the tree holds only regular
 # files and directories: the macOS signing service refuses symlinks and
 # hardlinks inside the universal bundle. A single-arch tree keeps Node's bin
-# links, as `kirocrew kas install` lays them down.
+# links, as `ajcrew kas install` lays them down.
 KAS_ROOT="$RESOURCES/backend-dist/kas"
 if [ "${BUNDLE_KAS:-1}" = "0" ]; then
   echo "▶ Bundled KAS engine: not part of this build (BUNDLE_KAS=0)"
@@ -186,7 +186,7 @@ else
   KAS_NODE="$KAS_ROOT/$KAS_VERSION/$KAS_NODE_REL"
   test -x "$KAS_NODE" || { echo "ERROR: bundled KAS Node missing or not executable: $KAS_NODE" >&2; exit 1; }
   kas_node_archs="$(lipo -archs "$KAS_NODE")"
-  if [ -d "$RESOURCES/backend-dist/kirocrew-backend-arm64" ] && [ -d "$RESOURCES/backend-dist/kirocrew-backend-x64" ]; then
+  if [ -d "$RESOURCES/backend-dist/ajcrew-backend-arm64" ] && [ -d "$RESOURCES/backend-dist/ajcrew-backend-x64" ]; then
     kas_links="$(find "$KAS_ROOT" \( -type l -o \( -type f -links +1 \) \) -print | head -5)"
     if [ -n "$kas_links" ]; then
       echo "ERROR: bundled KAS tree carries a symlink or hardlink:" >&2
@@ -230,23 +230,23 @@ fi
 PORT="$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1])')"
 APP_OUT="$LOG_DIR/app-stdout.log"
 APP_ERR="$LOG_DIR/app-stderr.log"
-# KIROCREW_HOME isolates the data home (and the dashboard token) under $WORK;
-# KIROCREW_PORT pins the gateway port so /api/health has one address to ask;
-# KIROCREW_SKIP_MODEL_DOWNLOAD keeps the ~610MB embeddings download out of a
+# AJCREW_HOME isolates the data home (and the dashboard token) under $WORK;
+# AJCREW_PORT pins the gateway port so /api/health has one address to ask;
+# AJCREW_SKIP_MODEL_DOWNLOAD keeps the ~610MB embeddings download out of a
 # smoke test. HOME stays the runner's own: Electron needs its real
 # Library/Application Support and Logs directories.
-KIROCREW_HOME="$HOME_DIR" KIROCREW_PORT="$PORT" KIROCREW_SKIP_MODEL_DOWNLOAD=1 \
+AJCREW_HOME="$HOME_DIR" AJCREW_PORT="$PORT" AJCREW_SKIP_MODEL_DOWNLOAD=1 \
   "$APP_BIN" >"$APP_OUT" 2>"$APP_ERR" &
 APP_PID=$!
-echo "▶ Launched $EXECUTABLE (pid $APP_PID) with KIROCREW_PORT=$PORT"
+echo "▶ Launched $EXECUTABLE (pid $APP_PID) with AJCREW_PORT=$PORT"
 
-# An LTS build (release-lts.yml sets KIROCREW_BUILD_EDITION=lts) refuses to start
+# An LTS build (release-lts.yml sets AJCREW_BUILD_EDITION=lts) refuses to start
 # with nobody signed in, and the smoke has no sign-in. So for LTS the assertion is
 # the refusal itself: the app's gateway logs `LTS boot refused` to the launch log
 # and never answers /api/health. The installed layout above is checked the same.
 LTS_REFUSAL="LTS boot refused"
 launch_log() { find "$HOME/Library/Logs" -maxdepth 2 -name gateway-launch.log 2>/dev/null | head -1; }
-if [ "${KIROCREW_BUILD_EDITION:-}" = lts ]; then
+if [ "${AJCREW_BUILD_EDITION:-}" = lts ]; then
   refused=0
   started=$(date +%s)
   while :; do
@@ -277,12 +277,12 @@ if [ "${KIROCREW_BUILD_EDITION:-}" = lts ]; then
   # Not in a subshell or pipe, so BOUNDED_STATUS is still this run's; a timeout
   # returns 124 without setting it, which counts as no refusal.
   kas_status_exit=0
-  KIROCREW_HOME="$HOME_DIR" KIROCREW_SKIP_MODEL_DOWNLOAD=1 \
-    bounded "$MAX_CLI_SECONDS" "installed kirocrew kas status" \
+  AJCREW_HOME="$HOME_DIR" AJCREW_SKIP_MODEL_DOWNLOAD=1 \
+    bounded "$MAX_CLI_SECONDS" "installed ajcrew kas status" \
     "$LAUNCHER" kas status >"$kas_status_out" 2>&1 || kas_status_exit=$?
   [ "$kas_status_exit" -eq 0 ] && kas_status_exit=$BOUNDED_STATUS
   if [ "$kas_status_exit" -eq 0 ] || ! grep -qF "$LTS_REFUSAL" "$kas_status_out"; then
-    echo "ERROR: the signed-out LTS kirocrew kas status did not refuse with '$LTS_REFUSAL' (exit $kas_status_exit)" >&2
+    echo "ERROR: the signed-out LTS ajcrew kas status did not refuse with '$LTS_REFUSAL' (exit $kas_status_exit)" >&2
     tail -n 40 "$kas_status_out" >&2
     exit 1
   fi
@@ -336,12 +336,12 @@ echo "▶ Installed app's gateway answered /api/health in $(( $(date +%s) - star
 gateway_pid="$(for pid in $(smoke_gateway_pids); do
   if ps -o command= -p "$pid" 2>/dev/null | grep -q "gateway"; then echo "$pid"; break; fi
 done)"
-test -n "$gateway_pid" || { echo "ERROR: no gateway child with KIROCREW_HOME=$HOME_DIR found" >&2; ps -axo pid=,command= | grep -i kiro | head -20 >&2; exit 1; }
+test -n "$gateway_pid" || { echo "ERROR: no gateway child with AJCREW_HOME=$HOME_DIR found" >&2; ps -axo pid=,command= | grep -i kiro | head -20 >&2; exit 1; }
 child_env="$(ps eww -p "$gateway_pid")"
 
 if [ "${BUNDLE_KIRO_CLI:-0}" = "1" ]; then
   case "$child_env" in
-    *"KIROCREW_BUNDLED_KIRO_DIR=$BUNDLED_DIR"*) echo "▶ Gateway child (pid $gateway_pid) carries KIROCREW_BUNDLED_KIRO_DIR=$BUNDLED_DIR" ;;
+    *"AJCREW_BUNDLED_KIRO_DIR=$BUNDLED_DIR"*) echo "▶ Gateway child (pid $gateway_pid) carries AJCREW_BUNDLED_KIRO_DIR=$BUNDLED_DIR" ;;
     *) echo "ERROR: gateway child (pid $gateway_pid) was not handed the bundled kiro-cli directory" >&2
        [ -n "$LAUNCH_LOG" ] && { echo "gateway-launch.log tail:"; tail -n 40 "$LAUNCH_LOG"; }
        exit 1 ;;
@@ -359,14 +359,14 @@ if [ "${BUNDLE_KIRO_CLI:-0}" = "1" ]; then
   # The installed doctor resolves the same copy on its kiro-cli row. Text is
   # asserted, not the exit code: doctor also reports runner facts it fails on.
   doctor_out="$LOG_DIR/doctor.out"
-  KIROCREW_HOME="$HOME_DIR" KIROCREW_BUNDLED_KIRO_DIR="$BUNDLED_DIR" KIRO_NO_AUTO_UPDATE=1 \
-    KIROCREW_SKIP_MODEL_DOWNLOAD=1 bounded "$MAX_HEALTH_SECONDS" "installed kirocrew doctor" \
+  AJCREW_HOME="$HOME_DIR" AJCREW_BUNDLED_KIRO_DIR="$BUNDLED_DIR" KIRO_NO_AUTO_UPDATE=1 \
+    AJCREW_SKIP_MODEL_DOWNLOAD=1 bounded "$MAX_HEALTH_SECONDS" "installed ajcrew doctor" \
     "$LAUNCHER" doctor >"$doctor_out" 2>&1 || true
   kiro_row="$(grep -E '^\s*kiro-cli:' "$doctor_out" | head -1 || true)"
   echo "▶ Installed doctor kiro-cli row: $kiro_row"
   case "$kiro_row" in
     *"$BUNDLED"*) ;;
-    *) echo "ERROR: installed kirocrew doctor did not resolve the bundled kiro-cli at $BUNDLED" >&2
+    *) echo "ERROR: installed ajcrew doctor did not resolve the bundled kiro-cli at $BUNDLED" >&2
        tail -n 40 "$doctor_out" >&2; exit 1 ;;
   esac
 fi
@@ -378,13 +378,13 @@ if [ "${BUNDLE_KAS:-1}" != "0" ]; then
   # dropped or moved, or whose install record the shell refused, fails here
   # (the launch log tail then carries the shell's reason).
   case "$child_env" in
-    *"KIROCREW_BUNDLED_KAS_DIR=$KAS_ROOT"*) echo "▶ Gateway child (pid $gateway_pid) carries KIROCREW_BUNDLED_KAS_DIR=$KAS_ROOT" ;;
+    *"AJCREW_BUNDLED_KAS_DIR=$KAS_ROOT"*) echo "▶ Gateway child (pid $gateway_pid) carries AJCREW_BUNDLED_KAS_DIR=$KAS_ROOT" ;;
     *) echo "ERROR: gateway child (pid $gateway_pid) was not handed the bundled KAS engine root $KAS_ROOT" >&2
        [ -n "$LAUNCH_LOG" ] && { echo "gateway-launch.log tail:"; tail -n 40 "$LAUNCH_LOG"; }
        exit 1 ;;
   esac
 
-  # (b) The backend reads the installed tree through that environment. `kirocrew
+  # (b) The backend reads the installed tree through that environment. `ajcrew
   # kas status` runs the same reader a session spawn uses
   # (acp.kas_bundle.installed_bundle: data home first, then this root), and its
   # `installed:` row says which one answered; `(built into the app)` is the
@@ -392,8 +392,8 @@ if [ "${BUNDLE_KAS:-1}" != "0" ]; then
   # smoke's own empty one, so nothing an operator installed can answer instead.
   # Text is asserted, not the exit code, the same as doctor.
   kas_status_out="$LOG_DIR/kas-status.out"
-  KIROCREW_HOME="$HOME_DIR" KIROCREW_BUNDLED_KAS_DIR="$KAS_ROOT" KIROCREW_SKIP_MODEL_DOWNLOAD=1 \
-    bounded "$MAX_CLI_SECONDS" "installed kirocrew kas status" \
+  AJCREW_HOME="$HOME_DIR" AJCREW_BUNDLED_KAS_DIR="$KAS_ROOT" AJCREW_SKIP_MODEL_DOWNLOAD=1 \
+    bounded "$MAX_CLI_SECONDS" "installed ajcrew kas status" \
     "$LAUNCHER" kas status >"$kas_status_out" 2>&1 || true
   kas_status_row="$(grep -E '^installed:' "$kas_status_out" | head -1 || true)"
   kas_engine_row="$(grep -E '^\s*engine:' "$kas_status_out" | head -1 || true)"
@@ -401,12 +401,12 @@ if [ "${BUNDLE_KAS:-1}" != "0" ]; then
   echo "▶ Installed kas status engine row: $kas_engine_row"
   case "$kas_status_row" in
     *"(built into the app)"*) ;;
-    *) echo "ERROR: installed kirocrew kas status did not report the bundled KAS engine as built into the app (KIROCREW_BUNDLED_KAS_DIR=$KAS_ROOT)" >&2
+    *) echo "ERROR: installed ajcrew kas status did not report the bundled KAS engine as built into the app (AJCREW_BUNDLED_KAS_DIR=$KAS_ROOT)" >&2
        tail -n 40 "$kas_status_out" >&2; exit 1 ;;
   esac
   case "$kas_engine_row" in
     *"$KAS_ROOT/"*) ;;
-    *) echo "ERROR: installed kirocrew kas status resolved an engine outside the bundled root $KAS_ROOT" >&2
+    *) echo "ERROR: installed ajcrew kas status resolved an engine outside the bundled root $KAS_ROOT" >&2
        tail -n 40 "$kas_status_out" >&2; exit 1 ;;
   esac
 fi

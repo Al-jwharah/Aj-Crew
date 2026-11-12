@@ -28,8 +28,8 @@ from __future__ import annotations
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.members import DM_SLOT_KEY_PREFIX
+from aj_crew.dashboard import session_control as sc
+from aj_crew.members import DM_SLOT_KEY_PREFIX
 
 CRON_SLOT = "cron-2c3b2e25"
 

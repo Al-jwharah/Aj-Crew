@@ -17,19 +17,19 @@ from session_helpers import (  # noqa: F401 -- the fixture is requested by name
     cfg_fixture,
 )
 
-from kiro_crew.acp.runtime import AcpWorkspaceBindingError
-from kiro_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO, AcpPromptStats
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import (
+from aj_crew.acp.runtime import AcpWorkspaceBindingError
+from aj_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO, AcpPromptStats
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import (
     _BG_BLIND_RECYCLE_PROMPTS,
     BACKGROUND_KEY,
     CONSOLIDATE_KEY,
     SessionClosingError,
     SessionManager,
 )
-from kiro_crew.start_priority import StartPriority
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import await_until
+from aj_crew.start_priority import StartPriority
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import await_until
 
 
 class TestRecycleBackground:
@@ -42,15 +42,15 @@ class TestRecycleBackground:
         try:
             background, _, _ = await mgr.get_or_create(BACKGROUND_KEY)
             mgr.release(BACKGROUND_KEY)
-            extraction, _, _ = await mgr.get_or_create(CONSOLIDATE_KEY, agent="kirocrew-lite")
+            extraction, _, _ = await mgr.get_or_create(CONSOLIDATE_KEY, agent="ajcrew-lite")
             mgr.release(CONSOLIDATE_KEY)
             extraction.context_usage_pct = lambda: 75.0
-            await mgr.recycle_background(session_key=CONSOLIDATE_KEY, agent="kirocrew-lite")
+            await mgr.recycle_background(session_key=CONSOLIDATE_KEY, agent="ajcrew-lite")
             assert mgr._sessions[CONSOLIDATE_KEY].provider is not extraction
             extraction.shutdown.assert_awaited_once()
             assert mgr._sessions[BACKGROUND_KEY].provider is background
             background.shutdown.assert_not_awaited()
-            factory.assert_called_with(CONSOLIDATE_KEY, agent="kirocrew-lite")
+            factory.assert_called_with(CONSOLIDATE_KEY, agent="ajcrew-lite")
         finally:
             await mgr.close_all()
 
@@ -330,7 +330,7 @@ class TestReloadProviderFactory:
         mgr._warm_pool.put_nowait((mock_pool_p, "agent"))
 
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
             patch.object(cfg, "create_provider_factory", return_value=_mock_provider_factory()),
         ):
             await mgr.reload_provider_factory()
@@ -348,7 +348,7 @@ class TestReloadProviderFactory:
         mgr.release("k1")
 
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
             patch.object(cfg, "create_provider_factory", return_value=_mock_provider_factory()),
         ):
             await mgr.reload_provider_factory()
@@ -366,7 +366,7 @@ class TestReloadProviderFactory:
         provider.shutdown = AsyncMock(side_effect=OSError("dead"))
 
         with (
-            patch.object(KiroCrewConfig, "load", return_value=cfg),
+            patch.object(AjCrewConfig, "load", return_value=cfg),
             patch.object(cfg, "create_provider_factory", return_value=_mock_provider_factory()),
         ):
             await mgr.reload_provider_factory()
@@ -420,7 +420,7 @@ class TestGetBgSessionRecycle:
         sentinel = object()
         rt2.create_session = AsyncMock(return_value=sentinel)
 
-        with patch("kiro_crew.acp.runtime.AcpRuntime", side_effect=[rt2]):
+        with patch("aj_crew.acp.runtime.AcpRuntime", side_effect=[rt2]):
             result = await mgr.get_bg_session()
 
         stale._is_stale.assert_awaited_once()
@@ -458,7 +458,7 @@ class TestGetBgSessionRecycle:
         sentinel = object()
         rt2.create_session = AsyncMock(return_value=sentinel)
 
-        with patch("kiro_crew.acp.runtime.AcpRuntime", side_effect=[rt2]):
+        with patch("aj_crew.acp.runtime.AcpRuntime", side_effect=[rt2]):
             result = await mgr.get_bg_session()
 
         stale._is_stale.assert_awaited_once()
@@ -491,7 +491,7 @@ class TestGetBgSessionBackendSwitch:
         mgr = SessionManager(cfg, provider_factory=_mock_provider_factory())
         rt = self._fresh_runtime()
 
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=rt) as ctor:
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=rt) as ctor:
             result = await mgr.get_bg_session()
 
         assert ctor.call_args.kwargs["acp_backend"] == backend
@@ -514,7 +514,7 @@ class TestGetBgSessionBackendSwitch:
         mgr._bg_runtime = stranded
 
         rt2 = self._fresh_runtime()
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=rt2) as ctor:
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=rt2) as ctor:
             result = await mgr.get_bg_session()
 
         stranded.kill.assert_awaited_once()  # mismatched + idle → recycled
@@ -543,7 +543,7 @@ class TestGetBgSessionBackendSwitch:
         mgr._bg_runtime = busy
 
         rt2 = self._fresh_runtime()
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=rt2) as ctor:
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=rt2) as ctor:
             result = await mgr.get_bg_session()
 
         busy.kill.assert_not_awaited()  # live handles are never killed
@@ -571,7 +571,7 @@ class TestGetBgSessionBackendSwitch:
         mgr._draining_bg_runtimes.append(still_busy)
 
         rt = self._fresh_runtime()
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=rt):
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=rt):
             await mgr.get_bg_session()
 
         drained.kill.assert_awaited_once()  # drained → reaped
@@ -617,7 +617,7 @@ class TestGetBgSessionBackendSwitch:
         mgr._bg_runtime = cached
 
         with patch(
-            "kiro_crew.acp.runtime.AcpRuntime",
+            "aj_crew.acp.runtime.AcpRuntime",
             side_effect=AssertionError("should not respawn a matching runtime"),
         ):
             result = await mgr.get_bg_session()
@@ -735,8 +735,8 @@ class TestRetireStaleBackendBgRuntime:
             patch.object(
                 mgr, "_retire_stale_backend_bg_runtime", wraps=mgr._retire_stale_backend_bg_runtime
             ) as retire,
-            patch("kiro_crew.session.build_provider_factory", return_value=MagicMock()),
-            patch("kiro_crew.session.KiroCrewConfig.load", return_value=cfg),
+            patch("aj_crew.session.build_provider_factory", return_value=MagicMock()),
+            patch("aj_crew.session.AjCrewConfig.load", return_value=cfg),
         ):
             await mgr.refresh_defaults()
 
@@ -882,7 +882,7 @@ class TestRetireStaleBackendBgRuntime:
                 mgr, "_provider_backed_bg_session", AsyncMock(return_value=provider_handle)
             ),
             patch(
-                "kiro_crew.acp.runtime.AcpRuntime",
+                "aj_crew.acp.runtime.AcpRuntime",
                 side_effect=AssertionError("must not construct a runtime for a moved backend"),
             ),
         ):
@@ -967,10 +967,10 @@ class TestOpenTaskSession:
         parent = "taskrunner:run1:runtime"
 
         p1, new1, res1 = await mgr.open_task_session(
-            parent, "taskrunner:run1:decompose", agent="kirocrew"
+            parent, "taskrunner:run1:decompose", agent="ajcrew"
         )
         p2, new2, res2 = await mgr.open_task_session(
-            parent, "taskrunner:run1:task0", agent="kirocrew"
+            parent, "taskrunner:run1:task0", agent="ajcrew"
         )
 
         # Exactly ONE factory-built runtime, adopted + reused for both steps.
@@ -1004,7 +1004,7 @@ class TestOpenTaskSession:
         parent = "taskrunner:run3:runtime"
 
         provider, _is_new, _resumed = await mgr.open_task_session(
-            parent, "taskrunner:run3:task0", agent="kirocrew"
+            parent, "taskrunner:run3:task0", agent="ajcrew"
         )
 
         assert provider._handle.delete_delay_secs == float(delay)
@@ -1020,7 +1020,7 @@ class TestOpenTaskSession:
         parent = "taskrunner:run2:runtime"
         key = "taskrunner:run2:task0"
 
-        provider, is_new, _resumed = await mgr.open_task_session(parent, key, agent="kirocrew")
+        provider, is_new, _resumed = await mgr.open_task_session(parent, key, agent="ajcrew")
 
         # Registered under the per-step key so reset/context helpers work by key.
         assert key in mgr._sessions
@@ -1036,7 +1036,7 @@ class TestOpenTaskSession:
         parent = "taskrunner:run3:runtime"
         first = "taskrunner:run3:decompose"
         key = "taskrunner:run3:task0"
-        await mgr.open_task_session(parent, first, agent="kirocrew")
+        await mgr.open_task_session(parent, first, agent="ajcrew")
         runtime = created[0]
         inner = runtime.create_session.side_effect
         seen: dict[str, object] = {}
@@ -1050,7 +1050,7 @@ class TestOpenTaskSession:
 
         runtime.create_session.side_effect = observe
         before = mgr.session_generation(key)
-        await mgr.open_task_session(parent, key, agent="kirocrew")
+        await mgr.open_task_session(parent, key, agent="ajcrew")
 
         # The create window is visible to the registry, and the reservation is
         # dropped once the session is registered.
@@ -1071,11 +1071,11 @@ class TestOpenTaskSession:
         parent = "taskrunner:run4:runtime"
         first = "taskrunner:run4:decompose"
         key = "taskrunner:run4:task0"
-        await mgr.open_task_session(parent, first, agent="kirocrew")
+        await mgr.open_task_session(parent, first, agent="ajcrew")
         created[0].create_session.side_effect = RuntimeError("create failed")
 
         with pytest.raises(RuntimeError, match="create failed"):
-            await mgr.open_task_session(parent, key, agent="kirocrew")
+            await mgr.open_task_session(parent, key, agent="ajcrew")
 
         assert not mgr._has_allocation_reservation(key)
         assert key not in mgr.session_keys()
@@ -1097,7 +1097,7 @@ class TestOpenTaskSession:
         result = await mgr.open_task_session(
             "taskrunner:run3:runtime",
             "taskrunner:run3:task0",
-            agent="kirocrew",
+            agent="ajcrew",
             cwd="/repo/packages/app",
             approval_policy="auto",
         )
@@ -1105,7 +1105,7 @@ class TestOpenTaskSession:
         assert result == (dedicated, True, False)
         mgr.get_or_create.assert_awaited_once_with(
             "taskrunner:run3:task0",
-            agent="kirocrew",
+            agent="ajcrew",
             approval_policy="auto",
             cwd="/repo/packages/app",
             start_priority=StartPriority.BACKGROUND,

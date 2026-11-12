@@ -7,10 +7,10 @@ from test_workflows_inject import _FakeSlot
 from test_workflows_private_outputs import State
 from test_workflows_private_outputs import world as _world
 
-from kiro_crew.dashboard.workflow_inject import inject_bound_workflow_result
-from kiro_crew.execution_context import bind_session_execution
-from kiro_crew.testing.wait import await_until
-from kiro_crew.workflow_memory import WorkflowScope
+from aj_crew.dashboard.workflow_inject import inject_bound_workflow_result
+from aj_crew.execution_context import bind_session_execution
+from aj_crew.testing.wait import await_until
+from aj_crew.workflow_memory import WorkflowScope
 
 world = _world
 
@@ -65,7 +65,7 @@ async def test_restricted_completion_does_not_recreate_closed_parent(world, monk
     def unexpected_binding(*args, **kwargs):
         pytest.fail("A closed restricted session must not be persisted for a fallback")
 
-    monkeypatch.setattr("kiro_crew.execution_context.bind_session_execution", unexpected_binding)
+    monkeypatch.setattr("aj_crew.execution_context.bind_session_execution", unexpected_binding)
     snapshot = {
         "session_key": scope.origin,
         "run_id": scope.run_id,

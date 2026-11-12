@@ -2,7 +2,7 @@
 
 Manual (/compact, !compact, channel commands) and automatic
 (context-threshold) compaction perform the identical operation, so they share
-one wait budget: ``kiro_crew.constants.COMPACT_WAIT_TIMEOUT_SECS``, raised for
+one wait budget: ``aj_crew.constants.COMPACT_WAIT_TIMEOUT_SECS``, raised for
 all of them by ``session.compact_wait_secs``. A shorter manual budget reports
 "Compaction timed out." on work that is still running and subsequently
 succeeds — the budget expires, not the work.
@@ -19,7 +19,7 @@ import inspect
 import pytest
 from source_corpus import parsed_candidates, src_root
 
-from kiro_crew.constants import COMPACT_WAIT_TIMEOUT_SECS
+from aj_crew.constants import COMPACT_WAIT_TIMEOUT_SECS
 
 # One xdist worker for the whole module: `test_no_call_site_pins_a_shorter_wait` scans
 # src/ through the shared corpus, and under `--dist loadgroup` an unmarked module is
@@ -34,7 +34,7 @@ def _wait_default(func) -> object:
 def test_provider_abc_default_is_shared_budget():
     """The base LLMProvider default — inherited by every manual call site
     that passes no explicit timeout — is the shared budget."""
-    from kiro_crew.providers.base import LLMProvider
+    from aj_crew.providers.base import LLMProvider
 
     assert _wait_default(LLMProvider.wait_for_compaction) == COMPACT_WAIT_TIMEOUT_SECS
 
@@ -42,10 +42,10 @@ def test_provider_abc_default_is_shared_budget():
 @pytest.mark.parametrize(
     "import_path",
     [
-        "kiro_crew.providers.acp.AcpProvider",
-        "kiro_crew.acp.client.AcpClient",
-        "kiro_crew.acp.session_handle.AcpSessionHandle",
-        "kiro_crew.acp.session_provider.AcpSessionProvider",
+        "aj_crew.providers.acp.AcpProvider",
+        "aj_crew.acp.client.AcpClient",
+        "aj_crew.acp.session_handle.AcpSessionHandle",
+        "aj_crew.acp.session_provider.AcpSessionProvider",
     ],
 )
 def test_every_implementation_default_is_shared_budget(import_path: str):
@@ -60,7 +60,7 @@ def test_every_implementation_default_is_shared_budget(import_path: str):
 def test_automatic_compaction_uses_shared_budget():
     """The automatic context-threshold path in session.py budgets with the
     same shared constant as the manual paths."""
-    import kiro_crew.session as session_mod
+    import aj_crew.session as session_mod
 
     assert session_mod.COMPACT_WAIT_TIMEOUT_SECS is COMPACT_WAIT_TIMEOUT_SECS
 
@@ -69,7 +69,7 @@ def test_inner_status_wait_spends_the_remaining_shared_budget():
     """The in-place path's async status wait derives from what remains of the
     shared budget — no fixed slice may strand budget while a still-running
     compaction is abandoned and its session recycled."""
-    from kiro_crew.session import _compact_result_wait_secs
+    from aj_crew.session import _compact_result_wait_secs
 
     assert _compact_result_wait_secs(0.0) == COMPACT_WAIT_TIMEOUT_SECS
     # Shrinks as the /compact prompt turn consumes the budget.
@@ -80,7 +80,7 @@ def test_inner_status_wait_spends_the_full_remaining_budget():
     """The inner wait never truncates the shared budget: at every elapsed
     point it gets AT LEAST the remaining budget, so a compaction completing
     in the final seconds is not abandoned early."""
-    from kiro_crew.session import _compact_result_wait_secs
+    from aj_crew.session import _compact_result_wait_secs
 
     step = COMPACT_WAIT_TIMEOUT_SECS / 20
     elapsed = 0.0
@@ -94,7 +94,7 @@ def test_inner_status_wait_lands_before_the_outer_cap():
     """The outer ``asyncio.wait_for`` carries the margin as headroom, so the
     inner timeout lands strictly before it and the graceful "no result"
     diagnostic stays reachable while the prompt phase is within budget."""
-    from kiro_crew.session import (
+    from aj_crew.session import (
         _COMPACT_RESULT_WAIT_MARGIN_SECS,
         _compact_result_wait_secs,
     )
@@ -111,7 +111,7 @@ def test_inner_status_wait_lands_before_the_outer_cap():
 def test_inner_status_wait_never_below_floor_or_non_positive():
     """A prompt turn that ran long (or clock weirdness) clamps to the floor,
     never to zero or a negative timeout."""
-    from kiro_crew.session import (
+    from aj_crew.session import (
         _COMPACT_RESULT_WAIT_FLOOR_SECS,
         _compact_result_wait_secs,
     )
@@ -134,7 +134,7 @@ def test_inner_status_wait_never_below_floor_or_non_positive():
 def test_configured_budget_zero_falls_back_to_built_in():
     """0 (the default) and any non-positive value resolve to the built-in
     budget, so an install that sets nothing behaves exactly as before."""
-    from kiro_crew.session import _resolve_compact_wait_secs
+    from aj_crew.session import _resolve_compact_wait_secs
 
     assert _resolve_compact_wait_secs(0.0) == COMPACT_WAIT_TIMEOUT_SECS
     assert _resolve_compact_wait_secs(-1.0) == COMPACT_WAIT_TIMEOUT_SECS
@@ -142,7 +142,7 @@ def test_configured_budget_zero_falls_back_to_built_in():
 
 def test_configured_budget_positive_is_the_effective_budget():
     """A positive setting is used verbatim as the effective budget."""
-    from kiro_crew.session import _resolve_compact_wait_secs
+    from aj_crew.session import _resolve_compact_wait_secs
 
     assert _resolve_compact_wait_secs(600.0) == 600.0
 
@@ -151,7 +151,7 @@ def test_configured_budget_reaches_the_inner_status_wait():
     """The inner status wait derives from the EFFECTIVE budget, not the
     built-in constant — raising the setting raises the inner wait, which is
     where the measured timeouts occur."""
-    from kiro_crew.session import _compact_result_wait_secs, _resolve_compact_wait_secs
+    from aj_crew.session import _compact_result_wait_secs, _resolve_compact_wait_secs
 
     budget = _resolve_compact_wait_secs(600.0)
     assert _compact_result_wait_secs(0.0, budget) == 600.0
@@ -165,10 +165,10 @@ async def test_inner_wait_uses_the_snapshotted_budget_not_a_live_reread():
     callable derives from the budget passed to it, so a live
     ``session.compact_wait_secs`` change between the outer snapshot and the
     inner call cannot split one compaction across two budgets."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.session import SessionManager
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.session import SessionManager
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.compact_wait_secs = 600.0
     mgr = SessionManager(cfg)
     inner = mgr._compaction._deps.compact_result_wait_secs
@@ -187,8 +187,8 @@ async def test_inner_wait_uses_the_snapshotted_budget_not_a_live_reread():
 def test_default_config_leaves_compaction_budget_at_built_in():
     """A freshly-defaulted config resolves to the built-in budget — the key
     exists but changes nothing until an operator sets it."""
-    from kiro_crew.config.sections import SessionConfig
-    from kiro_crew.session import _resolve_compact_wait_secs
+    from aj_crew.config.sections import SessionConfig
+    from aj_crew.session import _resolve_compact_wait_secs
 
     cfg = SessionConfig()
     assert cfg.compact_wait_secs == 0.0
@@ -201,16 +201,16 @@ def test_load_honours_a_configured_budget(tmp_path, monkeypatch):
     it back to the default."""
     import json
 
-    from kiro_crew.config import loader as loader_module
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.session import _resolve_compact_wait_secs
+    from aj_crew.config import loader as loader_module
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.session import _resolve_compact_wait_secs
 
     path = tmp_path / "config.json"
     path.write_text(json.dumps({"session": {"compact_wait_secs": 900.0}}), encoding="utf-8")
     monkeypatch.setattr(loader_module, "config_path", lambda: path)
     monkeypatch.setattr(loader_module, "config_local_path", lambda: tmp_path / "missing.local.json")
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
 
     assert cfg.session.compact_wait_secs == 900.0
     assert _resolve_compact_wait_secs(cfg.session.compact_wait_secs) == 900.0
@@ -222,30 +222,30 @@ def test_load_clamps_an_out_of_range_budget(tmp_path, monkeypatch):
     capped, so a hand-edited typo cannot arm a near-zero or unbounded wait."""
     import json
 
-    from kiro_crew.config import loader as loader_module
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.config.sections import COMPACT_WAIT_SECS_MAX, COMPACT_WAIT_SECS_MIN
-    from kiro_crew.session import _resolve_compact_wait_secs
+    from aj_crew.config import loader as loader_module
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.config.sections import COMPACT_WAIT_SECS_MAX, COMPACT_WAIT_SECS_MIN
+    from aj_crew.session import _resolve_compact_wait_secs
 
     monkeypatch.setattr(loader_module, "config_local_path", lambda: tmp_path / "missing.local.json")
 
     neg = tmp_path / "neg.json"
     neg.write_text(json.dumps({"session": {"compact_wait_secs": -5.0}}), encoding="utf-8")
     monkeypatch.setattr(loader_module, "config_path", lambda: neg)
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.session.compact_wait_secs == 0.0
     assert _resolve_compact_wait_secs(cfg.session.compact_wait_secs) == COMPACT_WAIT_TIMEOUT_SECS
 
     tiny = tmp_path / "tiny.json"
     tiny.write_text(json.dumps({"session": {"compact_wait_secs": 5.0}}), encoding="utf-8")
     monkeypatch.setattr(loader_module, "config_path", lambda: tiny)
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.session.compact_wait_secs == COMPACT_WAIT_SECS_MIN
 
     big = tmp_path / "big.json"
     big.write_text(json.dumps({"session": {"compact_wait_secs": 10_000.0}}), encoding="utf-8")
     monkeypatch.setattr(loader_module, "config_path", lambda: big)
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.session.compact_wait_secs == COMPACT_WAIT_SECS_MAX
 
 
@@ -281,7 +281,7 @@ def test_no_call_site_pins_a_shorter_wait():
                     continue  # non-literal (derived) timeouts are exempt
                 if isinstance(value, (int, float)) and value < COMPACT_WAIT_TIMEOUT_SECS:
                     offenders.append(
-                        f"src/kiro_crew/{path.relative_to(root).as_posix()}:{node.lineno}"
+                        f"src/aj_crew/{path.relative_to(root).as_posix()}:{node.lineno}"
                         f" (timeout={value})"
                     )
     assert not offenders, (
@@ -305,7 +305,7 @@ def test_no_call_site_pins_a_shorter_wait():
 def test_there_is_one_budget_resolver():
     """No module-level resolver sits beside the manager's: a second one is
     the drift the single method exists to prevent."""
-    import kiro_crew.session as session_mod
+    import aj_crew.session as session_mod
 
     assert not hasattr(session_mod, "compact_wait_budget_secs")
     assert callable(session_mod.SessionManager.compact_wait_budget_secs)
@@ -365,7 +365,7 @@ def test_every_call_site_passes_a_configurable_budget():
             if not isinstance(node, ast.Call) or _call_name(node.func) != "wait_for_compaction":
                 continue
             args = list(node.args[:1]) + [kw.value for kw in node.keywords if kw.arg == "timeout"]
-            where = f"src/kiro_crew/{path.relative_to(root).as_posix()}:{node.lineno}"
+            where = f"src/aj_crew/{path.relative_to(root).as_posix()}:{node.lineno}"
             if not args:
                 offenders.append(f"{where} (no budget)")
             for arg in args:
@@ -400,10 +400,10 @@ def test_manager_budget_follows_its_config():
     """``SessionManager.compact_wait_budget_secs()`` resolves the manager's own
     config, and the automatic coordinator reads the same method, so the two
     cannot drift apart."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.session import SessionManager
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.session import SessionManager
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     mgr = SessionManager(cfg)
     assert mgr.compact_wait_budget_secs() == COMPACT_WAIT_TIMEOUT_SECS
 
@@ -414,11 +414,11 @@ def test_manager_budget_follows_its_config():
 
 def test_task_runner_overflow_compaction_uses_the_manager_budget():
     """The task runner's context-overflow compaction waits the session
-    manager's budget, which holds in a standalone ``kirocrew run`` too: that
+    manager's budget, which holds in a standalone ``ajcrew run`` too: that
     process arms no live-config watcher, so a snapshot-based budget would wait
     the
     built-in budget there whatever the config file says."""
-    import kiro_crew.task_executor as task_executor_mod
+    import aj_crew.task_executor as task_executor_mod
 
     tree = ast.parse(inspect.getsource(task_executor_mod))
     budgets = [
@@ -448,7 +448,7 @@ def test_post_failure_budget_is_one_constant_for_both_dispatch_paths():
     """The dedicated-process client and the shared-runtime handle must reap an
     abandoned post-compaction turn on the same schedule; a second literal would
     let one path keep hanging after the other was tuned."""
-    from kiro_crew.acp import client, session_handle
+    from aj_crew.acp import client, session_handle
 
     assert session_handle._COMPACTION_FAILED_TURN_BUDGET is client._COMPACTION_FAILED_TURN_BUDGET
 
@@ -456,7 +456,7 @@ def test_post_failure_budget_is_one_constant_for_both_dispatch_paths():
 def test_post_failure_budget_is_bounded_by_the_ordinary_silence_window():
     """A turn the backend has already reported a failure for must not outlive an
     ordinary silent turn — otherwise the hang it fixes just gets shorter."""
-    from kiro_crew.acp.client import (
+    from aj_crew.acp.client import (
         _COMPACTION_FAILED_TURN_BUDGET,
         _STALE_TURN_TIMEOUT,
     )

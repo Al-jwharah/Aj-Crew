@@ -8,7 +8,7 @@ empty body; ``_suppressed``, the stored row of a verdict that withheld its turn;
 
 from __future__ import annotations
 
-from kiro_crew import irq
+from aj_crew import irq
 
 
 def _verdict(outcome: irq.Outcome) -> irq.Verdict:

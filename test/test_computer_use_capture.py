@@ -35,9 +35,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.computer_use import capture_macos, macos_ffi
-from kiro_crew.computer_use.types import (
+from aj_crew import platform_compat
+from aj_crew.computer_use import capture_macos, macos_ffi
+from aj_crew.computer_use.types import (
     DEFAULT_SCREENSHOT_JPEG_QUALITY,
     DEFAULT_SCREENSHOT_MAX_PX,
     MAX_SCREENSHOT_MAX_PX,
@@ -775,7 +775,7 @@ class TestFramePayloadRegexIsLinear:
     def test_a_long_non_matching_run_is_rejected_promptly(self):
         import time
 
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
         # A long charset run that CANNOT complete the match — the worst case for the
         # vulnerable shape. Generous bound: the linear form does 400k in ~4ms, so a
@@ -786,14 +786,14 @@ class TestFramePayloadRegexIsLinear:
         assert time.monotonic() - start < 1.0
 
     def test_real_base64_still_matches(self):
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
         for good in ("QUJD", "QUJDRA==", "QUJDRUY=", "A" * 4000):
             assert screencast._B64_RE.fullmatch(good), good
 
     def test_malformed_padding_is_rejected(self):
         """Stricter than the old pattern: quad structure is now enforced."""
-        from kiro_crew.computer_use import screencast
+        from aj_crew.computer_use import screencast
 
         for bad in ("QUJDRA=", "A=B", "AB!CD", "====", "QUJD="):
             assert screencast._B64_RE.fullmatch(bad) is None, bad
@@ -892,7 +892,7 @@ class TestScreenshotCeilingCannotOutgrowTheInlineImageCap:
     """
 
     def test_the_ceiling_is_within_the_inline_image_cap(self) -> None:
-        from kiro_crew.imaging import MAX_IMAGE_EDGE_PX
+        from aj_crew.imaging import MAX_IMAGE_EDGE_PX
 
         assert MAX_SCREENSHOT_MAX_PX <= MAX_IMAGE_EDGE_PX
 

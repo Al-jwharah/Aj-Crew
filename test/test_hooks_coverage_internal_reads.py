@@ -1,4 +1,4 @@
-"""Coverage of ``kiro_crew.hooks``' audited internal reads of sensitive paths.
+"""Coverage of ``aj_crew.hooks``' audited internal reads of sensitive paths.
 
 A read id is registered once, for a relative path that is still sensitive; an
 unregistered or stale id is denied with an audit record first; and the read
@@ -17,9 +17,9 @@ from hooks_coverage_helpers import (
     _write,
 )
 
-from kiro_crew import hooks as hooks_mod
-from kiro_crew import security
-from kiro_crew.hooks import (
+from aj_crew import hooks as hooks_mod
+from aj_crew import security
+from aj_crew.hooks import (
     _emit_internal_read_audit,
     emit_internal_read_audit,
     register_internal_read_path,
@@ -110,7 +110,7 @@ class TestSafeReadFileInternal:
             "_emit_internal_read_audit",
             lambda read_id, outcome: outcomes.append(outcome) or True,
         )
-        from kiro_crew import platform_compat as _pc
+        from aj_crew import platform_compat as _pc
 
         real_no_reparse = _pc.open_file_no_reparse
 
@@ -146,7 +146,7 @@ class TestInternalReadAudit:
             def log_tool_invocation(self, **kwargs):
                 calls.append(kwargs)
 
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(sel_mod, "sel", lambda: _Sel())
         assert _emit_internal_read_audit("some.read", "success") is True
@@ -162,7 +162,7 @@ class TestInternalReadAudit:
             def log_tool_invocation(self, **kwargs):
                 calls.append(kwargs)
 
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(sel_mod, "sel", lambda: _Sel())
         assert _emit_internal_read_audit("some.read", "missing") is True
@@ -173,7 +173,7 @@ class TestInternalReadAudit:
             def log_tool_invocation(self, **kwargs):
                 raise RuntimeError("sel down")
 
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(sel_mod, "sel", lambda: _Sel())
         assert _emit_internal_read_audit("some.read", "success") is False
@@ -185,7 +185,7 @@ class TestInternalReadAudit:
             def log_tool_invocation(self, **kwargs):
                 calls.append(kwargs["outcome"])
 
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(sel_mod, "sel", lambda: _Sel())
         assert emit_internal_read_audit("not.registered", "success") is False

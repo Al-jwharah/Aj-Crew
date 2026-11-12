@@ -8,7 +8,7 @@ the fold emits ``board`` / ``cycle`` / ``items``, so every row of a copied page 
 "a board" with a count of zero and no cycle flag.
 
 So this one plants real ``work/recorded`` entries in real session logs, folds them with
-the real :func:`~kiro_crew.crew_log.projection.read_tree_projection`, and drives the
+the real :func:`~aj_crew.crew_log.projection.read_tree_projection`, and drives the
 gallery page's own script over that output. Nothing between the log and the assertion is
 a fixture, which is what makes it able to catch a key the page and the harness both
 misspell the same way.
@@ -23,11 +23,11 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, eager, emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log.entry_types import WORK_ENTRY_TYPE
-from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, eager, emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log.entry_types import WORK_ENTRY_TYPE
+from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
 GATEWAY = "gateway"
 ROOT = "chat-1-root"
@@ -52,7 +52,7 @@ def _isolated_home(tmp_path: Any, _floor_monkeypatch: Any) -> Any:
     called ``monkeypatch.undo()`` on the shared instance would drop this with it and the
     next test would resolve the operator's real home.
     """
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     eager.stop_for_tests()
     crew_log.forget_slot_folds()
     emit.reset_caches()
@@ -63,7 +63,7 @@ def _isolated_home(tmp_path: Any, _floor_monkeypatch: Any) -> Any:
 
 
 def _log(unit_id: str, slot: str) -> CrewLog:
-    return CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="kirocrew", slot=slot)
+    return CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew", slot=slot)
 
 
 def _work(handle: CrewLog, slot: str, action: str, *, by: str = "", **data: Any) -> Any:
@@ -103,7 +103,7 @@ def _planted_tree() -> dict[str, Any]:
 
 @pytest.fixture(scope="module")
 def page() -> dict[str, Any]:
-    from kiro_crew.artifact_store import dashboard_package as dp
+    from aj_crew.artifact_store import dashboard_package as dp
 
     return dp.parse_package(GALLERY.read_text(encoding="utf-8"))
 
@@ -132,7 +132,7 @@ def test_the_page_draws_the_planted_fleet(page: dict[str, Any]) -> None:
     """
     from test_dashboard_frame_subscribe import _run
 
-    from kiro_crew import dashboard_frame
+    from aj_crew import dashboard_frame
 
     value = _planted_tree()
     read = dashboard_frame.read_payload(

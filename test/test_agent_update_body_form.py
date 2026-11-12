@@ -25,32 +25,32 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
 
 @pytest.fixture(autouse=True)
 def _owner_caller(_floor_monkeypatch):
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
 
 def _make_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_agent_update
+    from aj_crew.dashboard.handlers import api_ajcrew_agent_update
 
     app = web.Application()
     # Body-form route registered first, matching the real route registration order.
-    app.router.add_put("/api/agents", api_kirocrew_agent_update)
-    app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+    app.router.add_put("/api/agents", api_ajcrew_agent_update)
+    app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
     return app
 
 
 def _seed(name: str) -> None:
     """Write a minimal config with one crew and a default agent."""
-    cfg = KiroCrewConfig.load()
-    cfg.agents[name] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew", workspace="default", model="claude-sonnet-4"
+    cfg = AjCrewConfig.load()
+    cfg.agents[name] = AjCrewAgentConfig(
+        kiro_agent="ajcrew", workspace="default", model="claude-sonnet-4"
     )
     cfg.default_agent = name
     cfg.save()
@@ -67,7 +67,7 @@ class TestBodyFormRoute:
                 "/api/agents",
                 json={
                     "name": "My Agent",
-                    "kiro_agent": "kirocrew",
+                    "kiro_agent": "ajcrew",
                     "workspace": "default",
                     "model": "claude-sonnet-4",
                     "description": "updated",
@@ -82,7 +82,7 @@ class TestBodyFormRoute:
             body = await resp.json()
             assert body.get("ok") is True
 
-        saved = KiroCrewConfig.load()
+        saved = AjCrewConfig.load()
         assert "My Agent" in saved.agents
         assert saved.agents["My Agent"].description == "updated"
 
@@ -92,7 +92,7 @@ class TestBodyFormRoute:
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.put(
                 "/api/agents",
-                json={"kiro_agent": "kirocrew"},
+                json={"kiro_agent": "ajcrew"},
             )
             assert resp.status == 400
             body = await resp.json()
@@ -107,7 +107,7 @@ class TestBodyFormRoute:
             resp = await client.put(
                 "/api/agents/my-agent",
                 json={
-                    "kiro_agent": "kirocrew",
+                    "kiro_agent": "ajcrew",
                     "workspace": "default",
                     "model": "claude-sonnet-4",
                     "description": "path form",
@@ -122,14 +122,14 @@ class TestBodyFormRoute:
             body = await resp.json()
             assert body.get("ok") is True
 
-        saved = KiroCrewConfig.load()
+        saved = AjCrewConfig.load()
         assert saved.agents["my-agent"].description == "path form"
 
 
 class TestBodyFormAuthParity:
     """Body-form PUT /api/agents is gated by the same owner check as the path-form.
 
-    Both routes share one handler (``api_kirocrew_agent_update``); ``_require_owner``
+    Both routes share one handler (``api_ajcrew_agent_update``); ``_require_owner``
     fires before the name is resolved from either source. The tests here pin
     this explicitly so a future refactor that separates the handlers does not
     accidentally omit the gate on the body-form route.
@@ -142,7 +142,7 @@ class TestBodyFormAuthParity:
     @pytest.mark.asyncio
     async def test_body_form_rejects_non_owner(self, monkeypatch):
         """Non-owner caller gets 403 owner_only on PUT /api/agents."""
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard.handlers import source_providers
 
         monkeypatch.setattr(
             source_providers,
@@ -158,7 +158,7 @@ class TestBodyFormAuthParity:
     @pytest.mark.asyncio
     async def test_body_form_same_gate_as_path_form(self, monkeypatch):
         """Body-form and path-form both return 403 owner_only for a non-owner."""
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard.handlers import source_providers
 
         monkeypatch.setattr(
             source_providers,

@@ -22,15 +22,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import model_registry
-from kiro_crew.acp.client import (
+from aj_crew import model_registry
+from aj_crew.acp.client import (
     AcpClient,
     AcpError,
     AcpModelUnavailable,
     resolve_usable_model,
 )
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KAS,
@@ -41,7 +41,7 @@ from kiro_crew.acp.types import (
     JsonRpcMessage,
     effort_config_option_id,
 )
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.providers.acp import AcpProvider
 
 #: The id codex-acp carries its reasoning effort under, read through the resolver
 #: rather than spelled again here -- a second copy in the tests would agree with
@@ -291,7 +291,7 @@ class TestAdvertisedPairSwitch:
 
 def _effort_provider(backend: str, model: str, *, applied: list[tuple[str, str]]) -> AcpProvider:
     """A provider whose client records every ``set_config_option`` write."""
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider(acp_backend=backend)
     provider._client = MagicMock()
     provider._client.backend = backend
@@ -447,7 +447,7 @@ class TestPersistedPairAndSlotEffortAgree:
             # persisted pin.
             await client._apply_startup_model()
 
-        with patch("kiro_crew.providers.acp.AcpClient"):
+        with patch("aj_crew.providers.acp.AcpClient"):
             provider = AcpProvider(acp_backend=ACP_BACKEND_CODEX)
         provider._client = client
         provider._start_kiro_runtime = _start_runtime  # type: ignore[method-assign]
@@ -472,7 +472,7 @@ class TestPersistedPairAndSlotEffortAgree:
         client = _codex_client(tmp_path, model="openai.gpt-6-astra[max]")
         applied: list[tuple[str, str]] = []
         client.set_config_option = _codex_acp_1_11(applied)  # type: ignore[method-assign]
-        with patch("kiro_crew.providers.acp.AcpClient"):
+        with patch("aj_crew.providers.acp.AcpClient"):
             provider = AcpProvider(acp_backend=ACP_BACKEND_CODEX)
         provider._client = client
         provider._effort_per_model = {"openai.gpt-6-astra[max]": "high"}
@@ -775,7 +775,7 @@ class TestABarePinOnAPairIdHarness:
     def _startup_provider(model: str):
         provider = AcpProvider(model=model, acp_backend=ACP_BACKEND_CODEX)
         provider._client._work_dir = "/tmp/ws"
-        provider._client._agent = "kirocrew"
+        provider._client._agent = "ajcrew"
         provider._client._resume_session_id = ""
         return provider
 
@@ -793,9 +793,9 @@ class TestABarePinOnAPairIdHarness:
         runtime.create_session = AsyncMock(return_value=handle)
 
         with (
-            patch("kiro_crew.providers.acp.AcpRuntime", return_value=runtime),
+            patch("aj_crew.providers.acp.AcpRuntime", return_value=runtime),
             patch(
-                "kiro_crew.providers.acp.AcpSessionProvider",
+                "aj_crew.providers.acp.AcpSessionProvider",
                 side_effect=lambda h, r, **kw: MagicMock(_handle=h, _runtime=r, resumed=False),
             ),
             patch("pathlib.Path.exists", return_value=False),
@@ -878,11 +878,11 @@ class TestABarePinOnAPairIdHarness:
 
         A warm claim must match a cold start, or the model would depend on the pool.
         """
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         cfg = MagicMock()
         cfg.session.pool_size = 2
-        cfg.session.pool_agent = "kirocrew"
+        cfg.session.pool_agent = "ajcrew"
         cfg.session.pool_ttl_secs = 1800
         cfg.session.timeout_secs = 3600
         cfg.agent.default_agent = ""
@@ -917,7 +917,7 @@ class TestABarePinOnAPairIdHarness:
         The bare id reads as unadvertised against bracketed rows; refusing it would make the
         claim site hard-kill the live provider.
         """
-        from kiro_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.session_provider import AcpSessionProvider
 
         handle = MagicMock()
         handle.available_models = [{"modelId": m, "name": m} for m in CODEX_PAIR_ROWS]
@@ -943,7 +943,7 @@ class TestABarePinOnAPairIdHarness:
         """The fold widens only a pair-id pin that resolves to an advertised row;
         a model the account truly lacks must still raise, after the fresh probe.
         """
-        from kiro_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.session_provider import AcpSessionProvider
 
         handle = MagicMock()
         handle.available_models = [{"modelId": m, "name": m} for m in CODEX_PAIR_ROWS]
@@ -982,7 +982,7 @@ CLAUDE_CATALOG = ["claude-opus-4-8", "claude-sonnet-4-6"]
 def _shared_codex_provider(
     advertised: list[str] = CODEX_PAIR_CATALOG, *, backend: str = ACP_BACKEND_CODEX
 ):
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     handle = MagicMock()
     handle.session_id = "codex-shared-1"
@@ -1041,7 +1041,7 @@ def _shared_runtime_provider(
     ``set_config_option`` that answers the bare ``-32602`` codex emits for a value
     it will not take (or accepts everything when ``refuse`` is False).
     """
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     handle = MagicMock()
     handle.session_id = "shared-refusing-1"
@@ -1064,7 +1064,7 @@ def _shared_runtime_provider(
     runtime = MagicMock()
     runtime.acp_backend = backend
     runtime.is_alive.return_value = True
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider(acp_backend=backend)
     provider._client = AcpSessionProvider(handle, runtime)  # type: ignore[assignment]
     return provider
@@ -1093,7 +1093,7 @@ class TestSubstituteCallersDoNotRaiseOnTheSharedRuntime:
     async def test_the_substitute_seam_does_not_raise_on_a_refusal(
         self, backend: str, advertised: list[str], pick: str
     ) -> None:
-        from kiro_crew.llm_helpers import resolve_substitute_set_model
+        from aj_crew.llm_helpers import resolve_substitute_set_model
 
         provider = _shared_runtime_provider(backend, advertised)
         set_model_fn = resolve_substitute_set_model(provider)
@@ -1112,8 +1112,8 @@ class TestTheDashboardPickReadsTheRefusalBack:
 
     @staticmethod
     def _switch(provider: AcpProvider, wire: str):
-        from kiro_crew.dashboard import chat_handlers as ch
-        from kiro_crew.dashboard.chat_handlers import _ChatSlot
+        from aj_crew.dashboard import chat_handlers as ch
+        from aj_crew.dashboard.chat_handlers import _ChatSlot
 
         return (
             patch.object(ch, "_wire_model_id", return_value=wire),
@@ -1184,7 +1184,7 @@ class TestTheDashboardPickReadsTheRefusalBack:
         pick: the handler raises ``AcpModelUnavailable`` (a 4xx), it does not
         return False (which would reset and tear down the conversation), and the
         session keeps the model it serves."""
-        from kiro_crew.acp.transport_errors import AcpError
+        from aj_crew.acp.transport_errors import AcpError
 
         provider = _shared_runtime_provider(ACP_BACKEND_KIRO, ["claude-sonnet-4.6", "glm-5"])
         handle = _shared_handle(provider)
@@ -1208,8 +1208,8 @@ class TestTheDashboardPickReadsTheRefusalBack:
         ``session/set_model`` (no config-option ladder), so there is no refusal
         to read. A codex or claude session cannot express Auto as a set_model at
         all and falls back to a reset before any call."""
-        from kiro_crew.dashboard import chat_handlers as ch
-        from kiro_crew.dashboard.chat_handlers import _ChatSlot
+        from aj_crew.dashboard import chat_handlers as ch
+        from aj_crew.dashboard.chat_handlers import _ChatSlot
 
         kiro = _shared_runtime_provider(ACP_BACKEND_KIRO, ["auto", "claude-sonnet-4.6"])
         handle = _shared_handle(kiro)

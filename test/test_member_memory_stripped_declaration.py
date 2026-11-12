@@ -15,17 +15,17 @@ import logging
 
 import pytest
 
-from kiro_crew import cli_doctor, memory_stores
-from kiro_crew.config import loader
-from kiro_crew.config.loader import KiroCrewConfig, config_dir
-from kiro_crew.execution_context import resolve_member_execution
-from kiro_crew.memory_stores import (
+from aj_crew import cli_doctor, memory_stores
+from aj_crew.config import loader
+from aj_crew.config.loader import AjCrewConfig, config_dir
+from aj_crew.execution_context import resolve_member_execution
+from aj_crew.memory_stores import (
     legacy_member_store_states,
     provision_member_memory,
     repair_legacy_member_stores,
     require_member_memory_store,
 )
-from kiro_crew.vector_memory import read_member_database_identity
+from aj_crew.vector_memory import read_member_database_identity
 
 
 def _config_path():
@@ -41,15 +41,15 @@ def _provisioned_member(alias: str = "reviewer") -> tuple[str, str]:
     """Create a real member store the way member creation does; return (member_id, store)."""
     _write_config(
         {
-            "agents": {"default": {}, "peer": {"kiro_agent": "kirocrew"}, alias: {}},
+            "agents": {"default": {}, "peer": {"kiro_agent": "ajcrew"}, alias: {}},
             "memory_stores": {"default": {}},
         }
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     store = provision_member_memory(cfg, alias)
     cfg.save()  # creation publishes the allocation; provisioning is in-memory
     loader._invalidate_config_cache()
-    reloaded = KiroCrewConfig.load()
+    reloaded = AjCrewConfig.load()
     member_id = reloaded.agents[alias].member_id
     assert member_id and reloaded.memory_stores[store].memory_version == 2
     return member_id, store
@@ -72,14 +72,14 @@ class TestAStrippedDeclarationIsRestored:
         member_id, store = _provisioned_member()
         database_before = _database(store).read_bytes()
         _strip_member_fields("reviewer", store)
-        stripped = KiroCrewConfig.load()
+        stripped = AjCrewConfig.load()
         assert stripped.memory_stores[store].memory_version == 1
         with pytest.raises(memory_stores.UnknownMemoryStore):
             require_member_memory_store(stripped, "reviewer", require_directory=True)
 
         assert repair_legacy_member_stores() == [store]
 
-        repaired = KiroCrewConfig.load()
+        repaired = AjCrewConfig.load()
         assert repaired.agents["reviewer"].member_id == member_id
         record = repaired.memory_stores[store]
         assert (record.memory_version, record.owner_member_id, record.owner_member) == (
@@ -101,14 +101,14 @@ class TestAStrippedDeclarationIsRestored:
 
         assert repair_legacy_member_stores() == []
         assert _config_path().read_bytes() == after
-        assert legacy_member_store_states(KiroCrewConfig.load()) == {}
+        assert legacy_member_store_states(AjCrewConfig.load()) == {}
 
     def test_doctor_reports_it_as_pending_not_broken(self, capsys) -> None:
         _member_id, store = _provisioned_member()
         _strip_member_fields("reviewer", store)
         issues: list[str] = []
 
-        cli_doctor._doctor_member_memory_bindings(KiroCrewConfig.load(), issues)
+        cli_doctor._doctor_member_memory_bindings(AjCrewConfig.load(), issues)
 
         output = capsys.readouterr().out
         assert f"'reviewer' -> {store!r}: no member identity yet" in output
@@ -125,18 +125,18 @@ class TestWhatIsNotAStrippedDeclaration:
         )
         directory = memory_stores.memory_stores_root() / "team-notes"
         directory.mkdir(parents=True)
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
         v1 = VectorMemoryStore(directory / memory_stores.MEMORY_DB_FILE)
         v1.init()
         v1.close()
         before = _config_path().read_bytes()
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.memory_stores"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.memory_stores"):
             assert repair_legacy_member_stores() == []
 
         assert _config_path().read_bytes() == before
-        assert legacy_member_store_states(KiroCrewConfig.load()) == {}
+        assert legacy_member_store_states(AjCrewConfig.load()) == {}
         assert not [r for r in caplog.records if "team-notes" in r.getMessage()]
 
     def test_two_bound_members_are_not_guessed_between(self) -> None:

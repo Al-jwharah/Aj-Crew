@@ -19,9 +19,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import guide_catalog, ui_index
-from kiro_crew.dashboard.guide_runs import GuideStore
-from kiro_crew.guide_catalog import GuideCatalogError, validate_actions
+from aj_crew import guide_catalog, ui_index
+from aj_crew.dashboard.guide_runs import GuideStore
+from aj_crew.guide_catalog import GuideCatalogError, validate_actions
 
 _BASE_BUILD = "sha256:" + "b" * 64
 _AUTO_BUILD = "sha256:" + "a" * 64
@@ -256,8 +256,8 @@ def test_an_auto_guide_starts_and_carries_the_plan_to_the_tab(files) -> None:
 
 
 def test_observe_accepts_a_point_auto_location_and_refuses_the_rest(files) -> None:
-    from kiro_crew.dashboard.guide_runs import GuideError
-    from kiro_crew.dashboard.handlers.guide import _observe_ids
+    from aj_crew.dashboard.guide_runs import GuideError
+    from aj_crew.dashboard.handlers.guide import _observe_ids
 
     files()
     targets, _, _ = _observe_ids({"targets": [_POINT]})

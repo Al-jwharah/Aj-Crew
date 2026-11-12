@@ -17,10 +17,10 @@ import threading
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.computer_use import backend as backend_mod
-from kiro_crew.computer_use import index as index_mod
-from kiro_crew.computer_use.backend import (
+from aj_crew import platform_compat
+from aj_crew.computer_use import backend as backend_mod
+from aj_crew.computer_use import index as index_mod
+from aj_crew.computer_use.backend import (
     LINUX_REASON,
     UNKNOWN_PLATFORM_REASON,
     ComputerUseBackend,
@@ -32,7 +32,7 @@ from kiro_crew.computer_use.backend import (
     select_default_backend,
     unsupported_snapshot,
 )
-from kiro_crew.computer_use.types import (
+from aj_crew.computer_use.types import (
     PERMISSION_UNSUPPORTED,
     PLATFORM_FAKE,
     PLATFORM_LINUX,
@@ -45,11 +45,11 @@ from kiro_crew.computer_use.types import (
     ElementRec,
     SnapshotRequest,
 )
-from kiro_crew.testing.fake_computer_use import FAKE_FILES_APP, FakeComputerUseBackend
+from aj_crew.testing.fake_computer_use import FAKE_FILES_APP, FakeComputerUseBackend
 
 # Every abstract method a driver must implement, as (name, args) pairs the
 # ``UnsupportedBackend`` uniformity test drives.
-_APP = AppRef(name="Probe", pid=1, bundle_id="dev.kirocrew.probe")
+_APP = AppRef(name="Probe", pid=1, bundle_id="dev.ajcrew.probe")
 _REC = ElementRec(index=0, role="AXButton")
 _DRIVER_CALLS = (
     ("list_apps", ()),
@@ -95,7 +95,7 @@ def test_package_import_is_side_effect_free():
     """Importing the package must not build a backend or a snapshot index.
 
     A module-scope construction would load a native framework on every machine that
-    merely imports ``kiro_crew``, breaking collection on the Linux fleet.
+    merely imports ``aj_crew``, breaking collection on the Linux fleet.
     """
     assert backend_mod._shared_backend is None or isinstance(
         backend_mod._shared_backend, ComputerUseBackend
@@ -343,7 +343,7 @@ class TestPlatformSelection:
         real_import = builtins.__import__
 
         def _fail(name, *args, **kwargs):
-            if name == "kiro_crew.computer_use.macos_driver":
+            if name == "aj_crew.computer_use.macos_driver":
                 raise ImportError("ApplicationServices unavailable")
             return real_import(name, *args, **kwargs)
 

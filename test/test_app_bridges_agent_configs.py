@@ -17,9 +17,9 @@ from app_bridges_helpers import _stub_venv_probe  # noqa: F401
 from app_bridges_helpers import app_env_fixture  # noqa: F401
 from app_bridges_helpers import _make_app_source
 
-from kiro_crew.apps.bridges import _register_agents, register_app
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
-from kiro_crew.apps.manifest import AppManifest
+from aj_crew.apps.bridges import _register_agents, register_app
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
+from aj_crew.apps.manifest import AppManifest
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -34,7 +34,7 @@ class TestBuiltinAgentNamesAreNamespaced:
 
     def _builtin_dirs(self):
 
-        import kiro_crew.apps.builtins as builtins_pkg
+        import aj_crew.apps.builtins as builtins_pkg
 
         root = Path(builtins_pkg.__file__).parent
         return [p for p in root.iterdir() if (p / "app.json").is_file()]
@@ -69,7 +69,7 @@ class TestUserAgentEditsSurviveRefresh:
     """
 
     def test_user_keys_win_and_owned_keys_are_refreshed(self) -> None:
-        from kiro_crew.apps.bridges import _preserve_user_agent_edits
+        from aj_crew.apps.bridges import _preserve_user_agent_edits
 
         prior = {
             "name": "app--agent",
@@ -94,7 +94,7 @@ class TestUserAgentEditsSurviveRefresh:
         assert out["prompt"] == "file:///new/path.md"
 
     def test_no_prior_file_is_a_no_op(self) -> None:
-        from kiro_crew.apps.bridges import _preserve_user_agent_edits
+        from aj_crew.apps.bridges import _preserve_user_agent_edits
 
         fresh = {"name": "a", "model": "auto"}
         assert _preserve_user_agent_edits("a.json", None, fresh) == fresh
@@ -105,7 +105,7 @@ class TestUserAgentEditsSurviveRefresh:
         They mean containment, so they are refreshed: a tightened exclude list must reach
         existing installs, and a file edit must not drop it for good.
         """
-        from kiro_crew.apps.bridges import _preserve_user_agent_edits
+        from aj_crew.apps.bridges import _preserve_user_agent_edits
 
         prior = {
             "name": "app--agent",
@@ -128,7 +128,7 @@ class TestUserAgentEditsSurviveRefresh:
     def test_a_corrupt_prior_file_does_not_fail_the_refresh(self, tmp_path) -> None:
         """An unreadable file must not block registration — it means "nothing to
         preserve", not "abort"."""
-        from kiro_crew.apps.bridges import _read_agent_config
+        from aj_crew.apps.bridges import _read_agent_config
 
         broken = tmp_path / "a.json"
         broken.write_text("{not json", encoding="utf-8")
@@ -142,7 +142,7 @@ class TestUserAgentEditsSurviveRefresh:
         The set is spelled out because ownership is a judgement per key: CONTAINMENT keys
         are owned, PREFERENCE keys are the user's. Adding a key is a security decision.
         """
-        from kiro_crew.apps.bridges import _FRAMEWORK_OWNED_AGENT_KEYS
+        from aj_crew.apps.bridges import _FRAMEWORK_OWNED_AGENT_KEYS
 
         assert _FRAMEWORK_OWNED_AGENT_KEYS == {
             "name",
@@ -169,7 +169,7 @@ class TestUserAgentEditsSurviveRefresh:
         """
         import json
 
-        from kiro_crew.apps.bridges import _FRAMEWORK_OWNED_AGENT_KEYS
+        from aj_crew.apps.bridges import _FRAMEWORK_OWNED_AGENT_KEYS
 
         # Keys a user is MEANT to be able to pin by hand. `welcomeMessage` is user-facing
         # copy, like `description`. `skills` (read into `AgentInfo.skills`) is a preference
@@ -182,7 +182,7 @@ class TestUserAgentEditsSurviveRefresh:
             "welcomeMessage",
             "skills",
         }
-        root = _REPO_ROOT / "src/kiro_crew/apps/builtins"
+        root = _REPO_ROOT / "src/aj_crew/apps/builtins"
         templates = sorted(root.glob("*/agents/*.json"))
         if not templates:
             # Same reasoning as the namespacing guard above: nothing ships an
@@ -213,8 +213,8 @@ class TestBuiltinDeclaredResourcesActuallyRegister:
         """
         import dataclasses
 
-        from kiro_crew.apps.discovery import _manifest_to_builtin_dict
-        from kiro_crew.apps.manifest import AppManifest
+        from aj_crew.apps.discovery import _manifest_to_builtin_dict
+        from aj_crew.apps.manifest import AppManifest
 
         declared = {f.name for f in dataclasses.fields(AppManifest)}
         # ``extra`` is the catch-all bag, splatted into the dict by key.
@@ -232,7 +232,7 @@ class TestBuiltinDeclaredResourcesActuallyRegister:
                 "description": "d",
                 "author": "a",
                 "license": "MIT",
-                "minKiroCrewVersion": "1.0.0",
+                "minAjCrewVersion": "1.0.0",
                 "signer": "s",
                 "signature": "sig",
                 "agents": ["agents/a.json"],
@@ -290,9 +290,9 @@ class TestBuiltinDeclaredResourcesActuallyRegister:
         """A builtin resolves resource paths against the packaged dir, not $HOME."""
         import json as _json
 
-        from kiro_crew.apps.bridges import _app_resource_root
-        from kiro_crew.apps.discovery import _get_builtins_dir
-        from kiro_crew.apps.manager import get_app, register_builtin_apps
+        from aj_crew.apps.bridges import _app_resource_root
+        from aj_crew.apps.discovery import _get_builtins_dir
+        from aj_crew.apps.manager import get_app, register_builtin_apps
 
         register_builtin_apps()
         packaged = _get_builtins_dir()
@@ -329,7 +329,7 @@ class TestNeutralizeEntryShape:
     """
 
     def test_neutralize_copies_the_full_spec_from_the_global_file(self, monkeypatch):
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         monkeypatch.setattr(
             bridges,
@@ -346,7 +346,7 @@ class TestNeutralizeEntryShape:
         assert "@some-server" not in out["tools"]
 
     def test_neutralize_drops_per_tool_grants(self, monkeypatch):
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         monkeypatch.setattr(
             bridges, "_global_mcp_specs", lambda: {"some-server": {"command": "srv"}}
@@ -368,7 +368,7 @@ class TestNeutralizeEntryShape:
         assert out["allowedTools"] == ["@some-server-2/t1"]
 
     def test_server_without_a_global_spec_is_skipped_not_emitted_bare(self, monkeypatch):
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         monkeypatch.setattr(bridges, "_global_mcp_specs", lambda: {})
         agent = {"name": "a", "tools": [], "mcpServers": {}}
@@ -379,7 +379,7 @@ class TestNeutralizeEntryShape:
 
     def test_every_emitted_entry_has_a_command(self, monkeypatch):
         """The invariant itself, over a mixed grant+neutralize merge."""
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         monkeypatch.setattr(bridges, "_global_mcp_specs", lambda: {"n1": {"command": "c1"}})
         agent = {
@@ -412,7 +412,7 @@ class TestDeclaredMcpToolsAreEnforced:
 
     @staticmethod
     def _manifest(tools, name="app"):
-        from kiro_crew.apps.manifest import AppManifest, Permissions
+        from aj_crew.apps.manifest import AppManifest, Permissions
 
         return AppManifest(
             name=name,
@@ -423,7 +423,7 @@ class TestDeclaredMcpToolsAreEnforced:
         )
 
     def test_undeclared_managed_tools_are_excluded(self):
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         out = bridges._enforce_declared_mcp_tools(
             {"name": "app--a", "tools": []}, self._manifest(["cron_add"])
@@ -433,7 +433,7 @@ class TestDeclaredMcpToolsAreEnforced:
         assert "cron_add" not in excl, "a declared managed tool must stay reachable"
 
     def test_empty_declaration_is_a_no_op(self):
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         agent = {"name": "app--a", "tools": ["@app:x"]}
         out = bridges._enforce_declared_mcp_tools(agent, self._manifest([]))
@@ -443,7 +443,7 @@ class TestDeclaredMcpToolsAreEnforced:
     def test_an_app_authored_exclude_is_preserved(self):
         """A union, not a replacement: an app that already hand-excludes a managed
         tool keeps it alongside the derived exclusions."""
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         agent = {"name": "app--a", "managedToolPolicy": {"exclude": ["task_run"]}}
         out = bridges._enforce_declared_mcp_tools(agent, self._manifest(["cron_add"]))
@@ -452,7 +452,7 @@ class TestDeclaredMcpToolsAreEnforced:
         assert "spawn_run" in excl, "the derived exclusion must be added too"
 
     def test_a_present_include_key_is_preserved(self):
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         agent = {"name": "app--a", "managedToolPolicy": {"include": {"srv": ["t"]}}}
         out = bridges._enforce_declared_mcp_tools(agent, self._manifest(["cron_add"]))
@@ -462,7 +462,7 @@ class TestDeclaredMcpToolsAreEnforced:
     def test_skill_search_is_never_derived_into_the_exclusion(self):
         """App agents reach their own mapped skills through ``skill_search``, so an
         app that declares only its own server tools must keep it."""
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         out = bridges._enforce_declared_mcp_tools(
             {"name": "app--a"}, self._manifest(["@app/own_tool"])
@@ -486,7 +486,7 @@ class TestDeclaredMcpToolsAreEnforced:
         """A malformed policy fails closed at the session gate (``policy_unreadable``,
         every managed tool refused). Rewriting it into a valid exclude would turn that
         refusal into an allow of the declared tools, so it is returned untouched."""
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         agent = {"name": "app--a", "managedToolPolicy": policy}
         out = bridges._enforce_declared_mcp_tools(agent, self._manifest(["cron_add"]))
@@ -497,8 +497,8 @@ class TestDeclaredMcpToolsAreEnforced:
         """End to end through ``_register_agents``: an app declaring one managed
         tool gets a materialized agent whose ``managedToolPolicy.exclude`` holds
         every OTHER managed tool, and never its own declared one."""
-        from kiro_crew.apps import bridges
-        from kiro_crew.apps.manifest import AppManifest
+        from aj_crew.apps import bridges
+        from aj_crew.apps.manifest import AppManifest
 
         src = _make_app_source(
             tmp_path,
@@ -517,30 +517,30 @@ class TestDeclaredMcpToolsAreEnforced:
     def test_an_unreadable_server_is_withheld_whole(self, monkeypatch):
         """A managed server whose tool declaration reads ``None`` has no names to
         exclude, so it goes to ``excludeServers`` rather than being left out."""
-        import kiro_crew.mcp_discovery_managed as managed
-        from kiro_crew.apps import bridges
+        import aj_crew.mcp_discovery_managed as managed
+        from aj_crew.apps import bridges
 
         real = managed.managed_tool_names_for_policy
         monkeypatch.setattr(
             managed,
             "managed_tool_names_for_policy",
-            lambda name: None if name == "kirocrew-cron" else real(name),
+            lambda name: None if name == "ajcrew-cron" else real(name),
         )
         out = bridges._enforce_declared_mcp_tools({"name": "app--a"}, self._manifest(["spawn_run"]))
         policy = out["managedToolPolicy"]
-        assert policy["excludeServers"] == ["kirocrew-cron"]
+        assert policy["excludeServers"] == ["ajcrew-cron"]
         assert "cron_remove" not in policy["exclude"], "its names were never read"
 
     def test_a_readable_universe_writes_no_server_withhold(self):
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         out = bridges._enforce_declared_mcp_tools({"name": "app--a"}, self._manifest(["cron_add"]))
         assert "excludeServers" not in out["managedToolPolicy"]
 
-    @pytest.mark.parametrize("value", ["kirocrew-cron", None, ["kirocrew-cron", 3]])
+    @pytest.mark.parametrize("value", ["ajcrew-cron", None, ["ajcrew-cron", 3]])
     def test_a_malformed_authored_exclude_servers_is_left_for_the_gate(self, monkeypatch, value):
-        import kiro_crew.mcp_discovery_managed as managed
-        from kiro_crew.apps import bridges
+        import aj_crew.mcp_discovery_managed as managed
+        from aj_crew.apps import bridges
 
         monkeypatch.setattr(managed, "managed_tool_names_for_policy", lambda name: None)
         agent = {"name": "app--a", "managedToolPolicy": {"excludeServers": value}}
@@ -551,17 +551,17 @@ class TestDeclaredMcpToolsAreEnforced:
         """Materialize with one managed server's declaration unreadable, then ask
         the gateway's policy read what the session gets: an undeclared tool on that
         server must be refused, not left callable until a later refresh."""
-        import kiro_crew.mcp_discovery_managed as managed
-        import kiro_crew.mcp_shared as mcp_shared
-        from kiro_crew.apps import bridges
-        from kiro_crew.apps.manifest import AppManifest
-        from kiro_crew.dashboard.handlers import sessions as sessions_mod
+        import aj_crew.mcp_discovery_managed as managed
+        import aj_crew.mcp_shared as mcp_shared
+        from aj_crew.apps import bridges
+        from aj_crew.apps.manifest import AppManifest
+        from aj_crew.dashboard.handlers import sessions as sessions_mod
 
         real = managed.managed_tool_names_for_policy
         monkeypatch.setattr(
             managed,
             "managed_tool_names_for_policy",
-            lambda name: None if name == "kirocrew-cron" else real(name),
+            lambda name: None if name == "ajcrew-cron" else real(name),
         )
         src = _make_app_source(
             tmp_path,
@@ -585,23 +585,23 @@ class TestDeclaredMcpToolsAreEnforced:
             included = policy.include_for(server)
             return tool in policy.excluded or (included is not None and tool not in included)
 
-        assert refused("kirocrew-cron", "cron_remove"), "an undeclared tool must stay blocked"
-        assert refused("kirocrew-cron", "cron_add")
-        assert not refused("kirocrew-core", "spawn_run"), "the declared tool stays reachable"
+        assert refused("ajcrew-cron", "cron_remove"), "an undeclared tool must stay blocked"
+        assert refused("ajcrew-cron", "cron_add")
+        assert not refused("ajcrew-core", "spawn_run"), "the declared tool stays reachable"
 
     def test_the_restriction_is_recorded_in_sel(self, app_env, tmp_path, monkeypatch):
         """Deriving the restriction is a permission decision, so materialization
         records one bounded SEL event naming the app, agent and what is withheld."""
         from unittest.mock import MagicMock
 
-        import kiro_crew.mcp_discovery_managed as managed
-        from kiro_crew.apps import bridges
+        import aj_crew.mcp_discovery_managed as managed
+        from aj_crew.apps import bridges
 
         real = managed.managed_tool_names_for_policy
         monkeypatch.setattr(
             managed,
             "managed_tool_names_for_policy",
-            lambda name: None if name == "kirocrew-cron" else real(name),
+            lambda name: None if name == "ajcrew-cron" else real(name),
         )
         recorder = MagicMock()
         monkeypatch.setattr(bridges, "sel", lambda: recorder)
@@ -617,14 +617,14 @@ class TestDeclaredMcpToolsAreEnforced:
         assert len(events) == 1
         text = events[0]["resources"]
         assert "app scoped-app agent my-agent" in text
-        assert "withheld whole: [kirocrew-cron]" in text
+        assert "withheld whole: [ajcrew-cron]" in text
         assert "more]" in text, "the tool list is bounded"
         assert len(text) < 1000
 
     def test_an_unrestricted_app_records_nothing(self, app_env, tmp_path, monkeypatch):
         from unittest.mock import MagicMock
 
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         recorder = MagicMock()
         monkeypatch.setattr(bridges, "sel", lambda: recorder)
@@ -643,7 +643,7 @@ class TestAppPromptPathIsContained:
     """
 
     def _call(self, tmp_path, raw):
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         app_root = tmp_path / "app"
         app_root.mkdir(exist_ok=True)
@@ -651,7 +651,7 @@ class TestAppPromptPathIsContained:
         return bridges._apply_agent_prompt({}, "a", policy, "someapp", app_root), app_root
 
     def test_a_path_outside_the_app_is_dropped(self, tmp_path, monkeypatch):
-        from kiro_crew.apps import bridges, manager
+        from aj_crew.apps import bridges, manager
 
         monkeypatch.setattr(manager, "app_data_dir", lambda n: tmp_path / "data")
         monkeypatch.setattr(bridges, "app_data_dir", lambda n: tmp_path / "data")
@@ -661,7 +661,7 @@ class TestAppPromptPathIsContained:
         assert "prompt" not in merged  # escaping path refused
 
     def test_a_path_inside_the_app_root_is_kept(self, tmp_path, monkeypatch):
-        from kiro_crew.apps import bridges, manager
+        from aj_crew.apps import bridges, manager
 
         monkeypatch.setattr(manager, "app_data_dir", lambda n: tmp_path / "data")
         monkeypatch.setattr(bridges, "app_data_dir", lambda n: tmp_path / "data")
@@ -672,7 +672,7 @@ class TestAppPromptPathIsContained:
         assert merged["prompt"] == f"file://{prompt.resolve()}"
 
     def test_a_symlink_escaping_the_app_is_refused(self, tmp_path, monkeypatch):
-        from kiro_crew.apps import bridges, manager
+        from aj_crew.apps import bridges, manager
 
         monkeypatch.setattr(manager, "app_data_dir", lambda n: tmp_path / "data")
         monkeypatch.setattr(bridges, "app_data_dir", lambda n: tmp_path / "data")
@@ -703,7 +703,7 @@ class TestRegisterPrunesUpgradedAwayResources:
     def test_stale_app_agent_and_server_are_pruned(self, tmp_path, app_env) -> None:
         import json as _json
 
-        from kiro_crew.apps import bridges as bridges_mod
+        from aj_crew.apps import bridges as bridges_mod
 
         src = _make_app_source(tmp_path)  # declares my-agent, no mcpServers
         install_app(src)
@@ -726,7 +726,7 @@ class TestRegisterPrunesUpgradedAwayResources:
 
         # The off-loop boot reconcile is the one path that prunes. Ensure the app
         # is enabled so reconcile processes it (it skips disabled apps).
-        from kiro_crew.apps.manager import enable_app
+        from aj_crew.apps.manager import enable_app
 
         enable_app("test-app")
         bridges_mod.reconcile_enabled_app_resources()
@@ -747,7 +747,7 @@ class TestRegisterNeverDeletesBeforeReplacement:
     """
 
     def test_a_legacy_symlink_survives_a_failed_rewrite(self, tmp_path, app_env, monkeypatch):
-        from kiro_crew.apps import bridges as bridges_mod
+        from aj_crew.apps import bridges as bridges_mod
 
         src = _make_app_source(tmp_path)
         install_app(src)
@@ -781,7 +781,7 @@ class TestPruneAbortsOnUnreadableAgent:
     """
 
     def test_unreadable_agent_aborts_the_agent_prune(self, tmp_path, app_env, monkeypatch):
-        from kiro_crew.apps import bridges as bridges_mod
+        from aj_crew.apps import bridges as bridges_mod
 
         src = _make_app_source(tmp_path)
         install_app(src)
@@ -808,7 +808,7 @@ class TestPruneAbortsOnUnreadableAgent:
         cannot-read != removed situation: the agent must be RETAINED (treated
         as present), never pruned out of its last-good materialized config.
         """
-        from kiro_crew.apps import bridges as bridges_mod
+        from aj_crew.apps import bridges as bridges_mod
 
         src = _make_app_source(tmp_path)
         install_app(src)
@@ -839,7 +839,7 @@ class TestPruneAbortsOnUnreadableAgent:
         src = _make_app_source(tmp_path)
         install_app(src)
         app_dir = app_env["home"] / "apps" / "test-app"
-        from kiro_crew.apps.manager_records import get_app_manifest
+        from aj_crew.apps.manager_records import get_app_manifest
 
         with pytest.raises(ValueError, match="mcpServers must be an object"):
             AppManifest.from_dict(
@@ -878,8 +878,8 @@ class TestShippedAgentTemplatesAreRenderedByTheGateway:
     """
 
     def test_placeholders_resolve_to_gateway_computed_values(self, tmp_path, app_env):
-        from kiro_crew.apps.agent_template_values import HOST_PLACEHOLDERS
-        from kiro_crew.apps.bridges import _placeholder_values
+        from aj_crew.apps.agent_template_values import HOST_PLACEHOLDERS
+        from aj_crew.apps.bridges import _placeholder_values
 
         values = _placeholder_values("pptx-maker")
         # The host set every app gets, plus what the registering built-in adds.
@@ -900,13 +900,13 @@ class TestShippedAgentTemplatesAreRenderedByTheGateway:
         """Fail-closed: a placeholder outside the host set is inert for an app no
         built-in module computes it for, rather than silently registering an
         unrendered config."""
-        from kiro_crew.apps.agent_template_values import HOST_PLACEHOLDERS
-        from kiro_crew.apps.bridges import _placeholder_values
+        from aj_crew.apps.agent_template_values import HOST_PLACEHOLDERS
+        from aj_crew.apps.bridges import _placeholder_values
 
         assert set(_placeholder_values("some-other-app")) <= set(HOST_PLACEHOLDERS)
 
     def test_a_template_is_rendered_into_the_data_home(self, tmp_path, app_env):
-        from kiro_crew.apps.bridges import _render_shipped_agent
+        from aj_crew.apps.bridges import _render_shipped_agent
 
         shipped = tmp_path / "package" / "pptx-maker" / "agents"
         shipped.mkdir(parents=True)
@@ -929,7 +929,7 @@ class TestShippedAgentTemplatesAreRenderedByTheGateway:
     def test_the_install_dir_copy_is_never_read(self, tmp_path, app_env):
         """The whole point of the redesign: an attacker-written copy in the install dir
         has no influence, because it is not consulted."""
-        from kiro_crew.apps.bridges import _render_shipped_agent
+        from aj_crew.apps.bridges import _render_shipped_agent
 
         shipped = tmp_path / "package" / "pptx-maker" / "agents"
         shipped.mkdir(parents=True)
@@ -948,7 +948,7 @@ class TestShippedAgentTemplatesAreRenderedByTheGateway:
         assert rendered["command"] != "/tmp/attacker-binary"
 
     def test_a_config_with_no_placeholder_is_returned_untouched(self, tmp_path, app_env):
-        from kiro_crew.apps.bridges import _render_shipped_agent
+        from aj_crew.apps.bridges import _render_shipped_agent
 
         shipped = tmp_path / "package" / "pptx-maker" / "agents"
         shipped.mkdir(parents=True)
@@ -959,7 +959,7 @@ class TestShippedAgentTemplatesAreRenderedByTheGateway:
 
     def test_an_unresolvable_placeholder_registers_nothing(self, tmp_path, app_env):
         """Better to register no agent than one naming a literal `{ENGINE_ROOT}`."""
-        from kiro_crew.apps.bridges import _render_shipped_agent
+        from aj_crew.apps.bridges import _render_shipped_agent
 
         shipped = tmp_path / "package" / "unknown-app" / "agents"
         shipped.mkdir(parents=True)
@@ -973,7 +973,7 @@ class TestShippedAgentTemplatesAreRenderedByTheGateway:
         must be escaped or the render is invalid JSON (or a mangled separator)."""
         from unittest import mock
 
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         shipped = tmp_path / "package" / "pptx-maker" / "agents"
         shipped.mkdir(parents=True)
@@ -1005,7 +1005,7 @@ _HOST_TEMPLATE = {
 
 #: The one built-in that ships an ``agent_placeholders`` module, and the names it adds.
 _WHEEL_APP = "pptx-maker"
-_WHEEL_MODULE = "kiro_crew.apps.builtins.pptx_maker.agent_placeholders"
+_WHEEL_MODULE = "aj_crew.apps.builtins.pptx_maker.agent_placeholders"
 _WHEEL_ONLY = {"{ENGINE_ROOT}", "{ENGINE_MCP_DIR}", "{APP_PROMPTS}", "{TOOLS_PATH}"}
 
 
@@ -1024,7 +1024,7 @@ class TestAnInstalledAppsTemplateRendersFromTheHostSet:
     """Any app's agent may name the host placeholders the gateway computes."""
 
     def test_it_registers_with_every_value_filled_in(self, tmp_path, app_env):
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         root, manifest = _installed_templated_app(tmp_path, app_env["home"], _HOST_TEMPLATE)
 
@@ -1070,7 +1070,7 @@ class TestAReleasedBuiltinsHostSetTemplateNeverImportsTheWheel:
 
     @pytest.fixture(autouse=True)
     def _released(self, _floor_monkeypatch):
-        from kiro_crew.apps import builtin_adoption
+        from aj_crew.apps import builtin_adoption
 
         _floor_monkeypatch.setattr(
             builtin_adoption, "builtin_released", lambda name: name == _WHEEL_APP
@@ -1079,8 +1079,8 @@ class TestAReleasedBuiltinsHostSetTemplateNeverImportsTheWheel:
     def test_its_placeholder_module_is_not_imported(self, tmp_path, app_env, monkeypatch):
         import sys
 
-        from kiro_crew.apps.bridges import _placeholder_values
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.bridges import _placeholder_values
+        from aj_crew.apps.manager import app_dir
 
         monkeypatch.delitem(sys.modules, _WHEEL_MODULE, raising=False)
 
@@ -1096,8 +1096,8 @@ class TestAReleasedBuiltinsHostSetTemplateNeverImportsTheWheel:
         still render."""
         import sys
 
-        from kiro_crew.apps.bridges import _render_shipped_agent
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.bridges import _render_shipped_agent
+        from aj_crew.apps.manager import app_dir
 
         monkeypatch.setitem(sys.modules, _WHEEL_MODULE, None)  # an import now raises
         agents = app_dir(_WHEEL_APP) / "agents"
@@ -1135,7 +1135,7 @@ def _pptx_tree(base: Path, agents: dict[str, str]) -> Path:
 
 def _earlier_pin_agents() -> dict[str, str]:
     """The agents of a tree adopted at the earlier pin: the wheel's own, byte for byte."""
-    import kiro_crew.apps.builtins as builtins_pkg
+    import aj_crew.apps.builtins as builtins_pkg
 
     shipped = Path(builtins_pkg.__file__).parent / "pptx_maker" / "agents"
     return {p.name: p.read_text(encoding="utf-8") for p in sorted(shipped.glob("*.json"))}
@@ -1159,14 +1159,14 @@ class TestATreeAdoptedAtAnEarlierPinKeepsItsAgents:
 
     @pytest.fixture(autouse=True)
     def _released(self, _floor_monkeypatch):
-        from kiro_crew.apps import builtin_adoption
+        from aj_crew.apps import builtin_adoption
 
         _floor_monkeypatch.setattr(
             builtin_adoption, "builtin_released", lambda name: name == _WHEEL_APP
         )
 
     def _assert_all_four_render(self, result, kiro_agents: Path) -> None:
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         assert not result.errors
         assert sorted(result.agents) == sorted(
@@ -1179,9 +1179,9 @@ class TestATreeAdoptedAtAnEarlierPinKeepsItsAgents:
     def test_restart_disable_enable_and_update_keep_all_four(self, tmp_path, app_env, monkeypatch):
         import sys
 
-        from kiro_crew.apps import bridges
-        from kiro_crew.apps.bridges import deregister_app
-        from kiro_crew.apps.manager import update_app
+        from aj_crew.apps import bridges
+        from aj_crew.apps.bridges import deregister_app
+        from aj_crew.apps.manager import update_app
 
         agents = _earlier_pin_agents()
         assert len(agents) == 4
@@ -1213,7 +1213,7 @@ class TestATreeAdoptedAtAnEarlierPinKeepsItsAgents:
     ):
         import importlib
 
-        from kiro_crew.apps.bridges import _placeholder_values
+        from aj_crew.apps.bridges import _placeholder_values
 
         module = importlib.import_module(_WHEEL_MODULE)
         monkeypatch.setattr(
@@ -1248,7 +1248,7 @@ class TestRegisterAgentsSnapshotUpkeep:
         # Removing an app's agent files must drop them from the resolver's
         # snapshot. Otherwise a disabled app's agent stays dispatchable in memory
         # and a slot still bound to it hands kiro-cli a name whose config is gone.
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         agents = tmp_path / "agents"
         agents.mkdir()
@@ -1264,7 +1264,7 @@ class TestRegisterAgentsSnapshotUpkeep:
         assert calls == ["refresh"]
 
     def test_deregister_without_removals_does_not_refresh(self, monkeypatch, tmp_path):
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         agents = tmp_path / "agents"
         agents.mkdir()
@@ -1282,7 +1282,7 @@ class TestRegisterAgentsSnapshotUpkeep:
         # follows a prune) writes nothing. Skipping the rescan there would leave
         # the removed name dispatchable in memory, and kiro-cli would silently
         # fall back to its own default for a name it cannot load.
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         calls: list[str] = []
         monkeypatch.setattr(
@@ -1323,7 +1323,7 @@ class TestRefreshAppAgentsReportsIoFailures:
         )
 
     def test_an_io_failure_is_collected(self, monkeypatch, tmp_path):
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         self._wire(monkeypatch, brmod, tmp_path)
 
@@ -1340,7 +1340,7 @@ class TestRefreshAppAgentsReportsIoFailures:
 
     def test_a_permanent_skip_collects_nothing(self, monkeypatch, tmp_path):
         # An unsafe agent name or malformed spec registers nothing and never will.
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         self._wire(monkeypatch, brmod, tmp_path)
         monkeypatch.setattr(
@@ -1356,7 +1356,7 @@ class TestRefreshAppAgentsReportsIoFailures:
     def test_a_self_managed_app_is_never_materialized(self, monkeypatch, tmp_path):
         # `resources="app"` means the app registers its own agents; the gateway
         # publishing them too is duplicate dispatchable configuration.
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         self._wire(monkeypatch, brmod, tmp_path)
         monkeypatch.setattr(brmod, "get_app", lambda name: {"resources": "app"})
@@ -1372,7 +1372,7 @@ class TestRefreshAppAgentsReportsIoFailures:
 
     def test_a_denied_app_has_its_agents_scrubbed_not_rewritten(self, monkeypatch, tmp_path):
         # Rewriting a revoked app's agents would make them dispatchable again.
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         self._wire(monkeypatch, brmod, tmp_path)
         monkeypatch.setattr(brmod, "_registration_denied", lambda name, action, app_root: "revoked")
@@ -1404,7 +1404,7 @@ class TestRenderFailureIsClassifiedByCause:
         return src
 
     def test_a_write_failure_is_collected(self, monkeypatch, tmp_path):
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         src = self._template(tmp_path, '{"name": "a", "root": "{ENGINE_ROOT}"}')
         monkeypatch.setattr(
@@ -1422,7 +1422,7 @@ class TestRenderFailureIsClassifiedByCause:
         assert collected == [str(src)]
 
     def test_an_unresolved_placeholder_is_not_collected(self, monkeypatch, tmp_path):
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         src = self._template(tmp_path, '{"name": "a", "root": "{ENGINE_ROOT}"}')
         # Nothing resolves.
@@ -1433,7 +1433,7 @@ class TestRenderFailureIsClassifiedByCause:
         assert collected == []  # permanent: retrying never converges
 
     def test_invalid_rendered_json_is_not_collected(self, monkeypatch, tmp_path):
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         src = self._template(tmp_path, '{"name": "a", "root": "{ENGINE_ROOT}"')  # unbalanced
         monkeypatch.setattr(

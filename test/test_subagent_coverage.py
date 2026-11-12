@@ -1,9 +1,9 @@
-"""Coverage tests for ``kiro_crew.subagent`` helpers and manager bookkeeping.
+"""Coverage tests for ``aj_crew.subagent`` helpers and manager bookkeeping.
 
 Module-level probes (memory / CPU / cgroup readers, env parsing, agent and governance vetting)
 and ``SubagentManager`` bookkeeping (slots, pid and cost records, stall detection, reads,
 queue depth, the stagger gate). Process boundaries are stubbed; nothing writes outside
-``tmp_path`` / the isolated ``KIROCREW_HOME``. Finished runs are in
+``tmp_path`` / the isolated ``AJCREW_HOME``. Finished runs are in
 ``test_subagent_coverage_completion.py``, live runs in ``test_subagent_coverage_live_runs.py``.
 """
 
@@ -21,12 +21,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from subagent_coverage_helpers import _info, _manager
 
+from aj_crew import subagent as sa
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_cost import _cost_log_path
+from aj_crew.subagent_persistence_layout import _subagents_dir
+from aj_crew.subagent_persistence_state import read_tombstone
 from conftest import absent_sysconf
-from kiro_crew import subagent as sa
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_cost import _cost_log_path
-from kiro_crew.subagent_persistence_layout import _subagents_dir
-from kiro_crew.subagent_persistence_state import read_tombstone
 
 # ── _safe_fire ────────────────────────────────────────────────────────────
 
@@ -52,13 +52,13 @@ class TestSafeFire:
             reached.append("raised")
             raise RuntimeError("nope")
 
-        with caplog.at_level("WARNING", logger="kiro_crew.subagent"):
+        with caplog.at_level("WARNING", logger="aj_crew.subagent"):
             sa._safe_fire(_boom())
             await asyncio.sleep(0)
             await asyncio.sleep(0)
 
         assert reached == ["raised"]
-        warnings = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.subagent"]
+        warnings = [r.getMessage() for r in caplog.records if r.name == "aj_crew.subagent"]
         assert "Subagent callback failed" in warnings
 
 
@@ -106,14 +106,14 @@ def _verdict(permitted: bool, reason: str = "") -> SimpleNamespace:
 class TestVetSpawnGovernance:
     def test_permitted_returns_none(self) -> None:
         with patch(
-            "kiro_crew.platform.governance_profiles.governance_permits",
+            "aj_crew.platform.governance_profiles.governance_permits",
             return_value=_verdict(True),
         ):
             assert sa._vet_spawn_governance("dash:1", "scout") is None
 
     def test_capability_disabled_returns_reason(self) -> None:
         with patch(
-            "kiro_crew.platform.governance_profiles.governance_permits",
+            "aj_crew.platform.governance_profiles.governance_permits",
             return_value=_verdict(False, "spawn off for this app"),
         ):
             assert sa._vet_spawn_governance("dash:1", "", app="notes") == "spawn off for this app"
@@ -125,18 +125,16 @@ class TestVetSpawnGovernance:
             calls.append(item)
             return _verdict(not item.startswith("agents:"))
 
-        with patch(
-            "kiro_crew.platform.governance_profiles.governance_permits", side_effect=_permits
-        ):
+        with patch("aj_crew.platform.governance_profiles.governance_permits", side_effect=_permits):
             reason = sa._vet_spawn_governance("dash:1", "scout")
         assert reason == "agent 'scout' not permitted by spawn policy"
         assert "agents:scout" in calls
 
     def test_composition_error_propagates(self) -> None:
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         with patch(
-            "kiro_crew.platform.governance_profiles.governance_permits",
+            "aj_crew.platform.governance_profiles.governance_permits",
             side_effect=PlatformCompositionError("bad platform"),
         ):
             with pytest.raises(PlatformCompositionError):
@@ -146,11 +144,11 @@ class TestVetSpawnGovernance:
         audit = MagicMock()
         with (
             patch(
-                "kiro_crew.platform.governance_profiles.governance_permits",
+                "aj_crew.platform.governance_profiles.governance_permits",
                 side_effect=RuntimeError("store down"),
             ),
             patch(
-                "kiro_crew.platform.governance_profiles.audit_governance_degraded",
+                "aj_crew.platform.governance_profiles.audit_governance_degraded",
                 audit,
             ),
         ):
@@ -162,11 +160,11 @@ class TestVetSpawnGovernance:
     def test_audit_failure_still_fails_closed(self) -> None:
         with (
             patch(
-                "kiro_crew.platform.governance_profiles.governance_permits",
+                "aj_crew.platform.governance_profiles.governance_permits",
                 side_effect=RuntimeError("store down"),
             ),
             patch(
-                "kiro_crew.platform.governance_profiles.audit_governance_degraded",
+                "aj_crew.platform.governance_profiles.audit_governance_degraded",
                 side_effect=RuntimeError("audit down"),
             ),
         ):
@@ -200,28 +198,28 @@ class TestTimeoutContext:
 
 class TestEnvFloat:
     def test_absent_uses_default(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.delenv("KIROCREW_TEST_FLOAT", raising=False)
-        assert sa._env_float("KIROCREW_TEST_FLOAT", 7.5) == 7.5
+        monkeypatch.delenv("AJCREW_TEST_FLOAT", raising=False)
+        assert sa._env_float("AJCREW_TEST_FLOAT", 7.5) == 7.5
 
     def test_valid_value_wins(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_TEST_FLOAT", "12.25")
-        assert sa._env_float("KIROCREW_TEST_FLOAT", 7.5) == 12.25
+        monkeypatch.setenv("AJCREW_TEST_FLOAT", "12.25")
+        assert sa._env_float("AJCREW_TEST_FLOAT", 7.5) == 12.25
 
     @pytest.mark.parametrize("raw", ["0", "-3", "abc"])
     def test_invalid_or_nonpositive_falls_back(
         self, raw: str, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_TEST_FLOAT", raw)
-        assert sa._env_float("KIROCREW_TEST_FLOAT", 7.5) == 7.5
+        monkeypatch.setenv("AJCREW_TEST_FLOAT", raw)
+        assert sa._env_float("AJCREW_TEST_FLOAT", 7.5) == 7.5
 
 
 class TestResolveInjectionTimeout:
     def test_clamped_to_outer_cap(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_INJECTION_TIMEOUT", str(sa._ON_DONE_TIMEOUT * 10))
+        monkeypatch.setenv("AJCREW_INJECTION_TIMEOUT", str(sa._ON_DONE_TIMEOUT * 10))
         assert sa._resolve_injection_timeout() == sa._ON_DONE_TIMEOUT
 
     def test_below_cap_kept(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_INJECTION_TIMEOUT", "60")
+        monkeypatch.setenv("AJCREW_INJECTION_TIMEOUT", "60")
         assert sa._resolve_injection_timeout() == 60.0
 
 
@@ -230,14 +228,14 @@ class TestSubagentRolePins:
         cfg = MagicMock()
         cfg.agent.role_models = {"subagent": " sonnet "}
         with (
-            patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=cfg),
-            patch("kiro_crew.config.loader.normalize_agent_model", side_effect=str.strip),
+            patch("aj_crew.config.loader.AjCrewConfig.load", return_value=cfg),
+            patch("aj_crew.config.loader.normalize_agent_model", side_effect=str.strip),
         ):
             assert sa._subagent_default_model() == "sonnet"
 
     def test_model_pin_never_raises(self) -> None:
         with patch(
-            "kiro_crew.config.loader.KiroCrewConfig.load", side_effect=RuntimeError("no config")
+            "aj_crew.config.loader.AjCrewConfig.load", side_effect=RuntimeError("no config")
         ):
             assert sa._subagent_default_model() == ""
 
@@ -251,38 +249,38 @@ class TestSubagentRolePins:
     def test_effort_pin(self, pinned: object, expected: str) -> None:
         cfg = MagicMock()
         cfg.agent.role_efforts = {"subagent": pinned}
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=cfg):
             assert sa._subagent_default_effort() == expected
 
     def test_effort_pin_never_raises(self) -> None:
         with patch(
-            "kiro_crew.config.loader.KiroCrewConfig.load", side_effect=RuntimeError("no config")
+            "aj_crew.config.loader.AjCrewConfig.load", side_effect=RuntimeError("no config")
         ):
             assert sa._subagent_default_effort() == ""
 
 
 class TestDigestHoldSecs:
     def test_absent_uses_default(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.delenv("KIROCREW_SUBAGENT_DIGEST_HOLD_SECS", raising=False)
+        monkeypatch.delenv("AJCREW_SUBAGENT_DIGEST_HOLD_SECS", raising=False)
         assert sa._digest_hold_secs() == sa._DEFAULT_DIGEST_HOLD_SECS
 
     def test_nan_is_malformed_not_a_deadline(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_SUBAGENT_DIGEST_HOLD_SECS", "nan")
+        monkeypatch.setenv("AJCREW_SUBAGENT_DIGEST_HOLD_SECS", "nan")
         val = sa._digest_hold_secs()
         assert not math.isnan(val)
         assert val == sa._DEFAULT_DIGEST_HOLD_SECS
 
     @pytest.mark.parametrize("raw", ["0", "-1"])
     def test_nonpositive_opts_out(self, raw: str, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_SUBAGENT_DIGEST_HOLD_SECS", raw)
+        monkeypatch.setenv("AJCREW_SUBAGENT_DIGEST_HOLD_SECS", raw)
         assert sa._digest_hold_secs() == 0.0
 
     def test_clamped_to_hard_deadline(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_SUBAGENT_DIGEST_HOLD_SECS", str(sa._TIMEOUT_SECS * 5))
+        monkeypatch.setenv("AJCREW_SUBAGENT_DIGEST_HOLD_SECS", str(sa._TIMEOUT_SECS * 5))
         assert sa._digest_hold_secs() == float(sa._TIMEOUT_SECS)
 
     def test_valid_value_kept(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_SUBAGENT_DIGEST_HOLD_SECS", "45")
+        monkeypatch.setenv("AJCREW_SUBAGENT_DIGEST_HOLD_SECS", "45")
         assert sa._digest_hold_secs() == 45.0
 
 
@@ -295,8 +293,8 @@ class TestCheckMemoryAvailable:
         f = tmp_path / "meminfo"
         f.write_text("MemAvailable:    8388608 kB\n")
         with (
-            patch("kiro_crew.hooks.safe_read_file", side_effect=AssertionError),
-            patch("kiro_crew.hooks.is_sensitive_path", side_effect=AssertionError),
+            patch("aj_crew.hooks.safe_read_file", side_effect=AssertionError),
+            patch("aj_crew.hooks.is_sensitive_path", side_effect=AssertionError),
         ):
             assert sa.check_memory_available(min_gb=4.0, path=str(f)) == (True, 8.0)
 
@@ -786,11 +784,11 @@ class TestSlowCommandRecord:
         assert entry["parent_session"] == "dash:1"
 
     def test_write_failure_is_swallowed(self, caplog: pytest.LogCaptureFixture) -> None:
-        caplog.set_level("DEBUG", logger="kiro_crew.subagent")
+        caplog.set_level("DEBUG", logger="aj_crew.subagent")
         with patch.object(sa, "record_slow_command", side_effect=OSError) as rec:
             SubagentManager._record_slow_command(_info("slow1"), 1.0)
         assert rec.call_args.args == ("slow1",)
-        assert [r.getMessage() for r in caplog.records if r.name == "kiro_crew.subagent"] == [
+        assert [r.getMessage() for r in caplog.records if r.name == "aj_crew.subagent"] == [
             "Failed to record slow command for slow1"
         ]
 

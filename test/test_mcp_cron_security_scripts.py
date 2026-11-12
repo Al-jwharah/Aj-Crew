@@ -19,9 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from conftest import make_dir_link, requires_symlinks
-from kiro_crew import mcp_cron
-from kiro_crew.mcp_cron import (
+from aj_crew import mcp_cron
+from aj_crew.mcp_cron import (
     _SENSITIVE_HOME_DIRS,
     _call_tool_inner,
     _matched_sensitive_name,
@@ -30,6 +29,7 @@ from kiro_crew.mcp_cron import (
     _vet_script_file,
     _vet_shell_command,
 )
+from conftest import make_dir_link, requires_symlinks
 
 
 @pytest.fixture(autouse=True)
@@ -190,7 +190,7 @@ def test_script_body_is_never_a_shell_gate_subject(monkeypatch):
     Python. Put new detectors in ``_vet_script_contents`` as whole-body, source-aware
     matches, or leave the concern to the sandbox.
     """
-    from kiro_crew import mcp_cron, security
+    from aj_crew import mcp_cron, security
 
     def trip(*a, **k):
         raise AssertionError("shell matcher reached with a source body")
@@ -270,8 +270,8 @@ def _refuse_content_read(*args, **kwargs):
 def test_resolved_fifo_is_refused_before_a_blocking_read(monkeypatch, tmp_path):
     import builtins
 
-    from kiro_crew.config.loader import config_dir
-    from kiro_crew.cron_script import resolve_script_path
+    from aj_crew.config.loader import config_dir
+    from aj_crew.cron_script import resolve_script_path
 
     make_fifo = getattr(os, "mkfifo", None)
     if make_fifo is None:
@@ -472,11 +472,11 @@ class TestCronAddScriptGuard:
 
     def _setup_home(self, monkeypatch, tmp_path):
         # resolve_script_path() restricts to config_dir()/crons; with
-        # KIROCREW_HOME=tmp_path, config_dir() returns tmp_path, so the allowed
-        # crons dir is tmp_path/crons. KIROCREW_HOME also drives the CronService
+        # AJCREW_HOME=tmp_path, config_dir() returns tmp_path, so the allowed
+        # crons dir is tmp_path/crons. AJCREW_HOME also drives the CronService
         # store.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
         crons_dir = tmp_path / "crons"
         crons_dir.mkdir(parents=True, exist_ok=True)
@@ -496,7 +496,7 @@ class TestCronAddScriptGuard:
             {"name": name, "script": str(crons_dir / "evil.py") + ":run", "every": 3600},
         )
         assert result.startswith("Error:")
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=tmp_path)
         assert not any(j.name == name for j in svc.list_jobs(include_disabled=True))
@@ -516,7 +516,7 @@ class TestCronAddScriptGuard:
 def test_vet_script_file_blocks_sensitive_symlink(monkeypatch, tmp_path):
     """A crons-dir entry that resolves to a credential path must be blocked,
     not opened (symlink defense)."""
-    import kiro_crew.mcp_cron as mcp_cron_mod
+    import aj_crew.mcp_cron as mcp_cron_mod
 
     target = tmp_path / "looks_like_creds"
     target.write_text("AKIAIOSFODNN7EXAMPLE\n")

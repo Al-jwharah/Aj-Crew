@@ -2,7 +2,7 @@
 
 import pytest
 
-from kiro_crew.terminal_safe import normalize_for_scanning, safe_terminal_line
+from aj_crew.terminal_safe import normalize_for_scanning, safe_terminal_line
 
 
 def test_removes_osc_broad_csi_two_byte_escape_and_controls() -> None:
@@ -332,7 +332,7 @@ def test_the_result_is_encodable_by_a_strict_handler() -> None:
     the ``print`` itself raise ``UnicodeEncodeError`` -- the caller crashes with a
     traceback exactly where it meant to show a diagnosis.
     """
-    planted = b"/var/lib/kirocrew/\xffbad.json".decode("utf-8", "surrogateescape")
+    planted = b"/var/lib/ajcrew/\xffbad.json".decode("utf-8", "surrogateescape")
 
     # Unguarded, this is the crash; guarded, it encodes.
     with pytest.raises(UnicodeEncodeError):
@@ -358,5 +358,5 @@ def test_every_surrogate_escaped_byte_is_removed() -> None:
 
 def test_an_ordinary_path_is_untouched_by_the_surrogate_rule() -> None:
     """The rule must not reach text that decodes, which is nearly every real path."""
-    for value in ("/var/lib/kirocrew/live_target.json", "C:\\Users\\me\\cloud.json", "é-ok"):
+    for value in ("/var/lib/ajcrew/live_target.json", "C:\\Users\\me\\cloud.json", "é-ok"):
         assert safe_terminal_line(value) == value

@@ -6,12 +6,12 @@ so the whole gateway died, the supervisor restarted it, the boot prewarm loaded
 the model again five seconds later, and the gateway died again -- every 15-25 s,
 indefinitely, with every chat session and channel along for the ride.
 
-Two things are pinned here. The ISA check in :mod:`kiro_crew.stt.preflight` runs
+Two things are pinned here. The ISA check in :mod:`aj_crew.stt.preflight` runs
 the one native call that both exercises ``ggml_cpu_init`` and reports the build's
 instruction sets in a CHILD process, so the answer costs the gateway nothing; and
 the load marker the engine writes around every native load turns "the last load
 took the process down" into a refusal instead of another attempt. Both reach
-every surface through :func:`kiro_crew.stt.engine.probe`.
+every surface through :func:`aj_crew.stt.engine.probe`.
 """
 
 from __future__ import annotations
@@ -26,9 +26,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.stt import capabilities as caps_mod
-from kiro_crew.stt import engine as engine_mod
-from kiro_crew.stt import models, preflight
+from aj_crew.stt import capabilities as caps_mod
+from aj_crew.stt import engine as engine_mod
+from aj_crew.stt import models, preflight
 
 # Real captures. The first is a stock CPU wheel (see stt/capabilities.py); the
 # second is what a `-march=native` build on a Skylake-SP class host reports.
@@ -121,7 +121,7 @@ class TestHostFlags:
             seen.append(path)
             return sentinel
 
-        monkeypatch.setattr("kiro_crew.embeddings._linux_aarch64_cpu_features", shared)
+        monkeypatch.setattr("aj_crew.embeddings._linux_aarch64_cpu_features", shared)
         assert _flags(tmp_path, _GRAVITON2_CPUINFO, "aarch64", monkeypatch) is sentinel
         assert seen == [tmp_path / "cpuinfo"]
 
@@ -298,7 +298,7 @@ class TestProbeNative:
         assert "import _pywhispercpp" not in preflight._PROBE_SOURCE
         # Nothing in the child but the probe: no site customisation of ours, no
         # numpy, no gateway import that could itself be the thing that crashes.
-        assert "kiro_crew" not in preflight._PROBE_SOURCE
+        assert "aj_crew" not in preflight._PROBE_SOURCE
         # The child expects to die; it must not leave a core file behind, so the
         # rlimit prelude comes first and is a separate constant a test can keep.
         assert preflight._PROBE_SOURCE == preflight._PROBE_PRELUDE + preflight._PROBE_BODY
@@ -355,7 +355,7 @@ class TestProbeNative:
 
         monkeypatch.setattr(preflight.subprocess, "run", fake_run)
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "nope")
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", "nope")
+        monkeypatch.setenv("AJCREW_SESSION_KEY", "nope")
         monkeypatch.setenv("PYTHONPATH", "/tmp/planted")
         monkeypatch.setenv("PATH", os.environ.get("PATH", "/usr/bin"))
         preflight._run_probe_child(5.0, "/site/_pywhispercpp.so")
@@ -363,7 +363,7 @@ class TestProbeNative:
         assert seen["cmd"][5:] == ["/site/_pywhispercpp.so"]
         assert seen["cwd"] == preflight._CHILD_CWD == sys.prefix
         assert "AWS_SECRET_ACCESS_KEY" not in seen["env"]
-        assert "KIROCREW_SESSION_KEY" not in seen["env"]
+        assert "AJCREW_SESSION_KEY" not in seen["env"]
         assert "PYTHONPATH" not in seen["env"]
         assert "PATH" in seen["env"]
         assert set(seen["env"]) <= preflight._CHILD_ENV_KEEP
@@ -791,7 +791,7 @@ class TestProbeConsultsPreflight:
     def test_capabilities_do_not_touch_the_build_when_preflight_refuses(self, monkeypatch) -> None:
         """`GET /api/stt/status` reads the build's capabilities in-process, and
         that call runs `ggml_cpu_init` -- the very code that faults."""
-        from kiro_crew.stt import capabilities as caps_mod
+        from aj_crew.stt import capabilities as caps_mod
 
         monkeypatch.setattr(
             preflight,

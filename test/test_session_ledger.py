@@ -24,12 +24,12 @@ from aiohttp.test_utils import make_mocked_request
 from crew_log_drain import assert_drained
 from off_loop_helpers import off_loop
 
-from kiro_crew import crew_log as lg
-from kiro_crew import session_ledger as sl
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.platform_compat import IS_POSIX
+from aj_crew import crew_log as lg
+from aj_crew import session_ledger as sl
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.platform_compat import IS_POSIX
 
 SESSION = "acp-1"
 LATER_SESSION = "acp-2"
@@ -39,12 +39,12 @@ LATER_SESSION = "acp-2"
 def _isolated_home(tmp_path, monkeypatch):
     """Own data home, crew log on, and no writer state carried between tests.
 
-    ``env -u KIROCREW_HOME`` is what the suite is run with; the fixture points
+    ``env -u AJCREW_HOME`` is what the suite is run with; the fixture points
     the data home at a tmp path so a test never writes into the live one, and
     turns the crew log on because the ledger's authority is that log now.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     crew_log_emit.reset_caches()
     crew_log.forget_slot_folds()
     yield
@@ -59,7 +59,7 @@ def _unit(unit_id: str = SESSION, *, slot: str) -> None:
     test kept would own the write lease it needs (the pattern the projection
     suite's fixtures established).
     """
-    CrewLog.create(lg.KIND_SESSION, unit_id, owner="owner", agent="kirocrew", slot=slot)
+    CrewLog.create(lg.KIND_SESSION, unit_id, owner="owner", agent="ajcrew", slot=slot)
 
 
 def _record(slot_key: str, *, session_id: str = SESSION, **fields: Any) -> dict[str, Any]:
@@ -257,11 +257,11 @@ def test_ledger_root_is_behind_the_agent_file_gate():
     so probe with home-relative spellings."""
     from pathlib import Path
 
-    from kiro_crew.security import is_sensitive_path
+    from aj_crew.security import is_sensitive_path
 
     home = Path.home()
     assert is_sensitive_path(str(home / ".kiro/crew/ledger/chat-1-abc12345/state.json"))
-    assert is_sensitive_path(str(home / ".kirocrew/ledger/x-deadbeef/state.json"))
+    assert is_sensitive_path(str(home / ".ajcrew/ledger/x-deadbeef/state.json"))
 
 
 # ── record refusals ───────────────────────────────────────────────────────
@@ -277,9 +277,9 @@ def test_record_refuses_when_the_session_has_no_crew_log():
 def test_record_refuses_when_the_crew_log_is_switched_off(monkeypatch):
     key = "chat-off-1"
     _unit(slot=key)
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "0")
+    monkeypatch.setenv("AJCREW_CREW_LOG", "0")
     crew_log_emit.reset_caches()
-    with pytest.raises(sl.LedgerUnavailable, match="KIROCREW_CREW_LOG"):
+    with pytest.raises(sl.LedgerUnavailable, match="AJCREW_CREW_LOG"):
         _record(key, goal="g")
 
 
@@ -356,7 +356,7 @@ def test_snapshot_contains_state_and_is_capped():
 
 @pytest.mark.asyncio
 async def test_compose_nudge_body_prefixes_snapshot():
-    from kiro_crew.dashboard.handlers.autonudge import compose_nudge_body
+    from aj_crew.dashboard.handlers.autonudge import compose_nudge_body
 
     slot_key = "chat-13-333"
     _unit(slot=sl.ledger_key(slot_key))
@@ -372,7 +372,7 @@ async def test_compose_nudge_body_folds_key_like_the_write_path():
     """A ledger written under the route's fold of `dashboard_chat-X` must be the
     one a loop keyed `chat-X` reads — both fold to the same slot, so both resolve
     to the same crew log units. Changing either side's fold breaks this pairing."""
-    from kiro_crew.dashboard.handlers.autonudge import compose_nudge_body
+    from aj_crew.dashboard.handlers.autonudge import compose_nudge_body
 
     written_key = sl.ledger_key("dashboard_chat-15-555")
     _unit(slot=written_key)
@@ -383,7 +383,7 @@ async def test_compose_nudge_body_folds_key_like_the_write_path():
 
 @pytest.mark.asyncio
 async def test_compose_nudge_body_unchanged_without_ledger():
-    from kiro_crew.dashboard.handlers.autonudge import compose_nudge_body
+    from aj_crew.dashboard.handlers.autonudge import compose_nudge_body
 
     assert await compose_nudge_body("m {{STOP_FILE}}", "/x", "chat-none-1") == "m /x"
     assert await compose_nudge_body("m {{STOP_FILE}}", "/x", None) == "m /x"
@@ -391,7 +391,7 @@ async def test_compose_nudge_body_unchanged_without_ledger():
 
 @pytest.mark.asyncio
 async def test_compose_nudge_body_survives_snapshot_failure(monkeypatch):
-    from kiro_crew.dashboard.handlers.autonudge import compose_nudge_body
+    from aj_crew.dashboard.handlers.autonudge import compose_nudge_body
 
     monkeypatch.setattr(sl, "render_snapshot", MagicMock(side_effect=RuntimeError("boom")))
     assert await compose_nudge_body("m", None, "chat-14-444") == "m"
@@ -432,7 +432,7 @@ def test_gateway_fire_callbacks_use_the_composer():
     Offenders are named, not counted, so a new adapter does not break the test.
     Delegation counts one hop, onto a target that calls the composer directly.
     """
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     # Each adapter's own source, wherever its composed owner defines it, indented
     # back to method level so the split above attributes each body to one adapter.
@@ -517,7 +517,7 @@ def _mk_request(method: str, path: str, *, body: Any = ..., sk: str = "chat-r-1"
 @pytest.fixture()
 def _open_route(monkeypatch):
     """Bypass session recognition/restriction (their own suites cover them)."""
-    from kiro_crew.dashboard.handlers import session_ledger as routes
+    from aj_crew.dashboard.handlers import session_ledger as routes
 
     async def _recognized(*a: Any, **k: Any) -> None:
         return None
@@ -612,7 +612,7 @@ async def test_route_record_answers_a_typed_refusal_when_the_crew_log_refuses(_o
 
 @pytest.mark.asyncio
 async def test_route_refuses_unrecognized_session(monkeypatch):
-    from kiro_crew.dashboard.handlers import session_ledger as routes
+    from aj_crew.dashboard.handlers import session_ledger as routes
 
     async def _refused(*a: Any, **k: Any) -> web.Response:
         return web.json_response({"error": "unknown session"}, status=403)
@@ -652,7 +652,7 @@ async def test_route_write_lands_under_ledger_key(_open_route):
 def test_routes_are_on_the_strict_internal_allowlist():
     """The tools authenticate with the internal secret; without this entry the
     call falls through to cookie auth and every tool call 403s."""
-    from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
+    from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
 
     assert "/api/session-ledger" in _STRICT_INTERNAL_API_PATHS
 
@@ -689,7 +689,7 @@ def test_purge_matching_tolerates_bad_and_absent_keys():
 
 @pytest.mark.asyncio
 async def test_remove_slot_for_history_key_preserves_ledger():
-    from kiro_crew.dashboard.handlers.sessions import _remove_slot_for_history_key
+    from aj_crew.dashboard.handlers.sessions import _remove_slot_for_history_key
 
     history_key = "dashboard_chat-88-123"
     ledger_key = sl.ledger_key(history_key)
@@ -705,8 +705,8 @@ async def test_remove_slot_for_history_key_preserves_ledger():
 @pytest.mark.asyncio
 async def test_delete_with_folded_spelling_preserves_exact_channel_key_ledger():
     """A lossy transcript spelling never authorizes work-ledger deletion."""
-    from kiro_crew.dashboard.handlers.sessions import _remove_slot_for_history_key
-    from kiro_crew.dashboard.state import _normalize_slot_key
+    from aj_crew.dashboard.handlers.sessions import _remove_slot_for_history_key
+    from aj_crew.dashboard.state import _normalize_slot_key
 
     channel_key = "slack:C042:1712793600.123456"
     directory = _legacy_store(channel_key)
@@ -751,7 +751,7 @@ def test_purge_matching_is_exact_and_a_folded_spelling_matches_nothing():
     """The primitive matches exact keys only: the folded spelling of a channel key
     names no ledger, so a lossy alias can never remove one the caller did not
     list by its exact key."""
-    from kiro_crew.dashboard.state import _normalize_slot_key
+    from aj_crew.dashboard.state import _normalize_slot_key
 
     _legacy_store("slack:C1:1.1")
     _legacy_store("slack:C2:2.2")
@@ -998,7 +998,7 @@ def test_a_partial_identity_removal_is_logged_accurately(monkeypatch, caplog):
         return original(self, *args, **kwargs)
 
     monkeypatch.setattr(pathlib.Path, "unlink", _refuse_breadcrumb)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.session_ledger"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.session_ledger"):
         assert sl.purge_matching({key}, guard=lambda _d: True) == 0
 
     assert not (directory / "state.json").exists()
@@ -1040,8 +1040,8 @@ def test_a_writer_lock_still_creates_the_store():
 def test_mcp_tools_refuse_without_strict_identity(monkeypatch):
     """A subagent's lenient PID-walk identity resolves to the PARENT session;
     the tools must refuse rather than read/write the parent's ledger."""
-    from kiro_crew import mcp_core
-    from kiro_crew.mcp_tools import ledger as tools
+    from aj_crew import mcp_core
+    from aj_crew.mcp_tools import ledger as tools
 
     monkeypatch.setattr(mcp_core, "_resolve_session_key_strict", lambda: "")
     transport = MagicMock()
@@ -1055,8 +1055,8 @@ def test_mcp_tools_refuse_without_strict_identity(monkeypatch):
 def test_mcp_tools_pass_the_verified_key_to_transport(monkeypatch):
     """The key that was CHECKED must be the key that is USED — the transport
     must not re-resolve leniently."""
-    from kiro_crew import mcp_core
-    from kiro_crew.mcp_tools import ledger as tools
+    from aj_crew import mcp_core
+    from aj_crew.mcp_tools import ledger as tools
 
     monkeypatch.setattr(mcp_core, "_resolve_session_key_strict", lambda: "chat-v-1")
     # Each fake answers with the ledger of the key it was handed, so the tool's
@@ -1097,8 +1097,8 @@ def test_mcp_tools_pass_the_verified_key_to_transport(monkeypatch):
 def test_mcp_read_returns_an_events_only_record(monkeypatch):
     """A record holding only events is a ledger: the read returns its event tail
     instead of the start-one hint."""
-    from kiro_crew import mcp_core
-    from kiro_crew.mcp_tools import ledger as tools
+    from aj_crew import mcp_core
+    from aj_crew.mcp_tools import ledger as tools
 
     event = {"ts": "2026-11-01T00:00:00Z", "kind": "progress", "text": "checked CI"}
     state = {"goal": "", "phase": "", "next": "", "tried": [], "artifacts": {}, "events": [event]}
@@ -1155,8 +1155,8 @@ def test_read_of_a_slot_whose_fold_outlasts_the_telemetry_budget(monkeypatch):
     The fold is O(the log); with the 10s telemetry default of ``mcp_core._get`` a big
     slot would time out while ``session_ledger_record`` has 30s. Only the socket is fake.
     """
-    from kiro_crew import mcp_core
-    from kiro_crew.mcp_tools import ledger as tools
+    from aj_crew import mcp_core
+    from aj_crew.mcp_tools import ledger as tools
 
     route_seconds = 12.0
     socket = _TimingUrlopen(
@@ -1186,8 +1186,8 @@ def test_the_ledger_read_budget_matches_the_write_path(monkeypatch):
     """
     import inspect
 
-    from kiro_crew import mcp_core
-    from kiro_crew.mcp_tools import ledger as tools
+    from aj_crew import mcp_core
+    from aj_crew.mcp_tools import ledger as tools
 
     transport_default = inspect.signature(mcp_core._send).parameters["timeout"].default
     assert tools._LEDGER_READ_TIMEOUT_S >= transport_default

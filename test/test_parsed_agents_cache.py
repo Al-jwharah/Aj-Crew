@@ -23,8 +23,8 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.agent_discovery as agent_discovery
-from kiro_crew.agent_discovery import (
+import aj_crew.agent_discovery as agent_discovery
+from aj_crew.agent_discovery import (
     agent_skill_globs,
     clear_list_agents_cache,
     parsed_agent_specs,
@@ -43,7 +43,7 @@ def clean_cache():
 def fake_home(tmp_path, monkeypatch):
     """Pin $HOME to tmp_path so ``kiro_agents_dir()`` resolves to a sandbox."""
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     return tmp_path
 
@@ -273,7 +273,7 @@ class TestAgentSkillGlobsCachedPath:
 
 class TestDashboardAdapterSharesSnapshot:
     def test_load_parsed_agents_reads_through_the_snapshot(self, fake_home, monkeypatch):
-        import kiro_crew.dashboard.handlers._shared as shared
+        import aj_crew.dashboard.handlers._shared as shared
 
         agents_dir = _agents_dir(fake_home)
         _write_agent(agents_dir, "a", {"name": "alpha", "resources": []})

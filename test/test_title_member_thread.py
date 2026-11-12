@@ -12,15 +12,15 @@ from __future__ import annotations
 import pytest
 from title_refresh_helpers import _fake_state, _patch_generator, _titled_slot
 
-from kiro_crew.dashboard import chat_title
-from kiro_crew.dashboard.chat_title import (
+from aj_crew.dashboard import chat_title
+from aj_crew.dashboard.chat_title import (
     _TITLE_REFRESH_MILESTONES,
     _maybe_auto_title,
     generate_manual_title,
     maybe_refresh_title,
     title_then_refresh,
 )
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
 
 def _member_slot(key: str = "member-lead") -> _ChatSlot:

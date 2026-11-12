@@ -4,7 +4,7 @@
  * app-window-preload.js — the bridge a hosted app window's page gets.
  *
  * Loaded only into windows app-window-host.js creates, which run sandboxed with
- * context isolation and no Node. It exposes `window.kirocrewDesktopWindow`: a few
+ * context isolation and no Node. It exposes `window.ajcrewDesktopWindow`: a few
  * fire-and-forget calls and one event, nothing else. The identity it reports is
  * informational — the host resolves every message back to the window that sent
  * it and acts only within that window's app declaration, so a page that lies
@@ -67,7 +67,7 @@ function createBridge(ipc, identity) {
 }
 
 if (contextBridge && ipcRenderer) {
-  contextBridge.exposeInMainWorld("kirocrewDesktopWindow", createBridge(ipcRenderer, identityFrom(process.argv)));
+  contextBridge.exposeInMainWorld("ajcrewDesktopWindow", createBridge(ipcRenderer, identityFrom(process.argv)));
 }
 
 // A sandboxed preload need not have `module`; the guard keeps the tests' handle.

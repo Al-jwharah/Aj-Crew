@@ -1,11 +1,11 @@
 """``SshTunnelManager`` keeps every member it had, and each is bound from the module that owns it.
 
-The manager's behaviour lives in the ``kiro_crew.instances.ssh_tunnel_manager_*`` owner modules:
+The manager's behaviour lives in the ``aj_crew.instances.ssh_tunnel_manager_*`` owner modules:
 each member's body is a module-level function there whose first parameter is ``self``, and the
 class binds it by name (``m = _owner.m``, or ``staticmethod(_owner.f)``). The instance state
 stays on the instance, so tests, ``SshTunnelManager.__new__`` builds and every patch of a method
 see the same object they always did. The module-level helpers, constants and classes live in
-the owners too, and ``kiro_crew.instances.ssh_tunnel_manager`` serves each of them. This file
+the owners too, and ``aj_crew.instances.ssh_tunnel_manager`` serves each of them. This file
 pins that contract:
 
 * the frozen member inventory -- every member, its kind, whether it is a coroutine, its
@@ -20,7 +20,7 @@ pins that contract:
 * the facade serves exactly the definitions that moved, a star import binds the names it bound
   before the split, and the facade's own code reads only names it binds;
 * a write through the facade reaches every owner that reads the name, for every name the test
-  trees patch there (the facade's mirror, ``kiro_crew._facade_mirror``).
+  trees patch there (the facade's mirror, ``aj_crew._facade_mirror``).
 """
 
 from __future__ import annotations
@@ -39,8 +39,8 @@ from typing import Any
 import facade_mirror_scan
 import pytest
 
-from kiro_crew.instances import ssh_tunnel_manager as stm
-from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+from aj_crew.instances import ssh_tunnel_manager as stm
+from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_ssh_tunnel_manager_bindings")
 
@@ -49,7 +49,7 @@ SHARED_BINDINGS_CHECKS = (
     "the_class_only_scan_can_fail",
 )
 
-_PACKAGE = "kiro_crew.instances"
+_PACKAGE = "aj_crew.instances"
 
 #: Member -> (kind, coroutine, signature digest, owning module). Frozen at the split: the
 #: kind, coroutine flag and signature are BASE's; the owner is where the member lives now.
@@ -191,7 +191,7 @@ _MOVED_DEFINITIONS = frozenset("""
     _transport_method _unsupported_method_message _upload_chunks _verify_and_reclaim_forwarder
     """.split())
 
-#: The names ``from kiro_crew.instances.ssh_tunnel_manager import *`` bound before the split.
+#: The names ``from aj_crew.instances.ssh_tunnel_manager import *`` bound before the split.
 _STAR_NAMES = frozenset("""
     Any Awaitable CONNECTION_METHODS Callable DEFAULT_TUNNEL_BASE_PORT DiagnosisResult
     FARGATE_HEALTH_PATH FARGATE_TURN_PATH HopPortGuard HopRetiredError Instance
@@ -205,8 +205,8 @@ _STAR_NAMES = frozenset("""
     cloud_ssm codecs contextlib dataclass dataclass_replace descendant_ids diagnose_instance
     diagnose_instance_fargate diagnose_instance_ssm enum gateway_id hashlib hmac
     is_headless_provisioner json live logger logging mint_remote_token mint_remote_token_ssm
-    platform_compat proxy_tool_missing_message quote re redact run_remote_kirocrew
-    run_remote_kirocrew_ssm sel sel_hmac_key_path split_ecs_target ssh_spawn_argv_env time
+    platform_compat proxy_tool_missing_message quote re redact run_remote_ajcrew
+    run_remote_ajcrew_ssm sel sel_hmac_key_path split_ecs_target ssh_spawn_argv_env time
     tool_spawn_env ttl_to_seconds validate_aws_profile validate_aws_region validate_remote_bin
     validate_ssh_host validate_ssm_run_as validate_ssm_target validate_ttl
     """.split())
@@ -362,10 +362,10 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
 def test_the_facade_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n    from kiro_crew.instances.ssh_tunnel_manager import X\n"
-        "def f():\n    from kiro_crew.instances.ssh_tunnel_manager import x\n"
-        "import kiro_crew.instances.ssh_tunnel_manager\n"
-        "from kiro_crew.instances import ssh_tunnel_manager\n"
+        "if TYPE_CHECKING:\n    from aj_crew.instances.ssh_tunnel_manager import X\n"
+        "def f():\n    from aj_crew.instances.ssh_tunnel_manager import x\n"
+        "import aj_crew.instances.ssh_tunnel_manager\n"
+        "from aj_crew.instances import ssh_tunnel_manager\n"
     )
     assert sorted(_runtime_facade_imports(tree)) == [5, 6, 7]
 
@@ -396,14 +396,14 @@ def _owner_imports(tree: ast.Module) -> set[str]:
 
 def test_the_owner_import_scan_can_fail() -> None:
     tree = ast.parse(
-        "from kiro_crew.instances.ssh_tunnel_manager_child import X\n"
-        "from kiro_crew.instances import ssh_tunnel_manager_peer as _p, registry\n"
-        "import kiro_crew.instances.ssh_tunnel_manager_ports\n"
+        "from aj_crew.instances.ssh_tunnel_manager_child import X\n"
+        "from aj_crew.instances import ssh_tunnel_manager_peer as _p, registry\n"
+        "import aj_crew.instances.ssh_tunnel_manager_ports\n"
     )
     assert _owner_imports(tree) == {
-        "kiro_crew.instances.ssh_tunnel_manager_child",
-        "kiro_crew.instances.ssh_tunnel_manager_peer",
-        "kiro_crew.instances.ssh_tunnel_manager_ports",
+        "aj_crew.instances.ssh_tunnel_manager_child",
+        "aj_crew.instances.ssh_tunnel_manager_peer",
+        "aj_crew.instances.ssh_tunnel_manager_ports",
     }
 
 

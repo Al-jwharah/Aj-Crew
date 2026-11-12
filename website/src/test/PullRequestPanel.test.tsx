@@ -534,7 +534,7 @@ describe('PullRequestPanel', () => {
 
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('GitHub CLI login required')
-    expect(alert).toHaveTextContent('Kiro Crew uses your local provider CLI')
+    expect(alert).toHaveTextContent('Aj Crew uses your local provider CLI')
     expect(alert).toHaveTextContent('gh auth login')
     expect(alert).not.toHaveTextContent('{"error"')
   })
@@ -662,7 +662,7 @@ describe('PullRequestPanel', () => {
 
   it('preserves trusted-install guidance when the local CLI is unavailable', async () => {
     mockApi.pullRequestSource.mockRejectedValueOnce(
-      new Error('{"error":"The local GitHub CLI (gh) was not found in a trusted system location. Install a root-owned `gh` at `/usr/local/libexec/kirocrew/gh`, run `gh auth login`, then retry."}'),
+      new Error('{"error":"The local GitHub CLI (gh) was not found in a trusted system location. Install a root-owned `gh` at `/usr/local/libexec/ajcrew/gh`, run `gh auth login`, then retry."}'),
     )
 
     renderPanel()
@@ -670,7 +670,7 @@ describe('PullRequestPanel', () => {
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('Could not load this pull request')
     expect(alert).toHaveTextContent('Install a root-owned')
-    expect(alert).toHaveTextContent('/usr/local/libexec/kirocrew/gh')
+    expect(alert).toHaveTextContent('/usr/local/libexec/ajcrew/gh')
     expect(alert).toHaveTextContent('gh auth login')
     expect(alert).not.toHaveTextContent('GitHub CLI login required')
     expect(alert).not.toHaveTextContent('{"error"')

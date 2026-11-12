@@ -83,7 +83,7 @@ async function runScene(scene, theme) {
     interrupted: scene.interrupted,
     last_message: RESTART_ROW,
     messages: scene.totalMessages,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     memory_mode: 'persistent',
     project: PROJECT,
     modified: Math.floor(now),

@@ -23,9 +23,9 @@ from llm_pool_helpers import (  # noqa: F401 -- the autouse fixture registers by
 )
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew.knowledge import llm_pool
-from kiro_crew.knowledge.llm_pool import CCWorker
-from kiro_crew.testing.wait import await_until
+from aj_crew.knowledge import llm_pool
+from aj_crew.knowledge.llm_pool import CCWorker
+from aj_crew.testing.wait import await_until
 
 # ---------------------------------------------------------------------------
 # Tests: CCWorker (mocked subprocess)
@@ -45,7 +45,7 @@ class TestCCWorker:
 
     @pytest.mark.asyncio
     async def test_start_raises_without_claude(self):
-        with patch("kiro_crew.knowledge.llm_pool.shutil.which", return_value=None):
+        with patch("aj_crew.knowledge.llm_pool.shutil.which", return_value=None):
             worker = CCWorker()
             with pytest.raises(RuntimeError, match="claude CLI not found"):
                 await worker.start()
@@ -222,7 +222,7 @@ class TestCCWorkerStreamJson:
 
     def test_the_line_limit_is_the_acp_transports_ceiling(self):
         """knowledge.md says so; a copy could drift from it without a test."""
-        from kiro_crew.acp import transport_framing
+        from aj_crew.acp import transport_framing
 
         assert llm_pool.STDOUT_LINE_LIMIT == transport_framing._STDOUT_BUFFER_LIMIT
 
@@ -380,7 +380,7 @@ def _patch_tree_kill(monkeypatch, sink):
     point are patched, so the pin stays safe even when run against unmodified
     code that never calls either.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     async def _fake_tree(pid, sig):
         sink.append((pid, sig))
@@ -408,7 +408,7 @@ class TestCCWorkerReapsTheProcessTree:
 
     @pytest.mark.asyncio
     async def test_spawn_requests_its_own_session(self):
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         captured: "dict[str, object]" = {}
 
@@ -423,10 +423,10 @@ class TestCCWorkerReapsTheProcessTree:
         # least `mode`) into the `_prepare` seam. A positional-only stub raises
         # TypeError from inside wrap_argv_async instead of exercising the spawn.
         with (
-            patch("kiro_crew.knowledge.llm_pool.wrap_argv", lambda cmd, **k: (cmd, None)),
-            patch("kiro_crew.knowledge.llm_pool.cgroup_scope_argv", lambda argv: argv),
+            patch("aj_crew.knowledge.llm_pool.wrap_argv", lambda cmd, **k: (cmd, None)),
+            patch("aj_crew.knowledge.llm_pool.cgroup_scope_argv", lambda argv: argv),
             patch(
-                "kiro_crew.knowledge.llm_pool.create_subprocess_limited",
+                "aj_crew.knowledge.llm_pool.create_subprocess_limited",
                 _fake_spawn,
             ),
         ):

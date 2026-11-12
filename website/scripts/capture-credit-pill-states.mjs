@@ -52,7 +52,7 @@ const slots = [{
   running: false,
   last_message: 'Checking the top bar.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: '/home/user/workspace/notes',
   folder_id: '',
@@ -90,7 +90,7 @@ for (const scenario of ['failed', 'loading', 'ok']) {
         return true
       }
       // The credit segment and its modal are the Kiro backend's surface.
-      if (path === '/api/config/kirocrew') {
+      if (path === '/api/config/ajcrew') {
         await json(route, KIRO_BACKEND_CONFIG_FIXTURE)
         return true
       }

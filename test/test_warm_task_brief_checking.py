@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from kiro_crew.dashboard.warm_task_brief_checking import checking_text
+from aj_crew.dashboard.warm_task_brief_checking import checking_text
 
 
 def test_names_each_nonzero_count_first_then_the_goal():

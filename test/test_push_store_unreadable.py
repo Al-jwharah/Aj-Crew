@@ -15,7 +15,7 @@ import pathlib
 
 import pytest
 
-from kiro_crew.notifications.push_store import PushSubscriptionStore
+from aj_crew.notifications.push_store import PushSubscriptionStore
 
 _SAVED = {
     "https://push.example.com/phone": {
@@ -37,9 +37,9 @@ _NEW = {
 @pytest.fixture
 def store_dir(monkeypatch, tmp_path):
     """A data home whose subscriptions file the tests write, with public DNS."""
-    monkeypatch.setattr("kiro_crew.notifications.push_store.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.push_store.config_dir", lambda: tmp_path)
     monkeypatch.setattr(
-        "kiro_crew.link_unfurl._default_resolve", lambda _host, _port: ["93.184.216.34"]
+        "aj_crew.link_unfurl._default_resolve", lambda _host, _port: ["93.184.216.34"]
     )
     directory = tmp_path / "web-push"
     directory.mkdir()

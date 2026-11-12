@@ -12,7 +12,7 @@ import React from 'react'
 vi.mock('../../api/client', () => ({
   api: {
     agentDetail: vi.fn(),
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     defaultMcpSetAdd: vi.fn(),
     defaultMcpSetRemove: vi.fn(),
   },
@@ -22,20 +22,20 @@ import { api } from '../../api/client'
 import { ApiError } from '../../api/apiError'
 import { DefaultMcpGrantsSection } from './DefaultMcpGrantsSection'
 
-const DASH = 'kirocrew-dashboard'
-const DEBUG = 'kirocrew-debug'
-const STAMP = 'x-kirocrew-card-addition'
+const DASH = 'ajcrew-dashboard'
+const DEBUG = 'ajcrew-debug'
+const STAMP = 'x-ajcrew-card-addition'
 
 type Mount = 'recorded' | 'by_hand' | 'off'
 const spec = (dash: Mount, debug: Mount = dash) => {
-  const mcpServers: Record<string, unknown> = { 'kirocrew-core': { command: 'kirocrew' } }
-  const tools: string[] = ['@kirocrew-core']
+  const mcpServers: Record<string, unknown> = { 'ajcrew-core': { command: 'ajcrew' } }
+  const tools: string[] = ['@ajcrew-core']
   for (const [name, mount] of [[DASH, dash], [DEBUG, debug]] as const) {
     if (mount === 'off') continue
-    mcpServers[name] = mount === 'recorded' ? { command: 'kirocrew', [STAMP]: true } : { command: 'kirocrew' }
+    mcpServers[name] = mount === 'recorded' ? { command: 'ajcrew', [STAMP]: true } : { command: 'ajcrew' }
     tools.push(`@${name}`)
   }
-  return { name: 'kirocrew', mcpServers, tools }
+  return { name: 'ajcrew', mcpServers, tools }
 }
 const refusal = (status: number, code: string, message: string) =>
   new ApiError(status, message, JSON.stringify({ error: message, code }))
@@ -51,7 +51,7 @@ beforeEach(() => {
   // The app's own default: nothing goes stale on its own.
   qc = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity }, mutations: { retry: false } } })
   vi.mocked(api.agentDetail).mockResolvedValue(spec('off'))
-  vi.mocked(api.kirocrewConfig).mockResolvedValue({ agent: { session_control: true } })
+  vi.mocked(api.ajcrewConfig).mockResolvedValue({ agent: { session_control: true } })
   vi.mocked(api.defaultMcpSetAdd).mockResolvedValue({ sessions_reset: 0 })
   vi.mocked(api.defaultMcpSetRemove).mockResolvedValue({ sessions_reset: 0 })
 })
@@ -62,7 +62,7 @@ describe('DefaultMcpGrantsSection', () => {
     wrap(<DefaultMcpGrantsSection />)
     await waitFor(() => expect(stateText(DASH)).toMatch(/^On the default agent/))
     expect(stateText(DEBUG)).toMatch(/Added by hand/)
-    expect(api.agentDetail).toHaveBeenCalledWith('kirocrew')
+    expect(api.agentDetail).toHaveBeenCalledWith('ajcrew')
   })
 
   it('adds only the sets that are off and says so', async () => {
@@ -130,28 +130,28 @@ describe('DefaultMcpGrantsSection', () => {
   })
 
   it('names agent.session_control when it is off', async () => {
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ agent: { session_control: false } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ agent: { session_control: false } })
     wrap(<DefaultMcpGrantsSection />)
     const note = await screen.findByTestId('default-mcp-session-control-note')
     expect(note.textContent).toMatch(/agent\.session_control/)
   })
 
   it('says the Session Control read failed and retries it', async () => {
-    vi.mocked(api.kirocrewConfig).mockRejectedValue(refusal(500, 'internal', 'config read failed'))
+    vi.mocked(api.ajcrewConfig).mockRejectedValue(refusal(500, 'internal', 'config read failed'))
     wrap(<DefaultMcpGrantsSection />)
     const notice = await screen.findByTestId('default-mcp-config-error')
     expect(notice.textContent).toMatch(/Session Control/)
     expect(screen.queryByTestId('default-mcp-session-control-note')).toBeNull()
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ agent: { session_control: false } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ agent: { session_control: false } })
     fireEvent.click(screen.getByTestId('default-mcp-config-retry'))
     await screen.findByTestId('default-mcp-session-control-note')
-    expect(api.kirocrewConfig).toHaveBeenCalledTimes(2)
+    expect(api.ajcrewConfig).toHaveBeenCalledTimes(2)
     expect(screen.queryByTestId('default-mcp-config-error')).toBeNull()
   })
 
   it('says nothing about Session Control until the config read answers', async () => {
     let answer: (cfg: unknown) => void = () => {}
-    vi.mocked(api.kirocrewConfig).mockReturnValue(new Promise(resolve => { answer = resolve }))
+    vi.mocked(api.ajcrewConfig).mockReturnValue(new Promise(resolve => { answer = resolve }))
     wrap(<DefaultMcpGrantsSection />)
     await waitFor(() => expect(stateText(DASH)).toMatch(/Not on the default agent/))
     expect(screen.queryByTestId('default-mcp-session-control-note')).toBeNull()

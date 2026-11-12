@@ -25,7 +25,7 @@ import { mkdirSync } from 'node:fs'
 import { serveDist } from './lib/serve-dist.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/apps-library-sections'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -35,7 +35,7 @@ const app = (name, displayName, icon, enabled, origin = 'registry') => ({
   installedAt: '2026-07-01T00:00:00Z', origin, resources: 'gateway', lifecycle: 'gateway',
   manifest: {
     name, version: '1.0.0', displayName,
-    description: `${displayName} does things.`, author: 'kirocrew', tags: [name],
+    description: `${displayName} does things.`, author: 'ajcrew', tags: [name],
     ui: { pages: [{ route: `/${name}-ui`, label: displayName, icon }] },
   },
 })

@@ -10,13 +10,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.config import loader
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, ResolvedBindings
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.config import loader
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, ResolvedBindings
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 _GUARD_SECS = 30.0
-_REAL_LOAD = KiroCrewConfig.load
+_REAL_LOAD = AjCrewConfig.load
 
 
 @pytest.fixture
@@ -25,11 +25,11 @@ def eager(monkeypatch):
     state = MagicMock(spec=DashboardState)
     state.get_slot.return_value = slot
     state.sessions = MagicMock()
-    cfg = KiroCrewConfig(agents={"default": KiroCrewAgentConfig()})
+    cfg = AjCrewConfig(agents={"default": AjCrewAgentConfig()})
     bindings = ResolvedBindings(
         workspace_dir=Path("workspace"),
         effective_memory_config={},
-        kiro_agent="kirocrew",
+        kiro_agent="ajcrew",
         model="",
         resolved_alias="default",
         requested_resolved=True,
@@ -39,7 +39,7 @@ def eager(monkeypatch):
     spawn = AsyncMock()
     monkeypatch.setattr(chat_runner, "_EAGER_SPAWN_DEBOUNCE_SECS", 0)
     monkeypatch.setattr(chat_runner, "_consume_pending_reset", AsyncMock(return_value=False))
-    monkeypatch.setattr(chat_runner.KiroCrewConfig, "load", lambda: cfg)
+    monkeypatch.setattr(chat_runner.AjCrewConfig, "load", lambda: cfg)
     monkeypatch.setattr(chat_runner, "resolve_session_agent_bindings", lambda *args, **kw: bindings)
     monkeypatch.setattr(chat_runner, "_require_session_memory_assignment", lambda *args: None)
     monkeypatch.setattr(chat_runner, "record_agent_selection", lambda *args, **kwargs: None)
@@ -60,7 +60,7 @@ async def test_config_load_runs_off_loop_and_normal_spawn_survives(eager, monkey
         load_threads.append(threading.get_ident())
         return cfg
 
-    monkeypatch.setattr(chat_runner.KiroCrewConfig, "load", load)
+    monkeypatch.setattr(chat_runner.AjCrewConfig, "load", load)
     await chat_runner._eager_spawn(state, slot)
     assert len(load_threads) == 1
     assert load_threads[0] != loop_thread
@@ -83,7 +83,7 @@ async def test_superseded_load_never_reaches_allocation(eager, monkeypatch, muta
         assert release.wait(_GUARD_SECS)
         return cfg
 
-    monkeypatch.setattr(chat_runner.KiroCrewConfig, "load", load)
+    monkeypatch.setattr(chat_runner.AjCrewConfig, "load", load)
     task = asyncio.create_task(chat_runner._eager_spawn(state, slot))
     running_turn = None
     try:
@@ -140,7 +140,7 @@ async def test_first_worker_load_migration_preserves_concurrent_config_write(eag
         loader.update_config_locked(config_path, mutate=mutate)
 
     monkeypatch.setattr(loader, "_persist_config_migration", parked_persist)
-    monkeypatch.setattr(chat_runner.KiroCrewConfig, "load", real_load)
+    monkeypatch.setattr(chat_runner.AjCrewConfig, "load", real_load)
     task = asyncio.create_task(chat_runner._eager_spawn(state, slot))
     try:
         await asyncio.wait_for(entered.wait(), _GUARD_SECS)

@@ -7,16 +7,16 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.shared_crew import internal_caller
-from kiro_crew.shared_crew.accounting import SessionCreateRate, StorageAccount
-from kiro_crew.shared_crew.internal_caller import (
+from aj_crew.shared_crew import internal_caller
+from aj_crew.shared_crew.accounting import SessionCreateRate, StorageAccount
+from aj_crew.shared_crew.internal_caller import (
     ATTESTED_SESSION_KEY,
     CALLER_SESSION_HEADER,
     CALLER_TOKEN_HEADER,
     attest_internal_session,
 )
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.taskq.store import TaskStore
+from aj_crew.testing.clock import ManualClock
 
 # -- StorageAccount -----------------------------------------------------------
 
@@ -124,8 +124,8 @@ def signed(monkeypatch):
         calls.append(token)
         return table.get(token, "")
 
-    monkeypatch.setattr("kiro_crew.session_token_sig.verify_session_token", fake_verify)
-    monkeypatch.setattr("kiro_crew.member_memory_auth.verify_session_token", fake_verify)
+    monkeypatch.setattr("aj_crew.session_token_sig.verify_session_token", fake_verify)
+    monkeypatch.setattr("aj_crew.member_memory_auth.verify_session_token", fake_verify)
     return calls
 
 
@@ -136,7 +136,7 @@ def test_declared_key_uses_the_shared_transport_check(monkeypatch):
         seen.append(key)
         return True
 
-    monkeypatch.setattr("kiro_crew.member_memory_auth.session_key_is_attested", fake_check)
+    monkeypatch.setattr("aj_crew.member_memory_auth.session_key_is_attested", fake_check)
     assert _attest(_Request({CALLER_SESSION_HEADER: "sess-a"})) == "sess-a"
     assert seen == ["sess-a"]
 
@@ -203,5 +203,5 @@ def test_read_only_request_still_answers(signed):
 
 
 def test_verify_token_reads_the_signed_mapping(monkeypatch):
-    monkeypatch.setattr("kiro_crew.session_token_sig.verify_session_token", lambda t: "sess-z")
+    monkeypatch.setattr("aj_crew.session_token_sig.verify_session_token", lambda t: "sess-z")
     assert internal_caller._verify_token("tok") == "sess-z"

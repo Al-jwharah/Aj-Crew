@@ -8,7 +8,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.cron import api_cron_to_chat
+from aj_crew.dashboard.handlers.cron import api_cron_to_chat
 
 
 def _make_app(state):
@@ -85,7 +85,7 @@ class TestApiCronToChat:
         job = _make_job()
         state = _make_state(jobs=[job])
         with patch(
-            "kiro_crew.dashboard.handlers.cron.inject_cron_result_to_dashboard"
+            "aj_crew.dashboard.handlers.cron.inject_cron_result_to_dashboard"
         ) as mock_inject:
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post("/api/crons/abc123/to-chat")
@@ -142,7 +142,7 @@ class TestApiCronToChat:
             return s
 
         with patch(
-            "kiro_crew.dashboard.source_providers.contract.is_valid_source_identity_key",
+            "aj_crew.dashboard.source_providers.contract.is_valid_source_identity_key",
             return_value=True,
         ):
             state.get_or_create_slot = _get_or_create
@@ -308,7 +308,7 @@ class TestBindCronSlotDismissed:
         # Drive _bind_cron_slot directly with a REUSED slot object that already
         # carries a colliding local transcript's dismissed set (``seeded``), an
         # unlinked binding, and the given ``dismissed`` payload.
-        from kiro_crew.dashboard import cron_inject
+        from aj_crew.dashboard import cron_inject
 
         slot = MagicMock()
         slot.linked_session_key = ""
@@ -334,7 +334,7 @@ class TestBindCronSlotDismissed:
                 ),
             ),
             patch(
-                "kiro_crew.dashboard.source_providers.contract.is_valid_source_identity_key",
+                "aj_crew.dashboard.source_providers.contract.is_valid_source_identity_key",
                 return_value=True,
             ),
         ):
@@ -359,6 +359,6 @@ class TestBindCronSlotDismissed:
 
 
 def cron_inject_unread():
-    from kiro_crew.dashboard import cron_inject
+    from aj_crew.dashboard import cron_inject
 
     return cron_inject._DISMISSED_UNREAD

@@ -14,12 +14,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import lts_sign_in
-from kiro_crew.dashboard import lts_gate_middleware as gate_mw
-from kiro_crew.dashboard import routes as routes_pkg
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
-from kiro_crew.lts_gate import REASON_LOGIN_REQUIRED, LoginWatch, LtsGate
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import lts_sign_in
+from aj_crew.dashboard import lts_gate_middleware as gate_mw
+from aj_crew.dashboard import routes as routes_pkg
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService
+from aj_crew.lts_gate import REASON_LOGIN_REQUIRED, LoginWatch, LtsGate
+from aj_crew.testing.wait import async_wait_until
 
 
 class FakeLogin:
@@ -43,7 +43,7 @@ class FakeLogin:
 
 @pytest.fixture
 def lts(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 # --------------------------------------------------------------------------- #
@@ -544,7 +544,7 @@ async def test_closed_gate_allows_session_revocation(lts: None) -> None:
 def _status_app(
     monkeypatch: pytest.MonkeyPatch, login: FakeLogin, *, owner: bool
 ) -> web.Application:
-    from kiro_crew.dashboard.handlers import kiro_prerequisite as prereq
+    from aj_crew.dashboard.handlers import kiro_prerequisite as prereq
 
     class FakeService:
         initial_setup_complete = True
@@ -644,7 +644,7 @@ async def test_closed_gate_status_reads_the_vault_off_the_event_loop(
 ) -> None:
     import threading
 
-    from kiro_crew import lts_sign_in
+    from aj_crew import lts_sign_in
 
     loop_thread = threading.get_ident()
     readers: list[int] = []
@@ -654,7 +654,7 @@ async def test_closed_gate_status_reads_the_vault_off_the_event_loop(
             readers.append(threading.get_ident())
             return None
 
-    monkeypatch.setattr("kiro_crew.auth.bridge.default_token_store", lambda: Store())
+    monkeypatch.setattr("aj_crew.auth.bridge.default_token_store", lambda: Store())
     login = FakeLogin(signed_in=False)
     app = _status_app(monkeypatch, login, owner=True)
     client = await _client(app)
@@ -687,7 +687,7 @@ def test_oss_installs_no_gate_and_no_middleware() -> None:
 
 
 def test_oss_chain_insert_is_a_no_op() -> None:
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     app = web.Application()
     marker = object()
@@ -702,7 +702,7 @@ def test_lts_without_an_installed_gate_refuses_to_build(lts: None) -> None:
 
 
 def test_lts_chain_puts_the_gate_right_after_token_auth(lts: None) -> None:
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     async def token_auth(request: web.Request, handler: Any) -> Any:
         return await handler(request)
@@ -750,7 +750,7 @@ def _sample_path(canonical: str) -> str:
 def _route_table() -> list[tuple[str, str]]:
     app = web.Application()
     routes_pkg.register_all(app)
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     server._register_mcp_routes(app)
     table: list[tuple[str, str]] = []

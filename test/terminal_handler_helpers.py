@@ -18,12 +18,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew.dashboard.handlers import terminal
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.dashboard.handlers import terminal
+from aj_crew.testing.ids import UNALLOCATABLE_PID
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim; no test of the family calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim; no test of the family calls monkeypatch.undo()
 def _clear_enabled_cache(monkeypatch):
     """Enable terminal and reset cache between tests."""
     terminal._enabled_cache[0] = True

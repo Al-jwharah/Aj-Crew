@@ -16,9 +16,9 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.config.loader as loader
-import kiro_crew.dashboard.handlers.messaging as mod
-from kiro_crew.secrets import SecretVault
+import aj_crew.config.loader as loader
+import aj_crew.dashboard.handlers.messaging as mod
+from aj_crew.secrets import SecretVault
 
 _PLACEHOLDER = "placeholder-channel-token"
 
@@ -49,7 +49,7 @@ def _vault_value(home: Path, name: str) -> str | None:
 
 
 def _load() -> dict[str, str]:
-    return loader.KiroCrewConfig().load_credentials()
+    return loader.AjCrewConfig().load_credentials()
 
 
 # ── The shared resolver ────────────────────────────────────────────────────
@@ -166,9 +166,7 @@ def test_load_credentials_resolves_a_reference_from_the_environment(
 ) -> None:
     _store(home, "WECOM_SECRET", _PLACEHOLDER)
     monkeypatch.setenv("WECOM_SECRET", "secret://WECOM_SECRET")
-    assert loader.KiroCrewConfig().load_credentials(propagate=False)["WECOM_SECRET"] == (
-        _PLACEHOLDER
-    )
+    assert loader.AjCrewConfig().load_credentials(propagate=False)["WECOM_SECRET"] == (_PLACEHOLDER)
 
 
 def test_load_credentials_leaves_an_unresolvable_reference_unset(
@@ -183,12 +181,12 @@ def test_load_credentials_plaintext_env_is_unchanged(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     (home / ".env").write_text(
-        "TELEGRAM_BOT_TOKEN=plaintext-placeholder\nKIROCREW_OWNER_ID=U0123ABC456\n",
+        "TELEGRAM_BOT_TOKEN=plaintext-placeholder\nAJCREW_OWNER_ID=U0123ABC456\n",
         encoding="utf-8",
     )
     creds = _load()
     assert creds["TELEGRAM_BOT_TOKEN"] == "plaintext-placeholder"
-    assert creds["KIROCREW_OWNER_ID"] == "U0123ABC456"
+    assert creds["AJCREW_OWNER_ID"] == "U0123ABC456"
     assert not (home / ".vault" / "secrets.enc").exists()
 
 
@@ -198,10 +196,10 @@ def test_load_credentials_plaintext_env_is_unchanged(
 def test_a_new_channel_token_lands_in_the_vault_as_a_reference(home: Path) -> None:
     (home / ".env").write_text("# keep\nTELEGRAM_BOT_TOKEN=old-plaintext\n", encoding="utf-8")
 
-    mod._write_env_updates({"TELEGRAM_BOT_TOKEN": _PLACEHOLDER, "KIROCREW_OWNER_ID": "U01"})
+    mod._write_env_updates({"TELEGRAM_BOT_TOKEN": _PLACEHOLDER, "AJCREW_OWNER_ID": "U01"})
 
     text = (home / ".env").read_text(encoding="utf-8")
-    assert text == "# keep\nTELEGRAM_BOT_TOKEN=secret://TELEGRAM_BOT_TOKEN\nKIROCREW_OWNER_ID=U01\n"
+    assert text == "# keep\nTELEGRAM_BOT_TOKEN=secret://TELEGRAM_BOT_TOKEN\nAJCREW_OWNER_ID=U01\n"
     assert _PLACEHOLDER not in text
     assert _vault_value(home, "TELEGRAM_BOT_TOKEN") == _PLACEHOLDER
 
@@ -301,11 +299,11 @@ def test_the_channel_settings_get_reads_credentials_off_the_loop(
     class _Stop(Exception):
         pass
 
-    def _record(self: loader.KiroCrewConfig, **_kw: object) -> dict[str, str]:
+    def _record(self: loader.AjCrewConfig, **_kw: object) -> dict[str, str]:
         threads.append(threading.get_ident())
         raise _Stop
 
-    monkeypatch.setattr(loader.KiroCrewConfig, "load_credentials", _record)
+    monkeypatch.setattr(loader.AjCrewConfig, "load_credentials", _record)
     handler = getattr(mod, f"api_{channel}_config_get")
 
     async def _run() -> int:
@@ -340,17 +338,17 @@ def test_a_landed_save_puts_the_reference_in_the_environment(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv("WEBEX_BOT_TOKEN", "old-plaintext")
-    monkeypatch.setenv("KIROCREW_OWNER_ID", "U-old")
+    monkeypatch.setenv("AJCREW_OWNER_ID", "U-old")
 
     asyncio.run(
         mod._write_env_or_roll_back(
-            {"WEBEX_BOT_TOKEN": _PLACEHOLDER, "KIROCREW_OWNER_ID": "U01"}, None
+            {"WEBEX_BOT_TOKEN": _PLACEHOLDER, "AJCREW_OWNER_ID": "U01"}, None
         )
     )
 
     assert os.environ["WEBEX_BOT_TOKEN"] == "secret://WEBEX_BOT_TOKEN"
-    assert os.environ["KIROCREW_OWNER_ID"] == "U01"
-    assert loader.KiroCrewConfig().load_credentials(propagate=False)["WEBEX_BOT_TOKEN"] == (
+    assert os.environ["AJCREW_OWNER_ID"] == "U01"
+    assert loader.AjCrewConfig().load_credentials(propagate=False)["WEBEX_BOT_TOKEN"] == (
         _PLACEHOLDER
     )
 
@@ -400,7 +398,7 @@ def test_the_teams_saver_verifies_with_the_resolved_password(
 def test_the_slack_wizard_checks_a_kept_reference_as_its_secret(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    import kiro_crew.cli_setup as cli_setup
+    import aj_crew.cli_setup as cli_setup
 
     _store(home, "SLACK_BOT_TOKEN", _PLACEHOLDER)
     tokens: list[str] = []
@@ -430,13 +428,13 @@ def test_the_gateway_takes_boot_credentials_resolved_off_the_loop() -> None:
     import inspect
     from unittest.mock import MagicMock
 
-    from kiro_crew.slack import gateway as gw
+    from aj_crew.slack import gateway as gw
 
     cfg = MagicMock()
     cfg.load_credentials.side_effect = AssertionError("credentials were passed in")
     cfg.slack.allowed_users = []
     cfg.slack.tracking_channels = []
-    cfg.slack.command = "kirocrew"
+    cfg.slack.command = "ajcrew"
     orch = gw.GatewayOrchestrator(
         cfg, credentials={"SLACK_APP_TOKEN": "xapp-placeholder", "SLACK_BOT_TOKEN": "xoxb-ph"}
     )

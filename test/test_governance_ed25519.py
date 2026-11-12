@@ -16,10 +16,10 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
-from kiro_crew.platform import governance
-from kiro_crew.platform.admission import AdmissionPolicy, ed25519_verify
-from kiro_crew.platform.context import PlatformCompositionError
-from kiro_crew.platform.governance import (
+from aj_crew.platform import governance
+from aj_crew.platform.admission import AdmissionPolicy, ed25519_verify
+from aj_crew.platform.context import PlatformCompositionError
+from aj_crew.platform.governance import (
     SIGNATURE_UNVERIFIED,
     SIGNATURE_VERIFIED,
     assert_policy_signature_satisfied,
@@ -149,10 +149,10 @@ class TestLoaderEndToEnd:
     def _write(self, monkeypatch, tmp_path, *, doc: dict, admission: dict) -> None:
         policy = tmp_path / "security_policy.json"
         policy.write_text(json.dumps(doc))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(policy))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(policy))
         adm = tmp_path / "admission_policy.json"
         adm.write_text(json.dumps(admission))
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
 
     def test_required_signature_is_satisfied_by_ed25519(self, monkeypatch, tmp_path):
         private, public = _keypair()

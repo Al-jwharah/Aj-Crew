@@ -1,6 +1,6 @@
 """Guard: the backend's recovery markers must match the frontend's wire list.
 
-Every ``*_RECOVERY_PREFIX`` in ``kiro_crew.dashboard.state`` is a literal string
+Every ``*_RECOVERY_PREFIX`` in ``aj_crew.dashboard.state`` is a literal string
 the backend puts at the head of an injected continuation. ``PREFIXES`` in
 ``website/src/pages/chat/RecoveryCard.tsx`` is the frontend's copy of that same
 list, matched with ``startsWith`` to pick which card a transcript row renders as.
@@ -34,8 +34,8 @@ from pathlib import Path
 
 _REPO = Path(__file__).resolve().parents[1]
 _BACKEND_FILES = (
-    _REPO / "src" / "kiro_crew" / "dashboard" / "state.py",
-    *sorted((_REPO / "src" / "kiro_crew" / "dashboard" / "state_parts").glob("*.py")),
+    _REPO / "src" / "aj_crew" / "dashboard" / "state.py",
+    *sorted((_REPO / "src" / "aj_crew" / "dashboard" / "state_parts").glob("*.py")),
 )
 _FRONTEND = _REPO / "website" / "src" / "pages" / "chat" / "RecoveryCard.tsx"
 

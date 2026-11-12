@@ -33,20 +33,20 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.config.loader import _build_slack_config
-from kiro_crew.config.sections import SlackConfig
-from kiro_crew.dashboard.chat_persistence import (
+from aj_crew.config.loader import _build_slack_config
+from aj_crew.config.sections import SlackConfig
+from aj_crew.dashboard.chat_persistence import (
     _META_LAST_USER_AT,
     _newest_human_turn_ts,
     _save_slot_to_history,
 )
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.history import HUMAN_TURN_META_KEY, SLOT_OWNED_META_KEYS
-from kiro_crew.messaging.sessions_view import (
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.history import HUMAN_TURN_META_KEY, SLOT_OWNED_META_KEYS
+from aj_crew.messaging.sessions_view import (
     _SESSIONS_DEFAULT_LIMIT,
     _collect_recent_sessions,
 )
-from kiro_crew.slack.sessions_view import (
+from aj_crew.slack.sessions_view import (
     _SLACK_MESSAGE_BLOCK_LIMIT,
     MAX_MESSAGE_SESSION_ROWS,
     _build_sessions_blocks,
@@ -481,11 +481,11 @@ class TestOnlyAPersonsSendIsMarked:
 
     @pytest.mark.asyncio
     async def test_a_persons_send_is_marked(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("chat-1")
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", MagicMock())
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.spawn_guarded_turn", MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.spawn_guarded_turn", MagicMock())
 
         async with TestClient(TestServer(_make_app(state))) as client:
             resp = await client.post("/api/chat", json={"message": "hi", "slot": "chat-1"})
@@ -495,14 +495,14 @@ class TestOnlyAPersonsSendIsMarked:
 
     @pytest.mark.asyncio
     async def test_an_apps_send_is_not_marked(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("app-chat")
         # The app OWNS the slot, so the app-scope 404s above the marker pass and
         # the request actually reaches the row write.
         slot._app = _APP
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", MagicMock())
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.spawn_guarded_turn", MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.spawn_guarded_turn", MagicMock())
 
         @web.middleware
         async def _as_app(request: web.Request, handler):  # type: ignore[no-untyped-def]
@@ -532,12 +532,12 @@ class TestOnlyAPersonsSendIsMarked:
         # forge human-turn provenance and advance the ranking stamp; the reserved
         # strip drops the key at entry, and the app-origin gate then declines to
         # re-add it, so the forged claim never reaches the row.
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("app-chat")
         slot._app = _APP
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", MagicMock())
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.spawn_guarded_turn", MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.spawn_guarded_turn", MagicMock())
 
         @web.middleware
         async def _as_app(request: web.Request, handler):  # type: ignore[no-untyped-def]
@@ -590,12 +590,12 @@ class TestOnlyAPersonsSendIsMarked:
 
     @pytest.mark.asyncio
     async def test_the_composers_steer_is_marked(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = self._steerable_slot(state)
 
-        from kiro_crew.dashboard.chat_delivery import steer_into_running_turn
+        from aj_crew.dashboard.chat_delivery import steer_into_running_turn
 
         await steer_into_running_turn(state, slot, "go north", user_origin=True)
 
@@ -603,12 +603,12 @@ class TestOnlyAPersonsSendIsMarked:
 
     @pytest.mark.asyncio
     async def test_a_peer_agents_steer_is_not_marked(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = self._steerable_slot(state)
 
-        from kiro_crew.dashboard.chat_delivery import steer_into_running_turn
+        from aj_crew.dashboard.chat_delivery import steer_into_running_turn
 
         # Exactly what `session_control.send_to_target` passes: an agent steering
         # another session, which is how a conductor reaches a worker.
@@ -655,7 +655,7 @@ class TestSlackMessageBlockCeiling:
             {
                 "key": f"dashboard:chat-{i}",
                 "title": f"session {i}",
-                "agent": "kirocrew",
+                "agent": "ajcrew",
                 "mtime": 0.0,
                 "active": False,
                 "kind": "dashboard",

@@ -14,7 +14,7 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
-const apiMock = vi.hoisted(() => ({ updateKirocrewAgent: vi.fn(), projectGit: vi.fn(), kirocrewConfig: vi.fn() }))
+const apiMock = vi.hoisted(() => ({ updateAjcrewAgent: vi.fn(), projectGit: vi.fn(), ajcrewConfig: vi.fn() }))
 vi.mock('../api/client', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api/client')>()
   return { ...actual, api: { ...actual.api, ...apiMock } }
@@ -39,7 +39,7 @@ function harness(over: Partial<Opts> = {}) {
     currentSlot: { key: 'slot-a', agent: 'builder', model: 'm-2' } as ChatSlot,
     defaultAgent: 'default',
     pendingAgent: '',
-    installedAgents: [{ name: 'builder', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', selection_kind: 'member' }],
+    installedAgents: [{ name: 'builder', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', selection_kind: 'member' }],
     provider: provider as never,
     availableModels: [],
     codexPairModels: false,
@@ -58,24 +58,24 @@ function harness(over: Partial<Opts> = {}) {
 }
 
 beforeEach(() => {
-  apiMock.updateKirocrewAgent.mockReset()
+  apiMock.updateAjcrewAgent.mockReset()
   apiMock.projectGit.mockReset()
 })
 
 describe('pinning the shown model to the agent', () => {
   it('writes agents.<name>.model, then refreshes and invalidates resolved models', async () => {
-    apiMock.updateKirocrewAgent.mockResolvedValue({})
+    apiMock.updateAjcrewAgent.mockResolvedValue({})
     const { opts, hook, invalidate } = harness()
     expect(hook.result.current._modelPinAgent).toBe('builder')
     act(() => { hook.result.current.pinModelToAgentMut.mutate({ agent: 'builder', model: 'm-2' }) })
     await waitFor(() => expect(invalidate).toHaveBeenCalledWith({ queryKey: ['resolved-model'] }))
-    expect(apiMock.updateKirocrewAgent).toHaveBeenCalledWith('builder', { model: 'm-2' })
+    expect(apiMock.updateAjcrewAgent).toHaveBeenCalledWith('builder', { model: 'm-2' })
     expect(opts.dispatch).toHaveBeenCalledWith(triggerRefresh())
     expect(opts.showActionError).not.toHaveBeenCalled()
   })
 
   it('says a failed write on the page and as a critical notification', async () => {
-    apiMock.updateKirocrewAgent.mockRejectedValue(new Error('config.json is read-only'))
+    apiMock.updateAjcrewAgent.mockRejectedValue(new Error('config.json is read-only'))
     const { opts, hook } = harness()
     act(() => { hook.result.current.pinModelToAgentMut.mutate({ agent: 'builder', model: 'm-2' }) })
     await waitFor(() => expect(opts.showActionError).toHaveBeenCalledTimes(1))
@@ -89,11 +89,11 @@ describe('pinning the shown model to the agent', () => {
 })
 
 describe('which agent the pin row may target (#25099)', () => {
-  const templateRow = { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', selection_kind: 'template' as const }
+  const templateRow = { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', selection_kind: 'template' as const }
 
   it('offers no target on a template-bound session, so the row is withheld', () => {
     const { hook } = harness({
-      currentSlot: { key: 'slot-t', agent: 'kirocrew', agent_kind: 'template', model: 'm-2' } as ChatSlot,
+      currentSlot: { key: 'slot-t', agent: 'ajcrew', agent_kind: 'template', model: 'm-2' } as ChatSlot,
       installedAgents: [templateRow],
     })
     expect(hook.result.current._modelPinAgent).toBe('')
@@ -102,7 +102,7 @@ describe('which agent the pin row may target (#25099)', () => {
 
   it('offers no target when the slot kind is unset but the name is only a template', () => {
     const { hook } = harness({
-      currentSlot: { key: 'slot-t', agent: 'kirocrew', model: 'm-2' } as ChatSlot,
+      currentSlot: { key: 'slot-t', agent: 'ajcrew', model: 'm-2' } as ChatSlot,
       installedAgents: [templateRow],
     })
     expect(hook.result.current._modelPinAgent).toBe('')
@@ -110,7 +110,7 @@ describe('which agent the pin row may target (#25099)', () => {
 
   it('offers no target for a template-bound slot even when a crew agent shares its name', () => {
     const { hook } = harness({
-      currentSlot: { key: 'slot-t', agent: 'kirocrew', agent_kind: 'template', model: 'm-2' } as ChatSlot,
+      currentSlot: { key: 'slot-t', agent: 'ajcrew', agent_kind: 'template', model: 'm-2' } as ChatSlot,
       installedAgents: [{ ...templateRow, selection_kind: 'member' }],
     })
     expect(hook.result.current._modelPinAgent).toBe('')

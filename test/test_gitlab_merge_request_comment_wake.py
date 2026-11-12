@@ -11,8 +11,8 @@ activity notes are excluded, and the digest is independent of note page order.
 import json
 import subprocess
 
-from kiro_crew.monitoring.gitlab_merge_request import GitLabMergeRequestProvider
-from kiro_crew.monitoring.models import MonitorObservationStatus
+from aj_crew.monitoring.gitlab_merge_request import GitLabMergeRequestProvider
+from aj_crew.monitoring.models import MonitorObservationStatus
 
 _SUBJECT = "https://gitlab.com/acme/widgets/-/merge_requests/8"
 
@@ -103,7 +103,7 @@ def test_gitlab_incomplete_notes_read_yields_empty_digest_and_no_wake(monkeypatc
         return subprocess.CompletedProcess(["glab"], 0, stdout=json.dumps([]), stderr="")
 
     monkeypatch.setattr(
-        "kiro_crew.monitoring.gitlab_merge_request.run_provider_cli",
+        "aj_crew.monitoring.gitlab_merge_request.run_provider_cli",
         fetch_fails_notes,
     )
     result = _probe(GitLabMergeRequestProvider(gitlab_hosts=[]))
@@ -185,12 +185,12 @@ def test_gitlab_comment_digest_is_independent_of_note_page_order(monkeypatch):
         return fetch
 
     monkeypatch.setattr(
-        "kiro_crew.monitoring.gitlab_merge_request.run_provider_cli",
+        "aj_crew.monitoring.gitlab_merge_request.run_provider_cli",
         make_fetch("alpha", "omega"),
     )
     first = _probe(GitLabMergeRequestProvider(gitlab_hosts=[]))
     monkeypatch.setattr(
-        "kiro_crew.monitoring.gitlab_merge_request.run_provider_cli",
+        "aj_crew.monitoring.gitlab_merge_request.run_provider_cli",
         make_fetch("omega", "alpha"),
     )
     second = _probe(GitLabMergeRequestProvider(gitlab_hosts=[]))
@@ -269,7 +269,7 @@ def test_gitlab_notes_read_has_its_own_page_budget_past_the_discussions_bound(mo
             payload = []
         return subprocess.CompletedProcess(["glab"], 0, stdout=json.dumps(payload), stderr="")
 
-    monkeypatch.setattr("kiro_crew.monitoring.gitlab_merge_request.run_provider_cli", fetch)
+    monkeypatch.setattr("aj_crew.monitoring.gitlab_merge_request.run_provider_cli", fetch)
     result = _probe(GitLabMergeRequestProvider(gitlab_hosts=[]))
 
     assert _comment_condition_key(result) is not None
@@ -295,7 +295,7 @@ def test_gitlab_notes_past_their_page_budget_fail_closed(monkeypatch):
             payload = []
         return subprocess.CompletedProcess(["glab"], 0, stdout=json.dumps(payload), stderr="")
 
-    monkeypatch.setattr("kiro_crew.monitoring.gitlab_merge_request.run_provider_cli", fetch)
+    monkeypatch.setattr("aj_crew.monitoring.gitlab_merge_request.run_provider_cli", fetch)
     result = _probe(GitLabMergeRequestProvider(gitlab_hosts=[]))
 
     assert "pr_comment_body_digest" not in result.canonical

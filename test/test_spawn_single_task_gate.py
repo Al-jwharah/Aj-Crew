@@ -24,14 +24,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import mcp_shared
-from kiro_crew.dashboard.handlers.messaging import parent_work_supported
-from kiro_crew.mcp_tools import spawn as spawn_tools
-from kiro_crew.validation import SPAWN_RUN_SCHEMA, SPAWN_SUB_AGENTS_SCHEMA, validate_tool_args
+from aj_crew import mcp_shared
+from aj_crew.dashboard.handlers.messaging import parent_work_supported
+from aj_crew.mcp_tools import spawn as spawn_tools
+from aj_crew.validation import SPAWN_RUN_SCHEMA, SPAWN_SUB_AGENTS_SCHEMA, validate_tool_args
 
 
 def _tools() -> dict[str, dict]:
-    roster = [types.SimpleNamespace(name="kirocrew")]
+    roster = [types.SimpleNamespace(name="ajcrew")]
     with patch.object(spawn_tools.mcp_core, "list_agents", return_value=roster):
         return {t["name"]: t for t in spawn_tools.schemas()}
 
@@ -85,7 +85,7 @@ def test_legacy_solo_fields_are_still_accepted(schema, base, reason) -> None:
 
 def _run(tool: str, args: dict[str, Any], answer: dict | None = None):
     """Run a spawn tool; return (POSTed bodies, result text, sel mock)."""
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     bodies: list[dict] = []
     sel = MagicMock()
@@ -153,7 +153,7 @@ def _run_sub_agents(agents: list[dict]) -> tuple[list[dict], str, MagicMock]:
         return {}
 
     def _fake_get(path: str, **_kw: Any) -> dict:
-        return {"done": True, "agent": "kirocrew", "result": "ok"}
+        return {"done": True, "agent": "ajcrew", "result": "ok"}
 
     with (
         patch.object(spawn_tools.mcp_core, "_post", side_effect=_fake_post),
@@ -219,16 +219,16 @@ class TestApiSpawn:
     PARENT = "dashboard:1"
 
     async def _call(self, body: dict):
-        from kiro_crew.dashboard.handlers import messaging
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.handlers import messaging
+        from aj_crew.dashboard.state import _ChatSlot
 
         body = {"parent_session": self.PARENT, **body}
         mgr = MagicMock()
         mgr.spawn.return_value = SimpleNamespace(id="a1", done=False, error="")
         mgr.max_concurrent = 4
         sessions = MagicMock()
-        sessions.get_agent.return_value = "kirocrew"
-        sessions.get_agent_selection.return_value = ("template", "kirocrew")
+        sessions.get_agent.return_value = "ajcrew"
+        sessions.get_agent_selection.return_value = ("template", "ajcrew")
         state = SimpleNamespace(
             _slots={"1": _ChatSlot("1", memory_mode="persistent")},
             _restricted_keys=set(),
@@ -257,7 +257,7 @@ class TestApiSpawn:
         "extra",
         [
             {"solo": True},
-            {"solo": True, "agent": "kirocrew"},
+            {"solo": True, "agent": "ajcrew"},
             {"solo": True, "solo_reason": "user_requested"},
         ],
     )

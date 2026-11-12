@@ -9,16 +9,16 @@ from __future__ import annotations
 
 #: Every module of the engine, facade included.
 _ENGINE_MODULES = (
-    "kiro_crew.onboarding_import",
-    "kiro_crew.onboarding_scan",
-    "kiro_crew.onboarding_plan",
-    "kiro_crew.onboarding_apply",
-    "kiro_crew.onboarding_sources",
-    "kiro_crew.onboarding_sources.amazon_quick",
-    "kiro_crew.onboarding_sources.claude_code",
-    "kiro_crew.onboarding_sources.codex",
-    "kiro_crew.onboarding_sources.gemini",
-    "kiro_crew.onboarding_sources.hermes",
-    "kiro_crew.onboarding_sources.lineage",
-    "kiro_crew.onboarding_sources.openclaw",
+    "aj_crew.onboarding_import",
+    "aj_crew.onboarding_scan",
+    "aj_crew.onboarding_plan",
+    "aj_crew.onboarding_apply",
+    "aj_crew.onboarding_sources",
+    "aj_crew.onboarding_sources.amazon_quick",
+    "aj_crew.onboarding_sources.claude_code",
+    "aj_crew.onboarding_sources.codex",
+    "aj_crew.onboarding_sources.gemini",
+    "aj_crew.onboarding_sources.hermes",
+    "aj_crew.onboarding_sources.lineage",
+    "aj_crew.onboarding_sources.openclaw",
 )

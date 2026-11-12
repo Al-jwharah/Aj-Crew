@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import edition_install_fence, sandbox, security
-from kiro_crew.hooks import TOOL_DENY, HookManager, HooksConfig
-from kiro_crew.llm_helpers import _edit_target_denial
+from aj_crew import edition_install_fence, sandbox, security
+from aj_crew.hooks import TOOL_DENY, HookManager, HooksConfig
+from aj_crew.llm_helpers import _edit_target_denial
 
 _POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlinks")
 
@@ -24,7 +24,7 @@ _POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlinks
 @pytest.fixture
 def install(tmp_path: Path, monkeypatch) -> Path:
     """A packaged install tree the gateway imports from, as the fence sees it."""
-    root = tmp_path / "venv" / "lib" / "site-packages" / "kiro_crew"
+    root = tmp_path / "venv" / "lib" / "site-packages" / "aj_crew"
     (root / "static").mkdir(parents=True)
     (root / "server.py").write_text("x = 1\n", encoding="utf-8")
     monkeypatch.setattr(
@@ -35,7 +35,7 @@ def install(tmp_path: Path, monkeypatch) -> Path:
 
 @pytest.fixture
 def lts(monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 def test_lts_refuses_a_write_into_the_install_tree(install: Path, lts) -> None:
@@ -63,12 +63,12 @@ def test_lts_leaves_reads_and_siblings_open(install: Path, lts, tmp_path: Path) 
     assert security.is_sensitive_path(str(install / "server.py")) is False
     sibling = install.parent / "other_pkg" / "mod.py"
     assert security.is_sensitive_write_path(str(sibling)) is False
-    prefix_twin = install.parent / "kiro_crew_extra" / "mod.py"
+    prefix_twin = install.parent / "aj_crew_extra" / "mod.py"
     assert security.is_sensitive_write_path(str(prefix_twin)) is False
 
 
 def test_oss_is_unchanged(install: Path, monkeypatch) -> None:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "oss")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "oss")
     assert security.sensitive_write_path_refusal(str(install / "server.py")) is None
 
 

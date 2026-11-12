@@ -18,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.remote_session import git_proxy
-from kiro_crew.testing.wait import wait_until
+from aj_crew.remote_session import git_proxy
+from aj_crew.testing.wait import wait_until
 
 SECRET = "ab" * 32
 WAIT = 30.0
@@ -186,8 +186,8 @@ def test_a_push_body_is_framed_and_a_refusal_is_returned(proxy, chunked):
     frames = proxy.out.request()
     sent = b"".join(base64.b64decode(f["b"]) for f in frames if f["t"] == "body")
     assert sent == b"".join(payload)
-    proxy.reply({"t": "err", "id": frames[0]["id"], "status": 403, "message": "Kiro Crew: denied"})
-    assert done() == {"status": 403, "body": b"Kiro Crew: denied\n"}
+    proxy.reply({"t": "err", "id": frames[0]["id"], "status": 403, "message": "Aj Crew: denied"})
+    assert done() == {"status": 403, "body": b"Aj Crew: denied\n"}
 
 
 def test_an_answer_that_is_not_a_response_is_a_502_and_cancels(proxy):

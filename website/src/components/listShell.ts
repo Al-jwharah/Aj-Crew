@@ -6,13 +6,13 @@
  *
  * They live here as whole class strings rather than as values copied between
  * the two files because copied values drift silently — the roster once carried
- * its own header padding, row weight and line-heights, and in kiro-light its own
+ * its own header padding, row weight and line-heights, and in aj-light its own
  * background, none of which anything flagged. `src/test/listShellParity.test.ts`
  * pins both pages to these constants.
  */
 
 /** The card itself. `sidebar` is the theme-pack hook (website/docs/theming-contract.md,
- *  "Stable hooks") and `sidebar-inner` the kiro-light shell hook (index.css) that
+ *  "Stable hooks") and `sidebar-inner` the aj-light shell hook (index.css) that
  *  steps the card back to `--panel` on the white canvas — both must lead the
  *  string; `src/test/kiroLightShellHooks.test.ts` anchors on that. */
 export const LIST_SHELL_CLS = 'sidebar sidebar-inner bg-bg-elevated border border-border rounded-xl shadow-sm'
@@ -25,7 +25,7 @@ export const LIST_SHELL_CLS = 'sidebar sidebar-inner bg-bg-elevated border borde
 export const LIST_HEADER_CLS = 'flex justify-between items-center px-2 mt-0.5 h-10'
 
 /** The panel title inside that header. `sessions-panel-title` is the class the
- *  kiro themes retint (index.css). */
+ *  aj themes retint (index.css). */
 export const LIST_TITLE_CLS = 'sessions-panel-title text-sm font-semibold text-text-strong tracking-[.04em] truncate'
 
 /** The scrolling list body. Its top padding is the floating search dock's live

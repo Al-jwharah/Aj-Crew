@@ -56,7 +56,7 @@ const slots = [{
   running: false,
   last_message: 'Summarised the findings so far.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   modified: now,
   source_links: [],

@@ -19,11 +19,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import tailnet, tailnet_proxy_proof
-from kiro_crew.dashboard.tailnet import TailnetTrust
-from kiro_crew.dashboard.token_auth import generate_token, token_auth_middleware
-from kiro_crew.shared_crew import people
-from kiro_crew.shared_crew.contracts import ACTOR_REQUEST_KEY, Provenance
+from aj_crew.dashboard import tailnet, tailnet_proxy_proof
+from aj_crew.dashboard.tailnet import TailnetTrust
+from aj_crew.dashboard.token_auth import generate_token, token_auth_middleware
+from aj_crew.shared_crew import people
+from aj_crew.shared_crew.contracts import ACTOR_REQUEST_KEY, Provenance
 
 TRUST = TailnetTrust(
     trust_identity=True,
@@ -41,13 +41,13 @@ linux_only = pytest.mark.skipif(not sys.platform.startswith("linux"), reason="/p
 
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
-    import kiro_crew.dashboard.revocation_gen as rg
-    import kiro_crew.dashboard.token_auth as ta
+    import aj_crew.dashboard.revocation_gen as rg
+    import aj_crew.dashboard.token_auth as ta
 
     monkeypatch = _floor_monkeypatch
     # The loopback proxy proof runs only under the Shared Crew preview.
-    monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     monkeypatch.setattr(rg, "_gen", 0)
     monkeypatch.setattr(ta, "_revoked_store_singleton", None)
     monkeypatch.setattr(tailnet, "IS_POSIX", True)

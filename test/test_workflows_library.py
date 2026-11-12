@@ -7,10 +7,10 @@ import threading
 
 import pytest
 
-from kiro_crew import security
-from kiro_crew.workflows import store as workflow_store
-from kiro_crew.workflows.library import WorkflowDefinitionLibrary
-from kiro_crew.workflows.store import WORKFLOW_LIBRARY_DIR_NAME
+from aj_crew import security
+from aj_crew.workflows import store as workflow_store
+from aj_crew.workflows.library import WorkflowDefinitionLibrary
+from aj_crew.workflows.store import WORKFLOW_LIBRARY_DIR_NAME
 
 SOURCE_V1 = (
     'META = {"name": "debug-project", "description": "Investigate a project failure"}\n'
@@ -33,7 +33,7 @@ class TestWorkflowLibraryProtection:
     def test_library_directory_is_a_keystone_leaf(self) -> None:
         assert WORKFLOW_LIBRARY_DIR_NAME in security._CREW_SECRET_LEAVES
 
-    @pytest.mark.parametrize("prefix", [".kiro/crew", ".kirocrew"])
+    @pytest.mark.parametrize("prefix", [".kiro/crew", ".ajcrew"])
     def test_definition_files_are_sensitive_under_every_home_prefix(self, prefix: str) -> None:
         path = f"~/{prefix}/workflow_library/wfd_example.json"
 
@@ -44,7 +44,7 @@ class TestWorkflowLibraryProtection:
         # The shell gate matches no paths in command text; the library directory is
         # bind-masked in every sandbox mode, so a shell read, write or ``tar -C``
         # drop finds no such path.
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert WORKFLOW_LIBRARY_DIR_NAME in sandbox._CREW_HIDDEN_LEAVES
 
@@ -298,7 +298,7 @@ def test_collision_suffix_stays_inside_the_slug_limit(tmp_path) -> None:
 
 
 def test_slugify_non_ascii_names_derive_distinct_stable_slugs() -> None:
-    from kiro_crew.workflows.library import _slugify
+    from aj_crew.workflows.library import _slugify
 
     chinese = _slugify("\u4f1a\u8bae\u7eaa\u8981")
     japanese = _slugify("\u8cb7\u3044\u7269\u30ea\u30b9\u30c8")
@@ -308,6 +308,6 @@ def test_slugify_non_ascii_names_derive_distinct_stable_slugs() -> None:
 
 
 def test_slugify_ascii_names_are_unchanged() -> None:
-    from kiro_crew.workflows.library import _slugify
+    from aj_crew.workflows.library import _slugify
 
     assert _slugify("Debug Project") == "debug-project"

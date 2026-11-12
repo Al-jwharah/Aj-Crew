@@ -83,7 +83,7 @@ mkdirSync(OUT, { recursive: true })
 
 /* `/api/project/tree` returns paths RELATIVE to `root`. The tree model is
  * created with `flattenEmptyDirectories: true`, so single-child directory
- * chains (src/kiro_crew/dashboard/handlers) collapse into one row — which is
+ * chains (src/aj_crew/dashboard/handlers) collapse into one row — which is
  * what the real workspace looks like too. Deep + shallow paths on purpose, so
  * All-files shows nesting and Changed shows a flat handful. */
 const TREE_PATHS = [
@@ -93,10 +93,10 @@ const TREE_PATHS = [
   'website/scripts/fixtures/pierre-migration.md',
   'docs/architecture/side-panel.md',
   'docs/system-specs/modules/session.md',
-  'src/kiro_crew/dashboard/handlers/files.py',
-  'src/kiro_crew/dashboard/handlers/sessions.py',
-  'src/kiro_crew/dashboard/server.py',
-  'src/kiro_crew/session.py',
+  'src/aj_crew/dashboard/handlers/files.py',
+  'src/aj_crew/dashboard/handlers/sessions.py',
+  'src/aj_crew/dashboard/server.py',
+  'src/aj_crew/session.py',
   'website/package.json',
   'website/scripts/capture-pierre-chat-diffs.mjs',
   'website/scripts/capture-pierre-files-tab.mjs',
@@ -202,7 +202,7 @@ const slots = [{
   running: false,
   last_message: 'Pierre migration',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   // The Files tab, the rail and the tree all hang off the slot's project dir.
   project: PROJECT,
@@ -399,7 +399,7 @@ async function main() {
    *   mc-panel-tabs:<slot>               the tab strip + which tab is active
    *   mc-files-rail-open / -w            rail shown, wide enough to read
    *   mc-side-panel-width                panel wide enough to hold viewer + rail
-   *   kirocrew:comment-hint-dismissed    the markdown comment-tip banner would
+   *   ajcrew:comment-hint-dismissed    the markdown comment-tip banner would
    *                                      appear in PREVIEW only and shift the
    *                                      very geometry frames 12/13 compare
    *   mc-chat-config.pinLastPrompt=false the pinned-prompt banner floats over
@@ -434,7 +434,7 @@ async function main() {
       localStorage.setItem('mc-file-collapse-unchanged', '0')
       localStorage.setItem('mc-files-rail-w', railW)
       localStorage.setItem('mc-side-panel-width', panelW)
-      localStorage.setItem('kirocrew:comment-hint-dismissed', '1')
+      localStorage.setItem('ajcrew:comment-hint-dismissed', '1')
       localStorage.setItem('mc-git-panel-opened:' + slot + ':' + project, '1')
       localStorage.setItem('mc-chat-config', JSON.stringify({ pinLastPrompt: false, streamMode: 'immediate' }))
     }, [
@@ -552,7 +552,7 @@ async function main() {
     probe('FilesHomePanel empty-viewer hint', p10.getByText('Select a file from the tree to open it in a new tab')),
     probe('rail filter field placeholder', p10.locator('input[placeholder="Filter files…"]'), { attr: 'placeholder' }),
     probe('All-files segment aria-pressed=true', p10.locator('[aria-label="All files"][aria-pressed="true"]'), { attr: 'aria-pressed' }),
-  ], [await assertTreeRows('10-files-tab-all-files', ['AGENTS.md', 'README.md', 'package.json', 'docs', 'website', 'kiro_crew'])])
+  ], [await assertTreeRows('10-files-tab-all-files', ['AGENTS.md', 'README.md', 'package.json', 'docs', 'website', 'aj_crew'])])
 
   // ── Frame 11: the CHANGED filter ───────────────────────────────────────────
   // Module-level `sessionChangedMode` in FileBrowserRail is deliberately NOT

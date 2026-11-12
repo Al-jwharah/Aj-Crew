@@ -7,9 +7,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.mcp_dashboard import TABLE
-from kiro_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.mcp_dashboard import TABLE
+from aj_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
 
 _FOLDERS = [{"id": "aaaaaaaaaaaa", "name": "Work", "parent_id": ""}]
 
@@ -137,7 +137,7 @@ def test_an_unverifiable_caller_is_refused() -> None:
 )
 def test_a_scoped_or_unlocatable_caller_is_refused(scope: Any) -> None:
     """The tool refuses these itself, not only through the blocked-tools list."""
-    with patch("kiro_crew.mcp_dashboard._caller_app_scope", return_value=scope):
+    with patch("aj_crew.mcp_dashboard._caller_app_scope", return_value=scope):
         out, posts = _move({"session": "chat-1-100", "before": "chat-2-200"})
     assert out.startswith("Error:") and "app-scoped or delegated caller" in out
     assert posts == []
@@ -149,8 +149,8 @@ def test_a_scoped_or_unlocatable_caller_is_refused(scope: Any) -> None:
         pytest.param("channel:slack:C1.100", id="channel-agent"),
         pytest.param("slack:1712793600.123456", id="slack-thread"),
         pytest.param("1712793600.123456", id="legacy-slack-thread"),
-        pytest.param("discord:kirocrew:dm:U1", id="discord-dm"),
-        pytest.param("telegram_kirocrew_dm_42", id="persisted-channel-stem"),
+        pytest.param("discord:ajcrew:dm:U1", id="discord-dm"),
+        pytest.param("telegram_ajcrew_dm_42", id="persisted-channel-stem"),
     ],
 )
 def test_a_messaging_caller_is_refused_before_any_session_is_listed(caller: str) -> None:
@@ -160,7 +160,7 @@ def test_a_messaging_caller_is_refused_before_any_session_is_listed(caller: str)
     forms is refused, not only a channel agent's ``channel:`` keys.
     """
     sel_obj = MagicMock()
-    with patch("kiro_crew.mcp_dashboard.sel", return_value=sel_obj):
+    with patch("aj_crew.mcp_dashboard.sel", return_value=sel_obj):
         out, dash = _call(
             "chat_session_pin_move",
             {"session": "chat-1-100", "before": "chat-2-200"},

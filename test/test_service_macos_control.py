@@ -20,7 +20,7 @@ from service_helpers import (  # noqa: F401 -- fixtures are found by name
     _restart_settle_without_waiting,
 )
 
-from kiro_crew.service.common import LAUNCHD_LABEL
+from aj_crew.service.common import LAUNCHD_LABEL
 
 
 class TestMacOSControlPaths:
@@ -30,7 +30,7 @@ class TestMacOSControlPaths:
         """Re-running install on a host that already has the plist loaded
         should boot it out first, then write+bootstrap. Otherwise the new
         plist wouldn't take effect."""
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         plist_dir = tmp_path / "LaunchAgents"
         plist_path = plist_dir / f"{LAUNCHD_LABEL}.plist"
@@ -49,10 +49,10 @@ class TestMacOSControlPaths:
         ok = MagicMock(returncode=0, stdout="", stderr="")
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/opt/homebrew/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/opt/homebrew/bin/ajcrew",
             ),
-            patch("kiro_crew.service.macos.subprocess.run", return_value=ok) as run,
+            patch("aj_crew.service.macos.subprocess.run", return_value=ok) as run,
         ):
             svc_macos.install()
         called = [c.args[0] for c in run.call_args_list]
@@ -62,7 +62,7 @@ class TestMacOSControlPaths:
         assert unload_idx < load_idx
 
     def test_uninstall_unloads_and_removes_plist(self, tmp_path, monkeypatch):
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         plist_dir = tmp_path / "LaunchAgents"
         plist_path = plist_dir / f"{LAUNCHD_LABEL}.plist"
@@ -72,11 +72,11 @@ class TestMacOSControlPaths:
         data_home.mkdir()
         sentinel = data_home / "memory.db"
         sentinel.write_text("user data")
-        monkeypatch.setenv("KIROCREW_HOME", str(data_home))
+        monkeypatch.setenv("AJCREW_HOME", str(data_home))
         monkeypatch.setattr(svc_macos, "PLIST_PATH", plist_path)
 
         ok = MagicMock(returncode=0, stdout="", stderr="")
-        with patch("kiro_crew.service.macos.subprocess.run", return_value=ok) as run:
+        with patch("aj_crew.service.macos.subprocess.run", return_value=ok) as run:
             svc_macos.uninstall()
         assert not plist_path.exists()
         called = [c.args[0] for c in run.call_args_list]
@@ -88,11 +88,11 @@ class TestMacOSControlPaths:
         """A refused bootout leaves the agent loaded: uninstall names the
         domain holding it (here user/<uid>, an SSH install) and still removes
         the plist and the launcher."""
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         plist_path = tmp_path / f"{LAUNCHD_LABEL}.plist"
         plist_path.write_text("<plist/>")
-        launcher = tmp_path / "kirocrew-live"
+        launcher = tmp_path / "ajcrew-live"
         launcher.write_text("#!/bin/sh\n")
         monkeypatch.setattr(svc_macos, "PLIST_PATH", plist_path)
         monkeypatch.setattr(svc_macos, "LIVE_PROGRAM", launcher)
@@ -105,7 +105,7 @@ class TestMacOSControlPaths:
 
         with (
             patch.object(svc_macos, "_bootout", return_value=False),
-            patch("kiro_crew.service.macos.subprocess.run", side_effect=_print),
+            patch("aj_crew.service.macos.subprocess.run", side_effect=_print),
         ):
             assert svc_macos.uninstall() == user
         assert not plist_path.exists()
@@ -114,28 +114,28 @@ class TestMacOSControlPaths:
     def test_uninstall_retry_still_reports_a_loaded_agent(self, tmp_path, monkeypatch):
         """A refused run already removed the plist; running uninstall again
         must not report success while launchd still holds the job."""
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         monkeypatch.setattr(svc_macos, "PLIST_PATH", tmp_path / "missing.plist")
-        monkeypatch.setattr(svc_macos, "LIVE_PROGRAM", tmp_path / "kirocrew-live")
+        monkeypatch.setattr(svc_macos, "LIVE_PROGRAM", tmp_path / "ajcrew-live")
         loaded = MagicMock(returncode=0, stdout="state = running\n", stderr="")
-        with patch("kiro_crew.service.macos.subprocess.run", return_value=loaded):
+        with patch("aj_crew.service.macos.subprocess.run", return_value=loaded):
             assert svc_macos.uninstall() == svc_macos._legacy_domains()[0]
 
     def test_uninstall_of_an_agent_never_loaded_succeeds(self, tmp_path, monkeypatch):
         """False from _bootout also means nothing was loaded: that is a clean
         uninstall, not a failure."""
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         plist_path = tmp_path / f"{LAUNCHD_LABEL}.plist"
         plist_path.write_text("<plist/>")
         monkeypatch.setattr(svc_macos, "PLIST_PATH", plist_path)
-        monkeypatch.setattr(svc_macos, "LIVE_PROGRAM", tmp_path / "kirocrew-live")
+        monkeypatch.setattr(svc_macos, "LIVE_PROGRAM", tmp_path / "ajcrew-live")
 
         absent = MagicMock(returncode=113, stdout="", stderr="Could not find service")
         with (
             patch.object(svc_macos, "_bootout", return_value=False),
-            patch("kiro_crew.service.macos.subprocess.run", return_value=absent),
+            patch("aj_crew.service.macos.subprocess.run", return_value=absent),
         ):
             assert svc_macos.uninstall() is None
         assert not plist_path.exists()
@@ -143,15 +143,15 @@ class TestMacOSControlPaths:
     def test_uninstall_does_not_probe_after_an_accepted_bootout(self, tmp_path, monkeypatch):
         """An accepted bootout is asynchronous: a probe right after it could
         still see the leaving job, so a clean uninstall never asks."""
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         plist_path = tmp_path / f"{LAUNCHD_LABEL}.plist"
         plist_path.write_text("<plist/>")
         monkeypatch.setattr(svc_macos, "PLIST_PATH", plist_path)
-        monkeypatch.setattr(svc_macos, "LIVE_PROGRAM", tmp_path / "kirocrew-live")
+        monkeypatch.setattr(svc_macos, "LIVE_PROGRAM", tmp_path / "ajcrew-live")
         with (
             patch.object(svc_macos, "_bootout", return_value=True),
-            patch("kiro_crew.service.macos.subprocess.run") as run,
+            patch("aj_crew.service.macos.subprocess.run") as run,
         ):
             assert svc_macos.uninstall() is None
         run.assert_not_called()
@@ -159,59 +159,59 @@ class TestMacOSControlPaths:
     def test_uninstall_with_nothing_installed_only_asks_launchd(self, tmp_path, monkeypatch):
         """Nothing installed: uninstall asks launchd, boots nothing out and
         reports success."""
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         monkeypatch.setattr(svc_macos, "PLIST_PATH", tmp_path / "missing.plist")
-        monkeypatch.setattr(svc_macos, "LIVE_PROGRAM", tmp_path / "kirocrew-live")
+        monkeypatch.setattr(svc_macos, "LIVE_PROGRAM", tmp_path / "ajcrew-live")
         absent = MagicMock(returncode=113, stdout="", stderr="Could not find service")
-        with patch("kiro_crew.service.macos.subprocess.run", return_value=absent) as run:
+        with patch("aj_crew.service.macos.subprocess.run", return_value=absent) as run:
             assert svc_macos.uninstall() is None
         verbs = [c.args[0][1] for c in run.call_args_list]
         assert verbs and set(verbs) == {"print"}
 
     def test_uninstall_idempotent_when_plist_missing(self, tmp_path, monkeypatch):
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         monkeypatch.setattr(svc_macos, "PLIST_PATH", tmp_path / "missing.plist")
         monkeypatch.setattr(svc_macos, "_loaded_domain", lambda: None)
-        live = tmp_path / "kirocrew-live"
+        live = tmp_path / "ajcrew-live"
         live.write_text("#!/bin/sh\n")
         monkeypatch.setattr(svc_macos, "LIVE_PROGRAM", live)
-        with patch("kiro_crew.service.macos.subprocess.run") as run:
+        with patch("aj_crew.service.macos.subprocess.run") as run:
             assert svc_macos.uninstall() is None
         assert not live.exists()
         run.assert_not_called()
 
     def test_is_active_returns_false_when_launchctl_errors(self):
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         not_loaded = MagicMock(returncode=1, stdout="", stderr="not loaded")
-        with patch("kiro_crew.service.macos.subprocess.run", return_value=not_loaded):
+        with patch("aj_crew.service.macos.subprocess.run", return_value=not_loaded):
             assert svc_macos.is_active() is False
 
     def test_is_active_returns_true_with_pid_in_output(self):
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         loaded = MagicMock(
             returncode=0,
-            stdout='{\n\t"PID" = 1234;\n\t"Label" = "dev.kirocrew.gateway";\n}\n',
+            stdout='{\n\t"PID" = 1234;\n\t"Label" = "dev.ajcrew.gateway";\n}\n',
             stderr="",
         )
-        with patch("kiro_crew.service.macos.subprocess.run", return_value=loaded):
+        with patch("aj_crew.service.macos.subprocess.run", return_value=loaded):
             assert svc_macos.is_active() is True
 
     def test_is_active_returns_true_when_loaded_without_pid_line(self):
         """`launchctl list <label>` succeeds even if the agent is loaded
         but not running. We treat that as active so callers don't trip
         over a transient state."""
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         loaded_no_pid = MagicMock(
             returncode=0,
-            stdout='{\n\t"Label" = "dev.kirocrew.gateway";\n}\n',
+            stdout='{\n\t"Label" = "dev.ajcrew.gateway";\n}\n',
             stderr="",
         )
-        with patch("kiro_crew.service.macos.subprocess.run", return_value=loaded_no_pid):
+        with patch("aj_crew.service.macos.subprocess.run", return_value=loaded_no_pid):
             assert svc_macos.is_active() is True
 
     def test_stop_unloads_plist_when_present(self, tmp_path, monkeypatch):
@@ -219,13 +219,13 @@ class TestMacOSControlPaths:
         # restart the agent immediately. ``bootout`` removes the job from its
         # domain, so there is nothing to respawn, while leaving the plist
         # enabled for the next login.
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         plist_path = tmp_path / "agent.plist"
         plist_path.write_text("<plist/>")
         monkeypatch.setattr(svc_macos, "PLIST_PATH", plist_path)
         ok = MagicMock(returncode=0, stdout="", stderr="")
-        with patch("kiro_crew.service.macos.subprocess.run", return_value=ok) as run:
+        with patch("aj_crew.service.macos.subprocess.run", return_value=ok) as run:
             assert svc_macos.stop() is True
         called = [c.args[0] for c in run.call_args_list]
         uid = getattr(os, "getuid", lambda: -1)()
@@ -234,10 +234,10 @@ class TestMacOSControlPaths:
         assert not any(c[:2] == ["launchctl", "stop"] for c in called)
 
     def test_stop_no_op_when_plist_absent(self, tmp_path, monkeypatch):
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         monkeypatch.setattr(svc_macos, "PLIST_PATH", tmp_path / "missing.plist")
-        with patch("kiro_crew.service.macos.subprocess.run") as run:
+        with patch("aj_crew.service.macos.subprocess.run") as run:
             assert svc_macos.stop() is False
         run.assert_not_called()
 
@@ -249,13 +249,13 @@ class TestMacOSControlPaths:
         # never runs and the agent stays down. ``kickstart -k`` is performed by
         # launchd itself, so it survives the caller's death — the property Dev
         # Fleet's Restart control depends on.
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         plist_path = tmp_path / "agent.plist"
         plist_path.write_text("<plist/>")
         monkeypatch.setattr(svc_macos, "PLIST_PATH", plist_path)
         ok = MagicMock(returncode=0, stdout="", stderr="")
-        with patch("kiro_crew.service.macos.subprocess.run", return_value=ok) as run:
+        with patch("aj_crew.service.macos.subprocess.run", return_value=ok) as run:
             assert svc_macos.restart() is True
         called = [c.args[0] for c in run.call_args_list]
         assert len(called) == 1, "restart must be a single launchd operation"
@@ -269,13 +269,13 @@ class TestMacOSControlPaths:
 
     def test_restart_is_false_when_launchd_rejects_it(self, tmp_path, monkeypatch):
         """A rejected kickstart must not be reported as a restart."""
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         plist_path = tmp_path / "agent.plist"
         plist_path.write_text("<plist/>")
         monkeypatch.setattr(svc_macos, "PLIST_PATH", plist_path)
         bad = MagicMock(returncode=1, stdout="", stderr="no such service")
-        with patch("kiro_crew.service.macos.subprocess.run", return_value=bad):
+        with patch("aj_crew.service.macos.subprocess.run", return_value=bad):
             assert svc_macos.restart() is False
 
     def test_restart_no_op_when_plist_absent(self, tmp_path, monkeypatch):
@@ -283,41 +283,41 @@ class TestMacOSControlPaths:
         # error. The CLI controller decides whether to fall back to the
         # foreground-gateway path; this layer just refuses to invent a
         # plist that doesn't exist.
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         monkeypatch.setattr(svc_macos, "PLIST_PATH", tmp_path / "missing.plist")
-        with patch("kiro_crew.service.macos.subprocess.run") as run:
+        with patch("aj_crew.service.macos.subprocess.run") as run:
             assert svc_macos.restart() is False
         run.assert_not_called()
 
     def test_status_returns_launchctl_output_when_loaded(self):
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         loaded = MagicMock(
             returncode=0,
             stdout='{\n\t"PID" = 1234;\n}\n',
             stderr="",
         )
-        with patch("kiro_crew.service.macos.subprocess.run", return_value=loaded):
+        with patch("aj_crew.service.macos.subprocess.run", return_value=loaded):
             out = svc_macos.status()
         assert "PID" in out
 
     def test_status_returns_friendly_message_when_not_loaded(self):
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         not_loaded = MagicMock(returncode=1, stdout="", stderr="no entry")
-        with patch("kiro_crew.service.macos.subprocess.run", return_value=not_loaded):
+        with patch("aj_crew.service.macos.subprocess.run", return_value=not_loaded):
             out = svc_macos.status()
         assert "not loaded" in out
 
-    def test_kirocrew_bin_falls_back_to_argv0(self, monkeypatch):
-        """If `kirocrew` is not on PATH, kirocrew_bin should resolve
+    def test_ajcrew_bin_falls_back_to_argv0(self, monkeypatch):
+        """If `ajcrew` is not on PATH, ajcrew_bin should resolve
         sys.argv[0] rather than crash."""
-        from kiro_crew.service import common as svc_common
+        from aj_crew.service import common as svc_common
 
-        monkeypatch.setattr(sys, "argv", ["/some/path/kirocrew"])
-        with patch("kiro_crew.service.common.shutil.which", return_value=None):
-            assert "kirocrew" in svc_common.kirocrew_bin()
+        monkeypatch.setattr(sys, "argv", ["/some/path/ajcrew"])
+        with patch("aj_crew.service.common.shutil.which", return_value=None):
+            assert "ajcrew" in svc_common.ajcrew_bin()
 
 
 class TestEnsureLiveProgram:
@@ -330,18 +330,18 @@ class TestEnsureLiveProgram:
     """
 
     def _agent(self, monkeypatch, tmp_path, *, indirected=True, fmt=None):
-        from kiro_crew.service import macos as svc_macos
+        from aj_crew.service import macos as svc_macos
 
         launcher = tmp_path / "live-gateway"
-        plist = tmp_path / "dev.kirocrew.gateway.plist"
-        target = str(launcher) if indirected else "/usr/local/bin/kirocrew"
+        plist = tmp_path / "dev.ajcrew.gateway.plist"
+        target = str(launcher) if indirected else "/usr/local/bin/ajcrew"
         # A REAL plist, in either wire format: launchd accepts XML and binary
         # alike, and the reconcile must not care which one it is handed.
         plist.write_bytes(
             plistlib.dumps(
                 {
-                    "Label": "dev.kirocrew.gateway",
-                    "EnvironmentVariables": {"KIROCREW_PORT": "5477"},
+                    "Label": "dev.ajcrew.gateway",
+                    "EnvironmentVariables": {"AJCREW_PORT": "5477"},
                     "ProgramArguments": [target, "gateway", "--no-open"],
                 },
                 fmt=fmt or plistlib.FMT_XML,
@@ -359,7 +359,7 @@ class TestEnsureLiveProgram:
         that only decides whether to rewrite a launcher.
         """
         svc, launcher, _plist = self._agent(monkeypatch, tmp_path, fmt=plistlib.FMT_BINARY)
-        monkeypatch.setenv("KIROCREW_SERVICE_BIN", str(self._exe(tmp_path / "bin" / "kirocrew")))
+        monkeypatch.setenv("AJCREW_SERVICE_BIN", str(self._exe(tmp_path / "bin" / "ajcrew")))
 
         assert svc.ensure_live_program() is True
         assert launcher.exists()
@@ -416,12 +416,12 @@ class TestEnsureLiveProgram:
         self, monkeypatch, tmp_path
     ):
         svc, launcher, plist = self._agent(monkeypatch, tmp_path)
-        pinned = self._exe(tmp_path / "opt" / "kirocrew")
-        monkeypatch.setenv("KIROCREW_SERVICE_BIN", str(pinned))
+        pinned = self._exe(tmp_path / "opt" / "ajcrew")
+        monkeypatch.setenv("AJCREW_SERVICE_BIN", str(pinned))
         # Read the target back off the resolver rather than restating a literal:
-        # kirocrew_bin() absolutizes, so the path SHAPE differs per platform
+        # ajcrew_bin() absolutizes, so the path SHAPE differs per platform
         # (Windows resolves a rooted POSIX path to a drive-qualified one).
-        resolved = svc.kirocrew_bin()
+        resolved = svc.ajcrew_bin()
         before = plist.read_bytes()
 
         assert svc.ensure_live_program() is True
@@ -438,7 +438,7 @@ class TestEnsureLiveProgram:
         "Windows, and this reconcile only ever runs on darwin",
     )
     def test_refuses_to_write_a_launcher_that_execs_a_non_executable(self, monkeypatch, tmp_path):
-        """`python -m kiro_crew` with no console script resolves to `__main__.py`.
+        """`python -m aj_crew` with no console script resolves to `__main__.py`.
 
         Writing that would leave launchd unable to spawn the agent AND suppress
         every later repair, since the launcher would then exist — the self-heal
@@ -448,7 +448,7 @@ class TestEnsureLiveProgram:
         not_exec = tmp_path / "pkg" / "__main__.py"
         not_exec.parent.mkdir()
         not_exec.write_text("# a module, not a program\n")
-        monkeypatch.setenv("KIROCREW_SERVICE_BIN", str(not_exec))
+        monkeypatch.setenv("AJCREW_SERVICE_BIN", str(not_exec))
 
         with pytest.raises(OSError, match="not an executable file"):
             svc.ensure_live_program()
@@ -459,41 +459,41 @@ class TestEnsureLiveProgram:
         """No sibling script and no override: refuse, never resolve through PATH.
 
         PATH cannot answer "which install is running", so an unrelated or older
-        `kirocrew` ahead of this one would be persisted into the agent — the
+        `ajcrew` ahead of this one would be persisted into the agent — the
         mismatch this repair exists to end, recreated by the repair.
         """
         svc, launcher, _plist = self._agent(monkeypatch, tmp_path)
-        monkeypatch.delenv("KIROCREW_SERVICE_BIN", raising=False)
-        stray = self._exe(tmp_path / "stray" / "kirocrew")
-        from kiro_crew.service import common as svc_common
+        monkeypatch.delenv("AJCREW_SERVICE_BIN", raising=False)
+        stray = self._exe(tmp_path / "stray" / "ajcrew")
+        from aj_crew.service import common as svc_common
 
         monkeypatch.setattr(svc_common.shutil, "which", lambda _n: str(stray))
-        # An interpreter directory with NO kirocrew beside it.
+        # An interpreter directory with NO ajcrew beside it.
         bare = tmp_path / "bare"
         bare.mkdir()
         monkeypatch.setattr(svc.sys, "executable", str(bare / "python"))
 
-        with pytest.raises(OSError, match="no kirocrew console script"):
+        with pytest.raises(OSError, match="no ajcrew console script"):
             svc.ensure_live_program()
 
         assert not launcher.exists()
 
     def test_targets_the_repairing_install_not_whatever_path_finds(self, monkeypatch, tmp_path):
-        """A stray `kirocrew` earlier on PATH must not be baked into the launcher.
+        """A stray `ajcrew` earlier on PATH must not be baked into the launcher.
 
         Restoring the agent onto some OTHER install is a quieter version of the
         mismatch this repair exists to end, so the target comes from the running
         interpreter rather than from PATH resolution.
         """
         svc, launcher, _plist = self._agent(monkeypatch, tmp_path)
-        monkeypatch.delenv("KIROCREW_SERVICE_BIN", raising=False)
-        stray = self._exe(tmp_path / "stray" / "kirocrew")
-        # kirocrew_bin() lives in service.common and resolves through ITS shutil.
-        from kiro_crew.service import common as svc_common
+        monkeypatch.delenv("AJCREW_SERVICE_BIN", raising=False)
+        stray = self._exe(tmp_path / "stray" / "ajcrew")
+        # ajcrew_bin() lives in service.common and resolves through ITS shutil.
+        from aj_crew.service import common as svc_common
 
         monkeypatch.setattr(svc_common.shutil, "which", lambda _n: str(stray))
         # The console script that ships beside the running interpreter.
-        mine = self._exe(tmp_path / "mine" / ("kirocrew.exe" if os.name == "nt" else "kirocrew"))
+        mine = self._exe(tmp_path / "mine" / ("ajcrew.exe" if os.name == "nt" else "ajcrew"))
         monkeypatch.setattr(svc.sys, "executable", str(mine.parent / "python"))
 
         assert svc.ensure_live_program() is True
@@ -505,9 +505,9 @@ class TestEnsureLiveProgram:
     def test_an_explicit_service_bin_override_still_wins(self, monkeypatch, tmp_path):
         """Pinning the service Program is operator intent, not PATH shadowing."""
         svc, launcher, _plist = self._agent(monkeypatch, tmp_path)
-        pinned = self._exe(tmp_path / "pinned" / "kirocrew")
-        monkeypatch.setenv("KIROCREW_SERVICE_BIN", str(pinned))
-        resolved = svc.kirocrew_bin()
+        pinned = self._exe(tmp_path / "pinned" / "ajcrew")
+        monkeypatch.setenv("AJCREW_SERVICE_BIN", str(pinned))
+        resolved = svc.ajcrew_bin()
 
         assert svc.ensure_live_program() is True
 
@@ -517,7 +517,7 @@ class TestEnsureLiveProgram:
         """An existing launcher may carry a Dev Fleet cutover — never clobber it."""
         svc, launcher, _plist = self._agent(monkeypatch, tmp_path)
         launcher.write_text(
-            "#!/bin/sh\ncd '/wt/live' || exit 1\nexec '/wt/live/.venv/bin/kirocrew' \"$@\"\n"
+            "#!/bin/sh\ncd '/wt/live' || exit 1\nexec '/wt/live/.venv/bin/ajcrew' \"$@\"\n"
         )
 
         assert svc.ensure_live_program() is False
@@ -542,32 +542,32 @@ class TestEnsureLiveProgram:
 class TestLauncherReconcileIsProductionOnly:
     """Only the real instance may repair the shared launchd launcher.
 
-    LIVE_PROGRAM is a per-user path that KIROCREW_HOME does not scope, so a dev,
+    LIVE_PROGRAM is a per-user path that AJCREW_HOME does not scope, so a dev,
     pod, or worktree gateway "repairing" it would repoint the user's REAL agent
     at its own venv — the serving-vs-managed mismatch the reconcile exists to
     prevent, authored by the reconcile itself.
     """
 
     def test_the_default_home_on_darwin_reconciles(self, monkeypatch):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         monkeypatch.setattr(cli_server.sys, "platform", "darwin")
 
         assert cli_server._should_reconcile_launchd_launcher() is True
 
     def test_an_isolated_home_does_not_reconcile(self, monkeypatch, tmp_path):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / ".kirocrew-dev"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / ".ajcrew-dev"))
         monkeypatch.setattr(cli_server.sys, "platform", "darwin")
 
         assert cli_server._should_reconcile_launchd_launcher() is False
 
     def test_non_darwin_never_reconciles(self, monkeypatch):
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         monkeypatch.setattr(cli_server.sys, "platform", "linux")
 
         assert cli_server._should_reconcile_launchd_launcher() is False
@@ -580,9 +580,9 @@ class TestLauncherReconcileIsProductionOnly:
         the signed bundle and invalidate its signature. The launchd agent belongs
         to a `service install`, not to an app that manages its own backend.
         """
-        from kiro_crew import cli_server, platform_compat
+        from aj_crew import cli_server, platform_compat
 
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         monkeypatch.setattr(cli_server.sys, "platform", "darwin")
         # Drive the real predicate with a bundle-shaped interpreter path rather
         # than stubbing it, so this test and the packaging layout cannot agree on
@@ -590,7 +590,7 @@ class TestLauncherReconcileIsProductionOnly:
         bundled_python = (
             tmp_path
             / platform_compat.BUNDLED_BACKEND_DIST_DIRNAME
-            / "kirocrew-backend"
+            / "ajcrew-backend"
             / "bin"
             / "python3.12"
         )

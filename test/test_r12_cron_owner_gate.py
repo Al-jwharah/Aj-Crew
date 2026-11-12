@@ -14,7 +14,7 @@ four caller rows:
 * an app token acting on a job its app created still reaches the store,
   because App Kit documents these paths as declarable app routes;
 * the internal-secret transport (no ``app`` claim at all) still reaches the
-  store, because ``kirocrew cron trigger`` posts ``/run`` that way.
+  store, because ``ajcrew cron trigger`` posts ``/run`` that way.
 
 Every collaborator is a mock on ``state.crons``: no real cron store, scheduler
 or agent is touched.
@@ -30,7 +30,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.cron import CronService
+from aj_crew.cron import CronService
 
 pytestmark = pytest.mark.asyncio
 
@@ -106,7 +106,7 @@ ROUTE_IDS = ["patch", "run", "enable", "ack", "cancel", "delete", "batch_delete"
 
 @pytest.fixture
 def sel_calls(monkeypatch) -> MagicMock:
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     recorder = MagicMock()
     monkeypatch.setattr(sel_mod, "sel", lambda: recorder)
@@ -114,7 +114,7 @@ def sel_calls(monkeypatch) -> MagicMock:
 
 
 async def _call(claims: dict[str, object], method: str, path: str, body):
-    from kiro_crew.dashboard.handlers import cron as h
+    from aj_crew.dashboard.handlers import cron as h
 
     crons = _crons()
     app = web.Application(middlewares=[_identity(claims)])

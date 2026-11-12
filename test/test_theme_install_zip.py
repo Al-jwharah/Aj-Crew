@@ -6,7 +6,7 @@ These tests cover what only an archive can express (traversal names, symlink
 entries, size inflation, macOS metadata, a wrapping folder) and the HTTP surface
 (size cap, empty body, governance, a pack landing under ``themes/``).
 
-Every test points ``KIROCREW_HOME`` at ``tmp_path``. The HTTP tests run a real
+Every test points ``AJCREW_HOME`` at ``tmp_path``. The HTTP tests run a real
 aiohttp app on an OS-assigned loopback port.
 """
 
@@ -24,9 +24,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-import kiro_crew.platform.governance_profiles as gov_mod
-from kiro_crew.dashboard import theme_zip
-from kiro_crew.dashboard.handlers import themes as th
+import aj_crew.platform.governance_profiles as gov_mod
+from aj_crew.dashboard import theme_zip
+from aj_crew.dashboard.handlers import themes as th
 
 _VARS = {
     "dark": {"--bg": "#000000", "--text": "#ffffff", "--accent": "#3366ff"},
@@ -118,7 +118,7 @@ def _pack_entries(prefix: str = "") -> dict[str, bytes | str]:
 def themes_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     home = tmp_path / "crew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     d = home / "themes"
     d.mkdir()
     assert os.path.realpath(str(th._themes_dir())) == os.path.realpath(str(d))

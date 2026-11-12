@@ -29,9 +29,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew import mcp_core, session_directive
-from kiro_crew.acp._dispatch import parse_session_update
-from kiro_crew.acp.types import (
+from aj_crew import mcp_core, session_directive
+from aj_crew.acp._dispatch import parse_session_update
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_SUBAGENT_ACTIVITY,
     EVENT_SUBAGENT_LIST,
@@ -41,9 +41,9 @@ from kiro_crew.acp.types import (
     EVENT_TOOL_RESULT,
     AcpEvent,
 )
-from kiro_crew.dashboard import directive_queue
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.dashboard.session_directive_apply import DirectiveOutcome
+from aj_crew.dashboard import directive_queue
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.dashboard.session_directive_apply import DirectiveOutcome
 
 # The raw arguments the model sent. Long enough to matter, quoted enough to have
 # defeated the naive repair, and carrying the ``_meta`` block KAS attaches to
@@ -148,7 +148,7 @@ async def _drive(state, slot, events, monkeypatch, *, park=True, park_input=None
     *park* publishes the record the tool would have parked, under the digest of
     *park_input* (default: the raw call args), for THIS slot's session key.
     """
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     parked = []
 
@@ -185,7 +185,7 @@ async def _drive(state, slot, events, monkeypatch, *, park=True, park_input=None
 
 def _opencode_events(
     *,
-    wire_title: str = "kirocrew-core_monitor_start",
+    wire_title: str = "ajcrew-core_monitor_start",
     result_text: str = "Monitor loop requested.",
     tool_call_id: str = "tc-oc",
 ):
@@ -233,8 +233,8 @@ def _kas_events(result_text: str, *, raw_input=FRAME_INPUT, tool_call_id="tc-kas
         AcpEvent(
             kind=EVENT_TOOL_CALL,
             tool_call_id=tool_call_id,
-            title="@kirocrew-core/monitor_start",
-            wire_title="@kirocrew-core/monitor_start",
+            title="@ajcrew-core/monitor_start",
+            wire_title="@ajcrew-core/monitor_start",
             tool_kind="other",
             tool_name="",
             mcp_server_name="",
@@ -303,8 +303,8 @@ class TestRawInputArrivesLate:
             AcpEvent(
                 kind=EVENT_TOOL_CALL_UPDATE,
                 tool_call_id="tc-late",
-                title="@kirocrew-core/monitor_start",
-                wire_title="@kirocrew-core/monitor_start",
+                title="@ajcrew-core/monitor_start",
+                wire_title="@ajcrew-core/monitor_start",
                 raw_tool_params=FRAME_INPUT,
             ),
             AcpEvent(
@@ -407,7 +407,7 @@ class TestTheKeyStillGrantsNothing:
             session_directive.call_input_digest("monitor_start", CALL_ARGS),
         )
         monkeypatch.setattr(directive_queue.time, "monotonic", _real)
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.chat_runner"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.chat_runner"):
             spy = await _drive(
                 state,
                 slot,
@@ -463,7 +463,7 @@ class TestTheToolSideOfTheKey:
         not a second invocation: routing it through ``call_tool_with_logging``
         wrote a second "completed" row attributed to the same session, doubling
         every directive in the audit trail."""
-        from kiro_crew import mcp_shared
+        from aj_crew import mcp_shared
 
         rows: list[dict] = []
 
@@ -496,7 +496,7 @@ class TestTheToolSideOfTheKey:
     def test_a_direct_handler_call_reports_nothing(self, monkeypatch):
         """Outside ``_call_tool`` there is no call to report; posting an empty one
         would only be refused by the gateway as not derivable."""
-        from kiro_crew.mcp_tools import control
+        from aj_crew.mcp_tools import control
 
         posted: list[tuple[str, dict]] = []
         monkeypatch.setattr(mcp_core, "_post", lambda p, b, **kw: posted.append((p, b)))
@@ -518,7 +518,7 @@ class TestEmptyArgumentDirectives:
                 {
                     "sessionUpdate": "tool_call",
                     "toolCallId": "tc-empty",
-                    "title": "@kirocrew-core/reset_conversation",
+                    "title": "@ajcrew-core/reset_conversation",
                     "kind": "other",
                     "rawInput": {},
                 },
@@ -540,8 +540,8 @@ class TestEmptyArgumentDirectives:
             AcpEvent(
                 kind=EVENT_TOOL_CALL,
                 tool_call_id="tc-e",
-                title="@kirocrew-core/reset_conversation",
-                wire_title="@kirocrew-core/reset_conversation",
+                title="@ajcrew-core/reset_conversation",
+                wire_title="@ajcrew-core/reset_conversation",
                 tool_kind="other",
                 tool_name="",
                 mcp_server_name="",
@@ -556,7 +556,7 @@ class TestEmptyArgumentDirectives:
             AcpEvent(kind=EVENT_TEXT_CHUNK, text="ok"),
             AcpEvent(kind=EVENT_COMPLETE),
         ]
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         parked = []
 
@@ -601,8 +601,8 @@ class TestPlantedRecordIsNotClaimedByADifferentTool:
             AcpEvent(
                 kind=EVENT_TOOL_CALL,
                 tool_call_id="tc-rs",
-                title="@kirocrew-core/resource_status",
-                wire_title="@kirocrew-core/resource_status",
+                title="@ajcrew-core/resource_status",
+                wire_title="@ajcrew-core/resource_status",
                 tool_kind="other",
                 tool_name="",
                 mcp_server_name="",
@@ -614,7 +614,7 @@ class TestPlantedRecordIsNotClaimedByADifferentTool:
             AcpEvent(kind=EVENT_TEXT_CHUNK, text="ok"),
             AcpEvent(kind=EVENT_COMPLETE),
         ]
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         parked = []
 
@@ -651,11 +651,11 @@ class TestPlantedRecordIsNotClaimedByADifferentTool:
 
     def test_kas_wire_title_and_kiro_cli_identity_both_resolve(self):
         assert (
-            session_directive.directive_tool_from_call("", "", "@kirocrew-core/monitor_start")
+            session_directive.directive_tool_from_call("", "", "@ajcrew-core/monitor_start")
             == "monitor_start"
         )
         assert (
-            session_directive.directive_tool_from_call("kirocrew-core", "monitor_start", "x")
+            session_directive.directive_tool_from_call("ajcrew-core", "monitor_start", "x")
             == "monitor_start"
         )
 
@@ -690,8 +690,8 @@ class TestNativeSubagentCannotReachTheParentThroughASharedDigest:
             AcpEvent(
                 kind=EVENT_TOOL_CALL,
                 tool_call_id="tc-child",
-                title="@kirocrew-core/reset_conversation",
-                wire_title="@kirocrew-core/reset_conversation",
+                title="@ajcrew-core/reset_conversation",
+                wire_title="@ajcrew-core/reset_conversation",
                 tool_kind="other",
                 tool_name="",
                 mcp_server_name="",
@@ -701,8 +701,8 @@ class TestNativeSubagentCannotReachTheParentThroughASharedDigest:
             AcpEvent(
                 kind=EVENT_TOOL_CALL,
                 tool_call_id="tc-parent",
-                title="@kirocrew-core/reset_conversation",
-                wire_title="@kirocrew-core/reset_conversation",
+                title="@ajcrew-core/reset_conversation",
+                wire_title="@ajcrew-core/reset_conversation",
                 tool_kind="other",
                 tool_name="",
                 mcp_server_name="",
@@ -723,7 +723,7 @@ class TestNativeSubagentCannotReachTheParentThroughASharedDigest:
             AcpEvent(kind=EVENT_TEXT_CHUNK, text="ok"),
             AcpEvent(kind=EVENT_COMPLETE),
         ]
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         parked = []
 
@@ -765,7 +765,7 @@ def _sel_spy(monkeypatch) -> list[dict]:
         def __getattr__(self, name):
             return lambda *a, **k: None
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.sel", lambda: _Spy())
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.sel", lambda: _Spy())
     return calls
 
 
@@ -805,8 +805,8 @@ class TestOneRefusalPerFrame:
             AcpEvent(
                 kind=EVENT_TOOL_CALL,
                 tool_call_id="tc-nat",
-                title="@kirocrew-core/monitor_start",
-                wire_title="@kirocrew-core/monitor_start",
+                title="@ajcrew-core/monitor_start",
+                wire_title="@ajcrew-core/monitor_start",
                 tool_kind="other",
                 tool_name="monitor_start",
                 mcp_server_name=session_directive.CORE_MCP_SERVER,
@@ -860,8 +860,8 @@ class TestOneRefusalPerFrame:
             AcpEvent(
                 kind=EVENT_TOOL_CALL,
                 tool_call_id="tc-nat",
-                title="@kirocrew-core/monitor_start",
-                wire_title="@kirocrew-core/monitor_start",
+                title="@ajcrew-core/monitor_start",
+                wire_title="@ajcrew-core/monitor_start",
                 tool_kind="other",
                 tool_name="monitor_start",
                 mcp_server_name=session_directive.CORE_MCP_SERVER,
@@ -907,8 +907,8 @@ class TestOneRefusalPerFrame:
             AcpEvent(
                 kind=EVENT_TOOL_CALL,
                 tool_call_id="tc-garbled",
-                title="@kirocrew-core/monitor_start",
-                wire_title="@kirocrew-core/monitor_start",
+                title="@ajcrew-core/monitor_start",
+                wire_title="@ajcrew-core/monitor_start",
                 tool_kind="other",
                 tool_name="monitor_start",
                 mcp_server_name=session_directive.CORE_MCP_SERVER,
@@ -942,7 +942,7 @@ class TestTheDisplayTitleCannotForgeTheTool:
     """``select_tool_title`` fills the DISPLAY title from a shell call's
     model-authored ``rawInput.description``. The tool half of the digest reads
     the backend's own ``wire_title`` instead, so a shell call described as
-    ``@kirocrew-core/reset_conversation`` resolves to nothing and records no
+    ``@ajcrew-core/reset_conversation`` resolves to nothing and records no
     digest -- a planted record stays unclaimed."""
 
     def test_parser_keeps_the_wire_title_apart_from_the_description(self):
@@ -956,7 +956,7 @@ class TestTheDisplayTitleCannotForgeTheTool:
                     "kind": "execute",
                     "rawInput": {
                         "command": "echo hi",
-                        "description": "@kirocrew-core/reset_conversation",
+                        "description": "@ajcrew-core/reset_conversation",
                     },
                 },
                 cache_scope="scope",
@@ -964,7 +964,7 @@ class TestTheDisplayTitleCannotForgeTheTool:
             if e.kind == EVENT_TOOL_CALL
         ]
         ev = evs[0]
-        assert ev.title == "@kirocrew-core/reset_conversation", "display label is the description"
+        assert ev.title == "@ajcrew-core/reset_conversation", "display label is the description"
         assert ev.wire_title == "Run Command", "the wire title is the backend's own field"
         assert (
             session_directive.directive_tool_from_call(
@@ -984,12 +984,12 @@ class TestTheDisplayTitleCannotForgeTheTool:
         state = _stub_state(tmp_path)
         slot = state.get_or_create_slot("desc-forge")
         slot._titled = True
-        forged_args = {"command": "echo hi", "description": "@kirocrew-core/reset_conversation"}
+        forged_args = {"command": "echo hi", "description": "@ajcrew-core/reset_conversation"}
         events = [
             AcpEvent(
                 kind=EVENT_TOOL_CALL,
                 tool_call_id="tc-sh",
-                title="@kirocrew-core/reset_conversation",  # what select_tool_title produced
+                title="@ajcrew-core/reset_conversation",  # what select_tool_title produced
                 wire_title="Run Command",
                 tool_kind="execute",
                 is_shell=True,
@@ -1003,7 +1003,7 @@ class TestTheDisplayTitleCannotForgeTheTool:
             AcpEvent(kind=EVENT_TEXT_CHUNK, text="ok"),
             AcpEvent(kind=EVENT_COMPLETE),
         ]
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         parked = []
 
@@ -1043,21 +1043,21 @@ class TestClaudeBackendResolvesTheTool:
 
     @staticmethod
     def _msg(update: dict):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         return JsonRpcMessage(method="session/update", params={"update": update})
 
     def test_resolver_accepts_the_raw_mcp_name(self):
         assert (
-            session_directive.directive_tool_from_call("", "", "mcp__kirocrew-core__monitor_start")
+            session_directive.directive_tool_from_call("", "", "mcp__ajcrew-core__monitor_start")
             == "monitor_start"
         )
         # Server half still checked: another server's same-named tool is not ours.
         assert session_directive.directive_tool_from_call("", "", "mcp__other__monitor_start") == ""
-        assert session_directive.directive_tool_from_call("", "", "mcp__kirocrew-core__nope") == ""
+        assert session_directive.directive_tool_from_call("", "", "mcp__ajcrew-core__nope") == ""
 
     def test_legacy_tool_call_builder_carries_the_wire_title(self):
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = AcpClient()
         ev = client._extract_tool_event(
@@ -1065,14 +1065,14 @@ class TestClaudeBackendResolvesTheTool:
                 {
                     "sessionUpdate": "tool_call",
                     "toolCallId": "tc-cc",
-                    "title": "mcp__kirocrew-core__monitor_start",
+                    "title": "mcp__ajcrew-core__monitor_start",
                     "kind": "other",
                     "rawInput": CALL_ARGS,
                 }
             )
         )
         assert ev is not None and ev.kind == EVENT_TOOL_CALL
-        assert ev.wire_title == "mcp__kirocrew-core__monitor_start"
+        assert ev.wire_title == "mcp__ajcrew-core__monitor_start"
         assert ev.raw_tool_params == CALL_ARGS
         assert (
             session_directive.directive_tool_from_call(
@@ -1083,14 +1083,14 @@ class TestClaudeBackendResolvesTheTool:
 
     def test_legacy_builder_preserves_an_explicit_empty_raw_input(self):
         """Same fix as the shared builder: an explicit ``{}`` is an argument set."""
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         ev = AcpClient()._extract_tool_event(
             self._msg(
                 {
                     "sessionUpdate": "tool_call",
                     "toolCallId": "tc-cc0",
-                    "title": "mcp__kirocrew-core__reset_conversation",
+                    "title": "mcp__ajcrew-core__reset_conversation",
                     "kind": "other",
                     "rawInput": {},
                 }
@@ -1099,7 +1099,7 @@ class TestClaudeBackendResolvesTheTool:
         assert ev is not None and ev.raw_tool_params == {}
 
     def test_legacy_refinement_builder_carries_the_wire_title(self):
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = AcpClient()
         # claude-agent-acp: initial tool_call with empty input, then the refinement.
@@ -1119,17 +1119,17 @@ class TestClaudeBackendResolvesTheTool:
                 {
                     "sessionUpdate": "tool_call_update",
                     "toolCallId": "tc-cc2",
-                    "title": "mcp__kirocrew-core__monitor_start",
+                    "title": "mcp__ajcrew-core__monitor_start",
                     "rawInput": CALL_ARGS,
                 }
             )
         )
         assert ev is not None and ev.kind == EVENT_TOOL_CALL_UPDATE
-        assert ev.wire_title == "mcp__kirocrew-core__monitor_start"
+        assert ev.wire_title == "mcp__ajcrew-core__monitor_start"
         assert ev.raw_tool_params == CALL_ARGS
 
     def test_legacy_builder_keeps_a_shell_description_out_of_the_wire_title(self):
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = AcpClient()
         ev = client._extract_tool_event(
@@ -1141,7 +1141,7 @@ class TestClaudeBackendResolvesTheTool:
                     "kind": "execute",
                     "rawInput": {
                         "command": "echo hi",
-                        "description": "mcp__kirocrew-core__reset_conversation",
+                        "description": "mcp__ajcrew-core__reset_conversation",
                     },
                 }
             )
@@ -1172,8 +1172,8 @@ class TestClaudeBackendResolvesTheTool:
             AcpEvent(
                 kind=EVENT_TOOL_CALL_UPDATE,
                 tool_call_id="tc-cl",
-                title="mcp__kirocrew-core__monitor_start",
-                wire_title="mcp__kirocrew-core__monitor_start",
+                title="mcp__ajcrew-core__monitor_start",
+                wire_title="mcp__ajcrew-core__monitor_start",
                 raw_tool_params=CALL_ARGS,
             ),
             AcpEvent(
@@ -1223,7 +1223,7 @@ class TestClaudeBackendResolvesTheTool:
 
 class TestKasWireTitleCarriesTheBackendPrefix:
     """A recorded KAS ``tool_call`` frame titled the MCP call
-    ``Running: @kirocrew-core/suggest_followup`` -- the backend's own ``Running: ``
+    ``Running: @ajcrew-core/suggest_followup`` -- the backend's own ``Running: ``
     prefix in front of the wrapper's ``@<server>/<tool>``. Matching the bare
     spelling only left that frame with no digest, so on a KAS session that emits
     no ``_meta.kiro`` the record parked and nothing claimed it: the tool answered
@@ -1232,13 +1232,13 @@ class TestKasWireTitleCarriesTheBackendPrefix:
     @pytest.mark.parametrize(
         "title,expected",
         [
-            ("Running: @kirocrew-core/suggest_followup", "suggest_followup"),
-            ("Running: @kirocrew-core/monitor_start", "monitor_start"),
-            ("@kirocrew-core/monitor_start", "monitor_start"),
+            ("Running: @ajcrew-core/suggest_followup", "suggest_followup"),
+            ("Running: @ajcrew-core/monitor_start", "monitor_start"),
+            ("@ajcrew-core/monitor_start", "monitor_start"),
             ("Running: @other-server/monitor_start", ""),
-            ("Running: Running: @kirocrew-core/monitor_start", ""),  # one prefix, not a loop
-            ("Loading tool: kirocrew-core::suggest_followup", ""),  # tool_search, not the call
-            ("Running: echo @kirocrew-core/monitor_start", ""),
+            ("Running: Running: @ajcrew-core/monitor_start", ""),  # one prefix, not a loop
+            ("Loading tool: ajcrew-core::suggest_followup", ""),  # tool_search, not the call
+            ("Running: echo @ajcrew-core/monitor_start", ""),
         ],
     )
     def test_prefixed_wire_title_resolves(self, title, expected):
@@ -1252,8 +1252,8 @@ class TestKasWireTitleCarriesTheBackendPrefix:
         state = _stub_state(tmp_path)
         slot = state.get_or_create_slot("kas-prefixed-title")
         events = _kas_events(_kas_offloaded(_tool_text()))
-        events[0].title = "Running: @kirocrew-core/monitor_start"
-        events[0].wire_title = "Running: @kirocrew-core/monitor_start"
+        events[0].title = "Running: @ajcrew-core/monitor_start"
+        events[0].wire_title = "Running: @ajcrew-core/monitor_start"
         spy = await _drive(state, slot, events, monkeypatch)
         _assert_record_applied_once(spy, slot)
 
@@ -1400,8 +1400,8 @@ class TestLegacyParamsCacheIsTruthyGated:
     no sensitive-path scope), and the refinement must refresh it."""
 
     def test_initial_empty_input_is_not_cached_and_refinement_refreshes(self):
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.types import JsonRpcMessage
 
         def msg(update):
             return JsonRpcMessage(method="session/update", params={"update": update})
@@ -1457,8 +1457,8 @@ class TestConcurrentDirectivesInOneSession:
             return AcpEvent(
                 kind=EVENT_TOOL_CALL,
                 tool_call_id=tcid,
-                title=f"@kirocrew-core/{tool}",
-                wire_title=f"@kirocrew-core/{tool}",
+                title=f"@ajcrew-core/{tool}",
+                wire_title=f"@ajcrew-core/{tool}",
                 tool_kind="other",
                 tool_name="",
                 mcp_server_name="",
@@ -1498,7 +1498,7 @@ class TestConcurrentDirectivesInOneSession:
             AcpEvent(kind=EVENT_TEXT_CHUNK, text="ok"),
             AcpEvent(kind=EVENT_COMPLETE),
         ]
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         parked = []
 
@@ -1544,10 +1544,10 @@ class TestConcurrentDirectivesInOneSession:
 class TestOpenCodeBackendResolvesTheTool:
     """opencode names an MCP tool ``<server>_<tool>`` -- ONE underscore -- and emits
     no ``_meta.kiro`` at all, so the wire title is the only channel that names the
-    tool it called. CAPTURED off 1.18.30 with a Crew MCP server (``kirocrew-core``,
+    tool it called. CAPTURED off 1.18.30 with a Crew MCP server (``ajcrew-core``,
     exposing ``monitor_start``) riding the ``session/new`` ``mcpServers`` array:
     ``{"sessionUpdate":"tool_call","toolCallId":"call_live_1",``
-    ``"title":"kirocrew-core_monitor_start","kind":"other",...}``
+    ``"title":"ajcrew-core_monitor_start","kind":"other",...}``
     (``test/fixtures/acp_frames/opencode/mcp-directive-call-live.jsonl``).
     Every recogniser returned ``""`` for that spelling, so a session with Crew's
     control plane mounted would answer every directive tool and apply none of them.
@@ -1567,22 +1567,22 @@ class TestOpenCodeBackendResolvesTheTool:
             "evil-mcp_monitor_start",
             "other_reset_conversation",
             # ...and a third-party server exposing a tool LITERALLY named
-            # "kirocrew-core_monitor_start" spells its own id with its own name
+            # "ajcrew-core_monitor_start" spells its own id with its own name
             # in front, so it fails the prefix too.
-            "evil-mcp_kirocrew-core_monitor_start",
+            "evil-mcp_ajcrew-core_monitor_start",
             # A single underscore is NOT treated as a separator, which is why
             # match_tool was left alone: these must all stay unresolved.
             "do_monitor_start",
             "evilmonitor_start",
             # Longer than the tool name: the DIRECTIVE_TOOLS membership check on
             # the tool half is what refuses it.
-            "kirocrew-core_monitor_start_extra",
+            "ajcrew-core_monitor_start_extra",
             # A real Crew tool that is not a directive tool.
-            "kirocrew-core_resource_status",
-            "kirocrew-core_spike_marker_tool",
+            "ajcrew-core_resource_status",
+            "ajcrew-core_spike_marker_tool",
             # Not a qualified name at all.
-            "kirocrew-core",
-            "kirocrew-core_",
+            "ajcrew-core",
+            "ajcrew-core_",
         ],
     )
     def test_a_lookalike_single_underscore_name_resolves_to_nothing(self, title):
@@ -1600,7 +1600,7 @@ class TestOpenCodeBackendResolvesTheTool:
         state = _stub_state(tmp_path)
         slot = state.get_or_create_slot("opencode-directive")
         slot._titled = True
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.chat_runner"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.chat_runner"):
             spy = await _drive(state, slot, _opencode_events(), monkeypatch)
         spy.assert_awaited_once()
         assert spy.call_args.args[3] == "monitor_start"
@@ -1618,11 +1618,11 @@ class TestOpenCodeBackendResolvesTheTool:
         state = _stub_state(tmp_path)
         slot = state.get_or_create_slot("opencode-lookalike")
         slot._titled = True
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.chat_runner"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.chat_runner"):
             spy = await _drive(
                 state,
                 slot,
-                _opencode_events(wire_title="kirocrew-core_monitor_start_extra"),
+                _opencode_events(wire_title="ajcrew-core_monitor_start_extra"),
                 monkeypatch,
             )
         spy.assert_not_called()
@@ -1647,11 +1647,11 @@ class TestOpenCodeBackendResolvesTheTool:
         state = _stub_state(tmp_path)
         slot = state.get_or_create_slot("opencode-no-record")
         slot._titled = True
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.chat_runner"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.chat_runner"):
             spy = await _drive(
                 state,
                 slot,
-                _opencode_events(wire_title="kirocrew-core_monitor_start_extra"),
+                _opencode_events(wire_title="ajcrew-core_monitor_start_extra"),
                 monkeypatch,
                 park=False,
             )
@@ -1669,10 +1669,10 @@ async def test_codex_identified_call_can_claim_its_parked_result(tmp_path, monke
         AcpEvent(
             kind=EVENT_TOOL_CALL,
             tool_call_id="exec-native-mcp",
-            mcp_server_name="kirocrew-core",
+            mcp_server_name="ajcrew-core",
             tool_name="monitor_start",
             raw_tool_params={
-                "server": "kirocrew-core",
+                "server": "ajcrew-core",
                 "tool": "monitor_start",
                 "arguments": CALL_ARGS,
             },
@@ -1700,7 +1700,7 @@ async def test_unmatched_native_result_reports_application_failure(tmp_path, mon
             kind=EVENT_TOOL_CALL,
             tool_call_id="native-failure",
             tool_name="monitor_start",
-            mcp_server_name="kirocrew-core",
+            mcp_server_name="ajcrew-core",
             raw_tool_params=CALL_ARGS,
         ),
         AcpEvent(
@@ -1741,7 +1741,7 @@ async def test_unmatched_non_monitor_result_gets_no_monitor_advice(tmp_path, mon
             kind=EVENT_TOOL_CALL,
             tool_call_id="native-reset",
             tool_name="reset_conversation",
-            mcp_server_name="kirocrew-core",
+            mcp_server_name="ajcrew-core",
             raw_tool_params={},
         ),
         AcpEvent(
@@ -1773,7 +1773,7 @@ async def test_unmatched_non_monitor_result_gets_no_monitor_advice(tmp_path, mon
 def test_unverified_notice_leads_with_a_human_outcome_for_every_directive_tool():
     """The line a person reads is the outcome alone, in words; the tool
     identifier is confined to the agent instruction the tool result carries."""
-    from kiro_crew.dashboard.chat_runner import (
+    from aj_crew.dashboard.chat_runner import (
         unverified_directive_notice,
         unverified_directive_outcome,
     )
@@ -1798,7 +1798,7 @@ def test_unverified_notice_leads_with_a_human_outcome_for_every_directive_tool()
 def test_unclaimed_turn_end_notice_is_tool_neutral():
     """Any directive tool can park a record, so the notice for a record no call
     claimed cannot send the agent to one tool's inspector."""
-    from kiro_crew.dashboard.chat_runner import UNCLAIMED_DIRECTIVE_NOTICE
+    from aj_crew.dashboard.chat_runner import UNCLAIMED_DIRECTIVE_NOTICE
 
     assert UNCLAIMED_DIRECTIVE_NOTICE == (
         "A request from this turn was not applied. Check that your last request took effect."
@@ -1807,24 +1807,24 @@ def test_unclaimed_turn_end_notice_is_tool_neutral():
 
 
 def test_codex_digest_does_not_unwrap_conflicting_identity():
-    raw = {"server": "kirocrew-core", "tool": "monitor_start", "arguments": CALL_ARGS}
+    raw = {"server": "ajcrew-core", "tool": "monitor_start", "arguments": CALL_ARGS}
     expected = session_directive.call_input_digest("monitor_start", CALL_ARGS)
     assert (
         session_directive.event_input_digest("monitor_start", raw, "untrusted", "monitor_start")
         != expected
     )
     assert (
-        session_directive.event_input_digest("monitor_start", raw, "kirocrew-core", "monitor_stop")
+        session_directive.event_input_digest("monitor_start", raw, "ajcrew-core", "monitor_stop")
         != expected
     )
 
 
 # ── Tool Search deferred calls: the frame wraps the arguments in tool_call ───
 
-# What the frame's rawInput carries when the backend defers kirocrew-core under
+# What the frame's rawInput carries when the backend defers ajcrew-core under
 # Tool Search: the model calls the ``tool_call`` meta-tool, which forwards only
 # ``arguments`` to the MCP server.
-DEFERRED_FRAME_INPUT = {"tool_id": "kirocrew-core::monitor_start", "arguments": CALL_ARGS}
+DEFERRED_FRAME_INPUT = {"tool_id": "ajcrew-core::monitor_start", "arguments": CALL_ARGS}
 
 
 @pytest.mark.asyncio
@@ -1842,9 +1842,9 @@ async def test_a_deferred_tool_call_frame_claims_its_parked_record(tmp_path, mon
     assert directive_queue.depth(effective_session_key(slot)) == 0
 
 
-# A resource-v2 tool loader spells the same tool ``tool::kirocrew-core::<tool>``.
+# A resource-v2 tool loader spells the same tool ``tool::ajcrew-core::<tool>``.
 @pytest.mark.parametrize(
-    "tool_id", ["kirocrew-core::monitor_start", "tool::kirocrew-core::monitor_start"]
+    "tool_id", ["ajcrew-core::monitor_start", "tool::ajcrew-core::monitor_start"]
 )
 def test_deferred_digest_matches_the_servers_digest_without_frame_identity(tool_id):
     expected = session_directive.call_input_digest("monitor_start", CALL_ARGS)
@@ -1857,14 +1857,14 @@ def test_deferred_digest_matches_the_servers_digest_without_frame_identity(tool_
 @pytest.mark.parametrize(
     "raw",
     [
-        {"tool_id": "kirocrew-core::monitor_update", "arguments": CALL_ARGS},
+        {"tool_id": "ajcrew-core::monitor_update", "arguments": CALL_ARGS},
         {"tool_id": "other-server::monitor_start", "arguments": CALL_ARGS},
         {"tool_id": "tool::other-server::monitor_start", "arguments": CALL_ARGS},
-        {"tool_id": "tool::kirocrew-core::monitor_update", "arguments": CALL_ARGS},
-        {"tool_id": "x::kirocrew-core::monitor_start", "arguments": CALL_ARGS},
+        {"tool_id": "tool::ajcrew-core::monitor_update", "arguments": CALL_ARGS},
+        {"tool_id": "x::ajcrew-core::monitor_start", "arguments": CALL_ARGS},
         {"tool_id": "monitor_start", "arguments": CALL_ARGS},
-        {"tool_id": "kirocrew-core::monitor_start", "arguments": CALL_ARGS, "extra": 1},
-        {"tool_id": "kirocrew-core::monitor_start", "arguments": json.dumps(CALL_ARGS)},
+        {"tool_id": "ajcrew-core::monitor_start", "arguments": CALL_ARGS, "extra": 1},
+        {"tool_id": "ajcrew-core::monitor_start", "arguments": json.dumps(CALL_ARGS)},
     ],
     ids=[
         "other-tool",

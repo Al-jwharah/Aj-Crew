@@ -19,33 +19,33 @@ from __future__ import annotations
 
 import importlib
 
-from kiro_crew.metrics import inventory_gauges as ig
-from kiro_crew.metrics import process_gauges as pg
-from kiro_crew.metrics.product_metrics import PRODUCT_METRICS
-from kiro_crew.metrics.provider import histogram_bounds
+from aj_crew.metrics import inventory_gauges as ig
+from aj_crew.metrics import process_gauges as pg
+from aj_crew.metrics.product_metrics import PRODUCT_METRICS
+from aj_crew.metrics.provider import histogram_bounds
 
 #: Modules that DECLARE instrument names as module constants. An instrument is
 #: created lazily by the recorder at its first emit, so there is no runtime
 #: registry to read; the declaring constant is the closest thing to one, and
 #: every emit site in the tree passes one of these rather than a literal.
 _DECLARING_MODULES = (
-    "kiro_crew.metrics.events",
-    "kiro_crew.metrics.sessions",
-    "kiro_crew.metrics.turns",
-    "kiro_crew.metrics.turn_completed",
-    "kiro_crew.metrics.monitor_loops",
-    "kiro_crew.metrics.crew_log_export",
-    "kiro_crew.metrics.session_control_calls",
-    "kiro_crew.metrics.work",
-    "kiro_crew.metrics.crew_mode",
-    "kiro_crew.metrics.feature_usage",
-    "kiro_crew.metrics.http_metrics",
-    "kiro_crew.metrics.db_metrics",
-    "kiro_crew.metrics.tool_calls",
-    "kiro_crew.metrics.inventory_gauges",
-    "kiro_crew.metrics.process_gauges",
+    "aj_crew.metrics.events",
+    "aj_crew.metrics.sessions",
+    "aj_crew.metrics.turns",
+    "aj_crew.metrics.turn_completed",
+    "aj_crew.metrics.monitor_loops",
+    "aj_crew.metrics.crew_log_export",
+    "aj_crew.metrics.session_control_calls",
+    "aj_crew.metrics.work",
+    "aj_crew.metrics.crew_mode",
+    "aj_crew.metrics.feature_usage",
+    "aj_crew.metrics.http_metrics",
+    "aj_crew.metrics.db_metrics",
+    "aj_crew.metrics.tool_calls",
+    "aj_crew.metrics.inventory_gauges",
+    "aj_crew.metrics.process_gauges",
     # The Explore panel's counters are declared beside the state they count.
-    "kiro_crew.milestones",
+    "aj_crew.milestones",
 )
 
 #: Up/down counter instrument names. EMPTY, and that is a fact about the tree
@@ -64,7 +64,7 @@ def _declared_instrument_names() -> "dict[str, str]":
         for attr, value in vars(module).items():
             if attr.startswith("_") or not isinstance(value, str):
                 continue
-            if value.startswith("kirocrew."):
+            if value.startswith("ajcrew."):
                 found.setdefault(value, f"{module_name.rsplit('.', 1)[1]}.{attr}")
     return found
 
@@ -120,7 +120,7 @@ def test_every_name_is_a_declared_instrument():
     assert not undeclared, (
         f"in PRODUCT_METRICS with no declaring instrument constant: {undeclared}. "
         "Either the instrument is not on this branch (list it in the PENDING "
-        "comment instead) or the name is misspelled -- mind the kirocrew. prefix."
+        "comment instead) or the name is misspelled -- mind the ajcrew. prefix."
     )
 
 
@@ -162,7 +162,7 @@ def test_no_name_is_a_histogram_by_the_providers_own_bucket_map():
 #: asserted absent. Putting one back then means deleting a line a reader has to
 #: read, rather than quietly adding a name to a set.
 _HELD_ON_OPEN_ATTRIBUTES = {
-    "kirocrew.turn.tokens": (
+    "ajcrew.turn.tokens": (
         "`model` is the configured model id -- on a non-Kiro backend it can be a "
         "provider resource id -- and `provider` is configured the same way, so "
         "neither is drawn from a set this repo controls"
@@ -218,26 +218,26 @@ def test_the_resolver_can_see_each_failure_it_is_asked_to_catch():
     deliberate input. Remove any one branch from ``_instrument_kind`` and the
     matching line fails, so "no offenders" above is a real observation.
     """
-    declared = {"kirocrew.a.counter": "x.A", "kirocrew.a.hist": "x.H"}
-    gauges = frozenset({"kirocrew.a.gauge"})
-    histograms = frozenset({"kirocrew.a.hist"})
-    updown = frozenset({"kirocrew.a.updown"})
+    declared = {"ajcrew.a.counter": "x.A", "ajcrew.a.hist": "x.H"}
+    gauges = frozenset({"ajcrew.a.gauge"})
+    histograms = frozenset({"ajcrew.a.hist"})
+    updown = frozenset({"ajcrew.a.updown"})
     kind = lambda name: _instrument_kind(  # noqa: E731 - one call shape, four rows
         name, declared=declared, gauges=gauges, histograms=histograms, updown=updown
     )
 
     # An unknown name: no instrument at all.
-    assert kind("kirocrew.not.declared") is None
+    assert kind("ajcrew.not.declared") is None
     # A histogram, declared, and rejected on kind.
-    assert kind("kirocrew.a.hist") == "histogram"
+    assert kind("ajcrew.a.hist") == "histogram"
     assert "histogram" not in _EXPORTABLE_KINDS
     # An up/down counter, declared, rejected on kind. Driven through the injected
     # set because the tree declares none -- the branch is still live code.
-    assert kind("kirocrew.a.updown") is None, "an undeclared updown name is unknown first"
+    assert kind("ajcrew.a.updown") is None, "an undeclared updown name is unknown first"
     assert (
         _instrument_kind(
-            "kirocrew.a.updown",
-            declared={**declared, "kirocrew.a.updown": "x.U"},
+            "ajcrew.a.updown",
+            declared={**declared, "ajcrew.a.updown": "x.U"},
             gauges=gauges,
             histograms=histograms,
             updown=updown,
@@ -246,11 +246,11 @@ def test_the_resolver_can_see_each_failure_it_is_asked_to_catch():
     )
     assert "up_down_counter" not in _EXPORTABLE_KINDS
     # And the two kinds that DO pass, so the resolver is not simply rejecting all.
-    assert kind("kirocrew.a.counter") == "counter"
+    assert kind("ajcrew.a.counter") == "counter"
     assert (
         _instrument_kind(
-            "kirocrew.a.gauge",
-            declared={**declared, "kirocrew.a.gauge": "x.G"},
+            "ajcrew.a.gauge",
+            declared={**declared, "ajcrew.a.gauge": "x.G"},
             gauges=gauges,
             histograms=histograms,
             updown=updown,
@@ -280,9 +280,9 @@ def test_behavioral_metrics_are_product_metrics_and_counters():
     """A behavioral metric is a reviewed product metric, and only counters are routed.
 
     The recorder moves only ``counter()`` calls to the behavioral scope, so a gauge
-    or histogram listed there would silently stay on ``kiro_crew``.
+    or histogram listed there would silently stay on ``aj_crew``.
     """
-    from kiro_crew.metrics.behavioral_metrics import BEHAVIORAL_METRICS
+    from aj_crew.metrics.behavioral_metrics import BEHAVIORAL_METRICS
 
     assert BEHAVIORAL_METRICS, "BEHAVIORAL_METRICS is empty"
     assert BEHAVIORAL_METRICS <= PRODUCT_METRICS, sorted(BEHAVIORAL_METRICS - PRODUCT_METRICS)

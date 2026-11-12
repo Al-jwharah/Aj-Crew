@@ -76,7 +76,7 @@ def _slice_for(cgroup_base: Path, home: Path) -> Path:
     token = instance_slice_token(home)
     path = (
         cgroup_base
-        / "kirocrew.slice"
+        / "ajcrew.slice"
         / AGENTS_SLICE
         / f"{AGENTS_SLICE[: -len('.slice')]}-{token}.slice"
     )
@@ -429,7 +429,7 @@ def test_a_spawn_failure_during_cleanup_raises(
 def test_the_sampler_default_home_is_not_the_legacy_path() -> None:
     """The sampler must not default to the pre-move top-level home.
 
-    ``~/.kirocrew`` is the LEGACY home; the product resolves its data home under
+    ``~/.ajcrew`` is the LEGACY home; the product resolves its data home under
     kiro-cli's base. A sampler defaulting to the legacy path would report an
     empty machine forever on a stock run, which is the false-clean this whole
     change exists to prevent.
@@ -437,7 +437,7 @@ def test_the_sampler_default_home_is_not_the_legacy_path() -> None:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
     import soak_process_sampler
 
-    from kiro_crew.config.paths import LEGACY_CONFIG_DIR_NAME, peek_data_home
+    from aj_crew.config.paths import LEGACY_CONFIG_DIR_NAME, peek_data_home
 
     resolved = soak_process_sampler.default_home()
     assert resolved is not None
@@ -463,7 +463,7 @@ def test_the_sampler_refuses_a_home_that_does_not_exist(
     import soak_process_sampler
 
     monkeypatch.setattr(sys, "platform", "linux")
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     missing = tmp_path / "not-there"
     assert soak_process_sampler.main(["--home", str(missing), "--once"]) == 2
     err = capsys.readouterr().err
@@ -484,7 +484,7 @@ def test_the_sampler_refuses_by_name_off_linux(
     import soak_process_sampler
 
     monkeypatch.setattr(sys, "platform", "win32")
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     assert soak_process_sampler.main(["--home", str(tmp_path), "--once"]) == 2
     err = capsys.readouterr().err
     assert "needs cgroup v2 and /proc" in err

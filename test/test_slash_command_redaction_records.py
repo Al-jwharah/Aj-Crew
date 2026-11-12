@@ -21,8 +21,8 @@ import pytest
 from prompts_helpers import _isolate_home  # noqa: F401
 from prompts_helpers import _ss
 
-import kiro_crew.dashboard.chat_runner as chat_runner
-from kiro_crew.security import EXFILTRATION_REDACTION_TAG_PREFIX
+import aj_crew.dashboard.chat_runner as chat_runner
+from aj_crew.security import EXFILTRATION_REDACTION_TAG_PREFIX
 
 # Built at runtime so no literal token shape sits in the source.
 _GH = "ghp_" + "k7qmz2x9wv4tb8ncr6yd3fj5hs1gpl0aeuo2"
@@ -34,7 +34,7 @@ class _Slot:
     """The parts of ``_ChatSlot`` a local command's reply touches."""
 
     key = "slot-1"
-    agent = "kirocrew"
+    agent = "ajcrew"
     project = ""
     _app = ""
 
@@ -121,7 +121,7 @@ def test_goal_objective_echo_records_its_credential(monkeypatch: pytest.MonkeyPa
 
 
 def test_agent_refusal_records_its_credential(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     async def _switch(*_a, **_kw):
         return SimpleNamespace(status=409)
@@ -201,11 +201,11 @@ def test_a_clean_command_reply_carries_no_meta() -> None:
 def test_a_command_reply_vouches_the_order_of_its_links() -> None:
     """A command reply is redacted in one pass, so its records are in reply order
     and the row says so: two different links on one allowed host both come back."""
-    from kiro_crew.dashboard.chat_utils import (
+    from aj_crew.dashboard.chat_utils import (
         BLOCKED_LINKS_ORDERED_KEY,
         with_allowed_links_restored,
     )
-    from kiro_crew.security.exfil import scoped_exempt_hosts
+    from aj_crew.security.exfil import scoped_exempt_hosts
 
     first = "https://collect.example.com/a?q=" + "a" * 250
     second = "https://collect.example.com/b?q=" + "b" * 250

@@ -50,9 +50,9 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.embeddings as embeddings_mod
-from kiro_crew._llama_lib_path import _BUNDLED_LIBS_DIR_NAMES
-from kiro_crew.embeddings import (
+import aj_crew.embeddings as embeddings_mod
+from aj_crew._llama_lib_path import _BUNDLED_LIBS_DIR_NAMES
+from aj_crew.embeddings import (
     _LIB_PATH_ENV,
     _LIBS_DIR_NAME,
     _REQUIRED_VENDORED_LIBS,
@@ -61,7 +61,7 @@ from kiro_crew.embeddings import (
 )
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
-_VENDOR_SRC = _REPO_ROOT / "src" / "kiro_crew" / "_vendor"
+_VENDOR_SRC = _REPO_ROOT / "src" / "aj_crew" / "_vendor"
 _LIBS_SRC = _VENDOR_SRC / _LIBS_DIR_NAME
 
 # `*.so` is the glob that stripped libllama.so. Any required lib matching a
@@ -143,7 +143,7 @@ def test_manifest_reincludes_libs_after_the_excludes() -> None:
         for line in (_REPO_ROOT / "MANIFEST.in").read_text(encoding="utf-8").splitlines()
         if line.strip() and not line.strip().startswith("#")
     ]
-    reinclude = f"recursive-include src/kiro_crew/_vendor/{_LIBS_DIR_NAME} *"
+    reinclude = f"recursive-include src/aj_crew/_vendor/{_LIBS_DIR_NAME} *"
     assert reinclude in lines, "MANIFEST.in must re-include the vendored native libs"
 
     last_reinclude = max(i for i, line in enumerate(lines) if line == reinclude)
@@ -240,7 +240,7 @@ def test_manifest_rules_keep_every_required_lib() -> None:
             rules += [(kind, args[0].rstrip("/"), pat) for pat in args[1:]]
 
     for plat, required in _REQUIRED_VENDORED_LIBS.items():
-        directory = f"src/kiro_crew/_vendor/{_LIBS_DIR_NAME}/{plat}"
+        directory = f"src/aj_crew/_vendor/{_LIBS_DIR_NAME}/{plat}"
         for name in required:
             shipped = False
             for kind, rule_dir, pattern in rules:
@@ -363,7 +363,7 @@ class TestIncompletePayloadRefusal:
             tmp_path
             / "previous-install"
             / "site-packages"
-            / "kiro_crew"
+            / "aj_crew"
             / "_vendor"
             / "llama_cpp_libs"
             / "linux_x86_64"
@@ -400,17 +400,17 @@ class TestPayloadVerifierWithoutRuntimeDependencies:
     @pytest.mark.parametrize("missing_from", [None, "wheel", "sdist", "both"])
     def test_artifact_contents(self, tmp_path: Path, missing_from: str | None) -> None:
         """Both archives pass when complete; either missing member stays fatal."""
-        wheel = tmp_path / "kirocrew-0.0.0-py3-none-any.whl"
-        sdist = tmp_path / "kirocrew-0.0.0.tar.gz"
-        missing = f"kiro_crew/_vendor/{_LIBS_DIR_NAME}/linux_x86_64/libllama.so"
+        wheel = tmp_path / "ajcrew-0.0.0-py3-none-any.whl"
+        sdist = tmp_path / "ajcrew-0.0.0.tar.gz"
+        missing = f"aj_crew/_vendor/{_LIBS_DIR_NAME}/linux_x86_64/libllama.so"
         with zipfile.ZipFile(wheel, "w") as whl, tarfile.open(sdist, "w:gz") as tar:
             for platform, required in _REQUIRED_VENDORED_LIBS.items():
                 for name in required:
-                    rel = f"kiro_crew/_vendor/{_LIBS_DIR_NAME}/{platform}/{name}"
+                    rel = f"aj_crew/_vendor/{_LIBS_DIR_NAME}/{platform}/{name}"
                     if rel != missing or missing_from not in ("wheel", "both"):
                         whl.writestr(rel, b"stub")
                     if rel != missing or missing_from not in ("sdist", "both"):
-                        info = tarfile.TarInfo(f"kirocrew-0.0.0/src/{rel}")
+                        info = tarfile.TarInfo(f"ajcrew-0.0.0/src/{rel}")
                         info.size = 4
                         tar.addfile(info, io.BytesIO(b"stub"))
 
@@ -489,7 +489,7 @@ class TestPayloadDeclarations:
         and pins the DERIVATION -- the frozenset is built from the dict's name,
         and no platform name appears as a literal anywhere else in the file.
         """
-        leaf = _REPO_ROOT / "src" / "kiro_crew" / "_llama_lib_path.py"
+        leaf = _REPO_ROOT / "src" / "aj_crew" / "_llama_lib_path.py"
         tree = ast.parse(leaf.read_text(encoding="utf-8"), filename=str(leaf))
 
         assert _BUNDLED_LIBS_DIR_NAMES == frozenset(_REQUIRED_VENDORED_LIBS)
@@ -532,7 +532,7 @@ class TestPayloadDeclarations:
 
 
 class TestVendoredLoaderLibPathPrecedence:
-    """The ``kiro_crew DIVERGENCE FROM UPSTREAM`` in ``_vendor/llama_cpp/llama_cpp.py``.
+    """The ``aj_crew DIVERGENCE FROM UPSTREAM`` in ``_vendor/llama_cpp/llama_cpp.py``.
 
     The host hands the bundled directory to the vendored loader through a
     process-local seam (a module in ``sys.modules``) so that nothing is ever

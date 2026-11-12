@@ -17,8 +17,8 @@ import asyncio
 from conductor_wake_helpers import _isolated_home  # noqa: F401
 from conductor_wake_helpers import CONDUCTOR, WORKER, WORKER_B, _bind, _fire, _item, _service
 
-from kiro_crew import conductor_wake, work_ledger
-from kiro_crew.testing.wait import await_until
+from aj_crew import conductor_wake, work_ledger
+from aj_crew.testing.wait import await_until
 
 # ── a push the service cannot take now is not lost ───────────────────────────
 
@@ -31,9 +31,9 @@ def test_a_push_during_the_fire_window_re_arms_at_delay_zero_after_the_cycle(tmp
     must then arm at delay ZERO -- a deadline arm would hold the worker's report for the
     conductor's whole patrol cadence, since the cycle in flight read the ledger first.
     """
-    import kiro_crew.autonudge as autonudge
+    import aj_crew.autonudge as autonudge
 
-    monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
     _bind(status="progress")
     pushed: list[str] = []
     arms: list[tuple[str, float | None]] = []
@@ -77,7 +77,7 @@ def _restored_service_ticks(
     records the fingerprint of the ledger as it stood; *report_after* is a worker status
     written while the gateway is "down", or ``""`` for no new event at all.
     """
-    monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
     item_id = _bind(status="progress")
     base = tmp_path / "an"
     fired: list[str] = []
@@ -165,7 +165,7 @@ def test_a_quiet_pushed_tick_keeps_the_earlier_deadline(tmp_path, monkeypatch):
     """
     import time
 
-    monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
     async def _drive() -> "tuple[float, float, float]":
         async def _never(_loop) -> bool:
@@ -207,9 +207,9 @@ def _ledger_service(tmp_path, monkeypatch, *, closed: "set[str]"):
     The wake window is OFF here, so each push arms its own tick. The window's own cases
     arm it explicitly (``_batching_service`` in ``test_conductor_wake_batching.py``).
     """
-    import kiro_crew.autonudge as autonudge
+    import aj_crew.autonudge as autonudge
 
-    monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
     monkeypatch.setenv(conductor_wake.WAKE_BATCH_ENV, "0")
     delivered: list[int] = []
     during: list = []
@@ -411,9 +411,9 @@ def test_an_item_pulls_its_conductor_forward_at_most_twelve_times_an_hour(
     """
     import logging
 
-    import kiro_crew.autonudge as autonudge
+    import aj_crew.autonudge as autonudge
 
-    monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
     # A window far shorter than the loop's hour-long cadence, so each admitted push arms
     # at the window itself and the clamp against the deadline is not what is being read.
     window = 7.0
@@ -441,7 +441,7 @@ def test_an_item_pulls_its_conductor_forward_at_most_twelve_times_an_hour(
         finally:
             svc.stop()
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.conductor_wake"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.conductor_wake"):
         fired, active = asyncio.run(_drive())
     assert cap == 12
     assert fired[0] and fired[:cap] == [fired[0]] * cap, "the first twelve pull forward"

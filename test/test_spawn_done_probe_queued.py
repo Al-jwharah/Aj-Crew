@@ -14,7 +14,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.apps.spawn_sdk import build_done_probe
+from aj_crew.apps.spawn_sdk import build_done_probe
 
 
 def _subagents(*, tracked=None, queued_ids=()):

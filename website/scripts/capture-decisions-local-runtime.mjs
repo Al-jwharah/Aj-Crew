@@ -33,7 +33,7 @@
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { serveDist } from './lib/serve-dist.mjs'
-import { json, logPageProblems, stubDashboardApi, KIROCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
+import { json, logPageProblems, stubDashboardApi, AJCREW_CONFIG_FIXTURE } from './lib/stub-dashboard-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/decisions-local-runtime'
 mkdirSync(OUT, { recursive: true })
@@ -160,9 +160,9 @@ async function main() {
           await json(route, { names: [] })
           return true
         }
-        if (path === '/api/config/kirocrew') {
+        if (path === '/api/config/ajcrew') {
           await json(route, {
-            ...KIROCREW_CONFIG_FIXTURE,
+            ...AJCREW_CONFIG_FIXTURE,
             decisions: { bucket: 100, provider: { endpoint: payload.configured_endpoint } },
           })
           return true

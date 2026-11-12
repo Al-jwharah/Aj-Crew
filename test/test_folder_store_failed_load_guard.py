@@ -17,7 +17,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.handlers.cron_board import api_cron_folders_create
+from aj_crew.dashboard.handlers.cron_board import api_cron_folders_create
 
 _BOM = b"\xef\xbb\xbf"
 _FOLDERS = [{"id": "f1", "name": "One", "parent_id": ""}, {"id": "f2", "name": "Two"}]
@@ -26,7 +26,7 @@ _CRON = [{"id": "c1", "name": "C1", "order": 0}, {"id": "c2", "name": "C2", "ord
 
 @pytest.fixture()
 def cfg(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     return tmp_path
 
 
@@ -204,7 +204,7 @@ async def test_adopt_by_name_after_a_held_load_reuses_the_folder_on_disk(
     cfg, tmp_path, monkeypatch
 ) -> None:
     """The app cron bridge matches by name: it must see the rows on disk, not the empty list."""
-    from kiro_crew.dashboard.handlers.cron_board import create_or_adopt_cron_folder
+    from aj_crew.dashboard.handlers.cron_board import create_or_adopt_cron_folder
 
     (cfg / "cron_folders.json").write_text(json.dumps(_CRON), encoding="utf-8")
     state = _make_state(tmp_path)
@@ -218,7 +218,7 @@ async def test_adopt_by_name_after_a_held_load_reuses_the_folder_on_disk(
 
 @pytest.mark.asyncio
 async def test_adopt_by_name_on_an_unreadable_store_fails_and_keeps_bytes(cfg, tmp_path) -> None:
-    from kiro_crew.dashboard.handlers.cron_board import create_or_adopt_cron_folder
+    from aj_crew.dashboard.handlers.cron_board import create_or_adopt_cron_folder
 
     original = _unreadable(_CRON)["typo"]
     (cfg / "cron_folders.json").write_bytes(original)

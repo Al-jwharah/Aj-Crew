@@ -17,17 +17,17 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-from kiro_crew.acp import disposed_session
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.transport_errors import AcpError, AcpProcessDied
-from kiro_crew.acp.types import (
+from aj_crew.acp import disposed_session
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.transport_errors import AcpError, AcpProcessDied
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     OUTCOME_CANCELLED,
     STOP_REASON_CANCELLED,
     JsonRpcMessage,
 )
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_KIRO,
     ACP_BACKEND_PI,
     ACP_BACKEND_STRANDS,
@@ -312,7 +312,7 @@ class _Stdin:
 async def test_a_cancel_while_its_approval_is_open_rejects_it_and_the_next_turn_answers(
     tmp_path, monkeypatch
 ) -> None:
-    from kiro_crew.acp.types import EVENT_TEXT_CHUNK, EVENT_TOOL_CALL_UPDATE
+    from aj_crew.acp.types import EVENT_TEXT_CHUNK, EVENT_TOOL_CALL_UPDATE
 
     client, frames, _hooks = _client(tmp_path)
     client._process = type("_Proc", (), {"stdin": _Stdin(), "returncode": None})()

@@ -25,8 +25,8 @@ from typing import NamedTuple
 
 import pytest
 
-from kiro_crew.mcp_gateway import stub as stub_mod
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.mcp_gateway import stub as stub_mod
+from aj_crew.testing.wait import await_until, finished
 
 #: Small enough to keep these tests fast, and the drain takes it as a parameter
 #: for exactly that reason. Every timing assertion below is relative to it.

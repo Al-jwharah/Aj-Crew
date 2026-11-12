@@ -1,7 +1,7 @@
 // Spec Builder — PR screenshot capture.
 //
 // Drives a REAL instance of this branch (isolated gateway, own port, own
-// KIROCREW_HOME — never the live plane) and captures the surfaces a reviewer
+// AJCREW_HOME — never the live plane) and captures the surfaces a reviewer
 // needs, in both palettes (the app is theme-token driven, so light/dark is a
 // meaningful variant).
 //

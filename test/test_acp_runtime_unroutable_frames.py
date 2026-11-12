@@ -21,7 +21,7 @@ from acp_runtime_helpers import (
     _stop_reader,
 )
 
-from kiro_crew.acp.types import METHOD_KIRO_SESSION_UPDATE, METHOD_SESSION_UPDATE
+from aj_crew.acp.types import METHOD_KIRO_SESSION_UPDATE, METHOD_SESSION_UPDATE
 
 # ── Unroutable-frame drop accounting (log-flood containment) ──
 #
@@ -42,12 +42,12 @@ async def test_unknown_session_drops_aggregate_into_one_counted_record(caplog):
     """N drops of the same (sid, method) inside one window → ONE record, count N."""
     import logging
 
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     rt, reader, _ = _make_runtime()
     task = await _start_reader(rt)
     try:
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.acp.runtime"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.acp.runtime"):
             for _ in range(5):
                 _feed(reader, {"method": "session/update", "params": {"sessionId": "ghost"}})
             await _drain(reader)
@@ -82,7 +82,7 @@ async def test_two_unknown_sessions_are_counted_separately(caplog):
     rt, reader, _ = _make_runtime()
     task = await _start_reader(rt)
     try:
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.acp.runtime"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.acp.runtime"):
             for _ in range(3):
                 _feed(reader, {"method": "session/update", "params": {"sessionId": "sid-aaa"}})
             for _ in range(2):
@@ -121,12 +121,12 @@ async def test_no_session_broadcast_drops_are_counted(caplog):
     """With zero registered sessions every global frame drops — same shape."""
     import logging
 
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     rt, reader, _ = _make_runtime()
     task = await _start_reader(rt)
     try:
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.acp.runtime"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.acp.runtime"):
             for _ in range(4):
                 _feed(reader, {"method": "mcp/status", "params": {}})
             await _drain(reader)
@@ -147,7 +147,7 @@ def test_drop_counter_state_does_not_leak_between_intervals(caplog):
 
     rt, _reader, _ = _make_runtime()
 
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.acp.runtime"):
         rt._note_dropped_frame("sid-x", "session/update")
         rt._note_dropped_frame("sid-x", "session/update")
         rt._flush_dropped_frames()
@@ -168,12 +168,12 @@ def test_drop_counter_map_is_bounded(caplog):
     """A wide fan-out of distinct keys flushes early instead of growing."""
     import logging
 
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     rt, _reader, _ = _make_runtime()
     cap = runtime_mod._DROP_SUMMARY_MAX_KEYS
 
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.acp.runtime"):
         for i in range(cap * 3):
             rt._note_dropped_frame(f"sid-{i}", "session/update")
             assert len(rt._dropped_frames) <= cap
@@ -184,7 +184,7 @@ def test_drop_counter_map_is_bounded(caplog):
 
 def test_drop_counter_truncates_backend_controlled_key_text():
     """A pathological sessionId/method cannot be retained at full length."""
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     rt, _reader, _ = _make_runtime()
     limit = runtime_mod._DROP_SUMMARY_KEY_MAX_CHARS
@@ -206,7 +206,7 @@ def test_drop_key_is_redacted_before_the_retention_cap(caplog):
     """
     import logging
 
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     rt, _reader, _ = _make_runtime()
     limit = runtime_mod._DROP_SUMMARY_KEY_MAX_CHARS
@@ -220,7 +220,7 @@ def test_drop_key_is_redacted_before_the_retention_cap(caplog):
     for part in (session_id, method):
         assert "AKIA" not in part and len(part) <= limit
 
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.acp.runtime"):
         rt._flush_dropped_frames()
     records = _drop_records(caplog)
     assert records, "the flush must still report the drop"
@@ -229,8 +229,8 @@ def test_drop_key_is_redacted_before_the_retention_cap(caplog):
 
 def test_drop_key_over_the_redact_input_cap_keeps_only_its_length():
     """A multi-KB key half never reaches the redactor and retains no content."""
-    import kiro_crew.acp._dispatch as acp_dispatch
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp._dispatch as acp_dispatch
+    import aj_crew.acp.runtime as runtime_mod
 
     rt, _reader, _ = _make_runtime()
     huge = "ghp_" + "A" * (acp_dispatch._REQUEST_ID_REDACT_INPUT_CAP + 40)
@@ -311,7 +311,7 @@ def test_drop_counter_placeholder_appears_in_flushed_summary(caplog):
 
     rt, _reader, _ = _make_runtime()
 
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.acp.runtime"):
         rt._note_dropped_frame(12345, 123)
         rt._flush_dropped_frames()
 
@@ -338,7 +338,7 @@ async def test_unroutable_permission_request_is_auto_rejected(caplog):
     rt, reader, proc = _make_runtime()
     task = await _start_reader(rt)
     try:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.runtime"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.runtime"):
             _feed(
                 reader,
                 {

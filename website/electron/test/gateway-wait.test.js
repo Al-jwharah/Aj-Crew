@@ -150,7 +150,7 @@ test("waitForGateway aborts when the window is gone", async () => {
 // the backend. Prefixing "could not be launched" would open with failure
 // vocabulary under a title that says the install is still finishing.
 test("describeGatewayFailure: an incomplete bundle passes its message through bare", () => {
-  const msg = "Kiro Crew's bundled Python runtime is still being installed — retry.";
+  const msg = "Aj Crew's bundled Python runtime is still being installed — retry.";
   assert.strictEqual(describeGatewayFailure({ error: msg, incompleteBundle: true }), msg);
 });
 
@@ -218,7 +218,7 @@ test("describeGatewayFailure: an offered button is the named exit", () => {
   assert.match(s, /retry to reach a\.example\.com/);
   // Naming the manual route beside an offered button is what sent users through
   // it unnecessarily.
-  assert.doesNotMatch(s, /KIROCREW_PORT/);
+  assert.doesNotMatch(s, /AJCREW_PORT/);
 });
 
 // Both remaining states withhold the button, and they must not share wording: a
@@ -282,9 +282,9 @@ test("describeGatewayFailure: an occupied port is named, not reported as a faile
   // "Stop whatever is on port 5476" is an instruction only a reader who already
   // knows how to find a listener can carry out; for everyone else it is the one
   // exit this state names and it is unusable. So the likeliest occupant is named
-  // -- an orphan from a terminal-started Kiro Crew, which is also what the
+  // -- an orphan from a terminal-started Aj Crew, which is also what the
   // retired-flag path says produces it -- together with an action anyone can take.
-  assert.match(s, /another Kiro Crew started from a terminal/);
+  assert.match(s, /another Aj Crew started from a terminal/);
   assert.match(s, /quit that one/);
   assert.doesNotMatch(s, /Stop whatever is on port/);
 });
@@ -296,11 +296,11 @@ test("describeGatewayFailure: a failed local-start attempt is acknowledged, not 
   });
   assert.match(s, /did not finish/);
   assert.match(s, /"Run a local gateway" setting stays on/);
-  // The remedy has to name the control that carries it out. "launching Kiro Crew
+  // The remedy has to name the control that carries it out. "launching Aj Crew
   // again" left a reader unsure whether Quit was the way to do that, or whether
   // the missing button was an accident.
   assert.match(s, /choose Start Local Gateway to try again/);
-  assert.doesNotMatch(s, /choose Quit and then open Kiro Crew again/);
+  assert.doesNotMatch(s, /choose Quit and then open Aj Crew again/);
   // The acknowledgement has to LEAD. Every branch shares the crew advice, so a
   // reopened dialog that starts with it repeats three identical sentences and
   // reads as nothing having happened, which buries the one thing that changed.
@@ -320,7 +320,7 @@ test("describeGatewayFailure: a withheld button leaves the explicit-port route",
   const s = describeGatewayFailure({
     disabled: true, port: 7778, remoteHost: "a.example.com", canStartHere: false,
   });
-  assert.match(s, /KIROCREW_PORT/);
+  assert.match(s, /AJCREW_PORT/);
   assert.match(s, /no remote host configured/);
   // A variable name alone is not an instruction: the reader has to be told where
   // to set it, or the only exit this state offers is one they cannot carry out.
@@ -486,7 +486,7 @@ test("describeGatewayFailure: without a restart it falls back to the explicit-po
     canStartHere: false,
   });
   assert.doesNotMatch(s, /choose Start Local Gateway/, "a withheld button is not offered");
-  assert.match(s, /KIROCREW_PORT/, "the manual route is named instead");
+  assert.match(s, /AJCREW_PORT/, "the manual route is named instead");
   assert.match(s, /reserved for reaching a\.example\.com/, "the reservation still travels with it");
   // Two states share this title and only this one withholds the button, so the
   // screen has to say why -- otherwise a reader cannot tell them apart at all.
@@ -506,7 +506,7 @@ test("describeGatewayFailure: a foreign holder asks only for the thing that free
   assert.match(s, /Port 5476/);
   assert.match(s, /served by a program this app did not start/);
   assert.match(s, /no remote crew saved for that port/);
-  // It may BE a Kiro Crew gateway, reached over a tunnel, so saving its address
+  // It may BE an Aj Crew gateway, reached over a tunnel, so saving its address
   // is the first remedy and must be named -- in words that say what the click
   // commits to, because a reader who cannot tell will not press it.
   assert.match(s, /choose Add Remote Crew and fill in its address/);
@@ -594,7 +594,7 @@ test("describeGatewayFailure: an unreadable probe is not reported as a successor
   // NOT quit-and-reopen: this state is only reachable with a crew on the port the
   // launch targets, and it targets that port on purpose, so a plain reopen lands
   // on the crew-configured refusal and starts nothing.
-  assert.match(s, /KIROCREW_PORT set to a port number that has no remote host/,
+  assert.match(s, /AJCREW_PORT set to a port number that has no remote host/,
     "the route named is the one that actually starts a gateway here");
   assert.doesNotMatch(s, /open it again instead/, "a plain reopen does not recover here");
 });
@@ -641,7 +641,7 @@ test("tailLines on empty/null input", () => {
 
 test("isPortInUse detects a port-bind failure", () => {
   assert.strictEqual(
-    isPortInUse("17:57:53 ERROR kiro_crew.dashboard.server: Port 7788 already in use -- is another KiroCrew gateway running?"),
+    isPortInUse("17:57:53 ERROR aj_crew.dashboard.server: Port 7788 already in use -- is another Aj Crew gateway running?"),
     true,
   );
   assert.strictEqual(isPortInUse("OSError: [Errno 48] Address already in use"), true);

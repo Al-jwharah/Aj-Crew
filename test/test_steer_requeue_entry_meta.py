@@ -42,7 +42,7 @@ class TestRequeuedThenCancelledSteer:
     async def test_cancelled_requeue_is_not_persisted_as_delivered(
         self, tmp_path, monkeypatch, _patch_sel
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -87,7 +87,7 @@ class TestHardKillDiscardsSteers:
 
     @pytest.mark.asyncio
     async def test_force_stop_clears_pending_steers(self, tmp_path, monkeypatch, _patch_sel):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.push_slots_update = MagicMock()
@@ -142,13 +142,13 @@ class TestRequeuedSteerCarriesTheClientSendId:
         `_requeue_unconsumed_steers` rather than a hand-rolled stand-in, so the
         entry meta asserted here is the one production writes.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
 
         async def _steer(message):
-            from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+            from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
             _requeue_unconsumed_steers(state, slot)
             return True
@@ -188,7 +188,7 @@ class TestRequeuedSteerCarriesTheClientSendId:
         its steer delivery ids), and this pins that `sendId` is not filtered out
         of it.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.subagents = None
@@ -197,7 +197,7 @@ class TestRequeuedSteerCarriesTheClientSendId:
         slot._steer_delivery_ids = {self._TEXT: "did-1"}
         slot._steer_send_ids = {self._TEXT: self._SEND_ID}
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         chat_runner._requeue_unconsumed_steers(state, slot)
 
@@ -223,13 +223,13 @@ class TestRequeuedSteerCarriesTheClientSendId:
         Pinned as an ABSENT KEY rather than a falsy value -- an empty string would
         travel to the row and give the frontend an id that matches nothing.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
 
         async def _steer(message):
-            from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+            from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
             _requeue_unconsumed_steers(state, slot)
             return True
@@ -255,13 +255,13 @@ class TestRequeuedSteerCarriesTheClientSendId:
         that fails the id gates must not get there by the requeue door after being
         refused at the row door.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
 
         async def _steer(message):
-            from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+            from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
             _requeue_unconsumed_steers(state, slot)
             return True
@@ -303,7 +303,7 @@ class TestSendIdMapLifecycle:
     @pytest.mark.asyncio
     async def test_the_requeue_moves_the_entry_out(self, tmp_path, monkeypatch):
         """Moved onto the queue entry, not copied -- the map must not keep it."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("test")
@@ -311,7 +311,7 @@ class TestSendIdMapLifecycle:
         slot._steer_delivery_ids = {self._TEXT: "did-1"}
         slot._steer_send_ids = {self._TEXT: self._SEND_ID}
 
-        from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+        from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
         _requeue_unconsumed_steers(state, slot)
 
@@ -343,7 +343,7 @@ class TestSendIdMapLifecycle:
         terminal tail and enter the requeue loop zero times, so it cannot cover
         this even though it is the same failure mode one layer up.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("test")
@@ -352,7 +352,7 @@ class TestSendIdMapLifecycle:
         slot._steer_delivery_ids = {t: f"did-{n}" for n, t in enumerate(texts)}
         slot._steer_send_ids = {t: f"s-m4k2p1-{n}" for n, t in enumerate(texts)}
 
-        from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+        from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
         _requeue_unconsumed_steers(state, slot)
 
@@ -374,7 +374,7 @@ class TestSendIdMapLifecycle:
     @pytest.mark.asyncio
     async def test_a_hard_kill_drops_the_entry(self, tmp_path, monkeypatch, _patch_sel):
         """A force stop discards the text, so no requeued entry will carry it."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.push_slots_update = MagicMock()
@@ -414,7 +414,7 @@ class TestSendIdMapLifecycle:
         records that precondition, so the constructed pin below is honestly
         labelled a defensive-invariant pin rather than a production-path one.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.subagents = None
@@ -422,7 +422,7 @@ class TestSendIdMapLifecycle:
         observed: dict[str, object] = {}
 
         async def _requeue_and_drain(message):
-            from kiro_crew.dashboard import chat_runner
+            from aj_crew.dashboard import chat_runner
 
             chat_runner._requeue_unconsumed_steers(state, slot)
             with (
@@ -478,7 +478,7 @@ class TestSendIdMapLifecycle:
         `_steer_delivery_ids` pop at this same return is defensive for exactly the
         same reason. This pin is what makes removing either of them fail.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -534,13 +534,13 @@ class TestRequeuedSteerKeepsItsDecisionReceipt:
     @pytest.mark.asyncio
     async def test_requeued_entry_meta_carries_the_receipt(self, tmp_path, monkeypatch):
         """Registration -> entry meta, driving the real requeue from inside the RPC."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
 
         async def _steer(message):
-            from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+            from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
             _requeue_unconsumed_steers(state, slot)
             return True
@@ -550,7 +550,7 @@ class TestRequeuedSteerKeepsItsDecisionReceipt:
         client_mock.steer = _steer
         slot._acp_client = client_mock
 
-        from kiro_crew.dashboard.chat_delivery import STEER_REQUEUED, steer_into_running_turn
+        from aj_crew.dashboard.chat_delivery import STEER_REQUEUED, steer_into_running_turn
 
         outcome = await steer_into_running_turn(state, slot, self._TEXT, decision_strip=self._STRIP)
         assert outcome == STEER_REQUEUED
@@ -564,7 +564,7 @@ class TestRequeuedSteerKeepsItsDecisionReceipt:
     @pytest.mark.asyncio
     async def test_drained_row_carries_the_receipt(self, tmp_path, monkeypatch):
         """Entry meta -> row meta: the row is what the transcript reader reads."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.subagents = None
@@ -573,7 +573,7 @@ class TestRequeuedSteerKeepsItsDecisionReceipt:
         slot._steer_delivery_ids = {self._TEXT: "did-1"}
         slot._steer_decision_strips = {self._TEXT: self._STRIP}
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         chat_runner._requeue_unconsumed_steers(state, slot)
         with (
@@ -600,7 +600,7 @@ class TestRequeuedSteerKeepsItsDecisionReceipt:
         REQUEUED row and the drained row would claim the decision and neither copy is
         ever removed. `sendId` is dropped at that same site for the same reason.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -610,8 +610,8 @@ class TestRequeuedSteerKeepsItsDecisionReceipt:
         client_mock.steer = AsyncMock(return_value=True)
         slot._acp_client = client_mock
 
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat_delivery import STEER_STEERED, steer_into_running_turn
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat_delivery import STEER_STEERED, steer_into_running_turn
 
         assert (
             await steer_into_running_turn(state, slot, self._TEXT, decision_strip=self._STRIP)
@@ -636,14 +636,14 @@ class TestRequeuedSteerKeepsItsDecisionReceipt:
         message for the slot's lifetime -- and a steer the echo accounted for is
         never requeued, so nothing will read it again.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("test")
         slot._pending_steers = [self._TEXT]
         slot._steer_decision_strips = {self._TEXT: self._STRIP}
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         chat_runner._settle_consumed_steers(
             slot, f"<user_message>\n{self._TEXT}\n</user_message>", state
@@ -660,13 +660,13 @@ class TestRequeuedSteerKeepsItsDecisionReceipt:
         persisted with the queue and reaches the row, where an empty receipt would
         render as a decision that never happened.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
 
         async def _steer(message):
-            from kiro_crew.dashboard.chat_runner import _requeue_unconsumed_steers
+            from aj_crew.dashboard.chat_runner import _requeue_unconsumed_steers
 
             _requeue_unconsumed_steers(state, slot)
             return True
@@ -676,7 +676,7 @@ class TestRequeuedSteerKeepsItsDecisionReceipt:
         client_mock.steer = _steer
         slot._acp_client = client_mock
 
-        from kiro_crew.dashboard.chat_delivery import steer_into_running_turn
+        from aj_crew.dashboard.chat_delivery import steer_into_running_turn
 
         await steer_into_running_turn(state, slot, self._TEXT)
         assert "decisions_strip" not in slot._queue[0]["meta"]

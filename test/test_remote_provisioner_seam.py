@@ -13,19 +13,19 @@ import os
 
 import pytest
 
-from kiro_crew.cloud.launch_engine import RealLaunchEngine
-from kiro_crew.platform.defaults import (
+from aj_crew.cloud.launch_engine import RealLaunchEngine
+from aj_crew.platform.defaults import (
     BUILTIN_REMOTE_PROVISIONER,
     FARGATE_PROVISIONER_ID,
     FARGATE_REMOTE_PROVISIONER,
     DefaultRemoteProvisionerProvider,
 )
-from kiro_crew.platform.interfaces import (
+from aj_crew.platform.interfaces import (
     BUILTIN_PROVISIONER_ID,
     RemoteProvisioner,
     RemoteProvisionerProvider,
 )
-from kiro_crew.sandbox import SandboxCeilingUnsealable
+from aj_crew.sandbox import SandboxCeilingUnsealable
 
 
 class TestFargateLane:
@@ -50,20 +50,20 @@ class TestFargateLane:
     @staticmethod
     def _complete_block() -> dict:
         # The credential secret is a conforming pair: the canonical name
-        # kirocrew/crew/<crew>/<ENV> and the ARN that is that name plus one
+        # ajcrew/crew/<crew>/<ENV> and the ARN that is that name plus one
         # six-character service suffix. The account id is fictional. Without a
         # secret named for the model credential the block is INCOMPLETE, because
         # the engine would refuse every launch made through the lane.
         return {
-            "cluster": "kirocrew-crew-prod",
+            "cluster": "ajcrew-crew-prod",
             "subnets": ["subnet-a"],
             "security_groups": ["sg-1"],
-            "image": "public.ecr.aws/example/kirocrew-crew-base@sha256:" + "b" * 64,
+            "image": "public.ecr.aws/example/ajcrew-crew-base@sha256:" + "b" * 64,
             "secrets": [
                 [
-                    "kirocrew/crew/demo/KIRO_IDENTITY",
+                    "ajcrew/crew/demo/KIRO_IDENTITY",
                     "arn:aws:secretsmanager:us-east-1:123456789012:"
-                    "secret:kirocrew/crew/demo/KIRO_IDENTITY-AbCdEf",
+                    "secret:ajcrew/crew/demo/KIRO_IDENTITY-AbCdEf",
                 ]
             ],
             "cpu_architecture": "X86_64",
@@ -72,7 +72,7 @@ class TestFargateLane:
     def test_unconfigured_offers_only_ec2_and_refuses_the_fargate_engine(
         self, monkeypatch, tmp_path
     ):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         provider = DefaultRemoteProvisionerProvider()
         assert [p.id for p in provider.provisioners()] == [BUILTIN_PROVISIONER_ID]
         with pytest.raises(KeyError):
@@ -81,8 +81,8 @@ class TestFargateLane:
     def test_configured_offers_the_lane_and_builds_the_engine_from_the_block(
         self, monkeypatch, tmp_path
     ):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config.loader import config_dir
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config.loader import config_dir
 
         block = self._complete_block()
         self._write_config(config_dir(), block)
@@ -114,8 +114,8 @@ class TestFargateLane:
         only checked the claimed case would pass if the field were hardcoded true, which
         is the failure that hands every lane an unsandboxed worker.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config.loader import config_dir
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config.loader import config_dir
 
         self._write_config(config_dir(), {**self._complete_block(), "internal_only": True})
         engine = DefaultRemoteProvisionerProvider().engine_for(FARGATE_PROVISIONER_ID)
@@ -136,8 +136,8 @@ class TestFargateLane:
         engine's own ``bounds`` is the only place the file's number can change what a
         task gets.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config.loader import config_dir
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config.loader import config_dir
 
         block = {**self._complete_block(), "task_ttl_seconds": 43200}
         self._write_config(config_dir(), block)
@@ -146,7 +146,7 @@ class TestFargateLane:
         assert engine._bounds.ttl_seconds == 43200
         # The cap must NOT move because the file set a lifetime: it has no key, so the
         # engine's own value has to survive an operator override of its sibling.
-        from kiro_crew.cloud.fargate_engine import DEFAULT_MAX_RUNNING_TASKS
+        from aj_crew.cloud.fargate_engine import DEFAULT_MAX_RUNNING_TASKS
 
         assert engine._bounds.max_running == DEFAULT_MAX_RUNNING_TASKS
 
@@ -156,12 +156,12 @@ class TestFargateLane:
         Read from the engine's own constants rather than written out, so it cannot drift
         from them and cannot pass by coincidence.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.cloud.fargate_engine import (
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.cloud.fargate_engine import (
             DEFAULT_MAX_RUNNING_TASKS,
             DEFAULT_TASK_TTL_SECONDS,
         )
-        from kiro_crew.config.loader import config_dir
+        from aj_crew.config.loader import config_dir
 
         self._write_config(config_dir(), self._complete_block())
 
@@ -176,8 +176,8 @@ class TestFargateLane:
         ``TaskBounds`` on its first launch, which is the state this module's
         "incomplete means absent" rule exists to prevent.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config.loader import config_dir
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config.loader import config_dir
 
         self._write_config(config_dir(), {**self._complete_block(), "task_ttl_seconds": 0})
 
@@ -187,8 +187,8 @@ class TestFargateLane:
             provider.engine_for(FARGATE_PROVISIONER_ID)
 
     def test_the_ec2_lane_is_unchanged_either_way(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config.loader import config_dir
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config.loader import config_dir
 
         provider = DefaultRemoteProvisionerProvider()
         assert isinstance(provider.engine_for(BUILTIN_PROVISIONER_ID), RealLaunchEngine)
@@ -197,8 +197,8 @@ class TestFargateLane:
 
     def test_an_incomplete_block_leaves_the_lane_unoffered(self, monkeypatch, tmp_path):
         """Offered-and-refusing is the state this avoids."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config.loader import config_dir
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config.loader import config_dir
 
         self._write_config(config_dir(), {"cluster": "only-a-cluster"})
         provider = DefaultRemoteProvisionerProvider()
@@ -217,8 +217,8 @@ class TestFargateLane:
         config-level boundary asserts the same thing; without this case a change
         that drops the requirement passes the seam suite untouched.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config.loader import config_dir
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config.loader import config_dir
 
         self._write_config(config_dir(), {**self._complete_block(), "secrets": []})
         provider = DefaultRemoteProvisionerProvider()
@@ -232,7 +232,7 @@ class TestFargateLane:
         ``provisioners()`` builds the Set-up list, so raising here would render the
         tab empty -- turning a Fargate problem into no lanes at all.
         """
-        import kiro_crew.cloud.config as cloud_config
+        import aj_crew.cloud.config as cloud_config
 
         def boom(*_args, **_kwargs):
             raise OSError("unreadable")
@@ -243,8 +243,8 @@ class TestFargateLane:
 
     def test_the_block_is_read_per_call_not_cached(self, monkeypatch, tmp_path):
         """An operator who edits the file gets the answer from the next request."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config.loader import config_dir
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config.loader import config_dir
 
         provider = DefaultRemoteProvisionerProvider()
         assert [p.id for p in provider.provisioners()] == [BUILTIN_PROVISIONER_ID]
@@ -268,8 +268,8 @@ class TestFargateLane:
     def test_importing_the_platform_does_not_pull_the_cloud_config_module(self):
         """The deferral is load-bearing twice over, so it is pinned.
 
-        ``kiro_crew.cloud`` reaches ``kiro_crew.sandbox``, which imports
-        ``kiro_crew.platform.current_context`` -- a module-level import here raises
+        ``aj_crew.cloud`` reaches ``aj_crew.sandbox``, which imports
+        ``aj_crew.platform.current_context`` -- a module-level import here raises
         ``ImportError: cannot import name 'current_context' from partially
         initialized module``, because this module loads during ``platform`` init.
         It is also 105 ms and 122 modules against a 126 ms init, for a lane most
@@ -280,11 +280,11 @@ class TestFargateLane:
         import sys
         from pathlib import Path
 
-        from kiro_crew.subprocess_utf8 import UTF8_TEXT
+        from aj_crew.subprocess_utf8 import UTF8_TEXT
 
         probe = (
-            "import sys, kiro_crew.platform.defaults as d;"
-            "print('cloud.config' if 'kiro_crew.cloud.config' in sys.modules else 'deferred')"
+            "import sys, aj_crew.platform.defaults as d;"
+            "print('cloud.config' if 'aj_crew.cloud.config' in sys.modules else 'deferred')"
         )
         # Run from the repository root with src/ on the path, so the child imports
         # this checkout rather than whatever is installed.
@@ -348,19 +348,19 @@ class TestDefaultProvider:
 
 class TestComposition:
     def test_default_context_composes_the_seam(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.platform.bootstrap import build_default_context
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.platform.bootstrap import build_default_context
 
-        ctx = build_default_context(KiroCrewConfig.load(), profile="standalone")
+        ctx = build_default_context(AjCrewConfig.load(), profile="standalone")
         assert isinstance(ctx.remote_provisioners, DefaultRemoteProvisionerProvider)
 
     def test_companion_can_replace_it_with_dataclasses_replace(self, monkeypatch, tmp_path):
         """The companion's composition root is ``dataclasses.replace`` on the base
         context; a new required field must not break that path."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.platform.bootstrap import build_default_context
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.platform.bootstrap import build_default_context
 
         class Two:
             def provisioners(self):
@@ -369,7 +369,7 @@ class TestComposition:
             def engine_for(self, provisioner_id):
                 raise KeyError(provisioner_id)
 
-        base = build_default_context(KiroCrewConfig.load(), profile="standalone")
+        base = build_default_context(AjCrewConfig.load(), profile="standalone")
         ctx = dataclasses.replace(base, remote_provisioners=Two())
         assert [p.id for p in ctx.remote_provisioners.provisioners()] == ["aws_ec2", "d"]
 
@@ -387,22 +387,22 @@ class TestTheConfirmationReachesTheEngine:
     def _block() -> dict:
         arn = (
             "arn:aws:secretsmanager:us-east-1:123456789012:secret:"
-            "kirocrew/crew/demo/KIRO_IDENTITY-abcdef"
+            "ajcrew/crew/demo/KIRO_IDENTITY-abcdef"
         )
         return {
-            "cluster": "kirocrew-crew-prod",
+            "cluster": "ajcrew-crew-prod",
             "subnets": ["subnet-a"],
             "security_groups": ["sg-1"],
-            "image": "public.ecr.aws/example/kirocrew-crew-base@sha256:" + "a" * 64,
-            "secrets": [["kirocrew/crew/demo/KIRO_IDENTITY", arn]],
+            "image": "public.ecr.aws/example/ajcrew-crew-base@sha256:" + "a" * 64,
+            "secrets": [["ajcrew/crew/demo/KIRO_IDENTITY", arn]],
             "cpu_architecture": "X86_64",
         }
 
     def _provider_over(self, monkeypatch, tmp_path, block):
         import json
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config.loader import config_dir
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config.loader import config_dir
 
         home = config_dir()
         home.mkdir(parents=True, exist_ok=True)
@@ -472,22 +472,22 @@ class TestTheOperatorCanReadTheRecipientBeforeConfirming:
     def _block() -> dict:
         arn = (
             "arn:aws:secretsmanager:us-east-1:123456789012:secret:"
-            "kirocrew/crew/demo/KIRO_IDENTITY-abcdef"
+            "ajcrew/crew/demo/KIRO_IDENTITY-abcdef"
         )
         return {
-            "cluster": "kirocrew-crew-prod",
+            "cluster": "ajcrew-crew-prod",
             "subnets": ["subnet-a"],
             "security_groups": ["sg-1"],
-            "image": "public.ecr.aws/example/kirocrew-crew-base@sha256:" + "a" * 64,
-            "secrets": [["kirocrew/crew/demo/KIRO_IDENTITY", arn]],
+            "image": "public.ecr.aws/example/ajcrew-crew-base@sha256:" + "a" * 64,
+            "secrets": [["ajcrew/crew/demo/KIRO_IDENTITY", arn]],
             "cpu_architecture": "X86_64",
         }
 
     def _provider(self, monkeypatch, tmp_path, block):
         import json
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config.loader import config_dir
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config.loader import config_dir
 
         home = config_dir()
         home.mkdir(parents=True, exist_ok=True)
@@ -495,7 +495,7 @@ class TestTheOperatorCanReadTheRecipientBeforeConfirming:
         return DefaultRemoteProvisionerProvider()
 
     def test_the_fargate_row_carries_the_resolved_recipient(self, monkeypatch, tmp_path):
-        from kiro_crew.cloud.config import FargateConfig
+        from aj_crew.cloud.config import FargateConfig
 
         block = self._block()
         provider = self._provider(monkeypatch, tmp_path, block)
@@ -516,7 +516,7 @@ class TestTheOperatorCanReadTheRecipientBeforeConfirming:
 
         import json
 
-        from kiro_crew.config.loader import config_dir
+        from aj_crew.config.loader import config_dir
 
         substituted = {**self._block(), "image": "public.ecr.aws/attacker/x@sha256:" + "b" * 64}
         (config_dir() / "cloud.json").write_text(json.dumps({"fargate": substituted}))
@@ -548,7 +548,7 @@ class TestTheOperatorCanReadTheRecipientBeforeConfirming:
         mechanism being special-cased to Fargate."""
         import dataclasses
 
-        from kiro_crew.platform.interfaces import RemoteProvisioner
+        from aj_crew.platform.interfaces import RemoteProvisioner
 
         field = {f.name: f for f in dataclasses.fields(RemoteProvisioner)}["confirm_before_launch"]
         assert field.default == ""
@@ -578,9 +578,9 @@ class TestTheAliasRefusalSitsWhereTheFileIsConsumed:
         Both shapes matter and only one is a link. ``rsync --link-dest`` and hardlinking
         backups produce the second, which no symlink check sees at all.
         """
-        import kiro_crew.sandbox as sandbox_mod
+        import aj_crew.sandbox as sandbox_mod
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         home = tmp_path
         home.mkdir(parents=True, exist_ok=True)
         real = home / "dotfiles-cloud.json"
@@ -603,9 +603,9 @@ class TestTheAliasRefusalSitsWhereTheFileIsConsumed:
         The alias harm is credential delivery to a container the owner did not choose, and it
         is answered where the launch reads the file rather than where a spawn starts.
         """
-        import kiro_crew.sandbox as sandbox_mod
+        import aj_crew.sandbox as sandbox_mod
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         real = tmp_path / "dotfiles-cloud.json"
         real.write_text("{}")
         (tmp_path / "cloud.json").symlink_to(real)
@@ -628,7 +628,7 @@ class TestTheAliasRefusalSitsWhereTheFileIsConsumed:
         import importlib
         import inspect
 
-        import kiro_crew.sandbox as sandbox_mod
+        import aj_crew.sandbox as sandbox_mod
 
         # The module and the owners carved out of it, which share its namespace.
         modules = [sandbox_mod, *map(importlib.import_module, sandbox_mod._CARVED_OWNERS)]
@@ -653,8 +653,8 @@ class TestTheAliasRefusalSitsWhereTheFileIsConsumed:
 
         import pytest as _pytest
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        from kiro_crew.config.loader import config_dir
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        from aj_crew.config.loader import config_dir
 
         home = config_dir()
         home.mkdir(parents=True, exist_ok=True)
@@ -669,9 +669,9 @@ class TestTheAliasRefusalSitsWhereTheFileIsConsumed:
                         "image": "public.ecr.aws/x/base@sha256:" + "a" * 64,
                         "secrets": [
                             [
-                                "kirocrew/crew/demo/KIRO_IDENTITY",
+                                "ajcrew/crew/demo/KIRO_IDENTITY",
                                 "arn:aws:secretsmanager:us-east-1:123456789012:secret:"
-                                "kirocrew/crew/demo/KIRO_IDENTITY-abcdef",
+                                "ajcrew/crew/demo/KIRO_IDENTITY-abcdef",
                             ]
                         ],
                         "cpu_architecture": "X86_64",

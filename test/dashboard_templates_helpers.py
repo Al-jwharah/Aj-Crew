@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TypedDict
 
-from kiro_crew.dashboard_templates import Unsaid
+from aj_crew.dashboard_templates import Unsaid
 
 ROOT = Path(__file__).resolve().parents[1]
 

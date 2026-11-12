@@ -17,8 +17,8 @@ const mockConfirm = vi.fn(() => true)
 Object.defineProperty(window, 'confirm', { writable: true, value: mockConfirm })
 
 const baseSlots = [
-  { key: 'slot-1', title: 'Pipeline debug', running: false, agent: 'kirocrew', created: '2026-04-08T01:00:00Z', last_ts: '2026-04-08T02:00:00Z', folder_id: '' },
-  { key: 'slot-2', title: 'Code review', running: true, agent: 'kirocrew', created: '2026-04-08T00:00:00Z', last_ts: '2026-04-08T01:30:00Z', folder_id: '' },
+  { key: 'slot-1', title: 'Pipeline debug', running: false, agent: 'ajcrew', created: '2026-04-08T01:00:00Z', last_ts: '2026-04-08T02:00:00Z', folder_id: '' },
+  { key: 'slot-2', title: 'Code review', running: true, agent: 'ajcrew', created: '2026-04-08T00:00:00Z', last_ts: '2026-04-08T01:30:00Z', folder_id: '' },
   { key: 'slot-3', title: 'Oncall triage', running: false, agent: 'oncall', created: '2026-04-07T10:00:00Z', last_ts: '2026-04-07T12:00:00Z', folder_id: '' },
 ]
 
@@ -28,8 +28,8 @@ const defaultProps = {
   unreadSlots: [] as string[],
   history: [],
   historyHasMore: false,
-  defaultAgent: 'kirocrew',
-  installedAgents: [{ name: 'kirocrew', source: 'builtin' }, { name: 'oncall', source: 'aim' }],
+  defaultAgent: 'ajcrew',
+  installedAgents: [{ name: 'ajcrew', source: 'builtin' }, { name: 'oncall', source: 'aim' }],
 }
 
 // A case asserting a write REACHES the server must declare a live gateway:

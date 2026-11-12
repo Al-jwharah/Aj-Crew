@@ -20,9 +20,9 @@ from typing import Any
 import pytest
 from _hot_reload_helpers import ChannelCase, cfg_with, channel_cases, prime_live
 
-from kiro_crew.agent_switch_command import handle_channel_agent_command
-from kiro_crew.config import live
-from kiro_crew.messaging.conversation import ConversationState
+from aj_crew.agent_switch_command import handle_channel_agent_command
+from aj_crew.config import live
+from aj_crew.messaging.conversation import ConversationState
 
 _NEW = "amzn-builder"
 
@@ -80,10 +80,10 @@ def test_a_live_default_change_reaches_the_routes_next_conversation(case: Channe
     prime_live("agent", default_agent="")
     d = case.make_dispatcher()
     conv_key, read = _ROUTES[case.name]
-    assert _agent(read(d)) == "kirocrew"
+    assert _agent(read(d)) == "ajcrew"
 
     prime_live("agent", default_agent=_NEW)
-    assert _agent(read(d)) == "kirocrew"
+    assert _agent(read(d)) == "ajcrew"
 
     d._conv.bump_gen(conv_key)
     assert _agent(read(d)) == _NEW
@@ -95,11 +95,11 @@ def test_an_idle_rotation_reads_the_default_again(case: ChannelCase) -> None:
     d = case.make_dispatcher()
     conv_key, read = _ROUTES[case.name]
     d._conv.maybe_rotate(conv_key, 1000.0, idle_minutes=1)
-    assert _agent(read(d)) == "kirocrew"
+    assert _agent(read(d)) == "ajcrew"
 
     prime_live("agent", default_agent=_NEW)
     d._conv.maybe_rotate(conv_key, 1030.0, idle_minutes=1)
-    assert _agent(read(d)) == "kirocrew"
+    assert _agent(read(d)) == "ajcrew"
 
     d._conv.maybe_rotate(conv_key, 2000.0, idle_minutes=1)
     assert _agent(read(d)) == _NEW
@@ -181,7 +181,7 @@ def test_a_discarded_agent_section_keeps_the_default_in_force(case: ChannelCase)
     prime_live("agent", default_agent=_NEW)
     assert _agent(read(d)) == _NEW
 
-    # A discarded section loads as defaults; reading those would revert to kirocrew.
+    # A discarded section loads as defaults; reading those would revert to ajcrew.
     live.watch().prime(cfg_with("agent", degraded=frozenset({"agent"}), default_agent=""))
     d._conv.bump_gen(conv_key)
 
@@ -221,18 +221,16 @@ def test_a_default_whose_spec_was_removed_runs_the_managed_template(
     # The evidence ``default_template`` acts on: a complete installed snapshot that
     # names "gone" as removed, and an edition that does not supply it.
     monkeypatch.setattr(
-        "kiro_crew.config.loader_snapshots._removal_evidence",
-        lambda: (frozenset({"kirocrew"}), frozenset({"gone"}), True),
+        "aj_crew.config.loader_snapshots._removal_evidence",
+        lambda: (frozenset({"ajcrew"}), frozenset({"gone"}), True),
     )
-    monkeypatch.setattr(
-        "kiro_crew.config.loader_snapshots._edition_agent_names", lambda: frozenset()
-    )
+    monkeypatch.setattr("aj_crew.config.loader_snapshots._edition_agent_names", lambda: frozenset())
     prime_live("agent", default_agent="gone")
     d = case.make_dispatcher()
     d.cfg.agent.default_agent = "gone"
     _, read = _ROUTES[case.name]
 
-    assert _agent(read(d)) == "kirocrew"
+    assert _agent(read(d)) == "ajcrew"
 
 
 def test_a_bucket_move_reseeds_the_counter_from_the_new_bucket() -> None:
@@ -280,7 +278,7 @@ async def test_a_reset_to_an_equal_default_clears_the_pick(case: ChannelCase) ->
     assert d._agent_picks.get(conv_key) == ""
     prime_live("agent", default_agent="")
     d._conv.bump_gen(conv_key)
-    assert _agent(read(d)) == "kirocrew"
+    assert _agent(read(d)) == "ajcrew"
 
 
 def test_a_pin_holds_for_one_conversation() -> None:
@@ -339,7 +337,7 @@ async def test_an_equal_reset_keeps_the_running_turns_key(case: ChannelCase) -> 
     prime_live("agent", default_agent="")
     d = case.make_dispatcher()
     conv_key, read = _ROUTES[case.name]
-    assert _agent(read(d)) == "kirocrew"
+    assert _agent(read(d)) == "ajcrew"
     d._agent_picks.set(conv_key, _NEW)
     d._conv.bump_gen(conv_key)
     running = read(d)
@@ -371,10 +369,10 @@ async def test_an_equal_reset_keeps_the_running_turns_key(case: ChannelCase) -> 
 async def test_naming_the_pinned_old_default_keeps_it_past_rotation(
     case: ChannelCase, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """``/agent kirocrew`` while the open conversation still runs the old default
-    kirocrew is "Already using", but the user named it: ``/new`` must keep it."""
+    """``/agent ajcrew`` while the open conversation still runs the old default
+    ajcrew is "Already using", but the user named it: ``/new`` must keep it."""
     monkeypatch.setattr(
-        "kiro_crew.agent_switch_command.pickable_agent_names", lambda: ["kirocrew", _NEW]
+        "aj_crew.agent_switch_command.pickable_agent_names", lambda: ["ajcrew", _NEW]
     )
     prime_live("agent", default_agent="")
     d = case.make_dispatcher()
@@ -383,12 +381,12 @@ async def test_naming_the_pinned_old_default_keeps_it_past_rotation(
     prime_live("agent", default_agent=_NEW)
 
     if case.name == "telegram":
-        reply = await d._apply_agent(conv_key, "kirocrew")
+        reply = await d._apply_agent(conv_key, "ajcrew")
     else:
         reply = await handle_channel_agent_command(
             d._agent_picks,
             conv_key,
-            "kirocrew",
+            "ajcrew",
             conv=d._conv,
             configured=d._configured_agent(),
             running_default=d._configured_agent(conv_key),
@@ -399,7 +397,7 @@ async def test_naming_the_pinned_old_default_keeps_it_past_rotation(
     assert "Already using" in reply
     assert read(d) == before
     d._conv.bump_gen(conv_key)
-    assert _agent(read(d)) == "kirocrew"
+    assert _agent(read(d)) == "ajcrew"
 
 
 @pytest.mark.asyncio
@@ -413,7 +411,7 @@ async def test_a_route_that_moved_during_discovery_goes_through_the_busy_check(
     prime_live("agent", default_agent="")
     d = case.make_dispatcher()
     conv_key, read = _ROUTES[case.name]
-    assert _agent(read(d)) == "kirocrew"
+    assert _agent(read(d)) == "ajcrew"
     prime_live("agent", default_agent=_NEW)
     busy: list[str] = []
     d.sessions.is_busy = lambda key: key in busy
@@ -422,15 +420,15 @@ async def test_a_route_that_moved_during_discovery_goes_through_the_busy_check(
     def _names() -> list[str]:
         d._conv.bump_gen(conv_key)
         busy.append(read(d))
-        return ["kirocrew", _NEW]
+        return ["ajcrew", _NEW]
 
-    monkeypatch.setattr("kiro_crew.agent_switch_command.pickable_agent_names", _names)
+    monkeypatch.setattr("aj_crew.agent_switch_command.pickable_agent_names", _names)
     running_default = d._configured_agent(conv_key)
 
     reply = await handle_channel_agent_command(
         d._agent_picks,
         conv_key,
-        "kirocrew",
+        "ajcrew",
         conv=d._conv,
         configured=d._configured_agent(),
         running_default=running_default,

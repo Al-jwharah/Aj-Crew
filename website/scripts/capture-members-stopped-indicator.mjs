@@ -36,13 +36,13 @@ mkdirSync(OUT, { recursive: true })
 const MEMBERS = [
   {
     name: 'analyst', slug: 'analyst', bound: true, slot_key: 'member-analyst',
-    running: false, kiro_agent: 'kirocrew', workspace: 'default',
+    running: false, kiro_agent: 'ajcrew', workspace: 'default',
     memory_store: 'default', model: '', last_active_ts: 1000,
     last_message: 'Running the analysis now.', last_message_stopped: true,
   },
   {
     name: 'scribe', slug: 'scribe', bound: true, slot_key: 'member-scribe',
-    running: false, kiro_agent: 'kirocrew', workspace: 'docs',
+    running: false, kiro_agent: 'ajcrew', workspace: 'docs',
     memory_store: 'default', model: '', last_active_ts: 900,
     last_message: 'Draft pushed — ready for review.',
   },
@@ -62,10 +62,10 @@ async function newPage(theme, viewport = { width: 1280, height: 820 }) {
   await page.route(u => new URL(u).pathname.startsWith('/api/'), route => {
     const path = new URL(route.request().url()).pathname
     const json = (body) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
-    if (path === '/api/members') return json({ members: MEMBERS, default_agent: 'kirocrew' })
+    if (path === '/api/members') return json({ members: MEMBERS, default_agent: 'ajcrew' })
     if (path === '/api/crons') return json({ jobs: [] })
     if (path === '/api/webhooks') return json({ tokens: [] })
-    if (path === '/api/agents') return json({ agents: [], default_agent: 'kirocrew' })
+    if (path === '/api/agents') return json({ agents: [], default_agent: 'ajcrew' })
     const thread = path.match(/^\/api\/members\/([^/]+)\/thread$/)
     if (thread) {
       const slug = decodeURIComponent(thread[1])

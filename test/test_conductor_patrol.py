@@ -26,15 +26,15 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import autonudge, autonudge_authz, conductor_patrol
-from kiro_crew import work_ledger as wl
-from kiro_crew.autonudge import (
+from aj_crew import autonudge, autonudge_authz, conductor_patrol
+from aj_crew import work_ledger as wl
+from aj_crew.autonudge import (
     SERVICE_SHUTTING_DOWN_MESSAGE,
     AutoNudgeService,
     MonitorUpdateConflict,
 )
-from kiro_crew.dashboard.handlers import work_ledger as routes
-from kiro_crew.monitoring.models import MonitorActionCompletion, MonitorActionDisposition
+from aj_crew.dashboard.handlers import work_ledger as routes
+from aj_crew.monitoring.models import MonitorActionCompletion, MonitorActionDisposition
 
 CONDUCTOR = "chat-p-conductor"
 WORKER = "chat-p-worker"
@@ -97,7 +97,7 @@ _SLOTS: dict[str, _Slot] = {}
 # (testing-conventions D11): a test's monkeypatch.undo() never strips it.
 @pytest.fixture(autouse=True)
 def _env(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _SLOTS.clear()
 
     async def _recognized(*a: Any, **k: Any) -> None:
@@ -326,7 +326,7 @@ async def test_an_active_loop_that_watches_something_else_gets_the_note(svc, aud
 @pytest.mark.asyncio
 async def test_refused_arm_logs_warning_and_bind_still_succeeds(svc, audits, caplog):
     item_id = await _setup(memory_mode="temporary")
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.conductor_patrol"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.conductor_patrol"):
         body = await _bind(item_id, WORKER)
 
     assert body["patrol"] == conductor_patrol.REFUSED
@@ -343,7 +343,7 @@ async def test_an_authorizer_crash_does_not_fail_the_bind(svc, monkeypatch, capl
 
     monkeypatch.setattr(autonudge_authz, "authorize_and_add_nudge", _boom)
     item_id = await _setup()
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.conductor_patrol"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.conductor_patrol"):
         body = await _bind(item_id, WORKER)
 
     assert body["patrol"] == conductor_patrol.REFUSED
@@ -397,7 +397,7 @@ async def test_closed_item_is_never_unpatrolled(svc):
 def test_the_default_patrol_has_no_cycle_cap_and_the_ceiling_as_its_runtime():
     """No cycle cap; the operator's runtime ceiling (7 days as shipped) is the one
     runaway backstop (rfc-permanent-patrol.md)."""
-    from kiro_crew.monitoring.limits import DEFAULT_RUNTIME_CEILING_SECS, runtime_ceiling_secs
+    from aj_crew.monitoring.limits import DEFAULT_RUNTIME_CEILING_SECS, runtime_ceiling_secs
 
     assert conductor_patrol.PATROL_MAX_CYCLES == 0
     assert conductor_patrol.patrol_max_runtime_secs() == runtime_ceiling_secs()
@@ -569,7 +569,7 @@ async def test_real_store_rearms_a_system_stopped_default(tmp_path):
 @pytest.mark.asyncio
 async def test_monitor_watch_replaces_an_active_default_patrol_mid_wake(tmp_path):
     """The structured create-only arm (``monitor_watch``) never 409s on the default."""
-    from kiro_crew.monitoring.models import MonitorBudgets
+    from aj_crew.monitoring.models import MonitorBudgets
 
     svc = AutoNudgeService(base_dir=tmp_path)
     try:
@@ -594,7 +594,7 @@ async def test_monitor_watch_replaces_an_active_default_patrol_mid_wake(tmp_path
 
 @pytest.mark.asyncio
 async def test_monitor_watch_still_409s_over_an_ordinary_loop(tmp_path):
-    from kiro_crew.monitoring.models import MonitorBudgets
+    from aj_crew.monitoring.models import MonitorBudgets
 
     svc = AutoNudgeService(base_dir=tmp_path)
     try:
@@ -622,7 +622,7 @@ async def test_replacing_a_firing_default_does_not_cancel_its_running_wake(tmp_p
     Displacing the default must leave that task running, not cancel it."""
     import asyncio
 
-    from kiro_crew.monitoring.models import MonitorBudgets
+    from aj_crew.monitoring.models import MonitorBudgets
 
     svc = AutoNudgeService(base_dir=tmp_path)
     try:
@@ -699,7 +699,7 @@ async def test_a_bind_after_shutdown_closed_admission_is_refused_before_add_and_
     monkeypatch.setattr(real, "add", add)
     await real.shutdown()
     item = await _setup()
-    caplog.set_level(logging.DEBUG, logger="kiro_crew.conductor_patrol")
+    caplog.set_level(logging.DEBUG, logger="aj_crew.conductor_patrol")
 
     body = await _bind(item, WORKER)
 
@@ -707,7 +707,7 @@ async def test_a_bind_after_shutdown_closed_admission_is_refused_before_add_and_
     assert body["patrol_note"] == conductor_patrol.ARM_YOURSELF_NOTE
     add.assert_not_awaited()
     assert real.get_by_slot(CONDUCTOR) is None
-    patrol_logs = [r for r in caplog.records if r.name == "kiro_crew.conductor_patrol"]
+    patrol_logs = [r for r in caplog.records if r.name == "aj_crew.conductor_patrol"]
     assert [(r.levelno, r.getMessage()) for r in patrol_logs] == [
         (logging.DEBUG, f"conductor patrol not armed for {CONDUCTOR}: auto-nudge is shutting down")
     ]
@@ -730,14 +730,14 @@ async def test_closed_admission_outranks_audit_unavailable_for_conductor_bind(
 
     monkeypatch.setattr(autonudge_authz, "sel", _unavailable_sel)
     item = await _setup()
-    caplog.set_level(logging.DEBUG, logger="kiro_crew.conductor_patrol")
+    caplog.set_level(logging.DEBUG, logger="aj_crew.conductor_patrol")
 
     body = await _bind(item, WORKER)
 
     assert body["patrol"] == conductor_patrol.REFUSED
     assert body["patrol_note"] == conductor_patrol.ARM_YOURSELF_NOTE
     assert real.get_by_slot(CONDUCTOR) is None
-    patrol_logs = [r for r in caplog.records if r.name == "kiro_crew.conductor_patrol"]
+    patrol_logs = [r for r in caplog.records if r.name == "aj_crew.conductor_patrol"]
     assert [(r.levelno, r.getMessage()) for r in patrol_logs] == [
         (logging.DEBUG, f"conductor patrol not armed for {CONDUCTOR}: auto-nudge is shutting down")
     ]
@@ -760,14 +760,14 @@ async def test_an_audit_outage_that_races_closure_still_logs_its_refusal_at_warn
 
     monkeypatch.setattr(autonudge_authz, "sel", _closing_then_unavailable)
     item = await _setup()
-    caplog.set_level(logging.DEBUG, logger="kiro_crew.conductor_patrol")
+    caplog.set_level(logging.DEBUG, logger="aj_crew.conductor_patrol")
 
     body = await _bind(item, WORKER)
 
     assert body["patrol"] == conductor_patrol.REFUSED
     assert real.accepting_mutations is False
     assert real.get_by_slot(CONDUCTOR) is None
-    patrol_logs = [r for r in caplog.records if r.name == "kiro_crew.conductor_patrol"]
+    patrol_logs = [r for r in caplog.records if r.name == "aj_crew.conductor_patrol"]
     assert [r.levelno for r in patrol_logs] == [logging.WARNING]
     assert "audit log unavailable" in patrol_logs[0].getMessage()
     assert SERVICE_SHUTTING_DOWN_MESSAGE not in patrol_logs[0].getMessage()

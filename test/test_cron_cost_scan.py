@@ -21,7 +21,7 @@ from typing import Any
 _SCRIPT = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "cron-cost-optimize"
     / "scripts"
@@ -212,7 +212,7 @@ class TestMinimalContextBlockers(unittest.TestCase):
         self.assertTrue(any("skill" in b for b in f.blockers))
 
     def test_skill_named_in_prose_blocks_minimal_context(self) -> None:
-        job = _job(message="Load the kirocrew-prepare-pr skill and drive the branch to green.")
+        job = _job(message="Load the ajcrew-prepare-pr skill and drive the branch to green.")
         self.assertEqual(_classify(job).verdict, "leave-as-is")
 
     def test_memory_dependence_blocks_minimal_context(self) -> None:

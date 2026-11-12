@@ -23,9 +23,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps import app_frame as af
-from kiro_crew.apps import app_hosts, link_preview_grants, point_grants
-from kiro_crew.apps.manager_records import STAGED_GRANT_FAMILIES
+from aj_crew.apps import app_frame as af
+from aj_crew.apps import app_hosts, link_preview_grants, point_grants
+from aj_crew.apps.manager_records import STAGED_GRANT_FAMILIES
 
 APP = "notes-app"
 
@@ -53,8 +53,8 @@ async def _client(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[TestClient]:
             calls.append(request.match_info["path"])
             return web.json_response({"ok": True})
 
-    monkeypatch.setattr("kiro_crew.apps.hooks_integration.get_route_registry", _Registry)
-    monkeypatch.setattr("kiro_crew.dashboard.server._embed_parent_port", lambda r, a: None)
+    monkeypatch.setattr("aj_crew.apps.hooks_integration.get_route_registry", _Registry)
+    monkeypatch.setattr("aj_crew.dashboard.server._embed_parent_port", lambda r, a: None)
 
     @web.middleware
     async def auth(request: web.Request, handler: Any) -> web.StreamResponse:
@@ -173,7 +173,7 @@ const POINT = {
 };
 """
 _DRIVER = r"""
-const deliver = (data) => (listeners.message || []).forEach((f) => f({ source: parent, data: { 'kirocrew-app-frame': 1, ...data } }));
+const deliver = (data) => (listeners.message || []).forEach((f) => f({ source: parent, data: { 'ajcrew-app-frame': 1, ...data } }));
 deliver({ type: 'init', capability: 'c' });
 for (let i = 0; i < 50 && !posted.some((m) => m.type === 'ready'); i++) await new Promise((r) => setTimeout(r, 10));
 deliver({ type: 'test.invoke', invocationId: 'inv-0001' });

@@ -21,12 +21,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.handlers import messaging as mod
-from kiro_crew.telegram.transport import TelegramTransport
+from aj_crew.dashboard.handlers import messaging as mod
+from aj_crew.telegram.transport import TelegramTransport
 
 
 def _state(tmp_path, monkeypatch, transport: Any):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.register_channel_transport(transport)
     return state
@@ -35,7 +35,7 @@ def _state(tmp_path, monkeypatch, transport: Any):
 def _recorded_sel(monkeypatch) -> list[dict[str, Any]]:
     recorded: list[dict[str, Any]] = []
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner.sel",
+        "aj_crew.dashboard.chat_runner.sel",
         lambda: type("S", (), {"log_api_access": lambda self, **kw: recorded.append(kw)})(),
     )
     return recorded
@@ -120,7 +120,7 @@ async def test_the_recipient_check_gets_the_resolved_id_and_the_target_principal
 async def test_a_discord_owner_receives_the_dm_on_the_opened_channel(tmp_path, monkeypatch):
     """Discord judges the PEER: the resolved id is a DM channel unrelated to the
     user snowflake on the roster, so the check passes on the target's principal."""
-    from kiro_crew.discord.transport import DiscordTransport
+    from aj_crew.discord.transport import DiscordTransport
 
     client = MagicMock()
     client.create_dm_channel = AsyncMock(return_value="999000111222333444")
@@ -141,7 +141,7 @@ async def test_a_discord_owner_receives_the_dm_on_the_opened_channel(tmp_path, m
 async def test_a_webex_owner_receives_the_dm(tmp_path, monkeypatch):
     """Webex resolves a DM target to the email itself and judges the principal
     against the same lowercased roster ``authorize`` uses."""
-    from kiro_crew.webex.transport import WebexTransport
+    from aj_crew.webex.transport import WebexTransport
 
     client = MagicMock()
     client.send_message = AsyncMock(return_value="m-1")
@@ -179,7 +179,7 @@ async def test_a_governance_denial_still_stops_before_resolution(tmp_path, monke
     """Governance is vetted BEFORE the target resolves, as resolution can itself be
     a visible side effect (Discord opens a DM channel over REST)."""
     monkeypatch.setattr(
-        "kiro_crew.platform.governance_profiles.governance_permits",
+        "aj_crew.platform.governance_profiles.governance_permits",
         lambda *a, **kw: SimpleNamespace(permitted=False),
     )
     transport, client = _telegram([123])

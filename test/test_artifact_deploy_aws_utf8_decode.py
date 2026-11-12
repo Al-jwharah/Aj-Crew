@@ -16,11 +16,11 @@ from types import ModuleType, SimpleNamespace
 
 import pytest
 
-import kiro_crew.deploy.engine as engine
-import kiro_crew.sandbox as sandbox
+import aj_crew.deploy.engine as engine
+import aj_crew.sandbox as sandbox
 
 _SCRIPTS = (
-    Path(__file__).resolve().parent.parent / "src/kiro_crew/deploy/skills/artifact-deploy/scripts"
+    Path(__file__).resolve().parent.parent / "src/aj_crew/deploy/skills/artifact-deploy/scripts"
 )
 
 

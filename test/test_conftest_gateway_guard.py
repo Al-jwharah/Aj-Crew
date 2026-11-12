@@ -7,14 +7,14 @@ request that slipped past the guard lands on the stand-in, never on a real gatew
 
 The helpers are taken from ``mcp_core`` when this module is collected, before any
 fixture runs. That is exactly what a module holds after
-``from kiro_crew.mcp_core import _get, _post`` (``mcp_panel``, ``mcp_work`` and
+``from aj_crew.mcp_core import _get, _post`` (``mcp_panel``, ``mcp_work`` and
 others), so the ``_post`` driven here is the real one, not the recorder.
 
 ``test_loopback_guard_covers_build_loopback_opener`` adds coverage for the second
 guard: clients that import ``loopback_urlopen`` directly from
-``kiro_crew.loopback_http`` (``cron_trigger``, ``cli_commands``, etc.) bypass
+``aj_crew.loopback_http`` (``cron_trigger``, ``cli_commands``, etc.) bypass
 ``mcp_core`` entirely and are covered by a guard on
-``kiro_crew.loopback_http.build_loopback_opener`` instead.
+``aj_crew.loopback_http.build_loopback_opener`` instead.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ import threading
 
 import pytest
 
-from kiro_crew import mcp_core, port_resolution
+from aj_crew import mcp_core, port_resolution
 
 _SENDERS = {
     name: fn
@@ -112,8 +112,8 @@ def unconfigured_client(monkeypatch):
     re-proves the target before every re-dial and never dials a no-evidence default,
     so emptying its pause schedule removes only the sleeps.
     """
-    monkeypatch.delenv("KIROCREW_PORT", raising=False)
-    monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
+    monkeypatch.delenv("AJCREW_PORT", raising=False)
+    monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
     for name in ("_API_PORT", "_API", "_API_UNIX_SOCKET"):
         monkeypatch.setattr(mcp_core, name, None)
     monkeypatch.setattr(mcp_core, "_resolve_session_key", lambda: "")
@@ -139,7 +139,7 @@ def _assert_refused(answer: dict, port: int) -> None:
 def test_every_mcp_core_function_that_sends_is_driven_here():
     """A new ``mcp_core`` function that calls ``_send`` fails here until it is listed."""
     assert sorted(_SENDERS) == list(_HELPERS)
-    assert all(fn.__module__ == "kiro_crew.mcp_core" for fn in _SENDERS.values())
+    assert all(fn.__module__ == "aj_crew.mcp_core" for fn in _SENDERS.values())
 
 
 @pytest.mark.parametrize("helper", _HELPERS)
@@ -171,14 +171,14 @@ def test_an_unstubbed_helper_is_refused_on_the_default_port(
 def test_an_unstubbed_helper_is_refused_on_the_port_the_shell_exports(
     request, stand_in, unconfigured_client, monkeypatch
 ):
-    """``KIROCREW_PORT`` exported by the shell that started pytest is a developer's gateway too."""
+    """``AJCREW_PORT`` exported by the shell that started pytest is a developer's gateway too."""
     default = stand_in("default-gateway")
     exported = stand_in("exported-gateway")
     monkeypatch.setattr(port_resolution, "_DEFAULT_PORT", default.port)
     monkeypatch.setattr(
         _suite_conftest(request), "_EXPORTED_GATEWAY_PORTS", frozenset({exported.port})
     )
-    monkeypatch.setenv("KIROCREW_PORT", str(exported.port))
+    monkeypatch.setenv("AJCREW_PORT", str(exported.port))
 
     _assert_refused(_SENDERS["_get"]("/api/guard-check/exported"), exported.port)
     assert exported.seen == []
@@ -187,12 +187,12 @@ def test_an_unstubbed_helper_is_refused_on_the_port_the_shell_exports(
 
 def test_the_exported_ports_come_from_both_client_variables(request, monkeypatch):
     conftest_module = _suite_conftest(request)
-    monkeypatch.setenv("KIROCREW_PORT", "6123")
-    monkeypatch.setenv("KIROCREW_BOUND_PORT", "6124")
+    monkeypatch.setenv("AJCREW_PORT", "6123")
+    monkeypatch.setenv("AJCREW_BOUND_PORT", "6124")
     assert conftest_module._exported_gateway_ports() == {6123, 6124}
 
-    monkeypatch.setenv("KIROCREW_BOUND_PORT", "not-a-port")
-    monkeypatch.delenv("KIROCREW_PORT")
+    monkeypatch.setenv("AJCREW_BOUND_PORT", "not-a-port")
+    monkeypatch.delenv("AJCREW_PORT")
     assert conftest_module._exported_gateway_ports() == frozenset()
 
 
@@ -200,7 +200,7 @@ def test_loopback_guard_covers_build_loopback_opener(monkeypatch, tmp_path, stan
     """The conftest guard on build_loopback_opener refuses cron_trigger to the gateway port.
 
     ``cron_trigger.trigger_cron_job`` reaches the network through
-    ``kiro_crew.loopback_http.loopback_urlopen``, which looks up
+    ``aj_crew.loopback_http.loopback_urlopen``, which looks up
     ``build_loopback_opener`` in its own module on every request. The
     ``_refuse_developer_gateway_opener`` guard intercepts there.
 
@@ -213,14 +213,14 @@ def test_loopback_guard_covers_build_loopback_opener(monkeypatch, tmp_path, stan
     ``trigger_cron_job`` bypasses ``mcp_core`` and the stand-in would receive the
     request, failing the ``assert gateway.seen == []`` below.
     """
-    from kiro_crew.cron_trigger import trigger_cron_job
+    from aj_crew.cron_trigger import trigger_cron_job
 
     gateway = stand_in("default-gateway")
     # Make *gateway.port* look like the default gateway port so the guard targets it.
     monkeypatch.setattr(port_resolution, "_DEFAULT_PORT", gateway.port)
     # Clear any shell-exported port so the test does not depend on the environment.
-    monkeypatch.delenv("KIROCREW_PORT", raising=False)
-    monkeypatch.delenv("KIROCREW_BOUND_PORT", raising=False)
+    monkeypatch.delenv("AJCREW_PORT", raising=False)
+    monkeypatch.delenv("AJCREW_BOUND_PORT", raising=False)
 
     secret = tmp_path / ".local_secret"
     secret.write_text("any-secret", encoding="utf-8")

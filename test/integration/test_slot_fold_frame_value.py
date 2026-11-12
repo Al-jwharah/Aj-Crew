@@ -22,7 +22,7 @@ import pytest
 from crew_log_drain import assert_drained
 from integration.conftest import GatewayBoot
 
-from kiro_crew.crew_log import eager, emit
+from aj_crew.crew_log import eager, emit
 
 _SLOT = "dashboard:fold-frame-e2e"
 _SESSION = "s-fold-frame-e2e"
@@ -32,7 +32,7 @@ _DEADLINE_SECS = 20.0
 def _record_work_item() -> None:
     """Open a unit on the slot and record one work item, through the real emitter."""
     emit.on_session_opened(
-        _SESSION, agent="kirocrew", slot=_SLOT, model="opus", cwd="/w", owner="owner"
+        _SESSION, agent="ajcrew", slot=_SLOT, model="opus", cwd="/w", owner="owner"
     )
     assert_drained()
     emit._write(
@@ -56,7 +56,7 @@ def _record_work_item() -> None:
 async def test_only_the_work_frame_carries_a_value(gateway_boot: GatewayBoot, monkeypatch):
     # The suite pins the crew log off for the process; this test is about it being on.
     # Set before the boot, so the boot installs the exporter's bus subscriptions.
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     emit.reset_caches()
     async with gateway_boot() as gw, aiohttp.ClientSession() as session:
         async with session.ws_connect(

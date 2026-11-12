@@ -14,20 +14,20 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from overload_fakes import mock_ctx, mock_sessions, wait_taskq_open
 
-import kiro_crew.subagent as subagent_mod
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
-from kiro_crew.testing.wait import async_wait_until, await_until
+import aj_crew.subagent as subagent_mod
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.subagent import SubagentManager
+from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 @pytest.mark.asyncio
 @pytest.mark.timeout(30)
 async def test_deferred_row_that_starts_clears_the_queued_count(monkeypatch) -> None:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.subagent_cost_gb = 0.5
     cfg.agent.spawn_min_memory_gb = 4.0
-    monkeypatch.setattr(KiroCrewConfig, "load", lambda: cfg)
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: cfg)
     monkeypatch.setattr(subagent_mod, "Stats", MagicMock())
     monkeypatch.setattr(subagent_mod, "sel", MagicMock())
     monkeypatch.setattr(SpawnAdmissionCoordinator, "open_store_off_loop", True)

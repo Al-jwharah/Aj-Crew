@@ -20,7 +20,7 @@ import { mkdirSync } from 'node:fs'
 import { serveDist } from './lib/serve-dist.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/voice-ptt'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -68,7 +68,7 @@ async function main() {
 
     if (path === '/api/config/stt' && method === 'POST') return json(route, stt)
     if (path === '/api/config/stt') return json(route, stt)
-    if (path === '/api/config/kirocrew') {
+    if (path === '/api/config/ajcrew') {
       return json(route, {
         agent: { model: 'claude-opus-4.8', reasoning_effort: 'high' },
         session: { autocompact_pct: 90 },

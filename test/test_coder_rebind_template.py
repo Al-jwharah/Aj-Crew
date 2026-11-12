@@ -11,9 +11,9 @@ from test_coder_retention import KEY, URL
 from test_coder_retention import FakeCoder as RetentionCoder
 from test_coder_retention import _past_due, sync
 
-from kiro_crew.coder import retention, session_launch
-from kiro_crew.coder.client import CoderClientError, CoderWorkspace
-from kiro_crew.session_environment import SessionEnvironmentUnavailable
+from aj_crew.coder import retention, session_launch
+from aj_crew.coder.client import CoderClientError, CoderWorkspace
+from aj_crew.session_environment import SessionEnvironmentUnavailable
 
 
 class FakeCoder(RetentionCoder):

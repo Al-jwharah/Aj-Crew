@@ -1,6 +1,6 @@
 """What the resolver and the gate decide for an unnamed capability or an alias group.
 
-An unnamed capability is ungoverned and therefore permitted, ``kirocrew policy
+An unnamed capability is ungoverned and therefore permitted, ``ajcrew policy
 validate`` reports a partially governed ``capabilities`` block, and
 ``gate_decision`` judges a tool reached under two spellings of one identity as one
 question. The archetypes, the loader and the resolution engine are in
@@ -15,8 +15,8 @@ import logging
 import pytest
 from governance_policy_helpers import _policy_body
 
-from kiro_crew.platform import governance
-from kiro_crew.platform.governance import (
+from aj_crew.platform import governance
+from aj_crew.platform.governance import (
     CAPABILITY,
     MODE_ALLOW,
     MODE_DENY,
@@ -66,7 +66,7 @@ class TestCapabilityOmissionIsUngoverned:
        actually wrote.
 
     The real defect was documentation, and the protection is
-    ``kirocrew policy validate`` reporting a partially-governed block.
+    ``ajcrew policy validate`` reporting a partially-governed block.
     """
 
     def test_unnamed_capability_is_permitted_and_reads_as_ungoverned(self):
@@ -128,7 +128,7 @@ class TestCapabilityOmissionIsUngoverned:
 
 
 class TestValidateReportsUngovernedCapabilities:
-    """`kirocrew policy validate` must surface a partially-governed block.
+    """`ajcrew policy validate` must surface a partially-governed block.
 
     Since omission cannot deny, the only protection against an author believing
     otherwise is telling them which rows they left open.
@@ -138,11 +138,11 @@ class TestValidateReportsUngovernedCapabilities:
         import argparse
         from unittest.mock import patch
 
-        from kiro_crew import cli_commands
+        from aj_crew import cli_commands
 
         args = argparse.Namespace(policy_action="validate")
         with patch(
-            "kiro_crew.platform.context.current_context",
+            "aj_crew.platform.context.current_context",
             return_value=type("Ctx", (), {"governance": ceiling})(),
         ):
             cli_commands._policy(args)
@@ -179,7 +179,7 @@ class TestValidateReportsUngovernedCapabilities:
         re-reads a parsed object and cannot see a pattern that never matched.
         The line matters because this policy reports OK while denying nothing.
         """
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.platform.governance"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.platform.governance"):
             ceiling = parse_policy(
                 _policy_body(
                     network={"egress": {"mode": MODE_DENY, "deny": ["https://skills.sh/api"]}}

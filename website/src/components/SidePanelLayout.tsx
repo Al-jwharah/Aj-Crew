@@ -197,7 +197,7 @@ export function useSidePanelLeaveGuard(guard: SidePanelLeaveGuard, atStake = fal
   }, [register])
 }
 
-const TAB_MEMORY_PREFIX = 'kirocrew:sidepanel-tab:'
+const TAB_MEMORY_PREFIX = 'ajcrew:sidepanel-tab:'
 
 /** A tab's count pill (see `SidePanelTab.badge`). Same pill as the main rail's
  *  expanded badge. `role="status"` carries the label as the accessible name, as

@@ -1,6 +1,6 @@
 """Regression guard: importing the knowledge readers must not load python-docx.
 
-``kiro_crew.knowledge.readers`` sits on the gateway's boot import chain
+``aj_crew.knowledge.readers`` sits on the gateway's boot import chain
 (``dashboard.server`` reaches it through ``knowledge.ingestion``), and
 python-docx plus the lxml it pulls in cost ~75 ms of cumulative import time.
 Only ``FileReader._read_docx`` uses it, so it is imported there, on the first
@@ -20,13 +20,13 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.knowledge.readers import FileReader
+from aj_crew.knowledge.readers import FileReader
 
 
 def test_readers_import_does_not_load_docx(tmp_path: Path) -> None:
     code = (
         "import sys; "
-        "import kiro_crew.knowledge.readers; "
+        "import aj_crew.knowledge.readers; "
         "print(repr([m for m in sys.modules if m == 'docx' or m.startswith('docx.')]))"
     )
     res = subprocess.run(
@@ -37,10 +37,10 @@ def test_readers_import_does_not_load_docx(tmp_path: Path) -> None:
         timeout=120,
         cwd=tmp_path,
     )
-    assert res.returncode == 0, f"import kiro_crew.knowledge.readers failed:\n{res.stderr}"
+    assert res.returncode == 0, f"import aj_crew.knowledge.readers failed:\n{res.stderr}"
     present = ast.literal_eval(res.stdout.strip())
     assert present == [], (
-        f"importing kiro_crew.knowledge.readers loaded python-docx: {present[:5]}. "
+        f"importing aj_crew.knowledge.readers loaded python-docx: {present[:5]}. "
         "Keep the docx imports inside FileReader._read_docx."
     )
 

@@ -7,17 +7,17 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.boxd_session import cli as boxd_cli
-from kiro_crew.boxd_session.launch import BoxdSessionEnvironments
-from kiro_crew.coder import retention
-from kiro_crew.dashboard.handlers import session_environments as handlers
-from kiro_crew.session_environments.persistent_vm import SessionResource
+from aj_crew.boxd_session import cli as boxd_cli
+from aj_crew.boxd_session.launch import BoxdSessionEnvironments
+from aj_crew.coder import retention
+from aj_crew.dashboard.handlers import session_environments as handlers
+from aj_crew.session_environments.persistent_vm import SessionResource
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 NAME = "kc-0123456789abcdef"
@@ -95,7 +95,7 @@ async def test_readiness_constructs_cli_off_loop(discovery):
 
 @pytest.mark.asyncio
 async def test_shutdown_resolves_cli_off_loop(tmp_path, monkeypatch, discovery):
-    from kiro_crew.config import paths
+    from aj_crew.config import paths
 
     binary, calls, run = discovery
     section = SimpleNamespace(coder_url="", boxd_profiles=[PROFILE])

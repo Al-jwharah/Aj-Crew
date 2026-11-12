@@ -28,9 +28,9 @@ from crew_log_fold_eager_helpers import (  # noqa: F401 -- the autouse fixture r
     _work_entry,
 )
 
-from kiro_crew.crew_log import bus, eager
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.dashboard_feed import DashboardFeed
+from aj_crew.crew_log import bus, eager
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.dashboard_feed import DashboardFeed
 
 
 @pytest.fixture(autouse=True)

@@ -16,23 +16,23 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.monitoring import plugins as plugins_module
-from kiro_crew.monitoring import registry
-from kiro_crew.monitoring.controller import MonitorController
-from kiro_crew.monitoring.models import (
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.monitoring import plugins as plugins_module
+from aj_crew.monitoring import registry
+from aj_crew.monitoring.controller import MonitorController
+from aj_crew.monitoring.models import (
     MonitorBudgets,
     MonitorCreationSurface,
     monitor_frontend_contract,
 )
-from kiro_crew.monitoring.plugins import (
+from aj_crew.monitoring.plugins import (
     MonitorKindPlugin,
     register_monitor_kind,
     registered_monitor_kind,
     registered_monitor_kinds,
 )
-from kiro_crew.monitoring.pull_request import PullRequestFacts, build_pull_request_probe_result
-from kiro_crew.monitoring.registry import (
+from aj_crew.monitoring.pull_request import PullRequestFacts, build_pull_request_probe_result
+from aj_crew.monitoring.registry import (
     GITHUB_PULL_REQUEST,
     PULL_REQUEST_MONITOR_KINDS,
     REVIEW_READY,
@@ -42,9 +42,9 @@ from kiro_crew.monitoring.registry import (
     kind_supports_objective,
     publicly_armable_kinds,
 )
-from kiro_crew.monitoring.targets import infer_pull_request_kind, normalize_pull_request_target
-from kiro_crew.validation import MONITOR_WATCH_SCHEMA
-from kiro_crew.validation_parts.field_engine import ValidationError, validate_tool_args
+from aj_crew.monitoring.targets import infer_pull_request_kind, normalize_pull_request_target
+from aj_crew.validation import MONITOR_WATCH_SCHEMA
+from aj_crew.validation_parts.field_engine import ValidationError, validate_tool_args
 
 KIND = "example_code_review"
 HOST = "https://review.example.test/reviews/"

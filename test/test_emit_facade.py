@@ -1,8 +1,8 @@
 """The session crew-log emitter facade keeps the patch seams the one module had.
 
-``kiro_crew.crew_log.emit`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the
-``kiro_crew.crew_log.emit_<role>`` owners. Callers, tests and documents still reach every
-name as ``kiro_crew.crew_log.emit.<name>``, and the moved code reads its names as plain
+``aj_crew.crew_log.emit`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the
+``aj_crew.crew_log.emit_<role>`` owners. Callers, tests and documents still reach every
+name as ``aj_crew.crew_log.emit.<name>``, and the moved code reads its names as plain
 module globals, so a patch through the facade reaches that code only because the mirror
 writes it into every module holding the name.
 
@@ -30,8 +30,8 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.crew_log import emit
+from aj_crew import _facade_mirror
+from aj_crew.crew_log import emit
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_emit_facade")
 
@@ -39,8 +39,8 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_emit_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.crew_log.emit"
-OWNER_PREFIX = "kiro_crew.crew_log.emit_"
+FACADE = "aj_crew.crew_log.emit"
+OWNER_PREFIX = "aj_crew.crew_log.emit_"
 CREW_LOG_DIR = Path(emit.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
 
@@ -199,7 +199,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for path in _owner_paths().values():
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in _owner_paths():
+                if not node.module.startswith("aj_crew") or node.module in _owner_paths():
                     continue
                 for alias in node.names:
                     found.setdefault(alias.asname or alias.name, (node.module, alias.name))
@@ -220,7 +220,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
-    """At BASE the emitter bound these by import, so ``from kiro_crew.crew_log.emit import
+    """At BASE the emitter bound these by import, so ``from aj_crew.crew_log.emit import
     crew_log_enabled`` type-checked. Now an owner holds them, so the facade names each one
     from its home module under ``TYPE_CHECKING``, and exactly those."""
     served = set(_index().exports)

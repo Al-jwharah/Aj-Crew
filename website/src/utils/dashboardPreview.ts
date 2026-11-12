@@ -113,7 +113,7 @@ export function dashboardPreviewMemberFromRef(ref: string | null | undefined): s
 }
 
 /** The window event a preview link's open fires, carrying the panel reference it opened. */
-const PREVIEW_OPENED_EVENT = 'kirocrew:dashboard-preview-opened'
+const PREVIEW_OPENED_EVENT = 'ajcrew:dashboard-preview-opened'
 
 /** Say a preview link was opened again. A side panel that already handed its last
  *  preview over to the live page is mounted under the same reference, so it hears

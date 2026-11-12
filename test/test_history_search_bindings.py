@@ -1,6 +1,6 @@
-"""``kiro_crew.history_search`` stays the import path and the patch surface of its family.
+"""``aj_crew.history_search`` stays the import path and the patch surface of its family.
 
-The module keeps ``SessionCatalogProjection`` and is a ``kiro_crew._facade_mirror`` facade
+The module keeps ``SessionCatalogProjection`` and is an ``aj_crew._facade_mirror`` facade
 over three owners, lowest layer first: ``history_search_query`` (what a query means:
 needles, forge references, the provider spelling slot, the one-string match rule),
 ``history_search_memo`` (what every search over one directory shares: the memos, their
@@ -29,17 +29,17 @@ from pathlib import Path
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew import history_search as facade
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror
+from aj_crew import history_search as facade
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_history_search_bindings")
 
-_PACKAGE = "kiro_crew"
-_FACADE = "kiro_crew.history_search"
-_QUERY = "kiro_crew.history_search_query"
-_MEMO = "kiro_crew.history_search_memo"
-_LISTING = "kiro_crew.history_search_listing"
+_PACKAGE = "aj_crew"
+_FACADE = "aj_crew.history_search"
+_QUERY = "aj_crew.history_search_query"
+_MEMO = "aj_crew.history_search_memo"
+_LISTING = "aj_crew.history_search_listing"
 _OWNERS = (_QUERY, _MEMO, _LISTING)
 _INVENTORY = Path(__file__).resolve().parent / "campaign_facade_inventories" / f"{_FACADE}.json"
 
@@ -136,7 +136,7 @@ def _logs_under_own_name(source: str) -> bool:
 
 def test_the_own_name_logger_detector_answers_both_ways() -> None:
     assert _logs_under_own_name("import logging\nlog = logging.getLogger(__name__)\n")
-    assert not _logs_under_own_name('import logging\nlog = logging.getLogger("kiro_crew.x")\n')
+    assert not _logs_under_own_name('import logging\nlog = logging.getLogger("aj_crew.x")\n')
 
 
 def test_the_family_logs_under_the_facade_name() -> None:
@@ -265,10 +265,10 @@ def _runtime_facade_imports(tree: ast.Module, package: str = _PACKAGE) -> list[i
 def test_the_facade_import_scan_answers_both_ways() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n    from kiro_crew.history_search import SessionCatalogProjection\n"
-        "def f():\n    from kiro_crew.history_search import x\n"
-        "import kiro_crew.history_search\n"
-        "from kiro_crew import history_search\n"
+        "if TYPE_CHECKING:\n    from aj_crew.history_search import SessionCatalogProjection\n"
+        "def f():\n    from aj_crew.history_search import x\n"
+        "import aj_crew.history_search\n"
+        "from aj_crew import history_search\n"
         "from . import history_search\n"
         "from .history_search import SearchNeedle\n"
     )
@@ -297,21 +297,21 @@ def _owner_imports(tree: ast.Module, package: str = _PACKAGE) -> set[str]:
 
 def test_the_owner_import_scan_answers_both_ways() -> None:
     source = (
-        "from kiro_crew.history_search_query import parse_search_query\n"
-        "from kiro_crew import history_search_memo, platform_compat\n"
-        "import kiro_crew.history_search_listing\n"
-        "import kiro_crew.history_search\n"
+        "from aj_crew.history_search_query import parse_search_query\n"
+        "from aj_crew import history_search_memo, platform_compat\n"
+        "import aj_crew.history_search_listing\n"
+        "import aj_crew.history_search\n"
     )
     assert _owner_imports(ast.parse(source)) == set(_OWNERS)
     relative = (
         "from ..history_search_query import SearchNeedle\nfrom .. import history_search_memo\n"
         "from ..history_search_listing import ListingRow\n"
     )
-    assert _owner_imports(ast.parse(relative), "kiro_crew.dashboard") == set(_OWNERS)
+    assert _owner_imports(ast.parse(relative), "aj_crew.dashboard") == set(_OWNERS)
     sibling = "from .history_search_query import SearchNeedle\n"
-    assert _owner_imports(ast.parse(sibling), "kiro_crew") == {_QUERY}
-    assert _owner_imports(ast.parse(sibling), "kiro_crew.dashboard") == set()
-    assert _owner_imports(ast.parse("from kiro_crew.history_search import SearchNeedle\n")) == set()
+    assert _owner_imports(ast.parse(sibling), "aj_crew") == {_QUERY}
+    assert _owner_imports(ast.parse(sibling), "aj_crew.dashboard") == set()
+    assert _owner_imports(ast.parse("from aj_crew.history_search import SearchNeedle\n")) == set()
 
 
 def test_each_owner_imports_only_owners_listed_before_it() -> None:
@@ -329,8 +329,8 @@ def test_the_query_owner_imports_no_other_member_of_the_family(tmp_path: Path) -
     facade, so the layering the owner order states is the one the imports keep."""
     probe = (
         "import json, sys\n"
-        "import kiro_crew.history_search_query\n"
-        "print(json.dumps(sorted(m for m in sys.modules if m.startswith('kiro_crew.history'))))\n"
+        "import aj_crew.history_search_query\n"
+        "print(json.dumps(sorted(m for m in sys.modules if m.startswith('aj_crew.history'))))\n"
     )
     env = dict(os.environ)
     src = str(Path(importlib.import_module(_PACKAGE).__file__ or "").resolve().parents[1])
@@ -350,11 +350,11 @@ def test_the_query_owner_imports_no_other_member_of_the_family(tmp_path: Path) -
 
 
 def test_only_the_family_imports_an_owner() -> None:
-    """Callers keep importing ``kiro_crew.history_search``; the owners are its own."""
+    """Callers keep importing ``aj_crew.history_search``; the owners are its own."""
     family = {
-        "kiro_crew/history_search.py",
-        "kiro_crew/history_search_memo.py",
-        "kiro_crew/history_search_listing.py",
+        "aj_crew/history_search.py",
+        "aj_crew/history_search_memo.py",
+        "aj_crew/history_search_listing.py",
     }
     root = source_corpus.src_root().parent
     scanned: list[str] = []

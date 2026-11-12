@@ -17,9 +17,9 @@ import shlex
 
 import pytest
 
-import kiro_crew.skills as skills_mod
-from kiro_crew.deploy import handlers_guards as guards
-from kiro_crew.deploy import profiles as profiles_mod
+import aj_crew.skills as skills_mod
+from aj_crew.deploy import handlers_guards as guards
+from aj_crew.deploy import profiles as profiles_mod
 
 # Each value breaks a different shell rule: a command separator, a parameter
 # expansion, whitespace, both quote styles and a command substitution.

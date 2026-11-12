@@ -16,8 +16,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from acp_runtime_helpers import _make_runtime
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.transport_framing import encode_frame
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.transport_framing import encode_frame
 
 HIGH = "\ud83d"
 LOW = "\ude00"

@@ -1,6 +1,6 @@
 /**
  * Unless the gateway's `dashboard.crewmates_in_agent_picker` config (read from
- * the shared `['kirocrewConfig']` query) is `true`, the chat agent pop-up
+ * the shared `['ajcrewConfig']` query) is `true`, the chat agent pop-up
  * withholds a member row only when a listed template already reaches the same
  * binding. A crewmate no template covers -- made by hand with its own memory, or
  * running its own private copy -- must stay pickable, or it cannot be chosen from
@@ -21,43 +21,43 @@ import { api } from '../api/client'
 vi.mock('../api/client', () => ({
   api: {
     agentCatalog: vi.fn(),
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
   },
 }))
 
 const catalog = [
-  { name: 'reviewer', kiro_agent: 'reviewer', workspace: 'default', memory_store: 'member-reviewer', description: 'My reviewer', source: 'kirocrew', selection_kind: 'member' },
+  { name: 'reviewer', kiro_agent: 'reviewer', workspace: 'default', memory_store: 'member-reviewer', description: 'My reviewer', source: 'ajcrew', selection_kind: 'member' },
   { name: 'reviewer', kiro_agent: 'reviewer', workspace: 'default', memory_store: 'default', description: 'Shared reviewer', source: 'package', selection_kind: 'template' },
   // The stock shape the loader seeds: a template, a workspace and a store, nothing else.
-  { name: 'default', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: '', source: 'kirocrew', selection_kind: 'member' },
+  { name: 'default', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: '', source: 'ajcrew', selection_kind: 'member' },
   { name: 'atlas', kiro_agent: 'atlas', workspace: 'default', memory_store: 'default', description: 'package agent', source: 'package', selection_kind: 'template' },
-  { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'main agent', source: 'kirocrew', selection_kind: 'template' },
+  { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'main agent', source: 'ajcrew', selection_kind: 'template' },
   // Made by hand: its own name and its own memory, on a listed template.
-  { name: 'my-helper', kiro_agent: 'atlas', workspace: 'default', memory_store: 'member-my-helper', description: 'mine', source: 'kirocrew', selection_kind: 'member' },
+  { name: 'my-helper', kiro_agent: 'atlas', workspace: 'default', memory_store: 'member-my-helper', description: 'mine', source: 'ajcrew', selection_kind: 'member' },
   // Customized: runs its own private copy, which the catalog never lists.
-  { name: 'tuned', kiro_agent: 'tuned-copy', workspace: 'default', memory_store: 'member-tuned', description: 'mine', source: 'kirocrew', selection_kind: 'member' },
+  { name: 'tuned', kiro_agent: 'tuned-copy', workspace: 'default', memory_store: 'member-tuned', description: 'mine', source: 'ajcrew', selection_kind: 'member' },
 ]
 
 const COVERED_HIDDEN = [
   ['member', 'reviewer'],
   ['template', 'reviewer'],
-  // The built-in default crew is covered by the listed `kirocrew` template and
+  // The built-in default crew is covered by the listed `ajcrew` template and
   // is withheld like any covered crewmate: a new session runs the default
   // TEMPLATE, whose own row is the way back from any switch.
   ['template', 'atlas'],
-  ['template', 'kirocrew'],
+  ['template', 'ajcrew'],
   ['member', 'my-helper'],
   ['member', 'tuned'],
 ]
 
 const agentsApi = vi.mocked(api.agentCatalog)
-const configApi = vi.mocked(api.kirocrewConfig)
+const configApi = vi.mocked(api.ajcrewConfig)
 
 describe('useAgents keeps covered mates out of the picker unless the config allows them', () => {
   beforeEach(() => {
     agentsApi.mockReset()
     configApi.mockReset()
-    agentsApi.mockResolvedValue({ agents: catalog, default_agent: 'kirocrew' } as never)
+    agentsApi.mockResolvedValue({ agents: catalog, default_agent: 'ajcrew' } as never)
   })
 
   it.each([
@@ -92,7 +92,7 @@ describe('useAgents keeps covered mates out of the picker unless the config allo
   })
 
   it('withholds an identity-less mate on a listed template', () => {
-    // `default` has no memory of its own and runs the listed `kirocrew`
+    // `default` has no memory of its own and runs the listed `ajcrew`
     // template -- the same binding -- and no crewmate is exempt for being "the
     // default": a new session runs the default TEMPLATE, whose own row is the
     // way back from any switch.
@@ -117,9 +117,9 @@ describe('useAgents keeps covered mates out of the picker unless the config allo
   })
 
   describe('a mate on the shared store and a listed template', () => {
-    const template = { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'main agent', source: 'kirocrew', selection_kind: 'template' }
+    const template = { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'main agent', source: 'ajcrew', selection_kind: 'template' }
     const mate = (name: string, own: Record<string, unknown> = {}) => ({
-      name, kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: '', source: 'kirocrew', selection_kind: 'member', ...own,
+      name, kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: '', source: 'ajcrew', selection_kind: 'member', ...own,
     })
     // An install upgraded from shared memory: three mates set up for their own
     // work beside the stock `default`, which has nothing of its own. `tracker`
@@ -134,7 +134,7 @@ describe('useAgents keeps covered mates out of the picker unless the config allo
     ]
 
     it('offers the mates with a setup of their own and withholds the stock one', async () => {
-      agentsApi.mockResolvedValue({ agents: upgraded, default_agent: 'kirocrew' } as never)
+      agentsApi.mockResolvedValue({ agents: upgraded, default_agent: 'ajcrew' } as never)
       configApi.mockResolvedValue({ default_workspace: 'default' } as never)
       const { result } = renderHookWithProviders(() => useAgents(0))
       await waitFor(() => expect(result.current.choices).toHaveLength(4))
@@ -142,12 +142,12 @@ describe('useAgents keeps covered mates out of the picker unless the config allo
       // A template pick runs on the default workspace with no identity or rules,
       // so it does not reach a mate's own workspace, description or rules.
       expect(result.current.choices.map(c => [c.selection_kind, c.name])).toEqual([
-        ['template', 'kirocrew'],
+        ['template', 'ajcrew'],
         ['member', 'reports'],
         ['member', 'review-drafts'],
         ['member', 'tracker'],
       ])
-      expect(result.current.displayChoices.map(c => c.name)).toEqual(['kirocrew', 'reports', 'review-drafts', 'tracker'])
+      expect(result.current.displayChoices.map(c => c.name)).toEqual(['ajcrew', 'reports', 'review-drafts', 'tracker'])
     })
 
     it.each([
@@ -160,7 +160,7 @@ describe('useAgents keeps covered mates out of the picker unless the config allo
       ['rules, goals or briefing, as the server reports them', { own_setup: true }],
     ])('keeps a mate with its own %s', (_label, own) => {
       const rows = withoutCoveredCrewmates([template, mate('mine', own)] as never)
-      expect(rows.map(r => [r.selection_kind, r.name])).toEqual([['template', 'kirocrew'], ['member', 'mine']])
+      expect(rows.map(r => [r.selection_kind, r.name])).toEqual([['template', 'ajcrew'], ['member', 'mine']])
     })
 
     it.each([
@@ -175,10 +175,10 @@ describe('useAgents keeps covered mates out of the picker unless the config allo
     })
 
     it('reads the workspace a template pick runs on from `default_workspace`', async () => {
-      agentsApi.mockResolvedValue({ agents: [template, mate('default'), mate('on-main', { workspace: 'main' })], default_agent: 'kirocrew' } as never)
+      agentsApi.mockResolvedValue({ agents: [template, mate('default'), mate('on-main', { workspace: 'main' })], default_agent: 'ajcrew' } as never)
       configApi.mockResolvedValue({ default_workspace: 'main' } as never)
       const { result } = renderHookWithProviders(() => useAgents(0))
-      await waitFor(() => expect(result.current.choices.map(c => c.name)).toEqual(['kirocrew', 'default']))
+      await waitFor(() => expect(result.current.choices.map(c => c.name)).toEqual(['ajcrew', 'default']))
     })
   })
 
@@ -199,8 +199,8 @@ describe('useAgents keeps covered mates out of the picker unless the config allo
     // cron or channel binding to `reviewer` dispatches exactly what it did before.
     const reviewer = result.current.agents.find(a => a.name === 'reviewer')
     expect(reviewer?.selection_kind).toBe('member')
-    expect(result.current.agents.map(a => a.name)).toEqual(['reviewer', 'default', 'atlas', 'kirocrew', 'my-helper', 'tuned'])
-    expect(result.current.defaultAgent).toBe('kirocrew')
+    expect(result.current.agents.map(a => a.name)).toEqual(['reviewer', 'default', 'atlas', 'ajcrew', 'my-helper', 'tuned'])
+    expect(result.current.defaultAgent).toBe('ajcrew')
   })
 
   describe('the "default for new sessions" row on a chat of unknown kind', () => {

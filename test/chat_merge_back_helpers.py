@@ -15,22 +15,22 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import chat_handlers, chat_merge_back, chat_persistence
-from kiro_crew.dashboard.chat_merge_back import (
+from aj_crew.dashboard import chat_handlers, chat_merge_back, chat_persistence
+from aj_crew.dashboard.chat_merge_back import (
     MERGE_NOTE_SOURCE,
     api_chat_slot_merge_back,
     api_chat_slot_merge_back_draft,
     covered_digest,
     message_key,
 )
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard.chat_utils import (
     effective_session_key,
     slot_history_key,
     transcripts_share_file,
 )
-from kiro_crew.dashboard.handlers.sessions import api_session_delete
-from kiro_crew.dashboard.slot_buffers import MERGED_FROM_META_KEY, sanitize_merged_from
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard.handlers.sessions import api_session_delete
+from aj_crew.dashboard.slot_buffers import MERGED_FROM_META_KEY, sanitize_merged_from
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 def _row(role: str, content: str, mid: str | None) -> dict:
@@ -126,7 +126,7 @@ def model_fixture(monkeypatch):
 
     cfg = SimpleNamespace(agent=SimpleNamespace(resolve_model=lambda role: f"model-for-{role}"))
     monkeypatch.setattr(chat_merge_back, "run_bg_oneliner", fake)
-    monkeypatch.setattr(chat_merge_back, "KiroCrewConfig", SimpleNamespace(load=lambda: cfg))
+    monkeypatch.setattr(chat_merge_back, "AjCrewConfig", SimpleNamespace(load=lambda: cfg))
     return SimpleNamespace(calls=calls, replies=replies)
 
 
@@ -158,7 +158,7 @@ def _assert_privacy_denial(
 
 @pytest.fixture(name="chats")
 def chats_fixture(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     parent = state.get_or_create_slot("parent")
     parent.title = "Parent"
@@ -266,10 +266,10 @@ async def _run_turn(
     """
     from unittest.mock import AsyncMock, MagicMock, patch
 
-    from kiro_crew.acp.types import STOP_REASON_END_TURN
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.dashboard.chat_runner import _run_chat
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.acp.types import STOP_REASON_END_TURN
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.dashboard.chat_runner import _run_chat
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     prompts: list[str] = []
     stream_started = asyncio.Event()
@@ -315,7 +315,7 @@ async def _run_turn(
     state._background_tasks = set()
     slot.append("user", message, "msg msg-u")
     with patch(
-        "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+        "aj_crew.dashboard.chat_runner._start_next_queued_turn",
         new=AsyncMock(return_value=False),
     ):
         turn = asyncio.create_task(
@@ -453,7 +453,7 @@ def _queued_merge_context(index: int) -> dict:
 
 def _restrict_parent_chain(chats, mode: str = "temporary") -> str:
     """Restrict the parent's requested member of its real transcript chain."""
-    from kiro_crew import history as history_mod
+    from aj_crew import history as history_mod
 
     log = chats.state.conversation_log
     parent_key = slot_history_key(chats.parent)
@@ -465,7 +465,7 @@ def _restrict_parent_chain(chats, mode: str = "temporary") -> str:
 
 async def _move_older_fork_rows_to_rotated_archive(chats) -> None:
     """Leave the fork's copied rows and first fork-only turn only in its archive head."""
-    from kiro_crew import history as history_mod
+    from aj_crew import history as history_mod
 
     log = chats.state.conversation_log
     key = slot_history_key(chats.fork)
@@ -490,7 +490,7 @@ async def _move_older_fork_rows_to_rotated_archive(chats) -> None:
 
 def _move_parent_rows_to_rotated_archive(chats) -> None:
     """Leave the persistent parent's copied rows only in its archive head."""
-    from kiro_crew import history as history_mod
+    from aj_crew import history as history_mod
 
     log = chats.state.conversation_log
     key = slot_history_key(chats.parent)
@@ -518,7 +518,7 @@ async def _restart_as_sidebar_rows(chats, tmp_path, monkeypatch):
     home = tmp_path / "home"
     home.mkdir()
     (home / "open_slots.json").write_text(json.dumps({"keys": ["fork", "parent"], "ts": 0.0}))
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setattr(chat_persistence, "EAGER_WINDOW_RESTORES", 0)
     state = _make_state(tmp_path)
     await chat_persistence.restore_open_slots_async(state)

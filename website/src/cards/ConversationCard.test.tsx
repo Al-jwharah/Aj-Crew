@@ -46,8 +46,8 @@ const card = (over: Partial<Card> = {}): Card => ({
   editable: [],
   params: { path: 'chat.verbosity', value: 'brief' },
   plan: {
-    apply: [{ method: 'PATCH', path: '/api/config/kirocrew', body: { path: 'chat.verbosity', value: 'brief' } }],
-    undo: [{ method: 'PATCH', path: '/api/config/kirocrew', body: { path: 'chat.verbosity', value: 'standard' } }],
+    apply: [{ method: 'PATCH', path: '/api/config/ajcrew', body: { path: 'chat.verbosity', value: 'brief' } }],
+    undo: [{ method: 'PATCH', path: '/api/config/ajcrew', body: { path: 'chat.verbosity', value: 'standard' } }],
   },
   created_at: 1_700_000_000,
   expires_at: NOW + 3_600_000,
@@ -117,7 +117,7 @@ beforeEach(() => {
       pending = [next]
       return HttpResponse.json({ card: next })
     }),
-    http.patch('/api/config/kirocrew', () => HttpResponse.json({ ok: true })),
+    http.patch('/api/config/ajcrew', () => HttpResponse.json({ ok: true })),
     http.post('/api/agents', () => HttpResponse.json({ ok: true })),
     http.post('/api/crons', () => HttpResponse.json({ ok: true, id: 'job1' })),
     http.post('/api/secrets', () => HttpResponse.json({ ok: true })),
@@ -166,7 +166,7 @@ describe('card registry', () => {
 describe('card layout', () => {
   const INSET = /(^|\s)(?:[a-z0-9@[\]:-]*:)?-?(?:p[xlrse]|m[xlrse])-/
 
-  it('names the mate that proposed it, and Kiro Crew outside a mate chat', async () => {
+  it('names the mate that proposed it, and Aj Crew outside a mate chat', async () => {
     pending = [card({ reason: 'You asked for shorter replies.' })]
     const rows = pending.map(c => row(c))
     qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -184,7 +184,7 @@ describe('card layout', () => {
     expect(await view.findByText(L('reason_label', { name: 'Pebble' }))).toBeInTheDocument()
     view.unmount()
     renderCards()
-    expect(await screen.findByText(L('reason_label', { name: 'Kiro Crew' }))).toBeInTheDocument()
+    expect(await screen.findByText(L('reason_label', { name: 'Aj Crew' }))).toBeInTheDocument()
   })
 
   it('puts every block of a card on one left edge: no child adds its own inset', async () => {
@@ -266,7 +266,7 @@ describe('shared change card layout', () => {
     const changeRow = within(rows).getByTestId('change-card-value').closest('[data-card-row]') as HTMLElement
     expect(reason.className).toBe(changeRow.className)
     const [label, value] = Array.from(reason.children) as HTMLElement[]
-    expect(label.textContent).toBe(L('reason_label', { name: 'Kiro Crew' }))
+    expect(label.textContent).toBe(L('reason_label', { name: 'Aj Crew' }))
     expect(label.className).toBe((changeRow.children[0] as HTMLElement).className)
     expect(value.textContent).toBe('You asked for shorter replies.')
   })
@@ -287,7 +287,7 @@ describe('shared change card layout', () => {
     renderCards()
     // Not inside any crewmate chat: the proposer still comes from the card.
     expect(await screen.findByText(L('reason_label', { name: 'Scout' }), {}, ROSTER_CHAIN)).toBeInTheDocument()
-    expect(screen.queryByText(L('reason_label', { name: 'Kiro Crew' }))).toBeNull()
+    expect(screen.queryByText(L('reason_label', { name: 'Aj Crew' }))).toBeNull()
   })
 
   it('keeps a typed secret when the proposer resolves after the card is drawn', async () => {
@@ -310,7 +310,7 @@ describe('shared change card layout', () => {
     })]
     renderCards()
     const input = await screen.findByTestId('change-card-input-value') as HTMLInputElement
-    expect(screen.getByText(L('reason_label', { name: 'Kiro Crew' }))).toBeInTheDocument()
+    expect(screen.getByText(L('reason_label', { name: 'Aj Crew' }))).toBeInTheDocument()
     fireEvent.change(input, { target: { value: SECRET } })
     release()
     expect(await screen.findByText(L('reason_label', { name: 'Scout' }), {}, ROSTER_CHAIN)).toBeInTheDocument()
@@ -325,7 +325,7 @@ describe('shared change card layout', () => {
     renderCards()
     expect(await screen.findByTestId('change-card-roster-error', {}, ROSTER_CHAIN)).toBeInTheDocument()
     expect(screen.getByTestId('change-card-apply')).toBeInTheDocument()
-    expect(screen.getByText(L('reason_label', { name: 'Kiro Crew' }))).toBeInTheDocument()
+    expect(screen.getByText(L('reason_label', { name: 'Aj Crew' }))).toBeInTheDocument()
   })
 
   it('keeps the product name for a card the main assistant proposed, and while the roster is unknown', async () => {
@@ -334,9 +334,9 @@ describe('shared change card layout', () => {
     ] })))
     pending = [card({ reason: 'You asked for shorter replies.' })]
     renderCards()
-    expect(await screen.findByText(L('reason_label', { name: 'Kiro Crew' }))).toBeInTheDocument()
+    expect(await screen.findByText(L('reason_label', { name: 'Aj Crew' }))).toBeInTheDocument()
     await waitFor(() => expect(qc.getQueryData(MEMBERS_ROSTER_QUERY_KEY)).toBeTruthy(), ROSTER_CHAIN)
-    expect(screen.getByText(L('reason_label', { name: 'Kiro Crew' }))).toBeInTheDocument()
+    expect(screen.getByText(L('reason_label', { name: 'Aj Crew' }))).toBeInTheDocument()
     expect(cardProposer(SLOT, undefined)).toBeNull()
     expect(cardProposer('', [])).toBeNull()
   })
@@ -536,7 +536,7 @@ describe('change card', () => {
   })
 
   it('maps a refusal code to its message and offers a refreshed preview', async () => {
-    server.use(http.patch('/api/config/kirocrew', () => HttpResponse.json({ error: 'raw', code: 'changed_since_preview' }, { status: 409 })))
+    server.use(http.patch('/api/config/ajcrew', () => HttpResponse.json({ error: 'raw', code: 'changed_since_preview' }, { status: 409 })))
     pending = [card()]
     renderCards()
     fireEvent.click(await screen.findByTestId('change-card-apply'))
@@ -776,7 +776,7 @@ describe('result line', () => {
     fireEvent.click(await screen.findByTestId('change-card-undo'))
     await waitFor(() => expect(stepCalls()).toHaveLength(1))
     const [u] = stepCalls()
-    expect([u.method, u.url, JSON.parse(u.body)]).toEqual(['PATCH', '/api/config/kirocrew', { path: 'chat.verbosity', value: 'standard' }])
+    expect([u.method, u.url, JSON.parse(u.body)]).toEqual(['PATCH', '/api/config/ajcrew', { path: 'chat.verbosity', value: 'standard' }])
     expect(u.headers).toMatchObject({ 'x-card-op': 'undo', 'x-card-step': '0' })
   })
 
@@ -869,7 +869,7 @@ describe('one-shot schedule', () => {
       await act(async () => { vi.advanceTimersByTime(2_100) })
       expect(screen.queryByTestId('change-card-apply')).toBeNull()
       const status = screen.getByTestId('change-card-status')
-      expect(status.textContent).toBe(L('time_passed', { name: 'Kiro Crew' }))
+      expect(status.textContent).toBe(L('time_passed', { name: 'Aj Crew' }))
       expect(status.getAttribute('aria-live')).toBe('polite')
       expect(document.activeElement).toBe(screen.getByTestId('change-card-cancel'))
     } finally {

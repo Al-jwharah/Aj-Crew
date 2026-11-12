@@ -254,7 +254,7 @@ describe('hashed-asset 5xx retry', () => {
   })
 })
 
-// A sign-in link (`/?token=...`, from `kirocrew token`) is honoured only by the
+// A sign-in link (`/?token=...`, from `ajcrew token`) is honoured only by the
 // gateway's auth middleware, which swaps the link token for a session cookie. A
 // phone whose worker answered it from the cached shell never made that exchange:
 // /api/status came back 403 and the page said "Session expired". Runs the real
@@ -292,7 +292,7 @@ describe('sign-in links belong to the gateway', () => {
 describe('what deliberately gets no retry', () => {
   it('takes over /vendor, which boot depends on', () => {
     expect(intercepts('/vendor/react.mjs', 'no-cors')).toBe(true)
-    expect(intercepts('/vendor/kirocrew-app-sdk.mjs', 'no-cors')).toBe(true)
+    expect(intercepts('/vendor/ajcrew-app-sdk.mjs', 'no-cors')).toBe(true)
   })
 
   it('leaves fonts and sprites alone — they cost looks, not boot', () => {

@@ -19,15 +19,15 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.dashboard import create_rate_limit
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard import stop_retry
-from kiro_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard import create_rate_limit
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard import stop_retry
+from aj_crew.dashboard.chat_utils import slot_history_key
 
 # The autouse fixture below replaces ``sc.session_control_enabled`` so every
 # other test runs in the shipped (enabled) state without reading config. Keep a
 # handle on the real function so the tests that are ABOUT that function can call
-# it — it still resolves ``KiroCrewConfig`` through module globals, so patching
+# it — it still resolves ``AjCrewConfig`` through module globals, so patching
 # the config class continues to work through this reference.
 _REAL_ENABLED = sc.session_control_enabled
 

@@ -6,7 +6,7 @@ them. ``_make_orchestrator`` builds the orchestrator over stub credentials, and
 for its collaborators. ``_fake_async_proc`` stands in for a spawned child and
 ``_git_exec_fake`` answers the git commands an update runs by subcommand.
 ``_install_effect`` fixes how an update sees the install, and
-``_ImportlibWithoutReload`` keeps a completed update from re-importing ``kiro_crew``
+``_ImportlibWithoutReload`` keeps a completed update from re-importing ``aj_crew``
 in the worker. ``_within_lost_run`` bounds a wait at the lost-run ceiling defined
 here, and ``_until_set_while_progressing`` waits for an event, naming the progress
 made so far if it never arrives. ``_restore_update_check_cache`` is an
@@ -23,10 +23,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.handlers import updates as dashboard_updates
-from kiro_crew.slack.gateway import GatewayOrchestrator
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.handlers import updates as dashboard_updates
+from aj_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.testing.wait import async_wait_until
 
 #: Lost-run ceiling for a wait the test itself must end (a stub it parks, a
 #: writer it holds, a signal production raises on the way). Timed wait by wait,
@@ -81,8 +81,8 @@ async def _within_lost_run(awaitable, what: str, *, timeout: float = _LOST_RUN_S
 class _ImportlibWithoutReload:
     """``importlib`` as the gateway sees it, except that ``reload`` returns its argument.
 
-    A completed update re-imports ``kiro_crew``, which leaves a NEW
-    ``kiro_crew.shutdown_event`` while importers keep the old one, so a later test
+    A completed update re-imports ``aj_crew``, which leaves a NEW
+    ``aj_crew.shutdown_event`` while importers keep the old one, so a later test
     on the worker that sets it never wakes ``gateway.run()`` and hangs to
     ``--timeout``. Only the gateway's binding is replaced.
     """
@@ -115,10 +115,10 @@ def _install_effect(effect: str = "install", route: str | None = "git"):
     ``can_apply``; a test standing in for a git checkout says so here instead of
     hoping the real derivation agrees with a fake tree.
     """
-    from kiro_crew.platform.update_capability import AutoUpdateEffect
+    from aj_crew.platform.update_capability import AutoUpdateEffect
 
     return patch(
-        "kiro_crew.slack.gateway.auto_update_effect",
+        "aj_crew.slack.gateway.auto_update_effect",
         return_value=AutoUpdateEffect(effect, route),
     )
 
@@ -133,17 +133,17 @@ def _make_orchestrator(
     test_mode: bool = False,
 ) -> GatewayOrchestrator:
     """Build a GatewayOrchestrator with mocked credentials."""
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     creds: dict[str, str] = {}
     if slack_enabled:
         creds = {
             "SLACK_APP_TOKEN": "xapp-test",
             "SLACK_BOT_TOKEN": "xoxb-test",
-            "KIROCREW_OWNER_ID": owner_id,
+            "AJCREW_OWNER_ID": owner_id,
         }
     else:
         if owner_id:
-            creds["KIROCREW_OWNER_ID"] = owner_id
+            creds["AJCREW_OWNER_ID"] = owner_id
     with patch.object(cfg, "load_credentials", return_value=creds):
         orch = GatewayOrchestrator(
             cfg,

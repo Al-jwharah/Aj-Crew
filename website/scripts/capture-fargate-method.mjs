@@ -9,7 +9,7 @@
  *  1. The add form with "AWS Fargate task (chat API)" selected: the ECS task
  *     target field showing its placeholder, plus its hint, AWS profile and region, the remote port at
  *     the front proxy's 8080 with its hint; no remote user, token TTL or
- *     kirocrew path field.
+ *     ajcrew path field.
  *  2. The crew list: the connected fargate row carries the Fargate badge, the
  *     Chat API copy field holding the forwarded URL and its note, and a
  *     Disconnect control, with no open or link control; the idle fargate row
@@ -29,7 +29,7 @@ import { logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 const OUT = process.argv[2] || '../temp-screenshots/fargate-method'
 mkdirSync(OUT, { recursive: true })
 
-const ECS_TARGET = 'ecs:kirocrew-dev_4f1c9a2b7d3e4f5a8b6c7d8e9f0a1b2c_4f1c9a2b7d3e4f5a8b6c7d8e9f0a1b2c-2653819172'
+const ECS_TARGET = 'ecs:ajcrew-dev_4f1c9a2b7d3e4f5a8b6c7d8e9f0a1b2c_4f1c9a2b7d3e4f5a8b6c7d8e9f0a1b2c-2653819172'
 const LOCAL_PORT = 51230
 const TURN_URL = `http://127.0.0.1:${LOCAL_PORT}/v1/chat/completions`
 
@@ -162,7 +162,7 @@ if ((await portBox.inputValue()) !== '8080') fail(`the port default must follow 
 for (const gone of ['SSH host / alias', 'Remote user', 'Token TTL']) {
   if ((await page.getByLabel(gone).count()) !== 0) fail(`${gone} must be absent for the fargate method`)
 }
-if ((await page.getByLabel(/Remote kirocrew path/i).count()) !== 0) fail('the kirocrew path field must be absent for the fargate method')
+if ((await page.getByLabel(/Remote ajcrew path/i).count()) !== 0) fail('the ajcrew path field must be absent for the fargate method')
 await page.getByRole('textbox', { name: 'Name' }).last().fill('research-crew-2')
 // The ECS field stays empty on purpose: the frame has to show its placeholder,
 // the shape a first-time user types against.

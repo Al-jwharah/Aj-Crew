@@ -1,6 +1,6 @@
 """An ``mcp.json`` whose bytes are not UTF-8 is skipped like one that does not parse.
 
-MCP discovery reads several ``mcp.json`` files (Kiro Crew's own, Kiro's global,
+MCP discovery reads several ``mcp.json`` files (Aj Crew's own, Kiro's global,
 and other tools' globals). A file that does not parse is logged and skipped, so
 the servers in the other files are still found. A file whose bytes are not
 UTF-8 is the same unusable file, so it is skipped the same way instead of
@@ -16,7 +16,7 @@ from typing import TypeVar
 
 import pytest
 
-from kiro_crew import mcp_discovery
+from aj_crew import mcp_discovery
 
 T = TypeVar("T")
 
@@ -46,7 +46,7 @@ def files(tmp_path: Path, monkeypatch) -> tuple[Path, Path]:
 
 
 def test_discovery_skips_an_mcp_json_that_is_not_utf8_and_keeps_the_rest(files, caplog):
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_discovery"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_discovery"):
         by_source = _call(mcp_discovery._load_mcp_json_by_source)
 
     assert {name for bucket in by_source.values() for name in bucket} == {"live"}
@@ -71,7 +71,7 @@ def test_discovery_names_the_utf16_repair_reason_in_the_warning(files, caplog):
     so a user can act on it. The file is still skipped and the other file's server
     is still found (the invariant above).
     """
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.mcp_discovery"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.mcp_discovery"):
         by_source = _call(mcp_discovery._load_mcp_json_by_source)
 
     assert {name for bucket in by_source.values() for name in bucket} == {"live"}
@@ -86,11 +86,11 @@ def test_load_user_json_object_names_the_utf16_repair_and_reads_empty(tmp_path, 
     file reads as ``{}`` (skip-and-keep, nothing raised) with the fixed reason in
     the warning rather than the codec error.
     """
-    from kiro_crew.user_json import load_user_json_object, wide_bom_reason
+    from aj_crew.user_json import load_user_json_object, wide_bom_reason
 
     p = tmp_path / "mcp.json"
     p.write_bytes(b'\xff\xfe{"mcpServers": {"bad": {"command": "x"}}}')
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.user_json"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.user_json"):
         assert load_user_json_object(p) == {}
     assert any("re-save it as UTF-8" in r.getMessage() for r in caplog.records)
     # The helper names UTF-16/UTF-32 marks and leaves a plain UTF-8 file alone.

@@ -10,20 +10,20 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.knowledge.llm_pool import LLMPool
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.testing.wait import await_until
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.knowledge.llm_pool import LLMPool
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.testing.wait import await_until
 
-_HANDLER_LOGGER = "kiro_crew.dashboard.handlers.knowledge"
+_HANDLER_LOGGER = "aj_crew.dashboard.handlers.knowledge"
 
 
 @pytest.fixture(autouse=True)
 def _listed_test_hosts(_floor_monkeypatch):
     """List the hosts these sources name in ``knowledge.doc_ingest_hosts``.
 
-    A source with no connector is fetched by Kiro Crew only from a listed host,
+    A source with no connector is fetched by Aj Crew only from a listed host,
     and the list is empty by default; these tests exercise what happens after
     that gate lets the URL through.
     """
@@ -59,7 +59,7 @@ def _config(
     extraction_effort: str = "",
     background_effort: str | None = None,
 ):
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.knowledge.extraction_effort = extraction_effort
     if background_effort is not None:
         cfg.agent.role_efforts = {"background": background_effort}
@@ -113,7 +113,7 @@ class TestKnowledgePoolSetup:
             return extractor
 
         monkeypatch.setattr(
-            kh.KiroCrewConfig,
+            kh.AjCrewConfig,
             "load",
             lambda: _config(extraction_effort, background_effort),
         )
@@ -147,7 +147,7 @@ class TestKnowledgePoolSetup:
         # operator pin wins over the hard default while a background-role pin
         # never moves extraction. The role lookup reads config.json's raw JSON
         # (a dict), so a None role pin means "absent".
-        from kiro_crew.knowledge.llm_pool import (
+        from aj_crew.knowledge.llm_pool import (
             DEFAULT_EXTRACTION_EFFORT,
             _get_workload_effort,
         )

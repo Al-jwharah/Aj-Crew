@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-import kiro_crew.sandbox as sb
+import aj_crew.sandbox as sb
 
 
 @pytest.fixture(autouse=True)
@@ -27,13 +27,13 @@ def _clean_probe_state(monkeypatch) -> Any:
     and replaces a planted verdict with the real host's one. Joining (rather than
     sleeping) makes that deterministic.
 
-    Clears ``KIROCREW_SANDBOX_ACTIVE`` to prevent the "already inside sandbox"
+    Clears ``AJCREW_SANDBOX_ACTIVE`` to prevent the "already inside sandbox"
     passthrough from short-circuiting tests on sandboxed hosts.
     """
-    monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+    monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
     monkeypatch.setattr(
         sb, "_KIRO_INTERNAL_SETTINGS_PATH",
-        "/nonexistent/kirocrew-test/amazon-internal.json",
+        "/nonexistent/ajcrew-test/amazon-internal.json",
     )
     _join_warm_thread()
     sb.reset_backend()
@@ -234,7 +234,7 @@ class TestGuidanceProse:
 
     def test_apparmor_guidance_names_the_command_that_fixes_it(self) -> None:
         guidance = sb._linux_remedy_guidance(sb.REMEDY_APPARMOR_USERNS)
-        assert "kirocrew service install" in guidance
+        assert "ajcrew service install" in guidance
         # Naming the sysctl WITHOUT warning against setting it to 0 would invite
         # disabling a kernel-wide protection to satisfy one application.
         assert "Do NOT set the sysctl to 0" in guidance
@@ -249,7 +249,7 @@ class TestGuidanceProse:
         """
         guidance = sb._linux_remedy_guidance(sb.REMEDY_APPARMOR_USERNS)
         assert "cannot fix that" in guidance
-        assert "aa-exec -p kirocrew-userns -- kirocrew gateway" not in guidance
+        assert "aa-exec -p ajcrew-userns -- ajcrew gateway" not in guidance
 
     def test_every_token_has_guidance(self) -> None:
         for token in (
@@ -419,7 +419,7 @@ class TestWrapArgvWiring:
 
         assert caught.value.kind == "transient"
         assert caught.value.remedy == ""
-        assert "kirocrew service install" not in str(caught.value)
+        assert "ajcrew service install" not in str(caught.value)
 
     def test_a_container_mount_denial_is_told_about_apparmor_not_seccomp(
         self, monkeypatch: pytest.MonkeyPatch
@@ -449,7 +449,7 @@ class TestWrapArgvWiring:
         assert "blocks user namespace creation" not in message
         # The documented escape hatches stay named: an operator who cannot change
         # the pod policy still has a way forward.
-        assert "KIROCREW_ALLOW_UNSANDBOXED=1" in message
+        assert "AJCREW_ALLOW_UNSANDBOXED=1" in message
         assert "sandbox_allow_unsandboxed_exec=true" in message
 
     def test_a_container_unshare_denial_keeps_the_seccomp_advice(
@@ -468,5 +468,5 @@ class TestWrapArgvWiring:
 
         message = str(caught.value)
         assert "blocks user namespace creation" in message
-        assert "kirocrew-seccomp.json" in message
+        assert "ajcrew-seccomp.json" in message
         assert "apparmor=unconfined" not in message

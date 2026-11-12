@@ -85,7 +85,7 @@ class FakeVm:
     started_at: str
     client_token: str = ""
     maximum_duration_in_seconds: int = 900
-    image_arn: str = "arn:aws:lambda:us-east-1:123456789012:microvm-image/kirocrew"
+    image_arn: str = "arn:aws:lambda:us-east-1:123456789012:microvm-image/ajcrew"
     image_version: str = "1"
     run_hook_payload: str = ""
     #: Read out of the run payload, so a replacement VM's container carries the

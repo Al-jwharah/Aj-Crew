@@ -15,13 +15,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from chat_regenerate_cov80_helpers import state_fixture  # noqa: F401
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat import _history_key_for, _save_slot_to_history
-from kiro_crew.dashboard.chat_turn.regenerate_swap import (
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat import _history_key_for, _save_slot_to_history
+from aj_crew.dashboard.chat_turn.regenerate_swap import (
     RegenerateTarget,
     rows_before_regenerate_target,
 )
-from kiro_crew.dashboard.slot_persistence import write_guards
+from aj_crew.dashboard.slot_persistence import write_guards
 
 
 def _arm(state, name: str = "s1", linked: str | None = None):
@@ -298,7 +298,7 @@ async def test_appends_at_the_cap_during_the_swap_do_not_credit_retired_rows(sta
         return await real(*args, **kwargs)
 
     with (
-        patch("kiro_crew.dashboard.state._MAX_SLOT_MESSAGES", 3),
+        patch("aj_crew.dashboard.state._MAX_SLOT_MESSAGES", 3),
         patch.object(chat_runner, "save_slot_off_loop", new=_append_during_the_write),
     ):
         await chat_runner.settle_regenerate(state, slot)
@@ -521,7 +521,7 @@ def _run_chat_state(tmp_path, monkeypatch):
 
     from chat_test_helpers import _make_state
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.push_slots_update = MagicMock()
@@ -555,7 +555,7 @@ async def _regenerate_through_the_runner(state, slot, events) -> None:
 
     state.sessions.get_or_create = AsyncMock(return_value=(_client_streaming(events), True, False))
     with patch(
-        "kiro_crew.dashboard.chat_regenerate.reject_if_kiro_unverified",
+        "aj_crew.dashboard.chat_regenerate.reject_if_kiro_unverified",
         new=AsyncMock(return_value=None),
     ):
         async with TestClient(TestServer(_make_regen_app(state))) as client:
@@ -568,8 +568,8 @@ async def _regenerate_through_the_runner(state, slot, events) -> None:
 async def test_a_refused_regenerate_turn_keeps_the_previous_reply(tmp_path, monkeypatch) -> None:
     """End to end: the provider refuses before any text, so the previous
     reply is still in the window and on disk."""
-    from kiro_crew.acp.types import STOP_REASON_REFUSAL
-    from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+    from aj_crew.acp.types import STOP_REASON_REFUSAL
+    from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
     state = _run_chat_state(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -593,7 +593,7 @@ async def test_a_refused_regenerate_turn_keeps_the_previous_reply(tmp_path, monk
 async def test_a_regenerate_turn_with_a_reply_replaces_the_previous_one(
     tmp_path, monkeypatch
 ) -> None:
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     state = _run_chat_state(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -627,9 +627,9 @@ async def test_switching_regenerated_replies_shows_each_ones_turn_stats(
     from aiohttp.test_utils import TestClient, TestServer
     from chat_regenerate_cov80_helpers import _make_regen_app
 
-    from kiro_crew.acp.types import TurnUsage
-    from kiro_crew.dashboard.chat_utils import _prepare_messages
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.acp.types import TurnUsage
+    from aj_crew.dashboard.chat_utils import _prepare_messages
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     state = _run_chat_state(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -678,7 +678,7 @@ async def test_regenerating_a_command_answered_directly_replaces_its_reply(
 ) -> None:
     """``/prompts`` with no prompts is answered by the slash gate's own writer:
     that row is the Regenerate's reply, so it replaces the previous one."""
-    from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+    from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
     state = _run_chat_state(tmp_path, monkeypatch)
     slot = _slash_slot(state, "/prompts")
@@ -696,7 +696,7 @@ async def test_regenerating_a_command_answered_directly_replaces_its_reply(
 async def test_regenerating_a_prompt_get_settles_in_its_nested_turn(tmp_path, monkeypatch) -> None:
     """``/prompts get <name>`` runs the prompt as a nested turn (depth 1) that
     runs the tail for the outer one: its reply replaces the previous one."""
-    from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
     state = _run_chat_state(tmp_path, monkeypatch)
     slot = _slash_slot(state, "/prompts get tidy")
@@ -785,16 +785,16 @@ async def test_a_notice_only_regenerate_through_the_runner_waits_for_the_continu
     the previous reply is still the current one and carries no variants."""
     from test_dashboard_chat_empty_response import TestEmptyResponseRetry
 
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         EVENT_COMPACTION_STATUS,
         EVENT_COMPLETE,
         EVENT_TEXT_CHUNK,
         STOP_REASON_END_TURN,
         AcpEvent,
     )
-    from kiro_crew.dashboard.chat_utils import _COMPACTION_CONTINUE_MSG
+    from aj_crew.dashboard.chat_utils import _COMPACTION_CONTINUE_MSG
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state, slot, client, run_chat = TestEmptyResponseRetry()._make_state_and_slot(tmp_path)
     slot.append("assistant", "old")
     slot.drain()
@@ -821,7 +821,7 @@ async def test_a_notice_only_regenerate_through_the_runner_waits_for_the_continu
     client.stream = stream
     client.stream_command = stream
     with patch(
-        "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+        "aj_crew.dashboard.chat_runner._start_next_queued_turn",
         new=AsyncMock(return_value=False),
     ):
         await run_chat(state, slot, "hello")
@@ -842,10 +842,10 @@ async def test_a_notice_only_regenerate_stopped_mid_compaction_saves_a_notice_ro
     next Regenerate's scan passes over it to the reply it re-runs."""
     from test_dashboard_chat_empty_response import TestEmptyResponseRetry
 
-    from kiro_crew.acp.types import EVENT_TEXT_CHUNK, AcpEvent
-    from kiro_crew.dashboard.system_notices import is_system_notice
+    from aj_crew.acp.types import EVENT_TEXT_CHUNK, AcpEvent
+    from aj_crew.dashboard.system_notices import is_system_notice
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state, slot, client, run_chat = TestEmptyResponseRetry()._make_state_and_slot(tmp_path)
     slot.append("assistant", "old")
     slot.drain()
@@ -867,7 +867,7 @@ async def test_a_notice_only_regenerate_stopped_mid_compaction_saves_a_notice_ro
     client.stream = stream
     client.stream_command = stream
     with patch(
-        "kiro_crew.dashboard.chat_runner._start_next_queued_turn",
+        "aj_crew.dashboard.chat_runner._start_next_queued_turn",
         new=AsyncMock(return_value=False),
     ):
         await run_chat(state, slot, "hello")
@@ -879,7 +879,7 @@ async def test_a_notice_only_regenerate_stopped_mid_compaction_saves_a_notice_ro
 
 
 def test_a_notice_only_flush_is_tagged_a_system_notice(state) -> None:
-    from kiro_crew.dashboard.system_notices import is_system_notice
+    from aj_crew.dashboard.system_notices import is_system_notice
 
     slot = _notice_target(state)
     row = chat_runner._flush_segment(state, slot, "Compacting...", broadcast=False)
@@ -959,8 +959,8 @@ def test_the_interrupted_turn_preamble_of_a_regenerate_omits_the_reply_it_replac
     """A Regenerate's recovery replay on a natively resumed session restores the
     interrupted turn from the window, which must not carry the old reply as the
     partial output of the turn re-asking its question."""
-    from kiro_crew.context import build_interrupted_turn_preamble
-    from kiro_crew.dashboard.state import TURN_OPENING_INJECT_KINDS
+    from aj_crew.context import build_interrupted_turn_preamble
+    from aj_crew.dashboard.state import TURN_OPENING_INJECT_KINDS
 
     slot = _arm_after_an_earlier_turn(state)
     rows = chat_runner.rows_before_regenerate_target(slot, list(slot.messages))
@@ -1059,7 +1059,7 @@ async def test_a_reply_trimmed_into_the_prefix_after_a_real_flush_saves_no_varia
     )
     saved = AsyncMock(return_value=True)
     with (
-        patch("kiro_crew.dashboard.state._MAX_SLOT_MESSAGES", 2),
+        patch("aj_crew.dashboard.state._MAX_SLOT_MESSAGES", 2),
         patch.object(chat_runner, "save_slot_off_loop", new=saved),
     ):
         chat_runner._flush_segment(state, slot, "new", broadcast=False)

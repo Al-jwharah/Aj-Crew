@@ -19,17 +19,17 @@ from autonudge_helpers import _enable  # noqa: F401
 from autonudge_helpers import svc_fixture  # noqa: F401
 from autonudge_shutdown_drain_helpers import _LOST_RUN_SECS, _wait_until
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import (
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import (
     AutoNudgeService,
     NudgeAdmissionReason,
     NudgeAdmissionRefused,
 )
-from kiro_crew.monitoring.models import (
+from aj_crew.monitoring.models import (
     MonitorActionCompletion,
     MonitorActionDisposition,
 )
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.mark.asyncio
@@ -42,7 +42,7 @@ async def test_shutdown_during_a_ledger_extension_lands_it_whole_or_drops_it(
     Cut while the ``update`` waits on the lock, the write drains and lands; cut while
     the tick reads the ledger, no write starts. Store and memory agree either way.
     """
-    from kiro_crew.autonudge_service import firing
+    from aj_crew.autonudge_service import firing
 
     class _ObservedLock(asyncio.Lock):
         def __init__(self) -> None:
@@ -426,7 +426,7 @@ async def test_a_displaced_default_patrol_completion_resolves_through_shutdown_u
         real_write(payload)
 
     monkeypatch.setattr(svc, "_write_state", _counted_write)
-    caplog.set_level(logging.DEBUG, logger="kiro_crew.autonudge")
+    caplog.set_level(logging.DEBUG, logger="aj_crew.autonudge")
     arm = asyncio.create_task(
         svc.add(
             slot_key=slot,

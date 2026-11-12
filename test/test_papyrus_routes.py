@@ -2,7 +2,7 @@
 
 Lives in the repo-level ``test/`` tree (not the app's in-package ``tests/``)
 because ``setup.cfg`` sets ``testpaths = test transfer`` — a test under
-``src/kiro_crew/apps/builtins/...`` is never collected by CI.
+``src/aj_crew/apps/builtins/...`` is never collected by CI.
 
 Handlers are driven directly with ``aiohttp.test_utils.make_mocked_request``, the
 same approach ``issue_radar``'s route tests take, so no server is bound and no
@@ -37,8 +37,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.apps.builtins.papyrus.backend import gitops, latex, routes, store, tectonic
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.apps.builtins.papyrus.backend import gitops, latex, routes, store, tectonic
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 def _request(method: str, path: str, body: dict[str, Any] | None = None) -> web.Request:
@@ -1266,8 +1266,8 @@ class TestNoBlockingCallsOnTheLoop:
 
     **The path-validation gate was the reported instance.** ``_project`` /
     ``_project_for_create`` / ``_safe_relative`` look like cheap string checks but
-    each calls ``Path.resolve()`` plus a ``stat``-family probe, so a
-    ``KIROCREW_HOME`` on a stalled network mount wedges the gateway inside the
+    each calls ``Path.resolve()`` plus a ``stat``-family probe, so an
+    ``AJCREW_HOME`` on a stalled network mount wedges the gateway inside the
     authorization check — before the handler has done any of its own work. Twenty-two
     call sites across the handlers had that shape.
 
@@ -1384,9 +1384,9 @@ class TestNoBlockingCallsOnTheLoop:
         the spawns live, and the blocking cold-probe above was reached from an
         ``async def`` in each of them rather than from a handler.
         """
-        from kiro_crew.apps.builtins.papyrus.backend import gitops as papyrus_gitops
-        from kiro_crew.apps.builtins.papyrus.backend import latex as papyrus_latex
-        from kiro_crew.apps.builtins.papyrus.backend import routes as papyrus_routes
+        from aj_crew.apps.builtins.papyrus.backend import gitops as papyrus_gitops
+        from aj_crew.apps.builtins.papyrus.backend import latex as papyrus_latex
+        from aj_crew.apps.builtins.papyrus.backend import routes as papyrus_routes
 
         return [papyrus_routes, papyrus_latex, papyrus_gitops]
 

@@ -23,15 +23,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST, EVENT_TEXT_CHUNK
-from kiro_crew.messaging import auto_title
-from kiro_crew.testing.wait import finished
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST, EVENT_TEXT_CHUNK
+from aj_crew.messaging import auto_title
+from aj_crew.testing.wait import finished
 
 #: These tests start background helper turns, which are skipped while the host's
 #: memory posture is critical (see ``ample_host_free_memory``).
 pytestmark = pytest.mark.usefixtures("ample_host_free_memory")
 
-_KEY = "telegram:kirocrew:direct:4242"
+_KEY = "telegram:ajcrew:direct:4242"
 
 
 def _ev(kind: str, **kw):
@@ -315,7 +315,7 @@ class TestManualTitleWins:
     async def test_a_deterministic_fallback_record_is_titled(self, audits):
         """The other side of the same guard: no title on the record means the
         surface is still showing its deterministic fallback, so name it."""
-        log = _Log({"agent": "kirocrew"})
+        log = _Log({"agent": "ajcrew"})
         renamed: list[str] = []
         title = await _call(
             _Sessions(_title_provider()),
@@ -383,7 +383,7 @@ class TestDeletedDuringTheTurn:
         refuse for its own reasons and leave that test green with the real
         request never made.
         """
-        log = _Log({"agent": "kirocrew"})
+        log = _Log({"agent": "ajcrew"})
         title = await _call(_Sessions(_title_provider()), log, _KEY, "u", "a", source="telegram")
         assert title == "Deploy the gateway"
         assert log.required_existing == [True]
@@ -448,8 +448,8 @@ class TestDeletedDuringTheTurn:
         no stamp to compare.
         """
         log = _Log(
-            {"agent": "kirocrew"},  # written in an older shape: no created_at
-            becomes={"agent": "kirocrew", "created_at": "2026-09-20T06:00:12.500000+00:00"},
+            {"agent": "ajcrew"},  # written in an older shape: no created_at
+            becomes={"agent": "ajcrew", "created_at": "2026-09-20T06:00:12.500000+00:00"},
         )
         renamed: list[str] = []
         title = await _call(
@@ -476,7 +476,7 @@ class TestDeletedDuringTheTurn:
         Mutation: drop the ``not meta`` term from the re-read -- red.
         """
         assert auto_title.try_claim(_KEY) is True
-        log = _Log({"agent": "kirocrew"}, becomes={})  # no stamp, then deleted
+        log = _Log({"agent": "ajcrew"}, becomes={})  # no stamp, then deleted
         title = await _call(_Sessions(_title_provider()), log, _KEY, "u", "a", source="telegram")
         assert title == ""
         assert auto_title.is_titled(_KEY) is False
@@ -789,7 +789,7 @@ class TestDeletedDuringTheTurn:
         so a whole dispatcher would add a Telegram client and a session store to
         the fixture without changing what is measured.
         """
-        from kiro_crew.telegram.transport_dispatch import TelegramDispatcher
+        from aj_crew.telegram.transport_dispatch import TelegramDispatcher
 
         titles: list[str] = []
 

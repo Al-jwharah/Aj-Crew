@@ -21,9 +21,9 @@ from feature_videos_hosted_helpers import _fresh_cache  # noqa: F401 - fixture
 from feature_videos_hosted_helpers import _no_network  # noqa: F401 - fixture
 from feature_videos_hosted_helpers import _CDN, _CLIP, _entry, _parsed, _seed, _write_media
 
-from kiro_crew import feature_videos as fv
-from kiro_crew import feature_videos_cache as cache_mod
-from kiro_crew import feature_videos_manifest as manifest_mod
+from aj_crew import feature_videos as fv
+from aj_crew import feature_videos_cache as cache_mod
+from aj_crew import feature_videos_manifest as manifest_mod
 
 # ── serving ──
 
@@ -57,7 +57,7 @@ class TestServingRoute:
         outside = tmp_path / "elsewhere"
         (outside / "0.6.0").mkdir(parents=True)
         (outside / "0.6.0" / "hosted-clip.mp4").write_bytes(b"x")
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             manifest_mod.cache_root().parent.mkdir(parents=True, exist_ok=True)
             manifest_mod.cache_root().symlink_to(outside, target_is_directory=True)
             assert cache_mod.resolve_served_path("0.6.0", "hosted-clip.mp4") is None
@@ -70,7 +70,7 @@ class TestServingRoute:
         load. A <video> pointed at a clip must not receive HTML with a 200 —
         the exclusion list is what keeps this route on the refusing side.
         """
-        import kiro_crew.dashboard.token_auth as ta
+        import aj_crew.dashboard.token_auth as ta
 
         request = MagicMock()
         request.method = method
@@ -79,7 +79,7 @@ class TestServingRoute:
         assert ta._is_spa_shell_request(request) is False
 
     def test_serves_a_cached_file(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.6.0")
             request = _file_request("0.6.0", "hosted-clip.mp4")
             resp = asyncio.run(cache_mod.api_feature_video_file(request))
@@ -102,7 +102,7 @@ class TestServingRoute:
     def test_a_range_request_is_honoured_so_the_player_can_seek(
         self, tmp_path: Path, header: str, status: int, content_range: str, expected: bytes
     ) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.6.0")
             request = _file_request("0.6.0", "hosted-clip.mp4", headers={"Range": header})
             resp = asyncio.run(cache_mod.api_feature_video_file(request))
@@ -113,7 +113,7 @@ class TestServingRoute:
 
     @pytest.mark.parametrize("header", ["bytes=99999-", f"bytes={len(_CLIP)}-"])
     def test_a_range_past_the_end_is_a_416(self, tmp_path: Path, header: str) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.6.0")
             with pytest.raises(web.HTTPRequestRangeNotSatisfiable) as excinfo:
                 asyncio.run(
@@ -128,7 +128,7 @@ class TestServingRoute:
         self, tmp_path: Path, header: str
     ) -> None:
         """RFC 9110 section 14.2: a Range the server cannot use is ignored, not refused."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.6.0")
             request = _file_request("0.6.0", "hosted-clip.mp4", headers={"Range": header})
             try:
@@ -141,7 +141,7 @@ class TestServingRoute:
             assert _served_body(request) == _CLIP
 
     def test_a_head_request_carries_the_headers_and_no_body(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.6.0")
             request = _file_request("0.6.0", "hosted-clip.mp4", method="HEAD")
             resp = asyncio.run(cache_mod.api_feature_video_file(request))
@@ -164,7 +164,7 @@ class TestServingRoute:
         """
         secret = tmp_path / "secret.bin"
         secret.write_bytes(b"not yours")
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = _write_media("0.6.0")
             clip = folder / "hosted-clip.mp4"
             real_resolve = cache_mod.resolve_served_path
@@ -197,7 +197,7 @@ class TestServingRoute:
         outside = tmp_path / "outside"
         outside.mkdir()
         (outside / "hosted-clip.mp4").write_bytes(b"not yours")
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = _write_media("0.6.0")
             real_resolve = cache_mod.resolve_served_path
 
@@ -218,7 +218,7 @@ class TestServingRoute:
         """A second name for an outside inode passes every path rule; the link count does not."""
         secret = tmp_path / "secret.bin"
         secret.write_bytes(b"not yours")
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = _write_media("0.6.0")
             try:
                 os.link(secret, folder / "alias.mp4")
@@ -231,7 +231,7 @@ class TestServingRoute:
     def test_a_descriptor_whose_real_path_cannot_be_read_is_a_404(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.6.0")
             monkeypatch.setattr(cache_mod.pinned_fs, "fd_real_path", lambda _fd: None)
             with pytest.raises(web.HTTPNotFound):
@@ -262,7 +262,7 @@ class TestServingRoute:
                 path.symlink_to(outside, target_is_directory=True)
                 swapped.append(path)
 
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.6.0")
             monkeypatch.setattr(manifest_mod, "_refuse_link", _check_then_swap_root)
             with pytest.raises(web.HTTPNotFound):
@@ -273,7 +273,7 @@ class TestServingRoute:
 
     def test_a_file_swapped_for_a_directory_after_resolution_is_a_404(self, tmp_path: Path) -> None:
         """Same window, non-regular leaf: fstat on the opened descriptor refuses it."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = _write_media("0.6.0")
             clip = folder / "hosted-clip.mp4"
             real_resolve = cache_mod.resolve_served_path
@@ -305,7 +305,7 @@ class TestServingRoute:
         self, tmp_path: Path, name: str, content_type: str
     ) -> None:
         """The type is decided by the name the parser admitted, never sniffed."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = manifest_mod.ensure_cache_dir("0.6.0")
             (folder / name).write_bytes(b"<html><script>alert(1)</script></html>")
             resp = asyncio.run(cache_mod.api_feature_video_file(_file_request("0.6.0", name)))
@@ -337,7 +337,7 @@ class TestServingRoute:
         refusing, not containment: without it a planted ``x.html`` would come back
         on the dashboard's own origin as something the browser executes.
         """
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = manifest_mod.ensure_cache_dir("0.6.0")
             (folder / name).write_bytes(b"<html><script>alert(1)</script></html>")
             assert cache_mod.resolve_served_path("0.6.0", name) is None
@@ -376,19 +376,19 @@ class TestServingRoute:
     def test_an_unsafe_component_is_a_flat_404(
         self, tmp_path: Path, release: str, name: str
     ) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.6.0")
             with pytest.raises(web.HTTPNotFound):
                 asyncio.run(cache_mod.api_feature_video_file(_file_request(release, name)))
 
     def test_a_file_that_is_not_there_is_a_404(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             manifest_mod.ensure_cache_dir("0.6.0")
             with pytest.raises(web.HTTPNotFound):
                 asyncio.run(cache_mod.api_feature_video_file(_file_request("0.6.0", "gone.mp4")))
 
     def test_a_directory_is_never_served(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = manifest_mod.ensure_cache_dir("0.6.0")
             (folder / "sub.mp4").mkdir()
             with pytest.raises(web.HTTPNotFound):
@@ -397,7 +397,7 @@ class TestServingRoute:
     @pytest.mark.skipif(sys.platform.startswith("win"), reason="symlinks need privilege on Windows")
     def test_a_symlink_out_of_the_cache_is_refused(self, tmp_path: Path) -> None:
         """Name validation cannot see a symlink; the containment re-check can."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = manifest_mod.ensure_cache_dir("0.6.0")
             secret = tmp_path / "secret.mp4"
             secret.write_bytes(b"not yours")
@@ -416,7 +416,7 @@ class TestServingRoute:
         outside = tmp_path / "outside"
         outside.mkdir()
         (outside / "hosted-clip.mp4").write_bytes(b"not yours")
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             root = manifest_mod.cache_root()
             root.mkdir(parents=True, exist_ok=True)
             (root / "0.6.0").symlink_to(outside, target_is_directory=True)
@@ -434,14 +434,14 @@ class TestServingRoute:
         target is a clip in the same folder. Checking containment alone would
         serve this one.
         """
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             folder = _write_media("0.6.0")
             (folder / "alias.mp4").symlink_to(folder / "hosted-clip.mp4")
             assert cache_mod.resolve_served_path("0.6.0", "alias.mp4") is None
 
     def test_a_missing_cache_root_is_a_404_not_a_crash(self, tmp_path: Path) -> None:
         """Nothing fetched yet: the anchor cannot be resolved, so there is no file."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             assert cache_mod.resolve_served_path("0.6.0", "hosted-clip.mp4") is None
 
 
@@ -456,7 +456,7 @@ class TestNoEgressFromSelection:
     """
 
     def test_selection_under_a_permit_still_offers_nothing_uncached(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _seed(_parsed())
             with patch.object(manifest_mod, "download_denied", return_value=False):
                 assert fv.eligible_offers("9.9.9") == ()
@@ -469,9 +469,9 @@ class TestNoEgressFromSelection:
 
     def test_the_status_readout_uses_the_memo(self, tmp_path: Path) -> None:
         """A display field must not spend an audited decision."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with patch(
-                "kiro_crew.platform.governance_profiles.vet_and_audit",
+                "aj_crew.platform.governance_profiles.vet_and_audit",
                 return_value=SimpleNamespace(permitted=True),
             ) as vet:
                 manifest_mod.download_permitted_cached()
@@ -520,7 +520,7 @@ class TestSourceUrlValidation:
 
 class TestHostedSelection:
     def test_a_cached_entry_is_offered_from_this_origin(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.6.0")
             _seed(_parsed())
             picked = _first()
@@ -531,12 +531,12 @@ class TestHostedSelection:
 
     def test_an_uncached_entry_is_not_offered_at_all(self, tmp_path: Path) -> None:
         """Not from the CDN, not from anywhere: the browser never plays unverified bytes."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _seed(_parsed())
             assert _first() is None
 
     def test_only_the_cached_entries_of_a_mixed_manifest_are_offered(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.6.0", "cached-one")
             _seed(_parsed(entries=[_entry("uncached-one"), _entry("cached-one")]))
             for _ in range(20):
@@ -546,7 +546,7 @@ class TestHostedSelection:
 
     def test_a_denied_ceiling_still_plays_what_is_on_disk(self, tmp_path: Path) -> None:
         """Withdrawing bytes already downloaded is a separate decision the row does not make."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _seed(_parsed())
             with patch.object(manifest_mod, "download_denied", return_value=True):
                 assert _first() is None
@@ -557,7 +557,7 @@ class TestHostedSelection:
 
     def test_a_manifest_replaces_the_static_catalog(self, tmp_path: Path) -> None:
         """Mixing them would offer a bundled clip and its hosted successor as two."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.6.0")
             _seed(_parsed())
             with patch.object(fv, "_asset_exists", lambda _p: True):
@@ -568,7 +568,7 @@ class TestHostedSelection:
     def test_the_static_catalog_serves_when_no_manifest_was_ever_fetched(
         self, tmp_path: Path
     ) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with patch.object(fv, "_asset_exists", lambda _p: True):
                 picked = _first()
             assert picked is not None
@@ -582,25 +582,25 @@ class TestHostedSelection:
         clips, and a verdict on one would not retire the other — the same reason
         the manifest replaces the catalog instead of extending it.
         """
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _seed(_parsed())
             with patch.object(fv, "_asset_exists", lambda _p: True):
                 assert _first() is None
 
     def test_recorded_state_and_probes_still_withdraw_a_hosted_entry(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _seed(_parsed(entries=[_entry("recorded"), _entry("probed", used_when=["always"])]))
             fv.save_state(fv.FeatureVideoState(videos={"recorded": {"status": "seen", "ts": 1.0}}))
             with patch.dict(fv._PROBES, {"always": lambda: True}):
                 assert _first() is None
 
     def test_a_version_floor_withdraws_a_hosted_entry(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _seed(_parsed(entries=[_entry("future", min_version="99.0.0")]))
             assert _first("1.2.3") is None
 
     def test_a_hosted_id_can_record_a_verdict(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _seed(_parsed())
             ids = fv.known_video_ids()
             # Both catalogs: a clip shown before the manifest landed must stay

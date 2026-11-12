@@ -29,9 +29,9 @@ from computer_use_api_helpers import (  # noqa: F401 -- fixtures are requested b
     state_file_fixture,
 )
 
-from kiro_crew.computer_use import enable_state
-from kiro_crew.computer_use.types import STATE_KEY_ENABLED, PolicyStateError
-from kiro_crew.dashboard.handlers import computer_use as cu_api
+from aj_crew.computer_use import enable_state
+from aj_crew.computer_use.types import STATE_KEY_ENABLED, PolicyStateError
+from aj_crew.dashboard.handlers import computer_use as cu_api
 
 
 def _app_token_middleware(app_name: str):
@@ -240,7 +240,7 @@ class TestEnableRestartsSessions:
         ``no_agent_spec_rewrite`` autouse fixture, so it needs no handling here.
         """
         calls: list = []
-        import kiro_crew.dashboard.handlers.sessions as sessions_mod
+        import aj_crew.dashboard.handlers.sessions as sessions_mod
 
         async def _fake(request):
             calls.append(request)
@@ -300,7 +300,7 @@ class TestEnableRestartsSessions:
         the next cold session — which is strictly better than telling the operator
         their save failed when the keystone did move.
         """
-        import kiro_crew.dashboard.handlers.sessions as sessions_mod
+        import aj_crew.dashboard.handlers.sessions as sessions_mod
 
         async def _boom(request):
             raise RuntimeError("no session manager on this app")
@@ -318,13 +318,13 @@ class TestEnableRestartsSessions:
     async def test_the_flip_REBUILDS_the_agent_spec(self, state_file, monkeypatch):
         """The enable is a spec-emission gate, so the reset needs a fresh spec.
 
-        ``agent._computer_use_spec_gate`` keeps ``kirocrew-computer`` out of the
+        ``agent._computer_use_spec_gate`` keeps ``ajcrew-computer`` out of the
         emitted spec while the keystone is off, so restarting sessions without
         rebuilding would restart them into a spec that still omits the server —
         the operator enables the feature and the tools appear only after the next
         gateway start.
         """
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         self._spy(monkeypatch)
         built: list = []
@@ -341,7 +341,7 @@ class TestEnableRestartsSessions:
     @pytest.mark.asyncio
     async def test_a_NO_OP_resave_does_not_rebuild(self, state_file, monkeypatch):
         """Same narrowness as the reset: no transition, no work."""
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         state_file.write_text(json.dumps({STATE_KEY_ENABLED: True}), encoding="utf-8")
         self._spy(monkeypatch)
@@ -371,8 +371,8 @@ class TestEnableRestartsSessions:
         order: a lock acquired and released before the call would read the same in
         the source and fix nothing.
         """
-        import kiro_crew.agent as agent_mod
-        from kiro_crew.dashboard.handlers.agents import _get_config_lock
+        import aj_crew.agent as agent_mod
+        from aj_crew.dashboard.handlers.agents import _get_config_lock
 
         self._spy(monkeypatch)
         # Resolved on the loop: ``_get_config_lock`` needs a running loop, and the
@@ -393,12 +393,12 @@ class TestEnableRestartsSessions:
     async def test_the_flip_rewrites_each_app_under_its_lifecycle_lock(
         self, state_file, monkeypatch
     ):
-        """App agents copy the gated ``kirocrew-computer`` entry too, so the flip
+        """App agents copy the gated ``ajcrew-computer`` entry too, so the flip
         rewrites them, each under its app's lifecycle lock (an update or disable in
         flight must not interleave) and outside the config lock nested inside it."""
-        from kiro_crew.apps import bridges
-        from kiro_crew.apps.manager import app_lifecycle_lock
-        from kiro_crew.dashboard.handlers.agents import _get_config_lock
+        from aj_crew.apps import bridges
+        from aj_crew.apps.manager import app_lifecycle_lock
+        from aj_crew.dashboard.handlers.agents import _get_config_lock
 
         self._spy(monkeypatch)
         config_lock = _get_config_lock()
@@ -424,7 +424,7 @@ class TestEnableRestartsSessions:
         assertion is behavioural — it flips the enable for real and checks that
         what the handler called was the stub, not the module's own function.
         """
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         reached: list[str] = []
         current = agent_mod.rebuild_agent_config
@@ -449,14 +449,14 @@ class TestEnableRestartsSessions:
 
         ``api_computer_use_config_save`` imports ``rebuild_agent_config`` inside the
         function. Hoisting it to module scope would bind the name at import time,
-        so patching ``kiro_crew.agent`` would not reach this call site — and
+        so patching ``aj_crew.agent`` would not reach this call site — and
         the guard above would keep passing while every enable-flipping test wrote
         the operator's real ``~/.kiro/agents`` again.
 
         Asserted POSITIVELY (the stub must have run), because "the real one did not
         run" is also true when nothing ran at all.
         """
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         ran: list[str] = []
         monkeypatch.setattr(
@@ -468,7 +468,7 @@ class TestEnableRestartsSessions:
             resp = await client.put("/api/computer-use/config", json={"enabled": True})
         assert resp.status == 200
         assert ran == ["stub"], (
-            "patching kiro_crew.agent no longer reaches the handler's call site — the "
+            "patching aj_crew.agent no longer reaches the handler's call site — the "
             "import was hoisted to module scope, which defeats no_agent_spec_rewrite"
         )
 
@@ -480,7 +480,7 @@ class TestEnableRestartsSessions:
         the next gateway start — and the sessions are still reset, because a stale
         ``tools/list`` is a separate problem from a stale spec.
         """
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         calls = self._spy(monkeypatch)
 
@@ -513,7 +513,7 @@ class TestEnableRestartsSessions:
     async def test_the_save_reports_whether_the_spec_was_rewritten(
         self, state_file, monkeypatch, rebuild, expected
     ):
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         self._spy(monkeypatch)
         monkeypatch.setattr(agent_mod, "rebuild_agent_config", rebuild)

@@ -100,7 +100,7 @@ describe('MarkdownPanel comment/copy flow', () => {
     defaultProps.onSubmitComments.mockClear()
     defaultProps.onClose.mockClear()
     highlightRegistry.clear()
-    localStorage.setItem('kirocrew:comment-hint-dismissed', '1')
+    localStorage.setItem('ajcrew:comment-hint-dismissed', '1')
   })
   afterEach(() => {
     vi.useRealTimers()
@@ -205,12 +205,12 @@ describe('MarkdownPanel comment/copy flow', () => {
   })
 
   it('dismisses comment hint when Got it is clicked', () => {
-    localStorage.removeItem('kirocrew:comment-hint-dismissed')
+    localStorage.removeItem('ajcrew:comment-hint-dismissed')
     render(<Providers><MarkdownPanel {...defaultProps} /></Providers>)
     expect(screen.getByText('Got it')).toBeInTheDocument()
     fireEvent.click(screen.getByText('Got it'))
     expect(screen.queryByText('Got it')).not.toBeInTheDocument()
-    expect(localStorage.getItem('kirocrew:comment-hint-dismissed')).toBe('1')
+    expect(localStorage.getItem('ajcrew:comment-hint-dismissed')).toBe('1')
   })
 
   it('does not show selection toolbar in edit mode', () => {

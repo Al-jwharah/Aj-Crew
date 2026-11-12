@@ -27,12 +27,12 @@ const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 const locked = params.get('locked') === '1'
 
 localStorage.setItem('mc-theme', theme)
-localStorage.setItem('mc-color-theme', 'kiro')
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+localStorage.setItem('mc-color-theme', 'aj')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const MEMBER: MemberRosterRow = {
   name: 'oncall', slug: 'oncall', slot_key: 'member-oncall', running: false,
-  model: '', approval_mode: 'trust', kiro_agent: 'kirocrew', memory_store: 'default',
+  model: '', approval_mode: 'trust', kiro_agent: 'ajcrew', memory_store: 'default',
   workspace: 'default',
 } as MemberRosterRow
 

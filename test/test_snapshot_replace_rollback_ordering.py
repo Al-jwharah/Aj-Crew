@@ -7,9 +7,9 @@ escaping that keeps a forged newline or tab from faking listing lines.
 
 from __future__ import annotations
 
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 class TestNamesCannotForgeListingLines:
@@ -63,18 +63,18 @@ class TestReplaceSavesEveryTreeBeforeReplacingAny:
         """The behavioural half: if the replace pass dies, the ORIGINAL tree must be
         recoverable even though the databases have already moved.
 
-        Built from a manual `kirocrew-snapshot-` payload, with the failure injected at
+        Built from a manual `ajcrew-snapshot-` payload, with the failure injected at
         `shutil.rmtree`, which `_do_replace_mutations` uses to clear a live tree.
         """
         home = tmp_path / "home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
-        _setup_fake_kirocrew(home)
+        monkeypatch.setenv("AJCREW_HOME", str(home))
+        _setup_fake_ajcrew(home)
         md = home / "workspace" / "memory"
         md.mkdir(parents=True, exist_ok=True)
         (md / "preferences.md").write_text("changed since the backup")
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         (payload / "workspace" / "memory").mkdir(parents=True)
         (payload / "workspace" / "memory" / "preferences.md").write_text("from the bundle")
         (payload / "MANIFEST.json").write_text(
@@ -113,13 +113,13 @@ class TestReplaceSavesEveryTreeBeforeReplacingAny:
     def test_a_normal_replace_still_works(self, tmp_path, monkeypatch):
         home = tmp_path / "home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
-        _setup_fake_kirocrew(home)
+        monkeypatch.setenv("AJCREW_HOME", str(home))
+        _setup_fake_ajcrew(home)
         md = home / "workspace" / "memory"
         md.mkdir(parents=True, exist_ok=True)
         (md / "preferences.md").write_text("original")
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         (payload / "workspace" / "memory").mkdir(parents=True)
         (payload / "workspace" / "memory" / "preferences.md").write_text("original")
         (payload / "MANIFEST.json").write_text(

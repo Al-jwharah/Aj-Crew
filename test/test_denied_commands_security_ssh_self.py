@@ -17,13 +17,13 @@ import pytest
 from denied_commands_security_helpers import _own_address_probe_stays_local  # noqa: F401
 from denied_commands_security_helpers import _denied_by, _rule_pattern
 
-import kiro_crew.sel as sel_mod
-from kiro_crew import security
-from kiro_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
-from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
-from kiro_crew.security import BUILTIN_DENIED_RULES
-from kiro_crew.security import argv_floor as _argv_floor
-from kiro_crew.security import compute_effective_denied, is_denied, is_safe_user_regex
+import aj_crew.sel as sel_mod
+from aj_crew import security
+from aj_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
+from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+from aj_crew.security import BUILTIN_DENIED_RULES
+from aj_crew.security import argv_floor as _argv_floor
+from aj_crew.security import compute_effective_denied, is_denied, is_safe_user_regex
 
 # Each test starts with the macOS libc and libproc handle caches unbuilt and puts them
 # back after, as every test of the test_denied_commands_security family does (see conftest.py).
@@ -62,7 +62,7 @@ class TestSandboxEscapeSshSelf:
         # literal ``$(hostname)`` text hint -- so a fixed cache with the
         # resolved-once latch set covers them, and it keeps ``_own_host_names``
         # from seeding the module globals and spawning the real
-        # ``kirocrew-own-host-resolve`` getfqdn/getaddrinfo daemon thread (a
+        # ``ajcrew-own-host-resolve`` getfqdn/getaddrinfo daemon thread (a
         # no-test-side-effects violation, plus leaked global state for the
         # worker). ``_OWN_HOST_RESOLVE_DONE`` short-circuits ``_own_host_names``
         # before the lock, so there is no seed and no thread; monkeypatch
@@ -774,7 +774,7 @@ class TestSandboxEscapeSshSelf:
         "server,tool,params",
         [
             (
-                "kirocrew-cron",
+                "ajcrew-cron",
                 "cron_add",
                 {"name": "digest", "cron_expr": "0 9 * * 1-5", "message": "Summarize my PRs"},
             ),

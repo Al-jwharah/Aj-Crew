@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from typing import Tuple
 
-from kiro_crew.platform.governance import (
+from aj_crew.platform.governance import (
     BootControls,
     CapabilityGate,
     Decision,

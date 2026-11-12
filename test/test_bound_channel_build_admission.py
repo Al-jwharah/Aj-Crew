@@ -41,23 +41,23 @@ from slack_transport_dispatch_helpers import (
 from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
 from telegram_helpers import _dispatcher, _dm
 
-from conftest import MockSlackClient
-from kiro_crew import executors
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
-from kiro_crew.hooks import HookResult
-from kiro_crew.messaging import dispatch as D
-from kiro_crew.messaging.dispatch import (
+from aj_crew import executors
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN
+from aj_crew.hooks import HookResult
+from aj_crew.messaging import dispatch as D
+from aj_crew.messaging.dispatch import (
     DISCORD_DRIFT,
     ChannelTurn,
     MonitorWake,
     Verdict,
     drive_turn,
 )
-from kiro_crew.monitoring.models import MonitorDispatchResult
-from kiro_crew.slack import handler as slack_handler
-from kiro_crew.slack import transport_dispatch as slack_transport
-from kiro_crew.telegram.dispatch import turn_engine
-from kiro_crew.testing.wait import await_until, finished, until_parked
+from aj_crew.monitoring.models import MonitorDispatchResult
+from aj_crew.slack import handler as slack_handler
+from aj_crew.slack import transport_dispatch as slack_transport
+from aj_crew.telegram.dispatch import turn_engine
+from aj_crew.testing.wait import await_until, finished, until_parked
+from conftest import MockSlackClient
 
 _BUSY = "Memory is busy"
 
@@ -161,8 +161,8 @@ def test_rearm_first_turn_arms_only_the_session_the_turn_claimed(
 ) -> None:
     from types import SimpleNamespace
 
-    from kiro_crew.session_parts import claims
-    from kiro_crew.session_parts.record import FirstTurnState
+    from aj_crew.session_parts import claims
+    from aj_crew.session_parts.record import FirstTurnState
 
     provider = object()
     session = SimpleNamespace(
@@ -273,7 +273,7 @@ async def test_a_refused_slack_turn_keeps_the_stopped_turn_to_recall(monkeypatch
 
 @pytest.mark.asyncio
 async def test_the_slack_transport_turn_answers_memory_unavailable(monkeypatch) -> None:
-    monkeypatch.setattr(slack_transport, "_get_default_agent", lambda: "kirocrew")
+    monkeypatch.setattr(slack_transport, "_get_default_agent", lambda: "ajcrew")
     monkeypatch.setattr(slack_transport, "_hydrate_thread_overrides", _no_override)
     monkeypatch.setattr(slack_transport, "_hydrate_conv_flags", lambda *a, **k: None)
     monkeypatch.setattr(slack_transport, "_thread_agents", {})

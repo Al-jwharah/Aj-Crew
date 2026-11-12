@@ -12,13 +12,13 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.apps.backend import AppProcess
+from aj_crew.apps.backend import AppProcess
 
 
 class TestPromotionRequiresAConfirmedEnabledApp:
     """A disabled app must not be resurrected by a health recovery.
 
-    `kirocrew app disable` runs in its OWN process: it deregisters the app's resources
+    `ajcrew app disable` runs in its OWN process: it deregisters the app's resources
     and never touches this process's tracking table. The record survives, so a later
     recovery would re-register the MCP servers and agents the operator just removed.
     Demotion is never gated — scrubbing is always safe.
@@ -26,7 +26,7 @@ class TestPromotionRequiresAConfirmedEnabledApp:
 
     @pytest.fixture
     def tracked(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         calls: list[tuple[str, int, bool]] = []
         monkeypatch.setattr(
@@ -82,7 +82,7 @@ class TestPromotionRequiresAConfirmedEnabledApp:
 class TestPromotionIsVerifiedAfterTheWrite:
     """The enabled check cannot be atomic with the write.
 
-    `kirocrew app disable` runs in another process, so there is no lock to share. Ordering
+    `ajcrew app disable` runs in another process, so there is no lock to share. Ordering
     closes the interleave where the flag is read after the resources come down; this
     covers the other one — the check passes, the disable completes, and the write lands
     afterwards, leaving a disabled app dispatchable.
@@ -90,7 +90,7 @@ class TestPromotionIsVerifiedAfterTheWrite:
 
     @pytest.fixture
     def tracked(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         calls: list[tuple[str, int, bool]] = []
         monkeypatch.setattr(
@@ -114,7 +114,7 @@ class TestPromotionIsVerifiedAfterTheWrite:
         states = iter([True, False])
         monkeypatch.setattr(bmod, "_app_enabled_state", lambda name: next(states))
         undone: list[str] = []
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(brmod, "deregister_app", lambda n: undone.append(n))
 
@@ -126,7 +126,7 @@ class TestPromotionIsVerifiedAfterTheWrite:
     def test_a_still_enabled_app_is_left_registered(self, monkeypatch, tracked):
         bmod, ap, calls = tracked
         monkeypatch.setattr(bmod, "_app_enabled_state", lambda name: True)
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(
             brmod,
@@ -165,7 +165,7 @@ class TestUndoIsRetriedUntilItCompletes:
 
     @pytest.fixture
     def disabled(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         monkeypatch.setattr(bmod, "_app_enabled_state", lambda name: False)
         monkeypatch.setattr(bmod, "_gate_mcp_registration", lambda name, port, *, healthy: True)
@@ -181,7 +181,7 @@ class TestUndoIsRetriedUntilItCompletes:
 
     def test_a_soft_failure_leaves_the_record_unreconciled(self, monkeypatch, disabled):
         bmod, ap = disabled
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(
             brmod,
@@ -195,7 +195,7 @@ class TestUndoIsRetriedUntilItCompletes:
 
     def test_a_clean_removal_is_recorded(self, monkeypatch, disabled):
         bmod, ap = disabled
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(brmod, "deregister_app", lambda n: SimpleNamespace(errors=[]))
 
@@ -204,7 +204,7 @@ class TestUndoIsRetriedUntilItCompletes:
 
     def test_a_raising_deregister_also_leaves_it_unreconciled(self, monkeypatch, disabled):
         bmod, ap = disabled
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         def _boom(n):
             raise OSError("agents dir unwritable")
@@ -219,7 +219,7 @@ class TestUndoIsRetriedUntilItCompletes:
         # refusal path is where an unlanded undo gets another attempt.
         bmod, ap = disabled
         attempts: list[str] = []
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(
             brmod,
@@ -234,7 +234,7 @@ class TestUndoIsRetriedUntilItCompletes:
     def test_a_completed_undo_is_not_retried(self, monkeypatch, disabled):
         bmod, ap = disabled
         ap.mcp_healthy = False  # already reconciled
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(
             brmod,
@@ -256,8 +256,8 @@ class TestDemotionRefreshIsGatedOnEnablement:
 
     @pytest.fixture
     def wired(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         scrubbed: list[str] = []
         refreshed: list[str] = []
@@ -312,8 +312,8 @@ class TestDisabledCleanupResultIsTheReconcileResult:
     """A failed disabled-app cleanup is not a completed reconcile."""
 
     def test_a_failed_cleanup_reports_unlanded(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(brmod, "scrub_backend_mcp_url", lambda name, unreconciled=None: [])
         monkeypatch.setattr(bmod, "_app_enabled_state", lambda name: False)
@@ -322,8 +322,8 @@ class TestDisabledCleanupResultIsTheReconcileResult:
         assert bmod._gate_mcp_registration("app", 9350, healthy=False) is False
 
     def test_a_clean_cleanup_reports_landed(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(brmod, "scrub_backend_mcp_url", lambda name, unreconciled=None: [])
         monkeypatch.setattr(bmod, "_app_enabled_state", lambda name: False)
@@ -341,7 +341,7 @@ class TestTheUndoNeverTouchesASuccessor:
     """
 
     def test_a_retired_record_with_unreadable_enablement_undoes_nothing(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         old = AppProcess(app_name="app", port=9360, healthy=False, mcp_healthy=True)
         successor = AppProcess(app_name="app", port=9361, healthy=True, mcp_healthy=True)
@@ -376,8 +376,8 @@ class TestUnreadableManifestKeepsTheScrubUnlanded:
     """
 
     def test_an_unreadable_manifest_reports_unlanded(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         def _scrub(name, unreconciled=None):
             if unreconciled is not None:
@@ -389,8 +389,8 @@ class TestUnreadableManifestKeepsTheScrubUnlanded:
         assert bmod._gate_mcp_registration("app", 9370, healthy=False) is False
 
     def test_a_readable_manifest_reports_landed(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(brmod, "scrub_backend_mcp_url", lambda name, unreconciled=None: [])
         monkeypatch.setattr(bmod, "_app_enabled_state", lambda name: True)
@@ -410,8 +410,8 @@ class TestUnknownEnablementNeverDeletes:
 
     @pytest.fixture
     def wired(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         dropped: list[str] = []
         monkeypatch.setattr(brmod, "scrub_backend_mcp_url", lambda name, unreconciled=None: [])
@@ -441,8 +441,8 @@ class TestUnknownEnablementNeverDeletes:
         # The other direction is unchanged: not-confirmed means do not add. Asserted
         # through the transition rather than a predicate, because what matters is that
         # the promotion does not happen AND nothing is deleted on the way.
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         monkeypatch.setattr(bmod, "_app_enabled_state", lambda name: None)
         monkeypatch.setattr(
@@ -471,7 +471,7 @@ class TestATransitionAlwaysReconciles:
     """
 
     def test_a_demotion_reconciles_even_when_the_flags_agree(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         calls: list[bool] = []
         monkeypatch.setattr(
@@ -494,7 +494,7 @@ class TestATransitionAlwaysReconciles:
     def test_an_unchanged_verdict_still_short_circuits(self, monkeypatch):
         # The fast path has to survive: without it a settled backend would rewrite
         # mcp.json on every sweep.
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         monkeypatch.setattr(
             bmod,
@@ -523,8 +523,8 @@ class TestTheUndoPathsAlsoRefuseAnUnknownState:
 
     @pytest.fixture
     def tracked(self, monkeypatch):
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as brmod
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as brmod
 
         deleted: list[str] = []
         monkeypatch.setattr(brmod, "deregister_app", lambda n: deleted.append(n))
@@ -581,7 +581,7 @@ class TestEnabledStateDistinguishesUnreadableFromDisabled:
     """
 
     def _meta(self, monkeypatch, tmp_path):
-        import kiro_crew.apps.manager as mgr
+        import aj_crew.apps.manager as mgr
 
         app = tmp_path / "probe"
         app.mkdir(parents=True, exist_ok=True)
@@ -618,7 +618,7 @@ class TestEnabledStateDistinguishesUnreadableFromDisabled:
         self, monkeypatch, tmp_path
     ):
         # The path that matters: backend must see None, or no deletion is ever refused.
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         mgr, meta = self._meta(monkeypatch, tmp_path)
         meta.write_text("{ not json", encoding="utf-8")

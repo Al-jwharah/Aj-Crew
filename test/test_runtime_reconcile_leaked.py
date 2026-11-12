@@ -17,8 +17,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import runtime_reconcile as rr
-from kiro_crew.dashboard import handlers_system
+from aj_crew import runtime_reconcile as rr
+from aj_crew.dashboard import handlers_system
 
 LEAK = 4242
 CHILD = 4243

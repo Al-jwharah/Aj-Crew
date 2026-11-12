@@ -39,7 +39,7 @@ export interface TemplateRow {
   source: string
   package: string
   scope: string
-  kirocrew_owned: boolean
+  ajcrew_owned: boolean
   forked_from: string
   private_to: string
   read_only: 'package' | 'runtime' | 'markdown' | 'private_copy' | null
@@ -173,12 +173,12 @@ const READ_ONLY_LEAD_KEY = {
 const NATIVE_TOOL_NAMES = ['fs_read', 'fs_write', 'execute_bash', 'use_aws', 'grep', 'glob', 'web_fetch', 'web_search', 'knowledge', 'thinking'] as const
 
 /**
- * Kiro Crew's background-subagent tools, offered as completions too. Adding one
+ * Aj Crew's background-subagent tools, offered as completions too. Adding one
  * grants it and the save declares the server, so a custom agent gets the same
  * session-attached spawn (task box, Stop, explicit `agent` / `crew`) as the
  * built-in agent without a hand-edited spec.
  */
-const CREW_CORE_SERVER = 'kirocrew-core'
+const CREW_CORE_SERVER = 'ajcrew-core'
 const CREW_SPAWN_TOOL_NAMES = ['spawn_run', 'spawn_list', 'spawn_status', 'spawn_steer', 'spawn_continue', 'spawn_release'] as const
 const CREW_CORE_REF = `@${CREW_CORE_SERVER}`
 const CREW_SPAWN_TOOL_REFS: readonly string[] = CREW_SPAWN_TOOL_NAMES.map(name => `${CREW_CORE_REF}/${name}`)
@@ -187,7 +187,7 @@ const CREW_SPAWN_FAMILY_LABEL = `${CREW_CORE_REF}/spawn_*`
 
 /**
  * The spawn refs a template's tools still lack, or none when it already gets
- * the whole family: `@kirocrew-core` grants it, and so does `*` once the spec
+ * the whole family: `@ajcrew-core` grants it, and so does `*` once the spec
  * declares the server (`*` grants every DECLARED server and declares none).
  * `*` with the server undeclared mounts nothing, so the family is offered
  * there too; the save then declares the server for the explicit refs.
@@ -484,7 +484,7 @@ export default function AgentTemplatesTab() {
     },
   })
   const enroll = useMutation({
-    mutationFn: (row: TemplateRow) => api.createKirocrewAgent({ name: row.name, kiro_agent: row.name, memory_store: 'default', avatar: defaultLookFor(row.name) }),
+    mutationFn: (row: TemplateRow) => api.createAjcrewAgent({ name: row.name, kiro_agent: row.name, memory_store: 'default', avatar: defaultLookFor(row.name) }),
     onSuccess: (r: { error?: string }, row) => {
       if (r?.error) { setNotice({ kind: 'err', text: r.error }); return }
       setNotice({ kind: 'ok', text: i18nT('pages.overview.agentTemplatesTab.enrolled', { name: row.name }) })
@@ -499,10 +499,10 @@ export default function AgentTemplatesTab() {
       // capability install). A user who opens Capabilities on Crews, comes
       // here, enrolls and goes back is inside that entry's `gcTime`, and the
       // crewmate this tab just reported as enrolled is missing from the list.
-      void queryClient.invalidateQueries({ queryKey: ['kirocrew-agents'] })
+      void queryClient.invalidateQueries({ queryKey: ['ajcrew-agents'] })
       // The same write lands in config.json, whose masked read ships the agent
       // records -- the pairing #12740 established for a member write.
-      void queryClient.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+      void queryClient.invalidateQueries({ queryKey: ['ajcrewConfig'] })
     },
     onError: writeError,
   })

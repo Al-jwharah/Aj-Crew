@@ -18,9 +18,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew import aws_consent
-from kiro_crew.apps.builtins.aws_control import hooks
-from kiro_crew.apps.job_sdk import JobError, UnknownJobKind
+from aj_crew import aws_consent
+from aj_crew.apps.builtins.aws_control import hooks
+from aj_crew.apps.job_sdk import JobError, UnknownJobKind
 
 ACCOUNT = "111122223333"
 

@@ -23,12 +23,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import mcp_core
-from kiro_crew.dashboard.handlers.messaging import api_update_message
-from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS, _register_mcp_routes
-from kiro_crew.mcp_core import _call_tool
-from kiro_crew.mcp_tools.messaging import schemas
-from kiro_crew.validation import MCP_CORE_SCHEMAS
+from aj_crew import mcp_core
+from aj_crew.dashboard.handlers.messaging import api_update_message
+from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS, _register_mcp_routes
+from aj_crew.mcp_core import _call_tool
+from aj_crew.mcp_tools.messaging import schemas
+from aj_crew.validation import MCP_CORE_SCHEMAS
 
 _CHANNEL = "C0ABC123"
 _TS = "1780088134.952549"
@@ -69,7 +69,7 @@ def test_tool_has_a_validation_schema() -> None:
 @pytest.fixture()
 def caller():
     """A strictly-resolvable caller identity, as the gateway injects one."""
-    with patch.dict("os.environ", {"KIROCREW_SESSION_KEY": _CALLER}):
+    with patch.dict("os.environ", {"AJCREW_SESSION_KEY": _CALLER}):
         yield _CALLER
 
 
@@ -85,14 +85,14 @@ class TestUpdateMessageTool:
         assert "invalid" in result.lower() and "timestamp" in result.lower()
 
     def test_requires_text_or_blocks(self, caller) -> None:
-        with patch("kiro_crew.mcp_core._post") as post:
+        with patch("aj_crew.mcp_core._post") as post:
             result = _call_tool("update_message", {"channel": _CHANNEL, "ts": _TS})
         post.assert_not_called()
         assert result.startswith("Error:")
         assert "text or blocks" in result
 
     def test_successful_update(self, caller) -> None:
-        with patch("kiro_crew.mcp_core._post") as post:
+        with patch("aj_crew.mcp_core._post") as post:
             post.return_value = {"ok": True}
             result = _call_tool("update_message", {"channel": _CHANNEL, "ts": _TS, "text": "done"})
         assert "updated" in result.lower()
@@ -105,7 +105,7 @@ class TestUpdateMessageTool:
 
     def test_blocks_only_update_reaches_the_gateway(self, caller) -> None:
         blocks = [{"type": "section", "text": {"type": "mrkdwn", "text": "done"}}]
-        with patch("kiro_crew.mcp_core._post") as post:
+        with patch("aj_crew.mcp_core._post") as post:
             post.return_value = {"ok": True}
             result = _call_tool(
                 "update_message", {"channel": _CHANNEL, "ts": _TS, "blocks": blocks}
@@ -114,7 +114,7 @@ class TestUpdateMessageTool:
         assert post.call_args.args[1]["blocks"] == blocks
 
     def test_api_error_is_surfaced(self, caller) -> None:
-        with patch("kiro_crew.mcp_core._post") as post:
+        with patch("aj_crew.mcp_core._post") as post:
             post.return_value = {"error": "message_not_found"}
             result = _call_tool("update_message", {"channel": _CHANNEL, "ts": _TS, "text": "done"})
         assert "message_not_found" in result
@@ -131,14 +131,14 @@ class TestUpdateMessageGates:
 
     def test_unattributable_caller_is_refused(self, monkeypatch) -> None:
         monkeypatch.setattr(mcp_core, "_resolve_session_key_strict", lambda: "")
-        with patch("kiro_crew.mcp_core._post") as post:
+        with patch("aj_crew.mcp_core._post") as post:
             result = _call_tool("update_message", {"channel": _CHANNEL, "ts": _TS, "text": "done"})
         post.assert_not_called()
         assert result.startswith("Error:")
 
     def test_channel_agent_is_refused(self, monkeypatch) -> None:
         monkeypatch.setattr(mcp_core, "_resolve_session_key_strict", lambda: "channel:C1:a1")
-        with patch("kiro_crew.mcp_core._post") as post:
+        with patch("aj_crew.mcp_core._post") as post:
             result = _call_tool("update_message", {"channel": _CHANNEL, "ts": _TS, "text": "done"})
         post.assert_not_called()
         assert result.startswith("Error:")
@@ -146,9 +146,9 @@ class TestUpdateMessageGates:
 
     def test_messaging_capability_denial_stops_the_edit(self, caller) -> None:
         with (
-            patch("kiro_crew.mcp_core._post") as post,
+            patch("aj_crew.mcp_core._post") as post,
             patch(
-                "kiro_crew.mcp_core._vet_messaging_governance",
+                "aj_crew.mcp_core._vet_messaging_governance",
                 return_value="outbound messaging blocked by governance policy",
             ),
         ):
@@ -159,10 +159,8 @@ class TestUpdateMessageGates:
 
     def test_the_channels_vet_names_slack(self, caller) -> None:
         with (
-            patch("kiro_crew.mcp_core._post") as post,
-            patch(
-                "kiro_crew.mcp_core._vet_channel_governance", side_effect=_slack_edits_only
-            ) as vet,
+            patch("aj_crew.mcp_core._post") as post,
+            patch("aj_crew.mcp_core._vet_channel_governance", side_effect=_slack_edits_only) as vet,
         ):
             post.return_value = {"ok": True}
             result = _call_tool("update_message", {"channel": _CHANNEL, "ts": _TS, "text": "done"})
@@ -174,9 +172,9 @@ class TestUpdateMessageGates:
 
     def test_channels_denial_stops_the_edit(self, caller) -> None:
         with (
-            patch("kiro_crew.mcp_core._post") as post,
+            patch("aj_crew.mcp_core._post") as post,
             patch(
-                "kiro_crew.mcp_core._vet_channel_governance",
+                "aj_crew.mcp_core._vet_channel_governance",
                 return_value="messaging via transport 'slack' blocked by governance policy",
             ),
         ):
@@ -238,10 +236,10 @@ class TestUpdateMessageEndpoint:
     def _tracked(self, monkeypatch):
         """``_CHANNEL`` is a ROOM, and a room must be tracked to be editable.
 
-        Patched at ``kiro_crew.slack.handler`` rather than at a ``handlers.messaging``
+        Patched at ``aj_crew.slack.handler`` rather than at a ``handlers.messaging``
         name because the handler's import of the probe is function-local.
         """
-        monkeypatch.setattr("kiro_crew.slack.handler.is_tracked_channel", lambda cid: True)
+        monkeypatch.setattr("aj_crew.slack.handler.is_tracked_channel", lambda cid: True)
 
     @pytest.mark.asyncio
     async def test_missing_channel(self) -> None:
@@ -401,7 +399,7 @@ class TestUpdateMessageEndpoint:
     @pytest.mark.asyncio
     async def test_untracked_room_is_refused(self, monkeypatch) -> None:
         """Tracking is the operator's revocation lever, so a revoked room is not editable."""
-        monkeypatch.setattr("kiro_crew.slack.handler.is_tracked_channel", lambda cid: False)
+        monkeypatch.setattr("aj_crew.slack.handler.is_tracked_channel", lambda cid: False)
         slack = _slack()
         async with TestClient(TestServer(_make_app(_mock_state(slack)))) as client:
             resp = await client.post(
@@ -419,7 +417,7 @@ class TestUpdateMessageEndpoint:
         way: a DM is authorized by identity. The admitted case is in
         ``TestUpdateMessageDmIsOwnerOnly``, keyed on the owner's resolved DM.
         """
-        monkeypatch.setattr("kiro_crew.slack.handler.is_tracked_channel", lambda cid: False)
+        monkeypatch.setattr("aj_crew.slack.handler.is_tracked_channel", lambda cid: False)
         slack = _slack()
         async with TestClient(TestServer(_make_app(_mock_state(slack)))) as client:
             resp = await client.post(
@@ -442,7 +440,7 @@ class TestUpdateMessageDmIsOwnerOnly:
     @pytest.fixture(autouse=True)
     def _untracked(self, monkeypatch):
         """No DM is ever a tracked channel, so the room allowlist must not save us."""
-        monkeypatch.setattr("kiro_crew.slack.handler.is_tracked_channel", lambda cid: False)
+        monkeypatch.setattr("aj_crew.slack.handler.is_tracked_channel", lambda cid: False)
 
     @pytest.mark.asyncio
     async def test_the_owners_own_dm_is_editable(self) -> None:

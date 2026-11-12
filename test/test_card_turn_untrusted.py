@@ -26,8 +26,8 @@ from chat_runner_coverage_helpers import (
     _slot,
 )
 
-from kiro_crew.dashboard import card_send, chat_runner
-from kiro_crew.hooks import TOOL_AUTO_APPROVE, ToolHookResult
+from aj_crew.dashboard import card_send, chat_runner
+from aj_crew.hooks import TOOL_AUTO_APPROVE, ToolHookResult
 
 _LS = json.dumps({"command": "ls -la"})
 _CARD_TEXT = "[Dashboard card] Approve the plan"
@@ -219,9 +219,9 @@ async def _requeued_entry(tmp_path, monkeypatch, *, card: bool):
     from chat_test_helpers import _make_state, pin_kiro_cli_harness
 
     pin_kiro_cli_harness()
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.push_slots_update = MagicMock()
@@ -260,7 +260,7 @@ async def test_a_recovery_retry_of_a_card_turn_stays_untrusted(tmp_path, monkeyp
     The requeued entry carries ``cardOrigin``, and the drain hands the retry to
     ``_run_chat`` with ``_card_origin`` set.
     """
-    from kiro_crew.dashboard.card_send import CARD_ORIGIN_META_KEY
+    from aj_crew.dashboard.card_send import CARD_ORIGIN_META_KEY
 
     state, slot, entry = await _requeued_entry(tmp_path, monkeypatch, card=True)
     assert entry["meta"].get(CARD_ORIGIN_META_KEY) is True
@@ -293,7 +293,7 @@ async def test_a_recovery_retry_of_a_card_turn_stays_untrusted(tmp_path, monkeyp
 @pytest.mark.asyncio
 async def test_a_recovery_retry_of_a_typed_turn_carries_no_mark(tmp_path, monkeypatch):
     """The control: an ordinary retry is unchanged."""
-    from kiro_crew.dashboard.card_send import CARD_ORIGIN_META_KEY
+    from aj_crew.dashboard.card_send import CARD_ORIGIN_META_KEY
 
     _, _, entry = await _requeued_entry(tmp_path, monkeypatch, card=False)
     assert CARD_ORIGIN_META_KEY not in entry["meta"]
@@ -341,7 +341,7 @@ async def test_regenerating_a_card_reply_reruns_it_as_a_card_turn(tmp_path, card
     async def _capture(_state, _slot, _message, **kwargs) -> None:
         seen.update(kwargs)
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=_capture):
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=_capture):
         async with _client(state) as client:
             resp = await client.post("/api/chat/slots/s1/regenerate")
             assert resp.status == 200

@@ -19,7 +19,7 @@ import real_dashboard_state as rds
 from real_dashboard_state import _settle_real_dashboard_states  # noqa: F401
 from real_dashboard_state import real_dashboard_state, settling_notification_writes
 
-from kiro_crew.dashboard.state_parts.notification_log import (
+from aj_crew.dashboard.state_parts.notification_log import (
     _notification_io_executor,
     _notifications_path,
 )

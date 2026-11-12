@@ -55,9 +55,9 @@ const IN_PLACE_CODES = new Set(['EBUSY', 'EXDEV'])
 
 /**
  * The completeness rule, shared byte-for-byte with frontend._ASSET_REF in
- * src/kiro_crew/frontend.py (test_frontend_dist_resolve.py pins the two equal):
+ * src/aj_crew/frontend.py (test_frontend_dist_resolve.py pins the two equal):
  * every `/assets/*.js|css` index.html references, ignoring a query or hash.
- * A sub-path build (KIROCREW_BASE_PATH) writes `/<base>/assets/...`; the base
+ * A sub-path build (AJCREW_BASE_PATH) writes `/<base>/assets/...`; the base
  * segments are matched and dropped so the ref still names a file in the tree.
  */
 export const ASSET_REF_PATTERN = String.raw`(?:src|href)="(?:/[A-Za-z0-9._~-]+)*(/assets/[^"?#]+\.(?:js|css))(?:[?#][^"]*)?"`
@@ -287,7 +287,7 @@ export function atomicPublishPlugin({ publish = publishDist, warn = console.warn
   let next = null
   let written = false
   return {
-    name: 'kirocrew-atomic-publish',
+    name: 'ajcrew-atomic-publish',
     apply: 'build',
     // After every user plugin: its config() redirect is the one that lands, and
     // its post-order writeBundle runs after theirs.

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.monitoring.targets import (
+from aj_crew.monitoring.targets import (
     infer_pull_request_kind,
     normalize_pull_request_target,
     parse_azure_devops_pull_request_target,

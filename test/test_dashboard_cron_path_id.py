@@ -19,7 +19,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.handlers.cron import (
+from aj_crew.dashboard.handlers.cron import (
     api_cron_ack,
     api_cron_cancel,
     api_cron_delete,
@@ -31,8 +31,8 @@ from kiro_crew.dashboard.handlers.cron import (
     api_cron_to_chat,
     api_cron_update,
 )
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.validation import MAX_SHORT_STRING
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.validation import MAX_SHORT_STRING
 
 # An id one character past the bound. These ids are server-minted, so an
 # over-long value only arrives from a malformed/hostile client.

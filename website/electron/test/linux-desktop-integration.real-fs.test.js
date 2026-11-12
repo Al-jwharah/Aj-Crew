@@ -26,23 +26,23 @@ const {
 } = require("./linux-desktop-integration-test-helpers");
 
 test("real filesystem keeps managed metadata stable and detects chmod", LINUX_FILESYSTEM_ONLY, (t) => {
-  const root = realFs.mkdtempSync(realPath.join(realOs.tmpdir(), "kirocrew-ldi-"));
+  const root = realFs.mkdtempSync(realPath.join(realOs.tmpdir(), "ajcrew-ldi-"));
   t.after(() => realFs.rmSync(root, { recursive: true, force: true }));
   const home = realPath.join(root, "home");
   const appDir = realPath.join(root, "appdir");
   const dataDir = realPath.join(root, "data");
-  const stateDir = realPath.join(root, "config", "kirocrew-desktop");
+  const stateDir = realPath.join(root, "config", "ajcrew-desktop");
   const resourcesPath = realPath.join(root, "resources");
-  const binDir = realPath.join(resourcesPath, "backend-dist", "kirocrew-backend", "bin");
+  const binDir = realPath.join(resourcesPath, "backend-dist", "ajcrew-backend", "bin");
   realFs.mkdirSync(realPath.join(appDir, "usr", "share", "icons", "hicolor", "16x16", "apps"), {
     recursive: true,
   });
   realFs.mkdirSync(home, { recursive: true });
   realFs.mkdirSync(binDir, { recursive: true });
   realFs.symlinkSync("/usr/bin/python3", realPath.join(binDir, "python3.12"));
-  realFs.writeFileSync(realPath.join(appDir, "kirocrew-desktop.desktop"), BUNDLED_DESKTOP);
+  realFs.writeFileSync(realPath.join(appDir, "ajcrew-desktop.desktop"), BUNDLED_DESKTOP);
   realFs.writeFileSync(
-    realPath.join(appDir, "usr", "share", "icons", "hicolor", "16x16", "apps", "kirocrew-desktop.png"),
+    realPath.join(appDir, "usr", "share", "icons", "hicolor", "16x16", "apps", "ajcrew-desktop.png"),
     "REAL PNG"
   );
   const deps = {
@@ -51,7 +51,7 @@ test("real filesystem keeps managed metadata stable and detects chmod", LINUX_FI
     os: realOs,
     platform: "linux",
     installKind: "appimage",
-    env: { APPIMAGE: realPath.join(root, "KiroCrew.AppImage"), APPDIR: appDir, HOME: home,
+    env: { APPIMAGE: realPath.join(root, "AjCrew.AppImage"), APPDIR: appDir, HOME: home,
       XDG_DATA_HOME: dataDir },
     version: "0.5.0",
     stateDir,
@@ -64,7 +64,7 @@ test("real filesystem keeps managed metadata stable and detects chmod", LINUX_FI
 
   assert.equal(integrateLinuxDesktop(deps).installed, true);
   assert.equal(integrateLinuxDesktop(deps).installed, true);
-  const launcher = realPath.join(dataDir, "applications", "kirocrew-desktop-appimage.desktop");
+  const launcher = realPath.join(dataDir, "applications", "ajcrew-desktop-appimage.desktop");
   const statePath = realPath.join(stateDir, "linux-desktop-integration", "state.json");
   const record = JSON.parse(realFs.readFileSync(statePath, "utf8")).artifacts[launcher];
   assert.equal(realFs.statSync(launcher).ino, realFs.statSync(record.anchorPath).ino);
@@ -80,23 +80,23 @@ test("real filesystem keeps managed metadata stable and detects chmod", LINUX_FI
 });
 
 test("real filesystem detects a concurrent user xattr edit via the packaged helper", LINUX_FILESYSTEM_ONLY, (t) => {
-  const root = realFs.mkdtempSync(realPath.join(realOs.tmpdir(), "kirocrew-ldi-xattr-"));
+  const root = realFs.mkdtempSync(realPath.join(realOs.tmpdir(), "ajcrew-ldi-xattr-"));
   t.after(() => realFs.rmSync(root, { recursive: true, force: true }));
   const home = realPath.join(root, "home");
   const appDir = realPath.join(root, "appdir");
   const dataDir = realPath.join(root, "data");
-  const stateDir = realPath.join(root, "config", "kirocrew-desktop");
+  const stateDir = realPath.join(root, "config", "ajcrew-desktop");
   const resourcesPath = realPath.join(root, "resources");
-  const binDir = realPath.join(resourcesPath, "backend-dist", "kirocrew-backend", "bin");
+  const binDir = realPath.join(resourcesPath, "backend-dist", "ajcrew-backend", "bin");
   realFs.mkdirSync(realPath.join(appDir, "usr", "share", "icons", "hicolor", "16x16", "apps"), {
     recursive: true,
   });
   realFs.mkdirSync(home, { recursive: true });
   realFs.mkdirSync(binDir, { recursive: true });
   realFs.symlinkSync("/usr/bin/python3", realPath.join(binDir, "python3.12"));
-  realFs.writeFileSync(realPath.join(appDir, "kirocrew-desktop.desktop"), BUNDLED_DESKTOP);
+  realFs.writeFileSync(realPath.join(appDir, "ajcrew-desktop.desktop"), BUNDLED_DESKTOP);
   realFs.writeFileSync(
-    realPath.join(appDir, "usr", "share", "icons", "hicolor", "16x16", "apps", "kirocrew-desktop.png"),
+    realPath.join(appDir, "usr", "share", "icons", "hicolor", "16x16", "apps", "ajcrew-desktop.png"),
     "REAL PNG"
   );
   const deps = {
@@ -105,7 +105,7 @@ test("real filesystem detects a concurrent user xattr edit via the packaged help
     os: realOs,
     platform: "linux",
     installKind: "appimage",
-    env: { APPIMAGE: realPath.join(root, "KiroCrew.AppImage"), APPDIR: appDir, HOME: home,
+    env: { APPIMAGE: realPath.join(root, "AjCrew.AppImage"), APPDIR: appDir, HOME: home,
       XDG_DATA_HOME: dataDir },
     version: "0.5.0",
     stateDir,
@@ -117,13 +117,13 @@ test("real filesystem detects a concurrent user xattr edit via the packaged help
   };
 
   assert.equal(integrateLinuxDesktop(deps).installed, true);
-  const launcher = realPath.join(dataDir, "applications", "kirocrew-desktop-appimage.desktop");
+  const launcher = realPath.join(dataDir, "applications", "ajcrew-desktop-appimage.desktop");
   const originalBody = realFs.readFileSync(launcher, "utf8");
   let xattrSupported;
   {
     const py = realPath.join(binDir, "python3.12");
     const result = realChildProcess.spawnSync(py, [
-      "-c", "import os,sys; os.setxattr(sys.argv[1], 'user.kirocrew_test', b'marker')", launcher,
+      "-c", "import os,sys; os.setxattr(sys.argv[1], 'user.ajcrew_test', b'marker')", launcher,
     ]);
     xattrSupported = result.status === 0;
   }
@@ -145,7 +145,7 @@ test("real filesystem detects a concurrent user xattr edit via the packaged help
 test("real helper treats a filesystem without xattr support as an empty selected set", LINUX_FILESYSTEM_ONLY, (t) => {
   const { root, deps, helperRuns, launcher, statePath } = xattrFailingFixture(t, "ENOTSUP");
 
-  assert.deepEqual(integrateLinuxDesktop(deps), { installed: true, iconName: "kirocrew-desktop", sizes: 1 });
+  assert.deepEqual(integrateLinuxDesktop(deps), { installed: true, iconName: "ajcrew-desktop", sizes: 1 });
   assert.ok(realFs.existsSync(launcher));
   const fingerprints = helperRuns.filter((r) => r.mode === "fingerprint");
   assert.ok(fingerprints.length > 0);
@@ -204,24 +204,24 @@ test("real helper reports an unexpected xattr failure as a structured error and 
 });
 
 test("real publication and cleanup defer while their inode has an open descriptor", LINUX_FILESYSTEM_ONLY, (t) => {
-  const root = realFs.mkdtempSync(realPath.join(realOs.tmpdir(), "kirocrew-ldi-lease-"));
+  const root = realFs.mkdtempSync(realPath.join(realOs.tmpdir(), "ajcrew-ldi-lease-"));
   t.after(() => realFs.rmSync(root, { recursive: true, force: true }));
   const noLease = managedLeaseUnavailable(root);
   const home = realPath.join(root, "home");
   const appDir = realPath.join(root, "appdir");
   const dataDir = realPath.join(root, "data");
-  const stateDir = realPath.join(root, "config", "kirocrew-desktop");
+  const stateDir = realPath.join(root, "config", "ajcrew-desktop");
   const resourcesPath = realPath.join(root, "resources");
-  const binDir = realPath.join(resourcesPath, "backend-dist", "kirocrew-backend", "bin");
+  const binDir = realPath.join(resourcesPath, "backend-dist", "ajcrew-backend", "bin");
   realFs.mkdirSync(realPath.join(appDir, "usr", "share", "icons", "hicolor", "16x16", "apps"), {
     recursive: true,
   });
   realFs.mkdirSync(home, { recursive: true });
   realFs.mkdirSync(binDir, { recursive: true });
   realFs.symlinkSync("/usr/bin/python3", realPath.join(binDir, "python3.12"));
-  realFs.writeFileSync(realPath.join(appDir, "kirocrew-desktop.desktop"), BUNDLED_DESKTOP);
+  realFs.writeFileSync(realPath.join(appDir, "ajcrew-desktop.desktop"), BUNDLED_DESKTOP);
   realFs.writeFileSync(
-    realPath.join(appDir, "usr", "share", "icons", "hicolor", "16x16", "apps", "kirocrew-desktop.png"),
+    realPath.join(appDir, "usr", "share", "icons", "hicolor", "16x16", "apps", "ajcrew-desktop.png"),
     "REAL PNG"
   );
   const helperRuns = [];
@@ -233,14 +233,14 @@ test("real publication and cleanup defer while their inode has an open descripto
   };
   const deps = {
     fs: realFs, path: realPath, os: realOs, platform: "linux", installKind: "appimage",
-    env: { APPIMAGE: realPath.join(root, "KiroCrew.AppImage"), APPDIR: appDir, HOME: home,
+    env: { APPIMAGE: realPath.join(root, "AjCrew.AppImage"), APPDIR: appDir, HOME: home,
       XDG_DATA_HOME: dataDir },
     version: "0.5.0", stateDir,
     uid: typeof process.geteuid === "function" ? process.geteuid() : undefined,
     run: () => {}, log: () => {}, spawnSync, resourcesPath,
   };
   assert.equal(integrateLinuxDesktop(deps).installed, true);
-  const launcher = realPath.join(dataDir, "applications", "kirocrew-desktop-appimage.desktop");
+  const launcher = realPath.join(dataDir, "applications", "ajcrew-desktop-appimage.desktop");
   const statePath = realPath.join(stateDir, "linux-desktop-integration", "state.json");
   const originalBody = realFs.readFileSync(launcher, "utf8");
   const before = managedLauncherSnapshot(launcher, statePath);
@@ -386,8 +386,8 @@ test("startLinuxDesktopIntegration settles the plan on the main thread without a
     [{ ...WORKER_DEPS, platform: "darwin" }, "not linux"],
     [{ ...WORKER_DEPS, installKind: "deb" }, "not an AppImage install"],
     [{ ...WORKER_DEPS, env: { HOME } }, "missing AppImage runtime paths"],
-    [{ ...WORKER_DEPS, env: { ...WORKER_DEPS.env, KIROCREW_DISABLE_DESKTOP_INTEGRATION: "1" } },
-      "opt-out via KIROCREW_DISABLE_DESKTOP_INTEGRATION"],
+    [{ ...WORKER_DEPS, env: { ...WORKER_DEPS.env, AJCREW_DISABLE_DESKTOP_INTEGRATION: "1" } },
+      "opt-out via AJCREW_DISABLE_DESKTOP_INTEGRATION"],
   ];
   for (const [deps, reason] of cases) {
     const result = await startLinuxDesktopIntegration(deps, { createWorker });
@@ -399,9 +399,9 @@ test("startLinuxDesktopIntegration settles the plan on the main thread without a
 test("startLinuxDesktopIntegration hosts this module as the worker with serializable state only", async () => {
   const logs = [];
   const { calls, createWorker } = fakeWorkerFactory((worker) => {
-    worker.emit("message", { type: "log", message: "reconciled kirocrew-desktop at 1 size(s)" });
+    worker.emit("message", { type: "log", message: "reconciled ajcrew-desktop at 1 size(s)" });
     worker.emit("message", "not an object");
-    worker.emit("message", { type: "result", result: { installed: true, iconName: "kirocrew-desktop", sizes: 1 } });
+    worker.emit("message", { type: "result", result: { installed: true, iconName: "ajcrew-desktop", sizes: 1 } });
     worker.emit("exit", 0);
   });
 
@@ -412,13 +412,13 @@ test("startLinuxDesktopIntegration hosts this module as the worker with serializ
     log: (m) => logs.push(m),
   }, { createWorker });
 
-  assert.deepEqual(result, { installed: true, iconName: "kirocrew-desktop", sizes: 1 });
-  assert.deepEqual(logs, ["reconciled kirocrew-desktop at 1 size(s)"]);
+  assert.deepEqual(result, { installed: true, iconName: "ajcrew-desktop", sizes: 1 });
+  assert.deepEqual(logs, ["reconciled ajcrew-desktop at 1 size(s)"]);
   assert.equal(calls.length, 1);
   const { file, options } = calls[0];
   assert.equal(file, MODULE_PATH, "the module is its own worker entry");
   assert.deepEqual(options.execArgv, []);
-  assert.equal(options.workerData.role, "kirocrew-linux-desktop-integration");
+  assert.equal(options.workerData.role, "ajcrew-linux-desktop-integration");
   assert.deepEqual(options.workerData.env, WORKER_DEPS.env, "non-string env values are dropped");
   assert.equal(options.workerData.uid, null);
   assert.equal(options.workerData.stateDir, WORKER_DEPS.stateDir);
@@ -463,23 +463,23 @@ test("startLinuxDesktopIntegration never rejects when the worker fails or dies s
 // the event loop; the race below fails for that shape, because no main-thread
 // timer can fire until a synchronous reconciliation returns.
 test("startLinuxDesktopIntegration keeps the main thread responsive while helpers run", LINUX_FILESYSTEM_ONLY, async (t) => {
-  const root = realFs.mkdtempSync(realPath.join(realOs.tmpdir(), "kirocrew-ldi-worker-"));
+  const root = realFs.mkdtempSync(realPath.join(realOs.tmpdir(), "ajcrew-ldi-worker-"));
   t.after(() => realFs.rmSync(root, { recursive: true, force: true }));
   const home = realPath.join(root, "home");
   const appDir = realPath.join(root, "appdir");
   const dataDir = realPath.join(root, "data");
-  const stateDir = realPath.join(root, "config", "kirocrew-desktop");
+  const stateDir = realPath.join(root, "config", "ajcrew-desktop");
   const resourcesPath = realPath.join(root, "resources");
-  const binDir = realPath.join(resourcesPath, "backend-dist", "kirocrew-backend", "bin");
+  const binDir = realPath.join(resourcesPath, "backend-dist", "ajcrew-backend", "bin");
   const callLog = realPath.join(binDir, "calls.log");
   realFs.mkdirSync(realPath.join(appDir, "usr", "share", "icons", "hicolor", "16x16", "apps"), {
     recursive: true,
   });
   realFs.mkdirSync(home, { recursive: true });
   realFs.mkdirSync(binDir, { recursive: true });
-  realFs.writeFileSync(realPath.join(appDir, "kirocrew-desktop.desktop"), BUNDLED_DESKTOP);
+  realFs.writeFileSync(realPath.join(appDir, "ajcrew-desktop.desktop"), BUNDLED_DESKTOP);
   realFs.writeFileSync(
-    realPath.join(appDir, "usr", "share", "icons", "hicolor", "16x16", "apps", "kirocrew-desktop.png"),
+    realPath.join(appDir, "usr", "share", "icons", "hicolor", "16x16", "apps", "ajcrew-desktop.png"),
     "REAL PNG"
   );
   // Stand-in interpreter: argv is `-I -c <script> <mode> <target> ...`. Every
@@ -496,7 +496,7 @@ test("startLinuxDesktopIntegration keeps the main thread responsive while helper
 
   const logs = [];
   const integration = startLinuxDesktopIntegration({
-    env: { APPIMAGE: realPath.join(root, "KiroCrew.AppImage"), APPDIR: appDir, HOME: home,
+    env: { APPIMAGE: realPath.join(root, "AjCrew.AppImage"), APPDIR: appDir, HOME: home,
       XDG_DATA_HOME: dataDir },
     platform: "linux",
     installKind: "appimage",
@@ -523,13 +523,13 @@ test("startLinuxDesktopIntegration keeps the main thread responsive while helper
   assert.equal(first, "main-thread-timer", "the main thread stayed free while the worker ran");
 
   const result = await integration;
-  assert.deepEqual(result, { installed: true, iconName: "kirocrew-desktop", sizes: 1 });
+  assert.deepEqual(result, { installed: true, iconName: "ajcrew-desktop", sizes: 1 });
   const calls = realFs.readFileSync(callLog, "utf8").trim().split("\n");
   assert.ok(calls.length >= 8, `expected a burst of helper starts, saw ${calls.length}`);
   assert.ok(calls.every((mode) => mode === "fingerprint"), calls.join(","));
   assert.ok(ticks >= 5, `main-thread timers kept firing during the run (${ticks} ticks)`);
 
-  const launcher = realPath.join(dataDir, "applications", "kirocrew-desktop-appimage.desktop");
-  assert.match(realFs.readFileSync(launcher, "utf8"), /^StartupWMClass=kirocrew-desktop$/m);
-  assert.ok(logs.some((m) => /reconciled kirocrew-desktop at 1 size\(s\)/.test(m)), logs.join("\n"));
+  const launcher = realPath.join(dataDir, "applications", "ajcrew-desktop-appimage.desktop");
+  assert.match(realFs.readFileSync(launcher, "utf8"), /^StartupWMClass=ajcrew-desktop$/m);
+  assert.ok(logs.some((m) => /reconciled ajcrew-desktop at 1 size\(s\)/.test(m)), logs.join("\n"));
 });

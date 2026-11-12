@@ -353,7 +353,7 @@ describe('crewmateBubbleClass', () => {
 })
 
 /** The frontend half of the shared pin: the backend's `is_speech_row`
- *  (`src/kiro_crew/dashboard/system_notices.py`, tested by
+ *  (`src/aj_crew/dashboard/system_notices.py`, tested by
  *  `test/test_members_preview_speech_only.py`) reads the SAME file, so what the
  *  chat draws and what the roster quotes cannot drift apart silently. The chat
  *  draws the crewmate's rows through

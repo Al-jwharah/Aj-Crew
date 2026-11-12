@@ -14,10 +14,10 @@ import pytest
 from slack_handler_helpers import _clean_approval_state  # noqa: F401
 from slack_handler_helpers import FakeProvider, FakeSessionManager
 
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack.format import CONTINUATION, SLACK_MSG_LIMIT, split_message
+from aj_crew.slack.handler import _build_phase_emojis, _condense_thinking, handle_message
 from conftest import MockSlackClient
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack.format import CONTINUATION, SLACK_MSG_LIMIT, split_message
-from kiro_crew.slack.handler import _build_phase_emojis, _condense_thinking, handle_message
 
 
 class TestSplitMessage:
@@ -178,8 +178,8 @@ class TestCronMessageSplitting:
     @pytest.mark.asyncio
     async def test_short_cron_result_sends_single_block_message(self):
         """Short cron output posts one Block Kit message with ack button."""
-        from kiro_crew.slack.format import build_cron_ack_block, to_slack_mrkdwn
-        from kiro_crew.slack.gateway import _CRON_MSG_LIMIT
+        from aj_crew.slack.format import build_cron_ack_block, to_slack_mrkdwn
+        from aj_crew.slack.gateway import _CRON_MSG_LIMIT
 
         slack = MockSlackClient()
         result_text = "All systems healthy."
@@ -200,8 +200,8 @@ class TestCronMessageSplitting:
     @pytest.mark.asyncio
     async def test_long_cron_result_splits_into_multiple_messages(self):
         """Long cron output splits: first as Block Kit, overflow as threaded messages."""
-        from kiro_crew.slack.format import build_cron_ack_block, to_slack_mrkdwn
-        from kiro_crew.slack.gateway import _CRON_MSG_LIMIT
+        from aj_crew.slack.format import build_cron_ack_block, to_slack_mrkdwn
+        from aj_crew.slack.gateway import _CRON_MSG_LIMIT
 
         slack = MockSlackClient()
         # Generate text that exceeds the 3000-char Block Kit section limit
@@ -233,8 +233,8 @@ class TestCronMessageSplitting:
     @pytest.mark.asyncio
     async def test_all_cron_parts_within_block_kit_limit(self):
         """Every split part fits within the Block Kit section text limit."""
-        from kiro_crew.slack.format import to_slack_mrkdwn
-        from kiro_crew.slack.gateway import _CRON_MSG_LIMIT
+        from aj_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.gateway import _CRON_MSG_LIMIT
 
         result_text = "x" * 10000
         post_text = f"⏰ *Cron: stress*\n\n{to_slack_mrkdwn(result_text)}"
@@ -246,8 +246,8 @@ class TestCronMessageSplitting:
     @pytest.mark.asyncio
     async def test_cron_split_preserves_full_content(self):
         """All original content is present across the split parts (no data loss)."""
-        from kiro_crew.slack.format import to_slack_mrkdwn
-        from kiro_crew.slack.gateway import _CRON_MSG_LIMIT
+        from aj_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.gateway import _CRON_MSG_LIMIT
 
         result_text = "unique_token_abc\n" * 400
         post_text = f"⏰ *Cron: check*\n\n{to_slack_mrkdwn(result_text)}"
@@ -486,7 +486,7 @@ class TestToSlackMrkdwnTruncation:
     falls through to the cap. The result must always be safely under the limit."""
 
     def test_no_newline_long_text_truncates_under_limit(self):
-        from kiro_crew.slack.format import SLACK_MAX_TEXT, to_slack_mrkdwn
+        from aj_crew.slack.format import SLACK_MAX_TEXT, to_slack_mrkdwn
 
         # A single long line with NO newline (minified JSON / base64 / long URL).
         text = "x" * (SLACK_MAX_TEXT + 5000)
@@ -496,7 +496,7 @@ class TestToSlackMrkdwnTruncation:
         assert "truncated" in out
 
     def test_leading_newline_does_not_truncate_to_empty(self):
-        from kiro_crew.slack.format import SLACK_MAX_TEXT, to_slack_mrkdwn
+        from aj_crew.slack.format import SLACK_MAX_TEXT, to_slack_mrkdwn
 
         # Newline only at index 0 of the window: rfind -> 0, `0 or CAP` -> CAP
         # pre-fix (accidentally correct), but the explicit check keeps it robust.
@@ -506,19 +506,19 @@ class TestToSlackMrkdwnTruncation:
         assert "truncated" in out
 
     def test_short_text_is_untouched(self):
-        from kiro_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.format import to_slack_mrkdwn
 
         assert to_slack_mrkdwn("hello world") == "hello world"
 
     def test_an_early_line_break_does_not_cut_away_the_text(self):
-        from kiro_crew.slack.format import SLACK_MAX_TEXT, to_slack_mrkdwn
+        from aj_crew.slack.format import SLACK_MAX_TEXT, to_slack_mrkdwn
 
         text = "Hi\n" + "x" * (SLACK_MAX_TEXT + 5000)
         out = to_slack_mrkdwn(text)
         assert out == text[:SLACK_MAX_TEXT] + f"\n\n_…truncated ({len(text)} chars total)_"
 
     def test_a_line_break_a_quarter_in_is_still_the_cut(self):
-        from kiro_crew.slack.format import SLACK_MAX_TEXT, to_slack_mrkdwn
+        from aj_crew.slack.format import SLACK_MAX_TEXT, to_slack_mrkdwn
 
         head = "a" * (SLACK_MAX_TEXT // 2)
         text = head + "\n" + "b" * SLACK_MAX_TEXT
@@ -529,14 +529,14 @@ class TestTruncatedOverflowCut:
     """``_truncated`` keeps one message's worth of text and announces the rest."""
 
     def test_an_early_line_break_does_not_cut_away_the_text(self):
-        from kiro_crew.slack.format import _truncated
+        from aj_crew.slack.format import _truncated
 
         text = "Hi\n" + "x" * 5000
         notice = f"\n\n_…truncated ({len(text)} chars total)_"
         assert _truncated(text, 3900) == [text[: 3900 - len(notice)] + notice]
 
     def test_a_line_break_a_quarter_in_is_still_the_cut(self):
-        from kiro_crew.slack.format import _truncated
+        from aj_crew.slack.format import _truncated
 
         text = "a" * 2000 + "\n" + "b" * 3000
         assert _truncated(text, 3900) == [
@@ -548,26 +548,26 @@ class TestToSlackMrkdwnInlineCode:
     """Slack shows inline code as written, so its markers are never rewritten."""
 
     def test_bold_and_strike_markers_inside_inline_code_are_kept(self):
-        from kiro_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.format import to_slack_mrkdwn
 
         assert to_slack_mrkdwn("call `f(**kwargs)` now") == "call `f(**kwargs)` now"
         assert to_slack_mrkdwn("`a~~b~~c` and ~~gone~~") == "`a~~b~~c` and ~gone~"
 
     def test_emphasis_around_a_code_span_still_converts(self):
-        from kiro_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.format import to_slack_mrkdwn
 
         assert to_slack_mrkdwn("**a `b` c**") == "*a `b` c*"
         assert to_slack_mrkdwn("~~a `x` b~~") == "~a `x` b~"
 
     def test_a_backslash_inside_code_does_not_reach_past_the_span(self):
         """A backslash is literal inside code, so `C:\\` closes on its own."""
-        from kiro_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.format import to_slack_mrkdwn
 
         out = to_slack_mrkdwn("Use `C:\\` then **bold** and `x`.")
         assert out == "Use `C:\\` then *bold* and `x`."
 
     def test_an_escaped_backtick_outside_code_opens_nothing(self):
-        from kiro_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.format import to_slack_mrkdwn
 
         assert to_slack_mrkdwn("\\`a **b** `c`") == "\\`a *b* `c`"
 
@@ -578,14 +578,14 @@ class TestToSlackMrkdwnKeepTables:
     TABLE = "| Model | Cost |\n" "|-------|------|\n" "| GPT-4 | $30  |\n" "| Claude | $15 |"
 
     def test_tables_converted_by_default(self):
-        from kiro_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.format import to_slack_mrkdwn
 
         result = to_slack_mrkdwn(self.TABLE)
         assert "| Model | Cost |" not in result
         assert "•" in result
 
     def test_tables_preserved_with_keep_tables(self):
-        from kiro_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.format import to_slack_mrkdwn
 
         result = to_slack_mrkdwn(self.TABLE, keep_tables=True)
         assert "| Model | Cost |" in result
@@ -593,25 +593,25 @@ class TestToSlackMrkdwnKeepTables:
 
     def test_a_lone_pipe_row_is_never_swallowed(self):
         """A pipe line with no separator under it is prose, not a header."""
-        from kiro_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.format import to_slack_mrkdwn
 
         assert to_slack_mrkdwn("Legend:\n| a | b |\nend") == "Legend:\n| a | b |\nend"
 
     def test_a_table_inside_a_code_fence_is_left_alone(self):
-        from kiro_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.format import to_slack_mrkdwn
 
         src = "```\n| a | b |\n|---|---|\n| 1 | 2 |\n```"
         assert to_slack_mrkdwn(src) == src
 
     def test_a_table_in_a_tilde_or_longer_fence_is_left_alone(self):
-        from kiro_crew.slack.format import _convert_tables
+        from aj_crew.slack.format import _convert_tables
 
         table = "| a | b |\n|---|---|\n| 1 | 2 |"
         for src in (f"~~~\n{table}\n~~~", f"````\n```\n{table}\n````"):
             assert _convert_tables(src) == src
 
     def test_escaped_and_inline_code_pipes_stay_in_their_cell(self):
-        from kiro_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.format import to_slack_mrkdwn
 
         escaped = to_slack_mrkdwn("| op | meaning |\n|---|---|\n| a \\| b | or |")
         assert escaped == "• *op:* a | b | *meaning:* or"
@@ -619,13 +619,13 @@ class TestToSlackMrkdwnKeepTables:
         assert code == "• *op:* `a|b` | *meaning:* or"
 
     def test_an_empty_row_keeps_its_place(self):
-        from kiro_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.format import to_slack_mrkdwn
 
         out = to_slack_mrkdwn("| a | b |\n|---|---|\n| 1 | 2 |\n|  |  |\n| 3 | 4 |")
         assert out == "• *a:* 1 | *b:* 2\n• —\n• *a:* 3 | *b:* 4"
 
     def test_keep_tables_still_converts_headings(self):
-        from kiro_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.format import to_slack_mrkdwn
 
         text = "## Heading\n\n" + self.TABLE
         result = to_slack_mrkdwn(text, keep_tables=True)
@@ -633,7 +633,7 @@ class TestToSlackMrkdwnKeepTables:
         assert "| Model | Cost |" in result
 
     def test_keep_tables_still_converts_mermaid(self):
-        from kiro_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.format import to_slack_mrkdwn
 
         text = self.TABLE + "\n\n```mermaid\ngraph TD\nA[Start] --> B[End]\n```"
         result = to_slack_mrkdwn(text, keep_tables=True)
@@ -695,7 +695,7 @@ class TestToSlackMrkdwnImages:
         ],
     )
     def test_image_passthrough_and_link_conversion(self, text, expected):
-        from kiro_crew.slack.format import to_slack_mrkdwn
+        from aj_crew.slack.format import to_slack_mrkdwn
 
         assert to_slack_mrkdwn(text) == expected
 
@@ -709,7 +709,7 @@ class TestMermaidSequenceArrows:
 
     @staticmethod
     def _seq(line: str) -> str:
-        from kiro_crew.slack.format import _convert_mermaid
+        from aj_crew.slack.format import _convert_mermaid
 
         return _convert_mermaid("```mermaid\nsequenceDiagram\n" + line + "\n```")
 
@@ -829,20 +829,20 @@ class TestBuildTimingFooter:
     """Unit tests for the build_timing_footer helper."""
 
     def test_duration_seconds(self):
-        from kiro_crew.slack.handler import build_timing_footer
+        from aj_crew.slack.handler import build_timing_footer
 
         blocks, text = build_timing_footer(5.0)
         assert text == "Finished in 5s"
         assert blocks[0]["type"] == "context"
 
     def test_duration_minutes(self):
-        from kiro_crew.slack.handler import build_timing_footer
+        from aj_crew.slack.handler import build_timing_footer
 
         blocks, text = build_timing_footer(125.0)
         assert text == "Finished in 2m 5s"
 
     def test_with_client_ctx(self):
-        from kiro_crew.slack.handler import build_timing_footer
+        from aj_crew.slack.handler import build_timing_footer
 
         provider = FakeProvider()
         provider.context_usage_pct = lambda: 42.0
@@ -851,14 +851,14 @@ class TestBuildTimingFooter:
         assert "ctx 42%" in text
 
     def test_no_client_no_ctx(self):
-        from kiro_crew.slack.handler import build_timing_footer
+        from aj_crew.slack.handler import build_timing_footer
 
         blocks, text = build_timing_footer(10.0, None)
         assert "ctx" not in text
         assert text == "Finished in 10s"
 
     def test_client_error_falls_back(self):
-        from kiro_crew.slack.handler import build_timing_footer
+        from aj_crew.slack.handler import build_timing_footer
 
         provider = FakeProvider()
         provider.context_usage_pct = lambda: (_ for _ in ()).throw(RuntimeError("boom"))
@@ -874,7 +874,7 @@ def _handler_clock(monkeypatch, monotonic) -> None:
     asyncio's loop clock too. The owners read ``time`` from the handler's globals
     (``_facade_compose.compose``), so rebinding that NAME is enough.
     """
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     monkeypatch.setattr(handler, "time", SimpleNamespace(monotonic=monotonic))
 
@@ -1026,7 +1026,7 @@ class TestToolElapsedTimer:
     @pytest.mark.asyncio
     async def test_elapsed_updater_fires_after_30s(self, monkeypatch):
         """Periodic updater updates task card after 30s."""
-        from kiro_crew.slack import handler
+        from aj_crew.slack import handler
 
         slack = MockSlackClient()
         slack._stream_enabled = True

@@ -19,9 +19,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps.builtins.personal_shopper.backend import routes
-from kiro_crew.apps.builtins.personal_shopper.backend import store as store_mod
-from kiro_crew.apps.builtins.personal_shopper.backend.store import PreferenceStore
+from aj_crew.apps.builtins.personal_shopper.backend import routes
+from aj_crew.apps.builtins.personal_shopper.backend import store as store_mod
+from aj_crew.apps.builtins.personal_shopper.backend.store import PreferenceStore
 
 BASE = "/api/apps/personal-shopper"
 OWNER = "owner-1"

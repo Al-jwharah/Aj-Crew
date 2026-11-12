@@ -19,7 +19,7 @@ import pytest
 from tmpdir_helpers import _SHORT_TMP_ROOT_ENV as SHORT_TMP_ROOT_ENV
 from tmpdir_helpers import SHORT_TMP_PREFIX, short_tmp_base
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 
 class TestShortTmpBase:

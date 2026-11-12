@@ -15,10 +15,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import history as history_mod
-from kiro_crew import history_projection
-from kiro_crew.history import ConversationLog, HistoryConsolidator
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import history as history_mod
+from aj_crew import history_projection
+from aj_crew.history import ConversationLog, HistoryConsolidator
+from aj_crew.testing.wait import async_wait_until
 
 KEY = "dashboard:chat-threshold"
 THRESHOLD = history_mod._CONSOLIDATION_THRESHOLD
@@ -272,7 +272,7 @@ async def test_a_pass_claimed_during_the_count_is_not_doubled(tmp_path, monkeypa
 
 @pytest.mark.asyncio
 async def test_a_refused_pass_leaves_the_offset_alone(tmp_path):
-    from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
+    from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
 
     log = _log(tmp_path)
     await _append(log, THRESHOLD)
@@ -557,7 +557,7 @@ async def test_a_key_inside_its_retry_deadline_schedules_no_count(tmp_path):
 
 @pytest.mark.asyncio
 async def test_a_refused_idle_pass_sets_no_throttle(tmp_path):
-    from kiro_crew.history_consolidation import _CONSOLIDATION_REFUSED
+    from aj_crew.history_consolidation import _CONSOLIDATION_REFUSED
 
     log = _log(tmp_path)
     await _append(log, 3)

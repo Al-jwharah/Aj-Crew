@@ -135,7 +135,7 @@ export const NOTIFICATIONS_RING_CAP = 200
 /** True when an attention surface must skip *n*.
  *
  *  The backend stamps both halves and states the contract in
- *  `kiro_crew/notifications/settings.py`: muting a channel keeps the note in
+ *  `aj_crew/notifications/settings.py`: muting a channel keeps the note in
  *  history but sets `silenced: true` and forces `priority: "passive"`, "so every
  *  attention surface (badge count, sound, native banner, feed styling) skips
  *  it". `notification_coordinator.unread_count()` applies both halves to the

@@ -70,7 +70,7 @@ describe('uiPrefs', () => {
         'mc-chat-drafts',
         'mc-comment-drafts',
         'mc-paste-store-v1',
-        'kirocrew:touched-files:',
+        'ajcrew:touched-files:',
         'mc-webpreview-url',
         'mc-active-slot-chat',
       ]) {
@@ -82,7 +82,7 @@ describe('uiPrefs', () => {
       // The token is a credential; theme/language/onboarding reconcile through
       // /api/config/theme, so backing them up here would fork the truth.
       for (const owned of [
-        'kiro_crew_token',
+        'aj_crew_token',
         'mc-lang',
         'mc-color-theme',
         'mc-theme',
@@ -200,9 +200,9 @@ describe('uiPrefs', () => {
     })
 
     it('ignores keys outside the allowlist', async () => {
-      mockFetch(() => okJson({ prefs: { 'vc_heights_x': '{}', 'kiro_crew_token': 'leak' } }))
+      mockFetch(() => okJson({ prefs: { 'vc_heights_x': '{}', 'aj_crew_token': 'leak' } }))
       expect(await hydrateUiPrefs()).toBe(0)
-      expect(localStorage.getItem('kiro_crew_token')).toBeNull()
+      expect(localStorage.getItem('aj_crew_token')).toBeNull()
     })
 
     it('ignores non-string values', async () => {

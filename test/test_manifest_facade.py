@@ -1,8 +1,8 @@
 """The app manifest's facade keeps the seams the one module had.
 
-``kiro_crew.apps.manifest`` is a plain re-export facade over the
-``kiro_crew.apps.manifest_<role>`` owners: it imports every name they define, so callers,
-tests and documents still reach each one as ``kiro_crew.apps.manifest.<name>`` and get
+``aj_crew.apps.manifest`` is a plain re-export facade over the
+``aj_crew.apps.manifest_<role>`` owners: it imports every name they define, so callers,
+tests and documents still reach each one as ``aj_crew.apps.manifest.<name>`` and get
 the owner's own object. A re-export is a binding, so a patch through the facade reaches
 the facade's own readers and nothing else. These tests pin that this is enough: no owner
 reads or binds a name the test trees patch through the facade (today the only patch goes
@@ -25,7 +25,7 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew.apps import manifest
+from aj_crew.apps import manifest
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_manifest_facade")
 
@@ -33,21 +33,21 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_manifest_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("corpus_gate",)
 
-FACADE = "kiro_crew.apps.manifest"
+FACADE = "aj_crew.apps.manifest"
 #: Every owner and the owners it may import; none may import the facade.
 LAYERS: dict[str, frozenset[str]] = {
-    "kiro_crew.apps.manifest_names": frozenset(),
-    "kiro_crew.apps.manifest_containment": frozenset(),
-    "kiro_crew.apps.manifest_sections": frozenset({"kiro_crew.apps.manifest_names"}),
-    "kiro_crew.apps.manifest_contributes": frozenset(),
-    "kiro_crew.apps.manifest_agent_tools": frozenset(),
+    "aj_crew.apps.manifest_names": frozenset(),
+    "aj_crew.apps.manifest_containment": frozenset(),
+    "aj_crew.apps.manifest_sections": frozenset({"aj_crew.apps.manifest_names"}),
+    "aj_crew.apps.manifest_contributes": frozenset(),
+    "aj_crew.apps.manifest_agent_tools": frozenset(),
 }
 OWNERS = (
-    "kiro_crew.apps.manifest_names",
-    "kiro_crew.apps.manifest_containment",
-    "kiro_crew.apps.manifest_sections",
-    "kiro_crew.apps.manifest_contributes",
-    "kiro_crew.apps.manifest_agent_tools",
+    "aj_crew.apps.manifest_names",
+    "aj_crew.apps.manifest_containment",
+    "aj_crew.apps.manifest_sections",
+    "aj_crew.apps.manifest_contributes",
+    "aj_crew.apps.manifest_agent_tools",
 )
 APPS_DIR = Path(manifest.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
@@ -105,7 +105,7 @@ def _imports(source: str) -> set[str]:
         if isinstance(node, ast.ImportFrom):
             module = node.module or ""
             if node.level:
-                module = importlib.util.resolve_name("." * node.level + module, "kiro_crew.apps")
+                module = importlib.util.resolve_name("." * node.level + module, "aj_crew.apps")
             found.add(module)
             found.update(f"{module}.{alias.name}" for alias in node.names)
         elif isinstance(node, ast.Import):
@@ -129,7 +129,7 @@ def _corpus_patched_names() -> frozenset[str]:
     found: set[str] = set()
     for path in _test_tree_files():
         text = path.read_text(encoding="utf-8", errors="replace")
-        # Every spelling of the facade, merged ``from kiro_crew.apps import a, manifest``
+        # Every spelling of the facade, merged ``from aj_crew.apps import a, manifest``
         # imports included, names the leaf, so this skips only files that cannot patch it.
         if "manifest" not in text:
             continue
@@ -141,10 +141,10 @@ def test_the_patch_scan_reads_a_patch_through_the_facade() -> None:
     """Non-vacuity: no test patches a name through this facade today, so the scan is
     shown on a planted file to find both spellings a later test would use."""
     planted = (
-        "from kiro_crew.apps import manifest\n"
+        "from aj_crew.apps import manifest\n"
         "def test_x(monkeypatch):\n"
         "    monkeypatch.setattr(manifest, 'KEBAB_RE', None)\n"
-        "    monkeypatch.setattr('kiro_crew.apps.manifest._path_escapes_app_root', None)\n"
+        "    monkeypatch.setattr('aj_crew.apps.manifest._path_escapes_app_root', None)\n"
     )
     found = facade_mirror_scan.patched_names(planted, {FACADE: FACADE}).get(FACADE, set())
     assert found == {"KEBAB_RE", "_path_escapes_app_root"}
@@ -168,7 +168,7 @@ def test_no_owner_reads_or_binds_a_name_patched_through_the_facade() -> None:
 def test_manifest_sys_is_the_sys_platform_config_reads() -> None:
     """``test_app_manifest.py`` patches ``manifest.sys.platform``. That reaches
     ``PlatformConfig.current_os`` in its owner only because both bind the one ``sys``."""
-    sections = importlib.import_module("kiro_crew.apps.manifest_sections")
+    sections = importlib.import_module("aj_crew.apps.manifest_sections")
     assert manifest.sys is sys
     assert vars(sections)["sys"] is sys
     assert "sys" in facade_mirror_scan.global_reads(_source(sections), sections.__file__)
@@ -178,7 +178,7 @@ def test_the_owners_are_every_manifest_sibling_and_import_only_their_layer() -> 
     """``OWNERS`` is every ``manifest_*.py`` beside the facade; ``manifest_sections`` imports
     ``manifest_names`` and no other owner imports a family member, the facade included,
     not even for type checking."""
-    siblings = {f"kiro_crew.apps.{path.stem}" for path in APPS_DIR.glob("manifest_*.py")}
+    siblings = {f"aj_crew.apps.{path.stem}" for path in APPS_DIR.glob("manifest_*.py")}
     assert sorted(siblings) == sorted(OWNERS) == sorted(LAYERS)
     family = {FACADE, *OWNERS}
     reached = {
@@ -195,7 +195,7 @@ def test_the_owners_are_every_manifest_sibling_and_import_only_their_layer() -> 
 def test_the_import_scan_resolves_relative_imports() -> None:
     """Non-vacuity for the layering scan: the spellings an owner could use all resolve."""
     planted = "from . import manifest\nfrom .manifest_names import KEBAB_RE\n"
-    assert {FACADE, "kiro_crew.apps.manifest_names"} <= _imports(planted)
+    assert {FACADE, "aj_crew.apps.manifest_names"} <= _imports(planted)
 
 
 def test_every_name_an_owner_defines_is_the_facades_object() -> None:

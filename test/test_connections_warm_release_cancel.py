@@ -15,9 +15,9 @@ import connections_warm_helpers
 import pytest
 from connections_warm_helpers import _claim, _provider
 
-from kiro_crew.connections import warm
-from kiro_crew.connections.mint import _mints
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.connections import warm
+from aj_crew.connections.mint import _mints
+from aj_crew.testing.wait import async_wait_until, await_until
 
 _clean_mint_table = connections_warm_helpers._clean_mint_table
 _clean_warm_runtime = connections_warm_helpers._clean_warm_runtime

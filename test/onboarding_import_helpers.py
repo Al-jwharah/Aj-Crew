@@ -20,10 +20,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.context import reset_context, set_context
-from kiro_crew.platform.interfaces import ImportSource
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.context import reset_context, set_context
+from aj_crew.platform.interfaces import ImportSource
 
 
 def _install(*sources: ImportSource) -> None:
@@ -33,7 +33,7 @@ def _install(*sources: ImportSource) -> None:
         def import_sources(self) -> list[ImportSource]:
             return list(sources)
 
-    base = build_default_context(KiroCrewConfig())
+    base = build_default_context(AjCrewConfig())
     set_context(dataclasses.replace(base, import_sources=_Provider()))
 
 

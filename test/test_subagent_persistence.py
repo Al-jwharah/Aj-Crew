@@ -22,7 +22,7 @@ from subagent_persistence_helpers import (  # noqa: F401 -- the fixture is reque
     agent_root_fixture,
 )
 
-from kiro_crew.subagent_persistence import (
+from aj_crew.subagent_persistence import (
     _CLEANUP_IDENTITY_LOCK,
     _LIVE_CLEANUP_IDENTITIES,
     classify_persisted_ending,
@@ -56,14 +56,14 @@ class TestCreateAgentFolder:
         path = create_agent_folder(
             "abc123",
             task="do stuff",
-            agent="kirocrew",
+            agent="ajcrew",
             parent_session="dashboard:default",
             max_turns=100,
         )
         state = json.loads((path / "state.json").read_text(encoding="utf-8"))
         assert state["id"] == "abc123"
         assert state["task"] == "do stuff"
-        assert state["agent"] == "kirocrew"
+        assert state["agent"] == "ajcrew"
         # No ending writes a run status back to this file, so it carries none
         # that would read as running afterwards (the tombstone records it).
         assert "status" not in state
@@ -157,7 +157,7 @@ class TestUpdateState:
         assert state["pid"] == 99
 
     def test_corrupt_or_nonobject_state_skips_update(self, agent_root, monkeypatch):
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         create_agent_folder("u-corrupt", task="t")
         path = agent_root / "u-corrupt" / "state.json"
@@ -184,8 +184,8 @@ class TestUpdateState:
         (``result_complete``) land with no retry loop of its own."""
         from pathlib import Path
 
-        import kiro_crew.atomic_write as aw
-        from kiro_crew import platform_compat
+        import aj_crew.atomic_write as aw
+        from aj_crew import platform_compat
 
         create_agent_folder("u-win", task="t")
         target = agent_root / "u-win" / "state.json"
@@ -246,7 +246,7 @@ class TestReadState:
         assert read_state("bad") is None
 
     def test_invalid_encoding_depth_and_nonobject_return_none(self, agent_root, monkeypatch):
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         folder = agent_root / "bad-shapes"
         folder.mkdir()
@@ -314,7 +314,7 @@ class TestWriteResultChunk:
         """The fresh write stages its text before replacing the file, so a disk
         that refuses it (full, quota) costs nothing: the earlier attempt's
         partial is still there to read, and the call says nothing was written."""
-        import kiro_crew.atomic_write as aw
+        import aj_crew.atomic_write as aw
 
         create_agent_folder("w3", task="t")
         assert write_result_chunk("w3", "an earlier attempt's partial")
@@ -340,8 +340,8 @@ class TestWriteResultChunk:
 
 class TestWriteFinishedResult:
     def test_a_whole_answer_is_rewritten_from_memory_and_flagged(self, agent_root, monkeypatch):
-        import kiro_crew.context_management as cm
-        from kiro_crew.subagent_persistence import write_finished_result
+        import aj_crew.context_management as cm
+        from aj_crew.subagent_persistence import write_finished_result
 
         monkeypatch.setattr(cm, "RESULT_FILE_MAX_BYTES", 2_000)
         create_agent_folder("f1", task="t")
@@ -355,7 +355,7 @@ class TestWriteFinishedResult:
         assert (read_state("f1") or {}).get("result_complete") is True
 
     def test_an_empty_whole_answer_leaves_no_file(self, agent_root):
-        from kiro_crew.subagent_persistence import write_finished_result
+        from aj_crew.subagent_persistence import write_finished_result
 
         create_agent_folder("f2", task="t")
         write_result_chunk("f2", "an earlier attempt's partial")
@@ -365,8 +365,8 @@ class TestWriteFinishedResult:
         assert (read_state("f2") or {}).get("result_complete") is True
 
     def test_any_other_ending_is_capped_in_place_and_not_flagged(self, agent_root, monkeypatch):
-        import kiro_crew.context_management as cm
-        from kiro_crew.subagent_persistence import write_finished_result
+        import aj_crew.context_management as cm
+        from aj_crew.subagent_persistence import write_finished_result
 
         monkeypatch.setattr(cm, "RESULT_FILE_MAX_BYTES", 2_000)
         create_agent_folder("f3", task="t")
@@ -384,9 +384,9 @@ class TestWriteFinishedResult:
         the cap is written in place, and the whole answer stays unflagged."""
         from pathlib import Path
 
-        import kiro_crew.context_management as cm
-        import kiro_crew.subagent_persistence as sp
-        from kiro_crew.subagent_persistence import write_finished_result
+        import aj_crew.context_management as cm
+        import aj_crew.subagent_persistence as sp
+        from aj_crew.subagent_persistence import write_finished_result
 
         monkeypatch.setattr(cm, "RESULT_FILE_MAX_BYTES", 2_000)
         real_replace = os.replace
@@ -413,7 +413,7 @@ class TestWriteFinishedResult:
         assert (read_state("f4") or {}).get("result_complete") is False
 
     def test_a_cleared_folder_is_not_recreated_or_flagged(self, agent_root):
-        from kiro_crew.subagent_persistence import write_finished_result
+        from aj_crew.subagent_persistence import write_finished_result
 
         assert write_finished_result("gone1", "the answer", update_state) is False
         assert not (agent_root / "gone1").exists()
@@ -441,7 +441,7 @@ class TestWriteTombstone:
     def test_live_identity_snapshot_never_reads_sidecar(self, agent_root):
         from unittest.mock import patch
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "t-memory-only-snapshot"
         create_agent_folder(agent_id, task="t")
@@ -473,7 +473,7 @@ class TestWriteTombstone:
     def test_live_identity_published_before_sidecar_read(self, agent_root):
         from unittest.mock import patch
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "t-prepublish"
         create_agent_folder(agent_id, task="t")
@@ -519,7 +519,7 @@ class TestWriteTombstone:
         ]
 
     def test_protected_record_stays_inside_test_temp_root(self, agent_root):
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "protected-test-root"
         create_agent_folder(agent_id, task="t")
@@ -536,7 +536,7 @@ class TestWriteTombstone:
     def test_concurrent_publish_during_sidecar_write_is_not_overwritten(self, agent_root):
         from unittest.mock import patch
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "t-append-only-publish"
         create_agent_folder(agent_id, task="t")
@@ -695,7 +695,7 @@ class TestPruneStaleTombstones:
 
         cleaned: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.subagent_persistence._cleanup_session_files_sync",
+            "aj_crew.subagent_persistence._cleanup_session_files_sync",
             lambda sid, provider, *, cwd="": cleaned.append(sid),
         )
         assert prune_stale_tombstones(max_age_days=0, delivered_ttl_secs=0) == 1
@@ -703,7 +703,7 @@ class TestPruneStaleTombstones:
         assert not (agent_root / agent_id).exists()
 
     def test_mtime_fallback_at_cutoff_is_eligible(self, agent_root, monkeypatch):
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "mtime-at-cutoff"
         create_agent_folder(agent_id, task="t")
@@ -739,7 +739,7 @@ class TestPruneStaleTombstones:
 
     def test_future_died_and_mtime_preserve_unreadable_state_grace(self, agent_root, monkeypatch):
         """Clock rollback must not turn unknown retention into immediate cleanup."""
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "future-died-and-mtime"
         create_agent_folder(agent_id, task="t")
@@ -822,7 +822,7 @@ class TestPruneStaleTombstones:
         ts_path.write_text(json.dumps(ts), encoding="utf-8")
         cleaned: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.subagent_persistence._cleanup_session_files_sync",
+            "aj_crew.subagent_persistence._cleanup_session_files_sync",
             lambda sid, provider, *, cwd="": cleaned.append(sid),
         )
 
@@ -885,7 +885,7 @@ class TestPruneStaleTombstones:
         ts_path.write_text(json.dumps(ts), encoding="utf-8")
         cleaned: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.subagent_persistence._cleanup_session_files_sync",
+            "aj_crew.subagent_persistence._cleanup_session_files_sync",
             lambda sid, provider, *, cwd="": cleaned.append(sid),
         )
 
@@ -965,7 +965,7 @@ class TestPathTraversal:
         ],
     )
     def test_traversing_agent_id_rejected(self, agent_root, agent_id):
-        from kiro_crew.subagent_persistence import _agent_dir
+        from aj_crew.subagent_persistence import _agent_dir
 
         with pytest.raises(ValueError, match="Invalid agent_id"):
             _agent_dir(agent_id)
@@ -1019,7 +1019,7 @@ class TestRecordSlowCommandRotation:
 
     @pytest.fixture(autouse=True)
     def small_cap(self, _floor_monkeypatch):
-        _floor_monkeypatch.setattr("kiro_crew.subagent_persistence._SLOW_LOG_MAX_BYTES", self.CAP)
+        _floor_monkeypatch.setattr("aj_crew.subagent_persistence._SLOW_LOG_MAX_BYTES", self.CAP)
 
     def test_rotation_keeps_every_record(self, agent_root):
         """One rotation: older records land in ``.jsonl.1``, none are lost."""
@@ -1097,7 +1097,7 @@ class TestRecordSlowCommandRotation:
         event loop (the caller is async ``_maybe_flag_stall``)."""
         import threading
 
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         live = agent_root / "slow_commands.jsonl"
         live.write_text("x" * (self.CAP + 10), encoding="utf-8")
@@ -1125,7 +1125,7 @@ class TestRecordSlowCommandRotation:
 class TestCanonicalMemoryMode:
     @pytest.mark.parametrize("mode", ["persistent", "incognito", "temporary"])
     def test_recreation_keeps_original_restriction(self, agent_root, mode):
-        from kiro_crew.subagent_persistence import read_run_memory_mode
+        from aj_crew.subagent_persistence import read_run_memory_mode
 
         folder = create_agent_folder("privacy-mode", memory_mode=mode)
         create_agent_folder("privacy-mode", memory_mode="persistent")
@@ -1133,7 +1133,7 @@ class TestCanonicalMemoryMode:
         assert (folder / "state.json").exists() == (mode == "persistent")
 
     def test_tightening_survives_restart_without_new_body(self, agent_root):
-        from kiro_crew import subagent_persistence as persistence
+        from aj_crew import subagent_persistence as persistence
 
         folder = create_agent_folder(
             "privacy-tighten", task="original persisted body", app="example-app"
@@ -1151,7 +1151,7 @@ class TestCanonicalMemoryMode:
         state = read_state("privacy-damaged")
         state["execution_context"]["memory_mode"] = "unknown"
         (folder / "state.json").write_text(json.dumps(state), encoding="utf-8")
-        from kiro_crew.subagent_persistence import read_run_memory_mode
+        from aj_crew.subagent_persistence import read_run_memory_mode
 
         with pytest.raises(ValueError):
             read_run_memory_mode("privacy-damaged")
@@ -1160,8 +1160,8 @@ class TestCanonicalMemoryMode:
 @pytest.mark.parametrize("original", ["persistent", "incognito", "temporary"])
 @pytest.mark.parametrize("requested", ["persistent", "incognito", "temporary"])
 def test_runtime_mode_binding_only_tightens(agent_root, original, requested):
-    from kiro_crew.messaging.privacy_mode import strictest
-    from kiro_crew.subagent_persistence import bind_session_memory_mode, read_session_memory_mode
+    from aj_crew.messaging.privacy_mode import strictest
+    from aj_crew.subagent_persistence import bind_session_memory_mode, read_session_memory_mode
 
     key = "taskrunner:mode-composition:runtime"
     assert bind_session_memory_mode(key, original) == original
@@ -1172,10 +1172,10 @@ def test_runtime_mode_binding_only_tightens(agent_root, original, requested):
 
 
 def test_restricted_runtime_record_never_calls_disk_writer(agent_root, monkeypatch):
-    from kiro_crew.subagent_persistence import bind_session_memory_mode
+    from aj_crew.subagent_persistence import bind_session_memory_mode
 
     def fail(*args, **kwargs):
         raise AssertionError("restricted record attempted a disk write")
 
-    monkeypatch.setattr("kiro_crew.subagent_persistence._atomic_write", fail)
+    monkeypatch.setattr("aj_crew.subagent_persistence._atomic_write", fail)
     assert bind_session_memory_mode("taskrunner:restricted:runtime", "temporary") == "temporary"

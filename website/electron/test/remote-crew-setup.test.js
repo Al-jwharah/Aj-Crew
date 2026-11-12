@@ -100,13 +100,13 @@ test("parseRemoteCrewFields reads a save and rejects a dismissal", () => {
   assert.deepStrictEqual(
     parseRemoteCrewFields(JSON.stringify({
       host: "  myhost  ",
-      binPath: " ~/.local/bin/kirocrew ",
+      binPath: " ~/.local/bin/ajcrew ",
       remotePort: " 5477 ",
       remotePath: " ~/.toolbox/bin ",
     })),
     {
       host: "myhost",
-      binPath: "~/.local/bin/kirocrew",
+      binPath: "~/.local/bin/ajcrew",
       remotePort: "5477",
       remotePath: "~/.toolbox/bin",
       manageTunnel: false,
@@ -121,7 +121,7 @@ test("saveRemoteCrewConfig stores a validated crew under the launch port", () =>
   const store = fakeStore();
   const result = saveRemoteCrewConfig(store, 5476, {
     host: "myhost.example.com",
-    binPath: "~/.local/bin/kirocrew",
+    binPath: "~/.local/bin/ajcrew",
     remotePort: "5477",
     remotePath: "~/.toolbox/bin:/usr/bin",
   });
@@ -130,7 +130,7 @@ test("saveRemoteCrewConfig stores a validated crew under the launch port", () =>
   assert.deepStrictEqual(store.data.remoteHosts, {
     5476: {
       host: "myhost.example.com",
-      binPath: "~/.local/bin/kirocrew",
+      binPath: "~/.local/bin/ajcrew",
       remotePort: "5477",
       remotePath: "~/.toolbox/bin:/usr/bin",
       manageTunnel: false,
@@ -167,7 +167,7 @@ const REFUSED_CASES = [
   { name: "no host", fields: {}, port: 5476, error: MISSING_HOST_ERROR },
   { name: "whitespace host", fields: { host: "  " }, port: 5476, error: MISSING_HOST_ERROR },
   { name: "invalid host", fields: { host: "my host!" }, port: 5476 },
-  { name: "binary path traversal", fields: { host: "myhost", binPath: "../kirocrew" }, port: 5476 },
+  { name: "binary path traversal", fields: { host: "myhost", binPath: "../ajcrew" }, port: 5476 },
   { name: "non-numeric remote port", fields: { host: "myhost", remotePort: "http" }, port: 5476 },
   { name: "out-of-range remote port", fields: { host: "myhost", remotePort: "99999" }, port: 5476 },
   { name: "remote PATH traversal", fields: { host: "myhost", remotePath: "../bin" }, port: 5476 },
@@ -354,7 +354,7 @@ function captureDialogHtml(storeData, actions = ["mc-action:quit"]) {
     shell: { showItemInFolder() {} },
     ipcMain: { on() {}, removeListener() {} },
     port: 5476,
-    home: "/virtual/kirocrew-home",
+    home: "/virtual/ajcrew-home",
     getMainWindow: () => null,
     isQuitting: () => false,
     requestQuit() {},
@@ -386,7 +386,7 @@ function captureDialogHtml(storeData, actions = ["mc-action:quit"]) {
     processRef: {
       platform: "test",
       arch: "x64",
-      env: { KIROCREW_HOME: "/virtual/kirocrew-home" },
+      env: { AJCREW_HOME: "/virtual/ajcrew-home" },
       resourcesPath: "/virtual/resources",
       kill() { throw new Error("process kill must not run in this harness"); },
     },
@@ -415,7 +415,7 @@ test("the client-only dialog offers add with nothing stored and edit with an add
 
   const configured = await dialogHtmlFor({
     runLocalGateway: false,
-    remoteHosts: { 5476: { host: "myhost", binPath: "~/.local/bin/kirocrew" } },
+    remoteHosts: { 5476: { host: "myhost", binPath: "~/.local/bin/ajcrew" } },
   });
   // A stored address that nothing answers may simply be wrong, so the form has
   // to stay reachable here or a typo recreates the dead end this change fixes.
@@ -434,7 +434,7 @@ test("the client-only dialog offers add with nothing stored and edit with an add
 test("a refused save reopens the form on the typed values, not on the empty store", async () => {
   const typed = {
     host: "my host",
-    binPath: "~/.local/bin/kirocrew",
+    binPath: "~/.local/bin/ajcrew",
     remotePort: "5477",
     remotePath: "~/.toolbox/bin",
   };
@@ -448,13 +448,13 @@ test("a refused save reopens the form on the typed values, not on the empty stor
 
   assert.strictEqual(loaded.length, 4, "dialog, form, reopened form, dialog again");
   const form = loaded[1];
-  assert.match(form, /Leave blank for ~\/\.local\/bin\/kirocrew/, "the binary path explains its default");
+  assert.match(form, /Leave blank for ~\/\.local\/bin\/ajcrew/, "the binary path explains its default");
   assert.match(form, /Leave blank if it is also 5476/, "the two ports are explained");
   assert.match(form, /Leave blank for ~\/\.toolbox\/bin/, "the remote PATH explains its default");
 
   const reopened = loaded[2];
   assert.match(reopened, /value="my host"/, "the rejected host comes back");
-  assert.match(reopened, /value="~\/\.local\/bin\/kirocrew"/, "so does the binary path");
+  assert.match(reopened, /value="~\/\.local\/bin\/ajcrew"/, "so does the binary path");
   assert.match(reopened, /value="5477"/, "so does the remote port");
   assert.match(reopened, /value="~\/\.toolbox\/bin"/, "so does the remote PATH");
 

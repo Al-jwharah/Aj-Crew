@@ -31,8 +31,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import platform_compat
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 posix_exec = pytest.mark.skipif(
     sys.platform == "win32" or not os.path.exists("/bin/sh"),
@@ -46,7 +46,7 @@ _DEAD_CHILD = 5002
 _NEW_GATEWAY = textwrap.dedent("""
     import os, sys
     old_pid, start_id = int(sys.argv[1]), sys.argv[2]
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
     still_live = (
         platform_compat.pid_exists(old_pid)
         and platform_compat.get_process_start_id(old_pid) == start_id
@@ -78,7 +78,7 @@ _NEW_GATEWAY = textwrap.dedent("""
 _OLD_GATEWAY = textwrap.dedent("""
     import os, subprocess, sys
     layout, new_gateway = sys.argv[1:3]
-    from kiro_crew import platform_compat, session_pid
+    from aj_crew import platform_compat, session_pid
     path = session_pid._session_pid_file_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(f"{os.getpid()}:%(dead)d:TOK-B\\n", encoding="utf-8")
@@ -100,7 +100,7 @@ def _restart(layout: str, tmp_path: Path) -> tuple[int, int, dict[str, str]]:
     home.mkdir()
     old = subprocess.Popen(
         [sys.executable, "-c", _OLD_GATEWAY, layout, _NEW_GATEWAY],
-        env={**os.environ, "KIROCREW_HOME": str(home)},
+        env={**os.environ, "AJCREW_HOME": str(home)},
         cwd=tmp_path,
         start_new_session=True,
         stdout=subprocess.PIPE,
@@ -168,7 +168,7 @@ class TestEachReaderWithTheSupervisorPinned:
     def test_the_sweep_handles_the_supervisors_row_and_keeps_a_live_gateways(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import session_pid
+        from aj_crew import session_pid
 
         home = tmp_path / "home"
         home.mkdir()
@@ -184,7 +184,7 @@ class TestEachReaderWithTheSupervisorPinned:
         assert rows.read_text(encoding="utf-8").split() == [theirs]
 
     def _root_rows(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *rows: str) -> Path:
-        from kiro_crew import session_pid
+        from aj_crew import session_pid
 
         home = tmp_path / "home"
         home.mkdir()
@@ -200,7 +200,7 @@ class TestEachReaderWithTheSupervisorPinned:
     def test_the_root_sweep_handles_the_supervisors_row_and_keeps_a_live_gateways(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import session_pid
+        from aj_crew import session_pid
 
         mine = f"{self._SUPERVISOR}:{_DEAD_CHILD}:TOK-B"
         theirs = f"{self._OTHER_GATEWAY}:{_DEAD_CHILD + 1}:TOK-C"
@@ -223,7 +223,7 @@ class TestEachReaderWithTheSupervisorPinned:
     def test_the_root_sweep_still_asks_the_argv_gate_for_the_supervisors_live_child(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import session_pid
+        from aj_crew import session_pid
 
         child = 6001
         live = {self._SUPERVISOR, self._OTHER_GATEWAY, child}
@@ -249,7 +249,7 @@ class TestEachReaderWithTheSupervisorPinned:
         assert rows.read_text(encoding="utf-8").split() == []
 
     def test_the_supervisors_leftover_is_orphaned_and_a_live_gateways_is_not(self) -> None:
-        from kiro_crew import session_pid
+        from aj_crew import session_pid
 
         suffix = session_pid._RETRACT_SUFFIX
         assert session_pid._retraction_leftover_is_orphaned(

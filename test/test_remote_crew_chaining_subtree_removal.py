@@ -36,8 +36,8 @@ from remote_crew_chaining_helpers import (
     _State,
 )
 
-from kiro_crew.instances.registry import InstancesRegistry
-from kiro_crew.testing.wait import await_until, finished, until_parked
+from aj_crew.instances.registry import InstancesRegistry
+from aj_crew.testing.wait import await_until, finished, until_parked
 
 
 class _FakeMgr:
@@ -104,7 +104,7 @@ class TestChainCascade:
 
     def test_removing_a_parent_removes_the_rows_below_it(self, tmp_path, monkeypatch):
         """A row left behind describes a forward that can never be opened again."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -141,7 +141,7 @@ class TestChainCascade:
         former parent id reported a failure having just deleted the crews under
         it, and dropped the list of which ones they were with it.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -179,7 +179,7 @@ class TestChainCascade:
         failed stop from a reconnect that landed after a successful one -- so it is
         safe to refuse on, and every row stays.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -234,7 +234,7 @@ class TestChainCascade:
         sticky intent, so its tab was gone and reconnecting the parent would not have
         brought it back: a row left changed under a sentence promising otherwise.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -291,7 +291,7 @@ class TestChainCascade:
         is logged rather than hidden -- the response cannot carry it, because the
         removal succeeded and nothing at the dashboard reads a residual.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -310,7 +310,7 @@ class TestChainCascade:
                 return True
 
         stuck = _RacingStuck()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.handlers_instances"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.handlers_instances"):
             resp = asyncio.run(
                 handlers.api_instances_remove(_FakeReq(_State(reg, stuck), match={"id": "b"}))
             )
@@ -333,7 +333,7 @@ class TestChainCascade:
         by reading the registry, and the rows are gone by then, so sweeping only
         the crew that was asked for tears down nothing below it and leaves a
         forward holding a port with no row left to surface it."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -383,7 +383,7 @@ class TestChainCascade:
         """Validating the parent and inserting the child are two awaits. A removal
         between them snapshots the subtree without the new row and then deletes the
         parent under it, leaving a crew whose only route is a hop that is gone."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -448,7 +448,7 @@ class TestChainCascade:
     def test_the_rows_go_leaves_first_so_no_row_outlives_its_parent(self, tmp_path, monkeypatch):
         """An interrupted sweep may leave a parent with fewer children, which still
         connects; a row whose parent is already gone can never be opened again."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -511,8 +511,8 @@ class TestRemovingAParentTakesItsChainedSubtree:
         self, tmp_path, monkeypatch
     ):
         """Driven through `unregister_instance`, the path cloud destroy actually calls."""
-        from kiro_crew.cloud import connect as cloud_connect
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.cloud import connect as cloud_connect
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         reg.add(name="Parent", ssh_host="parent-host", instance_id="parent", ttl="2h")
@@ -528,7 +528,7 @@ class TestRemovingAParentTakesItsChainedSubtree:
         reg.add(name="Bystander", ssh_host="other-host", instance_id="other", ttl="2h")
         monkeypatch.setattr(cloud_connect, "InstancesRegistry", lambda: reg, raising=False)
         monkeypatch.setattr(
-            "kiro_crew.instances.registry.InstancesRegistry", lambda *a, **k: reg, raising=False
+            "aj_crew.instances.registry.InstancesRegistry", lambda *a, **k: reg, raising=False
         )
 
         assert cloud_connect.unregister_instance("parent-host") is True
@@ -543,7 +543,7 @@ class TestRemovingAParentTakesItsChainedSubtree:
 
     def test_the_cascade_is_one_write_so_no_read_sees_a_child_without_its_parent(self, tmp_path):
         """Removing a row at a time left a window an interleaved read could land in."""
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         reg.add(name="P", ssh_host="p", instance_id="p", ttl="2h")
@@ -580,7 +580,7 @@ class TestRemovingAParentTakesItsChainedSubtree:
         self, tmp_path
     ):
         """The two boundary answers a caller branches on."""
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
         reg.add(name="Solo", ssh_host="solo", instance_id="solo", ttl="2h")

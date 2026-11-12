@@ -13,14 +13,14 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app_with_agent_routes, _make_state
 
-from kiro_crew.agent_switch_command import switch_announcement
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.chat import (
+from aj_crew.agent_switch_command import switch_announcement
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.chat import (
     api_chat_slot_model,
     api_chat_slot_reasoning_effort,
     api_chat_slots_model,
 )
-from kiro_crew.dashboard.system_notices import (
+from aj_crew.dashboard.system_notices import (
     _SWITCH_VALUE_MAX,
     SESSION_SWITCH_KIND,
     SYSTEM_NOTICE_KINDS,
@@ -41,7 +41,7 @@ def _start(slot) -> None:
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.sessions.reset = AsyncMock()
     return st
@@ -98,9 +98,7 @@ def test_a_request_value_is_shown_on_one_capped_line():
 
 
 def test_the_agent_row_reads_the_same_line_as_the_agent_command():
-    assert session_switch_notice("agent", "kirocrew-worker") == switch_announcement(
-        "kirocrew-worker"
-    )
+    assert session_switch_notice("agent", "ajcrew-worker") == switch_announcement("ajcrew-worker")
 
 
 # ── Workspace ──

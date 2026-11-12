@@ -9,8 +9,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew.channel import ChannelManager
-from kiro_crew.dashboard.handlers_channel import (
+from aj_crew.channel import ChannelManager
+from aj_crew.dashboard.handlers_channel import (
     api_channel_approve_agent,
     api_channel_clear_context,
     api_channel_create,

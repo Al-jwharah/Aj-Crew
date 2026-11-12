@@ -24,7 +24,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-DASHBOARD = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "dashboard"
+DASHBOARD = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "dashboard"
 MODULE = DASHBOARD / "chat_regenerate.py"
 
 # An "error" sentence and the "code" beside it, tolerating the line break black

@@ -79,14 +79,14 @@ export function ImpactSection() {
 
           {/* User Quotes */}
           <div className="relative mb-12">
-            <div className="absolute -left-3 top-0 bottom-0 w-1 bg-gradient-to-b from-purple-500 via-purple-500/50 to-transparent rounded-full" />
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 pl-4"><MessageSquare size={18} className="text-purple-400" /> What Users Say</h3>
+            <div className="absolute -left-3 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-500 via-teal-500/50 to-transparent rounded-full" />
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 pl-4"><MessageSquare size={18} className="text-teal-400" /> What Users Say</h3>
             <div className="grid md:grid-cols-2 gap-3 ml-4">
               {QUOTES.map((q, i) => (
-                <div key={i} className="bg-[#111827] border border-purple-500/12 rounded-xl p-5 relative overflow-hidden hover:border-purple-500/30 transition-colors">
-                  <div className="absolute top-3 left-4 text-4xl text-purple-500/20 font-serif leading-none">"</div>
+                <div key={i} className="bg-[#111827] border border-teal-500/12 rounded-xl p-5 relative overflow-hidden hover:border-teal-500/30 transition-colors">
+                  <div className="absolute top-3 left-4 text-4xl text-teal-500/20 font-serif leading-none">"</div>
                   <p className="text-sm text-slate-300 italic pl-6 mb-3">{q.text}</p>
-                  <div className="text-xs text-purple-400 font-medium pl-6">— {q.role}</div>
+                  <div className="text-xs text-teal-400 font-medium pl-6">— {q.role}</div>
                 </div>
               ))}
             </div>

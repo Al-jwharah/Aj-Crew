@@ -18,8 +18,8 @@ from overload_fakes import Clock
 from taskq_real_crash import harness
 from taskq_real_crash.reopen import BASE_CLOCK, record, reopen_store
 
-from kiro_crew.taskq import model
-from kiro_crew.taskq.reconcile import reconcile_on_boot
+from aj_crew.taskq import model
+from aj_crew.taskq.reconcile import reconcile_on_boot
 
 pytestmark = pytest.mark.skipif(
     sys.platform == "win32", reason="win32: SIGKILL and flock semantics differ"

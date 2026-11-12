@@ -29,7 +29,7 @@ first paint:
 
 Everything is patched at the ``github_client`` / ``store`` / ``llm_helpers``
 boundary, so no provider subprocess runs, no model is called, no network is
-touched, and nothing is written outside the per-test ``KIROCREW_HOME`` that
+touched, and nothing is written outside the per-test ``AJCREW_HOME`` that
 ``conftest.py`` pins. No sleeps and no wall-clock assertions.
 
 This file pins the shared one-shot session, the issue-triage validator, loaders and
@@ -67,10 +67,10 @@ from issue_radar_routes_ai_coverage_helpers import (
     _writable,
 )
 
-from kiro_crew import llm_helpers
-from kiro_crew.apps.builtins.issue_radar.backend import github_client as gh
-from kiro_crew.apps.builtins.issue_radar.backend import routes, store
-from kiro_crew.start_priority import StartPriority
+from aj_crew import llm_helpers
+from aj_crew.apps.builtins.issue_radar.backend import github_client as gh
+from aj_crew.apps.builtins.issue_radar.backend import routes, store
+from aj_crew.start_priority import StartPriority
 
 
 def _no_lock():
@@ -98,7 +98,7 @@ class TestRunOneshotModel(unittest.IsolatedAsyncioTestCase):
         _, kwargs = stream.call_args
         self.assertEqual(kwargs["approval_policy"], llm_helpers.ToolApprovalPolicy.REJECT_ALL)
         state.sessions.get_or_create.assert_awaited_once_with(
-            "k1", agent="kirocrew-lite", start_priority=StartPriority.BACKGROUND
+            "k1", agent="ajcrew-lite", start_priority=StartPriority.BACKGROUND
         )
         state.sessions.release.assert_called_once_with("k1")
         state.sessions.destroy.assert_awaited_once_with("k1")

@@ -16,8 +16,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat import api_chat_slot_queue_reorder
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.chat import api_chat_slot_queue_reorder
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 # ── Unit tests: reorder on _ChatSlot._queue ──
 

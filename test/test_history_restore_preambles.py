@@ -12,7 +12,7 @@ import json
 
 import pytest
 
-from kiro_crew.history import ConversationLog
+from aj_crew.history import ConversationLog
 
 
 class TestStopEventContextInjection:
@@ -23,7 +23,7 @@ class TestStopEventContextInjection:
         """context.py emits the system note for resolved stop events."""
         import json
 
-        from kiro_crew.context import _build_stop_event_notes
+        from aj_crew.context import _build_stop_event_notes
 
         log = ConversationLog(base_dir=tmp_path)
         log.append("sess1", "user", "hello")
@@ -46,7 +46,7 @@ class TestStopEventContextInjection:
         """At most 3 stop event notes are injected."""
         import json
 
-        from kiro_crew.context import _build_stop_event_notes
+        from aj_crew.context import _build_stop_event_notes
 
         log = ConversationLog(base_dir=tmp_path)
         for i in range(5):
@@ -68,7 +68,7 @@ class TestStopEventContextInjection:
         """Unresolved stop_events (state=stopping) are not injected."""
         import json
 
-        from kiro_crew.context import _build_stop_event_notes
+        from aj_crew.context import _build_stop_event_notes
 
         log = ConversationLog(base_dir=tmp_path)
         stop_data = json.dumps(
@@ -95,7 +95,7 @@ class TestCancelledTurnPreambleInstruction:
     def test_preamble_forbids_standalone_acknowledgment(self, tmp_path):
         import json
 
-        from kiro_crew.context import build_cancelled_turn_preamble
+        from aj_crew.context import build_cancelled_turn_preamble
 
         log = ConversationLog(base_dir=tmp_path)
         log.append("sess1", "user", "please refactor the parser")
@@ -136,12 +136,12 @@ class TestCancelledTurnPreambleRequest:
         # turn never read it, so the request it cancelled is the prompt before it.
         import json
 
-        from kiro_crew.context import build_cancelled_turn_preamble
-        from kiro_crew.dashboard.chat_delivery import (
+        from aj_crew.context import build_cancelled_turn_preamble
+        from aj_crew.dashboard.chat_delivery import (
             STEER_RETRACTABLE_META,
             STEER_STATE_RETRACTED,
         )
-        from kiro_crew.dashboard.steer_retract import RETRACT_ACTION_META, RETRACT_UNSEND
+        from aj_crew.dashboard.steer_retract import RETRACT_ACTION_META, RETRACT_UNSEND
 
         log = ConversationLog(base_dir=tmp_path)
         log.append("sess1", "user", "please refactor the parser")
@@ -189,7 +189,7 @@ class TestCancelledTurnPreambleSteer:
 
     @staticmethod
     def _restore(log):
-        from kiro_crew.context import build_cancelled_turn_preamble
+        from aj_crew.context import build_cancelled_turn_preamble
 
         return build_cancelled_turn_preamble(log, "sess1")
 
@@ -371,7 +371,7 @@ class TestCancelledTurnPreambleSteer:
         )
 
     def test_without_steers_the_cap_cuts_where_it_always_did(self):
-        from kiro_crew.context_assembly.replay import cancelled_turn_preamble
+        from aj_crew.context_assembly.replay import cancelled_turn_preamble
 
         cap = 50
         shapes = [[60], [50], [49, 1], [49, 2], [24, 25], [24, 25, 3], [10] * 6, [3] * 20]
@@ -405,7 +405,7 @@ class TestInterruptedTurnPreamble:
         ]
 
     def test_restores_the_newest_opener_and_its_partial_answer(self):
-        from kiro_crew.context import build_interrupted_turn_preamble
+        from aj_crew.context import build_interrupted_turn_preamble
 
         rows = self._rows()
         current = {"role": "inject", "content": "resume"}
@@ -420,7 +420,7 @@ class TestInterruptedTurnPreamble:
         assert "first request" not in out and "first answer" not in out
 
     def test_a_second_resume_press_still_finds_the_interrupted_opener(self):
-        from kiro_crew.context import build_interrupted_turn_preamble
+        from aj_crew.context import build_interrupted_turn_preamble
 
         rows = self._rows()
         rows.append({"role": "inject", "content": "resume (first press)"})
@@ -434,15 +434,15 @@ class TestInterruptedTurnPreamble:
         assert "resume (first press)" not in out
 
     def test_no_opener_restores_nothing(self):
-        from kiro_crew.context import build_interrupted_turn_preamble
+        from aj_crew.context import build_interrupted_turn_preamble
 
         current = {"role": "inject", "content": "resume"}
         assert build_interrupted_turn_preamble([current], current=current) == ""
         assert build_interrupted_turn_preamble([]) == ""
 
     def test_the_block_is_attributed_by_the_context_scanner(self):
-        from kiro_crew.context import build_interrupted_turn_preamble
-        from kiro_crew.context_blocks import split_blocks
+        from aj_crew.context import build_interrupted_turn_preamble
+        from aj_crew.context_blocks import split_blocks
 
         out = build_interrupted_turn_preamble(self._rows())
         blocks = split_blocks(out + "\n\n[REPLY FORMAT RULES]\nx\n")
@@ -454,8 +454,8 @@ class TestInterruptedTurnPreamble:
         # would restore the already-answered request before it as "the most
         # recent request". A recovery inject (an earlier Resume press) continues
         # the turn and is walked past.
-        from kiro_crew.context import build_interrupted_turn_preamble
-        from kiro_crew.dashboard.state import TURN_OPENING_INJECT_KINDS
+        from aj_crew.context import build_interrupted_turn_preamble
+        from aj_crew.dashboard.state import TURN_OPENING_INJECT_KINDS
 
         rows = [
             {"role": "user", "content": "answered request"},
@@ -486,7 +486,7 @@ class TestInterruptedTurnPreamble:
         # The frame claims the request inside it is the one to carry on with, so
         # a copy planted in transcript text is neutralized by the egress scrub,
         # and a marker inside the restored payload cannot survive either.
-        from kiro_crew.context import (
+        from aj_crew.context import (
             _neutralize_structural_markers,
             build_interrupted_turn_preamble,
         )
@@ -504,8 +504,8 @@ class TestInterruptedTurnPreamble:
 
     def test_only_a_user_opener_is_called_the_users_request(self):
         # An automated delivery must not be framed as something the user typed.
-        from kiro_crew.context import build_interrupted_turn_preamble
-        from kiro_crew.dashboard.state import TURN_OPENING_INJECT_KINDS
+        from aj_crew.context import build_interrupted_turn_preamble
+        from aj_crew.dashboard.state import TURN_OPENING_INJECT_KINDS
 
         user = build_interrupted_turn_preamble([{"role": "user", "content": "ship it"}])
         assert "the user's most recent request" in user

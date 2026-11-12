@@ -9,6 +9,7 @@ import { initI18n, i18next } from '../src/i18n'
 import { __resetStagingForTests } from '../src/components/pierreStaging'
 import { clearSideChatDrafts } from '../src/chat-core/composer/sideChatDrafts'
 import { __resetSharedUnreadQueueForTests } from '../src/store/dashboard/unread'
+import { __setShellLayoutFallbackForTests } from '../src/hooks/useShellLayout'
 
 // The Pierre mount queue is MODULE state — in a browser that is per-page, but a
 // vitest worker runs many test files in one process, so without this a file that
@@ -26,6 +27,13 @@ beforeEach(() => { clearSideChatDrafts() })
 // markSlotUnread queues its shared-record write on a timer; drop a previous
 // test's queue so it cannot land in this test's storage.
 beforeEach(() => { __resetSharedUnreadQueueForTests() })
+// The shell ships two layouts and Simple is the default (hooks/useShellLayout).
+// Every test written before Simple existed asserts the Advanced shell, and many
+// clear localStorage between cases, so a stored value would not survive them:
+// the layout an EMPTY store resolves to is pinned to Advanced here instead. A
+// Simple-layout test opts in by storing `mc-shell-layout = simple` (or through
+// the same seam); `shellLayout.test.ts` pins the shipped default itself.
+beforeEach(() => { __setShellLayoutFallbackForTests('advanced') })
 
 // lottie-web registers a module-scoped `setInterval(checkReady, 100)` purely by
 // being IMPORTED (`readyStateCheckInterval` in the prebuilt player bundles). That
@@ -550,13 +558,13 @@ beforeEach(({ onTestFinished }) => {
 // out of the log. Any other file is expected to emit none; its warning is printed
 // as usual and reported again at the end of the file. Repeated full local runs list
 // the same files bar one or two, each seen in one run only, so whether a file warns
-// can depend on timing: that report does not fail the run. KIROCREW_ACT_STRICT=1 fails
+// can depend on timing: that report does not fail the run. AJCREW_ACT_STRICT=1 fails
 // the test that emitted the warning instead (or the file, for a warning outside any
 // test). A listed file that emitted none in a run of every one of its tests is
 // reported too, so the list shrinks. SHRINK-ONLY: remove a file once its barriers
 // are fixed; never add one to quiet a new warning.
 const ACT_WARNING_FILES: ReadonlySet<string> = new Set(actWarningBaseline)
-const ACT_STRICT = process.env.KIROCREW_ACT_STRICT === '1'
+const ACT_STRICT = process.env.AJCREW_ACT_STRICT === '1'
 let actInTest = 0
 let actInFile = 0
 let actInTests = 0

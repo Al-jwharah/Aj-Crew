@@ -22,12 +22,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.dashboard import server as srv
-from kiro_crew.knowledge import ingestion as ingestion_mod
-from kiro_crew.knowledge import store as store_mod
-from kiro_crew.knowledge.ingestion import IngestionPipeline
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard import server as srv
+from aj_crew.knowledge import ingestion as ingestion_mod
+from aj_crew.knowledge import store as store_mod
+from aj_crew.knowledge.ingestion import IngestionPipeline
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.testing.wait import await_until
 
 # The store binds ``pysqlite3`` when it is installed, so both the raw reads and
 # the connect patch below go through the SAME module the store uses.
@@ -369,7 +369,7 @@ class TestGatewayKick:
             srv._kick_knowledge_orphan_reclaim(state)
             await asyncio.gather(*state._background_tasks)
 
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.server"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.server"):
             asyncio.run(run())
         assert any("orphan reclaim failed" in r.message for r in caplog.records)
 
@@ -503,7 +503,7 @@ class TestSweepWaitsForIngestion:
             _insert_orphan_source(store, "orphan")
             worker = _kick_worker(store, timeout=0.2)
             with store.ingestion_in_flight():
-                with caplog.at_level("WARNING", logger="kiro_crew.knowledge.store"):
+                with caplog.at_level("WARNING", logger="aj_crew.knowledge.store"):
                     started = time.monotonic()
                     worker()
                 assert time.monotonic() - started < 5
@@ -698,7 +698,7 @@ class TestWatcherReReadsUnderTheGate:
         is gone instead of ingesting items for a deleted source."""
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.knowledge.watcher import KnowledgeWatcher
+        from aj_crew.knowledge.watcher import KnowledgeWatcher
 
         store = KnowledgeStore(str(tmp_path / "k.db"))
         try:
@@ -811,7 +811,7 @@ class TestFtsMigrationRunsPostBind:
         return KnowledgeStore(path)
 
     def test_kick_migrates_and_the_first_search_does_not(self, tmp_path, monkeypatch):
-        from kiro_crew.knowledge.retrieval import HybridRetriever
+        from aj_crew.knowledge.retrieval import HybridRetriever
 
         store = self._legacy_store(tmp_path)
         try:

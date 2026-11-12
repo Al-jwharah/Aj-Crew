@@ -75,8 +75,8 @@ describe("chooseRecoveryStrategy", () => {
 describe("classifyAdoptedGateway", () => {
   // Positive identification requires BOTH same-family health AND a local
   // LISTEN owner — anything less stays "none" (never-kill/never-respawn).
-  it("classifies a same-family kirocrew-owned holder as reused-local", () => {
-    assert.equal(classifyAdoptedGateway({ reason: "same-family", localOwner: "kirocrew" }), "reused-local");
+  it("classifies a same-family ajcrew-owned holder as reused-local", () => {
+    assert.equal(classifyAdoptedGateway({ reason: "same-family", localOwner: "ajcrew" }), "reused-local");
   });
 
   it("classifies a same-family service-owned holder as reused-service", () => {
@@ -90,7 +90,7 @@ describe("classifyAdoptedGateway", () => {
   });
 
   it("stays none without the same-family health identification", () => {
-    assert.equal(classifyAdoptedGateway({ reason: "healthy", localOwner: "kirocrew" }), "none");
+    assert.equal(classifyAdoptedGateway({ reason: "healthy", localOwner: "ajcrew" }), "none");
     assert.equal(classifyAdoptedGateway({ reason: undefined, localOwner: "service" }), "none");
   });
 
@@ -98,7 +98,7 @@ describe("classifyAdoptedGateway", () => {
   // positively-identified local adoption gets the bounded strategy, an
   // unidentified one keeps the indefinite external reconnect.
   it("composes with chooseRecoveryStrategy end to end", () => {
-    const local = classifyAdoptedGateway({ reason: "same-family", localOwner: "kirocrew" });
+    const local = classifyAdoptedGateway({ reason: "same-family", localOwner: "ajcrew" });
     assert.equal(chooseRecoveryStrategy({ gatewayOwnership: local }), "reconnect-bounded");
     const external = classifyAdoptedGateway({ reason: "same-family", localOwner: "none" });
     assert.equal(chooseRecoveryStrategy({ gatewayOwnership: external }), "reconnect");
@@ -266,9 +266,9 @@ describe("unrecoverableGatewayDialog", () => {
       port: 5476,
       isPrimaryWindow: true,
     });
-    assert.equal(model.title, "Kiro Crew: backend stuck on port 5476");
+    assert.equal(model.title, "Aj Crew: backend stuck on port 5476");
     assert.equal(model.primaryAction, "quit");
-    assert.equal(model.primaryLabel, "Quit Kiro Crew");
+    assert.equal(model.primaryLabel, "Quit Aj Crew");
     assert.equal(model.showQuitButton, false);
     assert.equal(model.portConflict, false);
     assert.match(model.message, /Restart your computer/);
@@ -280,11 +280,11 @@ describe("unrecoverableGatewayDialog", () => {
       probeFailed: true,
       isPrimaryWindow: false,
     });
-    assert.equal(model.title, "Kiro Crew: can't verify what's using port 5476");
+    assert.equal(model.title, "Aj Crew: can't verify what's using port 5476");
     assert.equal(model.primaryAction, "quit");
     assert.equal(model.primaryLabel, "Close");
     assert.equal(model.showQuitButton, false);
-    assert.match(model.message, /Quit and reopen Kiro Crew to try again/);
+    assert.match(model.message, /Quit and reopen Aj Crew to try again/);
     assert.match(model.message, /If the port is still blocked, restart your computer/);
   });
 
@@ -294,9 +294,9 @@ describe("unrecoverableGatewayDialog", () => {
       variant: "held",
       isPrimaryWindow: true,
     });
-    assert.equal(model.title, "Kiro Crew: port 5476 is in use");
+    assert.equal(model.title, "Aj Crew: port 5476 is in use");
     assert.equal(model.primaryAction, "quit");
-    assert.equal(model.primaryLabel, "Quit Kiro Crew");
+    assert.equal(model.primaryLabel, "Quit Aj Crew");
     assert.equal(model.showQuitButton, false);
     assert.match(model.message, /Quit the process using port 5476/);
     assert.doesNotMatch(model.message, /Restart your computer/);
@@ -755,7 +755,7 @@ describe("shouldReresolveBackend", () => {
 
   it("pins the watchdog's exit status so the two sides cannot drift apart", () => {
     const backend = fs.readFileSync(
-      path.join(__dirname, "..", "..", "..", "src", "kiro_crew", "dashboard", "stale_asset_watchdog.py"),
+      path.join(__dirname, "..", "..", "..", "src", "aj_crew", "dashboard", "stale_asset_watchdog.py"),
       "utf8",
     );
     assert.match(backend, new RegExp(`^STALE_ASSET_EXIT_CODE = ${STALE_ASSET_EXIT_CODE}$`, "m"));
@@ -873,7 +873,7 @@ describe("shouldReresolveBackend", () => {
     );
   });
 
-  // A dev checkout with no kirocrew anywhere spawns the bare PATH name and gets
+  // A dev checkout with no ajcrew anywhere spawns the bare PATH name and gets
   // ENOENT on every boot; treating that as stale would relaunch the app forever.
   it("ignores a first signal from a PATH or source-checkout gateway", () => {
     assert.equal(
@@ -928,17 +928,17 @@ describe("isStaleBundleSignal", () => {
 });
 
 describe("gatewayCliInvocation", () => {
-  it("unwraps a Windows kirocrew.cmd to the bundled python.exe (win32 path rules)", () => {
-    const cmd = "C:\\App\\resources\\backend-dist\\kirocrew-backend\\bin\\kirocrew.cmd";
+  it("unwraps a Windows ajcrew.cmd to the bundled python.exe (win32 path rules)", () => {
+    const cmd = "C:\\App\\resources\\backend-dist\\ajcrew-backend\\bin\\ajcrew.cmd";
     assert.deepEqual(gatewayCliInvocation(cmd, ["gateway-pid"], path.win32), {
-      bin: "C:\\App\\resources\\backend-dist\\kirocrew-backend\\python.exe",
-      args: ["-s", "-P", "-m", "kiro_crew", "gateway-pid"],
+      bin: "C:\\App\\resources\\backend-dist\\ajcrew-backend\\python.exe",
+      args: ["-s", "-P", "-m", "aj_crew", "gateway-pid"],
     });
   });
 
   it("passes any other bin through unchanged", () => {
-    assert.deepEqual(gatewayCliInvocation("/opt/kc/bin/kirocrew", ["gateway-pid"]), {
-      bin: "/opt/kc/bin/kirocrew",
+    assert.deepEqual(gatewayCliInvocation("/opt/kc/bin/ajcrew", ["gateway-pid"]), {
+      bin: "/opt/kc/bin/ajcrew",
       args: ["gateway-pid"],
     });
   });

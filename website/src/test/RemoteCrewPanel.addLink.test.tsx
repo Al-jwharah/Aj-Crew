@@ -7,7 +7,7 @@ import { RemoteCrewPanel } from '../pages/settings/RemoteCrewPanel'
 import { prefillCrewAddForm, setCrewAddForm } from '../store/instancesSlice'
 import { EMPTY_INSTANCE_FORM } from '../pages/settings/InstanceFormFields'
 
-// A `kirocrew://remote-crew/add` link fills in the add form and nothing else:
+// An `ajcrew://remote-crew/add` link fills in the add form and nothing else:
 // the crew is created only by the user's own Add click.
 vi.mock('../api/client', () => {
   class ApiError extends Error {

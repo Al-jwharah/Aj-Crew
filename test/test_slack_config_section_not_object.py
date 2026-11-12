@@ -6,7 +6,7 @@ key inside a config section. When that section holds a list, string, number or
 its bytes and the in-memory state keeps its value. ``_set_default_agent``
 refuses with ``ValueError``, the error its callers already turn into a reply.
 
-Config writes land in the per-test ``KIROCREW_HOME`` that ``conftest.py`` pins.
+Config writes land in the per-test ``AJCREW_HOME`` that ``conftest.py`` pins.
 """
 
 from __future__ import annotations
@@ -21,10 +21,10 @@ from slack_interactions_coverage_helpers import ix_logs_fixture  # noqa: F401
 from slack_interactions_coverage_helpers import orch_fixture  # noqa: F401
 from slack_interactions_coverage_helpers import _ix_messages, _payload
 
-from kiro_crew.config.loader import config_path
-from kiro_crew.slack import events
-from kiro_crew.slack import handler as sh
-from kiro_crew.slack import interactions as ix
+from aj_crew.config.loader import config_path
+from aj_crew.slack import events
+from aj_crew.slack import handler as sh
+from aj_crew.slack import interactions as ix
 
 NOT_OBJECTS = [["x"], "x", 7, None]
 NOT_OBJECT_IDS = ["list", "str", "int", "null"]

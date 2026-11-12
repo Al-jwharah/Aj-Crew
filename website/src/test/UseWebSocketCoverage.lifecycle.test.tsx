@@ -381,7 +381,7 @@ describe('useWebSocket slots reconcile', () => {
     testStore.dispatch(sseChatMessage({ slot: BACKGROUND, role: 'assistant', content: 'archived', ts: '1' }))
     expect(testStore.getState().chat.slotMessages[BACKGROUND]).toBeDefined()
 
-    testStore.dispatch(sseSlots([{ key: ACTIVE, title: ACTIVE, agent: 'kirocrew' } as ChatSlot]))
+    testStore.dispatch(sseSlots([{ key: ACTIVE, title: ACTIVE, agent: 'ajcrew' } as ChatSlot]))
     expect(testStore.getState().chat.slotMessages[BACKGROUND]).toBeUndefined()
   })
 

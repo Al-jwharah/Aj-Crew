@@ -13,7 +13,7 @@ from pathlib import Path
 import native_skill_projection_helpers
 import pytest
 
-from kiro_crew import agent_spec_pins
+from aj_crew import agent_spec_pins
 
 # The shared fixtures, bound here by name: pytest registers the fixtures from this namespace.
 _legacy_alias = native_skill_projection_helpers._legacy_alias
@@ -42,7 +42,7 @@ def _write(directory: Path, file_name: str, **spec: object) -> Path:
 def contested_tree(native_tree, monkeypatch):
     from types import SimpleNamespace
 
-    from kiro_crew.acp import skill_projection as projection
+    from aj_crew.acp import skill_projection as projection
 
     home, agents, project = native_tree
     _write(agents, "PkgA-helper.json", name="helper", prompt="A", tools=["read"])
@@ -61,18 +61,18 @@ def _view_prompt(agents: Path, alias: str) -> str:
 
 
 def test_the_kiro_cli_view_is_built_from_the_pinned_file(contested_tree, pins):
-    from kiro_crew.acp import skill_projection as projection
+    from aj_crew.acp import skill_projection as projection
 
     agents, project = contested_tree
     pins["helper"] = "PkgB-helper.json"
     prepared = projection.prepare_native_skill_projection(project)
     alias = prepared.agent("helper")
-    assert alias.startswith("kirocrew-") and alias != "helper"
+    assert alias.startswith("ajcrew-") and alias != "helper"
     assert _view_prompt(agents, alias) == "B"
 
 
 def test_no_pin_builds_no_kiro_cli_view_for_a_contested_name(contested_tree, pins):
-    from kiro_crew.acp import skill_projection as projection
+    from aj_crew.acp import skill_projection as projection
 
     _agents, project = contested_tree
     prepared = projection.prepare_native_skill_projection(project)
@@ -83,7 +83,7 @@ def test_no_pin_builds_no_kiro_cli_view_for_a_contested_name(contested_tree, pin
 def test_a_pin_whose_file_is_gone_builds_no_view_of_the_file_left(contested_tree, pins):
     """With one file left, a pin naming another one still refuses: kiro-cli is
     never handed a view of a file the operator did not pin."""
-    from kiro_crew.acp import skill_projection as projection
+    from aj_crew.acp import skill_projection as projection
 
     agents, project = contested_tree
     pins["helper"] = "PkgB-helper.json"

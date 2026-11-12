@@ -33,7 +33,7 @@ initI18n()
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 localStorage.setItem('mc-theme', theme)
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const PR_URL = 'https://github.com/kirodotdev/KiroCrew/pull/6420'
 const REVIEW_ID = 'PRR_draft_1'
@@ -41,7 +41,7 @@ const REVIEW_ID = 'PRR_draft_1'
 const DRAFT = {
   reviewId: REVIEW_ID,
   body: 'Two notes on the retry path, both non-blocking.',
-  comments: [{ path: 'src/kiro_crew/retry.py', line: 88, body: 'Bound this loop.' }],
+  comments: [{ path: 'src/aj_crew/retry.py', line: 88, body: 'Bound this loop.' }],
   commitId: 'c0ffee1234567890',
   headSha: 'c0ffee1234567890',
   stale: false,

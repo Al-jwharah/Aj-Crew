@@ -21,9 +21,9 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_handlers_core_coverage_helpers import fake_sel_fixture  # noqa: F401
 
-from kiro_crew import session_workspace_tail
-from kiro_crew.dashboard.handlers import core as core_mod
-from kiro_crew.session_workspace_tail import ResultTail
+from aj_crew import session_workspace_tail
+from aj_crew.dashboard.handlers import core as core_mod
+from aj_crew.session_workspace_tail import ResultTail
 
 
 def _append(path: Path, data: bytes) -> None:
@@ -99,7 +99,7 @@ def test_a_replaced_file_is_read_from_its_start(tmp_path: Path) -> None:
 
 
 def _stream_app(path: Path, monkeypatch: pytest.MonkeyPatch) -> web.Application:
-    monkeypatch.setattr("kiro_crew.session_workspace.result_path", lambda *_a: path)
+    monkeypatch.setattr("aj_crew.session_workspace.result_path", lambda *_a: path)
     app = web.Application()
     app["state"] = SimpleNamespace(
         subagents=SimpleNamespace(get=lambda _a: SimpleNamespace(done=True))

@@ -19,24 +19,24 @@ from typing import Any, Dict, List, Optional
 from aiohttp import WSMsgType, web
 from aiohttp.test_utils import TestServer
 
-from kiro_crew.dashboard.kiro_relay.caller import published_relay_caller
-from kiro_crew.dashboard.kiro_relay.ingress import (
+from aj_crew.dashboard.kiro_relay.caller import published_relay_caller
+from aj_crew.dashboard.kiro_relay.ingress import (
     RELAY_INGRESS_APP_KEY,
     RelayIngress,
     relay_ingress_middleware,
 )
-from kiro_crew.dashboard.relay_headers import relay_header_strip_middleware
-from kiro_crew.relay_client.client import RelayClient
-from kiro_crew.relay_client.connection import RelayTimings
-from kiro_crew.relay_client.ingress import LoopbackIngress
-from kiro_crew.relay_client.protocol import WS_MESSAGE_MAX_BYTES
-from kiro_crew.relay_client.token_source import (
+from aj_crew.dashboard.relay_headers import relay_header_strip_middleware
+from aj_crew.relay_client.client import RelayClient
+from aj_crew.relay_client.connection import RelayTimings
+from aj_crew.relay_client.ingress import LoopbackIngress
+from aj_crew.relay_client.protocol import WS_MESSAGE_MAX_BYTES
+from aj_crew.relay_client.token_source import (
     ConnectedPeople,
     HostCredential,
     NewTokenCallback,
     RelayConnected,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 FIXTURES = Path(__file__).parent / "fixtures" / "relay_protocol_v1"
 TOKEN = "eyJ0eXAiOiJraXJvLXJlbGF5LWhvc3Qrand0In0.eyJ0ZXN0IjoxfQ.c2ln"
@@ -282,7 +282,7 @@ class FakeCrew:
             ]
         )
         if self.canonical_redirect:
-            from kiro_crew.dashboard.server import build_host_canonical_redirect
+            from aj_crew.dashboard.server import build_host_canonical_redirect
 
             app.middlewares.append(build_host_canonical_redirect("localhost"))
             app.router.add_get("/", self._sessions)

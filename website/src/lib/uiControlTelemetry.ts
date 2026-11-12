@@ -3,7 +3,7 @@
  *
  * Sends only which KIND of control was clicked (`UiControl`), never what it
  * said, which turn it was on or which artifact it named. The gateway records
- * `kirocrew.ui.control.clicked` and answers 204; with telemetry consent off it
+ * `ajcrew.ui.control.clicked` and answers 204; with telemetry consent off it
  * records nothing. A failure is swallowed here, so reporting can never change
  * what the click does.
  */

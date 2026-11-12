@@ -377,7 +377,7 @@ describe('CrewChatWindow', () => {
     renderWindow()
     const box = await screen.findByRole('textbox')
     fireEvent.change(box, { target: { value: 'half a thought' } })
-    await waitFor(() => expect(sessionStorage.getItem('kirocrew.crewDrafts') ?? '').toContain('half a thought'))
+    await waitFor(() => expect(sessionStorage.getItem('ajcrew.crewDrafts') ?? '').toContain('half a thought'))
   })
 
   it('offers no card for an approval it cannot tie to one peer row', async () => {
@@ -904,8 +904,8 @@ describe('CrewChatWindow', () => {
   })
 
   it.each([
-    [{ version: '0.8.0', behind: true }, "This crew runs Kiro Crew 0.8.0, older than this machine's 0.9.0. Update the crew to match."],
-    [{ version: '0.10.0', ahead: true }, "This crew runs Kiro Crew 0.10.0, newer than this machine's 0.9.0. Update this machine to match."],
+    [{ version: '0.8.0', behind: true }, "This crew runs Aj Crew 0.8.0, older than this machine's 0.9.0. Update the crew to match."],
+    [{ version: '0.10.0', ahead: true }, "This crew runs Aj Crew 0.10.0, newer than this machine's 0.9.0. Update this machine to match."],
   ])('names the older side of a version mismatch (%o)', async (caps, text) => {
     mocks.instancesCapabilities.mockResolvedValue({ version_match: false, local_version: '0.9.0', ...caps })
     renderWindow()
@@ -1302,9 +1302,9 @@ describe('CrewChatWindow', () => {
   describe('agent and approval mode on the peer', () => {
     const peerCaps = {
       version_match: true, version: '0.9.0', local_version: '0.9.0', unavailable: {},
-      default_agent: 'kirocrew',
+      default_agent: 'ajcrew',
       agents: [
-        { name: 'kirocrew', description: '', scope: 'global', model: '' },
+        { name: 'ajcrew', description: '', scope: 'global', model: '' },
         { name: 'builder', description: 'Builds things', scope: 'local', model: '' },
       ],
     }
@@ -1318,18 +1318,18 @@ describe('CrewChatWindow', () => {
       const chip = await screen.findByRole('button', { name: 'Agent: builder' }, PEER_ROW_WAIT)
       fireEvent.click(chip)
       const list = await screen.findByRole('listbox', { name: 'Agent list' })
-      expect(within(list).getByText('kirocrew')).toBeTruthy()
+      expect(within(list).getByText('ajcrew')).toBeTruthy()
       expect(within(list).getByText('builder')).toBeTruthy()
     })
 
     it('marks an agent-less peer slot as the PEER\'s default', async () => {
       renderWindow()
-      expect(await screen.findByRole('button', { name: /kirocrew/ }, PEER_ROW_WAIT)).toHaveTextContent('kirocrew · default')
+      expect(await screen.findByRole('button', { name: /ajcrew/ }, PEER_ROW_WAIT)).toHaveTextContent('ajcrew · default')
     })
 
     it('switches the agent on the PEER\'s slot, never this machine\'s', async () => {
       renderWindow()
-      fireEvent.click(await screen.findByRole('button', { name: /kirocrew/ }, PEER_ROW_WAIT))
+      fireEvent.click(await screen.findByRole('button', { name: /ajcrew/ }, PEER_ROW_WAIT))
       fireEvent.click(within(await screen.findByRole('listbox', { name: 'Agent list' })).getByText('builder'))
       await waitFor(() => expect(posted()).toContainEqual(['api/chat/slots/k1/agent', { agent: 'builder' }]))
       expect(mocks.chatSlotAgent).not.toHaveBeenCalled()
@@ -1338,7 +1338,7 @@ describe('CrewChatWindow', () => {
     it('shows the peer\'s refusal of an agent switch on the window', async () => {
       mocks.crewPeerPost.mockRejectedValueOnce(new Error('agent not found on peer'))
       renderWindow()
-      fireEvent.click(await screen.findByRole('button', { name: /kirocrew/ }, PEER_ROW_WAIT))
+      fireEvent.click(await screen.findByRole('button', { name: /ajcrew/ }, PEER_ROW_WAIT))
       fireEvent.click(within(await screen.findByRole('listbox', { name: 'Agent list' })).getByText('builder'))
       expect(await screen.findByText('agent not found on peer')).toBeTruthy()
       expect(screen.getByText('devbox refused that action. Try again, or open the crew\'s own dashboard.')).toBeTruthy()
@@ -1358,7 +1358,7 @@ describe('CrewChatWindow', () => {
         .mockResolvedValue(peerCaps)
       renderWindow()
       expect(await screen.findByText('Couldn\'t load the agent list.', undefined, PEER_ROW_WAIT)).toBeTruthy()
-      expect(await screen.findByRole('button', { name: /kirocrew/ }, { timeout: 8000 })).toBeTruthy()
+      expect(await screen.findByRole('button', { name: /ajcrew/ }, { timeout: 8000 })).toBeTruthy()
       expect(screen.queryByText('Couldn\'t load the agent list.')).toBeNull()
     }, 15000)
 
@@ -1433,7 +1433,7 @@ describe('CrewChatWindow', () => {
       renderWindow()
       // Wait for the approval-state answer itself, then for the slot row.
       expect(await screen.findByText('Couldn\'t read the approval mode on devbox. Trying again…', undefined, PEER_ROW_WAIT)).toBeTruthy()
-      await screen.findByRole('button', { name: /kirocrew/ }, PEER_ROW_WAIT)
+      await screen.findByRole('button', { name: /ajcrew/ }, PEER_ROW_WAIT)
       expect(screen.queryByRole('button', { name: /approval mode/i })).toBeNull()
     })
 

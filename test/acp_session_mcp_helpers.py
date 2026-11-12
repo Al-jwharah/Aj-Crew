@@ -20,18 +20,18 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp import session_mcp
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew import agent as agent_mod
+from aj_crew.acp import client as client_mod
+from aj_crew.acp import session_mcp
+from aj_crew.acp.client import AcpClient
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
-_CORE = {"command": "/opt/kirocrew", "args": ["mcp-core"]}
-_CRON = {"command": "/opt/kirocrew", "args": ["mcp-cron"]}
+_CORE = {"command": "/opt/ajcrew", "args": ["mcp-core"]}
+_CRON = {"command": "/opt/ajcrew", "args": ["mcp-cron"]}
 
 #: The starting-mode pin setting, spelled as ``configuration.md`` documents it, so a
 #: rename of the operator-facing name fails here rather than following the code.
-_PIN_SETTING_ENV = "KIROCREW_CC_PIN_INHERITED_MODE"
+_PIN_SETTING_ENV = "AJCREW_CC_PIN_INHERITED_MODE"
 
 
 @pytest.fixture(autouse=True)
@@ -40,14 +40,14 @@ def _pinned_kiro_cli_version(_floor_monkeypatch):
 
     A client start here materialises the agent spec (``ensure_agent_materialized``
     -> ``rebuild_agent_config`` -> ``_write_derived_permissions``), which reads
-    ``installed_kiro_cli_version`` function-locally from ``kiro_crew.kiro_cli``:
+    ``installed_kiro_cli_version`` function-locally from ``aj_crew.kiro_cli``:
     one real ``kiro-cli --version`` spawn per binary identity, process-cached, so
     whichever test in the worker starts first pays it against the HOST's install
     with the checkout as the child's cwd. Pinned to the floor release, as
     ``test_agent.py`` and the generated-writer suites pin it.
     """
     _floor_monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
 
@@ -73,7 +73,7 @@ def isolated_seed_provenance(_floor_monkeypatch):
     LATER test's client (pytest truncates long test names to one shared
     tmp-dir prefix, so paths can even collide) is correctly refused against.
     """
-    from kiro_crew.acp import seed_provenance
+    from aj_crew.acp import seed_provenance
 
     _floor_monkeypatch.setattr(seed_provenance, "_RECORDS", {})
     _floor_monkeypatch.setattr(seed_provenance, "_LIVE", {})
@@ -82,7 +82,7 @@ def isolated_seed_provenance(_floor_monkeypatch):
 
 @pytest.fixture(name="no_ambient_pin_setting", autouse=True)
 def _no_ambient_pin_setting(_floor_monkeypatch):
-    """``KIROCREW_CC_PIN_INHERITED_MODE`` is an input here, never the test host's.
+    """``AJCREW_CC_PIN_INHERITED_MODE`` is an input here, never the test host's.
 
     Unset is the default. A fixture that turns it on with its own ``monkeypatch``
     requests ``no_ambient_pin_setting``, so the removal runs first.
@@ -105,7 +105,7 @@ def agents_dir_fixture(tmp_path, monkeypatch):
     monkeypatch.setattr(
         session_mcp,
         "managed_mcp_spec_entry",
-        lambda name: {"kirocrew-core": dict(_CORE), "kirocrew-cron": dict(_CRON)}.get(name),
+        lambda name: {"ajcrew-core": dict(_CORE), "ajcrew-cron": dict(_CRON)}.get(name),
     )
     # Registry mode reads the effective config; pinned off (the default for a
     # personal install) so the symmetric filter is deterministic here. The tests
@@ -115,7 +115,7 @@ def agents_dir_fixture(tmp_path, monkeypatch):
 
 
 def _write_spec(
-    agents_dir: Path, *, servers: dict, tools: list | None, name: str = "kirocrew"
+    agents_dir: Path, *, servers: dict, tools: list | None, name: str = "ajcrew"
 ) -> None:
     spec: dict = {"name": name, "mcpServers": servers}
     if tools is not None:
@@ -127,10 +127,10 @@ def _write_project_spec(project_dir: Path, *, servers: dict, tools: list | None)
     """A spec in the checkout kiro-cli resolves ``--agent`` against first."""
     agents = project_dir / ".kiro" / "agents"
     agents.mkdir(parents=True, exist_ok=True)
-    spec: dict = {"name": "kirocrew", "mcpServers": servers}
+    spec: dict = {"name": "ajcrew", "mcpServers": servers}
     if tools is not None:
         spec["tools"] = tools
-    (agents / "kirocrew.json").write_text(json.dumps(spec), encoding="utf-8")
+    (agents / "ajcrew.json").write_text(json.dumps(spec), encoding="utf-8")
 
 
 def _by_name(elements: list[dict]) -> dict[str, dict]:

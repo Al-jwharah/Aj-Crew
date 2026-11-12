@@ -16,7 +16,7 @@ const defaultProps = {
   onChange: vi.fn(),
   onSend: vi.fn(),
   onProjectClick: vi.fn(),
-  project: '/home/u/work/KiroCrew',
+  project: '/home/u/work/AjCrew',
 }
 
 beforeEach(() => {
@@ -30,17 +30,17 @@ const branchBtn = () => screen.getByRole('button', { name: /Cop(y|ied) (branch n
 describe('ChatInput project chip branch label', () => {
   it('renders the branch beside the folder name', () => {
     renderWithProviders(<ChatInput {...defaultProps} projectBranch="feat/example" />)
-    expect(chip()).toHaveTextContent('KiroCrew')
+    expect(chip()).toHaveTextContent('AjCrew') // brand-ok: fixture data
     expect(branchBtn()).toHaveTextContent('feat/example')
     expect(chip().getAttribute('title')).toContain('Branch: feat/example')
-    expect(chip().getAttribute('title')).toContain('/home/u/work/KiroCrew')
+    expect(chip().getAttribute('title')).toContain('/home/u/work/AjCrew')
   })
 
   it('shows only the folder name when no branch is known', () => {
     renderWithProviders(<ChatInput {...defaultProps} />)
     const btn = chip()
-    expect(btn).toHaveTextContent('KiroCrew')
-    expect(btn.getAttribute('title')).toBe('Project: /home/u/work/KiroCrew')
+    expect(btn).toHaveTextContent('AjCrew') // brand-ok: fixture data
+    expect(btn.getAttribute('title')).toBe('Project: /home/u/work/AjCrew')
     expect(screen.queryByRole('button', { name: /Copy branch name/ })).not.toBeInTheDocument()
     // No separator glyph without a branch to separate.
     expect(btn.textContent).not.toContain('·')
@@ -60,7 +60,7 @@ describe('ChatInput project chip branch label', () => {
     const btn = chip()
     expect(btn).toBeEnabled()
     expect(btn).toHaveAccessibleName(/Branch: main/)
-    expect(btn).toHaveAccessibleName(/This reply finishes in KiroCrew\./)
+    expect(btn).toHaveAccessibleName(/This reply finishes in AjCrew\./)
   })
 
   it('leaves the branch copyable while a response is running', () => {
@@ -189,8 +189,8 @@ describe('ChatInput project chip while a response is running', () => {
     const btn = chip()
     expect(btn).toBeEnabled()
     const title = btn.getAttribute('title') || ''
-    expect(title).toContain('Project: /home/u/work/KiroCrew')
-    expect(title).toContain('Your next message runs in the project you pick. This reply finishes in KiroCrew.\nLinks in this reply will open in the project you pick.') // brand-ok: KiroCrew is the fixture folder name
+    expect(title).toContain('Project: /home/u/work/AjCrew')
+    expect(title).toContain('Your next message runs in the project you pick. This reply finishes in AjCrew.\nLinks in this reply will open in the project you pick.') // brand-ok: AjCrew is the fixture folder name
     expect(btn.getAttribute('aria-label')).toBe(title)
     fireEvent.click(btn)
     expect(onProjectClick).toHaveBeenCalledTimes(1)
@@ -220,7 +220,7 @@ describe('ChatInput project chip while a response is running', () => {
     rerender(<ChatInput {...defaultProps} project="/home/u/work/OtherRepo" isRunning onStop={vi.fn()} />)
     const title = chip().getAttribute('title') || ''
     expect(title).toContain('Project: /home/u/work/OtherRepo')
-    expect(title).toContain('This reply finishes in KiroCrew.') // brand-ok: KiroCrew is the fixture folder name
+    expect(title).toContain('This reply finishes in AjCrew.') // brand-ok: AjCrew is the fixture folder name
     // The next reply snapshots the project it starts in.
     rerender(<ChatInput {...defaultProps} project="/home/u/work/OtherRepo" onStop={vi.fn()} />)
     rerender(<ChatInput {...defaultProps} project="/home/u/work/OtherRepo" isRunning onStop={vi.fn()} />)
@@ -233,8 +233,8 @@ describe('ChatInput project chip while a response is running', () => {
         <ChatInput {...defaultProps} project={project} isRunning onStop={vi.fn()} />
       </SlotProvider>
     )
-    const { rerender } = renderWithProviders(inSlot('chat-a', '/home/u/work/KiroCrew'))
-    expect(chip().getAttribute('title')).toContain('This reply finishes in KiroCrew.') // brand-ok: fixture folder name
+    const { rerender } = renderWithProviders(inSlot('chat-a', '/home/u/work/AjCrew'))
+    expect(chip().getAttribute('title')).toContain('This reply finishes in AjCrew.') // brand-ok: fixture folder name
     // Both chats are running, so isRunning never flips; the slot change alone
     // must move the snapshot to the other chat's project.
     rerender(inSlot('chat-b', '/home/u/work/OtherRepo'))
@@ -243,7 +243,7 @@ describe('ChatInput project chip while a response is running', () => {
 
   it('keeps the agent chip locked mid-turn while the model chip stays enabled', () => {
     renderWithProviders(
-      <ChatInput {...defaultProps} isRunning onStop={vi.fn()} agentName="kirocrew" onAgentClick={vi.fn()} modelName="claude-sonnet-4" onModelClick={vi.fn()} />,
+      <ChatInput {...defaultProps} isRunning onStop={vi.fn()} agentName="ajcrew" onAgentClick={vi.fn()} modelName="claude-sonnet-4" onModelClick={vi.fn()} />,
     )
     expect(screen.getByRole('button', { name: /switch agents/ })).toBeDisabled()
     expect(screen.getByTestId('composer-model-chip')).toBeEnabled()

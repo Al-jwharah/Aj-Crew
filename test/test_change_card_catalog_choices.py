@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import change_card_catalog as catalog
+from aj_crew import change_card_catalog as catalog
 
 
 @pytest.mark.parametrize(

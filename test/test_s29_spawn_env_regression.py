@@ -9,7 +9,7 @@ Both halves drive the REAL production seam, not a rebuilt copy of its literals:
   ``_claude_bin`` redirected at a stub, so every environment decision stays in
   production code.
 
-``KIROCREW_OWNER_ID`` is the probe key at both sites: it is a member of
+``AJCREW_OWNER_ID`` is the probe key at both sites: it is a member of
 ``sandbox._AGENT_DENIED_ENV_KEYS`` that carries no credential material of its
 own, so the planted value can stay a neutral literal. The other members of that
 list -- the chat-platform bot-token class, the tracker/forge token class and the
@@ -38,11 +38,11 @@ from dashboard_owner_helpers import as_owner
 from test_app_execution import _install_test_app, _route_app
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew import platform_compat
-from kiro_crew.knowledge.llm_pool import CCWorker
+from aj_crew import platform_compat
+from aj_crew.knowledge.llm_pool import CCWorker
 
 MARKER = "S29_MARKER"
-PROBE_KEY = "KIROCREW_OWNER_ID"
+PROBE_KEY = "AJCREW_OWNER_ID"
 
 #: A provider key the product deliberately passes to an agent child: it is in
 #: neither ``_SENSITIVE_ENV_PREFIXES`` nor ``_AGENT_DENIED_ENV_KEYS``, so the
@@ -116,9 +116,9 @@ async def open_app_spawn(tmp_path, monkeypatch) -> OpenAppSpawn:
     up; and ``create_subprocess_limited`` is the one seam replaced to read back
     the ``argv`` and ``env`` the route handed it -- the observables under test.
     """
-    import kiro_crew.apps.routes as routes
-    from kiro_crew import sandbox
-    from kiro_crew.apps import execution
+    import aj_crew.apps.routes as routes
+    from aj_crew import sandbox
+    from aj_crew.apps import execution
 
     _install_test_app(
         tmp_path,
@@ -309,7 +309,7 @@ async def _run_worker_spawn(stub, monkeypatch) -> None:
     Teardown is unconditionally suppressed so a raising cleanup cannot decide
     this test's outcome instead of the assertion.
     """
-    import kiro_crew.knowledge.llm_pool as llm_pool
+    import aj_crew.knowledge.llm_pool as llm_pool
 
     # The spawn inherits this process's working directory, and ``_spawn`` takes no
     # ``cwd``, so without this the stub child runs from the repository root. Any
@@ -358,9 +358,9 @@ async def test_knowledge_worker_child_does_not_receive_an_agent_denied_key(
 async def test_knowledge_worker_child_does_not_receive_the_interpreter_env(
     tmp_path, monkeypatch
 ) -> None:
-    """Second class at the same site: Kiro Crew's own interpreter paths.
+    """Second class at the same site: Aj Crew's own interpreter paths.
 
-    A foreign runtime that inherits ``PYTHONPATH`` imports Kiro Crew's
+    A foreign runtime that inherits ``PYTHONPATH`` imports Aj Crew's
     site-packages instead of its own -- the hazard
     ``sandbox._PYTHON_ENV_PREFIXES`` documents.
     """
@@ -410,7 +410,7 @@ async def test_knowledge_worker_wraps_at_the_operator_configured_tier(monkeypatc
     default -- so a worker that ignored the argument would read as ``auto``
     here rather than as the configured value.
     """
-    import kiro_crew.knowledge.llm_pool as llm_pool
+    import aj_crew.knowledge.llm_pool as llm_pool
 
     seen: dict[str, object] = {}
 
@@ -458,7 +458,7 @@ async def test_a_respawned_worker_reads_the_current_tier_not_the_first_one(
     answer differently the second time, which is what an operator editing
     ``agent.sandbox`` between spawns looks like from here.
     """
-    import kiro_crew.knowledge.llm_pool as llm_pool
+    import aj_crew.knowledge.llm_pool as llm_pool
 
     modes = iter(("standard", "strict"))
     seen: list[object] = []
@@ -507,7 +507,7 @@ async def test_pool_reads_the_tier_per_worker_not_once_at_start(monkeypatch) -> 
     inside the worker cannot help, because a pool-built worker is handed an
     explicit value and never resolves for itself.
     """
-    import kiro_crew.knowledge.llm_pool as llm_pool
+    import aj_crew.knowledge.llm_pool as llm_pool
 
     modes = iter(("standard", "strict"))
     monkeypatch.setattr(llm_pool, "_get_sandbox_mode", lambda *a, **k: next(modes))

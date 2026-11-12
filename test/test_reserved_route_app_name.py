@@ -19,13 +19,13 @@ import json
 
 import pytest
 
-from kiro_crew.apps.manager import (
+from aj_crew.apps.manager import (
     APP_MANIFEST_FILENAME,
     _read_installed,
     install_app,
     register_external_app,
 )
-from kiro_crew.apps.manifest import RESERVED_APP_NAME_CODE
+from aj_crew.apps.manifest import RESERVED_APP_NAME_CODE
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -58,10 +58,10 @@ def _make_app_source(tmp_path, name):
 
 @pytest.fixture()
 def app_home(tmp_path, monkeypatch):
-    """Set KIROCREW_HOME to a temp directory for isolated testing."""
-    home = tmp_path / "kirocrew-home"
+    """Set AJCREW_HOME to a temp directory for isolated testing."""
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     # The success-path assertions install a synthetic third-party app.
     (home / "config.json").write_text(
         json.dumps({"agent": {"apps_allow_third_party": True}}), encoding="utf-8"

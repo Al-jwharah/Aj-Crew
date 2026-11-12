@@ -16,7 +16,7 @@ import type { SendMode } from '../pages/chat/ChatSettings'
 import { i18nT } from '../i18n/t'
 // — $skill inline trigger autocomplete.
 // Mirrors FilePickerMenu but lists skills (from /api/skills, all sources:
-// kirocrew + workspace + AIM). Selecting one inserts a `$leaf` token; the
+// ajcrew + workspace + AIM). Selecting one inserts a `$leaf` token; the
 // backend SkillsLoader.resolve_dollar_skills then expands it (allowlist match
 // on the leaf segment — no path is constructed from user input, per input-validation guidance).
 
@@ -24,7 +24,7 @@ interface SkillItem {
   key: string          // full key, e.g. "WorkforceEmploymentKnowledgeBase/oncall-handover"
   name: string
   description: string
-  source?: string      // kirocrew | aim | kiro-user | kiro-workspace
+  source?: string      // ajcrew | aim | kiro-user | kiro-workspace
   // Only present on `kiro-workspace` rows: whether the operator has granted
   // this project directory trust. An untrusted row is LISTED but not usable —
   // its `$token` would expand to nothing, because SkillsLoader gates the
@@ -434,7 +434,7 @@ export default function SkillPickerMenu({
                     {i18nT('components.skillPickerMenu.trust_needed_badge')}
                   </span>
                 )
-                : s.source && s.source !== 'kirocrew' && (
+                : s.source && s.source !== 'ajcrew' && (
                   <span className="text-[10px] text-muted shrink-0 whitespace-nowrap uppercase tracking-wide">{s.source}</span>
                 )}
             </div>

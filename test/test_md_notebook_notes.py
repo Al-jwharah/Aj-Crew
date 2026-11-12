@@ -16,9 +16,9 @@ from md_notebook_helpers import _seed_template  # noqa: F401 - fixture
 from md_notebook_helpers import fixtures_fixture  # noqa: F401 - fixture
 from md_notebook_helpers import _clone, _git, signed_client
 
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.md_notebook import git_ops
 from conftest import requires_symlinks
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.md_notebook import git_ops
 
 
 @pytest.mark.asyncio
@@ -559,7 +559,7 @@ def test_extract_tags_accepts_a_non_ascii_leading_character() -> None:
     register the same way. Tags feed an in-memory index, never a path, so
     the wide lead cannot create a filesystem collision.
     """
-    from kiro_crew.apps.builtins.md_notebook import notes as notes_mod
+    from aj_crew.apps.builtins.md_notebook import notes as notes_mod
 
     assert notes_mod.extract_tags("#论文") == ["论文"]
     assert notes_mod.extract_tags("#분기") == ["분기"]
@@ -572,7 +572,7 @@ def test_extract_tags_accepts_a_non_ascii_leading_character() -> None:
 
 def test_extract_tags_still_refuses_a_non_alphanumeric_lead() -> None:
     """Only the script restriction is lifted; the shape rules stand."""
-    from kiro_crew.apps.builtins.md_notebook import notes as notes_mod
+    from aj_crew.apps.builtins.md_notebook import notes as notes_mod
 
     assert notes_mod.extract_tags("#_foo") == []
     assert notes_mod.extract_tags("#-x") == []
@@ -585,7 +585,7 @@ def test_extract_tags_still_refuses_a_non_alphanumeric_lead() -> None:
 def test_extract_tags_ignores_masked_code_in_any_script() -> None:
     """Code masking still wins over the wider lead: a tag inside fenced or
     inline code is a sample, not an index entry."""
-    from kiro_crew.apps.builtins.md_notebook import notes as notes_mod
+    from aj_crew.apps.builtins.md_notebook import notes as notes_mod
 
     assert notes_mod.extract_tags("```\n#논문\n```") == []
     assert notes_mod.extract_tags("`#논문`") == []
@@ -607,7 +607,7 @@ def test_extract_tags_keeps_a_word_whose_script_uses_combining_marks(word: str) 
     """Python's ``\\w`` has no combining marks, so a tag scanner built on it alone
     would register these as their first letter -- ``#हिन्दी`` as ``ह`` -- a
     different tag from the one typed. The whole word is the tag."""
-    from kiro_crew.apps.builtins.md_notebook import notes as notes_mod
+    from aj_crew.apps.builtins.md_notebook import notes as notes_mod
 
     # NFC can reorder a run of marks (canonical ordering), so the tag is the word's NFC form.
     tag = unicodedata.normalize("NFC", word)
@@ -618,7 +618,7 @@ def test_extract_tags_keeps_a_word_whose_script_uses_combining_marks(word: str) 
 def test_extract_tags_is_nfc_so_one_tag_has_one_spelling() -> None:
     """A decomposed accent (``e`` + U+0301) is the same tag as the composed one,
     not a visually identical second tag -- and not the truncated ``cafe``."""
-    from kiro_crew.apps.builtins.md_notebook import notes as notes_mod
+    from aj_crew.apps.builtins.md_notebook import notes as notes_mod
 
     assert notes_mod.extract_tags("#cafe\u0301 and #caf\u00e9") == ["caf\u00e9"]
     meta = notes_mod.parse_note("n.md", "---\ntags: [cafe\u0301]\n---\nbody #caf\u00e9\n")
@@ -628,7 +628,7 @@ def test_extract_tags_is_nfc_so_one_tag_has_one_spelling() -> None:
 def test_extract_tags_still_ends_at_a_format_character() -> None:
     """Only combining marks were added: a zero-width space or a bidi override is
     not part of a word, so it still ends the tag rather than hiding inside it."""
-    from kiro_crew.apps.builtins.md_notebook import notes as notes_mod
+    from aj_crew.apps.builtins.md_notebook import notes as notes_mod
 
     assert notes_mod.extract_tags("#ab\u200bcd") == ["ab"]
     assert notes_mod.extract_tags("#ab\u202ecd") == ["ab"]

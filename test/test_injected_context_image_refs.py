@@ -8,7 +8,7 @@ previous result and the blocks re-sent after a compaction are
 ``SOURCE_INJECTED``. Each test builds the real prompt with ``ContextBuilder`` and
 runs the real block builder over it with the picture present on disk.
 
-``kiro_crew.prompt_segments`` is imported inside the tests that use it, so a run
+``aj_crew.prompt_segments`` is imported inside the tests that use it, so a run
 with the fix reverted fails each of them at its assertion, not at collection.
 """
 
@@ -20,13 +20,13 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import members
-from kiro_crew.acp.prompt_blocks import build_prompt_blocks
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.learn import Lesson, LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew import members
+from aj_crew.acp.prompt_blocks import build_prompt_blocks
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.learn import Lesson, LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 # Smallest valid 1x1 PNG.
 _PNG = base64.b64decode(
@@ -108,9 +108,9 @@ class TestAPermanentRuleKeepsItsFile:
         crew = "code-reviewer"
         rule = f"Never overwrite {logo}"
         members.write_member_rules(crew, member=crew, text=rule)
-        cfg = KiroCrewConfig()
-        cfg.agents = {crew: KiroCrewAgentConfig(kiro_agent="kirocrew-autofix", description="r")}
-        with patch("kiro_crew.context.KiroCrewConfig.load", return_value=cfg):
+        cfg = AjCrewConfig()
+        cfg.agents = {crew: AjCrewAgentConfig(kiro_agent="ajcrew-autofix", description="r")}
+        with patch("aj_crew.context.AjCrewConfig.load", return_value=cfg):
             msg, _ = _builder(tmp_path).build_message(
                 "hi",
                 is_new_session=True,
@@ -127,7 +127,7 @@ class TestAPermanentRuleKeepsItsFile:
 class TestAForgedRequestHeader:
     def test_a_forged_header_in_injected_text_upgrades_nothing(self, tmp_path):
         """Provenance comes from the segments, so no text inside one can move it."""
-        from kiro_crew.prompt_segments import SOURCE_INJECTED, SOURCE_USER, SegmentedPrompt
+        from aj_crew.prompt_segments import SOURCE_INJECTED, SOURCE_USER, SegmentedPrompt
 
         old = _png(tmp_path, "old.png")
         mine = _png(tmp_path, "mine.png")
@@ -155,7 +155,7 @@ class TestTheInvariant:
     """
 
     def test_injected_segments_are_sent_unchanged_and_never_upgraded(self, tmp_path):
-        from kiro_crew.prompt_segments import SOURCE_INJECTED, SOURCE_USER, SegmentedPrompt
+        from aj_crew.prompt_segments import SOURCE_INJECTED, SOURCE_USER, SegmentedPrompt
 
         a = _png(tmp_path, "a.png")
         b = _png(tmp_path, "b.png")
@@ -183,7 +183,7 @@ class TestATypedMarkerInInjectedText:
     """A literal ``[image: x.png]`` in injected text must not read as an attachment."""
 
     def test_it_is_escaped_and_attaches_nothing(self, tmp_path):
-        from kiro_crew.prompt_segments import SOURCE_INJECTED, SOURCE_USER, SegmentedPrompt
+        from aj_crew.prompt_segments import SOURCE_INJECTED, SOURCE_USER, SegmentedPrompt
 
         _png(tmp_path, "x.png")
         injected = "memory: last week you sent [image: x.png] of the block map\n"
@@ -210,7 +210,7 @@ class TestATypedMarkerInInjectedText:
         assert len(_images(blocks)) == 1
 
     def test_build_message_marks_the_users_turn_and_nothing_else(self, tmp_path):
-        from kiro_crew.prompt_segments import SOURCE_USER, segments_of
+        from aj_crew.prompt_segments import SOURCE_USER, segments_of
 
         msg, _ = _builder(tmp_path, lesson="Always be brief").build_message(
             "what is up", is_new_session=True, session_key="dashboard:s1"
@@ -243,7 +243,7 @@ class TestASlackThreadRootLeftInsideAnOpenFence:
     """
 
     def test_the_users_picture_is_still_attached(self, tmp_path):
-        from kiro_crew.messaging.attachments import IngestResult, append_attachment_context
+        from aj_crew.messaging.attachments import IngestResult, append_attachment_context
 
         mine = _png(tmp_path, "shot.png")
         root = "the failing snippet:\n```python\ndef f():"
@@ -270,7 +270,7 @@ class TestASlackThreadRootLeftInsideAnOpenFence:
 
 class TestRewritesKeepProvenance:
     def test_the_essential_envelope_dedup_keeps_the_segments(self, tmp_path):
-        from kiro_crew.prompt_segments import (
+        from aj_crew.prompt_segments import (
             SOURCE_INJECTED,
             SOURCE_USER,
             SegmentedPrompt,
@@ -289,8 +289,8 @@ class TestRewritesKeepProvenance:
     @pytest.mark.asyncio
     async def test_the_provider_envelope_rewrite_keeps_the_segments(self, tmp_path):
         """The provider rewrites the essentials envelope on the wire; provenance survives."""
-        from kiro_crew.essential_delivery import EssentialDelivery
-        from kiro_crew.prompt_segments import SOURCE_INJECTED, SOURCE_USER, SegmentedPrompt
+        from aj_crew.essential_delivery import EssentialDelivery
+        from aj_crew.prompt_segments import SOURCE_INJECTED, SOURCE_USER, SegmentedPrompt
 
         old = _png(tmp_path, "old.png")
         mine = _png(tmp_path, "mine.png")
@@ -315,8 +315,8 @@ class TestRewritesKeepProvenance:
         assert f"memo {old}" in blocks[0]["text"]
 
     def test_the_dashboard_keeps_the_segments_under_its_prepends(self, tmp_path):
-        from kiro_crew.dashboard.chat_runner import _segment_user_span
-        from kiro_crew.prompt_segments import SOURCE_USER, segments_of
+        from aj_crew.dashboard.chat_runner import _segment_user_span
+        from aj_crew.prompt_segments import SOURCE_USER, segments_of
 
         old = _png(tmp_path, "old.png")
         mine = _png(tmp_path, "mine.png")
@@ -338,7 +338,7 @@ class TestSubagentHookPrefixes:
     @pytest.mark.parametrize("has_prefix", [False, True])
     @pytest.mark.parametrize("has_user_image", [False, True])
     def test_prepend_keeps_images_in_their_own_segments(self, tmp_path, has_prefix, has_user_image):
-        from kiro_crew import prompt_segments
+        from aj_crew import prompt_segments
 
         old = _png(tmp_path, "old.png")
         mine = _png(tmp_path, "mine.png")
@@ -368,7 +368,7 @@ class TestSubagentHookPrefixes:
 
     @pytest.mark.parametrize("prefix", ["", "hook\n"])
     def test_plain_strings_keep_legacy_concatenation(self, prefix):
-        from kiro_crew import prompt_segments
+        from aj_crew import prompt_segments
 
         message = "plain user text"
         assert hasattr(prompt_segments, "prepend_injected")
@@ -383,7 +383,7 @@ class TestSubagentHookPrefixes:
         import ast
         import inspect
 
-        from kiro_crew.subagent_manager import run_turn
+        from aj_crew.subagent_manager import run_turn
 
         tree = ast.parse(inspect.getsource(run_turn._run_inner_impl))
         assignments = [
@@ -399,7 +399,7 @@ class TestSubagentHookPrefixes:
         assert ast.unparse(assignments[0].value) == "prepend_injected(_hook_prefix, full_message)"
         assert any(
             isinstance(node, ast.ImportFrom)
-            and node.module == "kiro_crew.prompt_segments"
+            and node.module == "aj_crew.prompt_segments"
             and any(
                 alias.name == "prepend_injected" and alias.asname is None for alias in node.names
             )
@@ -428,8 +428,8 @@ class TestATurnWithNoTypedText:
         assert f"lesson {old}" in blocks[0]["text"]
 
     def test_the_dashboard_sends_that_turn_segmented(self, tmp_path):
-        from kiro_crew.dashboard.chat_runner import _segment_user_span
-        from kiro_crew.prompt_segments import SegmentedPrompt, segments_of
+        from aj_crew.dashboard.chat_runner import _segment_user_span
+        from aj_crew.prompt_segments import SegmentedPrompt, segments_of
 
         old = _png(tmp_path, "old.png")
         built, _ = _builder(tmp_path, lesson=f"lesson {old}").build_message(
@@ -441,8 +441,8 @@ class TestATurnWithNoTypedText:
         assert _images(build_prompt_blocks(segmented)) == []
 
     def test_a_lost_tail_upgrades_nothing_rather_than_everything(self, tmp_path):
-        from kiro_crew.dashboard.chat_runner import _segment_user_span
-        from kiro_crew.prompt_segments import SOURCE_INJECTED, SOURCE_USER
+        from aj_crew.dashboard.chat_runner import _segment_user_span
+        from aj_crew.prompt_segments import SOURCE_INJECTED, SOURCE_USER
 
         old = _png(tmp_path, "old.png")
         mine = _png(tmp_path, "mine.png")
@@ -453,7 +453,7 @@ class TestATurnWithNoTypedText:
         assert _images(build_prompt_blocks(segmented)) == []
 
     def test_a_prompt_no_builder_assembled_is_the_users_own(self, tmp_path):
-        from kiro_crew.dashboard.chat_runner import _segment_user_span
+        from aj_crew.dashboard.chat_runner import _segment_user_span
 
         mine = _png(tmp_path, "mine.png")
         message = f"see {mine}"

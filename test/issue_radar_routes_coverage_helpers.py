@@ -20,7 +20,7 @@ from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 from dashboard_owner_helpers import NoConfiguredOwner
 
-from kiro_crew.apps.builtins.issue_radar.backend import provider, routes, store
+from aj_crew.apps.builtins.issue_radar.backend import provider, routes, store
 
 BASE = "/api/apps/issue-radar"
 SHA = "a" * 40

@@ -13,11 +13,11 @@
  *
  * Behaviour: silent and self-healing. Launching the app is consent. A private
  * manifest records the hashes, inode anchors, and metadata of every launcher
- * and icon Kiro Crew writes. A later release or moved AppImage updates a public
+ * and icon Aj Crew writes. A later release or moved AppImage updates a public
  * file only while that provenance still matches; any unknown, unreadable,
  * special, content-edited, or metadata-edited file is preserved. Pre-existing
  * manual launchers have no manifest provenance and are never adopted.
- * `KIROCREW_DISABLE_DESKTOP_INTEGRATION` disables all integration work.
+ * `AJCREW_DISABLE_DESKTOP_INTEGRATION` disables all integration work.
  *
  * Safety: publication uses same-directory temporary files, durable manifest
  * intent, and atomic no-replace hard links. Managed replacement runs inside
@@ -63,10 +63,10 @@
  * no-ops.
  *
  * The managed launcher's desktop id is the bundled icon name plus
- * `-appimage` (`kirocrew-desktop-appimage.desktop`, nightly
- * `kirocrew-desktop-nightly-appimage.desktop`). XDG resolves a user-level
+ * `-appimage` (`ajcrew-desktop-appimage.desktop`, nightly
+ * `ajcrew-desktop-nightly-appimage.desktop`). XDG resolves a user-level
  * entry over a system one of the SAME id, so a launcher named like the deb/rpm
- * entry (`kirocrew-desktop.desktop` under /usr/share/applications) would keep
+ * entry (`ajcrew-desktop.desktop` under /usr/share/applications) would keep
  * starting a stale or deleted AppImage after a package was installed. The
  * distinct id keeps both entries independent; `StartupWMClass` still carries
  * the bundled value, which equals Electron's app_id, so GNOME and KDE associate
@@ -101,7 +101,7 @@ const MAX_ARTIFACT_BYTES = 16 * 1024 * 1024;
 const APPIMAGE_LAUNCHER_SUFFIX = "-appimage";
 // workerData marker that makes this module run as the integration worker when
 // it is the worker's entry script, instead of only exporting its helpers.
-const WORKER_ROLE = "kirocrew-linux-desktop-integration";
+const WORKER_ROLE = "ajcrew-linux-desktop-integration";
 let tempNonce = 0;
 
 function uniqueSidePath(base, kind) {
@@ -136,7 +136,7 @@ const ICON_SIZES = ["16x16", "24x24", "32x32", "48x48", "64x64", "128x128", "256
 const SYSTEM_BIN_DIRS = ["/usr/bin", "/bin", "/usr/sbin", "/sbin"];
 
 // Truthy env values, matching how the rest of the electron shell reads
-// KIROCREW_* flags (see disable-gpu.js).
+// AJCREW_* flags (see disable-gpu.js).
 const TRUTHY = new Set(["1", "true", "yes", "on"]);
 const EXTRACT_AND_RUN_ARG = "--appimage-extract-and-run";
 const EXTRACT_AND_RUN_APPDIR = /^appimage_extracted_[0-9a-f]{32}$/;
@@ -254,16 +254,16 @@ function appImageLauncherName(iconName) {
  * Decide whether to run at all. Integration is Linux-only, requires an install
  * kind already resolved as `appimage` plus both AppImage runtime variables, and
  * is skipped when the user opts out via
- * `KIROCREW_DISABLE_DESKTOP_INTEGRATION` (truthy 1/true/yes/on, matching the
- * `KIROCREW_DISABLE_GPU` convention). `platform` and `installKind` are injected
+ * `AJCREW_DISABLE_DESKTOP_INTEGRATION` (truthy 1/true/yes/on, matching the
+ * `AJCREW_DISABLE_GPU` convention). `platform` and `installKind` are injected
  * rather than inferred from environment presence. Returns
  * { integrate, appImage, appDir, reason }.
  */
 function planIntegration(env, platform = process.platform, installKind = "unknown") {
   if (platform !== "linux") return { integrate: false, reason: "not linux" };
-  const optOut = env && env.KIROCREW_DISABLE_DESKTOP_INTEGRATION;
+  const optOut = env && env.AJCREW_DISABLE_DESKTOP_INTEGRATION;
   if (typeof optOut === "string" && TRUTHY.has(optOut.trim().toLowerCase())) {
-    return { integrate: false, reason: "opt-out via KIROCREW_DISABLE_DESKTOP_INTEGRATION" };
+    return { integrate: false, reason: "opt-out via AJCREW_DISABLE_DESKTOP_INTEGRATION" };
   }
   if (installKind !== "appimage") return { integrate: false, reason: "not an AppImage install" };
   const appImage = env && env.APPIMAGE;
@@ -543,7 +543,7 @@ const METADATA_HELPER_SCRIPT = [
 
 function runMetadataHelper(fs, path, spawnSync, resourcesPath, args) {
   if (typeof spawnSync !== "function" || typeof resourcesPath !== "string") return null;
-  const binDir = path.join(resourcesPath, "backend-dist", "kirocrew-backend", "bin");
+  const binDir = path.join(resourcesPath, "backend-dist", "ajcrew-backend", "bin");
   let python;
   try {
     const name = fs.readdirSync(binDir).find((entry) => /^python3\.\d+$/.test(entry));
@@ -825,7 +825,7 @@ function loadManifest(fs, manifestPath) {
       if (record.recovery !== undefined &&
           (!validRecovery(record.recovery) ||
            record.recovery.paths.some((p) =>
-             !isGeneratedSidePath(artifactPath, p, ["tmp", "kirocrew-displaced"])))) return null;
+             !isGeneratedSidePath(artifactPath, p, ["tmp", "ajcrew-displaced"])))) return null;
       if (record.pending !== undefined && record.pending !== null) {
         const p = record.pending;
         if (!p || !/^[0-9a-f]{64}$/.test(p.hash) ||
@@ -834,11 +834,11 @@ function loadManifest(fs, manifestPath) {
             !validMetadata(p.metadata) ||
             !isGeneratedSidePath(artifactPath, p.tempPath, ["tmp"])) return null;
         if (p.displacedPath !== undefined &&
-            !isGeneratedSidePath(artifactPath, p.displacedPath, ["kirocrew-displaced"])) return null;
+            !isGeneratedSidePath(artifactPath, p.displacedPath, ["ajcrew-displaced"])) return null;
         if (p.previous !== undefined &&
             (!validRecovery(p.previous) ||
              p.previous.paths.some((candidate) =>
-               !isGeneratedSidePath(artifactPath, candidate, ["tmp", "kirocrew-displaced"])))) return null;
+               !isGeneratedSidePath(artifactPath, candidate, ["tmp", "ajcrew-displaced"])))) return null;
       }
     }
     return parsed;
@@ -1016,7 +1016,7 @@ function unlinkRecoveryGroup(
   const candidates = [];
   for (const recoveryPath of recovery.paths) {
     if (!isGeneratedSidePath(
-      artifactPath, recoveryPath, ["tmp", "kirocrew-displaced"]
+      artifactPath, recoveryPath, ["tmp", "ajcrew-displaced"]
     )) return false;
     const before = inspectArtifact(fs, recoveryPath);
     if (before.status === "absent") continue;
@@ -1212,7 +1212,7 @@ function staleUpdateProvenanceIsAbsent(fs, record, artifactPath) {
       !isGeneratedSidePath(artifactPath, pending.tempPath, ["tmp"]) ||
       inspectArtifact(fs, pending.tempPath).status !== "absent") return false;
   return pending.previous.paths.every((candidate) =>
-    isGeneratedSidePath(artifactPath, candidate, ["tmp", "kirocrew-displaced"]) &&
+    isGeneratedSidePath(artifactPath, candidate, ["tmp", "ajcrew-displaced"]) &&
     inspectArtifact(fs, candidate).status === "absent"
   );
 }
@@ -1530,7 +1530,7 @@ function reconcileArtifact(
     }
   }
 
-  const displaced = uniqueSidePath(artifactPath, "kirocrew-displaced");
+  const displaced = uniqueSidePath(artifactPath, "ajcrew-displaced");
   const beforePending = inspectArtifact(fs, artifactPath);
   const previousExtended = fingerprintMetadata(artifactPath);
   if (!recordOwns(fs, record, beforePending, artifactPath) ||
@@ -1581,7 +1581,7 @@ function reconcileArtifact(
 
   // The current temp hard link remains the live ownership anchor. Superseded
   // names stay manifest-recorded for crash recovery and are removed on a later
-  // launch only if their inode and hash remain exactly as Kiro Crew left them.
+  // launch only if their inode and hash remain exactly as Aj Crew left them.
   // Their suffixes are not desktop or icon extensions, so indexers ignore them
   // during that bounded retention window.
   try { syncDirectory(fs, destDir); } catch { /* public state is already durable */ }
@@ -1611,7 +1611,7 @@ function reconcileArtifact(
  *                          helper; work is retained when it is absent, busy,
  *                          or fails
  *   resourcesPath       — process.resourcesPath, locates the packaged
- *                          interpreter under backend-dist/kirocrew-backend/bin
+ *                          interpreter under backend-dist/ajcrew-backend/bin
  */
 function integrateLinuxDesktop(deps) {
   const {
@@ -1652,7 +1652,7 @@ function integrateLinuxDesktop(deps) {
   const iconRoot = path.join(share, "icons", "hicolor");
   const launcherPath = path.join(appsDir, appImageLauncherName(iconName));
   const launcherBody = renderDesktopEntry({
-    name: entry.Name || "Kiro Crew",
+    name: entry.Name || "Aj Crew",
     comment: entry.Comment,
     tryExec: plan.appImage,
     execLine: rewriteExec(entry.Exec, plan.appImage, plan.appDir),
@@ -1697,7 +1697,7 @@ function integrateLinuxDesktop(deps) {
         fingerprintMetadata, deleteMetadata
       );
     }
-    note(`launcher at ${launcherPath} was not written by Kiro Crew; preserving it`);
+    note(`launcher at ${launcherPath} was not written by Aj Crew; preserving it`);
     return { skipped: true, reason: "launcher customized" };
   }
 

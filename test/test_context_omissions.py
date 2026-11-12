@@ -2,7 +2,7 @@
 
 Each budgeted block writes an omission notice into the prompt when it cuts. These
 cases pin the structured twin of that notice: the same decision records the same
-numbers into :func:`kiro_crew.context_omissions.collect`, nothing is recorded when
+numbers into :func:`aj_crew.context_omissions.collect`, nothing is recorded when
 nothing is cut or when no composition is collecting, and the record stays inside
 its closed vocabulary however it is fed.
 """
@@ -18,21 +18,21 @@ import pytest
 from chat_test_helpers import _make_state, drain_background_tasks
 from crew_log_drain import assert_drained
 
-from kiro_crew import context_omissions
-from kiro_crew.context import ContextBuilder
-from kiro_crew.context_assembly import budget as _budgets
-from kiro_crew.crew_log import crew_log_path
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log.entry_types import validate_data
-from kiro_crew.crew_log.schema import KIND_SESSION
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.folder_steering import SteeringCollection, SteeringOmission, render_folder_steering
-from kiro_crew.learn import Lesson, LessonStore
-from kiro_crew.lesson_validation import render_lesson_tier, render_withheld_tier
-from kiro_crew.memory import MemoryStore
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.wait import finished
+from aj_crew import context_omissions
+from aj_crew.context import ContextBuilder
+from aj_crew.context_assembly import budget as _budgets
+from aj_crew.crew_log import crew_log_path
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log.entry_types import validate_data
+from aj_crew.crew_log.schema import KIND_SESSION
+from aj_crew.dashboard import chat_runner
+from aj_crew.folder_steering import SteeringCollection, SteeringOmission, render_folder_steering
+from aj_crew.learn import Lesson, LessonStore
+from aj_crew.lesson_validation import render_lesson_tier, render_withheld_tier
+from aj_crew.memory import MemoryStore
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.wait import finished
 
 _RULE_NOTICE = re.compile(r"omitted (\d+) of (\d+) retained rules above the (\d+)-character")
 
@@ -223,7 +223,7 @@ class TestTheTurnWritesTheRecord:
     async def test_a_cut_made_while_building_reaches_the_entry(
         self, tmp_path, monkeypatch, request, _floor_monkeypatch
     ):
-        _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         _floor_monkeypatch.setenv(crew_log_emit.CREW_LOG_ENV, "1")
         crew_log_emit.reset_caches()
         request.addfinalizer(crew_log_emit.reset_caches)

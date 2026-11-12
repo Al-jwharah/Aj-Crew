@@ -31,10 +31,10 @@ import json
 import pytest
 from wake_judge_feedback_helpers import _delivered, _suppressed, _verdict
 
-from kiro_crew import autonudge_judge as judge
-from kiro_crew import irq
-from kiro_crew.autonudge import _MAX_QUIET_STREAK, AutoNudgeService
-from kiro_crew.decisions.points import nudge_wake as point
+from aj_crew import autonudge_judge as judge
+from aj_crew import irq
+from aj_crew.autonudge import _MAX_QUIET_STREAK, AutoNudgeService
+from aj_crew.decisions.points import nudge_wake as point
 
 
 def _forfeited(at: float, row_id: str = "") -> dict:
@@ -130,7 +130,7 @@ class TestMutatingToolReading:
         return (f"tc-{name}", "", name, True)
 
     @staticmethod
-    def _mcp(name: str, server: str = "kirocrew-core") -> tuple[str, str, str, bool]:
+    def _mcp(name: str, server: str = "ajcrew-core") -> tuple[str, str, str, bool]:
         return (f"tc-{name}", server, name, True)
 
     @pytest.mark.parametrize("name", ["fs_read", "read_file", "grep", "grep_search", "glob"])
@@ -176,9 +176,7 @@ class TestMutatingToolReading:
             "learn_add",
         ],
     )
-    @pytest.mark.parametrize(
-        "server", ["kirocrew-core", "kirocrew-work", "some-vendor-mcp", "memory"]
-    )
+    @pytest.mark.parametrize("server", ["ajcrew-core", "ajcrew-work", "some-vendor-mcp", "memory"])
     def test_every_mcp_call_counts_as_mutating(self, name, server):
         """There is no read-only MCP tier, and this is the pin that keeps it that way.
 
@@ -204,12 +202,12 @@ class TestMutatingToolReading:
     def test_a_first_party_server_gets_no_exemption(self):
         """The case that would have passed before, and must not now.
 
-        ``memory_recall`` on ``kirocrew-core`` is a genuine read, and it counts as
+        ``memory_recall`` on ``ajcrew-core`` is a genuine read, and it counts as
         mutating anyway. That is the accepted cost: one flat row in the calibration curve
         for such a turn, against the alternative of trusting 25 unverifiable claims.
         """
         assert (
-            judge.tool_changed_something("memory_recall", "kirocrew-core", identity_trusted=True)
+            judge.tool_changed_something("memory_recall", "ajcrew-core", identity_trusted=True)
             is True
         )
 
@@ -229,7 +227,7 @@ class TestMutatingToolReading:
         Names with no scope row are not covered here -- the KAS ids have none -- so this
         sits alongside that join rather than replacing it.
         """
-        from kiro_crew.platform.governance import BUILTIN_TOOL_SCOPES
+        from aj_crew.platform.governance import BUILTIN_TOOL_SCOPES
 
         write_scopes = {"filesystem.write", "commands", "tools"}
         covered = 0
@@ -248,7 +246,7 @@ class TestMutatingToolReading:
 
     def test_the_builtin_half_is_the_approval_gate_s_own_set(self):
         """Not a copy of it: a copy is what admitted a write-capable tool."""
-        from kiro_crew.hooks import _HOST_READ_ONLY_BUILTIN_TOOLS
+        from aj_crew.hooks import _HOST_READ_ONLY_BUILTIN_TOOLS
 
         assert _HOST_READ_ONLY_BUILTIN_TOOLS
         assert _HOST_READ_ONLY_BUILTIN_TOOLS <= judge.READ_ONLY_BUILTIN_TOOLS
@@ -262,7 +260,7 @@ class TestMutatingToolReading:
         sides, so a renamed or added tool id breaks here rather than silently leaving a
         stale spelling in the judge that classifies a live read as unknown.
         """
-        from kiro_crew.acp import kas_permissions
+        from aj_crew.acp import kas_permissions
 
         read_only_kiro_names = ("fs_read", "grep", "glob", "web_fetch", "web_search")
         for name in read_only_kiro_names:

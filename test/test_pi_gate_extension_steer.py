@@ -1,10 +1,10 @@
-"""Kiro Crew's pi gate extension delivering steers, run under Node against a stand-in pi.
+"""Aj Crew's pi gate extension delivering steers, run under Node against a stand-in pi.
 
 The extension reads the host's sealed steer files at each ``turn_end`` and queues the
 oldest undelivered one with ``pi.sendMessage(message, {deliverAs: "steer"})``, then
 notifies a consumed envelope when pi starts that message. These cases load the
 SHIPPED file and drive its handlers the way pi does, with files sealed by the host's
-own :class:`~kiro_crew.acp.harness.pi_steer.PiSteerChannel`, and pin each guard: the
+own :class:`~aj_crew.acp.harness.pi_steer.PiSteerChannel`, and pin each guard: the
 key, the nonce, the session, the sequence in the name, replay, a turn that aborted
 or failed, an idle agent, and a steer retired when its run settled.
 
@@ -24,8 +24,8 @@ import pytest
 from real_adapter_gate import require_real_adapter
 from test_pi_gate_extension_mcp import _node
 
-from kiro_crew.acp.harness.pi import pi_gate_extension_path
-from kiro_crew.acp.harness.pi_steer import PiSteerChannel
+from aj_crew.acp.harness.pi import pi_gate_extension_path
+from aj_crew.acp.harness.pi_steer import PiSteerChannel
 
 pytestmark = pytest.mark.real_adapter
 
@@ -154,17 +154,17 @@ class _Rig:
     def run(self, node_argv: list[str]) -> dict[str, Any]:
         harness = self.tmp / "harness.mjs"
         harness.write_text(_HARNESS, encoding="utf-8")
-        extension = self.tmp / "kiro_crew_tool_gate.ts"
+        extension = self.tmp / "aj_crew_tool_gate.ts"
         extension.write_bytes(Path(pi_gate_extension_path()).read_bytes())
         steps = self.tmp / "steps.json"
         steps.write_text(json.dumps(self.steps), encoding="utf-8")
         home = self.tmp / "home"
         env = {
-            **{k: v for k, v in os.environ.items() if not k.startswith(("PI_", "KIROCREW_PI_"))},
+            **{k: v for k, v in os.environ.items() if not k.startswith(("PI_", "AJCREW_PI_"))},
             "HOME": str(home),
             "USERPROFILE": str(home),
             "PI_CODING_AGENT_DIR": str(self.tmp / "agent"),
-            "KIROCREW_PI_GATE_SESSION": _NONCE,
+            "AJCREW_PI_GATE_SESSION": _NONCE,
             **self.channel.env(),
         }
         completed = subprocess.run(
@@ -188,7 +188,7 @@ def _sent(out: dict[str, Any]) -> list[str]:
 
 
 def _echoes(out: dict[str, Any]) -> list[dict[str, Any]]:
-    return [json.loads(n["message"]) for n in out["notes"] if "kiro-crew-steer" in n["message"]]
+    return [json.loads(n["message"]) for n in out["notes"] if "aj-crew-steer" in n["message"]]
 
 
 def test_a_steer_is_delivered_as_a_steer_and_its_start_is_echoed(node, tmp_path) -> None:
@@ -199,7 +199,7 @@ def test_a_steer_is_delivered_as_a_steer_and_its_start_is_echoed(node, tmp_path)
     rig.message_start("use blue")
     out = rig.run(node)
     assert _sent(out) == ["use blue"]
-    assert _echoes(out) == [{"kiro-crew-steer": 1, "nonce": _NONCE, "seq": 1}]
+    assert _echoes(out) == [{"aj-crew-steer": 1, "nonce": _NONCE, "seq": 1}]
     assert out["notes"][0]["level"] == "info"
 
 

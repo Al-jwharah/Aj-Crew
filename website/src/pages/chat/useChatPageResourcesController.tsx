@@ -633,11 +633,11 @@ export function useChatPageResourcesController({
     // diff viewer (with syntax highlighting). Skip the dashboard's
     // own DiffPanel in that case — the plugin sets the flag on page load.
     try {
-      window.dispatchEvent(new CustomEvent('kirocrew-file-open', {
+      window.dispatchEvent(new CustomEvent('ajcrew-file-open', {
         detail: { path: filePath, before: original, after: modified },
       }))
     } catch { /* the IDE bridge is optional; the dashboard path below still runs */ }
-    if ((window as unknown as { __kirocrewPluginHandlesFiles?: boolean }).__kirocrewPluginHandlesFiles) return
+    if ((window as unknown as { __ajcrewPluginHandlesFiles?: boolean }).__ajcrewPluginHandlesFiles) return
     // Brand-new file (no prior content): a diff would render as one big green
     // all-additions block, which hurts readability. Open the normal readable
     // file view instead — there's no meaningful "before" to compare against.

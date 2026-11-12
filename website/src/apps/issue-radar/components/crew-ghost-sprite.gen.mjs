@@ -1,5 +1,5 @@
 /**
- * Generator for `crew-ghost-sprite.png` — the baked Kiro-ghost mascot sheet that
+ * Generator for `crew-ghost-sprite.png` — the baked gem mascot sheet that
  * `CrewGhost.tsx` imports.
  *
  * Why this exists: `website/AUTOSDE.yaml`'s blocking `use-lucide-icons` rule
@@ -63,7 +63,7 @@ const OUTFITS = [
   { hat: 'none', glasses: 'shades', cape: true, capeColor: '#27408b' },
   { hat: 'beanie', glasses: 'none', cape: false, capeColor: '' },
   { hat: 'party', glasses: 'round', cape: false, capeColor: '' },
-  { hat: 'crown', glasses: 'none', cape: true, capeColor: '#5b2c6f' },
+  { hat: 'crown', glasses: 'none', cape: true, capeColor: '#0f766e' },
 ]
 
 /** Pull the shared body bitmap out of `sceneText.ts` instead of re-typing it. */
@@ -132,10 +132,10 @@ function drawCrewGhost(X, gx, gy, o, blush, pixels, ghostColor, eyeColor, eyeShi
   }
 
   if (o.hat === 'witch') {
-    d(gx + 6, gy - 1, 16, 1.8, '#2d1b4e')
-    d(gx + 10, gy - 4.5, 7, 3.5, '#2d1b4e')
-    d(gx + 11.8, gy - 7.5, 3.4, 3.4, '#2d1b4e')
-    d(gx + 10, gy - 2, 7, 1.1, '#8e44ad')
+    d(gx + 6, gy - 1, 16, 1.8, '#12343a')
+    d(gx + 10, gy - 4.5, 7, 3.5, '#12343a')
+    d(gx + 11.8, gy - 7.5, 3.4, 3.4, '#12343a')
+    d(gx + 10, gy - 2, 7, 1.1, '#2dd4bf')
   } else if (o.hat === 'top') {
     d(gx + 7, gy - 1, 13, 1.4, '#181820')
     d(gx + 9, gy - 7, 9, 6, '#181820')

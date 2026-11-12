@@ -29,19 +29,19 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state, drain_background_tasks
 
-from kiro_crew import executors
-from kiro_crew.context import ContextBuilder
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.executors import (
+from aj_crew import executors
+from aj_crew.context import ContextBuilder
+from aj_crew.dashboard import chat_runner
+from aj_crew.executors import (
     _MAX_EMBED_WORKERS,
     EmbedAdmissionTimeout,
     acquire_embed_admission,
     run_in_embed_pool,
 )
-from kiro_crew.memory import MemoryStore
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.wait import async_wait_until, await_until, finished, until_parked
+from aj_crew.memory import MemoryStore
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.wait import async_wait_until, await_until, finished, until_parked
 
 SLOT_NAME = "preprompt-chat"
 

@@ -1,7 +1,7 @@
 ---
 title: Worker context cap -- the gateway trims a dispatched worker's KAS chat only on an expired cache
 status: accepted
-author: iamwhatever, with kirocrew-worker
+author: iamwhatever, with ajcrew-worker
 created: 2026-10-22
 last-audited: 2026-11-03
 audited-at: e5353f39bb
@@ -45,7 +45,7 @@ superseded-by: []
     item with `work_brief`, as its prompt already says.
 - Code read at `ba317c8f61`. Numbers come from one operator's host: 887
   dashboard turns of 42 dispatched-worker KAS sessions, 2026-10-17 to
-  2026-10-21 (4.5 days), the R7 join of Kiro Crew's usage rows, the chat
+  2026-10-21 (4.5 days), the R7 join of Aj Crew's usage rows, the chat
   transcripts and the KAS transcripts. Every turn is Claude Opus 5.5 on KAS,
   1M-token window. No live spend. Scripts and outputs:
   `research/crewmate-perf/r8/` in the operator's crew workspace.
@@ -180,7 +180,7 @@ at the recommended set's 660K p50. Each later request then saves
 | That turn's first output, p50 | +1.5 s (start 5.3 s) to +4.8 s (start 8.6 s) |
 
 **The start of a trimmed session, measured.** A trim's next turn opens a new
-KAS session on its send path: spawn, `session/new` with Kiro Crew's MCP stubs,
+KAS session on its send path: spawn, `session/new` with Aj Crew's MCP stubs,
 the context build (memory recall included) and the replay. The nearest real
 case is a turn that opened a new KAS session for a chat that already had one
 (a reset, a restart, an idle reap). From the dashboard opener to the prompt at
@@ -199,7 +199,7 @@ R7 assumed 5.2 s. This RFC uses 5.3 s, and gives 8.6 s as the high case.
 
 1. A trim happens only at a turn start, before the turn claims its session.
    Nothing changes the context inside a turn.
-2. Between trims, history is append-only: Kiro Crew never edits or removes a
+2. Between trims, history is append-only: Aj Crew never edits or removes a
    message the KAS session holds.
 3. There is no sliding window. A trim replaces the whole session once, and
    the new session is append-only again from its first request.
@@ -251,7 +251,7 @@ A session is capped by the worker rules when all of these hold:
 
 | Check | Source |
 |---|---|
-| its slot runs `kirocrew-worker` | the slot's agent |
+| its slot runs `ajcrew-worker` | the slot's agent |
 | its session key has a work-ledger binding | `work_ledger.read_binding`: the same lookup `work_brief` uses, so only a dispatched worker, which has a brief to seed, is in scope |
 | its backend is KAS | as in the conductor cap |
 | the turn is a dashboard turn | `turn_admission.py`, the same call site as the conductor cap |
@@ -270,7 +270,7 @@ unchanged.
 | Tail budget | 100K tokens | LOW 150K − 46K base − 4K head; it has never bound on this host (max worker text 34K tokens) |
 | Damping | 50K past the first reading after a trim | kept, as in the conductor cap |
 
-The tail is sized in **tokens**, with the estimator Kiro Crew already uses
+The tail is sized in **tokens**, with the estimator Aj Crew already uses
 (`decisions/points/model_route.prompt_tokens`: ASCII chars / 4, every other
 char one token). The conductor's 270,000 chars landed near 187K on its mixed
 Chinese and English text, 1.81 chars per token. Worker text on this host is
@@ -281,7 +281,7 @@ Chinese and English text, 1.81 chars per token. Worker text on this host is
 Built where every cold start builds its history
 (`_session_replay_history`), in this order, with no model call:
 
-1. Kiro Crew's usual new-session context.
+1. Aj Crew's usual new-session context.
 2. **A trim note.** The chat moved to a new session at this turn's start. Tool
    output, reasoning and older messages are not in context. They are in the
    chat's transcript: `search_chat_history` searches it, `get_chat_session`
@@ -398,7 +398,7 @@ while the cap drops it for free on an expired cache.
   carries the note, brief, report, edited files and tail.
 - The same worker over 200K on a warm cache is not trimmed.
 - Over 600K, it is trimmed warm or cold.
-- An unbound `kirocrew-worker` chat, and a normal chat, are untouched.
+- An unbound `ajcrew-worker` chat, and a normal chat, are untouched.
 - A goal conductor keeps its 150/400 marks and its seed.
 - Each hold leaves the session in place.
 - The tail stops at its token budget, not its char budget.
@@ -431,7 +431,7 @@ section 4 run against the implementation's own code.
 - **A wrong scope.** A worker chat's metadata can name another agent. Scoping
   on the work-ledger binding, not only the agent's name, keeps an unbound chat
   out. Amended 2026-11-03: the built check scopes on the slot's agent
-  (`kirocrew-worker`) only, behind a switch that is off by default; an unbound
+  (`ajcrew-worker`) only, behind a switch that is off by default; an unbound
   chat running that agent is trimmed by the same cold-only rule.
 - **A warm worker past the line (added 2026-11-03).** With no safety line, a
   worker whose turns keep arriving inside the cache life keeps growing until

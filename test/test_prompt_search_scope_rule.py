@@ -1,6 +1,6 @@
 """The shipped system prompts must keep the file-search-scope rule.
 
-KiroCrew's only lever over the kiro-cli-native ``grep``/``glob`` tools is the
+Aj Crew's only lever over the kiro-cli-native ``grep``/``glob`` tools is the
 system prompt -- those tools are not mediated by the MCP gateway, so nothing in
 Python can cap their search root. Without an explicit rule the agent recursively
 searches the entire home directory (``$HOME``) whenever the active project is
@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-CONFIG_DIR = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "config"
+CONFIG_DIR = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "config"
 PROMPTS = ("prompt.md",)
 
 

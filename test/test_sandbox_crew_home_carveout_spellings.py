@@ -1,9 +1,9 @@
 """A crew-home sandbox carve-out must be spelled every way the masks spell it.
 
 The masks name one crew-home directory three ways: ``$HOME/.kiro/crew/<leaf>``,
-``$HOME/.kirocrew/<leaf>`` (both joined from ``Path.home()``, which does not
+``$HOME/.ajcrew/<leaf>`` (both joined from ``Path.home()``, which does not
 resolve links) and the ``config_dir()`` path ``_relocated_crew_targets`` adds
-(which does, because ``KIROCREW_HOME`` is ``resolve()``d). Under a symlinked
+(which does, because ``AJCREW_HOME`` is ``resolve()``d). Under a symlinked
 ``$HOME`` -- ``/home/u -> /local/home/u``, the shape every Amazon cloud desktop
 has -- those are DIFFERENT STRINGS for THE SAME directory.
 
@@ -27,8 +27,8 @@ import os
 
 import pytest
 
-import kiro_crew.sandbox as sb
-from kiro_crew import platform_compat
+import aj_crew.sandbox as sb
+from aj_crew import platform_compat
 
 pytestmark = pytest.mark.skipif(
     not platform_compat.IS_POSIX,
@@ -64,7 +64,7 @@ def symlinked_home(tmp_path, monkeypatch):
     are present.
     """
     real = tmp_path / "real"
-    data_home = real / ".kirocrew"
+    data_home = real / ".ajcrew"
     data_home.mkdir(parents=True)
     current_parent = real / ".kiro"
     current_parent.mkdir()
@@ -89,19 +89,19 @@ class TestTheSpellingSet:
         assert set(spellings) == {
             str(staged),
             str(link / ".kiro" / "crew" / _STAGING_LEAF / "drive-preview-abc123"),
-            str(link / ".kirocrew" / _STAGING_LEAF / "drive-preview-abc123"),
+            str(link / ".ajcrew" / _STAGING_LEAF / "drive-preview-abc123"),
         }
 
     def test_the_reported_host_shape_lifts_its_one_alias_and_nothing_else(
         self, monkeypatch, tmp_path
     ):
         # The exact host that reported the bug: ``$HOME`` is a symlink, the data
-        # home is reached as ``$HOME/.kirocrew``, and the OTHER crew-home prefix
+        # home is reached as ``$HOME/.ajcrew``, and the OTHER crew-home prefix
         # does not exist at all. Pinned as one case because the fixture above
         # provisions both aliases and the two gate tests use a plain home, so the
         # shape that actually produced the ENOENT was covered only piecewise.
         real = tmp_path / "real"
-        data_home = real / ".kirocrew"
+        data_home = real / ".ajcrew"
         data_home.mkdir(parents=True)
         home = tmp_path / "link"
         home.symlink_to(real, target_is_directory=True)
@@ -114,7 +114,7 @@ class TestTheSpellingSet:
 
         assert set(spellings) == {
             str(staged),
-            str(home / ".kirocrew" / _STAGING_LEAF / "drive-preview-abc123"),
+            str(home / ".ajcrew" / _STAGING_LEAF / "drive-preview-abc123"),
         }
         # And the whole point: no mask entry is an ANCESTOR of a granted
         # spelling, so nothing can be bound over the staged file. The absent
@@ -163,7 +163,7 @@ class TestTheSpellingSet:
         assert (
             str(home / ".kiro" / "crew" / _STAGING_LEAF / "drive-preview-abc123") not in spellings
         )
-        assert str(home / ".kirocrew" / _STAGING_LEAF / "drive-preview-abc123") not in spellings
+        assert str(home / ".ajcrew" / _STAGING_LEAF / "drive-preview-abc123") not in spellings
 
     def test_a_path_outside_the_data_home_is_returned_unchanged(self, symlinked_home, tmp_path):
         # A workspace or repo carve-out has no crew-home spelling to add, and
@@ -245,7 +245,7 @@ class TestTheDrivePreviewUsesTheSpellingSet:
         a temp directory outside the data home, where every spelling collapses to
         one and the bug cannot appear.
         """
-        from kiro_crew.apps.builtins.aws_control.backend import storage
+        from aj_crew.apps.builtins.aws_control.backend import storage
 
         _link, data_home = symlinked_home
         staging_parent = data_home / _STAGING_LEAF

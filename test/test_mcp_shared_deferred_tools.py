@@ -2,7 +2,7 @@
 
 ``run_mcp_stdio_loop`` runs one worker thread per server, so a ``wait`` that
 slept its whole duration on it parked every other caller's call behind it --
-on the pooled ``kirocrew-core`` backend, every dashboard session at once.
+on the pooled ``ajcrew-core`` backend, every dashboard session at once.
 A handler that only waits returns a :class:`DeferredTool`; the loop times its
 short steps from its own tick and the worker is free the moment the handler
 returns. These tests pin that contract at the loop, plus the in-flight report
@@ -27,16 +27,16 @@ from test_mcp_shared import _initialize
 from test_mcp_shared import _LoopHarness as _PlainLoopHarness
 from test_mcp_shared import _tools_call, _tools_call_with_caller
 
-import kiro_crew.mcp_shared as mcp_shared
-from kiro_crew.mcp_caller import (
+import aj_crew.mcp_shared as mcp_shared
+from aj_crew.mcp_caller import (
     INFLIGHT_CAPABILITY_KEY,
     INFLIGHT_NOTIFICATION,
     build_tenant_meta,
     current_caller,
     current_tenant_nonce,
 )
-from kiro_crew.mcp_shared import DeferredTool, ToolCancelled, drive_deferred
-from kiro_crew.testing.wait import wait_until
+from aj_crew.mcp_shared import DeferredTool, ToolCancelled, drive_deferred
+from aj_crew.testing.wait import wait_until
 
 
 class _Parked(DeferredTool):
@@ -119,7 +119,7 @@ def _text(harness: _LoopHarness, req_id: Any) -> str:
 
 
 class _LoopHarness(_PlainLoopHarness):
-    """The shared harness, started the way ``kirocrew-core`` starts its loop:
+    """The shared harness, started the way ``ajcrew-core`` starts its loop:
     with the in-flight report opted in, so these tests exercise that path."""
 
     def __init__(self, monkeypatch, call_tool_fn, loop_kwargs=None, list_tools_fn=None):
@@ -1232,7 +1232,7 @@ class TestInflightReport:
             harness.close()
 
     def test_a_server_that_did_not_opt_in_neither_advertises_nor_reports(self, monkeypatch):
-        """Only ``kirocrew-core`` opts in: a server on the same loop that did not
+        """Only ``ajcrew-core`` opts in: a server on the same loop that did not
         must not lower its gateway's recycle ceiling, so a client that declared
         the capability still gets no advertisement and no report from it."""
         sent = self._notifications(monkeypatch)
@@ -1523,8 +1523,8 @@ def test_wrappers_forward_abandon_and_the_audit_runs_only_on_settle():
 
 
 def test_spawn_collection_commit_installs_its_call_identity(monkeypatch):
-    from kiro_crew import mcp_core
-    from kiro_crew.mcp_tools.spawn import _SubAgentsStep
+    from aj_crew import mcp_core
+    from aj_crew.mcp_tools.spawn import _SubAgentsStep
 
     calls: list = []
     contexts: list = []
@@ -1570,8 +1570,8 @@ def test_ask_queue_budget_is_inside_the_outcome_retention_grace():
     a full step pool serializes the cards, one server-fixed slice each."""
     import math
 
-    from kiro_crew.dashboard.state import DashboardState
-    from kiro_crew.validation import ASK_WAIT_SLICE_SECS
+    from aj_crew.dashboard.state import DashboardState
+    from aj_crew.validation import ASK_WAIT_SLICE_SECS
 
     queue_budget = (
         math.ceil(mcp_shared.DEFERRED_PARKED_MAX / mcp_shared.DEFERRED_STEP_WORKERS)

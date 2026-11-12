@@ -16,17 +16,17 @@ import asyncio
 import importlib
 from unittest.mock import AsyncMock
 
-from conftest import MockSlackClient
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     STOP_REASON_END_TURN,
 )
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.slack import renderer as _slack_renderer
-from kiro_crew.slack import transport_dispatch
-from kiro_crew.slack.handler import DELIVERY_DEBT_NOTICE, handle_message
+from aj_crew.providers.base import LLMEvent
+from aj_crew.slack import renderer as _slack_renderer
+from aj_crew.slack import transport_dispatch
+from aj_crew.slack.handler import DELIVERY_DEBT_NOTICE, handle_message
+from conftest import MockSlackClient
 
 _handler_tests = importlib.import_module("test_slack_handler")
 _golden = importlib.import_module("test_slack_golden_transcript")
@@ -306,7 +306,7 @@ def test_native_rotation_failure_resends_the_lost_text():
 
 
 def _run_transport(monkeypatch, slack, sessions):
-    monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "kirocrew")
+    monkeypatch.setattr(transport_dispatch, "_get_default_agent", lambda: "ajcrew")
     monkeypatch.setattr(
         transport_dispatch, "_hydrate_thread_overrides", AsyncMock(return_value=None)
     )

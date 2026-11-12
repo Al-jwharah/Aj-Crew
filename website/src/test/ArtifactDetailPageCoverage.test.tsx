@@ -10,7 +10,7 @@
  * sync banner. Those are the paths where a silent failure loses a user's work,
  * so each is pinned here together with its error branch.
  *
- * Kiro Crew convention: this suite mirrors `ArtifactDetailPage.test.tsx` —
+ * Aj Crew convention: this suite mirrors `ArtifactDetailPage.test.tsx` —
  * automocked api client, `renderWithProviders` on the real `/artifacts/:slug`
  * route so `useParams` and `navigate` run for real.
  *
@@ -47,7 +47,7 @@ vi.mock('../api/client')
 // to mount without ChatPage's full hook graph.
 vi.mock('../pages/ChatPage', () => ({
   default: () => <div data-testid="chat-page" />,
-  PREFILL_STORAGE_KEY: 'kirocrew_prefill',
+  PREFILL_STORAGE_KEY: 'ajcrew_prefill',
 }))
 
 // The publish panel is a separate surface with its own provider queries; the
@@ -999,7 +999,7 @@ describe('ArtifactDetailPage — mutation paths', () => {
     await waitFor(() => expect(vi.mocked(api).createChatSlot).toHaveBeenCalledTimes(1))
     // The prompt is STAGED, never auto-sent — the embedded composer picks it up.
     await waitFor(() =>
-      expect(sessionStorage.getItem('kirocrew_prefill')).toMatch(/open comment/),
+      expect(sessionStorage.getItem('ajcrew_prefill')).toMatch(/open comment/),
     )
   })
 
@@ -1011,11 +1011,11 @@ describe('ArtifactDetailPage — mutation paths', () => {
   })
 
   it('a failed Send to a session create shows the cause on its own line under the title', async () => {
-    vi.mocked(api).createChatSlot = vi.fn().mockRejectedValue(new Error('Kiro Crew is restarting'))
+    vi.mocked(api).createChatSlot = vi.fn().mockRejectedValue(new Error('Aj Crew is restarting'))
     await mount(mkArtifact())
     fireEvent.click(await findMoreItem('Send to a session'))
     fireEvent.click(await screen.findByRole('menuitem', { name: 'New session' }))
-    const cause = await screen.findByText('Kiro Crew is restarting')
+    const cause = await screen.findByText('Aj Crew is restarting')
     expect(cause.tagName).toBe('SPAN')
     expect(cause.className).toContain('block')
     expect(cause.closest('[role="alert"]')?.textContent).toContain('Could not start a session')
@@ -1230,7 +1230,7 @@ describe('ArtifactDetailPage — upstream sync banner', () => {
     visibility: 'SHARED' as const,
     shared_with: [],
     auto_sync: false,
-    last_synced_kirocrew_version: 1,
+    last_synced_ajcrew_version: 1,
     version_map: {},
     published_at: '2026-07-01T00:00:00Z',
     published_by: 'joe',

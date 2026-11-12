@@ -1,6 +1,6 @@
-"""`kirocrew setup`'s cloud step follows the ``remote_provisioners`` seam.
+"""`ajcrew setup`'s cloud step follows the ``remote_provisioners`` seam.
 
-The first-run wizard's last step offers to launch Kiro Crew on EC2 in the user's
+The first-run wizard's last step offers to launch Aj Crew on EC2 in the user's
 own AWS account. A managed edition that withdraws the built-in ``aws_ec2`` lane
 from the seam (so its dashboard Set-up tab does not offer it) must not have the
 wizard put the same launch in front of its users.
@@ -12,9 +12,9 @@ import dataclasses
 
 import pytest
 
-from kiro_crew import cli_setup
-from kiro_crew.platform import context as platform_context
-from kiro_crew.platform.defaults import (
+from aj_crew import cli_setup
+from aj_crew.platform import context as platform_context
+from aj_crew.platform.defaults import (
     BUILTIN_REMOTE_PROVISIONER,
     FARGATE_REMOTE_PROVISIONER,
 )
@@ -103,7 +103,7 @@ def test_degraded_seam_keeps_the_public_offer(monkeypatch, with_provisioners):
 
 
 def test_composition_error_is_not_swallowed(monkeypatch, with_provisioners):
-    from kiro_crew.platform.context import PlatformCompositionError
+    from aj_crew.platform.context import PlatformCompositionError
 
     with_provisioners(_Provisioners(exc=PlatformCompositionError("companion failed")))
     _prompted(monkeypatch)

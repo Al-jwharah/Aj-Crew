@@ -24,7 +24,7 @@ import json
 
 import pytest
 
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.store import KnowledgeStore
 
 ARTIFACT_URI = "artifact://"
 

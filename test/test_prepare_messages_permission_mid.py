@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import json
 
-from kiro_crew.dashboard.chat_utils import _prepare_messages
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.chat_utils import _prepare_messages
+from aj_crew.dashboard.state import _ChatSlot
 
 
 def _permission_slot() -> tuple[_ChatSlot, str]:

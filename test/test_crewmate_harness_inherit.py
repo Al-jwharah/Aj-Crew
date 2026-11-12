@@ -20,10 +20,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import acp_backends
-from kiro_crew.agent_sdk import backends as registry
-from kiro_crew.config import loader_builders
-from kiro_crew.config.loader_builders import _build_agent_config
+from aj_crew import acp_backends
+from aj_crew.agent_sdk import backends as registry
+from aj_crew.config import loader_builders
+from aj_crew.config.loader_builders import _build_agent_config
 
 #: Every harness the tests choose between, Kiro CLI (``""``) included.
 SELECTABLE = {"", "kas", "claude", "codex", "goose", "opencode", "strands", "pi", "deepseek"}
@@ -35,7 +35,7 @@ def _registry(_floor_monkeypatch):
     _floor_monkeypatch.setattr(registry, "_baseline", set(SELECTABLE))
     _floor_monkeypatch.setattr(registry, "_selectable", set(SELECTABLE))
     _floor_monkeypatch.setattr(loader_builders, "_member_fallback_logged", set())
-    from kiro_crew import crewmate_harness
+    from aj_crew import crewmate_harness
 
     _floor_monkeypatch.setattr(crewmate_harness, "_fallback_logged", set())
     _floor_monkeypatch.setattr(crewmate_harness, "_VERDICTS", {})
@@ -48,13 +48,13 @@ def _member(agent: dict) -> str:
 
 class TestResolver:
     def test_crewmates_follow_a_settings_harness_they_can_run_on(self):
-        from kiro_crew.agent_sdk.backends import crewmate_inherited_backend
+        from aj_crew.agent_sdk.backends import crewmate_inherited_backend
 
         for harness in ("claude", "codex", "kas"):
             assert crewmate_inherited_backend(harness) == (harness, False)
 
     def test_kiro_cli_reads_as_kas_and_is_not_a_fallback(self):
-        from kiro_crew.agent_sdk.backends import crewmate_inherited_backend
+        from aj_crew.agent_sdk.backends import crewmate_inherited_backend
 
         assert crewmate_inherited_backend(acp_backends.ACP_BACKEND_KIRO) == ("kas", False)
 
@@ -73,7 +73,7 @@ class TestResolver:
         ],
     )
     def test_a_harness_crewmates_cannot_run_on_falls_back_to_kas(self, harness):
-        from kiro_crew.agent_sdk.backends import crewmate_inherited_backend
+        from aj_crew.agent_sdk.backends import crewmate_inherited_backend
 
         assert crewmate_inherited_backend(harness) == ("kas", True)
 
@@ -101,10 +101,10 @@ class TestLoadedField:
         "harness", ["claude", "kas", "kiro", "codex", "pi", "deepseek", "goose"]
     )
     def test_an_inherited_harness_never_refuses_a_crewmates_worker(self, harness):
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.mate_worker import crewmate_worker_backend, worker_kit_backend_refusal
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.mate_worker import crewmate_worker_backend, worker_kit_backend_refusal
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent = _build_agent_config({"acp_backend": harness})
         assert worker_kit_backend_refusal(crewmate_worker_backend(cfg)) is None
 
@@ -152,7 +152,7 @@ def _cfg(
     main: str, member: str, *, pin: str = "", inherited: bool | None = None
 ) -> SimpleNamespace:
     """A config as the readers see it; *inherited* is the loader's mark (absent: None)."""
-    from kiro_crew.config.loader import KiroCrewAgentConfig
+    from aj_crew.config.loader import AjCrewAgentConfig
 
     agent = SimpleNamespace(acp_backend=main, member_acp_backend=member, kas_bundle=False)
     if inherited is not None:
@@ -160,7 +160,7 @@ def _cfg(
     return SimpleNamespace(
         agent=agent,
         agents={
-            "atlas": KiroCrewAgentConfig(
+            "atlas": AjCrewAgentConfig(
                 member_id="atlas-0123456789ab", kiro_agent="atlas", acp_backend=pin
             )
         },
@@ -172,14 +172,14 @@ def declared(_floor_monkeypatch):
     """Whether config.json holds ``agent.member_acp_backend``; False by default."""
     state = {"value": False}
     _floor_monkeypatch.setattr(
-        "kiro_crew.config.loader_document.member_acp_backend_declared", lambda: state["value"]
+        "aj_crew.config.loader_document.member_acp_backend_declared", lambda: state["value"]
     )
     return state
 
 
 class TestSource:
     def test_settings(self, declared):
-        from kiro_crew.crewmate_harness import SOURCE_SETTINGS, inherited_harness_source
+        from aj_crew.crewmate_harness import SOURCE_SETTINGS, inherited_harness_source
 
         got = inherited_harness_source(_cfg("claude", "claude"))
         assert (got.harness, got.source, got.settings_harness) == (
@@ -189,26 +189,26 @@ class TestSource:
         )
 
     def test_kiro_cli_is_settings_not_fallback(self, declared):
-        from kiro_crew.crewmate_harness import SOURCE_SETTINGS, inherited_harness_source
+        from aj_crew.crewmate_harness import SOURCE_SETTINGS, inherited_harness_source
 
         got = inherited_harness_source(_cfg(acp_backends.ACP_BACKEND_KIRO, "kas"))
         assert (got.harness, got.source, got.settings_harness) == ("kas", SOURCE_SETTINGS, "kiro")
 
     def test_legacy(self, declared):
-        from kiro_crew.crewmate_harness import SOURCE_LEGACY, inherited_harness_source
+        from aj_crew.crewmate_harness import SOURCE_LEGACY, inherited_harness_source
 
         declared["value"] = True
         got = inherited_harness_source(_cfg("goose", "codex"))
         assert (got.harness, got.source) == ("codex", SOURCE_LEGACY)
 
     def test_fallback(self, declared):
-        from kiro_crew.crewmate_harness import SOURCE_FALLBACK, inherited_harness_source
+        from aj_crew.crewmate_harness import SOURCE_FALLBACK, inherited_harness_source
 
         got = inherited_harness_source(_cfg("goose", "kas"))
         assert (got.harness, got.source, got.settings_harness) == ("kas", SOURCE_FALLBACK, "goose")
 
     def test_a_pin_wins(self, declared):
-        from kiro_crew.crewmate_harness import SOURCE_PIN, crewmate_harness_source
+        from aj_crew.crewmate_harness import SOURCE_PIN, crewmate_harness_source
 
         got = crewmate_harness_source(_cfg("goose", "kas", pin="claude"), "atlas")
         assert (got.harness, got.source) == ("claude", SOURCE_PIN)
@@ -216,7 +216,7 @@ class TestSource:
     def test_an_unstartable_pin_reads_empty_and_still_refuses_at_start(
         self, declared, _floor_monkeypatch
     ):
-        from kiro_crew.crewmate_harness import (
+        from aj_crew.crewmate_harness import (
             SOURCE_PIN,
             CrewmateHarnessUnavailable,
             crewmate_backend_pin,
@@ -230,8 +230,8 @@ class TestSource:
             crewmate_backend_pin(cfg, "dashboard:member-atlas-0123456789ab")
 
     def test_the_worker_backend_agrees_with_the_readout(self, declared):
-        from kiro_crew.crewmate_harness import inherited_harness_source
-        from kiro_crew.mate_worker import crewmate_worker_backend
+        from aj_crew.crewmate_harness import inherited_harness_source
+        from aj_crew.mate_worker import crewmate_worker_backend
 
         cfg = _cfg("claude", "claude")
         assert acp_backends.backend_to_stored(crewmate_worker_backend(cfg)) == (
@@ -250,12 +250,12 @@ class _State:
 class TestAlarm:
     @pytest.fixture(autouse=True)
     def _fresh(self, _floor_monkeypatch):
-        from kiro_crew import crewmate_harness_notice
+        from aj_crew import crewmate_harness_notice
 
         _floor_monkeypatch.setattr(crewmate_harness_notice, "_announced", set())
 
     def test_a_fallback_rings_the_bell_once_naming_both_harnesses(self, declared):
-        from kiro_crew import crewmate_harness_notice
+        from aj_crew import crewmate_harness_notice
 
         state = _State()
         assert asyncio.run(crewmate_harness_notice.deliver(state, _cfg("goose", "kas")))
@@ -269,7 +269,7 @@ class TestAlarm:
         assert "cannot run on" in body
 
     def test_no_bell_when_crewmates_follow_the_settings_harness(self, declared):
-        from kiro_crew import crewmate_harness_notice
+        from aj_crew import crewmate_harness_notice
 
         state = _State()
         assert not asyncio.run(crewmate_harness_notice.deliver(state, _cfg("claude", "claude")))
@@ -285,7 +285,7 @@ class TestAlarm:
         )
 
     def test_moved_notice_shown_once_when_inherited_differs_from_kas(self, declared):
-        from kiro_crew import crewmate_harness_notice
+        from aj_crew import crewmate_harness_notice
 
         state = _State()
         cfg = _cfg("claude", "claude")
@@ -307,27 +307,27 @@ class TestAlarm:
         ],
     )
     def test_no_moved_notice_when_the_bot_did_not_move_by_inherit(self, declared, cfg):
-        from kiro_crew import crewmate_harness_notice
+        from aj_crew import crewmate_harness_notice
 
         state = _State()
         assert not asyncio.run(crewmate_harness_notice.deliver_moved(state, cfg(), "atlas"))
         assert state.notes == []
 
     def test_no_moved_notice_when_the_legacy_setting_decides(self, declared):
-        from kiro_crew import crewmate_harness_notice
+        from aj_crew import crewmate_harness_notice
 
         declared["value"] = True
         assert not crewmate_harness_notice.moved_note_owed(_cfg("claude", "claude"), "atlas")
 
     def test_no_bell_when_the_legacy_setting_decides(self, declared):
-        from kiro_crew import crewmate_harness_notice
+        from aj_crew import crewmate_harness_notice
 
         declared["value"] = True
         state = _State()
         assert not asyncio.run(crewmate_harness_notice.deliver(state, _cfg("goose", "kas")))
 
     def test_moving_away_and_back_rings_again(self, declared):
-        from kiro_crew import crewmate_harness_notice
+        from aj_crew import crewmate_harness_notice
 
         state = _State()
         asyncio.run(crewmate_harness_notice.deliver(state, _cfg("goose", "kas")))
@@ -336,7 +336,7 @@ class TestAlarm:
         assert len(state.notes) == 2
 
     def test_a_broken_bell_never_raises(self, declared):
-        from kiro_crew import crewmate_harness_notice
+        from aj_crew import crewmate_harness_notice
 
         class _Broken:
             def notify(self, *a, **k):
@@ -353,10 +353,10 @@ class TestPanelReadout:
     def test_the_agent_harness_panel_reports_the_crewmate_harness(
         self, declared, _floor_monkeypatch
     ):
-        from kiro_crew.dashboard.handlers import acp_backend_status
+        from aj_crew.dashboard.handlers import acp_backend_status
 
         _floor_monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             staticmethod(lambda *a, **k: _cfg("goose", "kas")),
         )
         assert acp_backend_status._crewmate_harness() == {
@@ -366,14 +366,12 @@ class TestPanelReadout:
         }
 
     def test_a_failed_read_leaves_the_readout_out(self, _floor_monkeypatch):
-        from kiro_crew.dashboard.handlers import acp_backend_status
+        from aj_crew.dashboard.handlers import acp_backend_status
 
         def _boom(*a, **k):
             raise OSError("unreadable")
 
-        _floor_monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(_boom)
-        )
+        _floor_monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", staticmethod(_boom))
         assert acp_backend_status._crewmate_harness() is None
 
 
@@ -386,7 +384,7 @@ def limits(_floor_monkeypatch):
     state: dict = {"value": (), "reads": 0}
 
     def _fields(member_id, backend):
-        from kiro_crew.crewmate_harness import _on_event_loop
+        from aj_crew.crewmate_harness import _on_event_loop
 
         state["reads"] += 1
         state["on_loop"] = state.get("on_loop", 0) + int(_on_event_loop())
@@ -394,15 +392,15 @@ def limits(_floor_monkeypatch):
             return (), ()
         return tuple(state["value"]), tuple(state.get("items", ()))
 
-    _floor_monkeypatch.setattr("kiro_crew.mate_worker.kas_only_worker_detail", _fields)
+    _floor_monkeypatch.setattr("aj_crew.mate_worker.kas_only_worker_detail", _fields)
     _floor_monkeypatch.setattr(
-        "kiro_crew.crewmate_harness._chat_tool_limits",
+        "aj_crew.crewmate_harness._chat_tool_limits",
         lambda crew, backend: (
             tuple(state.get("chat", ())) if crew == "atlas" and backend != "kas" else ()
         ),
     )
     _floor_monkeypatch.setattr(
-        "kiro_crew.agent_discovery.agents_dir_revision",
+        "aj_crew.agent_discovery.agents_dir_revision",
         lambda _dir: state.get("revision", ("r", 0)),
     )
     return state
@@ -423,14 +421,14 @@ class TestLoaderMark:
         assert getattr(built, loader_builders.MEMBER_BACKEND_INHERITED_ATTR) is inherited
 
     def test_the_mark_is_never_written_back(self):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent = _build_agent_config({"acp_backend": "claude"})
         assert loader_builders.MEMBER_BACKEND_INHERITED_ATTR not in cfg.to_dict()["agent"]
 
     def test_a_degraded_load_marks_the_defaults_inherited(self):
-        from kiro_crew.config import loader_pipeline
+        from aj_crew.config import loader_pipeline
 
         assert "mark_member_backend_inherited(cfg.agent, True)" in (
             __import__("inspect").getsource(loader_pipeline.build_config)
@@ -441,8 +439,8 @@ class TestWorkerSpecFallback:
     """One Crew bot whose worker spec its inherited harness cannot carry."""
 
     def test_a_mate_that_narrows_worker_tools_runs_on_kas(self, limits):
-        from kiro_crew.crewmate_harness import crewmate_backend_pin, pinned_backend
-        from kiro_crew.mate_worker import crewmate_worker_backend
+        from aj_crew.crewmate_harness import crewmate_backend_pin, pinned_backend
+        from aj_crew.mate_worker import crewmate_worker_backend
 
         limits["value"] = ("tool limits",)
         cfg = _cfg("claude", "claude", inherited=True)
@@ -452,8 +450,8 @@ class TestWorkerSpecFallback:
         assert crewmate_worker_backend(cfg, "atlas") == "kas"
 
     def test_the_gate_routes_the_fallback_to_kas(self, limits):
-        from kiro_crew.crewmate_harness import crewmate_backend_pin
-        from kiro_crew.members import select_provider_backend
+        from aj_crew.crewmate_harness import crewmate_backend_pin
+        from aj_crew.members import select_provider_backend
 
         limits["value"] = ("tool limits",)
         cfg = _cfg("claude", "claude", inherited=True)
@@ -461,14 +459,14 @@ class TestWorkerSpecFallback:
         assert select_provider_backend(DM_KEY, "claude", "claude", crew_backend=pin) == "kas"
 
     def test_a_mate_without_limits_follows_settings(self, limits):
-        from kiro_crew.crewmate_harness import crewmate_backend_pin, pinned_backend
+        from aj_crew.crewmate_harness import crewmate_backend_pin, pinned_backend
 
         cfg = _cfg("claude", "claude", inherited=True)
         assert crewmate_backend_pin(cfg, DM_KEY) is None
         assert pinned_backend(cfg, "atlas", "claude") == "claude"
 
     def test_the_legacy_setting_is_never_moved(self, limits):
-        from kiro_crew.crewmate_harness import crewmate_backend_pin, pinned_backend
+        from aj_crew.crewmate_harness import crewmate_backend_pin, pinned_backend
 
         limits["value"] = ("tool limits",)
         cfg = _cfg("claude", "claude", inherited=False)
@@ -477,7 +475,7 @@ class TestWorkerSpecFallback:
         assert limits["reads"] == 0
 
     def test_an_explicit_pin_is_never_moved(self, limits):
-        from kiro_crew.crewmate_harness import crewmate_backend_pin
+        from aj_crew.crewmate_harness import crewmate_backend_pin
 
         limits["value"] = ("tool limits",)
         cfg = _cfg("claude", "claude", pin="claude", inherited=True)
@@ -485,21 +483,21 @@ class TestWorkerSpecFallback:
         assert pin is not None and pin.backend == "claude" and not pin.worker_spec_fallback
 
     def test_an_inherited_kas_reads_no_file(self, limits):
-        from kiro_crew.crewmate_harness import inherited_falls_back
+        from aj_crew.crewmate_harness import inherited_falls_back
 
         limits["value"] = ("tool limits",)
         assert not inherited_falls_back(_cfg("kas", "kas", inherited=True), "atlas")
         assert limits["reads"] == 0
 
     def test_no_fallback_when_kas_is_not_selectable(self, limits, _floor_monkeypatch):
-        from kiro_crew.crewmate_harness import inherited_falls_back
+        from aj_crew.crewmate_harness import inherited_falls_back
 
         _floor_monkeypatch.setattr(registry, "_selectable", {"", "claude"})
         limits["value"] = ("tool limits",)
         assert not inherited_falls_back(_cfg("claude", "claude", inherited=True), "atlas")
 
     def test_the_fallback_is_logged_once(self, limits, caplog):
-        from kiro_crew import crewmate_harness
+        from aj_crew import crewmate_harness
 
         limits["value"] = ("tool limits",)
         cfg = _cfg("claude", "claude", inherited=True)
@@ -512,7 +510,7 @@ class TestWorkerSpecFallback:
 
     @pytest.mark.parametrize("fields", [("hooks",), ("permissions",), ("toolsSettings",)])
     def test_worker_spec_policy_alone_runs_the_mate_on_kas(self, limits, fields):
-        from kiro_crew.crewmate_harness import crewmate_backend_pin, pinned_backend
+        from aj_crew.crewmate_harness import crewmate_backend_pin, pinned_backend
 
         limits["value"] = fields
         cfg = _cfg("claude", "claude", inherited=True)
@@ -520,7 +518,7 @@ class TestWorkerSpecFallback:
         assert pinned_backend(cfg, "atlas", "claude") == "kas"
 
     def test_a_readout_of_a_pinned_mate_logs_nothing(self, limits, declared, caplog):
-        from kiro_crew import crewmate_harness
+        from aj_crew import crewmate_harness
 
         limits["value"] = ("hooks",)
         cfg = _cfg("claude", "claude", pin="claude", inherited=True)
@@ -531,7 +529,7 @@ class TestWorkerSpecFallback:
     def test_the_event_loop_reads_memory_only(self, limits):
         import threading as _threading
 
-        from kiro_crew import crewmate_harness
+        from aj_crew import crewmate_harness
 
         limits["value"] = ("hooks",)
         cfg = _cfg("claude", "claude", inherited=True)
@@ -549,7 +547,7 @@ class TestWorkerSpecFallback:
         assert limits["reads"] == 1 and limits.get("on_loop", 0) == 0
 
     def test_the_refresh_reads_every_mate_off_the_loop(self, limits):
-        from kiro_crew import crewmate_harness
+        from aj_crew import crewmate_harness
 
         limits["value"] = ("permissions",)
         cfg = _cfg("claude", "claude", inherited=True)
@@ -563,7 +561,7 @@ class TestWorkerSpecFallback:
         assert limits["reads"] == 1
 
     def test_the_file_read_is_memoized_on_the_folder_revision(self, limits):
-        from kiro_crew import crewmate_harness
+        from aj_crew import crewmate_harness
 
         limits["revision"] = ("r", 1)
         limits["value"] = ("tool limits",)
@@ -578,7 +576,7 @@ class TestWorkerSpecFallback:
         assert limits["reads"] == 2
 
     def test_the_readout_names_the_mates_real_harness(self, limits, declared):
-        from kiro_crew.crewmate_harness import (
+        from aj_crew.crewmate_harness import (
             SOURCE_PIN,
             SOURCE_WORKER_SPEC,
             crewmate_harness_source,
@@ -598,7 +596,7 @@ class TestWorkerSpecFallback:
         assert crewmate_inherited_source(pinned, "atlas").source == SOURCE_WORKER_SPEC
 
     def test_the_model_is_judged_on_kas_for_the_fallback(self, limits):
-        from kiro_crew.dashboard.handlers.agents import _pin_entitlement_backend
+        from aj_crew.dashboard.handlers.agents import _pin_entitlement_backend
 
         cfg = _cfg("claude", "claude", inherited=True)
         assert _pin_entitlement_backend(cfg, "atlas") == "claude"
@@ -610,7 +608,7 @@ class TestWorkerSpecFallback:
 
 class TestModelSpelling:
     def test_spelling_follows_the_effective_backend(self):
-        from kiro_crew.crewmate_harness import kiro_spelling_applies
+        from aj_crew.crewmate_harness import kiro_spelling_applies
 
         assert kiro_spelling_applies("kas")
         assert kiro_spelling_applies(acp_backends.ACP_BACKEND_KIRO)
@@ -618,7 +616,7 @@ class TestModelSpelling:
         assert not kiro_spelling_applies("claude")
 
     def test_an_inherited_claude_alias_is_not_refused_as_a_kiro_spelling(self, _floor_monkeypatch):
-        from kiro_crew.dashboard.handlers import agents
+        from aj_crew.dashboard.handlers import agents
 
         _floor_monkeypatch.setattr(agents.model_registry, "acp_id_correction", lambda _m: "x")
         cfg = _cfg("claude", "claude", inherited=True)
@@ -628,7 +626,7 @@ class TestModelSpelling:
         assert reason is None or "kiro-cli serves" not in reason
 
     def test_a_kas_harness_still_gets_the_spelling_check(self, _floor_monkeypatch):
-        from kiro_crew.dashboard.handlers import agents
+        from aj_crew.dashboard.handlers import agents
 
         _floor_monkeypatch.setattr(agents.model_registry, "acp_id_correction", lambda _m: "x")
         reason = agents._model_pin_rejected("claude-sonnet-4-5", None, "", backend="kas")
@@ -638,12 +636,12 @@ class TestModelSpelling:
 class TestMateAlarm:
     @pytest.fixture(autouse=True)
     def _fresh(self, _floor_monkeypatch):
-        from kiro_crew import crewmate_harness_notice
+        from aj_crew import crewmate_harness_notice
 
         _floor_monkeypatch.setattr(crewmate_harness_notice, "_announced", set())
 
     def test_a_mate_fallback_rings_once_and_opens_its_page(self, limits, declared):
-        from kiro_crew import crewmate_harness_notice
+        from aj_crew import crewmate_harness_notice
 
         limits["value"] = ("tool limits",)
         cfg = _cfg("claude", "claude", inherited=True)
@@ -655,7 +653,7 @@ class TestMateAlarm:
         assert url == "/members?member=atlas"
 
     def test_the_note_names_exactly_the_entries_to_change(self, limits, declared):
-        from kiro_crew import crewmate_harness_notice
+        from aj_crew import crewmate_harness_notice
 
         limits["value"] = ("tool limits", "hooks")
         limits["items"] = (
@@ -675,13 +673,13 @@ class TestMateAlarm:
         assert "more" not in body and crewmate_harness_notice.ROUTE in body
 
     def test_a_long_list_is_capped(self):
-        from kiro_crew.crewmate_harness_notice import MAX_ITEMS, _items_line
+        from aj_crew.crewmate_harness_notice import MAX_ITEMS, _items_line
 
         line = _items_line(tuple(("turned off", f"s/t{i}") for i in range(MAX_ITEMS + 3)))
         assert line.count("`s/t") == MAX_ITEMS and line.endswith("(+3 more)")
 
     def test_a_name_with_markup_is_escaped(self):
-        from kiro_crew.crewmate_harness_notice import MAX_ITEM_CHARS, _items_line
+        from aj_crew.crewmate_harness_notice import MAX_ITEM_CHARS, _items_line
 
         line = _items_line((("hooks", "a`<img src=x>\n[x](http://e)\x1b"), ("hooks", "y" * 99)))
         assert line == (
@@ -689,7 +687,7 @@ class TestMateAlarm:
         )
 
     def test_a_mate_that_stops_falling_back_is_told_again_later(self, limits, declared):
-        from kiro_crew import crewmate_harness_notice
+        from aj_crew import crewmate_harness_notice
 
         cfg = _cfg("claude", "claude", inherited=True)
         state = _State()
@@ -706,14 +704,14 @@ class TestKasOnlyWorkerFields:
     @pytest.fixture
     def spec(self, _floor_monkeypatch):
         state: dict = {"spec": {}}
-        _floor_monkeypatch.setattr("kiro_crew.mate_worker.mate_file_for_member", lambda _m: "atlas")
+        _floor_monkeypatch.setattr("aj_crew.mate_worker.mate_file_for_member", lambda _m: "atlas")
         _floor_monkeypatch.setattr(
-            "kiro_crew.agent_sdk.agent_specs.load_agent_spec", lambda _d, _n: dict(state["spec"])
+            "aj_crew.agent_sdk.agent_specs.load_agent_spec", lambda _d, _n: dict(state["spec"])
         )
         return state
 
     def test_every_field_only_kas_carries_is_named(self, spec):
-        from kiro_crew.mate_worker import kas_only_worker_fields
+        from aj_crew.mate_worker import kas_only_worker_fields
 
         spec["spec"] = {
             "excludedTools": ["shell"],
@@ -730,13 +728,13 @@ class TestKasOnlyWorkerFields:
         assert kas_only_worker_fields("atlas-0123456789ab", "kas") == ()
 
     def test_a_plain_spec_names_nothing(self, spec):
-        from kiro_crew.mate_worker import kas_only_worker_fields
+        from aj_crew.mate_worker import kas_only_worker_fields
 
         spec["spec"] = {"tools": ["read"], "hooks": {}}
         assert kas_only_worker_fields("atlas-0123456789ab", "claude") == ()
 
     def test_the_detail_names_each_switched_off_tool_and_hook(self, spec):
-        from kiro_crew.mate_worker import kas_only_worker_detail
+        from aj_crew.mate_worker import kas_only_worker_detail
 
         spec["spec"] = {
             "mcpServers": {
@@ -755,7 +753,7 @@ class TestKasOnlyWorkerFields:
         )
 
     def test_a_deny_host_is_told_only_the_entries_it_cannot_carry(self, spec):
-        from kiro_crew.mate_worker import kas_only_worker_detail
+        from aj_crew.mate_worker import kas_only_worker_detail
 
         spec["spec"] = {
             "mcpServers": {"github": {"command": "gh", "disabledTools": ["create_issue"]}},
@@ -768,7 +766,7 @@ class TestKasOnlyWorkerFields:
 
 class TestChatToolLimits:
     def test_a_saved_spec_with_chat_tool_limits_runs_the_mate_on_kas(self, limits):
-        from kiro_crew.crewmate_harness import (
+        from aj_crew.crewmate_harness import (
             crewmate_backend_pin,
             worker_spec_kas_detail,
             worker_spec_kas_fields,
@@ -783,14 +781,12 @@ class TestChatToolLimits:
         assert crewmate_backend_pin(cfg, DM_KEY).backend == "kas"
 
     def test_the_real_check_skips_a_harness_that_carries_chat_limits(self, _floor_monkeypatch):
-        from kiro_crew import crewmate_harness
+        from aj_crew import crewmate_harness
 
         def _boom(_crew):
             raise AssertionError("must not read")
 
-        _floor_monkeypatch.setattr(
-            "kiro_crew.agent_capabilities.prepare_member_capabilities", _boom
-        )
+        _floor_monkeypatch.setattr("aj_crew.agent_capabilities.prepare_member_capabilities", _boom)
         assert not crewmate_harness._chat_tool_limits("atlas", "kas")
 
     @pytest.mark.parametrize(
@@ -798,31 +794,31 @@ class TestChatToolLimits:
         [({"tool_limited_servers": ("github",)}, True), ({"tool_limited_servers": ()}, False)],
     )
     def test_the_real_check_reads_the_saved_spec(self, _floor_monkeypatch, prepared, expected):
-        from kiro_crew import crewmate_harness
+        from aj_crew import crewmate_harness
 
         _floor_monkeypatch.setattr(
-            "kiro_crew.agent_capabilities.prepare_member_capabilities", lambda _crew: prepared
+            "aj_crew.agent_capabilities.prepare_member_capabilities", lambda _crew: prepared
         )
         assert bool(crewmate_harness._chat_tool_limits("atlas", "codex")) is expected
 
     def test_an_unreadable_saved_spec_is_left_to_the_start(self, _floor_monkeypatch):
-        from kiro_crew import crewmate_harness
+        from aj_crew import crewmate_harness
 
         def _refuse(_crew):
             raise RuntimeError("materialization_pending")
 
         _floor_monkeypatch.setattr(
-            "kiro_crew.agent_capabilities.prepare_member_capabilities", _refuse
+            "aj_crew.agent_capabilities.prepare_member_capabilities", _refuse
         )
         assert not crewmate_harness._chat_tool_limits("atlas", "claude")
 
 
 class TestWatchDocument:
     def test_removing_a_stored_value_equal_to_settings_is_a_change(self):
-        from kiro_crew.config.live import diff_config_docs, watch_document
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.live import diff_config_docs, watch_document
+        from aj_crew.config.loader import AjCrewConfig
 
-        stored, inherited = KiroCrewConfig(), KiroCrewConfig()
+        stored, inherited = AjCrewConfig(), AjCrewConfig()
         stored.agent = _build_agent_config(
             {"acp_backend": "claude", "member_acp_backend": "claude"}
         )
@@ -832,10 +828,10 @@ class TestWatchDocument:
         assert "agent.member_acp_backend" in changed
 
     def test_the_watch_document_never_changes_to_dict(self):
-        from kiro_crew.config.live import watch_document
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.live import watch_document
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent = _build_agent_config({"acp_backend": "claude"})
         watch_document(cfg)
         assert cfg.to_dict()["agent"]["member_acp_backend"] == "claude"
@@ -843,13 +839,13 @@ class TestWatchDocument:
 
 class TestPrivateCopyFallback:
     def test_a_project_scoped_spec_is_read_from_the_private_copy(self, _floor_monkeypatch):
-        from kiro_crew import crewmate_harness
+        from aj_crew import crewmate_harness
 
         def _refuse(_crew):
             raise RuntimeError("project_identity_changed")
 
         _floor_monkeypatch.setattr(
-            "kiro_crew.agent_capabilities.prepare_member_capabilities", _refuse
+            "aj_crew.agent_capabilities.prepare_member_capabilities", _refuse
         )
         _floor_monkeypatch.setattr(
             crewmate_harness, "_private_copy_tool_limits", lambda c: ("github/search",)
@@ -862,21 +858,21 @@ class TestColdStartRefresh:
 
     @pytest.fixture(autouse=True)
     def _fresh(self, _floor_monkeypatch):
-        from kiro_crew import crewmate_harness_notice
+        from aj_crew import crewmate_harness_notice
 
         _floor_monkeypatch.setattr(crewmate_harness_notice, "_announced", set())
 
     def test_an_external_hooks_edit_moves_the_next_cold_start_to_kas(
         self, limits, declared, _floor_monkeypatch
     ):
-        from kiro_crew import crewmate_harness
+        from aj_crew import crewmate_harness
 
         cfg = _cfg("claude", "claude", inherited=True)
         state = _State()
         _floor_monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(lambda *a, **k: cfg)
+            "aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda *a, **k: cfg)
         )
-        _floor_monkeypatch.setattr("kiro_crew.slack.handler.get_dashboard_state", lambda: state)
+        _floor_monkeypatch.setattr("aj_crew.slack.handler.get_dashboard_state", lambda: state)
 
         async def _pin():
             return crewmate_harness.crewmate_backend_pin(cfg, DM_KEY)
@@ -899,14 +895,14 @@ class TestColdStartRefresh:
         self, limits, declared, _floor_monkeypatch
     ):
         """The wiring RFC section 6 needs: the cold start itself rings the moved note."""
-        from kiro_crew import crewmate_harness, crewmate_harness_notice
+        from aj_crew import crewmate_harness, crewmate_harness_notice
 
         cfg = _cfg("claude", "claude", inherited=True)
         state = _State()
         _floor_monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(lambda *a, **k: cfg)
+            "aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda *a, **k: cfg)
         )
-        _floor_monkeypatch.setattr("kiro_crew.slack.handler.get_dashboard_state", lambda: state)
+        _floor_monkeypatch.setattr("aj_crew.slack.handler.get_dashboard_state", lambda: state)
 
         asyncio.run(crewmate_harness.refresh_session_verdict(DM_KEY))
         # A second cold start, as after a restart, says nothing more.
@@ -917,25 +913,25 @@ class TestColdStartRefresh:
         assert channel == crewmate_harness_notice.NOTE_CHANNEL
 
     def test_a_pinned_bot_is_not_read(self, limits, _floor_monkeypatch):
-        from kiro_crew import crewmate_harness
+        from aj_crew import crewmate_harness
 
         cfg = _cfg("claude", "claude", pin="claude", inherited=True)
         _floor_monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(lambda *a, **k: cfg)
+            "aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda *a, **k: cfg)
         )
         asyncio.run(crewmate_harness.refresh_session_verdict(DM_KEY))
         assert limits["reads"] == 0
 
     def test_a_failed_read_never_raises(self, limits, declared, _floor_monkeypatch):
         """A failed read returns quietly and leaves the held answer in place."""
-        from kiro_crew import crewmate_harness
+        from aj_crew import crewmate_harness
 
         cfg = _cfg("claude", "claude", inherited=True)
         state = _State()
         _floor_monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(lambda *a, **k: cfg)
+            "aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda *a, **k: cfg)
         )
-        _floor_monkeypatch.setattr("kiro_crew.slack.handler.get_dashboard_state", lambda: state)
+        _floor_monkeypatch.setattr("aj_crew.slack.handler.get_dashboard_state", lambda: state)
 
         async def _pin():
             return crewmate_harness.crewmate_backend_pin(cfg, DM_KEY)
@@ -949,9 +945,7 @@ class TestColdStartRefresh:
         def _boom(*a, **k):
             raise OSError("unreadable")
 
-        _floor_monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(_boom)
-        )
+        _floor_monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", staticmethod(_boom))
         assert asyncio.run(crewmate_harness.refresh_session_verdict(DM_KEY)) is None
         assert asyncio.run(_pin()).backend == "kas"
         assert state.notes == notes_before
@@ -959,7 +953,7 @@ class TestColdStartRefresh:
     def test_the_factory_seam_awaits_the_refresh(self):
         import inspect
 
-        from kiro_crew.session_allocation_parts import get_or_create
+        from aj_crew.session_allocation_parts import get_or_create
 
         source = inspect.getsource(get_or_create._get_or_create_impl)
         refresh = source.index("await refresh_session_verdict(key)")
@@ -971,14 +965,14 @@ class TestUnrunnablePin:
 
     @pytest.fixture(autouse=True)
     def _fresh(self, _floor_monkeypatch):
-        from kiro_crew import crewmate_harness, crewmate_harness_notice
+        from aj_crew import crewmate_harness, crewmate_harness_notice
 
         _floor_monkeypatch.setattr(crewmate_harness_notice, "_announced", set())
         _floor_monkeypatch.setattr(crewmate_harness, "_pin_fallback_logged", set())
 
     @pytest.mark.parametrize("pinned", ["goose", "opencode", "strands", "pi", "deepseek"])
     def test_the_pin_runs_on_kas(self, pinned):
-        from kiro_crew.crewmate_harness import crewmate_backend_pin, pinned_backend
+        from aj_crew.crewmate_harness import crewmate_backend_pin, pinned_backend
 
         cfg = _cfg("claude", "claude", pin=pinned, inherited=True)
         pin = crewmate_backend_pin(cfg, DM_KEY)
@@ -987,19 +981,19 @@ class TestUnrunnablePin:
 
     @pytest.mark.parametrize("pinned", ["claude", "codex", "kas"])
     def test_a_pin_bots_can_run_on_is_kept(self, pinned):
-        from kiro_crew.crewmate_harness import crewmate_backend_pin
+        from aj_crew.crewmate_harness import crewmate_backend_pin
 
         pin = crewmate_backend_pin(_cfg("claude", "claude", pin=pinned, inherited=True), DM_KEY)
         assert pin.backend == pinned and not pin.harness_fallback
 
     def test_a_pin_that_cannot_start_still_refuses(self):
-        from kiro_crew.crewmate_harness import CrewmateHarnessUnavailable, crewmate_backend_pin
+        from aj_crew.crewmate_harness import CrewmateHarnessUnavailable, crewmate_backend_pin
 
         with pytest.raises(CrewmateHarnessUnavailable):
             crewmate_backend_pin(_cfg("claude", "claude", pin="no-such-harness"), DM_KEY)
 
     def test_it_is_logged_once_as_an_error(self, caplog):
-        from kiro_crew import crewmate_harness
+        from aj_crew import crewmate_harness
 
         cfg = _cfg("claude", "claude", pin="goose", inherited=True)
         with caplog.at_level(logging.ERROR, logger=crewmate_harness.logger.name):
@@ -1009,7 +1003,7 @@ class TestUnrunnablePin:
         assert len(lines) == 1 and lines[0].levelno == logging.ERROR
 
     def test_the_readout_names_kas(self, declared):
-        from kiro_crew.crewmate_harness import SOURCE_PIN, crewmate_harness_source
+        from aj_crew.crewmate_harness import SOURCE_PIN, crewmate_harness_source
 
         got = crewmate_harness_source(
             _cfg("claude", "claude", pin="goose", inherited=True), "atlas"
@@ -1017,7 +1011,7 @@ class TestUnrunnablePin:
         assert (got.harness, got.source) == ("kas", SOURCE_PIN)
 
     def test_the_bell_says_so_as_an_error(self, declared):
-        from kiro_crew import crewmate_harness_notice
+        from aj_crew import crewmate_harness_notice
 
         state = _State()
         cfg = _cfg("claude", "claude", pin="goose", inherited=True)
@@ -1034,7 +1028,7 @@ class TestModelFollowsTheHarness:
 
     @pytest.fixture(autouse=True)
     def _warm(self, _floor_monkeypatch):
-        from kiro_crew import model_registry as mr
+        from aj_crew import model_registry as mr
 
         _floor_monkeypatch.setattr(
             mr,
@@ -1047,11 +1041,11 @@ class TestModelFollowsTheHarness:
         )
 
     def _config(self, *, pin: str):
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent = _build_agent_config({"acp_backend": "claude", "model": "auto"})
-        cfg.agents["atlas"] = KiroCrewAgentConfig(
+        cfg.agents["atlas"] = AjCrewAgentConfig(
             member_id="atlas-0123456789ab",
             kiro_agent="atlas",
             acp_backend=pin,
@@ -1060,7 +1054,7 @@ class TestModelFollowsTheHarness:
         return cfg
 
     def _model(self, cfg, _floor_monkeypatch):
-        from kiro_crew.session_parts.policy import _session_model
+        from aj_crew.session_parts.policy import _session_model
 
         _floor_monkeypatch.setattr(type(cfg), "_resolve_agent_model", lambda self: "")
         return _session_model(cfg, "atlas", crew_agent="atlas", session_key=DM_KEY)
@@ -1079,7 +1073,7 @@ class TestPinFallbackNeedsKas:
     def test_a_denied_kas_lands_on_the_floor_and_names_it(
         self, declared, _floor_monkeypatch, caplog
     ):
-        from kiro_crew import crewmate_harness, crewmate_harness_notice
+        from aj_crew import crewmate_harness, crewmate_harness_notice
 
         _floor_monkeypatch.setattr(crewmate_harness_notice, "_announced", set())
         _floor_monkeypatch.setattr(registry, "_selectable", {"", "claude", "pi"})
@@ -1097,7 +1091,7 @@ class TestPinFallbackNeedsKas:
         assert crewmate_harness.kas_pin_landing() == acp_backends.backend_to_stored(floor)
 
     def test_kas_pin_harnesses_lists_the_pins_that_run_on_kas(self):
-        from kiro_crew.crewmate_harness import kas_pin_harnesses
+        from aj_crew.crewmate_harness import kas_pin_harnesses
 
         listed = kas_pin_harnesses()
         assert {"goose", "opencode", "pi", "deepseek", "strands"} <= set(listed)
@@ -1108,7 +1102,7 @@ class TestUnpinnedModelJudgedOnTheBotsHarness:
     """An unpinned Bot's model is judged on the harness it runs on, never the install's."""
 
     def test_a_kiro_cli_install_judges_a_bot_on_kas(self, _floor_monkeypatch):
-        from kiro_crew.dashboard.handlers import agents
+        from aj_crew.dashboard.handlers import agents
 
         cfg = _cfg(acp_backends.ACP_BACKEND_KIRO, "kas", inherited=True)
         assert agents._pin_entitlement_backend(cfg, "atlas") == "kas"
@@ -1117,12 +1111,12 @@ class TestUnpinnedModelJudgedOnTheBotsHarness:
 
 class TestModelSaveRefresh:
     def test_an_external_edit_is_read_before_a_model_save(self, limits, _floor_monkeypatch):
-        from kiro_crew import crewmate_harness
-        from kiro_crew.dashboard.handlers import agents
+        from aj_crew import crewmate_harness
+        from aj_crew.dashboard.handlers import agents
 
         cfg = _cfg("claude", "claude", inherited=True)
         _floor_monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(lambda *a, **k: cfg)
+            "aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda *a, **k: cfg)
         )
         limits["value"], limits["revision"] = ("hooks",), ("r", 1)
         crewmate_harness.refresh_worker_spec_verdicts(cfg)
@@ -1139,7 +1133,7 @@ class TestModelSaveRefresh:
     def test_the_update_handler_awaits_the_refresh(self):
         import inspect
 
-        from kiro_crew.dashboard.agent_admin import crew_update
+        from aj_crew.dashboard.agent_admin import crew_update
 
         source = inspect.getsource(crew_update)
         assert source.index("await refresh_crew_verdict(name)") < source.index(
@@ -1148,11 +1142,11 @@ class TestModelSaveRefresh:
 
     def test_a_pinned_bot_is_refreshed_too(self, limits, _floor_monkeypatch):
         """A save that clears the pin is judged on the fresh Inherited answer."""
-        from kiro_crew import crewmate_harness
+        from aj_crew import crewmate_harness
 
         cfg = _cfg("claude", "claude", pin="kas", inherited=True)
         _floor_monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(lambda *a, **k: cfg)
+            "aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda *a, **k: cfg)
         )
         limits["value"], limits["revision"] = ("hooks",), ("r", 1)
         crewmate_harness.refresh_worker_spec_verdicts(cfg)
@@ -1169,14 +1163,14 @@ class TestCarriedMcpToolLimits:
     @pytest.fixture
     def spec(self, _floor_monkeypatch):
         state: dict = {"spec": {}}
-        _floor_monkeypatch.setattr("kiro_crew.mate_worker.mate_file_for_member", lambda _m: "atlas")
+        _floor_monkeypatch.setattr("aj_crew.mate_worker.mate_file_for_member", lambda _m: "atlas")
         _floor_monkeypatch.setattr(
-            "kiro_crew.agent_sdk.agent_specs.load_agent_spec", lambda _d, _n: dict(state["spec"])
+            "aj_crew.agent_sdk.agent_specs.load_agent_spec", lambda _d, _n: dict(state["spec"])
         )
         return state
 
     def test_claude_carries_a_switched_off_mcp_tool(self, spec):
-        from kiro_crew.mate_worker import kas_only_worker_fields
+        from aj_crew.mate_worker import kas_only_worker_fields
 
         spec["spec"] = {
             "mcpServers": {"github": {"command": "gh", "disabledTools": ["create_issue"]}}
@@ -1185,7 +1179,7 @@ class TestCarriedMcpToolLimits:
         assert kas_only_worker_fields("atlas-0123456789ab", "codex") == ("tool limits",)
 
     def test_a_native_tool_limit_still_needs_kas(self, spec):
-        from kiro_crew.mate_worker import kas_only_worker_fields
+        from aj_crew.mate_worker import kas_only_worker_fields
 
         spec["spec"] = {"excludedTools": ["shell"]}
         assert kas_only_worker_fields("atlas-0123456789ab", "claude") == ("tool limits",)

@@ -12,13 +12,13 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from kiro_crew.constants import GLUED_FOOTER_TEXT_LABEL
+from aj_crew.constants import GLUED_FOOTER_TEXT_LABEL
 
 
 def _state_and_slot(tmp_path, monkeypatch):
     from chat_test_helpers import _make_state
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     slot = state.get_or_create_slot("s-glue")
@@ -26,7 +26,7 @@ def _state_and_slot(tmp_path, monkeypatch):
 
 
 def test_flush_segment_labels_glued_text_and_logs_one_sel_row(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     state, slot = _state_and_slot(tmp_path, monkeypatch)
     fake_sel = MagicMock()
@@ -56,7 +56,7 @@ def test_flush_segment_labels_glued_text_and_logs_one_sel_row(tmp_path, monkeypa
 
 def test_glued_footer_text_skips_sel_when_cold(tmp_path, monkeypatch):
     """Cold SEL state skips the audit write."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     _, slot = _state_and_slot(tmp_path, monkeypatch)
     fake_sel = MagicMock()
@@ -70,7 +70,7 @@ def test_glued_footer_text_skips_sel_when_cold(tmp_path, monkeypatch):
 
 def test_glued_footer_text_uses_active_turn_session_identity(tmp_path, monkeypatch):
     """The active turn session identifies the audit caller."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     _, slot = _state_and_slot(tmp_path, monkeypatch)
     slot._active_turn_session_key = "slack:1234.5678"
@@ -87,7 +87,7 @@ def test_glued_footer_text_uses_active_turn_session_identity(tmp_path, monkeypat
 
 def test_glued_footer_text_falls_back_to_effective_session_identity(tmp_path, monkeypatch):
     """The effective session identifies a turn without an active session."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     _, slot = _state_and_slot(tmp_path, monkeypatch)
     slot._active_turn_session_key = ""
@@ -103,7 +103,7 @@ def test_glued_footer_text_falls_back_to_effective_session_identity(tmp_path, mo
 
 
 def test_flush_segment_without_glue_logs_nothing(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     state, slot = _state_and_slot(tmp_path, monkeypatch)
     fake_sel = MagicMock()
@@ -117,7 +117,7 @@ def test_flush_segment_without_glue_logs_nothing(tmp_path, monkeypatch):
 
 
 def test_plain_glued_prose_is_labelled_but_not_directive_shaped(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     state, slot = _state_and_slot(tmp_path, monkeypatch)
     fake_sel = MagicMock()
@@ -131,7 +131,7 @@ def test_plain_glued_prose_is_labelled_but_not_directive_shaped(tmp_path, monkey
 
 
 def test_glued_text_preview_redacts_exfiltration_url_before_truncation(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     state, slot = _state_and_slot(tmp_path, monkeypatch)
     fake_sel = MagicMock()
@@ -147,7 +147,7 @@ def test_glued_text_preview_redacts_exfiltration_url_before_truncation(tmp_path,
 
 
 def test_system_rules_name_stray_footer_text_as_the_models_own() -> None:
-    from kiro_crew.context import _CRITICAL_RULES_TAIL
+    from aj_crew.context import _CRITICAL_RULES_TAIL
 
     assert "Text after the closing ] of an [OPTIONS:] line in one of YOUR OWN earlier" in (
         _CRITICAL_RULES_TAIL

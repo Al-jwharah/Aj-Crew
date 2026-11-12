@@ -1,7 +1,7 @@
 ---
 title: The batch write guard is on by default
 status: implemented
-author: kirocrew agent session, directed by iamwhatever
+author: ajcrew agent session, directed by iamwhatever
 created: 2026-11-09
 last-audited: 2026-11-09
 audited-at: 87defc8a5f
@@ -19,7 +19,7 @@ Status: implemented in
 2026-11-09 through the conductor chat that dispatched the work. This document
 landed first, and the code change rebased onto it. Every citation below was read
 on `origin/main` at `1e3b894d87`. Citations name a file and a symbol, not a line
-number. Paths are under `src/kiro_crew/` unless they start with `test/` or
+number. Paths are under `src/aj_crew/` unless they start with `test/` or
 `docs/`.
 
 This document lands on its own because it changes a default, and
@@ -98,7 +98,7 @@ Opt-out: set `hooks.batch_write_guard` to `false` in `config.json`.
   guard is a discipline guard, not a security control, so a broken config
   keeps the old behaviour rather than refusing calls.
 - Docs that say "off by default" or "opt-in" are updated in the same code PR
-  (`src/kiro_crew/docs/configuration.md`, `docs/system-specs/modules/acp-client.md`,
+  (`src/aj_crew/docs/configuration.md`, `docs/system-specs/modules/acp-client.md`,
   `docs/system-specs/modules/config.md`, `docs/system-specs/modules/sel.md`,
   the module docstring of `acp/batch_guard.py`).
 
@@ -124,18 +124,18 @@ are:
   call.
 
 Behaviour that turning the guard on already brings, and that now reaches every
-install that does not opt out (from `src/kiro_crew/docs/configuration.md`
+install that does not opt out (from `src/aj_crew/docs/configuration.md`
 `hooks.batch_write_guard`):
 
-- On the KAS backend, Kiro Crew's own write tools (ledger, report and send)
+- On the KAS backend, Aj Crew's own write tools (ledger, report and send)
   that an agent's `allowedTools` auto-approves come back as approval requests
-  Kiro Crew answers itself (`batch_guard.withhold_write_auto_approval`). A
+  Aj Crew answers itself (`batch_guard.withhold_write_auto_approval`). A
   write sent alone still runs with no prompt.
 - Under a configured governance profile or a matching `confirm_tools` pattern,
   such a write now goes through those checks, so it can prompt where it ran
   silently before.
 - A native KAS sub-agent, or a child session with its own session id, has no
-  Kiro Crew answer for those requests, so its spec-approved writes ask a person,
+  Aj Crew answer for those requests, so its spec-approved writes ask a person,
   or are refused when nobody is there. An install that relies on such
   sub-agents writing unattended should set the guard to `false`.
 - A kiro-cli session still approves its spec's `allowedTools` itself, so those

@@ -18,14 +18,14 @@ from dev_fleet_app_helpers import _reset_shutdown_admission_state  # noqa: F401 
 from dev_fleet_app_helpers import _sweep_staged_sync_tempdirs  # noqa: F401 - fixture
 from dev_fleet_app_helpers import _venv_maps_to_the_synced_checkout  # noqa: F401 - fixture
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
-from kiro_crew.apps.builtins.dev_fleet import live as live_mod
-from kiro_crew.apps.builtins.dev_fleet import repository as repository_mod
-from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod
-from kiro_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
-from kiro_crew.testing.wait import async_wait_until, await_until, finished, until_parked
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
+from aj_crew.apps.builtins.dev_fleet import live as live_mod
+from aj_crew.apps.builtins.dev_fleet import repository as repository_mod
+from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod
+from aj_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
+from aj_crew.testing.wait import async_wait_until, await_until, finished, until_parked
 
 
 # =============================================================================
@@ -170,12 +170,12 @@ async def test_pod_up_fails_closed_when_not_active():
             repository_mod,
             "_find_worktree",
             new_callable=AsyncMock,
-            return_value=({"path": "/repo/kirocrew-wt-x"}, None),
+            return_value=({"path": "/repo/ajcrew-wt-x"}, None),
         ),
         patch.object(runtime_mod, "_POD_AVAILABLE", True),
         patch.object(runtime_mod.rt, "active_names", return_value=set()),
     ):
-        result = await mod._pod_up("kirocrew-wt-x")
+        result = await mod._pod_up("ajcrew-wt-x")
     assert result["ok"] is False
     assert "not active after start" in result["error"]
 
@@ -199,19 +199,19 @@ async def test_pod_up_ok_when_active():
             repository_mod,
             "_find_worktree",
             new_callable=AsyncMock,
-            return_value=({"path": "/repo/kirocrew-wt-x"}, None),
+            return_value=({"path": "/repo/ajcrew-wt-x"}, None),
         ),
         patch.object(
-            worktree_ops_mod, "_read_pin_strict", return_value=(True, "/repo/kirocrew-wt-x")
+            worktree_ops_mod, "_read_pin_strict", return_value=(True, "/repo/ajcrew-wt-x")
         ),
         patch.object(runtime_mod.rt, "pod_name_mutex", return_value=MagicMock()),
         patch.object(runtime_mod.rt, "derive_port", return_value=7999),
         patch.object(runtime_mod, "_sel", return_value=MagicMock()),
         patch.object(runtime_mod, "_POD_AVAILABLE", True),
-        patch.object(runtime_mod.rt, "active_names", return_value={"kirocrew-wt-x"}),
+        patch.object(runtime_mod.rt, "active_names", return_value={"ajcrew-wt-x"}),
         patch.object(runtime_mod.rt, "mint_token", return_value="tok-gw"),
     ):
-        result = await mod._pod_up("kirocrew-wt-x")
+        result = await mod._pod_up("ajcrew-wt-x")
     assert result["ok"] is True
     assert result["port"] == 7999
     assert result["token"] == "tok-gw"
@@ -684,19 +684,19 @@ async def test_worktree_remove_refuses_when_pod_reactivates_before_mutation(
 def test_register_skills_creates_symlinks_for_bundled_skills(tmp_path, monkeypatch):
     """Enabling the dev-fleet app registers its bundled pod-e2e skill.
 
-    kirocrew-worktree-dev is deliberately NOT bundled here: the canonical copy
+    ajcrew-worktree-dev is deliberately NOT bundled here: the canonical copy
     ships in the top-level ``skills/`` catalog (synced into every install), and
     a second app-bridged copy would drift and be loaded nondeterministically
     against it.
     """
-    from kiro_crew.apps.bridges import _register_skills
-    from kiro_crew.apps.manifest import AppManifest
+    from aj_crew.apps.bridges import _register_skills
+    from aj_crew.apps.manifest import AppManifest
 
     fake_config = tmp_path / "config"
     fake_config.mkdir()
-    monkeypatch.setattr("kiro_crew.apps.bridges.config_dir", lambda: fake_config)
+    monkeypatch.setattr("aj_crew.apps.bridges.config_dir", lambda: fake_config)
 
-    app_root = Path(__file__).resolve().parent.parent / ("src/kiro_crew/apps/builtins/dev_fleet")
+    app_root = Path(__file__).resolve().parent.parent / ("src/aj_crew/apps/builtins/dev_fleet")
 
     manifest = AppManifest(
         name="dev-fleet",
@@ -713,7 +713,7 @@ def test_register_skills_creates_symlinks_for_bundled_skills(tmp_path, monkeypat
     registered_names = {r.split("/")[-1] for r in registered}
     assert expected_skills <= registered_names
     # The stale bundled copy must stay deleted — the shipped catalog owns it.
-    assert not (app_root / "skills" / "kirocrew-worktree-dev").exists()
+    assert not (app_root / "skills" / "ajcrew-worktree-dev").exists()
 
     # is_link_or_junction, not is_symlink: registration links with a directory junction
     # on Windows (an unprivileged account holds no SeCreateSymbolicLinkPrivilege)
@@ -729,21 +729,21 @@ def test_register_skills_creates_symlinks_for_bundled_skills(tmp_path, monkeypat
 
 def test_register_skills_tolerates_missing_feature_demo_recording(tmp_path, monkeypatch):
     """feature-demo-recording absence must not crash skill registration."""
-    from kiro_crew.apps.bridges import _register_skills
-    from kiro_crew.apps.manifest import AppManifest
+    from aj_crew.apps.bridges import _register_skills
+    from aj_crew.apps.manifest import AppManifest
 
     fake_config = tmp_path / "config"
     fake_config.mkdir()
-    monkeypatch.setattr("kiro_crew.apps.bridges.config_dir", lambda: fake_config)
+    monkeypatch.setattr("aj_crew.apps.bridges.config_dir", lambda: fake_config)
 
-    app_root = Path(__file__).resolve().parent.parent / ("src/kiro_crew/apps/builtins/dev_fleet")
+    app_root = Path(__file__).resolve().parent.parent / ("src/aj_crew/apps/builtins/dev_fleet")
 
     manifest = AppManifest(
         name="dev-fleet",
         version="1.0.0",
         skills=[
             "skills/pod-e2e",
-            "skills/kirocrew-worktree-dev",  # not bundled — must not crash
+            "skills/ajcrew-worktree-dev",  # not bundled — must not crash
             "skills/feature-demo-recording",
         ],
     )
@@ -753,7 +753,7 @@ def test_register_skills_tolerates_missing_feature_demo_recording(tmp_path, monk
     registered_names = {r.split("/")[-1] for r in registered}
     assert "pod-e2e" in registered_names
     # Absent bundled dirs are tolerated, not registered.
-    assert "kirocrew-worktree-dev" not in registered_names
+    assert "ajcrew-worktree-dev" not in registered_names
 
 
 @pytest.mark.asyncio
@@ -807,4 +807,4 @@ def test_own_checkout_path_resolves_this_worktree():
     assert own is not None
     from pathlib import Path
 
-    assert (Path(own) / "src" / "kiro_crew").is_dir()
+    assert (Path(own) / "src" / "aj_crew").is_dir()

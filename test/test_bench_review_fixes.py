@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.eval.bench.corpus import (
+from aj_crew.eval.bench.corpus import (
     CAT_SINGLE_HOP,
     BenchInstance,
     BenchQuery,
@@ -19,14 +19,14 @@ from kiro_crew.eval.bench.corpus import (
     BenchTurn,
     Corpus,
 )
-from kiro_crew.eval.bench.ingest import IngestConfig
-from kiro_crew.eval.bench.retrieval import (
+from aj_crew.eval.bench.ingest import IngestConfig
+from aj_crew.eval.bench.retrieval import (
     QueryRetrieval,
     RetrievalConfig,
     aggregate,
 )
-from kiro_crew.eval.bench.run import compare_reports, run_retrieval
-from kiro_crew.eval.bench.toy_embedder import TOY_EMBEDDER_ID, toy_embed_fn
+from aj_crew.eval.bench.run import compare_reports, run_retrieval
+from aj_crew.eval.bench.toy_embedder import TOY_EMBEDDER_ID, toy_embed_fn
 
 # ── A session cut-off wider than the fragment window is not measurable ───────
 # Retrieval asks the store for `limit` FRAGMENTS; the distinct sessions among them
@@ -88,7 +88,7 @@ def test_the_report_names_an_omitted_cutoff_instead_of_dropping_it_silently(
     tmp_path: Path,
 ) -> None:
     """A missing row reads as "not requested"; it was requested and found unmeasurable."""
-    from kiro_crew.eval.bench.run import format_report
+    from aj_crew.eval.bench.run import format_report
 
     corpus = Corpus(
         "toy",

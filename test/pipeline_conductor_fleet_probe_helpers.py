@@ -20,7 +20,7 @@ from conftest import make_dir_link
 SCRIPT = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "pipeline-conductor"
     / "scripts"
@@ -57,10 +57,10 @@ UNBUDGETED = ["-n4"]
 #   node id in ``test/requires-real-symlinks.txt`` and skipped when the probe fails.
 
 
-# CI's ``--cov=kiro_crew`` is a module-name boundary, so the script must load under a
-# dotted ``kiro_crew`` name or it is not measured at all. The name is supplied because
+# CI's ``--cov=aj_crew`` is a module-name boundary, so the script must load under a
+# dotted ``aj_crew`` name or it is not measured at all. The name is supplied because
 # the directory is not importable (a hyphen in the skill name, no ``__init__.py``).
-LOAD_NAME = "kiro_crew.builtin_skills.pipeline_conductor.scripts.fleet_probe"
+LOAD_NAME = "aj_crew.builtin_skills.pipeline_conductor.scripts.fleet_probe"
 
 
 @pytest.fixture(name="mod")
@@ -71,7 +71,7 @@ def mod_fixture():
 @pytest.fixture(name="sessions")
 def sessions_fixture(tmp_path, monkeypatch):
     """The gateway session store the probe derives from the data home."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
     store = tmp_path / "crew" / "sessions"
     store.mkdir(parents=True)
     return store
@@ -128,7 +128,7 @@ def host_proc(tmp_path, monkeypatch, *, mem_kb: int | None = 8_388_608) -> Path:
         (root / "meminfo").write_text(
             f"MemTotal:       16000000 kB\nMemAvailable:   {mem_kb} kB\n", encoding="utf-8"
         )
-    monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(root))
+    monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(root))
     monkeypatch.setattr(os, "sysconf", lambda name: 100, raising=False)
     return root
 

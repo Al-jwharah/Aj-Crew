@@ -26,7 +26,7 @@ const TelemetryPanel = lazy(() => import('../TelemetryPanel'))
 const SessionArchive = lazy(() => import('../SessionArchive'))
 const LocalStorageDebug = lazy(() => import('../LocalStorageDebug'))
 const ConfigPage = lazy(() => import('../overview').then(m => ({
-  default: () => <><m.KiroCrewCfgTab /><m.AgentCfgTab /></>,
+  default: () => <><m.AjCrewCfgTab /><m.AgentCfgTab /></>,
 })))
 const DebugToolsTab = lazy(() => import('../developer/DebugToolsTab').then(m => ({ default: m.DebugToolsTab })))
 const MemoryGraphTab = lazy(() => import('../overview/MemoryGraphTab'))
@@ -38,7 +38,7 @@ const loading = (page: ReactNode) => (
 
 /** The remote guide's SSH-tunnel section: it works on every desktop OS and
  *  covers both a hand-run forward and the app-held one (#3810). */
-const LOCAL_GATEWAY_TUNNEL_GUIDE = 'https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/remote-and-mobile.md#ssh-tunnel-laptop'
+const LOCAL_GATEWAY_TUNNEL_GUIDE = 'https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/guides/remote-and-mobile.md#ssh-tunnel-laptop'
 
 /** Settings > Developer tab: a SettingsSubNav whose first page, Feature
  *  Previews, holds the per-device opt-in switches, and whose other pages are

@@ -26,7 +26,7 @@ import { serveDist } from './lib/serve-dist.mjs'
 import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/browser-mode'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 const CHAT_SLOT = 'chat-browser-mode'
 
 mkdirSync(OUT, { recursive: true })
@@ -57,7 +57,7 @@ const chatSlots = [{
   running: false,
   last_message: '',
   messages: 0,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

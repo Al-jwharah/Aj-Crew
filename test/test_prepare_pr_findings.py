@@ -2,7 +2,7 @@
 
 `pr_findings.py` prints UNTRUSTED CI-log and review-comment text, so it redacts
 credentials first. It carries its OWN stdlib-only copy of the patterns because
-the script is documented as portable and cannot import `kiro_crew.security`.
+the script is documented as portable and cannot import `aj_crew.security`.
 That copy required THREE `.`-separated segments, so the two-segment dashboard
 link token (`base64url(payload).base64url(hmac_sig)`) never matched it.
 
@@ -30,10 +30,10 @@ ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = (
     ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "scripts"
     / "pr_findings.py"
 )
@@ -70,7 +70,7 @@ class TestCredentialRedaction:
         This mints one and fails if the copied pattern stops covering it.
         """
         module = _load_script()
-        from kiro_crew.dashboard.token_auth import generate_token
+        from aj_crew.dashboard.token_auth import generate_token
 
         token = generate_token("local-app", 300, register_nonce=False)
 
@@ -138,7 +138,7 @@ class TestCredentialRedaction:
 STATUS_SCRIPT = SCRIPT.with_name("pr_status.py")
 REVIEW_CONTRACT_SCRIPT = SCRIPT.with_name("_review_contract.py")
 # pr_status.py imports this sibling too, so a bundle missing it is a bundle that
-# cannot start. The whole kirocrew-prepare-pr/ directory is the supported copy unit.
+# cannot start. The whole ajcrew-prepare-pr/ directory is the supported copy unit.
 GREEN_AGE_SCRIPT = SCRIPT.with_name("green_age.py")
 # The owner modules pr_status.py loads the same way.
 STATUS_OWNERS = tuple(

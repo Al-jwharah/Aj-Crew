@@ -20,15 +20,15 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-if "kiro_crew.slack.handler" not in sys.modules:
-    _stub = types.ModuleType("kiro_crew.slack.handler")
+if "aj_crew.slack.handler" not in sys.modules:
+    _stub = types.ModuleType("aj_crew.slack.handler")
     _stub.is_allowed_user = lambda uid: False  # type: ignore[attr-defined]
     _stub.is_tracked_channel = lambda cid: False  # type: ignore[attr-defined]
-    sys.modules["kiro_crew.slack.handler"] = _stub
+    sys.modules["aj_crew.slack.handler"] = _stub
 
-from kiro_crew.cron import CronJob  # noqa: E402
-from kiro_crew.cron_script import ScriptContext  # noqa: E402
-from kiro_crew.dashboard.handlers import api_send_message  # noqa: E402
+from aj_crew.cron import CronJob  # noqa: E402
+from aj_crew.cron_script import ScriptContext  # noqa: E402
+from aj_crew.dashboard.handlers import api_send_message  # noqa: E402
 
 JOB_ID = "job12345"
 
@@ -60,7 +60,7 @@ def _live_running_slot():
 
 @pytest.fixture
 def mock_sel():
-    with patch("kiro_crew.sel.sel") as m:
+    with patch("aj_crew.sel.sel") as m:
         m.return_value = MagicMock()
         yield m.return_value
 
@@ -107,7 +107,7 @@ async def test_resolved_key_with_no_live_slot_falls_back_to_bell(mock_sel):
     it posts a notification."""
     state = _state_with_job(slot=None)
     with patch(
-        "kiro_crew.dashboard.handlers.messaging.rehydrate_slot_from_history_async",
+        "aj_crew.dashboard.handlers.messaging.rehydrate_slot_from_history_async",
         return_value=None,
     ):
         async with TestClient(TestServer(_make_app(state))) as c:
@@ -151,7 +151,7 @@ async def test_a_cron_send_message_is_delivered_as_cron_with_eviction(mock_sel):
     session, asking a full live queue to drop its oldest entry."""
     from unittest.mock import AsyncMock
 
-    from kiro_crew.dashboard import session_deliver
+    from aj_crew.dashboard import session_deliver
 
     slot = _live_running_slot()
     state = _state_with_job(slot=slot)

@@ -18,9 +18,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import session_surface
-from kiro_crew.decisions import log as _log
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import session_surface
+from aj_crew.decisions import log as _log
+from aj_crew.vector_memory import VectorMemoryStore
 
 ENDPOINT = "https://api.typesafe.ai/v1/systemone"
 SESSION = "chat-reachability"
@@ -67,7 +67,7 @@ class _Oracle:
         pass
 
     async def ask(self, state, questions):
-        from kiro_crew.decisions.types import Answer
+        from aj_crew.decisions.types import Answer
 
         _Oracle.asked.append(state)
         answers = {}
@@ -102,17 +102,17 @@ def wired(tmp_path, monkeypatch, opened):
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr("kiro_crew.config.loader.decisions_consent_path", lambda: keystone)
+    monkeypatch.setattr("aj_crew.config.loader.decisions_consent_path", lambda: keystone)
     monkeypatch.setattr(_log, "log_dir", lambda: tmp_path / "decisions")
 
     provider = SimpleNamespace(endpoint=ENDPOINT, model="jev-1", timeout_ms=5000, api_key="")
     snapshot = SimpleNamespace(
         decisions=SimpleNamespace(bucket=100, provider=provider, history_budget_chars=0)
     )
-    monkeypatch.setattr("kiro_crew.decisions.gate._snapshot", lambda: snapshot)
-    monkeypatch.setattr("kiro_crew.decisions.impl_systemone.SystemOneProvider", _Oracle)
+    monkeypatch.setattr("aj_crew.decisions.gate._snapshot", lambda: snapshot)
+    monkeypatch.setattr("aj_crew.decisions.impl_systemone.SystemOneProvider", _Oracle)
     monkeypatch.setattr(
-        "kiro_crew.decisions.capability.is_decisions_denied", lambda *_a, **_kw: False
+        "aj_crew.decisions.capability.is_decisions_denied", lambda *_a, **_kw: False
     )
 
     store = opened(VectorMemoryStore(db_path=tmp_path / "mem.db"))
@@ -149,7 +149,7 @@ class _PointClock:
     def __init__(self, monkeypatch):
         import time
 
-        from kiro_crew.decisions.points import memory_recall as point
+        from aj_crew.decisions.points import memory_recall as point
 
         self.now = time.monotonic()
         monkeypatch.setattr(point, "time", SimpleNamespace(monotonic=lambda: self.now))
@@ -187,7 +187,7 @@ async def _recall(wired, session_key: str = SESSION, *, dashboard_open: bool = T
     about. Everything from the hook builder inward is the real path, including
     `run_in_embed_pool`, which is the worker thread the point must be called on.
     """
-    from kiro_crew.dashboard.handlers import memory_member as mm
+    from aj_crew.dashboard.handlers import memory_member as mm
 
     request = _request(session_key, dashboard_open=dashboard_open)
     with (pytest.MonkeyPatch.context() as patch,):
@@ -256,7 +256,7 @@ class TestTheHookIsReachedOnARealRecall:
         leftover, so the outcome published here is claimed by the reply that ends THIS
         turn.
         """
-        from kiro_crew.decisions import outcomes
+        from aj_crew.decisions import outcomes
 
         seen: list = []
         monkeypatch.setattr(outcomes, "publish", lambda key, row: seen.append((key, row)))
@@ -285,7 +285,7 @@ class TestOnlyACommittedRecallLeavesAReceipt:
         """
         import asyncio as _asyncio
 
-        from kiro_crew.decisions.points import memory_recall as mr
+        from aj_crew.decisions.points import memory_recall as mr
 
         class _Slow:
             def __init__(self, _provider):
@@ -295,7 +295,7 @@ class TestOnlyACommittedRecallLeavesAReceipt:
                 await _asyncio.sleep(5)
                 raise AssertionError("the caller must have stopped waiting by now")
 
-        monkeypatch.setattr("kiro_crew.decisions.impl_systemone.SystemOneProvider", _Slow)
+        monkeypatch.setattr("aj_crew.decisions.impl_systemone.SystemOneProvider", _Slow)
         monkeypatch.setattr(mr, "MIN_WAIT_SECS", 0.05)
         monkeypatch.setattr(mr, "MAX_WAIT_SECS", 0.05)
 
@@ -315,7 +315,7 @@ class TestOnlyACommittedRecallLeavesAReceipt:
         check to fail once makes `recall` retry, so the hook runs twice and exactly one of
         those attempts produced the result the caller got.
         """
-        from kiro_crew.vector_memory import _RecallSpaceChanged
+        from aj_crew.vector_memory import _RecallSpaceChanged
 
         # Discard the first attempt AFTER it has run, which is the production sequence:
         # `_recall_once` applies the hook and only then validates the generation, so the
@@ -341,7 +341,7 @@ class TestOnlyACommittedRecallLeavesAReceipt:
 
         class _VaryingOracle(_Oracle):
             async def ask(self, state, questions):
-                from kiro_crew.decisions.types import Answer
+                from aj_crew.decisions.types import Answer
 
                 asks.append(1)
                 _Oracle.asked.append(state)
@@ -359,7 +359,7 @@ class TestOnlyACommittedRecallLeavesAReceipt:
                     for i, q in enumerate(questions)
                 }
 
-        monkeypatch.setattr("kiro_crew.decisions.impl_systemone.SystemOneProvider", _VaryingOracle)
+        monkeypatch.setattr("aj_crew.decisions.impl_systemone.SystemOneProvider", _VaryingOracle)
 
         payload = await _recall(wired)
         assert len(calls) == 2, "the store did not retry, so this proves nothing"
@@ -381,7 +381,7 @@ class TestOnlyACommittedRecallLeavesAReceipt:
         The keyword retry gets no candidates and returns no memories; keeping the first
         attempt's outcome would record three kept memories for an empty response.
         """
-        from kiro_crew.vector_memory import _RecallSpaceChanged
+        from aj_crew.vector_memory import _RecallSpaceChanged
 
         calls: list[int] = []
         real_once = type(wired.store)._recall_once
@@ -421,7 +421,7 @@ class TestOnlyACommittedRecallLeavesAReceipt:
     @pytest.mark.asyncio
     async def test_a_failing_route_commits_nothing(self, wired, monkeypatch):
         """A decision made for a response the caller never gets leaves no receipt."""
-        from kiro_crew.dashboard.handlers import memory_member as mm
+        from aj_crew.dashboard.handlers import memory_member as mm
 
         real_recall = wired.store.recall
 
@@ -452,8 +452,8 @@ class TestOnlyACommittedRecallLeavesAReceipt:
         """
         import time
 
-        from kiro_crew.dashboard.handlers import memory_member as mm
-        from kiro_crew.embeddings import EmbeddingWork, embedding_work
+        from aj_crew.dashboard.handlers import memory_member as mm
+        from aj_crew.embeddings import EmbeddingWork, embedding_work
 
         def _spent():
             work = EmbeddingWork(time.monotonic() - 1.0)
@@ -520,7 +520,7 @@ class TestOnlyACommittedRecallLeavesAReceipt:
         multibyte text. The receipt names both removals SEPARATELY so its counts add up.
         The cap is lowered: Jev keeps two of three and the budget drops one.
         """
-        from kiro_crew.dashboard.handlers import memory_member as mm
+        from aj_crew.dashboard.handlers import memory_member as mm
 
         monkeypatch.setattr(mm, "_RECALL_CONTEXT_CAP", 160)
 
@@ -557,8 +557,8 @@ class TestOnlyACommittedRecallLeavesAReceipt:
         The search spends the same request budget first; a constant wait could overrun
         the deadline and turn found memories into `504`.
         """
-        from kiro_crew.decisions.points import memory_recall as mr
-        from kiro_crew.embeddings import EmbeddingWork, embedding_work
+        from aj_crew.decisions.points import memory_recall as mr
+        from aj_crew.embeddings import EmbeddingWork, embedding_work
 
         clock = _PointClock(monkeypatch)
         budget, burn = _REAL_BACKSTOP_SECS, _REAL_BACKSTOP_SECS - 2.5
@@ -619,8 +619,8 @@ class TestOnlyACommittedRecallLeavesAReceipt:
         import threading
         import time
 
-        from kiro_crew.decisions.points import memory_recall as mr
-        from kiro_crew.embeddings import EmbeddingWork, embedding_work
+        from aj_crew.decisions.points import memory_recall as mr
+        from aj_crew.embeddings import EmbeddingWork, embedding_work
 
         rows = [{"id": mem_id, "text": text} for mem_id, text in EPISODES]
         pending: list = []
@@ -663,7 +663,7 @@ class TestOnlyACommittedRecallLeavesAReceipt:
         `_memory_recall_keep`'s early check can go stale: closing the tab, or the last
         owner dashboard, mid-search must still stop note snippets from being sent.
         """
-        from kiro_crew.dashboard.handlers import memory_member as mm
+        from aj_crew.dashboard.handlers import memory_member as mm
 
         closed: list[int] = []
         real_search = wired.store.search_episodic
@@ -718,7 +718,7 @@ class TestOnlyACommittedRecallLeavesAReceipt:
         import asyncio as _asyncio
         import threading
 
-        from kiro_crew.decisions.points import memory_recall as mr
+        from aj_crew.decisions.points import memory_recall as mr
 
         loop = _asyncio.new_event_loop()
         ready = threading.Event()
@@ -817,7 +817,7 @@ class TestTheGatesStillHold:
             async def ask(self, _state, _questions):
                 raise RuntimeError("boom")
 
-        monkeypatch.setattr("kiro_crew.decisions.impl_systemone.SystemOneProvider", _Broken)
+        monkeypatch.setattr("aj_crew.decisions.impl_systemone.SystemOneProvider", _Broken)
         payload = await _recall(wired)
         ids = {row["id"] for row in payload["retrieval"]["episodes"]}
         assert ids == {mem_id for mem_id, _t in EPISODES}
@@ -839,12 +839,12 @@ class TestTheHookIsNotOnThePromptPath:
     def test_get_context_carries_no_hook(self):
         import inspect
 
-        from kiro_crew.memory import MemoryStore
+        from aj_crew.memory import MemoryStore
 
         assert "episodic_keep" not in inspect.signature(MemoryStore.get_context).parameters
 
     def test_the_context_builder_has_no_hook_builder(self):
-        from kiro_crew.context import ContextBuilder
+        from aj_crew.context import ContextBuilder
 
         assert not hasattr(ContextBuilder, "_episodic_keep_hook")
 

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY, HookManager, HooksConfig
+from aj_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY, HookManager, HooksConfig
 
 
 class TestAppOwnMcpServerAutoApprove:
@@ -32,7 +32,7 @@ class TestAppOwnMcpServerAutoApprove:
     def _builtin(self, monkeypatch):
         """Treat the test app names as first-party builtins whose shipped
         manifest declares the ``myapp:srv`` MCP server."""
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         monkeypatch.setattr(
             hooks_mod,
@@ -55,7 +55,7 @@ class TestAppOwnMcpServerAutoApprove:
     @pytest.fixture
     def _agent_owned(self, monkeypatch):
         """``myagent`` is declared by builtin ``myapp``'s shipped manifest."""
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         monkeypatch.setattr(hooks_mod, "_BUILTIN_APP_AGENTS", {"myagent": "myapp"})
 
@@ -101,7 +101,7 @@ class TestAppOwnMcpServerAutoApprove:
             "mcp__myapp:srv__do_thing",
             app="",
             agent="myagent",  # alias spelled like the builtin's agent
-            resolved_agent="kirocrew",  # …but a different agent served the turn
+            resolved_agent="ajcrew",  # …but a different agent served the turn
             mcp_server_name="myapp:srv",
             mcp_tool_name="do_thing",
             tool_kind="other",
@@ -128,7 +128,7 @@ class TestAppOwnMcpServerAutoApprove:
         # auto-approve a different app's app-scoped server. Both apps are
         # first-party and both servers declared, so ONLY the ownership check can
         # be what rejects this.
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         monkeypatch.setattr(
             hooks_mod, "_is_first_party_app", lambda app: app.casefold() in {"myapp", "otherapp"}
@@ -186,7 +186,7 @@ class TestAppOwnMcpServerAutoApprove:
         # A per-tool policy denying ``@myapp:srv/danger`` must block the call
         # even though the prose title never matches that policy — closing the
         # bypass where an own-server auto-approve skipped per-tool governance.
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         monkeypatch.setattr(hooks_mod, "_is_first_party_app", lambda app: True)
         monkeypatch.setattr(hooks_mod, "_is_declared_builtin_mcp_server", lambda name: True)
@@ -223,7 +223,7 @@ class TestAppOwnMcpServerAutoApprove:
         # to the canonical mcp__server__tool, not just the prose title. A deny
         # rule keyed on the canonical name blocks the own-server auto-approve
         # even when the LLM title is non-canonical prose that never matched it.
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         monkeypatch.setattr(hooks_mod, "_is_first_party_app", lambda app: True)
         monkeypatch.setattr(hooks_mod, "_is_declared_builtin_mcp_server", lambda name: True)
@@ -258,7 +258,7 @@ class TestAppOwnMcpServerAutoApprove:
     def test_set_builtin_app_mcp_servers_populates_gate(self, monkeypatch):
         # Boot pushes the shipped-manifest-declared <app>:<server> names in; the
         # gate then does a pure in-memory, case-insensitive membership test.
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         monkeypatch.setattr(hooks_mod, "_BUILTIN_APP_MCP_SERVERS", frozenset())
         hooks_mod.set_builtin_app_mcp_servers(["MyApp:Srv", "other:s", "", None])  # junk ignored
@@ -295,7 +295,7 @@ class TestAppOwnMcpServerAutoApprove:
 
     def test_third_party_own_server_not_auto_approved(self, monkeypatch):
         # A third-party app (no builtin provenance) is NOT blanket-trusted.
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         monkeypatch.setattr(hooks_mod, "_is_first_party_app", lambda app: False)
         mgr = HookManager()
@@ -325,12 +325,12 @@ class TestAppOwnMcpServerAutoApprove:
         assert r.action == TOOL_ALLOW
 
     def test_host_managed_server_not_matched(self, _builtin):
-        # Host/managed servers (kirocrew-cron) are not `<app>:`-namespaced.
+        # Host/managed servers (ajcrew-cron) are not `<app>:`-namespaced.
         mgr = HookManager()
         r = mgr.on_tool_call(
-            "mcp__kirocrew-cron__cron_add",
+            "mcp__ajcrew-cron__cron_add",
             app="myapp",
-            mcp_server_name="kirocrew-cron",
+            mcp_server_name="ajcrew-cron",
             tool_kind="other",
         )
         assert r.action == TOOL_ALLOW
@@ -349,7 +349,7 @@ class TestAppOwnMcpServerAutoApprove:
     def test_governance_deny_wins_over_own_server(self, monkeypatch):
         # The app-own-server branch is placed AFTER `_governance_denial`, so a
         # ceiling/profile that denies the app's own server still blocks it.
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         monkeypatch.setattr(hooks_mod, "_is_first_party_app", lambda app: True)
         monkeypatch.setattr(
@@ -367,19 +367,19 @@ class TestAppOwnMcpServerAutoApprove:
         assert r.action == TOOL_DENY
 
     def test_ownership_helper_direct(self):
-        from kiro_crew.hooks import _app_owns_mcp_server
+        from aj_crew.hooks import _app_owns_mcp_server
 
         assert _app_owns_mcp_server("myapp:srv", "myapp") is True
         assert _app_owns_mcp_server("MyApp:srv", "myapp") is True  # case-insensitive
         assert _app_owns_mcp_server("other:srv", "myapp") is False
         assert _app_owns_mcp_server("myapp:srv", "") is False
         assert _app_owns_mcp_server("", "myapp") is False  # no server → fail closed
-        assert _app_owns_mcp_server("kirocrew-cron", "myapp") is False  # no colon
+        assert _app_owns_mcp_server("ajcrew-cron", "myapp") is False  # no colon
 
     def test_set_builtin_app_names_populates_gate(self, monkeypatch):
         # Boot pushes the builtin names in; the gate then does a pure in-memory,
         # case-insensitive membership test (no filesystem I/O on the event loop).
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         monkeypatch.setattr(hooks_mod, "_BUILTIN_APP_NAMES", frozenset())
         hooks_mod.set_builtin_app_names(["MyApp", "other", "", None])  # junk ignored
@@ -390,7 +390,7 @@ class TestAppOwnMcpServerAutoApprove:
     def test_unwarmed_builtin_set_fails_closed(self, monkeypatch):
         # Before boot warms the set, provenance is unknown → treated as
         # third-party (own-server calls prompt, never wrongly auto-approved).
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         monkeypatch.setattr(hooks_mod, "_BUILTIN_APP_NAMES", frozenset())
         assert hooks_mod._is_first_party_app("myapp") is False
@@ -408,13 +408,13 @@ class TestTargetPathSpellings:
 
     @staticmethod
     def _gate():
-        from kiro_crew.hooks import HookManager, HooksConfig
+        from aj_crew.hooks import HookManager, HooksConfig
 
         return HookManager(HooksConfig.from_dict({}))
 
     @pytest.mark.parametrize("key", ["path", "file_path", "filePath", "targetFile"])
     def test_a_sensitive_path_is_denied_under_every_spelling(self, key):
-        from kiro_crew.hooks import TOOL_DENY
+        from aj_crew.hooks import TOOL_DENY
 
         decision = self._gate().on_tool_call(
             "Tidy up the notes",
@@ -431,7 +431,7 @@ class TestTargetPathSpellings:
         """``delete_file`` (KAS) carries its path as ``targetFile`` under kind
         ``delete``; the keystone is not kind-gated, so the spelling alone decides
         whether the delete is seen."""
-        from kiro_crew.hooks import TOOL_DENY
+        from aj_crew.hooks import TOOL_DENY
 
         decision = self._gate().on_tool_call(
             "Delete the key",
@@ -453,7 +453,7 @@ class TestTargetPathSpellings:
         limiting the keystone to the FIRST path still passed while the kind was
         ``edit``.
         """
-        from kiro_crew.hooks import TOOL_DENY
+        from aj_crew.hooks import TOOL_DENY
 
         decision = self._gate().on_tool_call(
             "Read the notes",
@@ -466,7 +466,7 @@ class TestTargetPathSpellings:
     def test_an_ordinary_path_is_still_allowed_under_every_spelling(self):
         """The absence direction: widening the spellings must not start denying
         ordinary files, or the gate would refuse most real edits."""
-        from kiro_crew.hooks import TOOL_DENY
+        from aj_crew.hooks import TOOL_DENY
 
         for key in ("path", "file_path", "filePath", "targetFile"):
             decision = self._gate().on_tool_call(
@@ -478,7 +478,7 @@ class TestTargetPathSpellings:
             assert decision.action != TOOL_DENY, f"{key!r} wrongly denied an ordinary file"
 
     def test_target_paths_ignores_non_string_and_blank_values(self):
-        from kiro_crew.hooks import target_paths
+        from aj_crew.hooks import target_paths
 
         assert target_paths({"path": {"nested": 1}, "filePath": "   "}) == []
         assert target_paths(None) == []
@@ -500,13 +500,13 @@ class TestTargetPathNestedExtraction:
 
     @staticmethod
     def _gate():
-        from kiro_crew.hooks import HookManager, HooksConfig
+        from aj_crew.hooks import HookManager, HooksConfig
 
         return HookManager(HooksConfig.from_dict({}))
 
     def test_a_sensitive_path_nested_in_an_array_argument_is_denied(self):
         """The reported fence miss, end to end through the gate."""
-        from kiro_crew.hooks import TOOL_DENY
+        from aj_crew.hooks import TOOL_DENY
 
         decision = self._gate().on_tool_call(
             "Read the notes",
@@ -520,13 +520,13 @@ class TestTargetPathNestedExtraction:
         )
 
     def test_single_op_array_extraction(self):
-        from kiro_crew.hooks import target_paths
+        from aj_crew.hooks import target_paths
 
         params = {"operations": [{"mode": "Line", "path": "~/.ssh/id_rsa"}]}
         assert target_paths(params) == ["~/.ssh/id_rsa"]
 
     def test_two_op_array_extraction_preserves_order_and_dedups(self):
-        from kiro_crew.hooks import target_paths
+        from aj_crew.hooks import target_paths
 
         params = {
             "operations": [
@@ -540,13 +540,13 @@ class TestTargetPathNestedExtraction:
     def test_negative_control_pattern_only_yields_nothing(self):
         """A search-shaped call with no path key emits no candidates — the
         widening must not start inventing targets from unrelated arguments."""
-        from kiro_crew.hooks import target_paths
+        from aj_crew.hooks import target_paths
 
         assert target_paths({"pattern": "x"}) == []
         assert target_paths({"operations": [{"mode": "Directory", "depth": 2}]}) == []
 
     def test_list_of_strings_directly_under_a_path_key_is_collected(self):
-        from kiro_crew.hooks import target_paths
+        from aj_crew.hooks import target_paths
 
         assert target_paths({"path": ["/tmp/a", "~/.ssh/id_rsa"]}) == [
             "/tmp/a",
@@ -556,7 +556,7 @@ class TestTargetPathNestedExtraction:
     def test_an_ordinary_nested_path_is_still_allowed(self):
         """The absence direction: recursing must not start denying ordinary
         batch reads, or the gate would refuse most real multi-file calls."""
-        from kiro_crew.hooks import TOOL_DENY
+        from aj_crew.hooks import TOOL_DENY
 
         decision = self._gate().on_tool_call(
             "Read the notes",
@@ -569,7 +569,7 @@ class TestTargetPathNestedExtraction:
     def test_a_deeply_nested_path_is_still_found_without_raising(self):
         """The walk is iterative and exhaustive: depth alone cannot hide a
         path (no RecursionError, no fail-open depth bound)."""
-        from kiro_crew.hooks import target_paths
+        from aj_crew.hooks import target_paths
 
         deep: dict = {"path": "~/.ssh/id_rsa"}
         for _ in range(1000):
@@ -582,7 +582,7 @@ class TestTargetPathNestedExtraction:
         """An attacker-shaped payload that exhausts the work caps must mark the
         result truncated, and the gate must DENY the unverifiable call rather
         than trust a partial scan — deny-by-default, never silent fail-open."""
-        from kiro_crew.hooks import (
+        from aj_crew.hooks import (
             _TARGET_PATH_MAX_PATHS,
             TOOL_DENY,
             target_paths,
@@ -612,7 +612,7 @@ class TestTargetPathNestedExtraction:
 
     def test_ordinary_calls_are_nowhere_near_the_work_caps(self):
         """The caps must not start refusing real batch reads."""
-        from kiro_crew.hooks import target_paths
+        from aj_crew.hooks import target_paths
 
         params = {"operations": [{"mode": "Line", "path": f"/tmp/f{i}.txt"} for i in range(40)]}
         result = target_paths(params)
@@ -685,7 +685,7 @@ class TestPathTierUnderAResolverStall:
     def test_a_stalled_file_read_is_refused_as_unverifiable_not_as_sensitive(
         self, monkeypatch, tmp_path
     ):
-        from kiro_crew import security
+        from aj_crew import security
 
         target = tmp_path / "ws" / "README.md"
         target.parent.mkdir()
@@ -706,7 +706,7 @@ class TestPathTierUnderAResolverStall:
         assert repr(str(target)) in result.reason  # quoted: the unverifiable wording uses the repr
 
     def test_a_sensitive_read_still_says_sensitive(self, monkeypatch):
-        from kiro_crew import security
+        from aj_crew import security
 
         monkeypatch.setattr(security.paths, "_path_in_home_dirs", lambda *a, **k: True)
         result = HookManager().on_tool_call("~/.aws/credentials", tool_kind="read")
@@ -714,7 +714,7 @@ class TestPathTierUnderAResolverStall:
         assert result.reason == "Blocked: access to sensitive path: ~/.aws/credentials"
 
     def test_safe_read_file_keeps_the_repr_quoted_match_wording(self, monkeypatch, tmp_path):
-        from kiro_crew import hooks, security
+        from aj_crew import hooks, security
 
         target = tmp_path / "plain.txt"
         target.write_text("x")
@@ -724,7 +724,7 @@ class TestPathTierUnderAResolverStall:
         assert str(info.value) == f"Blocked: access to sensitive path: {str(target)!r}"
 
     def test_safe_read_file_passes_the_unverifiable_wording_through(self, monkeypatch, tmp_path):
-        from kiro_crew import hooks, security
+        from aj_crew import hooks, security
 
         target = tmp_path / "plain.txt"
         target.write_text("x")
@@ -746,7 +746,7 @@ class TestPathTierUnderAResolverStall:
         still re-spelled with the repr (the log-forgery guard)."""
         import os
 
-        from kiro_crew import hooks, security
+        from aj_crew import hooks, security
 
         forged = str(tmp_path / f"{security.UNVERIFIABLE_PATH_PREFIX}\nWARNING forged")
         resolved = os.path.realpath(forged)
@@ -771,7 +771,7 @@ class TestShellCommandTextLeavesThePathTier:
     CMD = "cd /workplace/me/proj && grep -rn verified_reverse_launch_into src"
 
     def test_the_recovered_command_never_enters_the_path_tier(self, monkeypatch):
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         asked: list[str] = []
 
@@ -789,7 +789,7 @@ class TestShellCommandTextLeavesThePathTier:
         that happens to be a bare path is command text all the same: the path tier
         is not consulted, and the sandbox is what stands between the shell and the
         credential store (see the spec's "does not match PATHS in command text")."""
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         asked: list[str] = []
         monkeypatch.setattr(
@@ -805,7 +805,7 @@ class TestShellCommandTextLeavesThePathTier:
     def test_a_shell_title_that_is_not_the_command_still_pays_the_path_tier(self, monkeypatch):
         """An LLM-authored title on a shell frame is not command text; it is gated as
         before (the resolver sees it, and a match on it is refused)."""
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         asked: list[str] = []
         monkeypatch.setattr(
@@ -817,7 +817,7 @@ class TestShellCommandTextLeavesThePathTier:
     def test_a_non_shell_title_is_still_path_gated(self, monkeypatch):
         """The Claude Code adapter's file-read title is the bare path with no prefix
         and no raw_params; the title tier is what fences it, and it must keep doing so."""
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         asked: list[str] = []
 
@@ -832,7 +832,7 @@ class TestShellCommandTextLeavesThePathTier:
         assert result.reason == "Blocked: access to sensitive path: ~/.ssh/id_rsa"
 
     def test_a_non_shell_read_with_raw_params_is_still_path_gated(self, monkeypatch):
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         monkeypatch.setattr(
             hooks,
@@ -849,7 +849,7 @@ class TestShellCommandTextLeavesThePathTier:
         """kiro-cli can classify an execute-kind frame as shell while naming an MCP
         server. An MCP-served tool runs outside the sandbox the exemption leans
         on, so its command stays path-gated."""
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         asked: list[str] = []
 
@@ -872,7 +872,7 @@ class TestShellCommandTextLeavesThePathTier:
     def test_raw_params_paths_on_a_shell_frame_are_still_refused(self, monkeypatch):
         """The raw_params path tier is independent of the command exemption: a shell-
         classified frame carrying a path parameter is still refused on it."""
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         monkeypatch.setattr(
             hooks,
@@ -892,7 +892,7 @@ class TestShellCommandTextLeavesThePathTier:
     def test_a_verified_tool_identity_title_leaves_the_path_tier(self, monkeypatch):
         """A title that is exactly the call's own verified ``@server/tool``
         identity names a tool, not a file -- a resolver stall cannot refuse it."""
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         asked: list[str] = []
 
@@ -902,19 +902,19 @@ class TestShellCommandTextLeavesThePathTier:
 
         monkeypatch.setattr(hooks, "sensitive_path_refusal", stalled)
         result = HookManager().on_tool_call(
-            "@kirocrew-core/wait",
-            mcp_server_name="kirocrew-core",
+            "@ajcrew-core/wait",
+            mcp_server_name="ajcrew-core",
             mcp_tool_name="wait",
             mcp_identity_trusted=True,
         )
-        assert "@kirocrew-core/wait" not in asked
+        assert "@ajcrew-core/wait" not in asked
         assert result.action != TOOL_DENY or "Path:" not in result.reason
 
     def test_a_bare_server_title_with_a_known_tool_is_not_exempt(self, monkeypatch):
         """When the tool is proven the call's own identity is ``@server/tool``; a
         bare ``@server`` title names a broader thing than the specific tool that
         ran, so it is NOT this call's identity and must stay path-gated."""
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         asked: list[str] = []
 
@@ -924,25 +924,25 @@ class TestShellCommandTextLeavesThePathTier:
 
         monkeypatch.setattr(hooks, "sensitive_path_refusal", recording)
         result = HookManager().on_tool_call(
-            "@kirocrew-core",
-            mcp_server_name="kirocrew-core",
+            "@ajcrew-core",
+            mcp_server_name="ajcrew-core",
             mcp_tool_name="wait",
             mcp_identity_trusted=True,
         )
-        assert "@kirocrew-core" in asked
+        assert "@ajcrew-core" in asked
         assert result.action == TOOL_DENY
 
     @pytest.mark.parametrize(
         ("title", "trusted"),
         [
-            ("@kirocrew-core/wait", False),
+            ("@ajcrew-core/wait", False),
             ("~/.ssh/id_rsa", True),
-            ("@kirocrew-core/wait/x", True),
-            ("@kirocrew-core/other", True),
+            ("@ajcrew-core/wait/x", True),
+            ("@ajcrew-core/other", True),
         ],
     )
     def test_any_other_title_of_an_mcp_call_is_still_path_gated(self, monkeypatch, title, trusted):
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         asked: list[str] = []
 
@@ -953,7 +953,7 @@ class TestShellCommandTextLeavesThePathTier:
         monkeypatch.setattr(hooks, "sensitive_path_refusal", recording)
         result = HookManager().on_tool_call(
             title,
-            mcp_server_name="kirocrew-core",
+            mcp_server_name="ajcrew-core",
             mcp_tool_name="wait",
             mcp_identity_trusted=trusted,
         )

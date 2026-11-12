@@ -21,16 +21,16 @@ describe('ErrorDetails', () => {
   })
 
   it('keeps the detail collapsed until asked', () => {
-    render(<ErrorDetails details="kirocrew-deploy-base" />)
-    expect(screen.queryByText('kirocrew-deploy-base')).toBeNull()
+    render(<ErrorDetails details="ajcrew-deploy-base" />)
+    expect(screen.queryByText('ajcrew-deploy-base')).toBeNull()
     fireEvent.click(screen.getByText('Details'))
-    expect(screen.getByText('kirocrew-deploy-base')).toBeTruthy()
+    expect(screen.getByText('ajcrew-deploy-base')).toBeTruthy()
   })
 
   it('copies the remediation command and reports it', async () => {
     const writeText = vi.fn(async () => undefined)
     vi.stubGlobal('navigator', { clipboard: { writeText } })
-    render(<ErrorDetails details="kirocrew-deploy-base" remediation="/s/install-reaper.sh --profile ship" />)
+    render(<ErrorDetails details="ajcrew-deploy-base" remediation="/s/install-reaper.sh --profile ship" />)
     fireEvent.click(screen.getByText('Details'))
     expect(screen.getByText('/s/install-reaper.sh --profile ship')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: /Copy/i }))

@@ -25,30 +25,30 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.cli_commands import _cron
-from kiro_crew.config.loader import (
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+from aj_crew.cli_commands import _cron
+from aj_crew.config.loader import (
+    AjCrewAgentConfig,
+    AjCrewConfig,
     config_dir,
 )
-from kiro_crew.cron import CronService
-from kiro_crew.dashboard.handlers.cron import api_cron_update
-from kiro_crew.execution_context import execution_from_record
-from kiro_crew.memory_stores import provision_member_memory
+from aj_crew.cron import CronService
+from aj_crew.dashboard.handlers.cron import api_cron_update
+from aj_crew.execution_context import execution_from_record
+from aj_crew.memory_stores import provision_member_memory
 
 
 @pytest.fixture
 def member_with_distinct_template(tmp_path, monkeypatch):
     """A crew member whose display name differs from its kiro template."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     (config_dir() / "crons").mkdir(parents=True)
-    cfg = KiroCrewConfig.load()
-    cfg.agents["SampleMemberAgent"] = KiroCrewAgentConfig(
+    cfg = AjCrewConfig.load()
+    cfg.agents["SampleMemberAgent"] = AjCrewAgentConfig(
         kiro_agent="sample-template-agent", triggers="sample"
     )
     provision_member_memory(cfg, "SampleMemberAgent")
     cfg.save()
-    return KiroCrewConfig.load().agents["SampleMemberAgent"].member_id
+    return AjCrewConfig.load().agents["SampleMemberAgent"].member_id
 
 
 def _svc() -> CronService:
@@ -115,9 +115,9 @@ def test_update_via_cli_to_member_name_is_refused(member_with_distinct_template)
 
 
 def test_update_via_mcp_to_member_name_is_refused(member_with_distinct_template):
-    from kiro_crew.mcp_cron import _call_tool_locally
+    from aj_crew.mcp_cron import _call_tool_locally
 
-    with patch("kiro_crew.mcp_cron._authz_session_key", return_value="dashboard:tester"):
+    with patch("aj_crew.mcp_cron._authz_session_key", return_value="dashboard:tester"):
         _call_tool_locally("cron_add", {"name": "daily", "message": "task", "every": 60})
         job_id = _only_job().id
         result = _call_tool_locally("cron_update", {"job_id": job_id, "agent": "SampleMemberAgent"})
@@ -142,7 +142,7 @@ async def test_update_via_dashboard_to_member_name_is_refused(member_with_distin
     job_id = _template_job()
     app = _dashboard_app(svc.update_job_async)
     with patch(
-        "kiro_crew.dashboard.handlers.cron.require_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.cron.require_owner_dashboard_request",
         return_value=None,
     ):
         async with TestClient(TestServer(app)) as client:
@@ -174,7 +174,7 @@ def test_sdk_update_job_naming_a_member_stays_a_template(member_with_distinct_te
     all: it stays a template and reaches only global memory, exactly as on main.
     An app is never even offered the member re-point, so it is not refused — it
     is simply recorded as the (template) name it gave."""
-    from kiro_crew.apps.cron_sdk import CronSDK
+    from aj_crew.apps.cron_sdk import CronSDK
 
     sdk = CronSDK("testapp", _svc())
     job = sdk.add_job("daily", "task", every_secs=60)

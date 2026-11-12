@@ -4,8 +4,8 @@ import json
 import re
 from pathlib import Path
 
-from kiro_crew.cron import CronService
-from kiro_crew.testing.fixtures import seeded_home
+from aj_crew.cron import CronService
+from aj_crew.testing.fixtures import seeded_home
 
 _WEBSITE_SRC = Path(__file__).resolve().parents[1] / "website" / "src"
 _PRESETS_TSX = _WEBSITE_SRC / "utils" / "schedulePresets.tsx"

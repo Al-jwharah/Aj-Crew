@@ -11,11 +11,11 @@ import logging
 import os
 from types import SimpleNamespace
 
-from kiro_crew.acp import mcp_ref_guard
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.mcp_session_report import McpSessionReport
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_GOOSE, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.acp import mcp_ref_guard
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.mcp_session_report import McpSessionReport
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.agent_sdk.backends import ACP_BACKEND_GOOSE, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
 
 
 def test_an_unset_placeholder_is_named_and_no_value_is(tmp_path, monkeypatch, caplog):
@@ -37,7 +37,7 @@ def test_an_unset_placeholder_is_named_and_no_value_is(tmp_path, monkeypatch, ca
 
     with caplog.at_level(logging.WARNING, logger=mcp_ref_guard.__name__):
         found = mcp_ref_guard.warn_unset_env_placeholders(
-            spec, [], backend=ACP_BACKEND_KIRO, agent="kirocrew", child_env=os.environ
+            spec, [], backend=ACP_BACKEND_KIRO, agent="ajcrew", child_env=os.environ
         )
     assert found == (["github ('KC4970_UNSET')"], 0)
     records = [r for r in caplog.records if r.name == mcp_ref_guard.__name__]
@@ -48,7 +48,7 @@ def test_an_unset_placeholder_is_named_and_no_value_is(tmp_path, monkeypatch, ca
 
     # Both session-start call sites record it; the reading a model gets leaves it
     # out, because the server did start.
-    client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_KIRO)
+    client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_KIRO)
     client._mcp_ref_spec = spec
     client._child_env_names = frozenset({"HOME"})
     client._begin_session_report([])
@@ -61,13 +61,13 @@ def test_an_unset_placeholder_is_named_and_no_value_is(tmp_path, monkeypatch, ca
         _child_env_names=frozenset({"HOME"}),
     )
     handle = SimpleNamespace(mcp_session_report=lambda: runtime_report)
-    AcpRuntime._guard_unresolved_mcp_refs(runtime, handle, spec, "kirocrew", [])
+    AcpRuntime._guard_unresolved_mcp_refs(runtime, handle, spec, "ajcrew", [])
     for report in (client.mcp_session_report(), runtime_report):
         assert "github ('KC4970_UNSET')" in report.problem_summary()
         assert "KC4970_UNSET" not in report.problem_summary(include_reasons=False)
 
     # A server the attempt pruned as unstartable never starts, so it is not named.
-    pruned = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_GOOSE)
+    pruned = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_GOOSE)
     pruned._mcp_ref_spec = spec
     pruned._begin_session_report([])
     pruned._mcp_pruned_names = ("github",)
@@ -91,7 +91,7 @@ def test_an_unset_placeholder_is_named_and_no_value_is(tmp_path, monkeypatch, ca
     # Set only in agent.env: the routed view resolves it, so nothing is named.
     configured = SimpleNamespace(agent=SimpleNamespace(env={"KC4970_UNSET": "from-agent-env"}))
     monkeypatch.setattr(
-        "kiro_crew.config.KiroCrewConfig.load", staticmethod(lambda: configured), raising=True
+        "aj_crew.config.AjCrewConfig.load", staticmethod(lambda: configured), raising=True
     )
     assert mcp_ref_guard.warn_unset_env_placeholders(
         spec, [{"name": "github"}], backend=ACP_BACKEND_KAS, agent="k", child_env=child

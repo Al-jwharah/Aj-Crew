@@ -22,11 +22,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-import kiro_crew.cron as cron_mod
-import kiro_crew.mcp_cron as mcp_cron
-from kiro_crew.cron import CronService
-from kiro_crew.cron_history import CronRunRecord
-from kiro_crew.dashboard.handlers.cron import api_cron_delete
+import aj_crew.cron as cron_mod
+import aj_crew.mcp_cron as mcp_cron
+from aj_crew.cron import CronService
+from aj_crew.cron_history import CronRunRecord
+from aj_crew.dashboard.handlers.cron import api_cron_delete
 
 
 @pytest.fixture
@@ -74,7 +74,7 @@ def test_remove_job_async_deletes_the_history(service, tmp_path):
 
 def test_remove_job_if_async_deletes_the_history(service, tmp_path):
     """The dashboard's card Undo removes through the compare-and-delete path."""
-    from kiro_crew.dashboard.change_cards import cron_job_revision
+    from aj_crew.dashboard.change_cards import cron_job_revision
 
     job = service.add_job("card", "run", every_secs=3600)
     path = _history_file(service, tmp_path, job.id)
@@ -96,7 +96,7 @@ def test_remove_job_if_async_deletes_the_history(service, tmp_path):
 
 def test_control_a_refused_compare_and_delete_keeps_the_history(service, tmp_path):
     """A card Undo refused because the job changed since the card applied removes nothing."""
-    from kiro_crew.dashboard.change_cards import cron_job_revision
+    from aj_crew.dashboard.change_cards import cron_job_revision
 
     job = service.add_job("card", "run", every_secs=3600)
     path = _history_file(service, tmp_path, job.id)

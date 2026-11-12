@@ -12,7 +12,7 @@ fenced only by the first one. These tests pin the reconciliation between them:
 The third is the one worth failing loudly: an entry that quietly moves from "masked" to
 "exception" is a ceiling the agent can rewrite again.
 
-The Linux side is read from the spawn's :class:`~kiro_crew.sandbox_plan.ConfinementPlan`
+The Linux side is read from the spawn's :class:`~aj_crew.sandbox_plan.ConfinementPlan`
 (``sandbox._spawn_plan``), whose mask, seal and file lists are what the namespace
 launcher is handed, and the launcher's own seal stage is driven with a recording libc.
 The macOS side is read from the rendered Seatbelt profile.
@@ -32,7 +32,7 @@ from sandbox_governance_mask_helpers import _no_host_ssh_probe  # noqa: F401
 from sandbox_governance_mask_helpers import _POSIX_ONLY
 from test_sandbox_launcher_program import RecordingLibc, launch, refusal
 
-from kiro_crew import sandbox, sandbox_launcher_program, sandbox_plan, security
+from aj_crew import sandbox, sandbox_launcher_program, sandbox_plan, security
 
 #: The launcher program pins its targets as ``/proc/self/fd/<n>``, which only Linux has.
 _LINUX_ONLY = pytest.mark.skipif(
@@ -40,7 +40,7 @@ _LINUX_ONLY = pytest.mark.skipif(
 )
 
 _MODES = ("standard", "cc", "strict")
-_CREW_PREFIXES = (".kiro/crew", ".kirocrew")
+_CREW_PREFIXES = (".kiro/crew", ".ajcrew")
 
 _MS_BIND = 4096
 _MS_REMOUNT = 32
@@ -119,9 +119,9 @@ def _expected_exceptions() -> set[str]:
 def test_run_authority_file_edits_are_refused_on_both_run_roots(
     tmp_path, monkeypatch, leaf, read_refused
 ):
-    from kiro_crew.hooks import TOOL_DENY, HookManager, HooksConfig
+    from aj_crew.hooks import TOOL_DENY, HookManager, HooksConfig
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     target = tmp_path / leaf / "run-one" / "state.json"
     target.parent.mkdir(parents=True)
     target.write_text('{"app":"original-app"}', encoding="utf-8")
@@ -356,9 +356,9 @@ class TestAbsentRegistryTrustIsSealedByPrecreation:
 
     def test_an_empty_document_reads_as_no_grants(self, tmp_path, monkeypatch) -> None:
         """Criterion 1: the ``{}`` the launcher materialises means what an absent file means."""
-        from kiro_crew.apps import registry_trust as rt
-        from kiro_crew.apps.registry_pipeline import sources
-        from kiro_crew.config import loader
+        from aj_crew.apps import registry_trust as rt
+        from aj_crew.apps.registry_pipeline import sources
+        from aj_crew.config import loader
 
         path = tmp_path / "registry_trust.json"
         monkeypatch.setattr(loader, "registry_trust_path", lambda: path)
@@ -613,7 +613,7 @@ class TestTheReconciliationIsComplete:
 
 
 class TestARelocatedDataHomeIsCoveredToo:
-    """``KIROCREW_HOME`` outside ``$HOME`` must not escape the mask.
+    """``AJCREW_HOME`` outside ``$HOME`` must not escape the mask.
 
     Every dir-list entry is ``$HOME``-relative and joined with ``Path.home()``, so a
     managed fleet that relocates the data home would otherwise get no rule at all for the
@@ -627,9 +627,9 @@ class TestARelocatedDataHomeIsCoveredToo:
 
     @staticmethod
     def _relocate(monkeypatch, tmp_path) -> str:
-        from kiro_crew.config.paths import config_dir
+        from aj_crew.config.paths import config_dir
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "relocated-crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "relocated-crew"))
         return str(config_dir())
 
     @_POSIX_ONLY
@@ -675,7 +675,7 @@ class TestARelocatedDataHomeIsCoveredToo:
 
     def test_the_default_layout_adds_no_duplicate_rule(self, monkeypatch, tmp_path):
         """De-duplication: where the two spellings match textually, no second rule."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "x" / ".kiro" / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "x" / ".kiro" / "crew"))
         monkeypatch.setattr(sandbox.Path, "home", staticmethod(lambda: tmp_path / "x"))
 
         assert sandbox._relocated_crew_targets(("security_policy.json",)) == []
@@ -811,7 +811,7 @@ class TestAppBackendOwnedLeaves:
         """
         import inspect
 
-        from kiro_crew.apps import backend as backend_mod
+        from aj_crew.apps import backend as backend_mod
 
         src = inspect.getsource(backend_mod._start_app_backend_body)
         assert "app_backend_visible_targets(app_name)" in src
@@ -862,7 +862,7 @@ class TestForeignMaskShadowGuard:
         same relocated spelling under a strict-only mask survives a standard
         spawn and is dropped from a strict one."""
         monkeypatch.setattr(sandbox.Path, "home", staticmethod(lambda: tmp_path))
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / ".aws" / "relocated-crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / ".aws" / "relocated-crew"))
         reloc = str(tmp_path / ".aws" / "relocated-crew" / "md-notebook-staging")
 
         assert reloc in sandbox.app_backend_visible_targets("md-notebook")
@@ -898,7 +898,7 @@ class TestForeignMaskShadowGuard:
         rather than only its verdict.
         """
         monkeypatch.setattr(sandbox.Path, "home", staticmethod(lambda: tmp_path))
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "relocated-crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "relocated-crew"))
         staging_root = str(tmp_path / "relocated-crew" / "aws-control-staging")
 
         assert staging_root in sandbox._relocated_crew_targets(("aws-control-staging",))
@@ -915,7 +915,7 @@ class TestForeignMaskShadowGuard:
         refuse rather than lift.
         """
         monkeypatch.setattr(sandbox.Path, "home", staticmethod(lambda: tmp_path))
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / ".gnupg" / "relocated-crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / ".gnupg" / "relocated-crew"))
         staging_root = str(tmp_path / ".gnupg" / "relocated-crew" / "aws-control-staging")
 
         assert sandbox.carveout_shadowed_by_foreign_mask(staging_root)
@@ -931,10 +931,10 @@ class TestForeignMaskShadowGuard:
         mask for the CLI child, so the transfer must raise before ``_checked``
         runs -- and the per-call directory must still be cleaned up.
         """
-        from kiro_crew.apps.builtins.aws_control.backend import storage
+        from aj_crew.apps.builtins.aws_control.backend import storage
 
         monkeypatch.setattr(sandbox.Path, "home", staticmethod(lambda: tmp_path))
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / ".gnupg" / "relocated-crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / ".gnupg" / "relocated-crew"))
         staging_root = tmp_path / ".gnupg" / "relocated-crew" / "aws-control-staging"
         staging_root.mkdir(parents=True)
         monkeypatch.setattr(storage, "_preview_staging_parent", lambda: staging_root)
@@ -972,10 +972,10 @@ class TestForeignMaskShadowGuard:
         branches. The shadowed layout is asserted through the guard first, so
         this cannot pass by the layout being safe.
         """
-        from kiro_crew.apps.builtins.aws_control.backend import storage
+        from aj_crew.apps.builtins.aws_control.backend import storage
 
         monkeypatch.setattr(sandbox.Path, "home", staticmethod(lambda: tmp_path))
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / ".gnupg" / "relocated-crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / ".gnupg" / "relocated-crew"))
         staging_root = tmp_path / ".gnupg" / "relocated-crew" / "aws-control-staging"
         staging_root.mkdir(parents=True)
         assert sandbox.carveout_shadowed_by_foreign_mask(str(staging_root))
@@ -1012,10 +1012,10 @@ class TestForeignMaskShadowGuard:
         skip the refusal for a spawn that then applies the lift, which is the one
         direction this path must never fail in.
         """
-        from kiro_crew.apps.builtins.aws_control.backend import storage
+        from aj_crew.apps.builtins.aws_control.backend import storage
 
         monkeypatch.setattr(sandbox.Path, "home", staticmethod(lambda: tmp_path))
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / ".gnupg" / "relocated-crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / ".gnupg" / "relocated-crew"))
         staging_root = tmp_path / ".gnupg" / "relocated-crew" / "aws-control-staging"
         staging_root.mkdir(parents=True)
         monkeypatch.setattr(storage, "_preview_staging_parent", lambda: staging_root)
@@ -1055,9 +1055,9 @@ class TestForeignMaskShadowGuard:
         """
         import inspect
 
-        from kiro_crew.apps import backend as backend_mod
-        from kiro_crew.apps.builtins.aws_control.backend import storage as storage_mod
-        from kiro_crew.monitoring import provider_cli as provider_cli_mod
+        from aj_crew.apps import backend as backend_mod
+        from aj_crew.apps.builtins.aws_control.backend import storage as storage_mod
+        from aj_crew.monitoring import provider_cli as provider_cli_mod
 
         for name, obj in (
             ("app_backend_visible_targets", sandbox.app_backend_visible_targets),
@@ -1092,7 +1092,7 @@ class TestForeignMaskShadowGuard:
         CREATES the relocated directory) never writes beneath the real home.
         """
         monkeypatch.setattr(sandbox.Path, "home", staticmethod(lambda: tmp_path))
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / ".gnupg" / "relocated-crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / ".gnupg" / "relocated-crew"))
 
         # Positive first, so the absence loop below cannot pass vacuously: the
         # relocated spelling really is minted by the resolver and really does
@@ -1119,7 +1119,7 @@ class TestForeignMaskShadowGuard:
         """
         import inspect
 
-        from kiro_crew.apps import backend as backend_mod
+        from aj_crew.apps import backend as backend_mod
 
         src = inspect.getsource(backend_mod._start_app_backend_body)
         assert "carveout_shadowed_by_foreign_mask(_cache_target)" in src
@@ -1135,7 +1135,7 @@ _BACKENDS = (
 
 class TestAPodChildsRemappedHomeIsMasked:
     """``acp.client._apply_pod_home_remap`` gives a pod's
-    kiro-cli child a pod-owned ``HOME`` (``KIROCREW_OS_HOME``) and
+    kiro-cli child a pod-owned ``HOME`` (``AJCREW_OS_HOME``) and
     ``pod.runtime._seed_pod_os_home`` stages the host's SSO tokens into it -- but
     every entry in the tier lists is ``$HOME``-relative joined against the GATEWAY's
     home, so none of them named the remapped tree.
@@ -1189,8 +1189,8 @@ class TestAPodChildsRemappedHomeIsMasked:
     def test_the_remapped_home_is_re_anchored_when_the_pod_marker_is_set(
         self, monkeypatch, backend: str
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", self._OS_HOME)
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", self._OS_HOME)
 
         out = self._masked(backend)
 
@@ -1247,27 +1247,27 @@ class TestAPodChildsRemappedHomeIsMasked:
     def test_a_non_pod_session_mask_is_unchanged(self, monkeypatch, backend: str) -> None:
         """Gated on the pod marker exactly as ``config.paths`` gates the resolver, so
         an ordinary session gains no rule."""
-        monkeypatch.delenv("KIROCREW_POD", raising=False)
-        monkeypatch.delenv("KIROCREW_OS_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_POD", raising=False)
+        monkeypatch.delenv("AJCREW_OS_HOME", raising=False)
         ordinary = self._masked(backend)
-        monkeypatch.setenv("KIROCREW_OS_HOME", self._OS_HOME)
+        monkeypatch.setenv("AJCREW_OS_HOME", self._OS_HOME)
 
         assert self._under_os_home(backend) == []
         assert self._masked(backend) == ordinary
 
     @pytest.mark.parametrize("backend", _BACKENDS)
     def test_the_marker_must_be_exactly_one(self, monkeypatch, backend: str) -> None:
-        monkeypatch.setenv("KIROCREW_POD", "false")
-        monkeypatch.setenv("KIROCREW_OS_HOME", self._OS_HOME)
+        monkeypatch.setenv("AJCREW_POD", "false")
+        monkeypatch.setenv("AJCREW_OS_HOME", self._OS_HOME)
 
         assert self._under_os_home(backend) == []
 
     @pytest.mark.parametrize("backend", _BACKENDS)
     def test_no_os_home_yields_nothing(self, monkeypatch, backend: str) -> None:
-        monkeypatch.delenv("KIROCREW_POD", raising=False)
-        monkeypatch.delenv("KIROCREW_OS_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_POD", raising=False)
+        monkeypatch.delenv("AJCREW_OS_HOME", raising=False)
         ordinary = self._masked(backend)
-        monkeypatch.setenv("KIROCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_POD", "1")
 
         assert self._masked(backend) == ordinary
 
@@ -1279,10 +1279,10 @@ class TestAPodChildsRemappedHomeIsMasked:
         ``$HOME``-relative spelling are added, so the mask list gains no repeat."""
         monkeypatch.setenv("HOME", str(tmp_path))
         monkeypatch.setenv("USERPROFILE", str(tmp_path))
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(tmp_path))
-        monkeypatch.delenv("KIROCREW_POD", raising=False)
+        monkeypatch.setenv("AJCREW_OS_HOME", str(tmp_path))
+        monkeypatch.delenv("AJCREW_POD", raising=False)
         ordinary = self._masked(backend)
-        monkeypatch.setenv("KIROCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_POD", "1")
 
         assert self._masked(backend) == ordinary
 
@@ -1295,8 +1295,8 @@ class TestAPodChildsRemappedHomeIsMasked:
         that reached only one backend's plan would be silently platform-specific.
         Read from the plan each builder renders, and from the profile itself."""
         pod = str(tmp_path / "pod")
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", pod)
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", pod)
 
         masked = self._masked(backend)
 

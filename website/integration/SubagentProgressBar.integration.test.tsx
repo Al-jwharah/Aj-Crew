@@ -18,7 +18,7 @@ const mockSpawnList = vi.mocked(api.spawnList)
 const SLOT = 'chat-test-slot'
 
 function makeAgent(id: string, task: string, overrides?: Partial<Parameters<typeof sseSubagentSpawn>[0]>) {
-  return { slot: SLOT, id, task, agent: 'kirocrew', ...overrides }
+  return { slot: SLOT, id, task, agent: 'ajcrew', ...overrides }
 }
 
 function storeWithActiveSlot(): ReturnType<typeof createTestStore> {

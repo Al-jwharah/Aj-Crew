@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.platform import feed_trust
+from aj_crew.platform import feed_trust
 
 ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = ROOT / "cli.sh"
@@ -120,7 +120,7 @@ def _signed_manifest(private: Path, tmp_path: Path, **fields: str) -> dict:
     payload = {
         "channel": "stable",
         "key_id": feed_trust.PINNED_KEY_ID,
-        "schema": "kirocrew-cli-artifact-manifest-v1",
+        "schema": "ajcrew-cli-artifact-manifest-v1",
         "version": "0.6.0",
         **fields,
     }

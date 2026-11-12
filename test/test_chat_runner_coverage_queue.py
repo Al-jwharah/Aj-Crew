@@ -1,4 +1,4 @@
-"""Coverage tests for ``kiro_crew.dashboard.chat_runner``: the queue drain.
+"""Coverage tests for ``aj_crew.dashboard.chat_runner``: the queue drain.
 
 Covers ``_start_next_queued_turn`` (the hold while subagents run, and run-now), the
 pending synthesis run, and ``_finish_queue_cycle`` with its synthesis fire gate.
@@ -15,9 +15,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from chat_runner_coverage_helpers import _errors, _slot, _state
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND, chunk_generation
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND, chunk_generation
+from aj_crew.testing.wait import async_wait_until
 
 # ── queue drain / synthesis ───────────────────────────────────────────────
 
@@ -37,7 +37,7 @@ class TestStartNextQueuedTurn:
         state.subagents = None
 
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load", side_effect=RuntimeError("bad toml")),
+            patch.object(chat_runner.AjCrewConfig, "load", side_effect=RuntimeError("bad toml")),
             patch.object(chat_runner, "spawn_guarded_turn", return_value=MagicMock()) as spawn,
             patch.object(chat_runner, "_run_chat", return_value=MagicMock()),
         ):
@@ -65,7 +65,7 @@ class TestStartNextQueuedTurn:
         state.subagents = MagicMock(running_agents_for=MagicMock(return_value=["agent-1"]))
 
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load") as load,
+            patch.object(chat_runner.AjCrewConfig, "load") as load,
             patch.object(chat_runner, "spawn_guarded_turn", return_value=MagicMock()) as spawn,
             patch.object(
                 chat_runner, "_run_chat", new=MagicMock(return_value=MagicMock())
@@ -94,7 +94,7 @@ class TestStartNextQueuedTurn:
         state.subagents = MagicMock(running_agents_for=MagicMock(return_value=["agent-1"]))
 
         with (
-            patch.object(chat_runner.KiroCrewConfig, "load") as load,
+            patch.object(chat_runner.AjCrewConfig, "load") as load,
             patch.object(chat_runner, "spawn_guarded_turn", return_value=MagicMock()) as spawn,
             patch.object(
                 chat_runner, "_run_chat", new=MagicMock(return_value=MagicMock())
@@ -599,7 +599,7 @@ class TestRunPendingSynthesis:
         ``cls`` is persisted only for ``role == "system"``, so a ``cronLabel`` built from it
         vanishes on rehydrate. The render decision rests on the durable channel.
         """
-        from kiro_crew.dashboard.chat_persistence import _build_message_entry_uncached
+        from aj_crew.dashboard.chat_persistence import _build_message_entry_uncached
 
         cron_cls = json.dumps({"cronLabel": "nightly-audit"})
         entry = _build_message_entry_uncached(
@@ -713,7 +713,7 @@ class TestFinishQueueCycle:
         longer than the reset timeout. Nothing is running or queued, but B's
         result has not landed: the real manager's in-memory term holds the
         fire gate until B's task ends."""
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.subagent import SubagentInfo, SubagentManager
 
         state, slot = _state(tmp_path), _slot()
         state._slots[slot.key] = slot
@@ -891,8 +891,8 @@ class TestFinishQueueCycle:
         text after the turn's last tool call. It is a report only on a successful stop."""
         from types import SimpleNamespace
 
-        from kiro_crew.acp.types import classify_stop_reason
-        from kiro_crew.dashboard.state import SUBAGENT_FINAL_COMPLETION_NOTE
+        from aj_crew.acp.types import classify_stop_reason
+        from aj_crew.dashboard.state import SUBAGENT_FINAL_COMPLETION_NOTE
 
         slot = SimpleNamespace(_inflight_merge_contexts=[], _synthesis_final_turn_ran=not expected)
         rows = [("m1", earlier), ("m2", reply)] if earlier else []

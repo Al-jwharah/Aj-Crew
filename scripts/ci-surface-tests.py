@@ -11,7 +11,7 @@ The catch is that a minority of tests are *cross-surface parity guards*: they
 live in one suite but assert against the OTHER surface's source (e.g. a pytest
 test that reads ``website/src/utils/sanitize.ts`` to prove the redaction mirror
 still matches, or an Electron test that reads
-``src/kiro_crew/computer_use/permissions.py``). Skipping one of those is how a
+``src/aj_crew/computer_use/permissions.py``). Skipping one of those is how a
 drift bug ships green.
 
 So this script does NOT try to enumerate the guards (a list that must be
@@ -71,7 +71,7 @@ _BACKEND_FOREIGN = re.compile(
 #
 # Two distinct escape styles both have to be caught, which is exactly what an
 # eyeball grep kept missing:
-#   1. string literals   -- '../../../src/kiro_crew/connections/registry.json'
+#   1. string literals   -- '../../../src/aj_crew/connections/registry.json'
 #   2. path segments     -- path.resolve(__dirname, '..', '..', '..', 'test')
 #
 # Backend-owned config extensions close the last bare-name gap: a spec reads
@@ -86,7 +86,7 @@ _FRONTEND_FOREIGN = re.compile(
       (?:\.\./){3,}                                  # ../../../ escape upward
     | \.\.[\\/]\.\.[\\/]\.\.                          # ../../.. joined form
     | (?:['"]\.\.['"]\s*,\s*){2,}                     # '..', '..', ... segments
-    | kiro_crew                                       # backend package by name
+    | aj_crew                                       # backend package by name
     | \bpackaging\b
     | \bskills\b
     | test[\\/]fixtures                               # shared parity fixtures
@@ -104,7 +104,7 @@ _FRONTEND_FOREIGN = re.compile(
 # worse than an unclassified file: the reduced run passes explicit paths, so a
 # root that is never walked never runs at all (it does not fall back to
 # "keep running" the way an unclassifiable file does).
-_BACKEND_ROOTS = ("test", "transfer", "src/kiro_crew/apps/builtins")
+_BACKEND_ROOTS = ("test", "transfer", "src/aj_crew/apps/builtins")
 _BACKEND_GLOBS = ("test_*.py",)
 
 # Frontend spec roots. MUST cover every root in vitest's `test.include`

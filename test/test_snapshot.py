@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.snapshot — snapshot and restore."""
+"""Tests for aj_crew.snapshot — snapshot and restore."""
 
 from __future__ import annotations
 
@@ -15,9 +15,9 @@ import pytest
 import snapshot_helpers
 from snapshot_helpers import unpinnable_argv
 
+from aj_crew import snapshot as snapshot_mod
+from aj_crew.snapshot import restore_main, snapshot_main
 from conftest import requires_o_nofollow, requires_symlinks
-from kiro_crew import snapshot as snapshot_mod
-from kiro_crew.snapshot import restore_main, snapshot_main
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -26,8 +26,8 @@ from kiro_crew.snapshot import restore_main, snapshot_main
 _no_gateway = snapshot_helpers._no_gateway
 
 
-def _setup_fake_kirocrew(d: Path) -> None:
-    """Create a realistic fake ~/.kirocrew directory."""
+def _setup_fake_ajcrew(d: Path) -> None:
+    """Create a realistic fake ~/.ajcrew directory."""
     for sub in (
         "workspace/memory/history",
         "workspace/knowledge",
@@ -102,7 +102,7 @@ def _setup_fake_kirocrew(d: Path) -> None:
     (d / "telemetry_salt").write_bytes(b"\x04" * snapshot_mod._TELEMETRY_SALT_BYTES)
     (d / "notifications.jsonl").write_text('{"ts":"2026-01-01","msg":"test"}\n')
     (d / "project_dir").write_text("/home/user/project")
-    (d / "workspace_dir").write_text("/home/user/.kirocrew/workspace")
+    (d / "workspace_dir").write_text("/home/user/.ajcrew/workspace")
     (d / "workspace/memory/history/2026-01-01.md").write_text("history entry")
     (d / "workspace/doc.md").write_text("doc content")
     (d / "workspace/hygiene_data/week1.json").write_text("big data")
@@ -111,7 +111,7 @@ def _setup_fake_kirocrew(d: Path) -> None:
 
 
 def _make_snapshot(src: Path, out: Path, extra_args: list[str] | None = None) -> Path:
-    """Create a snapshot and return the tarball path. Caller must set KIROCREW_HOME.
+    """Create a snapshot and return the tarball path. Caller must set AJCREW_HOME.
 
     ``unpinnable_argv()`` is always appended: without directory descriptors staging refuses,
     and every caller would fail inside this helper. It is empty where pinning works.
@@ -119,7 +119,7 @@ def _make_snapshot(src: Path, out: Path, extra_args: list[str] | None = None) ->
     args = [str(out)] + (extra_args or []) + unpinnable_argv()
     snapshot_main(args)
     tarballs = sorted(
-        out.glob("kirocrew-snapshot-*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True
+        out.glob("ajcrew-snapshot-*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True
     )
     assert tarballs, "No tarball created"
     return tarballs[0]
@@ -155,8 +155,8 @@ def env(tmp_path, monkeypatch):
     """Set up source dir, output dir, and snapshot tarball."""
     src = tmp_path / "src"
     out = tmp_path / "out"
-    _setup_fake_kirocrew(src)
-    monkeypatch.setenv("KIROCREW_HOME", str(src))
+    _setup_fake_ajcrew(src)
+    monkeypatch.setenv("AJCREW_HOME", str(src))
     tarball = _make_snapshot(src, out)
     return src, out, tarball, tmp_path
 
@@ -173,7 +173,7 @@ class TestSnapshot:
         extract.mkdir()
         with tarfile.open(str(tarball)) as tar:
             tar.extractall(extract, filter=lambda t, _d="": t)
-        snaps = [d for d in extract.iterdir() if d.name.startswith("kirocrew-snapshot-")]
+        snaps = [d for d in extract.iterdir() if d.name.startswith("ajcrew-snapshot-")]
         assert snaps
         snap = snaps[0]
         assert (snap / "memory.db").is_file()
@@ -192,7 +192,7 @@ class TestSnapshot:
             "created_at",
             "hostname",
             "user",
-            "kirocrew_dir",
+            "ajcrew_dir",
             "contents",
         ):
             assert v2_key in m, v2_key
@@ -206,7 +206,7 @@ class TestSnapshot:
         extract.mkdir()
         with tarfile.open(str(tarball)) as tar:
             tar.extractall(extract, filter=lambda t, _d="": t)
-        snap = next(d for d in extract.iterdir() if d.name.startswith("kirocrew-snapshot-"))
+        snap = next(d for d in extract.iterdir() if d.name.startswith("ajcrew-snapshot-"))
         conn = sqlite3.connect(str(snap / "memory.db"))
         assert conn.execute("SELECT count(*) FROM semantic_memory").fetchone()[0] == 2
         conn.close()
@@ -217,7 +217,7 @@ class TestSnapshot:
         extract.mkdir()
         with tarfile.open(str(tarball)) as tar:
             tar.extractall(extract, filter=lambda t, _d="": t)
-        snap = next(d for d in extract.iterdir() if d.name.startswith("kirocrew-snapshot-"))
+        snap = next(d for d in extract.iterdir() if d.name.startswith("ajcrew-snapshot-"))
         for f in (
             "telemetry_salt",
             "notifications.jsonl",
@@ -233,23 +233,23 @@ class TestSnapshot:
         out2 = tmp_path / "out2"
         out2.mkdir()
         for i in range(3):
-            (out2 / f"kirocrew-snapshot-2026010{i}T000000Z.tar.gz").write_text("fake")
-        monkeypatch.setenv("KIROCREW_HOME", str(src))
+            (out2 / f"ajcrew-snapshot-2026010{i}T000000Z.tar.gz").write_text("fake")
+        monkeypatch.setenv("AJCREW_HOME", str(src))
         snapshot_main([str(out2), "--keep", "2"] + unpinnable_argv())
-        total = len(list(out2.glob("kirocrew-snapshot-*.tar.gz")))
+        total = len(list(out2.glob("ajcrew-snapshot-*.tar.gz")))
         assert total == 2
 
     def test_list(self, env, capsys, monkeypatch):
         """TEST 3"""
         src, out, _, _ = env
-        monkeypatch.setenv("KIROCREW_HOME", str(src))
+        monkeypatch.setenv("AJCREW_HOME", str(src))
         snapshot_main([str(out), "--list"])
-        assert "kirocrew-snapshot-" in capsys.readouterr().out
+        assert "ajcrew-snapshot-" in capsys.readouterr().out
 
     def test_keep_zero_errors(self, env, capsys, monkeypatch):
         """TEST 29 partial"""
         src, _, _, tmp_path = env
-        monkeypatch.setenv("KIROCREW_HOME", str(src))
+        monkeypatch.setenv("AJCREW_HOME", str(src))
         # argparse will raise SystemExit for --keep 0 since we validate > 0
         # But our validation is post-parse, so it returns 1
         ret = snapshot_main([str(tmp_path / "x"), "--keep", "0"])
@@ -266,7 +266,7 @@ class TestRestoreDryRun:
         _, _, tarball, tmp_path = env
         fresh = tmp_path / "fresh4"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         restore_main([str(tarball), "--dry-run", "--force"])
         assert "Dry run" in capsys.readouterr().out
         assert not (fresh / "memory.db").exists()
@@ -278,7 +278,7 @@ class TestRestoreReplace:
         _, _, tarball, tmp_path = env
         fresh = tmp_path / "fresh5"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         ret = restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv())
         assert ret == 0
         assert (fresh / "memory.db").is_file()
@@ -297,9 +297,9 @@ class TestRestoreReplace:
         """TEST 6"""
         _, _, tarball, tmp_path = env
         existing = tmp_path / "existing6"
-        _setup_fake_kirocrew(existing)
+        _setup_fake_ajcrew(existing)
         (existing / "workspace/original.md").write_text("original")
-        monkeypatch.setenv("KIROCREW_HOME", str(existing))
+        monkeypatch.setenv("AJCREW_HOME", str(existing))
         restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv())
         backups = [
             d for d in existing.iterdir() if d.is_dir() and d.name.startswith("pre-restore-")
@@ -316,9 +316,9 @@ class TestRestoreReplace:
         """TEST 24"""
         _, _, tarball, tmp_path = env
         existing = tmp_path / "existing24"
-        _setup_fake_kirocrew(existing)
+        _setup_fake_ajcrew(existing)
         (existing / "workspace/local_only.md").write_text("local-only-file")
-        monkeypatch.setenv("KIROCREW_HOME", str(existing))
+        monkeypatch.setenv("AJCREW_HOME", str(existing))
         restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv())
         backups = [
             d for d in existing.iterdir() if d.is_dir() and d.name.startswith("pre-restore-")
@@ -337,7 +337,7 @@ class TestRestoreReplace:
         """
         _, _, tarball, tmp_path = env
         existing = tmp_path / "existing2844"
-        _setup_fake_kirocrew(existing)
+        _setup_fake_ajcrew(existing)
         # Make the live core files byte-distinguishable from the snapshot's, so
         # "unchanged" below cannot pass by the two sides being identical.
         conn = sqlite3.connect(str(existing / "memory.db"))
@@ -355,7 +355,7 @@ class TestRestoreReplace:
         os.symlink(str(existing / "workspace/doc.md"), str(existing / "workspace/alias.md"))
         before_db = (existing / "memory.db").read_bytes()
         before_crons = (existing / "crons.json").read_bytes()
-        monkeypatch.setenv("KIROCREW_HOME", str(existing))
+        monkeypatch.setenv("AJCREW_HOME", str(existing))
 
         ret = restore_main([str(tarball), "--mode", "replace", "--force"])
 
@@ -367,8 +367,8 @@ class TestRestoreReplace:
     def test_replace_endorses_the_restored_config(self, env, monkeypatch, pinned):
         """A restore is the owner's write: where the sandbox seals config.json, the
         restored file takes effect instead of loading as the endorsed copy it replaced."""
-        from kiro_crew.config import loosening_provenance as lp
-        from kiro_crew.config.loader import read_config_for_update
+        from aj_crew.config import loosening_provenance as lp
+        from aj_crew.config.loader import read_config_for_update
 
         if pinned and unpinnable_argv():
             pytest.skip("no pinned staging on this platform")
@@ -382,9 +382,9 @@ class TestRestoreReplace:
             monkeypatch.setattr(snapshot_mod, "_staging_is_pinned", _unpinned)
         _, _, tarball, tmp_path = env
         existing = tmp_path / "existing-endorse"
-        _setup_fake_kirocrew(existing)
+        _setup_fake_ajcrew(existing)
         (existing / "config.json").write_text('{"agent": {"model": "old"}}')
-        monkeypatch.setenv("KIROCREW_HOME", str(existing))
+        monkeypatch.setenv("AJCREW_HOME", str(existing))
         monkeypatch.setattr(lp, "enforcement_active", lambda: True)
         lp.record("config.json", (existing / "config.json").read_bytes(), strict=True)
 
@@ -396,14 +396,14 @@ class TestRestoreReplace:
         assert lp.pending_changes() == []
 
     def test_failed_replace_puts_the_endorsed_config_back(self, env, monkeypatch):
-        from kiro_crew.config import loosening_provenance as lp
+        from aj_crew.config import loosening_provenance as lp
 
         _, _, tarball, tmp_path = env
         existing = tmp_path / "existing-endorse-rollback"
-        _setup_fake_kirocrew(existing)
+        _setup_fake_ajcrew(existing)
         (existing / "config.json").write_text('{"agent": {"model": "old"}}')
         before = (existing / "config.json").read_bytes()
-        monkeypatch.setenv("KIROCREW_HOME", str(existing))
+        monkeypatch.setenv("AJCREW_HOME", str(existing))
         monkeypatch.setattr(lp, "enforcement_active", lambda: True)
         lp.record("config.json", before, strict=True)
 
@@ -424,13 +424,13 @@ class TestRestoreReplace:
 
 class TestRestoreMergeEndorses:
     def test_merge_endorses_a_config_it_restores_because_it_was_missing(self, env, monkeypatch):
-        from kiro_crew.config import loosening_provenance as lp
-        from kiro_crew.config.loader import read_config_for_update
+        from aj_crew.config import loosening_provenance as lp
+        from aj_crew.config.loader import read_config_for_update
 
         _, _, tarball, tmp_path = env
         existing = tmp_path / "existing-merge-endorse"
-        _setup_fake_kirocrew(existing)
-        monkeypatch.setenv("KIROCREW_HOME", str(existing))
+        _setup_fake_ajcrew(existing)
+        monkeypatch.setenv("AJCREW_HOME", str(existing))
         monkeypatch.setattr(lp, "enforcement_active", lambda: True)
         lp.record("config.json", b'{"agent": {"model": "old"}}', strict=True)
         (existing / "config.json").unlink()
@@ -446,7 +446,7 @@ class TestRestoreMerge:
         """TEST 7"""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst7"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         conn = sqlite3.connect(str(dst / "memory.db"))
         conn.execute(
             "INSERT INTO semantic_memory (key, value_json, confidence, source, "
@@ -458,7 +458,7 @@ class TestRestoreMerge:
         )
         conn.commit()
         conn.close()
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         ret = restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
         assert ret == 0
         conn = sqlite3.connect(str(dst / "memory.db"))
@@ -483,17 +483,17 @@ class TestRestoreMerge:
         BOUNDARY does with the exception; a unit test on the merge passes either way.
         """
         src, out, dst = tmp_path / "src9", tmp_path / "out9", tmp_path / "dst9"
-        _setup_fake_kirocrew(src)
+        _setup_fake_ajcrew(src)
         # Both sides must have the file or the merge is never reached: a missing
         # destination takes the copy branch instead.
         (src / "notifications.jsonl").write_bytes(b'{"ts":1,"msg":"from snapshot"}\n')
-        monkeypatch.setenv("KIROCREW_HOME", str(src))
+        monkeypatch.setenv("AJCREW_HOME", str(src))
         tarball = _make_snapshot(src, out)
 
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         # 0xff is invalid UTF-8 anywhere, which is how a real file gets here.
         (dst / "notifications.jsonl").write_bytes(b'{"ts":2,"msg":"\xff"}\n')
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
 
         ret = restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
 
@@ -506,9 +506,9 @@ class TestRestoreMerge:
         """TEST 8"""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst8"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         before = len(json.loads((dst / "crons.json").read_text(encoding="utf-8"))["jobs"])
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         ret = restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
         assert ret == 0
         after = len(json.loads((dst / "crons.json").read_text(encoding="utf-8"))["jobs"])
@@ -518,11 +518,11 @@ class TestRestoreMerge:
         """TEST 9"""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst9"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         d = json.loads((dst / "crons.json").read_text(encoding="utf-8"))
         d["jobs"][0]["name"] = "different-job"
         (dst / "crons.json").write_text(json.dumps(d))
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
         count = len(json.loads((dst / "crons.json").read_text(encoding="utf-8"))["jobs"])
         assert count == 2
@@ -534,10 +534,10 @@ class TestRestoreMerge:
         (src / "crons.json").write_text("{malformed", encoding="utf-8")
         tarball = _make_snapshot(src, tmp_path / "malformed-snapshot-out")
         dst = tmp_path / "dst_malformed_snapshot_crons"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         before = (dst / "crons.json").read_bytes()
 
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         ret = restore_main(
             [str(tarball), "--mode", "merge", "--components", "crons", "--force"]
             + unpinnable_argv()
@@ -554,11 +554,11 @@ class TestRestoreMerge:
     ):
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst_malformed_local_crons"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         malformed = b"{malformed"
         (dst / "crons.json").write_bytes(malformed)
 
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         ret = restore_main(
             [str(tarball), "--mode", "merge", "--components", "crons", "--force"]
             + unpinnable_argv()
@@ -574,9 +574,9 @@ class TestRestoreMerge:
         """TEST 10"""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst10"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         (dst / "workspace/doc.md").write_text("local version")
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         ret = restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
         assert ret == 0
         assert (dst / "workspace/doc.md").read_text(encoding="utf-8") == "local version"
@@ -585,7 +585,7 @@ class TestRestoreMerge:
         """TEST 12"""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst12"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         conn = sqlite3.connect(str(dst / "memory.db"))
         conn.execute(
             "INSERT INTO episodic_memories (id, text, created_at) "
@@ -593,7 +593,7 @@ class TestRestoreMerge:
         )
         conn.commit()
         conn.close()
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         ret = restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
         assert ret == 0
         conn = sqlite3.connect(str(dst / "memory.db"))
@@ -606,8 +606,8 @@ class TestRestoreMerge:
         """TEST 13"""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst13"
-        _setup_fake_kirocrew(dst)
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        _setup_fake_ajcrew(dst)
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
         assert "Semantic Memory imported: 0" in capsys.readouterr().out
 
@@ -615,12 +615,12 @@ class TestRestoreMerge:
         """TEST 13b"""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst13b"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         conn = sqlite3.connect(str(dst / "memory.db"))
         conn.execute("DELETE FROM semantic_memory WHERE key='test.key2'")
         conn.commit()
         conn.close()
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
         assert "Semantic Memory imported: 1" in capsys.readouterr().out
 
@@ -629,9 +629,9 @@ class TestRestoreMerge:
         """TEST 14"""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst14"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         (dst / "notifications.jsonl").write_text('{"ts":"2026-02-01","msg":"local"}\n')
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
         lines = (dst / "notifications.jsonl").read_text(encoding="utf-8").strip().split("\n")
         assert len(lines) == 2
@@ -640,9 +640,9 @@ class TestRestoreMerge:
         """TEST 15"""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst15"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         (dst / "plan_memory/local_plan.json").write_text("local plan")
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         ret = restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
         assert ret == 0
         assert (dst / "plan_memory/plan1.json").is_file()
@@ -653,15 +653,15 @@ class TestRestoreMerge:
     ):
         """One unreadable component must not abort the whole merge."""
         src = tmp_path / "src-partial"
-        _setup_fake_kirocrew(src)
+        _setup_fake_ajcrew(src)
         (src / "crons.json").write_text("{not json", encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_HOME", str(src))
+        monkeypatch.setenv("AJCREW_HOME", str(src))
         tarball = _make_snapshot(src, tmp_path / "out-partial")
 
         dst = tmp_path / "dst-partial"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         (dst / "telemetry_salt").unlink()
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
 
         assert restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv()) == 0
         assert (dst / "telemetry_salt").is_file()
@@ -670,9 +670,9 @@ class TestRestoreMerge:
         """Valid JSON is not a valid cron file; `jobs` is looked up on it."""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst-list-crons"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         (dst / "crons.json").write_text('["not", "a", "cron file"]', encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
 
         ret = restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
 
@@ -696,9 +696,9 @@ class TestRestoreMerge:
         relies on has to hold before it starts."""
         _, _, tarball, tmp_path = env
         dst = tmp_path / f"dst-shape-{abs(hash(body))}"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         (dst / "crons.json").write_text(body, encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
 
         ret = restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
 
@@ -711,15 +711,15 @@ class TestRestoreMerge:
     ):
         """Same contract on the incoming side."""
         src = tmp_path / "src-bad-job"
-        _setup_fake_kirocrew(src)
+        _setup_fake_ajcrew(src)
         (src / "crons.json").write_text('{"jobs": [123]}', encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_HOME", str(src))
+        monkeypatch.setenv("AJCREW_HOME", str(src))
         tarball = _make_snapshot(src, tmp_path / "out-bad-job")
 
         dst = tmp_path / "dst-bad-job"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         keep = (dst / "crons.json").read_text(encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
 
         ret = restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
 
@@ -731,9 +731,9 @@ class TestRestoreMerge:
         """Preservation: absent `jobs` already meant "no jobs" and still does."""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst-no-jobs-key"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         (dst / "crons.json").write_text('{"version": 1}', encoding="utf-8")
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
 
         assert restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv()) == 0
 
@@ -744,11 +744,11 @@ class TestRestoreMerge:
         """Preservation: the guard must not change the ordinary merge."""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst-good-crons"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         d = json.loads((dst / "crons.json").read_text(encoding="utf-8"))
         d["jobs"][0]["name"] = "different-job"
         (dst / "crons.json").write_text(json.dumps(d))
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
 
         restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
 
@@ -758,9 +758,9 @@ class TestRestoreMerge:
         """TEST 16"""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst16"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         (dst / "telemetry_salt").unlink()
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
         assert (dst / "telemetry_salt").is_file()
         assert "telemetry_salt: restored" in capsys.readouterr().out
@@ -770,7 +770,7 @@ class TestRestoreMerge:
         _, _, tarball, tmp_path = env
         fresh = tmp_path / "fresh26"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         restore_main(
             [str(tarball), "--mode", "merge", "--components", "memory", "--force"]
             + unpinnable_argv()
@@ -783,10 +783,10 @@ class TestRestoreMerge:
         """TEST 25"""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst25"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         # Same ts as snapshot
         (dst / "notifications.jsonl").write_text('{"ts":"2026-01-01","msg":"test"}\n')
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         restore_main(
             [str(tarball), "--mode", "merge", "--components", "notifications", "--force"]
             + unpinnable_argv()
@@ -802,7 +802,7 @@ class TestAutoDetect:
         _, _, tarball, tmp_path = env
         fresh = tmp_path / "fresh11"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         restore_main([str(tarball), "--force"])
         assert "replace" in capsys.readouterr().out.lower()
 
@@ -810,8 +810,8 @@ class TestAutoDetect:
         """TEST 11b"""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst11"
-        _setup_fake_kirocrew(dst)
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        _setup_fake_ajcrew(dst)
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         restore_main([str(tarball), "--force"])
         assert "merge" in capsys.readouterr().out.lower()
 
@@ -829,7 +829,7 @@ class TestComponents:
         _, _, tarball, tmp_path = env
         fresh = tmp_path / "fresh19"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         restore_main(
             [str(tarball), "--mode", "replace", "--components", "memory", "--force"]
             + unpinnable_argv()
@@ -845,7 +845,7 @@ class TestComponents:
         _, _, tarball, tmp_path = env
         fresh = tmp_path / "fresh20"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         restore_main(
             [str(tarball), "--mode", "replace", "--components", "crons,skills", "--force"]
             + unpinnable_argv()
@@ -859,9 +859,9 @@ class TestComponents:
         """TEST 21"""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst21"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         (dst / "crons.json").unlink()
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         restore_main(
             [str(tarball), "--mode", "merge", "--components", "crons", "--force"]
             + unpinnable_argv()
@@ -874,7 +874,7 @@ class TestComponents:
     def test_invalid_component(self, env, capsys, monkeypatch):
         """TEST 22"""
         _, _, tarball, tmp_path = env
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         ret = restore_main([str(tarball), "--components", "bogus", "--force"])
         assert ret == 1
         out = capsys.readouterr().out
@@ -889,7 +889,7 @@ class TestComponents:
         _, _, tarball, tmp_path = env
         fresh = tmp_path / "fresh23"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv())
         assert (fresh / "memory.db").is_file()
         assert (fresh / "crons.json").is_file()
@@ -905,7 +905,7 @@ class TestIntegrity:
         _, _, tarball, tmp_path = env
         fresh = tmp_path / "fresh17"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv())
         assert "integrity: OK" in capsys.readouterr().out
 
@@ -914,7 +914,7 @@ class TestIntegrity:
         _, _, tarball, tmp_path = env
         fresh = tmp_path / "fresh31"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         restore_main(
             [str(tarball), "--mode", "replace", "--components", "memory", "--force"]
             + unpinnable_argv()
@@ -935,7 +935,7 @@ class TestSecurity:
         """The SEL key moved to trust/sel_hmac.key; NEVER_SNAPSHOT_FILES is
         matched by BASENAME so the key must be dropped from a bundle at BOTH
         the new and the legacy location."""
-        from kiro_crew.snapshot import _data_filter
+        from aj_crew.snapshot import _data_filter
 
         legacy = tarfile.TarInfo(name="snap/sel_hmac.key")
         assert _data_filter(legacy) is None
@@ -950,7 +950,7 @@ class TestSecurity:
         data filter refuses special files. A FIFO or device member must be
         dropped, not staged: a later restore pass that opens a staged FIFO
         for reading blocks on a writer that never comes."""
-        from kiro_crew.snapshot import _data_filter
+        from aj_crew.snapshot import _data_filter
 
         fifo = tarfile.TarInfo(name="snap/workspace/pipe")
         fifo.type = tarfile.FIFOTYPE
@@ -970,7 +970,7 @@ class TestSecurity:
         src, _, _, tmp_path = env
         out = tmp_path / "sym_out"
         out.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(src))
+        monkeypatch.setenv("AJCREW_HOME", str(src))
         tarball = _make_snapshot(src, out)
 
         # Extract, inject symlink, re-tar
@@ -978,7 +978,7 @@ class TestSecurity:
         extract.mkdir()
         with tarfile.open(str(tarball)) as tar:
             tar.extractall(extract, filter=lambda t, _d="": t)
-        snap = next(d for d in extract.iterdir() if d.name.startswith("kirocrew-snapshot-"))
+        snap = next(d for d in extract.iterdir() if d.name.startswith("ajcrew-snapshot-"))
         os.symlink("/etc/passwd", str(snap / "evil_link"))
         evil_tar = tmp_path / "evil.tar.gz"
         with tarfile.open(str(evil_tar), "w:gz") as tar:
@@ -986,7 +986,7 @@ class TestSecurity:
 
         fresh = tmp_path / "fresh30"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         ret = restore_main([str(evil_tar), "--mode", "replace", "--force"] + unpinnable_argv())
         # Symlink is filtered out by _data_filter, restore succeeds
         assert ret == 0
@@ -1004,16 +1004,16 @@ class TestSecurity:
         evil_tar = tmp_path / "traversal.tar.gz"
         with tarfile.open(str(evil_tar), "w:gz") as tar:
             # Add a valid snapshot dir so extraction finds something
-            info = tarfile.TarInfo(name="kirocrew-snapshot-20260101T000000Z/")
+            info = tarfile.TarInfo(name="ajcrew-snapshot-20260101T000000Z/")
             info.type = tarfile.DIRTYPE
             tar.addfile(info)
             # Add traversal entry — will be filtered
-            info2 = tarfile.TarInfo(name="kirocrew-snapshot-20260101T000000Z/../../../etc/passwd")
+            info2 = tarfile.TarInfo(name="ajcrew-snapshot-20260101T000000Z/../../../etc/passwd")
             info2.size = 0
             tar.addfile(info2)
         fresh = tmp_path / "fresh_traversal"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         ret = restore_main([str(evil_tar), "--mode", "replace", "--force"] + unpinnable_argv())
         # Traversal entry filtered out, restore proceeds
         assert ret == 0
@@ -1026,7 +1026,7 @@ class TestSecurity:
         _, _, _, tmp_path = env
         evil_tar = tmp_path / "abspath.tar.gz"
         with tarfile.open(str(evil_tar), "w:gz") as tar:
-            info = tarfile.TarInfo(name="kirocrew-snapshot-20260101T000000Z/")
+            info = tarfile.TarInfo(name="ajcrew-snapshot-20260101T000000Z/")
             info.type = tarfile.DIRTYPE
             tar.addfile(info)
             info2 = tarfile.TarInfo(name="/etc/passwd")
@@ -1034,7 +1034,7 @@ class TestSecurity:
             tar.addfile(info2)
         fresh = tmp_path / "fresh_abspath"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         ret = restore_main([str(evil_tar), "--mode", "replace", "--force"] + unpinnable_argv())
         assert ret == 0
         assert not any(p.name == "passwd" for p in fresh.rglob("*"))
@@ -1044,16 +1044,16 @@ class TestSecurity:
         evil_tar = tmp_path / "hardlink.tar.gz"
         with tarfile.open(str(evil_tar), "w:gz") as tar:
             # Add valid snapshot dir
-            info = tarfile.TarInfo(name="kirocrew-snapshot-20260101T000000Z/")
+            info = tarfile.TarInfo(name="ajcrew-snapshot-20260101T000000Z/")
             info.type = tarfile.DIRTYPE
             tar.addfile(info)
-            info2 = tarfile.TarInfo(name="kirocrew-snapshot-20260101T000000Z/evil")
+            info2 = tarfile.TarInfo(name="ajcrew-snapshot-20260101T000000Z/evil")
             info2.type = tarfile.LNKTYPE
-            info2.linkname = "kirocrew-snapshot-20260101T000000Z/memory.db"
+            info2.linkname = "ajcrew-snapshot-20260101T000000Z/memory.db"
             tar.addfile(info2)
         fresh = tmp_path / "fresh_hardlink"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         ret = restore_main([str(evil_tar), "--mode", "replace", "--force"] + unpinnable_argv())
         assert ret == 0
         assert not (fresh / "evil").exists()
@@ -1066,14 +1066,14 @@ class TestIntegrityFailure:
         extract.mkdir()
         with tarfile.open(str(tarball)) as tar:
             tar.extractall(extract, filter=lambda t, _d="": t)
-        snap = next(d for d in extract.iterdir() if d.name.startswith("kirocrew-snapshot-"))
+        snap = next(d for d in extract.iterdir() if d.name.startswith("ajcrew-snapshot-"))
         (snap / "memory.db").write_bytes(b"not a valid sqlite database")
         corrupt_tar = tmp_path / "corrupt.tar.gz"
         with tarfile.open(str(corrupt_tar), "w:gz") as tar:
             tar.add(str(snap), arcname=snap.name)
         fresh = tmp_path / "fresh_corrupt"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         ret = restore_main([str(corrupt_tar), "--mode", "replace", "--force"])
         assert ret == 1
         assert "integrity check failed" in capsys.readouterr().out
@@ -1085,7 +1085,7 @@ class TestParsedNamespace:
     def test_snapshot_via_parsed_namespace(self, env, monkeypatch):
         src, _, _, tmp_path = env
         out = tmp_path / "out_parsed"
-        monkeypatch.setenv("KIROCREW_HOME", str(src))
+        monkeypatch.setenv("AJCREW_HOME", str(src))
         ns = argparse.Namespace(
             output_dir=str(out),
             keep=7,
@@ -1094,13 +1094,13 @@ class TestParsedNamespace:
         )
         ret = snapshot_main(parsed=ns)
         assert ret == 0
-        assert list(out.glob("kirocrew-snapshot-*.tar.gz"))
+        assert list(out.glob("ajcrew-snapshot-*.tar.gz"))
 
     def test_restore_via_parsed_namespace(self, env, monkeypatch):
         _, _, tarball, tmp_path = env
         fresh = tmp_path / "fresh_parsed"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
         ns = argparse.Namespace(
             snapshot=str(tarball),
             mode="replace",
@@ -1123,13 +1123,13 @@ class TestSchemaIncompatibleMerge:
         """Merge gracefully skips tables that don't exist in source."""
         _, _, tarball, tmp_path = env
         dst = tmp_path / "dst_schema"
-        _setup_fake_kirocrew(dst)
+        _setup_fake_ajcrew(dst)
         # Drop a table from destination to simulate schema mismatch
         conn = sqlite3.connect(str(dst / "memory.db"))
         conn.execute("DROP TABLE knowledge_edges")
         conn.commit()
         conn.close()
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         ret = restore_main([str(tarball), "--mode", "merge", "--force"] + unpinnable_argv())
         assert ret == 0
         out = capsys.readouterr().out
@@ -1142,7 +1142,7 @@ class TestCorruptSourceDB:
         src, _, _, tmp_path = env
         out = tmp_path / "corrupt_src_out"
         out.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(src))
+        monkeypatch.setenv("AJCREW_HOME", str(src))
         tarball = _make_snapshot(src, out)
 
         # Extract, corrupt memory.db, re-tar
@@ -1150,15 +1150,15 @@ class TestCorruptSourceDB:
         extract.mkdir()
         with tarfile.open(str(tarball)) as tar:
             tar.extractall(extract, filter=lambda t, _d="": t)
-        snap = next(d for d in extract.iterdir() if d.name.startswith("kirocrew-snapshot-"))
+        snap = next(d for d in extract.iterdir() if d.name.startswith("ajcrew-snapshot-"))
         (snap / "memory.db").write_bytes(b"corrupt data here")
         corrupt_tar = tmp_path / "corrupt_src.tar.gz"
         with tarfile.open(str(corrupt_tar), "w:gz") as tar:
             tar.add(str(snap), arcname=snap.name)
 
         dst = tmp_path / "dst_corrupt_src"
-        _setup_fake_kirocrew(dst)
-        monkeypatch.setenv("KIROCREW_HOME", str(dst))
+        _setup_fake_ajcrew(dst)
+        monkeypatch.setenv("AJCREW_HOME", str(dst))
         ret = restore_main([str(corrupt_tar), "--mode", "merge", "--force"] + unpinnable_argv())
         assert ret == 0
         out_text = capsys.readouterr().out
@@ -1171,8 +1171,8 @@ class TestGatewayRunningRefusal:
         _, _, tarball, tmp_path = env
         fresh = tmp_path / "fresh_gw"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
-        monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "1")
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "1")
         ret = restore_main([str(tarball), "--mode", "replace"])
         assert ret == 1
         assert "Gateway is running" in capsys.readouterr().out
@@ -1182,22 +1182,22 @@ class TestGatewayRunningRefusal:
         _, _, tarball, tmp_path = env
         fresh = tmp_path / "fresh_gw_force"
         fresh.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(fresh))
-        monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "1")
+        monkeypatch.setenv("AJCREW_HOME", str(fresh))
+        monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "1")
         ret = restore_main([str(tarball), "--mode", "replace", "--force"] + unpinnable_argv())
         assert ret == 0
 
 
-class TestEmptyKirocrewDir:
+class TestEmptyAjcrewDir:
     def test_snapshot_empty_dir(self, tmp_path, monkeypatch):
-        """Snapshot succeeds on an empty ~/.kirocrew directory."""
+        """Snapshot succeeds on an empty ~/.ajcrew directory."""
         empty = tmp_path / "empty_mc"
         empty.mkdir()
         out = tmp_path / "empty_out"
-        monkeypatch.setenv("KIROCREW_HOME", str(empty))
+        monkeypatch.setenv("AJCREW_HOME", str(empty))
         ret = snapshot_main([str(out)] + unpinnable_argv())
         assert ret == 0
-        assert list(out.glob("kirocrew-snapshot-*.tar.gz"))
+        assert list(out.glob("ajcrew-snapshot-*.tar.gz"))
 
 
 class TestConcurrentSnapshot:
@@ -1206,7 +1206,7 @@ class TestConcurrentSnapshot:
         src, _, _, tmp_path = env
         out = tmp_path / "concurrent_out"
         out.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(src))
+        monkeypatch.setenv("AJCREW_HOME", str(src))
         # The archive name is second-resolution (`snapshot_main` stamps it
         # `%Y%m%dT%H%M%SZ` and publishes `out / f"{name}.tar.gz"`), so two snapshots
         # taken inside one second resolve to the same path and the second overwrites
@@ -1226,7 +1226,7 @@ class TestConcurrentSnapshot:
         monkeypatch.setattr(snapshot_mod, "datetime", _OneSecondPerCall)
         snapshot_main([str(out)] + unpinnable_argv())
         snapshot_main([str(out)] + unpinnable_argv())
-        tarballs = list(out.glob("kirocrew-snapshot-*.tar.gz"))
+        tarballs = list(out.glob("ajcrew-snapshot-*.tar.gz"))
         assert len(tarballs) == 2
         assert tarballs[0].name != tarballs[1].name
 
@@ -1240,12 +1240,12 @@ class TestTheArchiveIsLockedDownBeforeItIsPublished:
     """
 
     def test_the_lockdown_runs_before_the_archive_is_published(self, tmp_path, monkeypatch):
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         src = tmp_path / "src"
         out = tmp_path / "out"
-        _setup_fake_kirocrew(src)
-        monkeypatch.setenv("KIROCREW_HOME", str(src))
+        _setup_fake_ajcrew(src)
+        monkeypatch.setenv("AJCREW_HOME", str(src))
 
         real = platform_compat.restrict_to_owner
         locked: list[Path] = []
@@ -1254,10 +1254,10 @@ class TestTheArchiveIsLockedDownBeforeItIsPublished:
             locked.append(Path(path))
             return real(path)
 
-        monkeypatch.setattr("kiro_crew.platform_compat.restrict_to_owner", _recording)
+        monkeypatch.setattr("aj_crew.platform_compat.restrict_to_owner", _recording)
         snapshot_main([str(out)] + unpinnable_argv())
 
-        published = sorted(out.glob("kirocrew-snapshot-*.tar.gz"))
+        published = sorted(out.glob("ajcrew-snapshot-*.tar.gz"))
         assert published, "no snapshot was produced"
         archive_locks = [p for p in locked if p.parent == out]
         assert archive_locks, "the snapshot archive was never locked down"
@@ -1270,11 +1270,11 @@ class TestTheArchiveIsLockedDownBeforeItIsPublished:
         """The comment promises an abort; nothing may be left at the final path."""
         src = tmp_path / "src"
         out = tmp_path / "out"
-        _setup_fake_kirocrew(src)
-        monkeypatch.setenv("KIROCREW_HOME", str(src))
+        _setup_fake_ajcrew(src)
+        monkeypatch.setenv("AJCREW_HOME", str(src))
 
         monkeypatch.setattr(
-            "kiro_crew.platform_compat.restrict_to_owner",
+            "aj_crew.platform_compat.restrict_to_owner",
             lambda path: (_ for _ in ()).throw(OSError("icacls: transient failure")),
         )
 
@@ -1282,7 +1282,7 @@ class TestTheArchiveIsLockedDownBeforeItIsPublished:
             snapshot_main([str(out)] + unpinnable_argv())
 
         assert not list(
-            out.glob("kirocrew-snapshot-*.tar.gz")
+            out.glob("ajcrew-snapshot-*.tar.gz")
         ), "an archive whose lockdown failed was left at its final path"
         assert not list(out.glob("*.tmp")), "the temp archive was not cleaned up"
 
@@ -1290,11 +1290,11 @@ class TestTheArchiveIsLockedDownBeforeItIsPublished:
         """Preservation: the permission the lockdown exists to apply still lands."""
         src = tmp_path / "src"
         out = tmp_path / "out"
-        _setup_fake_kirocrew(src)
-        monkeypatch.setenv("KIROCREW_HOME", str(src))
+        _setup_fake_ajcrew(src)
+        monkeypatch.setenv("AJCREW_HOME", str(src))
 
         snapshot_main([str(out)] + unpinnable_argv())
-        tarball = sorted(out.glob("kirocrew-snapshot-*.tar.gz"))[0]
+        tarball = sorted(out.glob("ajcrew-snapshot-*.tar.gz"))[0]
         assert tarball.is_file()
         if os.name == "posix":
             assert tarball.stat().st_mode & 0o777 == 0o600, oct(tarball.stat().st_mode)

@@ -21,9 +21,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import injection_receipts, vector_memory
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.context import (
+from aj_crew import injection_receipts, vector_memory
+from aj_crew.config import AjCrewConfig
+from aj_crew.context import (
     _LESSONS_SHOWN_PER_SESSION,
     _LESSONS_SHOWN_SESSIONS,
     _MULTIBYTE_TABLE,
@@ -33,11 +33,11 @@ from kiro_crew.context import (
     _scrub_turn_lesson,
     _ShownLessons,
 )
-from kiro_crew.hooks import HookResult
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.hooks import HookResult
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
+from aj_crew.vector_memory import VectorMemoryStore
 
 # Common words most rules share, so they are never what earns a rule its place.
 # Only words write_lesson's dedup ignores (its stop list, or two letters), so
@@ -200,7 +200,7 @@ def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """A per-test config home, set the way the V1 golden tests set theirs."""
     root = tmp_path / "home"
     root.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(root))
+    monkeypatch.setenv("AJCREW_HOME", str(root))
     return root
 
 
@@ -277,7 +277,7 @@ class TestDocumentedPerMessageBounds:
     def test_operator_facing_copies_state_the_measured_bounds(self) -> None:
         root = Path(__file__).resolve().parents[1]
 
-        source = (root / "src/kiro_crew/config/memory_sections.py").read_text(encoding="utf-8")
+        source = (root / "src/aj_crew/config/memory_sections.py").read_text(encoding="utf-8")
         source_help = source.split("inject_lessons_per_turn: bool", 1)[1].split(
             "inject_activity: bool", 1
         )[0]
@@ -296,7 +296,7 @@ class TestDocumentedPerMessageBounds:
             return lines[0]
 
         configuration_row = line_about(
-            "src/kiro_crew/docs/configuration.md", "`memory.inject_lessons_per_turn`"
+            "src/aj_crew/docs/configuration.md", "`memory.inject_lessons_per_turn`"
         )
         config_spec_row = line_about(
             "docs/system-specs/modules/config.md", "inject_lessons_per_turn: bool"
@@ -325,7 +325,7 @@ class TestDocumentedPerMessageBounds:
 
 class TestSessionLifecycle:
     def test_off_by_default(self, builder, home) -> None:
-        assert KiroCrewConfig.load().memory.inject_lessons_per_turn is False
+        assert AjCrewConfig.load().memory.inject_lessons_per_turn is False
 
         assert HEADER not in turn(builder, "flywheel telemetry canary")
 

@@ -3,7 +3,7 @@
 ``scripts/docs_lint.py`` gates a doc's SYMBOLS and PATHS, never what it claims about
 them, and ``test_context_management_doc.py`` pins one file:
 ``docs/architecture/context-management.md``. That leaves
-``src/kiro_crew/docs/agent-spec-fields.md`` free to say the opposite of the code with
+``src/aj_crew/docs/agent-spec-fields.md`` free to say the opposite of the code with
 every symbol and path resolving and the lint green — and the claims most exposed to
 that are its skill-resource ones, because they describe a decision whose inputs are
 not visible in any symbol it names.
@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-DOC = Path(__file__).parent.parent / "src" / "kiro_crew" / "docs" / "agent-spec-fields.md"
+DOC = Path(__file__).parent.parent / "src" / "aj_crew" / "docs" / "agent-spec-fields.md"
 
 
 @pytest.fixture(scope="module")
@@ -49,7 +49,7 @@ def test_the_doc_does_not_claim_a_backend_condition_on_skill_injection(doc_text:
             f"§Resources still says {stale!r}; a mapped skill:// is injected by Crew "
             "on every backend since _skills_injection_plan stopped reading is_cc"
         )
-    assert "| `kirocrew` | mapped | mapped set only, injected by Crew |" in table
+    assert "| `ajcrew` | mapped | mapped set only, injected by Crew |" in table
     assert "| custom | mapped | mapped set only, injected by Crew |" in table
 
 
@@ -62,12 +62,12 @@ def test_steering_is_still_the_backend_gated_half(doc_text: str) -> None:
     through it. A token match on ``is_cc`` anywhere would stay green with the
     steering gate's own condition dropped.
     """
-    owner = Path(__file__).parent.parent / "src" / "kiro_crew" / "context_assembly"
+    owner = Path(__file__).parent.parent / "src" / "aj_crew" / "context_assembly"
     source = (owner / "inclusion.py").read_text(encoding="utf-8")
     gate = (
         "    if not is_cc or essentials:\n"
         '        return ""\n'
-        "    if agent and not is_kirocrew_default_agent(agent):\n"
+        "    if agent and not is_ajcrew_default_agent(agent):\n"
         '        return ""\n'
         "    if not _group_included(context_groups, CONTEXT_GROUP_PROJECT):\n"
         '        return ""\n'
@@ -87,7 +87,7 @@ def test_steering_is_still_the_backend_gated_half(doc_text: str) -> None:
 
 def test_relative_skill_uri_anchors_at_the_supplied_project(tmp_path: Path) -> None:
     """The doc's relative-URI rule: project_dir wins, spec location is the fallback."""
-    from kiro_crew.agent_discovery import expand_skill_uri
+    from aj_crew.agent_discovery import expand_skill_uri
 
     spec = tmp_path / "proj" / ".kiro" / "agents" / "foo.json"
     spec.parent.mkdir(parents=True)
@@ -124,9 +124,9 @@ def test_native_launch_view_carries_no_skill_resources(doc_text, tmp_path, monke
     import json
     from types import SimpleNamespace
 
-    from kiro_crew.acp import skill_projection as projection
+    from aj_crew.acp import skill_projection as projection
 
-    monkeypatch.delenv("KIROCREW_NATIVE_SKILL_PROJECTION", raising=False)
+    monkeypatch.delenv("AJCREW_NATIVE_SKILL_PROJECTION", raising=False)
     home = tmp_path / "kiro"
     agents = home / "agents"
     agents.mkdir(parents=True)
@@ -135,7 +135,7 @@ def test_native_launch_view_carries_no_skill_resources(doc_text, tmp_path, monke
     monkeypatch.setattr(projection, "kiro_home", lambda: home)
     monkeypatch.setattr(projection, "kiro_agents_dir", lambda: agents)
     monkeypatch.setattr(
-        "kiro_crew.agent.managed_mcp_spec_entry",
+        "aj_crew.agent.managed_mcp_spec_entry",
         lambda name, **_kw: {"command": "test-core", "args": []},
     )
     monkeypatch.setattr(
@@ -164,7 +164,7 @@ def test_native_launch_view_carries_no_skill_resources(doc_text, tmp_path, monke
 
 def test_mirror_note_names_the_real_return_expression(doc_text: str) -> None:
     """The mirror note quotes the plan's expression; a rewrite must update the page."""
-    source = (Path(__file__).parent.parent / "src" / "kiro_crew" / "context.py").read_text(
+    source = (Path(__file__).parent.parent / "src" / "aj_crew" / "context.py").read_text(
         encoding="utf-8"
     )
     assert "return (bool(globs) or not is_custom), globs" in source
@@ -179,8 +179,8 @@ def test_inherited_trees_are_promised_for_kiro_cli_only(doc_text: str) -> None:
     ``test_inherited_skill_scope.py``; this pins that the table's column for the
     inherited row does not also promise it to KAS.
     """
-    from kiro_crew.acp.types import PROVIDER_LABEL_KAS
-    from kiro_crew.agent_sdk.provider_identity import PROVIDER_ACP
+    from aj_crew.acp.types import PROVIDER_LABEL_KAS
+    from aj_crew.agent_sdk.provider_identity import PROVIDER_ACP
 
     assert PROVIDER_LABEL_KAS != PROVIDER_ACP
     table = doc_text.split("### Resources", 1)[1].split("## Per-surface summary", 1)[0]
@@ -207,22 +207,22 @@ def test_app_skill_mapping_names_the_namespaced_path(
     """The page's app-skill rule: one namespaced entry per skill, never the flat link.
 
     A plain skill gets both links; one named after its app, ``auto``, or an existing
-    directory gets only the namespaced one. ``expand_skill_uri`` ignores ``KIROCREW_HOME``.
+    directory gets only the namespaced one. ``expand_skill_uri`` ignores ``AJCREW_HOME``.
     """
     import json
 
-    from kiro_crew import platform_compat
-    from kiro_crew.agent_discovery import expand_skill_uri
-    from kiro_crew.apps import execution as execution_mod
-    from kiro_crew.apps.bridges import _register_skills
-    from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
-    from kiro_crew.apps.manifest import AppManifest
-    from kiro_crew.skill_runtime import catalog as catalog_mod
-    from kiro_crew.skills import SkillsLoader
+    from aj_crew import platform_compat
+    from aj_crew.agent_discovery import expand_skill_uri
+    from aj_crew.apps import execution as execution_mod
+    from aj_crew.apps.bridges import _register_skills
+    from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
+    from aj_crew.apps.manifest import AppManifest
+    from aj_crew.skill_runtime import catalog as catalog_mod
+    from aj_crew.skills import SkillsLoader
 
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setattr(execution_mod, "third_party_execution_allowed", lambda: True)
     skills_root = home / "skills"
     (skills_root / "taken").mkdir(parents=True)
@@ -294,7 +294,7 @@ def test_app_skill_mapping_names_the_namespaced_path(
     for claim in (
         "`skill://~/.kiro/crew/skills/<app>/<skill>/SKILL.md`",
         "`skill://~/.kiro/crew/skills/<app>/*/SKILL.md`",
-        "home, not `KIROCREW_HOME`",
+        "home, not `AJCREW_HOME`",
         "same name as its app",
         "reserved\n(`auto`)",
         "real directory of that name already exists",
@@ -307,8 +307,8 @@ def test_app_wildcard_alias_never_resolves_a_project_row(tmp_path, monkeypatch):
     """A project row sharing a leaf with an app skill is never resolved."""
     import os
 
-    from kiro_crew.skill_runtime import catalog as catalog_mod
-    from kiro_crew.skills import _ScopedSkillEntry
+    from aj_crew.skill_runtime import catalog as catalog_mod
+    from aj_crew.skills import _ScopedSkillEntry
 
     skills_root = tmp_path / "skills"
     (skills_root / "app" / "leaf").mkdir(parents=True)
@@ -335,7 +335,7 @@ def test_app_wildcard_alias_never_resolves_a_project_row(tmp_path, monkeypatch):
 
 def _alias_case(tmp_path):
     """A skills root holding a flat ``a-first`` row and an ``app`` prefix to map."""
-    from kiro_crew.skills import _ScopedSkillEntry
+    from aj_crew.skills import _ScopedSkillEntry
 
     skills_root = tmp_path / "skills"
     target = tmp_path / "bundle" / "a-first"
@@ -349,8 +349,8 @@ def _alias_case(tmp_path):
 
 def test_app_wildcard_selects_a_flat_row_through_its_namespaced_link(tmp_path):
     """A flat row is selected when ``<app>/<leaf>`` resolves to the same skill."""
-    from kiro_crew.skill_runtime import catalog as catalog_mod
-    from kiro_crew.testing.links import make_dir_link
+    from aj_crew.skill_runtime import catalog as catalog_mod
+    from aj_crew.testing.links import make_dir_link
 
     skills_root, target, row, pattern = _alias_case(tmp_path)
     make_dir_link(skills_root / "a-first", target)
@@ -363,8 +363,8 @@ def test_app_wildcard_selects_a_flat_row_through_its_namespaced_link(tmp_path):
 
 def test_app_wildcard_skips_an_alias_with_a_different_target(tmp_path):
     """An ``<app>/<leaf>`` path that is a different skill does not select the flat row."""
-    from kiro_crew.skill_runtime import catalog as catalog_mod
-    from kiro_crew.testing.links import make_dir_link
+    from aj_crew.skill_runtime import catalog as catalog_mod
+    from aj_crew.testing.links import make_dir_link
 
     skills_root, target, row, pattern = _alias_case(tmp_path)
     make_dir_link(skills_root / "a-first", target)
@@ -379,9 +379,9 @@ def test_app_wildcard_skips_an_alias_with_a_different_target(tmp_path):
 
 def test_app_wildcard_selects_a_flat_row_under_a_linked_loader_root(tmp_path):
     """A resolved mapping selects a flat row spelled through a linked loader root."""
-    from kiro_crew import skills as sk
-    from kiro_crew.skill_runtime import catalog as catalog_mod
-    from kiro_crew.testing.links import make_dir_link
+    from aj_crew import skills as sk
+    from aj_crew.skill_runtime import catalog as catalog_mod
+    from aj_crew.testing.links import make_dir_link
 
     skills_root, target, _, _ = _alias_case(tmp_path)
     make_dir_link(skills_root / "a-first", target)

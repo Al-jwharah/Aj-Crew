@@ -16,8 +16,8 @@ from unittest.mock import AsyncMock
 import pytest
 from local_asyncio_helpers import asyncio_with_sleep
 
+from aj_crew.taskrunner import Step, TaskRun
 from conftest import requires_git
-from kiro_crew.taskrunner import Step, TaskRun
 
 
 def _non_git_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str) -> Path:
@@ -64,7 +64,7 @@ class TestGitCoord:
         sandbox availability, so run the command unwrapped in-test."""
         import os as _os
 
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         _floor_monkeypatch.setattr(
             git_coord,
@@ -75,7 +75,7 @@ class TestGitCoord:
     @pytest.mark.asyncio
     async def test_init_workspace_no_repo(self, tmp_path: Path, monkeypatch) -> None:
         """init_workspace in a non-git dir → run in place, no git init."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = _non_git_dir(tmp_path, monkeypatch, "work")
         (work_dir / "hello.txt").write_text("hi")
@@ -100,7 +100,7 @@ class TestGitCoord:
         Locks the git-optional guarantee independently of whether the test host
         actually has git installed, by simulating the missing binary.
         """
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         async def _no_git(*_a, **_k):
             raise FileNotFoundError(2, "No such file or directory", "git")
@@ -125,7 +125,7 @@ class TestGitCoord:
     @pytest.mark.asyncio
     async def test_init_workspace_existing_repo(self, tmp_path: Path) -> None:
         """init_workspace in existing git repo → worktree created."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         # Set up a real git repo
         work_dir = tmp_path / "repo"
@@ -141,7 +141,7 @@ class TestGitCoord:
 
         await git_coord.init_workspace(run)
 
-        assert run.branch_name == "kirocrew/task/wt_test"
+        assert run.branch_name == "ajcrew/task/wt_test"
         assert run.worktree_path != ""
         assert Path(run.worktree_path).exists()
         # work_dir should have been updated to the worktree
@@ -151,7 +151,7 @@ class TestGitCoord:
 
     @pytest.mark.asyncio
     async def test_workspace_is_valid_true_for_a_live_worktree(self, tmp_path: Path) -> None:
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -178,7 +178,7 @@ class TestGitCoord:
         repository at the expected path, so validation fails closed and the
         retry is refused with a clear error instead of resuming on a
         workspace whose identity cannot be established."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -206,7 +206,7 @@ class TestGitCoord:
     async def test_workspace_is_valid_true_for_a_run_with_no_worktree(self, tmp_path: Path) -> None:
         """A run that never had a worktree (non-git-folder mode) is trivially
         valid -- there is nothing broken to detect."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         run = TaskRun(spec_path="/t.md", spec_content="s")
         run.task_id = "nogit_valid"
@@ -227,7 +227,7 @@ class TestGitCoord:
         (``run.repo_root``) and the run's EXISTING branch -- not fail with
         "branch already exists", which a naive re-``init_workspace()`` call
         would hit."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -274,7 +274,7 @@ class TestGitCoord:
     ) -> None:
         """If even run.repo_root cannot be recovered from, reinit must
         report failure rather than silently disabling git."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -290,7 +290,7 @@ class TestGitCoord:
 
         import shutil
 
-        from kiro_crew.platform_compat import rmtree_force
+        from aj_crew.platform_compat import rmtree_force
 
         shutil.rmtree(run.worktree_path, ignore_errors=True)
         # Plain shutil.rmtree(..., ignore_errors=False) fails closed on Windows:
@@ -317,7 +317,7 @@ class TestGitCoord:
         that answer would commit every remaining step into the enclosing
         checkout while reporting those steps completed. Validity therefore has
         to be identity (is this MY worktree?), not mere repo-ness."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         enclosing = tmp_path / "enclosing"
         enclosing.mkdir()
@@ -328,7 +328,7 @@ class TestGitCoord:
 
         # The run's worktree was deregistered and its contents cleaned up, but
         # the directory itself survived -- and it sits inside `enclosing`.
-        stale = enclosing / ".kirocrew-work" / "nested_test"
+        stale = enclosing / ".ajcrew-work" / "nested_test"
         stale.mkdir(parents=True)
 
         run = TaskRun(spec_path="/t.md", spec_content="s")
@@ -336,7 +336,7 @@ class TestGitCoord:
         run.work_dir = str(stale)
         run.worktree_path = str(stale)
         run.repo_root = str(enclosing)
-        run.branch_name = "kirocrew/task/nested_test"
+        run.branch_name = "ajcrew/task/nested_test"
         run.git_enabled = True
 
         # Precondition, and the whole point: git DOES report this directory as
@@ -360,7 +360,7 @@ class TestGitCoord:
         repository that is not the run's own. A linked worktree shares its main
         repository's git directory, so the common git dir is what actually
         distinguishes them."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -378,7 +378,7 @@ class TestGitCoord:
 
         # Replace the worktree with an unrelated repository at the SAME path.
         await git_coord.finalize(run)
-        from kiro_crew.platform_compat import rmtree_force
+        from aj_crew.platform_compat import rmtree_force
 
         rmtree_force(worktree_dir)
         Path(worktree_dir).mkdir(parents=True)
@@ -403,7 +403,7 @@ class TestGitCoord:
         repo, checked out on a DIFFERENT branch at the run's own path, must
         not read as valid -- resuming would commit the run's remaining steps
         onto somebody else's branch while reporting success."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -441,7 +441,7 @@ class TestGitCoord:
         lets the rest fail the run."""
         import errno
 
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         async def exhausted(*args: object, **kwargs: object) -> object:
             raise OSError(errno.EMFILE, "Too many open files")
@@ -466,7 +466,7 @@ class TestGitCoord:
         propagated on Windows -- exactly the lost-worktree state the retry path
         exists to detect. Both are ``OSError``, which is what the guard tests.
         """
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         async def refuse_to_spawn(*args: object, **kwargs: object) -> object:
             raise NotADirectoryError(267, "The directory name is invalid")
@@ -480,7 +480,7 @@ class TestGitCoord:
         run.task_id = "spawn_gone"
         run.repo_root = str(tmp_path / "gone")
         run.work_dir = str(tmp_path / "gone")
-        run.branch_name = "kirocrew/task/spawn_gone"
+        run.branch_name = "ajcrew/task/spawn_gone"
 
         assert await git_coord.reinit_workspace_for_retry(run) is False
 
@@ -499,7 +499,7 @@ class TestGitCoord:
         """
         import shutil as _shutil
 
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -548,7 +548,7 @@ class TestGitCoord:
         assert treasure.read_text() == "someone else's data"
         assert recovered is False
         # The stranger's directory is put back, not left under a stale name.
-        assert not list(worktree_dir.parent.glob("*.kirocrew-stale-*"))
+        assert not list(worktree_dir.parent.glob("*.ajcrew-stale-*"))
 
     @pytest.mark.asyncio
     async def test_recovery_never_deletes_a_tree_swapped_in_after_the_proof(
@@ -566,7 +566,7 @@ class TestGitCoord:
         """
         import shutil as _shutil
 
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -631,7 +631,7 @@ class TestGitCoord:
         authorize destruction. The rename is what frees the path for the
         re-add; the tree survives on disk under the set-aside name.
         """
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -656,7 +656,7 @@ class TestGitCoord:
 
         assert await git_coord.reinit_workspace_for_retry(run) is True
 
-        parked = list(worktree_dir.parent.glob(f"{worktree_dir.name}.kirocrew-stale-*"))
+        parked = list(worktree_dir.parent.glob(f"{worktree_dir.name}.ajcrew-stale-*"))
         assert parked, "the captured leftover was deleted instead of parked"
         assert (parked[0] / "scratch.txt").read_text() == "uncommitted scratch"
 
@@ -672,7 +672,7 @@ class TestGitCoord:
         ``exists()`` on a UNC target performs outbound SMB authentication --
         a credential exposure -- so UNC/device forms are rejected on the raw
         string before any syscall."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         worktrees_dir = str(tmp_path / "repo" / ".git" / "worktrees")
         tree = tmp_path / "leftover"
@@ -709,7 +709,7 @@ class TestGitCoord:
         (On Windows the same applies to junctions/reparse points.)"""
         import os as _os
 
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         if not hasattr(_os, "symlink"):
             pytest.skip("no symlink support on this platform")
@@ -770,7 +770,7 @@ class TestGitCoord:
         worktree path must not be recursively deleted during recovery --
         that would be silent, unrecoverable data loss for whatever that
         repository holds. Recovery must refuse and fail the run instead."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -788,7 +788,7 @@ class TestGitCoord:
         # Replace the worktree with an unrelated, independent repository at
         # the SAME path -- exactly the shape a foreign occupant would take.
         await git_coord.finalize(run)
-        from kiro_crew.platform_compat import rmtree_force
+        from aj_crew.platform_compat import rmtree_force
 
         rmtree_force(worktree_dir)
         Path(worktree_dir).mkdir(parents=True)
@@ -814,7 +814,7 @@ class TestGitCoord:
         Git's pointer back to this run's original repository.  A replacement
         directory with unrelated files must survive byte-for-byte.
         """
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -842,7 +842,7 @@ class TestGitCoord:
         self, tmp_path: Path
     ) -> None:
         """Repository identity alone does not authorize destructive recovery."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -883,7 +883,7 @@ class TestGitCoord:
         unrelated directory at the run's worktree path and asserts the
         contents survive recovery on disk.
         """
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -919,7 +919,7 @@ class TestGitCoord:
             candidate / "precious.txt"
             for candidate in (
                 [worktree_dir]
-                + list(worktree_dir.parent.glob(f"{worktree_dir.name}.kirocrew-stale-*"))
+                + list(worktree_dir.parent.glob(f"{worktree_dir.name}.ajcrew-stale-*"))
             )
             if (candidate / "precious.txt").exists()
         ]
@@ -944,7 +944,7 @@ class TestGitCoord:
         commit ledger is the ground truth the branch tip must still descend
         from.
         """
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -982,7 +982,7 @@ class TestGitCoord:
         steps stay marked passed while their output is absent. Recovery must
         refuse -- and refuse BEFORE touching the leftover tree on disk.
         """
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -1031,7 +1031,7 @@ class TestGitCoord:
         """
         import shutil as _shutil
 
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -1087,7 +1087,7 @@ class TestGitCoord:
     @pytest.mark.asyncio
     async def test_commit_and_revert(self, tmp_path: Path) -> None:
         """commit_step creates commit, revert_step undoes it."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -1117,7 +1117,7 @@ class TestGitCoord:
     @pytest.mark.asyncio
     async def test_commit_no_changes(self, tmp_path: Path) -> None:
         """commit_step with no changes → empty string."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -1141,7 +1141,7 @@ class TestGitCoord:
     @pytest.mark.asyncio
     async def test_non_git_workspace_git_ops_are_noops(self, tmp_path: Path, monkeypatch) -> None:
         """A non-git workspace runs in place; all git helpers are safe no-ops."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = _non_git_dir(tmp_path, monkeypatch, "plain")
         (work_dir / "a.py").write_text("x = 1")
@@ -1167,7 +1167,7 @@ class TestGitCoord:
     @pytest.mark.asyncio
     async def test_get_state_summary(self, tmp_path: Path) -> None:
         """get_state_summary returns git log + diff stat."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -1195,7 +1195,7 @@ class TestGitCoord:
     @pytest.mark.asyncio
     async def test_revert_no_commits(self, tmp_path: Path) -> None:
         """revert_step with no commits → no-op."""
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -1228,7 +1228,7 @@ class TestGitCoord:
         one commit hash, and emits no log line at default (non-debug) levels."""
         import logging
 
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         work_dir = tmp_path / "repo"
         work_dir.mkdir()
@@ -1251,7 +1251,7 @@ class TestGitCoord:
         assert run.commit_hashes == [sha]
         assert (Path(run.work_dir) / "tracked.txt").read_text() == "v2"
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.git_coord"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.git_coord"):
             await git_coord.revert_step(run)
 
         assert run.commit_hashes == []  # exactly one popped
@@ -1268,7 +1268,7 @@ class TestGitCoord:
         retries the bounded window and, once the handle clears, pops normally."""
         import logging
 
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         monkeypatch.setattr(git_coord.platform_compat, "IS_WINDOWS", True)
         monkeypatch.setattr(git_coord, "asyncio", asyncio_with_sleep(AsyncMock()))  # no real delay
@@ -1295,7 +1295,7 @@ class TestGitCoord:
         run.worktree_path = "/w"
         run.commit_hashes = ["aaa", "bbb"]
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.git_coord"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.git_coord"):
             await git_coord.revert_step(run)
 
         assert calls["n"] == 3  # two contended attempts, third succeeds
@@ -1312,7 +1312,7 @@ class TestGitCoord:
         stays consistent with the un-reverted worktree."""
         import logging
 
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         monkeypatch.setattr(git_coord.platform_compat, "IS_WINDOWS", True)
         monkeypatch.setattr(git_coord, "asyncio", asyncio_with_sleep(AsyncMock()))
@@ -1336,7 +1336,7 @@ class TestGitCoord:
         run.worktree_path = "/w"
         run.commit_hashes = ["aaa", "bbb"]
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.git_coord"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.git_coord"):
             await git_coord.revert_step(run)
 
         assert calls["n"] == git_coord._REVERT_MAX_ATTEMPTS  # tried the whole budget
@@ -1354,7 +1354,7 @@ class TestGitCoord:
         it surfaces at WARNING on the first attempt and does not pop."""
         import logging
 
-        from kiro_crew import git_coord
+        from aj_crew import git_coord
 
         # POSIX: a reset failure is a genuine fault — no retry window.
         monkeypatch.setattr(git_coord.platform_compat, "IS_WINDOWS", False)
@@ -1377,7 +1377,7 @@ class TestGitCoord:
         run.worktree_path = "/w"
         run.commit_hashes = ["aaa"]
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.git_coord"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.git_coord"):
             await git_coord.revert_step(run)
 
         assert calls["n"] == 1  # no retry

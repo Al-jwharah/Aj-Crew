@@ -74,7 +74,7 @@ describe('floorCountText', () => {
 describe('projectLabel', () => {
   it('keeps the last path segment, tolerating trailing separators and Windows paths', () => {
     expect(projectLabel('/local/home/u/.kiro/crew/workspace')).toBe('workspace')
-    expect(projectLabel('/srv/kirocrew/')).toBe('kirocrew')
+    expect(projectLabel('/srv/ajcrew/')).toBe('ajcrew')
     expect(projectLabel('C:\\work\\Reports')).toBe('Reports')
     expect(projectLabel('plain')).toBe('plain')
   })

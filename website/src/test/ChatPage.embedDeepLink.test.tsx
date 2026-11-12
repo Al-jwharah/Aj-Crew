@@ -44,7 +44,7 @@ vi.mock('../api/client', () => ({
      'chatSlotWorkspace', 'models', 'planFromChat', 'renameSlot',
      'resolveApproval', 'screenshot', 'slackChannels', 'slackLink', 'spawnList',
      'stopChatSlot', 'uploadFiles', 'voiceSynthesize', 'workspaces', 'chatSlots',
-     'notifications', 'status', 'generateTitle', 'kirocrewConfig', 'agentResolvedModel',
+     'notifications', 'status', 'generateTitle', 'ajcrewConfig', 'agentResolvedModel',
      'chatSlotsUnrestored', 'sessionsNamed'].map(k => [k, vi.fn().mockResolvedValue(
       k === 'chatSlotDetail' ? { messages: [], has_more: false, total: 0 } : {}
     )])
@@ -139,6 +139,6 @@ describe('embed chat deep link in a fresh window', () => {
     expect(store.getState().chat.activeSlot).toBe('chat-2-200')
     // No step on the way named the default chat or dropped the link's `?sid=`.
     expect(seenUrls.filter(u => u.includes('chat-1-100') || u === '/embed/chat')).toEqual([])
-    expect(JSON.parse(sessionStorage.getItem('kirocrew-embed-tabs') ?? '[]')).toEqual(['chat-2-200'])
+    expect(JSON.parse(sessionStorage.getItem('ajcrew-embed-tabs') ?? '[]')).toEqual(['chat-2-200'])
   })
 })

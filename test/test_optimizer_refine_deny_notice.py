@@ -37,17 +37,17 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import llm_helpers
-from kiro_crew.constants import (
+from aj_crew import llm_helpers
+from aj_crew.constants import (
     DENY_CAUSE_AUDIT_UNAVAILABLE,
     DENY_CAUSE_HOOK_ERROR,
 )
-from kiro_crew.dashboard.handlers import optimizer as optimizer_mod
-from kiro_crew.dashboard.handlers import taskrunner as taskrunner_mod
-from kiro_crew.dashboard.handlers.optimizer import handle_optimize
-from kiro_crew.dashboard.handlers.taskrunner import _run_refine
-from kiro_crew.deny_notice import _DENY_CAUSE_TEXT, build_refusal_steer_notice
-from kiro_crew.providers.base import (
+from aj_crew.dashboard.handlers import optimizer as optimizer_mod
+from aj_crew.dashboard.handlers import taskrunner as taskrunner_mod
+from aj_crew.dashboard.handlers.optimizer import handle_optimize
+from aj_crew.dashboard.handlers.taskrunner import _run_refine
+from aj_crew.deny_notice import _DENY_CAUSE_TEXT, build_refusal_steer_notice
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
@@ -55,14 +55,14 @@ from kiro_crew.providers.base import (
 )
 
 _GENERIC = "User denied tool execution"
-_TAG = "[Kiro Crew host notice]"
+_TAG = "[Aj Crew host notice]"
 #: Only the POLICY cause appends class-specific remediation; its guidance line
 #: is the fingerprint that must be absent from every other cause's notice.
 _POLICY_GUIDANCE = "allowed alternative"
 _SURFACE_CLAUSE = "tool policy of the surface"
 _HOOK_ERROR_CLAUSE = "PreToolUse hook raised"
 _AUDIT_CLAUSE = "could not write the audit record"
-_SRC = pathlib.Path(__file__).resolve().parents[1] / "src/kiro_crew"
+_SRC = pathlib.Path(__file__).resolve().parents[1] / "src/aj_crew"
 
 
 # ── Doubles ──────────────────────────────────────────────────────────────────
@@ -203,7 +203,7 @@ def optimizer_sel(monkeypatch):
 @pytest.fixture
 def refine_sel(monkeypatch):
     sel = _FakeSel()
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.sel", lambda: sel)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.sel", lambda: sel)
     return sel
 
 

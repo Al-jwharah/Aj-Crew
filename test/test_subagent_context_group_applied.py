@@ -19,8 +19,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.subagent import SubagentManager
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.subagent import SubagentManager
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -63,7 +63,7 @@ async def _groups_passed_for(**spawn_kwargs: object) -> frozenset[str]:
     ctx.hooks.auto_approve_subagent_tools = False
     mgr = SubagentManager(sessions=_mock_sessions(), ctx_builder=ctx)
     mgr._should_use_session_sharing = MagicMock(return_value=False)  # type: ignore[method-assign]
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = mgr.spawn("do the thing", **spawn_kwargs)  # type: ignore[arg-type]
         assert info is not None
         await mgr._tasks[info.id]

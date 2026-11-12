@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-const HARNESS_GATEWAY = !!process.env.KIROCREW_E2E_EPHEMERAL
+const HARNESS_GATEWAY = !!process.env.AJCREW_E2E_EPHEMERAL
 
 /** Seed a planned run via from-chat API (does NOT execute). Returns task_id. */
 async function seedPlannedRun(

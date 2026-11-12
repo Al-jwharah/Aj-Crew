@@ -136,7 +136,7 @@ def _evaluate(
             "PR_BODY": body,
             "PR_DRAFT": "true" if draft else "false",
             "GITHUB_OUTPUT": str(output),
-            "GITHUB_REPOSITORY": "kirodotdev/KiroCrew",
+            "GITHUB_REPOSITORY": "Al-jwharah/Aj-Crew",
         }
     )
     env.pop("PR_CALLER", None)
@@ -182,7 +182,7 @@ def test_an_empty_description_reports_every_required_section(tmp_path: Path) -> 
         assert section in outputs["summary"]
     # The section is missing, so its Goal line is not reported separately.
     assert "**Goal:**" not in outputs["summary"]
-    assert "https://github.com/kirodotdev/KiroCrew/blob/main/.github/PULL_REQUEST_TEMPLATE.md" in (
+    assert "https://github.com/Al-jwharah/Aj-Crew/blob/main/.github/PULL_REQUEST_TEMPLATE.md" in (
         outputs["summary"]
     )
 

@@ -39,7 +39,7 @@ async def _read_done(state: Any, run: Any, key: str) -> None:
     (``GET /api/spawn/{id}``): internal auth, its own session."""
     from test_subagent_queued_visibility import _Req
 
-    from kiro_crew.dashboard.messaging_api import run_views
+    from aj_crew.dashboard.messaging_api import run_views
 
     req = _Req(state, run.id)
     req["internal_auth"] = True
@@ -67,7 +67,7 @@ async def test_a_read_after_the_spawning_attempt_ended_holds_nothing(
     reads the child done and marks it under whatever holds the permit next (another
     task's turn, the same task's next claim) or while nothing holds it. No such read
     stamps the child and no such mark is held, so the completion is delivered."""
-    from kiro_crew.slack.gateway_runtime.subagent_injection import INLINE_DELIVER, _inline_verdict
+    from aj_crew.slack.gateway_runtime.subagent_injection import INLINE_DELIVER, _inline_verdict
 
     key = "cron:j1:r1"
     child = _returned_child("c1", key)
@@ -111,7 +111,7 @@ async def test_a_spawn_with_no_holding_of_its_own_records_nothing_and_holds_noth
     parent later, it holds nothing: the completion is delivered, never lost. (A
     spawn whose caller is not the parent session it names is refused before any
     child exists: ``internal_memory_scope``'s 409.)"""
-    from kiro_crew.slack.gateway_runtime.subagent_injection import INLINE_DELIVER, _inline_verdict
+    from aj_crew.slack.gateway_runtime.subagent_injection import INLINE_DELIVER, _inline_verdict
 
     key = "cron:j1:r1"
     child = _returned_child("c1", key)
@@ -159,7 +159,7 @@ async def test_a_child_spawned_read_and_marked_under_one_landed_turn_is_confirme
         turns.append(message)
         return "answered"
 
-    with patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream):
+    with patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream):
         await sessions.get_or_create(key)
         _prompt_in_flight(sessions, key)
         await _spawn_from_the_parents_tool(state, key, child)
@@ -197,8 +197,8 @@ async def test_only_the_parents_own_internal_spawn_names_the_holding_attempt(
     a call without internal auth gets a child that names nothing."""
     from test_subagent_queued_visibility import _Req
 
-    from kiro_crew.dashboard.handlers import messaging
-    from kiro_crew.dashboard.handlers._shared_member_scope import _MEMBER_SCOPE_KEY, MemberScope
+    from aj_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.handlers._shared_member_scope import _MEMBER_SCOPE_KEY, MemberScope
 
     key = "cron:j1:r1"
     child = _returned_child("c1", key)
@@ -251,8 +251,8 @@ async def test_a_spawn_naming_another_parent_than_its_caller_anchors_no_attempt(
     call to A's attempt."""
     from test_subagent_queued_visibility import _Req
 
-    from kiro_crew.dashboard.handlers import messaging
-    from kiro_crew.dashboard.handlers._shared_member_scope import _MEMBER_SCOPE_KEY, MemberScope
+    from aj_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.handlers._shared_member_scope import _MEMBER_SCOPE_KEY, MemberScope
 
     caller, parent = "cron:ja:r1", "cron:jb:r1"
     child = _returned_child("c1", parent)
@@ -294,7 +294,7 @@ def test_the_spawning_attempt_is_named_only_for_the_parents_own_session(tmp_path
     prompt is in flight."""
     from test_subagent_queued_visibility import _Req
 
-    from kiro_crew.dashboard.messaging_api.run_views import _session_turn_holding
+    from aj_crew.dashboard.messaging_api.run_views import _session_turn_holding
 
     sessions = MagicMock()
     sessions.turn_token = MagicMock(return_value=("cron:j1:r1", "task", 7))
@@ -325,7 +325,7 @@ async def test_a_mark_is_held_only_when_the_spawn_also_names_the_holding_attempt
     """``_flag_collected_inline`` checks both records against the attempt holding the
     permit: a child whose done-read stamp names it but whose spawn names an earlier
     attempt, or no attempt, is not held, so its completion is delivered."""
-    from kiro_crew.slack.gateway_runtime.subagent_injection import INLINE_DELIVER, _inline_verdict
+    from aj_crew.slack.gateway_runtime.subagent_injection import INLINE_DELIVER, _inline_verdict
 
     key = "cron:j1:r1"
     child = _returned_child("c1", key)
@@ -359,7 +359,7 @@ async def test_a_spawn_and_a_done_read_while_the_holder_has_not_sent_its_prompt_
     message. The spawn records nothing and the done read stamps nothing, so even
     once the injection's prompt is in flight and the call marks the child there,
     no mark is held: the completion is delivered."""
-    from kiro_crew.slack.gateway_runtime.subagent_injection import INLINE_DELIVER, _inline_verdict
+    from aj_crew.slack.gateway_runtime.subagent_injection import INLINE_DELIVER, _inline_verdict
 
     key = "cron:j1:r1"
     child = _returned_child("c1", key)
@@ -441,7 +441,7 @@ async def test_a_cut_calls_member_posted_under_the_successors_prompt_records_not
     permit and its prompt goes out. The call's next member, posted now, sees an
     in-flight holder, but the call is anchored to T, so it records nothing: read
     done and marked under the successor, which lands, it is still delivered."""
-    from kiro_crew.slack.gateway_runtime.subagent_injection import INLINE_DELIVER, _inline_verdict
+    from aj_crew.slack.gateway_runtime.subagent_injection import INLINE_DELIVER, _inline_verdict
 
     key = "cron:j1:r1"
     first, later = _returned_child("c1", key), _returned_child("c2", key)
@@ -512,7 +512,7 @@ async def test_a_call_whose_first_member_named_nothing_anchors_nothing_for_the_r
 
 @pytest.mark.asyncio
 async def test_a_member_with_no_call_id_is_judged_by_its_own_holding(tmp_path: Any) -> None:
-    """A body with no ``call_id`` (an older kirocrew-core, the CLI, ``spawn_run``)
+    """A body with no ``call_id`` (an older ajcrew-core, the CLI, ``spawn_run``)
     records whatever in-flight attempt holds the permit at its own POST, as before
     the anchor: after a cut it records the successor (the window the anchor
     closes for a ``spawn_sub_agents`` call that sends one)."""
@@ -541,7 +541,7 @@ async def test_a_member_with_no_call_id_is_judged_by_its_own_holding(tmp_path: A
 def test_the_call_anchor_map_keeps_only_the_newest_calls() -> None:
     """``ParentTurnLedger.call_attempt`` holds at most ``CALL_ANCHOR_LIMIT`` calls and
     drops the oldest first; a call that is asked about again is kept as newest."""
-    from kiro_crew.parent_turns import CALL_ANCHOR_LIMIT, ParentTurnLedger
+    from aj_crew.parent_turns import CALL_ANCHOR_LIMIT, ParentTurnLedger
 
     ledger = ParentTurnLedger()
     token = ("cron:j1:r1", "task", 1)
@@ -570,8 +570,8 @@ async def _post_member_slowly(
     anchor and the recording run as in production."""
     from test_subagent_queued_visibility import _Req
 
-    from kiro_crew.dashboard.handlers import messaging
-    from kiro_crew.dashboard.handlers._shared_member_scope import _MEMBER_SCOPE_KEY, MemberScope
+    from aj_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.handlers._shared_member_scope import _MEMBER_SCOPE_KEY, MemberScope
 
     async def _hand_off(*_a: Any, **_kw: Any) -> Any:
         return child
@@ -607,7 +607,7 @@ async def _drive_a_post_across_the_cut(tmp_path: Any, *, cut: bool, call_id: str
     from chat_test_helpers import _make_state
     from test_subagent_queued_visibility import _Req
 
-    from kiro_crew.dashboard.messaging_api import run_views
+    from aj_crew.dashboard.messaging_api import run_views
 
     sessions = _new_sessions()
     key = "cron:j1:r1"
@@ -657,7 +657,7 @@ async def _drive_a_post_across_the_cut(tmp_path: Any, *, cut: bool, call_id: str
         _prompt_in_flight(sessions, key, False)
         return f"answered {message}"
 
-    with patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream):
+    with patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream):
         await sessions.get_or_create(key)  # T, the cron run's turn
         _prompt_in_flight(sessions, key)
         seen["t_token"] = sessions.turn_token(key)
@@ -736,8 +736,8 @@ async def test_an_invalid_call_id_is_refused_before_any_spawn(
     child is created."""
     from test_subagent_queued_visibility import _Req
 
-    from kiro_crew.dashboard.handlers import messaging
-    from kiro_crew.dashboard.handlers._shared_member_scope import _MEMBER_SCOPE_KEY, MemberScope
+    from aj_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.handlers._shared_member_scope import _MEMBER_SCOPE_KEY, MemberScope
 
     key = "cron:j1:r1"
     state, _sessions = _spawn_state(tmp_path, key)
@@ -768,9 +768,9 @@ async def _real_manager(monkeypatch: pytest.MonkeyPatch) -> Any:
     the queue, the pump and the record it builds when a member starts are real."""
     from overload_fakes import mock_ctx, mock_sessions, wait_taskq_open
 
-    import kiro_crew.subagent as subagent_mod
-    from kiro_crew.subagent import SubagentManager
-    from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+    import aj_crew.subagent as subagent_mod
+    from aj_crew.subagent import SubagentManager
+    from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
 
     monkeypatch.setattr(subagent_mod, "Stats", MagicMock())
     monkeypatch.setattr(subagent_mod, "sel", MagicMock())
@@ -793,7 +793,7 @@ async def _real_manager(monkeypatch: pytest.MonkeyPatch) -> Any:
 
 
 async def _stop_manager(mgr: Any) -> None:
-    from kiro_crew.testing.wait import await_until
+    from aj_crew.testing.wait import await_until
 
     mgr._shutting_down = True
     tasks = [task for task in mgr._tasks.values() if not task.done()]
@@ -811,8 +811,8 @@ async def _post_member(state: Any, key: str, call_id: str, monkeypatch: Any) -> 
     and the real manager hand-off; returns the record the route answered with."""
     from test_subagent_queued_visibility import _Req
 
-    from kiro_crew.dashboard.handlers import messaging
-    from kiro_crew.dashboard.handlers._shared_member_scope import _MEMBER_SCOPE_KEY, MemberScope
+    from aj_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.handlers._shared_member_scope import _MEMBER_SCOPE_KEY, MemberScope
 
     async def _persistent(*_a: Any) -> str:
         return "persistent"
@@ -830,7 +830,7 @@ async def _post_member(state: Any, key: str, call_id: str, monkeypatch: Any) -> 
 
 
 async def _start_the_queue(mgr: Any, ids: list[str]) -> None:
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.testing.wait import async_wait_until
 
     mgr._spawn_stagger_secs = 0.0
 
@@ -879,7 +879,7 @@ async def test_queued_members_of_one_call_are_confirmed_with_no_completion_turn(
         return "answered"
 
     try:
-        with patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream):
+        with patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream):
             await sessions.get_or_create(key)
             _prompt_in_flight(sessions, key)
             holding = sessions.turn_token(key)
@@ -926,7 +926,7 @@ async def test_a_queued_member_that_starts_after_its_spawning_attempt_ended_hold
     its completion is delivered."""
     from chat_test_helpers import _make_state
 
-    from kiro_crew.slack.gateway_runtime.subagent_injection import INLINE_DELIVER, _inline_verdict
+    from aj_crew.slack.gateway_runtime.subagent_injection import INLINE_DELIVER, _inline_verdict
 
     key = "cron:j1:r1"
     sessions = _new_sessions()
@@ -964,8 +964,8 @@ def test_a_carried_attempt_is_bounded_and_dropped_when_the_row_never_starts() ->
     started gets the attempt on its live record."""
     from overload_fakes import mock_ctx, mock_sessions
 
-    from kiro_crew.subagent import SubagentInfo, SubagentManager
-    from kiro_crew.subagent_parts.run_limits import _QUEUED_SPAWN_ATTEMPT_LIMIT as LIMIT
+    from aj_crew.subagent import SubagentInfo, SubagentManager
+    from aj_crew.subagent_parts.run_limits import _QUEUED_SPAWN_ATTEMPT_LIMIT as LIMIT
 
     mgr = SubagentManager(sessions=mock_sessions(), ctx_builder=mock_ctx(), max_concurrent=3)
     token = ("cron:j1:r1", "task", 1)
@@ -993,8 +993,8 @@ async def test_a_queued_member_stopped_before_it_starts_is_delivered_not_lost(
     turn lands: one duplicate turn, never a loss. The first member is confirmed."""
     from chat_test_helpers import _make_state
 
-    from kiro_crew.slack.gateway_runtime.subagent_injection import INLINE_DELIVER, _inline_verdict
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.slack.gateway_runtime.subagent_injection import INLINE_DELIVER, _inline_verdict
+    from aj_crew.testing.wait import async_wait_until
 
     key = "cron:j1:r1"
     sessions = _new_sessions()

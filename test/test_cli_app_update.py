@@ -1,4 +1,4 @@
-"""``kirocrew app update`` sends the dashboard's Update request through a running gateway.
+"""``ajcrew app update`` sends the dashboard's Update request through a running gateway.
 
 The verb has no file-only form: with no gateway it refuses and changes nothing.
 """
@@ -13,8 +13,8 @@ import pytest
 
 class TestCliUpdate:
     def test_it_goes_through_the_gateway(self, monkeypatch, capsys):
-        import kiro_crew.app_lifecycle_client as client
-        from kiro_crew.cli_commands_app import _handle_app
+        import aj_crew.app_lifecycle_client as client
+        from aj_crew.cli_commands_app import _handle_app
 
         sent: list[tuple[str, str]] = []
 
@@ -28,8 +28,8 @@ class TestCliUpdate:
         assert "updated my-app to 1.1.0" in capsys.readouterr().out
 
     def test_with_no_gateway_it_refuses_and_changes_nothing(self, monkeypatch, capsys):
-        import kiro_crew.app_lifecycle_client as client
-        import kiro_crew.cli_commands_app as cli_app
+        import aj_crew.app_lifecycle_client as client
+        import aj_crew.cli_commands_app as cli_app
 
         monkeypatch.setattr(client, "toggle_app", lambda *a, **k: None)
         monkeypatch.setattr(
@@ -41,8 +41,8 @@ class TestCliUpdate:
         assert "nothing was updated" in capsys.readouterr().err
 
     def test_a_gateway_refusal_is_reported(self, monkeypatch, capsys):
-        import kiro_crew.app_lifecycle_client as client
-        from kiro_crew.cli_commands_app import _handle_app
+        import aj_crew.app_lifecycle_client as client
+        from aj_crew.cli_commands_app import _handle_app
 
         def _refuse(*a, **k):
             raise client.AppGatewayError("app 'my-app' not installed", code="app_not_installed")
@@ -53,8 +53,8 @@ class TestCliUpdate:
         assert "not installed" in capsys.readouterr().err
 
     def test_a_refusal_ending_in_a_period_is_not_doubled(self, monkeypatch, capsys):
-        import kiro_crew.app_lifecycle_client as client
-        from kiro_crew.cli_commands_app import _handle_app
+        import aj_crew.app_lifecycle_client as client
+        from aj_crew.cli_commands_app import _handle_app
 
         def _refuse(*a, **k):
             raise client.AppGatewayError("app 'my-app' is already installed (v1). Uninstall first.")
@@ -67,7 +67,7 @@ class TestCliUpdate:
         assert ".." not in err
 
     def test_the_parser_accepts_the_verb(self):
-        from kiro_crew.cli_parser_agent import register_app_parser
+        from aj_crew.cli_parser_agent import register_app_parser
 
         parser = argparse.ArgumentParser()
         register_app_parser(parser.add_subparsers(dest="command"))
@@ -75,7 +75,7 @@ class TestCliUpdate:
         assert (args.app_action, args.name) == ("update", "my-app")
 
     def test_the_parser_accepts_an_optional_source(self):
-        from kiro_crew.cli_parser_agent import register_app_parser
+        from aj_crew.cli_parser_agent import register_app_parser
 
         parser = argparse.ArgumentParser()
         register_app_parser(parser.add_subparsers(dest="command"))
@@ -89,7 +89,7 @@ class TestCliUpdateSource:
 
     @staticmethod
     def _capture(monkeypatch, answer=None):
-        import kiro_crew.app_lifecycle_client as client
+        import aj_crew.app_lifecycle_client as client
 
         sent: list[tuple[str, str, object]] = []
 
@@ -101,7 +101,7 @@ class TestCliUpdateSource:
         return sent
 
     def test_a_relative_source_is_sent_absolute(self, monkeypatch, tmp_path):
-        from kiro_crew.cli_commands_app import _handle_app
+        from aj_crew.cli_commands_app import _handle_app
 
         (tmp_path / "my-app-v2").mkdir()
         monkeypatch.chdir(tmp_path)
@@ -111,7 +111,7 @@ class TestCliUpdateSource:
         assert sent == [("my-app", "update", {"source": str((tmp_path / "my-app-v2").resolve())})]
 
     def test_without_source_no_body_is_sent(self, monkeypatch):
-        from kiro_crew.cli_commands_app import _handle_app
+        from aj_crew.cli_commands_app import _handle_app
 
         sent = self._capture(monkeypatch)
         _handle_app(types.SimpleNamespace(app_action="update", name="my-app", source=None))
@@ -119,7 +119,7 @@ class TestCliUpdateSource:
 
     @pytest.mark.parametrize("empty", ["", "   "])
     def test_an_empty_source_is_refused_before_any_request(self, monkeypatch, capsys, empty):
-        from kiro_crew.cli_commands_app import _handle_app
+        from aj_crew.cli_commands_app import _handle_app
 
         sent = self._capture(monkeypatch)
         with pytest.raises(SystemExit) as exc:
@@ -133,8 +133,8 @@ class TestCliUpdateResult:
     """An update re-registers the new manifest, so it reports counts as enable does."""
 
     def test_registration_counts_are_printed(self, monkeypatch, capsys):
-        import kiro_crew.app_lifecycle_client as client
-        from kiro_crew.cli_commands_app import _handle_app
+        import aj_crew.app_lifecycle_client as client
+        from aj_crew.cli_commands_app import _handle_app
 
         answer = {
             "ok": True,
@@ -147,13 +147,13 @@ class TestCliUpdateResult:
         out = capsys.readouterr().out
         assert "Agents registered: 1" in out
         assert "Skills registered: 0" in out
-        assert "kirocrew app enable" not in out
+        assert "ajcrew app enable" not in out
 
     def test_an_update_parked_for_consent_prints_no_counts_or_enable_hint(
         self, monkeypatch, capsys
     ):
-        import kiro_crew.app_lifecycle_client as client
-        from kiro_crew.cli_commands_app import _handle_app
+        import aj_crew.app_lifecycle_client as client
+        from aj_crew.cli_commands_app import _handle_app
 
         # The new version newly asks to control the owner's chats, so the gateway
         # leaves it off; that consent is the dashboard's alone.
@@ -169,4 +169,4 @@ class TestCliUpdateResult:
         out = capsys.readouterr().out
         assert "disabled because this version newly requests session approval" in out
         assert "registered" not in out
-        assert "kirocrew app enable" not in out
+        assert "ajcrew app enable" not in out

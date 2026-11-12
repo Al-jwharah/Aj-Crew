@@ -4,7 +4,7 @@ The manifest checks a path's spelling, never its target, so every path is resolv
 ``test/fixtures/dashboard_templates/pod_folds.json``.
 
 The four buckets come from ``state`` plus the worker's ``status``, pinned against
-:mod:`kiro_crew.work_vocab` so a new state never reads as healthy "still moving". The
+:mod:`aj_crew.work_vocab` so a new state never reads as healthy "still moving". The
 silence band is computed from a write time and has a "no write time" state.
 """
 
@@ -18,12 +18,12 @@ from typing import Any
 import dashboard_template_checks
 import pytest
 
-from kiro_crew.dashboard_templates.manifest import ManifestError, load_template
-from kiro_crew.work_vocab import WORK_ITEM_STATES, WORK_VERDICTS, WORK_WORKER_STATUSES
+from aj_crew.dashboard_templates.manifest import ManifestError, load_template
+from aj_crew.work_vocab import WORK_ITEM_STATES, WORK_VERDICTS, WORK_WORKER_STATUSES
 
 TEMPLATE_ID = "standup"
 ROOT = Path(__file__).resolve().parents[1]
-DIRECTORY = ROOT / "src/kiro_crew/dashboard_templates/builtin" / TEMPLATE_ID
+DIRECTORY = ROOT / "src/aj_crew/dashboard_templates/builtin" / TEMPLATE_ID
 FIXTURES = ROOT / "test/fixtures/dashboard_templates"
 POD = FIXTURES / "pod_folds.json"
 SAMPLE = FIXTURES / "sample_work-kanban.json"
@@ -255,9 +255,9 @@ class TestItDrawsFromTheHost(
 ):
 
     def test_the_written_tag_is_gated_on_the_hosts_agentic_mark(self, html: str) -> None:
-        """``window.kirocrew.agentic`` is a LIST, not an object.
+        """``window.ajcrew.agentic`` is a LIST, not an object.
 
-        :func:`kiro_crew.dashboard_frame.read_payload` puts ``sorted(agentic)`` there, so
+        :func:`aj_crew.dashboard_frame.read_payload` puts ``sorted(agentic)`` there, so
         asking it for a PROPERTY named ``headline`` answers no on every render -- which
         would label every written headline as one nobody wrote. The shipped
         ``session-ledger`` reads it with ``indexOf`` for this reason.
@@ -279,7 +279,7 @@ class TestItDrawsFromTheHost(
         bag keeps a fold's array an ARRAY. A page written against a stringified bag
         draws nothing while every cell still fills.
         """
-        from kiro_crew.dashboard_frame import read_payload
+        from aj_crew.dashboard_frame import read_payload
 
         payload = read_payload({"moments": [{"type": "turn/completed"}]}, agentic=["headline"])
         assert payload["agentic"] == ["headline"]

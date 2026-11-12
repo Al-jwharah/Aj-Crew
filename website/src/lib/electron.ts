@@ -15,7 +15,7 @@
  * neither `.mac-electron` nor `.win-electron` applies, which is the correct
  * zero-inset layout, locked in by App.linuxElectron.test.tsx.
  */
-const mc = window.kirocrew
+const mc = window.ajcrew
 
 export const isElectron = !!mc?.isElectron
 export const isMacElectron = isElectron && mc?.platform === 'darwin'
@@ -44,11 +44,11 @@ export const LINUX_CAPTION_CONTROLS_WIDTH = 108
  * For copy about an action the SHELL performs rather than the gateway — Mochi's
  * reveal is an IPC send its main process handles, so the gateway's platform would
  * be the wrong host to name. Read lazily (not from the module-load `mc` capture
- * above) so a test can stub `window.kirocrew` per-case, exactly as `pathForFile`
+ * above) so a test can stub `window.ajcrew` per-case, exactly as `pathForFile`
  * does.
  */
 export function electronPlatform(): string | undefined {
-  return window.kirocrew?.platform
+  return window.ajcrew?.platform
 }
 
 /**
@@ -58,10 +58,10 @@ export function electronPlatform(): string | undefined {
  * falsy result as "no path available" and keep their browser behaviour.
  *
  * Read lazily (not via the module-load `mc` capture above) so tests can stub
- * `window.kirocrew` per-case without import-order coupling.
+ * `window.ajcrew` per-case without import-order coupling.
  */
 export function pathForFile(file: File): string {
-  const k = window.kirocrew
+  const k = window.ajcrew
   try {
     return k?.getPathForFile?.(file) || ''
   } catch {
@@ -91,7 +91,7 @@ export const MAC_FULLSCREEN_TOP_RESERVE_PX = 24
  * the control there and the built-in viewer stays the only handoff — matching
  * how `browserAPI`/`zoomAPI`/`wslAPI` consumers feature-detect their bridges.
  * Read lazily (not a module-load capture) so a test can stub `window.fileOpenAPI`
- * per-case, exactly as `pathForFile` stubs `window.kirocrew`.
+ * per-case, exactly as `pathForFile` stubs `window.ajcrew`.
  */
 export function canOpenFileInEditor(): boolean {
   return typeof (window as { fileOpenAPI?: { open?: unknown } }).fileOpenAPI?.open === 'function'
@@ -269,4 +269,4 @@ export function needsDesktopApp(app: {
  * `components.appstore.*.desktop_app_hint` instead; this remains the
  * machine-readable reason string for logs and non-UI callers.
  */
-export const DESKTOP_APP_REQUIRED_LABEL = 'Requires the KiroCrew desktop app'
+export const DESKTOP_APP_REQUIRED_LABEL = 'Requires the Aj Crew desktop app'

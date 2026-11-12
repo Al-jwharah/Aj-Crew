@@ -13,9 +13,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew import mcp_core
-from kiro_crew.mcp_core import _call_tool_inner
-from kiro_crew.mcp_shared import DeferredTool, drive_deferred
+from aj_crew import mcp_core
+from aj_crew.mcp_core import _call_tool_inner
+from aj_crew.mcp_shared import DeferredTool, drive_deferred
 
 _DONE = {"done": True, "result": "final answer", "outcome": "completed"}
 _RUNNING = {"done": False, "result": "", "turns": 2}
@@ -81,7 +81,7 @@ def test_a_read_that_may_not_hold_the_result_marks_nothing(args, payload) -> Non
 
 
 def test_an_over_cap_reply_marks_nothing() -> None:
-    from kiro_crew.validation import MAX_RESPONSE_LEN
+    from aj_crew.validation import MAX_RESPONSE_LEN
 
     result, posts, _ = _read(
         {"agent_id": "abc123"}, {**_DONE, "result": "x" * (MAX_RESPONSE_LEN + 1)}
@@ -91,7 +91,7 @@ def test_an_over_cap_reply_marks_nothing() -> None:
 
 
 def test_usage_header_counts_toward_the_response_cap() -> None:
-    from kiro_crew.validation import MAX_RESPONSE_LEN
+    from aj_crew.validation import MAX_RESPONSE_LEN
 
     result, posts, _ = _read(
         {"agent_id": "abc123"},
@@ -102,7 +102,7 @@ def test_usage_header_counts_toward_the_response_cap() -> None:
 
 
 def test_a_reply_that_fits_after_sanitization_marks_after_the_write() -> None:
-    from kiro_crew.validation import MAX_RESPONSE_LEN, sanitize_string
+    from aj_crew.validation import MAX_RESPONSE_LEN, sanitize_string
 
     text = "x" * MAX_RESPONSE_LEN + "\u200b"
     assert len(text) > MAX_RESPONSE_LEN
@@ -136,7 +136,7 @@ def test_no_resolvable_session_answers_plain_text() -> None:
 
 
 def test_a_transport_failure_is_retried_once_and_never_raises() -> None:
-    from kiro_crew.subagent_read_collected import post_mark_collected
+    from aj_crew.subagent_read_collected import post_mark_collected
 
     calls: list[float] = []
 

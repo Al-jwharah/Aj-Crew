@@ -1,7 +1,7 @@
 """Tests for the kiro-cli hooks an installed spec carries.
 
 ``agent.kiro_hooks`` merged into the spec (validation, dedup, caps), and the
-hook keys internal to Kiro Crew that are stripped from it.
+hook keys internal to Aj Crew that are stripped from it.
 """
 
 from __future__ import annotations
@@ -20,8 +20,8 @@ from agent_helpers import _pinned_kiro_cli_version  # noqa: F401
 # Re-exported under the original private names so the call sites below are unchanged.
 from mcp_merge_helpers import DEFAULT_MANAGED_MCPS as _DEFAULT_MANAGED_MCPS
 
+from aj_crew.agent import install_agent
 from conftest import requires_symlinks
-from kiro_crew.agent import install_agent
 
 
 class TestKiroHooksMerge:
@@ -81,25 +81,25 @@ class TestKiroHooksMerge:
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir(exist_ok=True)
         if existing:
-            (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+            (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         prompt = cfg_dir / "prompt.md"
         patches = [
             patch.multiple(
-                "kiro_crew.agent",
+                "aj_crew.agent",
                 KIRO_AGENTS_DIR=kiro_dir,
                 _BUNDLED_CFG_DIR=cfg_dir,
-                _KIROCREW_BIN="/usr/bin/kirocrew",
+                _AJCREW_BIN="/usr/bin/ajcrew",
                 _MANAGED_MCP_SERVERS=_DEFAULT_MANAGED_MCPS,
                 _KIRO_MCP_JSON=tmp_path / "nonexistent_kiro_mcp.json",
                 _CC_MCP_JSON=tmp_path / "nonexistent_cc_mcp.json",
             ),
-            patch("kiro_crew.agent._prompt_path", return_value=prompt),
-            patch("kiro_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json"),
-            patch("kiro_crew.agent._project_dir", return_value=None),
-            patch("kiro_crew.agent._aim_skill_paths", return_value=[]),
-            patch("kiro_crew.agent.shutil.which", side_effect=lambda c, **kw: c),
-            patch("kiro_crew.agent._mc_config_path", return_value=mc_config),
+            patch("aj_crew.agent._prompt_path", return_value=prompt),
+            patch("aj_crew.agent._shipped_defaults", return_value=cfg_dir / "defaults.json"),
+            patch("aj_crew.agent._project_dir", return_value=None),
+            patch("aj_crew.agent._aim_skill_paths", return_value=[]),
+            patch("aj_crew.agent.shutil.which", side_effect=lambda c, **kw: c),
+            patch("aj_crew.agent._mc_config_path", return_value=mc_config),
         ]
         with ExitStack() as stack:
             for p in patches:
@@ -152,7 +152,7 @@ class TestKiroHooksMerge:
 
     def test_user_hooks_dedup_against_bundled(self, tmp_path: Path):
         """User hook whose command+matcher matches a bundled hook is not added twice."""
-        from kiro_crew.agent import _merge_kiro_hooks
+        from aj_crew.agent import _merge_kiro_hooks
 
         hook = self._make_hook(tmp_path, "audit.sh")
         bundled = {"postToolUse": [{"matcher": "execute_bash", "command": hook}]}
@@ -214,20 +214,20 @@ class TestKiroHooksMerge:
 
     # -- Direct unit tests for _merge_kiro_hooks defensive branches --
     def test_merge_kiro_hooks_non_dict_user_hooks_returns_original(self):
-        from kiro_crew.agent import _merge_kiro_hooks
+        from aj_crew.agent import _merge_kiro_hooks
 
         bundled = {"postToolUse": [{"command": "audit.sh"}]}
         assert _merge_kiro_hooks(bundled, ["bad"]) == bundled
 
     def test_merge_kiro_hooks_non_list_event_entries_skipped(self):
-        from kiro_crew.agent import _merge_kiro_hooks
+        from aj_crew.agent import _merge_kiro_hooks
 
         bundled = {"postToolUse": [{"command": "audit.sh"}]}
         result = _merge_kiro_hooks(bundled, {"postToolUse": "not-a-list"})
         assert result == bundled
 
     def test_merge_kiro_hooks_non_dict_entry_in_list_skipped(self):
-        from kiro_crew.agent import _merge_kiro_hooks
+        from aj_crew.agent import _merge_kiro_hooks
 
         result = _merge_kiro_hooks({}, {"preToolUse": ["just-a-string"]})
         assert result["preToolUse"] == []
@@ -242,12 +242,12 @@ class TestKiroHooksMerge:
         ],
     )
     def test_validate_rejects_a_path_that_names_no_hook_file(self, command: str):
-        from kiro_crew.agent import _validate_hook_command
+        from aj_crew.agent import _validate_hook_command
 
         assert _validate_hook_command(command, "test") is None
 
     def test_validate_rejects_shell_metacharacters(self, tmp_path: Path):
-        from kiro_crew.agent import _validate_hook_command
+        from aj_crew.agent import _validate_hook_command
 
         hook = self._make_hook(tmp_path)
         assert _validate_hook_command(hook + "; rm -rf /", "test") is None
@@ -255,14 +255,14 @@ class TestKiroHooksMerge:
         assert _validate_hook_command(hook + " $(evil)", "test") is None
 
     def test_validate_accepts_valid_hook(self, tmp_path: Path):
-        from kiro_crew.agent import _validate_hook_command
+        from aj_crew.agent import _validate_hook_command
 
         hook = self._make_hook(tmp_path)
         assert _validate_hook_command(hook, "test") is not None
 
     def test_merge_strips_extra_fields(self, tmp_path: Path):
         """Only command and matcher fields are kept; arbitrary keys are stripped."""
-        from kiro_crew.agent import _merge_kiro_hooks
+        from aj_crew.agent import _merge_kiro_hooks
 
         hook = self._make_hook(tmp_path)
         user = {"preToolUse": [{"command": hook, "matcher": "*", "shell": True, "env": {"X": "1"}}]}
@@ -272,7 +272,7 @@ class TestKiroHooksMerge:
     @requires_symlinks
     def test_validate_rejects_symlink_to_sensitive(self, tmp_path: Path):
         """Symlinks resolving to sensitive paths are rejected."""
-        from kiro_crew.agent import _validate_hook_command
+        from aj_crew.agent import _validate_hook_command
 
         sensitive = tmp_path / ".ssh" / "key"
         sensitive.parent.mkdir(parents=True)
@@ -281,12 +281,12 @@ class TestKiroHooksMerge:
         link = tmp_path / "hooks" / "sneaky.sh"
         link.parent.mkdir(parents=True)
         link.symlink_to(sensitive)
-        with patch("kiro_crew.agent.is_sensitive_path", side_effect=lambda p: ".ssh" in p):
+        with patch("aj_crew.agent.is_sensitive_path", side_effect=lambda p: ".ssh" in p):
             assert _validate_hook_command(str(link), "test") is None
 
     def test_merge_rejects_non_string_matcher(self, tmp_path: Path):
         """Non-string matcher values are skipped (prevents TypeError and injection)."""
-        from kiro_crew.agent import _merge_kiro_hooks
+        from aj_crew.agent import _merge_kiro_hooks
 
         hook = self._make_hook(tmp_path)
         user = {
@@ -302,7 +302,7 @@ class TestKiroHooksMerge:
 
     def test_merge_kiro_hooks_max_per_event_limit(self, tmp_path: Path):
         """At most _MAX_USER_HOOKS_PER_EVENT hooks are accepted per event."""
-        from kiro_crew.agent import _MAX_USER_HOOKS_PER_EVENT, _merge_kiro_hooks
+        from aj_crew.agent import _MAX_USER_HOOKS_PER_EVENT, _merge_kiro_hooks
 
         hooks = [
             {"command": self._make_hook(tmp_path, f"hook_{i}.sh")}
@@ -313,14 +313,14 @@ class TestKiroHooksMerge:
 
     def test_merge_kiro_hooks_unknown_event_rejected(self):
         """Unknown event types are silently dropped."""
-        from kiro_crew.agent import _merge_kiro_hooks
+        from aj_crew.agent import _merge_kiro_hooks
 
         result = _merge_kiro_hooks({}, {"onBadEvent": [{"command": "/bin/true"}]})
         assert "onBadEvent" not in result
 
     def test_merge_rejects_matcher_with_shell_metacharacters(self, tmp_path: Path):
         """Matchers with shell metacharacters are rejected."""
-        from kiro_crew.agent import _merge_kiro_hooks
+        from aj_crew.agent import _merge_kiro_hooks
 
         hook = self._make_hook(tmp_path)
         user = {
@@ -338,7 +338,7 @@ class TestKiroHooksMerge:
 
     def test_merge_rejects_oversized_matcher(self, tmp_path: Path):
         """Matchers exceeding max length are rejected."""
-        from kiro_crew.agent import _MAX_MATCHER_LEN, _merge_kiro_hooks
+        from aj_crew.agent import _MAX_MATCHER_LEN, _merge_kiro_hooks
 
         hook = self._make_hook(tmp_path)
         user = {
@@ -353,7 +353,7 @@ class TestKiroHooksMerge:
 
     def test_merge_global_hooks_limit(self, tmp_path: Path):
         """Total hooks across all events are capped at _MAX_TOTAL_USER_HOOKS."""
-        from kiro_crew.agent import _MAX_TOTAL_USER_HOOKS, _merge_kiro_hooks
+        from aj_crew.agent import _MAX_TOTAL_USER_HOOKS, _merge_kiro_hooks
 
         user = {}
         for event in ("preToolUse", "postToolUse", "userPromptSubmit"):
@@ -367,14 +367,14 @@ class TestKiroHooksMerge:
 
 
 class TestKiroHooksFiltering:
-    """Tests that hook keys internal to Kiro Crew are stripped from kiro-cli agent config."""
+    """Tests that hook keys internal to Aj Crew are stripped from kiro-cli agent config."""
 
     def test_auto_approve_tools_stripped_from_agent_config(self, tmp_path: Path):
-        """auto_approve_tools must not appear in kirocrew.json (kiro-cli rejects it)."""
-        from kiro_crew.agent import _kiro_hooks_only
+        """auto_approve_tools must not appear in ajcrew.json (kiro-cli rejects it)."""
+        from aj_crew.agent import _kiro_hooks_only
 
         hooks = {
-            "auto_approve_tools": ["kirocrew browse *"],
+            "auto_approve_tools": ["ajcrew browse *"],
             "postToolUse": [{"matcher": "execute_bash", "command": "audit.sh"}],
             "userPromptSubmit": [{"command": "metrics.sh"}],
         }
@@ -384,8 +384,8 @@ class TestKiroHooksFiltering:
         assert "userPromptSubmit" in result
 
     def test_auto_deny_tools_stripped_from_agent_config(self):
-        """auto_deny_tools must not appear in kirocrew.json."""
-        from kiro_crew.agent import _kiro_hooks_only
+        """auto_deny_tools must not appear in ajcrew.json."""
+        from aj_crew.agent import _kiro_hooks_only
 
         hooks = {
             "auto_deny_tools": ["Dangerous*"],
@@ -397,7 +397,7 @@ class TestKiroHooksFiltering:
 
     def test_only_valid_kiro_events_preserved(self):
         """Only kiro-cli valid hook events survive filtering."""
-        from kiro_crew.agent import _VALID_HOOK_EVENTS, _kiro_hooks_only
+        from aj_crew.agent import _VALID_HOOK_EVENTS, _kiro_hooks_only
 
         hooks = {
             "auto_approve_tools": ["*"],
@@ -420,28 +420,28 @@ class TestKiroHooksFiltering:
         _VALID_HOOK_EVENTS accepts any new bundled key not in _INTERNAL_HOOK_KEYS, and
         kiro-cli rejects the whole spec for an internal one, so each new key must be
         added here (an event) or to _INTERNAL_HOOK_KEYS."""
-        from kiro_crew.agent import _BUNDLED_CFG_DIR, _load_json
+        from aj_crew.agent import _BUNDLED_CFG_DIR, _load_json
 
         bundled = _load_json(_BUNDLED_CFG_DIR / "defaults.json")
         bundled_hook_keys = set((bundled or {}).get("hooks", {}).keys())
         assert bundled_hook_keys == {"auto_approve_tools", "postToolUse"}, (
             f"bundled defaults.json hooks keys changed to {bundled_hook_keys} -- "
             "classify any new key as a real kiro-cli event (covered automatically "
-            "via _VALID_HOOK_EVENTS) or Kiro-Crew-internal (add to "
+            "via _VALID_HOOK_EVENTS) or Aj-Crew-internal (add to "
             "_INTERNAL_HOOK_KEYS), then update this pinned set."
         )
 
     def test_sanitize_agent_hooks_repairs_owned_files_subtractively(self, tmp_path: Path):
-        """The repair removes only Kiro Crew's legacy key from every owned spec."""
-        from kiro_crew.agent import _hooks_sanitized_mtimes, _sanitize_agent_hooks
-        from kiro_crew.agent_files import OWNED_KIRO_AGENT_FILES
+        """The repair removes only Aj Crew's legacy key from every owned spec."""
+        from aj_crew.agent import _hooks_sanitized_mtimes, _sanitize_agent_hooks
+        from aj_crew.agent_files import OWNED_KIRO_AGENT_FILES
 
         kiro_dir = tmp_path / "agents"
         kiro_dir.mkdir()
         broken_config = {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "hooks": {
-                "auto_approve_tools": ["kirocrew browse *"],
+                "auto_approve_tools": ["ajcrew browse *"],
                 "postToolUse": [{"matcher": "execute_bash", "command": "audit.sh"}],
                 "futureHookEvent": [{"command": "future.sh"}],
             },
@@ -451,9 +451,9 @@ class TestKiroHooksFiltering:
 
         _hooks_sanitized_mtimes.clear()
         with (
-            patch("kiro_crew.agent.KIRO_AGENTS_DIR", kiro_dir),
+            patch("aj_crew.agent.KIRO_AGENTS_DIR", kiro_dir),
             patch(
-                "kiro_crew.agent_materialization.worker_agent."
+                "aj_crew.agent_materialization.worker_agent."
                 "_foreign_dashboard_author_spec_reason",
                 return_value=None,
             ),
@@ -471,17 +471,17 @@ class TestKiroHooksFiltering:
 
     def test_sanitize_agent_hooks_repairs_a_bom_saved_owned_file(self, tmp_path: Path):
         """A hand-saved owned spec with a byte-order mark is repaired, not skipped."""
-        from kiro_crew.agent import _hooks_sanitized_mtimes, _sanitize_agent_hooks
-        from kiro_crew.agent_files import OWNED_KIRO_AGENT_FILES
+        from aj_crew.agent import _hooks_sanitized_mtimes, _sanitize_agent_hooks
+        from aj_crew.agent_files import OWNED_KIRO_AGENT_FILES
 
         kiro_dir = tmp_path / "agents"
         kiro_dir.mkdir()
-        spec = {"name": "kirocrew", "hooks": {"auto_approve_tools": ["x"], "stop": []}}
+        spec = {"name": "ajcrew", "hooks": {"auto_approve_tools": ["x"], "stop": []}}
         target = kiro_dir / sorted(OWNED_KIRO_AGENT_FILES)[0]
         target.write_bytes(codecs.BOM_UTF8 + json.dumps(spec).encode("utf-8"))
 
         _hooks_sanitized_mtimes.clear()
-        with patch("kiro_crew.agent.KIRO_AGENTS_DIR", kiro_dir):
+        with patch("aj_crew.agent.KIRO_AGENTS_DIR", kiro_dir):
             _sanitize_agent_hooks()
 
         raw = target.read_bytes()
@@ -489,11 +489,11 @@ class TestKiroHooksFiltering:
         assert json.loads(raw)["hooks"] == {"stop": []}
 
     @pytest.mark.parametrize(
-        "filename", ["other-tool.json", "kirocrew-custom.json", "sample-app--worker.json"]
+        "filename", ["other-tool.json", "ajcrew-custom.json", "sample-app--worker.json"]
     )
     def test_sanitize_agent_hooks_does_not_touch_unowned_files(self, tmp_path: Path, filename: str):
         """Foreign, prefix-lookalike, and app materialized specs stay byte-identical."""
-        from kiro_crew.agent import _hooks_sanitized_mtimes, _sanitize_agent_hooks
+        from aj_crew.agent import _hooks_sanitized_mtimes, _sanitize_agent_hooks
 
         kiro_dir = tmp_path / "agents"
         kiro_dir.mkdir()
@@ -511,28 +511,28 @@ class TestKiroHooksFiltering:
         path.write_text(original, encoding="utf-8")
 
         _hooks_sanitized_mtimes.clear()
-        with patch("kiro_crew.agent.KIRO_AGENTS_DIR", kiro_dir):
+        with patch("aj_crew.agent.KIRO_AGENTS_DIR", kiro_dir):
             _sanitize_agent_hooks()
 
         assert path.read_text(encoding="utf-8") == original
 
     def test_sanitize_agent_hooks_skips_clean_file(self, tmp_path: Path):
         """_sanitize_agent_hooks does not rewrite configs that are already clean."""
-        from kiro_crew.agent import _hooks_sanitized_mtimes, _sanitize_agent_hooks
+        from aj_crew.agent import _hooks_sanitized_mtimes, _sanitize_agent_hooks
 
         kiro_dir = tmp_path / "agents"
         kiro_dir.mkdir()
         clean_config = {
-            "name": "kirocrew",
+            "name": "ajcrew",
             "hooks": {
                 "postToolUse": [{"matcher": "execute_bash", "command": "audit.sh"}],
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(clean_config))
-        original_mtime = (kiro_dir / "kirocrew.json").stat().st_mtime
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(clean_config))
+        original_mtime = (kiro_dir / "ajcrew.json").stat().st_mtime
 
         _hooks_sanitized_mtimes.clear()
-        with patch("kiro_crew.agent.KIRO_AGENTS_DIR", kiro_dir):
+        with patch("aj_crew.agent.KIRO_AGENTS_DIR", kiro_dir):
             _sanitize_agent_hooks()
 
-        assert (kiro_dir / "kirocrew.json").stat().st_mtime == original_mtime
+        assert (kiro_dir / "ajcrew.json").stat().st_mtime == original_mtime

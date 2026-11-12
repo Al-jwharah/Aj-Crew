@@ -22,7 +22,7 @@ vi.mock('../api/client')
 // graph.
 vi.mock('../pages/ChatPage', () => ({
   default: () => <div data-testid="chat-page" />,
-  PREFILL_STORAGE_KEY: 'kirocrew_prefill',
+  PREFILL_STORAGE_KEY: 'ajcrew_prefill',
 }))
 
 const mkArtifact = (overrides: Partial<Artifact> = {}): Artifact => ({
@@ -1176,7 +1176,7 @@ describe('ArtifactDetailPage', () => {
       visibility: 'SHARED' as const,
       shared_with: [],
       auto_sync: false,
-      last_synced_kirocrew_version: 1,
+      last_synced_ajcrew_version: 1,
       version_map: {},
       published_at: '2026-07-01T00:00:00Z',
       published_by: 'joe',

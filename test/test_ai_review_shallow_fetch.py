@@ -60,7 +60,7 @@ DIFF_FORMS = (
     ("--no-color",),
     ("--name-only",),
     ("--name-only", "--diff-filter=AM"),
-    ("--numstat", "--", ".", ":(exclude)src/kiro_crew/_vendor"),
+    ("--numstat", "--", ".", ":(exclude)src/aj_crew/_vendor"),
     (
         "-z",
         "-M",
@@ -151,7 +151,7 @@ class _Origin:
 
 def _scenarios(tmp: Path) -> tuple[_Origin, list[dict]]:
     o = _Origin(tmp)
-    o.commit({"README.md": "r\n", "src/a.py": "a = 1\n", "src/kiro_crew/_vendor/v.py": "v\n"})
+    o.commit({"README.md": "r\n", "src/a.py": "a = 1\n", "src/aj_crew/_vendor/v.py": "v\n"})
     fork_point = o.commit({"src/b.py": "b = 1\n", ".github/screenshots/old.png": "png-old\n"})
     out: list[dict] = []
 
@@ -165,7 +165,7 @@ def _scenarios(tmp: Path) -> tuple[_Origin, list[dict]]:
     o.commit({"src/c.py": "c = 1\n"})
     o.commit({"src/b.py": None, "temp-screenshots/shot.png": "png-new\n"})
     o.git("mv", ".github/screenshots/old.png", ".github/screenshots/renamed.png")
-    multi = o.commit({"src/kiro_crew/_vendor/v.py": "v2\n"})
+    multi = o.commit({"src/aj_crew/_vendor/v.py": "v2\n"})
     out.append({"name": "multi-commit", "base": fork_point, "head": multi, "base_tip": fork_point})
 
     # 3. Base moved after branching: main is ahead of the merge-base. base.sha

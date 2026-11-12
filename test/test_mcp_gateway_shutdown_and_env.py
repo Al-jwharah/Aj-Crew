@@ -16,22 +16,22 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.mcp_gateway import gatewayd, launch_approval, manager
-from kiro_crew.mcp_gateway.backend import HEARTBEAT_PING_ID, Backend
-from kiro_crew.mcp_gateway.hashing import (
+from aj_crew.mcp_gateway import gatewayd, launch_approval, manager
+from aj_crew.mcp_gateway.backend import HEARTBEAT_PING_ID, Backend
+from aj_crew.mcp_gateway.hashing import (
     ENV_SCRUB_PREFIXES,
     expand_stub_flags,
     hash_effective_env,
     is_secret_env_key,
     non_secret_env,
 )
-from kiro_crew.mcp_gateway.pool import BackendPool, PoolKey
-from kiro_crew.mcp_gateway.rewriter import (
+from aj_crew.mcp_gateway.pool import BackendPool, PoolKey
+from aj_crew.mcp_gateway.rewriter import (
     env_sidecar_dir,
     env_sidecar_name,
     resolve_overlay_dir,
 )
-from kiro_crew.mcp_gateway.shutdown_budget import (
+from aj_crew.mcp_gateway.shutdown_budget import (
     DRAIN_SECS,
     POOL_SHUTDOWN_SECS,
     TOTAL_SHUTDOWN_BUDGET_SECS,
@@ -301,7 +301,7 @@ class TestDeclaredEnvForwarding:
         ``identity_keys`` is the set the stub hashed with; a set the daemon does not
         share models a lying stub. The file is named for ``(agent, server)`` as the
         rewriter names it."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         sidecar_dir = env_sidecar_dir(resolve_overlay_dir())
         sidecar_dir.mkdir(parents=True, exist_ok=True)
         env_hash = hash_effective_env(
@@ -321,9 +321,9 @@ class TestDeclaredEnvForwarding:
         It is pinned against the real forwarder, not a copy of its filter chain, so
         a filter added only to the forwarder fails here. Only the ON path can drift.
         """
-        from kiro_crew.mcp_gateway import gatewayd
-        from kiro_crew.mcp_gateway.hashing import is_secret_env_key
-        from kiro_crew.mcp_gateway.rewriter import _withheld_env_count
+        from aj_crew.mcp_gateway import gatewayd
+        from aj_crew.mcp_gateway.hashing import is_secret_env_key
+        from aj_crew.mcp_gateway.rewriter import _withheld_env_count
 
         declared = {
             "LOG_LEVEL": "debug",
@@ -373,8 +373,8 @@ class TestDeclaredEnvForwarding:
         learned about ``pool_identity_env`` the count identity below breaks, which
         is the same drift this class already guards for the default set.
         """
-        from kiro_crew.mcp_gateway import gatewayd
-        from kiro_crew.mcp_gateway.rewriter import _withheld_env_count
+        from aj_crew.mcp_gateway import gatewayd
+        from aj_crew.mcp_gateway.rewriter import _withheld_env_count
 
         named = frozenset({"OAUTH_TOKEN"})
         monkeypatch.setattr(gatewayd, "pool_identity_env_keys", lambda: named)
@@ -408,9 +408,9 @@ class TestDeclaredEnvForwarding:
         ``pool_identity_env_keys`` drops such names at the source, so a key can never
         be in the identity yet still refused by the forwarder.
         """
-        from kiro_crew.mcp_gateway.rewriter import pool_identity_env_keys
+        from aj_crew.mcp_gateway.rewriter import pool_identity_env_keys
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "config.json").write_text(
             json.dumps(
                 {"mcp_gateway": {"pool_identity_env": ["AWS_SECRET_KEY", "OAUTH_TOKEN"]}}
@@ -427,7 +427,7 @@ class TestDeclaredEnvForwarding:
         Stubs are untrusted. The daemon recomputes the hash under its own configured
         set, so a stub claiming an extra key fails the coherence gate.
         """
-        from kiro_crew.mcp_gateway import gatewayd
+        from aj_crew.mcp_gateway import gatewayd
 
         # Daemon: nothing opted in. Stub: claims OAUTH_TOKEN is identity.
         monkeypatch.setattr(gatewayd, "pool_identity_env_keys", lambda: frozenset())
@@ -452,7 +452,7 @@ class TestDeclaredEnvForwarding:
         them, letting the gate and the filter apply different sets. Counting the reads
         pins the set as a required parameter of ``_declared_env_pairs``.
         """
-        from kiro_crew.mcp_gateway import gatewayd
+        from aj_crew.mcp_gateway import gatewayd
 
         named = frozenset({"OAUTH_TOKEN"})
         reads = {"n": 0}
@@ -602,13 +602,13 @@ class TestDeclaredEnvForwarding:
         assert gatewayd._declared_non_secret_env(stale) == {}
 
     def test_missing_sidecar_is_not_an_error(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         assert gatewayd._declared_non_secret_env(_pool_key()) == {}
 
     @pytest.mark.parametrize("body", ["{not json", '["a", "b"]'], ids=["malformed", "non-object"])
     def test_unreadable_sidecar_is_ignored(self, tmp_path, monkeypatch, body):
         key = _pool_key()
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         sidecar_dir = env_sidecar_dir(resolve_overlay_dir())
         sidecar_dir.mkdir(parents=True, exist_ok=True)
         (sidecar_dir / env_sidecar_name(_AGENT, key.server_name)).write_text(
@@ -623,7 +623,7 @@ class TestApprovalIdentityCountsDeclarationsNotFiles:
     @staticmethod
     def _write_for(tmp_path, monkeypatch, agent: str, pairs: dict, key: PoolKey) -> PoolKey:
         """Write *agent*'s own sidecar for ``key``'s server, as the rewriter does."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         sidecar_dir = env_sidecar_dir(resolve_overlay_dir())
         sidecar_dir.mkdir(parents=True, exist_ok=True)
         (sidecar_dir / env_sidecar_name(agent, key.server_name)).write_text(
@@ -646,7 +646,7 @@ class TestApprovalIdentityCountsDeclarationsNotFiles:
         pairs = {"TOOL": "on", "OAUTH_TOKEN": "same-token"}
         base = _pool_key(server="builder-mcp")
         key = self._write_for(tmp_path, monkeypatch, "gpu-dev", pairs, base)
-        self._write_for(tmp_path, monkeypatch, "kirocrew", pairs, base)
+        self._write_for(tmp_path, monkeypatch, "ajcrew", pairs, base)
 
         # Premise: two files really are on disk for this one server.
         files = sorted(env_sidecar_dir(resolve_overlay_dir()).glob("*.json"))
@@ -671,7 +671,7 @@ class TestApprovalIdentityCountsDeclarationsNotFiles:
             tmp_path, monkeypatch, "gpu-dev", {"TOOL": "on", "OAUTH_TOKEN": "a"}, base
         )
         self._write_for(
-            tmp_path, monkeypatch, "kirocrew", {"TOOL": "on", "OAUTH_TOKEN": "b"}, base
+            tmp_path, monkeypatch, "ajcrew", {"TOOL": "on", "OAUTH_TOKEN": "b"}, base
         )
         assert gatewayd._approval_env_identity(key) == key.effective_env_hash
 
@@ -682,7 +682,7 @@ class TestApprovalIdentityCountsDeclarationsNotFiles:
             tmp_path, monkeypatch, "gpu-dev", {"A": "1", "OAUTH_TOKEN": "t"}, base
         )
         self._write_for(
-            tmp_path, monkeypatch, "kirocrew", {"OAUTH_TOKEN": "t", "A": "1"}, base
+            tmp_path, monkeypatch, "ajcrew", {"OAUTH_TOKEN": "t", "A": "1"}, base
         )
         assert gatewayd._approval_env_identity(key) == launch_approval.env_fingerprint(
             {"A": "1", "OAUTH_TOKEN": "t"}
@@ -703,7 +703,7 @@ class TestCoherentSidecarScanReadsOnce:
 
         # Patched on the OWNER module, which is where the scan resolves it.
         # Patching only the facade re-export would leave the real loader running.
-        from kiro_crew.mcp_gateway.daemon import launch as launch_mod
+        from aj_crew.mcp_gateway.daemon import launch as launch_mod
 
         real_loader = launch_mod._load_env_sidecar
         calls: list[int] = []
@@ -755,7 +755,7 @@ class TestSidecarNaming:
         name would spawn one agent's private backend with the other agent's credentials.
         """
         assert env_sidecar_name("gpu-dev", "builder-mcp") != env_sidecar_name(
-            "kirocrew", "builder-mcp"
+            "ajcrew", "builder-mcp"
         )
 
     def test_the_env_hash_cannot_stand_in_for_the_agent(self):
@@ -773,7 +773,7 @@ class TestSidecarNaming:
         assert a != b
         # And the name really does separate them.
         assert env_sidecar_name("gpu-dev", "builder-mcp") != env_sidecar_name(
-            "kirocrew", "builder-mcp"
+            "ajcrew", "builder-mcp"
         )
 
     def test_pool_identity_is_unaffected_by_the_agent_in_the_name(self):
@@ -806,28 +806,28 @@ class TestSidecarNaming:
         assert name.endswith(".json")
 
     def test_sidecar_dir_is_a_sibling_of_the_agents_overlay(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         overlay = resolve_overlay_dir()
         assert env_sidecar_dir(overlay) == overlay.parent / "stubs" / "env"
 
 
 def _load_config_from_dict(data: object):
     """Write ``data`` to a temp config file and load it through the real
-    ``KiroCrewConfig.load()`` parse path (mirrors ``config_loader_helpers``)."""
+    ``AjCrewConfig.load()`` parse path (mirrors ``config_loader_helpers``)."""
     import tempfile
     import unittest.mock
     from pathlib import Path
 
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(data, f)
         tmp = Path(f.name)
     try:
         with unittest.mock.patch(
-            "kiro_crew.config.loader.config_path", return_value=tmp
+            "aj_crew.config.loader.config_path", return_value=tmp
         ):
-            return KiroCrewConfig.load()
+            return AjCrewConfig.load()
     finally:
         tmp.unlink(missing_ok=True)
 
@@ -840,7 +840,7 @@ class TestMalformedDeclaredEnv:
 
     @staticmethod
     def _build(tmp_path, env_value):
-        from kiro_crew.mcp_gateway.rewriter import _build_stub_entry, _normalized_env
+        from aj_crew.mcp_gateway.rewriter import _build_stub_entry, _normalized_env
 
         original = {"command": "/bin/true", "args": [], "env": env_value}
         return _build_stub_entry(
@@ -875,7 +875,7 @@ class TestForwardDeclaredEnvFlag:
         Safe because gatewayd re-hashes the sidecar at spawn, so a forwarded key is one
         every co-tenant declared identically.
         """
-        from kiro_crew.config.loader import McpGatewayConfig
+        from aj_crew.config.loader import McpGatewayConfig
 
         assert McpGatewayConfig().forward_declared_env is True
 
@@ -978,7 +978,7 @@ class TestPrivateBackendDeclaredEnv:
         assert gatewayd._declared_env_to_forward(key) == {"REGION": "us-west-2"}
 
     def test_private_backend_approval_binds_secret_prefixed_values(self, tmp_path, monkeypatch):
-        from kiro_crew.mcp_gateway import launch_approval
+        from aj_crew.mcp_gateway import launch_approval
 
         approved = {"AWS_SECRET_ACCESS_KEY": "first", "REGION": "us-west-2"}
         key = _pool_key(server="gh-mcp")
@@ -1001,14 +1001,14 @@ class TestPrivateBackendDeclaredEnv:
         import shlex
         import sys
 
-        from kiro_crew.mcp_gateway import launch_approval
-        from kiro_crew.mcp_gateway.hashing import hash_command
+        from aj_crew.mcp_gateway import launch_approval
+        from aj_crew.mcp_gateway.hashing import hash_command
 
         approved = {"AWS_SESSION_TOKEN": "first", "REGION": "us-west-2"}
         key = _pool_key(server="gh-mcp")
         key = TestDeclaredEnvForwarding._write_sidecar(tmp_path, monkeypatch, approved, key)
         command = sys.executable
-        monkeypatch.setenv("KIROCREW_MCP_TARGET_GH_MCP", shlex.quote(command))
+        monkeypatch.setenv("AJCREW_MCP_TARGET_GH_MCP", shlex.quote(command))
         approvals = launch_approval.LaunchApprovals()
         approvals.approved_pairs["GH_MCP"] = {
             launch_approval.launch_pair(

@@ -10,7 +10,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard.handlers import api_workspaces_create, api_workspaces_update
+from aj_crew.dashboard.handlers import api_workspaces_create, api_workspaces_update
 
 
 def _make_app() -> web.Application:
@@ -24,7 +24,7 @@ def _make_app() -> web.Application:
 
 @pytest.fixture()
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.sel") as m:
+    with patch("aj_crew.dashboard.handlers.sel") as m:
         m.return_value = MagicMock()
         yield m.return_value
 
@@ -32,21 +32,21 @@ def mock_sel():
 @pytest.fixture()
 def cfg_env(tmp_path, monkeypatch):
     """Set up a clean config dir with a default workspace."""
-    cfg_dir = tmp_path / ".kirocrew"
+    cfg_dir = tmp_path / ".ajcrew"
     cfg_dir.mkdir()
     cfg_file = cfg_dir / "config.json"
     cfg_file.write_text(json.dumps({
         "workspaces": {"default": {"dir": "workspace"}}
     }))
     monkeypatch.setattr(
-        "kiro_crew.config.loader.config_path", lambda: cfg_file
+        "aj_crew.config.loader.config_path", lambda: cfg_file
     )
     monkeypatch.setattr(
-        "kiro_crew.config.loader.config_dir", lambda: cfg_dir
+        "aj_crew.config.loader.config_dir", lambda: cfg_dir
     )
     # Also patch the local import in handlers
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.config_dir", lambda: cfg_dir
+        "aj_crew.dashboard.handlers.config_dir", lambda: cfg_dir
     )
     return cfg_dir
 
@@ -199,7 +199,7 @@ class TestCopyFromExtendedLengthPrefix:
         cfg["workspaces"]["src"] = {"dir": "workspace-src"}
         (cfg_env / "config.json").write_text(json.dumps(cfg))
         (cfg_env / "workspace-src").mkdir()
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.files.data_home", lambda: cfg_env)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.files.data_home", lambda: cfg_env)
         return cfg_env
 
     @staticmethod
@@ -221,7 +221,7 @@ class TestCopyFromExtendedLengthPrefix:
         def reached(_path):
             raise _ReachedSensitiveCheck
 
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.files.is_sensitive_path", reached)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.files.is_sensitive_path", reached)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("side", ["dst", "src"])

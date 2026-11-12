@@ -1,4 +1,4 @@
-"""Disconnect when Kiro Crew holds the sign-in (``dashboard.feature_previews.crew_oauth``).
+"""Disconnect when Aj Crew holds the sign-in (``dashboard.feature_previews.crew_oauth``).
 
 Reuses the handler harness of ``test_connections_disconnect.py``: every side
 effect but the decision under test is neutralized there.
@@ -22,7 +22,7 @@ async def test_a_failed_crew_held_cleanup_is_a_coded_failure_not_a_disconnect(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A Crew-held sign-in that could not be removed must not read as disconnected."""
-    from kiro_crew.connections import crew_oauth
+    from aj_crew.connections import crew_oauth
 
     purged: list[str] = []
     audits: list[dict] = []
@@ -38,7 +38,7 @@ async def test_a_failed_crew_held_cleanup_is_a_coded_failure_not_a_disconnect(
     async def _vault_broken(_slug: str) -> dict:
         raise OSError("vault unreadable")
 
-    from kiro_crew.connections import crew_oauth_proxy
+    from aj_crew.connections import crew_oauth_proxy
 
     dropped: list[str] = []
     monkeypatch.setattr(crew_oauth, "manages", lambda _slug: True)
@@ -65,7 +65,7 @@ async def test_disconnect_always_revokes_the_crew_grant(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Disconnect = Crew grant revoked, even when another entry keeps the native grant."""
-    from kiro_crew.connections import crew_oauth, crew_oauth_proxy
+    from aj_crew.connections import crew_oauth, crew_oauth_proxy
 
     _wire(
         monkeypatch,
@@ -116,8 +116,8 @@ async def test_a_flag_off_disconnect_answers_as_on_main(
     monkeypatch: pytest.MonkeyPatch, tmp_path, vault: str
 ) -> None:
     """Flag off: an empty or unreadable vault is no Crew pair, so Disconnect is main's 200."""
-    from kiro_crew.connections import crew_oauth
-    from kiro_crew.secrets import SecretVault
+    from aj_crew.connections import crew_oauth
+    from aj_crew.secrets import SecretVault
 
     _wire(
         monkeypatch,
@@ -157,7 +157,7 @@ async def test_a_leftover_crew_pair_does_not_hide_a_kept_native_grant(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Flag now off: the old Crew pair goes, and the native sharing answer still shows."""
-    from kiro_crew.connections import crew_oauth
+    from aj_crew.connections import crew_oauth
 
     _wire(
         monkeypatch,
@@ -196,8 +196,8 @@ async def test_connect_uses_crews_sign_in_only_where_routing_does(
     from aiohttp.test_utils import TestClient, TestServer
     from dashboard_owner_helpers import as_owner
 
-    from kiro_crew.connections import crew_oauth, warm
-    from kiro_crew.dashboard.handlers import connections
+    from aj_crew.connections import crew_oauth, warm
+    from aj_crew.dashboard.handlers import connections
 
     started: list[str] = []
 
@@ -240,7 +240,7 @@ async def test_the_kept_grant_line_names_kiro_clis_pair_only_when_it_exists(
         inventory=[_entry(_SLUG, _provider_url()), _entry("notion-work", _provider_url())],
         purged=[],
     )
-    caplog.set_level("INFO", logger="kiro_crew.connections.ownership")
+    caplog.set_level("INFO", logger="aj_crew.connections.ownership")
 
     await _disconnect()
 

@@ -12,8 +12,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.handlers.knowledge import list_items
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.dashboard.handlers.knowledge import list_items
+from aj_crew.knowledge.store import KnowledgeStore
 
 
 @pytest.fixture()
@@ -38,9 +38,9 @@ async def _call(store, query: dict, retriever=None):
     req.query = query
     req.app = {}
     with (
-        patch("kiro_crew.dashboard.handlers.knowledge._store", return_value=store),
+        patch("aj_crew.dashboard.handlers.knowledge._store", return_value=store),
         patch(
-            "kiro_crew.dashboard.handlers.knowledge.HybridRetriever",
+            "aj_crew.dashboard.handlers.knowledge.HybridRetriever",
             return_value=retriever,
         ),
     ):

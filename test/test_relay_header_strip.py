@@ -22,11 +22,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME
-from kiro_crew.apps.routes import register_app_routes
-from kiro_crew.dashboard import handlers
-from kiro_crew.dashboard import server as srv
-from kiro_crew.dashboard.relay_headers import (
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME
+from aj_crew.apps.routes import register_app_routes
+from aj_crew.dashboard import handlers
+from aj_crew.dashboard import server as srv
+from aj_crew.dashboard.relay_headers import (
     RELAY_HEADER_PREFIX,
     is_relay_header,
     relay_header_strip_middleware,
@@ -80,7 +80,7 @@ def _forged_headers() -> list[tuple[str, str]]:
         ("X-Kiro-Relay-User", True),
         ("X-KIRO-RELAY-FOO", True),
         ("x-kiro-relay", False),
-        ("x-kirocrew-principal", False),
+        ("x-ajcrew-principal", False),
         ("x-relay-user", False),
     ],
 )
@@ -102,7 +102,7 @@ def test_every_relay_header_is_dropped_and_every_other_header_kept_in_order() ->
 
 
 def test_a_request_without_a_relay_header_is_handed_on_unchanged() -> None:
-    request = make_mocked_request("GET", "/x", headers={"X-Kiro-Crew": "1"})
+    request = make_mocked_request("GET", "/x", headers={"X-Aj-Crew": "1"})
     assert strip_client_relay_headers(request) is request
 
 
@@ -222,10 +222,10 @@ class TestAppProxyNeverForwardsARelayHeader:
 
     @pytest.fixture(autouse=True)
     def _proxy_env(self, tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch) -> None:
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         app_dir = home / "apps" / "proxy-app"
         app_dir.mkdir(parents=True)
-        _floor_monkeypatch.setenv("KIROCREW_HOME", str(home))
+        _floor_monkeypatch.setenv("AJCREW_HOME", str(home))
         (app_dir / ".app_secret").write_text(self._SECRET)
         (app_dir / "installed.json").write_text(
             json.dumps(
@@ -252,9 +252,9 @@ class TestAppProxyNeverForwardsARelayHeader:
                 }
             )
         )
-        import kiro_crew.apps.backend as bmod
-        import kiro_crew.apps.bridges as bridges_mod
-        from kiro_crew.apps.routes import _app_secret_cache
+        import aj_crew.apps.backend as bmod
+        import aj_crew.apps.bridges as bridges_mod
+        from aj_crew.apps.routes import _app_secret_cache
 
         kiro_agents = tmp_path / "kiro-agents"
         kiro_agents.mkdir()
@@ -267,7 +267,7 @@ class TestAppProxyNeverForwardsARelayHeader:
     async def test_a_relay_header_in_any_case_never_reaches_the_backend(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.apps.routes as routes
+        import aj_crew.apps.routes as routes
 
         received: list[tuple[str, str]] = []
 

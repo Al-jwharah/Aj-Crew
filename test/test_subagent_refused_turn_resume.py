@@ -14,17 +14,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import deny_notice, subagent
-from kiro_crew.agent_sdk.spec_hooks import TurnSpecHooks
-from kiro_crew.execution_context import execution_for_store
-from kiro_crew.hooks import TOOL_ALLOW, TOOL_DENY, ToolHookResult
-from kiro_crew.providers.base import (
+from aj_crew import deny_notice, subagent
+from aj_crew.agent_sdk.spec_hooks import TurnSpecHooks
+from aj_crew.execution_context import execution_for_store
+from aj_crew.hooks import TOOL_ALLOW, TOOL_DENY, ToolHookResult
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
     LLMEvent,
 )
-from kiro_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent import SubagentInfo, SubagentManager
 
 pytestmark = pytest.mark.usefixtures("close_subagent_managers")
 
@@ -128,7 +128,7 @@ async def _run(provider: _Provider, hook: ToolHookResult) -> SubagentInfo:
             AsyncMock(return_value=TurnSpecHooks([], None, False, False)),
         ),
         patch(
-            "kiro_crew.subagent_manager.run.permission_pre_tool_block",
+            "aj_crew.subagent_manager.run.permission_pre_tool_block",
             AsyncMock(return_value=None),
         ),
         patch.object(manager, "_write_tombstone") as tombstone,
@@ -176,7 +176,7 @@ async def test_a_cancelled_turn_without_a_host_refusal_is_not_resumed():
 async def test_a_persons_no_after_a_host_refusal_is_not_resumed():
     # The host refuses one call, then a person rejects the next one in the same
     # turn. The person's answer stands: the cancelled ending is not resumed.
-    from kiro_crew import tool_permission
+    from aj_crew import tool_permission
 
     answers = [
         tool_permission.Settled("refused", "hook_deny", "host", "policy", _REASON),

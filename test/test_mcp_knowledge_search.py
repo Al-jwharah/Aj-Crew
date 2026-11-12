@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.validation import ValidationError
+from aj_crew.validation import ValidationError
 
 
 @pytest.fixture
@@ -19,10 +19,10 @@ def mock_db_exists(tmp_path):
 
 
 class TestKnowledgeSearchDBMissing:
-    @patch("kiro_crew.mcp_core.config_dir")
+    @patch("aj_crew.mcp_core.config_dir")
     def test_returns_not_configured_when_db_missing(self, mock_config_dir, tmp_path):
         mock_config_dir.return_value = tmp_path  # no knowledge.db here
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         result = _call_tool_inner("local_knowledge_search", {"query": "auth"})
         assert "not configured" in result
@@ -31,38 +31,38 @@ class TestKnowledgeSearchDBMissing:
 class TestKnowledgeSearchValidation:
     @pytest.mark.parametrize("query", ["", "   "], ids=["empty", "whitespace"])
     def test_blank_query_raises_validation_error(self, query):
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         with pytest.raises(ValidationError):
             _call_tool_inner("local_knowledge_search", {"query": query})
 
     def test_limit_over_max_raises_validation_error(self):
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         with pytest.raises(ValidationError):
             _call_tool_inner("local_knowledge_search", {"query": "test", "limit": 99})
 
 
 class TestKnowledgeSearchResults:
-    @patch("kiro_crew.mcp_core.config_dir")
-    @patch("kiro_crew.mcp_core.HybridRetriever")
-    @patch("kiro_crew.mcp_core.KnowledgeStore")
-    @patch("kiro_crew.mcp_core.create_embedder_from_config")
+    @patch("aj_crew.mcp_core.config_dir")
+    @patch("aj_crew.mcp_core.HybridRetriever")
+    @patch("aj_crew.mcp_core.KnowledgeStore")
+    @patch("aj_crew.mcp_core.create_embedder_from_config")
     def test_no_results_returns_message(
         self, mock_embedder, mock_store_cls, mock_retriever_cls, mock_config_dir, mock_db_exists
     ):
         mock_config_dir.return_value = mock_db_exists
         mock_embedder.return_value = None
         mock_retriever_cls.return_value.search.return_value = []
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         result = _call_tool_inner("local_knowledge_search", {"query": "nonexistent"})
         assert "No relevant knowledge found" in result
 
-    @patch("kiro_crew.mcp_core.config_dir")
-    @patch("kiro_crew.mcp_core.HybridRetriever")
-    @patch("kiro_crew.mcp_core.KnowledgeStore")
-    @patch("kiro_crew.mcp_core.create_embedder_from_config")
+    @patch("aj_crew.mcp_core.config_dir")
+    @patch("aj_crew.mcp_core.HybridRetriever")
+    @patch("aj_crew.mcp_core.KnowledgeStore")
+    @patch("aj_crew.mcp_core.create_embedder_from_config")
     def test_low_score_filtered_out(
         self, mock_embedder, mock_store_cls, mock_retriever_cls, mock_config_dir, mock_db_exists
     ):
@@ -71,15 +71,15 @@ class TestKnowledgeSearchResults:
         mock_retriever_cls.return_value.search.return_value = [
             {"title": "Weak Match", "content": "low relevance", "score": 0.005, "source": "s1"}
         ]
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         result = _call_tool_inner("local_knowledge_search", {"query": "test"})
         assert "No relevant knowledge found" in result
 
-    @patch("kiro_crew.mcp_core.config_dir")
-    @patch("kiro_crew.mcp_core.HybridRetriever")
-    @patch("kiro_crew.mcp_core.KnowledgeStore")
-    @patch("kiro_crew.mcp_core.create_embedder_from_config")
+    @patch("aj_crew.mcp_core.config_dir")
+    @patch("aj_crew.mcp_core.HybridRetriever")
+    @patch("aj_crew.mcp_core.KnowledgeStore")
+    @patch("aj_crew.mcp_core.create_embedder_from_config")
     def test_formatted_output(
         self, mock_embedder, mock_store_cls, mock_retriever_cls, mock_config_dir, mock_db_exists
     ):
@@ -97,7 +97,7 @@ class TestKnowledgeSearchResults:
             }
         ]
 
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         result = _call_tool_inner("local_knowledge_search", {"query": "auth"})
 
@@ -109,10 +109,10 @@ class TestKnowledgeSearchResults:
         # No score or relevance metadata exposed
         assert "0.035" not in result
 
-    @patch("kiro_crew.mcp_core.config_dir")
-    @patch("kiro_crew.mcp_core.HybridRetriever")
-    @patch("kiro_crew.mcp_core.KnowledgeStore")
-    @patch("kiro_crew.mcp_core.create_embedder_from_config")
+    @patch("aj_crew.mcp_core.config_dir")
+    @patch("aj_crew.mcp_core.HybridRetriever")
+    @patch("aj_crew.mcp_core.KnowledgeStore")
+    @patch("aj_crew.mcp_core.create_embedder_from_config")
     def test_default_limit_is_3(
         self, mock_embedder, mock_store_cls, mock_retriever_cls, mock_config_dir, mock_db_exists
     ):
@@ -120,7 +120,7 @@ class TestKnowledgeSearchResults:
         mock_embedder.return_value = None
         mock_retriever_cls.return_value.search.return_value = []
 
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         result = _call_tool_inner("local_knowledge_search", {"query": "test"})
         mock_retriever_cls.return_value.search.assert_called_once_with(
@@ -128,10 +128,10 @@ class TestKnowledgeSearchResults:
         )
         assert "No relevant knowledge found" in result
 
-    @patch("kiro_crew.mcp_core.config_dir")
-    @patch("kiro_crew.mcp_core.HybridRetriever")
-    @patch("kiro_crew.mcp_core.KnowledgeStore")
-    @patch("kiro_crew.mcp_core.create_embedder_from_config")
+    @patch("aj_crew.mcp_core.config_dir")
+    @patch("aj_crew.mcp_core.HybridRetriever")
+    @patch("aj_crew.mcp_core.KnowledgeStore")
+    @patch("aj_crew.mcp_core.create_embedder_from_config")
     def test_citation_with_section_and_uri(
         self, mock_embedder, mock_store_cls, mock_retriever_cls, mock_config_dir, mock_db_exists
     ):
@@ -154,7 +154,7 @@ class TestKnowledgeSearchResults:
             }
         ]
 
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         result = _call_tool_inner("local_knowledge_search", {"query": "auth"})
 
@@ -165,10 +165,10 @@ class TestKnowledgeSearchResults:
         # A specific file path supersedes the folder-root uri Link.
         assert "**Link:**" not in result
 
-    @patch("kiro_crew.mcp_core.config_dir")
-    @patch("kiro_crew.mcp_core.HybridRetriever")
-    @patch("kiro_crew.mcp_core.KnowledgeStore")
-    @patch("kiro_crew.mcp_core.create_embedder_from_config")
+    @patch("aj_crew.mcp_core.config_dir")
+    @patch("aj_crew.mcp_core.HybridRetriever")
+    @patch("aj_crew.mcp_core.KnowledgeStore")
+    @patch("aj_crew.mcp_core.create_embedder_from_config")
     def test_artifact_citation_uses_slug(
         self, mock_embedder, mock_store_cls, mock_retriever_cls, mock_config_dir, mock_db_exists
     ):
@@ -190,7 +190,7 @@ class TestKnowledgeSearchResults:
             }
         ]
 
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         result = _call_tool_inner("local_knowledge_search", {"query": "vision"})
 
@@ -202,10 +202,10 @@ class TestKnowledgeSearchResults:
         assert "Artifacts \u2014" not in result
         assert "artifact://aggregate" not in result
 
-    @patch("kiro_crew.mcp_core.config_dir")
-    @patch("kiro_crew.mcp_core.HybridRetriever")
-    @patch("kiro_crew.mcp_core.KnowledgeStore")
-    @patch("kiro_crew.mcp_core.create_embedder_from_config")
+    @patch("aj_crew.mcp_core.config_dir")
+    @patch("aj_crew.mcp_core.HybridRetriever")
+    @patch("aj_crew.mcp_core.KnowledgeStore")
+    @patch("aj_crew.mcp_core.create_embedder_from_config")
     def test_internal_uri_survives_redaction(
         self, mock_embedder, mock_store_cls, mock_retriever_cls, mock_config_dir, mock_db_exists
     ):
@@ -225,7 +225,7 @@ class TestKnowledgeSearchResults:
             }
         ]
 
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         result = _call_tool_inner("local_knowledge_search", {"query": "vision"})
 
@@ -236,12 +236,12 @@ class TestKnowledgeSearchResults:
 class TestKnowledgeSearchToolDefinition:
     @pytest.mark.parametrize("name", ["local_knowledge_search", "knowledge_list_sources"])
     def test_tool_listed(self, name):
-        from kiro_crew.mcp_core import _list_tools
+        from aj_crew.mcp_core import _list_tools
 
         assert name in [t["name"] for t in _list_tools()]
 
     def test_tool_has_required_query(self):
-        from kiro_crew.mcp_core import _list_tools
+        from aj_crew.mcp_core import _list_tools
 
         tools = _list_tools()
         tool = next(t for t in tools if t["name"] == "local_knowledge_search")
@@ -249,7 +249,7 @@ class TestKnowledgeSearchToolDefinition:
 
     @pytest.mark.parametrize("field", ["source_id", "namespace"])
     def test_filter_field_is_optional(self, field):
-        from kiro_crew.mcp_core import _list_tools
+        from aj_crew.mcp_core import _list_tools
 
         tools = _list_tools()
         tool = next(t for t in tools if t["name"] == "local_knowledge_search")
@@ -260,7 +260,7 @@ class TestKnowledgeSearchToolDefinition:
 class TestKnowledgeSearchSourceFilter:
     @pytest.mark.parametrize("field", ["source_id", "namespace"])
     def test_filter_rejects_non_string(self, field):
-        from kiro_crew.mcp_core import _validate_args
+        from aj_crew.mcp_core import _validate_args
 
         # At the MCP entry point: a genuinely wrong type (list) on a string
         # field is still rejected, while a number is defensively converted to
@@ -272,7 +272,7 @@ class TestKnowledgeSearchSourceFilter:
 
     @pytest.mark.parametrize("field", ["source_id", "namespace"])
     def test_filter_rejects_overlong_value(self, field):
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         with pytest.raises(ValidationError):
             _call_tool_inner("local_knowledge_search", {"query": "q", field: "x" * 65})
@@ -287,9 +287,9 @@ class TestKnowledgeSearchSourceFilter:
         ],
         ids=["source_id", "namespace"],
     )
-    @patch("kiro_crew.mcp_core.config_dir")
-    @patch("kiro_crew.mcp_core.HybridRetriever")
-    @patch("kiro_crew.mcp_core._get_knowledge_search")
+    @patch("aj_crew.mcp_core.config_dir")
+    @patch("aj_crew.mcp_core.HybridRetriever")
+    @patch("aj_crew.mcp_core._get_knowledge_search")
     def test_filter_passed_through_to_retriever(
         self, mock_get_search, mock_retriever_cls, mock_config_dir, mock_db_exists, extra, expected
     ):
@@ -299,14 +299,14 @@ class TestKnowledgeSearchSourceFilter:
         mock_get_search.return_value = (mock_store, None)
         mock_retriever_cls.return_value.search.return_value = []
 
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         result = _call_tool_inner("local_knowledge_search", {"query": "auth", **extra})
         mock_retriever_cls.return_value.search.assert_called_once_with("auth", limit=3, **expected)
         assert "No relevant knowledge found" in result
 
-    @patch("kiro_crew.mcp_core.config_dir")
-    @patch("kiro_crew.mcp_core._get_knowledge_search")
+    @patch("aj_crew.mcp_core.config_dir")
+    @patch("aj_crew.mcp_core._get_knowledge_search")
     def test_unknown_source_id_names_discovery_tool(
         self, mock_get_search, mock_config_dir, mock_db_exists
     ):
@@ -317,7 +317,7 @@ class TestKnowledgeSearchSourceFilter:
         mock_store.db.execute.return_value.fetchone.return_value = None
         mock_get_search.return_value = (mock_store, None)
 
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         result = _call_tool_inner(
             "local_knowledge_search", {"query": "auth", "source_id": "no-such-id"}
@@ -325,9 +325,9 @@ class TestKnowledgeSearchSourceFilter:
         assert "knowledge_list_sources" in result
         assert "no-such-id" in result
 
-    @patch("kiro_crew.mcp_core.sel")
-    @patch("kiro_crew.mcp_core.config_dir")
-    @patch("kiro_crew.mcp_core._get_knowledge_search")
+    @patch("aj_crew.mcp_core.sel")
+    @patch("aj_crew.mcp_core.config_dir")
+    @patch("aj_crew.mcp_core._get_knowledge_search")
     def test_unknown_source_audit_redacts_query(
         self, mock_get_search, mock_config_dir, mock_sel, mock_db_exists
     ):
@@ -338,7 +338,7 @@ class TestKnowledgeSearchSourceFilter:
         mock_store.db.execute.return_value.fetchone.return_value = None
         mock_get_search.return_value = (mock_store, None)
 
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         _call_tool_inner(
             "local_knowledge_search",
@@ -371,9 +371,9 @@ class TestKnowledgeSearchRemoteLegScope:
     }
 
     def _search(self, tmp_path, monkeypatch, opened, args):
-        from kiro_crew import mcp_core
-        from kiro_crew.knowledge.store import KnowledgeStore
-        from kiro_crew.mcp_tools import knowledge as mcp_knowledge
+        from aj_crew import mcp_core
+        from aj_crew.knowledge.store import KnowledgeStore
+        from aj_crew.mcp_tools import knowledge as mcp_knowledge
 
         db_dir = tmp_path / "workspace" / "knowledge"
         db_dir.mkdir(parents=True)
@@ -415,17 +415,17 @@ class TestKnowledgeSearchRemoteLegScope:
 
 
 class TestKnowledgeListSources:
-    @patch("kiro_crew.mcp_core.config_dir")
+    @patch("aj_crew.mcp_core.config_dir")
     def test_returns_not_configured_when_db_missing(self, mock_config_dir, tmp_path):
         mock_config_dir.return_value = tmp_path  # no knowledge.db here
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         result = _call_tool_inner("knowledge_list_sources", {})
         assert "not configured" in result
 
-    @patch("kiro_crew.mcp_core.config_dir")
+    @patch("aj_crew.mcp_core.config_dir")
     def test_lists_sources_with_active_item_counts(self, mock_config_dir, tmp_path):
-        from kiro_crew.knowledge.store import KnowledgeStore
+        from aj_crew.knowledge.store import KnowledgeStore
 
         db_dir = tmp_path / "workspace" / "knowledge"
         db_dir.mkdir(parents=True)
@@ -445,28 +445,28 @@ class TestKnowledgeListSources:
         store.close()
         mock_config_dir.return_value = tmp_path
 
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         result = _call_tool_inner("knowledge_list_sources", {})
         assert f"Design Docs — id: {src_a} (2 item(s))" in result
         assert f"Runbooks — id: {src_b} (1 item(s))" in result
 
-    @patch("kiro_crew.mcp_core.config_dir")
+    @patch("aj_crew.mcp_core.config_dir")
     def test_empty_library_reports_no_sources(self, mock_config_dir, tmp_path):
-        from kiro_crew.knowledge.store import KnowledgeStore
+        from aj_crew.knowledge.store import KnowledgeStore
 
         db_dir = tmp_path / "workspace" / "knowledge"
         db_dir.mkdir(parents=True)
         KnowledgeStore(str(db_dir / "knowledge.db")).close()
         mock_config_dir.return_value = tmp_path
 
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         result = _call_tool_inner("knowledge_list_sources", {})
         assert "no sources yet" in result
 
     def test_rejects_unknown_fields(self):
-        from kiro_crew.mcp_core import _call_tool_inner
+        from aj_crew.mcp_core import _call_tool_inner
 
         with pytest.raises(ValidationError):
             _call_tool_inner("knowledge_list_sources", {"filter": "x"})
@@ -491,7 +491,7 @@ class TestKnowledgeListSourcesCountQuery:
     def _seed(path, seed: int):
         import random
 
-        from kiro_crew.knowledge.store import KnowledgeStore
+        from aj_crew.knowledge.store import KnowledgeStore
 
         rng = random.Random(seed)
         store = KnowledgeStore(str(path))
@@ -513,8 +513,8 @@ class TestKnowledgeListSourcesCountQuery:
         return store
 
     def test_item_owned_and_located_in_same_source_counts_once(self, tmp_path):
-        from kiro_crew.knowledge.store import KnowledgeStore
-        from kiro_crew.mcp_tools.knowledge import _SOURCE_COUNTS_SQL
+        from aj_crew.knowledge.store import KnowledgeStore
+        from aj_crew.mcp_tools.knowledge import _SOURCE_COUNTS_SQL
 
         store = KnowledgeStore(str(tmp_path / "k.db"))
         try:
@@ -528,7 +528,7 @@ class TestKnowledgeListSourcesCountQuery:
 
     @pytest.mark.parametrize("seed", range(12))
     def test_matches_correlated_query_on_random_libraries(self, tmp_path, seed):
-        from kiro_crew.mcp_tools.knowledge import _SOURCE_COUNTS_SQL
+        from aj_crew.mcp_tools.knowledge import _SOURCE_COUNTS_SQL
 
         store = self._seed(tmp_path / "k.db", seed)
         try:
@@ -539,7 +539,7 @@ class TestKnowledgeListSourcesCountQuery:
         assert new == old
 
     def test_query_plan_has_no_correlated_subquery(self, tmp_path):
-        from kiro_crew.mcp_tools.knowledge import _SOURCE_COUNTS_SQL
+        from aj_crew.mcp_tools.knowledge import _SOURCE_COUNTS_SQL
 
         store = self._seed(tmp_path / "k.db", 0)
         try:

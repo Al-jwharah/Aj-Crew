@@ -33,15 +33,15 @@ from prompts_helpers import (
     _write_request,
 )
 
-from conftest import requires_symlinks
-from kiro_crew.dashboard.chat import _expand_prompt_mention
-from kiro_crew.dashboard.handlers import (
+from aj_crew.dashboard.chat import _expand_prompt_mention
+from aj_crew.dashboard.handlers import (
     _list_aim_prompts,
     api_prompt_detail,
     api_prompts,
     api_prompts_create,
 )
-from kiro_crew.dashboard.handlers import prompts as _prompts_mod
+from aj_crew.dashboard.handlers import prompts as _prompts_mod
+from conftest import requires_symlinks
 
 
 class TestEveryPromptReaderUsesTheNoLinkGate:
@@ -74,7 +74,7 @@ class TestEveryPromptReaderUsesTheNoLinkGate:
         routed through ``_extract_sop_description`` this raises, and if it silently
         stopped reading at all the description would be empty.
         """
-        import kiro_crew.dashboard.handlers as h
+        import aj_crew.dashboard.handlers as h
 
         proj = tmp_path / "checkout"
         d = proj / ".kiro" / "prompts"
@@ -1316,7 +1316,7 @@ class TestARootSwappedAfterValidationPublishesNothing:
 
     @staticmethod
     def _swap_root_after_the_pin(monkeypatch, prompts_dir: Path, outside: Path) -> None:
-        import kiro_crew.dashboard.handlers as h
+        import aj_crew.dashboard.handlers as h
 
         real = _prompts_mod._local_prompt_scan_root
 
@@ -1400,7 +1400,7 @@ class TestARootSwappedAfterValidationPublishesNothing:
         # Same stem as the outside file, so the swap alone decides which one is
         # read: the entry is legitimate and its own bytes are innocuous.
         (d / "creds.md").write_text("# Mine\nMINE\n", encoding="utf-8")
-        from kiro_crew.dashboard import chat_runner as _cr
+        from aj_crew.dashboard import chat_runner as _cr
 
         self._swap_root_before_the_read(monkeypatch, _cr, d, outside)
 
@@ -1413,7 +1413,7 @@ class TestARootSwappedAfterValidationPublishesNothing:
     def test_the_unscoped_read_is_not_redirected_by_a_root_swapped_after_the_mint(
         self, tmp_path, monkeypatch, mock_sel
     ):
-        from kiro_crew import hooks as _hooks
+        from aj_crew import hooks as _hooks
 
         proj, d, outside = self._plant(tmp_path)
         (d / "creds.md").write_text("# Mine\nMINE\n", encoding="utf-8")

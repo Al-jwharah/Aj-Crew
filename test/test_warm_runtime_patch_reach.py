@@ -1,6 +1,6 @@
 """Warm-mint patch reach: a name the tests substitute on the facade reaches every owner reading it.
 
-``kiro_crew.connections.warm`` is the warm engine's patch surface, and its ``warm_runtime``
+``aj_crew.connections.warm`` is the warm engine's patch surface, and its ``warm_runtime``
 owners read every name the facade defines, and every name a test substitutes on it, through
 ``_warm_facade()`` at call time. A bare read of such a name in an owner binds the owner's own
 copy, so a patch of ``warm.<name>`` stops reaching that read while every behavioural test that
@@ -29,8 +29,8 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew.connections import warm, warm_runtime
-from kiro_crew.connections.mint import _mints
+from aj_crew.connections import warm, warm_runtime
+from aj_crew.connections.mint import _mints
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_warm_runtime_patch_reach")
 
@@ -38,7 +38,7 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_warm_runtime_patch_reach")
 _clean_mint_table = connections_warm_helpers._clean_mint_table
 _clean_warm_runtime = connections_warm_helpers._clean_warm_runtime
 
-FACADE = "kiro_crew.connections.warm"
+FACADE = "aj_crew.connections.warm"
 _THIS_FILE = Path(__file__).resolve()
 _CONTRACT = _THIS_FILE.with_name("test_connections_warm_mint_composition_contract.py")
 
@@ -408,7 +408,7 @@ def test_the_bare_read_check_catches_each_shape_it_guards() -> None:
     # No ``from __future__ import annotations`` here, so annotations are evaluated and count.
     planted = "\n".join(
         [
-            "from kiro_crew.config.loader import data_home",  # 1
+            "from aj_crew.config.loader import data_home",  # 1
             "async def handed_off():",
             "    await to_thread(_log_warm_event, 'x')",  # 3
             "def caught():",
@@ -419,7 +419,7 @@ def test_the_bare_read_check_catches_each_shape_it_guards() -> None:
             "def tuned(limit=_LIMIT):",  # 9
             "    return limit",
             "def imported_here():",
-            "    from kiro_crew.config.loader import data_home",  # 12
+            "    from aj_crew.config.loader import data_home",  # 12
             "    return data_home()",
             "def outer():",
             "    def inner(data_home):",
@@ -484,7 +484,7 @@ def test_the_bare_read_check_leaves_a_function_its_own_names() -> None:
             "from __future__ import annotations",
             "from typing import TYPE_CHECKING",
             "if TYPE_CHECKING:",
-            "    from kiro_crew.connections.warm import _WarmMintRuntime",
+            "    from aj_crew.connections.warm import _WarmMintRuntime",
             "def own(data_home):",
             "    return data_home()",
             "def typed(runtime: _WarmMintRuntime) -> _WarmMintRuntime:",
@@ -509,8 +509,8 @@ def test_a_facade_patch_reaches_a_name_the_facade_only_imports(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """Executed, not only parsed: a substitution on the facade is what the moved code runs."""
-    generation_tree = importlib.import_module("kiro_crew.connections.warm_runtime.generation_tree")
-    spec_body = importlib.import_module("kiro_crew.connections.warm_runtime.spec_body")
+    generation_tree = importlib.import_module("aj_crew.connections.warm_runtime.generation_tree")
+    spec_body = importlib.import_module("aj_crew.connections.warm_runtime.spec_body")
 
     monkeypatch.setattr(warm, "data_home", lambda: tmp_path)
     assert generation_tree._warm_work_dir() == tmp_path / "run" / "connections-warm"
@@ -532,7 +532,7 @@ async def test_a_facade_patch_reaches_a_thread_handoff_a_watcher_and_a_verdict(
 ) -> None:
     """Three late reads in one adoption: the liveness verdict the row is judged by, the grant
     watcher scheduled as a task, and the audit event handed to ``asyncio.to_thread``."""
-    table_flow = importlib.import_module("kiro_crew.connections.warm_runtime.table_flow")
+    table_flow = importlib.import_module("aj_crew.connections.warm_runtime.table_flow")
     watched: list[tuple[str, str, str]] = []
     logged: list[tuple[Any, ...]] = []
 
@@ -565,8 +565,8 @@ async def test_a_facade_patch_reaches_a_tunable_and_the_runtime_singleton(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A constant read late (the kill timeout) and the singleton read late (the re-drain)."""
-    mint_process = importlib.import_module("kiro_crew.connections.warm_runtime.mint_process")
-    table_flow = importlib.import_module("kiro_crew.connections.warm_runtime.table_flow")
+    mint_process = importlib.import_module("aj_crew.connections.warm_runtime.mint_process")
+    table_flow = importlib.import_module("aj_crew.connections.warm_runtime.table_flow")
 
     class _Unkillable:
         async def kill(self, **kwargs: Any) -> None:
@@ -592,7 +592,7 @@ async def test_a_facade_patch_reaches_a_tunable_and_the_runtime_singleton(
 async def test_a_facade_patch_reaches_a_coroutine_scheduled_as_a_task(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    rearms = importlib.import_module("kiro_crew.connections.warm_runtime.rearms")
+    rearms = importlib.import_module("aj_crew.connections.warm_runtime.rearms")
     started: list[str] = []
 
     async def _rearm(slug: str) -> list[str]:

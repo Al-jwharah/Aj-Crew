@@ -1,12 +1,12 @@
 """The Slack gateway stays one namespace while its owners live in ``gateway_runtime``.
 
-``kiro_crew.slack.gateway`` keeps its import path and its patch surface; the modules of
-``kiro_crew.slack.gateway_runtime`` hold the rest, one responsibility each, and
+``aj_crew.slack.gateway`` keeps its import path and its patch surface; the modules of
+``aj_crew.slack.gateway_runtime`` hold the rest, one responsibility each, and
 ``_facade_compose.compose`` runs every function they define on the facade's
 globals. These tests pin what that composition promises:
 
 * each owner function runs on the facade's globals, and every global it reads
-  resolves there, so a patch of ``kiro_crew.slack.gateway.<name>`` reaches it;
+  resolves there, so a patch of ``aj_crew.slack.gateway.<name>`` reaches it;
 * each moved name keeps the kind and signature it had in the one-module file,
   and is ONE object whichever module a caller reads it from;
 * a function's ``__module__`` / ``__qualname__`` still name the facade and the
@@ -34,10 +34,10 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.slack.gateway as gateway
-from kiro_crew._facade_compose import compose as facade_compose
-from kiro_crew.slack import gateway_runtime
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew.slack.gateway as gateway
+from aj_crew._facade_compose import compose as facade_compose
+from aj_crew.slack import gateway_runtime
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 _FACADE = gateway.__name__
 _SRC = Path(gateway.__file__).resolve().parents[2]
@@ -98,7 +98,7 @@ _BASE_SURFACE: dict[str, tuple[tuple[str, str, str], ...]] = {
         (
             "_start_adaptive_controller",
             "method",
-            "(self, cfg: 'KiroCrewConfig | None' = None) -> 'None'",
+            "(self, cfg: 'AjCrewConfig | None' = None) -> 'None'",
         ),
         ("_wire_overload_health", "method", "(self, controller: 'AdaptiveController') -> 'None'"),
         ("_subagent_dependency_coordinator", "method", "(self) -> 'Any'"),
@@ -133,7 +133,7 @@ _BASE_SURFACE: dict[str, tuple[tuple[str, str, str], ...]] = {
         (
             "restart_channel",
             "async method",
-            "(self, channel_type: 'str', *, cfg: 'KiroCrewConfig | None' = None) -> 'object | None'",
+            "(self, channel_type: 'str', *, cfg: 'AjCrewConfig | None' = None) -> 'object | None'",
         ),
         (
             "_forget_superseded_start",
@@ -576,11 +576,11 @@ _BASE_SURFACE: dict[str, tuple[tuple[str, str, str], ...]] = {
             "(timeout: 'float | None' = None) -> 'None'",
         ),
         ("signing_key_preflight", "function", "() -> 'None'"),
-        ("_start_kas_cli_floor", "function", "(cfg: 'KiroCrewConfig') -> \"'asyncio.Task[None]'\""),
+        ("_start_kas_cli_floor", "function", "(cfg: 'AjCrewConfig') -> \"'asyncio.Task[None]'\""),
         (
             "run_gateway",
             "async function",
-            "(cfg: 'KiroCrewConfig', *, no_dashboard: 'bool' = False, no_crons: 'bool' = False, no_tunnel: 'bool' = False, no_open: 'bool' = False, port_override: 'str | None' = None, json_ready: 'bool' = False, approval_mode: 'str | None' = None, test_mode: 'bool' = False) -> 'None'",
+            "(cfg: 'AjCrewConfig', *, no_dashboard: 'bool' = False, no_crons: 'bool' = False, no_tunnel: 'bool' = False, no_open: 'bool' = False, port_override: 'str | None' = None, json_ready: 'bool' = False, approval_mode: 'str | None' = None, test_mode: 'bool' = False) -> 'None'",
         ),
         ("BOOT_RESTART_HINT", "value", "'str'"),
         ("_SIGNING_KEY_PREFLIGHT_TIMEOUT_SECS", "value", "'float'"),
@@ -683,7 +683,7 @@ _BASE_SURFACE: dict[str, tuple[tuple[str, str, str], ...]] = {
         (
             "__init__",
             "method",
-            "(self, cfg: 'KiroCrewConfig', *, no_dashboard: 'bool' = False, no_crons: 'bool' = False, no_open: 'bool' = False, port_override: 'str | None' = None, json_ready: 'bool' = False, approval_mode: 'str | None' = None, test_mode: 'bool' = False, credentials: 'Mapping[str, str] | None' = None) -> 'None'",
+            "(self, cfg: 'AjCrewConfig', *, no_dashboard: 'bool' = False, no_crons: 'bool' = False, no_open: 'bool' = False, port_override: 'str | None' = None, json_ready: 'bool' = False, approval_mode: 'str | None' = None, test_mode: 'bool' = False, credentials: 'Mapping[str, str] | None' = None) -> 'None'",
         ),
     ),
     "subagent_wiring": (
@@ -825,47 +825,47 @@ _BASE_SURFACE: dict[str, tuple[tuple[str, str, str], ...]] = {
         (
             "_hoist_wecom",
             "method",
-            "(self, cfg: 'KiroCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
+            "(self, cfg: 'AjCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
         ),
         (
             "_hoist_telegram",
             "method",
-            "(self, cfg: 'KiroCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
+            "(self, cfg: 'AjCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
         ),
         (
             "_hoist_weixin",
             "method",
-            "(self, cfg: 'KiroCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
+            "(self, cfg: 'AjCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
         ),
         (
             "_hoist_whatsapp",
             "method",
-            "(self, cfg: 'KiroCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
+            "(self, cfg: 'AjCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
         ),
         (
             "_hoist_feishu",
             "method",
-            "(self, cfg: 'KiroCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
+            "(self, cfg: 'AjCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
         ),
         (
             "_hoist_discord",
             "method",
-            "(self, cfg: 'KiroCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
+            "(self, cfg: 'AjCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
         ),
         (
             "_hoist_webex",
             "method",
-            "(self, cfg: 'KiroCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
+            "(self, cfg: 'AjCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
         ),
         (
             "_hoist_imessage",
             "method",
-            "(self, cfg: 'KiroCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
+            "(self, cfg: 'AjCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
         ),
         (
             "_hoist_teams",
             "method",
-            "(self, cfg: 'KiroCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
+            "(self, cfg: 'AjCrewConfig', creds: 'Mapping[str, str]') -> 'None'",
         ),
         (
             "_on_session_environment_config_change",
@@ -899,7 +899,7 @@ def test_the_owners_define_functions_for_the_sweeps_to_check() -> None:
 
 
 def test_every_owner_function_runs_on_the_facade_globals() -> None:
-    """A patch of ``kiro_crew.slack.gateway.<name>`` reaches an owner function only
+    """A patch of ``aj_crew.slack.gateway.<name>`` reaches an owner function only
     because the function reads the facade's globals, not its own module's."""
     strays = [
         label
@@ -1030,9 +1030,9 @@ def test_module_and_qualname_still_name_the_facade() -> None:
 
 
 def test_a_star_import_carries_the_moved_public_names(tmp_path: Path) -> None:
-    """``from kiro_crew.slack.gateway import *`` exports what the one-module file did."""
+    """``from aj_crew.slack.gateway import *`` exports what the one-module file did."""
     probe = tmp_path / "gateway_star_probe.py"
-    probe.write_text("from kiro_crew.slack.gateway import *  # noqa: F401,F403\n", encoding="utf-8")
+    probe.write_text("from aj_crew.slack.gateway import *  # noqa: F401,F403\n", encoding="utf-8")
     spec = importlib.util.spec_from_file_location("gateway_star_probe", probe)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -1138,23 +1138,23 @@ def _owner_runtime_edges(source: str, package: str) -> list[int]:
         ("from .channel_lifecycle import restart_channel\n", True),
         ("from .. import gateway\n", True),
         ("from ..gateway import sel\n", True),
-        ("from kiro_crew.slack import gateway\n", True),
-        ("from kiro_crew.slack import gateway_runtime\n", True),
-        ("import kiro_crew.slack.gateway\n", True),
-        ("import kiro_crew.slack.gateway as facade\n", True),
-        ("from kiro_crew.slack.gateway import sel\n", True),
-        ("def f():\n    from kiro_crew.slack.gateway import sel\n", True),
-        ("import importlib\nimportlib.import_module('kiro_crew.slack.gateway')\n", True),
-        ("__import__('kiro_crew.slack.gateway_runtime.admission')\n", True),
+        ("from aj_crew.slack import gateway\n", True),
+        ("from aj_crew.slack import gateway_runtime\n", True),
+        ("import aj_crew.slack.gateway\n", True),
+        ("import aj_crew.slack.gateway as facade\n", True),
+        ("from aj_crew.slack.gateway import sel\n", True),
+        ("def f():\n    from aj_crew.slack.gateway import sel\n", True),
+        ("import importlib\nimportlib.import_module('aj_crew.slack.gateway')\n", True),
+        ("__import__('aj_crew.slack.gateway_runtime.admission')\n", True),
         (
-            "import importlib\nimportlib.import_module('.admission', 'kiro_crew.slack.gateway_runtime')\n",
+            "import importlib\nimportlib.import_module('.admission', 'aj_crew.slack.gateway_runtime')\n",
             True,
         ),
-        ("if TYPE_CHECKING:\n    from kiro_crew.slack.gateway import sel\n", False),
+        ("if TYPE_CHECKING:\n    from aj_crew.slack.gateway import sel\n", False),
         ("if TYPE_CHECKING:\n    from .. import gateway\n", False),
-        ("from kiro_crew.slack import handler\n", False),
-        ("import kiro_crew.slack.gateway_helpers_elsewhere\n", False),
-        ("from kiro_crew.llm_helpers import annotate_model_fallback\n", False),
+        ("from aj_crew.slack import handler\n", False),
+        ("import aj_crew.slack.gateway_helpers_elsewhere\n", False),
+        ("from aj_crew.llm_helpers import annotate_model_fallback\n", False),
     ],
 )
 def test_the_owner_edge_check_sees_every_spelling(source: str, flagged: bool) -> None:
@@ -1168,28 +1168,28 @@ def test_the_owner_edge_check_sees_every_spelling(source: str, flagged: bool) ->
         ("from .gateway_runtime import delivery\n", True),
         ("from . import gateway_runtime\n", True),
         ("from .gateway_runtime.delivery import _cron_origin_key\n", True),
-        ("import kiro_crew.slack.gateway_runtime.delivery\n", True),
-        ("from kiro_crew.slack.gateway_runtime import delivery as d\n", True),
+        ("import aj_crew.slack.gateway_runtime.delivery\n", True),
+        ("from aj_crew.slack.gateway_runtime import delivery as d\n", True),
         ("if TYPE_CHECKING:\n    from .gateway_runtime import delivery\n", True),
         (
-            "import importlib\nimportlib.import_module('kiro_crew.slack.gateway_runtime.delivery')\n",
+            "import importlib\nimportlib.import_module('aj_crew.slack.gateway_runtime.delivery')\n",
             True,
         ),
         ("from . import gateway\n", False),
         ("from .gateway import GatewayOrchestrator\n", False),
-        ("from kiro_crew.slack import gateway\n", False),
+        ("from aj_crew.slack import gateway\n", False),
         ("import importlib\nimportlib.import_module(name)\n", False),
     ],
 )
 def test_the_importer_check_sees_every_spelling(source: str, flagged: bool) -> None:
     """The one-import-path check below is only as good as the spellings it resolves."""
-    assert bool(_owner_importers(source, "kiro_crew.slack")) is flagged
+    assert bool(_owner_importers(source, "aj_crew.slack")) is flagged
 
 
 def test_nothing_but_the_facade_imports_an_owner() -> None:
     """The facade is the only import path, so there is one patch surface."""
     importers = []
-    for path in sorted((_SRC / "kiro_crew").rglob("*.py")):
+    for path in sorted((_SRC / "aj_crew").rglob("*.py")):
         if (
             _RUNTIME_DIR in path.resolve().parents
             or path.resolve() == Path(gateway.__file__).resolve()
@@ -1243,10 +1243,10 @@ def test_a_second_facade_import_recomposes_the_owners_onto_it(tmp_path: Path) ->
     the NEW namespace, and the orchestrator's qualnames are not prefixed twice."""
     script = textwrap.dedent("""
         import sys
-        import kiro_crew.slack.gateway as first
-        del sys.modules["kiro_crew.slack.gateway"]
-        import kiro_crew.slack.gateway as second
-        from kiro_crew.slack.gateway_runtime import delivery
+        import aj_crew.slack.gateway as first
+        del sys.modules["aj_crew.slack.gateway"]
+        import aj_crew.slack.gateway as second
+        from aj_crew.slack.gateway_runtime import delivery
         fn = second.GatewayOrchestrator._deliver_cron_to_channel
         assert second is not first
         assert fn.__globals__ is vars(second)
@@ -1274,8 +1274,8 @@ def test_a_fresh_facade_import_loads_every_owner(tmp_path: Path) -> None:
     assert len(names) >= 8, names
     script = textwrap.dedent("""
         import sys
-        import kiro_crew.slack.gateway
-        missing = [n for n in sys.argv[1:] if f"kiro_crew.slack.gateway_runtime.{n}" not in sys.modules]
+        import aj_crew.slack.gateway
+        missing = [n for n in sys.argv[1:] if f"aj_crew.slack.gateway_runtime.{n}" not in sys.modules]
         assert missing == [], missing
         print("ok")
         """)
@@ -1408,7 +1408,7 @@ def test_the_facade_and_its_owners_reach_autonudge_only_through_its_service() ->
         f"{stem}:{node.lineno}"
         for stem, source in _holder_sources().items()
         for node in ast.walk(ast.parse(source))
-        if any(name.startswith("kiro_crew.autonudge_service") for name in _names(node))
+        if any(name.startswith("aj_crew.autonudge_service") for name in _names(node))
     ]
     assert offenders == []
 

@@ -17,10 +17,10 @@ import acp_pi_backend_helpers
 import pytest
 from acp_pi_backend_helpers import ROOT
 
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.acp_backends import (
+from aj_crew.acp import client as acp_client
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_DEEPSEEK,
@@ -34,8 +34,8 @@ from kiro_crew.acp_backends import (
     effort_config_option_id,
     effort_config_option_value,
 )
-from kiro_crew.agent_sdk import backend_cards
-from kiro_crew.effort import EFFORT_LEVELS
+from aj_crew.agent_sdk import backend_cards
+from aj_crew.effort import EFFORT_LEVELS
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _no_ambient_pi_env = acp_pi_backend_helpers._no_ambient_pi_env
@@ -181,7 +181,7 @@ class TestTheEffortChannel:
         The pi corpus has no config-value refusal for ``_is_config_value_rejection`` to
         read, so the push must never send a raw level pi did not advertise.
         """
-        from kiro_crew.providers import acp as provider_module
+        from aj_crew.providers import acp as provider_module
 
         body = inspect.getsource(provider_module.AcpProvider._set_effort_config_option)
 
@@ -192,9 +192,9 @@ class TestTheEffortChannel:
     def test_every_effort_write_site_resolves_the_value(self) -> None:
         """Four sites write a level; one writing it raw is the divergence the resolver
         exists to prevent -- the session runs a level the UI does not report."""
-        from kiro_crew.acp import client as client_module
-        from kiro_crew.knowledge import llm_pool
-        from kiro_crew.providers import acp as provider_module
+        from aj_crew.acp import client as client_module
+        from aj_crew.knowledge import llm_pool
+        from aj_crew.providers import acp as provider_module
 
         assert "effort_config_option_value(" in inspect.getsource(
             provider_module.AcpProvider._set_effort_config_option
@@ -212,7 +212,7 @@ PI_MODEL = "ollama/llama3.2:3b"
 
 def _pi_provider(tmp_path, *, model: str = PI_MODEL, options=None):
     """An ``AcpProvider`` on pi with a session's config options already stored."""
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     provider = AcpProvider(acp_backend=ACP_BACKEND_PI, work_dir=tmp_path, model=model)
     provider._client._acp_config_options = (
@@ -231,7 +231,7 @@ class TestTheEffortControlIsReachableOnThisHarness:
 
     def test_the_registry_does_not_recognise_the_model_pi_normally_serves(self) -> None:
         """The premise, stated so the tests below cannot pass for the wrong reason."""
-        from kiro_crew.effort import model_supports_effort
+        from aj_crew.effort import model_supports_effort
 
         assert model_supports_effort(PI_MODEL) is False
 
@@ -268,7 +268,7 @@ class TestTheEffortControlIsReachableOnThisHarness:
     ) -> None:
         """The other arm. kiro-cli refuses effort per model, so the name test is right
         there -- and a non-member must not inherit the advertised-option answer."""
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         provider = AcpProvider(acp_backend=ACP_BACKEND_KIRO, work_dir=tmp_path)
         provider._client._model = PI_MODEL
@@ -314,7 +314,7 @@ class TestTheEffortControlIsReachableOnThisHarness:
         ``change_effort`` and ``clear_effort`` gated on the model test directly, so a
         pi user could be shown a dropdown whose every write was declined.
         """
-        from kiro_crew.providers import acp as provider_module
+        from aj_crew.providers import acp as provider_module
 
         for method in ("change_effort", "clear_effort"):
             body = inspect.getsource(getattr(provider_module.AcpProvider, method))
@@ -328,7 +328,7 @@ class TestTheEffortControlIsReachableOnThisHarness:
 
     def test_the_shared_resolver_keeps_its_registry_behaviour_untouched(self) -> None:
         """Every existing caller omits ``levels``, so the model registry still answers."""
-        from kiro_crew.effort import resolve_effort_for_model
+        from aj_crew.effort import resolve_effort_for_model
 
         assert resolve_effort_for_model("claude-opus-4.8", {"claude-opus-4.8": "max"}) == "max"
         assert resolve_effort_for_model(PI_MODEL, {PI_MODEL: "high"}) is None
@@ -350,12 +350,12 @@ class TestAPersistedLevelSurvivesAColdStart:
         """The kwargs the provider factory would construct AcpProvider with."""
         from unittest.mock import MagicMock, patch
 
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.provider = "acp"
         cfg.agent.acp_backend = backend
-        with patch("kiro_crew.providers.acp.AcpProvider") as mock_provider:
+        with patch("aj_crew.providers.acp.AcpProvider") as mock_provider:
             mock_provider.return_value = MagicMock()
             factory = cfg.create_provider_factory()
             factory(
@@ -497,7 +497,7 @@ class TestMaxFollowsTheModel:
 
     def test_the_resolution_hands_the_fold_in_rather_than_applying_it_after(self) -> None:
         """Order is the property, so it is pinned at the seam rather than inferred."""
-        from kiro_crew.providers import acp as provider_module
+        from aj_crew.providers import acp as provider_module
 
         body = inspect.getsource(provider_module.AcpProvider._resolve_effort)
 
@@ -506,7 +506,7 @@ class TestMaxFollowsTheModel:
 
     def test_the_shared_resolver_folds_before_it_checks(self) -> None:
         """Directly, on the resolver: a fold applied after the check cannot pass this."""
-        from kiro_crew.effort import resolve_effort_for_model
+        from aj_crew.effort import resolve_effort_for_model
 
         fold = {"max": "xhigh"}.get
 
@@ -546,7 +546,7 @@ class TestThePushNeverNeedsARefusal:
         descent from that point down Crew's ladder. The ladder is what a refusal
         would walk, so it counts as emittable even when the first write succeeds.
         """
-        from kiro_crew.effort import EFFORT_LEVELS
+        from aj_crew.effort import EFFORT_LEVELS
 
         advertised = [o["value"] for o in _pi_thought_level_option()["options"]]
         target = effort_config_option_value(ACP_BACKEND_PI, level, advertised)
@@ -560,7 +560,7 @@ class TestThePushNeverNeedsARefusal:
 
     def test_every_crew_level_emits_only_values_pi_advertised(self) -> None:
         """Crew's whole ladder, including the level this model does not have."""
-        from kiro_crew.effort import EFFORT_LEVELS
+        from aj_crew.effort import EFFORT_LEVELS
 
         advertised = {o["value"] for o in _pi_thought_level_option()["options"]}
 
@@ -586,7 +586,7 @@ class TestThePushNeverNeedsARefusal:
         requested level raw -- fails here rather than quietly reintroducing the
         dependency on an unmeasured refusal shape.
         """
-        from kiro_crew.providers import acp as provider_module
+        from aj_crew.providers import acp as provider_module
 
         body = inspect.getsource(provider_module.AcpProvider._set_effort_config_option)
 
@@ -742,7 +742,7 @@ def _signed_out_startup_client(backend: str, spawns: list[int]) -> AcpClient:
 
 
 def test_a_signed_out_pi_names_the_fix_and_is_not_retried() -> None:
-    from kiro_crew.agent_sdk import host_auth
+    from aj_crew.agent_sdk import host_auth
 
     spawns: list[int] = []
     client = _signed_out_startup_client(ACP_BACKEND_PI, spawns)

@@ -16,9 +16,9 @@ import pytest
 import subagent_continuable_helpers
 from subagent_continuable_helpers import _manager, _mock_sessions, _stop_reason
 
-from kiro_crew.subagent import SubagentInfo
-from kiro_crew.subagent_persistence import create_agent_folder, write_run_agent
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.subagent import SubagentInfo
+from aj_crew.subagent_persistence import create_agent_folder, write_run_agent
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -39,7 +39,7 @@ class TestKeepTranscript:
     async def test_destroy_deletes_transcript_by_default(self, tmp_path) -> None:
         h, sessions, files = self._handle_with_transcript(tmp_path, sid="sid-h")
         h._runtime.terminate_session = AsyncMock()
-        with patch("kiro_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions):
+        with patch("aj_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions):
             await h.destroy()
         assert [f for f in files if f.exists()] == []
         h._runtime.terminate_session.assert_awaited_once_with("sid-h")
@@ -49,7 +49,7 @@ class TestKeepTranscript:
         h, sessions, files = self._handle_with_transcript(tmp_path, sid="sid-h")
         h._runtime.terminate_session = AsyncMock()
         h.keep_transcript = True
-        with patch("kiro_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions):
+        with patch("aj_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions):
             await h.destroy()
         assert all(f.exists() for f in files)
         # terminate_session still runs — RSS reclaim is unconditional.
@@ -85,7 +85,7 @@ class TestKeepTranscript:
     # a file. These drive the real `_cleanup_transcript` against a real sessions dir.
 
     def _handle_with_transcript(self, tmp_path, sid="sid-cancel"):  # type: ignore[no-untyped-def]
-        from kiro_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.session_handle import AcpSessionHandle
 
         with patch.object(AcpSessionHandle, "__init__", lambda self: None):
             h = AcpSessionHandle()  # type: ignore[call-arg]
@@ -106,7 +106,7 @@ class TestKeepTranscript:
         h, sessions, files = self._handle_with_transcript(tmp_path)
         h._runtime.terminate_session = AsyncMock(side_effect=asyncio.CancelledError())
 
-        with patch("kiro_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions):
+        with patch("aj_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions):
             with pytest.raises(asyncio.CancelledError):
                 await h.destroy()
 
@@ -120,7 +120,7 @@ class TestKeepTranscript:
         h, sessions, files = self._handle_with_transcript(tmp_path, sid="sid-raise")
         h._runtime.terminate_session = AsyncMock(side_effect=RuntimeError("boom"))
 
-        with patch("kiro_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions):
+        with patch("aj_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions):
             with pytest.raises(RuntimeError):
                 await h.destroy()
 
@@ -133,7 +133,7 @@ class TestKeepTranscript:
         h.keep_transcript = True
         h._runtime.terminate_session = AsyncMock(side_effect=asyncio.CancelledError())
 
-        with patch("kiro_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions):
+        with patch("aj_crew.acp.session_handle.kiro_sessions_dir", lambda: sessions):
             with pytest.raises(asyncio.CancelledError):
                 await h.destroy()
 
@@ -149,7 +149,7 @@ class TestPersistenceGuards:
     ) -> None:  # type: ignore[no-untyped-def]
         import json
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         owner_id = "promotion-race"
         continuation_id = "promotion-race-child"
@@ -230,7 +230,7 @@ class TestPersistenceGuards:
         assert not (sp.read_state(owner_id) or {}).get("keep")
 
     def test_unrelated_retention_lock_does_not_block_promotion(self, tmp_path) -> None:  # type: ignore[no-untyped-def]
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         blocked_id = "retention-lock-blocked"
         promoted_id = "retention-lock-independent"
@@ -249,7 +249,7 @@ class TestPersistenceGuards:
         assert (sp.read_state(promoted_id) or {}).get("keep") is True
 
     def test_same_agent_retention_lock_is_retryable(self, tmp_path) -> None:  # type: ignore[no-untyped-def]
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "promotion-retention-contention"
         sp.create_agent_folder(agent_id, task="original")
@@ -268,7 +268,7 @@ class TestPersistenceGuards:
     def test_promotion_retries_while_off_loop_writer_lock_is_held(
         self, tmp_path
     ) -> None:  # type: ignore[no-untyped-def]
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "promotion-writer-contention"
         sp.create_agent_folder(agent_id, task="original")
@@ -296,7 +296,7 @@ class TestPersistenceGuards:
     def test_off_loop_promotion_uses_writer_lock_without_self_deadlock(
         self, tmp_path
     ) -> None:  # type: ignore[no-untyped-def]
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "promotion-off-loop"
         sp.create_agent_folder(agent_id, task="original")
@@ -320,7 +320,7 @@ class TestPersistenceGuards:
     ) -> None:  # type: ignore[no-untyped-def]
         import json
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         malformed_id = "a-malformed-owner"
         valid_id = "z-valid-run"
@@ -367,7 +367,7 @@ class TestPersistenceGuards:
     ) -> None:  # type: ignore[no-untyped-def]
         import json
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         deep_id = "a-deep-tombstone"
         valid_id = "z-valid-after-deep"
@@ -406,7 +406,7 @@ class TestPersistenceGuards:
     ) -> None:  # type: ignore[no-untyped-def]
         import json
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         corrupt_id = "a-corrupt-protected"
         valid_id = "z-valid-after-protected"
@@ -449,7 +449,7 @@ class TestPersistenceGuards:
         import json
         from unittest.mock import call
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "cancel-recovery-generations"
         sp.create_agent_folder(agent_id, task="t")
@@ -514,7 +514,7 @@ class TestPersistenceGuards:
     ) -> None:  # type: ignore[no-untyped-def]
         import json
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "untrusted-sidecar"
         own_sid = "sid-owned-by-run"
@@ -570,7 +570,7 @@ class TestPersistenceGuards:
         import json
         import time
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "unsupported-cleanup-retry"
         sp.create_agent_folder(agent_id, task="t")
@@ -611,7 +611,7 @@ class TestPersistenceGuards:
         import json
         import time
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "legacy-untrusted-sid"
         sp.create_agent_folder(agent_id, task="t")
@@ -654,7 +654,7 @@ class TestPersistenceGuards:
         import json
         import time
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = f"hard-ceiling-{trusted_generation}"
         sp.create_agent_folder(agent_id, task="t")
@@ -693,7 +693,7 @@ class TestPersistenceGuards:
         import json
         import time
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "stale-false-after-promotion"
         sp.create_agent_folder(agent_id, task="t")
@@ -735,7 +735,7 @@ class TestPersistenceGuards:
     ) -> None:  # type: ignore[no-untyped-def]
         import json
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "cleanup-store-lockdown"
         sp.create_agent_folder(agent_id, task="t")
@@ -762,7 +762,7 @@ class TestPersistenceGuards:
     def test_cleanup_store_parse_failure_never_rewrites_history(
         self, tmp_path
     ) -> None:  # type: ignore[no-untyped-def]
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "cleanup-store-corrupt"
         sp.create_agent_folder(agent_id, task="t")
@@ -791,7 +791,7 @@ class TestPersistenceGuards:
     ) -> None:  # type: ignore[no-untyped-def]
         import json
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "forged-tombstone-retention"
         sp.create_agent_folder(agent_id, task="t")
@@ -821,7 +821,7 @@ class TestPersistenceGuards:
     def test_tombstone_prune_keeps_files_for_keep_runs(self, tmp_path) -> None:  # type: ignore[no-untyped-def]
         import json
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "keeprun1"
         sp.create_agent_folder(agent_id, task="t")
@@ -843,7 +843,7 @@ class TestPersistenceGuards:
     def test_continuation_prune_honors_original_release(self, tmp_path) -> None:  # type: ignore[no-untyped-def]
         import json
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         original_id = "original-run"
         continuation_id = "continuation-run"
@@ -883,7 +883,7 @@ class TestPersistenceGuards:
     ) -> None:  # type: ignore[no-untyped-def]
         import json
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         original_id = "partial-state-owner"
         continuation_id = "partial-state-continuation"
@@ -939,7 +939,7 @@ class TestPersistenceGuards:
     ) -> None:  # type: ignore[no-untyped-def]
         import json
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         owner_id = "protected-retention-owner"
         continuation_id = f"protected-owner-{bool(writable_key)}"
@@ -987,7 +987,7 @@ class TestPersistenceGuards:
     ) -> None:  # type: ignore[no-untyped-def]
         import json
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         owner_id = "unreadable-sidecar-owner"
         child_id = "unreadable-sidecar-child"
@@ -1025,7 +1025,7 @@ class TestPersistenceGuards:
     def test_continuation_prune_owner_missing_keep_is_nonretained(self, tmp_path) -> None:  # type: ignore[no-untyped-def]
         import json
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         original_id = "owner-missing-keep"
         continuation_id = "continuation-missing-keep"
@@ -1067,7 +1067,7 @@ class TestPersistenceGuards:
         import json
         import time
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         original_id = "owner-corrupt"
         continuation_id = "continuation-corrupt-owner"
@@ -1113,7 +1113,7 @@ class TestPersistenceGuards:
     def test_tombstone_prune_cleans_files_for_plain_runs(self, tmp_path) -> None:  # type: ignore[no-untyped-def]
         import json
 
-        import kiro_crew.subagent_persistence as sp
+        import aj_crew.subagent_persistence as sp
 
         agent_id = "plainrun"
         sp.create_agent_folder(agent_id, task="t")
@@ -1142,8 +1142,8 @@ class TestContinuationMemoryMode:
     @pytest.mark.parametrize("original", ["persistent", "incognito", "temporary"])
     @pytest.mark.parametrize("requested", ["persistent", "incognito", "temporary"])
     async def test_fresh_manager_restores_and_tightens_original_mode(self, original, requested):
-        from kiro_crew.messaging.privacy_mode import strictest
-        from kiro_crew.subagent_persistence import (
+        from aj_crew.messaging.privacy_mode import strictest
+        from aj_crew.subagent_persistence import (
             read_run_agent_selection,
             read_run_app,
             read_run_memory_mode,
@@ -1209,7 +1209,7 @@ class TestContinuationMemoryMode:
 
     @pytest.mark.asyncio
     async def test_missing_original_policy_never_allocates_provider(self):
-        from kiro_crew.subagent_persistence import _agent_dir, create_agent_folder
+        from aj_crew.subagent_persistence import _agent_dir, create_agent_folder
 
         await asyncio.to_thread(
             create_agent_folder, "missing-resume-policy", memory_mode="persistent"
@@ -1291,7 +1291,7 @@ async def _until_thrown(resume, task, count):
 
 @pytest.mark.asyncio
 async def test_cancelled_resume_drains_mode_publication_before_returning(monkeypatch):
-    from kiro_crew import subagent_persistence as persistence
+    from aj_crew import subagent_persistence as persistence
 
     persistence.create_agent_folder("cancel-mode-original", memory_mode="incognito")
     persistence.create_agent_folder("cancel-mode-current", memory_mode="temporary")

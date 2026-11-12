@@ -38,7 +38,7 @@ const DASH_TITLE = 'Ops dashboard triage'
 // itself must NOT be open — it has to be a history row for the resume path.
 const openSlots = [{
   key: 'chat-current', title: 'Scratch', messages: 2, running: false,
-  agent: 'kirocrew', created: '2026-08-20T09:00:00Z', last_ts: '2026-08-20T09:30:00Z', folder_id: '',
+  agent: 'ajcrew', created: '2026-08-20T09:00:00Z', last_ts: '2026-08-20T09:30:00Z', folder_id: '',
 }]
 
 // The dashboard-surface session as Older Sessions lists it. The 'dashboard'
@@ -46,7 +46,7 @@ const openSlots = [{
 // backend's surface resolution.
 const history = [{
   key: DASH_KEY, title: DASH_TITLE, messages: 14,
-  created: '2026-08-18T10:00:00Z', modified: 1786000000, agent: 'kirocrew',
+  created: '2026-08-18T10:00:00Z', modified: 1786000000, agent: 'ajcrew',
   memory_mode: 'persistent',
 }]
 

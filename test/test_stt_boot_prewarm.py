@@ -21,7 +21,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard import server as server_mod
+from aj_crew.dashboard import server as server_mod
 
 
 @pytest.fixture
@@ -38,7 +38,7 @@ def warm(monkeypatch: pytest.MonkeyPatch):
     cfg.stt.idle_evict_secs = 600
     cfg.stt.timeout_secs = 300
     cfg.stt.threads = 64
-    monkeypatch.setattr(server_mod.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    monkeypatch.setattr(server_mod.AjCrewConfig, "load", staticmethod(lambda: cfg))
 
     engine_stub = MagicMock()
     engine_stub.shared_engine = lambda **kw: calls["bounds"].append(kw)  # type: ignore[union-attr]
@@ -51,7 +51,7 @@ def warm(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(server_mod, "_import_stt_engine", _import)
     # Pinned so the memory gate is deterministic rather than a property of whatever
     # host runs the suite. Generous by default; the gate's own cases override it.
-    monkeypatch.setattr("kiro_crew.subagent._available_memory_gb", lambda: 62.5)
+    monkeypatch.setattr("aj_crew.subagent._available_memory_gb", lambda: 62.5)
     return cfg, calls
 
 
@@ -64,8 +64,8 @@ def _patch_stt(
     used: bool = True,
 ):
     """Stand in for the two lazily-imported modules the prewarm reaches."""
-    from kiro_crew.stt import models as stt_models
-    from kiro_crew.stt import session as stt_session
+    from aj_crew.stt import models as stt_models
+    from aj_crew.stt import session as stt_session
 
     monkeypatch.setattr(stt_models, "is_present", lambda model: present)
     monkeypatch.setattr(stt_models, "used_within", lambda seconds: used)
@@ -74,7 +74,7 @@ def _patch_stt(
         calls["prewarm"].append((model_name, language))
         return MagicMock(ok=ok, detail="unavailable")
 
-    # The SUBMODULE, never the package. `kiro_crew/stt/__init__.py` resolves its
+    # The SUBMODULE, never the package. `aj_crew/stt/__init__.py` resolves its
     # public names through a PEP 562 `__getattr__`, and its own docstring spells out
     # what patching the package does: `monkeypatch.setattr(stt, "prewarm", ...)`
     # leaves the original behind as a REAL attribute on teardown, which from then on
@@ -175,12 +175,12 @@ class TestTheBootPrewarmRefrains:
         pointer-down prewarm still covers the case.
         """
         cfg, calls = warm
-        import kiro_crew.dashboard.server as server_mod
+        import aj_crew.dashboard.server as server_mod
 
         _patch_stt(monkeypatch, calls, present=True)
         # The reviewer's actual case: the 1.6 GB model on a machine with 2 GB free.
         cfg.stt.model = "large-v3-turbo"
-        monkeypatch.setattr("kiro_crew.subagent._available_memory_gb", lambda: 1.95)
+        monkeypatch.setattr("aj_crew.subagent._available_memory_gb", lambda: 1.95)
         await server_mod._stt_startup_prewarm()
         assert calls["prewarm"] == []
 
@@ -198,12 +198,12 @@ class TestTheBootPrewarmRefrains:
         headroom. Here the host says 64 GB and the cgroup says 1 GB: no warm.
         """
         cfg, calls = warm
-        import kiro_crew.dashboard.server as server_mod
+        import aj_crew.dashboard.server as server_mod
 
         _patch_stt(monkeypatch, calls, present=True)
         cfg.stt.model = "large-v3-turbo"
         monkeypatch.setattr(server_mod.platform_compat, "host_available_mib", lambda: 64_000)
-        monkeypatch.setattr("kiro_crew.subagent._available_memory_gb", lambda: 1.0)
+        monkeypatch.setattr("aj_crew.subagent._available_memory_gb", lambda: 1.0)
         await server_mod._stt_startup_prewarm()
         assert calls["prewarm"] == []
 
@@ -216,10 +216,10 @@ class TestTheBootPrewarmRefrains:
         Same direction as every other gate here: withhold unless sure.
         """
         cfg, calls = warm
-        import kiro_crew.dashboard.server as server_mod
+        import aj_crew.dashboard.server as server_mod
 
         _patch_stt(monkeypatch, calls, present=True)
-        monkeypatch.setattr("kiro_crew.subagent._available_memory_gb", lambda: -1.0)
+        monkeypatch.setattr("aj_crew.subagent._available_memory_gb", lambda: -1.0)
         await server_mod._stt_startup_prewarm()
         assert calls["prewarm"] == []
 
@@ -251,7 +251,7 @@ class TestTheBootPrewarmRefrains:
         self, warm, monkeypatch: pytest.MonkeyPatch
     ):
         """A recent decode keeps the boot warm, judged against the declared window."""
-        from kiro_crew.stt import models as stt_models
+        from aj_crew.stt import models as stt_models
 
         _, calls = warm
         _patch_stt(monkeypatch, calls, present=True)
@@ -265,19 +265,19 @@ class TestTheBootPrewarmRefrains:
 class TestTheUsageMarker:
     @pytest.fixture
     def home(self, tmp_path, monkeypatch: pytest.MonkeyPatch):
-        from kiro_crew.stt import models as stt_models
+        from aj_crew.stt import models as stt_models
 
         monkeypatch.setattr(stt_models, "models_dir", lambda: tmp_path)
         monkeypatch.setattr(stt_models, "_last_usage_stamp", None)
         return tmp_path
 
     def test_no_marker_means_not_used(self, home):
-        from kiro_crew.stt import models as stt_models
+        from aj_crew.stt import models as stt_models
 
         assert stt_models.used_within(14 * 86400) is False
 
     def test_a_decode_stamp_reads_back_as_recent(self, home):
-        from kiro_crew.stt import models as stt_models
+        from aj_crew.stt import models as stt_models
 
         assert stt_models.claim_usage_stamp() is True
         stt_models.write_usage_marker()
@@ -287,7 +287,7 @@ class TestTheUsageMarker:
         import os
         import time
 
-        from kiro_crew.stt import models as stt_models
+        from aj_crew.stt import models as stt_models
 
         stt_models.write_usage_marker()
         old = time.time() - 30 * 86400
@@ -296,13 +296,13 @@ class TestTheUsageMarker:
 
     def test_stamping_is_throttled_within_a_process(self, home):
         """One claim per interval, so every partial of a dictation is not a write."""
-        from kiro_crew.stt import models as stt_models
+        from aj_crew.stt import models as stt_models
 
         assert stt_models.claim_usage_stamp() is True
         assert stt_models.claim_usage_stamp() is False
 
     def test_an_unwritable_directory_does_not_raise(self, tmp_path, monkeypatch):
-        from kiro_crew.stt import models as stt_models
+        from aj_crew.stt import models as stt_models
 
         monkeypatch.setattr(stt_models, "models_dir", lambda: tmp_path / "missing" / "dir")
         stt_models.write_usage_marker()

@@ -1,6 +1,6 @@
 """``POST /api/update`` refuses to start an installer under an approved restart.
 
-``kirocrew restart --when-idle`` asks the restart gate, which counts a dashboard
+``ajcrew restart --when-idle`` asks the restart gate, which counts a dashboard
 update only once its installer is registered. An update still copying memory
 stores when the gate approves is not counted, so without this refusal its
 installer would start and the approved restart would stop it partway through.
@@ -24,8 +24,8 @@ from dashboard_updates_coverage_helpers import (  # noqa: F401 -- the autouse fi
     _sequence_procs,
 )
 
-from kiro_crew.dashboard.handlers import updates, updates_apply
-from kiro_crew.slack.gateway_runtime import update_schedule
+from aj_crew.dashboard.handlers import updates, updates_apply
+from aj_crew.slack.gateway_runtime import update_schedule
 
 _UPSTREAM_OID = b"0123456789abcdef0123456789abcdef01234567"
 
@@ -47,7 +47,7 @@ def _refused(resp) -> bool:
 @pytest.mark.asyncio
 @pytest.mark.parametrize("approved", [True, False], ids=["approved", "not-approved"])
 async def test_a_policy_update_waits_out_a_restart_approved_during_its_copy(monkeypatch, approved):
-    from kiro_crew.platform import update_provider
+    from aj_crew.platform import update_provider
 
     held = {"live": False}
     monkeypatch.setattr(
@@ -76,10 +76,10 @@ async def test_a_git_update_waits_out_a_restart_approved_during_its_copy(
     monkeypatch, tmp_path, approved
 ):
     """The git path's own copy runs after the policy check, so it needs its own."""
-    from kiro_crew import dep_sync
+    from aj_crew import dep_sync
 
     held = {"live": False}
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", _git_proj(monkeypatch, tmp_path))
     monkeypatch.setattr(updates, "resolve_remote_url", lambda _p, **_k: "")
     monkeypatch.setattr(updates, "update_blocked_reason", lambda _u: "")
     monkeypatch.setattr(dep_sync, "incoming_python_floor_breach", lambda *a, **k: None)

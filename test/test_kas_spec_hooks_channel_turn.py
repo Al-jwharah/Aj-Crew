@@ -21,21 +21,21 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-import kiro_crew.hooks as hooks_mod
-from kiro_crew import name_grant
-from kiro_crew.acp.types import (
+import aj_crew.config.paths as paths_mod
+import aj_crew.hooks as hooks_mod
+from aj_crew import name_grant
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     EVENT_TOOL_RESULT,
 )
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.constants import DENY_CAUSE_POLICY
-from kiro_crew.hooks import (
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.constants import DENY_CAUSE_POLICY
+from aj_crew.hooks import (
     HOOK_EVENT_AGENT_SPAWN,
     HOOK_EVENT_POST_TOOL_USE,
     HOOK_EVENT_PRE_TOOL_USE,
@@ -44,11 +44,11 @@ from kiro_crew.hooks import (
     ScriptHookResult,
     ScriptHookStore,
 )
-from kiro_crew.messaging import APPROVAL_INTERACTIVE, TransportCapabilities, TurnDriver
-from kiro_crew.messaging import driver as driver_mod
-from kiro_crew.messaging.renderer import SilentRenderer
-from kiro_crew.messaging.script_hooks import ScriptHookTurn
-from kiro_crew.providers.base import LLMEvent
+from aj_crew.messaging import APPROVAL_INTERACTIVE, TransportCapabilities, TurnDriver
+from aj_crew.messaging import driver as driver_mod
+from aj_crew.messaging.renderer import SilentRenderer
+from aj_crew.messaging.script_hooks import ScriptHookTurn
+from aj_crew.providers.base import LLMEvent
 
 _AGENT = "kas-channel-hooked"
 _SESSION = "slack:dm:U1"

@@ -11,9 +11,9 @@ from __future__ import annotations
 import pytest
 from test_workflows_service import GOOD_SCRIPT, FakeSessions, _wait_terminal
 
-from kiro_crew.workflows.library import WorkflowDefinitionLibrary
-from kiro_crew.workflows.service import WorkflowService
-from kiro_crew.workflows.update_from_run import source_sha256
+from aj_crew.workflows.library import WorkflowDefinitionLibrary
+from aj_crew.workflows.service import WorkflowService
+from aj_crew.workflows.update_from_run import source_sha256
 
 pytestmark = pytest.mark.asyncio
 

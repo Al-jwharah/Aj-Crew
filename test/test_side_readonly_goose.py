@@ -19,15 +19,15 @@ from pathlib import Path
 import pytest
 import yaml  # type: ignore[import-untyped]
 
-from kiro_crew.acp import _dispatch
-from kiro_crew.acp.harness import goose as goose_mod
-from kiro_crew.acp.harness.goose import build_side_goose_root, goose_config_dir
-from kiro_crew.acp.transport_errors import AcpError
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.acp_backends import ACP_BACKEND_GOOSE, ACP_BACKENDS_SIDE_READONLY
-from kiro_crew.llm_helpers import ToolApprovalPolicy, stream_and_collect
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.acp import _dispatch
+from aj_crew.acp.harness import goose as goose_mod
+from aj_crew.acp.harness.goose import build_side_goose_root, goose_config_dir
+from aj_crew.acp.transport_errors import AcpError
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.acp_backends import ACP_BACKEND_GOOSE, ACP_BACKENDS_SIDE_READONLY
+from aj_crew.llm_helpers import ToolApprovalPolicy, stream_and_collect
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
 #: The side home is POSIX-only (``goose.side_home_supported``); these tests build one.
 _posix_home = pytest.mark.skipif(
@@ -134,7 +134,7 @@ class _ScriptedProvider:
 
 
 async def _gate(acp_event, policy: ToolApprovalPolicy) -> _ScriptedProvider:
-    from kiro_crew.hooks import HookManager, HooksConfig
+    from aj_crew.hooks import HookManager, HooksConfig
 
     provider = _ScriptedProvider(AcpProvider._to_llm_event(acp_event))
     await stream_and_collect(
@@ -359,7 +359,7 @@ def test_a_home_that_cannot_be_built_refuses_the_side_session(tmp_path, monkeypa
 async def test_a_host_without_a_side_home_keeps_goose_side_turns_tool_free(monkeypatch):
     """Where no separate home can be built, the side turn and the footer both
     answer no tools, and a launch asked for one refuses."""
-    from kiro_crew.dashboard.handlers import side as side_mod
+    from aj_crew.dashboard.handlers import side as side_mod
 
     monkeypatch.setattr(side_mod, "goose_side_home_supported", lambda: False)
     assert await side_mod._side_read_only_tools(ACP_BACKEND_GOOSE) is False
@@ -404,8 +404,8 @@ class _Session:
 
 
 async def _launch_env(monkeypatch, tmp_path, session: _Session) -> dict[str, str]:
-    from kiro_crew.acp.harness import goose as goose_mod
-    from kiro_crew.acp.harness.base import SpawnContext
+    from aj_crew.acp.harness import goose as goose_mod
+    from aj_crew.acp.harness.base import SpawnContext
 
     async def _resolved(backend):
         return "goose", ["goose", "acp"], "goose acp", "goose"
@@ -467,12 +467,12 @@ async def test_a_side_session_with_no_scratch_window_is_refused(monkeypatch, tmp
 
 @pytest.mark.parametrize("side_read_only", [True, False], ids=["side", "normal"])
 def test_a_side_session_mounts_no_mcp_server(side_read_only):
-    from kiro_crew.acp.client import AcpClient
+    from aj_crew.acp.client import AcpClient
 
     client = AcpClient.__new__(AcpClient)
     client._acp_backend = ACP_BACKEND_GOOSE
     client._session_id = "goose-1"
     client._side_read_only = side_read_only
-    placed = [{"name": "kirocrew-core", "command": "x", "args": [], "env": []}]
+    placed = [{"name": "ajcrew-core", "command": "x", "args": [], "env": []}]
     client._session_mcp_servers = lambda: placed  # type: ignore[method-assign]
     assert client._goose_session_mcp_servers() == ([] if side_read_only else placed)

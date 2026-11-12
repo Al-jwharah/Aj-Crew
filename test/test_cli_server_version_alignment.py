@@ -1,7 +1,7 @@
-"""``kirocrew status`` says whether the gateway runs the package selected to run.
+"""``ajcrew status`` says whether the gateway runs the package selected to run.
 
 The selected package is the live-target checkout when one is pinned, else the
-installed package read from disk; both sides are the string ``kirocrew --version``
+installed package read from disk; both sides are the string ``ajcrew --version``
 prints, so two builds of one release differ.
 """
 
@@ -18,20 +18,20 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew
-from kiro_crew import cli_server
-from kiro_crew.service import live_target
+import aj_crew
+from aj_crew import cli_server
+from aj_crew.service import live_target
 
 
 @pytest.fixture(autouse=True)
 def _isolate_pointer(tmp_path, _floor_monkeypatch):
     home = tmp_path / "home"
     home.mkdir()
-    _floor_monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: home)
+    _floor_monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: home)
 
 
 def _package(root: Path, init_text: str, stamp: str | None = None) -> Path:
-    package = root / "src" / "kiro_crew"
+    package = root / "src" / "aj_crew"
     package.mkdir(parents=True)
     (package / "__init__.py").write_text(init_text, encoding="utf-8")
     if stamp is not None:
@@ -60,7 +60,7 @@ def test_selected_version_unpinned_reads_the_installed_package_from_disk(
     # The imported __version__ is not the answer: an in-place upgrade rewrites the
     # files under a process that keeps the version it imported.
     package = _package(tmp_path / "install", '__version__ = "99.0.0"\n')
-    monkeypatch.setattr(kiro_crew, "__file__", str(package / "__init__.py"))
+    monkeypatch.setattr(aj_crew, "__file__", str(package / "__init__.py"))
 
     assert live_target.selected_version()[0] == "99.0.0"
 
@@ -105,7 +105,7 @@ def test_status_prints_aligned_when_the_gateway_runs_the_selected_build(monkeypa
     ids=["skew", "aligned"],
 )
 def test_token_auth_status_prints_version_without_age(monkeypatch, capsys, running, expected):
-    from kiro_crew.doctor_checks import services
+    from aj_crew.doctor_checks import services
 
     monkeypatch.setattr(live_target, "selected_version", lambda: ("0.13.0", 1.0))
     monkeypatch.setattr(cli_server, "resolve_client_port", lambda p: 7777)
@@ -123,7 +123,7 @@ def test_token_auth_status_prints_version_without_age(monkeypatch, capsys, runni
     cli_server._status(SimpleNamespace(port=None))
 
     out = capsys.readouterr().out
-    assert "Kiro Crew gateway is running (token auth enabled)." in out
+    assert "Aj Crew gateway is running (token auth enabled)." in out
     assert "For detailed stats, see the Overview page in the dashboard." in out
     assert f"  Version:     {expected}" in out
     assert "for at least" not in out
@@ -163,11 +163,11 @@ def test_an_unreadable_version_is_unknown_and_names_the_side(running, selected, 
 def test_doctor_reads_the_same_selected_version_as_status(tmp_path, monkeypatch, capsys) -> None:
     # A pinned checkout at another version than the imported __version__: doctor
     # compares the gateway with the pin, as status does, and finds it aligned.
-    from kiro_crew.doctor_checks import services
+    from aj_crew.doctor_checks import services
 
     _pin_checkout(tmp_path / "checkout", '__version__ = "0.9.0"\n')
     monkeypatch.setattr(services, "_running_gateway_version", lambda port: "0.9.0")
-    assert kiro_crew.__version__ != "0.9.0"
+    assert aj_crew.__version__ != "0.9.0"
     issues: list[str] = []
 
     services._doctor_running_version(7777, issues)
@@ -180,7 +180,7 @@ def test_doctor_reads_the_same_selected_version_as_status(tmp_path, monkeypatch,
 
 
 def test_doctor_names_an_unreadable_selected_version_without_an_issue(monkeypatch, capsys) -> None:
-    from kiro_crew.doctor_checks import services
+    from aj_crew.doctor_checks import services
 
     monkeypatch.setattr(live_target, "selected_version", lambda: (None, None))
     monkeypatch.setattr(services, "_running_gateway_version", lambda port: "0.9.0")

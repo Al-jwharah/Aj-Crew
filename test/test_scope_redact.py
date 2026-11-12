@@ -472,8 +472,8 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
     """
 
     def test_a_shape_in_the_prose_removes_the_field_and_keeps_the_row(self, tmp_path: Path) -> None:
-        clean = _row("cat ~/.kirocrew/cloud.json")
-        shaped = _row("grep -c . ~/.kirocrew/cloud.json", reason=f"the role reads {ARN} first")
+        clean = _row("cat ~/.ajcrew/cloud.json")
+        shaped = _row("grep -c . ~/.ajcrew/cloud.json", reason=f"the role reads {ARN} first")
         path = tmp_path / "candidates.json"
         path.write_text(_corpus(clean, shaped), encoding="utf-8")
 
@@ -488,7 +488,7 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
         assert rows[0] == clean
         assert rows[1] == {
             "kind": "shell",
-            "command_or_flow": "grep -c . ~/.kirocrew/cloud.json",
+            "command_or_flow": "grep -c . ~/.ajcrew/cloud.json",
             "platform": "posix",
         }, "the classified fields stay verbatim and only the prose field goes"
         assert "[REDACTED" not in body, "a corpus must carry no redaction marker"
@@ -501,7 +501,7 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
         so, and the file is left exactly as it arrived.
         """
         original = _corpus(
-            _row("cat ~/.kirocrew/cloud.json"),
+            _row("cat ~/.ajcrew/cloud.json"),
             _row(f"aws secretsmanager describe-secret --secret-id {ARN}"),
         )
         path = tmp_path / "candidates.json"
@@ -516,7 +516,7 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
         """Fail closed on the strictest row, not on the average of them."""
         path = tmp_path / "candidates.json"
         original = _corpus(
-            _row("ls ~/.kirocrew", reason=f"after reading {ARN}"),
+            _row("ls ~/.ajcrew", reason=f"after reading {ARN}"),
             _row(f"aws iam get-role --role-name {ARN}"),
         )
         path.write_text(original, encoding="utf-8")
@@ -533,14 +533,14 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
         """
         for field in ("kind", "command_or_flow", "platform"):
             path = tmp_path / f"candidates-{field}.json"
-            original = _corpus({**_row("ls ~/.kirocrew"), field: ARN})
+            original = _corpus({**_row("ls ~/.ajcrew"), field: ARN})
             path.write_text(original, encoding="utf-8")
 
             assert redact.main(["--mode", "json", "--drop-changed-fields", str(path)]) == 11, field
             assert path.read_text(encoding="utf-8") == original, field
 
     def test_a_clean_corpus_is_untouched_and_reports_unchanged(self, tmp_path: Path) -> None:
-        rows = [_row("cat ~/.kirocrew/cloud.json"), _row("ls ~/.kirocrew")]
+        rows = [_row("cat ~/.ajcrew/cloud.json"), _row("ls ~/.ajcrew")]
         path = tmp_path / "candidates.json"
         path.write_text(_corpus(*rows), encoding="utf-8")
 
@@ -567,7 +567,7 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
             f"the env holds aws_session_token={SESSION_TOKEN}",
         ):
             path = tmp_path / "candidates.json"
-            path.write_text(_corpus(_row("ls ~/.kirocrew", reason=shaped_reason)), encoding="utf-8")
+            path.write_text(_corpus(_row("ls ~/.ajcrew", reason=shaped_reason)), encoding="utf-8")
 
             assert (
                 redact.main(
@@ -577,7 +577,7 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
             ), shaped_reason
             row = json.loads(path.read_text(encoding="utf-8"))["golden_paths"][0]
             assert "reason" not in row, shaped_reason
-            assert row["command_or_flow"] == "ls ~/.kirocrew", shaped_reason
+            assert row["command_or_flow"] == "ls ~/.ajcrew", shaped_reason
 
     def test_a_secret_named_by_an_extra_field_removes_that_field(self, tmp_path: Path) -> None:
         """In JSON a key and its value are two separate strings.
@@ -588,7 +588,7 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
         """
         path = tmp_path / "candidates.json"
         path.write_text(
-            _corpus(dict(_row("ls ~/.kirocrew"), aws_session_token=SESSION_TOKEN)),
+            _corpus(dict(_row("ls ~/.ajcrew"), aws_session_token=SESSION_TOKEN)),
             encoding="utf-8",
         )
 
@@ -598,7 +598,7 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
         )
         row = json.loads(path.read_text(encoding="utf-8"))["golden_paths"][0]
         assert "aws_session_token" not in row
-        assert row["command_or_flow"] == "ls ~/.kirocrew"
+        assert row["command_or_flow"] == "ls ~/.ajcrew"
 
     def test_a_credential_shape_in_an_extra_field_KEY_removes_that_field(
         self, tmp_path: Path
@@ -612,7 +612,7 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
         """
         path = tmp_path / "candidates.json"
         path.write_text(
-            _corpus({**_row("ls ~/.kirocrew"), ARN: "the role this row assumes"}),
+            _corpus({**_row("ls ~/.ajcrew"), ARN: "the role this row assumes"}),
             encoding="utf-8",
         )
 
@@ -622,7 +622,7 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
         )
         row = json.loads(path.read_text(encoding="utf-8"))["golden_paths"][0]
         assert ARN not in row
-        assert row["command_or_flow"] == "ls ~/.kirocrew"
+        assert row["command_or_flow"] == "ls ~/.ajcrew"
 
     def test_a_shape_outside_the_rows_is_refused(self, tmp_path: Path) -> None:
         """Nothing outside a row says whether the classifier reads it.
@@ -633,7 +633,7 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
         """
         path = tmp_path / "candidates.json"
         path.write_text(
-            json.dumps({"golden_paths": [_row("ls ~/.kirocrew")], "note": f"for {ARN}"}, indent=2),
+            json.dumps({"golden_paths": [_row("ls ~/.ajcrew")], "note": f"for {ARN}"}, indent=2),
             encoding="utf-8",
         )
 
@@ -641,7 +641,7 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
 
     def test_a_document_with_no_rows_key_is_refused(self, tmp_path: Path) -> None:
         path = tmp_path / "candidates.json"
-        path.write_text(json.dumps({"rows": [_row("ls ~/.kirocrew")]}), encoding="utf-8")
+        path.write_text(json.dumps({"rows": [_row("ls ~/.ajcrew")]}), encoding="utf-8")
 
         assert redact.main(["--mode", "json", "--drop-changed-fields", str(path)]) == 1
 
@@ -655,7 +655,7 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
         """``deny_diff.load_corpus`` accepts both shapes, so this must too."""
         path = tmp_path / "candidates.json"
         path.write_text(
-            json.dumps([_row("ls ~/.kirocrew", reason=f"the role is {ARN}")]), encoding="utf-8"
+            json.dumps([_row("ls ~/.ajcrew", reason=f"the role is {ARN}")]), encoding="utf-8"
         )
 
         assert (
@@ -664,7 +664,7 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
         )
         assert json.loads(path.read_text(encoding="utf-8"))[0] == {
             "kind": "shell",
-            "command_or_flow": "ls ~/.kirocrew",
+            "command_or_flow": "ls ~/.ajcrew",
             "platform": "posix",
         }
 
@@ -675,7 +675,7 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
         byte-faithful.
         """
         path = tmp_path / "candidates.json"
-        path.write_text(_corpus(_row("ls ~/.kirocrew")), encoding="utf-8")
+        path.write_text(_corpus(_row("ls ~/.ajcrew")), encoding="utf-8")
 
         with pytest.raises(SystemExit) as caught:
             redact.main(["--mode", "text", "--drop-changed-fields", str(path)])
@@ -689,9 +689,9 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
         path = tmp_path / "candidates.json"
         path.write_text(
             _corpus(
-                _row("ls ~/.kirocrew"),
-                _row("cat ~/.kirocrew/cloud.json", reason=f"the role is {ARN}"),
-                _row("jq . ~/.kirocrew/config.json", reason=f"the account is /{ACCT}/"),
+                _row("ls ~/.ajcrew"),
+                _row("cat ~/.ajcrew/cloud.json", reason=f"the role is {ARN}"),
+                _row("jq . ~/.ajcrew/config.json", reason=f"the account is /{ACCT}/"),
             ),
             encoding="utf-8",
         )
@@ -709,9 +709,9 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
         prose costs no measurement at all.
         """
         commands = [
-            "cat ~/.kirocrew/cloud.json",
-            "ls ~/.kirocrew",
-            "jq . ~/.kirocrew/config.json",
+            "cat ~/.ajcrew/cloud.json",
+            "ls ~/.ajcrew",
+            "jq . ~/.ajcrew/config.json",
         ]
         path = tmp_path / "candidates.json"
         path.write_text(
@@ -744,14 +744,14 @@ class TestDropChangedFieldsSplitsTheCorpusByWhatIsClassified:
         """
         path = tmp_path / "candidates.json"
         path.write_text(
-            _corpus(_row("ls ~/.kirocrew", reason=f"the role is {ARN}")), encoding="utf-8"
+            _corpus(_row("ls ~/.ajcrew", reason=f"the role is {ARN}")), encoding="utf-8"
         )
         redact.main(["--mode", "json", "--drop-changed-fields", str(path)])
 
         rows = deny_diff.load_corpus(path)
 
         assert len(rows) == 1
-        assert rows[0].command == "ls ~/.kirocrew"
+        assert rows[0].command == "ls ~/.ajcrew"
         assert rows[0].reason == ""
 
 

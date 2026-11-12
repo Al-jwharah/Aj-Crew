@@ -13,8 +13,8 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DOC = REPO_ROOT / "src" / "kiro_crew" / "docs" / "session-control.md"
-INDEX = REPO_ROOT / "src" / "kiro_crew" / "docs" / "index.md"
+DOC = REPO_ROOT / "src" / "aj_crew" / "docs" / "session-control.md"
+INDEX = REPO_ROOT / "src" / "aj_crew" / "docs" / "index.md"
 
 
 @pytest.fixture(scope="module")
@@ -24,7 +24,7 @@ def doc_text() -> str:
 
 @pytest.fixture(scope="module")
 def advertised_tools() -> list[dict]:
-    from kiro_crew.mcp_dashboard import _tool_definitions
+    from aj_crew.mcp_dashboard import _tool_definitions
 
     return _tool_definitions()
 
@@ -68,7 +68,7 @@ def test_the_page_states_the_tool_count_it_documents(
 ) -> None:
     """The page opens on a count, and a count is the one claim a reader cannot check."""
     assert f"all {len(advertised_tools)} of its tools" in doc_text
-    assert f"the {len(advertised_tools)} `kirocrew-dashboard` MCP tools" in INDEX.read_text(
+    assert f"the {len(advertised_tools)} `ajcrew-dashboard` MCP tools" in INDEX.read_text(
         encoding="utf-8"
     ), "index.md's row states a different tool count than the server advertises"
 
@@ -89,7 +89,7 @@ def test_the_agent_inheritance_warning_quotes_the_live_schema(
     assert "inherits the CALLER'S OWN agent" in doc_text, (
         "the page must keep quoting session_create's own wording for the " "agent-inheritance trap"
     )
-    assert "kirocrew-worker" in schema_text and "kirocrew-worker" in doc_text
+    assert "ajcrew-worker" in schema_text and "ajcrew-worker" in doc_text
 
 
 def test_the_documented_defaults_match_the_schemas(
@@ -128,8 +128,8 @@ def test_the_page_matches_the_session_control_group_and_the_channel_block(
     is the containment list. The page splits the server into those two halves and tells
     a channel agent it has none of them, so both sets are read from their own modules.
     """
-    from kiro_crew.channel import CHANNEL_AGENT_BLOCKED_TOOLS
-    from kiro_crew.mcp_dashboard import SESSION_CONTROL_TOOLS
+    from aj_crew.channel import CHANNEL_AGENT_BLOCKED_TOOLS
+    from aj_crew.mcp_dashboard import SESSION_CONTROL_TOOLS
 
     assert len(SESSION_CONTROL_TOOLS) == 24
     for tool in SESSION_CONTROL_TOOLS:
@@ -148,7 +148,7 @@ def test_the_page_matches_the_session_control_group_and_the_channel_block(
 
 def _session_control_source() -> str:
     """The facade and every owner module it composes, where the refusal codes live."""
-    dashboard = Path(__file__).parent.parent / "src" / "kiro_crew" / "dashboard"
+    dashboard = Path(__file__).parent.parent / "src" / "aj_crew" / "dashboard"
     paths = [dashboard / "session_control.py"]
     paths += sorted((dashboard / "session_control_parts").glob("*.py"))
     return "\n".join(path.read_text(encoding="utf-8") for path in paths)
@@ -205,10 +205,10 @@ def test_the_queue_row_matches_what_each_verb_does_to_the_queue(
     """
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
+    from aj_crew.dashboard.chat_persistence import _rehydrate_slot_from_history
 
     # The handlers facade and every ``chat_api`` owner it composes, read as one text.
-    dashboard = Path(__file__).parent.parent / "src" / "kiro_crew" / "dashboard"
+    dashboard = Path(__file__).parent.parent / "src" / "aj_crew" / "dashboard"
     handlers = "\n".join(
         path.read_text(encoding="utf-8")
         for path in (dashboard / "chat_handlers.py", *sorted((dashboard / "chat_api").glob("*.py")))
@@ -232,7 +232,7 @@ def test_the_queue_row_matches_what_each_verb_does_to_the_queue(
     # A tab rehydrated from disk hands its queued prompts back, sanitized: a
     # hand-added ``kind`` is not carried, and an entry the writer never emits is
     # dropped.
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     queued = [{"id": "q-1", "content": "still waiting", "kind": "steer"}, {"content": 7}]
     line = {"_type": "metadata", "created_at": "2026-01-01T00:00:00", "queued_prompts": queued}
@@ -256,7 +256,7 @@ def test_the_queue_row_matches_what_each_verb_does_to_the_queue(
 
 def test_the_documented_switch_defaults_match_config(doc_text: str) -> None:
     """The agent switches the doc's table states, each read off ``AgentConfig``."""
-    from kiro_crew.config.sections import AgentConfig
+    from aj_crew.config.sections import AgentConfig
 
     agent_cfg = AgentConfig()
     switches = ("session_control", "member_dispatch", "crew_panel")
@@ -274,16 +274,16 @@ def test_the_documented_switch_defaults_match_config(doc_text: str) -> None:
 
 def test_the_documented_limits_match_their_constants(doc_text: str) -> None:
     """Rate-limit window, budgets, and the capacity ceilings behind them."""
-    from kiro_crew.dashboard.chat_folders import MAX_CHAT_FOLDERS
-    from kiro_crew.dashboard.create_rate_limit import (
+    from aj_crew.dashboard.chat_folders import MAX_CHAT_FOLDERS
+    from aj_crew.dashboard.create_rate_limit import (
         MAX_FOLDER_CREATES_PER_WINDOW,
         MAX_SESSION_CREATES_PER_WINDOW,
         MAX_TAG_COLUMN_CREATES_PER_WINDOW,
         MAX_TAG_CREATES_PER_WINDOW,
         WINDOW_SECS,
     )
-    from kiro_crew.dashboard.state import MAX_LIVE_SLOTS, MAX_SLOTS_PER_CREATOR
-    from kiro_crew.dashboard.stop_retry import WINDOW_SECS as STOP_WINDOW_SECS
+    from aj_crew.dashboard.state import MAX_LIVE_SLOTS, MAX_SLOTS_PER_CREATOR
+    from aj_crew.dashboard.stop_retry import WINDOW_SECS as STOP_WINDOW_SECS
 
     assert f"over a {int(WINDOW_SECS)}-second window" in doc_text
     assert f"**{MAX_SESSION_CREATES_PER_WINDOW}** session" in doc_text
@@ -300,7 +300,7 @@ def test_the_documented_limits_match_their_constants(doc_text: str) -> None:
     # The broadcast cap is quoted TWICE -- once in prose, once in the refusal
     # table -- and both are pinned, because this page shipped `32` after the
     # constant rose to 50: an agent reading it named a subset it never needed.
-    from kiro_crew.validation import MAX_BROADCAST_TARGETS
+    from aj_crew.validation import MAX_BROADCAST_TARGETS
 
     assert (
         f"at most **{MAX_BROADCAST_TARGETS}** sessions are reachable" in doc_text

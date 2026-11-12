@@ -22,17 +22,15 @@ from dynamic_dashboard_cards_helpers import _seeded_session_tree  # noqa: F401
 from dynamic_dashboard_cards_helpers import lifecycle_fixture  # noqa: F401
 from dynamic_dashboard_cards_helpers import _worker_done
 
-from kiro_crew.dashboard.dynamic_cards import CardBudget, CardPublisher
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.dynamic_cards import CardBudget, CardPublisher
+from aj_crew.testing.wait import await_until
 
 
 def test_automatic_cards_default_off_and_config_roundtrips():
-    from kiro_crew.config.loader import KiroCrewConfig, _build_dashboard_config
+    from aj_crew.config.loader import AjCrewConfig, _build_dashboard_config
 
-    assert KiroCrewConfig().dashboard.dynamic_dashboard_cards is False
-    cfg = KiroCrewConfig(
-        dashboard=_build_dashboard_config(set(), {"dynamic_dashboard_cards": True})
-    )
+    assert AjCrewConfig().dashboard.dynamic_dashboard_cards is False
+    cfg = AjCrewConfig(dashboard=_build_dashboard_config(set(), {"dynamic_dashboard_cards": True}))
     assert cfg.dashboard.dynamic_dashboard_cards is True
     assert cfg.to_dict()["dashboard"]["dynamic_dashboard_cards"] is True
 
@@ -49,7 +47,7 @@ async def test_disabled_cards_never_queue_or_spend(lifecycle):
 
 @pytest.mark.asyncio
 async def test_enabling_seeds_open_sessions_without_a_get(lifecycle, monkeypatch):
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     service, slot, state = lifecycle
     service.set_enabled(False)
@@ -68,7 +66,7 @@ async def test_enabling_seeds_open_sessions_without_a_get(lifecycle, monkeypatch
 
 @pytest.mark.asyncio
 async def test_disable_cancels_inflight_without_refunding_budget(lifecycle, monkeypatch):
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     service, slot, state = lifecycle
     entered, cancelled, never = asyncio.Event(), asyncio.Event(), asyncio.Event()
@@ -199,7 +197,7 @@ async def test_timeout_releases_the_only_permit_and_keeps_last_good_card(monkeyp
 
 @pytest.mark.asyncio
 async def test_rewrite_discards_previous_layout_and_reads_current_disk_rows(lifecycle, monkeypatch):
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     service, slot, state = lifecycle
     service.publisher.budget = CardBudget(debounce=0, per_session=0)
@@ -225,9 +223,9 @@ async def test_rewrite_discards_previous_layout_and_reads_current_disk_rows(life
 async def test_real_history_locks_and_card_get_authority(lifecycle, monkeypatch, tmp_path):
     import json
 
-    from kiro_crew.dashboard import card_lifecycle
-    from kiro_crew.dashboard.routes.chat import api_dashboard_card
-    from kiro_crew.history import ConversationLog
+    from aj_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard.routes.chat import api_dashboard_card
+    from aj_crew.history import ConversationLog
 
     service, slot, state = lifecycle
     state.conversation_log = ConversationLog(tmp_path / "sessions")
@@ -258,7 +256,7 @@ async def test_real_history_locks_and_card_get_authority(lifecycle, monkeypatch,
 
 @pytest.mark.asyncio
 async def test_rapid_toggle_waits_for_cancel_and_shutdown_does_not_respawn(lifecycle, monkeypatch):
-    from kiro_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard import card_lifecycle
 
     service, slot, state = lifecycle
     entered, cancelling, release = asyncio.Event(), asyncio.Event(), asyncio.Event()
@@ -307,10 +305,10 @@ async def test_rapid_toggle_waits_for_cancel_and_shutdown_does_not_respawn(lifec
 async def test_gateway_live_config_owns_cost_opt_in(monkeypatch):
     from aiohttp import web
 
-    from kiro_crew.config import live
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard.server import _kick_config_watch, _register_config_watch
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.config import live
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard.server import _kick_config_watch, _register_config_watch
+    from aj_crew.dashboard.state import DashboardState
 
     watcher = live.ConfigWatch()
     monkeypatch.setattr(live, "watch", lambda: watcher)
@@ -324,7 +322,7 @@ async def test_gateway_live_config_owns_cost_opt_in(monkeypatch):
     state.set_dynamic_cards_enabled = lambda enabled: DashboardState.set_dynamic_cards_enabled(
         state, enabled
     )
-    initial = KiroCrewConfig()
+    initial = AjCrewConfig()
     app = web.Application()
     _register_config_watch(app, state, initial)
     assert state._dynamic_cards is None
@@ -333,7 +331,7 @@ async def test_gateway_live_config_owns_cost_opt_in(monkeypatch):
         asyncio.gather(*state._background_tasks), what="the background tasks finishing"
     )
     assert state._dynamic_cards is None
-    updated = KiroCrewConfig()
+    updated = AjCrewConfig()
     updated.dashboard.dynamic_dashboard_cards = True
     await watcher._dispatch(
         live.ConfigChange(
@@ -365,10 +363,10 @@ def test_registering_routes_and_config_never_imports_card_producer(
 
     from aiohttp import web
 
-    from kiro_crew.config import live
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard.routes import chat
-    from kiro_crew.dashboard.server import _register_config_watch
+    from aj_crew.config import live
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard.routes import chat
+    from aj_crew.dashboard.server import _register_config_watch
 
     original_import = builtins.__import__
     test_thread = threading.get_ident()
@@ -377,13 +375,13 @@ def test_registering_routes_and_config_never_imports_card_producer(
         # The hook is process-wide while it is installed, so it raises only for imports
         # made on this test's own thread: another thread's import is none of its business.
         if threading.get_ident() == test_thread:
-            assert name != "kiro_crew.dashboard.card_lifecycle", "producer imported before bind"
+            assert name != "aj_crew.dashboard.card_lifecycle", "producer imported before bind"
         return original_import(name, *args, **kwargs)
 
     monkeypatch.setattr(builtins, "__import__", guarded_import)
     monkeypatch.setattr(live, "watch", lambda: watcher)
     watcher = live.ConfigWatch()
-    initial = KiroCrewConfig()
+    initial = AjCrewConfig()
     initial.dashboard.dynamic_dashboard_cards = enabled
     state = SimpleNamespace(set_dynamic_cards_enabled=lambda value: None)
     app = web.Application()
@@ -409,11 +407,11 @@ async def test_initial_enabled_activation_is_deferred_and_seeds_restored_session
 
     from aiohttp import web
 
-    from kiro_crew.config import live
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard import card_lifecycle
-    from kiro_crew.dashboard.server import _kick_config_watch, _register_config_watch
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.config import live
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard.server import _kick_config_watch, _register_config_watch
+    from aj_crew.dashboard.state import DashboardState
 
     service, slot, state = lifecycle
     state._dynamic_cards = None
@@ -436,7 +434,7 @@ async def test_initial_enabled_activation_is_deferred_and_seeds_restored_session
     watcher = live.ConfigWatch()
     monkeypatch.setattr(live, "watch", lambda: watcher)
     monkeypatch.setattr(watcher, "start", AsyncMock())
-    initial = KiroCrewConfig()
+    initial = AjCrewConfig()
     initial.dashboard.dynamic_dashboard_cards = True
     app = web.Application()
     _register_config_watch(app, state, initial)
@@ -465,7 +463,7 @@ def test_both_server_entrypoints_defer_card_activation_until_after_listening():
     import inspect
     from pathlib import Path
 
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     # The boot phases an entrypoint delegates to live in its server_runtime owners.
     owners = sorted((Path(server.__file__).parent / "server_runtime").glob("[!_]*.py"))
@@ -488,14 +486,14 @@ async def test_optional_card_activation_failure_does_not_disable_config_watching
 
     from aiohttp import web
 
-    from kiro_crew.config import live
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.dashboard.server import _kick_config_watch
+    from aj_crew.config import live
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.dashboard.server import _kick_config_watch
 
     watcher = live.ConfigWatch()
     monkeypatch.setattr(live, "watch", lambda: watcher)
     monkeypatch.setattr(watcher, "start", AsyncMock())
-    initial = KiroCrewConfig()
+    initial = AjCrewConfig()
     initial.dashboard.dynamic_dashboard_cards = True
     app = web.Application()
     app["config_watch_initial"] = initial
@@ -514,9 +512,9 @@ async def test_optional_card_activation_failure_does_not_disable_config_watching
 async def test_config_cleanup_cancels_card_worker_without_respawning(lifecycle, monkeypatch):
     from aiohttp import web
 
-    from kiro_crew.config import live
-    from kiro_crew.dashboard import card_lifecycle
-    from kiro_crew.dashboard.server import _register_config_watch
+    from aj_crew.config import live
+    from aj_crew.dashboard import card_lifecycle
+    from aj_crew.dashboard.server import _register_config_watch
 
     service, slot, state = lifecycle
     state._dynamic_cards = service

@@ -1,6 +1,6 @@
 """The session gate and the body check on the memory dashboard's mutating routes.
 
-Covers ``kiro_crew.dashboard.handlers.memory``'s shared-table routes and settings PUT, how
+Covers ``aj_crew.dashboard.handlers.memory``'s shared-table routes and settings PUT, how
 the gate spots a subagent session, and the 400 on a non-object body. See
 ``test_handlers_memory_coverage.py`` for the family.
 """
@@ -25,9 +25,9 @@ from handlers_memory_coverage_helpers import (  # noqa: F401 -- the autouse fixt
     _store,
 )
 
-import kiro_crew.dashboard.handlers.memory as mem_mod
+import aj_crew.dashboard.handlers.memory as mem_mod
 
-_MOD = "kiro_crew.dashboard.handlers.memory"
+_MOD = "aj_crew.dashboard.handlers.memory"
 
 
 # the memory-mutation session gate, on every route that carries it
@@ -103,7 +103,7 @@ class TestMemoryMutationSessionGate:
     async def test_unrecognized_session_is_refused(
         self, case_id: str, handler: str, method: str, body: Any, mutator: str
     ) -> None:
-        # No slot, no restricted-key entry, no transcript on disk (KIROCREW_HOME is
+        # No slot, no restricted-key entry, no transcript on disk (AJCREW_HOME is
         # pinned per test), so the recognition probe finds nothing to accept.
         state, blocked = _gate_fixture(case_id, mutator, restricted=False)
         req = _make_request(state, method=method, json_body=body, session_key="dashboard:forged")
@@ -142,7 +142,7 @@ class TestMemoryMutationSessionGate:
         """A refusal is an authorization decision, so it lands in the SEL log."""
         log = MagicMock()
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.sel", lambda: SimpleNamespace(log_api_access=log)
+            "aj_crew.dashboard.handlers.sel", lambda: SimpleNamespace(log_api_access=log)
         )
         state, _blocked = _gate_fixture(case_id, mutator, restricted=True)
         req = _make_request(state, method=method, json_body=body, session_key="dashboard:ghost")
@@ -179,7 +179,7 @@ class TestMemoryMutationSessionGate:
         req = _make_request(
             state, method="PUT", json_body={"migrated": True}, session_key=session_key
         )
-        with patch(f"{_MOD}.KiroCrewConfig.load", return_value=_cfg()):
+        with patch(f"{_MOD}.AjCrewConfig.load", return_value=_cfg()):
             resp = await mem_mod.api_memory_settings(req)
         assert resp.status == status
         assert _body(resp)["code"] == code
@@ -213,8 +213,8 @@ class TestSubagentMemorySessionRecognition:
         "run_id", ["", "../worker", r"..\worker", ".worker", "C:worker", "worker:stream", "a\x00b"]
     )
     async def test_invalid_subagent_ids_cannot_reach_the_filesystem(self, monkeypatch, run_id):
-        from kiro_crew.dashboard.handlers.cron import _recognize_session
-        from kiro_crew.history import is_incognito_transcript
+        from aj_crew.dashboard.handlers.cron import _recognize_session
+        from aj_crew.history import is_incognito_transcript
 
         # Model an existing target at every spelling: rejection must come from
         # key validation, not from an absent file (including Windows ADS paths).
@@ -234,10 +234,10 @@ class TestSubagentMemorySessionRecognition:
         exists.assert_not_called()
 
     async def test_subagent_history_cannot_replace_a_live_allocation(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers.cron import _recognize_session
-        from kiro_crew.history import ConversationLog, is_incognito_transcript
+        from aj_crew.dashboard.handlers.cron import _recognize_session
+        from aj_crew.history import ConversationLog, is_incognito_transcript
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         log = ConversationLog(base_dir=tmp_path / "sessions")
         await asyncio.to_thread(
             log.update_metadata, "subagent:worker-a", {"memory_store": "default"}
@@ -260,10 +260,10 @@ class TestSubagentMemorySessionRecognition:
     async def test_a_subagent_cannot_borrow_another_sessions_identity(
         self, tmp_path, monkeypatch, collision
     ):
-        from kiro_crew.dashboard.handlers.cron import _recognize_session
-        from kiro_crew.history import ConversationLog, is_incognito_transcript
+        from aj_crew.dashboard.handlers.cron import _recognize_session
+        from aj_crew.history import ConversationLog, is_incognito_transcript
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         state = _make_state()
         if collision == "live-slot":
             state._slots["worker-a"] = SimpleNamespace(memory_mode="persistent")
@@ -299,10 +299,10 @@ class TestSubagentMemorySessionRecognition:
     async def test_subagent_history_mode_cannot_replace_a_live_allocation(
         self, tmp_path, monkeypatch, metadata
     ):
-        from kiro_crew.dashboard.handlers.cron import _recognize_session
-        from kiro_crew.history import is_incognito_transcript
+        from aj_crew.dashboard.handlers.cron import _recognize_session
+        from aj_crew.history import is_incognito_transcript
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         sessions = tmp_path / "sessions"
         sessions.mkdir()
         (sessions / "subagent_worker-a.jsonl").write_text(
@@ -366,7 +366,7 @@ class TestNonObjectBodiesAcrossConvertedHandlers:
             body_present=True,
         )
         handler = getattr(mem_mod, handler_name)
-        with patch(f"{_MOD}.KiroCrewConfig.load", return_value=_cfg()):
+        with patch(f"{_MOD}.AjCrewConfig.load", return_value=_cfg()):
             resp = await handler(req)
         assert resp.status == 400, f"{handler_name} on {payload!r}: expected 400"
         assert _body(resp)["code"] == "body_not_object", handler_name

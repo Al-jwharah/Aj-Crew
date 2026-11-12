@@ -26,7 +26,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_PERMISSION_REQUEST,
     EVENT_TOOL_CALL,
     OPTION_ALLOW_ONCE,
@@ -41,9 +41,9 @@ def _guard():
     # Resolved by name so the unfixed tree fails inside each test, naming the
     # missing module, rather than at collection.
     try:
-        return importlib.import_module("kiro_crew.acp.batch_guard")
+        return importlib.import_module("aj_crew.acp.batch_guard")
     except ImportError:
-        pytest.fail("kiro_crew.acp.batch_guard is missing: no batch write guard exists")
+        pytest.fail("aj_crew.acp.batch_guard is missing: no batch write guard exists")
 
 
 # ── frames ──
@@ -301,7 +301,7 @@ def test_a_path_qualified_operator_prefix_matches_by_program_name(command):
 
 
 def test_the_built_in_table_names_no_extra_write_commands():
-    from kiro_crew.hook_runtime.hook_types import HooksConfig
+    from aj_crew.hook_runtime.hook_types import HooksConfig
 
     assert HooksConfig.from_dict({}).batch_write_guard_commands == []
     assert HooksConfig.from_dict(
@@ -339,18 +339,18 @@ def test_built_in_file_tools_follow_the_table(tool_name, expected):
 @pytest.mark.parametrize(
     ("server", "tool", "expected"),
     [
-        ("kirocrew-work", "work_report", "write"),
-        ("kirocrew-work", "work_ledger_record", "write"),
-        ("kirocrew-work", "work_ledger_read", "read"),
-        ("kirocrew-work", "work_brief", "read"),
-        ("kirocrew-dashboard", "session_send", "write"),
-        ("kirocrew-dashboard", "session_broadcast", "write"),
-        ("kirocrew-dashboard", "session_status", "read"),
-        ("kirocrew-dashboard", "session_read_message", "read"),
-        ("kirocrew-core", "send_message", "write"),
-        ("kirocrew-core", "session_ledger_record", "write"),
-        ("kirocrew-core", "memory_recall", "read"),
-        ("kirocrew-core", "spawn_status", "read"),
+        ("ajcrew-work", "work_report", "write"),
+        ("ajcrew-work", "work_ledger_record", "write"),
+        ("ajcrew-work", "work_ledger_read", "read"),
+        ("ajcrew-work", "work_brief", "read"),
+        ("ajcrew-dashboard", "session_send", "write"),
+        ("ajcrew-dashboard", "session_broadcast", "write"),
+        ("ajcrew-dashboard", "session_status", "read"),
+        ("ajcrew-dashboard", "session_read_message", "read"),
+        ("ajcrew-core", "send_message", "write"),
+        ("ajcrew-core", "session_ledger_record", "write"),
+        ("ajcrew-core", "memory_recall", "read"),
+        ("ajcrew-core", "spawn_status", "read"),
     ],
 )
 def test_first_party_mcp_tools_follow_the_table(server, tool, expected):
@@ -456,7 +456,7 @@ def test_a_new_turn_starts_an_empty_window():
 
 def test_the_window_shares_the_in_flight_bound_and_logs_overflow(caplog):
     guard = _guard()
-    from kiro_crew.acp._dispatch_parts.tool_call_provenance import MAX_ACTIVE_TOOL_CALLS
+    from aj_crew.acp._dispatch_parts.tool_call_provenance import MAX_ACTIVE_TOOL_CALLS
 
     window = guard.BatchWindow()
     with caplog.at_level("WARNING", logger=guard.__name__):
@@ -469,7 +469,7 @@ def test_the_window_shares_the_in_flight_bound_and_logs_overflow(caplog):
 
 def test_the_window_keeps_a_bounded_key_for_a_huge_id():
     guard = _guard()
-    from kiro_crew.acp._dispatch_parts.tool_call_provenance import TOOL_CALL_CACHE_MAX_KEY_CHARS
+    from aj_crew.acp._dispatch_parts.tool_call_provenance import TOOL_CALL_CACHE_MAX_KEY_CHARS
 
     huge = "i" * (1024 * 1024)
     window = guard.BatchWindow()
@@ -544,7 +544,7 @@ def test_a_shell_call_with_no_command_yet_is_neither_class():
 
 
 def test_the_guard_is_on_unless_the_operator_turns_it_off():
-    from kiro_crew.hook_runtime.hook_types import HooksConfig
+    from aj_crew.hook_runtime.hook_types import HooksConfig
 
     assert HooksConfig().batch_write_guard is True
     assert HooksConfig.from_dict({}).batch_write_guard is True
@@ -565,7 +565,7 @@ def _answers(send_mock):
 
 
 def _client(tmp_path):
-    from kiro_crew.acp.client import AcpClient
+    from aj_crew.acp.client import AcpClient
 
     client = AcpClient(work_dir=tmp_path)
     client._send_response = AsyncMock()
@@ -574,7 +574,7 @@ def _client(tmp_path):
 
 
 def _handle():
-    from kiro_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.session_handle import AcpSessionHandle
 
     runtime = MagicMock()
     runtime.send_response = AsyncMock()
@@ -682,8 +682,8 @@ async def test_a_cancel_during_the_notice_still_answers_the_request(
     _feed(transport, _write_frame())
     transport._permission_gate_events[45] = _write_permission(45)
 
-    from kiro_crew.llm_helpers_parts import tool_approval
-    from kiro_crew.testing.wait import await_until
+    from aj_crew.llm_helpers_parts import tool_approval
+    from aj_crew.testing.wait import await_until
 
     before = set(tool_approval._orphan_rejects)
     with pytest.raises(asyncio.CancelledError):
@@ -710,8 +710,8 @@ def _child_frame(msg: JsonRpcMessage, child_sid: str = "child-1") -> JsonRpcMess
 
 
 def _claude_client(tmp_path):
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
 
     client = AcpClient(work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE)
     client._send_response = AsyncMock()
@@ -819,12 +819,12 @@ async def test_transport_applies_the_operators_extra_write_commands(
 @pytest.mark.asyncio
 async def test_guard_settings_read_the_hooks_section(monkeypatch):
     guard = _guard()
-    from kiro_crew.config import KiroCrewConfig
+    from aj_crew.config import AjCrewConfig
 
     class _Cfg:
         hooks = {"batch_write_guard": True, "batch_write_guard_commands": list(_EXTRA)}
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: _Cfg()))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: _Cfg()))
     assert guard.guard_settings() == (True, _EXTRA)
     _Cfg.hooks = {}
     assert guard.guard_settings() == (True, ())
@@ -847,7 +847,7 @@ async def test_guard_settings_read_the_hooks_section(monkeypatch):
 def test_guard_settings_through_a_real_config_load(tmp_path, text, expected):
     from unittest.mock import patch
 
-    from kiro_crew.config.loader import _invalidate_config_cache
+    from aj_crew.config.loader import _invalidate_config_cache
 
     guard = _guard()
     cfg_file = tmp_path / "config.json"
@@ -855,9 +855,9 @@ def test_guard_settings_through_a_real_config_load(tmp_path, text, expected):
     _invalidate_config_cache()
     try:
         with (
-            patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
+            patch("aj_crew.config.loader.config_path", return_value=cfg_file),
             patch(
-                "kiro_crew.config.loader.config_local_path",
+                "aj_crew.config.loader.config_local_path",
                 return_value=tmp_path / "config.local.json",
             ),
         ):
@@ -869,7 +869,7 @@ def test_guard_settings_through_a_real_config_load(tmp_path, text, expected):
 def test_demo_refusal_text():
     """The refusal a model reads, printed for the PR body's demo transcript."""
     guard = _guard()
-    from kiro_crew.deny_notice import build_refusal_steer_notice
+    from aj_crew.deny_notice import build_refusal_steer_notice
 
     window = guard.BatchWindow()
     window.dispatched("tc-read", guard.READ, "gh pr view 7 --json headRefOid")
@@ -949,15 +949,15 @@ async def test_a_peer_named_only_by_its_permission_request_still_counts(
     monkeypatch.setattr(guard, "guard_settings", lambda: (True, ()))
     transport = make_transport(tmp_path)
     _with_steer(transport, monkeypatch)
-    _feed(transport, _mcp_frame("tc-ledger-read", "kirocrew-work"))
-    _feed(transport, _mcp_frame("tc-ledger-write", "kirocrew-work"))
+    _feed(transport, _mcp_frame("tc-ledger-read", "ajcrew-work"))
+    _feed(transport, _mcp_frame("tc-ledger-write", "ajcrew-work"))
     transport._permission_gate_events[46] = _mcp_permission(
-        46, "tc-ledger-read", "kirocrew-work", "work_ledger_read"
+        46, "tc-ledger-read", "ajcrew-work", "work_ledger_read"
     )
     transport._permission_gate_events[47] = _mcp_permission(
         47,
         "tc-ledger-write",
-        "kirocrew-work",
+        "ajcrew-work",
         "work_ledger_record",
         json.dumps({"action": "decide", "item_id": "it_9fc6cc99"}),
     )
@@ -976,7 +976,7 @@ async def test_a_batch_refusal_settles_as_a_host_refusal_with_its_cause(
     # recovery path that collects refused outcomes gets them, not a bare
     # floor refusal.
     guard = _guard()
-    from kiro_crew import tool_permission as tp
+    from aj_crew import tool_permission as tp
 
     monkeypatch.setattr(guard, "guard_settings", lambda: (True, ()))
     transport = make_transport(tmp_path)
@@ -1004,7 +1004,7 @@ async def test_a_batch_refusal_settles_as_a_host_refusal_with_its_cause(
     transport._permission_gate_events[49] = AcpEvent(
         kind=EVENT_PERMISSION_REQUEST, request_id=49, title="x"
     )
-    monkeypatch.setattr("kiro_crew.permission_floor.refusal_for", lambda *a, **k: "Blocked: floor")
+    monkeypatch.setattr("aj_crew.permission_floor.refusal_for", lambda *a, **k: "Blocked: floor")
     ask.request_id = 49
     ask.event = transport._permission_gate_events[49]
     settled = await tp._allow(ask, policy, "test_rung", "auto_approved", "rule")
@@ -1012,13 +1012,13 @@ async def test_a_batch_refusal_settles_as_a_host_refusal_with_its_cause(
 
 
 def _provider_for(transport):
-    from kiro_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.session_handle import AcpSessionHandle
 
     if isinstance(transport, AcpSessionHandle):
-        from kiro_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.session_provider import AcpSessionProvider
 
         return AcpSessionProvider(transport, MagicMock())
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     provider = AcpProvider()
     provider._client = transport
@@ -1028,7 +1028,7 @@ def _provider_for(transport):
 @pytest.mark.parametrize("make_transport", _TRANSPORTS)
 def test_a_kept_refusal_is_held_under_a_bounded_key(tmp_path, make_transport):
     guard = _guard()
-    from kiro_crew.acp._dispatch_parts.tool_call_provenance import TOOL_CALL_CACHE_MAX_KEY_CHARS
+    from aj_crew.acp._dispatch_parts.tool_call_provenance import TOOL_CALL_CACHE_MAX_KEY_CHARS
 
     transport = make_transport(tmp_path)
     huge = "q" * (1024 * 1024)
@@ -1042,7 +1042,7 @@ def test_refusal_outcome_labels_a_guard_refusal_as_the_guard():
     # A consumer that writes its own SEL row for an approve_tool False reads the
     # kept reason, then asks refusal_outcome how to label its row.
     guard = _guard()
-    from kiro_crew.permission_floor import OUTCOME_REJECTED_TRANSPORT_FLOOR
+    from aj_crew.permission_floor import OUTCOME_REJECTED_TRANSPORT_FLOOR
 
     outcome, metadata = guard.refusal_outcome("Blocked by the batch guard: ...")
     assert outcome == guard.OUTCOME_REJECTED_BATCH_GUARD
@@ -1112,15 +1112,15 @@ def test_a_read_whose_terminal_is_lost_stops_holding_the_batch_open():
 @pytest.mark.parametrize(
     ("module_name", "make_transport"),
     [
-        ("kiro_crew.acp.client", lambda tmp_path: _client(tmp_path)),
-        ("kiro_crew.acp.session_handle", lambda tmp_path: _handle()),
+        ("aj_crew.acp.client", lambda tmp_path: _client(tmp_path)),
+        ("aj_crew.acp.session_handle", lambda tmp_path: _handle()),
     ],
 )
 async def test_a_batch_refusal_has_its_own_log_line_and_audit_row(
     tmp_path, monkeypatch, caplog, module_name, make_transport
 ):
     guard = _guard()
-    from kiro_crew import permission_floor
+    from aj_crew import permission_floor
 
     monkeypatch.setattr(guard, "guard_settings", lambda: (True, ()))
     audit = MagicMock()
@@ -1147,7 +1147,7 @@ async def test_a_batch_refusal_has_its_own_log_line_and_audit_row(
 @pytest.mark.asyncio
 async def test_a_settled_batch_refusal_writes_no_floor_refused_row(tmp_path, monkeypatch):
     guard = _guard()
-    from kiro_crew import tool_permission as tp
+    from aj_crew import tool_permission as tp
 
     monkeypatch.setattr(guard, "guard_settings", lambda: (True, ()))
     transport = _client(tmp_path)

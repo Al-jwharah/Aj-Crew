@@ -1,8 +1,8 @@
 """The crew-log fold facade keeps the patch seams the one module had.
 
-``kiro_crew.crew_log.projection`` is a mirror facade (:mod:`kiro_crew._facade_mirror`)
-over the ``kiro_crew.crew_log.projection_<role>`` owners. Callers, tests and documents
-still reach every name as ``kiro_crew.crew_log.projection.<name>``, and the moved code
+``aj_crew.crew_log.projection`` is a mirror facade (:mod:`aj_crew._facade_mirror`)
+over the ``aj_crew.crew_log.projection_<role>`` owners. Callers, tests and documents
+still reach every name as ``aj_crew.crew_log.projection.<name>``, and the moved code
 reads its names as plain module globals, so a patch through the facade reaches that
 code only because the mirror writes it into every module holding the name.
 
@@ -28,8 +28,8 @@ from types import ModuleType
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.crew_log import projection
+from aj_crew import _facade_mirror
+from aj_crew.crew_log import projection
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_projection_facade")
 
@@ -37,8 +37,8 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_projection_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "spelling_cases")
 
-FACADE = "kiro_crew.crew_log.projection"
-OWNER_PREFIX = "kiro_crew.crew_log.projection_"
+FACADE = "aj_crew.crew_log.projection"
+OWNER_PREFIX = "aj_crew.crew_log.projection_"
 CREW_LOG_DIR = Path(projection.__file__).resolve().parent
 
 #: Names the test trees are known to patch through the facade, from every kind of seam
@@ -130,13 +130,13 @@ class _Receivers:
                     local = alias.asname or alias.name
                     if full == FACADE:
                         self.aliases.add(local)
-                    elif full.startswith("kiro_crew."):
+                    elif full.startswith("aj_crew."):
                         self.modules[local] = full
             elif isinstance(node, ast.Import):
                 for alias in node.names:
                     if alias.name == FACADE:
                         self.aliases.add(alias.asname or FACADE)
-                    elif alias.name.startswith("kiro_crew.") and alias.asname:
+                    elif alias.name.startswith("aj_crew.") and alias.asname:
                         self.modules[alias.asname] = alias.name
             elif isinstance(node, ast.Assign) and isinstance(node.value, ast.Call):
                 assigns.append(node)
@@ -240,59 +240,59 @@ def _corpus_patched_names() -> frozenset[str]:
 #: Each spelling the patch scan must read, and each it must skip, keyed by case id.
 _SPELLING_CASES = {
     "monkeypatch-alias": (
-        "from kiro_crew.crew_log import projection\n"
+        "from aj_crew.crew_log import projection\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(projection, 'A', 1)\n",
         {"A"},
     ),
     "delattr-renamed-alias": (
-        "from kiro_crew.crew_log import projection as crew_log\n"
+        "from aj_crew.crew_log import projection as crew_log\n"
         "def t(monkeypatch):\n    monkeypatch.delattr(crew_log, 'B')\n",
         {"B"},
     ),
     "patch-object-import-as": (
-        "import kiro_crew.crew_log.projection as P\n"
+        "import aj_crew.crew_log.projection as P\n"
         "from unittest import mock\n"
         "def t():\n    with mock.patch.object(P, 'C'):\n        pass\n",
         {"C"},
     ),
     "dotted-setattr": (
-        "def t(monkeypatch):\n" "    monkeypatch.setattr('kiro_crew.crew_log.projection.D', 1)\n",
+        "def t(monkeypatch):\n" "    monkeypatch.setattr('aj_crew.crew_log.projection.D', 1)\n",
         {"D"},
     ),
     "mock-patch-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.crew_log.projection.E'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.crew_log.projection.E'):\n        pass\n",
         {"E"},
     ),
     "import-module": (
         "import importlib\n"
-        "P = importlib.import_module('kiro_crew.crew_log.projection')\n"
+        "P = importlib.import_module('aj_crew.crew_log.projection')\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(P, 'F', 1)\n",
         {"F"},
     ),
     "module-attribute-receiver": (
-        "from kiro_crew.crew_log import read as crew_log_read\n"
+        "from aj_crew.crew_log import read as crew_log_read\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(crew_log_read.projections, 'G', 1)\n",
         {"G"},
     ),
     "patch-multiple": (
-        "from kiro_crew.crew_log import projection\n"
+        "from aj_crew.crew_log import projection\n"
         "from unittest import mock\n"
         "def t():\n    with mock.patch.multiple(projection, H=1):\n        pass\n",
         {"H"},
     ),
     "plain-assignment-and-del": (
-        "from kiro_crew.crew_log import projection as crew_log\n"
+        "from aj_crew.crew_log import projection as crew_log\n"
         "def t():\n    crew_log.I = 1\n    del crew_log.J\n",
         {"I", "J"},
     ),
     "helper-call-receiver": (
-        "from kiro_crew.dashboard.handlers import crew_log as routes\n"
+        "from aj_crew.dashboard.handlers import crew_log as routes\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(routes._crew_log(), 'K', 1)\n",
         {"K"},
     ),
     "local-bound-from-helper": (
-        "from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs\n"
+        "from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs\n"
         "def t(monkeypatch):\n"
         "    projection = cs._projection()\n"
         "    monkeypatch.setattr(projection, 'L', 1)\n",
@@ -300,18 +300,18 @@ _SPELLING_CASES = {
     ),
     # Another module's patch, and a facade patch of a name chosen at run time.
     "other-module": (
-        "from kiro_crew.crew_log import store\n"
+        "from aj_crew.crew_log import store\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(store, 'X', 1)\n",
         set(),
     ),
     "name-chosen-at-run-time": (
-        "from kiro_crew.crew_log import projection\n"
+        "from aj_crew.crew_log import projection\n"
         "def t(monkeypatch, name):\n    monkeypatch.setattr(projection, name, 1)\n",
         set(),
     ),
     "an-owner-path-is-not-the-facade": (
         "def t(monkeypatch):\n"
-        "    monkeypatch.setattr('kiro_crew.crew_log.projection_usage.Y', 1)\n",
+        "    monkeypatch.setattr('aj_crew.crew_log.projection_usage.Y', 1)\n",
         set(),
     ),
 }
@@ -375,7 +375,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for path in _owner_paths().values():
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -392,7 +392,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
         if isinstance(node, ast.If) and _dotted(node.test) == "TYPE_CHECKING":
             for stmt in node.body:
                 if isinstance(stmt, ast.ImportFrom) and stmt.module not in family:
-                    if stmt.module == "kiro_crew.crew_log.checkpoint":
+                    if stmt.module == "aj_crew.crew_log.checkpoint":
                         continue  # the facade's own type-only imports for its annotations
                     for alias in stmt.names:
                         out[alias.asname or alias.name] = (stmt.module or "", alias.name)
@@ -400,7 +400,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
-    """At BASE the facade re-bound these by import, so ``from kiro_crew.crew_log.projection
+    """At BASE the facade re-bound these by import, so ``from aj_crew.crew_log.projection
     import RADAR_PHASES`` type-checked. Now an owner holds them, so the facade names each one
     from its home module under ``TYPE_CHECKING``, and exactly those."""
     served = set(_index().exports)

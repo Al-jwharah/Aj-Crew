@@ -14,9 +14,9 @@ from types import SimpleNamespace
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import work_ledger as wl
-from kiro_crew.crew_log import projection
-from kiro_crew.dashboard.handlers import work_ledger_board as board
+from aj_crew import work_ledger as wl
+from aj_crew.crew_log import projection
+from aj_crew.dashboard.handlers import work_ledger_board as board
 
 CONDUCTOR = "chat-1-conductor"
 OWNER = "owner-subject"
@@ -47,7 +47,7 @@ async def _call(state, conductor: str):
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 

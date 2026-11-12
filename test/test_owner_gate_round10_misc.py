@@ -22,7 +22,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.diagnostics import BundleResult
+from aj_crew.diagnostics import BundleResult
 
 pytestmark = pytest.mark.asyncio
 
@@ -53,8 +53,8 @@ def _base_app() -> web.Application:
 def _diagnostics_app(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> tuple[web.Application, list[dict]]:
-    import kiro_crew.dashboard.handlers as handlers_pkg
-    from kiro_crew.dashboard.handlers import diagnostics as dh
+    import aj_crew.dashboard.handlers as handlers_pkg
+    from aj_crew.dashboard.handlers import diagnostics as dh
 
     calls: list[dict] = []
     out = tmp_path / "diagnostics"
@@ -129,7 +129,7 @@ async def test_diagnostics_collect_and_download_allow_owner(monkeypatch, tmp_pat
 def _embedding_app(
     monkeypatch: pytest.MonkeyPatch,
 ) -> tuple[web.Application, list, threading.Event]:
-    from kiro_crew.dashboard.handlers import memory
+    from aj_crew.dashboard.handlers import memory
 
     applied: list = []
     done = threading.Event()
@@ -138,7 +138,7 @@ def _embedding_app(
         applied.append((store, raw))
         done.set()
 
-    monkeypatch.delenv("KIROCREW_EMBED_MODEL_PATH", raising=False)
+    monkeypatch.delenv("AJCREW_EMBED_MODEL_PATH", raising=False)
     monkeypatch.setattr(memory, "memory_startup_refusal", lambda: None)
     monkeypatch.setattr(
         memory, "validate_custom_model_path", lambda raw, origin="": (Path(raw), "", "")
@@ -197,8 +197,8 @@ def _record_offloads(monkeypatch: pytest.MonkeyPatch, module: Any) -> list[str]:
 
 
 async def test_diagnostics_collect_audits_the_allowed_build(monkeypatch, tmp_path) -> None:
-    import kiro_crew.dashboard.handlers as handlers_pkg
-    from kiro_crew.dashboard.handlers import diagnostics as dh
+    import aj_crew.dashboard.handlers as handlers_pkg
+    from aj_crew.dashboard.handlers import diagnostics as dh
 
     app, calls = _diagnostics_app(monkeypatch, tmp_path)
     audit = MagicMock()

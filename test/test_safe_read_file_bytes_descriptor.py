@@ -4,9 +4,9 @@ import os
 
 import pytest
 
+from aj_crew import hooks, platform_compat, portability
+from aj_crew.testing.wait import await_until
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew import hooks, platform_compat, portability
-from kiro_crew.testing.wait import await_until
 
 
 def _assert_closed(descriptors):
@@ -248,7 +248,7 @@ def darwin_spelling(tmp_path, monkeypatch):
     """Simulate kernel spelling/platform, keeping real descriptors and inodes."""
     from types import SimpleNamespace
 
-    from kiro_crew import pinned_fs
+    from aj_crew import pinned_fs
 
     directory = tmp_path / "casepack"
     directory.mkdir()
@@ -317,7 +317,7 @@ def test_darwin_kernel_case_spelling_keeps_real_descriptor(darwin_spelling, kind
     "failure", ["different_inode", "missing", "no_walk", "leaf_link", "ancestor_link"]
 )
 def test_darwin_alias_requires_nofollow_identity(darwin_spelling, monkeypatch, failure):
-    from kiro_crew import pinned_fs
+    from aj_crew import pinned_fs
 
     source = darwin_spelling.resolve()
     canonical = str(source)
@@ -359,7 +359,7 @@ def test_darwin_alias_requires_nofollow_identity(darwin_spelling, monkeypatch, f
     "failure", ["outside", "root_unknown", "root_swap", "sensitive", "hardlink", "oversize"]
 )
 def test_darwin_alias_keeps_read_boundaries(darwin_spelling, monkeypatch, failure):
-    from kiro_crew import pinned_fs
+    from aj_crew import pinned_fs
 
     source = darwin_spelling
     root = source.parent
@@ -400,8 +400,8 @@ def test_darwin_alias_keeps_read_boundaries(darwin_spelling, monkeypatch, failur
 def test_darwin_spelling_reaches_theme_destination_guard(darwin_spelling, tmp_path, monkeypatch):
     import json
 
-    from kiro_crew.dashboard import theme_validate
-    from kiro_crew.dashboard.handlers import themes
+    from aj_crew.dashboard import theme_validate
+    from aj_crew.dashboard.handlers import themes
 
     monkeypatch.setattr(theme_validate, "config_dir", lambda: tmp_path / "cfg")
     themes_root = theme_validate._themes_dir()
@@ -490,7 +490,7 @@ _NORMCASE_FOLDS_CASE = os.path.normcase("A") != "A"
 def _outbox_request(monkeypatch, source):
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.dashboard.handlers import files
+    from aj_crew.dashboard.handlers import files
 
     monkeypatch.setattr(files.config_loader, "outbox_dir", lambda: source.parent)
     monkeypatch.setattr(files, "_sel", MagicMock())
@@ -516,7 +516,7 @@ def _install_barrier(monkeypatch, checkpoint, source, pause):
     """
     from pathlib import Path
 
-    from kiro_crew import pinned_fs
+    from aj_crew import pinned_fs
 
     walk_threads = []
     if checkpoint == "resolve":
@@ -570,7 +570,7 @@ async def test_outbox_reader_keeps_loop_live_and_closes_after_cancel(
     import threading
     from concurrent.futures import ThreadPoolExecutor
 
-    from kiro_crew.dashboard.handlers import files
+    from aj_crew.dashboard.handlers import files
 
     source = darwin_spelling.resolve()
     request = _outbox_request(monkeypatch, source)
@@ -639,7 +639,7 @@ async def test_on_loop_outbox_reader_trips_the_barrier(
     """Negative control: a reader run on the event loop fails the same barrier."""
     import threading
 
-    from kiro_crew.dashboard.handlers import files
+    from aj_crew.dashboard.handlers import files
 
     source = darwin_spelling.resolve()
     request = _outbox_request(monkeypatch, source)
@@ -666,7 +666,7 @@ def test_normalization_only_alias_is_refused(darwin_spelling, monkeypatch, kind)
     """The macOS exception is exact case only: NFC and NFD spellings stay refused."""
     import unicodedata
 
-    from kiro_crew import pinned_fs
+    from aj_crew import pinned_fs
 
     source = darwin_spelling.with_name(unicodedata.normalize("NFC", "r\u00e9port.txt"))
     darwin_spelling.rename(source)
@@ -736,7 +736,7 @@ def test_case_alias_replace_follows_filesystem_identity(tmp_path, verified):
 def test_darwin_replace_refusal_preserves_original(
     darwin_spelling, monkeypatch, checkpoint, failure
 ):
-    from kiro_crew import pinned_fs
+    from aj_crew import pinned_fs
 
     source = darwin_spelling.resolve()
     root = source.parent
@@ -782,8 +782,8 @@ def test_darwin_replace_refusal_preserves_original(
 async def test_outbox_offload_preserves_refusals(monkeypatch, endpoint, failure):
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew import executors
-    from kiro_crew.dashboard.handlers import files
+    from aj_crew import executors
+    from aj_crew.dashboard.handlers import files
 
     request = MagicMock()
     request.app = {"state": MagicMock(_slots={})}

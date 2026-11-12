@@ -15,7 +15,7 @@ import re
 
 import pytest
 
-from kiro_crew.hooks import (
+from aj_crew.hooks import (
     _BUNDLED_AUTO_APPROVE_TOOLS,
     _READ_ONLY_TOOL_KINDS,
     TOOL_ALLOW,
@@ -31,7 +31,7 @@ from kiro_crew.hooks import (
 @pytest.fixture
 def restore_context():
     """Reset the platform context after a test installs a custom one."""
-    from kiro_crew.platform import reset_context
+    from aj_crew.platform import reset_context
 
     yield
     reset_context()
@@ -39,16 +39,16 @@ def restore_context():
 
 def _install_ceiling_with_command_deny(patterns):
     """Install a platform context whose governance ceiling pins ``patterns``."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.platform import governance as gov
-    from kiro_crew.platform import set_context
-    from kiro_crew.platform.bootstrap import build_default_context
-    from kiro_crew.platform.profile import PROFILE_STANDALONE
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.platform import governance as gov
+    from aj_crew.platform import set_context
+    from aj_crew.platform.bootstrap import build_default_context
+    from aj_crew.platform.profile import PROFILE_STANDALONE
 
     ceiling = gov.parse_policy(
         {"version": 1, "boot": {}, "commands": {"mode": "deny", "deny": list(patterns)}}
     )
-    ctx = build_default_context(KiroCrewConfig(), profile=PROFILE_STANDALONE)
+    ctx = build_default_context(AjCrewConfig(), profile=PROFILE_STANDALONE)
     set_context(dataclasses.replace(ctx, governance=ceiling))
     return ceiling
 
@@ -353,7 +353,7 @@ class TestResolveDeniedNotes:
         # be read as a second, FABRICATED deny pattern. The add endpoint rejects
         # this, but the keystone file is operator-editable by hand, so the read
         # path is what actually holds the invariant.
-        from kiro_crew.security import DENY_REASON_PREFIX
+        from aj_crew.security import DENY_REASON_PREFIX
 
         cfg = HooksConfig(
             denied_commands_user_added=[
@@ -396,7 +396,7 @@ class TestResolveDeniedNotes:
         routes notes into ``is_denied`` around ``resolve_denied_notes`` would pass
         the unit test above and still hand RecoveryCard a fabricated pattern.
         """
-        from kiro_crew.security import DENY_REASON_PREFIX, is_denied
+        from aj_crew.security import DENY_REASON_PREFIX, is_denied
 
         pattern = "frobnicate.*"
         cfg = HooksConfig(
@@ -530,8 +530,8 @@ class TestGovernancePins:
 
     def test_governance_pinned_ids_helper_failsoft(self):
         # Standalone default context governs nothing → no pins, no raise.
-        from kiro_crew.hooks import _governance_pinned_command_ids
-        from kiro_crew.platform import current_context
+        from aj_crew.hooks import _governance_pinned_command_ids
+        from aj_crew.platform import current_context
 
         assert _governance_pinned_command_ids(current_context()) == set()
 
@@ -662,7 +662,7 @@ class TestSearchArgDenyTarget:
         # but no encoding can make a rule anchored on `(?:\s|$)` match a path carrying a
         # suffix — `/local/home/alice/.` evades that anchor too. See the anchoring note
         # in the security spec.
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         target = _search_deny_target(
             {"path": "/local/home/alice max_depth=1", "pattern": "*.md"}
@@ -676,7 +676,7 @@ class TestSearchArgDenyTarget:
         # PRODUCTION normalizer so it models the emitted spelling on every OS, and
         # `re.escape` because a real home path carries regex metacharacters (a Windows
         # `C:\Users\…` makes `\U` a bad escape and raises rather than failing).
-        from kiro_crew.hooks import _normalize_search_path
+        from aj_crew.hooks import _normalize_search_path
 
         monkeypatch.setenv("HOME", str(tmp_path))
         monkeypatch.setenv("USERPROFILE", str(tmp_path))
@@ -742,12 +742,12 @@ class TestSearchDenyTargetSynthesis:
         a hardcoded POSIX spelling fails the Windows lane. Canonicalization has its own
         equivalence tests; the assertions using this helper are about field STRUCTURE.
         """
-        from kiro_crew.hooks import _encode_search_field, _normalize_search_path
+        from aj_crew.hooks import _encode_search_field, _normalize_search_path
 
         return f"path={_encode_search_field(_normalize_search_path(raw))}"
 
     def test_only_scope_fields_are_emitted_in_declared_order(self):
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         target = _search_deny_target(
             {"pattern": "*.py", "max_depth": 3, "path": "/srv", "include": "*.txt"}
@@ -758,7 +758,7 @@ class TestSearchDenyTargetSynthesis:
         # They are model-authored free text, not scope. An emitted value can mint a field
         # it is not, and a benign search whose pattern is a dangerous literal matches a
         # command-oriented rule.
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         target = _search_deny_target({"path": "/srv", "pattern": "DROP TABLE", "include": "*.sql"})
         assert target == f"file-search {self._path_field('/srv')}"
@@ -766,14 +766,14 @@ class TestSearchDenyTargetSynthesis:
     def test_absent_depth_is_omitted_not_placeholdered(self):
         # A rule expresses "unbounded" as the ABSENCE of max_depth, so an omitted key
         # must leave no text behind for a negative lookahead to trip over.
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         assert _search_deny_target({"path": "/srv", "pattern": "*.py"}) == (
             f"file-search {self._path_field('/srv')}"
         )
 
     def test_zero_depth_cap_is_emitted(self):
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         assert "max_depth=0" in _search_deny_target(
             {"path": "/srv", "pattern": "*.py", "max_depth": 0}
@@ -783,14 +783,14 @@ class TestSearchDenyTargetSynthesis:
         # kiro-cli echoes some rawInput keys camelCased. Missing that spelling does
         # not merely lose a field, it INVERTS the rule: an uncapped-search rule would
         # fire on a search that carries a cap.
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         assert _search_deny_target({"path": "/srv", "pattern": "*.py", "maxDepth": 2}) == (
             f"file-search {self._path_field('/srv')} max_depth=2"
         )
 
     def test_camelcased_path_is_emitted_under_the_canonical_name(self):
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         assert _search_deny_target({"filePath": "/srv", "pattern": "*.py"}) == (
             f"file-search {self._path_field('/srv')}"
@@ -799,7 +799,7 @@ class TestSearchDenyTargetSynthesis:
     def test_boolean_depth_is_not_emitted(self):
         # `bool` is an `int` subclass; a boolean depth is meaningless and no rule
         # could match it sensibly.
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         assert "max_depth" not in _search_deny_target(
             {"path": "/srv", "pattern": "*.py", "max_depth": True}
@@ -815,14 +815,14 @@ class TestSearchDenyTargetSynthesis:
     )
     def test_emitted_values_cannot_forge_a_field(self, path, forbidden, required):
         # Asserted as properties, not a literal spelling, so the Windows lane agrees.
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         target = _search_deny_target({"path": path, "pattern": "*.py"})
         assert forbidden not in target.removeprefix("file-search ")
         assert required in target
 
     def test_percent_is_escaped_so_the_encoding_is_unambiguous(self):
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         assert "%25" in _search_deny_target({"path": "/srv/100%", "pattern": "*.py"})
 
@@ -844,7 +844,7 @@ class TestSearchDenyTargetSynthesis:
         # A rule sees ONE spelling of a tree, so equivalent roots cannot slip past it.
         # Asserted as equality between two spellings rather than a literal, because
         # normalization is OS-shaped and a POSIX literal would fail on the Windows lane.
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         canonical = _search_deny_target({"path": "/srv/app", "pattern": "*.py"})
         assert _search_deny_target({"path": equivalent, "pattern": "*.py"}) == canonical
@@ -852,7 +852,7 @@ class TestSearchDenyTargetSynthesis:
     def test_emitted_separators_are_forward_slashes_on_every_os(self):
         # `normpath` produces `\` on Windows, so a rule authored with `/` — the form the
         # spec documents — would silently stop matching there, failing OPEN.
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         target = _search_deny_target({"path": "/srv/app/sub", "pattern": "*.py"})
         assert "\\" not in target
@@ -876,8 +876,8 @@ class TestSearchDenyTargetSynthesis:
         # Read the way a Windows gateway reads it, on any host.
         import ntpath
 
-        from kiro_crew import hooks
-        from kiro_crew.security import paths_resolver
+        from aj_crew import hooks
+        from aj_crew.security import paths_resolver
 
         class _NtOs:
             name, sep, altsep, path = "nt", "\\", "/", ntpath
@@ -891,7 +891,7 @@ class TestSearchDenyTargetSynthesis:
         assert target == f"file-search path={field}"
 
     def test_tilde_and_home_var_expand_to_the_real_root(self, monkeypatch, tmp_path):
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         monkeypatch.setenv("HOME", str(tmp_path))
         monkeypatch.setenv("USERPROFILE", str(tmp_path))
@@ -909,7 +909,7 @@ class TestSearchDenyTargetSynthesis:
         # regression on every host regardless.
         import pwd
 
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         def _boom(name):  # pragma: no cover - hit only on regression
             raise AssertionError(f"getpwnam({name!r}) reached from the deny target path")
@@ -928,7 +928,7 @@ class TestSearchDenyTargetSynthesis:
         # this red if an account-database fallback is ever reinstated.
         import pwd
 
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         def _boom(uid):  # pragma: no cover - hit only on regression
             raise AssertionError(f"getpwuid({uid!r}) reached from the deny target path")
@@ -948,7 +948,7 @@ class TestSearchDenyTargetSynthesis:
         # The expansion is built by concatenation with leading separators
         # stripped, mirroring how a shell resolves `$HOME//etc`. Reverting to
         # os.path.join turns this red.
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         monkeypatch.setenv("HOME", str(tmp_path))
         monkeypatch.setenv("USERPROFILE", str(tmp_path))
@@ -964,7 +964,7 @@ class TestSearchDenyTargetSynthesis:
         # arbitrary variables let an agent append `$AWS_SECRET_ACCESS_KEY` to a prefix
         # it knew a rule refuses and have the deny it wanted write the secret to a
         # readable log. Reinstating `os.path.expandvars` turns this red.
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "s3cr3t-sentinel-value")
         target = _search_deny_target(
@@ -978,7 +978,7 @@ class TestSearchDenyTargetSynthesis:
         # Substituting an unset variable with "" would turn `$HOME/x` into `/x` — a
         # root-scope walk the tool never performs — and a rule matching that broader
         # scope would then deny the wrong thing. Left literal instead.
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         monkeypatch.delenv("HOME", raising=False)
         monkeypatch.delenv("USERPROFILE", raising=False)
@@ -990,7 +990,7 @@ class TestSearchDenyTargetSynthesis:
         # `expanduser` raises ValueError on a `~name` form carrying an embedded NUL.
         # Inside the permission gate an exception is a crash, not a decision, so the
         # raw value is returned for encoding instead.
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         target = _search_deny_target({"filePath": "~bad\x00user", "pattern": "*"})
         assert target.startswith("file-search path=")
@@ -1000,13 +1000,13 @@ class TestSearchDenyTargetSynthesis:
         # `abspath` would resolve against the GATEWAY cwd, which is not the cwd the
         # tool runs in: that both bypasses a rule naming the tree actually walked and
         # falsely denies a search when the gateway's own tree is the one named.
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         assert _search_deny_target({"path": ".", "pattern": "*"}) == "file-search path=."
         assert _search_deny_target({"path": "../x", "pattern": "*"}) == "file-search path=../x"
 
     def test_recursive_operation_is_search_shaped_without_a_pattern(self):
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         assert _search_deny_target({"operation": "search_symbols", "path": "/srv"}) == (
             "file-search path=/srv"
@@ -1025,7 +1025,7 @@ class TestSearchDenyTargetSynthesis:
         ],
     )
     def test_non_search_shapes_synthesize_nothing(self, params):
-        from kiro_crew.hooks import _search_deny_target
+        from aj_crew.hooks import _search_deny_target
 
         assert _search_deny_target(params) == ""
 
@@ -1046,7 +1046,7 @@ class TestSearchTargetSynthesizedTier:
     NAMESPACE = "file-search"
 
     def _effective(self):
-        from kiro_crew.security import BUILTIN_DENIED_RULES, compute_effective_denied
+        from aj_crew.security import BUILTIN_DENIED_RULES, compute_effective_denied
 
         return list(compute_effective_denied(BUILTIN_DENIED_RULES, (), False, (), ()))
 
@@ -1065,7 +1065,7 @@ class TestSearchTargetSynthesizedTier:
         #
         # This is a ratchet, not a probe: a future built-in written against the grammar
         # fails it, which is the signal to give that rule an explicit way into the tier.
-        from kiro_crew.security import _deny_pattern_matches
+        from aj_crew.security import _deny_pattern_matches
 
         fill = "\x01" * len(self.NAMESPACE)  # inert, absent from every shipped pattern
         for target in (
@@ -1095,7 +1095,7 @@ class TestSearchTargetSynthesizedTier:
         # to relax the assertion.
         import fnmatch
 
-        from kiro_crew.security import _DENY_EXCEPTIONS, _deny_pattern_matches
+        from aj_crew.security import _DENY_EXCEPTIONS, _deny_pattern_matches
 
         targets = (
             "file-search path=/srv/mkfs-tests max_depth=3",
@@ -1120,14 +1120,14 @@ class TestSearchTargetSynthesizedTier:
                     )
 
     def test_a_command_rule_takes_no_part_in_a_synthesized_target(self):
-        from kiro_crew.security import is_denied_synthesized_target
+        from aj_crew.security import is_denied_synthesized_target
 
         # The shipped catalogue is simply not among the participating patterns.
         assert is_denied_synthesized_target("file-search path=/srv/mkfs-tests") is None
 
     def test_that_same_rule_still_denies_the_real_command(self):
         # The whole point of a separate tier rather than disabling: the rule keeps working.
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied("mkfs.ext4 /dev/sda1", denied_regexes=self._effective()) is not None
 
@@ -1146,7 +1146,7 @@ class TestSearchTargetSynthesizedTier:
         # effective set by pattern TEXT, so an operator rule whose text coincided with a
         # shipped one was read as shipped and dropped -- a silent fail-open on an explicit
         # deny. Pattern text is not provenance.
-        from kiro_crew.security import is_denied_synthesized_target
+        from aj_crew.security import is_denied_synthesized_target
 
         assert (
             is_denied_synthesized_target(
@@ -1156,7 +1156,7 @@ class TestSearchTargetSynthesizedTier:
         )
 
     def test_an_operator_authored_glob_denies(self):
-        from kiro_crew.security import is_denied_synthesized_target
+        from aj_crew.security import is_denied_synthesized_target
 
         assert (
             is_denied_synthesized_target(
@@ -1169,7 +1169,7 @@ class TestSearchTargetSynthesizedTier:
         # `None` must mean "the regex tier contributes nothing", NOT `is_denied`'s
         # fail-closed-to-every-builtin. Getting this backwards would evaluate the whole
         # shipped catalogue against a synthesized target and reinstate the collision.
-        from kiro_crew.security import is_denied_synthesized_target
+        from aj_crew.security import is_denied_synthesized_target
 
         assert is_denied_synthesized_target("file-search path=/srv/mkfs-tests", None) is None
         assert is_denied_synthesized_target("file-search path=/srv/mkfs-tests", []) is None
@@ -1179,10 +1179,10 @@ class TestSearchTargetSynthesizedTier:
         # hole: the synthesizer whitespace-encodes every value, so a hostile path cannot
         # split into the two adjacent tokens a floor looks for, and the program token is
         # always the namespace. A search of a tree cannot mint a credential.
-        from kiro_crew.hooks import _search_deny_target
-        from kiro_crew.security import _is_credential_mint, is_denied_synthesized_target
+        from aj_crew.hooks import _search_deny_target
+        from aj_crew.security import _is_credential_mint, is_denied_synthesized_target
 
-        target = _search_deny_target({"path": "/srv/kirocrew token", "pattern": "*.py"})
+        target = _search_deny_target({"path": "/srv/ajcrew token", "pattern": "*.py"})
         assert " " not in target.split("path=", 1)[1]
         assert not _is_credential_mint(target.lower())
         assert is_denied_synthesized_target(target) is None

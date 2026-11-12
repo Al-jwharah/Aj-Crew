@@ -18,7 +18,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard.handlers import files as files_mod
+from aj_crew.dashboard.handlers import files as files_mod
 
 
 def _make_app() -> web.Application:
@@ -30,7 +30,7 @@ def _make_app() -> web.Application:
 
 @pytest.fixture()
 def mock_sel():
-    with patch("kiro_crew.sel.sel") as m:
+    with patch("aj_crew.sel.sel") as m:
         instance = MagicMock()
         m.return_value = instance
         yield instance
@@ -71,7 +71,7 @@ async def test_each_path_gets_the_per_path_routes_answer(tmp_path, home, mock_se
     (tmp_path / "folder").mkdir()
     (tmp_path / ".ssh").mkdir()
     (tmp_path / ".ssh" / "id_rsa").write_text("k", encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(proj))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(proj))
 
     paths = [
         str(tmp_path / "notes.md"),

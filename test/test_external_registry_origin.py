@@ -85,7 +85,7 @@ class TestStaleCloneOriginVerification:
     async def test_mismatched_origin_discards_clone_and_reclones(self, tmp_path):
         import asyncio as _asyncio
 
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         dest = tmp_path / "app"
         (dest / ".git").mkdir(parents=True)  # looks like an existing clone
@@ -93,14 +93,14 @@ class TestStaleCloneOriginVerification:
         captured: dict = {}
         vetted_url = "ssh://git.example.com/team/MyRegistry"
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
             patch(
-                "kiro_crew.apps.registry.wrap_argv",
+                "aj_crew.apps.registry.wrap_argv",
                 side_effect=lambda a, mode="standard", **_k: (a, None),
             ),
             # cgroup_scope_argv wraps the argv on Linux (identity on macOS) —
             # pin it so the captured commands are platform-independent.
-            patch("kiro_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
+            patch("aj_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
             patch.object(
                 _asyncio,
                 "create_subprocess_exec",
@@ -130,7 +130,7 @@ class TestStaleCloneOriginVerification:
     async def test_matching_origin_pulls_in_place(self, tmp_path):
         import asyncio as _asyncio
 
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         dest = tmp_path / "app"
         (dest / ".git").mkdir(parents=True)
@@ -138,14 +138,14 @@ class TestStaleCloneOriginVerification:
         captured: dict = {}
         vetted_url = "ssh://git.example.com/team/MyRegistry"
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
             patch(
-                "kiro_crew.apps.registry.wrap_argv",
+                "aj_crew.apps.registry.wrap_argv",
                 side_effect=lambda a, mode="standard", **_k: (a, None),
             ),
             # cgroup_scope_argv wraps the argv on Linux (identity on macOS) —
             # pin it so the captured commands are platform-independent.
-            patch("kiro_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
+            patch("aj_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
             patch.object(
                 _asyncio,
                 "create_subprocess_exec",
@@ -224,20 +224,20 @@ class TestManifestOriginGate:
         fake sees is the real command, platform-independently.
         """
         return (
-            patch("kiro_crew.apps.registry.app_source_dir", return_value=clone_dir),
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.app_source_dir", return_value=clone_dir),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
             patch(
-                "kiro_crew.apps.registry.wrap_argv",
+                "aj_crew.apps.registry.wrap_argv",
                 side_effect=lambda a, mode="standard", **_k: (a, None),
             ),
-            patch("kiro_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
-            patch("kiro_crew.apps.registry.create_subprocess_limited", new=spawn),
+            patch("aj_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
+            patch("aj_crew.apps.registry.create_subprocess_limited", new=spawn),
         )
 
     @pytest.mark.asyncio
     async def test_mismatched_origin_does_not_reuse_persisted_manifest(self, tmp_path):
         """A stale clone's app.json must never be handed to the admission gate."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         clone_dir = self._seed_stale_clone(tmp_path, "STALE")
         vetted_url = "ssh://git.example.com/team/NewRepo"
@@ -259,7 +259,7 @@ class TestManifestOriginGate:
     @pytest.mark.asyncio
     async def test_matching_origin_reuses_persisted_manifest(self, tmp_path):
         """The fast path still works when the clone really is that repo."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         clone_dir = self._seed_stale_clone(tmp_path, "CURRENT")
         vetted_url = "ssh://git.example.com/team/NewRepo"
@@ -279,7 +279,7 @@ class TestManifestOriginGate:
     @pytest.mark.asyncio
     async def test_unreadable_origin_fails_closed(self, tmp_path):
         """An origin that cannot be read is treated as a mismatch, not a match."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         clone_dir = self._seed_stale_clone(tmp_path, "STALE")
         vetted_url = "ssh://git.example.com/team/NewRepo"
@@ -304,7 +304,7 @@ class TestStaleCloneDeletionFailsClosed:
 
     @pytest.mark.asyncio
     async def test_surviving_stale_clone_aborts_the_install(self, tmp_path):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         dest = tmp_path / "app"
         (dest / ".git").mkdir(parents=True)
@@ -336,13 +336,13 @@ class TestStaleCloneDeletionFailsClosed:
 
         log_lines: list = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
             patch(
-                "kiro_crew.apps.registry.wrap_argv",
+                "aj_crew.apps.registry.wrap_argv",
                 side_effect=lambda a, mode="standard", **_k: (a, None),
             ),
-            patch("kiro_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
-            patch("kiro_crew.apps.registry.create_subprocess_limited", new=_spawn),
+            patch("aj_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
+            patch("aj_crew.apps.registry.create_subprocess_limited", new=_spawn),
             # rename fails (Windows lock / permissions)
             patch.object(Path, "rename", _failing_rename),
         ):
@@ -368,7 +368,7 @@ class TestOriginMismatchDeleteOrder:
     async def test_failed_reclone_preserves_old_checkout(self, tmp_path):
         """Origin mismatch + FAILED fresh clone → old checkout still present
         at dest, error dict returned."""
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         stale_url = "https://old-origin.example.com/app.git"
         new_url = "https://new-origin.example.com/app.git"
@@ -400,14 +400,14 @@ class TestOriginMismatchDeleteOrder:
 
         log_lines: list[str] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_create_subprocess,
             ),
             patch(
-                "kiro_crew.apps.registry._clone_origin_url",
+                "aj_crew.apps.registry._clone_origin_url",
                 new=AsyncMock(return_value=stale_url),
             ),
         ):
@@ -435,7 +435,7 @@ class TestOriginMismatchDeleteOrder:
     async def test_successful_reclone_replaces_checkout(self, tmp_path):
         """Origin mismatch + successful fresh clone → dest contains the new
         clone, moved-aside path deferred to pending_cleanup."""
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         stale_url = "https://old-origin.example.com/app.git"
         new_url = "https://new-origin.example.com/app.git"
@@ -474,14 +474,14 @@ class TestOriginMismatchDeleteOrder:
         log_lines: list[str] = []
         pending_cleanup: list[Path] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_create_subprocess,
             ),
             patch(
-                "kiro_crew.apps.registry._clone_origin_url",
+                "aj_crew.apps.registry._clone_origin_url",
                 new=AsyncMock(return_value=stale_url),
             ),
         ):
@@ -510,7 +510,7 @@ class TestOriginMismatchDeleteOrder:
     async def test_move_aside_failure_returns_stale_clone_not_removed(self, tmp_path):
         """Move-aside failure (mock rename to raise) → stale_clone_not_removed
         error, mismatched clone never pulled/built."""
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         stale_url = "https://old-origin.example.com/app.git"
         new_url = "https://new-origin.example.com/app.git"
@@ -545,10 +545,10 @@ class TestOriginMismatchDeleteOrder:
 
         log_lines: list[str] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=AsyncMock(return_value=_OriginProc()),
             ),
             patch.object(Path, "rename", _failing_rename),
@@ -575,7 +575,7 @@ class TestOriginMismatchDeleteOrder:
         dest (same preservation guarantee as the failure path)."""
         import asyncio as _asyncio
 
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         stale_url = "https://old-origin.example.com/app.git"
         new_url = "https://new-origin.example.com/app.git"
@@ -613,15 +613,15 @@ class TestOriginMismatchDeleteOrder:
 
         log_lines: list[str] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_create_subprocess,
             ),
-            patch("kiro_crew.apps.registry._kill_process_group", new=AsyncMock()),
+            patch("aj_crew.apps.registry._kill_process_group", new=AsyncMock()),
             patch(
-                "kiro_crew.apps.registry._clone_origin_url",
+                "aj_crew.apps.registry._clone_origin_url",
                 new=AsyncMock(return_value=stale_url),
             ),
         ):
@@ -653,7 +653,7 @@ class TestOriginMismatchDeleteOrder:
         Without the try/finally guard, a spawn failure after move-aside would
         strand the old checkout under .stale-* permanently.
         """
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         stale_url = "https://old-origin.example.com/app.git"
         new_url = "https://new-origin.example.com/app.git"
@@ -693,10 +693,10 @@ class TestOriginMismatchDeleteOrder:
 
         log_lines: list[str] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_subprocess_side_effect,
             ),
         ):
@@ -728,7 +728,7 @@ class TestOriginMismatchDeleteOrder:
         """
         import asyncio as _asyncio
 
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         stale_url = "https://old-origin.example.com/app.git"
         new_url = "https://new-origin.example.com/app.git"
@@ -764,10 +764,10 @@ class TestOriginMismatchDeleteOrder:
 
         log_lines: list[str] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_subprocess_side_effect,
             ),
         ):
@@ -798,7 +798,7 @@ class TestOriginMismatchDeleteOrder:
         """
         import asyncio as _asyncio
 
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         stale_url = "https://old-origin.example.com/app.git"
         new_url = "https://new-origin.example.com/app.git"
@@ -858,14 +858,14 @@ class TestOriginMismatchDeleteOrder:
 
         log_lines: list[str] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_subprocess_side_effect,
             ),
             patch(
-                "kiro_crew.apps.registry._kill_process_group",
+                "aj_crew.apps.registry._kill_process_group",
                 side_effect=_fake_kill_process_group,
             ),
         ):
@@ -899,7 +899,7 @@ class TestUnreadableOriginAbort:
     @pytest.mark.asyncio
     async def test_unreadable_origin_returns_error_without_destroying(self, tmp_path):
         """Checkout with unreadable origin → error, dest untouched."""
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         git_url = "https://example.com/app.git"
         dest = tmp_path / "app-sources" / "myapp"
@@ -912,9 +912,9 @@ class TestUnreadableOriginAbort:
 
         log_lines: list[str] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
             patch(
-                "kiro_crew.apps.registry._clone_origin_url",
+                "aj_crew.apps.registry._clone_origin_url",
                 new=AsyncMock(return_value=None),
             ),
         ):
@@ -941,7 +941,7 @@ class TestUnreadableOriginAbort:
     @pytest.mark.asyncio
     async def test_readable_different_origin_still_reclones(self, tmp_path):
         """Readable but different origin → move-aside/re-clone path (not blocked)."""
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         stale_url = "https://old.example.com/app.git"
         new_url = "https://new.example.com/app.git"
@@ -971,14 +971,14 @@ class TestUnreadableOriginAbort:
         log_lines: list[str] = []
         pending_cleanup: list[Path] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_create_subprocess,
             ),
             patch(
-                "kiro_crew.apps.registry._clone_origin_url",
+                "aj_crew.apps.registry._clone_origin_url",
                 new=AsyncMock(return_value=stale_url),
             ),
         ):
@@ -1004,7 +1004,7 @@ class TestOriginMismatchLogsBeforeMoveAside:
 
     @pytest.mark.asyncio
     async def test_origin_mismatch_logs_the_mismatched_origin(self, tmp_path):
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         existing_origin = "https://example.com/old-owner/app.git"
         requested_url = "https://example.com/new-owner/app.git"
@@ -1041,15 +1041,15 @@ class TestOriginMismatchLogsBeforeMoveAside:
         log_lines: list[str] = []
         pending_cleanup: list[Path] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
-            patch("kiro_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_create_subprocess,
             ),
             patch(
-                "kiro_crew.apps.registry._clone_origin_url",
+                "aj_crew.apps.registry._clone_origin_url",
                 new=AsyncMock(return_value=existing_origin),
             ),
         ):
@@ -1099,7 +1099,7 @@ class TestCloneOriginProbeOffLoop:
 
     @pytest.mark.asyncio
     async def test_missing_git_dir_returns_none_without_spawning(self, tmp_path):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         dest = tmp_path / "app"
         dest.mkdir()  # a directory, but not a clone
@@ -1108,7 +1108,7 @@ class TestCloneOriginProbeOffLoop:
         spawn = AsyncMock()
         with (
             self._track_git_probe(dest, probe_threads),
-            patch("kiro_crew.apps.registry.create_subprocess_limited", new=spawn),
+            patch("aj_crew.apps.registry.create_subprocess_limited", new=spawn),
         ):
             assert await reg._clone_origin_url(dest) is None
 
@@ -1118,7 +1118,7 @@ class TestCloneOriginProbeOffLoop:
 
     @pytest.mark.asyncio
     async def test_existing_clone_reads_origin_after_off_loop_probe(self, tmp_path):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         dest = tmp_path / "app"
         (dest / ".git").mkdir(parents=True)
@@ -1141,11 +1141,11 @@ class TestCloneOriginProbeOffLoop:
         with (
             self._track_git_probe(dest, probe_threads),
             patch(
-                "kiro_crew.apps.registry.wrap_argv",
+                "aj_crew.apps.registry.wrap_argv",
                 side_effect=lambda a, mode="standard", **_k: (a, None),
             ),
-            patch("kiro_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
-            patch("kiro_crew.apps.registry.create_subprocess_limited", side_effect=_fake_spawn),
+            patch("aj_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
+            patch("aj_crew.apps.registry.create_subprocess_limited", side_effect=_fake_spawn),
         ):
             assert await reg._clone_origin_url(dest) == origin
 

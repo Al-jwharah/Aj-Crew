@@ -1,6 +1,6 @@
 "use strict";
 
-const { findKirocrewBin } = require("../../find-bin");
+const { findAjcrewBin } = require("../../find-bin");
 const { resolveGatewayPath } = require("../../mac-env");
 const { launchBlockingBundleParts } = require("../../bundle-integrity");
 const { describeSandboxProfileNeed } = require("../../sandbox-profile");
@@ -13,7 +13,7 @@ const { describeSandboxProfileNeed } = require("../../sandbox-profile");
  * a GUI-launched macOS app should recover, and whether this app's own
  * executable is still there to relaunch.
  *
- * Every answer is computed fresh on each call (findKirocrewBin does live
+ * Every answer is computed fresh on each call (findAjcrewBin does live
  * access() checks), which is what lets a stale-bundle respawn pick up a backend
  * swapped in at the same path. `dirname` is the Electron app directory the
  * supervisor was given, never this module's own location.
@@ -49,7 +49,7 @@ function createLaunchPreflight({
 
   /** The backend launcher the candidate list names right now. */
   function resolveGatewayBin() {
-    return findKirocrewBin(
+    return findAjcrewBin(
       fs,
       os,
       path,
@@ -83,7 +83,7 @@ function createLaunchPreflight({
   /**
    * Re-ask, without spawning anything, whether the launcher would refuse the
    * bundled backend right now. Resolves the binary afresh the way spawnGateway
-   * does (findKirocrewBin probes live), so a launcher that only lands mid-way
+   * does (findAjcrewBin probes live), so a launcher that only lands mid-way
    * through extraction is picked up too. null = not resolvable to a bundled
    * tree yet, which the dialog reads as "still installing, count unknown".
    */

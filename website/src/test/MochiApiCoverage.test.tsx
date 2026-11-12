@@ -4,7 +4,7 @@
  * `mochiApiSeam.test.ts` already pins the config nesting, the pack-detail
  * inlining and the panel-width arithmetic. What it does not reach is the set of
  * functions that exist only because a browser tab cannot do what the original's
- * Electron main process did: every one of them talks to a Kiro Crew HTTP route,
+ * Electron main process did: every one of them talks to an Aj Crew HTTP route,
  * a transient `<input type="file">`, or a blob download.
  *
  * Those are exactly the paths that fail SILENTLY. The vendored call sites are all
@@ -220,7 +220,7 @@ describe('mochiApi MCP inventory', () => {
     { name: 'plain-name', tools: [{ name: 'a' }, { name: 'b' }] },
     { name: 'slack-mcp', tool_count: 7 },
     { name: 'mochi:tools' },
-    { name: 'kirocrew-core' },
+    { name: 'ajcrew-core' },
     { name: 'unconfigured' },
   ]
 
@@ -266,7 +266,7 @@ describe('mochiApi MCP inventory', () => {
     // The app's OWN server and the host-managed ones are already in the
     // baseline grant; listing them as addable was the bug.
     expect(rows.find((r) => r.name === 'mochi:tools')?.core).toBe(true)
-    expect(rows.find((r) => r.name === 'kirocrew-core')?.core).toBe(true)
+    expect(rows.find((r) => r.name === 'ajcrew-core')?.core).toBe(true)
     expect(rows.find((r) => r.name === 'plain-name')?.core).toBe(false)
   })
 

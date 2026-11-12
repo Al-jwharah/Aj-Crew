@@ -17,8 +17,8 @@ import math
 
 import pytest
 
-from kiro_crew.computer_use import cursor_motion, render, tools
-from kiro_crew.computer_use.types import (
+from aj_crew.computer_use import cursor_motion, render, tools
+from aj_crew.computer_use.types import (
     CURVE_AMOUNT_MAX,
     DEFAULT_DRAG_PATH,
     DEFAULT_DRAG_STEPS,
@@ -171,7 +171,7 @@ class TestPathConfinement:
     @staticmethod
     def _driver(monkeypatch, owned):
         """A Windows driver whose point-ownership answer is scripted."""
-        from kiro_crew.computer_use import apps_windows, windows_driver, windows_ffi
+        from aj_crew.computer_use import apps_windows, windows_driver, windows_ffi
 
         seen: list[tuple[float, float]] = []
 
@@ -289,7 +289,7 @@ class TestMacOSInterpolationFloor:
 
     @staticmethod
     def _dragged_events(requested_steps: int, path: str) -> int:
-        from kiro_crew.computer_use import macos_ffi
+        from aj_crew.computer_use import macos_ffi
 
         steps = max(requested_steps, macos_ffi.DRAG_STEPS)
         shaped = steps > DEFAULT_DRAG_STEPS or path != DEFAULT_DRAG_PATH
@@ -315,7 +315,7 @@ class TestMacOSInterpolationFloor:
         ],
     )
     def test_a_sparse_request_is_raised_to_the_platform_floor(self, steps, path):
-        from kiro_crew.computer_use import macos_ffi
+        from aj_crew.computer_use import macos_ffi
 
         assert self._dragged_events(steps, path) == macos_ffi.DRAG_STEPS - 1
 
@@ -362,7 +362,7 @@ class TestDragRequestShape:
     def test_the_schema_bounds_steps(self):
         # The wall-clock bound: each point is its own SendInput call, so an unbounded
         # count is an unbounded time with the operator's mouse button held down.
-        from kiro_crew.validation import MCP_COMPUTER_SCHEMAS, ValidationError, validate_tool_args
+        from aj_crew.validation import MCP_COMPUTER_SCHEMAS, ValidationError, validate_tool_args
 
         schema = MCP_COMPUTER_SCHEMAS["computer_drag"]
         base = {"app": "x", "from_x": 0, "from_y": 0, "to_x": 1, "to_y": 1}

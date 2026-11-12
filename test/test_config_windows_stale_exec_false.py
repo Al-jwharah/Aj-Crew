@@ -15,10 +15,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.config import loader as L
-from kiro_crew.config import superseded_defaults as SD
-from kiro_crew.config import windows_exec_adoption
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config import loader as L
+from aj_crew.config import superseded_defaults as SD
+from aj_crew.config import windows_exec_adoption
+from aj_crew.config.loader import AjCrewConfig
 
 KEY = "agent.sandbox_allow_unsandboxed_exec"
 FIELD = "sandbox_allow_unsandboxed_exec"
@@ -49,7 +49,7 @@ def test_windows_drops_the_stale_false_once_and_logs_it(tmp_path, monkeypatch, c
     _write(tmp_path, {FIELD: False, "approval_mode": "auto"})
 
     with caplog.at_level(logging.WARNING):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
     # The run that performed the migration already holds the Windows default.
     assert cfg.agent.sandbox_allow_unsandboxed_exec is True
@@ -64,13 +64,13 @@ def test_windows_drops_the_stale_false_once_and_logs_it(tmp_path, monkeypatch, c
 def test_a_false_set_after_the_adoption_is_kept(tmp_path, monkeypatch):
     monkeypatch.setattr("sys.platform", "win32")
     _write(tmp_path, {FIELD: False})
-    assert KiroCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is True
+    assert AjCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is True
 
     # The owner locks the host down by hand after the one-shot ran.
     _write(tmp_path, {FIELD: False})
-    assert KiroCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
+    assert AjCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
     L._invalidate_config_cache()
-    assert KiroCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
+    assert AjCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
     assert _stored(tmp_path)[FIELD] is False
 
 
@@ -79,7 +79,7 @@ def test_a_stored_false_off_windows_is_untouched(tmp_path, monkeypatch, platform
     monkeypatch.setattr("sys.platform", platform)
     _write(tmp_path, {FIELD: False})
 
-    assert KiroCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
+    assert AjCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
     assert _stored(tmp_path)[FIELD] is False
     assert SD.adopted_superseded() == {}
     # Not reported either: false is still the default there.
@@ -90,18 +90,18 @@ def test_a_stored_true_on_windows_is_untouched(tmp_path, monkeypatch):
     monkeypatch.setattr("sys.platform", "win32")
     _write(tmp_path, {FIELD: True})
 
-    assert KiroCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is True
+    assert AjCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is True
     assert _stored(tmp_path)[FIELD] is True
     assert SD.adopted_superseded() == {}
 
 
 def test_an_acked_false_on_windows_is_kept(tmp_path, monkeypatch):
-    """``config set``, Settings saves and ``kirocrew setup`` ack the false they write."""
+    """``config set``, Settings saves and ``ajcrew setup`` ack the false they write."""
     monkeypatch.setattr("sys.platform", "win32")
     _write(tmp_path, {FIELD: False})
     assert SD.ack_explicit_write(KEY, False) is True
 
-    assert KiroCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
+    assert AjCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
     assert _stored(tmp_path)[FIELD] is False
     assert SD.adopted_superseded() == {}
 
@@ -110,7 +110,7 @@ def test_only_this_key_is_dropped(tmp_path, monkeypatch):
     monkeypatch.setattr("sys.platform", "win32")
     _write(tmp_path, {FIELD: False, "sandbox_allow_no_isolation": False})
 
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
 
     assert _stored(tmp_path) == {"sandbox_allow_no_isolation": False}
 
@@ -118,10 +118,10 @@ def test_only_this_key_is_dropped(tmp_path, monkeypatch):
 def test_a_windows_pod_keeps_its_seed_floor_false(tmp_path, monkeypatch):
     """A pod's seed floor writes this false on purpose into a fresh home."""
     monkeypatch.setattr("sys.platform", "win32")
-    monkeypatch.setenv("KIROCREW_POD", "1")
+    monkeypatch.setenv("AJCREW_POD", "1")
     _write(tmp_path, {FIELD: False})
 
-    assert KiroCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
+    assert AjCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
     assert _stored(tmp_path)[FIELD] is False
     assert SD.adopted_superseded() == {}
 
@@ -131,12 +131,12 @@ def test_a_windows_install_with_nothing_stale_keeps_a_later_false(tmp_path, monk
     """With no stale false to drop, the first load ends the one-shot."""
     monkeypatch.setattr("sys.platform", "win32")
     _write(tmp_path, {} if stored is None else {FIELD: stored})
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
     assert SD.acked_superseded() == {KEY: False}
 
     # The operator then locks the host down by hand.
     _write(tmp_path, {FIELD: False})
-    assert KiroCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
+    assert AjCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
     assert _stored(tmp_path)[FIELD] is False
     assert SD.adopted_superseded() == {}
 
@@ -157,16 +157,16 @@ def test_a_deferred_close_is_retried_on_the_next_unchanged_load(tmp_path, monkey
 
     # Two deferred loads: the first may write the document back, so the second is
     # the one that reads bytes the next load will see unchanged.
-    KiroCrewConfig.load()
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
+    AjCrewConfig.load()
     assert SD.acked_superseded() == {}
     lock["busy"] = False
     # Same bytes on disk, no cache invalidation: the retry must still run.
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
     assert SD.acked_superseded() == {KEY: False}
 
     _write(tmp_path, {FIELD: False})
-    assert KiroCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
+    assert AjCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
     assert _stored(tmp_path)[FIELD] is False
 
 
@@ -187,30 +187,30 @@ def test_an_unreadable_ledger_does_not_turn_the_config_cache_off(tmp_path, monke
 
     # The first load may write the document back, so the second reads the bytes
     # that stay unchanged.
-    KiroCrewConfig.load()
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
+    AjCrewConfig.load()
     assert calls and all(calls)
     settled = len(calls)
 
     # The next unchanged load is served from the cache, so it never re-runs the close.
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
     assert len(calls) == settled
     assert ledger.read_text(encoding="utf-8") == "{not json"
 
 
 def test_a_false_written_after_config_defaults_adopt_is_kept(tmp_path, monkeypatch):
     """``config defaults --adopt`` records the adoption, so the one-shot stays spent."""
-    from kiro_crew import cli_config
+    from aj_crew import cli_config
 
     monkeypatch.setattr("sys.platform", "win32")
     monkeypatch.setattr(cli_config, "config_path", lambda: tmp_path / "config.json")
     monkeypatch.setattr(cli_config, "config_local_path", lambda: tmp_path / "config.local.json")
     monkeypatch.setattr(cli_config, "sel", lambda: SimpleNamespace(log_api_access=lambda **_: None))
     _write(tmp_path, {})
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
     # A hand-written false after the close is kept, and then adopted by command.
     _write(tmp_path, {FIELD: False})
-    assert KiroCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
+    assert AjCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
     cli_config._config_cmd(
         argparse.Namespace(config_action="defaults", keys=[KEY], adopt=True, keep=False)
     )
@@ -219,7 +219,7 @@ def test_a_false_written_after_config_defaults_adopt_is_kept(tmp_path, monkeypat
 
     # The operator locks the host down by hand again.
     _write(tmp_path, {FIELD: False})
-    assert KiroCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
+    assert AjCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is False
     assert _stored(tmp_path)[FIELD] is False
 
 
@@ -227,12 +227,12 @@ def test_a_false_written_after_config_defaults_adopt_is_kept(tmp_path, monkeypat
 def test_off_windows_nothing_is_recorded_for_an_absent_key(tmp_path, monkeypatch, platform):
     monkeypatch.setattr("sys.platform", platform)
     _write(tmp_path, {})
-    KiroCrewConfig.load()
+    AjCrewConfig.load()
     assert SD.acked_superseded() == {}
 
 
 def test_the_drop_writes_the_setup_grant_audit_event(tmp_path, monkeypatch):
-    from kiro_crew import sel as sel_mod
+    from aj_crew import sel as sel_mod
 
     events: list[dict] = []
 
@@ -244,7 +244,7 @@ def test_the_drop_writes_the_setup_grant_audit_event(tmp_path, monkeypatch):
     monkeypatch.setattr("sys.platform", "win32")
     _write(tmp_path, {FIELD: False})
 
-    assert KiroCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is True
+    assert AjCrewConfig.load().agent.sandbox_allow_unsandboxed_exec is True
     assert len(events) == 1
     event = events[0]
     assert event["tool_name"] == FIELD
@@ -254,7 +254,7 @@ def test_the_drop_writes_the_setup_grant_audit_event(tmp_path, monkeypatch):
 
 
 def test_a_failed_audit_keeps_the_false(tmp_path, monkeypatch, caplog):
-    from kiro_crew import sel as sel_mod
+    from aj_crew import sel as sel_mod
 
     class _Sel:
         def log_tool_invocation(self, **kwargs):
@@ -265,7 +265,7 @@ def test_a_failed_audit_keeps_the_false(tmp_path, monkeypatch, caplog):
     _write(tmp_path, {FIELD: False})
 
     with caplog.at_level(logging.WARNING):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
 
     assert cfg.agent.sandbox_allow_unsandboxed_exec is False
     assert _stored(tmp_path)[FIELD] is False
@@ -278,10 +278,10 @@ def test_the_adoption_notice_names_the_isolation_cost(tmp_path, monkeypatch, cap
     _write(tmp_path, {FIELD: False})
 
     with caplog.at_level(logging.WARNING):
-        KiroCrewConfig.load()
+        AjCrewConfig.load()
 
     lines = [r.getMessage() for r in caplog.records if KEY in r.getMessage()]
     assert any("without OS isolation" in line for line in lines)
     summary = SD.adoption_summary(KEY, False)
     assert "without OS isolation" in summary
-    assert f"kirocrew config set {KEY} false" in summary
+    assert f"ajcrew config set {KEY} false" in summary

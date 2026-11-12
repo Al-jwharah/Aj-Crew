@@ -21,7 +21,7 @@ import json
 from typing import Any, Optional
 from unittest.mock import MagicMock
 
-from kiro_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway import gatewayd as gw
 
 
 def _run(coro):

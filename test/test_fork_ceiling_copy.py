@@ -11,11 +11,11 @@ import json
 import pathlib
 import re
 
-from kiro_crew.dashboard.chat_fork import _MAX_SLOT_MESSAGES
+from aj_crew.dashboard.chat_fork import _MAX_SLOT_MESSAGES
 
 _REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
 _LOCALES = _REPO_ROOT / "website" / "src" / "i18n" / "locales"
-_FORK = _REPO_ROOT / "src" / "kiro_crew" / "dashboard" / "chat_fork.py"
+_FORK = _REPO_ROOT / "src" / "aj_crew" / "dashboard" / "chat_fork.py"
 _KEYS = ("fork_too_large_error_head", "fork_too_large_error_tail")
 _DIGIT = re.compile(r"[0-9]")
 

@@ -11,11 +11,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.mcp_gateway.rewriter import (
+from aj_crew.mcp_gateway.rewriter import (
     _WRAPPER_MARKER,
     _WRAPPER_MARKER_LEGACY,
 )
-from kiro_crew.mcp_gateway.session_servers import (
+from aj_crew.mcp_gateway.session_servers import (
     injection_server_names,
     pooled_session_servers,
 )
@@ -31,7 +31,7 @@ class TestEnableRebuildsFactory:
     async def test_enable_calls_refresh_defaults(self) -> None:
         """_apply_mcp_gateway_enabled must call refresh_defaults() on the
         session manager so the captured overlay path is re-resolved."""
-        from kiro_crew.slack.gateway import GatewayOrchestrator
+        from aj_crew.slack.gateway import GatewayOrchestrator
 
         orch = GatewayOrchestrator.__new__(GatewayOrchestrator)
         orch._mcp_gateway_manager = None
@@ -41,7 +41,7 @@ class TestEnableRebuildsFactory:
 
         with patch.object(type(orch), "_init_mcp_gateway", new_callable=AsyncMock) as mock_init:
             mock_init.return_value = None
-            with patch("kiro_crew.slack.gateway.KiroCrewConfig") as mock_cfg:
+            with patch("aj_crew.slack.gateway.AjCrewConfig") as mock_cfg:
                 mock_cfg.load.return_value = MagicMock(mcp_gateway=MagicMock(enabled=True))
                 orch._cfg = mock_cfg.load.return_value
                 result = await orch._apply_mcp_gateway_enabled(True)
@@ -53,7 +53,7 @@ class TestEnableRebuildsFactory:
     async def test_disable_also_calls_refresh_defaults(self) -> None:
         """Disabling must also rebuild the factory so new sessions stop
         injecting stubs pointing at a dead socket."""
-        from kiro_crew.slack.gateway import GatewayOrchestrator
+        from aj_crew.slack.gateway import GatewayOrchestrator
 
         orch = GatewayOrchestrator.__new__(GatewayOrchestrator)
         orch._mcp_gateway_manager = MagicMock(is_running=False)
@@ -63,7 +63,7 @@ class TestEnableRebuildsFactory:
         orch.sessions.refresh_defaults = AsyncMock()
 
         with patch.object(type(orch), "_stop_mcp_broker", new_callable=AsyncMock):
-            with patch("kiro_crew.slack.gateway.KiroCrewConfig") as mock_cfg:
+            with patch("aj_crew.slack.gateway.AjCrewConfig") as mock_cfg:
                 mock_cfg.load.return_value = MagicMock(mcp_gateway=MagicMock(enabled=False))
                 orch._cfg = mock_cfg.load.return_value
                 result = await orch._apply_mcp_gateway_enabled(False)
@@ -74,7 +74,7 @@ class TestEnableRebuildsFactory:
     @pytest.mark.asyncio
     async def test_no_crash_when_sessions_is_none(self) -> None:
         """Early boot: sessions may not be initialised yet."""
-        from kiro_crew.slack.gateway import GatewayOrchestrator
+        from aj_crew.slack.gateway import GatewayOrchestrator
 
         orch = GatewayOrchestrator.__new__(GatewayOrchestrator)
         orch._mcp_gateway_manager = None
@@ -82,7 +82,7 @@ class TestEnableRebuildsFactory:
         orch.sessions = None
 
         with patch.object(type(orch), "_init_mcp_gateway", new_callable=AsyncMock):
-            with patch("kiro_crew.slack.gateway.KiroCrewConfig") as mock_cfg:
+            with patch("aj_crew.slack.gateway.AjCrewConfig") as mock_cfg:
                 mock_cfg.load.return_value = MagicMock(mcp_gateway=MagicMock(enabled=True))
                 orch._cfg = mock_cfg.load.return_value
                 result = await orch._apply_mcp_gateway_enabled(True)
@@ -142,11 +142,11 @@ class TestInjectionPrecedenceRobust:
 
 
 class TestNamingMigration:
-    """New naming emits KIROCREW_* identifiers while still reading legacy
+    """New naming emits AJCREW_* identifiers while still reading legacy
     MC_* / _mc_* values from overlays written by prior versions."""
 
-    def test_new_marker_value_is_kirocrew_prefixed(self) -> None:
-        assert "kirocrew" in _WRAPPER_MARKER.lower()
+    def test_new_marker_value_is_ajcrew_prefixed(self) -> None:
+        assert "ajcrew" in _WRAPPER_MARKER.lower()
         assert "mc_mcp" not in _WRAPPER_MARKER.lower()
 
     def test_legacy_marker_value_preserved(self) -> None:
@@ -187,9 +187,9 @@ class TestNamingMigration:
 
     def test_gatewayd_resolver_accepts_legacy_env_key(self) -> None:
         """env_target_resolver must find a target under the old MC_MCP_TARGET_
-        prefix when the new KIROCREW_MCP_TARGET_ is absent."""
-        from kiro_crew.mcp_gateway.gatewayd import env_target_resolver
-        from kiro_crew.mcp_gateway.pool import PoolKey
+        prefix when the new AJCREW_MCP_TARGET_ is absent."""
+        from aj_crew.mcp_gateway.gatewayd import env_target_resolver
+        from aj_crew.mcp_gateway.pool import PoolKey
 
         pk = PoolKey(
             server_name="test-srv",
@@ -202,8 +202,8 @@ class TestNamingMigration:
         env_patch = {"MC_MCP_TARGET_TEST_SRV": "/usr/bin/test-srv --stdio"}
         with patch.dict(os.environ, env_patch, clear=False):
             # Remove any new-style key that might exist
-            os.environ.pop("KIROCREW_MCP_TARGET_TEST_SRV", None)
-            os.environ.pop("KIROCREW_MCP_TARGET_TEST_SRV__abc123", None)
+            os.environ.pop("AJCREW_MCP_TARGET_TEST_SRV", None)
+            os.environ.pop("AJCREW_MCP_TARGET_TEST_SRV__abc123", None)
             result = env_target_resolver(pk)
         assert result is not None
         command, args, env, work_dir = result
@@ -212,8 +212,8 @@ class TestNamingMigration:
 
     def test_gatewayd_resolver_prefers_new_env_key(self) -> None:
         """When both new and legacy keys exist, the new one wins."""
-        from kiro_crew.mcp_gateway.gatewayd import env_target_resolver
-        from kiro_crew.mcp_gateway.pool import PoolKey
+        from aj_crew.mcp_gateway.gatewayd import env_target_resolver
+        from aj_crew.mcp_gateway.pool import PoolKey
 
         pk = PoolKey(
             server_name="test-srv",
@@ -224,23 +224,23 @@ class TestNamingMigration:
             os_uid=1000,
         )
         env_patch = {
-            "KIROCREW_MCP_TARGET_TEST_SRV": "/usr/bin/new-srv --stdio",
+            "AJCREW_MCP_TARGET_TEST_SRV": "/usr/bin/new-srv --stdio",
             "MC_MCP_TARGET_TEST_SRV": "/usr/bin/old-srv --stdio",
         }
         with patch.dict(os.environ, env_patch, clear=False):
-            os.environ.pop("KIROCREW_MCP_TARGET_TEST_SRV__abc123", None)
+            os.environ.pop("AJCREW_MCP_TARGET_TEST_SRV__abc123", None)
             os.environ.pop("MC_MCP_TARGET_TEST_SRV__abc123", None)
             result = env_target_resolver(pk)
         assert result is not None
         command, _, _, _ = result
         assert command == "/usr/bin/new-srv"
 
-    def test_stub_accepts_kirocrew_mcp_socket_env(self) -> None:
-        """The stub should prefer KIROCREW_MCP_SOCKET over MC_MCP_SOCKET."""
-        from kiro_crew.mcp_gateway.stub import _parse_args
+    def test_stub_accepts_ajcrew_mcp_socket_env(self) -> None:
+        """The stub should prefer AJCREW_MCP_SOCKET over MC_MCP_SOCKET."""
+        from aj_crew.mcp_gateway.stub import _parse_args
 
         with patch.dict(os.environ, {
-            "KIROCREW_MCP_SOCKET": "/tmp/new.sock",
+            "AJCREW_MCP_SOCKET": "/tmp/new.sock",
             "MC_MCP_SOCKET": "/tmp/old.sock",
         }, clear=False):
             args = _parse_args([
@@ -251,10 +251,10 @@ class TestNamingMigration:
 
     def test_stub_falls_back_to_legacy_mc_mcp_socket(self) -> None:
         """When only MC_MCP_SOCKET is set, it should still work."""
-        from kiro_crew.mcp_gateway.stub import _parse_args
+        from aj_crew.mcp_gateway.stub import _parse_args
 
         env = dict(os.environ)
-        env.pop("KIROCREW_MCP_SOCKET", None)
+        env.pop("AJCREW_MCP_SOCKET", None)
         env["MC_MCP_SOCKET"] = "/tmp/legacy.sock"
         with patch.dict(os.environ, env, clear=True):
             args = _parse_args([
@@ -264,9 +264,9 @@ class TestNamingMigration:
         assert args.socket == "/tmp/legacy.sock"
 
     def test_rewriter_emits_new_env_key_prefix(self, tmp_path: Path) -> None:
-        """rewrite_agents must populate target_env with KIROCREW_MCP_TARGET_
+        """rewrite_agents must populate target_env with AJCREW_MCP_TARGET_
         keys, not the legacy MC_MCP_TARGET_ prefix."""
-        from kiro_crew.mcp_gateway.rewriter import rewrite_agents
+        from aj_crew.mcp_gateway.rewriter import rewrite_agents
 
         agents_dir = tmp_path / "agents"
         agents_dir.mkdir()
@@ -287,15 +287,15 @@ class TestNamingMigration:
             work_dir=work_dir,
             stub_servers=frozenset({"pooled"}),
         )
-        assert any(k.startswith("KIROCREW_MCP_TARGET_") for k in target_env), (
-            f"Expected KIROCREW_MCP_TARGET_ prefix in target_env keys: {list(target_env.keys())}"
+        assert any(k.startswith("AJCREW_MCP_TARGET_") for k in target_env), (
+            f"Expected AJCREW_MCP_TARGET_ prefix in target_env keys: {list(target_env.keys())}"
         )
         assert not any(k.startswith("MC_MCP_TARGET_") for k in target_env)
 
     def test_idempotent_rewrite_upgrades_legacy_marker(self, tmp_path: Path) -> None:
         """Re-running the rewriter on an overlay that carries the legacy
         marker must upgrade it to the new marker."""
-        from kiro_crew.mcp_gateway.rewriter import _rewrite_single_spec
+        from aj_crew.mcp_gateway.rewriter import _rewrite_single_spec
 
         spec = {
             "name": "agent",

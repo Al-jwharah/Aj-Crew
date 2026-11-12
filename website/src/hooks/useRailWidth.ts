@@ -19,6 +19,8 @@ import { useSyncExternalStore } from 'react'
  */
 const RAIL_W_EXPANDED = 236
 const RAIL_W_COLLAPSED = 74
+/** The Simple layout's sidebar: wide enough for a chat title, still one slim column. */
+const RAIL_W_SIMPLE = 264
 
 /**
  * Duration of the shell's `grid-template-columns` transition (App.tsx), plus a
@@ -35,9 +37,10 @@ const RAIL_SETTLE_SLACK_MS = 40
 export const RAIL_SETTLE_MS = RAIL_TRANSITION_MS + RAIL_SETTLE_SLACK_MS
 
 /** Rail width for the shell's current state. Mobile has no rail track. */
-export function railWidthFor({ isMobile, collapsed }: { isMobile: boolean; collapsed: boolean }): number {
+export function railWidthFor({ isMobile, collapsed, simple = false }: { isMobile: boolean; collapsed: boolean; simple?: boolean }): number {
   if (isMobile) return 0
-  return collapsed ? RAIL_W_COLLAPSED : RAIL_W_EXPANDED
+  if (collapsed) return RAIL_W_COLLAPSED
+  return simple ? RAIL_W_SIMPLE : RAIL_W_EXPANDED
 }
 
 let railWidth = RAIL_W_EXPANDED

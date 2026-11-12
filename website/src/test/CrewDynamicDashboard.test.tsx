@@ -25,7 +25,7 @@ import CrewDynamicDashboard, {
 /** A composed body carrying its read in the data island, as `compose_body` builds it. */
 function withIsland(credits: number): string {
   return (
-    `<script type="application/json" id="kirocrew-dashboard-data">${JSON.stringify({ fields: { credits } })}</script>` +
+    `<script type="application/json" id="ajcrew-dashboard-data">${JSON.stringify({ fields: { credits } })}</script>` +
     `<p>${credits} credits</p>`
   )
 }
@@ -426,7 +426,7 @@ describe('CrewDynamicDashboard', () => {
     mount()
     await screen.findByTestId('crew-dashboard-iframe')
     expect(mints.length).toBeGreaterThan(0)
-    expect(mints[mints.length - 1]).toContain('kirocrew-dashboard:open')
+    expect(mints[mints.length - 1]).toContain('ajcrew-dashboard:open')
     // The grant set is unchanged: the bridge is the way out, not a wider sandbox.
     expect(screen.getByTestId('crew-dashboard-iframe')).toHaveAttribute('sandbox', 'allow-scripts')
   })
@@ -677,13 +677,13 @@ describe('CrewDynamicDashboard', () => {
   })
 
   it('draws the page it was sent when the gateway does not say suggestions', async () => {
-    // The shipped page named for the crewmate (`kirocrew-conductor` gets its board)
+    // The shipped page named for the crewmate (`ajcrew-conductor` gets its board)
     // reads `empty` without the flag: the gateway decides, the tab does not re-derive.
     vi.spyOn(api, 'memberDashboard').mockResolvedValue(
-      page({ ...unadopted(), suggestions: false, template: { id: 'kirocrew-conductor', version: 1 } }),
+      page({ ...unadopted(), suggestions: false, template: { id: 'ajcrew-conductor', version: 1 } }),
     )
     renderWithProviders(
-      <CrewDynamicDashboard target={{ kind: 'member', slug: 'kirocrew-conductor', member: 'kirocrew-conductor' }} displayName="Conductor" />,
+      <CrewDynamicDashboard target={{ kind: 'member', slug: 'ajcrew-conductor', member: 'ajcrew-conductor' }} displayName="Conductor" />,
     )
     expect(await screen.findByTestId('crew-dashboard-frame')).toBeInTheDocument()
     expect(screen.queryByTestId('crew-dashboard-suggestions')).toBeNull()

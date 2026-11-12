@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from kiro_crew.dashboard.state import _ChatSlot, append_and_surface, row_mid
+from aj_crew.dashboard.state import _ChatSlot, append_and_surface, row_mid
 
 
 class _StateStub:
@@ -132,7 +132,7 @@ class TestAppendAndSurface:
         frame = state.chat_frames()[0]
         assert "ghp_" not in frame["content"]
 
-        from kiro_crew.dashboard.state import chat_message_frame, chat_message_note
+        from aj_crew.dashboard.state import chat_message_frame, chat_message_note
 
         expected = chat_message_frame(
             chat_message_note(slot.key, msg, workspace=None), include_metadata=True
@@ -159,7 +159,7 @@ class TestConvertedSites:
         hand-built mid-less frame = two renderable copies. New: one delivery,
         mid-carrying.
         """
-        from kiro_crew.dashboard.chat_utils import _append_compaction_notice
+        from aj_crew.dashboard.chat_utils import _append_compaction_notice
 
         state = _StateStub()
         slot, delivered = _slot_with_callback()

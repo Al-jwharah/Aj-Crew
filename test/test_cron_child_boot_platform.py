@@ -18,20 +18,20 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.cron_script import run_script_sandboxed
-from kiro_crew.platform import PROFILE_ENTERPRISE
+from aj_crew.cron_script import run_script_sandboxed
+from aj_crew.platform import PROFILE_ENTERPRISE
 
 
 @pytest.fixture(autouse=True)
 def _cron_home(tmp_path, monkeypatch):
     """Point ``config_dir()`` at a test-owned home.
 
-    ``config_dir()`` resolves from ``KIROCREW_HOME``, not ``Path.home``. Set here so
+    ``config_dir()`` resolves from ``AJCREW_HOME``, not ``Path.home``. Set here so
     that under ``--noconftest`` it is not the developer's real ``~/.kiro``.
     """
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     crons = home / "crons"
     crons.mkdir()
     return crons
@@ -49,12 +49,12 @@ def _spawns_real_child(monkeypatch):
 
     ``wrap_argv`` fails closed on hosts with no OS sandbox backend, which is every CI
     runner. Bypass it, and put ``src/`` on ``PYTHONPATH`` so the child can import
-    ``kiro_crew`` from a checkout.
+    ``aj_crew`` from a checkout.
     """
     src_dir = str(Path(__file__).resolve().parents[1] / "src")
     existing = os.environ.get("PYTHONPATH", "")
     monkeypatch.setenv("PYTHONPATH", src_dir + (os.pathsep + existing if existing else ""))
-    monkeypatch.setattr("kiro_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
+    monkeypatch.setattr("aj_crew.cron_script.wrap_argv", lambda argv, **k: (list(argv), None))
 
 
 _STOP = "stop before spawn"
@@ -72,7 +72,7 @@ def _capture_launcher(script_path: str) -> str:
         captured["launcher"] = Path(argv[1]).read_text()
         raise RuntimeError(_STOP)
 
-    with patch("kiro_crew.cron_script.wrap_argv", _capture):
+    with patch("aj_crew.cron_script.wrap_argv", _capture):
         with pytest.raises(RuntimeError, match=_STOP):
             run_script_sandboxed(script_path + ":run", "job-id")
 
@@ -83,17 +83,17 @@ def _capture_launcher(script_path: str) -> str:
 def _child_profile(monkeypatch, profile: str) -> None:
     """Resolve ``profile`` in the CHILD only.
 
-    Setting ``KIROCREW_PROFILE`` on the test process itself would make the
+    Setting ``AJCREW_PROFILE`` on the test process itself would make the
     PARENT's own ``current_context()`` fail closed long before it spawns
     anything, so the override goes on the child env the launcher builds.
     """
-    from kiro_crew import cron_script
+    from aj_crew import cron_script
 
     real = cron_script._clean_cron_env
 
     def _with_profile() -> dict[str, str]:
         env = real()
-        env["KIROCREW_PROFILE"] = profile
+        env["AJCREW_PROFILE"] = profile
         return env
 
     monkeypatch.setattr(cron_script, "_clean_cron_env", _with_profile)
@@ -112,14 +112,14 @@ class TestLauncherPreambleOrdering:
 
     def test_launcher_boots_the_platform(self, _cron_home):
         launcher = self._launcher(_cron_home)
-        assert "from kiro_crew.platform.bootstrap import boot_platform" in launcher
-        assert "boot_platform(KiroCrewConfig.load())" in launcher
+        assert "from aj_crew.platform.bootstrap import boot_platform" in launcher
+        assert "boot_platform(AjCrewConfig.load())" in launcher
 
     def test_boot_is_after_syspath_strip_and_before_scriptcontext(self, _cron_home):
         launcher = self._launcher(_cron_home)
         strip = launcher.index("sys.path[:] = [p for p in sys.path")
-        boot = launcher.index("boot_platform(KiroCrewConfig.load())")
-        script_context = launcher.index("from kiro_crew.cron_script import ScriptContext")
+        boot = launcher.index("boot_platform(AjCrewConfig.load())")
+        script_context = launcher.index("from aj_crew.cron_script import ScriptContext")
         assert strip < boot < script_context, (
             "boot_platform must run after the sys.path strip and before the "
             f"ScriptContext import (strip={strip}, boot={boot}, ctx={script_context})"
@@ -136,8 +136,8 @@ class TestChildArrivesBooted:
     PROBE = (
         "import json\n"
         "def run(ctx):\n"
-        "    from kiro_crew.platform import bootstrap\n"
-        "    from kiro_crew.platform.context import current_context\n"
+        "    from aj_crew.platform import bootstrap\n"
+        "    from aj_crew.platform.context import current_context\n"
         "    raise SystemExit(\n"
         "        json.dumps(\n"
         "            {'booted': bootstrap._BOOTED, 'profile': current_context().profile}\n"
@@ -176,7 +176,7 @@ class TestNonStandaloneFailsAtLaunchNotMidScript:
             _cron_home,
             "def run(ctx):\n"
             f"    open({str(sentinel)!r}, 'w').close()\n"
-            "    from kiro_crew.platform.context import current_context\n"
+            "    from aj_crew.platform.context import current_context\n"
             "    current_context()\n",
         )
         result = run_script_sandboxed(script_path + ":run", "job-id", timeout=60)
@@ -201,4 +201,4 @@ def test_launcher_is_profile_independent(_cron_home, monkeypatch, profile):
     """
     _child_profile(monkeypatch, profile)
     script_path = _write_cron_script(_cron_home, "def run(ctx):\n    pass\n")
-    assert "boot_platform(KiroCrewConfig.load())" in _capture_launcher(script_path)
+    assert "boot_platform(AjCrewConfig.load())" in _capture_launcher(script_path)

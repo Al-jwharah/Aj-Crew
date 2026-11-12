@@ -12,7 +12,7 @@ This suite holds the two halves of the answer. The producers emit one spelling
 per directory (the one the tier lists carry, so the occupant pass records under a
 name the launcher looks up): read from the plan line of the launcher
 ``namespace_argv`` really writes for such a host. And the launcher's own stages
-(``kiro_crew.sandbox_launcher_program``) run to the end against that plan, with a
+(``aj_crew.sandbox_launcher_program``) run to the end against that plan, with a
 bind that HIDES its target the way a real mount does; the crew-home alias checks on
 either side of the masks refuse a home link re-aimed in between, at the point in
 the child run where each one stands.
@@ -27,9 +27,9 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import CoveringLibc, launch, refusal, rendered_payload
 
-import kiro_crew.sandbox as sb
-from kiro_crew import kiro_prerequisite as kp
-from kiro_crew import platform_compat, sandbox_launcher_program
+import aj_crew.sandbox as sb
+from aj_crew import kiro_prerequisite as kp
+from aj_crew import platform_compat, sandbox_launcher_program
 
 program = sandbox_launcher_program
 
@@ -49,7 +49,7 @@ _LINUX_ONLY = pytest.mark.skipif(
 def symlinked_home(tmp_path, monkeypatch):
     """``$HOME`` is a link into the real tree; the data home sits under both spellings."""
     real_home = tmp_path / "mnt" / "home" / "u"
-    data_home = real_home / ".kirocrew"
+    data_home = real_home / ".ajcrew"
     for leaf in ("diag", "run", "apps/aws-control/data", "quarantined-clones"):
         (data_home / leaf).mkdir(parents=True)
     (data_home / ".env").write_text("SECRET=1\n")
@@ -72,7 +72,7 @@ def _probe_script(link_home: Path, data_home: Path) -> str:
         "strict",
         extra_hidden_dirs=service._hidden_probe_dirs,
     )
-    script_path = next(a for a in argv if a.endswith(".py") and "kirocrew_sandbox_" in a)
+    script_path = next(a for a in argv if a.endswith(".py") and "ajcrew_sandbox_" in a)
     try:
         return Path(script_path).read_text()
     finally:
@@ -92,7 +92,7 @@ def _child_plan(plan: dict) -> dict:
 def _re_aim_home(tmp_path: Path, to: str) -> Path:
     """Re-aim the ``$HOME`` link at ``tmp_path/<to>/home``; returns the new ``u``."""
     target = tmp_path / to / "home" / "u"
-    (target / ".kirocrew").mkdir(parents=True, exist_ok=True)
+    (target / ".ajcrew").mkdir(parents=True, exist_ok=True)
     home_link = tmp_path / "home"
     home_link.unlink()
     home_link.symlink_to(tmp_path / to / "home", target_is_directory=True)
@@ -113,10 +113,10 @@ def test_the_probes_home_spellings_fold_onto_the_data_home(symlinked_home) -> No
     service = kp.KiroPrerequisiteService(
         platform_name="linux", home=link_home, data_home=data_home, environ={}
     )
-    assert str(link_home / ".kirocrew") in service._hidden_probe_dirs, "fixture drifted"
+    assert str(link_home / ".ajcrew") in service._hidden_probe_dirs, "fixture drifted"
     dirs = _probe_plan(link_home, data_home)["sensitive_dirs"]
     assert dirs.count(str(data_home)) == 1
-    assert str(link_home / ".kirocrew") not in dirs
+    assert str(link_home / ".ajcrew") not in dirs
 
 
 def test_a_relocated_home_is_still_listed_under_its_own_spelling(tmp_path, monkeypatch) -> None:
@@ -146,7 +146,7 @@ def test_the_launcher_is_handed_one_spelling_per_directory(symlinked_home) -> No
     # no relocated twin -- is still masked after the fold.
     assert str(data_home / "diag") in plan["sensitive_dirs"]
     assert str(data_home / ".vault") in plan["sensitive_dirs"]
-    assert not any(name.startswith(str(link_home / ".kirocrew")) for name in plan["sensitive_dirs"])
+    assert not any(name.startswith(str(link_home / ".ajcrew")) for name in plan["sensitive_dirs"])
 
 
 def test_the_carried_leaf_identity_is_under_the_spelling_the_launcher_lists(
@@ -159,7 +159,7 @@ def test_the_carried_leaf_identity_is_under_the_spelling_the_launcher_lists(
     assert leaf in plan["sensitive_dirs"]
     assert leaf in plan["mask_occupants"], "the crew leaf lost its carried identity"
     assert not any(
-        name.startswith(str(link_home / ".kirocrew")) for name in plan["mask_occupants"]
+        name.startswith(str(link_home / ".ajcrew")) for name in plan["mask_occupants"]
     ), "an occupant was recorded under the alias spelling"
 
 
@@ -194,24 +194,24 @@ def test_the_folded_alias_travels_with_the_identity_it_rested_on(symlinked_home)
     link_home, data_home = symlinked_home
     aliases = _probe_plan(link_home, data_home)["crew_home_aliases"]
     info = os.stat(data_home)
-    assert [str(link_home / ".kirocrew"), str(data_home), info.st_dev, info.st_ino] in aliases
+    assert [str(link_home / ".ajcrew"), str(data_home), info.st_dev, info.st_ino] in aliases
     # ``.kiro/crew`` is absent on this host, so it is no alias and keeps its own rules.
     assert not any(alias.endswith(".kiro/crew") for alias, *_ in aliases)
 
 
 def test_a_plain_home_folds_nothing(tmp_path, monkeypatch) -> None:
     home = tmp_path / "home"
-    (home / ".kirocrew").mkdir(parents=True)
+    (home / ".ajcrew").mkdir(parents=True)
     monkeypatch.setattr(sb.Path, "home", classmethod(lambda _cls: home))
-    monkeypatch.setattr(sb, "config_dir", lambda: home / ".kirocrew")
+    monkeypatch.setattr(sb, "config_dir", lambda: home / ".ajcrew")
     assert sb._crew_home_alias_roots() == ()
 
 
 def test_a_bind_mounted_data_home_keeps_its_own_spelling(tmp_path, monkeypatch) -> None:
     """Same identity is not the test; the same NAME is.
 
-    A data home bind-mounted at ``$HOME/.kirocrew`` (``KIROCREW_HOME=/srv/crew``,
-    ``mount --bind /srv/crew ~/.kirocrew``) reports the source's ``(st_dev,
+    A data home bind-mounted at ``$HOME/.ajcrew`` (``AJCREW_HOME=/srv/crew``,
+    ``mount --bind /srv/crew ~/.ajcrew``) reports the source's ``(st_dev,
     st_ino)`` under both paths, yet it is a second mount: a mask placed on the
     canonical path's entry does not appear under the bind. Folding the alias
     onto the canonical would leave every leaf under the alias unmasked, so a
@@ -222,7 +222,7 @@ def test_a_bind_mounted_data_home_keeps_its_own_spelling(tmp_path, monkeypatch) 
     elsewhere = tmp_path / "srv" / "crew"
     elsewhere.mkdir(parents=True)
     home = tmp_path / "home"
-    alias = home / ".kirocrew"
+    alias = home / ".ajcrew"
     alias.mkdir(parents=True)
     canonical_id = os.stat(elsewhere)
     real_stat = os.stat
@@ -270,8 +270,8 @@ def test_an_alias_re_aimed_after_the_fold_refuses_before_any_mask(symlinked_home
     assert refusal(program.check_crew_home_aliases, run) is None  # the link holds
 
     elsewhere = _re_aim_home(tmp_path, "elsewhere")
-    (elsewhere / ".kirocrew" / ".env").write_text("PLANTED=1\n")
-    assert not os.path.samefile(link_home / ".kirocrew", data_home)
+    (elsewhere / ".ajcrew" / ".env").write_text("PLANTED=1\n")
+    assert not os.path.samefile(link_home / ".ajcrew", data_home)
 
     refused = refusal(program.check_crew_home_aliases, run)
     assert refused is not None and "reaches a different directory now" in refused
@@ -295,13 +295,13 @@ def test_a_canonical_swapped_under_a_still_true_alias_refuses(symlinked_home, tm
 
     aside = tmp_path / "aside" / "home" / "u"
     aside.mkdir(parents=True)
-    data_home.rename(aside / ".kirocrew")  # the original keeps its identity
+    data_home.rename(aside / ".ajcrew")  # the original keeps its identity
     data_home.mkdir()  # a fresh directory under the canonical name
     home_link = tmp_path / "home"
     home_link.unlink()
     home_link.symlink_to(tmp_path / "aside" / "home", target_is_directory=True)
-    assert os.path.samefile(link_home / ".kirocrew", aside / ".kirocrew")
-    assert not os.path.samefile(link_home / ".kirocrew", data_home)
+    assert os.path.samefile(link_home / ".ajcrew", aside / ".ajcrew")
+    assert not os.path.samefile(link_home / ".ajcrew", data_home)
 
     refused = refusal(program.check_crew_home_aliases, run)
     assert refused is not None and "holds a different directory now" in refused
@@ -347,7 +347,7 @@ def test_an_alias_re_aimed_between_the_read_and_the_mounts_refuses_after_them(
     assert refusal(program.confirm_crew_home_aliases, run) is None  # both names, one directory
 
     _re_aim_home(tmp_path, "elsewhere")
-    assert not os.path.samefile(link_home / ".kirocrew", data_home)
+    assert not os.path.samefile(link_home / ".ajcrew", data_home)
 
     refused = refusal(program.confirm_crew_home_aliases, run)
     assert refused is not None and "now that the masks are placed" in refused
@@ -463,22 +463,22 @@ def test_an_alias_re_aimed_at_a_second_mount_of_the_data_home_refuses(
     run = launch(tmp_path, plan)
 
     second = tmp_path / "second" / "home" / "u"
-    (second / ".kirocrew").mkdir(parents=True)
-    one_identity = _one_identity(data_home, second / ".kirocrew")
+    (second / ".ajcrew").mkdir(parents=True)
+    one_identity = _one_identity(data_home, second / ".ajcrew")
 
     with monkeypatch.context() as patched:
         patched.setattr(program.os, "stat", one_identity)
         assert refusal(gate, run) is None  # the link holds
 
     _re_aim_home(tmp_path, "second")
-    a, b = one_identity(str(link_home / ".kirocrew")), one_identity(str(data_home))
+    a, b = one_identity(str(link_home / ".ajcrew")), one_identity(str(data_home))
     assert (a.st_dev, a.st_ino) == (b.st_dev, b.st_ino), "the fixture did not share the identity"
 
     with monkeypatch.context() as patched:
         patched.setattr(program.os, "stat", one_identity)
         refused = refusal(gate, run)
     assert (
-        refused is not None and str(second / ".kirocrew") in refused
+        refused is not None and str(second / ".ajcrew") in refused
     ), "the refusal names where the alias went"
 
 
@@ -488,13 +488,13 @@ def test_a_legacy_link_canonical_under_a_symlinked_home_spawns(tmp_path, monkeyp
 
     A default data home on a symlinked host: ``config_dir()`` is ``$HOME/.kiro/crew``,
     unresolved on both counts -- ``$HOME`` is a link and ``.kiro/crew`` is the
-    migration link to ``.kirocrew``. The producer pairs ``$HOME/.kirocrew`` with
+    migration link to ``.ajcrew``. The producer pairs ``$HOME/.ajcrew`` with
     that canonical because both RESOLVE to the data home. The gates must compare
     resolutions on both sides: against the raw canonical string every spawn on
     this layout would be refused on an untouched filesystem, before any mask.
     """
     real_home = tmp_path / "mnt" / "home" / "u"
-    data_home = real_home / ".kirocrew"
+    data_home = real_home / ".ajcrew"
     for leaf in ("diag", "run", "apps/aws-control/data", "quarantined-clones"):
         (data_home / leaf).mkdir(parents=True)
     (real_home / ".kiro").mkdir()
@@ -508,7 +508,7 @@ def test_a_legacy_link_canonical_under_a_symlinked_home_spawns(tmp_path, monkeyp
     monkeypatch.setattr(sb, "_backend", "namespace")
 
     pairs = sb._crew_home_alias_roots()
-    assert [(a, c) for a, c, _d, _i in pairs] == [(str(link_home / ".kirocrew"), str(legacy))]
+    assert [(a, c) for a, c, _d, _i in pairs] == [(str(link_home / ".ajcrew"), str(legacy))]
 
     run = launch(tmp_path, _probe_plan(link_home, legacy))
     assert refusal(gate, run) is None  # untouched filesystem: no refusal

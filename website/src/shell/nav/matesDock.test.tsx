@@ -131,7 +131,7 @@ function setOverflow(el: HTMLElement, hidden: number) {
   act(() => { el.dispatchEvent(new Event('scroll')) })
 }
 
-const saved = {} as Awaited<ReturnType<typeof api.updateKirocrewAgent>>
+const saved = {} as Awaited<ReturnType<typeof api.updateAjcrewAgent>>
 const membersReply = (members: MemberRosterRow[]) => ({ members }) as Awaited<ReturnType<typeof api.members>>
 
 describe('DockMatesSection', () => {
@@ -177,7 +177,7 @@ describe('DockMatesSection', () => {
       ...['a', 'b', 'c'].map((n, i) => row(n, { starred: true, star_order: i + 1 })),
       row('late', { starred: true }),
     ]
-    const update = vi.spyOn(api, 'updateKirocrewAgent').mockResolvedValue(saved)
+    const update = vi.spyOn(api, 'updateAjcrewAgent').mockResolvedValue(saved)
     vi.spyOn(api, 'members').mockResolvedValue(membersReply(roster))
     renderDock(roster)
     fireEvent.click(within(screen.getByTestId('dock-mates-more')).getByRole('button'))
@@ -217,9 +217,9 @@ describe('DockMatesSection', () => {
   it('ignores overlapping drops until writes and the confirming roster read settle', async () => {
     const initial = ['a', 'b', 'c'].map((n, i) => row(n, { starred: true, star_order: i + 1 }))
     const serverOrder = ['c', 'a', 'b'].map((n, i) => row(n, { starred: true, star_order: i + 1 }))
-    const write = deferred<Awaited<ReturnType<typeof api.updateKirocrewAgent>>>()
+    const write = deferred<Awaited<ReturnType<typeof api.updateAjcrewAgent>>>()
     const read = deferred<Awaited<ReturnType<typeof api.members>>>()
-    const update = vi.spyOn(api, 'updateKirocrewAgent').mockResolvedValue(saved).mockImplementationOnce(() => write.promise)
+    const update = vi.spyOn(api, 'updateAjcrewAgent').mockResolvedValue(saved).mockImplementationOnce(() => write.promise)
     const members = vi.spyOn(api, 'members').mockResolvedValue(membersReply(serverOrder)).mockImplementationOnce(() => read.promise)
     const { qc } = renderDock(initial)
     try {
@@ -255,7 +255,7 @@ describe('DockMatesSection', () => {
   it('refetches partial server order and shows the reorder failure', async () => {
     const initial = ['a', 'b', 'c'].map((n, i) => row(n, { starred: true, star_order: i + 1 }))
     const partial = [initial[0], initial[1], { ...initial[2], star_order: 1 }]
-    vi.spyOn(api, 'updateKirocrewAgent').mockResolvedValueOnce(saved).mockRejectedValueOnce(new Error('write failed'))
+    vi.spyOn(api, 'updateAjcrewAgent').mockResolvedValueOnce(saved).mockRejectedValueOnce(new Error('write failed'))
     const members = vi.spyOn(api, 'members').mockResolvedValue(membersReply(partial))
     const { qc } = renderDock(initial)
     act(() => drop('c', 'a'))
@@ -319,14 +319,14 @@ describe('DockMatesSection', () => {
 
   it('hands the failed reorder write to the agent', async () => {
     const initial = ['a', 'b'].map((n, i) => row(n, { starred: true, star_order: i + 1 }))
-    vi.spyOn(api, 'updateKirocrewAgent').mockRejectedValue(failedRequest('write failed', '/api/kirocrew/agents/b', 409))
+    vi.spyOn(api, 'updateAjcrewAgent').mockRejectedValue(failedRequest('write failed', '/api/ajcrew/agents/b', 409))
     vi.spyOn(api, 'members').mockResolvedValue(membersReply(initial))
     renderDock(initial)
     act(() => drop('b', 'a'))
     const notice = await screen.findByTestId('dock-mates-reorder-error')
     fireEvent.click(within(notice).getByRole('button', { name: /ask.*agent/i }))
     expect(handoff.prompts).toHaveLength(1)
-    expect(handoff.prompts[0]).toContain('/api/kirocrew/agents/b -> HTTP 409')
+    expect(handoff.prompts[0]).toContain('/api/ajcrew/agents/b -> HTTP 409')
   })
 
   it('fades the bottom edge only while rows are scrolled out of sight', () => {
@@ -470,7 +470,7 @@ describe.each(['section', 'tiles'] as const)('live presence in %s', surface => {
     act(() => {
       liveStore.dispatch(sseSlots([
         slot('a', false),
-        { key: 'chat-worker', agent: 'kirocrew', running: false, mate_root: 'member-a', pending_approval: true } as ChatSlot,
+        { key: 'chat-worker', agent: 'ajcrew', running: false, mate_root: 'member-a', pending_approval: true } as ChatSlot,
       ]))
     })
     expect(within(mate).getByRole('status', { name: 'Needs your approval or answer' })).toBeInTheDocument()

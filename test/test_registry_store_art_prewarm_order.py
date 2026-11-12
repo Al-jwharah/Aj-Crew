@@ -16,8 +16,8 @@ from typing import Any
 import pytest
 from registry_store_art_prewarm_helpers import MANIFEST, _entry, _fake_fetch, _pin_registry
 
-from kiro_crew.apps import registry as reg_mod
-from kiro_crew.apps.registry import (
+from aj_crew.apps import registry as reg_mod
+from aj_crew.apps.registry import (
     _TRUST_OWNER,
     _expire_cache_file,
     _manifest_cache_path,

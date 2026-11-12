@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from kiro_crew.pipeline_board_contract import (
+from aj_crew.pipeline_board_contract import (
     CONTRACT_VERSION,
     EMPTY_JUDGMENT,
     UNSAID,
@@ -22,7 +22,7 @@ from kiro_crew.pipeline_board_contract import (
     panel_card_data,
     panel_payload,
 )
-from kiro_crew.work_vocab import WORK_ITEM_STATES, WorkBoardItem, WorkBoardView
+from aj_crew.work_vocab import WORK_ITEM_STATES, WorkBoardItem, WorkBoardView
 
 #: The newest entry's stamp, and a read clock exactly one hour later -- DERIVED from the
 #: stamp rather than hand-computed, so the ages below are exact by construction and a

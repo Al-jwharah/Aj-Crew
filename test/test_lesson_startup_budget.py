@@ -16,9 +16,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from kiro_crew.dashboard.handlers.cron import _candidate_applies
-from kiro_crew.learn import _MAX_LESSONS_TOTAL, Lesson, LessonStore, _prune_to_total
-from kiro_crew.lesson_validation import (
+from aj_crew.dashboard.handlers.cron import _candidate_applies
+from aj_crew.learn import _MAX_LESSONS_TOTAL, Lesson, LessonStore, _prune_to_total
+from aj_crew.lesson_validation import (
     LESSON_APPLIES_ALWAYS,
     LESSON_APPLIES_ON_TOPIC,
     LESSON_APPLIES_UNSTATED,
@@ -28,7 +28,7 @@ from kiro_crew.lesson_validation import (
     render_lesson_tier,
     tighter_lesson_budget,
 )
-from kiro_crew.vector_memory import VectorMemoryStore, _lesson_applies
+from aj_crew.vector_memory import VectorMemoryStore, _lesson_applies
 
 DIRECTIVE_BUDGET = 7_000
 EXPERIENCE_BUDGET = 1_500
@@ -519,7 +519,7 @@ def test_the_contradiction_sweep_drops_standing_rule_candidates():
     route also runs a model-judged contradiction sweep that ends in
     ``delete_semantic``. Guarding one and not the other leaves the rule deletable.
     """
-    from kiro_crew.dashboard.handlers.cron import _candidate_applies
+    from aj_crew.dashboard.handlers.cron import _candidate_applies
 
     assert _candidate_applies({"applies": "on_topic"}) == LESSON_APPLIES_ON_TOPIC
     assert _candidate_applies({"applies": "always"}) == LESSON_APPLIES_ALWAYS
@@ -651,7 +651,7 @@ class TestAFindingNeverRetiresAStandingRule:
         An omitted tier is served as a standing rule, so a past finding would arrive in
         every session. A malformed value migrates as unstated rather than aborting.
         """
-        from kiro_crew import vector_memory as vm
+        from aj_crew import vector_memory as vm
 
         home = tmp_path / "home"
         home.mkdir()
@@ -996,7 +996,7 @@ class TestTheTierIsVisibleWhereOverflowSendsTheReader:
         assert authored_lesson_applies(17) is None
 
     def test_learn_list_marks_a_finding_and_leaves_a_rule_bare(self):
-        from kiro_crew.mcp_tools.learn import _applies_suffix
+        from aj_crew.mcp_tools.learn import _applies_suffix
 
         assert _applies_suffix({"applies": "on_topic"}) == " (applies: on_topic)"
         # A standing rule and an untiered row both arrive every session, so
@@ -1033,8 +1033,8 @@ class TestTheTierIsVisibleWhereOverflowSendsTheReader:
 
     def test_the_capacity_message_does_not_tell_the_caller_to_reword(self, monkeypatch):
         """Driven through ``learn_add`` itself, not a helper: the wording lives there."""
-        from kiro_crew import mcp_core
-        from kiro_crew.mcp_tools import learn as mcp_learn
+        from aj_crew import mcp_core
+        from aj_crew.mcp_tools import learn as mcp_learn
 
         monkeypatch.setattr(
             mcp_core,

@@ -14,7 +14,7 @@ import { i18nT } from '../i18n/t'
  * which still answers them itself (`unscopedFallback`).
  *
  * A hook, called from App's own body after useAppShell, so its config read
- * joins the shell's ['kirocrewConfig'] read at the same place in boot order.
+ * joins the shell's ['ajcrewConfig'] read at the same place in boot order.
  * `hasDock` is false in popout and embed windows, which render no dock panel:
  * there the shell answers nothing rather than open a tab no one can see.
  * Returns the failure to show and its dismiss.

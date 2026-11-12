@@ -22,13 +22,13 @@ describe('resolveBuildBase', () => {
   })
 
   it('normalizes a sub-path to a leading and trailing slash', () => {
-    expect(resolveBuildBase('/proxy/kirocrew')).toBe('/proxy/kirocrew/')
-    expect(resolveBuildBase('/proxy/kirocrew/')).toBe('/proxy/kirocrew/')
+    expect(resolveBuildBase('/proxy/ajcrew')).toBe('/proxy/ajcrew/')
+    expect(resolveBuildBase('/proxy/ajcrew/')).toBe('/proxy/ajcrew/')
     expect(resolveBuildBase('/a//b///')).toBe('/a/b/')
   })
 
   it.each([
-    'proxy/kirocrew',
+    'proxy/ajcrew',
     '//evil.example/x',
     'https://host/x',
     '/a/../b',
@@ -37,7 +37,7 @@ describe('resolveBuildBase', () => {
     '/a#b',
     '/a b',
   ])('refuses %j', (raw) => {
-    expect(() => resolveBuildBase(raw)).toThrow(/KIROCREW_BASE_PATH/)
+    expect(() => resolveBuildBase(raw)).toThrow(/AJCREW_BASE_PATH/)
   })
 })
 
@@ -49,8 +49,8 @@ describe('vendorImportMap', () => {
         'react-dom': '/vendor/react-dom.mjs',
         'react-dom/client': '/vendor/react-dom-client.mjs',
         'react/jsx-runtime': '/vendor/react-jsx-runtime.mjs',
-        '@kirocrew/app-sdk': '/vendor/kirocrew-app-sdk.mjs',
-        '@kirocrew/app-sdk/ui': '/vendor/kirocrew-ui.mjs',
+        '@ajcrew/app-sdk': '/vendor/ajcrew-app-sdk.mjs',
+        '@ajcrew/app-sdk/ui': '/vendor/ajcrew-ui.mjs',
         '@tanstack/react-query': '/vendor/tanstack-react-query.mjs',
         'lucide-react': '/vendor/lucide-react.mjs',
       },

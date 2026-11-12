@@ -20,10 +20,10 @@ from discord_sessions_helpers import (
     _picker_button,
 )
 
-from kiro_crew.discord.renderer import session_provenance_tag
-from kiro_crew.discord.session_resume import DiscordSessionResume
-from kiro_crew.messaging import session_resume as session_resume_core
-from kiro_crew.messaging.link import ChannelLink
+from aj_crew.discord.renderer import session_provenance_tag
+from aj_crew.discord.session_resume import DiscordSessionResume
+from aj_crew.messaging import session_resume as session_resume_core
+from aj_crew.messaging.link import ChannelLink
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _isolated_home = discord_sessions_helpers._isolated_home
@@ -67,7 +67,7 @@ async def test_persisted_default_agent_sentinel_is_not_forwarded() -> None:
     await dispatcher.handle_message(_message("continue here"))
 
     assert sessions.last_key == "dashboard:chat-1"
-    assert sessions.last_agent == "kirocrew"
+    assert sessions.last_agent == "ajcrew"
 
 
 @pytest.mark.asyncio
@@ -83,7 +83,7 @@ async def test_persisted_auto_agent_sentinel_is_not_forwarded() -> None:
     sessions.is_new_result = True
     await dispatcher.handle_message(_message("continue here"))
 
-    assert sessions.last_agent == "kirocrew"
+    assert sessions.last_agent == "ajcrew"
 
 
 @pytest.mark.asyncio
@@ -121,7 +121,7 @@ async def test_resumed_session_without_recorded_agent_falls_back() -> None:
     sessions.is_new_result = True
     await dispatcher.handle_message(_message("continue here"))
 
-    assert sessions.last_agent == "kirocrew"
+    assert sessions.last_agent == "ajcrew"
 
 
 @pytest.mark.asyncio

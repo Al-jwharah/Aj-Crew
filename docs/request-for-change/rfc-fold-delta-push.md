@@ -1,7 +1,7 @@
 ---
 title: Fold advances push deltas, not whole values -- the work board ships changed items, every receiver applies by base revision
 status: draft
-author: kirocrew agent session
+author: ajcrew agent session
 created: 2026-10-26
 last-audited: 2026-10-26
 audited-at: 908099fc26
@@ -15,7 +15,7 @@ superseded-by: []
 # RFC: Fold advances push deltas, not whole values
 
 Status: draft. Nothing built. Every code reference below was read at `908099fc26`.
-Paths are relative to `src/kiro_crew/` unless they start with `website/`.
+Paths are relative to `src/aj_crew/` unless they start with `website/`.
 
 Each time the crew log's eager folder advances a fold, it renders the WHOLE fold
 value, hands it to every bus subscriber, and the dashboard socket exporter sends that

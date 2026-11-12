@@ -18,11 +18,11 @@ import subprocess
 import sys
 from pathlib import Path
 
-import kiro_crew
+import aj_crew
 
-#: The child imports the same ``kiro_crew`` this process does: pytest puts the
+#: The child imports the same ``aj_crew`` this process does: pytest puts the
 #: checkout's ``src`` on ``sys.path``, a bare ``python -c`` child does not.
-_SRC = str(Path(kiro_crew.__file__).resolve().parent.parent)
+_SRC = str(Path(aj_crew.__file__).resolve().parent.parent)
 
 
 def _modules_after(code: str, cwd: Path) -> list[str]:
@@ -45,7 +45,7 @@ def _modules_after(code: str, cwd: Path) -> list[str]:
 
 def test_importing_session_export_does_not_load_markdown_it(tmp_path: Path) -> None:
     present = _modules_after(
-        "import sys; import kiro_crew.dashboard.session_export; "
+        "import sys; import aj_crew.dashboard.session_export; "
         "print(repr(sorted(m for m in sys.modules if m.split('.')[0] == 'markdown_it')))",
         tmp_path,
     )
@@ -57,7 +57,7 @@ def test_importing_session_export_does_not_load_markdown_it(tmp_path: Path) -> N
 
 def test_first_markdown_export_builds_and_reuses_the_parser(tmp_path: Path) -> None:
     present = _modules_after(
-        "import sys; from kiro_crew.dashboard import session_markdown as sm; "
+        "import sys; from aj_crew.dashboard import session_markdown as sm; "
         "p = sm._parser(); assert sm._parser() is p; "
         "assert p.parse('# hi\\n')[0].type == 'heading_open'; "
         "print(repr(['markdown_it'] if 'markdown_it' in sys.modules else []))",

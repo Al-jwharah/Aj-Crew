@@ -18,8 +18,8 @@ from unittest.mock import AsyncMock
 import pytest
 from overload_fakes import Clock
 
-from kiro_crew.adaptive.controller import AdaptiveController, HostSample
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.adaptive.controller import AdaptiveController, HostSample
+from aj_crew.config.loader import AjCrewConfig
 
 pytestmark = pytest.mark.timeout(30)
 
@@ -62,15 +62,15 @@ class FakeLane:
         }
 
 
-def _cfg(**agent_over: object) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _cfg(**agent_over: object) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     for k, v in agent_over.items():
         setattr(cfg.agent, k, v)
     return cfg
 
 
 def _controller(
-    manager: FakeManager, lane: Optional[FakeLane], *, cfg: Optional[KiroCrewConfig] = None
+    manager: FakeManager, lane: Optional[FakeLane], *, cfg: Optional[AjCrewConfig] = None
 ) -> tuple[AdaptiveController, Clock]:
     clock = Clock()
     host = HostSample(free_mem_mb=16_000.0, rss_mb=300.0, fd_count=50, fd_limit=1000)
@@ -146,7 +146,7 @@ class TestRunnerLaneFeedsTheExecTrack:
         the cap is pinned low here to watch the climb.)"""
         from dataclasses import replace
 
-        from kiro_crew.adaptive.policy import AdaptivePolicy
+        from aj_crew.adaptive.policy import AdaptivePolicy
 
         mgr = FakeManager(user_max=64)
         lane = FakeLane()

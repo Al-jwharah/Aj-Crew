@@ -60,20 +60,20 @@ class TestLauncherExecPathIsSafeToAttach:
     """
 
     def test_rejects_a_relative_path(self):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        resolved, problem = aa.validate_exec_path("kirocrew.AppImage")
+        resolved, problem = aa.validate_exec_path("ajcrew.AppImage")
 
         assert resolved is None
         assert "absolute" in problem
 
     def test_rejects_an_empty_path(self):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         assert aa.validate_exec_path("   ")[0] is None
 
     def test_rejects_a_path_that_does_not_exist(self, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         resolved, problem = aa.validate_exec_path(str(tmp_path / "nope.AppImage"))
 
@@ -81,7 +81,7 @@ class TestLauncherExecPathIsSafeToAttach:
         assert "could not be resolved" in problem
 
     def test_rejects_a_directory(self, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         resolved, problem = aa.validate_exec_path(str(tmp_path))
 
@@ -95,9 +95,9 @@ class TestLauncherExecPathIsSafeToAttach:
         The constant is monkeypatched rather than writing to the real /tmp so the
         assertion holds on macOS too, where /tmp resolves to /private/tmp.
         """
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        app = tmp_path / "kirocrew.AppImage"
+        app = tmp_path / "ajcrew.AppImage"
         app.write_text("#!/bin/sh\n")
         monkeypatch.setattr(aa, "_UNSAFE_EXEC_PARENTS", (str(tmp_path) + "/",))
 
@@ -109,7 +109,7 @@ class TestLauncherExecPathIsSafeToAttach:
 
     def test_rejects_the_appimage_runtime_mount(self):
         """/tmp/.mount_XXXXXX is a fresh random path every launch."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         assert "/tmp/" in aa._UNSAFE_EXEC_PARENTS
 
@@ -129,28 +129,28 @@ class TestLauncherExecPathIsSafeToAttach:
     )
     def test_shared_interpreters_are_recognised(self, path):
         """Attaching here would grant userns to every program that runs it."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         assert aa._SHARED_INTERPRETER_RE.match(path), path
 
     @pytest.mark.parametrize(
         "path",
         [
-            "/home/user/AppImages/kirocrew.AppImage",
-            "/opt/KiroCrew/kirocrew",
-            "/usr/bin/kirocrew-desktop",
+            "/home/user/AppImages/ajcrew.AppImage",
+            "/opt/AjCrew/ajcrew",
+            "/usr/bin/ajcrew-desktop",
             "/usr/local/bin/pythonish-app",
         ],
     )
     def test_real_application_paths_are_not_mistaken_for_interpreters(self, path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         assert not aa._SHARED_INTERPRETER_RE.match(path), path
 
     @posix_only
     def test_rejects_a_shared_interpreter_end_to_end(self):
         """/bin/sh exists on every POSIX host, and resolves to a shell either way."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         resolved, problem = aa.validate_exec_path("/bin/sh")
 
@@ -166,9 +166,9 @@ class TestLauncherExecPathIsSafeToAttach:
         attachment that the kernel matches against /bin/sh — a host-wide grant
         reached through a name that looks harmless.
         """
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        link = tmp_path / "kirocrew.AppImage"
+        link = tmp_path / "ajcrew.AppImage"
         link.symlink_to("/bin/sh")
 
         resolved, problem = aa.validate_exec_path(str(link))
@@ -179,7 +179,7 @@ class TestLauncherExecPathIsSafeToAttach:
     @pytest.mark.parametrize("bad", ["star*", "quest?", "brack[et]", "brace{x}", 'quo"te'])
     def test_rejects_glob_metacharacters(self, durable_dir, bad):
         """AppArmor reads an attachment as a glob even inside quotes."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         app = durable_dir / f"{bad}.AppImage"
         try:
@@ -195,9 +195,9 @@ class TestLauncherExecPathIsSafeToAttach:
     @posix_only
     def test_accepts_a_durable_path_with_a_space(self, durable_dir):
         """A space is fine — the rendered attachment is quoted."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        app = durable_dir / "Kiro Crew.AppImage"
+        app = durable_dir / "Aj Crew.AppImage"
         app.write_text("#!/bin/sh\n")
 
         resolved, problem = aa.validate_exec_path(str(app))
@@ -219,11 +219,11 @@ class TestATakeoverOfTheAttachedPathIsRefused:
     def test_a_world_writable_directory_outside_the_denylist_is_refused(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         shared = tmp_path / "shared"
         shared.mkdir()
-        app = shared / "kirocrew.AppImage"
+        app = shared / "ajcrew.AppImage"
         app.write_text("#!/bin/sh\n")
         os.chmod(shared, 0o777)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions -- the lax mode IS the fixture, not the behaviour under test: this stages a world-writable directory outside the prefix denylist precisely so the assertion below can prove validate_exec_path() refuses to attach an AppArmor userns grant there. Removing it deletes this regression test.  # noqa: E501  # fmt: skip
         # Empty the denylist so this can only be caught by the mode walk — the
@@ -238,9 +238,9 @@ class TestATakeoverOfTheAttachedPathIsRefused:
 
     def test_a_group_writable_file_is_refused(self, tmp_path, monkeypatch):
         """Group members could replace the binary that receives the grant."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        app = tmp_path / "kirocrew.AppImage"
+        app = tmp_path / "ajcrew.AppImage"
         app.write_text("#!/bin/sh\n")
         os.chmod(app, 0o775)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions -- group-writable IS the fixture: the test proves a file group members could replace is refused as an attachment target.  # noqa: E501  # fmt: skip
         monkeypatch.setattr(aa, "_UNSAFE_EXEC_PARENTS", ())
@@ -254,12 +254,12 @@ class TestATakeoverOfTheAttachedPathIsRefused:
 
     def test_a_writable_ancestor_is_enough_to_refuse(self, tmp_path, monkeypatch):
         """Renaming a writable parent re-points the same absolute path."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         outer = tmp_path / "outer"
         inner = outer / "inner"
         inner.mkdir(parents=True)
-        app = inner / "kirocrew.AppImage"
+        app = inner / "ajcrew.AppImage"
         app.write_text("#!/bin/sh\n")
         os.chmod(app, 0o755)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions -- tight leaf; the writable ANCESTOR below is what this test exercises.  # noqa: E501  # fmt: skip
         os.chmod(inner, 0o755)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions -- tight leaf; the writable ANCESTOR below is what this test exercises.  # noqa: E501  # fmt: skip
@@ -280,7 +280,7 @@ class TestATakeoverOfTheAttachedPathIsRefused:
         to be owned by the caller closes the whole class rather than adding names
         to the list.
         """
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         target = Path("/usr/bin/env")  # root-owned on every POSIX host
         if not target.exists():
@@ -305,7 +305,7 @@ class TestATakeoverOfTheAttachedPathIsRefused:
         self, shared, monkeypatch, tmp_path
     ):
         """The ownership rule covers what the interpreter regex never listed."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         stand_in = tmp_path / Path(shared).name
         stand_in.write_text("#!/bin/sh\n")
@@ -324,9 +324,9 @@ class TestATakeoverOfTheAttachedPathIsRefused:
 
     def test_a_file_you_own_under_a_tight_chain_is_accepted(self, tmp_path, monkeypatch):
         """Positive control: an AppImage you downloaded is owned by you."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        app = tmp_path / "kirocrew.AppImage"
+        app = tmp_path / "ajcrew.AppImage"
         app.write_text("#!/bin/sh\n")
         os.chmod(app, 0o755)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions -- an executable must be executable; the point of this test is that a user-owned 0755 file under a tight chain is ACCEPTED.  # noqa: E501  # fmt: skip
         # The ancestor chain of a pytest tmp_path is 0700 on macOS but includes
@@ -348,7 +348,7 @@ class TestATakeoverOfTheAttachedPathIsRefused:
         disqualifying; what matters is that the most obvious wrong answer a user
         could give is refused.
         """
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         tmp_uid = Path("/tmp").stat().st_uid
         if tmp_uid not in (0, os.getuid()):
@@ -361,9 +361,9 @@ class TestATakeoverOfTheAttachedPathIsRefused:
 
     def test_a_file_owned_by_another_user_is_refused(self, tmp_path, monkeypatch):
         """The owner of the file chooses which binary gets the grant."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        app = tmp_path / "kirocrew.AppImage"
+        app = tmp_path / "ajcrew.AppImage"
         app.write_text("#!/bin/sh\n")
         real = app.stat()
 
@@ -410,7 +410,7 @@ class TestATakeoverOfTheAttachedPathIsRefused:
         Both endpoints' chains are tight; only the directory holding the hop is
         writable, and a lexical chain over the collapsed path never names it.
         """
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         trusted = tmp_path / "trusted"
         trusted.mkdir()
@@ -420,7 +420,7 @@ class TestATakeoverOfTheAttachedPathIsRefused:
         real.write_text("#!/bin/sh\n")
         hop = loose / "hop"
         hop.symlink_to(real)
-        app = trusted / "kirocrew.AppImage"
+        app = trusted / "ajcrew.AppImage"
         app.symlink_to(hop)
         monkeypatch.setattr(aa, "_UNSAFE_EXEC_PARENTS", ())
         self._tight_except(monkeypatch, tmp_path, loose)
@@ -437,19 +437,19 @@ class TestATakeoverOfTheAttachedPathIsRefused:
         The collapsed path's chain runs ``holder/bin``, ``holder``, ... and never
         names ``prefix``, whose owner can re-point ``bin`` wholesale.
         """
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         prefix = tmp_path / "prefix"
         prefix.mkdir()
         real_bin = tmp_path / "holder" / "bin"
         real_bin.mkdir(parents=True)
-        leaf = real_bin / "kirocrew.AppImage"
+        leaf = real_bin / "ajcrew.AppImage"
         leaf.write_text("#!/bin/sh\n")
         (prefix / "bin").symlink_to(real_bin)
         monkeypatch.setattr(aa, "_UNSAFE_EXEC_PARENTS", ())
         self._tight_except(monkeypatch, tmp_path, prefix)
 
-        resolved, problem = aa.validate_exec_path(str(prefix / "bin" / "kirocrew.AppImage"))
+        resolved, problem = aa.validate_exec_path(str(prefix / "bin" / "ajcrew.AppImage"))
 
         assert resolved is None
         assert "group- or world-writable" in problem
@@ -457,7 +457,7 @@ class TestATakeoverOfTheAttachedPathIsRefused:
 
     def test_a_chain_through_tight_directories_is_still_accepted(self, tmp_path, monkeypatch):
         """Strictly a widening: the hop shape with every directory tight is accepted."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         trusted = tmp_path / "trusted"
         trusted.mkdir()
@@ -467,7 +467,7 @@ class TestATakeoverOfTheAttachedPathIsRefused:
         real.write_text("#!/bin/sh\n")
         hop = hops / "hop"
         hop.symlink_to(real)
-        app = trusted / "kirocrew.AppImage"
+        app = trusted / "ajcrew.AppImage"
         app.symlink_to(hop)
         monkeypatch.setattr(aa, "_UNSAFE_EXEC_PARENTS", ())
         self._tight_except(monkeypatch, tmp_path, tmp_path / "nothing-is-loose")
@@ -479,9 +479,9 @@ class TestATakeoverOfTheAttachedPathIsRefused:
 
     def test_a_walk_that_cannot_be_enumerated_is_refused(self, tmp_path, monkeypatch):
         """``None`` from the walk is a refusal that says so, never a shorter chain."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        app = tmp_path / "kirocrew.AppImage"
+        app = tmp_path / "ajcrew.AppImage"
         app.write_text("#!/bin/sh\n")
         monkeypatch.setattr(aa.platform_compat, "traversed_components", lambda _path: None)
 
@@ -495,12 +495,12 @@ class TestATakeoverOfTheAttachedPathIsRefused:
 class TestExpectedUidOverride:
     """The systemd service case checks ownership against the SERVICE
     account, not the installer process's own uid — a different account when
-    ``kirocrew service install`` itself runs as root or under ``sudo``."""
+    ``ajcrew service install`` itself runs as root or under ``sudo``."""
 
     def test_a_file_owned_by_the_expected_uid_is_accepted(self, tmp_path, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        app = tmp_path / "kirocrew"
+        app = tmp_path / "ajcrew"
         app.write_text("#!/bin/sh\n")
         os.chmod(app, 0o755)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions  # noqa: E501  # fmt: skip
         real_uid = app.stat().st_uid
@@ -519,13 +519,13 @@ class TestExpectedUidOverride:
     ):
         """The critical case: the venv script IS owned by
         whoever is running this Python process (e.g. root, under ``sudo
-        kirocrew service install``), but that is not the account the SERVICE
+        ajcrew service install``), but that is not the account the SERVICE
         runs as -- checking against the installer's own uid would wrongly
         accept an attachment that grants a different human's process the
         namespace capability."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        app = tmp_path / "kirocrew"
+        app = tmp_path / "ajcrew"
         app.write_text("#!/bin/sh\n")
         os.chmod(app, 0o755)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions  # noqa: E501  # fmt: skip
         installer_uid = app.stat().st_uid
@@ -557,11 +557,11 @@ class TestExpectedUidOverride:
         tight-mode ancestor owned by a THIRD account (not root, not the
         expected owner) still makes the whole path substitutable — the mode
         walk alone must not accept it."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         foreign = tmp_path / "foreign"
         foreign.mkdir()
-        app = foreign / "kirocrew"
+        app = foreign / "ajcrew"
         app.write_text("#!/bin/sh\n")
         os.chmod(app, 0o755)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions  # noqa: E501  # fmt: skip
         os.chmod(foreign, 0o755)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions -- deliberately TIGHT against the 0o022 walk; the foreign OWNER below is what this test exercises.  # noqa: E501  # fmt: skip
@@ -593,11 +593,11 @@ class TestExpectedUidOverride:
         ownership rule must not reject it — root can already edit
         /etc/apparmor.d directly, so refusing root-owned ancestors would
         reject every real install for no gain."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         parent = tmp_path / "sys"
         parent.mkdir()
-        app = parent / "kirocrew"
+        app = parent / "ajcrew"
         app.write_text("#!/bin/sh\n")
         os.chmod(app, 0o755)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions  # noqa: E501  # fmt: skip
         os.chmod(parent, 0o755)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions  # noqa: E501  # fmt: skip
@@ -621,9 +621,9 @@ class TestExpectedUidOverride:
         ownership helper -- a regression that stops threading the kwarg
         through validate_exec_path would not be caught by the unit test above
         alone."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        app = tmp_path / "kirocrew"
+        app = tmp_path / "ajcrew"
         app.write_text("#!/bin/sh\n")
         os.chmod(app, 0o755)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions  # noqa: E501  # fmt: skip
         real_uid = app.stat().st_uid
@@ -642,11 +642,11 @@ class TestExpectedUidOverride:
         """pip and venv honour the umask, so an install made under umask 002
         leaves ``<venv>/bin`` at 0775. The service refusal names that cause
         and its fix, not the AppImage advice."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         bin_dir = tmp_path / "kc" / "bin"
         bin_dir.mkdir(parents=True)
-        app = bin_dir / "kirocrew"
+        app = bin_dir / "ajcrew"
         app.write_text("#!/bin/sh\n")
         os.chmod(app, 0o755)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions  # noqa: E501  # fmt: skip
         os.chmod(bin_dir, 0o775)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions -- the umask-002 venv bin dir IS the fixture: the test proves its refusal names the cause.  # noqa: E501  # fmt: skip
@@ -666,8 +666,8 @@ class TestExpectedUidOverride:
 class TestLauncherProfileRendering:
     """The rendered profile must grant one permission and attach to one path."""
 
-    def _render(self, path="/home/u/Apps/kirocrew.AppImage", abi="4.0"):
-        from kiro_crew.service import apparmor as aa
+    def _render(self, path="/home/u/Apps/ajcrew.AppImage", abi="4.0"):
+        from aj_crew.service import apparmor as aa
 
         return aa.render_launcher_profile(abi, Path(path))
 
@@ -691,12 +691,12 @@ class TestLauncherProfileRendering:
 
     @posix_only
     def test_attaches_to_the_given_path_in_quotes(self):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        text = self._render("/home/u/My Apps/kirocrew.AppImage")
+        text = self._render("/home/u/My Apps/ajcrew.AppImage")
 
         assert (
-            f'profile {aa.LAUNCHER_PROFILE_NAME} "/home/u/My Apps/kirocrew.AppImage" '
+            f'profile {aa.LAUNCHER_PROFILE_NAME} "/home/u/My Apps/ajcrew.AppImage" '
             "flags=(unconfined)" in text
         )
 
@@ -708,7 +708,7 @@ class TestLauncherProfileRendering:
         assert "include <tunables/global>" in text
 
     def test_keeps_a_local_override_include(self):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         assert f"include if exists <local/{aa.LAUNCHER_PROFILE_NAME}>" in self._render()
 
@@ -717,20 +717,20 @@ class TestLauncherProfileRendering:
         text = self._render()
 
         assert "Moving or renaming" in text
-        assert "kirocrew sandbox status" in text
+        assert "ajcrew sandbox status" in text
 
     @posix_only
     def test_round_trips_through_the_attachment_parser(self, monkeypatch, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         profile = tmp_path / aa.LAUNCHER_PROFILE_NAME
-        profile.write_text(self._render("/home/u/Apps/kirocrew.AppImage"))
+        profile.write_text(self._render("/home/u/Apps/ajcrew.AppImage"))
         monkeypatch.setattr(aa, "LAUNCHER_PROFILE_PATH", profile)
 
-        assert aa.installed_attachment() == "/home/u/Apps/kirocrew.AppImage"
+        assert aa.installed_attachment() == "/home/u/Apps/ajcrew.AppImage"
 
     def test_attachment_parser_returns_none_when_not_installed(self, monkeypatch, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         monkeypatch.setattr(aa, "LAUNCHER_PROFILE_PATH", tmp_path / "absent")
 
@@ -747,30 +747,30 @@ class TestLauncherStatusTellsTheTruth:
         monkeypatch.setattr(aa, "userns_restricted", lambda: True)
 
     def test_unaffected_host_is_reported_as_fine(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         monkeypatch.setattr(aa, "apparmor_is_active", lambda: True)
         monkeypatch.setattr(aa, "userns_restricted", lambda: False)
 
-        ok, detail = aa.launcher_status("/home/u/Apps/kirocrew.AppImage")
+        ok, detail = aa.launcher_status("/home/u/Apps/ajcrew.AppImage")
 
         assert ok is True
         assert "does not restrict" in detail
 
     def test_missing_profile_on_an_appimage_launch_names_the_command(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         self._restricted(monkeypatch, aa)
         monkeypatch.setattr(aa, "installed_attachment", lambda: None)
 
-        ok, detail = aa.launcher_status("/home/u/Apps/kirocrew.AppImage")
+        ok, detail = aa.launcher_status("/home/u/Apps/ajcrew.AppImage")
 
         assert ok is False
-        assert "kirocrew sandbox install-profile" in detail
+        assert "ajcrew sandbox install-profile" in detail
 
     def test_missing_profile_without_an_appimage_points_at_the_service(self, monkeypatch):
         """A foreground gateway has no safe path to attach to."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         self._restricted(monkeypatch, aa)
         monkeypatch.setattr(aa, "installed_attachment", lambda: None)
@@ -779,28 +779,28 @@ class TestLauncherStatusTellsTheTruth:
         ok, detail = aa.launcher_status(None)
 
         assert ok is False
-        assert "kirocrew service install" in detail
+        assert "ajcrew service install" in detail
 
     def test_a_moved_appimage_is_reported_as_not_covered(self, monkeypatch, durable_dir):
         """The kernel reports nothing here — the profile simply never matches."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        app = durable_dir / "kirocrew.AppImage"
+        app = durable_dir / "ajcrew.AppImage"
         app.write_text("#!/bin/sh\n")
         self._restricted(monkeypatch, aa)
-        monkeypatch.setattr(aa, "installed_attachment", lambda: "/old/place/kirocrew.AppImage")
+        monkeypatch.setattr(aa, "installed_attachment", lambda: "/old/place/ajcrew.AppImage")
 
         ok, detail = aa.launcher_status(str(app))
 
         assert ok is False
-        assert "/old/place/kirocrew.AppImage" in detail
+        assert "/old/place/ajcrew.AppImage" in detail
         assert "does not apply" in detail
         assert "re-point" in detail
 
     def test_a_matching_attachment_is_reported_as_covered(self, monkeypatch, durable_dir):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        app = durable_dir / "kirocrew.AppImage"
+        app = durable_dir / "ajcrew.AppImage"
         app.write_text("#!/bin/sh\n")
         self._restricted(monkeypatch, aa)
         monkeypatch.setattr(aa, "installed_attachment", lambda: str(app.resolve()))
@@ -817,7 +817,7 @@ class TestLauncherInstallIsFailSoftAndHonest:
 
     @staticmethod
     def _app(durable_dir):
-        app = durable_dir / "kirocrew.AppImage"
+        app = durable_dir / "ajcrew.AppImage"
         app.write_text("#!/bin/sh\n")
         return app
 
@@ -836,7 +836,7 @@ class TestLauncherInstallIsFailSoftAndHonest:
         monkeypatch.setattr(aa, "verify_enforcement", lambda *_a: (True, None))
 
     def test_skips_cleanly_on_a_host_that_does_not_need_it(self, monkeypatch, durable_dir):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         writes, runs, write, run = self._writers()
         monkeypatch.setattr(aa, "should_install", lambda: (False, "no restriction here"))
@@ -850,7 +850,7 @@ class TestLauncherInstallIsFailSoftAndHonest:
         assert writes == [] and runs == []
 
     def test_explains_itself_when_there_is_nothing_to_attach_to(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         writes, runs, write, run = self._writers()
         monkeypatch.setattr(aa, "should_install", lambda: (True, "restricted"))
@@ -864,7 +864,7 @@ class TestLauncherInstallIsFailSoftAndHonest:
         assert writes == []
 
     def test_refuses_an_unsafe_path_without_touching_the_host(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         writes, runs, write, run = self._writers()
         monkeypatch.setattr(aa, "should_install", lambda: (True, "restricted"))
@@ -876,7 +876,7 @@ class TestLauncherInstallIsFailSoftAndHonest:
         assert writes == [] and runs == []
 
     def test_refuses_a_profile_that_does_not_compile(self, monkeypatch, durable_dir):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         writes, runs, write, run = self._writers()
         self._ready(monkeypatch, aa)
@@ -891,7 +891,7 @@ class TestLauncherInstallIsFailSoftAndHonest:
         assert writes == [] and runs == []
 
     def test_a_sudo_failure_warns_and_never_raises(self, monkeypatch, durable_dir):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         self._ready(monkeypatch, aa)
 
@@ -911,7 +911,7 @@ class TestLauncherInstallIsFailSoftAndHonest:
         assert "fail closed" in outcome.message
 
     def test_does_not_claim_success_when_enforcement_is_unconfirmed(self, monkeypatch, durable_dir):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         writes, runs, write, run = self._writers()
         self._ready(monkeypatch, aa)
@@ -929,7 +929,7 @@ class TestLauncherInstallIsFailSoftAndHonest:
         self, monkeypatch, durable_dir
     ):
         """Verifying the service profile instead would prove the wrong thing."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         writes, runs, write, run = self._writers()
         self._ready(monkeypatch, aa)
@@ -949,7 +949,7 @@ class TestLauncherInstallIsFailSoftAndHonest:
     def test_success_writes_the_profile_loads_it_and_says_to_restart(
         self, monkeypatch, durable_dir
     ):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         writes, runs, write, run = self._writers()
         self._ready(monkeypatch, aa)
@@ -966,22 +966,22 @@ class TestLauncherInstallIsFailSoftAndHonest:
 
     def test_warns_about_a_conflicting_hand_written_profile(self, monkeypatch, durable_dir):
         """The workaround people find first attaches to the same AppImage."""
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         writes, runs, write, run = self._writers()
         self._ready(monkeypatch, aa)
-        monkeypatch.setattr(aa, "conflicting_attachment", lambda _p: "/etc/apparmor.d/kirocrew")
+        monkeypatch.setattr(aa, "conflicting_attachment", lambda _p: "/etc/apparmor.d/ajcrew")
 
         outcome = aa.install_launcher(
             write, run, lambda *_a: (0, ""), 1000, 1000, str(self._app(durable_dir))
         )
 
         assert outcome.ok is True, "a conflict is a warning, not a failure"
-        assert "/etc/apparmor.d/kirocrew" in outcome.message
+        assert "/etc/apparmor.d/ajcrew" in outcome.message
         assert "ambiguous" in outcome.message
 
     def test_uninstall_is_a_silent_noop_when_nothing_is_installed(self, monkeypatch, durable_dir):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         monkeypatch.setattr(aa, "LAUNCHER_PROFILE_PATH", durable_dir / "absent")
 
@@ -991,7 +991,7 @@ class TestLauncherInstallIsFailSoftAndHonest:
         assert outcome.message == ""
 
     def test_uninstall_unloads_then_removes(self, monkeypatch, durable_dir):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         profile = durable_dir / aa.LAUNCHER_PROFILE_NAME
         profile.write_text("profile\n")
@@ -1006,10 +1006,10 @@ class TestLauncherInstallIsFailSoftAndHonest:
         assert runs[1] == ("rm", "-f", str(profile))
 
     def test_default_exec_path_reads_appimage(self, monkeypatch):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        monkeypatch.setenv("APPIMAGE", "/home/u/Apps/kirocrew.AppImage")
-        assert aa.default_exec_path() == "/home/u/Apps/kirocrew.AppImage"
+        monkeypatch.setenv("APPIMAGE", "/home/u/Apps/ajcrew.AppImage")
+        assert aa.default_exec_path() == "/home/u/Apps/ajcrew.AppImage"
 
         monkeypatch.setenv("APPIMAGE", "   ")
         assert aa.default_exec_path() is None
@@ -1024,7 +1024,7 @@ class TestLauncherInstallIsFailSoftAndHonest:
 #: would never match the forward-slash profile text and the test would assert a
 #: platform artefact instead of the matching logic. AppArmor is Linux-only, so
 #: PurePosixPath is also what production actually passes here.
-_APPIMAGE = PurePosixPath("/opt/KiroCrew.AppImage")
+_APPIMAGE = PurePosixPath("/opt/AjCrew.AppImage")
 
 
 class TestAppArmorConflictingAttachment:
@@ -1038,7 +1038,7 @@ class TestAppArmorConflictingAttachment:
 
     @staticmethod
     def _dir(monkeypatch, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         monkeypatch.setattr(aa, "LAUNCHER_PROFILE_PATH", tmp_path / aa.LAUNCHER_PROFILE_NAME)
         return aa
@@ -1049,20 +1049,20 @@ class TestAppArmorConflictingAttachment:
 
     def test_our_own_profile_is_never_the_conflict(self, monkeypatch, tmp_path):
         aa = self._dir(monkeypatch, tmp_path)
-        (tmp_path / aa.LAUNCHER_PROFILE_NAME).write_text('"/opt/KiroCrew.AppImage" {}')
+        (tmp_path / aa.LAUNCHER_PROFILE_NAME).write_text('"/opt/AjCrew.AppImage" {}')
         assert aa.conflicting_attachment(_APPIMAGE) is None
 
     @pytest.mark.parametrize(
         "body",
         [
-            '"/opt/KiroCrew.AppImage" flags=(attach_disconnected) {}',
-            "profile local /opt/KiroCrew.AppImage {}",
-            "profile local\n/opt/KiroCrew.AppImage",
+            '"/opt/AjCrew.AppImage" flags=(attach_disconnected) {}',
+            "profile local /opt/AjCrew.AppImage {}",
+            "profile local\n/opt/AjCrew.AppImage",
         ],
     )
     def test_each_attachment_spelling_is_found(self, body: str, monkeypatch, tmp_path):
         aa = self._dir(monkeypatch, tmp_path)
-        other = tmp_path / "local-kirocrew"
+        other = tmp_path / "local-ajcrew"
         other.write_text(body)
         assert aa.conflicting_attachment(_APPIMAGE) == str(other)
 
@@ -1082,7 +1082,7 @@ class TestAppArmorConflictingAttachment:
         aa = self._dir(monkeypatch, tmp_path)
         (tmp_path / "unreadable").write_text("x")
         good = tmp_path / "zz-real"
-        good.write_text('"/opt/KiroCrew.AppImage" {}')
+        good.write_text('"/opt/AjCrew.AppImage" {}')
         real_read = Path.read_text
 
         def _read(self, *a, **kw):
@@ -1107,16 +1107,16 @@ class TestAppArmorLauncherUninstall:
     """
 
     def test_nothing_to_do_when_no_profile_is_installed(self, monkeypatch, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
         monkeypatch.setattr(aa, "LAUNCHER_PROFILE_PATH", tmp_path / "absent")
         outcome = aa.uninstall_launcher(lambda *a: None)
         assert (outcome.changed, outcome.ok) == (False, True)
 
     def test_it_unloads_then_removes(self, monkeypatch, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        path = tmp_path / "kirocrew-launcher"
+        path = tmp_path / "ajcrew-launcher"
         path.write_text("profile")
         monkeypatch.setattr(aa, "LAUNCHER_PROFILE_PATH", path)
         monkeypatch.setattr(aa, "parser_path", lambda: "/usr/sbin/apparmor_parser")
@@ -1131,9 +1131,9 @@ class TestAppArmorLauncherUninstall:
         assert outcome.changed is True and outcome.ok is True
 
     def test_a_failed_unload_still_removes_the_file(self, monkeypatch, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        path = tmp_path / "kirocrew-launcher"
+        path = tmp_path / "ajcrew-launcher"
         path.write_text("profile")
         monkeypatch.setattr(aa, "LAUNCHER_PROFILE_PATH", path)
         monkeypatch.setattr(aa, "parser_path", lambda: "/usr/sbin/apparmor_parser")
@@ -1150,9 +1150,9 @@ class TestAppArmorLauncherUninstall:
         assert outcome.ok is True
 
     def test_a_failed_removal_is_reported(self, monkeypatch, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        path = tmp_path / "kirocrew-launcher"
+        path = tmp_path / "ajcrew-launcher"
         path.write_text("profile")
         monkeypatch.setattr(aa, "LAUNCHER_PROFILE_PATH", path)
         monkeypatch.setattr(aa, "parser_path", lambda: None)
@@ -1166,9 +1166,9 @@ class TestAppArmorLauncherUninstall:
         assert "read-only /etc" in outcome.message
 
     def test_no_parser_skips_the_unload_and_still_removes(self, monkeypatch, tmp_path):
-        from kiro_crew.service import apparmor as aa
+        from aj_crew.service import apparmor as aa
 
-        path = tmp_path / "kirocrew-launcher"
+        path = tmp_path / "ajcrew-launcher"
         path.write_text("profile")
         monkeypatch.setattr(aa, "LAUNCHER_PROFILE_PATH", path)
         monkeypatch.setattr(aa, "parser_path", lambda: None)

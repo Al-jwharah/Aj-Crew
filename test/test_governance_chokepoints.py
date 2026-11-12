@@ -17,7 +17,7 @@ import pytest
 from governance_chokepoints_helpers import _isolate  # noqa: F401
 from governance_chokepoints_helpers import _install
 
-from kiro_crew.platform import governance_profiles as gp
+from aj_crew.platform import governance_profiles as gp
 
 
 # ── filesystem + egress at the host gate (tool kind + real args) ──
@@ -32,7 +32,7 @@ class TestFilesystemEgressAtGate:
                 "filesystem": {"read": {"mode": "deny", "deny": ["**/.env"]}},
             }
         )
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         hooks = HookManager()
         result = hooks.on_tool_call("Reading /home/u/proj/.env", session_key="cli_chat")
@@ -48,7 +48,7 @@ class TestFilesystemEgressAtGate:
                 "filesystem": {"write": {"mode": "allow", "allow": ["/home/u/workspace/**"]}},
             }
         )
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         hooks = HookManager()
         denied = hooks.on_tool_call(
@@ -83,7 +83,7 @@ class TestFilesystemEgressAtGate:
                 },
             }
         )
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         hooks = HookManager()
         denied = hooks.on_tool_call(
@@ -109,7 +109,7 @@ class TestFilesystemEgressAtGate:
         # emitted: a kindless (or fetch-kind) call carrying BOTH a url param
         # and a diff block keeps its network.egress pair, so a governed egress
         # ceiling still binds it.
-        from kiro_crew.platform.governance import classify_tool_args
+        from aj_crew.platform.governance import classify_tool_args
 
         pairs = classify_tool_args(
             "",
@@ -135,7 +135,7 @@ class TestFilesystemEgressAtGate:
                 "filesystem": {"write": {"mode": "allow", "allow": ["/home/u/workspace/**"]}},
             }
         )
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         hooks = HookManager()
         denied = hooks.on_tool_call(
@@ -169,7 +169,7 @@ class TestFilesystemEgressAtGate:
                 "filesystem": {"read": {"mode": "deny", "deny": [f"{cwd}/secret/**"]}},
             }
         )
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         hooks = HookManager()
         # Relative path that resolves into the denied subtree → DENY.
@@ -199,7 +199,7 @@ class TestFilesystemEgressAtGate:
                 "network": {"egress": {"mode": "allow", "allow": ["*.amazonaws.com"]}},
             }
         )
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         hooks = HookManager()
         denied = hooks.on_tool_call(
@@ -219,7 +219,7 @@ class TestFilesystemEgressAtGate:
 
     def test_ungoverned_args_are_noop(self):
         _install(None)
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         hooks = HookManager()
         r = hooks.on_tool_call(
@@ -231,7 +231,7 @@ class TestFilesystemEgressAtGate:
         # A fetch of a hostless URL (file://, mailto:, data:) must NOT be
         # classified as egress to a phantom host (e.g. the scheme "file") — it
         # carries no network host, so an egress allowlist must not block it.
-        from kiro_crew.platform.governance import _url_host, classify_tool_args
+        from aj_crew.platform.governance import _url_host, classify_tool_args
 
         assert _url_host("file:///etc/passwd") == ""
         assert classify_tool_args("fetch", {"url": "file:///etc/passwd"}) == ()
@@ -244,7 +244,7 @@ class TestFilesystemEgressAtGate:
         # retry must NOT mis-parse their payload as an authority — otherwise the
         # egress gate grounds its decision on a host the URL never contacts
         # (e.g. mailto:user@evil.com → phantom "evil.com").
-        from kiro_crew.platform.governance import _url_host, classify_tool_args
+        from aj_crew.platform.governance import _url_host, classify_tool_args
 
         for u in (
             "mailto:user@example.com",
@@ -273,7 +273,7 @@ class TestFilesystemEgressAtGate:
                 "network": {"egress": {"mode": "allow", "allow": ["allowed.com"]}},
             }
         )
-        from kiro_crew.platform.governance import classify_tool_args
+        from aj_crew.platform.governance import classify_tool_args
 
         assert classify_tool_args("fetch", {"url": "mailto:exfil@allowed.com"}) == ()
 
@@ -282,7 +282,7 @@ class TestFilesystemEgressAtGate:
         # tool_kind arrives "". A write must still be governed via the param
         # shape (path → both fs ceilings), and a shell command (carries
         # `command`) must NOT be misrouted to filesystem.
-        from kiro_crew.platform.governance import classify_tool_args
+        from aj_crew.platform.governance import classify_tool_args
 
         # Empty kind + path → both read+write ceilings (can't tell which).
         pairs = dict(classify_tool_args("", {"path": "/etc/passwd"}))
@@ -297,7 +297,7 @@ class TestFilesystemEgressAtGate:
 
     @pytest.mark.parametrize("key", ["path", "file_path", "filePath"])
     def test_every_path_alias_is_classified(self, key):
-        from kiro_crew.platform.governance import classify_tool_args
+        from aj_crew.platform.governance import classify_tool_args
 
         assert classify_tool_args("edit", {key: "/srv/secret"}) == (
             ("filesystem.write", "/srv/secret"),
@@ -308,7 +308,7 @@ class TestFilesystemEgressAtGate:
 
     def test_conflicting_path_aliases_are_all_classified(self):
         """An innocent first alias must not mask a sensitive later alias."""
-        from kiro_crew.platform.governance import classify_tool_args
+        from aj_crew.platform.governance import classify_tool_args
 
         assert classify_tool_args(
             "edit",
@@ -330,7 +330,7 @@ class TestFilesystemEgressAtGate:
                 "filesystem": {"write": {"mode": "allow", "allow": ["/tmp/**"]}},
             }
         )
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         decision = HookManager().on_tool_call(
             "Editing notes",
@@ -350,7 +350,7 @@ class TestFilesystemEgressAtGate:
                 "filesystem": {"write": {"mode": "allow", "allow": ["/home/u/ws/**"]}},
             }
         )
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         hooks = HookManager()
         r = hooks.on_tool_call(
@@ -363,14 +363,14 @@ class TestFilesystemEgressAtGate:
     def test_nested_array_read_path_is_classified(self):
         # A batch-shaped tool buries its target inside an array argument. The
         # governance plane must surface it (before the fix this returned ()).
-        from kiro_crew.platform.governance import classify_tool_args
+        from aj_crew.platform.governance import classify_tool_args
 
         assert classify_tool_args(
             "read", {"operations": [{"mode": "Line", "path": "~/secrets/notes.txt"}]}
         ) == (("filesystem.read", "~/secrets/notes.txt"),)
 
     def test_nested_array_edit_path_maps_to_write(self):
-        from kiro_crew.platform.governance import classify_tool_args
+        from aj_crew.platform.governance import classify_tool_args
 
         assert classify_tool_args(
             "edit", {"operations": [{"mode": "Line", "path": "~/secrets/notes.txt"}]}
@@ -378,7 +378,7 @@ class TestFilesystemEgressAtGate:
 
     def test_deeply_nested_path_under_dict_and_list_mix(self):
         # A path buried under an arbitrary mix of dicts and lists is still found.
-        from kiro_crew.platform.governance import classify_tool_args
+        from aj_crew.platform.governance import classify_tool_args
 
         assert classify_tool_args(
             "read", {"a": [{"b": {"c": [{"file_path": "~/secrets/deep.key"}]}}]}
@@ -409,7 +409,7 @@ class TestFilesystemEgressAtGate:
                 "filesystem": {"read": {"mode": "allow", "allow": [self._fs_tree("ws", "**")]}},
             }
         )
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         hooks = HookManager()
         denied = hooks.on_tool_call(
@@ -432,7 +432,7 @@ class TestFilesystemEgressAtGate:
                 "filesystem": {"read": {"mode": "allow", "allow": [self._fs_tree("ws", "**")]}},
             }
         )
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         hooks = HookManager()
         allowed = hooks.on_tool_call(
@@ -455,7 +455,7 @@ class TestFilesystemEgressAtGate:
                 "filesystem": {"read": {"mode": "allow", "allow": [ws, self._fs_tree("ws", "**")]}},
             }
         )
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         hooks = HookManager()
         title = "Reading listing workspace"
@@ -473,7 +473,7 @@ class TestFilesystemEgressAtGate:
     def test_a_builtin_naming_no_read_path_keeps_the_reading_title(self):
         # A built-in judged in its own scopes gets a marker, not a path, when its
         # arguments name no read target, so the title's pair still meets a deny.
-        from kiro_crew.platform.governance import gate_decision, parse_policy
+        from aj_crew.platform.governance import gate_decision, parse_policy
 
         ceiling = parse_policy(
             {
@@ -496,7 +496,7 @@ class TestFilesystemEgressAtGate:
         # A relative argument is anchored at this process's working directory,
         # not where the session reads it, so it cannot stand in for a title that
         # names the denied file.
-        from kiro_crew.platform.governance import gate_decision, parse_policy
+        from aj_crew.platform.governance import gate_decision, parse_policy
 
         ceiling = parse_policy(
             {
@@ -518,7 +518,7 @@ class TestFilesystemEgressAtGate:
     def test_an_expansion_dependent_argument_keeps_the_reading_title(self, spelling):
         # The matcher expands ``~`` and ``$VAR``; the reading tool may open the
         # literal spelling, so the two need not name one file.
-        from kiro_crew.platform.governance import gate_decision, parse_policy
+        from aj_crew.platform.governance import gate_decision, parse_policy
 
         ceiling = parse_policy(
             {
@@ -539,7 +539,7 @@ class TestFilesystemEgressAtGate:
     def test_a_title_naming_a_file_the_arguments_miss_still_refuses(self):
         # A batch read's Image entry carries ``image_paths``, which the argument
         # scan does not list; a title naming that denied file keeps its pair.
-        from kiro_crew.platform.governance import gate_decision, parse_policy
+        from aj_crew.platform.governance import gate_decision, parse_policy
 
         ceiling = parse_policy(
             {
@@ -566,7 +566,7 @@ class TestFilesystemEgressAtGate:
     def test_an_image_entry_with_a_decoy_path_keeps_the_reading_title(self, batched):
         # The scan lists the decoy ``path`` and never ``image_paths``, so the
         # entry still has an unjudged target and the title's pair stays.
-        from kiro_crew.platform.governance import gate_decision, parse_policy
+        from aj_crew.platform.governance import gate_decision, parse_policy
 
         ceiling = parse_policy(
             {
@@ -593,7 +593,7 @@ class TestFilesystemEgressAtGate:
         # Allow-mode confinement: the label title keeps its pair because the
         # Image entry's target is not in the scan, so the call stays refused.
         ws = self._fs_tree("ws")
-        from kiro_crew.platform.governance import gate_decision, parse_policy
+        from aj_crew.platform.governance import gate_decision, parse_policy
 
         ceiling = parse_policy(
             {
@@ -618,7 +618,7 @@ class TestFilesystemEgressAtGate:
 
     @pytest.mark.skipif(os.name != "nt", reason="%VAR% expansion is Windows path semantics")
     def test_a_windows_percent_variable_argument_keeps_the_reading_title(self):
-        from kiro_crew.platform.governance import gate_decision, parse_policy
+        from aj_crew.platform.governance import gate_decision, parse_policy
 
         ceiling = parse_policy(
             {
@@ -642,8 +642,8 @@ class TestFilesystemEgressAtGate:
         # The read gate asks the shared anchor check with the drive required.
         import ntpath
 
-        from kiro_crew.platform import governance, tool_paths
-        from kiro_crew.platform.governance_parts import evaluator
+        from aj_crew.platform import governance, tool_paths
+        from aj_crew.platform.governance_parts import evaluator
 
         seen = []
 
@@ -669,15 +669,15 @@ class TestFilesystemEgressAtGate:
     # an ungoverned host still permits it (permit-by-default preserved).
     @staticmethod
     def _truncating_read_params():
-        from kiro_crew.platform.tool_paths import _TARGET_PATH_MAX_NODES
+        from aj_crew.platform.tool_paths import _TARGET_PATH_MAX_NODES
 
         pad = [{"k": i} for i in range(_TARGET_PATH_MAX_NODES + 50)]
         pad.append({"path": "/home/u/secrets/buried.txt"})
         return {"operations": pad}
 
     def test_truncated_scan_emits_never_permittable_marker(self):
-        from kiro_crew.platform.governance import _TRUNCATED_SCAN_ITEM, classify_tool_args
-        from kiro_crew.platform.tool_paths import target_paths
+        from aj_crew.platform.governance import _TRUNCATED_SCAN_ITEM, classify_tool_args
+        from aj_crew.platform.tool_paths import target_paths
 
         params = self._truncating_read_params()
         assert target_paths(params).truncated is True
@@ -688,7 +688,7 @@ class TestFilesystemEgressAtGate:
         assert ("filesystem.read", _TRUNCATED_SCAN_ITEM) in pairs
 
     def test_truncated_scan_unknown_kind_consults_both_fs_scopes(self):
-        from kiro_crew.platform.governance import _TRUNCATED_SCAN_ITEM, classify_tool_args
+        from aj_crew.platform.governance import _TRUNCATED_SCAN_ITEM, classify_tool_args
 
         pairs = classify_tool_args("", self._truncating_read_params())
         assert ("filesystem.read", _TRUNCATED_SCAN_ITEM) in pairs
@@ -702,7 +702,7 @@ class TestFilesystemEgressAtGate:
         # () for a zero-path truncated scan and resolve is never asked about the
         # marker). The end-to-end HookManager test below cannot guard the fix on its
         # own because the always-on keystone hard-denies any truncated scan first.
-        from kiro_crew.platform.governance import (
+        from aj_crew.platform.governance import (
             _TRUNCATED_SCAN_ITEM,
             classify_tool_args,
             parse_policy,
@@ -737,7 +737,7 @@ class TestFilesystemEgressAtGate:
                 "filesystem": {"read": {"mode": "allow", "allow": ["/home/u/ws/**"]}},
             }
         )
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         hooks = HookManager()
         denied = hooks.on_tool_call(
@@ -757,7 +757,7 @@ class TestFilesystemEgressAtGate:
         # plane's decision. Here we drive classify_tool_args + resolve directly:
         # the truncation emits the marker, and an UNGOVERNED ceiling (None) permits
         # it — permit-by-default is preserved for hosts with no policy.
-        from kiro_crew.platform.governance import (
+        from aj_crew.platform.governance import (
             _TRUNCATED_SCAN_ITEM,
             classify_tool_args,
             resolve,
@@ -772,7 +772,7 @@ class TestFilesystemEgressAtGate:
     def test_flat_and_fetch_cases_unchanged_regression(self):
         # Regression: the flat top-level path and the fetch/url derivation must be
         # byte-for-byte unchanged by the depth-aware rewrite.
-        from kiro_crew.platform.governance import classify_tool_args
+        from aj_crew.platform.governance import classify_tool_args
 
         assert classify_tool_args("read", {"path": "~/secrets/notes.txt"}) == (
             ("filesystem.read", "~/secrets/notes.txt"),
@@ -791,7 +791,7 @@ class TestFoldersAliasesFilesystem:
     provider profile App. A.3). They are normalized to filesystem.* at parse time."""
 
     def test_profile_folders_write_narrows_filesystem_write(self):
-        from kiro_crew.platform.governance import parse_profile, resolve
+        from aj_crew.platform.governance import parse_profile, resolve
 
         prof = parse_profile(
             {
@@ -809,7 +809,7 @@ class TestFoldersAliasesFilesystem:
     def test_folders_and_filesystem_both_present_intersect(self):
         # If a file authors BOTH folders.write and filesystem.write, they compose
         # (intersect) rather than one silently overwriting the other.
-        from kiro_crew.platform.governance import parse_policy, resolve
+        from aj_crew.platform.governance import parse_policy, resolve
 
         pol = parse_policy(
             {
@@ -830,7 +830,7 @@ class TestKeystoneOnRealPath:
 
     def test_edit_to_trust_root_blocked_even_with_innocuous_title(self):
         _install(None)  # ungoverned: ONLY the always-on keystone is in play
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         hooks = HookManager()
         # A generic title that does not contain the path; the real path is the
@@ -839,14 +839,14 @@ class TestKeystoneOnRealPath:
             "code",
             session_key="cli_chat",
             tool_kind="edit",
-            raw_params={"path": "~/.kirocrew/security_policy.json"},
+            raw_params={"path": "~/.ajcrew/security_policy.json"},
         )
         assert r.action == TOOL_DENY
         assert "sensitive path" in r.reason.lower()
 
     def test_edit_to_ssh_key_blocked_via_real_path(self):
         _install(None)
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         hooks = HookManager()
         r = hooks.on_tool_call(
@@ -859,7 +859,7 @@ class TestKeystoneOnRealPath:
 
     def test_benign_edit_path_not_blocked(self):
         _install(None)
-        from kiro_crew.hooks import TOOL_DENY, HookManager
+        from aj_crew.hooks import TOOL_DENY, HookManager
 
         hooks = HookManager()
         r = hooks.on_tool_call(
@@ -877,8 +877,8 @@ class TestPermissionEventCarriesRawParams:
     network.egress enforcement is a no-op in production."""
 
     def test_permission_event_recovers_cached_params(self):
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, JsonRpcMessage
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, JsonRpcMessage
 
         client = AcpClient.__new__(AcpClient)  # avoid spawning a real process
         client._tool_call_inputs = {}
@@ -926,7 +926,7 @@ class TestGovernanceDegradedIsObservable:
         monkeypatch.setattr(gp, "resolve_active_scope", _boom)
 
         emitted: list = []
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(
             sel_mod.sel(),
@@ -951,7 +951,7 @@ class TestGovernanceDegradedIsObservable:
         # The stdio MCP path passes log_warning=False (stderr would corrupt the
         # JSON-RPC stream) but STILL writes the file-backed SEL.
         emitted: list = []
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(
             sel_mod.sel(), "log_governance_degraded", lambda **kw: emitted.append(kw)
@@ -969,7 +969,7 @@ class TestGovernanceDegradedIsObservable:
         # If the SEL write ITSELF fails AND log_warning=False (stdio path), the
         # fail-open would otherwise be completely invisible at prod log level.
         # The SEL-emit failure must escalate to WARNING regardless.
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         def _boom(**kw):
             raise OSError("disk full")
@@ -1001,7 +1001,7 @@ class TestGovernanceDegradedIsObservable:
         # of the late `from ... import audit_governance_degraded`).
         monkeypatch.setattr(gp, "audit_governance_degraded", _boom)
 
-        from kiro_crew.hooks import HookManager
+        from aj_crew.hooks import HookManager
 
         hooks = HookManager()
         # Must return a decision (degrade to no-opinion), NOT raise.
@@ -1025,7 +1025,7 @@ class TestGovernanceDegradedIsObservable:
         monkeypatch.setattr(gp, "resolve_active_scope", _boom)
 
         emitted: list = []
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(
             sel_mod.sel(), "log_governance_degraded", lambda **kw: emitted.append(kw)
@@ -1055,7 +1055,7 @@ class TestGovernanceDegradedIsObservable:
         monkeypatch.setattr(gp, "resolve_active_scope", _boom)
 
         emitted: list = []
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(
             sel_mod.sel(), "log_governance_degraded", lambda **kw: emitted.append(kw)
@@ -1078,13 +1078,13 @@ class TestGovernanceDegradedIsObservable:
         # rather than being mis-tagged "slack". (follow-up #6/#8.)
         import json
 
-        from kiro_crew.sel import SecurityEventLog
+        from aj_crew.sel import SecurityEventLog
 
         SecurityEventLog._instance = None
         SecurityEventLog._initialized = False
         sel_dir = tmp_path / "sel"
         sel_obj = SecurityEventLog(base_dir=sel_dir, sync=True)
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_obj)
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_obj)
         try:
             gp.audit_governance_degraded(
                 "learn_add",
@@ -1118,7 +1118,7 @@ class TestMatchPathNormalization:
     """
 
     def test_traversal_item_does_not_satisfy_allow_prefix(self):
-        from kiro_crew.platform.governance import _match_path
+        from aj_crew.platform.governance import _match_path
 
         assert not _match_path("/home/u/ws/../.bashrc", "/home/u/ws/**")
         # In-tree . / .. that stays inside still matches.
@@ -1128,7 +1128,7 @@ class TestMatchPathNormalization:
     def test_wildcard_adjacent_pattern_is_not_collapsed(self):
         import fnmatch
 
-        from kiro_crew.platform.governance import _match_path
+        from aj_crew.platform.governance import _match_path
 
         # The pattern is matched verbatim: ``_match_path`` agrees with a raw
         # ``fnmatchcase`` on the un-collapsed glob (an absolute item needs no
@@ -1160,7 +1160,7 @@ class TestMatchPathOnWindows:
 
     @pytest.fixture(autouse=True)
     def _windows_reading(self, _floor_monkeypatch):
-        from kiro_crew.platform import governance
+        from aj_crew.platform import governance
 
         _floor_monkeypatch.setenv("USERPROFILE", _NT_HOME)
         _floor_monkeypatch.setenv("HOME", _NT_HOME)
@@ -1179,7 +1179,7 @@ class TestMatchPathOnWindows:
         ],
     )
     def test_a_home_deny_matches_every_spelling_of_its_paths(self, item):
-        from kiro_crew.platform.governance import _match_denied_path
+        from aj_crew.platform.governance import _match_denied_path
 
         # ``~`` expands to ``C:\Users\u/.ssh/**``: both separators in one pattern.
         assert _match_denied_path(item, "~/.ssh/**")
@@ -1213,7 +1213,7 @@ class TestMatchPathOnWindows:
         ],
     )
     def test_an_allow_meets_the_path_it_covers(self, item, pattern):
-        from kiro_crew.platform.governance import _match_path
+        from aj_crew.platform.governance import _match_path
 
         assert _match_path(item, pattern)
 
@@ -1228,7 +1228,7 @@ class TestMatchPathOnWindows:
         ],
     )
     def test_an_allow_meets_only_the_case_it_names(self, item, pattern):
-        from kiro_crew.platform.governance import _match_denied_path, _match_path
+        from aj_crew.platform.governance import _match_denied_path, _match_path
 
         assert not _match_path(item, pattern)
         assert _match_denied_path(item, pattern)
@@ -1236,7 +1236,7 @@ class TestMatchPathOnWindows:
     def test_a_policy_allow_admits_no_directory_in_another_case(self):
         from governance_policy_helpers import _policy_body
 
-        from kiro_crew.platform.governance import parse_policy, resolve
+        from aj_crew.platform.governance import parse_policy, resolve
 
         allow = {"read": {"mode": "allow", "allow": [r"C:\work\private\**"]}}
         ceiling = parse_policy(_policy_body(filesystem=allow))
@@ -1255,12 +1255,12 @@ class TestMatchPathOnWindows:
         [r"C:\Users\u\.sshx\id_rsa", r"C:\Users\other\.ssh\id_rsa", r"D:\Users\u\.ssh\id_rsa"],
     )
     def test_a_home_deny_matches_no_other_path(self, item):
-        from kiro_crew.platform.governance import _match_path
+        from aj_crew.platform.governance import _match_path
 
         assert not _match_path(item, "~/.ssh/**")
 
     def test_a_drive_or_share_is_part_of_the_path(self):
-        from kiro_crew.platform.governance import _match_path
+        from aj_crew.platform.governance import _match_path
 
         # A drive letter names a volume, so an allow meets it in either case.
         assert _match_path("c:/data/x.txt", r"C:\data\**")
@@ -1272,7 +1272,7 @@ class TestMatchPathOnWindows:
         assert not _match_path(r"C:\srv\share\x.txt", "//srv/share/**")
 
     def test_a_traversal_still_cannot_satisfy_an_allow_prefix(self):
-        from kiro_crew.platform.governance import _match_path
+        from aj_crew.platform.governance import _match_path
 
         assert not _match_path(r"C:\ws\..\secret.txt", "C:/ws/**")
         assert _match_path(r"C:\ws\.\src\app.py", "C:/ws/**")
@@ -1280,7 +1280,7 @@ class TestMatchPathOnWindows:
     def test_a_policy_deny_written_with_slashes_is_enforced(self):
         from governance_policy_helpers import _policy_body
 
-        from kiro_crew.platform.governance import parse_policy, resolve
+        from aj_crew.platform.governance import parse_policy, resolve
 
         ceiling = parse_policy(
             _policy_body(filesystem={"read": {"mode": "deny", "deny": ["~/.ssh/**"]}})
@@ -1300,12 +1300,12 @@ class TestMatchPathOnWindows:
         ],
     )
     def test_a_bracket_expression_gains_no_member(self, item, pattern):
-        from kiro_crew.platform.governance import _match_path
+        from aj_crew.platform.governance import _match_path
 
         assert not _match_path(item, pattern)
 
     def test_a_bracket_range_matches_in_any_case_without_new_members(self):
-        from kiro_crew.platform.governance import _match_denied_path
+        from aj_crew.platform.governance import _match_denied_path
 
         assert _match_denied_path(r"C:\data\A.txt", r"C:\data\[a-c]*")
         assert _match_denied_path(r"c:\DATA\b.txt", "C:/data/[A-C]*")
@@ -1324,13 +1324,13 @@ class TestMatchPathOnWindows:
         ],
     )
     def test_only_ascii_letters_match_in_another_case(self, item, pattern):
-        from kiro_crew.platform.governance import _match_denied_path, _match_path
+        from aj_crew.platform.governance import _match_denied_path, _match_path
 
         assert not _match_denied_path(item, pattern)
         assert not _match_path(item, pattern)
 
     def test_a_non_ascii_letter_matches_as_written(self):
-        from kiro_crew.platform.governance import _match_denied_path
+        from aj_crew.platform.governance import _match_denied_path
 
         assert _match_denied_path("C:\\Donn\u00e9es\\x", "C:/donn\u00e9es/**")
         assert _match_denied_path("C:\\work\\\u0130nvoices\\x", "C:/WORK/\u0130nvoices/**")
@@ -1338,7 +1338,7 @@ class TestMatchPathOnWindows:
     def test_a_range_deny_is_enforced_through_the_policy(self):
         from governance_policy_helpers import _policy_body
 
-        from kiro_crew.platform.governance import parse_policy, resolve
+        from aj_crew.platform.governance import parse_policy, resolve
 
         ceiling = parse_policy(
             _policy_body(filesystem={"read": {"mode": "deny", "deny": [r"C:\data\[A-z]*"]}})
@@ -1348,7 +1348,7 @@ class TestMatchPathOnWindows:
         assert resolve(ceiling, None, "filesystem.read", r"C:\data\1.txt").permitted
 
     def test_posix_compares_paths_as_written(self, monkeypatch):
-        from kiro_crew.platform import governance
+        from aj_crew.platform import governance
 
         monkeypatch.setattr(governance, "_WINDOWS_PATHS", False)
         assert not governance._match_path("/home/u/A.txt", "/home/u/a.txt")
@@ -1360,7 +1360,7 @@ class TestMatchPathOnWindows:
 class TestChokepointsFailClosed:
     def test_vet_spawn_governance_denies_on_error(self, monkeypatch):
         """A governance evaluation error must DENY the spawn (return a reason)."""
-        from kiro_crew import subagent
+        from aj_crew import subagent
 
         def _boom(*a, **k):
             raise RuntimeError("governance module broken")
@@ -1372,8 +1372,8 @@ class TestChokepointsFailClosed:
 
     def test_vet_spawn_governance_reraises_composition_error(self, monkeypatch):
         """PlatformCompositionError still propagates (hard fail-closed CPP)."""
-        from kiro_crew import subagent
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew import subagent
+        from aj_crew.platform.context import PlatformCompositionError
 
         def _compose_fail(*a, **k):
             raise PlatformCompositionError("companion missing")
@@ -1384,7 +1384,7 @@ class TestChokepointsFailClosed:
 
     def test_enterprise_posture_denies_on_error(self, monkeypatch):
         """A governance evaluation error must DENY the workspace (return False)."""
-        from kiro_crew.slack import enterprise
+        from aj_crew.slack import enterprise
 
         def _boom(*a, **k):
             raise RuntimeError("governance module broken")
@@ -1393,8 +1393,8 @@ class TestChokepointsFailClosed:
         assert enterprise._governance_posture_permits_workspace("E_ATTACKER", "T_ATTACKER") is False
 
     def test_enterprise_posture_reraises_composition_error(self, monkeypatch):
-        from kiro_crew.platform.context import PlatformCompositionError
-        from kiro_crew.slack import enterprise
+        from aj_crew.platform.context import PlatformCompositionError
+        from aj_crew.slack import enterprise
 
         def _compose_fail(*a, **k):
             raise PlatformCompositionError("companion missing")

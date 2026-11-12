@@ -97,7 +97,7 @@ chip names the model a turn will run on instead of `auto`.
 
 A pooled session is checked a second time when `session/set_mode` activates an
 agent. kiro-cli puts the session on the model the activated agent's spec pins,
-which undoes the first check, and `agent.model` is copied into `kirocrew.json`, so
+which undoes the first check, and `agent.model` is copied into `ajcrew.json`, so
 an unentitled global default reaches the wire this way. `set_mode` answers `{}`;
 kiro-cli reports the applied model only in the `_kiro.dev/agent/switched` frame it
 sends before that answer (`{"agentName", "previousAgentName", "model", ...}`, seen
@@ -172,7 +172,7 @@ so the stamp is per request, never per process: a long-lived runtime records for
 whoever is in the vault at its next session. The picker's handler reads the
 vault's fingerprint on every request and again after its one await (the
 advertised-store persist), so after an account switch made anywhere on the host
--- the dashboard's sign-in card, or `kirocrew kas login` / `kas logout` in a
+-- the dashboard's sign-in card, or `ajcrew kas login` / `kas logout` in a
 shell, which writes the same vault from another process -- it answers cold, and
 the rows serve again if the vault comes back to that account. No in-process
 notice from the vault's writer is needed, so there is none. Only the **bundle route** reads
@@ -288,7 +288,7 @@ with no migration and no second field.
 Both resolvers scope EVERY tier and let an out-of-scope tier defer to the next, so
 an out-of-scope pin reads exactly like an unset one:
 
-- `KiroCrewConfig.acp_effective_model` — the provider factory's selection, which
+- `AjCrewConfig.acp_effective_model` — the provider factory's selection, which
   every surface routes through. It takes the per-session `backend` because
   `create_provider_factory` resolves that before the model; a member-DM thread
   auto-routed to another harness is judged against the harness it runs.
@@ -451,7 +451,7 @@ an alias that translation is already a substitution — `to_provider_id`
 turns `claude-haiku-4.5` into Sonnet's id, because the claude backend serves no
 Haiku — so a site that scopes the translated value asks about the substitute and
 the pin passes. `test_model_scope_wire_paths.py::TestScopeSeesTheUntranslatedPin`
-parses `src/kiro_crew` and fails when any scope call receives a value assigned from
+parses `src/aj_crew` and fails when any scope call receives a value assigned from
 `to_provider_id` / `to_acp_id` / `resolve_wire_model_id` in the same function. It
 asserts the property rather than freezing a list of sites, so a legitimate new site
 needs no edit.

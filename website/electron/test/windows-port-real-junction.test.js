@@ -13,9 +13,9 @@
 //      path-bound matcher accepts it.
 //
 // A third probe covers the lock-holder probe's launcher: Node's shell-free
-// execFile refuses a `.cmd` here (EINVAL), so `kirocrew gateway-pid` is reached
+// execFile refuses a `.cmd` here (EINVAL), so `ajcrew gateway-pid` is reached
 // only through gatewayCliInvocation's unwrap of the bundled
-// backend-dist\kirocrew-backend\bin\kirocrew.cmd to the python.exe beside it.
+// backend-dist\ajcrew-backend\bin\ajcrew.cmd to the python.exe beside it.
 
 const { describe, it, test } = require("node:test");
 const assert = require("node:assert");
@@ -29,7 +29,7 @@ const {
   windowsProcessCommand,
 } = require("../windows-port");
 const { gatewayCliInvocation } = require("../gateway-recovery");
-const { isKirocrewCommand } = require("../gateway-stop");
+const { isAjcrewCommand } = require("../gateway-stop");
 
 const IS_WIN = process.platform === "win32";
 const skip = IS_WIN ? false : "real NTFS junctions and Win32_Process exist only on Windows";
@@ -37,7 +37,7 @@ const skip = IS_WIN ? false : "real NTFS junctions and Win32_Process exist only 
 // Bundle layout under one versioned root: python.exe at the tree root, the
 // launcher shim under bin\ (build-desktop.sh build_backend_windows).
 function makeBundle(root, version) {
-  const tree = path.join(root, version, "resources", "backend-dist", "kirocrew-backend");
+  const tree = path.join(root, version, "resources", "backend-dist", "ajcrew-backend");
   fs.mkdirSync(path.join(tree, "bin"), { recursive: true });
   return tree;
 }
@@ -54,7 +54,7 @@ test("realpathSync.native follows a real directory junction to the versioned tre
   fs.writeFileSync(path.join(target, "python.exe"), "");
   const link = path.join(root, "current");
   fs.symlinkSync(path.join(root, "0.7.0.5"), link, "junction");
-  const viaLink = path.join(link, "resources", "backend-dist", "kirocrew-backend");
+  const viaLink = path.join(link, "resources", "backend-dist", "ajcrew-backend");
 
   const linkPython = path.join(viaLink, "python.exe");
   const targetPython = path.join(target, "python.exe");
@@ -67,7 +67,7 @@ test("realpathSync.native follows a real directory junction to the versioned tre
     "the junction was actually followed, not merely normalised");
 
   // What the launcher trusts when its resolver picked the shim through the junction.
-  const trusted = windowsGatewayExecutablePaths(path.join(viaLink, "bin", "kirocrew.cmd"));
+  const trusted = windowsGatewayExecutablePaths(path.join(viaLink, "bin", "ajcrew.cmd"));
   assert.ok(
     trusted.some((candidate) => candidate.toLowerCase() === canonicalTarget.toLowerCase()),
     `trusted set names the resolved interpreter: ${JSON.stringify(trusted)}`
@@ -96,7 +96,7 @@ test("a process launched through a junction is matched however Win32_Process spe
   fs.copyFileSync(process.execPath, targetPython);
   const link = path.join(root, "current");
   fs.symlinkSync(path.join(root, "0.7.0.5"), link, "junction");
-  const viaLink = path.join(link, "resources", "backend-dist", "kirocrew-backend");
+  const viaLink = path.join(link, "resources", "backend-dist", "ajcrew-backend");
   const linkPython = path.join(viaLink, "python.exe");
 
   await warmUpCimProvider();
@@ -128,14 +128,14 @@ test("a process launched through a junction is matched however Win32_Process spe
 
     // The path-bound matcher, fed the real ExecutablePath spelling and the
     // gateway argv the launcher would have used, accepts the process as ours.
-    // (Node cannot run `-m kiro_crew`, so the argv is synthesised; the
+    // (Node cannot run `-m aj_crew`, so the argv is synthesised; the
     // executable spelling under test is the OS's.)
     const trustedExecutablePaths = windowsGatewayExecutablePaths(
-      path.join(viaLink, "bin", "kirocrew.cmd")
+      path.join(viaLink, "bin", "ajcrew.cmd")
     );
-    const command = `"${reported[1]}" "${reported[1]}" -s -m kiro_crew gateway --no-open --port 5476`;
+    const command = `"${reported[1]}" "${reported[1]}" -s -m aj_crew gateway --no-open --port 5476`;
     assert.strictEqual(
-      isKirocrewCommand(command, { trustedExecutablePaths, canonicalizePath: canonicalWindowsPath }),
+      isAjcrewCommand(command, { trustedExecutablePaths, canonicalizePath: canonicalWindowsPath }),
       true,
       `reported=${reported[1]} trusted=${JSON.stringify(trustedExecutablePaths)}`
     );
@@ -146,29 +146,29 @@ test("a process launched through a junction is matched however Win32_Process spe
 }));
 
 describe("gatewayCliInvocation on a real Windows host", { skip: IS_WIN ? false : "a .cmd launcher and its EINVAL refusal exist only on Windows" }, () => {
-  it("unwraps the bundled kirocrew.cmd to the bundled python.exe with -s -P -m kiro_crew", () => {
+  it("unwraps the bundled ajcrew.cmd to the bundled python.exe with -s -P -m aj_crew", () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "kc-cli-inv-"));
     try {
-      const backend = path.join(root, "backend-dist", "kirocrew-backend");
-      const cmd = path.join(backend, "bin", "kirocrew.cmd");
+      const backend = path.join(root, "backend-dist", "ajcrew-backend");
+      const cmd = path.join(backend, "bin", "ajcrew.cmd");
       const { bin, args } = gatewayCliInvocation(cmd, ["gateway-pid"]);
       assert.strictEqual(bin, path.join(backend, "python.exe"));
       assert.ok(path.isAbsolute(bin), "the unwrapped interpreter path is absolute");
-      assert.deepStrictEqual(args, ["-s", "-P", "-m", "kiro_crew", "gateway-pid"]);
+      assert.deepStrictEqual(args, ["-s", "-P", "-m", "aj_crew", "gateway-pid"]);
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }
   });
 
   it("passes a non-.cmd bin through unchanged", () => {
-    const exe = path.join(os.tmpdir(), "kirocrew.exe");
+    const exe = path.join(os.tmpdir(), "ajcrew.exe");
     assert.deepStrictEqual(gatewayCliInvocation(exe, ["gateway-pid"]), { bin: exe, args: ["gateway-pid"] });
   });
 
   it("execFile refuses a .cmd as-is, the failure the unwrap exists to avoid", async () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), "kc-cli-cmd-"));
     try {
-      const cmd = path.join(root, "kirocrew.cmd");
+      const cmd = path.join(root, "ajcrew.cmd");
       fs.writeFileSync(cmd, "@echo off\r\necho hi\r\n");
       const error = await new Promise((resolve) => {
         try {

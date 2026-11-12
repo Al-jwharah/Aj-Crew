@@ -1,16 +1,16 @@
-# Contributing to Kiro Crew
+# Contributing to Aj Crew
 
-Thanks for your interest in contributing! Kiro Crew is an open-source project and
+Thanks for your interest in contributing! Aj Crew is an open-source project and
 we welcome issues and pull requests.
 
 ## Reporting Bugs and Requesting Features
 
-Open a [GitHub issue](https://github.com/kirodotdev/KiroCrew/issues). Before you
+Open a [GitHub issue](https://github.com/Al-jwharah/Aj-Crew/issues). Before you
 do, search the open issues, because the fastest resolution is often a thread that
 already exists.
 
 For a bug, what actually helps is a way to reproduce it, the version you are on,
-your operating system, and anything unusual about how Kiro Crew is installed or
+your operating system, and anything unusual about how Aj Crew is installed or
 where it runs. A stack trace beats a description of a stack trace. If it only
 happens on one surface, say which one, because the dashboard, the CLI, and a chat
 channel take different paths through the code.
@@ -21,7 +21,7 @@ it leaves room for an answer nobody had thought of.
 
 ## Finding Something to Work On
 
-Start with the [open issues](https://github.com/kirodotdev/KiroCrew/issues). Issues
+Start with the [open issues](https://github.com/Al-jwharah/Aj-Crew/issues). Issues
 carry an `area:` label naming the subsystem they land in — `area: dashboard`,
 `area: agents`, `area: cron` and so on — so you can filter to the part of the
 codebase you want to work in, and a type label (`bug`, `enhancement`,
@@ -76,7 +76,7 @@ virtualenv creation, and the editable backend install. Do not duplicate those
 steps manually.
 
 How you clone depends on your access. If you have push access (members of
-[`kirocrew-active-contributors`](https://github.com/orgs/kirodotdev/teams/kirocrew-active-contributors)
+[`ajcrew-active-contributors`](https://github.com/orgs/kirodotdev/teams/ajcrew-active-contributors)
 and maintainers), clone this repository directly rather than forking: a branch
 here reaches the CodeBuild runner fleet, which a fork's branches cannot, so a
 fork pull request runs on the shared GitHub-hosted pool and queues behind
@@ -86,18 +86,18 @@ cloned.
 
 ```bash
 # With push access: clone this repository
-git clone https://github.com/kirodotdev/KiroCrew.git
-cd KiroCrew
-git remote add upstream https://github.com/kirodotdev/KiroCrew.git
+git clone https://github.com/Al-jwharah/Aj-Crew.git
+cd Aj-Crew
+git remote add upstream https://github.com/Al-jwharah/Aj-Crew.git
 ```
 
 Without push access, fork first:
 
 ```bash
 # Fork the repo on GitHub, then clone your fork
-git clone https://github.com/<your-username>/KiroCrew.git
-cd KiroCrew
-git remote add upstream https://github.com/kirodotdev/KiroCrew.git
+git clone https://github.com/<your-username>/AjCrew.git
+cd Aj-Crew
+git remote add upstream https://github.com/Al-jwharah/Aj-Crew.git
 ```
 
 Then, either way:
@@ -105,9 +105,9 @@ Then, either way:
 ```bash
 make build
 source .venv/bin/activate
-kirocrew setup               # configure the data home and default agent
-kirocrew doctor              # verify the install and backend
-kirocrew gateway             # start the dashboard and messaging gateway
+ajcrew setup               # configure the data home and default agent
+ajcrew doctor              # verify the install and backend
+ajcrew gateway             # start the dashboard and messaging gateway
 ```
 
 The dashboard is at `http://localhost:5476`. The [install guide](docs/guides/install.md)
@@ -118,20 +118,20 @@ On Windows, `.\make.ps1 build` builds the frontend and backend; activate
 [Windows guide](docs/guides/windows-install.md) first because some execution
 paths require an explicit opt-in.
 
-**Messaging channels are optional**: the default `kirocrew setup` configures
+**Messaging channels are optional**: the default `ajcrew setup` configures
 none, and the dashboard + CLI work without channel credentials. Connect a
-channel later from the dashboard, or run `kirocrew setup --slack` for the guided
+channel later from the dashboard, or run `ajcrew setup --slack` for the guided
 Slack path.
 
 ## Development Skills (agents and humans)
 
 The contributor workflow is codified as agent-loadable skills in
-[`src/kiro_crew/builtin_skills/kirocrew-dev/`](src/kiro_crew/builtin_skills/kirocrew-dev/)
+[`src/aj_crew/builtin_skills/ajcrew-dev/`](src/aj_crew/builtin_skills/ajcrew-dev/)
 — the canonical definition of how code gets written, tested, and reviewed here:
 
-- **`kirocrew-worktree-dev`** — the HARD RULE workflow: every change in a git
+- **`ajcrew-worktree-dev`** — the HARD RULE workflow: every change in a git
   worktree, the blocking build gates, the built-dist gotcha, preview paths.
-- **`kirocrew-prepare-pr`** — drives working-tree changes to a review-ready PR
+- **`ajcrew-prepare-pr`** — drives working-tree changes to a review-ready PR
   (commit → sync → squash → open → poll CI/review bots → fix findings).
 - **`babysit`** — same-session monitoring loop that keeps a PR moving through
   CI and review rounds.
@@ -140,8 +140,8 @@ The contributor workflow is codified as agent-loadable skills in
 - **`dashboard-template`** — adding a dashboard page with its contract,
   provider, and parity test.
 
-An agent contributing to Kiro Crew loads this suite and follows the same
-worktree → build gate → kirocrew-prepare-pr → review loop human contributors use, so
+An agent contributing to Aj Crew loads this suite and follows the same
+worktree → build gate → ajcrew-prepare-pr → review loop human contributors use, so
 the PR process stays consistent regardless of who is writing the code. If you
 change the workflow, change it THERE. The checked-in workflows and
 [CI and review guide](docs/ci/ci-and-reviews.md) are canonical for the gate list;
@@ -162,15 +162,15 @@ token in one terminal; `./dev-backend.sh` starts the dev backend alone from live
 source. The manual steps:
 
 ```bash
-# Copy your whole data home into .kirocrew-dev/ (optional; re-running replaces it)
+# Copy your whole data home into .ajcrew-dev/ (optional; re-running replaces it)
 ./dev-seed.sh
 
 # Start the dev backend (port 6777, isolated data)
-KIROCREW_HOME=.kirocrew-dev KIROCREW_PORT=6777 kirocrew gateway
+AJCREW_HOME=.ajcrew-dev AJCREW_PORT=6777 ajcrew gateway
 ```
 
 Browse at `http://localhost:6777`. The backend serves the built frontend assets directly.
-When `src/kiro_crew/static/dist` links to `website/dist` (what `make build` and the
+When `src/aj_crew/static/dist` links to `website/dist` (what `make build` and the
 gateway set up for a stock checkout), a hand-run `npm run build` is live as soon as it
 finishes, on a running gateway too; under an edition `static/dist` links to a private
 copy, which only the next stage replaces. See the runtime dist resolution notes in
@@ -178,11 +178,11 @@ copy, which only the next stage replaces. See the runtime dist resolution notes 
 
 | Env var | Purpose | Default |
 |---------|---------|---------|
-| `KIROCREW_HOME` | Config/data directory override | `~/.kiro/crew` |
-| `KIROCREW_PORT` | Dashboard port override | `5476` |
-| `KIROCREW_KIRO_BIN` | Explicit path to the `kiro-cli` binary (overrides PATH auto-detection) | auto-detected |
+| `AJCREW_HOME` | Config/data directory override | `~/.kiro/crew` |
+| `AJCREW_PORT` | Dashboard port override | `5476` |
+| `AJCREW_KIRO_BIN` | Explicit path to the `kiro-cli` binary (overrides PATH auto-detection) | auto-detected |
 
-If you don't need to run production and dev side by side, omit `KIROCREW_PORT` —
+If you don't need to run production and dev side by side, omit `AJCREW_PORT` —
 just stop your production gateway first.
 
 ### Full-Stack Dev Setup (Backend + Frontend Hot-Reload)
@@ -192,15 +192,15 @@ for instant hot-reload without rebuilding:
 
 ```bash
 # Terminal 1 — start the backend
-KIROCREW_HOME=.kirocrew-dev KIROCREW_PORT=6777 kirocrew gateway
+AJCREW_HOME=.ajcrew-dev AJCREW_PORT=6777 ajcrew gateway
 
 # Terminal 2 — start the frontend dev server (hot-reloads .tsx changes)
 cd website
-KIROCREW_PORT=6777 npm run dev
+AJCREW_PORT=6777 npm run dev
 # → Vite starts at http://localhost:3000, proxies /api/* to backend on port 6777
 
 # Terminal 3 — generate an auth token
-KIROCREW_HOME=.kirocrew-dev KIROCREW_PORT=6777 kirocrew token
+AJCREW_HOME=.ajcrew-dev AJCREW_PORT=6777 ajcrew token
 # → Outputs: http://localhost:6777?token=eyJ...
 
 # Open in browser — replace :6777 with :3000:
@@ -232,23 +232,23 @@ Key entry points:
 
 | File | Purpose |
 |------|---------|
-| `src/kiro_crew/cli.py` | CLI entrypoint (argparse) |
-| `src/kiro_crew/session.py` | Conversation session management |
-| `src/kiro_crew/providers/` | LLM provider layer. ACP only — `agent.provider` is fixed to `acp` |
-| `src/kiro_crew/acp/client.py` | ACP JSON-RPC client (stdio) |
-| `src/kiro_crew/slack/gateway.py` | Slack Socket Mode gateway |
-| `src/kiro_crew/slack/handler.py` | Message handling, tool approval |
-| `src/kiro_crew/dashboard/` | Web dashboard (aiohttp backend) |
-| `src/kiro_crew/mcp_core.py` | `kirocrew-core` MCP server: answers `tools/list` and dispatches calls |
-| `src/kiro_crew/mcp_tools/` | `kirocrew-core` tools, one module per domain (`schemas()` + `HANDLERS`) |
-| `src/kiro_crew/mcp_cron.py` | MCP tools: cron scheduling |
-| `src/kiro_crew/context.py` | Context builder (memory, skills, history) |
-| `src/kiro_crew/subagent.py` | Subagent lifecycle and timeout |
-| `src/kiro_crew/autonudge.py` | Reactive same-session self-nudge service |
-| `src/kiro_crew/snapshot.py` | Portable snapshot and restore |
-| `src/kiro_crew/apps/` | App Kit platform (manifest, manager, registry, routes) |
-| `src/kiro_crew/eval/` | Multi-session eval harness |
-| `src/kiro_crew/config/` | Shipped agent config (`defaults.json`) and default system prompt (`prompt.md`); overrides are in [Agent Config Files](src/kiro_crew/docs/agents.md#agent-config-files) |
+| `src/aj_crew/cli.py` | CLI entrypoint (argparse) |
+| `src/aj_crew/session.py` | Conversation session management |
+| `src/aj_crew/providers/` | LLM provider layer. ACP only — `agent.provider` is fixed to `acp` |
+| `src/aj_crew/acp/client.py` | ACP JSON-RPC client (stdio) |
+| `src/aj_crew/slack/gateway.py` | Slack Socket Mode gateway |
+| `src/aj_crew/slack/handler.py` | Message handling, tool approval |
+| `src/aj_crew/dashboard/` | Web dashboard (aiohttp backend) |
+| `src/aj_crew/mcp_core.py` | `ajcrew-core` MCP server: answers `tools/list` and dispatches calls |
+| `src/aj_crew/mcp_tools/` | `ajcrew-core` tools, one module per domain (`schemas()` + `HANDLERS`) |
+| `src/aj_crew/mcp_cron.py` | MCP tools: cron scheduling |
+| `src/aj_crew/context.py` | Context builder (memory, skills, history) |
+| `src/aj_crew/subagent.py` | Subagent lifecycle and timeout |
+| `src/aj_crew/autonudge.py` | Reactive same-session self-nudge service |
+| `src/aj_crew/snapshot.py` | Portable snapshot and restore |
+| `src/aj_crew/apps/` | App Kit platform (manifest, manager, registry, routes) |
+| `src/aj_crew/eval/` | Multi-session eval harness |
+| `src/aj_crew/config/` | Shipped agent config (`defaults.json`) and default system prompt (`prompt.md`); overrides are in [Agent Config Files](src/aj_crew/docs/agents.md#agent-config-files) |
 | `skills/` | On-demand skill definitions (see [skills/README.md](skills/README.md)) |
 | `website/` | React + Vite frontend SPA |
 
@@ -266,15 +266,15 @@ a doc nobody updated is worse than no doc, because readers still trust it.
 
 The five steps — find the one owning doc, edit rather than add, update every
 index, no changelog narration, run `./scripts/docs-lint.sh` — plus the
-`src/kiro_crew/docs/` filenames-are-an-API caveat are in
+`src/aj_crew/docs/` filenames-are-an-API caveat are in
 [The rule for changing docs](docs/README.md#the-rule-for-changing-docs).
 
-## Extending Kiro Crew
+## Extending Aj Crew
 
 - **Skills** — a skill is a directory holding a `SKILL.md`. See [skills/README.md](skills/README.md) for the format and where skills are installed
-- **MCP tools** — a `kirocrew-core` tool is a `schemas()` descriptor plus a `HANDLERS` entry in `src/kiro_crew/mcp_tools/<domain>.py`; cron tools live in `mcp_cron.py` (their bodies) and `mcp_cron_tool_list.py` (their schemas). See [MCP](docs/architecture/mcp.md#a-kirocrew-core-tool-has-two-halves). Every LLM-facing command must have an MCP tool
-- **Hooks** — see [Steering files, prompts and hooks](src/kiro_crew/docs/steering-and-hooks.md)
-- **Lessons** — self-learned from corrections and stored in the memory store (`lessons.jsonl` is a legacy fallback); see [Memory & Learning](src/kiro_crew/docs/memory-and-learning.md#lessons)
+- **MCP tools** — an `ajcrew-core` tool is a `schemas()` descriptor plus a `HANDLERS` entry in `src/aj_crew/mcp_tools/<domain>.py`; cron tools live in `mcp_cron.py` (their bodies) and `mcp_cron_tool_list.py` (their schemas). See [MCP](docs/architecture/mcp.md#a-ajcrew-core-tool-has-two-halves). Every LLM-facing command must have an MCP tool
+- **Hooks** — see [Steering files, prompts and hooks](src/aj_crew/docs/steering-and-hooks.md)
+- **Lessons** — self-learned from corrections and stored in the memory store (`lessons.jsonl` is a legacy fallback); see [Memory & Learning](src/aj_crew/docs/memory-and-learning.md#lessons)
 
 ## Tests
 
@@ -324,8 +324,8 @@ passing. Trimming your own diff is the single highest-leverage thing you can do 
 get it merged.
 
 When your change is ready, the workflow is already codified rather than left to
-taste. See Development Skills above: `kirocrew-worktree-dev` covers building and
-verifying in a worktree, and `kirocrew-prepare-pr` takes it from there, driving the change
+taste. See Development Skills above: `ajcrew-worktree-dev` covers building and
+verifying in a worktree, and `ajcrew-prepare-pr` takes it from there, driving the change
 to a review-ready pull request by committing, syncing onto the base, squashing to
 the one or two commits this repo allows, opening or updating the PR, then polling CI
 and the review bots and fixing what they find. An agent that loads it follows the
@@ -352,10 +352,10 @@ git push --force-with-lease origin <feature-branch>
    case branch on this repository directly as in First-Time Setup above. Your
    branches then reach the CodeBuild runner fleet, which a fork's cannot.
 2. **Branch** from `main` in a git worktree, never in the main clone (the
-   `kirocrew-worktree-dev` skill owns this rule):
+   `ajcrew-worktree-dev` skill owns this rule):
    ```bash
    git fetch upstream main
-   git worktree add ../kirocrew-wt-my-feature -b feat/my-feature upstream/main
+   git worktree add ../ajcrew-wt-my-feature -b feat/my-feature upstream/main
    ```
 3. **Start from an issue.** Every PR must name an issue of this repository
    that has been given a tier, on a line of its own in the description: `Closes #N`
@@ -472,7 +472,7 @@ removal request stays honored.
 
 ## Questions?
 
-Open a [GitHub issue](https://github.com/kirodotdev/KiroCrew/issues) or start a
+Open a [GitHub issue](https://github.com/Al-jwharah/Aj-Crew/issues) or start a
 discussion in the repository.
 
 ## Security Issues
@@ -487,7 +487,7 @@ means following it and the open source code of conduct and FAQ it links.
 
 ## Licensing
 
-Kiro Crew is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for the
+Aj Crew is licensed under the Apache License 2.0. See [LICENSE](LICENSE) for the
 full text and [NOTICE](NOTICE) for attribution. Third-party components carry their
 own licenses, recorded in [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES).
 

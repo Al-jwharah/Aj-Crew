@@ -5,10 +5,10 @@ import os
 
 import pytest
 
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew.workflows.registry import RunHandle, RunRegistry
+from aj_crew.workflows.store import WorkflowRunStore
 from conftest import make_dir_link
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-from kiro_crew.workflows.registry import RunHandle, RunRegistry
-from kiro_crew.workflows.store import WorkflowRunStore
 
 
 def _save(base, run_id="wf_000001"):
@@ -16,7 +16,7 @@ def _save(base, run_id="wf_000001"):
     registry = RunRegistry(store=store)
     handle = RunHandle(run_id=run_id, name="restart", source="large source " * 1000)
     handle.execution_context = ExecutionContext(
-        None, MemoryStoreRef("default"), "template", "kirocrew"
+        None, MemoryStoreRef("default"), "template", "ajcrew"
     )
     registry.register(handle)
     registry.mark_terminal(run_id, "finished", result={"saved": True})
@@ -28,7 +28,7 @@ def test_restart_restores_public_run_through_symlink_ancestor(tmp_path, monkeypa
     actual.mkdir()
     alias = tmp_path / "alias"
     make_dir_link(alias, actual)
-    monkeypatch.setenv("KIROCREW_HOME", str(alias))
+    monkeypatch.setenv("AJCREW_HOME", str(alias))
     _save(alias / "workflows")
     restored = RunRegistry(store=WorkflowRunStore(base_dir=alias / "workflows"))
     assert restored.load_persisted() == 1
@@ -58,7 +58,7 @@ def test_restart_refuses_linked_run_files(tmp_path, kind):
 
 
 def test_restart_refuses_ancestor_swap_outside_resolved_root(tmp_path, monkeypatch):
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     store = _save(tmp_path / "workflows")
     outside = tmp_path / "outside"
@@ -98,7 +98,7 @@ def test_discovery_diagnostics_never_log_private_text(tmp_path, monkeypatch, cap
     import logging
     from pathlib import Path
 
-    from kiro_crew.workflows import store as store_module
+    from aj_crew.workflows import store as store_module
 
     store = _save(tmp_path / "workflows")
     sentinel = "PRIVATE_DISCOVERY_SECRET_SENTINEL"
@@ -142,7 +142,7 @@ def test_discovery_diagnostics_never_log_private_text(tmp_path, monkeypatch, cap
 def test_unreadable_record_with_surrogate_name_does_not_abort_recovery(tmp_path, monkeypatch):
     from pathlib import Path
 
-    from kiro_crew.workflows import store as store_module
+    from aj_crew.workflows import store as store_module
 
     store = _save(tmp_path / "workflows")
     bad_path = store.runs_dir / "unreadable-\udcff.json"

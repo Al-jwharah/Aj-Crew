@@ -1,7 +1,7 @@
 /**
  * Tests for the vendored SDK's WS subscription pre-check.
  *
- * The gateway (`kiro_crew/dashboard/ws_event_scope.py`) is authoritative; this
+ * The gateway (`aj_crew/dashboard/ws_event_scope.py`) is authoritative; this
  * table is advisory. The last test cross-checks the two so drift is visible
  * here rather than as a wrong console warning in an app author's browser.
  */
@@ -76,7 +76,7 @@ describe('checkSubscribeAllowed', () => {
     // Drift between the advisory table and the authoritative gate produces
     // wrong developer warnings, so pin them together.
     const py = readFileSync(
-      join(__dirname, '../../../src/kiro_crew/dashboard/ws_event_scope.py'),
+      join(__dirname, '../../../src/aj_crew/dashboard/ws_event_scope.py'),
       'utf-8',
     )
     const names = (block: string): string[] => {

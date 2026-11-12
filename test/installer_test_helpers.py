@@ -20,7 +20,7 @@ from __future__ import annotations
 import contextlib
 import subprocess
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 #: A hermetic installer run (fake curl, fake package managers) finishes in
 #: seconds, so this bound only ever trips on a wedge. It sits well under
@@ -66,7 +66,7 @@ class _KillOnCloseJob:
             import ctypes
             from ctypes import wintypes
 
-            from kiro_crew.platform_compat import (
+            from aj_crew.platform_compat import (
                 _JOBOBJECT_EXTENDED_LIMIT_INFORMATION_CLASS,
                 _JobObjectExtendedLimitInformation,
             )

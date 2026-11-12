@@ -15,9 +15,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.files import api_channel_upload_file, api_slack_upload_file
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.messaging.link import ChannelLink
+from aj_crew.dashboard.handlers.files import api_channel_upload_file, api_slack_upload_file
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.messaging.link import ChannelLink
 
 _NOT_STRINGS = [5, True, ["a"], {"a": 1}]
 
@@ -52,11 +52,11 @@ def _slack_app(slack) -> web.Application:
 async def _post_channel(tmp_path, outbox_file, payload, transport):
     with (
         patch(
-            "kiro_crew.dashboard.chat_runner._resolve_mirror_target",
+            "aj_crew.dashboard.chat_runner._resolve_mirror_target",
             return_value=(ChannelLink(channel_type="telegram", channel_id="42"), transport),
         ),
-        patch("kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent),
-        patch("kiro_crew.config.loader.workspace_root", return_value=tmp_path),
+        patch("aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent),
+        patch("aj_crew.config.loader.workspace_root", return_value=tmp_path),
     ):
         async with TestClient(TestServer(_channel_app())) as client:
             resp = await client.post(
@@ -139,8 +139,8 @@ async def test_the_slack_leg_refuses_a_non_string_path_or_name(tmp_path, outbox_
     slack.upload_file = AsyncMock()
     payload = {"file_path": str(outbox_file), "filename": "report.txt", field: value}
     with (
-        patch("kiro_crew.config.loader.outbox_dir", return_value=outbox_file.parent),
-        patch("kiro_crew.config.loader.workspace_root", return_value=tmp_path),
+        patch("aj_crew.config.loader.outbox_dir", return_value=outbox_file.parent),
+        patch("aj_crew.config.loader.workspace_root", return_value=tmp_path),
     ):
         async with TestClient(TestServer(_slack_app(slack))) as client:
             resp = await client.post("/api/slack/upload-file", json=payload)

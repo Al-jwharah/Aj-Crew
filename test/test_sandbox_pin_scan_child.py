@@ -20,8 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import sandbox_mount_sweep, sandbox_pin_scan_child
-from kiro_crew.sandbox import (
+from aj_crew import sandbox_mount_sweep, sandbox_pin_scan_child
+from aj_crew.sandbox import (
     _MOUNT_SOURCE_MAX_AGE_SECONDS,
     _cleanup_stale_sandbox_mount_sources,
     _PinScanCoverage,
@@ -45,7 +45,7 @@ def test_real_child_scans_the_host_proc(monkeypatch: pytest.MonkeyPatch, sandbox
     reply = sandbox_pin_scan_child.scan_in_child("keyed")
     assert reply is not None
     pinned, complete, covered = reply
-    assert isinstance(pinned, set) and all(n.startswith("kirocrew_sb_") for n in pinned)
+    assert isinstance(pinned, set) and all(n.startswith("ajcrew_sb_") for n in pinned)
     assert isinstance(complete, bool) and isinstance(covered, bool)
 
     calls: list[str] = []
@@ -57,7 +57,7 @@ def test_real_child_scans_the_host_proc(monkeypatch: pytest.MonkeyPatch, sandbox
 
     monkeypatch.setattr(sandbox_pin_scan_child, "scan_in_child", _spy)
     pinned, _ = sandbox_sweep_original("_mount_pinned_source_names")(coverage=_PinScanCoverage())
-    assert all(n.startswith("kirocrew_sb_") for n in pinned)
+    assert all(n.startswith("ajcrew_sb_") for n in pinned)
     sandbox_sweep_original("_bound_source_basenames")(coverage=_PinScanCoverage())
     assert calls == ["keyed", "legacy"]
 
@@ -68,7 +68,7 @@ _GOOD_REPLY = '{"pinned": [], "complete": true, "covered": true}'
 @pytest.mark.parametrize(
     ("argv", "timeout", "reason"),
     [
-        pytest.param(["/nonexistent/kirocrew-python"], 30.0, "could not start", id="cannot-start"),
+        pytest.param(["/nonexistent/ajcrew-python"], 30.0, "could not start", id="cannot-start"),
         # The child would reply well-formed after the sleep, so only the timeout
         # can make this answer None.
         pytest.param(
@@ -107,9 +107,9 @@ def test_failed_child_answers_none(argv, timeout, reason, caplog):
 
 
 def test_well_formed_reply_is_returned():
-    argv = _python('print(\'{"pinned": ["kirocrew_sb_1_a"], "complete": false, "covered": true}\')')
+    argv = _python('print(\'{"pinned": ["ajcrew_sb_1_a"], "complete": false, "covered": true}\')')
     assert sandbox_pin_scan_child.scan_in_child("keyed", argv=argv) == (
-        {"kirocrew_sb_1_a"},
+        {"ajcrew_sb_1_a"},
         False,
         True,
     )
@@ -128,13 +128,13 @@ def test_child_scan_runs_the_matching_in_process_scan(kind, monkeypatch: pytest.
     def _fake(proc_root, *, matcher, coverage):
         seen.update(proc_root=proc_root, matcher=matcher)
         coverage.covered = False
-        return {"kirocrew_sb_2_b", "kirocrew_sb_1_a"}, True
+        return {"ajcrew_sb_2_b", "ajcrew_sb_1_a"}, True
 
     monkeypatch.setattr(sandbox_mount_sweep, "_mount_pinned_source_names_in_process", _fake)
     reply = sandbox_pin_scan_child._scan(kind)
 
     assert reply == {
-        "pinned": ["kirocrew_sb_1_a", "kirocrew_sb_2_b"],
+        "pinned": ["ajcrew_sb_1_a", "ajcrew_sb_2_b"],
         "complete": True,
         "covered": False,
     }
@@ -151,7 +151,7 @@ def test_child_entry_writes_one_reply_line(capfd, monkeypatch: pytest.MonkeyPatc
     monkeypatch.setattr(
         sandbox_pin_scan_child,
         "_scan",
-        lambda kind: {"pinned": [f"kirocrew_sb_1_{kind}"], "complete": True, "covered": True},
+        lambda kind: {"pinned": [f"ajcrew_sb_1_{kind}"], "complete": True, "covered": True},
     )
 
     assert sandbox_pin_scan_child.main(["keyed"]) == 0
@@ -159,7 +159,7 @@ def test_child_entry_writes_one_reply_line(capfd, monkeypatch: pytest.MonkeyPatc
     out = capfd.readouterr().out
     assert out.count("\n") == 1
     assert sandbox_pin_scan_child._parse_reply(out.encode()) == (
-        {"kirocrew_sb_1_keyed"},
+        {"ajcrew_sb_1_keyed"},
         True,
         True,
     )
@@ -180,11 +180,11 @@ def test_failed_child_keeps_a_dead_pid_directory(
 ):
     """A failed child is an unproven scan: the sweep reclaims no directory."""
     monkeypatch.setattr(
-        "kiro_crew.sandbox._mount_pinned_source_names",
+        "aj_crew.sandbox._mount_pinned_source_names",
         sandbox_sweep_original("_mount_pinned_source_names"),
     )
     _failing_child(monkeypatch)
-    held = tmp_path / f"kirocrew_sb_{_DEAD_PID}_home"
+    held = tmp_path / f"ajcrew_sb_{_DEAD_PID}_home"
     held.mkdir()
     stale = time.time() - _MOUNT_SOURCE_MAX_AGE_SECONDS - 100
     os.utime(held, (stale, stale))

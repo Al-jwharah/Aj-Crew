@@ -3,13 +3,13 @@
  * inline editor) and regenerate (Sparkles) controls as the single-session
  * header. Against a REAL pod, not fixtures.
  *
- *   kirocrew pod up <worktree> --json | tail -1 > "$KIROCREW_SCRATCH/pod-info.json"
+ *   ajcrew pod up <worktree> --json | tail -1 > "$AJCREW_SCRATCH/pod-info.json"
  *   # the pod needs dashboard.session_grid = true and >= 4 sessions:
- *   #   kirocrew pod api <wt> PUT /api/dashboard/config --allow-write --data '{"session_grid": true}'
- *   #   kirocrew pod api <wt> GET /api/chat/slots   -> pass four keys as PANE_SLOTS
- *   POD_INFO="$KIROCREW_SCRATCH/pod-info.json" PANE_SLOTS=a,b,c,d \
+ *   #   ajcrew pod api <wt> PUT /api/dashboard/config --allow-write --data '{"session_grid": true}'
+ *   #   ajcrew pod api <wt> GET /api/chat/slots   -> pass four keys as PANE_SLOTS
+ *   POD_INFO="$AJCREW_SCRATCH/pod-info.json" PANE_SLOTS=a,b,c,d \
  *     node scripts/capture-pane-header-rename.mjs ../temp-screenshots/pane-header-rename
- *   # then verify the rename landed: kirocrew pod api <wt> GET /api/chat/slots
+ *   # then verify the rename landed: ajcrew pod api <wt> GET /api/chat/slots
  *
  * Frames (the ones only a real pod can show):
  *   1. pane-header-rest.png      — 2x2 split at rest (controls hidden, titles only)
@@ -46,7 +46,7 @@ const grid2x2 = (slots) => ({
 })
 
 async function main() {
-  // The pod's slot keys come from the shell (`kirocrew pod api <wt> GET
+  // The pod's slot keys come from the shell (`ajcrew pod api <wt> GET
   // /api/chat/slots`): a bare fetch from here carries no credential.
   const slots = (process.env.PANE_SLOTS || '').split(',').map((k) => k.trim()).filter(Boolean)
   check('PANE_SLOTS names >= 4 sessions for a 2x2 grid', slots.length >= 4, `got ${slots.length}`)

@@ -1,6 +1,6 @@
 """Who owns each snapshot rule, and that the facade hands out that owner's objects.
 
-``kiro_crew.snapshot`` is the command and API facade; the rules it applies live in six
+``aj_crew.snapshot`` is the command and API facade; the rules it applies live in six
 owner modules. These tests pin the ownership map itself: every name is defined in
 exactly one module, the facade re-exports the owner's object rather than a copy and a
 patch on the facade reaches the owner that calls it, the owners depend on one another in
@@ -21,11 +21,11 @@ from pathlib import Path
 import pytest
 from test_snapshot import SNAPSHOT_FAMILY
 
-from kiro_crew import (
+from aj_crew import (
     _sqlite_compat,
 )
-from kiro_crew import snapshot as snap
-from kiro_crew import (
+from aj_crew import snapshot as snap
+from aj_crew import (
     snapshot_archive,
     snapshot_build,
     snapshot_components,
@@ -41,7 +41,7 @@ REPO_SRC = SRC.parent
 #: The owner of every name the facade exports, by module. A name moving between owners
 #: is a change to this table, made on purpose, rather than something a re-export hides.
 OWNERS: dict[str, tuple[str, ...]] = {
-    "kiro_crew.snapshot_components": (
+    "aj_crew.snapshot_components": (
         "COMPONENTS",
         "COMPONENT_HELP",
         "COMPONENT_JSON_OBJECTS",
@@ -77,7 +77,7 @@ OWNERS: dict[str, tuple[str, ...]] = {
         "resolve_components",
         "safe_tree_root",
     ),
-    "kiro_crew.snapshot_archive": (
+    "aj_crew.snapshot_archive": (
         "DB_COPIED",
         "DB_NOT_A_DATABASE",
         "DB_UNSAFE_SOURCE",
@@ -126,7 +126,7 @@ OWNERS: dict[str, tuple[str, ...]] = {
         "_terminal_safe",
         "archive_byte_bound",
     ),
-    "kiro_crew.snapshot_restore": (
+    "aj_crew.snapshot_restore": (
         "NamedStoresInUse",
         "RollbackIncomplete",
         "SourceComponentUnsound",
@@ -157,7 +157,7 @@ OWNERS: dict[str, tuple[str, ...]] = {
         "_save_locked_document_to",
         "_trees_absent_from_bundle",
     ),
-    "kiro_crew.snapshot_merge": (
+    "aj_crew.snapshot_merge": (
         "NotificationCopyUnsupported",
         "_MERGE_ALLOWED_TABLES",
         "_NOTIFICATION_RECORD_CAP",
@@ -185,22 +185,22 @@ OWNERS: dict[str, tuple[str, ...]] = {
         "_write_merged_crons",
     ),
     # The manifest writer and the size estimate that runs before it.
-    "kiro_crew.snapshot_build": (
+    "aj_crew.snapshot_build": (
         "_build_snapshot",
         "_estimate_selected_bytes",
         "_fsize",
     ),
     # The merge-mode driver, and the notification copy whose docstring records the ruling
     # for platforms without O_NOFOLLOW.
-    "kiro_crew.snapshot_merge_driver": (
+    "aj_crew.snapshot_merge_driver": (
         "_copy_notifications",
         "_do_merge",
     ),
     # The newest-first order `--list` and the `--keep` prune share.
-    "kiro_crew.snapshot_order": ("newest_first",),
+    "aj_crew.snapshot_order": ("newest_first",),
     # What the facade itself defines: the two commands and the outbound redaction seam
     # (every redaction call name stays in this one module).
-    "kiro_crew.snapshot": (
+    "aj_crew.snapshot": (
         "EXIT_INCOMPLETE",
         "RedactionFailed",
         "_DASHBOARD_PORT",
@@ -227,42 +227,42 @@ OWNERS: dict[str, tuple[str, ...]] = {
 }
 
 _MODULES = {
-    "kiro_crew.snapshot": snap,
-    "kiro_crew.snapshot_components": snapshot_components,
-    "kiro_crew.snapshot_archive": snapshot_archive,
-    "kiro_crew.snapshot_restore": snapshot_restore,
-    "kiro_crew.snapshot_merge": snapshot_merge,
-    "kiro_crew.snapshot_build": snapshot_build,
-    "kiro_crew.snapshot_merge_driver": snapshot_merge_driver,
-    "kiro_crew.snapshot_order": snapshot_order,
+    "aj_crew.snapshot": snap,
+    "aj_crew.snapshot_components": snapshot_components,
+    "aj_crew.snapshot_archive": snapshot_archive,
+    "aj_crew.snapshot_restore": snapshot_restore,
+    "aj_crew.snapshot_merge": snapshot_merge,
+    "aj_crew.snapshot_build": snapshot_build,
+    "aj_crew.snapshot_merge_driver": snapshot_merge_driver,
+    "aj_crew.snapshot_order": snapshot_order,
 }
 
 #: Which owners each owner may import. The facade imports all of them; nothing imports
 #: the facade back, and the redaction pass stays out of every module's import time.
 ALLOWED_IMPORTS: dict[str, frozenset[str]] = {
-    "kiro_crew.snapshot_components": frozenset(),
-    "kiro_crew.snapshot_archive": frozenset({"kiro_crew.snapshot_components"}),
-    "kiro_crew.snapshot_restore": frozenset(
-        {"kiro_crew.snapshot_components", "kiro_crew.snapshot_archive"}
+    "aj_crew.snapshot_components": frozenset(),
+    "aj_crew.snapshot_archive": frozenset({"aj_crew.snapshot_components"}),
+    "aj_crew.snapshot_restore": frozenset(
+        {"aj_crew.snapshot_components", "aj_crew.snapshot_archive"}
     ),
-    "kiro_crew.snapshot_merge": frozenset(
-        {"kiro_crew.snapshot_components", "kiro_crew.snapshot_archive"}
+    "aj_crew.snapshot_merge": frozenset(
+        {"aj_crew.snapshot_components", "aj_crew.snapshot_archive"}
     ),
-    "kiro_crew.snapshot_build": frozenset(
-        {"kiro_crew.snapshot_components", "kiro_crew.snapshot_archive"}
+    "aj_crew.snapshot_build": frozenset(
+        {"aj_crew.snapshot_components", "aj_crew.snapshot_archive"}
     ),
-    "kiro_crew.snapshot_merge_driver": frozenset(
+    "aj_crew.snapshot_merge_driver": frozenset(
         {
-            "kiro_crew.snapshot_components",
-            "kiro_crew.snapshot_archive",
-            "kiro_crew.snapshot_restore",
-            "kiro_crew.snapshot_merge",
+            "aj_crew.snapshot_components",
+            "aj_crew.snapshot_archive",
+            "aj_crew.snapshot_restore",
+            "aj_crew.snapshot_merge",
         }
     ),
-    "kiro_crew.snapshot_order": frozenset(),
+    "aj_crew.snapshot_order": frozenset(),
 }
 
-_OWNER_MODULES = tuple(m for m in OWNERS if m != "kiro_crew.snapshot")
+_OWNER_MODULES = tuple(m for m in OWNERS if m != "aj_crew.snapshot")
 
 
 def _module_path(module: str) -> Path:
@@ -284,7 +284,7 @@ def _top_level_definitions(path: Path) -> set[str]:
 def test_each_owner_defines_exactly_its_declared_names(module: str) -> None:
     defined = _top_level_definitions(_module_path(module))
     # A module-level `try` binds the dashboard port where the facade defines it.
-    if module == "kiro_crew.snapshot":
+    if module == "aj_crew.snapshot":
         defined.add("_DASHBOARD_PORT")
     assert defined == set(OWNERS[module]), (
         f"{module} defines {sorted(defined - set(OWNERS[module]))} beyond its declared "
@@ -318,16 +318,16 @@ def test_every_snapshot_module_is_registered_with_the_family_scans() -> None:
 
 
 def _imported_modules(tree: ast.AST) -> set[str]:
-    """Every ``kiro_crew`` module a tree imports, at module scope or inside a function."""
+    """Every ``aj_crew`` module a tree imports, at module scope or inside a function."""
     found: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.module:
-            if node.module == "kiro_crew":
-                found.update(f"kiro_crew.{a.name}" for a in node.names)
-            elif node.module.startswith("kiro_crew."):
+            if node.module == "aj_crew":
+                found.update(f"aj_crew.{a.name}" for a in node.names)
+            elif node.module.startswith("aj_crew."):
                 found.add(node.module)
         elif isinstance(node, ast.Import):
-            found.update(a.name for a in node.names if a.name.startswith("kiro_crew."))
+            found.update(a.name for a in node.names if a.name.startswith("aj_crew."))
         elif (
             isinstance(node, ast.Call)
             and isinstance(node.func, ast.Attribute)
@@ -342,16 +342,16 @@ def _imported_modules(tree: ast.AST) -> set[str]:
 @pytest.mark.parametrize("module", _OWNER_MODULES)
 def test_owners_depend_downward_only_and_never_on_the_facade(module: str) -> None:
     tree = ast.parse(_module_path(module).read_text(encoding="utf-8"))
-    family = {m for m in _imported_modules(tree) if m.startswith("kiro_crew.snapshot")}
-    assert "kiro_crew.snapshot" not in family, f"{module} reaches back into the facade"
-    assert "kiro_crew.snapshot_redact" not in family, f"{module} imports the redaction pass"
+    family = {m for m in _imported_modules(tree) if m.startswith("aj_crew.snapshot")}
+    assert "aj_crew.snapshot" not in family, f"{module} reaches back into the facade"
+    assert "aj_crew.snapshot_redact" not in family, f"{module} imports the redaction pass"
     assert (
         family <= ALLOWED_IMPORTS[module]
     ), f"{module} imports {sorted(family - ALLOWED_IMPORTS[module])}, which sit above it"
 
 
 def test_only_the_snapshot_family_imports_an_owner_module() -> None:
-    """Owners are reached only through ``kiro_crew.snapshot``, so ``_facade()`` finds it loaded.
+    """Owners are reached only through ``aj_crew.snapshot``, so ``_facade()`` finds it loaded.
 
     ``_facade()`` looks the facade up in ``sys.modules`` instead of importing it. That holds
     only while every production path into an owner runs through the facade, which imports
@@ -371,7 +371,7 @@ def test_only_the_snapshot_family_imports_an_owner_module() -> None:
         tree = ast.parse(text)
         imported = _imported_modules(tree) & owners
         imported |= {
-            f"kiro_crew.{name}"
+            f"aj_crew.{name}"
             for node in ast.walk(tree)
             if isinstance(node, ast.ImportFrom) and node.level
             for name in [node.module or "", *(a.name for a in node.names)]
@@ -385,7 +385,7 @@ def test_only_the_snapshot_family_imports_an_owner_module() -> None:
 @pytest.mark.parametrize("module", sorted(OWNERS))
 def test_no_module_binds_the_config_class_at_import(module: str) -> None:
     """The redaction switch is read from its own file, never from ``config.json``."""
-    assert not hasattr(_MODULES[module], "KiroCrewConfig")
+    assert not hasattr(_MODULES[module], "AjCrewConfig")
 
 
 @pytest.mark.parametrize("module", sorted(OWNERS))
@@ -401,10 +401,10 @@ def test_the_facade_binds_stdlib_sqlite_past_a_husk_driver(tmp_path: Path) -> No
     The owners reach the driver through the facade when they open a database, as the claim
     for this split asked, so the facade's binding is the only one to check. The same
     fresh-interpreter shape as ``test_sqlite_compat_resolver``: the husk has to be in place
-    before the first ``import kiro_crew``.
+    before the first ``import aj_crew``.
     """
     sites = [m for m in OWNERS if hasattr(_MODULES[m], "sqlite3")]
-    assert sites == ["kiro_crew.snapshot"]
+    assert sites == ["aj_crew.snapshot"]
     script = textwrap.dedent("""
         import importlib
         import sqlite3
@@ -417,7 +417,7 @@ def test_the_facade_binds_stdlib_sqlite_past_a_husk_driver(tmp_path: Path) -> No
             assert module.sqlite3 is sqlite3, name
             module.sqlite3.connect(':memory:').close()
         """).format(sites=sites)
-    env = dict(os.environ, KIROCREW_HOME=str(tmp_path), KIRO_HOME=str(tmp_path / "kiro"))
+    env = dict(os.environ, AJCREW_HOME=str(tmp_path), KIRO_HOME=str(tmp_path / "kiro"))
     env.update(TMPDIR=str(tmp_path), TMP=str(tmp_path), TEMP=str(tmp_path))
     env["PYTHONPATH"] = os.pathsep.join([str(REPO_SRC), env.get("PYTHONPATH", "")]).rstrip(
         os.pathsep

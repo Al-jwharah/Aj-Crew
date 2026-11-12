@@ -68,8 +68,8 @@ const extra = async (path, route) => {
 }
 
 await stubDashboardApi(page, {
-  slots: [{ key: SLOT, messages: 0, running: false, agent: 'kirocrew', model: FROM, mode: '' }],
-  theme: 'kiro-dark',
+  slots: [{ key: SLOT, messages: 0, running: false, agent: 'ajcrew', model: FROM, mode: '' }],
+  theme: 'aj-dark',
   extra,
   preserveStorage: true,
   localStorageEntries: { 'mc-active-slot': SLOT, 'mc-lang': 'en' },

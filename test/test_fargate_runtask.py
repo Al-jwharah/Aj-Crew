@@ -15,23 +15,23 @@ import re
 
 import pytest
 
-from kiro_crew.cloud import fargate as fargate_package
-from kiro_crew.cloud.fargate import identity as ident
-from kiro_crew.cloud.fargate import runtask as rt
-from kiro_crew.cloud.fargate import taskdef as td
-from kiro_crew.cloud.fargate.identity import CrewBinding, DocumentRefused, SecretRef
-from kiro_crew.cloud.iam import MANAGED_TAG_KEY
+from aj_crew.cloud import fargate as fargate_package
+from aj_crew.cloud.fargate import identity as ident
+from aj_crew.cloud.fargate import runtask as rt
+from aj_crew.cloud.fargate import taskdef as td
+from aj_crew.cloud.fargate.identity import CrewBinding, DocumentRefused, SecretRef
+from aj_crew.cloud.iam import MANAGED_TAG_KEY
 
 ACCOUNT = "123456789012"
 REGION = "us-east-1"
 BINDING = CrewBinding(partition="aws", account=ACCOUNT, crew="frontdesk")
-IMAGE = f"repo/kirocrew-crew@sha256:{'d' * 64}"
+IMAGE = f"repo/ajcrew-crew@sha256:{'d' * 64}"
 SECOND_SECRET = "EXTRA_TOKEN"
 
 
 def other_crew_ref(crew: str, key: str) -> SecretRef:
     """A reference naming a crew other than the fixture's, for the crossing tests."""
-    name = f"kirocrew/crew/{crew}/{key}"
+    name = f"ajcrew/crew/{crew}/{key}"
     return SecretRef(
         name=name,
         arn=f"arn:aws:secretsmanager:{REGION}:{ACCOUNT}:secret:{name}-AbCdEf",
@@ -40,7 +40,7 @@ def other_crew_ref(crew: str, key: str) -> SecretRef:
 
 def secret_ref(key: str) -> SecretRef:
     """A secret named twice: canonically, and as the ARN that resolves to it."""
-    name = f"kirocrew/crew/{BINDING.crew}/{key}"
+    name = f"ajcrew/crew/{BINDING.crew}/{key}"
     return SecretRef(
         name=name,
         arn=f"arn:aws:secretsmanager:{REGION}:{ACCOUNT}:secret:{name}-AbCdEf",
@@ -89,8 +89,8 @@ def strings(node):
 
 ARGUMENT_SHAPES = [
     {},
-    {"environment": {"KIROCREW_TELEMETRY_DISABLED": "1"}},
-    {"started_by": "kirocrew-launch"},
+    {"environment": {"AJCREW_TELEMETRY_DISABLED": "1"}},
+    {"started_by": "ajcrew-launch"},
     {"size": rt.TaskSize(cpu="1024", memory="4096", ephemeral_storage_gib=50)},
     {
         "environment": {"A": "1", "B": "2"},
@@ -315,7 +315,7 @@ def _container_env_names() -> set[str]:
     source = (
         pathlib.Path(__file__).resolve().parents[1]
         / "src"
-        / "kiro_crew"
+        / "aj_crew"
         / "apps"
         / "builtins"
         / "aws_control"
@@ -655,10 +655,10 @@ def test_a_correlation_value_outside_the_api_charset_is_refused(value):
 def _managed_value_the_codebase_filters_on() -> set[str]:
     """The marker VALUE other modules match, read from their own source.
 
-    ``cloud/ec2.py`` tags and discovers by ``kirocrew:managed=true``; a change there would
+    ``cloud/ec2.py`` tags and discovers by ``ajcrew:managed=true``; a change there would
     make these tasks invisible. Parsed, not imported, to keep coverage.py off it here.
     """
-    source = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "cloud" / "ec2.py"
+    source = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "cloud" / "ec2.py"
     assert source.is_file(), f"ec2 module moved: {source}"
     text = source.read_text(encoding="utf-8")
     found = set(re.findall(r"\{MANAGED_TAG_KEY\}=([A-Za-z0-9_-]+)", text))
@@ -692,7 +692,7 @@ def test_the_marker_and_the_correlation_value_are_separate_keys():
 
     The marker has to be constant for teardown to match it; the correlation value
     has to vary for a caller to find their own task. This mirrors ``cloud/ec2.py``,
-    which tags ``kirocrew:managed=true`` beside ``kirocrew:instance=<tag>``.
+    which tags ``ajcrew:managed=true`` beside ``ajcrew:instance=<tag>``.
     """
     assert rt.LAUNCH_TAG_KEY != MANAGED_TAG_KEY
 
@@ -798,7 +798,7 @@ def test_an_empty_security_group_is_refused_rather_than_left_to_the_vpc_default(
 
 def test_started_by_is_carried_only_when_given_and_only_within_the_api_cap():
     assert "startedBy" not in request()
-    assert request(started_by="kirocrew-launch")["startedBy"] == "kirocrew-launch"
+    assert request(started_by="ajcrew-launch")["startedBy"] == "ajcrew-launch"
     with pytest.raises(DocumentRefused, match="startedBy"):
         request(started_by="x" * (rt.STARTED_BY_MAX + 1))
 
@@ -935,7 +935,7 @@ def test_every_constant_a_consumer_must_import_is_on_the_package_surface():
     missing = sorted(name for name in required if name not in surface | SURFACE_EXCLUSIONS.keys())
     assert not missing, (
         "these constants are required by the contract but cannot be imported from "
-        f"kiro_crew.cloud.fargate, so a consumer must re-spell them: {missing}"
+        f"aj_crew.cloud.fargate, so a consumer must re-spell them: {missing}"
     )
 
     stale = sorted(name for name in SURFACE_EXCLUSIONS if name in surface)

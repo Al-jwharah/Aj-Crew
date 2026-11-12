@@ -42,7 +42,7 @@ export interface SsmCreated {
 export const ssmStatusKey = ['shared-crew', 'ssm'] as const
 
 /** The guide a teammate or owner reads for the tools and the IAM setup. */
-export const SSM_GUIDE_URL = 'https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/remote-and-mobile.md#share-one-crew-over-aws-ssm'
+export const SSM_GUIDE_URL = 'https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/guides/remote-and-mobile.md#share-one-crew-over-aws-ssm'
 
 /** Invites to show as Waiting: made, and no person row stands for them yet.
  *  A joined invite leaves the list once its person is a row of their own (that

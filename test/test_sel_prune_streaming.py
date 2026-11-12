@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.sel import SecurityEvent, SecurityEventLog
+from aj_crew.sel import SecurityEvent, SecurityEventLog
 
 
 @pytest.fixture(autouse=True)

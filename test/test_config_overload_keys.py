@@ -29,8 +29,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config import sections
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config import sections
+from aj_crew.config.loader import AjCrewConfig
 
 _CLAMP_RE = re.compile(r"[Cc]lamped to (-?\d+(?:\.\d+)?)\s*(?:s)?\.\.\s*(-?\d+(?:\.\d+)?)")
 
@@ -69,10 +69,10 @@ _FLOOR_COMPANIONS: dict[str, dict[str, object]] = {
 }
 
 
-def _loaded(tmp_path: Path, data: dict) -> KiroCrewConfig:
+def _loaded(tmp_path: Path, data: dict) -> AjCrewConfig:
     (tmp_path / "config.json").write_text(json.dumps(data), encoding="utf-8")
-    with unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
-        return KiroCrewConfig.load()
+    with unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
+        return AjCrewConfig.load()
 
 
 def _scalar_fields(cls: type) -> list[dataclasses.Field]:
@@ -138,7 +138,7 @@ def test_explicit_default_round_trips(
     ids=_ids,
 )
 def test_a_bool_key_flips(section: str, field: dataclasses.Field, tmp_path: Path) -> None:
-    from kiro_crew.config.superseded_defaults import SUPERSEDED_DEFAULTS
+    from aj_crew.config.superseded_defaults import SUPERSEDED_DEFAULTS
 
     flipped = not field.default
     if any(

@@ -28,9 +28,9 @@ from dashboard_state_ws_helpers import (  # noqa: F401 -- fixtures are requested
     sync_event_loop,
 )
 
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard import crewmate_feed
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew import _facade_mirror
+from aj_crew.dashboard import crewmate_feed
+from aj_crew.dashboard.state import DashboardState
 
 STEP = 200
 

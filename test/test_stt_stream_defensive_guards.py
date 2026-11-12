@@ -17,7 +17,7 @@ from aiohttp.test_utils import TestClient, TestServer
 from stt_stream_helpers import transcribe_consented_fixture  # noqa: F401
 from stt_stream_helpers import _cfg, _make_app, _wait_for_operation
 
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 
 class TestDefensiveGuards:
@@ -42,16 +42,16 @@ class TestDefensiveGuards:
         HTTPForbidden/HTTPServiceUnavailable.
         """
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg()),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: False)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: False)
         # sel() itself raises — worst case. _emit_guard_audit must swallow.
 
         def _raising_sel():
             raise RuntimeError("SEL not initialized")
 
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.sel", _raising_sel)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.sel", _raising_sel)
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get("/api/ws/stt")
             # Must be 403 (from HTTPForbidden), not 500.
@@ -68,23 +68,23 @@ class TestDefensiveGuards:
         """
         pytest.importorskip("amazon_transcribe")
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg()),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
         # Force TranscribeStreamingClient constructor to raise.
 
         def _raising_client(**kw):
             raise RuntimeError("bad region")
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.TranscribeStreamingClient",
+            "aj_crew.dashboard.stt_stream.TranscribeStreamingClient",
             _raising_client,
         )
         calls: list[dict] = []
         fake_sel = MagicMock()
         fake_sel.log_api_access = lambda **kw: calls.append(kw)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.sel", lambda: fake_sel)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             msg = await ws.receive_json()
@@ -108,12 +108,12 @@ class TestDefensiveGuards:
     async def test_profile_resolver_is_built_off_the_event_loop(self, monkeypatch):
         """The resolver's boto3 Session is the first boto3 use, which imports boto3.
 
-        ``kiro_crew.transcribe_aws`` defers that import (~200 ms) to first use, so the
+        ``aj_crew.transcribe_aws`` defers that import (~200 ms) to first use, so the
         stream builds the resolver in a worker thread, as the batch path does, rather
         than stalling every other request on the loop for the first dictation.
         """
         pytest.importorskip("amazon_transcribe")
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         cfg = _cfg(transcribe_profile="dictation")
         aws_consent.record_grant(
@@ -125,16 +125,16 @@ class TestDefensiveGuards:
             granted_at="2026-08-21T00:00:00+00:00",
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load", classmethod(lambda cls: cfg)
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load", classmethod(lambda cls: cfg)
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
         built_on: list[int] = []
 
         def _resolver(profile):
             built_on.append(threading.get_ident())
             raise RuntimeError("profile not found")
 
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream._ProfileCredentialResolver", _resolver)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream._ProfileCredentialResolver", _resolver)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             msg = await ws.receive_json()
@@ -154,10 +154,10 @@ class TestDefensiveGuards:
         same reason theirs do.
         """
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg()),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
         calls: list[dict] = []
         # sel() itself returns an object whose log_api_access raises only for
         # the start operation — guard rejections are unreachable (origin ok,
@@ -170,7 +170,7 @@ class TestDefensiveGuards:
                 raise RuntimeError("SEL unavailable")
 
         fake_sel.log_api_access = _log
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.sel", lambda: fake_sel)
         async with TestClient(TestServer(_make_app())) as client:
             ws = await client.ws_connect("/api/ws/stt")
             msg = await ws.receive_json()
@@ -202,10 +202,10 @@ class TestDefensiveGuards:
         from amazon_transcribe.handlers import TranscriptResultStreamHandler
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.KiroCrewConfig.load",
+            "aj_crew.dashboard.stt_stream.AjCrewConfig.load",
             classmethod(lambda cls: _cfg()),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.check_origin", lambda r, require: True)
 
         # Stub Transcribe happy-path client.
         input_stream = MagicMock()
@@ -216,7 +216,7 @@ class TestDefensiveGuards:
         client = MagicMock()
         client.start_stream_transcription = AsyncMock(return_value=stream)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.stt_stream.TranscribeStreamingClient",
+            "aj_crew.dashboard.stt_stream.TranscribeStreamingClient",
             lambda **kw: client,
         )
 
@@ -247,7 +247,7 @@ class TestDefensiveGuards:
         calls: list[dict] = []
         fake_sel = MagicMock()
         fake_sel.log_api_access = lambda **kw: calls.append(kw)
-        monkeypatch.setattr("kiro_crew.dashboard.stt_stream.sel", lambda: fake_sel)
+        monkeypatch.setattr("aj_crew.dashboard.stt_stream.sel", lambda: fake_sel)
 
         try:
             async with TestClient(TestServer(_make_app())) as http_client:

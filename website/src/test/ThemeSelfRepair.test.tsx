@@ -44,7 +44,7 @@ describe('useTheme — self-repair (decision 6)', () => {
     themesFn.mockResolvedValue({ themes: [] }) // the persisted theme is gone
     localStorage.setItem('mc-color-theme', 'custom-ghost')
     const { result } = renderHook(() => useTheme(), { wrapper })
-    await waitFor(() => expect(result.current.colorTheme).toBe('kiro'))
+    await waitFor(() => expect(result.current.colorTheme).toBe('aj'))
   })
 
   it('keeps a still-present installed selection', async () => {
@@ -66,14 +66,14 @@ describe('useTheme — self-repair (decision 6)', () => {
     // A value persisted by an older build whose built-in theme no longer exists.
     localStorage.setItem('mc-color-theme', 'lumon')
     const { result } = renderHook(() => useTheme(), { wrapper })
-    await waitFor(() => expect(result.current.colorTheme).toBe('kiro'))
+    await waitFor(() => expect(result.current.colorTheme).toBe('aj'))
   })
 
   it('keeps a downstream-registered (edition) theme selection', async () => {
     // Regression: edition themes added via registerTheme() live in
     // REGISTERED_THEMES, not the core THEMES array. Self-repair must treat them
     // as valid built-ins — otherwise selecting LCARS/Lumon/Miami/etc bounced
-    // straight back to the default 'kiro'.
+    // straight back to the default 'aj'.
     registerTheme([{ value: 'lcars', label: '🖖 LCARS' }])
     themesFn.mockResolvedValue({ themes: [] })
     localStorage.setItem('mc-color-theme', 'lcars')

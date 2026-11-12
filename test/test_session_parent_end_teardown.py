@@ -16,7 +16,7 @@ from session_helpers import (  # noqa: F401 -- the fixture is requested by name
     cfg_fixture,
 )
 
-from kiro_crew.session import SessionManager
+from aj_crew.session import SessionManager
 
 
 class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChildrenHarness):
@@ -38,7 +38,7 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
         """
         from types import SimpleNamespace
 
-        from kiro_crew.subagent_manager.cancellation import CancellationCoordinator
+        from aj_crew.subagent_manager.cancellation import CancellationCoordinator
 
         def _run(agent_id, *, awaiting, started):
             return SimpleNamespace(
@@ -100,7 +100,7 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
         """
         from types import SimpleNamespace
 
-        from kiro_crew.subagent_manager.cancellation import CancellationCoordinator
+        from aj_crew.subagent_manager.cancellation import CancellationCoordinator
 
         def _run(agent_id, *, done, awaiting=False, started=123.0):
             return SimpleNamespace(
@@ -169,7 +169,7 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
         """
         from types import SimpleNamespace
 
-        from kiro_crew.subagent_manager.cancellation import CancellationCoordinator
+        from aj_crew.subagent_manager.cancellation import CancellationCoordinator
 
         def _run(agent_id: str, *, done: bool, reported: bool, held=0.0, queued=False):
             info = SimpleNamespace(
@@ -265,8 +265,8 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
         import ast
         import pathlib
 
-        import kiro_crew.subagent as _subagent_mod
-        from kiro_crew.subagent import DELIVERY_ROUTING_FIELDS, DELIVERY_ROUTING_MODULES
+        import aj_crew.subagent as _subagent_mod
+        from aj_crew.subagent import DELIVERY_ROUTING_FIELDS, DELIVERY_ROUTING_MODULES
 
         root = pathlib.Path(_subagent_mod.__file__).resolve().parent
         written: set[str] = set()
@@ -309,7 +309,7 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
         A classification nothing reads is a classification that can be wrong, so this drives
         one field at a time rather than trusting the table's shape.
         """
-        from kiro_crew.subagent import (
+        from aj_crew.subagent import (
             DELIVERY_ROUTING_FIELDS,
             PARKS_WHEN_SET,
             PARKS_WHEN_UNSET,
@@ -353,7 +353,7 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
         """
         import logging
 
-        from kiro_crew.subagent_manager.cancellation import CancellationCoordinator
+        from aj_crew.subagent_manager.cancellation import CancellationCoordinator
 
         class _Admission:
             async def taskq_row_is_claimed_unstarted_async(self, agent_id):
@@ -383,7 +383,7 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
 
         coordinator = CancellationCoordinator(_Manager())  # type: ignore[arg-type]
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.subagent"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.subagent"):
             await coordinator.cancel_for_teardown_impl(
                 ("in-window",),
                 parent_session_key="dashboard:chat-9",
@@ -413,7 +413,7 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
         import inspect
         import sys
 
-        from kiro_crew import session_lifecycle
+        from aj_crew import session_lifecycle
 
         tree = ast.parse(
             "".join(
@@ -485,7 +485,7 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
         decision such as a spawn approval. The store cancel must refuse an ``admitted`` row
         and the refusal must not reach the live reap.
         """
-        from kiro_crew.subagent_manager.cancellation import CancellationCoordinator
+        from aj_crew.subagent_manager.cancellation import CancellationCoordinator
 
         asked: list[bool] = []
         reaped: list[str] = []
@@ -546,7 +546,7 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
         """
         from types import SimpleNamespace
 
-        from kiro_crew.subagent_manager.cancellation import CancellationCoordinator
+        from aj_crew.subagent_manager.cancellation import CancellationCoordinator
 
         reaped: list[str] = []
 
@@ -611,7 +611,7 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
         """
         from types import SimpleNamespace
 
-        from kiro_crew.subagent_manager.cancellation import CancellationCoordinator
+        from aj_crew.subagent_manager.cancellation import CancellationCoordinator
 
         sync_store_calls: list[str] = []
         reaped: list[str] = []
@@ -762,8 +762,8 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
         import asyncio as _asyncio
         from types import SimpleNamespace
 
-        from kiro_crew.subagent import delivery_is_parked
-        from kiro_crew.subagent_manager.cancellation import CancellationCoordinator
+        from aj_crew.subagent import delivery_is_parked
+        from aj_crew.subagent_manager.cancellation import CancellationCoordinator
 
         async def _forever():
             # flake-ok: pre-existing never-set Event that keeps the stand-in watcher task parked until the teardown cancels it; the test never awaits the task; moved verbatim
@@ -837,7 +837,7 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
         import asyncio as _asyncio
         from types import SimpleNamespace
 
-        from kiro_crew.subagent_manager.cancellation import CancellationCoordinator
+        from aj_crew.subagent_manager.cancellation import CancellationCoordinator
 
         async def _forever():
             # flake-ok: pre-existing never-set Event that keeps the stand-in watcher task parked; the test cancels the task itself before awaiting it; moved verbatim
@@ -894,7 +894,7 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
         import pathlib
         import re
 
-        root = pathlib.Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+        root = pathlib.Path(__file__).resolve().parent.parent / "src" / "aj_crew"
         offenders: list[str] = []
         for path in root.rglob("*.py"):
             if path.relative_to(root).as_posix() in {
@@ -923,7 +923,7 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
         import pathlib
         import re
 
-        root = pathlib.Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+        root = pathlib.Path(__file__).resolve().parent.parent / "src" / "aj_crew"
         # The module that DEFINES ``reset`` names the keyword in its own docstring, which
         # is not a call site.
         defines_it = {"session_lifecycle.py", "session_lifecycle_parts/teardown.py"}
@@ -980,7 +980,7 @@ class TestParentEndCancelsItsChildrenTeardownRules(_TestParentEndCancelsItsChild
         import inspect
         import sys
 
-        from kiro_crew import session_lifecycle
+        from aj_crew import session_lifecycle
 
         tree = ast.parse(
             "".join(

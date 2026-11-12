@@ -11,16 +11,16 @@ import math
 
 import pytest
 
-from kiro_crew.dashboard.handlers import workflows as handlers
-from kiro_crew.testing.wait import async_wait_until
-from kiro_crew.workflows.events import EventStream
-from kiro_crew.workflows.registry import (
+from aj_crew.dashboard.handlers import workflows as handlers
+from aj_crew.testing.wait import async_wait_until
+from aj_crew.workflows.events import EventStream
+from aj_crew.workflows.registry import (
     RunHandle,
     RunRegistry,
     start_background_run,
 )
-from kiro_crew.workflows.service import _AUTHOR_SYSTEM, WorkflowService
-from kiro_crew.workflows.store import WorkflowRunStore
+from aj_crew.workflows.service import _AUTHOR_SYSTEM, WorkflowService
+from aj_crew.workflows.store import WorkflowRunStore
 
 NOW = "2026-10-30T00:00:00Z"
 SCRIPT = """META = {"name": "budget-echo"}
@@ -133,7 +133,7 @@ def test_the_authoring_prompt_warns_that_remaining_can_be_infinite():
 
 def test_json_portable_rebuilds_only_what_it_must():
     # Imported here so the tests above still collect when the fix is reverted.
-    from kiro_crew.strict_json import json_portable
+    from aj_crew.strict_json import json_portable
 
     clean = {"a": [1, 2.5, "s", None, True], "b": {"c": (1, 2)}}
     assert json_portable(clean) is clean

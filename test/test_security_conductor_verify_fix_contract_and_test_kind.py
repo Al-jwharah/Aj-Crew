@@ -61,9 +61,9 @@ NO_TEST_IN_IT = "# a module the fix left behind with no test node in it\n"
 A_CONTRACT = {
     "finding_ids": [1],
     "allowed_paths": ["src/", "test/"],
-    "forbidden_paths": ["src/kiro_crew/sandbox.py"],
+    "forbidden_paths": ["src/aj_crew/sandbox.py"],
     "max_changed_files": 3,
-    "no_new_refusal_statement": "An operator-set KIROCREW_SECURITY_POLICY still reaches the child.",
+    "no_new_refusal_statement": "An operator-set AJCREW_SECURITY_POLICY still reaches the child.",
 }
 
 
@@ -111,7 +111,7 @@ class TestTheFixContractIsStepZero:
 
     def test_no_contract_file_behaves_exactly_as_before(self, staged: Path, tmp_path: Path) -> None:
         """An old dispatch must not turn unverifiable overnight."""
-        worktree = build_repo(tmp_path, "no-contract", committed=("src/kiro_crew/x.py",))
+        worktree = build_repo(tmp_path, "no-contract", committed=("src/aj_crew/x.py",))
         a_behaviour_file(worktree, "test/test_behaviour.py", PASSING_TEST)
         a_golden_path(staged, kind="test", command="test/test_behaviour.py")
         install_verifier(staged, VERIFIER_REJECTED)
@@ -124,7 +124,7 @@ class TestTheFixContractIsStepZero:
         }
 
     def test_a_named_contract_that_is_honoured_holds(self, staged: Path, tmp_path: Path) -> None:
-        worktree = build_repo(tmp_path, "honoured", committed=("src/kiro_crew/x.py",))
+        worktree = build_repo(tmp_path, "honoured", committed=("src/aj_crew/x.py",))
         held = held_contract(tmp_path, "honoured", A_CONTRACT)
         a_behaviour_file(worktree, "test/test_behaviour.py", PASSING_TEST)
         a_golden_path(staged, kind="test", command="test/test_behaviour.py")
@@ -143,7 +143,7 @@ class TestTheFixContractIsStepZero:
         worktree = build_repo(
             tmp_path,
             "over-reach",
-            committed=("src/kiro_crew/x.py", "src/kiro_crew/sandbox.py"),
+            committed=("src/aj_crew/x.py", "src/aj_crew/sandbox.py"),
         )
         held = held_contract(tmp_path, "over-reach", A_CONTRACT)
         a_golden_path(staged, kind="flow", command="monitor_start")
@@ -155,14 +155,14 @@ class TestTheFixContractIsStepZero:
         body = payload(result)
         assert body["verdict"] == "broken"
         assert body["contract"]["verdict"] == "broken"
-        assert "src/kiro_crew/sandbox.py" in body["contract"]["why"]
+        assert "src/aj_crew/sandbox.py" in body["contract"]["why"]
         assert "fix contract" in result.stderr
 
     def test_a_contract_that_will_not_read_is_unverifiable(
         self, staged: Path, tmp_path: Path
     ) -> None:
         """A named contract nobody could read is a check that went unsettled."""
-        worktree = build_repo(tmp_path, "bad-contract", committed=("src/kiro_crew/x.py",))
+        worktree = build_repo(tmp_path, "bad-contract", committed=("src/aj_crew/x.py",))
         held = tmp_path / "bad-contract-held.json"
         held.write_text("{not json", encoding="utf-8")
         a_golden_path(staged, kind="flow", command="monitor_start")
@@ -178,7 +178,7 @@ class TestTheFixContractIsStepZero:
         self, staged: Path, tmp_path: Path
     ) -> None:
         """A UTF-16 contract is named as unreadable, not as a broken script."""
-        worktree = build_repo(tmp_path, "utf16-contract", committed=("src/kiro_crew/x.py",))
+        worktree = build_repo(tmp_path, "utf16-contract", committed=("src/aj_crew/x.py",))
         held = tmp_path / "utf16-contract-held.json"
         held.write_bytes(json.dumps(A_CONTRACT).encode("utf-16"))
         a_golden_path(staged, kind="flow", command="monitor_start")
@@ -195,7 +195,7 @@ class TestTheFixContractIsStepZero:
     def test_an_absent_sibling_is_a_broken_installation_not_a_pass(
         self, staged: Path, tmp_path: Path
     ) -> None:
-        worktree = build_repo(tmp_path, "no-sibling", committed=("src/kiro_crew/x.py",))
+        worktree = build_repo(tmp_path, "no-sibling", committed=("src/aj_crew/x.py",))
         held = held_contract(tmp_path, "no-sibling", A_CONTRACT)
         (staged / "check_fix_contract.py").unlink()
         a_golden_path(staged, kind="flow", command="monitor_start")
@@ -210,7 +210,7 @@ class TestTheFixContractIsStepZero:
         self, staged: Path, tmp_path: Path
     ) -> None:
         """Precedence 10 > 30 is unchanged: a fix that did not land is not a scope story."""
-        worktree = build_repo(tmp_path, "both-wrong", committed=("src/kiro_crew/sandbox.py",))
+        worktree = build_repo(tmp_path, "both-wrong", committed=("src/aj_crew/sandbox.py",))
         held = held_contract(tmp_path, "both-wrong", A_CONTRACT)
         a_golden_path(staged, kind="flow", command="monitor_start")
         install_verifier(staged, VERIFIER_CONFIRMED)
@@ -255,7 +255,7 @@ class TestAnUnsettledContractStopsTheGateRunningTheWorktree:
         worktree = build_repo(
             tmp_path,
             "violated-no-run",
-            committed=("src/kiro_crew/x.py", "src/kiro_crew/sandbox.py"),
+            committed=("src/aj_crew/x.py", "src/aj_crew/sandbox.py"),
         )
         sentinel = self.a_row_and_its_sentinel(staged, worktree)
         held = held_contract(tmp_path, "violated-no-run", A_CONTRACT)
@@ -278,7 +278,7 @@ class TestAnUnsettledContractStopsTheGateRunningTheWorktree:
         self, staged: Path, tmp_path: Path
     ) -> None:
         """Unreadable is not honoured: the same licence is missing, so the same skip."""
-        worktree = build_repo(tmp_path, "unreadable-no-run", committed=("src/kiro_crew/x.py",))
+        worktree = build_repo(tmp_path, "unreadable-no-run", committed=("src/aj_crew/x.py",))
         sentinel = self.a_row_and_its_sentinel(staged, worktree)
         held = tmp_path / "unreadable-held.json"
         held.write_text("{not json", encoding="utf-8")
@@ -298,7 +298,7 @@ class TestAnUnsettledContractStopsTheGateRunningTheWorktree:
         Without this, a screen that refused every ``test`` row unconditionally would
         pass the two cases above and cost the corpus its whole behaviour half.
         """
-        worktree = build_repo(tmp_path, "honoured-does-run", committed=("src/kiro_crew/x.py",))
+        worktree = build_repo(tmp_path, "honoured-does-run", committed=("src/aj_crew/x.py",))
         sentinel = self.a_row_and_its_sentinel(staged, worktree)
         held = held_contract(tmp_path, "honoured-does-run", A_CONTRACT)
         result = run_fix(
@@ -318,7 +318,7 @@ class TestAnUnsettledContractStopsTheGateRunningTheWorktree:
         worktree = build_repo(
             tmp_path,
             "violated-shell",
-            committed=("src/kiro_crew/x.py", "src/kiro_crew/sandbox.py"),
+            committed=("src/aj_crew/x.py", "src/aj_crew/sandbox.py"),
         )
         a_golden_path(staged, kind="shell", command="git status --porcelain")
         install_verifier(staged, VERIFIER_REJECTED)
@@ -493,7 +493,7 @@ class TestTheContractCannotSteerTheGateThatReadsIt:
         self, staged: Path, tmp_path: Path
     ) -> None:
         """``"base": "HEAD"`` would make the judged diff empty and every fix honoured."""
-        worktree = build_repo(tmp_path, "own-base", committed=("src/kiro_crew/sandbox.py",))
+        worktree = build_repo(tmp_path, "own-base", committed=("src/aj_crew/sandbox.py",))
         held = held_contract(tmp_path, "own-base", {**A_CONTRACT, "base": "HEAD"})
         a_golden_path(staged, kind="flow", command="monitor_start")
         install_verifier(staged, VERIFIER_REJECTED)
@@ -501,7 +501,7 @@ class TestTheContractCannotSteerTheGateThatReadsIt:
             staged, tmp_path / "findings.db", worktree, extra=["--contract", str(held)]
         )
         assert result.returncode == EXIT_BROKEN, result.stdout
-        assert "src/kiro_crew/sandbox.py" in payload(result)["contract"]["why"]
+        assert "src/aj_crew/sandbox.py" in payload(result)["contract"]["why"]
 
     def test_a_relative_contract_path_is_resolved_before_it_is_used(
         self, staged: Path, tmp_path: Path
@@ -512,7 +512,7 @@ class TestTheContractCannotSteerTheGateThatReadsIt:
         conductor's. Run from a directory that is NOT the worktree, with a decoy in the
         worktree at that same relative path, and the narrow external copy must still win.
         """
-        worktree = build_repo(tmp_path, "relative", committed=("src/kiro_crew/sandbox.py",))
+        worktree = build_repo(tmp_path, "relative", committed=("src/aj_crew/sandbox.py",))
         outside = tmp_path / "outside"
         outside.mkdir()
         (outside / "held.json").write_text(json.dumps(A_CONTRACT), encoding="utf-8")
@@ -535,7 +535,7 @@ class TestTheContractCannotSteerTheGateThatReadsIt:
         )
         assert result.returncode == EXIT_BROKEN, result.stdout
         body = payload(result)
-        assert "src/kiro_crew/sandbox.py" in body["contract"]["why"]
+        assert "src/aj_crew/sandbox.py" in body["contract"]["why"]
         assert body["contract"]["report"]["contract_path"] == str(outside / "held.json")
 
     def test_the_base_is_passed_explicitly_on_every_invocation(self, mod) -> None:
@@ -555,7 +555,7 @@ class TestTheContractCannotSteerTheGateThatReadsIt:
         worktree = build_repo(
             tmp_path,
             "external",
-            committed=("src/kiro_crew/sandbox.py",),
+            committed=("src/aj_crew/sandbox.py",),
             contract={**A_CONTRACT, "allowed_paths": ["src/"], "forbidden_paths": []},
         )
         held = tmp_path / "conductor" / "fix-contract.json"
@@ -568,7 +568,7 @@ class TestTheContractCannotSteerTheGateThatReadsIt:
         )
         assert result.returncode == EXIT_BROKEN, result.stdout
         body = payload(result)
-        assert "src/kiro_crew/sandbox.py" in body["contract"]["why"]
+        assert "src/aj_crew/sandbox.py" in body["contract"]["why"]
         assert body["contract"]["report"]["contract_path"] == str(held)
 
     def test_a_stale_contract_does_not_reject_the_wrong_dispatch(
@@ -579,7 +579,7 @@ class TestTheContractCannotSteerTheGateThatReadsIt:
         Reading its rejection as this one's would send a fixer to repair a scope nobody
         declared for this run, so the mismatch is checked before the exit code branches.
         """
-        worktree = build_repo(tmp_path, "stale-violation", committed=("src/kiro_crew/sandbox.py",))
+        worktree = build_repo(tmp_path, "stale-violation", committed=("src/aj_crew/sandbox.py",))
         held = held_contract(tmp_path, "stale-violation", {**A_CONTRACT, "finding_ids": [99]})
         a_golden_path(staged, kind="flow", command="monitor_start")
         install_verifier(staged, VERIFIER_REJECTED)
@@ -599,7 +599,7 @@ class TestTheContractCannotSteerTheGateThatReadsIt:
         contract" are indistinguishable from here.
         """
         worktree = build_repo(
-            tmp_path, "unnamed", committed=("src/kiro_crew/x.py",), contract=A_CONTRACT
+            tmp_path, "unnamed", committed=("src/aj_crew/x.py",), contract=A_CONTRACT
         )
         a_golden_path(staged, kind="flow", command="monitor_start")
         install_verifier(staged, VERIFIER_REJECTED)
@@ -616,7 +616,7 @@ class TestTheContractCannotSteerTheGateThatReadsIt:
         worktree = build_repo(
             tmp_path,
             "widened",
-            committed=("src/kiro_crew/sandbox.py",),
+            committed=("src/aj_crew/sandbox.py",),
             contract={**A_CONTRACT, "allowed_paths": ["src/"], "forbidden_paths": []},
         )
         a_golden_path(staged, kind="flow", command="monitor_start")
@@ -634,7 +634,7 @@ class TestTheContractCannotSteerTheGateThatReadsIt:
         self, staged: Path, tmp_path: Path
     ) -> None:
         """Naming a copy IS the assertion that one exists, so a missing one is unsettled."""
-        worktree = build_repo(tmp_path, "named-gone", committed=("src/kiro_crew/x.py",))
+        worktree = build_repo(tmp_path, "named-gone", committed=("src/aj_crew/x.py",))
         a_golden_path(staged, kind="flow", command="monitor_start")
         install_verifier(staged, VERIFIER_REJECTED)
         result = run_fix(
@@ -650,7 +650,7 @@ class TestTheContractCannotSteerTheGateThatReadsIt:
         self, staged: Path, tmp_path: Path
     ) -> None:
         """A stale contract from an earlier dispatch is not this run's scope."""
-        worktree = build_repo(tmp_path, "wrong-finding", committed=("src/kiro_crew/x.py",))
+        worktree = build_repo(tmp_path, "wrong-finding", committed=("src/aj_crew/x.py",))
         held = held_contract(tmp_path, "wrong-finding", {**A_CONTRACT, "finding_ids": [99]})
         a_golden_path(staged, kind="flow", command="monitor_start")
         install_verifier(staged, VERIFIER_REJECTED)
@@ -664,7 +664,7 @@ class TestTheContractCannotSteerTheGateThatReadsIt:
     def test_a_named_contract_that_does_cover_the_finding_holds(
         self, staged: Path, tmp_path: Path
     ) -> None:
-        worktree = build_repo(tmp_path, "right-finding", committed=("src/kiro_crew/x.py",))
+        worktree = build_repo(tmp_path, "right-finding", committed=("src/aj_crew/x.py",))
         held = held_contract(tmp_path, "right-finding", {**A_CONTRACT, "finding_ids": [1, 16]})
         a_golden_path(staged, kind="flow", command="monitor_start")
         install_verifier(staged, VERIFIER_REJECTED)

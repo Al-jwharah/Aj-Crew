@@ -1,7 +1,7 @@
 /** Client-side pre-check for a pasted OAuth loopback return address.
  *
  * Mirrors the backend's `_validated_loopback_return_address`
- * (`src/kiro_crew/dashboard/handlers/connections.py`): plain HTTP, a loopback
+ * (`src/aj_crew/dashboard/handlers/connections.py`): plain HTTP, a loopback
  * host from the SAME set the backend admits — `127.0.0.1`, `::1`, or
  * `localhost` (kiro-cli's callback URL can be localhost-shaped, so a stricter
  * client check would reject the exact paste the recovery flow solicits) — an

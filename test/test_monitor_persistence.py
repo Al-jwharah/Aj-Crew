@@ -9,8 +9,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.monitoring.models import (
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.monitoring.models import (
     DEFAULT_MONITOR_CADENCE_SECS,
     MonitorBudgets,
     MonitorCreationSurface,

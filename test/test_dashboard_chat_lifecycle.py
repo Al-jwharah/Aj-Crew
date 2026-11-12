@@ -24,9 +24,9 @@ class TestSaveDoesNotResurrectDeletedSession:
     """
 
     def test_save_after_committed_delete_does_not_recreate_the_file(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("gone")
         slot.append("user", "hello")
@@ -55,9 +55,9 @@ class TestSaveDoesNotResurrectDeletedSession:
     def test_resumed_slot_save_after_delete_does_not_recreate_the_file(self, tmp_path, monkeypatch):
         """The ``_resumed_count`` evidence arm: a slot restored from history
         (no save of its own yet) must also honor a committed delete."""
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:revived", "user", "old turn")
@@ -86,9 +86,9 @@ class TestSaveDoesNotResurrectDeletedSession:
         The 5s flush can clear ``_dirty`` first, so the fork skips its flush and falls
         back to the in-memory window; only the ``session_was_deleted`` probe refuses it.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("forkclean")
         slot.append("user", "keep me?", "msg msg-u")
@@ -118,10 +118,10 @@ class TestSaveDoesNotResurrectDeletedSession:
     @pytest.mark.asyncio
     async def test_transfer_bundle_refuses_a_deleted_session(self, tmp_path, monkeypatch):
         """Same bypass on the export path: a non-dirty deleted slot must not bundle."""
-        from kiro_crew.dashboard import session_transfer as st
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard import session_transfer as st
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("bundlegone")
         slot.append("user", "ship me?", "msg msg-u")
@@ -141,10 +141,10 @@ class TestSaveDoesNotResurrectDeletedSession:
         The pre-read probe can pass before the delete, so the post-assembly re-check
         must catch it.
         """
-        from kiro_crew.dashboard import session_transfer as st
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard import session_transfer as st
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("midassembly")
         slot.append("user", "racing", "msg msg-u")
@@ -174,9 +174,9 @@ class TestSaveDoesNotResurrectDeletedSession:
         The recreated file has a new ``created_at``; the guard must spot that identity,
         since a file-exists check would merge the deleted window into it.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("reborn")
         slot.created_at = "2026-10-01T12:00:00+00:00"
@@ -189,7 +189,7 @@ class TestSaveDoesNotResurrectDeletedSession:
         assert log.delete_session("dashboard:reborn") is True
         # A foreign writer recreates the session file with a fresh identity.
         monkeypatch.setattr(
-            "kiro_crew.history.metadata_now_iso",
+            "aj_crew.history.metadata_now_iso",
             lambda: "2026-10-01T12:00:01+00:00",
         )
         log.append("dashboard:reborn", "assistant", "foreign row in the new file")
@@ -211,16 +211,14 @@ class TestSaveDoesNotResurrectDeletedSession:
         Its slot never runs the dashboard rehydrate paths, so without
         ``_disk_meta_created_at`` the guard fails open for every channel tab.
         """
-        from kiro_crew.dashboard import channel_slots
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard import channel_slots
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         key = "slack:thread-77"
-        monkeypatch.setattr(
-            "kiro_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:00+00:00"
-        )
+        monkeypatch.setattr("aj_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:00+00:00")
         log.append(key, "user", "channel turn")
         meta = log.get_metadata(key)
         assert meta.get("created_at"), "fixture transcript must carry an identity"
@@ -240,9 +238,7 @@ class TestSaveDoesNotResurrectDeletedSession:
         # Delete, then a foreign append recreates the file with a new identity:
         # the surviving slot's pending save must skip, not merge.
         assert log.delete_session(key) is True
-        monkeypatch.setattr(
-            "kiro_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:01+00:00"
-        )
+        monkeypatch.setattr("aj_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:01+00:00")
         log.append(key, "assistant", "new incarnation row")
         assert _save_slot_to_history(state, slot, force=True) is False
         content = log._path(key).read_text(encoding="utf-8")
@@ -256,9 +252,9 @@ class TestSaveDoesNotResurrectDeletedSession:
         ``chat_fork`` sets ``_resumed_count`` even when that save failed, so the gate
         must require ``_disk_meta_created_at``, not the counters, or the fork is lost.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("forkchild")
         slot.append("user", "the forked conversation", "msg msg-u")
@@ -280,9 +276,9 @@ class TestSaveDoesNotResurrectDeletedSession:
 
         All window counters are 0 here, so identity alone must gate.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         # A session file with metadata but no message rows — e.g. a titled
@@ -314,9 +310,9 @@ class TestSaveDoesNotResurrectDeletedSession:
 
         The save raises, so ``_dirty`` stays armed and the flush retries later.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         slot = state.get_or_create_slot("flaky")
@@ -334,12 +330,12 @@ class TestSaveDoesNotResurrectDeletedSession:
 
     def test_probe_refuses_the_copy_when_metadata_is_unreadable(self, tmp_path, monkeypatch):
         """``session_was_deleted`` must fail closed on an unreadable metadata line."""
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _save_slot_to_history,
             session_was_deleted,
         )
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         slot = state.get_or_create_slot("murky")
@@ -356,9 +352,9 @@ class TestSaveDoesNotResurrectDeletedSession:
     def test_first_save_of_a_fresh_slot_still_creates_the_file(self, tmp_path, monkeypatch):
         """Control: the guard must not break the normal first create — a
         brand-new slot has no on-disk evidence and starts with no file."""
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("fresh")
         slot.append("user", "first message")
@@ -376,9 +372,9 @@ class TestSaveDoesNotResurrectDeletedSession:
         A delete-won skip raises nothing, and the new destination slot carries no delete
         evidence, so the fork itself must abort.
         """
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("forkgone")
         slot.append("user", "keep me?", "msg msg-u")
@@ -422,10 +418,10 @@ class TestSaveDoesNotResurrectDeletedSession:
         The destination's lock does not serialise against the source's delete, so the
         handler re-probes before acknowledging and removes the copy it wrote.
         """
-        from kiro_crew.dashboard import chat_fork as fork_mod
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard import chat_fork as fork_mod
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("forkrace")
         slot.append("user", "delete me", "msg msg-u")
@@ -483,9 +479,9 @@ class TestSaveDoesNotResurrectDeletedSession:
         A missing file reads as ``({}, True)``; that empty ``created_at`` must not be
         taken as legacy metadata and answer "not deleted".
         """
-        from kiro_crew.dashboard.chat_persistence import session_was_deleted
+        from aj_crew.dashboard.chat_persistence import session_was_deleted
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:midprobe", "user", "delete me")
@@ -515,9 +511,9 @@ class TestSaveDoesNotResurrectDeletedSession:
         The re-stat must not turn the documented fail-open for legacy metadata
         into a refusal -- the file is there, so the copy proceeds.
         """
-        from kiro_crew.dashboard.chat_persistence import session_was_deleted
+        from aj_crew.dashboard.chat_persistence import session_was_deleted
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         log.append("dashboard:legacymeta", "user", "keep me")
@@ -546,12 +542,12 @@ class TestSaveDoesNotResurrectDeletedSession:
         new incarnation": a key mismatch is no delete evidence for the current
         target, so the save must land and ``session_was_deleted`` stay False.
         """
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _save_slot_to_history,
             session_was_deleted,
         )
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
 
@@ -581,7 +577,7 @@ class TestSaveDoesNotResurrectDeletedSession:
         # The routing drifts: linked_session_key lapses, so slot_history_key
         # now resolves to the dashboard: fallback (file B), not file A.
         slot.linked_session_key = ""
-        from kiro_crew.dashboard.chat_utils import slot_history_key
+        from aj_crew.dashboard.chat_utils import slot_history_key
 
         assert slot_history_key(slot) == fallback_key, "drift precondition"
 
@@ -619,9 +615,9 @@ class TestSaveDoesNotResurrectDeletedSession:
         """
         import os
 
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         observed_key = "cron:job-cache"
@@ -680,12 +676,12 @@ class TestSaveDoesNotResurrectDeletedSession:
         The witnesses must stat the OBSERVED file (A) on a mismatch: A is gone,
         so the verdict is deleted and the save into B is refused.
         """
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _save_slot_to_history,
             session_was_deleted,
         )
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
 
@@ -705,7 +701,7 @@ class TestSaveDoesNotResurrectDeletedSession:
 
         # Only then does the routing drift to the dashboard: fallback (file B).
         slot.linked_session_key = ""
-        from kiro_crew.dashboard.chat_utils import slot_history_key
+        from aj_crew.dashboard.chat_utils import slot_history_key
 
         fallback_key = "dashboard:cron_job-77"
         assert slot_history_key(slot) == fallback_key, "drift precondition"
@@ -727,9 +723,9 @@ class TestSaveDoesNotResurrectDeletedSession:
         self, tmp_path, monkeypatch
     ):
         """A delete between A's stat and metadata read cannot republish A into B."""
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         observed_key = "cron:job-empty-race"
@@ -771,11 +767,11 @@ class TestSaveDoesNotResurrectDeletedSession:
         released before source verification or target commit, or if acquisition
         stops being deterministic.
         """
-        from kiro_crew.dashboard import chat_persistence
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-        from kiro_crew.history import transcript_lock_stems
+        from aj_crew.dashboard import chat_persistence
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.history import transcript_lock_stems
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         observed_key = "cron:job-lock-span"
@@ -842,12 +838,12 @@ class TestSaveDoesNotResurrectDeletedSession:
         self, tmp_path, monkeypatch
     ):
         """An unverifiable A raises for saves and refuses lock-free copies."""
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _save_slot_to_history,
             session_was_deleted,
         )
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         observed_key = "cron:job-stat-retry"
@@ -910,12 +906,12 @@ class TestSaveDoesNotResurrectDeletedSession:
         lock-free copy probe must answer that as unverifiable and refuse the
         copy, and a save must raise so its dirty retry stays armed.
         """
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _save_slot_to_history,
             session_was_deleted,
         )
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
         observed_key = "cron:job-resolve-eio"
@@ -957,12 +953,12 @@ class TestSaveDoesNotResurrectDeletedSession:
         a drift to another file and switch the delete witnesses off, so a
         permanent delete landing before the next save would be undone.
         """
-        from kiro_crew.dashboard.chat_persistence import (
+        from aj_crew.dashboard.chat_persistence import (
             _save_slot_to_history,
             session_was_deleted,
         )
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         log = state.conversation_log
 
@@ -995,9 +991,9 @@ class TestSaveDoesNotResurrectDeletedSession:
     @staticmethod
     def _observed_slot(tmp_path, monkeypatch, name: str, *, created_at: str | None = None):
         """A slot that has seen its own transcript on disk, and its log."""
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot(name)
         if created_at is not None:
@@ -1009,13 +1005,13 @@ class TestSaveDoesNotResurrectDeletedSession:
         return state, slot, state.conversation_log
 
     def test_witness_answers_present_for_a_live_transcript(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_persistence import DeleteWitness, session_delete_witness
+        from aj_crew.dashboard.chat_persistence import DeleteWitness, session_delete_witness
 
         state, slot, _log = self._observed_slot(tmp_path, monkeypatch, "alive")
         assert session_delete_witness(state, slot) is DeleteWitness.PRESENT
 
     def test_witness_answers_deleted_for_a_gone_transcript(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_persistence import DeleteWitness, session_delete_witness
+        from aj_crew.dashboard.chat_persistence import DeleteWitness, session_delete_witness
 
         state, slot, log = self._observed_slot(tmp_path, monkeypatch, "gone")
         assert log.delete_session("dashboard:gone") is True
@@ -1023,7 +1019,7 @@ class TestSaveDoesNotResurrectDeletedSession:
 
     def test_witness_answers_deleted_for_a_new_incarnation(self, tmp_path, monkeypatch):
         """A file recreated by another writer after the delete is not this session."""
-        from kiro_crew.dashboard.chat_persistence import DeleteWitness, session_delete_witness
+        from aj_crew.dashboard.chat_persistence import DeleteWitness, session_delete_witness
 
         state, slot, log = self._observed_slot(
             tmp_path,
@@ -1032,9 +1028,7 @@ class TestSaveDoesNotResurrectDeletedSession:
             created_at="2026-10-01T12:00:00+00:00",
         )
         assert log.delete_session("dashboard:reincarnated") is True
-        monkeypatch.setattr(
-            "kiro_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:01+00:00"
-        )
+        monkeypatch.setattr("aj_crew.history.metadata_now_iso", lambda: "2026-10-01T12:00:01+00:00")
         log.append("dashboard:reincarnated", "assistant", "foreign row in the new file")
         assert log._path("dashboard:reincarnated").exists()
         assert session_delete_witness(state, slot) is DeleteWitness.DELETED
@@ -1042,7 +1036,7 @@ class TestSaveDoesNotResurrectDeletedSession:
     def test_witness_answers_deleted_when_the_file_vanishes_mid_probe(self, tmp_path, monkeypatch):
         """A delete landing between the stat and the metadata read is a delete,
         not the unverifiable empty it reads back as."""
-        from kiro_crew.dashboard.chat_persistence import DeleteWitness, session_delete_witness
+        from aj_crew.dashboard.chat_persistence import DeleteWitness, session_delete_witness
 
         state, slot, log = self._observed_slot(tmp_path, monkeypatch, "midway")
         real_status = log.get_metadata_status
@@ -1056,7 +1050,7 @@ class TestSaveDoesNotResurrectDeletedSession:
 
     def test_witness_answers_unverifiable_on_a_stat_error(self, tmp_path, monkeypatch):
         """A stat failure other than a missing file proves nothing either way."""
-        from kiro_crew.dashboard.chat_persistence import DeleteWitness, session_delete_witness
+        from aj_crew.dashboard.chat_persistence import DeleteWitness, session_delete_witness
 
         state, slot, log = self._observed_slot(tmp_path, monkeypatch, "unstatable")
         real_path = log._path
@@ -1070,7 +1064,7 @@ class TestSaveDoesNotResurrectDeletedSession:
 
     def test_witness_answers_unverifiable_on_unreadable_metadata(self, tmp_path, monkeypatch):
         """The file is there; its identity cannot be read. Not a delete."""
-        from kiro_crew.dashboard.chat_persistence import DeleteWitness, session_delete_witness
+        from aj_crew.dashboard.chat_persistence import DeleteWitness, session_delete_witness
 
         state, slot, log = self._observed_slot(tmp_path, monkeypatch, "murkier")
         monkeypatch.setattr(log, "get_metadata_status", lambda key: ({}, False))
@@ -1079,7 +1073,7 @@ class TestSaveDoesNotResurrectDeletedSession:
     def test_witness_answers_unverifiable_when_the_metadata_read_raises(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.dashboard.chat_persistence import DeleteWitness, session_delete_witness
+        from aj_crew.dashboard.chat_persistence import DeleteWitness, session_delete_witness
 
         state, slot, log = self._observed_slot(tmp_path, monkeypatch, "raising")
 
@@ -1092,7 +1086,7 @@ class TestSaveDoesNotResurrectDeletedSession:
     def test_republishers_refuse_on_deleted_and_on_unverifiable_alike(self, tmp_path, monkeypatch):
         """``session_was_deleted`` is the witness with the two refusing answers
         collapsed, so fork and transfer keep failing closed on both."""
-        from kiro_crew.dashboard.chat_persistence import session_was_deleted
+        from aj_crew.dashboard.chat_persistence import session_was_deleted
 
         state, slot, log = self._observed_slot(tmp_path, monkeypatch, "collapsed")
         real_status = log.get_metadata_status
@@ -1110,7 +1104,7 @@ class TestSaveDoesNotResurrectDeletedSession:
 class TestSlotLifecycle:
     @pytest.mark.asyncio
     async def test_list_slots(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("a")
         state.get_or_create_slot("b")
@@ -1124,8 +1118,8 @@ class TestSlotLifecycle:
     async def test_list_slots_schedules_source_refresh_with_push_callback(
         self, tmp_path, monkeypatch
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard.handlers import source_providers
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard.handlers import source_providers
 
         scheduler = MagicMock()
         monkeypatch.setattr(source_providers, "schedule_check_refresh", scheduler)
@@ -1154,9 +1148,9 @@ class TestSlotLifecycle:
 
     @pytest.mark.asyncio
     async def test_list_slots_omits_status_and_refresh_for_non_owner(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard import state as state_module
-        from kiro_crew.dashboard.handlers import source_providers
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard import state as state_module
+        from aj_crew.dashboard.handlers import source_providers
 
         scheduler = MagicMock()
         monkeypatch.setattr(source_providers, "schedule_check_refresh", scheduler)
@@ -1196,9 +1190,9 @@ class TestSlotLifecycle:
         scheduler.assert_not_called()
 
     def test_slot_status_serialization_requires_owner_opt_in(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
             state_module,
             "_cached_check_status",
@@ -1218,7 +1212,7 @@ class TestSlotLifecycle:
 
     @pytest.mark.asyncio
     async def test_approve_no_pending(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("s1")
         async with TestClient(TestServer(_make_app(state))) as client:
@@ -1227,8 +1221,8 @@ class TestSlotLifecycle:
 
     @pytest.mark.asyncio
     async def test_approve_resolves_future(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat.sel", lambda: MagicMock())
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         loop = asyncio.get_running_loop()
@@ -1243,8 +1237,8 @@ class TestSlotLifecycle:
 
     @pytest.mark.asyncio
     async def test_trust_sets_flag_and_approves(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat.sel", lambda: MagicMock())
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         loop = asyncio.get_running_loop()
@@ -1274,8 +1268,8 @@ class TestSlotLifecycle:
     @pytest.mark.asyncio
     async def test_approve_broadcasts_approval_resolved_single_pending(self, tmp_path, monkeypatch):
         """Single pending future without explicit request_id: extracts id and broadcasts."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat.sel", lambda: MagicMock())
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         fut: asyncio.Future[str] = asyncio.get_running_loop().create_future()
@@ -1295,8 +1289,8 @@ class TestSlotLifecycle:
     @pytest.mark.asyncio
     async def test_approve_broadcasts_with_explicit_request_id(self, tmp_path, monkeypatch):
         """Explicit request_id is forwarded in the broadcast."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat.sel", lambda: MagicMock())
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         fut: asyncio.Future[str] = asyncio.get_running_loop().create_future()
@@ -1318,8 +1312,8 @@ class TestSlotLifecycle:
     @pytest.mark.asyncio
     async def test_reject_broadcasts_approved_false(self, tmp_path, monkeypatch):
         """Rejection broadcasts approved=False."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.dashboard.chat.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.chat.sel", lambda: MagicMock())
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         fut: asyncio.Future[str] = asyncio.get_running_loop().create_future()
@@ -1383,7 +1377,7 @@ class TestSlotTaskNoneGuard:
         slot.task = asyncio.get_running_loop().create_future()
 
         async with TestClient(TestServer(_make_app(state))) as client:
-            with patch("kiro_crew.dashboard.chat_handlers.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_handlers.save_slot_off_loop"):
                 resp = await client.delete("/api/chat/slots/s1")
             assert resp.status == 200
             assert slot.task.cancelled()
@@ -1396,7 +1390,7 @@ class TestBulkCleanup:
     @pytest.mark.asyncio
     async def test_cleanup_archives_stale_sessions(self, tmp_path, monkeypatch):
         """Stale sessions are archived; fresh and pinned are kept."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         from datetime import datetime, timedelta, timezone
 
@@ -1443,7 +1437,7 @@ class TestBulkCleanup:
 
         from slot_ownership_checkpoint_helpers import _as
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         old_ts = (datetime.now(timezone.utc) - timedelta(days=5)).isoformat()
         for name in ("own", "linked"):
@@ -1469,7 +1463,7 @@ class TestBulkCleanup:
     @pytest.mark.asyncio
     async def test_cleanup_skips_active_slot(self, tmp_path, monkeypatch):
         """The active slot is never archived even if stale."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         from datetime import datetime, timedelta, timezone
 
@@ -1490,7 +1484,7 @@ class TestBulkCleanup:
     @pytest.mark.asyncio
     async def test_cleanup_saves_to_history(self, tmp_path, monkeypatch):
         """Archived sessions are persisted to conversation log."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         from datetime import datetime, timedelta, timezone
 
@@ -1513,7 +1507,7 @@ class TestBulkCleanup:
     @pytest.mark.asyncio
     async def test_cleanup_defaults_to_3_days(self, tmp_path, monkeypatch):
         """Without max_inactive_days, defaults to 3."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         from datetime import datetime, timedelta, timezone
 
@@ -1537,7 +1531,7 @@ class TestBulkCleanup:
         It takes the same 3-day fallback as a non-numeric string: a slot idle for
         2 days stays and one idle for 4 days is archived.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         from datetime import datetime, timedelta, timezone
 
@@ -1563,7 +1557,7 @@ class TestBulkCleanup:
     async def test_cleanup_with_a_huge_integer_archives_nothing(self, tmp_path, monkeypatch):
         """A JSON integer too large for a float: no slot is that old, so nothing is
         archived, and the cutoff arithmetic does not raise."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         from datetime import datetime, timedelta, timezone
 
@@ -1587,7 +1581,7 @@ class TestBulkCleanup:
     @pytest.mark.asyncio
     async def test_cleanup_empty_slots_uses_created_at(self, tmp_path, monkeypatch):
         """Slots with no messages use created_at for staleness."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         from datetime import datetime, timedelta, timezone
 
@@ -1606,7 +1600,7 @@ class TestBulkCleanup:
     @pytest.mark.asyncio
     async def test_cleanup_no_stale_returns_zero(self, tmp_path, monkeypatch):
         """When all sessions are fresh, nothing is archived."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         from datetime import datetime, timezone
 
@@ -1628,7 +1622,7 @@ class TestBulkCleanup:
     @pytest.mark.asyncio
     async def test_cleanup_rollback_on_save_failure(self, tmp_path, monkeypatch):
         """When _save_slot_to_history raises, slot is restored and reported as failed."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         from datetime import datetime, timedelta, timezone
 
@@ -1638,7 +1632,7 @@ class TestBulkCleanup:
         slot.drain()
 
         with patch(
-            "kiro_crew.dashboard.chat_handlers.save_slot_off_loop",
+            "aj_crew.dashboard.chat_handlers.save_slot_off_loop",
             side_effect=OSError("disk full"),
         ):
             async with TestClient(TestServer(_make_app(state))) as client:
@@ -1659,7 +1653,7 @@ class TestBulkCleanup:
     @pytest.mark.asyncio
     async def test_cleanup_cancels_running_task(self, tmp_path, monkeypatch):
         """Running tasks on stale slots are cancelled after archive."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         from datetime import datetime, timedelta, timezone
 
@@ -1681,7 +1675,7 @@ class TestBulkCleanup:
     @pytest.mark.asyncio
     async def test_cleanup_skips_unparseable_timestamps(self, tmp_path, monkeypatch):
         """Slots with unparseable timestamps are skipped, not archived."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
 
         slot = state.get_or_create_slot("bad-ts")
@@ -1701,7 +1695,7 @@ class TestBulkCleanup:
     @pytest.mark.asyncio
     async def test_cleanup_dry_run_returns_keys_without_archiving(self, tmp_path, monkeypatch):
         """dry_run=True returns stale keys and active_is_stale but does not archive anything."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         from datetime import datetime, timedelta, timezone
 

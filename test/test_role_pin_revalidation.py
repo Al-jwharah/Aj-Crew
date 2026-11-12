@@ -20,10 +20,10 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.agent_sdk.drivers.acp import EntitlementRevalidating
-from kiro_crew.dashboard.handlers import core
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.agent_sdk.drivers.acp import EntitlementRevalidating
+from aj_crew.dashboard.handlers import core
 
 
 def _rows(*ids: str) -> list[dict[str, str]]:
@@ -63,7 +63,7 @@ def _request(*providers: Any) -> Any:
 @pytest.fixture(autouse=True)
 def _no_display_only_rejection(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_handlers._model_rejected_reason",
+        "aj_crew.dashboard.chat_handlers._model_rejected_reason",
         lambda _v, provider=None: None,
     )
 
@@ -104,7 +104,7 @@ def test_newest_first_stays_scoped_to_the_pins_own_harness() -> None:
 
 def test_patch_scope_is_the_default_harness(monkeypatch: pytest.MonkeyPatch) -> None:
     cfg = SimpleNamespace(agent=SimpleNamespace(provider="kiro", acp_backend="kas"))
-    monkeypatch.setattr("kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(lambda: cfg))
+    monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", staticmethod(lambda: cfg))
 
     assert core._active_provider_and_pin_backend() == ("kiro", "kas")
 

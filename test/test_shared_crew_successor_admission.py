@@ -14,14 +14,14 @@ from telegram_helpers import _dispatcher, _dm
 from test_shared_crew_entry_points import ALICE
 from test_shared_crew_entry_points import service as _service
 
-from kiro_crew import session_allocation
-from kiro_crew.dashboard.handlers import side
-from kiro_crew.dashboard.side_state import SideState
-from kiro_crew.messaging import queue_drain
-from kiro_crew.shared_crew import admission_entry, turn_gate
-from kiro_crew.shared_crew.admission import OperationState
-from kiro_crew.shared_crew.contracts import Principal
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import session_allocation
+from aj_crew.dashboard.handlers import side
+from aj_crew.dashboard.side_state import SideState
+from aj_crew.messaging import queue_drain
+from aj_crew.shared_crew import admission_entry, turn_gate
+from aj_crew.shared_crew.admission import OperationState
+from aj_crew.shared_crew.contracts import Principal
+from aj_crew.testing.wait import async_wait_until, await_until
 
 service = _service
 
@@ -194,7 +194,7 @@ async def test_dashboard_queue_dispatch_discards_the_predecessor_admission(
 ):
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     state = _make_state(tmp_path)
     slot = state.get_or_create_slot("queued-successor")
@@ -210,7 +210,7 @@ async def test_dashboard_queue_dispatch_discards_the_predecessor_admission(
     monkeypatch.setattr(chat_runner, "_run_chat", run)
     monkeypatch.setattr(chat_runner, "_parked_queue_drain_admitted", lambda: True)
     monkeypatch.setattr(chat_runner, "subagents_hold_user_messages", lambda *_: False)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_slack.slot_is_live", lambda *_: True)
+    monkeypatch.setattr("aj_crew.dashboard.chat_slack.slot_is_live", lambda *_: True)
     with turn_gate.mark_admitted("predecessor"):
         assert await chat_runner._start_next_queued_turn(state, slot)
         assert turn_gate.admitted_work() == "predecessor"

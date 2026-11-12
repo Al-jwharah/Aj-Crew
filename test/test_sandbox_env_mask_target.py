@@ -16,15 +16,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import sandbox
-from kiro_crew.config import loader_credentials
+from aj_crew import sandbox
+from aj_crew.config import loader_credentials
 
 
 @pytest.fixture()
 def crew_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     home = tmp_path / "crew"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     return home
 
 
@@ -77,7 +77,7 @@ def test_a_failed_create_warns_and_lets_the_spawn_go_ahead(
     monkeypatch.setattr(sandbox, "config_dir", lambda: tmp_path / "nope")
     established: list[str] = []
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.sandbox"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.sandbox"):
         assert sandbox._materialize_env_mask_target(established) is None
 
     assert established == []

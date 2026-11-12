@@ -18,8 +18,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import folder_steering, pinned_fs
-from kiro_crew.dashboard.chat_folders import (
+from aj_crew import folder_steering, pinned_fs
+from aj_crew.dashboard.chat_folders import (
     MAX_FOLDER_STEERING_DIR_LEN,
     MAX_FOLDER_STEERING_DIRS,
     _resolve_folder_steering_dirs,
@@ -28,9 +28,9 @@ from kiro_crew.dashboard.chat_folders import (
     api_chat_folder_update,
     slot_steering_principal,
 )
-from kiro_crew.dashboard.chat_runner import _folder_steering_turn
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.folder_steering import collect_folder_steering
+from aj_crew.dashboard.chat_runner import _folder_steering_turn
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.folder_steering import collect_folder_steering
 
 #: The validator refuses a non-empty ``steering_dirs`` where a directory cannot
 #: be opened relative to a descriptor (native Windows), so every test that
@@ -143,7 +143,7 @@ def test_validate_refuses_a_non_empty_list_where_the_pinned_walk_is_unavailable(
     ``isdir``/``realpath`` on a name swapped for a junction at a share is an outbound
     SMB authentication. The empty list stays valid so a folder can still clear its steering.
     """
-    from kiro_crew.dashboard import chat_folders
+    from aj_crew.dashboard import chat_folders
 
     real = tmp_path / "standards"
     real.mkdir()
@@ -173,7 +173,7 @@ def test_validate_proves_existence_with_a_pinned_open_that_refuses_a_link(tmp_pa
     link.symlink_to(target, target_is_directory=True)
     # A canonicalizer that leaves the link spelling in place stands in for the
     # swap-after-screen window: the screen saw a directory, the leaf is a link.
-    from kiro_crew.dashboard import chat_folders
+    from aj_crew.dashboard import chat_folders
 
     resolved, err = _validate_steering_dirs([str(target)])
     assert err is None and resolved == [str(target.resolve())]
@@ -194,7 +194,7 @@ def test_validate_rejects_sensitive_path(tmp_path, monkeypatch):
     # tests do. (On the loop that helper still takes the bounded gate; it is the
     # entry point, not the bound, that differs here.)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_folders.canonical_path_refusal",
+        "aj_crew.dashboard.chat_folders.canonical_path_refusal",
         lambda p: f"Blocked: access to sensitive path: {p}",
     )
     resolved, err = _validate_steering_dirs([str(real)])
@@ -206,8 +206,8 @@ def test_validate_rejects_sensitive_path(tmp_path, monkeypatch):
 def test_validate_reports_a_resolver_stall_as_unverifiable_not_sensitive(tmp_path, monkeypatch):
     """A stalled resolver is not a match: the person is told to retry, not that an
     ordinary directory is sensitive, and the audit line keeps the two apart."""
-    import kiro_crew.dashboard.chat_folders as cf
-    from kiro_crew.security import UNVERIFIABLE_PATH_PREFIX
+    import aj_crew.dashboard.chat_folders as cf
+    from aj_crew.security import UNVERIFIABLE_PATH_PREFIX
 
     real = tmp_path / "standards"
     real.mkdir()
@@ -244,9 +244,9 @@ def test_validate_rejects_a_root_that_crosses_a_memory_silo(tmp_path, monkeypatc
     Folder steering reaches every chat in the folder, a V2 member's included, so a root
     over ``workspace/`` would leak Global memory into that member's prompt.
     """
-    from kiro_crew.config.loader import config_dir
-    from kiro_crew.memory import WORKSPACE_DIR_NAME
-    from kiro_crew.memory_stores import MEMORY_STORES_DIR_NAME
+    from aj_crew.config.loader import config_dir
+    from aj_crew.memory import WORKSPACE_DIR_NAME
+    from aj_crew.memory_stores import MEMORY_STORES_DIR_NAME
 
     base = config_dir()
     if which == "is-workspace":
@@ -277,7 +277,7 @@ def test_silo_fence_is_case_insensitive_like_the_sensitive_path_gate():
     """
     from pathlib import Path
 
-    from kiro_crew.folder_steering import crosses_memory_silo
+    from aj_crew.folder_steering import crosses_memory_silo
 
     silos = (Path("/Users/me/.kiro/crew/workspace"), Path("/Users/me/.kiro/crew/memory_stores"))
     for spelling in (
@@ -301,7 +301,7 @@ def test_silo_fence_holds_when_either_side_is_a_drive_root(tmp_path):
     """
     from pathlib import Path
 
-    from kiro_crew.folder_steering import crosses_memory_silo
+    from aj_crew.folder_steering import crosses_memory_silo
 
     drive_root = Path(os.path.splitdrive(str(tmp_path))[0] + os.sep)
     silo = tmp_path / "crew" / "workspace"
@@ -317,14 +317,14 @@ def test_validate_rejects_a_configured_absolute_workspace_as_a_silo(tmp_path, mo
     The fence uses ``workspace_dir_for``, so it follows the config rather than assuming
     ``config_dir()/workspace``.
     """
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.config.sections import WorkspaceConfig
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.config.sections import WorkspaceConfig
 
     research = tmp_path / "elsewhere" / "research-ws"
     (research / "history").mkdir(parents=True)
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.workspaces["research"] = WorkspaceConfig(dir=str(research))
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
     for target in (research, research / "history", research.parent):
         resolved, err = _validate_steering_dirs([str(target)])
         assert resolved == [] and err and "memory store" in err.lower(), target
@@ -346,7 +346,7 @@ def test_validate_bounds_the_retained_canonical_string_not_only_the_submission(
     it, so an unbounded stored value would trip the length check on every read
     and silently drop the chain's steering. Refuse at write time instead.
     """
-    from kiro_crew.dashboard import chat_folders as cf
+    from aj_crew.dashboard import chat_folders as cf
 
     real = tmp_path / "standards"
     real.mkdir()
@@ -375,7 +375,7 @@ def test_validate_rejects_over_cap(tmp_path):
 
 def test_validate_rejects_an_over_long_entry_before_touching_the_filesystem(monkeypatch):
     """The directory-count cap alone would retain 16 strings of any size."""
-    import kiro_crew.dashboard.chat_folders as cf
+    import aj_crew.dashboard.chat_folders as cf
 
     touched = MagicMock()
     monkeypatch.setattr(cf, "validate_file_path", touched)
@@ -391,7 +391,7 @@ def test_validate_refuses_a_unc_path_before_resolving_it(monkeypatch, unc):
     """``realpath``/``isdir`` on ``\\\\host\\share`` opens an SMB connection on
     Windows -- an outbound credential probe -- so a UNC-shaped entry must be
     refused lexically, before ``validate_file_path`` ever runs on it."""
-    import kiro_crew.dashboard.chat_folders as cf
+    import aj_crew.dashboard.chat_folders as cf
 
     touched = MagicMock()
     monkeypatch.setattr(cf, "validate_file_path", touched)
@@ -409,7 +409,7 @@ def test_validate_admits_through_the_hardened_screen_not_bare_realpath(tmp_path,
     A bare ``realpath`` follows a local Windows junction aimed at a share (an outbound SMB
     probe), so the validator must never fall back to resolving the name itself.
     """
-    import kiro_crew.dashboard.chat_folders as cf
+    import aj_crew.dashboard.chat_folders as cf
 
     real = tmp_path / "standards"
     real.mkdir()
@@ -548,13 +548,13 @@ def test_resolver_gates_app_owned_steering_by_slot_owner(tmp_path, slot_app, exp
 
 def _member_execution(store: str) -> Any:
     """A V2 member execution bound to *store*, as ``_run_chat`` captures it."""
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
     return ExecutionContext(
         "reviewer",
         MemoryStoreRef(store_id=store, member_id="reviewer"),
         "member",
-        "kirocrew",
+        "ajcrew",
         selection_name="reviewer",
     )
 
@@ -658,7 +658,7 @@ def test_resolver_skips_a_bad_stored_entry_and_keeps_the_rest(tmp_path, caplog):
             "steering_dirs": ["relative/dir", str(gone), str(good)],
         },
     ]
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.chat_folders"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.chat_folders"):
         resolved, err = _resolve_folder_steering_dirs(folders, "a")
     assert err is None
     assert resolved == [str(ancestor.resolve()), str(good.resolve())]
@@ -862,7 +862,7 @@ def test_walk_refuses_where_descriptor_relative_opens_are_unavailable(
         return real_scandir(arg, *a, **kw)
 
     monkeypatch.setattr(folder_steering.os, "scandir", _spy)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.folder_steering"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.folder_steering"):
         docs = collect_folder_steering([str(root)], project=None, home=tmp_path / "home")
     assert docs == []
     assert listed == []  # nothing was listed by name

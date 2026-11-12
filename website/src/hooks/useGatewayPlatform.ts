@@ -85,7 +85,7 @@ export function useGatewayPlatform(): GatewayPlatform {
 }
 
 /**
- * The shell prefixes the gateway resolved for `kirocrew config set`, or `undefined`
+ * The shell prefixes the gateway resolved for `ajcrew config set`, or `undefined`
  * when the cached status carries none a command may be built from.
  *
  * Absent from a gateway older than the field, from a non-owner's redacted status, and

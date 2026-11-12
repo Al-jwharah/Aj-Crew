@@ -94,7 +94,7 @@ class TestProbeRepoCleanup:
         # pytest's tmp_path: a passing run leaves nothing behind, and a failing
         # one keeps the tree on purpose (tmp_path_retention_policy = failed) for
         # inspection, cleaned by pytest on a later green run.
-        from kiro_crew.platform_compat import rmtree_force
+        from aj_crew.platform_compat import rmtree_force
 
         repo = os.path.join(tmp_path, "r")
         _build_probe_repo(repo)

@@ -36,7 +36,7 @@ export function crewsApi({ crews, defaultAgent, workspaces, memoryStores, instal
     if (path === '/api/workspaces') {
       return json(route, { workspaces: wsNames.map(name => ({ name })) }), true
     }
-    if (path === '/api/config/kirocrew') {
+    if (path === '/api/config/ajcrew') {
       return json(route, { memory_stores: Object.fromEntries(msNames.map(n => [n, {}])) }), true
     }
     return false

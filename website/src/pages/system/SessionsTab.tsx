@@ -838,9 +838,9 @@ export default function SessionsTab({ planeStateRef }: Props) {
             breakdown that says where it went. An older gateway sends no
             breakdown: the stat then shows the sessions' own total, as before. */}
         <FooterStat
-          label={i18nT('pages.sessionsTab.footer_kirocrew_gb')}
+          label={i18nT('pages.sessionsTab.footer_ajcrew_gb')}
           value={breakdown ? <MemoryBreakdownButton breakdown={breakdown} /> : fmtGb(usedMb)}
-          {...(breakdown ? { hint: i18nT('pages.sessionsTab.footer_kirocrew_gb_hint') } : {})}
+          {...(breakdown ? { hint: i18nT('pages.sessionsTab.footer_ajcrew_gb_hint') } : {})}
         />
         <FooterStat label={i18nT('pages.sessionsTab.footer_share_of_machine')} value={sharePct != null ? fmtPercent(sharePct / 100, { maximumFractionDigits: 2 }) : '—'} />
         <FooterStat label={i18nT('pages.sessionsTab.footer_largest_session_gb')} value={fmtGb(largestMb)} />

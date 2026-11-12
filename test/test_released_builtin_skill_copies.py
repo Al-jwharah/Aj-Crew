@@ -26,16 +26,16 @@ from builtin_adoption_helpers import (
 )
 from skills_helpers import _settled
 
-from kiro_crew import skills as skills_mod
-from kiro_crew import skills_builtin_provenance as provenance_mod
-from kiro_crew import skills_builtin_sync as sync_mod
-from kiro_crew.apps import builtin_adoption as adoption
-from kiro_crew.apps import builtin_adoption_pins as pins_mod
-from kiro_crew.apps import execution as exec_mod
-from kiro_crew.apps import manager
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.skill_runtime import catalog as catalog_mod
-from kiro_crew.skills import SkillsLoader
+from aj_crew import skills as skills_mod
+from aj_crew import skills_builtin_provenance as provenance_mod
+from aj_crew import skills_builtin_sync as sync_mod
+from aj_crew.apps import builtin_adoption as adoption
+from aj_crew.apps import builtin_adoption_pins as pins_mod
+from aj_crew.apps import execution as exec_mod
+from aj_crew.apps import manager
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.skill_runtime import catalog as catalog_mod
+from aj_crew.skills import SkillsLoader
 
 APP = "acme"
 SKILL = f"{APP}-writing"
@@ -57,7 +57,7 @@ def _loader(skills: Path) -> SkillsLoader:
         SkillsLoader(
             skills_path=skills,
             install_builtins=False,
-            config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+            config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
         )
     )
 

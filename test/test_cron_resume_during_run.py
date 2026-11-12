@@ -19,8 +19,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.cron import _AUTO_PAUSE_THRESHOLD, CronJob, CronService
-from kiro_crew.testing.wait import await_until
+from aj_crew.cron import _AUTO_PAUSE_THRESHOLD, CronJob, CronService
+from aj_crew.testing.wait import await_until
 
 
 def _resume_from_another_process(tmp_path, job_id: str) -> None:
@@ -114,7 +114,7 @@ async def test_the_reaper_does_not_count_a_hung_run_against_a_resume_issued_duri
         claim = svc._claims[job.id]
         await asyncio.to_thread(_resume_from_another_process, tmp_path, job.id)
 
-        with patch("kiro_crew.sel.sel"):
+        with patch("aj_crew.sel.sel"):
             await svc._force_reap(job.id, 9999.0, claim=claim)
     finally:
         run.cancel()

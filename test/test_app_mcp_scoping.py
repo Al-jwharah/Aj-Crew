@@ -1,4 +1,4 @@
-"""App MCP servers land in KiroCrew's agent config, never the shared kiro file.
+"""App MCP servers land in Aj Crew's agent config, never the shared kiro file.
 
 The shared ``~/.kiro/settings/mcp.json`` is read by Kiro IDE and every kiro-cli agent,
 so app tools there would reach surfaces that never installed the app. A ``clean``
@@ -21,14 +21,14 @@ def fake_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     The paths are module constants resolved at import time, so they are patched
     directly rather than via ``HOME`` (which they do not consult).
     """
-    from kiro_crew.apps import bridges
+    from aj_crew.apps import bridges
 
     agents = tmp_path / ".kiro" / "agents"
     settings = tmp_path / ".kiro" / "settings"
     agents.mkdir(parents=True)
     settings.mkdir(parents=True)
 
-    monkeypatch.setattr(bridges, "_mcp_json_path", lambda: agents / "kirocrew.json")
+    monkeypatch.setattr(bridges, "_mcp_json_path", lambda: agents / "ajcrew.json")
     monkeypatch.setattr(bridges, "_LEGACY_SHARED_MCP_PATH", settings / "mcp.json")
     return tmp_path
 
@@ -59,7 +59,7 @@ class TestGrantVersusGovernance:
     """
 
     def _policy(self, monkeypatch: pytest.MonkeyPatch, denied: bool):
-        from kiro_crew.apps import bridges as bmod
+        from aj_crew.apps import bridges as bmod
 
         monkeypatch.setattr(bmod, "_may_auto_approve", lambda ref, ceiling=None: not denied)
         return bmod._apply_agent_mcp_policy(
@@ -93,7 +93,7 @@ class TestGrantVersusGovernance:
         When the ceiling constrains a builtin's scope, the shortcut is declined so the
         call reaches the gate, which decides with the real path.
         """
-        from kiro_crew.apps import bridges as bmod
+        from aj_crew.apps import bridges as bmod
 
         monkeypatch.setattr(
             bmod,
@@ -117,7 +117,7 @@ class TestGrantVersusGovernance:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """No ceiling must mean no behaviour change — this is the standalone path."""
-        from kiro_crew.apps import bridges as bmod
+        from aj_crew.apps import bridges as bmod
 
         monkeypatch.setattr(bmod, "_may_auto_approve", lambda ref, ceiling=None: True)
         data = {"tools": ["fs_read"], "allowedTools": ["fs_read"]}
@@ -130,8 +130,8 @@ class TestGrantVersusGovernance:
         there — but a tool whose always-on floor (sensitive-path / denied-command)
         lives at the gate is withheld even with no ceiling, since auto-approve
         would skip that un-disableable floor."""
-        from kiro_crew.platform import context as ctxmod
-        from kiro_crew.platform import governance as gmod
+        from aj_crew.platform import context as ctxmod
+        from aj_crew.platform import governance as gmod
 
         monkeypatch.setattr(ctxmod, "current_context", lambda: object())
         # A network-only builtin carries no always-on floor → kept ungoverned.
@@ -152,7 +152,7 @@ class TestGrantVersusGovernance:
         append path did nothing for exactly the refs that were already there — a
         ceiling-denied server stayed auto-approved and never reached the gate.
         """
-        from kiro_crew.apps import bridges as bmod
+        from aj_crew.apps import bridges as bmod
 
         # Server-level, like the real predicate: `@denied/tool` belongs to
         # `denied`, so a per-tool entry is withheld too.
@@ -186,7 +186,7 @@ class TestGrantVersusGovernance:
         """
         from types import SimpleNamespace
 
-        from kiro_crew.platform.governance import (
+        from aj_crew.platform.governance import (
             ScopedRuleset,
             _ceiling_mentions_mcp_server,
         )
@@ -206,7 +206,7 @@ class TestGrantVersusGovernance:
         """Allow-mode listing a subset must not let the whole server through."""
         from types import SimpleNamespace
 
-        from kiro_crew.platform.governance import (
+        from aj_crew.platform.governance import (
             ScopedRuleset,
             _ceiling_mentions_mcp_server,
         )
@@ -219,7 +219,7 @@ class TestGrantVersusGovernance:
         """`@srv-other` must not count as an opinion about `@srv`."""
         from types import SimpleNamespace
 
-        from kiro_crew.platform.governance import (
+        from aj_crew.platform.governance import (
             ScopedRuleset,
             _ceiling_mentions_mcp_server,
         )
@@ -231,21 +231,21 @@ class TestGrantVersusGovernance:
     def test_an_ungoverned_scope_is_not_an_opinion(self) -> None:
         from types import SimpleNamespace
 
-        from kiro_crew.platform.governance import _ceiling_mentions_mcp_server
+        from aj_crew.platform.governance import _ceiling_mentions_mcp_server
 
         ceiling = SimpleNamespace(get=lambda scope: None)
         assert _ceiling_mentions_mcp_server(ceiling, "srv") is False
 
     def test_an_ungoverned_host_is_unchanged(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """No ceiling composed -> the predicate must not strip grants."""
-        from kiro_crew.platform import governance as gmod
+        from aj_crew.platform import governance as gmod
 
         assert gmod.may_skip_gate("@srv", None) is True
 
 
 class TestRegistrationTarget:
     def test_stdio_server_lands_in_agent_config(self, fake_home: Path) -> None:
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         bridges._register_mcp_servers("mochi", _manifest({"pet": {"command": "mochi-mcp"}}))
 
@@ -254,7 +254,7 @@ class TestRegistrationTarget:
 
     def test_shared_kiro_file_is_untouched(self, fake_home: Path) -> None:
         """The whole point: Kiro IDE must not see the app's servers."""
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         bridges._LEGACY_SHARED_MCP_PATH.write_text('{"mcpServers": {"user-owned": {}}}')
 
@@ -265,10 +265,10 @@ class TestRegistrationTarget:
 
     def test_registration_preserves_other_agent_config_fields(self, fake_home: Path) -> None:
         """The agent config holds hooks/tools/prompt — a read-modify-write must keep them."""
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         bridges._mcp_json_path().write_text(
-            json.dumps({"name": "kirocrew", "includeMcpJson": False, "tools": ["fs_read"]})
+            json.dumps({"name": "ajcrew", "includeMcpJson": False, "tools": ["fs_read"]})
         )
 
         bridges._register_mcp_servers("mochi", _manifest({"pet": {"command": "x"}}))
@@ -281,7 +281,7 @@ class TestRegistrationTarget:
 
 class TestDeregistration:
     def test_removes_only_the_named_app(self, fake_home: Path) -> None:
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         bridges._register_mcp_servers("mochi", _manifest({"pet": {"command": "a"}}))
         bridges._register_mcp_servers("other", _manifest({"srv": {"command": "b"}}))
@@ -298,7 +298,7 @@ class TestDeregistration:
         by other processes (Kiro IDE, other agents) and a stall would freeze
         chat/heartbeat. The scrub is deferred to the OFF-loop boot reconcile, so
         the legacy entry survives a deregister on the hot path."""
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         bridges._LEGACY_SHARED_MCP_PATH.write_text(
             json.dumps({"mcpServers": {"mochi:pet": {"command": "old"}, "keep-me": {}}})
@@ -312,7 +312,7 @@ class TestDeregistration:
         assert "keep-me" in shared["mcpServers"]
 
     def test_missing_legacy_file_is_not_an_error(self, fake_home: Path) -> None:
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         bridges._LEGACY_SHARED_MCP_PATH.unlink(missing_ok=True)
         assert bridges._scrub_legacy_shared_mcp("mochi") == 0
@@ -327,14 +327,14 @@ class TestRebuildSurvival:
     """
 
     def test_collect_returns_enabled_app_servers(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew import agent
+        from aj_crew import agent
 
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.list_apps", lambda: [{"name": "mochi"}], raising=False
+            "aj_crew.apps.manager.list_apps", lambda: [{"name": "mochi"}], raising=False
         )
-        monkeypatch.setattr("kiro_crew.apps.manager.is_app_enabled", lambda n: True, raising=False)
+        monkeypatch.setattr("aj_crew.apps.manager.is_app_enabled", lambda n: True, raising=False)
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.get_app_manifest",
+            "aj_crew.apps.manager.get_app_manifest",
             lambda n: _manifest({"pet": {"command": "mochi-mcp"}}),
             raising=False,
         )
@@ -343,19 +343,19 @@ class TestRebuildSurvival:
 
     def test_disabled_app_contributes_nothing(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """A disabled app's tools must not reach any session."""
-        from kiro_crew import agent
+        from aj_crew import agent
 
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.list_apps", lambda: [{"name": "mochi"}], raising=False
+            "aj_crew.apps.manager.list_apps", lambda: [{"name": "mochi"}], raising=False
         )
-        monkeypatch.setattr("kiro_crew.apps.manager.is_app_enabled", lambda n: False, raising=False)
+        monkeypatch.setattr("aj_crew.apps.manager.is_app_enabled", lambda n: False, raising=False)
 
         assert agent._collect_app_mcp_servers() == {}
 
     def test_one_broken_manifest_does_not_drop_the_others(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import agent
+        from aj_crew import agent
 
         def _manifest_or_boom(name: str) -> Any:
             if name == "broken":
@@ -363,13 +363,13 @@ class TestRebuildSurvival:
             return _manifest({"srv": {"command": "ok"}})
 
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.list_apps",
+            "aj_crew.apps.manager.list_apps",
             lambda: [{"name": "broken"}, {"name": "good"}],
             raising=False,
         )
-        monkeypatch.setattr("kiro_crew.apps.manager.is_app_enabled", lambda n: True, raising=False)
+        monkeypatch.setattr("aj_crew.apps.manager.is_app_enabled", lambda n: True, raising=False)
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.get_app_manifest", _manifest_or_boom, raising=False
+            "aj_crew.apps.manager.get_app_manifest", _manifest_or_boom, raising=False
         )
 
         assert agent._collect_app_mcp_servers() == {"good:srv": {"command": "ok"}}
@@ -380,20 +380,20 @@ class TestRebuildSurvival:
         """A self-managed HTTP server (no backend.entryPoint) has an authoritative
         fixed URL and never gets a live registration — its manifest URL must
         survive the rebuild rather than being dropped as an illustrative port."""
-        from kiro_crew import agent
+        from aj_crew import agent
 
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.list_apps", lambda: [{"name": "companion"}], raising=False
+            "aj_crew.apps.manager.list_apps", lambda: [{"name": "companion"}], raising=False
         )
-        monkeypatch.setattr("kiro_crew.apps.manager.is_app_enabled", lambda n: True, raising=False)
+        monkeypatch.setattr("aj_crew.apps.manager.is_app_enabled", lambda n: True, raising=False)
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.get_app_manifest",
+            "aj_crew.apps.manager.get_app_manifest",
             lambda n: _manifest({"companion": {"url": "http://127.0.0.1:7778/mcp"}}),
             raising=False,
         )
         # No live registration exists for a self-managed server.
         monkeypatch.setattr(
-            "kiro_crew.apps.bridges.registered_app_mcp_servers", lambda: {}, raising=False
+            "aj_crew.apps.bridges.registered_app_mcp_servers", lambda: {}, raising=False
         )
 
         out = agent._collect_app_mcp_servers()
@@ -405,21 +405,21 @@ class TestRebuildSurvival:
         """A gateway-launched backend (backend.entryPoint set) carries only an
         illustrative port until its process resolves one; with no live entry the
         dead URL must be skipped, not written."""
-        from kiro_crew import agent
+        from aj_crew import agent
 
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.list_apps", lambda: [{"name": "hosted"}], raising=False
+            "aj_crew.apps.manager.list_apps", lambda: [{"name": "hosted"}], raising=False
         )
-        monkeypatch.setattr("kiro_crew.apps.manager.is_app_enabled", lambda n: True, raising=False)
+        monkeypatch.setattr("aj_crew.apps.manager.is_app_enabled", lambda n: True, raising=False)
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.get_app_manifest",
+            "aj_crew.apps.manager.get_app_manifest",
             lambda n: _manifest(
                 {"srv": {"url": "http://127.0.0.1:1/mcp"}}, entry_point="backend/app.py"
             ),
             raising=False,
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.bridges.registered_app_mcp_servers", lambda: {}, raising=False
+            "aj_crew.apps.bridges.registered_app_mcp_servers", lambda: {}, raising=False
         )
 
         assert agent._collect_app_mcp_servers() == {}
@@ -435,14 +435,14 @@ class TestCeilingProbesFailClosed:
     def test_mcp_probe_declines_when_the_evaluator_raises(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform import governance as gmod
+        from aj_crew.platform import governance as gmod
 
         def _boom(*_a: Any, **_k: Any) -> Any:
             raise RuntimeError("evaluator exploded")
 
-        monkeypatch.setattr("kiro_crew.platform.governance.gate_decision", _boom)
+        monkeypatch.setattr("aj_crew.platform.governance.gate_decision", _boom)
         monkeypatch.setattr(
-            "kiro_crew.platform.context.current_context",
+            "aj_crew.platform.context.current_context",
             lambda: type("C", (), {"governance": object()})(),
         )
         assert gmod.may_skip_gate("@srv", object()) is False
@@ -450,14 +450,14 @@ class TestCeilingProbesFailClosed:
     def test_builtin_probe_declines_when_the_evaluator_raises(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform import governance as gmod
+        from aj_crew.platform import governance as gmod
 
         class _Exploding:
             def get(self, _scope: str) -> Any:
                 raise RuntimeError("evaluator exploded")
 
         monkeypatch.setattr(
-            "kiro_crew.platform.context.current_context",
+            "aj_crew.platform.context.current_context",
             lambda: type("C", (), {"governance": _Exploding()})(),
         )
         tool = next(iter(gmod.BUILTIN_TOOL_SCOPES))
@@ -466,10 +466,10 @@ class TestCeilingProbesFailClosed:
     def test_an_ungoverned_host_still_keeps_its_grants(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform import governance as gmod
+        from aj_crew.platform import governance as gmod
 
         monkeypatch.setattr(
-            "kiro_crew.platform.context.current_context",
+            "aj_crew.platform.context.current_context",
             lambda: type("C", (), {"governance": None})(),
         )
         # A non-floor builtin: no always-on gate floor, so an ungoverned host
@@ -486,7 +486,7 @@ def _doctor_source() -> str:
     import inspect
     import pkgutil
 
-    from kiro_crew import cli_doctor, cli_doctor_parts
+    from aj_crew import cli_doctor, cli_doctor_parts
 
     return "\n".join(
         inspect.getsource(mod)
@@ -516,9 +516,9 @@ class TestBothWritePointsConsultTheCeiling:
         import inspect
         import pkgutil
 
-        from kiro_crew import agent, agent_materialization, cli_doctor
-        from kiro_crew.apps import bridges
-        from kiro_crew.dashboard.handlers import mcp as mcp_handler
+        from aj_crew import agent, agent_materialization, cli_doctor
+        from aj_crew.apps import bridges
+        from aj_crew.dashboard.handlers import mcp as mcp_handler
 
         # Every module that can put an entry on an auto-approve list. Found by an
         # AST sweep for appends/assignments into an `allowedTools` list, not by
@@ -548,7 +548,7 @@ class TestBothWritePointsConsultTheCeiling:
         # is the shared one.
         agent_parts = [agent] + [
             importlib.import_module(f"{package.__name__}.{info.name}")
-            for package in (agent_materialization, importlib.import_module("kiro_crew.agent_parts"))
+            for package in (agent_materialization, importlib.import_module("aj_crew.agent_parts"))
             for info in pkgutil.iter_modules(package.__path__)
         ]
         assert len(agent_parts) > 1, "the agent_materialization modules were not found"
@@ -559,11 +559,11 @@ class TestBothWritePointsConsultTheCeiling:
             )
         assert "may_skip_gate" in inspect.getsource(
             agent._may_auto_approve
-        ), "kiro_crew.agent must use the shared predicate"
+        ), "aj_crew.agent must use the shared predicate"
 
     def test_every_mapped_scope_exists_in_the_catalog(self) -> None:
         """A scope name typo would silently mean "ungoverned", i.e. auto-approved."""
-        from kiro_crew.platform.governance import BUILTIN_TOOL_SCOPES, SCOPE_CATALOG
+        from aj_crew.platform.governance import BUILTIN_TOOL_SCOPES, SCOPE_CATALOG
 
         unknown = sorted(
             {s for scopes in BUILTIN_TOOL_SCOPES.values() for s in scopes} - set(SCOPE_CATALOG)
@@ -574,7 +574,7 @@ class TestBothWritePointsConsultTheCeiling:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The reported bypass: mount it, but do not hand it a gate exemption."""
-        from kiro_crew import agent
+        from aj_crew import agent
 
         monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: ref != "@denied")
         config: dict[str, Any] = {"tools": [], "allowedTools": []}
@@ -597,8 +597,8 @@ class TestBothWritePointsConsultTheCeiling:
         """
         import inspect
 
-        from kiro_crew import agent
-        from kiro_crew.agent_materialization import mcp_sources
+        from aj_crew import agent
+        from aj_crew.agent_materialization import mcp_sources
 
         assert "mcp_sources.sync_shared_server_refs(" in inspect.getsource(agent.install_agent)
         src = inspect.getsource(mcp_sources.sync_shared_server_refs)
@@ -617,14 +617,14 @@ class TestAnEmptyAllowlistIsTheStrictestCeiling:
         return type("C", (), {"get": lambda _self, s: ruleset if s == scope else None})()
 
     def test_empty_allowlist_withholds_auto_approve(self) -> None:
-        from kiro_crew.platform.governance import ScopedRuleset, may_skip_gate
+        from aj_crew.platform.governance import ScopedRuleset, may_skip_gate
 
         rules = ScopedRuleset(mode="allow", allow=(), deny=())
         ceiling = self._ceiling("filesystem.read", rules)
         assert may_skip_gate("fs_read", ceiling) is False
 
     def test_populated_allowlist_also_withholds_it(self) -> None:
-        from kiro_crew.platform.governance import ScopedRuleset, may_skip_gate
+        from aj_crew.platform.governance import ScopedRuleset, may_skip_gate
 
         rules = ScopedRuleset(mode="allow", allow=("/srv/**",), deny=())
         ceiling = self._ceiling("filesystem.read", rules)
@@ -638,21 +638,21 @@ class TestAnEmptyAllowlistIsTheStrictestCeiling:
         the "empty denylist is not an opinion" property is observed through a ref,
         for which the arg-derived filesystem.read scope is the deciding factor.
         """
-        from kiro_crew.platform.governance import ScopedRuleset, may_skip_gate
+        from aj_crew.platform.governance import ScopedRuleset, may_skip_gate
 
         rules = ScopedRuleset(mode="deny", allow=(), deny=())
         ceiling = self._ceiling("filesystem.read", rules)
         assert may_skip_gate("@srv", ceiling) is True
 
     def test_a_populated_denylist_is_an_opinion(self) -> None:
-        from kiro_crew.platform.governance import ScopedRuleset, may_skip_gate
+        from aj_crew.platform.governance import ScopedRuleset, may_skip_gate
 
         rules = ScopedRuleset(mode="deny", allow=(), deny=("/etc/**",))
         ceiling = self._ceiling("filesystem.read", rules)
         assert may_skip_gate("fs_read", ceiling) is False
 
     def test_an_unrecognized_shape_is_not_proof_of_safety(self) -> None:
-        from kiro_crew.platform.governance import may_skip_gate
+        from aj_crew.platform.governance import may_skip_gate
 
         ceiling = self._ceiling("filesystem.read", type("R", (), {"mode": "???"})())
         assert may_skip_gate("fs_read", ceiling) is False
@@ -668,7 +668,7 @@ class TestManifestAutoApproveCannotSelfGrantAnExemption:
     def test_a_governed_server_loses_autoapprove_but_keeps_its_tools(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import agent
+        from aj_crew import agent
 
         monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: False)
         out = agent._ceiling_filtered_spec(
@@ -680,7 +680,7 @@ class TestManifestAutoApproveCannotSelfGrantAnExemption:
     def test_an_ungoverned_host_keeps_the_manifest_grant(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import agent
+        from aj_crew import agent
 
         monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: True)
         out = agent._ceiling_filtered_spec("someapp:srv", {"autoApprove": ["a"]})
@@ -690,7 +690,7 @@ class TestManifestAutoApproveCannotSelfGrantAnExemption:
         """A future caller must not reintroduce the verbatim copy."""
         import inspect
 
-        from kiro_crew import agent
+        from aj_crew import agent
 
         src = inspect.getsource(agent._collect_app_mcp_servers)
         # The one place a spec is written must be the ceiling-filtered call —
@@ -711,7 +711,7 @@ class TestManifestAutoApproveCannotSelfGrantAnExemption:
         here. Pinned because the two branches must not diverge: an operator whose
         ceiling is `mcp: {mode: allow, allow: []}` has denied every MCP tool.
         """
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
         ceiling = gov.GovernanceCeiling(
             version=1,
@@ -731,8 +731,8 @@ class TestATighteningReachesAnExistingConfig:
     def test_the_app_key_is_assigned_not_setdefault(self) -> None:
         import inspect
 
-        from kiro_crew import agent
-        from kiro_crew.agent_materialization import mcp_sources
+        from aj_crew import agent
+        from aj_crew.agent_materialization import mcp_sources
 
         assert "mcp_sources.merge_mcp_sources(" in inspect.getsource(agent.rebuild_agent_config)
         src = inspect.getsource(mcp_sources.merge_mcp_sources)
@@ -741,7 +741,7 @@ class TestATighteningReachesAnExistingConfig:
 
     def test_a_stale_autoapprove_is_replaced(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """End state, not just the shape: the stripped spec is what remains."""
-        from kiro_crew import agent
+        from aj_crew import agent
 
         stale = {"url": "http://127.0.0.1:1/mcp", "autoApprove": ["danger"]}
         fresh = {"url": "http://127.0.0.1:1/mcp"}  # ceiling stripped autoApprove
@@ -765,7 +765,7 @@ class TestACapabilityGrantNeedsALiteralTrue:
 
     @pytest.mark.parametrize("value", ["false", "no", "0", 0, 1, "true", [], {}, None])
     def test_only_a_real_true_grants(self, value: Any) -> None:
-        from kiro_crew.apps.manifest import Permissions
+        from aj_crew.apps.manifest import Permissions
 
         perms = Permissions.from_dict(
             {"spawn": value, "cron": value, "network": value, "storage": value}
@@ -777,7 +777,7 @@ class TestACapabilityGrantNeedsALiteralTrue:
         assert perms.storage is expected
 
     def test_a_real_true_still_grants(self) -> None:
-        from kiro_crew.apps.manifest import Permissions
+        from aj_crew.apps.manifest import Permissions
 
         perms = Permissions.from_dict({"spawn": True, "cron": True})
         assert perms.spawn is True
@@ -789,7 +789,7 @@ class TestACapabilityGrantNeedsALiteralTrue:
         `is True` would be wrong here — `"true"` would turn signature
         verification OFF. The safe default follows what the field withholds.
         """
-        from kiro_crew.apps.admission import AppAdmissionPolicy
+        from aj_crew.apps.admission import AppAdmissionPolicy
 
         for value in ["false", "true", 1, "yes", None]:
             pol = AppAdmissionPolicy.from_dict({"require_signature": value})
@@ -799,10 +799,10 @@ class TestACapabilityGrantNeedsALiteralTrue:
 
 def _pin_honour_auto_approve(monkeypatch: pytest.MonkeyPatch, honour: bool) -> None:
     """Pin ``mcp.honour_auto_approve`` through the real read path the floor uses."""
-    from kiro_crew.config import live
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config import live
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.mcp.honour_auto_approve = honour
     monkeypatch.setattr(live, "snapshot", lambda: cfg)
 
@@ -817,7 +817,7 @@ class TestAutoApproveIsFilteredAtTheWriteChokepoint:
     def test_a_governed_server_loses_the_key_and_keeps_the_server(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: False)
         out = gov.strip_ungoverned_auto_approve(
@@ -831,7 +831,7 @@ class TestAutoApproveIsFilteredAtTheWriteChokepoint:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """An absent ceiling does not buy the exemption -- the opt-in does."""
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: True)
         _pin_honour_auto_approve(monkeypatch, True)
@@ -842,9 +842,9 @@ class TestAutoApproveIsFilteredAtTheWriteChokepoint:
         """The host agent writer and app-agent materialization, at the same point."""
         import inspect
 
-        from kiro_crew import agent
-        from kiro_crew.agent_materialization import default_spec_commit
-        from kiro_crew.apps import bridges
+        from aj_crew import agent
+        from aj_crew.agent_materialization import default_spec_commit
+        from aj_crew.apps import bridges
 
         # The host agent's write is the rebuild's commit phase.
         assert "default_spec_commit.write_default_spec(" in inspect.getsource(agent.install_agent)
@@ -864,7 +864,7 @@ class TestOnlyTheOwnersOwnAutoApproveIsHonoured:
 
     @staticmethod
     def _honoured(monkeypatch: pytest.MonkeyPatch, servers: dict) -> dict:
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: True)
         monkeypatch.setattr(gov, "_declared_auto_approve", lambda emitted: {})
@@ -879,11 +879,11 @@ class TestOnlyTheOwnersOwnAutoApproveIsHonoured:
         assert "autoApprove" not in out["weather:api"], "an app manifest grant must not survive"
         assert out["weather:api"]["command"] == "w", "the server itself must stay available"
 
-    def test_an_entry_kiro_crew_authored_is_not_the_owner(
+    def test_an_entry_aj_crew_authored_is_not_the_owner(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A marker means we wrote it into a file we do not own -- our emission."""
-        from kiro_crew.mcp_provenance import stamp
+        from aj_crew.mcp_provenance import stamp
 
         out = self._honoured(
             monkeypatch, {"mail": stamp({"command": "m", "autoApprove": ["email_send"]})}
@@ -903,7 +903,7 @@ class TestOnlyTheOwnersOwnAutoApproveIsHonoured:
         The app's entries there carry its `<app>:` prefix, so naming them is exact
         and closed, and the owner's own entries in the same file keep the opt-in.
         """
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: True)
         monkeypatch.setattr(gov, "_declared_auto_approve", lambda emitted: {})
@@ -927,7 +927,7 @@ class TestOnlyTheOwnersOwnAutoApproveIsHonoured:
         A list of an app's keys goes stale, so a writer whose whole map is an app's
         declines the opt-in outright.
         """
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: True)
         monkeypatch.setattr(gov, "_declared_auto_approve", lambda emitted: {"ours": ("read",)})
@@ -947,7 +947,7 @@ class TestOnlyTheOwnersOwnAutoApproveIsHonoured:
         """Pin the call shape: the app writer must not re-grow a key enumeration."""
         import inspect
 
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         src = inspect.getsource(bridges._register_agents)
         assert "honour_owner_written=False" in src
@@ -980,7 +980,7 @@ class TestAnUngovernedHostDoesNotKeepAutoApprove:
         honour: bool,
         seeded: dict | None = None,
     ) -> dict:
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: not governed)
         monkeypatch.setattr(gov, "_declared_auto_approve", lambda emitted: seeded or {})
@@ -991,7 +991,7 @@ class TestAnUngovernedHostDoesNotKeepAutoApprove:
     def test_a_verb_the_spec_declares_survives_without_the_opt_in(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """The floor is user-only: Kiro Crew's own emission is not the hole.
+        """The floor is user-only: Aj Crew's own emission is not the hole.
 
         A blanket floor would strip a shipped server's own tools, and the operator
         who lost them would set the opt-in to get them back -- which honours their
@@ -1005,7 +1005,7 @@ class TestAnUngovernedHostDoesNotKeepAutoApprove:
 
     def test_only_the_declared_verbs_survive(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """A user verb added ALONGSIDE a declared one is dropped on its own."""
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: True)
         monkeypatch.setattr(gov, "_declared_auto_approve", lambda emitted: {"mail": ("email_read",)})
@@ -1047,8 +1047,8 @@ class TestAnUngovernedHostDoesNotKeepAutoApprove:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Fail-closed: this value decides whether the approval gate runs at all."""
-        from kiro_crew.config import live
-        from kiro_crew.platform import governance as gov
+        from aj_crew.config import live
+        from aj_crew.platform import governance as gov
 
         def _torn() -> None:
             raise OSError("config momentarily unreadable")
@@ -1072,7 +1072,7 @@ class TestADeclarationCoversOnlyItsOwnTransport:
     SPEC = {"declared": {"command": "/opt/edition/mcp", "args": ["serve"], "autoApprove": ["read"]}}
 
     def _lookup(self, monkeypatch: pytest.MonkeyPatch, emitted: dict) -> dict:
-        from kiro_crew import agent
+        from aj_crew import agent
 
         monkeypatch.setattr(agent, "_MANAGED_MCP_SERVERS", dict(self.SPEC))
         monkeypatch.setattr(agent, "_extra_mcp_servers", lambda: {})
@@ -1123,9 +1123,9 @@ class TestEveryWriterRevokesAStaleGrant:
         import inspect
         import pkgutil
 
-        from kiro_crew import agent, agent_materialization, cli_doctor
-        from kiro_crew.apps import bridges
-        from kiro_crew.dashboard.handlers import mcp as mcp_handler
+        from aj_crew import agent, agent_materialization, cli_doctor
+        from aj_crew.apps import bridges
+        from aj_crew.dashboard.handlers import mcp as mcp_handler
 
         # agent.py's writers are composed from its agent_parts owners and the
         # agent_materialization modules; the agent side is judged on agent.py and those
@@ -1140,7 +1140,7 @@ class TestEveryWriterRevokesAStaleGrant:
         )
         assert "may_skip_gate" in inspect.getsource(
             agent._may_auto_approve
-        ), "kiro_crew.agent must consult the ceiling"
+        ), "aj_crew.agent must consult the ceiling"
         # The bridges facade's code lives in its owners: read the facade with each.
         bridges_src = "\n".join(
             inspect.getsource(m) for m in (bridges, *map(importlib.import_module, bridges._OWNERS))
@@ -1174,8 +1174,8 @@ class TestBuiltinAutoApprovalsGoThroughTheFinalPass:
     def test_rebuild_filters_the_allowed_list_through_the_predicate(self) -> None:
         import inspect
 
-        from kiro_crew import agent
-        from kiro_crew.agent_materialization import auto_approve
+        from aj_crew import agent
+        from aj_crew.agent_materialization import auto_approve
 
         assert "auto_approve.final_ceiling_pass(config)" in inspect.getsource(
             agent.rebuild_agent_config
@@ -1194,7 +1194,7 @@ class TestBuiltinAutoApprovalsGoThroughTheFinalPass:
         """
         import inspect
 
-        from kiro_crew.agent_materialization import auto_approve
+        from aj_crew.agent_materialization import auto_approve
 
         src = inspect.getsource(auto_approve.final_ceiling_pass)
         # The withheld branch of the final allowedTools pass emits the same event
@@ -1226,13 +1226,13 @@ class TestTemplateGrantsAreCeilingFilteredAtBuild:
     """The template's ``allowedTools`` is ceiling-filtered inside
     ``build_agent_config`` itself, so every derived spec inherits the filter.
 
-    ``rebuild_agent_config``'s final pass covers only ``kirocrew.json``; installers such
+    ``rebuild_agent_config``'s final pass covers only ``ajcrew.json``; installers such
     as ``_install_research_agent`` write their own file from this constructor.
     """
 
     @staticmethod
     def _floor_builtins() -> set[str]:
-        from kiro_crew.platform.governance import _FLOOR_GATE_SCOPES, BUILTIN_TOOL_SCOPES
+        from aj_crew.platform.governance import _FLOOR_GATE_SCOPES, BUILTIN_TOOL_SCOPES
 
         return {
             name
@@ -1241,7 +1241,7 @@ class TestTemplateGrantsAreCeilingFilteredAtBuild:
         }
 
     def test_build_output_carries_no_floor_scoped_builtin_grant(self) -> None:
-        from kiro_crew import agent
+        from aj_crew import agent
 
         config = agent.build_agent_config()
         leaked = self._floor_builtins().intersection(config.get("allowedTools", []))
@@ -1253,9 +1253,9 @@ class TestTemplateGrantsAreCeilingFilteredAtBuild:
     def test_the_filter_is_idempotent_so_rebuilds_are_unchanged(self) -> None:
         """No-op proof for the primary spec: ``rebuild_agent_config``'s own
         final pass re-filters this same list through the same pure predicate,
-        so a fresh rebuild's ``kirocrew.json`` is byte-for-byte what it was
+        so a fresh rebuild's ``ajcrew.json`` is byte-for-byte what it was
         before the filter moved into the constructor."""
-        from kiro_crew import agent
+        from aj_crew import agent
 
         config = agent.build_agent_config()
         allowed = config.get("allowedTools", [])
@@ -1266,7 +1266,7 @@ class TestTemplateGrantsAreCeilingFilteredAtBuild:
         ``build_agent_config`` IS inheriting the ceiling filter."""
         import inspect
 
-        from kiro_crew import agent
+        from aj_crew import agent
 
         src = inspect.getsource(agent.build_agent_config)
         assert "_apply_allowed_tools_ceiling(" in src
@@ -1283,7 +1283,7 @@ class TestTemplateGrantsAreCeilingFilteredAtBuild:
         import inspect
         import pkgutil
 
-        from kiro_crew import agent, agent_materialization
+        from aj_crew import agent, agent_materialization
 
         parts = [agent] + [
             importlib.import_module(f"{agent_materialization.__name__}.{info.name}")
@@ -1327,24 +1327,24 @@ class TestTheCodeToolIsGovernedForWrites:
         return type("C", (), {"get": lambda _s, s: ruleset if s == scope else None})()
 
     def test_code_is_in_the_map(self) -> None:
-        from kiro_crew.platform.governance import BUILTIN_TOOL_SCOPES
+        from aj_crew.platform.governance import BUILTIN_TOOL_SCOPES
 
         assert set(BUILTIN_TOOL_SCOPES["code"]) == {"commands", "tools", "filesystem.write"}
 
     def test_a_write_ceiling_withholds_code(self) -> None:
-        from kiro_crew.platform.governance import ScopedRuleset, may_skip_gate
+        from aj_crew.platform.governance import ScopedRuleset, may_skip_gate
 
         rules = ScopedRuleset(mode="allow", allow=("/srv/**",), deny=())
         assert may_skip_gate("code", self._ceiling("filesystem.write", rules)) is False
 
     def test_a_commands_ceiling_withholds_code(self) -> None:
-        from kiro_crew.platform.governance import ScopedRuleset, may_skip_gate
+        from aj_crew.platform.governance import ScopedRuleset, may_skip_gate
 
         rules = ScopedRuleset(mode="deny", allow=(), deny=("rm *",))
         assert may_skip_gate("code", self._ceiling("commands", rules)) is False
 
     def test_an_ungoverned_host_withholds_code_because_of_its_floor(self) -> None:
-        from kiro_crew.platform.governance import may_skip_gate
+        from aj_crew.platform.governance import may_skip_gate
 
         # `code` maps to commands + filesystem.write — both always-on gate floors
         # (denied commands, sensitive-path). So it is withheld from auto-approve
@@ -1356,7 +1356,7 @@ class TestTheCodeToolIsGovernedForWrites:
         enforced at the gate must never be auto-approved, ceiling or not —
         auto-approve is the one path that skips that un-disableable floor.
         Network-only and unmapped builtins carry no such floor and stay allowed."""
-        from kiro_crew.platform.governance import may_skip_gate
+        from aj_crew.platform.governance import may_skip_gate
 
         for tool in ("fs_read", "fs_write", "glob", "grep", "execute_bash", "code"):
             assert may_skip_gate(tool, None) is False, tool
@@ -1376,8 +1376,8 @@ class TestAppServersAreMounted:
     def test_the_rebuild_adds_app_server_refs_to_tools(self) -> None:
         import inspect
 
-        from kiro_crew import agent
-        from kiro_crew.agent_materialization import mcp_sources
+        from aj_crew import agent
+        from aj_crew.agent_materialization import mcp_sources
 
         assert "mcp_sources.merge_mcp_sources(" in inspect.getsource(agent.rebuild_agent_config)
         src = inspect.getsource(mcp_sources.merge_mcp_sources)
@@ -1392,8 +1392,8 @@ class TestProfileOnlyGovernanceWithholdsAutoApprove:
     """
 
     def test_a_profile_deny_withholds_even_without_a_ceiling(self, monkeypatch) -> None:
-        from kiro_crew.platform import governance as gov
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance as gov
+        from aj_crew.platform import governance_profiles as gp
 
         # No policy ceiling.
         monkeypatch.setattr(gp, "any_configured_profile_governs", gp.any_configured_profile_governs)
@@ -1401,7 +1401,7 @@ class TestProfileOnlyGovernanceWithholdsAutoApprove:
         class _Ctx:
             governance = None
 
-        monkeypatch.setattr("kiro_crew.platform.context.current_context", lambda: _Ctx())
+        monkeypatch.setattr("aj_crew.platform.context.current_context", lambda: _Ctx())
         # A profile that governs the `mcp` scope (denies a server's tool).
         prof = gov.Profile(
             name="p",
@@ -1417,30 +1417,30 @@ class TestProfileOnlyGovernanceWithholdsAutoApprove:
         assert gov.may_skip_gate_now("@srv") is True
 
     def test_an_unresolved_store_fails_closed(self, monkeypatch) -> None:
-        from kiro_crew.platform import governance_profiles as gp
+        from aj_crew.platform import governance_profiles as gp
 
         monkeypatch.setattr(gp._STORE, "resolved", lambda: False)
         assert gp.any_configured_profile_governs("@srv") is True
 
 
-class TestKirocrewJsonHasOneSerializedWriter:
-    """kirocrew.json is written by BOTH the regenerating rebuild and the app-MCP
+class TestAjcrewJsonHasOneSerializedWriter:
+    """ajcrew.json is written by BOTH the regenerating rebuild and the app-MCP
     registration path (bridges._register_mcp_servers, under bridges._mcp_lock).
     Rebuild must hold that same lock across a final re-read+merge so a register
     that lands after its snapshot is not silently overwritten.
     """
 
-    def test_rebuild_writes_kirocrew_json_under_the_shared_mcp_lock(self) -> None:
+    def test_rebuild_writes_ajcrew_json_under_the_shared_mcp_lock(self) -> None:
         import inspect
 
-        from kiro_crew import agent
-        from kiro_crew.agent_materialization import default_spec_commit
+        from aj_crew import agent
+        from aj_crew.agent_materialization import default_spec_commit
 
         assert "default_spec_commit.write_default_spec(" in inspect.getsource(
             agent.rebuild_agent_config
         )
         src = inspect.getsource(default_spec_commit.write_default_spec)
-        assert "with _mcp_lock():" in src, "the kirocrew.json write must hold bridges' lock"
+        assert "with _mcp_lock():" in src, "the ajcrew.json write must hold bridges' lock"
         assert "_read_mcp_json_unlocked()" in src, "…and re-read app entries under it"
         # The merge only re-adds app-namespaced servers the snapshot missed.
         assert '":" in _k' in src
@@ -1457,7 +1457,7 @@ class TestEveryBuiltinIsCheckedAgainstTheToolsScope:
         return type("C", (), {"get": lambda _s, s: ruleset if s == scope else None})()
 
     def test_an_unmapped_builtin_is_withheld_by_a_tools_opinion(self) -> None:
-        from kiro_crew.platform.governance import ScopedRuleset, may_skip_gate
+        from aj_crew.platform.governance import ScopedRuleset, may_skip_gate
 
         rules = ScopedRuleset(mode="deny", allow=(), deny=("report",))
         # `report` is NOT in BUILTIN_TOOL_SCOPES, yet a tools opinion must reach it.
@@ -1465,13 +1465,13 @@ class TestEveryBuiltinIsCheckedAgainstTheToolsScope:
         assert may_skip_gate("introspect", self._ceiling("tools", rules)) is False
 
     def test_an_unmapped_builtin_is_kept_when_tools_is_silent(self) -> None:
-        from kiro_crew.platform.governance import may_skip_gate
+        from aj_crew.platform.governance import may_skip_gate
 
         # No ceiling opinion anywhere → keep the grant.
         assert may_skip_gate("report", self._ceiling("filesystem.read", None)) is True
 
     def test_a_mapped_builtin_still_honours_its_capability_scope(self) -> None:
-        from kiro_crew.platform.governance import ScopedRuleset, may_skip_gate
+        from aj_crew.platform.governance import ScopedRuleset, may_skip_gate
 
         rules = ScopedRuleset(mode="allow", allow=("/srv/**",), deny=())
         assert may_skip_gate("fs_read", self._ceiling("filesystem.read", rules)) is False
@@ -1496,7 +1496,7 @@ class TestQueuedSpawnKeepsAppIdentity:
     def test_the_queued_params_include_app(self) -> None:
         import inspect
 
-        from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+        from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
 
         src = inspect.getsource(SpawnAdmissionCoordinator.spawn_impl)
         assert '"app": app,' in src, "the queued params must carry the app identity"
@@ -1508,7 +1508,7 @@ class TestAppAgentWithholdIsAudited:
     host sync and doctor do."""
 
     def test_withholding_emits_the_sel_event(self, monkeypatch) -> None:
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         monkeypatch.setattr(bridges, "_may_auto_approve", lambda ref: ref != "@app:denied")
         events: list[dict] = []
@@ -1524,7 +1524,7 @@ class TestAppAgentWithholdIsAudited:
         assert "@app:denied" in events[0]["resources"]
 
     def test_no_event_when_nothing_withheld(self, monkeypatch) -> None:
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         monkeypatch.setattr(bridges, "_may_auto_approve", lambda ref: True)
         events: list[dict] = []
@@ -1542,7 +1542,7 @@ class TestStripAutoApproveIsAudited:
     decision that must be SEL-audited like every other withhold path."""
 
     def test_strip_emits_the_withheld_event(self, monkeypatch) -> None:
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: False)  # governed
         events: list[dict] = []
@@ -1565,7 +1565,7 @@ class TestStripAutoApproveIsAudited:
         operator can find in the feed is one that was taken AWAY -- the allowed
         ones would leave no trace of why they were allowed.
         """
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: True)  # ungoverned
         monkeypatch.setattr(gov, "_auto_approve_is_honoured", lambda: True)
@@ -1583,9 +1583,9 @@ class TestStripAutoApproveIsAudited:
         assert "@srv" in events[0]["resources"]
 
     def test_a_declared_list_is_not_reported_as_the_owners_decision(self, monkeypatch) -> None:
-        """What a server spec declares is Kiro Crew's own emission, not a choice
+        """What a server spec declares is Aj Crew's own emission, not a choice
         the owner made, so honouring it is not a grant worth a record."""
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: True)
         monkeypatch.setattr(gov, "_auto_approve_is_honoured", lambda: True)
@@ -1608,7 +1608,7 @@ class TestStripAutoApproveIsAudited:
         ungoverned host. A governed ref keeps nothing whatever the config says, so
         no value of ``mcp.honour_auto_approve`` can widen an enterprise ceiling.
         """
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: False)  # governed
         monkeypatch.setattr(gov, "_auto_approve_is_honoured", lambda: True)  # owner said keep
@@ -1629,8 +1629,8 @@ class TestRebuildDoesNotResurrectDeregisteredApps:
     def test_rebuild_removes_app_keys_absent_from_on_disk(self) -> None:
         import inspect
 
-        from kiro_crew import agent
-        from kiro_crew.agent_materialization import default_spec_commit
+        from aj_crew import agent
+        from aj_crew.agent_materialization import default_spec_commit
 
         assert "default_spec_commit.write_default_spec(" in inspect.getsource(
             agent.rebuild_agent_config
@@ -1651,7 +1651,7 @@ class TestRebuildDoesNotResurrectDeregisteredApps:
         should be. Both _app_of_key_enabled fallbacks therefore return False."""
         import inspect
 
-        from kiro_crew.agent_materialization import default_spec_commit
+        from aj_crew.agent_materialization import default_spec_commit
 
         src = inspect.getsource(default_spec_commit.write_default_spec)
         # The fail-OPEN wording (and behaviour) must be gone from both fallbacks.
@@ -1671,20 +1671,20 @@ class TestMcpAutoApproveHonoursArgumentScopes:
         return type("C", (), {"get": lambda _s, s: ruleset if s == scope else None})()
 
     def test_a_filesystem_write_ceiling_withholds_an_mcp_server(self) -> None:
-        from kiro_crew.platform.governance import ScopedRuleset, may_skip_gate
+        from aj_crew.platform.governance import ScopedRuleset, may_skip_gate
 
         rules = ScopedRuleset(mode="allow", allow=("/srv/**",), deny=())
         # No mcp opinion at all — only filesystem.write — yet @srv must be withheld.
         assert may_skip_gate("@srv", self._ceiling("filesystem.write", rules)) is False
 
     def test_a_network_egress_ceiling_withholds_an_mcp_server(self) -> None:
-        from kiro_crew.platform.governance import ScopedRuleset, may_skip_gate
+        from aj_crew.platform.governance import ScopedRuleset, may_skip_gate
 
         rules = ScopedRuleset(mode="deny", allow=(), deny=("evil.example",))
         assert may_skip_gate("@srv", self._ceiling("network.egress", rules)) is False
 
     def test_an_ungoverned_host_still_keeps_the_mcp_server(self) -> None:
-        from kiro_crew.platform.governance import may_skip_gate
+        from aj_crew.platform.governance import may_skip_gate
 
         assert may_skip_gate("@srv", None) is True
 
@@ -1695,7 +1695,7 @@ class TestConfigSanitizerAuditsWithheld:
     must emit the same SEL event the per-ref writers do."""
 
     def test_sanitizer_emits_withheld_for_dropped_allowedtools(self, monkeypatch):
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
         events: list[dict] = []
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: ref != "@denied")
@@ -1714,7 +1714,7 @@ class TestConfigSanitizerAuditsWithheld:
         assert "mcp_auto_approve_withheld" in ops
 
     def test_sanitizer_silent_when_nothing_withheld(self, monkeypatch):
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
         events: list[dict] = []
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: True)
@@ -1735,7 +1735,7 @@ class TestCeilingFilteredSpecIsAudited:
     otherwise it is the one revocation with no audit trail."""
 
     def test_withheld_autoapprove_emits_sel_event(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        import kiro_crew.agent as agent
+        import aj_crew.agent as agent
 
         monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: False)
         events: list[dict] = []
@@ -1752,7 +1752,7 @@ class TestCeilingFilteredSpecIsAudited:
     def test_permitted_spec_is_untouched_and_unaudited(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.agent as agent
+        import aj_crew.agent as agent
 
         monkeypatch.setattr(agent, "_may_auto_approve", lambda ref: True)
         events: list[dict] = []

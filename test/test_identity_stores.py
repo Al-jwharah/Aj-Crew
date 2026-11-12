@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import identity_stores as ids
-from kiro_crew.identity_stores import (
+from aj_crew import identity_stores as ids
+from aj_crew.identity_stores import (
     IDENTITY_STORE_ROOTS,
     Platform,
     Product,
@@ -338,7 +338,7 @@ class TestUsageTuplesAnchorTheRealHome:
     """
 
     def test_import_time_tuples_are_real_home_anchored(self) -> None:
-        from kiro_crew.dashboard.handlers import kiro_usage_api as api
+        from aj_crew.dashboard.handlers import kiro_usage_api as api
 
         real_home = Path.home()
         for db in (*api._CLI_SQLITE_DBS, *api._OTHER_SQLITE_DBS):

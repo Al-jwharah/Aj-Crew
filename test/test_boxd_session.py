@@ -22,17 +22,17 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.boxd_session import launch as boxd_launch
-from kiro_crew.boxd_session.cli import BoxdCLI, BoxdError
-from kiro_crew.remote_session import wire
-from kiro_crew.remote_session.link import RemoteLink
-from kiro_crew.session_environment import SessionEnvironmentUnavailable
+from aj_crew.boxd_session import launch as boxd_launch
+from aj_crew.boxd_session.cli import BoxdCLI, BoxdError
+from aj_crew.remote_session import wire
+from aj_crew.remote_session.link import RemoteLink
+from aj_crew.session_environment import SessionEnvironmentUnavailable
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="POSIX guest shell")
@@ -148,7 +148,7 @@ async def test_a_session_gets_a_machine_and_its_worker_is_dialled_through_exec(t
     assert created["args"] == ["--json", "--vcpu", "1"]
     launch = prepared.launch
     await launch.install()
-    assert (fake.home / ".kirocrew-worker" / "worker.py").exists()
+    assert (fake.home / ".ajcrew-worker" / "worker.py").exists()
     worker_id = launch.new_worker_id()
     secret = wire.new_secret()
     port = await launch.start_worker(worker_id, [sys.executable, "-u", "-c", ENGINE], secret)
@@ -288,7 +288,7 @@ async def test_a_failed_create_leaves_no_machine_or_row(tmp_path, fake, monkeypa
 
 @sync
 async def test_a_missing_cli_refuses_before_any_row_is_reserved(tmp_path, monkeypatch):
-    from kiro_crew.boxd_session import cli as boxd_cli
+    from aj_crew.boxd_session import cli as boxd_cli
 
     def missing():
         raise BoxdError("the boxd CLI is not installed on the gateway machine")
@@ -304,9 +304,9 @@ async def test_a_missing_cli_refuses_before_any_row_is_reserved(tmp_path, monkey
 
 @sync
 async def test_shutdown_hibernates_every_session_machine(tmp_path, fake, monkeypatch):
-    from kiro_crew.boxd_session import cli as boxd_cli
-    from kiro_crew.coder import retention
-    from kiro_crew.config import live, paths
+    from aj_crew.boxd_session import cli as boxd_cli
+    from aj_crew.coder import retention
+    from aj_crew.config import live, paths
 
     envs = _envs(tmp_path, fake)
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path / "data")
@@ -331,9 +331,9 @@ async def test_shutdown_hibernates_every_session_machine(tmp_path, fake, monkeyp
 async def test_files_and_terminal_reach_the_machine_without_creating_it(
     tmp_path, fake, monkeypatch
 ):
-    from kiro_crew.boxd_session import cli as boxd_cli
-    from kiro_crew.coder import session_browse, session_launch
-    from kiro_crew.config import live, paths
+    from aj_crew.boxd_session import cli as boxd_cli
+    from aj_crew.coder import session_browse, session_launch
+    from aj_crew.config import live, paths
 
     envs = _envs(tmp_path, fake)
     home = tmp_path / "data"
@@ -364,9 +364,9 @@ async def test_files_and_terminal_reach_the_machine_without_creating_it(
 
 @sync
 async def test_health_and_unsaved_work_never_wake_a_hibernated_machine(tmp_path, fake, monkeypatch):
-    from kiro_crew.boxd_session import cli as boxd_cli
-    from kiro_crew.coder import session_browse, session_launch
-    from kiro_crew.config import live, paths
+    from aj_crew.boxd_session import cli as boxd_cli
+    from aj_crew.coder import session_browse, session_launch
+    from aj_crew.config import live, paths
 
     envs = _envs(tmp_path, fake)
     home = tmp_path / "data"
@@ -399,8 +399,8 @@ async def test_health_and_unsaved_work_never_wake_a_hibernated_machine(tmp_path,
 
 @sync
 async def test_a_boxd_choice_is_prepared_by_the_boxd_provider(monkeypatch, tmp_path):
-    from kiro_crew.coder import session_launch
-    from kiro_crew.config import live, paths
+    from aj_crew.coder import session_launch
+    from aj_crew.config import live, paths
 
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path)
     section = SimpleNamespace(
@@ -422,8 +422,8 @@ async def test_a_boxd_choice_is_prepared_by_the_boxd_provider(monkeypatch, tmp_p
 
 
 def test_names_are_validated_before_any_argv_is_built():
-    from kiro_crew.boxd_session.cli import check_machine_name
-    from kiro_crew.boxd_session.shell import BoxdShell
+    from aj_crew.boxd_session.cli import check_machine_name
+    from aj_crew.boxd_session.shell import BoxdShell
 
     for bad in ("--json", "kc-XYZ", "other", "kc-0123456789abcdef; rm -rf /"):
         with pytest.raises(BoxdError):
@@ -443,7 +443,7 @@ def test_names_are_validated_before_any_argv_is_built():
 
 
 def test_boxd_profiles_validate_and_share_one_id_space():
-    from kiro_crew.config import session_environments as se
+    from aj_crew.config import session_environments as se
 
     good = {**PROFILE, "workdir": "/workspace/work"}
     assert se.validate_boxd_profiles([good]) == [good]
@@ -468,8 +468,8 @@ def test_boxd_profiles_validate_and_share_one_id_space():
 
 @sync
 async def test_the_readiness_check_lists_once_and_touches_no_machine(tmp_path, fake, monkeypatch):
-    from kiro_crew.boxd_session import cli as boxd_cli
-    from kiro_crew.dashboard.handlers import session_environments as handlers
+    from aj_crew.boxd_session import cli as boxd_cli
+    from aj_crew.dashboard.handlers import session_environments as handlers
 
     monkeypatch.setattr(boxd_cli, "resolve_boxd_bin", lambda: fake.bin)
     section = SimpleNamespace(boxd_profiles=[PROFILE, {**PROFILE, "id": "bx-two"}])
@@ -485,8 +485,8 @@ async def test_the_readiness_check_lists_once_and_touches_no_machine(tmp_path, f
 
 
 def _live_section(monkeypatch, tmp_path, envs, fake):
-    from kiro_crew.boxd_session import cli as boxd_cli
-    from kiro_crew.config import live, paths
+    from aj_crew.boxd_session import cli as boxd_cli
+    from aj_crew.config import live, paths
 
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path / "data")
     section = SimpleNamespace(coder_url="", sprites_profiles=[], **vars(envs._config))
@@ -498,7 +498,7 @@ def _live_section(monkeypatch, tmp_path, envs, fake):
 async def test_the_archive_path_schedules_the_machine_and_a_reopen_supersedes_it(
     tmp_path, fake, monkeypatch
 ):
-    from kiro_crew.coder import retention
+    from aj_crew.coder import retention
 
     envs = _envs(tmp_path, fake)
     _live_section(monkeypatch, tmp_path, envs, fake)
@@ -518,7 +518,7 @@ async def test_the_archive_path_schedules_the_machine_and_a_reopen_supersedes_it
 async def test_a_history_reopen_keeps_the_machine_without_a_start(tmp_path, fake, monkeypatch):
     # Reopened from History and edited only through Files: no prepare ever runs,
     # so the reopen itself must cancel both deadlines, and wake nothing.
-    from kiro_crew.coder import retention
+    from aj_crew.coder import retention
 
     envs = _envs(tmp_path, fake)
     _live_section(monkeypatch, tmp_path, envs, fake)
@@ -551,7 +551,7 @@ async def test_a_history_reopen_keeps_the_machine_without_a_start(tmp_path, fake
 async def test_a_reopen_that_cannot_cancel_the_deletion_says_so(tmp_path, fake, monkeypatch):
     # A failed timer cancellation is reported, so a history resume refuses
     # rather than publish a tab whose machine both deadlines would delete.
-    from kiro_crew.coder import retention
+    from aj_crew.coder import retention
 
     envs = _envs(tmp_path, fake)
     _live_section(monkeypatch, tmp_path, envs, fake)
@@ -578,8 +578,8 @@ async def test_a_reopen_whose_registry_write_fails_refuses_instead_of_publishing
     # registry write fails, the resume refuses: a tab published with its deadline
     # still standing would be swept with its files. Only a replacement machine
     # under the recorded name is "nothing to keep".
-    from kiro_crew.coder import retention
-    from kiro_crew.session_environments.persistent_vm import SessionResourceRegistry
+    from aj_crew.coder import retention
+    from aj_crew.session_environments.persistent_vm import SessionResourceRegistry
 
     envs = _envs(tmp_path, fake)
     _live_section(monkeypatch, tmp_path, envs, fake)
@@ -610,7 +610,7 @@ async def test_a_reopen_never_keeps_a_replacement_under_the_recorded_name(
 ):
     # Like archive and the sweep, a reopen checks identity before it clears a
     # deletion timer: a machine that took the recorded name is left alone.
-    from kiro_crew.coder import retention
+    from aj_crew.coder import retention
 
     envs = _envs(tmp_path, fake)
     _live_section(monkeypatch, tmp_path, envs, fake)
@@ -633,8 +633,8 @@ async def test_a_reopen_never_keeps_a_replacement_under_the_recorded_name(
 async def test_a_blank_working_folder_runs_in_the_machines_login_home(tmp_path, fake, monkeypatch):
     # Blank in the profile: the session, Files and the terminal all use the
     # folder the machine reports as its login home. Coder still requires one.
-    from kiro_crew.config import session_environments as se
-    from kiro_crew.session_environments import browse as vm_browse
+    from aj_crew.config import session_environments as se
+    from aj_crew.session_environments import browse as vm_browse
 
     assert se.validate_boxd_profiles([{**PROFILE, "workdir": ""}])[0]["workdir"] == ""
     with pytest.raises(se.SessionEnvironmentsError, match="workdir"):
@@ -652,7 +652,7 @@ async def test_a_blank_working_folder_runs_in_the_machines_login_home(tmp_path, 
 
 @sync
 async def test_the_sweeper_deletes_due_machines_without_a_coder_url(tmp_path, fake, monkeypatch):
-    from kiro_crew.coder import retention
+    from aj_crew.coder import retention
 
     envs = _envs(tmp_path, fake)
     _live_section(monkeypatch, tmp_path, envs, fake)
@@ -665,9 +665,9 @@ async def test_the_sweeper_deletes_due_machines_without_a_coder_url(tmp_path, fa
 
 
 def test_the_dashboard_lists_machines_and_keeps_a_used_choice(tmp_path, fake, monkeypatch):
-    from kiro_crew.config import paths
-    from kiro_crew.dashboard.handlers import session_environments as handlers
-    from kiro_crew.session_environments.persistent_vm import SessionResource
+    from aj_crew.config import paths
+    from aj_crew.dashboard.handlers import session_environments as handlers
+    from aj_crew.session_environments.persistent_vm import SessionResource
 
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path / "data")
     envs = _envs(tmp_path, fake)

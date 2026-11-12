@@ -45,8 +45,8 @@ from remote_crew_chaining_helpers import (
     _relay_mint,
 )
 
-from kiro_crew.instances.ssh_tunnel_manager import _Mint
-from kiro_crew.testing.wait import await_until
+from aj_crew.instances.ssh_tunnel_manager import _Mint
+from aj_crew.testing.wait import await_until
 
 
 class TestHopRetiredDetection:
@@ -83,7 +83,7 @@ class TestHopRetiredDetection:
         return asyncio.run(run())
 
     def test_the_parent_saying_the_hop_is_gone_retires_the_forward(self, tmp_path, monkeypatch):
-        from kiro_crew.instances.token_mint import HopRetiredError
+        from aj_crew.instances.token_mint import HopRetiredError
 
         reg, mgr = self._chained(tmp_path, monkeypatch)
         monkeypatch.setattr(mgr, "_mint_through_parent", _relay_mint(mgr))
@@ -107,7 +107,7 @@ class TestHopRetiredDetection:
         tearing a working chain down on one would turn every network hiccup into a
         disconnect the user has to undo.
         """
-        from kiro_crew.instances.token_mint import TokenMintError
+        from aj_crew.instances.token_mint import TokenMintError
 
         reg, mgr = self._chained(tmp_path, monkeypatch)
         monkeypatch.setattr(mgr, "_mint_through_parent", _relay_mint(mgr))
@@ -147,8 +147,8 @@ class TestHopRetiredDetection:
         removed crew in with "maybe this build has no chaining endpoint". A test that
         reads the set cannot see that; one that answers a 404 can.
         """
-        from kiro_crew.instances import ssh_tunnel_manager as stm
-        from kiro_crew.instances.token_mint import HopRetiredError
+        from aj_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances.token_mint import HopRetiredError
 
         reg, mgr = self._chained(tmp_path, monkeypatch)
         inst = reg.get("c")
@@ -176,8 +176,8 @@ class TestHopRetiredDetection:
         retryable failure rather than being trusted -- failing closed on a reply too
         big to vet.
         """
-        from kiro_crew.instances import ssh_tunnel_manager as stm
-        from kiro_crew.instances.token_mint import HopRetiredError, TokenMintError
+        from aj_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances.token_mint import HopRetiredError, TokenMintError
 
         reg, mgr = self._chained(tmp_path, monkeypatch)
         inst = reg.get("c")
@@ -212,8 +212,8 @@ class TestHopRetiredDetection:
         would tear a chain down because the PARENT is old rather than because the hop
         moved, which is the confusion reading the status alone creates.
         """
-        from kiro_crew.instances import ssh_tunnel_manager as stm
-        from kiro_crew.instances.token_mint import HopRetiredError, TokenMintError
+        from aj_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances.token_mint import HopRetiredError, TokenMintError
 
         reg, mgr = self._chained(tmp_path, monkeypatch)
         inst = reg.get("c")
@@ -276,7 +276,7 @@ class TestChainedRepairPaths:
         minted: list[str] = []
         monkeypatch.setattr(mgr, "_mint_through_parent", _relay_mint(mgr, port=54321, seen=minted))
 
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         mgr._tunnels["c"].status.state = TunnelState.ERROR
         _FakeTunnel.made = []
@@ -304,7 +304,7 @@ class TestChainedRepairPaths:
         minted: list[str] = []
         monkeypatch.setattr(mgr, "_mint_through_parent", _relay_mint(mgr, port=54321, seen=minted))
 
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         fails = {"n": 1}
         real_start = _FakeTunnel.start
@@ -338,13 +338,13 @@ class TestChainedRepairPaths:
         assert asyncio.run(mgr.connect("c")).state.value == "connected"
 
         async def mint_naming_no_port(inst, _params):
-            from kiro_crew.instances.ssh_tunnel_manager import _Mint
+            from aj_crew.instances.ssh_tunnel_manager import _Mint
 
             return _Mint(token="CHAINED_TOKEN", hop=0, ttl=inst.ttl)
 
         monkeypatch.setattr(mgr, "_mint_through_parent", mint_naming_no_port)
 
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         mgr._tunnels["c"].status.state = TunnelState.ERROR
         _FakeTunnel.made = []
@@ -482,12 +482,12 @@ class TestChainedRepairPaths:
         import ast
         import pathlib
 
-        from kiro_crew.instances import ssh_tunnel_manager as mod
+        from aj_crew.instances import ssh_tunnel_manager as mod
 
         src = "".join(
             (
                 pathlib.Path(__file__).resolve().parents[1]
-                / "src/kiro_crew/instances"
+                / "src/aj_crew/instances"
                 / f"{name.rpartition('.')[2]}.py"
             ).read_text(encoding="utf-8")
             for name in (mod.__name__, *mod._OWNERS)
@@ -621,7 +621,7 @@ class TestChainedRepairPaths:
             mgr, "_mint_through_parent", _relay_mint(mgr, token="MOVED", port=54321)
         )
 
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         # Every rebuild fails, so no forward ever dials the port the parent named.
         async def never_starts(self):
@@ -743,7 +743,7 @@ class TestChainedRepairPaths:
             _relay_mint(mgr, token="HEALED", port=54321, hop_gen=7),
         )
 
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         mgr._tunnels["c"].status.state = TunnelState.ERROR
         _FakeTunnel.made = []
@@ -759,8 +759,8 @@ class TestChainedRepairPaths:
         guarding the credential -- which is the whole finding. The endpoint and these
         fields ship in one change, so a parent that answers this route at all has them.
         """
-        from kiro_crew.instances import ssh_tunnel_manager as stm
-        from kiro_crew.instances.token_mint import TokenMintError
+        from aj_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances.token_mint import TokenMintError
 
         reg, mgr = self._pair(tmp_path, monkeypatch)
         inst = reg.get("c")
@@ -955,11 +955,11 @@ class TestTheRefreshScheduleFollowsTheLifetimeItStored:
         the row would put the re-mint long after the credential is dead. The pane
         would then reload on every cycle, which is what makes the cap safe or not.
         """
-        from kiro_crew.instances.constants import (
+        from aj_crew.instances.constants import (
             DEFAULT_TOKEN_REFRESH_FRACTION,
             LENT_HOP_TTL_CAP,
         )
-        from kiro_crew.instances.token_mint import ttl_to_seconds
+        from aj_crew.instances.token_mint import ttl_to_seconds
 
         cap = ttl_to_seconds(LENT_HOP_TTL_CAP)
         reg, mgr = self._chained(tmp_path, monkeypatch, row_ttl="20h")
@@ -1021,7 +1021,7 @@ class TestTheRefreshScheduleFollowsTheLifetimeItStored:
         new lifetime, so the retry stays on the interval it was already using; making
         failure reschedule would turn a network blip into a changed schedule.
         """
-        from kiro_crew.instances.token_mint import TokenMintError
+        from aj_crew.instances.token_mint import TokenMintError
 
         reg, mgr = self._chained(tmp_path, monkeypatch)
         answer = {"ttl": "20h"}

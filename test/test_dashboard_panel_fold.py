@@ -19,13 +19,13 @@ from typing import Any
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew import agent_panel
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection
-from kiro_crew.dashboard.handlers import member_dashboard as routes
-from kiro_crew.dashboard_templates.manifest import parse_manifest
+from aj_crew import agent_panel
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection
+from aj_crew.dashboard.handlers import member_dashboard as routes
+from aj_crew.dashboard_templates.manifest import parse_manifest
 
 SLOT = "member-shared-crew"
 UNIT = "acp-shared-crew"
@@ -42,8 +42,8 @@ def _env(tmp_path, _floor_monkeypatch):
     On ``_floor_monkeypatch`` so a test body's ``monkeypatch.undo()`` cannot lift
     the isolation.
     """
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     crew_log_emit.reset_caches()
     projection.forget_slot_folds()
     _floor_monkeypatch.setattr(routes, "_dashboard_slot", lambda member, slug: SLOT)

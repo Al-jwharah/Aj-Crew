@@ -22,7 +22,7 @@ from aiohttp.test_utils import make_mocked_request
 from body_stream_helpers import BodyStreamPayload
 from dashboard_owner_helpers import NoConfiguredOwner
 
-from kiro_crew.dashboard.handlers import mcp as h
+from aj_crew.dashboard.handlers import mcp as h
 
 
 def _req(body: object) -> web.Request:

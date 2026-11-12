@@ -1,6 +1,6 @@
 """Agent tool text names only Settings tabs the dashboard really has.
 
-The MCP tools under ``src/kiro_crew/mcp_tools`` and ``src/kiro_crew/mcp_*.py``
+The MCP tools under ``src/aj_crew/mcp_tools`` and ``src/aj_crew/mcp_*.py``
 describe themselves to the agent, and the agent repeats those words to the
 person: "turn on X in Settings -> Y". The tabs are the entries of the ``tabs``
 list in ``website/src/pages/SettingsPage.tsx``, each labelled through an i18n
@@ -18,7 +18,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
-SRC = ROOT / "src" / "kiro_crew"
+SRC = ROOT / "src" / "aj_crew"
 SETTINGS_PAGE = ROOT / "website" / "src" / "pages" / "SettingsPage.tsx"
 LOCALES = ROOT / "website" / "src" / "i18n" / "locales"
 

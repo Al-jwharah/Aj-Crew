@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import pytest
 
-import kiro_crew.eventlog.service as svc_mod
-from kiro_crew import eventlog_hooks
-from kiro_crew.members import member_slot_key, slug_for_name
+import aj_crew.eventlog.service as svc_mod
+from aj_crew import eventlog_hooks
+from aj_crew.members import member_slot_key, slug_for_name
 
 
 def test_member_slug_for_slot_bare_key():
@@ -127,7 +127,7 @@ def test_member_name_for_slug_falls_back_to_a_direct_scan(monkeypatch):
     or partially installed process can fail that import, and the hook still has to
     answer. The fallback scans ``cfg.agents`` through ``members.slug_for_name``.
     """
-    import kiro_crew.dashboard.handlers.members as members_handler
+    import aj_crew.dashboard.handlers.members as members_handler
 
     def _unavailable(cfg, slug):
         raise RuntimeError("resolver unavailable in this process")
@@ -146,8 +146,8 @@ def test_member_name_for_slug_skips_a_name_that_cannot_be_slugged(monkeypatch):
     the same "one broken peer must not mask healthy ones" rule the doctor sections
     follow.
     """
-    import kiro_crew.dashboard.handlers.members as members_handler
-    from kiro_crew import members as members_mod
+    import aj_crew.dashboard.handlers.members as members_handler
+    from aj_crew import members as members_mod
 
     monkeypatch.setattr(
         members_handler,
@@ -170,7 +170,7 @@ def test_member_name_for_slug_skips_a_name_that_cannot_be_slugged(monkeypatch):
 
 def test_member_name_for_slug_survives_a_config_without_agents(monkeypatch):
     """A config shape this helper cannot read is "no member", not a crash."""
-    import kiro_crew.dashboard.handlers.members as members_handler
+    import aj_crew.dashboard.handlers.members as members_handler
 
     monkeypatch.setattr(
         members_handler,
@@ -192,12 +192,12 @@ class TestV2MemberSlotKeys:
     """
 
     def _v2_slot_key(self, slug: str, store: str) -> str:
-        from kiro_crew import members as members_mod
+        from aj_crew import members as members_mod
 
         return members_mod.DM_SLOT_KEY_PREFIX + slug + members_mod.MEMORY_STORE_SLOT_SUFFIX + store
 
     def test_a_memory_store_slot_resolves_to_the_members_slug(self):
-        from kiro_crew import eventlog_hooks
+        from aj_crew import eventlog_hooks
 
         key = self._v2_slot_key("alice", "research")
         assert eventlog_hooks.member_slug_for_slot(key) == "alice", (
@@ -206,14 +206,14 @@ class TestV2MemberSlotKeys:
         )
 
     def test_a_dashboard_prefixed_memory_store_slot_also_resolves(self):
-        from kiro_crew import eventlog_hooks
+        from aj_crew import eventlog_hooks
 
         key = "dashboard_" + self._v2_slot_key("alice", "research")
         assert eventlog_hooks.member_slug_for_slot(key) == "alice"
 
     def test_the_suffix_belongs_to_the_slot_not_the_slug(self):
         """The shared parser is the one place this rule is spelled."""
-        from kiro_crew import members as members_mod
+        from aj_crew import members as members_mod
 
         key = self._v2_slot_key("alice", "research")
         assert members_mod.slug_from_dm_slot_key(key) == "alice"
@@ -224,7 +224,7 @@ class TestStartupReconcileHonoursMemberId:
     """Reconciliation must read the log the member's own identity names."""
 
     def test_an_explicit_member_id_decides_which_log_is_reconciled(self):
-        from kiro_crew import members as members_mod
+        from aj_crew import members as members_mod
 
         class _Agent:
             # An attribute, not a dict key: member_slug reads it with getattr,
@@ -254,15 +254,15 @@ class TestEmitAnswersWhetherTheEventLanded:
     def test_a_failed_append_is_reported_and_answered(self, caplog, monkeypatch):
         import logging
 
-        from kiro_crew import eventlog_hooks
-        from kiro_crew.eventlog import service as service_module
+        from aj_crew import eventlog_hooks
+        from aj_crew.eventlog import service as service_module
 
         class _Unusable:
             def ensure(self, *args, **kwargs):
                 raise OSError("no space left on device")
 
         monkeypatch.setattr(service_module, "get_service", lambda: _Unusable())
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.eventlog_hooks"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.eventlog_hooks"):
             landed = eventlog_hooks.emit("alice", "Alice", "member/message", {"text": "hi"})
 
         assert landed is False
@@ -276,11 +276,11 @@ class TestEmitAnswersWhetherTheEventLanded:
         # nothing about whether the event reached the log.
         import logging
 
-        from kiro_crew import eventlog_hooks
-        from kiro_crew.eventlog.service import get_service
-        from kiro_crew.eventlog.types import MEMBER_MESSAGE
+        from aj_crew import eventlog_hooks
+        from aj_crew.eventlog.service import get_service
+        from aj_crew.eventlog.types import MEMBER_MESSAGE
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.eventlog_hooks"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.eventlog_hooks"):
             landed = eventlog_hooks.emit("alice", "Alice", MEMBER_MESSAGE, {"text": "hi"})
 
         assert landed is True
@@ -300,7 +300,7 @@ class TestThePendingQueueIsBounded:
         import logging
         import threading
 
-        from kiro_crew import eventlog_hooks
+        from aj_crew import eventlog_hooks
 
         release = threading.Event()
         ran: list[int] = []
@@ -311,7 +311,7 @@ class TestThePendingQueueIsBounded:
 
         monkeypatch.setattr(eventlog_hooks, "MAX_PENDING_APPENDS", 4)
         try:
-            with caplog.at_level(logging.DEBUG, logger="kiro_crew.eventlog_hooks"):
+            with caplog.at_level(logging.DEBUG, logger="aj_crew.eventlog_hooks"):
                 for _ in range(12):
                     eventlog_hooks.submit(_block)
                 pending = len(eventlog_hooks._inflight)
@@ -332,10 +332,10 @@ class TestThePendingQueueIsBounded:
         # test above while dropping every event the gateway ever records.
         import logging
 
-        from kiro_crew import eventlog_hooks
+        from aj_crew import eventlog_hooks
 
         ran: list[int] = []
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.eventlog_hooks"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.eventlog_hooks"):
             for _ in range(5):
                 eventlog_hooks.submit(lambda: ran.append(1))
             eventlog_hooks.drain_for_shutdown()
@@ -355,9 +355,9 @@ class TestThisProcessDoesNotRetainAMemberLogsWriteLease:
     """
 
     def test_no_lease_is_held_after_ensure_append_or_read(self):
-        from kiro_crew.crew_log import lease
-        from kiro_crew.eventlog.service import get_service
-        from kiro_crew.eventlog.types import ACTIVITY_RECORD
+        from aj_crew.crew_log import lease
+        from aj_crew.eventlog.service import get_service
+        from aj_crew.eventlog.types import ACTIVITY_RECORD
 
         svc = get_service()
         svc.ensure("probe-member", "Probe Member")
@@ -376,10 +376,10 @@ class TestThisProcessDoesNotRetainAMemberLogsWriteLease:
         # CONTROL. Asserting an EMPTY holder table proves nothing unless that table
         # is capable of being non-empty, which is exactly the shape a pin can be
         # vacuous in: a table that is always empty would satisfy the test above.
-        from kiro_crew.crew_log import lease
-        from kiro_crew.crew_log.schema import KIND_MEMBER
-        from kiro_crew.eventlog.log import MemberLog
-        from kiro_crew.eventlog.service import get_service
+        from aj_crew.crew_log import lease
+        from aj_crew.crew_log.schema import KIND_MEMBER
+        from aj_crew.eventlog.log import MemberLog
+        from aj_crew.eventlog.service import get_service
 
         get_service().ensure("probe-member", "Probe Member")
         lease_path = MemberLog("probe-member").path.parent / lease.LEASE_FILE
@@ -401,7 +401,7 @@ class TestARefusedSubmitLeavesTheTransitionsRetryable:
     """
 
     def test_submit_answers_false_past_the_ceiling(self, monkeypatch):
-        import kiro_crew.eventlog_hooks as hooks
+        import aj_crew.eventlog_hooks as hooks
 
         monkeypatch.setattr(hooks, "MAX_PENDING_APPENDS", 0)
         monkeypatch.setattr(hooks, "_overflowing", False)
@@ -412,7 +412,7 @@ class TestARefusedSubmitLeavesTheTransitionsRetryable:
         # the test above while making every caller retry forever and never advance.
         import threading
 
-        import kiro_crew.eventlog_hooks as hooks
+        import aj_crew.eventlog_hooks as hooks
 
         landed = threading.Event()
         assert hooks.submit(landed.set) is True
@@ -425,7 +425,7 @@ class TestARefusedSubmitLeavesTheTransitionsRetryable:
         advanced the checkpoint but resent anyway would be correct, and one that held
         the checkpoint but computed an empty set would not.
         """
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         st = state_module.DashboardState.__new__(state_module.DashboardState)
         st._member_driven_slots_seen = {}
@@ -448,7 +448,7 @@ class TestARefusedSubmitLeavesTheTransitionsRetryable:
 
         # Patched on the real module: state_parts/slot_directory.py imports eventlog_hooks INSIDE
         # the method, so there is no module-level attribute to stand in for.
-        import kiro_crew.eventlog_hooks as hooks_module
+        import aj_crew.eventlog_hooks as hooks_module
 
         monkeypatch.setattr(hooks_module, "submit", _fake_submit)
 
@@ -491,7 +491,7 @@ class TestAnAppendThatDidNotLandIsRecomputed:
 
     @staticmethod
     def _state(monkeypatch, emit_results, handovers):
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         st = state_module.DashboardState.__new__(state_module.DashboardState)
         st._member_driven_slots_seen = {}
@@ -501,7 +501,7 @@ class TestAnAppendThatDidNotLandIsRecomputed:
         st.serialize_slots = lambda *a, **k: []
         st._slots = {"slot-1": _StubSlot("slot-1", "member-alice")}
 
-        import kiro_crew.eventlog_hooks as hooks_module
+        import aj_crew.eventlog_hooks as hooks_module
 
         def _run_now(fn):
             handovers.append(fn)
@@ -553,9 +553,9 @@ class TestAnAppendThatDidNotLandIsRecomputed:
         Both transitions must be written, and the open must come FIRST: a close with no
         preceding open is not a history anyone can read.
         """
-        import kiro_crew.eventlog_hooks as hooks_module
-        from kiro_crew.dashboard import state as state_module
-        from kiro_crew.eventlog.types import SLOT_CLOSED, SLOT_OPENED
+        import aj_crew.eventlog_hooks as hooks_module
+        from aj_crew.dashboard import state as state_module
+        from aj_crew.eventlog.types import SLOT_CLOSED, SLOT_OPENED
 
         st = state_module.DashboardState.__new__(state_module.DashboardState)
         st._member_driven_slots_seen = {}
@@ -622,9 +622,9 @@ class TestAFailedCloseIsRetriedToo:
     """
 
     def test_a_failed_close_is_offered_again(self, monkeypatch):
-        import kiro_crew.eventlog_hooks as hooks_module
-        from kiro_crew.dashboard import state as state_module
-        from kiro_crew.eventlog.types import SLOT_CLOSED
+        import aj_crew.eventlog_hooks as hooks_module
+        from aj_crew.dashboard import state as state_module
+        from aj_crew.eventlog.types import SLOT_CLOSED
 
         st = state_module.DashboardState.__new__(state_module.DashboardState)
         st._member_driven_slots_seen = {}
@@ -709,8 +709,8 @@ class TestAReportArrivingDuringTheDrainIsNotErased:
             dict.clear(self)
 
     def test_a_failure_recorded_mid_drain_is_still_applied(self, monkeypatch):
-        import kiro_crew.eventlog_hooks as hooks_module
-        from kiro_crew.dashboard import state as state_module
+        import aj_crew.eventlog_hooks as hooks_module
+        from aj_crew.dashboard import state as state_module
 
         st = state_module.DashboardState.__new__(state_module.DashboardState)
         # The checkpoint has already advanced past both closes, which is what makes a
@@ -752,8 +752,8 @@ class TestAReportArrivingDuringTheDrainIsNotErased:
         invented a correction, or applied one unconditionally, would drop that slot
         out of the checkpoint and the comparison would re-emit it as an OPEN.
         """
-        import kiro_crew.eventlog_hooks as hooks_module
-        from kiro_crew.dashboard import state as state_module
+        import aj_crew.eventlog_hooks as hooks_module
+        from aj_crew.dashboard import state as state_module
 
         st = state_module.DashboardState.__new__(state_module.DashboardState)
         st._member_driven_slots_seen = {"slot-1": ("member-alice", "")}
@@ -792,7 +792,7 @@ class TestAReportArrivingAfterADrainIsStillHeard:
     """
 
     def test_a_worker_in_flight_across_a_drain_is_still_heard(self, monkeypatch):
-        from kiro_crew.dashboard import state as state_module
+        from aj_crew.dashboard import state as state_module
 
         st = state_module.DashboardState.__new__(state_module.DashboardState)
         st._member_driven_slots_seen = {}
@@ -802,7 +802,7 @@ class TestAReportArrivingAfterADrainIsStillHeard:
         st.serialize_slots = lambda *a, **k: []
         st._slots = {"slot-1": _StubSlot("slot-1", "member-alice")}
 
-        import kiro_crew.eventlog_hooks as hooks_module
+        import aj_crew.eventlog_hooks as hooks_module
 
         deferred: list[object] = []
         monkeypatch.setattr(hooks_module, "submit", lambda fn: (deferred.append(fn), True)[1])
@@ -838,10 +838,10 @@ class TestALiveReopenSurvivesTheStartupReconcile:
     """
 
     def test_a_closer_is_not_written_once_the_state_it_closes_is_gone(self, tmp_path, monkeypatch):
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog import types
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import types
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         svc_mod.set_service(None)
         svc = svc_mod.get_service()
         svc.ensure("ivy", "Ivy")
@@ -863,10 +863,10 @@ class TestALiveReopenSurvivesTheStartupReconcile:
     def test_a_closer_that_still_applies_is_written(self, tmp_path, monkeypatch):
         # CONTROL. Refusing every closer would satisfy the test above and leave every
         # interrupted slot open for good.
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog import types
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import types
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         svc_mod.set_service(None)
         svc = svc_mod.get_service()
         svc.ensure("ivy", "Ivy")
@@ -892,11 +892,11 @@ class TestALiveReopenSurvivesTheStartupReconcile:
         newer word for a state that had already closed itself. The predicate is
         therefore asked inside the store's ownership, where the file cannot move.
         """
-        from kiro_crew.eventlog import log as log_mod
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog import types
+        from aj_crew.eventlog import log as log_mod
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import types
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         svc_mod.set_service(None)
         svc = svc_mod.get_service()
         svc.ensure("ivy", "Ivy")
@@ -956,10 +956,10 @@ class TestALiveReopenSurvivesTheStartupReconcile:
         every attempt and the projection would stay stale for good -- so this pins
         the two together rather than trusting them to agree.
         """
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog import types
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import types
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         svc_mod.set_service(None)
         svc = svc_mod.get_service()
         svc.ensure("ivy", "Ivy")
@@ -993,11 +993,11 @@ class TestALiveReopenSurvivesTheStartupReconcile:
         a window looks identical to one that does not apply, the state it was closing
         stays open until the next restart.
         """
-        from kiro_crew.eventlog import log as log_mod
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog import types
+        from aj_crew.eventlog import log as log_mod
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import types
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         svc_mod.set_service(None)
         svc = svc_mod.get_service()
         svc.ensure("ivy", "Ivy")
@@ -1044,11 +1044,11 @@ class TestALiveReopenSurvivesTheStartupReconcile:
         before the first attempt, is what keeps the whole retry loop inside the single
         budget its caller is charged.
         """
-        from kiro_crew.eventlog import log as log_mod
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog import types
+        from aj_crew.eventlog import log as log_mod
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import types
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         svc_mod.set_service(None)
         svc = svc_mod.get_service()
         svc.ensure("ivy", "Ivy")
@@ -1097,11 +1097,11 @@ class TestALiveReopenSurvivesTheStartupReconcile:
         decline test above and quietly stop closing interrupted state on any member
         another process also writes to.
         """
-        from kiro_crew.eventlog import log as log_mod
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog import types
+        from aj_crew.eventlog import log as log_mod
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import types
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         svc_mod.set_service(None)
         svc = svc_mod.get_service()
         svc.ensure("ivy", "Ivy")
@@ -1149,10 +1149,10 @@ class TestALiveReopenSurvivesTheStartupReconcile:
     ):  # The point of the recheck is that it sees state the caller could not. A
         # predicate handed the caller's own snapshot would close nothing it should not
         # and also nothing it should -- it would just be the same stale answer again.
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog import types
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import types
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         svc_mod.set_service(None)
         svc = svc_mod.get_service()
         svc.ensure("ivy", "Ivy")
@@ -1180,11 +1180,11 @@ class TestALiveReopenSurvivesTheStartupReconcile:
         compaction the live patrol then reads as stopped for good -- a later restart
         sees `stopped` and has no reason to reopen it.
         """
-        from kiro_crew import eventlog_hooks
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog import types
+        from aj_crew import eventlog_hooks
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import types
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         svc_mod.set_service(None)
         svc = svc_mod.get_service()
         svc.ensure("ivy", "Ivy")
@@ -1224,11 +1224,11 @@ class TestALiveReopenSurvivesTheStartupReconcile:
         # CONTROL for the test above. Refusing whenever the slug's sequence advanced
         # would satisfy it and leave every genuinely interrupted patrol armed for
         # good -- which is exactly the failure mode of gating on `asOfSeq`.
-        from kiro_crew import eventlog_hooks
-        from kiro_crew.eventlog import service as svc_mod
-        from kiro_crew.eventlog import types
+        from aj_crew import eventlog_hooks
+        from aj_crew.eventlog import service as svc_mod
+        from aj_crew.eventlog import types
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         svc_mod.set_service(None)
         svc = svc_mod.get_service()
         svc.ensure("ivy", "Ivy")
@@ -1263,9 +1263,9 @@ class TestALiveReopenSurvivesTheStartupReconcile:
         import ast
         import pathlib
 
-        import kiro_crew
+        import aj_crew
 
-        src = (pathlib.Path(kiro_crew.__file__).parent / "eventlog_hooks.py").read_text(
+        src = (pathlib.Path(aj_crew.__file__).parent / "eventlog_hooks.py").read_text(
             encoding="utf-8"
         )
         calls = [
@@ -1296,7 +1296,7 @@ class TestTheDrainWaitsForAReservationNotJustARegisteredFuture:
     def test_a_drain_inside_the_window_does_not_report_success(self, monkeypatch):
         import concurrent.futures
 
-        import kiro_crew.eventlog_hooks as hooks
+        import aj_crew.eventlog_hooks as hooks
 
         monkeypatch.setattr(hooks, "_overflowing", False)
         monkeypatch.setattr(hooks, "_reserved", 0)
@@ -1326,7 +1326,7 @@ class TestTheDrainWaitsForAReservationNotJustARegisteredFuture:
         # test above and add the full drain timeout to every clean shutdown.
         import time
 
-        import kiro_crew.eventlog_hooks as hooks
+        import aj_crew.eventlog_hooks as hooks
 
         monkeypatch.setattr(hooks, "_reserved", 0)
         hooks._inflight.clear()
@@ -1352,7 +1352,7 @@ class TestTheCeilingHoldsWhenTwoCallersInterleave:
     def test_a_second_caller_arriving_mid_submit_is_refused(self, monkeypatch):
         import concurrent.futures
 
-        import kiro_crew.eventlog_hooks as hooks
+        import aj_crew.eventlog_hooks as hooks
 
         monkeypatch.setattr(hooks, "MAX_PENDING_APPENDS", 1)
         monkeypatch.setattr(hooks, "_overflowing", False)
@@ -1383,7 +1383,7 @@ class TestTheCeilingHoldsWhenTwoCallersInterleave:
         # CONTROL. Without this, never releasing a reservation would satisfy the test
         # above while lowering the ceiling by one on every append for the life of the
         # process, until nothing could be queued at all.
-        import kiro_crew.eventlog_hooks as hooks
+        import aj_crew.eventlog_hooks as hooks
 
         monkeypatch.setattr(hooks, "MAX_PENDING_APPENDS", 2)
         monkeypatch.setattr(hooks, "_overflowing", False)

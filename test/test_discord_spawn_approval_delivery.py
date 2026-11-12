@@ -20,12 +20,12 @@ import pytest
 # dispatcher factory) so this suite exercises the SAME doubles.
 from test_discord import _dispatcher as _base_dispatcher  # noqa: E402
 
-from kiro_crew.discord import transport_dispatch as dispatch_mod
-from kiro_crew.discord.client import DiscordInteraction
-from kiro_crew.discord.renderer import DiscordApprovalDecider
-from kiro_crew.messaging import spawn_approval_delivery as seam
-from kiro_crew.messaging.display_safety import canonicalize_display
-from kiro_crew.subagent import SpawnApprovalUnreachable
+from aj_crew.discord import transport_dispatch as dispatch_mod
+from aj_crew.discord.client import DiscordInteraction
+from aj_crew.discord.renderer import DiscordApprovalDecider
+from aj_crew.messaging import spawn_approval_delivery as seam
+from aj_crew.messaging.display_safety import canonicalize_display
+from aj_crew.subagent import SpawnApprovalUnreachable
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -341,10 +341,10 @@ async def test_a_key_this_channel_cannot_address_falls_through() -> None:
     """
     d, cli, _ = _dispatcher({"u1"})
     for key in (
-        "unified:kirocrew",
-        "telegram:kirocrew:direct:12345",
+        "unified:ajcrew",
+        "telegram:ajcrew:direct:12345",
         "dashboard:main",
-        "discord:kirocrew:direct",  # no scope segment
+        "discord:ajcrew:direct",  # no scope segment
         "",
     ):
         assert await d.deliver_spawn_approval("spawn:a1", "spawn_run(t)", key) is None, key
@@ -469,7 +469,7 @@ async def test_registering_discord_does_not_widen_another_channel() -> None:
     d, cli, _ = _dispatcher({"u1"})
     seam.register_channel_delivery("discord", d.deliver_spawn_approval)
 
-    for foreign in ("webex:kirocrew:direct:u1", "telegram:kirocrew:direct:12345"):
+    for foreign in ("webex:ajcrew:direct:u1", "telegram:ajcrew:direct:12345"):
         assert await seam.deliver_spawn_approval("spawn:a1", "spawn_run(t)", foreign) is None
     assert cli.sent == []
 
@@ -482,9 +482,9 @@ def test_a_foreign_surface_is_refused_by_the_reverse_lookup_itself() -> None:
     lookup directly so that second line of defence cannot hide a regression here.
     """
     d, _cli, _ = _dispatcher({"u1"})
-    assert d._spawn_chat_target("telegram:kirocrew:direct:u1") is None
-    assert d._spawn_chat_target("webex:kirocrew:group:t1") is None
-    assert d._spawn_chat_target("unified:kirocrew") is None
+    assert d._spawn_chat_target("telegram:ajcrew:direct:u1") is None
+    assert d._spawn_chat_target("webex:ajcrew:group:t1") is None
+    assert d._spawn_chat_target("unified:ajcrew") is None
     # Non-vacuity: this channel's own keys DO resolve, and to the right places.
     assert d._spawn_chat_target(d._session_key("u1")) == ("", "", "u1", d._session_key("u1"))
     thread_key = d._session_key("u1", "t1")
@@ -498,9 +498,9 @@ def test_the_reverse_lookup_refuses_every_shape_it_cannot_place() -> None:
     here rather than resolve silently to the first segment.
     """
     d, _cli, _ = _dispatcher({"u1"})
-    assert d._spawn_chat_target("discord:kirocrew:channel:c1") is None, "unknown chat_type"
-    assert d._spawn_chat_target("discord:kirocrew:group:g1:t1") is None, "scope deeper than one"
-    assert d._spawn_chat_target("discord:kirocrew:direct:u1:extra") is None
+    assert d._spawn_chat_target("discord:ajcrew:channel:c1") is None, "unknown chat_type"
+    assert d._spawn_chat_target("discord:ajcrew:group:g1:t1") is None, "scope deeper than one"
+    assert d._spawn_chat_target("discord:ajcrew:direct:u1:extra") is None
 
 
 # ── Resolution through the existing press path ─────────────────────────────
@@ -680,7 +680,7 @@ def _short_wait(monkeypatch):
     No press is scheduled in any test using this, so the only way the wait ends is
     its own timeout -- there is no race for the scheduler to decide.
     """
-    from kiro_crew.discord import renderer as renderer_mod
+    from aj_crew.discord import renderer as renderer_mod
 
     monkeypatch.setattr(renderer_mod, "_APPROVAL_TIMEOUT_S", 0.05)
 

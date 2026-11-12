@@ -17,15 +17,15 @@ from typing import Any
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew import crew_log as lg
-from kiro_crew import session_ledger as sl
-from kiro_crew.context import ContextBuilder
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.dashboard.handlers.autonudge import compose_nudge_body
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew import crew_log as lg
+from aj_crew import session_ledger as sl
+from aj_crew.context import ContextBuilder
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.dashboard.handlers.autonudge import compose_nudge_body
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 SLOT = "chat-ledger-reinject-1"
 SESSION_KEY = f"dashboard:{SLOT}"
@@ -42,8 +42,8 @@ def _isolated(tmp_path, _floor_monkeypatch):
     monkeypatch.setenv("HOME", str(h))
     monkeypatch.setenv("USERPROFILE", str(h))
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: h))
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     crew_log_emit.reset_caches()
     crew_log.forget_slot_folds()
     yield
@@ -59,7 +59,7 @@ def _builder(tmp_path) -> ContextBuilder:
 
 
 def _record(**fields: Any) -> None:
-    CrewLog.create(lg.KIND_SESSION, "acp-1", owner="owner", agent="kirocrew", slot=SLOT)
+    CrewLog.create(lg.KIND_SESSION, "acp-1", owner="owner", agent="ajcrew", slot=SLOT)
     sl.record(SLOT, session_id="acp-1", **fields)
     assert_drained()
 

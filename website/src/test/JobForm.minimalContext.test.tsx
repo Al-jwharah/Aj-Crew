@@ -23,7 +23,7 @@ vi.mock('../api/client', () => ({
     updateCron: vi.fn(),
     createCron: vi.fn(),
     models: vi.fn().mockResolvedValue({ models: [] }),
-    kirocrewAgents: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
+    ajcrewAgents: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
     agentCatalog: vi.fn().mockResolvedValue({ agents: [], default_agent: '' }),
   },
 }))
@@ -180,7 +180,7 @@ describe('minimal context in the job form', () => {
     // Cleared because the mock is shared with every case above it in this file.
     vi.mocked(api.createCron).mockClear()
     renderWithProviders(
-      <JobForm layout="vertical" agents={[]} onSaved={() => {}} memberId="default" providerAgent="kirocrew" />,
+      <JobForm layout="vertical" agents={[]} onSaved={() => {}} memberId="default" providerAgent="ajcrew" />,
     )
     await userEvent.type(await screen.findByLabelText('Name'), 'default-crew job')
     await userEvent.type(screen.getByLabelText('Message'), 'Sweep the queue.')
@@ -195,7 +195,7 @@ describe('minimal context in the job form', () => {
     vi.mocked(api.createCron).mockResolvedValue({})
     vi.mocked(api.createCron).mockClear()
     renderWithProviders(
-      <JobForm layout="vertical" agents={[]} onSaved={() => {}} memberId="oncall" providerAgent="kirocrew" />,
+      <JobForm layout="vertical" agents={[]} onSaved={() => {}} memberId="oncall" providerAgent="ajcrew" />,
     )
     await userEvent.type(await screen.findByLabelText('Name'), 'member job')
     await userEvent.type(screen.getByLabelText('Message'), 'Sweep the queue.')
@@ -203,6 +203,6 @@ describe('minimal context in the job form', () => {
     await waitFor(() => expect(api.createCron).toHaveBeenCalled())
     const body = vi.mocked(api.createCron).mock.calls[0][0] as Record<string, unknown>
     expect(body.member_id).toBe('oncall')
-    expect(body.agent).toBe('kirocrew')
+    expect(body.agent).toBe('ajcrew')
   })
 })

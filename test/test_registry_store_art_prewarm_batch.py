@@ -31,8 +31,8 @@ from registry_store_art_prewarm_helpers import (
     _settled,
 )
 
-from kiro_crew.apps import registry as reg_mod
-from kiro_crew.apps.registry import (
+from aj_crew.apps import registry as reg_mod
+from aj_crew.apps.registry import (
     _TRUST_OWNER,
     _blob_cache_dir,
     _copy_declared_art,
@@ -42,10 +42,10 @@ from kiro_crew.apps.registry import (
     _read_manifest_cache,
     _store_art_cache_path,
 )
-from kiro_crew.config import loader as loader_mod
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.testing.wait import LoopHop, await_until, until_parked
+from aj_crew.config import loader as loader_mod
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.testing.wait import LoopHop, await_until, until_parked
 
 # ---------------------------------------------------------------------------
 # Cancellation settles the copy without recording a partial run
@@ -230,7 +230,7 @@ class TestScratchDirCancellation:
         import os
         import tempfile
 
-        from kiro_crew.apps.registry_pipeline import store_art
+        from aj_crew.apps.registry_pipeline import store_art
 
         _pin_registry(monkeypatch, _TRUST_OWNER)
         loop = asyncio.get_running_loop()
@@ -241,7 +241,7 @@ class TestScratchDirCancellation:
         real_mkdtemp = tempfile.mkdtemp
 
         def _held_mkdtemp(*args, **kwargs):
-            if kwargs.get("prefix") != "kirocrew-store-art-":
+            if kwargs.get("prefix") != "ajcrew-store-art-":
                 return real_mkdtemp(*args, **kwargs)
             try:
                 loop.call_soon_threadsafe(entered.set)
@@ -331,10 +331,10 @@ class TestCallSites:
         row as ambiguous."""
         import asyncio
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.registries = []
-        monkeypatch.setattr(loader_mod.KiroCrewConfig, "load", staticmethod(lambda: cfg))
-        base = build_default_context(KiroCrewConfig())
+        monkeypatch.setattr(loader_mod.AjCrewConfig, "load", staticmethod(lambda: cfg))
+        base = build_default_context(AjCrewConfig())
         ctx = dataclasses.replace(
             base,
             apps_loader=_Loader(
@@ -424,10 +424,10 @@ class TestCallSites:
         possible claimant, leaving every row cold. Both prewarms must therefore run
         only after both registries have been fetched and had their manifest caches
         expired, in refresh order, each with its own fresh rows."""
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.registries = []
-        monkeypatch.setattr(loader_mod.KiroCrewConfig, "load", staticmethod(lambda: cfg))
-        base = build_default_context(KiroCrewConfig())
+        monkeypatch.setattr(loader_mod.AjCrewConfig, "load", staticmethod(lambda: cfg))
+        base = build_default_context(AjCrewConfig())
         ctx = dataclasses.replace(
             base,
             apps_loader=_Loader(
@@ -517,7 +517,7 @@ class TestPrewarmBatchBounds:
             for i in range(1000)
         ]
 
-        with caplog.at_level("WARNING", logger="kiro_crew.apps.registry"):
+        with caplog.at_level("WARNING", logger="aj_crew.apps.registry"):
             fetched = await _prewarm_owner_tier_store_assets(reg, rows)
 
         assert fetched == 5
@@ -665,7 +665,7 @@ class TestPrewarmRowFieldCap:
         # A valid repo key (so it passes the provenance gate) but an over-length branch.
         entry = _entry(branch="b" * 100)
 
-        with caplog.at_level("WARNING", logger="kiro_crew.apps.registry"):
+        with caplog.at_level("WARNING", logger="aj_crew.apps.registry"):
             assert await _prewarm_owner_tier_store_assets(reg, [entry]) == 0
 
         assert calls == [], "a field-rejected row must not be cloned"
@@ -725,7 +725,7 @@ class TestPerRowScreenshotCap:
         _fake_fetch(monkeypatch, tree, manifest)
         entry = _entry()
 
-        with caplog.at_level("WARNING", logger="kiro_crew.apps.registry"):
+        with caplog.at_level("WARNING", logger="aj_crew.apps.registry"):
             assert await _prewarm_owner_tier_store_assets(reg, [entry]) == 1
 
             # The first `cap` screenshots landed; the extras were never read or cached.
@@ -805,7 +805,7 @@ class TestBoundedPostBudgetCleanup:
                 raise
             return True
 
-        from kiro_crew.apps.registry_pipeline import store_art
+        from aj_crew.apps.registry_pipeline import store_art
 
         class _WaitSpy:
             """``asyncio`` for the prewarm's owner, recording each ``asyncio.wait``
@@ -847,7 +847,7 @@ class TestBoundedPostBudgetCleanup:
             # ``asyncio.wait`` rather than ``wait_for``: on a hang, ``wait_for`` would
             # cancel the prewarm and then wait for it to unwind, which a prewarm stuck
             # on the unreleased cleanup never does.
-            with caplog.at_level("WARNING", logger="kiro_crew.apps.registry"):
+            with caplog.at_level("WARNING", logger="aj_crew.apps.registry"):
                 prewarm = asyncio.ensure_future(_prewarm_owner_tier_store_assets(reg, [entry]))
                 done, _ = await asyncio.wait({prewarm}, timeout=_BARRIER_CEILING_SECS)
             if prewarm not in done:

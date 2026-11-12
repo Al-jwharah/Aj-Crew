@@ -68,7 +68,7 @@
         "agent": "dash-demo",
         "close_reason": null,
         "closed_at": null,
-        "cwd": "/home/you/kirocrew/workspace",
+        "cwd": "/home/you/ajcrew/workspace",
         "dropped": {
           "bytes": 0,
           "count": 0
@@ -517,7 +517,7 @@
           {
             "acceptance": {
               "kind": "file",
-              "path": "src/kiro_crew/dashboard_templates/builtin/crewmate-overview/manifest.json"
+              "path": "src/aj_crew/dashboard_templates/builtin/crewmate-overview/manifest.json"
             },
             "artifacts": {},
             "closed_at": "2026-10-03T11:41:07+00:00",
@@ -573,7 +573,7 @@
           {
             "acceptance": {
               "kind": "file",
-              "path": "src/kiro_crew/dashboard_templates/builtin/goal-board/manifest.json"
+              "path": "src/aj_crew/dashboard_templates/builtin/goal-board/manifest.json"
             },
             "artifacts": {},
             "closed_at": null,
@@ -613,7 +613,7 @@
           {
             "acceptance": {
               "kind": "file",
-              "path": "src/kiro_crew/dashboard_templates/builtin/session-ledger/manifest.json"
+              "path": "src/aj_crew/dashboard_templates/builtin/session-ledger/manifest.json"
             },
             "artifacts": {},
             "closed_at": null,

@@ -14,7 +14,7 @@ import subprocess
 from collections.abc import Mapping, Sequence
 from copy import deepcopy
 
-from kiro_crew.monitoring.github_pull_request import GitHubPullRequestProvider
+from aj_crew.monitoring.github_pull_request import GitHubPullRequestProvider
 
 _HEAD = "0123456789abcdef0123456789abcdef01234567"
 

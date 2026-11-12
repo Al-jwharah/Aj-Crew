@@ -21,10 +21,10 @@ const t = (lng: string, key: string, opts?: Record<string, unknown>) =>
 
 const KEYS: Array<[string, Record<string, unknown>]> = [
   ['pages.chatSidebar.hide_all_source_links_stopped_retry', { done: 2, n: 5 }],
-  ['pages.chat.browserLiveCard.allow_explainer_asked_once', { productName: 'Kiro Crew' }],
+  ['pages.chat.browserLiveCard.allow_explainer_asked_once', { productName: 'Aj Crew' }],
   ['pages.overview.usageSeriesChart.aria_label_keyboard_hint', {}],
-  ['pages.kiroCrewAgentsPage.memory_binding_mismatch_diagnostic', { command: 'kirocrew doctor' }],
-  ['pages.kiroCrewAgentsPage.memory_binding_unavailable_diagnostic', { command: 'kirocrew doctor' }],
+  ['pages.ajCrewAgentsPage.memory_binding_mismatch_diagnostic', { command: 'ajcrew doctor' }],
+  ['pages.ajCrewAgentsPage.memory_binding_unavailable_diagnostic', { command: 'ajcrew doctor' }],
 ]
 
 describe('whole-message joins outside Settings', () => {
@@ -36,10 +36,10 @@ describe('whole-message joins outside Settings', () => {
       'Stacked area chart of spend over time. Use the left and right arrow keys to step through days.',
     )
     expect(t('en', KEYS[3][0], KEYS[3][1])).toBe(
-      'This member’s configured memory store belongs to another member. It cannot be used here. Inspect the cause on the gateway: kirocrew doctor',
+      'This member’s configured memory store belongs to another member. It cannot be used here. Inspect the cause on the gateway: ajcrew doctor',
     )
     expect(t('en', KEYS[4][0], KEYS[4][1])).toBe(
-      'This member’s configured memory store is unavailable. Inspect the cause on the gateway: kirocrew doctor',
+      'This member’s configured memory store is unavailable. Inspect the cause on the gateway: ajcrew doctor',
     )
   })
 

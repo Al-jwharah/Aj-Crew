@@ -14,13 +14,13 @@ import asyncio
 
 import pytest
 
-from kiro_crew.instances.ssh_tunnel_manager import (
+from aj_crew.instances.ssh_tunnel_manager import (
     _MAX_STDOUT_CHARS,
     _sanitize_ssm_stdout,
     _SshTunnel,
     _ssm_close_reason,
 )
-from kiro_crew.testing.wait import finished
+from aj_crew.testing.wait import finished
 
 # The exact literals session-manager-plugin writes to stdout, from its source:
 # datachannel HandleChannelClosedMessage and sessionhandler ResumeSessionHandler.
@@ -134,7 +134,7 @@ class TestClosedForwardMessage:
         low = msg.lower()
         for promise in ("automatically", "will reconnect", "retrying", "keep using"):
             assert promise not in low, promise
-        for verb in ("kirocrew cloud", "kirocrew connect", "aws ssm start-session"):
+        for verb in ("ajcrew cloud", "ajcrew connect", "aws ssm start-session"):
             assert verb not in low, verb
         # A digit may only appear as the local port, never as a duration.
         assert "minute" not in low and "second" not in low
@@ -342,7 +342,7 @@ class TestDeliberateStopSkipsTheDrain:
         async def _drive() -> None:
             t = _tunnel()
             t.status.state = __import__(
-                "kiro_crew.instances.ssh_tunnel_manager", fromlist=["TunnelState"]
+                "aj_crew.instances.ssh_tunnel_manager", fromlist=["TunnelState"]
             ).TunnelState.CONNECTED
 
             async def _never_eof() -> None:

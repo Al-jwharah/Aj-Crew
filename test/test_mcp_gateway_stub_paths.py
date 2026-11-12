@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.mcp_gateway.stub import (
+from aj_crew.mcp_gateway.stub import (
     _crew_home,
     _default_socket_path,
     _fallback_log_path,
@@ -26,17 +26,17 @@ from kiro_crew.mcp_gateway.stub import (
 
 
 def _clear_home_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Reproduce a Windows environment: no KIROCREW_HOME and no HOME."""
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    """Reproduce a Windows environment: no AJCREW_HOME and no HOME."""
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     monkeypatch.delenv("HOME", raising=False)
 
 
-def test_kirocrew_home_wins_when_set(
+def test_ajcrew_home_wins_when_set(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     assert _crew_home() == tmp_path
-    assert _default_socket_path() == str(tmp_path / "kirocrew-mcp-gateway.sock")
+    assert _default_socket_path() == str(tmp_path / "ajcrew-mcp-gateway.sock")
     assert _fallback_log_path() == tmp_path / "logs" / "stub_fallback.jsonl"
 
 
@@ -85,7 +85,7 @@ def test_unresolvable_home_degrades_instead_of_raising(
 
     # Must not raise, and must still yield a usable path.
     assert _crew_home().parts, "a degraded home must still be a usable path"
-    assert _default_socket_path().endswith("kirocrew-mcp-gateway.sock")
+    assert _default_socket_path().endswith("ajcrew-mcp-gateway.sock")
     assert _fallback_log_path().name == "stub_fallback.jsonl"
 
 
@@ -109,9 +109,9 @@ def test_log_fallback_rotates_at_the_size_cap(
     """The log rotated at the cap keeps ONE previous generation, bounding disk
     use. Unrotated it grows without limit — hundreds of KB in hours on a
     degraded host."""
-    from kiro_crew.mcp_gateway import stub
+    from aj_crew.mcp_gateway import stub
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     log = stub._fallback_log_path()
     log.parent.mkdir(parents=True)
     log.write_bytes(b"x" * stub._FALLBACK_LOG_MAX_BYTES)
@@ -137,9 +137,9 @@ def test_fallback_counts_aggregates_live_and_rotated_within_window(
     import json
     import time as _time
 
-    from kiro_crew.mcp_gateway import stub
+    from aj_crew.mcp_gateway import stub
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     log = stub._fallback_log_path()
     log.parent.mkdir(parents=True)
     now = _time.time()
@@ -168,9 +168,9 @@ def test_fallback_counts_aggregates_live_and_rotated_within_window(
 def test_fallback_counts_survives_a_missing_log(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    from kiro_crew.mcp_gateway import stub
+    from aj_crew.mcp_gateway import stub
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     counts = stub.fallback_counts()
     assert counts["total"] == 0
     assert counts["by_server"] == {}
@@ -186,15 +186,15 @@ def test_log_fallback_never_blocks_when_the_rotation_lock_is_held(
     import json
     import os as _os
 
-    from kiro_crew.mcp_gateway import stub
+    from aj_crew.mcp_gateway import stub
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     log = stub._fallback_log_path()
     log.parent.mkdir(parents=True)
     log.write_bytes(b"x" * (stub._FALLBACK_LOG_MAX_BYTES - 1) + b"\n")  # at the cap
 
     # Simulate another stub holding the rotation lock RIGHT NOW.
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     holder_fd = _os.open(
         log.with_suffix(".jsonl.lock"), _os.O_CREAT | _os.O_RDWR, 0o600

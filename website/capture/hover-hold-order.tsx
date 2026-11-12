@@ -43,10 +43,10 @@ const theme = params.get('theme') || 'dark'
 // writes data-theme itself, so setting the attribute here is overridden on mount
 // (which is how the first pass captured two light frames and one dark from the
 // same ?theme=dark). Both keys are pinned because the colour theme alone drifted
-// between runs — one pass rendered kiro-dark and the next monokai-dark.
+// between runs — one pass rendered aj-dark and the next monokai-dark.
 localStorage.setItem('mc-theme', theme === 'light' ? 'light' : 'dark')
-localStorage.setItem('mc-color-theme', 'kiro')
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+localStorage.setItem('mc-color-theme', 'aj')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // Rows must stay in the one list rather than folding into the stale section —
 // the subject is their ORDER, so every row has to remain visible.
@@ -61,7 +61,7 @@ const slot = (key: string, title: string, lastTs: string, msg: string): ChatSlot
   title,
   messages: 8,
   running: false,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   last_message: msg,
   last_ts: lastTs,
 } as ChatSlot)
@@ -102,8 +102,8 @@ function Harness() {
         unreadSlots={[]}
         history={[]}
         historyHasMore={false}
-        defaultAgent="kirocrew"
-        installedAgents={[{ name: 'kirocrew', description: 'Kiro Crew' }]}
+        defaultAgent="ajcrew"
+        installedAgents={[{ name: 'ajcrew', description: 'Aj Crew' }]}
       />
     </div>
   )

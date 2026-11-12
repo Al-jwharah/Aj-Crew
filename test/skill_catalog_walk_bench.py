@@ -14,7 +14,7 @@ Run from the repository root::
 
 It builds, in a temporary directory, a fake home (pinned as both ``HOME`` and
 ``USERPROFILE``, whichever ``Path.home()`` reads on this platform), a fake
-``$KIROCREW_HOME`` and a project directory -- the three skill roots a vanilla
+``$AJCREW_HOME`` and a project directory -- the three skill roots a vanilla
 install keys (``kiro-user/``, ``kiro-workspace/`` and the data home, resolved
 through the handler's own ``_skill_key_roots``) -- refuses to write anything if a
 resolved root lies outside that directory, and spreads ``--skills`` skills over them,
@@ -112,7 +112,7 @@ def _row(label: str, values: list[float]) -> str:
 # The environment the run pins at its temporary tree. HOME is what ``Path.home()``
 # reads on POSIX and USERPROFILE what it reads on Windows (never HOME there), so
 # both are pinned or the ``kiro-user/`` root would land in the real profile.
-_PINNED_ENV = ("HOME", "USERPROFILE", "KIROCREW_HOME")
+_PINNED_ENV = ("HOME", "USERPROFILE", "AJCREW_HOME")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -142,13 +142,13 @@ def _measure(base: Path, skills: int, runs: int) -> int:
     home.mkdir()
     project.mkdir()
     # Set BEFORE the import: ``Path.home()`` reads the environment at call time,
-    # and ``config_dir()`` memoises on the KIROCREW_HOME it first sees.
+    # and ``config_dir()`` memoises on the AJCREW_HOME it first sees.
     os.environ["HOME"] = str(home)
     os.environ["USERPROFILE"] = str(home)
-    os.environ["KIROCREW_HOME"] = str(base / "kirocrew-home")
+    os.environ["AJCREW_HOME"] = str(base / "ajcrew-home")
 
-    import kiro_crew
-    from kiro_crew.dashboard.handlers import _shared
+    import aj_crew
+    from aj_crew.dashboard.handlers import _shared
 
     # A stand-in for the handler's DashboardState: the root resolver reads
     # only ``_slots``.
@@ -190,7 +190,7 @@ def _measure(base: Path, skills: int, runs: int) -> int:
     both = [a + b for a, b in zip(walk, recheck)]
     twice = [2 * a for a in walk]
 
-    print(f"kiro_crew: {Path(kiro_crew.__file__).resolve().parents[2]}")
+    print(f"aj_crew: {Path(aj_crew.__file__).resolve().parents[2]}")
     print(f"python {platform.python_version()} on {platform.platform()}")
     print(
         f"tree: {len(snapshot.entries)} skills over {len(roots)} roots "

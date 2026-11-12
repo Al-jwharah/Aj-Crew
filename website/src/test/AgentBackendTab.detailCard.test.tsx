@@ -13,13 +13,13 @@ import React from 'react'
 
 const {
   patchConfigMock,
-  kirocrewConfigMock,
+  ajcrewConfigMock,
   schemaMock,
   acpBackendsMock,
   acpBackendRecheckMock,
 } = vi.hoisted(() => ({
   patchConfigMock: vi.fn(() => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(() => Promise.resolve({ agent: { acp_backend: 'kiro' } })),
+  ajcrewConfigMock: vi.fn(() => Promise.resolve({ agent: { acp_backend: 'kiro' } })),
   schemaMock: vi.fn(),
   acpBackendsMock: vi.fn(),
   acpBackendRecheckMock: vi.fn(),
@@ -27,7 +27,7 @@ const {
 
 vi.mock('../api/client', () => ({
   api: {
-    kirocrewConfig: kirocrewConfigMock,
+    ajcrewConfig: ajcrewConfigMock,
     patchConfig: patchConfigMock,
     acpBackends: acpBackendsMock,
     acpBackendRecheck: acpBackendRecheckMock,
@@ -109,8 +109,8 @@ beforeEach(() => {
   localStorage.clear()
   patchConfigMock.mockClear()
   patchConfigMock.mockResolvedValue({})
-  kirocrewConfigMock.mockClear()
-  kirocrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'kiro' } })
+  ajcrewConfigMock.mockClear()
+  ajcrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'kiro' } })
   acpBackendRecheckMock.mockClear()
   // The shipped core: every known agent is selectable. Claude Code is in the public
   // baseline because acp/client.py owns its whole spawn path and the adapter it needs
@@ -147,9 +147,9 @@ describe('AgentBackendTab detail card', () => {
     schemaMock.mockReturnValue(schemaWith(['kiro']))
     wrap()
     await waitFor(() =>
-      expect(screen.getByText('Kiro Crew tools work in the chat')).toBeInTheDocument(),
+      expect(screen.getByText('Aj Crew tools work in the chat')).toBeInTheDocument(),
     )
-    const supported = screen.getByText('Kiro Crew tools work in the chat')
+    const supported = screen.getByText('Aj Crew tools work in the chat')
     expect(supported.parentElement?.textContent).toContain('Available.')
     const absent = screen.getByText('You can add a message while it works')
     expect(absent.parentElement?.textContent).toContain('Not available.')
@@ -190,10 +190,10 @@ describe('AgentBackendTab detail card', () => {
     schemaMock.mockReturnValue(schemaWith(['kiro']))
     wrap()
     await waitFor(() =>
-      expect(screen.getByText('Kiro Crew tools work in the chat')).toBeInTheDocument(),
+      expect(screen.getByText('Aj Crew tools work in the chat')).toBeInTheDocument(),
     )
     const fold = screen.getByTestId('agent-harness-about')
-    expect(screen.getByText('Kiro Crew tools work in the chat').closest('details')).toBe(fold)
+    expect(screen.getByText('Aj Crew tools work in the chat').closest('details')).toBe(fold)
     expect((fold as HTMLDetailsElement).open).toBe(false)
     expect(screen.getByTestId('agent-harness-about-summary').textContent).toBe(
       'About Kiro CLI\u00a0· 1 of 2 features',
@@ -232,7 +232,7 @@ describe('AgentBackendTab detail card', () => {
     expect(saved.parentElement?.textContent).toContain('Available.')
     const markdown = screen.getByText('Loads custom agents you define in a markdown file')
     expect(markdown.parentElement?.textContent).toContain('Not available.')
-    expect(screen.getByText('Kiro Crew tools work in the chat').closest('details')).toBe(
+    expect(screen.getByText('Aj Crew tools work in the chat').closest('details')).toBe(
       screen.getByTestId('agent-harness-about'),
     )
   })
@@ -242,7 +242,7 @@ describe('AgentBackendTab detail card', () => {
     schemaMock.mockReturnValue(schemaWith(['kiro']))
     wrap()
     await waitFor(() =>
-      expect(screen.getByText('Kiro Crew tools work in the chat')).toBeInTheDocument(),
+      expect(screen.getByText('Aj Crew tools work in the chat')).toBeInTheDocument(),
     )
     expect(screen.queryByText('Other differences (not counted)')).toBeNull()
   })
@@ -268,7 +268,7 @@ describe('AgentBackendTab detail card', () => {
     schemaMock.mockReturnValue(schemaWith(['kiro']))
     wrap()
     await waitFor(() =>
-      expect(screen.getByText('Kiro Crew tools work in the chat')).toBeInTheDocument(),
+      expect(screen.getByText('Aj Crew tools work in the chat')).toBeInTheDocument(),
     )
     expect(screen.queryByText(/some_future_capability/)).toBeNull()
     expect(screen.getByText('Kiro CLI supports 1 of 1 features')).toBeInTheDocument()
@@ -317,7 +317,7 @@ describe('AgentBackendTab detail card', () => {
       screen.getByText(label).closest('li')?.querySelector('svg')?.getAttribute('class') ?? ''
     expect(glyph('The /compact command works')).not.toEqual('')
     expect(glyph('The /compact command works')).not.toEqual(
-      glyph('Kiro Crew tools work in the chat'),
+      glyph('Aj Crew tools work in the chat'),
     )
     expect(glyph('The /compact command works')).not.toEqual(
       glyph('You can add a message while it works'),
@@ -417,10 +417,10 @@ describe('AgentBackendTab detail card', () => {
     wrap()
     await waitFor(() =>
       expect(
-        screen.getByText('Asks before each tool, because Kiro Crew tells it to.'),
+        screen.getByText('Asks before each tool, because Aj Crew tells it to.'),
       ).toBeInTheDocument(),
     )
-    expect(screen.getByText(/because Kiro Crew tells it to/).closest('details')).toBe(
+    expect(screen.getByText(/because Aj Crew tells it to/).closest('details')).toBe(
       screen.getByTestId('agent-harness-about'),
     )
     highlight('Kiro Agent')
@@ -434,7 +434,7 @@ describe('AgentBackendTab detail card', () => {
     schemaMock.mockReturnValue(schemaWith(['kiro']))
     wrap()
     await waitFor(() =>
-      expect(screen.getByText('Kiro Crew tools work in the chat')).toBeInTheDocument(),
+      expect(screen.getByText('Aj Crew tools work in the chat')).toBeInTheDocument(),
     )
     expect(screen.queryByText(/a_future_mechanism/)).toBeNull()
   })
@@ -457,7 +457,7 @@ describe('AgentBackendTab detail card', () => {
   })
 
   it('folds a security note and counts it in the summary, without the warning marker', async () => {
-    // "Kiro Crew's sandbox is not confining this child" fails OPEN. The owner folded
+    // "Aj Crew's sandbox is not confining this child" fails OPEN. The owner folded
     // it with the rest of the card, on one condition: the always-visible summary
     // counts it.
     acpBackendsMock.mockResolvedValue({
@@ -606,7 +606,7 @@ describe('AgentBackendTab MCP ability card', () => {
    * a risk, or makes one of the reader's own agent-file settings ineffective. Two
    * things pass: the deny reach (a risk met by accident) and the settings that will not
    * take effect. The route Crew takes to the agent — native, mirror, external — is true
-   * and costs the reader nothing, so it is not on the card at all; `kirocrew doctor`
+   * and costs the reader nothing, so it is not on the card at all; `ajcrew doctor`
    * states it for whoever is diagnosing a route.
    */
   beforeEach(() => {
@@ -655,7 +655,7 @@ describe('AgentBackendTab MCP ability card', () => {
     wrap()
     const rule = await screen.findByText(/stops every tool on the same server/)
     const exception = panel().getByText(/One exception/)
-    expect(exception.textContent).toContain('kirocrew-core')
+    expect(exception.textContent).toContain('ajcrew-core')
     expect(exception.closest('details')).toBe(rule.closest('details'))
     expect(rule.compareDocumentPosition(exception) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
@@ -971,7 +971,7 @@ describe('AgentBackendTab kiro sign-in', () => {
   })
 
   it('opens on KAS with the sign-in while KAS is the saved backend, even if it reads as unselectable', async () => {
-    kirocrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'kas' } })
+    ajcrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'kas' } })
     schemaMock.mockReturnValue(schemaWith(['kiro']))
     wrap()
     await waitFor(() => expect(row('Kiro Agent')).toHaveAttribute('aria-current', 'true'))
@@ -1086,14 +1086,14 @@ describe('AgentBackendTab new backend', () => {
     // A status strip.
     await waitFor(() => expect(panel().getByText('Experimental')).toBeInTheDocument())
     // Every capability line, with its verdict as a word.
-    expect(screen.getByText('Kiro Crew tools work in the chat')).toBeInTheDocument()
+    expect(screen.getByText('Aj Crew tools work in the chat')).toBeInTheDocument()
     expect(screen.getByText('The /compact command works')).toBeInTheDocument()
     expect(
       screen.getByText('You can add a message while it works').parentElement?.textContent,
     ).toContain('Not available.')
     expect(screen.getByText(`${unheardOf} supports 2 of 3 features`)).toBeInTheDocument()
     // The graded line, from the routing enum.
-    expect(screen.getByText(/through an add-on Kiro Crew loads and checks/)).toBeInTheDocument()
+    expect(screen.getByText(/through an add-on Aj Crew loads and checks/)).toBeInTheDocument()
     // The security note, inside the About fold and counted in its summary.
     expect(screen.getByText(/Signs in with its own file/).closest('details')).toBe(
       screen.getByTestId('agent-harness-about'),

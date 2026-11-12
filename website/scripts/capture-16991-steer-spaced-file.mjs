@@ -27,7 +27,7 @@ const OUT = process.argv[2] || '../temp-screenshots/16991-steer-spaced-file'
 const LABEL = process.argv[3] || 'after'
 const DIST = process.argv[4] ? resolve(process.argv[4]) : undefined
 const SLOT = 'chat-steer-spaced-file'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 const FILE = '/tmp/My Project/notes v2.md'
 
 mkdirSync(OUT, { recursive: true })
@@ -38,7 +38,7 @@ const slots = [{
   running: true,
   last_message: 'Reading the changelog…',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

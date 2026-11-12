@@ -165,7 +165,7 @@ beforeEach(() => {
   listUnused = []
   listManagedError = false
   listShouldFail = false
-  localStorage.setItem('kiro_crew_token', 'test-token')
+  localStorage.setItem('aj_crew_token', 'test-token')
   installFetch()
 })
 
@@ -196,10 +196,10 @@ describe('SecretsPanel', () => {
     mount()
 
     expect(await screen.findByText('No secrets stored yet.')).toBeInTheDocument()
-    expect(screen.getByText(/KIROCREW_HOME\/config.json/)).toBeInTheDocument()
+    expect(screen.getByText(/AJCREW_HOME\/config.json/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Open the secrets setup guide' })).toHaveAttribute(
       'href',
-      'https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/secrets-env.md',
+      'https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/guides/secrets-env.md',
     )
 
     await user.click(screen.getByRole('button', { name: 'Add secret' }))
@@ -212,7 +212,7 @@ describe('SecretsPanel', () => {
     mount()
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Some automatic credentials are hidden because $KIROCREW_HOME/config.json',
+      'Some automatic credentials are hidden because $AJCREW_HOME/config.json',
     )
     expect(screen.getByText('MY_API_KEY')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add secret' })).toBeInTheDocument()
@@ -250,7 +250,7 @@ describe('SecretsPanel', () => {
     ]
     mount()
 
-    expect(await screen.findByText('Used automatically by Kiro Crew')).toBeInTheDocument()
+    expect(await screen.findByText('Used automatically by Aj Crew')).toBeInTheDocument()
     expect(screen.getByText('Jira API token')).toBeInTheDocument()
     expect(screen.getByText(/Authenticates Jira issue lookups/)).toBeInTheDocument()
     expect(screen.getByText('JIRA_API_TOKEN')).toBeInTheDocument()
@@ -571,13 +571,13 @@ describe('SecretsPanel', () => {
     const user = userEvent.setup()
     listManaged = [{ name: 'JIRA_API_TOKEN', kind: 'jira_api_token' }]
     mount()
-    await screen.findByText('Used automatically by Kiro Crew')
+    await screen.findByText('Used automatically by Aj Crew')
 
     await user.click(screen.getByRole('button', { name: 'Add secret' }))
     await user.type(screen.getByLabelText('Secret name'), 'jira_api_token')
     await user.type(screen.getByLabelText('Secret value'), 'jira-token-value')
 
-    expect(screen.getByText('Saving here updates JIRA_API_TOKEN under Used automatically by Kiro Crew.')).toBeInTheDocument()
+    expect(screen.getByText('Saving here updates JIRA_API_TOKEN under Used automatically by Aj Crew.')).toBeInTheDocument()
     const save = screen.getByRole('button', { name: 'Save' })
     expect(save).toBeEnabled()
     await user.click(save)
@@ -824,16 +824,16 @@ describe('SecretsPanel custom secrets card', () => {
     // is not told it is MCP-only — AND the mediated chat route (#8628).
     expect(screen.getByText(/Encrypted keys for MCP servers and \.env settings/)).toBeInTheDocument()
     // The authorize step names its prerequisites: a member chat, the opt-in
-    // @kirocrew-secrets grant, and where to run the command.
+    // @ajcrew-secrets grant, and where to run the command.
     const authorize = screen.getByText(
-      /To let an agent in a member chat call one approved API with a secret, grant the agent @kirocrew-secrets, then run the command below in a shell or on the Terminal page\./,
+      /To let an agent in a member chat call one approved API with a secret, grant the agent @ajcrew-secrets, then run the command below in a shell or on the Terminal page\./,
     )
-    expect(SECRETS_SERVER_GRANT).toBe('@kirocrew-secrets')
+    expect(SECRETS_SERVER_GRANT).toBe('@ajcrew-secrets')
     // The command is a literal the owner types, so it renders verbatim from
     // the code constant inside a <code> element, never from a catalog value.
     const command = screen.getByText(SECRETS_AUTHORIZE_COMMAND)
     expect(command.tagName).toBe('CODE')
-    expect(command.textContent).toBe('kirocrew secrets authorize NAME https://api.example.com')
+    expect(command.textContent).toBe('ajcrew secrets authorize NAME https://api.example.com')
     expect(authorize).toContainElement(command)
     // The token appears in both the disclaimer and the empty-state line.
     expect(screen.getAllByText(/secret:\/\/YOUR_KEY/).length).toBeGreaterThanOrEqual(1)
@@ -1404,7 +1404,7 @@ describe('SecretsPanel session key', () => {
   /**
    * The panel sends the fixed `dashboard:ui` session key that the shared
    * transport (`src/api/client.ts`) uses, on every request.  It previously read
-   * `localStorage['kiro_crew_token']` — a key nothing in the app ever writes —
+   * `localStorage['aj_crew_token']` — a key nothing in the app ever writes —
    * so that read always resolved to '' and was vestigial dead code.  This pins
    * the panel to the same `dashboard:ui` identity every other panel sends, and
    * guards against a regression back to a stored-token read.
@@ -1414,7 +1414,7 @@ describe('SecretsPanel session key', () => {
 
     // Even with a stray token in localStorage, the panel must NOT read it —
     // the header is the fixed dashboard:ui literal.
-    localStorage.setItem('kiro_crew_token', 'SHOULD-BE-IGNORED')
+    localStorage.setItem('aj_crew_token', 'SHOULD-BE-IGNORED')
     installFetch()
 
     mount()
@@ -1545,7 +1545,7 @@ describe('SecretsPanel on an expired session', () => {
     expect(isAuthBannerShown()).toBe(true)
     // The banner is only worth raising for what it carries: the command that
     // mints a fresh token, and somewhere to paste the result.
-    expect(banner()?.textContent).toContain('kirocrew token')
+    expect(banner()?.textContent).toContain('ajcrew token')
     expect(banner()?.querySelector('input')).not.toBeNull()
   })
 

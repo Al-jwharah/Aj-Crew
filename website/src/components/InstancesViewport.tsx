@@ -336,7 +336,7 @@ export default function InstancesViewport({ macInset = false }: { macInset?: boo
   // an ordinary model broadcast for an ack — see EmbeddedHostBridge.
   const postAckToRef = useRef<(id: string) => void>(() => {})
   const instancesRef = useRef<InstanceView[]>([])
-  // A `kirocrew://chat?crew=` link's session, posted once its pane is ready.
+  // An `ajcrew://chat?crew=` link's session, posted once its pane is ready.
   useDeliverPendingPaneSlot(iframeRefs, warm, ready)
 
   // Whether `refreshToken` would actually mint for this id right now: no mint

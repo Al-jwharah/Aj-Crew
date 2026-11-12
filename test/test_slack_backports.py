@@ -23,11 +23,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config.loader import ACTIVATION_ALWAYS, KiroCrewConfig, MessagingConfig
-from kiro_crew.messaging.outbound_files import ExtractLimits, OutboundFile, Rejection
-from kiro_crew.messaging.split import split_markdown_safe
-from kiro_crew.slack import events as ev
-from kiro_crew.slack.files import (
+from aj_crew.config.loader import ACTIVATION_ALWAYS, AjCrewConfig, MessagingConfig
+from aj_crew.messaging.outbound_files import ExtractLimits, OutboundFile, Rejection
+from aj_crew.messaging.split import split_markdown_safe
+from aj_crew.slack import events as ev
+from aj_crew.slack.files import (
     SLACK_MAX_TOTAL_UPLOAD_BYTES,
     SLACK_MAX_UPLOAD_FILE_BYTES,
     SLACK_MAX_UPLOAD_FILES,
@@ -37,11 +37,11 @@ from kiro_crew.slack.files import (
     is_voice_memo,
     upload_outbound_files,
 )
-from kiro_crew.slack.format import SLACK_MSG_LIMIT, TRUNCATION_NOTICE
-from kiro_crew.slack.handler import _THINKING
-from kiro_crew.slack.renderer import SlackRenderer
-from kiro_crew.slack.transport import SLACK_CAPABILITIES
-from kiro_crew.testing.wait import await_until, default_timeout
+from aj_crew.slack.format import SLACK_MSG_LIMIT, TRUNCATION_NOTICE
+from aj_crew.slack.handler import _THINKING
+from aj_crew.slack.renderer import SlackRenderer
+from aj_crew.slack.transport import SLACK_CAPABILITIES
+from aj_crew.testing.wait import await_until, default_timeout
 
 #: A one-pixel PNG: real leading bytes, so the extractor's magic-byte allowlist
 #: accepts it the way it would accept a chart the agent rendered.
@@ -57,8 +57,8 @@ def _quiet_sel():
     path keeps its own ``sel``.
     """
     fake = MagicMock()
-    with patch("kiro_crew.slack.files.sel", return_value=fake):
-        with patch("kiro_crew.slack.events.sel", return_value=fake):
+    with patch("aj_crew.slack.files.sel", return_value=fake):
+        with patch("aj_crew.slack.events.sel", return_value=fake):
             yield fake
 
 
@@ -242,7 +242,7 @@ class TestOutboundUploads:
         real_mkdtemp = tempfile.mkdtemp
 
         def _held_mkdtemp(*args, **kwargs):
-            if kwargs.get("prefix") != "kirocrew-slack-upload-":
+            if kwargs.get("prefix") != "ajcrew-slack-upload-":
                 return real_mkdtemp(*args, **kwargs)
             try:
                 loop.call_soon_threadsafe(entered.set)
@@ -364,7 +364,7 @@ class TestOutboundUploads:
         renderer = _renderer(slack, tmp_path)
         tiny = ExtractLimits(max_files=4, max_total_bytes=1024, max_file_bytes=4)
 
-        with patch("kiro_crew.slack.files.UPLOAD_LIMITS", tiny):
+        with patch("aj_crew.slack.files.UPLOAD_LIMITS", tiny):
             await _turn(renderer, f"see ![c]({chart})")
 
         shown = slack.shown()
@@ -553,7 +553,7 @@ class TestFenceSafeSplitting:
 
         slack = _FakeSlack(streaming=False)
         renderer = _renderer(slack)
-        with patch("kiro_crew.slack.renderer.split_markdown_safe", _record):
+        with patch("aj_crew.slack.renderer.split_markdown_safe", _record):
             await _turn(renderer, _fenced_answer())
 
         assert threads, "the shared splitter was never used"
@@ -584,12 +584,12 @@ class TestFenceSafeSplitting:
 
 def _orch() -> MagicMock:
     orch = MagicMock()
-    orch._cfg = KiroCrewConfig(
+    orch._cfg = AjCrewConfig(
         slack_channels={},
         slack_dm_activation=ACTIVATION_ALWAYS,
         messaging=MessagingConfig(use_transport=False),
     )
-    orch.slack_command = "kirocrew"
+    orch.slack_command = "ajcrew"
     orch._owner_id = "U_OWNER"
     orch._allowed_users = {"U_OWNER"}
     orch._tracking_channels = set()
@@ -651,20 +651,20 @@ async def _route_voice(
         "team": "T1",
         "files": files,
     }
-    with patch("kiro_crew.slack.events.is_allowed_user", return_value=True):
-        with patch("kiro_crew.slack.events.stt_available", return_value=available):
+    with patch("aj_crew.slack.events.is_allowed_user", return_value=True):
+        with patch("aj_crew.slack.events.stt_available", return_value=available):
             with patch(
-                "kiro_crew.slack.events._transcribe_with_reaction",
+                "aj_crew.slack.events._transcribe_with_reaction",
                 new_callable=AsyncMock,
                 return_value=transcripts,
             ):
                 with patch(
-                    "kiro_crew.slack.events.process_slack_files",
+                    "aj_crew.slack.events.process_slack_files",
                     new_callable=AsyncMock,
                     return_value=([], []),
                 ):
                     with patch(
-                        "kiro_crew.slack.events.handle_message", new_callable=AsyncMock
+                        "aj_crew.slack.events.handle_message", new_callable=AsyncMock
                     ) as handle:
                         await ev._route_message(orch, event, ev.SeenCache())
                         await _drain(orch)
@@ -747,8 +747,8 @@ class TestVoiceMemoRejections:
         # token on its own upstream path), so the wording is pinned against what
         # that function emits. Editing one copy without the other turns this red
         # instead of letting Slack and Discord describe one failure two ways.
-        from kiro_crew import transcribe
-        from kiro_crew.messaging.attachments import IngestResult, transcribe_audio_attachments
+        from aj_crew import transcribe
+        from aj_crew.messaging.attachments import IngestResult, transcribe_audio_attachments
 
         monkeypatch.setattr(transcribe, "is_available", lambda *a, **k: False)
         unavailable = await transcribe_audio_attachments(
@@ -772,8 +772,8 @@ class TestVoiceMemoRejections:
     async def test_over_duration_attachment_is_refused_before_transcription(
         self, monkeypatch
     ) -> None:
-        from kiro_crew import transcribe
-        from kiro_crew.messaging.attachments import IngestResult, transcribe_audio_attachments
+        from aj_crew import transcribe
+        from aj_crew.messaging.attachments import IngestResult, transcribe_audio_attachments
 
         monkeypatch.setattr(transcribe, "is_available", lambda: True)
         cfg = SimpleNamespace(timeout_secs=900)
@@ -799,15 +799,15 @@ class TestVoiceMemoRejections:
         ]
         # Two-way pin: the Slack path's shared constant must render byte-identical
         # to what this neutral path emits, so neither side can drift alone.
-        from kiro_crew.slack.files import VOICE_MEMO_TOO_LONG
+        from aj_crew.slack.files import VOICE_MEMO_TOO_LONG
 
         assert result.rejections == [VOICE_MEMO_TOO_LONG.format(minutes=60)]
         transcribe_call.assert_not_awaited()
 
     @pytest.mark.asyncio
     async def test_unverified_attachment_duration_is_refused(self, monkeypatch) -> None:
-        from kiro_crew import transcribe
-        from kiro_crew.messaging.attachments import IngestResult, transcribe_audio_attachments
+        from aj_crew import transcribe
+        from aj_crew.messaging.attachments import IngestResult, transcribe_audio_attachments
 
         monkeypatch.setattr(transcribe, "is_available", lambda: True)
         monkeypatch.setattr(
@@ -824,7 +824,7 @@ class TestVoiceMemoRejections:
 
         assert result.rejections == ["[Audio attachment — duration could not be verified]"]
         # Two-way pin: see test_over_duration_attachment_is_refused_before_transcription.
-        from kiro_crew.slack.files import VOICE_MEMO_DURATION_UNVERIFIED
+        from aj_crew.slack.files import VOICE_MEMO_DURATION_UNVERIFIED
 
         assert result.rejections == [VOICE_MEMO_DURATION_UNVERIFIED]
         transcribe_call.assert_not_awaited()

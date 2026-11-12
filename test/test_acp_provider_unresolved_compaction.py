@@ -13,16 +13,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp import stale_compaction
-from kiro_crew.acp.client import AcpClient, AcpError
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.types import EVENT_COMPACTION_STATUS, JsonRpcMessage
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.acp import stale_compaction
+from aj_crew.acp.client import AcpClient, AcpError
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.types import EVENT_COMPACTION_STATUS, JsonRpcMessage
+from aj_crew.providers.acp import AcpProvider
 
 
 def _build_provider(backend: str) -> AcpProvider:
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider(acp_backend=backend)
     provider._client = MagicMock()
     provider._client.backend = backend

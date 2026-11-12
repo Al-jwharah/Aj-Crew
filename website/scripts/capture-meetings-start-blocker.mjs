@@ -77,7 +77,7 @@ function meetingsApi(path, route) {
       },
       task_providers: [{ id: 'ledger', label: 'Local ledger' }],
       calendar_providers: [{ id: 'none', label: 'None' }],
-      stt_providers: [{ id: 'kiro', label: 'Kiro Crew' }],
+      stt_providers: [{ id: 'kiro', label: 'Aj Crew' }],
     }), true
   }
   if (path === '/api/apps/meetings/calendar') {

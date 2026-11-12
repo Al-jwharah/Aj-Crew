@@ -99,7 +99,7 @@ describe('InstancesViewport relay listener', () => {
   describe('mc-native-notify relay (a pane cannot post an OS banner itself)', () => {
     const CONSTRUCTED: Array<{ title: string; options: NotificationOptions | undefined }> = []
     const INSTANCES: Array<{ onclick: (() => void) | null }> = []
-    const ENVELOPE = { type: 'mc-native-notify', v: 1, title: 'Approval required', body: 'Bash', tag: 'kirocrew-approval', silent: true }
+    const ENVELOPE = { type: 'mc-native-notify', v: 1, title: 'Approval required', body: 'Bash', tag: 'ajcrew-approval', silent: true }
 
     function stubNotification(permission: 'granted' | 'default') {
       class FakeNotification {
@@ -129,7 +129,7 @@ describe('InstancesViewport relay listener', () => {
       await waitFor(() => expect(CONSTRUCTED).toHaveLength(1))
       expect(CONSTRUCTED[0]).toEqual({
         title: 'Zzq One: Approval required',
-        options: { body: 'Bash', tag: 'cd-1:kirocrew-approval', silent: true },
+        options: { body: 'Bash', tag: 'cd-1:ajcrew-approval', silent: true },
       })
     })
 
@@ -338,7 +338,7 @@ describe('InstancesViewport origin embeddability', () => {
   })
 
   it('shows the honest card for the loopback origins the CSP does not admit (::1, https *.localhost)', async () => {
-    for (const href of ['https://kirocrew.localhost:7778/', 'http://[::1]:7778/']) {
+    for (const href of ['https://ajcrew.localhost:7778/', 'http://[::1]:7778/']) {
       setLocation(href)
       const store = warmStore()
       const { unmount } = renderWithProviders(<InstancesViewport />, { store })

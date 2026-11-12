@@ -15,8 +15,7 @@ from __future__ import annotations
 
 import pytest
 
-from conftest import requires_symlinks
-from kiro_crew.hooks import (
+from aj_crew.hooks import (
     HOOK_PASSTHROUGH,
     HOOK_REPLY,
     TOOL_DENY,
@@ -25,6 +24,7 @@ from kiro_crew.hooks import (
     HooksConfig,
     safe_read_file,
 )
+from conftest import requires_symlinks
 
 
 class TestShellCommandProperty:
@@ -34,7 +34,7 @@ class TestShellCommandProperty:
     """
 
     def test_from_raw_tool_params(self):
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(kind="tool_call", is_shell=True, raw_tool_params={"command": "ls -la"})
         assert ev.shell_command == "ls -la"
@@ -44,7 +44,7 @@ class TestShellCommandProperty:
         — this is the dashboard's primary gate path, so the fallback is
         load-bearing: reading only raw_tool_params is a no-op on permission
         events."""
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(
             kind="permission_request",
@@ -54,13 +54,13 @@ class TestShellCommandProperty:
         assert ev.shell_command == "cr --all --yes"
 
     def test_non_shell_returns_none(self):
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(kind="tool_call", is_shell=False, raw_tool_params={"command": "ls"})
         assert ev.shell_command is None
 
     def test_missing_or_empty_command_returns_none(self):
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         assert AcpEvent(kind="tool_call", is_shell=True, raw_tool_params={}).shell_command is None
         assert (
@@ -69,7 +69,7 @@ class TestShellCommandProperty:
         )
 
     def test_malformed_tool_input_returns_none(self):
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(kind="permission_request", is_shell=True, tool_input="not json{")
         assert ev.shell_command is None
@@ -84,7 +84,7 @@ class TestShellCommandUseAws:
     """
 
     def test_use_aws_from_raw_tool_params(self):
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(
             kind="tool_call",
@@ -112,7 +112,7 @@ class TestShellCommandUseAws:
         the dashboard's primary gate path, where the v3.3.x SSM block fired."""
         import json as _json
 
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(
             kind="permission_request",
@@ -124,7 +124,7 @@ class TestShellCommandUseAws:
     def test_use_aws_not_denied_by_default_gate(self):
         """End-to-end through the gate: a benign use_aws call must NOT hit the
         deny-by-default backstop once the command is recoverable."""
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(
             kind="permission_request",
@@ -139,7 +139,7 @@ class TestShellCommandUseAws:
     def test_use_aws_destructive_operation_still_denied(self):
         """The synthesized command must keep the built-in deny globs armed:
         destructive AWS operations stay blocked."""
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(
             kind="tool_call",
@@ -158,7 +158,7 @@ class TestShellCommandUseAws:
     def test_use_aws_credential_read_payload_still_denied(self):
         """A shell payload smuggled inside ssm send-command parameters must be
         visible to the sensitive-path checks via the serialized tail."""
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(
             kind="tool_call",
@@ -177,7 +177,7 @@ class TestShellCommandUseAws:
     def test_missing_operation_name_still_returns_none(self):
         """Half a structured shape is not verifiable — deny-by-default must
         stay armed for it."""
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(kind="tool_call", is_shell=True, raw_tool_params={"service_name": "ssm"})
         assert ev.shell_command is None
@@ -187,7 +187,7 @@ class TestShellCommandUseAws:
     def test_pascal_case_operation_normalized_to_kebab(self):
         """PascalCase operation_name (the AWS API name, e.g. 'DeleteStack')
         must be normalized to kebab-case so deny globs still match."""
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(
             kind="tool_call",
@@ -206,7 +206,7 @@ class TestShellCommandUseAws:
     def test_pascal_case_destructive_op_denied(self):
         """End-to-end: PascalCase 'DeleteStack' must hit the deny gate
         identically to kebab 'delete-stack'."""
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(
             kind="tool_call",
@@ -224,7 +224,7 @@ class TestShellCommandUseAws:
 
     def test_camel_case_operation_normalized(self):
         """camelCase operation_name must also normalize (e.g. 'deleteStack')."""
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(
             kind="tool_call",
@@ -240,7 +240,7 @@ class TestShellCommandUseAws:
 
     def test_kebab_case_operation_unchanged(self):
         """Already-kebab operation_name must pass through unchanged."""
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(
             kind="tool_call",
@@ -258,7 +258,7 @@ class TestShellCommandUseAws:
         single tokens like 'cloudformation'). PascalCase service_name is passed
         through as-is because normalizing it would break deny regex matches
         (e.g. 'CloudFormation' → 'cloud-formation' ≠ 'cloudformation')."""
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(
             kind="tool_call",
@@ -281,7 +281,7 @@ class TestShellCommandUseAws:
     def test_whitespace_in_service_name_returns_none(self):
         """service_name with whitespace is rejected (fail-closed) — a
         multi-token service could confuse regex-based deny rules."""
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(
             kind="tool_call",
@@ -295,7 +295,7 @@ class TestShellCommandUseAws:
 
     def test_whitespace_in_operation_name_returns_none(self):
         """operation_name with whitespace is rejected (fail-closed)."""
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(
             kind="tool_call",
@@ -311,7 +311,7 @@ class TestShellCommandUseAws:
         """permission_request path (tool_input JSON) also normalizes casing."""
         import json as _json
 
-        from kiro_crew.acp.types import AcpEvent
+        from aj_crew.acp.types import AcpEvent
 
         ev = AcpEvent(
             kind="permission_request",
@@ -376,14 +376,14 @@ class TestHooksConfigFromDict:
         assert cfg.auto_approve_subagent_tools is True
 
     def test_hook_manager_auto_approve_subagent_tools_property(self):
-        from kiro_crew.hooks import HookManager
+        from aj_crew.hooks import HookManager
 
         cfg = HooksConfig.from_dict({"auto_approve_subagent_tools": True})
         mgr = HookManager(cfg)
         assert mgr.auto_approve_subagent_tools is True
 
     def test_hook_manager_auto_approve_subagent_tools_default(self):
-        from kiro_crew.hooks import HookManager
+        from aj_crew.hooks import HookManager
 
         cfg = HooksConfig.from_dict({})
         mgr = HookManager(cfg)
@@ -413,7 +413,7 @@ class TestSafeReadFile:
 
     def test_blocks_symlink_to_sensitive_path(self, tmp_path, monkeypatch):
         """A workspace symlink into ~/.aws must be refused through the link."""
-        from kiro_crew.hooks import safe_read_file_bytes
+        from aj_crew.hooks import safe_read_file_bytes
 
         home = tmp_path / "home"
         (home / ".aws").mkdir(parents=True)
@@ -438,7 +438,7 @@ class TestSafeReadFile:
         A FILE symlink, so a junction cannot stand in for it — the marker skips
         this only where symlink creation needs a privilege the shell lacks.
         """
-        from kiro_crew.hooks import safe_read_file_bytes
+        from aj_crew.hooks import safe_read_file_bytes
 
         real = tmp_path / "real.txt"
         real.write_text("hello")
@@ -478,8 +478,8 @@ class TestSafeReadFile:
         gate itself on both tiers."""
         import os
 
-        from kiro_crew import hooks as hooks_mod
-        from kiro_crew import security
+        from aj_crew import hooks as hooks_mod
+        from aj_crew import security
 
         home = tmp_path / "home"
         home.mkdir()
@@ -526,7 +526,7 @@ class TestSafeReadFile:
         """
         import errno
 
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         monkeypatch.setattr(hooks, "MAX_FILE_BYTES", 16)
         f = tmp_path / "big.json"
@@ -546,7 +546,7 @@ class TestSafeReadFile:
         """
         import errno
 
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         monkeypatch.setattr(hooks, "MAX_FILE_BYTES", 16)
         f = tmp_path / "grows.json"
@@ -586,7 +586,7 @@ class TestSafeReadFile:
         """
         import os
 
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         f = tmp_path / "watched.txt"
         f.write_bytes(b"payload")
@@ -611,7 +611,7 @@ class TestSafeReadFile:
         """
         import os
 
-        from kiro_crew import hooks
+        from aj_crew import hooks
 
         f = tmp_path / "refused.txt"
         f.write_bytes(b"must not be read")
@@ -634,7 +634,7 @@ class TestSafeReadFile:
         """
         import os
 
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         f = tmp_path / "plain.txt"
         f.write_bytes(b"content")
@@ -659,7 +659,7 @@ class TestSafeReadFile:
         """
         import errno
 
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         f = tmp_path / "plain.txt"
         f.write_bytes(b"content")

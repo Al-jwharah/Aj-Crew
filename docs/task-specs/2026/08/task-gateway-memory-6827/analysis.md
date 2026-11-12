@@ -1,9 +1,9 @@
 # Investigation: Gateway memory climb (issue #6827)
 
-> Archived analysis; owning spec: [vendored packages, local divergences from upstream](../../../../../src/kiro_crew/_vendor/README.md#local-divergences-from-upstream-re-apply-on-every-upgrade).
+> Archived analysis; owning spec: [vendored packages, local divergences from upstream](../../../../../src/aj_crew/_vendor/README.md#local-divergences-from-upstream-re-apply-on-every-upgrade).
 ## Summary
 
-Issue #6827 reports the Kiro Crew Python Gateway (`python.exe`) climbing from a
+Issue #6827 reports the Aj Crew Python Gateway (`python.exe`) climbing from a
 ~600 MB baseline to ~3 GB within roughly 10 minutes on a Windows 11 desktop,
 with no user interaction. The environment has 50+ skills, local git-clone
 knowledge sources, Telegram, and RSS enabled.
@@ -48,12 +48,12 @@ eliminates the full 3 GB climb.
 
 ## Root-cause candidate
 
-`LlamaCppEmbedder._load_model` (`src/kiro_crew/embeddings.py`, the
+`LlamaCppEmbedder._load_model` (`src/aj_crew/embeddings.py`, the
 `_load_model` method) constructs the vendored `Llama` with `embedding=True`,
 `n_ctx=_N_CTX(2048)`, `n_batch=_N_CTX(2048)`, `n_ubatch=_N_UBATCH(512)`.
 
 Upstream's constructor eagerly allocates a per-token scores buffer
-(`src/kiro_crew/_vendor/llama_cpp/llama.py`, lines ~476-478):
+(`src/aj_crew/_vendor/llama_cpp/llama.py`, lines ~476-478):
 
 ```python
 self.scores: npt.NDArray[np.single] = np.ndarray(
@@ -70,7 +70,7 @@ self.scores: npt.NDArray[np.single] = np.ndarray(
 ```
 
 That buffer is **pure waste on the embedding path**. `Llama.embed` /
-`create_embedding` (`src/kiro_crew/_vendor/llama_cpp/llama.py`, ~lines 1060-1185)
+`create_embedding` (`src/aj_crew/_vendor/llama_cpp/llama.py`, ~lines 1060-1185)
 return vectors via `llama_get_embeddings_seq` / `llama_get_embeddings` and never
 read `self.scores`. (The `logits_all = True` line inside `embed()` at ~line 1088
 is a local output-marking flag; it does not resize the constructor's scores
@@ -84,9 +84,9 @@ resident memory rather than a slow per-request creep.
 
 Cited files/line areas:
 
-- `src/kiro_crew/embeddings.py` -> `LlamaCppEmbedder._load_model` (the `Llama(...)`
+- `src/aj_crew/embeddings.py` -> `LlamaCppEmbedder._load_model` (the `Llama(...)`
   construction call site).
-- `src/kiro_crew/_vendor/llama_cpp/llama.py` -> scores allocation (~lines 476-478),
+- `src/aj_crew/_vendor/llama_cpp/llama.py` -> scores allocation (~lines 476-478),
   `embed()` / `create_embedding()` read path (~lines 1060-1185).
 
 ## Fix applied (FEAT-002)
@@ -94,7 +94,7 @@ Cited files/line areas:
 Committed as `fix(embeddings): skip the embedder's unused scores buffer (#6827)`.
 
 - Patched the vendored constructor
-  (`src/kiro_crew/_vendor/llama_cpp/llama.py`, `Llama.__init__`) to allocate
+  (`src/aj_crew/_vendor/llama_cpp/llama.py`, `Llama.__init__`) to allocate
   `self.scores` with **zero rows** when the model is opened with
   `embedding=True` and `logits_all` off:
 
@@ -109,18 +109,18 @@ Committed as `fix(embeddings): skip the embedder's unused scores buffer (#6827)`
   )
   ```
 
-- `src/kiro_crew/embeddings.py` is **unchanged** apart from an explanatory
+- `src/aj_crew/embeddings.py` is **unchanged** apart from an explanatory
   comment: `n_ctx`, `n_batch` (still `== n_ctx`), and `n_ubatch` all keep their
   existing values, so accepted context, logical batch, and micro-batching are
   untouched and the produced embedding vectors are **byte-identical for every
   input**, including unspaced text.
-- Marked with a `kiro_crew DIVERGENCE FROM UPSTREAM` comment and recorded under
-  "Local divergences from upstream" in `src/kiro_crew/_vendor/README.md`, since
+- Marked with an `aj_crew DIVERGENCE FROM UPSTREAM` comment and recorded under
+  "Local divergences from upstream" in `src/aj_crew/_vendor/README.md`, since
   the documented upgrade procedure replaces `llama_cpp/` wholesale and would
   otherwise drop the patch.
 - `scripts/vendor_manifest.sha256` regenerated with
   `python scripts/verify_vendor_manifest.py --write`, as
-  `src/kiro_crew/_vendor/README.md` prescribes, so the `vendor-manifest` CI job
+  `src/aj_crew/_vendor/README.md` prescribes, so the `vendor-manifest` CI job
   stays green and the vendored change shows up in the reviewable diff.
 
 Buffer-size math (n_vocab = 151,936 for Qwen3-Embedding-0.6B):
@@ -152,7 +152,7 @@ raising:
 | `_create_completion()` — `self._scores[token_offset - 1, :]`, `self._scores[-1, :]`, `self._scores[token_offset, :]`, `logits_to_logprobs(self._scores)` | row index / logprob path; would raise |
 
 The last two rows are the generation and logprob paths. They are unreachable
-here for two independent reasons: `src/kiro_crew/embeddings.py` is the only
+here for two independent reasons: `src/aj_crew/embeddings.py` is the only
 in-repo constructor of the vendored `Llama` and it calls `create_embedding()`
 only; and llama.cpp does not produce usable logits on a context created with
 `embeddings=True` in the first place, so upstream generation on an embedding
@@ -202,7 +202,7 @@ Each of the following was investigated in source and found to be bounded, so it
 is **not** the cause of an unbounded climb:
 
 - **(a) Per-embed KV-cache growth.** `Llama.embed()` calls `kv_cache_clear()` +
-  `reset()` on every call (`src/kiro_crew/_vendor/llama_cpp/llama.py`, ~lines
+  `reset()` on every call (`src/aj_crew/_vendor/llama_cpp/llama.py`, ~lines
   1103-1180). The KV cache is cleared per embed, so it cannot accumulate across
   calls.
 
@@ -210,28 +210,28 @@ is **not** the cause of an unbounded climb:
   inference onto a single owned worker thread (`kc-embed-infer`); callers hand
   work to it rather than each spinning up llama.cpp compute state. See the
   `LlamaCppEmbedder` class docstring and `_infer_loop` in
-  `src/kiro_crew/embeddings.py`. One owned thread means no per-caller pool
+  `src/aj_crew/embeddings.py`. One owned thread means no per-caller pool
   growth.
 
 - **(c) Unbounded embed result cache.** The result cache is bounded by
   `functools.lru_cache(maxsize=_EMBED_CACHE_MAX)` with `_EMBED_CACHE_MAX = 128`
-  (`src/kiro_crew/embeddings.py`, `_EMBED_CACHE_MAX = 128` at ~line 2154,
+  (`src/aj_crew/embeddings.py`, `_EMBED_CACHE_MAX = 128` at ~line 2154,
   applied to `_cached_embed` at ~line 2181). At ~4 MB for 128 entries this is
   fixed-size and cannot grow unbounded.
 
 - **(d) Skills held per-session as parsed objects.** `SkillsLoader` caches
   (`_fm_cache` / `_iter_cache`) are **shared** and keyed by file path with
-  TTL/invalidation, not per-session (`src/kiro_crew/skills.py`, ~lines
+  TTL/invalidation, not per-session (`src/aj_crew/skills.py`, ~lines
   1493-1774). 50+ skills are parsed into a shared, path-keyed cache, so session
   count does not multiply the footprint.
 
 - **(e) folder_watcher retaining per-file buffers for local git clones.** The
   watcher persists per-file state in SQLite (`folder_file_state`) with batched
   `last_seen` flushes; the scan loop does not accumulate unbounded in-memory
-  buffers (`src/kiro_crew/knowledge/folder_watcher.py`, scan loop ~lines
+  buffers (`src/aj_crew/knowledge/folder_watcher.py`, scan loop ~lines
   380-540). File state lives in the database, not RAM.
 
-- **(f) MCP/LLM subprocess fan-out.** `src/kiro_crew/knowledge/llm_pool.py` spawns
+- **(f) MCP/LLM subprocess fan-out.** `src/aj_crew/knowledge/llm_pool.py` spawns
   `kiro-cli` subprocess workers. That is tracked as issue **#3259** and is
   **explicitly out of scope** for #6827 (subprocess memory is separate from the
   `python.exe` gateway heap under investigation here).
@@ -244,7 +244,7 @@ comment:
 
 1. In `config.json`, set `memory.embedding_provider` to `""` (empty string).
    This is a documented diagnostic: an empty provider is coerced by
-   `_coerce_embedding_provider` in `src/kiro_crew/config/loader.py` and makes the
+   `_coerce_embedding_provider` in `src/aj_crew/config/loader.py` and makes the
    gateway fall back to keyword/FTS search instead of loading the in-process
    embedder (`knowledge/embedder.create_embedder_from_config`,
    `vector_memory._try_embed`).
@@ -257,7 +257,7 @@ comment:
      of the embedder -> keep #6827 open.
 3. A few minutes **into the climb**, capture a `tracemalloc` snapshot or a `py-spy`
    dump. This repo already ships py-spy support in
-   `src/kiro_crew/perf_sampler.py` (py-spy and in-process sampling), so no extra
+   `src/aj_crew/perf_sampler.py` (py-spy and in-process sampling), so no extra
    tooling install is required.
 4. Note whether the growth is **smooth** (steady creep, suggests a real leak) or
    **stepped** (discrete jumps, suggests bounded allocations firing at intervals).
@@ -285,5 +285,5 @@ Follow-up measurements the maintainer/reporter should take post-fix:
 3. Run the `memory.embedding_provider=""` diagnostic above to split embedder
    baseline from any residual climb.
 4. If a climb persists with the embedder disabled, attach the `tracemalloc` /
-   `py-spy` dump (via `src/kiro_crew/perf_sampler.py`) and note smooth vs stepped
+   `py-spy` dump (via `src/aj_crew/perf_sampler.py`) and note smooth vs stepped
    growth so the remaining leak can be localized outside the embedding path.

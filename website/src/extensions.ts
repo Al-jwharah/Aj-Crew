@@ -5,7 +5,7 @@
  * This module is imported for its side effects as the very first line of
  * `main.tsx`, before the store, providers, or `App` are constructed, so any
  * edition contributions are present before the shell renders. The edition's OWN
- * `extensions.tsx` (in its own repo, at `$KIROCREW_EDITION_DIR`) is where the
+ * `extensions.tsx` (in its own repo, at `$AJCREW_EDITION_DIR`) is where the
  * frontend extension-seam registrars are called:
  *
  *   import { registerBuiltinComponents } from '@/apps/builtinRegistry'
@@ -41,19 +41,19 @@
  * Syntax-highlighting languages are the one contribution that is NOT a
  * registrar here: the highlight.js worker must load them too, and it never
  * imports this module. The edition ships them as a data module,
- * `$KIROCREW_EDITION_DIR/languages.ts` (see `@/utils/highlightLanguages`).
+ * `$AJCREW_EDITION_DIR/languages.ts` (see `@/utils/highlightLanguages`).
  *
  * For edition-owned API methods there is no registrar — the edition imports the
  * blessed `apiTransport` (`@/api/apiTransport`) and builds its own typed API
  * module on it (the core never consumes edition API methods, so a registry would
  * add stringly-typed surface for no composition benefit).
  *
- * The core OWNS this file and imports the `virtual:kirocrew-edition` module,
+ * The core OWNS this file and imports the `virtual:ajcrew-edition` module,
  * which the `editionExtensionPlugin` in `vite.config.ts` resolves to:
- *   - an INERT empty module in the stock OSS build (`KIROCREW_EDITION_DIR`
+ *   - an INERT empty module in the stock OSS build (`AJCREW_EDITION_DIR`
  *     unset) — the stock build registers nothing, byte-identical to no seam;
  *   - the downstream edition's OWN composition root
- *     (`$KIROCREW_EDITION_DIR/extensions.tsx`) when that env var points at an
+ *     (`$AJCREW_EDITION_DIR/extensions.tsx`) when that env var points at an
  *     edition repo — so the edition injects its registrations by CONFIG, never
  *     by shadowing this file or `main.tsx` (the copy-and-shadow erosion the
  *     seams exist to eliminate).
@@ -67,7 +67,7 @@
  * `apiTransport` and builds its own typed API module on it.)
  */
 // Resolved by editionExtensionPlugin (vite.config.ts): inert in the stock build,
-// the edition's composition root when KIROCREW_EDITION_DIR is set.
-import 'virtual:kirocrew-edition'
+// the edition's composition root when AJCREW_EDITION_DIR is set.
+import 'virtual:ajcrew-edition'
 
 export {}

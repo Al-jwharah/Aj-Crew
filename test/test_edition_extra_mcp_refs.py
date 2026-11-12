@@ -15,11 +15,11 @@ from typing import Any
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew import agent
-from kiro_crew.agent_files import AGENT_FILENAME
-from kiro_crew.agent_materialization import guide_platform, mcp_aliases
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+import aj_crew.config.paths as paths_mod
+from aj_crew import agent
+from aj_crew.agent_files import AGENT_FILENAME
+from aj_crew.agent_materialization import guide_platform, mcp_aliases
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 EXTRA = "edition-late"
 EXTRA_REF = f"@{EXTRA}"
@@ -34,17 +34,17 @@ def rebuildable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", directory)
     monkeypatch.setattr(paths_mod, "mate_agents_dir", lambda: tmp_path / "mates" / "agents")
     monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
+        "aj_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
     )
     bindir = tmp_path / "bin"
     bindir.mkdir()
-    launcher = bindir / "kirocrew"
+    launcher = bindir / "ajcrew"
     launcher.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
     launcher.chmod(0o755)
-    monkeypatch.setattr(agent, "_KIROCREW_BIN", str(launcher))
+    monkeypatch.setattr(agent, "_AJCREW_BIN", str(launcher))
     monkeypatch.setattr(agent, "_KIRO_MCP_JSON", tmp_path / "kiro-global-mcp.json")
     monkeypatch.setattr(agent, "_DEFAULT_KIRO_HOOKS_DIR", tmp_path / "hooks")
-    monkeypatch.setattr("kiro_crew.apps.bridges._mcp_json_path", lambda: directory / AGENT_FILENAME)
+    monkeypatch.setattr("aj_crew.apps.bridges._mcp_json_path", lambda: directory / AGENT_FILENAME)
     return directory
 
 
@@ -55,7 +55,7 @@ def _supply(monkeypatch: pytest.MonkeyPatch, extras: dict[str, dict[str, Any]]) 
 
 
 def _extra_spec() -> dict[str, Any]:
-    return {"command": agent._KIROCREW_BIN, "args": ["mcp-late"]}
+    return {"command": agent._AJCREW_BIN, "args": ["mcp-late"]}
 
 
 def _spec(agents_dir: Path) -> dict[str, Any]:
@@ -115,7 +115,7 @@ def test_a_fresh_install_refs_the_server_and_records_it(
 def test_a_gated_off_server_gains_no_ref_and_stays_unrecorded(
     rebuildable: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.agent_materialization import managed_mcp
+    from aj_crew.agent_materialization import managed_mcp
 
     _supply(monkeypatch, {})
     agent.rebuild_agent_config()
@@ -197,9 +197,9 @@ _EDITION_ENV = {"TOOL_PERSONALIZATION_ENABLED": "true"}
 def test_a_kiro_global_entry_does_not_replace_an_edition_servers_invocation(
     rebuildable: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, global_extra: dict
 ) -> None:
-    edition = {"command": agent._KIROCREW_BIN, "args": _EDITION_ARGS, "env": _EDITION_ENV}
+    edition = {"command": agent._AJCREW_BIN, "args": _EDITION_ARGS, "env": _EDITION_ENV}
     _supply(monkeypatch, {EXTRA: edition})
-    shared = {EXTRA: {"command": agent._KIROCREW_BIN, "timeout": 5000, **global_extra}}
+    shared = {EXTRA: {"command": agent._AJCREW_BIN, "timeout": 5000, **global_extra}}
     (tmp_path / "kiro-global-mcp.json").write_text(
         json.dumps({"mcpServers": shared}), encoding="utf-8"
     )

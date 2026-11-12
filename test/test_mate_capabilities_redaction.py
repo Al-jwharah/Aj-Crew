@@ -14,9 +14,9 @@ import json
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew import mate_capabilities
-from kiro_crew.agent_capabilities import CapabilityError, CapabilityService
+import aj_crew.config.paths as paths_mod
+from aj_crew import mate_capabilities
+from aj_crew.agent_capabilities import CapabilityError, CapabilityService
 
 ENV_TOKEN = "env-tok-7f3a9c2e51"
 HEADER_TOKEN = "hdr-tok-b84d01e6aa"
@@ -147,7 +147,7 @@ def test_a_retain_path_onto_an_unmasked_leaf_is_refused(mate):
 
 
 def test_the_workers_server_rows_are_masked_too(mate, monkeypatch):
-    from kiro_crew import mate_worker
+    from aj_crew import mate_worker
 
     service, _ = mate
     monkeypatch.setattr(mate_capabilities, "worker_summary", REAL_WORKER_SUMMARY)

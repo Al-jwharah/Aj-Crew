@@ -16,11 +16,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.chat_utils import _MAX_TOOL_PURPOSE, _redact_tool_field
-from kiro_crew.dashboard.interaction_coordinator import ApprovalCoordinator
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot, row_mid
-from kiro_crew.history import ConversationLog
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard.chat_utils import _MAX_TOOL_PURPOSE, _redact_tool_field
+from aj_crew.dashboard.interaction_coordinator import ApprovalCoordinator
+from aj_crew.dashboard.state import DashboardState, _ChatSlot, row_mid
+from aj_crew.history import ConversationLog
+from aj_crew.testing.wait import async_wait_until
 
 _WAIT_SECS = 30.0
 
@@ -136,7 +136,7 @@ def test_projection_bounds_coordinator_purpose_without_splitting_text(character,
 
 
 def test_projection_redacts_full_coordinator_purpose_before_the_display_cut(monkeypatch):
-    from kiro_crew.dashboard import state as state_module
+    from aj_crew.dashboard import state as state_module
 
     secret = "ghp_" + "A" * 36
     purpose = "x" * (_MAX_TOOL_PURPOSE - 12) + secret + " tail" * 10
@@ -464,7 +464,7 @@ async def test_push_failure_never_breaks_the_approval(tmp_path):
 
 @pytest.mark.asyncio
 async def test_a_huge_coordinator_purpose_is_bounded_before_it_is_retained(tmp_path):
-    from kiro_crew.dashboard.chat_utils import _MAX_TOOL_PURPOSE
+    from aj_crew.dashboard.chat_utils import _MAX_TOOL_PURPOSE
 
     state = _make_state(tmp_path)
     parent = state.get_or_create_slot("parent")

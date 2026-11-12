@@ -22,7 +22,7 @@
  *  the one on it applies.
  *
  *  `applyWorkDelta` is the TypeScript twin of `apply_work` in
- *  `src/kiro_crew/crew_log/fold_delta.py`; both run the fixtures in
+ *  `src/aj_crew/crew_log/fold_delta.py`; both run the fixtures in
  *  `website/src/test/fixtures/work-delta-cases.json`. */
 import type { QueryClient } from '@tanstack/react-query'
 import { slotKey } from '../../pages/chat/command-center/model'

@@ -97,7 +97,7 @@ class TestUxScopeGateSurvivesAWideDiff:
         # The UI file comes FIRST so `grep -q` can answer immediately -- the
         # worst case for the writer, and the one that manufactured 141.
         touched = "website/src/App.tsx\n" + "\n".join(
-            f"src/kiro_crew/module_{i}.py" for i in range(tail_files)
+            f"src/aj_crew/module_{i}.py" for i in range(tail_files)
         )
         # Via a file, not the environment: a 200k-line value hits the execve
         # limit (E2BIG) before it reaches the gate.
@@ -135,7 +135,7 @@ class TestUxScopeGateSurvivesAWideDiff:
         bash = _bash()
         if bash is None:
             pytest.skip("the scope gate runs only under Bash")
-        touched = "src/kiro_crew/session.py\ndocs/ci/ci-and-reviews.md"
+        touched = "src/aj_crew/session.py\ndocs/ci/ci-and-reviews.md"
         github_output = tmp_path / "github_output"
         github_output.touch()  # the Actions runtime pre-creates $GITHUB_OUTPUT
         script = (

@@ -12,7 +12,7 @@ from __future__ import annotations
 import inspect
 import time
 
-from kiro_crew.dashboard import arrival_folders, channel_folders, chat_folders
+from aj_crew.dashboard import arrival_folders, channel_folders, chat_folders
 
 _STAMP_LINE = '"created_at": time.time()'
 

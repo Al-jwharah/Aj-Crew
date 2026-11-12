@@ -14,13 +14,13 @@ import logging
 
 import pytest
 
-from kiro_crew.acp import mcp_ref_guard
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.mcp_ref_guard import warn_remote_header_secret_refs
-from kiro_crew.acp.mcp_session_report import McpSessionReport
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CODEX, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.mcp_gateway.secret_uri import (
+from aj_crew.acp import mcp_ref_guard
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.mcp_ref_guard import warn_remote_header_secret_refs
+from aj_crew.acp.mcp_session_report import McpSessionReport
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CODEX, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.mcp_gateway.secret_uri import (
     header_secret_refs,
     remote_header_secret_ref_error,
 )
@@ -68,7 +68,7 @@ class TestTheSessionWarning:
         spec = {"mcpServers": {"remote": dict(_REMOTE), "local": {"command": "x"}}}
         with caplog.at_level(logging.WARNING, logger=mcp_ref_guard.__name__):
             found, omitted = warn_remote_header_secret_refs(
-                spec, [], backend=ACP_BACKEND_KIRO, agent="kirocrew"
+                spec, [], backend=ACP_BACKEND_KIRO, agent="ajcrew"
             )
         assert found == ["remote ('x-api-key')"]
         assert omitted == 0
@@ -90,7 +90,7 @@ class TestTheSessionWarning:
             }
         ]
         assert warn_remote_header_secret_refs(
-            spec, wire, backend=ACP_BACKEND_CODEX, agent="kirocrew"
+            spec, wire, backend=ACP_BACKEND_CODEX, agent="ajcrew"
         ) == (["remote ('x-api-key')"], 0)
         # The spec alone does not count on a host that only sees the array.
         assert warn_remote_header_secret_refs(spec, [], backend=ACP_BACKEND_CODEX, agent="k") == (
@@ -175,20 +175,20 @@ class TestTheReport:
 
 class TestTheCallSites:
     def test_the_client_records_it_at_session_composition(self, tmp_path):
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_KIRO)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_KIRO)
         client._mcp_ref_spec = {"mcpServers": {"remote": dict(_REMOTE)}}
         client._begin_session_report([])
         client._guard_unresolved_mcp_refs([])
         assert client.mcp_session_report().header_secret_refs == ("remote ('x-api-key')",)
 
     def test_a_failure_in_the_header_guard_costs_nothing(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         def _boom(*_a, **_k):
             raise RuntimeError("guard exploded")
 
         monkeypatch.setattr(client_mod, "warn_remote_header_secret_refs", _boom)
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_KIRO)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_KIRO)
         client._mcp_ref_spec = {"mcpServers": {"remote": dict(_REMOTE)}}
         client._begin_session_report([])
         client._guard_unresolved_mcp_refs([])  # must not raise

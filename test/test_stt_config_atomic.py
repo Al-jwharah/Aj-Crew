@@ -15,9 +15,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-import kiro_crew.dashboard.handlers.core as core
-from kiro_crew.config.loader import config_path
-from kiro_crew.dashboard.handlers.agents import _get_config_lock
+import aj_crew.dashboard.handlers.core as core
+from aj_crew.config.loader import config_path
+from aj_crew.dashboard.handlers.agents import _get_config_lock
 
 
 def _put(body: dict):
@@ -72,13 +72,13 @@ async def test_put_blocks_on_config_lock() -> None:
 @pytest.mark.asyncio
 async def test_put_offloads_atomic_write(monkeypatch) -> None:
     """A slow fsync-backed write must not run on the gateway event loop."""
-    import kiro_crew.config.loader as loader
+    import aj_crew.config.loader as loader
 
     # Land the one-time boot migrations before recording starts: ``load()``
     # persists them inline on whatever thread calls it, and this test is about
     # the handler's own write, not the loader's.
     config_path().write_text("{}", encoding="utf-8")
-    loader.KiroCrewConfig.load()
+    loader.AjCrewConfig.load()
 
     event_loop_thread = threading.get_ident()
     write_threads: list[int] = []

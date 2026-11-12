@@ -24,44 +24,44 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli
-from kiro_crew.platform import PlatformCompositionError
+from aj_crew import cli
+from aj_crew.platform import PlatformCompositionError
 
 _SRC = Path(__file__).resolve().parent.parent / "src"
-_CLI_PY = _SRC / "kiro_crew" / "cli.py"
+_CLI_PY = _SRC / "aj_crew" / "cli.py"
 #: The modules holding the parser registrars ``main()`` calls before it parses.
 _CLI_PARSER_PYS = tuple(
-    _SRC / "kiro_crew" / f"cli_parser_{part}.py" for part in ("gateway", "agent", "admin")
+    _SRC / "aj_crew" / f"cli_parser_{part}.py" for part in ("gateway", "agent", "admin")
 )
 
-#: Modules that must NOT load as a side effect of ``import kiro_crew.cli``.
+#: Modules that must NOT load as a side effect of ``import aj_crew.cli``.
 #: Each entry names a measured cost: cli_commands/cli_server are the two
 #: deferred dispatch-table modules (~1.1 s combined), slack.gateway is
 #: cli_server's heaviest edge, dashboard.state → vector_memory → numpy is the
 #: ~56 MB RSS chain. The cli_commands_* modules are cli_commands' owners, which load
 #: with it; one of them loading here is the same cost.
 _BANNED_AFTER_CLI_IMPORT = (
-    "kiro_crew.cli_commands",
-    "kiro_crew.cli_commands_workspace",
-    "kiro_crew.cli_commands_memory",
-    "kiro_crew.cli_commands_gateway_api",
-    "kiro_crew.cli_commands_app",
-    "kiro_crew.cli_commands_agent",
-    "kiro_crew.cli_commands_cron",
-    "kiro_crew.cli_commands_security",
-    "kiro_crew.cli_commands_eval",
-    "kiro_crew.cli_commands_learn",
-    "kiro_crew.cli_commands_secrets",
-    "kiro_crew.cli_server",
-    "kiro_crew.slack.gateway",
-    "kiro_crew.dashboard.state",
-    "kiro_crew.vector_memory",
+    "aj_crew.cli_commands",
+    "aj_crew.cli_commands_workspace",
+    "aj_crew.cli_commands_memory",
+    "aj_crew.cli_commands_gateway_api",
+    "aj_crew.cli_commands_app",
+    "aj_crew.cli_commands_agent",
+    "aj_crew.cli_commands_cron",
+    "aj_crew.cli_commands_security",
+    "aj_crew.cli_commands_eval",
+    "aj_crew.cli_commands_learn",
+    "aj_crew.cli_commands_secrets",
+    "aj_crew.cli_server",
+    "aj_crew.slack.gateway",
+    "aj_crew.dashboard.state",
+    "aj_crew.vector_memory",
     "numpy",
 )
 
 
 def test_cli_import_does_not_load_heavy_modules(tmp_path: Path) -> None:
-    """Ratchet: ``import kiro_crew.cli`` must stay free of the deferred modules.
+    """Ratchet: ``import aj_crew.cli`` must stay free of the deferred modules.
 
     If this fails, a module-scope import (direct or transitive) reached one of
     the banned modules again — move it into the dispatch branch that needs it
@@ -69,13 +69,13 @@ def test_cli_import_does_not_load_heavy_modules(tmp_path: Path) -> None:
     """
     code = (
         "import sys; "
-        "import kiro_crew.cli; "
+        "import aj_crew.cli; "
         "banned = " + repr(list(_BANNED_AFTER_CLI_IMPORT)) + "; "
         "present = [m for m in banned if m in sys.modules]; "
         "print(repr(present))"
     )
     # cwd=tmp_path: a child inherits pytest's CWD (the checkout) unless told
-    # otherwise; the interpreter resolves kiro_crew from the installed package,
+    # otherwise; the interpreter resolves aj_crew from the installed package,
     # not from the directory it runs in, so nothing here needs the checkout.
     res = subprocess.run(
         [sys.executable, "-X", "utf8", "-c", code],
@@ -84,17 +84,17 @@ def test_cli_import_does_not_load_heavy_modules(tmp_path: Path) -> None:
         timeout=120,
         cwd=tmp_path,
     )
-    assert res.returncode == 0, f"import kiro_crew.cli failed:\n{res.stderr}"
+    assert res.returncode == 0, f"import aj_crew.cli failed:\n{res.stderr}"
     present = ast.literal_eval(res.stdout.strip())
     assert present == [], (
-        f"module-scope import of kiro_crew.cli loaded deferred modules: {present}. "
+        f"module-scope import of aj_crew.cli loaded deferred modules: {present}. "
         "A new (or moved-back) module-scope import reaches them — defer it into "
         "the main() dispatch branch that uses it (see issue #3504)."
     )
 
 
 def _local_imports_in_main() -> list[tuple[str, str]]:
-    """(module, name) for every function-local kiro_crew import inside main()
+    """(module, name) for every function-local aj_crew import inside main()
     and the ``cli_parser_*`` registrar functions it calls to build its parser."""
     tree = ast.parse(_CLI_PY.read_text(encoding="utf-8"))
     main_fn = next(
@@ -112,7 +112,7 @@ def _local_imports_in_main() -> list[tuple[str, str]]:
     for fn in [main_fn, *registrars]:
         for node in ast.walk(fn):
             if isinstance(node, ast.ImportFrom) and node.module and (
-                node.module == "kiro_crew" or node.module.startswith("kiro_crew.")
+                node.module == "aj_crew" or node.module.startswith("aj_crew.")
             ):
                 for alias in node.names:
                     found.append((node.module, alias.name))
@@ -123,9 +123,9 @@ def test_main_contains_the_deferred_dispatch_imports() -> None:
     """The dispatch imports really are function-local (not silently hoisted back)."""
     local = _local_imports_in_main()
     modules = {mod for mod, _ in local}
-    assert "kiro_crew.cli_commands" in modules
-    assert "kiro_crew.cli_server" in modules
-    assert "kiro_crew.dashboard.state" in modules
+    assert "aj_crew.cli_commands" in modules
+    assert "aj_crew.cli_server" in modules
+    assert "aj_crew.dashboard.state" in modules
     # Coherence check: the dispatch chain defers a substantial name set, not a remnant.
     assert len(local) >= 25, f"expected >=25 deferred imports in main(), found {len(local)}"
 
@@ -166,9 +166,9 @@ def _read_line(
 
 
 def _stdio_roundtrip(subcommand: str, tmp_path: Path) -> list[str]:
-    """Start ``kirocrew <subcommand>`` over stdio; return the tools/list names."""
+    """Start ``ajcrew <subcommand>`` over stdio; return the tools/list names."""
     proc = subprocess.Popen(
-        [sys.executable, "-X", "utf8", "-m", "kiro_crew", subcommand],
+        [sys.executable, "-X", "utf8", "-m", "aj_crew", subcommand],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -178,7 +178,7 @@ def _stdio_roundtrip(subcommand: str, tmp_path: Path) -> list[str]:
         cwd=tmp_path,
         env={
             **os.environ,
-            "KIROCREW_HOME": str(tmp_path / "home"),
+            "AJCREW_HOME": str(tmp_path / "home"),
         },
     )
     try:
@@ -244,11 +244,11 @@ def test_boot_platform_runs_before_mcp_core_dispatch(monkeypatch) -> None:
         cli, "boot_platform", lambda *_a, **_k: order.append("boot_platform")
     )
 
-    fake_mcp_core = types.ModuleType("kiro_crew.mcp_core")
+    fake_mcp_core = types.ModuleType("aj_crew.mcp_core")
     fake_mcp_core.run_mcp_core_server = lambda: order.append("dispatch")  # type: ignore[attr-defined]
-    monkeypatch.setitem(sys.modules, "kiro_crew.mcp_core", fake_mcp_core)
+    monkeypatch.setitem(sys.modules, "aj_crew.mcp_core", fake_mcp_core)
 
-    monkeypatch.setattr(cli.sys, "argv", ["kirocrew", "mcp-core"])
+    monkeypatch.setattr(cli.sys, "argv", ["ajcrew", "mcp-core"])
     cli.main()
 
     assert order == ["boot_platform", "dispatch"]
@@ -263,11 +263,11 @@ def test_platform_composition_error_still_aborts_mcp_core(monkeypatch, capsys) -
     monkeypatch.setattr(cli, "boot_platform", _raise)
 
     dispatched: list[bool] = []
-    fake_mcp_core = types.ModuleType("kiro_crew.mcp_core")
+    fake_mcp_core = types.ModuleType("aj_crew.mcp_core")
     fake_mcp_core.run_mcp_core_server = lambda: dispatched.append(True)  # type: ignore[attr-defined]
-    monkeypatch.setitem(sys.modules, "kiro_crew.mcp_core", fake_mcp_core)
+    monkeypatch.setitem(sys.modules, "aj_crew.mcp_core", fake_mcp_core)
 
-    monkeypatch.setattr(cli.sys, "argv", ["kirocrew", "mcp-core"])
+    monkeypatch.setattr(cli.sys, "argv", ["ajcrew", "mcp-core"])
     with pytest.raises(SystemExit) as exited:
         cli.main()
     assert exited.value.code == 1
@@ -278,7 +278,7 @@ def test_platform_composition_error_still_aborts_mcp_core(monkeypatch, capsys) -
 
 
 def test_a_policy_error_reaches_policy_validate_as_one_line(monkeypatch, capsys) -> None:
-    """`kirocrew policy validate` on a policy with a typo'd key: the error the
+    """`ajcrew policy validate` on a policy with a typo'd key: the error the
     composition raised, on one line with exit 1, and the command never runs."""
 
     def _raise(*_a, **_k):
@@ -287,14 +287,14 @@ def test_a_policy_error_reaches_policy_validate_as_one_line(monkeypatch, capsys)
     monkeypatch.setattr(cli, "boot_platform", _raise)
     ran: list[bool] = []
     monkeypatch.setattr(
-        "kiro_crew.cli_commands._policy", lambda *_a, **_k: ran.append(True)
+        "aj_crew.cli_commands._policy", lambda *_a, **_k: ran.append(True)
     )
-    monkeypatch.setattr(cli.sys, "argv", ["kirocrew", "policy", "validate"])
+    monkeypatch.setattr(cli.sys, "argv", ["ajcrew", "policy", "validate"])
     with pytest.raises(SystemExit) as exited:
         cli.main()
     assert exited.value.code == 1
     assert ran == []
     err = capsys.readouterr().err
     assert "❌ unknown governed key 'sandbox.enabeld' (fail-closed)" in err
-    assert "kirocrew doctor" in err
+    assert "ajcrew doctor" in err
     assert "Traceback" not in err

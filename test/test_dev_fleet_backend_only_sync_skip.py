@@ -34,8 +34,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.builtins.dev_fleet import npm_preflight as np
-from kiro_crew.apps.builtins.dev_fleet import sync_runner
+from aj_crew.apps.builtins.dev_fleet import npm_preflight as np
+from aj_crew.apps.builtins.dev_fleet import sync_runner
 
 PREFLIGHT_LABEL = "Verify dependencies"
 FRONTEND = frozenset({"npm ci", "npm build + stage"})
@@ -52,7 +52,7 @@ def _tree(root: Path, *, populated: bool = True) -> str:
 
 def _fingerprint(root: Path, tree_id: str) -> None:
     """Write the build-source fingerprint the skip requires, beside static/dist."""
-    d = Path(root, "src", "kiro_crew", "static", "dist")
+    d = Path(root, "src", "aj_crew", "static", "dist")
     d.mkdir(parents=True, exist_ok=True)
     (d / np._BUILD_SOURCE_FINGERPRINT).write_text(tree_id, encoding="utf-8")
 
@@ -357,7 +357,7 @@ class TestUntrustedStepCannotForgeTheSkipVerdict:
 
 class TestFrontendBuildStepsShape:
     def test_both_steps_present_in_order(self):
-        from kiro_crew.apps.builtins.dev_fleet import worktree_ops
+        from aj_crew.apps.builtins.dev_fleet import worktree_ops
 
         steps = worktree_ops._frontend_build_steps(
             npm_bin="/usr/bin/npm", git_bin="/usr/bin/git", repo="/repo"
@@ -381,7 +381,7 @@ class TestBuildSourceFingerprintCleanTreeGuard:
     longer on disk."""
 
     def _git_status(self, *, porcelain: bytes, tree_id: bytes = b"tree_head\n", rc: int = 0):
-        from kiro_crew import frontend as fe
+        from aj_crew import frontend as fe
 
         def fake_run(argv, **kw):
             if "status" in argv:
@@ -394,28 +394,28 @@ class TestBuildSourceFingerprintCleanTreeGuard:
 
     def test_clean_website_is_stamped(self, tmp_path, monkeypatch):
         fe, fake = self._git_status(porcelain=b"")
-        (tmp_path / "src" / "kiro_crew" / "static" / "dist").mkdir(parents=True)
+        (tmp_path / "src" / "aj_crew" / "static" / "dist").mkdir(parents=True)
         monkeypatch.setattr(fe.subprocess, "run", fake)
         fe._write_build_source_fingerprint(tmp_path, "/usr/bin/git", log=lambda *_: None)
-        fp = tmp_path / "src" / "kiro_crew" / "static" / "dist" / fe._BUILD_SOURCE_FINGERPRINT
+        fp = tmp_path / "src" / "aj_crew" / "static" / "dist" / fe._BUILD_SOURCE_FINGERPRINT
         assert fp.exists() and fp.read_text(encoding="utf-8").strip() == "tree_head"
 
     def test_dirty_website_is_not_stamped(self, tmp_path, monkeypatch):
         fe, fake = self._git_status(porcelain=b" M website/src/App.tsx\n")
-        (tmp_path / "src" / "kiro_crew" / "static" / "dist").mkdir(parents=True)
+        (tmp_path / "src" / "aj_crew" / "static" / "dist").mkdir(parents=True)
         monkeypatch.setattr(fe.subprocess, "run", fake)
         fe._write_build_source_fingerprint(tmp_path, "/usr/bin/git", log=lambda *_: None)
-        fp = tmp_path / "src" / "kiro_crew" / "static" / "dist" / fe._BUILD_SOURCE_FINGERPRINT
+        fp = tmp_path / "src" / "aj_crew" / "static" / "dist" / fe._BUILD_SOURCE_FINGERPRINT
         assert (
             not fp.exists()
         ), "a dirty website/ must leave no fingerprint, so the next sync rebuilds"
 
     def test_unresolvable_status_is_not_stamped(self, tmp_path, monkeypatch):
         fe, fake = self._git_status(porcelain=b"", rc=128)
-        (tmp_path / "src" / "kiro_crew" / "static" / "dist").mkdir(parents=True)
+        (tmp_path / "src" / "aj_crew" / "static" / "dist").mkdir(parents=True)
         monkeypatch.setattr(fe.subprocess, "run", fake)
         fe._write_build_source_fingerprint(tmp_path, "/usr/bin/git", log=lambda *_: None)
-        fp = tmp_path / "src" / "kiro_crew" / "static" / "dist" / fe._BUILD_SOURCE_FINGERPRINT
+        fp = tmp_path / "src" / "aj_crew" / "static" / "dist" / fe._BUILD_SOURCE_FINGERPRINT
         assert not fp.exists()
 
 

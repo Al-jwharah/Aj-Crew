@@ -1,4 +1,4 @@
-"""The ``kiro_crew.pod.runtime`` namespace is the pod suite's one patch seam.
+"""The ``aj_crew.pod.runtime`` namespace is the pod suite's one patch seam.
 
 Every pod test, the pod CLI and Dev Fleet reach the pod runtime as ``rt.<name>``,
 and roughly seven hundred test sites patch collaborators there. Whichever module
@@ -30,12 +30,12 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew import pinned_fs, platform_compat
-from kiro_crew.pod import launchd
-from kiro_crew.pod import provision as prov
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod.config import EXIT_REFUSED_UNRECOVERABLE, PodConfig
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import pinned_fs, platform_compat
+from aj_crew.pod import launchd
+from aj_crew.pod import provision as prov
+from aj_crew.pod import runtime as rt
+from aj_crew.pod.config import EXIT_REFUSED_UNRECOVERABLE, PodConfig
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 _HOST_IS_WINDOWS = platform_compat.IS_WINDOWS
 _POD = "wt"
@@ -61,8 +61,8 @@ def _value(result: object) -> Callable[..., object]:
 def cfg(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PodConfig:
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
     monkeypatch.setenv("USERPROFILE", str(tmp_path / "home"))
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pod-root"))
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods"))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pod-root"))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods"))
     monkeypatch.setattr(rt, "IS_MACOS", False)
     monkeypatch.setattr(rt, "IS_WINDOWS", False)
     return PodConfig.load()
@@ -74,7 +74,7 @@ def _ready_checkout(root: Path) -> Path:
     binary.parent.mkdir(parents=True)
     binary.write_text("#!/bin/sh\n")
     binary.chmod(0o755)
-    (checkout / "src" / "kiro_crew" / "static" / "dist").mkdir(parents=True)
+    (checkout / "src" / "aj_crew" / "static" / "dist").mkdir(parents=True)
     return checkout
 
 
@@ -296,7 +296,7 @@ def _exec(cfg, tmp_path, mp):
 
 
 def _child_probe(cfg, tmp_path, mp):
-    from kiro_crew.agent_sdk import pod_child_probe
+    from aj_crew.agent_sdk import pod_child_probe
 
     def _capture(_env: object, *, timeout_secs: float) -> object:
         raise _Reached(timeout_secs)
@@ -511,7 +511,7 @@ def test_a_constant_patched_on_the_runtime_reaches_its_reader(
 
 
 def test_the_package_reexports_are_the_runtime_objects() -> None:
-    import kiro_crew.pod as pod
+    import aj_crew.pod as pod
 
     for name in ("PodError", "derive_port", "pod_home", "pod_unit", "resolve_checkout"):
         assert getattr(pod, name) is getattr(rt, name), name
@@ -561,7 +561,7 @@ def _flag_client(cfg, tmp_path, mp):
 
 
 def _flag_lifecycle(cfg, tmp_path, mp):
-    from kiro_crew.pod import windows
+    from aj_crew.pod import windows
 
     mp.setattr(windows, "start", _raiser("windows-branch"))
     mp.setattr(rt.unit_mod, "unit_is_current", _raiser("posix-branch"))
@@ -662,7 +662,7 @@ def test_a_platform_flag_patched_on_the_runtime_reaches_every_owner(
 _POD_DIR = Path(rt.__file__).parent
 
 #: The runtime namespace's surface: the pod CLI, Dev Fleet and the pod suite read
-#: these names on ``kiro_crew.pod.runtime``, whichever module defines them, so every
+#: these names on ``aj_crew.pod.runtime``, whichever module defines them, so every
 #: one must resolve there. Dropping a name is an API change, made here on purpose.
 _RUNTIME_SURFACE = frozenset(
     {
@@ -913,7 +913,7 @@ def test_a_reexported_name_is_the_owners_object_and_absent_from_the_core() -> No
 
 
 def test_a_write_through_the_runtime_lands_on_the_owner_and_is_restored() -> None:
-    from kiro_crew.pod import runtime_lifecycle, runtime_ports
+    from aj_crew.pod import runtime_lifecycle, runtime_ports
 
     original = runtime_ports.derive_port
     with pytest.MonkeyPatch.context() as patched:
@@ -964,7 +964,7 @@ def owner_guard() -> Iterator[Callable[[ModuleType, str], object]]:
 def test_nested_mock_patches_unwind_one_level_at_a_time(
     owner_guard: Callable[[ModuleType, str], object],
 ) -> None:
-    from kiro_crew.pod import runtime_client
+    from aj_crew.pod import runtime_client
 
     original = owner_guard(runtime_client, "mint_token")
     outer, inner = _value("outer"), _value("inner")
@@ -979,10 +979,10 @@ def test_nested_mock_patches_unwind_one_level_at_a_time(
 def test_mock_patch_of_a_dotted_target_lands_on_the_owner_and_is_restored(
     owner_guard: Callable[[ModuleType, str], object],
 ) -> None:
-    from kiro_crew.pod import runtime_ports
+    from aj_crew.pod import runtime_ports
 
     original = owner_guard(runtime_ports, "derive_port")
-    with mock.patch("kiro_crew.pod.runtime.derive_port") as stub:
+    with mock.patch("aj_crew.pod.runtime.derive_port") as stub:
         assert runtime_ports.derive_port is stub
     assert runtime_ports.derive_port is original
     assert "derive_port" not in vars(rt)
@@ -991,7 +991,7 @@ def test_mock_patch_of_a_dotted_target_lands_on_the_owner_and_is_restored(
 def test_monkeypatch_and_mock_nest_either_way_through_the_runtime(
     owner_guard: Callable[[ModuleType, str], object],
 ) -> None:
-    from kiro_crew.pod import runtime_home
+    from aj_crew.pod import runtime_home
 
     original = owner_guard(runtime_home, "cleanup_home")
     by_monkeypatch, by_mock = _value("monkeypatch"), _value("mock")
@@ -1015,7 +1015,7 @@ def test_monkeypatch_and_mock_nest_either_way_through_the_runtime(
 def test_monkeypatch_delattr_through_the_runtime_removes_and_restores(
     owner_guard: Callable[[ModuleType, str], object],
 ) -> None:
-    from kiro_crew.pod import runtime_ports
+    from aj_crew.pod import runtime_ports
 
     original = owner_guard(runtime_ports, "allocate_port")
     with pytest.MonkeyPatch.context() as patched:
@@ -1028,7 +1028,7 @@ def test_monkeypatch_delattr_through_the_runtime_removes_and_restores(
 def test_deleting_a_name_through_the_runtime_deletes_it_on_the_owner(
     owner_guard: Callable[[ModuleType, str], object],
 ) -> None:
-    from kiro_crew.pod import runtime_ports
+    from aj_crew.pod import runtime_ports
 
     owner_guard(runtime_ports, "operator_pinned")
     del rt.operator_pinned
@@ -1040,7 +1040,7 @@ def test_every_read_resolves_the_owner_through_the_import_system() -> None:
     """Each read asks ``importlib`` for the owner, so nothing here can go stale: it
     answers from ``sys.modules`` and waits on the import lock while an owner's body
     is still running, which a mapping held here could do neither of."""
-    from kiro_crew.pod import runtime_client
+    from aj_crew.pod import runtime_client
 
     calls: list[str] = []
     real_import = importlib.import_module
@@ -1178,17 +1178,17 @@ def test_owners_import_only_submodules_and_exception_types_from_the_pod_package(
     for stem, tree in _owner_sources().items():
         for node in ast.walk(tree):
             if not isinstance(node, ast.ImportFrom) or not (node.module or "").startswith(
-                "kiro_crew.pod"
+                "aj_crew.pod"
             ):
                 continue
             for alias in node.names:
-                if node.module == "kiro_crew.pod":
+                if node.module == "aj_crew.pod":
                     if not (_POD_DIR / f"{alias.name}.py").is_file():
-                        offenders.append(f"{stem}: from kiro_crew.pod import {alias.name}")
-                elif node.module == "kiro_crew.pod.runtime":
+                        offenders.append(f"{stem}: from aj_crew.pod import {alias.name}")
+                elif node.module == "aj_crew.pod.runtime":
                     if alias.name not in allowed_from_core:
-                        offenders.append(f"{stem}: from kiro_crew.pod.runtime import {alias.name}")
-                elif node.module.startswith("kiro_crew.pod.runtime_"):
+                        offenders.append(f"{stem}: from aj_crew.pod.runtime import {alias.name}")
+                elif node.module.startswith("aj_crew.pod.runtime_"):
                     offenders.append(f"{stem}: from {node.module} import {alias.name}")
     assert offenders == []
 
@@ -1204,7 +1204,7 @@ def test_the_core_imports_no_owner_before_its_own_names_are_bound() -> None:
         for sub in ast.walk(node):
             if isinstance(sub, ast.ImportFrom) and "runtime_" in (sub.module or ""):
                 loaded.append(sub.module or "")
-            if isinstance(sub, ast.ImportFrom) and sub.module == "kiro_crew.pod":
+            if isinstance(sub, ast.ImportFrom) and sub.module == "aj_crew.pod":
                 loaded.extend(a.name for a in sub.names if a.name.startswith("runtime_"))
     assert loaded == []
 
@@ -1233,15 +1233,15 @@ def test_importing_the_runtime_binds_every_owner_before_a_test_can_patch() -> No
     and ``runtime_home`` holding the real function."""
     code = (
         "import sys\n"
-        "from kiro_crew import platform_compat\n"
-        "import kiro_crew.pod.runtime as rt\n"
+        "from aj_crew import platform_compat\n"
+        "import aj_crew.pod.runtime as rt\n"
         "owners = sorted(rt._EXPORTS_BY_OWNER)\n"
         "print(','.join(m for m in owners if m not in sys.modules))\n"
         "real = platform_compat.pin_directory\n"
         "platform_compat.pin_directory = lambda path: None\n"
         "rt.seed_home_from_scenario\n"
         "platform_compat.pin_directory = real\n"
-        "home = sys.modules['kiro_crew.pod.runtime_home']\n"
+        "home = sys.modules['aj_crew.pod.runtime_home']\n"
         "print(home.pin_directory is real, rt.pin_directory is real)\n"
     )
     env = dict(os.environ)
@@ -1407,7 +1407,7 @@ def test_the_refusal_goes_by_name_so_a_module_stub_is_still_undone(
 ) -> None:
     """A forwarded function patched with a module object is an ordinary patch: it is
     written and undone. A module-valued name stays refused meanwhile, both ways."""
-    from kiro_crew.pod import runtime_lifecycle
+    from aj_crew.pod import runtime_lifecycle
 
     original = owner_guard(runtime_lifecycle, "stop_pod")
     stub = ModuleType("stop_pod_stub")

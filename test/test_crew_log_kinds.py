@@ -18,9 +18,9 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, CrewLogError, Ref
-from kiro_crew.crew_log.schema import check_ownership, require_src
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, CrewLogError, Ref
+from aj_crew.crew_log.schema import check_ownership, require_src
 
 CREW = "qa"
 SESSION = "s-7f3a"
@@ -29,7 +29,7 @@ SESSION = "s-7f3a"
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 
@@ -38,7 +38,7 @@ def _crew(unit_id: str = CREW) -> CrewLog:
 
 
 def _session(unit_id: str = SESSION) -> CrewLog:
-    return CrewLog.create(lg.KIND_SESSION, unit_id, owner=CREW, agent="kirocrew")
+    return CrewLog.create(lg.KIND_SESSION, unit_id, owner=CREW, agent="ajcrew")
 
 
 def _code(excinfo) -> str:
@@ -113,7 +113,7 @@ def test_an_unknown_kind_is_refused_before_any_source_list_is_indexed():
 
 def test_the_session_emitters_own_sources_are_all_accepted():
     """No behaviour change for the writes that exist: the emitter's own constants."""
-    from kiro_crew.crew_log import emit
+    from aj_crew.crew_log import emit
 
     for src in (emit._SRC_ACP, emit._SRC_GATEWAY):
         assert require_src(src, kind=lg.KIND_SESSION) == src

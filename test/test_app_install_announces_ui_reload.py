@@ -6,7 +6,7 @@ the files changed. The gateway sends the ``app_reload`` frame the dev-mode watch
 sends, and AppHost answers it with a page reload.
 
 Every route that replaces an app's files on success sends it once: the update
-route (``kirocrew app update`` and the Sync button) from a local source and from
+route (``ajcrew app update`` and the Sync button) from a local source and from
 the registry, the local install, and both registry install routes. A failed
 update or install replaced nothing and sends nothing.
 """
@@ -28,8 +28,8 @@ from apps_routes_coverage_helpers import (
     _setup_env,
 )
 
-import kiro_crew.apps.routes as routes_mod
-from kiro_crew.apps.manager import AppResult, enable_app, get_app, update_app
+import aj_crew.apps.routes as routes_mod
+from aj_crew.apps.manager import AppResult, enable_app, get_app, update_app
 
 
 def _recording_app() -> tuple[web.Application, list[tuple[str, dict[str, Any]]]]:

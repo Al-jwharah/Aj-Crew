@@ -16,21 +16,21 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew.acp import session_mcp
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.agent_sdk.backends import (
+import aj_crew.config.paths as paths_mod
+from aj_crew.acp import session_mcp
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_GOOSE,
     ACP_BACKEND_KIRO,
     ACP_BACKEND_OPENCODE,
 )
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard import chat_runner
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard import chat_runner
 
 _MIRRORS = [ACP_BACKEND_GOOSE, ACP_BACKEND_OPENCODE]
-_AGENT = "kirocrew"
+_AGENT = "ajcrew"
 _REPO_CMD = "repo-hook"
 _USER_CMD = "user-hook"
 

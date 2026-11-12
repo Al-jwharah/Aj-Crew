@@ -21,7 +21,7 @@ import pytest
 from voice_reply_helpers import _no_argv_prefixers  # noqa: F401
 from voice_reply_helpers import _mock_subprocess
 
-from kiro_crew.voice_reply import (
+from aj_crew.voice_reply import (
     _SAY_VOICE_RE,
     DEFAULT_PITCH,
     DEFAULT_PROVIDER,
@@ -206,7 +206,7 @@ class TestStripMarkdown:
         # in milliseconds. Generous bound for slow CI.
         import time
 
-        from kiro_crew.constants import strip_control_comments
+        from aj_crew.constants import strip_control_comments
 
         start = time.monotonic()
         out_tabs = strip_control_comments("<!--deliver:" + "\t" * 50_000)
@@ -378,11 +378,11 @@ class TestProviderConstants:
 
 class TestIsAvailable:
     def test_polly_available_when_aws_on_path(self) -> None:
-        with patch("kiro_crew.voice_reply.shutil.which", return_value="/usr/bin/aws"):
+        with patch("aj_crew.voice_reply.shutil.which", return_value="/usr/bin/aws"):
             assert is_available(PROVIDER_POLLY) is True
 
     def test_polly_unavailable_when_aws_missing(self) -> None:
-        with patch("kiro_crew.voice_reply.shutil.which", return_value=None):
+        with patch("aj_crew.voice_reply.shutil.which", return_value=None):
             assert is_available(PROVIDER_POLLY) is False
 
     def test_unknown_provider_returns_false(self, caplog) -> None:
@@ -390,13 +390,13 @@ class TestIsAvailable:
 
     def test_system_available_when_engine_resolves(self) -> None:
         with patch(
-            "kiro_crew.voice_reply.resolve_system_tts",
+            "aj_crew.voice_reply.resolve_system_tts",
             return_value=(SYSTEM_ENGINE_SAY, "/usr/bin/say"),
         ):
             assert is_available(PROVIDER_SYSTEM) is True
 
     def test_system_unavailable_without_engine(self) -> None:
-        with patch("kiro_crew.voice_reply.resolve_system_tts", return_value=None):
+        with patch("aj_crew.voice_reply.resolve_system_tts", return_value=None):
             assert is_available(PROVIDER_SYSTEM) is False
 
 
@@ -405,10 +405,10 @@ class TestIsAvailable:
 
 class TestResolveSystemTts:
     def test_macos_uses_say(self) -> None:
-        with patch("kiro_crew.voice_reply.IS_MACOS", True), patch(
-            "kiro_crew.voice_reply.IS_WINDOWS", False
+        with patch("aj_crew.voice_reply.IS_MACOS", True), patch(
+            "aj_crew.voice_reply.IS_WINDOWS", False
         ), patch(
-            "kiro_crew.voice_reply.trusted_system_bin", return_value="/usr/bin/say"
+            "aj_crew.voice_reply.trusted_system_bin", return_value="/usr/bin/say"
         ) as probe:
             assert resolve_system_tts() == (SYSTEM_ENGINE_SAY, "/usr/bin/say")
         probe.assert_called_once_with("say")
@@ -418,9 +418,9 @@ class TestResolveSystemTts:
         # and throws in pwsh 7, so resolving anything else would report a
         # provider as available that fails on every call.
         ps = r"C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
-        with patch("kiro_crew.voice_reply.IS_MACOS", False), patch(
-            "kiro_crew.voice_reply.IS_WINDOWS", True
-        ), patch("kiro_crew.voice_reply.trusted_system_bin", return_value=ps) as probe:
+        with patch("aj_crew.voice_reply.IS_MACOS", False), patch(
+            "aj_crew.voice_reply.IS_WINDOWS", True
+        ), patch("aj_crew.voice_reply.trusted_system_bin", return_value=ps) as probe:
             assert resolve_system_tts() == (SYSTEM_ENGINE_SAPI, ps)
         probe.assert_called_once_with("powershell")
 
@@ -431,23 +431,23 @@ class TestResolveSystemTts:
             calls.append(name)
             return "/usr/bin/espeak" if name == "espeak" else None
 
-        with patch("kiro_crew.voice_reply.IS_MACOS", False), patch(
-            "kiro_crew.voice_reply.IS_WINDOWS", False
-        ), patch("kiro_crew.voice_reply.trusted_system_bin", side_effect=probe):
+        with patch("aj_crew.voice_reply.IS_MACOS", False), patch(
+            "aj_crew.voice_reply.IS_WINDOWS", False
+        ), patch("aj_crew.voice_reply.trusted_system_bin", side_effect=probe):
             assert resolve_system_tts() == (SYSTEM_ENGINE_ESPEAK, "/usr/bin/espeak")
         assert calls == ["espeak-ng", "espeak"]
 
     def test_linux_without_engine_returns_none(self) -> None:
         # The normal answer on a stock server image, not a broken host.
-        with patch("kiro_crew.voice_reply.IS_MACOS", False), patch(
-            "kiro_crew.voice_reply.IS_WINDOWS", False
-        ), patch("kiro_crew.voice_reply.trusted_system_bin", return_value=None):
+        with patch("aj_crew.voice_reply.IS_MACOS", False), patch(
+            "aj_crew.voice_reply.IS_WINDOWS", False
+        ), patch("aj_crew.voice_reply.trusted_system_bin", return_value=None):
             assert resolve_system_tts() is None
 
     def test_macos_without_say_returns_none(self) -> None:
-        with patch("kiro_crew.voice_reply.IS_MACOS", True), patch(
-            "kiro_crew.voice_reply.IS_WINDOWS", False
-        ), patch("kiro_crew.voice_reply.trusted_system_bin", return_value=None):
+        with patch("aj_crew.voice_reply.IS_MACOS", True), patch(
+            "aj_crew.voice_reply.IS_WINDOWS", False
+        ), patch("aj_crew.voice_reply.trusted_system_bin", return_value=None):
             assert resolve_system_tts() is None
 
 
@@ -469,7 +469,7 @@ class TestResolveSystemTtsAsync:
             seen.append(threading.get_ident())
             return (SYSTEM_ENGINE_SAY, "/usr/bin/say")
 
-        with patch("kiro_crew.voice_reply.resolve_system_tts", side_effect=slow_resolve):
+        with patch("aj_crew.voice_reply.resolve_system_tts", side_effect=slow_resolve):
             assert await resolve_system_tts_async() == (SYSTEM_ENGINE_SAY, "/usr/bin/say")
         assert seen and seen[0] != loop_thread
 
@@ -681,13 +681,13 @@ class TestListSystemVoices:
 
     @pytest.mark.asyncio
     async def test_no_engine_is_an_empty_list_not_an_error(self) -> None:
-        with patch("kiro_crew.voice_reply.resolve_system_tts", return_value=None):
+        with patch("aj_crew.voice_reply.resolve_system_tts", return_value=None):
             assert await list_system_voices() == []
 
     @pytest.mark.asyncio
     async def test_a_spawn_failure_raises(self) -> None:
         with patch(
-            "kiro_crew.voice_reply.resolve_system_tts",
+            "aj_crew.voice_reply.resolve_system_tts",
             return_value=(SYSTEM_ENGINE_SAY, "/usr/bin/say"),
         ), patch("asyncio.create_subprocess_exec", side_effect=OSError("no exec")):
             with pytest.raises(SystemVoiceProbeError):
@@ -699,7 +699,7 @@ class TestListSystemVoices:
             return _mock_subprocess(returncode=3, stderr=b"bad flag")
 
         with patch(
-            "kiro_crew.voice_reply.resolve_system_tts",
+            "aj_crew.voice_reply.resolve_system_tts",
             return_value=(SYSTEM_ENGINE_SAY, "/usr/bin/say"),
         ), patch("asyncio.create_subprocess_exec", side_effect=fake_exec):
             with pytest.raises(SystemVoiceProbeError):
@@ -714,7 +714,7 @@ class TestListSystemVoices:
             return proc
 
         with patch(
-            "kiro_crew.voice_reply.resolve_system_tts",
+            "aj_crew.voice_reply.resolve_system_tts",
             return_value=(SYSTEM_ENGINE_SAY, "/usr/bin/say"),
         ), patch("asyncio.create_subprocess_exec", side_effect=fake_exec):
             with pytest.raises(SystemVoiceProbeError):
@@ -731,7 +731,7 @@ class TestListSystemVoices:
             return proc
 
         with patch(
-            "kiro_crew.voice_reply.resolve_system_tts",
+            "aj_crew.voice_reply.resolve_system_tts",
             return_value=(SYSTEM_ENGINE_SAY, "/usr/bin/say"),
         ), patch("asyncio.create_subprocess_exec", side_effect=fake_exec):
             with pytest.raises(asyncio.CancelledError):
@@ -750,8 +750,8 @@ class TestResolvePollyCli:
         """A GUI-launched gateway's minimal PATH must still resolve the CLI
         absolutely via the deploy engine's well-known-dirs resolver instead of
         silently skipping TTS."""
-        from kiro_crew import github_runner, voice_reply
-        from kiro_crew.deploy import engine
+        from aj_crew import github_runner, voice_reply
+        from aj_crew.deploy import engine
 
         fake_aws = tmp_path / "aws"
         fake_aws.write_text("#!/bin/sh\n")
@@ -769,8 +769,8 @@ class TestResolvePollyCli:
     def test_none_when_cli_absent_everywhere(self, monkeypatch, tmp_path) -> None:
         """Bare-name fallback that is not invocable maps to None — the value
         every probe site already treats as 'unavailable'."""
-        from kiro_crew import voice_reply
-        from kiro_crew.deploy import engine
+        from aj_crew import voice_reply
+        from aj_crew.deploy import engine
 
         empty_bin = tmp_path / "emptybin"
         empty_bin.mkdir()
@@ -787,7 +787,7 @@ class TestResolvePollyCli:
 @pytest.fixture
 def fresh_removed_warning(monkeypatch):
     """The removed-provider notice fires once per process; give each test its own."""
-    monkeypatch.setattr("kiro_crew.voice_reply._warned_removed_providers", set())
+    monkeypatch.setattr("aj_crew.voice_reply._warned_removed_providers", set())
 
 
 class TestResolveConfiguredProvider:
@@ -802,7 +802,7 @@ class TestResolveConfiguredProvider:
     def test_invalid_provider_warns_and_never_reaches_polly(self, caplog) -> None:
         import logging
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.voice_reply"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.voice_reply"):
             assert resolve_configured_provider({"provider": "ploly"}) == DEFAULT_PROVIDER
         assert DEFAULT_PROVIDER != PROVIDER_POLLY
         assert any("ploly" in rec.message for rec in caplog.records)
@@ -822,7 +822,7 @@ class TestRemovedPiperProvider:
     ) -> None:
         import logging
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.voice_reply"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.voice_reply"):
             got = resolve_configured_provider({"provider": "piper", "piper_model": "~/v.onnx"})
         assert got == DEFAULT_PROVIDER == PROVIDER_SYSTEM
         notices = [r.message for r in caplog.records if "was removed" in r.message]
@@ -838,7 +838,7 @@ class TestRemovedPiperProvider:
         # The pre-system-default upgrade shape: no provider, only a model path.
         import logging
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.voice_reply"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.voice_reply"):
             assert resolve_configured_provider({"piper_model": "~/v.onnx"}) == DEFAULT_PROVIDER
             assert resolve_configured_provider({"provider": "", "piper_model": "~/v.onnx"}) == (
                 DEFAULT_PROVIDER
@@ -851,14 +851,14 @@ class TestRemovedPiperProvider:
     ) -> None:
         import logging
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.voice_reply"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.voice_reply"):
             assert resolve_configured_provider({"piper_model": malformed}) == DEFAULT_PROVIDER
         assert not any("was removed" in r.message for r in caplog.records)
 
     def test_the_notice_is_logged_once_per_process(self, caplog, fresh_removed_warning) -> None:
         import logging
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.voice_reply"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.voice_reply"):
             for _ in range(3):
                 resolve_configured_provider({"provider": "piper"})
         assert sum("was removed" in r.message for r in caplog.records) == 1
@@ -868,7 +868,7 @@ class TestRemovedPiperProvider:
     ) -> None:
         import logging
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.voice_reply"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.voice_reply"):
             got = resolve_configured_provider(
                 {"provider": PROVIDER_POLLY, "piper_model": "~/voices/en.onnx"}
             )

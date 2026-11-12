@@ -30,7 +30,7 @@ name: Merge Queue Readiness
 # No fleet route, deliberately. This job polls; it runs no tests, so it does not
 # need the fleet's size, and the fleet's webhook admits jobs by actor and
 # workflow shape this file has no measured history with. In this repository it
-# takes the `kirocrew-runners` group's label; in a fork it stays on a hosted
+# takes the `ajcrew-runners` group's label; in a fork it stays on a hosted
 # runner (the `readiness` job below says why). The poll budget below starts
 # when the job starts, so runner queue time does not eat into it.
 # The budget is the polled lanes' own ceiling, not their typical time: a CI run
@@ -82,7 +82,7 @@ jobs:
     # The job name IS the check name the ruleset requires. Renaming it silently
     # stops satisfying branch protection for every queued pull request.
     name: PR Readiness
-    # In THIS repository this poll takes the `kirocrew-runners` group's own
+    # In THIS repository this poll takes the `ajcrew-runners` group's own
     # runner instead of the shared standard pool, whose concurrency is shared
     # enterprise-wide. Targeted by LABEL rather than `group:`: a group belongs
     # to the kirodotdev organization, and a fork that enables its own merge
@@ -125,7 +125,7 @@ jobs:
     # definition is at `maximum_runners`, restore `runs-on: ubuntu-latest` on
     # this line before diagnosing anything else -- ahead of every other
     # group-targeted site, because this one gates the queue itself.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     # Above the poll's TOTAL_BUDGET below, so the step's own error names the
     # slow lane rather than the job cap cutting it off.
     timeout-minutes: 225

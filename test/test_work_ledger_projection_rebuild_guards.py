@@ -33,10 +33,10 @@ from work_ledger_projection_helpers import (
     _Slot,
 )
 
-from kiro_crew import work_ledger as wl
-from kiro_crew.crew_log import eager, projection
-from kiro_crew.dashboard.handlers import work_ledger as routes
-from kiro_crew.testing.wait import async_wait_until, await_until, default_timeout, until_parked
+from aj_crew import work_ledger as wl
+from aj_crew.crew_log import eager, projection
+from aj_crew.dashboard.handlers import work_ledger as routes
+from aj_crew.testing.wait import async_wait_until, await_until, default_timeout, until_parked
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _isolated = work_ledger_projection_helpers._isolated
@@ -96,7 +96,7 @@ async def test_a_pruned_worker_unit_leaves_the_rebuilt_report_standing(
 ):
     """The board's copy of the report is in the conductor's log, so retention taking the
     worker's unit costs the board nothing: the rebuild keeps the report."""
-    from kiro_crew.crew_log import store
+    from aj_crew.crew_log import store
 
     _real_units(monkeypatch)
     item_id = await _board()
@@ -107,7 +107,7 @@ async def test_a_pruned_worker_unit_leaves_the_rebuilt_report_standing(
     # Retention takes the worker's unit; the conductor's create and bind remain.
     import shutil
 
-    from kiro_crew import crew_log as lg
+    from aj_crew import crew_log as lg
 
     with eager.paused():
         shutil.rmtree(store.crew_log_dir(lg.KIND_SESSION, "u-worker"))
@@ -130,8 +130,8 @@ async def test_a_rebuild_keeps_the_completeness_marker_and_a_later_prune_keeps_t
     the conductor's log."""
     import shutil
 
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import store
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import store
 
     _real_units(monkeypatch)
     item_id = await _board()
@@ -372,8 +372,8 @@ def test_supplemental_worker_units_use_append_order_not_the_header_clock(monkeyp
     an earlier one, so that inconsistency let a backward clock step across the worker's
     reset fold its OLDER report last, overwriting the latest status and summary.
     """
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog, emit, store
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog, emit, store
 
     older_unit = "u-worker-clock-older"
     newer_unit = "u-worker-clock-newer"
@@ -391,7 +391,7 @@ def test_supplemental_worker_units_use_append_order_not_the_header_clock(monkeyp
     board_unit = "u-board-clock"
     monkeypatch.setattr(store, "now_ms", lambda: 3_000)
     opened = CrewLog.create(
-        lg.KIND_SESSION, board_unit, owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, board_unit, owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     del opened
     mine = {"slot": CONDUCTOR, "actor": "conductor", "by": CONDUCTOR}
@@ -412,7 +412,7 @@ def test_supplemental_worker_units_use_append_order_not_the_header_clock(monkeyp
     # The worker's FIRST unit, appended first, carries the later wall clock.
     monkeypatch.setattr(store, "now_ms", lambda: 2_000)
     first = CrewLog.create(
-        lg.KIND_SESSION, older_unit, owner="raymond", agent="kirocrew", slot=WORKER
+        lg.KIND_SESSION, older_unit, owner="raymond", agent="ajcrew", slot=WORKER
     )
     del first
     assert emit.on_work_recorded(
@@ -432,7 +432,7 @@ def test_supplemental_worker_units_use_append_order_not_the_header_clock(monkeyp
     # correction gives it the earlier header clock, so the raw store order is backwards.
     monkeypatch.setattr(store, "now_ms", lambda: 1_000)
     second = CrewLog.create(
-        lg.KIND_SESSION, newer_unit, owner="raymond", agent="kirocrew", slot=WORKER
+        lg.KIND_SESSION, newer_unit, owner="raymond", agent="ajcrew", slot=WORKER
     )
     del second
     assert emit.on_work_recorded(
@@ -632,13 +632,13 @@ def test_a_rebuild_holds_a_fold_created_items_lock_through_its_undo(monkeypatch)
     So this fails the rebuild AFTER the new item lands, and asks at undo time
     whether another holder could take that item's lock. It must not be able to.
     """
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     new_id = "it_0000abcd"
     stray_id = "it_0000dead"
     conductor = CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     mine = {"slot": CONDUCTOR, "actor": "conductor", "by": CONDUCTOR}
     conductor.append(
@@ -789,8 +789,8 @@ def test_a_new_generation_resets_the_boards_own_entry_count_and_epoch():
     the same second, so comparing timestamps end to end would be flaky, while the
     reset itself is exact.
     """
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     state = projection._work_start()
     state["entries"] = 5
@@ -808,7 +808,7 @@ def test_a_new_generation_resets_the_boards_own_entry_count_and_epoch():
 
     # End to end: two entries for one board, then a third opening a new generation.
     unit = CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     old = {"slot": CONDUCTOR, "actor": "conductor", "by": CONDUCTOR, "generation": "gen-0001"}
     unit.append(
@@ -855,11 +855,11 @@ def test_a_generationless_straggler_is_omitted_once_a_stamped_board_is_live():
     because it materialises an item through the same line with no dependence on the
     baseline payload's shape.
     """
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     unit = CrewLog.create(
-        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="kirocrew", slot=CONDUCTOR
+        lg.KIND_SESSION, "u-conductor", owner="raymond", agent="ajcrew", slot=CONDUCTOR
     )
     stamped = {
         "slot": CONDUCTOR,
@@ -901,12 +901,12 @@ def test_a_board_from_before_the_stamp_still_applies_its_own_entries():
     this, a guard that omitted every generationless entry would satisfy the test
     above while silently emptying every pre-stamp board.
     """
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
     legacy_slot = "chat-91-legacy"
     unit = CrewLog.create(
-        lg.KIND_SESSION, "u-legacy", owner="raymond", agent="kirocrew", slot=legacy_slot
+        lg.KIND_SESSION, "u-legacy", owner="raymond", agent="ajcrew", slot=legacy_slot
     )
     old = {"slot": legacy_slot, "actor": "conductor", "by": legacy_slot}  # no generation
     unit.append(

@@ -25,8 +25,8 @@ from slack_options_lifecycle_helpers import (
     _slack_app,
 )
 
-from kiro_crew.slack.outbound import PostedOptions
-from kiro_crew.testing.wait import await_until, until_parked
+from aj_crew.slack.outbound import PostedOptions
+from aj_crew.testing.wait import await_until, until_parked
 
 
 class TestLinkTimeBackfill:
@@ -73,7 +73,7 @@ class TestLinkTimeBackfill:
         assert state.slack_client.post_blocks.await_args is not None
 
     def _state(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.slack_client = MagicMock()
         state.slack_client.open_dm = AsyncMock(return_value="C1")
@@ -218,7 +218,7 @@ class TestNonStringKeyIsRefused:
 
     @pytest.mark.timeout(5)
     def test_a_non_string_key_returns_none_instead_of_spinning(self):
-        from kiro_crew.dashboard import chat_utils
+        from aj_crew.dashboard import chat_utils
 
         state = MagicMock()
 
@@ -228,7 +228,7 @@ class TestNonStringKeyIsRefused:
 
     @pytest.mark.timeout(5)
     def test_a_real_string_key_still_reaches_the_lookup(self):
-        from kiro_crew.dashboard import chat_utils
+        from aj_crew.dashboard import chat_utils
 
         state = MagicMock()
         sentinel = object()
@@ -248,9 +248,9 @@ class TestUnlinkSpendsTheControl:
 
     @pytest.mark.asyncio
     async def test_unlink_expires_a_live_options_control(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_slack import api_chat_slot_slack_unlink
+        from aj_crew.dashboard.chat_slack import api_chat_slot_slack_unlink
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_slack.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_slack.sel", lambda: MagicMock())
 
         state = _make_state(tmp_path)
         # Returns into the JSON body, so it has to be a real bool not a mock.
@@ -305,9 +305,9 @@ class TestUnlinkSpendsTheControl:
         Expiring first and then tearing down unconditionally wipes the in-memory fields
         of a relink that landed during the Slack await. This pins the compare-and-clear.
         """
-        from kiro_crew.dashboard.chat_slack import api_chat_slot_slack_unlink
+        from aj_crew.dashboard.chat_slack import api_chat_slot_slack_unlink
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_slack.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_slack.sel", lambda: MagicMock())
 
         state = _make_state(tmp_path)
         state.sessions.clear_slack_link = MagicMock(return_value=True)
@@ -328,7 +328,7 @@ class TestUnlinkSpendsTheControl:
             slot._slack_thread_ts = "thread-2"
             _state._slack_to_slot["thread-2"] = slot.key
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_slack.expire_slack_options", _relink_midway)
+        monkeypatch.setattr("aj_crew.dashboard.chat_slack.expire_slack_options", _relink_midway)
 
         app = web.Application()
         app["state"] = state
@@ -351,10 +351,10 @@ class TestUnlinkSpendsTheControl:
         comparison as "a relink landed" would turn every ordinary unlink into a
         silent no-op.
         """
-        from kiro_crew.dashboard.chat_slack import api_chat_slot_slack_unlink
-        from kiro_crew.dashboard.chat_utils import effective_session_key
+        from aj_crew.dashboard.chat_slack import api_chat_slot_slack_unlink
+        from aj_crew.dashboard.chat_utils import effective_session_key
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_slack.sel", lambda: MagicMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_slack.sel", lambda: MagicMock())
 
         state = _make_state(tmp_path)
         slack = MagicMock()
@@ -372,7 +372,7 @@ class TestUnlinkSpendsTheControl:
         async def _no_relink(_state, _session_key, ts=None):
             return None
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_slack.expire_slack_options", _no_relink)
+        monkeypatch.setattr("aj_crew.dashboard.chat_slack.expire_slack_options", _no_relink)
 
         app = web.Application()
         app["state"] = state
@@ -400,7 +400,7 @@ class TestEveryOutstandingControlIsExpired:
 
     @pytest.mark.asyncio
     async def test_expiry_drains_all_recorded_controls(self, tmp_path):
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             expire_slack_options,
             remember_slack_options,
         )
@@ -433,7 +433,7 @@ class TestEveryOutstandingControlIsExpired:
         A cron runs on ``cron:<id>`` but its slot is ``cron-<id>``, and the filename fold
         gives ``cron_<id>``. The resolver falls back to asking the slots their identity.
         """
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             expire_slack_options,
             remember_slack_options,
             slack_options_slot,
@@ -475,7 +475,7 @@ class TestEveryOutstandingControlIsExpired:
         """
         from slack_sdk.errors import SlackApiError
 
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             expire_slack_options,
             remember_slack_options,
         )
@@ -509,7 +509,7 @@ class TestEveryOutstandingControlIsExpired:
         """
         from slack_sdk.errors import SlackApiError
 
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             expire_slack_options,
             remember_slack_options,
         )
@@ -539,7 +539,7 @@ class TestEveryOutstandingControlIsExpired:
         thread index, which the dashboard slot index cannot see. A missed forget lets the
         next expiry edit over the answer and defeats the under-lock skip.
         """
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             slack_options_owner_key,
             slack_options_session_keys,
         )
@@ -566,7 +566,7 @@ class TestEveryOutstandingControlIsExpired:
         handed us a mock. Guards the helper against silently recording under a
         MagicMock's repr.
         """
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             canonical_key,
             slack_options_owner_key,
             slack_options_session_keys,
@@ -588,12 +588,12 @@ class TestEveryOutstandingControlIsExpired:
         Slack has no compare-and-set, so expiry re-reads its record inside the per-message
         ``options_edit_lock`` and skips its edit when a Send already dropped the record.
         """
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             expire_slack_options,
             forget_slack_options,
             remember_slack_options,
         )
-        from kiro_crew.slack.outbound import options_edit_lock
+        from aj_crew.slack.outbound import options_edit_lock
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
@@ -629,7 +629,7 @@ class TestEveryOutstandingControlIsExpired:
         """
         from slack_sdk.errors import SlackApiError
 
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             expire_slack_options,
             forget_slack_options,
             remember_slack_options,
@@ -660,7 +660,7 @@ class TestEveryOutstandingControlIsExpired:
     @pytest.mark.asyncio
     async def test_recording_the_same_control_twice_queues_one_edit(self, tmp_path):
         """A retry, or two paths recording one post, is not two live controls."""
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             expire_slack_options,
             remember_slack_options,
         )
@@ -689,7 +689,7 @@ class TestForgettingIsScopedToTheClickedControl:
     """
 
     def test_a_click_forgets_only_the_control_it_answered(self, tmp_path):
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             forget_slack_options,
             remember_slack_options,
         )
@@ -710,7 +710,7 @@ class TestForgettingIsScopedToTheClickedControl:
 
     def test_omitting_the_ts_still_clears_everything(self, tmp_path):
         """The unlink path detaches the whole conversation, so all of them go."""
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             forget_slack_options,
             remember_slack_options,
         )

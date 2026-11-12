@@ -17,9 +17,9 @@ from feature_videos_hosted_helpers import _fresh_cache  # noqa: F401 - fixture
 from feature_videos_hosted_helpers import _no_network  # noqa: F401 - fixture
 from feature_videos_hosted_helpers import _entry, _parsed, _seed, _write_media
 
-from kiro_crew import feature_videos as fv
-from kiro_crew import feature_videos_cache as cache_mod
-from kiro_crew import feature_videos_manifest as manifest_mod
+from aj_crew import feature_videos as fv
+from aj_crew import feature_videos_cache as cache_mod
+from aj_crew import feature_videos_manifest as manifest_mod
 
 # ── library, status and fetch-all ──
 
@@ -39,7 +39,7 @@ def _dashboard_request(path: str = "/api/feature-videos/status") -> MagicMock:
 def _library_body(tmp_path: Path) -> dict[str, object]:
     cfg = MagicMock()
     cfg.dashboard.feature_videos_enabled = True
-    with patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls:
+    with patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls:
         cfg_cls.load.return_value = cfg
         resp = asyncio.run(
             fv.api_feature_videos_library(_dashboard_request("/api/feature-videos/library"))
@@ -54,7 +54,7 @@ class TestLibraryRouteReportsNoDownloadPolicy:
     """
 
     def test_an_offer_carries_only_the_clip_and_the_switch(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.6.0")
             _seed(_parsed())
             with (
@@ -70,14 +70,14 @@ class TestLibraryRouteReportsNoDownloadPolicy:
         assert video["src"] == "/feature-videos/0.6.0/hosted-clip.mp4"
 
     def test_a_denied_ceiling_still_offers_nothing_uncached(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _seed(_parsed())
             with patch.object(manifest_mod, "download_denied", return_value=True):
                 body = _library_body(tmp_path)
         assert body == {"videos": [], "enabled": True}
 
     def test_a_cached_clip_under_a_denial_still_plays_locally(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.6.0")
             _seed(_parsed())
             with patch.object(manifest_mod, "download_denied", return_value=True):
@@ -85,7 +85,7 @@ class TestLibraryRouteReportsNoDownloadPolicy:
         assert body["videos"][0]["src"] == "/feature-videos/0.6.0/hosted-clip.mp4"  # type: ignore[index]
 
     def test_without_a_manifest_no_governance_is_consulted(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with (
                 patch.object(fv, "_asset_exists", lambda _p: True),
                 patch.object(manifest_mod, "download_permitted_cached", side_effect=AssertionError),
@@ -96,11 +96,11 @@ class TestLibraryRouteReportsNoDownloadPolicy:
         assert set(body) == {"videos", "enabled"}
 
     def test_the_kill_switch_answer_is_the_same_two_fields(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             cfg = MagicMock()
             cfg.dashboard.feature_videos_enabled = False
             with (
-                patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls,
+                patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls,
                 patch.object(manifest_mod, "download_denied", side_effect=AssertionError),
                 patch.object(manifest_mod, "download_permitted_cached", side_effect=AssertionError),
             ):
@@ -113,7 +113,7 @@ class TestLibraryRouteReportsNoDownloadPolicy:
 
 class TestStatusRoute:
     def test_reports_the_release_and_the_cache_progress(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             _write_media("0.6.0", "cached-one")
             _seed(_parsed(entries=[_entry("cached-one"), _entry("uncached-one")]))
             cfg = MagicMock()
@@ -121,7 +121,7 @@ class TestStatusRoute:
             # The memo is process-wide and TTL'd, so a sibling test that just
             # evaluated a denial would otherwise leak into this readout.
             with (
-                patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls,
+                patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls,
                 patch.object(manifest_mod, "download_permitted_cached", return_value=True),
             ):
                 cfg_cls.load.return_value = cfg
@@ -136,7 +136,7 @@ class TestStatusRoute:
 
     def _status_while(self, tmp_path: Path, entry: manifest_mod.ManifestEntry) -> dict:
         """The status body with *entry* recorded as the clip in flight."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             cfg = MagicMock()
             cfg.dashboard.feature_videos_enabled = True
             cache = cache_mod.feature_video_cache()
@@ -145,7 +145,7 @@ class TestStatusRoute:
             )
             try:
                 with (
-                    patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls,
+                    patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls,
                     patch.object(manifest_mod, "download_permitted_cached", return_value=True),
                 ):
                     cfg_cls.load.return_value = cfg
@@ -176,11 +176,11 @@ class TestStatusRoute:
         assert cache.status["downloading_title"] is None
 
     def test_reports_a_denied_ceiling(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             cfg = MagicMock()
             cfg.dashboard.feature_videos_enabled = True
             with (
-                patch("kiro_crew.feature_videos.KiroCrewConfig") as cfg_cls,
+                patch("aj_crew.feature_videos.AjCrewConfig") as cfg_cls,
                 patch.object(manifest_mod, "download_permitted_cached", return_value=False),
             ):
                 cfg_cls.load.return_value = cfg
@@ -198,9 +198,9 @@ def _enabled_cfg(enabled: bool = True) -> MagicMock:
 class TestFetchAllRoute:
     def test_the_kill_switch_is_a_409_and_starts_nothing(self, tmp_path: Path) -> None:
         """A silent ok would leave the panel polling for bytes that never come."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with (
-                patch("kiro_crew.feature_videos_cache.KiroCrewConfig") as cfg_cls,
+                patch("aj_crew.feature_videos_cache.AjCrewConfig") as cfg_cls,
                 patch.object(manifest_mod, "download_denied", side_effect=AssertionError),
                 patch.object(cache_mod.FeatureVideoCache, "ensure_all", side_effect=AssertionError),
             ):
@@ -213,9 +213,9 @@ class TestFetchAllRoute:
 
     def test_a_denied_ceiling_is_a_403_and_starts_nothing(self, tmp_path: Path) -> None:
         """An ACTION chokepoint, so it takes the audited answer, not the polled memo."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             with (
-                patch("kiro_crew.feature_videos_cache.KiroCrewConfig") as cfg_cls,
+                patch("aj_crew.feature_videos_cache.AjCrewConfig") as cfg_cls,
                 patch.object(manifest_mod, "download_denied", return_value=True),
                 patch.object(cache_mod.FeatureVideoCache, "ensure_all", side_effect=AssertionError),
             ):
@@ -235,7 +235,7 @@ class TestFetchAllRoute:
 
         async def run() -> web.Response:
             with (
-                patch("kiro_crew.feature_videos_cache.KiroCrewConfig") as cfg_cls,
+                patch("aj_crew.feature_videos_cache.AjCrewConfig") as cfg_cls,
                 patch.object(manifest_mod, "download_denied", return_value=False),
                 patch.object(cache_mod.FeatureVideoCache, "ensure_all", _fake_ensure_all),
             ):
@@ -245,7 +245,7 @@ class TestFetchAllRoute:
                 await cache_mod._task
                 return resp
 
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             resp = asyncio.run(run())
         assert resp.status == 200
         assert calls == [True]
@@ -256,7 +256,7 @@ class TestFetchAllRoute:
 
 class TestGovernanceProbe:
     def test_the_scope_is_in_the_catalog_as_a_capability(self) -> None:
-        from kiro_crew.platform.governance import SCOPE_CATALOG
+        from aj_crew.platform.governance import SCOPE_CATALOG
 
         spec = SCOPE_CATALOG[manifest_mod.DOWNLOAD_SCOPE]
         assert spec.capability_default is True
@@ -264,7 +264,7 @@ class TestGovernanceProbe:
     def test_a_permitting_decision_reads_as_not_denied(self) -> None:
         decision = SimpleNamespace(permitted=True)
         with patch(
-            "kiro_crew.platform.governance_profiles.vet_and_audit", return_value=decision
+            "aj_crew.platform.governance_profiles.vet_and_audit", return_value=decision
         ) as vet:
             assert manifest_mod.download_denied() is False
         # Fail-closed posture and the pinned surface are part of the contract.
@@ -274,7 +274,7 @@ class TestGovernanceProbe:
 
     def test_a_denying_decision_denies(self) -> None:
         with patch(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             return_value=SimpleNamespace(permitted=False),
         ):
             assert manifest_mod.download_denied() is True
@@ -282,10 +282,10 @@ class TestGovernanceProbe:
     def test_an_unevaluable_ceiling_denies_and_is_audited(self) -> None:
         with (
             patch(
-                "kiro_crew.platform.governance_profiles.vet_and_audit",
+                "aj_crew.platform.governance_profiles.vet_and_audit",
                 side_effect=RuntimeError("composition failed"),
             ),
-            patch("kiro_crew.sel.sel") as sel_factory,
+            patch("aj_crew.sel.sel") as sel_factory,
         ):
             assert manifest_mod.download_denied() is True
         sel_factory.return_value.log_governance_decision.assert_called_once()
@@ -296,13 +296,13 @@ class TestGovernanceProbe:
     def test_the_cached_read_tracks_the_last_real_answer(self) -> None:
         """A polled read reports what the last decision was, without deciding again."""
         with patch(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             return_value=SimpleNamespace(permitted=True),
         ):
             manifest_mod.download_denied()
         assert manifest_mod.download_permitted_cached() is True
         with patch(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             return_value=SimpleNamespace(permitted=False),
         ):
             manifest_mod.download_denied()

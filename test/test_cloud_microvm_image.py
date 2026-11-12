@@ -11,8 +11,8 @@ import json
 
 import pytest
 
-from kiro_crew.cloud.microvm import api
-from kiro_crew.cloud.microvm.image import (
+from aj_crew.cloud.microvm import api
+from aj_crew.cloud.microvm.image import (
     HOOK_ENABLED,
     HOOK_SWITCHES,
     ImageBuildFailed,
@@ -24,7 +24,7 @@ from kiro_crew.cloud.microvm.image import (
 )
 
 BASE = "arn:aws:lambda:us-east-1:123456789012:microvm-image/al2023-base"
-ROLE = "arn:aws:iam::123456789012:role/kirocrew-microvm-build"
+ROLE = "arn:aws:iam::123456789012:role/ajcrew-microvm-build"
 
 
 def _recipe(**overrides) -> Recipe:
@@ -95,7 +95,7 @@ class _Fake:
         return f"s3://recipes/{recipe.digest()}.zip"
 
     def install(self, monkeypatch):
-        import kiro_crew.cloud.microvm.image as image_module
+        import aj_crew.cloud.microvm.image as image_module
 
         monkeypatch.setattr(
             image_module.api,
@@ -264,7 +264,7 @@ class TestResolve:
         _resolver(fake).resolve(recipe)
         created = fake.created[0]
         assert created["name"] == name
-        assert created["tags"]["kirocrew:recipe"] == recipe.digest()
+        assert created["tags"]["ajcrew:recipe"] == recipe.digest()
         assert created["base_image_arn"] == BASE
         assert created["build_role_arn"] == ROLE
         assert created["code_artifact_uri"].startswith("s3://")
@@ -348,7 +348,7 @@ class TestImageApiShapes:
 
     def _create(self, **overrides):
         fields = {
-            "name": "kirocrew-crew-abc",
+            "name": "ajcrew-crew-abc",
             "base_image_arn": BASE,
             "build_role_arn": ROLE,
             "code_artifact_uri": "s3://recipes/abc.zip",
@@ -396,7 +396,7 @@ class TestImageApiShapes:
         run_once()
         assert tokens[0] != tokens[1], "a retry reuses the first attempt's idempotency key"
         assert all(len(t) <= 64 for t in tokens), "the service bounds the token at 64 chars"
-        from kiro_crew.cloud.microvm.image import _DIGEST_IN_NAME
+        from aj_crew.cloud.microvm.image import _DIGEST_IN_NAME
 
         digest_part = _recipe().digest()[:_DIGEST_IN_NAME]
         assert all(t.startswith(digest_part) for t in tokens), "the token lost its content root"
@@ -408,11 +408,11 @@ class TestImageApiShapes:
         The shape matters as much as the presence: the API takes a nested
         ``cloudWatch.logGroup`` structure rather than a flat string.
         """
-        self._create(log_group="/aws/lambda-microvms/kirocrew")
+        self._create(log_group="/aws/lambda-microvms/ajcrew")
         argv = captured[0]
         assert "--logging" in argv, "the build's logs have nowhere to go"
         assert json.loads(argv[argv.index("--logging") + 1]) == {
-            "cloudWatch": {"logGroup": "/aws/lambda-microvms/kirocrew"}
+            "cloudWatch": {"logGroup": "/aws/lambda-microvms/ajcrew"}
         }
 
     def test_no_log_group_sends_no_logging_flag_at_all(self, captured):
@@ -430,7 +430,7 @@ class TestImageApiShapes:
 
         Pinned on the constant the resolver sends.
         """
-        from kiro_crew.cloud.microvm.image import DEFAULT_CPU_ARCHITECTURE
+        from aj_crew.cloud.microvm.image import DEFAULT_CPU_ARCHITECTURE
 
         assert DEFAULT_CPU_ARCHITECTURE == "ARM_64"
         self._create(cpu_architecture=DEFAULT_CPU_ARCHITECTURE)
@@ -494,7 +494,7 @@ class TestImageApiShapes:
 
 class TestImageResponseReading:
     def test_a_response_missing_the_state_is_refused(self):
-        from kiro_crew.cloud.aws import AWSError
+        from aj_crew.cloud.aws import AWSError
 
         with pytest.raises(AWSError, match="missing"):
             api.MicroVmImage.from_response({"imageArn": "arn:x"})
@@ -571,7 +571,7 @@ class TestGuestEnvironment:
     """
 
     def test_the_lane_turns_the_strict_gate_on_for_its_own_images(self):
-        from kiro_crew.cloud.microvm.image import GUEST_ENVIRONMENT
+        from aj_crew.cloud.microvm.image import GUEST_ENVIRONMENT
 
         assert GUEST_ENVIRONMENT["SMC_REQUIRE_AUTH_ALL_ROUTES"] == "1"
 
@@ -584,10 +584,10 @@ class TestGuestEnvironment:
     # them. The guest's files answer to the guest's job.
 
     def test_the_guest_skips_the_embedding_model_and_the_sandbox(self):
-        from kiro_crew.cloud.microvm.image import GUEST_ENVIRONMENT
+        from aj_crew.cloud.microvm.image import GUEST_ENVIRONMENT
 
-        assert GUEST_ENVIRONMENT["KIROCREW_SKIP_MODEL_DOWNLOAD"] == "1"
-        assert GUEST_ENVIRONMENT["KIROCREW_ALLOW_UNSANDBOXED"] == "1"
+        assert GUEST_ENVIRONMENT["AJCREW_SKIP_MODEL_DOWNLOAD"] == "1"
+        assert GUEST_ENVIRONMENT["AJCREW_ALLOW_UNSANDBOXED"] == "1"
 
     def test_the_environment_reaches_the_build_call(self, monkeypatch):
         fake = _Fake()
@@ -611,7 +611,7 @@ class TestGuestEnvironment:
 
         monkeypatch.setattr(api, "checked_json", fake)
         api.create_microvm_image(
-            name="kirocrew-crew-abc",
+            name="ajcrew-crew-abc",
             base_image_arn=BASE,
             build_role_arn=ROLE,
             code_artifact_uri="s3://recipes/abc.zip",
@@ -640,7 +640,7 @@ class TestTheDigestCoversTheBaseArn:
     """
 
     def test_a_changed_base_arn_changes_the_digest(self):
-        from kiro_crew.cloud.microvm.image import Recipe
+        from aj_crew.cloud.microvm.image import Recipe
 
         common = {
             "base_digest": "sha256:aaa",
@@ -652,7 +652,7 @@ class TestTheDigestCoversTheBaseArn:
         assert first.digest() != second.digest()
 
     def test_a_changed_base_arn_changes_the_image_name(self):
-        from kiro_crew.cloud.microvm.image import Recipe
+        from aj_crew.cloud.microvm.image import Recipe
 
         common = {
             "base_digest": "sha256:aaa",
@@ -665,7 +665,7 @@ class TestTheDigestCoversTheBaseArn:
 
     def test_the_same_three_inputs_still_give_the_same_digest(self):
         """The cache has to hit when nothing changed, or every launch rebuilds."""
-        from kiro_crew.cloud.microvm.image import Recipe
+        from aj_crew.cloud.microvm.image import Recipe
 
         fields = {
             "base_image_arn": "arn:aws:lambda:us-east-1:1:microvm-image/a",
@@ -678,7 +678,7 @@ class TestTheDigestCoversTheBaseArn:
     def test_no_pair_of_inputs_can_impersonate_another(self):
         """The fields are labelled and newline-separated, so content cannot run
         together across the boundary."""
-        from kiro_crew.cloud.microvm.image import Recipe
+        from aj_crew.cloud.microvm.image import Recipe
 
         a = Recipe(base_image_arn="x", base_digest="y", bundle_digest="z", build_digest="v")
         b = Recipe(base_image_arn="x\nbase=y", base_digest="z", bundle_digest="w", build_digest="v")
@@ -695,7 +695,7 @@ class TestTheDigestCoversTheBuildSettings:
 
     @staticmethod
     def _digest(**overrides) -> str:
-        from kiro_crew.cloud.microvm.image import (
+        from aj_crew.cloud.microvm.image import (
             DEFAULT_CPU_ARCHITECTURE,
             DEFAULT_MINIMUM_MEMORY_MIB,
             GUEST_ENVIRONMENT,
@@ -717,13 +717,13 @@ class TestTheDigestCoversTheBuildSettings:
         assert self._digest() == self._digest()
 
     def test_a_changed_guest_environment_changes_it(self):
-        from kiro_crew.cloud.microvm.image import GUEST_ENVIRONMENT
+        from aj_crew.cloud.microvm.image import GUEST_ENVIRONMENT
 
         relaxed = {**GUEST_ENVIRONMENT, "SMC_REQUIRE_AUTH_ALL_ROUTES": "0"}
         assert self._digest(environment=relaxed) != self._digest()
 
     def test_an_added_guest_variable_changes_it(self):
-        from kiro_crew.cloud.microvm.image import GUEST_ENVIRONMENT
+        from aj_crew.cloud.microvm.image import GUEST_ENVIRONMENT
 
         assert self._digest(environment={**GUEST_ENVIRONMENT, "KC_EXTRA": "1"}) != self._digest()
 
@@ -737,7 +737,7 @@ class TestTheDigestCoversTheBuildSettings:
         assert self._digest(hook_port=9090) != self._digest()
 
     def test_a_hook_turned_off_changes_it(self):
-        from kiro_crew.cloud.microvm.image import HOOK_DISABLED
+        from aj_crew.cloud.microvm.image import HOOK_DISABLED
 
         assert self._digest(hooks={**HOOK_SWITCHES, "ready": HOOK_DISABLED}) != self._digest()
 
@@ -745,7 +745,7 @@ class TestTheDigestCoversTheBuildSettings:
         """A dict literal reordered is the same settings, so it must be the same
         image -- otherwise reordering the lines of this module rebuilds every
         crew's image for nothing."""
-        from kiro_crew.cloud.microvm.image import GUEST_ENVIRONMENT
+        from aj_crew.cloud.microvm.image import GUEST_ENVIRONMENT
 
         shuffled = dict(reversed(list(GUEST_ENVIRONMENT.items())))
         assert list(shuffled) != list(GUEST_ENVIRONMENT), "the fixture proves nothing"
@@ -759,7 +759,7 @@ class TestTheDigestCoversTheBuildSettings:
 
     def test_a_changed_setting_changes_the_image_name(self):
         """The end-to-end property: the name is what the cache matches on."""
-        from kiro_crew.cloud.microvm.image import GUEST_ENVIRONMENT
+        from aj_crew.cloud.microvm.image import GUEST_ENVIRONMENT
 
         relaxed = {**GUEST_ENVIRONMENT, "SMC_REQUIRE_AUTH_ALL_ROUTES": "0"}
         before = _recipe().image_name()
@@ -769,17 +769,17 @@ class TestTheDigestCoversTheBuildSettings:
     def test_an_assembled_recipe_carries_the_settings_this_module_ships(self, tmp_path):
         """The stamp is put on where the recipe is built, so nothing downstream
         has to remember to apply it."""
-        from kiro_crew.cloud.microvm import recipe as recipe_mod
+        from aj_crew.cloud.microvm import recipe as recipe_mod
 
         bundle = tmp_path / "bundle"
         (bundle / "skills").mkdir(parents=True)
         for name in ("manifest.json", "agent.json", "mcp.json"):
             (bundle / name).write_text("{}\n", encoding="utf-8")
-        wheel = tmp_path / "kiro_crew-0.0.0-py3-none-any.whl"
+        wheel = tmp_path / "aj_crew-0.0.0-py3-none-any.whl"
         import zipfile
 
         with zipfile.ZipFile(wheel, "w") as archive:
-            archive.writestr("kiro_crew/__init__.py", b"# serving code\n")
+            archive.writestr("aj_crew/__init__.py", b"# serving code\n")
         assembled = recipe_mod.assemble(
             bundle_dir=bundle, wheel=wheel, base_image_arn=BASE, out_zip=tmp_path / "r.zip"
         )
@@ -826,7 +826,7 @@ class TestTheDigestCoversTheBuildSettings:
         fake.version_status[(arn, "1")] = "ACTIVE"
         fake.install(monkeypatch)
         _resolver(fake).resolve(recipe)
-        assert fake.created[0]["tags"]["kirocrew:build-settings"] == default_build_digest()
+        assert fake.created[0]["tags"]["ajcrew:build-settings"] == default_build_digest()
 
 
 class TestACreatingImageIsWaitedOnAndAFailedOneIsNamed:
@@ -954,13 +954,13 @@ class TestTheImageCarriesTheIdentityTheGuestRefusesPayloadsOutside:
     def test_both_names_are_the_ones_the_guest_reads(self):
         """Spelled in two programs, so a rename in one is a check that silently
         stops checking: the guest reads an absent value as "not pinned"."""
-        from kiro_crew.cloud.microvm.image import EXPECTED_ACCOUNT_ENV, EXPECTED_REGION_ENV
+        from aj_crew.cloud.microvm.image import EXPECTED_ACCOUNT_ENV, EXPECTED_REGION_ENV
 
         assert EXPECTED_ACCOUNT_ENV == "SMC_MICROVM_ACCOUNT"
         assert EXPECTED_REGION_ENV == "SMC_MICROVM_REGION"
 
     def test_the_pins_reach_the_guest_environment(self):
-        from kiro_crew.cloud.microvm.image import (
+        from aj_crew.cloud.microvm.image import (
             EXPECTED_ACCOUNT_ENV,
             EXPECTED_REGION_ENV,
             guest_environment,
@@ -973,7 +973,7 @@ class TestTheImageCarriesTheIdentityTheGuestRefusesPayloadsOutside:
     def test_an_unpinned_build_leaves_the_names_out_rather_than_empty(self):
         """The guest reads absent and blank the same way, and the shorter spelling
         does not describe an image as carrying a pin it does not have."""
-        from kiro_crew.cloud.microvm.image import (
+        from aj_crew.cloud.microvm.image import (
             EXPECTED_ACCOUNT_ENV,
             EXPECTED_REGION_ENV,
             guest_environment,
@@ -984,7 +984,7 @@ class TestTheImageCarriesTheIdentityTheGuestRefusesPayloadsOutside:
         assert EXPECTED_REGION_ENV not in env
 
     def test_the_constant_every_image_shares_is_not_mutated(self):
-        from kiro_crew.cloud.microvm.image import GUEST_ENVIRONMENT, guest_environment
+        from aj_crew.cloud.microvm.image import GUEST_ENVIRONMENT, guest_environment
 
         before = dict(GUEST_ENVIRONMENT)
         guest_environment(account_id="123456789012", region="us-east-1")["SMC_X"] = "1"
@@ -993,7 +993,7 @@ class TestTheImageCarriesTheIdentityTheGuestRefusesPayloadsOutside:
     def test_the_posture_flags_survive_the_pinning(self):
         """Non-vacuity: the composed environment is the constant PLUS the pins, and
         ``SMC_REQUIRE_AUTH_ALL_ROUTES`` is the load-bearing one."""
-        from kiro_crew.cloud.microvm.image import GUEST_ENVIRONMENT, guest_environment
+        from aj_crew.cloud.microvm.image import GUEST_ENVIRONMENT, guest_environment
 
         env = guest_environment(account_id="123456789012", region="us-east-1")
         for key, value in GUEST_ENVIRONMENT.items():

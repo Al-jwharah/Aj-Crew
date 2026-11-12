@@ -1,7 +1,7 @@
 """Contracts the config package's module composition must keep (owners behind facades).
 
 Section DTOs, their builders and the loader's document, migration, cache and
-agent-resolution rules live in owner modules inside ``kiro_crew.config``, while
+agent-resolution rules live in owner modules inside ``aj_crew.config``, while
 ``config.sections`` and ``config.loader`` stay the facades every caller imports.
 What a relocation can silently break is pinned here: the facade namespaces and
 the identity of what they hand out, the logger each owner writes under, and the
@@ -22,15 +22,15 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.config as config_pkg
-from kiro_crew.config import loader, loader_builders, migration, section_builders, sections
-from kiro_crew.monitoring.limits import DEFAULT_RUNTIME_CEILING_SECS, MAX_RUNTIME_CEILING_SECS
+import aj_crew.config as config_pkg
+from aj_crew.config import loader, loader_builders, migration, section_builders, sections
+from aj_crew.monitoring.limits import DEFAULT_RUNTIME_CEILING_SECS, MAX_RUNTIME_CEILING_SECS
 
 # Every name each facade module held before the section/loader owners were split
 # out. A facade may gain names; it may not lose one, because tests and callers
 # reach private seams through these two modules by attribute.
 _HISTORICAL_NAMES = {
-    "kiro_crew.config.sections": """
+    "aj_crew.config.sections": """
 ACTIVATION_ALWAYS ACTIVATION_MENTION ACTIVATION_OBSERVE ACTIVATION_OFF ACTIVATION_REVIEW
 APPROVAL_TURN_MARGIN_SECS AUTOCOMPACT_PCT_MAX AUTOCOMPACT_PCT_MIN AgentConfig
 BACKGROUND_WORKER_AGENTS CHAT_ENTRY_CACHE_BYTES_DEFAULT CHAT_ENTRY_CACHE_BYTES_MAX
@@ -50,7 +50,7 @@ ExternalRegistryConfig FOLDER_INGEST_CHUNK_BUDGET_MAX FOLDER_SORT_DEFAULT FOLDER
 FORWARD_DECLARED_ENV_DEFAULT FeishuConfig HeartbeatConfig IMESSAGE_SERVICES
 IMPORT_CHUNK_BUDGET_MAX IMessageConfig InstancesConfig JAIL_MODE_AUTO JAIL_MODE_OFF JAIL_MODE_ON
 JUDGE_PROVIDERS JUDGE_PROVIDER_AUTO JUDGE_PROVIDER_JEV JUDGE_PROVIDER_LLM JiraAuthEntry
-KiroCrewAgentConfig KnowledgeConfig LINK_PATTERNS_MAX LINK_PATTERN_PATTERN_MAX_LEN
+AjCrewAgentConfig KnowledgeConfig LINK_PATTERNS_MAX LINK_PATTERN_PATTERN_MAX_LEN
 LINK_PATTERN_URL_MAX_LEN LOOP_STALL_EXIT_AFTER_DEFAULT LOOP_STALL_EXIT_AFTER_MANAGED_DEFAULT
 LOOP_STALL_EXIT_AFTER_MAX LOOP_STALL_EXIT_AFTER_MIN LinkPatternRule MAX_RUNTIME_CEILING_SECS
 MAX_SUBAGENTS_FIXED_FLOOR MCP_PROBE_TIMEOUT_MAX MCP_PROBE_TIMEOUT_MIN McpConfig McpGatewayConfig
@@ -98,7 +98,7 @@ link_pattern_url_ok logger logging math model_registry normalize_agent_model
 resolve_memory_store_config resolve_selected_backend stt_provider_is_coerced
 stt_provider_resolution yolo_duration_to_secs
 """.split(),
-    "kiro_crew.config.loader": """
+    "aj_crew.config.loader": """
 ACP_BACKENDS_EFFORT_FROM_ADVERTISED_OPTION ACTIVATION_ALWAYS ACTIVATION_MENTION
 ACTIVATION_OBSERVE ACTIVATION_OFF ACTIVATION_REVIEW APPROVAL_TURN_MARGIN_SECS
 AUTOCOMPACT_PCT_MAX AUTOCOMPACT_PCT_MIN AgentConfig BACKGROUND_WORKER_AGENTS
@@ -120,7 +120,7 @@ DecisionsConfig DiscordConfig EFFORT_LEVELS EMBED_RATE_LIMIT_MAX EXTRACTION_POOL
 EXTRACTION_POOL_SIZE_MIN ExternalRegistryConfig FOLDER_INGEST_CHUNK_BUDGET_MAX
 FORWARD_DECLARED_ENV_DEFAULT FeishuConfig HeartbeatConfig IMESSAGE_SERVICES
 IMPORT_CHUNK_BUDGET_MAX IMessageConfig InstancesConfig Iterable Iterator JAIL_MODE_AUTO
-JAIL_MODE_OFF JAIL_MODE_ON JiraAuthEntry KiroCrewAgentConfig KiroCrewConfig KnowledgeConfig
+JAIL_MODE_OFF JAIL_MODE_ON JiraAuthEntry AjCrewAgentConfig AjCrewConfig KnowledgeConfig
 LOOP_STALL_EXIT_AFTER_DEFAULT LOOP_STALL_EXIT_AFTER_MANAGED_DEFAULT LOOP_STALL_EXIT_AFTER_MAX
 LOOP_STALL_EXIT_AFTER_MIN Literal MANAGED_VAULT_FIXED_CONSUMERS MAX_SUBAGENTS_FIXED_FLOOR
 MCP_PROBE_TIMEOUT_MAX MCP_PROBE_TIMEOUT_MIN MIGRATE_AGENTS MIGRATE_CONNECTIONS_UI
@@ -225,9 +225,9 @@ workspace_root write_config_atomically yolo_duration_to_secs
 # logger; every other config module logs as the loader did, so a relocated
 # warning keeps the record name operators filter on and ``caplog`` tests select.
 _OWN_LOGGER_MODULES = {
-    "kiro_crew.config.live",
-    "kiro_crew.config.paths",
-    "kiro_crew.config.superseded_defaults",
+    "aj_crew.config.live",
+    "aj_crew.config.paths",
+    "aj_crew.config.superseded_defaults",
 }
 
 _MONITORING_HELP = (
@@ -239,7 +239,7 @@ _MONITORING_HELP = (
 def _config_modules() -> list[str]:
     return sorted(
         info.name
-        for info in pkgutil.iter_modules(config_pkg.__path__, prefix="kiro_crew.config.")
+        for info in pkgutil.iter_modules(config_pkg.__path__, prefix="aj_crew.config.")
         if not info.ispkg
     )
 
@@ -252,8 +252,8 @@ class TestFacadeNamespaces:
         assert missing == []
 
     def test_names_on_both_facades_are_the_same_object(self) -> None:
-        shared = set(_HISTORICAL_NAMES["kiro_crew.config.sections"]) & set(
-            _HISTORICAL_NAMES["kiro_crew.config.loader"]
+        shared = set(_HISTORICAL_NAMES["aj_crew.config.sections"]) & set(
+            _HISTORICAL_NAMES["aj_crew.config.loader"]
         )
         assert len(shared) > 200
         split = sorted(
@@ -297,7 +297,7 @@ class TestMonitoringRuntimeCeiling:
         assert fields[1].default is False
 
     def test_serialized_section_keeps_its_key_order(self) -> None:
-        section = loader.KiroCrewConfig().to_dict()["monitoring"]
+        section = loader.AjCrewConfig().to_dict()["monitoring"]
         assert list(section) == ["max_runtime_secs", "prefer_structured_arming"]
         assert section == {"max_runtime_secs": 604800, "prefer_structured_arming": False}
 
@@ -313,10 +313,10 @@ class TestMonitoringRuntimeCeiling:
     def test_rejected_value_warns_with_the_value_and_the_fallback(
         self, raw: object, caplog: pytest.LogCaptureFixture
     ) -> None:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.monitoring.limits"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.monitoring.limits"):
             built = loader._build_monitoring_config({"max_runtime_secs": raw}, False)
         assert built.max_runtime_secs == DEFAULT_RUNTIME_CEILING_SECS
-        [record] = [r for r in caplog.records if r.name == "kiro_crew.monitoring.limits"]
+        [record] = [r for r in caplog.records if r.name == "aj_crew.monitoring.limits"]
         assert repr(raw) in record.getMessage()
         assert str(DEFAULT_RUNTIME_CEILING_SECS) in record.getMessage()
 
@@ -336,7 +336,7 @@ class TestMcpAutoApproveDefault:
     def test_builder_and_dataclass_defaults_agree(self) -> None:
         assert sections.McpConfig().honour_auto_approve is True
         assert loader._build_mcp_config({}).honour_auto_approve is True
-        assert loader.KiroCrewConfig().to_dict()["mcp"]["honour_auto_approve"] is True
+        assert loader.AjCrewConfig().to_dict()["mcp"]["honour_auto_approve"] is True
 
     @pytest.mark.parametrize(("raw", "expected"), [(True, True), (False, False), ("false", False)])
     def test_only_a_real_boolean_true_is_read_as_true(self, raw: object, expected: bool) -> None:
@@ -354,7 +354,7 @@ class TestReadOnlyWorkspaceRoot:
     def test_create_false_resolves_without_creating_the_root(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.delenv("KIROCREW_WORKSPACE", raising=False)
+        monkeypatch.delenv("AJCREW_WORKSPACE", raising=False)
         monkeypatch.setattr(loader, "_default_workspace_base", lambda: tmp_path / "base")
         data_home = tmp_path / "home"
         data_home.mkdir()
@@ -369,7 +369,7 @@ class TestReadOnlyWorkspaceRoot:
     def test_saved_root_is_resolved_but_not_created(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.delenv("KIROCREW_WORKSPACE", raising=False)
+        monkeypatch.delenv("AJCREW_WORKSPACE", raising=False)
         data_home = tmp_path / "home"
         data_home.mkdir()
         target = tmp_path / "saved" / "ws"
@@ -383,7 +383,7 @@ class TestReadOnlyWorkspaceRoot:
     def test_default_still_creates_the_root(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_WORKSPACE", str(tmp_path / "ws"))
+        monkeypatch.setenv("AJCREW_WORKSPACE", str(tmp_path / "ws"))
 
         assert loader.workspace_root() == Path(os.path.realpath(tmp_path / "ws"))
         assert (tmp_path / "ws").is_dir()
@@ -391,13 +391,13 @@ class TestReadOnlyWorkspaceRoot:
 
 def _load_document(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, document: dict
-) -> loader.KiroCrewConfig:
+) -> loader.AjCrewConfig:
     path = tmp_path / "config.json"
     path.write_text(json.dumps(document), encoding="utf-8")
     monkeypatch.setattr(loader, "config_path", lambda: path)
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(loader, "config_local_path", lambda: tmp_path / "config.local.json")
-    return loader.KiroCrewConfig.load()
+    return loader.AjCrewConfig.load()
 
 
 class TestLoaderSeamsReachTheOwners:
@@ -458,7 +458,7 @@ class TestLoaderSeamsReachTheOwners:
             doc,
             frozenset({loader.MIGRATE_SUPERSEDED_DEFAULTS}),
             overlay_kiro_agent=None,
-            default_kiro_agent="kirocrew",
+            default_kiro_agent="ajcrew",
             adopt_keys=frozenset({"agent.subagent_timeout_secs"}),
             recorded_adoptions=[],
         )
@@ -588,7 +588,7 @@ class TestMigrationContract:
                 loader.MIGRATE_DEFAULT_AGENT,
             }
         )
-        kwargs = {"overlay_kiro_agent": None, "default_kiro_agent": "kirocrew"}
+        kwargs = {"overlay_kiro_agent": None, "default_kiro_agent": "ajcrew"}
 
         assert loader._apply_document_migrations(doc, pending, **kwargs) is True
         assert list(doc) == ["agent", "workspaces", "default_agent", "agents"]
@@ -605,7 +605,7 @@ class TestMigrationContract:
             doc,
             frozenset({loader.MIGRATE_AGENTS, loader.MIGRATE_DEFAULT_AGENT}),
             overlay_kiro_agent=None,
-            default_kiro_agent="kirocrew",
+            default_kiro_agent="ajcrew",
         )
         assert list(doc) == ["agent", "agents", "default_agent"]
         assert doc["default_agent"] == "default"
@@ -620,7 +620,7 @@ class TestMigrationContract:
         monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
         monkeypatch.setattr(loader, "config_local_path", lambda: tmp_path / "config.local.json")
 
-        loader.KiroCrewConfig.load()
+        loader.AjCrewConfig.load()
 
         assert (tmp_path / "config.json.bak").read_bytes() == original
         migrated = json.loads((tmp_path / "config.json").read_text(encoding="utf-8"))

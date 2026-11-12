@@ -44,7 +44,7 @@ const theme = params.get('theme') || 'dark'
 const ui = params.get('ui') || 'cli'
 const fixOn = params.get('fix') !== 'off'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 if (ui === 'cli') document.documentElement.setAttribute('data-ui', 'cli')
 document.documentElement.setAttribute('data-fix', fixOn ? 'on' : 'off')
 

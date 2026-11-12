@@ -10,7 +10,7 @@ import sys
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient
+from aj_crew.acp.client import AcpClient
 
 # Windows lacks os.killpg and POSIX process-tree APIs (ps, /proc).
 # Tests that exercise these paths are skipped on Windows.
@@ -38,21 +38,19 @@ def _pin_the_installed_kiro_cli_version(_floor_monkeypatch):
     protocol and process doubles. The version the gate sees is a property of the
     host, not of the client under test; ``None`` is the "cannot be established"
     branch every host without the binary already takes."""
-    _floor_monkeypatch.setattr("kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: None)
+    _floor_monkeypatch.setattr("aj_crew.kiro_cli.installed_kiro_cli_version", lambda: None)
 
 
 @pytest.fixture(autouse=True)
 def _native_projection_for_fake_processes(_floor_monkeypatch):
-    from kiro_crew.acp import skill_projection
+    from aj_crew.acp import skill_projection
 
     # These protocol/process doubles do not own installed native agent specs.
     # The projection contract is exercised in test_native_skill_projection.
     _floor_monkeypatch.setattr(
         skill_projection,
         "prepare_native_skill_projection",
-        lambda work_dir, **_kwargs: skill_projection.NativeSkillProjection(
-            {"kirocrew": "kirocrew"}
-        ),
+        lambda work_dir, **_kwargs: skill_projection.NativeSkillProjection({"ajcrew": "ajcrew"}),
     )
 
 

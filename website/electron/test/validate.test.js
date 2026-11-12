@@ -38,10 +38,10 @@ describe("HOSTNAME_RE", () => {
 
 describe("BINPATH_RE", () => {
   it("accepts valid binary paths", () => {
-    assert.ok(BINPATH_RE.test("~/.local/bin/kirocrew"));
-    assert.ok(BINPATH_RE.test("/usr/local/bin/kirocrew"));
-    assert.ok(BINPATH_RE.test("kirocrew"));
-    assert.ok(BINPATH_RE.test("$HOME/.local/bin/kirocrew"));
+    assert.ok(BINPATH_RE.test("~/.local/bin/ajcrew"));
+    assert.ok(BINPATH_RE.test("/usr/local/bin/ajcrew"));
+    assert.ok(BINPATH_RE.test("ajcrew"));
+    assert.ok(BINPATH_RE.test("$HOME/.local/bin/ajcrew"));
   });
 
   it("rejects paths starting with dash", () => {
@@ -50,13 +50,13 @@ describe("BINPATH_RE", () => {
   });
 
   it("rejects paths with spaces", () => {
-    assert.ok(!BINPATH_RE.test("/opt/my tools/kirocrew"));
-    assert.ok(!BINPATH_RE.test("kirocrew token"));
+    assert.ok(!BINPATH_RE.test("/opt/my tools/ajcrew"));
+    assert.ok(!BINPATH_RE.test("ajcrew token"));
   });
 
   it("accepts paths with single dots (current dir)", () => {
-    assert.ok(BINPATH_RE.test("./bin/kirocrew"));
-    assert.ok(BINPATH_RE.test("/usr/./bin/kirocrew"));
+    assert.ok(BINPATH_RE.test("./bin/ajcrew"));
+    assert.ok(BINPATH_RE.test("/usr/./bin/ajcrew"));
   });
 
   it("rejects paths with shell metacharacters", () => {
@@ -110,12 +110,12 @@ describe("REMOTE_PATH_RE", () => {
 
 describe("validateRemoteSettings", () => {
   it("returns null for valid settings", () => {
-    assert.equal(validateRemoteSettings("myhost.corp.example.com", "~/.local/bin/kirocrew"), null);
-    assert.equal(validateRemoteSettings("myhost.corp.example.com", "$HOME/.local/bin/kirocrew"), null);
+    assert.equal(validateRemoteSettings("myhost.corp.example.com", "~/.local/bin/ajcrew"), null);
+    assert.equal(validateRemoteSettings("myhost.corp.example.com", "$HOME/.local/bin/ajcrew"), null);
   });
 
   it("returns null for empty host (skips remote)", () => {
-    assert.equal(validateRemoteSettings("", "~/.local/bin/kirocrew"), null);
+    assert.equal(validateRemoteSettings("", "~/.local/bin/ajcrew"), null);
   });
 
   it("returns null for empty bin (uses default)", () => {
@@ -123,12 +123,12 @@ describe("validateRemoteSettings", () => {
   });
 
   it("accepts SSH config alias as hostname", () => {
-    assert.equal(validateRemoteSettings("clouddesk", "/usr/bin/kirocrew"), null);
-    assert.equal(validateRemoteSettings("dev-box", "~/.toolbox/bin/kirocrew"), null);
+    assert.equal(validateRemoteSettings("clouddesk", "/usr/bin/ajcrew"), null);
+    assert.equal(validateRemoteSettings("dev-box", "~/.toolbox/bin/ajcrew"), null);
   });
 
   it("rejects hostname with SSH option injection", () => {
-    const err = validateRemoteSettings("-oProxyCommand=evil", "/usr/bin/kirocrew");
+    const err = validateRemoteSettings("-oProxyCommand=evil", "/usr/bin/ajcrew");
     assert.ok(err);
   });
 
@@ -144,7 +144,7 @@ describe("validateRemoteSettings", () => {
   });
 
   it("rejects bin path with spaces", () => {
-    const err = validateRemoteSettings("host.example.com", "/opt/my tools/kirocrew");
+    const err = validateRemoteSettings("host.example.com", "/opt/my tools/ajcrew");
     assert.ok(err);
   });
 
@@ -154,12 +154,12 @@ describe("validateRemoteSettings", () => {
   });
 
   it("rejects hostname with consecutive dots", () => {
-    assert.ok(validateRemoteSettings("a..b", "/usr/bin/kirocrew"));
+    assert.ok(validateRemoteSettings("a..b", "/usr/bin/ajcrew"));
   });
 
   it("rejects hostname over 253 chars", () => {
     const long = "a" + ".bb".repeat(84) + ".c";  // > 253 chars
-    assert.ok(validateRemoteSettings(long, "/usr/bin/kirocrew"));
+    assert.ok(validateRemoteSettings(long, "/usr/bin/ajcrew"));
   });
 
   it("validates remotePort as numeric 1-65535", () => {

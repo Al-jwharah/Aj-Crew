@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.proxy_auth import sign_proxy_request_v2
+from aj_crew.apps.proxy_auth import sign_proxy_request_v2
 
 _DOC = Path(__file__).resolve().parent.parent / "docs" / "app-kit" / "api-reference.md"
 _SECRET = "s3cret-app-key"

@@ -1,4 +1,4 @@
-"""The ``ACP Runtimes`` rows of ``kirocrew doctor``.
+"""The ``ACP Runtimes`` rows of ``ajcrew doctor``.
 
 A runtime that outlives its session can hold a core with no turn in flight, and
 enough of them take the host down; this section is what names them in the health
@@ -13,13 +13,13 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_doctor, platform_compat, session_pid
-from kiro_crew.constants import (
-    KIROCREW_SPAWN_HOME_ENV,
-    KIROCREW_SPAWNED_ENV,
-    KIROCREW_SPAWNED_VALUE,
+from aj_crew import cli_doctor, platform_compat, session_pid
+from aj_crew.constants import (
+    AJCREW_SPAWN_HOME_ENV,
+    AJCREW_SPAWNED_ENV,
+    AJCREW_SPAWNED_VALUE,
 )
-from kiro_crew.doctor_checks import resources
+from aj_crew.doctor_checks import resources
 
 _HOME = "/home/someone/.kiro/crew"
 _SECRET = "sk-live-0123456789abcdef"
@@ -101,7 +101,7 @@ class _Table:
         )
 
 
-_MARKED = {KIROCREW_SPAWNED_ENV: KIROCREW_SPAWNED_VALUE, KIROCREW_SPAWN_HOME_ENV: _HOME}
+_MARKED = {AJCREW_SPAWNED_ENV: AJCREW_SPAWNED_VALUE, AJCREW_SPAWN_HOME_ENV: _HOME}
 
 
 @pytest.fixture
@@ -111,8 +111,8 @@ def table(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> _Table:
     # it at the fabricated table, through the same reader it uses there.
     monkeypatch.setattr(
         session_pid,
-        "_env_has_kirocrew_marker",
-        lambda pid, proc_root=None: session_pid._read_env_has_kirocrew_marker(pid, fabricated.root)
+        "_env_has_ajcrew_marker",
+        lambda pid, proc_root=None: session_pid._read_env_has_ajcrew_marker(pid, fabricated.root)
         is True,
     )
     return fabricated
@@ -168,15 +168,15 @@ def test_a_runtime_another_gateway_recorded_has_no_running_owner(table: _Table) 
 
 
 def test_a_runtime_a_live_cli_chat_recorded_is_owned_and_not_called_idle(table: _Table) -> None:
-    """``kirocrew chat`` records its runtime under its own pid; while that process is
+    """``ajcrew chat`` records its runtime under its own pid; while that process is
     still the runtime's ancestor a turn may be in flight, so it is not ownerless."""
     table.add(1, 0, ["/sbin/init"])
-    table.add(7, 1, ["/usr/bin/python3", "-m", "kiro_crew", "chat"])
+    table.add(7, 1, ["/usr/bin/python3", "-m", "aj_crew", "chat"])
     table.add(10, 7, ["/opt/kiro-cli", "acp"], cpu=0, cpu_later=40)
     (runtime,) = table.census(tracked={10: (7, "500")}, gateway_pid=99)
     assert runtime.owner == "other"
     lines = resources._acp_runtime_lines(resources._AcpCensus([runtime]), 1.0)
-    assert lines[0] == ("  runtimes:    1 alive: 1 owned by another live process (a kirocrew chat)")
+    assert lines[0] == ("  runtimes:    1 alive: 1 owned by another live process (an ajcrew chat)")
     assert "               pid 10: 40%, up 2.0h, owned by another live process" in lines
     assert not any(line.startswith("  no owner:") for line in lines)
 
@@ -186,7 +186,7 @@ def test_a_recorder_pid_that_is_alive_but_not_an_ancestor_does_not_own_it(
 ) -> None:
     """A recycled recorder pid names a stranger, not the process that held the runtime."""
     _recorded_pair(table)
-    table.add(7, 1, ["/usr/bin/python3", "-m", "kiro_crew", "chat"])
+    table.add(7, 1, ["/usr/bin/python3", "-m", "aj_crew", "chat"])
     (runtime,) = table.census(tracked={10: (7, "500")}, gateway_pid=99)
     assert runtime.owner == "stale"
 
@@ -215,7 +215,7 @@ def test_an_unrecorded_runtime_this_install_spawned_is_untracked_with_its_launch
             "/opt/python3.12",
             "-I",
             "-S",
-            f"{_HOME}/run/kirocrew_sandbox_20_ab.py",
+            f"{_HOME}/run/ajcrew_sandbox_20_ab.py",
             "/opt/kiro-cli",
             "acp",
         ],
@@ -233,8 +233,8 @@ def test_an_unrecorded_runtime_this_install_spawned_is_untracked_with_its_launch
     [
         None,  # a user's own kiro-cli in a terminal: no environment marker readable
         {"PATH": "/usr/bin"},
-        {KIROCREW_SPAWNED_ENV: KIROCREW_SPAWNED_VALUE, KIROCREW_SPAWN_HOME_ENV: "/other/home"},
-        {KIROCREW_SPAWNED_ENV: KIROCREW_SPAWNED_VALUE},
+        {AJCREW_SPAWNED_ENV: AJCREW_SPAWNED_VALUE, AJCREW_SPAWN_HOME_ENV: "/other/home"},
+        {AJCREW_SPAWNED_ENV: AJCREW_SPAWNED_VALUE},
     ],
 )
 def test_a_harness_this_install_did_not_spawn_is_not_counted(table: _Table, env) -> None:
@@ -260,7 +260,7 @@ def test_an_unrecorded_runtime_the_running_gateway_still_parents_is_its_own(
     """A runtime whose pid-file append failed is still the running gateway's: it may
     be in the middle of a turn, so it must not be called ownerless."""
     table.add(1, 0, ["/sbin/init"])
-    table.add(5, 1, ["/usr/bin/python3", "-m", "kiro_crew", "gateway"])
+    table.add(5, 1, ["/usr/bin/python3", "-m", "aj_crew", "gateway"])
     table.add(21, 5, ["/opt/kiro-cli", "acp"], env=_MARKED)
     (runtime,) = table.census(gateway_pid=5)
     assert (runtime.root, runtime.owner) == (21, "gateway")

@@ -18,11 +18,11 @@ from test_pod_windows_liveness import supervisor as supervisor
 from test_pod_windows_run import contained
 from test_pod_windows_run import model as model
 
-from kiro_crew.platform_compat import IS_WINDOWS
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod import windows as win
-from kiro_crew.pod.config import EXIT_REFUSED_UNRECOVERABLE, PodConfig
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.platform_compat import IS_WINDOWS
+from aj_crew.pod import runtime as rt
+from aj_crew.pod import windows as win
+from aj_crew.pod.config import EXIT_REFUSED_UNRECOVERABLE, PodConfig
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 __all__ = ["model", "supervisor"]
 
@@ -51,9 +51,9 @@ def cfg(tmp_path, monkeypatch) -> PodConfig:
     # suite sets both: without it the plane resolves into the runner's real
     # profile and one test's leftovers change another's verdict.
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
-    monkeypatch.setenv("KIROCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
+    monkeypatch.setenv("AJCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
     c = PodConfig.load()
     c.pods_dir.mkdir(parents=True, exist_ok=True)
     return c
@@ -83,7 +83,7 @@ def test_the_wrapper_pins_the_pod_plane_because_a_task_carries_no_env(cfg):
     DIFFERENT PodConfig. Every non-default key must therefore appear as a `set`.
     """
     body = win.render_task_script(cfg, "smoke")
-    from kiro_crew.pod.config import environment_vars
+    from aj_crew.pod.config import environment_vars
 
     selected = environment_vars(cfg)
     assert selected, "the hermetic fixture plane must differ from the defaults"
@@ -93,7 +93,7 @@ def test_the_wrapper_pins_the_pod_plane_because_a_task_carries_no_env(cfg):
 
 def test_the_wrapper_boots_the_named_pod_through_python(cfg):
     body = win.render_task_script(cfg, "smoke")
-    # Boot logic stays in kiro_crew.pod.runtime.boot; the wrapper only re-enters
+    # Boot logic stays in aj_crew.pod.runtime.boot; the wrapper only re-enters
     # the entry point, exactly as the systemd ExecStart and the launchd
     # ProgramArguments do. Nothing shell-shaped is shipped.
     assert 'pod _run "smoke"' in body
@@ -129,18 +129,18 @@ def test_the_wrapper_routes_logs_to_files_since_there_is_no_journal(cfg):
 def test_the_wrapper_disables_delayed_expansion(monkeypatch, tmp_path):
     """A `!` in a pod-plane path stays literal."""
     weird = tmp_path / "pod!root"
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(weird))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(weird))
     cfg = PodConfig.load()
     cfg.pods_dir.mkdir(parents=True, exist_ok=True)
     body = win.render_task_script(cfg, "smoke")
     assert body.splitlines()[2] == "setlocal DisableDelayedExpansion"
-    assert f'set "KIROCREW_POD_ROOT={weird}"' in body
+    assert f'set "AJCREW_POD_ROOT={weird}"' in body
 
 
 def test_a_percent_in_the_plane_is_escaped_not_expanded(cfg, monkeypatch, tmp_path):
     """`%` is the one cmd.exe metacharacter a path can legally contain."""
     weird = tmp_path / "pod%root"
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(weird))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(weird))
     c = PodConfig.load()
     c.pods_dir.mkdir(parents=True, exist_ok=True)
     body = win.render_task_script(c, "smoke")
@@ -155,7 +155,7 @@ def test_a_quote_in_the_plane_is_refused_at_up_not_at_boot(cfg, monkeypatch, tmp
     with, so this must fail loudly while the operator is still at the `pod up`
     prompt.
     """
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / 'pod"root'))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / 'pod"root'))
     c = PodConfig.load()
     with pytest.raises(win.WindowsTaskError, match="cmd.exe cannot quote"):
         win.render_task_script(c, "smoke")
@@ -164,7 +164,7 @@ def test_a_quote_in_the_plane_is_refused_at_up_not_at_boot(cfg, monkeypatch, tmp
 def test_the_wrapper_is_written_per_pod_beside_the_env_file(cfg):
     dst = win.write_task_script(cfg, "smoke")
     assert dst.parent == cfg.pods_dir
-    assert dst.name == "kirocrew-pod.smoke.cmd"
+    assert dst.name == "ajcrew-pod.smoke.cmd"
     # CRLF: a batch file with bare LF line endings is not reliably parsed by
     # cmd.exe, and newline="" keeps Python from translating what is already CRLF.
     # Asserted on BYTES: read_text() universal-newline-translates CRLF back to LF
@@ -179,9 +179,9 @@ def test_the_task_name_honours_a_hermetic_unit_prefix(cfg, monkeypatch):
     Same property cfg.unit_prefix buys on the other two backends: the prefix is
     its own folder segment, so no plane's task path is a prefix of another's.
     """
-    monkeypatch.setenv("KIROCREW_POD_UNIT_PREFIX", "kctest-pod")
+    monkeypatch.setenv("AJCREW_POD_UNIT_PREFIX", "kctest-pod")
     c = PodConfig.load()
-    assert win.task_name(c, "smoke") == r"\KiroCrew\pods\kctest-pod\smoke"
+    assert win.task_name(c, "smoke") == r"\AjCrew\pods\kctest-pod\smoke"
     assert win.task_script_path(c, "smoke").name == "kctest-pod.smoke.cmd"
 
 
@@ -368,7 +368,7 @@ def _earlier_failed_start(cfg) -> tuple:
     """Log files as an earlier refused boot left them (the wrapper appends)."""
     out, err = win.log_paths(cfg, "smoke")
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_bytes(b"kirocrew-pod: name=smoke earlier boot\r\n")
+    out.write_bytes(b"ajcrew-pod: name=smoke earlier boot\r\n")
     err.write_bytes(b"FATAL: no built dist for smoke (build the worktree first)\r\n")
     return out, err
 
@@ -380,7 +380,7 @@ def test_journal_since_mark_leaves_out_an_earlier_starts_fatal(cfg):
     text = win.recent_journal(cfg, "smoke", since=mark)
     assert "FATAL" not in text and "earlier boot" not in text
     assert "no pod log from this start" in text
-    assert "kirocrew pod logs smoke" in text
+    assert "ajcrew pod logs smoke" in text
     # Negative control: without the mark the same files still yield the stale line.
     assert "FATAL: no built dist" in win.recent_journal(cfg, "smoke")
 
@@ -390,7 +390,7 @@ def test_journal_since_mark_keeps_this_starts_fatal(cfg):
     out, err = _earlier_failed_start(cfg)
     mark = win.journal_mark(cfg, "smoke")
     with out.open("ab") as fh:
-        fh.write(b"kirocrew-pod: name=smoke this boot\r\n")
+        fh.write(b"ajcrew-pod: name=smoke this boot\r\n")
     with err.open("ab") as fh:
         fh.write(b"FATAL: venv missing for smoke\r\n")
     text = win.recent_journal(cfg, "smoke", since=mark)
@@ -423,7 +423,7 @@ def test_the_runtime_wrapper_does_not_translate_on_windows(cfg, monkeypatch):
     Pinned on ``terminal_exit_code``, the function callers reach. The rendered task
     has no restart policy, so a non-zero exit already stays down.
     """
-    from kiro_crew.pod.config import TERMINAL_BOOT_EXIT_CODES
+    from aj_crew.pod.config import TERMINAL_BOOT_EXIT_CODES
 
     monkeypatch.setattr(rt, "IS_MACOS", False)
     for code in (*TERMINAL_BOOT_EXIT_CODES, 0, 1, 42):
@@ -458,11 +458,11 @@ def test_start_creates_a_manual_run_only_task_then_runs_it(cfg, monkeypatch):
         "/Create",
         "/F",
         "/TN",
-        r"\KiroCrew\pods\kirocrew-pod\smoke",
+        r"\AjCrew\pods\ajcrew-pod\smoke",
         "/XML",
         str(definition),
     )
-    assert calls[1] == ("/Run", "/TN", r"\KiroCrew\pods\kirocrew-pod\smoke")
+    assert calls[1] == ("/Run", "/TN", r"\AjCrew\pods\ajcrew-pod\smoke")
     assert "/RU" not in calls[0] and "/RP" not in calls[0]
     assert script.exists(), "the wrapper must exist before the task points at it"
     assert not definition.exists(), "the definition file is spent once /Create returns"
@@ -488,7 +488,7 @@ def test_a_pod_task_runs_at_normal_priority_not_the_task_default(cfg):
 
 
 def test_the_task_definition_escapes_the_wrapper_path(tmp_path):
-    script = tmp_path / "a&b<c>" / "kirocrew-pod.smoke.cmd"
+    script = tmp_path / "a&b<c>" / "ajcrew-pod.smoke.cmd"
     xml = win.render_task_xml(script)
     assert "a&amp;b&lt;c&gt;" in xml
     assert _element(xml, "Command") == str(script)
@@ -535,7 +535,7 @@ def test_stop_ends_then_deletes_and_drops_the_wrapper(cfg, monkeypatch, drainabl
     win.result_path(cfg, "smoke").write_text("0\n")
     cp = win.stop(cfg, "smoke")
     assert cp.returncode == 0
-    tn = r"\KiroCrew\pods\kirocrew-pod\smoke"
+    tn = r"\AjCrew\pods\ajcrew-pod\smoke"
     assert calls == [("/End", "/TN", tn), ("/Delete", "/TN", tn, "/F")]
     # Per-pod state must not outlive the pod: a leftover wrapper makes
     # orphan_homes read the HOME as "installed, not orphaned" and never collect
@@ -925,7 +925,7 @@ def test_schtasks_resolves_from_a_trusted_system_directory():
 
 # The two tests that drive the REAL Task Scheduler (the creation probe and the
 # create/run/delete round trip) live in test_pod_windows_boot.py: that module is
-# opt-in (KIROCREW_E2E_POD_WINDOWS=1) and on the root conftest's host-service
+# opt-in (AJCREW_E2E_POD_WINDOWS=1) and on the root conftest's host-service
 # allowlist, so an ordinary Windows `pytest` never registers a scheduled task.
 
 
@@ -940,7 +940,7 @@ def test_the_wrapper_a_real_pod_would_boot_is_a_parsable_batch_file(cfg):
     body = win.render_task_script(cfg, "smoke")
     env_only = [ln for ln in body.splitlines() if ln.startswith(("@echo", "setlocal", 'set "'))]
     probe = cfg.pods_dir / "envprobe.cmd"
-    probe.write_text("\r\n".join([*env_only, "echo %KIROCREW_POD_ROOT%"]) + "\r\n", newline="")
+    probe.write_text("\r\n".join([*env_only, "echo %AJCREW_POD_ROOT%"]) + "\r\n", newline="")
     cp = subprocess.run([str(probe)], capture_output=True, timeout=30, **UTF8_TEXT)
     assert cp.returncode == 0, cp.stderr
     assert str(cfg.pod_root) in cp.stdout
@@ -955,11 +955,11 @@ def test_the_wrapper_is_written_in_the_console_code_page_and_refuses_what_it_can
     monkeypatch.setattr(win, "_script_encoding", lambda: "cp437")
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
-    monkeypatch.setenv("KIROCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "pods-env"))
+    monkeypatch.setenv("AJCREW_POD_ARTIFACTS_DIR", str(tmp_path / "artifacts"))
 
     # A Latin-1 letter is inside cp437, so this plane still renders and writes.
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "caf\u00e9" / "pods"))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "caf\u00e9" / "pods"))
     cfg = PodConfig.load()
     cfg.pods_dir.mkdir(parents=True, exist_ok=True)
     path = win.write_task_script(cfg, "smoke")
@@ -967,7 +967,7 @@ def test_the_wrapper_is_written_in_the_console_code_page_and_refuses_what_it_can
     assert body.startswith("@echo off") and "caf\u00e9" in body
 
     # A CJK character is not, so the write refuses with the offending text named.
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "\u4e2d\u6587" / "pods"))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "\u4e2d\u6587" / "pods"))
     cfg = PodConfig.load()
     cfg.pods_dir.mkdir(parents=True, exist_ok=True)
     with pytest.raises(win.WindowsTaskError) as info:

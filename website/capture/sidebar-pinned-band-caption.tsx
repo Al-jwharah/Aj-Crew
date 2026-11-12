@@ -36,8 +36,8 @@ const theme = params.get('theme') || 'dark'
 const scene = params.get('scene') || 'no-filter'
 
 localStorage.setItem('mc-theme', theme === 'light' ? 'light' : 'dark')
-localStorage.setItem('mc-color-theme', 'kiro')
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+localStorage.setItem('mc-color-theme', 'aj')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 // Use flat view so there is no folder complexity, matching the test PINNED_SLOTS fixture.
 localStorage.setItem('mc-sidebar-lane', 'flat')
 localStorage.setItem('mc-session-stale-collapse-ms', '0')
@@ -64,20 +64,20 @@ const ROWS: ChatSlot[] = [
     key: 'k-alpha', title: 'alpha session',
     running: false, messages: 2,
     tags: [], pinned: true,
-    agent: 'kirocrew', last_ts: at(5 * MIN), last_message: 'Done.',
+    agent: 'ajcrew', last_ts: at(5 * MIN), last_message: 'Done.',
   },
   {
     key: 'k-beta', title: 'beta session',
     // running=true only for the chip-with-unpinned scene; snapshot state before render
     running: scene === 'chip-with-unpinned', messages: 2,
     tags: ['t1'],
-    agent: 'kirocrew', last_ts: at(10 * MIN), last_message: 'Working...',
+    agent: 'ajcrew', last_ts: at(10 * MIN), last_message: 'Working...',
   },
   {
     key: 'k-gamma', title: 'gamma session',
     running: false, messages: 2,
     tags: ['t2'],
-    agent: 'kirocrew', last_ts: at(20 * MIN), last_message: 'Done.',
+    agent: 'ajcrew', last_ts: at(20 * MIN), last_message: 'Done.',
   },
 ] as unknown as ChatSlot[]
 
@@ -94,8 +94,8 @@ function Harness() {
         unreadSlots={[]}
         history={[]}
         historyHasMore={false}
-        defaultAgent="kirocrew"
-        installedAgents={[{ name: 'kirocrew', source: 'builtin' }]}
+        defaultAgent="ajcrew"
+        installedAgents={[{ name: 'ajcrew', source: 'builtin' }]}
       />
     </div>
   )

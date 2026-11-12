@@ -40,13 +40,13 @@ from wheel_engine_helpers import (
     _stub_children,
 )
 
-from kiro_crew.platform import wheel_engine
-from kiro_crew.platform.wheel_engine import (
+from aj_crew.platform import wheel_engine
+from aj_crew.platform.wheel_engine import (
     ManagedVenvLayout,
     WheelUpdateError,
     parse_and_validate_manifest,
 )
-from kiro_crew.platform_compat import IS_POSIX, trusted_system_bin
+from aj_crew.platform_compat import IS_POSIX, trusted_system_bin
 
 # The engine is POSIX-only by construction: cli.sh is a POSIX installer, and
 # running_from_managed_venv() answers False on Windows, so no production path
@@ -122,7 +122,7 @@ class TestManifestValidation:
             {"python_requires": "x" * 200},
             {"signature": "%%%not-base64%%%"},
             {"wheel_url": f"{_ARTIFACT_BASE}/cli/stable/9.9.9/other.whl"},
-            {"wheel_url": "https://evil.example/cli/stable/9.9.9/kirocrew-9.9.9-py3-none-any.whl"},
+            {"wheel_url": "https://evil.example/cli/stable/9.9.9/ajcrew-9.9.9-py3-none-any.whl"},
         ],
     )
     def test_field_tampering_refused(self, mutation: dict[str, object]) -> None:
@@ -389,7 +389,7 @@ class TestWheelDownload:
         body = b"wheel-bytes" * 100
         self._serve(monkeypatch, body)
         payload = {
-            "wheel_url": f"{_ARTIFACT_BASE}/cli/stable/9.9.9/kirocrew-9.9.9-py3-none-any.whl",
+            "wheel_url": f"{_ARTIFACT_BASE}/cli/stable/9.9.9/ajcrew-9.9.9-py3-none-any.whl",
             "sha256": hashlib.sha256(body).hexdigest(),
             "version": "9.9.9",
         }
@@ -401,7 +401,7 @@ class TestWheelDownload:
     ) -> None:
         self._serve(monkeypatch, b"tampered")
         payload = {
-            "wheel_url": f"{_ARTIFACT_BASE}/cli/stable/9.9.9/kirocrew-9.9.9-py3-none-any.whl",
+            "wheel_url": f"{_ARTIFACT_BASE}/cli/stable/9.9.9/ajcrew-9.9.9-py3-none-any.whl",
             "sha256": hashlib.sha256(b"expected").hexdigest(),
             "version": "9.9.9",
         }
@@ -413,9 +413,9 @@ class TestWheelDownload:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The release CDN serves the wheel itself, so a hop to another host is never followed."""
-        monkeypatch.delenv("KIROCREW_CDN_BASE", raising=False)
+        monkeypatch.delenv("AJCREW_CDN_BASE", raising=False)
         body = b"wheel-bytes" * 100
-        url = f"{_ARTIFACT_BASE}/cli/stable/9.9.9/kirocrew-9.9.9-py3-none-any.whl"
+        url = f"{_ARTIFACT_BASE}/cli/stable/9.9.9/ajcrew-9.9.9-py3-none-any.whl"
         requested = redirect_to(monkeypatch, url, "https://elsewhere.example/w.whl", body)
         payload = {"wheel_url": url, "sha256": hashlib.sha256(body).hexdigest(), "version": "9.9.9"}
         with pytest.raises(WheelUpdateError, match="to elsewhere.example refused"):
@@ -426,11 +426,11 @@ class TestWheelDownload:
     def test_an_operator_mirror_may_redirect_to_another_https_host(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """A url under ``KIROCREW_CDN_BASE`` is the operator's own mirror, as for every
+        """A url under ``AJCREW_CDN_BASE`` is the operator's own mirror, as for every
         environment-set url the shared opener serves; the digest still decides."""
-        monkeypatch.setenv("KIROCREW_CDN_BASE", "https://mirror.example/crew/")
+        monkeypatch.setenv("AJCREW_CDN_BASE", "https://mirror.example/crew/")
         body = b"wheel-bytes" * 100
-        url = "https://mirror.example/crew/cli/stable/9.9.9/kirocrew-9.9.9-py3-none-any.whl"
+        url = "https://mirror.example/crew/cli/stable/9.9.9/ajcrew-9.9.9-py3-none-any.whl"
         hop = "https://storage.example/w.whl"
         requested = redirect_to(monkeypatch, url, hop, body)
         dest = tmp_path / "w.whl"
@@ -445,7 +445,7 @@ class TestWheelDownload:
         self._serve(monkeypatch, body)
         with pytest.raises(WheelUpdateError, match="ceiling"):
             wheel_engine._download_to_file(
-                f"{_ARTIFACT_BASE}/cli/stable/9.9.9/kirocrew-9.9.9-py3-none-any.whl",
+                f"{_ARTIFACT_BASE}/cli/stable/9.9.9/ajcrew-9.9.9-py3-none-any.whl",
                 tmp_path / "w.whl",
                 cap=1024,
                 timeout=5,
@@ -490,7 +490,7 @@ class TestWheelDownload:
         dest = tmp_path / "w.whl"
         with pytest.raises(WheelUpdateError) as info:
             wheel_engine._download_to_file(
-                f"{_ARTIFACT_BASE}/cli/stable/9.9.9/kirocrew-9.9.9-py3-none-any.whl",
+                f"{_ARTIFACT_BASE}/cli/stable/9.9.9/ajcrew-9.9.9-py3-none-any.whl",
                 dest,
                 cap=1 << 20,
                 timeout=5,
@@ -638,7 +638,7 @@ class TestRealHttpResponse:
         dest = tmp_path / "w.whl"
         try:
             wheel_engine._download_to_file(
-                f"{_ARTIFACT_BASE}/cli/stable/9.9.9/kirocrew-9.9.9-py3-none-any.whl",
+                f"{_ARTIFACT_BASE}/cli/stable/9.9.9/ajcrew-9.9.9-py3-none-any.whl",
                 dest,
                 cap=1 << 20,
                 timeout=5,
@@ -906,7 +906,7 @@ class TestCancellableBuildChild:
 
     def test_every_child_holds_the_update_lock_past_its_parent(self, tmp_path: Path) -> None:
         """The lock fd is handed to the child, so an orphaned child keeps the lock."""
-        from kiro_crew.platform_compat import try_acquire_lock
+        from aj_crew.platform_compat import try_acquire_lock
 
         lock_path = tmp_path / "crew-venv.update.lock"
         parent_fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR, 0o600)
@@ -1040,7 +1040,7 @@ class TestBinaryOnlyDependencies:
     def test_the_wheel_install_is_binary_only(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        monkeypatch.delenv("KIROCREW_ALLOW_SOURCE_BUILDS", raising=False)
+        monkeypatch.delenv("AJCREW_ALLOW_SOURCE_BUILDS", raising=False)
         seen = self._capture(monkeypatch)
         wheel = tmp_path / "w.whl"
 
@@ -1060,7 +1060,7 @@ class TestBinaryOnlyDependencies:
     def test_the_opt_in_restores_the_compile_fallback(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        monkeypatch.setenv("KIROCREW_ALLOW_SOURCE_BUILDS", "1")
+        monkeypatch.setenv("AJCREW_ALLOW_SOURCE_BUILDS", "1")
         seen = self._capture(monkeypatch)
         wheel = tmp_path / "w.whl"
 
@@ -1076,7 +1076,7 @@ class TestBinaryOnlyDependencies:
         self, monkeypatch: pytest.MonkeyPatch, value: str
     ) -> None:
         """Same contract as cli.sh's `= "1"` test: anything else keeps the policy."""
-        monkeypatch.setenv("KIROCREW_ALLOW_SOURCE_BUILDS", value)
+        monkeypatch.setenv("AJCREW_ALLOW_SOURCE_BUILDS", value)
         assert wheel_engine._pip_binary_policy() == ["--only-binary=:all:"]
 
     def test_policy_matches_the_installer(self) -> None:
@@ -1093,7 +1093,7 @@ class TestBinaryOnlyDependencies:
     # pip's tail on a host no candidate wheel runs on, as the report showed it.
     _NO_WHEEL_TAIL = (
         b"ERROR: Could not find a version that satisfies the requirement numpy>=2.0 "
-        b"(from kirocrew) (from versions: 2.2.6, 2.3.0)\n"
+        b"(from ajcrew) (from versions: 2.2.6, 2.3.0)\n"
         b"ERROR: No matching distribution found for numpy>=2.0\n"
         b"ERROR: No matching distribution found for pillow>=10\n"
     )
@@ -1113,10 +1113,10 @@ class TestBinaryOnlyDependencies:
     ) -> None:
         """The update refuses in the installer's words, not pip's: which packages
         have no wheel, what host this is, and how to opt into compiling -- including
-        that only `kirocrew update` from the operator's shell honours it (the
+        that only `ajcrew update` from the operator's shell honours it (the
         gateway's own build steps run on the trusted system PATH), which is the one
         fact an install-time success hides."""
-        monkeypatch.delenv("KIROCREW_ALLOW_SOURCE_BUILDS", raising=False)
+        monkeypatch.delenv("AJCREW_ALLOW_SOURCE_BUILDS", raising=False)
         wheel = tmp_path / "w.whl"
         self._failing_install(monkeypatch, wheel, self._NO_WHEEL_TAIL)
 
@@ -1131,9 +1131,9 @@ class TestBinaryOnlyDependencies:
         # The usual cause is stated as usual, and the other cause sits next to it.
         assert "Usually this means the host is older than the wheels' floor" in text
         assert "package index could not be reached or does not carry these releases" in text
-        assert "KIROCREW_ALLOW_SOURCE_BUILDS=1" in text
+        assert "AJCREW_ALLOW_SOURCE_BUILDS=1" in text
         assert "trusted system PATH only" in text
-        assert "kirocrew update` from a shell" in text
+        assert "ajcrew update` from a shell" in text
         # pip's own verdict is kept, so the operator can check the classification.
         assert "No matching distribution found for numpy>=2.0" in text
         # Nothing was compiled: the install command was the only pip install of
@@ -1156,7 +1156,7 @@ class TestBinaryOnlyDependencies:
     ) -> None:
         """A failure that is not the no-wheel verdict (a dead index, a broken
         wheel) must not be dressed up as an unsupported platform."""
-        monkeypatch.delenv("KIROCREW_ALLOW_SOURCE_BUILDS", raising=False)
+        monkeypatch.delenv("AJCREW_ALLOW_SOURCE_BUILDS", raising=False)
         wheel = tmp_path / "w.whl"
         self._failing_install(
             monkeypatch,
@@ -1171,7 +1171,7 @@ class TestBinaryOnlyDependencies:
         assert text.startswith("pip install into the shadow venv exited 1"), text
         assert "Max retries exceeded" in text
         assert "prebuilt wheel" not in text
-        assert "KIROCREW_ALLOW_SOURCE_BUILDS" not in text
+        assert "AJCREW_ALLOW_SOURCE_BUILDS" not in text
 
     def test_incompatible_wheels_read_as_versions_none_and_still_get_the_guidance(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
@@ -1182,13 +1182,13 @@ class TestBinaryOnlyDependencies:
         host. That shape must get the same guidance as a numeric list, with the
         index named as the other possible cause (pip's text cannot tell them
         apart); pip's own words stay attached so the operator can check."""
-        monkeypatch.delenv("KIROCREW_ALLOW_SOURCE_BUILDS", raising=False)
+        monkeypatch.delenv("AJCREW_ALLOW_SOURCE_BUILDS", raising=False)
         wheel = tmp_path / "w.whl"
         self._failing_install(
             monkeypatch,
             wheel,
             b"ERROR: Could not find a version that satisfies the requirement numpy>=2.0 "
-            b"(from kirocrew) (from versions: none)\n"
+            b"(from ajcrew) (from versions: none)\n"
             b"ERROR: No matching distribution found for numpy>=2.0\n",
         )
 
@@ -1200,7 +1200,7 @@ class TestBinaryOnlyDependencies:
             "pip found no prebuilt wheel of numpy>=2.0 it may install on this host"
         ), text
         assert "package index could not be reached or does not carry these releases" in text
-        assert "KIROCREW_ALLOW_SOURCE_BUILDS=1" in text
+        assert "AJCREW_ALLOW_SOURCE_BUILDS=1" in text
         assert "from versions: none" in text
 
     def test_the_opt_in_never_reports_a_platform_refusal(
@@ -1208,7 +1208,7 @@ class TestBinaryOnlyDependencies:
     ) -> None:
         """With compiling allowed, 'No matching distribution' means the release
         genuinely does not exist, not that a wheel is missing: no dressing-up."""
-        monkeypatch.setenv("KIROCREW_ALLOW_SOURCE_BUILDS", "1")
+        monkeypatch.setenv("AJCREW_ALLOW_SOURCE_BUILDS", "1")
         wheel = tmp_path / "w.whl"
         self._failing_install(monkeypatch, wheel, self._NO_WHEEL_TAIL)
 

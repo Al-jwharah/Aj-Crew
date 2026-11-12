@@ -12,11 +12,11 @@ import logging
 
 import pytest
 
-from kiro_crew.acp import kas_cli_settings as kcs
-from kiro_crew.acp import runtime as runtime_facade
-from kiro_crew.acp import runtime_spawn_launch
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.types import ACP_BACKEND_KAS, KAS_CLIENT_CAPABILITIES
+from aj_crew.acp import kas_cli_settings as kcs
+from aj_crew.acp import runtime as runtime_facade
+from aj_crew.acp import runtime_spawn_launch
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.types import ACP_BACKEND_KAS, KAS_CLIENT_CAPABILITIES
 
 
 @pytest.fixture
@@ -107,9 +107,9 @@ def test_an_opt_out_shows_one_session_notice_row(monkeypatch):
     """The user sees, in the chat, that Crew cannot confirm KAS turned telemetry off."""
     from types import SimpleNamespace
 
-    from kiro_crew.acp.session_provider import AcpSessionProvider
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.providers.acp import AcpProvider
 
     session = AcpSessionProvider.__new__(AcpSessionProvider)
     session._handle = SimpleNamespace(kas_telemetry_notice=kcs.TELEMETRY_UNCONFIRMED_NOTICE)
@@ -195,9 +195,9 @@ def test_the_default_model_notice_names_the_model_and_the_picker():
 def test_the_default_model_notice_reaches_the_session_start_row(monkeypatch):
     from types import SimpleNamespace
 
-    from kiro_crew.acp.session_provider import AcpSessionProvider
-    from kiro_crew.dashboard import chat_runner
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.dashboard import chat_runner
+    from aj_crew.providers.acp import AcpProvider
 
     session = AcpSessionProvider.__new__(AcpSessionProvider)
     session.kas_default_model_notice = "ℹ names claude-sonnet-4.5"
@@ -223,17 +223,17 @@ def test_loading_it_first_leaves_the_skill_projection_installable(tmp_path):
     import sys
     from pathlib import Path
 
-    import kiro_crew
-    from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+    import aj_crew
+    from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
     code = (
-        "import kiro_crew.acp.kas_cli_settings\n"
-        "import kiro_crew.config.paths as paths\n"
+        "import aj_crew.acp.kas_cli_settings\n"
+        "import aj_crew.config.paths as paths\n"
         "paths.kiro_home = lambda: None\n"
-        "import kiro_crew.acp.skill_projection\n"
+        "import aj_crew.acp.skill_projection\n"
     )
     env = dict(os.environ)
-    package_root = str(Path(kiro_crew.__file__).resolve().parents[1])
+    package_root = str(Path(aj_crew.__file__).resolve().parents[1])
     env["PYTHONPATH"] = os.pathsep.join(filter(None, [package_root, env.get("PYTHONPATH")]))
     result = subprocess.run(
         [sys.executable, "-c", code],

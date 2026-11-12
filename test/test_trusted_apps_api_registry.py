@@ -17,9 +17,9 @@ from trusted_apps_api_helpers import home_fixture  # noqa: F401
 from trusted_apps_api_helpers import mock_sel_fixture  # noqa: F401
 from trusted_apps_api_helpers import _APP, _OTHER, _client, _install, _stored
 
-from kiro_crew.apps.manager import _read_installed, _write_installed
-from kiro_crew.dashboard.handlers import security
-from kiro_crew.dashboard.handlers.security import build_trusted_apps_snapshot
+from aj_crew.apps.manager import _read_installed, _write_installed
+from aj_crew.dashboard.handlers import security
+from aj_crew.dashboard.handlers.security import build_trusted_apps_snapshot
 
 # ── 5. a registry name that is not installed yet is grantable ──
 
@@ -31,7 +31,7 @@ _REG_ONLY_CLONE_TARGET = "https://clone.example.test/Owner/registry-only-app"
 @pytest.fixture
 def seeded_registry(monkeypatch: pytest.MonkeyPatch):
     """Seed the BUNDLED registry index in-process (never touches the network)."""
-    import kiro_crew.apps.registry as registry
+    import aj_crew.apps.registry as registry
 
     monkeypatch.setattr(
         registry,
@@ -50,7 +50,7 @@ def seeded_registry(monkeypatch: pytest.MonkeyPatch):
     # HTTPS fetch — and with a seed row present a failed lookup refuses
     # rather than falling back to the seed.
     monkeypatch.setattr(
-        "kiro_crew.apps.official_catalog.inventory_for_install",
+        "aj_crew.apps.official_catalog.inventory_for_install",
         lambda name: None,
     )
     return _REG_ONLY
@@ -65,7 +65,7 @@ async def test_grant_accepts_a_registry_name_that_is_not_installed(
     # are themselves third-party code), so "no grant without an install, no
     # install without a grant" left the operator only the blanket
     # ``apps_allow_third_party`` this endpoint exists to avoid.
-    from kiro_crew.apps.manager import get_app
+    from aj_crew.apps.manager import get_app
 
     assert get_app(_REG_ONLY) is None, "fixture must NOT install the app"
 
@@ -80,7 +80,7 @@ async def test_grant_accepts_a_registry_name_that_is_not_installed(
     # Persisted AND effective, so the install that follows is admitted.
     assert _stored(home)["apps_trusted"] == [_REG_ONLY]
     assert _stored(home)["apps_trusted_repositories"] == {_REG_ONLY: _REG_ONLY_CLONE_TARGET}
-    from kiro_crew.apps.execution import app_execution_denied
+    from aj_crew.apps.execution import app_execution_denied
 
     assert (
         app_execution_denied(
@@ -99,7 +99,7 @@ async def test_repository_grant_never_persists_embedded_clone_credentials(
     seeded_registry: str,
     monkeypatch: pytest.MonkeyPatch,
 ):
-    import kiro_crew.apps.registry as registry
+    import aj_crew.apps.registry as registry
 
     secret = "SuperSecret"
     credentialed = f"HTTPS://User:{secret}@Clone.Example.test/Owner/registry-only-app.git"
@@ -163,7 +163,7 @@ async def test_legacy_registry_install_binds_grant_to_current_repository(
 
     current_repository = "https://clone.example.test/Owner/current-app"
     monkeypatch.setattr(
-        "kiro_crew.apps.registry.get_registry_app",
+        "aj_crew.apps.registry.get_registry_app",
         lambda name: {"name": name, "gitUrl": f"{current_repository}.git"},
     )
 
@@ -197,7 +197,7 @@ async def test_legacy_unsupported_install_cannot_receive_repository_grant(
     home: Path, tmp_path: Path, mock_sel, source_url: str
 ):
     """Old ambiguous provenance is unknown until reinstalled from a safe URL."""
-    from kiro_crew.apps.manager import INSTALLED_META_FILENAME, app_dir
+    from aj_crew.apps.manager import INSTALLED_META_FILENAME, app_dir
 
     _install(tmp_path, _APP)
     meta_path = app_dir(_APP) / INSTALLED_META_FILENAME
@@ -366,7 +366,7 @@ _INEFFECTIVE_ENTRIES = ["LD-App", "ld-app ", "ｌd-app", "..", "*"]
 async def test_snapshot_reports_unenforceable_entries_as_ineffective(
     home: Path, tmp_path: Path, mock_sel
 ):
-    from kiro_crew.apps.execution import app_execution_denied, trusted_app_names
+    from aj_crew.apps.execution import app_execution_denied, trusted_app_names
 
     _install(tmp_path, _APP)
     (home / "config.json").write_text(

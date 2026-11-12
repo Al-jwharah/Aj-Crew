@@ -16,7 +16,7 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.apps.builtins.aws_control.backend import backup
+from aj_crew.apps.builtins.aws_control.backend import backup
 
 ACCOUNT = "111122223333"
 
@@ -41,7 +41,7 @@ class _SessionsArchiveLayerBGateHarness:
     """
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse state pin moved verbatim; no test that inherits it calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse state pin moved verbatim; no test that inherits it calls monkeypatch.undo()
     def _isolated_state(self, tmp_path, monkeypatch):
         monkeypatch.setattr(backup, "_state_path", lambda: tmp_path / "backup.json")
         # These tests assert exact member lists, so a real kiro-cli store on the host

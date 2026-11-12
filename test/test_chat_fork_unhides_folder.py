@@ -19,10 +19,10 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import chat_fork, create_rate_limit
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-from kiro_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard import chat_fork, create_rate_limit
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+from aj_crew.dashboard.chat_utils import slot_history_key
 
 FOLDER_ID = "fold00000001"
 
@@ -30,7 +30,7 @@ FOLDER_ID = "fold00000001"
 @pytest.fixture(autouse=True)
 def _isolated(_floor_monkeypatch, tmp_path):
     mp = _floor_monkeypatch
-    mp.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    mp.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     mp.setattr(sc, "session_control_enabled", lambda: True)
     mp.setattr(chat_fork, "sel", lambda: MagicMock())
     mp.setattr(sc, "sel", lambda: MagicMock())

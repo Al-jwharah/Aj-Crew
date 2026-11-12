@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from kiro_crew import session_image_repair as sir
+from aj_crew import session_image_repair as sir
 
 
 def _png_bytes(size: tuple[int, int], colour: str = "red") -> list[int]:

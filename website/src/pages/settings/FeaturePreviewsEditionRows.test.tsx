@@ -21,7 +21,7 @@ vi.mock('../../api/client', async importOriginal => {
       ...actual.api,
       sharedCrewPreview: vi.fn(),
       dashboardConfig: vi.fn(),
-      kirocrewConfig: vi.fn(),
+      ajcrewConfig: vi.fn(),
       getDecisionsConsent: vi.fn(),
     },
   }
@@ -61,7 +61,7 @@ beforeEach(() => {
   resetFeaturePreviewRowsForTests()
   vi.mocked(api.sharedCrewPreview).mockResolvedValue(null)
   vi.mocked(api.dashboardConfig).mockResolvedValue({ decisions_enabled: false } as never)
-  vi.mocked(api.kirocrewConfig).mockResolvedValue({} as never)
+  vi.mocked(api.ajcrewConfig).mockResolvedValue({} as never)
   vi.mocked(api.getDecisionsConsent).mockResolvedValue({ enabled: false, endpoint: '', configured_endpoint: '', permits: false })
 })
 

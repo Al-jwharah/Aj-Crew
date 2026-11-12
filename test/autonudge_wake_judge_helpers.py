@@ -11,10 +11,10 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import autonudge_judge as judge
-from kiro_crew.autonudge import NudgeLoop
-from kiro_crew.decisions.points import nudge_wake as point
-from kiro_crew.decisions.types import Answer
+from aj_crew import autonudge_judge as judge
+from aj_crew.autonudge import NudgeLoop
+from aj_crew.decisions.points import nudge_wake as point
+from aj_crew.decisions.types import Answer
 
 
 @pytest.fixture(autouse=True)

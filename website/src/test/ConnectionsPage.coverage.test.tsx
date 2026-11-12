@@ -352,7 +352,7 @@ describe('the provider gallery', () => {
     expect(bubble).toHaveTextContent('its tools may not work there')
   })
 
-  // The grant is on disk but Kiro Crew has no entry for the provider (it lives
+  // The grant is on disk but Aj Crew has no entry for the provider (it lives
   // only in a user's own agent spec), so `/api/mcp` lists no server.
   it('says why a provider with a stored sign-in but no server stays not connected', async () => {
     connectionsStatus.mockResolvedValue({
@@ -368,7 +368,7 @@ describe('the provider gallery', () => {
 
     fireEvent.mouseEnter(within(linear).getByRole('button', { name: 'Linear prerequisites' }))
     expect(screen.getByRole('tooltip')).toHaveTextContent(
-      "You're already signed in to Linear on this machine, but Kiro Crew isn't set up to use it yet, which is why it isn't connected. Connect sets it up and uses that saved sign-in when it can, so it may still ask you to sign in again.",
+      "You're already signed in to Linear on this machine, but Aj Crew isn't set up to use it yet, which is why it isn't connected. Connect sets it up and uses that saved sign-in when it can, so it may still ask you to sign in again.",
     )
   })
 
@@ -1337,7 +1337,7 @@ describe('a provider that needs attention', () => {
     mcpServers.mockResolvedValue([server({
       status: 'error',
       enabled: false,
-      presence: { kirocrew: false, kiroGlobal: true, ccGlobal: false },
+      presence: { ajcrew: false, kiroGlobal: true, ccGlobal: false },
     })])
     mount()
 
@@ -1346,8 +1346,8 @@ describe('a provider that needs attention', () => {
     await waitFor(() => expect(mcpCustomUpdate).toHaveBeenCalledWith('notion', {
       url: NOTION_URL, scopes: ['read'], clientId: 'client-1',
     }))
-    // Global scopes are passed through unchanged; only Kiro Crew's own is turned on.
-    expect(mcpApply).toHaveBeenCalledWith([{ name: 'notion', kirocrew: true, kiroGlobal: true, ccGlobal: false }])
+    // Global scopes are passed through unchanged; only Aj Crew's own is turned on.
+    expect(mcpApply).toHaveBeenCalledWith([{ name: 'notion', ajcrew: true, kiroGlobal: true, ccGlobal: false }])
   })
 
   it('leaves an already-enabled entry alone apart from the endpoint rewrite', async () => {

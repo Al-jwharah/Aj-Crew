@@ -16,10 +16,10 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from kiro_crew.apps.builtins.dev_fleet import repository, runtime
-from kiro_crew.apps.builtins.dev_fleet import worktree_ops_pods as pods
+from aj_crew.apps.builtins.dev_fleet import repository, runtime
+from aj_crew.apps.builtins.dev_fleet import worktree_ops_pods as pods
 
-_NAME = "kirocrew-wt-feature"
+_NAME = "ajcrew-wt-feature"
 
 
 @pytest.fixture

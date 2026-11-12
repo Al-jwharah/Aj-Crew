@@ -2,7 +2,7 @@
 
 Lives in the repo-level ``test/`` tree (not the app's in-package ``tests/``)
 because ``setup.cfg`` sets ``testpaths = test transfer`` — a test under
-``src/kiro_crew/apps/builtins/...`` is never collected by CI.
+``src/aj_crew/apps/builtins/...`` is never collected by CI.
 
 Four things are pinned here because each is a way the app could be wrong in a
 way no other test would catch:
@@ -40,9 +40,9 @@ from unittest import mock
 from aiohttp import web
 from aiohttp.test_utils import AioHTTPTestCase, make_mocked_request
 
+from aj_crew.apps.builtins.pptx_maker.backend import engine, paths, provision, routes
+from aj_crew.testing.wait import async_wait_until
 from conftest import make_dir_link
-from kiro_crew.apps.builtins.pptx_maker.backend import engine, paths, provision, routes
-from kiro_crew.testing.wait import async_wait_until
 
 # An AKIA-shaped access key ID. The canonical AWS documentation example, so it is
 # a real pattern match without being a live secret.
@@ -673,7 +673,7 @@ class TestPreviewRedaction(_RoutesFixture):
         """The placeholder carries a per-process random nonce, so artifact text
         cannot forge one. A forged token restores to nothing rather than to
         attacker-chosen bytes."""
-        forged = "\x00KIROCREW-BITMAP-" + ("0" * 16) + "-0\x00"
+        forged = "\x00AJCREW-BITMAP-" + ("0" * 16) + "-0\x00"
         (self.deck / "specs" / "brief.md").write_text(
             f"before{forged}after {_FAKE_AKIA}", encoding="utf-8"
         )
@@ -1325,7 +1325,7 @@ class TestWorkerResponseContract(unittest.TestCase):
     def test_an_unmapped_error_status_becomes_500_and_is_logged(self) -> None:
         """A worker inventing e.g. 418 must not reach the client as 418 — the
         ladder cannot carry it, so it degrades to 500 and says so."""
-        with self.assertLogs("kirocrew.app.pptx-maker", level="WARNING") as logs:
+        with self.assertLogs("ajcrew.app.pptx-maker", level="WARNING") as logs:
             resp = routes._worker_response(418, {"error": "teapot", "code": "c"})
         self.assertEqual(resp.status, 500)
         self.assertTrue(any("unmapped error status" in line for line in logs.output))
@@ -1334,7 +1334,7 @@ class TestWorkerResponseContract(unittest.TestCase):
         """The success branch always answers 200 — a worker returning 201 has its
         status silently rewritten, so the drift is only visible in the log. Pinned
         so a future worker that needs 201 is forced to extend the ladder."""
-        with self.assertLogs("kirocrew.app.pptx-maker", level="WARNING") as logs:
+        with self.assertLogs("ajcrew.app.pptx-maker", level="WARNING") as logs:
             resp = routes._worker_response(201, {"created": True})
         self.assertEqual(resp.status, 200)
         self.assertEqual(json.loads(resp.body), {"created": True})
@@ -1343,7 +1343,7 @@ class TestWorkerResponseContract(unittest.TestCase):
     def test_dropping_a_non_contract_error_field_is_reported(self) -> None:
         """The error branches rebuild the body key by key, so an extra field is
         silently lost — that drift must be visible in the log."""
-        with self.assertLogs("kirocrew.app.pptx-maker", level="WARNING") as logs:
+        with self.assertLogs("ajcrew.app.pptx-maker", level="WARNING") as logs:
             resp = routes._worker_response(400, {"error": "e", "code": "c", "hint": "extra"})
         self.assertNotIn("hint", json.loads(resp.body))
         self.assertTrue(any("non-contract error field" in line for line in logs.output))

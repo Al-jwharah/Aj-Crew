@@ -4,7 +4,7 @@ The share list names servers, but what a shared server runs is approved by conte
 in MCP Management. A listed server whose launch nobody approved is refused at the
 next gateway start, and without a notice the write's ``✅`` line reads as if sharing
 were on. The notice goes to stderr after the write, which is unchanged; a server the
-store approves, a reserved ``kirocrew-*`` server and a never-pooled one are not named.
+store approves, a reserved ``ajcrew-*`` server and a never-pooled one are not named.
 
 Every test writes under a temp data home; none touches ``~/.kiro/crew``.
 """
@@ -19,7 +19,7 @@ from unittest.mock import patch
 import pytest
 from mcp_launch_approval_helpers import _APPROVED_CMD, _approval_module, _approvals_for
 
-from kiro_crew.cli_config import _config_cmd
+from aj_crew.cli_config import _config_cmd
 
 SHARE_LIST = "mcp_gateway.stub_servers"
 _NOTICE = "has no approved launch"
@@ -30,11 +30,11 @@ def _run(home: Path, *, key: str | None, value: str | None, file: str | None, lo
         config_action="set", key=key, value=value, value_base64=None, file=file, local=local
     )
     with (
-        patch("kiro_crew.cli_config.config_path", return_value=home / "config.json"),
-        patch("kiro_crew.cli_config.config_local_path", return_value=home / "config.local.json"),
-        patch("kiro_crew.config.loader.config_path", return_value=home / "config.json"),
-        patch("kiro_crew.config.loader.config_dir", return_value=home),
-        patch("kiro_crew.cli_config.sel"),
+        patch("aj_crew.cli_config.config_path", return_value=home / "config.json"),
+        patch("aj_crew.cli_config.config_local_path", return_value=home / "config.local.json"),
+        patch("aj_crew.config.loader.config_path", return_value=home / "config.json"),
+        patch("aj_crew.config.loader.config_dir", return_value=home),
+        patch("aj_crew.cli_config.sel"),
     ):
         _config_cmd(args)
 
@@ -43,7 +43,7 @@ def _run(home: Path, *, key: str | None, value: str | None, file: str | None, lo
 def home(tmp_path: Path, monkeypatch) -> Path:
     d = tmp_path / "crew"
     d.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(d))
+    monkeypatch.setenv("AJCREW_HOME", str(d))
     mod = _approval_module()
     mod._write(
         mod.approvals_path(),
@@ -58,7 +58,7 @@ def _names_in(err: str) -> list[str]:
 
 @pytest.mark.parametrize("local", [False, True])
 def test_a_listed_server_with_no_approved_launch_is_named(home, capsys, local):
-    value = json.dumps(["wide-tools", "approved-srv", "kirocrew-cron", "creds-agent"])
+    value = json.dumps(["wide-tools", "approved-srv", "ajcrew-cron", "creds-agent"])
     _run(home, key=SHARE_LIST, value=value, file=None, local=local)
     captured = capsys.readouterr()
 
@@ -66,7 +66,7 @@ def test_a_listed_server_with_no_approved_launch_is_named(home, capsys, local):
     assert json.loads(target.read_text(encoding="utf-8"))["mcp_gateway"]["stub_servers"] == [
         "wide-tools",
         "approved-srv",
-        "kirocrew-cron",
+        "ajcrew-cron",
         "creds-agent",
     ]
     assert "✅" in captured.out

@@ -6,8 +6,8 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.cron as cron_mod
-from kiro_crew.cron import CronService, CronStoreBusy
+import aj_crew.cron as cron_mod
+from aj_crew.cron import CronService, CronStoreBusy
 
 
 class _Recorder:

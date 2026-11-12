@@ -14,8 +14,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.dashboard import session_health as sh
-from kiro_crew.metrics import events as ev
+from aj_crew.dashboard import session_health as sh
+from aj_crew.metrics import events as ev
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -50,7 +50,7 @@ class _Rec:
 @pytest.fixture
 def rec():
     r = _Rec()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=r):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=r):
         yield r
 
 
@@ -283,11 +283,11 @@ class TestLogScanIsSecondary:
         _write_log(
             log,
             [
-                f"{ts} WARNING kiro_crew.dashboard.chat: ACP error in slot chat-7-1: [AcpPromptBusy] busy",
-                f"{ts} WARNING kiro_crew.slack.gateway: Injected timeout error for subagent abc into slot chat-3-1",
-                f"{ts} WARNING kiro_crew.slack.gateway: Injected timeout error for subagent x into slot cron_1",
-                f"{ts} WARNING kiro_crew.session: Session chat-2-2 has dead provider — removing stale entry",
-                f"{ts} WARNING kiro_crew.dashboard.chat: ACP error in slot chat-8-1: [AcpError] throttled",
+                f"{ts} WARNING aj_crew.dashboard.chat: ACP error in slot chat-7-1: [AcpPromptBusy] busy",
+                f"{ts} WARNING aj_crew.slack.gateway: Injected timeout error for subagent abc into slot chat-3-1",
+                f"{ts} WARNING aj_crew.slack.gateway: Injected timeout error for subagent x into slot cron_1",
+                f"{ts} WARNING aj_crew.session: Session chat-2-2 has dead provider — removing stale entry",
+                f"{ts} WARNING aj_crew.dashboard.chat: ACP error in slot chat-8-1: [AcpError] throttled",
             ],
         )
         hits = sh.scan_log_for_stalls(log_path=log, now=log.stat().st_mtime)
@@ -304,7 +304,7 @@ class TestLogScanIsSecondary:
         _write_log(
             log,
             [
-                f"{old} WARNING kiro_crew.dashboard.chat: ACP error in slot chat-4-2: [AcpPromptBusy] x"
+                f"{old} WARNING aj_crew.dashboard.chat: ACP error in slot chat-4-2: [AcpPromptBusy] x"
             ],
         )
         assert sh.scan_log_for_stalls(log_path=log) == {}
@@ -316,9 +316,7 @@ class TestLogScanIsSecondary:
         ts = _ts_from_file(log)
         _write_log(
             log,
-            [
-                f"{ts} WARNING kiro_crew.dashboard.chat: ACP error in slot chat-1-1: [AcpPromptBusy] x"
-            ],
+            [f"{ts} WARNING aj_crew.dashboard.chat: ACP error in slot chat-1-1: [AcpPromptBusy] x"],
         )
         mon = sh.SessionHealthMonitor(include_log_scan=True)
         out = mon.compute(
@@ -333,9 +331,7 @@ class TestLogScanIsSecondary:
         ts = _ts_from_file(log)
         _write_log(
             log,
-            [
-                f"{ts} WARNING kiro_crew.dashboard.chat: ACP error in slot chat-1-1: [AcpPromptBusy] x"
-            ],
+            [f"{ts} WARNING aj_crew.dashboard.chat: ACP error in slot chat-1-1: [AcpPromptBusy] x"],
         )
         mon = sh.SessionHealthMonitor(include_log_scan=True)
         out = mon.compute(_health([_snap()], wall=log.stat().st_mtime), log_path=log)
@@ -348,9 +344,7 @@ class TestLogScanIsSecondary:
         ts = _ts_from_file(log)
         _write_log(
             log,
-            [
-                f"{ts} WARNING kiro_crew.dashboard.chat: ACP error in slot chat-5-5: [AcpPromptBusy] x"
-            ],
+            [f"{ts} WARNING aj_crew.dashboard.chat: ACP error in slot chat-5-5: [AcpPromptBusy] x"],
         )
         out = sh.compute_session_health(None, log_path=log, now=log.stat().st_mtime)
         assert out["stalled"]["chat-5-5"]["reason"] == "prompt_stuck"

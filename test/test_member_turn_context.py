@@ -1,6 +1,6 @@
 """The member-turn chokepoint: one decision point for the rules-currency invariant.
 
-``kiro_crew.members.member_turn_context`` owns "every member turn runs under current
+``aj_crew.members.member_turn_context`` owns "every member turn runs under current
 rules". Behavior tests pin the per-lifecycle verdict; AST guards pin that every delivery
 branch routes through it, so none bypasses the fail-closed rules gate.
 """
@@ -15,7 +15,7 @@ from itertools import product
 
 import pytest
 
-from kiro_crew.members import (
+from aj_crew.members import (
     MemberLifecycle,
     MemberSlugError,
     is_member_session_key,
@@ -225,7 +225,7 @@ class TestChokepointWiring:
     def test_build_message_delivery_routes_through_chokepoint(self):
         """Every member-section injection in build_message is guarded by the
         chokepoint's ``deliver_section`` verdict."""
-        import kiro_crew.context_assembly.turn_message as context_mod
+        import aj_crew.context_assembly.turn_message as context_mod
 
         tree = ast.parse(inspect.getsource(context_mod))
         build_message = _find_function(tree, "build_message")
@@ -244,7 +244,7 @@ class TestChokepointWiring:
     def test_build_message_rules_gate_routes_through_chokepoint(self):
         """The standalone fail-closed rules read runs iff the chokepoint says
         ``enforce_rules_gate`` — not under a hand-written lifecycle test."""
-        import kiro_crew.context_assembly.turn_message as context_mod
+        import aj_crew.context_assembly.turn_message as context_mod
 
         tree = ast.parse(inspect.getsource(context_mod))
         build_message = _find_function(tree, "build_message")
@@ -261,7 +261,7 @@ class TestChokepointWiring:
         """The lifecycle handed to the chokepoint comes from member_lifecycle
         with build_message's real branch inputs, so the chokepoint and the
         surrounding branch structure cannot disagree on the turn's state."""
-        import kiro_crew.context_assembly.turn_message as context_mod
+        import aj_crew.context_assembly.turn_message as context_mod
 
         tree = ast.parse(inspect.getsource(context_mod))
         build_message = _find_function(tree, "build_message")
@@ -272,7 +272,7 @@ class TestChokepointWiring:
 
     def test_build_session_context_delivery_routes_through_chokepoint(self):
         """The fresh-session injection (FRESH leg) consults the chokepoint."""
-        import kiro_crew.context_assembly.session_start as context_mod
+        import aj_crew.context_assembly.session_start as context_mod
 
         tree = ast.parse(inspect.getsource(context_mod))
         build_session_context = _find_function(tree, "build_session_context")
@@ -293,7 +293,7 @@ class TestChokepointWiring:
         the moment the session client exists."""
         from pathlib import Path
 
-        import kiro_crew.dashboard.chat_runner as chat_runner_mod
+        import aj_crew.dashboard.chat_runner as chat_runner_mod
 
         tree = ast.parse(
             "\n".join(
@@ -336,7 +336,7 @@ class TestChokepointWiring:
         reinjection flag, the thread's history key, and the roster's
         transcript-tail probe cannot drift apart. Any f-string carrying a
         ``dashboard:`` constant is flagged, whatever it interpolates."""
-        from kiro_crew.dashboard.handlers import members as members_handler_mod
+        from aj_crew.dashboard.handlers import members as members_handler_mod
 
         source = inspect.getsource(members_handler_mod)
         source += "".join(
@@ -372,7 +372,7 @@ class TestChokepointWiring:
         spellings of one predicate can drift, and the divergence that matters
         (branch true, lifecycle not SLIM_RESUME) would leave a resumed
         member session on a stale [PERMANENT RULES] snapshot silently."""
-        import kiro_crew.context_assembly.turn_message as context_mod
+        import aj_crew.context_assembly.turn_message as context_mod
 
         tree = ast.parse(inspect.getsource(context_mod))
         build_message = _find_function(tree, "build_message")

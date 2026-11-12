@@ -15,8 +15,8 @@ from unittest import mock
 
 import pytest
 
-import kiro_crew.executors as ex
-from kiro_crew.testing.wait import async_wait_until, default_timeout
+import aj_crew.executors as ex
+from aj_crew.testing.wait import async_wait_until, default_timeout
 
 
 def setup_function() -> None:

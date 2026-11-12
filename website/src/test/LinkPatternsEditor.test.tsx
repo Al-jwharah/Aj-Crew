@@ -164,7 +164,7 @@ describe('LinkPatternsEditor server-value adoption', () => {
       await settled
     })
 
-    // An external client (another tab, `kirocrew config set`) restores the
+    // An external client (another tab, `ajcrew config set`) restores the
     // pre-save value. Without the settlement-advanced watermark this looked
     // like a failed save's rollback and was swallowed — leaving stale rows
     // to overwrite the external change on the next blur.

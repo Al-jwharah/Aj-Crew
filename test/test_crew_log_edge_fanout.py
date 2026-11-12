@@ -14,14 +14,14 @@ from unittest.mock import patch
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew.crew_log import CrewLog, crew_log_path, emit
+from aj_crew.crew_log import CrewLog, crew_log_path, emit
 
 # Fixtures
 
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
     emit.reset_caches()
@@ -52,7 +52,7 @@ def _body(session_id: str) -> list[dict]:
 def _open(session_id: str) -> None:
     emit.on_session_opened(
         session_id,
-        agent="kirocrew",
+        agent="ajcrew",
         slot="s",
         model="m",
         cwd="/x",
@@ -219,7 +219,7 @@ class TestNothingIsShed:
     def test_no_ceiling_constant_exists_to_shed_against(self):
         from dataclasses import fields
 
-        from kiro_crew.crew_log.writer import WriterLimits
+        from aj_crew.crew_log.writer import WriterLimits
 
         for name in ("_MAX_PENDING_PER_SESSION", "_MAX_PENDING_BYTES_PER_SESSION"):
             assert not hasattr(

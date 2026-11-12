@@ -1,4 +1,4 @@
-"""Additional unit coverage for :mod:`kiro_crew.apps.backend`.
+"""Additional unit coverage for :mod:`aj_crew.apps.backend`.
 
 Complements ``test_app_backend.py`` (port allocation, spawn survival, dispatch)
 and ``test_app_backend_stale_reap.py`` (pidfile reap safety) by exercising the
@@ -45,8 +45,8 @@ from apps_backend_coverage_helpers import (
     _StopSpawn,
 )
 
-import kiro_crew.apps.backend as bmod
-from kiro_crew.apps.backend import AppProcess
+import aj_crew.apps.backend as bmod
+from aj_crew.apps.backend import AppProcess
 
 
 def test_lifecycle_mutation_is_confined_to_declared_owners() -> None:

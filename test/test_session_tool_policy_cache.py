@@ -12,7 +12,7 @@ These tests pin the policy semantics of the memo that answers the second request
 from one ``scandir``: an unchanged directory performs no spec read at all, an
 in-place edit or a new file makes the next call read again, and refusals are
 deliberately not memoized. The revision the memo is pinned to, and the memo's
-store rules, are :mod:`kiro_crew.agent_discovery`'s and are tested in
+store rules, are :mod:`aj_crew.agent_discovery`'s and are tested in
 ``test_agents_dir_memo.py``.
 """
 
@@ -26,8 +26,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import agent_discovery
-from kiro_crew.dashboard.handlers import sessions as sessions_mod
+from aj_crew import agent_discovery
+from aj_crew.dashboard.handlers import sessions as sessions_mod
 
 AGENT = "reviewer"
 
@@ -228,7 +228,7 @@ def test_an_alias_named_read_sees_the_alias_appear(
     """The revision leaves skill-view aliases out, so an alias write moves
     nothing it pins to; a policy read BY an alias name reads ``<alias>.json``
     by filename and is therefore never served from the memo."""
-    from kiro_crew.agent_spec_format import NATIVE_SKILL_ALIAS_PREFIX
+    from aj_crew.agent_spec_format import NATIVE_SKILL_ALIAS_PREFIX
 
     alias = f"{NATIVE_SKILL_ALIAS_PREFIX}0123456789abcdef01234567"
     _populate(tmp_path)
@@ -263,7 +263,7 @@ def test_the_policy_memo_is_separate_from_the_projection_memo(
     """The two ``spec_by_declared_name`` callers carry different SEL
     ``operation`` labels, so an answer read under one label is never handed
     to the other surface."""
-    from kiro_crew.acp import kas_agents
+    from aj_crew.acp import kas_agents
 
     _populate(tmp_path)
     monkeypatch.setattr(kas_agents, "_SPEC_SCAN_MEMO", agent_discovery.AgentsDirMemo())
@@ -388,7 +388,7 @@ def test_the_walk_keeps_no_more_policies_than_the_memo_can_store(
     memo's key bound a name's policy is never read by the walk, the requested
     name always keeps its place wherever the walk meets it, and a name the
     bound left out is answered by the one-name read."""
-    from kiro_crew.dashboard.handlers.sessions_parts import tool_policy
+    from aj_crew.dashboard.handlers.sessions_parts import tool_policy
 
     monkeypatch.setattr(tool_policy, "_AGENTS_DIR_MEMO_MAX_KEYS", 4)
     _populate(tmp_path, others=10)

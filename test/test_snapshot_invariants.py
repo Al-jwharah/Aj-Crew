@@ -12,16 +12,16 @@ import json
 from pathlib import Path
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, snapshot_family_paths, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, snapshot_family_paths, unpinnable_argv
 
-from kiro_crew.snapshot import _merge_memory, restore_main, snapshot_main
+from aj_crew.snapshot import _merge_memory, restore_main, snapshot_main
 
 
 @pytest.fixture
 def src(tmp_path, monkeypatch):
     d = tmp_path / "src"
-    _setup_fake_kirocrew(d)
-    monkeypatch.setenv("KIROCREW_HOME", str(d))
+    _setup_fake_ajcrew(d)
+    monkeypatch.setenv("AJCREW_HOME", str(d))
     return d
 
 
@@ -57,7 +57,7 @@ class TestMergeReleasesItsSourceHandles:
     def test_every_connection_the_merge_opens_is_closed(self, tmp_path, monkeypatch, source):
         import sqlite3
 
-        from kiro_crew import snapshot as snapshot_mod
+        from aj_crew import snapshot as snapshot_mod
 
         opened: list[sqlite3.Connection] = []
 
@@ -88,9 +88,9 @@ class TestMergeReleasesItsSourceHandles:
 
 
 def _snapshot(out: Path, extra: list[str]) -> Path:
-    # A selective bundle is `kirocrew-partial-*`, a complete one `kirocrew-snapshot-*`.
+    # A selective bundle is `ajcrew-partial-*`, a complete one `ajcrew-snapshot-*`.
     assert snapshot_main([str(out)] + extra + unpinnable_argv()) == 0
-    return sorted(out.glob("kirocrew-*.tar.gz"))[-1]
+    return sorted(out.glob("ajcrew-*.tar.gz"))[-1]
 
 
 class TestEveryTreeRootSiteUsesTheChokepoint:
@@ -164,7 +164,7 @@ class TestEveryTreeRootSiteUsesTheChokepoint:
         in one of its ancestors — every individual node the loop inspects looks
         ordinary while the write still lands outside.
         """
-        from kiro_crew.snapshot import safe_tree_root
+        from aj_crew.snapshot import safe_tree_root
 
         home = tmp_path / "home"
         (home / "workspace").mkdir(parents=True)
@@ -203,7 +203,7 @@ class TestEveryTreeRootSiteUsesTheChokepoint:
         # A REAL database, so merge mode takes the ATTACH path rather than the
         # "source unreadable, skipping" shortcut an empty file would trigger.
         _make_memory_db(dest / "memory.db")
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
 
         rc = restore_main([str(tarball), "--components", "memory", "--mode", "merge", "--force"])
         assert list(outside.iterdir()) == [], "merge wrote through a symlinked root"
@@ -216,7 +216,7 @@ class TestEveryTreeRootSiteUsesTheChokepoint:
 class TestManifestDrivenRestoreEdges:
     def test_an_unknown_only_manifest_restores_nothing(self, tmp_path):
         """An empty resolved set must not collapse into 'restore everything'."""
-        from kiro_crew.snapshot import _manifest_components
+        from aj_crew.snapshot import _manifest_components
 
         snap = tmp_path / "future"
         snap.mkdir()
@@ -224,7 +224,7 @@ class TestManifestDrivenRestoreEdges:
         assert _manifest_components(snap) == []
 
     def test_a_pre_manifest_bundle_still_means_everything(self, tmp_path):
-        from kiro_crew.snapshot import _manifest_components
+        from aj_crew.snapshot import _manifest_components
 
         snap = tmp_path / "old"
         snap.mkdir()
@@ -240,7 +240,7 @@ class TestManifestDrivenRestoreEdges:
         dest = tmp_path / "dest"
         dest.mkdir()
         (dest / "config.json").write_text('{"keep": true}')
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
 
         rc = restore_main([str(tarball), "--components", "config", "--mode", "replace", "--force"])
         assert rc == 1
@@ -253,7 +253,7 @@ class TestUnreadableManifestRefuses:
     """'We could not read it' must never resolve to the most destructive reading."""
 
     def test_a_malformed_manifest_raises_rather_than_defaulting(self, tmp_path):
-        from kiro_crew.snapshot import ManifestUnreadable, _manifest_components
+        from aj_crew.snapshot import ManifestUnreadable, _manifest_components
 
         snap = tmp_path / "broken"
         snap.mkdir()
@@ -262,7 +262,7 @@ class TestUnreadableManifestRefuses:
             _manifest_components(snap)
 
     def test_a_components_key_of_the_wrong_type_raises(self, tmp_path):
-        from kiro_crew.snapshot import ManifestUnreadable, _manifest_components
+        from aj_crew.snapshot import ManifestUnreadable, _manifest_components
 
         snap = tmp_path / "weird"
         snap.mkdir()
@@ -284,9 +284,7 @@ class TestUnreadableManifestRefuses:
         with tarfile.open(str(tarball)) as t:
             t.extractall(work, filter=lambda m, _d="": m)
         inner = next(
-            d
-            for d in work.iterdir()
-            if d.name.startswith(("kirocrew-snapshot-", "kirocrew-partial-"))
+            d for d in work.iterdir() if d.name.startswith(("ajcrew-snapshot-", "ajcrew-partial-"))
         )
         (inner / "MANIFEST.json").write_text("{corrupt")
         broken = tmp_path / "broken.tar.gz"
@@ -297,7 +295,7 @@ class TestUnreadableManifestRefuses:
         dest.mkdir()
         keep = dest / "config.json"
         keep.write_text('{"keep": true}')
-        monkeypatch.setenv("KIROCREW_HOME", str(dest))
+        monkeypatch.setenv("AJCREW_HOME", str(dest))
 
         rc = restore_main([str(broken), "--mode", "replace", "--force"])
         assert rc == 1

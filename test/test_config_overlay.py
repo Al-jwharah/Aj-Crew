@@ -8,8 +8,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.config.loader import (
-    KiroCrewConfig,
+from aj_crew.config.loader import (
+    AjCrewConfig,
     _deep_merge,
     _subtract_overlay,
     config_local_path,
@@ -76,7 +76,7 @@ class TestConfigOverlayLoad:
     """Integration tests for config.local.json merging during load()."""
 
     def test_local_overlay_merges_on_load(self, tmp_path: Path) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base_config = {
             "agent": {"yolo": False, "model": "opus", "provider": "acp"},
@@ -85,82 +85,82 @@ class TestConfigOverlayLoad:
         local_config = {"agent": {"yolo": True, "model": "auto"}}
         (config_dir / "config.local.json").write_text(json.dumps(local_config))
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            cfg = AjCrewConfig.load()
 
         assert cfg.agent.dangerously_skip_permissions is True
         assert cfg.agent.model == "auto"
         assert cfg.agent.provider == "acp"
 
     def test_load_without_local_file(self, tmp_path: Path) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base_config = {"agent": {"yolo": False}}
         (config_dir / "config.json").write_text(json.dumps(base_config))
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            cfg = AjCrewConfig.load()
 
         assert cfg.agent.dangerously_skip_permissions is False
 
     def test_invalid_local_json_ignored(self, tmp_path: Path) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base_config = {"agent": {"yolo": False}}
         (config_dir / "config.json").write_text(json.dumps(base_config))
         (config_dir / "config.local.json").write_text("not valid json {{{")
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            cfg = AjCrewConfig.load()
 
         assert cfg.agent.dangerously_skip_permissions is False
 
     def test_non_dict_local_json_ignored(self, tmp_path: Path) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base_config = {"agent": {"yolo": False}}
         (config_dir / "config.json").write_text(json.dumps(base_config))
         (config_dir / "config.local.json").write_text('"just a string"')
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            cfg = AjCrewConfig.load()
 
         assert cfg.agent.dangerously_skip_permissions is False
 
     def test_local_overlay_adds_new_section(self, tmp_path: Path) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base_config = {"agent": {"provider": "acp"}}
         (config_dir / "config.json").write_text(json.dumps(base_config))
         local_config = {"dashboard": {"auto_open_browser": False}}
         (config_dir / "config.local.json").write_text(json.dumps(local_config))
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            cfg = AjCrewConfig.load()
 
         assert cfg.dashboard.auto_open_browser is False
 
     def test_overlay_applies_when_config_json_missing(self, tmp_path: Path) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         local_config = {"agent": {"yolo": True, "provider": "acp"}}
         (config_dir / "config.local.json").write_text(json.dumps(local_config))
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            cfg = AjCrewConfig.load()
 
         assert cfg.agent.dangerously_skip_permissions is True
         assert cfg.agent.provider == "acp"
 
     def test_overlay_applies_when_config_json_invalid(self, tmp_path: Path) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         (config_dir / "config.json").write_text("not json {{{")
         local_config = {"agent": {"yolo": True}}
         (config_dir / "config.local.json").write_text(json.dumps(local_config))
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            cfg = AjCrewConfig.load()
 
         assert cfg.agent.dangerously_skip_permissions is True
 
@@ -173,7 +173,7 @@ class TestConfigOverlayLoad:
         overlay; caching that under the same stat fingerprint would pin defaults, so
         the next load must read the base again.
         """
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base_file = config_dir / "config.json"
         base_file.write_text(json.dumps({"timezone": "Asia/Shanghai"}))
@@ -191,9 +191,9 @@ class TestConfigOverlayLoad:
             return real_read_text(self, *args, **kwargs)
 
         monkeypatch.setattr(Path, "read_text", _flaky_read_text)
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            first = KiroCrewConfig.load()
-            second = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            first = AjCrewConfig.load()
+            second = AjCrewConfig.load()
 
         assert failures["left"] == 0, "the injected failure never fired"
         assert first.timezone == "", "the failed read did not degrade (test is vacuous)"
@@ -202,15 +202,15 @@ class TestConfigOverlayLoad:
         assert second.dashboard.auto_open_browser is False
 
     def test_save_does_not_leak_overlay_into_config_json(self, tmp_path: Path) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base_config = {"agent": {"yolo": False, "provider": "acp"}}
         (config_dir / "config.json").write_text(json.dumps(base_config))
         local_config = {"agent": {"yolo": True, "model": "auto"}}
         (config_dir / "config.local.json").write_text(json.dumps(local_config))
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            cfg = AjCrewConfig.load()
             assert cfg.agent.dangerously_skip_permissions is True
             assert cfg.agent.model == "auto"
             cfg.save()
@@ -223,15 +223,15 @@ class TestConfigOverlayLoad:
         assert "model" not in saved.get("agent", {})
 
     def test_save_keeps_a_base_value_the_overlay_also_sets(self, tmp_path: Path) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base_config = {"timezone": "Asia/Tokyo", "dashboard": {"theme_mode": "light"}}
         (config_dir / "config.json").write_text(json.dumps(base_config))
         local_config = {"timezone": "Asia/Tokyo", "dashboard": {"theme_mode": "dark"}}
         (config_dir / "config.local.json").write_text(json.dumps(local_config))
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            cfg = AjCrewConfig.load()
             assert cfg.dashboard.theme_mode == "dark"
             cfg.save()
             saved = json.loads((config_dir / "config.json").read_text(encoding="utf-8"))
@@ -244,18 +244,18 @@ class TestConfigOverlayLoad:
     def test_save_keeps_an_older_overlay_spelling_out_of_config_json(
         self, tmp_path: Path, spelling: str
     ) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         (config_dir / "config.json").write_text(json.dumps({"agent": {"provider": "acp"}}))
         (config_dir / "config.local.json").write_text(json.dumps({"agent": {spelling: True}}))
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            cfg = AjCrewConfig.load()
             assert cfg.agent.dangerously_skip_permissions is True
             cfg.save()
             saved = json.loads((config_dir / "config.json").read_text(encoding="utf-8"))
             (config_dir / "config.local.json").unlink()
-            reloaded = KiroCrewConfig.load()
+            reloaded = AjCrewConfig.load()
 
         # The overlay owns the value under its older name; config.json never gets it.
         assert "dangerously_skip_permissions" not in saved.get("agent", {})
@@ -264,19 +264,19 @@ class TestConfigOverlayLoad:
     def test_save_matches_an_overlay_spelling_the_reader_skips_as_the_reader_does(
         self, tmp_path: Path
     ) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base = {"agent": {"provider": "acp", "dangerously_skip_permissions": False}}
         (config_dir / "config.json").write_text(json.dumps(base))
         overlay = {"agent": {"dangerouslySkipPermissions": 0, "yolo": True}}
         (config_dir / "config.local.json").write_text(json.dumps(overlay))
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            cfg = AjCrewConfig.load()
             assert cfg.agent.dangerously_skip_permissions is False
             cfg.save()
             saved = json.loads((config_dir / "config.json").read_text(encoding="utf-8"))
-            reloaded = KiroCrewConfig.load()
+            reloaded = AjCrewConfig.load()
 
         # The non-bool spelling is skipped, so the base file keeps its own value.
         assert saved["agent"]["dangerously_skip_permissions"] is False
@@ -285,14 +285,14 @@ class TestConfigOverlayLoad:
     def test_save_keeps_an_older_knowledge_spelling_out_of_config_json(
         self, tmp_path: Path
     ) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         (config_dir / "config.json").write_text(json.dumps({"agent": {"provider": "acp"}}))
         overlay = {"knowledge": {"auto_ingest_doc_links": True}}
         (config_dir / "config.local.json").write_text(json.dumps(overlay))
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            cfg = AjCrewConfig.load()
             assert cfg.knowledge.auto_add_documents is True
             cfg.save()
             saved = json.loads((config_dir / "config.json").read_text(encoding="utf-8"))
@@ -310,15 +310,15 @@ class TestConfigOverlayLoad:
     def test_save_keeps_a_base_value_the_overlay_sets_under_an_older_name(
         self, tmp_path: Path, section: str, current: str, older: str
     ) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base = {"agent": {"provider": "acp"}}
         base.setdefault(section, {})[current] = True
         (config_dir / "config.json").write_text(json.dumps(base))
         (config_dir / "config.local.json").write_text(json.dumps({section: {older: True}}))
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            KiroCrewConfig.load().save()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            AjCrewConfig.load().save()
             saved = json.loads((config_dir / "config.json").read_text(encoding="utf-8"))
 
         # config.json keeps its own value under the current name.
@@ -335,18 +335,18 @@ class TestConfigOverlayLoad:
     def test_save_keeps_a_base_value_both_files_set_under_an_older_name(
         self, tmp_path: Path, section: str, current: str, older: str
     ) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base = {"agent": {"provider": "acp"}}
         base.setdefault(section, {})[older] = True
         (config_dir / "config.json").write_text(json.dumps(base))
         (config_dir / "config.local.json").write_text(json.dumps({section: {older: True}}))
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            KiroCrewConfig.load().save()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            AjCrewConfig.load().save()
             saved = json.loads((config_dir / "config.json").read_text(encoding="utf-8"))
             (config_dir / "config.local.json").unlink()
-            reloaded = KiroCrewConfig.load()
+            reloaded = AjCrewConfig.load()
 
         # The base value survives under the spelling config.json used.
         assert saved[section][older] is True
@@ -364,19 +364,19 @@ class TestConfigOverlayLoad:
     def test_save_keeps_the_overlay_ahead_when_both_files_differ_under_an_older_name(
         self, tmp_path: Path, section: str, current: str, older: str
     ) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base = {"agent": {"provider": "acp"}}
         base.setdefault(section, {})[older] = True
         (config_dir / "config.json").write_text(json.dumps(base))
         (config_dir / "config.local.json").write_text(json.dumps({section: {older: False}}))
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            before = getattr(getattr(KiroCrewConfig.load(), section), current)
-            KiroCrewConfig.load().save()
-            with_overlay = getattr(getattr(KiroCrewConfig.load(), section), current)
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            before = getattr(getattr(AjCrewConfig.load(), section), current)
+            AjCrewConfig.load().save()
+            with_overlay = getattr(getattr(AjCrewConfig.load(), section), current)
             (config_dir / "config.local.json").unlink()
-            without_overlay = getattr(getattr(KiroCrewConfig.load(), section), current)
+            without_overlay = getattr(getattr(AjCrewConfig.load(), section), current)
 
         # What loads does not change on save; the base value is still underneath.
         assert before is False
@@ -386,17 +386,17 @@ class TestConfigOverlayLoad:
     def test_save_keeps_a_base_older_spelling_the_reader_reads_past_a_non_bool(
         self, tmp_path: Path
     ) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base = {"agent": {"provider": "acp", "dangerously_skip_permissions": None, "yolo": True}}
         (config_dir / "config.json").write_text(json.dumps(base))
         overlay = {"agent": {"dangerouslySkipPermissions": True}}
         (config_dir / "config.local.json").write_text(json.dumps(overlay))
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            KiroCrewConfig.load().save()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            AjCrewConfig.load().save()
             (config_dir / "config.local.json").unlink()
-            reloaded = KiroCrewConfig.load()
+            reloaded = AjCrewConfig.load()
 
         # The reader skips the non-bool current name and reads the base's yolo.
         assert reloaded.agent.dangerously_skip_permissions is True
@@ -404,14 +404,14 @@ class TestConfigOverlayLoad:
     def test_save_matches_an_older_knowledge_value_in_the_form_the_reader_reads(
         self, tmp_path: Path
     ) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         (config_dir / "config.json").write_text(json.dumps({"agent": {"provider": "acp"}}))
         overlay = {"knowledge": {"auto_ingest_doc_links": "true"}}
         (config_dir / "config.local.json").write_text(json.dumps(overlay))
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            cfg = AjCrewConfig.load()
             assert cfg.knowledge.auto_add_documents is True
             cfg.save()
             saved = json.loads((config_dir / "config.json").read_text(encoding="utf-8"))
@@ -419,12 +419,12 @@ class TestConfigOverlayLoad:
         assert "auto_add_documents" not in saved.get("knowledge", {})
 
     def test_load_warns_when_config_json_is_non_dict(self, tmp_path: Path) -> None:
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         (config_dir / "config.json").write_text("[1, 2, 3]")
 
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            cfg = AjCrewConfig.load()
 
         assert cfg.agent.dangerously_skip_permissions is False
 
@@ -432,7 +432,7 @@ class TestConfigOverlayLoad:
         import logging
         import os
 
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base = {"agent": {"provider": "acp"}}
         (config_dir / "config.json").write_text(json.dumps(base))
@@ -441,10 +441,10 @@ class TestConfigOverlayLoad:
         os.chmod(local_file, 0o666)
 
         with (
-            patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-            caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"),
+            patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+            caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"),
         ):
-            cfg = KiroCrewConfig.load()
+            cfg = AjCrewConfig.load()
 
         assert cfg.agent.dangerously_skip_permissions is True
         assert "world-writable" in caplog.text
@@ -502,7 +502,7 @@ class TestConfigLocalPath:
     """Tests for config_local_path() function."""
 
     def test_returns_path_in_config_dir(self, tmp_path: Path) -> None:
-        with patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
+        with patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
             assert config_local_path() == tmp_path / "config.local.json"
 
 
@@ -510,28 +510,28 @@ class TestDictSetCreate:
     """Tests for _dict_set_create helper in cli_config."""
 
     def test_creates_intermediate_dicts(self) -> None:
-        from kiro_crew.cli_config import _dict_set_create
+        from aj_crew.cli_config import _dict_set_create
 
         d: dict = {}
         _dict_set_create(d, "agent.yolo", True)
         assert d == {"agent": {"yolo": True}}
 
     def test_creates_deeply_nested(self) -> None:
-        from kiro_crew.cli_config import _dict_set_create
+        from aj_crew.cli_config import _dict_set_create
 
         d: dict = {}
         _dict_set_create(d, "a.b.c.d", 42)
         assert d == {"a": {"b": {"c": {"d": 42}}}}
 
     def test_overwrites_existing_value(self) -> None:
-        from kiro_crew.cli_config import _dict_set_create
+        from aj_crew.cli_config import _dict_set_create
 
         d = {"agent": {"yolo": False}}
         _dict_set_create(d, "agent.yolo", True)
         assert d["agent"]["yolo"] is True
 
     def test_replaces_non_dict_intermediate(self) -> None:
-        from kiro_crew.cli_config import _dict_set_create
+        from aj_crew.cli_config import _dict_set_create
 
         d = {"agent": "not_a_dict"}
         _dict_set_create(d, "agent.yolo", True)
@@ -544,9 +544,9 @@ class TestCliConfigSetLocal:
     def test_local_set_writes_to_config_local_json(self, tmp_path: Path) -> None:
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
 
         args = argparse.Namespace(
@@ -554,9 +554,9 @@ class TestCliConfigSetLocal:
         )
 
         with patch(
-            "kiro_crew.cli_config.config_local_path", return_value=config_dir / "config.local.json"
+            "aj_crew.cli_config.config_local_path", return_value=config_dir / "config.local.json"
         ):
-            with patch("kiro_crew.cli_config.sel"):
+            with patch("aj_crew.cli_config.sel"):
                 _config_cmd(args)
 
         local_file = config_dir / "config.local.json"
@@ -567,9 +567,9 @@ class TestCliConfigSetLocal:
     def test_plain_set_keeps_base_values_the_overlay_also_sets(self, tmp_path: Path) -> None:
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base = {"timezone": "Asia/Tokyo", "dashboard": {"auto_open_browser": False}}
         (config_dir / "config.json").write_text(json.dumps(base))
@@ -580,13 +580,13 @@ class TestCliConfigSetLocal:
             config_action="set", key="dashboard.theme_mode", value="light", file=None, local=False
         )
         with (
-            patch("kiro_crew.cli_config.config_path", return_value=config_dir / "config.json"),
+            patch("aj_crew.cli_config.config_path", return_value=config_dir / "config.json"),
             patch(
-                "kiro_crew.cli_config.config_local_path",
+                "aj_crew.cli_config.config_local_path",
                 return_value=config_dir / "config.local.json",
             ),
-            patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-            patch("kiro_crew.cli_config.sel"),
+            patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+            patch("aj_crew.cli_config.sel"),
         ):
             _config_cmd(args)
             saved = json.loads((config_dir / "config.json").read_text(encoding="utf-8"))
@@ -612,9 +612,9 @@ class TestCliConfigSetLocal:
         """
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         local_file = config_dir / "config.local.json"
         before = '{"agent": {"streaming": false}}'
@@ -624,8 +624,8 @@ class TestCliConfigSetLocal:
             config_action="set", key=key, value="false", file=None, local=True
         )
 
-        with patch("kiro_crew.cli_config.config_local_path", return_value=local_file):
-            with patch("kiro_crew.cli_config.sel"):
+        with patch("aj_crew.cli_config.config_local_path", return_value=local_file):
+            with patch("aj_crew.cli_config.sel"):
                 with pytest.raises(SystemExit) as exc:
                     _config_cmd(args)
 
@@ -650,9 +650,9 @@ class TestCliConfigSetLocal:
         """``--local`` refuses these keys, as plain ``config set`` does."""
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         (config_dir / "config.json").write_text("{}", encoding="utf-8")
         local_file = config_dir / "config.local.json"
@@ -660,9 +660,9 @@ class TestCliConfigSetLocal:
         args = argparse.Namespace(config_action="set", key=key, value="x", file=None, local=True)
 
         with (
-            patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-            patch("kiro_crew.cli_config.config_local_path", return_value=local_file),
-            patch("kiro_crew.cli_config.sel"),
+            patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+            patch("aj_crew.cli_config.config_local_path", return_value=local_file),
+            patch("aj_crew.cli_config.sel"),
         ):
             with pytest.raises(SystemExit) as exc:
                 _config_cmd(args)
@@ -679,9 +679,9 @@ class TestCliConfigSetLocal:
         """
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         (config_dir / "config.json").write_text("{}", encoding="utf-8")
         local_file = config_dir / "config.local.json"
@@ -696,17 +696,17 @@ class TestCliConfigSetLocal:
         )
 
         with (
-            patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-            patch("kiro_crew.cli_config.config_local_path", return_value=local_file),
-            patch("kiro_crew.cli_config.sel"),
+            patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+            patch("aj_crew.cli_config.config_local_path", return_value=local_file),
+            patch("aj_crew.cli_config.sel"),
         ):
             _config_cmd(args)
 
         assert json.loads(local_file.read_text(encoding="utf-8")) == {
             "slack": {"open_channels": ["C1"], "dm_activation": "mention"}
         }
-        with patch("kiro_crew.config.loader.config_dir", return_value=config_dir):
-            cfg = KiroCrewConfig.load()
+        with patch("aj_crew.config.loader.config_dir", return_value=config_dir):
+            cfg = AjCrewConfig.load()
         assert cfg.slack_dm_activation == "mention"
         assert cfg.slack.open_channels == ["C1"]
 
@@ -714,9 +714,9 @@ class TestCliConfigSetLocal:
         """Plain ``config set slack.dm_activation`` exits 1 with ``Unknown key``."""
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base_file = config_dir / "config.json"
         base_file.write_text("{}", encoding="utf-8")
@@ -731,9 +731,9 @@ class TestCliConfigSetLocal:
         )
 
         with (
-            patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-            patch("kiro_crew.cli_config.config_local_path", return_value=local_file),
-            patch("kiro_crew.cli_config.sel"),
+            patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+            patch("aj_crew.cli_config.config_local_path", return_value=local_file),
+            patch("aj_crew.cli_config.sel"),
         ):
             with pytest.raises(SystemExit) as exc:
                 _config_cmd(args)
@@ -759,13 +759,13 @@ class TestCliConfigSetLocal:
         """A bad value for an emitted-elsewhere key exits 1 with nothing written."""
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
         local_file = tmp_path / "config.local.json"
         args = argparse.Namespace(config_action="set", key=key, value=value, file=None, local=True)
 
-        with patch("kiro_crew.cli_config.config_local_path", return_value=local_file):
-            with patch("kiro_crew.cli_config.sel"):
+        with patch("aj_crew.cli_config.config_local_path", return_value=local_file):
+            with patch("aj_crew.cli_config.sel"):
                 with pytest.raises(SystemExit) as exc:
                     _config_cmd(args)
 
@@ -777,11 +777,11 @@ class TestCliConfigSetLocal:
         """A real memory toggle (``memory.inject_lessons``) still pins via --local."""
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
         key = "memory.inject_lessons"
 
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         local_file = config_dir / "config.local.json"
 
@@ -789,8 +789,8 @@ class TestCliConfigSetLocal:
             config_action="set", key=key, value="false", file=None, local=True
         )
 
-        with patch("kiro_crew.cli_config.config_local_path", return_value=local_file):
-            with patch("kiro_crew.cli_config.sel"):
+        with patch("aj_crew.cli_config.config_local_path", return_value=local_file):
+            with patch("aj_crew.cli_config.sel"):
                 _config_cmd(args)
 
         assert json.loads(local_file.read_text(encoding="utf-8")) == {
@@ -800,9 +800,9 @@ class TestCliConfigSetLocal:
     def test_nonlocal_set_keeps_a_base_value_equal_to_the_overlay(self, tmp_path: Path) -> None:
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base = {
             "agent": {"dangerouslySkipPermissions": False, "streaming": True, "provider": "acp"}
@@ -820,13 +820,13 @@ class TestCliConfigSetLocal:
         )
 
         with (
-            patch("kiro_crew.cli_config.config_path", return_value=config_dir / "config.json"),
+            patch("aj_crew.cli_config.config_path", return_value=config_dir / "config.json"),
             patch(
-                "kiro_crew.cli_config.config_local_path",
+                "aj_crew.cli_config.config_local_path",
                 return_value=config_dir / "config.local.json",
             ),
-            patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-            patch("kiro_crew.cli_config.sel"),
+            patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+            patch("aj_crew.cli_config.sel"),
         ):
             _config_cmd(args)
 
@@ -838,9 +838,9 @@ class TestCliConfigSetLocal:
     def test_local_set_handles_corrupt_existing_file(self, tmp_path: Path) -> None:
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         (config_dir / "config.local.json").write_text("not json {{{")
 
@@ -849,9 +849,9 @@ class TestCliConfigSetLocal:
         )
 
         with patch(
-            "kiro_crew.cli_config.config_local_path", return_value=config_dir / "config.local.json"
+            "aj_crew.cli_config.config_local_path", return_value=config_dir / "config.local.json"
         ):
-            with patch("kiro_crew.cli_config.sel"):
+            with patch("aj_crew.cli_config.sel"):
                 _config_cmd(args)
 
         data = json.loads((config_dir / "config.local.json").read_text(encoding="utf-8"))
@@ -860,9 +860,9 @@ class TestCliConfigSetLocal:
     def test_local_set_handles_non_dict_existing_file(self, tmp_path: Path) -> None:
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         (config_dir / "config.local.json").write_text('"just a string"')
 
@@ -871,9 +871,9 @@ class TestCliConfigSetLocal:
         )
 
         with patch(
-            "kiro_crew.cli_config.config_local_path", return_value=config_dir / "config.local.json"
+            "aj_crew.cli_config.config_local_path", return_value=config_dir / "config.local.json"
         ):
-            with patch("kiro_crew.cli_config.sel"):
+            with patch("aj_crew.cli_config.sel"):
                 _config_cmd(args)
 
         data = json.loads((config_dir / "config.local.json").read_text(encoding="utf-8"))
@@ -888,9 +888,9 @@ class TestCliConfigSetLocal:
         """
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         corrupt = b"broken {{{"
         (config_dir / "config.json").write_bytes(corrupt)
@@ -900,13 +900,13 @@ class TestCliConfigSetLocal:
         )
 
         with (
-            patch("kiro_crew.cli_config.config_path", return_value=config_dir / "config.json"),
+            patch("aj_crew.cli_config.config_path", return_value=config_dir / "config.json"),
             patch(
-                "kiro_crew.cli_config.config_local_path",
+                "aj_crew.cli_config.config_local_path",
                 return_value=config_dir / "config.local.json",
             ),
-            patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-            patch("kiro_crew.cli_config.sel"),
+            patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+            patch("aj_crew.cli_config.sel"),
         ):
             _config_cmd(args)
 
@@ -917,9 +917,9 @@ class TestCliConfigSetLocal:
     def test_nonlocal_set_handles_corrupt_local_file(self, tmp_path: Path) -> None:
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         base = {"agent": {"dangerouslySkipPermissions": False, "provider": "acp"}}
         (config_dir / "config.json").write_text(json.dumps(base))
@@ -934,13 +934,13 @@ class TestCliConfigSetLocal:
         )
 
         with (
-            patch("kiro_crew.cli_config.config_path", return_value=config_dir / "config.json"),
+            patch("aj_crew.cli_config.config_path", return_value=config_dir / "config.json"),
             patch(
-                "kiro_crew.cli_config.config_local_path",
+                "aj_crew.cli_config.config_local_path",
                 return_value=config_dir / "config.local.json",
             ),
-            patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-            patch("kiro_crew.cli_config.sel"),
+            patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+            patch("aj_crew.cli_config.sel"),
         ):
             _config_cmd(args)
 
@@ -953,7 +953,7 @@ class TestCliConfigSetLocal:
 
         import pytest
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
         config_dir = tmp_path / "kiro"
         config_dir.mkdir()
@@ -964,13 +964,13 @@ class TestCliConfigSetLocal:
         )
 
         with (
-            patch("kiro_crew.cli_config.config_path", return_value=config_dir / "config.json"),
+            patch("aj_crew.cli_config.config_path", return_value=config_dir / "config.json"),
             patch(
-                "kiro_crew.cli_config.config_local_path",
+                "aj_crew.cli_config.config_local_path",
                 return_value=config_dir / "config.local.json",
             ),
-            patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-            patch("kiro_crew.cli_config.sel"),
+            patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+            patch("aj_crew.cli_config.sel"),
         ):
             with pytest.raises(SystemExit) as exc_info:
                 _config_cmd(args)
@@ -983,7 +983,7 @@ class TestCliConfigSetLocal:
         """config set --file replaces a corrupt config.json cleanly (on_corrupt=reset)."""
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
         config_dir = tmp_path / "kiro"
         config_dir.mkdir()
@@ -997,9 +997,9 @@ class TestCliConfigSetLocal:
         )
 
         with (
-            patch("kiro_crew.cli_config.config_path", return_value=config_dir / "config.json"),
-            patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-            patch("kiro_crew.cli_config.sel"),
+            patch("aj_crew.cli_config.config_path", return_value=config_dir / "config.json"),
+            patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+            patch("aj_crew.cli_config.sel"),
         ):
             _config_cmd(args)
 
@@ -1015,7 +1015,7 @@ class TestCliConfigSetLocal:
         """set --file refuses a workspace naming a missing dir; nothing is written."""
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
         config_dir = tmp_path / "kiro"
         (config_dir / "ok").mkdir(parents=True)
@@ -1038,9 +1038,9 @@ class TestCliConfigSetLocal:
             config_action="set", key=None, value=None, file=str(good_file), local=False
         )
         with (
-            patch("kiro_crew.cli_config.config_path", return_value=config_dir / "config.json"),
-            patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-            patch("kiro_crew.cli_config.sel"),
+            patch("aj_crew.cli_config.config_path", return_value=config_dir / "config.json"),
+            patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+            patch("aj_crew.cli_config.sel"),
         ):
             doc["workspaces"]["bad"] = bad
             good_file.write_text(json.dumps(doc))
@@ -1069,24 +1069,24 @@ class TestCliConfigSetDeclaredDictKeys:
     def _run(config_dir: Path, key: str, value: str) -> None:
         import argparse
 
-        from kiro_crew.cli_config import _config_cmd
+        from aj_crew.cli_config import _config_cmd
 
         args = argparse.Namespace(config_action="set", key=key, value=value, file=None, local=False)
         with (
-            patch("kiro_crew.cli_config.config_path", return_value=config_dir / "config.json"),
+            patch("aj_crew.cli_config.config_path", return_value=config_dir / "config.json"),
             patch(
-                "kiro_crew.cli_config.config_local_path",
+                "aj_crew.cli_config.config_local_path",
                 return_value=config_dir / "config.local.json",
             ),
-            patch("kiro_crew.config.loader.config_dir", return_value=config_dir),
-            patch("kiro_crew.cli_config.sel"),
+            patch("aj_crew.config.loader.config_dir", return_value=config_dir),
+            patch("aj_crew.cli_config.sel"),
         ):
             _config_cmd(args)
 
     @staticmethod
     def _stock_terminal(tmp_path: Path) -> Path:
         """A config whose `dashboard.terminal` holds only the default `enabled`."""
-        config_dir = tmp_path / ".kirocrew"
+        config_dir = tmp_path / ".ajcrew"
         config_dir.mkdir()
         (config_dir / "config.json").write_text(
             json.dumps({"dashboard": {"terminal": {"enabled": True}}})

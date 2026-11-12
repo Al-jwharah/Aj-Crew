@@ -19,7 +19,7 @@ import type { Artifact } from '../types'
 /**
  * Extension → artifact kind for importable files.
  *
- * Mirrors `_EXT_KIND_MAP` in `src/kiro_crew/artifact_store/rules.py` (the
+ * Mirrors `_EXT_KIND_MAP` in `src/aj_crew/artifact_store/rules.py` (the
  * backend's kind-inference map for file-backed artifacts). Both answer the same
  * question — which file extension means which artifact kind — so they are
  * held identical by `test/test_artifact_import_parity.py`, which parses this
@@ -42,7 +42,7 @@ export const IMPORTABLE_EXT_KINDS: Record<string, Artifact['kind']> = {
 }
 
 /**
- * Content cap, mirroring `MAX_CONTENT_BYTES` in `src/kiro_crew/artifacts.py`.
+ * Content cap, mirroring `MAX_CONTENT_BYTES` in `src/aj_crew/artifacts.py`.
  * Checked client-side so an oversize pick fails immediately with a clear
  * message instead of after uploading 25 MiB only to be refused.
  */

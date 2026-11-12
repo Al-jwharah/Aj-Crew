@@ -19,15 +19,15 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.history import ConversationLog
+from aj_crew.history import ConversationLog
 
 _CHANNELS = [
-    ("telegram", "kiro_crew.telegram.transport_dispatch"),
-    ("teams", "kiro_crew.teams.transport_dispatch"),
-    ("webex", "kiro_crew.webex.transport_dispatch"),
-    ("wecom", "kiro_crew.wecom.transport_dispatch"),
-    ("weixin", "kiro_crew.weixin.transport_dispatch"),
-    ("discord", "kiro_crew.discord.transport_dispatch"),
+    ("telegram", "aj_crew.telegram.transport_dispatch"),
+    ("teams", "aj_crew.teams.transport_dispatch"),
+    ("webex", "aj_crew.webex.transport_dispatch"),
+    ("wecom", "aj_crew.wecom.transport_dispatch"),
+    ("weixin", "aj_crew.weixin.transport_dispatch"),
+    ("discord", "aj_crew.discord.transport_dispatch"),
 ]
 
 

@@ -27,17 +27,17 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard import chat_handlers as ch
-from kiro_crew.dashboard import chat_resume_all as mod
-from kiro_crew.dashboard.chat_delivery import BACKGROUND_START_TASKS, START_BACKGROUND_META_KEY
-from kiro_crew.dashboard.chat_utils import (
+from aj_crew.dashboard import chat_handlers as ch
+from aj_crew.dashboard import chat_resume_all as mod
+from aj_crew.dashboard.chat_delivery import BACKGROUND_START_TASKS, START_BACKGROUND_META_KEY
+from aj_crew.dashboard.chat_utils import (
     _MANUAL_CONTINUE_MSG,
     _MANUAL_RESUME_MSG,
     SESSION_START_FAILED_KIND,
     SYNTHETIC_RECOVERY_KIND,
 )
-from kiro_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
+from aj_crew.testing.wait import async_wait_until, await_until
 
 _START_TIMEOUT = "Request initialize timed out after 90s"
 
@@ -613,7 +613,7 @@ def test_the_server_total_is_the_count_the_sidebar_reads_from_the_shared_fixture
     """The fixture's rows are what ``serialize_slots`` sends for its facts, and
     the server picks exactly its ``expected`` keys, as ``total`` too. The vitest
     suite checks the sidebar's count against the same rows and keys."""
-    from kiro_crew import crew_mode
+    from aj_crew import crew_mode
 
     # The Crew Mode lineage from these slots alone: no remembered root, no
     # persisted edge, the shipped conductor list.
@@ -938,7 +938,7 @@ def test_an_exception_outside_the_slot_work_still_sends_the_outcome(
 
 
 def _app(state) -> web.Application:
-    from kiro_crew.dashboard.chat import api_chat_slots_resume_all
+    from aj_crew.dashboard.chat import api_chat_slots_resume_all
 
     app = web.Application()
     app["state"] = state
@@ -979,7 +979,7 @@ async def test_the_press_says_whether_crew_mode_left_workers_out(
     """Only ``{"crew_mode": true}`` leaves a listed root's worker out of the run;
     no body or another value counts it, as the sidebar does with the preview
     off."""
-    from kiro_crew import crew_mode
+    from aj_crew import crew_mode
 
     monkeypatch.setattr(crew_mode, "_known_roots", set())
     monkeypatch.setattr(crew_mode, "persisted_parents", dict)
@@ -987,7 +987,7 @@ async def test_the_press_says_whether_crew_mode_left_workers_out(
     state = _make_state(tmp_path)
     frames = _frames(state)
     root = state.get_or_create_slot("conductor")
-    root.agent = "kirocrew-conductor"
+    root.agent = "ajcrew-conductor"
     _interrupted(root)
     worker = state.get_or_create_slot("worker")
     worker._created_by = "conductor"
@@ -1066,7 +1066,7 @@ def test_a_candidate_waits_for_memory_preparation_startup_has_not_published(
 ):
     """While this process is preparing memory but the state carries no task yet,
     nothing is dispatched; the run goes on once the task is published and ends."""
-    from kiro_crew import memory_startup
+    from aj_crew import memory_startup
 
     preparing = [True]
     monkeypatch.setattr(memory_startup, "memory_startup_preparing", lambda: preparing[0])
@@ -1220,7 +1220,7 @@ async def test_a_non_owner_dashboard_session_is_refused(tmp_path, dispatched):
 
 def test_the_route_is_registered_before_every_slot_pattern():
     """``resume-all`` must never be read as a slot name by any per-slot POST."""
-    from kiro_crew.dashboard.routes import chat as chat_routes
+    from aj_crew.dashboard.routes import chat as chat_routes
 
     app = web.Application()
     chat_routes.register(app)
@@ -1252,7 +1252,7 @@ def test_the_sidebar_names_the_same_bound_the_run_holds():
 
 def _record(monkeypatch, tmp_path, names: list[str] | None) -> Path:
     """Point the record at *tmp_path*; write *names* as a planned restart would."""
-    from kiro_crew.dashboard import restart_resume
+    from aj_crew.dashboard import restart_resume
 
     path = tmp_path / "resume-intent.json"
     monkeypatch.setattr(restart_resume, "intent_path", lambda: path)
@@ -1262,7 +1262,7 @@ def _record(monkeypatch, tmp_path, names: list[str] | None) -> Path:
 
 
 def _boot(state) -> MagicMock:
-    from kiro_crew.dashboard import restart_resume
+    from aj_crew.dashboard import restart_resume
 
     async def _go() -> None:
         await restart_resume.resume_after_restart(state)
@@ -1303,7 +1303,7 @@ def test_a_record_left_by_a_restart_that_never_happened_resumes_nothing(
     import os
     import time
 
-    from kiro_crew.dashboard import restart_resume
+    from aj_crew.dashboard import restart_resume
 
     state = _make_state(tmp_path)
     _interrupted(state.get_or_create_slot("cut"))
@@ -1318,7 +1318,7 @@ def test_a_record_left_by_a_restart_that_never_happened_resumes_nothing(
 
 def test_a_planned_restart_with_no_running_chat_clears_an_earlier_record(tmp_path, monkeypatch):
     """An empty record removes a stale one, so it cannot outlive this restart."""
-    from kiro_crew.dashboard import restart_resume
+    from aj_crew.dashboard import restart_resume
 
     path = _record(monkeypatch, tmp_path, ["left-over"])
     assert path.exists()
@@ -1360,7 +1360,7 @@ def test_a_recorded_chat_waiting_on_an_approval_is_refused_and_cleared(
 
 def test_the_dashboard_boot_schedules_the_resume_once_ready_and_never_awaits_it():
     """Off the boot path: one call after ``state.ready`` is set, not awaited."""
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     tree = ast.parse(inspect.getsource(server.start_dashboard))
     calls = [

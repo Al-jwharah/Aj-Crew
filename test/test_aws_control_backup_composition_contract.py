@@ -48,8 +48,8 @@ from aws_control_backup_composition_contract_helpers import (
     PARTS,
 )
 
-from kiro_crew.apps.builtins.aws_control.backend import backup
-from kiro_crew.apps.builtins.aws_control.backend.backup_parts import (
+from aj_crew.apps.builtins.aws_control.backend import backup
+from aj_crew.apps.builtins.aws_control.backend.backup_parts import (
     catalog,
     egress_text,
     ledger,
@@ -57,7 +57,7 @@ from kiro_crew.apps.builtins.aws_control.backend.backup_parts import (
     state,
 )
 
-_BACKEND = _REPO_ROOT / "src/kiro_crew/apps/builtins/aws_control/backend"
+_BACKEND = _REPO_ROOT / "src/aj_crew/apps/builtins/aws_control/backend"
 _PARTS_DIR = _BACKEND / "backup_parts"
 
 #: The engine's module-level surface: every name ``backup`` answers for, dunders

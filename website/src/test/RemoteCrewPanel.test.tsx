@@ -75,7 +75,7 @@ async function openRowMenu(u: ReturnType<typeof userEvent.setup>, name: RegExp =
 
 const CLOUD_INSTANCE = {
   id: 'kc1',
-  name: 'Kiro Crew Cloud (kc-3f9a)',
+  name: 'Aj Crew Cloud (kc-3f9a)',
   connection_method: 'ssm' as const,
   ssm_target: 'i-0abc123456789def0',
   ssh_host: '',
@@ -118,7 +118,7 @@ const RUNNING_JOB = {
   steps: [
     { key: 'preflight', label: 'Checked your AWS setup', state: 'done' as const },
     { key: 'provision', label: 'Created the instance', state: 'done' as const },
-    { key: 'install', label: 'Installing Kiro Crew', state: 'active' as const },
+    { key: 'install', label: 'Installing Aj Crew', state: 'active' as const },
     { key: 'connect', label: 'Connect', state: 'pending' as const },
   ],
 }
@@ -182,9 +182,9 @@ describe('RemoteCrewPanel', () => {
     releaseLaunches({ jobs: [DONE_JOB] })
 
     // Once known, it is correctly a cloud row: Stop + the two-step Delete, no plain Remove.
-    expect(await screen.findByText('Launched by Kiro Crew')).toBeInTheDocument()
+    expect(await screen.findByText('Launched by Aj Crew')).toBeInTheDocument()
     await openRowMenu(u)
-    expect(screen.getByRole('menuitem', { name: 'Stop Kiro Crew Cloud (kc-3f9a)' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Stop Aj Crew Cloud (kc-3f9a)' })).toBeInTheDocument()
     expect(screen.queryByRole('menuitem', { name: /^Remove/i })).not.toBeInTheDocument()
   })
 
@@ -245,7 +245,7 @@ describe('RemoteCrewPanel', () => {
 
     // The trash is confirm-gated, and the warning states what Remove does NOT do.
     await openRowMenu(u)
-    await u.click(screen.getByRole('menuitem', { name: /Remove Kiro Crew Cloud/i }))
+    await u.click(screen.getByRole('menuitem', { name: /Remove Aj Crew Cloud/i }))
     expect(await screen.findByText(/keeps running and billing/i)).toBeInTheDocument()
     expect(api.removeInstance).not.toHaveBeenCalled()
   })
@@ -472,7 +472,7 @@ describe('RemoteCrewPanel', () => {
 
     // Both saved crews render, each with its own Connect button.
     expect(await screen.findByText('dev-box-1')).toBeInTheDocument()
-    expect(screen.getByText(/Kiro Crew Cloud/)).toBeInTheDocument()
+    expect(screen.getByText(/Aj Crew Cloud/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^Connect$/i })).toBeInTheDocument()
     // The POSIX message belongs on the Set-up tab, not over the crew list.
     expect(screen.queryByText(/requires a POSIX host/i)).not.toBeInTheDocument()
@@ -800,7 +800,7 @@ describe('RemoteCrewPanel', () => {
     renderWithProviders(<RemoteCrewPanel />)
 
     await openRowMenu(u)
-    await u.click(await screen.findByRole('menuitem', { name: /^Start Kiro Crew Cloud/i }))
+    await u.click(await screen.findByRole('menuitem', { name: /^Start Aj Crew Cloud/i }))
     await waitFor(() => expect(api.cloudStart).toHaveBeenCalledWith('kc-3f9a', expect.anything()))
   })
 
@@ -830,9 +830,9 @@ describe('RemoteCrewPanel', () => {
     renderWithProviders(<RemoteCrewPanel />)
 
     await openRowMenu(u)
-    await u.click(await screen.findByRole('menuitem', { name: /^Stop Kiro Crew Cloud/i }))
+    await u.click(await screen.findByRole('menuitem', { name: /^Stop Aj Crew Cloud/i }))
     // While in flight the clicked button reports progress rather than still saying "Stop".
-    await waitFor(() => expect(screen.getByRole('button', { name: /^Stop Kiro Crew Cloud/i })).toHaveTextContent('…'))
+    await waitFor(() => expect(screen.getByRole('button', { name: /^Stop Aj Crew Cloud/i })).toHaveTextContent('…'))
     release({ ok: true })
   })
 
@@ -847,7 +847,7 @@ describe('RemoteCrewPanel', () => {
     renderWithProviders(<RemoteCrewPanel />)
 
     await openRowMenu(u)
-    await u.click(await screen.findByRole('menuitem', { name: /^Delete Kiro Crew Cloud/i }))
+    await u.click(await screen.findByRole('menuitem', { name: /^Delete Aj Crew Cloud/i }))
     await u.click(await screen.findByRole('button', { name: /^Confirm deleting/i }))
     await waitFor(() => expect(api.cloudDestroy).toHaveBeenCalledWith('kc-3f9a', expect.anything()))
     // The row now reflects the in-flight teardown and cannot be re-triggered.
@@ -893,10 +893,10 @@ describe('RemoteCrewPanel', () => {
     renderWithProviders(<RemoteCrewPanel />)
 
     // Cloud row carries the cloud attribution + a Stop control; manual row does not.
-    expect(await screen.findByText('Launched by Kiro Crew')).toBeInTheDocument()
+    expect(await screen.findByText('Launched by Aj Crew')).toBeInTheDocument()
     expect(screen.getByText(/does not manage this crew/i)).toBeInTheDocument()
-    await openRowMenu(u, /More actions for Kiro Crew Cloud/i)
-    expect(screen.getByRole('menuitem', { name: 'Stop Kiro Crew Cloud (kc-3f9a)' })).toBeInTheDocument()
+    await openRowMenu(u, /More actions for Aj Crew Cloud/i)
+    expect(screen.getByRole('menuitem', { name: 'Stop Aj Crew Cloud (kc-3f9a)' })).toBeInTheDocument()
 
     // The still-launching job shows a "Setting up" row with step progress + the note.
     expect(screen.getByText(/Setting up/)).toBeInTheDocument()
@@ -952,13 +952,13 @@ describe('RemoteCrewPanel', () => {
     // Retrying replays the same rejected credential, so the button could only
     // reproduce the error. Re-auth happens through the page-top banner instead,
     // and only the header's own refresh control remains.
-    const denial = new ApiError(403, 'Session expired. Run kirocrew token …')
+    const denial = new ApiError(403, 'Session expired. Run ajcrew token …')
     ;(denial as unknown as { authRequired: boolean }).authRequired = true
     vi.mocked(api.listInstances).mockRejectedValue(denial)
     vi.mocked(api.cloudLaunches).mockResolvedValue({ jobs: [] })
     renderWithProviders(<RemoteCrewPanel />)
 
-    expect(await screen.findByText(/kirocrew token/i)).toBeInTheDocument()
+    expect(await screen.findByText(/ajcrew token/i)).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /Refresh/i }).length).toBe(1)
   })
 
@@ -1014,7 +1014,7 @@ describe('RemoteCrewPanel', () => {
     // The list resolved to the built-in row, so the body names it (see the seam tests).
     await waitFor(() => expect(api.cloudLaunch).toHaveBeenCalledWith({ provider_id: 'aws_ec2', profile: '', region: 'us-east-1', size_key: 'balanced' }))
     // Progress card polls the job and renders its steps.
-    expect(await screen.findByText('Installing Kiro Crew')).toBeInTheDocument()
+    expect(await screen.findByText('Installing Aj Crew')).toBeInTheDocument()
   })
 
   it('sends a typed subnet ID with the launch', async () => {
@@ -1801,7 +1801,7 @@ describe('RemoteCrewPanel', () => {
       renderWithProviders(<RemoteCrewPanel />)
 
       expect(await screen.findByText('Other lane')).toBeInTheDocument()
-      expect(screen.queryByText('Launched by Kiro Crew')).not.toBeInTheDocument()
+      expect(screen.queryByText('Launched by Aj Crew')).not.toBeInTheDocument()
       await openRowMenu(u)
       expect(screen.queryByRole('menuitem', { name: /^Stop/i })).not.toBeInTheDocument()
       expect(screen.getByRole('menuitem', { name: /^Remove/i })).toBeInTheDocument()
@@ -1956,7 +1956,7 @@ describe('RemoteCrewPanel enabled after the gateway started', () => {
     const banner = screen.getByText(/not active yet/).closest('[role="status"]') as HTMLElement
     // #22104: say where to run the command and what works after; no "tunnel manager".
     expect(banner.textContent).toBe(
-      'Remote crew management is on, but not active yet. Run kirocrew restart in a terminal on the computer this dashboard runs on, not on a remote crew. Then you can connect to your remote crews.',
+      'Remote crew management is on, but not active yet. Run ajcrew restart in a terminal on the computer this dashboard runs on, not on a remote crew. Then you can connect to your remote crews.',
     )
     expect(screen.queryByText(/Disabled in config/)).not.toBeInTheDocument()
 
@@ -1969,7 +1969,7 @@ describe('RemoteCrewPanel enabled after the gateway started', () => {
 
     // The banner stays the one place the restart command appears.
     expect(screen.getAllByText(/not active yet/)).toHaveLength(1)
-    expect(screen.getAllByText('kirocrew restart')).toHaveLength(1)
+    expect(screen.getAllByText('ajcrew restart')).toHaveLength(1)
   })
 
   it('maps a 503 instances_manager_unavailable Connect failure to the restart hint', async () => {
@@ -1982,7 +1982,7 @@ describe('RemoteCrewPanel enabled after the gateway started', () => {
     vi.mocked(api.connectInstance).mockRejectedValue(
       new ApiError(
         503,
-        'instances manager not running: restart the gateway (kirocrew restart) to start remote crews',
+        'instances manager not running: restart the gateway (ajcrew restart) to start remote crews',
         JSON.stringify({ error: 'instances manager not running', code: 'instances_manager_unavailable' }),
       ),
     )

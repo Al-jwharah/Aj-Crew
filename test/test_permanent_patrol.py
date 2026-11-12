@@ -14,10 +14,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import mcp_core
-from kiro_crew.mcp_tools import control
-from kiro_crew.mcp_tools._limits import _MONITOR_DEFAULT_MAX_CYCLES
-from kiro_crew.monitoring.limits import runtime_ceiling_secs
+from aj_crew import mcp_core
+from aj_crew.mcp_tools import control
+from aj_crew.mcp_tools._limits import _MONITOR_DEFAULT_MAX_CYCLES
+from aj_crew.monitoring.limits import runtime_ceiling_secs
 
 
 @pytest.fixture()
@@ -92,15 +92,15 @@ def test_a_loop_that_wakes_every_interval_keeps_the_default_cap(emitted, args):
 async def test_the_applier_drops_a_default_cap_when_the_loop_is_gated_after_all(observed, cap):
     """The tool's replay reads no session log, so a bare ``PR <n>`` reaches the
     applier with the default cap; the applier re-reads the log and decides."""
-    from kiro_crew.dashboard import session_directive_apply as sda
+    from aj_crew.dashboard import session_directive_apply as sda
 
     authz = AsyncMock(return_value=(SimpleNamespace(id="loop-1"), None, 200))
     with (
         patch.object(sda, "_binding", return_value="chat-9-1"),
-        patch("kiro_crew.autonudge.get_instance", return_value=MagicMock()),
-        patch("kiro_crew.autonudge.read_session_texts", return_value=["acme/widgets#42"]),
-        patch("kiro_crew.autonudge.infer_monitor", return_value=observed),
-        patch("kiro_crew.autonudge_authz.authorize_and_add_nudge", authz),
+        patch("aj_crew.autonudge.get_instance", return_value=MagicMock()),
+        patch("aj_crew.autonudge.read_session_texts", return_value=["acme/widgets#42"]),
+        patch("aj_crew.autonudge.infer_monitor", return_value=observed),
+        patch("aj_crew.autonudge_authz.authorize_and_add_nudge", authz),
     ):
         await sda._monitor_start(
             MagicMock(),

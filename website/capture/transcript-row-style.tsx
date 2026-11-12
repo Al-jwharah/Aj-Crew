@@ -45,7 +45,7 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // MarkdownRenderer probes path-like inline code and unfurls links; neither
 // endpoint exists here and a pending probe leaves a chip mid-load.
@@ -83,11 +83,11 @@ const store = configureStore({
       },
       subagents: {
         a1: {
-          id: 'a1', task: 'audit the transcript rows', agent: 'kirocrew',
+          id: 'a1', task: 'audit the transcript rows', agent: 'ajcrew',
           status: 'running', streaming: '', lastTool: 'fs_read', startedAt: 0, elapsed: 4200,
         },
         a2: {
-          id: 'a2', task: 'audit the turn grouping', agent: 'kirocrew',
+          id: 'a2', task: 'audit the turn grouping', agent: 'ajcrew',
           status: 'done', streaming: '', lastTool: '', startedAt: 0, elapsed: 9100,
         },
       },
@@ -114,7 +114,7 @@ const MESSAGES: ChatMessage[] = [
   }),
   msg('tool', '🔧 workflow_run', { meta: { input: '{"intent":"pizza origins"}', output: 'Started workflow run `wf_1`' } }),
   msg('tool', '🔧 spawn_run', {
-    meta: { output: 'Spawned 2 subagent(s).\n  a1 (kirocrew): audit rows\n  a2 (kirocrew): audit turns' },
+    meta: { output: 'Spawned 2 subagent(s).\n  a1 (ajcrew): audit rows\n  a2 (ajcrew): audit turns' },
   }),
   msg('assistant', [
     '[Workflow completion event]',
@@ -125,7 +125,7 @@ const MESSAGES: ChatMessage[] = [
   ].join('\n')),
   msg('subagent', [
     '[Subagent completion event]',
-    'Agent `a1` (kirocrew) completed ✅',
+    'Agent `a1` (ajcrew) completed ✅',
     'Task: Audit the transcript rows',
     '',
     'Reported padding, radius and font size per row.',

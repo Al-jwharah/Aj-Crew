@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-SRC = Path(__file__).parent.parent / "src" / "kiro_crew"
+SRC = Path(__file__).parent.parent / "src" / "aj_crew"
 HANDLERS = "".join(
     (SRC / "deploy" / name).read_text(encoding="utf-8")
     for name in ("handlers_guards.py", "handlers_content.py", "handlers_sites.py", "handlers.py")
@@ -33,13 +33,13 @@ DEPLOY_INIT = (SRC / "deploy" / "__init__.py").read_text(encoding="utf-8")
 
 class TestDeployArtifactSchemaRegistration:
     def test_schema_registered_in_mcp_core_schemas(self):
-        from kiro_crew.validation import MCP_CORE_SCHEMAS
+        from aj_crew.validation import MCP_CORE_SCHEMAS
 
         assert "deploy_artifact" in MCP_CORE_SCHEMAS
 
     def test_invalid_input_rejected_with_controlled_error(self):
         """Invalid deploy_artifact args are rejected before reaching endpoint."""
-        from kiro_crew.validation import (
+        from aj_crew.validation import (
             DEPLOY_ARTIFACT_SCHEMA,
             ValidationError,
             validate_tool_args,
@@ -50,7 +50,7 @@ class TestDeployArtifactSchemaRegistration:
             validate_tool_args({}, DEPLOY_ARTIFACT_SCHEMA)
 
     def test_valid_input_passes_schema(self):
-        from kiro_crew.validation import DEPLOY_ARTIFACT_SCHEMA, validate_tool_args
+        from aj_crew.validation import DEPLOY_ARTIFACT_SCHEMA, validate_tool_args
 
         result = validate_tool_args(
             {"site_id": "test-site", "artifact_slug": "my-app"},
@@ -59,9 +59,9 @@ class TestDeployArtifactSchemaRegistration:
         assert result["site_id"] == "test-site"
 
     def test_redundant_inline_validate_removed_from_mcp_core(self):
-        # The inline `from kiro_crew.validation import DEPLOY_ARTIFACT_SCHEMA`
+        # The inline `from aj_crew.validation import DEPLOY_ARTIFACT_SCHEMA`
         # inside the deploy_artifact branch should be gone.
-        assert "from kiro_crew.validation import DEPLOY_ARTIFACT_SCHEMA" not in MCP_CORE
+        assert "from aj_crew.validation import DEPLOY_ARTIFACT_SCHEMA" not in MCP_CORE
 
 
 # ── F2: pending-confirm SEL audit on ALL denials ──
@@ -123,7 +123,7 @@ class TestDeploySkillsCopyNotSymlink:
 
     def test_skills_discoverable_after_copy(self):
         """Integration: install skills into a tmp root, verify _find_skills finds them."""
-        from kiro_crew.skills import _iter_skill_files
+        from aj_crew.skills import _iter_skill_files
 
         # Create a fake skills root with a SKILL.md
         with tempfile.TemporaryDirectory() as tmpdir:

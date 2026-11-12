@@ -49,7 +49,7 @@ function populatedBundle(overrides: Record<string, unknown> = {}) {
       seq: 1842,
       value: {
         lifecycle: 'open',
-        agent: 'kirocrew',
+        agent: 'ajcrew',
         model: 'a-model',
         opened_at: 1789821630000,
         turns_completed: 12,
@@ -133,17 +133,17 @@ function populatedBundle(overrides: Record<string, unknown> = {}) {
         by_id: {
           'sub-1': {
             agent_id: 'sub-1', seq_spawned: 1200,
-            agent: 'kirocrew-worker', model: 'a-model',
+            agent: 'ajcrew-worker', model: 'a-model',
             outcome: 'completed', ms: 41000, credits: 1.75, reason: '',
           },
           'sub-2': {
             agent_id: 'sub-2', seq_spawned: 1400,
-            agent: 'kirocrew-worker', model: 'a-model',
+            agent: 'ajcrew-worker', model: 'a-model',
             outcome: 'stopped', ms: 900, credits: null, reason: 'kill failed: pid 8821 still alive',
           },
           'sub-3': {
             agent_id: 'sub-3', seq_spawned: 1830,
-            agent: 'kirocrew-knowledge', model: 'a-model',
+            agent: 'ajcrew-knowledge', model: 'a-model',
             outcome: null, ms: null, credits: null, reason: '',
           },
         },
@@ -229,7 +229,7 @@ describe('CrewLogTab', () => {
     // row of five zeroes would assert a measurement of an empty file.
     expect(screen.queryByText('Status')).not.toBeInTheDocument()
     // Recording is on, so the switch-off instructions are not on screen.
-    expect(screen.queryByText(/KIROCREW_CREW_LOG/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/AJCREW_CREW_LOG/)).not.toBeInTheDocument()
     expect(screen.queryByTestId('crew-log-off')).not.toBeInTheDocument()
     expect(screen.queryByTestId('crew-log-footer-off')).not.toBeInTheDocument()
   })
@@ -244,7 +244,7 @@ describe('CrewLogTab', () => {
     expect(screen.getByText('Messages in this chat are not being saved.')).toBeInTheDocument()
     // A value the gateway does not recognise is said to be one BEFORE it is quoted, so it
     // is not read as the app misspelling a setting.
-    expect(screen.getByText(/^KIROCREW_CREW_LOG has a value that is not recognised, “fasle”/))
+    expect(screen.getByText(/^AJCREW_CREW_LOG has a value that is not recognised, “fasle”/))
       .toBeInTheDocument()
     expect(screen.queryByText(/0, false, no, off/)).not.toBeInTheDocument()
     // A warning, not the neutral empty state.
@@ -271,7 +271,7 @@ describe('CrewLogTab', () => {
     renderWithProviders(<CrewLogTab slot={SLOT} />)
     await waitFor(() => expect(screen.getByText('The crew log is off')).toBeInTheDocument())
     // The body leads with the fix.
-    expect(screen.getByText(/^Remove KIROCREW_CREW_LOG from ~\/elsewhere\/\.env \(or wherever/))
+    expect(screen.getByText(/^Remove AJCREW_CREW_LOG from ~\/elsewhere\/\.env \(or wherever/))
       .toBeInTheDocument()
     // The file named is the one the gateway reported, not a hardcoded home.
     expect(screen.queryByText(/~\/\.kiro\/crew\/\.env/)).not.toBeInTheDocument()
@@ -285,7 +285,7 @@ describe('CrewLogTab', () => {
     renderWithProviders(<CrewLogTab slot={SLOT} />)
     await waitFor(() => expect(screen.getByText('The crew log is off')).toBeInTheDocument())
     const notice = screen.getByTestId('crew-log-off')
-    expect(notice).toHaveTextContent(/Remove KIROCREW_CREW_LOG from .*restart the gateway\. It is set to “0”\./)
+    expect(notice).toHaveTextContent(/Remove AJCREW_CREW_LOG from .*restart the gateway\. It is set to “0”\./)
     expect(notice).not.toHaveTextContent(/not recognised/)
     // Entries are on screen, so only NEW messages go unsaved.
     expect(screen.getByText('New messages in this chat are not being saved. The ones below stay.'))
@@ -711,7 +711,7 @@ describe('CrewLogTab', () => {
     for (let i = 4; i <= 17; i += 1) {
       byId[`sub-${i}`] = {
         agent_id: `sub-${i}`, seq_spawned: 1830 + i,
-        agent: 'kirocrew-worker', model: 'a-model',
+        agent: 'ajcrew-worker', model: 'a-model',
         outcome: 'completed', ms: 1000, credits: 0.5, reason: '',
       }
     }
@@ -821,7 +821,7 @@ describe('CrewLogTab', () => {
     fireEvent.click(screen.getByText('Subagents'))
     const all = [...screen.getByText('subagent').closest('table')!.querySelectorAll('tbody tr')]
     const cells = all.filter(tr => tr.querySelectorAll('td').length === 5)[2].querySelectorAll('td')
-    expect(cells[0].getAttribute('title')).toBe('kirocrew-knowledge')
+    expect(cells[0].getAttribute('title')).toBe('ajcrew-knowledge')
     expect(cells[1].getAttribute('title')).toBe('a-model')
   })
 

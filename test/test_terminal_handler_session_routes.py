@@ -24,10 +24,10 @@ from terminal_handler_helpers import (  # noqa: F401 -- the autouse fixture regi
     _make_session,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard.handlers import terminal
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import await_until
+from aj_crew import platform_compat
+from aj_crew.dashboard.handlers import terminal
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import await_until
 
 
 class TestApiTerminalDelete:
@@ -798,7 +798,7 @@ class TestTerminalReservationOwnership:
         stage,
         windows,
     ):
-        from kiro_crew import conpty
+        from aj_crew import conpty
 
         o = opening
         entered, release = asyncio.Event(), asyncio.Event()

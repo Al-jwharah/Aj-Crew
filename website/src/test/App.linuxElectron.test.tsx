@@ -7,7 +7,7 @@
  * reserve that corner via `.linux-electron` (right inset), and must NOT apply
  * the mac (84px left) or win (142px right) insets.
  *
- * Deliberately NO vi.mock of ../lib/electron here: `window.kirocrew` is set
+ * Deliberately NO vi.mock of ../lib/electron here: `window.ajcrew` is set
  * in a hoisted block BEFORE the module loads, so the real derivation in
  * src/lib/electron.ts is what is under test — a refactor that mis-classifies
  * a Linux shell as mac/win, or stops reading the preload's linuxFrameless
@@ -20,18 +20,18 @@ import { renderWithProviders } from './helpers'
 
 // Must run before src/lib/electron.ts is imported (module-level consts).
 vi.hoisted(() => {
-  ;(window as unknown as { kirocrew: { isElectron: boolean; platform: string; linuxFrameless: boolean } }).kirocrew = { isElectron: true, platform: 'linux', linuxFrameless: true }
+  ;(window as unknown as { ajcrew: { isElectron: boolean; platform: string; linuxFrameless: boolean } }).ajcrew = { isElectron: true, platform: 'linux', linuxFrameless: true }
 })
 
 vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page">ChatPage</div> }))
 vi.mock('../pages/SystemPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => null }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 vi.mock('../pages/NotificationsPage', () => ({ default: () => null }))
 vi.mock('../pages/SchedulePage', () => ({ default: () => null }))
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
 

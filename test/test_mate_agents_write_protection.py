@@ -13,19 +13,19 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.agent as agent_mod
-import kiro_crew.config.paths as paths_mod
-from kiro_crew import security
-from kiro_crew.hooks import TOOL_DENY, HookManager, HooksConfig
-from kiro_crew.mate_config import write_mate_config
-from kiro_crew.security import is_sensitive_path, is_sensitive_write_path
+import aj_crew.agent as agent_mod
+import aj_crew.config.paths as paths_mod
+from aj_crew import security
+from aj_crew.hooks import TOOL_DENY, HookManager, HooksConfig
+from aj_crew.mate_config import write_mate_config
+from aj_crew.security import is_sensitive_path, is_sensitive_write_path
 
 
 @pytest.fixture
 def home(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     """A throwaway home (``USERPROFILE`` too, for Windows) with no kiro-cli home override.
 
-    The floor's isolated ``KIROCREW_HOME`` stays: the folder does not follow it.
+    The floor's isolated ``AJCREW_HOME`` stays: the folder does not follow it.
     """
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
@@ -76,8 +76,8 @@ def test_neighbours_are_not_over_blocked(home: Path) -> None:
 
 
 def _state_files() -> list[Path]:
-    from kiro_crew import mate_approval_revocations, mate_config, mate_tool_access
-    from kiro_crew.mate_config_migration import _ledger_path
+    from aj_crew import mate_approval_revocations, mate_config, mate_tool_access
+    from aj_crew.mate_config_migration import _ledger_path
 
     return [
         mate_config._owners_path(),

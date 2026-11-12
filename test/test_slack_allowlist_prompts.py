@@ -1,6 +1,6 @@
 """Slack allowlist owner prompts and their ``config.json`` persistence.
 
-:mod:`kiro_crew.slack.allowlist` decides who may talk to the agent: it DMs the
+:mod:`aj_crew.slack.allowlist` decides who may talk to the agent: it DMs the
 owner an Allow/Deny (or Track/Ignore) prompt and, once the owner answers, adds or
 removes the entry in ``config.json``. The interaction router dispatches on the
 buttons' action ids and ``partition(":")``s their value into an id and a display
@@ -19,8 +19,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.slack import allowlist as allowlist_mod
-from kiro_crew.slack.allowlist import (
+from aj_crew.slack import allowlist as allowlist_mod
+from aj_crew.slack.allowlist import (
     ACTION_ALLOWLIST_APPROVE,
     ACTION_ALLOWLIST_DENY,
     ACTION_TRACK_APPROVE,

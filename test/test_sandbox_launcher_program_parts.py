@@ -1,10 +1,10 @@
 """The namespace launcher program is one program, spliced from its facade and its parts.
 
-``kiro_crew.sandbox_launcher_program`` keeps the program's head, its namespace entry and
+``aj_crew.sandbox_launcher_program`` keeps the program's head, its namespace entry and
 stand-in root, and its run order; the rest of the program's text lives below the marker
-line of each ``kiro_crew.sandbox_launcher_parts`` module. ``kiro_crew.sandbox_launcher``
+line of each ``aj_crew.sandbox_launcher_parts`` module. ``aj_crew.sandbox_launcher``
 splices the parts back in when it renders a spawn's launcher, and
-:func:`kiro_crew._facade_compose.compose` runs the parts' functions on the facade's module
+:func:`aj_crew._facade_compose.compose` runs the parts' functions on the facade's module
 globals when the program is imported as a module. These tests pin what that promises:
 
 * the program the renderer holds is the facade with every part's text at its marker, as a
@@ -45,10 +45,10 @@ import source_corpus
 import yaml
 from test_sandbox_launcher_program import RecordingLibc, launch, payload, program_on_disk, refusal
 
-from kiro_crew import _facade_mirror, sandbox_launcher, sandbox_launcher_parts
-from kiro_crew import sandbox_launcher_program as program
-from kiro_crew._facade_compose import compose as facade_compose
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror, sandbox_launcher, sandbox_launcher_parts
+from aj_crew import sandbox_launcher_program as program
+from aj_crew._facade_compose import compose as facade_compose
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_sandbox_launcher_program_parts")
 
@@ -161,7 +161,7 @@ def test_the_program_is_the_facade_with_every_part_spliced_in() -> None:
 
 def test_the_splice_here_sees_a_changed_part(tmp_path: Path) -> None:
     """Non-vacuity: the splice above reads the parts, so a changed part changes it."""
-    package = tmp_path / "kiro_crew"
+    package = tmp_path / "aj_crew"
     (package / "sandbox_launcher_parts").mkdir(parents=True)
     (package / "sandbox_launcher_program.py").write_bytes(Path(program.__file__).read_bytes())
     for path in _part_paths().values():
@@ -193,8 +193,8 @@ def _foreign_imports(source: str) -> list[str]:
 
 
 def test_the_import_check_flags_a_project_or_relative_import() -> None:
-    planted = "import os\nfrom kiro_crew import sandbox\nfrom . import x\nimport yaml\n"
-    assert _foreign_imports(planted) == ["kiro_crew", ".", "yaml"]
+    planted = "import os\nfrom aj_crew import sandbox\nfrom . import x\nimport yaml\n"
+    assert _foreign_imports(planted) == ["aj_crew", ".", "yaml"]
 
 
 def test_the_program_imports_the_standard_library_and_nothing_else() -> None:
@@ -408,7 +408,7 @@ def _spellings() -> dict[str, str]:
         if "sandbox_launcher_program" not in text:
             continue
         for node in ast.parse(text).body:
-            if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew" and not node.level:
+            if isinstance(node, ast.ImportFrom) and node.module == "aj_crew" and not node.level:
                 for alias in node.names:
                     if alias.name == "sandbox_launcher_program":
                         spellings[f"{path.stem}.{alias.asname or alias.name}"] = FACADE
@@ -462,13 +462,13 @@ def test_the_spellings_include_a_helper_binding_of_the_facade() -> None:
     ("source", "expected"),
     [
         (
-            "from kiro_crew import sandbox_launcher_program as program\n"
+            "from aj_crew import sandbox_launcher_program as program\n"
             "def t(monkeypatch):\n    monkeypatch.setattr(program, 'A', 1)\n",
             {"A"},
         ),
         (
             "from unittest.mock import patch\n"
-            "def t():\n    with patch('kiro_crew.sandbox_launcher_program.B'):\n        pass\n",
+            "def t():\n    with patch('aj_crew.sandbox_launcher_program.B'):\n        pass\n",
             {"B"},
         ),
         (
@@ -479,7 +479,7 @@ def test_the_spellings_include_a_helper_binding_of_the_facade() -> None:
         (
             "from unittest.mock import patch\n"
             "def t():\n"
-            "    with patch('kiro_crew.sandbox_launcher_parts.mask_stages.D'):\n        pass\n",
+            "    with patch('aj_crew.sandbox_launcher_parts.mask_stages.D'):\n        pass\n",
             set(),
         ),
     ],
@@ -598,11 +598,11 @@ def _bad_part_imports(tree: ast.Module) -> list[str]:
     ("source", "flagged"),
     [
         ("import os\nimport platform as _plat\nfrom typing import TYPE_CHECKING\n", False),
-        ("if TYPE_CHECKING:\n    from kiro_crew.sandbox_launcher_program import _O_PATH\n", False),
-        ("from kiro_crew.sandbox_launcher_program import _O_PATH\n", True),
-        ("import kiro_crew.sandbox_launcher_program\n", True),
+        ("if TYPE_CHECKING:\n    from aj_crew.sandbox_launcher_program import _O_PATH\n", False),
+        ("from aj_crew.sandbox_launcher_program import _O_PATH\n", True),
+        ("import aj_crew.sandbox_launcher_program\n", True),
         ("from os import path\n", True),
-        ("if TYPE_CHECKING:\n    from kiro_crew.sandbox_plan import ConfinementPlan\n", True),
+        ("if TYPE_CHECKING:\n    from aj_crew.sandbox_plan import ConfinementPlan\n", True),
     ],
 )
 def test_the_part_import_check_sees_every_spelling(source: str, flagged: bool) -> None:
@@ -662,12 +662,12 @@ def _imports_a_part(source: str) -> bool:
 @pytest.mark.parametrize(
     ("source", "flagged"),
     [
-        ("from kiro_crew.sandbox_launcher_parts import mask_stages\n", True),
-        ("from kiro_crew.sandbox_launcher_parts.pinned_mounts import _pin_mount_path\n", True),
-        ("import kiro_crew.sandbox_launcher_parts.exec_lockdown\n", True),
-        ("from kiro_crew import sandbox_launcher_parts\n", True),
+        ("from aj_crew.sandbox_launcher_parts import mask_stages\n", True),
+        ("from aj_crew.sandbox_launcher_parts.pinned_mounts import _pin_mount_path\n", True),
+        ("import aj_crew.sandbox_launcher_parts.exec_lockdown\n", True),
+        ("from aj_crew import sandbox_launcher_parts\n", True),
         ("from .sandbox_launcher_parts import mask_stages\n", True),
-        ("from kiro_crew.sandbox_launcher_program import _pin_mount_path\n", False),
+        ("from aj_crew.sandbox_launcher_program import _pin_mount_path\n", False),
     ],
 )
 def test_the_importer_check_sees_every_spelling(source: str, flagged: bool) -> None:
@@ -692,7 +692,7 @@ def test_every_autosde_rule_that_names_the_facade_names_the_parts() -> None:
     autosde = yaml.safe_load(
         (source_corpus.repo_root() / "AUTOSDE.yaml").read_text(encoding="utf-8")
     )
-    facade_rel = "src/kiro_crew/sandbox_launcher_program.py"
+    facade_rel = "src/aj_crew/sandbox_launcher_program.py"
     rules = [
         rule for rule in autosde["custom-rules"] if facade_rel in (rule.get("file-patterns") or [])
     ]
@@ -700,7 +700,7 @@ def test_every_autosde_rule_that_names_the_facade_names_the_parts() -> None:
     missing = [
         rule["id"]
         for rule in rules
-        if "src/kiro_crew/sandbox_launcher_parts/*.py" not in rule["file-patterns"]
+        if "src/aj_crew/sandbox_launcher_parts/*.py" not in rule["file-patterns"]
     ]
     assert missing == []
 
@@ -767,11 +767,11 @@ def test_the_import_account_reports_a_planted_import() -> None:
     of a name that part does not define, are both reported."""
     planted = (
         Path(program.__file__).read_text(encoding="utf-8")
-        + "\nimport pickle\nfrom kiro_crew.sandbox_launcher_parts.exec_lockdown import _pin_mount_path\n"
+        + "\nimport pickle\nfrom aj_crew.sandbox_launcher_parts.exec_lockdown import _pin_mount_path\n"
     )
     assert unexpected_imports(planted, _part_names(), _family_reads()) == [
         "pickle",
-        "kiro_crew.sandbox_launcher_parts.exec_lockdown._pin_mount_path",
+        "aj_crew.sandbox_launcher_parts.exec_lockdown._pin_mount_path",
     ]
 
 

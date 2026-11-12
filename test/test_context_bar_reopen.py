@@ -18,13 +18,13 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 from windows_sim import read_text_sharing_violation
 
-from kiro_crew.acp.types import AcpPromptStats
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.acp.types import AcpPromptStats
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.providers.acp import AcpProvider
 
 
 def _provider(used: int, window: int, pct: float) -> AcpProvider:
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider()
     provider._client = MagicMock()
     provider._client.last_prompt_stats = AcpPromptStats(
@@ -43,7 +43,7 @@ def _isolate_snapshot_file(tmp_path, monkeypatch):
     ~/.kiro/crew/context_snapshots.json and a stray entry there would change
     what these tests observe.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
 
 async def _detail(state: DashboardState, slot_key: str) -> dict:
@@ -308,7 +308,7 @@ def test_repeating_the_same_reading_leaves_nothing_to_flush(tmp_path, monkeypatc
     state.broadcast_ws = MagicMock()
     state.broadcast_context_usage("s1", {"slot": "s1", "pct": 11.4})
     writes = MagicMock()
-    monkeypatch.setattr("kiro_crew.dashboard.state.atomic_write", writes)
+    monkeypatch.setattr("aj_crew.dashboard.state.atomic_write", writes)
     _flush(state)
     assert writes.call_count == 1
 
@@ -371,15 +371,15 @@ def test_failed_write_is_retried_on_the_next_flush(tmp_path, monkeypatch):
     state.broadcast_ws = MagicMock()
     state.broadcast_context_usage("s1", {"slot": "s1", "pct": 11.4})
 
-    from kiro_crew.dashboard.state import atomic_write as real_atomic_write
+    from aj_crew.dashboard.state import atomic_write as real_atomic_write
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.state.atomic_write",
+        "aj_crew.dashboard.state.atomic_write",
         MagicMock(side_effect=OSError("disk full")),
     )
     _flush(state)  # must swallow, not raise
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.atomic_write", real_atomic_write)
+    monkeypatch.setattr("aj_crew.dashboard.state.atomic_write", real_atomic_write)
     _flush(state)
 
     on_disk = json.loads((tmp_path / "context_snapshots.json").read_text())
@@ -415,7 +415,7 @@ def test_overlapping_flushes_cannot_roll_the_file_back(tmp_path, monkeypatch):
     # already cleared, so nothing would correct it until a new reading.
     import threading
 
-    from kiro_crew.dashboard.state import atomic_write as real_write
+    from aj_crew.dashboard.state import atomic_write as real_write
 
     state = _make_state(tmp_path)
     state.open_slots_restored = True
@@ -437,7 +437,7 @@ def test_overlapping_flushes_cannot_roll_the_file_back(tmp_path, monkeypatch):
         real_write(path, payload, **kwargs)
         completed_payloads.append(payload)
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.atomic_write", stalled_first_write)
+    monkeypatch.setattr("aj_crew.dashboard.state.atomic_write", stalled_first_write)
 
     flush_a = threading.Thread(target=state._persist_context_snapshots)
     flush_a.start()  # serializes pct 10, then stalls inside the file write

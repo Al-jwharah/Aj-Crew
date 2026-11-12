@@ -27,9 +27,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import sandbox
-from kiro_crew.sandbox import userns_available
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew import sandbox
+from aj_crew.sandbox import userns_available
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 pytestmark = [
     pytest.mark.skipif(sys.platform != "linux", reason="the namespace launcher is Linux-only"),
@@ -64,7 +64,7 @@ def read():
 
 report = {
     "mnt_ns": os.readlink("/proc/self/ns/mnt"),
-    "marker": os.environ.get("KIROCREW_SANDBOX_ACTIVE"),
+    "marker": os.environ.get("AJCREW_SANDBOX_ACTIVE"),
     "mkdir": attempt(lambda: os.mkdir(os.path.join(own, "after")) or True),
     "read": attempt(read),
 }
@@ -76,8 +76,8 @@ print("REPORT " + json.dumps(report), flush=True)
 def home(tmp_path, monkeypatch) -> Path:
     home = (tmp_path / "home").resolve()
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "0")
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "0")
     sandbox.reset_backend()
     yield home
     sandbox.reset_backend()
@@ -85,7 +85,7 @@ def home(tmp_path, monkeypatch) -> Path:
 
 def _delete_like_logind(pid: int) -> list[str]:
     """Remove every entry tagged with *pid* under the host stand-in roots; return them."""
-    prefix = "kirocrew_sb_%d_" % pid
+    prefix = "ajcrew_sb_%d_" % pid
     found: list[str] = []
     for root in (f"/run/user/{os.getuid()}", "/dev/shm", tempfile.gettempdir()):
         try:
@@ -114,7 +114,7 @@ def test_the_scratch_window_survives_the_host_deleting_the_stand_in_roots(home, 
     own = home / "scratch" / "session-aaaa"
     own.mkdir(parents=True)
     argv = [sys.executable, "-c", _CHILD, str(own)]
-    env = {k: v for k, v in os.environ.items() if k != "KIROCREW_SANDBOX_ACTIVE"}
+    env = {k: v for k, v in os.environ.items() if k != "AJCREW_SANDBOX_ACTIVE"}
     proc = subprocess.Popen(
         sandbox.namespace_argv(argv, tier, extra_private_dirs=(str(own),)),
         cwd=home,

@@ -183,19 +183,19 @@
       {
         "kind": "tool_call",
         "mcp_identity_trusted": true,
-        "mcp_server_name": "kirocrew-dashboard",
+        "mcp_server_name": "ajcrew-dashboard",
         "raw_tool_params": {
           "arguments": {},
-          "server": "kirocrew-dashboard",
+          "server": "ajcrew-dashboard",
           "tool": "session_status"
         },
-        "title": "mcp.kirocrew-dashboard.session_status",
+        "title": "mcp.ajcrew-dashboard.session_status",
         "tool_call_id": "call_probe_1",
         "tool_identity_trusted": true,
-        "tool_input": "{\n  \"server\": \"kirocrew-dashboard\",\n  \"tool\": \"session_status\",\n  \"arguments\": {}\n}",
+        "tool_input": "{\n  \"server\": \"ajcrew-dashboard\",\n  \"tool\": \"session_status\",\n  \"arguments\": {}\n}",
         "tool_kind": "execute",
         "tool_name": "session_status",
-        "wire_title": "mcp.kirocrew-dashboard.session_status"
+        "wire_title": "mcp.ajcrew-dashboard.session_status"
       }
     ],
     "frame": "session/update",
@@ -213,7 +213,7 @@
       {
         "kind": "permission_request",
         "mcp_identity_trusted": true,
-        "mcp_server_name": "kirocrew-dashboard",
+        "mcp_server_name": "ajcrew-dashboard",
         "options": [
           {
             "id": "allow_once",
@@ -235,13 +235,13 @@
         "raw_params_trusted": true,
         "raw_tool_params": {
           "arguments": {},
-          "server": "kirocrew-dashboard",
+          "server": "ajcrew-dashboard",
           "tool": "session_status"
         },
         "shell_classified": true,
         "title": "unknown",
         "tool_call_id": "call_probe_1",
-        "tool_input": "{\n  \"server\": \"kirocrew-dashboard\",\n  \"tool\": \"session_status\",\n  \"arguments\": {}\n}",
+        "tool_input": "{\n  \"server\": \"ajcrew-dashboard\",\n  \"tool\": \"session_status\",\n  \"arguments\": {}\n}",
         "tool_kind": "execute",
         "tool_name": "session_status"
       }

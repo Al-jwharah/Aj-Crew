@@ -1,4 +1,4 @@
-"""Tests for kirocrew.turn.duration, emitted at turn completion.
+"""Tests for ajcrew.turn.duration, emitted at turn completion.
 
 Drives the REAL production helper ``chat_runner._emit_turn_metric`` with a
 patched recorder, so the metric name, attributes, the stop_reason→outcome
@@ -21,14 +21,14 @@ class _CapturingRecorder:
 
 def _run(duration_ms, stop_reason, slot_key="dashboard:abc123", elapsed_ms=None, exhausted=False):
     """Invoke the production emit helper with a patched recorder; return it."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     rec = _CapturingRecorder()
     # ``_emit_turn_metric`` lives in ``metrics/turns.py`` so every dispatch
     # surface can reach it. It is the production entry point driven here; the
     # recorder is imported at the top of that module, so that is the consumer
     # to patch.
-    with patch("kiro_crew.metrics.turns.get_recorder", return_value=rec):
+    with patch("aj_crew.metrics.turns.get_recorder", return_value=rec):
         chat_runner._emit_turn_metric(
             duration_ms,
             stop_reason,
@@ -40,8 +40,8 @@ def _run(duration_ms, stop_reason, slot_key="dashboard:abc123", elapsed_ms=None,
 
 
 def _turn_call(rec):
-    calls = [c for c in rec.calls if c["name"] == "kirocrew.turn.duration"]
-    assert calls, "kirocrew.turn.duration histogram must be emitted"
+    calls = [c for c in rec.calls if c["name"] == "ajcrew.turn.duration"]
+    assert calls, "ajcrew.turn.duration histogram must be emitted"
     return calls[-1]
 
 
@@ -99,7 +99,7 @@ class TestTurnMetricOutcomeMapping:
         """STOP_REASON_TOOL_STALL starts with "error:" by design (branch-less
         callers degrade to generic handling) — the outcome mapping must check
         it BEFORE the error/timeout fallbacks."""
-        from kiro_crew.acp.types import STOP_REASON_TOOL_STALL
+        from aj_crew.acp.types import STOP_REASON_TOOL_STALL
 
         assert _turn_call(_run(9000, STOP_REASON_TOOL_STALL))["attrs"]["outcome"] == "tool_stall"
 
@@ -107,7 +107,7 @@ class TestTurnMetricOutcomeMapping:
         """A stall turn arriving with its recovery budget already spent dies
         with "start a new chat" — it must label stall_exhausted (a terminal
         fault to the aggregator), not the excluded recovery outcomes."""
-        from kiro_crew.acp.types import STOP_REASON_TOOL_STALL
+        from aj_crew.acp.types import STOP_REASON_TOOL_STALL
 
         c = _turn_call(_run(9000, STOP_REASON_TOOL_STALL, exhausted=True))
         assert c["attrs"]["outcome"] == "stall_exhausted"

@@ -8,25 +8,25 @@ from unittest.mock import patch
 
 def _load_cli():
     """Import cli module."""
-    from kiro_crew import cli
+    from aj_crew import cli
     return cli
 
 
 class TestFixShellProfiles:
     """Tests for _fix_shell_profiles."""
 
-    def test_removes_kirocrew_app_path(self, tmp_path):
+    def test_removes_ajcrew_app_path(self, tmp_path):
         cli = _load_cli()
         zshrc = tmp_path / ".zshrc"
         zshrc.write_text(
-            'export PATH="$HOME/.kirocrew-app/.venv/bin:$PATH"\n'
+            'export PATH="$HOME/.ajcrew-app/.venv/bin:$PATH"\n'
             'export PATH="$HOME/.toolbox/bin:$PATH"\n'
             'alias ll="ls -la"\n'
         )
         with patch.object(Path, "home", return_value=tmp_path):
             cli._fix_shell_profiles()
         content = zshrc.read_text(encoding="utf-8")
-        assert ".kirocrew-app" not in content
+        assert ".ajcrew-app" not in content
         assert ".toolbox" in content
         assert "alias ll" in content
 

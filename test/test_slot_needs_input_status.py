@@ -14,7 +14,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 def _state(*slot_keys: str) -> DashboardState:
@@ -366,7 +366,7 @@ def test_the_retiring_role_sets_agree_across_the_stack() -> None:
     Either half alone produces a visible defect: a role the client retires but
     the server keeps strands the status; the reverse re-renders a dead card.
     """
-    from kiro_crew.dashboard import state as state_mod
+    from aj_crew.dashboard import state as state_mod
 
     slice_src = (
         Path(state_mod.__file__).resolve().parents[3]

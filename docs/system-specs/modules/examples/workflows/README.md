@@ -9,7 +9,7 @@ orchestration shape.
 **These are research examples, not tests.** Nothing here asserts anything, and no
 test collects this directory as test cases. They are still load-bearing: the
 Workflows app serves these files to its example picker (`handle_examples` in
-`src/kiro_crew/apps/builtins/workflows/server.py`), and `test/test_workflows_app.py`
+`src/aj_crew/apps/builtins/workflows/server.py`), and `test/test_workflows_app.py`
 and `test/test_workflows_authoring_eval.py` require each one to validate, so moving,
 renaming or editing one changes what users see and can fail those tests. All three pass
 `workflows.validate.validate()`, but validation only proves the sandbox and
@@ -20,7 +20,7 @@ per-file caveats below before copying one. See [`../../workflows.md`](../../work
 |--------|-----------------------|
 | `01_review_changes.py` | `ctx.pipeline` with two stages (review then verify) plus a nested `ctx.parallel` fan-out, and structured output via `schema=` |
 | `02_loop_until_dry_bug_hunt.py` | loop-until-dry (keep fanning out finders until N consecutive clean rounds) combined with an early stop on `ctx.budget.remaining()` |
-| `03_scheduled_triage_native.py` | the ports native to Kiro Crew: `ctx.memory` for cross-run state, `ctx.cron.ensure` to self-reschedule, a per-call `nudge=` dict, and `ctx.send_slack` delivery |
+| `03_scheduled_triage_native.py` | the ports native to Aj Crew: `ctx.memory` for cross-run state, `ctx.cron.ensure` to self-reschedule, a per-call `nudge=` dict, and `ctx.send_slack` delivery |
 
 Caveats worth knowing before you copy one:
 
@@ -41,4 +41,4 @@ Caveats worth knowing before you copy one:
   engine that branch never fires.
 
 All three module docstrings say the DSL "is not implemented yet". That is out of
-date: `src/kiro_crew/workflows/` implements it.
+date: `src/aj_crew/workflows/` implements it.

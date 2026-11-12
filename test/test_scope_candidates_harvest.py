@@ -22,7 +22,7 @@ _row = base._row
 _write = base._write
 
 SHIPPED_CORPUS = (
-    base.ROOT / "src" / "kiro_crew" / "builtin_skills" / "security-conductor" / "golden-paths.json"
+    base.ROOT / "src" / "aj_crew" / "builtin_skills" / "security-conductor" / "golden-paths.json"
 )
 
 

@@ -1,20 +1,29 @@
-# Running Kiro Crew in Docker
+# Running Aj Crew in Docker
 
-The official image runs the Kiro Crew **gateway** — dashboard, channel bots
+The official image runs the Aj Crew **gateway** — dashboard, channel bots
 (Slack / Discord / Telegram / WeCom / Weixin / Webex), crons, and the kiro-cli
 agent runtime — as a headless container. Microsoft Teams, Feishu, and WhatsApp
 need optional dependencies that the stock image does not install; iMessage
 requires macOS and cannot run in this Linux image. It is the recommended way to
-run Kiro Crew 24/7 on a server or NAS; the strongest fit is the always-on
+run Aj Crew 24/7 on a server or NAS; the strongest fit is the always-on
 channel bot that does not need a desktop session.
 
-The image is public, so no registry login is needed. Start the gateway:
+> **No published image yet.** Aj Crew does not publish a container image today.
+> Build one from a checkout (see [Building locally](#building-locally)) and use
+> that tag, `ajcrew:dev`, wherever this guide shows
+> `ghcr.io/al-jwharah/ajcrew:<tag>`. The tag table and the provenance check
+> below describe what a release pipeline for this project publishes once one
+> exists; a `docker pull` of those names fails until then.
+
+Build the image, then start the gateway:
 
 ```
-docker run -d --name kirocrew \
+make wheel
+docker build -f docker/Dockerfile -t ajcrew:dev .
+docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
-  -v kirocrew-home:/home/kirocrew \
-  ghcr.io/kirodotdev/kirocrew:stable
+  -v ajcrew-home:/home/ajcrew \
+  ajcrew:dev
 ```
 
 Or with compose: copy [`docker/compose.yaml`](../../docker/compose.yaml) and run
@@ -37,7 +46,7 @@ for. Every published manifest carries SLSA build
 provenance — verify with:
 
 ```
-gh attestation verify oci://ghcr.io/kirodotdev/kirocrew:stable --repo kirodotdev/KiroCrew
+gh attestation verify oci://ghcr.io/al-jwharah/ajcrew:stable --repo Al-jwharah/Aj-Crew
 ```
 
 ## First-run setup
@@ -47,17 +56,17 @@ Two one-time steps after the container is up:
 1. **Log in the agent runtime** (chat sessions run on kiro-cli):
 
    ```
-   docker exec -it kirocrew kiro-cli login
+   docker exec -it ajcrew kiro-cli login
    ```
 
-   Credentials persist in the `kirocrew-home` volume, so login survives
+   Credentials persist in the `ajcrew-home` volume, so login survives
    container upgrades.
 
 2. **Open the dashboard** — every request requires a token; mint a login
    link yourself:
 
    ```
-   docker exec kirocrew kirocrew token --ttl 2h
+   docker exec ajcrew ajcrew token --ttl 2h
    ```
 
    Open the printed link, substituting the host you reach the container on
@@ -65,7 +74,7 @@ Two one-time steps after the container is up:
    expire minutes after minting — mint, then open immediately. (The gateway
    prints its own link at boot only when its stdout is a terminal. The
    `docker run -d` above and compose give it none, so `docker logs` shows the
-   bare dashboard URL and a line naming `kirocrew token`, and `docker exec`
+   bare dashboard URL and a line naming `ajcrew token`, and `docker exec`
    minting is the path.)
 
 ## Configuration
@@ -75,7 +84,7 @@ home). Pass them with `-e` / compose `environment:`:
 
 | Variable | Purpose |
 |----------|---------|
-| `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `KIROCREW_OWNER_ID` | Slack bot (Socket Mode) |
+| `SLACK_BOT_TOKEN`, `SLACK_APP_TOKEN`, `AJCREW_OWNER_ID` | Slack bot (Socket Mode) |
 | `DISCORD_BOT_TOKEN` | Discord bot |
 | `TELEGRAM_BOT_TOKEN` | Telegram bot |
 | `WECOM_BOT_ID`, `WECOM_SECRET` | WeCom bot |
@@ -84,9 +93,9 @@ home). Pass them with `-e` / compose `environment:`:
 | `MICROSOFT_APP_ID`, `MICROSOFT_APP_PASSWORD`, `MICROSOFT_APP_TENANT_ID` | Microsoft Teams bot (requires the `teams` extra) |
 | `FEISHU_APP_ID`, `FEISHU_APP_SECRET` | Feishu bot (requires the `feishu` extra) |
 | `KIRO_API_KEY` | kiro-cli model credential alternative to interactive login |
-| `KIROCREW_PORT` | Dashboard port (default 5476) |
-| `KIROCREW_BIND` | Bind address inside the container (image default `0.0.0.0`; see below) |
-| `KIROCREW_ALLOW_UNSANDBOXED` | Set `1` to explicitly allow agent exec without the inner sandbox (see Sandbox below) |
+| `AJCREW_PORT` | Dashboard port (default 5476) |
+| `AJCREW_BIND` | Bind address inside the container (image default `0.0.0.0`; see below) |
+| `AJCREW_ALLOW_UNSANDBOXED` | Set `1` to explicitly allow agent exec without the inner sandbox (see Sandbox below) |
 
 Credential hygiene: on every start the entrypoint moves the channel
 credentials it finds in the environment into the data home's `.env` file
@@ -103,12 +112,12 @@ Four channels are unavailable in the stock image. **Microsoft Teams** needs
 wheel, so use a custom image that installs the required distribution before
 enabling one of those transports. See the setup guidance in their packaged
 integration docs, including
-[whatsapp-integration.md](../../src/kiro_crew/docs/whatsapp-integration.md).
+[whatsapp-integration.md](../../src/aj_crew/docs/whatsapp-integration.md).
 
 **iMessage** cannot be added to this image: it drives Messages.app on the
 machine the gateway runs on and needs macOS 14 or newer plus Full Disk Access
 and Automation grants, so no Linux container can serve it —
-[imessage-integration.md](../../src/kiro_crew/docs/imessage-integration.md).
+[imessage-integration.md](../../src/aj_crew/docs/imessage-integration.md).
 
 Everything else lives in `config.json` inside the volume. Most settings are
 editable from the (token-authenticated) dashboard; the exceptions are the
@@ -118,13 +127,13 @@ any non-direct-local browser. The image ships no text editor, so edit those from
 the host — copy the file out, change it, copy it back, restart:
 
 ```
-docker cp kirocrew:/home/kirocrew/.kiro/crew/config.json .
+docker cp ajcrew:/home/ajcrew/.kiro/crew/config.json .
 # edit config.json locally, then:
-docker cp config.json kirocrew:/home/kirocrew/.kiro/crew/config.json
+docker cp config.json ajcrew:/home/ajcrew/.kiro/crew/config.json
 # docker cp writes the file root-owned; hand it back to the gateway user
 # (uid 1000) or the dashboard can never save settings again:
-docker exec -u 0 kirocrew chown kirocrew:kirocrew /home/kirocrew/.kiro/crew/config.json
-docker restart kirocrew
+docker exec -u 0 ajcrew chown ajcrew:ajcrew /home/ajcrew/.kiro/crew/config.json
+docker restart ajcrew
 ```
 
 (Or use environment variables / `.env` for the credential cases above,
@@ -133,7 +142,7 @@ which need no file edit at all.)
 ## State and upgrades
 
 All persistent state — gateway home (`~/.kiro/crew`), kiro-cli credentials,
-agents, skills — lives under `/home/kirocrew`. One named volume covers all
+agents, skills — lives under `/home/ajcrew`. One named volume covers all
 of it. Upgrade by pulling the newer image; state carries over:
 
 ```
@@ -145,7 +154,7 @@ the version selector (channel tags track their channel; version tags pin).
 
 ## Networking and security model
 
-- **Why `KIROCREW_BIND=0.0.0.0`:** outside Docker the gateway binds
+- **Why `AJCREW_BIND=0.0.0.0`:** outside Docker the gateway binds
   loopback only. Inside a container, published ports (`-p`) map to the
   container's bridge interface, so a loopback bind would be unreachable
   from the host. The image therefore binds all interfaces **inside the
@@ -173,11 +182,11 @@ the version selector (channel tags track their channel; version tags pin).
   probe paths.
 - **Exposing beyond localhost:** publishing `5476:5476` opens the TCP
   port, but LAN browsers will still be rejected until their origin is
-  allowed — set `dashboard.url` (or `KIROCREW_CORS_ORIGINS`) to the
+  allowed — set `dashboard.url` (or `AJCREW_CORS_ORIGINS`) to the
   address you browse from. The supported pattern is a TLS reverse proxy
   in front with `dashboard.url` set to its origin, exactly as for a
   non-container deployment.
-- **Sandbox:** on first run the entrypoint probes whether Kiro Crew's inner
+- **Sandbox:** on first run the entrypoint probes whether Aj Crew's inner
   Linux user-namespace sandbox works under the container runtime's
   seccomp/AppArmor policy. If it does, it seeds `agent.sandbox="auto"` so
   agent commands run namespace-isolated from gateway state, same as a
@@ -185,7 +194,7 @@ the version selector (channel tags track their channel; version tags pin).
   stays DISABLED (fail-closed) — the gateway, dashboard, and channel bots
   run normally. To enable agents in that situation, either permit user
   namespaces (see **Sandbox troubleshooting** below) or restart with
-  `-e KIROCREW_ALLOW_UNSANDBOXED=1` to explicitly accept unsandboxed agent
+  `-e AJCREW_ALLOW_UNSANDBOXED=1` to explicitly accept unsandboxed agent
   execution. In the consented posture the container is the only isolation
   boundary: treat its contents (mounted volumes included) as reachable by
   agent commands, and do not mount host paths you would not hand to the
@@ -193,7 +202,7 @@ the version selector (channel tags track their channel; version tags pin).
 
 ## Sandbox troubleshooting
 
-Kiro Crew runs agent commands inside a Linux user-namespace sandbox that
+Aj Crew runs agent commands inside a Linux user-namespace sandbox that
 bind-mounts empty dirs over credential paths (`~/.aws`, `~/.ssh`, etc.) so
 the agent subprocess cannot read gateway credentials. Building it takes three
 syscalls in order — `unshare(CLONE_NEWUSER)`, `unshare(CLONE_NEWNS)`, then a
@@ -216,7 +225,7 @@ sandbox and writes one of three postures:
 | Probe result | Env var set? | Posture written | Agent execution |
 |---|---|---|---|
 | Sandbox works ✅ | — | `sandbox=auto` | Namespace-isolated |
-| No backend ❌ | `KIROCREW_ALLOW_UNSANDBOXED=1` | `sandbox_allow_unsandboxed_exec=true` | Allowed — container is the only boundary |
+| No backend ❌ | `AJCREW_ALLOW_UNSANDBOXED=1` | `sandbox_allow_unsandboxed_exec=true` | Allowed — container is the only boundary |
 | No backend ❌ | _(not set)_ | `sandbox=auto` (default) | **Disabled** (fail-closed) |
 
 The entrypoint states which posture it seeded on the **first** run — the one where
@@ -225,25 +234,25 @@ read:
 
 ```
 [entrypoint] First run: inner sandbox backend available — seeded
-/home/kirocrew/.kiro/crew/config.json with agent.sandbox=auto so agent
+/home/ajcrew/.kiro/crew/config.json with agent.sandbox=auto so agent
 subprocesses run namespace-isolated from gateway credentials.
 ```
 
 ```
 [entrypoint] First run: NO inner sandbox backend under this runtime's seccomp
-policy; KIROCREW_ALLOW_UNSANDBOXED=1 given — seeded
-/home/kirocrew/.kiro/crew/config.json with sandbox=auto +
+policy; AJCREW_ALLOW_UNSANDBOXED=1 given — seeded
+/home/ajcrew/.kiro/crew/config.json with sandbox=auto +
 sandbox_allow_unsandboxed_exec=true. Agent subprocesses share the container user
 and can read files owned by the gateway.
 ```
 
 ```
 [entrypoint] First run: NO inner sandbox backend under this runtime's seccomp
-policy. Seeded /home/kirocrew/.kiro/crew/config.json with sandbox=auto: agent
+policy. Seeded /home/ajcrew/.kiro/crew/config.json with sandbox=auto: agent
 command execution is DISABLED (fail-closed) until you choose one of: (a) permit
 user namespaces (--security-opt seccomp=<profile permitting unshare/clone>) and
 restart to get the inner sandbox, or (b) restart with -e
-KIROCREW_ALLOW_UNSANDBOXED=1 to explicitly accept unsandboxed agent execution
+AJCREW_ALLOW_UNSANDBOXED=1 to explicitly accept unsandboxed agent execution
 (the container is then the only isolation boundary).
 ```
 
@@ -253,9 +262,9 @@ posture. It prints the standing reminder instead, whenever
 ways to let agent commands through. See
 [Check the startup log](docker-troubleshooting.md#check-the-startup-log).
 
-### Option A — Kiro Crew seccomp profile (recommended)
+### Option A — Aj Crew seccomp profile (recommended)
 
-The repo ships `docker/seccomp/kirocrew-seccomp.json`: the Docker default
+The repo ships `docker/seccomp/ajcrew-seccomp.json`: the Docker default
 allow-list extended with unconditional `unshare`, `clone`, `mount`, and
 `umount2` rules.
 This is strictly less permissive than `--security-opt seccomp=unconfined` or
@@ -264,29 +273,29 @@ This is strictly less permissive than `--security-opt seccomp=unconfined` or
 **Image-only users** (no repo checkout): download the profile directly:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/kirodotdev/KiroCrew/main/docker/seccomp/kirocrew-seccomp.json \
-  -o kirocrew-seccomp.json
+curl -fsSL https://raw.githubusercontent.com/Al-jwharah/Aj-Crew/main/docker/seccomp/ajcrew-seccomp.json \
+  -o ajcrew-seccomp.json
 ```
 
 Then start the container:
 
 ```bash
-docker run -d --name kirocrew \
+docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
-  -v kirocrew-home:/home/kirocrew \
-  --security-opt seccomp=kirocrew-seccomp.json \
-  ghcr.io/kirodotdev/kirocrew:stable
+  -v ajcrew-home:/home/ajcrew \
+  --security-opt seccomp=ajcrew-seccomp.json \
+  ghcr.io/al-jwharah/ajcrew:stable
 ```
 
-Or in compose (add to the `kirocrew` service):
+Or in compose (add to the `ajcrew` service):
 
 ```yaml
 security_opt:
-  - seccomp:./kirocrew-seccomp.json
+  - seccomp:./ajcrew-seccomp.json
 ```
 
 If you run Compose from a repository checkout instead of using the downloaded
-file above, use `seccomp:./docker/seccomp/kirocrew-seccomp.json`.
+file above, use `seccomp:./docker/seccomp/ajcrew-seccomp.json`.
 
 With this profile the inner sandbox runs normally and credential directories
 are hidden from agent subprocesses inside the container.
@@ -298,12 +307,12 @@ whose `deny mount` refuses the launcher's first mount with `EACCES` after both
 unshares succeeded. Add the AppArmor switch alongside the seccomp profile:
 
 ```bash
-docker run -d --name kirocrew \
+docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
-  -v kirocrew-home:/home/kirocrew \
+  -v ajcrew-home:/home/ajcrew \
   --security-opt apparmor=unconfined \
-  --security-opt seccomp=kirocrew-seccomp.json \
-  ghcr.io/kirodotdev/kirocrew:stable
+  --security-opt seccomp=ajcrew-seccomp.json \
+  ghcr.io/al-jwharah/ajcrew:stable
 ```
 
 `apparmor=unconfined` lifts only AppArmor's per-container rules; the seccomp
@@ -334,14 +343,14 @@ annotation):
 ```yaml
 spec:
   containers:
-    - name: kirocrew
+    - name: ajcrew
       securityContext:
         appArmorProfile:
           type: Unconfined
 ```
 
 If your cluster also enforces `seccompProfile: RuntimeDefault`, that profile
-blocks `unshare`; load `kirocrew-seccomp.json` on the node and reference it
+blocks `unshare`; load `ajcrew-seccomp.json` on the node and reference it
 with `seccompProfile: {type: Localhost, localhostProfile: <path>}`.
 
 **Accept the container as the only boundary** — when the AppArmor profile
@@ -355,7 +364,7 @@ in explicitly (Option B's posture):
 ```
 
 together with `"agent": {"sandbox_allow_unsandboxed_exec": true}` in the
-container's `config.json` (or `KIROCREW_ALLOW_UNSANDBOXED=1` on first run).
+container's `config.json` (or `AJCREW_ALLOW_UNSANDBOXED=1` on first run).
 `RuntimeDefault` makes the very first probe step fail, so the gateway takes
 its documented no-backend path and the opt-in applies to every spawn; the
 `mount_denied` verdict alone already routes there, so the seccomp line is a
@@ -371,11 +380,11 @@ If you cannot modify the seccomp policy (managed Kubernetes, locked-down
 runtime, Docker Desktop with restricted settings):
 
 ```bash
-docker run -d --name kirocrew \
+docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
-  -v kirocrew-home:/home/kirocrew \
-  -e KIROCREW_ALLOW_UNSANDBOXED=1 \
-  ghcr.io/kirodotdev/kirocrew:stable
+  -v ajcrew-home:/home/ajcrew \
+  -e AJCREW_ALLOW_UNSANDBOXED=1 \
+  ghcr.io/al-jwharah/ajcrew:stable
 ```
 
 In this posture the container is the only isolation boundary. Do not mount
@@ -398,8 +407,8 @@ config).
 Check from inside a running container:
 
 ```bash
-docker exec kirocrew python3 -c \
-  "from kiro_crew.sandbox import userns_available; print(userns_available())"
+docker exec ajcrew python3 -c \
+  "from aj_crew.sandbox import userns_available; print(userns_available())"
 ```
 
 - `True` → user namespaces work on the kernel; re-check your seccomp
@@ -411,11 +420,11 @@ docker exec kirocrew python3 -c \
 
 ```bash
 # Check which posture was chosen at startup
-docker logs kirocrew | grep '\[entrypoint\]'
+docker logs ajcrew | grep '\[entrypoint\]'
 
 # Live check from inside the container
-docker exec kirocrew python3 -c \
-  "from kiro_crew.sandbox import detect_backend; print(detect_backend())"
+docker exec ajcrew python3 -c \
+  "from aj_crew.sandbox import detect_backend; print(detect_backend())"
 # Expected: "namespace" (inner sandbox active) or "none" (unsandboxed)
 ```
 
@@ -431,8 +440,8 @@ The image consumes a built wheel (never the raw source tree), keeping Docker
 bytes identical to pip bytes for a given version:
 
 ```
-make wheel                                   # builds dist/kirocrew-*.whl
-docker build -f docker/Dockerfile -t kirocrew:dev .
+make wheel                                   # builds dist/ajcrew-*.whl
+docker build -f docker/Dockerfile -t ajcrew:dev .
 ```
 
 The Dockerfile consumes the wheel through a BuildKit bind mount, so the build
@@ -442,35 +451,35 @@ prefix the build with `DOCKER_BUILDKIT=1`.
 
 ### Baking in the KAS engine (`BUNDLE_KAS`)
 
-The `agent.kas_bundle` route runs Kiro Crew's own pinned KAS engine instead of
+The `agent.kas_bundle` route runs Aj Crew's own pinned KAS engine instead of
 going through kiro-cli. By default the image does not carry that engine, and
-turning the route on needs `docker exec <container> kirocrew kas install` first,
+turning the route on needs `docker exec <container> ajcrew kas install` first,
 which downloads about 55 MB into the home volume. To build an image with the
 engine already inside:
 
 ```
-docker build -f docker/Dockerfile --build-arg BUNDLE_KAS=1 -t kirocrew:dev-kas .
+docker build -f docker/Dockerfile --build-arg BUNDLE_KAS=1 -t ajcrew:dev-kas .
 ```
 
 The build runs the backend's own installer (`acp.kas_bundle.install_bundle`,
-the same code `kirocrew kas install` and the desktop build run) against the
+the same code `ajcrew kas install` and the desktop build run) against the
 version this release pins (`KAS_PIN_VERSION` in `acp/kas_pin.py`) and refuses a
 manifest whose bytes do not hash to `KAS_PIN_MANIFEST_SHA256`. The engine lands
-in `/usr/local/share/kirocrew/kas`, outside the home volume and owned by root,
+in `/usr/local/share/ajcrew/kas`, outside the home volume and owned by root,
 so a mounted home cannot shadow or rewrite it. The build then reads the tree
-back as the `kirocrew` user and fails if the gateway could not use it.
+back as the `ajcrew` user and fails if the gateway could not use it.
 
-The image sets `KIROCREW_BUNDLED_KAS_DIR=/usr/local/share/kirocrew/kas` as an
+The image sets `AJCREW_BUNDLED_KAS_DIR=/usr/local/share/ajcrew/kas` as an
 `ENV`, the variable the desktop app sets for its own copy, so the gateway and
 every `docker exec` command see it. The backend reads it as a second root after
-the home volume's own `kirocrew kas install`, so an engine you install yourself
-still wins. `docker exec <container> kirocrew kas status` reports the baked copy
+the home volume's own `ajcrew kas install`, so an engine you install yourself
+still wins. `docker exec <container> ajcrew kas status` reports the baked copy
 as `(built into the app)`. On an image built without `BUNDLE_KAS=1` the
 directory exists but is empty, and nothing reads as built in. The route itself
 stays off until you turn it on:
 
 ```
-docker exec <container> kirocrew config set agent.kas_bundle true
+docker exec <container> ajcrew config set agent.kas_bundle true
 docker restart <container>
 ```
 

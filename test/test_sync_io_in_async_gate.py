@@ -32,12 +32,12 @@ CI = ROOT / ".github" / "workflows" / "ci.yml"
 PROFILE = (
     ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "profiles"
-    / "kirocrew.json"
+    / "ajcrew.json"
 )
 
 SPEC = importlib.util.spec_from_file_location("check_sync_io_in_async", SCRIPT)
@@ -475,7 +475,7 @@ class TestExemplarStaysClean:
         # store call in asyncio.to_thread while handlers/knowledge.py next door
         # does not. It must never appear in the baseline.
         # The facade's owners (its ``_OWNERS``) hold the moved handlers, so each is read too.
-        rel = "src/kiro_crew/dashboard/handlers/memory.py"
+        rel = "src/aj_crew/dashboard/handlers/memory.py"
         tree = ast.parse((ROOT / rel).read_text(encoding="utf-8"))
         owners = next(
             ast.literal_eval(node.value)

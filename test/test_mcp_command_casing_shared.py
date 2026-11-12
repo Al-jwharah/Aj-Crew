@@ -5,7 +5,7 @@ it, so a bare ``demo-mcp`` resolves to ``demo-mcp.EXE`` while the file on disk i
 ``demo-mcp.exe``. A launcher that dispatches on its own ``argv[0]`` basename
 case-sensitively refuses to run under the synthesized spelling.
 
-The repair lives in ``kiro_crew.env`` beside ``mcp_search_path`` and is applied
+The repair lives in ``aj_crew.env`` beside ``mcp_search_path`` and is applied
 by all three consumers of a ``which`` result: the agent-config resolver (whose
 result is PERSISTED as the spec's absolute ``command``), the dashboard probe, and
 gatewayd's rewriter. The rewriter's own coverage lives in
@@ -30,9 +30,9 @@ import pytest
 from mcp_merge_helpers import bundled_defaults as _bundled_defaults
 from mcp_merge_helpers import run_install_mcp_merge as _run_install_mcp_merge
 
-from kiro_crew import env, platform_compat
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-from kiro_crew.mcp_discovery import McpServerInfo, _probe_cache, probe_server
+from aj_crew import env, platform_compat
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.mcp_discovery import McpServerInfo, _probe_cache, probe_server
 
 
 def _windows_casing(path: str | None) -> str:
@@ -127,7 +127,7 @@ def _pinned_kiro_cli_version(monkeypatch):
     the HOST's ``kiro-cli --version`` once per worker.
     """
     monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
 
@@ -147,7 +147,7 @@ class TestAgentConfigResolver:
     ) -> None:
         monkeypatch.setenv("PATH", "/usr/bin")
         actual, raw = _launcher(tmp_path)
-        monkeypatch.setattr("kiro_crew.agent.resolved_command_casing", _windows_casing)
+        monkeypatch.setattr("aj_crew.agent.resolved_command_casing", _windows_casing)
         cfg_dir = _bundled_defaults(tmp_path)
 
         emitted = _run_install_mcp_merge(
@@ -161,7 +161,7 @@ class TestAgentConfigResolver:
         assert (
             emitted["demo"]["command"] == actual
         ), "the PATH-search branch of _resolve_command persisted the PATHEXT spelling"
-        spec = json.loads((tmp_path / "kiro_agents" / "kirocrew.json").read_text())
+        spec = json.loads((tmp_path / "kiro_agents" / "ajcrew.json").read_text())
         assert spec["mcpServers"]["demo"]["command"] == actual
 
     @pytest.mark.usefixtures("_pinned_kiro_cli_version")
@@ -178,7 +178,7 @@ class TestAgentConfigResolver:
         actual, raw = _launcher(tmp_path)
         qualified = str(tmp_path / "bin" / "demo-mcp")
         assert not os.path.exists(qualified)
-        monkeypatch.setattr("kiro_crew.agent.resolved_command_casing", _windows_casing)
+        monkeypatch.setattr("aj_crew.agent.resolved_command_casing", _windows_casing)
         cfg_dir = _bundled_defaults(tmp_path)
 
         emitted = _run_install_mcp_merge(
@@ -206,20 +206,20 @@ class TestDashboardProbe:
     @pytest.mark.asyncio
     async def test_the_probe_spawns_the_on_disk_casing(self, tmp_path: Path, monkeypatch) -> None:
         actual, raw = _launcher(tmp_path)
-        monkeypatch.setattr("kiro_crew.mcp_discovery.resolved_command_casing", _windows_casing)
+        monkeypatch.setattr("aj_crew.mcp_discovery.resolved_command_casing", _windows_casing)
         captured: list[list[str]] = []
 
         def _wrap(argv, *a, env=None, **k):
             captured.append(list(argv))
             return list(argv), dict(env if env is not None else os.environ), None
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
+        monkeypatch.setattr("aj_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
         server = McpServerInfo(name="demo", command="demo-mcp", args=["--stdio"])
 
         with (
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value=raw),
+            patch("aj_crew.mcp_discovery.shutil.which", return_value=raw),
             patch(
-                "kiro_crew.mcp_discovery.create_subprocess_limited",
+                "aj_crew.mcp_discovery.create_subprocess_limited",
                 new_callable=AsyncMock,
                 side_effect=OSError("stop after argv capture"),
             ),
@@ -256,20 +256,20 @@ class TestDashboardProbe:
         def _would_repair(path: str | None) -> str:
             return str(Path(path).with_name("demo-mcp.exe")) if path else ""
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.resolved_command_casing", _would_repair)
+        monkeypatch.setattr("aj_crew.mcp_discovery.resolved_command_casing", _would_repair)
         captured: list[list[str]] = []
 
         def _wrap(argv, *a, env=None, **k):
             captured.append(list(argv))
             return list(argv), dict(env if env is not None else os.environ), None
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
+        monkeypatch.setattr("aj_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
         server = McpServerInfo(name="demo", command=str(declared), args=["--stdio"])
 
         with (
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value=str(declared)),
+            patch("aj_crew.mcp_discovery.shutil.which", return_value=str(declared)),
             patch(
-                "kiro_crew.mcp_discovery.create_subprocess_limited",
+                "aj_crew.mcp_discovery.create_subprocess_limited",
                 new_callable=AsyncMock,
                 side_effect=OSError("stop after argv capture"),
             ),
@@ -351,7 +351,7 @@ class TestSavedCommandAtEachResolver:
     ) -> None:
         monkeypatch.setenv("PATH", "/usr/bin")
         actual, saved = _saved_launcher(tmp_path)
-        monkeypatch.setattr("kiro_crew.agent.saved_command_casing", _windows_saved)
+        monkeypatch.setattr("aj_crew.agent.saved_command_casing", _windows_saved)
         cfg_dir = _bundled_defaults(tmp_path)
 
         emitted = _run_install_mcp_merge(
@@ -363,24 +363,24 @@ class TestSavedCommandAtEachResolver:
         )["mcpServers"]
 
         assert emitted["demo"]["command"] == actual
-        spec = json.loads((tmp_path / "kiro_agents" / "kirocrew.json").read_text())
+        spec = json.loads((tmp_path / "kiro_agents" / "ajcrew.json").read_text())
         assert spec["mcpServers"]["demo"]["command"] == actual
 
     @pytest.mark.asyncio
     async def test_the_probe_spawns_the_healed_spelling(self, tmp_path: Path, monkeypatch) -> None:
         actual, saved = _saved_launcher(tmp_path)
-        monkeypatch.setattr("kiro_crew.mcp_discovery.saved_command_casing", _windows_saved)
+        monkeypatch.setattr("aj_crew.mcp_discovery.saved_command_casing", _windows_saved)
         captured: list[list[str]] = []
 
         def _wrap(argv, *a, env=None, **k):
             captured.append(list(argv))
             return list(argv), dict(env if env is not None else os.environ), None
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
+        monkeypatch.setattr("aj_crew.mcp_discovery.sandboxed_spawn_argv", _wrap)
         server = McpServerInfo(name="demo", command=saved, args=["--stdio"])
 
         with patch(
-            "kiro_crew.mcp_discovery.create_subprocess_limited",
+            "aj_crew.mcp_discovery.create_subprocess_limited",
             new_callable=AsyncMock,
             side_effect=OSError("stop after argv capture"),
         ):
@@ -392,7 +392,7 @@ class TestSavedCommandAtEachResolver:
     def test_the_gateway_rewriter_emits_the_healed_spelling(
         self, tmp_path: Path, monkeypatch
     ) -> None:
-        from kiro_crew.mcp_gateway import rewriter
+        from aj_crew.mcp_gateway import rewriter
 
         actual, saved = _saved_launcher(tmp_path)
         monkeypatch.setattr(rewriter, "saved_command_casing", _windows_saved)
@@ -411,13 +411,13 @@ class TestHealedCommandKeepsItsProvenance:
         ``emitted`` value that differs from the command reads as a hand edit on
         the next pass, and the record is then dropped.
         """
-        from kiro_crew.mcp_provenance import DERIVED_KEY
+        from aj_crew.mcp_provenance import DERIVED_KEY
 
         monkeypatch.setenv("PATH", "/usr/bin")
         actual, saved = _saved_launcher(tmp_path)
         cfg_dir = _bundled_defaults(tmp_path)
         _run_install_mcp_merge(tmp_path, cfg_dir, cc_servers={}, kiro_servers={})
-        spec_path = tmp_path / "kiro_agents" / "kirocrew.json"
+        spec_path = tmp_path / "kiro_agents" / "ajcrew.json"
         cfg = json.loads(spec_path.read_text())
         cfg["mcpServers"]["demo"] = {"command": "demo-mcp"}
         spec_path.write_text(json.dumps(cfg))
@@ -433,7 +433,7 @@ class TestHealedCommandKeepsItsProvenance:
         assert first["demo"][DERIVED_KEY] == {"from": "demo-mcp", "emitted": saved}
 
         # This build: the source does not resolve, and the saved path heals.
-        monkeypatch.setattr("kiro_crew.agent.saved_command_casing", _windows_saved)
+        monkeypatch.setattr("aj_crew.agent.saved_command_casing", _windows_saved)
         second = _run_install_mcp_merge(
             tmp_path,
             cfg_dir,
@@ -455,13 +455,13 @@ class TestHealedCommandKeepsItsProvenance:
         server is agent-only again and only a matching ``emitted`` value lets a
         later rebuild re-derive it.
         """
-        from kiro_crew.mcp_provenance import DERIVED_KEY
+        from aj_crew.mcp_provenance import DERIVED_KEY
 
         monkeypatch.setenv("PATH", "/usr/bin")
         actual, saved = _saved_launcher(tmp_path)
         cfg_dir = _bundled_defaults(tmp_path)
         _run_install_mcp_merge(tmp_path, cfg_dir, cc_servers={}, kiro_servers={})
-        spec_path = tmp_path / "kiro_agents" / "kirocrew.json"
+        spec_path = tmp_path / "kiro_agents" / "ajcrew.json"
         cfg = json.loads(spec_path.read_text())
         cfg["mcpServers"]["demo"] = {"command": "demo-mcp"}
         spec_path.write_text(json.dumps(cfg))
@@ -475,7 +475,7 @@ class TestHealedCommandKeepsItsProvenance:
         assert first["demo"][DERIVED_KEY] == {"from": "demo-mcp", "emitted": saved}
 
         # The same server is now declared in mcp.json with the saved spelling.
-        monkeypatch.setattr("kiro_crew.agent.saved_command_casing", _windows_saved)
+        monkeypatch.setattr("aj_crew.agent.saved_command_casing", _windows_saved)
         second = _run_install_mcp_merge(
             tmp_path,
             cfg_dir,
@@ -497,14 +497,14 @@ class TestEditionContributedCommand:
     def test_extra_mcp_servers_heals_only_a_pathext_extension(
         self, tmp_path: Path, monkeypatch, contributed: str, expected: str
     ) -> None:
-        from kiro_crew import agent
+        from aj_crew import agent
 
         _saved_launcher(tmp_path)
         command = str(tmp_path / "bin" / contributed)
         returned = {"demo": {"command": command, "args": ["--stdio"]}}
         tooling = SimpleNamespace(extra_mcp_servers=lambda: returned)
         monkeypatch.setattr(agent, "current_context", lambda: SimpleNamespace(mcp_tooling=tooling))
-        monkeypatch.setattr("kiro_crew.agent.saved_command_casing", _windows_saved)
+        monkeypatch.setattr("aj_crew.agent.saved_command_casing", _windows_saved)
 
         extra = agent._extra_mcp_servers()
 

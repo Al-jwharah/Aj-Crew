@@ -13,8 +13,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.handlers import messaging as mod
-from kiro_crew.slack.mrkdwn_markdown import mrkdwn_to_markdown
+from aj_crew.dashboard.handlers import messaging as mod
+from aj_crew.slack.mrkdwn_markdown import mrkdwn_to_markdown
 
 
 class TestLinks:

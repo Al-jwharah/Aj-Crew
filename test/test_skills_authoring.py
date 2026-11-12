@@ -1,4 +1,4 @@
-"""Writing skills with ``SkillsLoader`` (``kiro_crew.skills``).
+"""Writing skills with ``SkillsLoader`` (``aj_crew.skills``).
 
 This file pins create, update and delete with their name-safety refusals, the provenance
 frontmatter of an auto skill, and refining and listing auto skills while keeping
@@ -16,7 +16,7 @@ from skills_helpers import (  # noqa: F401 -- the autouse fixtures register by i
     _settled,
 )
 
-from kiro_crew.skills import SkillsLoader
+from aj_crew.skills import SkillsLoader
 
 
 class TestSkillsCRUD:
@@ -153,14 +153,14 @@ class TestAutoSkillProvenance:
     """Tests for the AutoSkillProvenance dataclass frontmatter serialization."""
 
     def test_now_iso_is_utc(self):
-        from kiro_crew.skills import AutoSkillProvenance
+        from aj_crew.skills import AutoSkillProvenance
 
         stamp = AutoSkillProvenance.now_iso()
         # ISO 8601 UTC ends with +00:00 when using timezone.utc
         assert "+00:00" in stamp
 
     def test_frontmatter_lines_minimum(self):
-        from kiro_crew.skills import AutoSkillProvenance
+        from aj_crew.skills import AutoSkillProvenance
 
         prov = AutoSkillProvenance(
             session_key="dashboard:chat-1", created_at="2026-05-05T11:30:00+00:00"
@@ -174,7 +174,7 @@ class TestAutoSkillProvenance:
         assert not any(line.startswith("reuse_count:") for line in lines)
 
     def test_frontmatter_lines_with_refinement(self):
-        from kiro_crew.skills import AutoSkillProvenance
+        from aj_crew.skills import AutoSkillProvenance
 
         prov = AutoSkillProvenance(
             session_key="dashboard:chat-2",
@@ -191,7 +191,7 @@ class TestUpdateAutoSkill:
     """Tests for SkillsLoader.update_auto_skill (refine path)."""
 
     def _make_provenance(self, refined_at=""):
-        from kiro_crew.skills import AutoSkillProvenance
+        from aj_crew.skills import AutoSkillProvenance
 
         return AutoSkillProvenance(
             session_key="dashboard:chat-2",
@@ -277,9 +277,7 @@ class TestListAutoSkills:
             triggers="",
             procedure_md="body",
             provenance=(
-                __import__(
-                    "kiro_crew.skills", fromlist=["AutoSkillProvenance"]
-                ).AutoSkillProvenance(
+                __import__("aj_crew.skills", fromlist=["AutoSkillProvenance"]).AutoSkillProvenance(
                     session_key="x",
                     created_at="2026-05-05T11:30:00+00:00",
                 )
@@ -294,7 +292,7 @@ class TestUpdateAutoSkillPreservesCreatedAt:
     """Refine must not clobber created_at."""
 
     def test_created_at_preserved_across_refine(self, tmp_path):
-        from kiro_crew.skills import AutoSkillProvenance
+        from aj_crew.skills import AutoSkillProvenance
 
         loader = SkillsLoader(skills_path=tmp_path / "skills", install_builtins=False)
         original = AutoSkillProvenance(

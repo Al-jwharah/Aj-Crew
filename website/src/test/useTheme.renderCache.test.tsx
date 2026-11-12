@@ -516,7 +516,7 @@ describe('useTheme: active-theme render cache (themed first paint)', () => {
     expect(themeDetailFn.mock.calls.filter(([slug]) => slug === SLUG)).toHaveLength(2)
     expect(result.current.colorTheme).toBe(`custom-${SLUG}`)
     expect(localStorage.getItem('mc-color-theme')).toBe(`custom-${SLUG}`)
-    expect(updateThemeConfigFn).not.toHaveBeenCalledWith({ color: 'kiro' })
+    expect(updateThemeConfigFn).not.toHaveBeenCalledWith({ color: 'aj' })
 
     themeDetailFn.mockImplementation((slug: string) =>
       Promise.resolve(slug === SLUG ? detail : otherDetail),
@@ -725,7 +725,7 @@ describe('useTheme: active-theme render cache (themed first paint)', () => {
     const { result } = renderHook(() => useTheme(), { wrapper })
     expect(styleFor(SLUG)).not.toBeNull() // painted from the cache first
 
-    await waitFor(() => expect(result.current.colorTheme).toBe('kiro'))
+    await waitFor(() => expect(result.current.colorTheme).toBe('aj'))
     expect(result.current.installedThemeLoadFailed).toBe(false)
     expect(localStorage.getItem(KEY)).toBeNull()
     expect(styleFor(SLUG)).toBeNull()
@@ -772,7 +772,7 @@ describe('useTheme: active-theme render cache (themed first paint)', () => {
 
   it('a built-in selection empties the cache without enumerating storage', async () => {
     const keySpy = vi.spyOn(Storage.prototype, 'key')
-    localStorage.setItem('mc-color-theme', 'kiro')
+    localStorage.setItem('mc-color-theme', 'aj')
     localStorage.setItem(KEY, JSON.stringify(detail))
     renderHook(() => useTheme(), { wrapper })
     await waitFor(() => expect(localStorage.getItem(KEY)).toBeNull())

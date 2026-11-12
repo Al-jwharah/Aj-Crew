@@ -25,15 +25,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.skills import SkillsLoader
+from aj_crew.skills import SkillsLoader
 
 ROOT = Path(__file__).resolve().parent.parent
-BUILTIN_SKILLS_DIR = ROOT / "src" / "kiro_crew" / "builtin_skills"
+BUILTIN_SKILLS_DIR = ROOT / "src" / "aj_crew" / "builtin_skills"
 IMAGE_AUTHORING = BUILTIN_SKILLS_DIR / "image-authoring" / "SKILL.md"
 
 
 def _builtin_skill_files() -> list[Path]:
-    """Every packaged builtin SKILL.md, including nested ones (kirocrew-dev/…)."""
+    """Every packaged builtin SKILL.md, including nested ones (ajcrew-dev/…)."""
     return sorted(BUILTIN_SKILLS_DIR.rglob("SKILL.md"))
 
 

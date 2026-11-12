@@ -162,7 +162,7 @@ export default function TrustDropdown({ fullCommand, baseCommand, isShell, hasCo
       //
       // `break-all` sits on the COMMAND span alone. The words around it are
       // prose in the reader's language, and prose that may break between any
-      // two letters ("until Kiro Crew rest / arts") is prose the reader has to
+      // two letters ("until Aj Crew rest / arts") is prose the reader has to
       // reassemble on the consent surface; those words wrap at spaces, and
       // only the command -- which may have none -- breaks anywhere.
       // No `aria-label` beside the visible text: the row's accessible name is

@@ -57,7 +57,7 @@ const FIXTURES = {
   },
   '/api/security/trusted-apps': { apps: [], ineffective: [], allowAll: false },
   '/api/tailnet/status': TAILNET,
-  '/api/config/kirocrew': { agent: { yolo_duration: '6h', apps_allow_third_party: false } },
+  '/api/config/ajcrew': { agent: { yolo_duration: '6h', apps_allow_third_party: false } },
 }
 
 const SECTIONS = ['approval', 'tailnet', 'apps']

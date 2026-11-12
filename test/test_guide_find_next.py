@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import mcp_guide, ui_index
+from aj_crew import mcp_guide, ui_index
 
 
 @pytest.mark.parametrize(

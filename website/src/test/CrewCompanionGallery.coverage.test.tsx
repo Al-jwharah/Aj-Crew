@@ -123,7 +123,7 @@ const SVG = '<svg xmlns="http://www.w3.org/2000/svg"><rect width="4" height="4"/
 const builtin: PackMeta = {
   id: BUILTIN_ID,
   name: 'Kiro',
-  author: 'Kiro Crew',
+  author: 'Aj Crew',
   description: 'the bundled ghost',
   type: 'built-in',
   format: 'svg',
@@ -257,7 +257,7 @@ describe('gallery grid', () => {
   it('renders one card per pack with its name and author', async () => {
     await mount()
     expect(screen.getByText('Kiro')).toBeInTheDocument()
-    expect(screen.getByText('Kiro Crew')).toBeInTheDocument()
+    expect(screen.getByText('Aj Crew')).toBeInTheDocument()
     expect(screen.getByText('Boba')).toBeInTheDocument()
     expect(screen.getByText('community')).toBeInTheDocument()
   })

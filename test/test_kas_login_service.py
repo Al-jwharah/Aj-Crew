@@ -13,9 +13,9 @@ from datetime import datetime, timedelta, timezone
 import aiohttp
 import pytest
 
-from kiro_crew.auth.login import device
-from kiro_crew.auth.login.device import DeviceAuthorization
-from kiro_crew.auth.service import (
+from aj_crew.auth.login import device
+from aj_crew.auth.login.device import DeviceAuthorization
+from aj_crew.auth.service import (
     MAX_POLL_TRANSPORT_FAILURES,
     KasLoginService,
     SignedOutDuringLoginError,
@@ -23,7 +23,7 @@ from kiro_crew.auth.service import (
     UnknownLoginError,
     _parse_provider,
 )
-from kiro_crew.auth.store import KasToken, SocialProvider, TokenStore
+from aj_crew.auth.store import KasToken, SocialProvider, TokenStore
 
 
 class _FakeResp:
@@ -537,7 +537,7 @@ async def test_poll_authorized_store_write_failure_is_error(tmp_path, monkeypatc
     login_id = (await _begin(service, monkeypatch, _device_auth()))["login_id"]
 
     def _boom(_token):
-        from kiro_crew.auth.store import TokenStoreError
+        from aj_crew.auth.store import TokenStoreError
 
         raise TokenStoreError("could not persist KAS token social")
 
@@ -699,8 +699,8 @@ async def test_begin_device_evicts_expired_pending(tmp_path, monkeypatch):
 # scripted fake session as the social tests.
 # ---------------------------------------------------------------------------
 
-from kiro_crew.auth.login import builder_id, control_plane  # noqa: E402
-from kiro_crew.auth.service import InvalidStartUrlError, MissingStartUrlError  # noqa: E402
+from aj_crew.auth.login import builder_id, control_plane  # noqa: E402
+from aj_crew.auth.service import InvalidStartUrlError, MissingStartUrlError  # noqa: E402
 
 
 def _oidc_auth(expires_in_secs: float = 300) -> builder_id.DeviceAuthorization:
@@ -1030,7 +1030,7 @@ async def test_begin_oidc_rejects_url_metacharacter_regions(tmp_path):
     redirect client registration and token exchange to an attacker host.
     """
     service, _ = _service(tmp_path)
-    from kiro_crew.auth.service import InvalidRegionError
+    from aj_crew.auth.service import InvalidRegionError
 
     for bad in (
         "evil.com/",

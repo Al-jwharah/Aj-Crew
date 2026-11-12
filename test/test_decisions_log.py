@@ -18,11 +18,11 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from aj_crew import platform_log_append
+from aj_crew.decisions import log as log_mod
+from aj_crew.decisions.log import append, build_row, log_path, session_digest
+from aj_crew.decisions.types import Answer
 from conftest import requires_symlinks
-from kiro_crew import platform_log_append
-from kiro_crew.decisions import log as log_mod
-from kiro_crew.decisions.log import append, build_row, log_path, session_digest
-from kiro_crew.decisions.types import Answer
 
 
 @pytest.fixture
@@ -372,7 +372,7 @@ class TestFileCeiling:
         import logging
 
         home.parent.mkdir(parents=True, exist_ok=True)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.decisions.log"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.decisions.log"):
             for _ in range(10):
                 append(_row())
         size = log_path().stat().st_size

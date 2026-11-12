@@ -1,11 +1,11 @@
 """Per-agent default model: storage, precedence, and normalization.
 
-Stored per Kiro Crew agent (``agents.<name>.model``), not on the spec files under
+Stored per Aj Crew agent (``agents.<name>.model``), not on the spec files under
 ``~/.kiro/agents``: several agents can bind one spec, and installs regenerate them.
 
 Precedence under test, highest first:
-  1. the Kiro Crew agent's own ``model``
-  2. the bound kiro agent's pinned ``model`` (not for the built-in "kirocrew")
+  1. the Aj Crew agent's own ``model``
+  2. the bound kiro agent's pinned ``model`` (not for the built-in "ajcrew")
   3. the global ``agent.model``
   4. the installed agent file / bundled defaults
 """
@@ -19,28 +19,28 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config.loader import (
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+from aj_crew.config.loader import (
+    AjCrewAgentConfig,
+    AjCrewConfig,
     normalize_agent_model,
     resolve_agent_bindings,
     resolve_effective_model,
 )
-from kiro_crew.memory_stores import provision_member_memory
-from kiro_crew.session import _session_model
+from aj_crew.memory_stores import provision_member_memory
+from aj_crew.session import _session_model
 
 
-def _load_from_dict(data: object) -> KiroCrewConfig:
-    """Write *data* to a temp config file and load via KiroCrewConfig.load()."""
+def _load_from_dict(data: object) -> AjCrewConfig:
+    """Write *data* to a temp config file and load via AjCrewConfig.load()."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(data, f)
         tmp = Path(f.name)
     try:
         with unittest.mock.patch(
-            "kiro_crew.config.loader.config_path",
+            "aj_crew.config.loader.config_path",
             return_value=tmp,
         ):
-            return KiroCrewConfig.load()
+            return AjCrewConfig.load()
     finally:
         tmp.unlink(missing_ok=True)
 
@@ -83,7 +83,7 @@ class TestNonStringModelInConfig:
     def test_non_string_model_loads_as_inherit(self, bad: object) -> None:
         cfg = _load_from_dict(
             {
-                "agents": {"oncall": {"kiro_agent": "kirocrew", "model": bad}},
+                "agents": {"oncall": {"kiro_agent": "ajcrew", "model": bad}},
                 "default_agent": "oncall",
             }
         )
@@ -93,7 +93,7 @@ class TestNonStringModelInConfig:
         """The end-to-end path load -> resolve raises no exception."""
         cfg = _load_from_dict(
             {
-                "agents": {"oncall": {"kiro_agent": "kirocrew", "model": 123}},
+                "agents": {"oncall": {"kiro_agent": "ajcrew", "model": 123}},
                 "default_agent": "oncall",
             }
         )
@@ -119,8 +119,8 @@ class TestApiDoesNotStringifyModels:
         """
         import inspect
 
-        from kiro_crew.dashboard import agent_admin
-        from kiro_crew.dashboard.handlers import agents as agents_mod
+        from aj_crew.dashboard import agent_admin
+        from aj_crew.dashboard.handlers import agents as agents_mod
 
         owners = sorted(Path(agent_admin.__file__).parent.glob("[!_]*.py"))
         return "\n".join(
@@ -156,7 +156,7 @@ class TestPerAgentModelStorage:
     def test_model_loads_from_config(self, stored: str | None, want: str) -> None:
         cfg = _load_from_dict(
             {
-                "agents": {"oncall": {"kiro_agent": "kirocrew", "model": stored}},
+                "agents": {"oncall": {"kiro_agent": "ajcrew", "model": stored}},
                 "default_agent": "oncall",
             }
         )
@@ -165,14 +165,14 @@ class TestPerAgentModelStorage:
     def test_model_defaults_to_inherit_when_absent(self) -> None:
         """An agent written before this field exists must inherit, not break."""
         cfg = _load_from_dict(
-            {"agents": {"oncall": {"kiro_agent": "kirocrew"}}, "default_agent": "oncall"}
+            {"agents": {"oncall": {"kiro_agent": "ajcrew"}}, "default_agent": "oncall"}
         )
         assert cfg.agents["oncall"].model == ""
 
     def test_model_survives_save_round_trip(self) -> None:
         cfg = _load_from_dict(
             {
-                "agents": {"oncall": {"kiro_agent": "kirocrew", "model": "claude-opus-5"}},
+                "agents": {"oncall": {"kiro_agent": "ajcrew", "model": "claude-opus-5"}},
                 "default_agent": "oncall",
             }
         )
@@ -191,7 +191,7 @@ class TestPerAgentModelStorage:
     def test_bindings_carry_the_agent_model(self, stored: str, want: str) -> None:
         cfg = _load_from_dict(
             {
-                "agents": {"oncall": {"kiro_agent": "kirocrew", "model": stored}},
+                "agents": {"oncall": {"kiro_agent": "ajcrew", "model": stored}},
                 "default_agent": "oncall",
             }
         )
@@ -203,8 +203,8 @@ class TestPerAgentModelStorage:
         cfg = _load_from_dict(
             {
                 "agents": {
-                    "a": {"kiro_agent": "kirocrew", "model": "claude-opus-5"},
-                    "b": {"kiro_agent": "kirocrew", "model": "claude-sonnet-4.6"},
+                    "a": {"kiro_agent": "ajcrew", "model": "claude-opus-5"},
+                    "b": {"kiro_agent": "ajcrew", "model": "claude-sonnet-4.6"},
                 },
                 "default_agent": "a",
             }
@@ -225,14 +225,14 @@ def specs_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         encoding="utf-8",
     )
     (d / "unpinned.json").write_text(json.dumps({"name": "unpinned"}), encoding="utf-8")
-    monkeypatch.setattr("kiro_crew.config.loader.kiro_agents_dir", lambda: d)
+    monkeypatch.setattr("aj_crew.config.loader.kiro_agents_dir", lambda: d)
     return d
 
 
-def _cfg(agents: dict, global_model: str) -> KiroCrewConfig:
+def _cfg(agents: dict, global_model: str) -> AjCrewConfig:
     cfg = _load_from_dict({"agents": {"seed": {}}, "default_agent": "seed"})
     cfg.agent.model = global_model
-    cfg.agents = {n: KiroCrewAgentConfig(**a) for n, a in agents.items()}
+    cfg.agents = {n: AjCrewAgentConfig(**a) for n, a in agents.items()}
     cfg.default_agent = next(iter(agents))
     return cfg
 
@@ -244,7 +244,7 @@ class TestEffectiveModelPrecedence:
         ("kiro_agent", "model", "global_model", "want"),
         [
             pytest.param(
-                "kirocrew",
+                "ajcrew",
                 "claude-opus-5",
                 "claude-haiku-4.5",
                 "claude-opus-5",
@@ -265,14 +265,14 @@ class TestEffectiveModelPrecedence:
                 id="test_template_pin_applies_when_the_agent_defers",
             ),
             pytest.param(
-                "kirocrew",
+                "ajcrew",
                 "",
                 "claude-haiku-4.5",
                 "claude-haiku-4.5",
                 id="test_global_is_the_fallback_when_nothing_pins",
             ),
             # The global default is a real fallback: it applies to a named
-            # template that pins nothing, not only to kirocrew templates.
+            # template that pins nothing, not only to ajcrew templates.
             pytest.param(
                 "unpinned",
                 "",
@@ -291,7 +291,7 @@ class TestEffectiveModelPrecedence:
     def test_auto_global_is_never_returned_verbatim(self, specs_dir: Path) -> None:
         """ "auto" is the inherit spelling; returning it would pin the chip to a
         value no tier actually chose."""
-        cfg = _cfg({"crew": {"kiro_agent": "kirocrew", "model": ""}}, "auto")
+        cfg = _cfg({"crew": {"kiro_agent": "ajcrew", "model": ""}}, "auto")
         assert resolve_effective_model(cfg, "crew") != "auto"
 
     @pytest.mark.parametrize(
@@ -310,7 +310,7 @@ class TestEffectiveModelPrecedence:
     def test_a_session_that_names_no_crewmate_runs_the_global(
         self, specs_dir: Path, agent: str | None
     ) -> None:
-        cfg = _cfg({"crew": {"kiro_agent": "kirocrew", "model": "claude-opus-5"}}, "")
+        cfg = _cfg({"crew": {"kiro_agent": "ajcrew", "model": "claude-opus-5"}}, "")
         assert resolve_effective_model(cfg, agent) != "claude-opus-5"
         cfg.agent.model = "claude-haiku-4.5"
         assert resolve_effective_model(cfg, agent) == "claude-haiku-4.5"
@@ -320,7 +320,7 @@ class TestSessionModelCoversEverySurface:
     """The crew tier must apply to Slack / cron / spawn, not just dashboard chat.
 
     They reach ``SessionManager.get_or_create`` directly, whose ``_session_model`` gets a
-    kiro template name from the dashboard and a Kiro Crew agent name from Slack and
+    kiro template name from the dashboard and an Aj Crew agent name from Slack and
     cron, so both namespaces must work.
     """
 
@@ -328,7 +328,7 @@ class TestSessionModelCoversEverySurface:
         ("kiro_agent", "model", "global_model", "name", "want"),
         [
             pytest.param(
-                "kirocrew",
+                "ajcrew",
                 "claude-opus-5",
                 "claude-haiku-4.5",
                 "oncall",
@@ -364,7 +364,7 @@ class TestSessionModelCoversEverySurface:
             # Callers passing a kiro template name (the dashboard) get that
             # template's pin, the answer the model chip shows.
             pytest.param(
-                "kirocrew",
+                "ajcrew",
                 "claude-opus-5",
                 "",
                 "pinned",
@@ -372,7 +372,7 @@ class TestSessionModelCoversEverySurface:
                 id="test_template_name_resolves_its_own_pin",
             ),
             pytest.param(
-                "kirocrew",
+                "ajcrew",
                 "claude-opus-5",
                 "claude-haiku-4.5",
                 "no-such-thing",
@@ -399,13 +399,13 @@ class TestSessionModelCoversEverySurface:
             ("unpinned", "global-model", "global-model"),
             ("unpinned", "auto", None),
             ("pinned", "global-model", "claude-sonnet-4.6"),
-            ("kirocrew", "global-model", "global-model"),
+            ("ajcrew", "global-model", "global-model"),
         ],
     )
     def test_explicit_template_excludes_same_named_member_model(
         self, specs_dir: Path, template: str, global_model: str, expected: str | None
     ) -> None:
-        cfg = _cfg({template: {"kiro_agent": "kirocrew", "model": "member-model"}}, global_model)
+        cfg = _cfg({template: {"kiro_agent": "ajcrew", "model": "member-model"}}, global_model)
         assert _session_model(cfg, template, crew_agent="") == expected
         assert _session_model(cfg, template) == "member-model"
 

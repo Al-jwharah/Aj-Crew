@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.cron import (
+from aj_crew.cron import (
     _AUTO_PAUSE_THRESHOLD,
     CronJob,
     CronPauseNotSaved,
@@ -22,9 +22,9 @@ from kiro_crew.cron import (
     CronStoreBusy,
     _RunClaim,
 )
-from kiro_crew.cron_service import execution
-from kiro_crew.cron_service import settlement as settlement_rules
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+from aj_crew.cron_service import execution
+from aj_crew.cron_service import settlement as settlement_rules
+from aj_crew.testing.wait import async_wait_until, await_until, finished
 
 _OCCURRENCE_AT = 1_767_333_600.0
 _ADMITTED = SimpleNamespace(admitted=True, reason="")
@@ -91,7 +91,7 @@ async def test_cancel_save_failure_cannot_readmit_occurrence_after_reload(tmp_pa
 
     service._merge_terminal_state_locked = fail_terminal_write  # type: ignore[method-assign]
     try:
-        with patch("kiro_crew.cron.admission_check", return_value=_ADMITTED):
+        with patch("aj_crew.cron.admission_check", return_value=_ADMITTED):
             await service._on_timer()
             await await_until(started, what="the scheduled cron run to start")
             cancel = asyncio.create_task(service.cancel(job.id))
@@ -453,9 +453,9 @@ async def test_terminal_paths_retry_only_scheduled_failures(
     service._merge_terminal_state_with_retry = AsyncMock(return_value=None)  # type: ignore[method-assign]
 
     with (
-        patch("kiro_crew.cron.cron_script.kill_running_process", return_value=False),
-        patch("kiro_crew.cron.sel.sel"),
-        patch("kiro_crew.sel.sel"),
+        patch("aj_crew.cron.cron_script.kill_running_process", return_value=False),
+        patch("aj_crew.cron.sel.sel"),
+        patch("aj_crew.sel.sel"),
     ):
         if terminal == "cancel":
             assert await service.cancel(job.id) is True
@@ -608,8 +608,8 @@ async def test_a_newer_held_run_is_not_reported_as_the_cancel_s_settlement(
 
     service._merge_terminal_state_locked = newer_run_held_in_the_gap  # type: ignore[method-assign]
     with (
-        patch("kiro_crew.cron.cron_script.kill_running_process", return_value=False),
-        patch("kiro_crew.cron.sel.sel"),
+        patch("aj_crew.cron.cron_script.kill_running_process", return_value=False),
+        patch("aj_crew.cron.sel.sel"),
     ):
         assert await service.cancel(job.id) is True
 
@@ -645,7 +645,7 @@ async def test_a_resume_saved_during_a_manual_run_survives_its_terminal_write(
 
     def resumed_before_the_merge(*args: object, **kwargs: object) -> str | None:
         records.append(kwargs["terminal_record"])
-        assert CronService(base_dir=tmp_path).enable_job(job.id)  # e.g. `kirocrew cron resume`
+        assert CronService(base_dir=tmp_path).enable_job(job.id)  # e.g. `ajcrew cron resume`
         return real_merge(*args, **kwargs)
 
     service._merge_terminal_state_locked = resumed_before_the_merge  # type: ignore[method-assign]
@@ -682,7 +682,7 @@ async def _end_a_manual_run(
     )
     service._claims[job.id] = claim
     service._history.append = AsyncMock()  # type: ignore[method-assign]
-    with patch("kiro_crew.cron.cron_script.kill_running_process", return_value=False):
+    with patch("aj_crew.cron.cron_script.kill_running_process", return_value=False):
         if terminal == "cancel":
             assert await service.cancel(job.id) is True
         else:
@@ -730,7 +730,7 @@ async def test_a_manual_run_keeps_a_resume_of_its_auto_paused_one_shot(
         return real_merge(*args, **kwargs)
 
     service._merge_terminal_state_locked = resumed_before_the_merge  # type: ignore[method-assign]
-    with patch("kiro_crew.sel.sel"):
+    with patch("aj_crew.sel.sel"):
         await _end_a_manual_run(service, job, terminal)
 
     assert records == [None]
@@ -759,7 +759,7 @@ async def test_a_manual_failure_at_the_limit_audits_one_auto_pause(
     job.consecutive_failures = _AUTO_PAUSE_THRESHOLD - 1
     service._save()
     job.auto_paused_at_start = False  # stamped when the manual run started
-    with patch("kiro_crew.sel.sel") as sel:
+    with patch("aj_crew.sel.sel") as sel:
         if entry == "reap":
             await _end_a_manual_run(service, job, "reap")
         else:
@@ -818,7 +818,7 @@ async def test_a_scheduled_reap_keeps_a_limit_saved_during_the_run(
     this failure does not reach, and the reap paused the job anyway. The stored limit
     wins, as on main."""
     service, job = _failing_job_with_stored_limit(tmp_path, _AUTO_PAUSE_THRESHOLD - 1, stored_limit)
-    with patch("kiro_crew.sel.sel") as sel:
+    with patch("aj_crew.sel.sel") as sel:
         await _end_a_manual_run(service, job, "reap", trigger="scheduled")
 
     persisted = _stored(tmp_path)
@@ -850,7 +850,7 @@ async def test_a_scheduled_reap_at_the_stored_limit_audits_one_auto_pause(
     first save leaves it held, and none again when a later save writes it a second
     time."""
     service, job = _failing_job_with_stored_limit(tmp_path, failures, stored_limit)
-    with patch("kiro_crew.sel.sel") as sel:
+    with patch("aj_crew.sel.sel") as sel:
         if first_save == "fails":
             with patch.object(service, "_save", side_effect=OSError("terminal write failed")):
                 await _end_a_manual_run(service, job, "reap", trigger="scheduled")
@@ -887,7 +887,7 @@ async def test_a_held_reap_at_the_stored_limit_pauses_a_job_whose_schedule_chang
     job still enabled, so it ran once more unattended. The schedule edit drops only the
     old schedule's park; the stored limit still pauses the job, audited once."""
     service, job = _failing_job_with_stored_limit(tmp_path, _AUTO_PAUSE_THRESHOLD - 1, None)
-    with patch("kiro_crew.sel.sel") as sel:
+    with patch("aj_crew.sel.sel") as sel:
         with patch.object(service, "_save", side_effect=OSError("terminal write failed")):
             await _end_a_manual_run(service, job, "reap", trigger="scheduled")
         assert set(service._held_run_records) == {job.id}
@@ -961,7 +961,7 @@ async def test_a_reloaded_copy_does_not_audit_a_failed_one_shot_s_pause_twice(
 def test_only_a_scheduled_settlement_yields_to_a_resume_after_the_freeze(
     tmp_path: Path, scheduled: bool, answer: str | None, on_disk: tuple[bool, bool]
 ) -> None:
-    from kiro_crew import cron as seams
+    from aj_crew import cron as seams
 
     service, job = _one_shot_service(tmp_path)
     frozen = settlement_rules.freeze_terminal_record(
@@ -1151,8 +1151,8 @@ async def test_a_pause_or_resume_after_the_freeze_is_what_the_cancel_reports(
 
     service._merge_terminal_state_locked = choice_in_the_gap  # type: ignore[method-assign]
     with (
-        patch("kiro_crew.cron.cron_script.kill_running_process", return_value=False),
-        patch("kiro_crew.cron.sel.sel"),
+        patch("aj_crew.cron.cron_script.kill_running_process", return_value=False),
+        patch("aj_crew.cron.sel.sel"),
     ):
         if resume:
             with pytest.raises(CronPauseNotSaved, match="resumed meanwhile") as raised:
@@ -1204,11 +1204,11 @@ async def test_a_manual_cancel_or_reap_freezes_no_terminal_record(
     try:
         with (
             patch(
-                "kiro_crew.cron_service.service.run_merge.freeze_terminal_record",
+                "aj_crew.cron_service.service.run_merge.freeze_terminal_record",
                 recording_freeze,
             ),
             patch.object(CronJob, "_audit_pause_change", autospec=True),
-            patch("kiro_crew.cron.cron_script.kill_running_process", return_value=False),
+            patch("aj_crew.cron.cron_script.kill_running_process", return_value=False),
         ):
             if kind == "recurring":
                 job = await service.add_job_async("manual", "msg", every_secs=3600)

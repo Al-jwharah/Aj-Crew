@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.apps.bridges — resource registration bridges."""
+"""Tests for aj_crew.apps.bridges — resource registration bridges."""
 
 from __future__ import annotations
 
@@ -13,8 +13,8 @@ from app_bridges_helpers import _stub_venv_probe  # noqa: F401
 from app_bridges_helpers import app_env_fixture  # noqa: F401
 from app_bridges_helpers import _make_app_source
 
-from kiro_crew import platform_compat
-from kiro_crew.apps.bridges import (
+from aj_crew import platform_compat
+from aj_crew.apps.bridges import (
     RegistrationResult,
     _deregister_agents,
     _deregister_skills,
@@ -29,8 +29,8 @@ from kiro_crew.apps.bridges import (
     refresh_app_agents,
     register_app,
 )
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
-from kiro_crew.apps.manifest import AppManifest
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
+from aj_crew.apps.manifest import AppManifest
 
 # Namespace helpers
 
@@ -79,7 +79,7 @@ class TestAgentRegistration:
     ):
         """From a data home that does not own the shared agents dir, the app's
         agent is not written there: the owner's specs are left in place."""
-        from kiro_crew import agent as agent_mod
+        from aj_crew import agent as agent_mod
 
         src = _make_app_source(tmp_path)
         install_app(src)
@@ -122,7 +122,7 @@ class TestAgentRegistration:
         kiro-cli drops the reference silently at mount time, so this warning is the only
         signal. Warning only: a dangling ref is degradation, and the agent still registers.
         """
-        from kiro_crew.apps import bridges as bridges_mod
+        from aj_crew.apps import bridges as bridges_mod
 
         # Deterministic ambient: the check falls back to the user's global
         # mcp.json, and the developer's real one must not decide this test.
@@ -137,7 +137,7 @@ class TestAgentRegistration:
         )
         app_root = app_env["home"] / "apps" / "test-app"
 
-        with caplog.at_level("WARNING", logger="kiro_crew.apps.bridges"):
+        with caplog.at_level("WARNING", logger="aj_crew.apps.bridges"):
             registered = _register_agents("test-app", manifest, app_root)
 
         assert "test-app/my-agent" in registered  # still registers
@@ -146,7 +146,7 @@ class TestAgentRegistration:
         assert "@ghost/summon" in warning
         assert "my-agent" in warning
 
-    @pytest.mark.parametrize("managed_ref", ["@kirocrew-core", "@kirocrew-core/memory_recall"])
+    @pytest.mark.parametrize("managed_ref", ["@ajcrew-core", "@ajcrew-core/memory_recall"])
     def test_resolvable_at_grants_log_no_dangling_warning(
         self, tmp_path, app_env, monkeypatch, caplog, managed_ref
     ):
@@ -156,7 +156,7 @@ class TestAgentRegistration:
         server (``_own_mcp_servers``) and a global-``mcp.json`` server all resolve at mount
         time; warning on them would train operators to ignore the line that matters.
         """
-        from kiro_crew.apps import bridges as bridges_mod
+        from aj_crew.apps import bridges as bridges_mod
 
         monkeypatch.setattr(bridges_mod, "_global_mcp_specs", lambda: {"ambient-srv": {}})
         src = _make_app_source(tmp_path, mcpServers={"srv": {"command": "echo", "args": []}})
@@ -184,7 +184,7 @@ class TestAgentRegistration:
         # _own_mcp_servers reads it back from the registered config.
         _register_mcp_servers("test-app", manifest, live_port=None)
 
-        with caplog.at_level("WARNING", logger="kiro_crew.apps.bridges"):
+        with caplog.at_level("WARNING", logger="aj_crew.apps.bridges"):
             _register_agents("test-app", manifest, app_root)
 
         assert "silently never mount" not in caplog.text
@@ -199,7 +199,7 @@ class TestAgentRegistration:
         satisfy is dropped — treating the ambient entry as resolvable would
         suppress the warning for exactly the specs that set this flag.
         """
-        from kiro_crew.apps import bridges as bridges_mod
+        from aj_crew.apps import bridges as bridges_mod
 
         monkeypatch.setattr(bridges_mod, "_global_mcp_specs", lambda: {"ambient-srv": {}})
         src = _make_app_source(tmp_path)
@@ -219,7 +219,7 @@ class TestAgentRegistration:
         )
         app_root = app_env["home"] / "apps" / "test-app"
 
-        with caplog.at_level("WARNING", logger="kiro_crew.apps.bridges"):
+        with caplog.at_level("WARNING", logger="aj_crew.apps.bridges"):
             _register_agents("test-app", manifest, app_root)
 
         assert "silently never mount" in caplog.text
@@ -231,7 +231,7 @@ class TestAgentRegistration:
         Unlinking first and then failing a disk-full write makes the agent DISAPPEAR, so the
         file is left for atomic_write's rename to swap.
         """
-        from kiro_crew.apps import bridges as bridges_mod
+        from aj_crew.apps import bridges as bridges_mod
 
         src = _make_app_source(tmp_path)
         install_app(src)
@@ -278,7 +278,7 @@ class TestAgentRegistration:
         assert not link.exists(), "a spec that was never understood must not be materialized"
 
     def test_a_legacy_symlink_is_still_replaced(self, tmp_path, app_env):
-        """A symlink from an older Kiro Crew is dropped and replaced with a real file."""
+        """A symlink from an older Aj Crew is dropped and replaced with a real file."""
         src = _make_app_source(tmp_path)
         install_app(src)
         manifest = AppManifest.from_json_file(
@@ -302,8 +302,8 @@ class TestAgentRegistration:
         """The app mcp.json is read by kiro-cli, so a governed `autoApprove` here
         would auto-approve locally and bypass the gate. It must be stripped before
         the write, exactly like the agent-config writers do."""
-        from kiro_crew.apps import bridges as bridges_mod
-        from kiro_crew.platform import governance as gov
+        from aj_crew.apps import bridges as bridges_mod
+        from aj_crew.platform import governance as gov
 
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: False)  # governed
         src = _make_app_source(
@@ -329,7 +329,7 @@ class TestAgentRegistration:
         silently loses capability it declared. A value that is not a mapping is
         carried through to the writer, which skips what it cannot read.
         """
-        from kiro_crew.apps import bridges as bridges_mod
+        from aj_crew.apps import bridges as bridges_mod
 
         src = _make_app_source(
             tmp_path, agents=["agents/bad-agent.json", "agents/my-agent.json"]
@@ -358,13 +358,13 @@ class TestAgentRegistration:
         tools from the approval gate, so it is stripped whatever ``mcp.honour_auto_approve``
         says; that key defaults ON.
         """
-        from kiro_crew.apps import bridges as bridges_mod
-        from kiro_crew.config import live
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.platform import governance as gov
+        from aj_crew.apps import bridges as bridges_mod
+        from aj_crew.config import live
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.platform import governance as gov
 
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: True)  # ungoverned
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.mcp.honour_auto_approve = True
         monkeypatch.setattr(live, "snapshot", lambda: cfg)
         src = _make_app_source(
@@ -654,7 +654,7 @@ class TestTopLevel:
         # gate register_app does -- scrub any stale agent spec and register nothing
         # -- or a revoked app's agent (and its merged MCP servers) becomes
         # dispatchable again.
-        import kiro_crew.apps.execution as execution_mod
+        import aj_crew.apps.execution as execution_mod
 
         src = _make_app_source(tmp_path)
         install_app(src)
@@ -671,26 +671,26 @@ class TestTopLevel:
     def test_a_gate_closed_managed_ref_is_neither_copied_nor_reported(
         self, tmp_path, app_env, monkeypatch, caplog
     ):
-        # Computer use off: the app agent's spec must not carry kirocrew-computer
+        # Computer use off: the app agent's spec must not carry ajcrew-computer
         # (its backend would stall KAS readiness), and the ref it leaves dangling on
         # purpose is not a "will never mount" finding on every registration.
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
-        computer = agent_mod._MANAGED_MCP_SERVERS["kirocrew-computer"]
+        computer = agent_mod._MANAGED_MCP_SERVERS["ajcrew-computer"]
         monkeypatch.setitem(computer, "spec_gate", lambda: False)
         src = _make_app_source(tmp_path)
         (src / "agents" / "my-agent.json").write_text(
-            json.dumps({"name": "my-agent", "tools": ["@kirocrew-computer", "@kirocrew-core"]})
+            json.dumps({"name": "my-agent", "tools": ["@ajcrew-computer", "@ajcrew-core"]})
         )
         install_app(src)
 
-        with caplog.at_level("WARNING", logger="kiro_crew.apps.bridges"):
+        with caplog.at_level("WARNING", logger="aj_crew.apps.bridges"):
             assert refresh_app_agents("test-app")
 
         (spec_path,) = app_env["kiro_agents"].glob("*.json")
         servers = json.loads(spec_path.read_text(encoding="utf-8"))["mcpServers"]
-        assert "kirocrew-computer" not in servers
-        assert "kirocrew-core" in servers
+        assert "ajcrew-computer" not in servers
+        assert "ajcrew-core" in servers
         assert "never mount" not in caplog.text
 
     @pytest.mark.parametrize(
@@ -704,7 +704,7 @@ class TestTopLevel:
         # A CLI disable (another process) can land while a computer-use enable flip
         # rewrites app agents; the rewrite must not leave that app's agents
         # dispatchable; an unreadable state writes nothing before and deletes nothing after.
-        import kiro_crew.apps.bridges_register as register_mod
+        import aj_crew.apps.bridges_register as register_mod
 
         install_app(_make_app_source(tmp_path))
         states = iter([before, after])
@@ -715,7 +715,7 @@ class TestTopLevel:
         assert bool(list(app_env["kiro_agents"].glob("*.json"))) is materialized
 
     def test_install_while_execution_denied_registers_nothing(self, tmp_path, app_env, monkeypatch):
-        import kiro_crew.apps.execution as execution_mod
+        import aj_crew.apps.execution as execution_mod
 
         src = _make_app_source(
             tmp_path,
@@ -750,7 +750,7 @@ class TestTopLevel:
         register_app must skip all bridge work: a namespaced <app>--<agent>.json with empty
         mcpServers beside the app's real agent file makes kiro-cli load the empty one.
         """
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -764,7 +764,7 @@ class TestTopLevel:
         install_app(src)
 
         # Mark as self-managed (like Mochi does via registerExternal)
-        from kiro_crew.apps.manager import register_external_app
+        from aj_crew.apps.manager import register_external_app
 
         register_external_app("test-app", "1.0.0", "Test App", resources="app")
 
@@ -847,7 +847,7 @@ class TestStdioInterpreterResolution:
         ``setup(app_root)`` runs AFTER install (install_app removes a
         pre-existing dest dir, so a venv must be created post-install).
         """
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -995,9 +995,9 @@ class TestStdioInterpreterResolution:
     def test_a_gateway_module_server_is_pinned_to_the_gateway_interpreter(
         self, tmp_path, app_env, monkeypatch
     ):
-        # A stdio server that runs Kiro Crew's OWN code (`-m kiro_crew...`) must
+        # A stdio server that runs Aj Crew's OWN code (`-m aj_crew...`) must
         # run under the gateway's interpreter even when the app has a venv: app
-        # venvs are created without --system-site-packages, so kiro_crew is not
+        # venvs are created without --system-site-packages, so aj_crew is not
         # importable there and the venv interpreter dies on import — silently,
         # since the rewritten venv path exists and no warning fires.
         import sys
@@ -1006,7 +1006,7 @@ class TestStdioInterpreterResolution:
             tmp_path,
             app_env,
             monkeypatch,
-            {"command": "python3", "args": ["-s", "-m", "kiro_crew.apps.builtins.x.server"]},
+            {"command": "python3", "args": ["-s", "-m", "aj_crew.apps.builtins.x.server"]},
             setup=_fake_venv_python,
         )
         assert entry["command"] == sys.executable
@@ -1026,12 +1026,12 @@ class TestStdioInterpreterResolution:
             monkeypatch,
             {
                 "command": "python3",
-                "args": ["-m", "kiro_crew.apps.builtins.x.server"],
+                "args": ["-m", "aj_crew.apps.builtins.x.server"],
                 "env": {"PYTHONPATH": "/manifest/own"},
             },
         )
         assert entry["command"] == sys.executable
-        assert entry["args"] == ["-m", "kiro_crew.apps.builtins.x.server"]
+        assert entry["args"] == ["-m", "aj_crew.apps.builtins.x.server"]
         assert entry["env"]["PYTHONPATH"] == "/manifest/own"
 
     def test_a_windows_exe_spelling_of_python_gets_the_interpreter_policy(
@@ -1081,14 +1081,14 @@ class TestStdioInterpreterResolution:
     def test_a_script_argument_named_dash_m_does_not_trigger_the_gateway_pin(
         self, tmp_path, app_env, monkeypatch
     ):
-        # `python3 server.py -m kiro_crew.mode`: the -m belongs to the SCRIPT
+        # `python3 server.py -m aj_crew.mode`: the -m belongs to the SCRIPT
         # (CPython stops parsing its own options at the first operand), so the
         # entry must resolve venv-first — pinning it to sys.executable would
         # strand a venv-dependent server without its dependencies.
         created: list[Path] = []
         entry = self._register_stdio(
             tmp_path, app_env, monkeypatch,
-            {"command": "python3", "args": ["server.py", "-m", "kiro_crew.mode"]},
+            {"command": "python3", "args": ["server.py", "-m", "aj_crew.mode"]},
             setup=lambda root: created.append(_fake_venv_python(root)),
         )
         assert entry["command"] == str(created[0])
@@ -1100,7 +1100,7 @@ class TestStdioInterpreterResolution:
 
         entry = self._register_stdio(
             tmp_path, app_env, monkeypatch,
-            {"command": "python3", "args": ["-s", "-u", "-m", "kiro_crew.apps.x"]},
+            {"command": "python3", "args": ["-s", "-u", "-m", "aj_crew.apps.x"]},
             setup=_fake_venv_python,
         )
         assert entry["command"] == sys.executable
@@ -1115,7 +1115,7 @@ class TestStdioInterpreterResolution:
             tmp_path,
             app_env,
             monkeypatch,
-            {"command": "python3", "args": ["-X", "dev", "-W", "ignore", "-m", "kiro_crew.apps.x"]},
+            {"command": "python3", "args": ["-X", "dev", "-W", "ignore", "-m", "aj_crew.apps.x"]},
             setup=_fake_venv_python,
         )
         assert entry["command"] == sys.executable
@@ -1126,7 +1126,7 @@ class TestStdioInterpreterResolution:
 
         entry = self._register_stdio(
             tmp_path, app_env, monkeypatch,
-            {"command": "python3", "args": ["-mkiro_crew.apps.x"]},
+            {"command": "python3", "args": ["-maj_crew.apps.x"]},
             setup=_fake_venv_python,
         )
         assert entry["command"] == sys.executable
@@ -1141,7 +1141,7 @@ class TestStdioInterpreterResolution:
         entry = self._register_stdio(
             tmp_path, app_env, monkeypatch,
             {"command": "python3",
-             "args": ["-cimport server", "-m", "kiro_crew.x"]},
+             "args": ["-cimport server", "-m", "aj_crew.x"]},
             setup=lambda root: created.append(_fake_venv_python(root)),
         )
         assert entry["command"] == str(created[0])
@@ -1168,7 +1168,7 @@ class TestStdioInterpreterResolution:
     ):
         # `D:missing` carries no separator but names a location; it is never
         # rewritten AND it must not silently skip the unresolvable diagnostic.
-        with caplog.at_level("WARNING", logger="kiro_crew.apps.bridges"):
+        with caplog.at_level("WARNING", logger="aj_crew.apps.bridges"):
             entry = self._register_stdio(
                 tmp_path, app_env, monkeypatch, {"command": "D:missing", "args": []},
             )
@@ -1183,19 +1183,19 @@ class TestStdioInterpreterResolution:
         # This path supplies the package root through PYTHONPATH, so it keeps
         # its unconditional `-s` guard even when the host interpreter normally
         # allows user-site packages.
-        # `kirocrew` is pinned to `sys.executable -m kiro_crew` by
+        # `ajcrew` is pinned to `sys.executable -m aj_crew` by
         # _pin_host_cli_command BEFORE stdio resolution; the venv must not
         # override that (the host CLI is gateway code, not app code).
         entry = self._register_stdio(
             tmp_path, app_env, monkeypatch,
-            {"command": "kirocrew", "args": ["app", "mcp", "test-app"]},
+            {"command": "ajcrew", "args": ["app", "mcp", "test-app"]},
             setup=_fake_venv_python,
         )
         assert entry["command"] == sys.executable
-        assert entry["args"][:4] == ["-s", "-P", "-m", "kiro_crew"]
+        assert entry["args"][:4] == ["-s", "-P", "-m", "aj_crew"]
 
     def test_an_http_entry_is_unaffected(self, tmp_path, app_env, monkeypatch):
-        import kiro_crew.apps.backend as backend_mod
+        import aj_crew.apps.backend as backend_mod
 
         monkeypatch.setattr(backend_mod, "get_app_backend_port", lambda _n: 9000)
         entry = self._register_stdio(
@@ -1229,7 +1229,7 @@ class TestStdioInterpreterResolution:
         # shutil.which from this event-loop-reachable path can block on a
         # network-mounted PATH entry.
         missing = str(tmp_path / "definitely" / "not-a-real-binary-1807")
-        with caplog.at_level("WARNING", logger="kiro_crew.apps.bridges"):
+        with caplog.at_level("WARNING", logger="aj_crew.apps.bridges"):
             entry = self._register_stdio(
                 tmp_path, app_env, monkeypatch,
                 {"command": missing, "args": []},
@@ -1245,7 +1245,7 @@ class TestStdioInterpreterResolution:
     def test_a_bare_name_is_not_probed_and_logs_no_warning(
         self, tmp_path, app_env, monkeypatch, caplog
     ):
-        with caplog.at_level("WARNING", logger="kiro_crew.apps.bridges"):
+        with caplog.at_level("WARNING", logger="aj_crew.apps.bridges"):
             entry = self._register_stdio(
                 tmp_path, app_env, monkeypatch,
                 {"command": "definitely-not-a-real-binary-1807", "args": []},
@@ -1261,7 +1261,7 @@ class TestStdioInterpreterResolution:
         # every task until the stall watchdog kills the gateway. With a
         # running loop the probe must go to the maintenance pool; with none
         # (this test's own direct call) it runs inline.
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.bridges as bmod
 
         dispatched: list[tuple] = []
 
@@ -1292,7 +1292,7 @@ class TestStdioInterpreterResolution:
     def test_a_resolvable_command_logs_no_unresolvable_warning(
         self, tmp_path, app_env, monkeypatch, caplog
     ):
-        with caplog.at_level("WARNING", logger="kiro_crew.apps.bridges"):
+        with caplog.at_level("WARNING", logger="aj_crew.apps.bridges"):
             self._register_stdio(
                 tmp_path, app_env, monkeypatch, {"command": "python3", "args": []},
                 setup=_fake_venv_python,
@@ -1306,7 +1306,7 @@ class TestStdioInterpreterResolution:
         # gets the literal. The warning states that gap without prescribing a
         # route to vault access (that trust model is undecided), names the env
         # KEY only, never the secret name, and leaves the declared value as is.
-        with caplog.at_level("WARNING", logger="kiro_crew.apps.bridges"):
+        with caplog.at_level("WARNING", logger="aj_crew.apps.bridges"):
             entry = self._register_stdio(
                 tmp_path, app_env, monkeypatch,
                 {
@@ -1331,7 +1331,7 @@ class TestStdioInterpreterResolution:
     def test_a_plain_env_logs_no_secret_uri_warning(
         self, tmp_path, app_env, monkeypatch, caplog
     ):
-        with caplog.at_level("WARNING", logger="kiro_crew.apps.bridges"):
+        with caplog.at_level("WARNING", logger="aj_crew.apps.bridges"):
             self._register_stdio(
                 tmp_path, app_env, monkeypatch,
                 {"command": "python3", "args": [], "env": {"MODE": "secret:/not-a-ref"}},
@@ -1340,7 +1340,7 @@ class TestStdioInterpreterResolution:
         assert "secret:// reference" not in caplog.text
 
     def test_one_bad_server_does_not_block_its_siblings(self, tmp_path, app_env, monkeypatch):
-        import kiro_crew.apps.bridges as bmod
+        import aj_crew.apps.bridges as bmod
 
         mcp_path = tmp_path / "mcp.json"
         monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -1367,7 +1367,7 @@ class TestBackendSharesTheInterpreterPolicy:
     policy fork."""
 
     def test_venv_present_resolves_to_the_venv_interpreter(self, tmp_path):
-        from kiro_crew.apps.interpreter import resolve_app_python
+        from aj_crew.apps.interpreter import resolve_app_python
 
         venv_py = _fake_venv_python(tmp_path)
         assert resolve_app_python(tmp_path) == str(venv_py)
@@ -1375,14 +1375,14 @@ class TestBackendSharesTheInterpreterPolicy:
     def test_venv_absent_resolves_to_sys_executable(self, tmp_path):
         import sys
 
-        from kiro_crew.apps.interpreter import resolve_app_python
+        from aj_crew.apps.interpreter import resolve_app_python
 
         assert resolve_app_python(tmp_path) == sys.executable
 
     def test_no_app_context_resolves_to_sys_executable(self):
         import sys
 
-        from kiro_crew.apps.interpreter import resolve_app_python
+        from aj_crew.apps.interpreter import resolve_app_python
 
         assert resolve_app_python(None) == sys.executable
 
@@ -1398,7 +1398,7 @@ class TestBackendSharesTheInterpreterPolicy:
         # instead of being returned as a guaranteed-EACCES spawn target.
         import sys
 
-        from kiro_crew.apps.interpreter import resolve_app_python
+        from aj_crew.apps.interpreter import resolve_app_python
 
         def historical(root: Path) -> str:
             venv_python = str(root / ".venv" / "bin" / "python3")
@@ -1416,7 +1416,7 @@ class TestBackendSharesTheInterpreterPolicy:
         # helper. Grepping the source keeps this honest without spawning.
         import inspect
 
-        import kiro_crew.apps.backend as backend_mod
+        import aj_crew.apps.backend as backend_mod
 
         source = inspect.getsource(backend_mod)
         assert source.count("resolve_app_python(") >= 2, (
@@ -1439,8 +1439,8 @@ class TestAppEventBusIsActuallyWired:
     def test_dashboard_state_exposes_the_broadcast_method_the_gateway_passes(self):
         import inspect
 
-        from kiro_crew.dashboard import server as server_mod
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard import server as server_mod
+        from aj_crew.dashboard.state import DashboardState
 
         src = inspect.getsource(server_mod)
         # The app backend waves hand it over from a server_runtime owner.
@@ -1455,7 +1455,7 @@ class TestAppEventBusIsActuallyWired:
             )
 
     def test_context_has_no_event_bus_without_a_broadcast_fn(self, tmp_path):
-        from kiro_crew.apps.context import build_app_context
+        from aj_crew.apps.context import build_app_context
 
         ctx = build_app_context(
             "probe", tmp_path, permissions={"events": ["probe:thing"]}, broadcast_fn=None
@@ -1463,7 +1463,7 @@ class TestAppEventBusIsActuallyWired:
         assert ctx.events is None
 
     def test_context_gets_an_event_bus_when_a_broadcast_fn_is_supplied(self, tmp_path):
-        from kiro_crew.apps.context import build_app_context
+        from aj_crew.apps.context import build_app_context
 
         sent: list[dict] = []
         ctx = build_app_context(

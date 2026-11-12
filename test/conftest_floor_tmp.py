@@ -97,7 +97,7 @@ def _create_tmp_root(parent: pathlib.Path) -> pathlib.Path:
 
 
 #: Env var carrying this run's SHORT temp root, so xdist workers reuse the controller's.
-_SHORT_TMP_ROOT_ENV = "KIROCREW_TEST_SHORT_TMP_ROOT"
+_SHORT_TMP_ROOT_ENV = "AJCREW_TEST_SHORT_TMP_ROOT"
 
 
 #: Env vars ``tempfile`` consults, so a CHILD process inherits the redirect too.
@@ -111,8 +111,8 @@ _TMP_ENV_VARS = ("TMPDIR", "TEMP", "TMP")
 #: suite's fixture audit exists to avoid (paid ~26.5k times). It is the escape hatch
 #: for the one question the session-scoped ``_isolate_tempfile_base`` cannot answer: a single stray
 #: directory in a 26k-test run names no culprit. Re-run the suspect subset with
-#: ``KIROCREW_TMP_PER_TEST=1`` and the residue's parent directory IS the test id.
-_TMP_PER_TEST_ENV = "KIROCREW_TMP_PER_TEST"
+#: ``AJCREW_TMP_PER_TEST=1`` and the residue's parent directory IS the test id.
+_TMP_PER_TEST_ENV = "AJCREW_TMP_PER_TEST"
 
 #: Whether this run is in that mode, read ONCE at conftest import.
 #:
@@ -135,7 +135,7 @@ _TMP_PER_TEST = bool(os.environ.get(_TMP_PER_TEST_ENV))
 #: * ``pytest-of-`` -- a NESTED pytest's own ``basetemp`` tree. Several tests spawn one,
 #:   and it resolves ``gettempdir()`` after the redirect has taken effect, so it computes
 #:   its basetemp inside ours. A child runner's bookkeeping, with its own retention.
-#: * ``kirocrew-computer-shots`` -- the computer-use screenshot spool, which production
+#: * ``ajcrew-computer-shots`` -- the computer-use screenshot spool, which production
 #:   deliberately keeps under ``tempfile.gettempdir()`` as a persistent ring buffer
 #:   (pinned by ``test_computer_use_capture.py``). Long-lived BY DESIGN, so its presence
 #:   is the feature working, not a test leaking.
@@ -144,7 +144,7 @@ _TMP_PER_TEST = bool(os.environ.get(_TMP_PER_TEST_ENV))
 #:   suite does not own and cannot register cleanup for.
 _TMP_RESIDUE_ALLOWED_PREFIXES: tuple[str, ...] = (
     "pytest-of-",
-    "kirocrew-computer-shots",
+    "ajcrew-computer-shots",
     "playwright-",
     ".org.chromium.",
 )
@@ -156,7 +156,7 @@ _TMP_RESIDUE_ALLOWED_PREFIXES: tuple[str, ...] = (
 #: residue fails the shard it runs in. A local run warns by default, because a developer
 #: host has its own tools writing under the redirected ``TMPDIR`` that CI does not have;
 #: set it yourself to hold a local run to the CI rule.
-_TMP_RESIDUE_STRICT_ENV = "KIROCREW_TMP_RESIDUE_STRICT"
+_TMP_RESIDUE_STRICT_ENV = "AJCREW_TMP_RESIDUE_STRICT"
 
 
 def _redirect_tempfile_base(base: pathlib.Path) -> None:
@@ -192,7 +192,7 @@ def _remove_tree(path: pathlib.Path) -> bool:
     returns a filesystem-derived boolean rather than the hook's opinion.
     """
     try:
-        from kiro_crew import platform_compat as _pc
+        from aj_crew import platform_compat as _pc
     except ImportError:  # pragma: no cover - partial checkout
         shutil.rmtree(path, ignore_errors=True)
         return not path.exists()

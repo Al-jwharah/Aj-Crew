@@ -14,10 +14,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.acp import _dispatch
-from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, JsonRpcMessage
-from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE
-from kiro_crew.hooks import (
+from aj_crew.acp import _dispatch
+from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, JsonRpcMessage
+from aj_crew.acp_backends import ACP_BACKEND_CLAUDE
+from aj_crew.hooks import (
     TOOL_ALLOW,
     TOOL_AUTO_APPROVE,
     TOOL_DENY,

@@ -27,8 +27,8 @@ const closeSearch = vi.hoisted(() => vi.fn())
 vi.mock('../components/ChatDropOverlay', () => ({
   useChatFileDrop: () => ({ active: false, dropTargetProps: {} }),
 }))
-vi.mock('../components/WebPreviewPanel', () => ({ PREVIEW_SNIP_EVENT: 'kirocrew-web-preview-snip' }))
-vi.mock('../utils/browserAnnotations', () => ({ PREVIEW_ANNOTATE_EVENT: 'kirocrew-preview-annotate' }))
+vi.mock('../components/WebPreviewPanel', () => ({ PREVIEW_SNIP_EVENT: 'ajcrew-web-preview-snip' }))
+vi.mock('../utils/browserAnnotations', () => ({ PREVIEW_ANNOTATE_EVENT: 'ajcrew-preview-annotate' }))
 vi.mock('../hooks/useMessageSearch', () => ({
   useMessageSearch: () => ({ isOpen: false, close: closeSearch }),
 }))
@@ -130,7 +130,7 @@ describe('slotless capture entry points', () => {
     captureSeam.supported = true
     renderHook(() => useSlotlessController(), { wrapper })
 
-    await act(async () => { window.dispatchEvent(new Event('kirocrew-web-preview-snip')) })
+    await act(async () => { window.dispatchEvent(new Event('ajcrew-web-preview-snip')) })
 
     expect(captureSeam.captureScreen).not.toHaveBeenCalled()
     expect(captureSeam.screenshot).not.toHaveBeenCalled()
@@ -162,7 +162,7 @@ describe('capture entry points while a memory-mode switch locks the composer', (
     captureSeam.supported = true
     renderHook(() => useSlotlessController('slot-a', true), { wrapper })
 
-    await act(async () => { window.dispatchEvent(new Event('kirocrew-web-preview-snip')) })
+    await act(async () => { window.dispatchEvent(new Event('ajcrew-web-preview-snip')) })
 
     expect(captureSeam.captureScreen).not.toHaveBeenCalled()
     expect(captureSeam.hold).not.toHaveBeenCalled()
@@ -201,7 +201,7 @@ describe('a snip the embedded-pane trust gate refuses', () => {
   it('the Web Preview snip shows the same notice', async () => {
     renderHook(() => useSlotlessController('slot-a'), { wrapper })
 
-    await act(async () => { window.dispatchEvent(new Event('kirocrew-web-preview-snip')) })
+    await act(async () => { window.dispatchEvent(new Event('ajcrew-web-preview-snip')) })
 
     expect(captureSeam.showActionError).toHaveBeenCalledTimes(1)
     expect(captureSeam.release).toHaveBeenCalledWith('slot-a')

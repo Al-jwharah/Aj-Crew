@@ -28,8 +28,8 @@ from unittest.mock import patch
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew.skill_providers import github as gh
-from kiro_crew.skill_providers.base import SkillProvider, SkillProviderError
+from aj_crew.skill_providers import github as gh
+from aj_crew.skill_providers.base import SkillProvider, SkillProviderError
 
 # ---- fixtures / fakes ------------------------------------------------------
 
@@ -1507,7 +1507,7 @@ class TestInstallKey:
     def test_the_key_survives_the_handlers_slugify_unchanged(self):
         # If slugify altered or truncated it, the collision resistance would be
         # gone again -- so the key is built from characters slugify keeps verbatim.
-        from kiro_crew.dashboard.handlers.discover import _SAFE_SLUG_RE, _slugify
+        from aj_crew.dashboard.handlers.discover import _SAFE_SLUG_RE, _slugify
 
         for path in ("", "skills/reviewer", "a/b/c/deeply-nested", "UPPER/Mixed_Case.d"):
             key = self._key(path)
@@ -1534,7 +1534,7 @@ class TestInstallKey:
         # _SAFE_SLUG_RE refuses it -- a 400 on a skill that imports fine. Repos named
         # `.github` are common, and a root skill in one has an empty path, so the
         # label comes straight from the repo name.
-        from kiro_crew.dashboard.handlers.discover import _SAFE_SLUG_RE, _slugify
+        from aj_crew.dashboard.handlers.discover import _SAFE_SLUG_RE, _slugify
 
         key = gh.GitHubRepoProvider().install_slug(f"acme/{repo}@{_COMMIT}")
         assert key, repo
@@ -1543,7 +1543,7 @@ class TestInstallKey:
 
     def test_a_label_that_survives_nothing_falls_back_to_the_digest(self):
         # Digest-only is still a valid key: hex always starts with an alphanumeric.
-        from kiro_crew.dashboard.handlers.discover import _SAFE_SLUG_RE
+        from aj_crew.dashboard.handlers.discover import _SAFE_SLUG_RE
 
         key = gh.GitHubRepoProvider().install_slug(f"acme/...@{_COMMIT}")
         assert _SAFE_SLUG_RE.match(key)
@@ -1576,7 +1576,7 @@ class TestInstallSlugHook:
     """
 
     def test_a_provider_without_the_method_keeps_the_old_derivation(self):
-        from kiro_crew.dashboard.handlers.discover import _install_slug, _slugify
+        from aj_crew.dashboard.handlers.discover import _install_slug, _slugify
 
         class _NoHook:
             pass
@@ -1588,14 +1588,14 @@ class TestInstallSlugHook:
 
     def test_the_skillsh_provider_is_unaffected(self):
         # The regression that would matter most: the other built-in must not change.
-        from kiro_crew.dashboard.handlers.discover import _install_slug, _slugify
-        from kiro_crew.skill_providers.skillsh import SkillsShProvider
+        from aj_crew.dashboard.handlers.discover import _install_slug, _slugify
+        from aj_crew.skill_providers.skillsh import SkillsShProvider
 
         skill_id = "vercel/ai/react-perf"
         assert _install_slug(SkillsShProvider(), skill_id, skill_id) == _slugify(skill_id)
 
     def test_the_providers_key_is_used_when_it_supplies_one(self):
-        from kiro_crew.dashboard.handlers.discover import _install_slug
+        from aj_crew.dashboard.handlers.discover import _install_slug
 
         provider = gh.GitHubRepoProvider()
         skill_id = f"acme/widgets@{_COMMIT}:skills/reviewer"
@@ -1603,7 +1603,7 @@ class TestInstallSlugHook:
 
     @pytest.mark.parametrize("bad", [None, 7, b"bytes", [], ""])
     def test_a_useless_return_falls_back_instead_of_failing(self, bad):
-        from kiro_crew.dashboard.handlers.discover import _install_slug, _slugify
+        from aj_crew.dashboard.handlers.discover import _install_slug, _slugify
 
         class _Bad:
             def install_slug(self, skill_id):
@@ -1615,7 +1615,7 @@ class TestInstallSlugHook:
         # Reading the attribute EXECUTES the property, so this fails on getattr, not
         # on call -- a guard wrapped around the call alone never sees it, and the
         # whole discover response 500s.
-        from kiro_crew.dashboard.handlers.discover import _install_slug, _slugify
+        from aj_crew.dashboard.handlers.discover import _install_slug, _slugify
 
         class _RaisingDescriptor:
             @property
@@ -1625,7 +1625,7 @@ class TestInstallSlugHook:
         assert _install_slug(_RaisingDescriptor(), "a/b", "a/b") == _slugify("a/b")
 
     def test_a_non_callable_attribute_falls_back(self):
-        from kiro_crew.dashboard.handlers.discover import _install_slug, _slugify
+        from aj_crew.dashboard.handlers.discover import _install_slug, _slugify
 
         class _NotCallable:
             install_slug = "not a method"
@@ -1634,7 +1634,7 @@ class TestInstallSlugHook:
 
     def test_a_raising_hook_falls_back_instead_of_breaking_install(self):
         # Provider code must not be able to break installing.
-        from kiro_crew.dashboard.handlers.discover import _install_slug, _slugify
+        from aj_crew.dashboard.handlers.discover import _install_slug, _slugify
 
         class _Boom:
             def install_slug(self, skill_id):
@@ -1661,7 +1661,7 @@ class TestInstallSlugHook:
         # slugify strips every separator, and the call site then demands
         # _SAFE_SLUG_RE. So whatever comes back, the key is one safe segment or the
         # install is refused -- never a path.
-        from kiro_crew.dashboard.handlers.discover import _SAFE_SLUG_RE, _install_slug
+        from aj_crew.dashboard.handlers.discover import _SAFE_SLUG_RE, _install_slug
 
         slug = _install_slug(_Hostile(hostile), "a/b", "a/b")
         assert "/" not in slug and "\\" not in slug
@@ -1675,7 +1675,7 @@ class TestInstallSlugHook:
         # The concrete half of the test above: slugify leaves "..-..-etc-passwd",
         # which fails _SAFE_SLUG_RE because a slug must START with an alphanumeric.
         # That refusal is what the install handler turns into a 400.
-        from kiro_crew.dashboard.handlers.discover import _SAFE_SLUG_RE, _install_slug
+        from aj_crew.dashboard.handlers.discover import _SAFE_SLUG_RE, _install_slug
 
         slug = _install_slug(_Hostile("../../etc/passwd"), "a/b", "a/b")
         assert slug == "..-..-etc-passwd"
@@ -1688,7 +1688,7 @@ class TestInstallNamespace:
     shadow a shipped one."""
 
     def test_key_is_provider_prefixed_and_cannot_shadow_a_shipped_skill(self):
-        from kiro_crew.dashboard.handlers.discover import _SAFE_SLUG_RE, _slugify
+        from aj_crew.dashboard.handlers.discover import _SAFE_SLUG_RE, _slugify
 
         provider = gh.GitHubRepoProvider()
         skill_id = f"acme/widgets@{_COMMIT[:7]}:skills/reviewer"
@@ -1704,7 +1704,7 @@ class TestInstallNamespace:
         assert slug == "acme-widgets-0a1b2c3-skills-reviewer"
 
     def test_two_repos_with_the_same_skill_name_do_not_collide(self):
-        from kiro_crew.dashboard.handlers.discover import _slugify
+        from aj_crew.dashboard.handlers.discover import _slugify
 
         a = _slugify(f"acme/widgets@{_COMMIT[:7]}:skills/reviewer")
         b = _slugify(f"other/tools@{_COMMIT[:7]}:skills/reviewer")
@@ -1722,8 +1722,8 @@ class TestInstallNamespace:
 
         probe = (
             "import sys;"
-            "from kiro_crew.dashboard.handlers import discover;"
-            "print('github' if 'kiro_crew.skill_providers.github' in sys.modules else 'absent')"
+            "from aj_crew.dashboard.handlers import discover;"
+            "print('github' if 'aj_crew.skill_providers.github' in sys.modules else 'absent')"
         )
         out = subprocess.run(
             [sys.executable, "-c", probe],
@@ -1738,14 +1738,14 @@ class TestInstallNamespace:
         # ``_build_registry`` consults the policy with literals so it can decide
         # BEFORE importing. Pinned here: gating one identity while registering
         # another would make the policy allowlist meaningless.
-        from kiro_crew.dashboard.handlers.discover import _GITHUB_API_BASE, _GITHUB_NAME
+        from aj_crew.dashboard.handlers.discover import _GITHUB_API_BASE, _GITHUB_NAME
 
         provider = gh.GitHubRepoProvider()
         assert _GITHUB_NAME == provider.name
         assert _GITHUB_API_BASE == provider.api_base
 
     def test_registry_registers_the_provider_under_its_vetted_name(self):
-        from kiro_crew.dashboard.handlers import discover
+        from aj_crew.dashboard.handlers import discover
 
         registry = discover._build_registry()
         assert "github" in registry.provider_names

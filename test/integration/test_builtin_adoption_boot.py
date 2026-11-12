@@ -3,7 +3,7 @@
 The real gateway boots in-process on a home holding a builtin-owned record of a
 fixture app (``fixture-former``) shipped from a wheel root this test adds, with
 data, a secret, approved grants and ``enabled=true``. The pin table is the
-harness one (``KIROCREW_HARNESS_ADOPTION_PINS``, which ``integration_home``
+harness one (``AJCREW_HARNESS_ADOPTION_PINS``, which ``integration_home``
 points at ``tmp_path / "adoption-pins.json"``), and its one row names a
 harness-built archive of the repository copy. Every digest check runs: the
 archive against ``archiveSha256``, the copied tree against ``treeSha256``. No
@@ -36,12 +36,12 @@ from builtin_adoption_helpers import (
     write_tree,
 )
 
-from kiro_crew.apps import builtin_adoption
-from kiro_crew.apps import execution as exec_mod
-from kiro_crew.apps import manager
-from kiro_crew.apps.builtin_adoption_fetch import adoption_tree_digest
-from kiro_crew.apps.builtin_adoption_pins import load_adoption_pins
-from kiro_crew.apps.builtin_adoption_state import read_adoption_markers, read_ledger
+from aj_crew.apps import builtin_adoption
+from aj_crew.apps import execution as exec_mod
+from aj_crew.apps import manager
+from aj_crew.apps.builtin_adoption_fetch import adoption_tree_digest
+from aj_crew.apps.builtin_adoption_pins import load_adoption_pins
+from aj_crew.apps.builtin_adoption_state import read_adoption_markers, read_ledger
 
 pytestmark = [pytest.mark.integration, pytest.mark.timeout(300)]
 
@@ -103,7 +103,7 @@ def _ledger_state() -> str:
 
 async def _wait_staged() -> None:
     """Until the background STAGE pass has staged the pin."""
-    from kiro_crew.testing.wait import async_wait_until
+    from aj_crew.testing.wait import async_wait_until
 
     await async_wait_until(
         lambda: _ledger_state() == "staged",
@@ -125,7 +125,7 @@ async def _app_row(gw) -> dict:
 async def test_a_pinned_built_in_stages_then_adopts_and_keeps_its_lifecycle(
     gateway_boot, tmp_path, monkeypatch
 ):
-    from kiro_crew.apps.official_catalog import SKIP_FETCH_ENV
+    from aj_crew.apps.official_catalog import SKIP_FETCH_ENV
 
     # The store answers from the bundled seed, as for a harness subprocess gateway.
     monkeypatch.setenv(SKIP_FETCH_ENV, "1")
@@ -198,7 +198,7 @@ async def test_an_adopted_app_keeps_its_legacy_nav_after_the_pin_row_is_gone(
     the bare name only while the row carries ``legacyNav``; the gateway recorded it
     at adoption, so a build without the pin row still answers it.
     """
-    from kiro_crew.apps.official_catalog import SKIP_FETCH_ENV
+    from aj_crew.apps.official_catalog import SKIP_FETCH_ENV
 
     monkeypatch.setenv(SKIP_FETCH_ENV, "1")
     _write_fixture(tmp_path, monkeypatch)

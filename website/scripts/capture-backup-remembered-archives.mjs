@@ -87,7 +87,7 @@ const ACCOUNTS = {
 const DRIVE = {
   exists: true,
   region: REGION,
-  bucket: `kirocrew-drive-${ACC}-usw2`,
+  bucket: `ajcrew-drive-${ACC}-usw2`,
   usage: {
     bytes: 1181116006,
     objects: 42,

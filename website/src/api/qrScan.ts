@@ -26,7 +26,7 @@ import {
 } from './authBannerStyles'
 
 let openScan: ((event: KeyboardEvent) => void) | null = null
-const KEY_GATE_INSTALLED = 'kirocrew-qr-scan-key-gate'
+const KEY_GATE_INSTALLED = 'ajcrew-qr-scan-key-gate'
 
 if (typeof window !== 'undefined') {
   const listenerWindow = window as typeof window & { [KEY_GATE_INSTALLED]?: boolean }

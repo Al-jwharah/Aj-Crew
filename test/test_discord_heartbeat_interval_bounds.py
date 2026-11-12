@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.discord.client import _OP_HELLO, _OP_IDENTIFY, DiscordClient
+from aj_crew.discord.client import _OP_HELLO, _OP_IDENTIFY, DiscordClient
 
 # Spelled as literals so the test reads the same against a tree without the bounds.
 _DEFAULT_HEARTBEAT_SECS = 41.25

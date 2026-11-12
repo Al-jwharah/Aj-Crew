@@ -1,7 +1,7 @@
 """RED on main: dashboard-template `scaffold.py --out-root ~/<dir>` does not expand `~`.
 
 `main()` takes `--out-root` as `type=Path` and passes it straight to `emit()`,
-which joins `out_root / "src" / "kiro_crew" / ...`. There is no `expanduser()`,
+which joins `out_root / "src" / "aj_crew" / ...`. There is no `expanduser()`,
 so a `~`-prefixed `--out-root` resolves to a LITERAL directory named `~` under
 the process CWD rather than the operator's home. With `--force` (or on a fresh
 tree) the four generated files are then written under `./~/...` instead of the
@@ -10,13 +10,13 @@ literal-`~` tree.
 
 How it is hit: a builder runs the scaffold from outside a checkout and points it
 at one in their home, e.g.
-`python3 scaffold.py my_card --fold status --out-root ~/ws/KiroCrew --print-only`
+`python3 scaffold.py my_card --fold status --out-root ~/ws/AjCrew --print-only`
 and every printed path begins with a literal `~`.
 
 Smallest fix: in `main()`, expand before use —
 `root = (args.out_root.expanduser() if args.out_root is not None else repo_root())`.
 
-The script runs as a bare file (`kiro_crew` is off its import path), so this
+The script runs as a bare file (`aj_crew` is off its import path), so this
 test imports it by file path the way the skill is invoked.
 """
 
@@ -30,9 +30,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SCAFFOLD = (
     ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
+    / "ajcrew-dev"
     / "dashboard-template"
     / "scripts"
     / "scaffold.py"

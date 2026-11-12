@@ -1,7 +1,7 @@
 /**
  * The browser-tab attention count must skip silenced / passive-priority notes.
  *
- * Backend contract (`kiro_crew/notifications/settings.py`, `ChannelSettings.apply()`):
+ * Backend contract (`aj_crew/notifications/settings.py`, `ChannelSettings.apply()`):
  * muting a channel leaves the note in history but stamps it `silenced: true` and
  * forces `priority: "passive"`, "so every attention surface (badge count, sound,
  * native banner, feed styling) skips it". The coordinator holds itself to that —

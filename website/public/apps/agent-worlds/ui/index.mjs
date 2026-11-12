@@ -1,10 +1,10 @@
-// Agent Worlds — Standalone KiroCrew App
+// Agent Worlds — Standalone Aj Crew App
 // A pixel art office scene showing agents working at desks.
-// Uses the host's React and app-sdk via window.__kirocrew_modules.
+// Uses the host's React and app-sdk via window.__ajcrew_modules.
 
-const React = window.__kirocrew_modules.react
-const { useAppApi, useAppEvents } = window.__kirocrew_modules['@kirocrew/app-sdk']
-const { Sparkles, RefreshCw } = window.__kirocrew_modules['lucide-react']
+const React = window.__ajcrew_modules.react
+const { useAppApi, useAppEvents } = window.__ajcrew_modules['@ajcrew/app-sdk']
+const { Sparkles, RefreshCw } = window.__ajcrew_modules['lucide-react']
 
 const { useState, useEffect, useRef, useCallback, createElement: h } = React
 

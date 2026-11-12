@@ -12,8 +12,8 @@ export type DefaultAgentReadout = { default_agent: string; default_template: str
  * agent an agent-less slot or cron RUNS; consumers that only want that name
  * `select` it. Labels of such a row (`agentOrDefaultLabel`) must read the
  * template, not the crewmate alias `default_agent` -- a default crewmate
- * `radar` with `agent.default_agent` `kirocrew` would label a cron that runs
- * `kirocrew` as radar's. A gateway without the fields yields '' / false, and
+ * `radar` with `agent.default_agent` `ajcrew` would label a cron that runs
+ * `ajcrew` as radar's. A gateway without the fields yields '' / false, and
  * the label degrades to the literal `default`. The Custom agents tab reads
  * the full object (`overridden`, `override_path`) through this same key.
  *

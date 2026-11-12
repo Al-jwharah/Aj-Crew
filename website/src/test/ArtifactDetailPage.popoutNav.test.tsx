@@ -22,7 +22,7 @@ vi.mock('../api/client')
 // which would otherwise mount the full ChatPage and its whole hook graph.
 vi.mock('../pages/ChatPage', () => ({
   default: () => <div data-testid="chat-page" />,
-  PREFILL_STORAGE_KEY: 'kirocrew_prefill',
+  PREFILL_STORAGE_KEY: 'ajcrew_prefill',
 }))
 // Replace only the popout→main forwarding entry point; the rest of the module
 // (registerPopout, the coordination map, …) stays real.

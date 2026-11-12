@@ -12,8 +12,8 @@ import hmac
 
 import pytest
 
-from kiro_crew.secrets_mediation import provenance
-from kiro_crew.secrets_mediation.provenance import (
+from aj_crew.secrets_mediation import provenance
+from aj_crew.secrets_mediation.provenance import (
     sign_secret_authorizations,
     verify_secret_authorizations,
 )
@@ -42,7 +42,7 @@ def test_derived_key_is_stable_and_not_the_raw_token_secret(token_root):
 
 
 def test_no_key_file_is_written(token_root, tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.config.paths.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.paths.config_dir", lambda: tmp_path)
     sign_secret_authorizations(_AUTHZ)
     assert list(tmp_path.iterdir()) == []
 
@@ -89,9 +89,9 @@ def test_tampering_with_any_entry_invalidates_the_signature(token_root):
 @pytest.mark.parametrize(
     "label",
     [
-        b"kirocrew.secret_request_policy.sig.v1",
-        b"kirocrew.secret_request_policy.sig.v2",
-        b"kirocrew.some_other_purpose.v1\x00",
+        b"ajcrew.secret_request_policy.sig.v1",
+        b"ajcrew.secret_request_policy.sig.v2",
+        b"ajcrew.some_other_purpose.v1\x00",
     ],
 )
 def test_a_signature_under_another_purpose_label_is_rejected(token_root, label):
@@ -110,8 +110,8 @@ def test_a_signature_from_a_different_secret_is_rejected(token_root):
 
 
 def test_policy_directory_is_hidden_and_precreated():
-    from kiro_crew import sandbox
-    from kiro_crew.security import paths as security_paths
+    from aj_crew import sandbox
+    from aj_crew.security import paths as security_paths
 
     leaf = provenance.REQUEST_POLICY_DIRNAME
     assert leaf in security_paths._CREW_SECRET_LEAVES
@@ -125,8 +125,8 @@ def test_the_gateway_boot_does_no_mediation_key_work():
     mediation-specific boot step."""
     import inspect
 
-    from kiro_crew.dashboard import server as server_mod
-    from kiro_crew.dashboard.server_runtime import api_entrypoint
+    from aj_crew.dashboard import server as server_mod
+    from aj_crew.dashboard.server_runtime import api_entrypoint
 
     for module in (server_mod, api_entrypoint):
         source = inspect.getsource(module)
@@ -135,7 +135,7 @@ def test_the_gateway_boot_does_no_mediation_key_work():
 
 def _force_loader(monkeypatch: pytest.MonkeyPatch, *, ephemeral: bool) -> bytes:
     """Make the shared token-secret loader return a fresh key, flagged ephemeral or not."""
-    from kiro_crew.dashboard import token_secret
+    from aj_crew.dashboard import token_secret
 
     key = b"E" * 32 if ephemeral else b"P" * 32
 
@@ -164,7 +164,7 @@ def test_an_ephemeral_signing_root_never_signs_a_durable_policy(monkeypatch):
 def test_an_ephemeral_root_memoized_by_an_earlier_caller_still_refuses(monkeypatch):
     """The CLI verifies the existing policy before it signs, so the memo is usually
     filled by the time signing runs; the ephemeral verdict must survive that."""
-    from kiro_crew.dashboard import token_secret
+    from aj_crew.dashboard import token_secret
 
     _force_loader(monkeypatch, ephemeral=True)
     token_secret._get_secret()

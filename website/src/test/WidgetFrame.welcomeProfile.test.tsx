@@ -70,7 +70,7 @@ describe('the welcome widget frame profile', () => {
 
   it('carries no link bridge, in the frame or in a popped-out tab', async () => {
     const { container } = mount('welcome', '<a href="https://example.com">x</a>')
-    expect(minted().documentElement.outerHTML).not.toContain('kirocrew-dashboard:open')
+    expect(minted().documentElement.outerHTML).not.toContain('ajcrew-dashboard:open')
     let wrapper = ''
     const realBlob = window.Blob
     vi.spyOn(window, 'Blob' as never).mockImplementation(function (...args: unknown[]) {
@@ -85,7 +85,7 @@ describe('the welcome widget frame profile', () => {
     ;(container.querySelector('button[aria-label="Open in new tab"]') as HTMLButtonElement).click()
     expect(wrapper).toContain('<iframe')
     const scripts = Array.from(new DOMParser().parseFromString(wrapper, 'text/html').body.querySelectorAll(':scope > script'))
-    expect(scripts.map(s => s.textContent ?? '').some(t => t.includes('kirocrew-dashboard:open'))).toBe(false)
+    expect(scripts.map(s => s.textContent ?? '').some(t => t.includes('ajcrew-dashboard:open'))).toBe(false)
   })
 
   it('offers no star, so it is never saved where the chat profile would draw it', async () => {
@@ -117,7 +117,7 @@ describe('the chat widget frame profile is unchanged', () => {
     mount('chat', '<p>hi</p>')
     const doc = minted()
     expect(cspOf(doc)).toMatch(/cdn\.jsdelivr\.net/)
-    expect(doc.documentElement.outerHTML).toContain('kirocrew-dashboard:open')
+    expect(doc.documentElement.outerHTML).toContain('ajcrew-dashboard:open')
     expect(widgetFramePolicy('chat')).toEqual({
       srcdoc: { linkBridge: true, offlineScripts: false, rewriteBareLinks: true },
       linkBridge: true,

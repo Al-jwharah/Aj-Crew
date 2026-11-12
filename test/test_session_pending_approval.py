@@ -13,13 +13,13 @@ import json
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew import mcp_dashboard
-from kiro_crew.crew_log import emit
-from kiro_crew.crew_log import session_tree_projection as stp
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew import mcp_dashboard
+from aj_crew.crew_log import emit
+from aj_crew.crew_log import session_tree_projection as stp
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.mcp_tools.dashboard_client import InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
 
 
 @pytest.fixture(autouse=True)
@@ -29,10 +29,10 @@ def _enabled(_floor_monkeypatch):
 
 @pytest.fixture(autouse=True)
 def _tree_on(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crewhome"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crewhome"))
     _floor_monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     _floor_monkeypatch.setattr(
-        "kiro_crew.executors.maintenance_executor",
+        "aj_crew.executors.maintenance_executor",
         lambda: type("_NoPool", (), {"submit": staticmethod(lambda *a, **k: None)}),
     )
     stp.reset_for_tests()

@@ -1,6 +1,6 @@
 """A gateway running from a git checkout is named at boot and guarded in the skill.
 
-Two halves of one guard. ``kiro_crew.live_checkout`` logs a boot WARNING when the
+Two halves of one guard. ``aj_crew.live_checkout`` logs a boot WARNING when the
 gateway's package sits in a git work tree. The worktree-dev skill's
 ``live_checkout_guard.py`` refuses (exit 30) a HEAD-moving git command in the
 checkout a live gateway runs from, and lets a linked worktree through.
@@ -17,11 +17,11 @@ from pathlib import Path
 import pytest
 from skill_script_helpers import load_skill_script
 
-from kiro_crew import live_checkout
+from aj_crew import live_checkout
 
 GUARD = (
     Path(__file__).resolve().parents[1]
-    / "src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-worktree-dev/scripts/live_checkout_guard.py"
+    / "src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-worktree-dev/scripts/live_checkout_guard.py"
 )
 
 
@@ -33,7 +33,7 @@ def guard():
 def _clone(tmp_path: Path) -> Path:
     clone = tmp_path / "clone"
     (clone / ".git").mkdir(parents=True)
-    (clone / "src" / "kiro_crew").mkdir(parents=True)
+    (clone / "src" / "aj_crew").mkdir(parents=True)
     return clone
 
 
@@ -55,7 +55,7 @@ def _run_dir(tmp_path: Path, pid: int, launcher: str) -> Path:
 class TestBootWarning:
     def test_a_source_checkout_that_is_a_work_tree_warns_with_the_root(self, tmp_path, caplog):
         clone = _clone(tmp_path)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.live_checkout"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.live_checkout"):
             root = live_checkout.warn_if_running_from_git_checkout(clone)
         assert root == clone
         warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
@@ -68,14 +68,14 @@ class TestBootWarning:
 
     def test_an_installed_copy_does_not_warn(self, monkeypatch, caplog):
         monkeypatch.setattr(live_checkout, "_source_checkout_root", lambda: None)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.live_checkout"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.live_checkout"):
             assert live_checkout.warn_if_running_from_git_checkout() is None
         assert not caplog.records
 
     def test_a_source_tree_without_git_does_not_warn(self, tmp_path, caplog):
         plain = tmp_path / "plain"
         plain.mkdir()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.live_checkout"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.live_checkout"):
             assert live_checkout.warn_if_running_from_git_checkout(plain) is None
         assert not caplog.records
 
@@ -84,7 +84,7 @@ class TestSkillGuard:
     def test_the_live_gateways_checkout_is_refused(self, guard, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         clone = _clone(tmp_path)
-        run = _run_dir(tmp_path, os.getpid(), str(clone / ".venv/bin/kirocrew"))
+        run = _run_dir(tmp_path, os.getpid(), str(clone / ".venv/bin/ajcrew"))
         code, message = guard.check(clone / "src", run)
         assert code == guard.EXIT_REFUSED == 30
         assert "worktree add" in message
@@ -94,7 +94,7 @@ class TestSkillGuard:
         monkeypatch.chdir(tmp_path)
         clone = _clone(tmp_path)
         wt = _worktree(tmp_path)
-        run = _run_dir(tmp_path, os.getpid(), str(clone / ".venv/bin/kirocrew"))
+        run = _run_dir(tmp_path, os.getpid(), str(clone / ".venv/bin/ajcrew"))
         code, _ = guard.check(wt, run)
         assert code == guard.EXIT_SAFE
 
@@ -106,7 +106,7 @@ class TestSkillGuard:
         clone = _clone(tmp_path)
         proc = subprocess.Popen([sys.executable, "-c", "pass"])
         proc.wait()
-        run = _run_dir(tmp_path, proc.pid, str(clone / ".venv/bin/kirocrew"))
+        run = _run_dir(tmp_path, proc.pid, str(clone / ".venv/bin/ajcrew"))
         code, _ = guard.check(clone, run)
         assert code == guard.EXIT_SAFE
 

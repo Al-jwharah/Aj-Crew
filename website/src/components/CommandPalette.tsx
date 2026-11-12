@@ -15,7 +15,7 @@ import { useAllAggregator } from './commandPalette/providers/allAggregator'
 import { useSessionsProvider } from './commandPalette/providers/sessionsProvider'
 import type { SessionRef } from './commandPalette/providers/sessionsProvider'
 import { usePagesProvider } from './commandPalette/providers/pagesProvider'
-import { useActionsProvider } from './commandPalette/providers/actionsProvider'
+import { useActionsProvider, type ShellPaletteActions } from './commandPalette/providers/actionsProvider'
 import { useKnowledgeProvider } from './commandPalette/providers/knowledgeProvider'
 import type { KnowledgeRef } from './commandPalette/providers/knowledgeProvider'
 import { useSkillsProvider } from './commandPalette/providers/skillsProvider'
@@ -87,6 +87,8 @@ export interface CommandPaletteProps {
    * `ShortcutsModal` open state. Defaults to a no-op.
    */
   openShortcuts?: () => void
+  /** Shell commands offered as Actions (focus mode, feature request, problem report). Supplied by the app shell. */
+  shellActions?: ShellPaletteActions
   /**
    * Open a session in a split pane / Session Grid (⌘Enter on a session row).
    * Optional — when omitted, ⌘Enter on a session falls back to plain open.
@@ -122,6 +124,7 @@ export default function CommandPalette({
   open,
   onClose,
   openShortcuts,
+  shellActions,
   openInSplit,
   initialQuery = '',
 }: CommandPaletteProps) {
@@ -134,7 +137,7 @@ export default function CommandPalette({
   const openSessionsKey = useMemo(() => slots.map(slot => slot.key).sort().join('\u0000'), [slots])
   const sessions = useSessionsProvider({ openInSplit, openSessionsKey })
   const pages = usePagesProvider()
-  const actions = useActionsProvider({ openShortcuts: openShortcuts ?? NOOP })
+  const actions = useActionsProvider({ openShortcuts: openShortcuts ?? NOOP, shellActions })
 
   // Live chat-store/router actions backing the Enter matrix. `usePaletteActions`
   // exposes the same composer-insert (`setPendingInput`) and new-session

@@ -1,5 +1,5 @@
 ---
-title: Session-keyed scratch, a $KIROCREW_SCRATCH that lasts as long as the chat
+title: Session-keyed scratch, a $AJCREW_SCRATCH that lasts as long as the chat
 status: draft
 author: Pearcekieser
 created: 2026-10-28
@@ -12,10 +12,10 @@ supersedes: []
 superseded-by: []
 ---
 
-# RFC: Session-keyed scratch, a $KIROCREW_SCRATCH that lasts as long as the chat
+# RFC: Session-keyed scratch, a $AJCREW_SCRATCH that lasts as long as the chat
 
 The system prompt tells every agent to keep clones, probe scripts, build logs
-and PR drafts in `$KIROCREW_SCRATCH`. The directory behind that name lives as
+and PR drafts in `$AJCREW_SCRATCH`. The directory behind that name lives as
 long as the processes that mounted it. A dashboard chat lives longer than its
 processes: a gateway restart, a resume after a backend error, or an idle reap
 followed by a revive all give the chat a new process, and the new process gets
@@ -24,7 +24,7 @@ a new, empty directory. The hourly sweep deletes the old one an hour later.
 This RFC proposes that the scratch tree belongs to the session key instead.
 A new process for a known session rejoins the session's tree. The sweep stops
 asking whether the owner processes are alive while the session is open, and
-starts its clock when the session is closed. `$KIROCREW_SCRATCH` then names the
+starts its clock when the session is closed. `$AJCREW_SCRATCH` then names the
 same directory for the whole life of the chat, which is the durable
 per-session directory agents have been missing.
 
@@ -53,9 +53,9 @@ Phase 0 probe ran on 2026-11-02 at `62c27336b1`; its verdicts are under
 
 - `allocate_scratch` makes `<data home>/scratch/<label>-<token8>` per spawned
   process and `record_owner` writes the child's pid to `.owner`
-  (`src/kiro_crew/agent_scratch.py`).
+  (`src/aj_crew/agent_scratch.py`).
 - A process spawned on behalf of an existing session tree gets that tree as a
-  second sandbox window, and `KIROCREW_SCRATCH` names it
+  second sandbox window, and `AJCREW_SCRATCH` names it
   (`shared_scratch_window` and `scratch_env` in `agent_scratch.py`).
   That covers a dedicated subagent, a companion runtime, a recycled runtime's
   successor and a respawn on the same provider object
@@ -79,7 +79,7 @@ Phase 0 probe ran on 2026-11-02 at `62c27336b1`; its verdicts are under
 - The prompt tells agents the same thing from the other side: scratch is
   "reclaimed automatically once the session's processes are gone", and "state
   that must outlive your session's processes belongs in NEITHER" (the
-  `$KIROCREW_SCRATCH` rule in `src/kiro_crew/config/prompt.md`). It names no
+  `$AJCREW_SCRATCH` rule in `src/aj_crew/config/prompt.md`). It names no
   place that does qualify.
 - The durable `work/` root exists for state that must outlive a process, but
   it is masked from every sandboxed process and refused to the agent's file
@@ -121,7 +121,7 @@ paths are never cleaned, and on the same host `/tmp` ran out of inodes on
    owner process is alive.
 3. Reclaim starts when the session closes and runs after a retention window,
    so a chat revived from History inside the window finds its files.
-4. Agents keep using `$KIROCREW_SCRATCH` as they do now. It becomes the
+4. Agents keep using `$AJCREW_SCRATCH` as they do now. It becomes the
    durable per-session directory; no new variable and no new root.
 5. A session can mount only its own tree. The record that ties a key to a
    tree cannot be written by any agent.
@@ -277,11 +277,11 @@ scope, and sharing one would let two open sessions write the same files.
 ### Per-process temp stays per process
 
 Today a root's first process uses one directory for both `TMPDIR` and
-`$KIROCREW_SCRATCH`. Under this design that directory would keep every pytest
+`$AJCREW_SCRATCH`. Under this design that directory would keep every pytest
 basetemp and `mktemp` file the first process ever made, for the life of the
 chat. The root's first process therefore gets two directories: its own
 process directory for `TMPDIR`, the kiro-cli log and temp files, swept by the
-process rule as now; and the session tree for `$KIROCREW_SCRATCH`. Later
+process rule as now; and the session tree for `$AJCREW_SCRATCH`. Later
 processes already get exactly this split. The session tree carries an
 `.owner` marker like any other tree, and every process that mounts it adds
 its pid through the existing `adopt_owner` path. Without the index the sweep
@@ -291,9 +291,9 @@ is missing.
 
 ### Prompt and spec text
 
-When the design ships, the `$KIROCREW_SCRATCH` rule in `config/prompt.md` changes from
+When the design ships, the `$AJCREW_SCRATCH` rule in `config/prompt.md` changes from
 "reclaimed automatically once the session's processes are gone" to say that
-`$KIROCREW_SCRATCH` lasts as long as this chat and is reclaimed
+`$AJCREW_SCRATCH` lasts as long as this chat and is reclaimed
 `SESSION_RETENTION_SECONDS` after the chat closes. The subagent spec sentence
 "a gateway restart starts a fresh one" changes in the same PR.
 
@@ -329,8 +329,8 @@ left out. "Cause" is what the session recorded at the time.
 | 22 | 10-25 | CI shard log unreadable | Scratch changed after resume | A2 |
 
 Each case is a test someone can run, on a pod or in the suite. Each one writes
-a file to `$KIROCREW_SCRATCH` in a dashboard session, records the path, causes
-the event, then checks on the next turn that `$KIROCREW_SCRATCH` prints the
+a file to `$AJCREW_SCRATCH` in a dashboard session, records the path, causes
+the event, then checks on the next turn that `$AJCREW_SCRATCH` prints the
 same path and the file is there.
 
 - A1 Gateway restart. Stop and start the gateway between two turns. Covers
@@ -441,7 +441,7 @@ Exit: A3, A4, A8, A9 and A10 pass; A12 is unchanged; a process's temp files
 are still reclaimed one hour after it dies.
 
 **Phase 3, guidance.** Point the skills and docs that tell agents to keep
-durable work outside scratch back at `$KIROCREW_SCRATCH`, and say where the
+durable work outside scratch back at `$AJCREW_SCRATCH`, and say where the
 retention window is set. Exit: no skill shipped in this repository tells an
 agent to put per-session work under `/tmp` or a home-directory path.
 
@@ -451,7 +451,7 @@ agent to put per-session work under `/tmp` or a home-directory path.
   index loses nothing that today's sweep would keep.
 - Trees allocated before Phase 1 have no row and age out under the process
   rule.
-- The visible change is that `$KIROCREW_SCRATCH` stays the same across a
+- The visible change is that `$AJCREW_SCRATCH` stays the same across a
   restart or resume, and that trees for open sessions stay on disk longer.
 
 ## Security considerations
@@ -474,7 +474,7 @@ never closed keeps it indefinitely. The existing regenerable strip
 when a git-holding tree moves into quarantine, which under this design is
 after the retention window. Until then those directories stay in full. Phase 0's measurement decides whether open sessions also
 need an idle bound (open question 2). Disk reporting for the scratch root
-belongs with `kirocrew doctor`, not here.
+belongs with `ajcrew doctor`, not here.
 
 ## Alternatives considered
 

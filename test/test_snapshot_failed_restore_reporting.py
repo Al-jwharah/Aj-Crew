@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from test_snapshot import snapshot_family_source, unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 def _real_db(path: Path) -> bytes:
@@ -36,7 +36,7 @@ def home(tmp_path, monkeypatch):
 
 
 def _bundle(tmp_path: Path) -> Path:
-    payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+    payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
     payload.mkdir(parents=True)
     (payload / "memory.db").write_bytes(_real_db(tmp_path / "in.db"))
     (payload / "MANIFEST.json").write_text(
@@ -82,7 +82,7 @@ class TestAMidMutationIoFailureIsReportedNotRaised:
         (home / "memory.db").write_bytes(original)
         (home / "crons.json").write_text('{"jobs": [{"id": "mine"}]}', encoding="utf-8")
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         payload.mkdir(parents=True)
         (payload / "memory.db").write_bytes(_real_db(tmp_path / "in.db"))
         (payload / "crons.json").write_text('{"jobs": []}', encoding="utf-8")
@@ -154,7 +154,7 @@ class TestTheIntegrityCheckLeavesNoOpenHandle:
         (home / "config.json").write_text('{"mine": true}', encoding="utf-8")
         assert not (home / "crons.json").exists(), "premise: no pre-restore crons"
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         payload.mkdir(parents=True)
         (payload / "crons.json").write_text('{"jobs": []}', encoding="utf-8")
         (payload / "config.json").write_text('{"incoming": true}', encoding="utf-8")

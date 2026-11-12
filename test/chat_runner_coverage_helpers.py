@@ -1,4 +1,4 @@
-"""Shared builders for the ``kiro_crew.dashboard.chat_runner`` coverage tests.
+"""Shared builders for the ``aj_crew.dashboard.chat_runner`` coverage tests.
 
 ``test_chat_runner_coverage.py`` and its ``test_chat_runner_coverage_*.py`` siblings
 import from here, and ``test_chat_runner_coverage.py`` re-exports the names other
@@ -20,16 +20,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from chat_test_helpers import _make_ready_kiro_prerequisite
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TOOL_CALL,
     EVENT_TOOL_RESULT,
 )
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.history import ConversationLog
-from kiro_crew.providers.base import LLMEvent
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.history import ConversationLog
+from aj_crew.providers.base import LLMEvent
 
 # ── Shared helpers ────────────────────────────────────────────────────────
 

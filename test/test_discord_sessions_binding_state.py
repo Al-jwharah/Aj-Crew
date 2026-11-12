@@ -24,12 +24,12 @@ from discord_sessions_helpers import (
     _picker_button,
 )
 
-from kiro_crew.config.paths import config_dir
-from kiro_crew.discord.transport_dispatch import DiscordDispatcher
-from kiro_crew.messaging import resume_expectation
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.session_map import ConversationOwnershipConflict
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.config.paths import config_dir
+from aj_crew.discord.transport_dispatch import DiscordDispatcher
+from aj_crew.messaging import resume_expectation
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.session_map import ConversationOwnershipConflict
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _isolated_home = discord_sessions_helpers._isolated_home
@@ -268,8 +268,8 @@ class TestBindingLostUnderTheConversation:
         """
         import dataclasses
 
-        from kiro_crew.dashboard.chat_runner import _recipient_principal
-        from kiro_crew.mirror_admission import sign_mirror_admission
+        from aj_crew.dashboard.chat_runner import _recipient_principal
+        from aj_crew.mirror_admission import sign_mirror_admission
 
         dispatcher, client, sessions = _dispatcher({"u1"}, _log("Launch plan"))
         link = ChannelLink(channel_type="discord", channel_id="c1", principal="u1")
@@ -294,7 +294,7 @@ class TestBindingLostUnderTheConversation:
         back WITHOUT its peer -- nothing mints -- so the send stays refused and one
         audit row says why.
         """
-        from kiro_crew.dashboard.chat_runner import _recipient_principal
+        from aj_crew.dashboard.chat_runner import _recipient_principal
 
         dispatcher, client, sessions = _dispatcher({"u1"}, _log("Launch plan"))
         forged = ChannelLink(
@@ -348,7 +348,7 @@ class TestBindingLostUnderTheConversation:
         """
         import dataclasses
 
-        from kiro_crew.mirror_admission import sign_mirror_admission
+        from aj_crew.mirror_admission import sign_mirror_admission
 
         dispatcher, client, sessions = _dispatcher({"u1"}, _log("Launch plan"))
         link = ChannelLink(channel_type="discord", channel_id="c1", principal="u1")
@@ -623,7 +623,7 @@ class TestExpectationStoreInvariants:
     async def test_the_store_is_gated_from_agent_tools_yet_writable_by_the_gateway(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.security import is_sensitive_path
+        from aj_crew.security import is_sensitive_path
 
         restricted: list[str] = []
         pc = resume_expectation.platform_compat

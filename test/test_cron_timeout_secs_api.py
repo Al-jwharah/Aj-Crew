@@ -22,8 +22,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.cron import _JOB_TIMEOUT_SECS, CronJob
-from kiro_crew.dashboard.handlers.cron import api_cron_update, api_crons, api_crons_create
+from aj_crew.cron import _JOB_TIMEOUT_SECS, CronJob
+from aj_crew.dashboard.handlers.cron import api_cron_update, api_crons, api_crons_create
 
 pytestmark = pytest.mark.asyncio
 
@@ -150,14 +150,14 @@ class TestRealStore:
 
     @staticmethod
     def _service(tmp_path):
-        from kiro_crew.cron import CronService
+        from aj_crew.cron import CronService
 
         svc = CronService(base_dir=tmp_path)
         svc._dir.mkdir(parents=True, exist_ok=True)
         return svc
 
     async def test_a_patched_limit_is_the_runs_budget(self, tmp_path) -> None:
-        from kiro_crew.cron_service.execution import effective_wake_budget
+        from aj_crew.cron_service.execution import effective_wake_budget
 
         svc = self._service(tmp_path)
         job = svc.add_job("poller", "Check it.", every_secs=3600)

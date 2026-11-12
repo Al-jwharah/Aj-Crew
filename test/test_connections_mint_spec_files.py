@@ -22,11 +22,11 @@ import connections_mint_helpers
 import pytest
 from connections_mint_helpers import _URL
 
+from aj_crew import mcp_grant
+from aj_crew.connections import mint
+from aj_crew.runtime_ownership import RUNTIME_TENANCY, release_runtime_tenancy
+from aj_crew.testing.wait import async_wait_until, await_until
 from conftest import requires_symlinks
-from kiro_crew import mcp_grant
-from kiro_crew.connections import mint
-from kiro_crew.runtime_ownership import RUNTIME_TENANCY, release_runtime_tenancy
-from kiro_crew.testing.wait import async_wait_until, await_until
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _isolated_mint = connections_mint_helpers._isolated_mint
@@ -47,9 +47,9 @@ def test_cleanup_never_touches_a_file_it_did_not_record(
     # Aged files that LOOK exactly like ours, including the pid-token shape a
     # previous round matched on. None of them is in the manifest.
     lookalikes = [
-        tmp_path / f"kirocrew-mint-notion-{os.getpid()}-abcdef12.json",
-        tmp_path / "kirocrew-mint-notion-1234-deadbeef.json",
-        tmp_path / "kirocrew-mint-notion.json",
+        tmp_path / f"ajcrew-mint-notion-{os.getpid()}-abcdef12.json",
+        tmp_path / "ajcrew-mint-notion-1234-deadbeef.json",
+        tmp_path / "ajcrew-mint-notion.json",
     ]
     for path in lookalikes:
         path.write_text("USER FILE", encoding="utf-8")
@@ -77,7 +77,7 @@ def test_the_self_heal_leaves_rows_still_inside_the_ttl_window(_isolated_mint: P
 def test_releasing_a_spec_drops_its_row(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     manifest = tmp_path / "mint-specs.json"
     monkeypatch.setattr(mint, "_mint_manifest_path", lambda: manifest)
-    mine = tmp_path / f"kirocrew-mint-notion-{os.getpid()}-abcdef12.json"
+    mine = tmp_path / f"ajcrew-mint-notion-{os.getpid()}-abcdef12.json"
     mine.write_text("{}", encoding="utf-8")
     mint._write_mint_manifest({str(mine): time.time()})
 
@@ -130,7 +130,7 @@ def _plant_row(path: Path) -> None:
 
 
 def _mint_shaped(name_dir: Path, alias: str = "notion") -> Path:
-    return name_dir / f"kirocrew-mint-{alias}-{os.getpid()}-abcdef12.json"
+    return name_dir / f"ajcrew-mint-{alias}-{os.getpid()}-abcdef12.json"
 
 
 @pytest.mark.asyncio
@@ -191,7 +191,7 @@ def test_a_failed_release_unlink_keeps_its_manifest_row(monkeypatch):
     # The row is the only thing authorizing a delete of this file, so dropping it
     # on a failed unlink strands a real spec that no later sweep can see.
     agents_dir = mint._agent.kiro_agents_dir_path()
-    spec = agents_dir / "kirocrew-mint-notion-4242-abcdef01.json"
+    spec = agents_dir / "ajcrew-mint-notion-4242-abcdef01.json"
     spec.write_text("{}", encoding="utf-8")
     mint._write_mint_manifest({str(spec): time.time()})
 
@@ -212,7 +212,7 @@ def test_a_failed_release_unlink_keeps_its_manifest_row(monkeypatch):
 
 def test_a_successful_release_drops_its_manifest_row():
     agents_dir = mint._agent.kiro_agents_dir_path()
-    spec = agents_dir / "kirocrew-mint-notion-4243-abcdef02.json"
+    spec = agents_dir / "ajcrew-mint-notion-4243-abcdef02.json"
     spec.write_text("{}", encoding="utf-8")
     mint._write_mint_manifest({str(spec): time.time()})
 
@@ -244,12 +244,12 @@ def test_a_hard_stop_between_the_row_and_the_file_leaves_only_a_harmless_row(mon
     def _die_on_the_spec(path, data, *a, **k):
         # Only the spec publish dies; the manifest write must still land, which is
         # the whole point of doing it first.
-        if Path(path).name.startswith("kirocrew-mint-"):
+        if Path(path).name.startswith("ajcrew-mint-"):
             raise _HardStop()
         return real_write(path, data, *a, **k)
 
     def _die_on_the_spec_write(path, data, *a, **k):
-        if Path(path).name.startswith("kirocrew-mint-"):
+        if Path(path).name.startswith("ajcrew-mint-"):
             raise _HardStop()
         return real_spec_write(path, data, *a, **k)
 
@@ -274,7 +274,7 @@ def test_a_row_survives_a_failed_unlink_so_a_later_sweep_retries(monkeypatch):
     # Dropping the row on a failed unlink would abandon a real file that nothing
     # else is authorized to delete -- the row IS the authorization.
     agents_dir = mint._agent.kiro_agents_dir_path()
-    orphan = agents_dir / "kirocrew-mint-notion-4242-abcdef01.json"
+    orphan = agents_dir / "ajcrew-mint-notion-4242-abcdef01.json"
     orphan.write_text("{}", encoding="utf-8")
     aged = time.time() - mint._MINT_SPEC_ORPHAN_SECONDS - 1
     mint._write_mint_manifest({str(orphan): aged})
@@ -319,7 +319,7 @@ def test_a_spec_whose_row_cannot_be_recorded_is_not_left_behind(monkeypatch, tmp
         mint._write_mint_agent_spec("notion")
 
     # Nothing of ours is left in the agents dir.
-    assert not list(agents_dir.glob("kirocrew-mint-*.json"))
+    assert not list(agents_dir.glob("ajcrew-mint-*.json"))
 
 
 @pytest.mark.asyncio
@@ -328,7 +328,7 @@ async def test_a_reconnect_that_short_circuits_still_reaps_aged_orphans(monkeypa
     # future reconnect returns before any spec write, so unless the sweep runs
     # first the row is never looked at again.
     agents_dir = mint._agent.kiro_agents_dir_path()
-    orphan = agents_dir / "kirocrew-mint-notion-4242-abcdef01.json"
+    orphan = agents_dir / "ajcrew-mint-notion-4242-abcdef01.json"
     orphan.write_text("{}", encoding="utf-8")
     aged = time.time() - mint._MINT_SPEC_ORPHAN_SECONDS - 1
     mint._write_mint_manifest({str(orphan): aged})
@@ -399,7 +399,7 @@ def test_a_planted_row_naming_a_real_agent_spec_is_never_unlinked(_isolated_mint
 def test_a_planted_row_naming_one_of_our_managed_specs_is_never_unlinked(
     monkeypatch: pytest.MonkeyPatch, _isolated_mint: Path
 ):
-    from kiro_crew.agent_files import OWNED_KIRO_AGENT_FILES
+    from aj_crew.agent_files import OWNED_KIRO_AGENT_FILES
 
     owned = _isolated_mint / OWNED_KIRO_AGENT_FILES[0]
     owned.write_text("VICTIM", encoding="utf-8")
@@ -447,7 +447,7 @@ def test_an_unrecorded_mint_shaped_file_in_the_agents_dir_is_never_unlinked(
 def test_an_owned_name_symlinked_to_a_mint_shaped_file_is_never_unlinked(
     _isolated_mint: Path,
 ):
-    from kiro_crew.agent_files import OWNED_KIRO_AGENT_FILES
+    from aj_crew.agent_files import OWNED_KIRO_AGENT_FILES
 
     # The check/act attack: every name-based conjunct would pass on the RESOLVED
     # target (in-dir, mint-shaped, not owned) while unlink acts on the owned
@@ -487,12 +487,12 @@ def test_a_spec_name_is_unique_per_flow(tmp_path: Path):
     second = mint._mint_spec_name("notion")
 
     assert first != second
-    assert first.startswith(f"kirocrew-mint-notion-{os.getpid()}-")
+    assert first.startswith(f"ajcrew-mint-notion-{os.getpid()}-")
 
 
 def test_removal_deletes_only_the_exact_path_it_is_given(tmp_path: Path):
-    mine = tmp_path / f"kirocrew-mint-notion-{os.getpid()}-abcdef12.json"
-    sibling = tmp_path / f"kirocrew-mint-notion-{os.getpid() + 1}-beefcafe.json"
+    mine = tmp_path / f"ajcrew-mint-notion-{os.getpid()}-abcdef12.json"
+    sibling = tmp_path / f"ajcrew-mint-notion-{os.getpid() + 1}-beefcafe.json"
     for path in (mine, sibling):
         path.write_text("{}", encoding="utf-8")
 
@@ -503,7 +503,7 @@ def test_removal_deletes_only_the_exact_path_it_is_given(tmp_path: Path):
 
 
 def test_removal_is_a_no_op_without_a_path(tmp_path: Path):
-    handmade = tmp_path / "kirocrew-mint-notion.json"
+    handmade = tmp_path / "ajcrew-mint-notion.json"
     handmade.write_text("{}", encoding="utf-8")
 
     # The main-agent fallback records no path, so there is nothing to delete.
@@ -515,23 +515,23 @@ def test_removal_is_a_no_op_without_a_path(tmp_path: Path):
 def test_a_provider_absent_from_the_main_spec_falls_back_to_the_managed_agent(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ):
-    monkeypatch.setattr("kiro_crew.agent.kiro_agents_dir_path", lambda: tmp_path)
-    (tmp_path / "kirocrew.json").write_text(json.dumps({"mcpServers": {}}), encoding="utf-8")
+    monkeypatch.setattr("aj_crew.agent.kiro_agents_dir_path", lambda: tmp_path)
+    (tmp_path / "ajcrew.json").write_text(json.dumps({"mcpServers": {}}), encoding="utf-8")
 
-    assert mint._write_mint_agent_spec("notion") == ("kirocrew", "")
+    assert mint._write_mint_agent_spec("notion") == ("ajcrew", "")
 
 
 def test_writing_a_spec_lands_a_uniquely_named_file(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ):
-    monkeypatch.setattr("kiro_crew.agent.kiro_agents_dir_path", lambda: tmp_path)
-    (tmp_path / "kirocrew.json").write_text(
+    monkeypatch.setattr("aj_crew.agent.kiro_agents_dir_path", lambda: tmp_path)
+    (tmp_path / "ajcrew.json").write_text(
         json.dumps({"mcpServers": {"notion": {"url": _URL}}}), encoding="utf-8"
     )
 
     name, path = mint._write_mint_agent_spec("notion")
 
-    assert name.startswith(f"kirocrew-mint-notion-{os.getpid()}-")
+    assert name.startswith(f"ajcrew-mint-notion-{os.getpid()}-")
     assert Path(path) == tmp_path / f"{name}.json"
     body = json.loads(Path(path).read_text(encoding="utf-8"))
     assert list(body["mcpServers"]) == ["notion"]
@@ -542,16 +542,16 @@ def test_writing_a_spec_lands_a_uniquely_named_file(
 def test_writing_refuses_to_overwrite_an_existing_path(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ):
-    monkeypatch.setattr("kiro_crew.agent.kiro_agents_dir_path", lambda: tmp_path)
-    (tmp_path / "kirocrew.json").write_text(
+    monkeypatch.setattr("aj_crew.agent.kiro_agents_dir_path", lambda: tmp_path)
+    (tmp_path / "ajcrew.json").write_text(
         json.dumps({"mcpServers": {"notion": {"url": _URL}}}), encoding="utf-8"
     )
-    monkeypatch.setattr(mint, "_mint_spec_name", lambda alias: "kirocrew-mint-fixed-1-aaaaaaaa")
-    (tmp_path / "kirocrew-mint-fixed-1-aaaaaaaa.json").write_text("PRECIOUS", encoding="utf-8")
+    monkeypatch.setattr(mint, "_mint_spec_name", lambda alias: "ajcrew-mint-fixed-1-aaaaaaaa")
+    (tmp_path / "ajcrew-mint-fixed-1-aaaaaaaa.json").write_text("PRECIOUS", encoding="utf-8")
 
     with pytest.raises(FileExistsError):
         mint._write_mint_agent_spec("notion")
 
-    assert (tmp_path / "kirocrew-mint-fixed-1-aaaaaaaa.json").read_text(
+    assert (tmp_path / "ajcrew-mint-fixed-1-aaaaaaaa.json").read_text(
         encoding="utf-8"
     ) == "PRECIOUS"

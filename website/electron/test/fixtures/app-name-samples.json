@@ -1,5 +1,5 @@
 {
-  "_comment": "App names the deep-link resolver's isAppName (deep-link.js) and the manifest's KEBAB_RE (src/kiro_crew/apps/manifest_names.py) must agree on. deep-link.test.js runs every name through isAppName; test/test_cli_open.py runs every name through KEBAB_RE. Keep names under the manifest's 128-character cap, so only the grammar is compared here.",
+  "_comment": "App names the deep-link resolver's isAppName (deep-link.js) and the manifest's KEBAB_RE (src/aj_crew/apps/manifest_names.py) must agree on. deep-link.test.js runs every name through isAppName; test/test_cli_open.py runs every name through KEBAB_RE. Keep names under the manifest's 128-character cap, so only the grammar is compared here.",
   "valid": [
     "a",
     "0",

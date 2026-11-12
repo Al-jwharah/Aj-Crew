@@ -28,8 +28,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.memory as memory_mod
-from kiro_crew.heartbeat import (
+import aj_crew.memory as memory_mod
+from aj_crew.heartbeat import (
     _HEADER,
     HeartbeatService,
     _extract_tasks,
@@ -39,15 +39,15 @@ from kiro_crew.heartbeat import (
     is_keep_response,
     strip_keep_sentinel,
 )
-from kiro_crew.memory import MemoryStore
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.memory import MemoryStore
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import await_until, finished
 
 
 @pytest.fixture()
 def workspace(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Redirect ``heartbeat_path()`` at a tmp workspace."""
-    monkeypatch.setattr("kiro_crew.heartbeat.workspace_dir", lambda: tmp_path / "ws")
+    monkeypatch.setattr("aj_crew.heartbeat.workspace_dir", lambda: tmp_path / "ws")
     return tmp_path / "ws"
 
 
@@ -68,7 +68,7 @@ class _ImmediateExecutor:
 @pytest.fixture()
 def inline_executor(monkeypatch: pytest.MonkeyPatch) -> None:
     """Make ``loop.run_in_executor`` synchronous by handing back the real loop's default."""
-    monkeypatch.setattr("kiro_crew.heartbeat.maintenance_executor", lambda: None)
+    monkeypatch.setattr("aj_crew.heartbeat.maintenance_executor", lambda: None)
 
 
 class TestStartStop:
@@ -119,7 +119,7 @@ class TestLoop:
         """A set shutdown event ends the loop without ever beating."""
         event = asyncio.Event()
         event.set()
-        monkeypatch.setattr("kiro_crew.heartbeat.shutdown_event", event)
+        monkeypatch.setattr("aj_crew.heartbeat.shutdown_event", event)
         svc = HeartbeatService(_memory(), interval=3600)
         beats: list[int] = []
         monkeypatch.setattr(svc, "_beat", lambda: beats.append(1))  # never awaited
@@ -132,7 +132,7 @@ class TestLoop:
     ) -> None:
         """Shutdown arriving mid-wait exits immediately — it does not wait out the interval."""
         event = asyncio.Event()
-        monkeypatch.setattr("kiro_crew.heartbeat.shutdown_event", event)
+        monkeypatch.setattr("aj_crew.heartbeat.shutdown_event", event)
         svc = HeartbeatService(_memory(), interval=3600)
         beats: list[int] = []
         monkeypatch.setattr(svc, "_beat", lambda: beats.append(1))  # never awaited
@@ -150,7 +150,7 @@ class TestLoop:
     ) -> None:
         """The wait timing out is the normal wake-up: tick increments, _beat runs."""
         event = asyncio.Event()
-        monkeypatch.setattr("kiro_crew.heartbeat.shutdown_event", event)
+        monkeypatch.setattr("aj_crew.heartbeat.shutdown_event", event)
         svc = HeartbeatService(_memory(), interval=0.001)  # type: ignore[arg-type]
         beats: list[int] = []
 
@@ -168,7 +168,7 @@ class TestLoop:
     ) -> None:
         """A raising _beat must not kill the loop — it keeps ticking."""
         event = asyncio.Event()
-        monkeypatch.setattr("kiro_crew.heartbeat.shutdown_event", event)
+        monkeypatch.setattr("aj_crew.heartbeat.shutdown_event", event)
         svc = HeartbeatService(_memory(), interval=0.001)  # type: ignore[arg-type]
         calls: list[int] = []
 
@@ -228,9 +228,9 @@ class TestBeat:
     ) -> None:
         cfg = MagicMock()
         cfg.memory.history_max_days = 11
-        monkeypatch.setattr("kiro_crew.heartbeat.KiroCrewConfig.load", staticmethod(lambda: cfg))
+        monkeypatch.setattr("aj_crew.heartbeat.AjCrewConfig.load", staticmethod(lambda: cfg))
         sel_obj = MagicMock()
-        monkeypatch.setattr("kiro_crew.heartbeat.sel", lambda: sel_obj)
+        monkeypatch.setattr("aj_crew.heartbeat.sel", lambda: sel_obj)
 
         clock = ManualClock()
         clock.install(monkeypatch, memory_mod, time=False, datetime=True)
@@ -261,10 +261,10 @@ class TestBeat:
         """A raising SEL prune must not abort the beat, so consolidation still runs."""
         cfg = MagicMock()
         cfg.memory.history_max_days = 3
-        monkeypatch.setattr("kiro_crew.heartbeat.KiroCrewConfig.load", staticmethod(lambda: cfg))
+        monkeypatch.setattr("aj_crew.heartbeat.AjCrewConfig.load", staticmethod(lambda: cfg))
         sel_obj = MagicMock()
         sel_obj.prune.side_effect = RuntimeError("zibble")
-        monkeypatch.setattr("kiro_crew.heartbeat.sel", lambda: sel_obj)
+        monkeypatch.setattr("aj_crew.heartbeat.sel", lambda: sel_obj)
 
         consolidator = MagicMock()
         svc = HeartbeatService(_memory(), consolidator=consolidator)
@@ -356,7 +356,7 @@ class TestExtractTasks:
         self, caplog: pytest.LogCaptureFixture
     ) -> None:
         content = "- first\n- check CI <!-- note\n- second\n- third  <!-- deliver:slack -->"
-        with caplog.at_level("WARNING", logger="kiro_crew.heartbeat"):
+        with caplog.at_level("WARNING", logger="aj_crew.heartbeat"):
             tasks = _extract_tasks(content)
         assert tasks == [
             ("first", ""),
@@ -374,7 +374,7 @@ class TestExtractTasks:
         content = (
             "<!--\n- deploy prod  <!-- deliver:slack -->\n-->\n- kept  <!-- deliver:dashboard -->"
         )
-        with caplog.at_level("WARNING", logger="kiro_crew.heartbeat"):
+        with caplog.at_level("WARNING", logger="aj_crew.heartbeat"):
             assert _extract_tasks(content) == [("kept", "dashboard")]
         assert not [r for r in caplog.records if r.levelname == "WARNING"]
 
@@ -388,7 +388,7 @@ class TestExtractTasks:
 
     def test_comment_inside_a_task_line_is_dropped(self, caplog: pytest.LogCaptureFixture) -> None:
         content = "- run <!-- why --> tests  <!-- deliver:dashboard -->\n<!-- deliver:slack -->"
-        with caplog.at_level("WARNING", logger="kiro_crew.heartbeat"):
+        with caplog.at_level("WARNING", logger="aj_crew.heartbeat"):
             assert _extract_tasks(content) == [("run  tests", "dashboard")]
         assert not [r for r in caplog.records if r.levelname == "WARNING"]
 

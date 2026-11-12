@@ -1,4 +1,4 @@
-"""`kirocrew cloud launch --ssm-kms-key`: opt-in KMS for encrypted Session Manager.
+"""`ajcrew cloud launch --ssm-kms-key`: opt-in KMS for encrypted Session Manager.
 
 An org that pins a KMS key for Session Manager needs the on-box SSM agent to call
 ``kms:Decrypt`` on that key, and the default instance boundary caps it away. The
@@ -15,14 +15,14 @@ import re
 
 import pytest
 
-from kiro_crew import cli_cloud
-from kiro_crew.cloud import aws, ec2, iam, sizes, wizard
-from kiro_crew.validation import ValidationError
+from aj_crew import cli_cloud
+from aj_crew.cloud import aws, ec2, iam, sizes, wizard
+from aj_crew.validation import ValidationError
 
 _KEY = "arn:aws:kms:us-east-1:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
 _MRK = "arn:aws:kms:eu-west-1:111122223333:key/mrk-1234abcd12ab34cd56ef1234567890ab"
-_BOUNDARY = "arn:aws:iam::123456789012:policy/kirocrew-ec2-boundary"
-_KMS_BOUNDARY = "arn:aws:iam::123456789012:policy/kirocrew-ec2-kms-boundary"
+_BOUNDARY = "arn:aws:iam::123456789012:policy/ajcrew-ec2-boundary"
+_KMS_BOUNDARY = "arn:aws:iam::123456789012:policy/ajcrew-ec2-kms-boundary"
 
 # The default boundary document, written out literally. A change here changes the
 # ceiling of every default launch and fails the content check of every existing
@@ -70,7 +70,7 @@ def _default_boundary(account: str) -> dict:
                 "Sid": "SourceBucketRead",
                 "Effect": "Allow",
                 "Action": ["s3:GetObject"],
-                "Resource": f"arn:aws:s3:::kirocrew-src-{account}-*/*",
+                "Resource": f"arn:aws:s3:::ajcrew-src-{account}-*/*",
             },
         ],
     }
@@ -126,7 +126,7 @@ class TestFlagOffIsUnchanged:
         assert f"PermissionsBoundaryArn={_BOUNDARY}" in argv
 
     def test_default_deploy_creates_only_the_default_boundary(self, monkeypatch):
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         calls: list[str] = []
 
@@ -163,7 +163,7 @@ class TestFlagOffIsUnchanged:
         assert "kms" not in _resource_block("InstanceRole").lower()
 
     def test_iam_boundary_step_without_flag_creates_only_the_three(self, monkeypatch):
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         made: list[str] = []
         monkeypatch.setattr(cli_cloud, "_resolve", lambda _a: ("dev", "us-east-1"))
@@ -209,11 +209,11 @@ class TestKmsBoundary:
         assert json.dumps(iam.boundary_policy_document("123456789012")) == before
 
     def test_name_and_arn(self):
-        assert iam.KMS_BOUNDARY_NAME == "kirocrew-ec2-kms-boundary"
+        assert iam.KMS_BOUNDARY_NAME == "ajcrew-ec2-kms-boundary"
         assert iam.kms_boundary_arn("123456789012") == _KMS_BOUNDARY
 
     def test_ensure_routes_through_the_shared_verify_sequence(self, monkeypatch):
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         seen: dict = {}
         monkeypatch.setattr(source_mod, "_require_account", lambda *_a: "123456789012")
@@ -221,15 +221,15 @@ class TestKmsBoundary:
             source_mod, "_ensure_boundary", lambda **kw: seen.update(kw) or kw["arn"]
         )
         assert source_mod.ensure_instance_kms_boundary("dev", "us-east-1") == _KMS_BOUNDARY
-        assert seen["name"] == "kirocrew-ec2-kms-boundary"
+        assert seen["name"] == "ajcrew-ec2-kms-boundary"
         assert seen["expected"] == iam.kms_boundary_policy_document("123456789012")
         # A launch may not create it; the refusal names the admin step.
-        assert seen["admin_step"] == "kirocrew cloud iam-boundary --ssm-kms"
+        assert seen["admin_step"] == "ajcrew cloud iam-boundary --ssm-kms"
         source_mod.ensure_instance_kms_boundary("dev", "us-east-1", create=True)
         assert seen["admin_step"] == ""
 
     def test_launch_refuses_an_absent_kms_boundary_without_creating_it(self, monkeypatch):
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         calls: list[list[str]] = []
 
@@ -243,11 +243,11 @@ class TestKmsBoundary:
         monkeypatch.setattr(aws, "run_aws", _run)
         with pytest.raises(aws.AWSError) as exc:
             source_mod.ensure_instance_kms_boundary("dev", "us-east-1")
-        assert "kirocrew cloud iam-boundary --ssm-kms" in str(exc.value)
+        assert "ajcrew cloud iam-boundary --ssm-kms" in str(exc.value)
         assert [c[:2] for c in calls] == [["iam", "get-policy"]]
 
     def test_an_existing_kms_boundary_is_verified_before_use(self, monkeypatch):
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         verified: list[str] = []
         monkeypatch.setattr(source_mod, "_require_account", lambda *_a: "123456789012")
@@ -258,14 +258,14 @@ class TestKmsBoundary:
             lambda arn, name, expected, *_a: verified.append(name),
         )
         assert source_mod.ensure_instance_kms_boundary("dev", "us-east-1") == _KMS_BOUNDARY
-        assert verified == ["kirocrew-ec2-kms-boundary"]
+        assert verified == ["ajcrew-ec2-kms-boundary"]
 
     def test_template_boundary_pattern_accepts_exactly_the_two_names(self):
         pat = _allowed_pattern("PermissionsBoundaryArn")
         assert pat.fullmatch(_BOUNDARY) and pat.fullmatch(_KMS_BOUNDARY)
         for bad in (
-            "arn:aws:iam::123456789012:policy/kirocrew-ec2-admin-boundary",
-            "arn:aws:iam::123456789012:policy/kirocrew-ec2-kms-boundaryx",
+            "arn:aws:iam::123456789012:policy/ajcrew-ec2-admin-boundary",
+            "arn:aws:iam::123456789012:policy/ajcrew-ec2-kms-boundaryx",
             "arn:aws:iam::123456789012:policy/AdministratorAccess",
         ):
             assert not pat.fullmatch(bad), bad
@@ -288,7 +288,7 @@ class TestRoleGrant:
         assert "*" not in block
 
     def test_flag_on_argv_passes_key_and_kms_boundary(self, monkeypatch):
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         monkeypatch.setattr(aws, "assert_human_action", lambda *_a: None)
         monkeypatch.setattr(ec2, "find_stack", lambda *_a: None)
@@ -422,7 +422,7 @@ class TestCliThreading:
         assert seen["ssm_kms_key_arn"] == _KEY
 
     def test_iam_boundary_flag_adds_the_kms_boundary(self, monkeypatch):
-        import kiro_crew.cloud.source as source_mod
+        import aj_crew.cloud.source as source_mod
 
         made: list[str] = []
         monkeypatch.setattr(cli_cloud, "_resolve", lambda _a: ("dev", "us-east-1"))
@@ -451,8 +451,8 @@ class TestLauncherPolicy:
         assert cond == {
             "ArnLike": {
                 "iam:PermissionsBoundary": [
-                    "arn:aws:iam::*:policy/kirocrew-ec2-boundary",
-                    "arn:aws:iam::*:policy/kirocrew-ec2-kms-boundary",
+                    "arn:aws:iam::*:policy/ajcrew-ec2-boundary",
+                    "arn:aws:iam::*:policy/ajcrew-ec2-kms-boundary",
                 ]
             }
         }
@@ -461,7 +461,7 @@ class TestLauncherPolicy:
         # A launcher-held CreatePolicy on this name would leave it claimable in
         # every account that never opts in: a leaked credential could author a
         # permissive policy there and create a role capped by it.
-        kms = "arn:aws:iam::*:policy/kirocrew-ec2-kms-boundary"
+        kms = "arn:aws:iam::*:policy/ajcrew-ec2-kms-boundary"
         assert self._st("IamKmsBoundaryRead") == {
             "Sid": "IamKmsBoundaryRead",
             "Effect": "Allow",

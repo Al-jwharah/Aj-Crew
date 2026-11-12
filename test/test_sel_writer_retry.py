@@ -17,8 +17,8 @@ import logging
 
 import pytest
 
-import kiro_crew.sel as sel_mod
-from kiro_crew.sel import SecurityEvent, SecurityEventLog
+import aj_crew.sel as sel_mod
+from aj_crew.sel import SecurityEvent, SecurityEventLog
 
 
 @pytest.fixture(autouse=True)
@@ -43,7 +43,7 @@ def _event(event_id: str) -> SecurityEvent:
         timestamp="2026-05-13T00:00:00+00:00",
         event_type="tool_invocation",
         caller_identity="dashboard:abc",
-        agent="kirocrew",
+        agent="ajcrew",
         source="dashboard",
         operation="execute_bash",
     )

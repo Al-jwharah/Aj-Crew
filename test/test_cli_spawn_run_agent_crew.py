@@ -1,4 +1,4 @@
-"""``kirocrew spawn run`` pins its run with ``--agent``, ``--crew`` and ``--model``.
+"""``ajcrew spawn run`` pins its run with ``--agent``, ``--crew`` and ``--model``.
 
 The flags reach the same ``POST /api/spawn`` fields the native ``spawn_run``
 tool sends, so the gateway applies one policy to both: ``crew`` selects that
@@ -18,7 +18,7 @@ from unittest.mock import patch
 import pytest
 from cli_commands_coverage_helpers import _FakeResponse, _http_error, _ns
 
-from kiro_crew import cli_commands as cc
+from aj_crew import cli_commands as cc
 
 
 def _posted_body(urlopen_mock: Any) -> dict[str, Any]:
@@ -30,10 +30,10 @@ def _parse(argv: list[str]) -> Any:
     """Run ``cli.main`` on *argv* and return the namespace ``_spawn`` got."""
     seen: list[Any] = []
     with (
-        patch.object(sys, "argv", ["kirocrew", *argv]),
-        patch("kiro_crew.cli_commands._spawn", seen.append),
+        patch.object(sys, "argv", ["ajcrew", *argv]),
+        patch("aj_crew.cli_commands._spawn", seen.append),
     ):
-        from kiro_crew.cli import main
+        from aj_crew.cli import main
 
         main()
     assert len(seen) == 1
@@ -62,9 +62,9 @@ class TestSpawnRunParser:
 class TestSpawnRunBody:
     def _run(self, **kw: Any) -> Any:
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value=""),
+            patch("aj_crew.cli_commands._internal_secret", return_value=""),
             patch(
-                "kiro_crew.cli_commands._gateway_send",
+                "aj_crew.cli_commands._gateway_send",
                 return_value=_FakeResponse({"id": "ag1", "task": "t"}),
             ) as uo,
         ):
@@ -97,8 +97,8 @@ class TestSpawnRunBody:
         self, flag: str, blank: str, capsys: pytest.CaptureFixture[str]
     ) -> None:
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value=""),
-            patch("kiro_crew.cli_commands._gateway_send") as uo,
+            patch("aj_crew.cli_commands._internal_secret", return_value=""),
+            patch("aj_crew.cli_commands._gateway_send") as uo,
             pytest.raises(SystemExit) as exc,
         ):
             cc._spawn(
@@ -134,8 +134,8 @@ class TestSpawnRunRefusals:
     ) -> None:
         err = _http_error(status, json.dumps(payload).encode())
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value=""),
-            patch("kiro_crew.cli_commands._gateway_send", side_effect=err) as uo,
+            patch("aj_crew.cli_commands._internal_secret", return_value=""),
+            patch("aj_crew.cli_commands._gateway_send", side_effect=err) as uo,
             pytest.raises(SystemExit) as exc,
         ):
             cc._spawn(_ns(spawn_action="run", port=1, task="t", fire_and_forget=False, **kw))
@@ -153,19 +153,19 @@ class TestCliBodyThroughTheGateway:
     """
 
     _CFG = {
-        "default_agent": "kirocrew",
+        "default_agent": "ajcrew",
         "agents": {
-            "kirocrew": {"kiro_agent": "kirocrew"},
-            "coding": {"kiro_agent": "kirocrew", "triggers": "fix"},
+            "ajcrew": {"kiro_agent": "ajcrew"},
+            "coding": {"kiro_agent": "ajcrew", "triggers": "fix"},
         },
     }
 
     @staticmethod
     def _cli_body(**kw: Any) -> dict[str, Any]:
         with (
-            patch("kiro_crew.cli_commands._internal_secret", return_value="s"),
+            patch("aj_crew.cli_commands._internal_secret", return_value="s"),
             patch(
-                "kiro_crew.cli_commands._gateway_send",
+                "aj_crew.cli_commands._gateway_send",
                 return_value=_FakeResponse({"id": "ag1", "task": "t"}),
             ) as uo,
         ):
@@ -173,13 +173,13 @@ class TestCliBodyThroughTheGateway:
         return _posted_body(uo)
 
     def _gateway(self, body: dict[str, Any], tmp_path: Any, monkeypatch: Any) -> Any:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "config.json").write_text(json.dumps(self._CFG), encoding="utf-8")
-        from kiro_crew.config import loader as loader_mod
-        from kiro_crew.memory_stores import provision_member_memory
+        from aj_crew.config import loader as loader_mod
+        from aj_crew.memory_stores import provision_member_memory
 
         loader_mod._invalidate_config_cache()
-        config = loader_mod.KiroCrewConfig.load()
+        config = loader_mod.AjCrewConfig.load()
         provision_member_memory(config, "coding")
         config.save()
         cov = pytest.importorskip("test_handlers_messaging_coverage")
@@ -202,9 +202,9 @@ class TestCliBodyThroughTheGateway:
         assert kwargs["memory_store"]
 
     def test_agent_flag_reaches_the_manager(self, tmp_path: Any, monkeypatch: Any) -> None:
-        resp, mgr = self._gateway(self._cli_body(agent="kirocrew"), tmp_path, monkeypatch)
+        resp, mgr = self._gateway(self._cli_body(agent="ajcrew"), tmp_path, monkeypatch)
         assert resp.status == 200, resp
-        assert mgr.spawn.call_args.kwargs["agent"] == "kirocrew"
+        assert mgr.spawn.call_args.kwargs["agent"] == "ajcrew"
 
     def test_unknown_crew_flag_is_refused_and_never_spawns(
         self, tmp_path: Any, monkeypatch: Any

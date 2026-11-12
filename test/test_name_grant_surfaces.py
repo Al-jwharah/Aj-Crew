@@ -30,25 +30,25 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import name_grant, task_executor
-from kiro_crew.acp.types import (
+from aj_crew import name_grant, task_executor
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
     AcpEvent,
 )
-from kiro_crew.context import ContextBuilder
-from kiro_crew.execution_context import execution_for_store
-from kiro_crew.hooks import TOOL_AUTO_APPROVE, HookManager, ToolHookResult
-from kiro_crew.messaging import (
+from aj_crew.context import ContextBuilder
+from aj_crew.execution_context import execution_for_store
+from aj_crew.hooks import TOOL_AUTO_APPROVE, HookManager, ToolHookResult
+from aj_crew.messaging import (
     APPROVAL_INTERACTIVE,
     APPROVAL_TRUST_READS,
     TransportCapabilities,
     TurnDriver,
 )
-from kiro_crew.messaging.renderer import Renderer
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.task_models import Project, Task
+from aj_crew.messaging.renderer import Renderer
+from aj_crew.providers.base import LLMEvent
+from aj_crew.task_models import Project, Task
 
 _REFUSAL = name_grant.Refusal(name_grant.SHADOWED, "head resolves to a shadowing file")
 
@@ -110,7 +110,7 @@ class TestPromotedEntryPoint:
         stub.assert_awaited_once_with("head x")
 
     def test_dashboard_alias_is_the_promoted_helper(self):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         assert chat_runner._name_grant_refusal_off_loop is name_grant.refusal_for_command_off_loop
 
@@ -133,7 +133,7 @@ class TestPromotedEntryPoint:
         # the chokepoint, so the decline-not-raise guard covers them with no
         # second copy. Pinned through the wrapper so a future re-implementation
         # of the seam that loses the guard fails here.
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         monkeypatch.setattr(
             name_grant, "name_grant_refusal", MagicMock(side_effect=RuntimeError("boom"))
@@ -158,16 +158,16 @@ class TestLoopSafetyPins:
         import inspect
         import pkgutil
 
-        from kiro_crew import llm_helpers, subagent, task_executor, tool_permission
-        from kiro_crew.dashboard import chat_runner, chat_turn
-        from kiro_crew.discord import transport_dispatch as discord_dispatch
-        from kiro_crew.messaging import driver
-        from kiro_crew.slack import handler as slack_handler
-        from kiro_crew.slack import handler_runtime
-        from kiro_crew.slack import transport_dispatch as slack_dispatch
-        from kiro_crew.telegram import transport_dispatch as telegram_dispatch
-        from kiro_crew.telegram.dispatch import turn_engine as telegram_turn_engine
-        from kiro_crew.telegram.dispatch import turn_queue as telegram_turn_queue
+        from aj_crew import llm_helpers, subagent, task_executor, tool_permission
+        from aj_crew.dashboard import chat_runner, chat_turn
+        from aj_crew.discord import transport_dispatch as discord_dispatch
+        from aj_crew.messaging import driver
+        from aj_crew.slack import handler as slack_handler
+        from aj_crew.slack import handler_runtime
+        from aj_crew.slack import transport_dispatch as slack_dispatch
+        from aj_crew.telegram import transport_dispatch as telegram_dispatch
+        from aj_crew.telegram.dispatch import turn_engine as telegram_turn_engine
+        from aj_crew.telegram.dispatch import turn_queue as telegram_turn_queue
 
         # The Discord dispatcher is its facade and the owners it is composed from.
         discord_owners = [importlib.import_module(o) for o in discord_dispatch._OWNERS]
@@ -216,12 +216,12 @@ class TestLoopSafetyPins:
         import importlib
         import inspect
 
-        from kiro_crew.discord import transport_dispatch as discord_dispatch
-        from kiro_crew.messaging import dispatch
-        from kiro_crew.slack import transport_dispatch as slack_dispatch
-        from kiro_crew.telegram import transport_dispatch as telegram_dispatch
-        from kiro_crew.telegram.dispatch import turn_engine as telegram_turn_engine
-        from kiro_crew.telegram.dispatch import turn_queue as telegram_turn_queue
+        from aj_crew.discord import transport_dispatch as discord_dispatch
+        from aj_crew.messaging import dispatch
+        from aj_crew.slack import transport_dispatch as slack_dispatch
+        from aj_crew.telegram import transport_dispatch as telegram_dispatch
+        from aj_crew.telegram.dispatch import turn_engine as telegram_turn_engine
+        from aj_crew.telegram.dispatch import turn_queue as telegram_turn_queue
 
         # The Discord dispatcher is its facade and the owners it is composed from.
         discord_owners = [importlib.import_module(o) for o in discord_dispatch._OWNERS]
@@ -293,7 +293,7 @@ async def _execute_one_task(tmp_path, provider, *, on_tool_approval):
     task = Task(index=1, title="T", description="d")
     run.tasks = [task]
     sessions = _mock_sessions(provider)
-    with patch.object(task_executor.KiroCrewConfig, "load") as cfg:
+    with patch.object(task_executor.AjCrewConfig, "load") as cfg:
         cfg.return_value.agent.provider = "acp"
         await task_executor.execute_task(
             run=run,
@@ -367,7 +367,7 @@ class TestTaskRunnerSurface:
 
 class TestSubagentSurface:
     def _manager_and_stream(self, event):
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.subagent import SubagentInfo, SubagentManager
 
         provider = MagicMock()
 
@@ -402,7 +402,7 @@ class TestSubagentSurface:
 
     @staticmethod
     def _shell_event():
-        from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST
+        from aj_crew.providers.base import EVENT_PERMISSION_REQUEST
 
         return LLMEvent(
             kind=EVENT_PERMISSION_REQUEST,
@@ -418,10 +418,10 @@ class TestSubagentSurface:
         _stub_verdict(monkeypatch, _REFUSAL)
         manager, info, provider = self._manager_and_stream(self._shell_event())
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.update_state"),
-            patch("kiro_crew.subagent.create_agent_folder", MagicMock()),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.update_state"),
+            patch("aj_crew.subagent.create_agent_folder", MagicMock()),
         ):
             await manager._run_inner(info, "subagent:ng01")
         provider.approve_tool.assert_not_awaited()
@@ -432,10 +432,10 @@ class TestSubagentSurface:
         _stub_verdict(monkeypatch, None)
         manager, info, provider = self._manager_and_stream(self._shell_event())
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel"),
-            patch("kiro_crew.subagent.update_state"),
-            patch("kiro_crew.subagent.create_agent_folder", MagicMock()),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel"),
+            patch("aj_crew.subagent.update_state"),
+            patch("aj_crew.subagent.create_agent_folder", MagicMock()),
         ):
             await manager._run_inner(info, "subagent:ng01")
         provider.approve_tool.assert_awaited_once_with(9001)
@@ -446,10 +446,10 @@ class TestSubagentSurface:
         _stub_verdict(monkeypatch, _REFUSAL)
         manager, info, provider = self._manager_and_stream(self._shell_event())
         with (
-            patch("kiro_crew.subagent.Stats"),
-            patch("kiro_crew.subagent.sel") as sel_factory,
-            patch("kiro_crew.subagent.update_state"),
-            patch("kiro_crew.subagent.create_agent_folder", MagicMock()),
+            patch("aj_crew.subagent.Stats"),
+            patch("aj_crew.subagent.sel") as sel_factory,
+            patch("aj_crew.subagent.update_state"),
+            patch("aj_crew.subagent.create_agent_folder", MagicMock()),
         ):
             await manager._run_inner(info, "subagent:ng01")
         declined = [
@@ -580,7 +580,7 @@ class TestTurnDriverSurface:
         assert p.approved == ["rq1"]
 
     def test_the_decline_is_audited(self, monkeypatch):
-        from kiro_crew.messaging import driver as driver_mod
+        from aj_crew.messaging import driver as driver_mod
 
         _stub_verdict(monkeypatch, _REFUSAL)
         p = _ScriptedProvider(self._events())
@@ -621,10 +621,10 @@ class TestTurnDriverSurface:
         # surface's one security decision to an unattributable row.
         import inspect
 
-        from kiro_crew.messaging import dispatch
-        from kiro_crew.slack import transport_dispatch as slack_dispatch
-        from kiro_crew.slack.gateway_runtime import nudge_channel_fire
-        from kiro_crew.telegram.dispatch import turn_engine as telegram_turn_engine
+        from aj_crew.messaging import dispatch
+        from aj_crew.slack import transport_dispatch as slack_dispatch
+        from aj_crew.slack.gateway_runtime import nudge_channel_fire
+        from aj_crew.telegram.dispatch import turn_engine as telegram_turn_engine
 
         for mod in (dispatch, slack_dispatch, nudge_channel_fire, telegram_turn_engine):
             assert "audit_session_key=" in inspect.getsource(mod), mod.__name__
@@ -634,7 +634,7 @@ class TestTurnDriverSurface:
     ):
         # A platform-scope refusal's text is one constant, so the warning is
         # written once per session; each decline still gets its audit row.
-        from kiro_crew.messaging import driver as driver_mod
+        from aj_crew.messaging import driver as driver_mod
 
         name_grant._DECLINE_NOTICES.clear()
         _stub_verdict(
@@ -699,12 +699,12 @@ class TestSpawnRungEventIdentity:
         return [AcpEvent(**base), AcpEvent(kind=EVENT_COMPLETE, stop_reason="end_turn")]
 
     def test_genuine_spawn_run_event_rides_the_rung(self):
-        from kiro_crew.messaging.dispatch import build_auto_approve
+        from aj_crew.messaging.dispatch import build_auto_approve
 
         p = _ScriptedProvider(
             self._events(
                 tool_name="spawn_run",
-                mcp_server_name="kirocrew-core",
+                mcp_server_name="ajcrew-core",
                 mcp_identity_trusted=True,
             )
         )
@@ -719,7 +719,7 @@ class TestSpawnRungEventIdentity:
     def test_forged_shell_title_falls_to_the_ladder(self):
         # The rung declines; interactive mode without a decider then denies by
         # default — a downgrade to the normal path, not a hard block.
-        from kiro_crew.messaging.dispatch import build_auto_approve
+        from aj_crew.messaging.dispatch import build_auto_approve
 
         p = _ScriptedProvider(
             self._events(
@@ -744,14 +744,14 @@ class TestSpawnRungEventIdentity:
         import inspect
         import pkgutil
 
-        from kiro_crew.discord import transport_dispatch as discord_dispatch
-        from kiro_crew.messaging import dispatch, driver
-        from kiro_crew.slack import handler as slack_handler
-        from kiro_crew.slack import handler_runtime
-        from kiro_crew.slack import transport_dispatch as slack_dispatch
-        from kiro_crew.telegram import transport_dispatch as telegram_dispatch
-        from kiro_crew.telegram.dispatch import turn_engine as telegram_turn_engine
-        from kiro_crew.telegram.dispatch import turn_queue as telegram_turn_queue
+        from aj_crew.discord import transport_dispatch as discord_dispatch
+        from aj_crew.messaging import dispatch, driver
+        from aj_crew.slack import handler as slack_handler
+        from aj_crew.slack import handler_runtime
+        from aj_crew.slack import transport_dispatch as slack_dispatch
+        from aj_crew.telegram import transport_dispatch as telegram_dispatch
+        from aj_crew.telegram.dispatch import turn_engine as telegram_turn_engine
+        from aj_crew.telegram.dispatch import turn_queue as telegram_turn_queue
 
         # The Discord dispatcher is its facade and the owners it is composed from.
         discord_owners = [importlib.import_module(o) for o in discord_dispatch._OWNERS]
@@ -888,9 +888,9 @@ class TestStreamAndCollectSurface:
             self.rejected.append(request_id)
 
     def _run(self, monkeypatch, refusal, *, approver):
-        from kiro_crew import llm_helpers
-        from kiro_crew.hooks import ToolHookResult
-        from kiro_crew.providers.base import EVENT_COMPLETE as PB_COMPLETE
+        from aj_crew import llm_helpers
+        from aj_crew.hooks import ToolHookResult
+        from aj_crew.providers.base import EVENT_COMPLETE as PB_COMPLETE
 
         stub = _stub_verdict(monkeypatch, refusal)
         hooks = MagicMock()
@@ -945,8 +945,8 @@ class TestStreamAndCollectSurface:
 
     def test_the_decline_is_audited(self, monkeypatch):
         # `_resolve_permission` imports `sel` function-locally from
-        # `kiro_crew.sel`, so the observable seam is the source module.
-        with patch("kiro_crew.sel.sel") as sel_factory:
+        # `aj_crew.sel`, so the observable seam is the source module.
+        with patch("aj_crew.sel.sel") as sel_factory:
             approver = AsyncMock(return_value=False)
             self._run(monkeypatch, _REFUSAL, approver=approver)
         declined = [
@@ -969,7 +969,7 @@ class TestSlackHandlerSurface:
     def _run_handle_message(self, monkeypatch, refusal):
         from test_slack_handler_more_coverage import FakeProvider, FakeSessions, _Builder
 
-        import kiro_crew.slack.handler as h
+        import aj_crew.slack.handler as h
 
         _stub_verdict(monkeypatch, refusal)
         # The downgrade hands the request to the ordinary interactive prompt,

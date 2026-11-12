@@ -13,14 +13,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.validation import SPAWN_RUN_SCHEMA, ValidationError, validate_tool_args
+from aj_crew.validation import SPAWN_RUN_SCHEMA, ValidationError, validate_tool_args
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
 
 def _run_tool(args: dict[str, Any], responses: list[dict] | None = None) -> tuple[list[dict], str]:
     """Run spawn_run against a fake gateway; return (POSTed bodies, result text)."""
-    from kiro_crew import mcp_core
+    from aj_crew import mcp_core
 
     bodies: list[dict] = []
     answers = iter(responses or [])
@@ -88,12 +88,12 @@ class TestForwarding:
         bodies, _ = _run_tool(
             {
                 "tasks": [{"task": "a", "reasoning_effort": "max"}, "b"],
-                "agents": ["kirocrew", ""],
+                "agents": ["ajcrew", ""],
                 "reasoning_effort": "low",
             }
         )
         assert [b["reasoning_effort"] for b in bodies] == ["max", "low"]
-        assert [b["agent"] for b in bodies] == ["kirocrew", ""]
+        assert [b["agent"] for b in bodies] == ["ajcrew", ""]
 
     def test_unset_override_falls_back_and_omits_when_nothing_set(self):
         bodies, _ = _run_tool({"tasks": [{"task": "a"}, {"task": "b", "model": "gpt-6"}]})
@@ -106,7 +106,7 @@ class TestForwarding:
 
     def test_agent_is_not_a_task_object_field(self):
         with pytest.raises(ValidationError) as exc:
-            validate_tool_args({"tasks": [{"task": "a", "agent": "kirocrew"}]}, SPAWN_RUN_SCHEMA)
+            validate_tool_args({"tasks": [{"task": "a", "agent": "ajcrew"}]}, SPAWN_RUN_SCHEMA)
         assert exc.value.field == "tasks[0].agent"
 
     def test_effort_verdict_names_each_tasks_own_level(self):
@@ -124,7 +124,7 @@ class TestForwarding:
 class TestDeferredSubmission:
     @pytest.fixture
     def gateway(self, monkeypatch):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         post = MagicMock(return_value={"id": "a1"})
         monkeypatch.setattr(mcp_core, "_post", post)
@@ -133,7 +133,7 @@ class TestDeferredSubmission:
         return post
 
     def test_handler_returns_before_any_post_and_single_task_settles_in_one_step(self, gateway):
-        from kiro_crew.mcp_tools.spawn import _SpawnRunStep, spawn_run
+        from aj_crew.mcp_tools.spawn import _SpawnRunStep, spawn_run
 
         step = spawn_run("spawn_run", {"task": "one"})
         assert isinstance(step, _SpawnRunStep)
@@ -148,10 +148,10 @@ class TestDeferredSubmission:
     def test_each_step_posts_one_task_and_large_batch_stays_progressing(
         self, gateway, monkeypatch, manual_clock
     ):
-        from kiro_crew import mcp_core
-        from kiro_crew.mcp_gateway.backend import PROGRESS_WEDGE_CEILING_SECS
-        from kiro_crew.mcp_shared import _DeferredEntry
-        from kiro_crew.mcp_tools.spawn import spawn_run
+        from aj_crew import mcp_core
+        from aj_crew.mcp_gateway.backend import PROGRESS_WEDGE_CEILING_SECS
+        from aj_crew.mcp_shared import _DeferredEntry
+        from aj_crew.mcp_tools.spawn import spawn_run
 
         manual_clock.install(monkeypatch, mcp_core)
         count = 128  # An eight-second POST per member outlives the progress ceiling.
@@ -177,8 +177,8 @@ class TestDeferredSubmission:
         assert f"Spawned {count} subagent(s)." in text
 
     def test_refused_name_skips_only_its_siblings_and_reconciles_each(self, gateway):
-        from kiro_crew.mcp_tools.spawn import spawn_run
-        from kiro_crew.subagent import AGENT_NOT_FOUND_CODE
+        from aj_crew.mcp_tools.spawn import spawn_run
+        from aj_crew.subagent import AGENT_NOT_FOUND_CODE
 
         gateway.side_effect = [
             {"error": "unknown ghost", "code": AGENT_NOT_FOUND_CODE},
@@ -205,7 +205,7 @@ class TestDeferredSubmission:
     def test_abandon_and_cancel_preserve_accepted_ids_and_reconcile_unsubmitted(
         self, gateway, queued
     ):
-        from kiro_crew.mcp_tools.spawn import spawn_run
+        from aj_crew.mcp_tools.spawn import spawn_run
 
         gateway.side_effect = [
             {"id": "accepted", "status": "queued" if queued else "spawned"},
@@ -238,7 +238,7 @@ class TestDeferredSubmission:
 
     @pytest.mark.parametrize("exit_hook", ["cancel", "abandon"])
     def test_ending_mid_submission_reconciles_each_unsubmitted_task_once(self, gateway, exit_hook):
-        from kiro_crew.mcp_tools.spawn import spawn_run
+        from aj_crew.mcp_tools.spawn import spawn_run
 
         gateway.side_effect = [{"id": "a0"}, {"id": "a1"}] + [{}] * 10
         step = spawn_run("spawn_run", {"tasks": [f"t{i}" for i in range(5)]})
@@ -254,7 +254,7 @@ class TestDeferredSubmission:
         """``cancel()`` runs on the dispatch loop's thread: when the first lost
         report fails in transport the rest are left to the stuck-wave sweep,
         and the one attempt carries the short ``_LOST_REPORT_TIMEOUT_SECS``."""
-        from kiro_crew.mcp_tools.spawn import _LOST_REPORT_TIMEOUT_SECS, spawn_run
+        from aj_crew.mcp_tools.spawn import _LOST_REPORT_TIMEOUT_SECS, spawn_run
 
         def answer(path, body, **kwargs):
             if path == "/api/spawn/lost":
@@ -274,7 +274,7 @@ class TestDeferredSubmission:
         assert gateway.call_count == before + 1  # closed once; no second round of attempts
 
     def test_cancel_then_abandon_reconciles_each_unsubmitted_task_once(self, gateway):
-        from kiro_crew.mcp_tools.spawn import spawn_run
+        from aj_crew.mcp_tools.spawn import spawn_run
 
         gateway.side_effect = [{"id": "a0"}] + [{}] * 10
         step = spawn_run("spawn_run", {"tasks": ["a", "b", "c", "d"]})
@@ -287,7 +287,7 @@ class TestDeferredSubmission:
         assert [c.args[0] for c in gateway.call_args_list].count("/api/spawn") == 1
 
     def test_refused_only_abandon_stays_retryable_and_still_closes_the_wave(self, gateway):
-        from kiro_crew.mcp_tools.spawn import spawn_run
+        from aj_crew.mcp_tools.spawn import spawn_run
 
         gateway.side_effect = [{"error": "refused"}] + [{}] * 10
         step = spawn_run("spawn_run", {"tasks": ["a", "b", "c"]})
@@ -297,7 +297,7 @@ class TestDeferredSubmission:
         assert len(self._lost_reasons(gateway)) == 3
 
     def test_fully_submitted_or_never_started_step_reconciles_nothing(self, gateway):
-        from kiro_crew.mcp_tools.spawn import spawn_run
+        from aj_crew.mcp_tools.spawn import spawn_run
 
         untouched = spawn_run("spawn_run", {"tasks": ["a", "b"]})
         untouched.cancel()
@@ -312,7 +312,7 @@ class TestDeferredSubmission:
         assert [c.args[0] for c in gateway.call_args_list] == ["/api/spawn", "/api/spawn"]
 
     def test_all_refused_is_retryable_and_empty_tasks_settle_without_post(self, gateway):
-        from kiro_crew.mcp_tools.spawn import spawn_run
+        from aj_crew.mcp_tools.spawn import spawn_run
 
         gateway.return_value = {"error": "refused", "counted": True}
         step = spawn_run("spawn_run", {"task": "one"})
@@ -339,8 +339,8 @@ class TestDeferredSubmission:
         """The parked step retains the member list until submission finishes, so
         the count is bounded where it is retained -- by the one name both spawn
         tools share -- and refused before any deferred state is built."""
-        from kiro_crew import mcp_core
-        from kiro_crew.validation import SPAWN_BATCH_MEMBERS_MAX, SPAWN_RUN_SCHEMA
+        from aj_crew import mcp_core
+        from aj_crew.validation import SPAWN_BATCH_MEMBERS_MAX, SPAWN_RUN_SCHEMA
 
         values = ["task" if field == "tasks" else "scout"] * SPAWN_BATCH_MEMBERS_MAX
         assert validate_tool_args({field: values}, SPAWN_RUN_SCHEMA)[field] == values
@@ -350,8 +350,8 @@ class TestDeferredSubmission:
 
     @pytest.mark.parametrize("kind", ["errors", "queued_reasons", "transport_errors", "sibling"])
     def test_each_retained_gateway_line_is_bounded(self, gateway, monkeypatch, kind):
-        from kiro_crew.mcp_tools import spawn
-        from kiro_crew.subagent import AGENT_NOT_FOUND_CODE
+        from aj_crew.mcp_tools import spawn
+        from aj_crew.subagent import AGENT_NOT_FOUND_CODE
 
         long_line = "x" * (spawn._SA_ERROR_MAX_CHARS * 2)
         if kind == "queued_reasons":
@@ -380,7 +380,7 @@ class TestDeferredSubmission:
         assert len(lines[0]) == spawn._SA_ERROR_MAX_CHARS
 
     def test_abandon_preserves_unknown_acceptance_without_confirmed_ids(self, gateway):
-        from kiro_crew.mcp_tools.spawn import spawn_run
+        from aj_crew.mcp_tools.spawn import spawn_run
 
         gateway.return_value = {"error": "response timed out", "transport_error": True}
         step = spawn_run("spawn_run", {"tasks": ["uncertain", "unsubmitted"]})

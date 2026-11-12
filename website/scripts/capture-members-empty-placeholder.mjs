@@ -29,7 +29,7 @@ const SLUG = 'oncall'
 const SLOT = 'member-oncall-slot'
 
 const ROSTER = { members: [
-  { name: MEMBER, slug: SLUG, slot_key: SLOT, running: false, last_active_ts: 0, source: 'kirocrew' },
+  { name: MEMBER, slug: SLUG, slot_key: SLOT, running: false, last_active_ts: 0, source: 'ajcrew' },
 ] }
 
 const browser = await chromium.launch()

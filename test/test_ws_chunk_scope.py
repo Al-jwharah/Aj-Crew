@@ -17,9 +17,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.dashboard import ws_chunk_scope as scope
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard import ws_chunk_scope as scope
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog
 
 
 def _make_state(tmp_path) -> DashboardState:
@@ -376,11 +376,11 @@ async def test_each_coarse_frame_is_serialized_once_per_fan_out(state, monkeypat
 def e2e_state(tmp_path, monkeypatch):
     from chat_test_helpers import _make_state as _chat_state
 
-    from kiro_crew.dashboard import revocation_gen, token_auth
-    from kiro_crew.dashboard.handlers import updates
+    from aj_crew.dashboard import revocation_gen, token_auth
+    from aj_crew.dashboard.handlers import updates
 
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(token_auth, "_get_secret", lambda: b"chunk-scope-test-signing-key")
     monkeypatch.setattr(token_auth, "_state", token_auth.TokenStateManager())
     monkeypatch.setattr(token_auth, "_app_perms_cache", {})
@@ -388,9 +388,9 @@ def e2e_state(tmp_path, monkeypatch):
     monkeypatch.setattr(revocation_gen, "_gen", 0)
     stopped = asyncio.Event()
     monkeypatch.setattr(updates, "shutdown_event", stopped)
-    monkeypatch.setattr("kiro_crew.dashboard.ws.shutdown_event", stopped)
+    monkeypatch.setattr("aj_crew.dashboard.ws.shutdown_event", stopped)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.ws.load_declared_events_for_connect",
+        "aj_crew.dashboard.ws.load_declared_events_for_connect",
         lambda _app: (True, frozenset()),
     )
     st = _chat_state(tmp_path)
@@ -400,7 +400,7 @@ def e2e_state(tmp_path, monkeypatch):
 
 
 async def _until(socket, msg_type: str) -> list[dict]:
-    from kiro_crew.testing.wait import finished
+    from aj_crew.testing.wait import finished
 
     seen = []
     while True:
@@ -415,8 +415,8 @@ async def test_the_handler_routes_a_declaring_tab_by_its_chunk_watch(e2e_state, 
     from aiohttp.test_utils import TestClient, TestServer
     from chat_test_helpers import _make_app
 
-    from kiro_crew.dashboard import token_auth
-    from kiro_crew.dashboard.ws import api_ws
+    from aj_crew.dashboard import token_auth
+    from aj_crew.dashboard.ws import api_ws
 
     monkeypatch.setattr(
         e2e_state, "get_slot", lambda key: SimpleNamespace(running=True) if key == "A" else None
@@ -458,7 +458,7 @@ async def test_the_handler_routes_a_declaring_tab_by_its_chunk_watch(e2e_state, 
 
 @pytest.mark.asyncio
 async def test_tool_status_is_audited_under_its_own_type(state, monkeypatch):
-    import kiro_crew.dashboard.ws_event_scope as event_scope
+    import aj_crew.dashboard.ws_event_scope as event_scope
 
     granted: list[str] = []
     monkeypatch.setattr(event_scope, "_audit_allow", lambda who, frame: granted.append(frame))
@@ -474,7 +474,7 @@ async def test_tool_status_is_audited_under_its_own_type(state, monkeypatch):
 
 def test_the_disabled_caps_switch_turns_scoping_off(monkeypatch):
     # The one switch for every ws capability; ws.py applies it before asking.
-    from kiro_crew.dashboard import ws_slot_diff
+    from aj_crew.dashboard import ws_slot_diff
 
     caps = {"slot_patch", scope.CHUNK_SCOPE_CAPABILITY}
     assert scope.declared(ws_slot_diff.without_disabled_caps(caps))

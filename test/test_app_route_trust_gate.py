@@ -37,11 +37,11 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from off_loop_helpers import off_loop
 
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.dashboard import revocation_gen, token_auth
-from kiro_crew.dashboard.routes import register_all
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.dashboard import revocation_gen, token_auth
+from aj_crew.dashboard.routes import register_all
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.testing.wait import async_wait_until, await_until
 
 _NOT_FOUND = {"error": "not found", "code": "slot_not_found"}
 #: Bound on awaiting a state-level approval task the test itself settles. Its
@@ -88,20 +88,20 @@ _MANIFESTS = {
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(token_auth, "_get_secret", lambda: b"app-route-trust-gate-key")
     monkeypatch.setattr(token_auth, "_state", token_auth.TokenStateManager())
     monkeypatch.setattr(token_auth, "_app_perms_cache", {})
     monkeypatch.setattr(token_auth, "_revoked_store_singleton", None)
     monkeypatch.setattr(revocation_gen, "_gen", 0)
-    monkeypatch.setattr("kiro_crew.apps.manager.get_app_manifest", _MANIFESTS.get)
-    monkeypatch.setattr("kiro_crew.apps.permissions.get_app_manifest", _MANIFESTS.get)
-    monkeypatch.setattr("kiro_crew.apps.permissions.is_app_enabled", _MANIFESTS.__contains__)
-    from kiro_crew.apps.manager import InstalledApp
+    monkeypatch.setattr("aj_crew.apps.manager.get_app_manifest", _MANIFESTS.get)
+    monkeypatch.setattr("aj_crew.apps.permissions.get_app_manifest", _MANIFESTS.get)
+    monkeypatch.setattr("aj_crew.apps.permissions.is_app_enabled", _MANIFESTS.__contains__)
+    from aj_crew.apps.manager import InstalledApp
 
     monkeypatch.setattr(
-        "kiro_crew.apps.permissions._read_installed",
+        "aj_crew.apps.permissions._read_installed",
         lambda name, **_kw: InstalledApp(name=name) if name in _MANIFESTS else None,
     )
     st = _make_state(tmp_path)
@@ -168,7 +168,7 @@ def _app_slot(state, key: str, app_name: str):
 @pytest.mark.asyncio
 async def test_app_list_omits_state_level_approvals(state, monkeypatch):
     audit = MagicMock()
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.sel", lambda: audit)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.sel", lambda: audit)
     _user_slot(state)
     task = await _state_approval(state, "spawn:list")
     async with _serve(state) as client:
@@ -345,7 +345,7 @@ async def test_app_is_refused_an_id_pending_on_two_sessions_it_may_control(state
 @pytest.mark.asyncio
 async def test_app_decision_never_falls_through_to_a_same_id_sibling(state, monkeypatch):
     """A request settled during the awaited permission read is not replaced by a sibling."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     user = _native_approval(state, "user-tab", "5", origin=SlotOrigin.USER)
     own = _native_approval(state, "granted-own", "5", app=_GRANTED, origin=SlotOrigin.APP)
@@ -369,7 +369,7 @@ async def test_app_decision_never_lands_on_a_same_id_request_raised_on_the_same_
     state, monkeypatch
 ):
     """Ids recur within one slot too: only the request judged is ever resolved."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     judged = _native_approval(state, "user-tab", "7", origin=SlotOrigin.USER)
     newer: list[asyncio.Future[str]] = []
@@ -394,7 +394,7 @@ async def test_app_decision_never_lands_on_a_same_id_request_raised_on_the_same_
 async def test_app_resolution_is_audited_under_the_apps_name(state, monkeypatch):
     """The id route names the app in the SEL, exactly as the slot route does."""
     audit = MagicMock()
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.sel", lambda: audit)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.sel", lambda: audit)
     future = _native_approval(state, "user-tab", "7", origin=SlotOrigin.USER)
     async with _serve(state) as client:
         resp = await client.post("/api/approvals/7/reject", params=_q(_GRANTED))
@@ -488,7 +488,7 @@ async def test_app_session_list_holds_only_its_own_transcripts(state):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("remaining", [0, 1])
 async def test_app_list_rejudges_ownership_with_the_preview(state, monkeypatch, remaining):
-    from kiro_crew.dashboard.handlers import sessions as sessions_mod
+    from aj_crew.dashboard.handlers import sessions as sessions_mod
 
     log = state.conversation_log
     key = "dashboard_plain-chat"
@@ -527,7 +527,7 @@ async def test_app_list_rejudges_ownership_with_the_preview(state, monkeypatch, 
 
 @pytest.mark.asyncio
 async def test_app_older_list_rejudges_ownership_before_testing_content(state, monkeypatch):
-    from kiro_crew.dashboard.handlers import sessions as sessions_mod
+    from aj_crew.dashboard.handlers import sessions as sessions_mod
 
     log = state.conversation_log
     key = "dashboard_plain-chat"
@@ -560,8 +560,8 @@ async def test_app_older_list_rejudges_ownership_before_testing_content(state, m
 @pytest.mark.parametrize("app_name", [_PLAIN, ""], ids=["app", "dashboard"])
 @pytest.mark.parametrize("stage", ["filter", "preview", "user_only"])
 async def test_list_lock_timeout_is_restricted_only(state, monkeypatch, app_name, stage):
-    from kiro_crew.dashboard.handlers import sessions as sessions_mod
-    from kiro_crew.history import HistoryLockTimeout
+    from aj_crew.dashboard.handlers import sessions as sessions_mod
+    from aj_crew.history import HistoryLockTimeout
 
     key = "dashboard_plain-chat"
     _transcript(state, key, "plain note", _PLAIN)
@@ -631,7 +631,7 @@ async def test_app_catalog_does_not_return_metadata_from_a_foreign_incarnation(
 
 @pytest.mark.asyncio
 async def test_app_list_metadata_and_preview_share_an_off_loop_hold(state, monkeypatch):
-    from kiro_crew.dashboard.handlers import sessions as sessions_mod
+    from aj_crew.dashboard.handlers import sessions as sessions_mod
 
     log = state.conversation_log
     key = "dashboard_plain-chat"
@@ -730,7 +730,7 @@ async def test_app_search_rejudges_ownership_with_the_snippet(state, monkeypatch
 
 @pytest.mark.asyncio
 async def test_app_search_checks_ownership_and_snippet_under_one_hold(state, monkeypatch):
-    from kiro_crew.dashboard.handlers import sessions as sessions_mod
+    from aj_crew.dashboard.handlers import sessions as sessions_mod
 
     _transcript(state, "dashboard:plain-chat", "plain needle note", _PLAIN)
     log = state.conversation_log
@@ -776,7 +776,7 @@ async def test_app_search_checks_ownership_and_snippet_under_one_hold(state, mon
 @pytest.mark.asyncio
 @pytest.mark.parametrize("app_name", [_PLAIN, ""], ids=["app", "unrestricted"])
 async def test_search_output_lock_timeout_is_restricted_only(state, monkeypatch, app_name):
-    from kiro_crew.history import HistoryLockTimeout
+    from aj_crew.history import HistoryLockTimeout
 
     _transcript(state, "dashboard:plain-chat", "plain needle note", _PLAIN)
     lock = MagicMock(side_effect=HistoryLockTimeout("transcript busy"))
@@ -865,7 +865,7 @@ def replaced_after_check(state, monkeypatch):
     The stand-in for a same-key delete and recreate landing between that check
     and the protected read or unlink: the line now records ``_OTHER``.
     """
-    from kiro_crew.dashboard.handlers import sessions as sessions_mod
+    from aj_crew.dashboard.handlers import sessions as sessions_mod
 
     real = sessions_mod._app_transcript_refusal
 
@@ -899,7 +899,7 @@ async def test_app_delete_rejudges_ownership_inside_the_unlink_hold(state, repla
 @pytest.mark.parametrize("owner,expected", [(_PLAIN, "plain summary"), (_OTHER, "")])
 async def test_app_summary_rejudges_ownership_inside_each_read(state, monkeypatch, owner, expected):
     """``_summarize_one`` itself refuses a transcript the app stopped owning."""
-    from kiro_crew.dashboard.handlers import sessions as sessions_mod
+    from aj_crew.dashboard.handlers import sessions as sessions_mod
 
     prompts: list[str] = []
 
@@ -918,7 +918,7 @@ async def test_app_summary_rejudges_ownership_inside_each_read(state, monkeypatc
 async def test_app_cached_summary_is_not_served_for_a_transcript_it_does_not_own(
     state, monkeypatch
 ):
-    from kiro_crew.dashboard.handlers import sessions as sessions_mod
+    from aj_crew.dashboard.handlers import sessions as sessions_mod
 
     async def _model(*_args, **_kwargs):  # pragma: no cover - must not be reached
         raise AssertionError("the model was asked to summarize a foreign transcript")
@@ -938,10 +938,10 @@ async def test_app_cached_summary_is_not_served_for_a_transcript_it_does_not_own
 @pytest.mark.parametrize("stage", ["cache", "rows"])
 async def test_app_summary_ownership_loss_is_audited(state, monkeypatch, stage):
     """A late ownership loss records one denial even after the route's initial grant."""
-    from kiro_crew.dashboard.handlers import sessions as sessions_mod
+    from aj_crew.dashboard.handlers import sessions as sessions_mod
 
     audit = MagicMock()
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.sel", lambda: audit)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.sel", lambda: audit)
     key = "dashboard:plain-chat"
     await asyncio.to_thread(_transcript, state, key, "plain note", _PLAIN)
     log = state.conversation_log
@@ -988,7 +988,7 @@ async def test_app_summary_ownership_loss_is_audited(state, monkeypatch, stage):
 async def test_app_ownership_grants_are_audited(state, monkeypatch):
     """Every granted ownership decision leaves an ``allowed`` SEL record, like the refusals."""
     audit = MagicMock()
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.sel", lambda: audit)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.sel", lambda: audit)
     _seed_transcripts(state)
     async with _serve(state) as client:
         resp = await client.get("/api/sessions", params=_q(_PLAIN))
@@ -1096,14 +1096,14 @@ def summaries(monkeypatch):
         read.append(key)
         return f"summary of {key}"
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.sessions._summarize_one", _fake_summary)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.sessions._summarize_one", _fake_summary)
     return read
 
 
 @pytest.mark.asyncio
 async def test_app_summarizes_only_its_own_transcripts(state, summaries, monkeypatch):
     audit = MagicMock()
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.sel", lambda: audit)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.sel", lambda: audit)
     _seed_transcripts(state)
     keys = ["dashboard:user-chat", "dashboard:plain-chat", "dashboard:other-chat", "dashboard:none"]
     async with _serve(state) as client:
@@ -1138,7 +1138,7 @@ async def test_internal_caller_from_an_app_slot_summarizes_only_that_apps_transc
 ):
     """The production caller: the ``list_sessions`` MCP tool run by an agent in an app's slot."""
     monkeypatch.setattr(
-        "kiro_crew.member_memory_auth.session_key_is_attested", lambda *_a, **_k: True
+        "aj_crew.member_memory_auth.session_key_is_attested", lambda *_a, **_k: True
     )
     _seed_transcripts(state)
     _app_slot(state, "dashboard:plain-slot", _PLAIN)

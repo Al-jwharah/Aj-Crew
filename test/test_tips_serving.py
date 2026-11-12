@@ -1,4 +1,4 @@
-"""Unit tests for kiro_crew.tips: how a tip is served and answered.
+"""Unit tests for aj_crew.tips: how a tip is served and answered.
 
 The explore blend and the config fields that clamp it, the opt-out actions and their
 status payload, the summary text a tip shows (sentence-safe truncation, the first prose paragraph), and the
@@ -17,8 +17,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.tips import CatalogEntry, TipsState, _load_state, _save_state
-from kiro_crew.tips_text import (
+from aj_crew.tips import CatalogEntry, TipsState, _load_state, _save_state
+from aj_crew.tips_text import (
     SUMMARY_MAX_CHARS,
     first_prose_paragraph,
     strip_decoration,
@@ -37,7 +37,7 @@ class TestExploreBlend:
         ]
         st = TipsState()
         # Generate catalog-based fallback tips
-        from kiro_crew.tips import _fallback_tips, _is_eligible
+        from aj_crew.tips import _fallback_tips, _is_eligible
 
         all_catalog = [
             t for t in _fallback_tips(catalog, st) if _is_eligible(t, st, 999999.0, 48.0)
@@ -67,33 +67,33 @@ class TestConfigClamping:
     """Tests for tips_model and tips_explore_ratio config field handling."""
 
     def test_tips_model_default(self) -> None:
-        from kiro_crew.config.loader import DashboardConfig
+        from aj_crew.config.loader import DashboardConfig
 
         cfg = DashboardConfig()
         assert cfg.tips_model == "auto"
 
     def test_tips_explore_ratio_default(self) -> None:
-        from kiro_crew.config.loader import DashboardConfig
+        from aj_crew.config.loader import DashboardConfig
 
         cfg = DashboardConfig()
         assert cfg.tips_explore_ratio == 0.2
 
     def test_tips_explore_ratio_clamped_below(self) -> None:
-        from kiro_crew.config.loader import _safe_float
+        from aj_crew.config.loader import _safe_float
 
         # Below 0 gets clamped to 0
         result = _safe_float(-0.5, 0.2, lo=0.0, hi=1.0)
         assert result == 0.0
 
     def test_tips_explore_ratio_clamped_above(self) -> None:
-        from kiro_crew.config.loader import _safe_float
+        from aj_crew.config.loader import _safe_float
 
         # Above 1 gets clamped to 1
         result = _safe_float(1.5, 0.2, lo=0.0, hi=1.0)
         assert result == 1.0
 
     def test_tips_explore_ratio_invalid_uses_default(self) -> None:
-        from kiro_crew.config.loader import _safe_float
+        from aj_crew.config.loader import _safe_float
 
         result = _safe_float("not a number", 0.2, lo=0.0, hi=1.0)
         assert result == 0.2
@@ -101,13 +101,13 @@ class TestConfigClamping:
     def test_safe_float_nan_uses_default(self) -> None:
         """Codex round-5: NaN converts fine but bypasses clamping (NaN compares
         false against any bound) — must fall back to default."""
-        from kiro_crew.config.loader import _safe_float
+        from aj_crew.config.loader import _safe_float
 
         assert _safe_float("NaN", 0.2, lo=0.0, hi=1.0) == 0.2
         assert _safe_float(float("nan"), 6.0, lo=0.0) == 6.0
 
     def test_safe_float_infinity_uses_default(self) -> None:
-        from kiro_crew.config.loader import _safe_float
+        from aj_crew.config.loader import _safe_float
 
         assert _safe_float("Infinity", 0.2, lo=0.0, hi=1.0) == 0.2
         assert _safe_float("-Infinity", 0.6, lo=0.0, hi=1.0) == 0.6
@@ -116,17 +116,17 @@ class TestConfigClamping:
     def test_safe_float_huge_int_uses_default(self) -> None:
         """Codex round-14 (HIGH): float(10**400) raises OverflowError — a
         config file with a huge JSON integer must not crash config load."""
-        from kiro_crew.config.loader import _safe_float
+        from aj_crew.config.loader import _safe_float
 
         assert _safe_float(10**400, 6.0, lo=0.0) == 6.0
         assert _safe_float(-(10**400), 0.2, lo=0.0, hi=1.0) == 0.2
 
     def test_tips_model_from_config_data(self) -> None:
         """tips_model read as string from dashboard data."""
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         # Default config inherits the account's governed model via "auto"
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert isinstance(cfg.dashboard.tips_model, str)
         assert cfg.dashboard.tips_model == "auto"
 
@@ -135,7 +135,7 @@ class TestOptOutState:
     """UI opt-out: optout/optin actions persist opted_out; status payload shape."""
 
     def test_optout_persists_and_optin_reverses(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             st = _load_state()
             assert st.opted_out is False
             # Simulate the feedback handler's optout branch
@@ -150,7 +150,7 @@ class TestOptOutState:
             assert _load_state().opted_out is False
 
     def test_optout_clears_offered_tip(self, tmp_path: Path) -> None:
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             st = TipsState(
                 offered={
                     "id": "x",
@@ -172,7 +172,7 @@ class TestOptOutState:
 
     def test_status_payload_shape(self, tmp_path: Path) -> None:
         """The status endpoint reports both flags as booleans."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             st = _load_state()
             payload = {"enabled_config": bool(True), "opted_out": bool(st.opted_out)}
             assert payload == {"enabled_config": True, "opted_out": False}
@@ -192,7 +192,7 @@ class TestOptOutState:
 
 
 class TestTruncateSummary:
-    """Sentence-safe truncation (kiro_crew.tips_text.truncate_summary)."""
+    """Sentence-safe truncation (aj_crew.tips_text.truncate_summary)."""
 
     def test_short_text_unchanged(self) -> None:
         assert truncate_summary("A short summary.") == "A short summary."
@@ -287,9 +287,9 @@ class TestFeedbackErrorCodes:
         from aiohttp import streams
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.tips import TipsCache, api_tips_feedback
+        from aj_crew.tips import TipsCache, api_tips_feedback
 
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             cache = TipsCache()
             cache.state = TipsState()
             state = types.SimpleNamespace(_tips_cache=cache)
@@ -439,7 +439,7 @@ class TestProseParagraphExtraction:
 
     def test_bundled_catalog_carries_no_markup_or_emoji(self) -> None:
         """The shipped catalog is served verbatim, so it is checked directly."""
-        from kiro_crew.tips import _BUNDLED_CATALOG_FILE
+        from aj_crew.tips import _BUNDLED_CATALOG_FILE
 
         data = json.loads(_BUNDLED_CATALOG_FILE.read_text(encoding="utf-8"))
         for entry in data["entries"]:

@@ -32,9 +32,9 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _steerable,
 )
 
-from kiro_crew.dashboard import chat_delivery as cd
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard import chat_delivery as cd
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
 
 # ── Target resolution ────────────────────────────────────────────────────────
 
@@ -68,7 +68,7 @@ def test_resolves_target_by_the_key_list_sessions_reports(tmp_path):
 
     Matching only ``slot.key`` would answer the documented path with ``target_not_found``.
     """
-    from kiro_crew.history import transcript_stem
+    from aj_crew.history import transcript_stem
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -84,7 +84,7 @@ def test_resolves_target_by_the_key_list_sessions_reports(tmp_path):
 
 def test_the_caller_is_also_resolvable_by_its_stem(tmp_path):
     """Symmetry: the MCP process may present either form as the caller identity."""
-    from kiro_crew.history import transcript_stem
+    from aj_crew.history import transcript_stem
 
     state = _make_state(tmp_path)
     caller = _slot(state, "chat-1")
@@ -350,16 +350,16 @@ async def test_a_requeued_steer_records_queued_and_never_steered(tmp_path, monke
     the vocabulary has no steer type. Exactly one ``message/queued`` entry is written here,
     since the requeue bypasses the append that records a queued message.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     import json
 
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import emit as crew_log_emit
 
     crew_log_emit.reset_caches()
     sid = "sess-steer-requeue"
-    crew_log_emit.on_session_opened(sid, agent="kirocrew", slot="chat-1")
+    crew_log_emit.on_session_opened(sid, agent="ajcrew", slot="chat-1")
     crew_log_emit.on_turn_started(sid, 1, "user")
     assert_drained()
 

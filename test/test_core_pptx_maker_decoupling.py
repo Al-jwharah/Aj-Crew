@@ -1,7 +1,7 @@
-"""GATE: Kiro Crew core does not depend on the PPTX Maker (``pptx-maker``) app's code.
+"""GATE: Aj Crew core does not depend on the PPTX Maker (``pptx-maker``) app's code.
 
 PPTX Maker is to leave this repository whole. That is only possible while nothing
-outside ``src/kiro_crew/apps/builtins/`` imports it or names it. What the core
+outside ``src/aj_crew/apps/builtins/`` imports it or names it. What the core
 needs from the app it reads through a generic, app-keyed seam the app fills; what
 the app needs from the core it imports from the core. The app's pins of core
 parity (the shared credential spelling, the one-scope spawn layer, the Windows
@@ -10,9 +10,9 @@ containment fold, its agents' welcome hints) run in the app's own ``tests/``.
 Two properties are pinned:
 
 1. **No core module or script imports the app.** Every module under
-   ``src/kiro_crew`` outside ``apps/builtins/``, and every script under
+   ``src/aj_crew`` outside ``apps/builtins/``, and every script under
    ``scripts/``, is parsed. ``import``, ``from ... import`` (relative ones
-   resolved), ``from kiro_crew.apps.builtins import pptx_maker``,
+   resolved), ``from aj_crew.apps.builtins import pptx_maker``,
    ``importlib.import_module`` and ``__import__`` with a literal name are all in
    scope, and the probes below fail if any of those forms stops being caught.
 2. **The strings that still name the app are a pinned, shrinking list.** A path
@@ -38,11 +38,11 @@ import pytest
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_core_pptx_maker_decoupling")
 
-APP_PACKAGE = "kiro_crew.apps.builtins.pptx_maker"
+APP_PACKAGE = "aj_crew.apps.builtins.pptx_maker"
 #: The package directory name and the app id: every spelling that addresses the app.
 APP_NAMES = ("pptx_maker", "pptx-maker")
 
-#: (path relative to ``src/kiro_crew``, the literal): the core strings that still
+#: (path relative to ``src/aj_crew``, the literal): the core strings that still
 #: name the app, each with why it is not a seam. Each row is deleted together with
 #: the file or the skill it names.
 KNOWN_NAME_REFERENCES: frozenset[tuple[str, str]] = frozenset(
@@ -89,24 +89,24 @@ def test_the_strings_naming_the_app_are_the_pinned_list(core_trees):
 @pytest.mark.parametrize(
     ("source", "importer", "is_package"),
     [
-        ("import kiro_crew.apps.builtins.pptx_maker.backend.routes", "kiro_crew.x", False),
-        ("from kiro_crew.apps.builtins.pptx_maker.backend import engine", "kiro_crew.x", False),
-        ("from kiro_crew.apps.builtins import pptx_maker", "kiro_crew.x", False),
-        ("from ..apps.builtins.pptx_maker.backend import paths", "kiro_crew.dashboard.y", False),
-        ("from .builtins.pptx_maker import agent_placeholders", "kiro_crew.apps.y", False),
-        ("from .builtins import pptx_maker", "kiro_crew.apps", True),
+        ("import aj_crew.apps.builtins.pptx_maker.backend.routes", "aj_crew.x", False),
+        ("from aj_crew.apps.builtins.pptx_maker.backend import engine", "aj_crew.x", False),
+        ("from aj_crew.apps.builtins import pptx_maker", "aj_crew.x", False),
+        ("from ..apps.builtins.pptx_maker.backend import paths", "aj_crew.dashboard.y", False),
+        ("from .builtins.pptx_maker import agent_placeholders", "aj_crew.apps.y", False),
+        ("from .builtins import pptx_maker", "aj_crew.apps", True),
         (
             "import importlib\n"
-            "importlib.import_module('kiro_crew.apps.builtins.pptx_maker.backend.engine')",
-            "kiro_crew.x",
+            "importlib.import_module('aj_crew.apps.builtins.pptx_maker.backend.engine')",
+            "aj_crew.x",
             False,
         ),
-        ("__import__('kiro_crew.apps.builtins.pptx_maker')", "kiro_crew.x", False),
+        ("__import__('aj_crew.apps.builtins.pptx_maker')", "aj_crew.x", False),
         (
             "from typing import TYPE_CHECKING\n"
             "if TYPE_CHECKING:\n"
-            "    from kiro_crew.apps.builtins.pptx_maker.backend import decks",
-            "kiro_crew.x",
+            "    from aj_crew.apps.builtins.pptx_maker.backend import decks",
+            "aj_crew.x",
             False,
         ),
     ],
@@ -118,13 +118,13 @@ def test_the_scan_catches_every_import_form(source, importer, is_package):
 @pytest.mark.parametrize(
     "source",
     [
-        "from kiro_crew.apps import bridges_agents",
-        "from kiro_crew.apps.builtins import BUILTIN_NAMES",
-        "import kiro_crew.apps.builtins.pptx_maker_other",
+        "from aj_crew.apps import bridges_agents",
+        "from aj_crew.apps.builtins import BUILTIN_NAMES",
+        "import aj_crew.apps.builtins.pptx_maker_other",
     ],
 )
 def test_the_scan_leaves_other_imports_alone(source):
-    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "kiro_crew.x", False)
+    assert not independence.app_imports(ast.parse(source), APP_PACKAGE, "aj_crew.x", False)
 
 
 def test_the_string_scan_skips_docstrings_but_not_paths_or_ids():

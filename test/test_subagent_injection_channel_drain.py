@@ -19,10 +19,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.messaging.queue_drain import register_drain, reset_drains, tag_entry
-from kiro_crew.session import SessionManager
-from kiro_crew.subagent import SubagentInfo
+from aj_crew.config import AjCrewConfig
+from aj_crew.messaging.queue_drain import register_drain, reset_drains, tag_entry
+from aj_crew.session import SessionManager
+from aj_crew.subagent import SubagentInfo
 
 #: Ceiling for a wait that only fails on a hang, so a regression fails by name.
 _HANG_CEILING_S = 30
@@ -49,7 +49,7 @@ def _provider_factory() -> Any:
 
 
 def _gateway(sessions: SessionManager) -> Any:
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gateway = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gateway.sessions = sessions
@@ -75,7 +75,7 @@ async def _inject(gateway: Any, key: str) -> None:
     info = SubagentInfo(id="child-1", task="work", parent_session_key=key)
     info.result = "done"
     info.done = True
-    with patch("kiro_crew.slack.gateway._MAX_INJECT_ATTEMPTS", 1):
+    with patch("aj_crew.slack.gateway._MAX_INJECT_ATTEMPTS", 1):
         await asyncio.wait_for(
             gateway._inject_subagent_into_channel_parent(
                 info,
@@ -104,7 +104,7 @@ async def _settle_background(sessions: SessionManager) -> None:
 async def test_channel_injection_wakes_drain_for_message_queued_mid_turn(
     channel: str, key: str
 ) -> None:
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     gateway = _gateway(sessions)
     drained = asyncio.Event()
     drained_keys: list[str] = []
@@ -141,7 +141,7 @@ async def test_channel_injection_wakes_drain_for_message_queued_mid_turn(
 @pytest.mark.asyncio
 async def test_channel_injection_with_empty_queue_wakes_no_drain() -> None:
     key = "discord:dm:42"
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     gateway = _gateway(sessions)
     drain = AsyncMock()
     register_drain("discord", drain)

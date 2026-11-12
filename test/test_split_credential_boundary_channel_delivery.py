@@ -14,21 +14,21 @@ import pytest
 import split_credential_boundary_checks
 from split_credential_boundary_helpers import HEAD, KEY, SRC, TAIL, _name_of, _on_screen, _rejoins
 
-from kiro_crew.messaging.display_safety import joins_to_a_credential, redact_for_display
-from kiro_crew.messaging.renderer import _default_redactor
-from kiro_crew.messaging.split import (
+from aj_crew.messaging.display_safety import joins_to_a_credential, redact_for_display
+from aj_crew.messaging.renderer import _default_redactor
+from aj_crew.messaging.split import (
     _redact_only_the_rejoined_span,
     _rejoins_a_key,
     bounded_for_delivery,
     split_markdown_safe,
 )
-from kiro_crew.telegram.renderer import (
+from aj_crew.telegram.renderer import (
     _split_markdown,
     _split_markdown_bounded,
     _split_markdown_table_aware,
     _table_blocks,
 )
-from kiro_crew.whatsapp.renderer import _redact_all, render_chunks, to_whatsapp_text
+from aj_crew.whatsapp.renderer import _redact_all, render_chunks, to_whatsapp_text
 
 
 def _own_body_calls(func: ast.AsyncFunctionDef) -> list[ast.Call]:
@@ -406,7 +406,7 @@ class TestAHardByteCapIsNeverExceeded:
     """
 
     def test_webex_bounds_its_own_chunks(self) -> None:
-        from kiro_crew.webex.renderer import WEBEX_MAX_TEXT, _bounded_chunks
+        from aj_crew.webex.renderer import WEBEX_MAX_TEXT, _bounded_chunks
 
         oversized = "x" * 9000
         body = f"[label](https://example.test/{oversized}/{HEAD} {TAIL})"
@@ -440,7 +440,7 @@ class TestAHardByteCapIsNeverExceeded:
         assert bounded_for_delivery(["hello"], 40, _default_redactor) == ["hello"]
 
     def test_webex_keeps_ordinary_text_whole(self) -> None:
-        from kiro_crew.webex.renderer import _bounded_chunks
+        from aj_crew.webex.renderer import _bounded_chunks
 
         prose = "an ordinary answer with nothing to redact in it"
         assert "".join(_bounded_chunks(prose)) == prose

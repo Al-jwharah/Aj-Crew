@@ -1,6 +1,6 @@
-"""``kiro_crew.name_grant`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.name_grant`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.name_grant`` is a plain facade over three owners, lowest layer first:
+``aj_crew.name_grant`` is a plain facade over three owners, lowest layer first:
 ``name_grant_refusals`` (the refusal vocabulary and the decline-log dedupe),
 ``name_grant_tables`` (the fixed name tables) and ``name_grant_lookup`` (how the modelled
 shell looks a name up and which file answers it). It keeps the verdicts, the tokenizer, the
@@ -32,7 +32,7 @@ import pytest
 import source_corpus
 import test_campaign_facades_base_public_names as base_names
 
-from kiro_crew import _facade_mirror, name_grant
+from aj_crew import _facade_mirror, name_grant
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_name_grant_facade")
 
@@ -42,9 +42,9 @@ SHARED_FACADE_CHECKS = ("known_seams", "spelling_cases", "corpus_gate")
 
 FACADE = name_grant.__name__
 OWNERS = (
-    "kiro_crew.name_grant_refusals",
-    "kiro_crew.name_grant_tables",
-    "kiro_crew.name_grant_lookup",
+    "aj_crew.name_grant_refusals",
+    "aj_crew.name_grant_tables",
+    "aj_crew.name_grant_lookup",
 )
 _SRC = Path(name_grant.__file__).resolve().parent
 _GLOBAL_OPS = frozenset({"LOAD_GLOBAL", "LOAD_NAME"})
@@ -71,7 +71,7 @@ _KNOWN_SEAMS = frozenset(
 #: Every name the one-module file defined that an owner holds now, by owner: each stays bound
 #: on the facade as the owner's own object (names an owner gains later are not pinned).
 _MOVED: dict[str, frozenset[str]] = {
-    "kiro_crew.name_grant_refusals": frozenset("""
+    "aj_crew.name_grant_refusals": frozenset("""
         AGENT_TREE AMBIGUOUS_ENV AMBIGUOUS_PATH BUILTIN_SHADOWS DISPATCHER EXPANDED
         FILE_ASSOCIATION IDENTITY_CHANGED RELATIVE_PATH Refusal SHADOWED
         UNENUMERABLE UNINSPECTABLE UNKNOWN_COMMAND UNTOKENIZABLE UNWITNESSED
@@ -79,14 +79,14 @@ _MOVED: dict[str, frozenset[str]] = {
         _DECLINE_NOTICE_LOCK _PLATFORM_SCOPE_CODES _REFUSAL_LOG_TEXT _notice_digest
         platform_scope_notice should_log_decline windows_environment_refusal
         """.split()),
-    "kiro_crew.name_grant_tables": frozenset("""
+    "aj_crew.name_grant_tables": frozenset("""
         MODELLED_WINDOWS_SHELL _BASH_FUNC_KEY_PREFIX _BASH_FUNC_VALUE_PREFIX
         _COMSPEC_SCRIPT_EXTENSIONS _DEFAULT_PATHEXT _DISPATCHERS _ENV_PRELOAD_VARS
         _EXPANDING_CHARS _INERT_BUILTINS _POWERSHELL_CORE_COMMANDS
         _POWERSHELL_DEFAULT_ALIASES _WINDOWS_DISPATCHERS _WINDOWS_EXPANDING_CHARS
         _WINDOWS_INERT_BUILTINS _WINDOWS_RUNNABLE_EXTENSIONS _inherited_preload
         """.split()),
-    "kiro_crew.name_grant_lookup": frozenset("""
+    "aj_crew.name_grant_lookup": frozenset("""
         _ASSIGN_NAME_RE _COMPLEX_ENV_SHEBANG _DIGEST_CHUNK _EXEC_ENV_PREFIXES
         _EXEC_ENV_SUFFIXES _EXEC_ENV_VARS _INTERPRETER_DEPTH _content_digest
         _decides_execution _identity _is_absolute _is_regular_file
@@ -152,7 +152,7 @@ def _spellings() -> dict[str, str]:
                 if node.test.id == "TYPE_CHECKING":
                     body.extend(node.body)
         for node in body:
-            if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew" and not node.level:
+            if isinstance(node, ast.ImportFrom) and node.module == "aj_crew" and not node.level:
                 for alias in node.names:
                     if alias.name == "name_grant":
                         spellings[f"{module}.{alias.asname or alias.name}"] = FACADE
@@ -166,28 +166,28 @@ def patched_names(source: str) -> set[str]:
 #: Each spelling the patch scan must read, and each it must skip, keyed by case id.
 _SPELLING_CASES = {
     "monkeypatch": (
-        "from kiro_crew import name_grant\n"
+        "from aj_crew import name_grant\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(name_grant, 'A', 1)\n",
         {"A"},
     ),
     "mock-patch-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.name_grant.B'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.name_grant.B'):\n        pass\n",
         {"B"},
     ),
     "gateway-binding-string": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.slack.gateway.name_grant.C'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.slack.gateway.name_grant.C'):\n        pass\n",
         {"C"},
     ),
     "helper-binding": (
-        "from kiro_crew import llm_helpers\n"
+        "from aj_crew import llm_helpers\n"
         "def t(monkeypatch):\n    monkeypatch.setattr(llm_helpers.name_grant, 'D', 1)\n",
         {"D"},
     ),
     "owner": (
         "from unittest.mock import patch\n"
-        "def t():\n    with patch('kiro_crew.name_grant_lookup.E'):\n        pass\n",
+        "def t():\n    with patch('aj_crew.name_grant_lookup.E'):\n        pass\n",
         set(),
     ),
 }
@@ -257,7 +257,7 @@ def test_a_facade_patch_reaches_the_facade_reader(monkeypatch: pytest.MonkeyPatc
 
 
 def test_the_owners_are_every_name_grant_sibling() -> None:
-    siblings = sorted(f"kiro_crew.{path.stem}" for path in _SRC.glob("name_grant_*.py"))
+    siblings = sorted(f"aj_crew.{path.stem}" for path in _SRC.glob("name_grant_*.py"))
     assert siblings == sorted(OWNERS)
 
 
@@ -292,8 +292,8 @@ def test_each_owner_imports_only_owners_listed_before_it_and_never_the_facade() 
 
 def test_the_layering_check_can_fail() -> None:
     trees = {owner.__name__: _tree(owner) for owner in _owners()}
-    trees[OWNERS[0]] = ast.parse("from kiro_crew.name_grant_lookup import _identity\n")
-    trees[OWNERS[1]] = ast.parse("from kiro_crew import name_grant\n")
+    trees[OWNERS[0]] = ast.parse("from aj_crew.name_grant_lookup import _identity\n")
+    trees[OWNERS[1]] = ast.parse("from aj_crew import name_grant\n")
     assert _layering_gaps(trees) == {OWNERS[0]: [OWNERS[2]], OWNERS[1]: [FACADE]}
 
 
@@ -334,7 +334,7 @@ def test_every_base_public_name_type_checks_through_the_facade() -> None:
 
 def test_an_owner_that_logs_logs_under_the_facade_name() -> None:
     """Every reader of ``logger`` stayed in the facade, whose records keep the
-    ``kiro_crew.name_grant`` name; an owner that reads a logger binds that same one."""
+    ``aj_crew.name_grant`` name; an owner that reads a logger binds that same one."""
     assert name_grant.logger.name == FACADE
     reads = _owner_reads()
     for owner in _owners():

@@ -38,11 +38,11 @@ mkdirSync(OUT, { recursive: true })
 
 const OLDER = path => ({ path, before: '', after: '', truncated: true, content_omitted: true, omitted_reason: 'older_turn' })
 const OLDER_CHANGES = [
-  OLDER('src/kiro_crew/dashboard/chat_runner.py'),
-  OLDER('src/kiro_crew/history.py'),
+  OLDER('src/aj_crew/dashboard/chat_runner.py'),
+  OLDER('src/aj_crew/history.py'),
 ]
 const RECENT_CHANGES = [{
-  path: 'src/kiro_crew/dashboard/slot_persistence/transcript_merge.py',
+  path: 'src/aj_crew/dashboard/slot_persistence/transcript_merge.py',
   before: 'def compose_payload(state, slot):\n    prefix = read_prefix(slot)\n    return prefix',
   after: 'def compose_payload(state, slot):\n    prefix = read_prefix(slot)\n    prefix = bound(prefix)\n    return prefix',
 }]
@@ -67,7 +67,7 @@ const slots = [{
   running: false,
   last_message: SURFACE.title,
   messages: SURFACE.messages.length,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

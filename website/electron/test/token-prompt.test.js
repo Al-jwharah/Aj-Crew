@@ -5,7 +5,7 @@
 //
 // #16258: a packaged AppImage adopting a local gateway it did not spawn is
 // correctly refused a silent token mint, and the page told the user to run the
-// on-PATH `kirocrew token` — a command an AppImage installs nowhere on PATH.
+// on-PATH `ajcrew token` — a command an AppImage installs nowhere on PATH.
 // The shell now resolves the bundled launcher's absolute path
 // (appImageBundledCliPath, tested in gateway-auth-hint.test.js) and passes it
 // to this page as `?cli=`; the page names it in the LOCAL recovery command.
@@ -70,14 +70,14 @@ function renderWith(search) {
   return why.textContent;
 }
 
-const BUNDLED = "/tmp/.mount_Kiro/resources/backend-dist/kirocrew-backend-x64/bin/kirocrew";
+const BUNDLED = "/tmp/.mount_Kiro/resources/backend-dist/ajcrew-backend-x64/bin/ajcrew";
 
 // ── Local: our own gateway, token mint failed ──────────────────────────────
 
 test("local on a normal install names the on-PATH command", () => {
   const msg = renderWith("?kind=local&port=5476");
-  assert.match(msg, /Run kirocrew token on THIS machine and paste the URL below\./);
-  assert.ok(!msg.includes("/bin/kirocrew"), "no bundled path on a normal install");
+  assert.match(msg, /Run ajcrew token on THIS machine and paste the URL below\./);
+  assert.ok(!msg.includes("/bin/ajcrew"), "no bundled path on a normal install");
 });
 
 test("local on a packaged AppImage names the bundled launcher", () => {
@@ -85,11 +85,11 @@ test("local on a packaged AppImage names the bundled launcher", () => {
   // is refused, and the page must name a command the user can actually run.
   const msg = renderWith("?kind=local&port=5476&cli=" + encodeURIComponent(BUNDLED));
   assert.ok(msg.includes("Run " + BUNDLED + " token on THIS machine"), msg);
-  assert.ok(!/Run kirocrew token/.test(msg), "does not fall back to the bare on-PATH command");
+  assert.ok(!/Run ajcrew token/.test(msg), "does not fall back to the bare on-PATH command");
 });
 
 test("local quotes a bundled path containing spaces", () => {
-  const spaced = "/tmp/.mount A/bin/kirocrew";
+  const spaced = "/tmp/.mount A/bin/ajcrew";
   const msg = renderWith("?kind=local&cli=" + encodeURIComponent(spaced));
   assert.ok(msg.includes('Run "' + spaced + '" token on THIS machine'), msg);
 });
@@ -102,7 +102,7 @@ test("foreign always names the on-PATH command, even with a bundled path", () =>
   const withCli = renderWith("?kind=foreign&host=dev-host&cli=" + encodeURIComponent(BUNDLED));
   const noCli = renderWith("?kind=foreign&host=dev-host");
   assert.equal(withCli, noCli);
-  assert.match(withCli, /run kirocrew token on dev-host, then paste the URL below\./);
+  assert.match(withCli, /run ajcrew token on dev-host, then paste the URL below\./);
   assert.ok(!withCli.includes(BUNDLED), "a foreign gateway never names our bundled launcher");
 });
 
@@ -114,14 +114,14 @@ test("unknown on a normal install is byte-for-byte the original hedged text", ()
     msg,
     "The gateway on port 5476 would not issue a dashboard token, and this app "
       + "could not determine which machine it is running on. If you reached it "
-      + "through an SSH tunnel, run kirocrew token on the machine running that "
+      + "through an SSH tunnel, run ajcrew token on the machine running that "
       + "gateway; otherwise run it on this machine. Then paste the URL below.",
   );
 });
 
 test("unknown on a packaged AppImage names the bundled launcher for the local branch", () => {
   const msg = renderWith("?kind=unknown&port=5476&cli=" + encodeURIComponent(BUNDLED));
-  assert.ok(msg.includes("run kirocrew token on the machine running that gateway"));
+  assert.ok(msg.includes("run ajcrew token on the machine running that gateway"));
   assert.ok(msg.includes("otherwise run " + BUNDLED + " token on this machine"), msg);
 });
 

@@ -8,8 +8,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import embeddings as emb
-from kiro_crew.testing.wait import await_until, wait_until
+from aj_crew import embeddings as emb
+from aj_crew.testing.wait import await_until, wait_until
 
 
 @pytest.mark.parametrize(
@@ -24,7 +24,7 @@ from kiro_crew.testing.wait import await_until, wait_until
 def test_loaded_saved_config_preserves_explicit_threads_and_core_limit(
     tmp_path, monkeypatch, settings, configured, effective
 ):
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     path = tmp_path / "config.json"
     path.write_text(json.dumps({"memory": settings}), encoding="utf-8")
@@ -37,7 +37,7 @@ def test_loaded_saved_config_preserves_explicit_threads_and_core_limit(
         monkeypatch.setattr(emb.os, "sched_getaffinity", lambda pid: set(range(16)))
     loader._invalidate_config_cache()
     before = (emb._embed_threads(), emb.bulk_embed_threads())
-    cfg = loader.KiroCrewConfig.load()
+    cfg = loader.AjCrewConfig.load()
     assert (cfg.memory.embedding_threads, cfg.memory.embedding_bulk_threads) == configured
     cfg.save()
     assert (emb._embed_threads(), emb.bulk_embed_threads()) == before
@@ -194,7 +194,7 @@ def test_bulk_cooldown_is_shared_but_does_not_delay_interactive_calls(backend, m
 
 @pytest.mark.asyncio
 async def test_cancelled_memory_work_keeps_its_slot_until_the_thread_finishes(monkeypatch):
-    from kiro_crew import executors
+    from aj_crew import executors
 
     monkeypatch.setattr(executors, "_MAX_EMBED_WORKERS", 1)
     loop = asyncio.get_running_loop()

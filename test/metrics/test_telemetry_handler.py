@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.dashboard.handlers.telemetry import _aggregate, _Hist, _pct_from_buckets
-from kiro_crew.metrics.schema import RESOURCE_ATTR_PROCESS_START_TIME
+from aj_crew.dashboard.handlers.telemetry import _aggregate, _Hist, _pct_from_buckets
+from aj_crew.metrics.schema import RESOURCE_ATTR_PROCESS_START_TIME
 
 _BOUNDS = [10, 20, 30, 40, 50]
 
@@ -83,7 +83,7 @@ def test_aggregate_counts_only_the_end_to_end_startup_point(tmp_path: Path):
     """
     ready = {"outcome": "ready", "backend": "kiro", "spawned": True}
     startup = {
-        "name": "kirocrew.session.startup.duration",
+        "name": "ajcrew.session.startup.duration",
         "data": {
             "data_points": [
                 _startup_dp({**ready, "phase": "total"}, bucket=4),
@@ -114,7 +114,7 @@ def test_aggregate_kiro_startup_counts_as_cold(tmp_path: Path):
     every cold start as warm and cold reads as empty forever.
     """
     startup = {
-        "name": "kirocrew.session.startup.duration",
+        "name": "ajcrew.session.startup.duration",
         "data": {
             "data_points": [
                 _startup_dp(
@@ -131,7 +131,7 @@ def test_aggregate_kiro_startup_counts_as_cold(tmp_path: Path):
 def test_aggregate_treats_missing_phase_as_the_total(tmp_path: Path):
     """The claude path emits no phase attribute at all — still one startup."""
     startup = {
-        "name": "kirocrew.session.startup.duration",
+        "name": "ajcrew.session.startup.duration",
         "data": {
             "data_points": [
                 _startup_dp({"outcome": "ready", "spawned": False}),
@@ -146,7 +146,7 @@ def test_aggregate_treats_missing_phase_as_the_total(tmp_path: Path):
 
 def test_aggregate_startup_turn_and_other(tmp_path: Path):
     startup = {
-        "name": "kirocrew.session.startup.duration",
+        "name": "ajcrew.session.startup.duration",
         "data": {
             "data_points": [
                 {
@@ -162,7 +162,7 @@ def test_aggregate_startup_turn_and_other(tmp_path: Path):
         },
     }
     turn = {
-        "name": "kirocrew.turn.duration",
+        "name": "ajcrew.turn.duration",
         "data": {
             "data_points": [
                 {
@@ -187,7 +187,7 @@ def test_aggregate_startup_turn_and_other(tmp_path: Path):
         },
     }
     warm = {
-        "name": "kirocrew.mcp.warm_pool.acquire",
+        "name": "ajcrew.mcp.warm_pool.acquire",
         "data": {
             # Real SDK shards always mark a Sum with aggregation_temporality /
             # is_monotonic (a Gauge's data block carries neither) — the aggregator
@@ -214,7 +214,7 @@ def test_aggregate_startup_turn_and_other(tmp_path: Path):
     assert result["turn"]["fault_rate"] == 0.25  # 1 error / 4
 
     # Other: warm-pool counter with per-attr breakdown.
-    warm_rows = [o for o in result["other"] if o["name"] == "kirocrew.mcp.warm_pool.acquire"]
+    warm_rows = [o for o in result["other"] if o["name"] == "ajcrew.mcp.warm_pool.acquire"]
     assert warm_rows and warm_rows[0]["kind"] == "counter"
     assert warm_rows[0]["total"] == 4.0
     assert warm_rows[0]["by_attr"]["result=hit"] == 3.0
@@ -235,7 +235,7 @@ def test_aggregate_cumulative_sums_are_window_relative_and_add_across_pids(tmp_p
 
     def cpu(v1: float, v2: float) -> dict:
         return {
-            "name": "kirocrew.process.cpu.seconds",
+            "name": "ajcrew.process.cpu.seconds",
             "data": {
                 "aggregation_temporality": 2,
                 "is_monotonic": True,
@@ -260,7 +260,7 @@ def test_aggregate_cumulative_sums_are_window_relative_and_add_across_pids(tmp_p
     )
 
     result = _aggregate([p1, p2])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.cpu.seconds"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.cpu.seconds"]
     assert rows and rows[0]["kind"] == "counter"
     # In-window delta per PID ((150-100) + (30-10)), summed across PIDs.
     assert rows[0]["total"] == 70.0
@@ -270,13 +270,13 @@ def test_aggregate_lifetime_total_gauges_are_reduced_window_relative(tmp_path: P
     """A lifetime-total GAUGE reports the window's activity, not the total.
 
     The process CPU/GC readings became observable gauges so that nothing
-    Kiro Crew exports is cumulative, but their value is still "since this
+    Aj Crew exports is cumulative, but their value is still "since this
     process started". Reporting the newest sample the way a state gauge is
     reported would put an ever-growing number on the panel; they take the
     window-relative path instead, so this reads 40 (150-110), not 150.
     """
     metric = {
-        "name": "kirocrew.process.cpu.seconds",
+        "name": "ajcrew.process.cpu.seconds",
         "data": {  # no aggregation_temporality / is_monotonic: a Gauge block
             "data_points": [
                 {"attributes": {}, "value": 110.0, "time_unix_nano": 100},
@@ -286,7 +286,7 @@ def test_aggregate_lifetime_total_gauges_are_reduced_window_relative(tmp_path: P
         },
     }
     result = _aggregate([_write_shard(tmp_path, [metric])])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.cpu.seconds"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.cpu.seconds"]
     assert rows and rows[0]["kind"] == "counter"
     assert rows[0]["total"] == 40.0
 
@@ -301,7 +301,7 @@ def test_aggregate_stitches_a_lifetime_total_across_the_instrument_switch(tmp_pa
     would show the same instrument twice with two different meanings.
     """
     old_shape = {
-        "name": "kirocrew.process.cpu.seconds",
+        "name": "ajcrew.process.cpu.seconds",
         "data": {
             "aggregation_temporality": 2,
             "is_monotonic": True,
@@ -312,7 +312,7 @@ def test_aggregate_stitches_a_lifetime_total_across_the_instrument_switch(tmp_pa
         },
     }
     new_shape = {
-        "name": "kirocrew.process.cpu.seconds",
+        "name": "ajcrew.process.cpu.seconds",
         "data": {
             "data_points": [
                 {"attributes": {}, "value": 160.0, "time_unix_nano": 300},
@@ -320,7 +320,7 @@ def test_aggregate_stitches_a_lifetime_total_across_the_instrument_switch(tmp_pa
         },
     }
     result = _aggregate([_write_shard(tmp_path, [old_shape, new_shape])])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.cpu.seconds"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.cpu.seconds"]
     assert len(rows) == 1, f"the switch split one instrument into {len(rows)} rows: {rows}"
     # Same process, same stream: baseline 100 (first in window), newest 160.
     assert rows[0]["total"] == 60.0
@@ -334,7 +334,7 @@ def test_aggregate_state_gauges_are_not_reduced_like_lifetime_totals(tmp_path: P
     Its newest sample IS the answer.
     """
     metric = {
-        "name": "kirocrew.process.memory.rss_bytes",
+        "name": "ajcrew.process.memory.rss_bytes",
         "data": {
             "data_points": [
                 {"attributes": {}, "value": 400.0, "time_unix_nano": 100},
@@ -343,7 +343,7 @@ def test_aggregate_state_gauges_are_not_reduced_like_lifetime_totals(tmp_path: P
         },
     }
     result = _aggregate([_write_shard(tmp_path, [metric])])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.memory.rss_bytes"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.memory.rss_bytes"]
     assert rows and rows[0]["kind"] == "gauge"
     assert rows[0]["latest"] == 900.0
 
@@ -358,21 +358,21 @@ def test_the_instrument_modules_stay_off_the_import_path(tmp_path: Path):
     inside ``_aggregate``, so it is imported on first use -- this pins that, and
     pins that the deferred import still works when the aggregation path runs.
     """
-    handler = sys.modules["kiro_crew.dashboard.handlers.telemetry"]
+    handler = sys.modules["aj_crew.dashboard.handlers.telemetry"]
     assert not hasattr(handler, "LIFETIME_TOTAL_METRICS"), (
         "the roster was imported at module scope again, putting the instrument "
         "modules back on the gateway boot path"
     )
 
     names = handler._lifetime_total_gauge_names()
-    assert "kirocrew.process.cpu.seconds" in names
-    assert "kirocrew.inventory.probe.failures" in names, "the inventory half is missing"
+    assert "ajcrew.process.cpu.seconds" in names
+    assert "ajcrew.inventory.probe.failures" in names, "the inventory half is missing"
     # Memoized: the second call must hand back the same object, not re-import.
     assert handler._lifetime_total_gauge_names() is names
 
     # And the deferred path is what _aggregate actually consults.
     metric = {
-        "name": "kirocrew.inventory.probe.failures",
+        "name": "ajcrew.inventory.probe.failures",
         "data": {
             "data_points": [
                 {"attributes": {"probe": "crons"}, "value": 2.0, "time_unix_nano": 100},
@@ -383,7 +383,7 @@ def test_the_instrument_modules_stay_off_the_import_path(tmp_path: Path):
     rows = [
         o
         for o in _aggregate([_write_shard(tmp_path, [metric])])["other"]
-        if o["name"] == "kirocrew.inventory.probe.failures"
+        if o["name"] == "ajcrew.inventory.probe.failures"
     ]
     assert rows and rows[0]["kind"] == "counter", rows
     assert rows[0]["by_attr"] == {"probe=crons": 3.0}, rows[0]
@@ -409,7 +409,7 @@ def test_a_reused_pid_cannot_make_a_lifetime_total_go_negative(tmp_path: Path):
                 {
                     "metrics": [
                         {
-                            "name": "kirocrew.process.cpu.seconds",
+                            "name": "ajcrew.process.cpu.seconds",
                             "data": {  # Gauge block: no temporality markers
                                 "data_points": [
                                     {"attributes": {}, "value": first, "time_unix_nano": t0},
@@ -438,7 +438,7 @@ def test_a_reused_pid_cannot_make_a_lifetime_total_go_negative(tmp_path: Path):
     )
 
     result = _aggregate([shard])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.cpu.seconds"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.cpu.seconds"]
     assert len(rows) == 1, f"one instrument must yield one row, got {rows}"
     # 40 from the first process + 5 from the reuser. Never negative, and never
     # the 938 a single-stream reading would subtract.
@@ -456,7 +456,7 @@ def test_aggregate_cumulative_detects_counter_reset_on_pid_reuse(tmp_path: Path)
     whose in-window start is proven by the reset — contributes its full 30.
     """
     metric = {
-        "name": "kirocrew.process.cpu.seconds",
+        "name": "ajcrew.process.cpu.seconds",
         "data": {
             "aggregation_temporality": 2,
             "is_monotonic": True,
@@ -468,13 +468,13 @@ def test_aggregate_cumulative_detects_counter_reset_on_pid_reuse(tmp_path: Path)
         },
     }
     result = _aggregate([_write_shard(tmp_path, [metric])])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.cpu.seconds"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.cpu.seconds"]
     assert rows and rows[0]["total"] == 30.0
 
 
 def _cumulative_metric(points: list[tuple[int, float]]) -> dict:
     return {
-        "name": "kirocrew.process.cpu.seconds",
+        "name": "ajcrew.process.cpu.seconds",
         "data": {
             "aggregation_temporality": 2,
             "is_monotonic": True,
@@ -494,7 +494,7 @@ def _identity_line(metrics: list, identity: str | None) -> str:
     """
     rm: dict = {"scope_metrics": [{"metrics": metrics}]}
     if identity is not None:
-        rm["resource"] = {"attributes": {"kirocrew.process.start_time": identity}}
+        rm["resource"] = {"attributes": {"ajcrew.process.start_time": identity}}
     return json.dumps({"resource_metrics": [rm]})
 
 
@@ -518,7 +518,7 @@ def test_aggregate_cumulative_identity_splits_reused_pid_without_a_value_drop(tm
         encoding="utf-8",
     )
     result = _aggregate([shard])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.cpu.seconds"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.cpu.seconds"]
     assert rows and rows[0]["total"] == 65.0
 
 
@@ -539,7 +539,7 @@ def test_aggregate_cumulative_same_identity_stitches_across_provider_rebuild(tmp
         encoding="utf-8",
     )
     result = _aggregate([shard])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.cpu.seconds"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.cpu.seconds"]
     assert rows and rows[0]["total"] == 50.0
 
 
@@ -561,7 +561,7 @@ def test_aggregate_cumulative_identity_stream_treats_a_drop_as_garbage_not_reset
         encoding="utf-8",
     )
     result = _aggregate([shard])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.cpu.seconds"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.cpu.seconds"]
     assert rows and rows[0]["total"] == 50.0
 
 
@@ -577,7 +577,7 @@ def test_aggregate_cumulative_non_string_identity_reads_as_identity_less(tmp_pat
     line = {
         "resource_metrics": [
             {
-                "resource": {"attributes": {"kirocrew.process.start_time": 12345}},
+                "resource": {"attributes": {"ajcrew.process.start_time": 12345}},
                 "scope_metrics": [
                     {"metrics": [_cumulative_metric([(100, 100.0), (200, 10.0), (300, 30.0)])]}
                 ],
@@ -587,7 +587,7 @@ def test_aggregate_cumulative_non_string_identity_reads_as_identity_less(tmp_pat
     shard = tmp_path / "metrics-2026-08-21-1234.jsonl"
     shard.write_text(json.dumps(line) + "\n", encoding="utf-8")
     result = _aggregate([shard])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.cpu.seconds"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.cpu.seconds"]
     assert rows and rows[0]["total"] == 30.0
 
 
@@ -610,7 +610,7 @@ def test_aggregate_cumulative_legacy_lines_keep_the_value_heuristic(tmp_path: Pa
         encoding="utf-8",
     )
     result = _aggregate([legacy, stamped])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.cpu.seconds"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.cpu.seconds"]
     assert rows and rows[0]["total"] == 55.0
 
 
@@ -625,7 +625,7 @@ def test_aggregate_cumulative_totals_are_shard_order_independent(tmp_path: Path)
 
     def cpu(points: list[tuple[int, float]]) -> dict:
         return {
-            "name": "kirocrew.process.cpu.seconds",
+            "name": "ajcrew.process.cpu.seconds",
             "data": {
                 "aggregation_temporality": 2,
                 "is_monotonic": True,
@@ -662,7 +662,7 @@ def test_aggregate_cumulative_totals_are_shard_order_independent(tmp_path: Path)
 
     for order in ([older, newer], [newer, older]):
         result = _aggregate(order)
-        rows = [o for o in result["other"] if o["name"] == "kirocrew.process.cpu.seconds"]
+        rows = [o for o in result["other"] if o["name"] == "ajcrew.process.cpu.seconds"]
         # One monotonic stream 100→160: in-window activity 60, in either order.
         assert rows and rows[0]["total"] == 60.0
 
@@ -677,7 +677,7 @@ def test_aggregate_cumulative_reports_window_activity_not_lifetime(tmp_path: Pat
     window (5010 - 5000) is reported.
     """
     metric = {
-        "name": "kirocrew.process.cpu.seconds",
+        "name": "ajcrew.process.cpu.seconds",
         "data": {
             "aggregation_temporality": 2,
             "is_monotonic": True,
@@ -688,7 +688,7 @@ def test_aggregate_cumulative_reports_window_activity_not_lifetime(tmp_path: Pat
         },
     }
     result = _aggregate([_write_shard(tmp_path, [metric])])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.cpu.seconds"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.cpu.seconds"]
     assert rows and rows[0]["total"] == 10.0
 
 
@@ -700,7 +700,7 @@ def test_aggregate_rejects_non_finite_scalars(tmp_path: Path):
     poison sums with inf.
     """
     metric = {
-        "name": "kirocrew.process.threads.os",
+        "name": "ajcrew.process.threads.os",
         "data": {
             "data_points": [
                 {"attributes": {}, "value": float("inf"), "time_unix_nano": 5},
@@ -713,7 +713,7 @@ def test_aggregate_rejects_non_finite_scalars(tmp_path: Path):
     # OverflowError, which the coercion's except tuple must absorb (the point
     # degrades to non-cumulative instead of 500ing the endpoint).
     poisoned_temporality = {
-        "name": "kirocrew.poisoned.temporality",
+        "name": "ajcrew.poisoned.temporality",
         "data": {
             "data_points": [{"attributes": {}, "value": 3.0, "time_unix_nano": 7}],
             "aggregation_temporality": float("inf"),
@@ -721,14 +721,14 @@ def test_aggregate_rejects_non_finite_scalars(tmp_path: Path):
         },
     }
     result = _aggregate([_write_shard(tmp_path, [metric, poisoned_temporality])])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.threads.os"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.threads.os"]
     assert rows and rows[0]["kind"] == "gauge"
     # inf value skipped; inf timestamp coerces the point to ts=0 (sorts
     # oldest), so ts=9 wins.
     assert rows[0]["latest"] == 97.0
     # The poisoned-temporality Sum degrades to a delta counter (cumulative
     # False), still counted -- and the payload stays strict JSON.
-    poisoned = [o for o in result["other"] if o["name"] == "kirocrew.poisoned.temporality"]
+    poisoned = [o for o in result["other"] if o["name"] == "ajcrew.poisoned.temporality"]
     assert poisoned and poisoned[0]["kind"] == "counter"
     json.dumps(result, allow_nan=False)
 
@@ -767,7 +767,7 @@ def test_aggregate_rejects_non_finite_histogram_fields(tmp_path: Path):
     good = _hist_dp({}, count=2, ns=8, each_ms=25.0)
 
     metric = {
-        "name": "kirocrew.mcp.backend.acquire.duration",
+        "name": "ajcrew.mcp.backend.acquire.duration",
         "data": {
             "data_points": [
                 poisoned_sum,
@@ -784,7 +784,7 @@ def test_aggregate_rejects_non_finite_histogram_fields(tmp_path: Path):
         },
     }
     result = _aggregate([_write_shard(tmp_path, [metric])])
-    row = next(o for o in result["other"] if o["name"] == "kirocrew.mcp.backend.acquire.duration")
+    row = next(o for o in result["other"] if o["name"] == "ajcrew.mcp.backend.acquire.duration")
 
     # Structurally poisoned points (sum/bound/count/bucket) are skipped whole;
     # the nan-min point survives with min degraded; the inf-timestamp point
@@ -892,7 +892,7 @@ def test_aggregate_gauges_keep_latest_not_sum(tmp_path: Path):
 
     def gauge_metric(ts: int, value: float, attrs: dict | None = None) -> dict:
         return {
-            "name": "kirocrew.process.threads.os",
+            "name": "ajcrew.process.threads.os",
             "data": {
                 "data_points": [
                     {"attributes": attrs or {}, "value": value, "time_unix_nano": ts},
@@ -906,7 +906,7 @@ def test_aggregate_gauges_keep_latest_not_sum(tmp_path: Path):
     )
     result = _aggregate([shard])
 
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.threads.os"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.threads.os"]
     assert rows and rows[0]["kind"] == "gauge"
     # Three cycles observed 70/72/71 threads: the report is the newest sample
     # (72, ts=300), not 213.
@@ -916,7 +916,7 @@ def test_aggregate_gauges_keep_latest_not_sum(tmp_path: Path):
 def test_aggregate_gauge_attr_sets_are_independent(tmp_path: Path):
     """Attributed gauge samples keep the newest value PER attribute set."""
     metric = {
-        "name": "kirocrew.process.memory.rss_bytes",
+        "name": "ajcrew.process.memory.rss_bytes",
         "data": {
             "data_points": [
                 {"attributes": {"estimate": "current"}, "value": 100.0, "time_unix_nano": 1},
@@ -925,7 +925,7 @@ def test_aggregate_gauge_attr_sets_are_independent(tmp_path: Path):
         },
     }
     result = _aggregate([_write_shard(tmp_path, [metric])])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.memory.rss_bytes"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.memory.rss_bytes"]
     assert rows and rows[0]["kind"] == "gauge"
     # A gauge that went DOWN reports the newer, lower value — a sum (190) or a
     # max (100) would both misreport reclaimed memory.
@@ -936,13 +936,13 @@ def test_aggregate_gauges_do_not_collapse_across_pids(tmp_path: Path):
     """Concurrent processes exporting the same gauge stay distinguishable.
 
     Shards are per-PID (metrics-YYYY-MM-DD-<pid>.jsonl). The gateway and an MCP
-    daemon both export kirocrew.process.threads.os; timestamp-newest-wins
+    daemon both export ajcrew.process.threads.os; timestamp-newest-wins
     across processes would display an arbitrary process as gateway state.
     """
 
     def shard(pid: int, ts: int, value: float) -> Path:
         metric = {
-            "name": "kirocrew.process.threads.os",
+            "name": "ajcrew.process.threads.os",
             "data": {
                 "data_points": [
                     {"attributes": {}, "value": value, "time_unix_nano": ts},
@@ -959,7 +959,7 @@ def test_aggregate_gauges_do_not_collapse_across_pids(tmp_path: Path):
     daemon = shard(pid=200, ts=99, value=8.0)  # newer sample, a small daemon
 
     result = _aggregate([gateway, daemon])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.threads.os"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.threads.os"]
     assert rows and rows[0]["kind"] == "gauge"
     # Both processes keep their own newest sample, keyed by pid.
     assert rows[0]["by_attr"]["pid=100"] == 96.0
@@ -971,7 +971,7 @@ def test_aggregate_gauges_do_not_collapse_across_pids(tmp_path: Path):
 def test_single_pid_gauge_keeps_simple_shape(tmp_path: Path):
     """One process in the window: no pid= keys appear in by_attr."""
     metric = {
-        "name": "kirocrew.process.open_fds",
+        "name": "ajcrew.process.open_fds",
         "data": {
             "data_points": [
                 {"attributes": {}, "value": 144.0, "time_unix_nano": 7},
@@ -982,7 +982,7 @@ def test_single_pid_gauge_keeps_simple_shape(tmp_path: Path):
     rm = {"resource_metrics": [{"scope_metrics": [{"metrics": [metric]}]}]}
     p.write_text(json.dumps(rm) + "\n", encoding="utf-8")
     result = _aggregate([p])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.open_fds"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.open_fds"]
     assert rows and rows[0]["latest"] == 144.0
     assert not any(k.startswith("pid=") for k in rows[0]["by_attr"])
 
@@ -996,7 +996,7 @@ def test_malformed_scalar_records_never_crash_aggregate(tmp_path: Path):
     for /api/telemetry/startup.
     """
     metric = {
-        "name": "kirocrew.process.threads.os",
+        "name": "ajcrew.process.threads.os",
         "data": {
             "data_points": [
                 {"attributes": {}, "value": 96.0, "time_unix_nano": "not-a-number"},
@@ -1006,7 +1006,7 @@ def test_malformed_scalar_records_never_crash_aggregate(tmp_path: Path):
         },
     }
     result = _aggregate([_write_shard(tmp_path, [metric])])
-    rows = [o for o in result["other"] if o["name"] == "kirocrew.process.threads.os"]
+    rows = [o for o in result["other"] if o["name"] == "ajcrew.process.threads.os"]
     assert rows and rows[0]["kind"] == "gauge"
     # ts=9 beats the ts=0-coerced garbage-timestamp point; the garbage-value
     # point is skipped entirely.
@@ -1032,13 +1032,13 @@ def test_fault_rate_excludes_watchdog_recovery_outcomes(tmp_path: Path):
     """F4 regression: tool_stall and stale_recover must NOT count toward
     fault_rate even though they are not 'ok'. Only genuine terminal faults
     (error, timeout, unknown) are faults; watchdog recovery outcomes are
-    tracked separately under kirocrew.watchdog.recovery.outcome.
+    tracked separately under ajcrew.watchdog.recovery.outcome.
 
     'unknown' IS included because pre-labelling metric shards use it for
     unclassified non-ok outcomes; excluding it would silently inflate the
     denominator without matching the numerator on the 14-day lookback."""
     turn = {
-        "name": "kirocrew.turn.duration",
+        "name": "ajcrew.turn.duration",
         "data": {
             "data_points": [
                 _turn_dp({"outcome": "ok"}, count=4),
@@ -1071,7 +1071,7 @@ def test_fault_rate_excludes_watchdog_recovery_outcomes(tmp_path: Path):
     sub = tmp_path / "sub"
     sub.mkdir(exist_ok=True)
     error_only_turn = {
-        "name": "kirocrew.turn.duration",
+        "name": "ajcrew.turn.duration",
         "data": {
             "data_points": [
                 _turn_dp({"outcome": "ok"}, count=3),
@@ -1092,7 +1092,7 @@ def test_fault_rate_counts_exhausted_stall_turns_as_faults(tmp_path: Path):
     aggregator's allowlist counts as a terminal fault. Recovered stalls stay
     excluded; dead sessions count; fault_rate remains single-series."""
     turn = {
-        "name": "kirocrew.turn.duration",
+        "name": "ajcrew.turn.duration",
         "data": {
             "data_points": [
                 _turn_dp({"outcome": "ok"}, count=5),
@@ -1105,7 +1105,7 @@ def test_fault_rate_counts_exhausted_stall_turns_as_faults(tmp_path: Path):
     # The recovery counter is pure mechanism telemetry: it must NOT feed
     # fault_rate (the exhausted turn above already carries the fault).
     recovery = {
-        "name": "kirocrew.watchdog.recovery.outcome",
+        "name": "ajcrew.watchdog.recovery.outcome",
         "data": {
             "data_points": [
                 {
@@ -1152,8 +1152,8 @@ def test_every_turn_outcome_label_is_classified_fault_or_excluded():
     import ast
     import inspect
 
-    from kiro_crew.dashboard.handlers.telemetry import _TERMINAL_FAULT_OUTCOMES
-    from kiro_crew.metrics.turns import turn_outcome
+    from aj_crew.dashboard.handlers.telemetry import _TERMINAL_FAULT_OUTCOMES
+    from aj_crew.metrics.turns import turn_outcome
 
     labels: set[str] = set()
     for node in ast.walk(ast.parse(inspect.getsource(turn_outcome))):
@@ -1169,7 +1169,7 @@ def test_every_turn_outcome_label_is_classified_fault_or_excluded():
 
     # Non-faults, each with its exclusion reason pinned by the tests above:
     # "ok" succeeded; "tool_stall"/"stale_recover" are recovered-in-place stalls
-    # tracked under kirocrew.watchdog.recovery.outcome; "cancelled" is the
+    # tracked under ajcrew.watchdog.recovery.outcome; "cancelled" is the
     # operator pressing Stop, so counting it would report a deliberate user
     # action as the system failing — which is what folding it into "error"
     # does; "unclassified" is a turn whose surface had no stop reason to give,
@@ -1206,7 +1206,7 @@ def test_every_turn_outcome_label_is_classified_fault_or_excluded():
 #      A window straddling a boundary change reported ONE generation's count and
 #      percentiles with nothing saying a generation had been dropped — the MCP
 #      acquire card showed that subset beside a full-window counter.
-#   2. The MCP cold-load card read ``kirocrew.mcp.lazy_load.duration``, emitted
+#   2. The MCP cold-load card read ``ajcrew.mcp.lazy_load.duration``, emitted
 #      only by the legacy pre-ensure_backend spawn path, so it read "no data yet"
 #      forever while real cold spawns were being recorded on the acquire
 #      histogram under ``warm=false``.
@@ -1272,7 +1272,7 @@ def test_total_count_is_the_full_population_not_the_group_count():
 def test_other_histograms_report_dropped_generations(tmp_path: Path):
     """The ``other`` surface must report other_generations, not omit it."""
     acquire = {
-        "name": "kirocrew.mcp.backend.acquire.duration",
+        "name": "ajcrew.mcp.backend.acquire.duration",
         "data": {
             "data_points": [
                 _hist_dp({"warm": True}, count=4, ns=20),
@@ -1282,7 +1282,7 @@ def test_other_histograms_report_dropped_generations(tmp_path: Path):
     }
 
     result = _aggregate([_write_shard(tmp_path, [acquire])])
-    row = next(o for o in result["other"] if o["name"] == "kirocrew.mcp.backend.acquire.duration")
+    row = next(o for o in result["other"] if o["name"] == "ajcrew.mcp.backend.acquire.duration")
 
     assert row["count"] == 4, "newest generation only"
     assert row["other_generations"] == 1, "and it says so"
@@ -1292,7 +1292,7 @@ def test_other_histograms_report_dropped_generations(tmp_path: Path):
 def test_acquire_splits_expose_the_cold_side(tmp_path: Path):
     """The cold-spawn card is fed by the ``warm=false`` half of acquire."""
     acquire = {
-        "name": "kirocrew.mcp.backend.acquire.duration",
+        "name": "ajcrew.mcp.backend.acquire.duration",
         "data": {
             "data_points": [
                 _hist_dp({"warm": True}, count=9, each_ms=15.0),
@@ -1302,7 +1302,7 @@ def test_acquire_splits_expose_the_cold_side(tmp_path: Path):
     }
 
     result = _aggregate([_write_shard(tmp_path, [acquire])])
-    row = next(o for o in result["other"] if o["name"] == "kirocrew.mcp.backend.acquire.duration")
+    row = next(o for o in result["other"] if o["name"] == "ajcrew.mcp.backend.acquire.duration")
 
     assert row["count"] == 11
     assert set(row["splits"]) == {"warm=true", "warm=false"}
@@ -1317,7 +1317,7 @@ def test_acquire_splits_expose_the_cold_side(tmp_path: Path):
 def test_splits_are_restricted_to_named_low_cardinality_attrs(tmp_path: Path):
     """method/route must NOT spawn a sub-histogram per endpoint."""
     req = {
-        "name": "kirocrew.gateway.request.duration",
+        "name": "ajcrew.gateway.request.duration",
         "data": {
             "data_points": [
                 _hist_dp({"method": "GET", "route": "/api/a"}),
@@ -1326,21 +1326,21 @@ def test_splits_are_restricted_to_named_low_cardinality_attrs(tmp_path: Path):
         },
     }
     skill = {
-        "name": "kirocrew.skill.lazy_load.duration",
+        "name": "ajcrew.skill.lazy_load.duration",
         "data": {"data_points": [_hist_dp({"transport": "stdio"})]},
     }
 
     result = _aggregate([_write_shard(tmp_path, [req, skill])])
     by_name = {o["name"]: o for o in result["other"]}
 
-    assert "splits" not in by_name["kirocrew.gateway.request.duration"]
-    assert "splits" not in by_name["kirocrew.skill.lazy_load.duration"]
+    assert "splits" not in by_name["ajcrew.gateway.request.duration"]
+    assert "splits" not in by_name["ajcrew.skill.lazy_load.duration"]
 
 
 def test_turn_and_startup_generation_count_comes_from_stats(tmp_path: Path):
     """Single source: the field arrives with the stats, not as a sibling."""
     turn = {
-        "name": "kirocrew.turn.duration",
+        "name": "ajcrew.turn.duration",
         "data": {
             "data_points": [
                 _hist_dp({"outcome": "ok"}, count=3, ns=20),
@@ -1350,7 +1350,7 @@ def test_turn_and_startup_generation_count_comes_from_stats(tmp_path: Path):
     }
     ready = {"outcome": "ready", "backend": "kiro", "spawned": True, "phase": "total"}
     startup = {
-        "name": "kirocrew.session.startup.duration",
+        "name": "ajcrew.session.startup.duration",
         "data": {
             "data_points": [
                 _hist_dp(ready, count=2, ns=20),
@@ -1372,7 +1372,7 @@ def test_turn_and_startup_generation_count_comes_from_stats(tmp_path: Path):
 class TestTelemetryPosture:
     """``_telemetry_cfg`` reports the EFFECTIVE state, not the stored flag.
 
-    ``KIROCREW_TELEMETRY`` overrides ``telemetry.enabled`` inside the collector, so
+    ``AJCREW_TELEMETRY`` overrides ``telemetry.enabled`` inside the collector, so
     a panel that echoed the config value alone would say "off" on a host that is
     recording — and would offer a switch whose write the collector ignores. The
     pin is resolved through ``metrics.provider`` so the control and the collector
@@ -1384,33 +1384,33 @@ class TestTelemetryPosture:
         from unittest.mock import patch as _patch
 
         return _patch(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             return_value=SimpleNamespace(telemetry=SimpleNamespace(enabled=enabled)),
         )
 
     def test_config_flag_when_env_unset(self, monkeypatch) -> None:
-        from kiro_crew.dashboard.handlers.telemetry import _telemetry_cfg
+        from aj_crew.dashboard.handlers.telemetry import _telemetry_cfg
 
-        monkeypatch.delenv("KIROCREW_TELEMETRY", raising=False)
+        monkeypatch.delenv("AJCREW_TELEMETRY", raising=False)
         with self._cfg(True):
             state = _telemetry_cfg()
         assert state.enabled is True
         assert state.env_pinned is False
 
     def test_env_truthy_overrides_a_false_config(self, monkeypatch) -> None:
-        from kiro_crew.dashboard.handlers.telemetry import _telemetry_cfg
+        from aj_crew.dashboard.handlers.telemetry import _telemetry_cfg
 
-        monkeypatch.setenv("KIROCREW_TELEMETRY", "1")
+        monkeypatch.setenv("AJCREW_TELEMETRY", "1")
         with self._cfg(False):
             state = _telemetry_cfg()
         assert state.enabled is True
         assert state.env_pinned is True
-        assert state.env_var == "KIROCREW_TELEMETRY"
+        assert state.env_var == "AJCREW_TELEMETRY"
 
     def test_env_falsy_overrides_a_true_config(self, monkeypatch) -> None:
-        from kiro_crew.dashboard.handlers.telemetry import _telemetry_cfg
+        from aj_crew.dashboard.handlers.telemetry import _telemetry_cfg
 
-        monkeypatch.setenv("KIROCREW_TELEMETRY", "off")
+        monkeypatch.setenv("AJCREW_TELEMETRY", "off")
         with self._cfg(True):
             state = _telemetry_cfg()
         assert state.enabled is False
@@ -1419,9 +1419,9 @@ class TestTelemetryPosture:
     def test_blank_env_is_not_a_pin(self, monkeypatch) -> None:
         # An exported-but-empty variable is the shape a shell leaves behind; it
         # must defer to the config file rather than pinning the switch off.
-        from kiro_crew.dashboard.handlers.telemetry import _telemetry_cfg
+        from aj_crew.dashboard.handlers.telemetry import _telemetry_cfg
 
-        monkeypatch.setenv("KIROCREW_TELEMETRY", "  ")
+        monkeypatch.setenv("AJCREW_TELEMETRY", "  ")
         with self._cfg(True):
             state = _telemetry_cfg()
         assert state.enabled is True
@@ -1430,8 +1430,8 @@ class TestTelemetryPosture:
     def test_env_var_name_comes_from_the_collector(self) -> None:
         # The message names a variable for the user to unset, so the name must be
         # the one the collector reads, not a copy that can drift from it.
-        from kiro_crew.dashboard.handlers.telemetry import _telemetry_cfg
-        from kiro_crew.metrics.provider import TELEMETRY_ENV_VAR
+        from aj_crew.dashboard.handlers.telemetry import _telemetry_cfg
+        from aj_crew.metrics.provider import TELEMETRY_ENV_VAR
 
         assert _telemetry_cfg().env_var == TELEMETRY_ENV_VAR
 
@@ -1452,9 +1452,9 @@ class TestTelemetryPosture:
         '{"resource_metrics": [{"scope_metrics": "x"}]}',
         '{"resource_metrics": [{"scope_metrics": [{"metrics": [7, {"name": 3}]}]}]}',
         '{"resource_metrics": [{"scope_metrics": [{"metrics": '
-        '[{"name": "kirocrew.session.startup.duration", "data": "x"}]}]}]}',
+        '[{"name": "ajcrew.session.startup.duration", "data": "x"}]}]}]}',
         '{"resource_metrics": [{"scope_metrics": [{"metrics": '
-        '[{"name": "kirocrew.session.startup.duration", "data": {"data_points": [5, "x"]}}]}]}]}',
+        '[{"name": "ajcrew.session.startup.duration", "data": {"data_points": [5, "x"]}}]}]}]}',
     ],
 )
 def test_aggregate_skips_a_line_that_is_not_an_export_cycle(tmp_path: Path, bad_line: str):
@@ -1465,7 +1465,7 @@ def test_aggregate_skips_a_line_that_is_not_an_export_cycle(tmp_path: Path, bad_
     """
     ready = {"outcome": "ready", "backend": "kiro", "spawned": True}
     startup = {
-        "name": "kirocrew.session.startup.duration",
+        "name": "ajcrew.session.startup.duration",
         "data": {"data_points": [_startup_dp({**ready, "phase": "total"}, bucket=4)]},
     }
     p = _write_shard(tmp_path, [startup])

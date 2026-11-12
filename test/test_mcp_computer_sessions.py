@@ -1,4 +1,4 @@
-"""The ``kirocrew-computer`` shim's session identity and its loopback ``_invoke`` wire.
+"""The ``ajcrew-computer`` shim's session identity and its loopback ``_invoke`` wire.
 
 An unresolved session key travels as an ``unresolved:<pid>#<nonce>`` placeholder that
 keeps snapshot slots apart and never becomes an identity, and the real ``_invoke`` HTTP
@@ -25,10 +25,10 @@ from mcp_computer_helpers import home_fixture  # noqa: F401
 from mcp_computer_helpers import keystone_fixture  # noqa: F401
 from mcp_computer_helpers import _enable
 
-from kiro_crew import mcp_computer, mcp_core
-from kiro_crew.computer_use.types import ERROR_PREFIX, TOOL_LIST_APPS, AppRef
-from kiro_crew.mcp_caller import CallerContext, set_current_caller, set_current_tenant_nonce
-from kiro_crew.testing.wait import DEFAULT_INTERVAL_SECS, default_timeout
+from aj_crew import mcp_computer, mcp_core
+from aj_crew.computer_use.types import ERROR_PREFIX, TOOL_LIST_APPS, AppRef
+from aj_crew.mcp_caller import CallerContext, set_current_caller, set_current_tenant_nonce
+from aj_crew.testing.wait import DEFAULT_INTERVAL_SECS, default_timeout
 
 
 def _serve_in_background(server: http.server.HTTPServer) -> None:
@@ -74,8 +74,8 @@ class TestUnresolvedSessionsAreNamespaced:
 
     def test_two_unresolved_sessions_do_not_share_a_snapshot_slot(self):
         """The bug, at the layer it actually lived in."""
-        from kiro_crew.computer_use.index import SnapshotIndex
-        from kiro_crew.computer_use.types import ElementRec, Snapshot
+        from aj_crew.computer_use.index import SnapshotIndex
+        from aj_crew.computer_use.types import ElementRec, Snapshot
 
         app = AppRef(name="Notes", pid=1, window_id=7)
 
@@ -110,8 +110,8 @@ class TestUnresolvedSessionsAreNamespaced:
         ``os.getpid()`` is pinned to one value on purpose. Without the nonce both keys
         match and the fingerprint check cannot catch it: both trees describe one window.
         """
-        from kiro_crew.computer_use.index import SnapshotIndex
-        from kiro_crew.computer_use.types import ElementRec, Snapshot
+        from aj_crew.computer_use.index import SnapshotIndex
+        from aj_crew.computer_use.types import ElementRec, Snapshot
 
         monkeypatch.setattr(os, "getpid", lambda: 5150)
         app = AppRef(name="Notes", pid=1, window_id=7)
@@ -156,8 +156,8 @@ class TestUnresolvedSessionsAreNamespaced:
         cron ownership, callback routing and audit looking resolved. With no identity
         source, strict resolution stays empty.
         """
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
         set_current_caller(None)
         set_current_tenant_nonce("cafebabe")
 

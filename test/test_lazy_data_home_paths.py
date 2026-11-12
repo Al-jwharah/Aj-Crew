@@ -1,14 +1,14 @@
 """Guard: data-home paths must never be resolved at import time.
 
 ``config_dir()``, ``kiro_sessions_dir()`` and friends read
-``KIROCREW_HOME`` on *every* call. Binding one of them to a module-level constant
+``AJCREW_HOME`` on *every* call. Binding one of them to a module-level constant
 freezes whichever home happened to be active when that module was first
 imported, which silently breaks:
 
-* **pod isolation** -- a pod exports its own ``KIROCREW_HOME``;
+* **pod isolation** -- a pod exports its own ``AJCREW_HOME``;
 * **the lazy default-home resolution** (``~/.kiro/crew``), which is deliberately
   resolved late and cached;
-* **test isolation** -- the autouse ``_isolate_kirocrew_home`` fixture in
+* **test isolation** -- the autouse ``_isolate_ajcrew_home`` fixture in
   ``conftest.py`` runs *after* collection has already imported the module under
   test, so it cannot reach a frozen constant. That hole is how a local test run
   wrote 2128 fixture rows and 362 fixture cron records into an operator's real
@@ -51,7 +51,7 @@ from conftest import requires_symlinks
 # per full run for this file alone. Grouping keeps the cache single-copy per run.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_lazy_data_home_paths")
 
-SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 PATHS_MODULE = SRC / "config" / "paths.py"
 
 
@@ -97,7 +97,7 @@ def _transitive_path_factories() -> frozenset[str]:
     """Transitive closure: Path-returning functions that resolve through a paths.py factory.
 
     Extends the root set (functions declared in ``paths.py``) with every
-    ``Path``-returning function elsewhere in ``src/kiro_crew/`` that calls
+    ``Path``-returning function elsewhere in ``src/aj_crew/`` that calls
     (directly or transitively) any member of the set. This closes the gap where
     accessors like ``kiro_agents_dir_path()`` or ``_subagents_dir()`` resolve
     through ``kiro_agents_dir()`` or ``data_home()`` without being members of the
@@ -366,7 +366,7 @@ class TestNoImportTimePathResolution:
 
         mod = sys.modules[__name__]
 
-        fake_src = tmp_path / "kiro_crew"
+        fake_src = tmp_path / "aj_crew"
         (fake_src / "config").mkdir(parents=True)
         (fake_src / "config" / "paths.py").write_text(
             "from pathlib import Path\n\n\ndef config_dir() -> Path:\n    return Path('.')\n",
@@ -394,7 +394,7 @@ class TestNoImportTimePathResolution:
 
         mod = sys.modules[__name__]
 
-        fake_src = tmp_path / "kiro_crew"
+        fake_src = tmp_path / "aj_crew"
         (fake_src / "config").mkdir(parents=True)
         (fake_src / "config" / "paths.py").write_text(
             "from pathlib import Path\n\n\ndef data_home() -> Path:\n    return Path('.')\n",
@@ -429,23 +429,23 @@ class TestNoImportTimePathResolution:
 # environment -- without the reset this test would assert the fixture, not the
 # live-resolution branch it exists to cover.
 _CONFIG_DIR_ACCESSORS = [
-    ("kiro_crew.dashboard.handlers.usage", "_TOKEN_USAGE_DIR", "_token_usage_dir"),
-    ("kiro_crew.cron", "_DEFAULT_DIR", "_default_dir"),
-    ("kiro_crew.subagent_persistence", "_SUBAGENTS_DIR", "_subagents_dir"),
-    ("kiro_crew.dashboard.handlers.files", "_UPLOAD_DIR", "_upload_dir"),
-    ("kiro_crew.dashboard.handlers.files", "_SCREENSHOT_DIR", "_screenshot_dir"),
-    ("kiro_crew.dashboard.handlers.hooks", "_HOOK_STORE_PATH", "_hook_store_path"),
-    ("kiro_crew.dashboard.handlers.mcp", "_KIROCREW_MCP_JSON", "_kirocrew_mcp_json"),
-    ("kiro_crew.slack.sessions_view", "_SESSIONS_DIR", "_sessions_dir"),
-    ("kiro_crew.apps.builtins.auto_research.handlers", "RESEARCH_DIR", "research_dir"),
-    ("kiro_crew.apps.builtins.auto_research.handlers", "DB_PATH", "db_path"),
+    ("aj_crew.dashboard.handlers.usage", "_TOKEN_USAGE_DIR", "_token_usage_dir"),
+    ("aj_crew.cron", "_DEFAULT_DIR", "_default_dir"),
+    ("aj_crew.subagent_persistence", "_SUBAGENTS_DIR", "_subagents_dir"),
+    ("aj_crew.dashboard.handlers.files", "_UPLOAD_DIR", "_upload_dir"),
+    ("aj_crew.dashboard.handlers.files", "_SCREENSHOT_DIR", "_screenshot_dir"),
+    ("aj_crew.dashboard.handlers.hooks", "_HOOK_STORE_PATH", "_hook_store_path"),
+    ("aj_crew.dashboard.handlers.mcp", "_AJCREW_MCP_JSON", "_ajcrew_mcp_json"),
+    ("aj_crew.slack.sessions_view", "_SESSIONS_DIR", "_sessions_dir"),
+    ("aj_crew.apps.builtins.auto_research.handlers", "RESEARCH_DIR", "research_dir"),
+    ("aj_crew.apps.builtins.auto_research.handlers", "DB_PATH", "db_path"),
 ]
 
 
 class TestAccessorsFollowTheLiveHome:
-    """A post-import ``KIROCREW_HOME`` change must redirect every accessor.
+    """A post-import ``AJCREW_HOME`` change must redirect every accessor.
 
-    ``config_dir()`` returns a ``$KIROCREW_HOME`` override immediately, ahead of
+    ``config_dir()`` returns a ``$AJCREW_HOME`` override immediately, ahead of
     the cached default-home resolution branch, so the override path is live on
     every call. These modules are imported at collection time -- long before the
     env var below is set -- which is exactly the sequence that strands a
@@ -456,7 +456,7 @@ class TestAccessorsFollowTheLiveHome:
         import importlib
 
         home = tmp_path / "home-a"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
 
         stranded = []
         for mod_path, const, attr in _CONFIG_DIR_ACCESSORS:
@@ -465,21 +465,22 @@ class TestAccessorsFollowTheLiveHome:
             resolved = Path(getattr(mod, attr)())
             if not resolved.resolve().is_relative_to(home.resolve()):
                 stranded.append(f"{mod_path}.{attr}() -> {resolved}")
-        assert not stranded, (
-            "accessor did not follow KIROCREW_HOME set after import (issue #874):\n  "
-            + "\n  ".join(stranded)
+        assert (
+            not stranded
+        ), "accessor did not follow AJCREW_HOME set after import (issue #874):\n  " + "\n  ".join(
+            stranded
         )
 
     def test_accessor_tracks_a_second_change(self, tmp_path, monkeypatch):
         """Not merely read-once-late: it must re-resolve on every call."""
         import importlib
 
-        mod = importlib.import_module("kiro_crew.dashboard.handlers.usage")
+        mod = importlib.import_module("aj_crew.dashboard.handlers.usage")
         first = tmp_path / "home-1"
-        monkeypatch.setenv("KIROCREW_HOME", str(first))
+        monkeypatch.setenv("AJCREW_HOME", str(first))
         one = mod._token_usage_dir()
         second = tmp_path / "home-2"
-        monkeypatch.setenv("KIROCREW_HOME", str(second))
+        monkeypatch.setenv("AJCREW_HOME", str(second))
         two = mod._token_usage_dir()
         assert one != two
         assert one.resolve().is_relative_to(first.resolve())
@@ -491,8 +492,8 @@ class TestAccessorsFollowTheLiveHome:
         """
         import importlib
 
-        mod = importlib.import_module("kiro_crew.dashboard.handlers.usage")
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "ignored-home"))
+        mod = importlib.import_module("aj_crew.dashboard.handlers.usage")
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "ignored-home"))
         pinned = tmp_path / "pinned"
         monkeypatch.setattr(mod, "_TOKEN_USAGE_DIR", pinned)
         assert mod._token_usage_dir() == pinned
@@ -513,7 +514,7 @@ class TestResolutionDoesNotRepeatStartupMaintenance:
     """
 
     def _count_maintenance(self, monkeypatch):
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         calls: list[int] = []
         monkeypatch.setattr(paths, "_write_recovery_breadcrumb", lambda d: calls.append(1))
@@ -522,9 +523,9 @@ class TestResolutionDoesNotRepeatStartupMaintenance:
     def test_repeat_calls_skip_maintenance_but_config_dir_still_runs_it(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         home = tmp_path / "resolved"
         home.mkdir()
         monkeypatch.setattr(paths, "_resolved_home", home)
@@ -540,9 +541,9 @@ class TestResolutionDoesNotRepeatStartupMaintenance:
 
     def test_first_resolution_still_performs_maintenance(self, tmp_path, monkeypatch):
         """Per START, not per call -- the breadcrumb refresh runs once per process."""
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         monkeypatch.setattr(paths, "_resolved_home", None)
         monkeypatch.setattr(paths, "_resolve_default_home", lambda: tmp_path / "fresh")
         calls = self._count_maintenance(monkeypatch)
@@ -551,19 +552,19 @@ class TestResolutionDoesNotRepeatStartupMaintenance:
         assert calls, "the first resolution in a process must still perform maintenance"
 
     def test_override_is_never_cached(self, tmp_path, monkeypatch):
-        """A KIROCREW_HOME set after import must still be honoured.
+        """An AJCREW_HOME set after import must still be honoured.
 
         Caching would be cheaper but would freeze the home again, so the override
         branch deliberately delegates on every call.
         """
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         monkeypatch.setattr(paths, "_resolved_home", tmp_path / "stale-default")
         first = tmp_path / "ov-1"
-        monkeypatch.setenv("KIROCREW_HOME", str(first))
+        monkeypatch.setenv("AJCREW_HOME", str(first))
         assert paths.data_home().resolve() == first.resolve()
         second = tmp_path / "ov-2"
-        monkeypatch.setenv("KIROCREW_HOME", str(second))
+        monkeypatch.setenv("AJCREW_HOME", str(second))
         assert paths.data_home().resolve() == second.resolve()
 
     def test_invalid_override_does_not_reopen_the_maintenance_path(self, tmp_path, monkeypatch):
@@ -577,7 +578,7 @@ class TestResolutionDoesNotRepeatStartupMaintenance:
         call down the maintenance path and put the breadcrumb refresh back on the
         request path for anyone with a bad override.
         """
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         home = tmp_path / "resolved"
         home.mkdir()
@@ -589,7 +590,7 @@ class TestResolutionDoesNotRepeatStartupMaintenance:
         # be ACCEPTED and this test would assert nothing. (CI on Windows caught
         # exactly that.) ``tmp_path.anchor`` is "/" on POSIX and "C:\\" (or the
         # runner's drive) on Windows.
-        monkeypatch.setenv("KIROCREW_HOME", tmp_path.anchor)
+        monkeypatch.setenv("AJCREW_HOME", tmp_path.anchor)
         assert paths._valid_override_home() is None, "precondition: override rejected"
 
         calls = self._count_maintenance(monkeypatch)
@@ -603,11 +604,11 @@ class TestResolutionDoesNotRepeatStartupMaintenance:
         Otherwise the previous test could pass simply because the override
         branch stopped working altogether.
         """
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         monkeypatch.setattr(paths, "_resolved_home", tmp_path / "stale-default")
         good = tmp_path / "good-override"
-        monkeypatch.setenv("KIROCREW_HOME", str(good))
+        monkeypatch.setenv("AJCREW_HOME", str(good))
         assert paths._valid_override_home() is not None
         assert paths.data_home().resolve() == good.resolve()
 
@@ -615,7 +616,7 @@ class TestResolutionDoesNotRepeatStartupMaintenance:
 class TestConfigDirMemoIsNotServedAfterTheHomeIsCleared:
     """A ``config_dir()`` memo entry must not outlive the home it was built from.
 
-    The entry is keyed on ``(raw KIROCREW_HOME, resolved home)`` and the suite's
+    The entry is keyed on ``(raw AJCREW_HOME, resolved home)`` and the suite's
     autouse isolation fixture clears ``_resolved_home`` per test precisely so a
     home resolved by one test can never be served to the next. That invalidation
     only holds if the default path keys the entry on the home it RETURNED. Keying
@@ -636,16 +637,16 @@ class TestConfigDirMemoIsNotServedAfterTheHomeIsCleared:
     """
 
     def test_entry_from_a_bypassed_resolution_is_not_served_later(self, tmp_path, monkeypatch):
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         stubbed = tmp_path / "stubbed"
         # The breadcrumb is incidental to what this test asserts, and it is the
         # one part of the default path that writes OUTSIDE the resolved home:
         # ``_write_recovery_breadcrumb`` targets ``Path.home()`` directly, so the
         # first phase below -- which resolves through a stubbed resolver, before
         # ``Path.home`` is patched -- would drop a real
-        # ``~/.kirocrew.breadcrumb`` on the machine running the suite.
+        # ``~/.ajcrew.breadcrumb`` on the machine running the suite.
         monkeypatch.setattr(paths, "_write_recovery_breadcrumb", lambda _d: None)
 
         # A resolution that never writes ``_resolved_home`` (what a stubbed
@@ -672,9 +673,9 @@ class TestConfigDirMemoIsNotServedAfterTheHomeIsCleared:
         Two consecutive default-path calls must hit the entry, which is what keeps
         the breadcrumb refresh once-per-process instead of once-per-call.
         """
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         monkeypatch.setattr(paths, "_resolved_home", None)
         calls: list[int] = []
         monkeypatch.setattr(paths, "_write_recovery_breadcrumb", lambda d: calls.append(1))
@@ -698,7 +699,7 @@ class TestRecoveryBreadcrumb:
         without following it: the symlink is consumed (a regular breadcrumb
         takes its place) and the file it pointed at keeps its exact content.
         """
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         data_home = tmp_path / "data-home"
         crumb = tmp_path / paths.RECOVERY_BREADCRUMB_NAME
@@ -716,7 +717,7 @@ class TestRecoveryBreadcrumb:
     def test_normal_breadcrumb_write_is_private_and_contains_the_data_home(
         self, tmp_path: Path
     ) -> None:
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         data_home = tmp_path / "data-home"
         crumb = tmp_path / paths.RECOVERY_BREADCRUMB_NAME
@@ -739,7 +740,7 @@ class TestRecoveryBreadcrumb:
         that lack it (Windows) deliberately rewrite every start, so there the
         assertion is that the rewrite lands a valid breadcrumb.
         """
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         data_home = tmp_path / "data-home"
         crumb = tmp_path / paths.RECOVERY_BREADCRUMB_NAME
@@ -764,7 +765,7 @@ class TestRecoveryBreadcrumb:
         no-follow, non-blocking descriptor gated on ``S_ISREG``, so a FIFO is
         skipped and atomically replaced by the real breadcrumb.
         """
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         data_home = tmp_path / "data-home"
         crumb = tmp_path / paths.RECOVERY_BREADCRUMB_NAME
@@ -786,7 +787,7 @@ class TestRecoveryBreadcrumb:
         to the atomic rewrite there. Startup must not crash and the breadcrumb
         must still land correctly.
         """
-        from kiro_crew.config import paths
+        from aj_crew.config import paths
 
         data_home = tmp_path / "data-home"
         crumb = tmp_path / paths.RECOVERY_BREADCRUMB_NAME

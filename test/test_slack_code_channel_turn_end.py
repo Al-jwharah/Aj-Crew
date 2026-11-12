@@ -13,8 +13,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_turn.session_reset import _turn_release_session
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_turn.session_reset import _turn_release_session
 
 
 def _turn(

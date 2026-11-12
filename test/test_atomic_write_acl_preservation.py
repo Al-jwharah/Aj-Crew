@@ -34,9 +34,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.atomic_write import atomic_write, open_access_control_source
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew import platform_compat
+from aj_crew.atomic_write import atomic_write, open_access_control_source
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 _MACOS_ONLY = pytest.mark.skipif(
     not platform_compat.IS_MACOS, reason="the extended ACL is the macOS store"
@@ -206,7 +206,7 @@ def test_no_source_descriptor_is_opened_where_xattrs_do_not_exist(tmp_path, monk
     would fail every dashboard and steering save. Returning ``None`` keeps the
     write on its plain path.
     """
-    import kiro_crew.atomic_write as aw
+    import aj_crew.atomic_write as aw
 
     target = tmp_path / "file.txt"
     target.write_text("before", encoding="utf-8")
@@ -243,7 +243,7 @@ def test_pinned_caller_gets_a_descriptor_even_without_xattrs(tmp_path, monkeypat
     if not hasattr(os, "O_DIRECTORY") or os.open not in os.supports_dir_fd:
         pytest.skip("platform cannot pin a parent directory")
 
-    import kiro_crew.atomic_write as aw
+    import aj_crew.atomic_write as aw
 
     target = tmp_path / "file.txt"
     target.write_text("before", encoding="utf-8")
@@ -268,7 +268,7 @@ def test_source_descriptor_is_opened_where_xattrs_exist(tmp_path):
     target = tmp_path / "file.txt"
     target.write_text("before", encoding="utf-8")
 
-    from kiro_crew.atomic_write import open_access_control_source
+    from aj_crew.atomic_write import open_access_control_source
 
     fd = open_access_control_source(target)
     assert isinstance(fd, int)
@@ -288,7 +288,7 @@ def test_source_open_refuses_a_leaf_symlink(tmp_path):
     link = tmp_path / "link.txt"
     link.symlink_to(real)
 
-    from kiro_crew.atomic_write import open_access_control_source
+    from aj_crew.atomic_write import open_access_control_source
 
     with pytest.raises(OSError) as caught:
         open_access_control_source(link)
@@ -446,10 +446,10 @@ def test_no_source_fd_leaves_the_write_untouched(tmp_path, monkeypatch):
 @pytest.mark.skipif(sys.platform != "win32", reason="a Windows DACL exists only on Windows")
 def test_a_narrowed_windows_dacl_survives_the_replace(tmp_path):
     """A file narrowed below its folder keeps that narrowing after an overwrite."""
-    from kiro_crew import windows_acl
+    from aj_crew import windows_acl
 
     # The real lockdown under restrict_to_owner, which conftest stubs on Windows.
-    from kiro_crew.platform_owner_compat import (
+    from aj_crew.platform_owner_compat import (
         _OWNER_RIGHTS_SID,
         _apply_owner_only_dacl,
         current_user_sid,
@@ -472,8 +472,8 @@ def test_a_narrowed_windows_dacl_survives_the_replace(tmp_path):
 @pytest.mark.skipif(sys.platform != "win32", reason="a Windows DACL exists only on Windows")
 def test_a_file_moved_from_a_narrower_folder_keeps_its_inherited_dacl(tmp_path):
     """A move keeps the old folder's inherited entries; a save must not swap in the new folder's."""
-    from kiro_crew import windows_acl
-    from kiro_crew.platform_owner_compat import _apply_owner_only_dacl
+    from aj_crew import windows_acl
+    from aj_crew.platform_owner_compat import _apply_owner_only_dacl
 
     narrow, wide = tmp_path / "narrow", tmp_path / "wide"
     narrow.mkdir()
@@ -630,7 +630,7 @@ def test_a_temp_whose_removal_stays_refused_keeps_the_acl_it_carried(tmp_path):
 
 def test_a_macos_acl_that_cannot_be_carried_refuses_the_write(tmp_path, monkeypatch):
     """Like a lost POSIX ACL: the write raises, the original stays, no temp is left."""
-    import kiro_crew.atomic_write as aw
+    import aj_crew.atomic_write as aw
 
     target = tmp_path / "doc.md"
     target.write_text("ORIGINAL", encoding="utf-8")

@@ -21,8 +21,8 @@ from artifacts_handlers_helpers import (  # noqa: F401 -- fixtures are requested
     patch_restricted_fixture,
 )
 
-from kiro_crew.artifacts import ArtifactError
-from kiro_crew.dashboard.handlers.artifacts import (
+from aj_crew.artifacts import ArtifactError
+from aj_crew.dashboard.handlers.artifacts import (
     api_artifact_delete,
     api_artifact_detail,
     api_artifact_events,
@@ -163,7 +163,7 @@ class TestDetail:
         self, isolated_store, patch_restricted, monkeypatch
     ) -> None:
         """The write is a permission decision, so it belongs in the SEL trail."""
-        from kiro_crew.dashboard.handlers import artifacts as art_handlers
+        from aj_crew.dashboard.handlers import artifacts as art_handlers
 
         sel_stub = MagicMock()
         monkeypatch.setattr(art_handlers, "sel", lambda: sel_stub)
@@ -185,7 +185,7 @@ class TestDetail:
     ) -> None:
         """A withheld breadcrumb is still a decision — record it, mirroring
         the POST /events sibling, which audits its restricted-session denial."""
-        from kiro_crew.dashboard.handlers import artifacts as art_handlers
+        from aj_crew.dashboard.handlers import artifacts as art_handlers
 
         sel_stub = MagicMock()
         monkeypatch.setattr(art_handlers, "sel", lambda: sel_stub)
@@ -207,7 +207,7 @@ class TestDetail:
         self, isolated_store, patch_restricted, monkeypatch
     ) -> None:
         """A plain page view makes no decision, so it must not add SEL noise."""
-        from kiro_crew.dashboard.handlers import artifacts as art_handlers
+        from aj_crew.dashboard.handlers import artifacts as art_handlers
 
         sel_stub = MagicMock()
         monkeypatch.setattr(art_handlers, "sel", lambda: sel_stub)
@@ -270,7 +270,7 @@ class TestDelete:
         the attempt has to happen while it still exists. Die between the two steps in this
         order and the copy is withdrawn but the artifact remains -- the user deletes again.
         In the reverse order the record is gone while the content is still public."""
-        from kiro_crew.artifacts import ArtifactPublication
+        from aj_crew.artifacts import ArtifactPublication
 
         isolated_store.create(name="x", content="a", slug="x")
         isolated_store.set_publication(
@@ -294,7 +294,7 @@ class TestDelete:
             order.append("delete")
             return real_delete(slug, **kw)
 
-        monkeypatch.setattr("kiro_crew.publish_sync.delete_for_artifact", _withdraw)
+        monkeypatch.setattr("aj_crew.publish_sync.delete_for_artifact", _withdraw)
         monkeypatch.setattr(isolated_store, "delete", _delete)
         resp = await api_artifact_delete(_request(match={"slug": "x"}))
         assert resp.status == 200
@@ -311,8 +311,8 @@ class TestDelete:
         the delete the user asked for", which holds for a save to the SAME artifact; a
         recreate is a different artifact wearing the same slug.
         """
-        import kiro_crew.publish_sync as _ps
-        from kiro_crew.artifacts import ArtifactPublication
+        import aj_crew.publish_sync as _ps
+        from aj_crew.artifacts import ArtifactPublication
 
         isolated_store.create(name="x", content="a", slug="x")
         isolated_store.set_publication(
@@ -331,7 +331,7 @@ class TestDelete:
             isolated_store.create(name="x-replacement", content="b", slug="x")
             return _ps.DeleteWithdrawal.WITHDRAWN
 
-        monkeypatch.setattr("kiro_crew.publish_sync.delete_for_artifact", _withdraw)
+        monkeypatch.setattr("aj_crew.publish_sync.delete_for_artifact", _withdraw)
         resp = await api_artifact_delete(_request(match={"slug": "x"}))
         assert resp.status == 409
         # The replacement must survive, and still be the replacement.
@@ -352,8 +352,8 @@ class TestDelete:
         """
         import threading
 
-        import kiro_crew.publish_sync as _ps
-        from kiro_crew.artifacts import ArtifactPublication
+        import aj_crew.publish_sync as _ps
+        from aj_crew.artifacts import ArtifactPublication
 
         isolated_store.create(name="x", content="a", slug="x")
         isolated_store.set_publication(
@@ -379,7 +379,7 @@ class TestDelete:
             state["withdrawn"] = True
             return _ps.DeleteWithdrawal.WITHDRAWN
 
-        monkeypatch.setattr("kiro_crew.publish_sync.delete_for_artifact", _withdraw)
+        monkeypatch.setattr("aj_crew.publish_sync.delete_for_artifact", _withdraw)
         monkeypatch.setattr(isolated_store, "get", _recording_get)
 
         loop_thread = threading.current_thread().name
@@ -407,8 +407,8 @@ class TestDelete:
         clear and the removal. The refusal has to come from inside the store's lock, so
         the assertion is that the artifact and the NEW record both survive.
         """
-        import kiro_crew.publish_sync as _ps
-        from kiro_crew.artifacts import ArtifactPublication
+        import aj_crew.publish_sync as _ps
+        from aj_crew.artifacts import ArtifactPublication
 
         isolated_store.create(name="x", content="a", slug="x")
         isolated_store.set_publication(
@@ -440,7 +440,7 @@ class TestDelete:
             )
             return result
 
-        monkeypatch.setattr("kiro_crew.publish_sync.delete_for_artifact", _withdraw)
+        monkeypatch.setattr("aj_crew.publish_sync.delete_for_artifact", _withdraw)
         monkeypatch.setattr(isolated_store, "clear_publication", _clear_then_republish)
 
         resp = await api_artifact_delete(_request(match={"slug": "x"}))
@@ -469,7 +469,7 @@ class TestDelete:
         refused delete can be retried, or the owner can unpublish and accept the
         exposure deliberately.
         """
-        from kiro_crew.artifacts import ArtifactPublication
+        from aj_crew.artifacts import ArtifactPublication
 
         isolated_store.create(name="x", content="a", slug="x")
         isolated_store.set_publication(
@@ -485,18 +485,18 @@ class TestDelete:
         async def _boom(art):
             raise RuntimeError("destination unreachable")
 
-        import kiro_crew.publish_sync as _ps
+        import aj_crew.publish_sync as _ps
 
         real_withdraw = _ps.delete_for_artifact
         # The decision lives in delete_for_artifact; patching past it proves the handler
         # does not carry a second copy of it.
-        monkeypatch.setattr("kiro_crew.publish_sync.delete_for_artifact", _boom)
+        monkeypatch.setattr("aj_crew.publish_sync.delete_for_artifact", _boom)
         with pytest.raises(RuntimeError):
             await api_artifact_delete(_request(match={"slug": "x"}))
         # With the real function, an unregistered destination now REFUSES. Restore only
         # THIS patch -- monkeypatch.undo() would also drop the restricted-session fixture
         # and the handler would answer 403.
-        monkeypatch.setattr("kiro_crew.publish_sync.delete_for_artifact", real_withdraw)
+        monkeypatch.setattr("aj_crew.publish_sync.delete_for_artifact", real_withdraw)
         resp = await api_artifact_delete(_request(match={"slug": "x"}))
         assert resp.status == 502
         # The artifact and the handle that could still withdraw the copy both survive.
@@ -511,8 +511,8 @@ class TestDelete:
         withdrawal, a retry can still succeed -- so the publication (the only handle that
         can withdraw the still-public copy) must NOT be discarded. The delete is refused
         with an error, the artifact stays, and its publication record survives."""
-        import kiro_crew.publish_sync as _ps
-        from kiro_crew.artifacts import ArtifactPublication
+        import aj_crew.publish_sync as _ps
+        from aj_crew.artifacts import ArtifactPublication
 
         isolated_store.create(name="x", content="a", slug="x")
         isolated_store.set_publication(
@@ -528,7 +528,7 @@ class TestDelete:
         async def _reachable_but_rejected(art):
             return _ps.DeleteWithdrawal.FAILED
 
-        monkeypatch.setattr("kiro_crew.publish_sync.delete_for_artifact", _reachable_but_rejected)
+        monkeypatch.setattr("aj_crew.publish_sync.delete_for_artifact", _reachable_but_rejected)
         resp = await api_artifact_delete(_request(match={"slug": "x"}))
         assert resp.status == 502
         # The artifact and its retry handle both survive.
@@ -549,8 +549,8 @@ class TestDelete:
         with nothing able to recover. Refusing is recoverable: restore access and retry, or
         unpublish to accept the exposure in the open.
         """
-        import kiro_crew.publish_sync as _ps
-        from kiro_crew.artifacts import ArtifactPublication
+        import aj_crew.publish_sync as _ps
+        from aj_crew.artifacts import ArtifactPublication
 
         isolated_store.create(name="x", content="a", slug="x")
         isolated_store.set_publication(
@@ -566,7 +566,7 @@ class TestDelete:
         async def _unreachable(art):
             return _ps.DeleteWithdrawal.UNREACHABLE
 
-        monkeypatch.setattr("kiro_crew.publish_sync.delete_for_artifact", _unreachable)
+        monkeypatch.setattr("aj_crew.publish_sync.delete_for_artifact", _unreachable)
         resp = await api_artifact_delete(_request(match={"slug": "x"}))
         assert resp.status == 502
         assert (isolated_store.root / "x").exists()
@@ -583,8 +583,8 @@ class TestDelete:
         only from a typed `DriveNotFound`; read off an error message instead, a throttled or
         unauthorized reply would land here too and delete the handle to a live copy.
         """
-        import kiro_crew.publish_sync as _ps
-        from kiro_crew.artifacts import ArtifactPublication
+        import aj_crew.publish_sync as _ps
+        from aj_crew.artifacts import ArtifactPublication
 
         isolated_store.create(name="x", content="a", slug="x")
         isolated_store.set_publication(
@@ -600,7 +600,7 @@ class TestDelete:
         async def _gone(art):
             return _ps.DeleteWithdrawal.NOTHING_PUBLISHED
 
-        monkeypatch.setattr("kiro_crew.publish_sync.delete_for_artifact", _gone)
+        monkeypatch.setattr("aj_crew.publish_sync.delete_for_artifact", _gone)
         resp = await api_artifact_delete(_request(match={"slug": "x"}))
         assert resp.status == 200
         assert not (isolated_store.root / "x").exists()
@@ -612,7 +612,7 @@ class TestDelete:
         # A base ArtifactError raised by store.delete() (e.g. a future
         # store-level sensitive-path or filesystem refusal) must be caught and
         # audited, not escape the handler and 500 silently.
-        from kiro_crew.artifacts import ArtifactError
+        from aj_crew.artifacts import ArtifactError
 
         isolated_store.create(name="x", content="a", slug="x")
 
@@ -635,8 +635,8 @@ class TestReprobeNotice:
     ) -> None:
         """The handler delegates to ``publish_sync.reprobe_notice`` and returns
         the reconciled artifact (200)."""
-        import kiro_crew.publish_sync as _ps
-        from kiro_crew.artifacts import ArtifactPublication
+        import aj_crew.publish_sync as _ps
+        from aj_crew.artifacts import ArtifactPublication
 
         isolated_store.create(name="x", content="a", slug="x")
         isolated_store.set_publication(

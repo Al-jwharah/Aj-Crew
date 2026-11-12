@@ -12,10 +12,10 @@ from pathlib import Path
 
 import pytest
 
+from aj_crew.learn import Lesson, LessonStore
+from aj_crew.project_scope import project_scope_satisfied
+from aj_crew.vector_memory import _lesson_display_text, _lesson_scope, _lesson_slug
 from conftest import requires_symlinks
-from kiro_crew.learn import Lesson, LessonStore
-from kiro_crew.project_scope import project_scope_satisfied
-from kiro_crew.vector_memory import _lesson_display_text, _lesson_scope, _lesson_slug
 
 
 class TestProjectScopeSatisfied:
@@ -123,7 +123,7 @@ class TestProjectScopeSatisfied:
     def test_the_schema_refuses_a_scope_the_gate_cannot_satisfy(self):
         # Storing "." would report success and then apply nowhere, so the write
         # surface refuses it instead of persisting an inert lesson.
-        from kiro_crew.validation import LEARN_ADD_SCHEMA, ValidationError, validate_tool_args
+        from aj_crew.validation import LEARN_ADD_SCHEMA, ValidationError, validate_tool_args
 
         base = {"rule": "r", "category": "tool"}
         for bad in (".", "..", "src/./pkg", "C:/x"):
@@ -155,8 +155,8 @@ class TestProjectScopeSatisfied:
         # The static bypass, no race needed: a symlink already in the tree makes the
         # literal fragment look harmless while the probe follows it into the
         # credential directory. Judging the RESOLVED path is what closes it.
-        from kiro_crew import project_scope as ps
-        from kiro_crew.security import is_sensitive_path
+        from aj_crew import project_scope as ps
+        from aj_crew.security import is_sensitive_path
 
         # Aim check: the real predicate flags the shape the guard exists for.
         assert is_sensitive_path(str(Path.home() / ".ssh" / "id_rsa")) is True
@@ -190,7 +190,7 @@ class TestProjectScopeSatisfied:
         # and the gate enforces the rest. If they disagree, a value is either stored
         # and never usable or refused while being perfectly fine -- so pin both
         # surfaces, against the raw value, to the same verdicts.
-        from kiro_crew.project_scope import SCOPE_FRAGMENT_RE
+        from aj_crew.project_scope import SCOPE_FRAGMENT_RE
 
         (tmp_path / ".git").mkdir()
         (tmp_path / "src" / "pkg").mkdir(parents=True)
@@ -271,7 +271,7 @@ class TestSkillLoaderSharesTheGate:
     """The skill gate must answer through the shared function, not a copy."""
 
     def test_skill_gate_delegates_to_the_shared_rule(self, tmp_path, monkeypatch):
-        from kiro_crew import skills as skills_mod
+        from aj_crew import skills as skills_mod
 
         calls: list[tuple[str, object]] = []
 
@@ -516,7 +516,7 @@ class TestVectorStoreLessonScope:
     """
 
     def _store(self, tmp_path):
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
         store = VectorMemoryStore(db_path=tmp_path / "m.db", embedding_dim=4)
         store.init()
@@ -611,7 +611,7 @@ class TestVectorStoreLessonScope:
         # migrate_from_markdown reads lessons.jsonl directly, so it needs the same
         # three-state rule as the store: a present unusable scope is skipped, not
         # normalised to None and injected everywhere.
-        from kiro_crew import vector_memory as vm
+        from aj_crew import vector_memory as vm
 
         home = tmp_path / "home"
         home.mkdir()
@@ -636,7 +636,7 @@ class TestVectorStoreLessonScope:
         # A scoped lesson that migrates in as global is silently widened, which is
         # the one direction the gate must never move. Drives the real
         # migrate_from_markdown, which reads its source dir from config_dir().
-        from kiro_crew import vector_memory as vm
+        from aj_crew import vector_memory as vm
 
         home = tmp_path / "home"
         home.mkdir()
@@ -742,7 +742,7 @@ class TestVectorStoreLessonScope:
     def test_no_caller_can_launder_an_inadmissible_scope(self, tmp_path, monkeypatch):
         # The write surface is the single chokepoint, so the migration is covered by
         # it rather than by its own guard (which keeps only its skip COUNT right).
-        from kiro_crew import vector_memory as vm
+        from aj_crew import vector_memory as vm
 
         home = tmp_path / "home"
         home.mkdir()
@@ -763,7 +763,7 @@ class TestVectorStoreLessonScope:
     def test_a_stale_client_legacy_scope_is_refused_not_globalised(self):
         # Converting a workspace scope to a global lesson would inject a
         # one-workspace correction into every session.
-        from kiro_crew.mcp_tools import learn as mcp_learn
+        from aj_crew.mcp_tools import learn as mcp_learn
 
         out = mcp_learn.learn_add("learn_add", {"rule": "r", "scope": "workspace"})
         assert out.startswith("Error:")
@@ -857,7 +857,7 @@ class TestVectorStoreDeleteScope:
     """
 
     def _store(self, tmp_path):
-        from kiro_crew.vector_memory import VectorMemoryStore
+        from aj_crew.vector_memory import VectorMemoryStore
 
         store = VectorMemoryStore(db_path=tmp_path / "m.db", embedding_dim=4)
         store.init()

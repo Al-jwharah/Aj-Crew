@@ -41,7 +41,7 @@ const params = new URLSearchParams(location.search)
 const scene = params.get('scene') === 'before' ? 'before' : 'after'
 const theme = params.get('theme') || 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // The expanded card mounts MarkdownRenderer, which probes path-like inline
 // code and unfurls links. Neither endpoint exists here, and a pending probe

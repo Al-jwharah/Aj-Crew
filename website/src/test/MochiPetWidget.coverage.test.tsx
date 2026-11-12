@@ -148,7 +148,7 @@ beforeEach(() => {
   mocks.clearListeners()
   vi.resetAllMocks()
   api.getPetState.mockResolvedValue('idle')
-  api.getMochiConfig.mockResolvedValue({ theme: 'kirocrew' })
+  api.getMochiConfig.mockResolvedValue({ theme: 'ajcrew' })
   api.getWindowPosition.mockResolvedValue({ x: 300, y: 400 })
   api.presetsGetColorMap.mockResolvedValue({})
   api.galleryGetPackDetail.mockResolvedValue(null)
@@ -227,7 +227,7 @@ describe('PetWidget art and state', () => {
   })
 
   it('uses the name the user configured', async () => {
-    api.getMochiConfig.mockResolvedValue({ theme: 'kirocrew', petName: '  Ghosty  ' })
+    api.getMochiConfig.mockResolvedValue({ theme: 'ajcrew', petName: '  Ghosty  ' })
     await mountActive()
     expect(screen.getByTitle('Ghosty: idle')).toBeTruthy()
   })
@@ -292,7 +292,7 @@ describe('PetWidget art and state', () => {
 
 describe('PetWidget appearance packs', () => {
   it('paints art from the active pack instead of the built-in cat', async () => {
-    api.getMochiConfig.mockResolvedValue({ theme: 'kirocrew', activeAppearance: 'kiro-ghost' })
+    api.getMochiConfig.mockResolvedValue({ theme: 'ajcrew', activeAppearance: 'kiro-ghost' })
     api.galleryGetPackDetail.mockResolvedValue(ghostPack())
     await mountActive()
 
@@ -303,7 +303,7 @@ describe('PetWidget appearance packs', () => {
   })
 
   it('mirrors a pack that declares its art faces the other way', async () => {
-    api.getMochiConfig.mockResolvedValue({ theme: 'kirocrew', activeAppearance: 'kiro-ghost' })
+    api.getMochiConfig.mockResolvedValue({ theme: 'ajcrew', activeAppearance: 'kiro-ghost' })
     api.galleryGetPackDetail.mockResolvedValue(ghostPack({ flipX: true }))
     await mountActive()
     expect(petBox().style.transform).toContain('scaleX(-1)')
@@ -318,7 +318,7 @@ describe('PetWidget appearance packs', () => {
 
   it('keeps the built-in art and says why when a pack ships no idle drawing', async () => {
     const err = vi.spyOn(console, 'error').mockImplementation(() => {})
-    api.getMochiConfig.mockResolvedValue({ theme: 'kirocrew', activeAppearance: 'kiro-ghost' })
+    api.getMochiConfig.mockResolvedValue({ theme: 'ajcrew', activeAppearance: 'kiro-ghost' })
     api.galleryGetPackDetail.mockResolvedValue({
       meta: { id: 'kiro-ghost', format: 'svg' },
       animations: { walking: '<svg id="ghost-walk"></svg>' },
@@ -335,7 +335,7 @@ describe('PetWidget appearance packs', () => {
 
   it('reports a pack whose detail carries no art at all', async () => {
     const err = vi.spyOn(console, 'error').mockImplementation(() => {})
-    api.getMochiConfig.mockResolvedValue({ theme: 'kirocrew', activeAppearance: 'kiro-ghost' })
+    api.getMochiConfig.mockResolvedValue({ theme: 'ajcrew', activeAppearance: 'kiro-ghost' })
     api.galleryGetPackDetail.mockResolvedValue({ meta: { id: 'kiro-ghost' } })
     await mountActive()
 
@@ -349,7 +349,7 @@ describe('PetWidget appearance packs', () => {
 
   it('reports a pack that could not be loaded, and still draws a pet', async () => {
     const err = vi.spyOn(console, 'error').mockImplementation(() => {})
-    api.getMochiConfig.mockResolvedValue({ theme: 'kirocrew', activeAppearance: 'kiro-ghost' })
+    api.getMochiConfig.mockResolvedValue({ theme: 'ajcrew', activeAppearance: 'kiro-ghost' })
     api.galleryGetPackDetail.mockRejectedValue(new Error('pack file is gone'))
     await mountActive()
 
@@ -399,7 +399,7 @@ describe('PetWidget appearance packs', () => {
   })
 
   it('slides a pack with no peek drawing partly off-screen while it peeks', async () => {
-    api.getMochiConfig.mockResolvedValue({ theme: 'kirocrew', activeAppearance: 'kiro-ghost' })
+    api.getMochiConfig.mockResolvedValue({ theme: 'ajcrew', activeAppearance: 'kiro-ghost' })
     api.galleryGetPackDetail.mockResolvedValue(ghostPack())
     api.getWindowPosition.mockResolvedValue({ x: 0, y: 400 })
     await mountActive()
@@ -410,7 +410,7 @@ describe('PetWidget appearance packs', () => {
   })
 
   it('draws the BUILT-IN peek art even when a pack is active (current behaviour — see comment)', async () => {
-    api.getMochiConfig.mockResolvedValue({ theme: 'kirocrew', activeAppearance: 'kiro-ghost' })
+    api.getMochiConfig.mockResolvedValue({ theme: 'ajcrew', activeAppearance: 'kiro-ghost' })
     api.galleryGetPackDetail.mockResolvedValue(ghostPack())
     api.getWindowPosition.mockResolvedValue({ x: 0, y: 400 })
     await mountActive()
@@ -467,8 +467,8 @@ describe('PetWidget speech bubble', () => {
   it('keeps rendering across live theme and config updates', async () => {
     await mountActive()
     await act(async () => {
-      mocks.emit('themeChanged', 'kirocrew')
-      mocks.emit('configUpdated', { theme: 'kirocrew' })
+      mocks.emit('themeChanged', 'ajcrew')
+      mocks.emit('configUpdated', { theme: 'ajcrew' })
     })
     await act(async () => { mocks.emit('bubble', 'after the theme change', false) })
     expect(screen.getByText('after the theme change')).toBeTruthy()
@@ -612,7 +612,7 @@ describe('PetWidget walking and hiding', () => {
   })
 
   it('draws the walking art from the active pack while it moves', async () => {
-    api.getMochiConfig.mockResolvedValue({ theme: 'kirocrew', activeAppearance: 'kiro-ghost' })
+    api.getMochiConfig.mockResolvedValue({ theme: 'ajcrew', activeAppearance: 'kiro-ghost' })
     api.galleryGetPackDetail.mockResolvedValue(ghostPack())
     await mountActive()
 
@@ -635,7 +635,7 @@ describe('PetWidget walking and hiding', () => {
 
 describe('PetWidget non-SVG pack formats', () => {
   it('renders a sprite-sheet pack on a canvas, honouring the sheet geometry', async () => {
-    api.getMochiConfig.mockResolvedValue({ theme: 'kirocrew', activeAppearance: 'boba-sprite' })
+    api.getMochiConfig.mockResolvedValue({ theme: 'ajcrew', activeAppearance: 'boba-sprite' })
     api.galleryGetPackDetail.mockResolvedValue({
       meta: { id: 'boba-sprite', name: 'Boba', format: 'sprite' },
       animations: { idle: 'iVBORw0KGgo=' },
@@ -655,7 +655,7 @@ describe('PetWidget non-SVG pack formats', () => {
   })
 
   it("prefers the pack's own mood art over its state art", async () => {
-    api.getMochiConfig.mockResolvedValue({ theme: 'kirocrew', activeAppearance: 'kiro-ghost' })
+    api.getMochiConfig.mockResolvedValue({ theme: 'ajcrew', activeAppearance: 'kiro-ghost' })
     api.galleryGetPackDetail.mockResolvedValue(ghostPack())
     await mountActive()
     expect(petArt()).toContain('ghost-idle')
@@ -669,7 +669,7 @@ describe('PetWidget non-SVG pack formats', () => {
 
   it('warns once when the active pack resolves to no art at all', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    api.getMochiConfig.mockResolvedValue({ theme: 'kirocrew', activeAppearance: 'ghost-lottie' })
+    api.getMochiConfig.mockResolvedValue({ theme: 'ajcrew', activeAppearance: 'ghost-lottie' })
     api.galleryGetPackDetail.mockResolvedValue({
       meta: { id: 'ghost-lottie', format: 'lottie' },
       animations: { idle: { content: '', format: 'lottie' } },
@@ -685,7 +685,7 @@ describe('PetWidget non-SVG pack formats', () => {
 
   it('hands a lottie-format pack to the lottie renderer, and reports a clip it cannot parse', async () => {
     const err = vi.spyOn(console, 'error').mockImplementation(() => {})
-    api.getMochiConfig.mockResolvedValue({ theme: 'kirocrew', activeAppearance: 'ghost-lottie' })
+    api.getMochiConfig.mockResolvedValue({ theme: 'ajcrew', activeAppearance: 'ghost-lottie' })
     api.galleryGetPackDetail.mockResolvedValue({
       meta: { id: 'ghost-lottie', name: 'Ghost', format: 'lottie' },
       // Per-slot format, the shape the gallery sends for a mixed pack.

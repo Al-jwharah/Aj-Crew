@@ -25,7 +25,7 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "src/kiro_crew/apps/builtins/aws_control/crew/scripts/crew_image_build_plan.py"
+SCRIPT = ROOT / "src/aj_crew/apps/builtins/aws_control/crew/scripts/crew_image_build_plan.py"
 WORKFLOW = ROOT / ".github" / "workflows" / "crew-image-build.yml"
 
 #: Windows reports success from ``os.access(path, os.X_OK)`` for any file that
@@ -670,15 +670,15 @@ def test_every_registry_this_lane_writes_to_is_loopback() -> None:
 @pytest.mark.parametrize(
     "site",
     [
-        "docker push registry.example.com/kirocrew-crew-base:ci",
-        "docker image push registry.example.com/kirocrew-crew-base:ci",
-        "docker push kirocrew/crew-base:ci",
-        "docker push kirocrew-crew-base:ci",
-        'docker push "$MYSTERY_HOST/kirocrew-crew-base:ci"',
-        "docker tag local-only:ci registry.example.com/kirocrew-crew-base:ci",
-        "docker build -t registry.example.com/kirocrew-crew-base:ci .",
-        "docker buildx build --push --tag registry.example.com/kirocrew-crew-base:ci .",
-        "./src/kiro_crew/apps/builtins/aws_control/crew/scripts/build_crew_base_image.sh --tag registry.example.com/base:ci",
+        "docker push registry.example.com/ajcrew-crew-base:ci",
+        "docker image push registry.example.com/ajcrew-crew-base:ci",
+        "docker push ajcrew/crew-base:ci",
+        "docker push ajcrew-crew-base:ci",
+        'docker push "$MYSTERY_HOST/ajcrew-crew-base:ci"',
+        "docker tag local-only:ci registry.example.com/ajcrew-crew-base:ci",
+        "docker build -t registry.example.com/ajcrew-crew-base:ci .",
+        "docker buildx build --push --tag registry.example.com/ajcrew-crew-base:ci .",
+        "./src/aj_crew/apps/builtins/aws_control/crew/scripts/build_crew_base_image.sh --tag registry.example.com/base:ci",
     ],
 )
 def test_an_off_machine_write_site_is_caught(site: str) -> None:
@@ -727,7 +727,7 @@ def test_a_variable_tag_under_a_loopback_host_is_not_refused() -> None:
     real = WORKFLOW.read_text(encoding="utf-8")
     doctored = real.replace(
         '          docker push "$TAG"',
-        '          docker push "${REGISTRY}/kirocrew-crew-base:${GITHUB_SHA}"',
+        '          docker push "${REGISTRY}/ajcrew-crew-base:${GITHUB_SHA}"',
     )
     assert doctored != real, "the push line this test edits has been reworded"
     assert not _off_machine_write_sites(doctored), (
@@ -758,16 +758,16 @@ def test_the_plan_script_is_recorded_executable() -> None:
     )
 
 
-def test_supervisor_tree_imports_without_kiro_crew(tmp_path: Path) -> None:
-    """The build plan imports the container tree with no ``kiro_crew`` on the path.
+def test_supervisor_tree_imports_without_aj_crew(tmp_path: Path) -> None:
+    """The build plan imports the container tree with no ``aj_crew`` on the path.
 
     The lane imports ``container.supervisor.bundle`` as a top-level package under a bare
     ``python3``, and ``supervisor/__init__.py`` re-exports from ``backend``, so a
-    module-scope ``kiro_crew`` import anywhere there fails the lane. ``-S`` drops
+    module-scope ``aj_crew`` import anywhere there fails the lane. ``-S`` drops
     ``site-packages`` (the editable install) to reproduce that. Imports inside a
     function are fine.
     """
-    runtime = ROOT / "src/kiro_crew/apps/builtins/aws_control/crew/runtime"
+    runtime = ROOT / "src/aj_crew/apps/builtins/aws_control/crew/runtime"
     probe = "import container.supervisor.bundle, container.supervisor.__main__"
 
     def caches() -> set[Path]:
@@ -785,21 +785,21 @@ def test_supervisor_tree_imports_without_kiro_crew(tmp_path: Path) -> None:
         env={"PYTHONPATH": str(runtime), "PATH": "/usr/bin:/bin", "PYTHONDONTWRITEBYTECODE": "1"},
     )
     assert out.returncode == 0, (
-        "a supervisor module needs kiro_crew at import time, so "
+        "a supervisor module needs aj_crew at import time, so "
         "crew_image_build_plan.py cannot reach the bundle digest:\n" + out.stderr
     )
     assert caches() == before, "the probe wrote bytecode into the source tree: " + str(
         sorted(caches() - before)
     )
 
-    # Non-vacuity: the probe must fail for the RIGHT reason when kiro_crew is genuinely
+    # Non-vacuity: the probe must fail for the RIGHT reason when aj_crew is genuinely
     # required, otherwise a typo in the module names would pass this test silently.
     broken = subprocess.run(
-        [sys.executable, "-B", "-S", "-c", "import kiro_crew"],
+        [sys.executable, "-B", "-S", "-c", "import aj_crew"],
         capture_output=True,
         encoding="utf-8",
         cwd=tmp_path,
         env={"PYTHONPATH": str(runtime), "PATH": "/usr/bin:/bin", "PYTHONDONTWRITEBYTECODE": "1"},
     )
-    assert broken.returncode != 0, "kiro_crew is importable under -S, so this proves nothing"
+    assert broken.returncode != 0, "aj_crew is importable under -S, so this proves nothing"
     assert "ModuleNotFoundError" in broken.stderr

@@ -17,15 +17,15 @@ import aiohttp
 import pytest
 from aiohttp import web
 
-from kiro_crew import lts_boot
-from kiro_crew import lts_sign_in as sign_in
-from kiro_crew import lts_signin_gateway as signin
-from kiro_crew.dashboard import routes as routes_pkg
-from kiro_crew.dashboard import token_auth_tokens as tokens
-from kiro_crew.dashboard.token_auth_tokens import generate_token
-from kiro_crew.platform import enterprise_policy_fetch as epf
-from kiro_crew.platform.context import PlatformCompositionError
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import lts_boot
+from aj_crew import lts_sign_in as sign_in
+from aj_crew import lts_signin_gateway as signin
+from aj_crew.dashboard import routes as routes_pkg
+from aj_crew.dashboard import token_auth_tokens as tokens
+from aj_crew.dashboard.token_auth_tokens import generate_token
+from aj_crew.platform import enterprise_policy_fetch as epf
+from aj_crew.platform.context import PlatformCompositionError
+from aj_crew.testing.wait import async_wait_until, await_until
 
 _NO_SIGN_IN = "no Kiro sign-in was found"
 _SIGNED_OUT = PlatformCompositionError(f"policy could not be loaded: {_NO_SIGN_IN}")
@@ -33,8 +33,8 @@ _SIGNED_OUT = PlatformCompositionError(f"policy could not be loaded: {_NO_SIGN_I
 
 @pytest.fixture
 def lts(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
-    monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
+    monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
     monkeypatch.delenv(signin.DESKTOP_GATEWAY_ENV, raising=False)
 
 
@@ -88,7 +88,7 @@ def _owner_cookie(port: int) -> dict[str, str]:
 
 def _dashboard_route_table() -> list[tuple[str, str]]:
     """Every (method, path) the full dashboard registers, MCP routes included."""
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     app = web.Application()
     routes_pkg.register_all(app)
@@ -135,7 +135,7 @@ def test_other_errors_sandboxed_children_and_desktop_still_exit(
     monkeypatch.setenv(signin.DESKTOP_GATEWAY_ENV, "1")
     assert not signin.applies(_SIGNED_OUT)
     monkeypatch.delenv(signin.DESKTOP_GATEWAY_ENV)
-    monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
+    monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
     assert not signin.applies(_SIGNED_OUT)
 
 
@@ -143,17 +143,17 @@ def test_an_unreadable_vault_counts_as_signed_in(monkeypatch: pytest.MonkeyPatch
     def broken() -> Any:
         raise OSError("unreadable")
 
-    monkeypatch.setattr("kiro_crew.auth.bridge.default_token_store", broken)
+    monkeypatch.setattr("aj_crew.auth.bridge.default_token_store", broken)
     assert signin.signed_in()
 
 
 def test_only_an_empty_vault_reads_as_signed_out(
     tmp_path: Any, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.auth.store import TokenStore
+    from aj_crew.auth.store import TokenStore
 
     store = TokenStore(tmp_path)
-    monkeypatch.setattr("kiro_crew.auth.bridge.default_token_store", lambda: store)
+    monkeypatch.setattr("aj_crew.auth.bridge.default_token_store", lambda: store)
     assert not signin.signed_in()
     # A vault file that cannot be read is not proof that nobody is signed in.
     store._vault._store_path.parent.mkdir(parents=True, exist_ok=True)
@@ -221,7 +221,7 @@ async def test_the_sign_in_api_needs_the_owner_token() -> None:
 
 @pytest.mark.asyncio
 async def test_only_an_organisation_sign_in_can_start(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.dashboard.handlers import kas_login
+    from aj_crew.dashboard.handlers import kas_login
 
     started: list[str] = []
 
@@ -271,7 +271,7 @@ async def test_a_cross_site_sign_in_post_is_refused() -> None:
 def _fast(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(signin, "_WATCH_INTERVAL_SECS", 0.0)
     monkeypatch.setattr(signin, "_DRAIN_SECS", 0.0)
-    monkeypatch.setattr("kiro_crew.frontend.ensure_dev_dist_symlink", lambda: None)
+    monkeypatch.setattr("aj_crew.frontend.ensure_dev_dist_symlink", lambda: None)
     # The sign-in that lands is one the next start can use.
     monkeypatch.setattr(sign_in, "resolve", lambda **_kw: None)
 
@@ -341,8 +341,8 @@ async def test_serves_on_loopback_only_until_a_sign_in_lands_then_frees_the_port
     # lives, and fails under any other. Other sessions are untouched.
     from urllib.parse import unquote
 
-    from kiro_crew.dashboard import boot_id
-    from kiro_crew.dashboard.token_auth_tokens import validate_token
+    from aj_crew.dashboard import boot_id
+    from aj_crew.dashboard.token_auth_tokens import validate_token
 
     link = unquote(out.split(prefix, 1)[1].split()[0])
     other = _owner_cookie(5476)["mc_token_5476"]
@@ -442,7 +442,7 @@ def test_after_sign_in_it_exits_0_naming_the_start_command(
         signin.sign_in_then_exit(_SIGNED_OUT, port=0, owner_id="", no_open=True)
     assert exc.value.code == 0
     out = capsys.readouterr().out
-    assert "Signed in. Start Kiro Crew again:" in out
+    assert "Signed in. Start Aj Crew again:" in out
     assert "gateway" in out.splitlines()[-1]
 
 
@@ -470,7 +470,7 @@ def test_a_busy_port_exits(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setattr("kiro_crew.frontend.ensure_dev_dist_symlink", lambda: None)
+    monkeypatch.setattr("aj_crew.frontend.ensure_dev_dist_symlink", lambda: None)
     with socket.socket() as held:
         held.bind(("127.0.0.1", 0))
         held.listen()
@@ -485,8 +485,8 @@ def test_a_busy_port_exits(
 def _cli_gateway(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Any, *argv: str
 ) -> tuple[Any, list[int], MagicMock]:
-    """Run ``kirocrew gateway <argv>`` with a first boot that finds no sign-in."""
-    from kiro_crew import cli, cli_server
+    """Run ``ajcrew gateway <argv>`` with a first boot that finds no sign-in."""
+    from aj_crew import cli, cli_server
 
     boots: list[int] = []
 
@@ -494,9 +494,9 @@ def _cli_gateway(
         boots.append(1)
         raise _SIGNED_OUT
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(cli, "boot_platform", boot)
-    monkeypatch.setattr("kiro_crew.platform.boot_platform", boot)
+    monkeypatch.setattr("aj_crew.platform.boot_platform", boot)
     _no_serve(monkeypatch)
     monkeypatch.setattr(cli, "maybe_reexec", lambda _argv: None)
     monkeypatch.setattr(
@@ -506,7 +506,7 @@ def _cli_gateway(
     _usable_sign_in(monkeypatch)
     gateway = MagicMock(side_effect=AssertionError("no gateway starts in the sign-in process"))
     monkeypatch.setattr(cli_server, "_gateway", gateway)
-    monkeypatch.setattr(cli.sys, "argv", ["kirocrew", "gateway", *argv])
+    monkeypatch.setattr(cli.sys, "argv", ["ajcrew", "gateway", *argv])
     with pytest.raises(SystemExit) as exc:
         cli.main()
     return exc.value, boots, gateway
@@ -529,10 +529,10 @@ def test_cli_the_sign_in_screen_takes_the_gateway_lock(
     tmp_path: Any,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    from kiro_crew.config import config_dir
-    from kiro_crew.gateway_lock import GatewayLock
+    from aj_crew.config import config_dir
+    from aj_crew.gateway_lock import GatewayLock
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     held = GatewayLock(config_dir()).acquire()
     try:
         exit_, boots, gateway = _cli_gateway(monkeypatch, tmp_path, "--no-open")
@@ -593,7 +593,7 @@ def test_cli_opens_a_browser_only_where_the_gateway_would(
         monkeypatch.delenv(name, raising=False)
     for name, value in env.items():
         monkeypatch.setenv(name, value)
-    monkeypatch.setattr("kiro_crew.cli.sys.platform", "linux")
+    monkeypatch.setattr("aj_crew.cli.sys.platform", "linux")
     seen: dict[str, Any] = {}
 
     def sign_in_then_exit(_exc: BaseException, **kwargs: Any) -> None:
@@ -645,7 +645,7 @@ def test_cli_the_restart_command_repeats_the_launch_options(
 def test_the_restart_command_leaves_out_one_shot_options() -> None:
     import argparse
 
-    from kiro_crew import cli
+    from aj_crew import cli
 
     args = argparse.Namespace(
         no_tunnel=True, seed="demo", seed_replace=True, approval="reads", port=None
@@ -656,15 +656,15 @@ def test_the_restart_command_leaves_out_one_shot_options() -> None:
 def test_the_restart_command_names_the_data_home_it_signed_in(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(sign_in, "_launcher", lambda: "kirocrew")
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
-    assert signin.start_command(platform="linux") == "kirocrew gateway"
-    monkeypatch.setenv("KIROCREW_HOME", "/tmp/crew home")
+    monkeypatch.setattr(sign_in, "_launcher", lambda: "ajcrew")
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
+    assert signin.start_command(platform="linux") == "ajcrew gateway"
+    monkeypatch.setenv("AJCREW_HOME", "/tmp/crew home")
     assert (
         signin.start_command(("--no-crons",), platform="linux")
-        == "KIROCREW_HOME='/tmp/crew home' kirocrew gateway --no-crons"
+        == "AJCREW_HOME='/tmp/crew home' ajcrew gateway --no-crons"
     )
     assert (
         signin.start_command(platform="win32")
-        == "$env:KIROCREW_HOME = '/tmp/crew home'; & kirocrew gateway"
+        == "$env:AJCREW_HOME = '/tmp/crew home'; & ajcrew gateway"
     )

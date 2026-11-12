@@ -1,7 +1,7 @@
 """Every restart that closes the sessions waits for the dashboard turns it cut.
 
 The update restart (``_restart_after_update_claimed``), the dashboard restart
-(``_restart_gateway``) and the Slack ``/kirocrew restart`` (``_handle_restart``)
+(``_restart_gateway``) and the Slack ``/ajcrew restart`` (``_handle_restart``)
 save every chat slot, then ``close_all()`` the sessions, then exec or exit. A
 dashboard turn that was mid-reply when its session closed saves the text its user
 watched stream as it unwinds, after that first save. Each test here parks such a
@@ -20,12 +20,12 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard import chat as dashboard_chat
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.slack import events
-from kiro_crew.slack import gateway as slack_gateway
-from kiro_crew.slack.gateway import GatewayOrchestrator
+from aj_crew import platform_compat
+from aj_crew.dashboard import chat as dashboard_chat
+from aj_crew.dashboard.handlers import updates
+from aj_crew.slack import events
+from aj_crew.slack import gateway as slack_gateway
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 
 class _CutTurn(asyncio.Future):
@@ -100,7 +100,7 @@ def _slack_restart(restart: _Restart, monkeypatch) -> Awaitable[object]:
     monkeypatch.setattr(events, "is_owner", lambda _caller: True)
     monkeypatch.setattr(events, "sel", lambda: MagicMock())
     monkeypatch.setenv("INVOCATION_ID", "restart-test")
-    monkeypatch.setattr("kiro_crew.cli.drain_log_queue_before_hard_exit", AsyncMock())
+    monkeypatch.setattr("aj_crew.cli.drain_log_queue_before_hard_exit", AsyncMock())
     monkeypatch.setattr(platform_compat, "hard_exit", restart.end("exit"))
     orch = SimpleNamespace(sessions=restart.state.sessions, dashboard_state=restart.state)
     return events._handle_restart(orch, "U1", "", AsyncMock())
@@ -128,7 +128,7 @@ async def test_a_restart_waits_for_the_turn_it_cut_before_it_ends(
     run, ends_with, monkeypatch, _first_save_skipped
 ):
     monkeypatch.setattr(
-        "kiro_crew.gateway_shutdown_budget.DASHBOARD_TURN_UNWIND_SECS", 5.0, raising=False
+        "aj_crew.gateway_shutdown_budget.DASHBOARD_TURN_UNWIND_SECS", 5.0, raising=False
     )
     restart = _Restart()
     restarting = asyncio.ensure_future(run(restart, monkeypatch))
@@ -161,10 +161,10 @@ async def test_a_planned_restart_records_the_chats_it_cuts_before_close_all(
     run, ends_with, monkeypatch, _first_save_skipped
 ):
     """Only the slot with a turn in flight; the idle one is left to its owner."""
-    from kiro_crew.dashboard import restart_resume
+    from aj_crew.dashboard import restart_resume
 
     monkeypatch.setattr(
-        "kiro_crew.gateway_shutdown_budget.DASHBOARD_TURN_UNWIND_SECS", 0.2, raising=False
+        "aj_crew.gateway_shutdown_budget.DASHBOARD_TURN_UNWIND_SECS", 0.2, raising=False
     )
     restart = _Restart()
     restart.state._slots["s1"]._turn_in_flight_generation = 3
@@ -186,7 +186,7 @@ async def test_a_restart_never_cancels_or_outwaits_a_hung_turn(
     run, ends_with, monkeypatch, _first_save_skipped
 ):
     monkeypatch.setattr(
-        "kiro_crew.gateway_shutdown_budget.DASHBOARD_TURN_UNWIND_SECS", 0.2, raising=False
+        "aj_crew.gateway_shutdown_budget.DASHBOARD_TURN_UNWIND_SECS", 0.2, raising=False
     )
     restart = _Restart()
     try:

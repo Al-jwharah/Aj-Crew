@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.dashboard import routes as routes_pkg
+from aj_crew.dashboard import routes as routes_pkg
 
 
 def test_registrar_tuple_is_explicit_and_not_alphabetical() -> None:
@@ -158,8 +158,8 @@ def test_shared_crew_slice_matches_each_lane_registrar() -> None:
     """The slice's literal Shared Crew routes are exactly what each module registers."""
     from aiohttp import web
 
-    from kiro_crew.dashboard.routes import shared_crew
-    from kiro_crew.shared_crew import (
+    from aj_crew.dashboard.routes import shared_crew
+    from aj_crew.shared_crew import (
         routes_access,
         routes_admission,
         routes_capabilities,
@@ -208,7 +208,7 @@ def test_every_slice_module_exposes_register() -> None:
     import importlib
 
     for name in routes_pkg.REGISTRAR_NAMES:
-        mod = importlib.import_module(f"kiro_crew.dashboard.routes.{name}")
+        mod = importlib.import_module(f"aj_crew.dashboard.routes.{name}")
         assert callable(getattr(mod, "register", None)), f"{name} has no register()"
 
 

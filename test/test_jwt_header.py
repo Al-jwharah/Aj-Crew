@@ -7,9 +7,9 @@ import types
 
 import pytest
 
-from kiro_crew.decisions import gate
-from kiro_crew.log_redaction import SecretRedactionFilter
-from kiro_crew.security.redaction import redact_credentials
+from aj_crew.decisions import gate
+from aj_crew.log_redaction import SecretRedactionFilter
+from aj_crew.security.redaction import redact_credentials
 
 #: A JWT-shaped hit whose header does not decode to JSON: every site lets it through.
 _LOOKALIKE = "token " + "ey" + "Jhbm.a.b"
@@ -33,5 +33,5 @@ def test_a_json_object_python_cannot_parse_stays_a_credential(monkeypatch, site)
     assert not is_credential(_LOOKALIKE)
     huge_int = base64.urlsafe_b64encode(b'{"n":' + b"1" * 5000 + b"}").decode().rstrip("=")
     assert is_credential(f"token {huge_int}.a.b")
-    monkeypatch.setattr("kiro_crew.jwt_header.json", types.SimpleNamespace(loads=_raise_recursion))
+    monkeypatch.setattr("aj_crew.jwt_header.json", types.SimpleNamespace(loads=_raise_recursion))
     assert is_credential(_LOOKALIKE)

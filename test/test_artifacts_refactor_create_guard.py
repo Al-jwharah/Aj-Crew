@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import artifacts as art_mod
+from aj_crew import artifacts as art_mod
 
 _FACADE = art_mod.__name__
 _DYNAMIC = "<dynamic>"
@@ -241,7 +241,7 @@ def _create_patches(tree: ast.Module) -> list[tuple[int, str, str]]:
     return found
 
 
-_IMPORT_ART = "from kiro_crew import artifacts as art\n"
+_IMPORT_ART = "from aj_crew import artifacts as art\n"
 _FROM_MOCK = "from unittest import mock\n"
 
 
@@ -287,7 +287,7 @@ _FROM_MOCK = "from unittest import mock\n"
             _FROM_MOCK + f'_MOD = "{_FACADE}"\nmock.patch(_MOD + ".MAX_TAGS", create=True)',
             ["MAX_TAGS"],
         ),
-        (_FROM_MOCK + '_MOD = "kiro_crew.other"\nmock.patch(f"{_MOD}.MAX_TAGS", create=True)', []),
+        (_FROM_MOCK + '_MOD = "aj_crew.other"\nmock.patch(f"{_MOD}.MAX_TAGS", create=True)', []),
         (_FROM_MOCK + 'import os\nmock.patch(f"{os.__name__}.MAX_TAGS", create=True)', []),
         # (3) the target= and attribute= keyword forms
         (
@@ -345,7 +345,7 @@ _FROM_MOCK = "from unittest import mock\n"
         # (7) a name bound more than once keeps the binding that reaches the facade
         (
             _FROM_MOCK + "import importlib\n"
-            'def a(): m = importlib.import_module("kiro_crew.artifact_store.rules")\n'
+            'def a(): m = importlib.import_module("aj_crew.artifact_store.rules")\n'
             f'def b(): m = importlib.import_module("{_FACADE}")\n'
             'mock.patch.object(m, "MAX_TAGS", create=True)',
             ["MAX_TAGS"],
@@ -357,13 +357,13 @@ _FROM_MOCK = "from unittest import mock\n"
             ["MAX_TAGS"],
         ),
         (
-            _FROM_MOCK + f'_MOD = "kiro_crew.other"\n_MOD = "{_FACADE}"\n'
+            _FROM_MOCK + f'_MOD = "aj_crew.other"\n_MOD = "{_FACADE}"\n'
             'mock.patch(f"{_MOD}.MAX_TAGS", create=True)',
             ["MAX_TAGS"],
         ),
         (
             _FROM_MOCK + "import importlib\nimport json as m\n"
-            'm = importlib.import_module("kiro_crew.artifact_store.rules")\n'
+            'm = importlib.import_module("aj_crew.artifact_store.rules")\n'
             'mock.patch.object(m, "MAX_TAGS", create=True)',
             [],
         ),
@@ -393,7 +393,7 @@ def test_the_scan_reads_every_file_that_names_the_facade(text: str, worth: bool)
 
 def test_no_test_patches_a_forwarded_name_that_it_may_create() -> None:
     repo = Path(inspect.getfile(art_mod)).parents[2]
-    roots = [repo / "test", *sorted((repo / "src" / "kiro_crew").rglob("tests"))]
+    roots = [repo / "test", *sorted((repo / "src" / "aj_crew").rglob("tests"))]
     scanned = 0
     hits: dict[tuple[str, str], list[str]] = {}
     for root in roots:

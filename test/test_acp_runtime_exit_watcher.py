@@ -23,8 +23,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from test_update_provider import _UNALLOCATABLE_PID
 
-from kiro_crew.acp.runtime import AcpRuntime, AcpRuntimeDead
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.runtime import AcpRuntime, AcpRuntimeDead
+from aj_crew.testing.wait import await_until
 
 _POSIX_ONLY = pytest.mark.skipif(
     sys.platform == "win32",

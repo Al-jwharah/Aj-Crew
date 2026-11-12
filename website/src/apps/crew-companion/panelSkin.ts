@@ -1,14 +1,14 @@
 /**
- * Panel palette — derived from the Kiro Crew theme the user actually picked.
+ * Panel palette — derived from the Aj Crew theme the user actually picked.
  *
  * This file previously held two hand-written palettes (a cream light one and a dark
  * one) selected by `mode`. That was wrong: `src/shared/themes.ts` already links the
  * dashboard's own stylesheet, sets `data-theme`, and aliases this app's older
- * variable names onto Kiro Crew's — so every other window follows all ~36 themes,
+ * variable names onto Aj Crew's — so every other window follows all ~36 themes,
  * and only the panel ignored the user's colour choice.
  *
  * So the values here are CSS custom properties, not hex. Each carries the
- * `kiro-dark` fallback as its default, which matters twice: before the dashboard
+ * `aj-dark` fallback as its default, which matters twice: before the dashboard
  * stylesheet loads, and permanently if the gateway is unreachable.
  *
  * TRADEOFF, stated plainly: following an arbitrary user theme means the panel's
@@ -81,21 +81,21 @@ export interface PanelSkin {
 }
 
 /**
- * The live skin. Kiro Crew's variable names first, this app's older aliases second,
- * `kiro-dark` literals last.
+ * The live skin. Aj Crew's variable names first, this app's older aliases second,
+ * `aj-dark` literals last.
  */
 export const THEME_SKIN: PanelSkin = {
-  card: 'var(--card, var(--bg-elevated, #211d25))',
-  ink: 'var(--card-fg, var(--text, #dcdadf))',
-  muted: 'var(--muted, #938f9b)',
-  faint: 'var(--muted, #938f9b)',
-  row: 'var(--bg-hover, var(--bg-input, #28242e))',
-  hairline: 'var(--border, #352f3d)',
-  accent: 'var(--accent, #8e48ff)',
-  accentText: 'var(--cc-accent-text, var(--card-fg, var(--text, #dcdadf)))',
-  accentSoft: 'var(--accent-subtle, rgba(178,127,255,0.18))',
-  accentInk: 'var(--accent, #8e48ff)',
-  onAccent: 'var(--accent-fg, #ffffff)',
+  card: 'var(--card, var(--bg-elevated, #15171c))',
+  ink: 'var(--card-fg, var(--text, #d5d8de))',
+  muted: 'var(--muted, #8e96a3)',
+  faint: 'var(--muted, #8e96a3)',
+  row: 'var(--bg-hover, var(--bg-input, #1e2127))',
+  hairline: 'var(--border, #272a31)',
+  accent: 'var(--accent, #2dd4bf)',
+  accentText: 'var(--cc-accent-text, var(--card-fg, var(--text, #d5d8de)))',
+  accentSoft: 'var(--accent-subtle, rgba(45,212,191,0.16))',
+  accentInk: 'var(--accent, #2dd4bf)',
+  onAccent: 'var(--accent-fg, #04110f)',
   okSoft: 'var(--ok-subtle, rgba(0,133,67,0.18))',
   okInk: 'var(--ok, #008543)',
   shadow: 'var(--cc-panel-shadow)',

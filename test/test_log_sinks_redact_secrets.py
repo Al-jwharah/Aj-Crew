@@ -29,7 +29,7 @@ class _FakeProcess:
 
 
 def _runtime(lines):
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
     runtime = AcpRuntime.__new__(AcpRuntime)
     runtime.recording_allowed = True
@@ -57,7 +57,7 @@ class TestChildStderrDebugLine:
     @pytest.mark.asyncio
     async def test_the_stderr_line_is_redacted(self, caplog, line):
         runtime = _runtime([line])
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.acp"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.acp"):
             await runtime._drain_stderr()
         lines = [r.getMessage() for r in caplog.records if r.getMessage().startswith("stderr: ")]
         assert lines, "the stderr debug line was not logged"
@@ -75,9 +75,9 @@ class TestFailedJsonParseLine:
         ids=["prose", "broken-json"],
     )
     def test_the_reply_text_is_not_logged(self, caplog, reply):
-        from kiro_crew.llm_helpers import parse_llm_json
+        from aj_crew.llm_helpers import parse_llm_json
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew"):
             assert parse_llm_json(reply) is None
         lines = [
             r.getMessage() for r in caplog.records if "Failed to parse LLM JSON" in r.getMessage()
@@ -98,14 +98,14 @@ class TestMalformedLoopRowLine:
         ],
     )
     def test_the_row_is_redacted(self, tmp_path, caplog, row):
-        from kiro_crew.autonudge import AutoNudgeService
+        from aj_crew.autonudge import AutoNudgeService
 
         (tmp_path / "autonudge.json").write_text(
             json.dumps({"version": 1, "loops": [row]}), encoding="utf-8"
         )
         svc = AutoNudgeService(base_dir=tmp_path)
         try:
-            with caplog.at_level(logging.WARNING, logger="kiro_crew"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew"):
                 svc._load()
         finally:
             svc.stop()

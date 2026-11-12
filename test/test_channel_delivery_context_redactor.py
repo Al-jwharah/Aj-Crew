@@ -17,12 +17,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.handlers import messaging as mod
-from kiro_crew.messaging.link import ChannelLink
-from kiro_crew.messaging.renderer import display_safe_for
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
-from kiro_crew.webex.transport import WEBEX_CAPABILITIES
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.handlers import messaging as mod
+from aj_crew.messaging.link import ChannelLink
+from aj_crew.messaging.renderer import display_safe_for
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
+from aj_crew.webex.transport import WEBEX_CAPABILITIES
 
 # Shaped so the default credential pair does not match it: only the fake
 # companion grader below knows it.
@@ -65,7 +65,7 @@ def _companion(monkeypatch):
 
     monkeypatch.setattr(mod, "redact_via_context", _companion_redactor)
     monkeypatch.setattr(mod, "chunk_for_transport", _spy)
-    with patch("kiro_crew.sel.sel", return_value=MagicMock()):
+    with patch("aj_crew.sel.sel", return_value=MagicMock()):
         yield seen
 
 

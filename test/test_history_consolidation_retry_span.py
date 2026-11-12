@@ -19,20 +19,20 @@ from history_consolidation_retry_helpers import (
     _total,
 )
 
-from kiro_crew import history as history_mod
-from kiro_crew.dashboard.chat_persistence import (
+from aj_crew import history as history_mod
+from aj_crew.dashboard.chat_persistence import (
     _rehydrate_slot_from_history,
     _save_slot_to_history,
 )
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import (
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import (
     _CONSOLIDATION_MAX_ATTEMPTS,
     _CONSOLIDATION_PROMPT_BUDGET_CHARS,
     _SESSION_MAX_BYTES,
     ConversationLog,
     HistoryConsolidator,
 )
-from kiro_crew.testing.wait import finished
+from aj_crew.testing.wait import finished
 
 # A row big enough that five of them exceed the rotation byte budget whatever it
 # is set to. Rotation on a handful of huge rows is driven by the byte-shrink loop,
@@ -426,7 +426,7 @@ class TestForeignWritersCannotEraseTheAccounting:
 
     def test_a_dashboard_slot_save_preserves_the_retry_accounting(self, tmp_path, monkeypatch):
         """The save rebuilds the whole metadata line from the slot's own state."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         log = ConversationLog(base_dir=tmp_path)
         log.init()
         for i in range(3):
@@ -460,7 +460,7 @@ class TestForeignWritersCannotEraseTheAccounting:
 
     def test_a_slot_owned_field_is_still_cleared_by_omission(self, tmp_path, monkeypatch):
         """Preserving unowned keys must not make the slot's own state unclearable."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         log = ConversationLog(base_dir=tmp_path)
         log.init()
         log.append("dashboard:chat1", "user", "m0")
@@ -505,7 +505,7 @@ class TestAnEditedTranscriptEarnsAFreshBudget:
         for a span whose wait has already elapsed (so eligibility turns purely on
         the budget), positive for one still serving it.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         log = ConversationLog(base_dir=tmp_path)
         log.init()
         log.append("dashboard:chat1", "user", "ask")

@@ -1,4 +1,4 @@
-"""``kirocrew doctor`` prints the RUNNING gateway's adaptive-controller state.
+"""``ajcrew doctor`` prints the RUNNING gateway's adaptive-controller state.
 
 The controller lives only in the gateway process, so doctor reads its snapshot
 from ``GET /api/spawn/adaptive`` with the local credential (the way the other
@@ -25,15 +25,15 @@ from aiohttp import web
 from aiohttp.test_utils import TestServer
 from overload_fakes import Clock
 
-from kiro_crew import cli_server, port_resolution
-from kiro_crew.adaptive import controller as ctl_mod
-from kiro_crew.adaptive.controller import AdaptiveController, HostSample
-from kiro_crew.config import loader
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.handlers import spawn_resume
-from kiro_crew.dashboard.server import _MIXED_INTERNAL_API_PATHS, _STRICT_INTERNAL_API_PATHS
-from kiro_crew.dashboard.token_auth import token_auth_middleware
-from kiro_crew.doctor_checks import workload
+from aj_crew import cli_server, port_resolution
+from aj_crew.adaptive import controller as ctl_mod
+from aj_crew.adaptive.controller import AdaptiveController, HostSample
+from aj_crew.config import loader
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.handlers import spawn_resume
+from aj_crew.dashboard.server import _MIXED_INTERNAL_API_PATHS, _STRICT_INTERNAL_API_PATHS
+from aj_crew.dashboard.token_auth import token_auth_middleware
+from aj_crew.doctor_checks import workload
 
 _SECRET = "doctor-adaptive-test-secret"
 
@@ -56,7 +56,7 @@ class _Manager:
 
 
 def _controller() -> tuple[AdaptiveController, Clock]:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.adaptive_slow_start = False
     clock = Clock()
     host = HostSample(free_mem_mb=16_000.0, rss_mb=300.0, fd_count=50, fd_limit=1000)
@@ -200,7 +200,7 @@ def test_no_credential_sends_nothing_and_says_why(
     def _no_request(*_args: object, **_kwargs: object) -> None:
         raise AssertionError("doctor dialled the gateway without a credential")
 
-    monkeypatch.setattr("kiro_crew.cli_server._owner_verified_secret_urlopen", _no_request)
+    monkeypatch.setattr("aj_crew.cli_server._owner_verified_secret_urlopen", _no_request)
     workload._doctor_adaptive_live()
     out = capsys.readouterr().out
     assert out == (
@@ -265,7 +265,7 @@ def test_nothing_listening_reads_as_no_answer(
     def _refused(*_args: object, **_kwargs: object) -> None:
         raise ConnectionRefusedError("nothing listening")
 
-    monkeypatch.setattr("kiro_crew.cli_server._owner_verified_secret_urlopen", _refused)
+    monkeypatch.setattr("aj_crew.cli_server._owner_verified_secret_urlopen", _refused)
     workload._doctor_adaptive_live()
     out = capsys.readouterr().out
     assert out == f"  adaptive controller: not read on port {port}: no gateway answered\n"
@@ -281,7 +281,7 @@ def test_a_slow_gateway_reads_as_busy_not_gone(
     def _times_out(*_args: object, **_kwargs: object) -> None:
         raise TimeoutError("read timed out")
 
-    monkeypatch.setattr("kiro_crew.cli_server._owner_verified_secret_urlopen", _times_out)
+    monkeypatch.setattr("aj_crew.cli_server._owner_verified_secret_urlopen", _times_out)
     workload._doctor_adaptive_live()
     out = capsys.readouterr().out
     assert out == (
@@ -301,7 +301,7 @@ def test_a_connect_timeout_reads_as_no_answer_not_busy(
     def _connect_timeout(*_args: object, **_kwargs: object) -> None:
         raise urllib.error.URLError(TimeoutError("connect timed out"))
 
-    monkeypatch.setattr("kiro_crew.cli_server._owner_verified_secret_urlopen", _connect_timeout)
+    monkeypatch.setattr("aj_crew.cli_server._owner_verified_secret_urlopen", _connect_timeout)
     workload._doctor_adaptive_live()
     out = capsys.readouterr().out
     assert out == f"  adaptive controller: not read on port {port}: no gateway answered\n"
@@ -332,7 +332,7 @@ def test_the_live_block_sits_between_the_configured_line_and_the_ladder(
         "gate_ceiling": 8,
     }
     monkeypatch.setattr(workload, "_gateway_adaptive_state", lambda: (5476, state, ""))
-    workload._doctor_overload_resilience(KiroCrewConfig())
+    workload._doctor_overload_resilience(AjCrewConfig())
     lines = capsys.readouterr().out.splitlines()
     configured = next(i for i, line in enumerate(lines) if "adaptive concurrency: " in line)
     assert lines[configured + 1] == "  adaptive controller (running gateway on port 5476):"

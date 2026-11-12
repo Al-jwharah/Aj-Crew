@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.security: pass 4 of ``redact_credentials``, the ``?token=`` URL parameter.
+"""Tests for aj_crew.security: pass 4 of ``redact_credentials``, the ``?token=`` URL parameter.
 
 The value of a ``token`` query parameter is redacted by the parameter's name rather than the
 value's shape (template placeholders excepted), in batch and across ``StreamRedactor`` chunks,
@@ -12,7 +12,7 @@ import re
 
 import pytest
 
-from kiro_crew.security import redact_credentials
+from aj_crew.security import redact_credentials
 
 
 class TestTokenParamValueRedaction:
@@ -69,7 +69,7 @@ class TestTokenParamValueRedaction:
 
     def test_stream_floor_cut_keeps_a_placeholder_whole(self) -> None:
         """A forced 512-char floor cut never splits `$` from `{`: stream equals batch."""
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         for size in range(480, 501):
             text = " &token=${" + "a" * size + " BEGIN RSA PRIVATE"
@@ -78,7 +78,7 @@ class TestTokenParamValueRedaction:
             assert streamed == redact_credentials(text)[0], size
 
     def test_stream_matches_batch_at_every_chunk_cut_near_a_placeholder(self) -> None:
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         for text in (
             "x &token=${jwt} y",
@@ -179,7 +179,7 @@ class TestTokenParamValueRedaction:
 
     def test_named_percent_entity_is_case_sensitive(self) -> None:
         """Only the exact WHATWG named reference decodes to a percent sign."""
-        from kiro_crew.security.redaction import _TOKEN_PARAM_PARTIAL_RE
+        from aj_crew.security.redaction import _TOKEN_PARAM_PARTIAL_RE
 
         for name in ("&PERCNT;74oken", "&PerCnt;74oken"):
             text = f"?{name}={self._OPAQUE}"
@@ -208,7 +208,7 @@ class TestTokenParamValueRedaction:
 
     def test_stream_partial_rejects_unicode_casefold_homoglyphs(self) -> None:
         """A trailing Kelvin-spelled name is not a streaming token anchor."""
-        from kiro_crew.security.redaction import _TOKEN_PARAM_PARTIAL_RE
+        from aj_crew.security.redaction import _TOKEN_PARAM_PARTIAL_RE
 
         for name in ("to\u212aen", "TO\u212aEN"):
             assert _TOKEN_PARAM_PARTIAL_RE.search(f"?{name}=") is None, name
@@ -237,7 +237,7 @@ class TestTokenParamValueRedaction:
 
     def test_percent_encoded_name_split_mid_escape_not_leaked(self) -> None:
         """A chunk ending mid-escape holds the whole parameter until redaction."""
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         secret_head = self._OPAQUE[:8]
         secret_tail = self._OPAQUE[8:]
@@ -255,8 +255,8 @@ class TestTokenParamValueRedaction:
         """Every valid separator/name prefix pair stays buffered."""
         from itertools import product
 
-        from kiro_crew.security import _CRED_CLASS
-        from kiro_crew.security.redaction import _TOKEN_PARAM_PARTIAL_RE
+        from aj_crew.security import _CRED_CLASS
+        from aj_crew.security.redaction import _TOKEN_PARAM_PARTIAL_RE
 
         letter_spellings = (
             ("t", "%74", "%54", "&#116;", "&#84;", "&#x74;", "&#x54;", "&#37;74", "&percnt;74"),
@@ -298,7 +298,7 @@ class TestTokenParamValueRedaction:
 
     def test_stream_holds_complete_entity_name_parts_across_chunks(self) -> None:
         """A completed entity must not release an in-progress token name."""
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         for first_chunk, second_chunk in (
             ("?t&#111;", "ken=" + self._OPAQUE),
@@ -315,7 +315,7 @@ class TestTokenParamValueRedaction:
 
     def test_fully_composed_anchor_fits_stream_holdback_bound(self) -> None:
         """The longest separator plus five composed letters remains bounded."""
-        from kiro_crew.security import _STREAM_HOLDBACK_MAX
+        from aj_crew.security import _STREAM_HOLDBACK_MAX
 
         def html_hex_byte(byte: str) -> str:
             return f"&#x{'0' * 8}{ord(byte):X};"
@@ -467,7 +467,7 @@ class TestTokenParamValueRedaction:
         assert "[REDACTED: credential]" in result
         assert secret not in result
 
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         redactor = StreamRedactor()
         emitted = [
@@ -495,7 +495,7 @@ class TestTokenParamValueRedaction:
 
     def test_registered_credential_tags_are_fixed_points(self) -> None:
         """Every module-owned credential-tag literal is trusted by construction."""
-        from kiro_crew.security import CREDENTIAL_REDACTION_TAGS
+        from aj_crew.security import CREDENTIAL_REDACTION_TAGS
 
         for tag in CREDENTIAL_REDACTION_TAGS:
             text = f"?token={tag}"
@@ -507,7 +507,7 @@ class TestTokenParamValueRedaction:
         """Redaction-only: `_contains_fixed_credential` gates request-BLOCKING
         decisions in `exfil.py` and must not learn the parameter name -- a
         `?token=` URL is maskable output, never itself grounds to block."""
-        from kiro_crew.security.redaction import _contains_fixed_credential
+        from aj_crew.security.redaction import _contains_fixed_credential
 
         assert not _contains_fixed_credential(f"https://h.example/?token={self._OPAQUE}")
 
@@ -522,7 +522,7 @@ class TestTokenParamValueRedaction:
         canonical composition (`redact` / `redact_with_findings`) runs the
         exfil pass FIRST, and this pins that pass 4 does not break it.
         """
-        from kiro_crew.security import redact
+        from aj_crew.security import redact
 
         url = (
             "fetching https://collect.attacker.example/?token="
@@ -554,7 +554,7 @@ class TestTokenParamExemptUrlPrefixes:
             self._prefixes = prefixes
 
         def redact(self, text: str) -> str:
-            from kiro_crew.security import redact
+            from aj_crew.security import redact
 
             return redact(text)
 
@@ -571,11 +571,11 @@ class TestTokenParamExemptUrlPrefixes:
     def _install(self, prefixes: object) -> None:
         import dataclasses
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.platform.bootstrap import build_default_context
-        from kiro_crew.platform.context import set_context
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.platform.bootstrap import build_default_context
+        from aj_crew.platform.context import set_context
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, credentials=self._StubCredentialPolicy(prefixes)))
 
     @property
@@ -759,9 +759,9 @@ class TestTokenParamExemptUrlPrefixes:
     def test_pre_method_adapter_degrades_to_redaction(self) -> None:
         import dataclasses
 
-        from kiro_crew.config import KiroCrewConfig
-        from kiro_crew.platform.bootstrap import build_default_context
-        from kiro_crew.platform.context import set_context
+        from aj_crew.config import AjCrewConfig
+        from aj_crew.platform.bootstrap import build_default_context
+        from aj_crew.platform.context import set_context
 
         class _Old:
             def redact(self, text: str) -> str:
@@ -770,12 +770,12 @@ class TestTokenParamExemptUrlPrefixes:
             def exempt_exact_hosts(self) -> "frozenset[str]":
                 return frozenset()
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, credentials=_Old()))
         assert self._TOKEN not in redact_credentials(self._url)[0]
 
     def test_stream_windows_never_apply_the_exemption(self) -> None:
-        from kiro_crew.security import REDACTED_CREDENTIAL_TAG, StreamRedactor
+        from aj_crew.security import REDACTED_CREDENTIAL_TAG, StreamRedactor
 
         self._install(frozenset({self._PREFIX}))
         split_messages = (
@@ -789,7 +789,7 @@ class TestTokenParamExemptUrlPrefixes:
             assert REDACTED_CREDENTIAL_TAG in streamed
 
     def test_plain_approval_link_is_redacted_only_while_streaming(self) -> None:
-        from kiro_crew.security import REDACTED_CREDENTIAL_TAG, StreamRedactor
+        from aj_crew.security import REDACTED_CREDENTIAL_TAG, StreamRedactor
 
         self._install(frozenset({self._PREFIX}))
         redactor = StreamRedactor()
@@ -799,7 +799,7 @@ class TestTokenParamExemptUrlPrefixes:
         assert redact_credentials(self._url) == (self._url, [])
 
     def test_stream_suspension_resets_after_custom_redactor_exception(self) -> None:
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         self._install(frozenset({self._PREFIX}))
 
@@ -813,7 +813,7 @@ class TestTokenParamExemptUrlPrefixes:
         assert redact_credentials(self._url) == (self._url, [])
 
     def test_display_cache_key_covers_the_prefix_set(self) -> None:
-        from kiro_crew.dashboard import chat_utils
+        from aj_crew.dashboard import chat_utils
 
         chat_utils._clear_display_redaction_cache()
         assert self._TOKEN not in chat_utils._redact_for_display(self._url)
@@ -823,7 +823,7 @@ class TestTokenParamExemptUrlPrefixes:
 
     def test_repeated_exempt_links_stay_linear(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Every scanner operation examines only a constant multiple of the input."""
-        from kiro_crew.security import redaction as redaction_module
+        from aj_crew.security import redaction as redaction_module
 
         work = {"boundary": 0, "destination": 0, "scheme": 0}
         calls = {"boundary": 0, "destination": 0}
@@ -885,7 +885,7 @@ class TestTokenParamExemptUrlPrefixes:
         earlier_exempt_urls: list[tuple[int, int]],
     ) -> tuple[int, int] | None:
         """The seam's guards as first written: each candidate re-reads its whole prefix."""
-        from kiro_crew.security.redaction import (
+        from aj_crew.security.redaction import (
             _TOKEN_PARAM_DESTINATION_SIGNAL_RE,
             _TOKEN_PARAM_EXEMPT_OPENERS,
             _TOKEN_PARAM_EXEMPT_TRAIL,
@@ -932,7 +932,7 @@ class TestTokenParamExemptUrlPrefixes:
         Every pass-4 match of each text is put to both, in order, and also every
         other match, since the plan skips matches an earlier pass already claimed.
         """
-        from kiro_crew.security.redaction import (
+        from aj_crew.security.redaction import (
             _TOKEN_PARAM_RE,
             _token_param_exempt,
             _TokenParamExemptScan,

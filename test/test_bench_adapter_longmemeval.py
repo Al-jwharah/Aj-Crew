@@ -13,13 +13,13 @@ import json
 
 import pytest
 
-from kiro_crew.eval.bench.adapters.longmemeval import (
+from aj_crew.eval.bench.adapters.longmemeval import (
     LongMemEvalSchemaError,
     is_evidence_only,
     load_longmemeval,
     load_longmemeval_file,
 )
-from kiro_crew.eval.bench.corpus import (
+from aj_crew.eval.bench.corpus import (
     CAT_KNOWLEDGE_UPDATE,
     CAT_MULTI_HOP,
     CAT_PREFERENCE,

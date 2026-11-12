@@ -17,13 +17,13 @@ superseded-by: []
 - Status: draft. Phase 1 is in flight before acceptance, on the repository
   owner's request (section 10); nothing else is built. It proposes how to take the
   gateway's privileged local IPC out of the agent sandbox's reach without
-  breaking the Kiro Crew MCP servers that run inside that sandbox and call the
+  breaking the Aj Crew MCP servers that run inside that sandbox and call the
   gateway on every tool call. Claims about main were checked at `ccf5db72ff`.
 - Author: bolichen97
 
 ## 1. Problem
 
-A Kiro Crew MCP server such as `kirocrew-core` is launched by kiro-cli, so it
+An Aj Crew MCP server such as `ajcrew-core` is launched by kiro-cli, so it
 runs inside the agent sandbox, under the same uid and the same profile as the
 agent's own shell. It calls the gateway's internal API on every tool call. To
 do that it needs two things the shell can also reach today.
@@ -45,7 +45,7 @@ Session identity is weaker over TCP than over the socket. On the socket,
 `_verify_unix_peer` (`dashboard/token_auth_callers.py`) checks the declared
 `X-Session-Key` against the peer's kernel credentials and process ancestry. On
 TCP the gateway has no kernel evidence. The declared key is backed at most by
-the per-session token (`KIROCREW_STUB_SESSION_TOKEN`), and on a one-session
+the per-session token (`AJCREW_STUB_SESSION_TOKEN`), and on a one-session
 runtime that token is written into the kiro-cli process environment
 (`_apply_session_identity_env` in `acp/client_spawn_env.py`), which the
 agent's shell inherits.
@@ -54,7 +54,7 @@ agent's shell inherits.
 only on `FileNotFoundError` or `ConnectionRefusedError`. A Seatbelt deny raises
 `PermissionError`, which is not in that set, so the call fails. That is why the
 obvious fix, denying the dashboard socket in the sandbox profile, would break
-every in-sandbox Kiro Crew tool, and why this document does not propose it.
+every in-sandbox Aj Crew tool, and why this document does not propose it.
 
 Issue #9175 states the general constraint: nothing inside the sandbox can hold
 a secret the agent cannot read. This design accepts that and changes what a
@@ -66,7 +66,7 @@ from a value the caller holds.
 1. An agent shell in the sandbox cannot mint an owner token, cannot reach a
    socket that grants authority by connection alone, and cannot call the
    internal API as a session other than its own.
-2. Every Kiro Crew MCP server inside the sandbox keeps working, on every
+2. Every Aj Crew MCP server inside the sandbox keeps working, on every
    upgrade step, with no user action. The one-line test: a person who never
    reads this document notices nothing.
 3. Callers outside the sandbox (the CLI, the desktop app, the person's own
@@ -76,7 +76,7 @@ from a value the caller holds.
    POSIX-only and Windows keeps today's flow.
 
 Not a goal: confining the MCP tool surface itself. A sandboxed agent may still
-call its own Kiro Crew tools; whether a direct call must also prove a
+call its own Aj Crew tools; whether a direct call must also prove a
 PreToolUse approval is issue #10429.
 
 ## 3. Decision
@@ -138,7 +138,7 @@ The in-sandbox MCP servers get their own listener, outside `ipc/`:
 request on it must carry a **capability** that the gateway checks against the
 connection it arrived on.
 
-**Issue.** For each ACP session and each Kiro Crew server entry the gateway
+**Issue.** For each ACP session and each Aj Crew server entry the gateway
 injects into that session's `mcpServers`, the gateway mints a one-time
 **pickup** (32 random bytes). The pickup rides the server entry's own `env`
 element, the per-element channel `AcpRuntime._own_stub_session` already uses.
@@ -208,8 +208,8 @@ terminal and the dashboard keep every path they have. An agent loses the
 commands that work today only because its shell can read the owner secret.
 Run from the agent's shell, these stop working after phase 2:
 
-- `kirocrew app` lifecycle commands (`app_lifecycle_client.py`) and
-  `kirocrew memory forget` (`memory_forget_client.py`), which mint an owner
+- `ajcrew app` lifecycle commands (`app_lifecycle_client.py`) and
+  `ajcrew memory forget` (`memory_forget_client.py`), which mint an owner
   token through `/api/token/local`;
 - the gateway control commands that send `X-Local-Secret`
   (`cli_server_requests.py`, `cli_server_stop.py`, `cli_server_restart.py`,
@@ -237,10 +237,10 @@ gateway IPC working.
 | Phase | Change | Why no user loses IPC |
 |---|---|---|
 | 0 | Record the transport (`unix`, `agent`, `tcp`), the caller (`X-Internal-Caller`) and whether a capability was shown on every internal-auth SEL grant | Logging only |
-| 1 | Add the agent socket, `/api/ipc/redeem`, pickup issue and capability check. Kiro Crew's in-sandbox servers redeem and prefer the agent socket, and fall back to today's path when there is no pickup or the route answers `404` | Additive. An older gateway or a missing pickup takes today's path |
+| 1 | Add the agent socket, `/api/ipc/redeem`, pickup issue and capability check. Aj Crew's in-sandbox servers redeem and prefer the agent socket, and fall back to today's path when there is no pickup or the route answers `404` | Additive. An older gateway or a missing pickup takes today's path |
 | 2 | Create the masked `ipc/` leaf (3.2), split the credential (3.1) and hide `.local_secret` | The desktop app reads the same `.local_secret`, and the CLI's owner-secret senders move to `read_owner_secret` in the same pull request. Every in-sandbox MCP reader sends the internal secret already. Agent shells lose owner authority (3.5) |
 | 3 | Move the dashboard socket and every authority-by-connection socket into `ipc/` (3.2). For one release the gateway also binds the old dashboard socket path, which still needs the internal secret | An in-sandbox server dials the agent socket since phase 1. The CLI resolves the new path through `dashboard_socket_path` |
-| 4 | Stop publishing the internal secret where the sandbox can read it (3.6). Enter this phase only when phase 0 shows no sandboxed secret-only grant from a Kiro Crew component on nightly for 14 days | By then every Kiro Crew in-sandbox caller authenticates by capability, and the telemetry gate shows it |
+| 4 | Stop publishing the internal secret where the sandbox can read it (3.6). Enter this phase only when phase 0 shows no sandboxed secret-only grant from an Aj Crew component on nightly for 14 days | By then every Aj Crew in-sandbox caller authenticates by capability, and the telemetry gate shows it |
 
 Rollback of any phase is a revert. No phase stores data that a revert would
 leave behind: pickups and capabilities live in memory, and the files the later
@@ -277,7 +277,7 @@ phases move are rewritten on every gateway start.
 
 1. **Deny the dashboard socket in the sandbox profile.** Rejected: the deny
    raises `PermissionError`, `loopback_urlopen` does not fall back on it, and
-   every in-sandbox Kiro Crew tool would fail (section 1).
+   every in-sandbox Aj Crew tool would fail (section 1).
 2. **Widen the fallback to `PermissionError`.** Rejected: the fallback goes to
    TCP with the same readable secret, so it closes nothing and hides the
    denial.
@@ -286,7 +286,7 @@ phases move are rewritten on every gateway start.
    a per-element value read at any time is still a bearer value. The pickup
    uses the per-element channel only to start a redemption that binds
    authority to a pid.
-4. **Route every Kiro Crew server through gatewayd stubs**, so the privileged
+4. **Route every Aj Crew server through gatewayd stubs**, so the privileged
    half runs as an unsandboxed pooled backend (`mcp_gateway/pool.py` notes
    that pooled backends are not sandboxed). Kept as a compatible later step,
    not the decision: `mcp_gateway.stub_servers` is empty by default, the stub
@@ -313,7 +313,7 @@ phases move are rewritten on every gateway start.
    `ps`, `pgrep` or a build tool the agent runs? Phase 1 measures it. If it
    can, known limit 1 closes on macOS too.
 2. Phase 4's gate uses telemetry. Is "14 days of nightly with no sandboxed
-   secret-only grant from a Kiro Crew component" the right bar, and does a
+   secret-only grant from an Aj Crew component" the right bar, and does a
    user-written script cron that calls the API with the internal secret need
    a migration notice before phase 4?
 3. Should phase 3 keep the old dashboard socket path for one release, as
@@ -336,7 +336,7 @@ phases move are rewritten on every gateway start.
 
 Phase 1 started before this document was accepted: the repository owner
 (buluoray) asked for it on 2026-11-05 to fix #11988, where an enforced
-harness's `kirocrew-core` holds no internal secret at all, so every
+harness's `ajcrew-core` holds no internal secret at all, so every
 gateway-backed tool refuses `internal_secret_missing`. The code forced three
 changes from sections 3.3 and 4, recorded here rather than by editing them.
 
@@ -347,7 +347,7 @@ changes from sections 3.3 and 4, recorded here rather than by editing them.
    session. 1b is the client half: the pickup on the element, redemption at
    server startup, and sending through `unix_socket_urlopen`.
 2. **1b issues pickups to enforced harnesses first**, the four whose
-   `kirocrew-core` has no working path today (`tool_gate.is_enforced`). A
+   `ajcrew-core` has no working path today (`tool_gate.is_enforced`). A
    kiro-cli, KAS or Claude session keeps today's path byte for byte until a
    later step extends issuance, which is where the RFC's original phase 1
    scope resumes. The cron `socketpair` of section 3.3 is not in phase 1.
@@ -359,7 +359,7 @@ changes from sections 3.3 and 4, recorded here rather than by editing them.
    peer start token)`, and every request is admitted only for the session
    `verify_session_token` says that token names at that moment. Under the
    mask the server cannot read the signed token mapping, so it declares the
-   `KIROCREW_SESSION_KEY` on its own element; a declaration that disagrees
+   `AJCREW_SESSION_KEY` on its own element; a declaration that disagrees
    with the token is refused `ipc_session_mismatch` rather than admitted for
    either session. The redemption ancestry check reads the runtime's root pid
    live from the client for the same reason.

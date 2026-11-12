@@ -15,11 +15,11 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew import transcribe
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp import client_spawn_env
-from kiro_crew.config.sections_stt import SttConfig, _validated_stt_provider
-from kiro_crew.stt import codex, codex_media, codex_rpc
+from aj_crew import transcribe
+from aj_crew.acp import client as acp_client
+from aj_crew.acp import client_spawn_env
+from aj_crew.config.sections_stt import SttConfig, _validated_stt_provider
+from aj_crew.stt import codex, codex_media, codex_rpc
 
 
 def _cli(argv):
@@ -147,7 +147,7 @@ def test_availability_reports_a_host_the_sandbox_would_refuse(monkeypatch, probe
 def test_sandbox_refusal_is_reported_before_any_install_step(monkeypatch, binary, extra):
     # On a host with no confining backend no install step can make Codex run, so
     # the refusal must win over the binary and extra checks.
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(codex, "codex_cli", _cli(binary()))
     monkeypatch.setattr(codex.importlib.util, "find_spec", lambda name: extra)
@@ -159,7 +159,7 @@ def test_sandbox_refusal_is_reported_before_any_install_step(monkeypatch, binary
 def test_extra_missing_message_names_no_install_command(monkeypatch):
     # The prerequisites panel owns the command, and suppresses it where pip cannot
     # target this interpreter; the message must not repeat it in any locale.
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     locales = Path(__file__).resolve().parents[1] / "website" / "src" / "i18n" / "locales"
     files = sorted(p for p in locales.glob("*.json") if p.name != "en.json")
@@ -200,10 +200,10 @@ def test_settings_refuses_exactly_where_the_provider_mask_would_not_apply(
     # The provider's own predicate decides, read at the tier the child runs at.
     # Patched through the facade: these names have several holders, and only the
     # facade's setattr reaches all of them (test_facade_mirror_guards).
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: floor)
-    monkeypatch.setattr(sandbox, "_inside_kirocrew_sandbox", lambda: inside)
+    monkeypatch.setattr(sandbox, "_inside_ajcrew_sandbox", lambda: inside)
     monkeypatch.setattr(sandbox, "_macos_sandbox_state", lambda: None)
     monkeypatch.setattr(sandbox, "detect_backend", lambda config_mode="auto": backend)
     monkeypatch.setattr(sandbox, "configured_sandbox_mode", lambda: configured)
@@ -237,10 +237,10 @@ async def test_only_input_asr_is_emitted_exactly_once(wire):
     session._emit(None)
     events = [event async for event in session.events()]
     assert events == [
-        {"type": "partial", "text": "Kiro"},
-        {"type": "partial", "text": "Kiro Crew"},
-        {"type": "partial", "text": "Kiro Crew works"},
-        {"type": "final", "text": "Kiro Crew works"},
+        {"type": "partial", "text": "Aj"},
+        {"type": "partial", "text": "Aj Crew"},
+        {"type": "partial", "text": "Aj Crew works"},
+        {"type": "final", "text": "Aj Crew works"},
     ]
 
 
@@ -697,7 +697,7 @@ async def test_failed_initialized_write_during_start_is_a_retryable_failure(monk
         stdin=SimpleNamespace(write=write, drain=AsyncMock()),
         stdout=SimpleNamespace(readline=incoming.get),
     )
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     monkeypatch.setattr(
         sandbox,
@@ -890,8 +890,8 @@ async def test_rpc_login_env_and_process_cleanup(monkeypatch, wire, account_type
             with pytest.raises(codex_rpc.CodexError) as error:
                 await rpc.start(codex_cli)
             assert error.value.code == codex_rpc.CODE_LOGIN
-        from kiro_crew.agent_sdk.backends import ACP_BACKEND_CODEX
-        from kiro_crew.agent_sdk.tool_gate import adapter_hidden_credential_dirs
+        from aj_crew.agent_sdk.backends import ACP_BACKEND_CODEX
+        from aj_crew.agent_sdk.tool_gate import adapter_hidden_credential_dirs
 
         wrapped = wrap.await_args.args[0]
         assert wrapped == [
@@ -957,7 +957,7 @@ async def test_rpc_refuses_to_start_without_the_sandbox(monkeypatch):
 async def test_recorded_audio_uses_same_session_and_cleans_up(monkeypatch, text):
     import numpy as np
 
-    from kiro_crew import transcribe_local
+    from aj_crew import transcribe_local
 
     async def events():
         if text:
@@ -987,7 +987,7 @@ async def test_recorded_audio_uses_same_session_and_cleans_up(monkeypatch, text)
 async def test_batch_rejects_oversized_audio_without_opening_codex(monkeypatch):
     import numpy as np
 
-    from kiro_crew import transcribe_local
+    from aj_crew import transcribe_local
 
     start = AsyncMock()
     monkeypatch.setattr(codex.StreamingSession, "start", start)
@@ -1005,16 +1005,16 @@ async def test_batch_rejects_oversized_audio_without_opening_codex(monkeypatch):
 @pytest.mark.parametrize(
     ("agent", "version"),
     [
-        ("kiro_crew_dictation/0.163.0 (fixture)", (0, 163, 0)),
-        ("kiro_crew_dictation/1.2.3", (1, 2, 3)),
-        ("kiro_crew_dictation/0.163.0\t(tab)", (0, 163, 0)),
-        ("kiro_crew_dictation/0.163.0-alpha", None),
-        ("kiro_crew_dictation/0.163.0.1", None),
-        ("kiro_crew_dictation/0.163", None),
-        ("kiro_crew_dictation/0..0", None),
-        ("kiro_crew_dictation/0.１.0", None),
+        ("aj_crew_dictation/0.163.0 (fixture)", (0, 163, 0)),
+        ("aj_crew_dictation/1.2.3", (1, 2, 3)),
+        ("aj_crew_dictation/0.163.0\t(tab)", (0, 163, 0)),
+        ("aj_crew_dictation/0.163.0-alpha", None),
+        ("aj_crew_dictation/0.163.0.1", None),
+        ("aj_crew_dictation/0.163", None),
+        ("aj_crew_dictation/0..0", None),
+        ("aj_crew_dictation/0.１.0", None),
         ("codex_cli_rs/0.163.0", None),
-        ("other kiro_crew_dictation/0.163.0", None),
+        ("other aj_crew_dictation/0.163.0", None),
         ("unknown", None),
         ("", None),
         (None, None),
@@ -1028,10 +1028,10 @@ def test_codex_version_reads_only_an_exact_three_part_token(agent, version):
 @pytest.mark.parametrize(
     "agent",
     [
-        "kiro_crew_dictation/0.162.0 (fixture)",
+        "aj_crew_dictation/0.162.0 (fixture)",
         "unknown",
-        "kiro_crew_dictation/0.163.0-alpha",
-        "kiro_crew_dictation/0.163.0.1",
+        "aj_crew_dictation/0.163.0-alpha",
+        "aj_crew_dictation/0.163.0.1",
         "codex_cli_rs/0.163.0",
     ],
 )

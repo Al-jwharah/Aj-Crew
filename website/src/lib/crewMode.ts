@@ -6,7 +6,7 @@
  *  WHICH conductor is the gateway's `agent.crew_mode_agent`; the gateway moves
  *  every Crew Mode chat onto it when it changes, and refuses any other switch of
  *  a Crew Mode chat (`409 crew_mode_locked`). The conductor list is the gateway's
- *  one set (`kiro_crew.crew_mode.conductor_agents`);
+ *  one set (`aj_crew.crew_mode.conductor_agents`);
  *  it arrives with the agent catalog (`GET /api/agents/catalog`, read by
  *  `useAgents`), which records them here. Until a catalog lands, and on a gateway
  *  whose catalog carries no Crew Mode fields, no template is a conductor.
@@ -119,7 +119,7 @@ export function mateNeedsYouByKey(
 }
 
 /** The conductor Crew Mode runs while the gateway has not said otherwise. */
-export const DEFAULT_CREW_MODE_AGENT = 'kirocrew-team-lead'
+export const DEFAULT_CREW_MODE_AGENT = 'ajcrew-team-lead'
 
 /** The longest steer a person may type into a worker: the server's
  *  `MAX_SEND_MESSAGE_CHARS`, which the steer route and the worker's own composer
@@ -212,11 +212,11 @@ export function runsCrewMode(agent: string | null | undefined, kind: string | nu
 }
 
 /** Whether `name` is the default agent: the switch is offered only there. The
- *  literal `kirocrew` counts only while no default agent is configured; with
- *  one configured, a chat on the `kirocrew` template is that template. */
+ *  literal `ajcrew` counts only while no default agent is configured; with
+ *  one configured, a chat on the `ajcrew` template is that template. */
 export function isDefaultAgentName(name: string, defaultAgent: string | undefined): boolean {
   if (name === '') return true
-  return defaultAgent ? name === defaultAgent : name === 'kirocrew'
+  return defaultAgent ? name === defaultAgent : name === 'ajcrew'
 }
 
 /** Crew Mode needs a Persistent chat: an Incognito or Temporary session may not

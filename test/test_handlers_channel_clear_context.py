@@ -9,11 +9,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.handlers_channel import (
+from aj_crew.dashboard.handlers_channel import (
     api_channel_clear_context,
     api_channel_dismiss_agent,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until, until_parked
+from aj_crew.testing.wait import async_wait_until, await_until, until_parked
 
 
 def _make_agent(agent_id: str, role: str, session_key: str):
@@ -87,7 +87,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -116,7 +116,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
         channel rather than just this clear. The member is reported REFUSED, not cleared: the
         teardown is still running, so answering cleared would speak for unfinished work.
         """
-        import kiro_crew.dashboard.handlers_channel as hc
+        import aj_crew.dashboard.handlers_channel as hc
 
         agent = _make_agent("a1", "Researcher", "channel:ch1:a1")
         ch = _make_channel("ch1", {"a1": agent})
@@ -140,7 +140,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch.object(hc, "_now", side_effect=_deadline_spent_once_the_teardown_starts(hc)):
             with patch(
-                "kiro_crew.dashboard.handlers_channel._mgr",
+                "aj_crew.dashboard.handlers_channel._mgr",
                 return_value=MagicMock(get=MagicMock(return_value=ch)),
             ):
                 resp = await api_channel_clear_context(request)
@@ -165,7 +165,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
         `discard_conversation` releases the runtime from a `finally` whose first await outlasts
         this grace, so a wait that cancels on timeout would leave the runtime unreleased.
         """
-        import kiro_crew.dashboard.handlers_channel as hc
+        import aj_crew.dashboard.handlers_channel as hc
 
         released: list[str] = []
         # Held until the handler has answered, so the cleanup outlasts the grace on any host.
@@ -197,7 +197,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
         with patch.object(hc, "_now", side_effect=_times):
             with patch.object(hc, "_CANCEL_GRACE_SECS", 0.05):
                 with patch(
-                    "kiro_crew.dashboard.handlers_channel._mgr",
+                    "aj_crew.dashboard.handlers_channel._mgr",
                     return_value=MagicMock(get=MagicMock(return_value=ch)),
                 ):
                     await api_channel_clear_context(request)
@@ -221,7 +221,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
         still have its session popped and SID cleared by the shielded task.
         An earlier member's slow shutdown exhausts the shared deadline (`timeout ~= 0`).
         """
-        import kiro_crew.dashboard.handlers_channel as hc
+        import aj_crew.dashboard.handlers_channel as hc
 
         agent = _make_agent("a1", "Researcher", "channel:ch1:a1")
         ch = _make_channel("ch1", {"a1": agent})
@@ -254,7 +254,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
         _times = iter([0.0, 0.0, hc._CLEAR_DISCARD_TIMEOUT_SECS + 1.0])
         with patch.object(hc, "_now", side_effect=_times):
             with patch(
-                "kiro_crew.dashboard.handlers_channel._mgr",
+                "aj_crew.dashboard.handlers_channel._mgr",
                 return_value=MagicMock(get=MagicMock(return_value=ch)),
             ):
                 resp = await api_channel_clear_context(request)
@@ -280,7 +280,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
         providers are all slow holds the lock for N x the bound and stalls every message in
         the channel for that long. The deadline is taken once, before the first member.
         """
-        import kiro_crew.dashboard.handlers_channel as hc
+        import aj_crew.dashboard.handlers_channel as hc
 
         members = {
             f"a{i}": _make_agent(f"a{i}", f"Role{i}", f"channel:ch1:a{i}") for i in range(1, 5)
@@ -299,7 +299,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch.object(hc, "_note_reset", side_effect=_record_deadline):
             with patch(
-                "kiro_crew.dashboard.handlers_channel._mgr",
+                "aj_crew.dashboard.handlers_channel._mgr",
                 return_value=MagicMock(get=MagicMock(return_value=ch)),
             ):
                 resp = await api_channel_clear_context(request)
@@ -320,7 +320,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
         waits on the lock for all of it. So once the deadline is spent, a later member is
         refused without a teardown, which keeps the lock hold at the deadline plus one grace.
         """
-        import kiro_crew.dashboard.handlers_channel as hc
+        import aj_crew.dashboard.handlers_channel as hc
 
         members = {
             f"a{i}": _make_agent(f"a{i}", f"Role{i}", f"channel:ch1:a{i}") for i in range(1, 4)
@@ -339,7 +339,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
         # The first member is reached before the deadline and its hanging teardown spends it.
         with patch.object(hc, "_now", side_effect=_deadline_spent_once_the_teardown_starts(hc)):
             with patch(
-                "kiro_crew.dashboard.handlers_channel._mgr",
+                "aj_crew.dashboard.handlers_channel._mgr",
                 return_value=MagicMock(get=MagicMock(return_value=ch)),
             ):
                 resp = await api_channel_clear_context(request)
@@ -374,7 +374,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -398,7 +398,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -432,7 +432,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -463,7 +463,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -491,7 +491,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
             "ch1", {"scope": "agent", "agent_id": "a1"}, channel=ch, sessions=sessions
         )
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             async with ch._log_lock:
@@ -531,9 +531,9 @@ class TestAClearInTheInterTurnWindowIsRefused:
         sessions.resumable_sid = MagicMock(return_value=None)
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
-        with patch("kiro_crew.dashboard.handlers_channel.sel") as sel_mock:
+        with patch("aj_crew.dashboard.handlers_channel.sel") as sel_mock:
             with patch(
-                "kiro_crew.dashboard.handlers_channel._mgr",
+                "aj_crew.dashboard.handlers_channel._mgr",
                 return_value=MagicMock(get=MagicMock(return_value=ch)),
             ):
                 resp = await api_channel_clear_context(request)
@@ -557,7 +557,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
         The resume SID is cleared late, so an early cancellation leaves it resumable, and a
         member restored from disk is not in `_sessions`; the registry alone cannot judge it.
         """
-        import kiro_crew.dashboard.handlers_channel as hc
+        import aj_crew.dashboard.handlers_channel as hc
 
         agent = _make_agent("a1", "Researcher", "channel:ch1:a1")
         ch = _make_channel("ch1", {"a1": agent})
@@ -582,7 +582,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
         # signal, while a shortened grace would bet the settle lands inside it.
         with patch.object(hc, "_now", side_effect=_deadline_spent_once_the_teardown_starts(hc)):
             with patch(
-                "kiro_crew.dashboard.handlers_channel._mgr",
+                "aj_crew.dashboard.handlers_channel._mgr",
                 return_value=MagicMock(get=MagicMock(return_value=ch)),
             ):
                 resp = await api_channel_clear_context(request)
@@ -612,7 +612,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
         already gone. Reporting that member refused answers "Nothing was cleared" while its
         next turn starts empty -- the transcript is the only witness, and it is wiped.
         """
-        import kiro_crew.dashboard.handlers_channel as hc
+        import aj_crew.dashboard.handlers_channel as hc
 
         agent = _make_agent("a1", "Researcher", "channel:ch1:a1")
         ch = _make_channel("ch1", {"a1": agent})
@@ -636,7 +636,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch.object(hc, "_now", side_effect=_deadline_spent_once_the_teardown_starts(hc)):
             with patch(
-                "kiro_crew.dashboard.handlers_channel._mgr",
+                "aj_crew.dashboard.handlers_channel._mgr",
                 return_value=MagicMock(get=MagicMock(return_value=ch)),
             ):
                 resp = await api_channel_clear_context(request)
@@ -663,7 +663,7 @@ class TestAClearInTheInterTurnWindowIsRefused:
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -680,7 +680,7 @@ class TestChannelClearContext:
     async def test_returns_404_when_channel_not_found(self):
         request = _make_request("nonexistent", {}, channel=None)
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=None)),
         ):
             resp = await api_channel_clear_context(request)
@@ -698,7 +698,7 @@ class TestChannelClearContext:
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -726,7 +726,7 @@ class TestChannelClearContext:
             "ch1", {"scope": "agent", "agent_id": "a1"}, channel=ch, sessions=sessions
         )
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -767,7 +767,7 @@ class TestChannelClearContext:
             "ch1", {"scope": "agent", "agent_id": "a1"}, channel=ch, sessions=sessions
         )
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -800,7 +800,7 @@ class TestChannelClearContext:
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -831,7 +831,7 @@ class TestChannelClearContext:
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -864,7 +864,7 @@ class TestChannelClearContext:
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -900,9 +900,9 @@ class TestChannelClearContext:
         sessions.has_session = MagicMock(return_value=True)
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
-        with patch("kiro_crew.dashboard.handlers_channel.sel") as sel_mock:
+        with patch("aj_crew.dashboard.handlers_channel.sel") as sel_mock:
             with patch(
-                "kiro_crew.dashboard.handlers_channel._mgr",
+                "aj_crew.dashboard.handlers_channel._mgr",
                 return_value=MagicMock(get=MagicMock(return_value=ch)),
             ):
                 resp = await api_channel_clear_context(request)
@@ -936,7 +936,7 @@ class TestChannelClearContext:
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -979,7 +979,7 @@ class TestChannelClearContext:
             "ch1", {"scope": "agent", "agent_id": "a1"}, channel=ch, sessions=sessions
         )
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -1005,7 +1005,7 @@ class TestChannelClearContext:
             "ch1", {"scope": "agent", "agent_id": "a1"}, channel=ch, sessions=sessions
         )
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -1036,7 +1036,7 @@ class TestChannelClearContext:
             "ch1", {"scope": "agent", "agent_id": "a1"}, channel=ch, sessions=sessions
         )
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -1070,7 +1070,7 @@ class TestChannelClearContext:
             "ch1", {"scope": "agent", "agent_id": "a1"}, channel=ch, sessions=sessions
         )
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -1094,7 +1094,7 @@ class TestChannelClearContext:
             "ch1", {"scope": "agent", "agent_id": "a1"}, channel=ch, sessions=sessions
         )
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -1120,7 +1120,7 @@ class TestChannelClearContext:
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -1152,7 +1152,7 @@ class TestChannelClearContext:
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -1187,7 +1187,7 @@ class TestChannelClearContext:
 
         request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -1216,7 +1216,7 @@ class TestChannelClearContext:
             "ch1", {"scope": "agent", "agent_id": "nonexistent"}, channel=ch, sessions=sessions
         )
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -1234,7 +1234,7 @@ class TestChannelClearContext:
         # What aiohttp raises for an unparseable body (JSONDecodeError is one).
         request.json = AsyncMock(side_effect=ValueError("no body"))
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -1252,7 +1252,7 @@ class TestChannelClearContext:
             "ch1", {"scope": "agent"}, channel=ch, sessions=sessions
         )
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             resp = await api_channel_clear_context(request)
@@ -1305,7 +1305,7 @@ class TestMembershipAndLifetimeSerializeWithTheClear:
         dismiss_request = self._dismiss_request("ch1", "a2", ch)
 
         with patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ):
             clear = asyncio.ensure_future(api_channel_clear_context(clear_request))
@@ -1337,7 +1337,7 @@ class TestMembershipAndLifetimeSerializeWithTheClear:
         the clear is still tearing them down, and the clear then answers 200 for a channel that
         is already gone. Holding the clear's lock makes the close wait for its answer.
         """
-        from kiro_crew.dashboard.handlers_channel import api_channel_close
+        from aj_crew.dashboard.handlers_channel import api_channel_close
 
         agents = {"a1": _make_agent("a1", "Researcher", "channel:ch1:a1")}
         ch = _make_channel("ch1", agents)
@@ -1358,7 +1358,7 @@ class TestMembershipAndLifetimeSerializeWithTheClear:
 
         clear_request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         close_request = self._dismiss_request("ch1", "a1", ch)
-        with patch("kiro_crew.dashboard.handlers_channel._mgr", return_value=mgr):
+        with patch("aj_crew.dashboard.handlers_channel._mgr", return_value=mgr):
             clear = asyncio.ensure_future(api_channel_clear_context(clear_request))
             await await_until(parked, what="the clear reaching its first teardown")
 
@@ -1384,7 +1384,7 @@ class TestMembershipAndLifetimeSerializeWithTheClear:
         reads the SID the clear is about to drop and registers the old conversation after the
         clear answered 200, against a shared log the clear already wiped.
         """
-        import kiro_crew.dashboard.handlers_channel as hc
+        import aj_crew.dashboard.handlers_channel as hc
 
         sleeper = _make_agent("a2", "Analyst", "channel:ch1:a2")
         sleeper.state = "done"
@@ -1409,7 +1409,7 @@ class TestMembershipAndLifetimeSerializeWithTheClear:
 
         with (
             patch(
-                "kiro_crew.dashboard.handlers_channel._mgr",
+                "aj_crew.dashboard.handlers_channel._mgr",
                 return_value=MagicMock(get=MagicMock(return_value=ch)),
             ),
             patch.object(hc, "_spawn_agent_task") as spawn,
@@ -1448,7 +1448,7 @@ class TestMembershipAndLifetimeSerializeWithTheClear:
         before `run_channel_agent` has marked it. Marked `listening`, the clear would proceed,
         yield in its resume-SID probe, and let the startup read the SID it is about to drop.
         """
-        import kiro_crew.dashboard.handlers_channel as hc
+        import aj_crew.dashboard.handlers_channel as hc
 
         sleeper = _make_agent("a1", "Researcher", "channel:ch1:a1")
         sleeper.state = "done"
@@ -1461,7 +1461,7 @@ class TestMembershipAndLifetimeSerializeWithTheClear:
         clear_request = _make_request("ch1", {"scope": "all"}, channel=ch, sessions=sessions)
         with (
             patch(
-                "kiro_crew.dashboard.handlers_channel._mgr",
+                "aj_crew.dashboard.handlers_channel._mgr",
                 return_value=MagicMock(get=MagicMock(return_value=ch)),
             ),
             patch.object(hc, "_spawn_agent_task"),
@@ -1502,9 +1502,9 @@ class TestMembershipAndLifetimeSerializeWithTheClear:
 
         found_then_closed.get = MagicMock(side_effect=_lookup_then_close)
 
-        with patch("kiro_crew.dashboard.handlers_channel.sel") as sel_mock:
+        with patch("aj_crew.dashboard.handlers_channel.sel") as sel_mock:
             with patch(
-                "kiro_crew.dashboard.handlers_channel._mgr", return_value=found_then_closed
+                "aj_crew.dashboard.handlers_channel._mgr", return_value=found_then_closed
             ):
                 resp = await api_channel_clear_context(request)
 

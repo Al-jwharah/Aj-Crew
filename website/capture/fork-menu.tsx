@@ -43,7 +43,7 @@ const REFUSAL: Record<string, [string, string]> = {
   'too-large': ['fork_corpus_too_large', 'conversation too large to fork'],
 }
 localStorage.setItem('mc-theme', theme)
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 document.documentElement.setAttribute('data-mode', theme)
 
 const realFetch = globalThis.fetch.bind(globalThis)

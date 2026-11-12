@@ -30,9 +30,9 @@ from discord_helpers import (
     _prime_live,
 )
 
-import kiro_crew.discord.transport_dispatch as td_mod
-from kiro_crew import session_directive
-from kiro_crew.acp.types import (
+import aj_crew.discord.transport_dispatch as td_mod
+from aj_crew import session_directive
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
@@ -40,32 +40,32 @@ from kiro_crew.acp.types import (
     AcpEvent,
     TurnUsage,
 )
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.discord.renderer import DiscordApprovalDecider
-from kiro_crew.discord.transport import DiscordInboundMessage
-from kiro_crew.discord.transport_dispatch import (
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.config import AjCrewConfig
+from aj_crew.discord.renderer import DiscordApprovalDecider
+from aj_crew.discord.transport import DiscordInboundMessage
+from aj_crew.discord.transport_dispatch import (
     _NOT_A_SENDER,
     _STEER_ACK_EMOJI,
     DiscordDispatcher,
     _queued_origin,
     _QueuedOrigin,
 )
-from kiro_crew.messaging.attachments import cleanup
-from kiro_crew.messaging.commands import COMPACT_ACCOUNT_CHANGED_TEXT
-from kiro_crew.messaging.link import ChannelLink, legacy_dashboard_mirror_key
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.monitoring.completion import MonitorCompletionHook
-from kiro_crew.monitoring.models import (
+from aj_crew.messaging.attachments import cleanup
+from aj_crew.messaging.commands import COMPACT_ACCOUNT_CHANGED_TEXT
+from aj_crew.messaging.link import ChannelLink, legacy_dashboard_mirror_key
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.monitoring.completion import MonitorCompletionHook
+from aj_crew.monitoring.models import (
     MonitorActionCompletion,
     MonitorActionDisposition,
     MonitorBudgets,
     MonitorDispatchResult,
     MonitorOutcome,
 )
-from kiro_crew.session import SessionManager
-from kiro_crew.session_allocation import SessionClosingError
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.session import SessionManager
+from aj_crew.session_allocation import SessionClosingError
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # ── transport_dispatch.py ────────────────────────────────────────────────
 
@@ -86,7 +86,7 @@ class TestDispatcher:
     async def test_help_command(self) -> None:
         d, cli, _ = _dispatcher({"u1"})
         await d.handle_message(self._msg("!help"))
-        assert "Kiro Crew" in cli.sent[-1][0]
+        assert "Aj Crew" in cli.sent[-1][0]
         assert "!sessions [query]" in cli.sent[-1][0]
 
     @pytest.mark.asyncio
@@ -98,7 +98,7 @@ class TestDispatcher:
         RED-BEFORE: without the restricted-session gate at the refusal point the
         private message is written verbatim to ``refused.jsonl``.
         """
-        from kiro_crew.messaging import inbound_spool as S
+        from aj_crew.messaging import inbound_spool as S
 
         monkeypatch.setattr(S, "data_home", lambda: tmp_path)
         d, _cli, sess = _dispatcher({"u1"})
@@ -128,7 +128,7 @@ class TestDispatcher:
         self, tmp_path, monkeypatch
     ) -> None:
         """The restart notice can name the files: the spool keeps each ``filename``."""
-        from kiro_crew.messaging import inbound_spool as S
+        from aj_crew.messaging import inbound_spool as S
 
         monkeypatch.setattr(S, "data_home", lambda: tmp_path)
         d, _cli, sess = _dispatcher({"u1"})
@@ -147,7 +147,7 @@ class TestDispatcher:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The cleanup is an await: a prompt that starts there resets the walk."""
-        from kiro_crew.agent_sdk.drivers import acp_vocab
+        from aj_crew.agent_sdk.drivers import acp_vocab
 
         order: list[str] = []
         real_follow = acp_vocab.follow_engine_promotion
@@ -212,7 +212,7 @@ class TestDispatcher:
         def _factory(*_args: Any, **_kwargs: Any) -> _LiveProvider:
             return provider
 
-        manager = SessionManager(KiroCrewConfig(), provider_factory=_factory)
+        manager = SessionManager(AjCrewConfig(), provider_factory=_factory)
         boundary_reached = asyncio.Event()
         resume_monitor = asyncio.Event()
 
@@ -244,7 +244,7 @@ class TestDispatcher:
         manager.release(key)
         # The winning user turn's engine promoted A -> B. The BUSY wake runs no
         # prompt, so it must leave that promotion for the user turn to follow.
-        from kiro_crew.acp.engine_fallback import (
+        from aj_crew.acp.engine_fallback import (
             TRACKER_ATTR,
             EngineFallbackTracker,
             ModelFallbackNotice,
@@ -307,9 +307,7 @@ class TestDispatcher:
         async def _denied(_channel_type: str) -> bool:
             return False
 
-        monkeypatch.setattr(
-            "kiro_crew.discord.transport_dispatch.channel_inbound_permitted", _denied
-        )
+        monkeypatch.setattr("aj_crew.discord.transport_dispatch.channel_inbound_permitted", _denied)
         result = await d.handle_message(
             self._msg("[Monitor wake]"),
             interpret_commands=False,
@@ -614,9 +612,9 @@ class TestDispatcher:
             return provider, False, False
 
         sess.get_or_create = _get_or_create  # type: ignore[method-assign]
-        monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: service)
+        monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: service)
         monkeypatch.setattr(
-            "kiro_crew.autonudge_authz.sel",
+            "aj_crew.autonudge_authz.sel",
             lambda: SimpleNamespace(log_tool_invocation=lambda **_kwargs: None),
         )
         completion = MonitorCompletionHook(
@@ -661,7 +659,7 @@ class TestDispatcher:
     async def test_session_released_even_when_renderer_close_raises(self, monkeypatch) -> None:
         """A rendering-finalization failure (e.g. Discord returning a
         malformed body) must never leave the session permanently busy."""
-        from kiro_crew.discord.renderer import DiscordRenderer
+        from aj_crew.discord.renderer import DiscordRenderer
 
         async def _boom(self) -> None:
             raise RuntimeError("finalization failed")
@@ -717,7 +715,7 @@ class TestDispatcher:
             cleanup(paths)
 
         monkeypatch.setattr(
-            "kiro_crew.discord.transport_dispatch.cleanup_attachments",
+            "aj_crew.discord.transport_dispatch.cleanup_attachments",
             _cleanup,
         )
         d, cli, _ = _dispatcher({"u1"})
@@ -855,7 +853,7 @@ class TestDispatcher:
         prompt = d.ctx_builder.messages[-1]
         assert prompt.splitlines()[0] == "!help"
         assert prompt.splitlines()[1].endswith(".png")
-        assert "Kiro Crew — Discord" not in "\n".join(text for text, _ in cli.sent)
+        assert "Aj Crew — Discord" not in "\n".join(text for text, _ in cli.sent)
 
     @pytest.mark.asyncio
     async def test_opaque_attachment_download_is_not_silent(self) -> None:
@@ -1088,7 +1086,7 @@ class TestDispatcher:
     async def test_default_agent_fallback(self) -> None:
         d, _, sess = _dispatcher({"u1"})
         await d.handle_message(self._msg("hi"))
-        assert sess.last_agent == "kirocrew"
+        assert sess.last_agent == "ajcrew"
 
     @pytest.mark.asyncio
     async def test_configured_default_agent_wins(self) -> None:
@@ -1110,7 +1108,7 @@ class TestDrainSenderIdentity:
     only combine messages that share one.
     """
 
-    _UNIFIED = "unified:kirocrew"
+    _UNIFIED = "unified:ajcrew"
 
     def test_the_surface_reports_whether_the_edit_landed(self) -> None:
         """A rate-limited chat answers a refusal rather than raising, and the registry
@@ -1214,7 +1212,7 @@ class TestDrainSenderIdentity:
     @pytest.mark.asyncio
     async def test_a_senders_own_surplus_is_still_counted(self) -> None:
         """The guard against fixing the count by always reporting zero."""
-        from kiro_crew.discord.transport_dispatch import _MAX_COLLAPSE
+        from aj_crew.discord.transport_dispatch import _MAX_COLLAPSE
 
         d, _cli, sess = _dispatcher({"u1"}, dm_scope="unified")
         deferred: list[int] = []

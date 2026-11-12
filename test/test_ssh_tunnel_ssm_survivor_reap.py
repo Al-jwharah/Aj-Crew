@@ -24,11 +24,11 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.instances import ssh_tunnel_manager as stm
-from kiro_crew.instances import ssh_tunnel_manager_child as child_mod
-from kiro_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import platform_compat
+from aj_crew.instances import ssh_tunnel_manager as stm
+from aj_crew.instances import ssh_tunnel_manager_child as child_mod
+from aj_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
+from aj_crew.testing.wait import async_wait_until, await_until
 
 #: Bound on how long a stand-in process may outlive a test that failed to reap it.
 #: Kept well above the ``await_until`` ceiling: a stand-in that ended on its own
@@ -244,7 +244,7 @@ class TestProbeTeardownReporting:
         monitor = asyncio.create_task(asyncio.Event().wait())  # never reports an exit
         tunnel._monitor_task = monitor
         try:
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.instances.ssh_tunnel_manager"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.instances.ssh_tunnel_manager"):
                 await tunnel._probe_loop()
                 await async_wait_until(
                     lambda: any("is still up" in r.getMessage() for r in caplog.records),
@@ -268,7 +268,7 @@ class TestProbeTeardownReporting:
         monitor = asyncio.create_task(asyncio.Event().wait())  # never reports an exit
         tunnel._monitor_task = monitor
         try:
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.instances.ssh_tunnel_manager"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.instances.ssh_tunnel_manager"):
                 await tunnel._probe_teardown()
         finally:
             monitor.cancel()
@@ -287,7 +287,7 @@ class TestProbeTeardownReporting:
         done = asyncio.get_running_loop().create_future()
         done.set_result(None)
         tunnel._monitor_task = asyncio.ensure_future(done)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.instances.ssh_tunnel_manager"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.instances.ssh_tunnel_manager"):
             await tunnel._probe_teardown()
         messages = [r.getMessage() for r in caplog.records]
         assert any("PermissionError: not permitted" in m for m in messages)
@@ -304,7 +304,7 @@ class TestProbeTeardownReporting:
 
         tunnel._terminate = _noop  # type: ignore[method-assign]
         tunnel._monitor_task = asyncio.ensure_future(asyncio.sleep(0))
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.instances.ssh_tunnel_manager"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.instances.ssh_tunnel_manager"):
             await tunnel._probe_teardown()
         assert caplog.records == []
 

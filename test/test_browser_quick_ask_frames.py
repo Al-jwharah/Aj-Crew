@@ -30,13 +30,13 @@ from test_browser_quick_ask import (  # noqa: F401 - the autouse fixture
     _poll,
 )
 
-from kiro_crew.browser_harness import frames as fr
-from kiro_crew.browser_harness import live_hub as lh
-from kiro_crew.browser_harness import ops
-from kiro_crew.browser_harness import quick_ask as qa
-from kiro_crew.browser_harness.relay import CdpRelay
-from kiro_crew.dashboard.handlers import browser_ask
-from kiro_crew.mcp_tools import browser as tool
+from aj_crew.browser_harness import frames as fr
+from aj_crew.browser_harness import live_hub as lh
+from aj_crew.browser_harness import ops
+from aj_crew.browser_harness import quick_ask as qa
+from aj_crew.browser_harness.relay import CdpRelay
+from aj_crew.dashboard.handlers import browser_ask
+from aj_crew.mcp_tools import browser as tool
 
 pytestmark = pytest.mark.asyncio
 

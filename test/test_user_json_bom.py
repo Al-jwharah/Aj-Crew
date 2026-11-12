@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.user_json import (
+from aj_crew.user_json import (
     load_mcp_servers,
     load_user_json_object,
     loads_mcp_config,
@@ -91,7 +91,7 @@ class TestWritersPreserveAWrongShape:
     ) -> None:
         # A parseable file with a list ``mcpServers`` must not be read as empty
         # and overwritten with only the new entry.
-        from kiro_crew import mcp_discovery
+        from aj_crew import mcp_discovery
 
         path = tmp_path / ".mcp.json"
         raw = _BOM + json.dumps({"mcpServers": [{"command": "x"}], "keep": 1}).encode("utf-8")
@@ -104,13 +104,13 @@ class TestWritersPreserveAWrongShape:
 
 @pytest.fixture()
 def bridges_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    from kiro_crew.apps import bridges
+    from aj_crew.apps import bridges
 
     agents = tmp_path / ".kiro" / "agents"
     settings = tmp_path / ".kiro" / "settings"
     agents.mkdir(parents=True)
     settings.mkdir(parents=True)
-    monkeypatch.setattr(bridges, "_mcp_json_path", lambda: agents / "kirocrew.json")
+    monkeypatch.setattr(bridges, "_mcp_json_path", lambda: agents / "ajcrew.json")
     monkeypatch.setattr(bridges, "_LEGACY_SHARED_MCP_PATH", settings / "mcp.json")
     return tmp_path
 
@@ -119,12 +119,12 @@ class TestBridgesSetup:
     def test_legacy_scrub_reads_a_bom_file_and_writes_it_back_plain(
         self, bridges_home: Path, caplog: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         legacy = bridges._LEGACY_SHARED_MCP_PATH
         _write_bom_json(legacy, {"mcpServers": {"tunnel:srv": {"command": "x"}, "keep": {}}})
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.bridges"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.apps.bridges"):
             assert bridges._scrub_legacy_shared_mcp("tunnel") == 1
 
         assert "Failed to scrub" not in caplog.text
@@ -133,7 +133,7 @@ class TestBridgesSetup:
         assert json.loads(raw) == {"mcpServers": {"keep": {}}}
 
     def test_registration_reads_a_bom_agent_config(self, bridges_home: Path) -> None:
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         _write_bom_json(bridges._mcp_json_path(), {"mcpServers": {"user": {"command": "u"}}})
 
@@ -145,7 +145,7 @@ class TestBridgesSetup:
     def test_a_bom_list_root_agent_config_is_refused_not_crashed_on(
         self, bridges_home: Path
     ) -> None:
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         _write_bom_json(bridges._mcp_json_path(), [])
         assert bridges._read_mcp_json_unlocked() == {}
@@ -155,7 +155,7 @@ class TestBridgesSetup:
     def test_an_installed_app_agent_spec_with_bom_keeps_its_user_edits(
         self, tmp_path: Path
     ) -> None:
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         path = tmp_path / "app--agent.json"
         _write_bom_json(path, {"name": "app--agent", "model": "user-pick"})
@@ -164,7 +164,7 @@ class TestBridgesSetup:
     def test_global_policy_specs_read_a_bom_file(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         monkeypatch.setattr(Path, "home", lambda: tmp_path)
         _write_bom_json(
@@ -176,7 +176,7 @@ class TestBridgesSetup:
 
 class TestChatStartLoading:
     def test_agent_materialization_loader_reads_a_bom_mcp_json(self, tmp_path: Path) -> None:
-        from kiro_crew.user_json import load_user_json_object
+        from aj_crew.user_json import load_user_json_object
 
         path = tmp_path / "mcp.json"
         _write_bom_json(path, {"mcpServers": {"s": {"command": "s"}}})
@@ -185,10 +185,10 @@ class TestChatStartLoading:
     def test_agent_loader_keeps_judging_crew_config_like_the_config_loader(
         self, tmp_path: Path
     ) -> None:
-        # ``KiroCrewConfig.load`` accepts a BOM'd ``config.json``, so the agent's
+        # ``AjCrewConfig.load`` accepts a BOM'd ``config.json``, so the agent's
         # own loader must too: if the two judged one file differently, the spec
         # builder would treat a config the gateway loaded as absent.
-        from kiro_crew import agent
+        from aj_crew import agent
 
         path = tmp_path / "config.json"
         _write_bom_json(path, {"model": "m"})
@@ -197,7 +197,7 @@ class TestChatStartLoading:
     def test_doctor_reads_a_bom_agent_config(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         class _Stop(Exception):
             pass
@@ -207,7 +207,7 @@ class TestChatStartLoading:
 
         # Stop right after the parse verdict: the rest of doctor probes servers.
         monkeypatch.setattr(cli_doctor._agent, "_decline_shared_agent_home", _stop)
-        path = tmp_path / "kirocrew.json"
+        path = tmp_path / "ajcrew.json"
         # Valid JSON that is not an object: doctor names it only when the parse
         # got past the byte-order mark.
         _write_bom_json(path, ["not", "an", "object"])
@@ -216,7 +216,7 @@ class TestChatStartLoading:
         assert "agent spec is not a JSON object" in capsys.readouterr().out
 
     def test_json_agent_spec_with_bom_parses(self) -> None:
-        from kiro_crew.agent_spec_format import parse_agent_spec_bytes
+        from aj_crew.agent_spec_format import parse_agent_spec_bytes
 
         spec = parse_agent_spec_bytes(_BOM + b'{"name": "a"}', "a.json")
         assert spec == {"name": "a"}
@@ -224,7 +224,7 @@ class TestChatStartLoading:
     def test_discovery_reads_a_bom_mcp_json(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import mcp_discovery
+        from aj_crew import mcp_discovery
 
         path = tmp_path / "crew" / "mcp.json"
         _write_bom_json(path, {"mcpServers": {"d": {"command": "d"}}})
@@ -244,8 +244,8 @@ _PS51_DENIED = _BOM + b'{"user_added":[{"id":"u1","pattern":"git push --force"}]
 
 @pytest.fixture
 def denied_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    from kiro_crew.config import loader
-    from kiro_crew.dashboard.handlers import security as security_handlers
+    from aj_crew.config import loader
+    from aj_crew.dashboard.handlers import security as security_handlers
 
     path = tmp_path / "denied_commands.json"
     monkeypatch.setattr(loader, "denied_commands_path", lambda: path)
@@ -260,7 +260,7 @@ class TestDeniedCommandsKeystone:
         ids=["utf8_bom_crlf", "plain_utf8_control"],
     )
     def test_the_user_added_rule_reaches_the_gate(self, denied_file: Path, raw: bytes) -> None:
-        from kiro_crew.hooks import hooks_config_from_config_dict
+        from aj_crew.hooks import hooks_config_from_config_dict
 
         denied_file.write_bytes(raw)
         config = hooks_config_from_config_dict({})
@@ -274,7 +274,7 @@ class TestDeniedCommandsKeystone:
     def test_an_unusable_file_keeps_built_ins_and_says_so(
         self, denied_file: Path, raw: bytes, caplog: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.hooks import load_denied_commands_state
+        from aj_crew.hooks import load_denied_commands_state
 
         denied_file.write_bytes(raw)
         with caplog.at_level(logging.WARNING):
@@ -285,14 +285,14 @@ class TestDeniedCommandsKeystone:
     def test_a_missing_file_is_no_opt_out_without_a_warning(
         self, denied_file: Path, caplog: pytest.LogCaptureFixture
     ) -> None:
-        from kiro_crew.hooks import load_denied_commands_state
+        from aj_crew.hooks import load_denied_commands_state
 
         with caplog.at_level(logging.WARNING):
             assert load_denied_commands_state() == {}
         assert not [r for r in caplog.records if "denied_commands.json" in r.getMessage()]
 
     def test_the_settings_page_reads_and_edits_a_bom_file(self, denied_file: Path) -> None:
-        from kiro_crew.dashboard.handlers import security as security_handlers
+        from aj_crew.dashboard.handlers import security as security_handlers
 
         denied_file.write_bytes(_PS51_DENIED)
         expected = {"user_added": [{"id": "u1", "pattern": "git push --force"}]}
@@ -300,8 +300,8 @@ class TestDeniedCommandsKeystone:
         assert security_handlers._read_denied_strict() == expected
 
     def test_a_corrupt_file_still_refuses_an_edit(self, denied_file: Path) -> None:
-        from kiro_crew.dashboard.handlers import security as security_handlers
-        from kiro_crew.dashboard.handlers.security_audit import ConfigCorruptError
+        from aj_crew.dashboard.handlers import security as security_handlers
+        from aj_crew.dashboard.handlers.security_audit import ConfigCorruptError
 
         denied_file.write_bytes(_BOM + b"{not json")
         with pytest.raises(ConfigCorruptError):
@@ -311,9 +311,9 @@ class TestDeniedCommandsKeystone:
 @pytest.fixture
 def saved_hooks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """A ``hooks.json`` holding one PreToolUse hook, re-saved with a leading mark."""
-    import kiro_crew.hooks as hooks_mod
-    from kiro_crew.config import loader
-    from kiro_crew.hooks import HOOK_EVENT_PRE_TOOL_USE, ScriptHook, ScriptHookStore
+    import aj_crew.hooks as hooks_mod
+    from aj_crew.config import loader
+    from aj_crew.hooks import HOOK_EVENT_PRE_TOOL_USE, ScriptHook, ScriptHookStore
 
     monkeypatch.setattr(loader, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(hooks_mod, "_global_script_hook_store", None)
@@ -330,13 +330,13 @@ def saved_hooks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 class TestScriptHooksFile:
     def test_the_gateway_store_loads_a_bom_file(self, saved_hooks: Path) -> None:
-        from kiro_crew.hooks import ScriptHookStore
+        from aj_crew.hooks import ScriptHookStore
 
         store = ScriptHookStore(config_dir=saved_hooks.parent)
         assert [h.id for h in store.list_all()] == ["h1"]
 
     def test_a_hook_edit_saves_over_a_bom_file(self, saved_hooks: Path) -> None:
-        from kiro_crew.hooks import ScriptHookStore
+        from aj_crew.hooks import ScriptHookStore
 
         store = ScriptHookStore(config_dir=saved_hooks.parent)
         assert store.toggle("h1") is not None
@@ -345,13 +345,13 @@ class TestScriptHooksFile:
         assert not saved_hooks.read_bytes().startswith(_BOM)
 
     def test_the_standalone_gate_store_reads_a_bom_file(self, saved_hooks: Path) -> None:
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         store = hooks_mod.persisted_hook_store()
         assert [h.id for h in store.list_all()] == ["h1"]
 
     def test_the_webhook_registration_count_reads_a_bom_file(self, tmp_path: Path) -> None:
-        from kiro_crew import webhooks
+        from aj_crew import webhooks
 
         path = tmp_path / "hooks.json"
         path.write_bytes(_BOM + b'{"r1": {"context_summary": "a"}, "hooks": []}')
@@ -362,7 +362,7 @@ class TestScriptHooksFile:
     def test_the_webhook_intake_reads_a_bom_file(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.dashboard.handlers import hooks as hooks_handlers
+        from aj_crew.dashboard.handlers import hooks as hooks_handlers
 
         path = tmp_path / "hooks.json"
         path.write_bytes(_BOM + b'{"r1": {"context_summary": "a"}, "hooks": []}')
@@ -376,8 +376,8 @@ class TestScriptHooksFile:
     ) -> None:
         # The import sanitizer must read the file the way the store does: a BOM
         # file the store now loads must not slip past it with its hooks still on.
-        from kiro_crew.hooks import ScriptHookStore
-        from kiro_crew.portability_vetting import _disable_imported_script_hooks
+        from aj_crew.hooks import ScriptHookStore
+        from aj_crew.portability_vetting import _disable_imported_script_hooks
 
         assert saved_hooks.read_bytes().startswith(_BOM)
         assert len(_disable_imported_script_hooks(saved_hooks)) == 1
@@ -387,7 +387,7 @@ class TestScriptHooksFile:
     def test_a_corrupt_bom_file_still_fails_the_standalone_gate_closed(
         self, saved_hooks: Path
     ) -> None:
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         saved_hooks.write_bytes(_BOM + b"{not json")
         with pytest.raises(ValueError):
@@ -402,7 +402,7 @@ class TestGovernancePolicyReader:
 
     @pytest.mark.parametrize("raw", [_BOM + _DOC, _DOC], ids=["utf8_bom", "plain_utf8_control"])
     def test_the_policy_parses(self, tmp_path: Path, raw: bytes) -> None:
-        from kiro_crew.platform.governance import _read_json_file
+        from aj_crew.platform.governance import _read_json_file
 
         path = tmp_path / "security_policy.json"
         path.write_bytes(raw)
@@ -414,7 +414,7 @@ class TestGovernancePolicyReader:
         ids=["utf16", "bom_corrupt_json", "two_marks"],
     )
     def test_anything_else_still_raises(self, tmp_path: Path, raw: bytes) -> None:
-        from kiro_crew.platform.governance import _read_json_file
+        from aj_crew.platform.governance import _read_json_file
 
         path = tmp_path / "security_policy.json"
         path.write_bytes(raw)

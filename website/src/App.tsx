@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, useSyncExternalStore, createContext, lazy, Suspense, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef, useSyncExternalStore, createContext, lazy, Suspense, type ReactNode } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAppSelector, useAppDispatch } from './store'
 import { setUpdateProgress } from './store/dashboardSlice'
@@ -54,7 +54,7 @@ const CrewBoardPage = lazy(() => import('./pages/CrewBoardPage'))
 const SessionDashboardsPage = lazy(() => import('./pages/chat/command-center/SessionDashboardsPage'))
 import ArtifactDetailPage from './pages/ArtifactDetailPage'
 import { ChangelogModal, UpdateErrorDialogFrame } from './shell/updates/updateFlow'
-import KiroCrewNavBridge from './components/KiroCrewNavBridge'
+import AjCrewNavBridge from './components/AjCrewNavBridge'
 import InstancesViewport from './components/InstancesViewport'
 import { LocalOverlayRoot } from './components/overlayRoot'
 import EmbeddedHostBridge from './components/EmbeddedHostBridge'
@@ -249,7 +249,7 @@ export function UpdateOverlay({ onCancel }: { onCancel: () => void }) {
       <div className="bg-card border border-border rounded-xl p-8 max-w-md w-full mx-4 shadow-xl text-center">
         {/* A terminal step is not in progress, so it does not pulse. */}
         <div className={`text-4xl mb-4 ${isFailed ? 'text-danger' : 'animate-pulse'}`} data-testid="update-overlay-step-icon">{info?.icon || <RefreshCw className="lucide-inline" />}</div>
-        <div className="text-lg font-bold text-text-strong mb-2">{i18nT('app.updating_kirocrew')}</div>
+        <div className="text-lg font-bold text-text-strong mb-2">{i18nT('app.updating_ajcrew')}</div>
         <div className="text-sm text-muted mb-5">{detail || i18nT('app.starting_update')}</div>
         {/* Step progress */}
         <div className="flex flex-col gap-2 text-left mb-5">
@@ -328,9 +328,20 @@ export default function App() {
     setShortcutsOpen, toggleShortcutsModal, commandPalette, agentSwitchNotice, kiroUsageOpen, setKiroUsageOpen,
     kiroUsageState, kiroAccountEntry, metrics, subscribeLogs, subscribeSubagents, forceReconnect,
     updateFlow, updating, setUpdating, showUpdateModal, setShowUpdateModal, showChangelog, updateError,
-    setUpdateError, reportProblemOpen, setReportProblemOpen, effectiveCollapsed, activePath,
+    setUpdateError, reportProblemOpen, setReportProblemOpen, effectiveCollapsed, simpleLayout, activePath,
+    toggleFocusMode, requestFeature,
     libraryNavActive, discoverNavActive, isChat, needsFixedHeight, navRowActive, membersRoute, mobileSingle,
   } = shell
+  // Shell commands the command palette offers as Actions. The Simple layout's
+  // top bar draws no control for them, so this is where they are reached there
+  // (Advanced keeps its own controls and gains the same entries). Only the
+  // dashboard shell owns the three surfaces; a popout or an embed passes none.
+  const framed = isPopout || isEmbed
+  const shellPaletteActions = useMemo(() => framed ? undefined : {
+    toggleFocusMode,
+    requestFeature: () => { void requestFeature() },
+    reportProblem: () => setReportProblemOpen(true),
+  }, [framed, toggleFocusMode, requestFeature, setReportProblemOpen])
   // "Run in terminal" from a code block outside every chat, on any route.
   const runInTerminal = useRunInTerminalShellBridge(activeSlotProject, !isPopout && !isEmbed)
   // The dock terminal fills the content area only while maximized, so <main>
@@ -591,7 +602,7 @@ export default function App() {
       </>
     ) : isEmbed ? (
       <div className="h-screen supports-[height:100dvh]:h-dvh w-screen overflow-hidden bg-bg flex flex-col">
-        <KiroCrewNavBridge />
+        <AjCrewNavBridge />
         <Suspense fallback={null}><SelectionActionLayer /></Suspense>
         <EmbedTabStrip />
         <div className="flex-1 min-h-0">
@@ -643,8 +654,8 @@ export default function App() {
         gridTemplateAreas: isMobile ? '"topbar" "content"' : bottomDock ? '"topbar topbar" "nav content" "nav actbar"' : '"topbar topbar topbar" "nav content actbar"',
         ...(!isMobile && {
           gridTemplateColumns: bottomDock
-            ? `${focusActive ? 0 : railWidthFor({ isMobile, collapsed: effectiveCollapsed })}px minmax(0,1fr)`
-            : `${focusActive ? 0 : railWidthFor({ isMobile, collapsed: effectiveCollapsed })}px minmax(0,1fr) auto`,
+            ? `${focusActive ? 0 : railWidthFor({ isMobile, collapsed: effectiveCollapsed, simple: simpleLayout })}px minmax(0,1fr)`
+            : `${focusActive ? 0 : railWidthFor({ isMobile, collapsed: effectiveCollapsed, simple: simpleLayout })}px minmax(0,1fr) auto`,
           // Transition fires only when the template string itself changes (the
           // collapse toggle) — content-driven resizes of the auto track (e.g.
           // the Activity panel opening) don't alter the value, so keeping this
@@ -853,7 +864,7 @@ export default function App() {
             </Suspense>
           </ErrorBoundary>
           {/* Route-independent too: the first KAS chat on a host without a
-              working kiro-cli waits on the gateway downloading Kiro Crew's own
+              working kiro-cli waits on the gateway downloading Aj Crew's own
               engine, whatever page is open. */}
           <ErrorBoundary
             scope="kas-engine-notice"
@@ -997,6 +1008,7 @@ export default function App() {
       onClose={commandPalette.close}
       opener={commandPalette.opener}
       openShortcuts={toggleShortcutsModal}
+      shellActions={shellPaletteActions}
     />
     {/* Theme decoration: decorative overlays (widgets, transitions)
         contributed by the active theme's branding. Absent unless a registered

@@ -12,7 +12,7 @@ What must hold:
   watchlist-changed publish via the mtime watch.
 - A neutralize entry carries ``disabled: true`` so the denied server is never
   launched, and keeps ``disabledTools`` as defense in depth.
-- An app agent's ``@kirocrew-cron`` / ``@kirocrew-core`` tool references get
+- An app agent's ``@ajcrew-cron`` / ``@ajcrew-core`` tool references get
   their server specs materialized (they live in the HOST agent config, so the
   reference dangles without the copy).
 """
@@ -27,9 +27,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps.builtins.mochi import hooks
-from kiro_crew.apps.builtins.mochi.queue_poller import QueuePoller
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.apps.builtins.mochi import hooks
+from aj_crew.apps.builtins.mochi.queue_poller import QueuePoller
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class TestOwnerLoopNeverAwaitsPoll:
@@ -123,7 +123,7 @@ class TestWatchlistMtimeWatch:
 
 class TestNeutralizeDisablesServer:
     def test_neutralize_entry_is_disabled_and_keeps_tool_deny(self, monkeypatch):
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         monkeypatch.setattr(
             bridges, "_global_mcp_specs", lambda: {"amb": {"command": "amb-cmd", "args": []}}
@@ -143,25 +143,25 @@ class TestNeutralizeDisablesServer:
 
 class TestManagedRefsMaterialized:
     def test_managed_tool_refs_get_specs(self):
-        from kiro_crew.apps.bridges import _materialize_managed_refs
+        from aj_crew.apps.bridges import _materialize_managed_refs
 
-        data: dict[str, Any] = {"tools": ["fs_read", "@kirocrew-cron", "@kirocrew-core"]}
+        data: dict[str, Any] = {"tools": ["fs_read", "@ajcrew-cron", "@ajcrew-core"]}
         _materialize_managed_refs(data)
-        assert data["mcpServers"]["kirocrew-cron"]["args"][-1] == "mcp-cron"
-        assert data["mcpServers"]["kirocrew-core"]["args"][-1] == "mcp-core"
+        assert data["mcpServers"]["ajcrew-cron"]["args"][-1] == "mcp-cron"
+        assert data["mcpServers"]["ajcrew-core"]["args"][-1] == "mcp-core"
 
     def test_existing_entry_is_not_overwritten(self):
-        from kiro_crew.apps.bridges import _materialize_managed_refs
+        from aj_crew.apps.bridges import _materialize_managed_refs
 
         data: dict[str, Any] = {
-            "tools": ["@kirocrew-cron"],
-            "mcpServers": {"kirocrew-cron": {"command": "custom"}},
+            "tools": ["@ajcrew-cron"],
+            "mcpServers": {"ajcrew-cron": {"command": "custom"}},
         }
         _materialize_managed_refs(data)
-        assert data["mcpServers"]["kirocrew-cron"]["command"] == "custom"
+        assert data["mcpServers"]["ajcrew-cron"]["command"] == "custom"
 
     def test_unreferenced_managed_servers_stay_out(self):
-        from kiro_crew.apps.bridges import _materialize_managed_refs
+        from aj_crew.apps.bridges import _materialize_managed_refs
 
         data: dict[str, Any] = {"tools": ["fs_read"]}
         _materialize_managed_refs(data)
@@ -171,20 +171,20 @@ class TestManagedRefsMaterialized:
     def test_a_gated_server_is_copied_only_while_its_spec_gate_is_open(
         self, monkeypatch, gate_open
     ):
-        # A closed gate (computer use off) must not put kirocrew-computer in an app
+        # A closed gate (computer use off) must not put ajcrew-computer in an app
         # agent's spec or a policy grant: its backend advertises no tools and stalls
         # KAS readiness. An explicitly granted opt-in server is still copied.
-        import kiro_crew.agent as agent_mod
-        from kiro_crew.apps.bridges import _managed_mcp_spec, _materialize_managed_refs
+        import aj_crew.agent as agent_mod
+        from aj_crew.apps.bridges import _managed_mcp_spec, _materialize_managed_refs
 
-        computer = agent_mod._MANAGED_MCP_SERVERS["kirocrew-computer"]
+        computer = agent_mod._MANAGED_MCP_SERVERS["ajcrew-computer"]
         monkeypatch.setitem(computer, "spec_gate", lambda: gate_open)
-        data: dict[str, Any] = {"tools": ["@kirocrew-computer", "@kirocrew-work/list_work"]}
+        data: dict[str, Any] = {"tools": ["@ajcrew-computer", "@ajcrew-work/list_work"]}
         _materialize_managed_refs(data)
 
-        assert ("kirocrew-computer" in data["mcpServers"]) is gate_open
-        assert (_managed_mcp_spec("kirocrew-computer") is not None) is gate_open
-        assert data["mcpServers"]["kirocrew-work"]["args"][-1] == "mcp-work"
+        assert ("ajcrew-computer" in data["mcpServers"]) is gate_open
+        assert (_managed_mcp_spec("ajcrew-computer") is not None) is gate_open
+        assert data["mcpServers"]["ajcrew-work"]["args"][-1] == "mcp-work"
 
 
 def _ctx(tmp_path: Path) -> Any:
@@ -206,16 +206,16 @@ class TestNamespacedAgentFileCheck:
     """
 
     def test_namespaced_file_with_matching_name_counts(self, tmp_path, monkeypatch):
-        import kiro_crew.agent as agent_mod
-        from kiro_crew.dashboard.handlers.agents import _namespaced_agent_file_exists
+        import aj_crew.agent as agent_mod
+        from aj_crew.dashboard.handlers.agents import _namespaced_agent_file_exists
 
         monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", tmp_path)
         (tmp_path / "someapp--helper.json").write_text(json.dumps({"name": "helper"}))
         assert _namespaced_agent_file_exists("helper") is True
 
     def test_name_mismatch_does_not_count(self, tmp_path, monkeypatch):
-        import kiro_crew.agent as agent_mod
-        from kiro_crew.dashboard.handlers.agents import _namespaced_agent_file_exists
+        import aj_crew.agent as agent_mod
+        from aj_crew.dashboard.handlers.agents import _namespaced_agent_file_exists
 
         monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", tmp_path)
         # File name pattern matches but the JSON name field is different —
@@ -224,8 +224,8 @@ class TestNamespacedAgentFileCheck:
         assert _namespaced_agent_file_exists("helper") is False
 
     def test_unreadable_file_does_not_count(self, tmp_path, monkeypatch):
-        import kiro_crew.agent as agent_mod
-        from kiro_crew.dashboard.handlers.agents import _namespaced_agent_file_exists
+        import aj_crew.agent as agent_mod
+        from aj_crew.dashboard.handlers.agents import _namespaced_agent_file_exists
 
         monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", tmp_path)
         (tmp_path / "someapp--helper.json").write_text("{not json")
@@ -241,7 +241,7 @@ class TestMergeWriteHonorsConcurrentReset:
     """
 
     def test_merge_write_writes_nothing_when_queue_reset_concurrently(self, tmp_path):
-        from kiro_crew.apps.builtins.mochi.queue_poller import QueuePoller
+        from aj_crew.apps.builtins.mochi.queue_poller import QueuePoller
 
         class _CB:
             pass

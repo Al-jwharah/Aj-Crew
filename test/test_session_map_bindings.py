@@ -1,22 +1,22 @@
 """``SessionMap`` keeps every member it had, and each is bound from the module that owns it.
 
-The map's lock-and-file members live in ``kiro_crew.session_map_store`` and its channel-link
-members in ``kiro_crew.session_map_links``: each body there is a module-level function, and the
+The map's lock-and-file members live in ``aj_crew.session_map_store`` and its channel-link
+members in ``aj_crew.session_map_links``: each body there is a module-level function, and the
 class binds it by name -- ``m = _owner.m`` for one whose first parameter is ``self``,
 ``staticmethod(_owner.f)`` for the three static helpers. The state stays on the instance, so the live map, a throwaway
 reader and every patch of a member see the same object they always did. Every member that
-reads a name the tests patch through ``kiro_crew.session_map`` is defined in the facade, so
+reads a name the tests patch through ``aj_crew.session_map`` is defined in the facade, so
 the facade is a plain module, with no write-forwarding mirror. This file pins that contract:
 
 * the frozen member inventory -- every member, its kind, whether it is a coroutine, its
   signature and the module that owns it -- and each bound member IS its owner's function;
 * every member reads as a method of the class, through every wrapper: ``__qualname__`` is
-  ``SessionMap.<name>`` and ``__module__`` is ``kiro_crew.session_map``;
+  ``SessionMap.<name>`` and ``__module__`` is ``aj_crew.session_map``;
 * no owner keeps an unbound ``self`` function, and no bound function uses zero-argument
   ``super()``, ``__class__`` or a name-mangled attribute, which only work in a class body;
 * no owner imports the facade at run time, and each imports only owners listed before it;
 * each owner's docstring names the instance fields its members write and read;
-* the owners log as ``kiro_crew.session_map``, and the moved ``ConversationOwnershipConflict``
+* the owners log as ``aj_crew.session_map``, and the moved ``ConversationOwnershipConflict``
   keeps it as its module;
 * the facade still binds every module-level name it bound before the split, and the lock, its
   decorator and the moved exception are the owners' own objects;
@@ -40,9 +40,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import session_map as facade
-from kiro_crew import session_map_links, session_map_store
-from kiro_crew.session_map import SessionMap
+from aj_crew import session_map as facade
+from aj_crew import session_map_links, session_map_store
+from aj_crew.session_map import SessionMap
 
 # The reach check parses the test trees; keep it on one worker.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_session_map_bindings")
@@ -53,7 +53,7 @@ SHARED_BINDINGS_CHECKS = (
     "leaf_test_scope_derives_this_file_as_a_corpus_gate",
 )
 
-_FACADE = "kiro_crew.session_map"
+_FACADE = "aj_crew.session_map"
 
 #: Member -> (kind, coroutine, signature digest, owning module). Frozen at the split: the
 #: kind, coroutine flag and signature are BASE's; the owner is where the member lives now.
@@ -254,7 +254,7 @@ def test_each_member_keeps_its_kind_shape_and_owner(name: str) -> None:
     fn = _member_function(name)
     assert inspect.iscoroutinefunction(fn) is coroutine
     assert _signature_digest(fn) == digest, f"{name}{inspect.signature(fn)} changed signature"
-    home = sys.modules[f"kiro_crew.{owner}"]
+    home = sys.modules[f"aj_crew.{owner}"]
     # The body's own file, read off the code object (the function's ``__module__`` names the
     # facade on purpose, so it cannot say where the body lives).
     assert inspect.unwrap(fn).__code__.co_filename == home.__file__
@@ -336,7 +336,7 @@ def test_no_bound_function_needs_its_class_body(owner: str) -> None:
 
 
 def _runtime_facade_imports(tree: ast.Module) -> list[int]:
-    """Lines that import ``kiro_crew.session_map`` outside an ``if TYPE_CHECKING:`` block."""
+    """Lines that import ``aj_crew.session_map`` outside an ``if TYPE_CHECKING:`` block."""
     guarded: set[int] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.If) and ast.unparse(node.test) == "TYPE_CHECKING":
@@ -347,7 +347,7 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
             continue
         if isinstance(node, ast.ImportFrom):
             if node.module == _FACADE or (
-                node.module == "kiro_crew" and any(a.name == "session_map" for a in node.names)
+                node.module == "aj_crew" and any(a.name == "session_map" for a in node.names)
             ):
                 lines.append(node.lineno)
         elif isinstance(node, ast.Import):
@@ -359,11 +359,11 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
 def test_the_facade_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n    from kiro_crew.session_map import SessionMap\n"
-        "def f():\n    from kiro_crew.session_map import x\n"
-        "import kiro_crew.session_map\n"
-        "from kiro_crew import session_map\n"
-        "from kiro_crew import session_map_store\n"
+        "if TYPE_CHECKING:\n    from aj_crew.session_map import SessionMap\n"
+        "def f():\n    from aj_crew.session_map import x\n"
+        "import aj_crew.session_map\n"
+        "from aj_crew import session_map\n"
+        "from aj_crew import session_map_store\n"
     )
     assert sorted(_runtime_facade_imports(tree)) == [5, 6, 7]
 
@@ -374,32 +374,32 @@ def test_no_owner_imports_the_facade_at_run_time(owner: str) -> None:
 
 
 def _owner_imports(tree: ast.Module) -> set[str]:
-    """The ``kiro_crew.session_map_*`` owner modules *tree* imports, by dotted name."""
+    """The ``aj_crew.session_map_*`` owner modules *tree* imports, by dotted name."""
     found: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.module:
-            if node.module.startswith("kiro_crew.session_map_"):
+            if node.module.startswith("aj_crew.session_map_"):
                 found.add(node.module)
-            elif node.module == "kiro_crew":
+            elif node.module == "aj_crew":
                 found.update(
-                    f"kiro_crew.{a.name}" for a in node.names if a.name.startswith("session_map_")
+                    f"aj_crew.{a.name}" for a in node.names if a.name.startswith("session_map_")
                 )
         elif isinstance(node, ast.Import):
-            found.update(a.name for a in node.names if a.name.startswith("kiro_crew.session_map_"))
+            found.update(a.name for a in node.names if a.name.startswith("aj_crew.session_map_"))
     return found
 
 
 def test_the_owner_import_scan_can_fail() -> None:
     tree = ast.parse(
-        "from kiro_crew.session_map_store import _guarded\n"
-        "from kiro_crew import session_map_links as _l, validation\n"
-        "import kiro_crew.session_map_extra\n"
-        "from kiro_crew import session_map\n"
+        "from aj_crew.session_map_store import _guarded\n"
+        "from aj_crew import session_map_links as _l, validation\n"
+        "import aj_crew.session_map_extra\n"
+        "from aj_crew import session_map\n"
     )
     assert _owner_imports(tree) == {
-        "kiro_crew.session_map_store",
-        "kiro_crew.session_map_links",
-        "kiro_crew.session_map_extra",
+        "aj_crew.session_map_store",
+        "aj_crew.session_map_links",
+        "aj_crew.session_map_extra",
     }
 
 
@@ -477,7 +477,7 @@ def test_each_owner_names_the_fields_it_writes_and_reads(owner: str) -> None:
 
 @pytest.mark.parametrize("owner", facade._OWNERS)
 def test_owners_log_as_the_facade(owner: str) -> None:
-    """``caplog`` scopes and operator log filters key on ``kiro_crew.session_map``."""
+    """``caplog`` scopes and operator log filters key on ``aj_crew.session_map``."""
     module = sys.modules[owner]
     assert getattr(module, "logger", facade.logger) is facade.logger
 
@@ -561,7 +561,7 @@ def _patched_in(text: str) -> set[str]:
 def _patched_through_the_facade() -> set[str]:
     """Every name a file pytest collects tests or fixtures from patches on the facade,
     derived from the patch calls themselves: the root conftest, ``test/``, and the test
-    modules and conftests under ``src/kiro_crew/apps/builtins``."""
+    modules and conftests under ``src/aj_crew/apps/builtins``."""
     patched: set[str] = set()
     root = source_corpus.repo_root()
     for path in source_corpus.repo_files_named(".py"):
@@ -570,7 +570,7 @@ def _patched_through_the_facade() -> set[str]:
         if not (
             rel == "conftest.py"
             or rel.startswith("test/")
-            or (rel.startswith("src/kiro_crew/apps/builtins/") and collected)
+            or (rel.startswith("src/aj_crew/apps/builtins/") and collected)
         ):
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
@@ -607,7 +607,7 @@ def test_the_reach_check_can_fail() -> None:
     """A planted owner that reads a patched name as its own global is reported; one that
     reads a name it does not bind (a builtin) is not, and neither is an unpatched read."""
     planted = (
-        "from kiro_crew.config.paths import config_dir\n"
+        "from aj_crew.config.paths import config_dir\n"
         "def f(self):\n"
         "    return config_dir(), len(self._data)\n"
     )
@@ -618,12 +618,12 @@ def test_the_reach_check_can_fail() -> None:
 
 def test_both_patch_readers_see_the_facade() -> None:
     """The regular expressions read a dotted target; the syntax tree reads an alias chain
-    they cannot follow (``sm = kiro_crew.session_map`` then ``setattr(sm, ...)``)."""
-    dotted = 'def test_x(monkeypatch):\n    monkeypatch.setattr("kiro_crew.session_map.sel", 1)\n'
+    they cannot follow (``sm = aj_crew.session_map`` then ``setattr(sm, ...)``)."""
+    dotted = 'def test_x(monkeypatch):\n    monkeypatch.setattr("aj_crew.session_map.sel", 1)\n'
     chained = (
-        "import kiro_crew\n"
+        "import aj_crew\n"
         "def test_x(monkeypatch):\n"
-        "    sm = kiro_crew.session_map\n"
+        "    sm = aj_crew.session_map\n"
         "    monkeypatch.setattr(sm, 'config_dir', 1)\n"
     )
     assert _patched_in(dotted) == {"sel"}

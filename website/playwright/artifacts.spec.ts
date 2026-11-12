@@ -1,7 +1,7 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
 import { pickFromDropdown } from './helpers/dropdown'
 
-const HARNESS_GATEWAY = !!process.env.KIROCREW_E2E_EPHEMERAL
+const HARNESS_GATEWAY = !!process.env.AJCREW_E2E_EPHEMERAL
 
 const UNIQUE = `pw-${Date.now()}`
 

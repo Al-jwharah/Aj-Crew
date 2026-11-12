@@ -17,17 +17,17 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew import mate_capability_catalog, mate_worker
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.mate_config_migration import _read_back, migrate_existing_crewmates
+import aj_crew.config.paths as paths_mod
+from aj_crew import mate_capability_catalog, mate_worker
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.mate_config_migration import _read_back, migrate_existing_crewmates
 
 BASE = {
-    "name": "kirocrew-mate-worker",
+    "name": "ajcrew-mate-worker",
     "prompt": "worker base prompt",
-    "tools": ["fs_read", "@kirocrew-core"],
+    "tools": ["fs_read", "@ajcrew-core"],
     "allowedTools": ["fs_read"],
-    "mcpServers": {"kirocrew-core": {"command": "kc", "args": ["core"]}},
+    "mcpServers": {"ajcrew-core": {"command": "kc", "args": ["core"]}},
 }
 
 JIRA = {"command": "jira-mcp", "args": ["--stdio"], "autoApprove": ["get_issue"]}
@@ -62,7 +62,7 @@ def layout(monkeypatch, tmp_path):
     mates.mkdir(parents=True)
     monkeypatch.setattr(paths_mod, "kiro_agents_dir", lambda: user)
     monkeypatch.setattr(paths_mod, "kiro_home", lambda: kiro)
-    _write(mates, "kirocrew-mate-worker", BASE)
+    _write(mates, "ajcrew-mate-worker", BASE)
     return user, mates
 
 
@@ -71,16 +71,16 @@ def persisted(monkeypatch):
     """Config writes recorded instead of persisted; the shim serves *cfg* back."""
     saved: dict[str, dict] = {}
 
-    def install(cfg: KiroCrewConfig) -> dict[str, dict]:
+    def install(cfg: AjCrewConfig) -> dict[str, dict]:
         monkeypatch.setattr(
-            "kiro_crew.mate_config_migration.KiroCrewConfig",
+            "aj_crew.mate_config_migration.AjCrewConfig",
             type("Shim", (), {"load": staticmethod(lambda: cfg)}),
         )
 
         def persist(c, name, **kw):
             saved[name] = kw
 
-        monkeypatch.setattr("kiro_crew.memory_stores.persist_member_config", persist)
+        monkeypatch.setattr("aj_crew.memory_stores.persist_member_config", persist)
         return saved
 
     return install
@@ -90,16 +90,16 @@ def _write(directory: Path, name: str, spec: dict) -> None:
     (directory / f"{name}.json").write_text(json.dumps(spec), encoding="utf-8")
 
 
-def _cfg(**agents: KiroCrewAgentConfig) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _cfg(**agents: AjCrewAgentConfig) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     cfg.agents = dict(agents)
     return cfg
 
 
 def saved_notice(name: str) -> str:
     """The one upgrade notice crewmate *name* is owed, as its thread will read it."""
-    from kiro_crew.mate_upgrade_notice import claim_notice_prompt
-    from kiro_crew.members import member_slug
+    from aj_crew.mate_upgrade_notice import claim_notice_prompt
+    from aj_crew.members import member_slug
 
     return claim_notice_prompt(member_slug(name), name)
 
@@ -122,7 +122,7 @@ def test_a_shared_template_crewmate_carries_its_kit_and_nothing_the_base_has(lay
             skills=["skill://release"],
         ),
     )
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     saved = persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -148,7 +148,7 @@ def test_a_server_the_old_agent_mounted_through_a_star_stays_mounted(layout, per
     """``tools: ["*"]`` already mounted the agent's own server: its ``@server`` is no gain."""
     user, mates = layout
     _write(user, "builder", {"name": "builder", "tools": ["*"], "mcpServers": {"jira": JIRA}})
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     persisted(cfg)
 
     assert migrate_existing_crewmates(cfg).migrated == ["zxc"]
@@ -160,7 +160,7 @@ def test_a_server_the_old_agent_mounted_through_a_star_stays_mounted(layout, per
 
 def test_a_narrower_selector_than_the_old_agent_s_own_is_no_gain(layout, monkeypatch):
     """Old ``@jira`` covers a file's ``@jira/search``: the plan keeps it and withholds nothing."""
-    from kiro_crew import mate_config_migration as migration
+    from aj_crew import mate_config_migration as migration
 
     old = _template("builder", tools=["@jira"], mcpServers={"jira": JIRA})
     real = migration.migration_file
@@ -180,7 +180,7 @@ def test_a_narrower_selector_than_the_old_agent_s_own_is_no_gain(layout, monkeyp
 def test_a_prompt_that_does_not_resolve_keeps_a_server_its_star_mounted(layout, persisted):
     """The default-template move keeps ``@jira`` when the old agent's ``*`` mounted jira."""
     user, mates = layout
-    _write(user, "kirocrew", _template("kirocrew", tools=["@jira"], mcpServers={"jira": JIRA}))
+    _write(user, "ajcrew", _template("ajcrew", tools=["@jira"], mcpServers={"jira": JIRA}))
     _write(
         user,
         "starry",
@@ -188,7 +188,7 @@ def test_a_prompt_that_does_not_resolve_keeps_a_server_its_star_mounted(layout, 
             "starry", prompt="file://missing-prompt.md", tools=["*"], mcpServers={"jira": JIRA}
         ),
     )
-    cfg = _cfg(rfv=KiroCrewAgentConfig(member_id="rfv", kiro_agent="starry"))
+    cfg = _cfg(rfv=AjCrewAgentConfig(member_id="rfv", kiro_agent="starry"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -201,15 +201,15 @@ def test_a_prompt_that_does_not_resolve_keeps_a_server_its_star_mounted(layout, 
 def test_a_template_switched_during_the_pass_is_not_overwritten(layout, persisted, monkeypatch):
     user, _ = layout
     _write(user, "builder", _template("builder", prompt="Follow the release SOP."))
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     persisted(cfg)
-    from kiro_crew.memory_stores import MemberFieldConflict
+    from aj_crew.memory_stores import MemberFieldConflict
 
     def switched(c, name, **kw):
         # On disk the owner picked another template after the pass read "builder".
         raise MemberFieldConflict("kiro_agent")
 
-    monkeypatch.setattr("kiro_crew.memory_stores.persist_member_config", switched)
+    monkeypatch.setattr("aj_crew.memory_stores.persist_member_config", switched)
 
     report = migrate_existing_crewmates(cfg)
 
@@ -230,7 +230,7 @@ def test_a_crew_hex_crewmate_carries_its_private_copy(layout, persisted):
             tools=["@jira"],
         ),
     )
-    cfg = _cfg(qwe=KiroCrewAgentConfig(member_id="qwe", kiro_agent="crew-0a1b2c"))
+    cfg = _cfg(qwe=AjCrewAgentConfig(member_id="qwe", kiro_agent="crew-0a1b2c"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -244,8 +244,8 @@ def test_a_crew_hex_crewmate_carries_its_private_copy(layout, persisted):
 
 def test_a_default_template_crewmate_gets_a_file_that_adds_nothing(layout, persisted):
     user, mates = layout
-    _write(user, "kirocrew", _template("kirocrew"))
-    cfg = _cfg(rty=KiroCrewAgentConfig(member_id="rty", kiro_agent="kirocrew"))
+    _write(user, "ajcrew", _template("ajcrew"))
+    cfg = _cfg(rty=AjCrewAgentConfig(member_id="rty", kiro_agent="ajcrew"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -261,16 +261,16 @@ def test_a_crewmate_whose_worker_would_lose_a_grant_moves_and_is_told_once(
     layout, persisted, caplog
 ):
     """Owner decision: a loss moves the crewmate, and its user is told once."""
-    from kiro_crew.mate_upgrade_notice import claim_notice_prompt
-    from kiro_crew.members import member_slug
+    from aj_crew.mate_upgrade_notice import claim_notice_prompt
+    from aj_crew.members import member_slug
 
     user, mates = layout
     # A built-in tool the worker base does not mount cannot be carried.
     _write(user, "shell", _template("shell", tools=["execute_bash"]))
-    cfg = _cfg(uio=KiroCrewAgentConfig(member_id="uio", kiro_agent="shell", display_name="Ops Pal"))
+    cfg = _cfg(uio=AjCrewAgentConfig(member_id="uio", kiro_agent="shell", display_name="Ops Pal"))
     saved = persisted(cfg)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.mate_config_migration"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.mate_config_migration"):
         report = migrate_existing_crewmates(cfg)
 
     assert report.migrated == ["uio"] and report.dry_run_failed == {}
@@ -291,9 +291,9 @@ def test_a_crewmate_whose_worker_would_lose_a_grant_moves_and_is_told_once(
 
 def test_a_grant_the_worker_would_gain_is_withheld_for_the_card(layout, persisted, monkeypatch):
     """A gain is never written: the worker lacks it until a capability card adds it."""
-    from kiro_crew import mate_config_migration as migration
-    from kiro_crew.mate_upgrade_notice import claim_notice_prompt
-    from kiro_crew.members import member_slug
+    from aj_crew import mate_config_migration as migration
+    from aj_crew.mate_upgrade_notice import claim_notice_prompt
+    from aj_crew.members import member_slug
 
     user, mates = layout
     _write(user, "builder", _template("builder", prompt="Follow the release SOP."))
@@ -307,7 +307,7 @@ def test_a_grant_the_worker_would_gain_is_withheld_for_the_card(layout, persiste
         return planned
 
     monkeypatch.setattr(migration, "migration_file", with_a_gain)
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -343,14 +343,14 @@ def test_an_agent_whose_prompt_does_not_resolve_keeps_its_stated_limits(layout, 
     """It parses, so the deny it states is read; the default template cannot carry it,
     so the crewmate moves as is and its notice names the restriction."""
     user, mates = layout
-    _write(user, "kirocrew", _template("kirocrew"))
+    _write(user, "ajcrew", _template("ajcrew"))
     deny = {"fs_write": {"deniedPaths": ["/etc/**"]}}
     _write(
         user,
         "careful",
         _template("careful", prompt="file://missing-prompt.md", toolsSettings=deny),
     )
-    cfg = _cfg(ijk=KiroCrewAgentConfig(member_id="ijk", kiro_agent="careful"))
+    cfg = _cfg(ijk=AjCrewAgentConfig(member_id="ijk", kiro_agent="careful"))
     saved = persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -367,26 +367,26 @@ def test_a_prompt_that_does_not_resolve_keeps_its_switched_off_server_and_tools_
 ):
     """The default-template move never starts what the old agent switched off."""
     user, mates = layout
-    _write(user, "kirocrew", _template("kirocrew"))
+    _write(user, "ajcrew", _template("ajcrew"))
     spec = _template(
         "quiet",
         prompt="file://missing-prompt.md",
         excludedTools=["fs_read"],
     )
-    spec["mcpServers"]["kirocrew-core"] = {**spec["mcpServers"]["kirocrew-core"], "disabled": True}
+    spec["mcpServers"]["ajcrew-core"] = {**spec["mcpServers"]["ajcrew-core"], "disabled": True}
     _write(user, "quiet", spec)
-    cfg = _cfg(qaz=KiroCrewAgentConfig(member_id="qaz", kiro_agent="quiet"))
+    cfg = _cfg(qaz=AjCrewAgentConfig(member_id="qaz", kiro_agent="quiet"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
 
     assert report.moved_from_default == ["qaz"]
     written = _file(mates, "qaz")
-    assert written["mcpServers"]["kirocrew-core"] == {"disabled": True}
+    assert written["mcpServers"]["ajcrew-core"] == {"disabled": True}
     assert "fs_read" in written["excludedTools"]
     merged = mate_worker.merge_worker_spec(BASE, mate_worker.worker_additions(BASE, written))
     assert "fs_read" in merged["excludedTools"]
-    assert merged["mcpServers"]["kirocrew-core"].get("disabled") is True
+    assert merged["mcpServers"]["ajcrew-core"].get("disabled") is True
 
 
 def test_a_prompt_that_does_not_resolve_gets_no_grant_its_agent_lacked(layout, persisted):
@@ -394,11 +394,11 @@ def test_a_prompt_that_does_not_resolve_gets_no_grant_its_agent_lacked(layout, p
     # The default template adds jira; the old agent never had it.
     _write(
         user,
-        "kirocrew",
-        _template("kirocrew", tools=["@jira"], mcpServers={"jira": JIRA}),
+        "ajcrew",
+        _template("ajcrew", tools=["@jira"], mcpServers={"jira": JIRA}),
     )
     _write(user, "plain", _template("plain", prompt="file://missing-prompt.md"))
-    cfg = _cfg(wsx=KiroCrewAgentConfig(member_id="wsx", kiro_agent="plain"))
+    cfg = _cfg(wsx=AjCrewAgentConfig(member_id="wsx", kiro_agent="plain"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -409,13 +409,13 @@ def test_a_prompt_that_does_not_resolve_gets_no_grant_its_agent_lacked(layout, p
 
 
 def test_an_unreadable_agent_moves_onto_the_default_template_and_says_so(layout, persisted):
-    from kiro_crew.mate_upgrade_notice import claim_notice_prompt
-    from kiro_crew.members import member_slug
+    from aj_crew.mate_upgrade_notice import claim_notice_prompt
+    from aj_crew.members import member_slug
 
     user, mates = layout
-    _write(user, "kirocrew", _template("kirocrew"))
+    _write(user, "ajcrew", _template("ajcrew"))
     (user / "gone.json").write_text("{not json", encoding="utf-8")
-    cfg = _cfg(vbn=KiroCrewAgentConfig(member_id="vbn", kiro_agent="gone"))
+    cfg = _cfg(vbn=AjCrewAgentConfig(member_id="vbn", kiro_agent="gone"))
     saved = persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -442,7 +442,7 @@ def test_a_crewmate_whose_template_denies_writes_moves_and_is_told(layout, persi
     worker: the crewmate moves as is, nothing is withheld, and the one notice names it."""
     user, mates = layout
     _write(user, "careful", _template("careful", **{field: limit}))
-    cfg = _cfg(ijk=KiroCrewAgentConfig(member_id="ijk", kiro_agent="careful"))
+    cfg = _cfg(ijk=AjCrewAgentConfig(member_id="ijk", kiro_agent="careful"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -460,8 +460,8 @@ def test_a_crewmate_whose_template_denies_writes_moves_and_is_told(layout, persi
 def test_allow_only_permissions_are_grants_not_a_restriction(layout, persisted):
     user, _mates = layout
     allow = {"rules": [{"capability": "web_search", "effect": "allow"}]}
-    _write(user, "kirocrew", _template("kirocrew", permissions=allow))
-    cfg = _cfg(rty=KiroCrewAgentConfig(member_id="rty", kiro_agent="kirocrew"))
+    _write(user, "ajcrew", _template("ajcrew", permissions=allow))
+    cfg = _cfg(rty=AjCrewAgentConfig(member_id="rty", kiro_agent="ajcrew"))
     persisted(cfg)
 
     assert migrate_existing_crewmates(cfg).migrated == ["rty"]
@@ -470,9 +470,9 @@ def test_allow_only_permissions_are_grants_not_a_restriction(layout, persisted):
 def test_a_second_run_changes_nothing(layout, monkeypatch):
     user, mates = layout
     _write(user, "builder", _template("builder", mcpServers={"jira": JIRA}, tools=["@jira"]))
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     monkeypatch.setattr(
-        "kiro_crew.mate_config_migration.KiroCrewConfig",
+        "aj_crew.mate_config_migration.AjCrewConfig",
         type("Shim", (), {"load": staticmethod(lambda: cfg)}),
     )
     writes: list[str] = []
@@ -480,7 +480,7 @@ def test_a_second_run_changes_nothing(layout, monkeypatch):
     def persist(c, name, **kw):
         writes.append(name)
 
-    monkeypatch.setattr("kiro_crew.memory_stores.persist_member_config", persist)
+    monkeypatch.setattr("aj_crew.memory_stores.persist_member_config", persist)
 
     assert migrate_existing_crewmates(cfg).migrated == ["zxc"]
     before = (mates / "zxc.json").read_bytes()
@@ -495,7 +495,7 @@ def test_a_second_run_changes_nothing(layout, monkeypatch):
 def test_a_crewmate_already_on_its_own_file_is_not_a_candidate(layout, persisted):
     _user, mates = layout
     _write(mates, "qwe", {"name": "qwe", "prompt": "already mine"})
-    cfg = _cfg(qwe=KiroCrewAgentConfig(member_id="qwe", kiro_agent="qwe"))
+    cfg = _cfg(qwe=AjCrewAgentConfig(member_id="qwe", kiro_agent="qwe"))
     saved = persisted(cfg)
     before = (mates / "qwe.json").read_bytes()
 
@@ -509,7 +509,7 @@ def test_a_crewmate_already_on_its_own_file_is_not_a_candidate(layout, persisted
 def test_a_crewmate_pointed_back_by_hand_stays_put(layout, persisted):
     user, mates = layout
     _write(user, "builder", _template("builder", mcpServers={"jira": JIRA}, tools=["@jira"]))
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     saved = persisted(cfg)
     assert migrate_existing_crewmates(cfg).migrated == ["zxc"]
 
@@ -535,7 +535,7 @@ def test_carried_capabilities_read_as_already_there(layout, persisted, monkeypat
             mcpServers={"jira": JIRA},
         ),
     )
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     persisted(cfg)
     assert migrate_existing_crewmates(cfg).migrated == ["zxc"]
     monkeypatch.setattr(mate_worker, "mate_file_for_member", lambda member, config=None: member)
@@ -555,13 +555,13 @@ def _installed_layout(user: Path) -> dict:
     """The worker base the way Crew installs it: its own hooks and its withheld tools."""
     base = {
         **json.loads(json.dumps(BASE)),
-        "tools": [*BASE["tools"], "@kirocrew-mate"],
-        "allowedTools": [*BASE["allowedTools"], "@kirocrew-mate/request_capabilities"],
-        "mcpServers": {**BASE["mcpServers"], "kirocrew-mate": {"command": "kc", "args": ["mate"]}},
+        "tools": [*BASE["tools"], "@ajcrew-mate"],
+        "allowedTools": [*BASE["allowedTools"], "@ajcrew-mate/request_capabilities"],
+        "mcpServers": {**BASE["mcpServers"], "ajcrew-mate": {"command": "kc", "args": ["mate"]}},
         "hooks": AUDIT_HOOK,
-        "excludedTools": ["@kirocrew-mate/request_capabilities"],
+        "excludedTools": ["@ajcrew-mate/request_capabilities"],
     }
-    _write(user.parent / "mates" / "agents", "kirocrew-mate-worker", base)
+    _write(user.parent / "mates" / "agents", "ajcrew-mate-worker", base)
     return base
 
 
@@ -570,8 +570,8 @@ def test_the_default_template_as_installed_moves_onto_the_worker(layout, persist
     user, mates = layout
     base = _installed_layout(user)
     template = {k: v for k, v in base.items() if k != "excludedTools"}
-    _write(user, "kirocrew", {**template, "name": "kirocrew"})
-    cfg = _cfg(rty=KiroCrewAgentConfig(member_id="rty", kiro_agent="kirocrew"))
+    _write(user, "ajcrew", {**template, "name": "ajcrew"})
+    cfg = _cfg(rty=AjCrewAgentConfig(member_id="rty", kiro_agent="ajcrew"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -586,7 +586,7 @@ def test_a_hook_the_worker_base_lacks_moves_and_is_named(layout, persisted):
     base = _installed_layout(user)
     hooks = {"postToolUse": [*AUDIT_HOOK["postToolUse"], {"matcher": "fs_write", "command": "x"}]}
     _write(user, "builder", {**base, "name": "builder", "hooks": hooks, "excludedTools": []})
-    cfg = _cfg(uio=KiroCrewAgentConfig(member_id="uio", kiro_agent="builder"))
+    cfg = _cfg(uio=AjCrewAgentConfig(member_id="uio", kiro_agent="builder"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -597,24 +597,24 @@ def test_a_hook_the_worker_base_lacks_moves_and_is_named(layout, persisted):
     assert "its postToolUse hook on fs_write" in report.moved_with_changes["uio"]
 
 
-def _ray_kirocrew(base: dict) -> dict:
-    """Ray's live ``kirocrew``: the base plus approvals on servers the base owns.
+def _ray_ajcrew(base: dict) -> dict:
+    """Ray's live ``ajcrew``: the base plus approvals on servers the base owns.
 
-    ``@kirocrew-cron`` whole, ``@kirocrew-guide/rename_self``, and Rust Lead's
-    ``@kirocrew-core/ask_question`` / ``autonudge_stop`` and ``global_*`` recalls.
+    ``@ajcrew-cron`` whole, ``@ajcrew-guide/rename_self``, and Rust Lead's
+    ``@ajcrew-core/ask_question`` / ``autonudge_stop`` and ``global_*`` recalls.
     """
     template = {k: v for k, v in base.items() if k != "excludedTools"}
     template["mcpServers"] = json.loads(json.dumps(template["mcpServers"]))
-    template["mcpServers"]["kirocrew-core"]["autoApprove"] = ["ask_question", "autonudge_stop"]
-    template["mcpServers"]["kirocrew-cron"] = {"command": "kc", "args": ["cron"]}
-    template["mcpServers"]["kirocrew-guide"] = {"command": "kc", "args": ["guide"]}
-    template["tools"] = [*template["tools"], "@kirocrew-cron", "@kirocrew-guide"]
+    template["mcpServers"]["ajcrew-core"]["autoApprove"] = ["ask_question", "autonudge_stop"]
+    template["mcpServers"]["ajcrew-cron"] = {"command": "kc", "args": ["cron"]}
+    template["mcpServers"]["ajcrew-guide"] = {"command": "kc", "args": ["guide"]}
+    template["tools"] = [*template["tools"], "@ajcrew-cron", "@ajcrew-guide"]
     template["allowedTools"] = [
         *template["allowedTools"],
-        "@kirocrew-cron",
-        "@kirocrew-guide/rename_self",
-        "@kirocrew-guide/global_memory_recall",
-        "@kirocrew-guide/global_preference_add",
+        "@ajcrew-cron",
+        "@ajcrew-guide/rename_self",
+        "@ajcrew-guide/global_memory_recall",
+        "@ajcrew-guide/global_preference_add",
         "execute_bash",
     ]
     return template
@@ -623,7 +623,7 @@ def _ray_kirocrew(base: dict) -> dict:
 @pytest.fixture
 def platform_servers(monkeypatch):
     """The platform servers the gateway runs, as ``mate_worker.conductor_mcp_servers`` reads them."""
-    names = frozenset({"kirocrew-core", "kirocrew-cron", "kirocrew-guide", "kirocrew-mate"})
+    names = frozenset({"ajcrew-core", "ajcrew-cron", "ajcrew-guide", "ajcrew-mate"})
     monkeypatch.setattr(mate_worker, "conductor_mcp_servers", lambda: names)
     return names
 
@@ -635,12 +635,12 @@ def test_approvals_the_base_withholds_on_its_own_servers_are_no_loss(
     user, mates = layout
     base = _installed_layout(user)
     # As installed on Ray's live: the base declares the cron and guide servers itself.
-    base["mcpServers"]["kirocrew-cron"] = {"command": "kc", "args": ["cron"]}
-    base["mcpServers"]["kirocrew-guide"] = {"command": "kc", "args": ["guide"]}
-    base["tools"] = [*base["tools"], "@kirocrew-cron", "@kirocrew-guide"]
-    _write(user.parent / "mates" / "agents", "kirocrew-mate-worker", base)
-    _write(user, "kirocrew", {**_ray_kirocrew(base), "name": "kirocrew"})
-    cfg = _cfg(josh=KiroCrewAgentConfig(member_id="josh", kiro_agent="kirocrew"))
+    base["mcpServers"]["ajcrew-cron"] = {"command": "kc", "args": ["cron"]}
+    base["mcpServers"]["ajcrew-guide"] = {"command": "kc", "args": ["guide"]}
+    base["tools"] = [*base["tools"], "@ajcrew-cron", "@ajcrew-guide"]
+    _write(user.parent / "mates" / "agents", "ajcrew-mate-worker", base)
+    _write(user, "ajcrew", {**_ray_ajcrew(base), "name": "ajcrew"})
+    cfg = _cfg(josh=AjCrewAgentConfig(member_id="josh", kiro_agent="ajcrew"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -648,18 +648,18 @@ def test_approvals_the_base_withholds_on_its_own_servers_are_no_loss(
     assert report.dry_run_failed == {}
     assert report.migrated == ["josh"]
     # Nothing the base owns is copied into the file to "keep" it.
-    assert "@kirocrew-guide/rename_self" not in _file(mates, "josh").get("allowedTools", [])
+    assert "@ajcrew-guide/rename_self" not in _file(mates, "josh").get("allowedTools", [])
 
 
 def test_an_extra_server_still_moves_and_is_kept(layout, persisted, platform_servers):
     user, mates = layout
     base = _installed_layout(user)
-    template = _ray_kirocrew(base)
+    template = _ray_ajcrew(base)
     template["mcpServers"]["jira"] = JIRA
     template["tools"] = [*template["tools"], "@jira"]
     template["allowedTools"] = [*template["allowedTools"], "@jira/search"]
     _write(user, "reviewer", {**template, "name": "reviewer"})
-    cfg = _cfg(rex=KiroCrewAgentConfig(member_id="rex", kiro_agent="reviewer"))
+    cfg = _cfg(rex=AjCrewAgentConfig(member_id="rex", kiro_agent="reviewer"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -672,11 +672,11 @@ def test_an_extra_server_still_moves_and_is_kept(layout, persisted, platform_ser
 
 def test_a_real_loss_still_keeps_the_crewmate_where_it_is(layout, platform_servers):
     """A grant on a server the base does not own, which the planned file drops."""
-    from kiro_crew.mate_config_migration import dry_run, migration_file
+    from aj_crew.mate_config_migration import dry_run, migration_file
 
     user, _mates = layout
     base = _installed_layout(user)
-    source = _ray_kirocrew(base)
+    source = _ray_ajcrew(base)
     source["mcpServers"]["jira"] = JIRA
     source["tools"] = [*source["tools"], "@jira"]
     source["allowedTools"] = [*source["allowedTools"], "@jira/search"]
@@ -687,15 +687,15 @@ def test_a_real_loss_still_keeps_the_crewmate_where_it_is(layout, platform_serve
 
     assert "would lose" in reason and "@jira/search" in reason
     # The base-owned approvals are not named among the losses.
-    assert "rename_self" not in reason and "@kirocrew-cron" not in reason
+    assert "rename_self" not in reason and "@ajcrew-cron" not in reason
 
 
 def test_a_gain_still_keeps_the_crewmate_where_it_is(layout, platform_servers):
-    from kiro_crew.mate_config_migration import dry_run, migration_file
+    from aj_crew.mate_config_migration import dry_run, migration_file
 
     user, _mates = layout
     base = _installed_layout(user)
-    source = _ray_kirocrew(base)
+    source = _ray_ajcrew(base)
     planned = migration_file("uio", base, source)
     planned["mcpServers"] = {**planned["mcpServers"], "jira": JIRA}
     planned["tools"] = [*planned.get("tools", []), "@jira"]
@@ -705,16 +705,16 @@ def test_a_gain_still_keeps_the_crewmate_where_it_is(layout, platform_servers):
 
 def test_a_crewmate_bound_to_the_conductor_moves_without_a_notice_or_a_kit(layout, persisted):
     """The first crewmate a fresh install creates is bound to the conductor."""
-    from kiro_crew.mate_upgrade_notice import NOTICE_OWED_FILENAME
-    from kiro_crew.members import member_dir
+    from aj_crew.mate_upgrade_notice import NOTICE_OWED_FILENAME
+    from aj_crew.members import member_dir
 
     user, mates = layout
     _write(
         mates,
-        "kirocrew-mate-conductor",
-        _template("kirocrew-mate-conductor", excludedTools=["@kirocrew-core/spawn_run"]),
+        "ajcrew-mate-conductor",
+        _template("ajcrew-mate-conductor", excludedTools=["@ajcrew-core/spawn_run"]),
     )
-    cfg = _cfg(mate=KiroCrewAgentConfig(member_id="mate", kiro_agent="kirocrew-mate-conductor"))
+    cfg = _cfg(mate=AjCrewAgentConfig(member_id="mate", kiro_agent="ajcrew-mate-conductor"))
     saved = persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -732,21 +732,21 @@ def test_a_crewmate_bound_to_the_conductor_moves_without_a_notice_or_a_kit(layou
 
 def test_the_first_crewmate_gets_what_a_default_template_crewmate_gets(layout, persisted):
     """Mate, bound to the conductor, carries the default template's servers too."""
-    from kiro_crew.mate_upgrade_notice import NOTICE_OWED_FILENAME
-    from kiro_crew.members import member_dir
+    from aj_crew.mate_upgrade_notice import NOTICE_OWED_FILENAME
+    from aj_crew.members import member_dir
 
     user, mates = layout
-    _write(mates, "kirocrew-mate-conductor", _template("kirocrew-mate-conductor"))
+    _write(mates, "ajcrew-mate-conductor", _template("ajcrew-mate-conductor"))
     _write(
         user,
-        "kirocrew",
+        "ajcrew",
         _template(
-            "kirocrew", tools=["@jira"], allowedTools=["@jira/search"], mcpServers={"jira": JIRA}
+            "ajcrew", tools=["@jira"], allowedTools=["@jira/search"], mcpServers={"jira": JIRA}
         ),
     )
     cfg = _cfg(
-        mate=KiroCrewAgentConfig(member_id="mate", kiro_agent="kirocrew-mate-conductor"),
-        rty=KiroCrewAgentConfig(member_id="rty", kiro_agent="kirocrew"),
+        mate=AjCrewAgentConfig(member_id="mate", kiro_agent="ajcrew-mate-conductor"),
+        rty=AjCrewAgentConfig(member_id="rty", kiro_agent="ajcrew"),
     )
     persisted(cfg)
 
@@ -764,19 +764,19 @@ def test_the_first_crewmate_gets_what_a_default_template_crewmate_gets(layout, p
 
 def test_a_binding_without_a_member_id_is_left_alone_without_a_word(layout, persisted, caplog):
     """An older install's ``assistant`` binding is not a crewmate."""
-    from kiro_crew.mate_upgrade_notice import NOTICE_OWED_FILENAME
-    from kiro_crew.members import member_dir
+    from aj_crew.mate_upgrade_notice import NOTICE_OWED_FILENAME
+    from aj_crew.members import member_dir
 
     user, mates = layout
-    _write(user, "kirocrew-assistant", _template("kirocrew-assistant", tools=["execute_bash"]))
-    cfg = _cfg(assistant=KiroCrewAgentConfig(member_id="", kiro_agent="kirocrew-assistant"))
+    _write(user, "ajcrew-assistant", _template("ajcrew-assistant", tools=["execute_bash"]))
+    cfg = _cfg(assistant=AjCrewAgentConfig(member_id="", kiro_agent="ajcrew-assistant"))
     saved = persisted(cfg)
 
-    with caplog.at_level(logging.INFO, logger="kiro_crew.mate_config_migration"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.mate_config_migration"):
         report = migrate_existing_crewmates(cfg)
 
     assert report == type(report)()
-    assert cfg.agents["assistant"].kiro_agent == "kirocrew-assistant"
+    assert cfg.agents["assistant"].kiro_agent == "ajcrew-assistant"
     assert saved == {}
     assert not (mates / "assistant.json").exists()
     assert not (member_dir("assistant") / NOTICE_OWED_FILENAME).exists()
@@ -789,7 +789,7 @@ def test_a_binding_without_a_member_id_is_left_alone_without_a_word(layout, pers
 @pytest.fixture
 def threads(monkeypatch):
     """Execution records under the isolated data home; nothing live or vouched."""
-    from kiro_crew import execution_context
+    from aj_crew import execution_context
 
     execution_context._LIVE_EXECUTIONS.clear()
     execution_context._VOUCHED_EXECUTIONS.clear()
@@ -825,7 +825,7 @@ def test_a_pre_upgrade_thread_runs_on_the_conductor_and_keeps_its_memory(
 ):
     user, mates = layout
     _write(user, "builder", _template("builder", mcpServers={"jira": JIRA}, tools=["@jira"]))
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     persisted(cfg)
     key = "dashboard:member-zxc.memory-member-zxc-0123"
     before = _thread(threads, key, "zxc", "builder")
@@ -848,11 +848,11 @@ def test_the_old_thread_s_next_turn_binds_the_conductor_on_the_same_store(
     agent it runs is the conductor and the store it reads is the one it had."""
     from types import SimpleNamespace
 
-    from kiro_crew.session_agent_selection import resolve_session_agent_bindings
+    from aj_crew.session_agent_selection import resolve_session_agent_bindings
 
     user, _mates = layout
     _write(user, "builder", _template("builder", mcpServers={"jira": JIRA}, tools=["@jira"]))
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     persisted(cfg)
     key = "dashboard:member-zxc.memory-member-zxc-0123"
     _thread(threads, key, "zxc", "builder")
@@ -880,9 +880,9 @@ def test_other_records_and_a_skipped_crewmate_s_thread_are_left_alone(layout, pe
     _write(user, "hooked", _template("hooked"))
     _write(user, "sty", _template("sty"))
     cfg = _cfg(
-        zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"),
-        qwe=KiroCrewAgentConfig(member_id="qwe", kiro_agent="builder"),
-        sty=KiroCrewAgentConfig(member_id="sty", kiro_agent="hooked"),
+        zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"),
+        qwe=AjCrewAgentConfig(member_id="qwe", kiro_agent="builder"),
+        sty=AjCrewAgentConfig(member_id="sty", kiro_agent="hooked"),
     )
     persisted(cfg)
     worker = "dashboard:member-zxc.memory-worker"
@@ -913,14 +913,14 @@ def test_other_records_and_a_skipped_crewmate_s_thread_are_left_alone(layout, pe
 def test_a_second_boot_reads_no_thread_again(layout, persisted, threads, monkeypatch):
     user, _mates = layout
     _write(user, "builder", _template("builder", mcpServers={"jira": JIRA}, tools=["@jira"]))
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     persisted(cfg)
     key = "dashboard:member-zxc.memory-member-zxc-0123"
     _thread(threads, key, "zxc", "builder")
     assert migrate_existing_crewmates(cfg).threads_repointed == {"zxc": [key]}
     moved = _now(threads, key)
 
-    from kiro_crew import mate_config_migration
+    from aj_crew import mate_config_migration
 
     scanned: list[set[str]] = []
     real = mate_config_migration._dm_thread_keys
@@ -938,12 +938,12 @@ def test_an_unlistable_sessions_folder_leaves_the_thread_pass_owed(
 ):
     import os
 
-    from kiro_crew.history_files import _sessions_dir
-    from kiro_crew.mate_config_migration import repoint_moved_threads
+    from aj_crew.history_files import _sessions_dir
+    from aj_crew.mate_config_migration import repoint_moved_threads
 
     user, mates = layout
     _write(user, "builder", _template("builder", mcpServers={"jira": JIRA}, tools=["@jira"]))
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     persisted(cfg)
     key = "dashboard:member-zxc.memory-member-zxc-0123"
     _thread(threads, key, "zxc", "builder")
@@ -974,9 +974,9 @@ def test_an_unlistable_sessions_folder_leaves_the_thread_pass_owed(
 def test_a_rolled_back_crewmate_s_threads_stay_on_its_old_agent(layout, persisted, threads):
     user, mates = layout
     _write(user, "builder", _template("builder", mcpServers={"jira": JIRA}, tools=["@jira"]))
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     persisted(cfg)
-    from kiro_crew import mate_config_migration
+    from aj_crew import mate_config_migration
 
     # The binding moved, and the owner pointed it back before the thread pass ran.
     real = mate_config_migration.repoint_moved_threads
@@ -1009,12 +1009,12 @@ def test_a_crewmate_made_again_under_a_moved_name_is_moved_too(layout, persisted
     """The ledger knows a moved crewmate by its member id, not only its name."""
     user, mates = layout
     _write(user, "builder", _template("builder", mcpServers={"jira": JIRA}, tools=["@jira"]))
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     persisted(cfg)
     assert migrate_existing_crewmates(cfg).migrated == ["zxc"]
 
     # Deleted, then made again under the same key on the shared template.
-    cfg.agents["zxc"] = KiroCrewAgentConfig(member_id="zxc-2", kiro_agent="builder")
+    cfg.agents["zxc"] = AjCrewAgentConfig(member_id="zxc-2", kiro_agent="builder")
     again = migrate_existing_crewmates(cfg)
 
     assert again.migrated == ["zxc"]
@@ -1026,7 +1026,7 @@ def test_a_name_a_ledger_from_before_the_ids_lists_still_counts_as_moved(layout,
     user, mates = layout
     _write(user, "builder", _template("builder", mcpServers={"jira": JIRA}, tools=["@jira"]))
     (mates.parent / "migrated.json").write_text(json.dumps({"migrated": ["zxc"]}), encoding="utf-8")
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     saved = persisted(cfg)
 
     assert migrate_existing_crewmates(cfg).migrated == []
@@ -1040,10 +1040,10 @@ def test_an_unreadable_ledger_moves_nobody_and_is_kept(layout, persisted, caplog
     _write(user, "builder", _template("builder", mcpServers={"jira": JIRA}, tools=["@jira"]))
     ledger = mates.parent / "migrated.json"
     ledger.write_text(damaged, encoding="utf-8")
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     saved = persisted(cfg)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.mate_config_migration"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.mate_config_migration"):
         report = migrate_existing_crewmates(cfg)
 
     assert report.migrated == [] and saved == {}
@@ -1054,10 +1054,10 @@ def test_an_unreadable_ledger_moves_nobody_and_is_kept(layout, persisted, caplog
 
 
 def test_a_ledger_entry_left_by_another_member_under_the_key_is_replaced(layout, persisted):
-    from kiro_crew.mate_config_migration import _record_migrated
+    from aj_crew.mate_config_migration import _record_migrated
 
     _user, mates = layout
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc-2", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc-2", kiro_agent="builder"))
     persisted(cfg)
     (mates.parent / "migrated.json").write_text(
         json.dumps(
@@ -1083,8 +1083,8 @@ def test_a_ledger_entry_left_by_another_member_under_the_key_is_replaced(layout,
 
 def test_a_conductor_bound_crewmate_owes_no_thread_pass(layout, persisted, threads):
     _user, mates = layout
-    _write(_user, "kirocrew", _template("kirocrew"))
-    cfg = _cfg(mate=KiroCrewAgentConfig(member_id="mate", kiro_agent="kirocrew-mate-conductor"))
+    _write(_user, "ajcrew", _template("ajcrew"))
+    cfg = _cfg(mate=AjCrewAgentConfig(member_id="mate", kiro_agent="ajcrew-mate-conductor"))
     persisted(cfg)
 
     migrate_existing_crewmates(cfg)
@@ -1094,16 +1094,16 @@ def test_a_conductor_bound_crewmate_owes_no_thread_pass(layout, persisted, threa
 
 def test_a_platform_server_the_base_leaves_out_is_the_conductors(layout, platform_servers):
     """A gateway server the worker base does not mount is no worker's loss."""
-    from kiro_crew.mate_config_migration import dry_run, migration_file
+    from aj_crew.mate_config_migration import dry_run, migration_file
 
     user, _mates = layout
     base = _installed_layout(user)
-    source = _ray_kirocrew(base)  # declares kirocrew-cron / -guide; this base does not
+    source = _ray_ajcrew(base)  # declares ajcrew-cron / -guide; this base does not
     planned = migration_file("uio", base, source)
-    for server in ("kirocrew-cron", "kirocrew-guide"):
+    for server in ("ajcrew-cron", "ajcrew-guide"):
         planned["mcpServers"].pop(server, None)
-    planned["tools"] = [t for t in planned.get("tools", []) if "kirocrew-" not in t]
-    planned["allowedTools"] = [t for t in planned.get("allowedTools", []) if "kirocrew-" not in t]
+    planned["tools"] = [t for t in planned.get("tools", []) if "ajcrew-" not in t]
+    planned["allowedTools"] = [t for t in planned.get("allowedTools", []) if "ajcrew-" not in t]
 
     assert dry_run(base, source, planned) == ""
 
@@ -1116,7 +1116,7 @@ def test_a_crewmate_whose_id_names_its_own_user_level_agent_stays(layout, persis
     """
     user, mates = layout
     _write(user, "rust-lead", _template("rust-lead", mcpServers={"jira": JIRA}))
-    cfg = _cfg(**{"rust-lead": KiroCrewAgentConfig(member_id="rm", kiro_agent="rust-lead")})
+    cfg = _cfg(**{"rust-lead": AjCrewAgentConfig(member_id="rm", kiro_agent="rust-lead")})
     saved = persisted(cfg)
     key = "dashboard:member-rm.memory-member-rm-0123"
     before = _thread(threads, key, "rm", "rust-lead")
@@ -1134,12 +1134,12 @@ def test_a_crash_right_after_the_repoint_still_moves_the_old_threads(
     layout, persisted, threads, monkeypatch
 ):
     """The ledger intent is written before the repoint, so the next pass owes the threads."""
-    from kiro_crew import mate_upgrade_notice
+    from aj_crew import mate_upgrade_notice
 
     ec = threads
     user, mates = layout
     _write(user, "builder", _template("builder", prompt="Follow the release SOP."))
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     persisted(cfg)
     key = "dashboard:member-zxc"
     _thread(ec, key, "zxc", "builder")
@@ -1160,17 +1160,17 @@ def test_a_crash_right_after_the_repoint_still_moves_the_old_threads(
 def test_a_crewmate_shadowed_by_its_own_private_copy_moves_and_the_copy_is_retired(
     layout, persisted, monkeypatch
 ):
-    """The copy that shadows its file is the fork Kiro Crew made for it, so it is
+    """The copy that shadows its file is the fork Aj Crew made for it, so it is
     retired (kept for a rollback) and its lineage dropped before the repoint."""
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     user, mates = layout
     fork = _template("rust", prompt="Write Rust.", mcpServers={"jira": JIRA}, tools=["@jira"])
     _write(user, "rust", fork)
-    lineage = {"rust": {"forked_from": "kirocrew", "private_to": "rust"}}
+    lineage = {"rust": {"forked_from": "ajcrew", "private_to": "rust"}}
     monkeypatch.setattr(agent_state, "get_fork_info", lambda n, strict=False: lineage.get(n))
     monkeypatch.setattr(agent_state, "clear_fork_info", lambda n: lineage.pop(n, None))
-    cfg = _cfg(rust=KiroCrewAgentConfig(member_id="rust", kiro_agent="rust"))
+    cfg = _cfg(rust=AjCrewAgentConfig(member_id="rust", kiro_agent="rust"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -1187,13 +1187,13 @@ def test_a_crewmate_shadowed_by_a_spec_crew_does_not_own_stays_and_it_is_untouch
 ):
     """Someone else's spec under the crewmate's id: the crewmate stays, is told once,
     and that file is byte-identical after the pass."""
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     user, mates = layout
     raw = '{ "name": "pkg",  "allowedTools": ["execute_bash"] }\n'
     (user / "pkg.json").write_text(raw, encoding="utf-8")
     monkeypatch.setattr(agent_state, "get_fork_info", lambda n, strict=False: None)
-    cfg = _cfg(pkg=KiroCrewAgentConfig(member_id="pkg", kiro_agent="pkg"))
+    cfg = _cfg(pkg=AjCrewAgentConfig(member_id="pkg", kiro_agent="pkg"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -1214,7 +1214,7 @@ def test_an_unmigrated_row_on_a_package_spec_moves_and_leaves_that_spec_byte_ide
         _template("pkg-reviewer", prompt="Review.", allowedTools=["execute_bash"]), indent=3
     )
     (user / "pkg-reviewer.json").write_text(raw, encoding="utf-8")
-    cfg = _cfg(rvw=KiroCrewAgentConfig(member_id="rvw", kiro_agent="pkg-reviewer"))
+    cfg = _cfg(rvw=AjCrewAgentConfig(member_id="rvw", kiro_agent="pkg-reviewer"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -1228,7 +1228,7 @@ def test_an_unmigrated_row_on_a_package_spec_moves_and_leaves_that_spec_byte_ide
 @pytest.fixture
 def minting(monkeypatch):
     """Provisioning that records its calls; chat evidence answered per name."""
-    from kiro_crew import crewmate_prune_migration, memory_stores
+    from aj_crew import crewmate_prune_migration, memory_stores
 
     calls: list[tuple[str, bool]] = []
     chatted: set[str] = set()
@@ -1251,10 +1251,10 @@ def test_a_used_synced_row_with_no_identity_gets_one_and_moves(layout, persisted
     user, mates = layout
     _write(user, "pkg-reviewer", _template("pkg-reviewer", prompt="Review."))
     cfg = _cfg(
-        rvw=KiroCrewAgentConfig(kiro_agent="pkg-reviewer", source="package"),
-        idle=KiroCrewAgentConfig(kiro_agent="pkg-reviewer", source="package"),
-        app=KiroCrewAgentConfig(kiro_agent="pkg-reviewer", source="auto-improvement"),
-        old=KiroCrewAgentConfig(kiro_agent="pkg-reviewer", source="builtin"),
+        rvw=AjCrewAgentConfig(kiro_agent="pkg-reviewer", source="package"),
+        idle=AjCrewAgentConfig(kiro_agent="pkg-reviewer", source="package"),
+        app=AjCrewAgentConfig(kiro_agent="pkg-reviewer", source="auto-improvement"),
+        old=AjCrewAgentConfig(kiro_agent="pkg-reviewer", source="builtin"),
     )
     chatted.update({"rvw", "app", "old"})
     persisted(cfg)
@@ -1274,8 +1274,8 @@ def test_a_used_synced_row_with_no_identity_gets_one_and_moves(layout, persisted
 def test_a_row_on_a_spec_crew_owns_is_not_given_an_identity(layout, persisted, minting):
     calls, chatted = minting
     user, _mates = layout
-    _write(user, "kirocrew", _template("kirocrew"))
-    cfg = _cfg(helper=KiroCrewAgentConfig(kiro_agent="kirocrew", source="kirocrew"))
+    _write(user, "ajcrew", _template("ajcrew"))
+    cfg = _cfg(helper=AjCrewAgentConfig(kiro_agent="ajcrew", source="ajcrew"))
     chatted.add("helper")
     persisted(cfg)
 
@@ -1287,13 +1287,13 @@ def test_a_row_on_a_spec_crew_owns_is_not_given_an_identity(layout, persisted, m
 def test_a_private_copy_that_changed_is_not_retired(layout, persisted, monkeypatch):
     """Retirement re-proves the copy is Crew's under the spec lock, so a copy the fork
     refresh or the user changed in between is left where it is."""
-    from kiro_crew import agent_state
-    from kiro_crew.mate_config_migration import MateConfigError, _retire_shadow
+    from aj_crew import agent_state
+    from aj_crew.mate_config_migration import MateConfigError, _retire_shadow
 
     user, mates = layout
     _write(user, "rust", _template("rust"))
     monkeypatch.setattr(agent_state, "get_fork_info", lambda n, strict=False: None)
-    cfg = _cfg(rust=KiroCrewAgentConfig(member_id="rust", kiro_agent="rust"))
+    cfg = _cfg(rust=AjCrewAgentConfig(member_id="rust", kiro_agent="rust"))
 
     with pytest.raises(MateConfigError, match="changed"):
         _retire_shadow(cfg, "rust", user / "rust.json")
@@ -1301,19 +1301,19 @@ def test_a_private_copy_that_changed_is_not_retired(layout, persisted, monkeypat
 
 
 def test_retirement_rescans_the_agent_snapshot(layout, persisted, monkeypatch):
-    from kiro_crew import agent_state
-    from kiro_crew.config import loader_snapshots
+    from aj_crew import agent_state
+    from aj_crew.config import loader_snapshots
 
     user, _mates = layout
     _write(user, "rust", _template("rust", prompt="Write Rust."))
-    lineage = {"rust": {"forked_from": "kirocrew", "private_to": "rust"}}
+    lineage = {"rust": {"forked_from": "ajcrew", "private_to": "rust"}}
     monkeypatch.setattr(agent_state, "get_fork_info", lambda n, strict=False: lineage.get(n))
     monkeypatch.setattr(agent_state, "clear_fork_info", lambda n: lineage.pop(n, None))
     scans: list[bool] = []
     monkeypatch.setattr(
         loader_snapshots, "refresh_materialized_agents", lambda **kw: scans.append(True)
     )
-    cfg = _cfg(rust=KiroCrewAgentConfig(member_id="rust", kiro_agent="rust"))
+    cfg = _cfg(rust=AjCrewAgentConfig(member_id="rust", kiro_agent="rust"))
     persisted(cfg)
 
     assert migrate_existing_crewmates(cfg).migrated == ["rust"]
@@ -1328,7 +1328,7 @@ def test_a_used_row_that_cannot_move_is_not_given_an_identity(layout, persisted,
     _write(user, "pkg-reviewer", _template("pkg-reviewer"))
     # A user-level agent under its own id keeps it where it is.
     _write(user, "rvw", _template("rvw"))
-    cfg = _cfg(rvw=KiroCrewAgentConfig(kiro_agent="pkg-reviewer", source="package"))
+    cfg = _cfg(rvw=AjCrewAgentConfig(kiro_agent="pkg-reviewer", source="package"))
     chatted.add("rvw")
     persisted(cfg)
 
@@ -1339,11 +1339,11 @@ def test_a_used_row_that_cannot_move_is_not_given_an_identity(layout, persisted,
 
 
 def test_moved_from_agents_lists_the_agents_moved_crewmates_ran_on(layout, persisted):
-    from kiro_crew.mate_config_migration import moved_from_agents
+    from aj_crew.mate_config_migration import moved_from_agents
 
     user, _mates = layout
     _write(user, "builder", _template("builder", mcpServers={"jira": JIRA}, tools=["@jira"]))
-    cfg = _cfg(zxc=KiroCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
+    cfg = _cfg(zxc=AjCrewAgentConfig(member_id="zxc", kiro_agent="builder"))
     persisted(cfg)
 
     assert migrate_existing_crewmates(cfg).migrated == ["zxc"]
@@ -1355,7 +1355,7 @@ def test_a_minted_row_publishes_its_identity_with_its_repoint(layout, persisted,
     calls, chatted = minting
     user, _mates = layout
     _write(user, "pkg-reviewer", _template("pkg-reviewer"))
-    cfg = _cfg(rvw=KiroCrewAgentConfig(kiro_agent="pkg-reviewer", source="package"))
+    cfg = _cfg(rvw=AjCrewAgentConfig(kiro_agent="pkg-reviewer", source="package"))
     chatted.add("rvw")
     saved = persisted(cfg)
 
@@ -1369,13 +1369,13 @@ def test_a_minted_row_whose_move_fails_before_publish_keeps_its_memory(
 ):
     """A failure after the allocation and before the publish retires the allocation,
     so the row stays on its old agent with the memory it had."""
-    from kiro_crew import mate_config_migration as migration
-    from kiro_crew import memory_stores
+    from aj_crew import mate_config_migration as migration
+    from aj_crew import memory_stores
 
     calls, chatted = minting
     user, _mates = layout
     _write(user, "pkg-reviewer", _template("pkg-reviewer"))
-    cfg = _cfg(rvw=KiroCrewAgentConfig(kiro_agent="pkg-reviewer", source="package"))
+    cfg = _cfg(rvw=AjCrewAgentConfig(kiro_agent="pkg-reviewer", source="package"))
     chatted.add("rvw")
     saved = persisted(cfg)
     retired: list[str] = []
@@ -1401,15 +1401,15 @@ def test_a_minted_row_whose_move_fails_before_publish_keeps_its_memory(
 def test_a_private_copy_with_a_markdown_twin_is_not_retired(layout, persisted, monkeypatch):
     """Retiring the copy would leave the user's markdown twin shadowing the crewmate's
     file, so the crewmate stays, is told once, and both files are left as they are."""
-    from kiro_crew import agent_state
+    from aj_crew import agent_state
 
     user, mates = layout
     _write(user, "rust", _template("rust"))
     twin = "---\nname: rust\n---\nmine\n"
     (user / "rust.md").write_text(twin, encoding="utf-8")
-    lineage = {"rust": {"forked_from": "kirocrew", "private_to": "rust"}}
+    lineage = {"rust": {"forked_from": "ajcrew", "private_to": "rust"}}
     monkeypatch.setattr(agent_state, "get_fork_info", lambda n, strict=False: lineage.get(n))
-    cfg = _cfg(rust=KiroCrewAgentConfig(member_id="rust", kiro_agent="rust"))
+    cfg = _cfg(rust=AjCrewAgentConfig(member_id="rust", kiro_agent="rust"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)
@@ -1423,13 +1423,13 @@ def test_a_private_copy_with_a_markdown_twin_is_not_retired(layout, persisted, m
 def test_a_retirement_whose_move_fails_puts_the_copy_back(layout, persisted, monkeypatch, step):
     """A lineage drop or a repoint that fails after the copy moved puts the copy and
     its lineage back, so the crewmate keeps running where it was."""
-    from kiro_crew import agent_state
-    from kiro_crew import mate_config_migration as migration
+    from aj_crew import agent_state
+    from aj_crew import mate_config_migration as migration
 
     user, _mates = layout
     fork = _template("rust", prompt="Write Rust.")
     _write(user, "rust", fork)
-    original = {"forked_from": "kirocrew", "private_to": "rust"}
+    original = {"forked_from": "ajcrew", "private_to": "rust"}
     lineage = {"rust": dict(original)}
     monkeypatch.setattr(agent_state, "get_fork_info", lambda n, strict=False: lineage.get(n))
     monkeypatch.setattr(
@@ -1450,7 +1450,7 @@ def test_a_retirement_whose_move_fails_puts_the_copy_back(layout, persisted, mon
             raise OSError(28, "No space left on device")
 
         monkeypatch.setattr(migration, "_repoint", refused)
-    cfg = _cfg(rust=KiroCrewAgentConfig(member_id="rust", kiro_agent="rust"))
+    cfg = _cfg(rust=AjCrewAgentConfig(member_id="rust", kiro_agent="rust"))
     persisted(cfg)
 
     report = migrate_existing_crewmates(cfg)

@@ -11,13 +11,13 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.session_map import SessionMap
+from aj_crew.session_map import SessionMap
 
 
 @pytest.fixture()
 def session_map(tmp_path):
     """Create a SessionMap backed by a temp directory."""
-    with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+    with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
         yield SessionMap()
 
 
@@ -106,14 +106,14 @@ class TestClearSlackLink:
     def test_clear_persists_to_disk(self, tmp_path):
         # provider="claude_code" so get() returns the sid without a kiro-session
         # file existence check (which would otherwise prune the entry).
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             sm = SessionMap()
             sm.set("dash:1", "sid-abc", provider="claude_code")
             sm.set_slack_link("dash:1", "ts-1", "C-1")
             sm.clear_slack_link("dash:1")
 
         # Reload from disk: the cleared link must stay cleared, sid preserved.
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             sm2 = SessionMap()
             assert sm2.get_slack_link("dash:1") == (None, None)
             assert sm2.get("dash:1") == "sid-abc"
@@ -153,14 +153,14 @@ class TestSetSlackLinkEvictsPriorOwner:
         assert session_map.get_session_for_thread("ts-1") == "dash:b"
 
     def test_single_owner_invariant_survives_reload(self, tmp_path):
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             sm = SessionMap()
             sm.set("dash:a", "sid-a", provider="claude_code")
             sm.set("dash:b", "sid-b", provider="claude_code")
             sm.set_slack_link("dash:a", "ts-1", "C-1")
             sm.set_slack_link("dash:b", "ts-1", "C-1")
 
-        with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+        with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
             sm2 = SessionMap()
             assert sm2.get_slack_link("dash:a") == (None, None)
             assert sm2.get("dash:a") == "sid-a"
@@ -224,7 +224,7 @@ class TestSetSlackLinkEvictsPriorOwner:
         # dash:b was displaced earlier: its entry carries the "" sentinel.
         session_map.set_slack_link("dash:b", "", "")
 
-        with caplog.at_level("INFO", logger="kiro_crew.session_map"):
+        with caplog.at_level("INFO", logger="aj_crew.session_map"):
             session_map.set_slack_link("dash:c", "", "")
 
         assert session_map.get_slack_link("dash:a") == ("ts-2", "C-1")
@@ -287,6 +287,6 @@ class TestSetSlackLinkEvictsPriorOwner:
     def test_reassignment_log_only_fires_on_a_real_eviction(self, session_map, caplog):
         session_map.set("dash:b", "sid-b", provider="claude_code")
         session_map._thread_to_session["ts-1"] = "dash:ghost"
-        with caplog.at_level("INFO", logger="kiro_crew.session_map"):
+        with caplog.at_level("INFO", logger="aj_crew.session_map"):
             session_map.set_slack_link("dash:b", "ts-1", "C-1")
         assert "reassigned" not in caplog.text

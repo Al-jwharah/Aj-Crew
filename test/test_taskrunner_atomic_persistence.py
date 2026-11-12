@@ -17,14 +17,14 @@ import time
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from kiro_crew import taskrunner as taskrunner_facade
-from kiro_crew.config import paths
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.history import ConversationLog
-from kiro_crew.session_work_dir import data_home_id
-from kiro_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
-from kiro_crew.taskrunner_parts import run_registry
-from kiro_crew.testing.wait import await_until
+from aj_crew import taskrunner as taskrunner_facade
+from aj_crew.config import paths
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.history import ConversationLog
+from aj_crew.session_work_dir import data_home_id
+from aj_crew.taskrunner import Step, StepStatus, TaskRun, TaskRunner
+from aj_crew.taskrunner_parts import run_registry
+from aj_crew.testing.wait import await_until
 
 
 def _make_runner(work_dir: Path) -> TaskRunner:
@@ -107,10 +107,10 @@ class TestGitWorkspaceIdentitySurvivesRestart:
 
     def _git_run(self, task_id: str = "g1") -> TaskRun:
         run = _make_run(task_id)
-        run.work_dir = "/repos/proj/../.kirocrew-work/g1"
-        run.branch_name = "kirocrew/task/g1"
+        run.work_dir = "/repos/proj/../.ajcrew-work/g1"
+        run.branch_name = "ajcrew/task/g1"
         run.base_branch = "main"
-        run.worktree_path = "/repos/.kirocrew-work/g1"
+        run.worktree_path = "/repos/.ajcrew-work/g1"
         run.repo_root = "/repos/proj"
         run.git_enabled = True
         run.commit_hashes = ["abc1234", "def5678"]
@@ -125,9 +125,9 @@ class TestGitWorkspaceIdentitySurvivesRestart:
         reloaded._load_runs()
         back = reloaded._runs["g1"]
 
-        assert back.branch_name == "kirocrew/task/g1"
+        assert back.branch_name == "ajcrew/task/g1"
         assert back.base_branch == "main"
-        assert back.worktree_path == "/repos/.kirocrew-work/g1"
+        assert back.worktree_path == "/repos/.ajcrew-work/g1"
         assert back.repo_root == "/repos/proj"
         assert back.git_enabled is True
         assert back.commit_hashes == ["abc1234", "def5678"]
@@ -345,17 +345,17 @@ class TestRegistryPerDataHome:
         """Two data homes with no workspace of their own share one task runner folder
         in the per-user default root; after a restart each lists only its own run."""
         monkeypatch.setattr(paths, "_default_workspace_base", lambda: tmp_path / "base")
-        work_dir = tmp_path / "base" / "kirocrew-workspace" / "taskrunner_main"
+        work_dir = tmp_path / "base" / "ajcrew-workspace" / "taskrunner_main"
         work_dir.mkdir(parents=True)
         homes = {"a1": tmp_path / "home_a", "b1": tmp_path / "home_b"}
         for task_id, home in homes.items():
-            monkeypatch.setenv("KIROCREW_HOME", str(home))
+            monkeypatch.setenv("AJCREW_HOME", str(home))
             runner = _make_runner(work_dir)
             assert runner._runs == {}
             runner._runs[task_id] = _make_run(task_id)
             runner._persist_runs()
         for task_id, home in homes.items():
-            monkeypatch.setenv("KIROCREW_HOME", str(home))
+            monkeypatch.setenv("AJCREW_HOME", str(home))
             runner = _make_runner(work_dir)
             assert set(runner._runs) == {task_id}
             # The name carries the same home identity as a run-dir marker.
@@ -365,10 +365,10 @@ class TestRegistryPerDataHome:
 
         # The default home keeps the registry it has always had.
         monkeypatch.setattr(paths, "_default_home", lambda: homes["a1"])
-        monkeypatch.setenv("KIROCREW_HOME", str(homes["a1"]))
+        monkeypatch.setenv("AJCREW_HOME", str(homes["a1"]))
         assert _make_runner(work_dir)._runs_path() == work_dir / "runs.json"
-        # So does an install with no KIROCREW_HOME at all.
-        monkeypatch.delenv("KIROCREW_HOME")
+        # So does an install with no AJCREW_HOME at all.
+        monkeypatch.delenv("AJCREW_HOME")
         assert run_registry._home_runs_file(work_dir, "runs.json") == "runs.json"
 
     def test_a_write_keeps_the_file_loaded_when_the_default_base_moves(
@@ -377,9 +377,9 @@ class TestRegistryPerDataHome:
         """A volume mounting over the default base after boot must not send this
         home's next snapshot onto the shared ``runs.json``."""
         monkeypatch.setattr(paths, "_default_workspace_base", lambda: tmp_path / "base")
-        work_dir = tmp_path / "base" / "kirocrew-workspace" / "taskrunner_main"
+        work_dir = tmp_path / "base" / "ajcrew-workspace" / "taskrunner_main"
         work_dir.mkdir(parents=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home_a"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home_a"))
         runner = _make_runner(work_dir)
         monkeypatch.setattr(paths, "_default_workspace_base", lambda: tmp_path / "mounted")
         runner._runs["a1"] = _make_run("a1")
@@ -390,10 +390,10 @@ class TestRegistryPerDataHome:
     @staticmethod
     def _set_live_workspace(runner: TaskRunner, workspace_dir: Path) -> None:
         """Drive the real run-entry re-read with ``taskrunner.workspace_dir`` set."""
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.taskrunner.workspace_dir = str(workspace_dir)
         runner._config_baseline = (0, "")
-        with patch("kiro_crew.taskrunner.live.snapshot", return_value=cfg):
+        with patch("aj_crew.taskrunner.live.snapshot", return_value=cfg):
             runner._refresh_from_config()
         assert runner._work_dir == workspace_dir.resolve()
 
@@ -405,12 +405,12 @@ class TestRegistryPerDataHome:
         ``runs.json`` there, which it never read, is not overwritten, and a restart
         with the saved setting lists the run again."""
         monkeypatch.setattr(paths, "_default_workspace_base", lambda: tmp_path / "base")
-        work_dir = tmp_path / "base" / "kirocrew-workspace" / "taskrunner_main"
+        work_dir = tmp_path / "base" / "ajcrew-workspace" / "taskrunner_main"
         work_dir.mkdir(parents=True)
         shared = work_dir / "runs.json"
         shared.write_text('[{"task_id": "default-home-run"}]', encoding="utf-8")
         before = shared.read_bytes()
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home_a"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home_a"))
         runner = _make_runner(work_dir)
         self._set_live_workspace(runner, work_dir)
         runner._runs["a1"] = _make_run("a1")
@@ -427,11 +427,11 @@ class TestRegistryPerDataHome:
         """Moving to another folder while running writes the registry name a start
         with that saved setting loads, so the run is still listed after a restart."""
         monkeypatch.setattr(paths, "_default_workspace_base", lambda: tmp_path / "base")
-        work_dir = tmp_path / "base" / "kirocrew-workspace" / "taskrunner_main"
+        work_dir = tmp_path / "base" / "ajcrew-workspace" / "taskrunner_main"
         work_dir.mkdir(parents=True)
         chosen = tmp_path / "chosen"
         chosen.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home_a"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home_a"))
         runner = _make_runner(work_dir)
         self._set_live_workspace(runner, chosen)
         runner._runs["a1"] = _make_run("a1")
@@ -448,9 +448,9 @@ class TestRegistryPerDataHome:
         home_base = tmp_path / "user" / "workplace"
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path / "user"))
         monkeypatch.setattr(paths, "_default_workspace_base", lambda: home_base)
-        work_dir = home_base / "kirocrew-workspace" / "taskrunner_main"
+        work_dir = home_base / "ajcrew-workspace" / "taskrunner_main"
         work_dir.mkdir(parents=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home_a"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home_a"))
         runner = TaskRunner(sessions=MagicMock(), auto_test=False, workspace_dir=str(work_dir))
         runner._runs["a1"] = _make_run("a1")
         runner._persist_runs()
@@ -466,13 +466,13 @@ class TestRegistryPerDataHome:
         own file. The default home's ``runs.json`` there is never written, and the
         start logs its path, since this home's list does not show those runs."""
         monkeypatch.setattr(paths, "_default_workspace_base", lambda: tmp_path / "base")
-        chosen = tmp_path / "base" / "kirocrew-workspace" / "chosen"
+        chosen = tmp_path / "base" / "ajcrew-workspace" / "chosen"
         chosen.mkdir(parents=True)
         shared = chosen.resolve() / "runs.json"
         shared.write_text('[{"task_id": "default-home-run"}]', encoding="utf-8")
         before = shared.read_bytes()
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home_a"))
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.taskrunner"):
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home_a"))
+        with caplog.at_level(logging.WARNING, logger="aj_crew.taskrunner"):
             runner = TaskRunner(sessions=MagicMock(), auto_test=False, workspace_dir=str(chosen))
         assert str(shared) in caplog.text
         assert runner._runs_path() == chosen.resolve() / f"runs-{data_home_id()}.json"
@@ -487,13 +487,13 @@ class TestRegistryPerDataHome:
         where the runs saved before per-home registries are, instead of listing
         nothing silently."""
         monkeypatch.setattr(paths, "_default_workspace_base", lambda: tmp_path / "base")
-        work_dir = tmp_path / "base" / "kirocrew-workspace" / "taskrunner_main"
+        work_dir = tmp_path / "base" / "ajcrew-workspace" / "taskrunner_main"
         work_dir.mkdir(parents=True)
         (work_dir / "runs.json").write_text(
             '[{"task_id": "unmarked", "work_dir": "/nonexistent/run"}]', encoding="utf-8"
         )
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home_a"))
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.taskrunner"):
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home_a"))
+        with caplog.at_level(logging.WARNING, logger="aj_crew.taskrunner"):
             runner = _make_runner(work_dir)
         assert runner._runs == {}
         assert str(work_dir / "runs.json") in caplog.text
@@ -503,9 +503,9 @@ class TestRegistryPerDataHome:
         """A shared ``runs.json`` holding one run whose runtime session this override
         home recorded, and one run with no record here (another home's)."""
         monkeypatch.setattr(paths, "_default_workspace_base", lambda: tmp_path / "base")
-        work_dir = tmp_path / "base" / "kirocrew-workspace" / "taskrunner_main"
+        work_dir = tmp_path / "base" / "ajcrew-workspace" / "taskrunner_main"
         work_dir.mkdir(parents=True)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home_a"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home_a"))
         ConversationLog().update_metadata("taskrunner:mine:runtime", {"memory_mode": "persistent"})
         writer = _make_runner(work_dir)
         writer._runs_file = work_dir / "runs.json"  # write the shared file, as before
@@ -522,7 +522,7 @@ class TestRegistryPerDataHome:
         warning counts the runs left in it."""
         work_dir, shared = self._shared_registry_with(tmp_path, monkeypatch)
         before = shared.read_bytes()
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.taskrunner"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.taskrunner"):
             runner = _make_runner(work_dir)
         assert set(runner._runs) == {"mine"}
         assert runner._runs_path() == work_dir / f"runs-{data_home_id()}.json"
@@ -563,7 +563,7 @@ class TestRegistryPerDataHome:
         and writes stay open, because a restart could never read it either."""
         work_dir, shared = self._shared_registry_with(tmp_path, monkeypatch)
         ConversationLog()._path("taskrunner:other:runtime").write_bytes(b"\xff{not json\n")
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.taskrunner"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.taskrunner"):
             runner = _make_runner(work_dir)
         assert set(runner._runs) == {"mine"}
         assert not runner._snapshot_recovery_incomplete
@@ -656,7 +656,7 @@ class TestAsyncMutationPersistence:
             write_threads.append(threading.get_ident())
             path.write_text(content, encoding="utf-8")
 
-        monkeypatch.setattr("kiro_crew.taskrunner.atomic_write", record_write)
+        monkeypatch.setattr("aj_crew.taskrunner.atomic_write", record_write)
         asyncio.run(runner.update_plan("t1", [{"title": "updated"}]))
 
         assert write_threads

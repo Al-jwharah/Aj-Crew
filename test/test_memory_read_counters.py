@@ -14,8 +14,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import kiro_crew.dashboard.handlers.memory as mem_mod
-from kiro_crew.vector_memory import VectorMemoryStore
+import aj_crew.dashboard.handlers.memory as mem_mod
+from aj_crew.vector_memory import VectorMemoryStore
 
 _COUNTER_KEYS = {
     "statements_executed",
@@ -42,7 +42,7 @@ class TestCounterContract:
         """The counter-absent assertion: no ``read_counters`` at all fails here."""
         # With faiss installed, init builds the FAISS index, and that build's
         # data-version read is one counted statement this zero baseline would see.
-        monkeypatch.setattr("kiro_crew.vector_memory._HAS_FAISS", False)
+        monkeypatch.setattr("aj_crew.vector_memory._HAS_FAISS", False)
         store = _store(tmp_path, opened=opened)
         assert store.read_counters() == dict.fromkeys(_COUNTER_KEYS, 0)
 
@@ -103,7 +103,7 @@ class TestSemanticSurface:
         query, not two. The over-budget refusal hands back the rows it already
         materialized instead of returning None and making the candidate helper
         re-issue the identical SELECT."""
-        import kiro_crew.vector_memory as vm
+        import aj_crew.vector_memory as vm
 
         store = _store(tmp_path, semantic=4, opened=opened)
         # Force every build over budget so the refusal path is taken.

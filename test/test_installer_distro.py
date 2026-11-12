@@ -25,7 +25,7 @@ import pytest
 from installer_test_helpers import run_bounded
 from spawn_test_helpers import unblocked_signals
 
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CLI_SH = REPO_ROOT / "cli.sh"
@@ -165,7 +165,11 @@ def _run_cli_with_fake_env(
         # curl, uv, or interpreter can leak into cli.sh's ladder.
         "PATH": str(tools),
         "HOME": str(tmp_path / "home"),
-        "KIROCREW_HOME": str(tmp_path / "data-home"),
+        "AJCREW_HOME": str(tmp_path / "data-home"),
+        # The installer has no built-in release host and refuses to run
+        # without one. The recording curl answers every URL, so the host only
+        # has to be named; `.invalid` can never resolve if a real curl leaks in.
+        "AJCREW_CDN_BASE": "https://releases.example.invalid",
         **(extra_env or {}),
     }
     argv = [str(tools / "sh"), str(CLI_SH), *(extra_args or [])]
@@ -570,7 +574,7 @@ def test_cli_venv_rebuild_preserves_a_stale_backup(tmp_path: Path) -> None:
 def test_cli_reuses_a_recorded_managed_python_choice(tmp_path: Path) -> None:
     """A completed --managed-python install records its mode; a later run
     WITHOUT the flag must reuse it -- most importantly the re-run that
-    `kirocrew update` performs, which passes only --channel. Without the
+    `ajcrew update` performs, which passes only --channel. Without the
     marker read, every update would silently flip a managed install back onto
     whatever system interpreter it finds."""
     data_home = tmp_path / "data-home"
@@ -675,7 +679,7 @@ def test_cli_legacy_system_marker_migrates_to_managed(tmp_path: Path) -> None:
 
 def test_cli_system_pinned_marker_stays_on_system(tmp_path: Path) -> None:
     """A recorded `system-pinned` marker (the --system-python opt-out) must
-    survive a flag-less re-run -- the exact shape `kirocrew update` performs --
+    survive a flag-less re-run -- the exact shape `ajcrew update` performs --
     and never reach for uv."""
     data_home = tmp_path / "data-home"
     data_home.mkdir()
@@ -761,7 +765,7 @@ def test_cli_marker_driven_managed_run_falls_back_on_provision_failure(
     tmp_path: Path,
 ) -> None:
     """A `managed` marker records a DEFAULTED choice: when the uv download fails on
-    a marker-driven re-run (every `kirocrew update`), the run degrades to a usable
+    a marker-driven re-run (every `ajcrew update`), the run degrades to a usable
     system interpreter. Only a flag/env request made THIS run fails hard
     (test_cli_managed_python_flag_skips_system_interpreters)."""
     data_home = tmp_path / "data-home"
@@ -782,13 +786,13 @@ def test_cli_marker_driven_managed_run_falls_back_on_provision_failure(
 
 
 def test_cli_uv_download_honors_a_mirror_base(tmp_path: Path) -> None:
-    """KIROCREW_UV_URL points air-gapped / proxied hosts at a mirror of the uv
+    """AJCREW_UV_URL points air-gapped / proxied hosts at a mirror of the uv
     release tree. The URL must be built from it -- and the SHA-256 pin still
     applies, so a mirror can serve the bytes but never substitute them (pinned
     by test_cli_rejects_a_tampered_uv_download)."""
     result, markers = _run_cli_with_fake_env(
         tmp_path,
-        extra_env={"KIROCREW_UV_URL": "https://mirror.example.com/uv/"},
+        extra_env={"AJCREW_UV_URL": "https://mirror.example.com/uv/"},
     )
 
     recorded = (markers / "curl").read_text()
@@ -1154,7 +1158,7 @@ def test_tolerate_restores_the_moved_aside_venv_on_an_interrupt(tmp_path: Path) 
     """Ctrl-C during the tolerated pip upgrade must not strand the old install.
 
     By then the working venv has been moved to the backup path and the new
-    one has no kirocrew yet. ``_tolerate`` exits, and the rollback the rebuild
+    one has no ajcrew yet. ``_tolerate`` exits, and the rollback the rebuild
     arms on EXIT (``_venv_rollback_on_exit``, armed here as cli.sh arms it)
     puts the old venv back.
     """
@@ -1165,7 +1169,7 @@ def test_tolerate_restores_the_moved_aside_venv_on_an_interrupt(tmp_path: Path) 
     (venv / "new").write_text("half-built\n")
     backup.mkdir()
     (backup / "bin").mkdir()
-    (backup / "bin" / "kirocrew").write_text("old launcher\n")
+    (backup / "bin" / "ajcrew").write_text("old launcher\n")
     restore = CLI_SH.read_text()
     start = restore.index("_restore_tree() {")
     end = restore.index("\n}\n", start) + 3
@@ -1186,7 +1190,7 @@ def test_tolerate_restores_the_moved_aside_venv_on_an_interrupt(tmp_path: Path) 
     assert result.returncode == 130, result.stderr
     assert "after-interrupt" not in result.stdout
     assert "previous install was restored" in result.stderr
-    assert (venv / "bin" / "kirocrew").read_text() == "old launcher\n"
+    assert (venv / "bin" / "ajcrew").read_text() == "old launcher\n"
     assert not (venv / "new").exists()
     assert not backup.exists()
 
@@ -1267,7 +1271,7 @@ def test_run_step_redrawn_line_fits_the_terminal_width(tmp_path: Path) -> None:
     long_line = "Downloading " + "x" * 200 + ".whl (310 kB)"
     script = (
         f'set -eu; TMP="{tmp_path}"; . "{helpers}"; _tty=1; '
-        f'_run_step "{tmp_path}/wide.log" "Installing kirocrew 1.2.3 and its dependencies" '
+        f'_run_step "{tmp_path}/wide.log" "Installing ajcrew 1.2.3 and its dependencies" '
         f"sh -c 'echo \"{long_line}\"; sleep 1'"
     )
     # Bytes, not text=True: universal newlines would fold the \r redraws into \n.
@@ -1298,7 +1302,7 @@ def test_run_step_prefix_is_cut_on_a_terminal_narrower_than_the_message(
     (fake_bin / "tput").chmod(0o755)
     script = (
         f'set -eu; TMP="{tmp_path}"; . "{helpers}"; _tty=1; '
-        f'_run_step "{tmp_path}/narrow.log" "Installing kirocrew 1.2.3 and its dependencies with pipx" '
+        f'_run_step "{tmp_path}/narrow.log" "Installing ajcrew 1.2.3 and its dependencies with pipx" '
         f"sh -c 'echo Collecting-something-long-enough-to-matter; sleep 1'"
     )
     result = subprocess.run(

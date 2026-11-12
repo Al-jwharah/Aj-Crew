@@ -31,7 +31,7 @@ import { stubSplitPanes } from './lib/split-pane-fixture.mjs'
 import { chromiumExecutable } from './lib/chromium-executable.mjs'
 
 const out = process.argv[2]
-  || join(process.env.KIROCREW_SCRATCH || 'temp-screenshots', 'agent-switch-notice')
+  || join(process.env.AJCREW_SCRATCH || 'temp-screenshots', 'agent-switch-notice')
 mkdirSync(out, { recursive: true })
 
 const SLOT = 'chat-1'
@@ -48,7 +48,7 @@ const row = (name, selection_kind, source, description) => ({
   model: '', reasoning_effort: '', triggers: '', session_color: '', avatar: {},
 })
 const CATALOG = [
-  row('kirocrew', 'template', 'builtin', 'The stock crew agent template'),
+  row('ajcrew', 'template', 'builtin', 'The stock crew agent template'),
   row(TARGET, 'template', 'package', 'Triage pager alerts against the runbook'),
 ]
 
@@ -58,7 +58,7 @@ const CATALOG = [
 const TS = '2026-10-20T15:00:00Z'
 
 const slots = () => [{
-  key: SLOT, title: 'agent switch', running: false, messages: 2, agent: 'kirocrew',
+  key: SLOT, title: 'agent switch', running: false, messages: 2, agent: 'ajcrew',
   project: '/home/user/project', model: '', mode: '', last_ts: TS, created: TS,
 }]
 
@@ -77,7 +77,7 @@ async function prepare(page, theme) {
         return true
       }
       if (path === '/api/agents/catalog') {
-        await json(route, { agents: CATALOG, default_agent: 'kirocrew' })
+        await json(route, { agents: CATALOG, default_agent: 'ajcrew' })
         return true
       }
       if (/^\/api\/chat\/slots\/[^/]+\/agent$/.test(path) && route.request().method() === 'POST') {
@@ -177,7 +177,7 @@ try {
     const RIGHT = 'pane-idle'
     const ts = '2026-10-20T15:00:00Z'
     const paneSlot = (key, title) => ({
-      key, title, running: false, messages: 2, agent: 'kirocrew',
+      key, title, running: false, messages: 2, agent: 'ajcrew',
       created: ts, last_ts: ts, folder_id: '', model: '', mode: '',
     })
     await stubSplitPanes(page, {
@@ -202,7 +202,7 @@ try {
           return true
         }
         if (path === '/api/agents/catalog') {
-          await json(route, { agents: CATALOG, default_agent: 'kirocrew' })
+          await json(route, { agents: CATALOG, default_agent: 'ajcrew' })
           return true
         }
         if (/^\/api\/chat\/slots\/[^/]+\/agent$/.test(path) && route.request().method() === 'POST') {

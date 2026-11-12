@@ -23,18 +23,18 @@ from typing import Any, Callable
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew import agent, agent_state
-from kiro_crew.agent_files import MATE_SERVICE_AGENT_FILENAMES
-from kiro_crew.agent_materialization import (
+import aj_crew.config.paths as paths_mod
+from aj_crew import agent, agent_state
+from aj_crew.agent_files import MATE_SERVICE_AGENT_FILENAMES
+from aj_crew.agent_materialization import (
     auto_approve,
     conductor_agents,
     fork_refresh,
     service_agents,
     worker_agent,
 )
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
 
 _PACKAGE = Path(auto_approve.__file__).resolve().parent
 
@@ -45,7 +45,7 @@ _PACKAGE = Path(auto_approve.__file__).resolve().parent
 _PRIMARY_SPEC_WRITER = "default_spec_commit.py"
 
 #: ``(module, function)`` writers outside the tail by design. None: the shared-template
-#: pass never writes a spec Kiro Crew does not own
+#: pass never writes a spec Aj Crew does not own
 #: (``fork_refresh.require_shared_template_within_ceiling`` refuses a kiro-cli start on
 #: one the ceiling would narrow instead).
 _USER_TEMPLATE_WRITERS: frozenset[tuple[str, str]] = frozenset()
@@ -55,7 +55,7 @@ _USER_TEMPLATE_WRITERS: frozenset[tuple[str, str]] = frozenset()
 def _accepting_kiro_cli(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
     """Pin a kiro-cli that accepts ``permissions``, so the derive is observable."""
     _floor_monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
+        "aj_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
     )
 
 
@@ -105,7 +105,7 @@ def test_the_structural_scan_sees_a_direct_write() -> None:
 
 
 def _derive(config: dict[str, Any], filename: str = "x.json") -> Any:
-    from kiro_crew.agent_sdk.drivers.acp import derived_agent_permissions
+    from aj_crew.agent_sdk.drivers.acp import derived_agent_permissions
 
     return derived_agent_permissions(config.get("allowedTools") or [], filename)
 
@@ -121,11 +121,11 @@ _STALE_PERMISSIONS = {"rules": [{"capability": "execute_bash", "effect": "allow"
 def _overridden_template() -> dict[str, Any]:
     """What ``build_agent_config`` returns when ``agent.json`` tries every channel."""
     return {
-        "name": "kirocrew",
+        "name": "ajcrew",
         "prompt": "x",
-        "tools": ["@kirocrew-core"],
-        "allowedTools": ["@kirocrew-core"],
-        "mcpServers": {"kirocrew-core": dict(_UNDECLARED_CORE)},
+        "tools": ["@ajcrew-core"],
+        "allowedTools": ["@ajcrew-core"],
+        "mcpServers": {"ajcrew-core": dict(_UNDECLARED_CORE)},
         "includeMcpJson": True,
         "useLegacyMcpJson": True,
         "permissions": _STALE_PERMISSIONS,
@@ -133,30 +133,30 @@ def _overridden_template() -> dict[str, Any]:
 
 
 _INSTALLERS: dict[str, Callable[[], object]] = {
-    "kirocrew-conductor.json": conductor_agents._install_conductor_agent,
-    "kirocrew-ledger-conductor.json": conductor_agents._install_ledger_conductor_agent,
-    "kirocrew-pipeline-conductor.json": conductor_agents._install_pipeline_conductor_agent,
-    "kirocrew-security-conductor.json": conductor_agents._install_security_conductor_agent,
-    "kirocrew-worker.json": worker_agent._install_worker_agent,
-    "kirocrew-research.json": service_agents._install_research_agent,
-    "kirocrew-mate-conductor.json": service_agents._install_mate_conductor_agent,
-    "kirocrew-mate-worker.json": service_agents._install_mate_worker_agent,
-    "kirocrew-dashboard-manager.json": service_agents._install_dashboard_manager_agent,
-    "kirocrew-lite.json": service_agents._install_lite_agent_fallback,
-    "kirocrew-guest.json": service_agents._install_guest_agent,
-    "kirocrew-knowledge.json": service_agents._install_knowledge_agent,
+    "ajcrew-conductor.json": conductor_agents._install_conductor_agent,
+    "ajcrew-ledger-conductor.json": conductor_agents._install_ledger_conductor_agent,
+    "ajcrew-pipeline-conductor.json": conductor_agents._install_pipeline_conductor_agent,
+    "ajcrew-security-conductor.json": conductor_agents._install_security_conductor_agent,
+    "ajcrew-worker.json": worker_agent._install_worker_agent,
+    "ajcrew-research.json": service_agents._install_research_agent,
+    "ajcrew-mate-conductor.json": service_agents._install_mate_conductor_agent,
+    "ajcrew-mate-worker.json": service_agents._install_mate_worker_agent,
+    "ajcrew-dashboard-manager.json": service_agents._install_dashboard_manager_agent,
+    "ajcrew-lite.json": service_agents._install_lite_agent_fallback,
+    "ajcrew-guest.json": service_agents._install_guest_agent,
+    "ajcrew-knowledge.json": service_agents._install_knowledge_agent,
 }
 
 
 #: The service specs that mount no tool and no server, so they carry no KAS block.
-_MOUNTS_NOTHING = {"kirocrew-lite.json", "kirocrew-guest.json", "kirocrew-knowledge.json"}
+_MOUNTS_NOTHING = {"ajcrew-lite.json", "ajcrew-guest.json", "ajcrew-knowledge.json"}
 
 
 @pytest.fixture
 def agents_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: tmp_path)
     monkeypatch.setattr(agent, "build_agent_config", lambda *a, **k: _overridden_template())
-    monkeypatch.setattr(agent, "_kirocrew_mcp_invocation", lambda sub: ("/resolved/kc", [sub]))
+    monkeypatch.setattr(agent, "_ajcrew_mcp_invocation", lambda sub: ("/resolved/kc", [sub]))
     monkeypatch.setattr(worker_agent, "_installed_default_spec", lambda: None)
     monkeypatch.setattr(paths_mod, "mate_agents_dir", lambda: tmp_path / "mates" / "agents")
     return tmp_path
@@ -239,8 +239,8 @@ def test_the_research_spec_keeps_an_inherited_deny_and_ask(
 
     monkeypatch.setattr(agent, "build_agent_config", lambda *a, **k: _template())
     service_agents._install_research_agent()
-    spec = json.loads((agents_dir / "kirocrew-research.json").read_text(encoding="utf-8"))
-    derived = _derive(spec, "kirocrew-research.json")["rules"]
+    spec = json.loads((agents_dir / "ajcrew-research.json").read_text(encoding="utf-8"))
+    derived = _derive(spec, "ajcrew-research.json")["rules"]
     assert spec["permissions"]["rules"] == [_DENY_FETCH, _ASK_SERVER, *derived]
 
 
@@ -312,7 +312,7 @@ def test_inherit_narrowing_is_idempotent() -> None:
 
 
 def _accepted_by_kas(block: Any) -> bool:
-    from kiro_crew.acp.kas_permissions import parse_user_permissions
+    from aj_crew.acp.kas_permissions import parse_user_permissions
 
     return parse_user_permissions(block) is not None
 
@@ -326,7 +326,7 @@ def test_inherit_narrowing_never_writes_a_block_kas_refuses_past_the_rule_cap(
     rules are written alone rather than in a block that loses every one of them. The
     check that decides this is a question, so it reports no refusal.
     """
-    from kiro_crew.acp.kas_permissions import _MAX_RULES
+    from aj_crew.acp.kas_permissions import _MAX_RULES
 
     denies = [
         {"capability": "web_fetch", "match": [f"https://h{i}.example/*"], "effect": "deny"}
@@ -334,7 +334,7 @@ def test_inherit_narrowing_never_writes_a_block_kas_refuses_past_the_rule_cap(
     ]
     config = {**_overridden_template(), "permissions": {"rules": denies}}
     assert _accepted_by_kas(config["permissions"])
-    with caplog.at_level("WARNING", logger="kiro_crew.acp.kas_permissions"):
+    with caplog.at_level("WARNING", logger="aj_crew.acp.kas_permissions"):
         auto_approve.govern_spec(
             config, agent_filename="x.json", source="t", kas_policy="inherit_narrowing"
         )
@@ -348,8 +348,8 @@ def test_inherit_narrowing_keeps_a_derived_allow_past_the_pattern_cap_kas_now_sp
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A long ``match`` is split on the way to KAS, so the block keeps it."""
-    from kiro_crew.acp.kas_permissions import _MAX_PATTERNS_PER_RULE
-    from kiro_crew.agent_sdk.drivers import acp as acp_driver
+    from aj_crew.acp.kas_permissions import _MAX_PATTERNS_PER_RULE
+    from aj_crew.agent_sdk.drivers import acp as acp_driver
 
     wide = {
         "capability": "mcp",
@@ -369,8 +369,8 @@ def test_inherit_narrowing_counts_a_long_derived_match_as_the_rules_it_is_sent_a
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The rule bound counts a long ``match`` as the rules it is sent as."""
-    from kiro_crew.acp.kas_permissions import _MAX_PATTERNS_PER_RULE, _MAX_RULES
-    from kiro_crew.agent_sdk.drivers import acp as acp_driver
+    from aj_crew.acp.kas_permissions import _MAX_PATTERNS_PER_RULE, _MAX_RULES
+    from aj_crew.agent_sdk.drivers import acp as acp_driver
 
     wide = {
         "capability": "mcp",
@@ -407,7 +407,7 @@ def test_the_research_spec_audits_each_inherited_allow_it_drops(
     ]
     assert record["source"] == "_install_research_agent"
     assert "shell:allow" in record["resources"]
-    assert "kirocrew-research.json" in record["resources"]
+    assert "ajcrew-research.json" in record["resources"]
     assert "web_fetch" not in record["resources"]
 
 
@@ -433,7 +433,7 @@ def test_inherit_narrowing_audits_a_refused_inherited_block(
 def test_inherit_narrowing_audits_derived_allows_it_keeps_off_disk(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.acp.kas_permissions import _MAX_RULES
+    from aj_crew.acp.kas_permissions import _MAX_RULES
 
     recorder = _SelRecorder()
     monkeypatch.setattr(agent, "sel", lambda: recorder)
@@ -475,7 +475,7 @@ def test_inherit_narrowing_withholds_the_block_from_a_refusing_kiro_cli(
     _floor_monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A release that refuses the field refuses the whole spec, ``deny`` or not."""
-    _floor_monkeypatch.setattr("kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: None)
+    _floor_monkeypatch.setattr("aj_crew.kiro_cli.installed_kiro_cli_version", lambda: None)
     config = {
         "tools": ["fs_read"],
         "allowedTools": ["fs_read"],
@@ -549,9 +549,9 @@ def test_the_tail_writes_no_grant_for_an_auto_approve_verb(
     skill view it runs, rebuilt at every spawn. The tail adds none to the spec and
     takes none away: a grant on file would outlive the verb that backs it, and one
     the owner wrote in ``allowedTools`` is theirs whatever the opt-in says."""
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.mcp.honour_auto_approve = honour
     monkeypatch.setattr(live, "snapshot", lambda: cfg)
     own = "@builder-mcp/OwnersOwn"
@@ -603,7 +603,7 @@ def custom_fork(
     )
     monkeypatch.setattr(agent_state, "get_capabilities", lambda _name: None)
     monkeypatch.setattr(
-        KiroCrewConfig,
+        AjCrewConfig,
         "load",
         classmethod(
             lambda cls: SimpleNamespace(agents={"crew": SimpleNamespace(kiro_agent="crewfork")})

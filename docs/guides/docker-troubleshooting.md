@@ -1,6 +1,6 @@
 # Docker Troubleshooting Guide
 
-Practical solutions for common issues when running Kiro Crew in Docker. For
+Practical solutions for common issues when running Aj Crew in Docker. For
 general setup and configuration, see [docker.md](docker.md).
 
 ---
@@ -14,7 +14,7 @@ general setup and configuration, see [docker.md](docker.md).
 
 ```bash
 # Verify the port mapping
-docker port kirocrew
+docker port ajcrew
 # Expected: 5476/tcp -> 0.0.0.0:5476 (or 127.0.0.1:5476)
 ```
 
@@ -22,36 +22,36 @@ If no mapping shows, you forgot `-p` in `docker run` or the `ports:` key in
 compose. Re-create the container with the correct mapping:
 
 ```bash
-docker run -d --name kirocrew \
+docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
-  -v kirocrew-home:/home/kirocrew \
-  ghcr.io/kirodotdev/kirocrew:stable
+  -v ajcrew-home:/home/ajcrew \
+  ghcr.io/al-jwharah/ajcrew:stable
 ```
 
-### Check KIROCREW_BIND
+### Check AJCREW_BIND
 
-The image defaults to `KIROCREW_BIND=0.0.0.0` so published ports work. If
+The image defaults to `AJCREW_BIND=0.0.0.0` so published ports work. If
 you overrode this to `127.0.0.1`, the gateway only listens on the
 container's internal loopback — unreachable from the host.
 
 ```bash
-docker exec kirocrew printenv KIROCREW_BIND
+docker exec ajcrew printenv AJCREW_BIND
 ```
 
-Remove any override or explicitly set `-e KIROCREW_BIND=0.0.0.0`.
+Remove any override or explicitly set `-e AJCREW_BIND=0.0.0.0`.
 
-### Check KIROCREW_PORT mismatch
+### Check AJCREW_PORT mismatch
 
-If you changed `KIROCREW_PORT` inside the container but did not update the
+If you changed `AJCREW_PORT` inside the container but did not update the
 `-p` mapping, the host forwards to the wrong port:
 
 ```bash
-# If KIROCREW_PORT=8080 inside the container:
-docker run -d --name kirocrew \
+# If AJCREW_PORT=8080 inside the container:
+docker run -d --name ajcrew \
   -p 127.0.0.1:8080:8080 \
-  -e KIROCREW_PORT=8080 \
-  -v kirocrew-home:/home/kirocrew \
-  ghcr.io/kirodotdev/kirocrew:stable
+  -e AJCREW_PORT=8080 \
+  -v ajcrew-home:/home/ajcrew \
+  ghcr.io/al-jwharah/ajcrew:stable
 ```
 
 ### Firewall / Docker Desktop
@@ -59,7 +59,7 @@ docker run -d --name kirocrew \
 - **Linux:** check `iptables -L -n` or `nft list ruleset` for DROP rules
   on the Docker bridge.
 - **macOS / Windows (Docker Desktop):** the VM network stack may need a
-  restart. Try `docker restart kirocrew` or restart Docker Desktop.
+  restart. Try `docker restart ajcrew` or restart Docker Desktop.
 - **Remote host:** ensure the host firewall allows inbound on the published
   port, and use the host's IP (not `localhost`).
 
@@ -67,7 +67,7 @@ docker run -d --name kirocrew \
 
 ## 2. kiro-cli login fails inside the container
 
-**Symptoms:** `docker exec kirocrew kiro-cli login` hangs, shows garbled
+**Symptoms:** `docker exec ajcrew kiro-cli login` hangs, shows garbled
 output, or immediately exits with "not a terminal."
 
 The login command itself, and where its credentials persist, are covered by
@@ -80,7 +80,7 @@ covers what makes that command fail.
 `-it`:
 
 ```bash
-docker exec -it kirocrew kiro-cli login
+docker exec -it ajcrew kiro-cli login
 ```
 
 If you omit `-it`, the login prompt has no TTY to read from and fails.
@@ -97,13 +97,13 @@ Git Bash / MINGW terminals sometimes break TTY passthrough. Use PowerShell
 or `cmd.exe` instead:
 
 ```powershell
-docker exec -it kirocrew kiro-cli login
+docker exec -it ajcrew kiro-cli login
 ```
 
 Or prefix with `winpty` in Git Bash:
 
 ```bash
-winpty docker exec -it kirocrew kiro-cli login
+winpty docker exec -it ajcrew kiro-cli login
 ```
 
 ---
@@ -115,7 +115,7 @@ dashboard cannot save settings / write files.
 
 ### Volume ownership (uid mismatch)
 
-The container runs as `kirocrew` (uid 1000). If the volume was previously
+The container runs as `ajcrew` (uid 1000). If the volume was previously
 owned by another uid, or you bind-mount a host directory owned by a
 different user, writes fail.
 
@@ -124,7 +124,7 @@ different user, writes fail.
 ```bash
 # Named volumes inherit ownership from the image — usually fine.
 # If corrupted, reset ownership:
-docker exec -u 0 kirocrew chown -R kirocrew:kirocrew /home/kirocrew
+docker exec -u 0 ajcrew chown -R ajcrew:ajcrew /home/ajcrew
 ```
 
 **Fix for bind mounts:**
@@ -134,10 +134,10 @@ docker exec -u 0 kirocrew chown -R kirocrew:kirocrew /home/kirocrew
 sudo chown -R 1000:1000 /path/to/host/dir
 
 # Then mount:
-docker run -d --name kirocrew \
+docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
-  -v /path/to/host/dir:/home/kirocrew \
-  ghcr.io/kirodotdev/kirocrew:stable
+  -v /path/to/host/dir:/home/ajcrew \
+  ghcr.io/al-jwharah/ajcrew:stable
 ```
 
 ### Read-only filesystem
@@ -147,10 +147,10 @@ If you accidentally added `:ro` to the volume mount, remove it:
 ```yaml
 # Wrong:
 volumes:
-  - kirocrew-home:/home/kirocrew:ro
+  - ajcrew-home:/home/ajcrew:ro
 # Correct:
 volumes:
-  - kirocrew-home:/home/kirocrew
+  - ajcrew-home:/home/ajcrew
 ```
 
 ### SELinux (Fedora / RHEL)
@@ -158,7 +158,7 @@ volumes:
 On SELinux-enforcing hosts, bind mounts need the `:z` or `:Z` suffix:
 
 ```bash
--v /path/to/host/dir:/home/kirocrew:Z
+-v /path/to/host/dir:/home/ajcrew:Z
 ```
 
 ---
@@ -172,7 +172,7 @@ available on this host"; the startup log says agent command execution is
 ### Check the startup log
 
 ```bash
-docker logs kirocrew | grep '\[entrypoint\]'
+docker logs ajcrew | grep '\[entrypoint\]'
 ```
 
 The fail-closed posture announces itself on the run that chose it. The
@@ -180,11 +180,11 @@ entrypoint emits this as one long line — wrapped here to read:
 
 ```
 [entrypoint] First run: NO inner sandbox backend under this runtime's seccomp
-policy. Seeded /home/kirocrew/.kiro/crew/config.json with sandbox=auto: agent
+policy. Seeded /home/ajcrew/.kiro/crew/config.json with sandbox=auto: agent
 command execution is DISABLED (fail-closed) until you choose one of: (a) permit
 user namespaces (--security-opt seccomp=<profile permitting unshare/clone>) and
 restart to get the inner sandbox, or (b) restart with -e
-KIROCREW_ALLOW_UNSANDBOXED=1 to explicitly accept unsandboxed agent execution
+AJCREW_ALLOW_UNSANDBOXED=1 to explicitly accept unsandboxed agent execution
 (the container is then the only isolation boundary).
 ```
 
@@ -194,9 +194,9 @@ or grep the phrase that a later start does print:
 
 ```bash
 # On a first run: which posture was chosen.
-docker logs kirocrew | grep 'inner sandbox backend'
+docker logs ajcrew | grep 'inner sandbox backend'
 # On every later start with an unset opt-out: the standing reminder.
-docker logs kirocrew | grep 'sandbox_allow_unsandboxed_exec is not set'
+docker logs ajcrew | grep 'sandbox_allow_unsandboxed_exec is not set'
 ```
 
 ### Pick a posture
@@ -213,12 +213,12 @@ The short version: the sandbox needs `unshare(CLONE_NEWUSER)`,
 inside a container depends on the runtime's seccomp and AppArmor profiles;
 hardened profiles commonly block one of them. The startup probe is the source
 of truth and fails closed when no backend works. Prefer
-[Option A — the shipped seccomp profile](docker.md#option-a--kiro-crew-seccomp-profile-recommended);
+[Option A — the shipped seccomp profile](docker.md#option-a--aj-crew-seccomp-profile-recommended);
 fall back to [Option B](docker.md#option-b--explicit-unsandboxed-consent)
 only where you cannot set seccomp or AppArmor policy at all (managed
 Kubernetes, some Docker Desktop setups).
 
-### `KIROCREW_ALLOW_UNSANDBOXED=1` had no effect
+### `AJCREW_ALLOW_UNSANDBOXED=1` had no effect
 
 That variable is read on **first run only** — the entrypoint probes and
 seeds `config.json` when the volume has none, and an existing `config.json`
@@ -274,12 +274,12 @@ livenessProbe:
 
 ### Port mismatch
 
-If you set `KIROCREW_PORT` to a non-default value but did not update the
+If you set `AJCREW_PORT` to a non-default value but did not update the
 health check, the probe hits the wrong port:
 
 ```bash
 # Check what port the gateway is actually listening on:
-docker exec kirocrew printenv KIROCREW_PORT
+docker exec ajcrew printenv AJCREW_PORT
 ```
 
 For custom Kubernetes probes, match the port. The built-in Docker
@@ -291,7 +291,7 @@ only affects external probes that hardcode `5476`.
 If health fails because the process is crashing, check logs:
 
 ```bash
-docker logs --tail 50 kirocrew
+docker logs --tail 50 ajcrew
 ```
 
 Common causes: a corrupted `config.json`, or missing credentials for a
@@ -306,14 +306,14 @@ bad edit:
 ```bash
 # Keep the original under a name no later recovery can clobber, then let the
 # gateway seed defaults on restart:
-docker exec kirocrew sh -c \
-  'mv /home/kirocrew/.kiro/crew/config.json \
-      "/home/kirocrew/.kiro/crew/config.json.broken.$(date +%Y%m%d-%H%M%S)"'
-docker restart kirocrew
+docker exec ajcrew sh -c \
+  'mv /home/ajcrew/.kiro/crew/config.json \
+      "/home/ajcrew/.kiro/crew/config.json.broken.$(date +%Y%m%d-%H%M%S)"'
+docker restart ajcrew
 
 # Read the saved copies on the host to recover your settings:
-docker exec kirocrew ls /home/kirocrew/.kiro/crew/config.json.broken.*
-docker cp kirocrew:/home/kirocrew/.kiro/crew/config.json.broken.<stamp> .
+docker exec ajcrew ls /home/ajcrew/.kiro/crew/config.json.broken.*
+docker cp ajcrew:/home/ajcrew/.kiro/crew/config.json.broken.<stamp> .
 ```
 
 A plain `.broken` suffix would be overwritten the second time you did this,
@@ -334,13 +334,13 @@ layer and vanishes on removal:
 
 ```bash
 # WRONG — no volume:
-docker run -d --name kirocrew -p 5476:5476 ghcr.io/kirodotdev/kirocrew:stable
+docker run -d --name ajcrew -p 5476:5476 ghcr.io/al-jwharah/ajcrew:stable
 
 # CORRECT — named volume:
-docker run -d --name kirocrew \
+docker run -d --name ajcrew \
   -p 127.0.0.1:5476:5476 \
-  -v kirocrew-home:/home/kirocrew \
-  ghcr.io/kirodotdev/kirocrew:stable
+  -v ajcrew-home:/home/ajcrew \
+  ghcr.io/al-jwharah/ajcrew:stable
 ```
 
 ### `docker compose down -v` removes volumes
@@ -363,7 +363,7 @@ If you use a bind mount, ensure the path is correct and consistent:
 
 ```yaml
 volumes:
-  - ./data/kirocrew:/home/kirocrew   # relative path — ensure compose always runs from the same dir
+  - ./data/ajcrew:/home/ajcrew   # relative path — ensure compose always runs from the same dir
 ```
 
 Prefer absolute paths or named volumes for production.
@@ -378,7 +378,7 @@ agent subprocess cannot be safely isolated."
 
 ### Sandbox consent required
 
-If the sandbox probe failed and `KIROCREW_ALLOW_UNSANDBOXED` is not set,
+If the sandbox probe failed and `AJCREW_ALLOW_UNSANDBOXED` is not set,
 agent execution is disabled by design. See [section 4](#4-sandbox-related-errors).
 
 ### Missing tools in the container
@@ -393,10 +393,10 @@ there, being Python's and Debian's own).
 1. **Build a custom image** extending the official one — the reliable route:
 
    ```dockerfile
-   FROM ghcr.io/kirodotdev/kirocrew:stable
+   FROM ghcr.io/al-jwharah/ajcrew:stable
    USER root
    RUN apt-get update && apt-get install -y nodejs npm && rm -rf /var/lib/apt/lists/*
-   USER kirocrew
+   USER ajcrew
    ```
 
 2. **Mount a tools volume read-only.** Only worth trying for a statically
@@ -420,7 +420,7 @@ the wheel to `~/.kiro/crew/skills/` at startup. List what the container actually
 has:
 
 ```bash
-docker exec kirocrew ls /home/kirocrew/.kiro/crew/skills
+docker exec ajcrew ls /home/ajcrew/.kiro/crew/skills
 ```
 
 For a registry skill, use **Customize → Skills → Add Skill**; installation is a
@@ -428,8 +428,8 @@ human-only dashboard action. For your own local skill, copy its directory into
 the global skill tree and restore uid 1000 ownership:
 
 ```bash
-docker cp ./my-skill kirocrew:/home/kirocrew/.kiro/crew/skills/my-skill
-docker exec -u 0 kirocrew chown -R kirocrew:kirocrew /home/kirocrew/.kiro/crew/skills/my-skill
+docker cp ./my-skill ajcrew:/home/ajcrew/.kiro/crew/skills/my-skill
+docker exec -u 0 ajcrew chown -R ajcrew:ajcrew /home/ajcrew/.kiro/crew/skills/my-skill
 ```
 
 The skills catalog reads current on-disk state, so the copied skill appears
@@ -453,7 +453,7 @@ container-level limit as the final guard:
 ```yaml
 # compose.yaml
 services:
-  kirocrew:
+  ajcrew:
     # ...
     deploy:
       resources:
@@ -465,7 +465,7 @@ With a hard limit, the kernel OOM-kills the container rather than swapping
 the entire host. Monitor usage:
 
 ```bash
-docker stats kirocrew --no-stream
+docker stats ajcrew --no-stream
 ```
 
 ### Model downloads
@@ -478,10 +478,10 @@ retry does not accumulate files — only a hard kill mid-download (OOM,
 `docker kill`) can strand one. Check before clearing anything:
 
 ```bash
-docker exec kirocrew ls -la /home/kirocrew/.kiro/crew/models
+docker exec ajcrew ls -la /home/ajcrew/.kiro/crew/models
 # Strays are dot-prefixed and end in .tmp; the real model files are not.
 # -mmin +60 is what makes this safe: it skips a download still in flight.
-docker exec kirocrew find /home/kirocrew/.kiro/crew/models \
+docker exec ajcrew find /home/ajcrew/.kiro/crew/models \
   -maxdepth 1 -name '.*.tmp' -mmin +60 -delete
 ```
 
@@ -524,12 +524,12 @@ gateway's own process environment has no trace of the token you passed in.
 
 `docker/entrypoint.sh` moves every credential it finds in the environment into
 the data home's `.env` (written mode 600), unsets it, and exports
-`_KIROCREW_CREDS_SCRUBBED=1`. `KiroCrewConfig.load_credentials`
-(`src/kiro_crew/config/loader_config.py`) reads that marker and refuses to re-inject
+`_AJCREW_CREDS_SCRUBBED=1`. `AjCrewConfig.load_credentials`
+(`src/aj_crew/config/loader_config.py`) reads that marker and refuses to re-inject
 those keys into `os.environ`, so they never sit in the long-lived gateway's
 `/proc/<pid>/environ`.
 
-`docker exec kirocrew env` is **not** the probe: the daemon injects the
+`docker exec ajcrew env` is **not** the probe: the daemon injects the
 container's configured environment into the processes it starts, so your `-e`
 token appears there whether or not the gateway still holds it. Read a long-lived
 process's `execve`-time snapshot instead — `tini` becomes PID 1 only after the
@@ -542,7 +542,7 @@ verdict, never the value: a scrub that failed must not be diagnosed by pasting
 the credential into your scrollback.
 
 ```bash
-docker exec kirocrew sh -c '
+docker exec ajcrew sh -c '
   if tr "\0" "\n" < /proc/1/environ | grep -q "^$1="; then
     echo "$1 is STILL in PID 1 environ — the scrub did not run"
   else
@@ -552,17 +552,17 @@ docker exec kirocrew sh -c '
 
 The keys moved this way are `CREDENTIAL_KEYS` — the Slack, Discord, Telegram,
 WeCom, Webex, Microsoft Teams, Weixin, Feishu, Jira, Azure DevOps and Bitbucket
-credentials plus `KIROCREW_OWNER_ID` and `KIRO_API_KEY` — and any per-host
+credentials plus `AJCREW_OWNER_ID` and `KIRO_API_KEY` — and any per-host
 `JIRA_TOKEN_<hex>`.
 
 ### Confirm what was stored
 
 ```bash
 # One line per credential moved, printed on every start:
-docker logs kirocrew | grep 'Stored .* and removed it from the environment'
+docker logs ajcrew | grep 'Stored .* and removed it from the environment'
 
 # Key names in the stored file (no values):
-docker exec kirocrew cut -d= -f1 /home/kirocrew/.kiro/crew/.env
+docker exec ajcrew cut -d= -f1 /home/ajcrew/.kiro/crew/.env
 ```
 
 Neither a `Stored …` line nor a warning for your variable means the entrypoint
@@ -579,7 +579,7 @@ start.
 One warning is worth reading closely:
 
 ```
-[entrypoint] WARNING: could not read /home/kirocrew/.kiro/crew/.env (grep exit 2); leaving it untouched and keeping SLACK_BOT_TOKEN in the environment.
+[entrypoint] WARNING: could not read /home/ajcrew/.kiro/crew/.env (grep exit 2); leaving it untouched and keeping SLACK_BOT_TOKEN in the environment.
 ```
 
 The move is abandoned rather than rewriting `.env` with a single key, so the
@@ -595,34 +595,34 @@ can stop credential loading outright. Repair the file's owner and mode — uid
 
 ```bash
 # 1. Container running?
-docker ps -f name=kirocrew
+docker ps -f name=ajcrew
 
 # 2. Logs (last 30 lines)
-docker logs --tail 30 kirocrew
+docker logs --tail 30 ajcrew
 
 # 3. Health status
-docker inspect --format='{{.State.Health.Status}}' kirocrew
+docker inspect --format='{{.State.Health.Status}}' ajcrew
 
 # 4. Port mapping
-docker port kirocrew
+docker port ajcrew
 
 # 5. Volume mounted?
-docker inspect --format='{{range .Mounts}}{{.Destination}} → {{.Source}}{{"\n"}}{{end}}' kirocrew
+docker inspect --format='{{range .Mounts}}{{.Destination}} → {{.Source}}{{"\n"}}{{end}}' ajcrew
 
 # 6. Sandbox posture
-docker logs kirocrew | grep '\[entrypoint\]'
+docker logs ajcrew | grep '\[entrypoint\]'
 
 # 7. Memory usage
-docker stats kirocrew --no-stream
+docker stats ajcrew --no-stream
 ```
 
 ---
 
 ## Still stuck?
 
-- Check the full startup log: `docker logs kirocrew`
+- Check the full startup log: `docker logs ajcrew`
 - Review [docker.md](docker.md) for the complete configuration reference.
-- Open an [issue](https://github.com/kirodotdev/KiroCrew/issues) with your
+- Open an [issue](https://github.com/Al-jwharah/Aj-Crew/issues) with your
   Docker version (`docker version`), OS, and the relevant log output.
 
 **Redact before you post.** A container log is not guaranteed to be free of

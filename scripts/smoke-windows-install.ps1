@@ -28,7 +28,7 @@
 #     bytes THIS install wrote. installer.nsh carries a whole heal path for a
 #     shortcut left naming a stale sibling root, and a .lnk is a pointer no
 #     build-time check can follow.
-#   * the bundled CLI's (kirocrew.cmd, not kiro-cli) reachability as its own NEW
+#   * the bundled CLI's (ajcrew.cmd, not kiro-cli) reachability as its own NEW
 #     process, run from the installed prefix rather than found on PATH.
 #   * that the tree carries NO bundled kiro-cli: the shipped app detects the
 #     user's own install (BUNDLE_KIRO_CLI=1 opts a build in and flips this check).
@@ -36,8 +36,8 @@
 #     root sits where the Electron shell looks for it (gateway-env.js
 #     `bundledKasEnvironment`: `resources\backend-dist\kas\`, the single-arch
 #     layout), carries the `BUNDLED-VERSION` file and install record the shell
-#     reads before exporting `KIROCREW_BUNDLED_KAS_DIR`, and the installed
-#     `kirocrew kas status`, run from the installed interpreter with that
+#     reads before exporting `AJCREW_BUNDLED_KAS_DIR`, and the installed
+#     `ajcrew kas status`, run from the installed interpreter with that
 #     variable naming the root, reports the engine as `(built into the app)`
 #     from inside it. This smoke boots the gateway directly rather than through
 #     the Electron shell, so the variable is set here the way the shell sets it
@@ -48,20 +48,20 @@
 #
 # EVERY IDENTITY IS DERIVED FROM THE ARTIFACT AND THE REGISTRY, never written
 # here. The nightly channel deliberately ships different ones so it can sit
-# beside stable: build-desktop.sh overrides productName to "KiroCrew Nightly",
+# beside stable: build-desktop.sh overrides productName to "AjCrew Nightly",
 # extraMetadata.name and nsis.guid for a "-nightly." version, which changes the
 # install directory, the DisplayName, the app executable's filename, the shortcut
 # name and the uninstall registry key together. Hardcoding stable's spelling
 # would fail this gate on every nightly build. Reading the repo's package.json
 # would be just as wrong: those overrides are electron-builder CLI flags, so the
-# file on disk still says "Kiro Crew" while the artifact says otherwise. The
+# file on disk still says "Aj Crew" while the artifact says otherwise. The
 # identity therefore comes from the registration this install CREATES, found by
 # diffing the uninstall keys around it.
 #
 # WHAT THIS DELIBERATELY DOES NOT ASSERT: a PATH edit. The Windows installer
 # makes none. `nsis` in website/electron/package.json declares no PATH handling
 # and website/electron/build/installer.nsh touches only shortcuts and the
-# updater cache, so there is no `kirocrew` on PATH after a desktop install and
+# updater cache, so there is no `ajcrew` on PATH after a desktop install and
 # never has been. Asserting one would bake a false claim into a gate. The bundled
 # CLI is reached at its packaged path instead, which is what
 # docs/guides/windows-install.md describes and what the managed-server
@@ -236,7 +236,7 @@ if (-not (Test-Path -LiteralPath $blockmap -PathType Leaf)) {
 # the Windows user's TEMP on hosted runners. Use the same root so the upload
 # step can find these logs; retain TEMP for standalone runs outside Actions.
 $tempRoot = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { $env:TEMP }
-$requestedRoot = Join-Path ([IO.Path]::GetFullPath($tempRoot)) "kirocrew-smoke-$PID"
+$requestedRoot = Join-Path ([IO.Path]::GetFullPath($tempRoot)) "ajcrew-smoke-$PID"
 $sentinel = Join-Path $requestedRoot "pre-existing-user-file.txt"
 New-Item -ItemType Directory -Path $requestedRoot -Force | Out-Null
 Set-Content -LiteralPath $sentinel -Value "must survive install and uninstall" -Encoding utf8NoBOM
@@ -311,7 +311,7 @@ if (-not (Test-Path -LiteralPath $sentinel -PathType Leaf)) {
 
 # The app executable, derived: the one .exe in the install root that is not the
 # generated uninstaller. Deriving it is what keeps this channel-agnostic --
-# nightly's is "KiroCrew Nightly.exe".
+# nightly's is "AjCrew Nightly.exe".
 $rootExes = @(Get-ChildItem -LiteralPath $installLocation -File -Filter "*.exe" |
   Where-Object { $_.Name -notlike "Uninstall*" })
 if ($rootExes.Count -ne 1) {
@@ -360,10 +360,10 @@ Write-Host "> Start Menu shortcut targets this install: $($matchingShortcuts[0])
 
 # The bundled CLI, invoked as a NEW process. Not a PATH lookup: the installer
 # makes no PATH edit (see the header). What is asserted is that the packaged
-# launcher runs standalone, before this script sets any KIROCREW_* or PYTHON*
+# launcher runs standalone, before this script sets any AJCREW_* or PYTHON*
 # variable, so nothing this script arranged can be what made it work.
-$backendRoot = Join-Path $installLocation "resources\backend-dist\kirocrew-backend"
-$bundledCli = Join-Path $backendRoot "bin\kirocrew.cmd"
+$backendRoot = Join-Path $installLocation "resources\backend-dist\ajcrew-backend"
+$bundledCli = Join-Path $backendRoot "bin\ajcrew.cmd"
 $bundledPython = Join-Path $backendRoot "python.exe"
 foreach ($required in @($backendRoot, $bundledCli, $bundledPython)) {
   if (-not (Test-Path -LiteralPath $required)) {
@@ -439,10 +439,10 @@ if ($env:BUNDLE_KIRO_CLI -ne "1") {
 }
 
 # The KAS engine root the build stages beside the backend, in the INSTALLED tree:
-# the directory the Electron shell exports as KIROCREW_BUNDLED_KAS_DIR when it
+# the directory the Electron shell exports as AJCREW_BUNDLED_KAS_DIR when it
 # spawns the gateway, read here exactly as the shell reads it (BUNDLED-VERSION,
 # then <version>\install.json). Nothing is run from it: the shell runs nothing at
-# boot either, and whether the record's Node runs from here is what `kirocrew kas
+# boot either, and whether the record's Node runs from here is what `ajcrew kas
 # status` answers after the gateway boot. `BUNDLE_KAS=0` is the build's documented
 # opt-out (it stages no root), honoured the same way BUNDLE_KIRO_CLI=0 is.
 $bundledKasDir = Join-Path $installLocation "resources\backend-dist\kas"
@@ -478,14 +478,14 @@ $gatewayStdout = Join-Path $requestedRoot "gateway-stdout.log"
 $gatewayStderr = Join-Path $requestedRoot "gateway-stderr.log"
 New-Item -ItemType Directory -Path $gatewayHome -Force | Out-Null
 
-# A .cmd shim, because KIROCREW_KIRO_BIN must name something CreateProcess can
+# A .cmd shim, because AJCREW_KIRO_BIN must name something CreateProcess can
 # run: a .py relies on a shebang, which Windows has no equivalent for. It runs
 # the fake backend out of the INSTALLED payload through the INSTALLED
 # interpreter, so nothing from the repository checkout is involved.
 $fakeBackendLauncher = Join-Path $requestedRoot "kiro-backend.cmd"
 Set-Content -LiteralPath $fakeBackendLauncher -Encoding ascii -Value @(
   "@echo off",
-  "`"$bundledPython`" -s -m kiro_crew.testing.fake_acp_backend %*"
+  "`"$bundledPython`" -s -m aj_crew.testing.fake_acp_backend %*"
 )
 
 $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
@@ -493,22 +493,22 @@ $listener.Start()
 $gatewayPort = ([Net.IPEndPoint]$listener.LocalEndpoint).Port
 $listener.Stop()
 
-# An LTS build (release-lts.yml sets KIROCREW_BUILD_EDITION=lts) refuses to start
+# An LTS build (release-lts.yml sets AJCREW_BUILD_EDITION=lts) refuses to start
 # with nobody signed in, and the smoke has no sign-in. So for LTS the assertion is
 # the refusal itself: the gateway, started as the desktop app starts it
-# (KIROCREW_DESKTOP_GATEWAY), exits with `LTS boot refused` and never serves.
-$isLts = $env:KIROCREW_BUILD_EDITION -eq "lts"
+# (AJCREW_DESKTOP_GATEWAY), exits with `LTS boot refused` and never serves.
+$isLts = $env:AJCREW_BUILD_EDITION -eq "lts"
 $ltsRefusal = "LTS boot refused"
 
 $savedEnv = @{}
 $gatewayEnv = @{
-  KIROCREW_HOME = $gatewayHome
+  AJCREW_HOME = $gatewayHome
   KIRO_HOME = (Join-Path $gatewayHome "kiro")
-  KIROCREW_WORKSPACE = (Join-Path $gatewayHome "workspace")
-  KIROCREW_KIRO_BIN = $fakeBackendLauncher
-  KIROCREW_FAKE_ACP_TEST_MODE = "1"
+  AJCREW_WORKSPACE = (Join-Path $gatewayHome "workspace")
+  AJCREW_KIRO_BIN = $fakeBackendLauncher
+  AJCREW_FAKE_ACP_TEST_MODE = "1"
   # Embeddings are default-on; never let a smoke test kick the ~610MB download.
-  KIROCREW_SKIP_MODEL_DOWNLOAD = "1"
+  AJCREW_SKIP_MODEL_DOWNLOAD = "1"
   # The launcher must not inherit a PYTHONPATH from this job, and bytecode this
   # boot compiles goes OUTSIDE the installed tree -- the same thing the shipped
   # desktop app does. Left unset, `__pycache__` lands beside the bundled sources,
@@ -521,7 +521,7 @@ $gatewayEnv = @{
   PYTHONUTF8 = "1"
   PYTHONIOENCODING = "utf-8:backslashreplace"
 }
-if ($isLts) { $gatewayEnv["KIROCREW_DESKTOP_GATEWAY"] = "1" }
+if ($isLts) { $gatewayEnv["AJCREW_DESKTOP_GATEWAY"] = "1" }
 
 $gateway = $null
 $healthy = $false
@@ -538,7 +538,7 @@ try {
 
   # -s: no user site-packages, so the installed payload is what runs.
   $gateway = Start-Process -FilePath $bundledPython -ArgumentList @(
-    "-s", "-P", "-m", "kiro_crew", "gateway", "--no-open", "--port", "$gatewayPort"
+    "-s", "-P", "-m", "aj_crew", "gateway", "--no-open", "--port", "$gatewayPort"
   ) -WorkingDirectory $installLocation -RedirectStandardOutput $gatewayStdout `
     -RedirectStandardError $gatewayStderr -WindowStyle Hidden -PassThru
 
@@ -600,8 +600,8 @@ if ($isLts) {
 }
 
   # BUNDLE_KIRO_CLI=1 builds only: the installed product must RESOLVE the
-  # bundled copy the way the desktop shell wires it (KIROCREW_BUNDLED_KIRO_DIR,
-  # set by website/electron/gateway-env.js at spawn). `kirocrew doctor` prints
+  # bundled copy the way the desktop shell wires it (AJCREW_BUNDLED_KIRO_DIR,
+  # set by website/electron/gateway-env.js at spawn). `ajcrew doctor` prints
   # the binary a session spawns on its kiro-cli row, so that row naming the
   # installed exe is the proof; the fake backend above stays pinned for the
   # gateway boot because the boot assertion is about the interpreter, not the
@@ -610,19 +610,19 @@ if ($isLts) {
   if ($env:BUNDLE_KIRO_CLI -eq "1") {
     $doctorOut = Join-Path $requestedRoot "doctor.out"
     $doctorErr = Join-Path $requestedRoot "doctor.err"
-    $savedKiroBin = $env:KIROCREW_KIRO_BIN
-    Remove-Item -Path "Env:KIROCREW_KIRO_BIN" -ErrorAction SilentlyContinue
-    Set-Item -Path "Env:KIROCREW_BUNDLED_KIRO_DIR" -Value $bundledKiroDir
+    $savedKiroBin = $env:AJCREW_KIRO_BIN
+    Remove-Item -Path "Env:AJCREW_KIRO_BIN" -ErrorAction SilentlyContinue
+    Set-Item -Path "Env:AJCREW_BUNDLED_KIRO_DIR" -Value $bundledKiroDir
     Set-Item -Path "Env:KIRO_NO_AUTO_UPDATE" -Value "1"
     try {
       $doctorExit = Wait-BoundedExit -FilePath $bundledPython -Arguments @(
-        "-s", "-P", "-m", "kiro_crew", "doctor"
-      ) -TimeoutSeconds $MaxHealthSeconds -What "Installed kirocrew doctor" `
+        "-s", "-P", "-m", "aj_crew", "doctor"
+      ) -TimeoutSeconds $MaxHealthSeconds -What "Installed ajcrew doctor" `
         -StdoutFile $doctorOut -StderrFile $doctorErr
     } finally {
-      Remove-Item -Path "Env:KIROCREW_BUNDLED_KIRO_DIR" -ErrorAction SilentlyContinue
+      Remove-Item -Path "Env:AJCREW_BUNDLED_KIRO_DIR" -ErrorAction SilentlyContinue
       Remove-Item -Path "Env:KIRO_NO_AUTO_UPDATE" -ErrorAction SilentlyContinue
-      if ($null -ne $savedKiroBin) { Set-Item -Path "Env:KIROCREW_KIRO_BIN" -Value $savedKiroBin }
+      if ($null -ne $savedKiroBin) { Set-Item -Path "Env:AJCREW_KIRO_BIN" -Value $savedKiroBin }
     }
     $doctorText = (Get-Content -LiteralPath $doctorOut -Raw -ErrorAction SilentlyContinue)
     if (-not $doctorText) { $doctorText = "" }
@@ -631,13 +631,13 @@ if ($isLts) {
     if (-not $kiroRow -or ($kiroRow -notmatch [Regex]::Escape($bundledKiro))) {
       Write-Host "doctor stdout tail:"; Get-Content -LiteralPath $doctorOut -Tail 40 -ErrorAction SilentlyContinue
       Write-Host "doctor stderr tail:"; Get-Content -LiteralPath $doctorErr -Tail 20 -ErrorAction SilentlyContinue
-      throw "The installed kirocrew doctor did not resolve the bundled kiro-cli at $bundledKiro."
+      throw "The installed ajcrew doctor did not resolve the bundled kiro-cli at $bundledKiro."
     }
   }
 
 # The installed product must READ the bundled KAS engine the way the desktop
-# shell hands it over: KIROCREW_BUNDLED_KAS_DIR naming the staged root found
-# above. `kirocrew kas status` runs the same reader a session spawn uses
+# shell hands it over: AJCREW_BUNDLED_KAS_DIR naming the staged root found
+# above. `ajcrew kas status` runs the same reader a session spawn uses
 # (acp.kas_bundle.installed_bundle: the data home's engines\kas first, then this
 # root) and its `installed:` row says which one answered; `(built into the app)`
 # is the staged root, and the `engine:` row must sit inside it. The data home is
@@ -648,9 +648,9 @@ if ($env:BUNDLE_KAS -ne "0") {
   $kasStatusOut = Join-Path $requestedRoot "kas-status.out"
   $kasStatusErr = Join-Path $requestedRoot "kas-status.err"
   $kasEnv = @{
-    KIROCREW_HOME = $gatewayHome
-    KIROCREW_BUNDLED_KAS_DIR = $bundledKasDir
-    KIROCREW_SKIP_MODEL_DOWNLOAD = "1"
+    AJCREW_HOME = $gatewayHome
+    AJCREW_BUNDLED_KAS_DIR = $bundledKasDir
+    AJCREW_SKIP_MODEL_DOWNLOAD = "1"
     # Bytecode this run compiles stays OUTSIDE the installed tree, for the same
     # uninstall-residue reason the gateway boot above gives.
     PYTHONPYCACHEPREFIX = (Join-Path $gatewayHome "pycache")
@@ -668,8 +668,8 @@ if ($env:BUNDLE_KAS -ne "0") {
       }
     }
     $kasStatusExit = Wait-BoundedExit -FilePath $bundledPython -Arguments @(
-      "-s", "-P", "-m", "kiro_crew", "kas", "status"
-    ) -TimeoutSeconds $MaxCliSeconds -What "Installed kirocrew kas status" `
+      "-s", "-P", "-m", "aj_crew", "kas", "status"
+    ) -TimeoutSeconds $MaxCliSeconds -What "Installed ajcrew kas status" `
       -StdoutFile $kasStatusOut -StderrFile $kasStatusErr
   } finally {
     foreach ($name in $savedKasEnv.Keys) {
@@ -689,7 +689,7 @@ if ($env:BUNDLE_KAS -ne "0") {
     if ($kasStatusExit -eq 0 -or -not $kasStatusErrText -or -not $kasStatusErrText.Contains($ltsRefusal)) {
       Write-Host "kas status stdout tail:"; Get-Content -LiteralPath $kasStatusOut -Tail 40 -ErrorAction SilentlyContinue
       Write-Host "kas status stderr tail:"; Get-Content -LiteralPath $kasStatusErr -Tail 20 -ErrorAction SilentlyContinue
-      throw "The signed-out LTS kirocrew kas status did not refuse with '$ltsRefusal' (exit $kasStatusExit)."
+      throw "The signed-out LTS ajcrew kas status did not refuse with '$ltsRefusal' (exit $kasStatusExit)."
     }
     $kasStatusRow = "refused signed out (LTS)"
     Write-Host "> Signed-out LTS kas status refused (exit $kasStatusExit), as it must"
@@ -702,11 +702,11 @@ if ($env:BUNDLE_KAS -ne "0") {
   if (-not $kasStatusRow -or ($kasStatusRow -notmatch [Regex]::Escape("(built into the app)"))) {
     Write-Host "kas status stdout tail:"; Get-Content -LiteralPath $kasStatusOut -Tail 40 -ErrorAction SilentlyContinue
     Write-Host "kas status stderr tail:"; Get-Content -LiteralPath $kasStatusErr -Tail 20 -ErrorAction SilentlyContinue
-    throw "The installed kirocrew kas status did not report the bundled KAS engine as built into the app (KIROCREW_BUNDLED_KAS_DIR=$bundledKasDir)."
+    throw "The installed ajcrew kas status did not report the bundled KAS engine as built into the app (AJCREW_BUNDLED_KAS_DIR=$bundledKasDir)."
   }
   if (-not $kasEngineRow -or ($kasEngineRow -notmatch [Regex]::Escape($bundledKasDir + "\"))) {
     Write-Host "kas status stdout tail:"; Get-Content -LiteralPath $kasStatusOut -Tail 40 -ErrorAction SilentlyContinue
-    throw "The installed kirocrew kas status resolved an engine outside the bundled root $bundledKasDir."
+    throw "The installed ajcrew kas status resolved an engine outside the bundled root $bundledKasDir."
   }
   }
 }

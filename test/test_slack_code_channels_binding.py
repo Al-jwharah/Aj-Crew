@@ -12,18 +12,18 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.slack import features
-from kiro_crew.slack.agent_sessions.status import AgentSessionStatus
-from kiro_crew.slack.code_channels import binding as binding_mod
-from kiro_crew.slack.code_channels import hooks, status
-from kiro_crew.slack.code_channels.binding import (
+from aj_crew.slack import features
+from aj_crew.slack.agent_sessions.status import AgentSessionStatus
+from aj_crew.slack.code_channels import binding as binding_mod
+from aj_crew.slack.code_channels import hooks, status
+from aj_crew.slack.code_channels.binding import (
     SessionSpec,
     create_bound_session,
     mirror_post_thread,
     notify_turn_end,
     notify_turn_start,
 )
-from kiro_crew.slack.code_channels.store import (
+from aj_crew.slack.code_channels.store import (
     ROUTE_CODE_CHANNEL,
     Binding,
     CodeChannelStore,
@@ -150,7 +150,7 @@ def test_unreadable_or_mismatched_store_reads_as_empty(tmp_path: Any, content: s
 
 
 def test_routes_expire_and_are_capped(tmp_path: Any, monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.slack.code_channels import store as store_mod
+    from aj_crew.slack.code_channels import store as store_mod
 
     monkeypatch.setattr(store_mod, "MAX_ROUTES", 3)
     store = CodeChannelStore(tmp_path / "s.json")
@@ -167,7 +167,7 @@ def test_routes_expire_and_are_capped(tmp_path: Any, monkeypatch: pytest.MonkeyP
 def test_past_the_cap_stay_routes_go_before_a_code_channel_route(
     tmp_path: Any, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.slack.code_channels import store as store_mod
+    from aj_crew.slack.code_channels import store as store_mod
 
     monkeypatch.setattr(store_mod, "MAX_ROUTES", 2)
     store = CodeChannelStore(tmp_path / "s.json")
@@ -243,7 +243,7 @@ def test_update_binding_refuses_unknown_fields_and_the_key(tmp_path: Any, bad: d
 def test_a_failed_write_raises_and_changes_nothing(
     tmp_path: Any, monkeypatch: pytest.MonkeyPatch, write: Any
 ) -> None:
-    from kiro_crew.slack.code_channels import store as store_mod
+    from aj_crew.slack.code_channels import store as store_mod
 
     store = CodeChannelStore(tmp_path / "s.json")
     store.put_binding(BINDING)
@@ -315,7 +315,7 @@ async def test_a_system_notice_from_the_channels_session_posts_top_level(
     the linked thread."""
     from unittest.mock import AsyncMock
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     posted: list[Any] = []
     client = AsyncMock()
@@ -482,7 +482,7 @@ async def test_a_status_refusal_is_lifted_when_slack_capabilities_are_reprobed(
     """A ``feature_disabled`` status write latches only the code-channel driver;
     once the admin enables the feature, a reconnect or Check again re-probes and
     the next turn's status goes through again, without a gateway restart."""
-    from kiro_crew.slack import features
+    from aj_crew.slack import features
 
     slack = _StatusSlack(answer=_Refused("feature_disabled"))
     status.set_slack_provider(lambda: slack)
@@ -513,7 +513,7 @@ async def test_a_reprobe_during_a_refused_status_write_still_lifts_its_latch(
 ) -> None:
     """Check again lands while a write Slack will refuse is in flight: the latch
     that refusal sets belongs to the probe before, so the next write goes out."""
-    from kiro_crew.slack import features
+    from aj_crew.slack import features
 
     class _ReprobedMidCall(_StatusSlack):
         async def _api_call(self, method: str, **kwargs: Any) -> Any:
@@ -585,7 +585,7 @@ async def test_a_status_refusal_stops_only_code_channel_status(
     """A ``missing_scope`` on a channel's status write stops that driver's status
     writes and latches NO feature: thread agent sessions stay as they were, and
     code channels themselves keep routing (status is decoration on the turn)."""
-    from kiro_crew.slack import features
+    from aj_crew.slack import features
 
     refusal = Exception("missing_scope")
     refusal.response = {"error": "missing_scope"}  # type: ignore[attr-defined]
@@ -697,7 +697,7 @@ async def test_bound_session_is_filed_pinned_titled_persisted_and_linked(tmp_pat
     assert state.get_linked_slot("300.000001") is slot
     # The map write is the debounced, off-loop one, awaited before returning.
     state.sessions.aflush.assert_awaited()
-    from kiro_crew.dashboard.chat_utils_slots import slot_history_key
+    from aj_crew.dashboard.chat_utils_slots import slot_history_key
 
     meta = state.conversation_log.get_metadata(slot_history_key(slot))
     assert meta and meta.get("folder_id") == "f1"
@@ -711,8 +711,8 @@ async def test_a_picked_template_is_never_bound_as_a_same_named_crewmate(
     model pin: the defaults picker's template pick must not resolve to it."""
     from chat_test_helpers import _make_state
 
-    from kiro_crew.config import loader
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.config import loader
+    from aj_crew.dashboard import chat_handlers
 
     real = loader.resolve_agent_bindings
     kinds: list[str] = []
@@ -745,7 +745,7 @@ async def test_birth_fields_merge_into_metadata_the_agent_selection_already_wrot
 ) -> None:
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard.chat_utils_slots import slot_history_key
+    from aj_crew.dashboard.chat_utils_slots import slot_history_key
 
     state = _make_state(tmp_path)
     state._folders.append({"id": "f1", "name": "Slack work", "parent_id": "", "order": 0})
@@ -776,7 +776,7 @@ async def test_a_session_whose_birth_cannot_be_saved_is_retracted(
 ) -> None:
     from chat_test_helpers import _make_state
 
-    import kiro_crew.dashboard.chat_handlers as chat_handlers
+    import aj_crew.dashboard.chat_handlers as chat_handlers
 
     state = _make_state(tmp_path)
     state.conversation_log.update_metadata_if = lambda *_a, **_k: False
@@ -800,7 +800,7 @@ async def test_a_birth_save_that_raises_retracts_the_session(
 ) -> None:
     from chat_test_helpers import _make_state
 
-    import kiro_crew.dashboard.chat_handlers as chat_handlers
+    import aj_crew.dashboard.chat_handlers as chat_handlers
 
     state = _make_state(tmp_path)
     state.conversation_log.update_metadata_if = lambda *_a, **_k: False
@@ -827,18 +827,18 @@ async def test_a_default_project_is_resolved_off_the_loop(
 
     from chat_test_helpers import _make_state
 
-    from kiro_crew.config import KiroCrewConfig
+    from aj_crew.config import AjCrewConfig
 
     project = tmp_path / "proj"
     project.mkdir()
-    real_load = KiroCrewConfig.load
+    real_load = AjCrewConfig.load
 
     def load_with_default(*a: Any, **k: Any) -> Any:
         cfg = real_load(*a, **k)
         cfg.dashboard = SimpleNamespace(**{**vars(cfg.dashboard), "default_project": str(project)})
         return cfg
 
-    monkeypatch.setattr(KiroCrewConfig, "load", staticmethod(load_with_default))
+    monkeypatch.setattr(AjCrewConfig, "load", staticmethod(load_with_default))
     on_loop: list[bool] = []
     real = binding_mod._usable_project_dir
 
@@ -860,7 +860,7 @@ async def test_a_failed_binding_write_or_flush_takes_the_linked_session_down(
 ) -> None:
     from chat_test_helpers import _make_state
 
-    from kiro_crew.slack.code_channels import store as store_mod
+    from aj_crew.slack.code_channels import store as store_mod
 
     for failure in ("binding", "flush"):
         state = _make_state(tmp_path / failure)
@@ -901,7 +901,7 @@ async def test_a_link_landing_before_the_binding_is_stored_is_refused(
     rival link in that window is refused, and after it the binding refuses it."""
     from chat_test_helpers import _make_state
 
-    from kiro_crew.slack.code_channels import store as store_mod
+    from aj_crew.slack.code_channels import store as store_mod
 
     state = _make_state(tmp_path)
     rival = state.get_or_create_slot("rival")
@@ -944,7 +944,7 @@ async def test_a_failed_bind_releases_its_anchor_hold(tmp_path: Any) -> None:
     its link are retracted, and the anchor is an ordinary thread again."""
     from chat_test_helpers import _make_state
 
-    from kiro_crew.slack.code_channels import store as store_mod
+    from aj_crew.slack.code_channels import store as store_mod
 
     state = _make_state(tmp_path)
     other = state.get_or_create_slot("other")
@@ -978,7 +978,7 @@ async def test_a_fresh_home_resolves_to_the_conductor_in_code_channels(tmp_path:
     )
     spec = await binding_mod.resolve_session_spec(state, cfg)
     [folder] = [f for f in state._folders if f.get("name") == "Code channels"]
-    assert spec.folder_id == folder["id"] and spec.agent == "kirocrew-conductor"
+    assert spec.folder_id == folder["id"] and spec.agent == "ajcrew-conductor"
     # The next channel files into the same folder.
     assert (await binding_mod.resolve_session_spec(state, cfg)).folder_id == folder["id"]
     assert len([f for f in state._folders if f.get("name") == "Code channels"]) == 1
@@ -1023,7 +1023,7 @@ async def test_code_channels_folder_is_created_once_reused_and_recreated(tmp_pat
         state, binding_mod.AUTO_FOLDER_PATH, default_agent=binding_mod.AUTO_FOLDER_AGENT
     )
     [folder] = [f for f in state._folders if f["id"] == first]
-    assert folder["name"] == "Code channels" and folder["default_agent"] == "kirocrew-conductor"
+    assert folder["name"] == "Code channels" and folder["default_agent"] == "ajcrew-conductor"
     # A second channel reuses it: no duplicate.
     assert await binding_mod.ensure_folder_path(state, "Code channels") == first
     assert len([f for f in state._folders if f.get("name") == "Code channels"]) == 1
@@ -1048,7 +1048,7 @@ async def test_folder_auto_create_is_sel_audited_and_keeps_a_person_set_agent(
 ) -> None:
     from chat_test_helpers import _make_state
 
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     events: list[dict[str, Any]] = []
     monkeypatch.setattr(
@@ -1087,13 +1087,13 @@ async def test_folder_auto_create_is_sel_audited_and_keeps_a_person_set_agent(
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("agent", ["kirocrew-conductor", "kirocrew-team-lead"])
+@pytest.mark.parametrize("agent", ["ajcrew-conductor", "ajcrew-team-lead"])
 async def test_a_conductor_default_agent_binds_the_session_explicitly(
     tmp_path: Any, agent: str
 ) -> None:
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard.chat_utils_slots import slot_history_key
+    from aj_crew.dashboard.chat_utils_slots import slot_history_key
 
     state = _make_state(tmp_path)
     folder_id = await binding_mod.ensure_folder_path(state, "Code channels", default_agent=agent)

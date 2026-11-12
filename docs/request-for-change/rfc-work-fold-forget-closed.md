@@ -1,7 +1,7 @@
 ---
 title: Work fold forgets closed items — bound a board by what is open, not by what it ever created
 status: accepted
-author: kirocrew agent session
+author: ajcrew agent session
 created: 2026-10-10
 last-audited: 2026-10-10
 audited-at: bf1723d3f
@@ -25,10 +25,10 @@ so that one is not edited.
 ## 1. Problem
 
 A conductor board refuses its 257th `create` for good, even when only one item on it
-is still open. `_create_item` (`src/kiro_crew/work_ledger_writes.py`) refuses with
+is still open. `_create_item` (`src/aj_crew/work_ledger_writes.py`) refuses with
 `item_store_full` once `created_total >= MAX_STORED_ITEMS_PER_CONDUCTOR` (256,
 `work_vocab.WORK_STORED_ITEM_LIMIT`). The counter only climbs; closing an item gives
-nothing back. The only way out is `kirocrew ledger-sweep --purge`, run by a person,
+nothing back. The only way out is `ajcrew ledger-sweep --purge`, run by a person,
 and the sweep only removes a board whose items are all closed **and** idle for 30
 days (`ledger_sweep.DEFAULT_OLDER_THAN_DAYS`). A long-lived queue board is never idle,
 so it stays stuck.
@@ -144,7 +144,7 @@ records past the window", the implementation does not.
 | `crew_main_contract.py` | `_work_fields` reads counters instead of counting items |
 | `dashboard/handlers/work_ledger_board.py`, `dashboard/handlers/work_ledger.py`, board UI | show recent closed items, and say older history is in the crew log |
 | `ledger_sweep.py` | unchanged purge rule; optional per-item trim of old closed records |
-| `docs/system-specs/modules/session-work-ledger.md`, `src/kiro_crew/docs/work-ledger.md` | describe the open-bounded board |
+| `docs/system-specs/modules/session-work-ledger.md`, `src/aj_crew/docs/work-ledger.md` | describe the open-bounded board |
 | tests | replay with interleaved create/close past 256; late report after close; rebuild parity; counters |
 
 ## 6. Alternatives considered

@@ -16,9 +16,9 @@ from llm_pool_helpers import (  # noqa: F401 -- the autouse fixture registers by
     _zero_tool_client,
 )
 
-from kiro_crew.agent_sdk import backends as acp_backends
-from kiro_crew.knowledge import llm_pool as llm_pool_mod
-from kiro_crew.knowledge.llm_pool import (
+from aj_crew.agent_sdk import backends as acp_backends
+from aj_crew.knowledge import llm_pool as llm_pool_mod
+from aj_crew.knowledge.llm_pool import (
     AcpWorker,
     KnowledgeHarnessUnavailable,
     _get_acp_backend,
@@ -43,7 +43,7 @@ def _registry(_floor_monkeypatch):
 
 @pytest.fixture
 def lts(monkeypatch):
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 def _selectable(monkeypatch, *backends):
@@ -99,7 +99,7 @@ class TestThePoolSpawnsNothingWhenRefused:
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
             patch(
-                "kiro_crew.knowledge.llm_pool.AcpClient",
+                "aj_crew.knowledge.llm_pool.AcpClient",
                 side_effect=AssertionError("no process may start"),
             ),
         ):
@@ -119,7 +119,7 @@ class TestThePoolSpawnsNothingWhenRefused:
         first.spec_zero_tools = False
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", side_effect=[first]) as mk,
+            patch("aj_crew.knowledge.llm_pool.AcpClient", side_effect=[first]) as mk,
         ):
             worker = AcpWorker(acp_backend=OPENCODE)
             with pytest.raises(KnowledgeHarnessUnavailable):
@@ -139,7 +139,7 @@ class TestThePoolSpawnsNothingWhenRefused:
         first.spec_zero_tools = False
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", side_effect=[first]) as mk,
+            patch("aj_crew.knowledge.llm_pool.AcpClient", side_effect=[first]) as mk,
         ):
             worker = AcpWorker(acp_backend=OPENCODE)
             with pytest.raises(KnowledgeHarnessUnavailable):
@@ -160,7 +160,7 @@ class TestThePoolSpawnsNothingWhenRefused:
         second.spec_zero_tools = False
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", side_effect=[first, second]) as mk,
+            patch("aj_crew.knowledge.llm_pool.AcpClient", side_effect=[first, second]) as mk,
         ):
             worker = AcpWorker(acp_backend=OPENCODE)
             await worker.start()
@@ -175,7 +175,7 @@ class TestThePoolSpawnsNothingWhenRefused:
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
             patch(
-                "kiro_crew.knowledge.llm_pool.AcpClient",
+                "aj_crew.knowledge.llm_pool.AcpClient",
                 side_effect=AssertionError("no process may start"),
             ),
         ):
@@ -192,7 +192,7 @@ class TestThePoolSpawnsNothingWhenRefused:
         client.backend = KIRO
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", side_effect=[client]) as mk,
+            patch("aj_crew.knowledge.llm_pool.AcpClient", side_effect=[client]) as mk,
         ):
             worker = AcpWorker(acp_backend=KIRO)
             try:
@@ -210,7 +210,7 @@ class TestThePoolSpawnsNothingWhenRefused:
         client.backend = KIRO
         with (
             patch("pathlib.Path.home", return_value=tmp_path),
-            patch("kiro_crew.knowledge.llm_pool.AcpClient", side_effect=[client]) as mk,
+            patch("aj_crew.knowledge.llm_pool.AcpClient", side_effect=[client]) as mk,
         ):
             worker = AcpWorker(acp_backend=KIRO)
             try:

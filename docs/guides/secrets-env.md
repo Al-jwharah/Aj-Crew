@@ -1,7 +1,7 @@
 # Passing secrets to MCP servers
 
 MCP servers often need API keys, database passwords, or other secrets at
-runtime. Their specs can live in `~/.kiro/crew/mcp.json` (Kiro Crew scope) or
+runtime. Their specs can live in `~/.kiro/crew/mcp.json` (Aj Crew scope) or
 `~/.kiro/settings/mcp.json` (Kiro global scope), and either file may be shared or
 copied with an agent configuration. Plain `env` values in those files are not
 protected, so use vault references instead.
@@ -60,11 +60,11 @@ server's `env` directly instead.
 An agent file you maintain by hand under `~/.kiro/agents/` is launched as
 written, so route any server it declares with a `secret://` value.
 
-Such a server is kept in `~/.kiro/agents/kirocrew.json` with
-`"disabled": true` and `"x-kirocrew-withheld": true`. If you roll back to a
+Such a server is kept in `~/.kiro/agents/ajcrew.json` with
+`"disabled": true` and `"x-ajcrew-withheld": true`. If you roll back to a
 release without this check, that release's rebuild switches a server declared
 in either `mcp.json` back on by itself. A server declared only in
-`kirocrew.json` stays off: the older release reads its `disabled` as your own
+`ajcrew.json` stays off: the older release reads its `disabled` as your own
 switch-off and lists no row for it in MCP Management. To clear it, delete both
 keys from its entry in that file. Either way the older release can again start
 the server with the literal `secret://` text as its credential.
@@ -97,7 +97,7 @@ are each offered their own `GERRIT_HTTP_CREDENTIAL_<HEX>` row. The dashboard
 labels each row by host, so the hex-suffixed name is never typed by hand.
 
 A stored Connections OAuth client secret,
-`KIROCREW_CONNECTIONS_<SLUG>_CLIENT_SECRET`, appears in the catalog as kind
+`AJCREW_CONNECTIONS_<SLUG>_CLIENT_SECRET`, appears in the catalog as kind
 `connections_client_secret`, with `host` set to the provider slug. It is listed
 only once stored. The Secrets routes do not edit it: a write or delete of that
 name returns `409` with code `managed_by_connections`; change it under
@@ -132,11 +132,11 @@ process reads from its own environment:
 
 ```bash
 # Dry run (default): report what WOULD migrate, change nothing.
-kirocrew secrets import
+ajcrew secrets import
 
 # Apply: store the tokens in the vault and rewrite each .env line
 # to a secret:// reference.
-kirocrew secrets import --apply
+ajcrew secrets import --apply
 ```
 
 The importer reads only the data-home `.env` (there is no `--file` option, so a
@@ -180,7 +180,7 @@ to the legacy `.env` / environment value.  Per host it looks up the vault
 secret `JIRA_TOKEN_<HEX>` (the hex-encoded host name); for a single configured
 host it also accepts the global `JIRA_API_TOKEN` vault secret.  If neither vault
 entry exists it uses the same `.env` value it always has, so existing setups
-keep working without change — run `kirocrew secrets import --apply` to move the
+keep working without change — run `ajcrew secrets import --apply` to move the
 Jira token into the vault when you are ready.
 
 ### Remote (URL) servers: headers are not resolved
@@ -191,7 +191,7 @@ those as written, so a reference such as
 `"headers": { "x-api-key": "secret://MY_TOKEN" }` would reach the server as the
 literal text `secret://MY_TOKEN`.
 
-Kiro Crew does not send it silently:
+Aj Crew does not send it silently:
 
 - The MCP server probe (the dashboard's MCP server status) reports the server as
   an error naming the header, and does not contact the server.
@@ -218,7 +218,7 @@ The value then lives in `.env` rather than the encrypted vault, with the
 limits described under [What NOT to do](#what-not-to-do).
 
 Other backends (Claude, Codex, OpenCode, Goose, DeepSeek) receive a remote
-server's headers from Kiro Crew as written, and Kiro Crew does not rely on them
+server's headers from Aj Crew as written, and Aj Crew does not rely on them
 expanding `${env:}`; the KAS backend does not receive declared headers. On those
 backends there is no documented way to supply a header value from the vault or
 from `.env` yet.
@@ -227,7 +227,7 @@ from `.env` yet.
 
 ## Why service-level environment variables are not an MCP-only fallback
 
-The built-in Linux service reads `/etc/kirocrew/kirocrew.env`, but every value in
+The built-in Linux service reads `/etc/ajcrew/ajcrew.env`, but every value in
 that file enters the gateway process first. An unknown credential key then
 reaches the agent unless the source build adds it to `_AGENT_DENIED_ENV_KEYS`.
 Adding it to that scrub list is not a portable MCP delivery mechanism either: a
@@ -251,19 +251,19 @@ topologies and resolves the value only on the trusted side of the server spawn.
 ## Non-secret environment for the agent: `agent.env`
 
 `agent.env` in `config.json` sets environment variables on every agent process
-Kiro Crew starts for a chat session, background session or subagent, on every
+Aj Crew starts for a chat session, background session or subagent, on every
 backend, so shell tool calls and the MCP servers the agent starts inherit them.
 The gateway itself and MCP servers the gateway hosts do not get them. Use it for configuration, never for credentials:
 
 ```bash
-kirocrew config set agent.env '{"HTTPS_PROXY": "http://proxy.example:3128", "NO_PROXY": "localhost,127.0.0.1", "NODE_EXTRA_CA_CERTS": "/etc/ssl/certs/corp.pem", "AWS_PROFILE": "dev"}'
+ajcrew config set agent.env '{"HTTPS_PROXY": "http://proxy.example:3128", "NO_PROXY": "localhost,127.0.0.1", "NODE_EXTRA_CA_CERTS": "/etc/ssl/certs/corp.pem", "AWS_PROFILE": "dev"}'
 ```
 
 - A value here wins over the same variable in the gateway's own environment;
-  the variables Kiro Crew sets for the session itself still win over it, except
-  defaults Kiro Crew only fills in when a name is unset (such as
+  the variables Aj Crew sets for the session itself still win over it, except
+  defaults Aj Crew only fills in when a name is unset (such as
   `agent.child_env_defaults`), which this map overrides.
-- A name this map refuses is rejected when you save it: `kirocrew config set`
+- A name this map refuses is rejected when you save it: `ajcrew config set`
   (and any dashboard write) fails with the key and the reason, and nothing is
   written. A refused name that a hand edit puts in `config.json` is ignored with
   a warning naming the key.
@@ -272,7 +272,7 @@ kirocrew config set agent.env '{"HTTPS_PROXY": "http://proxy.example:3128", "NO_
   `PASSWD` or `CREDENTIAL` (`API_KEY`, `GITHUB_TOKEN`, `APIKEY`). A name that only
   contains such a word, such as `GOPRIVATE` or `TOKENIZERS_PARALLELISM`, is
   accepted. Put credentials in the vault and reference them with `secret://`.
-- Names Kiro Crew or the sandbox owns (`PATH`, `HOME`, `TMPDIR`, `KIROCREW_*`,
+- Names Aj Crew or the sandbox owns (`PATH`, `HOME`, `TMPDIR`, `AJCREW_*`,
   `KIRO_*`, `OPENCODE_*`, and similar) are refused. So are the names known to
   make a shell, the dynamic loader, a language runtime or a tool the agent runs
   execute code the command did not name: `LD_*`, `DYLD_*`, `PYTHON*`,

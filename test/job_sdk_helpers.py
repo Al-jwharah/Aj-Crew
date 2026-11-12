@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.job_sdk import JobRun, JobSDK, forget_sdk
-from kiro_crew.testing.wait import wait_until
+from aj_crew.apps.job_sdk import JobRun, JobSDK, forget_sdk
+from aj_crew.testing.wait import wait_until
 
 
 def _wait_terminal(sdk: JobSDK, run_id: str, timeout: float = 5.0) -> JobRun:

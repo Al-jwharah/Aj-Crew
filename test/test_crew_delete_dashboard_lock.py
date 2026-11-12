@@ -21,13 +21,13 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew import agent_panel
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.config.resolution import reset_degraded_observations
-from kiro_crew.dashboard.handlers import agents as agents_mod
-from kiro_crew.dashboard_templates import instance, structure_lock_removal
-from kiro_crew.eventlog import service as service_mod
-from kiro_crew.platform_compat import open_create_or_existing, try_acquire_lock
+from aj_crew import agent_panel
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.config.resolution import reset_degraded_observations
+from aj_crew.dashboard.handlers import agents as agents_mod
+from aj_crew.dashboard_templates import instance, structure_lock_removal
+from aj_crew.eventlog import service as service_mod
+from aj_crew.platform_compat import open_create_or_existing, try_acquire_lock
 
 GONE = "retired"
 LIVE = "keeper"
@@ -36,7 +36,7 @@ LIVE = "keeper"
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
     """Every test writes into its own data home, never the live one."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     reset_degraded_observations()
     service_mod.set_service(None)
     yield
@@ -68,7 +68,7 @@ def test_delete_removes_the_departed_crewmates_lock(tmp_path):
     _write_roster(home, **{GONE: {}})
     path = _lock(GONE)
 
-    captured = KiroCrewConfig.load()
+    captured = AjCrewConfig.load()
     _write_roster(home)  # the delete committed: the record is gone
     agents_mod._reclaim_deleted_member_dashboard_lock(GONE, captured)
 
@@ -83,7 +83,7 @@ def test_the_lock_is_found_by_the_persisted_member_id(tmp_path):
     by_id = _lock("mem-7")
     by_name = _lock(GONE)  # what the NAME alone folds to: never this crewmate's lock
 
-    captured = KiroCrewConfig.load()
+    captured = AjCrewConfig.load()
     _write_roster(home)
     agents_mod._reclaim_deleted_member_dashboard_lock(GONE, captured)
 
@@ -98,7 +98,7 @@ def test_other_crewmates_locks_are_untouched(tmp_path):
     live = _lock(LIVE)
     live_bytes = live.read_bytes()
 
-    captured = KiroCrewConfig.load()
+    captured = AjCrewConfig.load()
     _write_roster(home, **{LIVE: {}})
     agents_mod._reclaim_deleted_member_dashboard_lock(GONE, captured)
 
@@ -110,7 +110,7 @@ def test_other_crewmates_locks_are_untouched(tmp_path):
 def test_a_crewmate_that_never_locked_creates_nothing(tmp_path):
     home = tmp_path / "home"
     _write_roster(home, **{GONE: {}})
-    captured = KiroCrewConfig.load()
+    captured = AjCrewConfig.load()
     _write_roster(home)
 
     agents_mod._reclaim_deleted_member_dashboard_lock(GONE, captured)  # must not raise
@@ -123,7 +123,7 @@ def test_a_repeated_cleanup_is_a_no_op(tmp_path):
     home = tmp_path / "home"
     _write_roster(home, **{GONE: {}})
     path = _lock(GONE)
-    captured = KiroCrewConfig.load()
+    captured = AjCrewConfig.load()
     _write_roster(home)
 
     agents_mod._reclaim_deleted_member_dashboard_lock(GONE, captured)
@@ -140,7 +140,7 @@ def test_an_unreadable_lock_file_is_still_removed(tmp_path):
     path = _lock(GONE)
     path.write_text("not json", encoding="utf-8")
     assert instance.is_locked(GONE) is True
-    captured = KiroCrewConfig.load()
+    captured = AjCrewConfig.load()
     _write_roster(home)
 
     agents_mod._reclaim_deleted_member_dashboard_lock(GONE, captured)
@@ -156,7 +156,7 @@ def test_a_recreated_namesake_keeps_its_lock(tmp_path):
     home = tmp_path / "home"
     _write_roster(home, **{GONE: {}})
     path = _lock(GONE)
-    captured = KiroCrewConfig.load()
+    captured = AjCrewConfig.load()
     _write_roster(home, **{GONE: {}})  # a same-name crewmate is back on disk
 
     agents_mod._reclaim_deleted_member_dashboard_lock(GONE, captured)
@@ -169,7 +169,7 @@ def test_an_unreadable_roster_removes_nothing(tmp_path):
     home = tmp_path / "home"
     _write_roster(home, **{GONE: {}})
     path = _lock(GONE)
-    captured = KiroCrewConfig.load()
+    captured = AjCrewConfig.load()
     (home / "config.json").write_text("{not json", encoding="utf-8")
 
     agents_mod._reclaim_deleted_member_dashboard_lock(GONE, captured)
@@ -207,7 +207,7 @@ def test_an_aliased_store_is_refused_and_the_lock_kept(tmp_path, monkeypatch):
     home = tmp_path / "home"
     _write_roster(home, **{GONE: {}})
     path = _lock(GONE)
-    captured = KiroCrewConfig.load()
+    captured = AjCrewConfig.load()
     _write_roster(home)
     with monkeypatch.context() as mp:
         mp.setattr(agent_panel.platform_compat, "is_link_or_junction", lambda p: True)
@@ -222,7 +222,7 @@ def test_an_aliased_store_is_refused_and_the_lock_kept(tmp_path, monkeypatch):
 
 
 def _namespace_lock_is_held() -> bool:
-    from kiro_crew import memory_stores
+    from aj_crew import memory_stores
 
     roots = getattr(memory_stores._NAMESPACE_LOCK_STATE, "roots", None) or set()
     return memory_stores.memory_stores_root().resolve() in roots
@@ -239,7 +239,7 @@ def _delete_request(name: str):
 @pytest.mark.asyncio
 async def test_the_delete_route_removes_the_lock_under_the_namespace_lock(tmp_path, monkeypatch):
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
     home = tmp_path / "home"
@@ -253,18 +253,18 @@ async def test_the_delete_route_removes_the_lock_under_the_namespace_lock(tmp_pa
     held: list[bool] = []
     real = agents_mod._reclaim_deleted_member_dashboard_lock
 
-    def _spy(name: str, cfg: KiroCrewConfig) -> None:
+    def _spy(name: str, cfg: AjCrewConfig) -> None:
         held.append(_namespace_lock_is_held())
         real(name, cfg)
 
     monkeypatch.setattr(agents_mod, "_reclaim_deleted_member_dashboard_lock", _spy)
 
-    from kiro_crew.dashboard.handlers.agents import api_kirocrew_agent_delete
+    from aj_crew.dashboard.handlers.agents import api_ajcrew_agent_delete
 
-    resp = await api_kirocrew_agent_delete(_delete_request(GONE))
+    resp = await api_ajcrew_agent_delete(_delete_request(GONE))
 
     assert resp.status == 200
-    assert GONE not in KiroCrewConfig.load().agents
+    assert GONE not in AjCrewConfig.load().agents
     assert held == [True]
     assert not gone.exists()
     assert live.is_file()
@@ -275,12 +275,12 @@ async def test_the_delete_route_removes_the_lock_under_the_namespace_lock(tmp_pa
 
 def test_delete_removes_the_departed_crewmates_page_offer_record(tmp_path):
     """Kept, a later crewmate on the same slug would never be offered its own page."""
-    from kiro_crew.dashboard import page_offer
+    from aj_crew.dashboard import page_offer
 
     home = tmp_path / "home"
     _write_roster(home, **{GONE: {}})
     page_offer.record_asked(GONE, "Goal board", "goal-board")
-    captured = KiroCrewConfig.load()
+    captured = AjCrewConfig.load()
     _write_roster(home)
 
     agents_mod._reclaim_deleted_member_dashboard_lock(GONE, captured)
@@ -289,12 +289,12 @@ def test_delete_removes_the_departed_crewmates_page_offer_record(tmp_path):
 
 
 def test_a_recreated_namesake_keeps_its_page_offer_record(tmp_path):
-    from kiro_crew.dashboard import page_offer
+    from aj_crew.dashboard import page_offer
 
     home = tmp_path / "home"
     _write_roster(home, **{GONE: {}})
     page_offer.record_asked(GONE, "Goal board", "goal-board")
-    captured = KiroCrewConfig.load()
+    captured = AjCrewConfig.load()
     _write_roster(home, **{GONE: {}})
 
     agents_mod._reclaim_deleted_member_dashboard_lock(GONE, captured)

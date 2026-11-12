@@ -10,7 +10,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from kiro_crew.apps.event_bus import EventBus
+from aj_crew.apps.event_bus import EventBus
 
 # ---------------------------------------------------------------------------
 # Strategies
@@ -114,7 +114,7 @@ class TestBroadcastAdapterPreservesIdentityAndScope:
     """
 
     def test_app_and_scope_reach_the_sender(self) -> None:
-        from kiro_crew.apps.event_bus import build_broadcast_fn
+        from aj_crew.apps.event_bus import build_broadcast_fn
 
         sent: list[tuple] = []
         fn = build_broadcast_fn(lambda t, d: sent.append((t, d)))  # type: ignore[arg-type]
@@ -130,7 +130,7 @@ class TestBroadcastAdapterPreservesIdentityAndScope:
         assert data["data"] == {"n": 1}
 
     def test_plain_broadcast_keeps_app(self) -> None:
-        from kiro_crew.apps.event_bus import build_broadcast_fn
+        from aj_crew.apps.event_bus import build_broadcast_fn
 
         sent: list[tuple] = []
         fn = build_broadcast_fn(lambda t, d: sent.append((t, d)))  # type: ignore[arg-type]
@@ -142,7 +142,7 @@ class TestBroadcastAdapterPreservesIdentityAndScope:
 
     def test_end_to_end_from_publish_to_app(self) -> None:
         """EventBus.publish_to_app → adapter: app + scope arrive at the sender."""
-        from kiro_crew.apps.event_bus import EventBus, build_broadcast_fn
+        from aj_crew.apps.event_bus import EventBus, build_broadcast_fn
 
         sent: list[tuple] = []
         adapter = build_broadcast_fn(lambda t, d: sent.append((t, d)))  # type: ignore[arg-type]

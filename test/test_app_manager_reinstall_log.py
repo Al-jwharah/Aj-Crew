@@ -13,7 +13,7 @@ import logging
 from app_manager_helpers import app_home_fixture  # noqa: F401 - fixture
 from app_manager_helpers import _make_app_source
 
-from kiro_crew.apps.manager import get_app, install_app, uninstall_app
+from aj_crew.apps.manager import get_app, install_app, uninstall_app
 
 _ORPHAN = "Removing orphaned partial install"
 
@@ -22,7 +22,7 @@ def _warnings(caplog) -> list[str]:
     return [
         r.getMessage()
         for r in caplog.records
-        if r.name == "kiro_crew.apps.manager" and r.levelno >= logging.WARNING
+        if r.name == "aj_crew.apps.manager" and r.levelno >= logging.WARNING
     ]
 
 
@@ -33,7 +33,7 @@ class TestReinstallLog:
         assert install_app(_make_app_source(tmp_path)).ok
         (app_home / "apps" / "test-app" / "data" / "notes.md").write_text("kept\n")
         assert uninstall_app("test-app", keep_data=True).ok
-        caplog.set_level(logging.INFO, logger="kiro_crew.apps.manager")
+        caplog.set_level(logging.INFO, logger="aj_crew.apps.manager")
 
         assert install_app(_make_app_source(tmp_path / "again")).ok
 
@@ -49,7 +49,7 @@ class TestReinstallLog:
         assert uninstall_app("test-app", keep_data=True).ok
         (app_home / "apps" / "test-app" / "app.json").write_text("{}")  # a half-copied tree
         assert get_app("test-app") is None
-        caplog.set_level(logging.INFO, logger="kiro_crew.apps.manager")
+        caplog.set_level(logging.INFO, logger="aj_crew.apps.manager")
 
         assert install_app(_make_app_source(tmp_path / "again")).ok
 

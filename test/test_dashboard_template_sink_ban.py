@@ -19,15 +19,15 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew
-import kiro_crew.dashboard_templates as dashboard_templates
-from kiro_crew.dashboard_templates import catalog
+import aj_crew
+import aj_crew.dashboard_templates as dashboard_templates
+from aj_crew.dashboard_templates import catalog
 
 BUILTIN = Path(dashboard_templates.__file__).resolve().parent / "builtin"
 
 PAGES = sorted(BUILTIN.glob("*/template.html"))
 
-GALLERY = Path(kiro_crew.__file__).resolve().parent / "builtin_skills" / "dashboard" / "gallery"
+GALLERY = Path(aj_crew.__file__).resolve().parent / "builtin_skills" / "dashboard" / "gallery"
 #: The shipped dashboard PACKAGES, the copies an agent starts its own page from.
 PACKAGES = sorted(GALLERY.glob("*/package.json"))
 

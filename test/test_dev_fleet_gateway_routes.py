@@ -28,9 +28,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.apps.builtins import BUILTIN_NAMES
-from kiro_crew.apps.builtins.dev_fleet import gateway_routes, live, pointer_broker, server
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.apps.builtins import BUILTIN_NAMES
+from aj_crew.apps.builtins.dev_fleet import gateway_routes, live, pointer_broker, server
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class TestRegistration:
@@ -39,7 +39,7 @@ class TestRegistration:
         package hook composes the agent pod routes with these gateway routes, so what is
         pinned is that a call through the PACKAGE mounts every gateway route."""
         assert "dev_fleet" in BUILTIN_NAMES
-        mod = importlib.import_module("kiro_crew.apps.builtins.dev_fleet")
+        mod = importlib.import_module("aj_crew.apps.builtins.dev_fleet")
         via_package = web.Application()
         mod.register_routes(via_package)
         direct = web.Application()
@@ -361,7 +361,7 @@ class TestThePodTokenRoute:
 
     @pytest.fixture
     def minted(self, monkeypatch, enabled, recorded):
-        from kiro_crew.apps.builtins.dev_fleet import worktree_ops
+        from aj_crew.apps.builtins.dev_fleet import worktree_ops
 
         calls: list[str] = []
 
@@ -440,7 +440,7 @@ class TestThePodTokenRoute:
 
     @pytest.mark.asyncio
     async def test_an_unconfigured_checkout_is_a_409(self, enabled, recorded, monkeypatch) -> None:
-        from kiro_crew.apps.builtins.dev_fleet import worktree_ops
+        from aj_crew.apps.builtins.dev_fleet import worktree_ops
 
         async def _raise(name):
             raise gateway_routes.repository.RepoNotConfigured("no checkout configured")
@@ -750,7 +750,7 @@ class TestRemovalLeasesInTheGateway:
         """The barrier shields a mutation only while the mutation cannot outlive it:
         pinned against the REAL `git worktree remove` timeout, so a future bump there
         cannot silently reopen the overlap window."""
-        from kiro_crew.apps.builtins.dev_fleet import worktree_ops
+        from aj_crew.apps.builtins.dev_fleet import worktree_ops
 
         assert (
             live._REMOVAL_LEASE_GRACE_SECS
@@ -785,7 +785,7 @@ class TestRemovalLeasesInTheGateway:
         assert live.acquire_removal_lease("/wt/late") is not None
 
     def test_the_cap_exceeds_the_parallel_prune_width(self) -> None:
-        from kiro_crew.apps.builtins.dev_fleet import worktree_ops
+        from aj_crew.apps.builtins.dev_fleet import worktree_ops
 
         assert live._REMOVAL_LEASE_MAX_OUTSTANDING >= 4 * worktree_ops._PRUNE_CONCURRENCY
 
@@ -1199,7 +1199,7 @@ class TestThePreSpawnGate:
     async def test_run_cmd_refuses_without_spawning_and_unlinks_the_launcher(
         self, monkeypatch, tmp_path
     ) -> None:
-        from kiro_crew.apps.builtins.dev_fleet import runtime
+        from aj_crew.apps.builtins.dev_fleet import runtime
 
         launcher = tmp_path / "launcher.sh"
         launcher.write_text("#!/bin/sh\n", encoding="utf-8")
@@ -1228,7 +1228,7 @@ class TestThePreSpawnGate:
 
     @pytest.mark.asyncio
     async def test_run_cmd_proceeds_when_the_gate_allows(self, monkeypatch, tmp_path) -> None:
-        from kiro_crew.apps.builtins.dev_fleet import runtime
+        from aj_crew.apps.builtins.dev_fleet import runtime
 
         order: list[str] = []
         # sys.executable exists on every CI platform; /bin/true does not (macOS
@@ -1374,7 +1374,7 @@ class TestFleetViewDegradesWithRowsDuringAnOutage:
         """All three pointer-derived fields come from ONE broker read, so a gateway that
         goes away mid-build cannot fail a later field (the cancel-availability probe
         would be a second, unguarded read)."""
-        from kiro_crew.apps.builtins.dev_fleet import fleet_state
+        from aj_crew.apps.builtins.dev_fleet import fleet_state
 
         calls: list[bool] = []
 
@@ -1420,7 +1420,7 @@ class TestCreateReleaseWorktreeRouteIsOwnerOnly:
 
     @pytest.fixture
     def _action(self, monkeypatch):
-        import kiro_crew.apps.builtins.dev_fleet.release_worktree as release_worktree
+        import aj_crew.apps.builtins.dev_fleet.release_worktree as release_worktree
 
         calls: dict[str, Any] = {}
 
@@ -1483,7 +1483,7 @@ class TestCreateReleaseWorktreeRouteIsOwnerOnly:
         """A step refused for lack of an OS sandbox backend is a failure of this request's
         own machinery (503); any other refusal is a state the operator can change (409).
         The body is passed through so the page shows the worded reason either way."""
-        import kiro_crew.apps.builtins.dev_fleet.release_worktree as release_worktree
+        import aj_crew.apps.builtins.dev_fleet.release_worktree as release_worktree
 
         async def _refuse():
             return {"ok": False, "code": code, "error": "the worded reason"}
@@ -1508,8 +1508,8 @@ class TestCreateReleaseWorktreeRouteIsOwnerOnly:
         cancellation propagate."""
         from aiohttp.test_utils import make_mocked_request
 
-        import kiro_crew.apps.builtins.dev_fleet.release_worktree as release_worktree
-        from kiro_crew.apps.builtins.dev_fleet import runtime
+        import aj_crew.apps.builtins.dev_fleet.release_worktree as release_worktree
+        from aj_crew.apps.builtins.dev_fleet import runtime
 
         records: list[dict[str, Any]] = []
 

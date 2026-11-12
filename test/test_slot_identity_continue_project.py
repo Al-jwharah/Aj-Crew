@@ -12,10 +12,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.chat import api_chat_slot_continue, api_chat_slot_project
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.chat import api_chat_slot_continue, api_chat_slot_project
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 _SLOT = "s1"
 _OLD_PROJECT = "/old/project"

@@ -3,7 +3,7 @@
 // resolve, then every consumer is asked about the contributed language.
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('virtual:kirocrew-edition-languages', () => ({
+vi.mock('virtual:ajcrew-edition-languages', () => ({
   default: [
     {
       id: 'demo',

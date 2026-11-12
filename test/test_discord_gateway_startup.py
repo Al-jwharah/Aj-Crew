@@ -24,8 +24,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.discord import gateway as gw
-from kiro_crew.testing.wait import await_until
+from aj_crew.discord import gateway as gw
+from aj_crew.testing.wait import await_until
 
 
 class _Client:

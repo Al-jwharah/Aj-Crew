@@ -1,4 +1,4 @@
-"""``kirocrew doctor``'s cron health and its directory censuses.
+"""``ajcrew doctor``'s cron health and its directory censuses.
 
 The Cron Jobs section, the skill-view alias census of the Agents Directory
 section and the read-only run-directory census.
@@ -12,11 +12,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import cli_doctor, cron
+from aj_crew import cli_doctor, cron
 
 
 class TestCronHealth:
-    """`kirocrew doctor` Cron Jobs section — auto-paused / errored jobs.
+    """`ajcrew doctor` Cron Jobs section — auto-paused / errored jobs.
 
     Read-only by contract: the check reports and hints, it never resumes or
     triggers anything. The negative half of this suite (healthy store,
@@ -67,7 +67,7 @@ class TestCronHealth:
         assert "Cron Jobs" in out
         assert "auto-paused" in out
         assert "'nightly-sync' ('j1')" in out
-        assert "kirocrew cron resume <id>" in out
+        assert "ajcrew cron resume <id>" in out
         assert issues == ["1 cron job(s) auto-paused"]
 
     def test_errored_job_is_reported_with_trigger_hint(
@@ -80,7 +80,7 @@ class TestCronHealth:
         out = capsys.readouterr().out
         assert "errored:" in out
         assert "'pr-watch' ('j2')" in out
-        assert "kirocrew cron trigger <id>" in out
+        assert "ajcrew cron trigger <id>" in out
         assert issues == ["1 cron job(s) last ran with an error"]
 
     def test_a_user_paused_at_job_with_a_stale_error_is_not_reported(
@@ -413,14 +413,14 @@ class TestCronHealth:
 
 
 class TestDoctorSkillViewCensus:
-    """The Agents Directory section counts the ``kirocrew-skill-view-*`` aliases.
+    """The Agents Directory section counts the ``ajcrew-skill-view-*`` aliases.
 
     kiro-cli reads every file in the shared agents directory on startup, and unreclaimed
     aliases can reach tens of thousands (``EMFILE``). Doctor reports read-only: totals,
     leased count, this gateway's reclaim share, and a warning past a startup-cost threshold.
     """
 
-    PREFIX = "kirocrew-skill-view-"
+    PREFIX = "ajcrew-skill-view-"
 
     @staticmethod
     def _home(tmp_path: Path) -> Path:
@@ -442,7 +442,7 @@ class TestDoctorSkillViewCensus:
         if home is not None:
             metadata_dir = cls._side_dir(directory, "metadata")
             (metadata_dir / f"{stem}.json").write_text(
-                json.dumps({"x-kirocrew-managed": "skill-view", "x-kirocrew-home": home})
+                json.dumps({"x-ajcrew-managed": "skill-view", "x-ajcrew-home": home})
             )
         return stem
 
@@ -456,7 +456,7 @@ class TestDoctorSkillViewCensus:
         (lease_dir / f"{name}.hold").write_text("")
 
     def _run(self, tmp_path: Path, monkeypatch, capsys) -> str:
-        from kiro_crew.acp import skill_projection
+        from aj_crew.acp import skill_projection
 
         monkeypatch.setattr(cli_doctor, "KIRO_AGENTS_DIR", tmp_path)
         # The census resolves the data home itself, spelled as the publisher
@@ -471,7 +471,7 @@ class TestDoctorSkillViewCensus:
 
     def test_an_empty_directory_reports_zero_aliases(self, tmp_path, monkeypatch, capsys):
         out = self._run(tmp_path, monkeypatch, capsys)
-        assert "skill views: ✅ 0 kirocrew-skill-view-*.json alias(es)" in out
+        assert "skill views: ✅ 0 ajcrew-skill-view-*.json alias(es)" in out
 
     def test_live_and_unreferenced_aliases_are_counted_separately(
         self, tmp_path, monkeypatch, capsys
@@ -481,7 +481,7 @@ class TestDoctorSkillViewCensus:
             self._own(tmp_path, i)
         self._lease(tmp_path, live)
         out = self._run(tmp_path, monkeypatch, capsys)
-        assert "skill views: ✅ 8 kirocrew-skill-view-*.json alias(es)" in out
+        assert "skill views: ✅ 8 ajcrew-skill-view-*.json alias(es)" in out
         assert "(3 named by a lease record, 5 not)" in out
         assert "⚠️" not in self._line(out)
 
@@ -496,7 +496,7 @@ class TestDoctorSkillViewCensus:
         self._alias(tmp_path, limit, home=None)
         out = self._run(tmp_path, monkeypatch, capsys)
         assert "skill views: ⚠️" in out
-        assert f"{limit + 1} kirocrew-skill-view-*.json alias(es)" in out
+        assert f"{limit + 1} ajcrew-skill-view-*.json alias(es)" in out
 
     def test_the_threshold_grows_with_the_authored_agents(self, tmp_path, monkeypatch, capsys):
         # 100 authored specs size the threshold at 200, as the projection's ceiling.
@@ -525,7 +525,7 @@ class TestDoctorSkillViewCensus:
         assert "removed" not in line
         # No lease, no foreign home: neither caveat is printed.
         assert "Lease-named" not in line
-        assert "another Kiro Crew home" not in line
+        assert "another Aj Crew home" not in line
 
     def test_a_backlog_another_home_owns_is_named_as_not_draining_here(
         self, tmp_path, monkeypatch, capsys
@@ -535,9 +535,9 @@ class TestDoctorSkillViewCensus:
             self._alias(tmp_path, i, home="/some/other/home")
         self._own(tmp_path, 4)
         line = self._line(self._run(tmp_path, monkeypatch, capsys))
-        assert "(0 named by a lease record, 5 not, 4 owned by another Kiro Crew home)" in line
+        assert "(0 named by a lease record, 5 not, 4 owned by another Aj Crew home)" in line
         assert "reclaims a bounded number of the 1 this home owns" in line
-        assert "The 4 another Kiro Crew home owns never drain here" in line
+        assert "The 4 another Aj Crew home owns never drain here" in line
         # A second home shares this directory, so the remedy must stop BOTH
         # gateways, not only the one this doctor speaks for.
         assert "with every gateway that uses this agents directory stopped" in line
@@ -553,9 +553,9 @@ class TestDoctorSkillViewCensus:
         theirs = [self._alias(tmp_path, i, home="/some/other/home") for i in range(3)]
         self._lease(tmp_path, theirs)
         line = self._line(self._run(tmp_path, monkeypatch, capsys))
-        assert "(3 named by a lease record, 0 not, 3 owned by another Kiro Crew home)" in line
+        assert "(3 named by a lease record, 0 not, 3 owned by another Aj Crew home)" in line
         assert "crash-stale" not in line
-        assert "The 3 another Kiro Crew home owns never drain here" in line
+        assert "The 3 another Aj Crew home owns never drain here" in line
 
     def test_lease_named_aliases_are_described_as_held_not_as_never_draining(
         self, tmp_path, monkeypatch, capsys
@@ -584,7 +584,7 @@ class TestDoctorSkillViewCensus:
         (lease_dir / "1-bad.json").write_text("{not json")
         (lease_dir / "1-big.json").write_text(json.dumps({"aliases": ["x" * 70000]}))
         line = self._line(self._run(tmp_path, monkeypatch, capsys))
-        assert "⚠️  2 kirocrew-skill-view-*.json alias(es)" in line
+        assert "⚠️  2 ajcrew-skill-view-*.json alias(es)" in line
         assert "(0 named by a lease record, 2 not)" in line
         assert "2 lease record(s)" in line and "cannot be read" in line
         assert "slows every session start" not in line
@@ -606,14 +606,14 @@ class TestDoctorSkillViewCensus:
     def test_a_truncated_census_is_reported_as_floors_without_derived_counts(
         self, tmp_path, monkeypatch, capsys
     ):
-        from kiro_crew.acp import skill_projection
+        from aj_crew.acp import skill_projection
 
         monkeypatch.setattr(skill_projection, "_CENSUS_MAX_ALIASES", 3)
         monkeypatch.setattr(cli_doctor, "_SKILL_VIEW_BACKLOG_WARN", 2)
         for i in range(5):
             self._own(tmp_path, i)
         line = self._line(self._run(tmp_path, monkeypatch, capsys))
-        assert "3+ kirocrew-skill-view-*.json alias(es) (0+ named by a lease record)" in line
+        assert "3+ ajcrew-skill-view-*.json alias(es) (0+ named by a lease record)" in line
         assert "floors: the census stopped at its retention bound" in line
         # `total - leased` is neither a floor nor a ceiling once a bound was hit,
         # so no derived number is printed or promised.
@@ -626,7 +626,7 @@ class TestDoctorSkillViewCensus:
         self, tmp_path, monkeypatch, capsys
     ):
         # json.loads raises RecursionError (a RuntimeError) on nesting past the
-        # interpreter limit; a hand-authored file in Kiro Crew's own side-file
+        # interpreter limit; a hand-authored file in Aj Crew's own side-file
         # directories must read as unreadable, never take the diagnostic down.
         deep = "[" * 100000 + "]" * 100000
         self._own(tmp_path, 1)
@@ -635,16 +635,16 @@ class TestDoctorSkillViewCensus:
         lease_dir = self._side_dir(tmp_path, "leases")
         (lease_dir / "1-deep.json").write_text(deep)
         line = self._line(self._run(tmp_path, monkeypatch, capsys))
-        assert "2 kirocrew-skill-view-*.json alias(es)" in line
+        assert "2 ajcrew-skill-view-*.json alias(es)" in line
         assert "1 lease record(s)" in line and "cannot be read" in line
 
     def test_authored_specs_and_foreign_files_are_not_counted(self, tmp_path, monkeypatch, capsys):
-        (tmp_path / "kirocrew.json").write_text('{"name": "kirocrew"}')
-        (tmp_path / "kirocrew-skill-view-notes.txt").write_text("x")
-        (tmp_path / "kirocrew-skill-view-dir.json").mkdir()
+        (tmp_path / "ajcrew.json").write_text('{"name": "ajcrew"}')
+        (tmp_path / "ajcrew-skill-view-notes.txt").write_text("x")
+        (tmp_path / "ajcrew-skill-view-dir.json").mkdir()
         self._own(tmp_path, 1)
         out = self._run(tmp_path, monkeypatch, capsys)
-        assert "skill views: ✅ 1 kirocrew-skill-view-*.json alias(es)" in out
+        assert "skill views: ✅ 1 ajcrew-skill-view-*.json alias(es)" in out
 
     def test_the_census_never_deletes_anything(self, tmp_path, monkeypatch, capsys):
         monkeypatch.setattr(cli_doctor, "_SKILL_VIEW_BACKLOG_WARN", 1)
@@ -658,14 +658,14 @@ class TestDoctorSkillViewCensus:
     def test_the_remedy_names_the_projection_directories_it_means(
         self, tmp_path, monkeypatch, capsys
     ):
-        from kiro_crew.acp import skill_projection
+        from aj_crew.acp import skill_projection
 
         monkeypatch.setattr(cli_doctor, "_SKILL_VIEW_BACKLOG_WARN", 1)
         for i in range(2):
             self._own(tmp_path, i)
         (self._side_dir(tmp_path, "leases") / "1-bad.json").write_text("?")
         line = self._line(self._run(tmp_path, monkeypatch, capsys))
-        # The side files live under the Kiro Crew data home; the remedy names
+        # The side files live under the Aj Crew data home; the remedy names
         # those directories by their real path.
         metadata_dir = str(skill_projection._projection_metadata_dir())
         lease_dir = str(skill_projection._projection_lease_dir())
@@ -687,7 +687,7 @@ class TestDoctorSkillViewCensus:
     ):
         import hashlib
 
-        from kiro_crew.doctor_checks import resources
+        from aj_crew.doctor_checks import resources
 
         monkeypatch.setattr(resources, "_SKILL_VIEW_RESIDUE_WARN", 1)
         metadata_dir = self._side_dir(tmp_path, "metadata")
@@ -699,11 +699,11 @@ class TestDoctorSkillViewCensus:
 
         stem = self._own(tmp_path, 9)
         record = json.loads((metadata_dir / f"{stem}.json").read_text())
-        record["x-kirocrew-alias-sha256"] = hashlib.sha256(b"what was published").hexdigest()
+        record["x-ajcrew-alias-sha256"] = hashlib.sha256(b"what was published").hexdigest()
         (metadata_dir / f"{stem}.json").write_text(json.dumps(record))
         out = self._run(tmp_path, monkeypatch, capsys)
         assert "1 alias(es) rewritten by another program" in out
-        assert "KIROCREW_NATIVE_SKILL_PROJECTION=0" in out
+        assert "AJCREW_NATIVE_SKILL_PROJECTION=0" in out
 
     def test_an_env_value_that_differs_across_one_agents_views_is_named(
         self, tmp_path, monkeypatch, capsys
@@ -711,7 +711,7 @@ class TestDoctorSkillViewCensus:
         """Two views of one agent whose only difference is an env value: a launcher
         re-stamping a key the volatile set does not know. The line names it and
         the setting that makes it volatile; volatile keys are never named."""
-        monkeypatch.delenv("KIROCREW_SKILL_VIEW_VOLATILE_ENV", raising=False)
+        monkeypatch.delenv("AJCREW_SKILL_VIEW_VOLATILE_ENV", raising=False)
         home = self._home(tmp_path).absolute().as_posix()
         metadata_dir = self._side_dir(tmp_path, "metadata")
         for i, launch in enumerate(("a", "b")):
@@ -729,10 +729,10 @@ class TestDoctorSkillViewCensus:
             (metadata_dir / f"{stem}.json").write_text(
                 json.dumps(
                     {
-                        "x-kirocrew-managed": "skill-view",
-                        "x-kirocrew-home": home,
-                        "x-kirocrew-agent": "ops",
-                        "x-kirocrew-source": "/agents/ops.json",
+                        "x-ajcrew-managed": "skill-view",
+                        "x-ajcrew-home": home,
+                        "x-ajcrew-agent": "ops",
+                        "x-ajcrew-source": "/agents/ops.json",
                     }
                 )
             )
@@ -742,15 +742,15 @@ class TestDoctorSkillViewCensus:
     def test_a_churning_env_label_is_rendered_escaped(self, tmp_path, monkeypatch, capsys):
         """Labels come from spec files another program wrote: a control sequence in
         a server or key name must reach the terminal escaped, never executed."""
-        from kiro_crew.agent_sdk.drivers import acp as acp_driver
+        from aj_crew.agent_sdk.drivers import acp as acp_driver
 
         monkeypatch.setattr(
             acp_driver, "skill_view_churning_env_keys", lambda _d: ["srv.\x1b]0;pwn\x07KEY"]
         )
         out = self._run(tmp_path, monkeypatch, capsys)
         assert "\x1b" not in out and "\x07" not in out
-        assert "AIM_CREDS_AGENT_INJECTION" not in out.split("KIROCREW_SKILL_VIEW_VOLATILE_ENV")[0]
-        assert "KIROCREW_SKILL_VIEW_VOLATILE_ENV" in out
+        assert "AIM_CREDS_AGENT_INJECTION" not in out.split("AJCREW_SKILL_VIEW_VOLATILE_ENV")[0]
+        assert "AJCREW_SKILL_VIEW_VOLATILE_ENV" in out
 
 
 class TestRunDirCensus:
@@ -762,16 +762,16 @@ class TestRunDirCensus:
 
     @staticmethod
     def _run(monkeypatch, capsys, root: Path, retained=frozenset()) -> str:
-        from kiro_crew import session_pid
+        from aj_crew import session_pid
 
-        monkeypatch.setenv("KIROCREW_WORKSPACE", str(root))
+        monkeypatch.setenv("AJCREW_WORKSPACE", str(root))
         monkeypatch.setattr(session_pid, "retained_gateway_pids", lambda: frozenset(retained))
         cli_doctor._doctor_run_dirs()
         return capsys.readouterr().out
 
     @staticmethod
     def _marked(root: Path, name: str, marker: str) -> Path:
-        from kiro_crew.session_work_dir import RUN_DIR_MARKER
+        from aj_crew.session_work_dir import RUN_DIR_MARKER
 
         work_dir = root / name
         (work_dir / ".kiro" / "settings").mkdir(parents=True)
@@ -782,7 +782,7 @@ class TestRunDirCensus:
     def test_a_workspace_root_that_does_not_exist_is_not_created(
         self, tmp_path: Path, monkeypatch, capsys
     ) -> None:
-        root = tmp_path / "never-ran" / "kirocrew-workspace"
+        root = tmp_path / "never-ran" / "ajcrew-workspace"
         out = self._run(monkeypatch, capsys, root)
         assert not root.exists(), "the doctor created the workspace tree"
         assert not root.parent.exists()
@@ -791,7 +791,7 @@ class TestRunDirCensus:
     def test_both_figures_print_on_one_line_and_nothing_is_removed(
         self, tmp_path: Path, monkeypatch, capsys
     ) -> None:
-        from kiro_crew.session_work_dir import RUN_DIR_MARKER, data_home_id
+        from aj_crew.session_work_dir import RUN_DIR_MARKER, data_home_id
 
         root = tmp_path / "ws"
         legacy = root / "subagent_deadbeef" / ".kiro" / "settings"
@@ -814,7 +814,7 @@ class TestRunDirCensus:
     def test_an_unmarked_backlog_names_the_remedy_and_the_cap_makes_a_floor(
         self, tmp_path: Path, monkeypatch, capsys
     ) -> None:
-        from kiro_crew import session_work_dir
+        from aj_crew import session_work_dir
 
         root = tmp_path / "ws"
         for n in range(1, 4):
@@ -827,7 +827,7 @@ class TestRunDirCensus:
         assert "⚠️ " in out and "With the gateway stopped, move directories matching" in out
         assert (
             "hold nothing beyond .kiro/settings/cli.json,"
-            " .kiro/settings/.kirocrew-cli-settings.lock and an empty .kiro/agents"
+            " .kiro/settings/.ajcrew-cli-settings.lock and an empty .kiro/agents"
         ) in out
         original = session_work_dir.count_run_dirs
         monkeypatch.setattr(
@@ -843,7 +843,7 @@ class TestRunDirCensus:
         self, pinned: bool, tmp_path: Path, monkeypatch, capsys
     ) -> None:
         """The by-name walk never marks these folders, so the census is where they surface."""
-        from kiro_crew import session_work_dir
+        from aj_crew import session_work_dir
 
         monkeypatch.setattr(session_work_dir.pinned_fs, "supports_pinned_walk", lambda: pinned)
         root = tmp_path / "ws"
@@ -864,7 +864,7 @@ class TestRunDirCensus:
     def test_a_root_with_nothing_the_sweep_cannot_reclaim_is_clean(
         self, tmp_path: Path, monkeypatch, capsys
     ) -> None:
-        from kiro_crew.session_work_dir import data_home_id
+        from aj_crew.session_work_dir import data_home_id
 
         root = tmp_path / "ws"
         self._marked(root, "subagent_00000001", f"{data_home_id()}\n12345")
@@ -872,11 +872,11 @@ class TestRunDirCensus:
         assert "✅ no run directories left behind that the sweep cannot reclaim" in out
 
     def test_an_unreadable_ledger_skips_the_census(self, tmp_path: Path, monkeypatch, capsys):
-        from kiro_crew import session_pid
+        from aj_crew import session_pid
 
         root = tmp_path / "ws"
         self._marked(root, "subagent_00000001", "garbled")
-        monkeypatch.setenv("KIROCREW_WORKSPACE", str(root))
+        monkeypatch.setenv("AJCREW_WORKSPACE", str(root))
         monkeypatch.setattr(
             session_pid,
             "retained_gateway_pids",
@@ -890,7 +890,7 @@ class TestRunDirCensus:
         self, tmp_path: Path, monkeypatch, capsys
     ) -> None:
         """A permitted-marked folder the sweep keeps for its contents prints as *kept*."""
-        from kiro_crew.session_work_dir import data_home_id
+        from aj_crew.session_work_dir import data_home_id
 
         root = tmp_path / "ws"
         kept = self._marked(root, "subagent_00000001", f"{data_home_id()}\n23456")

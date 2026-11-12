@@ -1,7 +1,7 @@
-"""Headless turns match skill triggers on the request, not Kiro Crew's own text.
+"""Headless turns match skill triggers on the request, not Aj Crew's own text.
 
 A task-runner step, a task decomposition and a workflow authoring turn each
-wrap the request in text Kiro Crew writes: the step's role text, the plan's other
+wrap the request in text Aj Crew writes: the step's role text, the plan's other
 steps, the spec and the instructions; the decomposition instructions around the
 spec; the authoring instructions and the reference workflows around the intent.
 Unless ``build_message`` gets ``skill_trigger_text``, triggers match that whole
@@ -22,16 +22,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from test_background_loops_compaction_reinjection import _task_ctx, _task_provider, _task_sessions
 
-from kiro_crew import task_planner
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.memory import MemoryStore
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.task_executor import task_trigger_text
-from kiro_crew.taskrunner import Step, TaskRun, TaskRunner
-from kiro_crew.workflow_memory import WorkflowScope
-from kiro_crew.workflows.service import WorkflowService
+from aj_crew import task_planner
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.memory import MemoryStore
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.skills import SkillsLoader
+from aj_crew.task_executor import task_trigger_text
+from aj_crew.taskrunner import Step, TaskRun, TaskRunner
+from aj_crew.workflow_memory import WorkflowScope
+from aj_crew.workflows.service import WorkflowService
 
 pytestmark = pytest.mark.usefixtures("close_skills_loaders")
 
@@ -53,7 +53,7 @@ def _builder(tmp_path: Path, trigger: str) -> ContextBuilder:
     loader = SkillsLoader(
         skills_path=skills,
         install_builtins=False,
-        config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+        config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
     )
     return ContextBuilder(memory=MemoryStore(workspace=tmp_path / "ws"), skills=loader)
 
@@ -82,7 +82,7 @@ async def _step_build_call(tmp_path: Path) -> tuple[str, dict]:
     first = Step(index=1, title="Draft the grammar", description="Write the grammar file")
     second = Step(index=2, title="Write the parser", description="Parse the grammar into nodes")
     run.tasks = [first, second]
-    with patch("kiro_crew.task_executor.self_review", return_value=True):
+    with patch("aj_crew.task_executor.self_review", return_value=True):
         await runner._execute_single_task(run, second)
     call = ctx.build_message.call_args
     return call.args[0], call.kwargs
@@ -137,7 +137,7 @@ async def _decompose_build_call() -> tuple[str, dict]:
     sessions.reset = AsyncMock()
     ctx = MagicMock()
     ctx.build_message = MagicMock(return_value=("built", None))
-    with patch("kiro_crew.context.inherit_session_memory", AsyncMock(return_value="")):
+    with patch("aj_crew.context.inherit_session_memory", AsyncMock(return_value="")):
         await task_planner.decompose(_SPEC, sessions, ctx, task_id="t1")
     call = ctx.build_message.call_args
     return call.args[0], call.kwargs
@@ -164,7 +164,7 @@ _GOOD_SCRIPT = (
 
 @pytest.mark.asyncio
 async def test_an_authoring_turn_matches_triggers_on_the_intent(monkeypatch):
-    import kiro_crew.workflows.service as svc_mod
+    import aj_crew.workflows.service as svc_mod
 
     seen: list[dict] = []
 
@@ -201,7 +201,7 @@ async def test_the_workflow_scope_hands_the_trigger_text_to_build_message(monkey
         "wf-author:r1:a1",
         "wrapped",
         is_new=True,
-        agent="kirocrew-lite",
+        agent="ajcrew-lite",
         cwd=None,
         provider=None,
         skill_trigger_text="the intent",

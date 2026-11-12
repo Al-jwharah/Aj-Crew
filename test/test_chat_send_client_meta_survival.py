@@ -25,13 +25,13 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import revocation_gen, token_auth
-from kiro_crew.dashboard.chat_handlers import RESERVED_ROW_META_KEYS
-from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.testing.wait import finished
+from aj_crew.dashboard import revocation_gen, token_auth
+from aj_crew.dashboard.chat_handlers import RESERVED_ROW_META_KEYS
+from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers import updates
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.testing.wait import finished
 
 _SLOT = "meta-survival-slot"
 _FENCE = "meta-survival-test-finished"
@@ -54,8 +54,8 @@ _RELAY = "relay"
 def survival_state(tmp_path, monkeypatch):
     # Real authentication with isolated signing/nonce state: the WS echo is
     # gated on the auth middleware's positive dashboard-user claim.
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(token_auth, "_get_secret", lambda: b"meta-survival-test-signing-key")
     monkeypatch.setattr(token_auth, "_state", token_auth.TokenStateManager())
     monkeypatch.setattr(token_auth, "_app_perms_cache", {})
@@ -63,7 +63,7 @@ def survival_state(tmp_path, monkeypatch):
     monkeypatch.setattr(revocation_gen, "_gen", 0)
     stopped = asyncio.Event()
     monkeypatch.setattr(updates, "shutdown_event", stopped)
-    monkeypatch.setattr("kiro_crew.dashboard.ws.shutdown_event", stopped)
+    monkeypatch.setattr("aj_crew.dashboard.ws.shutdown_event", stopped)
     state = _make_state(tmp_path)
     state.get_or_create_slot(_SLOT, origin=SlotOrigin.USER)
     # Periodic status is unrelated to the row this module follows.
@@ -73,8 +73,8 @@ def survival_state(tmp_path, monkeypatch):
         slot.append("assistant", "Filed as #13342.")
         slot.append("done", "", "done", broadcast=False)
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", reply)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", reply)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._maybe_auto_title", AsyncMock())
     yield state
     stopped.set()
 
@@ -115,7 +115,7 @@ def _assert_server_meta_stripped(meta: dict) -> None:
 async def test_feature_request_stamp_survives_ingress_persistence_echo_and_fetch(
     survival_state,
 ):
-    from kiro_crew.dashboard.ws import api_ws
+    from aj_crew.dashboard.ws import api_ws
 
     app = _make_app(survival_state)
     app.middlewares.insert(0, token_auth.token_auth_middleware())

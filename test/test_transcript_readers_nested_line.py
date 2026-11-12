@@ -16,8 +16,8 @@ import pytest
 from stray_line_helpers import cyclic_gc_quiesced  # noqa: F401 - fixture
 from stray_line_helpers import too_deep_to_decode
 
-from kiro_crew import session_digest
-from kiro_crew.history import ConversationLog
+from aj_crew import session_digest
+from aj_crew.history import ConversationLog
 
 
 def _no_raise(fn: Callable[..., Any], *args: Any) -> Any:

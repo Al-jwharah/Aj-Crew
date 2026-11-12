@@ -28,8 +28,8 @@ from aiohttp import web
 from handlers_mcp_coverage_helpers import sandbox_fixture  # noqa: F401
 from handlers_mcp_coverage_helpers import _payload, _request, _write_global
 
-from kiro_crew.dashboard.handlers import mcp as mcp_mod
-from kiro_crew.mcp_discovery import McpServerInfo
+from aj_crew.dashboard.handlers import mcp as mcp_mod
+from aj_crew.mcp_discovery import McpServerInfo
 
 # A file name only this suite uses, so it can only reach a body through the
 # exception's own text.
@@ -40,7 +40,7 @@ Handler = Callable[[web.Request], Awaitable[web.Response]]
 
 def _no_other_servers(monkeypatch: pytest.MonkeyPatch) -> None:
     """Discovery sees no server in any other scope, so an unknown name is a 404."""
-    import kiro_crew.mcp_discovery as disc
+    import aj_crew.mcp_discovery as disc
 
     monkeypatch.setattr(disc, "list_servers", lambda *a, **k: [McpServerInfo(name="other")])
 

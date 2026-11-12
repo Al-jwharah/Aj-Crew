@@ -7,7 +7,7 @@ see the same document, or a tampered, deleted file decides what the load ignores
 These tests pin a few of those readers, plus the secret-segment rule the pending diff
 withholds values by.
 
-The conftest pins ``KIROCREW_HOME`` per test, so ``config_dir()`` is a fresh temp home.
+The conftest pins ``AJCREW_HOME`` per test, so ``config_dir()`` is a fresh temp home.
 """
 
 from __future__ import annotations
@@ -16,14 +16,14 @@ import json
 
 import pytest
 
-from kiro_crew.config import loosening_provenance as lp
-from kiro_crew.config.paths import config_dir
+from aj_crew.config import loosening_provenance as lp
+from aj_crew.config.paths import config_dir
 
 
 @pytest.fixture
 def _enforcing(monkeypatch):
     monkeypatch.setattr(lp, "enforcement_active", lambda: True)
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     loader._invalidate_config_cache()
     yield loader
@@ -42,7 +42,7 @@ def _endorse_then_tamper(loader, endorsed: dict, on_disk: dict | None) -> None:
 
 @pytest.mark.parametrize("on_disk", [{"hooks": {}}, None], ids=["tampered", "deleted"])
 def test_agent_spec_config_read_is_the_endorsed_copy(_enforcing, on_disk) -> None:
-    from kiro_crew import agent
+    from aj_crew import agent
 
     _endorse_then_tamper(_enforcing, {"hooks": {"auto_deny_tools": ["rm"]}}, on_disk)
 
@@ -67,13 +67,13 @@ def test_uninstall_sees_the_endorsed_trust_grant_and_waits_for_the_review(
     """The grant the load enforces is the endorsed one, so uninstall must withdraw it;
     with config.json pending that save is refused, so the precondition says so before
     any destructive step, and nothing is written."""
-    from kiro_crew.apps import manager_uninstall
+    from aj_crew.apps import manager_uninstall
 
     endorsed = {"agent": {"apps_trusted": ["foo", "bar"]}}
     _endorse_then_tamper(_enforcing, endorsed, on_disk)
 
     assert manager_uninstall.trust_grant_removal_blocked("foo") == lp.PENDING_SAVE_REFUSED
-    with pytest.raises(RuntimeError, match="changed outside Kiro Crew"):
+    with pytest.raises(RuntimeError, match="changed outside Aj Crew"):
         manager_uninstall._drop_trust_grant("foo")
     assert json.loads(lp.endorsed_bytes("config.json") or b"{}") == endorsed
     # An app with no grant needs no config write, so its uninstall is not held up.
@@ -81,7 +81,7 @@ def test_uninstall_sees_the_endorsed_trust_grant_and_waits_for_the_review(
 
 
 def test_a_channel_save_starts_from_the_endorsed_copy(_enforcing) -> None:
-    from kiro_crew.dashboard.handlers import weixin_qr
+    from aj_crew.dashboard.handlers import weixin_qr
 
     _endorse_then_tamper(_enforcing, {"agent": {"sandbox": "auto"}}, {"agent": {"sandbox": "off"}})
 

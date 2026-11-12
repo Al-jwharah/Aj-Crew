@@ -7,18 +7,18 @@ from unittest.mock import MagicMock, patch
 import pytest
 from aiohttp import web
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard.dist_file_response import DistFileResponse
+from aj_crew import platform_compat
+from aj_crew.dashboard.dist_file_response import DistFileResponse
 
 
 @pytest.mark.asyncio
 async def test_pwa_file_serves_through_symlinked_dist(tmp_path):
-    """dev-backend.sh symlinks static/dist -> KiroCrewWebsite/dist. The
+    """dev-backend.sh symlinks static/dist -> AjCrewWebsite/dist. The
     traversal guard must compare resolved paths on both sides so the
     legitimate symlinked file isn't rejected (falling through to the SPA
     fallback, which serves index.html as text/html and breaks any JS
     import e.g. /pcm-worklet.js)."""
-    from kiro_crew.dashboard.handlers import core
+    from aj_crew.dashboard.handlers import core
 
     real_dist = tmp_path / "real-dist"
     real_dist.mkdir()
@@ -37,7 +37,7 @@ async def test_pwa_file_serves_through_symlinked_dist(tmp_path):
 @pytest.mark.asyncio
 async def test_pwa_file_rejects_traversal(tmp_path):
     """Guard still blocks paths resolving outside _DIST_DIR."""
-    from kiro_crew.dashboard.handlers import core
+    from aj_crew.dashboard.handlers import core
 
     dist = tmp_path / "dist"
     dist.mkdir()

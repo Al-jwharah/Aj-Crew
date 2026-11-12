@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.sqlite_quarantine import quarantine_sqlite_file
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.sqlite_quarantine import quarantine_sqlite_file
 
 _GARBAGE = b"this is not a sqlite file " * 400
 
@@ -92,7 +92,7 @@ def test_by_default_a_sidecar_that_will_not_move_is_reported_and_the_file_still_
     tmp_path: Path, monkeypatch, suffix: str
 ) -> None:
     """The task store's contract: a stuck sidecar never stops its recreate."""
-    import kiro_crew.sqlite_quarantine as q
+    import aj_crew.sqlite_quarantine as q
 
     db = tmp_path / "knowledge.db"
     db.write_bytes(_GARBAGE)
@@ -115,7 +115,7 @@ def test_a_wal_that_will_not_move_keeps_everything_in_place(tmp_path: Path, monk
     The WAL cannot move (Windows refuses while it is open). A new library
     beside it would overwrite those pages, so nothing may move or be created.
     """
-    import kiro_crew.sqlite_quarantine as q
+    import aj_crew.sqlite_quarantine as q
 
     db = tmp_path / "knowledge.db"
     wal_path = tmp_path / "knowledge.db-wal"
@@ -158,7 +158,7 @@ def test_a_wal_that_will_not_move_keeps_everything_in_place(tmp_path: Path, monk
 
 
 def test_a_journal_that_will_not_move_puts_moved_files_back(tmp_path: Path, monkeypatch) -> None:
-    import kiro_crew.sqlite_quarantine as q
+    import aj_crew.sqlite_quarantine as q
 
     db = tmp_path / "knowledge.db"
     db.write_bytes(_GARBAGE)
@@ -198,7 +198,7 @@ def test_a_recovered_library_carries_the_notice(tmp_path: Path, stores) -> None:
 
 
 def test_a_database_that_will_not_move_leaves_no_placeholder(tmp_path: Path, monkeypatch) -> None:
-    import kiro_crew.sqlite_quarantine as q
+    import aj_crew.sqlite_quarantine as q
 
     db = tmp_path / "knowledge.db"
     db.write_bytes(_GARBAGE)
@@ -229,7 +229,7 @@ def test_a_locked_database_is_not_moved(tmp_path: Path, monkeypatch) -> None:
 
 
 def test_the_gateway_store_opens_over_a_damaged_file(tmp_path: Path, monkeypatch, stores) -> None:
-    import kiro_crew.dashboard.state as state_mod
+    import aj_crew.dashboard.state as state_mod
 
     monkeypatch.setattr(state_mod, "config_dir", lambda: tmp_path)
     db_dir = tmp_path / "workspace" / "knowledge"
@@ -258,7 +258,7 @@ def test_the_gateway_store_opens_over_a_damaged_file(tmp_path: Path, monkeypatch
 def test_the_gateway_store_sends_no_notice_for_a_healthy_file(
     tmp_path: Path, monkeypatch, stores
 ) -> None:
-    import kiro_crew.dashboard.state as state_mod
+    import aj_crew.dashboard.state as state_mod
 
     monkeypatch.setattr(state_mod, "config_dir", lambda: tmp_path)
     notes: list[object] = []

@@ -1,7 +1,7 @@
-// kirocrew:// deep links for the Kiro Crew Electron app.
+// ajcrew:// deep links for the Aj Crew Electron app.
 //
 // Other programs on the machine (a companion app, a Slack button, a Raycast
-// script, `kirocrew open`, a web page listing the user's machines) use this
+// script, `ajcrew open`, a web page listing the user's machines) use this
 // scheme to open the desktop app on one session, on one app's detail page, or
 // on Settings -> Remote Crew's add form filled in with one machine, rather than
 // only bring its window forward. A link carries the same target as the
@@ -25,10 +25,10 @@
 "use strict";
 
 /** The scheme this app registers. Also the value in package.json `build.protocols`. */
-const SCHEME = "kirocrew";
+const SCHEME = "ajcrew";
 
 /**
- * Pick the kirocrew:// URL out of a process argv, if one is there.
+ * Pick the ajcrew:// URL out of a process argv, if one is there.
  *
  * On Windows and Linux the OS launches a SECOND instance with the URL as an
  * argument; Electron's `second-instance` event hands the primary instance that
@@ -53,15 +53,15 @@ function deepLinkFromArgv(argv) {
 }
 
 /**
- * Resolve a kirocrew:// URL to the dashboard route it may open.
+ * Resolve an ajcrew:// URL to the dashboard route it may open.
  *
  * Exactly five forms are accepted:
  *
- *   kirocrew://                              -> { route: "" }           (raise the window)
- *   kirocrew://chat?sid=<slot key>           -> { route: "/chat?sid=<encoded key>", slotKey }
- *   kirocrew://chat?crew=<crew id>&sid=<key> -> { route: "/chat?crew=<id>&crewSid=<encoded key>", slotKey }
- *   kirocrew://apps/detail/<name>            -> { route: "/apps/detail/<name>" }   (one app's detail page)
- *   kirocrew://remote-crew/add?host=<ssh host>[&user=<u>][&port=<n>][&name=<label>]
+ *   ajcrew://                              -> { route: "" }           (raise the window)
+ *   ajcrew://chat?sid=<slot key>           -> { route: "/chat?sid=<encoded key>", slotKey }
+ *   ajcrew://chat?crew=<crew id>&sid=<key> -> { route: "/chat?crew=<id>&crewSid=<encoded key>", slotKey }
+ *   ajcrew://apps/detail/<name>            -> { route: "/apps/detail/<name>" }   (one app's detail page)
+ *   ajcrew://remote-crew/add?host=<ssh host>[&user=<u>][&port=<n>][&name=<label>]
  *                                            -> { route: "/settings/instances?host=<[u@]ssh host>[&port=<n>][&name=<label>]" }
  *                                               (the Remote Crew add form, filled in; see resolveRemoteCrewAdd)
  *
@@ -107,8 +107,8 @@ function resolveDeepLink(raw) {
   if (url.username || url.password || url.port) return refuse("credentials or port in URL");
   if (url.hash) return refuse("fragment not allowed");
 
-  // `new URL("kirocrew://chat?sid=x")` puts "chat" in hostname and "" in
-  // pathname. A bare `kirocrew://` (or `kirocrew:`) has an empty hostname.
+  // `new URL("ajcrew://chat?sid=x")` puts "chat" in hostname and "" in
+  // pathname. A bare `ajcrew://` (or `ajcrew:`) has an empty hostname.
   const host = url.hostname.toLowerCase();
   const segments = url.pathname.split("/").filter(Boolean);
   const params = [...url.searchParams.keys()];
@@ -212,11 +212,11 @@ function isSlotKey(s) {
 // so the slot-key rule above is capped there. A test pins both.
 const CREW_SLOT_KEY_RE = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 // A crew id as the instances registry mints it (`_ID_RE`,
-// src/kiro_crew/instances/registry.py; a test pins the two).
+// src/aj_crew/instances/registry.py; a test pins the two).
 const CREW_ID_RE = /^[a-z0-9][a-z0-9-]{0,62}$/;
 
 // App names: the manifest's kebab-case grammar, `KEBAB_RE` in
-// src/kiro_crew/apps/manifest_names.py, which every door that admits an app
+// src/aj_crew/apps/manifest_names.py, which every door that admits an app
 // enforces. It is checked here with plain logic rather than a regex, because
 // the name arrives from outside the process: one or more parts joined by
 // single dashes, each part made only of `a`-`z` and `0`-`9`. The length cap
@@ -238,7 +238,7 @@ function isAppName(s) {
   return true;
 }
 
-// SSH hosts: what `validate_ssh_host` (src/kiro_crew/instances/validation.py)
+// SSH hosts: what `validate_ssh_host` (src/aj_crew/instances/validation.py)
 // accepts, the check the gateway runs before it puts a host in an ssh command
 // line. A host, an FQDN, an ssh-config alias or `user@host`: at most one `@`,
 // each part starting with a letter, digit or underscore and holding only those,
@@ -261,7 +261,7 @@ function isGatewayPort(s) {
 }
 
 // Crew labels: not blank, at most the registry's `INSTANCE_NAME_MAX` characters
-// (src/kiro_crew/instances/registry.py, counted in code points as Python does;
+// (src/aj_crew/instances/registry.py, counted in code points as Python does;
 // test/test_cli_open.py keeps the two equal), and no control or invisible
 // formatting character, so the label the user reads in the form is the text it
 // holds.

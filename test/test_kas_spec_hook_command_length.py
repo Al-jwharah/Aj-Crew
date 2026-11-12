@@ -18,13 +18,13 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew.agent_materialization.kiro_hooks import _MAX_HOOK_PAYLOAD_LEN
-from kiro_crew.agent_sdk import spec_hooks
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.security.paths import MAX_SCANNABLE_COMMAND_CHARS
+import aj_crew.config.paths as paths_mod
+from aj_crew.agent_materialization.kiro_hooks import _MAX_HOOK_PAYLOAD_LEN
+from aj_crew.agent_sdk import spec_hooks
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard import chat_runner
+from aj_crew.security.paths import MAX_SCANNABLE_COMMAND_CHARS
 
 _OBJECT_LIMIT = MAX_SCANNABLE_COMMAND_CHARS
 _DOC_LIMIT = _MAX_HOOK_PAYLOAD_LEN

@@ -6,7 +6,7 @@
  *     underline on hover, the `copy` cursor) while a backend-confirmed path chip
  *     keeps the actionable look (accent, hover underline, pointer, glyph) — and
  *     each chip's accessible name states ITS click ("Copy …" vs "Open …"). The
- *     colours are asserted as COMPUTED values on both Kiro themes: the theme's
+ *     colours are asserted as COMPUTED values on both Aj themes: the theme's
  *     inline-code rule outranks the `text-accent` utility, so only a chip rule
  *     keyed on `data-chip-action` makes the accent actually paint.
  *  2. Hovering the copy chip shows the tooltip that names the action.
@@ -73,14 +73,14 @@ const KINDS = { [FILE]: 'file', [DIR]: 'dir', [LONG_FILE]: 'file' }
 const now = Date.now() / 1000
 const slots = [{
   key: SLOT, title: 'Inline code chips', running: false,
-  last_message: 'where the tests live', messages: 4, agent: 'kirocrew',
+  last_message: 'where the tests live', messages: 4, agent: 'ajcrew',
   memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now),
   source_links: [], source_links_total: 0,
 }, {
   // A second OPEN session, so its key in a message becomes a session chip
   // (the reader's own session never does).
   key: OTHER_SLOT, title: 'Sidebar rewrite', running: false,
-  last_message: 'rebased onto main', messages: 2, agent: 'kirocrew',
+  last_message: 'rebased onto main', messages: 2, agent: 'ajcrew',
   memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now) - 60,
   source_links: [], source_links_total: 0,
 }]
@@ -110,9 +110,9 @@ const detail = {
         '',
         `The gateway reads \`${LONG_COPY}\` at boot, then falls back to defaults.`,
         '',
-        'Override it with `KIROCREW_SETTINGS` when testing; the override wins over the file for that boot only, and the startup log names which one was read.',
+        'Override it with `AJCREW_SETTINGS` when testing; the override wins over the file for that boot only, and the startup log names which one was read.',
         '',
-        'Unset it afterwards with `unset KIROCREW_SETTINGS`.',
+        'Unset it afterwards with `unset AJCREW_SETTINGS`.',
       ].join('\n'),
     },
     { role: 'user', ts: now - 25, content: 'Where did the sidebar work go, and the screenshot?' },
@@ -245,11 +245,11 @@ async function main() {
     // :not(pre)>code{color:…}`, specificity 0,2,2) and the unlayered `text-accent`
     // utility (0,1,0) loses to it, so the class alone painted nothing — every chip
     // wore the code colour, and even with the accent restored the two purples
-    // (#c19aff / #b07fff) read as one kind of chip. The rule: a copy chip is
-    // NEUTRAL (the prose colour, as on every non-Kiro theme) with a dotted
+    // (#99f6e4 / #5eead4) read as one kind of chip. The rule: a copy chip is
+    // NEUTRAL (the prose colour, as on every non-Aj theme) with a dotted
     // underline; a chip whose click navigates is the accent. Keyed on
     // `data-chip-action`.
-    const ACCENT_COLOUR = { dark: 'rgb(176, 127, 255)', light: 'rgb(142, 72, 255)' } // #b07fff (message links) / --accent
+    const ACCENT_COLOUR = { dark: 'rgb(94, 234, 212)', light: 'rgb(15, 118, 110)' } // #5eead4 (message links) / --accent
     assert(`${theme}: chips declare their action (${rest.copy.action} / ${rest.file.action} / ${rest.dir.action})`,
       rest.copy.action === 'copy' && rest.file.action === 'navigate' && rest.dir.action === 'navigate')
     assert(`${theme}: copy chip paints in the NEUTRAL prose colour (${rest.copy.color} vs prose ${rest.copy.prose})`,
@@ -470,7 +470,7 @@ async function main() {
   // unreachable; the bubble opens above instead, over a line already read. ---
   await h.page.mouse.move(5, 5)
   await h.page.waitForTimeout(1600)
-  const lastLineChip = h.page.locator('code[aria-label="Copy unset KIROCREW_SETTINGS"]')
+  const lastLineChip = h.page.locator('code[aria-label="Copy unset AJCREW_SETTINGS"]')
   await lastLineChip.hover()
   await h.page.waitForTimeout(200)
   const lastGeo = await bubbleGeometry(lastLineChip)
@@ -527,7 +527,7 @@ async function main() {
   await h.page.evaluate(() => window.scrollTo(0, 0))
   await h.page.waitForTimeout(300)
 
-  // --- Session chip, on the default (Kiro dark) theme: recoloured by the same
+  // --- Session chip, on the default (Aj dark) theme: recoloured by the same
   // rule as the path chips, and its Ctrl+click copy gated on the write. ---
   await h.load('dark', { selector: 'textarea[data-composer-input]', settle: 900 })
   await h.page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: h.base })
@@ -545,7 +545,7 @@ async function main() {
     }
   })
   assert(`session: chip declares "navigate" and paints in the accent (${sessionRest.action}, ${sessionRest.color})`,
-    sessionRest.action === 'navigate' && sessionRest.color === 'rgb(176, 127, 255)')
+    sessionRest.action === 'navigate' && sessionRest.color === 'rgb(94, 234, 212)')
   assert(`session: chip is named for its click (${sessionRest.name})`, sessionRest.name === `Switch to session ${OTHER_SLOT}`)
   assert(`session: no native title, the bubble is its tooltip (${sessionRest.title})`, sessionRest.title === null)
   await sessionChip.hover()

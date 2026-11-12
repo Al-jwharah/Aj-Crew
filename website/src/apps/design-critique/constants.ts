@@ -34,7 +34,7 @@ import { i18nT } from '../../i18n/t'
 // The core agent, not a bundled one. A builtin's declared `agents` are never
 // registered (see the CRITIC note in prompts.ts), so naming `design-critic` here
 // would fail every request; the persona travels with the prompt instead.
-export const AGENT = 'kirocrew'
+export const AGENT = 'ajcrew'
 export const HKEY = 'dc-history-v1'
 export const JOBKEY = 'dc-current-job'
 // Every slot we create, until we've deleted it. Only ONE job record is kept, so

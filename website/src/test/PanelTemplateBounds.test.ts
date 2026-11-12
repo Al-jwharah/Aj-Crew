@@ -18,7 +18,7 @@ import { join } from 'node:path'
 
 const TEMPLATE = join(
   __dirname,
-  '../../../src/kiro_crew/agent_panel_templates/default.html',
+  '../../../src/aj_crew/agent_panel_templates/default.html',
 )
 
 /**
@@ -47,7 +47,7 @@ function templateScript(): string {
 function render(data: unknown): void {
   const holder = document.createElement('script')
   holder.type = 'application/json'
-  holder.id = 'kirocrew-panel-data'
+  holder.id = 'ajcrew-panel-data'
   holder.textContent = JSON.stringify(data)
 
   const root = document.createElement('div')

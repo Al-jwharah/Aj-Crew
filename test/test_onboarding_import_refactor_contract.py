@@ -1,4 +1,4 @@
-"""Compatibility contract of the :mod:`kiro_crew.onboarding_import` facade.
+"""Compatibility contract of the :mod:`aj_crew.onboarding_import` facade.
 
 The engine is composed of cohesive owners (``onboarding_scan``,
 ``onboarding_plan``, ``onboarding_sources``, ``onboarding_apply``) behind the
@@ -10,7 +10,7 @@ rule is implemented:
 * the importable names and the public signatures;
 * that every re-exported name IS the canonical owner's object, so a caller of
   the facade and a caller of the owner can never observe two implementations;
-* that every engine warning is still emitted on the ``kiro_crew.onboarding_import``
+* that every engine warning is still emitted on the ``aj_crew.onboarding_import``
   logger, which operators and tests filter on;
 * that the deferred imports stay deferred, so importing the facade does not pull
   the dashboard MCP handler, MCP discovery or the cron service into a process;
@@ -63,13 +63,13 @@ import pytest
 import source_corpus
 from onboarding_import_refactor_contract_helpers import _ENGINE_MODULES
 
-from kiro_crew import onboarding_import, onboarding_scan, onboarding_sources, platform_compat
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.context import reset_context, set_context
-from kiro_crew.platform.interfaces import ImportSource
+from aj_crew import onboarding_import, onboarding_scan, onboarding_sources, platform_compat
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.context import reset_context, set_context
+from aj_crew.platform.interfaces import ImportSource
 
-_FACADE_LOGGER = "kiro_crew.onboarding_import"
+_FACADE_LOGGER = "aj_crew.onboarding_import"
 
 #: Names reached through the facade by code this engine does not own -- imported,
 #: or cited by their ``onboarding_import.<name>`` path in specs, docstrings and
@@ -123,25 +123,25 @@ _FACADE_DEFINED = (
 
 #: The canonical owner of every re-exported consumer name.
 _OWNERS = {
-    "CATEGORY_IDS": "kiro_crew.onboarding_scan",
-    "_Item": "kiro_crew.onboarding_scan",
-    "_frontmatter": "kiro_crew.onboarding_scan",
-    "_column0_activation_declared": "kiro_crew.onboarding_scan",
-    "_load_no_alias_yaml": "kiro_crew.onboarding_scan",
-    "CONFLICT_STRATEGIES": "kiro_crew.onboarding_apply",
-    "STRATEGY_SKIP": "kiro_crew.onboarding_apply",
-    "STRATEGY_RENAME": "kiro_crew.onboarding_apply",
-    "STRATEGY_OVERWRITE": "kiro_crew.onboarding_apply",
-    "STRATEGY_CATEGORIES": "kiro_crew.onboarding_apply",
-    "_WriteOutcome": "kiro_crew.onboarding_apply",
-    "predecessor_mcp_names": "kiro_crew.onboarding_sources",
-    "stale_mcp_binaries": "kiro_crew.onboarding_sources",
-    "_managed_mcp_names": "kiro_crew.onboarding_sources",
-    "_sources": "kiro_crew.onboarding_sources",
-    "_Source": "kiro_crew.onboarding_sources",
-    "_SOURCE_ID_RE": "kiro_crew.onboarding_sources",
-    "_CORE_MANAGED_MCP_NAMES": "kiro_crew.onboarding_sources",
-    "_scan_source": "kiro_crew.onboarding_sources",
+    "CATEGORY_IDS": "aj_crew.onboarding_scan",
+    "_Item": "aj_crew.onboarding_scan",
+    "_frontmatter": "aj_crew.onboarding_scan",
+    "_column0_activation_declared": "aj_crew.onboarding_scan",
+    "_load_no_alias_yaml": "aj_crew.onboarding_scan",
+    "CONFLICT_STRATEGIES": "aj_crew.onboarding_apply",
+    "STRATEGY_SKIP": "aj_crew.onboarding_apply",
+    "STRATEGY_RENAME": "aj_crew.onboarding_apply",
+    "STRATEGY_OVERWRITE": "aj_crew.onboarding_apply",
+    "STRATEGY_CATEGORIES": "aj_crew.onboarding_apply",
+    "_WriteOutcome": "aj_crew.onboarding_apply",
+    "predecessor_mcp_names": "aj_crew.onboarding_sources",
+    "stale_mcp_binaries": "aj_crew.onboarding_sources",
+    "_managed_mcp_names": "aj_crew.onboarding_sources",
+    "_sources": "aj_crew.onboarding_sources",
+    "_Source": "aj_crew.onboarding_sources",
+    "_SOURCE_ID_RE": "aj_crew.onboarding_sources",
+    "_CORE_MANAGED_MCP_NAMES": "aj_crew.onboarding_sources",
+    "_scan_source": "aj_crew.onboarding_sources",
 }
 
 #: Public project names the module bound before it was split into owners, each
@@ -149,27 +149,27 @@ _OWNERS = {
 #: own object, so code written against the single module keeps resolving. Standard
 #: library, typing and third-party imports and private helpers are not surface.
 _PRE_SPLIT_PUBLIC_NAMES = {
-    "platform_compat": "kiro_crew",
-    "atomic_write": "kiro_crew.atomic_write",
-    "ConfigReadError": "kiro_crew.config.loader",
-    "update_config_locked": "kiro_crew.config.loader",
-    "config_dir": "kiro_crew.config.paths",
-    "make_sync_embed_fn": "kiro_crew.embeddings",
-    "ONBOARDING_IMPORT": "kiro_crew.frontmatter",
-    "parse_block_scalar_header": "kiro_crew.frontmatter",
-    "split_frontmatter": "kiro_crew.frontmatter",
-    "FileTooLargeError": "kiro_crew.hooks",
-    "safe_read_file_bytes_nolink": "kiro_crew.hooks",
-    "Lesson": "kiro_crew.learn",
-    "LessonStore": "kiro_crew.learn",
-    "contains_volatile_lesson_fact": "kiro_crew.lesson_validation",
-    "mcp_server_alias": "kiro_crew.mcp_utils",
-    "current_context": "kiro_crew.platform.context",
-    "safe_context_call": "kiro_crew.platform.context",
-    "contains_injection": "kiro_crew.security",
-    "is_sensitive_path": "kiro_crew.security",
-    "redact_with_findings": "kiro_crew.security",
-    "VectorMemoryStore": "kiro_crew.vector_memory",
+    "platform_compat": "aj_crew",
+    "atomic_write": "aj_crew.atomic_write",
+    "ConfigReadError": "aj_crew.config.loader",
+    "update_config_locked": "aj_crew.config.loader",
+    "config_dir": "aj_crew.config.paths",
+    "make_sync_embed_fn": "aj_crew.embeddings",
+    "ONBOARDING_IMPORT": "aj_crew.frontmatter",
+    "parse_block_scalar_header": "aj_crew.frontmatter",
+    "split_frontmatter": "aj_crew.frontmatter",
+    "FileTooLargeError": "aj_crew.hooks",
+    "safe_read_file_bytes_nolink": "aj_crew.hooks",
+    "Lesson": "aj_crew.learn",
+    "LessonStore": "aj_crew.learn",
+    "contains_volatile_lesson_fact": "aj_crew.lesson_validation",
+    "mcp_server_alias": "aj_crew.mcp_utils",
+    "current_context": "aj_crew.platform.context",
+    "safe_context_call": "aj_crew.platform.context",
+    "contains_injection": "aj_crew.security",
+    "is_sensitive_path": "aj_crew.security",
+    "redact_with_findings": "aj_crew.security",
+    "VectorMemoryStore": "aj_crew.vector_memory",
 }
 
 #: Modules the facade must NOT load at import time. Each is imported lazily at
@@ -178,9 +178,9 @@ _PRE_SPLIT_PUBLIC_NAMES = {
 #: (the dashboard handler imports this engine during gateway startup) or adds
 #: boot weight every importer pays.
 _DEFERRED_MODULES = (
-    "kiro_crew.dashboard.handlers.mcp",
-    "kiro_crew.mcp_discovery",
-    "kiro_crew.cron",
+    "aj_crew.dashboard.handlers.mcp",
+    "aj_crew.mcp_discovery",
+    "aj_crew.cron",
 )
 
 #: ``(seam, owner module)`` for every name the facade mirrors, read off the facade's
@@ -218,7 +218,7 @@ def install_sources():
             def import_sources(self) -> list[ImportSource]:
                 return list(sources)
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, import_sources=_Provider()))
 
     yield _install
@@ -239,7 +239,7 @@ class TestFacadeSurface:
         loaded from ``tmp_path``, the one place a star import is legal.
         """
         probe_path = tmp_path / "onboarding_star_probe.py"
-        probe_path.write_text("from kiro_crew.onboarding_import import *\n", encoding="utf-8")
+        probe_path.write_text("from aj_crew.onboarding_import import *\n", encoding="utf-8")
         spec = importlib.util.spec_from_file_location("onboarding_star_probe", probe_path)
         assert spec and spec.loader
         probe = importlib.util.module_from_spec(spec)
@@ -264,7 +264,7 @@ class TestFacadeSurface:
             public - set(onboarding_import.__all__)
         )
         assert public <= set(namespace), sorted(public - set(namespace))
-        gemini = importlib.import_module("kiro_crew.onboarding_sources.gemini")
+        gemini = importlib.import_module("aj_crew.onboarding_sources.gemini")
         assert namespace["url2pathname"] is gemini.url2pathname
         assert callable(vars(onboarding_import)["__getattr__"])
 
@@ -311,7 +311,7 @@ class TestFacadeSurface:
     def test_a_facade_defined_name_is_defined_here(self, name: str) -> None:
         # The persistence-switch and cron-probe ratchets locate these writers by
         # ``onboarding_import.py::<name>``; the plan/apply entry points are here too.
-        assert getattr(onboarding_import, name).__module__ == "kiro_crew.onboarding_import"
+        assert getattr(onboarding_import, name).__module__ == "aj_crew.onboarding_import"
 
 
 class TestLoggerIdentity:
@@ -322,7 +322,7 @@ class TestLoggerIdentity:
         return [
             record
             for record in caplog.records
-            if record.name.startswith("kiro_crew.onboarding") and record.levelno >= logging.WARNING
+            if record.name.startswith("aj_crew.onboarding") and record.levelno >= logging.WARNING
         ]
 
     def test_registry_warnings(self, caplog, install_sources) -> None:
@@ -361,7 +361,7 @@ class TestLoggerIdentity:
         # the real ~/.kiro unless redirected: the host floor only rebinds it when
         # the handler module was already imported, which is not yet the case when
         # this test is the first one a process runs.
-        mcp_handlers = importlib.import_module("kiro_crew.dashboard.handlers.mcp")
+        mcp_handlers = importlib.import_module("aj_crew.dashboard.handlers.mcp")
         global_mcp = tmp_path / "kiro" / "settings" / "mcp.json"
         monkeypatch.setattr(mcp_handlers, "_GLOBAL_MCP_JSON", global_mcp)
         monkeypatch.setattr(mcp_handlers, "_MCP_LOCK_PATH", global_mcp.with_suffix(".lock"))
@@ -420,7 +420,7 @@ class TestManagedNamesDuringAScan:
 
     def test_an_unwired_scan_refuses_to_guess_managed_names(self, tmp_path: Path) -> None:
         """A scan built outside ``_scan_source`` fails closed at the MCP projection."""
-        from kiro_crew.onboarding_scan import _Scan
+        from aj_crew.onboarding_scan import _Scan
 
         scan = _Scan(source_id="codex", root=tmp_path, user_home=tmp_path)
         with pytest.raises(RuntimeError, match="no registry"):
@@ -528,7 +528,7 @@ class TestMirroredSeams:
     @pytest.mark.parametrize(
         "patcher",
         [
-            lambda name, new: mock.patch(f"kiro_crew.onboarding_import.{name}", new),
+            lambda name, new: mock.patch(f"aj_crew.onboarding_import.{name}", new),
             lambda name, new: mock.patch.object(onboarding_import, name, new),
         ],
         ids=["mock.patch", "mock.patch.object"],
@@ -579,7 +579,7 @@ class TestMirroredSeams:
         assert name not in vars(onboarding_import)
 
     def test_a_name_outside_the_table_keeps_plain_module_behaviour(self) -> None:
-        with mock.patch("kiro_crew.onboarding_import._not_a_seam", "set", create=True):
+        with mock.patch("aj_crew.onboarding_import._not_a_seam", "set", create=True):
             assert vars(onboarding_import)["_not_a_seam"] == "set"
         assert "_not_a_seam" not in vars(onboarding_import)
         assert not hasattr(onboarding_import, "_not_a_seam")
@@ -625,7 +625,7 @@ class TestTheFacadesOwnCodeReadsTheOwner:
     """
 
     def test_the_facade_reads_no_mirrored_name_as_a_bare_global(self) -> None:
-        source = _engine_source("kiro_crew.onboarding_import").read_text(encoding="utf-8")
+        source = _engine_source("aj_crew.onboarding_import").read_text(encoding="utf-8")
         assert _bare_loads(source) == [], (
             "the facade reads these mirrored names from its own namespace, which only "
             "resolves if it binds them; read them off _owner(<name>) instead"
@@ -639,7 +639,7 @@ class TestTheFacadesOwnCodeReadsTheOwner:
         assert (
             _bare_loads(
                 "if TYPE_CHECKING:\n"
-                "    from kiro_crew.onboarding_apply import _write_json\n"
+                "    from aj_crew.onboarding_apply import _write_json\n"
                 "def f(path, data):\n"
                 '    _owner("_write_json")._write_json(path, data)\n'
             )
@@ -677,7 +677,7 @@ class TestTheMirroredNamesStayVisibleToTypeCheckers:
     sees one only through the ``TYPE_CHECKING`` imports, each from its owner."""
 
     def test_every_mirrored_name_is_imported_from_its_owner(self) -> None:
-        source = _engine_source("kiro_crew.onboarding_import").read_text(encoding="utf-8")
+        source = _engine_source("aj_crew.onboarding_import").read_text(encoding="utf-8")
         imported = _type_checking_imports(source)
         assert {name: imported.get(name) for name in onboarding_import._EXPORTS} == dict(
             onboarding_import._EXPORTS
@@ -719,15 +719,15 @@ class TestTheMirroredNamesStayVisibleToTypeCheckers:
 
     def test_the_check_can_fail(self) -> None:
         """An import outside the guard, or under another condition, is not counted."""
-        source = _engine_source("kiro_crew.onboarding_import").read_text(encoding="utf-8")
+        source = _engine_source("aj_crew.onboarding_import").read_text(encoding="utf-8")
         # Must flag: the facade's own guard with one name dropped from it.
         assert source.count("        _toml,\n") == 1
         assert "_toml" not in _type_checking_imports(source.replace("        _toml,\n", ""))
         assert (
             _type_checking_imports(
-                "from kiro_crew.onboarding_scan import _toml\n"
+                "from aj_crew.onboarding_scan import _toml\n"
                 "if DEBUG:\n"
-                "    from kiro_crew.onboarding_scan import _MAX_FILES\n"
+                "    from aj_crew.onboarding_scan import _MAX_FILES\n"
             )
             == {}
         )
@@ -775,7 +775,7 @@ class TestALoadedOwnerIsReadWithoutImportModule:
             # The refusal sits on the binding the miss path calls: a module that is
             # not loaded yet reaches it.
             with pytest.raises(AssertionError, match="resolution called import_module"):
-                onboarding_import._submodule("kiro_crew._onboarding_import_absent_probe")
+                onboarding_import._submodule("aj_crew._onboarding_import_absent_probe")
             assert refused.call_count == 1
 
 
@@ -1095,7 +1095,7 @@ def _hermes_projects_db_scenario(
         with connection:
             connection.execute("CREATE TABLE projects (path TEXT)")
     spy = patch_seam(_Spy(original))
-    hermes = importlib.import_module("kiro_crew.onboarding_sources.hermes")
+    hermes = importlib.import_module("aj_crew.onboarding_sources.hermes")
     scan = onboarding_scan._Scan(source_id="hermes", root=root, user_home=tmp_path)
     hermes._scan_hermes_projects_db(scan, root)
     assert _tables(spy) == ["projects"]
@@ -1106,9 +1106,7 @@ def _ledger_flush_scenario(tmp_path: Path, original: Any, patch_seam, install_so
     home = tmp_path / "home"
     _claude_skill(home)
     destination = tmp_path / "destination"
-    ledger = (
-        destination / importlib.import_module("kiro_crew.onboarding_apply")._LEDGER_RELATIVE_PATH
-    )
+    ledger = destination / importlib.import_module("aj_crew.onboarding_apply")._LEDGER_RELATIVE_PATH
     spy = patch_seam(_Spy(original))
     onboarding_import.apply_import(_preview("claude_code", home), data_home=destination)
     assert ledger in [call[0] for call in spy.calls]
@@ -1166,18 +1164,18 @@ _CALL_SITE_SEAMS: dict[str, Callable[..., None]] = {
 #: ``(seam, a module other than its owner that reads it)`` -> a scenario that patches
 #: ONLY the facade and proves that module's call site saw the patch.
 _CROSS_MODULE_READERS: dict[tuple[str, str], Callable[..., None]] = {
-    ("_MAX_FILES", "kiro_crew.onboarding_sources.openclaw"): _openclaw_agent_cap_scenario,
-    ("_is_link_like", "kiro_crew.onboarding_apply"): _apply_ancestor_scenario,
-    ("_is_link_like", "kiro_crew.onboarding_import"): _facade_probe_scenario,
-    ("_is_link_like", "kiro_crew.onboarding_sources"): _scan_source_scenario,
-    ("_is_link_like", "kiro_crew.onboarding_sources.amazon_quick"): _amazon_quick_profiles_scenario,
-    ("_is_link_like", "kiro_crew.onboarding_sources.hermes"): _hermes_profiles_scenario,
-    ("_is_link_like", "kiro_crew.onboarding_sources.openclaw"): _openclaw_agents_scenario,
-    ("_scan_lineage_install", "kiro_crew.onboarding_sources"): _scan_lineage_install_scenario,
-    ("_sqlite_columns", "kiro_crew.onboarding_sources.codex"): _codex_automations_scenario,
-    ("_sqlite_columns", "kiro_crew.onboarding_sources.hermes"): _hermes_projects_db_scenario,
-    ("_sqlite_columns", "kiro_crew.onboarding_sources.lineage"): _sqlite_columns_scenario,
-    ("_write_json", "kiro_crew.onboarding_import"): _ledger_flush_scenario,
+    ("_MAX_FILES", "aj_crew.onboarding_sources.openclaw"): _openclaw_agent_cap_scenario,
+    ("_is_link_like", "aj_crew.onboarding_apply"): _apply_ancestor_scenario,
+    ("_is_link_like", "aj_crew.onboarding_import"): _facade_probe_scenario,
+    ("_is_link_like", "aj_crew.onboarding_sources"): _scan_source_scenario,
+    ("_is_link_like", "aj_crew.onboarding_sources.amazon_quick"): _amazon_quick_profiles_scenario,
+    ("_is_link_like", "aj_crew.onboarding_sources.hermes"): _hermes_profiles_scenario,
+    ("_is_link_like", "aj_crew.onboarding_sources.openclaw"): _openclaw_agents_scenario,
+    ("_scan_lineage_install", "aj_crew.onboarding_sources"): _scan_lineage_install_scenario,
+    ("_sqlite_columns", "aj_crew.onboarding_sources.codex"): _codex_automations_scenario,
+    ("_sqlite_columns", "aj_crew.onboarding_sources.hermes"): _hermes_projects_db_scenario,
+    ("_sqlite_columns", "aj_crew.onboarding_sources.lineage"): _sqlite_columns_scenario,
+    ("_write_json", "aj_crew.onboarding_import"): _ledger_flush_scenario,
 }
 
 
@@ -1275,7 +1273,7 @@ class TestFacadeModuleAttributes:
 
 @pytest.mark.parametrize("attr", _MCP_HOST_PATHS)
 def test_the_mcp_host_paths_resolve_under_tmp_path(attr: str, tmp_path: Path) -> None:
-    mcp_handlers = importlib.import_module("kiro_crew.dashboard.handlers.mcp")
+    mcp_handlers = importlib.import_module("aj_crew.dashboard.handlers.mcp")
     assert Path(getattr(mcp_handlers, attr)).is_relative_to(tmp_path)
 
 
@@ -1288,11 +1286,11 @@ def _run_python(tmp_path: Path, code: str) -> str:
     # and spawns nothing, so the inherited PATH cannot reach a version-manager shim.
     env = {
         **os.environ,
-        "KIROCREW_HOME": str(env_home),
+        "AJCREW_HOME": str(env_home),
         "HOME": str(tmp_path),
         "USERPROFILE": str(tmp_path),
         "PYTHONPATH": str(Path(onboarding_import.__file__).resolve().parents[1]),
-        "KIROCREW_TELEMETRY": "0",
+        "AJCREW_TELEMETRY": "0",
     }
     completed = subprocess.run(
         [sys.executable, "-c", code],
@@ -1312,7 +1310,7 @@ class TestImportTimeBehaviour:
         out = _run_python(
             tmp_path,
             "import json, sys\n"
-            "import kiro_crew.onboarding_import\n"
+            "import aj_crew.onboarding_import\n"
             f"print(json.dumps([m for m in {list(_DEFERRED_MODULES)!r} if m in sys.modules]))\n",
         )
         assert json.loads(out.strip().splitlines()[-1]) == []
@@ -1323,17 +1321,17 @@ class TestImportTimeBehaviour:
         out = _run_python(
             tmp_path,
             f"import {module}\n"
-            "import kiro_crew.onboarding_import as facade\n"
+            "import aj_crew.onboarding_import as facade\n"
             "print(facade.preview_import.__module__)\n",
         )
-        assert out.strip().splitlines()[-1] == "kiro_crew.onboarding_import"
+        assert out.strip().splitlines()[-1] == "aj_crew.onboarding_import"
 
     def test_importing_mcp_cleanup_does_not_load_the_engine(self, tmp_path) -> None:
         out = _run_python(
             tmp_path,
             "import sys\n"
-            "import kiro_crew.mcp_cleanup\n"
-            "print('kiro_crew.onboarding_import' in sys.modules)\n",
+            "import aj_crew.mcp_cleanup\n"
+            "print('aj_crew.onboarding_import' in sys.modules)\n",
         )
         assert out.strip().splitlines()[-1] == "False"
 
@@ -1351,4 +1349,4 @@ def test_the_claude_code_source_id_is_the_foreign_app_not_the_provider() -> None
 
 
 def test_the_facade_module_is_importable_through_importlib() -> None:
-    assert importlib.import_module("kiro_crew.onboarding_import") is onboarding_import
+    assert importlib.import_module("aj_crew.onboarding_import") is onboarding_import

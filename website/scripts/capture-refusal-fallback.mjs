@@ -19,10 +19,10 @@
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { serveDist } from './lib/serve-dist.mjs'
-import { KIROCREW_CONFIG_FIXTURE, json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
+import { AJCREW_CONFIG_FIXTURE, json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/refusal-fallback'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -38,17 +38,17 @@ const scene = { refusal: '', slots: [], slotDetail: null }
 /** Feature routes only — the shared stub owns the boot path. */
 const extra = async (path, route) => {
   const method = route.request().method()
-  if (path === '/api/config/kirocrew' && method === 'PATCH') {
+  if (path === '/api/config/ajcrew' && method === 'PATCH') {
     const body = JSON.parse(route.request().postData() || '{}')
     if (body.path === 'agent.refusal_fallback_model') scene.refusal = body.value
     await json(route, { ok: true })
     return true
   }
-  if (path === '/api/config/kirocrew') {
+  if (path === '/api/config/ajcrew') {
     await json(route, {
-      ...KIROCREW_CONFIG_FIXTURE,
+      ...AJCREW_CONFIG_FIXTURE,
       agent: {
-        ...KIROCREW_CONFIG_FIXTURE.agent,
+        ...AJCREW_CONFIG_FIXTURE.agent,
         reasoning_effort: '',
         fallback_model: 'auto',
         refusal_fallback_model: scene.refusal,
@@ -267,7 +267,7 @@ async function main() {
     scene.slots = [{
       key: SLOT, title: 'Incident report summary', running: false,
       last_message: sc.messages[sc.messages.length - 1].content.slice(0, 60),
-      messages: sc.messages.length, agent: 'kirocrew', memory_mode: 'persistent',
+      messages: sc.messages.length, agent: 'ajcrew', memory_mode: 'persistent',
       project: PROJECT, folder_id: '', modified: Math.floor(Date.now() / 1000),
       source_links: [], source_links_total: 0,
     }]

@@ -15,8 +15,8 @@ from unittest import mock
 
 import pytest
 
-import kiro_crew.embeddings as embeddings_mod
-from kiro_crew.vector_memory import _HAS_FAISS, _HAS_NUMPY, SemanticRejectCode, VectorMemoryStore
+import aj_crew.embeddings as embeddings_mod
+from aj_crew.vector_memory import _HAS_FAISS, _HAS_NUMPY, SemanticRejectCode, VectorMemoryStore
 
 # Same xdist group as ``test_vector_memory.py`` and the topic files its docstring names, so
 # this file's tests share that group's worker; nothing in this file reads the source tree.
@@ -46,14 +46,14 @@ class TestEmbedLogsCarryNoMemoryText:
     def test_success_branch(self, tmp_path: Path, caplog: pytest.LogCaptureFixture, opened) -> None:
         store = self._store(tmp_path, opened=opened)
         store.embed_fn = lambda _t: [0.1, 0.2]
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.vector_memory"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.vector_memory"):
             assert store._try_embed(self._SENTINEL) == [0.1, 0.2]
         self._assert_not_logged(caplog)
 
     def test_none_branch(self, tmp_path: Path, caplog: pytest.LogCaptureFixture, opened) -> None:
         store = self._store(tmp_path, opened=opened)
         store.embed_fn = lambda _t: None
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.vector_memory"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.vector_memory"):
             assert store._try_embed(self._SENTINEL) is None
         self._assert_not_logged(caplog)
 
@@ -66,7 +66,7 @@ class TestEmbedLogsCarryNoMemoryText:
             raise RuntimeError("embedder down")
 
         store.embed_fn = boom
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.vector_memory"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.vector_memory"):
             assert store._try_embed(self._SENTINEL) is None
         self._assert_not_logged(caplog)
 
@@ -267,7 +267,7 @@ class TestFaissDimMismatch:
 
         import numpy as np
 
-        import kiro_crew.vector_memory as vm_mod
+        import aj_crew.vector_memory as vm_mod
 
         # Mock faiss with a real-behaving IndexFlatIP stand-in
         mock_index = MagicMock()
@@ -325,7 +325,7 @@ class TestFaissDimMismatch:
 
         import numpy as np
 
-        import kiro_crew.vector_memory as vm_mod
+        import aj_crew.vector_memory as vm_mod
 
         mock_index = MagicMock()
         mock_index.ntotal = 0
@@ -360,7 +360,7 @@ class TestFaissDimMismatch:
 
         import numpy as np
 
-        import kiro_crew.vector_memory as vm_mod
+        import aj_crew.vector_memory as vm_mod
 
         mock_index = MagicMock()
         mock_index.ntotal = 0
@@ -405,7 +405,7 @@ class TestWriteEpisodicWithoutEmbedding:
         """Store whose FAISS index is a populated mock (ntotal=1)."""
         from unittest.mock import MagicMock
 
-        import kiro_crew.vector_memory as vm_mod
+        import aj_crew.vector_memory as vm_mod
 
         mock_faiss = MagicMock()
         monkeypatch.setattr(vm_mod, "_HAS_FAISS", True)
@@ -729,7 +729,7 @@ class TestDeferredEmbedding:
         ``search_episodic`` needs only the stored blob (``_sqlite_vector_search``),
         so the vectors are useful with or without the index.
         """
-        import kiro_crew.vector_memory as vm_mod
+        import aj_crew.vector_memory as vm_mod
 
         monkeypatch.setattr(vm_mod, "_HAS_FAISS", False)
         store = opened(VectorMemoryStore(db_path=tmp_path / "mem.db"))
@@ -1005,7 +1005,7 @@ class TestSemanticWriteTimeEmbedding:
         assert lines and lines[0].startswith("pref.travel"), ctx
 
     def test_write_time_embed_uses_bulk_priority(self, tmp_path: Path, opened) -> None:
-        from kiro_crew.embeddings import PRIORITY_BULK
+        from aj_crew.embeddings import PRIORITY_BULK
 
         store = opened(VectorMemoryStore(db_path=tmp_path / "mem.db"))
         store.init()
@@ -1293,7 +1293,7 @@ def test_promotion_clustering_skips_vectors_it_cannot_compare() -> None:
     instead of failing the whole promotion pass."""
     import numpy as np
 
-    from kiro_crew.vector_memory_runtime.migration import cluster_episodes
+    from aj_crew.vector_memory_runtime.migration import cluster_episodes
 
     unit = np.zeros(8, dtype=np.float32)
     unit[0] = 1.0
@@ -1342,7 +1342,7 @@ class TestPromotionSkipIsObservable:
             patch.object(store, "_delete_episodic_row") as mock_delete,
             # Scoped to this module's logger: the package level is raised elsewhere, so an
             # unscoped at_level passes alone and fails in a full-suite run.
-            caplog.at_level(logging.INFO, logger="kiro_crew.vector_memory"),
+            caplog.at_level(logging.INFO, logger="aj_crew.vector_memory"),
         ):
             promoted = store.promote_episodic_patterns(min_count=1, min_sim=0.0)
 
@@ -1379,7 +1379,7 @@ class TestPromotionSkipIsObservable:
                 return_value=(SemanticRejectCode.VALUE_EMPTY, "Value must not be null or empty"),
             ),
             patch.object(store, "_delete_episodic_row"),
-            caplog.at_level(logging.INFO, logger="kiro_crew.vector_memory"),
+            caplog.at_level(logging.INFO, logger="aj_crew.vector_memory"),
         ):
             store.promote_episodic_patterns(min_count=1, min_sim=0.0)
             store.promote_episodic_patterns(min_count=1, min_sim=0.0)
@@ -1397,7 +1397,7 @@ class TestPromotionSkipIsObservable:
         import logging
         from unittest.mock import patch
 
-        import kiro_crew.vector_memory as vm_mod
+        import aj_crew.vector_memory as vm_mod
 
         store = opened(VectorMemoryStore(db_path=tmp_path / "mem.db", embedding_dim=8))
         store.init()
@@ -1418,7 +1418,7 @@ class TestPromotionSkipIsObservable:
                 return_value=(SemanticRejectCode.VALUE_EMPTY, "Value must not be null or empty"),
             ),
             patch.object(store, "_delete_episodic_row"),
-            caplog.at_level(logging.INFO, logger="kiro_crew.vector_memory"),
+            caplog.at_level(logging.INFO, logger="aj_crew.vector_memory"),
         ):
             store.promote_episodic_patterns(min_count=1, min_sim=0.0)
             store.promote_episodic_patterns(min_count=1, min_sim=0.0)

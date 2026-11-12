@@ -23,7 +23,7 @@ def _load_root_conftest():
     deterministic, and the fixtures it defines are inert in this namespace (a
     ``@pytest.fixture`` decorator only marks a function; nothing collects them here).
     """
-    spec = importlib.util.spec_from_file_location("_kirocrew_isolation_conftest", _ROOT_CONFTEST)
+    spec = importlib.util.spec_from_file_location("_ajcrew_isolation_conftest", _ROOT_CONFTEST)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)

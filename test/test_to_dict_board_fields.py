@@ -4,7 +4,7 @@ import asyncio
 import json
 from types import SimpleNamespace
 
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
 
 def _slot(*messages: dict) -> _ChatSlot:
@@ -66,7 +66,7 @@ def test_old_options_ending_no_longer_waits():
 
 
 def test_recent_options_ending_still_waits():
-    from kiro_crew.dashboard.slot_projection import OPTIONS_WAITING_MAX_AGE_SECS
+    from aj_crew.dashboard.slot_projection import OPTIONS_WAITING_MAX_AGE_SECS
 
     ts = _iso_ago(OPTIONS_WAITING_MAX_AGE_SECS - 3600)
     s = _slot({"role": "assistant", "content": "Pick.\n[OPTIONS: A | B]", "ts": ts})
@@ -76,7 +76,7 @@ def test_recent_options_ending_still_waits():
 
 
 def test_options_ending_cutoff_edges():
-    from kiro_crew.dashboard.slot_projection import (
+    from aj_crew.dashboard.slot_projection import (
         OPTIONS_WAITING_MAX_AGE_SECS,
         options_ending_is_stale,
     )
@@ -446,7 +446,7 @@ def test_last_ts_skips_the_turn_end_done_row():
 def test_last_ts_is_unchanged_by_a_rebuild_from_disk():
     # The same transcript before and after a restart: the live slot still holds
     # the unsaved rows, the rebuilt one holds only what the save path keeps.
-    from kiro_crew.dashboard.chat_persistence import _build_message_entry
+    from aj_crew.dashboard.chat_persistence import _build_message_entry
 
     s = _ChatSlot("test-slot")
     s.append("user", "question", "msg msg-u")
@@ -462,7 +462,7 @@ def test_last_ts_is_unchanged_by_a_rebuild_from_disk():
 def test_message_count_is_unchanged_by_a_rebuild_from_disk():
     # Each finished turn leaves a `done` row the save path never keeps, so a
     # count of every window row reads one row per turn higher until a restart.
-    from kiro_crew.dashboard.chat_persistence import _build_message_entry
+    from aj_crew.dashboard.chat_persistence import _build_message_entry
 
     s = _ChatSlot("test-slot")
     s.append("user", "question", "msg msg-u")
@@ -475,7 +475,7 @@ def test_message_count_is_unchanged_by_a_rebuild_from_disk():
 
 
 def test_last_ts_skips_every_transient_role():
-    from kiro_crew.dashboard.state import _TRANSIENT_ROLES
+    from aj_crew.dashboard.state import _TRANSIENT_ROLES
 
     for role in sorted(_TRANSIENT_ROLES):
         s = _slot(
@@ -496,7 +496,7 @@ def test_the_dashboard_unsaved_role_list_matches_the_save_path():
     import re
     from pathlib import Path
 
-    from kiro_crew.dashboard.state import _TRANSIENT_ROLES
+    from aj_crew.dashboard.state import _TRANSIENT_ROLES
 
     source = (
         Path(__file__).resolve().parents[1] / "website/src/hooks/unreadOnAttention.ts"
@@ -564,7 +564,7 @@ def test_not_interrupted_on_clean_finish():
     assert d["interrupted"] is False
 
 
-_QUIET_META = {"tool_call_id": "b", "tool_name": "nothing_to_do", "mcp_server": "kirocrew-core"}
+_QUIET_META = {"tool_call_id": "b", "tool_name": "nothing_to_do", "mcp_server": "ajcrew-core"}
 
 
 def test_not_interrupted_after_a_quiet_end():
@@ -576,7 +576,7 @@ def test_not_interrupted_after_a_quiet_end():
         {"role": "tool", "content": "🔧 gh pr view", "ts": "t2", "meta": {"tool_call_id": "a"}},
         {
             "role": "tool",
-            "content": "🔧 @kirocrew-core/nothing_to_do",
+            "content": "🔧 @ajcrew-core/nothing_to_do",
             "ts": "t3",
             "meta": {**_QUIET_META, "ends_turn": True},
         },
@@ -591,7 +591,7 @@ def test_a_refused_quiet_end_is_still_interrupted():
         {"role": "user", "content": "patrol", "ts": "t1"},
         {
             "role": "tool",
-            "content": "🔧 @kirocrew-core/nothing_to_do",
+            "content": "🔧 @ajcrew-core/nothing_to_do",
             "ts": "t2",
             "meta": dict(_QUIET_META),
         },
@@ -607,7 +607,7 @@ def test_a_quiet_end_followed_by_more_tool_work_does_not_close_the_turn():
         {"role": "user", "content": "patrol", "ts": "t1"},
         {
             "role": "tool",
-            "content": "🔧 @kirocrew-core/nothing_to_do",
+            "content": "🔧 @ajcrew-core/nothing_to_do",
             "ts": "t2",
             "meta": {**_QUIET_META, "ends_turn": True},
         },

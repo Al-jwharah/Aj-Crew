@@ -3,13 +3,13 @@
 ## Overview
 
 A **dynamic workflow** is one LLM-authored Python module that orchestrates several
-Kiro Crew agents through ordered phases. The module declares a pure-literal `META`
+Aj Crew agents through ordered phases. The module declares a pure-literal `META`
 dict and a single `async def workflow(ctx)` entrypoint; the engine validates it
 statically, executes it in a restricted namespace under hard ceilings, and streams
 a typed event journal that drives the UI, the chat `workflow_*` MCP tools, and
 resume.
 
-This module also provides Kiro Crew's shared orchestration substrate: run
+This module also provides Aj Crew's shared orchestration substrate: run
 identity, lifecycle state, event history, exact source, provenance, cancellation
 binding, and the reusable definition library. `RunRegistry.has_pending_work_for`
 provides a session-scoped, in-memory execution/terminal-handoff query for
@@ -20,7 +20,7 @@ driver of that substrate. TaskRunner is another, stricter product layer: it uses
 the common substrate but keeps its planning, approval, retry, test,
 git/worktree, replan, persistence, and cleanup semantics.
 
-The subsystem lives in `src/kiro_crew/workflows/` (14 modules, including `__init__.py`). This file is the
+The subsystem lives in `src/aj_crew/workflows/` (14 modules, including `__init__.py`). This file is the
 **frozen contract** those modules cite: `workflows/__init__.py` declares the `ctx`
 Protocol and the event vocabulary and points here, `events.py` says the per-type
 `data` field table lives here, and `validate.py` says never to relax a check here
@@ -72,17 +72,17 @@ service      (may import: validate, registry, runner, agent_exec, agent_pool, st
 ```
 
 The scan counts only relative sibling imports (`from .sib import …`, level 1).
-An absolute `kiro_crew.workflows.*` import is outside it: `agent_pool` imports
+An absolute `aj_crew.workflows.*` import is outside it: `agent_pool` imports
 `agent_exec` and `library` imports `store` that way, so the diagram's "leaves" are
 leaves only in the relative-import sense the test checks.
 
-The same test forbids the engine from importing `kiro_crew.dashboard.state` or
-`kiro_crew.dashboard.ws` directly, so progress leaves the engine only through the
+The same test forbids the engine from importing `aj_crew.dashboard.state` or
+`aj_crew.dashboard.ws` directly, so progress leaves the engine only through the
 injected event sink. `agent_exec`, `agent_pool`, and `store` are **optional
-adapters**, not engine layers. `runner.py` imports `kiro_crew.sel` and the
-`kiro_crew.security` redactors inside `try/except ImportError` and degrades to a
+adapters**, not engine layers. `runner.py` imports `aj_crew.sel` and the
+`aj_crew.security` redactors inside `try/except ImportError` and degrades to a
 no-op audit and unredacted (still truncated) failure text, so the engine stays
-importable standalone. `store.py` guards only `kiro_crew.config.loader.KiroCrewConfig`
+importable standalone. `store.py` guards only `aj_crew.config.loader.AjCrewConfig`
 that way (falling back to `config_dir()/workflows`); its `platform_compat`,
 `config.paths`, `execution_context`, `pinned_fs` and `security` imports are hard
 dependencies.
@@ -177,7 +177,7 @@ template: each run start reads `workflow_memory.inherited_step_agent(execution)`
 off the event loop and `WorkflowService._runner` hands it to both adapters as
 `default_agent`, so a `workflow_run` from a custom agent's chat runs its steps,
 and attributes their usage rows, as that agent, and the spawn gate vets that
-agent. The `kirocrew` floor, a carrier bound to a member and an app's own agent
+agent. The `ajcrew` floor, a carrier bound to a member and an app's own agent
 (its chat runs a launch copy no step session carries) and a template with no
 user-level spec (one only a checkout declares) give no default, so those steps run
 the configured pool agent.
@@ -186,7 +186,7 @@ the configured pool agent.
 (`agent_exec.build_agent_fn`, `agent_pool.build_pooled_agent_fn`) hand it to
 `get_or_create` as `reasoning_effort_override`, the same override `spawn_run`
 passes, so it outranks the crew pin and the configured default. It must be one of
-`kiro_crew.effort.EFFORT_LEVELS`; any other value fails the step
+`aj_crew.effort.EFFORT_LEVELS`; any other value fails the step
 (`WorkflowEffortInvalid`) before a session is allocated. Unset (`None` or `""`)
 passes nothing and the session resolves its effort as before. Effort applies
 when the step's session starts: the pooled adapter keys its warm sub-pools on
@@ -351,7 +351,7 @@ same terminal path.
 > early-stop never trips and no `budget_update` event is ever emitted. Wiring
 > per-call token cost into `charge()` is the missing half.
 
-### ports native to Kiro Crew
+### ports native to Aj Crew
 
 Four Protocols, each `Optional` on `ctx` and `None` when the host did not wire it:
 
@@ -657,7 +657,7 @@ context name from the first positional parameter, positional-only included, so a
 ## Structured output (`schema=`)
 
 `schema.py` is a dependency-free validator for the JSON-Schema **subset** the DSL
-actually uses. Kiro Crew's provider layer has no native schema enforcement and the
+actually uses. Aj Crew's provider layer has no native schema enforcement and the
 runtime ships neither `jsonschema` nor a JSON-Schema-consuming pydantic path.
 
 Supported: `type` (`object`, `array`, `string`, `integer`, `number`, `boolean`,
@@ -760,7 +760,7 @@ records: all mutation happens on the gateway event loop, so no locks are needed,
 and snapshots handed to callers are plain JSON-serializable dicts, never the live
 objects (in particular never the `asyncio.Task`).
 
-Strict JSON, not just Python-serializable: `kiro_crew.strict_json.json_portable` replaces
+Strict JSON, not just Python-serializable: `aj_crew.strict_json.json_portable` replaces
 every non-finite float (`inf`, `-inf`, `nan`) with `None` where script or agent
 values enter the record -- `EventStream._emit` event data, the terminal
 `result`, per-call `agent_results`, and the terminal merge of the runner's
@@ -925,7 +925,7 @@ can never observe or race live registry state.
 `WorkflowRunStore` persists **one self-contained JSON file per run** at
 `<workflows dir>/runs/<run_id>.json`. The directory resolves from a `workflows.dir`
 config key when present, else `<config_dir>/workflows` (so `~/.kiro/crew/workflows`
-by default, honoring `KIROCREW_HOME`).
+by default, honoring `AJCREW_HOME`).
 
 > Open question: `default_workflows_dir()` reads `cfg.workflows.dir` defensively
 > through `getattr`, but the shipped config dataclass has no `workflows` section,
@@ -1033,8 +1033,8 @@ best-effort.
 Every invocation still persists its authored script as part of the run snapshot
 above. Promotion into the reusable library is a separate, explicit user action.
 `WorkflowDefinitionLibrary` stores one JSON record per saved workflow at
-`<KIROCREW_HOME>/workflow_library/<workflow_id>.json`, which is global to the
-Kiro Crew data home and therefore shared by Kiro and adapted harnesses such as
+`<AJCREW_HOME>/workflow_library/<workflow_id>.json`, which is global to the
+Aj Crew data home and therefore shared by Kiro and adapted harnesses such as
 KAS. Unlike run snapshots, definitions do not follow the configurable
 `workflows.dir`: `workflow_library` is a dedicated `_CREW_SECRET_LEAVES`
 directory, so the shared sensitive-path gate blocks agent file tools and shell
@@ -1442,7 +1442,7 @@ See [Atomic run identity allocation](#atomic-run-identity-allocation).
 ### Authoring
 
 `author(intent)` turns a natural-language intent into a validated script using the
-same in-session model plumbing as the rest of Kiro Crew. Session creation has its
+same in-session model plumbing as the rest of Aj Crew. Session creation has its
 own narrow startup retry: up to three total attempts, each with a fresh isolated
 key and deterministic bounded backoff, only for `AcpRequestTimeout`,
 `AcpRuntimeDead`, or an `AcpError` accepted by the shared transient classifier.
@@ -1483,7 +1483,7 @@ before retry backoff, and the successfully acquired session is explicitly destro
 when authoring finishes; destruction shuts down the provider, removes the registry
 entry, and deletes any stale SessionMap entry. A workflow's authoring context
 therefore never pollutes (or is polluted by) chat, consolidation, or another run. It
-uses the tool-less `kirocrew-lite` agent with `ToolApprovalPolicy.REJECT_ALL`: the
+uses the tool-less `ajcrew-lite` agent with `ToolApprovalPolicy.REJECT_ALL`: the
 dominant cold-start cost is loading the full MCP toolset and system prompt, and
 authoring is pure text generation, so lite is what makes a fresh session cheap.
 `REJECT_ALL` is belt-and-suspenders against an alternate ACP backend injecting tools
@@ -1952,7 +1952,7 @@ breaks consumers with no warning.
 
 A re-freeze must update, in the same change:
 
-1. `src/kiro_crew/workflows/__init__.py` (the contract itself),
+1. `src/aj_crew/workflows/__init__.py` (the contract itself),
 2. this spec, and
 3. **`test/test_workflows_conformance.py`** (the conformance test).
 
@@ -1999,7 +1999,7 @@ table: where a row and its test disagree, the test is right.
   implementation.
 - **Pinned by** names the test module and the test function(s). Test modules live
   at `test/` in the repo root; engine sources live at
-  `src/kiro_crew/workflows/`.
+  `src/aj_crew/workflows/`.
 - A gate is *closed* by its test, not by this document. If a row disagrees with
   the named test, the test is right.
 
@@ -2049,7 +2049,7 @@ subset has to get right.
 | C2 | Malformed or invalid model output triggers a *bounded* retry (`DEFAULT_SCHEMA_RETRIES = 2`, so at most initial plus 2 attempts), then returns `None` rather than raising or looping. | `test_workflows_schema.py::test_c2_retry_then_success`, `::test_c2_all_malformed_returns_none`, `::test_c2_schema_violation_retried_then_none` | `schema.py` (`run_with_schema`) |
 | C3 | An object that parses as JSON but violates the schema is rejected, not returned: missing `required` key, wrong type, `enum` violation, and `bool` not counting as `integer`. | `test_workflows_schema.py::test_c3_missing_required_rejected`, `::test_c3_wrong_type_rejected`, `::test_c3_enum_violation_rejected`, `::test_c3_bool_is_not_integer` | `schema.py` |
 
-### Group D: Kiro Crew's own `ctx` primitives
+### Group D: Aj Crew's own `ctx` primitives
 
 Each native primitive delegates to a port injected per run. The gate is the
 *calling convention* (the ctx surface reaches the port with the right arguments),
@@ -2088,9 +2088,9 @@ and a git-dependent gate can redden a clean trunk.
 
 | Gate | Guarantees | Pinned by | Constrains |
 |---|---|---|---|
-| F1 | The layering in [Module layering](#module-layering) holds. No module may import backwards, no module escapes the declared contract, and the engine must not reach into `kiro_crew.dashboard.state` or `kiro_crew.dashboard.ws` (progress goes through the event bus or a port). | `test_workflows_architecture.py::test_layering_no_backward_or_unexpected_sibling_imports`, `::test_engine_does_not_import_dashboard_internals`, `::test_every_module_is_covered_by_the_contract` | all of `src/kiro_crew/workflows/` |
+| F1 | The layering in [Module layering](#module-layering) holds. No module may import backwards, no module escapes the declared contract, and the engine must not reach into `aj_crew.dashboard.state` or `aj_crew.dashboard.ws` (progress goes through the event bus or a port). | `test_workflows_architecture.py::test_layering_no_backward_or_unexpected_sibling_imports`, `::test_engine_does_not_import_dashboard_internals`, `::test_every_module_is_covered_by_the_contract` | all of `src/aj_crew/workflows/` |
 | F2 | The frozen contract in `workflows/__init__.py` cannot drift silently: `__all__`, the `WorkflowContext` data attributes, its exact method set, each method's signature and async-ness, each port's methods and `runtime_checkable`-ness, `EVENT_TYPES` (exact and ordered), and the event envelope keys plus JSON round-trip. Changing any of them is an explicit re-freeze that must update `__init__.py`, the spec above, and this test together. | `test_workflows_conformance.py::test_all_exports_exact`, `::test_ctx_method_set_exact`, `::test_ctx_method_signature`, `::test_port_method_signature`, `::test_event_types_exact_and_ordered`, `::test_event_envelope_keys_exact` | `__init__.py` |
-| F3 | Every implementation module under `workflows/` is imported by at least one `test/test_workflows_*.py`, so a module cannot be added without a test that reaches it. The gate carries its own negative control, so it cannot silently stop catching orphans. | `test_workflows_presence.py::test_every_workflows_module_has_a_referencing_test`, `::test_presence_gate_flags_an_orphan_module` | all of `src/kiro_crew/workflows/` |
+| F3 | Every implementation module under `workflows/` is imported by at least one `test/test_workflows_*.py`, so a module cannot be added without a test that reaches it. The gate carries its own negative control, so it cannot silently stop catching orphans. | `test_workflows_presence.py::test_every_workflows_module_has_a_referencing_test`, `::test_presence_gate_flags_an_orphan_module` | all of `src/aj_crew/workflows/` |
 
 ### Group G: authoring reliability
 

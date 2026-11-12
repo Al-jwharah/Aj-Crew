@@ -37,25 +37,25 @@ const SSO = { state: 'ok', seconds_remaining: 72000, expires_at: null, reason: '
 const SLOTS = [
   {
     key: 'browser-tabs-demo', title: 'Browser tab style demo', running: false,
-    last_message: 'Judging the tab restyle.', messages: 2, agent: 'kirocrew',
+    last_message: 'Judging the tab restyle.', messages: 2, agent: 'ajcrew',
     memory_mode: 'persistent', folder_id: '', modified: Math.floor(Date.now() / 1000),
     source_links: [], source_links_total: 0,
   },
   {
     key: 'fix-sidebar-dnd', title: 'Fix sidebar drag and drop', running: true,
-    last_message: 'Running the Playwright repro…', messages: 14, agent: 'kirocrew',
+    last_message: 'Running the Playwright repro…', messages: 14, agent: 'ajcrew',
     memory_mode: 'persistent', folder_id: '', modified: Math.floor(Date.now() / 1000) - 900,
     source_links: [], source_links_total: 0,
   },
   {
     key: 'settings-redesign', title: 'Settings redesign spec', running: false,
-    last_message: 'Display panel mockups saved.', messages: 31, agent: 'kirocrew',
+    last_message: 'Display panel mockups saved.', messages: 31, agent: 'ajcrew',
     memory_mode: 'persistent', folder_id: '', modified: Math.floor(Date.now() / 1000) - 3600,
     source_links: [], source_links_total: 0,
   },
   {
     key: 'weekly-report', title: 'Weekly report draft', running: false,
-    last_message: 'Draft ready for review.', messages: 6, agent: 'kirocrew',
+    last_message: 'Draft ready for review.', messages: 6, agent: 'ajcrew',
     memory_mode: 'persistent', folder_id: '', modified: Math.floor(Date.now() / 1000) - 7200,
     source_links: [], source_links_total: 0,
   },

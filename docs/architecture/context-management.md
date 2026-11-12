@@ -1,17 +1,17 @@
 # Context Management
 
-What Kiro Crew puts in front of the model, in what order, and where each piece
+What Aj Crew puts in front of the model, in what order, and where each piece
 comes from. Six questions, one section each: a fresh main chat session, the
 per-turn additions, a sub-agent, the default agent versus any other agent, a
 crew member's session, and which crew-member private files exist today.
 
 This is a contributor document: it cites private symbols throughout, so it lives
-here rather than in the packaged end-user tree (`src/kiro_crew/docs/`), whose
+here rather than in the packaged end-user tree (`src/aj_crew/docs/`), whose
 charter routes an engineering note to `docs/`. The packaged index links across to
 it.
 
 Everything here is read from the current code, and citations name a file and a
-**symbol** (`src/kiro_crew/context_assembly/turn_message.py` → `build_message`)
+**symbol** (`src/aj_crew/context_assembly/turn_message.py` → `build_message`)
 rather than a line number, which rots. Where an older doc disagreed with the code, that doc was
 corrected rather than annotated.
 
@@ -19,10 +19,10 @@ Detail this file deliberately does not restate:
 
 | For | Read |
 |---|---|
-| Agent specs, `skill://` mapping, config files | [Agents & Configuration](../../src/kiro_crew/docs/agents.md) |
-| Skill authoring, frontmatter, discovery tools | [Skills](../../src/kiro_crew/docs/skills.md) |
-| Spawning, limits, results | [Subagents & Parallel Work](../../src/kiro_crew/docs/subagents.md) |
-| Memory types, V1/V2, modes | [Memory & Learning](../../src/kiro_crew/docs/memory-and-learning.md) |
+| Agent specs, `skill://` mapping, config files | [Agents & Configuration](../../src/aj_crew/docs/agents.md) |
+| Skill authoring, frontmatter, discovery tools | [Skills](../../src/aj_crew/docs/skills.md) |
+| Spawning, limits, results | [Subagents & Parallel Work](../../src/aj_crew/docs/subagents.md) |
+| Memory types, V1/V2, modes | [Memory & Learning](../../src/aj_crew/docs/memory-and-learning.md) |
 | Section internals and budget rationale | [memory-skills-hooks spec](../system-specs/modules/memory-skills-hooks.md) |
 | Crew records, binding, `select_crew` | [crew-mode spec](../system-specs/modules/crew-mode.md) |
 | Sub-agent lifecycle, host/profile resolution | [subagent spec](../system-specs/modules/subagent.md), [platform-context spec](../system-specs/modules/platform-context.md) |
@@ -50,7 +50,7 @@ begin on its own line; the assembly newline-terminates the caller's
 |--:|---|---|---|
 | 1 | `[AGENT SYSTEM PROMPT]` | `config/prompt.md` (on the Claude Code backend with `kiro-cli` respelled `claude code`, nothing else renamed); `_load_agent_prompt` for a custom agent | skipped on a slim resume, and at a session start on a KAS known to apply that exact text as the agent's prompt (`template://<agent>#prompt`, recorded through kiro-cli 2.33.1 or later) |
 | 2 | `[CRITICAL RULES]` | `_critical_rules_for` (runtime-conditional) | unless the agent sets `includeCrewContext: false` |
-| 3 | `[CURRENT DATE]` | `get_local_tz` + `KiroCrewConfig.timezone` | always |
+| 3 | `[CURRENT DATE]` | `get_local_tz` + `AjCrewConfig.timezone` | always |
 | 4 | `[CURRENT AGENT]` / `[RUNTIME]` | `_runtime_display_name`, trusted `runtime_source` from the dispatcher | when a session key exists |
 | 4a | `[TOOL NAMES]` | `context_assembly/tool_names.py` → `tool_names_block` | Selected by `provider_type`; also in a minimal start and re-sent after compaction. Direct calls use active definitions, with qualified-name examples and recovery for legacy loaders that return only bare names. Loader inputs copy exact catalogue IDs; executor calls preserve the returned ID and never use the direct-call fallback |
 | 4b | `[ACTIVE MODEL]` | `context_assembly/sections.py` → `active_model_block`, from the live provider's `served_model` (the accessor the dashboard's model label reads); the harness gate in `agent_sdk/served_model_identity.py` | goose sessions only (`crew_states_served_model`: goose's own system prompt names no model, kiro-cli's does), when the session reports a model; also in a minimal start and a slim resume, and restated every follow-up (§2). Without it a model asked which model it is answers from training priors |
@@ -59,9 +59,9 @@ begin on its own line; the assembly newline-terminates the caller's
 | 7 | `[UI LANGUAGE]` | `_build_ui_language_section`, the configured language | only when set explicitly |
 | 8 | `[CONTEXT SCOPE]` | `_build_context_scope_section` | a parent withheld a group (§3) |
 | 9 | `[USER PROFILE]` | onboarding answers in config | non-empty, `lessons` group |
-| 10 | `[WORKSPACE IDENTITY]` | `workspace_dir_for` | `kirocrew` agent only |
-| 11 | `[DOCUMENTATION]` | `_build_docs_section`, the packaged docs dir | `kirocrew` agent, `project` group |
-| 12 | `[Steering resources]` | `_load_steering_resources` → `file://*.md` in `~/.kiro/agents/kirocrew.json`, each anchored as kiro-cli anchors it (relative at the session's project, else `$HOME`; `~/` at `$HOME`; absolute at its own prefix), plus kiro-cli's inherited defaults (global steering; the project's steering and `AGENTS.md` when one is bound), front matter stripped; a `manual`/`auto`/`fileMatch` document withheld (`folder_steering.every_session_body`); gated by `context_assembly/inclusion.py` → `steering_resources_part` | **Claude Code backend**, `kirocrew` agent, `project` group, not a member chat; re-sent after a compaction (§2, item 8) |
+| 10 | `[WORKSPACE IDENTITY]` | `workspace_dir_for` | `ajcrew` agent only |
+| 11 | `[DOCUMENTATION]` | `_build_docs_section`, the packaged docs dir | `ajcrew` agent, `project` group |
+| 12 | `[Steering resources]` | `_load_steering_resources` → `file://*.md` in `~/.kiro/agents/ajcrew.json`, each anchored as kiro-cli anchors it (relative at the session's project, else `$HOME`; `~/` at `$HOME`; absolute at its own prefix), plus kiro-cli's inherited defaults (global steering; the project's steering and `AGENTS.md` when one is bound), front matter stripped; a `manual`/`auto`/`fileMatch` document withheld (`folder_steering.every_session_body`); gated by `context_assembly/inclusion.py` → `steering_resources_part` | **Claude Code backend**, `ajcrew` agent, `project` group, not a member chat; re-sent after a compaction (§2, item 8) |
 | 13 | `[THREAD CONVERSATION HISTORY]` | `build_session_replay` (lossless, newest first), else `_recall_rows` truncation | new, non-resumed session |
 | 14 | `[PREVIOUS TURN WAS CANCELLED …]` | `_build_stop_event_notes` | recent user stop |
 | 15 | `[Memory …]` + `[Memory activity index]` + `[Memory activity]` + `[Memory tools]` | `memory.py` → `get_context`, `activity_index`, `get_activity_context` | not temporary, `memory` group; the activity block also needs `memory.inject_activity` |
@@ -82,13 +82,13 @@ binding, so re-injecting those would duplicate them (§5). Read the table as the
 V1 / non-member order.
 
 **The per-chat steering list reads these gates, never a copy.**
-`src/kiro_crew/steering_plan.py` answers, for one chat, whether each global,
+`src/aj_crew/steering_plan.py` answers, for one chat, whether each global,
 project and folder steering file reaches it: `briefing` for a member chat (the
 envelope decides), `harness` where KAS (`native_steering`) or kiro-cli (while the
 workspace inherits default resources, or for a document the agent's own
 `resources` name) loads it, and `no` on a harness with no path (`_project_steering_delivered`).
 Where Crew writes the text it reads the writer itself, not a copy of its rules: on
-Claude Code (the `kirocrew` template the turn resolves) the rows come from
+Claude Code (the `ajcrew` template the turn resolves) the rows come from
 `context_assembly.agent_spec.steering_resource_documents`, the one list
 `_load_steering_resources` joins, so a document the load keeps is `yes`, one it
 withholds is `no`, and one it reads from outside the two trees (`AGENTS.md`) gets
@@ -161,7 +161,7 @@ tokens, because characters are exact and free to count.
 
 Each per-block budget is `_budget(fraction)` — a **share of the base**, never a
 number of its own. The base, the shares and `_ResolvedCaps` live in
-`src/kiro_crew/context_assembly/budget.py`. The share is what the code states and what stays true when the
+`src/aj_crew/context_assembly/budget.py`. The share is what the code states and what stays true when the
 base moves, so the table quotes the share and the constant to read it from rather
 than a byte figure (`docs/system-specs/common/code-style.md` owns this rule).
 
@@ -244,7 +244,7 @@ agent and a crewmate's conductor get the pointer from `prompt.md`'s own token;
 every shipped conductor (`crew_mode.CONDUCTOR_TEMPLATES`) gets it appended to its
 contract block by `_resolve_agent_prompt`, and maps the skills it leads to
 (`skill_resources.WIDGET_POINTER_SKILLS`). Neither worker agent
-(`kirocrew-worker`, `kirocrew-mate-worker`) gets it, so the crewmate's worker
+(`ajcrew-worker`, `ajcrew-mate-worker`) gets it, so the crewmate's worker
 drops the token its default contract carries. On `more` the pointer says to draw
 an answer that reads better drawn as one widget without being asked; `less`
 prefers plain markdown.
@@ -318,7 +318,7 @@ The mechanism, when on:
   header and ledger news), and passes `""` on a turn whose text the person did not
   write (a recovery or Continue continuation, the synthesis prompt, an MCP
   App's message), which then matches and selects nothing. The headless callers
-  that wrap a request in Kiro Crew's own text pass the request alone: a
+  that wrap a request in Aj Crew's own text pass the request alone: a
   task-runner step its own title and description (`task_executor.task_trigger_text`,
   not the role text, the plan's other steps, the spec or the instructions), a
   task decomposition the spec, a workflow authoring turn the intent (through
@@ -358,7 +358,7 @@ The mechanism, when on:
 - The Jev decision point (`decisions/points/skills_select.py` →
   `selected_skills`, wired through the `select` callable) may **replace** the
   matched set for a sampled session; `None` keeps the match, `[]` empties it. See
-  [Jev Skill Selection](../../src/kiro_crew/docs/decisions.md).
+  [Jev Skill Selection](../../src/aj_crew/docs/decisions.md).
 
 #### Per-session body dedup
 
@@ -370,7 +370,7 @@ are LRU-bounded: `_SENT_SKILL_BODY_SESSIONS` (512) sessions and
 on its next match, never drops the skill.
 
 - **Reset.** The record for a session is dropped on a new session, on the first
-  turn after a compaction that armed `needs_reinjection` (Kiro Crew's own, or a
+  turn after a compaction that armed `needs_reinjection` (Aj Crew's own, or a
   backend compaction the turn's stream reported: the dashboard runner arms it as the
   status arrives, and every other turn loop that consumes the flag passes
   `compacted=True` to `rearm_reinjection` as its turn settles), and when
@@ -427,9 +427,9 @@ re-adds, once:
    session a contract it never agreed to, differing in a number it never chose.
    `{{COMPUTER_USE_BLOCK}}` is held the same way (`_session_computer_use_gate`),
    except that a resume re-takes the reading, because it starts a new backend
-   from the current spec: empty when that backend has `kirocrew-computer` in its
+   from the current spec: empty when that backend has `ajcrew-computer` in its
    spec, the short pointer to Settings when it does not. The usage text of that
-   server, and of `kirocrew-cron`, `kirocrew-guide` and `kirocrew-dashboard`, is
+   server, and of `ajcrew-cron`, `ajcrew-guide` and `ajcrew-dashboard`, is
    not in this block at all: it is each server's MCP `instructions`, which the
    harness keeps in its own system prompt, so a compaction does not drop it and
    nothing here has to restore it ([mcp](mcp.md), "Server instructions travel with
@@ -474,7 +474,7 @@ auto-nudge cycle message**, so each cycle starts from durable state rather than
 transcript memory. `build_message` adds the same block once on the first turn
 after a compaction (item 6 above), scrubbed of structural markers, unless that
 turn's text already carries it. It is empty when the session has no ledger or its phase is
-terminal. See [Session Ledger](../../src/kiro_crew/docs/session-ledger.md), [Monitor Loops](../../src/kiro_crew/docs/monitor-loops.md).
+terminal. See [Session Ledger](../../src/aj_crew/docs/session-ledger.md), [Monitor Loops](../../src/aj_crew/docs/monitor-loops.md).
 
 ## 3. Sub-agent sessions (`spawn_run`)
 
@@ -528,7 +528,7 @@ per-run model or effort override, or a member launch force the dedicated path.
 | Process | the parent's runtime (kiro-cli or codex) | its own process |
 | Start cost | ~200ms | ~3–5s |
 | Context assembly | identical `build_message` call | identical |
-| `$KIROCREW_SCRATCH` | **the parent's** | **the parent's** (mounted as a second window) |
+| `$AJCREW_SCRATCH` | **the parent's** | **the parent's** (mounted as a second window) |
 
 `agent_scratch.py` → `allocate_scratch` gives each spawned agent **process**
 `<data home>/scratch/<label>-<token8>/`, and `scratch_env` points
@@ -538,13 +538,13 @@ pins kiro-cli's chat log there, but only where `cap_kiro_cli_logs` can bound it
 (`_CAN_CAP_LOGS`); on Windows the key is omitted and kiro-cli keeps its default
 location, since a pinned log nothing rotates is worse than the CLI's own unlink.
 
-`$KIROCREW_SCRATCH` itself follows the **session tree**, not the process. A
+`$AJCREW_SCRATCH` itself follows the **session tree**, not the process. A
 shared-session child runs in the parent's process and sees the parent's directory
 for free; a dedicated-process child and a companion runtime are spawned with the
 parent's `work_scratch_dir` as `shared_scratch`, which the spawner mounts as a
 second private window into the masked scratch root and names as the child's
-`KIROCREW_SCRATCH` (`scratch_env(own, shared=…)`). So a brief staged under
-`$KIROCREW_SCRATCH` is readable by every child, however it was placed, and a
+`AJCREW_SCRATCH` (`scratch_env(own, shared=…)`). So a brief staged under
+`$AJCREW_SCRATCH` is readable by every child, however it was placed, and a
 `_bg` runtime recycled for age or RSS hands the sessions it takes over the same
 directory (its replacement inherits and adopts it). Reclamation is keyed on
 process liveness rather than on file age — a directory is removed only once every
@@ -555,18 +555,18 @@ directories above each window (`sandbox_plan.window_ancestors`) and nothing else
 `realpath` of a window `lstat`s every component, so without it a harness that
 canonicalizes its `$TMPDIR` — the Copilot CLI's `session/new` — fails on its own
 directory. Siblings stay unlistable and unreadable. The seams and the
-ownership rule: [subagent](../system-specs/modules/subagent.md#one-kirocrew_scratch-per-session-tree).
+ownership rule: [subagent](../system-specs/modules/subagent.md#one-ajcrew_scratch-per-session-tree).
 
 ## 4. Default agent vs other agents
 
 One function decides, for both session start and post-compaction re-injection:
 `context.py` → `_skills_injection_plan`. It returns `(inject?, globs)` from two
 facts — whether the agent's JSON maps skills, and whether the agent is a default
-agent or the `kirocrew-worker` derived from one (`WHOLE_CATALOG_TEMPLATES`, built
-from `KIROCREW_DEFAULT_AGENT_NAMES` plus `kirocrew-worker`, so it names `kirocrew`
+agent or the `ajcrew-worker` derived from one (`WHOLE_CATALOG_TEMPLATES`, built
+from `AJCREW_DEFAULT_AGENT_NAMES` plus `ajcrew-worker`, so it names `ajcrew`
 and the Bot's conductor and worker too). The harness matters for one row of the table: an
 unmapped custom agent on kiro-cli gets the skill trees kiro-cli lets it inherit,
-and nothing on any other harness (`src/kiro_crew/docs/agent-spec-fields.md` has
+and nothing on any other harness (`src/aj_crew/docs/agent-spec-fields.md` has
 the per-harness table). `is_cc` is accepted and ignored (steering, below, is the
 one block the backend does gate). `skill_search` (`session_skill_globs`) and KAS's
 skill rule (`kas_skill_scope`) read the same set, so an unmapped template in it
@@ -574,12 +574,12 @@ searches the whole catalog its startup directory lists. A Bot's conductor and
 worker read their mapping from the Bot folder
 (`mate_worker.mate_service_scope_spec`) rather than the roster; on kiro-cli an
 unmapped one there takes the inherited trees, and on every other harness it takes
-the `kirocrew` rows of the table.
+the `ajcrew` rows of the table.
 
 | Agent | `skill://` mapping | Skills it sees | Why |
 |---|---|---|---|
-| `kirocrew`, `kirocrew-worker`, Bot conductor and worker | none | the whole catalog (bounded discovery) | the default path |
-| `kirocrew`, `kirocrew-worker`, Bot conductor and worker | mapped | only the mapped set, on **either** backend | bounded directory and scoped activation |
+| `ajcrew`, `ajcrew-worker`, Bot conductor and worker | none | the whole catalog (bounded discovery) | the default path |
+| `ajcrew`, `ajcrew-worker`, Bot conductor and worker | mapped | only the mapped set, on **either** backend | bounded directory and scoped activation |
 | custom | none | **nothing**, or on kiro-cli the inherited trees | the agent is expected to bring its own |
 | custom | mapped | only the mapped set, on **either** backend | bounded directory and scoped activation |
 
@@ -638,20 +638,20 @@ transport protocol. MCP Tool Search discovers tool schemas, not skill bodies.
    Paginated listing and exact reads remain available during indexing. Trigger-time
    loading (§2), when enabled, is also constrained by an explicit mapping.
 
-### Consequence for `kirocrew-worker`
+### Consequence for `ajcrew-worker`
 
 `agent_materialization/worker_agent.py` → `_write_worker_spec` derives the worker spec as
-`default + @kirocrew-work − cron scheduling − unassigned opt-in servers`. The
+`default + @ajcrew-work − cron scheduling − unassigned opt-in servers`. The
 mirrored keys are `_WORKER_MIRRORED_SHAPES`: `tools`, `allowedTools`,
 `excludedTools`, `mcpServers`, `model`. `resources` is not among them:
 `_mirror_worker_skill_resources` appends the default's `skill://` entries to the
 template's `file://` steering glob, so the worker maps exactly what the default maps.
 
-`WHOLE_CATALOG_TEMPLATES` therefore puts the worker on the `kirocrew` rows of the
+`WHOLE_CATALOG_TEMPLATES` therefore puts the worker on the `ajcrew` rows of the
 table: with no mapping it sees the whole catalog its dispatcher sees, and with the
 default's mapping it sees that set, in its skill directory and in `skill_search`
 alike. Trigger matching is still gated on `not is_custom` in `build_message`, which
-reads `is_kirocrew_default_agent`, so per-message matching stays with the default
+reads `is_ajcrew_default_agent`, so per-message matching stays with the default
 agents and the worker is not one of them; a seed that wants a
 procedure followed names it. Memory, lessons, critical rules and hooks are
 unaffected: those are injected for every agent.
@@ -788,7 +788,7 @@ automatically for sessions it created, bounded by `agent.member_dispatch`.
 new session's agent as `agent.strip() or caller_slot.agent` — an omitted `agent`
 makes the child inherit the **caller's** agent, so a session created from a
 conductor is born a conductor, with no file-writing tools and unable to do the
-work. Pass `agent="kirocrew-worker"` (or the intended implementer) explicitly, and
+work. Pass `agent="ajcrew-worker"` (or the intended implementer) explicitly, and
 a self-contained brief with `session_send`. For a member-bound caller that explicit
 template selects the child's persona, not its memory: the child keeps the caller's
 store and member identity and takes `selection_kind == "template"`, which is what
@@ -823,24 +823,24 @@ per-member permission control; both exist today, in the forms above.
 
 | Question | Files |
 |---|---|
-| What is in the first-turn prompt, in what order | `src/kiro_crew/context.py` (`ContextBuilder`), whose `build_message` and `build_session_context` live in `src/kiro_crew/context_assembly/turn_message.py` and `session_start.py`, composed from the other owners there |
-| Which block is which, and how big it was | `src/kiro_crew/context_blocks.py` (`_MARKERS`, `_CLOSERS`, `measure_prompt`) |
-| Budgets, caps, the protected ceiling | `src/kiro_crew/context_assembly/budget.py` (`_budget`, `_ResolvedCaps`, `admit_background`), `src/kiro_crew/context.py` (`_resolve_caps`) |
-| Marker and fence scrubs of untrusted text | `src/kiro_crew/context_assembly/markers.py`, `src/kiro_crew/context.py` (`_neutralize_structural_markers`) |
-| Replay and recall projection | `src/kiro_crew/context_assembly/replay.py`, `src/kiro_crew/context.py` (`build_session_replay`, `_recall_rows`) |
-| Memory block contents | `src/kiro_crew/memory.py` (`get_context`, `activity_index`, `get_activity_context`) |
-| Lessons | `src/kiro_crew/learn.py`, `src/kiro_crew/vector_memory_runtime/lesson_write.py` (`write_lesson`), `src/kiro_crew/vector_memory_runtime/lessons.py` (the lesson readers, ranking and tiered rendering) |
-| Skill index, pinned bodies, discovery | `src/kiro_crew/skill_runtime/delivery.py` (`get_context`), `src/kiro_crew/skills_body_reads.py` (`load_skill`) |
-| Trigger matching, and its model-picked override | `src/kiro_crew/trigger_match.py`, `src/kiro_crew/skills_selection.py` (`get_triggered_skills`), `src/kiro_crew/skill_runtime/delivery.py` (`split_triggered`, `trigger_hint`), `src/kiro_crew/decisions/points/skills_select.py` |
-| Which agents get skills | `src/kiro_crew/context.py` (`_skills_injection_plan`), `src/kiro_crew/agent_discovery_parts/skill_scope.py` (`agent_skill_globs`), `src/kiro_crew/agent_discovery_parts/spec_fields.py` (`expand_skill_uri`) |
-| Steering and hooks | `src/kiro_crew/context_assembly/agent_spec.py` (`_load_steering_resources`, `steering_target_admissible`), `src/kiro_crew/hooks.py` |
-| Post-compaction re-injection | `src/kiro_crew/messaging/turn_bracket.py` (`TurnBracket`, `consume_reinjection`, `rearm_reinjection`; re-exported by `messaging/dispatch.py`) |
-| Ledger snapshot on nudge and post-compaction turns | `src/kiro_crew/session_ledger.py` (`render_snapshot`), `src/kiro_crew/dashboard/handlers/autonudge.py`, `src/kiro_crew/context_assembly/turn.py` (`ledger_reinjection_part`) |
-| Sub-agent context scope | `src/kiro_crew/subagent_parts/run_record.py` (`_context_groups_of`), `src/kiro_crew/mcp_tools/spawn.py`, `src/kiro_crew/mcp_tools/spawn_parts/schemas.py`, `src/kiro_crew/mcp_tools/spawn_parts/wave.py` |
-| Sub-agent prompt assembly, shared vs dedicated | `src/kiro_crew/subagent_manager/run_turn.py` (`_run_inner_impl`), `src/kiro_crew/subagent_manager/run_start.py` (`_should_use_session_sharing_impl`, `_sharing_plan_impl`) |
-| Scratch directories | `src/kiro_crew/agent_scratch.py` (`allocate_scratch`, `scratch_env`) |
-| The worker agent spec | `src/kiro_crew/agent_materialization/worker_agent.py` (`_write_worker_spec`) |
-| Member identity, rules, briefing, activity, V2 essentials | `src/kiro_crew/members.py` (the facade of the owners in `src/kiro_crew/members_parts/`), `src/kiro_crew/context_assembly/member.py` (`build_member_section`, `build_v2_essentials`), `src/kiro_crew/member_essential_context.py` |
-| Crew records, routing, binding | `src/kiro_crew/config/loader_pipeline.py`, `src/kiro_crew/config/loader_agents.py`, `src/kiro_crew/mcp_core_parts/crew.py` |
-| Per-member permissions | `src/kiro_crew/agent_capabilities.py`, `src/kiro_crew/agent_state.py` |
-| Session creation and agent inheritance | `src/kiro_crew/dashboard/session_control_parts/session_create.py` |
+| What is in the first-turn prompt, in what order | `src/aj_crew/context.py` (`ContextBuilder`), whose `build_message` and `build_session_context` live in `src/aj_crew/context_assembly/turn_message.py` and `session_start.py`, composed from the other owners there |
+| Which block is which, and how big it was | `src/aj_crew/context_blocks.py` (`_MARKERS`, `_CLOSERS`, `measure_prompt`) |
+| Budgets, caps, the protected ceiling | `src/aj_crew/context_assembly/budget.py` (`_budget`, `_ResolvedCaps`, `admit_background`), `src/aj_crew/context.py` (`_resolve_caps`) |
+| Marker and fence scrubs of untrusted text | `src/aj_crew/context_assembly/markers.py`, `src/aj_crew/context.py` (`_neutralize_structural_markers`) |
+| Replay and recall projection | `src/aj_crew/context_assembly/replay.py`, `src/aj_crew/context.py` (`build_session_replay`, `_recall_rows`) |
+| Memory block contents | `src/aj_crew/memory.py` (`get_context`, `activity_index`, `get_activity_context`) |
+| Lessons | `src/aj_crew/learn.py`, `src/aj_crew/vector_memory_runtime/lesson_write.py` (`write_lesson`), `src/aj_crew/vector_memory_runtime/lessons.py` (the lesson readers, ranking and tiered rendering) |
+| Skill index, pinned bodies, discovery | `src/aj_crew/skill_runtime/delivery.py` (`get_context`), `src/aj_crew/skills_body_reads.py` (`load_skill`) |
+| Trigger matching, and its model-picked override | `src/aj_crew/trigger_match.py`, `src/aj_crew/skills_selection.py` (`get_triggered_skills`), `src/aj_crew/skill_runtime/delivery.py` (`split_triggered`, `trigger_hint`), `src/aj_crew/decisions/points/skills_select.py` |
+| Which agents get skills | `src/aj_crew/context.py` (`_skills_injection_plan`), `src/aj_crew/agent_discovery_parts/skill_scope.py` (`agent_skill_globs`), `src/aj_crew/agent_discovery_parts/spec_fields.py` (`expand_skill_uri`) |
+| Steering and hooks | `src/aj_crew/context_assembly/agent_spec.py` (`_load_steering_resources`, `steering_target_admissible`), `src/aj_crew/hooks.py` |
+| Post-compaction re-injection | `src/aj_crew/messaging/turn_bracket.py` (`TurnBracket`, `consume_reinjection`, `rearm_reinjection`; re-exported by `messaging/dispatch.py`) |
+| Ledger snapshot on nudge and post-compaction turns | `src/aj_crew/session_ledger.py` (`render_snapshot`), `src/aj_crew/dashboard/handlers/autonudge.py`, `src/aj_crew/context_assembly/turn.py` (`ledger_reinjection_part`) |
+| Sub-agent context scope | `src/aj_crew/subagent_parts/run_record.py` (`_context_groups_of`), `src/aj_crew/mcp_tools/spawn.py`, `src/aj_crew/mcp_tools/spawn_parts/schemas.py`, `src/aj_crew/mcp_tools/spawn_parts/wave.py` |
+| Sub-agent prompt assembly, shared vs dedicated | `src/aj_crew/subagent_manager/run_turn.py` (`_run_inner_impl`), `src/aj_crew/subagent_manager/run_start.py` (`_should_use_session_sharing_impl`, `_sharing_plan_impl`) |
+| Scratch directories | `src/aj_crew/agent_scratch.py` (`allocate_scratch`, `scratch_env`) |
+| The worker agent spec | `src/aj_crew/agent_materialization/worker_agent.py` (`_write_worker_spec`) |
+| Member identity, rules, briefing, activity, V2 essentials | `src/aj_crew/members.py` (the facade of the owners in `src/aj_crew/members_parts/`), `src/aj_crew/context_assembly/member.py` (`build_member_section`, `build_v2_essentials`), `src/aj_crew/member_essential_context.py` |
+| Crew records, routing, binding | `src/aj_crew/config/loader_pipeline.py`, `src/aj_crew/config/loader_agents.py`, `src/aj_crew/mcp_core_parts/crew.py` |
+| Per-member permissions | `src/aj_crew/agent_capabilities.py`, `src/aj_crew/agent_state.py` |
+| Session creation and agent inheritance | `src/aj_crew/dashboard/session_control_parts/session_create.py` |

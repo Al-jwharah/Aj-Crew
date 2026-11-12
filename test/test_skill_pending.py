@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.skills import AutoSkillProvenance, ClaimRefusal, PendingApprovalRefused, SkillsLoader
+from aj_crew.skills import AutoSkillProvenance, ClaimRefusal, PendingApprovalRefused, SkillsLoader
 
 
 @pytest.fixture()
@@ -165,7 +165,7 @@ def test_noncanonical_pending_dir_name_is_hidden(loader):
 def test_stage_rolls_back_claim_on_write_failure(loader, monkeypatch):
     """A partial write (e.g. disk full) must not leave a claimed-but-empty
     pending dir that blocks re-staging the slug."""
-    import kiro_crew.skills as S
+    import aj_crew.skills as S
 
     def _boom(**kw):
         raise OSError("disk full")
@@ -249,7 +249,7 @@ def test_redaction_breaking_script_aborts_promotion(loader, monkeypatch):
 def test_failed_move_restores_meta(loader, monkeypatch):
     """If the promotion move fails after .meta.json was removed, the metadata is
     restored so the candidate isn't stranded in pending without it."""
-    import kiro_crew.skills as S
+    import aj_crew.skills as S
 
     _stage(loader, "movefail")
     meta = loader._pending_root() / "movefail" / ".meta.json"
@@ -651,7 +651,7 @@ def test_claim_without_the_lock_is_refused_not_attempted(loader, monkeypatch):
     def refusing(fd, **kw):
         raise OSError("lock held by another process")
 
-    monkeypatch.setattr("kiro_crew.skills.file_lock", refusing)
+    monkeypatch.setattr("aj_crew.skills.file_lock", refusing)
     assert _stage_distinct(loader, "unlocked") is None
     assert not (loader._pending_root() / "unlocked").exists()
     assert (
@@ -706,7 +706,7 @@ def test_claim_lock_refusal_is_reported_as_retryable(loader, monkeypatch):
     def refusing(fd, **kw):
         raise OSError("lock held by another process")
 
-    monkeypatch.setattr("kiro_crew.skills.file_lock", refusing)
+    monkeypatch.setattr("aj_crew.skills.file_lock", refusing)
     staged = ClaimRefusal()
     assert _stage_distinct(loader, "stall-retryable", refusal=staged) is None
     assert staged.retryable is True, "an unacquired claim lock is the retryable refusal"
@@ -913,7 +913,7 @@ def _stage_with_document_of(loader, slug, size):
     it produced: a test cannot pass on a document smaller than the one it names.
     Returns the staged procedure.
     """
-    from kiro_crew import skills as sk
+    from aj_crew import skills as sk
 
     prov = _prov()
     heading = "## Steps\n\n"
@@ -951,7 +951,7 @@ def test_detail_serves_a_generated_document_over_the_script_cap(loader):
     The whole body is served, not a view cut at the script cap, and the approve
     the detail informs goes through.
     """
-    from kiro_crew.skills_script_validator import MAX_SCRIPT_BYTES
+    from aj_crew.skills_script_validator import MAX_SCRIPT_BYTES
 
     assert _REPORTED_DOCUMENT_BYTES > MAX_SCRIPT_BYTES, "the fixture is under the old cap"
     procedure = _stage_with_document_of(loader, "long-doc", _REPORTED_DOCUMENT_BYTES)
@@ -971,7 +971,7 @@ def test_a_bundled_script_over_the_script_cap_is_refused(loader):
     executable under ``scripts/``, and the refusal is of the whole candidate, not
     an omission of the one script.
     """
-    from kiro_crew.skills_script_validator import MAX_SCRIPT_BYTES
+    from aj_crew.skills_script_validator import MAX_SCRIPT_BYTES
 
     assert MAX_SCRIPT_BYTES == 4096, "the bundled-script cap is not 4 KiB"
     _stage(loader, "big-script")
@@ -990,7 +990,7 @@ def test_a_document_over_the_document_cap_is_refused_whole(loader):
     which stays staged (the dashboard's ``pending_skill_unreadable`` case), and
     nothing is served in part: the refusal is the whole detail, not a cut body.
     """
-    from kiro_crew import skills as sk
+    from aj_crew import skills as sk
 
     _stage(loader, "cap-doc")
     pdir = loader._pending_root() / "cap-doc"
@@ -1019,7 +1019,7 @@ def test_metadata_over_the_document_cap_refuses_the_candidate(loader):
     """
     import json as _json
 
-    from kiro_crew import skills as sk
+    from aj_crew import skills as sk
 
     _stage(loader, "cap-meta")
     pdir = loader._pending_root() / "cap-meta"

@@ -29,14 +29,14 @@ export function useRunInTerminalConfig({
 
   // Opt-in "reuse the current terminal" for Run-in-terminal
   // (dashboard.terminal.reuse_current, default off — the fresh-shell default is
-  // unchanged). Read from the shared kirocrewConfig query and mirrored onto a
+  // unchanged). Read from the shared ajcrewConfig query and mirrored onto a
   // ref because the run-in-terminal handler (eventBridges.ts) installs once ([]-deps) and
   // reads it at event time, not at mount. Only a literal `true` turns it on —
   // the same "one literal decides it" rule the completion toggle uses, so a
   // hand-edited non-boolean cannot half-enable it.
   const { data: terminalCfg, isError: terminalCfgIsError, isPending: terminalCfgIsPending } = useQuery<{ dashboard?: { terminal?: { reuse_current?: boolean } } }>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
     staleTime: 30_000,
   })
   const terminalReuseRef = useRef(false)

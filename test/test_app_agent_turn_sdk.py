@@ -21,13 +21,13 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import llm_helpers
-from kiro_crew.apps import agent_turn_sdk
-from kiro_crew.apps.agent_turn_sdk import AgentTurnRefused, AgentTurnSDK
-from kiro_crew.apps.context import build_app_context
-from kiro_crew.platform import governance_profiles
-from kiro_crew.shared_crew import turn_gate
-from kiro_crew.shared_crew.admission import OperationKind
+from aj_crew import llm_helpers
+from aj_crew.apps import agent_turn_sdk
+from aj_crew.apps.agent_turn_sdk import AgentTurnRefused, AgentTurnSDK
+from aj_crew.apps.context import build_app_context
+from aj_crew.platform import governance_profiles
+from aj_crew.shared_crew import turn_gate
+from aj_crew.shared_crew.admission import OperationKind
 
 APP = "turn-probe"
 #: Names a hang only; every awaited turn here finishes on its own signal.
@@ -233,7 +233,7 @@ def test_a_oneshot_turn_rejects_every_tool_and_leaves_no_session(streamed, admit
     assert admitted[0]["automation"] is True
     assert admitted[0]["operation"] is OperationKind.BACKGROUND
     assert manager.events == [
-        ("get_or_create", key, "kirocrew-lite"),
+        ("get_or_create", key, "ajcrew-lite"),
         ("release", key),
         ("destroy", key),
     ]
@@ -299,7 +299,7 @@ def test_an_app_that_does_not_declare_agent_turns_gets_no_sdk(tmp_path: Path):
 
 
 def test_the_manifest_round_trips_the_grant_only_as_a_literal_true():
-    from kiro_crew.apps.manifest_sections import Permissions
+    from aj_crew.apps.manifest_sections import Permissions
 
     assert Permissions.from_dict({"agentTurns": True}).agentTurns is True
     assert Permissions.from_dict({"agentTurns": True}).to_dict() == {"agentTurns": True}
@@ -391,11 +391,11 @@ def test_an_unresolvable_default_agent_is_refused(monkeypatch, streamed, admitte
 
 
 def test_a_oneshot_turn_is_asked_about_its_fixed_agent(monkeypatch, streamed, admitted):
-    asked = _ceiling(monkeypatch, {"agents:kirocrew-lite"})
+    asked = _ceiling(monkeypatch, {"agents:ajcrew-lite"})
     manager = _Manager()
     with pytest.raises(AgentTurnRefused):
         asyncio.run(asyncio.wait_for(_sdk(manager).run_oneshot("p", label="translate"), _BOUND))
-    assert ("capabilities.spawn", "agents:kirocrew-lite", APP) in asked
+    assert ("capabilities.spawn", "agents:ajcrew-lite", APP) in asked
     assert manager.events == []
 
 
@@ -526,7 +526,7 @@ def test_a_session_whose_record_names_no_agent_is_refused_on_every_path(
     assert manager.events == [
         ("get_or_create", f"{APP}-k", "a1"),
         ("release", f"{APP}-k"),
-        ("get_or_create", oneshot_key, "kirocrew-lite"),
+        ("get_or_create", oneshot_key, "ajcrew-lite"),
         ("release", oneshot_key),
         ("destroy", oneshot_key),
     ]

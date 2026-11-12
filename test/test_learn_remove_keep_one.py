@@ -15,10 +15,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.handlers import cron
-from kiro_crew.learn import LessonStore
-from kiro_crew.mcp_tools import learn as learn_tools
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.dashboard.handlers import cron
+from aj_crew.learn import LessonStore
+from aj_crew.mcp_tools import learn as learn_tools
+from aj_crew.vector_memory import VectorMemoryStore
 
 RULE = "run the gate before pushing"
 

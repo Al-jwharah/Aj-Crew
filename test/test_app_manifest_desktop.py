@@ -13,14 +13,14 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps.desktop_manifest import (
+from aj_crew.apps.desktop_manifest import (
     MAX_DESKTOP_SHORTCUTS,
     MAX_DESKTOP_WINDOWS,
     DesktopConfig,
     canonical_accelerator,
 )
-from kiro_crew.apps.discovery import _manifest_to_builtin_dict
-from kiro_crew.apps.manifest import AppManifest
+from aj_crew.apps.discovery import _manifest_to_builtin_dict
+from aj_crew.apps.manifest import AppManifest
 
 _BASE: dict[str, Any] = {
     "name": "desk-probe",

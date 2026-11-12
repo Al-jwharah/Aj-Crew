@@ -15,20 +15,20 @@ import pytest
 from discord_helpers import _drop_live_config_snapshot  # noqa: F401
 from discord_helpers import FakeClient
 
-from conftest import CREDENTIAL_STRADDLE_SHAPES
-from kiro_crew.discord import renderer as discord_renderer
-from kiro_crew.discord.client import DISCORD_MAX_TEXT
-from kiro_crew.discord.renderer import (
+from aj_crew.discord import renderer as discord_renderer
+from aj_crew.discord.client import DISCORD_MAX_TEXT
+from aj_crew.discord.renderer import (
     DiscordApprovalDecider,
     DiscordRenderer,
     _delivered_form,
     _redact_all,
     session_provenance_tag,
 )
-from kiro_crew.discord.transport import DISCORD_CAPABILITIES
-from kiro_crew.messaging.display_safety import canonicalize_display, severs_a_credential
-from kiro_crew.messaging.split import split_markdown_safe
-from kiro_crew.testing.wait import async_wait_until, await_until, finished
+from aj_crew.discord.transport import DISCORD_CAPABILITIES
+from aj_crew.messaging.display_safety import canonicalize_display, severs_a_credential
+from aj_crew.messaging.split import split_markdown_safe
+from aj_crew.testing.wait import async_wait_until, await_until, finished
+from conftest import CREDENTIAL_STRADDLE_SHAPES
 
 # ── renderer.py streaming/finalization ───────────────────────────────────
 
@@ -442,7 +442,7 @@ class TestRenderer:
         assert len(ids) == 2
         assert ids[0].startswith("a:req9:") and ids[0].endswith(":1")
         assert ids[1].startswith("a:req9:") and ids[1].endswith(":0")
-        from kiro_crew.messaging.renderer import new_approval_nonce
+        from aj_crew.messaging.renderer import new_approval_nonce
 
         nonce = ids[0].split(":")[2]
         # Length is the shared minter's, not a Discord-local literal: three channels
@@ -562,8 +562,8 @@ class TestApprovalDecider:
         Without this the loop keeps waking, is denied by default, and spends its
         whole cycle cap accomplishing nothing.
         """
-        from kiro_crew import autonudge as _an
-        from kiro_crew.discord import renderer as _rend
+        from aj_crew import autonudge as _an
+        from aj_crew.discord import renderer as _rend
 
         recorded: list[str] = []
         monkeypatch.setattr(
@@ -588,7 +588,7 @@ class TestApprovalDecider:
         Recording it would stop a loop whose operator is right there declining
         one tool.
         """
-        from kiro_crew import autonudge as _an
+        from aj_crew import autonudge as _an
 
         recorded: list[str] = []
         monkeypatch.setattr(
@@ -953,14 +953,14 @@ class TestTheSweepReachesTheRealRegistry:
     """The end-of-turn sweep must not travel through the construction seam."""
 
     def test_the_discord_sweep_is_the_class_that_holds_the_reservations(self) -> None:
-        from kiro_crew.discord import transport_dispatch as discord_dispatch
+        from aj_crew.discord import transport_dispatch as discord_dispatch
 
         assert discord_dispatch._APPROVAL_REGISTRY is DiscordApprovalDecider
 
     def test_the_dispatcher_does_not_sweep_through_its_construction_seam(self) -> None:
         import inspect
 
-        from kiro_crew.discord import transport_dispatch as discord_dispatch
+        from aj_crew.discord import transport_dispatch as discord_dispatch
 
         source = inspect.getsource(discord_dispatch)
         assert "DiscordApprovalDecider.discard_session" not in source
@@ -1034,7 +1034,7 @@ class TestRotationSeamCredentialSafety:
         cli = FakeClient()
         r = DiscordRenderer(cli, "chan1", DISCORD_CAPABILITIES, session_key="sk")  # type: ignore[arg-type]
         monkeypatch.setattr(r, "_limit", lambda: limit)
-        monkeypatch.setattr("kiro_crew.discord.renderer._EDIT_THROTTLE_S", 1e9)
+        monkeypatch.setattr("aj_crew.discord.renderer._EDIT_THROTTLE_S", 1e9)
         return r, cli
 
     #: A cut inside an unbroken run of non-space characters is a HARD cut at the
@@ -1151,7 +1151,7 @@ class TestRotationSeamCredentialSafety:
         """
         head, tail = "AKIAIOSF", "ODNN7EXAMPLE"
         src = self._straddling_source(head, tail)
-        monkeypatch.setattr("kiro_crew.discord.renderer.safe_split_offset", lambda *a, **k: 0)
+        monkeypatch.setattr("aj_crew.discord.renderer.safe_split_offset", lambda *a, **k: 0)
         r, cli = self._renderer(monkeypatch, self._LIMIT)
         r._buf = [src]
 
@@ -1277,8 +1277,8 @@ class TestRotationSeamCredentialSafety:
         # Narrow the screen to the plain reading. The key hides in the link target,
         # broken by a run of ``*``, so neither whole-text reading sees it; only the
         # seal's split grading catches it.
-        from kiro_crew.messaging import display_safety
-        from kiro_crew.messaging import split as messaging_split
+        from aj_crew.messaging import display_safety
+        from aj_crew.messaging import split as messaging_split
 
         further_readings = (display_safety._plain_reading,)
         monkeypatch.setattr(display_safety, "FURTHER_READINGS", further_readings)
@@ -1334,7 +1334,7 @@ class TestTheLiveBubbleSeamSurvivesItsEditLifecycle:
         )
         # No throttle: every chunk becomes its own live frame, so the bubble is
         # edited more than once.
-        monkeypatch.setattr("kiro_crew.discord.renderer._EDIT_THROTTLE_S", 0.0)
+        monkeypatch.setattr("aj_crew.discord.renderer._EDIT_THROTTLE_S", 0.0)
         return r, cli
 
     @staticmethod

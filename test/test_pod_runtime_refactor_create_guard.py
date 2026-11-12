@@ -1,6 +1,6 @@
 """No test patches a name the pod runtime forwards with ``create=True``.
 
-``kiro_crew.pod.runtime`` forwards a delete of a moved name to the module that owns
+``aj_crew.pod.runtime`` forwards a delete of a moved name to the module that owns
 it. ``mock.patch`` restores a name the runtime does not hold by deleting it and then,
 finding it gone, writing its original back -- unless ``create`` is true, in which case
 it skips that write and the owner loses the name for every later caller in the
@@ -27,12 +27,12 @@ from unittest import mock
 import pytest
 from stale_package_attribute import package_attribute_replaced
 
-from kiro_crew.pod import runtime as rt
+from aj_crew.pod import runtime as rt
 
 _FACADE = rt.__name__
 _DYNAMIC = "<dynamic>"
 _REPO = Path(__file__).resolve().parents[1]
-_SRC = _REPO / "src" / "kiro_crew"
+_SRC = _REPO / "src" / "aj_crew"
 
 #: What a ``mock.patch`` callable resolves to, per module that provides one: the
 #: standard library, its PyPI backport, and pytest-mock's ``mocker`` fixture.
@@ -362,7 +362,7 @@ def _worth_parsing(text: str) -> bool:
     return "patch" in text and any(leaf in text for leaf in _LEAVES)
 
 
-_IMPORT_RT = "from kiro_crew.pod import runtime as rt\n"
+_IMPORT_RT = "from aj_crew.pod import runtime as rt\n"
 _FROM_MOCK = "from unittest import mock\n"
 
 
@@ -407,7 +407,7 @@ _CASES: list[tuple[str, list[str]]] = [
         _FROM_MOCK + f'_MOD = "{_FACADE}"\nmock.patch(_MOD + ".stop_pod", create=True)',
         ["stop_pod"],
     ),
-    (_FROM_MOCK + '_MOD = "kiro_crew.other"\nmock.patch(f"{_MOD}.stop_pod", create=True)', []),
+    (_FROM_MOCK + '_MOD = "aj_crew.other"\nmock.patch(f"{_MOD}.stop_pod", create=True)', []),
     (_FROM_MOCK + 'import os\nmock.patch(f"{os.__name__}.stop_pod", create=True)', []),
     # (3) the target= and attribute= keyword forms
     (
@@ -460,24 +460,24 @@ _CASES: list[tuple[str, list[str]]] = [
     ),
     # the runtime reached as the ``rt`` a src module binds it to
     (
-        "from kiro_crew.pod import cli as pod_cli\n"
+        "from aj_crew.pod import cli as pod_cli\n"
         + _FROM_MOCK
         + 'mock.patch.object(pod_cli.rt, "stop_pod", create=True)',
         ["stop_pod"],
     ),
     (
-        "from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod\n"
+        "from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod\n"
         + _FROM_MOCK
         + 'mock.patch.object(runtime_mod.rt, "stop_pod", create=True)',
         ["stop_pod"],
     ),
     (
         _FROM_MOCK
-        + 'mock.patch("kiro_crew.apps.builtins.dev_fleet.runtime.rt.stop_pod", create=True)',
+        + 'mock.patch("aj_crew.apps.builtins.dev_fleet.runtime.rt.stop_pod", create=True)',
         ["stop_pod"],
     ),
     (
-        "from kiro_crew.pod import cli as pod_cli\n"
+        "from aj_crew.pod import cli as pod_cli\n"
         + _FROM_MOCK
         + 'mock.patch.object(pod_cli, "stop_pod", create=True)',
         [],
@@ -548,15 +548,15 @@ _CASES: list[tuple[str, list[str]]] = [
         ["stop_pod"],
     ),
     (
-        "from kiro_crew import pod\n"
+        "from aj_crew import pod\n"
         + _FROM_MOCK
         + 'mock.patch.object(pod.runtime, "stop_pod", create=True)',
         ["stop_pod"],
     ),
     (
-        "import kiro_crew.pod.runtime\n"
+        "import aj_crew.pod.runtime\n"
         + _FROM_MOCK
-        + 'mock.patch.object(kiro_crew.pod.runtime, "stop_pod", create=True)',
+        + 'mock.patch.object(aj_crew.pod.runtime, "stop_pod", create=True)',
         ["stop_pod"],
     ),
 ]
@@ -570,8 +570,8 @@ def test_the_detector_answers_both_ways(source: str, expected: list[str]) -> Non
 def test_the_runtime_is_found_under_every_name_src_binds_it_to() -> None:
     assert {
         _FACADE,
-        "kiro_crew.pod.cli.rt",
-        "kiro_crew.apps.builtins.dev_fleet.runtime.rt",
+        "aj_crew.pod.cli.rt",
+        "aj_crew.apps.builtins.dev_fleet.runtime.rt",
     } <= _FACADE_PATHS
 
 
@@ -583,7 +583,7 @@ def test_the_premise_create_true_through_the_runtime_unbinds_the_owner(split: bo
     attribute can name another copy once an earlier test in the worker imports it
     fresh, so reading the attribute would make this check depend on test order.
     """
-    owner = "kiro_crew.pod.runtime_ports"
+    owner = "aj_crew.pod.runtime_ports"
     with package_attribute_replaced(owner) if split else nullcontext():
         runtime_ports = importlib.import_module(owner)
         original = vars(runtime_ports)["operator_pinned"]
@@ -602,7 +602,7 @@ def test_every_must_flag_case_passes_the_prefilter() -> None:
     assert flagged and [source for source in flagged if not _worth_parsing(source)] == []
     assert _LEAVES == {"pod", "dev_fleet"}
     assert not _worth_parsing("from unittest import mock\nmock.patch.object(json, 'x')\n")
-    assert not _worth_parsing("from kiro_crew.pod import runtime as rt\n")
+    assert not _worth_parsing("from aj_crew.pod import runtime as rt\n")
 
 
 def test_no_test_patches_a_forwarded_name_that_it_may_create() -> None:

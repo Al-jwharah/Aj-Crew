@@ -31,8 +31,8 @@ from security_conductor_scripts_helpers import scope_check_fixture  # noqa: F401
 from security_conductor_scripts_helpers import SCRIPTS, file_finding, out_json, seed_roe
 from skill_script_helpers import load_skill_script
 
-from kiro_crew import platform_compat
-from kiro_crew.testing.wait import wait_until
+from aj_crew import platform_compat
+from aj_crew.testing.wait import wait_until
 
 
 @pytest.fixture
@@ -100,7 +100,7 @@ def a_finding(ledger, db: Path, *, poc: str, title: str = "the guard admits a ba
             surface="security.is_denied",
             title=title,
             severity="High",
-            paths=["src/kiro_crew/security.py"],
+            paths=["src/aj_crew/security.py"],
             poc=poc,
             round_id="r1",
         )
@@ -661,7 +661,7 @@ def test_a_finding_whose_proof_names_only_a_file_is_refused_at_filing(
         "--title",
         "a whole file stands in for one test",
         "--path",
-        "src/kiro_crew/security.py",
+        "src/aj_crew/security.py",
         "--poc",
         "pytest::test/test_security.py",
     )
@@ -1421,9 +1421,9 @@ def test_a_json_file_alone_still_carries_its_own_round_id(
                 "surface": "webhooks.ingest",
                 "severity": "High",
                 "title": "unbounded frame accepted",
-                "paths": ["src/kiro_crew/webhooks.py"],
+                "paths": ["src/aj_crew/webhooks.py"],
                 "poc": "cmd::python3 -c pass",
-                "round_id": "kirocrew-dogfood-round-1",
+                "round_id": "ajcrew-dogfood-round-1",
             }
         ),
         encoding="utf-8",
@@ -1443,4 +1443,4 @@ def test_a_json_file_alone_still_carries_its_own_round_id(
         conn.close()
 
     assert code == 0
-    assert row["round_id"] == "kirocrew-dogfood-round-1"
+    assert row["round_id"] == "ajcrew-dogfood-round-1"

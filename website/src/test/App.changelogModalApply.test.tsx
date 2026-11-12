@@ -24,11 +24,11 @@ vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page
 vi.mock('../pages/SystemPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => null }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 vi.mock('../pages/NotificationsPage', () => ({ default: () => null }))
 vi.mock('../pages/SchedulePage', () => ({ default: () => null }))
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
 
@@ -39,13 +39,13 @@ vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { cont
 // `statusOverride` is mutable on purpose: the /api/status fetch lands AFTER mount
 // and writes the same slice the preloaded state seeds, so a fixed fetch payload
 // silently clobbers whatever a test set up and every case would test one shape.
-const { COMMAND, statusOverride, armUpdate, armStatus, setAutoUpdate, kirocrewConfig } = vi.hoisted(() => ({
-  COMMAND: 'python3 -m pip install --upgrade kiro-crew',
+const { COMMAND, statusOverride, armUpdate, armStatus, setAutoUpdate, ajcrewConfig } = vi.hoisted(() => ({
+  COMMAND: 'python3 -m pip install --upgrade aj-crew',
   statusOverride: { value: {} as Record<string, unknown> },
   armUpdate: vi.fn(),
   armStatus: vi.fn(),
   setAutoUpdate: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
 }))
 
 vi.mock('../api/client', () => ({
@@ -71,7 +71,7 @@ vi.mock('../api/client', () => ({
     listInstances: vi.fn().mockResolvedValue({ instances: [], warm_set_cap: 5 }),
     changelog: vi.fn().mockResolvedValue({ content: '## [0.2.0rc9]\n- a new entry\n' }),
     setAutoUpdate,
-    kirocrewConfig,
+    ajcrewConfig,
     armUpdate,
     armStatus,
   },
@@ -127,16 +127,16 @@ describe('changelog modal apply affordance', () => {
     statusOverride.value = {}
     armUpdate.mockReset()
     armUpdate.mockResolvedValue({
-      ok: true, armed: true, expires_in: 600, approve_command: 'kirocrew update approve',
+      ok: true, armed: true, expires_in: 600, approve_command: 'ajcrew update approve',
     })
     armStatus.mockReset()
     setAutoUpdate.mockReset()
     setAutoUpdate.mockResolvedValue({})
-    kirocrewConfig.mockReset()
-    kirocrewConfig.mockResolvedValue({ auto_update: true })
+    ajcrewConfig.mockReset()
+    ajcrewConfig.mockResolvedValue({ auto_update: true })
     delete window.updateAPI
     armStatus.mockResolvedValue({
-      armed: true, expires_in: 590, approve_command: 'kirocrew update approve',
+      armed: true, expires_in: 590, approve_command: 'ajcrew update approve',
     })
   })
 
@@ -153,7 +153,7 @@ describe('changelog modal apply affordance', () => {
 
     await waitFor(() => expect(armUpdate).toHaveBeenCalledTimes(1))
     expect(await screen.findByTestId('approve-command')).toHaveTextContent(
-      'kirocrew update approve',
+      'ajcrew update approve',
     )
     expect(screen.getByTestId('in-app-update-action')).toBe(action)
     expect(action).toHaveTextContent(/copy command/i)
@@ -183,7 +183,7 @@ describe('changelog modal apply affordance', () => {
   it('retains the installer command only for a non-armable install', async () => {
     renderWithProviders(<App />, { route: '/chat', preloadedState: wheelState() })
 
-    expect(await screen.findByTestId('modal-update-command')).toHaveTextContent('kiro-crew')
+    expect(await screen.findByTestId('modal-update-command')).toHaveTextContent('aj-crew')
     expect(armUpdate).not.toHaveBeenCalled()
   })
 
@@ -221,7 +221,7 @@ describe('changelog modal auto-update switch', () => {
     statusOverride.value = {}
     setAutoUpdate.mockReset()
     setAutoUpdate.mockImplementation(async (enabled: boolean) => ({ ok: true, auto_update: enabled }))
-    kirocrewConfig.mockReset()
+    ajcrewConfig.mockReset()
     delete window.updateAPI
   })
 
@@ -230,7 +230,7 @@ describe('changelog modal auto-update switch', () => {
   const live = () => expect(screen.getByRole('switch', { name: GATEWAY_LABEL })).not.toHaveAttribute('aria-disabled')
 
   it('shows the saved OFF when the modal opens by itself', async () => {
-    kirocrewConfig.mockResolvedValue({ auto_update: false })
+    ajcrewConfig.mockResolvedValue({ auto_update: false })
     renderWithProviders(<App />, { route: '/chat', preloadedState: installing() })
 
     await waitFor(live)
@@ -243,11 +243,11 @@ describe('changelog modal auto-update switch', () => {
     // time the modal opens.
     // The shipped client never lets a query go stale on its own, so nothing but
     // the read on open would fetch again.
-    kirocrewConfig.mockResolvedValueOnce({ auto_update: true }).mockResolvedValue({ auto_update: false })
+    ajcrewConfig.mockResolvedValueOnce({ auto_update: true }).mockResolvedValue({ auto_update: false })
     renderWithProviders(<App />, { route: '/chat', preloadedState: installing(), queryDefaults: { staleTime: Infinity } })
 
     await waitFor(() => expect(screen.getByRole('switch', { name: GATEWAY_LABEL })).toHaveAttribute('aria-checked', 'false'))
-    expect(kirocrewConfig.mock.calls.length).toBeGreaterThan(1)
+    expect(ajcrewConfig.mock.calls.length).toBeGreaterThan(1)
   })
 
   it('keeps a click made while that read is still in flight', async () => {
@@ -255,7 +255,7 @@ describe('changelog modal auto-update switch', () => {
     // predates the write, so it is dropped and read again; the old value it
     // carried must not land over the click.
     const reads: Array<(v: unknown) => void> = []
-    kirocrewConfig.mockResolvedValueOnce({ auto_update: true })
+    ajcrewConfig.mockResolvedValueOnce({ auto_update: true })
       .mockImplementation(() => new Promise(resolve => { reads.push(resolve) }))
     renderWithProviders(<App />, { route: '/chat', preloadedState: installing() })
 
@@ -273,7 +273,7 @@ describe('changelog modal auto-update switch', () => {
   })
 
   it('applies the saved value a read finds after a click whose save failed', async () => {
-    kirocrewConfig.mockResolvedValue({ auto_update: true })
+    ajcrewConfig.mockResolvedValue({ auto_update: true })
     setAutoUpdate.mockRejectedValueOnce(new Error('zzq save refused'))
     renderWithProviders(<App />, { route: '/chat', preloadedState: installing() })
 
@@ -281,7 +281,7 @@ describe('changelog modal auto-update switch', () => {
     const toggle = screen.getByRole('switch', { name: GATEWAY_LABEL })
     // The read after the failure is what the gateway holds; it shows, and the
     // failure notice goes with it, because that value is the one the click asked for.
-    kirocrewConfig.mockResolvedValue({ auto_update: false })
+    ajcrewConfig.mockResolvedValue({ auto_update: false })
     fireEvent.click(toggle)
     await waitFor(() => expect(setAutoUpdate).toHaveBeenCalledWith(false))
     await waitFor(() => expect(toggle).toHaveAttribute('aria-checked', 'false'))
@@ -289,7 +289,7 @@ describe('changelog modal auto-update switch', () => {
   })
 
   it("closes the modal for the agent hand-off from the row's failure notice", async () => {
-    kirocrewConfig.mockRejectedValue(new Error('zzq config unreadable'))
+    ajcrewConfig.mockRejectedValue(new Error('zzq config unreadable'))
     renderWithProviders(<App />, { route: '/chat', preloadedState: installing() })
 
     expect(await screen.findByText(i18nT('pages.settings.aboutPanel.auto_update_setting_unavailable'))).toBeInTheDocument()
@@ -300,7 +300,7 @@ describe('changelog modal auto-update switch', () => {
 
   it('is the only update dialog while it is open', async () => {
     // The proactive update popup offers the same action; it waits for this one.
-    kirocrewConfig.mockResolvedValue({ auto_update: true })
+    ajcrewConfig.mockResolvedValue({ auto_update: true })
     const rendered = renderWithProviders(<App />, {
       route: '/chat',
       preloadedState: wheelState({ update_auto_effect: 'install', update_can_arm: true, update_latest_version: '9.9.9' }),

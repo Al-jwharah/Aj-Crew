@@ -22,9 +22,9 @@ import sys
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew.crew_log import emit
-from kiro_crew.crew_log import session_tree_projection as stp
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.crew_log import emit
+from aj_crew.crew_log import session_tree_projection as stp
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 #: Run in a FRESH interpreter against the store this module wrote. Drives the RESOLVER
 #: rather than the store reader underneath it: that reader is shared code this change
@@ -40,8 +40,8 @@ from kiro_crew.subprocess_utf8 import UTF8_TEXT
 #: REAL ``SessionMap``, reading the real file, because that is the source under test.
 _CHILD = """
 import asyncio, json, sys
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.session_map import SessionMap
+from aj_crew.dashboard import session_control as sc
+from aj_crew.session_map import SessionMap
 
 mapped = SessionMap()
 
@@ -76,10 +76,10 @@ print(json.dumps({
 @pytest.fixture
 def _store(tmp_path, monkeypatch):
     """A real crew log store on disk, with no write armed on the shared pool."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     monkeypatch.setattr(
-        "kiro_crew.executors.maintenance_executor",
+        "aj_crew.executors.maintenance_executor",
         lambda: type("_NoPool", (), {"submit": staticmethod(lambda *a, **k: None)}),
     )
     stp.reset_for_tests()
@@ -103,7 +103,7 @@ def test_the_store_names_another_slots_log_in_a_process_that_mapped_nothing(_sto
     ):
         emit.on_session_opened(
             sid,
-            agent="kirocrew",
+            agent="ajcrew",
             slot=slot,
             model="opus",
             cwd="/w",

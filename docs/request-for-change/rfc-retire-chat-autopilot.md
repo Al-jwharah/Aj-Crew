@@ -26,7 +26,7 @@ Autopilot is the chat slot mode `"orchestrator"`: the model presents a staged pl
 
 The mode costs far more than it returns. Measured at `2b91a6badd`:
 
-- `src/kiro_crew/dashboard/chat_orchestrator.py` is 2,376 lines, `docs/system-specs/modules/autopilot.md` is 642 lines, and `src/kiro_crew/config/prompt-orchestrator.md` is a second system prompt kept beside the main one.
+- `src/aj_crew/dashboard/chat_orchestrator.py` is 2,376 lines, `docs/system-specs/modules/autopilot.md` is 642 lines, and `src/aj_crew/config/prompt-orchestrator.md` is a second system prompt kept beside the main one.
 - #15362 deletes 10,014 test lines across 55 files under `test/` that exist to hold this mode.
 - 61 commits touched the mode's own files (the module, its prompt, its spec and its dedicated tests) since 2026-06-30.
 - Its stage state (`StageBoundary`, `_in_stage_execution`) is threaded through 16 files outside the module, including `chat_runner.py`, `session_control.py`, `slack/gateway.py`, `subagent.py` and the Spec Builder app's `turn_guard.py`, so every change to the turn loop has to reason about a mode almost nobody runs.
@@ -36,7 +36,7 @@ Almost nobody runs it. On the maintainer's own host, 3 of 2,835 saved chat sessi
 ## Decision
 
 1. Remove the mode, its module, its prompt, its `plan-action` endpoint and its tests (#15362), then its toggle, menu entries, stage chrome and plan-gate chips (#15359).
-2. Add `"orchestrator"` to `_RETIRED_MODES` in `src/kiro_crew/dashboard/chat_persistence.py`, beside `"crew"`. A saved session in that mode restores as plain chat (`""`) with its transcript intact, rather than failing to load.
+2. Add `"orchestrator"` to `_RETIRED_MODES` in `src/aj_crew/dashboard/chat_persistence.py`, beside `"crew"`. A saved session in that mode restores as plain chat (`""`) with its transcript intact, rather than failing to load.
 3. In old transcripts, the `[OPTION: Go | Go All | Cancel]` footer renders as plain option text. Clicking one sends that word as an ordinary message; nothing resumes a stage loop.
 4. `PATCH /api/chat/slots/{slot}/mode` coerces a request naming `"orchestrator"` to `""`, so an older dashboard build still gets a working chat. An `orchestrator` section in `config.json` becomes a reserved key that loads as nothing and is not written back.
 

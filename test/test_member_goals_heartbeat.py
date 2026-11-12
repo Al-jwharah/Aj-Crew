@@ -37,9 +37,9 @@ from member_goals_helpers import (  # noqa: F401 -- the autouse fixtures registe
     _thread,
 )
 
-from kiro_crew import member_goals
-from kiro_crew.dashboard import goal_reminder, mate_welcome
-from kiro_crew.dashboard import session_directive_apply as directive_apply
+from aj_crew import member_goals
+from aj_crew.dashboard import goal_reminder, mate_welcome
+from aj_crew.dashboard import session_directive_apply as directive_apply
 
 # ── the record ──
 
@@ -159,7 +159,7 @@ def test_the_crewmates_set_check_ins_with_a_heartbeat_is_a_card_and_writes_nothi
 ) -> None:
     from aiohttp import web
 
-    from kiro_crew.dashboard.handlers import change_cards as card_routes
+    from aj_crew.dashboard.handlers import change_cards as card_routes
 
     seen: list[dict] = []
 
@@ -181,7 +181,7 @@ def test_the_crewmates_set_check_ins_with_a_heartbeat_is_a_card_and_writes_nothi
 
 
 def test_the_tool_schema_offers_the_heartbeat_and_its_intervals() -> None:
-    from kiro_crew import mcp_mate
+    from aj_crew import mcp_mate
 
     (tool,) = [t for t in mcp_mate._list_tools() if t["name"] == "set_check_ins"]
     props = tool["inputSchema"]["properties"]
@@ -291,14 +291,14 @@ def test_a_turn_that_starts_during_the_tools_check_skips_the_wake(_floor_monkeyp
 
 
 def test_the_session_tools_check_answers_false_when_it_cannot_tell(_floor_monkeypatch) -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     def boom(*_a: Any, **_k: Any) -> Any:
         raise RuntimeError("no config")
 
     # The class's own loader, not a name on the context facade: a facade rebind of an
     # owner-defined name would not reach the owner (test_context_composition_contract).
-    _floor_monkeypatch.setattr(KiroCrewConfig, "load", staticmethod(boom))
+    _floor_monkeypatch.setattr(AjCrewConfig, "load", staticmethod(boom))
     assert goal_reminder.member_has_session_tools(ORDINARY) is False
 
 
@@ -311,9 +311,9 @@ def test_the_session_tools_check_is_the_context_builders_member_backend_answer(
 ) -> None:
     # The same answer the context builder gives a member turn without live
     # session evidence (the configured member backend mounts session control),
-    # narrowed by the user switching kirocrew-dashboard off.
-    import kiro_crew.acp.session_mcp as session_mcp
-    import kiro_crew.context as context_mod
+    # narrowed by the user switching ajcrew-dashboard off.
+    import aj_crew.acp.session_mcp as session_mcp
+    import aj_crew.context as context_mod
 
     _seed()
     _floor_monkeypatch.setattr(
@@ -330,9 +330,9 @@ def test_the_session_tools_check_is_the_context_builders_member_backend_answer(
 
 def test_a_hidden_turn_carries_no_person_so_nothing_to_do_ends_it(_floor_monkeypatch) -> None:
     """``dispatch_hidden_turn`` opens the turn as the gateway, which the quiet end admits."""
-    import kiro_crew.dashboard.chat as chat_mod
-    import kiro_crew.dashboard.chat_handlers as chat_handlers
-    import kiro_crew.dashboard.turn_dispatch as turn_dispatch
+    import aj_crew.dashboard.chat as chat_mod
+    import aj_crew.dashboard.chat_handlers as chat_handlers
+    import aj_crew.dashboard.turn_dispatch as turn_dispatch
 
     seen: dict[str, Any] = {}
 
@@ -416,8 +416,8 @@ def test_a_stop_that_begins_during_the_wakes_reads_skips_it(_floor_monkeypatch) 
 
 
 def test_a_wake_while_a_monitor_loop_drives_the_thread_starts_no_turn(_floor_monkeypatch) -> None:
-    import kiro_crew.autonudge as autonudge
-    from kiro_crew import ledger_wake
+    import aj_crew.autonudge as autonudge
+    from aj_crew import ledger_wake
 
     state = FakeState()
     slug, slot = _armed(state)
@@ -495,7 +495,7 @@ class _Cards:
 def test_a_waiting_milestones_card_keeps_the_wake_from_proposing_another(
     _floor_monkeypatch,
 ) -> None:
-    from kiro_crew.dashboard import change_cards
+    from aj_crew.dashboard import change_cards
 
     state = FakeState()
     slug, _slot = _armed(state)
@@ -517,7 +517,7 @@ def test_a_waiting_milestones_card_keeps_the_wake_from_proposing_another(
 
 
 def test_an_unreadable_card_store_counts_as_no_waiting_card(_floor_monkeypatch) -> None:
-    from kiro_crew.dashboard import change_cards
+    from aj_crew.dashboard import change_cards
 
     def boom(_s: Any) -> Any:
         raise RuntimeError("no store")
@@ -544,7 +544,7 @@ def test_a_wake_that_cannot_move_anything_ends_at_once(_floor_monkeypatch) -> No
 
 def _unloaded(state: FakeState, _floor_monkeypatch, *, builds: bool) -> tuple[str, Any, list]:
     """An armed crewmate whose thread no slot holds, as after a restart."""
-    from kiro_crew.dashboard import chat_persistence, slot_queue_repository
+    from aj_crew.dashboard import chat_persistence, slot_queue_repository
 
     slug, slot = _armed(state)
     state._slots.pop(slot.key)
@@ -612,7 +612,7 @@ def test_a_loaded_thread_that_is_busy_still_skips(_floor_monkeypatch) -> None:
 @pytest.mark.parametrize("closer", ["user", "idle-sweep"])
 def test_a_closed_mate_thread_is_reloaded_and_woken(_floor_monkeypatch, closer: str) -> None:
     """A mate's heartbeat always wakes the mate: a ✕ or an idle sweep does not stop it."""
-    from kiro_crew.dashboard.channel_slots import note_slot_closed
+    from aj_crew.dashboard.channel_slots import note_slot_closed
 
     state = FakeState()
     slug, slot, loads = _unloaded(state, _floor_monkeypatch, builds=True)
@@ -630,7 +630,7 @@ def test_a_closed_mate_thread_is_reloaded_and_woken(_floor_monkeypatch, closer: 
 
 def test_only_a_mate_dm_key_adopts_a_closed_thread(_floor_monkeypatch) -> None:
     """Any other thread keeps the restore's close-stays-closed rule."""
-    from kiro_crew.dashboard import chat_persistence
+    from aj_crew.dashboard import chat_persistence
 
     state = FakeState()
     seen: list[bool] = []

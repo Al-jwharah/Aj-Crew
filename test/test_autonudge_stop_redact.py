@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import autonudge_stop_log as stoplog
+from aj_crew import autonudge_stop_log as stoplog
 
 # Obviously fake GitHub classic PAT shape, split so no scanner sees a literal.
 _FAKE_PAT = "ghp_" "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef12"

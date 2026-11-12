@@ -15,9 +15,9 @@ import { describe, it, expect, vi } from 'vitest'
 
 import { createMatesProvider, mateRoute } from './matesProvider'
 import { i18nT } from '../../i18n/t'
-import type { KiroCrewAgent } from '../../components/AgentSelector'
+import type { AjCrewAgent } from '../../components/AgentSelector'
 
-function mate(over: Partial<KiroCrewAgent> & { name: string }): KiroCrewAgent {
+function mate(over: Partial<AjCrewAgent> & { name: string }): AjCrewAgent {
   return {
     kiro_agent: '',
     workspace: '',
@@ -38,7 +38,7 @@ function mate(over: Partial<KiroCrewAgent> & { name: string }): KiroCrewAgent {
  * be excluded. `Review & QA` is a real crew-name shape and the reason the route is
  * encoded.
  */
-const ROSTER: KiroCrewAgent[] = [
+const ROSTER: AjCrewAgent[] = [
   mate({ name: 'oncall', description: 'Watches the pager and triages alerts.' }),
   mate({ name: 'qa-bot', display_name: 'reviewer', description: 'Reviews diffs.' }),
   mate({ name: 'Review & QA', description: 'Runs the review board.' }),
@@ -46,7 +46,7 @@ const ROSTER: KiroCrewAgent[] = [
   mate({ name: 'shipper', description: 'A shared template.', selection_kind: 'template' }),
 ]
 
-function build(rows: KiroCrewAgent[] = ROSTER, running: string[] = []) {
+function build(rows: AjCrewAgent[] = ROSTER, running: string[] = []) {
   const openMate = vi.fn()
   const provider = createMatesProvider({
     fetchMates: async () => rows,

@@ -23,8 +23,8 @@ from session_storage_helpers import (  # noqa: F401 -- fixtures are requested by
     stores_fixture,
 )
 
-from kiro_crew import session_storage
-from kiro_crew.session_storage import SessionStorageError
+from aj_crew import session_storage
+from aj_crew.session_storage import SessionStorageError
 
 
 class TestTrashBatchNamesAreLogSafe:
@@ -49,7 +49,7 @@ class TestTrashBatchNamesAreLogSafe:
     ) -> None:
         self._make_forged_dir(self._FORGED)
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.session_storage"):
             assert session_storage.list_trash() == []
 
         messages = [
@@ -79,7 +79,7 @@ class TestTrashBatchNamesAreLogSafe:
         except OSError:
             pytest.skip("this filesystem refuses a newline in a directory name")
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             assert session_storage.list_trash() == []
 
         messages = [
@@ -141,7 +141,7 @@ class TestTrashBatchNamesAreLogSafe:
                 session_storage, "_summarize_manifest", lambda batch, parsed=parsed: parsed
             )
 
-            with caplog.at_level(logging.DEBUG, logger="kiro_crew.session_storage"):
+            with caplog.at_level(logging.DEBUG, logger="aj_crew.session_storage"):
                 assert session_storage.list_trash() == []
 
             rendered = [record.getMessage() for record in caplog.records]
@@ -207,7 +207,7 @@ class TestUntrustedNamesAreLogSafeOutsideListTrash:
         batch_id, batch = self._staged(kiro_home)
         self._forge_uid(batch, files=["not-an-object"])
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             assert session_storage.restore(batch_id) == 0
 
         self._assert_escaped(
@@ -227,7 +227,7 @@ class TestUntrustedNamesAreLogSafeOutsideListTrash:
         # and the move, so the batch keeps its entry.
         monkeypatch.setattr(session_storage, "_move_file_exclusive", lambda src, dst: False)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             assert session_storage.restore(batch_id) == 0
 
         self._assert_escaped(
@@ -251,7 +251,7 @@ class TestUntrustedNamesAreLogSafeOutsideListTrash:
 
         monkeypatch.setattr(session_storage, "_move_file_exclusive", _refuse)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             assert session_storage.restore(batch_id) == 0
 
         self._assert_escaped(
@@ -277,7 +277,7 @@ class TestUntrustedNamesAreLogSafeOutsideListTrash:
 
         monkeypatch.setattr(session_storage, "_append_entry", _refuse)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             with pytest.raises(SessionStorageError):
                 session_storage.move_to_trash(
                     ["aaaa1111"], reason="manual", index=_index(), now=_NOW
@@ -304,7 +304,7 @@ class TestUntrustedNamesAreLogSafeOutsideListTrash:
             raise SessionStorageError(f"could not read all of {batch.name!r}")
 
         monkeypatch.setattr(session_storage, "_unlisted_files", _refuse)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             session_storage._discard_restored_batch(forged, None)
         self._assert_escaped(
             self._carrying(caplog, "keeping trash batch"), self._FORGED_NAME, "unreadable-scan"
@@ -314,7 +314,7 @@ class TestUntrustedNamesAreLogSafeOutsideListTrash:
         monkeypatch.setattr(
             session_storage, "_unlisted_files", lambda batch: [forged / "orphan.jsonl"]
         )
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             session_storage._discard_restored_batch(forged, None)
         self._assert_escaped(
             self._carrying(caplog, "keeping trash batch"), self._FORGED_NAME, "leftover-files"
@@ -329,7 +329,7 @@ class TestUntrustedNamesAreLogSafeOutsideListTrash:
             def exists() -> bool:
                 return True
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             assert (
                 session_storage._incomplete_if_present(_ForgedBatch())
                 == session_storage.SKIP_INCOMPLETE
@@ -359,7 +359,7 @@ class TestUntrustedNamesAreLogSafeOutsideListTrash:
             raise SessionStorageError("could not read all of it")
 
         monkeypatch.setattr(session_storage, "_unlisted_files", _refuse)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             assert session_storage.empty_trash() == 0
         self._assert_escaped(
             self._carrying(caplog, "refusing to empty"), self._FORGED_NAME, "unreadable-batch"
@@ -369,7 +369,7 @@ class TestUntrustedNamesAreLogSafeOutsideListTrash:
         monkeypatch.setattr(
             session_storage, "_unlisted_files", lambda batch: [forged / "orphan.jsonl"]
         )
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             assert session_storage.empty_trash() == 0
         self._assert_escaped(
             self._carrying(caplog, "refusing to empty"), self._FORGED_NAME, "leftover-files"
@@ -379,7 +379,7 @@ class TestUntrustedNamesAreLogSafeOutsideListTrash:
         caplog.clear()
         outside = tmp_path / self._FORGED_NAME
         monkeypatch.setattr(session_storage, "_batch_dir", lambda batch_id: outside)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             assert session_storage.empty_trash() == 0
         messages = self._carrying(caplog, "outside the trash root")
         assert messages, "the outside-the-root site did not log at all"
@@ -447,8 +447,8 @@ class TestCotenantNamesAreLogSafe:
     def _pod_root(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         pod_root = tmp_path / "pods"
         pod_root.mkdir()
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(pod_root))
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(pod_root))
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         monkeypatch.delenv("KIRO_HOME", raising=False)
         _pin_a_fake_default_home(monkeypatch, tmp_path)
         return pod_root
@@ -471,7 +471,7 @@ class TestCotenantNamesAreLogSafe:
         pod = self._make_forged_pod(self._pod_root(tmp_path, monkeypatch))
         (pod / "session_map.json").write_text("not json{", encoding="utf-8")
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             _protected, refusals = session_storage.cotenant_sids()
 
         assert [name for name, _why in refusals] == [self._FORGED]
@@ -490,7 +490,7 @@ class TestCotenantNamesAreLogSafe:
         # which is exactly the unreadable-map warning path under test.
         (pod / "session_map.json").write_bytes(b"\xff\xfe\xfa")
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             _protected, refusals = session_storage.cotenant_sids()
 
         assert [name for name, _why in refusals] == [self._FORGED]
@@ -514,7 +514,7 @@ class TestCotenantNamesAreLogSafe:
         # resolved path (newline included) into the traceback rendering.
         monkeypatch.setattr(session_storage.hooks, "is_sensitive_path", lambda p: True)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             _protected, refusals = session_storage.cotenant_sids()
 
         assert [name for name, _why in refusals] == [self._FORGED]
@@ -547,7 +547,7 @@ class TestCotenantNamesAreLogSafe:
             caplog.clear()
             monkeypatch.setattr(session_storage.hooks, "safe_read_file", _read)
 
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
                 _protected, refusals = session_storage.cotenant_sids()
 
             assert [name for name, _why in refusals] == [self._FORGED]
@@ -577,8 +577,8 @@ class TestCotenantRefusalTextIsForgeSafe:
         Windows refuses a newline in a real directory name, and what is under
         test is the CONSUMER's rendering, not discovery.
         """
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         monkeypatch.delenv("KIRO_HOME", raising=False)
         _pin_a_fake_default_home(monkeypatch, tmp_path)
         monkeypatch.setattr(

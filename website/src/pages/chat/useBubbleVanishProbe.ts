@@ -24,7 +24,7 @@
 import { useEffect, type RefObject } from 'react'
 
 /** Set `localStorage[BUBBLE_PROBE_FLAG] = '1'` and reload to enable. */
-export const BUBBLE_PROBE_FLAG = 'kirocrew_debug_bubble_probe'
+export const BUBBLE_PROBE_FLAG = 'ajcrew_debug_bubble_probe'
 
 export interface BubbleProbeCounts {
   /** Raw message count in the store for the active slot. */

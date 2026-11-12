@@ -15,9 +15,9 @@ import types
 
 import pytest
 
-from kiro_crew.apps.context import build_app_context
-from kiro_crew.apps.manifest import Permissions
-from kiro_crew.apps.spawn_sdk import SpawnError, SpawnSDK, build_spawn_impl
+from aj_crew.apps.context import build_app_context
+from aj_crew.apps.manifest import Permissions
+from aj_crew.apps.spawn_sdk import SpawnError, SpawnSDK, build_spawn_impl
 
 
 class _FakeManager:
@@ -58,7 +58,7 @@ class TestSpawnSDK:
     def _known_agents(self, monkeypatch):
         """The impl now rejects an agent absent from agent_discovery.list_agents,
         so the tests that reach the host must register the agent they name."""
-        import kiro_crew.apps.spawn_sdk as spawn_sdk
+        import aj_crew.apps.spawn_sdk as spawn_sdk
 
         monkeypatch.setattr(
             spawn_sdk,
@@ -162,7 +162,7 @@ class TestSpawnGateConsultsTheAppProfile:
     """
 
     def test_the_gate_receives_the_app_name(self, monkeypatch):
-        from kiro_crew import subagent
+        from aj_crew import subagent
 
         seen: list[dict] = []
 
@@ -170,7 +170,7 @@ class TestSpawnGateConsultsTheAppProfile:
             seen.append({"scope": scope, "item": item, "app": app})
             return types.SimpleNamespace(permitted=True, reason="")
 
-        import kiro_crew.platform.governance_profiles as gp
+        import aj_crew.platform.governance_profiles as gp
 
         monkeypatch.setattr(gp, "governance_permits", _fake_permits)
         err = subagent._vet_spawn_governance("sk", "probe-bg", app="probe")
@@ -179,14 +179,14 @@ class TestSpawnGateConsultsTheAppProfile:
         assert seen and all(c["app"] == "probe" for c in seen)
 
     def test_an_app_profile_denial_refuses_the_spawn(self, monkeypatch):
-        from kiro_crew import subagent
+        from aj_crew import subagent
 
         def _deny(scope, item, *, session_key="", agent="", app="", **kw):
             if app == "probe":
                 return types.SimpleNamespace(permitted=False, reason="denied for probe")
             return types.SimpleNamespace(permitted=True, reason="")
 
-        import kiro_crew.platform.governance_profiles as gp
+        import aj_crew.platform.governance_profiles as gp
 
         monkeypatch.setattr(gp, "governance_permits", _deny)
         assert subagent._vet_spawn_governance("sk", "probe-bg", app="probe") is not None
@@ -202,7 +202,7 @@ class TestSpawnRejectsAnUnknownAgent:
     """
 
     def test_unknown_agent_is_refused_before_the_host(self, monkeypatch):
-        import kiro_crew.apps.spawn_sdk as spawn_sdk
+        import aj_crew.apps.spawn_sdk as spawn_sdk
 
         monkeypatch.setattr(
             spawn_sdk,
@@ -216,7 +216,7 @@ class TestSpawnRejectsAnUnknownAgent:
         assert mgr.calls == [], "an unknown agent must never reach the manager"
 
     def test_a_discovery_failure_fails_closed(self, monkeypatch):
-        import kiro_crew.apps.spawn_sdk as spawn_sdk
+        import aj_crew.apps.spawn_sdk as spawn_sdk
 
         def _boom():
             raise RuntimeError("agents dir unreadable")
@@ -238,7 +238,7 @@ class TestSdkRefusalsAreAudited:
     """
 
     def _capture(self, monkeypatch):
-        import kiro_crew.apps.spawn_sdk as spawn_sdk
+        import aj_crew.apps.spawn_sdk as spawn_sdk
 
         calls: list[dict] = []
 
@@ -258,7 +258,7 @@ class TestSdkRefusalsAreAudited:
         assert calls[0]["metadata"]["app"] == "probe"
 
     def test_cross_app_refusal_is_audited(self, monkeypatch):
-        import kiro_crew.apps.spawn_sdk as spawn_sdk
+        import aj_crew.apps.spawn_sdk as spawn_sdk
 
         calls = self._capture(monkeypatch)
         monkeypatch.setattr(
@@ -272,7 +272,7 @@ class TestSdkRefusalsAreAudited:
         assert any(c["outcome"] == "denied" for c in calls)
 
     def test_discovery_failure_refusal_is_audited(self, monkeypatch):
-        import kiro_crew.apps.spawn_sdk as spawn_sdk
+        import aj_crew.apps.spawn_sdk as spawn_sdk
 
         calls = self._capture(monkeypatch)
 
@@ -294,7 +294,7 @@ class TestAgentDiscoveryIsOffloaded:
     def test_the_impl_offloads_list_agents(self) -> None:
         import inspect
 
-        from kiro_crew.apps import spawn_sdk
+        from aj_crew.apps import spawn_sdk
 
         # Both the spawn and the continuation read the app's agents through it.
         src = inspect.getsource(spawn_sdk._own_agents)
@@ -308,7 +308,7 @@ class TestSpawnSkipsTheScanWhenPrevalidated:
     SpawnSDK already confirmed it off the loop."""
 
     def test_validate_agent_is_not_called_when_prevalidated(self, monkeypatch):
-        from kiro_crew import subagent
+        from aj_crew import subagent
 
         called = {"n": 0}
 
@@ -321,7 +321,7 @@ class TestSpawnSkipsTheScanWhenPrevalidated:
         # guard exists AND that the flag threads into the queued params.
         import inspect
 
-        from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+        from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
 
         src = inspect.getsource(SpawnAdmissionCoordinator.spawn_impl)
         assert "and not _agent_prevalidated" in src
@@ -335,13 +335,13 @@ class TestSpawnRejectsCrossAppAndGlobalAgents:
     """
 
     def test_global_and_other_app_agents_are_refused(self, monkeypatch):
-        import kiro_crew.apps.spawn_sdk as spawn_sdk
+        import aj_crew.apps.spawn_sdk as spawn_sdk
 
         monkeypatch.setattr(
             spawn_sdk,
             "list_agents",
             lambda: [
-                types.SimpleNamespace(name="kirocrew", filename="kirocrew.json"),
+                types.SimpleNamespace(name="ajcrew", filename="ajcrew.json"),
                 types.SimpleNamespace(name="other-bg", filename="other--other-bg.json"),
                 types.SimpleNamespace(name="probe-bg", filename="probe--probe-bg.json"),
             ],
@@ -350,7 +350,7 @@ class TestSpawnRejectsCrossAppAndGlobalAgents:
         sdk = SpawnSDK("probe", build_spawn_impl(mgr))
         # The global host agent — exists, but not owned by "probe".
         with pytest.raises(SpawnError, match="only spawn its OWN"):
-            asyncio.run(sdk.run("t", "kirocrew"))
+            asyncio.run(sdk.run("t", "ajcrew"))
         # Another app's agent — exists, not owned by "probe".
         with pytest.raises(SpawnError, match="only spawn its OWN"):
             asyncio.run(sdk.run("t", "other-bg"))
@@ -365,7 +365,7 @@ class TestManagerRefusesUnknownAgent:
     the SDK guard must not be able to reintroduce that escalation."""
 
     def test_validate_agent_refuses_named_unknown(self, monkeypatch):
-        from kiro_crew import subagent
+        from aj_crew import subagent
 
         # Patched on SUBAGENT: the import is module-level there, so call-time
         # lookup happens against subagent's binding, not agent_discovery's.
@@ -373,7 +373,7 @@ class TestManagerRefusesUnknownAgent:
             subagent,
             "list_agents",
             lambda project_dir=None: [
-                types.SimpleNamespace(name="kirocrew"),
+                types.SimpleNamespace(name="ajcrew"),
                 types.SimpleNamespace(name="mochi--mochi-bg"),
             ],
         )
@@ -392,13 +392,13 @@ class TestManagerRefusesUnknownAgent:
         add filesystem work. The project scope therefore comes from the syscall-free
         cache; widening the pre-existing user-level scan to a second directory would
         stall the gateway on a slow or network checkout."""
-        import kiro_crew.agent_discovery as disc
-        from kiro_crew import subagent
+        import aj_crew.agent_discovery as disc
+        from aj_crew import subagent
 
         monkeypatch.setattr(
             subagent,
             "list_agents",
-            lambda project_dir=None: [types.SimpleNamespace(name="kirocrew")],
+            lambda project_dir=None: [types.SimpleNamespace(name="ajcrew")],
         )
         # A warm cache makes a project agent dispatchable...
         monkeypatch.setattr(
@@ -420,12 +420,12 @@ class TestManagerRefusesUnknownAgent:
     def test_cold_project_cache_refuses_rather_than_scanning(self, monkeypatch):
         """Fail closed on a cold cache — refusing an unknown name is this function's
         existing rule, and is safer than either stalling or running the default."""
-        from kiro_crew import subagent
+        from aj_crew import subagent
 
         monkeypatch.setattr(
             subagent,
             "list_agents",
-            lambda project_dir=None: [types.SimpleNamespace(name="kirocrew")],
+            lambda project_dir=None: [types.SimpleNamespace(name="ajcrew")],
         )
         monkeypatch.setattr(subagent, "cached_project_agent_names", lambda p: None)
         name, err, _code = subagent._validate_agent("repobot", "/some/project")
@@ -439,14 +439,14 @@ class TestChildGateInheritsTheApp:
     and forwarded to its per-tool-call gate."""
 
     def test_subagent_info_carries_app(self):
-        from kiro_crew.subagent import SubagentInfo
+        from aj_crew.subagent import SubagentInfo
 
         assert SubagentInfo(id="x", task="t", app="mochi").app == "mochi"
 
     def test_child_gate_forwards_the_app(self):
         import inspect
 
-        from kiro_crew.subagent_manager.run import RunEventCoordinator
+        from aj_crew.subagent_manager.run import RunEventCoordinator
 
         src = inspect.getsource(RunEventCoordinator._run_inner_impl)
         tree = ast.parse(textwrap.dedent(src))

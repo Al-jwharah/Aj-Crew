@@ -5,7 +5,7 @@
  * unpadded base64url segment instead, `/api/agents/b64/<segment><suffix>`: a
  * path-normalising reverse proxy decodes `%20` back to a bare space, the
  * request-line delimiter, and answers 502 before the gateway sees the request.
- * The server's twin is `kiro_crew/agent_url_path.py`;
+ * The server's twin is `aj_crew/agent_url_path.py`;
  * both forms reach the same handler.
  */
 export function agentPath(name: string, suffix = ''): string {

@@ -27,15 +27,15 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import autonudge as _an
-from kiro_crew import autonudge_judge, decisions, session_directive, validation
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.dashboard.session_directive_apply import apply_session_directive
-from kiro_crew.mcp_tools import control
-from kiro_crew.monitoring.models import MonitorOutcome
-from kiro_crew.probes import gh_pr
+from aj_crew import autonudge as _an
+from aj_crew import autonudge_judge, decisions, session_directive, validation
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.dashboard.session_directive_apply import apply_session_directive
+from aj_crew.mcp_tools import control
+from aj_crew.monitoring.models import MonitorOutcome
+from aj_crew.probes import gh_pr
 
-_SKILLS = Path(__file__).resolve().parents[1] / "src/kiro_crew/builtin_skills/kirocrew-dev"
+_SKILLS = Path(__file__).resolve().parents[1] / "src/aj_crew/builtin_skills/ajcrew-dev"
 _SESSION_KEY = "dashboard:chat-1"
 _BINDING = "chat-1"
 _URL = "https://github.com/acme/widgets/pull/42"
@@ -47,7 +47,7 @@ def _prepare_pr_recipe() -> dict[str, Any]:
 
     SKILL.md points at ``references/monitor-loop.md``, which carries the call.
     """
-    text = (_SKILLS / "kirocrew-prepare-pr" / "references" / "monitor-loop.md").read_text(
+    text = (_SKILLS / "ajcrew-prepare-pr" / "references" / "monitor-loop.md").read_text(
         encoding="utf-8"
     )
     block = next(
@@ -205,7 +205,7 @@ class _Harness:
 
     async def arm(self, recipe: dict[str, Any]) -> NudgeLoop:
         """Arm *recipe* the way the agent's call is applied: tool, directive, applier."""
-        with patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value=_SESSION_KEY):
+        with patch("aj_crew.mcp_core._resolve_session_key_strict", return_value=_SESSION_KEY):
             acknowledgement = control.monitor_start("monitor_start", recipe)
         directive = session_directive.decode(acknowledgement, "monitor_start")
         assert directive is not None, acknowledgement
@@ -215,8 +215,8 @@ class _Harness:
             channel_transports={},
         )
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=self.service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=self.service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             applied = await apply_session_directive(
                 state,
@@ -243,7 +243,7 @@ class _Harness:
 
 @pytest.fixture(autouse=True)
 def _enable(_floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    _floor_monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.mark.asyncio

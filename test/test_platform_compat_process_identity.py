@@ -23,9 +23,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import wait_until
+from aj_crew import platform_compat as pc
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import wait_until
 
 # Tests here read or build the macOS libc and libproc handles, so each one starts
 # with both caches unbuilt and puts them back after (see conftest.py).
@@ -79,7 +79,7 @@ class TestProcessIdentityPosix:
         # and the needle comparison is case-sensitive -- "python" is not in
         # "Python". Production needles ("kiro-cli", "claude") appear verbatim in
         # the argv they guard, so only the test's choice of needle was fragile.
-        token = "kirocrew-procmatch-probe"
+        token = "ajcrew-procmatch-probe"
         # Use a readiness pipe: the child signals after exec completes, so we
         # never race /proc/<pid>/cmdline population on a loaded runner.
         child = subprocess.Popen(
@@ -250,7 +250,7 @@ class TestProcessArgvMatchesExact:
             argv = [sleep_bin, "300"]
             child = subprocess.Popen(argv, start_new_session=True, stderr=subprocess.DEVNULL)
         else:
-            child, argv = self._spawn("kirocrew-argvexact-probe")
+            child, argv = self._spawn("ajcrew-argvexact-probe")
         try:
             self._assert_matches_once_readable(child.pid, argv)
             changed = list(argv)
@@ -414,7 +414,7 @@ class TestProcessArgvMatchesExact:
             if pc.IS_POSIX:
                 sleep_bin = shutil.which("sleep") or "/bin/sleep"
                 return subprocess.Popen([sleep_bin, str(300 + n)], start_new_session=True)
-            return self._spawn(f"kirocrew-argvsig-{n}")[0]
+            return self._spawn(f"ajcrew-argvsig-{n}")[0]
 
         first = spawn(0)
         try:

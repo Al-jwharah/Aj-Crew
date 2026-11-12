@@ -26,7 +26,7 @@ def _declare_servers(agents, names: list[str]) -> None:
 
 @pytest.mark.asyncio
 async def test_batch_read_resolves_once_and_matches_single_reads(toggle_home, monkeypatch):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     _declare_servers(toggle_home, ["one", "two", "three"])
     single = {}
@@ -58,8 +58,8 @@ async def test_batch_read_resolves_once_and_matches_single_reads(toggle_home, mo
 
 @pytest.mark.asyncio
 async def test_batch_read_reports_over_cap_per_name(toggle_home, monkeypatch):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
-    from kiro_crew.mcp_gateway.launch_resolve import ResolvedLaunches
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.mcp_gateway.launch_resolve import ResolvedLaunches
 
     _declare(toggle_home, "agent spec", _APPROVED_CMD, [])
     monkeypatch.setattr(
@@ -82,7 +82,7 @@ async def test_batch_read_reports_over_cap_per_name(toggle_home, monkeypatch):
 async def test_batch_read_reports_an_invalid_name_without_failing_the_rest(
     toggle_home, monkeypatch
 ):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     _declare_servers(toggle_home, ["one"])
     single_request = _stub_request({})
@@ -110,7 +110,7 @@ async def test_batch_read_reports_an_invalid_name_without_failing_the_rest(
 
 @pytest.mark.asyncio
 async def test_batch_read_of_only_invalid_names_skips_resolution(toggle_home, monkeypatch):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     def unexpected(*_a, **_kw):
         raise AssertionError("resolve_launches ran with no valid names")
@@ -139,7 +139,7 @@ async def test_batch_read_of_only_invalid_names_skips_resolution(toggle_home, mo
     ],
 )
 async def test_batch_read_refuses_a_malformed_body(toggle_home, monkeypatch, body, code):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     def unexpected(*_a, **_kw):
         raise AssertionError("resolve_launches ran for a refused request")
@@ -153,7 +153,7 @@ async def test_batch_read_refuses_a_malformed_body(toggle_home, monkeypatch, bod
 
 @pytest.mark.asyncio
 async def test_batch_read_failure_is_a_503(toggle_home, monkeypatch):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     def broken(*_a, **_kw):
         raise RuntimeError("rewrite failed")
@@ -167,7 +167,7 @@ async def test_batch_read_failure_is_a_503(toggle_home, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_names_sharing_a_stem_resolve_as_single_reads_do(toggle_home):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     _declare_servers(toggle_home, ["foo-mcp", "FOO_MCP"])
     single = {}
@@ -198,8 +198,8 @@ async def test_names_sharing_a_stem_resolve_as_single_reads_do(toggle_home):
 async def test_a_single_read_and_a_batch_read_give_the_same_code(
     toggle_home, monkeypatch, resolved, code
 ):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
-    from kiro_crew.mcp_gateway.launch_resolve import ResolvedLaunches
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.mcp_gateway.launch_resolve import ResolvedLaunches
 
     monkeypatch.setattr(
         mcp_mod.launch_resolve,
@@ -218,7 +218,7 @@ async def test_a_single_read_and_a_batch_read_give_the_same_code(
 
 @pytest.mark.asyncio
 async def test_each_batch_preview_is_accepted_by_its_one_name_confirm(toggle_home):
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
     names = [f"srv-{i}" for i in range(12)]
     _declare_servers(toggle_home, names)

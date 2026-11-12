@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from kiro_crew.apps import registry as reg
+from aj_crew.apps import registry as reg
 
 SHA = "a" * 40
 URL = "https://github.com/org/demo-app"
@@ -52,9 +52,9 @@ class TestAPinnedUpdateReportsTheOutage:
             def load():
                 return _Cfg()
 
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
-        monkeypatch.setattr(loader, "KiroCrewConfig", _Cfg)
+        monkeypatch.setattr(loader, "AjCrewConfig", _Cfg)
         # Same URL as the recorded source and no `_registry` marker: the row a
         # provenance match would accept if resolution ever reached the caches.
         monkeypatch.setattr(

@@ -16,10 +16,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.dashboard import session_directive_apply as sda
-from kiro_crew.dashboard.session_directive_apply import apply_session_directive
-from kiro_crew.monitoring.models import MonitorBudgets, MonitorOutcome
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.dashboard import session_directive_apply as sda
+from aj_crew.dashboard.session_directive_apply import apply_session_directive
+from aj_crew.monitoring.models import MonitorBudgets, MonitorOutcome
 
 
 @pytest.mark.asyncio
@@ -48,8 +48,8 @@ async def test_late_monitor_wake_cannot_rearm_after_user_stop(tmp_path, kind):
     )
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             result = await apply_session_directive(
                 state,
@@ -102,8 +102,8 @@ async def test_late_wake_of_a_user_stopped_structured_monitor_cannot_rearm(tmp_p
     )
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             result = await apply_session_directive(
                 state,
@@ -138,8 +138,8 @@ async def test_final_cycle_wake_may_arm_the_successor_of_its_capped_loop(tmp_pat
     )
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             result = await apply_session_directive(
                 state,
@@ -170,8 +170,8 @@ async def test_self_wake_revives_cap_expired_loop_by_raising_cap(tmp_path):
     )
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             result = await apply_session_directive(
                 state,
@@ -203,8 +203,8 @@ async def test_stale_wake_cannot_mutate_replacement_loop(tmp_path, kind):
     )
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),
@@ -238,9 +238,9 @@ async def test_stale_wake_stop_refusal_uses_stop_wording_and_is_surfaced(tmp_pat
     state = SimpleNamespace()
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
-            patch("kiro_crew.dashboard.state.append_and_surface", surfaced),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.dashboard.state.append_and_surface", surfaced),
         ):
             result = await apply_session_directive(
                 state,
@@ -283,9 +283,9 @@ async def test_stale_wake_cannot_remove_person_paused_loop(tmp_path, kind, stopp
     slot = SimpleNamespace(key="chat-1", _app="", messages=[])
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
-            patch("kiro_crew.dashboard.state.append_and_surface", surfaced),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.dashboard.state.append_and_surface", surfaced),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),
@@ -317,8 +317,8 @@ async def test_live_wake_can_stop_its_own_active_loop(tmp_path, kind):
     loop = await service.add(slot_key="chat-1", message="old", idle_secs=86400)
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),
@@ -346,8 +346,8 @@ async def test_live_wake_can_stop_its_own_system_deactivated_loop(tmp_path, kind
     await service.update(loop.id, active=False, stopped_reason="cycle_cap")
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),
@@ -372,8 +372,8 @@ async def test_live_wake_can_mutate_its_own_loop(tmp_path, kind):
     args = {"patch": {"message": "revised"}} if kind == "monitor_update" else {"reason": "done"}
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),
@@ -402,8 +402,8 @@ async def test_self_wake_without_loop_id_keeps_binding_fallback(tmp_path):
     loop = await service.add(slot_key="chat-1", message="old", idle_secs=86400)
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             result = await apply_session_directive(
                 SimpleNamespace(),
@@ -433,8 +433,8 @@ async def test_self_wake_revives_budget_expired_loop_by_raising_budget(tmp_path)
     )
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             result = await apply_session_directive(
                 state,
@@ -463,8 +463,8 @@ async def test_self_wake_cannot_revive_cap_expired_loop_without_raising_cap(tmp_
     )
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             result = await apply_session_directive(
                 state,
@@ -503,8 +503,8 @@ async def test_self_wake_cannot_revive_user_paused_loop_by_raising_cap(tmp_path,
     )
     try:
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=service),
-            patch("kiro_crew.autonudge_authz.sel", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=service),
+            patch("aj_crew.autonudge_authz.sel", return_value=MagicMock()),
         ):
             result = await apply_session_directive(
                 state,

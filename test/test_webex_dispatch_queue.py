@@ -18,11 +18,11 @@ from webex_dispatch_helpers import (
     _inbound,
 )
 
-from kiro_crew.acp.types import EVENT_COMPLETE, AcpEvent
-from kiro_crew.messaging.queue_drain import reset_drains
-from kiro_crew.webex import transport_dispatch as webex_dispatch
-from kiro_crew.webex.client import WebexInbound
-from kiro_crew.webex.transport_dispatch import _MAX_COLLAPSE
+from aj_crew.acp.types import EVENT_COMPLETE, AcpEvent
+from aj_crew.messaging.queue_drain import reset_drains
+from aj_crew.webex import transport_dispatch as webex_dispatch
+from aj_crew.webex.client import WebexInbound
+from aj_crew.webex.transport_dispatch import _MAX_COLLAPSE
 
 
 @pytest.fixture(autouse=True)
@@ -65,7 +65,7 @@ class TestDrainIsFlat:
                 depth["now"] -= 1
 
         with mock.patch.object(d, "_drain_queue", _counting):
-            with mock.patch("kiro_crew.webex.transport_dispatch.drive_turn", _noop_turn):
+            with mock.patch("aj_crew.webex.transport_dispatch.drive_turn", _noop_turn):
                 await d._drain_queue(d._session_key(_EMAIL), _inbound("x"))
 
         assert depth["max"] == 1, "the drain re-entered itself"
@@ -248,8 +248,8 @@ class TestWebexSharesTheQueueWithOtherTransports:
     @staticmethod
     def _foreign(text: str = "from telegram") -> tuple[str, str, dict]:
         """A queue entry as the TELEGRAM producer records one, built by that producer."""
-        from kiro_crew.telegram.transport_dispatch import _origin_kwargs as tg_kwargs
-        from kiro_crew.telegram.transport_dispatch import _QueuedOrigin as TgOrigin
+        from aj_crew.telegram.transport_dispatch import _origin_kwargs as tg_kwargs
+        from aj_crew.telegram.transport_dispatch import _QueuedOrigin as TgOrigin
 
         origin = TgOrigin(user_id="7", chat_id="70", thread_id="", chat_type="private", username="")
         return ("t0", text, tg_kwargs(origin))
@@ -262,7 +262,7 @@ class TestWebexSharesTheQueueWithOtherTransports:
         entry that did not carry it could only be replayed onto the OPENER's routing --
         a different session key whenever the two differ.
         """
-        from kiro_crew.messaging.queue_drain import entry_channel
+        from aj_crew.messaging.queue_drain import entry_channel
 
         sessions = FakeSessions(FakeProvider([]))
         sessions._busy = True
@@ -319,7 +319,7 @@ class TestWebexSharesTheQueueWithOtherTransports:
         There is no inbound then -- the finished turn belonged to another transport -- so
         every addressing field comes from the queued entry's own recorded place.
         """
-        from kiro_crew.messaging import queue_drain
+        from aj_crew.messaging import queue_drain
 
         sessions = FakeSessions(FakeProvider([]))
         d = _dispatcher(sessions, FakeCtx(), FakeClient())
@@ -370,7 +370,7 @@ class TestWebexSharesTheQueueWithOtherTransports:
         its OWN channel's turn -- so without the wake that message waits for its owner to
         finish some unrelated turn, and forever if that user goes quiet there.
         """
-        from kiro_crew.messaging import queue_drain
+        from aj_crew.messaging import queue_drain
 
         sessions = FakeSessions(FakeProvider([]))
         d = _dispatcher(sessions, FakeCtx(), FakeClient())
@@ -397,7 +397,7 @@ class TestWebexSharesTheQueueWithOtherTransports:
         so the loud failure is the correct outcome. Both producers are in the module, and
         the queue is an in-process list on a live session, so there is no lenient case.
         """
-        from kiro_crew.messaging.queue_drain import tag_entry
+        from aj_crew.messaging.queue_drain import tag_entry
 
         entry = tag_entry(
             {

@@ -19,7 +19,7 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const fixOn = params.get('fix') !== 'off'
 const theme = params.get('theme') || 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const ASK: ChatMessage = {
   role: 'assistant',
@@ -53,7 +53,7 @@ function Scene() {
           )}
         </div>
         <div className="mt-1 rounded-2xl border border-border bg-bg-elevated px-3 py-3 text-[13px] text-muted">
-          Message Kiro Crew…
+          Message Aj Crew…
         </div>
       </div>
     </div>

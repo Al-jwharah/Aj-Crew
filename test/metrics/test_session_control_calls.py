@@ -1,4 +1,4 @@
-"""``kirocrew.crew.session_control.calls``.
+"""``ajcrew.crew.session_control.calls``.
 
 Drives the REAL production pieces: the classifiers in
 ``metrics/session_control_calls.py``, the ``_counted`` wrapper that every
@@ -36,9 +36,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard.handlers import session_control as handler
-from kiro_crew.metrics import session_control_calls as scc
-from kiro_crew.metrics.recorder import MetricsRecorder
+from aj_crew.dashboard.handlers import session_control as handler
+from aj_crew.metrics import session_control_calls as scc
+from aj_crew.metrics.recorder import MetricsRecorder
 
 #: The ``agent_kind`` value set the crew-log usage fold names from its own
 #: hand-written stem table, written out LITERALLY here. The production side
@@ -60,8 +60,8 @@ EXPECTED_AGENT_KINDS = frozenset(
         "team_lead",
         "heartbeat",
         "dashboard_manager",
-        # A crewmate's conductor and its own worker (kirocrew-mate-conductor /
-        # kirocrew-mate-worker, both in OWNED_KIRO_AGENT_FILES).
+        # A crewmate's conductor and its own worker (ajcrew-mate-conductor /
+        # ajcrew-mate-worker, both in OWNED_KIRO_AGENT_FILES).
         "mate_conductor",
         "mate_worker",
         "default",
@@ -87,7 +87,7 @@ class _CapturingRecorder:
 @pytest.fixture
 def rec():
     r = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=r):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=r):
         yield r
 
 
@@ -166,7 +166,7 @@ class TestCallerEnum:
 
     def test_every_owned_agent_file_has_a_kind(self):
         """Derived, so a new owned file joins the enum with no table to edit."""
-        from kiro_crew.agent_files import AGENT_FILENAME, OWNED_KIRO_AGENT_FILES
+        from aj_crew.agent_files import AGENT_FILENAME, OWNED_KIRO_AGENT_FILES
 
         for filename in OWNED_KIRO_AGENT_FILES:
             stem = filename[: -len(".json")]
@@ -177,13 +177,13 @@ class TestCallerEnum:
                 assert kind == scc.CALLER_DEFAULT
 
     def test_a_hyphenated_stem_becomes_an_underscored_kind(self):
-        assert scc.caller_kind_for_agent("kirocrew-pipeline-conductor") == "pipeline_conductor"
-        assert scc.caller_kind_for_agent("kirocrew-team-lead") == "team_lead"
+        assert scc.caller_kind_for_agent("ajcrew-pipeline-conductor") == "pipeline_conductor"
+        assert scc.caller_kind_for_agent("ajcrew-team-lead") == "team_lead"
 
     def test_the_bare_default_agent_is_default_not_its_own_stem(self):
-        assert scc.caller_kind_for_agent("kirocrew") == scc.CALLER_DEFAULT
+        assert scc.caller_kind_for_agent("ajcrew") == scc.CALLER_DEFAULT
 
-    @pytest.mark.parametrize("agent", ["my-own-agent", "kirocrew-not-a-real-file", "zzz"])
+    @pytest.mark.parametrize("agent", ["my-own-agent", "ajcrew-not-a-real-file", "zzz"])
     def test_an_unowned_agent_name_cannot_mint_a_series(self, agent):
         assert scc.caller_kind_for_agent(agent) == scc.CALLER_OTHER
 
@@ -236,7 +236,7 @@ class TestCallerFromARequest:
         assert handler._caller_kind(_request(CREWMATE_SESSION, state=state)) == "crewmate"
 
     def test_an_owned_agents_slot_reads_as_its_kind(self):
-        state = _State({"chat-10": _Slot("chat-10", "kirocrew-worker")})
+        state = _State({"chat-10": _Slot("chat-10", "ajcrew-worker")})
         assert handler._caller_kind(_request("chat-10", state=state)) == "worker"
 
     def test_an_unknown_agent_reads_as_other(self):
@@ -262,9 +262,9 @@ class TestCallerFromARequest:
         shared mirrored name may be patched -- see
         ``test/test_facade_mirror_guards.py``.
         """
-        from kiro_crew.dashboard import session_control as sc
+        from aj_crew.dashboard import session_control as sc
 
-        state = _State({"chat-10": _Slot("chat-10", "kirocrew-conductor")})
+        state = _State({"chat-10": _Slot("chat-10", "ajcrew-conductor")})
         monkeypatch.setattr(sc, "caller_slot_key", lambda _state, _key: "chat-10")
         assert handler._caller_kind(_request("dashboard:chat-10-1789623359", state=state)) == (
             "conductor"
@@ -382,8 +382,8 @@ class TestExactlyOnce:
             def counter(self, *_a, **_k):
                 raise RuntimeError("recorder down")
 
-        name = "kiro_crew.metrics.session_control_calls"
-        with patch("kiro_crew.metrics.provider.get_recorder", return_value=_Boom()):
+        name = "aj_crew.metrics.session_control_calls"
+        with patch("aj_crew.metrics.provider.get_recorder", return_value=_Boom()):
             with caplog.at_level("DEBUG", logger=name):
                 scc.record_session_control_call("send", caller="worker", outcome="ok")
         logged = [r.getMessage() for r in caplog.records if r.name == name]
@@ -414,7 +414,7 @@ class TestRouteOps:
         what the counter actually records, and needs nothing in production whose
         only consumer is a test.
         """
-        from kiro_crew.dashboard.server import _register_mcp_routes
+        from aj_crew.dashboard.server import _register_mcp_routes
 
         app = web.Application()
         _register_mcp_routes(app)
@@ -468,7 +468,7 @@ class TestRouteOps:
         Reds if an op is named in the enum but no route ever emits it -- a value
         the dashboard would wait for forever.
         """
-        from kiro_crew.dashboard.server import _register_mcp_routes
+        from aj_crew.dashboard.server import _register_mcp_routes
 
         app = web.Application()
         _register_mcp_routes(app)
@@ -528,7 +528,7 @@ class TestTelemetryOff:
         """The recorder a disabled process holds has no meter, so the emit
         returns before touching an instrument -- no series is created at all."""
         disabled = MetricsRecorder(None)
-        with patch("kiro_crew.metrics.provider.get_recorder", return_value=disabled):
+        with patch("aj_crew.metrics.provider.get_recorder", return_value=disabled):
             scc.record_session_control_call("send", caller="worker", outcome="ok")
         assert disabled._counters == {}
 
@@ -540,7 +540,7 @@ class TestTelemetryOff:
         async def route(_request):
             return web.json_response({"ok": True})
 
-        with patch("kiro_crew.metrics.provider.get_recorder", return_value=disabled):
+        with patch("aj_crew.metrics.provider.get_recorder", return_value=disabled):
             response = await route(_request())
         assert response.status == 200
         assert disabled._counters == {}

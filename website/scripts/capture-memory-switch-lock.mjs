@@ -26,8 +26,8 @@ const OUT = process.argv[2] || '../temp-screenshots/16004-memory-switch-lock'
 mkdirSync(OUT, { recursive: true })
 
 const SLOTS = [
-  { key: 'chat-a', title: 'Release notes', messages: 0, running: false, agent: 'kirocrew', mode: '' },
-  { key: 'chat-b', title: 'Flaky test triage', messages: 0, running: false, agent: 'kirocrew', mode: '' },
+  { key: 'chat-a', title: 'Release notes', messages: 0, running: false, agent: 'ajcrew', mode: '' },
+  { key: 'chat-b', title: 'Flaky test triage', messages: 0, running: false, agent: 'ajcrew', mode: '' },
 ]
 const VIEWPORTS = [
   { name: 'desktop', width: 1440, height: 900 },

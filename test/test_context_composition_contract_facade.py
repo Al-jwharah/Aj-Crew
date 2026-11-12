@@ -1,12 +1,12 @@
-"""The ``kiro_crew.context`` facade and the ``context_assembly`` owners behind it.
+"""The ``aj_crew.context`` facade and the ``context_assembly`` owners behind it.
 
 The assembly lives in owner modules, so callers and tests keep reaching every name
-through ``kiro_crew.context``. These tests pin that surface: every name the facade
+through ``aj_crew.context``. These tests pin that surface: every name the facade
 defined or imported still resolves on it (an imported one as its home module's object, a
 moved one as its owner's), the frozen public signatures and ``ContextBuilder`` members,
 the owner set and that a fresh import of the facade loads every owner. They pin the
 placement rules that keep a patch on the facade effective once the code has moved: no
-Kiro Crew import at an owner's module scope, no owner importing a sibling's attribute, an
+Aj Crew import at an owner's module scope, no owner importing a sibling's attribute, an
 acyclic owner graph, the facade logger, and no owner binding or bare-reading a name the
 tests rebind on the facade (that set is derived from the test tree). And for a sample of
 those seams they show a patch on the facade reaching the moved code that reads it. The
@@ -38,10 +38,10 @@ from context_composition_contract_helpers import (  # noqa: F401 -- the fixture 
 )
 from source_corpus import repo_files_named, repo_root
 
-import kiro_crew
-from kiro_crew import context as ctx
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing.wait import default_timeout
+import aj_crew
+from aj_crew import context as ctx
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing.wait import default_timeout
 
 pytestmark = [
     pytest.mark.xdist_group("context_composition_contract"),
@@ -51,7 +51,7 @@ pytestmark = [
 
 # ── Frozen surface ─────────────────────────────────────────────────────────────
 
-#: Every name kiro_crew/context.py defined before its owners moved out. Each must
+#: Every name aj_crew/context.py defined before its owners moved out. Each must
 #: keep resolving on the facade, whichever module now holds it.
 _FACADE_DEFINED = """
     CONTEXT_GROUP_LESSONS CONTEXT_GROUP_MEMORY CONTEXT_GROUP_PROJECT ContextBuilder
@@ -120,75 +120,75 @@ _FACADE_STDLIB = """
 """.split()
 
 
-#: facade name -> (home module, attribute) for each Kiro Crew name it imported.
+#: facade name -> (home module, attribute) for each Aj Crew name it imported.
 _FACADE_IMPORTS: dict[str, tuple[str, str]] = {
-    "ESSENTIAL_MAX_CHARS": ("kiro_crew.member_essential_context", "ESSENTIAL_MAX_CHARS"),
+    "ESSENTIAL_MAX_CHARS": ("aj_crew.member_essential_context", "ESSENTIAL_MAX_CHARS"),
     "FOLDER_STEERING_OMISSION_SOURCE": (
-        "kiro_crew.folder_steering",
+        "aj_crew.folder_steering",
         "FOLDER_STEERING_OMISSION_SOURCE",
     ),
-    "FileTooLargeError": ("kiro_crew.hooks", "FileTooLargeError"),
-    "HOOK_INJECT_CONTEXT": ("kiro_crew.hooks", "HOOK_INJECT_CONTEXT"),
-    "HOOK_MODIFY": ("kiro_crew.hooks", "HOOK_MODIFY"),
-    "HookManager": ("kiro_crew.hooks", "HookManager"),
-    "HookResult": ("kiro_crew.hooks", "HookResult"),
-    "KiroCrewConfig": ("kiro_crew.config.loader", "KiroCrewConfig"),
-    "LessonStore": ("kiro_crew.learn", "LessonStore"),
+    "FileTooLargeError": ("aj_crew.hooks", "FileTooLargeError"),
+    "HOOK_INJECT_CONTEXT": ("aj_crew.hooks", "HOOK_INJECT_CONTEXT"),
+    "HOOK_MODIFY": ("aj_crew.hooks", "HOOK_MODIFY"),
+    "HookManager": ("aj_crew.hooks", "HookManager"),
+    "HookResult": ("aj_crew.hooks", "HookResult"),
+    "AjCrewConfig": ("aj_crew.config.loader", "AjCrewConfig"),
+    "LessonStore": ("aj_crew.learn", "LessonStore"),
     "MemberEssentialContextError": (
-        "kiro_crew.member_essential_context",
+        "aj_crew.member_essential_context",
         "MemberEssentialContextError",
     ),
-    "MemberLifecycle": ("kiro_crew.members", "MemberLifecycle"),
-    "MemberSlugError": ("kiro_crew.members", "MemberSlugError"),
-    "MemoryStore": ("kiro_crew.memory", "MemoryStore"),
-    "PROJECT_SKILL_BODY_CAP": ("kiro_crew.skills", "PROJECT_SKILL_BODY_CAP"),
-    "PROVIDER_ACP": ("kiro_crew.agent_sdk.provider_identity", "PROVIDER_ACP"),
-    "SkillsLoader": ("kiro_crew.skills", "SkillsLoader"),
-    "SteeringCollection": ("kiro_crew.folder_steering", "SteeringCollection"),
-    "_MAX_DOCUMENTS": ("kiro_crew.member_essential_context", "_MAX_DOCUMENTS"),
-    "_prompt_path": ("kiro_crew.agent", "_prompt_path"),
-    "_shipped_prompt": ("kiro_crew.agent", "_shipped_prompt"),
-    "acp_driver": ("kiro_crew.agent_sdk.drivers", "acp"),
-    "agent_skill_globs": ("kiro_crew.agent_discovery", "agent_skill_globs"),
-    "audit_injection_dropped": ("kiro_crew.security", "audit_injection_dropped"),
-    "collect_folder_steering": ("kiro_crew.folder_steering", "collect_folder_steering"),
-    "contains_injection": ("kiro_crew.security", "contains_injection"),
-    "expand_quick_prompt": ("kiro_crew.quick_prompts", "expand_quick_prompt"),
-    "get_local_tz": ("kiro_crew.cron", "get_local_tz"),
-    "get_recorder": ("kiro_crew.metrics.provider", "get_recorder"),
-    "has_dashboard_surface": ("kiro_crew.session_surface", "has_dashboard_surface"),
-    "is_claude_code": ("kiro_crew.agent_sdk.provider_identity", "is_claude_code"),
-    "is_grantable_tag_id": ("kiro_crew.board_tag_grammar", "is_grantable_tag_id"),
-    "is_managed_prompt": ("kiro_crew.agent", "is_managed_prompt"),
-    "is_sensitive_path": ("kiro_crew.security", "is_sensitive_path"),
-    "iter_agent_spec_files": ("kiro_crew.agent_spec_format", "iter_agent_spec_files"),
-    "kiro_agents_dir": ("kiro_crew.config.paths", "kiro_agents_dir"),
-    "live": ("kiro_crew.config", "live"),
-    "measure_prompt": ("kiro_crew.context_blocks", "measure_prompt"),
-    "member_briefing_path": ("kiro_crew.members", "member_briefing_path"),
-    "member_briefing_supported": ("kiro_crew.members", "member_briefing_supported"),
-    "member_context_identity": ("kiro_crew.member_essential_context", "member_context_identity"),
+    "MemberLifecycle": ("aj_crew.members", "MemberLifecycle"),
+    "MemberSlugError": ("aj_crew.members", "MemberSlugError"),
+    "MemoryStore": ("aj_crew.memory", "MemoryStore"),
+    "PROJECT_SKILL_BODY_CAP": ("aj_crew.skills", "PROJECT_SKILL_BODY_CAP"),
+    "PROVIDER_ACP": ("aj_crew.agent_sdk.provider_identity", "PROVIDER_ACP"),
+    "SkillsLoader": ("aj_crew.skills", "SkillsLoader"),
+    "SteeringCollection": ("aj_crew.folder_steering", "SteeringCollection"),
+    "_MAX_DOCUMENTS": ("aj_crew.member_essential_context", "_MAX_DOCUMENTS"),
+    "_prompt_path": ("aj_crew.agent", "_prompt_path"),
+    "_shipped_prompt": ("aj_crew.agent", "_shipped_prompt"),
+    "acp_driver": ("aj_crew.agent_sdk.drivers", "acp"),
+    "agent_skill_globs": ("aj_crew.agent_discovery", "agent_skill_globs"),
+    "audit_injection_dropped": ("aj_crew.security", "audit_injection_dropped"),
+    "collect_folder_steering": ("aj_crew.folder_steering", "collect_folder_steering"),
+    "contains_injection": ("aj_crew.security", "contains_injection"),
+    "expand_quick_prompt": ("aj_crew.quick_prompts", "expand_quick_prompt"),
+    "get_local_tz": ("aj_crew.cron", "get_local_tz"),
+    "get_recorder": ("aj_crew.metrics.provider", "get_recorder"),
+    "has_dashboard_surface": ("aj_crew.session_surface", "has_dashboard_surface"),
+    "is_claude_code": ("aj_crew.agent_sdk.provider_identity", "is_claude_code"),
+    "is_grantable_tag_id": ("aj_crew.board_tag_grammar", "is_grantable_tag_id"),
+    "is_managed_prompt": ("aj_crew.agent", "is_managed_prompt"),
+    "is_sensitive_path": ("aj_crew.security", "is_sensitive_path"),
+    "iter_agent_spec_files": ("aj_crew.agent_spec_format", "iter_agent_spec_files"),
+    "kiro_agents_dir": ("aj_crew.config.paths", "kiro_agents_dir"),
+    "live": ("aj_crew.config", "live"),
+    "measure_prompt": ("aj_crew.context_blocks", "measure_prompt"),
+    "member_briefing_path": ("aj_crew.members", "member_briefing_path"),
+    "member_briefing_supported": ("aj_crew.members", "member_briefing_supported"),
+    "member_context_identity": ("aj_crew.member_essential_context", "member_context_identity"),
     "member_inherits_default_resources": (
-        "kiro_crew.member_essential_context",
+        "aj_crew.member_essential_context",
         "member_inherits_default_resources",
     ),
-    "member_lifecycle": ("kiro_crew.members", "member_lifecycle"),
-    "member_turn_context": ("kiro_crew.members", "member_turn_context"),
-    "model_registry": ("kiro_crew", "model_registry"),
-    "parse_agent_spec_text": ("kiro_crew.agent_spec_format", "parse_agent_spec_text"),
-    "read_member_briefing": ("kiro_crew.members", "read_member_briefing"),
-    "read_member_rules": ("kiro_crew.members", "read_member_rules"),
-    "redact_credentials": ("kiro_crew.security", "redact_credentials"),
-    "redact_exfiltration_urls": ("kiro_crew.security", "redact_exfiltration_urls"),
-    "render_essentials": ("kiro_crew.member_essential_context", "render_essentials"),
-    "render_folder_steering": ("kiro_crew.folder_steering", "render_folder_steering"),
-    "render_omission_notice": ("kiro_crew.folder_steering", "render_omission_notice"),
-    "resource_status": ("kiro_crew", "resource_status"),
-    "safe_read_file": ("kiro_crew.hooks", "safe_read_file"),
-    "safe_read_file_bytes_nolink": ("kiro_crew.hooks", "safe_read_file_bytes_nolink"),
-    "slug_for_name": ("kiro_crew.members", "slug_for_name"),
-    "sqlite3": ("kiro_crew._sqlite_compat", "sqlite3"),
-    "workspace_dir_for": ("kiro_crew.config.loader", "workspace_dir_for"),
+    "member_lifecycle": ("aj_crew.members", "member_lifecycle"),
+    "member_turn_context": ("aj_crew.members", "member_turn_context"),
+    "model_registry": ("aj_crew", "model_registry"),
+    "parse_agent_spec_text": ("aj_crew.agent_spec_format", "parse_agent_spec_text"),
+    "read_member_briefing": ("aj_crew.members", "read_member_briefing"),
+    "read_member_rules": ("aj_crew.members", "read_member_rules"),
+    "redact_credentials": ("aj_crew.security", "redact_credentials"),
+    "redact_exfiltration_urls": ("aj_crew.security", "redact_exfiltration_urls"),
+    "render_essentials": ("aj_crew.member_essential_context", "render_essentials"),
+    "render_folder_steering": ("aj_crew.folder_steering", "render_folder_steering"),
+    "render_omission_notice": ("aj_crew.folder_steering", "render_omission_notice"),
+    "resource_status": ("aj_crew", "resource_status"),
+    "safe_read_file": ("aj_crew.hooks", "safe_read_file"),
+    "safe_read_file_bytes_nolink": ("aj_crew.hooks", "safe_read_file_bytes_nolink"),
+    "slug_for_name": ("aj_crew.members", "slug_for_name"),
+    "sqlite3": ("aj_crew._sqlite_compat", "sqlite3"),
+    "workspace_dir_for": ("aj_crew.config.loader", "workspace_dir_for"),
 }
 
 
@@ -292,7 +292,7 @@ _PUBLIC_SIGNATURES = {
     "session_store_for_turn": "(ctx_builder: 'object', session_key: 'str') -> 'str'",
     "steering_target_admissible": "(resolved: 'Path', base: 'Path | None' = None) -> 'bool'",
     "store_of_session": "(conversation_log: 'object', session_key: 'str') -> 'str'",
-    "ui_language_tag": "(cfg: \"'KiroCrewConfig'\") -> 'str'",
+    "ui_language_tag": "(cfg: \"'AjCrewConfig'\") -> 'str'",
     "validated_cached_vector_stores": "() -> \"tuple['VectorMemoryStore', ...]\"",
     "window_for_provider_client": "(client: 'object') -> 'int | None'",
 }
@@ -300,10 +300,10 @@ _PUBLIC_SIGNATURES = {
 
 # ── The facade and its owners ─────────────────────────────────────────────────
 
-OWNER_PACKAGE = "kiro_crew.context_assembly"
+OWNER_PACKAGE = "aj_crew.context_assembly"
 OWNER_DIR = Path(ctx.__file__).resolve().with_name("context_assembly")
 FACADE_PATH = Path(ctx.__file__).resolve()
-FACADE_LOGGER = "kiro_crew.context"
+FACADE_LOGGER = "aj_crew.context"
 
 #: The owners the facade composes. A module added or removed changes the
 #: composition, so the set is spelled out rather than globbed.
@@ -444,7 +444,7 @@ class TestSurface(composition_contract_checks.ThePackageHoldsExactlyTheComposedM
     def test_moved_classes_keep_their_owner_module(self) -> None:
         assert ctx._ResolvedCaps.__module__ == f"{OWNER_PACKAGE}.budget"
         assert ctx._ShownLessons.__module__ == f"{OWNER_PACKAGE}.store_admission"
-        assert ctx.ContextBuilder.__module__ == "kiro_crew.context"
+        assert ctx.ContextBuilder.__module__ == "aj_crew.context"
 
     def test_the_facade_is_a_plain_module(self) -> None:
         """Every name is an ordinary binding: no ``__getattr__`` forwarding, no class
@@ -456,7 +456,7 @@ class TestSurface(composition_contract_checks.ThePackageHoldsExactlyTheComposedM
 
     def test_a_star_import_still_binds_every_public_name(self, tmp_path: Path) -> None:
         path = tmp_path / "context_star_probe.py"
-        path.write_text("from kiro_crew.context import *\n", encoding="utf-8")
+        path.write_text("from aj_crew.context import *\n", encoding="utf-8")
         spec = importlib.util.spec_from_file_location("context_star_probe", path)
         assert spec is not None and spec.loader is not None
         probe = importlib.util.module_from_spec(spec)
@@ -493,11 +493,11 @@ class TestEagerOwners(composition_contract_checks.ThePackageInitImportsNothing):
         probe = (
             f"import faulthandler; faulthandler.dump_traceback_later({dump_after!r}, exit=False)\n"
             "import json, sys\n"
-            "import kiro_crew.context\n"
+            "import aj_crew.context\n"
             f"print(json.dumps(sorted(m for m in sys.modules if m.startswith({OWNER_PACKAGE + '.'!r}))))\n"
         )
         env = dict(os.environ)
-        src = str(Path(kiro_crew.__file__).resolve().parents[1])
+        src = str(Path(aj_crew.__file__).resolve().parents[1])
         env["PYTHONPATH"] = src + os.pathsep + env.get("PYTHONPATH", "")
         try:
             out = subprocess.run(
@@ -515,7 +515,7 @@ class TestEagerOwners(composition_contract_checks.ThePackageInitImportsNothing):
             if isinstance(stderr, bytes):
                 stderr = stderr.decode("utf-8", "replace")
             raise AssertionError(
-                f"a fresh import of kiro_crew.context did not finish within {exc.timeout:g} s; "
+                f"a fresh import of aj_crew.context did not finish within {exc.timeout:g} s; "
                 f"stderr so far:\n{stderr}"
             ) from None
         loaded = json.loads(out.stdout.splitlines()[-1])
@@ -523,23 +523,23 @@ class TestEagerOwners(composition_contract_checks.ThePackageInitImportsNothing):
 
 
 #: Every spelling a test uses to reach the facade module.
-_MENTIONS_THE_FACADE = re.compile(r"kiro_crew\.context\b|from kiro_crew import [^\n]*\bcontext\b")
+_MENTIONS_THE_FACADE = re.compile(r"aj_crew\.context\b|from aj_crew import [^\n]*\bcontext\b")
 _PATCH_CALLS = ("setattr", "patch.object", "delattr")
 
 
 def _facade_aliases(tree: ast.AST) -> set[str]:
-    """Local names bound to ``kiro_crew.context`` in *tree*, resolved to a fixed point."""
-    aliases = {"kiro_crew.context"}
+    """Local names bound to ``aj_crew.context`` in *tree*, resolved to a fixed point."""
+    aliases = {"aj_crew.context"}
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew":
+        if isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
             aliases |= {a.asname or a.name for a in node.names if a.name == "context"}
         elif isinstance(node, ast.Import):
-            aliases |= {a.asname for a in node.names if a.name == "kiro_crew.context" and a.asname}
+            aliases |= {a.asname for a in node.names if a.name == "aj_crew.context" and a.asname}
     loaders = {
-        'importlib.import_module("kiro_crew.context")',
-        "importlib.import_module('kiro_crew.context')",
-        'sys.modules["kiro_crew.context"]',
-        "sys.modules['kiro_crew.context']",
+        'importlib.import_module("aj_crew.context")',
+        "importlib.import_module('aj_crew.context')",
+        'sys.modules["aj_crew.context"]',
+        "sys.modules['aj_crew.context']",
     }
     changed = True
     while changed:
@@ -560,7 +560,7 @@ def _facade_aliases(tree: ast.AST) -> set[str]:
 def _patched_names_in(text: str) -> set[str]:
     """Names one test source rebinds on the facade itself.
 
-    Dotted targets (``context.KiroCrewConfig.load``) patch an attribute of a shared
+    Dotted targets (``context.AjCrewConfig.load``) patch an attribute of a shared
     object rather than a facade binding, so every holder of that object sees them;
     only first-level facade names count.
     """
@@ -584,12 +584,12 @@ def _patched_names_in(text: str) -> set[str]:
             for target in targets:
                 if isinstance(target, ast.Attribute) and ast.unparse(target.value) in aliases:
                     found.add(target.attr)
-    found |= set(re.findall(r"""["']kiro_crew\.context\.(\w+)["']""", text))
+    found |= set(re.findall(r"""["']aj_crew\.context\.(\w+)["']""", text))
     return found
 
 
 def _facade_patched_names() -> set[str]:
-    """Names any test rebinds on ``kiro_crew.context``."""
+    """Names any test rebinds on ``aj_crew.context``."""
     root = repo_root()
     tests = root / "test"
     found: set[str] = set()
@@ -633,7 +633,7 @@ def _bare_seam_loads(source: str, seams: set[str]) -> list[str]:
     """Reads of *seams* inside owner functions that a patch on the facade would miss.
 
     A seam is read as ``ctx.<name>`` after a function-local
-    ``from kiro_crew import context as ctx``. A bare global load or a function-local
+    ``from aj_crew import context as ctx``. A bare global load or a function-local
     import binding the name reads some other binding.
     """
     tree = ast.parse(source)
@@ -674,8 +674,8 @@ def _bare_seam_loads(source: str, seams: set[str]) -> list[str]:
 class TestPlacement(composition_contract_checks.NoOwnerAnchorsAPathOnItsOwnFile):
     """The rules that keep a patch on the facade effective once the code has moved."""
 
-    def test_owners_import_no_kiro_crew_module_at_module_scope(self) -> None:
-        """Every Kiro Crew name an owner needs is read through the facade at call
+    def test_owners_import_no_aj_crew_module_at_module_scope(self) -> None:
+        """Every Aj Crew name an owner needs is read through the facade at call
         time, so a patch there reaches it and the facade's import closure is
         unchanged. Sibling owners and ``TYPE_CHECKING`` imports are the exceptions."""
         for stem, source in _owner_sources().items():
@@ -685,11 +685,11 @@ class TestPlacement(composition_contract_checks.NoOwnerAnchorsAPathOnItsOwnFile)
                 if id(node) in typing_only:
                     continue
                 if isinstance(node, ast.ImportFrom) and _imported_module(node).startswith(
-                    "kiro_crew"
+                    "aj_crew"
                 ):
                     assert _imported_module(node) == OWNER_PACKAGE, (stem, node.module)
                 elif isinstance(node, ast.Import):
-                    assert not [a.name for a in node.names if a.name.startswith("kiro_crew")], stem
+                    assert not [a.name for a in node.names if a.name.startswith("aj_crew")], stem
 
     def test_owners_reach_the_facade_as_a_module_at_call_time(self) -> None:
         imports = 0
@@ -699,8 +699,8 @@ class TestPlacement(composition_contract_checks.NoOwnerAnchorsAPathOnItsOwnFile)
             for node in ast.walk(tree):
                 if id(node) in typing_only or not isinstance(node, ast.ImportFrom):
                     continue
-                assert node.module != "kiro_crew.context", f"{stem}:{node.lineno}"
-                if node.module == "kiro_crew" and "context" in [a.name for a in node.names]:
+                assert node.module != "aj_crew.context", f"{stem}:{node.lineno}"
+                if node.module == "aj_crew" and "context" in [a.name for a in node.names]:
                     assert node.col_offset > 0, f"{stem}:{node.lineno} imports the facade early"
                     imports += 1
         # Non-vacuous: the owners do reach the facade's seams.
@@ -717,10 +717,10 @@ class TestPlacement(composition_contract_checks.NoOwnerAnchorsAPathOnItsOwnFile)
     @pytest.mark.parametrize(
         "planted",
         [
-            "from kiro_crew.context_assembly.markers import _apply_marker_spans\n",
-            "from kiro_crew.context_assembly.budget import _ResolvedCaps as Caps\n",
-            "def f():\n    from kiro_crew.context_assembly.replay import _quota_tail\n",
-            "from kiro_crew.context_assembly import _quota_tail\n",
+            "from aj_crew.context_assembly.markers import _apply_marker_spans\n",
+            "from aj_crew.context_assembly.budget import _ResolvedCaps as Caps\n",
+            "def f():\n    from aj_crew.context_assembly.replay import _quota_tail\n",
+            "from aj_crew.context_assembly import _quota_tail\n",
             "from .sections import widget_block\n",
         ],
     )
@@ -730,7 +730,7 @@ class TestPlacement(composition_contract_checks.NoOwnerAnchorsAPathOnItsOwnFile)
     @pytest.mark.parametrize(
         "allowed",
         [
-            "from kiro_crew.context_assembly import markers as _markers\n",
+            "from aj_crew.context_assembly import markers as _markers\n",
             "from . import budget\n",
         ],
     )
@@ -786,17 +786,17 @@ class TestPlacement(composition_contract_checks.NoOwnerAnchorsAPathOnItsOwnFile)
     def test_the_patch_scan_reads_every_spelling(self) -> None:
         planted = (
             "import importlib\n"
-            "import kiro_crew.context as cm\n"
-            "from kiro_crew import context as ctx_mod\n"
-            "facade = importlib.import_module('kiro_crew.context')\n"
+            "import aj_crew.context as cm\n"
+            "from aj_crew import context as ctx_mod\n"
+            "facade = importlib.import_module('aj_crew.context')\n"
             "alias = facade\n"
             "def test(monkeypatch):\n"
             "    monkeypatch.setattr(cm, 'first', 1)\n"
             "    monkeypatch.setattr(ctx_mod, 'second', 2)\n"
             "    patch.object(alias, 'third')\n"
             "    ctx_mod.fourth = 4\n"
-            "    monkeypatch.setattr('kiro_crew.context.fifth', 5)\n"
-            "    monkeypatch.setattr('kiro_crew.context.Shared.attr', 6)\n"
+            "    monkeypatch.setattr('aj_crew.context.fifth', 5)\n"
+            "    monkeypatch.setattr('aj_crew.context.Shared.attr', 6)\n"
             "    monkeypatch.setattr(ctx_mod.Shared, 'attr', 7)\n"
             "    monkeypatch.setattr(other, 'not_facade', 8)\n"
         )
@@ -805,12 +805,12 @@ class TestPlacement(composition_contract_checks.NoOwnerAnchorsAPathOnItsOwnFile)
     def test_the_seam_scan_catches_a_planted_bare_read(self) -> None:
         planted = (
             "def f(path: 'datetime') -> '_resolve_caps':\n"
-            "    from kiro_crew import context as ctx\n"
+            "    from aj_crew import context as ctx\n"
             "    good = ctx._resolve_caps(None)\n"
             "    return _resolve_caps(None), datetime\n"
             "def g():\n"
-            "    from kiro_crew.cron import get_local_tz\n"
-            "    from kiro_crew.agent import _prompt_path as path\n"
+            "    from aj_crew.cron import get_local_tz\n"
+            "    from aj_crew.agent import _prompt_path as path\n"
             "    return get_local_tz, path\n"
         )
         seams = {"_resolve_caps", "datetime", "get_local_tz", "_prompt_path"}
@@ -864,7 +864,7 @@ class TestPatchReach:
         assert out == "keep A.txt [marker-removed] y"
 
     def test_embedding_deadline(self, monkeypatch) -> None:
-        from kiro_crew.embeddings import embedding_work
+        from aj_crew.embeddings import embedding_work
 
         monkeypatch.setattr(ctx, "_PROMPT_BUILD_EMBED_TIMEOUT_SECS", 1000.0)
         with ctx._prompt_build_embedding_deadline(True):
@@ -925,7 +925,7 @@ class TestPatchReach:
 
         crew = SimpleNamespace(description="Writes.", triggers="drafts", member_id="")
         cfg = SimpleNamespace(agents={"writer": crew})
-        monkeypatch.setattr(ctx.KiroCrewConfig, "load", lambda *a, **k: cfg)
+        monkeypatch.setattr(ctx.AjCrewConfig, "load", lambda *a, **k: cfg)
         monkeypatch.setattr(ctx, "read_member_rules", lambda slug, member: "")
         section = ctx.ContextBuilder._build_member_section(object(), "writer")  # type: ignore[arg-type]
         assert "[CURRENT ASSIGNMENT — not available on this platform]" in section
@@ -963,7 +963,7 @@ class TestPatchReach:
 
 
 def _guidance(session_key: str) -> list[str]:
-    from kiro_crew.context_assembly import turn
+    from aj_crew.context_assembly import turn
 
     return turn.interactive_guidance(
         interactive=True,

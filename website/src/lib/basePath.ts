@@ -1,7 +1,7 @@
 /**
  * The dashboard's URL base, fixed when the bundle was built.
  *
- * A build with `KIROCREW_BASE_PATH=/proxy/kirocrew` (see
+ * A build with `AJCREW_BASE_PATH=/proxy/ajcrew` (see
  * website/scripts/lib/basePath.mjs) sets Vite's `base`, which Vite exposes here
  * as `import.meta.env.BASE_URL`. The stock build has `BASE_URL === '/'`, so
  * `BASE_PATH` is `''` and every helper below is the identity.

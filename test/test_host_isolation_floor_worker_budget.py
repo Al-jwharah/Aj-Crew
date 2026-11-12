@@ -196,7 +196,7 @@ class TestTheWorkerBudgetIsMemoryBounded:
         monkeypatch.setattr(budget, "_cgroup_limit_mib", lambda: 0)
         monkeypatch.setattr(budget, "_host_available_mib", lambda: 0)
         monkeypatch.delenv(budget._MAX_WORKERS_ENV, raising=False)
-        # Kiro Crew seeds this cap at every agent spawn boundary; a run started
+        # Aj Crew seeds this cap at every agent spawn boundary; a run started
         # from an agent shell would otherwise read the spawner's cap here.
         monkeypatch.delenv(budget._XDIST_ENV_CAP, raising=False)
 
@@ -276,7 +276,7 @@ class TestTheWorkerBudgetIsMemoryBounded:
         stops asserting anything on the macOS and Windows shards.
         """
         import xdist_budget as budget
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         monkeypatch.setattr(platform_compat, "IS_LINUX", True)
         monkeypatch.setattr(platform_compat, "IS_MACOS", False)
@@ -326,9 +326,9 @@ class TestTheWorkerBudgetIsMemoryBounded:
 
         # Imported in-body, not at module scope: test_host_isolation_floor.py's ratchet asserts
         # that no import-time ``~/.kiro`` binding escapes the isolation fixtures,
-        # and importing kiro_crew during COLLECTION binds them against the real
+        # and importing aj_crew during COLLECTION binds them against the real
         # home before any fixture has run.
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         monkeypatch.setattr(platform_compat, "IS_LINUX", True)
         monkeypatch.setattr(platform_compat, "IS_MACOS", False)
@@ -355,7 +355,7 @@ class TestTheWorkerBudgetIsMemoryBounded:
         silently dropping to one worker.
         """
         import xdist_budget as budget
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         monkeypatch.setattr(platform_compat, "IS_LINUX", False)
         monkeypatch.setattr(platform_compat, "IS_MACOS", False)

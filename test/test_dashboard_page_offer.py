@@ -17,9 +17,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import change_card_dashboard_page as card
-from kiro_crew.dashboard import boot_id, page_offer
+from aj_crew import change_card_catalog as catalog
+from aj_crew import change_card_dashboard_page as card
+from aj_crew.dashboard import boot_id, page_offer
 
 SLUG = "scout"
 MEMBER = "Scout"
@@ -27,7 +27,7 @@ MEMBER = "Scout"
 
 @pytest.fixture
 def home(tmp_path: Path, _floor_monkeypatch: Any) -> Path:
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     return tmp_path
 
 
@@ -78,8 +78,8 @@ def test_the_summary_reads_as_the_answer() -> None:
 def test_the_preview_refuses_a_card_the_crewmate_may_not_raise(
     _floor_monkeypatch: Any, krs: bool, target: Any, code: str
 ) -> None:
-    from kiro_crew import dashboard_agentic, member_goals
-    from kiro_crew.dashboard import change_cards_readers as readers
+    from aj_crew import dashboard_agentic, member_goals
+    from aj_crew.dashboard import change_cards_readers as readers
 
     rec = {
         "goals": [{"id": "g00000001", "text": "Docs"}],
@@ -98,8 +98,8 @@ def test_a_re_preview_of_the_raised_card_is_not_refused_as_asked(
 ) -> None:
     """The raise wrote the asked-once record, so the card's own Refresh (after a
     ``changed_since_preview`` yes) re-reads only readiness and the target."""
-    from kiro_crew import dashboard_agentic, member_goals
-    from kiro_crew.dashboard import change_cards_readers as readers
+    from aj_crew import dashboard_agentic, member_goals
+    from aj_crew.dashboard import change_cards_readers as readers
 
     rec = {"goals": [{"id": "g00000001", "text": "Docs"}], "key_results": [{"id": "k1"}]}
     _floor_monkeypatch.setattr(page_offer, "was_asked", lambda _s: True)
@@ -117,8 +117,8 @@ def test_a_crewmate_asked_before_cannot_raise_the_card_again(
 ) -> None:
     import asyncio
 
-    from kiro_crew.dashboard.change_cards import CardError
-    from kiro_crew.dashboard.handlers import member_self
+    from aj_crew.dashboard.change_cards import CardError
+    from aj_crew.dashboard.handlers import member_self
 
     _claim_env(_floor_monkeypatch)
     page_offer.record_asked(SLUG, "Goal board")
@@ -130,8 +130,8 @@ def test_a_crewmate_asked_before_cannot_raise_the_card_again(
 
 
 def test_a_ready_template_crewmate_gets_the_card_context(_floor_monkeypatch: Any) -> None:
-    from kiro_crew import dashboard_agentic, member_goals
-    from kiro_crew.dashboard import change_cards_readers as readers
+    from aj_crew import dashboard_agentic, member_goals
+    from aj_crew.dashboard import change_cards_readers as readers
 
     rec = {"goals": [{"id": "g00000001", "text": "Docs"}], "key_results": [{"id": "k1"}]}
     _floor_monkeypatch.setattr(page_offer, "was_asked", lambda _s: False)
@@ -145,8 +145,8 @@ def test_a_ready_template_crewmate_gets_the_card_context(_floor_monkeypatch: Any
 
 
 def _claim_env(_floor_monkeypatch: Any) -> None:
-    from kiro_crew import dashboard_agentic
-    from kiro_crew import members as members_mod
+    from aj_crew import dashboard_agentic
+    from aj_crew import members as members_mod
 
     _floor_monkeypatch.setattr(members_mod, "member_slug", lambda _m, _c=None: SLUG)
     _floor_monkeypatch.setattr(
@@ -160,7 +160,7 @@ def test_raising_the_card_records_asked_once_before_it_is_shown(
     import asyncio
     import json
 
-    from kiro_crew.dashboard.handlers import member_self
+    from aj_crew.dashboard.handlers import member_self
 
     _claim_env(_floor_monkeypatch)
     assert page_offer.was_asked(SLUG) is False
@@ -179,8 +179,8 @@ def test_a_record_that_cannot_be_written_refuses_the_card(
 ) -> None:
     import asyncio
 
-    from kiro_crew.dashboard.change_cards import CardError
-    from kiro_crew.dashboard.handlers import member_self
+    from aj_crew.dashboard.change_cards import CardError
+    from aj_crew.dashboard.handlers import member_self
 
     _claim_env(_floor_monkeypatch)
 
@@ -198,7 +198,7 @@ def test_a_card_that_is_not_published_takes_the_record_back(
 ) -> None:
     import asyncio
 
-    from kiro_crew.dashboard.handlers import member_self
+    from aj_crew.dashboard.handlers import member_self
 
     _claim_env(_floor_monkeypatch)
 
@@ -231,7 +231,7 @@ def test_the_yes_wake_writes_saves_and_applies_with_one_message() -> None:
 
 
 async def _client(monkeypatch: Any, *, armed: bool, page: Any = None) -> TestClient:
-    from kiro_crew.dashboard.handlers import member_page_offer as route
+    from aj_crew.dashboard.handlers import member_page_offer as route
 
     async def owner(_req: Any, _op: str, member: Any, *, write: bool) -> Any:
         return SLUG, member, None
@@ -307,11 +307,11 @@ async def test_only_the_card_step_can_start_the_wake(home: Path, monkeypatch: An
 
 
 def test_the_write_wake_is_one_waiting_nudge(monkeypatch: Any, home: Path) -> None:
-    from kiro_crew.dashboard import goal_setup
+    from aj_crew.dashboard import goal_setup
 
     calls: list[tuple] = []
     monkeypatch.setattr(goal_setup, "_schedule", lambda *a, **k: calls.append((a, k)))
-    from kiro_crew import dashboard_agentic
+    from aj_crew import dashboard_agentic
 
     monkeypatch.setattr(dashboard_agentic, "page_offer_target", lambda _s: {"replaces": "x"})
     page_offer.record_asked(SLUG, "Goal board")
@@ -332,7 +332,7 @@ def test_the_write_wake_is_one_waiting_nudge(monkeypatch: Any, home: Path) -> No
 
 @pytest.mark.asyncio
 async def test_a_wake_that_never_starts_runs_its_dropped_hook(monkeypatch: Any) -> None:
-    from kiro_crew.dashboard import goal_setup
+    from aj_crew.dashboard import goal_setup
 
     async def timed_out(*_a: Any) -> str:
         return "skipped: timed out"
@@ -351,8 +351,8 @@ async def test_a_wake_that_never_starts_runs_its_dropped_hook(monkeypatch: Any) 
 
 
 def test_the_hook_arms_the_yes_on_apply_only() -> None:
-    from kiro_crew.dashboard.handlers import change_cards
-    from kiro_crew.dashboard.handlers.member_page_offer import REQ_CARD_PAGE_OFFER_APPLY
+    from aj_crew.dashboard.handlers import change_cards
+    from aj_crew.dashboard.handlers.member_page_offer import REQ_CARD_PAGE_OFFER_APPLY
 
     rec = {"kind": catalog.KIND_CREWMATE_DASHBOARD_PAGE, "params": {"member": MEMBER}}
     applied: dict[str, Any] = {}
@@ -365,7 +365,7 @@ def test_the_hook_arms_the_yes_on_apply_only() -> None:
 @pytest.mark.asyncio
 async def test_propose_change_cannot_raise_the_offer(monkeypatch: Any) -> None:
     """Only offer_dashboard_page raises it, so the asked-once record is always kept."""
-    from kiro_crew.dashboard.handlers import change_cards
+    from aj_crew.dashboard.handlers import change_cards
 
     async def caller(_req: Any, _op: str) -> tuple[str, str]:
         return "member-scout", "sk"
@@ -388,21 +388,21 @@ async def test_propose_change_cannot_raise_the_offer(monkeypatch: Any) -> None:
 
 
 def test_the_mate_tool_asks_for_the_offer() -> None:
-    from kiro_crew import agent, mcp_mate
-    from kiro_crew.dashboard.handlers import member_self
+    from aj_crew import agent, mcp_mate
+    from aj_crew.dashboard.handlers import member_self
 
     assert mcp_mate._PROPOSALS["offer_dashboard_page"] == "dashboard_page"
     assert member_self.SELF_PROPOSALS["dashboard_page"] == catalog.KIND_CREWMATE_DASHBOARD_PAGE
     # A gateway wake may raise it: the offer rides the wake that was running.
     assert "dashboard_page" in member_self.OWN_GOAL_PROPOSALS
-    assert "@kirocrew-mate/offer_dashboard_page" in agent._MATE_AUTO_GRANTS
+    assert "@ajcrew-mate/offer_dashboard_page" in agent._MATE_AUTO_GRANTS
 
 
 def _propose_env(monkeypatch: Any, *, flush_fails: bool) -> list[str]:
     """``propose_for_caller`` with its build and store faked; returns the store's calls."""
-    from kiro_crew.dashboard import change_cards as cards
-    from kiro_crew.dashboard.change_cards import CardError
-    from kiro_crew.dashboard.handlers import change_cards as routes
+    from aj_crew.dashboard import change_cards as cards
+    from aj_crew.dashboard.change_cards import CardError
+    from aj_crew.dashboard.handlers import change_cards as routes
 
     calls: list[str] = []
 
@@ -445,8 +445,8 @@ class _Request(dict):
 
 @pytest.mark.asyncio
 async def test_a_claim_that_fails_refuses_the_card_before_it_is_stored(monkeypatch: Any) -> None:
-    from kiro_crew.dashboard.change_cards import CardError
-    from kiro_crew.dashboard.handlers import change_cards as routes
+    from aj_crew.dashboard.change_cards import CardError
+    from aj_crew.dashboard.handlers import change_cards as routes
 
     calls = _propose_env(monkeypatch, flush_fails=False)
 
@@ -469,7 +469,7 @@ async def test_a_claim_that_fails_refuses_the_card_before_it_is_stored(monkeypat
 
 @pytest.mark.asyncio
 async def test_a_card_that_fails_to_save_runs_the_claims_undo(monkeypatch: Any) -> None:
-    from kiro_crew.dashboard.handlers import change_cards as routes
+    from aj_crew.dashboard.handlers import change_cards as routes
 
     calls = _propose_env(monkeypatch, flush_fails=True)
 
@@ -495,15 +495,15 @@ async def test_a_card_that_fails_to_save_runs_the_claims_undo(monkeypatch: Any) 
 
 
 def test_a_crewmate_without_mate_tools_gets_no_offer_line(monkeypatch: Any) -> None:
-    from kiro_crew import dashboard_agentic
-    from kiro_crew.dashboard import goal_reminder
+    from aj_crew import dashboard_agentic
+    from aj_crew.dashboard import goal_reminder
 
     rec = {"goals": [{"id": "g00000001", "text": "Docs"}], "key_results": [{"id": "k1"}]}
     monkeypatch.setattr(dashboard_agentic, "bound_package", lambda _s: "")
     monkeypatch.setattr(dashboard_agentic, "tab_shows_suggestions", lambda _s: False)
     monkeypatch.setattr(page_offer, "offer_line", lambda _s, _r: "OFFER")
     assert goal_reminder.dashboard_line(SLUG, rec) == "OFFER"
-    # offer_dashboard_page is a kirocrew-mate tool: without it the line could never be acted on.
+    # offer_dashboard_page is an ajcrew-mate tool: without it the line could never be acted on.
     assert goal_reminder.dashboard_line(SLUG, rec, has_mate_tools=False) == ""
 
 
@@ -512,8 +512,8 @@ def test_the_offer_snapshot_names_the_page_so_a_newer_template_refuses_the_yes(
 ) -> None:
     """A template adopted after the card was raised changes the snapshot the yes is
     compared against, so the yes is refused instead of replacing the newer page."""
-    from kiro_crew import dashboard_agentic
-    from kiro_crew.dashboard import change_cards_readers as readers
+    from aj_crew import dashboard_agentic
+    from aj_crew.dashboard import change_cards_readers as readers
 
     monkeypatch.setattr(
         readers, "_crewmate_identity", lambda m: {"exists": True, "slug": SLUG, "member_id": "x"}
@@ -530,7 +530,7 @@ def test_the_yes_wake_carries_the_page_look_and_no_motion_rule_of_its_own() -> N
     """The yes wake and dashboard_save's own description reach the crewmate in one turn,
     so the wake carries :data:`PAGE_LOOK` itself rather than a motion rule that could
     contradict it, and no met / open judgement the fold does not make."""
-    from kiro_crew.dashboard_templates.page_look import PAGE_LOOK
+    from aj_crew.dashboard_templates.page_look import PAGE_LOOK
 
     prompt = page_offer.write_prompt("Goal board")
     assert PAGE_LOOK in prompt
@@ -542,8 +542,8 @@ def test_the_yes_wake_carries_the_page_look_and_no_motion_rule_of_its_own() -> N
 def test_a_template_picked_after_the_yes_sends_no_write_wake(monkeypatch: Any, home: Path) -> None:
     """The yes was over one page; a template the person picked while the thread was
     busy is the newer choice, so the delayed wake is not sent and the record goes back."""
-    from kiro_crew import dashboard_agentic
-    from kiro_crew.dashboard import goal_setup
+    from aj_crew import dashboard_agentic
+    from aj_crew.dashboard import goal_setup
 
     calls: list[tuple] = []
     monkeypatch.setattr(goal_setup, "_schedule", lambda *a, **k: calls.append((a, k)))
@@ -566,8 +566,8 @@ def test_raising_the_card_records_the_page_it_was_raised_over(
 ) -> None:
     import asyncio
 
-    from kiro_crew import dashboard_agentic
-    from kiro_crew.dashboard.handlers import member_self
+    from aj_crew import dashboard_agentic
+    from aj_crew.dashboard.handlers import member_self
 
     _claim_env(_floor_monkeypatch)
     _floor_monkeypatch.setattr(
@@ -583,8 +583,8 @@ def test_raising_the_card_records_the_page_it_was_raised_over(
 async def test_the_yes_names_the_page_the_card_last_previewed(home: Path, monkeypatch: Any) -> None:
     """A card refreshed after the person adopted another template carries that page; the
     yes wakes over it, not over the page the card was first raised over."""
-    from kiro_crew import dashboard_agentic
-    from kiro_crew.dashboard import goal_setup
+    from aj_crew import dashboard_agentic
+    from aj_crew.dashboard import goal_setup
 
     calls: list[tuple] = []
     monkeypatch.setattr(goal_setup, "_schedule", lambda *a, **k: calls.append((a, k)))
@@ -615,7 +615,7 @@ def test_the_yes_marks_the_record_pending_until_its_wake_starts(
     monkeypatch: Any, home: Path
 ) -> None:
     """The yes waits in memory for an idle thread; the record says so until it starts."""
-    from kiro_crew.dashboard import goal_setup
+    from aj_crew.dashboard import goal_setup
 
     calls: list[tuple] = []
     monkeypatch.setattr(goal_setup, "_schedule", lambda *a, **k: calls.append((a, k)))
@@ -639,8 +639,8 @@ def test_a_yes_a_restart_lost_is_offered_again(monkeypatch: Any, home: Path) -> 
     the crewmate is not counted as asked, and raising the card again clears the mark."""
     import asyncio
 
-    from kiro_crew.dashboard import goal_setup
-    from kiro_crew.dashboard.handlers import member_self
+    from aj_crew.dashboard import goal_setup
+    from aj_crew.dashboard.handlers import member_self
 
     monkeypatch.setattr(goal_setup, "_schedule", lambda *a, **k: None)
     page_offer.record_asked(SLUG, "Goal board", "goal-board")
@@ -655,7 +655,7 @@ def test_a_yes_a_restart_lost_is_offered_again(monkeypatch: Any, home: Path) -> 
 
 
 def test_a_started_wake_stays_asked_after_a_restart(monkeypatch: Any, home: Path) -> None:
-    from kiro_crew.dashboard import goal_setup
+    from aj_crew.dashboard import goal_setup
 
     calls: list[tuple] = []
     monkeypatch.setattr(goal_setup, "_schedule", lambda *a, **k: calls.append((a, k)))
@@ -670,7 +670,7 @@ def test_a_started_wake_stays_asked_after_a_restart(monkeypatch: Any, home: Path
 
 @pytest.mark.asyncio
 async def test_a_wake_that_starts_runs_its_started_hook_only(monkeypatch: Any) -> None:
-    from kiro_crew.dashboard import goal_setup
+    from aj_crew.dashboard import goal_setup
 
     async def started(*_a: Any) -> str:
         return "started"

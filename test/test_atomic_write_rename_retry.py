@@ -13,8 +13,8 @@ import os
 
 import pytest
 
-from kiro_crew import atomic_write as aw
-from kiro_crew import platform_compat
+from aj_crew import atomic_write as aw
+from aj_crew import platform_compat
 
 
 @pytest.fixture(autouse=True)

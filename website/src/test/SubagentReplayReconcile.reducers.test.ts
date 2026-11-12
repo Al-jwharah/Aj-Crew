@@ -29,7 +29,7 @@ const STARTED = 1_790_000_000
 type Store = ReturnType<typeof createTestStore>
 
 const snapshot = (id: string, slot = ACTIVE, extra: Record<string, unknown> = {}) => sseSubagentSnapshot({
-  id, slot, task: `task ${id}`, agent: 'kirocrew', streaming: '', last_tool: 'shell', started: STARTED, tool_count: 2, ...extra,
+  id, slot, task: `task ${id}`, agent: 'ajcrew', streaming: '', last_tool: 'shell', started: STARTED, tool_count: 2, ...extra,
 })
 
 /** The view after a first replay: two running cards, one finished card. */
@@ -39,7 +39,7 @@ function replayed(): Store {
   s.dispatch(clearSubagentsForSnapshot())
   s.dispatch(snapshot('run-a'))
   s.dispatch(snapshot('run-b', OTHER))
-  s.dispatch(sseSubagentDone({ slot: ACTIVE, id: 'done-c', elapsed: 4, task: 'task done-c', agent: 'kirocrew', outcome: 'completed' }))
+  s.dispatch(sseSubagentDone({ slot: ACTIVE, id: 'done-c', elapsed: 4, task: 'task done-c', agent: 'ajcrew', outcome: 'completed' }))
   s.dispatch(subagentReplayDone())
   return s
 }
@@ -49,7 +49,7 @@ function replayAgain(s: Store) {
   s.dispatch(clearSubagentsForSnapshot())
   s.dispatch(snapshot('run-a'))
   s.dispatch(snapshot('run-b', OTHER))
-  s.dispatch(sseSubagentDone({ slot: ACTIVE, id: 'done-c', elapsed: 4, task: 'task done-c', agent: 'kirocrew', outcome: 'completed' }))
+  s.dispatch(sseSubagentDone({ slot: ACTIVE, id: 'done-c', elapsed: 4, task: 'task done-c', agent: 'ajcrew', outcome: 'completed' }))
   s.dispatch(subagentReplayDone())
 }
 
@@ -270,7 +270,7 @@ describe('reconnect replay reconcile', () => {
 
   it('treats a replay-done marker outside a replay as a no-op', () => {
     const s = replayed()
-    s.dispatch(sseSubagentSpawn({ slot: ACTIVE, id: 'live-d', task: 'new', agent: 'kirocrew' }))
+    s.dispatch(sseSubagentSpawn({ slot: ACTIVE, id: 'live-d', task: 'new', agent: 'ajcrew' }))
     const before = s.getState().chat
     s.dispatch(subagentReplayDone())
     expect(s.getState().chat.subagents).toBe(before.subagents)

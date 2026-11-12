@@ -22,7 +22,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import mcp_core, mcp_shared
+from aj_crew import mcp_core, mcp_shared
 
 
 @pytest.fixture(autouse=True)
@@ -68,33 +68,33 @@ def _headers(cap: _CapturedRequest) -> dict[str, str]:
 
 class TestCallerHeaderAttachment:
     def test_post_carries_declared_caller(self, captured: _CapturedRequest) -> None:
-        mcp_shared.set_internal_caller("kirocrew-dashboard")
+        mcp_shared.set_internal_caller("ajcrew-dashboard")
         mcp_core._post("/api/chat/folders", {"name": "x"})
         headers = _headers(captured)
-        assert headers["x-internal-caller"] == "kirocrew-dashboard"
+        assert headers["x-internal-caller"] == "ajcrew-dashboard"
         assert headers["x-internal-secret"] == "sekrit"
 
     def test_get_carries_declared_caller(self, captured: _CapturedRequest) -> None:
-        mcp_shared.set_internal_caller("kirocrew-dashboard")
+        mcp_shared.set_internal_caller("ajcrew-dashboard")
         mcp_core._get("/api/chat/folders")
-        assert _headers(captured)["x-internal-caller"] == "kirocrew-dashboard"
+        assert _headers(captured)["x-internal-caller"] == "ajcrew-dashboard"
 
     def test_patch_carries_declared_caller(self, captured: _CapturedRequest) -> None:
-        mcp_shared.set_internal_caller("kirocrew-dashboard")
+        mcp_shared.set_internal_caller("ajcrew-dashboard")
         mcp_core._patch("/api/chat/folders/f1", {"parent_id": ""})
-        assert _headers(captured)["x-internal-caller"] == "kirocrew-dashboard"
+        assert _headers(captured)["x-internal-caller"] == "ajcrew-dashboard"
 
     def test_put_carries_declared_caller(self, captured: _CapturedRequest) -> None:
-        mcp_shared.set_internal_caller("kirocrew-dashboard")
+        mcp_shared.set_internal_caller("ajcrew-dashboard")
         mcp_core._put("/api/thing", {})
-        assert _headers(captured)["x-internal-caller"] == "kirocrew-dashboard"
+        assert _headers(captured)["x-internal-caller"] == "ajcrew-dashboard"
 
     def test_delete_carries_declared_caller(self, captured: _CapturedRequest) -> None:
         """DELETE is the one verb that destroys data — the case the audit
         exists for — so it must be attributable like the other four."""
-        mcp_shared.set_internal_caller("kirocrew-dashboard")
+        mcp_shared.set_internal_caller("ajcrew-dashboard")
         mcp_core._delete("/api/thing")
-        assert _headers(captured)["x-internal-caller"] == "kirocrew-dashboard"
+        assert _headers(captured)["x-internal-caller"] == "ajcrew-dashboard"
 
     def test_undeclared_process_sends_no_caller_header(
         self, captured: _CapturedRequest

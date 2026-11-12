@@ -14,20 +14,20 @@ superseded-by: []
 
 # RFC: Security Conductor — proactive vulnerability discovery as a conductor use case
 
-A dedicated `kirocrew-security-conductor` agent and a `security-conductor` builtin skill that run
+A dedicated `ajcrew-security-conductor` agent and a `security-conductor` builtin skill that run
 proactive vulnerability discovery as a supervised worker fleet: one auditor per attack surface, an
 independent verifier per finding, and an optional fixer lane behind a human gate. The skill is the
 operating procedure of record; this document carries the intent and the decisions.
 
-**Status.** M0 and M1 are on main. The agent is registered — `kirocrew-security-conductor` in
-`UNADVERTISED_AGENTS` (`src/kiro_crew/subagent_parts/agent_policy.py`) with its installer
-`_install_security_conductor_agent` in `src/kiro_crew/agent_materialization/conductor_agents.py`
+**Status.** M0 and M1 are on main. The agent is registered — `ajcrew-security-conductor` in
+`UNADVERTISED_AGENTS` (`src/aj_crew/subagent_parts/agent_policy.py`) with its installer
+`_install_security_conductor_agent` in `src/aj_crew/agent_materialization/conductor_agents.py`
 ([#9273](https://github.com/kirodotdev/KiroCrew/pull/9273)) — and the skill plus the first rules of
-engagement are on main as `src/kiro_crew/builtin_skills/security-conductor/SKILL.md` and
+engagement are on main as `src/aj_crew/builtin_skills/security-conductor/SKILL.md` and
 `rules-of-engagement.json` ([#9271](https://github.com/kirodotdev/KiroCrew/pull/9271)), whose merge
 is the human review of the rules of engagement that M0 required as its exit criterion. M1 is
 complete: the SQLite findings ledger and its CLI landed as
-`src/kiro_crew/builtin_skills/security-conductor/scripts/ledger.py`
+`src/aj_crew/builtin_skills/security-conductor/scripts/ledger.py`
 ([#9270](https://github.com/kirodotdev/KiroCrew/pull/9270), with its test guard corrected in
 [#9362](https://github.com/kirodotdev/KiroCrew/pull/9362)); the three evaluator scripts
 `scope_check.py`, `finding_entry.py` and `verify_finding.py` merged
@@ -47,8 +47,8 @@ has run is per-host ledger state that the repository does not record.
 
 ## What a security conductor is
 
-The third instance of the conductor pattern, after `kirocrew-conductor` (free-form goals) and
-`kirocrew-pipeline-conductor` (one repository pipeline). Same shape — **agent + agent skills**: the
+The third instance of the conductor pattern, after `ajcrew-conductor` (free-form goals) and
+`ajcrew-pipeline-conductor` (one repository pipeline). Same shape — **agent + agent skills**: the
 skill carries the procedure, bundled zero-token scripts carry the bookkeeping, the agent carries the
 judgment. The conductor decomposes an audit into surfaces, dispatches one child session per surface,
 verifies each finding through a script rather than by reading a transcript, adjudicates severity, and
@@ -63,12 +63,12 @@ Three child roles:
   false positives. Hallucinated vulnerabilities are the dominant noise source in agentic security
   review, so every finding gets a second, independent rejection pass before a human sees it.
 - **Fixer** — optional, only for a verified High or Critical, dispatched only after a human yes. Runs
-  the `kirocrew-prepare-pr` skill; acceptance is PR checks green **and** `scripts/verify_fix.py` exit 0, which
+  the `ajcrew-prepare-pr` skill; acceptance is PR checks green **and** `scripts/verify_fix.py` exit 0, which
   is the golden-path half described below. Checks green alone is not acceptance.
 
 ## Why
 
-Kiro Crew's security posture today is reactive: a deny classifier, a governance ceiling, and human
+Aj Crew's security posture today is reactive: a deny classifier, a governance ceiling, and human
 review of what lands. Nothing looks for the next hole. The work of looking is fan-out over
 independent surfaces with a high false-positive rate and a hard blast-radius constraint — which is
 the conductor shape exactly: parallel workers, script-computed verification, one adjudicator, human
@@ -88,38 +88,38 @@ The pattern facts were measured at `e992b7771`; the shipped-state facts were re-
 `9348a25a34`.
 
 - The conductor pattern is shipped three times, with one standalone installer each in
-  `src/kiro_crew/agent_materialization/conductor_agents.py` (`_install_conductor_agent`,
+  `src/aj_crew/agent_materialization/conductor_agents.py` (`_install_conductor_agent`,
   `_install_pipeline_conductor_agent`, `_install_security_conductor_agent`, plus
-  `_install_ledger_conductor_agent` for the deprecated ledger-conductor alias), a filename constant each in `src/kiro_crew/agent_files.py`,
-  and roster hiding through `UNADVERTISED_AGENTS` in `src/kiro_crew/subagent_parts/agent_policy.py`, which carries four
-  entries — `kirocrew`, `kirocrew-conductor`, `kirocrew-pipeline-conductor` and
-  `kirocrew-security-conductor`.
+  `_install_ledger_conductor_agent` for the deprecated ledger-conductor alias), a filename constant each in `src/aj_crew/agent_files.py`,
+  and roster hiding through `UNADVERTISED_AGENTS` in `src/aj_crew/subagent_parts/agent_policy.py`, which carries four
+  entries — `ajcrew`, `ajcrew-conductor`, `ajcrew-pipeline-conductor` and
+  `ajcrew-security-conductor`.
 - "Never does the work itself" is already expressed as a spec property, not a prompt request:
   `_install_pipeline_conductor_agent`'s `tools` list omits both `fs_write` and `code`, and
   `execute_bash` is mounted but never auto-approved because `allowedTools` has no argument matching.
   The security-conductor installer keeps the same shape.
 - The bundled-script half of the pattern is shipped for the pipeline conductor
   (`claim_preflight.py`, `fleet_probe.py`, `credit_spend.py` under
-  `src/kiro_crew/builtin_skills/pipeline-conductor/scripts/`) and for this one as well: six scripts,
+  `src/aj_crew/builtin_skills/pipeline-conductor/scripts/`) and for this one as well: six scripts,
   `ledger.py`, `scope_check.py`, `finding_entry.py`, `verify_finding.py`, `verify_fix.py` and
-  `check_fix_contract.py`, live under `src/kiro_crew/builtin_skills/security-conductor/scripts/`,
+  `check_fix_contract.py`, live under `src/aj_crew/builtin_skills/security-conductor/scripts/`,
   beside the committed `golden-paths.json` corpus. `deny_diff.py` lives at the repository root in
   `scripts/`.
 - **SQLite is this repository's established store for durable agent knowledge**, which is the pattern
-  the findings ledger mirrors. `src/kiro_crew/memory.py` keeps `memory_index.db` beside the workspace
-  config; `src/kiro_crew/vector_memory_lifecycle.py` keeps `memory.db` in WAL mode behind a `schema_version`
-  table and a `_MIGRATIONS` ladder; `src/kiro_crew/knowledge/store.py` owns its own database with
+  the findings ledger mirrors. `src/aj_crew/memory.py` keeps `memory_index.db` beside the workspace
+  config; `src/aj_crew/vector_memory_lifecycle.py` keeps `memory.db` in WAL mode behind a `schema_version`
+  table and a `_MIGRATIONS` ladder; `src/aj_crew/knowledge/store.py` owns its own database with
   `CREATE TABLE IF NOT EXISTS` DDL and one connection per thread. All three import SQLite through the
-  `src/kiro_crew/_sqlite_compat.py` shim rather than the stdlib module directly, and `data_home()` in
-  `src/kiro_crew/config/paths.py` is where a new store's path is resolved from. `ledger.py` follows
+  `src/aj_crew/_sqlite_compat.py` shim rather than the stdlib module directly, and `data_home()` in
+  `src/aj_crew/config/paths.py` is where a new store's path is resolved from. `ledger.py` follows
   that shape: a `schema_version` table plus `CREATE TABLE IF NOT EXISTS` DDL for its five data
   tables.
 - The fixer lane has a procedure to reuse:
-  `src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/SKILL.md`.
+  `src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/SKILL.md`.
 - The three pilot surfaces are real code, not hypotheticals: the deny classifier `is_denied` in
-  `src/kiro_crew/security.py`, reached through `src/kiro_crew/platform/security_authority.py` from
-  the PreToolUse gate in `src/kiro_crew/hooks.py`; webhook ingest in `src/kiro_crew/webhooks.py`;
-  dashboard session and bearer handling in `src/kiro_crew/dashboard/token_auth.py`.
+  `src/aj_crew/security.py`, reached through `src/aj_crew/platform/security_authority.py` from
+  the PreToolUse gate in `src/aj_crew/hooks.py`; webhook ingest in `src/aj_crew/webhooks.py`;
+  dashboard session and bearer handling in `src/aj_crew/dashboard/token_auth.py`.
 - What this document proposes and main does **not** have: the harness that executes `flow` and
   `cron` golden paths, and the `finding-status/v1` record. The retrospective lane (including
   rulings on `policy_block` events) and the M3 fixer-lane procedure ship as `SKILL.md` procedure.
@@ -131,7 +131,7 @@ The pattern facts were measured at `e992b7771`; the shipped-state facts were re-
 
 ## The agent
 
-`kirocrew-security-conductor` is cloned from `kirocrew-conductor` and keeps every security invariant
+`ajcrew-security-conductor` is cloned from `ajcrew-conductor` and keeps every security invariant
 that installer argues for:
 
 - **No file-writing tool** — neither `fs_write` nor `code`. The conductor cannot edit a target, write
@@ -143,9 +143,9 @@ that installer argues for:
   cycles.
 - **Unattended operation is a session-level trust grant** by the operator, never a spec-level bypass.
 
-Registered alongside `kirocrew-pipeline-conductor` in `UNADVERTISED_AGENTS`
-(`src/kiro_crew/subagent_parts/agent_policy.py`), with its own filename constant in `src/kiro_crew/agent_files.py` and
-its own installer in `src/kiro_crew/agent_materialization/conductor_agents.py`, mirroring the
+Registered alongside `ajcrew-pipeline-conductor` in `UNADVERTISED_AGENTS`
+(`src/aj_crew/subagent_parts/agent_policy.py`), with its own filename constant in `src/aj_crew/agent_files.py` and
+its own installer in `src/aj_crew/agent_materialization/conductor_agents.py`, mirroring the
 existing installer tests.
 
 ## The trust boundary
@@ -175,8 +175,8 @@ named-shape screen, and this RFC says plainly what that does and does not bound:
 sloppy PoC -- an auditor that reaches for `curl`, names a credential path, or writes outside the
 worktree -- and it does not catch an adversarially crafted one, because a `cmd::` proof is an
 arbitrary program and `python -c` with `urllib` names none of the screened words. What bounds that
-case is not this script. It is the two layers the RFC already places around it: the auditor is a
-Kiro Crew session and its PoC is written under the session's own tool gate and, where the host
+case is not this script. It is the two layers the RFC already places around it: the auditor is an
+Aj Crew session and its PoC is written under the session's own tool gate and, where the host
 provides one, its sandbox; and the verifier runs as the operator's session, inheriting the same
 containment the operator granted that session. A `cmd::` proof therefore executes with exactly the
 privileges the operator gave the crew, no more. For the dogfood pilot -- the operator auditing the
@@ -190,7 +190,7 @@ first-run `cmd::` proofs; this one does not.
 proof's wall time, and reaps the process it started together with its process group (`killpg` on
 POSIX, `taskkill /T` on Windows), so a helper a proof stood up and never stopped does not outlive the
 verdict. It does not attempt kernel-level isolation.
-Kiro Crew's own namespace sandbox is Linux-only and package-internal, and these scripts are
+Aj Crew's own namespace sandbox is Linux-only and package-internal, and these scripts are
 standard-library files with no package import, so reaching for it would trade a cross-platform
 verifier for a Linux one. Where those two conflict, cross-platform wins.
 
@@ -265,15 +265,15 @@ answer on the fixer gate, an auditor's policy-block report awaiting a ruling. Ea
 cycle independently of what any probe fired, and an entry clears when the obligation is discharged,
 not when it is decided.
 
-## Pilot: dogfood Kiro Crew
+## Pilot: dogfood Aj Crew
 
 Round 1 is this repository, two to three auditors, concurrency two to three:
 
 1. **Safety-policy fence bypass** — the `execute_bash` deny classifier: `is_denied` in
-   `src/kiro_crew/security.py` and its gate path through
-   `src/kiro_crew/platform/security_authority.py` and `src/kiro_crew/hooks.py`.
-2. **MCP gateway and webhook ingest input validation** — `src/kiro_crew/webhooks.py`.
-3. **Session and bearer handling** — `src/kiro_crew/dashboard/token_auth.py`.
+   `src/aj_crew/security.py` and its gate path through
+   `src/aj_crew/platform/security_authority.py` and `src/aj_crew/hooks.py`.
+2. **MCP gateway and webhook ingest input validation** — `src/aj_crew/webhooks.py`.
+3. **Session and bearer handling** — `src/aj_crew/dashboard/token_auth.py`.
 
 Every finding goes through the verifier before it is reported. Fix PRs only after a human approves
 each one.
@@ -284,7 +284,7 @@ A round that does not remember the last one repeats its false positives. Finding
 the rules of engagement and the golden paths therefore live in **one SQLite database**, at
 `<data_home>/security-conductor/findings.db`, mirroring the pattern the memory and knowledge stores
 already use in this tree (see the verified facts above): a versioned schema, `CREATE TABLE IF NOT
-EXISTS` DDL, and SQLite imported through `src/kiro_crew/_sqlite_compat.py`. Five tables:
+EXISTS` DDL, and SQLite imported through `src/aj_crew/_sqlite_compat.py`. Five tables:
 
 The five tables are `findings`, `verdicts`, `lessons`, `roe_rules` and `golden_paths`.
 `scripts/ledger.py` owns the schema; read the DDL there rather than a copy here. Two points the
@@ -315,7 +315,7 @@ flipping `active` rather than by a commit.
 A security fix in this system is almost always a rule tightened: a deny pattern widened, a scope
 narrowed, a guard moved earlier. The only question verification asked was "is the PoC now refused?"
 — and a change that refuses everything answers that question yes. Nobody asked whether the chat still
-starts, whether the cron that fired yesterday still fires, whether `kirocrew-prepare-pr` can still push. A fix
+starts, whether the cron that fired yesterday still fires, whether `ajcrew-prepare-pr` can still push. A fix
 that passes the first question and fails the second is an outage the audit itself caused, and it is
 worse than the finding, because the finding was hypothetical and the outage is not.
 
@@ -346,7 +346,7 @@ The first set of rows covers the operations this system cannot lose:
 - Chat start plus one completed turn.
 - An existing cron firing on schedule.
 - `monitor_start` arming a loop and `autonudge_stop` ending it.
-- The `kirocrew-prepare-pr` commit-then-push sequence.
+- The `ajcrew-prepare-pr` commit-then-push sequence.
 - Each conductor's bundled-script calls — `claim_preflight.py`, `fleet_probe.py`, `credit_spend.py`,
   `scope_check.py`, `finding_entry.py`, `verify_finding.py`, `ledger.py`.
 
@@ -420,8 +420,8 @@ product still works, because no existing test asserts that a legitimate command 
 ### The denial differential
 
 `.github/workflows/denial-differential.yml` runs `scripts/deny_diff.py` on any PR touching
-`src/kiro_crew/security/**`, `deny_guidance.py`, `src/kiro_crew/platform/security_authority.py`,
-`src/kiro_crew/hooks.py`, `src/kiro_crew/hook_runtime/**`, the security conductor's
+`src/aj_crew/security/**`, `deny_guidance.py`, `src/aj_crew/platform/security_authority.py`,
+`src/aj_crew/hooks.py`, `src/aj_crew/hook_runtime/**`, the security conductor's
 `rules-of-engagement.json` or `golden-paths.json`, `scripts/deny_diff.py`, or the workflow itself.
 It classifies every golden path with the real deny composite — all four checks
 `hooks.on_tool_call` applies to a shell command (path fence, IMDS/env-credential detectors, exfil

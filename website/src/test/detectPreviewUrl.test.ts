@@ -13,7 +13,7 @@ describe('detectPreviewUrl', () => {
 
   it('picks up an explicit marker as source=marker', () => {
     const out = detectPreviewUrl([
-      msg('assistant', 'Server up.\n<!-- kirocrew:preview url="http://127.0.0.1:8080" -->\nDone.'),
+      msg('assistant', 'Server up.\n<!-- ajcrew:preview url="http://127.0.0.1:8080" -->\nDone.'),
     ])
     expect(out).toEqual({ url: 'http://127.0.0.1:8080', source: 'marker' })
   })
@@ -28,14 +28,14 @@ describe('detectPreviewUrl', () => {
 
   it('prefers the marker over an incidental localhost URL WITHIN the same message', () => {
     const out = detectPreviewUrl([
-      msg('assistant', 'old dev note http://localhost:9999\n<!-- kirocrew:preview url="http://127.0.0.1:8080" -->'),
+      msg('assistant', 'old dev note http://localhost:9999\n<!-- ajcrew:preview url="http://127.0.0.1:8080" -->'),
     ])
     expect(out).toEqual({ url: 'http://127.0.0.1:8080', source: 'marker' })
   })
 
   it('lets a NEWER prose URL win over an OLDER marker (chronological, not marker-global)', () => {
     const out = detectPreviewUrl([
-      msg('assistant', 'first run\n<!-- kirocrew:preview url="http://127.0.0.1:8080" -->'),
+      msg('assistant', 'first run\n<!-- ajcrew:preview url="http://127.0.0.1:8080" -->'),
       msg('assistant', 'restarted on a new port — serving at http://localhost:4321/'),
     ])
     expect(out).toEqual({ url: 'http://localhost:4321/', source: 'heuristic' })

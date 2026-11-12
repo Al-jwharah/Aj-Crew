@@ -2,7 +2,7 @@
 
 Inside an unprivileged user namespace the kernel treats a mount's nosuid / nodev /
 noexec bits as locked (``MNT_LOCK_*``) and rejects with EPERM any remount whose
-flag set would clear them. The bind :func:`~kiro_crew.sandbox_launcher_program.seal_readonly`
+flag set would clear them. The bind :func:`~aj_crew.sandbox_launcher_program.seal_readonly`
 creates inherits those bits — locks included — from its source mount, so a remount
 carrying only ``MS_RDONLY`` is refused on hosts whose ``/tmp`` (or ``/home``) is mounted
 ``nosuid,nodev``: the systemd ``tmp.mount`` default on Amazon Linux 2023, Fedora
@@ -12,7 +12,7 @@ flags via ``statvfs`` and the sealing remount ORs them back in — re-asserting 
 bit already in force can only keep restrictions, never widen access.
 
 Three layers here, each driving the launcher program module itself
-(``kiro_crew.sandbox_launcher_program``, the program a sandboxed spawn runs):
+(``aj_crew.sandbox_launcher_program``, the program a sandboxed spawn runs):
 
 - unit: ``_locked_mount_flags``'s ``f_flag`` → ``MS_*`` mapping, ``statvfs`` patched;
 - integration: :func:`seal_readonly`'s remount receives the helper's bits OR'd in,
@@ -46,8 +46,8 @@ from types import SimpleNamespace
 import pytest
 from test_sandbox_launcher_program import RecordingLibc, launch, payload
 
-from kiro_crew import sandbox_launcher
-from kiro_crew import sandbox_launcher_program as program
+from aj_crew import sandbox_launcher
+from aj_crew import sandbox_launcher_program as program
 
 _LINUX_ONLY = pytest.mark.skipif(sys.platform != "linux", reason="Linux namespace launcher only")
 
@@ -226,7 +226,7 @@ def _outer_script() -> str:
 def _inner_script() -> str:
     """Stage 2, the nested namespace: control, then the launcher program's seal.
 
-    The seal is :func:`~kiro_crew.sandbox_launcher_program.seal_readonly` itself: the
+    The seal is :func:`~aj_crew.sandbox_launcher_program.seal_readonly` itself: the
     program file is loaded by path (``argv[2]``, the program this test process's
     renderer holds) and driven with its own libc and the plan in ``argv[3]``, so the code
     under test is the code that ships.
@@ -352,7 +352,7 @@ class TestSealHoldsOnALockedNosuidNodevMountRealKernel:
 def _inner_mask_script() -> str:
     """Stage 2 for the OPTED-IN directory mask: run ``mask_sensitive`` on a real kernel.
 
-    The windowless read-only seal :func:`~kiro_crew.sandbox_launcher_program.mask_sensitive`
+    The windowless read-only seal :func:`~aj_crew.sandbox_launcher_program.mask_sensitive`
     places (via ``_seal_masked_dir_if_windowless``) uses the SAME remount flags as
     :func:`seal_readonly`, but it had only ever run against a recording libc. This drives
     it through ``mask_sensitive`` itself inside a nested namespace whose inherited tmpfs
@@ -391,7 +391,7 @@ def _inner_mask_script() -> str:
             plan = json.load(fh)
         run = program.Launch(plan, program._load_libc(), environ={})
         run.tmpfs_src = sys.argv[1]
-        run.src_prefix = "kirocrew_sb_test_"
+        run.src_prefix = "ajcrew_sb_test_"
         # Drive the directory-mask stage itself: it binds the empty stand-in and, for an
         # opted-in windowless mask, seals it read-only. Reaching the line after it means
         # the launcher did NOT abort on the seal.

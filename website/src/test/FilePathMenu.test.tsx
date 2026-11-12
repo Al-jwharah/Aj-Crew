@@ -374,7 +374,7 @@ describe('FilePathMenu', () => {
       expect(handoff.querySelector('svg')).toHaveClass('text-muted')
       await act(async () => { await user.keyboard(key) })
 
-      expect(consumeChatHandoff()).toContain('Couldn’t open this path on the machine running Kiro Crew.')
+      expect(consumeChatHandoff()).toContain('Couldn’t open this path on the machine running Aj Crew.')
       expect(api.revealPath).toHaveBeenCalledTimes(2)
     })
 

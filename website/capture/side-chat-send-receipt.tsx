@@ -30,7 +30,7 @@ const lang = params.get('lang') || 'en'
 const theme = params.get('theme') || 'dark'
 const refuse = params.get('refuse') || '409'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const realFetch = globalThis.fetch.bind(globalThis)
 globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {

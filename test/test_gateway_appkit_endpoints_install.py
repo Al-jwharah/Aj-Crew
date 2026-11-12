@@ -21,8 +21,8 @@ from gateway_appkit_endpoints_helpers import (  # noqa: F401 -- the fixture is r
     app_env_fixture,
 )
 
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME
-from kiro_crew.apps.routes import register_app_routes
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME
+from aj_crew.apps.routes import register_app_routes
 
 # ---------------------------------------------------------------------------
 # Uninstall app-sources cleanup tests
@@ -34,21 +34,21 @@ class TestUninstallAppSourcesCleanup:
 
     @pytest.fixture(autouse=True)
     def _uninstall_env(self, tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch):
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        _floor_monkeypatch.setenv("KIROCREW_HOME", str(home))
+        _floor_monkeypatch.setenv("AJCREW_HOME", str(home))
         # Stub bridges
-        import kiro_crew.apps.bridges as bridges_mod
+        import aj_crew.apps.bridges as bridges_mod
 
         kiro_agents = tmp_path / "kiro-agents"
         kiro_agents.mkdir()
         _floor_monkeypatch.setattr(bridges_mod, "KIRO_AGENTS_DIR", kiro_agents)
-        import kiro_crew.apps.backend as bmod
+        import aj_crew.apps.backend as bmod
 
         bmod._processes.clear()
         bmod._allocated_ports.clear()
         # Clear secret cache
-        from kiro_crew.apps.routes import _app_secret_cache
+        from aj_crew.apps.routes import _app_secret_cache
 
         _app_secret_cache.clear()
         self._home = home
@@ -95,7 +95,7 @@ class TestUninstallAppSourcesCleanup:
         """Uninstalling a registry app removes its workspace."""
         self._create_app("reg-app", origin="registry", source="registry:reg-app")
         # Simulate the per-app source clone directory (generic git clone layout:
-        # ~/.kirocrew/app-sources/{name}/ holding a checked-out repo).
+        # ~/.ajcrew/app-sources/{name}/ holding a checked-out repo).
         ws_dir = self._home / "app-sources" / "reg-app"
         (ws_dir / ".git").mkdir(parents=True)
         (ws_dir / "package.json").write_text('{"name": "reg-app"}')
@@ -150,7 +150,7 @@ class TestStreamingLogLines:
     the streaming install endpoint."""
 
     def test_append_pushes_to_queue(self) -> None:
-        from kiro_crew.apps.registry import StreamingLogLines
+        from aj_crew.apps.registry import StreamingLogLines
 
         q: asyncio.Queue[str | None] = asyncio.Queue()
         sl = StreamingLogLines(q)
@@ -162,7 +162,7 @@ class TestStreamingLogLines:
         assert q.get_nowait() == "line 2"
 
     def test_extend_pushes_each_line(self) -> None:
-        from kiro_crew.apps.registry import StreamingLogLines
+        from aj_crew.apps.registry import StreamingLogLines
 
         q: asyncio.Queue[str | None] = asyncio.Queue()
         sl = StreamingLogLines(q)
@@ -171,7 +171,7 @@ class TestStreamingLogLines:
         assert q.qsize() == 3
 
     def test_join_works_like_plain_list(self) -> None:
-        from kiro_crew.apps.registry import StreamingLogLines
+        from aj_crew.apps.registry import StreamingLogLines
 
         q: asyncio.Queue[str | None] = asyncio.Queue()
         sl = StreamingLogLines(q)
@@ -181,7 +181,7 @@ class TestStreamingLogLines:
 
     def test_full_queue_does_not_raise(self) -> None:
         """When the queue is full, append should silently drop (not block)."""
-        from kiro_crew.apps.registry import StreamingLogLines
+        from aj_crew.apps.registry import StreamingLogLines
 
         q: asyncio.Queue[str | None] = asyncio.Queue(maxsize=1)
         sl = StreamingLogLines(q)
@@ -191,7 +191,7 @@ class TestStreamingLogLines:
         assert q.qsize() == 1  # only first made it
 
     def test_empty_list_join(self) -> None:
-        from kiro_crew.apps.registry import StreamingLogLines
+        from aj_crew.apps.registry import StreamingLogLines
 
         q: asyncio.Queue[str | None] = asyncio.Queue()
         sl = StreamingLogLines(q)
@@ -263,7 +263,7 @@ class TestRegistryInstallStream:
         the companion test below pins separately.
         """
         monkeypatch.setattr(
-            "kiro_crew.apps.official_catalog.inventory_for_install",
+            "aj_crew.apps.official_catalog.inventory_for_install",
             lambda name: None,
         )
         async with self._make_client() as client:
@@ -292,13 +292,13 @@ class TestRegistryInstallStream:
         coordinates. Both branches are now deterministic instead of being
         selected by the CI runner's live network.
         """
-        from kiro_crew.apps import official_catalog
+        from aj_crew.apps import official_catalog
 
         def _outage(name: str) -> None:
             raise official_catalog.CatalogUnavailable("simulated catalog outage (test)")
 
         monkeypatch.setattr(
-            "kiro_crew.apps.official_catalog.inventory_for_install",
+            "aj_crew.apps.official_catalog.inventory_for_install",
             _outage,
         )
         async with self._make_client() as client:
@@ -337,12 +337,12 @@ class TestRegistryInstallStream:
             }
 
         monkeypatch.setattr(
-            "kiro_crew.apps.routes.install_from_registry",
+            "aj_crew.apps.routes.install_from_registry",
             _fake_install,
         )
         # Stub register_app to avoid touching real bridges
         monkeypatch.setattr(
-            "kiro_crew.apps.routes.register_app",
+            "aj_crew.apps.routes.register_app",
             lambda name: type("R", (), {"to_dict": lambda self: {"ok": True}})(),
         )
 
@@ -382,7 +382,7 @@ class TestRegistryInstallStream:
             }
 
         monkeypatch.setattr(
-            "kiro_crew.apps.routes.install_from_registry",
+            "aj_crew.apps.routes.install_from_registry",
             _fake_install,
         )
 
@@ -416,7 +416,7 @@ class TestRegistryInstallStream:
             }
 
         monkeypatch.setattr(
-            "kiro_crew.apps.routes.install_from_registry",
+            "aj_crew.apps.routes.install_from_registry",
             _fake_install,
         )
 
@@ -444,7 +444,7 @@ class TestRegistryInstallStream:
             raise RuntimeError("unexpected crash")
 
         monkeypatch.setattr(
-            "kiro_crew.apps.routes.install_from_registry",
+            "aj_crew.apps.routes.install_from_registry",
             _fake_install,
         )
 
@@ -476,7 +476,7 @@ class TestInstallFromRegistryLogLines:
         verdict depends on the runner's network.
         """
         _floor_monkeypatch.setattr(
-            "kiro_crew.apps.official_catalog.inventory_for_install",
+            "aj_crew.apps.official_catalog.inventory_for_install",
             lambda name: None,
         )
 
@@ -484,7 +484,7 @@ class TestInstallFromRegistryLogLines:
     async def test_custom_log_lines_receives_entries(self) -> None:
         """When a custom log_lines is passed, it should receive entries
         (even if the install fails early due to missing registry entry)."""
-        from kiro_crew.apps.registry import install_from_registry
+        from aj_crew.apps.registry import install_from_registry
 
         custom: list[str] = []
         result = await install_from_registry("nonexistent", log_lines=custom)
@@ -496,7 +496,7 @@ class TestInstallFromRegistryLogLines:
     @pytest.mark.asyncio
     async def test_default_log_lines_is_plain_list(self) -> None:
         """When log_lines is not passed, a plain list is used internally."""
-        from kiro_crew.apps.registry import install_from_registry
+        from aj_crew.apps.registry import install_from_registry
 
         result = await install_from_registry("nonexistent")
         assert result["ok"] is False
@@ -553,11 +553,11 @@ class TestRegistryInstallStreamSecurity:
             return {"ok": True, "name": name, "message": "ok", "log": "\n".join(log_lines or [])}
 
         monkeypatch.setattr(
-            "kiro_crew.apps.routes.install_from_registry",
+            "aj_crew.apps.routes.install_from_registry",
             _fake_install,
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.routes.register_app",
+            "aj_crew.apps.routes.register_app",
             lambda name: type("R", (), {"to_dict": lambda self: {"ok": True}})(),
         )
 
@@ -598,11 +598,11 @@ class TestRegistryInstallStreamSecurity:
             return {"ok": True, "name": name, "message": "ok", "log": "\n".join(log_lines or [])}
 
         monkeypatch.setattr(
-            "kiro_crew.apps.routes.install_from_registry",
+            "aj_crew.apps.routes.install_from_registry",
             _fake_install,
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.routes.register_app",
+            "aj_crew.apps.routes.register_app",
             lambda name: type("R", (), {"to_dict": lambda self: {"ok": True}})(),
         )
 

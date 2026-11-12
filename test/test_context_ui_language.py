@@ -17,17 +17,17 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.config.loader import config_path
-from kiro_crew.context import (
+from aj_crew.config.loader import config_path
+from aj_crew.context import (
     _UI_LANGUAGE_CATALOGS,
     ContextBuilder,
     _build_ui_language_section,
     normalize_ui_language_tag,
     ui_language_tag,
 )
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 
 @pytest.fixture(autouse=True)
@@ -38,8 +38,8 @@ def _close_skills_loaders(close_skills_loaders):
 def _seed_language(language: str) -> None:
     """Write a config.json with dashboard.language into the test-isolated home.
 
-    conftest pins KIROCREW_HOME to a per-test tmp dir, so config_path()
-    resolves inside it and KiroCrewConfig.load() picks this file up.
+    conftest pins AJCREW_HOME to a per-test tmp dir, so config_path()
+    resolves inside it and AjCrewConfig.load() picks this file up.
     """
     p = config_path()
     p.parent.mkdir(parents=True, exist_ok=True)
@@ -199,7 +199,7 @@ class TestUiLanguageSection:
         stubbed/mocked config (see TestCurrentDateTimezone) as well as from a
         loader that stopped coercing."""
         cfg = MagicMock()
-        monkeypatch.setattr("kiro_crew.context.KiroCrewConfig.load", lambda: cfg)
+        monkeypatch.setattr("aj_crew.context.AjCrewConfig.load", lambda: cfg)
         ctx = _builder(tmp_path).build_session_context()
         assert "[UI LANGUAGE]" not in ctx
         assert _build_ui_language_section(cfg) == ""
@@ -260,7 +260,7 @@ class TestCatalogDriftGate:
     def test_backend_set_matches_the_frontend_registry(self):
         """_UI_LANGUAGE_CATALOGS == SUPPORTED_LANGUAGES minus devOnly, exactly.
 
-        On failure: edit _UI_LANGUAGE_CATALOGS in src/kiro_crew/context_assembly/output_contract.py to
+        On failure: edit _UI_LANGUAGE_CATALOGS in src/aj_crew/context_assembly/output_contract.py to
         match website/src/i18n/languages.ts — that file stays the single source
         of truth; the Python set is the derived copy.
         """
@@ -270,7 +270,7 @@ class TestCatalogDriftGate:
             "backend catalog set drifted from the frontend registry.\n"
             f"  missing from backend: {sorted(shipped - _UI_LANGUAGE_CATALOGS)}\n"
             f"  stale in backend:     {sorted(_UI_LANGUAGE_CATALOGS - shipped)}\n"
-            "Update _UI_LANGUAGE_CATALOGS in src/kiro_crew/context_assembly/output_contract.py."
+            "Update _UI_LANGUAGE_CATALOGS in src/aj_crew/context_assembly/output_contract.py."
         )
 
     def test_dev_only_pseudolocale_stays_excluded(self):

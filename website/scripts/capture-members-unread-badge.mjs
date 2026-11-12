@@ -29,7 +29,7 @@ const MEMBER_SLOT = 'member-oncall'
 const MEMBERS = [
   {
     name: 'oncall', slug: 'oncall', bound: true, slot_key: MEMBER_SLOT, running: false,
-    kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', model: '',
+    kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', model: '',
     last_active_ts: 1000, last_message: 'Rotation summary posted.',
   },
 ]
@@ -49,7 +49,7 @@ await stubDashboardApi(page, {
   },
   extra: async (path, route) => {
     if (path === '/api/members') {
-      await json(route, { members: MEMBERS, default_agent: 'kirocrew' })
+      await json(route, { members: MEMBERS, default_agent: 'ajcrew' })
       return true
     }
     if (/^\/api\/members\/[^/]+\/thread$/.test(path)) {

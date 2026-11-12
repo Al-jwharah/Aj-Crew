@@ -29,8 +29,8 @@ from crew_log_fold_eager_helpers import (  # noqa: F401 -- the autouse fixture r
     _slot_log,
 )
 
-from kiro_crew.crew_log import bus, eager, fold_delta
-from kiro_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import bus, eager, fold_delta
+from aj_crew.crew_log import projection as crew_log
 
 
 @pytest.fixture(autouse=True)
@@ -415,7 +415,7 @@ def test_the_exporter_frame_for_work_is_the_whole_value_as_before():
     a pre-delta event did, whole value included, from the publisher's recorded render."""
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers.crew_log import CrewLogPublisher
+    from aj_crew.dashboard.handlers.crew_log import CrewLogPublisher
 
     sent: list[tuple[str, dict]] = []
     hub = SimpleNamespace(broadcast_ws_owners=lambda kind, data: sent.append((kind, data)))

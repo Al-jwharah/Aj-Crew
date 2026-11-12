@@ -18,7 +18,7 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent / "src/kiro_crew/slack/code_channels"
+ROOT = Path(__file__).resolve().parent.parent / "src/aj_crew/slack/code_channels"
 MODULES = ("tools.py", "wrapup.py", "commands.py", "workspace/service.py")
 COMMIT = {"commit_if_not_stopped", "_commit"}  # tools._commit raises on a refusal
 

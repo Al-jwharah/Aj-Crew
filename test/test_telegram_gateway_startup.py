@@ -22,8 +22,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.telegram import gateway as gw
-from kiro_crew.telegram.client import TelegramAuthError
+from aj_crew.telegram import gateway as gw
+from aj_crew.telegram.client import TelegramAuthError
 
 
 class _Client:

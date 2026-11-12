@@ -9,8 +9,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 import subagent_continuable_helpers
 
-from kiro_crew import members
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import members
+from aj_crew.testing.wait import async_wait_until, await_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -36,7 +36,7 @@ async def test_a_crew_run_and_its_continuation_record_one_spawn_entry(continuati
     _, store = await asyncio.to_thread(world.enroll_collision)
     sessions, manager = world.new_manager()
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             child = manager.spawn(
                 "member task", crew="worker", memory_store=store, keep=True, cwd=world.project
             )
@@ -62,7 +62,7 @@ async def test_a_template_run_records_no_spawn_entry(continuation_runtime):
     await asyncio.to_thread(world.enroll_collision)
     sessions, manager = world.new_manager()
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             child = manager.spawn("template task", agent="worker", cwd=world.project)
             assert child is not None and not child.error
             await await_until(manager._tasks[child.id], what="the child run finishing")
@@ -78,7 +78,7 @@ async def test_a_crew_run_on_an_explicit_template_still_records_the_member(conti
     _, store = await asyncio.to_thread(world.enroll_collision)
     sessions, manager = world.new_manager()
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             child = manager.spawn(
                 "member task",
                 crew="worker",
@@ -97,17 +97,17 @@ async def test_a_crew_run_on_an_explicit_template_still_records_the_member(conti
 
 @pytest.mark.asyncio
 async def test_a_helper_inheriting_a_member_is_not_that_members_run(continuation_runtime):
-    from kiro_crew import subagent_persistence as sp
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.execution_context import bind_session_execution, resolve_member_execution
+    from aj_crew import subagent_persistence as sp
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.execution_context import bind_session_execution, resolve_member_execution
 
     world = continuation_runtime
     await asyncio.to_thread(world.enroll_collision)
     parent = "dashboard:member-worker"
-    bind_session_execution(parent, resolve_member_execution(KiroCrewConfig.load(), "worker"))
+    bind_session_execution(parent, resolve_member_execution(AjCrewConfig.load(), "worker"))
     sessions, manager = world.new_manager()
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             child = manager.spawn("helper task", parent_session_key=parent, cwd=world.project)
             assert child is not None and not child.error
             await await_until(manager._tasks[child.id], what="the child run finishing")
@@ -121,17 +121,17 @@ async def test_a_helper_inheriting_a_member_is_not_that_members_run(continuation
 
 @pytest.mark.asyncio
 async def test_a_crew_run_refused_at_startup_records_nothing(continuation_runtime, monkeypatch):
-    from kiro_crew.memory_startup import MemoryStartupUnavailable
+    from aj_crew.memory_startup import MemoryStartupUnavailable
 
     world = continuation_runtime
     _, store = await asyncio.to_thread(world.enroll_collision)
     monkeypatch.setattr(
-        "kiro_crew.context.prepare_store_vectors",
+        "aj_crew.context.prepare_store_vectors",
         AsyncMock(side_effect=MemoryStartupUnavailable("memory is still preparing")),
     )
     sessions, manager = world.new_manager()
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             child = manager.spawn(
                 "member task", crew="worker", memory_store=store, cwd=world.project
             )
@@ -150,7 +150,7 @@ async def test_a_private_crew_run_records_nothing(continuation_runtime, mode):
     _, store = await asyncio.to_thread(world.enroll_collision)
     sessions, manager = world.new_manager()
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             child = manager.spawn(
                 "member task",
                 crew="worker",
@@ -168,7 +168,7 @@ async def test_a_private_crew_run_records_nothing(continuation_runtime, mode):
 
 @pytest.mark.asyncio
 async def test_a_respawned_crew_run_keeps_one_spawn_entry(continuation_runtime, monkeypatch):
-    import kiro_crew.subagent as subagent_mod
+    import aj_crew.subagent as subagent_mod
 
     world = continuation_runtime
     _, store = await asyncio.to_thread(world.enroll_collision)
@@ -187,7 +187,7 @@ async def test_a_respawned_crew_run_keeps_one_spawn_entry(continuation_runtime, 
     monkeypatch.setattr(subagent_mod, "run_in_embed_pool", build)
     sessions, manager = world.new_manager()
     try:
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             child = manager.spawn(
                 "member task", crew="worker", memory_store=store, cwd=world.project
             )

@@ -82,7 +82,7 @@ vi.mock('../../api/client', () => ({
     artifacts: vi.fn(() => Promise.resolve({ artifacts: [] })),
     // `dashboard.crewmate_threads` (reply threads) is read from the shared config
     // query; an empty config is the default -- the flag is OFF.
-    kirocrewConfig: vi.fn(() => Promise.resolve({})),
+    ajcrewConfig: vi.fn(() => Promise.resolve({})),
     // The Schedules chip's count and its tab body read the whole cron list and
     // filter it per crewmate (`wakesCrew`). Resolved-and-empty is the state every
     // case not about schedules wants: the chip reads 0/0, which is an ANSWER of
@@ -92,7 +92,7 @@ vi.mock('../../api/client', () => ({
     // `wakesCrew`'s default-crew fallback needs to know which crew is the default,
     // or every unbound job in the install would be attributed to whichever
     // crewmate happens to be open.
-    defaultAgent: vi.fn(() => Promise.resolve({ default_agent: 'kirocrew' })),
+    defaultAgent: vi.fn(() => Promise.resolve({ default_agent: 'ajcrew' })),
     // The schedule row's own controls (pause / run now), reached through
     // `useCronActions` once the Schedules tab is open.
     toggleCron: vi.fn(() => Promise.resolve({})),
@@ -103,13 +103,13 @@ vi.mock('../../api/client', () => ({
     // create write. Quiet defaults — one custom agent list item and one
     // workspace — so the dialog renders without its own options-failed notice
     // in every case that does not open it.
-    agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
-    // The crew editor's roster read (KiroCrewAgent list), fired when the
+    agentCatalog: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
+    // The crew editor's roster read (AjCrewAgent list), fired when the
     // thread-header pencil opens the in-place editor (CREW-18688).
-    kirocrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
+    ajcrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
     workspaces: vi.fn(() => Promise.resolve({ workspaces: [{ name: 'default' }] })),
     createWorkspace: vi.fn(() => Promise.resolve({ name: 'staging' })),
-    createKirocrewAgent: vi.fn(() => Promise.resolve({ ok: true })),
+    createAjcrewAgent: vi.fn(() => Promise.resolve({ ok: true })),
     // The guided (embedded Meet CrewMates) flow's reads and its schedule write.
     agentsInstalled: vi.fn(() => Promise.resolve([])),
     getSlackConfig: vi.fn(() => Promise.resolve({ connected: false })),
@@ -410,7 +410,7 @@ describe('MembersPage create links open the New mate card', () => {
       expect(screen.getByTestId('chat-pane-stub')).toBe(stub)
       expect(hiddenByStyle(stub)).toBe(false)
       expect(chatPaneMounts.count).toBe(mountsBefore)
-      expect(api.createKirocrewAgent).not.toHaveBeenCalled()
+      expect(api.createAjcrewAgent).not.toHaveBeenCalled()
       expect(api.sendChat).not.toHaveBeenCalled()
     } finally {
       through.stop()
@@ -418,7 +418,7 @@ describe('MembersPage create links open the New mate card', () => {
   })
 
   it('a create link with no goal opens the card folded and empty, from any chat, and its close returns to THAT chat', async () => {
-    await renderPage(assistantAndAlpha(), 'kirocrew', { route: '/members?member=alpha' })
+    await renderPage(assistantAndAlpha(), 'ajcrew', { route: '/members?member=alpha' })
     expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-alpha')
     await followBlankCreateLink()
     await waitFor(() => expect(cardOpen()).toBe(true))
@@ -434,7 +434,7 @@ describe('MembersPage create links open the New mate card', () => {
   })
 
   it('a deep link /members?create=1&name=&goal= opens an EDITABLE prefilled card, strips its params, and creates nothing', async () => {
-    await renderPage(assistantAndAlpha(), 'kirocrew', {
+    await renderPage(assistantAndAlpha(), 'ajcrew', {
       route: '/members?create=1&name=' + encodeURIComponent('scout') + '&goal=' + encodeURIComponent('Watch the release train & tag it'),
     })
     await waitFor(() => expect(cardOpen()).toBe(true))
@@ -443,25 +443,25 @@ describe('MembersPage create links open the New mate card', () => {
     fireEvent.change(goalField()!, { target: { value: 'Edited goal' } })
     expect(goalField()?.value).toBe('Edited goal')
     await waitFor(() => expect(currentUrl()).not.toMatch(/create=|name=|goal=/))
-    expect(api.createKirocrewAgent).not.toHaveBeenCalled()
+    expect(api.createAjcrewAgent).not.toHaveBeenCalled()
     expect(api.sendChat).not.toHaveBeenCalled()
   })
 
   it('a deep link with a malformed percent-escape opens the card without throwing', async () => {
-    await renderPage(assistantAndAlpha(), 'kirocrew', { route: '/members?create=1&goal=%E0%A4%A' })
+    await renderPage(assistantAndAlpha(), 'ajcrew', { route: '/members?create=1&goal=%E0%A4%A' })
     await waitFor(() => expect(cardOpen()).toBe(true))
-    expect(api.createKirocrewAgent).not.toHaveBeenCalled()
+    expect(api.createAjcrewAgent).not.toHaveBeenCalled()
   })
 
   it('Create on a prefilled card posts that name and goal, asks for the first greeting, and opens the new mate', async () => {
     await openAssistant()
     fireEvent.click(screen.getByTestId('chat-link-proposal'))
     await waitFor(() => expect(cardOpen()).toBe(true))
-    ;(api.createKirocrewAgent as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ ok: true, name: 'scout', member_id: 'm-scout' })
-    ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: [...assistantAndAlpha(), row({ name: 'scout', slug: 'scout' })], default_agent: 'kirocrew' })
+    ;(api.createAjcrewAgent as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ ok: true, name: 'scout', member_id: 'm-scout' })
+    ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: [...assistantAndAlpha(), row({ name: 'scout', slug: 'scout' })], default_agent: 'ajcrew' })
     fireEvent.click(within(card()).getByTestId('crewmate-create-submit'))
-    await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
-    expect(api.createKirocrewAgent).toHaveBeenCalledWith(
+    await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
+    expect(api.createAjcrewAgent).toHaveBeenCalledWith(
       expect.objectContaining({ name: 'scout', description: 'Watch the release train', first_greeting: true }),
     )
     await waitFor(() => expect(currentUrl()).toBe('/members?member=scout'), PANE_READY)
@@ -490,7 +490,7 @@ describe('MembersPage create links open the New mate card', () => {
   })
 
   it('only Mate\'s chat intercepts: a mate chat\'s create link is left to the chat', async () => {
-    await renderPage(assistantAndAlpha(), 'kirocrew', { route: '/members?member=alpha' })
+    await renderPage(assistantAndAlpha(), 'ajcrew', { route: '/members?member=alpha' })
     expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-alpha')
     const through = passedThrough()
     try {
@@ -525,7 +525,7 @@ describe('MembersPage create links open the New mate card', () => {
       await waitFor(() => expect(goalField()?.value).toBe('Watch the release train'))
       expect(nameField().value).toBe('scout')
       expect(confirm).toHaveBeenCalledTimes(2)
-      expect(api.createKirocrewAgent).not.toHaveBeenCalled()
+      expect(api.createAjcrewAgent).not.toHaveBeenCalled()
     } finally {
       confirm.mockRestore()
       through.stop()
@@ -595,7 +595,7 @@ describe('MembersPage create links open the New mate card', () => {
     expect(within(title).queryByTestId('member-pill-id')).toBeNull()
     expect(title).not.toHaveTextContent(/\bassistant\b/)
     utils.unmount()
-    await renderPage([defaultRow(), assistantRow(), row({ name: 'oncall', slug: 'oncall', display_name: 'Oncall Sentinel' })], 'kirocrew', { route: '/members?member=oncall' })
+    await renderPage([defaultRow(), assistantRow(), row({ name: 'oncall', slug: 'oncall', display_name: 'Oncall Sentinel' })], 'ajcrew', { route: '/members?member=oncall' })
     expect(await screen.findByTestId('chat-pane-stub', undefined, PANE_READY)).toHaveTextContent('member-oncall')
     expect(screen.getByTestId('member-title-row')).toHaveTextContent('Oncall Sentinel')
     expect(within(screen.getByTestId('member-title-row')).queryByTestId('member-pill-id')).toBeNull()
@@ -622,13 +622,13 @@ describe('MembersPage create links open the New mate card', () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
     try {
       let finish: (v: unknown) => void = () => {}
-      ;(api.createKirocrewAgent as ReturnType<typeof vi.fn>).mockReturnValueOnce(new Promise((resolve) => { finish = resolve }))
+      ;(api.createAjcrewAgent as ReturnType<typeof vi.fn>).mockReturnValueOnce(new Promise((resolve) => { finish = resolve }))
       await openAssistant()
       await clickAddCrewmate()
       await screen.findByRole('dialog')
       fireEvent.change(nameField(), { target: { value: 'radar' } })
       fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-      await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
+      await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
       // The user picks alpha mid-create and agrees to leave the card.
       fireEvent.click(await rosterRow('alpha'))
       await waitFor(() => expect(screen.getByTestId('chat-pane-stub')).toHaveTextContent('member-alpha'), PANE_READY)
@@ -636,7 +636,7 @@ describe('MembersPage create links open the New mate card', () => {
       const membersMock = api.members as ReturnType<typeof vi.fn>
       membersMock.mockResolvedValue({
         members: [...assistantAndAlpha(), row({ name: 'radar', slug: 'radar', dashboard_created: true })],
-        default_agent: 'kirocrew',
+        default_agent: 'ajcrew',
       })
       const readsBefore = membersMock.mock.calls.length
       await act(async () => { finish({ ok: true }) })
@@ -656,13 +656,13 @@ describe('MembersPage create links open the New mate card', () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
     try {
       let finish: (v: unknown) => void = () => {}
-      ;(api.createKirocrewAgent as ReturnType<typeof vi.fn>).mockReturnValueOnce(new Promise((resolve) => { finish = resolve }))
+      ;(api.createAjcrewAgent as ReturnType<typeof vi.fn>).mockReturnValueOnce(new Promise((resolve) => { finish = resolve }))
       await openAssistant()
       await clickAddCrewmate()
       await screen.findByRole('dialog')
       fireEvent.change(nameField(), { target: { value: 'radar' } })
       fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-      await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
+      await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
       fireEvent.click(await rosterRow('alpha'))
       await waitFor(() => expect(screen.getByTestId('chat-pane-stub')).toHaveTextContent('member-alpha'), PANE_READY)
       await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
@@ -680,13 +680,13 @@ describe('MembersPage create links open the New mate card', () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
     try {
       let fail: (e: unknown) => void = () => {}
-      ;(api.createKirocrewAgent as ReturnType<typeof vi.fn>).mockReturnValueOnce(new Promise((_, reject) => { fail = reject }))
+      ;(api.createAjcrewAgent as ReturnType<typeof vi.fn>).mockReturnValueOnce(new Promise((_, reject) => { fail = reject }))
       await openAssistant()
       await clickAddCrewmate()
       await screen.findByRole('dialog')
       fireEvent.change(nameField(), { target: { value: 'radar' } })
       fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-      await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
+      await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
       fireEvent.click(await rosterRow('alpha'))
       await waitFor(() => expect(screen.getByTestId('chat-pane-stub')).toHaveTextContent('member-alpha'), PANE_READY)
       await act(async () => { fail(new ApiError(500, 'boom')) })
@@ -704,13 +704,13 @@ describe('MembersPage create links open the New mate card', () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
     try {
       let finish: (v: unknown) => void = () => {}
-      ;(api.createKirocrewAgent as ReturnType<typeof vi.fn>).mockReturnValueOnce(new Promise((resolve) => { finish = resolve }))
+      ;(api.createAjcrewAgent as ReturnType<typeof vi.fn>).mockReturnValueOnce(new Promise((resolve) => { finish = resolve }))
       await openAssistant()
       await clickAddCrewmate()
       await screen.findByRole('dialog')
       fireEvent.change(nameField(), { target: { value: 'radar' } })
       fireEvent.click(screen.getByTestId('crewmate-create-submit'))
-      await waitFor(() => expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1))
+      await waitFor(() => expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1))
       fireEvent.click(await rosterRow('alpha'))
       await waitFor(() => expect(screen.getByTestId('chat-pane-stub')).toHaveTextContent('member-alpha'), PANE_READY)
       const membersMock = api.members as ReturnType<typeof vi.fn>
@@ -720,14 +720,14 @@ describe('MembersPage create links open the New mate card', () => {
       expect(screen.getByTestId('chat-pane-stub')).toHaveTextContent('member-alpha')
       membersMock.mockResolvedValue({
         members: [...assistantAndAlpha(), row({ name: 'radar', slug: 'radar', dashboard_created: true })],
-        default_agent: 'kirocrew',
+        default_agent: 'ajcrew',
       })
       fireEvent.click(screen.getByTestId('member-post-create-retry'))
       expect(await rosterRow('radar')).toBeInTheDocument()
       await waitFor(() => expect(screen.queryByTestId('member-post-create-error')).toBeNull(), PANE_READY)
       // The retry listed it; the chat the user picked is still the one open,
       // and the create was not sent a second time.
-      expect(api.createKirocrewAgent).toHaveBeenCalledTimes(1)
+      expect(api.createAjcrewAgent).toHaveBeenCalledTimes(1)
       expect(api.memberThread).not.toHaveBeenCalledWith('radar')
       expect(screen.getByTestId('chat-pane-stub')).toHaveTextContent('member-alpha')
     } finally {

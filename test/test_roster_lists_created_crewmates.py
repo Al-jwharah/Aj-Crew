@@ -3,7 +3,7 @@
 
 ``dashboard_created`` marks a crewmate the PERSON created: the Crewmates page's
 create and an approved ``crewmate.create`` card both reach ``POST /api/agents``
-with ``source: kirocrew`` and get a member id, so the page lists the row even
+with ``source: ajcrew`` and get a member id, so the page lists the row even
 while its chat is empty. A row the product generated (a sync row, a legacy
 binding, an app's own crewmate) does not carry it. The reserved ``default``
 member never does; it ships ``has_user_dm_message`` instead, true only once its
@@ -19,26 +19,26 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import members as members_mod
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.crew_log.projection_workers import _RELAY_PREFIX
-from kiro_crew.history import ARCHIVE_DIR_NAME, ARCHIVE_SEGMENT_DELIMITER, _safe_key
-from kiro_crew.memory_stores import persist_member_config, provision_member_memory
-from kiro_crew.transcript_person_rows import is_person_sent_row, transcript_has_person_message
+from aj_crew import change_card_catalog as catalog
+from aj_crew import members as members_mod
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.crew_log.projection_workers import _RELAY_PREFIX
+from aj_crew.history import ARCHIVE_DIR_NAME, ARCHIVE_SEGMENT_DELIMITER, _safe_key
+from aj_crew.memory_stores import persist_member_config, provision_member_memory
+from aj_crew.transcript_person_rows import is_person_sent_row, transcript_has_person_message
 
 
 @pytest.fixture(autouse=True)
 def _owner_caller(_floor_monkeypatch):
     _floor_monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
 
 def _app(state) -> web.Application:
-    from kiro_crew.dashboard.handlers import api_kirocrew_agents_create
-    from kiro_crew.dashboard.handlers.members import api_members
+    from aj_crew.dashboard.handlers import api_ajcrew_agents_create
+    from aj_crew.dashboard.handlers.members import api_members
 
     @web.middleware
     async def _auth(request: web.Request, handler):
@@ -48,7 +48,7 @@ def _app(state) -> web.Application:
 
     app = web.Application(middlewares=[_auth])
     app["state"] = state
-    app.router.add_post("/api/agents", api_kirocrew_agents_create)
+    app.router.add_post("/api/agents", api_ajcrew_agents_create)
     app.router.add_get("/api/members", api_members)
     return app
 
@@ -64,16 +64,16 @@ def _card_create_body(name: str) -> dict:
 
 def _seed_generated_rows() -> None:
     """Rows the product made on its own: a sync row, a legacy row, an app's crewmate."""
-    cfg = KiroCrewConfig.load()
-    cfg.agents["pkg-tool"] = KiroCrewAgentConfig(kiro_agent="pkg-tool", source="package")
-    cfg.agents["legacy-row"] = KiroCrewAgentConfig(kiro_agent="kirocrew", source="kirocrew")
-    cfg.agents["kirocrew-conductor"] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew-conductor", source="builtin"
+    cfg = AjCrewConfig.load()
+    cfg.agents["pkg-tool"] = AjCrewAgentConfig(kiro_agent="pkg-tool", source="package")
+    cfg.agents["legacy-row"] = AjCrewAgentConfig(kiro_agent="ajcrew", source="ajcrew")
+    cfg.agents["ajcrew-conductor"] = AjCrewAgentConfig(
+        kiro_agent="ajcrew-conductor", source="builtin"
     )
     cfg.save()
     # An app's own crewmate gets a member id like a created one, under its stamp.
-    cfg = KiroCrewConfig.load()
-    cfg.agents["app-bot"] = KiroCrewAgentConfig(kiro_agent="kirocrew", source="radar-app")
+    cfg = AjCrewConfig.load()
+    cfg.agents["app-bot"] = AjCrewAgentConfig(kiro_agent="ajcrew", source="radar-app")
     provision_member_memory(cfg, "app-bot")
     persist_member_config(cfg, "app-bot", create=True)
 
@@ -89,7 +89,7 @@ async def test_a_crewmate_made_by_an_approved_card_is_marked_created_by_the_pers
     state = _make_state(tmp_path)
     _seed_generated_rows()
     body = _card_create_body("PR Watcher")
-    assert body["source"] == "kirocrew"
+    assert body["source"] == "ajcrew"
     async with TestClient(TestServer(_app(state))) as client:
         resp = await client.post("/api/agents", json=body)
         assert resp.status == 200, await resp.text()
@@ -98,14 +98,14 @@ async def test_a_crewmate_made_by_an_approved_card_is_marked_created_by_the_pers
     # Its chat was never opened, so nothing is in it; the person made it anyway.
     assert rows[created]["dashboard_created"] is True
     assert rows[created]["has_dm_message"] is False
-    for generated in ("pkg-tool", "legacy-row", "kirocrew-conductor", "app-bot"):
+    for generated in ("pkg-tool", "legacy-row", "ajcrew-conductor", "app-bot"):
         assert rows[generated]["dashboard_created"] is False, generated
     # Only the reserved default row carries the stricter fact.
     assert all("has_user_dm_message" not in r for n, r in rows.items() if n != "default")
 
 
 def _bind_default_thread(state, rows: list[tuple[str, str]]) -> str:
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     slug = members_mod.member_slug("default", cfg)
     members_mod.write_dm_binding(slug, member="default", slot_key=f"member-{slug}")
     key = members_mod.member_thread_session_alias(slug)
@@ -117,8 +117,8 @@ def _bind_default_thread(state, rows: list[tuple[str, str]]) -> str:
 @pytest.mark.asyncio
 async def test_default_is_never_marked_created_even_when_it_looks_like_one(tmp_path):
     state = _make_state(tmp_path)
-    cfg = KiroCrewConfig.load()
-    cfg.agents["default"] = KiroCrewAgentConfig(kiro_agent="kirocrew", source="kirocrew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["default"] = AjCrewAgentConfig(kiro_agent="ajcrew", source="ajcrew")
     cfg.agents["default"].member_id = "m-looks-created"
     cfg.save()
     rows = await _roster(state)
@@ -155,7 +155,7 @@ async def test_a_message_the_person_sent_lists_default(tmp_path):
 async def test_a_live_unflushed_person_row_lists_default(tmp_path):
     state = _make_state(tmp_path)
     _bind_default_thread(state, [("assistant", "hello")])
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     slot_key = f"member-{members_mod.member_slug('default', cfg)}"
     from types import SimpleNamespace
 
@@ -187,7 +187,7 @@ def test_a_person_message_rotated_into_the_archive_still_counts(tmp_path):
 
 
 def test_the_relay_prefix_is_the_one_session_send_writes():
-    from kiro_crew.dashboard.session_control_parts import session_messaging
+    from aj_crew.dashboard.session_control_parts import session_messaging
 
     stamped = session_messaging._SEND_PROVENANCE.format(caller="chat-1", via="session_send")
     assert stamped.startswith(_RELAY_PREFIX)

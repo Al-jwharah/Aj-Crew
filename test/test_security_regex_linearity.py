@@ -29,7 +29,7 @@ import time
 
 import pytest
 
-from kiro_crew.security import is_sensitive_path, redact_credentials
+from aj_crew.security import is_sensitive_path, redact_credentials
 
 # ─────────────────────────────────────────────────────────────────────────────
 # redact_credentials pass 1 -- single sub() must be byte-identical
@@ -189,7 +189,7 @@ SENSITIVE_PATH_GOLDEN: list[tuple[str, bool]] = [
     ("~/.gnupg/secring.gpg", True),
     ("/tmp/harmless.txt", False),
     ("./README.md", False),
-    ("src/kiro_crew/security.py", False),
+    ("src/aj_crew/security.py", False),
     ("notes.md", False),
 ]
 
@@ -215,12 +215,12 @@ def test_credential_pattern_module_still_compiles_one_alternation() -> None:
     against the pre-filter and the scan being asked about different strings --
     the pre-filter is only a sound gate for the exact text the scan then walks.
     """
-    from kiro_crew import security as security_mod
+    from aj_crew import security as security_mod
 
     assert isinstance(security_mod._CREDENTIAL_PATTERNS, re.Pattern)
     # `redact_credentials` is a wrapper over the one plan both redactors share;
     # the scan lives in that plan.
-    from kiro_crew.security import redaction as redaction_mod
+    from aj_crew.security import redaction as redaction_mod
 
     body = inspect_source(redaction_mod._credential_redaction_plan)
     assert "_credential_matches(text)" in body

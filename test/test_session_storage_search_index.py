@@ -15,10 +15,10 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import history_index, session_storage
-from kiro_crew._sqlite_compat import fts5_available
-from kiro_crew.history import ConversationLog
-from kiro_crew.history_index import INDEX_FILENAME, SessionSearchIndex
+from aj_crew import history_index, session_storage
+from aj_crew._sqlite_compat import fts5_available
+from aj_crew.history import ConversationLog
+from aj_crew.history_index import INDEX_FILENAME, SessionSearchIndex
 
 pytestmark = pytest.mark.skipif(not fts5_available(), reason="SQLite built without FTS5")
 
@@ -29,7 +29,7 @@ def _no_index_quiet_window(monkeypatch):
     same breath, so the production deferral would skip both sessions and the
     ``remaining == 0`` seed assertion would fail before any test ran.
     """
-    from kiro_crew import history_search
+    from aj_crew import history_search
 
     monkeypatch.setattr(history_search, "_INDEX_QUIET_WINDOW_SECS", 0.0)
 

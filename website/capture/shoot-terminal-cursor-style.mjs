@@ -7,7 +7,7 @@
  *
  * The new control is a SettingsButtonGroup (Block / Bar / Underline) in
  * Display → Terminal, backed by the per-client useTerminalFont localStorage
- * store, so no server config drives it — the default stub's /api/config/kirocrew
+ * store, so no server config drives it — the default stub's /api/config/ajcrew
  * is enough to render the pane.
  *
  * Frames:

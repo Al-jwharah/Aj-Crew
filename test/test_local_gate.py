@@ -63,7 +63,7 @@ def test_script_exists(gate) -> None:
         ("website/electron/main.js", (True, False, False)),
         (".github/workflows/ci.yml", (False, True, False)),
         ("scripts/local-gate.py", (False, True, False)),
-        ("src/kiro_crew/gateway.py", (False, False, True)),
+        ("src/aj_crew/gateway.py", (False, False, True)),
         ("test/test_gatewayd_diag.py", (False, False, True)),
         ("docs/README.md", (False, False, True)),  # catch-all: unrecognised = backend
         ("newtoplevel.cfg", (False, False, True)),
@@ -102,14 +102,14 @@ def test_changed_files_keeps_both_rename_endpoints(gate, monkeypatch) -> None:
             return _Proc("abc123\n")
         if argv[:2] == ["git", "diff"]:
             assert "--no-renames" in argv, "committed diff must not fold renames"
-            return _Proc("src/kiro_crew/gateway.py\n")
+            return _Proc("src/aj_crew/gateway.py\n")
         assert "--no-renames" in argv, "porcelain status must not fold renames"
-        return _Proc('R  src/kiro_crew/moved.py -> temp-screenshots/f/moved.png\n')
+        return _Proc('R  src/aj_crew/moved.py -> temp-screenshots/f/moved.png\n')
 
     monkeypatch.setattr(gate.subprocess, "run", fake_run)
     paths = gate.changed_files("main")
     assert paths is not None
-    assert "src/kiro_crew/moved.py" in paths
+    assert "src/aj_crew/moved.py" in paths
     assert "temp-screenshots/f/moved.png" in paths
     # And the classification consequence: the old backend path still counts.
     assert gate.classify(paths) == (False, False, True)
@@ -117,7 +117,7 @@ def test_changed_files_keeps_both_rename_endpoints(gate, monkeypatch) -> None:
 
 def test_classify_mixed_diff_sets_both_flags(gate) -> None:
     frontend, meta, backend = gate.classify(
-        ["website/src/App.tsx", "src/kiro_crew/gateway.py"]
+        ["website/src/App.tsx", "src/aj_crew/gateway.py"]
     )
     assert frontend and backend and not meta
 
@@ -267,7 +267,7 @@ def test_full_flag_runs_the_budgeted_auto_with_a_capped_env(gate, monkeypatch) -
 
 
 def test_an_inherited_tighter_cap_is_never_raised(gate, monkeypatch) -> None:
-    """Kiro Crew seeds PYTEST_XDIST_AUTO_NUM_WORKERS at every agent spawn; the
+    """Aj Crew seeds PYTEST_XDIST_AUTO_NUM_WORKERS at every agent spawn; the
     gate must not hand a run more workers than its parent asked for."""
     monkeypatch.setenv("PYTEST_XDIST_AUTO_NUM_WORKERS", "1")
     assert gate.pytest_worker_env()["PYTEST_XDIST_AUTO_NUM_WORKERS"] == "1"
@@ -298,7 +298,7 @@ def test_gate_env_supplies_the_i18n_base_ref(gate, monkeypatch) -> None:
     monkeypatch.delenv("I18N_BASE_REF", raising=False)
     # The cap assertion below is about the bound the gate COMPUTES, and
     # `pytest_worker_env` keeps a tighter inherited one on purpose, so an ambient
-    # value -- which Kiro Crew seeds at every agent spawn -- would decide it.
+    # value -- which Aj Crew seeds at every agent spawn -- would decide it.
     monkeypatch.delenv("PYTEST_XDIST_AUTO_NUM_WORKERS", raising=False)
     calls: list[list[str]] = []
 
@@ -388,7 +388,7 @@ def test_both_surfaces_does_not_run_full(gate, monkeypatch) -> None:
     set; neither surface, and not the pair, is a reason for the full suite."""
     monkeypatch.setattr(
         gate, "changed_files",
-        lambda base: ["website/src/App.tsx", "src/kiro_crew/gateway.py"],
+        lambda base: ["website/src/App.tsx", "src/aj_crew/gateway.py"],
     )
     _related(monkeypatch, gate, {
         "backend": ["test/test_gatewayd_diag.py"],
@@ -401,15 +401,15 @@ def test_both_surfaces_does_not_run_full(gate, monkeypatch) -> None:
 
 def test_no_env_var_selects_full(gate, monkeypatch) -> None:
     """Only the flag reaches the full suite. An env var must not."""
-    monkeypatch.setenv("KIROCREW_LOCAL_GATE_FULL", "1")
-    monkeypatch.setattr(gate, "changed_files", lambda base: ["src/kiro_crew/gateway.py"])
+    monkeypatch.setenv("AJCREW_LOCAL_GATE_FULL", "1")
+    monkeypatch.setattr(gate, "changed_files", lambda base: ["src/aj_crew/gateway.py"])
     _related(monkeypatch, gate, {"backend": ["test/test_gatewayd_diag.py"]})
     assert not _is_full(gate.build_plan(_args()))
 
 
 def test_large_related_set_still_runs_as_related(gate, monkeypatch) -> None:
     """Size is printed, never used as a reason to switch to the full suite."""
-    monkeypatch.setattr(gate, "changed_files", lambda base: ["src/kiro_crew/context.py"])
+    monkeypatch.setattr(gate, "changed_files", lambda base: ["src/aj_crew/context.py"])
     many = [f"test/test_m{i}.py" for i in range(500)]
     _related(monkeypatch, gate, {"backend": many})
     monkeypatch.setattr(gate, "backend_argv", lambda targets: ["pytest", "--", *targets])
@@ -429,7 +429,7 @@ def test_related_set_is_batched_under_the_windows_argv_limit(gate, monkeypatch) 
     ran. Each batch's joined argv stays under `ARGV_CHAR_LIMIT`, every target
     lands in exactly one batch in order, and the labels number the batches.
     """
-    monkeypatch.setattr(gate, "changed_files", lambda base: ["src/kiro_crew/session.py"])
+    monkeypatch.setattr(gate, "changed_files", lambda base: ["src/aj_crew/session.py"])
     many = [f"test/test_widely_referenced_module_{i:04d}.py" for i in range(1100)]
     _related(monkeypatch, gate, {"backend": many})
     monkeypatch.setattr(
@@ -494,7 +494,7 @@ def test_missing_node_does_not_discard_the_backend_plan(gate, monkeypatch, capsy
     backend command, notes the skipped surface, and exits 0 with a loud line
     saying CI runs those specs. It must NOT surface as ``GateCannotSee``.
     """
-    monkeypatch.setattr(gate, "changed_files", lambda base: ["src/kiro_crew/gateway.py"])
+    monkeypatch.setattr(gate, "changed_files", lambda base: ["src/aj_crew/gateway.py"])
     _related(monkeypatch, gate, {
         "backend": ["test/test_gatewayd_diag.py"],
         "frontend": ["src/test/AcpAdapter.defaults.test.ts"],
@@ -526,7 +526,7 @@ def test_a_missing_runner_is_a_selection_error_everywhere_else(gate) -> None:
 
 
 def test_backend_only_diff_runs_related_not_full(gate, monkeypatch) -> None:
-    monkeypatch.setattr(gate, "changed_files", lambda base: ["src/kiro_crew/gateway.py"])
+    monkeypatch.setattr(gate, "changed_files", lambda base: ["src/aj_crew/gateway.py"])
     _related(monkeypatch, gate, {
         "backend": ["test/test_gatewayd_diag.py"],
         "frontend": ["src/test/AcpAdapter.defaults.test.ts"],
@@ -580,7 +580,7 @@ def test_hostile_frontend_target_fails_closed(gate, monkeypatch, hostile: str) -
     ``cwd=website`` first, so it validates against a different root and a
     single shared assertion would not prove both.
     """
-    monkeypatch.setattr(gate, "changed_files", lambda base: ["src/kiro_crew/gateway.py"])
+    monkeypatch.setattr(gate, "changed_files", lambda base: ["src/aj_crew/gateway.py"])
     _related(monkeypatch, gate, {"frontend": [hostile]})
     with pytest.raises(gate.GateCannotSee):
         gate.build_plan(_args())
@@ -614,7 +614,7 @@ def test_backend_targets_are_preceded_by_a_double_dash(gate, monkeypatch) -> Non
 
 
 def test_vitest_targets_are_not_preceded_by_a_double_dash(gate, monkeypatch) -> None:
-    monkeypatch.setattr(gate, "changed_files", lambda base: ["src/kiro_crew/gateway.py"])
+    monkeypatch.setattr(gate, "changed_files", lambda base: ["src/aj_crew/gateway.py"])
     _related(monkeypatch, gate, {"frontend": ["src/test/AcpAdapter.defaults.test.ts"]})
     _label, cmd, _cwd = gate.build_plan(_args()).commands[0]
     assert "--" not in cmd
@@ -687,7 +687,7 @@ def test_dry_run_against_the_real_repo_never_plans_a_full_suite(gate, monkeypatc
     """
     monkeypatch.setattr(
         gate, "changed_files",
-        lambda base: ["src/kiro_crew/gateway.py", "website/src/App.tsx"],
+        lambda base: ["src/aj_crew/gateway.py", "website/src/App.tsx"],
     )
     rc = gate.main(["--dry-run"])
     err = capsys.readouterr().err

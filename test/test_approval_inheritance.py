@@ -25,9 +25,9 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _slot,
 )
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.approval_inheritance import plan_descendant_postures
-from kiro_crew.dashboard.chat_handlers import api_chat_mode
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.approval_inheritance import plan_descendant_postures
+from aj_crew.dashboard.chat_handlers import api_chat_mode
 
 
 @web.middleware
@@ -187,7 +187,7 @@ def test_a_caller_that_may_not_raise_only_lowers(state):
 
 
 def test_a_crewmate_profile_worker_is_left_to_its_profile(state):
-    from kiro_crew.mate_worker import MATE_WORKER_AGENT
+    from aj_crew.mate_worker import MATE_WORKER_AGENT
 
     conductor = _slot(state, "chat-root")
     worker = _create(state, conductor)
@@ -221,8 +221,8 @@ def test_a_restored_worker_follows_its_conductor_on_a_recorded_edge(state, monke
     its creator again; the raise rides on the crew log's creation record."""
     from types import SimpleNamespace
 
-    from kiro_crew.crew_log import session_tree_projection
-    from kiro_crew.dashboard.slot_persistence.metadata_codec import _read_created_by
+    from aj_crew.crew_log import session_tree_projection
+    from aj_crew.dashboard.slot_persistence.metadata_codec import _read_created_by
 
     conductor = _slot(state, "chat-root")
     restored = _slot(state, "chat-restored")
@@ -294,7 +294,7 @@ def test_a_worker_whose_session_another_slot_shares_is_never_raised(state):
 
 def test_a_mode_an_app_set_on_a_worker_gives_way_to_its_conductor(state):
     """Only a person's own change makes a worker's mode explicit."""
-    from kiro_crew.dashboard.chat_handlers import _apply_inherited_postures
+    from aj_crew.dashboard.chat_handlers import _apply_inherited_postures
 
     conductor = _slot(state, "chat-root")
     worker = _create(state, conductor)

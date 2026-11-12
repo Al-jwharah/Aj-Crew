@@ -22,7 +22,7 @@ from test_project_tree import (  # noqa: F401
     repo,
 )
 
-from kiro_crew.testing.links import make_dir_link
+from aj_crew.testing.links import make_dir_link
 
 
 class TestProjectTreeFolderListing:
@@ -40,7 +40,7 @@ class TestProjectTreeFolderListing:
     ):
         """The whole listing names ``big`` as cut; its own listing reaches the
         folder the cap hid, with paths still relative to the project root."""
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_MAX_ENTRIES", 4)
         big = plain_project / "big"
@@ -66,8 +66,8 @@ class TestProjectTreeFolderListing:
     async def test_a_folder_listing_inside_a_repository_is_project_relative(
         self, repo, mock_sel  # noqa: F811
     ):  # noqa: F811
-        from kiro_crew import pinned_fs
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew import pinned_fs
+        from aj_crew.dashboard.handlers import files as files_mod
 
         status, data = await self._get(repo, dir="src")
         assert status == 200
@@ -139,7 +139,7 @@ class TestProjectTreeFolderListing:
     async def test_a_sensitive_folder_is_refused(
         self, plain_project, mock_sel, monkeypatch  # noqa: F811
     ):  # noqa: F811
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         (plain_project / "keys").mkdir(parents=True)
         real = os.path.realpath(plain_project / "keys")
@@ -176,7 +176,7 @@ class TestProjectTreeFolderListingIsPinned:
 
     @staticmethod
     def _swap_after_pin(monkeypatch, project: Path, outside: Path) -> None:
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew.dashboard.handlers import files as files_mod
 
         real_pin = files_mod._project_tree_pin
 
@@ -235,8 +235,8 @@ class TestProjectTreeFolderListingIsPinned:
         Simulated by turning the descriptor pin off; the by-name walk then
         compares each folder's identity and names the swapped one unreadable.
         """
-        from kiro_crew import pinned_fs
-        from kiro_crew.dashboard.handlers import files as files_mod
+        from aj_crew import pinned_fs
+        from aj_crew.dashboard.handlers import files as files_mod
 
         monkeypatch.setattr(files_mod, "_PROJECT_TREE_SCANDIR_TAKES_FD", False)
         monkeypatch.setattr(pinned_fs, "supports_pinned_walk", lambda: False)

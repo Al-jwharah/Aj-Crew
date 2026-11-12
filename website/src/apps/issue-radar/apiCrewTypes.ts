@@ -9,7 +9,7 @@
 // ── crews ───────────────────────────────────────────────────────────────────
 //
 // Every shape below MIRRORS the backend store,
-// `src/kiro_crew/apps/builtins/issue_radar/backend/crew_store.py` — that module is
+// `src/aj_crew/apps/builtins/issue_radar/backend/crew_store.py` — that module is
 // the SOURCE OF TRUTH for the phase list, the three phase classifications, the
 // event kinds and every record field. A crew record has no upstream to refetch
 // from (unlike an issue, where a schema mismatch is just a cache miss), so these

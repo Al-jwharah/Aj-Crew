@@ -92,12 +92,12 @@ describe('VoiceDisabledModal reason variants', () => {
         reason="unavailable"
         provider="whisper"
         code="stt_extra_missing"
-        installCommand="pip install 'kiro-crew[voice]'"
+        installCommand="pip install 'aj-crew[voice]'"
         onClose={noop}
         onOpenSettings={noop}
       />,
     )
-    expect(screen.getByText("pip install 'kiro-crew[voice]'")).toBeInTheDocument()
+    expect(screen.getByText("pip install 'aj-crew[voice]'")).toBeInTheDocument()
     expect(screen.getByText(/run the command below in a terminal/i)).toBeInTheDocument()
     // A real copy control, not a bare <pre> the user has to select by hand.
     expect(screen.getByRole('button', { name: /copy command/i })).toBeInTheDocument()
@@ -113,7 +113,7 @@ describe('VoiceDisabledModal reason variants', () => {
         reason="unavailable"
         provider="whisper"
         code="stt_extra_missing"
-        installCommand="pip install 'kiro-crew[voice]'"
+        installCommand="pip install 'aj-crew[voice]'"
         onClose={noop}
         onOpenSettings={noop}
       />,
@@ -160,7 +160,7 @@ describe('VoiceDisabledModal reason variants', () => {
         reason="unavailable"
         provider="mlx"
         code="stt_extra_missing"
-        installCommand="pip install 'kiro-crew[voice]'"
+        installCommand="pip install 'aj-crew[voice]'"
         onClose={noop}
         onOpenSettings={onOpenSettings}
       />,

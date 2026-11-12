@@ -16,9 +16,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TOOL_CALL, EVENT_TOOL_RESULT, AcpEvent
-from kiro_crew.dashboard import relay_spans, session_send_receipts
-from kiro_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TOOL_CALL, EVENT_TOOL_RESULT, AcpEvent
+from aj_crew.dashboard import relay_spans, session_send_receipts
+from aj_crew.dashboard.chat_utils import effective_session_key
 
 
 @pytest.fixture(autouse=True)
@@ -65,12 +65,12 @@ def test_park_refuses_what_it_cannot_describe():
     [
         {"target": "Planner", "message": "go", "steer": False, "_meta": {"x": 1}},
         {
-            "server": "kirocrew-dashboard",
+            "server": "ajcrew-dashboard",
             "tool": "session_send",
             "arguments": {"target": "Planner", "message": "go"},
         },
         {
-            "tool_id": "kirocrew-dashboard::session_send",
+            "tool_id": "ajcrew-dashboard::session_send",
             "arguments": {"target": "Planner", "message": "go"},
         },
     ],
@@ -89,14 +89,14 @@ def test_a_send_to_another_crew_never_takes_a_local_receipt():
         kind=EVENT_TOOL_CALL,
         tool_call_id="tc-local",
         tool_name="session_send",
-        mcp_server_name="kirocrew-dashboard",
+        mcp_server_name="ajcrew-dashboard",
         raw_tool_params={"target": "Planner", "message": "go"},
     )
     remote = AcpEvent(
         kind=EVENT_TOOL_CALL,
         tool_call_id="tc-remote",
         tool_name="session_send",
-        mcp_server_name="kirocrew-dashboard",
+        mcp_server_name="ajcrew-dashboard",
         raw_tool_params={"target": "Planner", "message": "go", "crew": "laptop"},
     )
     session_send_receipts.note_call(selectors, local, initial=True)
@@ -112,7 +112,7 @@ def test_a_send_to_another_crew_never_takes_a_local_receipt():
     assert (
         session_send_receipts.call_selector(
             {
-                "tool_id": "kirocrew-dashboard::session_send",
+                "tool_id": "ajcrew-dashboard::session_send",
                 "arguments": {"target": "P", "message": "m", "crew": "x"},
             }
         )
@@ -138,7 +138,7 @@ def test_the_outcome_follows_the_send_result():
 async def test_the_send_route_parks_what_it_delivered(monkeypatch):
     """Mutation guard: drop the ``park`` call in ``api_session_control_send`` and
     no receipt exists for the caller's turn to claim."""
-    from kiro_crew.dashboard.handlers import session_control as handler
+    from aj_crew.dashboard.handlers import session_control as handler
 
     request = MagicMock()
     request.headers = {"X-Session-Key": "chat-1"}
@@ -179,7 +179,7 @@ async def test_the_send_route_parks_what_it_delivered(monkeypatch):
 def test_the_session_send_tool_asks_for_a_receipt():
     """Mutation guard: drop ``receipt`` from the tool's request and the gateway
     parks nothing for its row."""
-    from kiro_crew import mcp_dashboard_session_runs as runs
+    from aj_crew import mcp_dashboard_session_runs as runs
 
     ctx = MagicMock()
     ctx.client.post.return_value = {"target": "chat-9", "started": True}
@@ -206,7 +206,7 @@ def _stub_state(tmp_path):
 
 
 def _send_call(
-    tcid: str, *, server: str = "kirocrew-dashboard", args: dict | None = None
+    tcid: str, *, server: str = "ajcrew-dashboard", args: dict | None = None
 ) -> AcpEvent:
     return AcpEvent(
         kind=EVENT_TOOL_CALL,
@@ -222,7 +222,7 @@ def _send_call(
 async def _drive(state, slot, events, monkeypatch, *, park=None):
     """Run *events* through the real ``_run_chat``; *park* runs right before the
     first tool result, the moment the gateway handles the tool's request."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     async def _stream(_msg):
         parked = False
@@ -394,7 +394,7 @@ def test_a_refinement_frame_supplies_the_arguments_an_initial_frame_lacked():
         kind=EVENT_TOOL_CALL,
         tool_call_id="tc-1",
         tool_name="session_send",
-        mcp_server_name="kirocrew-dashboard",
+        mcp_server_name="ajcrew-dashboard",
     )
     session_send_receipts.note_call(selectors, first, initial=True)
     assert selectors == {"tc-1": ""}
@@ -414,7 +414,7 @@ def test_a_refinement_frame_supplies_the_arguments_an_initial_frame_lacked():
 def test_receipts_share_the_directive_mechanism_but_not_its_records():
     """A directive discard (the marker path retiring its twin) must not delete a
     pending receipt, and a receipt is never claimable as a directive."""
-    from kiro_crew.dashboard import directive_queue
+    from aj_crew.dashboard import directive_queue
 
     directive_queue.reset()
     session_send_receipts.park("chat-1", "Planner", "go", "queued", "chat-9")
@@ -427,15 +427,15 @@ def test_receipts_share_the_directive_mechanism_but_not_its_records():
 @pytest.mark.parametrize(
     "wire_title",
     [
-        "@kirocrew-dashboard/session_send",
-        "Running: @kirocrew-dashboard/session_send",
-        "mcp__kirocrew-dashboard__session_send",
-        "kirocrew-dashboard_session_send",
+        "@ajcrew-dashboard/session_send",
+        "Running: @ajcrew-dashboard/session_send",
+        "mcp__ajcrew-dashboard__session_send",
+        "ajcrew-dashboard_session_send",
     ],
 )
 def test_a_call_named_only_by_its_wire_title_is_a_session_send(wire_title):
     assert session_send_receipts.is_session_send_call("", "", wire_title)
-    assert session_send_receipts.is_session_send_call("kirocrew-dashboard", "", wire_title)
+    assert session_send_receipts.is_session_send_call("ajcrew-dashboard", "", wire_title)
 
 
 @pytest.mark.parametrize(
@@ -445,7 +445,7 @@ def test_a_call_named_only_by_its_wire_title_is_a_session_send(wire_title):
         ("", "session_send", ""),
         ("", "", "@evil-server/session_send"),
         ("", "", "session_send"),
-        ("kirocrew-dashboard", "session_status", ""),
+        ("ajcrew-dashboard", "session_status", ""),
     ],
 )
 def test_another_tool_or_server_is_not(server, name, wire_title):
@@ -466,15 +466,15 @@ async def test_a_kas_send_named_only_by_its_wire_title_gets_its_card(tmp_path, m
     slot._titled = True
     key = effective_session_key(slot)
     raw = {
-        "tool_id": "kirocrew-dashboard::session_send",
+        "tool_id": "ajcrew-dashboard::session_send",
         "arguments": {"target": "Planner", "message": "go"},
     }
     events = [
         AcpEvent(
             kind=EVENT_TOOL_CALL,
             tool_call_id="tc-kas",
-            title="Running: @kirocrew-dashboard/session_send",
-            wire_title="Running: @kirocrew-dashboard/session_send",
+            title="Running: @ajcrew-dashboard/session_send",
+            wire_title="Running: @ajcrew-dashboard/session_send",
             raw_tool_params=raw,
             tool_input=json.dumps(raw),
         ),
@@ -495,14 +495,14 @@ async def test_a_kas_send_named_only_by_its_wire_title_gets_its_card(tmp_path, m
     for row in rows:
         assert row["meta"]["sessionSend"] == {"outcome": "delivered", "target": "chat-9"}
         assert row["meta"]["tool_name"] == "session_send"
-        assert row["meta"]["mcp_server"] == "kirocrew-dashboard"
+        assert row["meta"]["mcp_server"] == "ajcrew-dashboard"
     assert all(p["meta"].get("tool_name") == "session_send" for p in _patches(state))
 
 
 def test_a_permission_request_naming_the_tool_registers_the_call():
     """Mutation guard: drop ``note_call`` from ``_on_permission_request`` and a
     call identified only there never claims its receipt."""
-    from kiro_crew.dashboard.chat_turn import tool_approval
+    from aj_crew.dashboard.chat_turn import tool_approval
 
     turn = MagicMock()
     turn._pending_tool_ids = {}
@@ -512,7 +512,7 @@ def test_a_permission_request_naming_the_tool_registers_the_call():
         kind=EVENT_TOOL_CALL,
         tool_call_id="tc-perm",
         tool_name="session_send",
-        mcp_server_name="kirocrew-dashboard",
+        mcp_server_name="ajcrew-dashboard",
         raw_tool_params={"target": "Planner", "message": "go"},
     )
     import unittest.mock as um
@@ -529,8 +529,8 @@ def test_a_permission_request_naming_the_tool_registers_the_call():
 
 
 def test_a_row_named_by_a_qualified_tool_name_gets_the_canonical_identity():
-    """kiro-cli can report ``kirocrew-dashboard___session_send``; the dashboard
-    draws the card only for exactly ``session_send`` on ``kirocrew-dashboard``.
+    """kiro-cli can report ``ajcrew-dashboard___session_send``; the dashboard
+    draws the card only for exactly ``session_send`` on ``ajcrew-dashboard``.
 
     Mutation guard: rewrite only a missing name and this row keeps the qualified
     one, so its card never draws.
@@ -540,8 +540,8 @@ def test_a_row_named_by_a_qualified_tool_name_gets_the_canonical_identity():
     call = AcpEvent(
         kind=EVENT_TOOL_CALL,
         tool_call_id="tc-q",
-        tool_name="kirocrew-dashboard___session_send",
-        mcp_server_name="kirocrew-dashboard",
+        tool_name="ajcrew-dashboard___session_send",
+        mcp_server_name="ajcrew-dashboard",
         raw_tool_params={"target": "Planner", "message": "go"},
     )
     session_send_receipts.note_call(selectors, call, initial=True)
@@ -549,8 +549,8 @@ def test_a_row_named_by_a_qualified_tool_name_gets_the_canonical_identity():
     row = {
         "ts": "t1",
         "meta": {
-            "tool_name": "kirocrew-dashboard___session_send",
-            "mcp_server": "kirocrew-dashboard",
+            "tool_name": "ajcrew-dashboard___session_send",
+            "mcp_server": "ajcrew-dashboard",
             "mid": "m1",
         },
     }
@@ -560,7 +560,7 @@ def test_a_row_named_by_a_qualified_tool_name_gets_the_canonical_identity():
     )
     assert receipt == {"outcome": "delivered", "target": "chat-9"}
     assert row["meta"]["tool_name"] == "session_send"
-    assert row["meta"]["mcp_server"] == "kirocrew-dashboard"
+    assert row["meta"]["mcp_server"] == "ajcrew-dashboard"
 
 
 # ── relay_spans ──────────────────────────────────────────────────────────────

@@ -1,6 +1,6 @@
 /**
  * Screenshot harness for #26385: choosing KAS on a host where kiro-cli's relay
- * cannot run takes Kiro Crew's own engine, and the gateway downloads it.
+ * cannot run takes Aj Crew's own engine, and the gateway downloads it.
  *
  * Serves the REAL built SPA (website/dist) and answers /api/** from the shared
  * stub map, with `agent.acp_backend` set to `kas` and `GET /api/kas-bundle`
@@ -18,7 +18,7 @@ import { chromiumExecutable } from './lib/chromium-executable.mjs'
 import { serveDist } from './lib/serve-dist.mjs'
 import {
   KAS_BUNDLE_STATUS_FIXTURE,
-  KIROCREW_CONFIG_FIXTURE,
+  AJCREW_CONFIG_FIXTURE,
   json,
   logPageProblems,
   stubDashboardApi,
@@ -28,21 +28,21 @@ const OUT = process.argv[2] || '../temp-screenshots/26385-kas-own-engine'
 const PREFIX = process.argv[3] || 'after'
 
 const CONFIG = {
-  ...KIROCREW_CONFIG_FIXTURE,
-  agent: { ...KIROCREW_CONFIG_FIXTURE.agent, acp_backend: 'kas' },
+  ...AJCREW_CONFIG_FIXTURE,
+  agent: { ...AJCREW_CONFIG_FIXTURE.agent, acp_backend: 'kas' },
 }
 
 const AUTO_ROUTE = {
   route: 'bundle',
   automatic: true,
   reason: 'no_kiro_cli',
-  summary: "KAS runs on Kiro Crew's own engine because kiro-cli is not installed",
+  summary: "KAS runs on Aj Crew's own engine because kiro-cli is not installed",
 }
 
-const OFFLINE_ERROR = 'Kiro Crew could not install its KAS engine: could not fetch '
+const OFFLINE_ERROR = 'Aj Crew could not install its KAS engine: could not fetch '
   + 'https://downloads.example.com/kas/0.66.33/manifest.json: <urlopen error [Errno -3] '
   + 'Temporary failure in name resolution>. If this host is offline, connect it first. Then '
-  + 'retry: run `kirocrew kas install` in a terminal, or press Retry in the dashboard.'
+  + 'retry: run `ajcrew kas install` in a terminal, or press Retry in the dashboard.'
 
 const SCENES = {
   downloading: {
@@ -94,7 +94,7 @@ async function main() {
         // `return json(...), true` -- the comma marks the request handled.
         extra: async (path, route) => {
           if (path === '/api/theme/boot') return json(route, { mode: theme, theme: '' }), true
-          if (path === '/api/config/kirocrew') return json(route, CONFIG), true
+          if (path === '/api/config/ajcrew') return json(route, CONFIG), true
           if (path === '/api/kas-bundle') {
             return (scene.status ? json(route, scene.status) : json(route, { error: 'gateway restarting' }, 503)), true
           }

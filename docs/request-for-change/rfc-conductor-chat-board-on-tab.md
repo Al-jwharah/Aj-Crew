@@ -1,7 +1,7 @@
 ---
 title: Conductor chat board -- no second full task board in a chat whose Dashboard tab already shows it
 status: in-progress
-author: iamwhatever, with kirocrew-worker
+author: iamwhatever, with ajcrew-worker
 created: 2026-10-09
 last-audited: 2026-10-09
 audited-at: aee520e7da
@@ -21,11 +21,11 @@ superseded-by: []
 
 ## 1. Problem
 
-At every milestone (a task starting, finishing, getting stuck, or needing the person) the conductor draws one inline "Task board" widget in the chat: "Needs you", a done-of-total count, one row per task, and a next-step line. The rule is in the "Talking to the person" section of `_CONDUCTOR_SYSTEM_PROMPT` in `src/kiro_crew/agent.py`, added by [#16088](https://github.com/kirodotdev/KiroCrew/pull/16088).
+At every milestone (a task starting, finishing, getting stuck, or needing the person) the conductor draws one inline "Task board" widget in the chat: "Needs you", a done-of-total count, one row per task, and a next-step line. The rule is in the "Talking to the person" section of `_CONDUCTOR_SYSTEM_PROMPT` in `src/aj_crew/agent.py`, added by [#16088](https://github.com/kirodotdev/KiroCrew/pull/16088).
 
-A conductor crewmate whose Dashboard tab shows the `goal-board` template (or `work-kanban`, the same board as columns) already has that board one tab away. Both templates fold their numbers from the work ledger with no model call (`src/kiro_crew/dashboard_templates/builtin/README.md`: `work-kanban` declares no agentic field "because every number it shows has a fold", and `goal-board`'s "numbers are all folded"), so the board the tab draws is always current. The in-chat copy repeats it at every milestone, and the user reported it as duplicated: the chat fills with tables they already have, and the one line that needs them is buried among them.
+A conductor crewmate whose Dashboard tab shows the `goal-board` template (or `work-kanban`, the same board as columns) already has that board one tab away. Both templates fold their numbers from the work ledger with no model call (`src/aj_crew/dashboard_templates/builtin/README.md`: `work-kanban` declares no agentic field "because every number it shows has a fold", and `goal-board`'s "numbers are all folded"), so the board the tab draws is always current. The in-chat copy repeats it at every milestone, and the user reported it as duplicated: the chat fills with tables they already have, and the one line that needs them is buried among them.
 
-The conductor's turn already names the dynamic dashboard page it has adopted, and says when the tab shows it. `turn_block` in `src/kiro_crew/dashboard_agentic.py` emits a `[DASHBOARD]` block naming the template id (`Your dynamic dashboard is template <id> v<n>; the Dashboard tab shows it only with the 'Dynamic Dashboard' Feature Preview on.`), injected by `src/kiro_crew/context_assembly/member.py`.
+The conductor's turn already names the dynamic dashboard page it has adopted, and says when the tab shows it. `turn_block` in `src/aj_crew/dashboard_agentic.py` emits a `[DASHBOARD]` block naming the template id (`Your dynamic dashboard is template <id> v<n>; the Dashboard tab shows it only with the 'Dynamic Dashboard' Feature Preview on.`), injected by `src/aj_crew/context_assembly/member.py`.
 
 ## 2. Goals and non-goals
 

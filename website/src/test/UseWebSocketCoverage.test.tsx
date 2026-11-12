@@ -129,7 +129,7 @@ describe('useWebSocket frame router', () => {
   let originalRevokeObjectUrl: typeof URL.revokeObjectURL
 
   const slotFixture = (key: string, extra: Partial<ChatSlot> = {}): ChatSlot => ({
-    key, title: key, agent: 'kirocrew', ...extra,
+    key, title: key, agent: 'ajcrew', ...extra,
   } as ChatSlot)
 
   beforeEach(() => {

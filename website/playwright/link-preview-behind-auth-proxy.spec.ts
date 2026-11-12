@@ -18,7 +18,7 @@ import { fileURLToPath } from 'node:url'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const PROBE_LINK = 'https://probe.example.com/item/1'
-const PYTHON = process.env.KIROCREW_PYTHON || 'python3'
+const PYTHON = process.env.AJCREW_PYTHON || 'python3'
 
 test.use({ serviceWorkers: 'block' })
 
@@ -26,7 +26,7 @@ test.use({ serviceWorkers: 'block' })
 function srcdocDocument(app: string, entry: string): string {
   const program = [
     'import sys',
-    'from kiro_crew.apps import app_frame as lp',
+    'from aj_crew.apps import app_frame as lp',
     'p = lp._POINTS["linkPreviews"]',
     'sys.stdout.write(lp._frame_html(sys.argv[1], sys.argv[2], "Nprobe0123456789", p.script, srcdoc=True))',
   ].join('\n')

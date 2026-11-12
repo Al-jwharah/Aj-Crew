@@ -33,9 +33,9 @@ from publish_personal_drive_helpers import (
     _stub_profiles,
 )
 
-from kiro_crew import publish_provider as pp
-from kiro_crew.publish import personal_drive as pd
-from kiro_crew.publish_provider import Capability, CapabilityNotSupportedError, PublishError
+from aj_crew import publish_provider as pp
+from aj_crew.publish import personal_drive as pd
+from aj_crew.publish_provider import Capability, CapabilityNotSupportedError, PublishError
 
 # ── shape / contract ─────────────────────────────────────────────────────────
 
@@ -51,7 +51,7 @@ def test_no_per_account_provider_key_is_registered(monkeypatch):
     submit. A row that 400s when clicked is worse than no row."""
     import re as _re
 
-    from kiro_crew.dashboard.handlers import artifacts as art_handlers
+    from aj_crew.dashboard.handlers import artifacts as art_handlers
 
     _stub_profiles(monkeypatch, ["alpha", "beta"], default="alpha")
     pd.register_public_edition_providers()
@@ -127,7 +127,7 @@ def test_sync_model_is_a_token_guarded_mirror():
 
 
 def test_drive_does_not_carry_the_deploy_site_tag(monkeypatch, payload):
-    """The deploy engine groups sites by kirocrew:site and SKIPS resources without it.
+    """The deploy engine groups sites by ajcrew:site and SKIPS resources without it.
     Carrying that tag would list the pooled drive as an ordinary one-off site, where a
     recall empties it and a destroy deletes it -- wiping every published artifact."""
     _stub_profiles(monkeypatch, ["alpha"])
@@ -555,7 +555,7 @@ def test_external_id_is_generated_not_derived(monkeypatch, payload):
 
 
 def test_oversized_artifact_is_refused_with_its_size(monkeypatch, tmp_path):
-    from kiro_crew.artifacts import MAX_CONTENT_BYTES
+    from aj_crew.artifacts import MAX_CONTENT_BYTES
 
     _stub_profiles(monkeypatch, ["alpha"])
     _EngineSpy().install(monkeypatch)
@@ -686,7 +686,7 @@ def test_externally_disabled_is_reported_on_a_public_publish(monkeypatch, payloa
     _EngineSpy(enabled=False).install(monkeypatch)
     res = _publish(pd.PersonalDriveProvider(), payload)
     assert "DISABLED" in res.notice
-    assert "not a state Kiro Crew sets" in res.notice
+    assert "not a state Aj Crew sets" in res.notice
 
 
 def test_serving_notice_returns_the_rolling_out_code(monkeypatch):
@@ -1244,7 +1244,7 @@ def test_a_surviving_stale_source_never_overwrites_a_newer_destination(monkeypat
 
 
 def test_the_drive_never_claims_the_site_name_a_user_would_destroy(monkeypatch, payload):
-    """The engine hard-codes kirocrew:site on the create call and it can only be removed
+    """The engine hard-codes ajcrew:site on the create call and it can only be removed
     afterwards, so a window exists where the drive is listed as a deploy site. Named
     "default" that window meant `destroy default` -- the likeliest destroy anyone runs --
     deleting the distribution every published URL depends on."""

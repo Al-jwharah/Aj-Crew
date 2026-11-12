@@ -24,10 +24,10 @@ from fargate_launch_engine_helpers import (
     _spec_taskdef,
 )
 
-from kiro_crew.cloud import fargate_engine
-from kiro_crew.cloud.ec2 import MANAGED_TAG_KEY
-from kiro_crew.cloud.fargate import CREW_TAG_KEY, INTERNAL_ONLY_ENV, TASK_TTL_ENV, spec_binding
-from kiro_crew.cloud.fargate_engine import (
+from aj_crew.cloud import fargate_engine
+from aj_crew.cloud.ec2 import MANAGED_TAG_KEY
+from aj_crew.cloud.fargate import CREW_TAG_KEY, INTERNAL_ONLY_ENV, TASK_TTL_ENV, spec_binding
+from aj_crew.cloud.fargate_engine import (
     DEFAULT_MAX_RUNNING_TASKS,
     DEFAULT_TASK_TTL_SECONDS,
     MANAGED_TAG_VALUE,
@@ -110,7 +110,7 @@ def test_the_default_lifetime_is_the_only_session_length_the_cloud_lane_states()
     moves without the other, two answers to one question are live at once with
     nothing comparing them, which is what this pins.
     """
-    from kiro_crew.cloud import connect
+    from aj_crew.cloud import connect
 
     assert connect._safe_ttl("nonsense") == "6h"
     assert DEFAULT_TASK_TTL_SECONDS == 6 * 60 * 60
@@ -171,7 +171,7 @@ def test_a_task_whose_stamp_disagrees_with_its_own_tag_is_left_alone() -> None:
     a DISAGREEMENT fails. Crew attribution is pinned by the colleague tests below.
     """
     plan = _sweep(
-        [_bounded(age=DEFAULT_TASK_TTL_SECONDS + 1, started_by="kirocrew-cloud-kc-someoneelse")]
+        [_bounded(age=DEFAULT_TASK_TTL_SECONDS + 1, started_by="ajcrew-cloud-kc-someoneelse")]
     )
     assert plan.stop == ()
     assert plan.running == ()
@@ -318,8 +318,8 @@ def test_reap_removes_the_expired_tasks_registry_row(monkeypatch, tmp_path) -> N
     it runs on every provision, so a crew that outlives the default TTL is stopped
     by the next launch. Leaving its row puts a dead crew in the list, and the TTL
     sweep is not a teardown, so nothing else comes along to prune it."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    from kiro_crew.instances.registry import InstancesRegistry
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    from aj_crew.instances.registry import InstancesRegistry
 
     reg = InstancesRegistry(tmp_path / "instances.json")
     reg.add(
@@ -599,7 +599,7 @@ def test_mutation_the_stamp_must_still_agree_with_the_tag(monkeypatch) -> None:
     does not stand in for it -- that conflation is what left the crew case open.
     """
     foreign = _aged_task()
-    foreign["startedBy"] = "kirocrew-cloud-kc-someoneelse"
+    foreign["startedBy"] = "ajcrew-cloud-kc-someoneelse"
     double = _EcsDouble()
     double.tasks_for_teardown = [foreign]
     _patch_aws(monkeypatch, double)

@@ -10,8 +10,8 @@ Pins the Dashboard tab's "Waiting on you" list:
 
 from __future__ import annotations
 
-from kiro_crew.dashboard import member_waiting
-from kiro_crew.history import HUMAN_TURN_META_KEY
+from aj_crew.dashboard import member_waiting
+from aj_crew.history import HUMAN_TURN_META_KEY
 
 ASK = "Open a PR for the docs fix? [OPTIONS: Open the PR | Not yet]"
 
@@ -131,7 +131,7 @@ def test_an_item_counts_the_choices_it_cut():
 
 
 def test_the_producer_shares_the_folds_bounds():
-    from kiro_crew.crew_log import entry_types as et
+    from aj_crew.crew_log import entry_types as et
 
     assert member_waiting.TEXT_MAX_CHARS == et.CREWMATE_TEXT_LIMIT
     assert member_waiting.MAX_OPTIONS == et.CREWMATE_OPTION_LIMIT
@@ -164,7 +164,7 @@ class _Cards:
 
 
 def _with_cards(monkeypatch, cards):
-    from kiro_crew.dashboard import change_cards
+    from aj_crew.dashboard import change_cards
 
     monkeypatch.setattr(change_cards, "card_store_for", lambda _s: _Cards(cards))
 
@@ -192,7 +192,7 @@ def test_a_press_still_answers_once_its_card_is_dismissed_or_past_its_ttl(tmp_pa
     still answered the question, so the question does not come back."""
     from collections import OrderedDict
 
-    from kiro_crew.dashboard import change_cards
+    from aj_crew.dashboard import change_cards
 
     store = change_cards.CardStore(tmp_path / "cards.json", key=lambda: b"k" * 32)
     store._loaded = True

@@ -12,7 +12,7 @@ import logging
 
 import pytest
 
-from kiro_crew.mcp_gateway import manager as mgr
+from aj_crew.mcp_gateway import manager as mgr
 
 
 def _manager(tmp_path) -> mgr.GatewayManager:

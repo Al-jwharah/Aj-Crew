@@ -19,9 +19,9 @@ import re
 
 import pytest
 
-from kiro_crew import image_artifacts
-from kiro_crew.messaging import outbound_files as of
-from kiro_crew.widget_parse import mask_inline_code
+from aj_crew import image_artifacts
+from aj_crew.messaging import outbound_files as of
+from aj_crew.widget_parse import mask_inline_code
 
 #: The pattern itself, held before any test swaps the module attribute.
 _IMAGE_MD_RE = of.IMAGE_MD_RE

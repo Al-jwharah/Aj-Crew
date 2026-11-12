@@ -13,10 +13,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.chat_utils import _collapse_wire_rows
-from kiro_crew.history import ConversationLog
-from kiro_crew.testing.fixtures import seeded_home
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.chat_utils import _collapse_wire_rows
+from aj_crew.history import ConversationLog
+from aj_crew.testing.fixtures import seeded_home
 
 KEY = "dashboard_long-history"
 ROTATED_ROWS = 60
@@ -77,8 +77,8 @@ def test_sessions_long_history_advertises_a_reachable_earlier_page() -> None:
 
 def test_the_shipped_segment_matches_what_rotation_writes_today(tmp_path, monkeypatch) -> None:
     """The fixture's archive segment is real writer output, not authored bytes."""
-    monkeypatch.setattr("kiro_crew.history._SESSION_MAX_BYTES", 400)
-    monkeypatch.setattr("kiro_crew.history._SESSION_KEEP_LINES", 3)
+    monkeypatch.setattr("aj_crew.history._SESSION_MAX_BYTES", 400)
+    monkeypatch.setattr("aj_crew.history._SESSION_KEEP_LINES", 3)
     fresh = ConversationLog(base_dir=tmp_path)
     for index in range(20):
         fresh.append(KEY, "user", f"row {index:02d} with enough text to outgrow the budget")
@@ -107,7 +107,7 @@ def test_sessions_long_history_turns_session_summaries_on() -> None:
     config says nothing about it never shows the tab.
     """
     with seeded_home("sessions-long-history"):
-        assert KiroCrewConfig.load().session_summary.enabled is True
+        assert AjCrewConfig.load().session_summary.enabled is True
 
 
 def test_sessions_long_history_ends_on_a_long_multi_section_reply() -> None:

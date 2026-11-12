@@ -20,7 +20,7 @@ What it does and does not check structurally, since a reader will assume more
 than is here.  It DOES require each bucket's contract table to be the first
 table under its heading, reject a second backend-shaped table in the same
 bucket, verify the markdown rule row's width, resolve every Column-meaning row's
-CONSTANT NAME against :mod:`kiro_crew.acp_backends` and confirm the documented
+CONSTANT NAME against :mod:`aj_crew.acp_backends` and confirm the documented
 value matches the real one, and require bucket numbering to be consecutive from
 1 and to reach at least 9.  It does NOT check heading titles, cell padding, or
 prose -- a bucket renamed but still numbered passes.
@@ -38,7 +38,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from kiro_crew import acp_backends
+from aj_crew import acp_backends
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _DOC = _REPO_ROOT / "docs" / "system-specs" / "modules" / "agent-host-contract.md"
@@ -119,7 +119,7 @@ def _column_meaning() -> tuple[dict[str, str], list[str]]:
         if actual is None:
             problems.append(
                 f"line {i}: Column-meaning row names {const}, which does not exist in "
-                "kiro_crew.acp_backends"
+                "aj_crew.acp_backends"
             )
             continue
         if actual != documented:

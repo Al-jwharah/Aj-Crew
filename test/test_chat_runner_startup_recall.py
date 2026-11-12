@@ -25,12 +25,12 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state, drain_background_tasks
 
-from kiro_crew.config.memory_sections import STARTUP_RECALL_TIMEOUT_MAX_SECS
-from kiro_crew.context import ContextBuilder
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.memory import MemoryStore
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.skills import SkillsLoader
+from aj_crew.config.memory_sections import STARTUP_RECALL_TIMEOUT_MAX_SECS
+from aj_crew.context import ContextBuilder
+from aj_crew.dashboard import chat_runner
+from aj_crew.memory import MemoryStore
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.skills import SkillsLoader
 
 MESSAGE = "Summarize the deploy checklist."
 

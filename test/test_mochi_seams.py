@@ -18,9 +18,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps.builtins.mochi import watchlist_file as wf
-from kiro_crew.apps.builtins.mochi.pinned_files_service import PinnedFilesService
-from kiro_crew.apps.builtins.mochi.watchlist_service import (
+from aj_crew.apps.builtins.mochi import watchlist_file as wf
+from aj_crew.apps.builtins.mochi.pinned_files_service import PinnedFilesService
+from aj_crew.apps.builtins.mochi.watchlist_service import (
     GUARD_INTERVAL_MS,
     REMINDER_INTERVAL_MS,
     WatchlistService,
@@ -58,7 +58,7 @@ def _service(tmp_path: Path, cb: _Callbacks) -> WatchlistService:
 
 def _wl_path(tmp_path: Path) -> Path:
     """The path the service itself computes from data_dir."""
-    from kiro_crew.apps.builtins.mochi.watchlist_service import _WATCHLIST_FILE
+    from aj_crew.apps.builtins.mochi.watchlist_service import _WATCHLIST_FILE
 
     return tmp_path / _WATCHLIST_FILE
 
@@ -133,7 +133,7 @@ class TestPowerEventSeam:
     """lock-screen / suspend must pause the autonomous core."""
 
     def test_lock_and_suspend_pause_then_resume(self) -> None:
-        from kiro_crew.apps.builtins.mochi.idle_manager import IdleManager
+        from aj_crew.apps.builtins.mochi.idle_manager import IdleManager
 
         paused: list[bool] = []
 
@@ -153,7 +153,7 @@ class TestPowerEventSeam:
         assert paused == [True, False], "unlocking must resume"
 
     def test_unknown_event_is_ignored(self) -> None:
-        from kiro_crew.apps.builtins.mochi.idle_manager import IdleManager
+        from aj_crew.apps.builtins.mochi.idle_manager import IdleManager
 
         seen: list[str] = []
 
@@ -185,7 +185,7 @@ class TestPinsSurviveTheOtherWriter:
 
     def _write_disk_pin(self, tmp_path: Path, path: str) -> None:
         """What the MCP tool does: a locked read-modify-write on the file."""
-        from kiro_crew.apps.builtins.mochi.pinned_files_service import (
+        from aj_crew.apps.builtins.mochi.pinned_files_service import (
             DATA_FILE_NAME,
             pins_mutation,
         )
@@ -214,7 +214,7 @@ class TestPinsSurviveTheOtherWriter:
         assert paths == {a, b}, "the other process's pin must survive"
 
     def test_a_removal_by_the_other_process_is_not_resurrected(self, tmp_path: Path) -> None:
-        from kiro_crew.apps.builtins.mochi.pinned_files_service import (
+        from aj_crew.apps.builtins.mochi.pinned_files_service import (
             DATA_FILE_NAME,
             pins_mutation,
         )
@@ -322,7 +322,7 @@ class TestAPinIsNotAPassiveBookmark:
         assert svc.add_pin(str(target), now_ms=NOW) is True
 
     def test_the_mcp_tool_refuses_a_sensitive_path(self, tmp_path: Path, monkeypatch) -> None:
-        from kiro_crew.apps.builtins.mochi import mcp_server
+        from aj_crew.apps.builtins.mochi import mcp_server
 
         monkeypatch.setattr(mcp_server, "_data_dir", lambda: tmp_path)
         out = mcp_server._tool_pin_file({"path": str(Path.home() / ".aws" / "credentials")})
@@ -342,7 +342,7 @@ class TestPinPersistFailureIsReportedNotSwallowed:
     """
 
     def test_add_pin_persist_failure_returns_false_and_rolls_back(self, tmp_path, monkeypatch):
-        from kiro_crew.apps.builtins.mochi import pinned_files_service as pfs
+        from aj_crew.apps.builtins.mochi import pinned_files_service as pfs
 
         svc = PinnedFilesService(str(tmp_path), lambda channel, *args: None)
         target = tmp_path / "notes.md"
@@ -357,7 +357,7 @@ class TestPinPersistFailureIsReportedNotSwallowed:
         assert svc.get_pins() == []
 
     def test_remove_pin_persist_failure_returns_false_and_keeps_pin(self, tmp_path, monkeypatch):
-        from kiro_crew.apps.builtins.mochi import pinned_files_service as pfs
+        from aj_crew.apps.builtins.mochi import pinned_files_service as pfs
 
         svc = PinnedFilesService(str(tmp_path), lambda channel, *args: None)
         target = tmp_path / "notes.md"
@@ -382,7 +382,7 @@ class TestPinnedToleratesMalformedEntries:
     """
 
     def test_unpin_survives_a_scalar_entry_in_the_list(self, tmp_path):
-        from kiro_crew.apps.builtins.mochi.pinned_files_service import DATA_FILE_NAME
+        from aj_crew.apps.builtins.mochi.pinned_files_service import DATA_FILE_NAME
 
         target = tmp_path / "a.md"
         target.write_text("hi")
@@ -401,8 +401,8 @@ class TestStatsPersistFailureKeepsDirty:
     """
 
     def test_flush_retains_dirty_when_save_fails(self, tmp_path, monkeypatch):
-        from kiro_crew.apps.builtins.mochi import stats_service as ss
-        from kiro_crew.apps.builtins.mochi.stats_service import StatsService
+        from aj_crew.apps.builtins.mochi import stats_service as ss
+        from aj_crew.apps.builtins.mochi.stats_service import StatsService
 
         svc = StatsService(str(tmp_path))
         svc.mark_dirty(NOW)
@@ -427,7 +427,7 @@ class TestMalformedStatsDoNotThrow:
     def test_truthy_non_dict_nested_value_falls_back(self):
         import json as _json
 
-        from kiro_crew.apps.builtins.mochi.stats_service import (
+        from aj_crew.apps.builtins.mochi.stats_service import (
             create_default_stats,
             parse_stats_json,
         )
@@ -445,24 +445,24 @@ class TestWatchlistInputsAreValidated:
     crashing the renderer."""
 
     def _schema(self):
-        from kiro_crew.apps.builtins.mochi import mcp_server
+        from aj_crew.apps.builtins.mochi import mcp_server
 
         return mcp_server._INPUT_SCHEMAS["update_watchlist"]
 
     def test_a_mistyped_label_is_rejected(self):
-        from kiro_crew.validation import ValidationError, validate_mcp_tool_arguments
+        from aj_crew.validation import ValidationError, validate_mcp_tool_arguments
 
         with pytest.raises(ValidationError):
             validate_mcp_tool_arguments({"add": [{"label": {}}]}, self._schema())
 
     def test_an_unknown_field_is_rejected(self):
-        from kiro_crew.validation import ValidationError, validate_mcp_tool_arguments
+        from aj_crew.validation import ValidationError, validate_mcp_tool_arguments
 
         with pytest.raises(ValidationError):
             validate_mcp_tool_arguments({"add": [{"bogus": "x"}]}, self._schema())
 
     def test_a_well_formed_add_and_update_pass(self):
-        from kiro_crew.validation import validate_mcp_tool_arguments
+        from aj_crew.validation import validate_mcp_tool_arguments
 
         validate_mcp_tool_arguments(
             {
@@ -475,7 +475,7 @@ class TestWatchlistInputsAreValidated:
         )
 
     def test_update_requires_an_id(self):
-        from kiro_crew.validation import ValidationError, validate_mcp_tool_arguments
+        from aj_crew.validation import ValidationError, validate_mcp_tool_arguments
 
         with pytest.raises(ValidationError):
             validate_mcp_tool_arguments({"update": [{"status": "done"}]}, self._schema())
@@ -488,8 +488,8 @@ class TestResetIsNotResurrectedByAnInFlightPoll:
     """
 
     def test_merge_write_returns_when_the_queue_was_reset(self, tmp_path, monkeypatch):
-        from kiro_crew.apps.builtins.mochi import queue_file as qf
-        from kiro_crew.apps.builtins.mochi.queue_poller import QueuePoller
+        from aj_crew.apps.builtins.mochi import queue_file as qf
+        from aj_crew.apps.builtins.mochi.queue_poller import QueuePoller
 
         class _CB:
             async def spawn_agent(self, prompt: str) -> str:  # pragma: no cover

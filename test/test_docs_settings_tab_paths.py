@@ -1,6 +1,6 @@
 """User guides name Settings tabs the dashboard really has.
 
-The guides under ``src/kiro_crew/docs`` ship in the package and tell a person
+The guides under ``src/aj_crew/docs`` ship in the package and tell a person
 where to click: ``Settings → Browser``, ``Settings → Privacy``. The tabs are the
 entries of the ``tabs`` list in ``website/src/pages/SettingsPage.tsx``, each
 labelled through an i18n key. A guide that writes ``Settings → <name>`` for a
@@ -21,7 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 SETTINGS_PAGE = ROOT / "website" / "src" / "pages" / "SettingsPage.tsx"
 LOCALES = ROOT / "website" / "src" / "i18n" / "locales"
-GUIDES = ROOT / "src" / "kiro_crew" / "docs"
+GUIDES = ROOT / "src" / "aj_crew" / "docs"
 
 # `{ key: 'privacy', ..., label: i18nT('privacyDisclosure.settingsLabel'), ...`
 _TAB_LABEL_KEY_RE = re.compile(r"\{\s*key:\s*'[a-z-]+',[^}]*?\blabel:\s*i18nT\('([^']+)'\)")

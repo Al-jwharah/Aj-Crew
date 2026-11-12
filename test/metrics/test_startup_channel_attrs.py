@@ -9,8 +9,8 @@ cannot turn a metric attribute into an unbounded label.
 
 from unittest.mock import patch
 
-from kiro_crew.messaging.link import TELEMETRY_CHANNELS, telemetry_channel_of
-from kiro_crew.session import POOL_DECISIONS
+from aj_crew.messaging.link import TELEMETRY_CHANNELS, telemetry_channel_of
+from aj_crew.session import POOL_DECISIONS
 
 
 class _Rec:
@@ -86,7 +86,7 @@ class TestStartupAttrs:
     """The kiro startup emit carries channel + resumed on every datapoint."""
 
     def _emit(self, *, session_key=None, meta=None, outcome="ready"):
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         rec = _Rec()
         provider = AcpProvider.__new__(AcpProvider)  # emitter only, no spawn
@@ -94,7 +94,7 @@ class TestStartupAttrs:
             client = type("_C", (), {"_session_key": session_key})()
             provider._client = client
         phases = {"spawn_init": 1400.0, "session_load": 2100.0}
-        with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+        with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
             provider._emit_kiro_startup_metric(0.0, phases, outcome, meta)
         return rec
 
@@ -134,7 +134,7 @@ class TestStartupAttrs:
             meta={"resumed": False, "resume_outcome": "fallback_replay"},
         )
         assert (
-            "kirocrew.session.resume.outcome",
+            "ajcrew.session.resume.outcome",
             {
                 "outcome": "fallback_replay",
                 "channel": "telegram",
@@ -175,13 +175,13 @@ class TestChannelSurvivesClientSwap:
     """
 
     def _emit_after_swap(self, original_key, meta):
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         rec = _Rec()
         provider = AcpProvider.__new__(AcpProvider)
         # Stand in for the post-startup provider: key present but empty.
         provider._client = type("_Swapped", (), {"_session_key": ""})()
-        with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+        with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
             provider._emit_kiro_startup_metric(0.0, {"spawn_init": 1.0}, "ready", meta)
         return rec
 
@@ -205,12 +205,12 @@ class TestBackendAttribute:
     """
 
     def _emit(self, meta):
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         rec = _Rec()
         provider = AcpProvider.__new__(AcpProvider)
         provider._client = type("_Swapped", (), {"_session_key": "", "backend": "kas"})()
-        with patch("kiro_crew.metrics.provider.get_recorder", return_value=rec):
+        with patch("aj_crew.metrics.provider.get_recorder", return_value=rec):
             provider._emit_kiro_startup_metric(0.0, {"spawn_init": 1.0}, "ready", meta)
         return rec
 
@@ -239,8 +239,8 @@ class TestPrefixDrift:
     """
 
     def test_every_session_manager_prefix_has_a_label(self):
-        from kiro_crew import session as session_mod
-        from kiro_crew.messaging.link import telemetry_channel_of
+        from aj_crew import session as session_mod
+        from aj_crew.messaging.link import telemetry_channel_of
 
         minted = [
             session_mod._SUBAGENT_PREFIX,
@@ -255,8 +255,8 @@ class TestPrefixDrift:
         )
 
     def test_singleton_keys_have_labels(self):
-        from kiro_crew import session as session_mod
-        from kiro_crew.messaging.link import telemetry_channel_of
+        from aj_crew import session as session_mod
+        from aj_crew.messaging.link import telemetry_channel_of
 
         for key in (
             session_mod.BACKGROUND_KEY,
@@ -291,7 +291,7 @@ class TestPoolDecisions:
         import ast
         import inspect
 
-        from kiro_crew.session_allocation_parts import get_or_create
+        from aj_crew.session_allocation_parts import get_or_create
 
         tree = ast.parse(inspect.getsource(get_or_create))
         assigned = {
@@ -308,35 +308,35 @@ class TestPoolDecisions:
         assert assigned | {"hit", "miss_empty"} <= POOL_DECISIONS
 
     def test_shared_scratch_bypass_is_counted_by_name(self):
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager.__new__(SessionManager)
         rec = _Rec()
-        with patch("kiro_crew.session.get_recorder", return_value=rec):
+        with patch("aj_crew.session.get_recorder", return_value=rec):
             mgr._record_pool_decision("bypass_shared_scratch", "subagent:abc")
         assert [a["outcome"] for _, a in rec.counters] == ["bypass_shared_scratch"]
 
     def test_unmodelled_decision_folds_to_other(self):
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager.__new__(SessionManager)
         rec = _Rec()
         # session.py binds get_recorder at module import, so patch it there.
-        with patch("kiro_crew.session.get_recorder", return_value=rec):
+        with patch("aj_crew.session.get_recorder", return_value=rec):
             mgr._record_pool_decision("something_new", "telegram:1")
         assert rec.counters == [
             (
-                "kirocrew.session.pool.decision",
+                "ajcrew.session.pool.decision",
                 {"outcome": "other", "channel": "telegram"},
             )
         ]
 
     def test_decision_is_tagged_with_the_channel(self):
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         mgr = SessionManager.__new__(SessionManager)
         rec = _Rec()
-        with patch("kiro_crew.session.get_recorder", return_value=rec):
+        with patch("aj_crew.session.get_recorder", return_value=rec):
             mgr._record_pool_decision("bypass_resume", "telegram:99:1")
             mgr._record_pool_decision("hit", "dashboard:chat-3")
         assert [a["channel"] for _, a in rec.counters] == ["telegram", "dashboard"]

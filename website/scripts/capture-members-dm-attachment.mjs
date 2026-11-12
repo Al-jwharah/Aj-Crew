@@ -72,8 +72,8 @@ const PRELOADED_SHORT = [
 ]
 
 const MEMBERS = [
-  { name: 'radar', slug: 'radar', bound: true, slot_key: 'member-radar', running: false, kiro_agent: 'kirocrew-autofix', workspace: 'autofix', memory_store: 'default', model: '', last_active_ts: 1000, last_message: CAPTION },
-  { name: 'scribe', slug: 'scribe', bound: false, slot_key: '', running: false, kiro_agent: 'kirocrew-lite', workspace: 'docs', memory_store: 'default', model: '' },
+  { name: 'radar', slug: 'radar', bound: true, slot_key: 'member-radar', running: false, kiro_agent: 'ajcrew-autofix', workspace: 'autofix', memory_store: 'default', model: '', last_active_ts: 1000, last_message: CAPTION },
+  { name: 'scribe', slug: 'scribe', bound: false, slot_key: '', running: false, kiro_agent: 'ajcrew-lite', workspace: 'docs', memory_store: 'default', model: '' },
 ]
 
 const browser = await chromium.launch()
@@ -95,7 +95,7 @@ async function routeApi(page, slotKey) {
         : route.fulfill({ status: 404, body: 'not the fixture image' })
     }
     if (path === '/api/members') {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ members: MEMBERS, default_agent: 'kirocrew' }) })
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ members: MEMBERS, default_agent: 'ajcrew' }) })
     }
     const thread = path.match(/^\/api\/members\/([^/]+)\/thread$/)
     if (thread) {
@@ -113,7 +113,7 @@ async function routeApi(page, slotKey) {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ key: slotKey, title: 'radar', running: false, has_more: false, total: rows.length, messages: rows }) })
     }
     if (path === '/api/agents') {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ agents: [], default_agent: 'kirocrew' }) })
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ agents: [], default_agent: 'ajcrew' }) })
     }
     if (/\/api\/chat\/(tags|pins|folders|tag-columns)$/.test(path)) return route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
     const isList = /commands|skills|agents$|sessions|files|history|models|artifacts|folders|slots$|crons|webhooks/.test(path)

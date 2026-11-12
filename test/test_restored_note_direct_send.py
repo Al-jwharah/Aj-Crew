@@ -33,7 +33,7 @@ def _held(slot, note_id: str, text: str) -> None:
 
 @pytest.fixture
 def idle_state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.get_or_create_slot(_SLOT)
@@ -43,7 +43,7 @@ def idle_state(tmp_path, monkeypatch):
         seen.append([dict(entry) for entry in slot._pending_context])
         slot.append("done", "", "done", broadcast=False)
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", run_chat)
     return state, seen
 
 

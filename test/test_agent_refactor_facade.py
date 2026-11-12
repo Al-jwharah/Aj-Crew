@@ -1,8 +1,8 @@
-"""``kiro_crew.agent`` stays the agent-materialization patch seam after the split.
+"""``aj_crew.agent`` stays the agent-materialization patch seam after the split.
 
-The materialization is composed from the ``kiro_crew.agent_materialization`` owners,
-and ``kiro_crew.agent`` re-exports every moved name. Tests and src keep reading and
-patching ``kiro_crew.agent.<name>``; whichever module defines a name, a patch there has
+The materialization is composed from the ``aj_crew.agent_materialization`` owners,
+and ``aj_crew.agent`` re-exports every moved name. Tests and src keep reading and
+patching ``aj_crew.agent.<name>``; whichever module defines a name, a patch there has
 to reach the code that reads it.
 
 The seam rows patch ONE name on the facade with a stub that raises ``_Reached`` and
@@ -33,8 +33,8 @@ from unittest import mock
 import pytest
 import test_agent_refactor_create_guard as create_guard
 
-from kiro_crew import agent, agent_materialization
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import agent, agent_materialization
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 _AGENT_FILE = Path(agent.__file__)
 _OWNER_DIR = Path(agent_materialization.__file__).parent
@@ -111,7 +111,7 @@ def _opt_in_entry(tmp_path: Path, mp: pytest.MonkeyPatch) -> Callable[[], object
 
 
 def _conductor_servers(tmp_path: Path, mp: pytest.MonkeyPatch) -> Callable[[], object]:
-    mp.setattr(agent, "_kirocrew_mcp_invocation", _value(("kirocrew", ["mcp-dashboard"])))
+    mp.setattr(agent, "_ajcrew_mcp_invocation", _value(("ajcrew", ["mcp-dashboard"])))
     return lambda: agent._conductor_mcp_servers({})
 
 
@@ -127,7 +127,7 @@ SEAMS = [
     pytest.param("sel", _hook_rejected, id="hook_rejected<-sel"),
     pytest.param("_extra_mcp_servers", _crew_owned, id="crew_owned<-_extra_mcp_servers"),
     pytest.param(
-        "_kirocrew_mcp_invocation", _opt_in_entry, id="opt_in_entry<-_kirocrew_mcp_invocation"
+        "_ajcrew_mcp_invocation", _opt_in_entry, id="opt_in_entry<-_ajcrew_mcp_invocation"
     ),
     # A moved name another owner reads as ``<owner>.<name>``.
     pytest.param(
@@ -227,7 +227,7 @@ def test_install_agent_is_still_the_rebuild() -> None:
 
 
 def test_a_write_through_the_facade_lands_on_the_owner_and_is_restored() -> None:
-    from kiro_crew.agent_materialization import service_agents, worker_agent
+    from aj_crew.agent_materialization import service_agents, worker_agent
 
     original = service_agents._install_guest_agent
     with pytest.MonkeyPatch.context() as patched:
@@ -280,7 +280,7 @@ def owner_guard() -> Iterator[Callable[[ModuleType, str], object]]:
 def test_nested_mock_patches_unwind_one_level_at_a_time(
     owner_guard: Callable[[ModuleType, str], object],
 ) -> None:
-    from kiro_crew.agent_materialization import managed_mcp
+    from aj_crew.agent_materialization import managed_mcp
 
     original = owner_guard(managed_mcp, "crew_owned_mcp_servers")
     outer, inner = _value("outer"), _value("inner")
@@ -295,10 +295,10 @@ def test_nested_mock_patches_unwind_one_level_at_a_time(
 def test_mock_patch_of_a_dotted_target_lands_on_the_owner_and_is_restored(
     owner_guard: Callable[[ModuleType, str], object],
 ) -> None:
-    from kiro_crew.agent_materialization import auto_approve
+    from aj_crew.agent_materialization import auto_approve
 
     original = owner_guard(auto_approve, "_may_auto_approve")
-    with mock.patch("kiro_crew.agent._may_auto_approve") as stub:
+    with mock.patch("aj_crew.agent._may_auto_approve") as stub:
         assert auto_approve._may_auto_approve is stub
     assert auto_approve._may_auto_approve is original
     assert "_may_auto_approve" not in vars(agent)
@@ -307,7 +307,7 @@ def test_mock_patch_of_a_dotted_target_lands_on_the_owner_and_is_restored(
 def test_monkeypatch_and_mock_nest_either_way_through_the_facade(
     owner_guard: Callable[[ModuleType, str], object],
 ) -> None:
-    from kiro_crew.agent_materialization import conductor_agents
+    from aj_crew.agent_materialization import conductor_agents
 
     original = owner_guard(conductor_agents, "_install_conductor_agent")
     by_monkeypatch, by_mock = _value("monkeypatch"), _value("mock")
@@ -331,7 +331,7 @@ def test_monkeypatch_and_mock_nest_either_way_through_the_facade(
 def test_monkeypatch_delattr_through_the_facade_removes_and_restores(
     owner_guard: Callable[[ModuleType, str], object],
 ) -> None:
-    from kiro_crew.agent_materialization import mcp_aliases
+    from aj_crew.agent_materialization import mcp_aliases
 
     original = owner_guard(mcp_aliases, "_set_tool_aliases")
     with pytest.MonkeyPatch.context() as patched:
@@ -344,7 +344,7 @@ def test_monkeypatch_delattr_through_the_facade_removes_and_restores(
 def test_deleting_a_name_through_the_facade_deletes_it_on_the_owner(
     owner_guard: Callable[[ModuleType, str], object],
 ) -> None:
-    from kiro_crew.agent_materialization import fork_refresh
+    from aj_crew.agent_materialization import fork_refresh
 
     owner_guard(fork_refresh, "_FORK_REFRESH_WAIT_SECS")
     del agent._FORK_REFRESH_WAIT_SECS
@@ -356,7 +356,7 @@ def test_every_read_resolves_the_owner_through_the_import_system() -> None:
     """Each read asks ``importlib`` for the owner, so nothing here can go stale: it
     answers from ``sys.modules`` and waits on the import lock while an owner's body
     is still running, which a mapping held here could do neither of."""
-    from kiro_crew.agent_materialization import worker_agent
+    from aj_crew.agent_materialization import worker_agent
 
     calls: list[str] = []
     real_import = importlib.import_module
@@ -436,7 +436,7 @@ def test_every_public_reexport_is_declared_for_a_star_import() -> None:
 def test_a_star_import_binds_the_moved_public_names(tmp_path: Path) -> None:
     """Run for real, from a probe module file loaded by the import machinery."""
     probe = tmp_path / "agent_star_probe.py"
-    probe.write_text("from kiro_crew.agent import *  # noqa: F401,F403\n", encoding="utf-8")
+    probe.write_text("from aj_crew.agent import *  # noqa: F401,F403\n", encoding="utf-8")
     spec = importlib.util.spec_from_file_location("agent_star_probe", probe)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -453,7 +453,7 @@ def test_a_star_import_binds_the_moved_public_names(tmp_path: Path) -> None:
 
 # --------------------------------------------------------------------------- #
 # One home per name. A copy of a core seam, or of another owner's name, would miss
-# every patch of ``kiro_crew.agent.<name>``.
+# every patch of ``aj_crew.agent.<name>``.
 # --------------------------------------------------------------------------- #
 
 #: Names an owner binds by import although the core or another owner binds them
@@ -531,7 +531,7 @@ def _names_patched_on_the_facade() -> set[str]:
 
 
 def test_every_name_patched_on_the_facade_has_one_home() -> None:
-    """Whatever the suite patches on ``kiro_crew.agent`` is bound by exactly one
+    """Whatever the suite patches on ``aj_crew.agent`` is bound by exactly one
     module, so the patch reaches every reader; and no shared import is patched. A
     module-valued name is refused by the facade instead (see below)."""
     patched = _names_patched_on_the_facade()
@@ -549,14 +549,14 @@ def test_every_name_patched_on_the_facade_has_one_home() -> None:
 def test_the_write_scan_can_fail() -> None:
     """The scan sees each patch spelling, so an empty offender list means absence."""
     source = (
-        "from kiro_crew import agent\n"
+        "from aj_crew import agent\n"
         "from unittest import mock\n"
         "def test_x(monkeypatch):\n"
         '    monkeypatch.setattr(agent, "a_name", 1)\n'
-        '    monkeypatch.setattr("kiro_crew.agent.b_name", 1)\n'
+        '    monkeypatch.setattr("aj_crew.agent.b_name", 1)\n'
         '    monkeypatch.delattr(agent, "c_name")\n'
         '    mock.patch.object(agent, "d_name")\n'
-        '    mock.patch("kiro_crew.agent.e_name")\n'
+        '    mock.patch("aj_crew.agent.e_name")\n'
         '    monkeypatch.setattr(other, "f_name", 1)\n'
     )
     assert _facade_writes(ast.parse(source)) == {"a_name", "b_name", "c_name", "d_name", "e_name"}
@@ -588,7 +588,7 @@ def test_owners_import_the_core_and_their_siblings_only_as_modules() -> None:
             module = node.module or ""
             if module == agent.__name__ or module.startswith(f"{agent_materialization.__name__}."):
                 offenders.append(f"{stem}: from {module} import ...")
-            elif module == "kiro_crew":
+            elif module == "aj_crew":
                 for alias in node.names:
                     if alias.name == "agent" and alias.asname != "agent_mod":
                         offenders.append(f"{stem}: agent imported as {alias.asname}")
@@ -604,15 +604,15 @@ def test_owners_import_the_core_and_their_siblings_only_as_modules() -> None:
 #: probe load on use), and the packages agent materialization must not depend on
 #: (the harnesses, providers, dashboard and session) stay out of it altogether.
 _FUNCTION_LOCAL_ONLY = (
-    "kiro_crew.acp",
-    "kiro_crew.agent_sdk",
-    "kiro_crew.apps",
-    "kiro_crew.connections",
-    "kiro_crew.dashboard",
-    "kiro_crew.kiro_cli",
-    "kiro_crew.providers",
-    "kiro_crew.secrets",
-    "kiro_crew.session",
+    "aj_crew.acp",
+    "aj_crew.agent_sdk",
+    "aj_crew.apps",
+    "aj_crew.connections",
+    "aj_crew.dashboard",
+    "aj_crew.kiro_cli",
+    "aj_crew.providers",
+    "aj_crew.secrets",
+    "aj_crew.session",
 )
 
 
@@ -632,27 +632,27 @@ def test_owners_keep_boot_path_imports_function_local() -> None:
 
 
 def test_the_seams_that_need_a_call_time_import_still_import_at_call_time() -> None:
-    """Tests patch ``kiro_crew.kiro_cli``'s ``installed_kiro_cli_version`` and
+    """Tests patch ``aj_crew.kiro_cli``'s ``installed_kiro_cli_version`` and
     ``resolve_kiro_cli``, the install probe's ``_kas_bundle_route``, the engine
     bundle's ``installed_bundle`` and the SDK driver's permission helper at their
     source; that reaches the permission writer and its gate only while they import
     them when they run."""
-    from kiro_crew.agent_materialization import auto_approve
+    from aj_crew.agent_materialization import auto_approve
 
     gate = inspect.getsource(auto_approve._spec_permissions_accepted)
-    assert "from kiro_crew.agent_sdk.backend_install import" in gate
+    assert "from aj_crew.agent_sdk.backend_install import" in gate
     accepts = inspect.getsource(auto_approve._kiro_cli_accepts_permissions)
-    assert "from kiro_crew.kiro_cli import" in accepts
+    assert "from aj_crew.kiro_cli import" in accepts
     assert "installed_kiro_cli_version" in accepts
-    assert "from kiro_crew.kiro_cli import kiro_cli_installed" in gate
+    assert "from aj_crew.kiro_cli import kiro_cli_installed" in gate
     engine = inspect.getsource(auto_approve._bundled_engine_accepts_permissions)
-    assert "from kiro_crew.agent_sdk import kas_bundle" in engine
+    assert "from aj_crew.agent_sdk import kas_bundle" in engine
     writer = inspect.getsource(auto_approve._write_derived_permissions)
-    assert "from kiro_crew.agent_sdk.drivers.acp import" in writer
+    assert "from aj_crew.agent_sdk.drivers.acp import" in writer
 
 
 def test_no_other_src_module_imports_an_owner() -> None:
-    """Callers reach the materialization through ``kiro_crew.agent``; the owners are
+    """Callers reach the materialization through ``aj_crew.agent``; the owners are
     its implementation, so moving a name between them stays invisible to src."""
     offenders: list[str] = []
     for path in sorted(_SRC.rglob("*.py")):
@@ -719,17 +719,17 @@ def _fresh(code: str) -> list[str]:
         # The connections registry stays off the import path, as it was.
         pytest.param(
             "import sys\n"
-            "import kiro_crew.agent as agent\n"
+            "import aj_crew.agent as agent\n"
             "owners = sorted(agent._EXPORTS_BY_OWNER)\n"
             "print(','.join(m for m in owners if m not in sys.modules))\n"
-            "print('kiro_crew.connections.registry' in sys.modules)\n",
+            "print('aj_crew.connections.registry' in sys.modules)\n",
             ["", "False"],
             id="test_importing_the_facade_loads_every_owner_and_nothing_heavier",
         ),
         pytest.param(
             "import sys\n"
-            "import kiro_crew.agent_materialization.worker_agent as worker\n"
-            "import kiro_crew.agent as agent\n"
+            "import aj_crew.agent_materialization.worker_agent as worker\n"
+            "import aj_crew.agent as agent\n"
             "print(agent.rederive_worker_agent is worker.rederive_worker_agent)\n"
             "print(sorted(set(agent._EXPORTS_BY_OWNER) - set(sys.modules)))\n",
             ["True", "[]"],
@@ -816,7 +816,7 @@ def test_a_loaded_owner_is_read_without_a_fresh_import(
 ) -> None:
     """Once loaded, an owner answers from ``sys.modules``: reading, writing and
     undoing a forwarded name never re-executes an import."""
-    from kiro_crew.agent_materialization import service_agents
+    from aj_crew.agent_materialization import service_agents
 
     owner_guard(service_agents, "_install_lite_agent_fallback")
     loaded = set(sys.modules)
@@ -858,7 +858,7 @@ def test_the_refusal_goes_by_name_so_a_module_stub_is_still_undone(
 ) -> None:
     """A forwarded function patched with a module object is an ordinary patch: it is
     written and undone. A module-valued name stays refused meanwhile, both ways."""
-    from kiro_crew.agent_materialization import conductor_agents
+    from aj_crew.agent_materialization import conductor_agents
 
     original = owner_guard(conductor_agents, "_install_pipeline_conductor_agent")
     stub = ModuleType("installer_stub")

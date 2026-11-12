@@ -18,7 +18,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.security import pem_scan, redaction
+from aj_crew.security import pem_scan, redaction
 
 # The BEGIN markers are assembled from their dashes, so no line of this file holds a whole
 # private-key header for a secret scanner to read.

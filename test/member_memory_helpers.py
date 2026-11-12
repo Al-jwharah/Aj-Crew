@@ -23,14 +23,14 @@ from aiohttp import streams, web
 from aiohttp.test_utils import make_mocked_request
 from tmpdir_helpers import SHORT_TMP_PREFIX, short_tmp_base
 
-from kiro_crew import memory_stores
-from kiro_crew.atomic_write import on_event_loop
-from kiro_crew.config import loader
-from kiro_crew.context import ContextBuilder
-from kiro_crew.dashboard.handlers import cron
-from kiro_crew.dashboard.handlers._shared import markdown_memory_for_store
-from kiro_crew.memory import MemoryStore
-from kiro_crew.vector_memory import VectorMemoryStore, create_member_database, open_member_database
+from aj_crew import memory_stores
+from aj_crew.atomic_write import on_event_loop
+from aj_crew.config import loader
+from aj_crew.context import ContextBuilder
+from aj_crew.dashboard.handlers import cron
+from aj_crew.dashboard.handlers._shared import markdown_memory_for_store
+from aj_crew.memory import MemoryStore
+from aj_crew.vector_memory import VectorMemoryStore, create_member_database, open_member_database
 
 #: A credential-shaped token for "sensitive document" fixtures.
 DOCUMENT_CREDENTIAL = "AKIAIOSFODNN7EXAMPLE"
@@ -147,7 +147,7 @@ def forget_declared_stores(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture
 def env(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     write_member_home(tmp_path, *MEMBERS)
     forget_declared_stores(monkeypatch)
     tiers = {}
@@ -162,8 +162,8 @@ def env(tmp_path, monkeypatch):
             tier.init()
         tiers[name] = tier
     metadata = {}
-    from kiro_crew.history import ConversationLog
-    from kiro_crew.member_memory_auth import bind_private_session_store
+    from aj_crew.history import ConversationLog
+    from aj_crew.member_memory_auth import bind_private_session_store
 
     history = ConversationLog()
 

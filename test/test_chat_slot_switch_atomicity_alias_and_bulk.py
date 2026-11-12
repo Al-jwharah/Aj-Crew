@@ -17,9 +17,9 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_slot_switch_atomicity_helpers import _MODEL_A, _MODEL_B, _make_app, _mock_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard.chat_handlers import _slot_switch_session_lock
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.testing.wait import await_until, finished, until_parked
+from aj_crew.dashboard.chat_handlers import _slot_switch_session_lock
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.testing.wait import await_until, finished, until_parked
 
 _LINKED_KEY = "slack:8442.001"
 
@@ -99,7 +99,7 @@ class TestAliasSlotSwitchSerialization:
         def _boom():
             raise RuntimeError("config unreadable")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", _boom)
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", _boom)
         slot = _ChatSlot("alias-a")
         slot.agent = "old-agent"
         slot.linked_session_key = _LINKED_KEY
@@ -169,7 +169,7 @@ class TestAliasSlotSwitchSerialization:
     @pytest.mark.asyncio
     async def test_workspace_switch_waits_for_the_session_lock(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.default_project_dir",
+            "aj_crew.dashboard.chat_handlers.default_project_dir",
             lambda ws: f"/workspace/{ws}",
         )
         slot = _ChatSlot("alias-a")
@@ -287,7 +287,7 @@ class TestSlotProjectSwitchAtomicity:
         # write queues until the switch completes.
         import os
 
-        from kiro_crew.dashboard.chat import api_chat_slot_project
+        from aj_crew.dashboard.chat import api_chat_slot_project
 
         slot = _ChatSlot("test")
         slot.project = "/workspace/old-ws"
@@ -390,7 +390,7 @@ class TestBulkModelSwitchAtomicity:
         # that raises on the retry classifies THAT slot as failed (model
         # untouched) and the remaining slots are still processed — never a
         # 500 aborting the whole bulk switch.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         slot_a = _ChatSlot("a")
         slot_a.model = _MODEL_A
@@ -463,7 +463,7 @@ class TestBulkModelSwitchAtomicity:
         # already finished). Bulk commits AFTER the reset, so that session is
         # on the old model: the handler retries once, and on success the slot
         # is switched — never left as a silent stale process.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -483,7 +483,7 @@ class TestBulkModelSwitchAtomicity:
     async def test_reset_declined_twice_lands_in_skipped_running(self):
         # A second decline means another turn is genuinely racing the retry:
         # the slot lands in skipped_running with its model untouched.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -507,7 +507,7 @@ class TestBulkModelSwitchAtomicity:
         # skip_if_busy=skip_running and its atomic decline is authoritative:
         # the slot lands in skipped_running with its model untouched, and the
         # in-flight turn survives.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A
@@ -532,7 +532,7 @@ class TestBulkModelSwitchAtomicity:
         # it. The last-instant has_active_turn re-check on the effective
         # session catches it BEFORE the reset, so _reset_slot_session's
         # unblock half never runs against the live turn's pending cards.
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         slot = _ChatSlot("test")
         slot.model = _MODEL_A

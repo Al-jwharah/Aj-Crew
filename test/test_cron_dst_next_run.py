@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from kiro_crew.cron import (
+from aj_crew.cron import (
     CronJob,
     CronSchedule,
     _next_cron_boundary_ts,

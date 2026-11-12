@@ -1,22 +1,22 @@
-"""Regression tests: every internally-validated kirocrew-core MCP tool must be
+"""Regression tests: every internally-validated ajcrew-core MCP tool must be
 registered in MCP_CORE_SCHEMAS so a malformed/missing arg returns a clean
 "Error:" string instead of raising a ValidationError out of the stdio loop.
 
 Background: the delete_message fix schema-gated one tool (a missing arg crashed
-the whole kirocrew-core server), but the workflow_* tools that call
+the whole ajcrew-core server), but the workflow_* tools that call
 ``validate_tool_args(args, <SCHEMA>)`` inside their handler were never added to
 MCP_CORE_SCHEMAS. The outer guard in ``call_tool_with_logging`` only catches
 ValidationError from the *registered* schema lookup (``_validate_args``); an
 unregistered tool passed args through raw and its internal validate raised,
 propagating out of ``run_mcp_core_server``'s ``while True`` stdio loop and
-terminating every kirocrew-core tool for the session (and, when the backend is
+terminating every ajcrew-core tool for the session (and, when the backend is
 pooled, for every attached session) until respawn.
 """
 
 from __future__ import annotations
 
-from kiro_crew.mcp_core import _call_tool
-from kiro_crew.validation import MCP_CORE_SCHEMAS
+from aj_crew.mcp_core import _call_tool
+from aj_crew.validation import MCP_CORE_SCHEMAS
 
 # Tools that validate their args internally and are gated by MCP_CORE_SCHEMAS.
 # Each entry: (tool_name, args_that_should_fail_validation). A required arg is
@@ -51,5 +51,5 @@ class TestMcpCoreToolArgCrash:
         for tool, _ in _PREVIOUSLY_UNGATED:
             assert tool in MCP_CORE_SCHEMAS, (
                 f"{tool} validates args internally but is not in MCP_CORE_SCHEMAS "
-                f"— a bad arg would crash the kirocrew-core stdio loop"
+                f"— a bad arg would crash the ajcrew-core stdio loop"
             )

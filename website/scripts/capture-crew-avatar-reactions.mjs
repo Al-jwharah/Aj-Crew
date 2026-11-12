@@ -38,7 +38,7 @@ const page = await browser.newPage({ viewport: { width: 900, height: 1180 }, dev
  */
 const LIBRARY = {
   packs: [
-    { id: 'kiro-ghost', name: 'Kiro ghost', author: 'Kiro Crew', type: 'builtin', format: 'svg' },
+    { id: 'kiro-ghost', name: 'Kiro ghost', author: 'Aj Crew', type: 'builtin', format: 'svg' },
   ],
 }
 await page.route('**/api/appearances', route =>
@@ -380,7 +380,7 @@ const stripFilming = await browser.newContext({
 const strip = await stripFilming.newPage()
 await strip.goto(`${BASE}/capture/crew-avatar-reactions.html?scene=builder&theme=dark`)
 await strip.getByTestId('avatar-builder-tabs').waitFor()
-for (const tab of ['Reactions', 'Picture', 'Library', 'Ghost face', 'Reactions']) {
+for (const tab of ['Reactions', 'Picture', 'Library', 'Gem face', 'Reactions']) {
   await strip.getByRole('button', { name: tab, exact: true }).click()
   // Long enough to read the transition, short enough to keep the clip watchable.
   await strip.waitForTimeout(1100)

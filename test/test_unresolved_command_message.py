@@ -16,8 +16,8 @@ from __future__ import annotations
 
 import os
 
-from kiro_crew import env as env_mod
-from kiro_crew.env import describe_search_path
+from aj_crew import env as env_mod
+from aj_crew.env import describe_search_path
 
 
 def _abs(*parts: str) -> str:
@@ -63,7 +63,7 @@ def test_ignores_empty_entries():
 
 
 def test_probe_error_states_how_many_directories_were_searched():
-    from kiro_crew.mcp_discovery import _unresolved_error
+    from aj_crew.mcp_discovery import _unresolved_error
 
     msg = _unresolved_error("vendor-mcp", BASE_PATH)
     assert "command not found: vendor-mcp" in msg  # prefix preserved for callers
@@ -72,7 +72,7 @@ def test_probe_error_states_how_many_directories_were_searched():
 
 def test_probe_error_without_a_search_path_is_unchanged():
     """No search happened, so claim nothing about directories."""
-    from kiro_crew.mcp_discovery import _unresolved_error
+    from aj_crew.mcp_discovery import _unresolved_error
 
     assert _unresolved_error("vendor-mcp") == "command not found: vendor-mcp"
 
@@ -81,7 +81,7 @@ def test_probe_error_without_a_search_path_is_unchanged():
 
 
 def test_probe_warning_lists_the_searched_directories(caplog):
-    from kiro_crew import mcp_discovery
+    from aj_crew import mcp_discovery
 
     mcp_discovery._unresolvable_warned.clear()
     with caplog.at_level("WARNING"):
@@ -92,7 +92,7 @@ def test_probe_warning_lists_the_searched_directories(caplog):
 
 def test_probe_warning_repeats_are_still_demoted(caplog):
     """The once-only ledger must survive the added argument."""
-    from kiro_crew import mcp_discovery
+    from aj_crew import mcp_discovery
 
     mcp_discovery._unresolvable_warned.clear()
     with caplog.at_level("WARNING"):

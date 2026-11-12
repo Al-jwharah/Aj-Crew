@@ -13,8 +13,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { createTestStore } from './helpers'
 import { ThemeProvider } from '../hooks/useTheme'
 
-const { kirocrewConfigMock } = vi.hoisted(() => ({
-  kirocrewConfigMock: vi.fn((): Promise<unknown> => Promise.resolve({})),
+const { ajcrewConfigMock } = vi.hoisted(() => ({
+  ajcrewConfigMock: vi.fn((): Promise<unknown> => Promise.resolve({})),
 }))
 
 vi.mock('framer-motion', async () => {
@@ -56,7 +56,7 @@ vi.mock('../pages/chat/ChatSettings', () => ({
 vi.mock('../api/client', () => ({
   SEARCH_MIN_CHARS: 2,
   api: new Proxy({} as Record<string, unknown>, {
-    get: (_t, name: string) => (name === 'kirocrewConfig' ? kirocrewConfigMock : vi.fn().mockResolvedValue([])),
+    get: (_t, name: string) => (name === 'ajcrewConfig' ? ajcrewConfigMock : vi.fn().mockResolvedValue([])),
   }),
 }))
 
@@ -73,7 +73,7 @@ import ChatSidebar from '../pages/ChatSidebar'
 import type { RootState } from '../store'
 import type { ChatSlot } from '../types'
 
-const slots = [{ key: 'k1', title: 'a-session', running: false, messages: 2, agent: 'kirocrew', last_message: 'done' } as ChatSlot]
+const slots = [{ key: 'k1', title: 'a-session', running: false, messages: 2, agent: 'ajcrew', last_message: 'done' } as ChatSlot]
 
 function renderSidebar() {
   const store = createTestStore({
@@ -111,27 +111,27 @@ const unreadDot = (container: HTMLElement) =>
 
 afterEach(() => {
   vi.clearAllMocks()
-  kirocrewConfigMock.mockImplementation(() => Promise.resolve({}))
+  ajcrewConfigMock.mockImplementation(() => Promise.resolve({}))
 })
 
 describe('chat sidebar — dashboard.show_unread_dot', () => {
   it('shows the unread dot by default, when the key is absent', async () => {
     const { container } = renderSidebar()
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalled())
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalled())
     await waitFor(() => expect(unreadDot(container)).toBeTruthy())
   })
 
   it.each([[true], ['false'], [null]])('shows the unread dot when the setting is %j', async value => {
-    kirocrewConfigMock.mockImplementation(() => Promise.resolve({ dashboard: { show_unread_dot: value } }))
+    ajcrewConfigMock.mockImplementation(() => Promise.resolve({ dashboard: { show_unread_dot: value } }))
     const { container } = renderSidebar()
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalled())
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalled())
     await waitFor(() => expect(unreadDot(container)).toBeTruthy())
   })
 
   it('hides the unread dot, and keeps the last message, when the setting is false', async () => {
-    kirocrewConfigMock.mockImplementation(() => Promise.resolve({ dashboard: { show_unread_dot: false } }))
+    ajcrewConfigMock.mockImplementation(() => Promise.resolve({ dashboard: { show_unread_dot: false } }))
     const { container } = renderSidebar()
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalled())
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalled())
     await waitFor(() => expect(unreadDot(container)).toBeNull())
     expect(container.querySelector('.session-row')!.textContent).toContain('done')
   })

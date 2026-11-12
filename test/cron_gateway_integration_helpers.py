@@ -10,11 +10,11 @@ from __future__ import annotations
 from contextlib import nullcontext
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kiro_crew.cron import CronJob, CronSchedule
+from aj_crew.cron import CronJob, CronSchedule
 
 
 def _make_gw():
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gw = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gw.sessions = MagicMock()
@@ -48,7 +48,7 @@ def _make_script_job(**overrides):
         name="script-job",
         message="CR-123",
         schedule=CronSchedule(kind="every", every_secs=60),
-        script="~/.kirocrew/crons/monitor.py:run",
+        script="~/.ajcrew/crons/monitor.py:run",
     )
     defaults.update(overrides)
     return CronJob(**defaults)
@@ -80,10 +80,10 @@ async def _run_script_callback(gw, job, script_result=None, vet_reason=None, sid
     )
 
     with (
-        patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
-        patch("kiro_crew.slack.gateway.run_script_sandboxed", **mock_kw) as mock_run,
-        patch("kiro_crew.slack.gateway.vet_job_at_fire_time", return_value=vet_reason),
-        patch("kiro_crew.slack.gateway.sel"),
+        patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
+        patch("aj_crew.slack.gateway.run_script_sandboxed", **mock_kw) as mock_run,
+        patch("aj_crew.slack.gateway.vet_job_at_fire_time", return_value=vet_reason),
+        patch("aj_crew.slack.gateway.sel"),
     ):
 
         def capture_cron(on_job=None, **kw):
@@ -118,16 +118,16 @@ async def _run_command_callback(gw, job, cmd_result=None, side_effect=None, vet_
     # Only stand in for the gate when simulating a denial: other tests here drive
     # the REAL gate, and patching it unconditionally would silence them.
     gate = (
-        patch("kiro_crew.slack.gateway.vet_job_at_fire_time", return_value=vet_reason)
+        patch("aj_crew.slack.gateway.vet_job_at_fire_time", return_value=vet_reason)
         if vet_reason is not None
         else nullcontext()
     )
 
     with (
-        patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
-        patch("kiro_crew.slack.gateway.run_command_sandboxed", **mock_kw) as mock_run,
+        patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
+        patch("aj_crew.slack.gateway.run_command_sandboxed", **mock_kw) as mock_run,
         gate,
-        patch("kiro_crew.slack.gateway.sel"),
+        patch("aj_crew.slack.gateway.sel"),
     ):
 
         def capture_cron(on_job=None, **kw):
@@ -162,7 +162,7 @@ def _make_llm_job(**overrides):
 
 def _make_gw_for_llm():
     """Extended _make_gw with attributes the LLM single-agent path needs."""
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gw = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gw.sessions = MagicMock()
@@ -217,14 +217,14 @@ async def _run_llm_callback(gw, job, *, get_or_create_side_effect=None, fires=1)
     _stream_mock = AsyncMock(return_value="Agent response here")
 
     with (
-        patch("kiro_crew.slack.gateway.CronService") as mock_cron_cls,
-        patch("kiro_crew.slack.gateway.run_in_embed_pool", _embed_mock),
-        patch("kiro_crew.slack.gateway.stream_and_collect", _stream_mock),
-        patch("kiro_crew.slack.gateway.sel"),
-        patch("kiro_crew.slack.gateway.build_cron_session_context") as mock_ctx,
+        patch("aj_crew.slack.gateway.CronService") as mock_cron_cls,
+        patch("aj_crew.slack.gateway.run_in_embed_pool", _embed_mock),
+        patch("aj_crew.slack.gateway.stream_and_collect", _stream_mock),
+        patch("aj_crew.slack.gateway.sel"),
+        patch("aj_crew.slack.gateway.build_cron_session_context") as mock_ctx,
         # The agent names these jobs carry have no spec in the test home; the
         # missing-agent refusal has its own tests (test_cron_agent_presence.py).
-        patch("kiro_crew.cron_service.agent_presence.cron_agent_missing", return_value=False),
+        patch("aj_crew.cron_service.agent_presence.cron_agent_missing", return_value=False),
     ):
 
         mock_ctx.return_value = (f"cron:{job.id}", job.message)

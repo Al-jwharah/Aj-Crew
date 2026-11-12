@@ -16,15 +16,15 @@ from types import SimpleNamespace
 import pytest
 from local_asyncio_helpers import asyncio_with_sleep
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.autonudge_service import firing, model, subject_reads
-from kiro_crew.testing.wait import await_until
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.autonudge_service import firing, model, subject_reads
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture(autouse=True)
 def _enable(_floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    _floor_monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.fixture(autouse=True)
@@ -112,7 +112,7 @@ async def test_spent_cycle_cap_with_open_items_is_extended(svc, _nosleep, ledger
     loop.cycle_count = 200
     svc._cancel_timer(loop.id)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.autonudge"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.autonudge"):
         await svc._timer(loop)
 
     refreshed = svc._loops[loop.id]
@@ -177,7 +177,7 @@ async def test_past_the_runaway_backstop_nothing_is_extended(svc, _nosleep, ledg
     loop.created_ts -= 3601
     svc._cancel_timer(loop.id)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.autonudge"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.autonudge"):
         await svc._timer(loop)
 
     refreshed = svc._loops[loop.id]
@@ -291,7 +291,7 @@ async def test_a_user_stop_is_not_overridden(svc, _nosleep, ledger):
 
 
 def test_open_items_reads_positive_evidence_only(monkeypatch):
-    from kiro_crew.probes import work_ledger as probe
+    from aj_crew.probes import work_ledger as probe
 
     work_ledger = probe.work_ledger
 
@@ -315,7 +315,7 @@ def test_open_items_reads_positive_evidence_only(monkeypatch):
 
 
 def test_backstop_falls_back_to_seven_days(monkeypatch):
-    from kiro_crew.monitoring import limits
+    from aj_crew.monitoring import limits
 
     def _boom():
         raise RuntimeError("no config")
@@ -333,7 +333,7 @@ async def test_an_armed_tick_survives_its_own_update_and_logs(svc, _nosleep, led
     """
     loop = await _armed(svc, max_cycles=8)
     loop.cycle_count = 8
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.autonudge"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.autonudge"):
         svc._arm_timer(loop, delay=0)
         tick = svc._timers[loop.id]
         await asyncio.gather(tick, return_exceptions=True)
@@ -353,7 +353,7 @@ async def test_an_armed_tick_survives_its_own_runtime_extension(
     now = 1_900_000_000.0
     _freeze_clock(monkeypatch, now)
     loop.created_ts = now - 7300
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.autonudge"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.autonudge"):
         svc._arm_timer(loop, delay=0)
         tick = svc._timers[loop.id]
         await await_until(

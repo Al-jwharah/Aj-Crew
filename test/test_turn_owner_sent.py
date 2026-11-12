@@ -1,7 +1,7 @@
 """The turn's OWNER mark: ``_turn_owner_sent`` and ``_directive_owner_origin``.
 
 ``_turn_user_sent`` says a person sent the running turn. It does not say which
-one: ``/kirocrew dashboard`` mints a dashboard token for a channel user the
+one: ``/ajcrew dashboard`` mints a dashboard token for a channel user the
 install allow-lists, and their sends reach ``api_chat`` as a non-app request
 exactly as the owner's do. The crew-scoped session reads
 (``handlers_instances_crew_reads``) disclose the owner's peer corpus and need the
@@ -30,9 +30,9 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import chat_runner as cr
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.slot_queue_repository import sanitize_restored_queue
+from aj_crew.dashboard import chat_runner as cr
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.slot_queue_repository import sanitize_restored_queue
 
 NON_OWNER = "telegram:4242"
 
@@ -76,7 +76,7 @@ def _app(state, subject: str | None = None) -> web.Application:
 @pytest.mark.asyncio
 def _one_turn(state, slot, seen: list[bool]):
     """Wire *state* to run one bare turn whose model records the owner mark."""
-    from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+    from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
 
     async def _stream(_msg):
         seen.append(slot._turn_owner_sent)
@@ -222,8 +222,8 @@ async def test_a_steer_that_is_not_the_owners_clears_the_running_turns_mark(
     person's -- a dashboard-token holder who is not the owner -- which is exactly
     the case ``_turn_user_sent`` cannot see.
     """
-    from kiro_crew.dashboard import chat_delivery
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard import chat_delivery
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("chat-1")
     slot._turn_user_sent = True
@@ -241,8 +241,8 @@ async def test_a_steer_that_is_not_the_owners_clears_the_running_turns_mark(
 @pytest.mark.asyncio
 async def test_the_steer_seam_defaults_to_not_the_owner() -> None:
     """A caller that says nothing earns no mark: the default is the refusing one."""
-    from kiro_crew.dashboard import chat_delivery
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard import chat_delivery
+    from aj_crew.dashboard.state import _ChatSlot
 
     slot = _ChatSlot("chat-1")
     slot._turn_owner_sent = True
@@ -320,8 +320,8 @@ async def test_a_recovery_requeue_carries_the_mark_as_the_dying_turn_held_it(
     """
     from test_acp_tool_identity import _stub_state
 
-    from kiro_crew.acp.transport_errors import AcpProcessDied
-    from kiro_crew.dashboard.chat_utils_injected_rows import SYNTHETIC_RECOVERY_KIND
+    from aj_crew.acp.transport_errors import AcpProcessDied
+    from aj_crew.dashboard.chat_utils_injected_rows import SYNTHETIC_RECOVERY_KIND
 
     state = _stub_state(tmp_path)
     slot = state.get_or_create_slot("chat-1")
@@ -375,7 +375,7 @@ async def test_the_drain_stamps_the_successor_only_when_every_entry_is_the_owner
     authority. Merging is on so the two-entry cases drain as ONE turn."""
     from test_acp_tool_identity import _stub_state
 
-    from kiro_crew.config import KiroCrewConfig
+    from aj_crew.config import AjCrewConfig
 
     state = _stub_state(tmp_path)
     slot = state.get_or_create_slot("chat-1")
@@ -389,9 +389,9 @@ async def test_the_drain_stamps_the_successor_only_when_every_entry_is_the_owner
         seen.append(kwargs.get("_directive_owner_origin", False))
 
     monkeypatch.setattr(cr, "_run_chat", _run)
-    config = KiroCrewConfig()
+    config = AjCrewConfig()
     config.dashboard.merge_queued_messages = True
-    with patch.object(KiroCrewConfig, "load", return_value=config):
+    with patch.object(AjCrewConfig, "load", return_value=config):
         assert await cr._start_next_queued_turn(state, slot) is True
         assert slot.task is not None
         await slot.task
@@ -441,13 +441,13 @@ def test_editing_a_queued_entry_gives_it_the_editors_mark(tmp_path) -> None:
 async def test_an_idle_send_passes_the_mark_to_its_dispatch(
     tmp_path, monkeypatch, subject: str | None, expected: bool
 ) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     seen: list[bool] = []
 
     async def fake_run_chat(_st, sl, _msg, **_kwargs):
         seen.append(_kwargs.get("_directive_owner_origin", False))
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", fake_run_chat)
     state = _make_state(tmp_path)
     state.get_or_create_slot("s1")
 
@@ -462,7 +462,7 @@ async def test_an_idle_send_passes_the_mark_to_its_dispatch(
 async def test_a_send_into_a_busy_slot_marks_its_queue_entry(
     tmp_path, monkeypatch, subject: str | None, expected: bool
 ) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     slot = _busy(state.get_or_create_slot("s1"))
 
@@ -483,13 +483,13 @@ async def test_a_send_held_behind_sub_agents_marks_its_queue_entry(
     # The composer's own sends are never held behind live sub-agents, so a
     # dashboard send reaches the hold branch only behind a message parked while a
     # (now stalled) child was live. The drain takes the parked one first.
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", AsyncMock(return_value=None))
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", AsyncMock(return_value=None))
     monkeypatch.setattr(cr, "_run_chat", MagicMock(return_value=MagicMock()))
     monkeypatch.setattr(cr, "spawn_guarded_turn", lambda *a, **k: None)
     load = MagicMock()
     load.return_value.dashboard.merge_queued_messages = False
-    monkeypatch.setattr(cr.KiroCrewConfig, "load", load)
+    monkeypatch.setattr(cr.AjCrewConfig, "load", load)
     subs = MagicMock()
     subs.running_agents_for = MagicMock(return_value=[{"id": "dead", "stalled": True}])
     state = _make_state(tmp_path, subagents=subs)
@@ -511,7 +511,7 @@ async def test_a_steer_reports_its_senders_mark_to_the_seam(
     tmp_path, monkeypatch, subject: str | None, expected: bool
 ) -> None:
     """The composer's steer tells the seam who sent it; the seam decides the rest."""
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     _busy(state.get_or_create_slot("s1"))
     seen: list[dict] = []
@@ -520,7 +520,7 @@ async def test_a_steer_reports_its_senders_mark_to_the_seam(
         seen.append(kwargs)
         return "steered"
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers.steer_into_running_turn", fake_steer)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers.steer_into_running_turn", fake_steer)
     async with TestClient(TestServer(_app(state, subject))) as client:
         resp = await client.post(
             "/api/chat?ws=1", json={"message": "now", "slot": "s1", "steer": True}
@@ -549,13 +549,13 @@ def _conversation(state, key: str = "s1"):
 async def test_a_regenerate_passes_the_mark_to_its_dispatch(
     tmp_path, monkeypatch, subject: str | None, expected: bool
 ) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     seen: list[bool] = []
 
     async def fake_run_chat(_st, sl, _msg, **_kwargs):
         seen.append(_kwargs.get("_directive_owner_origin", False))
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_regenerate._run_chat", fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_regenerate._run_chat", fake_run_chat)
     state = _make_state(tmp_path)
     _conversation(state)
 
@@ -572,13 +572,13 @@ async def test_a_regenerate_passes_the_mark_to_its_dispatch(
 async def test_a_rewind_passes_the_mark_to_its_dispatch(
     tmp_path, monkeypatch, subject: str | None, expected: bool
 ) -> None:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     seen: list[bool] = []
 
     async def fake_run_chat(_st, sl, _msg, **_kwargs):
         seen.append(_kwargs.get("_directive_owner_origin", False))
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_rewind._run_chat", fake_run_chat)
+    monkeypatch.setattr("aj_crew.dashboard.chat_rewind._run_chat", fake_run_chat)
     state = _make_state(tmp_path)
     slot = _conversation(state)
     state.sessions._session_map.get = MagicMock(return_value="")
@@ -609,7 +609,7 @@ async def test_a_hard_kill_pops_the_owner_map_with_the_other_steer_maps(
     enough discarded steers, make every later steer queue instead of reaching the
     client. The owner map is popped in the same lockstep loop as its siblings.
     """
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.push_slots_update = MagicMock()

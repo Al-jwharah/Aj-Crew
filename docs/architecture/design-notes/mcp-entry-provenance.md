@@ -1,6 +1,6 @@
 # MCP entry provenance: who may rewrite a shared config entry
 
-Kiro Crew writes MCP server entries into two config files it does not own — the
+Aj Crew writes MCP server entries into two config files it does not own — the
 kiro-global `~/.kiro/settings/mcp.json` and the Claude Code sidecar `~/.mcp.json`.
 Users hand-edit both, and other tools write the sidecar. Any sync that can
 *update* entries (not just add them) must answer one question per entry:
@@ -14,15 +14,15 @@ write time instead of inferred at read time.
 
 ## The invariant
 
-> An entry in a shared config file is Kiro Crew–managed **iff** it carries our
+> An entry in a shared config file is Aj Crew–managed **iff** it carries our
 > marker. Name presence in the store is necessary, never sufficient. An
 > unmarked entry is the user's and is never rewritten.
 
 ## The marker
 
-Entries Kiro Crew writes into shared files carry one reserved key:
+Entries Aj Crew writes into shared files carry one reserved key:
 
-    "x-kirocrew": { "managed": true }
+    "x-ajcrew": { "managed": true }
 
 The `x-` form cannot collide with a kiro-cli field (its config structs derive
 `rename_all = "camelCase"`, which never produces a hyphen), and kiro-cli
@@ -141,14 +141,14 @@ second question, in the one file this note calls pure output: **which FIELDS of 
 rendered entry did the rebuild compute?**
 
 `rebuild_agent_config` reads its own previous output back as a merge source, so
-that a field the user set and Kiro Crew never models survives a rebuild. One field
+that a field the user set and Aj Crew never models survives a rebuild. One field
 in that output is not the user's — the resolved absolute `command`. Reading a
 computed value back as if it were authored is what makes it permanent:
 `_resolve_command` accepts an absolute existing executable without a PATH search,
 so no later change to how commands resolve can rebind one that was stored once
 (#4955).
 
-    "x-kirocrew-derived": { "from": "npx", "emitted": "/abs/npx" }
+    "x-ajcrew-derived": { "from": "npx", "emitted": "/abs/npx" }
 
 Both halves are load-bearing. `from` is what the next rebuild re-derives from, which
 is also why the source stays IN the file: a server whose only persisted home is the
@@ -159,7 +159,7 @@ it must hold across REPEATED rebuilds: recording a value we merely passed throug
 would make our own record read as proof on the next pass, which is how an unearned
 claim becomes an overwrite.
 
-Deliberately a second key rather than a field inside `x-kirocrew`. The two records
+Deliberately a second key rather than a field inside `x-ajcrew`. The two records
 answer different questions about different files, and the marker's invariant is
 that it appears only in files we do not own — folding this in would put the marker
 into the very file that exclusion is about, and expose it to `without_marker`,

@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import security
+from aj_crew import security
 
 HOME = r"C:\Users\alice"
 CRED = HOME + r"\.aws\credentials"  # inside a protected directory
@@ -78,7 +78,7 @@ def _enter_windows(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     environ = {
         k: v
         for k, v in os.environ.items()
-        if k not in ("KIROCREW_HOME", "KIRO_HOME", "KIROCREW_OS_HOME", "XDG_CONFIG_HOME")
+        if k not in ("AJCREW_HOME", "KIRO_HOME", "AJCREW_OS_HOME", "XDG_CONFIG_HOME")
     }
     environ["HOME"] = HOME
     environ["USERPROFILE"] = HOME

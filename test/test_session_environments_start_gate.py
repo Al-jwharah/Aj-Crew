@@ -6,18 +6,18 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.coder import session_launch
-from kiro_crew.config import live, paths
-from kiro_crew.providers import acp as acp_facade
-from kiro_crew.providers import acp_runtime_start as start
-from kiro_crew.session_environment import SessionEnvironmentUnavailable, forget_remote_workspace
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.coder import session_launch
+from aj_crew.config import live, paths
+from aj_crew.providers import acp as acp_facade
+from aj_crew.providers import acp_runtime_start as start
+from aj_crew.session_environment import SessionEnvironmentUnavailable, forget_remote_workspace
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 KEY = "dashboard:chat-gate"
@@ -110,7 +110,7 @@ def test_an_unreadable_choices_path_counts_as_present(tmp_path, monkeypatch):
         def stat(self):
             raise PermissionError(13, "denied")
 
-    monkeypatch.setattr("kiro_crew.session_environment.choices_path", Unstatable)
+    monkeypatch.setattr("aj_crew.session_environment.choices_path", Unstatable)
     assert start._choices_file_may_exist() is True
 
 
@@ -119,9 +119,9 @@ def test_an_unreadable_choices_path_counts_as_present(tmp_path, monkeypatch):
 async def test_an_adapter_backend_refuses_a_remote_session_before_its_engine(
     tmp_path, monkeypatch, choice
 ):
-    from kiro_crew.acp.runtime import AcpRuntimeError
-    from kiro_crew.providers import acp_lifecycle
-    from kiro_crew.session_environment import REMOTE_NEEDS_KAS
+    from aj_crew.acp.runtime import AcpRuntimeError
+    from aj_crew.providers import acp_lifecycle
+    from aj_crew.session_environment import REMOTE_NEEDS_KAS
 
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path)
     choices = session_launch.SessionEnvironmentChoices(tmp_path / "coder/session-choices.json")

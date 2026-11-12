@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.monitoring.models import MonitorState
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.monitoring.models import MonitorState
 
 
 def _owner_dashboard_identity():
@@ -32,7 +32,7 @@ def _owner_dashboard_identity():
 
 @pytest.fixture(autouse=True)
 def _enable(_floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    _floor_monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.fixture(name="svc")

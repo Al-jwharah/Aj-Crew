@@ -22,16 +22,16 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import history_search, history_words, mcp_core
-from kiro_crew.dashboard.handlers import search_segment
-from kiro_crew.dashboard.server import (
+from aj_crew import history_search, history_words, mcp_core
+from aj_crew.dashboard.handlers import search_segment
+from aj_crew.dashboard.server import (
     _MIXED_INTERNAL_API_PATHS,
     _STRICT_INTERNAL_API_PATHS,
     _register_mcp_routes,
 )
-from kiro_crew.dashboard.token_auth import token_auth_middleware
-from kiro_crew.mcp_tools import sessions
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.dashboard.token_auth import token_auth_middleware
+from aj_crew.mcp_tools import sessions
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 PATH = "/api/search/segment"
 SECRET = "the-real-secret"
@@ -261,7 +261,7 @@ class TestClientAndRegistration:
         assert history_search._cjk_slot.segment is sessions.gateway_cjk_words
 
     def test_the_gateway_boot_registers_the_in_process_dictionary(self):
-        from kiro_crew.slack.gateway import GatewayOrchestrator
+        from aj_crew.slack.gateway import GatewayOrchestrator
 
         boot = inspect.getsource(GatewayOrchestrator._init_services)
         assert "register_cjk_segmenter(segment_runs)" in boot
@@ -274,8 +274,8 @@ def test_one_dictionary_per_host(tmp_path):
     """
     script = textwrap.dedent("""
         import json, sys
-        from kiro_crew import history_search, mcp_core
-        from kiro_crew.mcp_tools import sessions
+        from aj_crew import history_search, mcp_core
+        from aj_crew.mcp_tools import sessions
 
         mcp_core._post = lambda *a, **k: {"ok": True, "words": [["修复", "内存", "泄漏"]]}
         history_search.register_cjk_segmenter(sessions.gateway_cjk_words)
@@ -284,7 +284,7 @@ def test_one_dictionary_per_host(tmp_path):
             "words": [n.text for n in needles if n.word],
             "rjieba_loaded": "rjieba" in sys.modules,
         }
-        from kiro_crew import history_words
+        from aj_crew import history_words
         imported = "rjieba" in sys.modules
         split = history_words.segment_runs(["修复内存泄漏"])
         print(json.dumps({"core": core, "gateway_import": imported, "split": split,

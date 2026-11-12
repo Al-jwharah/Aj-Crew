@@ -1,6 +1,6 @@
-"""The session's own ``$KIROCREW_SCRATCH`` directory as an outbound-image root.
+"""The session's own ``$AJCREW_SCRATCH`` directory as an outbound-image root.
 
-The agent is told to stage screenshots under ``$KIROCREW_SCRATCH``, a directory
+The agent is told to stage screenshots under ``$AJCREW_SCRATCH``, a directory
 the gateway allocates per runtime under the managed scratch root -- never under
 the working directory. Inline image extraction must therefore admit THAT one
 directory beside the cwd, and nothing wider: not the managed scratch root, not
@@ -15,9 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
-from kiro_crew import agent_scratch
-from kiro_crew.messaging.outbound_files import (
+from aj_crew import agent_scratch
+from aj_crew.messaging.outbound_files import (
     REASON_SENSITIVE,
     REASON_SYMLINK,
     REASON_UNREADABLE,
@@ -26,6 +25,7 @@ from kiro_crew.messaging.outbound_files import (
     extract_local_refs,
     extract_local_refs_off_loop,
 )
+from conftest import requires_symlinks
 
 _PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
 
@@ -48,8 +48,8 @@ def layout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path, Path,
     """An isolated data home, a project cwd, and two allocated scratch dirs."""
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    monkeypatch.delenv("KIROCREW_SCRATCH_ROOT", raising=False)
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    monkeypatch.delenv("AJCREW_SCRATCH_ROOT", raising=False)
     cwd = tmp_path / "project"
     cwd.mkdir()
     mine = agent_scratch.allocate_scratch("runtime")
@@ -241,7 +241,7 @@ class TestSlackWiring:
     def _renderer() -> object:
         from unittest.mock import MagicMock
 
-        from kiro_crew.slack.renderer import SlackRenderer
+        from aj_crew.slack.renderer import SlackRenderer
 
         return SlackRenderer(MagicMock(), "C1", "t1", reactions_enabled=False, show_thinking=False)
 

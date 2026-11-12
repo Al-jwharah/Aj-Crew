@@ -1,7 +1,7 @@
 "use strict";
 
-const { findKirocrewBin } = require("../../find-bin");
-const { forceStopPort, isKirocrewCommand } = require("../../gateway-stop");
+const { findAjcrewBin } = require("../../find-bin");
+const { forceStopPort, isAjcrewCommand } = require("../../gateway-stop");
 const {
   canonicalWindowsPath,
   windowsGatewayExecutablePaths,
@@ -116,21 +116,21 @@ function createPortHolders({
   const windowsRealpath = (candidate) => fs.realpathSync.native(candidate);
 
   function isTrustedWindowsGatewayCommand(command) {
-    const gatewayBin = findKirocrewBin(
+    const gatewayBin = findAjcrewBin(
       fs,
       os,
       path,
       processObj.resourcesPath,
       dirname,
     );
-    return isKirocrewCommand(command, {
+    return isAjcrewCommand(command, {
       trustedExecutablePaths: [
         ...windowsGatewayExecutablePaths(gatewayBin, { realpathSync: windowsRealpath }),
         ...getSpawnedExecutablePaths(),
       ],
       // A source or pip venv's gateway listens from the venv's base
       // interpreter, a child of its `Scripts\python.exe` redirector. Trusted
-      // only as a launch of the resolver's own `Scripts\kirocrew.exe`.
+      // only as a launch of the resolver's own `Scripts\ajcrew.exe`.
       trustedVenvLaunches: windowsVenvBaseInterpreterLaunches(gatewayBin, {
         readFileSync: fs.readFileSync,
         realpathSync: windowsRealpath,
@@ -327,7 +327,7 @@ function createPortHolders({
           isTrustedCommand: isTrustedWindowsGatewayCommand,
         }),
         sleep,
-        isKirocrew: isTrustedWindowsGatewayCommand,
+        isAjcrew: isTrustedWindowsGatewayCommand,
         failClosedOnProbeError: true,
         // netstat can leave a held port out of its table, so "no owner" is
         // checked with a real bind before recovery respawns into the port. A

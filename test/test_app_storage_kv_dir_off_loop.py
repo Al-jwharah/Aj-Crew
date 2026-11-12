@@ -3,7 +3,7 @@
 ``build_app_context`` is a synchronous factory the hook-context builders call
 on the gateway event loop (``LifecycleDispatcher._build_context`` and
 ``hooks_integration._build_app_context_from_info``). For a storage-enabled app
-it constructs an :class:`~kiro_crew.apps.app_storage.AppStorage`. That
+it constructs an :class:`~aj_crew.apps.app_storage.AppStorage`. That
 constructor touches no filesystem: a ``mkdir`` in it would be a blocking disk
 call on the loop, run on every lifecycle event (enable, boot, disable,
 shutdown).
@@ -27,8 +27,8 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.apps.app_storage import AppStorage
-from kiro_crew.apps.context import build_app_context
+from aj_crew.apps.app_storage import AppStorage
+from aj_crew.apps.context import build_app_context
 
 
 def test_build_app_context_does_not_create_the_kv_dir(tmp_path: Path) -> None:

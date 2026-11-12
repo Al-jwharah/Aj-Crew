@@ -20,9 +20,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import SessionManager
-from kiro_crew.subagent import SubagentInfo
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import SessionManager
+from aj_crew.subagent import SubagentInfo
 
 #: Ceiling for a wait that only fails on a hang, so a regression fails by name.
 _HANG_CEILING_S = 30
@@ -54,7 +54,7 @@ def _provider_factory(session_ids: list[str]) -> Any:
 
 
 def _gateway(sessions: SessionManager) -> Any:
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gateway = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gateway.sessions = sessions
@@ -79,7 +79,7 @@ async def _run(
     # The timeout's reset makes the retry's claim a new provider. A resume loads
     # the same backend session id; a fresh conversation gets another one.
     sessions = SessionManager(
-        KiroCrewConfig(),
+        AjCrewConfig(),
         provider_factory=_provider_factory(["sess-a", "sess-a" if retry_resumes else "sess-b"]),
     )
     gateway = _gateway(sessions)
@@ -114,8 +114,8 @@ async def _run(
     info.done = True
     try:
         with (
-            patch("kiro_crew.slack.gateway._MAX_INJECT_ATTEMPTS", 2),
-            patch("kiro_crew.slack.gateway.INJECTION_TIMEOUT", 0.05),
+            patch("aj_crew.slack.gateway._MAX_INJECT_ATTEMPTS", 2),
+            patch("aj_crew.slack.gateway.INJECTION_TIMEOUT", 0.05),
         ):
             await asyncio.wait_for(
                 gateway._inject_subagent_into_channel_parent(
@@ -176,11 +176,11 @@ async def test_a_reload_inside_the_retry_onto_a_new_session_sends_the_full_compl
     continue note. The backend then answers that it holds no session under that id,
     and the reload inside ``_inject_with_retry`` lands on a different conversation.
     That conversation never received the report, so it gets the full completion."""
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
     key = "discord:dm:42"
     sessions = SessionManager(
-        KiroCrewConfig(),
+        AjCrewConfig(),
         provider_factory=_provider_factory(["sess-a", "sess-a", "sess-b"]),
     )
     gateway = _gateway(sessions)
@@ -204,9 +204,9 @@ async def test_a_reload_inside_the_retry_onto_a_new_session_sends_the_full_compl
     info.done = True
     try:
         with (
-            patch("kiro_crew.slack.gateway._MAX_INJECT_ATTEMPTS", 2),
-            patch("kiro_crew.slack.gateway.INJECTION_TIMEOUT", 1.0),
-            patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream),
+            patch("aj_crew.slack.gateway._MAX_INJECT_ATTEMPTS", 2),
+            patch("aj_crew.slack.gateway.INJECTION_TIMEOUT", 1.0),
+            patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream),
         ):
             await asyncio.wait_for(
                 gateway._inject_subagent_into_channel_parent(
@@ -236,11 +236,11 @@ async def test_a_timeout_after_a_reload_reads_the_session_that_received_the_comp
     B, then the attempt times out. The timeout handler must read B, the provider
     holding the prompt, not the provider the attempt started on. Attempt 2
     resumes B, so it gets the continue note rather than the completion again."""
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
     key = "discord:dm:42"
     sessions = SessionManager(
-        KiroCrewConfig(),
+        AjCrewConfig(),
         provider_factory=_provider_factory(["sess-a", "sess-b", "sess-b"]),
     )
     gateway = _gateway(sessions)
@@ -264,9 +264,9 @@ async def test_a_timeout_after_a_reload_reads_the_session_that_received_the_comp
     info.done = True
     try:
         with (
-            patch("kiro_crew.slack.gateway._MAX_INJECT_ATTEMPTS", 2),
-            patch("kiro_crew.slack.gateway.INJECTION_TIMEOUT", 1.0),
-            patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream),
+            patch("aj_crew.slack.gateway._MAX_INJECT_ATTEMPTS", 2),
+            patch("aj_crew.slack.gateway.INJECTION_TIMEOUT", 1.0),
+            patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream),
         ):
             await asyncio.wait_for(
                 gateway._inject_subagent_into_channel_parent(

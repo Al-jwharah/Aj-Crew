@@ -8,8 +8,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.coder import startup
-from kiro_crew.coder.client import CoderClient
+from aj_crew.coder import startup
+from aj_crew.coder.client import CoderClient
 
 
 @pytest.mark.parametrize("failure", [None, ValueError("private-detail"), asyncio.CancelledError()])
@@ -61,7 +61,7 @@ async def test_coder_cli_timing_never_logs_argv_environment_or_output(
     canary = "fake-private-canary-0123456789"
     runner = AsyncMock(return_value=canary.encode())
     client = CoderClient("coder", "https://coder.example", canary, tmp_path, runner=runner)
-    with caplog.at_level(logging.INFO, logger="kiro_crew.coder.client"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.coder.client"):
         assert await client._call("list", canary) == canary.encode()
     assert "step=cli_list" in caplog.text
     assert "outcome=ok" in caplog.text

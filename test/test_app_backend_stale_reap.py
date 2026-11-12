@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import kiro_crew.apps.backend as backend_mod
+import aj_crew.apps.backend as backend_mod
 
 
 @pytest.fixture

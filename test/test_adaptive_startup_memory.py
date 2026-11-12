@@ -17,17 +17,17 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from overload_fakes import Clock, mock_ctx, mock_sessions, wait_taskq_open
 
-import kiro_crew.subagent as subagent_mod
-from kiro_crew.adaptive.controller import AdaptiveController, HostSample
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.subagent import (
+import aj_crew.subagent as subagent_mod
+from aj_crew.adaptive.controller import AdaptiveController, HostSample
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.subagent import (
     _UNLEARNED_DEDICATED_START_GB,
     SubagentInfo,
     SubagentManager,
     _startup_memory_reserve_gb,
 )
-from kiro_crew.subagent_manager.admission import SpawnAdmissionCoordinator
-from kiro_crew.testing.wait import await_until
+from aj_crew.subagent_manager.admission import SpawnAdmissionCoordinator
+from aj_crew.testing.wait import await_until
 
 
 @pytest.mark.parametrize("platform", ["WINDOWS", "MACOS"])
@@ -91,8 +91,8 @@ def test_startup_reserve_tracks_unobserved_dedicated_memory(rows, running, expec
 
 def test_cost_samples_are_written_under_the_bucket_the_gate_reads(monkeypatch, tmp_path) -> None:
     """An agent-less run inheriting a template builds THAT template's bucket."""
-    from kiro_crew import subagent_cost as sc
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew import subagent_cost as sc
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
     log = tmp_path / "cost_samples.jsonl"
     monkeypatch.setattr(sc, "_cost_log_path", lambda: log)
@@ -115,7 +115,7 @@ def test_cost_samples_are_written_under_the_bucket_the_gate_reads(monkeypatch, t
         for info in (inherited, named, bare, shared):
             mgr._record_cost(info)
         rows = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
-        assert [r["agent"] for r in rows] == ["heavy", "light", "kirocrew", "light"]
+        assert [r["agent"] for r in rows] == ["heavy", "light", "ajcrew", "light"]
         # A shared run's sample is marked; a dedicated run's record shape is unchanged.
         assert [r.get("shared") for r in rows] == [None, None, None, True]
         assert subagent_mod._cost_bucket("", heavy) == "heavy"
@@ -128,14 +128,14 @@ def test_cost_samples_are_written_under_the_bucket_the_gate_reads(monkeypatch, t
 def test_compaction_keeps_dedicated_history_under_a_flood_of_shared_runs(
     monkeypatch, tmp_path
 ) -> None:
-    from kiro_crew import subagent_cost as sc
+    from aj_crew import subagent_cost as sc
 
     log = tmp_path / "cost_samples.jsonl"
     monkeypatch.setattr(sc, "_cost_log_path", lambda: log)
     for _ in range(3):
-        sc.append_cost_sample("kirocrew", 6.0, 0.1)
+        sc.append_cost_sample("ajcrew", 6.0, 0.1)
     for _ in range(60):
-        sc.append_cost_sample("kirocrew", 0.2, 0.1, shared=True)
+        sc.append_cost_sample("ajcrew", 0.2, 0.1, shared=True)
     sc.compact_cost_log(window=50)
     rows = [json.loads(line) for line in log.read_text(encoding="utf-8").splitlines()]
     assert len(rows) == 53  # 3 dedicated kept, shared trimmed to its own window
@@ -143,7 +143,7 @@ def test_compaction_keeps_dedicated_history_under_a_flood_of_shared_runs(
 
 
 def test_the_held_map_is_bounded_against_an_agent_writable_log(monkeypatch, tmp_path) -> None:
-    from kiro_crew import subagent_cost as sc
+    from aj_crew import subagent_cost as sc
 
     log = tmp_path / "cost_samples.jsonl"
     monkeypatch.setattr(sc, "_cost_log_path", lambda: log)
@@ -214,10 +214,10 @@ def test_a_measured_peak_never_prices_a_start(cost_gb, expected):
 async def test_startup_cost_cannot_lower_enabled_floor_on_exhausted_cgroup(
     monkeypatch, cost_gb, floor_gb
 ):
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.subagent_cost_gb = cost_gb
     cfg.agent.spawn_min_memory_gb = floor_gb
-    monkeypatch.setattr(KiroCrewConfig, "load", lambda: cfg)
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: cfg)
     monkeypatch.setattr(subagent_mod, "Stats", MagicMock())
     monkeypatch.setattr(subagent_mod, "sel", MagicMock())
     monkeypatch.setattr(subagent_mod.platform_compat, "IS_LINUX", True)
@@ -260,12 +260,12 @@ async def test_startup_cost_cannot_lower_enabled_floor_on_exhausted_cgroup(
 async def test_delayed_dedicated_rss_does_not_spend_the_startup_reserve(
     monkeypatch, shock_gb
 ) -> None:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.max_subagents = 64
     cfg.agent.subagent_spawn_stagger_secs = 0.25
     cfg.agent.subagent_cost_gb = 0.5
     cfg.session.pool_size = 0
-    monkeypatch.setattr(KiroCrewConfig, "load", lambda: cfg)
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: cfg)
     monkeypatch.setattr(subagent_mod, "Stats", MagicMock())
     monkeypatch.setattr(subagent_mod, "sel", MagicMock())
     monkeypatch.setattr(SpawnAdmissionCoordinator, "open_store_off_loop", True)
@@ -420,7 +420,7 @@ def test_a_remote_run_has_its_own_cost_bucket() -> None:
     assert subagent_mod._cost_bucket("", heavy, remote=True) == "heavy@remote"
     assert subagent_mod._cost_bucket("named", heavy, remote=True) == "named@remote"
     # The default bucket keeps its own remote twin, never the bare default.
-    assert subagent_mod._cost_bucket("", None, remote=True) == "kirocrew@remote"
+    assert subagent_mod._cost_bucket("", None, remote=True) == "ajcrew@remote"
 
 
 @pytest.mark.parametrize(
@@ -439,13 +439,13 @@ def test_a_remote_run_has_its_own_cost_bucket() -> None:
 async def test_a_child_of_a_remote_session_is_held_to_its_engine_not_the_host_floor(
     monkeypatch, remote, free_gb, admitted
 ) -> None:
-    from kiro_crew import session_environment
+    from aj_crew import session_environment
 
     parent = "dash:remote-parent"
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.subagent_cost_gb = 0.5
     cfg.agent.spawn_min_memory_gb = 4.0
-    monkeypatch.setattr(KiroCrewConfig, "load", lambda: cfg)
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: cfg)
     monkeypatch.setattr(subagent_mod, "Stats", MagicMock())
     monkeypatch.setattr(subagent_mod, "sel", MagicMock())
     monkeypatch.setattr(subagent_mod.platform_compat, "IS_LINUX", True)
@@ -462,7 +462,7 @@ async def test_a_child_of_a_remote_session_is_held_to_its_engine_not_the_host_fl
     await wait_taskq_open(mgr)
     mgr._spawn_stagger_secs = 0.0
     # A heavy LOCAL history for the default bucket must not price a remote child.
-    mgr._learned_costs_gb = {"kirocrew": 6.0}
+    mgr._learned_costs_gb = {"ajcrew": 6.0}
     worker = AsyncMock()
     monkeypatch.setattr(mgr, "_run", worker)
     try:

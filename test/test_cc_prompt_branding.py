@@ -1,7 +1,7 @@
 """The default agent's prompt on the claude backend keeps the product name and paths.
 
 ``_resolve_agent_prompt`` hands the claude harness the same ``prompt.md`` the
-Kiro harness reads. Only the ``kiro-cli`` transport name is respelled; "Kiro
+Kiro harness reads. Only the ``kiro-cli`` transport name is respelled; "Aj
 Crew" and the ``~/.kiro/crew`` data home are the same on every backend, so a
 rewrite of them would tell the agent about a product that does not exist and
 send it looking for skills under a ``~/.claude/crew`` tree nothing writes.
@@ -13,9 +13,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.context import ContextBuilder
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.context import ContextBuilder
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 
 @pytest.fixture
@@ -23,7 +23,7 @@ def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """A private data home, so no user override reaches the shipped prompt."""
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     return home
 
 
@@ -40,7 +40,7 @@ def builder(tmp_path: Path, opened, monkeypatch: pytest.MonkeyPatch) -> ContextB
 
 def _resolve(builder: ContextBuilder, *, is_cc: bool) -> str:
     return builder._resolve_agent_prompt(
-        "kirocrew",
+        "ajcrew",
         project=None,
         mode="",
         session_key="sess-cc-branding",
@@ -50,12 +50,12 @@ def _resolve(builder: ContextBuilder, *, is_cc: bool) -> str:
     )
 
 
-def test_shipped_prompt_keeps_kiro_crew_and_its_data_home_paths(
+def test_shipped_prompt_keeps_aj_crew_and_its_data_home_paths(
     home: Path, builder: ContextBuilder
 ) -> None:
     resolved = _resolve(builder, is_cc=True)
 
-    assert "Kiro Crew" in resolved
+    assert "Aj Crew" in resolved
     assert "~/.kiro/crew/skills/" in resolved
     assert "Claude Crew" not in resolved
     assert "~/.claude/crew" not in resolved
@@ -77,9 +77,9 @@ def test_user_override_respells_kiro_cli_and_nothing_else(
     home: Path, builder: ContextBuilder
 ) -> None:
     (home / "prompt.md").write_text(
-        "Kiro Crew runs kiro-cli; skills live in ~/.kiro/crew/skills/.\n", encoding="utf-8"
+        "Aj Crew runs kiro-cli; skills live in ~/.kiro/crew/skills/.\n", encoding="utf-8"
     )
 
     resolved = _resolve(builder, is_cc=True)
 
-    assert resolved.startswith("Kiro Crew runs claude code; skills live in ~/.kiro/crew/skills/.")
+    assert resolved.startswith("Aj Crew runs claude code; skills live in ~/.kiro/crew/skills/.")

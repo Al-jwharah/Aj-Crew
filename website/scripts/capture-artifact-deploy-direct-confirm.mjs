@@ -79,7 +79,7 @@ const DEPLOYED = {
       provider: 'aws',
       account: '1234',
       region: 'us-east-1',
-      public_url: 'https://kirocrew-web-revenue-explorer.s3-website-us-east-1.amazonaws.com',
+      public_url: 'https://ajcrew-web-revenue-explorer.s3-website-us-east-1.amazonaws.com',
     },
   },
 }
@@ -100,7 +100,7 @@ const REAPER_REFUSAL = {
     'TTL 24h was requested for site quarterly-dashboard, but no reaper schedule '
     + 'was found for profile default in us-east-1. Without it the bucket would '
     + 'outlive its expiry with no process to remove it.',
-  remediation: '/local/home/example/.kirocrew/skills/artifact-deploy/install-reaper.sh --profile default',
+  remediation: '/local/home/example/.ajcrew/skills/artifact-deploy/install-reaper.sh --profile default',
 }
 
 // The one refusal this flow cannot route around: with no built static root there
@@ -145,7 +145,7 @@ const extra = async (path, route) => {
     return json(route, {
       cloudDeploymentEnabled: true,
       reaperInstallScript:
-        '/local/home/example/.kirocrew/skills/artifact-deploy/install-reaper.sh',
+        '/local/home/example/.ajcrew/skills/artifact-deploy/install-reaper.sh',
     }), true
   }
   if (path === '/api/deploy/profiles') {
@@ -182,7 +182,7 @@ const extra = async (path, route) => {
       try { confirming = JSON.parse(route.request().postData() || '{}').confirm === true } catch { /* preview */ }
       if (!confirming) return json(route, PREVIEW), true
       return json(route, {
-        url: 'https://kirocrew-web-quarterly-dashboard.s3-website-us-east-1.amazonaws.com',
+        url: 'https://ajcrew-web-quarterly-dashboard.s3-website-us-east-1.amazonaws.com',
         profile: 'default', region: 'us-east-1',
       }), true
     }
@@ -344,7 +344,7 @@ async function main() {
   await page.goto(base + `/artifacts/${DEPLOYED.slug}`, { waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(2500)
   await shot(page, '06-card-deployed', 820)
-  const urlSeen = await page.getByText(/kirocrew-web-revenue-explorer/).count()
+  const urlSeen = await page.getByText(/ajcrew-web-revenue-explorer/).count()
   console.log(`CHECK 06-card-deployed: public URL rendered -> ${urlSeen > 0 ? 'YES' : 'NO'}`)
   if (urlSeen === 0) process.exitCode = 1
 
@@ -414,7 +414,7 @@ async function main() {
     const ack = page.getByRole('button', { name: /Deploy|Publish|Confirm/i }).last()
     if (await ack.count()) { await ack.click().catch(() => {}); await page.waitForTimeout(1800) }
     await shot(page, '09-done')
-    const urlSeen = await page.getByText(/kirocrew-web-quarterly-dashboard/).count()
+    const urlSeen = await page.getByText(/ajcrew-web-quarterly-dashboard/).count()
     const failSeen = await page.getByText(/Unexpected response|Deploy failed/i).count()
     console.log(`CHECK 09-done: url=${urlSeen} failure=${failSeen}`)
     if (urlSeen === 0 || failSeen > 0) process.exitCode = 1

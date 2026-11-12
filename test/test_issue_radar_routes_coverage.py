@@ -25,7 +25,7 @@ That is what this file covers, at three levels:
 
 Everything is patched at the ``github_client`` / ``store`` boundary, so no ``gh``
 subprocess runs, no network is touched, and nothing is written outside the
-per-test ``KIROCREW_HOME`` that ``conftest.py`` pins. No sleeps and no
+per-test ``AJCREW_HOME`` that ``conftest.py`` pins. No sleeps and no
 wall-clock assertions, so ordering and duration cannot make these flaky.
 
 This file pins the field parsers, the write-permission gate, the shared error mapper,
@@ -63,8 +63,8 @@ from issue_radar_routes_coverage_helpers import (
     _writable,
 )
 
-from kiro_crew.apps.builtins.issue_radar.backend import github_client as gh
-from kiro_crew.apps.builtins.issue_radar.backend import routes, store
+from aj_crew.apps.builtins.issue_radar.backend import github_client as gh
+from aj_crew.apps.builtins.issue_radar.backend import routes, store
 
 # ── pure request-field parsers ───────────────────────────────────────────────
 
@@ -573,7 +573,7 @@ class TestRegisterRoutes(unittest.TestCase):
         self.assertNotIn("merge", routes._BULK_PR_ACTIONS)
 
     def test_the_watcher_lifecycle_hooks_are_registered(self):
-        from kiro_crew.apps.builtins.issue_radar.backend import watch
+        from aj_crew.apps.builtins.issue_radar.backend import watch
 
         self.assertIn(watch.start_watcher, self.app.on_startup)
         self.assertIn(watch.stop_watcher, self.app.on_cleanup)

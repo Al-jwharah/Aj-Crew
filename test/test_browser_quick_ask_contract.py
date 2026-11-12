@@ -17,7 +17,7 @@ import pytest
 from test_browser_quick_ask import _home  # noqa: F401 - the autouse hub/home reset
 from test_browser_quick_ask import KEY, FakePage, _answer, _asked
 
-from kiro_crew.browser_harness import live_hub as lh
+from aj_crew.browser_harness import live_hub as lh
 
 pytestmark = pytest.mark.asyncio
 

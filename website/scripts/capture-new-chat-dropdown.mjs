@@ -30,7 +30,7 @@ const folders = [
 ]
 
 const slot = (key, title, folder_id, last_ts, mode = '') => ({
-  key, title, messages: 6, running: false, agent: 'kirocrew', mode,
+  key, title, messages: 6, running: false, agent: 'ajcrew', mode,
   created: '2026-08-01T01:00:00Z', last_ts, folder_id,
 })
 

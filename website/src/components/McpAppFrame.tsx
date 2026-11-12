@@ -565,7 +565,7 @@ export default function McpAppFrame({ payload }: { payload: McpAppRenderPayload 
       if (
         e.data &&
         typeof e.data === 'object' &&
-        (e.data as { __kirocrew_nav__?: unknown }).__kirocrew_nav__
+        (e.data as { __ajcrew_nav__?: unknown }).__ajcrew_nav__
       ) {
         navigatedRef.current = true
         return
@@ -600,7 +600,7 @@ export default function McpAppFrame({ payload }: { payload: McpAppRenderPayload 
               id: msg.id,
               result: {
                 protocolVersion: PROTOCOL_VERSION,
-                hostInfo: { name: 'kirocrew', version: '0.1' },
+                hostInfo: { name: 'ajcrew', version: '0.1' },
                 hostCapabilities: HOST_CAPABILITIES,
                 hostContext: {
                   theme: themeSnapshotRef.current.theme,

@@ -15,7 +15,7 @@ from browser_live_helpers import (
     make_stream,
 )
 
-from kiro_crew.browser_harness import screencast as sc
+from aj_crew.browser_harness import screencast as sc
 
 # ── wire shape ─────────────────────────────────────────────────────────────
 

@@ -13,7 +13,7 @@ import uuid
 
 import pytest
 
-from kiro_crew.artifacts import ArtifactComment, ArtifactStore
+from aj_crew.artifacts import ArtifactComment, ArtifactStore
 
 _SLUG = "corrupt-comments"
 #: A UTF-16 BOM and a latin-1 ``é``: neither byte sequence is valid UTF-8.

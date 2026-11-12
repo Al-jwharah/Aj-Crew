@@ -22,12 +22,12 @@ from dev_fleet_app_helpers import _sweep_staged_sync_tempdirs  # noqa: F401 - fi
 from dev_fleet_app_helpers import _venv_maps_to_the_synced_checkout  # noqa: F401 - fixture
 from git_maintenance_helpers import git_maintenance_off_entries
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
-from kiro_crew.apps.builtins.dev_fleet import http_api as http_api_mod
-from kiro_crew.apps.builtins.dev_fleet import repository as repository_mod
-from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod
-from kiro_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
+from aj_crew.apps.builtins.dev_fleet import http_api as http_api_mod
+from aj_crew.apps.builtins.dev_fleet import repository as repository_mod
+from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod
+from aj_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
 
 # ---- builtin re-shell: HMAC middleware, R35, app-process tests ----
 
@@ -44,7 +44,7 @@ def _sign_request(secret: str, method: str, path: str, body: bytes = b"") -> dic
     body_hash = hashlib.sha256(body).hexdigest()
     msg = f"{ts}:{method}:{path}:{body_hash}"
     sig = _hmac_mod.new(secret.encode(), msg.encode(), hashlib.sha256).hexdigest()
-    return {"X-KiroCrew-Proxy": f"{ts}:{sig}"}
+    return {"X-AjCrew-Proxy": f"{ts}:{sig}"}
 
 
 def test_is_pr_merged():
@@ -154,9 +154,9 @@ async def test_discover_worktrees_sandbox_error_keeps_remedy():
         "available on this host, and the agent subprocess cannot be safely "
         "isolated. Probe detail: sandbox-exec probe failed (exit 71). This "
         "host's sandbox is NOT broken: the kernel reports this process is "
-        "already inside a macOS Seatbelt sandbox that KiroCrew did not create. "
+        "already inside a macOS Seatbelt sandbox that Aj Crew did not create. "
         'Set {"sandbox": false} in ~/.kiro/settings/amazon-internal.json so '
-        "KiroCrew's own profile owns isolation, then restart the gateway."
+        "Aj Crew's own profile owns isolation, then restart the gateway."
     )
     assert len(stderr) > 200, "fixture must exceed the old cap to be meaningful"
     with patch.object(runtime_mod, "_run_cmd", new=AsyncMock(return_value=(-1, "", stderr))):
@@ -184,8 +184,8 @@ async def test_discover_worktrees_missing_repo_raises_actionable_error(tmp_path)
 
     A silent [] here would render as the
     "No worktrees found" empty state. On packaged installs (where
-    KIROCREW_PROJECT_DIR points at the app bundle and discovery falls through
-    to the hardcoded ~/kirocrew) that empty state told users they had no
+    AJCREW_PROJECT_DIR points at the app bundle and discovery falls through
+    to the hardcoded ~/ajcrew) that empty state told users they had no
     worktrees when the app was simply looking at a path that does not exist.
     """
     missing = tmp_path / "does-not-exist"
@@ -201,7 +201,7 @@ async def test_discover_worktrees_missing_repo_raises_actionable_error(tmp_path)
             await mod._discover_worktrees()
     msg = str(exc.value)
     assert str(missing) in msg  # names the path it tried
-    assert "KIROCREW_DEVFLEET_REPO" in msg  # names the remedy
+    assert "AJCREW_DEVFLEET_REPO" in msg  # names the remedy
 
 
 @pytest.mark.asyncio
@@ -245,7 +245,7 @@ async def test_discover_worktrees_unresolved_git_blames_host_not_repo(tmp_path):
     Without the fix this failure surfaces as "git worktree discovery
     failed in <repo>: no trusted executable for 'git' in <PATH>" — blaming a
     healthy checkout, echoing the whole trusted PATH into the UI, and never
-    naming KIROCREW_DEVFLEET_BIN_GIT, the override that is the actual remedy.
+    naming AJCREW_DEVFLEET_BIN_GIT, the override that is the actual remedy.
     """
     repo = tmp_path / "repo"
     (repo / ".git").mkdir(parents=True)
@@ -258,7 +258,7 @@ async def test_discover_worktrees_unresolved_git_blames_host_not_repo(tmp_path):
             await mod._discover_worktrees()
     msg = str(exc.value)
     assert "'git'" in msg  # names the tool that could not be resolved
-    assert "KIROCREW_DEVFLEET_BIN_GIT" in msg  # names the remedy
+    assert "AJCREW_DEVFLEET_BIN_GIT" in msg  # names the remedy
     assert mod._TRUSTED_PATH not in msg  # PATH stays in the log, not the UI
     assert "worktree discovery failed" not in msg  # not blamed on the repo
     assert str(repo) not in msg  # the checkout is not implicated at all
@@ -297,16 +297,16 @@ async def test_sync_unresolved_git_names_override_not_path(monkeypatch):
         res = await mod._sync()
     assert res["ok"] is False
     assert "'git'" in res["error"]
-    assert "KIROCREW_DEVFLEET_BIN_GIT" in res["error"]
+    assert "AJCREW_DEVFLEET_BIN_GIT" in res["error"]
     assert mod._TRUSTED_PATH not in res["error"]
 
 
 def test_bin_override_var_derivation():
     """The advertised override var matches what _trusted_bin actually reads,
     including dash-to-underscore mapping for non-git tools."""
-    assert mod._bin_override_var("git") == "KIROCREW_DEVFLEET_BIN_GIT"
-    assert mod._bin_override_var("some-tool") == "KIROCREW_DEVFLEET_BIN_SOME_TOOL"
-    assert "KIROCREW_DEVFLEET_BIN_GIT" in mod._unresolved_tool_message("git")
+    assert mod._bin_override_var("git") == "AJCREW_DEVFLEET_BIN_GIT"
+    assert mod._bin_override_var("some-tool") == "AJCREW_DEVFLEET_BIN_SOME_TOOL"
+    assert "AJCREW_DEVFLEET_BIN_GIT" in mod._unresolved_tool_message("git")
 
 
 # =============================================================================
@@ -342,7 +342,7 @@ async def test_hmac_invalid_signature_returns_401():
     with patch.object(http_api_mod, "_load_app_secret", return_value="secret"):
         async with TestClient(TestServer(app)) as client:
             ts = str(int(time.time()))
-            headers = {"X-KiroCrew-Proxy": f"{ts}:badbadbadbad"}
+            headers = {"X-AjCrew-Proxy": f"{ts}:badbadbadbad"}
             resp = await client.get("/api/fleet", headers=headers)
             assert resp.status == 401
             body = await resp.json()
@@ -359,7 +359,7 @@ async def test_hmac_expired_timestamp_returns_401():
             body_hash = hashlib.sha256(b"").hexdigest()
             msg = f"{old_ts}:GET:/api/fleet:{body_hash}"
             sig = _hmac_mod.new(secret.encode(), msg.encode(), hashlib.sha256).hexdigest()
-            headers = {"X-KiroCrew-Proxy": f"{old_ts}:{sig}"}
+            headers = {"X-AjCrew-Proxy": f"{old_ts}:{sig}"}
             resp = await client.get("/api/fleet", headers=headers)
             assert resp.status == 401
             body = await resp.json()
@@ -483,9 +483,9 @@ async def test_fleet_handler_missing_repo_returns_error_payload():
 
     async def boom():
         raise RuntimeError(
-            "main checkout not found: /nope/kirocrew is missing or not a git "
-            "checkout. Set KIROCREW_DEVFLEET_REPO to your Kiro Crew checkout, "
-            "or clone it to ~/kirocrew."
+            "main checkout not found: /nope/ajcrew is missing or not a git "
+            "checkout. Set AJCREW_DEVFLEET_REPO to your Aj Crew checkout, "
+            "or clone it to ~/ajcrew."
         )
 
     with (
@@ -500,7 +500,7 @@ async def test_fleet_handler_missing_repo_returns_error_payload():
             body = await resp.json()
             assert body["worktrees"] == []
             assert "main checkout not found" in body["error"]
-            assert "KIROCREW_DEVFLEET_REPO" in body["error"]
+            assert "AJCREW_DEVFLEET_REPO" in body["error"]
 
 
 # =============================================================================
@@ -509,20 +509,20 @@ async def test_fleet_handler_missing_repo_returns_error_payload():
 
 
 def _make_checkout(root: Path) -> Path:
-    """Create a directory carrying every Kiro Crew checkout marker."""
+    """Create a directory carrying every Aj Crew checkout marker."""
     (root / ".git").mkdir(parents=True)
-    (root / "src" / "kiro_crew").mkdir(parents=True)
-    (root / "pyproject.toml").write_text("[project]\nname = 'kiro-crew'\n")
+    (root / "src" / "aj_crew").mkdir(parents=True)
+    (root / "pyproject.toml").write_text("[project]\nname = 'aj-crew'\n")
     return root
 
 
-def test_is_kirocrew_checkout_requires_every_marker(tmp_path):
+def test_is_ajcrew_checkout_requires_every_marker(tmp_path):
     """A bare git repo is refused: adopting it would run Pull+Build inside it."""
     bare = tmp_path / "some-other-repo"
     (bare / ".git").mkdir(parents=True)
-    assert mod._is_kirocrew_checkout(str(bare)) is False
-    assert mod._is_kirocrew_checkout(str(_make_checkout(tmp_path / "kirocrew"))) is True
-    assert mod._is_kirocrew_checkout("") is False
+    assert mod._is_ajcrew_checkout(str(bare)) is False
+    assert mod._is_ajcrew_checkout(str(_make_checkout(tmp_path / "ajcrew"))) is True
+    assert mod._is_ajcrew_checkout("") is False
 
 
 def test_default_main_repo_returns_empty_when_nothing_is_found(monkeypatch):
@@ -531,35 +531,35 @@ def test_default_main_repo_returns_empty_when_nothing_is_found(monkeypatch):
     A synthesized default makes a first run report a missing checkout the user
     never chose, which reads as a broken app rather than an open question.
     """
-    monkeypatch.delenv("KIROCREW_DEVFLEET_REPO", raising=False)
-    monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+    monkeypatch.delenv("AJCREW_DEVFLEET_REPO", raising=False)
+    monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
     with patch.object(repository_mod, "_own_source_checkout", return_value=None):
         assert mod._default_main_repo() == ""
 
 
-def test_default_main_repo_skips_a_project_dir_that_is_not_kirocrew(monkeypatch, tmp_path):
+def test_default_main_repo_skips_a_project_dir_that_is_not_ajcrew(monkeypatch, tmp_path):
     """A project directory that is some other git repo is not adopted."""
     other = tmp_path / "other"
     (other / ".git").mkdir(parents=True)
-    monkeypatch.delenv("KIROCREW_DEVFLEET_REPO", raising=False)
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(other))
+    monkeypatch.delenv("AJCREW_DEVFLEET_REPO", raising=False)
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(other))
     with patch.object(repository_mod, "_own_source_checkout", return_value=None):
         assert mod._default_main_repo() == ""
 
 
 def test_default_main_repo_falls_back_to_the_running_checkout(monkeypatch, tmp_path):
     """A gateway running from source manages that source tree, unconfigured."""
-    own = _make_checkout(tmp_path / "kirocrew")
-    monkeypatch.delenv("KIROCREW_DEVFLEET_REPO", raising=False)
-    monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+    own = _make_checkout(tmp_path / "ajcrew")
+    monkeypatch.delenv("AJCREW_DEVFLEET_REPO", raising=False)
+    monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
     with patch.object(repository_mod, "_own_source_checkout", return_value=str(own)):
         assert mod._default_main_repo() == str(own)
 
 
 def test_discover_main_repo_honors_the_config_repo_path(monkeypatch):
     """``dev_fleet.repo_path`` is a supported alternative to the env var."""
-    monkeypatch.delenv("KIROCREW_DEVFLEET_REPO", raising=False)
-    monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+    monkeypatch.delenv("AJCREW_DEVFLEET_REPO", raising=False)
+    monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
     with patch.object(repository_mod, "_load_dev_fleet_cfg", return_value={"repo_path": "/opt/kc"}):
         assert mod._discover_main_repo() == "/opt/kc"
 
@@ -567,17 +567,17 @@ def test_discover_main_repo_honors_the_config_repo_path(monkeypatch):
 def test_discover_main_repo_takes_an_explicit_path_verbatim(monkeypatch):
     """A configured path is NOT marker-tested: a typo must surface as an error
     naming that path, not be silently swapped for a discovered checkout."""
-    monkeypatch.setenv("KIROCREW_DEVFLEET_REPO", "/typo/kirocrew")
+    monkeypatch.setenv("AJCREW_DEVFLEET_REPO", "/typo/ajcrew")
     with patch.object(repository_mod, "_load_dev_fleet_cfg", return_value={"repo_path": "/opt/kc"}):
-        assert mod._discover_main_repo() == "/typo/kirocrew"
+        assert mod._discover_main_repo() == "/typo/ajcrew"
 
 
 def test_discover_main_repo_finds_a_conventional_clone_location(monkeypatch, tmp_path):
     """A real checkout in a conventional location is found without configuration."""
     home = tmp_path / "home"
-    checkout = _make_checkout(home / "Repos" / "KiroCrew")  # brand-ok: clone dir name
-    monkeypatch.delenv("KIROCREW_DEVFLEET_REPO", raising=False)
-    monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+    checkout = _make_checkout(home / "Repos" / "AjCrew")  # brand-ok: clone dir name
+    monkeypatch.delenv("AJCREW_DEVFLEET_REPO", raising=False)
+    monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
     with (
         patch.object(repository_mod, "_load_dev_fleet_cfg", return_value={}),
         patch.object(repository_mod, "_own_source_checkout", return_value=None),
@@ -590,9 +590,9 @@ def test_discover_main_repo_uses_the_filesystem_spelling(monkeypatch, tmp_path):
     """The returned path is spelled the way the directory is, not the way the
     probe list guesses — a case-variant does not match what git reports."""
     home = tmp_path / "home"
-    checkout = _make_checkout(home / "repos" / "KIROCREW")
-    monkeypatch.delenv("KIROCREW_DEVFLEET_REPO", raising=False)
-    monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+    checkout = _make_checkout(home / "repos" / "AJCREW")
+    monkeypatch.delenv("AJCREW_DEVFLEET_REPO", raising=False)
+    monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
     with (
         patch.object(repository_mod, "_load_dev_fleet_cfg", return_value={}),
         patch.object(repository_mod, "_own_source_checkout", return_value=None),
@@ -602,11 +602,11 @@ def test_discover_main_repo_uses_the_filesystem_spelling(monkeypatch, tmp_path):
 
 
 def test_discover_main_repo_ignores_an_unmarked_conventional_location(monkeypatch, tmp_path):
-    """An empty ~/kirocrew directory does not count as a checkout."""
+    """An empty ~/ajcrew directory does not count as a checkout."""
     home = tmp_path / "home"
-    (home / "kirocrew").mkdir(parents=True)
-    monkeypatch.delenv("KIROCREW_DEVFLEET_REPO", raising=False)
-    monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+    (home / "ajcrew").mkdir(parents=True)
+    monkeypatch.delenv("AJCREW_DEVFLEET_REPO", raising=False)
+    monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
     with (
         patch.object(repository_mod, "_load_dev_fleet_cfg", return_value={}),
         patch.object(repository_mod, "_own_source_checkout", return_value=None),
@@ -654,7 +654,7 @@ async def test_fleet_handler_reports_needs_setup_without_an_error():
     instead of rendering a red banner against a path the user never chose."""
 
     async def unconfigured():
-        raise mod.RepoNotConfigured("no Kiro Crew checkout found to manage")
+        raise mod.RepoNotConfigured("no Aj Crew checkout found to manage")
 
     with (
         patch.object(fleet_state_mod, "_fleet_refresh", new=unconfigured),
@@ -670,7 +670,7 @@ async def test_fleet_handler_reports_needs_setup_without_an_error():
 
 
 @pytest.mark.asyncio
-async def test_discover_worktrees_refuses_a_configured_non_kirocrew_repo():
+async def test_discover_worktrees_refuses_a_configured_non_ajcrew_repo():
     """A configured path that is a readable git repo but NOT this project is
     refused by name, never operated on. Tiers 1-2 skip the marker test at
     DISCOVERY so a typo is not silently replaced by a found checkout — that must
@@ -679,7 +679,7 @@ async def test_discover_worktrees_refuses_a_configured_non_kirocrew_repo():
     with (
         patch.object(repository_mod, "MAIN_REPO", "/some/other/repo"),
         patch.object(
-            repository_mod, "_REPO_INVALID_MSG", "not a Kiro Crew checkout: /some/other/repo ..."
+            repository_mod, "_REPO_INVALID_MSG", "not an Aj Crew checkout: /some/other/repo ..."
         ),
         patch.object(runtime_mod, "_run_cmd", new=run),
     ):
@@ -689,11 +689,11 @@ async def test_discover_worktrees_refuses_a_configured_non_kirocrew_repo():
     # happily, so the guard cannot rely on a non-zero exit.
     run.assert_not_awaited()
     assert "/some/other/repo" in str(exc.value)
-    assert "not a Kiro Crew checkout" in str(exc.value)
+    assert "not an Aj Crew checkout" in str(exc.value)
 
 
 @pytest.mark.asyncio
-async def test_auto_prune_reaper_idles_for_a_configured_non_kirocrew_repo():
+async def test_auto_prune_reaper_idles_for_a_configured_non_ajcrew_repo():
     """An enabled reaper must not run a cycle against an unusable checkout.
 
     MAIN_REPO is TRUTHY for a configured path that fails the marker test, so a
@@ -706,7 +706,7 @@ async def test_auto_prune_reaper_idles_for_a_configured_non_kirocrew_repo():
     sel = MagicMock()
     with (
         patch.object(repository_mod, "MAIN_REPO", "/some/other/repo"),
-        patch.object(repository_mod, "_REPO_INVALID_MSG", "not a Kiro Crew checkout: ..."),
+        patch.object(repository_mod, "_REPO_INVALID_MSG", "not an Aj Crew checkout: ..."),
         patch.object(worktree_ops_mod, "_auto_prune_cfg", return_value=(True, 0.01)),
         patch.object(worktree_ops_mod, "_auto_prune_once", new=prune),
         patch.object(runtime_mod, "_sel", return_value=sel),
@@ -720,29 +720,29 @@ async def test_auto_prune_reaper_idles_for_a_configured_non_kirocrew_repo():
 
 
 @pytest.mark.asyncio
-async def test_sync_refuses_a_configured_non_kirocrew_repo():
+async def test_sync_refuses_a_configured_non_ajcrew_repo():
     """The gate lives in the accessor, not the discovery funnel: sync and the
     refresher never pass through _discover_worktrees, and `pull --ff-only` plus
     `pip install -e` inside an unrelated repository is the worst outcome here."""
     with (
         patch.object(repository_mod, "MAIN_REPO", "/some/other/repo"),
         patch.object(
-            repository_mod, "_REPO_INVALID_MSG", "not a Kiro Crew checkout: /some/other/repo ..."
+            repository_mod, "_REPO_INVALID_MSG", "not an Aj Crew checkout: /some/other/repo ..."
         ),
     ):
         res = await mod._sync_start_locked()
     assert res["ok"] is False
-    assert "not a Kiro Crew checkout" in res["error"]
+    assert "not an Aj Crew checkout" in res["error"]
 
 
 @pytest.mark.asyncio
-async def test_status_refresher_idles_for_a_configured_non_kirocrew_repo(caplog):
+async def test_status_refresher_idles_for_a_configured_non_ajcrew_repo(caplog):
     run = AsyncMock(return_value=(0, "", ""))
-    caplog.set_level("INFO", logger="kiro_crew.apps.builtins.dev_fleet.server")
+    caplog.set_level("INFO", logger="aj_crew.apps.builtins.dev_fleet.server")
     with (
         patch.object(repository_mod, "MAIN_REPO", "/some/other/repo"),
         patch.object(
-            repository_mod, "_REPO_INVALID_MSG", "not a Kiro Crew checkout: /some/other/repo ..."
+            repository_mod, "_REPO_INVALID_MSG", "not an Aj Crew checkout: /some/other/repo ..."
         ),
         patch.object(runtime_mod, "_run_cmd", new=run),
     ):
@@ -751,11 +751,11 @@ async def test_status_refresher_idles_for_a_configured_non_kirocrew_repo(caplog)
     idle = [
         r.getMessage()
         for r in caplog.records
-        if r.name == "kiro_crew.apps.builtins.dev_fleet.server"
+        if r.name == "aj_crew.apps.builtins.dev_fleet.server"
         and "status refresher idle" in r.getMessage()
     ]
     assert idle == [
-        "dev-fleet: status refresher idle — not a Kiro Crew checkout: /some/other/repo ..."
+        "dev-fleet: status refresher idle — not an Aj Crew checkout: /some/other/repo ..."
     ]
     # Returned without fetching: no git ran against the unrelated repository.
     run.assert_not_awaited()
@@ -788,14 +788,12 @@ def test_repo_accessor_gates_both_unusable_states():
 @pytest.mark.asyncio
 async def test_discover_worktrees_proceeds_for_a_validated_checkout():
     with (
-        patch.object(repository_mod, "MAIN_REPO", "/good/kirocrew"),
+        patch.object(repository_mod, "MAIN_REPO", "/good/ajcrew"),
         patch.object(repository_mod, "_REPO_INVALID_MSG", None),
         patch.object(
             runtime_mod,
             "_run_cmd",
-            new=AsyncMock(
-                return_value=(0, "worktree /good/kirocrew\nbranch refs/heads/main\n", "")
-            ),
+            new=AsyncMock(return_value=(0, "worktree /good/ajcrew\nbranch refs/heads/main\n", "")),
         ),
     ):
         entries = await mod._discover_worktrees()
@@ -807,7 +805,7 @@ async def test_sync_refuses_without_a_repo():
     with patch.object(repository_mod, "MAIN_REPO", ""):
         res = await mod._sync_start_locked()
     assert res["ok"] is False
-    assert "no Kiro Crew checkout" in res["error"]
+    assert "no Aj Crew checkout" in res["error"]
 
 
 @pytest.mark.asyncio
@@ -819,7 +817,7 @@ async def test_unconfigured_repo_answers_a_coded_409_not_a_500():
     secret = "s" * 32
 
     async def boom(request):
-        raise mod.RepoNotConfigured("no Kiro Crew checkout found to manage")
+        raise mod.RepoNotConfigured("no Aj Crew checkout found to manage")
 
     app = web.Application(middlewares=[mod.hmac_proxy_middleware])
     app.router.add_get("/api/prune-candidates", boom)
@@ -881,13 +879,13 @@ async def test_fleet_handler_still_reports_an_unreadable_repo_as_an_error():
 
 
 def test_repo_source_hint_names_the_env_var(monkeypatch):
-    monkeypatch.setenv("KIROCREW_DEVFLEET_REPO", "/typo/kirocrew")
-    assert "KIROCREW_DEVFLEET_REPO" in mod._repo_source_hint()
+    monkeypatch.setenv("AJCREW_DEVFLEET_REPO", "/typo/ajcrew")
+    assert "AJCREW_DEVFLEET_REPO" in mod._repo_source_hint()
     assert "config.json" not in mod._repo_source_hint()
 
 
 def test_repo_source_hint_names_the_config_key(monkeypatch):
-    monkeypatch.delenv("KIROCREW_DEVFLEET_REPO", raising=False)
+    monkeypatch.delenv("AJCREW_DEVFLEET_REPO", raising=False)
     with patch.object(
         repository_mod, "_load_dev_fleet_cfg", return_value={"repo_path": "/typo/kc"}
     ):
@@ -897,10 +895,10 @@ def test_repo_source_hint_names_the_config_key(monkeypatch):
 
 
 def test_repo_source_hint_offers_both_when_neither_is_set(monkeypatch):
-    monkeypatch.delenv("KIROCREW_DEVFLEET_REPO", raising=False)
+    monkeypatch.delenv("AJCREW_DEVFLEET_REPO", raising=False)
     with patch.object(repository_mod, "_load_dev_fleet_cfg", return_value={}):
         hint = mod._repo_source_hint()
-    assert "KIROCREW_DEVFLEET_REPO" in hint and "config.json" in hint
+    assert "AJCREW_DEVFLEET_REPO" in hint and "config.json" in hint
 
 
 # =============================================================================
@@ -1112,36 +1110,36 @@ def test_create_app_returns_aiohttp_application():
 # ---- platform fixes discovered during pod QA of the builtin re-shell ----
 
 
-def test_backend_spawn_env_includes_kirocrew_home(monkeypatch):
+def test_backend_spawn_env_includes_ajcrew_home(monkeypatch):
     """The app backend must resolve the SAME config home as the gateway:
-    minimal_env() strips KIROCREW_HOME, so spawn must re-inject it or the
+    minimal_env() strips AJCREW_HOME, so spawn must re-inject it or the
     backend reads the wrong .app_secret and every proxied call 401s."""
-    import kiro_crew.apps.registry as registry
+    import aj_crew.apps.registry as registry
 
-    monkeypatch.setenv("KIROCREW_HOME", "/tmp/some-pod-home")
-    env = registry.minimal_env(KIROCREW_HOME="/tmp/some-pod-home")
-    assert env["KIROCREW_HOME"] == "/tmp/some-pod-home"
+    monkeypatch.setenv("AJCREW_HOME", "/tmp/some-pod-home")
+    env = registry.minimal_env(AJCREW_HOME="/tmp/some-pod-home")
+    assert env["AJCREW_HOME"] == "/tmp/some-pod-home"
     # And the bare strip behavior that motivated the fix:
-    assert "KIROCREW_HOME" not in registry.minimal_env()
+    assert "AJCREW_HOME" not in registry.minimal_env()
 
 
 def test_backend_spawn_env_passes_project_dir(monkeypatch):
-    """KIROCREW_PROJECT_DIR is a platform var like KIROCREW_HOME — backends
+    """AJCREW_PROJECT_DIR is a platform var like AJCREW_HOME — backends
     (e.g. dev-fleet worktree discovery) need the gateway's source checkout."""
     import inspect
 
-    import kiro_crew.apps.backend as backend_mod
+    import aj_crew.apps.backend as backend_mod
 
     src = inspect.getsource(backend_mod)
-    assert "KIROCREW_HOME=str(config_dir())" in src
-    assert '"KIROCREW_PROJECT_DIR"' in src
+    assert "AJCREW_HOME=str(config_dir())" in src
+    assert '"AJCREW_PROJECT_DIR"' in src
 
 
 def test_app_secret_loader_does_not_cache_empty(monkeypatch, tmp_path):
     """A missing secret must NOT be cached: it may be provisioned after the
     backend starts (install race). Empty-cache would 401 forever."""
     monkeypatch.setattr(http_api_mod, "_APP_SECRET", None)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     assert mod._load_app_secret() == ""
     assert mod._APP_SECRET is None  # emptiness NOT latched
     sdir = tmp_path / "apps" / mod.APP_NAME

@@ -20,7 +20,7 @@ from taskrunner_helpers import (
     _make_mock_sessions,
 )
 
-from kiro_crew.taskrunner import Step, TaskRun, TaskRunner
+from aj_crew.taskrunner import Step, TaskRun, TaskRunner
 
 
 class TestTaskNaming:
@@ -147,14 +147,14 @@ class TestWorkspaceDirValidation:
             TaskRunner(sessions=_make_mock_sessions(), workspace_dir=str(link))
 
     def test_resolve_helper_blank_and_normal(self, tmp_path):
-        from kiro_crew.taskrunner import _resolve_workspace_dir
+        from aj_crew.taskrunner import _resolve_workspace_dir
 
         assert _resolve_workspace_dir("") == ""
         assert _resolve_workspace_dir("   ") == ""
         assert _resolve_workspace_dir(str(tmp_path)) == str(Path(tmp_path).resolve())
 
     def test_resolve_helper_rejects_sensitive(self):
-        from kiro_crew.taskrunner import _resolve_workspace_dir
+        from aj_crew.taskrunner import _resolve_workspace_dir
 
         with pytest.raises(ValueError, match="sensitive"):
             _resolve_workspace_dir("~/.aws")
@@ -188,7 +188,7 @@ class TestMaxParallelStepsClamp:
     def _cap(self, value):
         sessions = _make_mock_sessions()
         # Pin the computed host-safe ceiling to a known value (9).
-        with patch("kiro_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9):
+        with patch("aj_crew.taskrunner.compute_memory_sized_parallel_cap", return_value=9):
             runner = TaskRunner(sessions=sessions, auto_test=False, max_parallel_steps=value)
         return runner._max_parallel_steps
 
@@ -209,7 +209,7 @@ class TestMaxParallelStepsClamp:
     def test_compute_failure_falls_back_to_legacy_default(self):
         sessions = _make_mock_sessions()
         with patch(
-            "kiro_crew.taskrunner.compute_memory_sized_parallel_cap",
+            "aj_crew.taskrunner.compute_memory_sized_parallel_cap",
             side_effect=RuntimeError("boom"),
         ):
             runner = TaskRunner(sessions=sessions, auto_test=False, max_parallel_steps=0)
@@ -253,10 +253,10 @@ class TestNotifySessionKey:
         async def _sink(title: str, body: str, task_id: str = "", *, session_key: str = "") -> None:
             seen.append((title, session_key))
 
-        runner, run = await self._start(tmp_path, _sink, "telegram:kirocrew:direct:U9")
+        runner, run = await self._start(tmp_path, _sink, "telegram:ajcrew:direct:U9")
         await runner._notify("Task 1 requires approval", "run the deploy?", run=run)
 
-        assert seen == [("[spec] Task 1 requires approval", "telegram:kirocrew:direct:U9")]
+        assert seen == [("[spec] Task 1 requires approval", "telegram:ajcrew:direct:U9")]
 
     @pytest.mark.asyncio
     async def test_omitted_session_key_leaves_the_call_shape_untouched(
@@ -293,7 +293,7 @@ class TestNotifySessionKey:
         async def _legacy(title: str, body: str, task_id: str = "") -> None:
             seen.append(title)
 
-        runner, run = await self._start(tmp_path, _legacy, "telegram:kirocrew:direct:U9")
+        runner, run = await self._start(tmp_path, _legacy, "telegram:ajcrew:direct:U9")
         await runner._notify("Task 1 requires approval", "run the deploy?", run=run)
 
         assert seen == ["[spec] Task 1 requires approval"]
@@ -301,7 +301,7 @@ class TestNotifySessionKey:
     @pytest.mark.asyncio
     async def test_delete_forgets_the_originating_key(self, tmp_path: Path) -> None:
         """The mapping is per-run bookkeeping, so deleting a run releases it."""
-        runner, run = await self._start(tmp_path, AsyncMock(), "telegram:kirocrew:direct:U9")
+        runner, run = await self._start(tmp_path, AsyncMock(), "telegram:ajcrew:direct:U9")
         assert runner._run_session_keys.get(run.task_id)
 
         assert await runner.delete_run(run.task_id) is True

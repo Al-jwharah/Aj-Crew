@@ -99,6 +99,7 @@ import { useLanguageGeneration } from '../i18n/useLanguageGeneration'
 
 
 import { i18nT } from '../i18n/t'
+import { simpleDockProps, simpleHomeFits, usePaneHeight } from '../lib/simpleHome'
 
 /**
  * Horizontal room the chat pane reclaims (negative margin) while the desktop
@@ -169,7 +170,7 @@ export default function ChatPage({ mode, embedded, embedMode, popout, noUrlSync 
     }
   }, [mcpAppPanel, activeSlot, appToolCallIds, dispatch, boundStore])
   const {
-    messages, messagesRef, kiroCrewVersion, completedTurnCount, knowledgeFetch, knowledgeFetchRef, softStopAtMapRef, sentMessages, slotRunning, slotRunningRef, turnDisclosure, setTurnDisclosureFor,
+    messages, messagesRef, ajCrewVersion, completedTurnCount, knowledgeFetch, knowledgeFetchRef, softStopAtMapRef, sentMessages, slotRunning, slotRunningRef, turnDisclosure, setTurnDisclosureFor,
     toolDisclosure, setToolDisclosureFor, turnRowMayBeLive, composerBusy, projectLocked, slotStopping, slotLoading, slotSwitchTarget, pendingQuestion, restoredQuestionNotice, pendingFollowup,
     folderSuggestion, followupTsBySlot, splitMode, setSplitMode, clearSplitOnSelect, crewWindow, openEmbeddedCrewWindow, navigateToEmbeddedSlot, splitAnchor, setSplitAnchor, activeTip, dismissTip,
     slotState, contextPct, contextTokens, activityOpen, slotHasMore, slotOldestIndex, cursorIsForActiveSlot, loadingOlder, olderFailed, activeViewIsBoundedPage, history, historyHasMore, environmentStart,
@@ -835,7 +836,7 @@ export default function ChatPage({ mode, embedded, embedMode, popout, noUrlSync 
   })
   const {
     sidebarPinned, setSidebarPinned, sidebarPinnedRef, sidebarAutoHidden, sidePanelDock, sidePanelDockAnim, sidebarWidth, setSidebarWidth, sidebarDragging, setSidebarDragging, setEditingTitleSlot,
-    editingTitle, enterSplit, splitAnchorForActive, activeIsSplitAnchor, splitSeedDir,
+    editingTitle, enterSplit, splitAnchorForActive, activeIsSplitAnchor, splitSeedDir, sessionsSimple,
   } = usePaneLayoutState({
     embedMode, dispatch, slots, activeSlot, autoOpenGitPanel, autoOpenGitPanelKnown, setSplitMode, splitMode, setSplitAnchor, tabsCtl, splitFeatureEnabled, _slotProject, projectGit, projectGitError, embedded, popout, isMobile, sidePanelAlwaysOpen, sidePanelAlwaysOpenKnown, activityOpen,
   })
@@ -877,8 +878,13 @@ export default function ChatPage({ mode, embedded, embedMode, popout, noUrlSync 
     effectiveSidebarWidth, toggleAct, handleSpeak, handleApplyPlan,
   } = useMessageActions({
     dispatch, navigate, filteredSlotsRef, connected, activeSlot, messages, messagesRef, slotRunning, activityOpen, activeSlotRef, activeSlotRemoteBound, showActionError, handleFileOpen, handleFolderOpen, search,
-    tabsCtl, sessionTitles, selectSessionTab, linkPreviewsOn, planTaskId, setSidebarPinned, sidebarAutoHidden, sidebarWidth, setRegenerating,
+    tabsCtl, sessionTitles, selectSessionTab, linkPreviewsOn, planTaskId, setSidebarPinned, sessionsSimple, sidebarAutoHidden, sidebarWidth, setRegenerating,
   })
+
+  // Simple layout's home: an empty chat (not the Crew Mode welcome, which is its
+  // own page) centres the composer in the pane while the pane has room for it.
+  const { paneRef: homePaneRef, paneH: homePaneH } = usePaneHeight()
+  const simpleHome = sessionsSimple && !isMobile && !popout && transcriptWelcome && !(crewModeOn || crewWelcomeHeld) && simpleHomeFits(homePaneH, dockH)
 
   // The rows the virtualizer draws (see transcriptRows).
   const { renderedTranscript, renderedDisplayItems } = useTranscriptRows({
@@ -1164,7 +1170,7 @@ export default function ChatPage({ mode, embedded, embedMode, popout, noUrlSync 
           />
         ) : (
           <SearchHighlightContext.Provider value={searchCtxValue}>
-          <div className="relative flex flex-col flex-1 min-h-0" {...dropTargetProps}>
+          <div ref={homePaneRef} className="relative flex flex-col flex-1 min-h-0" {...dropTargetProps} {...simpleDockProps(sessionsSimple && !isMobile, simpleHome, dockH)}>
             <ChatTitleOverlay
               embedMode={embedMode} popout={popout} activeSlot={activeSlot} dispatch={dispatch} filteredSlots={filteredSlots} isMobile={isMobile} titleInTopbar={titleInTopbar}
               activityOpen={activityOpen} setActionError={setActionError} showActionError={showActionError} onPinCollapsedHeight={onPinCollapsedHeight} pinCardRef={pinCardRef}
@@ -1179,9 +1185,9 @@ export default function ChatPage({ mode, embedded, embedMode, popout, noUrlSync 
             <ChatDropOverlay active={dragOver} />
             <ChatTranscriptView
               embedded={embedded} popout={popout} activeSlot={activeSlot} appToolCallIds={appToolCallIds} titleInTopbar={titleInTopbar} workerBreadcrumb={workerBreadcrumb} activityOpen={activityOpen}
-              completedTurnCount={completedTurnCount} cursorIsForActiveSlot={cursorIsForActiveSlot} kiroCrewVersion={kiroCrewVersion} loadingOlder={loadingOlder} olderFailed={olderFailed}
+              completedTurnCount={completedTurnCount} cursorIsForActiveSlot={cursorIsForActiveSlot} ajCrewVersion={ajCrewVersion} loadingOlder={loadingOlder} olderFailed={olderFailed}
               setTurnDisclosureFor={setTurnDisclosureFor} slotHasMore={slotHasMore} slotLoading={slotLoading} slotRunning={slotRunning} slotState={slotState} environmentStart={environmentStart} slotStopping={slotStopping}
-              slotSwitchTarget={slotSwitchTarget} turnDisclosure={turnDisclosure} turnRowMayBeLive={turnRowMayBeLive} setInput={setInput} isWelcomeState={transcriptWelcome} crewModeOn={crewModeOn || crewWelcomeHeld} openTaskBoard={openTaskBoard} chatConfig={chatConfig}
+              slotSwitchTarget={slotSwitchTarget} turnDisclosure={turnDisclosure} turnRowMayBeLive={turnRowMayBeLive} setInput={setInput} isWelcomeState={transcriptWelcome} simpleHome={simpleHome} crewModeOn={crewModeOn || crewWelcomeHeld} openTaskBoard={openTaskBoard} chatConfig={chatConfig}
               scrollerRef={scrollerRef} bindScroller={bindScroller} handleSurveyLayoutChange={handleSurveyLayoutChange} onScrollPin={onScrollPin} pinned={pinned} approve={approve}
               dismissApproval={dismissApproval} currentSlot={currentSlot} projectDir={transcriptProjectDir} regenerating={regenerating} sendUnconfirmed={sendUnconfirmed} dockH={dockH} lastRole={lastRole} streamTick={streamTick}
               footerActivityKey={!slotLoading && slotSwitchTarget !== activeSlot && (slotRunning || !currentSlot?.preparing) ? transcriptActivityKey(messages) : undefined}

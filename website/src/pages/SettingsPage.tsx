@@ -43,7 +43,7 @@ const AgentBackendTab = lazy(() =>
 )
 /** Subagent Settings + Warm Pool, beside the backend picker: both govern how agents run. */
 const AgentRunSettings = lazy(() =>
-  import('./overview/KiroCrewCfgTab').then(m => ({ default: m.AgentRunSettings })),
+  import('./overview/AjCrewCfgTab').then(m => ({ default: m.AgentRunSettings })),
 )
 /** Lazy: the Browser tab's status card and live-view settings are only needed when that tab opens. */
 const BrowserPanel = lazy(() =>
@@ -236,7 +236,7 @@ export default function SettingsPage() {
   // `=== true` is required, not cosmetic: the gateway sends null for a check that
   // never ran or failed, and a truthiness test would keep that dark while a
   // `!== false` test would light it on no evidence.
-  // Every `kirocrew://remote-crew/add` link remounts Remote Crew, so a panel
+  // Every `ajcrew://remote-crew/add` link remounts Remote Crew, so a panel
   // already on screen comes back on its first tab with the newest link's values
   // in its add form.
   const crewAddLinkSeq = useAppSelector(s => s.instances.crewForms?.addLinkSeq ?? 0)
@@ -252,7 +252,7 @@ export default function SettingsPage() {
   const webhooksPreview = usePreviewFlag(PREVIEW_WEBHOOKS)
   const sessionEnvironmentsPreview = usePreviewFlag(PREVIEW_SESSION_ENVIRONMENTS)
   // People exists only while the gateway reports the Shared Crew preview
-  // (`KIROCREW_SHARED_CREW_PREVIEW=1`); a browser setting cannot turn it on.
+  // (`AJCREW_SHARED_CREW_PREVIEW=1`); a browser setting cannot turn it on.
   const sharedCrew = useSharedCrewCapabilities()
   const sharedCrewPreview = sharedCrewPreviewOn(sharedCrew.capabilities)
   const allTabs = buildTabs().filter(t =>
@@ -292,7 +292,7 @@ export default function SettingsPage() {
       // viewport, so passing both is not a double render.
       navTop={<SettingsSearch />}
       headerRight={<SettingsSearch />}
-      footer={<span className="text-[12px] text-muted">{i18nT('pages.settingsPage.kirocrew_v')}{version}</span>}
+      footer={<span className="text-[12px] text-muted">{i18nT('pages.settingsPage.ajcrew_v')}{version}</span>}
     >
       {tab => <>
         <DataHomeOwnerStatusNotice />

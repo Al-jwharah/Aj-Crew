@@ -135,7 +135,7 @@ describe('useFrameLinkBridge', () => {
   it('opens the parsed URL, so what the hover title shows is what opens', () => {
     expect(webUrlOf({ type: OPEN_MESSAGE_TYPE, url: 'HTTPS://Example.TEST/a b' })).toBe('https://example.test/a%20b')
     expect(webUrlOf({ type: OPEN_MESSAGE_TYPE, url: 'http://example.test' })).toBe('http://example.test/')
-    expect(webUrlOf({ type: 'kirocrew-dashboard:act', url: URL_A })).toBeNull()
+    expect(webUrlOf({ type: 'ajcrew-dashboard:act', url: URL_A })).toBeNull()
     // A path is a page of this dashboard.
     expect(webUrlOf({ type: OPEN_MESSAGE_TYPE, url: '/artifacts/weekly-report' }))
       .toBe(`${window.location.origin}/artifacts/weekly-report`)

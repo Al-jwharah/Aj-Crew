@@ -19,7 +19,7 @@ export function filePopoutQuery(path: string, slot?: string | null): string {
 }
 
 const controller = createPopoutController({
-  channelName: 'kirocrew-file-popout',
+  channelName: 'ajcrew-file-popout',
   logLabel: 'filePopout',
   buildUrl: query => `${window.location.origin}${withBase('/popout/file')}?${query}`,
   // One name per query: the query is percent-encoded ASCII, so every other

@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-import kiro_crew.mcp_core as mcp_core
+import aj_crew.mcp_core as mcp_core
 
 
 @pytest.fixture
@@ -60,7 +60,7 @@ class TestToolSurface:
         assert "skill_search" in names
 
     def test_schemas_are_registered(self):
-        from kiro_crew.validation import MCP_CORE_SCHEMAS
+        from aj_crew.validation import MCP_CORE_SCHEMAS
 
         assert "skill_discover" in MCP_CORE_SCHEMAS
         assert "skill_fetch" in MCP_CORE_SCHEMAS
@@ -251,7 +251,7 @@ class TestSkillDiscover:
         the registry fields it carries have no per-field bound upstream
         (SkillSearchResult). A trailing label could therefore be padded off the
         end by the very publisher it warns about, so it must lead."""
-        from kiro_crew.validation import MAX_RESPONSE_LEN, sanitize_response
+        from aj_crew.validation import MAX_RESPONSE_LEN, sanitize_response
 
         calls, responses = fake_get
         # Enough padded entries to blow past the cap.

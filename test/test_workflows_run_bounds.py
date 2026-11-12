@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.workflows.registry import (
+from aj_crew.workflows.registry import (
     STATUS_CANCELLED,
     STATUS_FAILED,
     STATUS_FINISHED,
@@ -17,7 +17,7 @@ from kiro_crew.workflows.registry import (
     RunHandle,
     RunRegistry,
 )
-from kiro_crew.workflows.runner import (
+from aj_crew.workflows.runner import (
     DEFAULT_RUN_TIMEOUT_SECS,
     MAX_AGENT_ERROR_CHARS,
     MAX_RUN_TIMEOUT_SECS,
@@ -201,7 +201,7 @@ def test_redaction_covers_dict_keys_not_just_values() -> None:
     `_redact_obj` helper; a values-only walk let a credential-shaped key through
     into `result`, `events`, and (new here) `partial_results`.
     """
-    from kiro_crew.dashboard.handlers.workflows import _redact_obj
+    from aj_crew.dashboard.handlers.workflows import _redact_obj
 
     token = "ghp_16C7e42F292c6912E7710c838347Ae178B4a"
     payload = {

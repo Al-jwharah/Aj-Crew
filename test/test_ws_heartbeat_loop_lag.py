@@ -19,9 +19,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 
-from kiro_crew.dashboard import ws_heartbeat
-from kiro_crew.dashboard.ws_heartbeat import LagTolerantWebSocketResponse
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard import ws_heartbeat
+from aj_crew.dashboard.ws_heartbeat import LagTolerantWebSocketResponse
+from aj_crew.testing.wait import async_wait_until, await_until
 
 #: A short heartbeat, so the PONG window is a fifth of a second.
 _HEARTBEAT_S = 0.4

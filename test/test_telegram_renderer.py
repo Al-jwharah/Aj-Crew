@@ -16,8 +16,8 @@ import pytest
 from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
 from telegram_helpers import FakeClient
 
-from kiro_crew.messaging import driver as messaging_driver
-from kiro_crew.messaging.renderer import (
+from aj_crew.messaging import driver as messaging_driver
+from aj_crew.messaging.renderer import (
     DONE,
     STEER_CONSUMED,
     TEXT_CHUNK,
@@ -25,9 +25,9 @@ from kiro_crew.messaging.renderer import (
     OutputEvent,
     session_provenance_tag,
 )
-from kiro_crew.telegram import renderer as telegram_renderer
-from kiro_crew.telegram import renderer_live
-from kiro_crew.telegram.renderer import (
+from aj_crew.telegram import renderer as telegram_renderer
+from aj_crew.telegram import renderer_live
+from aj_crew.telegram.renderer import (
     TelegramApprovalDecider,
     TelegramRenderer,
     _has_table,
@@ -36,9 +36,9 @@ from kiro_crew.telegram.renderer import (
     _seal_table_fallback,
     _strip_steering,
 )
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class TestRenderer:

@@ -18,12 +18,12 @@ import sys
 
 import pytest
 
-from kiro_crew.acp import kas_secret_storage as kss
-from kiro_crew.acp import runtime_spawn_launch
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO, KAS_CLIENT_CAPABILITIES
-from kiro_crew.config.paths import data_home, kiro_agents_dir
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.acp import kas_secret_storage as kss
+from aj_crew.acp import runtime_spawn_launch
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp.types import ACP_BACKEND_KAS, ACP_BACKEND_KIRO, KAS_CLIENT_CAPABILITIES
+from aj_crew.config.paths import data_home, kiro_agents_dir
+from aj_crew.testing.wait import async_wait_until
 
 _HASH = "ab" * 32
 _TOKENS_KEY = f"kiro.mcp.{_HASH}.tokens"
@@ -189,7 +189,7 @@ def test_the_three_secret_methods_are_recognised():
 
 @pytest.mark.asyncio
 async def test_the_grant_vault_is_not_the_secrets_vault_and_holds_no_plaintext(tmp_path):
-    from kiro_crew.secrets import SecretVault
+    from aj_crew.secrets import SecretVault
 
     await _server(tmp_path).answer(
         kss.METHOD_SECRET_STORE, {"key": _TOKENS_KEY, "value": _TOKEN_VALUE}
@@ -208,7 +208,7 @@ async def test_the_grant_vault_is_not_the_secrets_vault_and_holds_no_plaintext(t
 
 @pytest.mark.asyncio
 async def test_get_with_revision_names_the_entry_delete_if_revision_matches(tmp_path):
-    from kiro_crew.secrets import SecretVault
+    from aj_crew.secrets import SecretVault
 
     vault = SecretVault(tmp_path)
     assert vault.get_with_revision("n") is None
@@ -221,7 +221,7 @@ async def test_get_with_revision_names_the_entry_delete_if_revision_matches(tmp_
 
 
 def test_the_grant_vault_is_on_the_agent_floor():
-    from kiro_crew.security.paths import is_sensitive_path
+    from aj_crew.security.paths import is_sensitive_path
 
     root = data_home() / "kas" / "mcp-grants" / ".vault"
     assert is_sensitive_path(str(root / "secrets.enc"))
@@ -263,17 +263,17 @@ async def test_a_vault_failure_is_a_value_free_refusal(tmp_path, monkeypatch, ca
 
 
 def _config_home(tmp_path, monkeypatch):
-    from kiro_crew.config import loader as L
+    from aj_crew.config import loader as L
 
     monkeypatch.setattr(L, "config_dir", lambda: tmp_path)
     return tmp_path
 
 
 def test_the_key_is_on_by_default_and_read_from_config(tmp_path, monkeypatch):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     home = _config_home(tmp_path, monkeypatch)
-    assert KiroCrewConfig.load().agent.kas_persist_mcp_sign_in is True
+    assert AjCrewConfig.load().agent.kas_persist_mcp_sign_in is True
     assert kss.persistence_enabled() is True
     (home / "config.json").write_text(json.dumps({"agent": {"default_agent": ""}}))
     assert kss.persistence_enabled() is True
@@ -288,11 +288,11 @@ def test_only_a_real_true_keeps_sign_ins(tmp_path, monkeypatch, stored):
     ``_safe_bool`` would fold each of these into the true default, so a hand-edited
     ``"false"`` would start storing tokens against what the owner wrote.
     """
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     home = _config_home(tmp_path, monkeypatch)
     (home / "config.json").write_text(json.dumps({"agent": {"kas_persist_mcp_sign_in": stored}}))
-    assert KiroCrewConfig.load().agent.kas_persist_mcp_sign_in is False
+    assert AjCrewConfig.load().agent.kas_persist_mcp_sign_in is False
     assert kss.persistence_enabled() is False
 
 
@@ -318,12 +318,12 @@ def test_an_unreadable_config_file_keeps_sign_ins_in_memory(tmp_path, monkeypatc
 
 
 def test_a_config_load_that_raises_keeps_sign_ins_in_memory(monkeypatch):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     def _boom(*_a, **_k):
         raise OSError("disk gone")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_boom))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(_boom))
     assert kss.persistence_enabled() is False
 
 
@@ -411,8 +411,8 @@ async def test_a_handshake_with_the_key_off_drops_an_earlier_server(monkeypatch)
 _STUB_AGENT = """
 import json, os, sys
 
-CAPTURE = os.environ["KIROCREW_TEST_SECRET_CAPTURE"]
-MODE = os.environ["KIROCREW_TEST_SECRET_MODE"]
+CAPTURE = os.environ["AJCREW_TEST_SECRET_CAPTURE"]
+MODE = os.environ["AJCREW_TEST_SECRET_MODE"]
 KEY = %(key)r
 VALUE = %(value)r
 seen = {}
@@ -462,7 +462,7 @@ for line in sys.stdin:
 """ % {"key": _TOKENS_KEY, "value": _TOKEN_VALUE}
 
 _STUB_AGENT_SPEC = {
-    "name": "kirocrew",
+    "name": "ajcrew",
     "description": "secret storage stub",
     "prompt": "You are a test agent.",
     "tools": [],
@@ -481,11 +481,11 @@ def kas_secret_stub(tmp_path, monkeypatch):
     async def fake_bin(*, environ=None, home=None) -> str:
         return str(launcher)
 
-    monkeypatch.setattr("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", fake_bin)
+    monkeypatch.setattr("aj_crew.acp.client._resolve_kiro_bin_for_spawn", fake_bin)
     monkeypatch.setenv("KIRO_HOME", str(tmp_path / "kiro-home"))
     capture = tmp_path / "capture.json"
-    monkeypatch.setenv("KIROCREW_TEST_SECRET_CAPTURE", str(capture))
-    from kiro_crew.agent import kiro_agents_dir_path
+    monkeypatch.setenv("AJCREW_TEST_SECRET_CAPTURE", str(capture))
+    from aj_crew.agent import kiro_agents_dir_path
 
     for agents_dir in {kiro_agents_dir(), kiro_agents_dir_path()}:
         agents_dir.mkdir(parents=True, exist_ok=True)
@@ -496,7 +496,7 @@ def kas_secret_stub(tmp_path, monkeypatch):
 
 
 async def _run_stub(tmp_path, capture, monkeypatch, mode: str) -> dict:
-    monkeypatch.setenv("KIROCREW_TEST_SECRET_MODE", mode)
+    monkeypatch.setenv("AJCREW_TEST_SECRET_MODE", mode)
     if capture.exists():
         capture.unlink()
     runtime = AcpRuntime(work_dir=tmp_path / "ws", sandbox_mode="off", acp_backend=ACP_BACKEND_KAS)
@@ -525,7 +525,7 @@ async def test_a_new_kas_process_reuses_the_stored_grant(
     async def record(backend, frame, wire_bytes=0):
         recorded.append(frame)
 
-    monkeypatch.setattr("kiro_crew.acp.runtime.record_frame", record)
+    monkeypatch.setattr("aj_crew.acp.runtime.record_frame", record)
     caplog.set_level(logging.DEBUG)
 
     first = await _run_stub(tmp_path, kas_secret_stub, monkeypatch, "write")
@@ -619,7 +619,7 @@ async def test_a_saved_sign_in_that_cannot_be_read_says_so(tmp_path, monkeypatch
 def test_saving_silently_off_warns_once_per_run(tmp_path, monkeypatch, caplog):
     import threading
 
-    from kiro_crew import mcp_grant_kas
+    from aj_crew import mcp_grant_kas
 
     monkeypatch.setattr(mcp_grant_kas, "_OFF_WARNING_GIVEN", threading.Event())
     home = _config_home(tmp_path, monkeypatch)

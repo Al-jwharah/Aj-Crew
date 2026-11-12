@@ -20,13 +20,13 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app as _make_chat_app
 from chat_test_helpers import _make_state as _make_chat_state
 
-from kiro_crew.dashboard import chat_handlers, chat_persistence, chat_runner
-from kiro_crew.dashboard.chat import api_chat_slot_note
-from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
-from kiro_crew.dashboard.chat_runner import drain_pending_context
-from kiro_crew.dashboard.chat_utils import _history_key_for
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.dashboard import chat_handlers, chat_persistence, chat_runner
+from aj_crew.dashboard.chat import api_chat_slot_note
+from aj_crew.dashboard.chat_persistence import save_slot_off_loop
+from aj_crew.dashboard.chat_runner import drain_pending_context
+from aj_crew.dashboard.chat_utils import _history_key_for
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.testing.clock import ManualClock
 
 
 class TestAutomaticSuccessorsDoNotConsumeNotes:
@@ -106,7 +106,7 @@ class TestImmediateNoteSessionBinding:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ):
         """Neither half may reach the session the slot is rebound to."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_chat_state(tmp_path)
         slot = _ChatSlot("cron-42")
         slot._app = "owner-app"
@@ -137,7 +137,7 @@ class TestImmediateNoteSessionBinding:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ):
         """Control: the guard drops ONLY content whose session actually changed."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_chat_state(tmp_path)
         slot = _ChatSlot("cron-42")
         slot._app = "owner-app"
@@ -166,7 +166,7 @@ class TestImmediateNoteSessionBinding:
         rebind the slot, so reading the routing twice authorizes the row against
         one session and then writes the file of another.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_chat_state(tmp_path)
         slot = _ChatSlot("cron-42")
         slot._app = "owner-app"
@@ -231,9 +231,9 @@ class TestCleanupPersistsHeldNotes:
         context reaches nobody. The visible row survives either way, which is why
         the sibling test above cannot see this.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.autonudge.get_instance",
+            "aj_crew.autonudge.get_instance",
             lambda: MagicMock(list_all=MagicMock(return_value=[])),
         )
         state = _make_chat_state(tmp_path)
@@ -302,9 +302,9 @@ class TestCleanupPersistsHeldNotes:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ):
         """A note accepted with 200 must be in the archived record."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.autonudge.get_instance",
+            "aj_crew.autonudge.get_instance",
             lambda: MagicMock(list_all=MagicMock(return_value=[])),
         )
         state = _make_chat_state(tmp_path)
@@ -365,9 +365,9 @@ class TestCleanupPersistsHeldNotes:
         saying so. Reverting the cancel is not the fix: it would delete the bulk
         cleanup's only flush, which the sibling tests above pin.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.autonudge.get_instance",
+            "aj_crew.autonudge.get_instance",
             lambda: MagicMock(list_all=MagicMock(return_value=[])),
         )
         state = _make_chat_state(tmp_path)
@@ -389,7 +389,7 @@ class TestCleanupPersistsHeldNotes:
             raise RuntimeError("archive write failed")
 
         try:
-            with patch("kiro_crew.dashboard.chat_handlers.save_slot_off_loop", new=_failing_save):
+            with patch("aj_crew.dashboard.chat_handlers.save_slot_off_loop", new=_failing_save):
                 async with self._make_client(state) as client:
                     clock.install(monkeypatch, chat_handlers)
                     resp = await client.post(
@@ -430,7 +430,7 @@ class TestPersistenceRebindDenialIsAudited:
     ):
         from types import SimpleNamespace
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_chat_state(tmp_path)
         slot = _ChatSlot("s1")
         state._slots["s1"] = slot
@@ -448,7 +448,7 @@ class TestPersistenceRebindDenialIsAudited:
         events: list[dict] = []
 
         with patch(
-            "kiro_crew.dashboard.chat_persistence.sel",
+            "aj_crew.dashboard.chat_persistence.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
         ):
             chat_persistence._save_slot_to_history(state, slot, messages=window, force=True)
@@ -481,7 +481,7 @@ class TestPersistenceRebindDenialIsAudited:
         """Count-gated: this is the periodic path, so a clean save must stay silent."""
         from types import SimpleNamespace
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_chat_state(tmp_path)
         slot = _ChatSlot("s2")
         state._slots["s2"] = slot
@@ -491,7 +491,7 @@ class TestPersistenceRebindDenialIsAudited:
         events: list[dict] = []
 
         with patch(
-            "kiro_crew.dashboard.chat_persistence.sel",
+            "aj_crew.dashboard.chat_persistence.sel",
             lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
         ):
             chat_persistence._save_slot_to_history(state, slot, messages=window, force=True)

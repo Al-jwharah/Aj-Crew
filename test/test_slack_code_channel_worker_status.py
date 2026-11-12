@@ -14,8 +14,8 @@ from typing import Any
 import pytest
 import test_slack_code_channel_workspace as _ws
 
-from kiro_crew.slack.code_channels import binding as cc_binding
-from kiro_crew.slack.code_channels import status
+from aj_crew.slack.code_channels import binding as cc_binding
+from aj_crew.slack.code_channels import status
 
 # Fixtures, by name: pytest finds a fixture through the module's namespace.
 _no_sandbox = _ws._no_sandbox

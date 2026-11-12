@@ -25,8 +25,8 @@ from test_kiro_cloud_session import (  # noqa: F401 -- fixtures, used by name
     stub,
 )
 
-from kiro_crew.acp.harness.kas_cloud import KasCloudSandboxHarness
-from kiro_crew.acp.types import ACP_BACKEND_KAS
+from aj_crew.acp.harness.kas_cloud import KasCloudSandboxHarness
+from aj_crew.acp.types import ACP_BACKEND_KAS
 
 
 @pytest.mark.asyncio
@@ -36,20 +36,20 @@ async def test_a_new_cloud_session_replacing_a_recorded_one_surfaces_once(
     """Edit & Resend, compaction and resets discard the resume id, so the next start
     reaches ``session/new`` with no reopen attempted. The chat still had a cloud
     session, and the new one does not hold its files: say so, as a failed reopen does."""
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.providers import acp
-    from kiro_crew.session_environment import forget_remote_workspace
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.providers import acp
+    from aj_crew.session_environment import forget_remote_workspace
 
     key = "dashboard:cloud-replaced"
     handlers._choices().set(key, "cloud", sl.KIRO_CLOUD_PROVIDER_ID)
     assert handlers._choices().record_cloud_session(key, "old-cloud", profile_id="cloud")
     _governed(monkeypatch, None)
     provider = acp.AcpProvider(
-        agent="kirocrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
+        agent="ajcrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
     )
     meta: dict[str, object] = {}
     rows = []
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     monkeypatch.setattr(chat_runner, "append_and_surface", lambda *a, **kw: rows.append((a, kw)))
     try:
@@ -75,15 +75,15 @@ async def test_a_new_cloud_session_replacing_a_recorded_one_surfaces_once(
 async def test_a_first_cloud_session_surfaces_nothing(
     handlers, stub, crew_agent, tmp_path, monkeypatch  # noqa: F811
 ):
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.providers import acp
-    from kiro_crew.session_environment import forget_remote_workspace
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.providers import acp
+    from aj_crew.session_environment import forget_remote_workspace
 
     key = "dashboard:cloud-first"
     handlers._choices().set(key, "cloud", sl.KIRO_CLOUD_PROVIDER_ID)
     _governed(monkeypatch, None)
     provider = acp.AcpProvider(
-        agent="kirocrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
+        agent="ajcrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
     )
     try:
         await provider._start_kiro_runtime_impl({}, {})
@@ -95,10 +95,10 @@ async def test_a_first_cloud_session_surfaces_nothing(
 
 
 def _cloud_provider(key: str, resume_sid: str | None):
-    from kiro_crew.providers import acp
+    from aj_crew.providers import acp
 
     provider = acp.AcpProvider(
-        agent="kirocrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
+        agent="ajcrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
     )
     if resume_sid:
         provider._client.set_resume_session_id(resume_sid)
@@ -110,8 +110,8 @@ async def test_reopening_the_recorded_cloud_session_surfaces_nothing(
     handlers, stub, crew_agent, tmp_path, monkeypatch  # noqa: F811
 ):
     """The same sandbox came back, with its files: no notice."""
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.session_environment import forget_remote_workspace
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.session_environment import forget_remote_workspace
 
     key = "dashboard:cloud-reopened"
     handlers._choices().set(key, "cloud", sl.KIRO_CLOUD_PROVIDER_ID)
@@ -137,8 +137,8 @@ async def test_a_reopen_that_replays_no_turn_starts_a_new_sandbox_and_says_so(
     """KAS answers a load of a lost record with an empty one: ``require_replay``
     refuses it, so the start falls back to a new sandbox, and the notice says the
     earlier session was not deleted. The refused load deletes nothing in the cloud."""
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.session_environment import forget_remote_workspace
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.session_environment import forget_remote_workspace
 
     key = "dashboard:cloud-empty-load"
     handlers._choices().set(key, "cloud", sl.KIRO_CLOUD_PROVIDER_ID)
@@ -184,16 +184,16 @@ async def test_each_path_that_drops_the_resume_id_says_the_chat_moved_sandbox(
 ):
     """Edit & Resend, a reset and compaction each clear the session's resume id, so
     the next start opens a new sandbox; that start must say so, once."""
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.session import SessionManager, _Session
-    from kiro_crew.session_environment import forget_remote_workspace
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.session import SessionManager, _Session
+    from aj_crew.session_environment import forget_remote_workspace
 
     key = "dashboard:cloud-dropped"
     handlers._choices().set(key, "cloud", sl.KIRO_CLOUD_PROVIDER_ID)
     _governed(monkeypatch, None)
     first = _cloud_provider(key, None)
-    manager = SessionManager(KiroCrewConfig())
+    manager = SessionManager(AjCrewConfig())
     second = None
     try:
         await first._start_kiro_runtime_impl({}, {})

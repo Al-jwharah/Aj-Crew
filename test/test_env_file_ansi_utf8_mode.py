@@ -13,8 +13,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.config import loader, loader_credentials
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config import loader, loader_credentials
+from aj_crew.config.loader import AjCrewConfig
 
 _ANSI = b"OWNER_NAME=caf\xe9\r\n"
 
@@ -37,7 +37,7 @@ def _boot_read(monkeypatch: pytest.MonkeyPatch, ep: Path) -> dict[str, str]:
     monkeypatch.setattr(loader, "env_path", lambda: ep)
     for key in (*loader.CREDENTIAL_KEYS, "OWNER_NAME"):
         monkeypatch.delenv(key, raising=False)
-    return KiroCrewConfig.__new__(KiroCrewConfig).load_credentials(propagate=False)
+    return AjCrewConfig.__new__(AjCrewConfig).load_credentials(propagate=False)
 
 
 def test_an_ansi_env_file_loads_under_utf8_mode(

@@ -25,7 +25,7 @@ export function ThemeDroppedRulesNotice({ report }: { report: OverridesDropRepor
         <span className="text-[12px] text-muted leading-relaxed">{i18nT('pages.settings.displayPanel.theme_styles_ignored_body')}</span>
         <code className="text-[11px] font-mono text-muted break-all">{report.rules.join(' · ')}</code>
         <a
-          href="https://github.com/kirodotdev/KiroCrew/blob/main/website/docs/theming-contract.md"
+          href="https://github.com/Al-jwharah/Aj-Crew/blob/main/website/docs/theming-contract.md"
           target="_blank" rel="noopener noreferrer"
           className="text-[12px] text-accent hover:underline w-fit"
         >{i18nT('pages.settings.displayPanel.theme_styles_ignored_link')}</a>

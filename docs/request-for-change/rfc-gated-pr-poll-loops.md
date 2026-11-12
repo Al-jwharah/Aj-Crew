@@ -1,7 +1,7 @@
 ---
 title: Gated PR poll loops -- the prepare-pr and babysit recipes arm their pull-request loop gated, with the judge off
 status: implemented
-author: iamwhatever, with kirocrew-worker
+author: iamwhatever, with ajcrew-worker
 created: 2026-10-20
 last-audited: 2026-10-21
 audited-at: 098bc0a174
@@ -15,7 +15,7 @@ superseded-by: []
 # RFC: Gated PR poll loops
 
 - Status: implemented. Maintainer Joe Guo (@iamwhatever), who owns the
-  `kirocrew-prepare-pr` and `babysit` skills, accepted this design on
+  `ajcrew-prepare-pr` and `babysit` skills, accepted this design on
   2026-10-21 (§ 10), and
   [#22442](https://github.com/kirodotdev/KiroCrew/pull/22442) implements it.
 - Related: [rfc-wake-judge.md](rfc-wake-judge.md) § 8, PR F ("skills: `babysit`
@@ -32,7 +32,7 @@ superseded-by: []
 
 Both recipes arm their pull-request poll loop ungated:
 
-- `kirocrew-prepare-pr` (`SKILL.md`, Phase 3 step 5):
+- `ajcrew-prepare-pr` (`SKILL.md`, Phase 3 step 5):
   `monitor_start(..., interval_secs=300, max_cycles=288, max_runtime_secs=86400, gate=False)`.
 - `babysit` (`SKILL.md`, "Example: legacy comment-aware recipe"): `"gate": false`.
 

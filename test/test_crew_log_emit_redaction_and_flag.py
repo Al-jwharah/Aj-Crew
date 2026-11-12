@@ -32,8 +32,8 @@ from crew_log_emit_helpers import (  # noqa: F401 -- the autouse fixture registe
     _typed,
 )
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import emit
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import emit
 
 # redaction
 
@@ -97,7 +97,7 @@ def test_a_rerun_immediately_after_a_resume_does_not_reuse_the_attempt():
 
     # Re-attach and rerun ordinal 7 with NO flush in between: the rerun's job is
     # submitted while the seed is still queued behind it.
-    emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-7", resumed=True)
+    emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-7", resumed=True)
     emit.on_turn_started(SESSION, 7, "user")
     assert_drained()
     starts = [e for e in _body() if e["type"] == "turn/started" and e["data"]["turn"] == 7]
@@ -120,7 +120,7 @@ def test_the_attempt_seed_keeps_readable_counts_before_a_backward_tail():
     with open(path, "ab") as damaged:
         damaged.write(started)
 
-    emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-7")
+    emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-7")
     assert_drained()
     seen: list[int] = []
     real_append = lg.CrewLog.append
@@ -271,18 +271,18 @@ def test_the_attempt_seed_reads_the_file_only_when_memory_cannot_answer():
         patch.setattr(emit, "_seed_attempts", _spy)
 
         # A warm reuse holds its counts: no scan.
-        emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-7")
+        emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-7")
         assert_drained()
         assert scans == [], "a warm reuse rescanned the file"
 
         # A resume belongs to a process that is gone: scan.
-        emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-7", resumed=True)
+        emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-7", resumed=True)
         assert_drained()
         assert scans == [SESSION], "a resume did not seed from the file"
 
         # A process without the counts in memory cannot answer either: scan.
         emit.reset_caches()
-        emit.on_session_opened(SESSION, agent="kirocrew", slot="chat-7")
+        emit.on_session_opened(SESSION, agent="ajcrew", slot="chat-7")
         assert_drained()
         assert scans == [SESSION, SESSION], "an evicted map was not re-seeded"
 
@@ -594,7 +594,7 @@ def _record_tool_result_event(event, *, call_id: str = "tc-measured") -> dict:
 
 
 def test_a_long_result_records_the_full_redacted_output_measurement():
-    from kiro_crew import session_directive
+    from aj_crew import session_directive
 
     full_output = "x" * session_directive.MAX_TOOL_RESULT_CHARS + "distinct suffix"
     event = _tool_result_event(full_output)
@@ -614,7 +614,7 @@ def test_a_long_result_records_the_full_redacted_output_measurement():
 
 
 def test_equal_display_prefixes_record_different_full_result_hashes():
-    from kiro_crew import session_directive
+    from aj_crew import session_directive
 
     prefix = "x" * session_directive.MAX_TOOL_RESULT_CHARS
     _open_session()
@@ -641,7 +641,7 @@ def test_a_status_only_terminal_frame_records_no_result_measurement():
 def test_chat_runner_forwards_the_full_result_measurement_to_the_emitter():
     import ast
 
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     tree = ast.parse(
         "\n".join(
@@ -746,7 +746,7 @@ def test_flag_off_allocates_no_state_either(monkeypatch):
     assert emit.enabled() is False
 
     for turn in range(1, 6):
-        emit.on_session_opened(SESSION, agent="kirocrew")
+        emit.on_session_opened(SESSION, agent="ajcrew")
         emit.on_turn_started(SESSION, turn, "user")
         emit.on_tool_called(SESSION, turn, name="fs_read", call_id=f"tc-{turn}")
 
@@ -829,19 +829,19 @@ def _record(fn, *a, **k):
 
 
 atexit.register = _record
-importlib.import_module("kiro_crew.dashboard.server")
-emit = sys.modules.get("kiro_crew.crew_log.emit")
-glue = {"kiro_crew.crew_log.emit", *getattr(emit, "_OWNERS", ())}
+importlib.import_module("aj_crew.dashboard.server")
+emit = sys.modules.get("aj_crew.crew_log.emit")
+glue = {"aj_crew.crew_log.emit", *getattr(emit, "_OWNERS", ())}
 print(
     json.dumps(
         {
             "storage": sorted(
                 k
                 for k in sys.modules
-                if k.startswith("kiro_crew.crew_log.")
+                if k.startswith("aj_crew.crew_log.")
                 and k not in glue
             ),
-            "glue": "kiro_crew.crew_log.emit" in sys.modules,
+            "glue": "aj_crew.crew_log.emit" in sys.modules,
             "hooks": [n for n in registered if "drain_for_shutdown" in n],
         }
     )
@@ -867,9 +867,9 @@ def _boot_probe(tmp_path: Path) -> dict:
         "TMPDIR": str(tmp_path),
         "HOME": str(user_home),
         "KC_PROBE_HOME": str(user_home),
-        "KIROCREW_HOME": str(tmp_path / "home"),
-        "KIROCREW_WORKSPACE": str(tmp_path / "workspace"),
-        "KIROCREW_CREW_LOG": "0",
+        "AJCREW_HOME": str(tmp_path / "home"),
+        "AJCREW_WORKSPACE": str(tmp_path / "workspace"),
+        "AJCREW_CREW_LOG": "0",
     }
     if sys.platform == "win32":  # pragma: no cover - parity with the lease suite
         env["SYSTEMROOT"] = os.environ.get("SYSTEMROOT", "")

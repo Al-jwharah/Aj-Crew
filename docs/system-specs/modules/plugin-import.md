@@ -1,23 +1,23 @@
 # Plugin import
 
-Owner: `kiro_crew.apps.plugin_import`. CLI: `kirocrew app import`. Tests:
+Owner: `aj_crew.apps.plugin_import`. CLI: `ajcrew app import`. Tests:
 `test/test_plugin_import.py`, `test/test_plugin_import_bounds.py` and
 `test/test_plugin_import_refusals.py`.
 
-Converts a manifest-declared plugin package into an installable Kiro Crew app.
+Converts a manifest-declared plugin package into an installable Aj Crew app.
 The input format is the one Codex reads and the one the published plugin
 directories ship; grok-build's plugin directory bundles the same resource kinds.
-Which foreign kind reaches which Kiro Crew extension point, and why the rest do
+Which foreign kind reaches which Aj Crew extension point, and why the rest do
 not, is [harness-plugin-mapping.md](harness-plugin-mapping.md) -- this file
 specifies the converter, not the mapping.
 
 ## 1. What it is for
 
-Two claims needed proving before Kiro Crew accepts foreign plugin contributions:
+Two claims needed proving before Aj Crew accepts foreign plugin contributions:
 that the extension points we already have can receive them, and that conversion
 does not require running foreign code. A converter proves both. It reads JSON
 and copies files; the converter itself has no foreign runtime to supervise. The
-emitted app is an ordinary Kiro Crew app, so a mapped MCP server can be launched
+emitted app is an ordinary Aj Crew app, so a mapped MCP server can be launched
 after installation under the normal app lifecycle.
 
 It is deliberately not an adapter. A package's in-process code -- tools, hook
@@ -321,15 +321,15 @@ codes in the module, so the two cannot drift apart silently.
 ## 7. CLI
 
 ```
-kirocrew app import <package-dir> [--out DIR] [--name NAME] [--install]
+ajcrew app import <package-dir> [--out DIR] [--name NAME] [--install]
 ```
 
 Prints the mapped and not-mapped halves plus warnings, then the path written.
 `--out` defaults to `./<app-name>-app`. `--name` overrides the derived app name,
 which is how a package whose name folds onto a reserved app name is imported.
 `--install` runs the ordinary local install afterwards; without it the command
-prints the `kirocrew app install` line to run. Install leaves an app disabled, as
-every local install does -- `kirocrew app enable <name>` is the separate step.
+prints the `ajcrew app install` line to run. Install leaves an app disabled, as
+every local install does -- `ajcrew app enable <name>` is the separate step.
 
 ## 8. What it was measured against
 

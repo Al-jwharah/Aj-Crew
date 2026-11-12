@@ -24,8 +24,8 @@ from aws_control_routes_helpers import (
     _request,
 )
 
-from kiro_crew.apps.builtins.aws_control.backend import routes as routes_mod
-from kiro_crew.deploy.engine import AWSError
+from aj_crew.apps.builtins.aws_control.backend import routes as routes_mod
+from aj_crew.deploy.engine import AWSError
 
 # Backup — status, run, nightly, restore
 
@@ -116,7 +116,7 @@ class TestBackupEndpoints:
         The handler only claims a Job SDK run, so this stubs the SDK. The runner is
         tested in ``test_aws_control_backup_job.py``.
         """
-        from kiro_crew.apps.builtins.aws_control.backend import backup as backup_mod
+        from aj_crew.apps.builtins.aws_control.backend import backup as backup_mod
 
         handlers = _registered()
         p1, p2, p3 = _enabled_owner_env()
@@ -148,7 +148,7 @@ class TestBackupEndpoints:
         return resp
 
     def test_run_snapshot_backup_starts_a_job_and_returns_its_id(self):
-        from kiro_crew.apps.builtins.aws_control.backend import backup as backup_mod
+        from aj_crew.apps.builtins.aws_control.backend import backup as backup_mod
 
         resp = self._run_backup(backup_mod.KIND_SNAPSHOT)
         assert resp.status == 200
@@ -158,7 +158,7 @@ class TestBackupEndpoints:
         assert body["runId"] == "e" * 32
 
     def test_run_sessions_backup_claims_the_sessions_kind(self):
-        from kiro_crew.apps.builtins.aws_control.backend import backup as backup_mod
+        from aj_crew.apps.builtins.aws_control.backend import backup as backup_mod
 
         start = AsyncMock(return_value="f" * 32)
         resp = self._run_backup(backup_mod.KIND_SESSIONS, start=start)
@@ -171,7 +171,7 @@ class TestBackupEndpoints:
     def test_run_reports_an_absent_job_runtime_as_503(self):
         # Enabled, but no SDK was published: the `jobs` grant is missing or the
         # context build failed. The runtime is absent — not a bad request.
-        from kiro_crew.apps.builtins.aws_control.backend import backup as backup_mod
+        from aj_crew.apps.builtins.aws_control.backend import backup as backup_mod
 
         resp = self._run_backup(backup_mod.KIND_SNAPSHOT, sdk_present=False)
         assert resp.status == 503
@@ -180,8 +180,8 @@ class TestBackupEndpoints:
     def test_run_reports_a_refused_claim_as_503(self):
         # The SDK could not persist the initial record, or the host refused a
         # thread. Nothing started, and the code says which layer refused.
-        from kiro_crew.apps.builtins.aws_control.backend import backup as backup_mod
-        from kiro_crew.apps.job_sdk import JobError
+        from aj_crew.apps.builtins.aws_control.backend import backup as backup_mod
+        from aj_crew.apps.job_sdk import JobError
 
         resp = self._run_backup(
             backup_mod.KIND_SNAPSHOT, start=AsyncMock(side_effect=JobError("no disk"))
@@ -237,7 +237,7 @@ class TestBackupEndpoints:
         p1, p2, p3 = _enabled_owner_env()
         req = _request("POST", f"/backup/{ACCOUNT}/nightly", match_info={"account": ACCOUNT})
         req.json = AsyncMock(return_value={"enabled": True})  # type: ignore[method-assign]
-        boom = OSError(28, "No space left on device", "/home/someone/.kirocrew/backup.json")
+        boom = OSError(28, "No space left on device", "/home/someone/.ajcrew/backup.json")
         with (
             p1,
             p2,
@@ -255,7 +255,7 @@ class TestBackupEndpoints:
         # ...and must not echo the OSError's rendering, which carries the
         # absolute path of the state file. The log has it; a response body does
         # not need to disclose the local filesystem layout.
-        assert ".kirocrew" not in body["error"]
+        assert ".ajcrew" not in body["error"]
 
     def test_layer_b_toggle_persists_the_permission(self):
         handlers = _registered()
@@ -359,7 +359,7 @@ class TestBackupEndpoints:
         p1, p2, p3 = _enabled_owner_env()
         req = _request("POST", f"/backup/{ACCOUNT}/layer-b", match_info={"account": ACCOUNT})
         req.json = AsyncMock(return_value={"enabled": True})  # type: ignore[method-assign]
-        boom = OSError(28, "No space left on device", "/home/someone/.kirocrew/backup.json")
+        boom = OSError(28, "No space left on device", "/home/someone/.ajcrew/backup.json")
         with (
             p1,
             p2,
@@ -373,7 +373,7 @@ class TestBackupEndpoints:
         assert resp.status == 500
         assert body["code"] == "state_persist_failed"
         assert "sessionsIncludeLayerB" not in body
-        assert ".kirocrew" not in body["error"]
+        assert ".ajcrew" not in body["error"]
 
     def test_a_real_false_still_disables_nightly(self):
         # The validation must not break the ordinary off path.
@@ -452,7 +452,7 @@ class TestBackupEndpoints:
             "POST", f"/backup/{ACCOUNT}/nightly-sessions", match_info={"account": ACCOUNT}
         )
         req.json = AsyncMock(return_value={"enabled": True})  # type: ignore[method-assign]
-        boom = OSError(28, "No space left on device", "/home/someone/.kirocrew/backup.json")
+        boom = OSError(28, "No space left on device", "/home/someone/.ajcrew/backup.json")
         with (
             p1,
             p2,
@@ -466,7 +466,7 @@ class TestBackupEndpoints:
         assert resp.status == 500
         assert body["code"] == "state_persist_failed"
         assert "nightlySessions" not in body
-        assert ".kirocrew" not in body["error"]
+        assert ".ajcrew" not in body["error"]
 
     def test_the_status_payload_reports_the_transcript_grant_separately(self):
         # The console renders two switches, so the payload must carry two fields.
@@ -841,7 +841,7 @@ class TestBackupEndpoints:
         # skip it. Asserted against the REAL backend: the refusal has to come from
         # the code, not from a mock told to produce it.
         resp, got = self._restore_for_real(
-            {"key": "snapshots/kirocrew-snapshot-20260101T000000Z-abcdef.tar.gz"},
+            {"key": "snapshots/ajcrew-snapshot-20260101T000000Z-abcdef.tar.gz"},
             tmp_path,
         )
         assert resp.status == 409
@@ -861,7 +861,7 @@ class TestBackupEndpoints:
 
         resp, got = self._restore_for_real(
             {
-                "key": "snapshots/kirocrew-snapshot-20260101T000000Z-abcdef.tar.gz",
+                "key": "snapshots/ajcrew-snapshot-20260101T000000Z-abcdef.tar.gz",
                 "foreignOk": True,
             },
             tmp_path,
@@ -925,12 +925,12 @@ class TestInstallLabel:
         # the machine-readable `code` every non-2xx here carries, and must not
         # echo the OSError's own text, which renders the state file's absolute
         # path.
-        boom = OSError(28, "No space left on device", "/home/someone/.kirocrew/backup.json")
+        boom = OSError(28, "No space left on device", "/home/someone/.ajcrew/backup.json")
         resp, _labeled, _find = self._label({"label": "ok"}, set_label=boom)
         body = _payload(resp)
         assert resp.status == 500
         assert body["code"] == "state_persist_failed"
-        assert ".kirocrew" not in body["error"]
+        assert ".ajcrew" not in body["error"]
 
 
 # IAM policy render
@@ -944,7 +944,7 @@ class TestIamPolicy:
         with (
             mock.patch.object(routes_mod, "is_app_enabled", return_value=True),
             mock.patch(
-                "kiro_crew.deploy.iam.policy_json", return_value={"Version": "2012-10-17"}
+                "aj_crew.deploy.iam.policy_json", return_value={"Version": "2012-10-17"}
             ) as policy,
         ):
             resp = asyncio.run(

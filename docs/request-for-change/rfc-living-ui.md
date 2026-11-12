@@ -45,7 +45,7 @@ superseded-by: []
 
 ## 1. Summary
 
-Agents in Kiro Crew draw two kinds of live HTML: inline `<mcwidget>` explainers in
+Agents in Aj Crew draw two kinds of live HTML: inline `<mcwidget>` explainers in
 chat, and the one-page Dashboard tab a crewmate writes for its person. Both are
 correct and themed today, but most of them sit still and read like a form. This
 RFC proposes **Living UI**: a way to make them pleasant to look at and easy to
@@ -69,30 +69,30 @@ and `explain-for` skills point to it. Theme packs keep owning the look.
 
 Verified at `9d088c85ad`:
 
-- `src/kiro_crew/builtin_skills/widgets/SKILL.md:214` ("Animation") is the only
+- `src/aj_crew/builtin_skills/widgets/SKILL.md:214` ("Animation") is the only
   motion guidance agents get. It says *when* to move (the freeze-one-frame test and
   a table of content kinds) and five hygiene rules (play/pause, reduced motion,
   stop when done, `requestAnimationFrame` plus `devicePixelRatio`, carry every
   value). It says nothing about *how* motion should feel, what the reader should
   look at, or how to check it.
-- `src/kiro_crew/builtin_skills/dashboard/SKILL.md` is 267 lines, not the ~76 the
+- `src/aj_crew/builtin_skills/dashboard/SKILL.md` is 267 lines, not the ~76 the
   task brief assumed. It covers the save/apply flow, honesty rules, the five
   manager questions and the frame contract. Its only motion line is
   `dashboard/SKILL.md:246`: "Motion off under `prefers-reduced-motion`."
-- `src/kiro_crew/builtin_skills/explain-for/SKILL.md:123` ("Draw it when the thing
+- `src/aj_crew/builtin_skills/explain-for/SKILL.md:123` ("Draw it when the thing
   has a shape") offers mermaid, excalidraw, `<mcwidget>` and image files. Its
   advice is about whether to draw and how to colour. It never suggests drawing the
   analogy as a working object.
-- `src/kiro_crew/builtin_skills/frontend-design-workflow/SKILL.md` is a process for
+- `src/aj_crew/builtin_skills/frontend-design-workflow/SKILL.md` is a process for
   changing a product's own UI in a repository: mockups first, then code, then
   evidence. It does not cover runtime widgets.
-- `skills/kirocrew-app-dev/SKILL.md` (a repo skill, not built-in) tells app authors
+- `skills/ajcrew-app-dev/SKILL.md` (a repo skill, not built-in) tells app authors
   to use host components and theme tokens ("Don't Reinvent the Dashboard").
 - Screenshots exist: `web-verify` captures loopback pages with `playwright-cli`,
   `agent-browser` or scripted Playwright and caps frames at 2000 px;
   `browser-recording` makes videos. Neither knows about widget bodies, theme
   variants, reduced motion or slowed time. `dashboard_save` runs the page once
-  offline in a headless browser (`src/kiro_crew/dashboard_verify.py`) and reports
+  offline in a headless browser (`src/aj_crew/dashboard_verify.py`) and reports
   script errors only, no pixels.
 
 ### 2.2 The gap
@@ -264,7 +264,7 @@ helpers a figure uses into an inline `<script>`. Reasons, in order:
    (`cspFor` in `website/src/lib/widgetSrcdoc.ts`, called with `offlineScripts` by
    `website/src/pages/members/CrewDynamicDashboard.tsx`) permits `'unsafe-inline'`
    plus one pinned Tailwind file. The composed document's own `FRAME_CSP`
-   (`src/kiro_crew/dashboard_frame.py`) permits `'unsafe-inline'` plus the two
+   (`src/aj_crew/dashboard_frame.py`) permits `'unsafe-inline'` plus the two
    CDN origins. Their intersection is inline script only.
 2. **A served asset widens two security policies.** It needs a second pinned path
    in `cspFor` and in `FRAME_CSP`, plus a change to the test that pins them equal.
@@ -324,18 +324,18 @@ Rules for any look:
 
 | Skill | Change |
 |---|---|
-| `living-ui` (new, `src/kiro_crew/builtin_skills/living-ui/`) | the rules, the toolkit, the looks, the harness; the single source of truth |
+| `living-ui` (new, `src/aj_crew/builtin_skills/living-ui/`) | the rules, the toolkit, the looks, the harness; the single source of truth |
 | `widgets` | the Animation section keeps its freeze-one-frame test and table, then defers "how to move" to `living-ui` in one paragraph |
 | `dashboard` | §6 "Theme and reach" adds one pointer: use `living-ui` for motion on change, never an idle tour on this page |
 | `explain-for` | "Draw it when the thing has a shape" adds: draw the analogy as a working object, not labelled boxes, and use `living-ui` when the widget moves |
 | `theme-pack-authoring` | unchanged; style stays with theme packs |
 | `frontend-design-workflow` | unchanged in substance. It governs changes to a product's own UI in a repo; `living-ui` governs runtime widgets and pages. One "see also" line for animated product UI |
-| `skills/kirocrew-app-dev` | one pointer: the rules apply to app UI too; an app may bundle the toolkit instead of inlining it |
+| `skills/ajcrew-app-dev` | one pointer: the rules apply to app UI too; an app may bundle the toolkit instead of inlining it |
 
 ### 6.2 Files in the new skill
 
 ```
-src/kiro_crew/builtin_skills/living-ui/
+src/aj_crew/builtin_skills/living-ui/
   SKILL.md                 rules (§5.1), API (§5.2), one readable block per helper
   toolkit/living-ui.js     readable source, the one place code is edited
   looks/isometric.md       the optional look (§5.3)
@@ -370,7 +370,7 @@ already exist.
    dashboard `view.html` plus a sample `fields` JSON) and writes one HTML file. The
    file sets the theme variables to a light set and a dark set (a query flag picks
    one), applies the same CSP as the frame, and for a dashboard stubs
-   `window.kirocrew.fields` and `subscribe`. Two more flags: `?reduced=1` forces
+   `window.ajcrew.fields` and `subscribe`. Two more flags: `?reduced=1` forces
    `calm`, and `?slow=0.05` runs `requestAnimationFrame` timestamps and
    `performance.now` at 1/20 speed, so a 100 ms envelope lands on several frames.
 2. **Capture** with `web-verify`'s backends on a loopback server: a 1440 px element
@@ -410,7 +410,7 @@ from `references/motion.md` (the follow formula, `burst`, the critically damped
 isometric look adapts `references/craft.md`. So:
 
 - `living-ui/LICENSE-anatomy.md` carries anatomy's full MIT notice, as
-  `src/kiro_crew/_vendor/llama_cpp/LICENSE.md` does for that vendored code.
+  `src/aj_crew/_vendor/llama_cpp/LICENSE.md` does for that vendored code.
 - `toolkit/living-ui.js` and `looks/isometric.md` start with a one-line notice
   naming the source and the licence file. Each helper block adapted from anatomy
   carries the same one-line comment, so a copied block keeps its notice.
@@ -457,7 +457,7 @@ PRs 2 to 5 depend on PR 1; nothing else depends on order unless stated.
 | 4 | Toolkit: `tour` | idle tour helper | tests: starts at 1.4 s in view; pauses on pointer, focus and key; resumes at 3.6 s; stops after `loops`; never runs under `calm` |
 | 5 | Toolkit: `explode` | exploded-view helper | tests: starts 35 ms apart; closing in reverse; a reversal re-staggers only changed parts; size still in budget |
 | 6 | Harness and checklist | `scripts/harness.py` and the §7 section of `SKILL.md`; one example widget under `living-ui/examples/` | test: the harness output carries the frame's CSP and both theme sets, and the `?slow` and `?reduced` flags; PR body carries 1440, 390, reduced and slowed shots of the example in light and dark |
-| 7 | Skill pointers | the `widgets`, `dashboard` and `explain-for` edits in §6.1; one line in `frontend-design-workflow` and `skills/kirocrew-app-dev` | a test that each of the three skills names `living-ui`; the widgets freeze-one-frame table is unchanged |
+| 7 | Skill pointers | the `widgets`, `dashboard` and `explain-for` edits in §6.1; one line in `frontend-design-workflow` and `skills/ajcrew-app-dev` | a test that each of the three skills names `living-ui`; the widgets freeze-one-frame table is unchanged |
 | 8 | Dashboard gallery example | one `dashboard/gallery/` package that uses `follow` on bound numbers and `burst` on a new approval, no tour | the existing gallery tests pass; `dashboard_save` verification passes on it; screenshots in the PR |
 | 9 | (optional) Measure, then decide on injection | count how often widgets copy the toolkit, its token cost and how often a copy throws; propose a host-injected inline preamble only if the cost matters | blocked on §12 Q2; a written verdict recorded in this document either way |
 | 10 | Isometric look | `looks/isometric.md`: when to use it, the tone recipe from theme variables, one example | the §10.1 style test covers it; screenshots in light, dark and one custom palette |

@@ -24,7 +24,7 @@ function pub(over: Partial<ArtifactPublication> = {}): ArtifactPublication {
     visibility: 'PRIVATE',
     shared_with: [],
     auto_sync: false,
-    last_synced_kirocrew_version: 1,
+    last_synced_ajcrew_version: 1,
     version_map: {},
     published_at: '2026-11-07T00:00:00Z',
     published_by: 'me',

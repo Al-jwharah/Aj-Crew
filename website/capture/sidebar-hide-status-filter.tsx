@@ -22,8 +22,8 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 localStorage.setItem('mc-theme', theme === 'light' ? 'light' : 'dark')
-localStorage.setItem('mc-color-theme', 'kiro')
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+localStorage.setItem('mc-color-theme', 'aj')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 localStorage.setItem('mc-sidebar-lane', 'flat')
 localStorage.setItem('mc-session-stale-collapse-ms', '0')
 localStorage.setItem('mc-sidebar-width', '380')
@@ -44,7 +44,7 @@ interface Row {
 }
 
 const row = (over: Partial<Row> & Pick<Row, 'key' | 'title' | 'last_ts' | 'last_message'>): Row => ({
-  messages: 12, running: false, agent: 'kirocrew', ...over,
+  messages: 12, running: false, agent: 'ajcrew', ...over,
 })
 
 const ROWS: Row[] = [
@@ -69,8 +69,8 @@ function Harness() {
         unreadSlots={UNREAD}
         history={[]}
         historyHasMore={false}
-        defaultAgent="kirocrew"
-        installedAgents={[{ name: 'kirocrew', source: 'builtin' }]}
+        defaultAgent="ajcrew"
+        installedAgents={[{ name: 'ajcrew', source: 'builtin' }]}
       />
     </div>
   )

@@ -64,8 +64,8 @@ vi.mock('../api/client', () => ({
 }))
 
 const SLOTS = [
-  { key: 's1', session_id: 'sid1', title: 'One', mode: 'default', agent: 'kirocrew', last_message_at: new Date().toISOString() },
-  { key: 's2', session_id: 'sid2', title: 'Two', mode: 'default', agent: 'kirocrew', last_message_at: new Date().toISOString() },
+  { key: 's1', session_id: 'sid1', title: 'One', mode: 'default', agent: 'ajcrew', last_message_at: new Date().toISOString() },
+  { key: 's2', session_id: 'sid2', title: 'Two', mode: 'default', agent: 'ajcrew', last_message_at: new Date().toISOString() },
 ] as never[]
 
 function renderSidebar(staticRows: boolean) {
@@ -79,7 +79,7 @@ function renderSidebar(staticRows: boolean) {
         unreadSlots={[]}
         history={[]}
         historyHasMore={false}
-        defaultAgent={'kirocrew'}
+        defaultAgent={'ajcrew'}
         installedAgents={[]}
         mode={'default'}
         staticRows={staticRows}

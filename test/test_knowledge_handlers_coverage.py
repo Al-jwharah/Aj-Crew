@@ -35,10 +35,10 @@ from knowledge_handlers_coverage_helpers import (  # noqa: F401 -- the fixture i
     store_fixture,
 )
 
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.testing.wait import await_until
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.testing.wait import await_until
 
 
 def _add_job(store, job_id="job-1", *, status="processing", source_id=None):
@@ -966,7 +966,7 @@ class TestImportBundle:
     ):
         # The depth at which the C json scanner raises varies by platform, so
         # force the RecursionError instead of relying on real nesting.
-        from kiro_crew.dashboard.handlers import knowledge as knowledge_mod
+        from aj_crew.dashboard.handlers import knowledge as knowledge_mod
 
         real_loads = knowledge_mod.json.loads
 
@@ -1254,7 +1254,7 @@ class TestGetEmbeddingStatus:
         busy timeout. Strict mode turns an on-loop take into a raise,
         which aiohttp surfaces as a 500."""
         await asyncio.to_thread(store.add_item, "a", "body", "note")
-        monkeypatch.setenv("KIROCREW_STRICT_ON_LOOP_STORE", "1")
+        monkeypatch.setenv("AJCREW_STRICT_ON_LOOP_STORE", "1")
         async with _client(_make_app(store)) as client:
             resp = await client.get("/api/knowledge/embedding/status")
             assert resp.status == 200

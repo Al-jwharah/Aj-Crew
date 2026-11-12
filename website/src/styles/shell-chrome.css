@@ -572,3 +572,21 @@ body.mc-focus-mode.mc-focus-rail .focus-chrome-rail{
 .scrollbar-none{scrollbar-width:none}
 .scrollbar-none::-webkit-scrollbar{display:none}
 
+
+/* Simple layout, chat pane. On an empty chat the composer dock is the home's
+   centred composer: the SAME dock element the chat uses, anchored at the
+   pane's middle instead of its bottom edge, in a capped column. The pane names
+   the state (`data-simple-dock`, lib/simpleHome.ts) and hands over the
+   offset; the dock's own element carries nothing for it, so the Advanced
+   layout, split panes and popouts are untouched. `bottom`, not a transform: a
+   transformed dock would become the containing block of the composer's fixed
+   menus. The 760px is SIMPLE_HOME_COMPOSER_MAX_W. */
+[data-simple-dock="home"]>[data-testid="composer-dock-root"]{
+  bottom:var(--simple-dock-bottom,0);max-width:760px;margin-inline:auto}
+/* Leaving home (the first message, or opening a chat with history) the dock
+   glides to the bottom edge. Only this state carries the transition, so going
+   back to an empty chat places the composer without an animation, and typing
+   on the home never lags behind the box's growth. */
+@media (prefers-reduced-motion:no-preference){
+  [data-simple-dock="settled"]>[data-testid="composer-dock-root"]{transition:bottom .2s ease-out}
+}

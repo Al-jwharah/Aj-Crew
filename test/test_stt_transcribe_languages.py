@@ -13,7 +13,7 @@ Three contracts, each with its own failure if broken:
 
 The live socket's request is covered in ``test_stt_stream.py``'s lifecycle class;
 these cases call the request builder and the handler directly. Per-test config
-isolation comes from the autouse ``KIROCREW_HOME`` fixture in conftest.
+isolation comes from the autouse ``AJCREW_HOME`` fixture in conftest.
 """
 
 from __future__ import annotations
@@ -27,11 +27,11 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-import kiro_crew.dashboard.handlers.core as core
-from kiro_crew.config import sections
-from kiro_crew.config.loader import KiroCrewConfig, config_path
-from kiro_crew.config.sections import SttConfig
-from kiro_crew.dashboard import stt_stream
+import aj_crew.dashboard.handlers.core as core
+from aj_crew.config import sections
+from aj_crew.config.loader import AjCrewConfig, config_path
+from aj_crew.config.sections import SttConfig
+from aj_crew.dashboard import stt_stream
 
 # ── helpers ──────────────────────────────────────────────────────────────
 
@@ -117,21 +117,21 @@ def test_unusable_lists_are_refused(value: object) -> None:
 
 
 def test_defaults_to_off() -> None:
-    stt = KiroCrewConfig.load().stt
+    stt = AjCrewConfig.load().stt
     assert stt.transcribe_languages == []
     assert stt.transcribe_language_identification == []
 
 
 def test_a_stored_list_is_loaded() -> None:
     _write_stt(provider="transcribe", transcribe_languages=["vi-VN", "en-US"])
-    stt = KiroCrewConfig.load().stt
+    stt = AjCrewConfig.load().stt
     assert stt.transcribe_languages == ["vi-VN", "en-US"]
     assert stt.transcribe_language_identification == ["vi-VN", "en-US"]
 
 
 def test_one_stored_language_keeps_identification_off() -> None:
     _write_stt(provider="transcribe", transcribe_languages=["vi-VN"])
-    stt = KiroCrewConfig.load().stt
+    stt = AjCrewConfig.load().stt
     assert stt.transcribe_languages == ["vi-VN"]
     assert stt.transcribe_language_identification == []
 
@@ -143,7 +143,7 @@ def test_an_unusable_stored_list_degrades_to_off(stored: object, monkeypatch, ca
     monkeypatch.setattr(sections, "_LAST_WARNED_TRANSCRIBE_LANGUAGES", None)
     _write_stt(provider="transcribe", language_code="vi-VN", transcribe_languages=stored)
     with caplog.at_level(logging.WARNING):
-        stt = KiroCrewConfig.load().stt
+        stt = AjCrewConfig.load().stt
     assert stt.transcribe_languages == []
     assert stt.effective_language_code == "vi-VN"
     assert any("transcribe_languages" in r.getMessage() for r in caplog.records)
@@ -154,18 +154,18 @@ def test_a_null_stored_list_is_off_without_a_notice_of_its_own(monkeypatch, capl
     monkeypatch.setattr(sections, "_LAST_WARNED_TRANSCRIBE_LANGUAGES", None)
     _write_stt(transcribe_languages=None)
     with caplog.at_level(logging.WARNING):
-        assert KiroCrewConfig.load().stt.transcribe_languages == []
+        assert AjCrewConfig.load().stt.transcribe_languages == []
     assert not any("Unusable stt.transcribe_languages" in r.getMessage() for r in caplog.records)
 
 
 def test_the_degrade_notice_deduplicates_the_last_value(monkeypatch, caplog) -> None:
     monkeypatch.setattr(sections, "_LAST_WARNED_TRANSCRIBE_LANGUAGES", None)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.sections"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.sections"):
         _write_stt(transcribe_languages=["en-US", "en-GB"])
-        KiroCrewConfig.load()
-        KiroCrewConfig.load()
+        AjCrewConfig.load()
+        AjCrewConfig.load()
         _write_stt(transcribe_languages=["fr-FR", "fr-CA"])
-        KiroCrewConfig.load()
+        AjCrewConfig.load()
     notices = [r for r in caplog.records if "transcribe_languages" in r.getMessage()]
     assert len(notices) == 2
 

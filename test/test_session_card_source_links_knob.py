@@ -23,11 +23,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-import kiro_crew.dashboard.handlers.source_providers as sp
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_source_links
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.testing.wait import default_timeout
+import aj_crew.dashboard.handlers.source_providers as sp
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.chat_handlers import api_chat_slot_source_links
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.testing.wait import default_timeout
 
 PRS = [f"https://github.com/acme/widgets/pull/{n}" for n in (11, 12)]
 ISSUES = [f"https://github.com/acme/widgets/issues/{n}" for n in (21, 22)]
@@ -40,7 +40,7 @@ def _slot(key: str = "s1") -> _ChatSlot:
 
 
 def _state(tmp_path, monkeypatch) -> DashboardState:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),
@@ -76,7 +76,7 @@ class TestSnapshotRead:
 
     def test_never_reads_config_on_the_event_loop(self, monkeypatch) -> None:
         """Companion to test_gitlab_allowlist_never_reads_config_on_the_event_loop.
-        This runs once per slots push, and ``KiroCrewConfig.load()`` stats, reads,
+        This runs once per slots push, and ``AjCrewConfig.load()`` stats, reads,
         parses and validates config files -- so the getter must not reach it."""
         monkeypatch.setattr(
             sp,
@@ -84,7 +84,7 @@ class TestSnapshotRead:
             lambda: pytest.fail("config read from the sync getter"),
         )
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             staticmethod(lambda *a, **k: pytest.fail("config load from the sync getter")),
         )
         assert sp.session_card_source_links_enabled() is True
@@ -108,7 +108,7 @@ class TestSnapshotRead:
         """A torn or unreadable config must not be indistinguishable from "the
         user said off" -- the hosts in the same tuple fail closed, this does not."""
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             staticmethod(lambda *a, **k: (_ for _ in ()).throw(OSError("torn read"))),
         )
         gitlab, jira, chips, github, bitbucket_server, gerrit = sp._load_source_link_settings()
@@ -268,7 +268,7 @@ class TestCheckRefreshFeed:
         _set_config(monkeypatch, False)
 
         with patch(
-            "kiro_crew.dashboard.handlers.source_providers.request_check_refresh_now"
+            "aj_crew.dashboard.handlers.source_providers.request_check_refresh_now"
         ) as refresh:
             state.refresh_slot_source_status("s1")
         refresh.assert_not_called()
@@ -295,10 +295,10 @@ class TestExpandEndpoint:
         strip, which would report a deleted session as linkless."""
         with (
             patch(
-                "kiro_crew.dashboard.handlers.source_providers.ensure_gitlab_hosts_loaded",
+                "aj_crew.dashboard.handlers.source_providers.ensure_gitlab_hosts_loaded",
                 return_value=None,
             ),
-            patch("kiro_crew.dashboard.chat_handlers.sel"),
+            patch("aj_crew.dashboard.chat_handlers.sel"),
         ):
             resp = await api_chat_slot_source_links(_request("nope", {"s1": _slot()}))
 
@@ -309,33 +309,33 @@ class TestExpandEndpoint:
 def cfg_file(tmp_path):
     p = tmp_path / "config.json"
     p.write_text("{}", encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=p):
+    with patch("aj_crew.config.loader.config_path", return_value=p):
         yield p
 
 
 class TestConfigField:
     def test_default_is_on_so_no_install_loses_its_chips(self) -> None:
-        assert KiroCrewConfig().dashboard.session_card_source_links is True
+        assert AjCrewConfig().dashboard.session_card_source_links is True
 
     def test_save_load_round_trip(self, cfg_file) -> None:
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.dashboard.session_card_source_links = False
         cfg.save()
 
         raw = json.loads(cfg_file.read_text(encoding="utf-8"))
         assert raw["dashboard"]["session_card_source_links"] is False
-        assert KiroCrewConfig.load().dashboard.session_card_source_links is False
+        assert AjCrewConfig.load().dashboard.session_card_source_links is False
 
     def test_a_hand_edited_non_bool_stays_on(self, cfg_file) -> None:
         cfg_file.write_text(
             json.dumps({"dashboard": {"session_card_source_links": "no"}}), encoding="utf-8"
         )
-        assert KiroCrewConfig.load().dashboard.session_card_source_links is True
+        assert AjCrewConfig.load().dashboard.session_card_source_links is True
 
     def test_carried_into_the_generated_schema(self) -> None:
         """The settings UI reads /api/config/schema, so the label and help have to
         travel with the field rather than being re-typed in the panel."""
-        from kiro_crew.config.schema import JSON_SCHEMA
+        from aj_crew.config.schema import JSON_SCHEMA
 
         node = JSON_SCHEMA["properties"]["dashboard"]["properties"]["session_card_source_links"]
         assert node["type"] == "boolean"
@@ -347,12 +347,12 @@ class TestConfigField:
 @pytest.fixture()
 def mock_sel():
     try:
-        import kiro_crew.dashboard.handlers  # noqa: F401
+        import aj_crew.dashboard.handlers  # noqa: F401
     except ImportError:
         pytest.skip("dashboard handler deps not available locally")
     m = MagicMock()
     m.log_tool_invocation = MagicMock()
-    with patch("kiro_crew.dashboard.handlers.sel", return_value=m):
+    with patch("aj_crew.dashboard.handlers.sel", return_value=m):
         yield m
 
 
@@ -376,7 +376,7 @@ class _OwnerState:
 
 @pytest.fixture()
 def handler_app(cfg_file, mock_sel):
-    from kiro_crew.dashboard.handlers.files import api_dashboard_config
+    from aj_crew.dashboard.handlers.files import api_dashboard_config
 
     app = web.Application()
     app.router.add_put("/api/dashboard/config", api_dashboard_config)
@@ -397,7 +397,7 @@ class TestConfigEndpoint:
                 "/api/dashboard/config", json={"session_card_source_links": False}
             )
             assert resp.status == 200
-        assert KiroCrewConfig.load().dashboard.session_card_source_links is False
+        assert AjCrewConfig.load().dashboard.session_card_source_links is False
 
     @pytest.mark.asyncio
     async def test_put_rejects_a_non_bool(self, handler_app, cfg_file) -> None:

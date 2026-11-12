@@ -98,7 +98,7 @@ describe('mcpWholeServerDeny', () => {
   it('adds the exception on a per-call reach', () => {
     const out = mcpWholeServerDeny(row({ per_tool_deny: 'per-call', costs_whole_server: true, ineffective: [] }, 'codex', 'Codex'))
     expect(out.rule).toContain('on OpenAI Codex')
-    expect(out.exception).toMatch(/^One exception: .*kirocrew-core.* on OpenAI Codex\.$/)
+    expect(out.exception).toMatch(/^One exception: .*ajcrew-core.* on OpenAI Codex\.$/)
   })
 
   it('says nothing on a reach that stops only the named tool', () => {
@@ -121,23 +121,23 @@ describe('mcpServerDeny', () => {
   })
 
   it('gives a spared server only the tool-by-tool fact', () => {
-    const out = mcpServerDeny(perCall(['kirocrew-core']), 'kirocrew-core')
+    const out = mcpServerDeny(perCall(['ajcrew-core']), 'ajcrew-core')
     expect(out.rule).toBe('')
     expect(out.exception).toMatch(/on OpenAI Codex turning off one tool here stops only that tool\.$/)
   })
 
   it('gives every other server only the rule', () => {
-    const out = mcpServerDeny(perCall(['kirocrew-core']), 'github')
+    const out = mcpServerDeny(perCall(['ajcrew-core']), 'github')
     expect(out.rule).toContain('on OpenAI Codex')
     expect(out.exception).toBe('')
   })
 
   it('reads the names from the gateway, not from a list of its own', () => {
-    expect(mcpServerDeny(perCall(['someone-else']), 'kirocrew-core').rule).toContain('on OpenAI Codex')
+    expect(mcpServerDeny(perCall(['someone-else']), 'ajcrew-core').rule).toContain('on OpenAI Codex')
   })
 
   it('keeps the pair on a gateway that sends no list', () => {
-    expect(mcpServerDeny(perCall(), 'kirocrew-core')).toEqual(mcpWholeServerDeny(perCall()))
+    expect(mcpServerDeny(perCall(), 'ajcrew-core')).toEqual(mcpWholeServerDeny(perCall()))
   })
 
   it('says nothing where the reach costs only the tool', () => {

@@ -39,7 +39,7 @@ const raw = params.get('scene')
 const scene = raw === 'copied' || raw === 'fallback' || raw === 'failed' ? raw : 'idle'
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // The clipboard the pressed row will meet. `copied` is a secure-context origin;
 // `fallback` is the plain-http one the fix exists for (no async API, so the

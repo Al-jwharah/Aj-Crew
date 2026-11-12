@@ -16,8 +16,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.knowledge.connectors import bedrock_kb
-from kiro_crew.knowledge.connectors.bedrock_kb import (
+from aj_crew.knowledge.connectors import bedrock_kb
+from aj_crew.knowledge.connectors.bedrock_kb import (
     BedrockKBConnector,
     _result_url,
     merge_by_rank,
@@ -114,7 +114,7 @@ def _grant(*, profile="team", region="us-east-1", account="111122223333"):
     """Record a REAL grant for the seeded rows' target; the attestation pins
     its account, and the enumeration reads back only entries under the
     current grant's account."""
-    from kiro_crew import aws_consent
+    from aj_crew import aws_consent
 
     return aws_consent.record_grant(
         aws_consent.SERVICE_BEDROCK_KB,
@@ -143,7 +143,7 @@ def _add_source(store, sid="src1", kb_ids="KBAAA11111", name="Team KB", *, attes
     )
     store.db.commit()
     if attest:
-        from kiro_crew import aws_consent
+        from aj_crew import aws_consent
 
         if aws_consent.read_grant(aws_consent.SERVICE_BEDROCK_KB) is None:
             _grant()
@@ -478,7 +478,7 @@ def test_recorded_grant_admits_validate_through_the_real_gate(monkeypatch, _cons
     STS probe (network) and the Bedrock client are faked."""
     from unittest.mock import AsyncMock
 
-    from kiro_crew import aws_consent
+    from aj_crew import aws_consent
 
     monkeypatch.setattr(bedrock_kb, "_consent_allows", _consent_granted)
     aws_consent.record_grant(
@@ -675,7 +675,7 @@ def test_live_source_survives_store_reconstruction(tmp_path):
     """A bedrock_kb source never has items (live retrieval, nothing
     ingested), so without its orphan-sweep exemption every gateway restart
     would silently delete it. Re-opening the store runs the sweep."""
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.store import KnowledgeStore
 
     db = str(tmp_path / "knowledge.db")
     store = KnowledgeStore(db)
@@ -697,7 +697,7 @@ def test_conflicting_second_bedrock_target_detection(tmp_path):
     (profile, region) is reported as a conflict; the SAME target is not."""
     import json as _json
 
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.store import KnowledgeStore
 
     store = KnowledgeStore(str(tmp_path / "knowledge.db"))
     store.add_source(
@@ -750,7 +750,7 @@ def _plant_bedrock_row(
     """
     import json as _json
 
-    from kiro_crew import aws_consent
+    from aj_crew import aws_consent
 
     sid = f"planted-{profile}-{region}"
     uri = f"bedrock-kb://{region}/KBTEST0001"
@@ -772,8 +772,8 @@ def test_conflict_rendering_redacts_a_planted_source_name(tmp_path):
     not its name), so it is redacted at the compare: the raw key, the
     whole exfil URL and its query payload are gone, the target stays
     readable, and the same target still reads as no conflict."""
-    from kiro_crew.knowledge.connectors.bedrock_kb import registered_target_mismatch
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.connectors.bedrock_kb import registered_target_mismatch
+    from aj_crew.knowledge.store import KnowledgeStore
 
     store = KnowledgeStore(str(tmp_path / "knowledge.db"))
     _plant_bedrock_row(store, _PLANTED_NAME, attest=True)
@@ -795,9 +795,9 @@ def test_only_a_registered_row_holds_the_bedrock_target(tmp_path):
     searched, so it must not refuse the owner's grant or registration. A row
     the gateway registered keeps its target, also after its grant is revoked,
     since confirming another target would still strand it."""
-    from kiro_crew import aws_consent
-    from kiro_crew.knowledge.connectors.bedrock_kb import registered_target_mismatch
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew import aws_consent
+    from aj_crew.knowledge.connectors.bedrock_kb import registered_target_mismatch
+    from aj_crew.knowledge.store import KnowledgeStore
 
     store = KnowledgeStore(str(tmp_path / "knowledge.db"))
     _plant_bedrock_row(store, "Planted KB", profile="foreign", region="eu-west-1")
@@ -813,7 +813,7 @@ def test_only_a_registered_row_holds_the_bedrock_target(tmp_path):
 
 def test_both_egress_sites_redact_through_the_platform_shim(monkeypatch, tmp_path):
     """The query leg and the conflict rendering go through
-    ``kiro_crew.platform.redact_via_context``, not ``security.redact``
+    ``aj_crew.platform.redact_via_context``, not ``security.redact``
     directly: on a host whose platform profile composes a companion
     credential policy, the companion's extra shapes must apply on top of the
     OSS baseline, or a companion-only shape in the query reaches AWS and one
@@ -822,11 +822,11 @@ def test_both_egress_sites_redact_through_the_platform_shim(monkeypatch, tmp_pat
     the stub runs on top of the baseline, not instead of it."""
     import dataclasses
 
-    from kiro_crew import security
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.knowledge.connectors.bedrock_kb import registered_target_mismatch
-    from kiro_crew.knowledge.store import KnowledgeStore
-    from kiro_crew.platform import (
+    from aj_crew import security
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.knowledge.connectors.bedrock_kb import registered_target_mismatch
+    from aj_crew.knowledge.store import KnowledgeStore
+    from aj_crew.platform import (
         PROFILE_ENTERPRISE,
         build_default_context,
         reset_context,
@@ -842,7 +842,7 @@ def test_both_egress_sites_redact_through_the_platform_shim(monkeypatch, tmp_pat
 
     set_context(
         dataclasses.replace(
-            build_default_context(KiroCrewConfig(), profile=PROFILE_ENTERPRISE),
+            build_default_context(AjCrewConfig(), profile=PROFILE_ENTERPRISE),
             credentials=_CompanionPolicy(),
         )
     )
@@ -875,8 +875,8 @@ def test_remote_search_route_resolves_store_and_fails_open(monkeypatch, tmp_path
     import asyncio as _asyncio
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard.handlers import knowledge as handler
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.dashboard.handlers import knowledge as handler
+    from aj_crew.knowledge.store import KnowledgeStore
 
     store = KnowledgeStore(str(tmp_path / "knowledge.db"))
     req = MagicMock()
@@ -921,7 +921,7 @@ def test_mcp_remote_leg_never_evaluates_consent_in_process(monkeypatch):
     read sees a pinned, possibly-stale inode). Its remote leg is an HTTP
     call to the gateway; the connector module is only used for the pure
     rank merge."""
-    from kiro_crew.mcp_tools import knowledge as mcp_knowledge
+    from aj_crew.mcp_tools import knowledge as mcp_knowledge
 
     calls = {}
 
@@ -962,7 +962,7 @@ def test_refusal_reason_reads_grant_and_attestation_from_one_snapshot(monkeypatc
     store already holds the replacement read by ``attested_sources``. The old
     account-only attestation filter admits that mixed state.
     """
-    from kiro_crew import aws_consent
+    from aj_crew import aws_consent
 
     source = _source("KBTEST0001")
     expected = _grant(profile="p", region="us-east-1", account="111122223333")
@@ -1170,7 +1170,7 @@ def _fake_boto3(sts_account: str):
 
 
 def test_get_client_verifies_frozen_credentials_against_the_grant(monkeypatch):
-    from kiro_crew import aws_consent
+    from aj_crew import aws_consent
 
     aws_consent.record_grant(
         aws_consent.SERVICE_BEDROCK_KB,
@@ -1336,7 +1336,7 @@ def test_search_remote_sources_queries_only_gateway_attested_rows(monkeypatch, s
     searched; a clone written straight into the database (no attestation), or
     an attested row whose stored KB set was widened afterwards, is skipped
     with a ``denied`` audit line and never reaches AWS."""
-    from kiro_crew import aws_consent
+    from aj_crew import aws_consent
 
     _add_source(store, sid="owner", kb_ids="KBTEST0001", name="Owner")
     # A clone with a different id and a KB the owner never approved.
@@ -1580,7 +1580,7 @@ def test_the_target_lookup_fetches_only_attested_rows_and_bounds_each_field(stor
     POST. Only an attested row holds a target, so the lookup fetches only
     those rows. An enlarged name is withheld in full while every returned
     value stays bounded before Python holds it."""
-    from kiro_crew.knowledge.connectors.bedrock_kb import registered_target_mismatch
+    from aj_crew.knowledge.connectors.bedrock_kb import registered_target_mismatch
 
     _plant_oversized_rows(store)
     recorder = _FetchRecorder(store.db)
@@ -1648,7 +1648,7 @@ def test_an_attestation_is_pinned_to_the_account_the_grant_confirmed(monkeypatch
     grant-equality gates still pass; the attestation therefore pins the
     confirmed account, and a registration made under the old account is
     skipped (audited) until the owner adds the source again."""
-    from kiro_crew import aws_consent
+    from aj_crew import aws_consent
 
     _add_source(store, sid="owner", kb_ids="KBTEST0001", name="Owner")
     client = FakeClient(results_by_kb={"KBTEST0001": [_hit("owner-hit", 0.9)]})
@@ -1694,7 +1694,7 @@ def test_attestation_refuses_an_account_the_caller_did_not_validate_under(store)
     pin any other, so the attestation can never name an account the KB was not
     probed in, whatever landed between validation and this write. Found in
     review."""
-    from kiro_crew import aws_consent
+    from aj_crew import aws_consent
 
     _grant(account="444455556666")
     props = {"kb_ids": "KBTEST0001", "region": "us-east-1", "profile": "team"}
@@ -1717,7 +1717,7 @@ def test_revoke_raises_on_an_unreadable_store_and_reports_false_on_a_missing_one
     would delete the row and leave the attestation for a re-minted row to
     inherit. The bytes stay for the operator to repair; a missing store is the
     ordinary nothing-attested case."""
-    from kiro_crew import aws_consent
+    from aj_crew import aws_consent
 
     path = aws_consent.aws_consent_path()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -1855,7 +1855,7 @@ class TestSearchDeadline:
     round-46 advisory finding)."""
 
     def test_expired_deadline_skips_remaining_kbs(self, monkeypatch):
-        from kiro_crew.knowledge.connectors import bedrock_kb as mod
+        from aj_crew.knowledge.connectors import bedrock_kb as mod
 
         calls: list[str] = []
 
@@ -1881,7 +1881,7 @@ class TestSearchDeadline:
         assert calls == []
 
     def test_live_deadline_lets_requests_through(self, monkeypatch):
-        from kiro_crew.knowledge.connectors import bedrock_kb as mod
+        from aj_crew.knowledge.connectors import bedrock_kb as mod
 
         calls: list[str] = []
 
@@ -1914,7 +1914,7 @@ class TestSearchDeadline:
     def test_spent_budget_skips_the_consent_probe_and_client_setup(self, monkeypatch):
         """Both STS legs run before the per-KB checks: a search whose budget is
         already spent starts neither (Opus finding ccc5e25aab01)."""
-        from kiro_crew.knowledge.connectors import bedrock_kb as mod
+        from aj_crew.knowledge.connectors import bedrock_kb as mod
 
         calls: list[str] = []
 
@@ -1937,7 +1937,7 @@ class TestSearchDeadline:
     def test_consent_probe_gets_the_remaining_budget(self, monkeypatch):
         """The probe is capped at what is left, and a probe that spends the
         rest leaves client setup unstarted."""
-        from kiro_crew.knowledge.connectors import bedrock_kb as mod
+        from aj_crew.knowledge.connectors import bedrock_kb as mod
 
         # The budget ends at t=110. 10 s remain at the consent check, and the
         # clock reads 111 once the probe returns.
@@ -1962,7 +1962,7 @@ class TestSearchDeadline:
         assert clients == []
 
     def test_unbounded_search_keeps_the_default_probe_timeout(self, monkeypatch):
-        from kiro_crew.knowledge.connectors import bedrock_kb as mod
+        from aj_crew.knowledge.connectors import bedrock_kb as mod
 
         timeouts: list[float | None] = []
 

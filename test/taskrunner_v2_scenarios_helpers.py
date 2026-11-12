@@ -24,7 +24,7 @@ def _passthrough_sandbox(_floor_monkeypatch):
     availability, so run the command unwrapped in-test."""
     import os as _os
 
-    from kiro_crew import git_coord
+    from aj_crew import git_coord
 
     _floor_monkeypatch.setattr(
         git_coord,
@@ -58,7 +58,7 @@ def _mock_sessions() -> MagicMock:
 
 
 def _llm_event(kind: str, text: str = ""):
-    from kiro_crew.providers.base import LLMEvent
+    from aj_crew.providers.base import LLMEvent
 
     return LLMEvent(kind=kind, text=text)
 

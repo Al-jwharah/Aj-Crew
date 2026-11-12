@@ -288,7 +288,7 @@ export default function CrewApprovalsEditor({
       await Promise.all([
         qc.invalidateQueries({ queryKey: ['agentDetail'] }),
         qc.invalidateQueries({ queryKey: ['agents-installed'] }),
-        qc.invalidateQueries({ queryKey: ['kirocrew-agents'] }),
+        qc.invalidateQueries({ queryKey: ['ajcrew-agents'] }),
       ])
       // A first approvals save gives the mate a new private crew-<hex> binding,
       // so the dialog's kiroAgent (seeded once at open) now holds the OLD parent

@@ -12,13 +12,13 @@ import json
 
 import pytest
 
-from kiro_crew.skills_auto_model import _PENDING_DOCUMENT_MAX_BYTES
+from aj_crew.skills_auto_model import _PENDING_DOCUMENT_MAX_BYTES
 
 
 @pytest.fixture
 def refs():
     """The module under test, imported per test so a missing module fails at setup."""
-    return importlib.import_module("kiro_crew.skills_script_refs")
+    return importlib.import_module("aj_crew.skills_script_refs")
 
 
 class TestReconcileScriptReferences:
@@ -45,7 +45,7 @@ class TestReconcileScriptReferences:
         "line",
         [
             "1. Edit `history.py` to add the field",
-            "1. python3 src/kiro_crew/tool.py",
+            "1. python3 src/aj_crew/tool.py",
             "1. see src/scripts/foo.py",
             "1. python3 -m pytest test/test_x.py",
             "1. run the suite",

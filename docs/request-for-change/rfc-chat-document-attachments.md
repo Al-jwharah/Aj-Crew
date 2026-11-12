@@ -50,7 +50,7 @@ ship on its own.
 
 ### 2.1 Current state: the dashboard
 
-- `api_upload_file` (`src/kiro_crew/dashboard/file_api/uploads.py`)
+- `api_upload_file` (`src/aj_crew/dashboard/file_api/uploads.py`)
   validates magic bytes, writes the file as
   `~/.kiro/crew/uploads/<uuid32>_<safe_name>` (0600 via
   `_write_file_restricted`), and returns `{"paths": [...]}`.
@@ -67,7 +67,7 @@ ship on its own.
   `test/test_attachment_marker_grammar_pin.py` fails if any of the three
   spellings drift. Changing the marker is therefore a three-site contract
   change, not a string edit.
-- `build_prompt_blocks` (`src/kiro_crew/acp/prompt_blocks.py`) is the one
+- `build_prompt_blocks` (`src/aj_crew/acp/prompt_blocks.py`) is the one
   place the outgoing message is rewritten before `session/prompt`: readable
   image paths become `image` blocks and the path is replaced by
   `[image: <name>]` in the text (its docstring). This rewrite is applied
@@ -80,7 +80,7 @@ ship on its own.
 
 ### 2.2 Current state: every other channel already converts
 
-`kiro_crew.messaging.attachments.ingest_attachments` classifies an inbound
+`aj_crew.messaging.attachments.ingest_attachments` classifies an inbound
 file as `DOCUMENT` when `doc_parser.is_parseable_document` says so
 (`classify`), runs `extract_text` in a worker thread, redacts and truncates
 to `IngestLimits.max_text_inject = 50 KiB` (`_clean_text`), and appends
@@ -90,7 +90,7 @@ to `IngestLimits.max_text_inject = 50 KiB` (`_clean_text`), and appends
 `teams/attachments.py`, `whatsapp/attachments.py`, `wecom/attachments.py`,
 `weixin/attachments.py`.
 
-So the product question raised in the issue's triage — whether Kiro Crew should
+So the product question raised in the issue's triage — whether Aj Crew should
 convert documents before the model sees them — was answered when those
 channels shipped. The dashboard is the exception, and the one surface where
 the file is already on local disk, which is what makes a sidecar rather than
@@ -98,7 +98,7 @@ inline injection the natural shape (§5.1, §9).
 
 ### 2.3 Current state: the extractors
 
-- `kiro_crew.pdf_extract.extract_pdf_segments` (`src/kiro_crew/pdf_extract.py`)
+- `aj_crew.pdf_extract.extract_pdf_segments` (`src/aj_crew/pdf_extract.py`)
   runs pdfplumber in a child under `RLIMIT_PROFILE_EXTRACTOR`, with a
   `max_chars`, `max_pages` (`PDF_MAX_PAGES = 2000`) and a monotonic
   `deadline`; it never raises and returns `(label, text)` page segments
@@ -107,7 +107,7 @@ inline injection the natural shape (§5.1, §9).
   explains why PDFs are routed there rather than to `extract_text`).
   pdfplumber is a core dependency (`install_requires` in `setup.cfg`);
   pypdfium2 comes with it.
-- `doc_parser._extract_pdf` (`src/kiro_crew/doc_parser.py`) is an
+- `doc_parser._extract_pdf` (`src/aj_crew/doc_parser.py`) is an
   in-process `stream…endstream` zlib scan. It is **live**, not dead code: it is
   the PDF branch of `extract_text`, which is what the eight channels in
   §2.2 call. The office preview never reaches it
@@ -125,10 +125,10 @@ Verified against `decba819400e`; the RFC supersedes the issue text on these:
    shipping a local file **out** to a channel. It does not scan chat uploads.
    The sidecar's redaction comes from the same redactors the channels use
    (§6), not from that gate.
-2. `kiro_crew/imaging.py` does not use pypdfium2. The in-process PDF rasterizer
+2. `aj_crew/imaging.py` does not use pypdfium2. The in-process PDF rasterizer
    with a memory ceiling is `office_slides.py`; Phase C reuses that.
 3. `knowledge/readers.py` does not call pdfplumber inline; it imports
-   `kiro_crew.pdf_extract`, which is the hardened seam this RFC targets.
+   `aj_crew.pdf_extract`, which is the hardened seam this RFC targets.
 4. "Upgrade `_extract_pdf`" is not an office-preview improvement (the preview
    never calls it); it is a fix for the eight channel integrations.
 
@@ -435,7 +435,7 @@ update channel to the agent or a "text pending" message that the agent has to
 poll for, and the race between send and completion is exactly the ambiguity
 the triage comment asked a product owner to remove.
 
-**Teach the agent's `read` tool to parse PDFs.** Out of Kiro Crew's hands;
+**Teach the agent's `read` tool to parse PDFs.** Out of Aj Crew's hands;
 `read` belongs to kiro-cli.
 
 ## 10. Open questions

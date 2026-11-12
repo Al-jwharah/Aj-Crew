@@ -1,6 +1,6 @@
 """Strands stays out of Crew Mode's member-facing sets, and why.
 
-A member or crewmate-worker session's Crew servers (``kirocrew-core``, the dashboard
+A member or crewmate-worker session's Crew servers (``ajcrew-core``, the dashboard
 and panel mounts) are stdio children the Strands CLI starts inside the session's
 sandbox, and the enforced credential mask hides the gateway credential from them, so
 their gateway-backed calls would be refused (``internal_secret_missing``). Strands is
@@ -22,9 +22,9 @@ from pathlib import Path
 import pytest
 import test_member_mount_deepseek as deepseek_mount
 
-import kiro_crew.validation  # noqa: F401 - break the legacy import cycle first
-from kiro_crew import acp_tool_gate, mate_worker
-from kiro_crew.acp.types import (
+import aj_crew.validation  # noqa: F401 - break the legacy import cycle first
+from aj_crew import acp_tool_gate, mate_worker
+from aj_crew.acp.types import (
     ACP_BACKEND_STRANDS,
     ACP_BACKENDS_MATE_WORKER_KIT,
     ACP_BACKENDS_MATE_WORKER_PROMPT_IN_CONTEXT,
@@ -34,8 +34,8 @@ from kiro_crew.acp.types import (
     ACP_BACKENDS_MEMBER_PANEL,
     ACP_BACKENDS_MEMBER_TOOL_LIMITS,
 )
-from kiro_crew.agent_capabilities import member_backend_gap
-from kiro_crew.config.paths import config_dir
+from aj_crew.agent_capabilities import member_backend_gap
+from aj_crew.config.paths import config_dir
 
 agents_dir = deepseek_mount.agents_dir
 MEMBER_KEY = deepseek_mount.MEMBER_KEY

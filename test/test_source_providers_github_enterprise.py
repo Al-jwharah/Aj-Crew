@@ -15,9 +15,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.config import loader as config_loader
-from kiro_crew.config import sections as config_sections
-from kiro_crew.dashboard.source_providers import (
+from aj_crew.config import loader as config_loader
+from aj_crew.config import sections as config_sections
+from aj_crew.dashboard.source_providers import (
     cache,
     chip_status,
     github,
@@ -26,7 +26,7 @@ from kiro_crew.dashboard.source_providers import (
     mutations,
     runner,
 )
-from kiro_crew.dashboard.source_providers.contract import RepoRef, SourceProviderError, SourceRef
+from aj_crew.dashboard.source_providers.contract import RepoRef, SourceProviderError, SourceRef
 
 GHE = "ghe.example.com"
 
@@ -77,7 +77,7 @@ def test_github_hosts_entries_are_normalized_like_gitlab_hosts() -> None:
 
 
 def test_a_host_also_in_gitlab_hosts_is_refused_at_config_load(caplog) -> None:
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
         dashboard = config_loader._build_dashboard_config(
             set(),
             {
@@ -126,7 +126,7 @@ def test_an_unreadable_config_leaves_github_hosts_closed(monkeypatch) -> None:
     def broken_load(*_a, **_k):
         raise OSError("torn read")
 
-    monkeypatch.setattr("kiro_crew.config.loader.KiroCrewConfig.load", staticmethod(broken_load))
+    monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", staticmethod(broken_load))
     assert hosts._load_source_link_settings()[3] == frozenset()
 
 
@@ -196,7 +196,7 @@ def test_lookalike_and_unlisted_spellings_are_not_recognized(url: str) -> None:
 def test_a_ported_entry_is_refused_at_config_load(caplog) -> None:
     """gh rejects a port in ``--hostname``, so a ported entry can never be
     reached; keeping it, or pinning its bare name, would aim calls elsewhere."""
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
         dashboard = config_loader._build_dashboard_config(
             set(), {"github_hosts": [f"{GHE}:8443", GHE]}
         )

@@ -17,20 +17,20 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.cloud.microvm import api
-from kiro_crew.cloud.microvm.engine import (
+from aj_crew.cloud.microvm import api
+from aj_crew.cloud.microvm.engine import (
     Activation,
     MicroVmLaunchEngine,
     MicroVmLaunchSpec,
     VmLauncher,
 )
-from kiro_crew.cloud.microvm.record import CrewStore
+from aj_crew.cloud.microvm.record import CrewStore
 
 SPEC = MicroVmLaunchSpec(
-    image_identifier="arn:aws:lambda:us-east-1:123456789012:microvm-image/kirocrew",
+    image_identifier="arn:aws:lambda:us-east-1:123456789012:microvm-image/ajcrew",
     image_version="7",
     kms_key_id="arn:aws:kms:us-east-1:123456789012:key/11111111-2222-3333-4444-555555555555",
-    identity_secret_ref="kirocrew/identity/demo-crew",
+    identity_secret_ref="ajcrew/identity/demo-crew",
     wall_seconds=900,
 )
 
@@ -115,7 +115,7 @@ def _no_real_secret_writes(_floor_monkeypatch):
     and the records, and a test that reached Secrets Manager would be a test that
     needs an account.
     """
-    from kiro_crew.cloud.microvm import engine as engine_mod
+    from aj_crew.cloud.microvm import engine as engine_mod
 
     _floor_monkeypatch.setattr(
         engine_mod.api, "put_secret", lambda name, value, **kw: f"arn:fake:{name}"
@@ -128,13 +128,13 @@ def engine_fixture(tmp_path, monkeypatch):
     store = CrewStore(tmp_path / "crews.json")
     launcher = FakeLauncher()
     monkeypatch.setattr(
-        "kiro_crew.cloud.microvm.engine._delete_activation",
+        "aj_crew.cloud.microvm.engine._delete_activation",
         lambda activation_id, *, profile, region: launcher.calls.append("delete_activation"),
     )
     # Both AWS mutations a teardown makes are stubbed here, so no test that uses
     # this fixture can reach a real ``aws ssm`` call on a machine with a profile.
     monkeypatch.setattr(
-        "kiro_crew.cloud.microvm.engine._deregister_node",
+        "aj_crew.cloud.microvm.engine._deregister_node",
         lambda mi_id, *, profile, region: launcher.calls.append("deregister_node"),
     )
     built = MicroVmLaunchEngine(spec=SPEC, store=store, launcher=launcher)

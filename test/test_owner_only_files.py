@@ -1,14 +1,14 @@
-"""Everything Kiro Crew creates in the data home is owner-only: files 0600, directories 0700.
+"""Everything Aj Crew creates in the data home is owner-only: files 0600, directories 0700.
 
 Every test runs under a ``022`` umask, the usual default, which is the condition
 the defect needed: a file created without an explicit mode lands at ``0644`` and
 a directory at ``0755``. Three layers are pinned separately because each one has
-to hold on its own (``kiro_crew.owner_only_files`` explains why):
+to hold on its own (``aj_crew.owner_only_files`` explains why):
 
 * creation -- the helpers and the stores that use them create with the mode,
   including SQLite's ``-wal``/``-shm``/``-journal`` sidecars;
 * the root -- the data home itself is ``0700``;
-* the startup sweep -- a fixed list of Kiro Crew's stores is tightened without
+* the startup sweep -- a fixed list of Aj Crew's stores is tightened without
   following a link, touching a hard-linked file, failing on ``EPERM``/``EROFS``
   or changing anything not on the list, on a worker thread kicked once the
   gateway's listener serves.
@@ -38,11 +38,11 @@ try:
 except ImportError:  # Windows, where pytestmark skips the whole module
     fcntl = None  # type: ignore[assignment]
 
-from kiro_crew import owner_only_files as oof
-from kiro_crew import platform_compat
-from kiro_crew._sqlite_compat import sqlite3
-from kiro_crew.atomic_write import atomic_write
-from kiro_crew.config.paths import config_dir, ensure_data_home
+from aj_crew import owner_only_files as oof
+from aj_crew import platform_compat
+from aj_crew._sqlite_compat import sqlite3
+from aj_crew.atomic_write import atomic_write
+from aj_crew.config.paths import config_dir, ensure_data_home
 
 pytestmark = pytest.mark.skipif(not platform_compat.IS_POSIX, reason="POSIX mode bits")
 
@@ -87,7 +87,7 @@ def _readable_by_others(root: Path) -> list[str]:
 
 def test_a_new_data_home_is_created_0700(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     fresh = tmp_path / "parent" / "home"
-    monkeypatch.setenv("KIROCREW_HOME", str(fresh))
+    monkeypatch.setenv("AJCREW_HOME", str(fresh))
     assert config_dir() == fresh.resolve()
     assert _mode(fresh) == 0o700
 
@@ -97,7 +97,7 @@ def test_ensure_data_home_tightens_an_existing_home(
 ) -> None:
     existing = tmp_path / "home"
     existing.mkdir(mode=0o755)
-    monkeypatch.setenv("KIROCREW_HOME", str(existing))
+    monkeypatch.setenv("AJCREW_HOME", str(existing))
     ensure_data_home()
     assert _mode(existing) == 0o700
 
@@ -177,9 +177,9 @@ def test_an_owner_only_check_does_not_resolve_the_default_home(
 ) -> None:
     """Writers peek on every write; a peek that filled the cache would make the
     first ``data_home()`` skip creating the home and its recovery breadcrumb."""
-    from kiro_crew.config import paths
+    from aj_crew.config import paths
 
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setattr(paths, "_resolved_home", None)
     monkeypatch.setattr(paths, "_config_dir_memo", None)
@@ -509,7 +509,7 @@ def test_a_dot_dot_path_through_a_link_is_left_alone(home: Path, tmp_path: Path)
 
 
 def test_the_knowledge_library_is_owner_only(home: Path) -> None:
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.store import KnowledgeStore
 
     directory = home / "workspace" / "knowledge"
     oof.mkdirs_owner_only(directory)
@@ -523,7 +523,7 @@ def test_the_knowledge_library_is_owner_only(home: Path) -> None:
 
 
 def test_a_transcript_and_its_directory_are_owner_only(home: Path) -> None:
-    from kiro_crew.history import ConversationLog, _archive_lines
+    from aj_crew.history import ConversationLog, _archive_lines
 
     store = ConversationLog(home / "sessions")
     store.append("dashboard:chat-1", "user", "something private")
@@ -535,7 +535,7 @@ def test_a_transcript_and_its_directory_are_owner_only(home: Path) -> None:
 
 
 def test_the_session_search_index_is_owner_only(home: Path) -> None:
-    from kiro_crew.history_index import SessionSearchIndex
+    from aj_crew.history_index import SessionSearchIndex
 
     index = SessionSearchIndex(home / "sessions" / ".index" / "session_index.db")
     try:
@@ -547,7 +547,7 @@ def test_the_session_search_index_is_owner_only(home: Path) -> None:
 
 
 def test_the_research_campaign_store_is_owner_only(home: Path) -> None:
-    from kiro_crew.apps.builtins.auto_research.campaign import storage
+    from aj_crew.apps.builtins.auto_research.campaign import storage
 
     conn = storage._get_db()
     try:
@@ -558,19 +558,19 @@ def test_the_research_campaign_store_is_owner_only(home: Path) -> None:
 
 
 def test_notification_history_is_owner_only(home: Path) -> None:
-    from kiro_crew.dashboard.state import _notifications_path, _persist_notification
+    from aj_crew.dashboard.state import _notifications_path, _persist_notification
 
     assert _persist_notification({"id": "n1", "title": "t", "body": "b"})
     assert _mode(_notifications_path()) == 0o600
     _notifications_path().unlink()
-    from kiro_crew.dashboard.state import _rewrite_notifications
+    from aj_crew.dashboard.state import _rewrite_notifications
 
     _rewrite_notifications([{"id": "n2", "title": "t", "body": "b"}])
     assert _mode(_notifications_path()) == 0o600
 
 
 def test_artifact_files_are_owner_only(home: Path) -> None:
-    from kiro_crew.artifacts import ArtifactStore
+    from aj_crew.artifacts import ArtifactStore
 
     store = ArtifactStore(root=home / "artifacts")
     art = store.create(name="Report", content="<p>private</p>", kind="html")
@@ -584,7 +584,7 @@ def test_artifact_files_under_a_symlinked_home_are_owner_only(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The writer resolves its path for the fence; the mode is decided on the home's spelling."""
-    from kiro_crew.artifacts import ArtifactStore
+    from aj_crew.artifacts import ArtifactStore
 
     real = tmp_path / "real-home"
     real.mkdir(mode=0o700)
@@ -602,7 +602,7 @@ def test_artifact_files_under_a_symlinked_home_are_owner_only(
 
 def test_a_stale_world_readable_artifact_tmp_is_not_published_at_its_mode(home: Path) -> None:
     """``os.open`` keeps an existing file's mode, so a ``.tmp`` a crash left is narrowed."""
-    from kiro_crew.artifacts import ArtifactStore
+    from aj_crew.artifacts import ArtifactStore
 
     store = ArtifactStore(root=home / "artifacts")
     art = store.create(name="Report", content="<p>private</p>", kind="html")
@@ -619,7 +619,7 @@ def test_a_stale_world_readable_artifact_tmp_is_not_published_at_its_mode(home: 
 
 
 def test_observed_channel_history_is_owner_only(home: Path) -> None:
-    from kiro_crew.channel_history import ChannelHistory
+    from aj_crew.channel_history import ChannelHistory
 
     history = ChannelHistory(history_dir=home / "channel-history")
     history.set_observe("C123")
@@ -633,7 +633,7 @@ def test_observed_channel_history_is_owner_only(home: Path) -> None:
 def test_observed_channel_history_outside_the_home_keeps_the_umask_default(
     tmp_path: Path,
 ) -> None:
-    from kiro_crew.channel_history import ChannelHistory
+    from aj_crew.channel_history import ChannelHistory
 
     history = ChannelHistory(history_dir=tmp_path / "shared-history")
     history.set_observe("C123")
@@ -645,7 +645,7 @@ def test_observed_channel_history_outside_the_home_keeps_the_umask_default(
 
 
 def test_session_workspace_results_are_owner_only(home: Path) -> None:
-    from kiro_crew import session_workspace as sw
+    from aj_crew import session_workspace as sw
 
     sw.append_history("s1", {"role": "user", "text": "x"})
     sw.write_result("s1", "a1", "result")
@@ -656,7 +656,7 @@ def test_session_workspace_results_are_owner_only(home: Path) -> None:
 
 
 def test_research_campaign_files_are_owner_only(home: Path) -> None:
-    from kiro_crew.apps.builtins.auto_research.campaign import storage
+    from aj_crew.apps.builtins.auto_research.campaign import storage
 
     campaign = "abcd1234"
     storage.write_status(campaign, "running")
@@ -670,7 +670,7 @@ def test_research_campaign_files_are_owner_only(home: Path) -> None:
 
 
 def test_heartbeat_queue_and_its_lock_are_owner_only(home: Path) -> None:
-    from kiro_crew.heartbeat import append_heartbeat_task, heartbeat_lock_path
+    from aj_crew.heartbeat import append_heartbeat_task, heartbeat_lock_path
 
     target = home / "workspace" / "HEARTBEAT.md"
     append_heartbeat_task("- check the thing", path=target)
@@ -684,7 +684,7 @@ def test_a_crewmate_dashboard_instance_is_owner_only(
     home: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """``members/<slug>/dashboard/``, its versions, lock and record, from a fresh adopt."""
-    from kiro_crew.dashboard_templates import catalog, instance
+    from aj_crew.dashboard_templates import catalog, instance
 
     builtin = tmp_path / "builtin" / "fixture-board"
     builtin.mkdir(parents=True)
@@ -711,7 +711,7 @@ def test_a_crewmate_dashboard_instance_is_owner_only(
 
 
 def test_a_config_write_narrows_an_old_world_readable_config(home: Path) -> None:
-    from kiro_crew.config.loader import write_config_atomically
+    from aj_crew.config.loader import write_config_atomically
 
     config = home / "config.json"
     config.write_text("{}", encoding="utf-8")
@@ -723,7 +723,7 @@ def test_a_config_write_narrows_an_old_world_readable_config(home: Path) -> None
 def test_a_config_symlinked_out_of_the_home_keeps_its_target_s_mode(
     home: Path, tmp_path: Path
 ) -> None:
-    from kiro_crew.config.loader import write_config_atomically
+    from aj_crew.config.loader import write_config_atomically
 
     target = tmp_path / "dotfiles" / "config.json"
     target.parent.mkdir()
@@ -737,12 +737,12 @@ def test_a_config_symlinked_out_of_the_home_keeps_its_target_s_mode(
 
 
 def test_gateway_log_is_created_and_rolled_over_owner_only(home: Path) -> None:
-    from kiro_crew.cli import _OwnerOnlyRotatingFileHandler
+    from aj_crew.cli import _OwnerOnlyRotatingFileHandler
 
     log = home / "gateway.log"
     handler = _OwnerOnlyRotatingFileHandler(log, maxBytes=64, backupCount=2, encoding="utf-8")
     try:
-        record = logging.LogRecord("kiro_crew.t", logging.WARNING, __file__, 1, "x" * 80, (), None)
+        record = logging.LogRecord("aj_crew.t", logging.WARNING, __file__, 1, "x" * 80, (), None)
         for _ in range(4):
             handler.emit(record)
     finally:
@@ -752,13 +752,11 @@ def test_gateway_log_is_created_and_rolled_over_owner_only(home: Path) -> None:
 
 
 def test_gateway_log_created_by_a_non_gateway_process_is_owner_only(home: Path) -> None:
-    from kiro_crew.cli import _AppendOnlyLogFileHandler
+    from aj_crew.cli import _AppendOnlyLogFileHandler
 
     handler = _AppendOnlyLogFileHandler(home / "gateway.log", encoding="utf-8")
     try:
-        handler.handle(
-            logging.LogRecord("kiro_crew.t", logging.WARNING, __file__, 1, "x", (), None)
-        )
+        handler.handle(logging.LogRecord("aj_crew.t", logging.WARNING, __file__, 1, "x", (), None))
     finally:
         handler.close()
     assert (home / "gateway.log").is_file()
@@ -771,7 +769,7 @@ def test_gateway_log_created_by_a_non_gateway_process_is_owner_only(home: Path) 
 
 
 def test_the_autonudge_store_and_its_sidecar_lock_are_owner_only(home: Path) -> None:
-    from kiro_crew.autonudge_service.store import _locked_file
+    from aj_crew.autonudge_service.store import _locked_file
 
     store = home / "nested" / "autonudge.json"
     with _locked_file(store, "r") as fh:
@@ -784,7 +782,7 @@ def test_the_autonudge_store_and_its_sidecar_lock_are_owner_only(home: Path) -> 
 
 
 def test_the_autonudge_store_outside_the_home_keeps_the_umask_default(tmp_path: Path) -> None:
-    from kiro_crew.autonudge_service.store import _locked_file
+    from aj_crew.autonudge_service.store import _locked_file
 
     store = tmp_path / "elsewhere" / "autonudge.json"
     with _locked_file(store, "r"):
@@ -794,7 +792,7 @@ def test_the_autonudge_store_outside_the_home_keeps_the_umask_default(tmp_path: 
 
 
 def test_the_inbound_spool_directory_and_its_lock_are_owner_only(home: Path) -> None:
-    from kiro_crew.messaging import inbound_spool
+    from aj_crew.messaging import inbound_spool
 
     target = home / "inbound-spool" / "refused.jsonl"
     assert inbound_spool.peek_next(path=target) == (None, [])
@@ -808,7 +806,7 @@ def test_the_inbound_spool_directory_and_its_lock_are_owner_only(home: Path) -> 
 
 
 def test_the_app_backend_lifecycle_lock_and_its_directory_are_owner_only(home: Path) -> None:
-    from kiro_crew.apps.backend_runtime.tracking import app_backend_lifecycle_flock
+    from aj_crew.apps.backend_runtime.tracking import app_backend_lifecycle_flock
 
     with app_backend_lifecycle_flock("demo-app"):
         pass
@@ -819,7 +817,7 @@ def test_the_app_backend_lifecycle_lock_and_its_directory_are_owner_only(home: P
 
 
 def test_the_dependency_ledger_lock_is_owner_only(home: Path) -> None:
-    from kiro_crew.apps import dependency_ledger
+    from aj_crew.apps import dependency_ledger
 
     with dependency_ledger._locked_ledger():
         pass
@@ -832,7 +830,7 @@ def test_a_remote_work_ledger_record_and_every_parent_it_creates_are_owner_only(
     home: Path,
 ) -> None:
     """``mkdir(parents=True, mode=0o700)`` left each new parent at ``0755``."""
-    from kiro_crew.work_ledger_remote import RemoteState, remote_state_path, write_remote_state
+    from aj_crew.work_ledger_remote import RemoteState, remote_state_path, write_remote_state
 
     write_remote_state("chat-1-board", "it_0123abcd", RemoteState())
 
@@ -847,10 +845,10 @@ def test_a_remote_work_ledger_record_and_every_parent_it_creates_are_owner_only(
 def test_a_member_crew_log_its_lock_lease_and_fold_marker_are_owner_only(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    import kiro_crew.members as members
-    from kiro_crew.crew_log.schema import KIND_MEMBER
-    from kiro_crew.crew_log.store import crew_log_dir
-    from kiro_crew.eventlog.service import MemberEventLogService
+    import aj_crew.members as members
+    from aj_crew.crew_log.schema import KIND_MEMBER
+    from aj_crew.crew_log.store import crew_log_dir
+    from aj_crew.eventlog.service import MemberEventLogService
 
     monkeypatch.setattr(members, "data_home", lambda: home)
     roster = home / "members"
@@ -869,8 +867,8 @@ def test_the_fold_marker_and_an_absent_unit_s_lease_carrier_are_owner_only(
     home: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The two member writers that can run before the unit's own directory exists."""
-    import kiro_crew.members as members
-    from kiro_crew.eventlog import service
+    import aj_crew.members as members
+    from aj_crew.eventlog import service
 
     monkeypatch.setattr(members, "data_home", lambda: home)
     (home / "members").mkdir(mode=0o700)
@@ -1146,7 +1144,7 @@ def test_the_sweep_reads_directories_incrementally(
 def test_the_startup_sweep_touches_only_the_listed_stores(home: Path) -> None:
     """Whatever else is kept in the data home keeps its modes, wherever it sits.
 
-    A project in ``workspace/``, a session workspace root ``kirocrew setup``
+    A project in ``workspace/``, a session workspace root ``ajcrew setup``
     placed in the home, the home itself used as a working directory, scratch
     space, the skill trees and an app's own files: none is on the list, so the
     sweep never has to recognise one to spare it.
@@ -1237,13 +1235,13 @@ def test_a_store_must_be_a_relative_path_with_a_pattern_only_last(store: str) ->
 
 
 def test_the_store_list_matches_the_stores_constants() -> None:
-    from kiro_crew import heartbeat, members, memory, session_workspace
-    from kiro_crew.apps.registry_pipeline.recovery import _app_sources_dir
-    from kiro_crew.config.sections import WorkspaceConfig
-    from kiro_crew.crew_log.store import _ROOT_LEAF as CREW_LOG
-    from kiro_crew.dashboard.state import _NOTIFICATIONS_FILE
-    from kiro_crew.memory_stores import MEMORY_DB_FILE
-    from kiro_crew.skills_discovery import SKILLS_DIR_NAME
+    from aj_crew import heartbeat, members, memory, session_workspace
+    from aj_crew.apps.registry_pipeline.recovery import _app_sources_dir
+    from aj_crew.config.sections import WorkspaceConfig
+    from aj_crew.crew_log.store import _ROOT_LEAF as CREW_LOG
+    from aj_crew.dashboard.state import _NOTIFICATIONS_FILE
+    from aj_crew.memory_stores import MEMORY_DB_FILE
+    from aj_crew.skills_discovery import SKILLS_DIR_NAME
 
     stores = set(oof.STARTUP_SWEEP_STORES)
     workspace = WorkspaceConfig().dir
@@ -1355,7 +1353,7 @@ def test_the_startup_sweep_narrows_the_skill_and_app_roots_but_not_what_they_hol
 def test_the_builtin_skill_sync_creates_the_skills_root_owner_only(
     home: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew import skills as skills_mod
+    from aj_crew import skills as skills_mod
 
     packaged = tmp_path / "packaged"
     _plant(packaged, "some-builtin/SKILL.md").write_text(
@@ -1400,9 +1398,9 @@ def test_the_cli_prologue_never_walks_the_data_home() -> None:
     before ``asyncio.run()``. Read from the source because ``main()`` boots a
     whole gateway; any call into the sweep from ``cli.py`` would be on that path.
     """
-    from kiro_crew import cli
+    from aj_crew import cli
 
-    package = REPO_ROOT / "src" / "kiro_crew"
+    package = REPO_ROOT / "src" / "aj_crew"
     # cli.py and every module split out of it.
     family = [package / "cli.py", *(package / f"{n.rsplit('.', 1)[1]}.py" for n in cli._OWNERS)]
     family += sorted(package.glob("cli_parser_*.py"))
@@ -1422,7 +1420,7 @@ def test_the_cli_prologue_never_walks_the_data_home() -> None:
 def test_both_gateway_entrypoints_kick_the_sweep_once_the_listener_serves(
     entrypoint: str, serving: str
 ) -> None:
-    from kiro_crew.dashboard import server as srv
+    from aj_crew.dashboard import server as srv
 
     source = inspect.getsource(getattr(srv, entrypoint))
     kick = "_kick_owner_only_sweep(state)"
@@ -1433,7 +1431,7 @@ def test_both_gateway_entrypoints_kick_the_sweep_once_the_listener_serves(
 def test_the_kick_runs_the_sweep_on_a_worker_thread_as_a_tracked_task(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard import server as srv
+    from aj_crew.dashboard import server as srv
 
     calls: list[tuple[Path, int, object]] = []
 
@@ -1462,7 +1460,7 @@ def test_the_kick_runs_the_sweep_on_a_worker_thread_as_a_tracked_task(
 def test_a_failing_kicked_sweep_is_logged_not_raised(
     monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
-    from kiro_crew.dashboard import server as srv
+    from aj_crew.dashboard import server as srv
 
     def _boom(*_a: object, **_k: object) -> oof.TightenReport:
         raise RuntimeError("boom")

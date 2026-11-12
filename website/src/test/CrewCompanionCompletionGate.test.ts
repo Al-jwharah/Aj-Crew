@@ -47,7 +47,7 @@ describe('isOwnBackgroundAgent', () => {
 
   it('does not match ordinary session slots', () => {
     expect(isOwnBackgroundAgent('session-1')).toBe(false)
-    expect(isOwnBackgroundAgent('kirocrew')).toBe(false)
+    expect(isOwnBackgroundAgent('ajcrew')).toBe(false)
     // A slot that merely CONTAINS the prefix mid-string is not the bg agent.
     expect(isOwnBackgroundAgent(`x-${BG_AGENT_PREFIX}`)).toBe(false)
   })

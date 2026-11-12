@@ -1,7 +1,7 @@
 """Byte-level contract of the artifact store's persisted files and errors.
 
-The store is split across :mod:`kiro_crew.artifacts` (the facade that owns the
-lock, the fenced file IO and the singletons) and the ``kiro_crew.artifact_store``
+The store is split across :mod:`aj_crew.artifacts` (the facade that owns the
+lock, the fenced file IO and the singletons) and the ``aj_crew.artifact_store``
 package (models, field rules, wire codec, comment threads, folders). Nothing a
 caller can observe may depend on where a rule lives, so this file pins the
 observable surface directly: the exact bytes of ``meta.json``,
@@ -28,8 +28,8 @@ from pathlib import Path
 import pytest
 from source_corpus import repo_files_named, repo_root
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew.artifacts import (
+from aj_crew import artifacts as art_mod
+from aj_crew.artifacts import (
     EXPECT_ABSENT,
     Artifact,
     ArtifactAlreadyExistsError,
@@ -45,7 +45,7 @@ from kiro_crew.artifacts import (
     ForkMetadata,
     ImageMetadata,
 )
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 NOW = "2026-01-02T03:04:05.000006+00:00"
 TOKEN = "0123456789abcdef" * 4
@@ -358,7 +358,7 @@ class TestResponseShape:
             "auto_sync",
             "collab_mode",
             "last_pushed_sha256",
-            "last_synced_kirocrew_version",
+            "last_synced_ajcrew_version",
             "wrapper_revision",
             "version_map",
             "published_at",
@@ -436,7 +436,7 @@ class TestTolerantLoad:
         raw["publication"] = {
             "artifact_id": "a1",
             "collab_mode": "weird",
-            "last_synced_kirocrew_version": "n/a",
+            "last_synced_ajcrew_version": "n/a",
             "version_map": {"1": "2", "2": "x"},
             "shared_with": ["bob", 3],
         }
@@ -444,7 +444,7 @@ class TestTolerantLoad:
         pub = store.get(art.slug).publication
         assert pub is not None
         assert pub.collab_mode == "mirror"
-        assert pub.last_synced_kirocrew_version == 0
+        assert pub.last_synced_ajcrew_version == 0
         assert pub.version_map == {"1": 2}
         assert pub.shared_with == ["bob"]
         assert pub.visibility == "PRIVATE"
@@ -578,13 +578,13 @@ class TestChangeListenerOrdering:
             raise RuntimeError("listener down")
 
         store.set_change_listener(boom)
-        with caplog.at_level("ERROR", logger="kiro_crew.artifacts"):
+        with caplog.at_level("ERROR", logger="aj_crew.artifacts"):
             store.create(name="swallow", content="c")
         assert store.get("swallow").content == "c"
         assert [
             r.getMessage()
             for r in caplog.records
-            if r.name == "kiro_crew.artifacts" and r.levelname == "ERROR"
+            if r.name == "aj_crew.artifacts" and r.levelname == "ERROR"
         ] == ["artifact change listener failed: action=upsert slug=swallow"]
 
 
@@ -601,7 +601,7 @@ _MOVED_RECORDS = (
 
 
 class TestFacadeSeams:
-    """Names callers and tests patch on :mod:`kiro_crew.artifacts` keep steering the store."""
+    """Names callers and tests patch on :mod:`aj_crew.artifacts` keep steering the store."""
 
     def test_timestamps_follow_the_facade_clock(self, store: ArtifactStore, monkeypatch) -> None:
         art = store.create(name="t", content="c")
@@ -721,18 +721,18 @@ class TestFacadeSeams:
             ArtifactStillPublishedError,
             ArtifactReplacedError,
         ):
-            assert cls.__module__ == "kiro_crew.artifacts", cls
+            assert cls.__module__ == "aj_crew.artifacts", cls
 
     def test_moved_records_report_their_owner_module(self) -> None:
         owners = {cls: cls.__module__ for cls in _MOVED_RECORDS}
         assert owners == {
-            Artifact: "kiro_crew.artifact_store.model",
-            ArtifactComment: "kiro_crew.artifact_store.model",
-            ArtifactPublication: "kiro_crew.artifact_store.model",
-            ForkMetadata: "kiro_crew.artifact_store.model",
-            ImageMetadata: "kiro_crew.artifact_store.model",
-            type(EXPECT_ABSENT): "kiro_crew.artifact_store.model",
-            ArtifactFolderStore: "kiro_crew.artifact_store.folders",
+            Artifact: "aj_crew.artifact_store.model",
+            ArtifactComment: "aj_crew.artifact_store.model",
+            ArtifactPublication: "aj_crew.artifact_store.model",
+            ForkMetadata: "aj_crew.artifact_store.model",
+            ImageMetadata: "aj_crew.artifact_store.model",
+            type(EXPECT_ABSENT): "aj_crew.artifact_store.model",
+            ArtifactFolderStore: "aj_crew.artifact_store.folders",
         }
 
     @pytest.mark.parametrize("cls", _MOVED_RECORDS, ids=lambda cls: cls.__name__)
@@ -817,35 +817,35 @@ def _reads_jpeg_sniffer(store: ArtifactStore) -> None:
 #: reader of the attribute and fails unless each one sees the replacement.
 SEAM_CASES = [
     pytest.param(
-        "kiro_crew.artifacts",
+        "aj_crew.artifacts",
         "_infer_kind",
         lambda _original: _fake_infer_kind,
         _reads_infer_kind,
         id="facade-_infer_kind",
     ),
     pytest.param(
-        "kiro_crew.artifacts",
+        "aj_crew.artifacts",
         "_validate_slug",
         lambda _original: _fake_validate_slug,
         _reads_validate_slug,
         id="facade-_validate_slug",
     ),
     pytest.param(
-        "kiro_crew.artifact_store.rules",
+        "aj_crew.artifact_store.rules",
         "MAX_NAME_LEN",
         lambda _original: 5,
         _reads_name_limit,
         id="rules-MAX_NAME_LEN",
     ),
     pytest.param(
-        "kiro_crew.artifact_store.rules",
+        "aj_crew.artifact_store.rules",
         "MAX_DESCRIPTION_LEN",
         lambda _original: 5,
         _reads_description_limit,
         id="rules-MAX_DESCRIPTION_LEN",
     ),
     pytest.param(
-        "kiro_crew.artifact_store.records",
+        "aj_crew.artifact_store.records",
         "ALLOWED_EVENT_TYPES",
         lambda original: frozenset(original | {"probe"}),
         _reads_event_types,
@@ -853,42 +853,42 @@ SEAM_CASES = [
     ),
     # Rule data the owners read, patched through the facade: the write reaches the owner.
     pytest.param(
-        "kiro_crew.artifacts",
+        "aj_crew.artifacts",
         "MAX_TAGS",
         lambda _original: 1,
         _reads_tag_limit,
         id="facade-MAX_TAGS",
     ),
     pytest.param(
-        "kiro_crew.artifacts",
+        "aj_crew.artifacts",
         "MAX_NAME_LEN",
         lambda _original: 5,
         _reads_name_limit,
         id="facade-MAX_NAME_LEN",
     ),
     pytest.param(
-        "kiro_crew.artifacts",
+        "aj_crew.artifacts",
         "_SLUG_RE",
         lambda _original: re.compile(r"^fine-[a-z]\Z"),
         _reads_slug_grammar,
         id="facade-_SLUG_RE",
     ),
     pytest.param(
-        "kiro_crew.artifacts",
+        "aj_crew.artifacts",
         "ALLOWED_EVENT_TYPES",
         lambda original: frozenset(original | {"probe"}),
         _reads_event_types,
         id="facade-ALLOWED_EVENT_TYPES",
     ),
     pytest.param(
-        "kiro_crew.artifacts",
+        "aj_crew.artifacts",
         "MAX_FOLDER_DEPTH",
         lambda _original: 1,
         _reads_folder_depth,
         id="facade-MAX_FOLDER_DEPTH",
     ),
     pytest.param(
-        "kiro_crew.artifacts",
+        "aj_crew.artifacts",
         "_sniff_jpeg_dimensions",
         lambda _original: lambda _data: (7, 9),
         _reads_jpeg_sniffer,
@@ -905,7 +905,7 @@ class TestSeamReach:
         self, store: ArtifactStore, monkeypatch, module_path, attr, replacement, probe
     ) -> None:
         # Resolved per case rather than at import, so the facade cases in this file
-        # collect and run even on a tree that has no kiro_crew.artifact_store package.
+        # collect and run even on a tree that has no aj_crew.artifact_store package.
         module = importlib.import_module(module_path)
         monkeypatch.setattr(module, attr, replacement(getattr(module, attr)))
         probe(store)
@@ -930,12 +930,12 @@ class TestSeamReach:
 
     def test_the_patch_scan_finds_each_spelling(self) -> None:
         source = (
-            "from kiro_crew import artifacts as art\n"
-            "import kiro_crew.artifacts as facade\n"
+            "from aj_crew import artifacts as art\n"
+            "import aj_crew.artifacts as facade\n"
             "def test_x(monkeypatch, other):\n"
             '    monkeypatch.setattr(art, "MAX_TAGS", 1)\n'
             '    monkeypatch.setattr(facade, "_SLUG_RE", 1)\n'
-            '    monkeypatch.setattr("kiro_crew.artifacts.MAX_NAME_LEN", 1)\n'
+            '    monkeypatch.setattr("aj_crew.artifacts.MAX_NAME_LEN", 1)\n'
             '    mock.patch.object(art, "config_dir")\n'
             '    monkeypatch.setattr(other, "NOT_THE_FACADE", 1)\n'
             '    monkeypatch.setattr(art.ArtifactStore, "create", None)\n'
@@ -970,22 +970,18 @@ _DOCUMENTED_SPLITS = {
 }
 
 #: Every spelling a test uses to name the facade module.
-_MENTIONS_THE_FACADE = re.compile(
-    r"kiro_crew\.artifacts\b|from kiro_crew import [^\n]*\bartifacts\b"
-)
+_MENTIONS_THE_FACADE = re.compile(r"aj_crew\.artifacts\b|from aj_crew import [^\n]*\bartifacts\b")
 
 
 def _facade_patched_names(text: str) -> set[str]:
-    """Names one test file rebinds on ``kiro_crew.artifacts`` itself."""
+    """Names one test file rebinds on ``aj_crew.artifacts`` itself."""
     tree = ast.parse(text)
-    aliases = {"kiro_crew.artifacts"}
+    aliases = {"aj_crew.artifacts"}
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew":
+        if isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
             aliases |= {a.asname or a.name for a in node.names if a.name == "artifacts"}
         elif isinstance(node, ast.Import):
-            aliases |= {
-                a.asname for a in node.names if a.name == "kiro_crew.artifacts" and a.asname
-            }
+            aliases |= {a.asname for a in node.names if a.name == "aj_crew.artifacts" and a.asname}
     found: set[str] = set()
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call) or len(node.args) < 2:
@@ -998,14 +994,14 @@ def _facade_patched_names(text: str) -> set[str]:
             and ast.unparse(node.func).endswith(("setattr", "patch.object"))
         ):
             found.add(name.value)
-    found |= set(re.findall(r"""["']kiro_crew\.artifacts\.(\w+)["']""", text))
+    found |= set(re.findall(r"""["']aj_crew\.artifacts\.(\w+)["']""", text))
     return found
 
 
 def _corpus_patched_names() -> set[str]:
     """Names any test rebinds on the facade, the parametrized seam cases above included."""
     root = repo_root()
-    found = {case.values[1] for case in SEAM_CASES if case.values[0] == "kiro_crew.artifacts"}
+    found = {case.values[1] for case in SEAM_CASES if case.values[0] == "aj_crew.artifacts"}
     for path in repo_files_named(".py"):
         relative = path.relative_to(root).parts
         in_tests = relative[0] == "test" or (relative[0] == "src" and "tests" in relative)
@@ -1068,7 +1064,7 @@ def _bare_reads(source: str) -> set[str]:
 
 
 #: Every public name the facade bound before its rules moved into
-#: :mod:`kiro_crew.artifact_store`, the moved names included. Each must still resolve
+#: :mod:`aj_crew.artifact_store`, the moved names included. Each must still resolve
 #: here and reach a star import.
 BASE_PUBLIC_NAMES = frozenset(
     {
@@ -1098,7 +1094,7 @@ BASE_PUBLIC_NAMES = frozenset(
         "ForkMetadata",
         "ImageMetadata",
         "Iterator",
-        "KiroCrewConfig",
+        "AjCrewConfig",
         "MAX_AUTO_WIDGET_ARTIFACTS",
         "MAX_COMMENTS_PER_ARTIFACT",
         "MAX_CONTENT_BYTES",
@@ -1161,7 +1157,7 @@ BASE_PUBLIC_NAMES = frozenset(
     }
 )
 
-#: Every public name of the facade: a star import of :mod:`kiro_crew.artifacts` binds
+#: Every public name of the facade: a star import of :mod:`aj_crew.artifacts` binds
 #: exactly these, the base names plus ``platform_compat``, a public module binding.
 FACADE_PUBLIC_NAMES = BASE_PUBLIC_NAMES | {"platform_compat"}
 
@@ -1170,7 +1166,7 @@ class TestPublicSurface:
     def test_star_import_exposes_the_same_public_names(self, tmp_path: Path) -> None:
         # A real star import, performed by the import system in a throwaway module.
         probe = tmp_path / "artifacts_star_import_probe.py"
-        probe.write_text("from kiro_crew.artifacts import *\n", encoding="utf-8")
+        probe.write_text("from aj_crew.artifacts import *\n", encoding="utf-8")
         spec = importlib.util.spec_from_file_location("artifacts_star_import_probe", probe)
         assert spec is not None and spec.loader is not None
         module = importlib.util.module_from_spec(spec)

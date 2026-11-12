@@ -15,11 +15,11 @@ import sys
 
 import pytest
 
-import kiro_crew.acp.client as client_mod
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.mcp_session_report import BUCKET_CAP, ERROR_CAP, NAME_CAP
-from kiro_crew.acp.mcp_startable import prune_unstartable, unstartable_reason
-from kiro_crew.acp_backends import (
+import aj_crew.acp.client as client_mod
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.mcp_session_report import BUCKET_CAP, ERROR_CAP, NAME_CAP
+from aj_crew.acp.mcp_startable import prune_unstartable, unstartable_reason
+from aj_crew.acp_backends import (
     ACP_BACKEND_COPILOT,
     ACP_BACKEND_DEEPSEEK,
     ACP_BACKEND_GOOSE,
@@ -55,7 +55,7 @@ def test_an_absolute_file_without_the_execute_bit_is_unstartable(tmp_path):
 
 
 def test_a_bare_name_on_no_path_is_unstartable(monkeypatch):
-    monkeypatch.setattr("kiro_crew.acp.mcp_startable.mcp_search_path", lambda _base: "")
+    monkeypatch.setattr("aj_crew.acp.mcp_startable.mcp_search_path", lambda _base: "")
     reason = unstartable_reason(_stdio("bad", "no-such-mcp-server-g19"))
     assert reason == "command not found on PATH: no-such-mcp-server-g19"
 
@@ -68,7 +68,7 @@ def test_a_bare_name_on_the_elements_own_path_is_startable(tmp_path, monkeypatch
         searched.append(declared)
         return declared
 
-    monkeypatch.setattr("kiro_crew.acp.mcp_startable.mcp_search_path", _search)
+    monkeypatch.setattr("aj_crew.acp.mcp_startable.mcp_search_path", _search)
     name = "g19-server.exe" if sys.platform == "win32" else "g19-server"
     exe = tmp_path / name
     exe.write_text("#!/bin/sh\n")
@@ -111,7 +111,7 @@ def _drive(tmp_path, monkeypatch, backend: str, *, rolls_back: bool):
     *rolls_back* (deepseek) an unstartable element in ``mcpServers`` fails the whole
     ``session/new``; without it (goose) the session is created regardless.
     """
-    client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=backend)
+    client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=backend)
     good = _stdio("good", sys.executable)
     bad = _stdio("bad", _MISSING)
     sent: list[dict] = []
@@ -201,7 +201,7 @@ async def test_the_pruned_server_warning_redacts_a_key_in_the_command(
 ):
     """A whole CLI line in ``command`` reaches the warning only after redaction."""
     key = "sk-proj-" + "Q7" * 20
-    client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_GOOSE)
+    client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_GOOSE)
     bad = _stdio("bad", f"{_MISSING} --api-key {key}")
 
     with caplog.at_level("WARNING", logger=client_mod.logger.name):
@@ -227,7 +227,7 @@ async def test_pruned_servers_are_bounded_where_kept_and_the_overflow_is_said(
     """
     long = "n" * (NAME_CAP * 4)
     servers = [_stdio(f"{i:03d}{long}", _MISSING) for i in range(BUCKET_CAP + 1)]
-    client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_GOOSE)
+    client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_GOOSE)
 
     with caplog.at_level("WARNING", logger=client_mod.logger.name):
         kept = await client._prune_unstartable_mcp(servers)
@@ -249,7 +249,7 @@ async def test_pruned_servers_are_bounded_where_kept_and_the_overflow_is_said(
 
 @pytest.mark.asyncio
 async def test_a_backend_outside_the_set_sends_the_array_untouched(tmp_path, monkeypatch):
-    client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_OPENCODE)
+    client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_OPENCODE)
     bad = _stdio("bad", _MISSING)
     sent: list[dict] = []
 

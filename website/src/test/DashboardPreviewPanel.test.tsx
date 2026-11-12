@@ -45,7 +45,7 @@ async function drawFrame() {
   await waitFor(() => expect(document.querySelector('[data-testid="crew-dashboard-iframe"]')).not.toBeNull(), { timeout: 5000 })
   const frame = document.querySelector('[data-testid="crew-dashboard-iframe"]') as HTMLIFrameElement
   fireEvent.load(frame)
-  window.dispatchEvent(new MessageEvent('message', { data: { type: 'kirocrew-dashboard:ready' }, source: frame.contentWindow }))
+  window.dispatchEvent(new MessageEvent('message', { data: { type: 'ajcrew-dashboard:ready' }, source: frame.contentWindow }))
 }
 
 function roster(rows: Array<Pick<MemberRosterRow, 'name' | 'slug'>>) {
@@ -147,7 +147,7 @@ describe('DashboardPreviewPanel', () => {
     const { queryClient } = renderWithProviders(<DashboardPreviewPanel target={{ kind: 'member', slug: 'atlas' }} />)
     await screen.findByTestId('crew-dashboard-frame', undefined, LAZY)
     members.mockRejectedValue(new Error('gateway restarting'))
-    await queryClient.refetchQueries({ queryKey: ['kirocrew-agents', 'members-roster'] }).catch(() => {})
+    await queryClient.refetchQueries({ queryKey: ['ajcrew-agents', 'members-roster'] }).catch(() => {})
     expect(await screen.findByTestId('dashboard-preview-roster-error', undefined, LAZY)).toBeInTheDocument()
   })
 

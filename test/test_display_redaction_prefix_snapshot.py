@@ -18,9 +18,9 @@ from collections.abc import Iterator
 import pytest
 from test_plantuml_link_redaction import _encode
 
-import kiro_crew.dashboard.chat_utils as chat_utils
-from kiro_crew.dashboard.display_battery import display_battery
-from kiro_crew.security import redaction
+import aj_crew.dashboard.chat_utils as chat_utils
+from aj_crew.dashboard.display_battery import display_battery
+from aj_crew.security import redaction
 
 PREFIX = "https://approve.example.com/auth"
 # An opaque value no earlier credential pass claims, so the battery's output

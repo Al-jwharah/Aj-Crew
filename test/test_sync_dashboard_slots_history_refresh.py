@@ -14,13 +14,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard import chat_utils_slots
-from kiro_crew.dashboard.chat_utils_slots import (
+from aj_crew.dashboard import chat_utils_slots
+from aj_crew.dashboard.chat_utils_slots import (
     _sync_dashboard_slots,
     listing_slot_snapshot,
 )
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.dashboard.state_parts import slots_push
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state_parts import slots_push
 
 
 @pytest.fixture

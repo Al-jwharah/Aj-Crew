@@ -9,8 +9,8 @@ from unittest.mock import AsyncMock, MagicMock, call
 import pytest
 from chat_test_helpers import _make_state, chat_done_frames
 
-from kiro_crew import autonudge
-from kiro_crew.dashboard import chat_runner as cr
+from aj_crew import autonudge
+from aj_crew.dashboard import chat_runner as cr
 
 
 @pytest.fixture
@@ -142,7 +142,7 @@ async def test_final_parent_reply_after_delivery_is_complete(completion_state):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("linked", ["", "slack:123.456"])
 async def test_workflow_activity_is_captured_in_completion_frame(completion_state, linked):
-    from kiro_crew.workflows.registry import STATUS_FINISHED, RunHandle, RunRegistry
+    from aj_crew.workflows.registry import STATUS_FINISHED, RunHandle, RunRegistry
 
     state, slot = completion_state
     slot.linked_session_key = linked

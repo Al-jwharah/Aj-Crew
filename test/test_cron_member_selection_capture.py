@@ -27,24 +27,24 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.cli_commands import _cron
-from kiro_crew.config.loader import (
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+from aj_crew.cli_commands import _cron
+from aj_crew.config.loader import (
+    AjCrewAgentConfig,
+    AjCrewConfig,
     config_dir,
     resolve_agent_bindings,
 )
-from kiro_crew.cron import CronService
-from kiro_crew.cron_service.identity import split_cron_agent_member
-from kiro_crew.dashboard.handlers.cron import api_crons_create
-from kiro_crew.execution_context import (
+from aj_crew.cron import CronService
+from aj_crew.cron_service.identity import split_cron_agent_member
+from aj_crew.dashboard.handlers.cron import api_crons_create
+from aj_crew.execution_context import (
     bind_session_execution,
     execution_from_record,
     read_session_execution,
     resolve_member_execution,
 )
-from kiro_crew.memory_stores import provision_member_memory
-from kiro_crew.session_agent_selection import resolve_session_agent_bindings
+from aj_crew.memory_stores import provision_member_memory
+from aj_crew.session_agent_selection import resolve_session_agent_bindings
 
 
 def _ns(**overrides) -> argparse.Namespace:
@@ -79,12 +79,12 @@ def member_with_distinct_template(tmp_path, monkeypatch):
     """A crew member whose display name differs from its kiro template.
 
     Lives under a real config home so the CLI's ``config_dir()``-rooted
-    ``CronService`` and ``KiroCrewConfig.load()`` see the same member.
+    ``CronService`` and ``AjCrewConfig.load()`` see the same member.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     (config_dir() / "crons").mkdir(parents=True)
-    cfg = KiroCrewConfig.load()
-    cfg.agents["SampleMemberAgent"] = KiroCrewAgentConfig(
+    cfg = AjCrewConfig.load()
+    cfg.agents["SampleMemberAgent"] = AjCrewAgentConfig(
         kiro_agent="sample-template-agent", triggers="sample"
     )
     store = provision_member_memory(cfg, "SampleMemberAgent")
@@ -96,28 +96,26 @@ def member_with_distinct_template(tmp_path, monkeypatch):
 def member_also_a_materialized_template(tmp_path, monkeypatch):
     """A crew member whose NAME also has a materialized ``~/.kiro/agents`` spec.
 
-    A member like ``kirocrew-conductor`` ships both a ``config.agents`` entry and a
-    ``kirocrew-conductor.json`` spec; the member alias must win. The snapshot is
+    A member like ``ajcrew-conductor`` ships both a ``config.agents`` entry and an
+    ``ajcrew-conductor.json`` spec; the member alias must win. The snapshot is
     seeded warm so the test is deterministic regardless of process.
     """
-    import kiro_crew.config.loader as loader
+    import aj_crew.config.loader as loader
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     (config_dir() / "crons").mkdir(parents=True)
-    cfg = KiroCrewConfig.load()
-    cfg.agents["kirocrew-conductor"] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew", triggers="conduct"
-    )
-    provision_member_memory(cfg, "kirocrew-conductor")
+    cfg = AjCrewConfig.load()
+    cfg.agents["ajcrew-conductor"] = AjCrewAgentConfig(kiro_agent="ajcrew", triggers="conduct")
+    provision_member_memory(cfg, "ajcrew-conductor")
     cfg.save()
     # Materialize a kiro agent spec of the SAME name (warm snapshot). Under the
     # pre-fix precedence this would have forced a template; alias-first keeps it
     # a member. Restore the snapshot after the test so it does not leak.
     saved = (loader._MATERIALIZED_AGENTS, loader._MATERIALIZED_AGENTS_READY)
-    loader._MATERIALIZED_AGENTS = frozenset({"kirocrew-conductor"})
+    loader._MATERIALIZED_AGENTS = frozenset({"ajcrew-conductor"})
     loader._MATERIALIZED_AGENTS_READY = True
     try:
-        yield KiroCrewConfig.load().agents["kirocrew-conductor"].member_id
+        yield AjCrewConfig.load().agents["ajcrew-conductor"].member_id
     finally:
         loader._MATERIALIZED_AGENTS, loader._MATERIALIZED_AGENTS_READY = saved
 
@@ -140,7 +138,7 @@ def test_cli_agent_naming_a_member_captures_a_member_selection(member_with_disti
     assert job.agent_id == ""
     capture = _capture(job)
     assert capture.selection_kind == "member"
-    assert capture.member_id == KiroCrewConfig.load().agents["SampleMemberAgent"].member_id
+    assert capture.member_id == AjCrewConfig.load().agents["SampleMemberAgent"].member_id
 
 
 def test_cli_member_reply_resolves_without_unknown_store(member_with_distinct_template):
@@ -152,7 +150,7 @@ def test_cli_member_reply_resolves_without_unknown_store(member_with_distinct_te
     session_key = f"cron:{job.id}"
     bind_session_execution(session_key, _capture(job))
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     # This is what the reply path does on every turn of the cron chat; on the
     # bug it raised UnknownMemoryStore resolving the member name as a template.
     bindings = resolve_session_agent_bindings(resolve_agent_bindings, cfg, session_key, None)
@@ -166,7 +164,7 @@ def test_cli_member_capture_matches_the_plain_resolver(member_with_distinct_temp
     _cron(_ns(agent="SampleMemberAgent"))
     job = _only_job()
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     plain = resolve_agent_bindings(cfg, "SampleMemberAgent", validate_memory_files=False)
     capture = _capture(job)
     assert capture.selection_kind == plain.selection_kind == "member"
@@ -177,8 +175,8 @@ def test_cli_member_capture_matches_the_plain_resolver(member_with_distinct_temp
 
 
 def test_split_promotes_a_member_name_and_leaves_a_template_alone(member_with_distinct_template):
-    cfg = KiroCrewConfig.load()
-    cfg.agents["plain-template"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["plain-template"] = AjCrewAgentConfig(kiro_agent="ajcrew")
     cfg.save()
 
     # A member name with no explicit member_id -> promoted to a member selection.
@@ -199,22 +197,22 @@ def test_split_prefers_the_member_alias_over_a_materialized_template(
     The pre-fix classifier required ``not _materialized_kiro_agent(agent_id)``,
     which reversed the live resolver and recorded such a member as a template.
     """
-    assert split_cron_agent_member("kirocrew-conductor", "") == ("", "kirocrew-conductor")
+    assert split_cron_agent_member("ajcrew-conductor", "") == ("", "ajcrew-conductor")
 
 
 def _create_via_cli() -> None:
-    _cron(_ns(agent="kirocrew-conductor"))
+    _cron(_ns(agent="ajcrew-conductor"))
 
 
 def _create_via_mcp() -> None:
     from unittest.mock import patch
 
-    from kiro_crew.mcp_cron import _call_tool_locally
+    from aj_crew.mcp_cron import _call_tool_locally
 
-    with patch("kiro_crew.mcp_cron._authz_session_key", return_value="dashboard:tester"):
+    with patch("aj_crew.mcp_cron._authz_session_key", return_value="dashboard:tester"):
         result = _call_tool_locally(
             "cron_add",
-            {"name": "daily", "message": "task", "every": 60, "agent": "kirocrew-conductor"},
+            {"name": "daily", "message": "task", "every": 60, "agent": "ajcrew-conductor"},
         )
     assert "Error" not in result
 
@@ -225,7 +223,7 @@ async def _create_via_dashboard() -> None:
     async with TestClient(TestServer(app)) as client:
         resp = await client.post(
             "/api/crons",
-            json={"name": "daily", "message": "task", "every": 60, "agent": "kirocrew-conductor"},
+            json={"name": "daily", "message": "task", "every": 60, "agent": "ajcrew-conductor"},
         )
     assert resp.status == 200
 
@@ -248,7 +246,7 @@ async def test_member_with_materialized_spec_records_a_member_on_every_path(
         await _create_via_dashboard()
 
     job = _only_job()
-    assert job.member_id == "kirocrew-conductor"
+    assert job.member_id == "ajcrew-conductor"
     assert job.agent_id == ""
     capture = _capture(job)
     assert capture.selection_kind == "member"
@@ -263,11 +261,11 @@ def test_mcp_cron_add_naming_a_member_captures_a_member_selection(
 ):
     from unittest.mock import patch
 
-    from kiro_crew.mcp_cron import _call_tool_locally
+    from aj_crew.mcp_cron import _call_tool_locally
 
     # The tool refuses an unidentified caller; a dashboard/agent caller has a
     # verified session key, so supply one for the test.
-    with patch("kiro_crew.mcp_cron._authz_session_key", return_value="dashboard:tester"):
+    with patch("aj_crew.mcp_cron._authz_session_key", return_value="dashboard:tester"):
         result = _call_tool_locally(
             "cron_add",
             {"name": "daily", "message": "task", "every": 60, "agent": "SampleMemberAgent"},
@@ -279,7 +277,7 @@ def test_mcp_cron_add_naming_a_member_captures_a_member_selection(
     assert job.agent_id == ""
     capture = _capture(job)
     assert capture.selection_kind == "member"
-    assert capture.member_id == KiroCrewConfig.load().agents["SampleMemberAgent"].member_id
+    assert capture.member_id == AjCrewConfig.load().agents["SampleMemberAgent"].member_id
 
 
 # ── Dashboard POST /api/crons path ───────────────────────────────────────────
@@ -317,7 +315,7 @@ async def test_dashboard_create_naming_a_member_captures_a_member_selection(
     assert job.agent_id == ""
     capture = _capture(job)
     assert capture.selection_kind == "member"
-    assert capture.member_id == KiroCrewConfig.load().agents["SampleMemberAgent"].member_id
+    assert capture.member_id == AjCrewConfig.load().agents["SampleMemberAgent"].member_id
 
 
 # ── App Kit SDK (ctx.cron.add_job) path ──────────────────────────────────────
@@ -331,7 +329,7 @@ def test_sdk_add_job_naming_a_member_stays_a_template(
     Apps are confined, so ``CronSDK._add_job_kwargs`` passes the name through as
     ``agent_id``: knowing a crewmate's name must not reach its private V2 memory.
     """
-    from kiro_crew.apps.cron_sdk import CronSDK
+    from aj_crew.apps.cron_sdk import CronSDK
 
     sdk = CronSDK("testapp", CronService(base_dir=config_dir()))
     sdk.add_job("daily", "task", every_secs=60, agent="SampleMemberAgent")
@@ -383,7 +381,7 @@ def test_start_moves_a_member_named_template_schedule_onto_the_member(
 ):
     """The schedule and its chat run as the member on its own store, as a create
     naming the member makes them today."""
-    from kiro_crew.cron_service.identity import migrate_member_named_template_schedules
+    from aj_crew.cron_service.identity import migrate_member_named_template_schedules
 
     legacy = _template_capture()
     assert _capture(legacy).selection_kind == "template"
@@ -391,7 +389,7 @@ def test_start_moves_a_member_named_template_schedule_onto_the_member(
 
     assert migrate_member_named_template_schedules(config_dir()) == [legacy.id]
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     member = resolve_member_execution(cfg, "SampleMemberAgent")
     job = _only_job()
     assert (job.agent_id, job.member_id) == ("", "samplememberagent")
@@ -414,10 +412,10 @@ def test_start_moves_a_member_named_template_schedule_onto_the_member(
 def test_a_session_already_moved_does_not_hold_the_schedule_back(member_with_distinct_template):
     """A start whose schedule write failed after the session moved: the next one
     finishes the move."""
-    from kiro_crew.cron_service.identity import migrate_member_named_template_schedules
+    from aj_crew.cron_service.identity import migrate_member_named_template_schedules
 
     legacy = _template_capture()
-    member = resolve_member_execution(KiroCrewConfig.load(), "SampleMemberAgent")
+    member = resolve_member_execution(AjCrewConfig.load(), "SampleMemberAgent")
     bind_session_execution(f"cron:{legacy.id}", member, replace_existing=True)
 
     assert migrate_member_named_template_schedules(config_dir()) == [legacy.id]
@@ -429,7 +427,7 @@ def test_a_schedule_whose_chat_runs_another_template_stays_as_it_is(
 ):
     """Dispatch would refuse a capture its session record disagrees with, so the
     schedule is left, and said, rather than moved under that record."""
-    from kiro_crew.cron_service.identity import migrate_member_named_template_schedules
+    from aj_crew.cron_service.identity import migrate_member_named_template_schedules
 
     legacy = _template_capture()
     session_key = f"cron:{legacy.id}"
@@ -460,7 +458,7 @@ def test_start_leaves_every_other_template_schedule_alone(
     """A provider template name, an app's schedule (an app may not reach a member's
     store by naming it) and a capture on a store other than Global keep their record,
     and so does their chat's session record, which agrees with it."""
-    from kiro_crew.cron_service.identity import migrate_member_named_template_schedules
+    from aj_crew.cron_service.identity import migrate_member_named_template_schedules
 
     job = _template_capture(agent, created_by=created_by, store=store)
     session_key = f"cron:{job.id}"
@@ -474,7 +472,7 @@ def test_start_leaves_every_other_template_schedule_alone(
 def test_the_gateway_memory_worker_moves_them_before_the_scheduler_arms():
     """The scheduler waits on this worker, so no fire publishes the template capture
     again once the gateway has started."""
-    from kiro_crew.slack import gateway as slack_gateway
+    from aj_crew.slack import gateway as slack_gateway
 
     source = inspect.getsource(slack_gateway.GatewayOrchestrator._initialize_memory_worker)
     assert (

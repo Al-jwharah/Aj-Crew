@@ -1,4 +1,4 @@
-"""Segment-file tests for kiro_crew.sel: what the readers and the appender trust on disk.
+"""Segment-file tests for aj_crew.sel: what the readers and the appender trust on disk.
 
 Pins the segment directory a read pins, fd validation on append, bounded segment
 enumeration, name probing and backward reads, the refusal of planted links and forged
@@ -27,10 +27,10 @@ from sel_helpers import (  # noqa: F401 -- fixtures are requested by name
     small_segments_fixture,
 )
 
-import kiro_crew.sel as sel_mod
+import aj_crew.sel as sel_mod
+from aj_crew import platform_compat
+from aj_crew.sel import SecurityEventLog
 from conftest import requires_symlinks
-from kiro_crew import platform_compat
-from kiro_crew.sel import SecurityEventLog
 
 
 class TestSegmentDirIsPinnedOnRead:
@@ -299,7 +299,7 @@ class TestAppendValidatesTheFileByFd:
                 live.write_text(json.dumps(asdict(sibling)) + "\n", encoding="utf-8")
             return real_open(path, flags, *args, **kwargs)
 
-        with patch("kiro_crew.sel.os.open", rotating_open):
+        with patch("aj_crew.sel.os.open", rotating_open):
             _fill(log, 1, start=7000)
 
         assert rotated, "precondition: the injected rotation fired"
@@ -470,7 +470,7 @@ class TestSegmentEnumerationIsBounded:
                 examined += 1
                 return entry
 
-        with patch("kiro_crew.sel.os.scandir", _CountingScandir):
+        with patch("aj_crew.sel.os.scandir", _CountingScandir):
             log._segments_oldest_first()
 
         assert examined <= sel_mod._SEGMENT_SCAN_CAP + 1, (
@@ -622,11 +622,11 @@ class TestSegmentDirIsNotFollowedThroughALink:
             return real_probe(path)
 
         with patch(
-            "kiro_crew.sel.platform_compat.is_link_or_junction",
+            "aj_crew.sel.platform_compat.is_link_or_junction",
             side_effect=rotation_paths_are_links,
         ):
             with patch(
-                "kiro_crew.sel.platform_compat.unlink_link_or_junction",
+                "aj_crew.sel.platform_compat.unlink_link_or_junction",
                 side_effect=OSError("read-only"),
             ):
                 before = log._segments_oldest_first()
@@ -839,7 +839,7 @@ class TestPlantedSegmentsAreNotReadAsHistory:
             "timestamp": "2020-01-01T00:00:00+00:00",
             "event_type": "tool_invocation",
             "caller_identity": "dashboard:victim",
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "source": "dashboard",
             "operation": "rm -rf /",
             "outcome": "approved",
@@ -1019,7 +1019,7 @@ class TestTimeWindowRead:
             read_bytes += len(chunk)
             return chunk
 
-        with patch("kiro_crew.sel.os.read", counting_read, create=True):
+        with patch("aj_crew.sel.os.read", counting_read, create=True):
             with patch.object(Path, "read_text", side_effect=AssertionError("whole-file read")):
                 assert len(log.recent(limit=5)) == 5
 

@@ -26,8 +26,8 @@ export const GHOST_EYE_MAP: Record<string, EyeSpec[]> = {
    * divergence is deliberate.
    *
    * Those numbers were authored against posed body footage, where each pose has its
-   * own silhouette. The built-in ghost here has only ONE body (`kiro_idle.svg`,
-   * byte-identical to the app's) — the pose changes the eyes and nothing else. So the
+   * own silhouette. The built-in companion here has only ONE body (`kiro_idle.svg`,
+   * written by `scripts/brand`) — the pose changes the eyes and nothing else. So the
    * '4th' pair landed where the 4th pose's head USED to be: measured against the idle
    * art, its right eye's centre sat at 82.3% while the head's right edge is at 80.3%,
    * i.e. the whole eye hung outside the silhouette, straddling the black outline.

@@ -20,16 +20,16 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew import session_ledger
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import checkpoint as savepoints
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import slot_state_codec
-from kiro_crew.crew_log.projection_readers import _slot_units_for_fold
-from kiro_crew.projection import MAX_PAYLOAD_BYTES
+from aj_crew import crew_log as lg
+from aj_crew import session_ledger
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import checkpoint as savepoints
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import slot_state_codec
+from aj_crew.crew_log.projection_readers import _slot_units_for_fold
+from aj_crew.projection import MAX_PAYLOAD_BYTES
 
 SLOT = "member-big-board"
 #: Items with a large acceptance map: 40 x about 60 KB of hex is about 2.4 MB of state
@@ -40,11 +40,11 @@ ACCEPTANCE_CHARS = 60_000
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     _floor_monkeypatch.setattr(crew_log_eager, "note_commit", lambda *a, **k: None)
     # Each header stamp one second after the last, so two units never tie on createdAt.
-    from kiro_crew.crew_log import store as crew_log_store
+    from aj_crew.crew_log import store as crew_log_store
 
     ticks = itertools.count(1_700_000_000_000, 1_000)
     _floor_monkeypatch.setattr(

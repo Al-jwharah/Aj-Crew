@@ -10,17 +10,17 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-import kiro_crew.acp.client as acp_client
-from kiro_crew.acp.client import AcpClient, AcpProcessDied
-from kiro_crew.acp.liveness import (
+import aj_crew.acp.client as acp_client
+from aj_crew.acp.client import AcpClient, AcpProcessDied
+from aj_crew.acp.liveness import (
     EVIDENCE_SAMPLING,
     VERDICT_DEAD,
     VERDICT_UNKNOWN,
     VERDICT_WORKING,
     LivenessOracle,
 )
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 
 class TestAcpClientStaleTurn:
@@ -70,8 +70,8 @@ class TestAcpClientStaleTurn:
         # otherwise the loop exits on `remaining <= 0` before the check runs and
         # the test would pass trivially, even without the fix. Each 0.05s poll
         # refreshes _last_activity, staying well under the 0.2s stale window.
-        with patch("kiro_crew.acp.client._STALE_TURN_TIMEOUT", 0.2):
-            with caplog.at_level("WARNING", logger="kiro_crew.acp.client"):
+        with patch("aj_crew.acp.client._STALE_TURN_TIMEOUT", 0.2):
+            with caplog.at_level("WARNING", logger="aj_crew.acp.client"):
                 actions = []
                 async for action, _msg in client._prompt_loop(req_id=1, timeout=1.0):
                     actions.append(action)
@@ -89,8 +89,8 @@ class TestAcpClientStaleTurn:
         # _last_activity never refreshes → genuinely silent on both clocks.
         client._last_activity = time.monotonic()
 
-        with patch("kiro_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
-            with caplog.at_level("WARNING", logger="kiro_crew.acp.client"):
+        with patch("aj_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
+            with caplog.at_level("WARNING", logger="aj_crew.acp.client"):
                 actions = []
                 async for action, _msg in client._prompt_loop(req_id=7, timeout=5.0):
                     actions.append(action)
@@ -124,8 +124,8 @@ class TestAcpClientStaleTurnOracleGate:
 
         # Loop timeout must exceed the stale window so the check fires repeatedly;
         # without the fix the first stale hit returns and the turn ends.
-        with patch("kiro_crew.acp.client._STALE_TURN_TIMEOUT", 0.1):
-            with caplog.at_level("WARNING", logger="kiro_crew.acp.client"):
+        with patch("aj_crew.acp.client._STALE_TURN_TIMEOUT", 0.1):
+            with caplog.at_level("WARNING", logger="aj_crew.acp.client"):
                 actions = []
                 async for action, _msg in client._prompt_loop(req_id=11, timeout=0.6):
                     actions.append(action)
@@ -193,9 +193,9 @@ class TestAcpClientStaleTurnOracleGate:
 
         client._read_message = AsyncMock(side_effect=read_and_move)
 
-        with patch("kiro_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
-            with patch("kiro_crew.acp.client._READ_TIMEOUT", 0.02):
-                with caplog.at_level("WARNING", logger="kiro_crew.acp.client"):
+        with patch("aj_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
+            with patch("aj_crew.acp.client._READ_TIMEOUT", 0.02):
+                with caplog.at_level("WARNING", logger="aj_crew.acp.client"):
                     actions = []
                     async for action, _msg in client._prompt_loop(req_id=42, timeout=0.5):
                         actions.append(action)
@@ -215,8 +215,8 @@ class TestAcpClientStaleTurnOracleGate:
             return_value=(VERDICT_DEAD, "no established backend socket")
         )
 
-        with patch("kiro_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
-            with caplog.at_level("WARNING", logger="kiro_crew.acp.client"):
+        with patch("aj_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
+            with caplog.at_level("WARNING", logger="aj_crew.acp.client"):
                 actions = []
                 async for action, _msg in client._prompt_loop(req_id=12, timeout=5.0):
                     actions.append(action)
@@ -243,8 +243,8 @@ class TestAcpClientStaleTurnOracleGate:
             return_value=(VERDICT_DEAD, "no established backend socket")
         )
 
-        with patch("kiro_crew.acp.client._STALE_TURN_TIMEOUT", 0.1):
-            with caplog.at_level("WARNING", logger="kiro_crew.acp.client"):
+        with patch("aj_crew.acp.client._STALE_TURN_TIMEOUT", 0.1):
+            with caplog.at_level("WARNING", logger="aj_crew.acp.client"):
                 async for _action, _msg in client._prompt_loop(
                     req_id=12, timeout=FALLBACK_TIMEOUT_SECS
                 ):
@@ -261,8 +261,8 @@ class TestAcpClientStaleTurnOracleGate:
             return_value=(VERDICT_UNKNOWN, "established-but-flat")
         )
 
-        with patch("kiro_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
-            with caplog.at_level("WARNING", logger="kiro_crew.acp.client"):
+        with patch("aj_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
+            with caplog.at_level("WARNING", logger="aj_crew.acp.client"):
                 actions = []
                 async for action, _msg in client._prompt_loop(req_id=13, timeout=5.0):
                     actions.append(action)
@@ -323,7 +323,7 @@ class TestAcpClientStaleTurnOracleGate:
         client._liveness_oracle = MagicMock()
 
         with patch(
-            "kiro_crew.acp.client.subprocess_executor",
+            "aj_crew.acp.client.subprocess_executor",
             side_effect=RuntimeError("cannot schedule new futures after shutdown"),
         ):
             assert await client._consult_liveness_model_wait() == (
@@ -347,9 +347,9 @@ class TestAcpClientStaleTurnOracleGate:
         client._consult_future = asyncio.get_running_loop().create_future()
 
         with (
-            patch("kiro_crew.session_pid._pid_gone_or_unmanaged", return_value=True),
-            patch("kiro_crew.session._untrack_pid"),
-            patch("kiro_crew.session._untrack_session_pid"),
+            patch("aj_crew.session_pid._pid_gone_or_unmanaged", return_value=True),
+            patch("aj_crew.session._untrack_pid"),
+            patch("aj_crew.session._untrack_session_pid"),
         ):
             client._reset_state()
         client._pid = 5353
@@ -375,9 +375,9 @@ class TestAcpClientStaleTurnOracleGate:
         client._consult_future = wedged
 
         with (
-            patch("kiro_crew.session_pid._pid_gone_or_unmanaged", return_value=True),
-            patch("kiro_crew.session._untrack_pid"),
-            patch("kiro_crew.session._untrack_session_pid"),
+            patch("aj_crew.session_pid._pid_gone_or_unmanaged", return_value=True),
+            patch("aj_crew.session._untrack_pid"),
+            patch("aj_crew.session._untrack_session_pid"),
         ):
             client._reset_state()
 
@@ -405,9 +405,9 @@ class TestAcpClientStaleTurnOracleGate:
         retired._child_gone_ts = 1.0
 
         with (
-            patch("kiro_crew.session_pid._pid_gone_or_unmanaged", return_value=True),
-            patch("kiro_crew.session._untrack_pid"),
-            patch("kiro_crew.session._untrack_session_pid"),
+            patch("aj_crew.session_pid._pid_gone_or_unmanaged", return_value=True),
+            patch("aj_crew.session._untrack_pid"),
+            patch("aj_crew.session._untrack_session_pid"),
         ):
             client._reset_state()
 
@@ -513,8 +513,8 @@ class TestAcpClientStaleTurnOracleGate:
             return await _real_wait_for(awaitable, timeout=0.01)
 
         with (
-            patch("kiro_crew.acp.client.subprocess_executor", return_value=pool),
-            patch("kiro_crew.acp.client.asyncio.wait_for", _fast_timeout),
+            patch("aj_crew.acp.client.subprocess_executor", return_value=pool),
+            patch("aj_crew.acp.client.asyncio.wait_for", _fast_timeout),
         ):
             await client._consult_liveness_model_wait()
 
@@ -555,8 +555,8 @@ class TestAcpClientStaleTurnOracleGate:
             return await _real_wait_for(awaitable, timeout=0.01)
 
         with (
-            patch("kiro_crew.acp.client.subprocess_executor", return_value=pool),
-            patch("kiro_crew.acp.client.asyncio.wait_for", _fast_timeout),
+            patch("aj_crew.acp.client.subprocess_executor", return_value=pool),
+            patch("aj_crew.acp.client.asyncio.wait_for", _fast_timeout),
         ):
             assert await client._consult_liveness_model_wait() == (
                 VERDICT_UNKNOWN,
@@ -593,9 +593,9 @@ class TestAcpClientStaleTurnOracleGate:
         configured = client._liveness_oracle
 
         with (
-            patch("kiro_crew.session_pid._pid_gone_or_unmanaged", return_value=True),
-            patch("kiro_crew.session._untrack_pid"),
-            patch("kiro_crew.session._untrack_session_pid"),
+            patch("aj_crew.session_pid._pid_gone_or_unmanaged", return_value=True),
+            patch("aj_crew.session._untrack_pid"),
+            patch("aj_crew.session._untrack_session_pid"),
         ):
             client._reset_state()
 
@@ -636,8 +636,8 @@ class TestAcpClientStaleTurnOracleGate:
 
         _real_wait_for = asyncio.wait_for
         with (
-            patch("kiro_crew.acp.client.subprocess_executor", return_value=pool),
-            patch("kiro_crew.acp.client.asyncio.wait_for", _always_times_out),
+            patch("aj_crew.acp.client.subprocess_executor", return_value=pool),
+            patch("aj_crew.acp.client.asyncio.wait_for", _always_times_out),
         ):
             assert await client._consult_liveness_model_wait() == (
                 VERDICT_UNKNOWN,
@@ -673,7 +673,7 @@ class TestAcpClientStaleTurnOracleGate:
         pool = MagicMock()
         pool.submit.return_value = thread_future
 
-        with patch("kiro_crew.acp.client.subprocess_executor", return_value=pool):
+        with patch("aj_crew.acp.client.subprocess_executor", return_value=pool):
             task = asyncio.ensure_future(client._consult_liveness_model_wait())
             while client._consult_future is None:
                 await asyncio.sleep(0)
@@ -720,8 +720,8 @@ class TestStaleTurnOpenToolCall:
         client = self._silent_client(tmp_path, tool_dispatched=True)
 
         t0 = time.monotonic()
-        with patch("kiro_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
-            with caplog.at_level("WARNING", logger="kiro_crew.acp.client"):
+        with patch("aj_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
+            with caplog.at_level("WARNING", logger="aj_crew.acp.client"):
                 actions = []
                 async for action, _msg in client._prompt_loop(req_id=85, timeout=0.4):
                     actions.append(action)
@@ -751,8 +751,8 @@ class TestStaleTurnOpenToolCall:
 
         client._read_message = AsyncMock(side_effect=_resolve_then_stay_silent)
 
-        with patch("kiro_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
-            with caplog.at_level("WARNING", logger="kiro_crew.acp.client"):
+        with patch("aj_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
+            with caplog.at_level("WARNING", logger="aj_crew.acp.client"):
                 actions = []
                 async for action, _msg in client._prompt_loop(req_id=86, timeout=5.0):
                     actions.append(action)
@@ -773,7 +773,7 @@ class TestStaleTurnOpenToolCall:
         client = self._silent_client(tmp_path, tool_dispatched=True)
         client._kill_process = AsyncMock()
 
-        with patch("kiro_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
+        with patch("aj_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
             with pytest.raises(AcpProcessDied, match="tool stalled"):
                 async for _action, _msg in client._prompt_loop(req_id=87, timeout=5.0):
                     pass
@@ -811,8 +811,8 @@ class TestStaleTurnProbeAccounting:
 
         # Cutoff 0 so every silent read is past it: the only thing that can keep
         # the turn alive on the first read is the priming deferral.
-        with patch("kiro_crew.acp.client._STALE_TURN_TIMEOUT", 0.0):
-            with caplog.at_level("WARNING", logger="kiro_crew.acp.client"):
+        with patch("aj_crew.acp.client._STALE_TURN_TIMEOUT", 0.0):
+            with caplog.at_level("WARNING", logger="aj_crew.acp.client"):
                 async for _action, _msg in client._prompt_loop(req_id=88, timeout=5.0):
                     pass
 
@@ -843,8 +843,8 @@ class TestStaleTurnProbeAccounting:
 
         client._consult_liveness_model_wait = _slow_consult
 
-        with patch("kiro_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
-            with caplog.at_level("WARNING", logger="kiro_crew.acp.client"):
+        with patch("aj_crew.acp.client._STALE_TURN_TIMEOUT", 0.05):
+            with caplog.at_level("WARNING", logger="aj_crew.acp.client"):
                 async for _action, _msg in client._prompt_loop(req_id=89, timeout=5.0):
                     pass
 
@@ -860,7 +860,7 @@ class TestToolStallWatchdog:
 
     @pytest.mark.asyncio
     async def test_dispatched_tool_with_no_data_exits(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import client as acp_client
+        from aj_crew.acp import client as acp_client
 
         # Shrink the windows so the watchdog trips quickly under test.
         monkeypatch.setattr(acp_client, "_TOOL_STALL_TIMEOUT", 0.2)
@@ -901,7 +901,7 @@ class TestToolStallWatchdog:
     async def test_no_dispatch_does_not_trip_watchdog(self, tmp_path, monkeypatch):
         # Without a dispatched tool, the stall watchdog must NOT fire; the loop
         # simply runs to its own deadline (proving the guard is gated on the flag).
-        from kiro_crew.acp import client as acp_client
+        from aj_crew.acp import client as acp_client
 
         monkeypatch.setattr(acp_client, "_TOOL_STALL_TIMEOUT", 0.2)
         monkeypatch.setattr(acp_client, "_READ_TIMEOUT", 0.02)
@@ -938,8 +938,8 @@ class TestToolStallWatchdog:
         # turn completion (handled in _dispatch_events) clears it.  The
         # last_data_ts reset alone prevents false positives for tools that keep
         # streaming.
-        from kiro_crew.acp import client as acp_client
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp import client as acp_client
+        from aj_crew.acp.types import JsonRpcMessage
 
         monkeypatch.setattr(acp_client, "_TOOL_STALL_TIMEOUT", 0.2)
         monkeypatch.setattr(acp_client, "_READ_TIMEOUT", 0.02)
@@ -978,7 +978,7 @@ class TestToolStallWatchdog:
         # Covers the EVENT_COMPLETE clear path in _dispatch_events: a turn that
         # ends while a tool is still marked dispatched must disarm the flag so a
         # stale True can't leak into the next turn's watchdog.
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient()
         # No tool results to flush on the complete path.
@@ -1000,7 +1000,7 @@ class TestToolStallWatchdog:
     async def test_tool_result_clears_tool_dispatched(self, monkeypatch):
         # Covers the tool_call_update clear path in _dispatch_events: when the
         # dispatched tool produces a result, the watchdog is disarmed.
-        from kiro_crew.acp.types import (
+        from aj_crew.acp.types import (
             EVENT_TOOL_CALL_UPDATE,
             METHOD_SESSION_UPDATE,
             AcpEvent,
@@ -1048,7 +1048,7 @@ class TestToolStallKeepalive:
     async def test_keepalive_prevents_tool_stall(self, tmp_path, monkeypatch):
         """When _last_activity is refreshed by keepalive pings, the tool stall
         watchdog must NOT fire even if no JSON-RPC stdout data arrives."""
-        from kiro_crew.acp import client as acp_client
+        from aj_crew.acp import client as acp_client
 
         monkeypatch.setattr(acp_client, "_TOOL_STALL_TIMEOUT", 0.5)
         monkeypatch.setattr(acp_client, "_READ_TIMEOUT", 0.05)
@@ -1097,7 +1097,7 @@ class TestToolStallKeepalive:
     async def test_genuine_stall_still_fires_without_keepalive(self, tmp_path, monkeypatch):
         """Without keepalive pings, the tool stall watchdog must still fire
         when a dispatched tool goes completely silent."""
-        from kiro_crew.acp import client as acp_client
+        from aj_crew.acp import client as acp_client
 
         monkeypatch.setattr(acp_client, "_TOOL_STALL_TIMEOUT", 0.2)
         monkeypatch.setattr(acp_client, "_READ_TIMEOUT", 0.02)

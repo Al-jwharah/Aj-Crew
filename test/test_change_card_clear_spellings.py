@@ -23,11 +23,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from test_change_card_folder_steering import SK, _needs_pinned_walk, _State, _step
 
-from kiro_crew import agent
-from kiro_crew import change_card_catalog as catalog
-from kiro_crew import mcp_core, mcp_guide
-from kiro_crew.dashboard.chat_folders import api_chat_folder_update
-from kiro_crew.dashboard.handlers import change_cards as routes
+from aj_crew import agent
+from aj_crew import change_card_catalog as catalog
+from aj_crew import mcp_core, mcp_guide
+from aj_crew.dashboard.chat_folders import api_chat_folder_update
+from aj_crew.dashboard.handlers import change_cards as routes
 
 STEERING = "folder.steering"
 TEMPLATE = "template.update"

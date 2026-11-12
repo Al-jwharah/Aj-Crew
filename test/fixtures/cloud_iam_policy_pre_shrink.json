@@ -12,7 +12,7 @@
         "cloudformation:DescribeStackEvents",
         "cloudformation:DescribeStackResources"
       ],
-      "Resource": "arn:aws:cloudformation:*:*:stack/kirocrew-*/*"
+      "Resource": "arn:aws:cloudformation:*:*:stack/ajcrew-*/*"
     },
     {
       "Sid": "CloudFormationChangeSet",
@@ -24,8 +24,8 @@
         "cloudformation:DeleteChangeSet"
       ],
       "Resource": [
-        "arn:aws:cloudformation:*:*:changeSet/kirocrew-*/*",
-        "arn:aws:cloudformation:*:*:stack/kirocrew-*/*"
+        "arn:aws:cloudformation:*:*:changeSet/ajcrew-*/*",
+        "arn:aws:cloudformation:*:*:stack/ajcrew-*/*"
       ]
     },
     {
@@ -79,7 +79,7 @@
       "Resource": "arn:aws:ec2:*:*:instance/*",
       "Condition": {
         "StringEquals": {
-          "aws:RequestTag/kirocrew:managed": "true"
+          "aws:RequestTag/ajcrew:managed": "true"
         }
       }
     },
@@ -109,7 +109,7 @@
       "Resource": "arn:aws:ec2:*:*:security-group/*",
       "Condition": {
         "StringEquals": {
-          "aws:RequestTag/kirocrew:managed": "true"
+          "aws:RequestTag/ajcrew:managed": "true"
         }
       }
     },
@@ -131,7 +131,7 @@
       "Resource": "*",
       "Condition": {
         "StringEquals": {
-          "aws:ResourceTag/kirocrew:managed": "true"
+          "aws:ResourceTag/ajcrew:managed": "true"
         }
       }
     },
@@ -162,7 +162,7 @@
       "Resource": "*",
       "Condition": {
         "StringEquals": {
-          "aws:ResourceTag/kirocrew:managed": "true"
+          "aws:ResourceTag/ajcrew:managed": "true"
         }
       }
     },
@@ -178,7 +178,7 @@
       "Resource": "*",
       "Condition": {
         "StringEquals": {
-          "aws:ResourceTag/kirocrew:managed": "true"
+          "aws:ResourceTag/ajcrew:managed": "true"
         }
       }
     },
@@ -188,10 +188,10 @@
       "Action": [
         "iam:CreateRole"
       ],
-      "Resource": "arn:aws:iam::*:role/kirocrew-ec2-*",
+      "Resource": "arn:aws:iam::*:role/ajcrew-ec2-*",
       "Condition": {
         "ArnLike": {
-          "iam:PermissionsBoundary": "arn:aws:iam::*:policy/kirocrew-ec2-boundary"
+          "iam:PermissionsBoundary": "arn:aws:iam::*:policy/ajcrew-ec2-boundary"
         }
       }
     },
@@ -201,10 +201,10 @@
       "Action": [
         "iam:PutRolePolicy"
       ],
-      "Resource": "arn:aws:iam::*:role/kirocrew-ec2-*",
+      "Resource": "arn:aws:iam::*:role/ajcrew-ec2-*",
       "Condition": {
         "StringEquals": {
-          "aws:ResourceTag/kirocrew:managed": "true"
+          "aws:ResourceTag/ajcrew:managed": "true"
         }
       }
     },
@@ -225,8 +225,8 @@
         "iam:RemoveRoleFromInstanceProfile"
       ],
       "Resource": [
-        "arn:aws:iam::*:role/kirocrew-ec2-*",
-        "arn:aws:iam::*:instance-profile/kirocrew-ec2-*"
+        "arn:aws:iam::*:role/ajcrew-ec2-*",
+        "arn:aws:iam::*:instance-profile/ajcrew-ec2-*"
       ]
     },
     {
@@ -235,10 +235,10 @@
       "Action": [
         "iam:TagRole"
       ],
-      "Resource": "arn:aws:iam::*:role/kirocrew-ec2-*",
+      "Resource": "arn:aws:iam::*:role/ajcrew-ec2-*",
       "Condition": {
         "StringEquals": {
-          "aws:ResourceTag/kirocrew:managed": "true"
+          "aws:ResourceTag/ajcrew:managed": "true"
         }
       }
     },
@@ -251,9 +251,9 @@
         "iam:GetPolicyVersion"
       ],
       "Resource": [
-        "arn:aws:iam::*:policy/kirocrew-ec2-boundary",
-        "arn:aws:iam::*:policy/kirocrew-crew-boundary",
-        "arn:aws:iam::*:policy/kirocrew-crew-exec-boundary"
+        "arn:aws:iam::*:policy/ajcrew-ec2-boundary",
+        "arn:aws:iam::*:policy/ajcrew-crew-boundary",
+        "arn:aws:iam::*:policy/ajcrew-crew-exec-boundary"
       ]
     },
     {
@@ -263,7 +263,7 @@
         "iam:AttachRolePolicy",
         "iam:DetachRolePolicy"
       ],
-      "Resource": "arn:aws:iam::*:role/kirocrew-ec2-*",
+      "Resource": "arn:aws:iam::*:role/ajcrew-ec2-*",
       "Condition": {
         "ArnEquals": {
           "iam:PolicyARN": "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
@@ -276,11 +276,11 @@
       "Action": [
         "iam:PassRole"
       ],
-      "Resource": "arn:aws:iam::*:role/kirocrew-ec2-*",
+      "Resource": "arn:aws:iam::*:role/ajcrew-ec2-*",
       "Condition": {
         "StringEquals": {
           "iam:PassedToService": "ec2.amazonaws.com",
-          "aws:ResourceTag/kirocrew:managed": "true"
+          "aws:ResourceTag/ajcrew:managed": "true"
         },
         "ArnLike": {
           "iam:AssociatedResourceArn": "arn:aws:ec2:*:*:instance/*"
@@ -297,7 +297,7 @@
       "Resource": "arn:aws:ec2:*:*:instance/*",
       "Condition": {
         "StringEquals": {
-          "ssm:resourceTag/kirocrew:managed": "true"
+          "ssm:resourceTag/ajcrew:managed": "true"
         }
       }
     },
@@ -320,7 +320,7 @@
       "Action": [
         "ssm:StartSession"
       ],
-      "Resource": "arn:aws:ecs:*:*:task/kirocrew-crew-*/*"
+      "Resource": "arn:aws:ecs:*:*:task/ajcrew-crew-*/*"
     },
     {
       "Sid": "DenyStartSessionOutsideTheLane",
@@ -331,7 +331,7 @@
       "NotResource": [
         "arn:aws:ssm:*::document/AWS-StartPortForwardingSession",
         "arn:aws:ec2:*:*:instance/*",
-        "arn:aws:ecs:*:*:task/kirocrew-crew-*/*",
+        "arn:aws:ecs:*:*:task/ajcrew-crew-*/*",
         "arn:aws:ssm:*:*:session/*"
       ]
     },
@@ -367,8 +367,8 @@
         "s3:ListBucket"
       ],
       "Resource": [
-        "arn:aws:s3:::kirocrew-src-*",
-        "arn:aws:s3:::kirocrew-src-*/*"
+        "arn:aws:s3:::ajcrew-src-*",
+        "arn:aws:s3:::ajcrew-src-*/*"
       ]
     },
     {

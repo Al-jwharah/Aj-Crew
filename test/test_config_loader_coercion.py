@@ -22,16 +22,16 @@ import unittest.mock
 from pathlib import Path
 
 import pytest
-from config_loader_helpers import _kirocrew_config_st, _load_from_dict, _load_from_dict_with_logs
+from config_loader_helpers import _ajcrew_config_st, _load_from_dict, _load_from_dict_with_logs
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
-import kiro_crew.config.loader as loader_module
-from kiro_crew.config.loader import (
+import aj_crew.config.loader as loader_module
+from aj_crew.config.loader import (
     _HAS_JSONSCHEMA,
     AgentConfig,
+    AjCrewConfig,
     DashboardConfig,
-    KiroCrewConfig,
     MemoryConfig,
     SessionConfig,
     SlackConfig,
@@ -58,7 +58,7 @@ _requires_jsonschema = pytest.mark.skipif(
 )
 
 
-def _load_absent_config() -> KiroCrewConfig:
+def _load_absent_config() -> AjCrewConfig:
     """Load with NEITHER config.json nor config.local.json present.
 
     This is the only path that reaches the dataclass field defaults, so it is
@@ -69,18 +69,18 @@ def _load_absent_config() -> KiroCrewConfig:
         missing_local = Path(d) / "config.local.json"
         with (
             unittest.mock.patch(
-                "kiro_crew.config.loader.config_path",
+                "aj_crew.config.loader.config_path",
                 return_value=missing,
             ),
             unittest.mock.patch(
-                "kiro_crew.config.loader.config_local_path",
+                "aj_crew.config.loader.config_local_path",
                 return_value=missing_local,
             ),
         ):
-            return KiroCrewConfig.load()
+            return AjCrewConfig.load()
 
 
-def _load_from_raw_string(content: str) -> KiroCrewConfig:
+def _load_from_raw_string(content: str) -> AjCrewConfig:
     """Write raw string content to a temp file and load."""
     with tempfile.NamedTemporaryFile(
         mode="w",
@@ -93,24 +93,24 @@ def _load_from_raw_string(content: str) -> KiroCrewConfig:
 
     try:
         with unittest.mock.patch(
-            "kiro_crew.config.loader.config_path",
+            "aj_crew.config.loader.config_path",
             return_value=tmp,
         ):
-            return KiroCrewConfig.load()
+            return AjCrewConfig.load()
     finally:
         tmp.unlink(missing_ok=True)
 
 
-def _default_config() -> KiroCrewConfig:
-    """Return a default KiroCrewConfig for comparison."""
-    return KiroCrewConfig()
+def _default_config() -> AjCrewConfig:
+    """Return a default AjCrewConfig for comparison."""
+    return AjCrewConfig()
 
 
 class TestMalformedConfigValuesNeverCrashLoad:
     """Round-2 hardening: several config parse sites coerced values with a bare
     .upper()/int()/list()/set()/.items() and no guard. jsonschema is optional
     (absent in the shipped runtime), so a hand-edited config.json with a wrongly
-    typed value reached the parse and crashed KiroCrewConfig.load() outright —
+    typed value reached the parse and crashed AjCrewConfig.load() outright —
     bricking every caller. Each must now degrade to the default instead."""
 
     def test_non_string_log_level_falls_back(self):
@@ -292,15 +292,15 @@ class TestSlackAllowedUsersLoad:
 class TestConfigLoaderProperties:
     """Property-based tests for the config loader validation logic."""
 
-    # Feature: config-schema, Property 6: KiroCrewConfig load/to_dict round-trip
-    @given(config=_kirocrew_config_st)
+    # Feature: config-schema, Property 6: AjCrewConfig load/to_dict round-trip
+    @given(config=_ajcrew_config_st)
     @settings(deadline=None)
     def test_load_to_dict_round_trip(
         self,
-        config: KiroCrewConfig,
+        config: AjCrewConfig,
     ) -> None:
         """Calling to_dict() then load() from that dict must yield an
-        equivalent KiroCrewConfig instance.
+        equivalent AjCrewConfig instance.
 
         **Validates: Requirements 2.4, 2.5, 9.4, 9.6**
         """
@@ -315,8 +315,8 @@ class TestConfigLoaderProperties:
         # An unset default template is carried from the roster default's row
         # on load (MIGRATE_STAR_DEFAULT_TEMPLATE), so the round trip holds for
         # the field once that one-shot carry is applied.
-        from kiro_crew.config.loader import dispatch_kiro_agent
-        from kiro_crew.config.migration import star_default_template_due
+        from aj_crew.config.loader import dispatch_kiro_agent
+        from aj_crew.config.migration import star_default_template_due
 
         carried = star_default_template_due(
             config.agent.default_agent,
@@ -488,7 +488,7 @@ class TestConfigLoaderProperties:
         for k in extra_keys:
             assert k in warning_text, f"Key '{k}' not mentioned in warning: {warning_text}"
 
-    # Feature: config-schema, Property 12: load() always returns valid KiroCrewConfig
+    # Feature: config-schema, Property 12: load() always returns valid AjCrewConfig
     @given(
         content=st.one_of(
             st.text(min_size=0, max_size=200),
@@ -505,14 +505,14 @@ class TestConfigLoaderProperties:
         self,
         content: str,
     ) -> None:
-        """For any input content, load() must return a KiroCrewConfig
+        """For any input content, load() must return an AjCrewConfig
         instance without raising an exception.
 
         **Validates: Requirements 6.6**
         """
         result = _load_from_raw_string(content)
 
-        assert isinstance(result, KiroCrewConfig)
+        assert isinstance(result, AjCrewConfig)
         assert isinstance(result.agent, AgentConfig)
         assert isinstance(result.session, SessionConfig)
         assert isinstance(result.memory, MemoryConfig)
@@ -539,7 +539,7 @@ class TestConfigLoaderProperties:
 
         **Validates: Requirements 8.2**
         """
-        from kiro_crew.config import schema as schema_mod
+        from aj_crew.config import schema as schema_mod
 
         # Find and temporarily mark slack.command as deprecated
         target_entry = None
@@ -626,9 +626,9 @@ class TestArchiveRetentionDays:
 
         cfg = _load_from_dict({"session": {"archive_retention_days": 60}})
         cfg_file = tmp_path / "config.json"
-        with patch("kiro_crew.config.loader.config_path", return_value=cfg_file):
+        with patch("aj_crew.config.loader.config_path", return_value=cfg_file):
             cfg.save()
-            loaded = KiroCrewConfig.load()
+            loaded = AjCrewConfig.load()
         assert loaded.session.archive_retention_days == 60
 
     def test_schema_permits_null_sentinel(self) -> None:
@@ -638,7 +638,7 @@ class TestArchiveRetentionDays:
         ``validate_config_data`` strip it and revert to 30. The schema shape is checked
         directly so this fails even where jsonschema is not installed.
         """
-        from kiro_crew.config.schema import JSON_SCHEMA
+        from aj_crew.config.schema import JSON_SCHEMA
 
         node = JSON_SCHEMA["properties"]["session"]["properties"]["archive_retention_days"]
         assert (
@@ -647,7 +647,7 @@ class TestArchiveRetentionDays:
 
     def test_validation_preserves_null(self) -> None:
         """When jsonschema runs, ``null`` must survive validation (not be stripped)."""
-        from kiro_crew.config import validation
+        from aj_crew.config import validation
 
         if not validation._HAS_JSONSCHEMA:
             pytest.skip("jsonschema not installed on this interpreter")
@@ -665,23 +665,23 @@ class TestSecurityBoundClamping:
     """The loader clamps out-of-range resource-limit knobs read from disk."""
 
     def test_subagent_auto_max_clamped_to_ceiling(self) -> None:
-        from kiro_crew.config.loader import SUBAGENT_AUTO_MAX_CEILING
+        from aj_crew.config.loader import SUBAGENT_AUTO_MAX_CEILING
 
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event"):
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event"):
             cfg = _load_from_dict({"agent": {"subagent_auto_max": 200}})
         assert cfg.agent.subagent_auto_max == SUBAGENT_AUTO_MAX_CEILING == 64
 
     def test_subagent_auto_max_floored_to_min(self) -> None:
         """A value below the auto-size floor (3) is clamped UP to 3 with a
         warning, mirroring the > ceiling clamp."""
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event"):
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event"):
             cfg = _load_from_dict({"agent": {"subagent_auto_max": 1}})
         assert cfg.agent.subagent_auto_max == 3
 
     def test_max_subagents_clamped_to_ceiling(self) -> None:
-        from kiro_crew.config.loader import SUBAGENT_AUTO_MAX_CEILING
+        from aj_crew.config.loader import SUBAGENT_AUTO_MAX_CEILING
 
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event"):
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event"):
             cfg = _load_from_dict({"agent": {"max_subagents": 200}})
         assert cfg.agent.max_subagents == SUBAGENT_AUTO_MAX_CEILING == 64
 
@@ -689,10 +689,10 @@ class TestSecurityBoundClamping:
         """An explicit pin of 1 or 2 is normalized UP to the fixed-pin floor (3):
         a sub-3 pin would silently disable auto-sizing and run below the default.
         The auto sentinel (0) and in-range pins (>= 3) are left untouched."""
-        from kiro_crew.config.loader import MAX_SUBAGENTS_FIXED_FLOOR
+        from aj_crew.config.loader import MAX_SUBAGENTS_FIXED_FLOOR
 
         assert MAX_SUBAGENTS_FIXED_FLOOR == 3
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event"):
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event"):
             for pinned in (1, 2):
                 cfg = _load_from_dict({"agent": {"max_subagents": pinned}})
                 assert cfg.agent.max_subagents == 3
@@ -702,9 +702,9 @@ class TestSecurityBoundClamping:
             assert _load_from_dict({"agent": {"max_subagents": 8}}).agent.max_subagents == 8
 
     def test_subagent_max_turns_clamped_to_ceiling(self) -> None:
-        from kiro_crew.config.loader import SUBAGENT_MAX_TURNS_CEILING
+        from aj_crew.config.loader import SUBAGENT_MAX_TURNS_CEILING
 
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event"):
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event"):
             cfg = _load_from_dict({"agent": {"subagent_max_turns": 99999}})
         assert cfg.agent.subagent_max_turns == SUBAGENT_MAX_TURNS_CEILING == 1000
 
@@ -716,7 +716,7 @@ class TestSecurityBoundClamping:
         Asserted for the int form (the raw-dict clamp) and the numeric-string
         form (which that clamp skips and only the coercion site bounds).
         """
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event"):
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event"):
             assert (
                 _load_from_dict({"agent": {"subagent_timeout_secs": 0}}).agent.subagent_timeout_secs
                 == 0
@@ -740,18 +740,18 @@ class TestSecurityBoundClamping:
             )
 
     def test_subagent_timeout_clamped_to_bounds(self) -> None:
-        from kiro_crew.config.loader import SUBAGENT_TIMEOUT_MAX, SUBAGENT_TIMEOUT_MIN
+        from aj_crew.config.loader import SUBAGENT_TIMEOUT_MAX, SUBAGENT_TIMEOUT_MIN
 
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event"):
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event"):
             hi = _load_from_dict({"agent": {"subagent_timeout_secs": 999999}})
             lo = _load_from_dict({"agent": {"subagent_timeout_secs": 1}})
         assert hi.agent.subagent_timeout_secs == SUBAGENT_TIMEOUT_MAX == 86400
         assert lo.agent.subagent_timeout_secs == SUBAGENT_TIMEOUT_MIN == 60
 
     def test_pool_size_clamped_to_max(self) -> None:
-        from kiro_crew.config.loader import POOL_SIZE_MAX
+        from aj_crew.config.loader import POOL_SIZE_MAX
 
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event"):
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event"):
             cfg = _load_from_dict({"session": {"pool_size": 1000}})
         assert cfg.session.pool_size == POOL_SIZE_MAX == 10
 
@@ -763,24 +763,24 @@ class TestSecurityBoundClamping:
         assert cfg.dashboard.chat_entry_cache_max_bytes == 32 * 1024 * 1024
 
     def test_chat_entry_cache_max_entries_clamped_at_both_ends(self) -> None:
-        from kiro_crew.config.loader import (
+        from aj_crew.config.loader import (
             CHAT_ENTRY_CACHE_ENTRIES_MAX,
             CHAT_ENTRY_CACHE_ENTRIES_MIN,
         )
 
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event"):
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event"):
             low = _load_from_dict({"dashboard": {"chat_entry_cache_max_entries": 1}})
             high = _load_from_dict({"dashboard": {"chat_entry_cache_max_entries": 10**9}})
         assert low.dashboard.chat_entry_cache_max_entries == CHAT_ENTRY_CACHE_ENTRIES_MIN == 256
         assert high.dashboard.chat_entry_cache_max_entries == CHAT_ENTRY_CACHE_ENTRIES_MAX == 262144
 
     def test_chat_entry_cache_max_bytes_clamped_at_both_ends(self) -> None:
-        from kiro_crew.config.loader import (
+        from aj_crew.config.loader import (
             CHAT_ENTRY_CACHE_BYTES_MAX,
             CHAT_ENTRY_CACHE_BYTES_MIN,
         )
 
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event"):
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event"):
             low = _load_from_dict({"dashboard": {"chat_entry_cache_max_bytes": 1024}})
             high = _load_from_dict({"dashboard": {"chat_entry_cache_max_bytes": 10**12}})
         assert low.dashboard.chat_entry_cache_max_bytes == CHAT_ENTRY_CACHE_BYTES_MIN
@@ -816,23 +816,23 @@ class TestSecurityBoundClamping:
         """A value below the floor is clamped UP: a session-start budget under
         the backend's 30s OAuth authorization wait recreates the race the
         dedicated budget exists to prevent."""
-        from kiro_crew.config.loader import SESSION_START_TIMEOUT_MIN
+        from aj_crew.config.loader import SESSION_START_TIMEOUT_MIN
 
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event"):
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event"):
             cfg = _load_from_dict({"agent": {"session_start_timeout_secs": 10}})
         assert cfg.agent.session_start_timeout_secs == SESSION_START_TIMEOUT_MIN == 90
 
     def test_session_start_timeout_clamped_to_max(self) -> None:
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event"):
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event"):
             cfg = _load_from_dict({"agent": {"session_start_timeout_secs": 99999}})
-        from kiro_crew.config.loader import SESSION_START_TIMEOUT_MAX
+        from aj_crew.config.loader import SESSION_START_TIMEOUT_MAX
 
         assert cfg.agent.session_start_timeout_secs == SESSION_START_TIMEOUT_MAX == 900
 
     def test_full_pentest_reproduction_clamped(self) -> None:
         """The exact tester payload is clamped, and to_dict() (what the GET API
         serializes) reports the clamped values, not the inflated ones."""
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event"):
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event"):
             cfg = _load_from_dict(
                 {
                     "agent": {
@@ -860,7 +860,7 @@ class TestSecurityBoundClamping:
         ``_clamp_security_bounds`` skips non-int values, so the coercion site must
         clamp ``max_subagents``, ``subagent_max_turns``, ``subagent_auto_max`` and
         ``pool_size``."""
-        from kiro_crew.config.loader import (
+        from aj_crew.config.loader import (
             POOL_SIZE_MAX,
             SUBAGENT_AUTO_MAX_CEILING,
             SUBAGENT_MAX_TURNS_CEILING,
@@ -919,7 +919,7 @@ class TestSecurityBoundClamping:
         assert not (cfg.agent.subagent_max_turns > 999)  # must not raise TypeError
 
     def test_in_range_values_unchanged(self) -> None:
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event") as mock_event:
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event") as mock_event:
             cfg = _load_from_dict(
                 {
                     "agent": {
@@ -937,7 +937,7 @@ class TestSecurityBoundClamping:
         mock_event.assert_not_called()
 
     def test_boundary_values_not_clamped(self) -> None:
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event") as mock_event:
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event") as mock_event:
             cfg = _load_from_dict(
                 {
                     "agent": {"subagent_auto_max": 64, "subagent_max_turns": 1000},
@@ -950,14 +950,14 @@ class TestSecurityBoundClamping:
         mock_event.assert_not_called()
 
     def test_clamp_logs_warning(self) -> None:
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event"):
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event"):
             _, logs = _load_from_dict_with_logs({"agent": {"subagent_auto_max": 200}})
         assert any(
             "subagent_auto_max" in m and "out of range" in m for m in logs
         ), f"expected clamp warning, got: {logs}"
 
     def test_clamp_emits_security_event(self) -> None:
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event") as mock_event:
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event") as mock_event:
             _load_from_dict({"agent": {"subagent_auto_max": 200}})
         mock_event.assert_called_once()
         args = mock_event.call_args.args
@@ -969,10 +969,10 @@ class TestSecurityBoundClamping:
         """The clamp skips non-int values, leaving them exactly as-is. Asserted
         against ``_clamp_security_bounds`` directly so the outcome is
         deterministic regardless of jsonschema availability."""
-        from kiro_crew.config.loader import _clamp_security_bounds
+        from aj_crew.config.loader import _clamp_security_bounds
 
         data = {"agent": {"subagent_max_turns": "lots"}}
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event") as mock_event:
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event") as mock_event:
             _clamp_security_bounds(data)
         assert data["agent"]["subagent_max_turns"] == "lots"
         mock_event.assert_not_called()
@@ -980,18 +980,18 @@ class TestSecurityBoundClamping:
     def test_bool_value_not_clamped(self) -> None:
         """A JSON true/false (bool is an int subclass) is not a numeric bound
         value: the clamp leaves it untouched and fires no event."""
-        from kiro_crew.config.loader import _clamp_security_bounds
+        from aj_crew.config.loader import _clamp_security_bounds
 
         data = {"agent": {"max_subagents": True}}
-        with unittest.mock.patch("kiro_crew.config.loader._log_config_clamp_event") as mock_event:
+        with unittest.mock.patch("aj_crew.config.loader._log_config_clamp_event") as mock_event:
             _clamp_security_bounds(data)
         assert data["agent"]["max_subagents"] is True
         mock_event.assert_not_called()
 
     def test_log_config_clamp_event_is_best_effort(self) -> None:
-        from kiro_crew.config.loader import _log_config_clamp_event
+        from aj_crew.config.loader import _log_config_clamp_event
 
-        with unittest.mock.patch("kiro_crew.sel.sel", side_effect=RuntimeError("SEL down")):
+        with unittest.mock.patch("aj_crew.sel.sel", side_effect=RuntimeError("SEL down")):
             _log_config_clamp_event("agent.subagent_auto_max", 200, 64, 1, 64)
 
 
@@ -1002,13 +1002,13 @@ class TestAutocompactPctLoadClamp:
     """
 
     def test_above_range_clamped_to_max(self) -> None:
-        from kiro_crew.config.loader import AUTOCOMPACT_PCT_MAX
+        from aj_crew.config.loader import AUTOCOMPACT_PCT_MAX
 
         cfg = _load_from_dict({"session": {"autocompact_pct": 500}})
         assert cfg.session.autocompact_pct == AUTOCOMPACT_PCT_MAX == 90.0
 
     def test_negative_clamped_to_min(self) -> None:
-        from kiro_crew.config.loader import AUTOCOMPACT_PCT_MIN
+        from aj_crew.config.loader import AUTOCOMPACT_PCT_MIN
 
         cfg = _load_from_dict({"session": {"autocompact_pct": -10}})
         assert cfg.session.autocompact_pct == AUTOCOMPACT_PCT_MIN == 5.0
@@ -1026,7 +1026,7 @@ class TestAutocompactPctLoadClamp:
         """An omitted key takes the module default, not a clamp bound. Asserted
         against the constant rather than a literal so the two cannot drift: a
         ``load()`` fallback restated as its own literal still fails here."""
-        from kiro_crew.config.loader import DEFAULT_AUTOCOMPACT_PCT
+        from aj_crew.config.loader import DEFAULT_AUTOCOMPACT_PCT
 
         cfg = _load_from_dict({})
         assert cfg.session.autocompact_pct == DEFAULT_AUTOCOMPACT_PCT
@@ -1036,8 +1036,8 @@ class TestAutocompactPctLoadClamp:
         ``session.autocompact_pct`` must BE the loader's clamp constants — the
         same objects, not two sets of literals that can drift apart (the drift
         is exactly how the load path lost the range in the first place)."""
-        from kiro_crew.config.loader import AUTOCOMPACT_PCT_MAX, AUTOCOMPACT_PCT_MIN
-        from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+        from aj_crew.config.loader import AUTOCOMPACT_PCT_MAX, AUTOCOMPACT_PCT_MIN
+        from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
         spec = _EDITABLE_CONFIG["session.autocompact_pct"]
         assert spec["type"] == "float"
@@ -1103,7 +1103,7 @@ class TestPoolSizeDefaultSingleSource:
 
 
 class TestMalformedConfigNeverBricksLoad:
-    """load() falls back to defaults, never raises, on values `kirocrew config set` can write.
+    """load() falls back to defaults, never raises, on values `ajcrew config set` can write.
 
     `config get/set` call load() first, so a raise would also block the CLI fix.
     Cases: a non-dict section, a non-dict `slack`, a non-numeric string for a number.
@@ -1138,7 +1138,7 @@ class TestMalformedConfigNeverBricksLoad:
     def test_numeric_strings_preserve_legacy_coercion_without_jsonschema(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.config.validation as validation
+        import aj_crew.config.validation as validation
 
         monkeypatch.setattr(validation, "_HAS_JSONSCHEMA", False)
 
@@ -1224,7 +1224,7 @@ class TestEmptyResponseMaxContinuesWiring:
 
 
 def _loader_warnings(caplog: pytest.LogCaptureFixture) -> list[str]:
-    return [r.getMessage() for r in caplog.records if r.name == "kiro_crew.config.loader"]
+    return [r.getMessage() for r in caplog.records if r.name == "aj_crew.config.loader"]
 
 
 class TestCoerceConfigField:

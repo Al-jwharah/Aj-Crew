@@ -29,20 +29,20 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import context as ctx
-from kiro_crew import embeddings, resource_status, session_surface, vector_memory
-from kiro_crew.config import loader as config_loader
-from kiro_crew.config import paths as config_paths
-from kiro_crew.config.loader import KiroCrewConfig, workspace_dir_for
-from kiro_crew.config.paths import config_dir
-from kiro_crew.context_assembly import budget as budget_mod
-from kiro_crew.embeddings import PRIORITY_NORMAL
-from kiro_crew.hooks import HookManager
-from kiro_crew.learn import LessonStore
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import context as ctx
+from aj_crew import embeddings, resource_status, session_surface, vector_memory
+from aj_crew.config import loader as config_loader
+from aj_crew.config import paths as config_paths
+from aj_crew.config.loader import AjCrewConfig, workspace_dir_for
+from aj_crew.config.paths import config_dir
+from aj_crew.context_assembly import budget as budget_mod
+from aj_crew.embeddings import PRIORITY_NORMAL
+from aj_crew.hooks import HookManager
+from aj_crew.learn import LessonStore
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.clock import ManualClock
+from aj_crew.vector_memory import VectorMemoryStore
 
 # ``context._memory_stores`` / ``context._lesson_stores`` are module globals behind
 # ``context._stores_lock``. Two workers racing them is a flake, so the whole module
@@ -89,7 +89,7 @@ class _TopicBackend(embeddings.EmbeddingBackend):
 
     @property
     def model_id(self) -> str:
-        return "kirocrew-test-topic-axes-v1"
+        return "ajcrew-test-topic-axes-v1"
 
     @property
     def dim(self) -> int:
@@ -114,7 +114,7 @@ class _TopicBackend(embeddings.EmbeddingBackend):
 # ── The seed ─────────────────────────────────────────────────────────────────
 
 _PREFERENCES = "# Preferences\n\n- Prefers tabs over spaces\n"
-_PROJECTS = "# Projects\n\n- kirocrew: the crew itself\n"
+_PROJECTS = "# Projects\n\n- ajcrew: the crew itself\n"
 _HISTORY_DAY = "#### 10:00 deploy chat\nAgreed to review the deploy checklist.\n"
 
 #: Semantic rows, written in this order. ``SEM_TOP`` outranks ``SEM_MID`` on both
@@ -184,8 +184,8 @@ class Seeded:
 def _seed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, opened) -> Seeded:
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    monkeypatch.setenv("KIROCREW_SKIP_MODEL_DOWNLOAD", "1")
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_SKIP_MODEL_DOWNLOAD", "1")
     # ``config_dir()`` memoises the resolved home in this module global for the
     # process lifetime, and one xdist worker runs thousands of tests in one process.
     monkeypatch.setattr(config_paths, "_resolved_home", None, raising=False)
@@ -197,7 +197,7 @@ def _seed(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, opened) -> Seeded:
         json.dumps({"agent": {"resource_pressure_gb": 0, "resource_critical_gb": 0}}),
         encoding="utf-8",
     )
-    assert KiroCrewConfig.load().agent.resource_pressure_gb == 0
+    assert AjCrewConfig.load().agent.resource_pressure_gb == 0
     assert resource_status.probe().context_line() == ""
 
     # Module globals: reset through monkeypatch so a build in this test cannot serve
@@ -351,7 +351,7 @@ EXPECTED_BLOCK_ORDER = [
     "[SESSION CONTEXT -- background reference only, NOT a task to act on.",
     "[CRITICAL RULES -- always follow these]",
     "[CURRENT DATE] ",
-    "[CURRENT AGENT] kirocrew",
+    "[CURRENT AGENT] ajcrew",
     "[WORKSPACE IDENTITY]",
     "[DOCUMENTATION]",
     "[Memory -- stable user profile.",
@@ -441,7 +441,7 @@ def test_production_agent_prompt_exists() -> None:
     time the prompt is reworded — a change this golden does not cover. Asserting the
     file exists keeps the stub honest.
     """
-    from kiro_crew.agent import _prompt_path
+    from aj_crew.agent import _prompt_path
 
     assert _prompt_path().is_file()
     assert _prompt_path().read_text(encoding="utf-8").strip()
@@ -485,14 +485,14 @@ def _blocks(payload: str) -> dict[str, str]:
 EXPECTED_EXTENTS = {
     "[CRITICAL RULES": 4338,
     "[CURRENT DATE]": 48,
-    "[CURRENT AGENT]": 196,
+    "[CURRENT AGENT]": 194,
     "[WORKSPACE IDENTITY]": 376,
-    "[DOCUMENTATION]": 235,
-    "[Memory —": 2077,
+    "[DOCUMENTATION]": 227,
+    "[Memory —": 2073,
     "[Skills:]": 413,
     "[Learned corrections": 320,
 }
-EXPECTED_TOTAL = 8003
+EXPECTED_TOTAL = 7989
 
 
 def test_session_context_char_extents(seeded: Seeded) -> None:
@@ -511,7 +511,7 @@ def test_total_stays_under_the_production_ceiling(seeded: Seeded) -> None:
     allowance here is inside it there too.
     """
     caps = ctx._resolve_caps(None)
-    assert KiroCrewConfig.load().skills.lazy_load is True
+    assert AjCrewConfig.load().skills.lazy_load is True
     payload = _session_context(seeded)
     assert len(payload) <= caps.base == caps.max_context
 
@@ -695,7 +695,7 @@ def test_follow_up_turn_costs_no_embedding(seeded: Seeded) -> None:
     assert seeded.inference_calls == []
 
 
-# ── 5. The files a build touches under KIROCREW_HOME ─────────────────────────
+# ── 5. The files a build touches under AJCREW_HOME ─────────────────────────
 
 
 def _home_files(home: Path) -> set[str]:
@@ -725,7 +725,7 @@ def test_seeded_home_file_set_is_pinned(seeded: Seeded) -> None:
     The pin guards that no store file appears outside ``memory.db*`` and
     ``workspace/memory/``. The config files below come from the seed's config writes:
 
-    * ``config.json.bak``: ``KiroCrewConfig.load()`` writes the file back with a backup.
+    * ``config.json.bak``: ``AjCrewConfig.load()`` writes the file back with a backup.
     * ``config.json.lock``: ``config.loader``'s advisory lock.
     * ``connections_ui_migrated.json``: the loader's one-time migration marker.
     * ``config-provenance/published``: ``config.write_provenance``, POSIX only.
@@ -791,7 +791,7 @@ def test_activity_off_makes_startup_embed_free(seeded: Seeded) -> None:
     data = json.loads(config_file.read_text(encoding="utf-8"))
     data["memory"] = {"inject_activity": False}
     config_file.write_text(json.dumps(data), encoding="utf-8")
-    assert KiroCrewConfig.load().memory.inject_activity is False
+    assert AjCrewConfig.load().memory.inject_activity is False
     payload = _session_context(seeded)
     assert seeded.embed_fn_calls == []
     assert seeded.inference_calls == []
@@ -862,7 +862,7 @@ def _set_memory_config(seeded: Seeded, **memory: object) -> None:
     data = json.loads(config_file.read_text(encoding="utf-8"))
     data["memory"] = memory
     config_file.write_text(json.dumps(data), encoding="utf-8")
-    loaded = KiroCrewConfig.load().memory
+    loaded = AjCrewConfig.load().memory
     assert {key: getattr(loaded, key) for key in memory} == memory
 
 
@@ -889,7 +889,7 @@ def test_memory_written_after_an_early_embed_reaches_the_first_turn(
     """Only the query's vector is kept: the store is read when the build runs."""
     # The late episode shares EP_TOP's topic vector, so FAISS's near-duplicate
     # check refuses it; the fixture built the index before this body ran.
-    monkeypatch.setattr("kiro_crew.vector_memory._HAS_FAISS", False)
+    monkeypatch.setattr("aj_crew.vector_memory._HAS_FAISS", False)
     monkeypatch.setattr(seeded.vectors, "_faiss_index", None)
     assert _early_embed(seeded, QUERY) is True
     late_lesson = "Tag every deploy review with the release train."
@@ -977,14 +977,14 @@ def test_a_build_ranks_by_keyword_once_its_wait_runs_out(
         no_time_left.setattr(ctx, "_PROMPT_BUILD_EMBED_TIMEOUT_SECS", 0.0)
         keyword_ranked = _first_turn(seeded)
     assert seeded.inference_calls == []
-    wait = KiroCrewConfig.load().memory.startup_recall_timeout_secs
+    wait = AjCrewConfig.load().memory.startup_recall_timeout_secs
     assert wait == 1.0 < ctx._PROMPT_BUILD_EMBED_TIMEOUT_SECS
 
     clock = ManualClock()
     clock.install(monkeypatch, budget_mod)
     # The facade binds no clock: a joined wait ends when ``EmbeddingWork.expired``,
     # in the owner below, reads the deadline as passed.
-    clock.install(monkeypatch, sys.modules["kiro_crew.embeddings_settings"])
+    clock.install(monkeypatch, sys.modules["aj_crew.embeddings_settings"])
     release, running = threading.Event(), threading.Event()
     backend = _HeldTopicBackend(seeded.inference_calls, release, running)
     monkeypatch.setattr(embeddings, "_backend_factory", lambda: backend, raising=False)

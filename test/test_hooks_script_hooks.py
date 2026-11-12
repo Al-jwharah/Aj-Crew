@@ -7,12 +7,12 @@ not a path. That spelling and ``s.split("/")[-1]`` both answer the text after th
 ``/``, or the whole string when there is none.
 
 The store's mutation guard is a ``@contextmanager``, whose generator ``compose`` does not
-rebind; ``hooks.py`` rebinds it after ``compose``, so a patch through ``kiro_crew.hooks``
+rebind; ``hooks.py`` rebinds it after ``compose``, so a patch through ``aj_crew.hooks``
 reaches it like every other store method.
 
 The classes the two owners define keep their owner's ``__module__``: ``compose`` rebinds
 the methods of exactly the classes whose module is the owner's, so a class reporting
-``kiro_crew.hooks`` would keep its methods on the owner's globals.
+``aj_crew.hooks`` would keep its methods on the owner's globals.
 """
 
 from __future__ import annotations
@@ -21,9 +21,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import hooks
-from kiro_crew.hook_runtime import hook_types, script_hooks
-from kiro_crew.hooks import HOOK_EVENT_USER_PROMPT_SUBMIT, ScriptHookStore
+from aj_crew import hooks
+from aj_crew.hook_runtime import hook_types, script_hooks
+from aj_crew.hooks import HOOK_EVENT_USER_PROMPT_SUBMIT, ScriptHookStore
 
 
 @pytest.mark.parametrize("key", ["", "a", "a/b", "/a/", "a//b"])
@@ -40,11 +40,11 @@ async def test_a_skills_only_hook_names_each_skill_by_its_last_segment(tmp_path:
             "event": HOOK_EVENT_USER_PROMPT_SUBMIT,
             "command": "",
             "matcher": "*deploy*",
-            "skills": ["kirocrew-dev/kirocrew-prepare-pr", "a//b", "plain"],
+            "skills": ["ajcrew-dev/ajcrew-prepare-pr", "a//b", "plain"],
         }
     )
     results = await store.fire(HOOK_EVENT_USER_PROMPT_SUBMIT, "please deploy this")
-    assert [r.stdout for r in results] == ["Load skills: $kirocrew-prepare-pr $b $plain"]
+    assert [r.stdout for r in results] == ["Load skills: $ajcrew-prepare-pr $b $plain"]
 
 
 def test_the_store_mutation_guard_reads_the_facade_globals(

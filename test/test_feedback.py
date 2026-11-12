@@ -15,7 +15,7 @@ from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 from named_cases_helpers import named_cases
 
-from kiro_crew.dashboard.handlers import feedback
+from aj_crew.dashboard.handlers import feedback
 
 _TEST_IDENTITY = "install-abc123"
 
@@ -197,7 +197,11 @@ class TestIdentityAndConsentHelpers:
                 self.ok = ok
 
         seen_audit_tools: list[str] = []
-        monkeypatch.setattr(feedback.KiroCrewConfig, "load", staticmethod(lambda: _Cfg()))
+        # The shipped build names no survey endpoint, which closes the gate
+        # before the ladder is read; give it one so the delegation is what runs.
+        monkeypatch.setattr(feedback, "_INGESTION_URL", "https://survey.example.test/form")
+        monkeypatch.setattr(feedback, "_PROMPT_URL", "https://survey.example.test/form/prompt")
+        monkeypatch.setattr(feedback.AjCrewConfig, "load", staticmethod(lambda: _Cfg()))
 
         def _tp(*, enabled: bool, acked: bool, audit_tool: str = "") -> "_Verdict":
             seen_audit_tools.append(audit_tool)
@@ -565,7 +569,7 @@ class TestSetupFeedbackRoutes:
 
 
 class TestSubmitMetadataRedaction:
-    """GPT bf59b21c #1: client-supplied ``sessionId`` / ``kiroCrewVersion`` land
+    """GPT bf59b21c #1: client-supplied ``sessionId`` / ``ajCrewVersion`` land
     in Aperture's ``metadataList`` and must be redacted before egress, the same
     way ``feedback`` / ``email`` already are -- a credential-bearing custom slot
     key must not leave the host verbatim. ``userId`` is the server-derived
@@ -614,7 +618,7 @@ class TestSubmitMetadataRedaction:
     ) -> None:
         # Spy on the two redactors so the assertion is independent of which
         # patterns they happen to match: prove the handler routes BOTH
-        # sessionId and kiroCrewVersion through exfiltration-URL redaction and
+        # sessionId and ajCrewVersion through exfiltration-URL redaction and
         # then credential redaction (same order as feedback/email), and that
         # the redacted output is what lands in metadataList. No feedback/email
         # in the body, so the only inputs these spies see are the two metadata
@@ -639,7 +643,7 @@ class TestSubmitMetadataRedaction:
             body={
                 "rating": "Good",
                 "sessionId": "chat-URLBIT-CREDBIT",
-                "kiroCrewVersion": "URLBIT-CREDBIT",
+                "ajCrewVersion": "URLBIT-CREDBIT",
             },
         )
 
@@ -654,7 +658,7 @@ class TestSubmitMetadataRedaction:
         assert "[url]-CREDBIT" in seen_cred
         # ...and the fully redacted value is what egresses.
         assert self._meta(captured["payload"], "sessionId") == "chat-[url]-[cred]"
-        assert self._meta(captured["payload"], "kiro_crew_version") == "[url]-[cred]"
+        assert self._meta(captured["payload"], "aj_crew_version") == "[url]-[cred]"
 
     @pytest.mark.asyncio
     async def test_clean_metadata_passes_through_and_user_id_is_server_value(
@@ -669,12 +673,12 @@ class TestSubmitMetadataRedaction:
             body={
                 "rating": "Good",
                 "sessionId": "chat-7-1786950000",
-                "kiroCrewVersion": "1.2.3",
+                "ajCrewVersion": "1.2.3",
             },
         )
 
         resp = await feedback.api_feedback_submit(self._req())
         assert resp.status == 200
         assert self._meta(captured["payload"], "sessionId") == "chat-7-1786950000"
-        assert self._meta(captured["payload"], "kiro_crew_version") == "1.2.3"
+        assert self._meta(captured["payload"], "aj_crew_version") == "1.2.3"
         assert self._meta(captured["payload"], "userId") == "install-xyz"

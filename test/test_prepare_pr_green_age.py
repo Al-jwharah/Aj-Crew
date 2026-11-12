@@ -29,7 +29,7 @@ import pytest
 from skill_script_helpers import load_skill_script
 
 ROOT = Path(__file__).resolve().parents[1]
-_SKILL_DIR = ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev" / "kirocrew-prepare-pr"
+_SKILL_DIR = ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr"
 SCRIPT = _SKILL_DIR / "scripts" / "green_age.py"
 
 # SKILL.md spells the cap as a word, so a change to RESYNC_CAP has to reach the
@@ -96,15 +96,15 @@ def pair(tmp_path: Path) -> Pair:
     """An upstream on ``main`` with one commit, plus a clone of it.
 
     The seed tree carries the two shapes the classes need: a module directory
-    under ``src/kiro_crew/`` and a sibling test directory.
+    under ``src/aj_crew/`` and a sibling test directory.
     """
     upstream = tmp_path / "upstream"
     upstream.mkdir()
     _git(upstream, "init", "-q", "-b", "main")
     _identify(upstream)
-    _write(upstream, "src/kiro_crew/ledger/store.py", "VALUE = 1\n")
-    _write(upstream, "src/kiro_crew/ledger/kinds.py", "KINDS = ()\n")
-    _write(upstream, "src/kiro_crew/chat/runner.py", "def go():\n    return 1\n")
+    _write(upstream, "src/aj_crew/ledger/store.py", "VALUE = 1\n")
+    _write(upstream, "src/aj_crew/ledger/kinds.py", "KINDS = ()\n")
+    _write(upstream, "src/aj_crew/chat/runner.py", "def go():\n    return 1\n")
     _write(upstream, "docs/readme.md", "hello\n")
     _commit(upstream, "seed")
 
@@ -163,8 +163,8 @@ def _summary(mod: ModuleType) -> dict:
 
 def test_same_file_edited_on_both_sides_is_stale(mod, monkeypatch, pair, capsys) -> None:
     """The most direct collision: the base changed a file this PR also changed."""
-    pair.branch_changes({"src/kiro_crew/ledger/store.py": "VALUE = 2\n"})
-    pair.base_gains({"src/kiro_crew/ledger/store.py": "VALUE = 3\n"})
+    pair.branch_changes({"src/aj_crew/ledger/store.py": "VALUE = 2\n"})
+    pair.base_gains({"src/aj_crew/ledger/store.py": "VALUE = 3\n"})
 
     code = _run_main(mod, monkeypatch, pair)
     payload = _summary(mod)
@@ -173,29 +173,29 @@ def test_same_file_edited_on_both_sides_is_stale(mod, monkeypatch, pair, capsys)
     assert payload["stale"] is True
     assert payload["commits"] == 1
     assert [(o["moved"], o["class"]) for o in payload["overlap"]] == [
-        ("src/kiro_crew/ledger/store.py", "same-file")
+        ("src/aj_crew/ledger/store.py", "same-file")
     ]
 
 
 def test_a_sibling_in_the_same_directory_is_stale(mod, monkeypatch, pair, capsys) -> None:
     """Two files in one module directory are one module's internals."""
-    pair.branch_changes({"src/kiro_crew/ledger/store.py": "VALUE = 2\n"})
-    pair.base_gains({"src/kiro_crew/ledger/kinds.py": "KINDS = ('a',)\n"})
+    pair.branch_changes({"src/aj_crew/ledger/store.py": "VALUE = 2\n"})
+    pair.base_gains({"src/aj_crew/ledger/kinds.py": "KINDS = ('a',)\n"})
 
     code = _run_main(mod, monkeypatch, pair)
     payload = _summary(mod)
 
     assert code == mod.EXIT_STALE
     assert [(o["moved"], o["class"]) for o in payload["overlap"]] == [
-        ("src/kiro_crew/ledger/kinds.py", "same-dir")
+        ("src/aj_crew/ledger/kinds.py", "same-dir")
     ]
 
 
 def test_a_moved_caller_importing_a_changed_module_is_stale(mod, monkeypatch, pair, capsys) -> None:
     """The moved file is a caller whose behaviour this PR redefines."""
-    pair.branch_changes({"src/kiro_crew/ledger/store.py": "VALUE = 2\n"})
+    pair.branch_changes({"src/aj_crew/ledger/store.py": "VALUE = 2\n"})
     pair.base_gains(
-        {"src/kiro_crew/chat/runner.py": "from kiro_crew.ledger import store\n\nUSE = store\n"}
+        {"src/aj_crew/chat/runner.py": "from aj_crew.ledger import store\n\nUSE = store\n"}
     )
 
     code = _run_main(mod, monkeypatch, pair)
@@ -203,10 +203,10 @@ def test_a_moved_caller_importing_a_changed_module_is_stale(mod, monkeypatch, pa
 
     assert code == mod.EXIT_STALE
     assert [(o["moved"], o["class"]) for o in payload["overlap"]] == [
-        ("src/kiro_crew/chat/runner.py", "import")
+        ("src/aj_crew/chat/runner.py", "import")
     ]
     # The class reports WHICH changed module the import reached, not the path.
-    assert payload["overlap"][0]["mine"] == "kiro_crew.ledger.store"
+    assert payload["overlap"][0]["mine"] == "aj_crew.ledger.store"
 
 
 def test_a_moved_test_named_for_a_changed_directory_is_stale(
@@ -214,11 +214,11 @@ def test_a_moved_test_named_for_a_changed_directory_is_stale(
 ) -> None:
     """The incident's own shape: no shared path component, no import at all.
 
-    ``test/test_ledger_retention.py`` and ``src/kiro_crew/ledger/store.py`` share
+    ``test/test_ledger_retention.py`` and ``src/aj_crew/ledger/store.py`` share
     nothing a path or import check can see, yet the new test hand-writes the very
     payloads the changed module now validates.
     """
-    pair.branch_changes({"src/kiro_crew/ledger/store.py": "VALUE = 2\n"})
+    pair.branch_changes({"src/aj_crew/ledger/store.py": "VALUE = 2\n"})
     pair.base_gains({"test/test_ledger_retention.py": "def test_x():\n    assert True\n"})
 
     code = _run_main(mod, monkeypatch, pair)
@@ -237,33 +237,33 @@ def test_a_moved_test_named_for_a_changed_directory_is_stale(
 def test_a_relative_import_resolves_against_the_moved_files_own_package(mod) -> None:
     """Skipping a relative import is a false FRESH, which is the dangerous direction.
 
-    `src/kiro_crew/knowledge/retrieval.py` writing `from .._sqlite_compat import x`
-    binds `kiro_crew._sqlite_compat`. A PR changing that module is a real overlap,
+    `src/aj_crew/knowledge/retrieval.py` writing `from .._sqlite_compat import x`
+    binds `aj_crew._sqlite_compat`. A PR changing that module is a real overlap,
     and an unresolved relative import reports it as no overlap at all.
     """
-    moved = "src/kiro_crew/knowledge/retrieval.py"
+    moved = "src/aj_crew/knowledge/retrieval.py"
 
     found = mod.imported_modules("from .._sqlite_compat import x\n", moved)
-    assert "kiro_crew._sqlite_compat" in found
+    assert "aj_crew._sqlite_compat" in found
 
     overlap = mod.classify_overlap(
         [moved],
-        ["src/kiro_crew/_sqlite_compat.py"],
+        ["src/aj_crew/_sqlite_compat.py"],
         lambda _p: "from .._sqlite_compat import x\n",
     )
     assert [(o["moved"], o["class"]) for o in overlap] == [(moved, "import")]
 
 
 def test_relative_import_resolution_follows_pythons_own_rules(mod) -> None:
-    package = "kiro_crew.knowledge"
+    package = "aj_crew.knowledge"
 
-    assert mod._package_of("src/kiro_crew/knowledge/retrieval.py") == package
+    assert mod._package_of("src/aj_crew/knowledge/retrieval.py") == package
     # __init__.py's own package is the directory it defines, not its parent.
-    assert mod._package_of("src/kiro_crew/knowledge/__init__.py") == package
+    assert mod._package_of("src/aj_crew/knowledge/__init__.py") == package
     assert mod._package_of("docs/readme.md") is None
 
-    assert mod._resolve_relative(".sibling", package) == "kiro_crew.knowledge.sibling"
-    assert mod._resolve_relative(".._sqlite_compat", package) == "kiro_crew._sqlite_compat"
+    assert mod._resolve_relative(".sibling", package) == "aj_crew.knowledge.sibling"
+    assert mod._resolve_relative(".._sqlite_compat", package) == "aj_crew._sqlite_compat"
     assert mod._resolve_relative(".", package) == package
     # Climbing to or past the root is not a real import, so it resolves to nothing
     # rather than to a top-level guess.
@@ -271,7 +271,7 @@ def test_relative_import_resolution_follows_pythons_own_rules(mod) -> None:
     assert mod._resolve_relative("..x", None) == ""
 
 
-_DEPENDENCY = "src/kiro_crew/taskq/dependency.py"
+_DEPENDENCY = "src/aj_crew/taskq/dependency.py"
 # taskq/dependency.py's only binding of its `adapters` subpackage, inside a
 # function body: a bare relative import, so nothing names the module before
 # `import`.
@@ -290,7 +290,7 @@ def test_a_moved_caller_with_only_a_bare_relative_import_is_stale(
     only through it shares no directory and no test stem with it: the head read
     FRESH.
     """
-    pair.branch_changes({"src/kiro_crew/taskq/adapters/github.py": "VALUE = 2\n"})
+    pair.branch_changes({"src/aj_crew/taskq/adapters/github.py": "VALUE = 2\n"})
     pair.base_gains({_DEPENDENCY: _DEPENDENCY_LOADER})
 
     code = _run_main(mod, monkeypatch, pair)
@@ -298,29 +298,29 @@ def test_a_moved_caller_with_only_a_bare_relative_import_is_stale(
 
     assert code == mod.EXIT_STALE
     assert [(o["moved"], o["class"], o["mine"]) for o in payload["overlap"]] == [
-        (_DEPENDENCY, "import", "kiro_crew.taskq.adapters.github")
+        (_DEPENDENCY, "import", "aj_crew.taskq.adapters.github")
     ]
 
 
 def test_a_bare_relative_import_binds_each_named_submodule(mod) -> None:
     found = mod.imported_modules(_DEPENDENCY_LOADER, _DEPENDENCY)
-    assert {"kiro_crew.taskq", "kiro_crew.taskq.adapters"} <= found
+    assert {"aj_crew.taskq", "aj_crew.taskq.adapters"} <= found
     # An alias is the local name, never a module.
-    assert "kiro_crew.taskq._adapters_pkg" not in found
+    assert "aj_crew.taskq._adapters_pkg" not in found
 
     # Each further dot climbs one package, as Python resolves it.
     facade = "def settle():\n    from .. import subagent as _facade\n"
     assert mod._parsed_imports(facade)
-    assert {"kiro_crew", "kiro_crew.subagent"} <= mod.imported_modules(
-        facade, "src/kiro_crew/subagent_manager/waves.py"
+    assert {"aj_crew", "aj_crew.subagent"} <= mod.imported_modules(
+        facade, "src/aj_crew/subagent_manager/waves.py"
     )
 
     # A parenthesized list spans lines, and every name in it -- aliased or
     # commented -- binds its own submodule.
     text = "from .. import (\n    store,  # the queue\n    waits as w,\n)\n"
-    found = mod.imported_modules(text, "src/kiro_crew/taskq/adapters/github.py")
-    assert {"kiro_crew.taskq", "kiro_crew.taskq.store", "kiro_crew.taskq.waits"} <= found
-    assert "kiro_crew.taskq.w" not in found
+    found = mod.imported_modules(text, "src/aj_crew/taskq/adapters/github.py")
+    assert {"aj_crew.taskq", "aj_crew.taskq.store", "aj_crew.taskq.waits"} <= found
+    assert "aj_crew.taskq.w" not in found
 
     # Climbing past the top is not a real import, so it binds nothing.
     assert mod.imported_modules("from ... import x\n", _DEPENDENCY) == set()
@@ -328,32 +328,32 @@ def test_a_bare_relative_import_binds_each_named_submodule(mod) -> None:
 
 def test_a_bare_relative_name_that_is_no_module_reaches_the_packages_init(mod) -> None:
     """`from .. import helper` may name a function the package `__init__.py` defines."""
-    found = mod.imported_modules("from .. import helper\n", "src/kiro_crew/taskq/dependency.py")
+    found = mod.imported_modules("from .. import helper\n", "src/aj_crew/taskq/dependency.py")
 
-    assert mod._imports_touch(found, mod.dotted_module_paths(["src/kiro_crew/__init__.py"])) == (
-        "kiro_crew"
+    assert mod._imports_touch(found, mod.dotted_module_paths(["src/aj_crew/__init__.py"])) == (
+        "aj_crew"
     )
     # The root package entry reaches only the root's own __init__.py, never every
     # module below it.
-    assert mod._imports_touch(found, {"kiro_crew.sel"}) == ""
+    assert mod._imports_touch(found, {"aj_crew.sel"}) == ""
 
 
 def test_imports_are_read_from_the_syntax_tree_and_the_lines(mod) -> None:
     """Each spelling below is missed by one of the two readings alone."""
     path = "test/test_main_entrypoint.py"
     # A trailing comment on a plain import.
-    assert "kiro_crew.__main__" in mod.imported_modules(
-        "import kiro_crew.__main__  # noqa: F401\n", path
+    assert "aj_crew.__main__" in mod.imported_modules(
+        "import aj_crew.__main__  # noqa: F401\n", path
     )
     # A `)` inside a comment does not close a parenthesized list.
-    text = "from kiro_crew import (\n    agent,  # loop (see #123)\n    sel,\n)\n"
-    assert {"kiro_crew.agent", "kiro_crew.sel"} <= mod.imported_modules(text, path)
+    text = "from aj_crew import (\n    agent,  # loop (see #123)\n    sel,\n)\n"
+    assert {"aj_crew.agent", "aj_crew.sel"} <= mod.imported_modules(text, path)
     # An import in a script a test hands to a child interpreter really runs.
-    child = 'CHILD = """\nimport kiro_crew.vector_memory\n"""\nsubprocess.run([sys.executable, "-c", CHILD])\n'
-    assert "kiro_crew.vector_memory" in mod.imported_modules(child, path)
+    child = 'CHILD = """\nimport aj_crew.vector_memory\n"""\nsubprocess.run([sys.executable, "-c", CHILD])\n'
+    assert "aj_crew.vector_memory" in mod.imported_modules(child, path)
     # A byte-order mark hides neither the parse nor the first line.
-    assert "kiro_crew.ledger.store" in mod.imported_modules(
-        "\ufefffrom kiro_crew.ledger import store\n", path
+    assert "aj_crew.ledger.store" in mod.imported_modules(
+        "\ufefffrom aj_crew.ledger import store\n", path
     )
 
 
@@ -361,7 +361,7 @@ def test_a_file_that_does_not_parse_is_still_scanned_line_by_line(mod) -> None:
     """Reading no imports out of an unparsable blob would be a false FRESH."""
     text = "def broken(:\n" + _DEPENDENCY_LOADER
     assert mod._parsed_imports(text) is None
-    assert "kiro_crew.taskq.adapters" in mod.imported_modules(text, _DEPENDENCY)
+    assert "aj_crew.taskq.adapters" in mod.imported_modules(text, _DEPENDENCY)
 
 
 def test_the_skill_states_the_loops_own_bounds(mod) -> None:
@@ -399,7 +399,7 @@ def test_a_flat_directory_is_not_a_module(mod, monkeypatch, pair, capsys) -> Non
     assert code == mod.EXIT_FRESH
     assert payload["overlap"] == []
     # The module directory below a source root still counts.
-    assert mod._module_dir("src/kiro_crew/ledger/store.py") == "src/kiro_crew/ledger"
+    assert mod._module_dir("src/aj_crew/ledger/store.py") == "src/aj_crew/ledger"
     assert mod._module_dir("test/test_mine.py") == ""
     assert mod._module_dir(".github/black-baseline.txt") == ""
     assert mod._module_dir("README.md") == ""
@@ -407,7 +407,7 @@ def test_a_flat_directory_is_not_a_module(mod, monkeypatch, pair, capsys) -> Non
 
 def test_a_base_that_moved_somewhere_else_stays_fresh(mod, monkeypatch, pair, capsys) -> None:
     """Movement alone is not staleness, or every PR on a busy repo would rebase."""
-    pair.branch_changes({"src/kiro_crew/ledger/store.py": "VALUE = 2\n"})
+    pair.branch_changes({"src/aj_crew/ledger/store.py": "VALUE = 2\n"})
     pair.base_gains({"docs/readme.md": "hello again\n"})
 
     code = _run_main(mod, monkeypatch, pair)
@@ -423,7 +423,7 @@ def test_a_base_that_moved_somewhere_else_stays_fresh(mod, monkeypatch, pair, ca
 
 
 def test_a_base_that_has_not_moved_is_fresh(mod, monkeypatch, pair, capsys) -> None:
-    pair.branch_changes({"src/kiro_crew/ledger/store.py": "VALUE = 2\n"})
+    pair.branch_changes({"src/aj_crew/ledger/store.py": "VALUE = 2\n"})
 
     code = _run_main(mod, monkeypatch, pair)
     payload = _summary(mod)
@@ -461,7 +461,7 @@ def test_outside_a_git_repository_is_an_environment_error(mod, monkeypatch, tmp_
 
 def test_a_failed_fetch_is_an_environment_error_not_a_green(mod, monkeypatch, pair, capsys) -> None:
     """A stale origin/main cannot prove freshness, so the fetch fails closed."""
-    pair.branch_changes({"src/kiro_crew/ledger/store.py": "VALUE = 2\n"})
+    pair.branch_changes({"src/aj_crew/ledger/store.py": "VALUE = 2\n"})
     _git(pair.work, "remote", "set-url", "origin", str(pair.work / "does-not-exist"))
 
     code = _run_main(mod, monkeypatch, pair)
@@ -482,13 +482,13 @@ def test_the_tested_base_is_the_merge_base_not_a_caller_supplied_sha(
 ) -> None:
     """The commit the green was measured on is inferred, never passed in.
 
-    kirocrew-prepare-pr rebases before every push, so merge-base(HEAD, origin/base) IS
+    ajcrew-prepare-pr rebases before every push, so merge-base(HEAD, origin/base) IS
     the base tip at trigger time. There is no flag to override it: a caller
     that could pin an arbitrary commit could also pin today's tip and make a
     stale tree read fresh.
     """
-    pair.branch_changes({"src/kiro_crew/ledger/store.py": "VALUE = 2\n"})
-    pair.base_gains({"src/kiro_crew/ledger/kinds.py": "KINDS = ('a',)\n"})
+    pair.branch_changes({"src/aj_crew/ledger/store.py": "VALUE = 2\n"})
+    pair.base_gains({"src/aj_crew/ledger/kinds.py": "KINDS = ('a',)\n"})
 
     assert _run_main(mod, monkeypatch, pair) == mod.EXIT_STALE
     with pytest.raises(SystemExit) as excinfo:
@@ -500,13 +500,13 @@ def test_the_tested_base_is_the_merge_base_not_a_caller_supplied_sha(
 def test_pr_mode_takes_the_changed_files_from_the_host(mod, monkeypatch, pair, capsys) -> None:
     """--pr reads the PR's files, so the verdict does not depend on the checkout."""
     pair.branch_changes({"docs/readme.md": "local only\n"})
-    pair.base_gains({"src/kiro_crew/ledger/kinds.py": "KINDS = ('a',)\n"})
+    pair.base_gains({"src/aj_crew/ledger/kinds.py": "KINDS = ('a',)\n"})
 
     real_run = mod.run
 
     def fake_run(args):
         if args[:3] == ["gh", "pr", "view"]:
-            return 0, "src/kiro_crew/ledger/store.py\n", ""
+            return 0, "src/aj_crew/ledger/store.py\n", ""
         return real_run(args)
 
     monkeypatch.setattr(mod, "run", fake_run)
@@ -581,9 +581,9 @@ def _template_text():
 
 def _overlapping(pair):
     """A branch and a base that collide in one file, so the verdict is STALE."""
-    pair.branch_changes({"src/kiro_crew/ledger/store.py": "VALUE = 2\n"})
-    pair.base_gains({"src/kiro_crew/ledger/store.py": "VALUE = 3\n"})
-    return ["src/kiro_crew/ledger/store.py"]
+    pair.branch_changes({"src/aj_crew/ledger/store.py": "VALUE = 2\n"})
+    pair.base_gains({"src/aj_crew/ledger/store.py": "VALUE = 3\n"})
+    return ["src/aj_crew/ledger/store.py"]
 
 
 def _comment(login, body, assoc="CONTRIBUTOR"):
@@ -675,7 +675,7 @@ def test_a_fresh_answer_never_reads_the_re_sync_budget(mod, monkeypatch, pair) -
     read only on the path that could actually spend it.
     """
     pair.branch_changes({"docs/readme.md": "branch only\n"})
-    pair.base_gains({"src/kiro_crew/chat/runner.py": "def go():\n    return 2\n"})
+    pair.base_gains({"src/aj_crew/chat/runner.py": "def go():\n    return 2\n"})
     seen = _stub_gh(mod, monkeypatch, pr_files=["docs/readme.md"], comments=(0, "9"))
 
     code = _run_main(mod, monkeypatch, pair, "--pr", "42")
@@ -913,32 +913,32 @@ def test_the_arming_template_carries_the_cap_and_the_in_flight_guard(mod) -> Non
 
 
 def test_dotted_module_paths_drops_the_source_root_and_resolves_packages(mod) -> None:
-    assert mod.dotted_module_paths(["src/kiro_crew/ledger/store.py"]) == {"kiro_crew.ledger.store"}
+    assert mod.dotted_module_paths(["src/aj_crew/ledger/store.py"]) == {"aj_crew.ledger.store"}
     # __init__.py names its package; no import ever spells the file.
-    assert mod.dotted_module_paths(["src/kiro_crew/ledger/__init__.py"]) == {"kiro_crew.ledger"}
+    assert mod.dotted_module_paths(["src/aj_crew/ledger/__init__.py"]) == {"aj_crew.ledger"}
     # A module outside a source root keeps its own path.
     assert mod.dotted_module_paths(["scripts/tool.py"]) == {"scripts.tool"}
     # Non-Python and non-identifier paths carry no import name.
-    assert mod.dotted_module_paths(["docs/readme.md", "src/kiro_crew/not-a-module/x.py"]) == set()
+    assert mod.dotted_module_paths(["docs/readme.md", "src/aj_crew/not-a-module/x.py"]) == set()
 
 
 def test_a_file_too_deep_to_parse_is_still_scanned_line_by_line(mod) -> None:
     """CPython raises MemoryError for a parser stack overflow; that is no verdict."""
-    text = "from kiro_crew import sel\nX = " + "(" * 6000 + ")" * 6000 + "\n"
+    text = "from aj_crew import sel\nX = " + "(" * 6000 + ")" * 6000 + "\n"
     assert mod._parsed_imports(text) is None
-    assert "kiro_crew.sel" in mod.imported_modules(text, "src/kiro_crew/gen.py")
+    assert "aj_crew.sel" in mod.imported_modules(text, "src/aj_crew/gen.py")
 
 
 def test_imported_modules_reads_every_form_an_import_can_take(mod) -> None:
     text = (
         "import os, sys as system\n"
-        "from kiro_crew.ledger import store, kinds as k\n"
+        "from aj_crew.ledger import store, kinds as k\n"
         "from . import sibling\n"
         "from .relative.deep import thing\n"
-        "from kiro_crew.chat import *\n"
-        "from kiro_crew.parens import (one, two)\n"
+        "from aj_crew.chat import *\n"
+        "from aj_crew.parens import (one, two)\n"
         "def f():\n"
-        "    from kiro_crew.deep import nested\n"
+        "    from aj_crew.deep import nested\n"
     )
     found = mod.imported_modules(text)
     # The tree reads every form below on its own, not only through the line scan.
@@ -946,14 +946,14 @@ def test_imported_modules_reads_every_form_an_import_can_take(mod) -> None:
     assert parsed == {"os", "sys"}
 
     assert {"os", "sys"} <= found
-    assert {"kiro_crew.ledger", "kiro_crew.ledger.store", "kiro_crew.ledger.kinds"} <= found
+    assert {"aj_crew.ledger", "aj_crew.ledger.store", "aj_crew.ledger.kinds"} <= found
     # An indented import binds the same module as one at column 0.
-    assert "kiro_crew.deep.nested" in found
-    assert {"kiro_crew.parens.one", "kiro_crew.parens.two"} <= found
+    assert "aj_crew.deep.nested" in found
+    assert {"aj_crew.parens.one", "aj_crew.parens.two"} <= found
     # A star import names the package and nothing more.
-    assert "kiro_crew.chat" in found
+    assert "aj_crew.chat" in found
     # An alias is the local name, never a module.
-    assert "system" not in found and "kiro_crew.ledger.k" not in found
+    assert "system" not in found and "aj_crew.ledger.k" not in found
     # A relative import's target depends on the importing file's own package;
     # with no path to resolve it against, it is skipped rather than guessed.
     assert not any(name.startswith(".") for name in found)
@@ -962,74 +962,72 @@ def test_imported_modules_reads_every_form_an_import_can_take(mod) -> None:
 
 def test_import_matching_runs_in_both_directions_on_a_dot_boundary(mod) -> None:
     # Module below a changed package.
-    assert mod._imports_touch({"kiro_crew.ledger.store"}, {"kiro_crew.ledger"}) == (
-        "kiro_crew.ledger"
-    )
+    assert mod._imports_touch({"aj_crew.ledger.store"}, {"aj_crew.ledger"}) == ("aj_crew.ledger")
     # Package above a changed module.
-    assert mod._imports_touch({"kiro_crew.ledger"}, {"kiro_crew.ledger.store"}) == (
-        "kiro_crew.ledger.store"
+    assert mod._imports_touch({"aj_crew.ledger"}, {"aj_crew.ledger.store"}) == (
+        "aj_crew.ledger.store"
     )
     # A shared prefix that is not a dot boundary is not a match.
-    assert mod._imports_touch({"kiro_crew.ledgerx"}, {"kiro_crew.ledger"}) == ""
+    assert mod._imports_touch({"aj_crew.ledgerx"}, {"aj_crew.ledger"}) == ""
 
 
 def test_a_package_import_reaches_its_direct_child_module(mod) -> None:
-    changed = {"kiro_crew.apps.builtins.aws_control.backend.backup"}
-    assert mod._imports_touch({"kiro_crew.apps.builtins.aws_control.backend"}, changed) == (
-        "kiro_crew.apps.builtins.aws_control.backend.backup"
+    changed = {"aj_crew.apps.builtins.aws_control.backend.backup"}
+    assert mod._imports_touch({"aj_crew.apps.builtins.aws_control.backend"}, changed) == (
+        "aj_crew.apps.builtins.aws_control.backend.backup"
     )
 
 
 def test_an_ancestor_package_import_does_not_reach_a_grandchild_module(mod) -> None:
-    # ``from kiro_crew import platform_compat`` yields the bare root token; it
+    # ``from aj_crew import platform_compat`` yields the bare root token; it
     # names no changed module and must not reach one through the shared root.
-    changed = {"kiro_crew.apps.builtins.aws_control.backend.backup"}
-    assert mod._imports_touch({"kiro_crew"}, changed) == ""
-    assert mod._imports_touch({"kiro_crew.apps.builtins.aws_control"}, changed) == ""
+    changed = {"aj_crew.apps.builtins.aws_control.backend.backup"}
+    assert mod._imports_touch({"aj_crew"}, changed) == ""
+    assert mod._imports_touch({"aj_crew.apps.builtins.aws_control"}, changed) == ""
 
 
 def test_the_root_package_token_does_not_reach_a_top_level_module(mod) -> None:
     # The bare root token names no module; the real import is matched exactly.
-    assert mod._imports_touch({"kiro_crew"}, {"kiro_crew.security"}) == ""
-    assert mod._imports_touch({"kiro_crew", "kiro_crew.security"}, {"kiro_crew.security"}) == (
-        "kiro_crew.security"
+    assert mod._imports_touch({"aj_crew"}, {"aj_crew.security"}) == ""
+    assert mod._imports_touch({"aj_crew", "aj_crew.security"}, {"aj_crew.security"}) == (
+        "aj_crew.security"
     )
 
 
 def test_a_facade_package_reaches_the_deep_module_its_init_re_exports(mod) -> None:
     inits = {
-        "src/kiro_crew/subagent_manager/__init__.py": (
+        "src/aj_crew/subagent_manager/__init__.py": (
             "from .admission import SpawnAdmissionCoordinator\n"
         ),
     }
-    changed = {"kiro_crew.subagent_manager.admission.gate"}
-    facade = {"kiro_crew.subagent_manager"}
+    changed = {"aj_crew.subagent_manager.admission.gate"}
+    facade = {"aj_crew.subagent_manager"}
     assert mod._imports_touch(facade, changed, inits.get) == (
-        "kiro_crew.subagent_manager.admission.gate"
+        "aj_crew.subagent_manager.admission.gate"
     )
     # Without the facade's own import, the deep module stays unreached.
     assert mod._imports_touch(facade, changed, {}.get) == ""
 
 
 def test_a_parenthesized_import_binds_every_name_across_lines(mod) -> None:
-    text = "from kiro_crew import (\n    model_registry,  # the registry\n    sel,\n)\n"
-    found = mod.imported_modules(text, "src/kiro_crew/acp/client.py")
-    assert {"kiro_crew.model_registry", "kiro_crew.sel"} <= found
-    assert mod._imports_touch(found, {"kiro_crew.model_registry"}) == "kiro_crew.model_registry"
+    text = "from aj_crew import (\n    model_registry,  # the registry\n    sel,\n)\n"
+    found = mod.imported_modules(text, "src/aj_crew/acp/client.py")
+    assert {"aj_crew.model_registry", "aj_crew.sel"} <= found
+    assert mod._imports_touch(found, {"aj_crew.model_registry"}) == "aj_crew.model_registry"
 
 
 def test_an_inline_comment_does_not_drop_the_imported_name(mod) -> None:
-    text = "from kiro_crew import agent  # the agent loop\n"
-    found = mod.imported_modules(text, "src/kiro_crew/cli.py")
-    assert "kiro_crew.agent" in found
-    assert mod._imports_touch(found, {"kiro_crew.agent"}) == "kiro_crew.agent"
+    text = "from aj_crew import agent  # the agent loop\n"
+    found = mod.imported_modules(text, "src/aj_crew/cli.py")
+    assert "aj_crew.agent" in found
+    assert mod._imports_touch(found, {"aj_crew.agent"}) == "aj_crew.agent"
 
 
 def test_each_blob_is_read_at_most_once_per_run(mod) -> None:
     blobs = {
-        "src/kiro_crew/a.py": "from kiro_crew import pkg\n",
-        "src/kiro_crew/b.py": "from kiro_crew import pkg\n",
-        "src/kiro_crew/pkg/__init__.py": "from .sub import thing\n",
+        "src/aj_crew/a.py": "from aj_crew import pkg\n",
+        "src/aj_crew/b.py": "from aj_crew import pkg\n",
+        "src/aj_crew/pkg/__init__.py": "from .sub import thing\n",
     }
     reads: list[str] = []
 
@@ -1037,8 +1035,8 @@ def test_each_blob_is_read_at_most_once_per_run(mod) -> None:
         reads.append(path)
         return blobs.get(path, "")
 
-    mine = ["src/kiro_crew/pkg/sub/x.py", "src/kiro_crew/pkg/sub/y.py"]
-    overlap = mod.classify_overlap(["src/kiro_crew/a.py", "src/kiro_crew/b.py"], mine, read)
+    mine = ["src/aj_crew/pkg/sub/x.py", "src/aj_crew/pkg/sub/y.py"]
+    overlap = mod.classify_overlap(["src/aj_crew/a.py", "src/aj_crew/b.py"], mine, read)
     assert [o["class"] for o in overlap] == ["import", "import"]
     assert len(reads) == len(set(reads))
 
@@ -1048,15 +1046,15 @@ def test_test_stem_prefixes_are_cumulative_and_only_for_test_files(mod) -> None:
         "ledger",
         "ledger_retention",
     ]
-    assert mod.test_stem_prefixes("src/kiro_crew/ledger/store.py") == []
+    assert mod.test_stem_prefixes("src/aj_crew/ledger/store.py") == []
     assert mod.test_stem_prefixes("test/helpers_test.py") == []
 
 
 def test_changed_dir_names_ignores_the_names_that_describe_layout(mod) -> None:
-    names = mod.changed_dir_names(["src/kiro_crew/ledger/store.py", "test/test_x.py"])
+    names = mod.changed_dir_names(["src/aj_crew/ledger/store.py", "test/test_x.py"])
 
     assert "ledger" in names
-    assert "kiro_crew" in names
+    assert "aj_crew" in names
     # "src" and "test" name a layout, so a test stem matching one says nothing
     # about which code the test covers.
     assert "src" not in names
@@ -1111,8 +1109,8 @@ def test_an_injected_runner_is_the_only_way_commands_are_issued(
     instead of passing.
     """
     _git_runs_in(mod, monkeypatch, _outside_any_repository(monkeypatch, tmp_path))
-    pair.branch_changes({"src/kiro_crew/ledger/store.py": "VALUE = 2\n"})
-    pair.base_gains({"src/kiro_crew/ledger/store.py": "VALUE = 3\n"})
+    pair.branch_changes({"src/aj_crew/ledger/store.py": "VALUE = 2\n"})
+    pair.base_gains({"src/aj_crew/ledger/store.py": "VALUE = 3\n"})
     seen: list[list[str]] = []
 
     def runner(args: list[str]) -> tuple[int, str, str]:

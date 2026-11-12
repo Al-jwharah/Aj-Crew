@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.config import sections_shared_crew as sc
-from kiro_crew.config.loader_builders import _build_dashboard_config
-from kiro_crew.config.sections_dashboard import DashboardConfig
+from aj_crew.config import sections_shared_crew as sc
+from aj_crew.config.loader_builders import _build_dashboard_config
+from aj_crew.config.sections_dashboard import DashboardConfig
 
 
 @pytest.fixture(autouse=True)
 def _shared_crew_preview(_floor_monkeypatch):
     """These cases pin the preview-on reader (``shared_crew.preview``)."""
-    _floor_monkeypatch.setenv("KIROCREW_SHARED_CREW_PREVIEW", "1")
+    _floor_monkeypatch.setenv("AJCREW_SHARED_CREW_PREVIEW", "1")
 
 
 def test_defaults_keep_every_switch_off():
@@ -88,7 +88,7 @@ _NOT_ACTIVE: frozenset[str] = frozenset()
 def test_every_key_needs_a_restart_and_says_whether_it_is_active():
     from dataclasses import fields
 
-    from kiro_crew.config.schema import requires_restart
+    from aj_crew.config.schema import requires_restart
 
     assert requires_restart("dashboard.shared_crew")
     for f in fields(sc.SharedCrewConfig):
@@ -102,7 +102,7 @@ def test_every_key_needs_a_restart_and_says_whether_it_is_active():
 def test_load_shared_crew_config_merges_local_overlay(tmp_path, monkeypatch, base_present):
     import json
 
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     base = tmp_path / "config.json"
     local = tmp_path / "config.local.json"
@@ -146,7 +146,7 @@ def test_load_shared_crew_config_merges_local_overlay(tmp_path, monkeypatch, bas
 
 @pytest.mark.parametrize("content", ["{", "[]", '{"dashboard": {"shared_crew": null}}'])
 def test_load_shared_crew_config_refuses_invalid_overlay(tmp_path, monkeypatch, content):
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     local = tmp_path / "config.local.json"
     monkeypatch.setattr(loader, "config_path", lambda: tmp_path / "absent.json")

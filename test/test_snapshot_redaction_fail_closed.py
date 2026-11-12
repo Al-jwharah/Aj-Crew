@@ -18,8 +18,8 @@ from pathlib import Path
 import pytest
 from test_snapshot import unpinnable_argv
 
-from kiro_crew import snapshot as snap
-from kiro_crew import snapshot_redact as redact
+from aj_crew import snapshot as snap
+from aj_crew import snapshot_redact as redact
 
 TOKEN = "8412345678:AAH9xSECRETtokenvalue_here12345"
 
@@ -377,7 +377,7 @@ class TestTheRollbackLedgerRecordsWhatWasTouchedNotWhatWasDeclared:
     """
 
     def _bundle_for_config(self, tmp_path, carried):
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         payload.mkdir(parents=True)
         for name in carried:
             (payload / name).write_text("FROM ARCHIVE", encoding="utf-8")
@@ -479,7 +479,7 @@ class TestAPinnedRefusalMidMutationStillRollsBack:
         live.commit()
         live.close()
 
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         (payload / "workspace" / "memory").mkdir(parents=True)
         (payload / "workspace" / "memory" / "keep.md").write_text("INCOMING", encoding="utf-8")
         # Both of memory's declared trees, or the pre-flight refuses the bundle for lacking
@@ -1019,7 +1019,7 @@ class TestCronValidationMatchesWhatTheReaderNeeds:
         The merge skips the unusable file and reports the rest of the restore complete.
         """
         (home / "crons.json").write_text('{"jobs": [{"name": "mine"}]}', encoding="utf-8")
-        payload = tmp_path / "kirocrew-snapshot-20260101T000000Z"
+        payload = tmp_path / "ajcrew-snapshot-20260101T000000Z"
         payload.mkdir(parents=True)
         (payload / "crons.json").write_text('{"jobs": ["x"]}', encoding="utf-8")
         (payload / "MANIFEST.json").write_text(
@@ -1053,10 +1053,10 @@ class TestTheUploadPathDoesNotConsultConfigAtAll:
 
         src = inspect.getsource(snap._redacted_upload_copy)
         assert "outbound_redaction_enabled()" in src
-        assert "KiroCrewConfig" not in src, "a config read came back to the upload path"
-        assert "from kiro_crew.config.loader import" not in src
+        assert "AjCrewConfig" not in src, "a config read came back to the upload path"
+        assert "from aj_crew.config.loader import" not in src
         assert not hasattr(
-            snap, "KiroCrewConfig"
+            snap, "AjCrewConfig"
         ), "the module-scope config import is unused now and must not linger"
 
     def test_the_schema_query_uses_the_current_table_name(self):

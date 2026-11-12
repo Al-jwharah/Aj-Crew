@@ -29,28 +29,28 @@ from pod_helpers import (  # noqa: F401 -- the fixtures register by import
     requires_posix_pod_lifecycle,
 )
 
-from conftest import requires_symlinks
-from kiro_crew import platform_compat
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod import unit as unit_mod
-from kiro_crew.pod.config import (
+from aj_crew import platform_compat
+from aj_crew.pod import runtime as rt
+from aj_crew.pod import unit as unit_mod
+from aj_crew.pod.config import (
     DEFAULT_BASE_PORT,
     DEFAULT_LIVE_PORT,
     DEFAULT_UNIT_PREFIX,
     PodConfig,
     _canonical_override,
 )
+from conftest import requires_symlinks
 
 
 class TestConfig:
     def test_defaults(self, monkeypatch: pytest.MonkeyPatch) -> None:
         for k in list(os.environ):
-            if k.startswith("KIROCREW_POD_"):
+            if k.startswith("AJCREW_POD_"):
                 monkeypatch.delenv(k, raising=False)
         c = PodConfig.load()
         assert c.base_port == DEFAULT_BASE_PORT
         assert c.live_port == DEFAULT_LIVE_PORT == 5476
-        assert c.unit_prefix == DEFAULT_UNIT_PREFIX == "kirocrew-pod"
+        assert c.unit_prefix == DEFAULT_UNIT_PREFIX == "ajcrew-pod"
         # Git is the primary resolver — no fixed root/repo pinned by default.
         assert c.repo_hint is None
         assert c.worktrees_root is None
@@ -61,7 +61,7 @@ class TestConfig:
     ) -> list[str]:
         """The default gateway PATH ``PodConfig.load`` derives for *home*."""
         for k in list(os.environ):
-            if k.startswith("KIROCREW_POD_"):
+            if k.startswith("AJCREW_POD_"):
                 monkeypatch.delenv(k, raising=False)
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
         monkeypatch.delenv("XDG_DATA_HOME", raising=False)
@@ -109,7 +109,7 @@ class TestConfig:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Pods and the host share one tool-manager list, so they cannot drift."""
-        from kiro_crew.env import user_tool_bin_dirs
+        from aj_crew.env import user_tool_bin_dirs
 
         parts = self._default_parts(tmp_path, monkeypatch)
         missing = [d for d in user_tool_bin_dirs(str(tmp_path)) if d not in parts]
@@ -117,7 +117,7 @@ class TestConfig:
 
     def test_tool_bin_dirs_are_in_native_normal_form(self, tmp_path: Path) -> None:
         """Entries are in native normal form, never mixing ``/`` into a ``\\`` home."""
-        from kiro_crew.env import user_tool_bin_dirs
+        from aj_crew.env import user_tool_bin_dirs
 
         dirs = user_tool_bin_dirs(os.path.join(str(tmp_path), "x", os.pardir))
         assert dirs
@@ -125,16 +125,16 @@ class TestConfig:
         assert str(tmp_path / ".volta" / "bin") in dirs
 
     def test_explicit_pod_path_still_wins(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_PATH", "/only/this")
+        monkeypatch.setenv("AJCREW_POD_PATH", "/only/this")
         assert PodConfig.load().gateway_path == "/only/this"
 
     def test_env_overrides_build_a_hermetic_plane(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_UNIT_PREFIX", "kirocrew-podtest")
-        monkeypatch.setenv("KIROCREW_POD_BASE_PORT", "7300")
-        monkeypatch.setenv("KIROCREW_POD_ROOT", "/tmp/podtest-root")
-        monkeypatch.setenv("KIROCREW_POD_LIVE_PORT", "9999")
+        monkeypatch.setenv("AJCREW_POD_UNIT_PREFIX", "ajcrew-podtest")
+        monkeypatch.setenv("AJCREW_POD_BASE_PORT", "7300")
+        monkeypatch.setenv("AJCREW_POD_ROOT", "/tmp/podtest-root")
+        monkeypatch.setenv("AJCREW_POD_LIVE_PORT", "9999")
         c = PodConfig.load()
-        assert c.unit_prefix == "kirocrew-podtest"
+        assert c.unit_prefix == "ajcrew-podtest"
         assert c.base_port == 7300
         # Compared against the CANONICAL form of the override, not a POSIX spelling
         # of it. What the config promises is that it carries the anchored value, and
@@ -147,7 +147,7 @@ class TestConfig:
         assert c.pod_root == _canonical_override("/tmp/podtest-root")
         assert c.pod_root.is_absolute()
         assert c.live_port == 9999
-        assert rt.pod_unit(c, "foo") == "kirocrew-podtest@foo.service"
+        assert rt.pod_unit(c, "foo") == "ajcrew-podtest@foo.service"
 
     # U+00B2 SUPERSCRIPT TWO passes isdigit but int() refuses it.
     @pytest.mark.parametrize(
@@ -158,42 +158,42 @@ class TestConfig:
     def test_an_unusable_port_env_falls_back_with_a_warning(
         self, raw: str, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_BASE_PORT", raw)
-        monkeypatch.setenv("KIROCREW_POD_LIVE_PORT", raw)
-        with caplog.at_level("WARNING", logger="kiro_crew.pod.config"):
+        monkeypatch.setenv("AJCREW_POD_BASE_PORT", raw)
+        monkeypatch.setenv("AJCREW_POD_LIVE_PORT", raw)
+        with caplog.at_level("WARNING", logger="aj_crew.pod.config"):
             c = PodConfig.load()
         assert c.base_port == DEFAULT_BASE_PORT
         assert c.live_port == DEFAULT_LIVE_PORT
         logged = " ".join(r.getMessage() for r in caplog.records)
-        assert "KIROCREW_POD_BASE_PORT" in logged
-        assert "KIROCREW_POD_LIVE_PORT" in logged
+        assert "AJCREW_POD_BASE_PORT" in logged
+        assert "AJCREW_POD_LIVE_PORT" in logged
 
     @pytest.mark.parametrize("raw", ["", "   "])
     def test_a_blank_port_env_reads_as_unset(
         self, raw: str, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_BASE_PORT", raw)
+        monkeypatch.setenv("AJCREW_POD_BASE_PORT", raw)
         assert PodConfig.load().base_port == DEFAULT_BASE_PORT
 
     @pytest.mark.parametrize("raw,want", [("1", 1), (" 7300 ", 7300), ("65535", 65535)])
     def test_a_live_port_env_in_range_still_wins(
         self, raw: str, want: int, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_LIVE_PORT", raw)
+        monkeypatch.setenv("AJCREW_POD_LIVE_PORT", raw)
         assert PodConfig.load().live_port == want
 
     @pytest.mark.parametrize("raw,want", [("1", 1), (" 7300 ", 7300), ("65336", 65336)])
     def test_a_base_port_env_whose_band_fits_still_wins(
         self, raw: str, want: int, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_BASE_PORT", raw)
+        monkeypatch.setenv("AJCREW_POD_BASE_PORT", raw)
         assert PodConfig.load().base_port == want
 
     def test_a_base_port_whose_band_overflows_falls_back(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # 65337 + 199 is 65536: the band's top port would not bind.
-        monkeypatch.setenv("KIROCREW_POD_BASE_PORT", "65337")
+        monkeypatch.setenv("AJCREW_POD_BASE_PORT", "65337")
         assert PodConfig.load().base_port == DEFAULT_BASE_PORT
 
 
@@ -215,13 +215,13 @@ class TestPathOverridesAreAnchoredNotCwdRelative:
         The contract is a round trip: the CLI loads in one directory, its config is
         rendered to the pod-plane env, and the gateway loads that env from another.
         """
-        from kiro_crew.pod.config import environment_vars
+        from aj_crew.pod.config import environment_vars
 
         cli_cwd = tmp_path / "operator-invocation-dir"
         gateway_cwd = tmp_path / "service-manager-root"
         cli_cwd.mkdir()
         gateway_cwd.mkdir()
-        monkeypatch.setenv("KIROCREW_POD_ROOT", self.RELATIVE)
+        monkeypatch.setenv("AJCREW_POD_ROOT", self.RELATIVE)
 
         monkeypatch.chdir(cli_cwd)
         from_cli = PodConfig.load()
@@ -244,7 +244,7 @@ class TestPathOverridesAreAnchoredNotCwdRelative:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.chdir(tmp_path)
-        monkeypatch.setenv("KIROCREW_POD_ROOT", self.RELATIVE)
+        monkeypatch.setenv("AJCREW_POD_ROOT", self.RELATIVE)
 
         assert PodConfig.load().pod_root.is_absolute()
 
@@ -258,21 +258,21 @@ class TestPathOverridesAreAnchoredNotCwdRelative:
         definition -- resolved, at boot, against a working directory the operator
         never chose.
         """
-        from kiro_crew.pod.config import environment_vars
+        from aj_crew.pod.config import environment_vars
 
         monkeypatch.chdir(tmp_path)
-        monkeypatch.setenv("KIROCREW_POD_ROOT", self.RELATIVE)
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", "tmp/pod-envs")
-        monkeypatch.setenv("KIROCREW_POD_ARTIFACTS_DIR", "tmp/pod-artifacts")
-        monkeypatch.setenv("KIROCREW_POD_WORKTREES_ROOT", "tmp/wts")
+        monkeypatch.setenv("AJCREW_POD_ROOT", self.RELATIVE)
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", "tmp/pod-envs")
+        monkeypatch.setenv("AJCREW_POD_ARTIFACTS_DIR", "tmp/pod-artifacts")
+        monkeypatch.setenv("AJCREW_POD_WORKTREES_ROOT", "tmp/wts")
 
         out = environment_vars(PodConfig.load())
 
         for key in (
-            "KIROCREW_POD_ROOT",
-            "KIROCREW_POD_ENV_DIR",
-            "KIROCREW_POD_ARTIFACTS_DIR",
-            "KIROCREW_POD_WORKTREES_ROOT",
+            "AJCREW_POD_ROOT",
+            "AJCREW_POD_ENV_DIR",
+            "AJCREW_POD_ARTIFACTS_DIR",
+            "AJCREW_POD_WORKTREES_ROOT",
         ):
             assert key in out, f"{key} should be pinned once overridden"
             assert Path(out[key]).is_absolute(), f"{key}={out[key]!r} is not absolute"
@@ -308,10 +308,10 @@ class TestPathOverridesAreAnchoredNotCwdRelative:
         link.symlink_to(real, target_is_directory=True)
         monkeypatch.chdir(tmp_path)
 
-        monkeypatch.setenv("KIROCREW_POD_ROOT", "sub/../real-pods")
+        monkeypatch.setenv("AJCREW_POD_ROOT", "sub/../real-pods")
         assert PodConfig.load().pod_root == real
 
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(link))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(link))
         assert PodConfig.load().pod_root == link, "the symlink spelling must survive"
 
     def test_the_torn_down_tree_is_the_tree_the_pod_writes_grants_into(
@@ -319,15 +319,15 @@ class TestPathOverridesAreAnchoredNotCwdRelative:
     ) -> None:
         """The grant tree sits inside the home ``pod down`` reclaims.
 
-        ``KIROCREW_OS_HOME`` and ``cleanup_home`` both derive from ``cfg.pod_root``.
+        ``AJCREW_OS_HOME`` and ``cleanup_home`` both derive from ``cfg.pod_root``.
         Containment, not equality: the grant tree is nested one level inside the home.
         """
         monkeypatch.chdir(tmp_path)
-        monkeypatch.setenv("KIROCREW_POD_ROOT", self.RELATIVE)
+        monkeypatch.setenv("AJCREW_POD_ROOT", self.RELATIVE)
         cfg = PodConfig.load()
 
         env = rt.build_pod_env(cfg, cfg.home_dir("demo"), 7900, tmp_path / "checkout")
-        os_home = Path(env["KIROCREW_OS_HOME"])
+        os_home = Path(env["AJCREW_OS_HOME"])
         reclaimed = cfg.pod_root / "demo"
 
         assert os_home.is_absolute()
@@ -355,7 +355,7 @@ class TestPortDerivation:
             assert cfg.base_port + 1 <= rt.derive_port(cfg, name) <= cfg.base_port + 199
 
     def test_pinned_port_wins(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path))
         c = PodConfig.load()
         (tmp_path / "pinned.env").write_text("PORT='7999'\nSEED='/x'\n")
         assert rt.derive_port(c, "pinned") == 7999
@@ -371,8 +371,8 @@ class TestPortAllocation:
     """
 
     def _plane(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PodConfig:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         return PodConfig.load()
 
     def test_the_probe_detects_a_real_listener(self, tmp_path, monkeypatch) -> None:
@@ -1050,14 +1050,14 @@ class TestEnvFileAndPin:
     def test_write_merge_preserves_keys(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path))
         c = PodConfig.load()
         rt.write_env_file(c, "x", {"CHECKOUT": "/a", "PORT": "7999"})
         rt.write_env_file(c, "x", {"SEED": "/s"})  # merge, don't clobber
         assert rt.read_env_file(c, "x") == {"CHECKOUT": "/a", "PORT": "7999", "SEED": "/s"}
 
     def test_pin_checkout(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path))
         c = PodConfig.load()
         rt.pin_checkout(c, "x", Path("/abs/co"))
         assert rt.read_env_file(c, "x")["CHECKOUT"] == str(Path("/abs/co"))
@@ -1070,20 +1070,20 @@ class TestWorktreeResolution:
     def test_git_worktrees_parses_porcelain(self, monkeypatch: pytest.MonkeyPatch) -> None:
         out = (
             "worktree /repo/main\nHEAD aaa\nbranch refs/heads/main\n\n"
-            "worktree /repo/kirocrew-wt-foo\nHEAD bbb\nbranch refs/heads/feat/foo\n\n"
+            "worktree /repo/ajcrew-wt-foo\nHEAD bbb\nbranch refs/heads/feat/foo\n\n"
         )
         monkeypatch.setattr(rt.subprocess, "run", lambda *a, **k: _cp(stdout=out))
         wts = rt._git_worktrees(Path("/repo/main"))
         assert wts["main"] == Path("/repo/main")
-        assert wts["kirocrew-wt-foo"] == Path("/repo/kirocrew-wt-foo")
-        assert wts["feat/foo"] == Path("/repo/kirocrew-wt-foo")  # branch match
+        assert wts["ajcrew-wt-foo"] == Path("/repo/ajcrew-wt-foo")
+        assert wts["feat/foo"] == Path("/repo/ajcrew-wt-foo")  # branch match
 
     def test_git_worktrees_empty_on_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(rt.subprocess, "run", lambda *a, **k: _cp(returncode=128))
         assert rt._git_worktrees(Path("/nope")) == {}
 
     def test_resolve_prefers_pin(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
         c = PodConfig.load()
         co = tmp_path / "co"
         co.mkdir()
@@ -1095,7 +1095,7 @@ class TestWorktreeResolution:
     def test_resolve_via_git_basename_and_branch(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
         c = PodConfig.load()
         monkeypatch.setattr(
             rt, "_git_worktrees", lambda ref: {"foo": Path("/x/foo"), "feat/bar": Path("/x/bar")}
@@ -1104,15 +1104,15 @@ class TestWorktreeResolution:
         assert rt.resolve_checkout(c, "bar", cwd=tmp_path) == Path("/x/bar")  # feat/<name>
 
     def test_resolve_root_fallback(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
-        monkeypatch.setenv("KIROCREW_POD_WORKTREES_ROOT", str(tmp_path / "wts"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_WORKTREES_ROOT", str(tmp_path / "wts"))
         c = PodConfig.load()
         (tmp_path / "wts" / "demo").mkdir(parents=True)
         monkeypatch.setattr(rt, "_git_worktrees", lambda ref: {})
         assert rt.resolve_checkout(c, "demo", cwd=tmp_path) == tmp_path / "wts" / "demo"
 
     def test_resolve_raises_teaching(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
         c = PodConfig.load()
         monkeypatch.setattr(rt, "_git_worktrees", lambda ref: {})
         with pytest.raises(rt.PodError, match="git worktree add"):
@@ -1121,7 +1121,7 @@ class TestWorktreeResolution:
     def test_stale_pin_falls_through_to_git(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
         c = PodConfig.load()
         rt.pin_checkout(c, "demo", tmp_path / "gone")  # pinned dir is absent
         (tmp_path / "real").mkdir()
@@ -1144,7 +1144,7 @@ class TestUnitRendering:
         teardown hook there deleted the HOME under the pod's own surviving
         subprocesses — and fired on the stop half of a Restart=, restarting the pod
         onto a wiped home. Reclamation belongs to `pod down` (runtime.stop_pod)."""
-        monkeypatch.setenv("KIROCREW_POD_ROOT", "/tmp/podtest-root")
+        monkeypatch.setenv("AJCREW_POD_ROOT", "/tmp/podtest-root")
         txt = unit_mod.render_unit(PodConfig.load())
         directives = [
             ln.split("=", 1)[0]
@@ -1159,27 +1159,27 @@ class TestUnitRendering:
         assert "Restart=on-failure" in txt
 
     def test_env_block_pins_nondefaults(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", "/tmp/hermetic-pods")
-        monkeypatch.setenv("KIROCREW_POD_REPO", "/tmp/some-repo")
+        monkeypatch.setenv("AJCREW_POD_ROOT", "/tmp/hermetic-pods")
+        monkeypatch.setenv("AJCREW_POD_REPO", "/tmp/some-repo")
         txt = unit_mod.render_unit(PodConfig.load())
         # Same reason as TestConfig's canonical comparison: the unit pins the
         # ANCHORED value, which on Windows carries the current drive.
         root = _canonical_override("/tmp/hermetic-pods")
         repo = _canonical_override("/tmp/some-repo")
-        assert f'Environment="KIROCREW_POD_ROOT={root}"' in txt
-        assert f'Environment="KIROCREW_POD_REPO={repo}"' in txt
+        assert f'Environment="AJCREW_POD_ROOT={root}"' in txt
+        assert f'Environment="AJCREW_POD_REPO={repo}"' in txt
 
     def test_env_block_quotes_spaces(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", "/tmp/pod root")
+        monkeypatch.setenv("AJCREW_POD_ROOT", "/tmp/pod root")
         cfg = PodConfig.load()
         txt = unit_mod.render_unit(cfg)
-        root_line = next(line for line in txt.splitlines() if "KIROCREW_POD_ROOT=" in line)
+        root_line = next(line for line in txt.splitlines() if "AJCREW_POD_ROOT=" in line)
         assert root_line.startswith('Environment="')
         assert "pod root" in root_line
 
     def test_unit_path_uses_prefix(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_UNIT_PREFIX", "kirocrew-podtest")
-        assert unit_mod.unit_path(PodConfig.load()).name == "kirocrew-podtest@.service"
+        monkeypatch.setenv("AJCREW_POD_UNIT_PREFIX", "ajcrew-podtest")
+        assert unit_mod.unit_path(PodConfig.load()).name == "ajcrew-podtest@.service"
 
     @requires_posix_pod_lifecycle
     def test_install_unit_refuses_a_symlinked_template(
@@ -1201,13 +1201,13 @@ class TestBootGuardrails:
     def test_refuses_no_pinned_checkout(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         assert rt.boot(PodConfig.load(), "nope") == 3
 
     def test_refuses_missing_venv(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         c = PodConfig.load()
         co = tmp_path / "co"
         co.mkdir()
@@ -1215,8 +1215,8 @@ class TestBootGuardrails:
         assert rt.boot(c, "x") == 3
 
     def test_refuses_live_port(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         c = PodConfig.load()
         co = _ready_worktree(tmp_path, "x")
         rt.pin_checkout(c, "x", co)

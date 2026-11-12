@@ -8,8 +8,8 @@ from typing import Any
 import aiohttp
 import pytest
 
-from kiro_crew.webex import client as webex_client
-from kiro_crew.webex.client import WebexClient
+from aj_crew.webex import client as webex_client
+from aj_crew.webex.client import WebexClient
 
 
 def _client(**kw: Any) -> WebexClient:

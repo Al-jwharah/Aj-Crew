@@ -3,7 +3,7 @@
 The Playwright MCP proxy is gone: the ``browser_*`` tools, ``browse_outline`` /
 ``browse_search``, the managed ``playwright-mcp`` server entry and the Browser
 Mode toggle were all removed; browsing is the one ``browser`` MCP tool on the
-Browser Harness (``kiro_crew.browser_harness``) today. Prose and agent specs did
+Browser Harness (``aj_crew.browser_harness``) today. Prose and agent specs did
 not move with it, and a stale reference here
 fails in the one way nothing else catches: the agent is *told* to call a tool
 that does not exist, so it either does nothing or relays a remedy pointing at
@@ -20,7 +20,7 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / "src" / "kiro_crew"
+SRC = ROOT / "src" / "aj_crew"
 
 # Names the migration deleted. ``browser_[a-z]`` covers the whole 22-tool
 # surface (browser_navigate, browser_snapshot, browser_take_screenshot, ...)
@@ -75,7 +75,7 @@ def test_pattern_catches_the_references_this_change_removed() -> None:
     assert REMOVED.search('    "@playwright-mcp",')
     assert REMOVED.search("use browse_outline to compress the snapshot")
     # ...and not on our own package, or the one tool that replaced them.
-    assert not REMOVED.search("from kiro_crew.browser_harness import ops")
+    assert not REMOVED.search("from aj_crew.browser_harness import ops")
     assert not REMOVED.search("the `browser` tool's navigate op")
 
 
@@ -89,11 +89,11 @@ def test_every_spelled_out_op_list_is_the_tools_own() -> None:
     The prompt's list once stopped at ``tabs``, and an agent refused to call
     ``ask`` because of it, while the tool's own schema offered it.
     """
-    from kiro_crew.browser_harness.ops import OPS
+    from aj_crew.browser_harness.ops import OPS
 
     seen = 0
     for path in _agent_facing_files():
         for match in _OP_LIST.finditer(path.read_text(encoding="utf-8")):
             seen += 1
             assert tuple(match.group(1).split("|")) == OPS, path.relative_to(ROOT)
-    assert seen >= 2, "the prompt and the kirocrew-commands skill both spell the list"
+    assert seen >= 2, "the prompt and the ajcrew-commands skill both spell the list"

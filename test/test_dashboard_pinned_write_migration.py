@@ -18,11 +18,11 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.dashboard.handlers.files as files_mod
-import kiro_crew.dashboard.handlers.prompts as prompts_mod
-import kiro_crew.dashboard.handlers.steering as steering_mod
-from kiro_crew.dashboard.handlers.files import _file_write_blocking
-from kiro_crew.dashboard.handlers.steering import (
+import aj_crew.dashboard.handlers.files as files_mod
+import aj_crew.dashboard.handlers.prompts as prompts_mod
+import aj_crew.dashboard.handlers.steering as steering_mod
+from aj_crew.dashboard.handlers.files import _file_write_blocking
+from aj_crew.dashboard.handlers.steering import (
     _create_file_blocking,
     _delete_file_blocking,
     _update_file_blocking,

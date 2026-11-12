@@ -1,7 +1,7 @@
 """The ``work-kanban`` built-in, checked against a fold value a pod really served.
 
 The template declares ``{"fold": ..., "path": ...}`` per field and the host resolves
-each one at run time. :mod:`kiro_crew.dashboard_templates.manifest` validates a path's
+each one at run time. :mod:`aj_crew.dashboard_templates.manifest` validates a path's
 SPELLING, never its target, so a plausible path that resolves to nothing would ship and
 render a blank cell on every conductor's dashboard with every gate green. These cases
 resolve all of them against ``test/fixtures/dashboard_templates/pod_folds.json`` -- the
@@ -13,7 +13,7 @@ fold field: they are DERIVED from an item's ``state`` together with its worker's
 worker reported ``done`` and which nothing has ruled on yet -- is named by neither
 field alone. A state the product adds and this page has no column for would land in
 "in progress" and read as work still moving, so the vocabulary is pinned against
-:mod:`kiro_crew.work_vocab` rather than against this page's own list.
+:mod:`aj_crew.work_vocab` rather than against this page's own list.
 """
 
 from __future__ import annotations
@@ -25,8 +25,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.dashboard_templates.manifest import MAX_FIELDS, ManifestError, load_template
-from kiro_crew.work_vocab import (
+from aj_crew.dashboard_templates.manifest import MAX_FIELDS, ManifestError, load_template
+from aj_crew.work_vocab import (
     WORK_FOLD_NAME,
     WORK_ITEM_STATES,
     WORK_STORED_ITEM_LIMIT,
@@ -36,7 +36,7 @@ from kiro_crew.work_vocab import (
 
 TEMPLATE_ID = "work-kanban"
 ROOT = Path(__file__).resolve().parents[1]
-DIRECTORY = ROOT / "src/kiro_crew/dashboard_templates/builtin" / TEMPLATE_ID
+DIRECTORY = ROOT / "src/aj_crew/dashboard_templates/builtin" / TEMPLATE_ID
 FIXTURES = ROOT / "test/fixtures/dashboard_templates"
 POD = FIXTURES / "pod_folds.json"
 SAMPLE = FIXTURES / f"sample_{TEMPLATE_ID}.json"
@@ -226,7 +226,7 @@ class TestThePageDrawsItself:
     def test_it_reads_the_hosts_own_field_bag(self, script: str) -> None:
         """The bound elements are filled by the host whether or not any script runs, so
         a page could pass parity while its charts drew from nothing."""
-        assert "window.kirocrew" in script
+        assert "window.ajcrew" in script
 
     def test_it_draws_its_charts_as_inline_svg(self, script: str) -> None:
         """The strip and the per-round bars are the page's own SVG. A chart built from
@@ -238,7 +238,7 @@ class TestThePageDrawsItself:
     def test_it_rerenders_when_the_host_refills(self, script: str) -> None:
         """The order of the host's first fill against this script is not the page's to
         assume, so it renders on load and again on every push."""
-        assert "addEventListener('kirocrew-dashboard'" in script.replace('"', "'")
+        assert "addEventListener('ajcrew-dashboard'" in script.replace('"', "'")
 
 
 class TestTheColumnVocabulary:

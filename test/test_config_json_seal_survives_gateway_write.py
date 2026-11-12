@@ -25,10 +25,10 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import CoveringLibc, identity, launch, payload, refusal
 
-from kiro_crew import sandbox_launcher_program
-from kiro_crew.config import loader_document
-from kiro_crew.config import write_provenance as wp
-from kiro_crew.sandbox_aliases import _referent_identity
+from aj_crew import sandbox_launcher_program
+from aj_crew.config import loader_document
+from aj_crew.config import write_provenance as wp
+from aj_crew.sandbox_aliases import _referent_identity
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="POSIX launcher only")
 
@@ -37,7 +37,7 @@ pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="POSIX launcher 
 def _home(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[Path]:
     home = tmp_path / "crew"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     published: dict = {}
     monkeypatch.setattr(wp, "_PUBLISHED", published)
     (home / "config.json").write_text(json.dumps({"agent": {}}), encoding="utf-8")
@@ -158,7 +158,7 @@ def test_a_file_swapped_in_right_after_the_publish_is_not_vouched_for(
     """
     sealed = _home / "config.json"
     carried = _as_the_pass_records_it(sealed)
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     real_write = loader.atomic_write
     swapped: list[Path] = []
@@ -375,7 +375,7 @@ def test_the_rendered_launcher_carries_the_record_descriptor(_home: Path) -> Non
     """The plan hands the launcher the record, this process's nonce and the vouched names."""
     from test_sandbox_launcher_program import rendered_payload
 
-    from kiro_crew.sandbox import _build_launcher_script
+    from aj_crew.sandbox import _build_launcher_script
 
     script = _build_launcher_script("standard", published_file_record=wp.launcher_record())
     record = rendered_payload(script)["published_file_record"]
@@ -390,10 +390,10 @@ def test_a_real_spawn_plan_carries_the_record_and_the_config_identity(
     """``namespace_argv`` records ``config.json`` and hands the launcher the record with it."""
     from test_sandbox_launcher_program import rendered_payload
 
-    from kiro_crew import sandbox_argv
+    from aj_crew import sandbox_argv
 
     monkeypatch.setattr(sandbox_argv, "_resolve_agent_executable", lambda executable: executable)
-    monkeypatch.setattr("kiro_crew.sandbox._ssh_supports_accept_new", lambda: True)
+    monkeypatch.setattr("aj_crew.sandbox._ssh_supports_accept_new", lambda: True)
     argv = sandbox_argv.namespace_argv(["/bin/true"], "standard")
     script = next(arg for arg in argv if arg.endswith(".py"))
     try:

@@ -12,7 +12,7 @@ import { setConfigPathValue, useOptimisticConfigPaths } from './useOptimisticCon
 /** The config path this card's switch writes, joined as `previewFlagConfigPath` does. */
 const configPath = ['work_ledger', 'remote_dispatch'].join('.')
 
-type KirocrewCfg = { work_ledger?: { remote_dispatch?: boolean } }
+type AjcrewCfg = { work_ledger?: { remote_dispatch?: boolean } }
 
 /**
  * Settings > Developer > Feature Previews: conductor remote dispatch
@@ -27,18 +27,18 @@ type KirocrewCfg = { work_ledger?: { remote_dispatch?: boolean } }
  */
 export function RemoteDispatchCard() {
   const qc = useQueryClient()
-  const cfgQ = useQuery<KirocrewCfg>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig() as Promise<KirocrewCfg>,
+  const cfgQ = useQuery<AjcrewCfg>({
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig() as Promise<AjcrewCfg>,
   })
   const overlay = useOptimisticConfigPaths(qc)
   const [saveError, setSaveError] = useState<string | null>(null)
   const toggleMut = useMutation(overlay.mutationOpts<boolean>({
-    queryKey: ['kirocrewConfig'],
+    queryKey: ['ajcrewConfig'],
     mutationFn: (value: boolean) => api.patchConfig(configPath, value),
     path: () => configPath,
     displayValue: v => v,
-    applyToCache: (cached, value) => setConfigPathValue(cached as KirocrewCfg, configPath, value),
+    applyToCache: (cached, value) => setConfigPathValue(cached as AjcrewCfg, configPath, value),
     onFailure: () => setSaveError(i18nT('pages.developer.featurePreviewsTab.remote_dispatch_save_failed')),
     onSupersede: () => setSaveError(null),
   }))

@@ -36,7 +36,7 @@ import { fmtList } from '../i18n/format'
 // for the decode, and a bare import of the icon binds that identifier at
 // module scope — the constructor would then build a React component and every
 // picture upload would throw.
-import { Coffee, Crown, Dices, Eye, Ghost, Heart, Image as ImageIcon, ImageUp, LayoutGrid, LibraryBig, Meh, Palette, Play, Smile, Sparkles } from 'lucide-react'
+import { Coffee, Crown, Dices, Eye, Gem, Heart, Image as ImageIcon, ImageUp, LayoutGrid, LibraryBig, Meh, Palette, Play, Smile, Sparkles } from 'lucide-react'
 import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog'
 import { Btn, Toggle } from './ui'
 import SegmentedControl from './SegmentedControl'
@@ -45,7 +45,7 @@ import { useIsMobile } from '../hooks/useIsMobile'
 import {
   ACCESSORIES,
   BROWS,
-  BRAND_PURPLE,
+  BRAND_TILE,
   EYES,
   MOTION_NAMES,
   MOTION_STATES,
@@ -195,8 +195,8 @@ const OPT_LABEL_KEYS: Record<string, string> = {
   term: 'components.avatarBuilder.opt_term',
 }
 
-/** Every pickable tile, brand purple first — the "no hue" spelling. */
-const TILE_OPTIONS = [BRAND_PURPLE, ...TILES]
+/** Every pickable tile, brand graphite first — the "no hue" spelling. */
+const TILE_OPTIONS = [BRAND_TILE, ...TILES]
 
 /**
  * Human color names for the tile swatches, keyed by hex. Screen readers get
@@ -207,7 +207,7 @@ const TILE_OPTIONS = [BRAND_PURPLE, ...TILES]
  * gate will not fire because every listed key ships in the catalog.
  */
 const TILE_LABEL_KEYS: Record<string, string> = {
-  '#9046ff': 'components.avatarBuilder.tile_purple',
+  '#30343c': 'components.avatarBuilder.tile_graphite',
   '#de2121': 'components.avatarBuilder.tile_red',
   '#21de21': 'components.avatarBuilder.tile_green',
   '#21a5de': 'components.avatarBuilder.tile_sky',
@@ -292,7 +292,7 @@ async function cropToSquareDataUri(file: File): Promise<string> {
       // `i` is an HTMLImageElement (decode-only, cannot execute script) and
       // `url` is a same-origin blob: URL minted two lines up from the user's
       // own file pick — no externally controlled input reaches the sink.
-      // nosemgrep: semgrep.kirocrew.frontend-external-script-inject
+      // nosemgrep: semgrep.ajcrew.frontend-external-script-inject
       i.src = url
     })
     const side = Math.min(img.naturalWidth, img.naturalHeight)
@@ -888,7 +888,7 @@ export default function CrewAvatarBuilder({
                       {
                         key: 'face',
                         label: t('components.avatarBuilder.mode_face'),
-                        icon: <Ghost size={13} aria-hidden="true" />,
+                        icon: <Gem size={13} aria-hidden="true" />,
                       },
                     ]
                   : []),

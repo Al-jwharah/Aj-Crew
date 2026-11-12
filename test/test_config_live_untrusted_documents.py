@@ -19,9 +19,9 @@ from config_live_helpers import (  # noqa: F401 -- fixtures are used by name
     cfg_file_fixture,
 )
 
-from kiro_crew.config import live
-from kiro_crew.config.live import ConfigChange, ConfigWatch
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config import live
+from aj_crew.config.live import ConfigChange, ConfigWatch
+from aj_crew.config.loader import AjCrewConfig
 
 # ── a document the loader cannot trust ────────────────────────────────────
 
@@ -32,18 +32,18 @@ class TestCurrentPointOfUseRead:
     once instead of nine times."""
 
     def test_prefers_the_armed_snapshot_over_a_disk_load(self, cfg_file: Path) -> None:
-        primed = KiroCrewConfig.load()
+        primed = AjCrewConfig.load()
         live.watch().prime(primed)
         cfg_file.write_text(
             json.dumps({"agent": {"model": "a-different-model-on-disk"}}), encoding="utf-8"
         )
-        boot_copy = KiroCrewConfig.load()
+        boot_copy = AjCrewConfig.load()
         assert live.current(boot_copy, log_prefix="test") is primed
 
     def test_falls_back_to_disk_when_unarmed(self, cfg_file: Path) -> None:
         assert live.snapshot() is None  # unstarted process watcher (fixture reset)
         cfg_file.write_text(json.dumps({"agent": {"model": "on-disk-model"}}), encoding="utf-8")
-        boot_copy = KiroCrewConfig.load()
+        boot_copy = AjCrewConfig.load()
         result = live.current(boot_copy, log_prefix="test")
         assert result is not boot_copy
         assert result.agent.model == "on-disk-model"
@@ -53,11 +53,11 @@ class TestCurrentPointOfUseRead:
     ) -> None:
         assert live.snapshot() is None
 
-        def _boom() -> KiroCrewConfig:
+        def _boom() -> AjCrewConfig:
             raise OSError("disk is gone")
 
-        monkeypatch.setattr(KiroCrewConfig, "load", staticmethod(_boom))
-        boot_copy = object.__new__(KiroCrewConfig)  # a sentinel; identity is all this asserts
+        monkeypatch.setattr(AjCrewConfig, "load", staticmethod(_boom))
+        boot_copy = object.__new__(AjCrewConfig)  # a sentinel; identity is all this asserts
         assert live.current(boot_copy, log_prefix="test") is boot_copy
 
 
@@ -70,7 +70,7 @@ class TestApplierTimeout:
     ) -> None:
         monkeypatch.setattr(live, "APPLIER_TIMEOUT_SECS", 0.05)
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
 
         release = asyncio.Event()
 
@@ -89,7 +89,7 @@ class TestApplierTimeout:
     @pytest.mark.asyncio
     async def test_a_prompt_async_applier_is_unaffected(self, cfg_file: Path) -> None:
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         adopted: list[str] = []
 
         async def _quick(change: ConfigChange) -> None:
@@ -121,7 +121,7 @@ class TestApplierTimeout:
     @pytest.mark.asyncio
     async def test_a_torn_config_degrades_rather_than_raising(self, cfg_file: Path) -> None:
         w = ConfigWatch()
-        good = KiroCrewConfig.load()
+        good = AjCrewConfig.load()
         w.prime(good)
         cfg_file.write_text("{not json at all", encoding="utf-8")
         assert await w.refresh_now() is None, "the values in force stay; nothing diffs"
@@ -138,7 +138,7 @@ class TestApplierTimeout:
         force. The applier-level degraded guards stay as the backstop for a
         document the loader flags without the file being torn."""
         w = ConfigWatch()
-        good = KiroCrewConfig.load()
+        good = AjCrewConfig.load()
         w.prime(good)
         seen: list[str] = []
         w.subscribe(callback=lambda c: seen.append(c.new.agent.model), name="any")
@@ -164,7 +164,7 @@ class TestApplierTimeout:
 
         _write(cfg_file, {"wecom": {"allow_all_users": True}})
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         adopted: list[Any] = []
 
         def _fail_closed(c: ConfigChange) -> None:
@@ -175,8 +175,8 @@ class TestApplierTimeout:
         w.subscribe("wecom", callback=_fail_closed, name="wecom-fail-closed")
         # The loader's answer to a torn section: DEFAULTS (allow_all_users False,
         # a revocation the roster must eventually honour) plus the mark.
-        degraded = replace(KiroCrewConfig(), _degraded_sections=frozenset({"wecom"}))
-        repaired = KiroCrewConfig()  # byte-identical document, clean read
+        degraded = replace(AjCrewConfig(), _degraded_sections=frozenset({"wecom"}))
+        repaired = AjCrewConfig()  # byte-identical document, clean read
         assert degraded.to_dict() == repaired.to_dict()
         with patch.object(
             ConfigWatch, "_load", side_effect=[degraded, degraded, repaired, repaired]
@@ -206,13 +206,13 @@ class TestApplierTimeout:
     ) -> None:
         _write(cfg_file, {"wecom": {"allow_all_users": True}})
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
 
         def _refuse(c: ConfigChange) -> None:
             raise live.ConfigDeferred(c.changed)
 
         w.subscribe("wecom", callback=_refuse, name="refuser")
-        with caplog.at_level("DEBUG", logger="kiro_crew.config.live"):
+        with caplog.at_level("DEBUG", logger="aj_crew.config.live"):
             _write(cfg_file, {"edit": 1})
             await w.refresh_now()
             _write(cfg_file, {"edit": 2})
@@ -225,7 +225,7 @@ class TestApplierTimeout:
         self, cfg_file: Path
     ) -> None:
         w = ConfigWatch()
-        w.prime(KiroCrewConfig.load())
+        w.prime(AjCrewConfig.load())
         before = w.snapshot()
         fired: list[str] = []
         w.subscribe(callback=lambda c: fired.append("ran"), name="any")
@@ -239,7 +239,7 @@ class TestApplierTimeout:
         """A fail-closed applier needs the degrade IN the change it is handed."""
         from dataclasses import replace
 
-        cfg = replace(KiroCrewConfig(), _degraded_sections=frozenset({"wecom"}))
+        cfg = replace(AjCrewConfig(), _degraded_sections=frozenset({"wecom"}))
         change = ConfigChange(old=None, new=cfg, changed=frozenset({"wecom.allowed_users"}))
         assert "wecom" in change.new.degraded_sections
 
@@ -253,6 +253,6 @@ class TestApplierTimeout:
         _fail_closed(change)
         assert applied == []
         _fail_closed(
-            ConfigChange(old=None, new=KiroCrewConfig(), changed=frozenset({"wecom.allowed_users"}))
+            ConfigChange(old=None, new=AjCrewConfig(), changed=frozenset({"wecom.allowed_users"}))
         )
         assert applied == ["adopted"]

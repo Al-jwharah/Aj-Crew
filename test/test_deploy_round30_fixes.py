@@ -13,13 +13,13 @@ from pathlib import Path
 import yaml
 
 REPO = Path(__file__).resolve().parents[1]
-TEMPLATES = REPO / "src" / "kiro_crew" / "deploy" / "skills" / "artifact-deploy" / "templates"
-HANDLERS = REPO / "src" / "kiro_crew" / "deploy" / "handlers_content.py"
+TEMPLATES = REPO / "src" / "aj_crew" / "deploy" / "skills" / "artifact-deploy" / "templates"
+HANDLERS = REPO / "src" / "aj_crew" / "deploy" / "handlers_content.py"
 
 
 class TestF1NolinkRead:
     def test_helper_rejects_hardlinked_inode(self, tmp_path, monkeypatch):
-        from kiro_crew.hooks import safe_read_file_bytes_nolink
+        from aj_crew.hooks import safe_read_file_bytes_nolink
         target = tmp_path / "secret.txt"
         target.write_text("data")
         link = tmp_path / "link.txt"
@@ -28,7 +28,7 @@ class TestF1NolinkRead:
         assert safe_read_file_bytes_nolink(str(target)) is None
 
     def test_helper_reads_regular_file(self, tmp_path):
-        from kiro_crew.hooks import safe_read_file_bytes_nolink
+        from aj_crew.hooks import safe_read_file_bytes_nolink
         f = tmp_path / "ok.txt"
         f.write_text("hello")
         assert safe_read_file_bytes_nolink(str(f)) == b"hello"
@@ -48,8 +48,8 @@ class TestF1NolinkRead:
         # traceback instead of a refusal.
         import errno
 
-        from kiro_crew import platform_compat
-        from kiro_crew.hooks import safe_read_file_bytes_nolink
+        from aj_crew import platform_compat
+        from aj_crew.hooks import safe_read_file_bytes_nolink
         target = tmp_path / "real.txt"
         target.write_text("x")
         canonical = os.path.realpath(target)

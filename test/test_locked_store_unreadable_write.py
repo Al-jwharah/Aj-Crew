@@ -20,8 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import feature_videos as fv
-from kiro_crew.deploy import pending
+from aj_crew import feature_videos as fv
+from aj_crew.deploy import pending
 
 BOM = b"\xef\xbb\xbf"
 _UNREADABLE = [

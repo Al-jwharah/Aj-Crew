@@ -2,7 +2,7 @@
 
 The start's check is not enough: a policy refresh or a profile edit can withdraw
 ``capabilities.kiro_cloud_sessions``, or govern a new scope, while the chat runs,
-and a cloud session's tools run in Kiro's cloud outside every gate Kiro Crew
+and a cloud session's tools run in Kiro's cloud outside every gate Aj Crew
 enforces. So each turn on a cloud runtime re-runs the start's check; a refusal
 stops the cloud runtime without deleting the sandbox and refuses the turn. Runs
 against the KAS stub of ``test_kiro_cloud_session``.
@@ -24,9 +24,9 @@ from test_kiro_cloud_session import (  # noqa: F401 -- fixtures, used by name
     stub,
 )
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.acp.harness.kas_cloud import KasCloudSandboxHarness
-from kiro_crew.acp.types import ACP_BACKEND_KAS
+from aj_crew.acp.client import AcpError
+from aj_crew.acp.harness.kas_cloud import KasCloudSandboxHarness
+from aj_crew.acp.types import ACP_BACKEND_KAS
 
 
 async def _turn(provider) -> None:
@@ -35,12 +35,12 @@ async def _turn(provider) -> None:
 
 
 async def _cloud_chat(handlers, key):  # noqa: F811
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.providers import acp
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.providers import acp
 
     handlers._choices().set(key, "cloud", sl.KIRO_CLOUD_PROVIDER_ID)
     provider = acp.AcpProvider(
-        agent="kirocrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
+        agent="ajcrew", session_key=key, acp_backend=ACP_BACKEND_KAS, sandbox_mode="off"
     )
     await provider._start_kiro_runtime_impl({}, {})
     return provider
@@ -50,7 +50,7 @@ async def _cloud_chat(handlers, key):  # noqa: F811
 async def test_a_narrowed_ceiling_refuses_the_next_cloud_turn_and_deletes_nothing(
     handlers, stub, crew_agent, monkeypatch  # noqa: F811
 ):
-    from kiro_crew.session_environment import forget_remote_workspace
+    from aj_crew.session_environment import forget_remote_workspace
 
     key = "dashboard:cloud-narrowed"
     _governed(monkeypatch, None)
@@ -81,8 +81,8 @@ async def test_a_narrowed_ceiling_refuses_the_next_cloud_turn_and_deletes_nothin
 async def test_a_cloud_chat_the_ceiling_still_allows_keeps_working(
     handlers, stub, crew_agent, monkeypatch  # noqa: F811
 ):
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.session_environment import forget_remote_workspace
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.session_environment import forget_remote_workspace
 
     key = "dashboard:cloud-allowed"
     allowed = {**_DENY_NC, "capabilities": {"kiro_cloud_sessions": {"enabled": True}}}
@@ -105,7 +105,7 @@ async def test_a_cloud_chat_the_ceiling_still_allows_keeps_working(
         # Each turn was judged as the start was: same session, agent and app.
         assert len(checked) == start_checks + 2
         assert {(args, tuple(sorted(kw.items()))) for args, kw in checked[start_checks:]} == {
-            ((key,), (("agent", "kirocrew"), ("app", "")))
+            ((key,), (("agent", "ajcrew"), ("app", "")))
         }
     finally:
         await provider.shutdown()
@@ -118,10 +118,10 @@ async def test_a_local_turn_is_never_checked_for_kiro_cloud(monkeypatch, tmp_pat
     no governance call at all, under a ceiling that would refuse a cloud chat."""
     from types import SimpleNamespace
 
-    from kiro_crew.acp.runtime import AcpRuntime
-    from kiro_crew.acp.session_provider import AcpSessionProvider
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.providers import acp
+    from aj_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.providers import acp
 
     def no_check(*_a, **_k):
         raise AssertionError("a session that is not a cloud sandbox is not re-checked")
@@ -130,7 +130,7 @@ async def test_a_local_turn_is_never_checked_for_kiro_cloud(monkeypatch, tmp_pat
     _governed(monkeypatch, _ceiling(**_DENY_NC))
     runtime = AcpRuntime(work_dir=tmp_path, acp_backend=ACP_BACKEND_KAS)
     assert runtime.is_cloud_sandbox is False
-    provider = acp.AcpProvider(agent="kirocrew", acp_backend=ACP_BACKEND_KAS)
+    provider = acp.AcpProvider(agent="ajcrew", acp_backend=ACP_BACKEND_KAS)
     provider._client = AcpSessionProvider(SimpleNamespace(session_id="local-1"), runtime)  # type: ignore[arg-type]
     assert getattr(provider, "_cloud_governance_scope", None) is None
     await provider._ready_confirmed_session()
@@ -142,9 +142,9 @@ async def test_a_remote_workspace_runtime_is_never_checked_for_kiro_cloud(monkey
     sandbox: even a stray scope on its provider must not refuse its turns."""
     from types import SimpleNamespace
 
-    from kiro_crew.acp.session_provider import AcpSessionProvider
-    from kiro_crew.coder import session_launch as sl
-    from kiro_crew.providers import acp, acp_turns
+    from aj_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.coder import session_launch as sl
+    from aj_crew.providers import acp, acp_turns
 
     def no_check(*_a, **_k):
         raise AssertionError("a remote workspace runtime is not re-checked for Kiro Cloud")
@@ -152,6 +152,6 @@ async def test_a_remote_workspace_runtime_is_never_checked_for_kiro_cloud(monkey
     monkeypatch.setattr(sl, "kiro_cloud_governance_refusal", no_check)
     runtime = SimpleNamespace(is_cloud_sandbox=False)
     handle = SimpleNamespace(session_id="coder-1")
-    provider = acp.AcpProvider(agent="kirocrew", acp_backend=ACP_BACKEND_KAS)
+    provider = acp.AcpProvider(agent="ajcrew", acp_backend=ACP_BACKEND_KAS)
     provider._client = AcpSessionProvider(handle, runtime)  # type: ignore[arg-type]
-    await acp_turns._readmit_cloud_session(provider, ("dashboard:coder", "kirocrew", ""))
+    await acp_turns._readmit_cloud_session(provider, ("dashboard:coder", "ajcrew", ""))

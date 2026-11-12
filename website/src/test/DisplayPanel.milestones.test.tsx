@@ -10,9 +10,9 @@ import { PREVIEW_EXPLORE, setPreviewFlag } from '../utils/previewFlags'
  * write; default ON.
  */
 
-const { patchConfigMock, kirocrewConfigMock } = vi.hoisted(() => ({
+const { patchConfigMock, ajcrewConfigMock } = vi.hoisted(() => ({
   patchConfigMock: vi.fn((_path: string, _value: unknown) => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(() => Promise.resolve({})),
+  ajcrewConfigMock: vi.fn(() => Promise.resolve({})),
 }))
 
 vi.mock('../api/client', () => {
@@ -28,7 +28,7 @@ vi.mock('../api/client', () => {
   }
   return {
     api: {
-      kirocrewConfig: kirocrewConfigMock,
+      ajcrewConfig: ajcrewConfigMock,
       patchConfig: patchConfigMock,
       installTheme: vi.fn(() => Promise.resolve({ ok: true })),
     },
@@ -104,24 +104,24 @@ describe('DisplayPanel → View Explore toggle', () => {
   afterEach(() => { setPreviewFlag(PREVIEW_EXPLORE, false) })
 
   it('hides the toggle on a gateway whose config has no milestones key', async () => {
-    kirocrewConfigMock.mockImplementation(() => Promise.resolve({ dashboard: { show_unread_dot: true } }))
+    ajcrewConfigMock.mockImplementation(() => Promise.resolve({ dashboard: { show_unread_dot: true } }))
     renderWithProviders(<DisplayPanel />, { route: ROUTE })
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalled())
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalled())
     await screen.findByRole('switch', { name: 'Translucent panels' })
     expect(main()).toBeNull()
   })
 
   it('hides the toggle while the Explore preview is off', async () => {
     setPreviewFlag(PREVIEW_EXPLORE, false)
-    kirocrewConfigMock.mockImplementation(() => Promise.resolve({ dashboard: { milestones_enabled: true } }))
+    ajcrewConfigMock.mockImplementation(() => Promise.resolve({ dashboard: { milestones_enabled: true } }))
     renderWithProviders(<DisplayPanel />, { route: ROUTE })
-    await waitFor(() => expect(kirocrewConfigMock).toHaveBeenCalled())
+    await waitFor(() => expect(ajcrewConfigMock).toHaveBeenCalled())
     await screen.findByRole('switch', { name: 'Translucent panels' })
     expect(main()).toBeNull()
   })
 
   it('shows it, reads it, and PATCHes the switch', async () => {
-    kirocrewConfigMock.mockImplementation(() => Promise.resolve({ dashboard: { milestones_enabled: true } }))
+    ajcrewConfigMock.mockImplementation(() => Promise.resolve({ dashboard: { milestones_enabled: true } }))
     renderWithProviders(<DisplayPanel />, { route: ROUTE })
     await waitFor(() => expect(main()).toHaveAttribute('aria-checked', 'true'))
     await waitFor(() => expect(main()).not.toHaveAttribute('aria-disabled'))

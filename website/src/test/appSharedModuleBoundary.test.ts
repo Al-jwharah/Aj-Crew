@@ -8,7 +8,7 @@ import { vendorImportMap } from '../../scripts/lib/basePath.mjs'
 const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8')
 
 function uiExports(): string[] {
-  const file = ts.createSourceFile('index.ts', read('../kirocrew-ui/index.ts'), ts.ScriptTarget.Latest)
+  const file = ts.createSourceFile('index.ts', read('../ajcrew-ui/index.ts'), ts.ScriptTarget.Latest)
   return file.statements.flatMap(statement => {
     if (!ts.isExportDeclaration(statement) || statement.isTypeOnly
       || !statement.exportClause || !ts.isNamedExports(statement.exportClause)) return []
@@ -63,7 +63,7 @@ function loadStub(source: string, key: string, host: object): Record<string, unk
   const body = source.replace(/export const/g, 'const').replace(/export default/g, 'const __default =')
   const tail = /export default/.test(source) ? `${names.join(',')},default:__default` : names.join(',')
   return runInNewContext(`${body}\n;({${tail}})`, {
-    window: { __kirocrew_modules: { [key]: host } },
+    window: { __ajcrew_modules: { [key]: host } },
   })
 }
 
@@ -81,34 +81,34 @@ const REACT_STUBS = [
 
 describe('app shared-module boundaries', () => {
   it('exports exactly the UI barrel values, without phantom or missing components', () => {
-    const source = read('../../public/vendor/kirocrew-ui.mjs')
+    const source = read('../../public/vendor/ajcrew-ui.mjs')
     const names = uiExports()
     expect(names.length).toBeGreaterThan(10)
     expect(stubExports(source)).toEqual(names)
     const host = Object.fromEntries(names.map(name => [name, () => name]))
-    const exported = loadStub(source, '@kirocrew/ui', host)
+    const exported = loadStub(source, '@ajcrew/ui', host)
     for (const name of names) expect(exported[name]).toBe(host[name])
   })
 
   it('exports exactly the app SDK barrel values, so no name fails an app at link time', () => {
-    const source = read('../../public/vendor/kirocrew-app-sdk.mjs')
+    const source = read('../../public/vendor/ajcrew-app-sdk.mjs')
     const names = valueExports('../app-sdk/index.ts')
     expect(names).toContain('APP_SDK_LEVEL')
     expect(names).toContain('fmtCurrency')
     expect(stubExports(source)).toEqual(names)
     const host = Object.fromEntries(names.map(name => [name, () => name]))
-    const exported = loadStub(source, '@kirocrew/app-sdk', host)
+    const exported = loadStub(source, '@ajcrew/app-sdk', host)
     for (const name of names) expect(exported[name]).toBe(host[name])
   })
 
   it('maps the documented UI specifier and React Query to checked-in vendor stubs', () => {
     const { imports } = vendorImportMap('/')
     for (const [specifier, filename] of [
-      ['@kirocrew/app-sdk/ui', 'kirocrew-ui.mjs'],
+      ['@ajcrew/app-sdk/ui', 'ajcrew-ui.mjs'],
       ['@tanstack/react-query', 'tanstack-react-query.mjs'],
     ]) {
       expect(imports[specifier]).toBe(`/vendor/${filename}`)
-      expect(read(`../../public/vendor/${filename}`)).toContain('window.__kirocrew_modules')
+      expect(read(`../../public/vendor/${filename}`)).toContain('window.__ajcrew_modules')
     }
   })
 
@@ -146,6 +146,6 @@ describe('app shared-module boundaries', () => {
     const guide = read('../../../docs/app-kit/getting-started.md')
     const section = guide.split('## Shared UI Components')[1].split('\n## ')[0]
     expect([...section.matchAll(/`(\w+)`/g)].map(match => match[1]).sort()).toEqual(uiExports())
-    expect(read('../kirocrew-ui/index.ts')).toContain("from '@kirocrew/app-sdk/ui'")
+    expect(read('../ajcrew-ui/index.ts')).toContain("from '@ajcrew/app-sdk/ui'")
   })
 })

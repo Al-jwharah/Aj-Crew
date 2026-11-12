@@ -15,7 +15,7 @@ import pytest
 from design_tweak_backend_helpers import isolated_queue_fixture  # noqa: F401
 from design_tweak_backend_helpers import _JsonHandler
 
-from kiro_crew.apps.builtins.design_tweak.backend import request_state, server
+from aj_crew.apps.builtins.design_tweak.backend import request_state, server
 
 
 def _load(monkeypatch, tmp_path: Path, stored: object) -> dict:

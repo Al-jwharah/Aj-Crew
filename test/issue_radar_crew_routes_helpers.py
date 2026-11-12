@@ -22,11 +22,11 @@ from aiohttp.test_utils import make_mocked_request
 from dashboard_owner_helpers import NoConfiguredOwner
 from off_loop_helpers import off_loop
 
-from kiro_crew.apps.builtins.issue_radar.backend import crew_routes, crew_store, routes, store
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log_projection
-from kiro_crew.crew_log.schema import KIND_SESSION
-from kiro_crew.crew_log.store import CrewLog
+from aj_crew.apps.builtins.issue_radar.backend import crew_routes, crew_store, routes, store
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log_projection
+from aj_crew.crew_log.schema import KIND_SESSION
+from aj_crew.crew_log.store import CrewLog
 
 BASE = "/api/apps/issue-radar"
 OWNER, REPO = "kirodotdev", "KiroCrew"  # brand-ok: the repository name
@@ -177,7 +177,7 @@ class _CrewRouteCase(unittest.IsolatedAsyncioTestCase):
                 ],
             ),
             mock.patch.dict(
-                os.environ, {"KIROCREW_HOME": home.name, crew_log_emit.CREW_LOG_ENV: "1"}
+                os.environ, {"AJCREW_HOME": home.name, crew_log_emit.CREW_LOG_ENV: "1"}
             ),
         ):
             patcher.start()
@@ -243,7 +243,7 @@ class _CrewRouteCase(unittest.IsolatedAsyncioTestCase):
             KIND_SESSION,
             session_id,
             owner="owner",
-            agent="kirocrew",
+            agent="ajcrew",
             slot=crew_store.slot_key_for(crew["id"]),
         )
         self._units[crew["id"]] = session_id

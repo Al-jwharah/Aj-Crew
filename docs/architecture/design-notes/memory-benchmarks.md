@@ -1,12 +1,12 @@
 # Memory benchmarks (LongMemEval, LoCoMo)
 
-`kirocrew bench` measures the Kiro Crew memory layer against two published benchmarks.
-It exists to answer one question the existing `kirocrew eval` cannot: **did this
+`ajcrew bench` measures the Aj Crew memory layer against two published benchmarks.
+It exists to answer one question the existing `ajcrew eval` cannot: **did this
 change make the agent's memory better or worse?**
 
-## Why not extend `kirocrew eval`
+## Why not extend `ajcrew eval`
 
-`kirocrew eval` runs a handful of hand-written scenarios carrying substring
+`ajcrew eval` runs a handful of hand-written scenarios carrying substring
 assertions, in a single pass. Three properties make it unable to answer that question, and none of
 them are fixed by adding scenarios:
 
@@ -61,7 +61,7 @@ usefulness. `recall_any`, `recall_micro` and `ndcg` are reported alongside it.
 
 One deliberate divergence: upstream stems with nltk's `PorterStemmer`, which
 defaults to `NLTK_EXTENSIONS` (an irregular-form table, and words of length ≤ 2 left
-alone). nltk is not a Kiro Crew dependency, so the port uses `snowballstemmer`'s
+alone). nltk is not an Aj Crew dependency, so the port uses `snowballstemmer`'s
 original Porter algorithm, already a hard dependency. They agree on the large
 majority of English tokens but are not bit-identical, so a LoCoMo number from this
 harness can differ from a published one in the third decimal.
@@ -210,7 +210,7 @@ sdist.
 **What fails the job is the instrument breaking, not the score moving.** A corpus
 checksum mismatch, an embedder that will not load, or a crashed run all exit
 non-zero, because each one means the next measurement would be silently
-meaningless. `kirocrew bench` writes each of those `error:`, `refusing to run:`,
+meaningless. `ajcrew bench` writes each of those `error:`, `refusing to run:`,
 `not saved:` and usage lines to stderr, so a report redirected from stdout never
 holds them. A recall regression does not fail it — the run pushes a branch carrying
 the new numbers and the comparison, and a human decides whether to accept.
@@ -337,7 +337,7 @@ through the FTS5 keyword fallback.
 ### The embedder identity describes the live embedder
 
 It is read from the running embedder, not from the module constants.
-`KIROCREW_EMBED_MODEL_PATH` (and `memory.embed_model_path`) make Kiro Crew run a
+`AJCREW_EMBED_MODEL_PATH` (and `memory.embed_model_path`) make Aj Crew run a
 different model, and the vector width can be adopted from the model file itself.
 Since `compare_reports` refuses only when two identities **differ**, recording the
 bundled constants for a custom run would let two different vector spaces be
@@ -392,25 +392,25 @@ the second run onward).
 ## Usage
 
 ```bash
-kirocrew bench list                    # corpora, sizes, what is cached
-kirocrew bench fetch locomo10          # download + verify (2.8 MB)
+ajcrew bench list                    # corpora, sizes, what is cached
+ajcrew bench fetch locomo10          # download + verify (2.8 MB)
 
 # the deterministic ruler
-kirocrew bench retrieval locomo10
+ajcrew bench retrieval locomo10
 
 # isolate semantic ranking from the recency decay
-kirocrew bench retrieval locomo10 --timeline now
+ajcrew bench retrieval locomo10 --timeline now
 
 # relax near-duplicate rejection (byte-identical text is always dropped regardless)
-kirocrew bench retrieval locomo10 --no-dedup
+ajcrew bench retrieval locomo10 --no-dedup
 
 # smoke the harness on a host that cannot load the embedder
-kirocrew bench retrieval locomo10 --instances 1 --queries 25 --toy-embedder
+ajcrew bench retrieval locomo10 --instances 1 --queries 25 --toy-embedder
 
 # A/B two commits
-kirocrew bench retrieval locomo10 --stem before   # on main
-kirocrew bench retrieval locomo10 --stem after    # on the branch
-kirocrew bench compare bench_results/before.json bench_results/after.json
+ajcrew bench retrieval locomo10 --stem before   # on main
+ajcrew bench retrieval locomo10 --stem after    # on the branch
+ajcrew bench compare bench_results/before.json bench_results/after.json
 ```
 
 `compare` refuses to attribute a delta when the two runs disagree on corpus
@@ -421,11 +421,11 @@ stdlib cosine, or FTS5 keyword), so two hosts can rank the same corpus different
 
 ## The statistics layer
 
-`src/kiro_crew/eval/bench/stats.py` carries the paired-interleaved-median protocol for the noisy
+`src/aj_crew/eval/bench/stats.py` carries the paired-interleaved-median protocol for the noisy
 end-to-end half: warmups discarded, ≥2 reps, **median never mean**, arms measured
 alternating so host drift cancels in the paired delta, and a noise band from 2σ of
 the untouched baseline. The protocol is lifted from
-`src/kiro_crew/apps/builtins/auto_improvement/spine/measurer.py`, which already gets this right; its code is not
+`src/aj_crew/apps/builtins/auto_improvement/spine/measurer.py`, which already gets this right; its code is not
 reusable because it is shaped around a git worktree and a duration to be minimized.
 
 It refuses to attach a confidence band to the deterministic ruler, and refuses to

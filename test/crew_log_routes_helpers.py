@@ -2,7 +2,7 @@
 
 ``test_crew_log_routes.py`` and its ``_dispatch_fence``, ``_unit_door_audit`` and
 ``_listing_workspace`` siblings import these by name. Three are autouse, so each of
-those modules imports all three: ``_isolated_home`` (a per-test ``KIROCREW_HOME``),
+those modules imports all three: ``_isolated_home`` (a per-test ``AJCREW_HOME``),
 ``_is_owner`` (every call is the dashboard owner's unless a test says otherwise) and
 ``_fresh_dispatch_scan`` (the read side's per-unit caches cleared around each test).
 The rest are the session and unit names the suites share, builders for a unit's log
@@ -18,9 +18,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.dashboard.handlers import crew_log as routes
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.dashboard.handlers import crew_log as routes
 
 SESSION = "s-route"
 GATEWAY = "gateway"
@@ -28,7 +28,7 @@ GATEWAY = "gateway"
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     yield
 
 
@@ -36,7 +36,7 @@ def _isolated_home(tmp_path, _floor_monkeypatch):
 def _is_owner():
     """Every test here calls as the dashboard owner unless it says otherwise."""
     with patch(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         return_value=True,
     ):
         yield
@@ -46,7 +46,7 @@ def _log(unit_id: str = SESSION, slot: str = "dashboard:1") -> CrewLog:
     # The HEADER's slot, which is what the session tree keys its fold by. Separate
     # from the opening entry's own ``slot`` field, and the two are kept equal here
     # because the emitter writes them from the same value.
-    return CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="kirocrew", slot=slot)
+    return CrewLog.create(lg.KIND_SESSION, unit_id, owner="raymond", agent="ajcrew", slot=slot)
 
 
 def _opened(
@@ -62,7 +62,7 @@ def _opened(
     record_class: bool = True,
 ) -> None:
     data = {
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "slot": slot,
         "model": "opus",
         "cwd": "/w",
@@ -194,7 +194,7 @@ OWNER_KEY = "dashboard:chat-owner"
 def _internal_request(
     path: str,
     *,
-    caller: str = "kirocrew-crew-log",
+    caller: str = "ajcrew-crew-log",
     session_key: str = OWNER_KEY,
     secret: bool = True,
     slots: dict[str, _Slot] | None = None,
@@ -258,7 +258,7 @@ def _fresh_dispatch_scan():
     anyway -- clearing them outright means these tests do not depend on that
     validation being right, which is a property with its own tests.
     """
-    from kiro_crew.crew_log import read as crew_log_read
+    from aj_crew.crew_log import read as crew_log_read
 
     crew_log_read._TREE._heads.clear()
     crew_log_read.reset_class_bundles()

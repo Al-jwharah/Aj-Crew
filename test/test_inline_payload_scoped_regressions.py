@@ -11,11 +11,11 @@ import shlex
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew import security
-from kiro_crew.security import argv_floor, inline_payload
+from aj_crew import security
+from aj_crew.security import argv_floor, inline_payload
 
-_MINT = "credential-exfil-kirocrew-token"
-_ENCODED_MINT = "a2lyb2NyZXcgdG9rZW4="
+_MINT = "credential-exfil-ajcrew-token"
+_ENCODED_MINT = "YWpjcmV3IHRva2Vu"
 
 
 def _rule_of(cmd: str) -> str | None:
@@ -61,12 +61,12 @@ class TestAnEncodedLiteralIsDataUntilSomethingDecodesIt:
         )
 
     def test_nested_decoding_preserves_case_until_resolved(self):
-        inner = base64.b64encode(b"import kiro_crew.cli").decode()
+        inner = base64.b64encode(b"import aj_crew.cli").decode()
         outer = base64.b64encode(inner.encode()).decode()
         cmd = f"python -c 'exec(base64.b64decode(base64.b64decode(\"{outer}\")))'"
         assert argv_floor._is_credential_mint(cmd.lower(), raw_text=cmd)
         assert _rule_of(cmd) == _MINT
-        assert inline_payload._decoded_b64_literals(cmd) == (inner.lower(), "import kiro_crew.cli")
+        assert inline_payload._decoded_b64_literals(cmd) == (inner.lower(), "import aj_crew.cli")
 
     def test_many_data_literals_do_not_spend_decode_work(self, monkeypatch):
         calls = 0
@@ -88,11 +88,11 @@ class TestTheConsoleScriptIsAWholePathComponent:
     @pytest.mark.parametrize(
         "cmd",
         [
-            "python3 -c \"import runpy; runpy.run_path('/w/kirocrew-scratch/kirocrew.py')\"",
-            "py -3 -c \"import runpy; runpy.run_path(r'C:\\\\w\\\\kirocrew-scratch\\\\kirocrew.py')\"",
-            "python3 -c \"exec(open('/w/kirocrew-scratch/kirocrew.py').read())\"",
-            "python3 -c \"import runpy; runpy.run_path('/w/scratch/kirocrew.pyc')\"",
-            "python3 -c \"exec(open('/w/scratch/kiro-crew.py').read())\"",
+            "python3 -c \"import runpy; runpy.run_path('/w/ajcrew-scratch/ajcrew.py')\"",
+            "py -3 -c \"import runpy; runpy.run_path(r'C:\\\\w\\\\ajcrew-scratch\\\\ajcrew.py')\"",
+            "python3 -c \"exec(open('/w/ajcrew-scratch/ajcrew.py').read())\"",
+            "python3 -c \"import runpy; runpy.run_path('/w/scratch/ajcrew.pyc')\"",
+            "python3 -c \"exec(open('/w/scratch/aj-crew.py').read())\"",
         ],
     )
     def test_a_user_file_named_for_the_product_is_not_the_program(self, cmd):
@@ -102,10 +102,10 @@ class TestTheConsoleScriptIsAWholePathComponent:
     @pytest.mark.parametrize(
         "cmd",
         [
-            "python3 -c \"exec(open(shutil.which('kirocrew')).read())\"",
-            "python3 -c \"exec(open('/opt/venv/bin/kirocrew').read())\"",
-            "python3 -c \"exec(open(r'C:\\\\venv\\\\Scripts\\\\kirocrew.exe').read())\"",
-            "python3 -c \"import runpy,shutil; runpy.run_path(shutil.which('kiro-crew'))\"",
+            "python3 -c \"exec(open(shutil.which('ajcrew')).read())\"",
+            "python3 -c \"exec(open('/opt/venv/bin/ajcrew').read())\"",
+            "python3 -c \"exec(open(r'C:\\\\venv\\\\Scripts\\\\ajcrew.exe').read())\"",
+            "python3 -c \"import runpy,shutil; runpy.run_path(shutil.which('aj-crew'))\"",
         ],
     )
     def test_the_installed_entry_point_is_still_the_program(self, cmd):
@@ -114,14 +114,14 @@ class TestTheConsoleScriptIsAWholePathComponent:
 
     def test_the_boundary_is_the_component_not_a_prefix(self):
         search = inline_payload._CONSOLE_SCRIPT_LITERAL_RE.search
-        for program in ("'kirocrew'", "'/venv/bin/kirocrew'", "kirocrew.exe'"):
+        for program in ("'ajcrew'", "'/venv/bin/ajcrew'", "ajcrew.exe'"):
             assert search(program), program
         for other in (
-            "'kirocrew.py'",
-            "'kirocrew.pyc'",
-            "'/w/kirocrew/x.py'",
-            "kirocrew_ws",
-            "x.kirocrew",
+            "'ajcrew.py'",
+            "'ajcrew.pyc'",
+            "'/w/ajcrew/x.py'",
+            "ajcrew_ws",
+            "x.ajcrew",
         ):
             assert not search(other), other
 
@@ -130,11 +130,11 @@ class TestACallArgumentHasOneQuoteAwareBoundary:
     @pytest.mark.parametrize(
         "payload",
         [
-            "exec(open([')', shutil.which('kirocrew')][1]).read())",
-            "runpy.run_path(run_name=str(')'), path_name=shutil.which('kirocrew'))",
-            "exec(open( # ) a comment\n shutil.which('kirocrew')).read())",
-            "exec(open(['''single ' and )''', shutil.which('kirocrew')][1]).read())",
-            "exec(open(['a\\')', shutil.which('kirocrew')][1]).read())",
+            "exec(open([')', shutil.which('ajcrew')][1]).read())",
+            "runpy.run_path(run_name=str(')'), path_name=shutil.which('ajcrew'))",
+            "exec(open( # ) a comment\n shutil.which('ajcrew')).read())",
+            "exec(open(['''single ' and )''', shutil.which('ajcrew')][1]).read())",
+            "exec(open(['a\\')', shutil.which('ajcrew')][1]).read())",
         ],
     )
     def test_a_quoted_paren_cannot_hide_the_program(self, payload):
@@ -143,17 +143,17 @@ class TestACallArgumentHasOneQuoteAwareBoundary:
     @pytest.mark.parametrize(
         "payload",
         [
-            "exec('print(\"(\")'); print('kirocrew done')",
-            "exec(open('a(b').read()); x = 'kirocrew'",
-            "exec('''print(\"(\")'''); print('kirocrew done')",
-            "exec(open('patch.py').read()); print('from kiro_crew.acp import x, secret hint')",
+            "exec('print(\"(\")'); print('ajcrew done')",
+            "exec(open('a(b').read()); x = 'ajcrew'",
+            "exec('''print(\"(\")'''); print('ajcrew done')",
+            "exec(open('patch.py').read()); print('from aj_crew.acp import x, secret hint')",
         ],
     )
     def test_later_prose_is_not_a_loader_argument(self, payload):
         assert not inline_payload._inline_payload_reaches_cli(payload)
 
     def test_an_unterminated_call_is_still_judged_on_everything_left(self):
-        for payload in ("exec(" + "f(" * 200 + "'kirocrew'", "exec(" + "x" * 20000 + "'kirocrew'"):
+        for payload in ("exec(" + "f(" * 200 + "'ajcrew'", "exec(" + "x" * 20000 + "'ajcrew'"):
             assert inline_payload._inline_payload_reaches_cli(payload), payload[:32]
 
 
@@ -161,7 +161,7 @@ class TestACallIsJudgedByWhatItResolvesTo:
     """A callable reached by any static binding is read as the callable it is."""
 
     # `import <pkg>.cli`, encoded. Inert text: nothing here decodes it but the gate.
-    ENCODED = "aW1wb3J0IGtpcm9fY3Jldy5jbGk="
+    ENCODED = "aW1wb3J0IGFqX2NyZXcuY2xp"
 
     @pytest.mark.parametrize(
         "spelling",
@@ -171,28 +171,28 @@ class TestACallIsJudgedByWhatItResolvesTo:
                 "spelling",
                 [
                     # The name written at the call, and reached through a module alias.
-                    'import runpy; runpy.run_module("kiro_crew")',
-                    'import runpy as rp; rp.run_module("kiro_crew")',
+                    'import runpy; runpy.run_module("aj_crew")',
+                    'import runpy as rp; rp.run_module("aj_crew")',
                     # Bound by a from-import, with and without an alias.
-                    'from runpy import run_module as r; r("kiro_crew")',
-                    'from runpy import run_module; run_module("kiro_crew")',
-                    'from importlib import import_module as m; m("kiro_crew")',
+                    'from runpy import run_module as r; r("aj_crew")',
+                    'from runpy import run_module; run_module("aj_crew")',
+                    'from importlib import import_module as m; m("aj_crew")',
                     # Bound by assignment, from the module or from a resolving head.
-                    'import runpy; r = runpy.run_module; r("kiro_crew")',
-                    'import runpy; r = getattr(runpy, "run_module"); r("kiro_crew")',
-                    'import runpy; r = runpy.__dict__["run_module"]; r("kiro_crew")',
+                    'import runpy; r = runpy.run_module; r("aj_crew")',
+                    'import runpy; r = getattr(runpy, "run_module"); r("aj_crew")',
+                    'import runpy; r = runpy.__dict__["run_module"]; r("aj_crew")',
                     # Called straight off the head, with no name to read at all.
-                    'import runpy; getattr(runpy, "run_module")("kiro_crew")',
-                    'import runpy; runpy.__dict__["run_module"]("kiro_crew")',
+                    'import runpy; getattr(runpy, "run_module")("aj_crew")',
+                    'import runpy; runpy.__dict__["run_module"]("aj_crew")',
                     # The bound name spelled in pieces, which the fold joins first.
-                    'import runpy; getattr(runpy, "run_" "module")("kiro_crew")',
+                    'import runpy; getattr(runpy, "run_" "module")("aj_crew")',
                     # Grouped: the parentheses are not an operation, so the head is what
                     # they wrap -- dotted, nested, spaced, or a bound name.
-                    'import runpy; (runpy.run_module)("kiro_crew")',
-                    'import runpy; ((runpy.run_module))("kiro_crew")',
-                    'import runpy; ( runpy.run_module )("kiro_crew")',
-                    'from runpy import run_module as r; (r)("kiro_crew")',
-                    'import runpy; r = (runpy.run_module); r("kiro_crew")',
+                    'import runpy; (runpy.run_module)("aj_crew")',
+                    'import runpy; ((runpy.run_module))("aj_crew")',
+                    'import runpy; ( runpy.run_module )("aj_crew")',
+                    'from runpy import run_module as r; (r)("aj_crew")',
+                    'import runpy; r = (runpy.run_module); r("aj_crew")',
                 ],
             ),
             *named_cases(
@@ -201,11 +201,11 @@ class TestACallIsJudgedByWhatItResolvesTo:
                 [
                     # The loader gate reads the same table: each of these loads the
                     # installed console script, whose dispatch is the mint.
-                    'import shutil; exec(open(shutil.which("kirocrew")).read())',
-                    'from builtins import exec as e; import shutil; e(open(shutil.which("kirocrew")).read())',
-                    'import builtins,shutil; getattr(builtins, "exec")(open(shutil.which("kirocrew")).read())',
-                    'import builtins,shutil; g = builtins.__dict__["exec"]; g(open(shutil.which("kirocrew")).read())',
-                    'import builtins,shutil; (builtins.exec)(open(shutil.which("kirocrew")).read())',
+                    'import shutil; exec(open(shutil.which("ajcrew")).read())',
+                    'from builtins import exec as e; import shutil; e(open(shutil.which("ajcrew")).read())',
+                    'import builtins,shutil; getattr(builtins, "exec")(open(shutil.which("ajcrew")).read())',
+                    'import builtins,shutil; g = builtins.__dict__["exec"]; g(open(shutil.which("ajcrew")).read())',
+                    'import builtins,shutil; (builtins.exec)(open(shutil.which("ajcrew")).read())',
                 ],
             ),
         ],
@@ -240,26 +240,26 @@ class TestACallIsJudgedByWhatItResolvesTo:
             # the package.
             'import runpy; runpy.run_path("patch.py")',
             'from runpy import run_path as rp; rp("patch.py")',
-            'from runpy import run_path as rp; rp("src/kiro_crew/x.py")',
-            'import runpy; getattr(runpy, "run_path")("src/kiro_crew/x.py")',
+            'from runpy import run_path as rp; rp("src/aj_crew/x.py")',
+            'import runpy; getattr(runpy, "run_path")("src/aj_crew/x.py")',
             # A binding to anything outside the vocabulary stays generic code.
             'import json; print(getattr(json, "dumps")({}))',
-            'import os; print(os.__dict__["getcwd"](), "src/kiro_crew")',
+            'import os; print(os.__dict__["getcwd"](), "src/aj_crew")',
             # A same-named callable from an unrelated module is not the stdlib one.
             'from other import b64decode as d; print(d("aGVsbG8="))',
             # An imported alias is a bare name, so an object attribute is not it.
-            'from base64 import b64decode as d; print(obj.d("aW1wb3J0IGtpcm9fY3Jldy5jbGk="))',
+            'from base64 import b64decode as d; print(obj.d("aW1wb3J0IGFqX2NyZXcuY2xp"))',
             # A binding written inside a string binds nothing.
-            'print("r = run_module"); print("kiro_crew")',
+            'print("r = run_module"); print("aj_crew")',
             # A GROUPED head is judged by what it is handed, like any other.
             'import runpy; (runpy.run_path)("patch.py")',
-            'import runpy; (runpy.run_path)("src/kiro_crew/x.py")',
+            'import runpy; (runpy.run_path)("src/aj_crew/x.py")',
             "import json; print((json.dumps)({}))",
             # A call's own argument list is not a grouping: this hands over what
             # partial RETURNS, not the callable named inside it.
-            'import functools; print(functools.partial(print)("kiro_crew"))',
+            'import functools; print(functools.partial(print)("aj_crew"))',
             # ... and a plain tuple is data, not a head.
-            'print(("kiro_crew", "x"))',
+            'print(("aj_crew", "x"))',
         ],
     )
     def test_a_binding_to_anything_else_is_not_a_mint(self, spelling):
@@ -270,12 +270,12 @@ class TestACallIsJudgedByWhatItResolvesTo:
     def test_a_head_resolves_only_from_its_own_name_argument(self):
         # A runner name in `getattr`'s DEFAULT slot is not what the call resolves to.
         assert not inline_payload._inline_payload_reaches_cli(
-            'getattr(obj, "dumps", "run_module")("kiro_crew")'
+            'getattr(obj, "dumps", "run_module")("aj_crew")'
         )
         # ... a one-argument call resolves to nothing ...
-        assert not inline_payload._inline_payload_reaches_cli('getattr(runpy)("kiro_crew")')
+        assert not inline_payload._inline_payload_reaches_cli('getattr(runpy)("aj_crew")')
         # ... and a subscript by a computed key is the noted residual, not a reach.
-        assert not inline_payload._inline_payload_reaches_cli('runpy.__dict__[name]("kiro_crew")')
+        assert not inline_payload._inline_payload_reaches_cli('runpy.__dict__[name]("aj_crew")')
 
     def test_a_bound_name_is_the_callable_and_not_its_result(self):
         table = inline_payload._callable_aliases(
@@ -304,10 +304,10 @@ class TestTheInspectionIsOnePassAndNotRecursive:
 
     def test_nesting_is_still_read_without_the_rescan(self):
         assert inline_payload._inline_payload_reaches_cli(
-            "exec(compile('import kiro_crew.config.loader as l; l.read_local_secret(1)', 'x', 'exec'))"
+            "exec(compile('import aj_crew.config.loader as l; l.read_local_secret(1)', 'x', 'exec'))"
         )
         assert not inline_payload._inline_payload_reaches_cli(
-            "exec(compile('from kiro_crew.acp import client', 'x', 'exec'))"
+            "exec(compile('from aj_crew.acp import client', 'x', 'exec'))"
         )
 
     def test_nested_loaders_do_not_copy_or_scan_each_tail(self, monkeypatch):
@@ -332,13 +332,13 @@ class TestTheGenuineProtectionsSurvive:
     @pytest.mark.parametrize(
         "cmd",
         [
-            "python -c 'from kiro_crew.cli import main; main()'",
-            "python -c 'from kiro_crew.cli_server import _token; _token(None)'",
-            "python -c 'from kiro_crew.config.loader import read_local_secret; print(read_local_secret(5476))'",
-            "python -c 'from kiro_crew.instances import run_marker; print(run_marker.read_secret(5476))'",
-            "python3 -c \"import runpy; runpy.run_module(mod_name='kiro_crew', run_name='__main__')\"",
-            "python -c \"exec('from kiro_crew.config.loader import read_local_secret; f()')\"",
-            "python3 - <<'PY'\nfrom kiro_crew.dashboard.token_auth import generate_token\nPY",
+            "python -c 'from aj_crew.cli import main; main()'",
+            "python -c 'from aj_crew.cli_server import _token; _token(None)'",
+            "python -c 'from aj_crew.config.loader import read_local_secret; print(read_local_secret(5476))'",
+            "python -c 'from aj_crew.instances import run_marker; print(run_marker.read_secret(5476))'",
+            "python3 -c \"import runpy; runpy.run_module(mod_name='aj_crew', run_name='__main__')\"",
+            "python -c \"exec('from aj_crew.config.loader import read_local_secret; f()')\"",
+            "python3 - <<'PY'\nfrom aj_crew.dashboard.token_auth import generate_token\nPY",
             # The mediated-secret signing functions reach the DASHBOARD token root
             # (`provenance._token_root()` -> `token_secret._get_secret()`), so a
             # command naming them reaches a token producer. Each name carries the
@@ -347,9 +347,9 @@ class TestTheGenuineProtectionsSurvive:
             # unanchored name list would refuse a user project's own
             # `verify_authorizations`). The argv gate refuses BEFORE product code
             # runs, a layer distinct from the OS `_CREW_HIDDEN_LEAVES` key mask.
-            "python -c 'from kiro_crew.secrets_mediation.provenance import _secret_policy_key; _secret_policy_key(d)'",
-            "python -c 'from kiro_crew.secrets_mediation.provenance import sign_secret_authorizations; sign_secret_authorizations(a, d)'",
-            'python3 -c "from kiro_crew.secrets_mediation.provenance import verify_secret_authorizations; help(verify_secret_authorizations)"',
+            "python -c 'from aj_crew.secrets_mediation.provenance import _secret_policy_key; _secret_policy_key(d)'",
+            "python -c 'from aj_crew.secrets_mediation.provenance import sign_secret_authorizations; sign_secret_authorizations(a, d)'",
+            'python3 -c "from aj_crew.secrets_mediation.provenance import verify_secret_authorizations; help(verify_secret_authorizations)"',
         ],
     )
     def test_the_mint_surface_is_still_denied(self, cmd):
@@ -358,17 +358,17 @@ class TestTheGenuineProtectionsSurvive:
     @pytest.mark.parametrize(
         "cmd",
         [
-            "python3 -c \"import ast; ast.parse(open('src/kiro_crew/security.py').read())\"",
-            "python3 -c 'from kiro_crew.acp import client; print(client)'",
+            "python3 -c \"import ast; ast.parse(open('src/aj_crew/security.py').read())\"",
+            "python3 -c 'from aj_crew.acp import client; print(client)'",
             "python3 -c \"exec(open('patch.py').read())\"",
-            "python3 -c \"print('kiro_crew docs mention the token verb')\"",
+            "python3 -c \"print('aj_crew docs mention the token verb')\"",
         ],
     )
     def test_an_ordinary_mention_is_still_allowed(self, cmd):
         assert _rule_of(cmd) is None, cmd
 
 
-_READER = "from kiro_crew.config.loader import read_local_secret"
+_READER = "from aj_crew.config.loader import read_local_secret"
 
 
 class TestAnImportBeginsAtEveryStatementBoundary:
@@ -376,7 +376,7 @@ class TestAnImportBeginsAtEveryStatementBoundary:
 
     A simple statement begins at the start of input, after ``;``, after a newline,
     or after the ``:`` that closes a compound header. Those four are the whole set
-    the grammar has, so the anchor is closed by construction: a ``from kiro_crew``
+    the grammar has, so the anchor is closed by construction: a ``from aj_crew``
     tucked behind ``if True:`` is the same import as one on its own line.
     """
 
@@ -408,10 +408,10 @@ class TestAnImportBeginsAtEveryStatementBoundary:
         plain colon into a reason: the anchor still needs the import itself.
         """
         for payload in (
-            "d = {'kiro_crew': 1}; print(d)",
-            "s = 'kiro_crew token'[0:4]; print(s)",
-            "x: int = 1; print('kiro_crew', x)",
-            "print({'a': 'from kiro_crew.acp import client'})",
+            "d = {'aj_crew': 1}; print(d)",
+            "s = 'aj_crew token'[0:4]; print(s)",
+            "x: int = 1; print('aj_crew', x)",
+            "print({'a': 'from aj_crew.acp import client'})",
         ):
             assert _rule_of(f'python -c "{payload}"') is None, payload
 
@@ -419,8 +419,8 @@ class TestAnImportBeginsAtEveryStatementBoundary:
 class TestAPackagePathIsOneClassOfSeparators:
     """The mint surface reads a package path however its separators are spelled.
 
-    ``kiro_crew.cli`` is a module, ``kiro_crew/cli.py`` a POSIX path and
-    ``kiro_crew\\cli.py`` a Windows path; all three name the same file, so the
+    ``aj_crew.cli`` is a module, ``aj_crew/cli.py`` a POSIX path and
+    ``aj_crew\\cli.py`` a Windows path; all three name the same file, so the
     matcher treats the three separators as one class. The Windows spellings
     below are raw or doubled, which is what a payload that actually opens the
     file on Windows has to write.
@@ -429,10 +429,14 @@ class TestAPackagePathIsOneClassOfSeparators:
     @pytest.mark.parametrize(
         "payload",
         [
-            "exec(open(r'src\\kiro_crew\\cli.py').read())",
-            "exec(open('src\\\\kiro_crew\\\\cli.py').read())",
-            "import runpy; runpy.run_path(r'src\\kiro_crew\\__main__.py')",
-            "exec(open(r'src\\kiro_crew\\dashboard\\token_auth.py').read())",
+            "exec(open(r'src\\aj_crew\\cli.py').read())",
+            # Doubled twice. `_rule_of` wraps the payload in a double-quoted
+            # `-c`, where the shell halves each backslash pair before Python
+            # reads it. One level of doubling would reach Python as `\aj...`,
+            # and `\a` is the BEL escape: that string names no file at all.
+            "exec(open('src\\\\\\\\aj_crew\\\\\\\\cli.py').read())",
+            "import runpy; runpy.run_path(r'src\\aj_crew\\__main__.py')",
+            "exec(open(r'src\\aj_crew\\dashboard\\token_auth.py').read())",
         ],
     )
     def test_a_windows_path_to_the_mint_is_still_the_mint(self, payload):
@@ -441,9 +445,9 @@ class TestAPackagePathIsOneClassOfSeparators:
     @pytest.mark.parametrize(
         "cmd",
         [
-            r"isort src\kiro_crew\mcp_core.py",
-            "python -c \"print(r'src\\kiro_crew\\acp\\client.py')\"",
-            "python -c \"import ast; ast.parse(open(r'src\\kiro_crew\\security.py').read())\"",
+            r"isort src\aj_crew\mcp_core.py",
+            "python -c \"print(r'src\\aj_crew\\acp\\client.py')\"",
+            "python -c \"import ast; ast.parse(open(r'src\\aj_crew\\security.py').read())\"",
         ],
     )
     def test_an_ordinary_windows_path_is_still_allowed(self, cmd):
@@ -533,7 +537,7 @@ class TestTheFoldIsClosedOverConstantExpressions:
         and only the call is unclosed: a piece whose own quote is missing is not a
         string token to either fold, which is the tokenizer's limit, not a choice.
         """
-        truncated = "exec(b64decode('a2lyb2Ny' 'ZXcgdG9rZW4='"
+        truncated = "exec(b64decode('YWpjcmV3' 'IHRva2Vu'"
         assert ast_parse_fails(truncated)
         assert inline_payload._fold_inline_literals(truncated).count(_ENCODED_MINT[:-1]) == 1
 
@@ -547,7 +551,7 @@ class TestTheFoldIsClosedOverConstantExpressions:
         payload never wrote. Left as written, the escape is not whitespace and
         starts no statement.
         """
-        payload = "print('a;\\nimport kiro_crew, os\\ntoken')"
+        payload = "print('a;\\nimport aj_crew, os\\ntoken')"
         folded = inline_payload._fold_inline_literals(payload)
         assert "\n" not in folded
         assert _rule_of(f'python -c "{payload}"') is None
@@ -572,7 +576,7 @@ class TestANulInThePayloadDoesNotCrashTheGate:
     def test_a_mint_after_the_nul_is_still_refused(self):
         body = (
             "def f(raw):\n    return raw\nparts = f(x).split(b'\\0')\n"
-            "import runpy; runpy.run_module('kiro_crew')\n"
+            "import runpy; runpy.run_module('aj_crew')\n"
         )
         assert _rule_of(f'python3 -c "{body}"') == _MINT
 

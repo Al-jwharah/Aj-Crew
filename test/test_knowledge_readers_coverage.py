@@ -7,8 +7,8 @@ from types import ModuleType, SimpleNamespace
 
 import pytest
 
-from kiro_crew.knowledge import readers
-from kiro_crew.knowledge.readers import FileReader, _AdocIncludes
+from aj_crew.knowledge import readers
+from aj_crew.knowledge.readers import FileReader, _AdocIncludes
 
 
 def _members(*paths):

@@ -12,7 +12,7 @@ import pytest
 class TestValidation:
     @pytest.mark.parametrize("good", ["cd-1-alias", "user@host.example.com", "h_1"])
     def test_ssh_host_accept(self, good):
-        from kiro_crew.instances.validation import validate_ssh_host
+        from aj_crew.instances.validation import validate_ssh_host
 
         assert validate_ssh_host(good) == good
 
@@ -20,16 +20,16 @@ class TestValidation:
         "bad", ["-oProxyCommand=x", "a b", "a;b", "a$b", "a@b@c", "", "@h", "h@", "`x`"]
     )
     def test_ssh_host_reject(self, bad):
-        from kiro_crew.instances.validation import SshValidationError, validate_ssh_host
+        from aj_crew.instances.validation import SshValidationError, validate_ssh_host
 
         with pytest.raises(SshValidationError):
             validate_ssh_host(bad)
 
     def test_remote_bin(self):
-        from kiro_crew.instances.validation import SshValidationError, validate_remote_bin
+        from aj_crew.instances.validation import SshValidationError, validate_remote_bin
 
         assert validate_remote_bin("") == ""
-        assert validate_remote_bin("~/.local/bin/kirocrew") == "~/.local/bin/kirocrew"
+        assert validate_remote_bin("~/.local/bin/ajcrew") == "~/.local/bin/ajcrew"
         for bad in ("$(x)", "a;b", "`x`", "-rf", 'a"b'):
             with pytest.raises(SshValidationError):
                 validate_remote_bin(bad)
@@ -40,12 +40,12 @@ class TestValidation:
 
 class TestRegistry:
     def _reg(self, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         return InstancesRegistry(path=tmp_path / "instances.json")
 
     def test_crud_and_collision(self, tmp_path):
-        from kiro_crew.instances.registry import DuplicateInstanceError
+        from aj_crew.instances.registry import DuplicateInstanceError
 
         reg = self._reg(tmp_path)
         a = reg.add(name="Cloud Desktop 1", ssh_host="cd-1-alias")
@@ -57,7 +57,7 @@ class TestRegistry:
         assert len(reg.list()) == 2
 
     def test_update_validation_and_hints(self, tmp_path):
-        from kiro_crew.instances.registry import InstanceNotFoundError, InvalidInstanceError
+        from aj_crew.instances.registry import InstanceNotFoundError, InvalidInstanceError
 
         reg = self._reg(tmp_path)
         reg.add(name="CD", ssh_host="cd-1", instance_id="cd-1")
@@ -103,9 +103,9 @@ class TestRegistry:
         assert "token" not in raw.lower()
 
     def test_env_home_path(self, tmp_path, monkeypatch):
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         assert InstancesRegistry().path == tmp_path / "instances.json"
 
     def test_two_registries_over_one_file_share_a_lock(self, tmp_path):
@@ -114,7 +114,7 @@ class TestRegistry:
         Callers construct a registry per request, so a lock owned by the object
         serialises nothing between them.
         """
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         first = self._reg(tmp_path)
         second = self._reg(tmp_path)
@@ -131,7 +131,7 @@ class TestRegistry:
         both records must survive. Both waits are bounded, so the serialised case
         times out and proceeds rather than hanging.
         """
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         path = tmp_path / "instances.json"
         writer = InstancesRegistry(path)
@@ -178,11 +178,7 @@ class TestValidatorsRejectEmbeddedNewlines:
         offenders = []
         for mod in ("registry", "validation", "constants"):
             path = (
-                Path(__file__).resolve().parents[1]
-                / "src"
-                / "kiro_crew"
-                / "instances"
-                / f"{mod}.py"
+                Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "instances" / f"{mod}.py"
             )
             for line in path.read_text(encoding="utf-8").splitlines():
                 stripped = line.strip()
@@ -202,8 +198,8 @@ class TestValidatorsRejectEmbeddedNewlines:
         ``validation.py`` strips and returns the cleaned value; the registry and the ttl
         check REJECT because they persist input. No guard may pass the newline through.
         """
-        from kiro_crew.instances import validation
-        from kiro_crew.instances.registry import (
+        from aj_crew.instances import validation
+        from aj_crew.instances.registry import (
             InstancesRegistry,
             InvalidInstanceError,
             validate_ttl,
@@ -211,7 +207,7 @@ class TestValidatorsRejectEmbeddedNewlines:
 
         for fn, dirty in (
             (validation.validate_ssh_host, "host\n"),
-            (validation.validate_remote_bin, "/usr/bin/kirocrew\n"),
+            (validation.validate_remote_bin, "/usr/bin/ajcrew\n"),
             (validation.validate_ssm_target, "i-0123456789abcdef0\n"),
             (validation.validate_ssm_run_as, "ec2-user\n"),
             (validation.validate_aws_profile, "Admin\n"),
@@ -233,7 +229,7 @@ class TestValidatorsRejectEmbeddedNewlines:
 
 class TestSlugifyHashFallback:
     def test_non_ascii_names_derive_distinct_stable_ids(self) -> None:
-        from kiro_crew.instances.registry import _ID_RE, _slugify
+        from aj_crew.instances.registry import _ID_RE, _slugify
 
         chinese = _slugify("\u5f00\u53d1\u673a")
         arabic = _slugify("\u062e\u0627\u062f\u0645 \u0627\u0644\u062a\u0637\u0648\u064a\u0631")
@@ -243,6 +239,6 @@ class TestSlugifyHashFallback:
         assert _ID_RE.match(chinese)
 
     def test_ascii_names_are_unchanged(self) -> None:
-        from kiro_crew.instances.registry import _slugify
+        from aj_crew.instances.registry import _slugify
 
         assert _slugify("Dev Box 2") == "dev-box-2"

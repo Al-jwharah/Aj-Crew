@@ -11,12 +11,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.deploy import engine, handlers, pending
+from aj_crew.deploy import engine, handlers, pending
 
 SCRIPTS_DIR = (
     Path(__file__).parent.parent
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "deploy"
     / "skills"
     / "artifact-deploy"
@@ -37,8 +37,8 @@ def _load_script(name: str):
 @pytest.fixture(autouse=True)
 def _isolate_config(tmp_path: Path, monkeypatch):
     cfg = tmp_path / "config.json"
-    import kiro_crew.deploy as _deploy_pkg
-    from kiro_crew.deploy import profiles as _profiles_mod
+    import aj_crew.deploy as _deploy_pkg
+    from aj_crew.deploy import profiles as _profiles_mod
 
     monkeypatch.setattr(handlers, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(_profiles_mod, "config_dir", lambda: tmp_path)
@@ -51,7 +51,7 @@ def _isolate_config(tmp_path: Path, monkeypatch):
 
 @pytest.fixture(autouse=True)
 def _mock_base_stack(monkeypatch):
-    _base_outputs = json.dumps([{"OutputKey": "BucketName", "OutputValue": "kirocrew-base-bucket"}])
+    _base_outputs = json.dumps([{"OutputKey": "BucketName", "OutputValue": "ajcrew-base-bucket"}])
     monkeypatch.setattr(engine, "run_aws", lambda *a, **kw: (0, _base_outputs, ""))
 
 
@@ -389,7 +389,7 @@ class TestR10ArtifactStaleness:
         """If the artifact is edited between preview and confirm, 409."""
         import types
 
-        from kiro_crew.deploy import handlers, pending
+        from aj_crew.deploy import handlers, pending
 
         class _Art:
             kind = "html"

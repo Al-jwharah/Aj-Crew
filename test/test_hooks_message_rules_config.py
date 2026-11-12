@@ -10,7 +10,7 @@ import logging
 
 import pytest
 
-from kiro_crew.hooks import (
+from aj_crew.hooks import (
     HOOK_INJECT_CONTEXT,
     HOOK_PASSTHROUGH,
     HOOK_REPLY,
@@ -55,7 +55,7 @@ def test_a_lone_string_trigger_is_one_trigger_not_its_letters():
 
 
 def test_a_skipped_rule_is_logged(caplog):
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.hooks"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.hooks"):
         HooksConfig.from_dict({"auto_replies": [{"pattern": 1, "reply": "x"}]})
 
     assert "skipped a rule whose pattern is not text" in caplog.text

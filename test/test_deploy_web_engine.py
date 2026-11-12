@@ -11,8 +11,8 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.deploy import engine
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.deploy import engine
+from aj_crew.testing.wait import default_timeout
 
 
 class FakeAWS:
@@ -89,7 +89,7 @@ def test_aws_bin_resolved_absolutely_from_extra_dirs(monkeypatch, tmp_path):
     # Isolate the provenance chokepoint (it has its own dedicated tests and its
     # verdict depends on host /tmp ownership): assert the resolver routes the
     # fallback hit through it and returns its canonical result.
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     validated = []
 
@@ -137,7 +137,7 @@ def test_aws_bin_fallback_hit_failing_provenance_returns_bare_name(monkeypatch, 
     monkeypatch.setenv("PATH", str(empty_bin))
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(tmp_path),))
 
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     def _refuse(candidate):
         raise ValueError("planted shim")
@@ -171,7 +171,7 @@ def test_aws_bin_refused_dir_does_not_shadow_a_good_later_dir(monkeypatch, tmp_p
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(bad_dir), str(good_dir)))
     monkeypatch.setattr(engine, "_REFUSED_AWS_BIN_DIRS", set())
 
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     def _refuse_only_bad(candidate):
         if candidate.startswith(str(bad_dir)):
@@ -208,7 +208,7 @@ def test_aws_spawn_env_omits_a_refused_dir_while_widening_for_a_good_one(monkeyp
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(bad_dir), str(good_dir)))
     monkeypatch.setattr(engine, "_REFUSED_AWS_BIN_DIRS", set())
 
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     def _refuse_only_bad(candidate):
         if candidate.startswith(str(bad_dir)):
@@ -243,7 +243,7 @@ def test_aws_bin_every_dir_refused_still_returns_bare_name(monkeypatch, tmp_path
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(first), str(second)))
     monkeypatch.setattr(engine, "_REFUSED_AWS_BIN_DIRS", set())
 
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     def _refuse(candidate):
         raise ValueError("planted shim")
@@ -271,7 +271,7 @@ def test_aws_bin_repaired_dir_is_cleared_from_the_refused_set(monkeypatch, tmp_p
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(install),))
     monkeypatch.setattr(engine, "_REFUSED_AWS_BIN_DIRS", set())
 
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     ownership_fixed = {"yet": False}
 
@@ -320,7 +320,7 @@ def test_aws_pass_does_not_clear_a_refused_plugin_in_the_same_dir(monkeypatch, t
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(mixed), str(good)))
     monkeypatch.setattr(engine, "_REFUSED_AWS_BIN_DIRS", set())
 
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     def _refuse_mixed_plugin(candidate):
         # Only the plugin in the mixed dir is refused; aws there passes.
@@ -380,7 +380,7 @@ def test_aws_tool_bin_resolves_session_manager_plugin_from_extra_dirs(monkeypatc
     monkeypatch.setenv("PATH", str(empty_bin))
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(tmp_path),))
 
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     validated = []
 
@@ -412,7 +412,7 @@ def test_aws_tool_bin_refused_provenance_falls_back_to_that_tool_s_name(monkeypa
     monkeypatch.setenv("PATH", str(empty_bin))
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(tmp_path),))
 
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     def _refuse(candidate):
         raise ValueError("planted shim")
@@ -436,7 +436,7 @@ def test_resolver_reports_the_candidates_this_walk_refused(monkeypatch, tmp_path
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(refused_dir), str(good_dir)))
     monkeypatch.setattr(engine, "_REFUSED_AWS_BIN_DIRS", set())
 
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     def _validate(candidate):
         if candidate.startswith(str(refused_dir)):
@@ -516,7 +516,7 @@ def test_resolver_excludes_untrusted_candidate_free_dir_from_spawn_path(monkeypa
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(fallback),))
     monkeypatch.setattr(engine, "_TRUSTED_AWS_BIN_DIRS", ())
 
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     def _refuse_directory(candidate):
         assert candidate == str(fallback)
@@ -543,7 +543,7 @@ def test_resolver_admits_trusted_candidate_free_dir_to_spawn_path(monkeypatch, t
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(fallback),))
     monkeypatch.setattr(engine, "_TRUSTED_AWS_BIN_DIRS", ())
 
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     checked = []
 
@@ -570,7 +570,7 @@ def test_trust_refresh_keeps_the_previous_snapshot_visible_until_publish(monkeyp
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", directories)
     monkeypatch.setattr(engine, "_TRUSTED_AWS_BIN_DIRS", tuple((directory, directory) for directory in directories))
     monkeypatch.setenv("PATH", str(tmp_path / "sysbin"))
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     snapshots = []
 
@@ -595,7 +595,7 @@ def test_trust_refresh_serializes_validation_and_publish(monkeypatch, tmp_path):
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(fallback),))
     monkeypatch.setattr(engine, "_TRUSTED_AWS_BIN_DIRS", ())
     monkeypatch.setattr(engine, "_WARNED_AWS_BIN_DIR_REFUSALS", set())
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     first_validation_started = threading.Event()
     second_refresh_started = threading.Event()
@@ -657,7 +657,7 @@ def test_trust_refresh_publishes_a_fallback_symlinks_canonical_target(monkeypatc
     monkeypatch.setenv("PATH", str(inherited))
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(fallback),))
     monkeypatch.setattr(engine, "_TRUSTED_AWS_BIN_DIRS", ())
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     monkeypatch.setattr(github_runner.os, "geteuid", lambda: 1000)
     monkeypatch.setattr(github_runner, "agent_writable_roots", lambda: ())
@@ -684,7 +684,7 @@ def test_retargeting_a_fallback_link_does_not_change_the_child_path(monkeypatch,
     monkeypatch.setenv("PATH", str(inherited))
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(fallback),))
     monkeypatch.setattr(engine, "_TRUSTED_AWS_BIN_DIRS", ())
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     monkeypatch.setattr(github_runner.os, "geteuid", lambda: 1000)
     monkeypatch.setattr(github_runner, "agent_writable_roots", lambda: ())
@@ -712,7 +712,7 @@ def test_spawn_env_deduplicates_original_and_canonical_spellings(monkeypatch, tm
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX resolver walk")
 def test_provider_directory_refuses_an_inconsistent_resolver_walk(monkeypatch, tmp_path):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     directory = tmp_path / "trusted"
     directory.mkdir()
@@ -744,7 +744,7 @@ def test_existing_refused_fallback_directory_warns_once(monkeypatch, tmp_path, c
     fallback.mkdir()
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(fallback),))
     monkeypatch.setattr(engine, "_WARNED_AWS_BIN_DIR_REFUSALS", set())
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     def _refuse_directory(_candidate):
         raise ValueError("directory trust refused")
@@ -866,7 +866,7 @@ def test_aws_spawn_env_preserves_the_rest_of_the_environment(monkeypatch, tmp_pa
 
 
 def _isolate_provider_directory_walk(monkeypatch, directory):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     monkeypatch.setattr(github_runner.os, "geteuid", lambda: 1000)
     monkeypatch.setattr(github_runner, "agent_writable_roots", lambda: ())
@@ -885,7 +885,7 @@ def _isolate_provider_directory_walk(monkeypatch, directory):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
 def test_provider_directory_translates_a_cyclic_symlink_to_value_error(monkeypatch, tmp_path):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     first = tmp_path / "cycle-first"
     second = tmp_path / "cycle-second"
@@ -904,7 +904,7 @@ def test_provider_directory_translates_a_cyclic_symlink_to_value_error(monkeypat
 
 @pytest.mark.skipif(sys.platform == "win32", reason="POSIX symlink semantics")
 def test_trust_refresh_skips_a_cyclic_symlink_and_publishes_good_directory(monkeypatch, tmp_path):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     first = tmp_path / "cycle-first"
     second = tmp_path / "cycle-second"
@@ -930,7 +930,7 @@ def test_trust_refresh_skips_a_cyclic_symlink_and_publishes_good_directory(monke
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX group-write semantics")
 def test_provider_directory_refuses_a_group_shared_component(monkeypatch, tmp_path):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     directory = tmp_path / "shared"
     directory.mkdir(mode=0o775)
@@ -956,7 +956,7 @@ def test_provider_directory_refuses_a_group_shared_component(monkeypatch, tmp_pa
 def test_provider_directory_accepts_a_group_holding_the_user_and_root(
     monkeypatch, tmp_path
 ):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     directory = tmp_path / "single-admin"
     directory.mkdir(mode=0o775)
@@ -980,7 +980,7 @@ def test_provider_directory_accepts_a_group_holding_the_user_and_root(
 def test_provider_directory_skips_the_membership_question_for_a_sticky_parent(
     monkeypatch, tmp_path
 ):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     parent = tmp_path / "sticky"
     parent.mkdir(mode=0o1777)
@@ -1007,7 +1007,7 @@ def test_provider_directory_skips_the_membership_question_for_a_sticky_parent(
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX group-write semantics")
 def test_provider_directory_asks_about_a_sticky_group_writable_path_entry(monkeypatch, tmp_path):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     directory = tmp_path / "sticky-entry"
     directory.mkdir(mode=0o1775)
@@ -1025,7 +1025,7 @@ def test_provider_directory_asks_about_a_sticky_group_writable_path_entry(monkey
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX world-write semantics")
 def test_provider_directory_refuses_a_sticky_world_writable_path_entry(monkeypatch, tmp_path):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     directory = tmp_path / "shared-tmp"
     directory.mkdir(mode=0o1777)
@@ -1043,7 +1043,7 @@ def test_provider_directory_refuses_a_sticky_world_writable_path_entry(monkeypat
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX group-write semantics")
 def test_provider_directory_refuses_an_unresolvable_group(monkeypatch, tmp_path):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     directory = tmp_path / "unknown-group"
     directory.mkdir(mode=0o775)
@@ -1061,7 +1061,7 @@ def test_provider_directory_refuses_an_unresolvable_group(monkeypatch, tmp_path)
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX group-write semantics")
 def test_trust_refresh_keeps_a_group_shared_dir_off_the_child_path(monkeypatch, tmp_path):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     inherited = tmp_path / "sysbin"
     inherited.mkdir()
@@ -1088,7 +1088,7 @@ def test_trust_refresh_keeps_a_group_shared_dir_off_the_child_path(monkeypatch, 
 def test_provider_directory_uses_posix_component_policy(monkeypatch, tmp_path):
     if os.name == "nt":
         pytest.skip("POSIX ownership semantics")
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     directory = tmp_path / "trusted"
     directory.mkdir()
@@ -1113,7 +1113,7 @@ def test_provider_directory_uses_posix_component_policy(monkeypatch, tmp_path):
 
 
 def test_provider_directory_uses_windows_acl_policy(monkeypatch, tmp_path):
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     directory = tmp_path / "trusted"
     directory.mkdir()
@@ -1176,7 +1176,7 @@ def test_run_aws_passes_the_widened_spawn_env_to_the_child(monkeypatch, tmp_path
     (tmp_path / "emptybin").mkdir()
     monkeypatch.setattr(engine, "_AWS_BIN_DIRS", (str(pkg),))
     monkeypatch.setattr(engine, "_REFUSED_AWS_BIN_DIRS", set())
-    from kiro_crew import github_runner
+    from aj_crew import github_runner
 
     monkeypatch.setattr(github_runner, "validate_provider_executable", lambda c: c)
     monkeypatch.setattr(github_runner, "validate_provider_directory", lambda candidate: candidate)
@@ -1192,8 +1192,8 @@ def test_run_aws_passes_the_widened_spawn_env_to_the_child(monkeypatch, tmp_path
 
 def test_random_bucket_name_format():
     name = engine.random_bucket_name()
-    assert name.startswith("kirocrew-web-")
-    suffix = name[len("kirocrew-web-"):]
+    assert name.startswith("ajcrew-web-")
+    suffix = name[len("ajcrew-web-"):]
     assert re.fullmatch(r"[0-9a-f]{12}", suffix), name
     # No account id, opaque
     assert "123456789012" not in name
@@ -1205,7 +1205,7 @@ def test_first_deploy_full_flow_and_ordering(fake):
     result = engine.deploy("cr-dashboard", "/tmp/site", profile="p", region="us-west-2")
     assert result["reused"] is False
     assert result["url"] == "https://d111abc.cloudfront.net/"
-    assert result["bucket"].startswith("kirocrew-web-")
+    assert result["bucket"].startswith("ajcrew-web-")
     assert result["distribution_id"] == "DIST123"
 
     acts = fake.actions()
@@ -1242,7 +1242,7 @@ def test_redeploy_is_idempotent_reuses_infra(monkeypatch):
     def fake_run(args, profile, timeout=30):  # noqa: ANN001
         if args[0] == "resourcegroupstaggingapi":
             return 0, json.dumps({"ResourceTagMappingList": [
-                {"ResourceARN": "arn:aws:s3:::kirocrew-web-deadbeef0001"},
+                {"ResourceARN": "arn:aws:s3:::ajcrew-web-deadbeef0001"},
                 {"ResourceARN": "arn:aws:cloudfront::123456789012:distribution/DISTOLD"},
             ]}), ""
         return f(args, profile, timeout)
@@ -1250,7 +1250,7 @@ def test_redeploy_is_idempotent_reuses_infra(monkeypatch):
     monkeypatch.setattr(engine, "run_aws", fake_run)
     result = engine.deploy("existing", "/tmp/site", profile="p")
     assert result["reused"] is True
-    assert result["bucket"] == "kirocrew-web-deadbeef0001"
+    assert result["bucket"] == "ajcrew-web-deadbeef0001"
     assert result["distribution_id"] == "DISTOLD"
     acts = f.actions()
     # Re-deploy must NOT create new infra — only sync + invalidate (+ status read).
@@ -1304,11 +1304,11 @@ def test_partial_deploy_recovery_reuses_bucket(fake, monkeypatch):
     monkeypatch.setattr(
         engine, "find_site_by_tag",
         lambda sid, p, region=engine.DEFAULT_REGION: {
-            "bucket": "kirocrew-web-deadbeef0000", "distribution_id": "", "distribution_arn": ""},
+            "bucket": "ajcrew-web-deadbeef0000", "distribution_id": "", "distribution_arn": ""},
     )
     result = engine.deploy("cr-dash", "/tmp/site", profile="p", region="us-west-2")
     # Reused the tagged bucket; created the missing distribution (not a full reuse).
-    assert result["bucket"] == "kirocrew-web-deadbeef0000"
+    assert result["bucket"] == "ajcrew-web-deadbeef0000"
     assert result["reused"] is False
     # No new bucket was allocated — the existing one was not orphaned.
     assert "s3api create-bucket" not in fake.actions()
@@ -1316,7 +1316,7 @@ def test_partial_deploy_recovery_reuses_bucket(fake, monkeypatch):
     assert "cloudfront create-distribution-with-tags" in fake.actions()
 
 
-_ENGINE_SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew" / "deploy" / "engine.py"
+_ENGINE_SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew" / "deploy" / "engine.py"
 
 
 class TestDeployBucketDurability:
@@ -1334,7 +1334,7 @@ class TestDeployBucketDurability:
 
     def _argvs(self):
         with mock.patch.object(engine, "_checked") as checked:
-            engine._harden_bucket("kirocrew-web-example", "p", "TagSet=[]")
+            engine._harden_bucket("ajcrew-web-example", "p", "TagSet=[]")
         return [c[0][0] for c in checked.call_args_list]
 
     def test_baseline_controls_are_applied(self):

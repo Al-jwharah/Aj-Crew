@@ -15,7 +15,7 @@ import pytest
 
 @pytest.fixture(autouse=True, name="_isolate_default_home")
 def _isolate_default_home_fixture(_floor_monkeypatch, tmp_path):
-    """Unpinning KIROCREW_HOME must remain safe even when SEL initializes cold."""
+    """Unpinning AJCREW_HOME must remain safe even when SEL initializes cold."""
     home = tmp_path / "home"
     home.mkdir()
     _floor_monkeypatch.setenv("HOME", str(home))
@@ -45,7 +45,7 @@ def _pin_default_home_and_breadcrumb(request, _floor_monkeypatch, tmp_path):
     A test requesting ``_isolate_default_home`` tests real cold resolution, so only the
     cache reset applies to it.
     """
-    from kiro_crew.config import paths
+    from aj_crew.config import paths
 
     _floor_monkeypatch.setattr(paths, "_resolved_home", None, raising=False)
     if "_isolate_default_home" in request.fixturenames:
@@ -77,7 +77,7 @@ def _durable_checkout(monkeypatch, agent_mod) -> None:
     and a real path a test can create lives under the redirected temp root,
     which the temp arm would (correctly) decline for its own reason.
     """
-    durable = Path("/durable-install/KiroCrew/src/kiro_crew/agent.py")
+    durable = Path("/durable-install/AjCrew/src/aj_crew/agent.py")
     monkeypatch.setattr(agent_mod, "__file__", str(durable))
 
 
@@ -87,9 +87,7 @@ def _spec_pinned_to(home) -> str:
 
     return json.dumps(
         {
-            "name": "kirocrew",
-            "mcpServers": {
-                "kirocrew-core": {"command": "kirocrew", "env": {"KIROCREW_HOME": str(home)}}
-            },
+            "name": "ajcrew",
+            "mcpServers": {"ajcrew-core": {"command": "ajcrew", "env": {"AJCREW_HOME": str(home)}}},
         }
     )

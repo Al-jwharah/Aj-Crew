@@ -10,8 +10,8 @@ import pytest
 from chat_test_helpers import _make_state, await_successor, chat_done_frames, run_as_slot_task
 from dashboard_chat_helpers import _provider_mock
 
-from kiro_crew.dashboard.recovery_replays import ReplayFamily
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.recovery_replays import ReplayFamily
+from aj_crew.testing.wait import await_until
 
 # ── Model refusal (kiro-cli `refusal` stop reason) ──
 
@@ -39,7 +39,7 @@ class TestRunChatModelRefusal:
 
     @staticmethod
     def _make_state_for_run_chat(tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.push_slots_update = MagicMock()
@@ -52,9 +52,9 @@ class TestRunChatModelRefusal:
     @pytest.mark.asyncio
     async def test_stale_recover_notice_is_tagged_and_emits_one_frame(self, tmp_path, monkeypatch):
         """The LIVE frame must carry the retry tag, and there must be exactly one."""
-        from kiro_crew.acp.types import STOP_REASON_STALE_RECOVER
-        from kiro_crew.dashboard.chat_utils import TRANSIENT_RETRY_KIND
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_STALE_RECOVER
+        from aj_crew.dashboard.chat_utils import TRANSIENT_RETRY_KIND
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_STALE_RECOVER)]
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -62,7 +62,7 @@ class TestRunChatModelRefusal:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -87,8 +87,8 @@ class TestRunChatModelRefusal:
 
     @pytest.mark.asyncio
     async def test_refusal_shows_declined_card_and_does_not_retry(self, tmp_path, monkeypatch):
-        from kiro_crew.acp.types import STOP_REASON_REFUSAL
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_REFUSAL
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         events = [LLMEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_REFUSAL)]
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -96,7 +96,7 @@ class TestRunChatModelRefusal:
         client = self._make_mock_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -138,8 +138,8 @@ class TestRunChatRefusalFallback:
 
     @staticmethod
     def _refusal_events(**refusal_kwargs):
-        from kiro_crew.acp.types import STOP_REASON_REFUSAL, RefusalInfo
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_REFUSAL, RefusalInfo
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         refusal = RefusalInfo(**refusal_kwargs) if refusal_kwargs else None
         return [LLMEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_REFUSAL, refusal=refusal)]
@@ -151,7 +151,7 @@ class TestRunChatRefusalFallback:
         """First refusal swaps + replays the SAME message; a second refusal
         (from the fallback) is terminal and says the fallback also declined."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         events = self._refusal_events(category="CYBER")
@@ -160,7 +160,7 @@ class TestRunChatRefusalFallback:
         client = self._make_refusing_client(events)
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -210,7 +210,7 @@ class TestRunChatRefusalFallback:
         """The swap is single-message: the first turn that is not the replay
         moves the session back to the primary before dispatching."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -218,7 +218,7 @@ class TestRunChatRefusalFallback:
         client = self._make_refusing_client(self._refusal_events(category="CYBER"))
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
         assert slot.task is not None
@@ -226,8 +226,8 @@ class TestRunChatRefusalFallback:
         assert slot._refusal_fallback_primary == "fable-5"
 
         # Next GENUINE message completes normally; restore precedes dispatch.
-        from kiro_crew.acp.types import STOP_REASON_END_TURN
-        from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+        from aj_crew.acp.types import STOP_REASON_END_TURN
+        from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
         async def _ok_stream(msg):
             yield LLMEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_END_TURN)
@@ -246,7 +246,7 @@ class TestRunChatRefusalFallback:
     async def test_disabled_seam_keeps_terminal_card_and_never_swaps(self, tmp_path, monkeypatch):
         """Empty config (the default) is byte-for-byte the pre-feature path."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -254,7 +254,7 @@ class TestRunChatRefusalFallback:
         client = self._make_refusing_client(self._refusal_events(category="CYBER"))
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -283,7 +283,7 @@ class TestRunChatRefusalFallback:
         and the Disabled sentence (which reads as 'no fallback set') is absent."""
         # The refusing client serves 'fable-5'; set the fallback to the SAME id.
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "fable-5",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -291,7 +291,7 @@ class TestRunChatRefusalFallback:
         client = self._make_refusing_client(self._refusal_events(category="CYBER"))
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -329,7 +329,7 @@ class TestRunChatRefusalFallback:
         fallback equals the refusing model. The gate matches the retry's own
         eligibility (actor user, top-level prompt)."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "fable-5",  # same as the refusing client's served model
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -337,7 +337,7 @@ class TestRunChatRefusalFallback:
         client = self._make_refusing_client(self._refusal_events(category="CYBER"))
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "nightly scan wake", _turn_actor="subagent")
 
@@ -357,7 +357,7 @@ class TestRunChatRefusalFallback:
         notice renders and the same-model notice token is never posted (the
         candidate is not equal to the refusing model)."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -365,7 +365,7 @@ class TestRunChatRefusalFallback:
         client = self._make_refusing_client(self._refusal_events(category="CYBER"))
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -379,7 +379,7 @@ class TestRunChatRefusalFallback:
     async def test_auto_uses_provider_recommended_model(self, tmp_path, monkeypatch):
         """'auto' defers to the refusal envelope's recommended_model."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "auto",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -389,7 +389,7 @@ class TestRunChatRefusalFallback:
         )
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -400,7 +400,7 @@ class TestRunChatRefusalFallback:
     async def test_auto_without_recommendation_is_terminal(self, tmp_path, monkeypatch):
         """'auto' with no recommended_model has nothing to retry on."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "auto",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -408,7 +408,7 @@ class TestRunChatRefusalFallback:
         client = self._make_refusing_client(self._refusal_events(category="CYBER"))
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -424,7 +424,7 @@ class TestRunChatRefusalFallback:
     async def test_failed_swap_falls_back_to_terminal_card(self, tmp_path, monkeypatch):
         """A set_model failure surfaces the ordinary card — never a dead retry."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -433,7 +433,7 @@ class TestRunChatRefusalFallback:
         client.set_model = AsyncMock(side_effect=RuntimeError("model unavailable"))
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello")
 
@@ -454,14 +454,14 @@ class TestRunChatRefusalFallback:
         Continue-style continuation, never the user's message: replaying the
         message would run the dispatched tool a second time."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
-        from kiro_crew.dashboard.chat_utils import (
+        from aj_crew.dashboard.chat_utils import (
             _REFUSAL_FALLBACK_RESUME_MSG,
             RecoveryPayload,
         )
-        from kiro_crew.providers.base import EVENT_TOOL_CALL, LLMEvent
+        from aj_crew.providers.base import EVENT_TOOL_CALL, LLMEvent
 
         events = [
             LLMEvent(kind=EVENT_TOOL_CALL, title="write_file", tool_kind="write"),
@@ -485,7 +485,7 @@ class TestRunChatRefusalFallback:
 
         monkeypatch.setattr(type(slot), "queue_insert", _spy)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "hello", _attachments=[str(tmp_path / "a.txt")])
 
@@ -535,7 +535,7 @@ class TestRunChatRefusalFallback:
         fallback model start the request over could only ever fire on a
         session that did not keep the partial turn — re-running the writes.
         The nudge must tell such a model to stop instead."""
-        from kiro_crew.dashboard.chat_utils import _REFUSAL_FALLBACK_RESUME_MSG
+        from aj_crew.dashboard.chat_utils import _REFUSAL_FALLBACK_RESUME_MSG
 
         assert "start the request now" not in _REFUSAL_FALLBACK_RESUME_MSG
         assert "do NOT start the request over" in _REFUSAL_FALLBACK_RESUME_MSG
@@ -546,10 +546,10 @@ class TestRunChatRefusalFallback:
         """With no tool dispatched, the retry stays the verbatim replay of the
         user's own words, carrying the original attachments."""
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._configured_refusal_fallback",
+            "aj_crew.dashboard.chat_runner._configured_refusal_fallback",
             lambda: "opus-test",
         )
-        from kiro_crew.dashboard.chat_utils import RecoveryPayload
+        from aj_crew.dashboard.chat_utils import RecoveryPayload
 
         events = self._refusal_events(category="CYBER")
         state = self._make_state_for_run_chat(tmp_path, monkeypatch)
@@ -566,7 +566,7 @@ class TestRunChatRefusalFallback:
 
         monkeypatch.setattr(type(slot), "queue_insert", _spy)
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         _file = str(tmp_path / "a.txt")
         await _run_chat(state, slot, "hello", _attachments=[_file])
@@ -587,7 +587,7 @@ class TestRunChatRefusalFallback:
 
     @staticmethod
     def _answering_events():
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         return [
             LLMEvent(kind=EVENT_TEXT_CHUNK, text="follow-up answer"),
@@ -611,14 +611,14 @@ class TestRunChatEarlyExitHandOff:
             TestRunChatRefusalFallback._answering_events() if events is None else events, prompts
         )
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.get_instance", lambda: None)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.get_instance", lambda: None)
         state.push_refresh = MagicMock()
         state.refresh_slot_source_status = MagicMock()
         return state, slot, prompts
 
     @staticmethod
     def _run(state, slot, message, **kwargs):
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         return run_as_slot_task(slot, _run_chat(state, slot, message, **kwargs))
 
@@ -627,7 +627,7 @@ class TestRunChatEarlyExitHandOff:
         notifies: list[dict] = []
         nudge = MagicMock()
         nudge.notify_turn_complete = MagicMock(side_effect=lambda _key, **kw: notifies.append(kw))
-        monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: nudge)
+        monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: nudge)
         return notifies
 
     @pytest.mark.parametrize(
@@ -656,7 +656,7 @@ class TestRunChatEarlyExitHandOff:
         state, slot, prompts = self._setup(tmp_path, monkeypatch)
         notifies = self._count_nudge_notifies(monkeypatch)
         title = AsyncMock()
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.title_then_refresh", title)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.title_then_refresh", title)
 
         await self._run(state, slot, "/prompts")
 
@@ -678,8 +678,8 @@ class TestRunChatEarlyExitHandOff:
         local command is still titled when the command ends the cycle."""
         state, slot, _prompts = self._setup(tmp_path, monkeypatch)
         title = AsyncMock()
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.title_then_refresh", title)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.generate_session_summary", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.title_then_refresh", title)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.generate_session_summary", AsyncMock())
         slot.queue_insert(0, "/prompts", kind="")
 
         first = await self._run(state, slot, "answer me")
@@ -738,7 +738,7 @@ class TestRunChatEarlyExitHandOff:
         ``/compact`` or ``/quit`` behaves as if the turn never started."""
         state, slot, prompts = self._setup(tmp_path, monkeypatch)
         consume = AsyncMock(return_value=False)
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._consume_pending_reset", consume)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._consume_pending_reset", consume)
 
         await self._run(state, slot, "/quit")
 
@@ -753,7 +753,7 @@ class TestRunChatEarlyExitHandOff:
         rather than failing every entry in turn, and the error propagates."""
         state, slot, prompts = self._setup(tmp_path, monkeypatch)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._discard_stale_decision",
+            "aj_crew.dashboard.chat_runner._discard_stale_decision",
             MagicMock(side_effect=RuntimeError("setup broke")),
         )
         slot.queue_insert(0, "second", kind="")
@@ -775,7 +775,7 @@ class TestRunChatEarlyExitHandOff:
         it. The outcome was recorded first, so the guard runs the tail with this
         turn's policy: a sign-in failure still holds the queue and is still
         recorded, and the AutoNudge timer re-arms exactly once, with its facts."""
-        from kiro_crew.acp.transport_errors import AcpAuthRequired
+        from aj_crew.acp.transport_errors import AcpAuthRequired
 
         async def _signed_out(_msg):
             raise AcpAuthRequired("Please sign in")
@@ -807,7 +807,7 @@ class TestRunChatEarlyExitHandOff:
         """A cancel landing while the tail awaits its deferred-reset consume (a
         turn deadline) is deferred until the hand-off ran: the queued message
         still runs, and the turn then ends cancelled."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state, slot, prompts = self._setup(tmp_path, monkeypatch)
         entered = asyncio.Event()
@@ -843,7 +843,7 @@ class TestRunChatEarlyExitHandOff:
         """A coroutine closed while suspended above its main try (a pending task
         destroyed at loop or harness teardown) cannot await, so the guard skips
         the tail instead of raising out of the close."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state, slot, _prompts = self._setup(tmp_path, monkeypatch)
         tails = AsyncMock()
@@ -866,7 +866,7 @@ class TestRunChatEarlyExitHandOff:
         the tail itself; the outer call must not run it a second time."""
         state, slot, prompts = self._setup(tmp_path, monkeypatch)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._expand_prompt_mention_off_loop",
+            "aj_crew.dashboard.chat_runner._expand_prompt_mention_off_loop",
             AsyncMock(return_value=("Execute the following instructions: review it", "ok")),
         )
         slot.queue_insert(0, "then this", kind="")
@@ -902,7 +902,7 @@ class TestRunChatEarlyExitHandOff:
         hands it the floor instead of ending: one terminal chat_done, after the
         message it ran. A reservation is any starter that takes the floor only
         from a slot that is not ``running``, as an app's turn reservation does."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state, slot, prompts = self._setup(tmp_path, monkeypatch)
         real_payload = chat_runner.chat_done_payload
@@ -938,7 +938,7 @@ class TestRunChatEarlyExitHandOff:
             if len(calls) == 1:
                 raise RuntimeError("setup broke")
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._discard_stale_decision", _discard)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._discard_stale_decision", _discard)
 
     @pytest.mark.parametrize("hold", ["sign-in", "setup"])
     @pytest.mark.asyncio
@@ -946,7 +946,7 @@ class TestRunChatEarlyExitHandOff:
         """A held queue keeps what it held, but a send arriving during the cycle's
         payload read is the user's next send, the one a hold resumes on: it runs
         instead of waiting on an idle slot, and the held entries drain after it."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state, slot, prompts = self._setup(tmp_path, monkeypatch)
         if hold == "sign-in":
@@ -986,8 +986,8 @@ class TestRunChatEarlyExitHandOff:
         """With sub-agents attached a user send waits, as it would on an idle
         slot. The hand-off for a send that arrived during the read of a held
         queue must not start a held sub-agent completion in its place."""
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND
 
         state, slot, prompts = self._setup(tmp_path, monkeypatch)
         state.subagents = MagicMock()
@@ -1041,8 +1041,8 @@ class TestRunChatEarlyExitHandOff:
         """The cycle still ends with a ``done`` row, which the OpenAI-compatible
         readers wait for, so the failed turn's error row is what tells them to
         answer ``server_error`` rather than an empty successful completion."""
-        from kiro_crew.dashboard import openai_compat
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard import openai_compat
+        from aj_crew.dashboard.chat import _run_chat
 
         state, slot, prompts = self._setup(tmp_path, monkeypatch)
         self._fail_first_setup(monkeypatch)
@@ -1106,7 +1106,7 @@ class TestRunChatEarlyExitHandOff:
         queued behind it runs."""
         state, slot, prompts = self._setup(tmp_path, monkeypatch)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_runner._handle_workflow_command",
+            "aj_crew.dashboard.chat_runner._handle_workflow_command",
             AsyncMock(side_effect=OSError("store unavailable")),
         )
         slot.queue_insert(0, "summarize the PR", kind="")
@@ -1128,7 +1128,7 @@ class TestRunChatEarlyExitHandOff:
         """A preparation task can finish without being cancelled and still have
         recorded a failure the turn's barrier refuses. The tail asks the barrier's
         own rule, so the queue is held rather than walked into that refusal."""
-        from kiro_crew import memory_startup
+        from aj_crew import memory_startup
 
         state, slot, prompts = self._setup(tmp_path, monkeypatch)
         monkeypatch.setattr(memory_startup, "_active", None)

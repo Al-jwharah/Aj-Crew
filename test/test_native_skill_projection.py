@@ -21,8 +21,8 @@ from unittest.mock import AsyncMock
 import native_skill_projection_helpers
 import pytest
 
-from kiro_crew.acp import skill_projection as projection
-from kiro_crew.agent_spec_format import iter_agent_spec_files
+from aj_crew.acp import skill_projection as projection
+from aj_crew.agent_spec_format import iter_agent_spec_files
 
 # The shared fixtures and helpers, bound here by name: pytest registers the fixtures
 # from this namespace.
@@ -41,7 +41,7 @@ def test_native_view_bounds_metadata_and_preserves_original_scope(native_tree):
     spec = {
         "name": "custom",
         "prompt": "file://instructions.md",
-        "tools": ["read", "@kirocrew-core"],
+        "tools": ["read", "@ajcrew-core"],
         "allowedTools": ["read"],
         "resources": ["file://RULES.md", *[f"skill://catalog/s{n}/SKILL.md" for n in range(1024)]],
     }
@@ -55,7 +55,7 @@ def test_native_view_bounds_metadata_and_preserves_original_scope(native_tree):
     assert len(view["resources"]) == 4
     # The authored grants are kept as written; a custom agent also gets Crew's
     # default servers (acp/default_crew_servers.py), here the one it did not name.
-    assert view["tools"] == [*spec["tools"], "@kirocrew-cron"]
+    assert view["tools"] == [*spec["tools"], "@ajcrew-cron"]
     assert view["allowedTools"] == spec["allowedTools"]
     assert view["prompt"] == "file://" + (agents / "instructions.md").as_posix()
     assert iter_agent_spec_files(agents) == [source]
@@ -86,7 +86,7 @@ def test_launch_record_resources_match_the_alias_file_kiro_cli_loads(native_tree
     kiro-cli loads the alias file, so a file holding fewer resources than the
     view would make the folder skip a guide kiro-cli never loaded.
     """
-    from kiro_crew import member_essential_context
+    from aj_crew import member_essential_context
 
     _home, agents, project = native_tree
     guides = {
@@ -170,13 +170,13 @@ def test_set_mode_activates_the_launched_agent_without_a_view_then_consumes_it()
     reactivating a cached spec the strict resolver existed to refuse.
     """
     prepared = projection.NativeSkillProjection({"custom": "native-alias"})
-    prepared.spawn_agent_name = "kirocrew"
-    activated = prepared.request("session/set_mode", {"sessionId": "s", "modeId": "kirocrew"})
-    assert activated["modeId"] == "kirocrew"
+    prepared.spawn_agent_name = "ajcrew"
+    activated = prepared.request("session/set_mode", {"sessionId": "s", "modeId": "ajcrew"})
+    assert activated["modeId"] == "ajcrew"
     # The exemption is spent: a second activation of the same agent fails closed.
     assert prepared.spawn_agent_name == ""
     with pytest.raises(ValueError, match="no prepared"):
-        prepared.request("session/set_mode", {"modeId": "kirocrew"})
+        prepared.request("session/set_mode", {"modeId": "ajcrew"})
     # A prepared agent still maps to its alias.
     assert prepared.request("session/set_mode", {"modeId": "custom"})["modeId"] == "native-alias"
     # Any OTHER unprepared mode is still rejected, launched agent set or not.
@@ -199,19 +199,19 @@ def test_frame_advertises_the_launched_agent_mode_independently_of_the_request_e
     unprojected stranger is still never advertised.
     """
     prepared = projection.NativeSkillProjection(
-        {}, spawn_agent_name="kirocrew", advertised_launch_name="kirocrew"
+        {}, spawn_agent_name="ajcrew", advertised_launch_name="ajcrew"
     )
     kept = prepared.frame(
-        {"availableModes": [{"id": "kirocrew", "name": "kirocrew"}, {"id": "stranger"}]}
+        {"availableModes": [{"id": "ajcrew", "name": "ajcrew"}, {"id": "stranger"}]}
     )
     # The launched agent's mode survives; an unprojected stranger does not.
-    assert kept["availableModes"] == [{"id": "kirocrew", "name": "kirocrew"}]
+    assert kept["availableModes"] == [{"id": "ajcrew", "name": "ajcrew"}]
     # Consuming the request exemption does NOT hide the advertised launch mode:
     # advertising is a fixed fact, not the one-shot request tolerance.
-    prepared.request("session/set_mode", {"modeId": "kirocrew"})
+    prepared.request("session/set_mode", {"modeId": "ajcrew"})
     assert prepared.spawn_agent_name == ""
-    after = prepared.frame({"availableModes": [{"id": "kirocrew", "name": "kirocrew"}]})
-    assert after["availableModes"] == [{"id": "kirocrew", "name": "kirocrew"}]
+    after = prepared.frame({"availableModes": [{"id": "ajcrew", "name": "ajcrew"}]})
+    assert after["availableModes"] == [{"id": "ajcrew", "name": "ajcrew"}]
 
 
 def test_frame_advertises_the_launch_mode_on_the_shared_runtime_with_empty_spawn_name():
@@ -224,15 +224,15 @@ def test_frame_advertises_the_launch_mode_on_the_shared_runtime_with_empty_spawn
     from availableModes, so ``_mode_available`` failed and the session was
     terminated before activation.
     """
-    prepared = projection.NativeSkillProjection({}, advertised_launch_name="kirocrew")
+    prepared = projection.NativeSkillProjection({}, advertised_launch_name="ajcrew")
     assert prepared.spawn_agent_name == ""
     kept = prepared.frame(
-        {"availableModes": [{"id": "kirocrew", "name": "kirocrew"}, {"id": "stranger"}]}
+        {"availableModes": [{"id": "ajcrew", "name": "ajcrew"}, {"id": "stranger"}]}
     )
-    assert kept["availableModes"] == [{"id": "kirocrew", "name": "kirocrew"}]
+    assert kept["availableModes"] == [{"id": "ajcrew", "name": "ajcrew"}]
     # A projection no spawn claimed (both fields empty) advertises neither.
     unclaimed = projection.NativeSkillProjection({})
-    hidden = unclaimed.frame({"availableModes": [{"id": "kirocrew", "name": "kirocrew"}]})
+    hidden = unclaimed.frame({"availableModes": [{"id": "ajcrew", "name": "ajcrew"}]})
     assert hidden["availableModes"] == []
 
 
@@ -260,9 +260,9 @@ def test_custom_agent_gets_crew_default_servers_without_approvals(native_tree):
     )
     prepared = projection.prepare_native_skill_projection(project)
     view = json.loads((agents / f"{prepared.agent('custom')}.json").read_text(encoding="utf-8"))
-    assert view["tools"] == ["read", "@kirocrew-core", "@kirocrew-cron"]
+    assert view["tools"] == ["read", "@ajcrew-core", "@ajcrew-cron"]
     assert view["allowedTools"] == []
-    for server in ("kirocrew-core", "kirocrew-cron"):
+    for server in ("ajcrew-core", "ajcrew-cron"):
         assert server in view["mcpServers"]
         assert "autoApprove" not in view["mcpServers"][server]
 
@@ -273,7 +273,7 @@ def test_a_per_tool_core_grant_keeps_its_narrowing(native_tree):
         json.dumps(
             {
                 "name": "custom",
-                "tools": ["read", "@kirocrew-core/skill_search"],
+                "tools": ["read", "@ajcrew-core/skill_search"],
                 "resources": ["skill://skills/a/SKILL.md"],
             }
         ),
@@ -281,7 +281,7 @@ def test_a_per_tool_core_grant_keeps_its_narrowing(native_tree):
     )
     prepared = projection.prepare_native_skill_projection(project)
     view = prepared.specs["custom"]
-    assert view["tools"] == ["read", "@kirocrew-core/skill_search", "@kirocrew-cron"]
+    assert view["tools"] == ["read", "@ajcrew-core/skill_search", "@ajcrew-cron"]
 
 
 @pytest.mark.parametrize(
@@ -296,7 +296,7 @@ def test_zero_tool_confirmation_judges_the_view_kiro_loads(
     the ban for the alias kiro loads through ``--agent``. The view is captured
     when the projection is prepared, so a later edit of the authored spec does
     not change the answer."""
-    from kiro_crew.acp import client as acp_client
+    from aj_crew.acp import client as acp_client
 
     _home, agents, project = native_tree
     spec = {"name": "custom", "tools": [], "includeMcpJson": False, "resources": resources}
@@ -319,7 +319,7 @@ def test_rollback_switch_confirms_a_zero_tool_spec_through_the_authored_bracket(
     """With the projection switched off no view exists and the harness loads the
     named spec itself, so the authored spec read before the spawn and again after
     start is the confirmation; a view-only answer would leave the pool unstartable."""
-    from kiro_crew.acp import client as acp_client
+    from aj_crew.acp import client as acp_client
 
     _home, _agents, project = native_tree
     project_agents = project / ".kiro" / "agents"
@@ -328,7 +328,7 @@ def test_rollback_switch_confirms_a_zero_tool_spec_through_the_authored_bracket(
     spec_path.write_text(
         json.dumps({"name": "custom", "tools": [], "includeMcpJson": False}), encoding="utf-8"
     )
-    monkeypatch.setenv("KIROCREW_NATIVE_SKILL_PROJECTION", "0")
+    monkeypatch.setenv("AJCREW_NATIVE_SKILL_PROJECTION", "0")
     client = acp_client.AcpClient(agent="custom", work_dir=project)
     client._native_skill_projection = projection.prepare_native_skill_projection(
         project, per_session_element=False
@@ -362,14 +362,14 @@ def test_projected_search_uses_the_managed_command_and_preserves_approval(native
                 "name": "custom",
                 "resources": ["skill://skills/a/SKILL.md"],
                 "mcpServers": {
-                    "kirocrew-core": {"command": "other-server", "args": [], "autoApprove": []}
+                    "ajcrew-core": {"command": "other-server", "args": [], "autoApprove": []}
                 },
             }
         ),
         encoding="utf-8",
     )
     prepared = projection.prepare_native_skill_projection(project)
-    entry = prepared.specs["custom"]["mcpServers"]["kirocrew-core"]
+    entry = prepared.specs["custom"]["mcpServers"]["ajcrew-core"]
     assert entry["command"] == "test-core" and entry["autoApprove"] == []
 
 
@@ -380,7 +380,7 @@ def test_explicit_search_exclusion_fails_only_that_agent(native_tree):
             {
                 "name": "custom",
                 "resources": ["skill://skills/a/SKILL.md"],
-                "excludedTools": ["@kirocrew-core/skill_search"],
+                "excludedTools": ["@ajcrew-core/skill_search"],
             }
         ),
         encoding="utf-8",
@@ -446,15 +446,15 @@ def test_spawn_agent_keeps_the_authored_name_when_no_view_is_prepared():
     """
     prepared = projection.NativeSkillProjection({"custom": "native-alias"})
     assert prepared.spawn_agent("custom") == "native-alias"
-    assert prepared.spawn_agent("kirocrew") == "kirocrew"
+    assert prepared.spawn_agent("ajcrew") == "ajcrew"
     with pytest.raises(ValueError, match="no prepared"):
-        prepared.agent("kirocrew")
+        prepared.agent("ajcrew")
 
 
 def test_spawn_agent_still_raises_an_authored_restriction():
     """An authored refusal is a user-facing spawn refusal, not a silent skip.
 
-    A ``kirocrew-core`` exclusion or a disabled ``skill_search`` records an
+    An ``ajcrew-core`` exclusion or a disabled ``skill_search`` records an
     ``errors`` entry naming the spec and the remedy; ``spawn_agent`` raises it so
     the runtime can wrap it as ``AcpRuntimeError`` and the startup paths can
     translate the sentence, exactly as the strict ``agent`` does.
@@ -480,8 +480,8 @@ def test_unmapped_custom_agent_that_opts_out_does_not_gain_tools_or_servers(nati
     spec = {
         "name": "custom",
         "tools": ["read"],
-        "excludedTools": ["@kirocrew-core/skill_search"],
-        "managedToolPolicy": {"excludeServers": ["kirocrew-core", "kirocrew-cron"]},
+        "excludedTools": ["@ajcrew-core/skill_search"],
+        "managedToolPolicy": {"excludeServers": ["ajcrew-core", "ajcrew-cron"]},
     }
     (agents / "custom.json").write_text(json.dumps(spec), encoding="utf-8")
     prepared = projection.prepare_native_skill_projection(project)
@@ -524,7 +524,7 @@ def test_invalid_core_restrictions_fail_only_the_affected_agent(
                 {
                     "name": name,
                     "resources": ["skill://skills/a/SKILL.md"],
-                    "mcpServers": {"kirocrew-core": core},
+                    "mcpServers": {"ajcrew-core": core},
                 }
             ),
             encoding="utf-8",
@@ -559,7 +559,7 @@ def test_rollback_restores_original_local_value_and_presence(native_tree, monkey
     current = json.loads(settings.read_text(encoding="utf-8"))
     current["toolSearch.enabled"] = False
     settings.write_text(json.dumps(current), encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_NATIVE_SKILL_PROJECTION", "0")
+    monkeypatch.setenv("AJCREW_NATIVE_SKILL_PROJECTION", "0")
     assert projection.prepare_native_skill_projection(project) is None
     restored = json.loads(settings.read_text(encoding="utf-8"))
     expected = {**original, "toolSearch.enabled": False}
@@ -586,7 +586,7 @@ def test_rollback_preserves_operator_changes(native_tree, monkeypatch, operator_
         current[key] = operator_value
         expected = {key: operator_value}
     settings.write_text(json.dumps(current), encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_NATIVE_SKILL_PROJECTION", "0")
+    monkeypatch.setenv("AJCREW_NATIVE_SKILL_PROJECTION", "0")
     assert projection.prepare_native_skill_projection(project) is None
     assert json.loads(settings.read_text(encoding="utf-8")) == expected
 
@@ -598,7 +598,7 @@ def test_disabled_projection_does_not_enumerate_agents_or_create_settings(native
         pytest.fail("disabled projection must not read authored agents")
 
     monkeypatch.setattr(projection, "list_agents", unexpected)
-    monkeypatch.setenv("KIROCREW_NATIVE_SKILL_PROJECTION", "0")
+    monkeypatch.setenv("AJCREW_NATIVE_SKILL_PROJECTION", "0")
     assert projection.prepare_native_skill_projection(project) is None
     assert list(agents.iterdir()) == []
     assert not (project / ".kiro").exists()
@@ -616,7 +616,7 @@ def _reset_ceiling_state(monkeypatch):
 
 
 def _fill_agents_dir_with_views(agents: Path, count: int) -> None:
-    """Write *count* ``kirocrew-skill-view-*.json`` files directly in *agents*."""
+    """Write *count* ``ajcrew-skill-view-*.json`` files directly in *agents*."""
     for n in range(count):
         name = f"{projection.NATIVE_SKILL_ALIAS_PREFIX}{n:024x}"
         (agents / f"{name}.json").write_text(f'{{"name":"{name}"}}', encoding="utf-8")
@@ -659,14 +659,14 @@ def test_at_or_above_the_ceiling_falls_back_and_writes_no_view(
     # the fallback's prune leaves them and mints nothing. The metadata/lock dirs
     # the prune may create are not skill-view files, so they do not count.
     assert _skill_views() == before
-    # Same code path as KIROCREW_NATIVE_SKILL_PROJECTION=0: no overlay written
+    # Same code path as AJCREW_NATIVE_SKILL_PROJECTION=0: no overlay written
     # because no cli.json existed to roll back.
     assert not (project / ".kiro").exists()
     fallback = [r for r in caplog.records if "fall back to authored agents" in r.message]
     assert fallback
     # The warning says the count spans every home's views (the conductor's
     # option-a choice) and points at the doctor's foreign-file remedy.
-    assert "regardless of which Kiro Crew home" in fallback[0].message
+    assert "regardless of which Aj Crew home" in fallback[0].message
     assert "doctor" in fallback[0].message
 
 
@@ -742,14 +742,14 @@ def test_rollback_of_legacy_owned_overlay(native_tree, monkeypatch, source, inhe
     settings.write_text(
         json.dumps(
             {
-                "kirocrew.skillDiscovery.inheritFiles": inherited,
-                "kirocrew.skillDiscovery.inheritSource": source,
+                "ajcrew.skillDiscovery.inheritFiles": inherited,
+                "ajcrew.skillDiscovery.inheritSource": source,
                 "chat.disableInheritingDefaultResources": True,
             }
         ),
         encoding="utf-8",
     )
-    monkeypatch.setenv("KIROCREW_NATIVE_SKILL_PROJECTION", "0")
+    monkeypatch.setenv("AJCREW_NATIVE_SKILL_PROJECTION", "0")
     assert projection.prepare_native_skill_projection(project) is None
     assert json.loads(settings.read_text(encoding="utf-8")) == expected
 
@@ -760,7 +760,7 @@ def test_rollback_never_changes_unmanaged_settings(native_tree, monkeypatch):
     settings.parent.mkdir(parents=True)
     original = '{ "chat.disableInheritingDefaultResources": true, "other": 42 }'
     settings.write_text(original, encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_NATIVE_SKILL_PROJECTION", "0")
+    monkeypatch.setenv("AJCREW_NATIVE_SKILL_PROJECTION", "0")
     assert projection.prepare_native_skill_projection(project) is None
     assert settings.read_text(encoding="utf-8") == original
 
@@ -769,7 +769,7 @@ def test_running_projection_keeps_its_mode_until_restart(native_tree, monkeypatc
     _home, agents, project = native_tree
     (agents / "custom.json").write_text('{"name":"custom"}', encoding="utf-8")
     prepared = projection.prepare_native_skill_projection(project)
-    monkeypatch.setenv("KIROCREW_NATIVE_SKILL_PROJECTION", "0")
+    monkeypatch.setenv("AJCREW_NATIVE_SKILL_PROJECTION", "0")
     refreshed = projection.prepare_native_skill_projection(project, enabled=True)
     assert refreshed.aliases == prepared.aliases
     assert projection.prepare_native_skill_projection(project) is None
@@ -780,11 +780,11 @@ def test_running_projection_keeps_its_mode_until_restart(native_tree, monkeypatc
 async def test_client_spawn_uses_authored_agent_only_when_rolled_back(
     native_tree, monkeypatch, enabled
 ):
-    from kiro_crew.acp import client as client_module
+    from aj_crew.acp import client as client_module
 
     home, agents, project = native_tree
     monkeypatch.setenv("KIRO_HOME", str(home))
-    monkeypatch.setenv("KIROCREW_NATIVE_SKILL_PROJECTION", "1" if enabled else "0")
+    monkeypatch.setenv("AJCREW_NATIVE_SKILL_PROJECTION", "1" if enabled else "0")
     (agents / "custom.json").write_text('{"name":"custom"}', encoding="utf-8")
     monkeypatch.setattr(
         client_module, "_resolve_kiro_bin_for_spawn", AsyncMock(return_value="test-kiro")

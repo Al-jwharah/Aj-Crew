@@ -23,10 +23,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 from aiohttp import web
 
-from kiro_crew.dashboard.handlers import mobile_connect
-from kiro_crew.platform.defaults import DefaultMobileConnectProvider
-from kiro_crew.platform.governance import SCOPE_CATALOG
-from kiro_crew.platform.interfaces import MobileConnectMethod
+from aj_crew.dashboard.handlers import mobile_connect
+from aj_crew.platform.defaults import DefaultMobileConnectProvider
+from aj_crew.platform.governance import SCOPE_CATALOG
+from aj_crew.platform.interfaces import MobileConnectMethod
 
 
 @dataclass
@@ -66,9 +66,9 @@ class TestGovernedMethods:
         ctx = MagicMock()
         ctx.mobile_connect.connect_methods.return_value = methods
         with (
-            patch("kiro_crew.platform.context.current_context", return_value=ctx),
+            patch("aj_crew.platform.context.current_context", return_value=ctx),
             patch(
-                "kiro_crew.platform.governance_profiles.governance_permits",
+                "aj_crew.platform.governance_profiles.governance_permits",
                 side_effect=_permits(denied),
             ),
         ):
@@ -103,7 +103,7 @@ class TestGovernedMethods:
     def test_degraded_seam_read_hides_the_entry(self) -> None:
         ctx = MagicMock()
         ctx.mobile_connect.connect_methods.side_effect = RuntimeError("adapter broke")
-        with patch("kiro_crew.platform.context.current_context", return_value=ctx):
+        with patch("aj_crew.platform.context.current_context", return_value=ctx):
             assert mobile_connect._governed_methods() == []
 
 
@@ -115,7 +115,7 @@ def _request(*, user: str = "alice", app: str = "") -> MagicMock:
 
 
 def _call_methods(request: MagicMock):
-    with patch("kiro_crew.dashboard.handlers.mobile_connect.check_origin", return_value=True):
+    with patch("aj_crew.dashboard.handlers.mobile_connect.check_origin", return_value=True):
         return asyncio.run(mobile_connect.api_mobile_connect_methods(request))
 
 
@@ -145,7 +145,7 @@ class TestMethodsEndpoint:
 class TestMintDeniedReason:
     def test_permitted_is_empty(self) -> None:
         with patch(
-            "kiro_crew.platform.governance_profiles.governance_permits",
+            "aj_crew.platform.governance_profiles.governance_permits",
             side_effect=_permits(set()),
         ):
             assert mobile_connect.mint_denied_reason("login_link") == ""
@@ -153,7 +153,7 @@ class TestMintDeniedReason:
     @pytest.mark.parametrize("denied", [{""}, {"methods:login_link"}])
     def test_either_half_denies(self, denied: set[str]) -> None:
         with patch(
-            "kiro_crew.platform.governance_profiles.governance_permits",
+            "aj_crew.platform.governance_profiles.governance_permits",
             side_effect=_permits(denied),
         ):
             assert mobile_connect.mint_denied_reason("login_link") != ""
@@ -167,7 +167,7 @@ class TestMintDeniedReason:
         """
         from unittest.mock import MagicMock
 
-        from kiro_crew.platform.interfaces import MobileConnectMethod
+        from aj_crew.platform.interfaces import MobileConnectMethod
 
         ctx = MagicMock()
         ctx.mobile_connect.connect_methods.return_value = [
@@ -175,10 +175,10 @@ class TestMintDeniedReason:
         ]
         with (
             patch(
-                "kiro_crew.platform.governance_profiles.governance_permits",
+                "aj_crew.platform.governance_profiles.governance_permits",
                 side_effect=_permits(set()),
             ),
-            patch("kiro_crew.platform.context.current_context", return_value=ctx),
+            patch("aj_crew.platform.context.current_context", return_value=ctx),
         ):
             assert "not offered" in mobile_connect.mint_denied_reason("login_link")
             assert mobile_connect.mint_denied_reason("tailnet_qr") == ""
@@ -187,15 +187,15 @@ class TestMintDeniedReason:
 class TestMintEndpointsReCheck:
     def test_mobile_link_mint_refused_when_method_denied(self) -> None:
         """The wire-level pin: a governance denial 403s BEFORE any minting."""
-        from kiro_crew.dashboard.handlers import auth_mobile
+        from aj_crew.dashboard.handlers import auth_mobile
 
         request = MagicMock(spec=web.Request)
         request.get.side_effect = {"user": "alice", "app": ""}.get
         request.headers = {"Origin": ""}
         with (
-            patch("kiro_crew.dashboard.handlers.auth_mobile.check_origin", return_value=True),
+            patch("aj_crew.dashboard.handlers.auth_mobile.check_origin", return_value=True),
             patch(
-                "kiro_crew.dashboard.handlers.auth_mobile.mint_denied_reason",
+                "aj_crew.dashboard.handlers.auth_mobile.mint_denied_reason",
                 return_value="mobile connect disabled by policy",
             ),
         ):
@@ -204,14 +204,14 @@ class TestMintEndpointsReCheck:
         assert json.loads(resp.text)["code"] == "governance_denied"
 
     def test_tailnet_qr_mint_refused_when_method_denied(self) -> None:
-        from kiro_crew.dashboard.handlers import tailnet_mobile
+        from aj_crew.dashboard.handlers import tailnet_mobile
 
         request = MagicMock(spec=web.Request)
         request.app = {}
         with (
             patch.object(tailnet_mobile, "_guard", return_value=None),
             patch(
-                "kiro_crew.dashboard.handlers.tailnet_mobile.mint_denied_reason",
+                "aj_crew.dashboard.handlers.tailnet_mobile.mint_denied_reason",
                 return_value="mobile connect disabled by policy",
             ),
             patch.object(tailnet_mobile, "_audit_async") as audit,

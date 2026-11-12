@@ -4,7 +4,7 @@
 persist it into config.json (``slack/interactions_modals.py`` via ``data.setdefault``,
 ``dashboard/chat_voice.py`` via ``json.dump``), and the gateway reads it back on
 startup (``slack/handler_runtime/voice.py::load_voice_reply_config``). There is
-no ``SCHEMA_REGISTRY`` entry and no ``KiroCrewConfig`` field, so before the
+no ``SCHEMA_REGISTRY`` entry and no ``AjCrewConfig`` field, so before the
 exemption set existed every launch logged ``Config: unrecognized top-level keys:
 voice_reply`` -- a false positive warning about a section the product wrote
 itself.
@@ -27,12 +27,12 @@ import logging
 
 import pytest
 
-from kiro_crew.config import loader as L
-from kiro_crew.config import validation
-from kiro_crew.config.loader import (
+from aj_crew.config import loader as L
+from aj_crew.config import validation
+from aj_crew.config.loader import (
     _KNOWN_CONFIG_SECTIONS,
     CONFIG_RESERVED_TOP_KEYS,
-    KiroCrewConfig,
+    AjCrewConfig,
 )
 
 _UNRECOGNIZED = "unrecognized top-level keys"
@@ -46,7 +46,7 @@ class TestCoreOwnedSectionsAreNotUnrecognized:
     @pytest.mark.skipif(not validation._HAS_JSONSCHEMA, reason="jsonschema not installed")
     def test_voice_reply_section_is_not_reported(self, caplog: pytest.LogCaptureFixture) -> None:
         data = {"agent": {"provider": "acp"}, "voice_reply": {"enabled": True, "provider": "polly"}}
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data(data)
         assert _unrecognized_warnings(caplog) == []
 
@@ -56,7 +56,7 @@ class TestCoreOwnedSectionsAreNotUnrecognized:
     ) -> None:
         # Excluding the core-owned set must not widen into silencing real typos.
         data = {"voice_reply": {"enabled": True}, "totally_unknown_key": 1}
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data(data)
         warnings = _unrecognized_warnings(caplog)
         assert warnings and "totally_unknown_key" in warnings[0]
@@ -73,7 +73,7 @@ class TestCoreOwnedSectionsAreNotUnrecognized:
         empty, so a scalar written by hand must keep the one warning that says it
         is being ignored.
         """
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data(
                 {"agent": {"provider": "acp"}, "voice_reply": malformed}
             )
@@ -93,8 +93,8 @@ class TestCoreOwnedSectionsAreNotUnrecognized:
         monkeypatch.setattr(L, "config_dir", lambda: tmp_path)
         monkeypatch.setattr(L, "config_local_path", lambda: tmp_path / "config.local.json")
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-            KiroCrewConfig.load()
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+            AjCrewConfig.load()
         assert _unrecognized_warnings(caplog) == []
 
     @pytest.mark.skipif(not validation._HAS_JSONSCHEMA, reason="jsonschema not installed")
@@ -115,8 +115,8 @@ class TestCoreOwnedSectionsAreNotUnrecognized:
         monkeypatch.setattr(L, "config_dir", lambda: tmp_path)
         monkeypatch.setattr(L, "config_local_path", lambda: tmp_path / "config.local.json")
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
-            cfg = KiroCrewConfig.load()
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
+            cfg = AjCrewConfig.load()
         assert _unrecognized_warnings(caplog) == []
         assert cfg.to_dict()["connections"]["oauth_clients"]["github"]["client_id"] == "Iv1.abc123"
 
@@ -124,7 +124,7 @@ class TestCoreOwnedSectionsAreNotUnrecognized:
     def test_a_non_object_connections_value_still_warns(
         self, caplog: pytest.LogCaptureFixture
     ) -> None:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             validation.validate_config_data({"agent": {"provider": "acp"}, "connections": "github"})
         warnings = _unrecognized_warnings(caplog)
         assert warnings and "connections" in warnings[0]
@@ -140,7 +140,7 @@ class TestCoreOwnedSectionsRoundTrip:
         monkeypatch.setattr(L, "config_dir", lambda: tmp_path)
         monkeypatch.setattr(L, "config_local_path", lambda: tmp_path / "config.local.json")
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg._extra_sections.get("voice_reply") == vr
         assert cfg.to_dict().get("voice_reply") == vr
 
@@ -160,13 +160,13 @@ class TestEveryCoreOwnedKeyHasAReader:
         assert validation._CORE_OWNED_TOP_KEYS == frozenset({"voice_reply", "connections"})
 
     def test_connections_client_id_is_read_by_resolve_oauth_client(self) -> None:
-        from kiro_crew.connections.oauth_clients import _config_client_id
+        from aj_crew.connections.oauth_clients import _config_client_id
 
         config = {"connections": {"oauth_clients": {"github": {"client_id": "Iv1.abc123"}}}}
         assert _config_client_id(config, "github") == "Iv1.abc123"
 
     def test_connections_tool_aliases_is_read_by_the_alias_gate(self, monkeypatch) -> None:
-        from kiro_crew.agent_materialization import mcp_aliases
+        from aj_crew.agent_materialization import mcp_aliases
 
         monkeypatch.setattr(
             mcp_aliases.agent_mod, "_load_json", lambda _p: {"connections": {"tool_aliases": True}}
@@ -174,7 +174,7 @@ class TestEveryCoreOwnedKeyHasAReader:
         assert mcp_aliases._connection_tool_aliases_enabled() is True
 
     def test_voice_reply_is_read_by_load_voice_reply_config(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew.slack import handler as handler_mod
+        from aj_crew.slack import handler as handler_mod
 
         # load_voice_reply_config mutates the shared module-level handler._vc
         # (global_enabled, default_voice, ...). Point it at a throwaway instance
@@ -191,7 +191,7 @@ class TestEveryCoreOwnedKeyHasAReader:
         monkeypatch.setattr(L, "config_dir", lambda: tmp_path)
         monkeypatch.setattr(L, "config_local_path", lambda: tmp_path / "config.local.json")
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         load_voice_reply_config(cfg)
         assert fresh_vc.global_enabled is True
         assert fresh_vc.default_voice == "Matthew"

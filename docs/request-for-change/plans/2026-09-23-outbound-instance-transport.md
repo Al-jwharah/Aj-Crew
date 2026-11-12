@@ -2,8 +2,8 @@
 
 > **Nothing implemented.** This plan is unstarted at `18f9984b0`: the only
 > `connection_method` values are `("ssh", "ssm", "fargate")`
-> (`src/kiro_crew/instances/registry.py`), and
-> `src/kiro_crew/instances/transports/` does not exist. Its spec is
+> (`src/aj_crew/instances/registry.py`), and
+> `src/aj_crew/instances/transports/` does not exist. Its spec is
 > [`../rfc-outbound-instance-transport.md`](../rfc-outbound-instance-transport.md).
 
 > **For agentic workers:** implement task-by-task. Steps use checkbox (`- [ ]`)
@@ -19,11 +19,11 @@ so the goal includes making the forbidden methods **fail closed** rather than
 merely go unused.
 
 **Architecture:** A `PeerTransport` protocol under
-`src/kiro_crew/instances/transports/` replaces the per-method branching inside
+`src/aj_crew/instances/transports/` replaces the per-method branching inside
 `SshTunnelManager`. `outbound` is a fourth implementation whose reach is an
 in-process loopback listener tunnelling framed HTTP over a persistent WSS channel.
 `SshTunnelManager.proxy_request`
-(`src/kiro_crew/instances/ssh_tunnel_manager.py`) stays the only way to talk
+(`src/aj_crew/instances/ssh_tunnel_manager.py`) stays the only way to talk
 to a peer, so no caller changes.
 
 **Sequencing rule:** phase 2 must land and be green before phase 3 starts. A
@@ -50,16 +50,16 @@ the transport, not after it.
 
 ## Phase 2 — Extract the transport seam (refactor, with two stated behaviour changes)
 
-- [ ] Create `src/kiro_crew/instances/transports/__init__.py` with the
+- [ ] Create `src/aj_crew/instances/transports/__init__.py` with the
       `PeerTransport` protocol: `validate`, `open`, `mint`, `describe_target`,
       `diagnose`, `restart`
 - [ ] Move the `ssh` arm of `_resolve_transport`
-      (`src/kiro_crew/instances/ssh_tunnel_manager.py`) into
+      (`src/aj_crew/instances/ssh_tunnel_manager.py`) into
       `transports/ssh.py`
 - [ ] Move the `ssm` arm, including the ECS-target refusal, into
       `transports/ssm.py`
 - [ ] Move the `fargate` arm, including its "no token to mint" answer from
-      `_mint_for` (`src/kiro_crew/instances/ssh_tunnel_manager.py`), into
+      `_mint_for` (`src/aj_crew/instances/ssh_tunnel_manager.py`), into
       `transports/fargate.py`
 - [ ] Replace the `method ==` branches in connect, both self-heal tiers,
       diagnostics and restart with calls through the resolved transport
@@ -121,7 +121,7 @@ exist, is what stops phase 3 from shipping a record that renders as SSH.
       empty, with validation in the new `outbound` arm only
 - [ ] Extend `CONNECTION_METHODS` to include `"outbound"`, and add the addressing
       fields to the immutability set in
-      `src/kiro_crew/dashboard/handlers_instances_gate.py`
+      `src/aj_crew/dashboard/handlers_instances_gate.py`
 - [ ] Confirm a registry file written before this change loads unchanged
       (round-trip test on a fixture record with no new fields)
 - [ ] Implement the frame codec: `REGISTER`, `HEARTBEAT`, `OPEN`, `DATA`,
@@ -163,10 +163,10 @@ A transport that lands before its controls invites exactly the record it is mean
 to refuse, so these are in the same PR (RFC §5).
 
 - [ ] Add `allowed_methods` to `InstancesConfig`
-      (`src/kiro_crew/config/integration_sections.py`), defaulting to every registered
+      (`src/aj_crew/config/integration_sections.py`), defaulting to every registered
       method so existing installs are unchanged
 - [ ] Enforce it in `Instance.validate()`
-      (`src/kiro_crew/instances/registry.py`), which the add and update paths
+      (`src/aj_crew/instances/registry.py`), which the add and update paths
       already run, so the API cannot create or edit a forbidden record
 - [ ] Refuse a forbidden method on the connect path, before any forwarder or
       socket is opened
@@ -191,10 +191,10 @@ to refuse, so these are in the same PR (RFC §5).
 
 ### Phase 3 posture visibility — where a reviewer looks (RFC §5.7)
 
-`kirocrew doctor` is not the surface a review reads. The dashboard already renders
+`ajcrew doctor` is not the surface a review reads. The dashboard already renders
 a row per security control, so the effective posture is registered as one.
 
-- [ ] Add a control to `_CONTROLS` (`src/kiro_crew/security_posture_controls.py`) whose
+- [ ] Add a control to `_CONTROLS` (`src/aj_crew/security_posture_controls.py`) whose
       items are the `connection_method` values `allowed_methods` currently
       permits, with the enforcing module as its `source`
 - [ ] Report `count` as unresolved rather than permissive when the effective
@@ -234,12 +234,12 @@ Phase 2 makes the mapping exhaustive; this gives the new entry something to prin
 - [ ] Test asserting the inbound dispatch table is exactly those three verbs, so a
       fourth capability cannot be added without failing a test. Assert the verb
       set, not the codec's frame count: a codec may grow a frame type harmlessly
-- [ ] Local mint called in-process — the same path `kirocrew token` uses — with
+- [ ] Local mint called in-process — the same path `ajcrew token` uses — with
       no shell and no `sudo`
 - [ ] `RESTART` handling: restart the peer's own gateway unit, no arguments
       accepted, refusal when the unit is unknown. Replaces the command-line
       dispatch in `restart_remote`
-      (`src/kiro_crew/instances/ssh_tunnel_manager.py`) for this method
+      (`src/aj_crew/instances/ssh_tunnel_manager.py`) for this method
 - [ ] Supervise the agent independently of the gateway (its own unit), so a
       stopped or broken gateway leaves the channel up — the break-glass
       requirement of RFC §5.6
@@ -294,9 +294,9 @@ by hand.
 - [ ] Add-instance form gains the `outbound` option with its three fields
 - [ ] Status strings and error copy for channel states, matching the existing
       per-method message style
-- [ ] `kirocrew doctor` check: channel reachable, heartbeat fresh, enrolment not
+- [ ] `ajcrew doctor` check: channel reachable, heartbeat fresh, enrolment not
       expired
-- [ ] `kirocrew doctor` reports the effective method posture, as the CLI-side
+- [ ] `ajcrew doctor` reports the effective method posture, as the CLI-side
       companion to the posture row landed in phase 3 — the row is what a review
       reads, the command is what an operator runs
 - [ ] Add-instance form hides methods that `allowed_methods` forbids, with the

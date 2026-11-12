@@ -73,7 +73,7 @@ jobs:
     # lanes already run: a GitHub-hosted Ubuntu VM with no fleet credentials,
     # and no fork code is checked out here on either runner.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     timeout-minutes: 10
     # `checks: write` posts this guard's own check-run. The reads are all GETs:
     # `pull-requests: read` for the open-PR list and the changed-file list,
@@ -216,7 +216,7 @@ jobs:
     # Same reason as the guard job above: fork-only work the CodeBuild fleet
     # cannot admit, so the group is the only way off the shared standard pool.
     runs-on:
-      group: kirocrew-runners
+      group: ajcrew-runners
     timeout-minutes: 10
     if: >-
       github.event_name == 'pull_request_target'

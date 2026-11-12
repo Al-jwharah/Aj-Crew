@@ -9,7 +9,7 @@ not mean the same thing on both families:
   still has a LIVE listener.
 
 The gateway decides that an app backend hit a port collision by observing that
-the spawned child died on its initial bind (``kiro_crew/apps/backend.py`` --
+the spawned child died on its initial bind (``aj_crew/apps/backend.py`` --
 the ``_survived_spawn`` call and the EADDRINUSE reasoning around it). That signal
 only exists while the bind is allowed to fail, so with the stock flag a second
 backend binds the same fixed port on Windows, the gateway reports a healthy
@@ -30,11 +30,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.apps import scaffold
-from kiro_crew.apps.builtins.design_tweak.backend import server as design_tweak_server
-from kiro_crew.apps.builtins.file_explorer import server as file_explorer_server
-from kiro_crew.apps.builtins.workflows import server as workflows_server
+from aj_crew import platform_compat
+from aj_crew.apps import scaffold
+from aj_crew.apps.builtins.design_tweak.backend import server as design_tweak_server
+from aj_crew.apps.builtins.file_explorer import server as file_explorer_server
+from aj_crew.apps.builtins.workflows import server as workflows_server
 
 APPS_ROOT = Path(scaffold.__file__).resolve().parent
 

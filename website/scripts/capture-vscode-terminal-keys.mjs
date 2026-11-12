@@ -14,10 +14,10 @@ import { join } from 'node:path'
 import { serveDist } from './lib/serve-dist.mjs'
 import { stubDashboardApi, json } from './lib/stub-dashboard-api.mjs'
 
-const out = process.argv[2] || join(process.env.KIROCREW_SCRATCH || 'temp-screenshots', 'vscode-terminal-keys')
+const out = process.argv[2] || join(process.env.AJCREW_SCRATCH || 'temp-screenshots', 'vscode-terminal-keys')
 mkdirSync(out, { recursive: true })
 const { srv, base } = await serveDist()
-const SLOTS = [{ key: 'chat-vscode-keys', title: 'VS Code shortcuts', running: false, messages: 2, agent: 'kirocrew', project: '/workspace', last_ts: new Date().toISOString() }]
+const SLOTS = [{ key: 'chat-vscode-keys', title: 'VS Code shortcuts', running: false, messages: 2, agent: 'ajcrew', project: '/workspace', last_ts: new Date().toISOString() }]
 
 /** Panel state: `open` is this window's per-window flag (sessionStorage,
  *  'mc-bottom-terminal-open'); the tab count stays in the shared layout. */

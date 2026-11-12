@@ -19,15 +19,15 @@ from pathlib import Path
 from pipeline_conductor_fleet_probe_helpers import LOAD_NAME
 from skill_script_helpers import load_skill_script
 
-from kiro_crew.acp.types import TurnUsage
-from kiro_crew.dashboard.chat_utils import _history_key_for
-from kiro_crew.dashboard.handlers import usage as usage_mod
-from kiro_crew.history import ConversationLog
+from aj_crew.acp.types import TurnUsage
+from aj_crew.dashboard.chat_utils import _history_key_for
+from aj_crew.dashboard.handlers import usage as usage_mod
+from aj_crew.history import ConversationLog
 
 SKILL_DIR = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
     / "pipeline-conductor"
 )
@@ -35,10 +35,10 @@ SKILL_DIR = (
 
 def _probe(tmp_path: Path, monkeypatch, sessions: list[str]):
     """The fleet-probe module plus a config, with the script's derived paths
-    (``$KIROCREW_HOME/sessions``, the ``/proc`` seam) pointed into the tmp
+    (``$AJCREW_HOME/sessions``, the ``/proc`` seam) pointed into the tmp
     tree -- same harness shape as ``test_pipeline_conductor_agent``."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
-    monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(tmp_path / "no-proc"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
+    monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(tmp_path / "no-proc"))
     cfg_path = tmp_path / "probe-config.json"
     cfg_path.write_text(json.dumps({"sessions": sessions}), encoding="utf-8")
     mod = load_skill_script(LOAD_NAME, SKILL_DIR / "scripts" / "fleet_probe.py")
@@ -72,8 +72,8 @@ class TestDeliveryPatternRoundTrip:
     """
 
     def test_watchdog_patterns_match_the_constants_the_gateway_emits(self):
-        from kiro_crew.acp.types import STOP_REASON_TOOL_STALL
-        from kiro_crew.dashboard.state import (
+        from aj_crew.acp.types import STOP_REASON_TOOL_STALL
+        from aj_crew.dashboard.state import (
             STALE_RECOVERY_PREFIX,
             TOOL_STALL_RECOVERY_PREFIX,
         )
@@ -93,7 +93,7 @@ class TestDeliveryPatternRoundTrip:
         the real writer and count what the script would count: a reworded
         separator would understate the index and make a talking session read as
         deadlocked."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
         mod = load_skill_script(LOAD_NAME, SKILL_DIR / "scripts" / "fleet_probe.py")
         log = ConversationLog(base_dir=tmp_path / "crew" / "sessions")
         log.append("s-needle", "user", "seed")  # inbound: must NOT count

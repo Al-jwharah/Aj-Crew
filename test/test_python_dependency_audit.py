@@ -177,12 +177,10 @@ class TestParsingFailsLoudRatherThanEmpty:
     def test_the_local_project_may_be_skipped(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        (tmp_path / "pyproject.toml").write_text(
-            '[project]\nname = "Kiro_Crew"\n', encoding="utf-8"
-        )
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "Aj_Crew"\n', encoding="utf-8")
         monkeypatch.setattr(gate, "_REPO_ROOT", tmp_path)
         skipped = {
-            "name": "kiro-crew",
+            "name": "aj-crew",
             "skip_reason": "Dependency is not published on PyPI and could not be audited",
         }
         findings = gate.parse_report(_report(skipped, _dep("pkg", "1.2.3", "PYSEC-2026-1")))

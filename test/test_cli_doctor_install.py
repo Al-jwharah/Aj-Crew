@@ -1,6 +1,6 @@
-"""``kirocrew doctor``'s install checks and install advice.
+"""``ajcrew doctor``'s install checks and install advice.
 
-Which install owns the ``kirocrew`` command, the source checkout, leftover
+Which install owns the ``ajcrew`` command, the source checkout, leftover
 kiro-cli installers, the faiss and AWS voice hints, the bare-install-command
 invariant and the venv deps probe.
 """
@@ -15,12 +15,12 @@ from pathlib import Path
 
 import pytest
 
+from aj_crew import cli_doctor, extras
 from conftest import make_dir_link
-from kiro_crew import cli_doctor, extras
 
 
 class TestPathLauncherOwnership:
-    """`kirocrew doctor` names which install owns the `kirocrew` command.
+    """`ajcrew doctor` names which install owns the `ajcrew` command.
 
     A gateway deliberately never takes the name from another install's working
     launcher, so the two can diverge silently: the documented Linux pairing puts
@@ -29,16 +29,16 @@ class TestPathLauncherOwnership:
     """
 
     def test_matching_launcher_is_reported_clean(self, monkeypatch, tmp_path, capsys) -> None:
-        exe = tmp_path / "opt" / "bin" / "kirocrew"
+        exe = tmp_path / "opt" / "bin" / "ajcrew"
         exe.parent.mkdir(parents=True)
         exe.write_text("")
         monkeypatch.setattr(cli_doctor.shutil, "which", lambda c, **kw: str(exe))
-        monkeypatch.setattr("kiro_crew.agent._resolve_kirocrew_bin", lambda: str(exe))
+        monkeypatch.setattr("aj_crew.agent._resolve_ajcrew_bin", lambda: str(exe))
 
         cli_doctor._doctor_path_launcher()
 
         out = capsys.readouterr().out
-        assert "kirocrew CLI: ✅" in out
+        assert "ajcrew CLI: ✅" in out
         assert "different install" not in out
 
     def test_matching_launcher_prints_the_symlink_resolved_spelling(
@@ -48,39 +48,39 @@ class TestPathLauncherOwnership:
         # Data Home row print, not the PATH spelling through a ``current`` link.
         versioned = tmp_path / "install" / "1.2.3"
         (versioned / "bin").mkdir(parents=True)
-        exe = versioned / "bin" / "kirocrew"
+        exe = versioned / "bin" / "ajcrew"
         exe.write_text("")
         current = tmp_path / "install" / "current"
         make_dir_link(current, versioned)
-        via_link = current / "bin" / "kirocrew"
+        via_link = current / "bin" / "ajcrew"
         monkeypatch.setattr(cli_doctor.shutil, "which", lambda c, **kw: str(via_link))
-        monkeypatch.setattr("kiro_crew.agent._resolve_kirocrew_bin", lambda: str(exe))
+        monkeypatch.setattr("aj_crew.agent._resolve_ajcrew_bin", lambda: str(exe))
 
         cli_doctor._doctor_path_launcher()
 
         out = capsys.readouterr().out
-        assert f"kirocrew CLI: ✅ {os.path.realpath(exe)}" in out
+        assert f"ajcrew CLI: ✅ {os.path.realpath(exe)}" in out
         assert str(via_link) not in out
 
     def test_divergent_launcher_names_both_paths(self, monkeypatch, tmp_path, capsys) -> None:
-        wheel = tmp_path / "crew-venv" / "bin" / "kirocrew"
+        wheel = tmp_path / "crew-venv" / "bin" / "ajcrew"
         wheel.parent.mkdir(parents=True)
         wheel.write_text("")
-        package = tmp_path / "opt" / "KiroCrew" / "kirocrew"  # brand-ok: real /opt path
+        package = tmp_path / "opt" / "AjCrew" / "ajcrew"  # brand-ok: real /opt path
         package.parent.mkdir(parents=True)
         package.write_text("")
         monkeypatch.setattr(cli_doctor.shutil, "which", lambda c, **kw: str(wheel))
-        monkeypatch.setattr("kiro_crew.agent._resolve_kirocrew_bin", lambda: str(package))
+        monkeypatch.setattr("aj_crew.agent._resolve_ajcrew_bin", lambda: str(package))
 
         cli_doctor._doctor_path_launcher()
 
         out = capsys.readouterr().out
-        assert "⚠ kirocrew CLI on PATH belongs to a different install" in out
+        assert "⚠ ajcrew CLI on PATH belongs to a different install" in out
         # Both sides must be named, or the user cannot tell which is which.
         # Compare like with like: the check prints realpath, and on Windows a
         # realpath can differ in form (short vs long name, case) from str(path).
         assert os.path.realpath(wheel) in out and os.path.realpath(package) in out
-        assert "kirocrew setup" in out
+        assert "ajcrew setup" in out
 
     def test_no_launcher_on_path_is_informational(self, monkeypatch, capsys) -> None:
         """The desktop app runs its bundled backend directly, so an absent
@@ -94,37 +94,37 @@ class TestPathLauncherOwnership:
         assert "⚠" not in out
 
     def test_unresolvable_install_does_not_cry_wolf(self, monkeypatch, tmp_path, capsys) -> None:
-        """A bare "kirocrew" sentinel is not a path, so there is nothing to
+        """A bare "ajcrew" sentinel is not a path, so there is nothing to
         compare and no divergence to claim."""
-        found = tmp_path / "bin" / "kirocrew"
+        found = tmp_path / "bin" / "ajcrew"
         found.parent.mkdir(parents=True)
         found.write_text("")
         monkeypatch.setattr(cli_doctor.shutil, "which", lambda c, **kw: str(found))
-        monkeypatch.setattr("kiro_crew.agent._resolve_kirocrew_bin", lambda: "kirocrew")
+        monkeypatch.setattr("aj_crew.agent._resolve_ajcrew_bin", lambda: "ajcrew")
 
         cli_doctor._doctor_path_launcher()
 
         out = capsys.readouterr().out
-        assert "kirocrew CLI: ✅" in out
+        assert "ajcrew CLI: ✅" in out
 
 
 class TestToolboxPathLauncher:
-    """A Toolbox install's `kirocrew` on PATH resolves to Toolbox's shared
+    """A Toolbox install's `ajcrew` on PATH resolves to Toolbox's shared
     `toolbox-exec` dispatcher, never to this install's binary, so the row asks the
     launcher for its version instead of comparing paths."""
 
     def _layout(self, monkeypatch, tmp_path, *, toolbox_install=True, probe=None):
         """PATH launcher = the dispatcher file itself (no link needed: the check reads
-        the realpath's basename), the running install under tools/kirocrew."""
+        the realpath's basename), the running install under tools/ajcrew."""
         dispatcher = tmp_path / ".toolbox" / "tools" / "toolbox" / "1.0" / "toolbox-exec"
         dispatcher.parent.mkdir(parents=True)
         dispatcher.write_text("")
-        running = tmp_path / ".toolbox" / "tools" / "kirocrew" / "9.9.9" / "bin" / "kirocrew"
+        running = tmp_path / ".toolbox" / "tools" / "ajcrew" / "9.9.9" / "bin" / "ajcrew"
         running.parent.mkdir(parents=True)
         running.write_text("")
         monkeypatch.setattr(cli_doctor.shutil, "which", lambda c, **kw: str(dispatcher))
-        monkeypatch.setattr("kiro_crew.agent._resolve_kirocrew_bin", lambda: str(running))
-        monkeypatch.setattr("kiro_crew.env.is_toolbox_install", lambda: toolbox_install)
+        monkeypatch.setattr("aj_crew.agent._resolve_ajcrew_bin", lambda: str(running))
+        monkeypatch.setattr("aj_crew.env.is_toolbox_install", lambda: toolbox_install)
         # The probe goes through the sandbox chokepoint: record what it was asked to
         # wrap, and hand back a marked argv and env so the spawn can be checked.
         calls: list[list[str]] = []
@@ -153,14 +153,14 @@ class TestToolboxPathLauncher:
     def test_same_version_through_the_dispatcher_is_clean(
         self, monkeypatch, tmp_path, capsys
     ) -> None:
-        from kiro_crew import version_line
+        from aj_crew import version_line
 
         dispatcher, calls = self._layout(monkeypatch, tmp_path, probe=(0, version_line() + "\n"))
 
         cli_doctor._doctor_path_launcher()
 
         out = capsys.readouterr().out
-        assert f"kirocrew CLI: ✅ {dispatcher} (Toolbox launcher, same version)" in out
+        assert f"ajcrew CLI: ✅ {dispatcher} (Toolbox launcher, same version)" in out
         assert "different install" not in out
         # The PATH spelling is run, since the dispatcher picks the tool from argv[0].
         assert calls == [[str(dispatcher), "--version"]]
@@ -168,7 +168,7 @@ class TestToolboxPathLauncher:
     def test_the_probe_runs_inside_the_sandbox(self, monkeypatch, tmp_path, capsys) -> None:
         """The launcher is whatever PATH found first, which an agent can plant, so it
         is spawned wrapped, with the scrubbed env, and the wrapper file is removed."""
-        from kiro_crew import version_line
+        from aj_crew import version_line
 
         dispatcher, _ = self._layout(monkeypatch, tmp_path, probe=(0, version_line() + "\n"))
 
@@ -181,7 +181,7 @@ class TestToolboxPathLauncher:
     def test_a_sandbox_that_cannot_be_built_keeps_the_warning(
         self, monkeypatch, tmp_path, capsys
     ) -> None:
-        from kiro_crew import version_line
+        from aj_crew import version_line
 
         self._layout(monkeypatch, tmp_path, probe=(0, version_line() + "\n"))
 
@@ -193,17 +193,17 @@ class TestToolboxPathLauncher:
         cli_doctor._doctor_path_launcher()
 
         out = capsys.readouterr().out
-        assert "⚠ kirocrew CLI on PATH belongs to a different install" in out
+        assert "⚠ ajcrew CLI on PATH belongs to a different install" in out
         assert self.wrapped == []
 
     @pytest.mark.parametrize(
         "probe",
         [
-            pytest.param((0, "kirocrew 0.0.0-other\n"), id="different-version"),
+            pytest.param((0, "ajcrew 0.0.0-other\n"), id="different-version"),
             pytest.param((0, "toolbox: no such tool\n"), id="malformed-output"),
             pytest.param((0, ""), id="empty-output"),
             pytest.param((1, ""), id="nonzero-exit"),
-            pytest.param(subprocess.TimeoutExpired(["kirocrew"], 5), id="timeout"),
+            pytest.param(subprocess.TimeoutExpired(["ajcrew"], 5), id="timeout"),
             pytest.param(OSError("exec failed"), id="cannot-run"),
         ],
     )
@@ -215,11 +215,11 @@ class TestToolboxPathLauncher:
         cli_doctor._doctor_path_launcher()
 
         out = capsys.readouterr().out
-        assert "⚠ kirocrew CLI on PATH belongs to a different install" in out
-        assert "kirocrew CLI: ✅" not in out
+        assert "⚠ ajcrew CLI on PATH belongs to a different install" in out
+        assert "ajcrew CLI: ✅" not in out
 
     def test_a_non_toolbox_install_is_not_probed(self, monkeypatch, tmp_path, capsys) -> None:
-        from kiro_crew import version_line
+        from aj_crew import version_line
 
         _, calls = self._layout(
             monkeypatch, tmp_path, toolbox_install=False, probe=(0, version_line() + "\n")
@@ -228,16 +228,16 @@ class TestToolboxPathLauncher:
         cli_doctor._doctor_path_launcher()
 
         out = capsys.readouterr().out
-        assert "⚠ kirocrew CLI on PATH belongs to a different install" in out
+        assert "⚠ ajcrew CLI on PATH belongs to a different install" in out
         assert calls == []
 
     def test_a_launcher_that_is_not_the_dispatcher_is_not_probed(
         self, monkeypatch, tmp_path, capsys
     ) -> None:
-        from kiro_crew import version_line
+        from aj_crew import version_line
 
         _, calls = self._layout(monkeypatch, tmp_path, probe=(0, version_line() + "\n"))
-        wheel = tmp_path / "crew-venv" / "bin" / "kirocrew"
+        wheel = tmp_path / "crew-venv" / "bin" / "ajcrew"
         wheel.parent.mkdir(parents=True)
         wheel.write_text("")
         monkeypatch.setattr(cli_doctor.shutil, "which", lambda c, **kw: str(wheel))
@@ -245,12 +245,12 @@ class TestToolboxPathLauncher:
         cli_doctor._doctor_path_launcher()
 
         out = capsys.readouterr().out
-        assert "⚠ kirocrew CLI on PATH belongs to a different install" in out
+        assert "⚠ ajcrew CLI on PATH belongs to a different install" in out
         assert calls == [] and self.wrapped == []
 
 
 class TestSourceCheckout:
-    """`kirocrew doctor` Source Checkout section — stale/off-branch source tree.
+    """`ajcrew doctor` Source Checkout section — stale/off-branch source tree.
 
     Guards _doctor_source_checkout: an editable install parked on a stale
     feature branch runs old code (merged security fixes included) while every
@@ -683,14 +683,14 @@ class TestCliInstallerResidue:
 def _report_source() -> str:
     """The source of every function that prints a row of the doctor report.
 
-    The orchestrator plus each ``kiro_crew.doctor_checks`` family, so an invariant
+    The orchestrator plus each ``aj_crew.doctor_checks`` family, so an invariant
     asserted over the report holds wherever a section lives.
     """
     import importlib
     import inspect
     import pkgutil
 
-    from kiro_crew import doctor_checks
+    from aj_crew import doctor_checks
 
     families = [
         importlib.import_module(f"{doctor_checks.__name__}.{info.name}")

@@ -25,19 +25,19 @@ import sys
 
 import pytest
 
-import kiro_crew.mcp_core as mcp_core
-from kiro_crew import session_directive
-from kiro_crew.acp import _dispatch
-from kiro_crew.acp.types import (
+import aj_crew.mcp_core as mcp_core
+from aj_crew import session_directive
+from aj_crew.acp import _dispatch
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TOOL_CALL,
     EVENT_TOOL_RESULT,
     AcpEvent,
 )
-from kiro_crew.mcp_core import _call_tool
-from kiro_crew.messaging import TransportCapabilities, TurnDriver
-from kiro_crew.messaging.renderer import Renderer
-from kiro_crew.validation import (
+from aj_crew.mcp_core import _call_tool
+from aj_crew.messaging import TransportCapabilities, TurnDriver
+from aj_crew.messaging.renderer import Renderer
+from aj_crew.validation import (
     MAX_SHORT_STRING,
     FieldSpec,
     ValidationError,
@@ -300,7 +300,7 @@ class TestTheRefusalTagSurvivesDelivery:
         AFTER redacting, and redaction GROWS text (a credential becomes a longer
         placeholder). Measured 7,999 chars in, 8,755 out. So the marker is
         re-attached at the cut, the way the App render marker already is."""
-        from kiro_crew.security import redact_credentials
+        from aj_crew.security import redact_credentials
 
         tagged = session_directive.tag_refusal(("Error: " + ("AKIAIOSFODNN7EXAMPLE " * 380))[:7960])
         assert len(tagged) <= session_directive.MAX_TOOL_RESULT_CHARS
@@ -444,7 +444,7 @@ def _drive(tool: str, tool_output: str) -> None:
 
 def _driver_messages(caplog) -> list[str]:
     return [
-        r.getMessage() for r in caplog.records if r.name == "kiro_crew.messaging.directive_tracker"
+        r.getMessage() for r in caplog.records if r.name == "aj_crew.messaging.directive_tracker"
     ]
 
 

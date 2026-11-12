@@ -40,7 +40,7 @@ const theme = params.get('theme') || 'dark'
 const refuse = params.get('refuse') || '409'
 const chips = params.get('chips') === '1'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const SLOT = 'chat-embed-capture'
 const transcript = {

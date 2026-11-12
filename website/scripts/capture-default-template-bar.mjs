@@ -8,7 +8,7 @@
  * interception — gateway-free, no kiro-cli, no dashboard auth.
  *
  * Frames, each in dark and light:
- *   bar        the tab with the bar showing the EFFECTIVE default (`kirocrew`,
+ *   bar        the tab with the bar showing the EFFECTIVE default (`ajcrew`,
  *              the runtime's own template, while the stored value is "")
  *   open       the picker open: a package template is offered, a crewmate's
  *              private copy is not
@@ -34,7 +34,7 @@
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { serveDist } from './lib/serve-dist.mjs'
-import { KIROCREW_CONFIG_FIXTURE, json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
+import { AJCREW_CONFIG_FIXTURE, json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/default-template-bar'
 const PREFIX = process.argv[3] || 'after'
@@ -43,13 +43,13 @@ mkdirSync(OUT, { recursive: true })
 const BAR_LABEL = 'New sessions use'
 
 const CREWS = [
-  { name: 'default', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'Used for all new chats', source: 'user', model: '', triggers: '', session_color: '' },
+  { name: 'default', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'Used for all new chats', source: 'user', model: '', triggers: '', session_color: '' },
   { name: 'pr-bot', kiro_agent: 'pr-bot-copy', workspace: 'default', memory_store: 'default', description: 'Reviews pull requests', source: 'user', model: '', triggers: '', session_color: '' },
 ]
 
 const tmpl = over => ({
   name: 'x', filename: 'x.json', description: '', model: '', skills: [], mcp_servers: [],
-  source: 'builtin', package: '', scope: 'global', kirocrew_owned: false, forked_from: '', private_to: '',
+  source: 'builtin', package: '', scope: 'global', ajcrew_owned: false, forked_from: '', private_to: '',
   read_only: null, default_eligible: true, used_by: [], ...over,
 })
 const defaultRef = { kind: 'default', id: 'default', label: 'default agent' }
@@ -58,7 +58,7 @@ const templates = (defaultName, reviewerDeleted = false) => [
   tmpl({ name: 'atlas', filename: 'atlas.json', description: 'Long-horizon planner', used_by: defaultName === 'atlas' ? [defaultRef] : [] }),
   tmpl({ name: 'papyrus-writer', filename: 'papyrus-papyrus-writer.json', description: 'LaTeX co-author', source: 'package', package: 'papyrus', read_only: 'package' }),
   tmpl({ name: 'pr-bot-copy', filename: 'pr-bot-copy.json', description: 'Careful code reviewer', forked_from: 'reviewer', private_to: 'pr-bot', read_only: 'private_copy', default_eligible: false, used_by: [{ kind: 'crew', id: 'pr-bot', label: 'pr-bot' }] }),
-  tmpl({ name: 'kirocrew', filename: 'kirocrew.json', description: 'Built-in', source: 'kirocrew', kirocrew_owned: true, read_only: 'runtime', used_by: [{ kind: 'crew', id: 'default', label: 'default' }, ...(defaultName === 'kirocrew' ? [defaultRef] : [])] }),
+  tmpl({ name: 'ajcrew', filename: 'ajcrew.json', description: 'Built-in', source: 'ajcrew', ajcrew_owned: true, read_only: 'runtime', used_by: [{ kind: 'crew', id: 'default', label: 'default' }, ...(defaultName === 'ajcrew' ? [defaultRef] : [])] }),
 ]
 
 // One prompt per template, so the editor in a frame shows the agent it is open on.
@@ -67,18 +67,18 @@ const PROMPTS = {
   atlas: 'You plan long tasks. Break the goal into steps and track each one.',
   'papyrus-writer': 'You co-author LaTeX papers. Keep the author’s voice.',
   'pr-bot-copy': 'You review pull requests for pr-bot. Read before you judge.',
-  kirocrew: 'You are the Kiro Crew assistant.',
+  ajcrew: 'You are the Aj Crew assistant.',
 }
 const OVERRIDE_PATH = '/home/user/.kiro/crew/config.local.json'
 
 const DETAIL = name => ({
   name, model: '', description: templates('').find(t => t.name === name)?.description || '',
   prompt: PROMPTS[name] || `You are ${name}.`, skills: [], tools: ['fs_read', 'fs_write', 'execute_bash'],
-  allowedTools: ['fs_read'], resources: [], mcpServers: { 'kirocrew-core': {} },
+  allowedTools: ['fs_read'], resources: [], mcpServers: { 'ajcrew-core': {} },
 })
 
 const CFG = {
-  ...KIROCREW_CONFIG_FIXTURE,
+  ...AJCREW_CONFIG_FIXTURE,
   agents: Object.fromEntries(CREWS.map(c => [c.name, { kiro_agent: c.kiro_agent, workspace: c.workspace, memory_store: c.memory_store, description: c.description, source: 'config' }])),
   default_agent: 'default',
   workspaces: { default: { dir: '~/.kiro/crew/workspace' } },
@@ -89,10 +89,10 @@ const CFG = {
 function makeExtra(state) {
   return async function extra(path, route) {
     const method = route.request().method()
-    if (path === '/api/config/kirocrew') return json(route, CFG), true
+    if (path === '/api/config/ajcrew') return json(route, CFG), true
     if (path === '/api/agents') return json(route, { agents: CREWS, default_agent: 'default' }), true
     if (path === '/api/agents/installed') return json(route, []), true
-    if (path === '/api/agents/templates') return json(route, { templates: templates(state.stored || 'kirocrew', state.reviewerDeleted) }), true
+    if (path === '/api/agents/templates') return json(route, { templates: templates(state.stored || 'ajcrew', state.reviewerDeleted) }), true
     // The template default is written through the default-agent route, marked
     // as a template, and read back from that same route's GET.
     if (path === '/api/config/default-agent' && method === 'PUT') {
@@ -115,7 +115,7 @@ function makeExtra(state) {
     if (path === '/api/config/default-agent' && method !== 'GET') throw new Error(`unexpected ${method} ${path}`)
     if (path === '/api/config/default-agent' && state.readFails) return json(route, { error: 'failed to read config file', code: 'config_unreadable' }, 500), true
     if (path === '/api/config/default-agent') {
-      return json(route, { default_agent: 'default', default_template: state.stored || 'kirocrew', overridden: !!state.overridden, ...(state.overridden ? { override_path: OVERRIDE_PATH } : {}) }), true
+      return json(route, { default_agent: 'default', default_template: state.stored || 'ajcrew', overridden: !!state.overridden, ...(state.overridden ? { override_path: OVERRIDE_PATH } : {}) }), true
     }
     if (path.startsWith('/api/agents/detail/')) return json(route, DETAIL(decodeURIComponent(path.split('/api/agents/detail/')[1] || ''))), true
     if (path === '/api/mcp' || path === '/api/mcp/probe') return json(route, []), true
@@ -151,7 +151,7 @@ try {
     const trigger = bar.getByRole('combobox', { name: BAR_LABEL })
     await trigger.waitFor({ state: 'visible', timeout: 15000 })
     // Stored "" renders as what actually starts, never as a blank or the first option.
-    await page.waitForFunction(el => (el.textContent || '').includes('kirocrew'), await trigger.elementHandle(), { timeout: 15000 })
+    await page.waitForFunction(el => (el.textContent || '').includes('ajcrew'), await trigger.elementHandle(), { timeout: 15000 })
     if (!(await bar.getByText(/^Not offered here: /).count())) throw new Error(`${theme} bar: hidden-rows note missing while a private copy is on the roster`)
     await noDialog(page, `${theme} bar`)
     await page.waitForTimeout(400)
@@ -163,7 +163,7 @@ try {
     const list = page.getByRole('listbox').filter({ hasNot: page.getByRole('option', { name: /Careful code reviewer/ }) }).last()
     await list.waitFor({ state: 'visible', timeout: 10000 })
     const names = await list.getByRole('option').allTextContents()
-    for (const want of ['reviewer', 'atlas', 'papyrus-writer', 'kirocrew']) {
+    for (const want of ['reviewer', 'atlas', 'papyrus-writer', 'ajcrew']) {
       if (!names.some(n => n.trim() === want)) throw new Error(`${theme} open: "${want}" missing from the picker (saw ${JSON.stringify(names)})`)
     }
     if (names.some(n => n.trim() === 'pr-bot-copy')) throw new Error(`${theme} open: a mate's private copy leaked into the picker`)

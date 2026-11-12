@@ -8,7 +8,7 @@ Both detach, the daemon sweeps idle backends, and a third stub arrives later:
   backend, so a server holding its sign-in in memory signs in once;
 * without it (the default), the idle sweep drained the backend and a new one starts.
 
-``KIROCREW_KEEP_ALIVE_IDLE_SECS`` sets the idle timeout (default 2s); the manual
+``AJCREW_KEEP_ALIVE_IDLE_SECS`` sets the idle timeout (default 2s); the manual
 proof for the PR ran it at the shipped 300s.
 """
 
@@ -28,14 +28,14 @@ from test_mcp_gateway_pool_integ import (
     _spawn_stub,
 )
 
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.mcp_gateway import transport
-from kiro_crew.mcp_gateway.pool import BackendPool
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway import transport
+from aj_crew.mcp_gateway.pool import BackendPool
+from aj_crew.testing.wait import async_wait_until, await_until
 
 pytestmark = pytest.mark.xdist_group("mcp_gateway")
 
-_IDLE_SECS = int(os.environ.get("KIROCREW_KEEP_ALIVE_IDLE_SECS", "2"))
+_IDLE_SECS = int(os.environ.get("AJCREW_KEEP_ALIVE_IDLE_SECS", "2"))
 
 
 class _SweepLog:
@@ -100,7 +100,7 @@ async def _run(tmp_path: Path, sock: Path, keep_alive: frozenset[str], sweeps: _
             off_loop=True,
             describe=lambda: "gatewayd never bound its endpoint",
         )
-        for i, agent in enumerate(("kirocrew", "kirocrew-worker")):
+        for i, agent in enumerate(("ajcrew", "ajcrew-worker")):
             proc = await _spawn_stub(
                 socket_path=sock, server="fake", agent=agent, work_dir=work_dir, home=home
             )
@@ -119,7 +119,7 @@ async def _run(tmp_path: Path, sock: Path, keep_alive: frozenset[str], sweeps: _
         )
 
         late = await _spawn_stub(
-            socket_path=sock, server="fake", agent="kirocrew", work_dir=work_dir, home=home
+            socket_path=sock, server="fake", agent="ajcrew", work_dir=work_dir, home=home
         )
         procs.append(late)
         assert "result" in await _drive_initialize(late, req_id=9)

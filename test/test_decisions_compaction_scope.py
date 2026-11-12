@@ -13,7 +13,7 @@ import json
 
 import pytest
 
-from kiro_crew.decisions import consent
+from aj_crew.decisions import consent
 
 DEFAULT_ENDPOINT = "https://api.typesafe.ai/v1/systemone"
 
@@ -23,7 +23,7 @@ def keystone(tmp_path, monkeypatch):
     """A redirected keystone path, so nothing touches the real home."""
     path = tmp_path / "decisions_consent.json"
     monkeypatch.setattr(consent, "consent_path", lambda: path)
-    from kiro_crew.config import loader as config_loader
+    from aj_crew.config import loader as config_loader
 
     monkeypatch.setattr(config_loader, "decisions_consent_path", lambda: path, raising=False)
     return path
@@ -138,11 +138,11 @@ class TestRoute:
 
     @pytest.fixture(autouse=True)
     def _owner(self, monkeypatch, keystone):
-        from kiro_crew.dashboard.handlers import decisions as handler
+        from aj_crew.dashboard.handlers import decisions as handler
 
         monkeypatch.setattr(handler, "is_owner_dashboard_request", lambda _r: True)
         monkeypatch.setattr(handler, "_audit", lambda *_a, **_kw: asyncio.sleep(0))
-        from kiro_crew.decisions import capability
+        from aj_crew.decisions import capability
 
         monkeypatch.setattr(capability, "is_decisions_denied", lambda *_a, **_kw: False)
         return handler
@@ -160,7 +160,7 @@ class TestRoute:
         stays revoked and stores no scope, because a scope is only meaningful while the
         seam is on.
         """
-        from kiro_crew.decisions import consent
+        from aj_crew.decisions import consent
 
         consent.save_enabled(False, endpoint="")
         response = asyncio.run(
@@ -176,7 +176,7 @@ class TestRoute:
         assert consent.consented_compaction(state) is False
 
     def test_a_scope_only_put_moves_the_scope_and_nothing_else(self, _owner):
-        from kiro_crew.decisions import consent
+        from aj_crew.decisions import consent
 
         asyncio.run(
             _owner.api_decisions_consent_put(
@@ -203,7 +203,7 @@ class TestRoute:
     def test_a_scope_only_put_cannot_rebind_the_endpoint(self, _owner, monkeypatch):
         # The endpoint travels with the switch, so a body that names neither may not move
         # it: the recorded binding is the one the owner reviewed.
-        from kiro_crew.decisions import consent, gate
+        from aj_crew.decisions import consent, gate
 
         asyncio.run(
             _owner.api_decisions_consent_put(

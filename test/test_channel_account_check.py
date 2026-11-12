@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.channel_account_check import RESTART_FAILED_TEXT, session_after_account_check
+from aj_crew.channel_account_check import RESTART_FAILED_TEXT, session_after_account_check
 
 
 class _Sessions:

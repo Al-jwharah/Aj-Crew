@@ -1,6 +1,6 @@
-"""Coverage tests for ``kiro_crew.dashboard.server``'s startup path.
+"""Coverage tests for ``aj_crew.dashboard.server``'s startup path.
 
-Pins the body of :func:`~kiro_crew.dashboard.server.start_dashboard`: the wiring order
+Pins the body of :func:`~aj_crew.dashboard.server.start_dashboard`: the wiring order
 and the route, middleware and hook inventory. Helpers are in
 ``test_dashboard_server_coverage.py``.
 
@@ -30,9 +30,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import BaseTestServer, TestClient, TestServer
 
-from kiro_crew.apps.builtins import BUILTIN_NAMES
-from kiro_crew.dashboard import server as srv
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.apps.builtins import BUILTIN_NAMES
+from aj_crew.dashboard import server as srv
+from aj_crew.testing.wait import async_wait_until
 
 # ``start_dashboard`` imports every built-in app package on its first call, and some
 # of them bind ``config_dir`` by name at import time. The tests below patch
@@ -41,9 +41,9 @@ from kiro_crew.testing.wait import async_wait_until
 # Import them here, before any patch, so they bind the real function.
 for _builtin_name in BUILTIN_NAMES:
     try:
-        importlib.import_module(f"kiro_crew.apps.builtins.{_builtin_name}")
+        importlib.import_module(f"aj_crew.apps.builtins.{_builtin_name}")
     except ModuleNotFoundError as exc:
-        if exc.name != f"kiro_crew.apps.builtins.{_builtin_name}":
+        if exc.name != f"aj_crew.apps.builtins.{_builtin_name}":
             raise
 
 requires_unix_socket = pytest.mark.skipif(
@@ -229,8 +229,8 @@ def _neutralise_outside_process_work(monkeypatch) -> dict[str, Any]:
     Returns the spies. Kept in one helper because a missing entry fails nothing: it
     silently spawns a subprocess or writes the operator's real config.
     """
-    import kiro_crew.apps.dev_mode as dev_mode
-    import kiro_crew.kiro_prerequisite as kiro_prereq
+    import aj_crew.apps.dev_mode as dev_mode
+    import aj_crew.kiro_prerequisite as kiro_prereq
 
     spies: dict[str, Any] = {
         # Spawns a real backend process per enabled app.
@@ -238,7 +238,7 @@ def _neutralise_outside_process_work(monkeypatch) -> dict[str, Any]:
         # Writes into the apps dir and re-materialises builtin manifests.
         "register_builtin_apps": MagicMock(),
         # Rewrites the operator's REAL ~/.kiro/settings/mcp.json — the one step
-        # here whose target is outside KIROCREW_HOME.
+        # here whose target is outside AJCREW_HOME.
         "cleanup_migrated_builtin": MagicMock(),
         "on_gateway_startup": AsyncMock(),
         "on_gateway_shutdown": AsyncMock(),
@@ -279,8 +279,8 @@ async def _start_dashboard(tmp_path: Path, monkeypatch, **kwargs: Any) -> Any:
     this from starting a service; everything else runs for real against the
     ``tmp_path`` data home. Returns ``(runner, state, spies)``.
     """
-    import kiro_crew.config.loader as _loader
-    import kiro_crew.dashboard.state as _st
+    import aj_crew.config.loader as _loader
+    import aj_crew.dashboard.state as _st
 
     monkeypatch.setattr(srv, "data_home", lambda: tmp_path)
     monkeypatch.setattr(_st, "config_dir", lambda: tmp_path)
@@ -291,7 +291,7 @@ async def _start_dashboard(tmp_path: Path, monkeypatch, **kwargs: Any) -> Any:
     # await that MagicMock (the eleventh sweep's ten flaky 409s). Pin them
     # here so monkeypatch puts back what this test found -- the leaker's own
     # contract, alongside the rootdir conftest's snapshot/restore floor.
-    from kiro_crew.apps import hooks_integration as _hooks
+    from aj_crew.apps import hooks_integration as _hooks
 
     monkeypatch.setattr(_hooks, "_lifecycle_dispatcher", None)
     monkeypatch.setattr(_hooks, "_route_registry", None)
@@ -317,8 +317,8 @@ async def _start_dashboard(tmp_path: Path, monkeypatch, **kwargs: Any) -> Any:
         # The port-reservation boot path exports the reserved socket's name as
         # bound-port evidence before the app-backend pass -- same raw
         # os.environ write, same snapshot+restore need.
-        "KIROCREW_BOUND_PORT",
-        "KIROCREW_BOUND_HOST",
+        "AJCREW_BOUND_PORT",
+        "AJCREW_BOUND_HOST",
     ):
         _prior = os.environ.get(_leak_key)
         monkeypatch.setenv(_leak_key, "" if _prior is None else _prior)
@@ -695,11 +695,11 @@ class TestStartDashboardWiring:
     ) -> None:
         """The reserved socket's REAL name is exported before the spawn pass.
 
-        ``apps.backend`` fails closed on ``KIROCREW_BOUND_PORT``. The port is reserved before
+        ``apps.backend`` fails closed on ``AJCREW_BOUND_PORT``. The port is reserved before
         the spawn pass, so a squatter cannot hold the port backends trust (fixed or auto).
         """
-        import kiro_crew.config.loader as _loader
-        import kiro_crew.dashboard.state as _st
+        import aj_crew.config.loader as _loader
+        import aj_crew.dashboard.state as _st
 
         seen: list[str | None] = []
         real_port = 43121
@@ -716,12 +716,12 @@ class TestStartDashboardWiring:
         monkeypatch.setattr(srv, "_start_unix_site", AsyncMock(return_value=None))
         spies = _neutralise_outside_process_work(monkeypatch)
         spies["start_enabled_app_backends"].side_effect = lambda: (
-            seen.append(os.environ.get("KIROCREW_BOUND_PORT")),
+            seen.append(os.environ.get("AJCREW_BOUND_PORT")),
             [],
         )[1]
         for _leak_key in (
-            "KIROCREW_BOUND_PORT",
-            "KIROCREW_BOUND_HOST",
+            "AJCREW_BOUND_PORT",
+            "AJCREW_BOUND_HOST",
         ):
             _prior = os.environ.get(_leak_key)
             monkeypatch.setenv(_leak_key, "" if _prior is None else _prior)
@@ -729,7 +729,7 @@ class TestStartDashboardWiring:
                 monkeypatch.delenv(_leak_key, raising=False)
         # Stale inherited evidence (an in-process restart / exporting parent):
         # the reservation export must SUPERSEDE it, never leak it to the pass.
-        monkeypatch.setenv("KIROCREW_BOUND_PORT", "55555")
+        monkeypatch.setenv("AJCREW_BOUND_PORT", "55555")
 
         sessions = MagicMock(count=0)
         sessions.remove = AsyncMock()
@@ -768,15 +768,15 @@ class TestStartDashboardWiring:
         """``tunnel.relay_enabled`` builds the app's relay ingress on, never past the lock."""
         import dataclasses
 
-        import kiro_crew.config.loader as _loader
-        import kiro_crew.dashboard.state as _st
-        from kiro_crew import edition_locks
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.dashboard.kiro_relay.ingress import RELAY_INGRESS_APP_KEY
+        import aj_crew.config.loader as _loader
+        import aj_crew.dashboard.state as _st
+        from aj_crew import edition_locks
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.dashboard.kiro_relay.ingress import RELAY_INGRESS_APP_KEY
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.tunnel = dataclasses.replace(cfg.tunnel, relay_enabled=relay_enabled)
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
         if locked:
             # The LTS lock on the ``tunnel`` control alone, without the
             # edition's policy and login boot.
@@ -815,11 +815,11 @@ class TestStartDashboardWiring:
     async def test_ipv6_loopback_bind_exports_v6_host_evidence(self, tmp_path, monkeypatch) -> None:
         """A ::1 bind exports ::1 as the callback host, never IPv4 loopback.
 
-        With KIROCREW_BIND=::1 the IPv4 port stays seizable, so a 127.0.0.1 origin would
+        With AJCREW_BIND=::1 the IPv4 port stays seizable, so a 127.0.0.1 origin would
         route backend secrets to whoever grabs it.
         """
-        import kiro_crew.config.loader as _loader
-        import kiro_crew.dashboard.state as _st
+        import aj_crew.config.loader as _loader
+        import aj_crew.dashboard.state as _st
 
         seen: list[str | None] = []
 
@@ -835,12 +835,12 @@ class TestStartDashboardWiring:
         monkeypatch.setattr(srv, "_start_unix_site", AsyncMock(return_value=None))
         spies = _neutralise_outside_process_work(monkeypatch)
         spies["start_enabled_app_backends"].side_effect = lambda: (
-            seen.append(os.environ.get("KIROCREW_BOUND_HOST")),
+            seen.append(os.environ.get("AJCREW_BOUND_HOST")),
             [],
         )[1]
         for _leak_key in (
-            "KIROCREW_BOUND_PORT",
-            "KIROCREW_BOUND_HOST",
+            "AJCREW_BOUND_PORT",
+            "AJCREW_BOUND_HOST",
         ):
             _prior = os.environ.get(_leak_key)
             monkeypatch.setenv(_leak_key, "" if _prior is None else _prior)
@@ -882,8 +882,8 @@ class TestStartDashboardWiring:
         WITHOUT having spawned children — a backend spawned first would present
         its X-App-Secret to whatever answers at the origin it was handed.
         """
-        import kiro_crew.config.loader as _loader
-        import kiro_crew.dashboard.state as _st
+        import aj_crew.config.loader as _loader
+        import aj_crew.dashboard.state as _st
 
         monkeypatch.setattr(srv, "data_home", lambda: tmp_path)
         monkeypatch.setattr(_st, "config_dir", lambda: tmp_path)
@@ -892,8 +892,8 @@ class TestStartDashboardWiring:
         monkeypatch.setattr(srv, "_start_unix_site", AsyncMock(return_value=None))
         spies = _neutralise_outside_process_work(monkeypatch)
         for _leak_key in (
-            "KIROCREW_BOUND_PORT",
-            "KIROCREW_BOUND_HOST",
+            "AJCREW_BOUND_PORT",
+            "AJCREW_BOUND_HOST",
         ):
             _prior = os.environ.get(_leak_key)
             monkeypatch.setenv(_leak_key, "" if _prior is None else _prior)
@@ -929,8 +929,8 @@ class TestStartDashboardWiring:
         backend_start_side_effect: Any | None = None,
     ) -> None:
         """Reach a selected post-reservation failure without host side effects."""
-        import kiro_crew.config.loader as _loader
-        import kiro_crew.dashboard.state as _st
+        import aj_crew.config.loader as _loader
+        import aj_crew.dashboard.state as _st
 
         monkeypatch.setattr(srv, "data_home", lambda: tmp_path)
         monkeypatch.setattr(_st, "config_dir", lambda: tmp_path)
@@ -946,8 +946,8 @@ class TestStartDashboardWiring:
         if backend_start_side_effect is not None:
             spies["start_enabled_app_backends"].side_effect = backend_start_side_effect
         for _leak_key in (
-            "KIROCREW_BOUND_PORT",
-            "KIROCREW_BOUND_HOST",
+            "AJCREW_BOUND_PORT",
+            "AJCREW_BOUND_HOST",
         ):
             _prior = os.environ.get(_leak_key)
             monkeypatch.setenv(_leak_key, "" if _prior is None else _prior)
@@ -1001,7 +1001,7 @@ class TestStartDashboardWiring:
         self, tmp_path: Path, monkeypatch
     ) -> None:
         """A spawn pass that raises after one child is recorded still sweeps it."""
-        import kiro_crew.apps.backend as backend_mod
+        import aj_crew.apps.backend as backend_mod
 
         reserved_socket = _fake_reserved_socket()
         swept_names: list[list[str]] = []
@@ -1048,8 +1048,8 @@ class TestStartDashboardWiring:
         boot must run runner.cleanup() (whose _hooks_shutdown sweep stops this
         process's backends) before propagating.
         """
-        import kiro_crew.config.loader as _loader
-        import kiro_crew.dashboard.state as _st
+        import aj_crew.config.loader as _loader
+        import aj_crew.dashboard.state as _st
 
         monkeypatch.setattr(srv, "data_home", lambda: tmp_path)
         monkeypatch.setattr(_st, "config_dir", lambda: tmp_path)
@@ -1064,8 +1064,8 @@ class TestStartDashboardWiring:
         spies = _neutralise_outside_process_work(monkeypatch)
         states = _record_states(monkeypatch)
         for _leak_key in (
-            "KIROCREW_BOUND_PORT",
-            "KIROCREW_BOUND_HOST",
+            "AJCREW_BOUND_PORT",
+            "AJCREW_BOUND_HOST",
         ):
             _prior = os.environ.get(_leak_key)
             monkeypatch.setenv(_leak_key, "" if _prior is None else _prior)
@@ -1116,7 +1116,7 @@ class TestStartDashboardWiring:
         Route registration reads the lazy store, so the boot builds it on a
         worker first; this records which thread ran the constructor.
         """
-        import kiro_crew.dashboard.state as _st
+        import aj_crew.dashboard.state as _st
 
         loop_thread = threading.get_ident()
         built_on: list[int] = []
@@ -1138,7 +1138,7 @@ class TestStartDashboardWiring:
     ) -> None:
         """One wave, before ``runner.setup()``, so startup hooks find their backend running.
 
-        Under the reservation it already sees ``KIROCREW_BOUND_PORT`` (pinned by
+        Under the reservation it already sees ``AJCREW_BOUND_PORT`` (pinned by
         ``test_backends_spawn_with_the_reserved_ports_evidence_exported``), so a bound-port
         backend such as Dev Fleet needs no second wave after the bind.
         """
@@ -1376,7 +1376,7 @@ class TestStartDashboardWiring:
         The flag is checked ahead of the enable gate, and read from process state because
         ``slack.allowlist`` opens a second door that never reaches ``setup_tunnel``.
         """
-        from kiro_crew.tunnel import set_publish_disabled
+        from aj_crew.tunnel import set_publish_disabled
 
         self._tunnel_enabled_context(monkeypatch)
         set_publish_disabled(True)
@@ -1399,7 +1399,7 @@ class TestStartDashboardWiring:
 
         Asserted at the call: ``setup_tunnel`` also returns None here for lack of token auth.
         """
-        from kiro_crew.tunnel import set_publish_disabled
+        from aj_crew.tunnel import set_publish_disabled
 
         self._tunnel_enabled_context(monkeypatch)
         set_publish_disabled(False)
@@ -1452,7 +1452,7 @@ async def test_windows_time_wait_no_holder_stretches_the_reservation_ladder(
     SO_EXCLUSIVEADDRUSE refuses a port in TIME_WAIT, which has no process to reclaim, so
     NO_HOLDER stretches the budget to _TIME_WAIT_BUDGET_SECS (TcpTimedWaitDelay).
     """
-    from kiro_crew.dashboard.port_reclaim import NO_HOLDER
+    from aj_crew.dashboard.port_reclaim import NO_HOLDER
 
     fails = 10  # more than the short ladder's retries below
 
@@ -1491,7 +1491,7 @@ async def test_live_holder_keeps_the_short_reservation_ladder_on_windows(
     ladder's prompt SystemExit (with its actionable message) is the right
     outcome.
     """
-    from kiro_crew.dashboard.port_reclaim import FOREIGN_HOLDER
+    from aj_crew.dashboard.port_reclaim import FOREIGN_HOLDER
 
     calls: list[int] = []
 
@@ -1522,7 +1522,7 @@ async def test_non_time_wait_outcomes_keep_the_short_ladder_on_windows(
     For UNAVAILABLE and RECLAIM_FAILED, waiting four minutes cannot free the port and
     would only stall boot.
     """
-    from kiro_crew.dashboard import port_reclaim
+    from aj_crew.dashboard import port_reclaim
 
     outcome = getattr(port_reclaim, outcome_name)
     calls: list[int] = []
@@ -1569,7 +1569,7 @@ class TestTheHarnessJoinsStoreJobsBeforeClosing:
         """
         import concurrent.futures
 
-        from kiro_crew.knowledge.store import KnowledgeStore
+        from aj_crew.knowledge.store import KnowledgeStore
 
         entered = threading.Event()
         release = threading.Event()

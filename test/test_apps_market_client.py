@@ -17,9 +17,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps import market_client
-from kiro_crew.apps.market_client import HttpMarketClient, cbor_decode, cbor_encode
-from kiro_crew.apps.marketplace_install import MarketInstallError, folder_capabilities
+from aj_crew.apps import market_client
+from aj_crew.apps.market_client import HttpMarketClient, cbor_decode, cbor_encode
+from aj_crew.apps.marketplace_install import MarketInstallError, folder_capabilities
 
 REF = "acme/ticket-digest"
 SHA = "a" * 64

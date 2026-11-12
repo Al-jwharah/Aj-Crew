@@ -14,9 +14,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew import platform_compat, session_pid_sig
-from kiro_crew.messaging import identity
-from kiro_crew.session_pid_sig import read_session_pid_mapping
+from aj_crew import platform_compat, session_pid_sig
+from aj_crew.messaging import identity
+from aj_crew.session_pid_sig import read_session_pid_mapping
 
 
 @pytest.fixture(name="pid_home")
@@ -65,10 +65,10 @@ def test_publishes_with_host_pid_and_key(pid_home: Path) -> None:
     """
     sessions = _Sessions(4242)
     with _spy_publish() as pub:
-        asyncio.run(identity.publish_turn_identity(sessions, "telegram:kirocrew:direct:7"))
-        pub.assert_called_once_with(4242, "telegram:kirocrew:direct:7")
+        asyncio.run(identity.publish_turn_identity(sessions, "telegram:ajcrew:direct:7"))
+        pub.assert_called_once_with(4242, "telegram:ajcrew:direct:7")
     mapping = read_session_pid_mapping(4242, pid_home)
-    assert mapping.session_key == "telegram:kirocrew:direct:7"
+    assert mapping.session_key == "telegram:ajcrew:direct:7"
     assert not mapping.shared
 
 
@@ -159,7 +159,7 @@ def test_the_companion_producer_still_omits_the_field_the_filter_tests() -> None
 
     from test_update_provider import _UNALLOCATABLE_PID
 
-    from kiro_crew.session_allocation import SessionAllocationService
+    from aj_crew.session_allocation import SessionAllocationService
 
     runtime = SimpleNamespace(pid=_UNALLOCATABLE_PID, is_alive=lambda: True, _spawn_monotonic=None)
     owner = SimpleNamespace(_bg_runtime=runtime)
@@ -204,7 +204,7 @@ def test_an_unreadable_snapshot_records_no_tenant_set(pid_home: Path) -> None:
 def test_no_publish_when_pid_unavailable(pid_home: Path) -> None:
     sessions = _Sessions(None)  # session not spawned yet -> get_pid None
     with _spy_publish() as pub:
-        asyncio.run(identity.publish_turn_identity(sessions, "slack:kirocrew:C1:T1"))
+        asyncio.run(identity.publish_turn_identity(sessions, "slack:ajcrew:C1:T1"))
         pub.assert_not_called()
     assert sorted(p.name for p in pid_home.glob("session_pid_*")) == []
 
@@ -214,7 +214,7 @@ def test_swallows_get_pid_error(pid_home: Path) -> None:
     sessions.get_pid.side_effect = RuntimeError("boom")
     with _spy_publish() as pub:
         # A get_pid / filesystem failure must never propagate out of a turn.
-        asyncio.run(identity.publish_turn_identity(sessions, "discord:kirocrew:g:t"))
+        asyncio.run(identity.publish_turn_identity(sessions, "discord:ajcrew:g:t"))
         pub.assert_not_called()
     assert sorted(p.name for p in pid_home.glob("session_pid_*")) == []
 
@@ -225,7 +225,7 @@ def test_swallows_get_pid_error(pid_home: Path) -> None:
 def test_inbound_permitted_when_no_policy(monkeypatch, tmp_path) -> None:
     # Default OSS build: no channels policy → every transport's inbound permits,
     # so inbound handling is byte-identical to today.
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.platform import governance_profiles as gp
 
     monkeypatch.setattr(gp, "_PROFILES_DIR", tmp_path / "profiles")
     gp.reset_store()
@@ -242,7 +242,7 @@ def test_inbound_denied_after_host_profile_hot_reload(monkeypatch, tmp_path) -> 
     # ProfileStore hot-reloads by mtime, so the per-message recheck picks it up.
     import json
 
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.platform import governance_profiles as gp
 
     pdir = tmp_path / "profiles"
     pdir.mkdir()
@@ -274,19 +274,19 @@ def test_inbound_fail_closed_on_governance_error(monkeypatch) -> None:
     def _boom(*_a, **_k):
         raise RuntimeError("evaluation glitch")
 
-    monkeypatch.setattr("kiro_crew.messaging.identity.governance_permits", _boom)
+    monkeypatch.setattr("aj_crew.messaging.identity.governance_permits", _boom)
     assert asyncio.run(identity.channel_inbound_permitted("discord")) is False
 
 
 def test_inbound_reraises_platform_composition_error(monkeypatch) -> None:
     # A broken CPP composition must surface (matches the host gate), not be
     # silently swallowed into a blanket deny.
-    from kiro_crew.platform.context import PlatformCompositionError
+    from aj_crew.platform.context import PlatformCompositionError
 
     def _boom(*_a, **_k):
         raise PlatformCompositionError("companion mismatch")
 
-    monkeypatch.setattr("kiro_crew.messaging.identity.governance_permits", _boom)
+    monkeypatch.setattr("aj_crew.messaging.identity.governance_permits", _boom)
     import pytest
 
     with pytest.raises(PlatformCompositionError):
@@ -299,7 +299,7 @@ def test_inbound_governed_deny_is_sel_audited(monkeypatch, tmp_path) -> None:
     # allows only slack → discord denied → one governance_decision SEL written.
     import json
 
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.platform import governance_profiles as gp
 
     pdir = tmp_path / "profiles"
     pdir.mkdir()
@@ -312,7 +312,7 @@ def test_inbound_governed_deny_is_sel_audited(monkeypatch, tmp_path) -> None:
         def log_governance_decision(self, **kw):
             audited.append(kw)
 
-    monkeypatch.setattr("kiro_crew.messaging.identity.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.messaging.identity.sel", lambda: _Sel())
     try:
         (pdir / "host.json").write_text(
             json.dumps(
@@ -340,7 +340,7 @@ def test_inbound_governed_allow_denies_on_audit_failure(monkeypatch, tmp_path) -
     # drive a turn unaudited — matching the host transport-start gate.
     import json
 
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.platform import governance_profiles as gp
 
     pdir = tmp_path / "profiles"
     pdir.mkdir()
@@ -352,7 +352,7 @@ def test_inbound_governed_allow_denies_on_audit_failure(monkeypatch, tmp_path) -
             # Only the governed ALLOW is critical; simulate an unwritable SEL.
             raise OSError("SEL disk full")
 
-    monkeypatch.setattr("kiro_crew.messaging.identity.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.messaging.identity.sel", lambda: _Sel())
     try:
         # A host profile that ALLOWS slack → an inbound slack message is a GOVERNED
         # allow; the failing critical audit must flip it to denied.
@@ -378,7 +378,7 @@ def test_inbound_ungoverned_permit_is_not_audited(monkeypatch, tmp_path) -> None
     # configured — hot-path write amplification that also drowns real governance
     # signal. There is no decision to record: nothing was governed. Governed
     # decisions and every deny ARE recorded (covered by the sibling tests).
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.platform import governance_profiles as gp
 
     monkeypatch.setattr(gp, "_PROFILES_DIR", tmp_path / "profiles")
     gp.reset_store()
@@ -389,7 +389,7 @@ def test_inbound_ungoverned_permit_is_not_audited(monkeypatch, tmp_path) -> None
         def log_governance_decision(self, **kw):
             audited.append(kw)
 
-    monkeypatch.setattr("kiro_crew.messaging.identity.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.messaging.identity.sel", lambda: _Sel())
     try:
         assert asyncio.run(identity.channel_inbound_permitted("discord")) is True
         assert audited == [], (
@@ -404,7 +404,7 @@ def test_inbound_ungoverned_permit_survives_audit_failure(monkeypatch, tmp_path)
     # An ungoverned allow is best-effort: a SEL write failure must NOT flip it to
     # denied (OSS availability doesn't hinge on SEL disk health) — only a GOVERNED
     # allow is audit-or-deny.
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.platform import governance_profiles as gp
 
     monkeypatch.setattr(gp, "_PROFILES_DIR", tmp_path / "profiles")
     gp.reset_store()
@@ -413,7 +413,7 @@ def test_inbound_ungoverned_permit_survives_audit_failure(monkeypatch, tmp_path)
         def log_governance_decision(self, **kw):
             raise OSError("SEL disk full")
 
-    monkeypatch.setattr("kiro_crew.messaging.identity.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.messaging.identity.sel", lambda: _Sel())
     try:
         # No policy → ungoverned allow → still permitted despite the audit failure.
         assert asyncio.run(identity.channel_inbound_permitted("discord")) is True
@@ -427,7 +427,7 @@ def test_inbound_ungoverned_permit_survives_audit_failure(monkeypatch, tmp_path)
 def test_outbound_permitted_when_no_policy(monkeypatch, tmp_path) -> None:
     # Default OSS build: no channels policy → every transport's outbound permits,
     # so sends are byte-identical to a build without this gate.
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.platform import governance_profiles as gp
 
     monkeypatch.setattr(gp, "_PROFILES_DIR", tmp_path / "profiles")
     gp.reset_store()
@@ -444,18 +444,18 @@ def test_outbound_fail_closed_on_governance_error(monkeypatch) -> None:
     def _boom(*_a, **_k):
         raise RuntimeError("evaluation glitch")
 
-    monkeypatch.setattr("kiro_crew.messaging.identity.governance_permits", _boom)
+    monkeypatch.setattr("aj_crew.messaging.identity.governance_permits", _boom)
     assert asyncio.run(identity.channel_outbound_permitted("discord")) is False
 
 
 def test_outbound_reraises_platform_composition_error(monkeypatch) -> None:
     # Matches the inbound sibling and the host gate: a broken composition surfaces.
-    from kiro_crew.platform.context import PlatformCompositionError
+    from aj_crew.platform.context import PlatformCompositionError
 
     def _boom(*_a, **_k):
         raise PlatformCompositionError("companion mismatch")
 
-    monkeypatch.setattr("kiro_crew.messaging.identity.governance_permits", _boom)
+    monkeypatch.setattr("aj_crew.messaging.identity.governance_permits", _boom)
     import pytest
 
     with pytest.raises(PlatformCompositionError):
@@ -475,9 +475,9 @@ def test_outbound_rows_name_the_outbound_direction(monkeypatch) -> None:
         def log_governance_decision(self, **kw):
             rows.append(kw)
 
-    monkeypatch.setattr("kiro_crew.messaging.identity.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.messaging.identity.sel", lambda: _Sel())
     monkeypatch.setattr(
-        "kiro_crew.messaging.identity.governance_permits",
+        "aj_crew.messaging.identity.governance_permits",
         lambda *a, **k: _decision(False, "policy"),
     )
     assert asyncio.run(identity.channel_outbound_permitted("discord")) is False
@@ -496,9 +496,9 @@ def test_the_governed_outbound_allow_row_is_written_critically(monkeypatch) -> N
         def log_governance_decision(self, **kw):
             rows.append(kw)
 
-    monkeypatch.setattr("kiro_crew.messaging.identity.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.messaging.identity.sel", lambda: _Sel())
     monkeypatch.setattr(
-        "kiro_crew.messaging.identity.governance_permits",
+        "aj_crew.messaging.identity.governance_permits",
         lambda *a, **k: _decision(True, "policy"),
     )
     assert asyncio.run(identity.channel_outbound_permitted("discord")) is True
@@ -515,9 +515,9 @@ def test_an_unrecordable_governed_allow_fails_closed(monkeypatch) -> None:
         def log_governance_decision(self, **kw):
             raise OSError("read-only file system")
 
-    monkeypatch.setattr("kiro_crew.messaging.identity.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.messaging.identity.sel", lambda: _Sel())
     monkeypatch.setattr(
-        "kiro_crew.messaging.identity.governance_permits",
+        "aj_crew.messaging.identity.governance_permits",
         lambda *a, **k: _decision(True, "policy"),
     )
     assert asyncio.run(identity.channel_outbound_permitted("discord")) is False
@@ -534,13 +534,13 @@ def test_an_unwritable_audit_store_still_lets_a_deny_answer(monkeypatch) -> None
         def log_governance_decision(self, **kw):
             raise OSError("read-only file system")
 
-    monkeypatch.setattr("kiro_crew.messaging.identity.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.messaging.identity.sel", lambda: _Sel())
     monkeypatch.setattr(
-        "kiro_crew.messaging.identity.audit_governance_degraded",
+        "aj_crew.messaging.identity.audit_governance_degraded",
         lambda *a, **k: degraded.append(a[0] if a else ""),
     )
     monkeypatch.setattr(
-        "kiro_crew.messaging.identity.governance_permits",
+        "aj_crew.messaging.identity.governance_permits",
         lambda *a, **k: _decision(False, "policy"),
     )
     assert asyncio.run(identity.channel_outbound_permitted("discord")) is False
@@ -557,13 +557,13 @@ def test_an_unrecordable_governed_allow_reports_itself_degraded(monkeypatch) -> 
         def log_governance_decision(self, **kw):
             raise OSError("read-only file system")
 
-    monkeypatch.setattr("kiro_crew.messaging.identity.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.messaging.identity.sel", lambda: _Sel())
     monkeypatch.setattr(
-        "kiro_crew.messaging.identity.audit_governance_degraded",
+        "aj_crew.messaging.identity.audit_governance_degraded",
         lambda *a, **k: degraded.append(a[0] if a else ""),
     )
     monkeypatch.setattr(
-        "kiro_crew.messaging.identity.governance_permits",
+        "aj_crew.messaging.identity.governance_permits",
         lambda *a, **k: _decision(True, "policy"),
     )
     assert asyncio.run(identity.channel_outbound_permitted("discord")) is False
@@ -579,9 +579,9 @@ def test_an_ungoverned_outbound_allow_writes_no_row(monkeypatch) -> None:
         def log_governance_decision(self, **kw):
             rows.append(kw)
 
-    monkeypatch.setattr("kiro_crew.messaging.identity.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.messaging.identity.sel", lambda: _Sel())
     monkeypatch.setattr(
-        "kiro_crew.messaging.identity.governance_permits",
+        "aj_crew.messaging.identity.governance_permits",
         lambda *a, **k: _decision(True, ""),
     )
     assert asyncio.run(identity.channel_outbound_permitted("discord")) is True

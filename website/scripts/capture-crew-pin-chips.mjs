@@ -86,7 +86,7 @@ const SLOTS = [{
   running: false,
   last_message: 'Pinned devdesk to the header.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   folder_id: '',
   modified: Math.floor(Date.now() / 1000),

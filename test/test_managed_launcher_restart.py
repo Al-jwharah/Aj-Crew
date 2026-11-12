@@ -17,20 +17,20 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from installer_test_helpers import run_bounded
 
-from kiro_crew import platform_compat
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.gateway_restart import resolve_restart_launcher
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.context import PlatformCompositionError, set_context
-from kiro_crew.slack.gateway import GatewayOrchestrator
+from aj_crew import platform_compat
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.handlers import updates
+from aj_crew.gateway_restart import resolve_restart_launcher
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.context import PlatformCompositionError, set_context
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 _SOURCE_ROOT = Path(__file__).resolve().parents[1] / "src"
 
 
 def _compose(monkeypatch, launcher):
     provider = SimpleNamespace(restart_launcher=Mock(return_value=launcher))
-    set_context(replace(build_default_context(KiroCrewConfig()), gateway_lifecycle=provider))
+    set_context(replace(build_default_context(AjCrewConfig()), gateway_lifecycle=provider))
     return provider
 
 
@@ -44,7 +44,7 @@ def _state():
 
 class TestLauncherContract:
     def test_default_preserves_python_resolution(self):
-        ctx = build_default_context(KiroCrewConfig())
+        ctx = build_default_context(AjCrewConfig())
         set_context(ctx)
         assert ctx.gateway_lifecycle.restart_launcher() is None
         assert resolve_restart_launcher() is None
@@ -111,7 +111,7 @@ class TestLauncherContract:
         args = ["gateway", "--port", "6789", "space argument", 'quote"value', "", "雪"]
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", windows)
         monkeypatch.setenv("PYTHONPATH", "stale-import-tree")
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "instance home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "instance home"))
         monkeypatch.setenv("PYTHONUTF8", "0")
         monkeypatch.setenv("PYTHONIOENCODING", "ascii")
         execv = Mock()
@@ -122,7 +122,7 @@ class TestLauncherContract:
             expected = [subprocess.list2cmdline([arg]) for arg in expected]
         execv.assert_called_once_with(launcher, expected)
         assert os.environ["PYTHONPATH"] == "stale-import-tree"
-        assert os.environ["KIROCREW_HOME"] == str(tmp_path / "instance home")
+        assert os.environ["AJCREW_HOME"] == str(tmp_path / "instance home")
         assert os.environ["PYTHONUTF8"] == "1"
         assert os.environ["PYTHONIOENCODING"] == "utf-8:backslashreplace"
 
@@ -158,7 +158,7 @@ class TestLauncherContract:
         # A stub launcher written here: ``os.execv`` is replaced below, so no byte
         # of it ever runs; the resolver asks only for an absolute executable file
         # (``.exe`` on Windows, where the execute bit does not exist).
-        launcher = tmp_path / ("kirocrew.exe" if platform_compat.IS_WINDOWS else "kirocrew")
+        launcher = tmp_path / ("ajcrew.exe" if platform_compat.IS_WINDOWS else "ajcrew")
         launcher.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
         platform_compat.chmod_safe(launcher, 0o700)
         _compose(monkeypatch, str(launcher))
@@ -199,7 +199,7 @@ print("PROBE=" + json.dumps({
     "core": core_probe.VERSION, "companion": companion_probe.VERSION,
     "core_path": core_probe.__file__, "companion_path": companion_probe.__file__,
     "executable": sys.executable, "args": sys.argv[1:],
-    "home": os.environ["KIROCREW_HOME"], "port": os.environ["KIROCREW_PORT"],
+    "home": os.environ["AJCREW_HOME"], "port": os.environ["AJCREW_PORT"],
     "pythonpath": os.environ["PYTHONPATH"],
     "utf8": os.environ.get("PYTHONUTF8"),
     "encoding": os.environ.get("PYTHONIOENCODING"),
@@ -208,16 +208,16 @@ print("PROBE=" + json.dumps({
 if os.environ.pop("PROBE_FIRST", ""):
     sys.path.extend(DEPENDENCY_PATHS)
     from dataclasses import replace
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.platform.bootstrap import build_default_context
-    from kiro_crew.platform.context import set_context
-    from kiro_crew.dashboard.handlers import updates
-    from kiro_crew.dashboard import chat
-    from kiro_crew.platform import update_provider
-    from kiro_crew.slack import gateway
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.platform.bootstrap import build_default_context
+    from aj_crew.platform.context import set_context
+    from aj_crew.dashboard.handlers import updates
+    from aj_crew.dashboard import chat
+    from aj_crew.platform import update_provider
+    from aj_crew.slack import gateway
 
     launcher = str(root / "crew-launcher")
-    set_context(replace(build_default_context(KiroCrewConfig()),
+    set_context(replace(build_default_context(AjCrewConfig()),
         gateway_lifecycle=SimpleNamespace(restart_launcher=lambda: launcher)))
     state = SimpleNamespace(_gateway_restart_in_progress=False,
         push_update_progress=lambda *a: None,
@@ -270,11 +270,11 @@ def test_managed_bundle_switch(tmp_path, mode, remove_a):
         imports.mkdir(parents=True)
         for name in ("core_probe", "companion_probe"):
             (imports / f"{name}.py").write_text(f"VERSION = {version!r}\n", encoding="utf-8")
-        package = imports / "kiro_crew"
+        package = imports / "aj_crew"
         package.mkdir()
         # Execute real restart code through A's removable import path. The
         # synthetic module entry point only reports a probe even without the fix.
-        for entry in (_SOURCE_ROOT / "kiro_crew").iterdir():
+        for entry in (_SOURCE_ROOT / "aj_crew").iterdir():
             if entry.name not in {"__main__.py", "__pycache__"}:
                 (package / entry.name).symlink_to(entry, target_is_directory=entry.is_dir())
         (package / "__main__.py").write_text(
@@ -307,10 +307,10 @@ def test_managed_bundle_switch(tmp_path, mode, remove_a):
         "PATH": os.pathsep.join([str(Path(sys.executable).parent), "/usr/bin", "/bin"]),
         "HOME": str(home),
         "KIRO_HOME": str(home / ".kiro"),
-        "KIROCREW_HOME": str(home),
-        "KIROCREW_PORT": "6789",
-        "KIROCREW_PROFILE": "standalone",
-        "KIROCREW_TELEMETRY": "0",
+        "AJCREW_HOME": str(home),
+        "AJCREW_PORT": "6789",
+        "AJCREW_PROFILE": "standalone",
+        "AJCREW_TELEMETRY": "0",
         "TMPDIR": str(root),
         "TMP": str(root),
         "TEMP": str(root),

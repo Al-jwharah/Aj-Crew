@@ -59,7 +59,7 @@ try {
     await page.route(url => new URL(url).pathname.startsWith('/api/'), route => {
       const p = new URL(route.request().url()).pathname
       if (p === '/api/models') return json(route, s.models)
-      if (p === '/api/config/kirocrew') return json(route, { agent: { model: 'auto', reasoning_effort: '' }, dashboard: {} })
+      if (p === '/api/config/ajcrew') return json(route, { agent: { model: 'auto', reasoning_effort: '' }, dashboard: {} })
       if (p === '/api/config/schema') return json(route, { entries: [] })
       if (p === '/api/dashboard/config') return json(route, { model_picker_hidden_models: [], model_picker_configured: false, verbosity: 'default', default_memory_mode: 'persistent', widget_density: 'more' })
       if (p === '/api/agents') return json(route, { agents: [], default_agent: 'default' })

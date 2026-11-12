@@ -7,7 +7,7 @@
  * but "it follows every theme and stays legible on all of them", so this
  * captures the SAME note across four deliberately chosen palettes:
  *
- *   01 kiro-dark         - the shipped default, green accent
+ *   01 aj-dark         - the shipped default, green accent
  *   02 monokai-dark      - a saturated warm accent on near-black
  *   03 gruvbox-light     - a light theme with a low-contrast accent
  *   04 everforest-light  - the tightest built-in palette measured: its own
@@ -139,11 +139,11 @@ async function main() {
   const { srv, base } = await serveDist()
   const browser = await chromium.launch()
   try {
-    await shoot(browser, base, { file: '01-kiro-dark.png', mode: 'dark', palette: 'kiro' })
+    await shoot(browser, base, { file: '01-aj-dark.png', mode: 'dark', palette: 'aj' })
     await shoot(browser, base, { file: '02-monokai-dark.png', mode: 'dark', palette: 'monokai' })
     await shoot(browser, base, { file: '03-gruvbox-light.png', mode: 'light', palette: 'gruvbox' })
     await shoot(browser, base, { file: '04-everforest-light.png', mode: 'light', palette: 'everforest' })
-    await shoot(browser, base, { file: '05-editing-a-heading.png', mode: 'dark', palette: 'kiro', edit: true })
+    await shoot(browser, base, { file: '05-editing-a-heading.png', mode: 'dark', palette: 'aj', edit: true })
   } finally {
     await browser.close()
     srv.close()

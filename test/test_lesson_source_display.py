@@ -13,12 +13,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew.vector_memory import VectorMemoryStore
 
 
 def test_learn_list_shows_each_lessons_source(monkeypatch):
-    from kiro_crew import mcp_core
-    from kiro_crew.mcp_tools import learn as mcp_learn
+    from aj_crew import mcp_core
+    from aj_crew.mcp_tools import learn as mcp_learn
 
     monkeypatch.setattr(
         mcp_core,
@@ -40,7 +40,7 @@ def test_learn_list_shows_each_lessons_source(monkeypatch):
 
 
 def test_source_suffix_ignores_blank_and_non_string_values():
-    from kiro_crew.mcp_tools.learn import _source_suffix
+    from aj_crew.mcp_tools.learn import _source_suffix
 
     assert _source_suffix({"source": "  "}) == ""
     assert _source_suffix({"source": None}) == ""
@@ -50,7 +50,7 @@ def test_source_suffix_ignores_blank_and_non_string_values():
 
 async def _lessons_api_body(tmp_path, source: str, **patches) -> dict:
     """GET /api/lessons over a real vector store holding one row with *source*."""
-    from kiro_crew.dashboard.handlers import cron
+    from aj_crew.dashboard.handlers import cron
 
     store = VectorMemoryStore(db_path=tmp_path / "m.db", embedding_dim=4)
     store.init()

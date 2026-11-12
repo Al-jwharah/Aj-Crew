@@ -16,20 +16,20 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from test_acp_liveness import FakeProc
 
-from kiro_crew import _process_group_supervisor, platform_compat
-from kiro_crew.acp import liveness, runtime_liveness
-from kiro_crew.acp.liveness import (
+from aj_crew import _process_group_supervisor, platform_compat
+from aj_crew.acp import liveness, runtime_liveness
+from aj_crew.acp.liveness import (
     InFlightToolTracker,
     LivenessOracle,
     ProcessRow,
     ToolCallState,
 )
-from kiro_crew.acp.runtime import AcpRequestTimeout, AcpRuntime
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import STOP_REASON_TOOL_STALL
-from kiro_crew.dashboard.state import build_tool_stall_recovery_prompt
-from kiro_crew.testing.ids import unallocatable_pids
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS, wait_until
+from aj_crew.acp.runtime import AcpRequestTimeout, AcpRuntime
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import STOP_REASON_TOOL_STALL
+from aj_crew.dashboard.state import build_tool_stall_recovery_prompt
+from aj_crew.testing.ids import unallocatable_pids
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, wait_until
 
 RUNTIME = 100
 
@@ -260,7 +260,7 @@ def test_crew_launcher_uses_its_sole_harness_as_the_shell_parent(
 ) -> None:
     _date_fake_proc_at_100_hz(monkeypatch)
     fake = FakeProc(tmp_path / "proc")
-    fake.add_pid(RUNTIME, children=[110], cmdline="kirocrew sandbox launcher")
+    fake.add_pid(RUNTIME, children=[110], cmdline="ajcrew sandbox launcher")
     fake.add_pid(110, children=[200], cmdline="kiro-cli acp")
     fake.add_pid(200, cmdline="/bin/sh -c python slow_query.py")
     starts = {
@@ -288,7 +288,7 @@ def test_crew_launcher_requires_one_identified_harness(
     _date_fake_proc_at_100_hz(monkeypatch)
     fake = FakeProc(tmp_path / "proc")
     launcher_children = [110, 120] if failure == "multiple" else [110]
-    fake.add_pid(RUNTIME, children=launcher_children, cmdline="kirocrew sandbox launcher")
+    fake.add_pid(RUNTIME, children=launcher_children, cmdline="ajcrew sandbox launcher")
     fake.add_pid(110, children=[200], cmdline="kiro-cli acp")
     if failure == "multiple":
         fake.add_pid(120, cmdline="unrelated child")
@@ -428,7 +428,7 @@ def test_a_state_without_is_shell_is_judged_and_withholds_overlapping_cleanup(
     judged call, and an overlapping shell call loses cleanup authority for it."""
     tracker = InFlightToolTracker(max_calls=4)
     shell = _shell_tool()
-    opaque = SimpleNamespace(tool_name="@kirocrew-core/spawn_sub_agents", title="call")
+    opaque = SimpleNamespace(tool_name="@ajcrew-core/spawn_sub_agents", title="call")
     calls = [("call-1", shell), ("", opaque)] if shell_first else [("", opaque), ("call-1", shell)]
 
     for call_id, state in calls:
@@ -436,7 +436,7 @@ def test_a_state_without_is_shell_is_judged_and_withholds_overlapping_cleanup(
 
     assert tracker.current is calls[-1][1]
     assert shell.shell_cleanup_disqualified is True
-    assert vars(opaque) == {"tool_name": "@kirocrew-core/spawn_sub_agents", "title": "call"}
+    assert vars(opaque) == {"tool_name": "@ajcrew-core/spawn_sub_agents", "title": "call"}
 
 
 def test_a_non_shell_state_still_leaves_shell_cleanup_authority_alone() -> None:

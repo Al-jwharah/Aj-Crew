@@ -22,7 +22,7 @@ vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page
 vi.mock('../pages/SystemPage', () => ({ default: () => <div data-testid="system-page">SystemPage</div> }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => <div data-testid="projects-page">ProjectsPage</div> }))
 vi.mock('../pages/LogsPage', () => ({ default: () => <div data-testid="logs-page">LogsPage</div> }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => <div data-testid="mc-agents-page">MCAgentsPage</div> }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => <div data-testid="mc-agents-page">MCAgentsPage</div> }))
 vi.mock('../pages/CapabilitiesPage', () => ({ default: () => <div data-testid="capabilities-page">CapabilitiesPage</div> }))
 vi.mock('../pages/NotificationsPage', () => ({ default: () => <div data-testid="notifications-page">NotificationsPage</div> }))
 vi.mock('../pages/SchedulePage', () => ({ default: () => <div data-testid="schedule-page">SchedulePage</div> }))
@@ -38,7 +38,7 @@ vi.mock('../pages/HooksPage', () => {
   return { default: () => <div data-testid="hooks-page">HooksPage</div> }
 })
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }, { name: 'reviewer' }, { name: 'oracle' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }, { name: 'reviewer' }, { name: 'oracle' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
 vi.mock('../api/client', () => ({
@@ -50,7 +50,7 @@ vi.mock('../api/client', () => ({
     listApps: vi.fn().mockResolvedValue([]),
     // A NON-Kiro harness by default, so the credit pill's Kiro-only surfaces
     // (the no-reading dash) stay off unless a test names the kiro backend.
-    kirocrewConfig: vi.fn().mockResolvedValue({ agent: { acp_backend: 'claude' } }),
+    ajcrewConfig: vi.fn().mockResolvedValue({ agent: { acp_backend: 'claude' } }),
     system: vi.fn().mockResolvedValue({ mem_used_gb: 4.0, mem_total_gb: 16.0, cpu_pct: 25.0, disk_total_gb: 100.0, disk_free_gb: 60.0 }),
     chatSlotAgent: vi.fn().mockResolvedValue({}),
     // The left dock reads the roster; an empty one keeps its notice out of these frames.
@@ -81,7 +81,7 @@ vi.mock('../api/client', () => ({
       reason: 'ready',
       endpoint_configured: true,
       env_override: false,
-      env_var: 'KIROCREW_TELEMETRY_DISABLED',
+      env_var: 'AJCREW_TELEMETRY_DISABLED',
     }),
     patchConfig: vi.fn().mockResolvedValue({}),
     createChatSlot: vi.fn().mockResolvedValue({ key: 'feature-slot', title: 'feature-slot', messages: 0, running: false }),
@@ -126,7 +126,7 @@ const waitShellEntered = () => waitFor(
 
 /**
  * Mount the shell and wait for what it fetches by itself. Chain: App mounts, its mount-time queries
- * (theme-boot, kiro-usage, kirocrewConfig, system-metrics, apps, instances, ...) each answer and re-render App.
+ * (theme-boot, kiro-usage, ajcrewConfig, system-metrics, apps, instances, ...) each answer and re-render App.
  */
 async function mountShell() {
   const rendered = renderWithProviders(<App />, { route: '/chat' })
@@ -405,7 +405,7 @@ describe('onCycleAgent keyboard shortcut', () => {
     const { api } = await import('../api/client')
     const { store } = await import('../store')
     // Set up the real singleton store state that onCycleAgent reads via store.getState()
-    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'kirocrew' }] })
+    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'ajcrew' }] })
     store.dispatch({ type: 'chat/setActiveSlot', payload: 'slot-1' })
     renderWithProviders(<App />, { route: '/chat' })
     // The switch now rides performSlotSwitch (#5120), so the API call lands a
@@ -443,7 +443,7 @@ describe('onCycleAgent keyboard shortcut', () => {
     ;(api.chatSlotAgent as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
       new ApiError(400, REAL_FAILURE, JSON.stringify({ error: REAL_FAILURE })),
     )
-    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: true, agent: 'kirocrew' }] })
+    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: true, agent: 'ajcrew' }] })
     store.dispatch({ type: 'chat/setActiveSlot', payload: 'slot-1' })
     renderWithProviders(<App />, { route: '/chat' })
 
@@ -476,7 +476,7 @@ describe('onCycleAgent keyboard shortcut', () => {
     try {
       const failure = new ApiError(400, REAL_FAILURE, JSON.stringify({ error: REAL_FAILURE }))
       ;(api.chatSlotAgent as ReturnType<typeof vi.fn>).mockRejectedValue(failure)
-      store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: true, agent: 'kirocrew' }] })
+      store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: true, agent: 'ajcrew' }] })
       store.dispatch({ type: 'chat/setActiveSlot', payload: 'slot-1' })
       renderWithProviders(<App />, { route: '/chat' })
 
@@ -519,7 +519,7 @@ describe('onCycleAgent edge cases', () => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'A', code: 'KeyA', altKey: true, shiftKey: true, bubbles: true }))
     })
     expect(api.chatSlotAgent).not.toHaveBeenCalled()
-    useAgentsMock.mockReturnValue({ agents: [{ name: 'kirocrew' }, { name: 'reviewer' }, { name: 'oracle' }], defaultAgent: 'kirocrew' })
+    useAgentsMock.mockReturnValue({ agents: [{ name: 'ajcrew' }, { name: 'reviewer' }, { name: 'oracle' }], defaultAgent: 'ajcrew' })
   })
 })
 
@@ -528,7 +528,7 @@ describe('onCycleReasoningEffort keyboard shortcut (#5120)', () => {
     const { api } = await import('../api/client')
     const { store } = await import('../store')
     ;(api.chatSlotReasoningEffort as ReturnType<typeof vi.fn>).mockClear()
-    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'kirocrew', reasoning_effort: 'max' }] })
+    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'ajcrew', reasoning_effort: 'max' }] })
     store.dispatch({ type: 'chat/setActiveSlot', payload: 'slot-1' })
     renderWithProviders(<App />, { route: '/chat' })
     // Two presses in one synchronous batch: the first pick is still in
@@ -554,7 +554,7 @@ describe('onCycleReasoningEffort keyboard shortcut (#5120)', () => {
     const { api } = await import('../api/client')
     const { store } = await import('../store')
     ;(api.chatSlotReasoningEffort as ReturnType<typeof vi.fn>).mockClear()
-    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'kirocrew', reasoning_effort: 'low' }] })
+    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'ajcrew', reasoning_effort: 'low' }] })
     store.dispatch({ type: 'chat/setActiveSlot', payload: 'slot-1' })
     renderWithProviders(<App />, { route: '/chat' })
     await act(async () => {
@@ -573,7 +573,7 @@ describe('onCycleReasoningEffort follows the session\'s harness', () => {
     const { api } = await import('../api/client')
     const { store } = await import('../store')
     ;(api.chatSlotReasoningEffort as ReturnType<typeof vi.fn>).mockClear()
-    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'kirocrew', reasoning_effort: 'low' }] })
+    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'ajcrew', reasoning_effort: 'low' }] })
     store.dispatch({ type: 'chat/setActiveSlot', payload: 'slot-1' })
     const { queryClient } = renderWithProviders(<App />, { route: '/chat' })
     queryClient.setQueryData(['slot-selection-capabilities', 'slot-1'], { known: true, effort_supported: true, effort_levels: ['low', 'high'] })
@@ -592,7 +592,7 @@ describe('onCycleReasoningEffort follows the session\'s harness', () => {
 
     queryClient.setQueryData(['slot-selection-capabilities', 'slot-1'], { known: false })
     ;(api.chatSlotReasoningEffort as ReturnType<typeof vi.fn>).mockClear()
-    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'kirocrew', model: 'claude-haiku-4.5', reasoning_effort: 'low' }] })
+    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'ajcrew', model: 'claude-haiku-4.5', reasoning_effort: 'low' }] })
     await act(async () => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'D', code: 'KeyD', altKey: true, shiftKey: true, bubbles: true }))
     })
@@ -601,7 +601,7 @@ describe('onCycleReasoningEffort follows the session\'s harness', () => {
     // Unknown is not "takes none": a cold codex thread's model answers, as in its composer.
     queryClient.setQueryData(['slot-selection-capabilities', 'slot-1'], { known: false, model_effort_pair_ids: true, effort_supported: null, effort_levels: [] })
     store.dispatch({ type: 'chat/setAgentSwitchNotice', payload: null })
-    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'kirocrew', model: 'openai.gpt-6.1-sol', reasoning_effort: 'low' }] })
+    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'ajcrew', model: 'openai.gpt-6.1-sol', reasoning_effort: 'low' }] })
     await act(async () => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'D', code: 'KeyD', altKey: true, shiftKey: true, bubbles: true }))
     })
@@ -609,7 +609,7 @@ describe('onCycleReasoningEffort follows the session\'s harness', () => {
     expect(store.getState().chat.agentSwitchNotice).toBeNull()
 
     ;(api.chatSlotReasoningEffort as ReturnType<typeof vi.fn>).mockClear()
-    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'kirocrew', model: 'claude-haiku-4.5', reasoning_effort: 'low' }] })
+    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'ajcrew', model: 'claude-haiku-4.5', reasoning_effort: 'low' }] })
     await act(async () => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'D', code: 'KeyD', altKey: true, shiftKey: true, bubbles: true }))
     })
@@ -620,8 +620,8 @@ describe('onCycleReasoningEffort follows the session\'s harness', () => {
     // composer's own key (app included): a crew resolved to a no-effort model does not cycle.
     ;(api.chatSlotReasoningEffort as ReturnType<typeof vi.fn>).mockClear()
     store.dispatch({ type: 'chat/setAgentSwitchNotice', payload: null })
-    queryClient.setQueryData(['resolved-model', 'kirocrew', 'acp', 'my-app'], 'claude-haiku-4.5')
-    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'kirocrew', app: 'my-app', model: '', reasoning_effort: 'low' }] })
+    queryClient.setQueryData(['resolved-model', 'ajcrew', 'acp', 'my-app'], 'claude-haiku-4.5')
+    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'ajcrew', app: 'my-app', model: '', reasoning_effort: 'low' }] })
     await act(async () => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'D', code: 'KeyD', altKey: true, shiftKey: true, bubbles: true }))
     })
@@ -657,7 +657,7 @@ describe('onCyclePrevAgent edge cases', () => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Z', code: 'KeyZ', altKey: true, shiftKey: true, bubbles: true }))
     })
     expect(api.chatSlotAgent).not.toHaveBeenCalled()
-    useAgentsMock.mockReturnValue({ agents: [{ name: 'kirocrew' }, { name: 'reviewer' }, { name: 'oracle' }], defaultAgent: 'kirocrew' })
+    useAgentsMock.mockReturnValue({ agents: [{ name: 'ajcrew' }, { name: 'reviewer' }, { name: 'oracle' }], defaultAgent: 'ajcrew' })
   })
 })
 
@@ -738,7 +738,7 @@ describe('onCycleApprovalMode and onCyclePrevAgent shortcuts', () => {
     await act(async () => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Z', code: 'KeyZ', altKey: true, shiftKey: true, bubbles: true }))
     })
-    expect(api.chatSlotAgent).toHaveBeenCalledWith('slot-1', 'kirocrew')
+    expect(api.chatSlotAgent).toHaveBeenCalledWith('slot-1', 'ajcrew')
   })
 
   it('cycles approval mode backward on Alt+Shift+V', async () => {
@@ -847,10 +847,10 @@ describe('Alt+Shift+S/X model cycling via React Query cache', () => {
     const { api } = await import('../api/client')
     const { store } = await import('../store')
     vi.mocked(api.chatSlotAgent).mockReset().mockResolvedValue({ agent })
-    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'kirocrew', model: '' }] })
+    store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: false, agent: 'ajcrew', model: '' }] })
     store.dispatch({ type: 'chat/setActiveSlot', payload: 'slot-1' })
     const { queryClient } = renderWithProviders(<App />, { route: '/chat' })
-    queryClient.setQueryData(['resolved-model', 'kirocrew', 'acp', ''], 'claude-haiku-4.5')
+    queryClient.setQueryData(['resolved-model', 'ajcrew', 'acp', ''], 'claude-haiku-4.5')
     queryClient.setQueryData(['resolved-model', agent, 'acp', ''], 'claude-opus-4.6')
     queryClient.setQueryData(['slot-selection-capabilities', 'slot-1'], { known: false, effort_supported: false, effort_levels: [] })
     queryClient.setQueryData(['slot-selection-capabilities', 'slot-2'], { known: false, effort_supported: false, effort_levels: [] })
@@ -1004,7 +1004,7 @@ describe('Kiro credits pill — edge cases', () => {
     // is the kiro id, the empty string): kiro-cli holds no reading yet, and the
     // modal this dash opens is where the user refreshes. Hiding it here would hide
     // the one recovery path; on any other harness there is nothing to refresh.
-    vi.mocked(api.kirocrewConfig).mockResolvedValueOnce({ agent: { acp_backend: 'kiro' } } as never)
+    vi.mocked(api.ajcrewConfig).mockResolvedValueOnce({ agent: { acp_backend: 'kiro' } } as never)
     vi.mocked(api.sessionsUsage).mockResolvedValue({ usage: { available: false } } as never)
     renderWithProviders(<App />, { route: '/chat' })
     const pill = await screen.findByTitle('Kiro account & credits — no balance reading yet; open to refresh')
@@ -1038,7 +1038,7 @@ describe('Kiro credits pill — edge cases', () => {
     const { api } = await import('../api/client')
     // The first read fails; the retry the modal triggers is left IN FLIGHT, so
     // the test can see what the segment does while the query is refetching.
-    vi.mocked(api.kirocrewConfig)
+    vi.mocked(api.ajcrewConfig)
       .mockRejectedValueOnce(new ApiError(500, 'config store unreadable'))
       .mockReturnValue(new Promise(() => {}) as never)
     vi.mocked(api.sessionsUsage).mockResolvedValue({ usage: { available: false } } as never)
@@ -1049,7 +1049,7 @@ describe('Kiro credits pill — edge cases', () => {
     expect(pill).toHaveTextContent('—')
     expect(screen.queryByTitle('Kiro account & credits — no balance reading yet; open to refresh')).not.toBeInTheDocument()
     // The mock keeps its history across this file's tests: count relative to now.
-    const configReads = vi.mocked(api.kirocrewConfig).mock.calls.length
+    const configReads = vi.mocked(api.ajcrewConfig).mock.calls.length
 
     fireEvent.click(pill)
     const dialog = await screen.findByRole('dialog', { name: 'Kiro Account' })
@@ -1059,19 +1059,19 @@ describe('Kiro credits pill — edge cases', () => {
     expect(within(dialog).getByRole('button', { name: /^Refresh$/ })).toBeEnabled()
     // Opening the modal re-asks for the config: the shared client never lets
     // the query go stale by itself, so this is the only retry there is.
-    await waitFor(() => expect(vi.mocked(api.kirocrewConfig).mock.calls.length).toBeGreaterThan(configReads))
+    await waitFor(() => expect(vi.mocked(api.ajcrewConfig).mock.calls.length).toBeGreaterThan(configReads))
     await waitShellEntered()
     // While that retry is in flight the query is back to `pending` with its
     // error cleared. The segment must NOT drop to the hidden non-Kiro shape
     // for that window: the dash, the notice and the modal all stay.
     // flake-ok: pre-existing sleep barrier, moved verbatim; tracked for a de-flake pass
-    // nosemgrep: semgrep.kirocrew.test-promise-sleep -- pre-existing sleep barrier, moved verbatim; tracked for a de-flake pass
+    // nosemgrep: semgrep.ajcrew.test-promise-sleep -- pre-existing sleep barrier, moved verbatim; tracked for a de-flake pass
     await new Promise(resolve => setTimeout(resolve, 600))
     expect(screen.getByTitle(CONFIG_TITLE)).toBeInTheDocument()
     expect(screen.getByRole('dialog', { name: 'Kiro Account' })).toBe(dialog)
     expect(within(dialog).getByRole('alert')).toHaveTextContent('Could not load settings, so your balance can’t be shown.')
     expect(within(dialog).queryByText('No balance reading is available for this account yet.')).not.toBeInTheDocument()
-    vi.mocked(api.kirocrewConfig).mockReset().mockResolvedValue({ agent: { acp_backend: 'claude' } } as never)
+    vi.mocked(api.ajcrewConfig).mockReset().mockResolvedValue({ agent: { acp_backend: 'claude' } } as never)
   })
 
   it('keeps the modal open when usage resolves to no reading on the Kiro backend', async () => {
@@ -1079,7 +1079,7 @@ describe('Kiro credits pill — edge cases', () => {
     // modal it opens is where Refresh lives -- closing it would take the one
     // recovery path away at the moment it is needed.
     const { api } = await import('../api/client')
-    vi.mocked(api.kirocrewConfig).mockResolvedValueOnce({ agent: { acp_backend: 'kiro' } } as never)
+    vi.mocked(api.ajcrewConfig).mockResolvedValueOnce({ agent: { acp_backend: 'kiro' } } as never)
     let resolveUsage: (v: unknown) => void = () => {}
     vi.mocked(api.sessionsUsage).mockReturnValue(new Promise(r => { resolveUsage = r }) as never)
     renderWithProviders(<App />, { route: '/chat' })
@@ -1092,7 +1092,7 @@ describe('Kiro credits pill — edge cases', () => {
     await waitShellEntered()
     // Past any close (and its exit animation): still the same dialog, with Refresh.
     // flake-ok: pre-existing sleep barrier, moved verbatim; tracked for a de-flake pass
-    // nosemgrep: semgrep.kirocrew.test-promise-sleep -- pre-existing sleep barrier, moved verbatim; tracked for a de-flake pass
+    // nosemgrep: semgrep.ajcrew.test-promise-sleep -- pre-existing sleep barrier, moved verbatim; tracked for a de-flake pass
     await new Promise(resolve => setTimeout(resolve, 600))
     const dialog = screen.getByRole('dialog', { name: 'Kiro Account' })
     expect(within(dialog).getByText('No balance reading is available for this account yet.')).toBeInTheDocument()
@@ -1170,7 +1170,7 @@ describe('agent-switch notice host', () => {
       ;(api.chatSlotAgent as ReturnType<typeof vi.fn>).mockRejectedValue(
         new ApiError(400, REAL_FAILURE, JSON.stringify({ error: REAL_FAILURE })),
       )
-      store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: true, agent: 'kirocrew' }] })
+      store.dispatch({ type: 'dashboard/sseSlots', payload: [{ key: 'slot-1', messages: 0, running: true, agent: 'ajcrew' }] })
       store.dispatch({ type: 'chat/setActiveSlot', payload: 'slot-1' })
       renderWithProviders(<App />, { route: '/popout/chat/slot-1' })
 

@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 from test_sandbox_launcher_program import rendered_payload
 
-from kiro_crew import sandbox, sandbox_launcher_program
+from aj_crew import sandbox, sandbox_launcher_program
 
 program = sandbox_launcher_program
 
@@ -42,7 +42,7 @@ def crew_home_fixture(tmp_path, monkeypatch):
     (:func:`sandbox._masked_crew_home_roots`), because the masks cover every spelling and a
     check scoped to the live home alone would judge one of them. Under a bare
     ``config_dir()`` patch those passes would read ``$HOME/.kiro/crew`` and
-    ``$HOME/.kirocrew`` on the machine running the suite, so a developer whose real data
+    ``$HOME/.ajcrew`` on the machine running the suite, so a developer whose real data
     home happens to hold a hard-linked credential leaf would see refusals from tests that
     never created one.
     """

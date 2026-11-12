@@ -33,13 +33,13 @@ import { ApiError } from '../api/apiError'
 
 const {
   patchConfigMock,
-  kirocrewConfigMock,
+  ajcrewConfigMock,
   schemaMock,
   acpBackendsMock,
   acpBackendRecheckMock,
 } = vi.hoisted(() => ({
   patchConfigMock: vi.fn(() => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(() => Promise.resolve({ agent: { acp_backend: 'kiro' } })),
+  ajcrewConfigMock: vi.fn(() => Promise.resolve({ agent: { acp_backend: 'kiro' } })),
   schemaMock: vi.fn(),
   acpBackendsMock: vi.fn(),
   acpBackendRecheckMock: vi.fn(),
@@ -47,7 +47,7 @@ const {
 
 vi.mock('../api/client', () => ({
   api: {
-    kirocrewConfig: kirocrewConfigMock,
+    ajcrewConfig: ajcrewConfigMock,
     patchConfig: patchConfigMock,
     acpBackends: acpBackendsMock,
     acpBackendRecheck: acpBackendRecheckMock,
@@ -101,8 +101,8 @@ beforeEach(() => {
   localStorage.clear()
   patchConfigMock.mockClear()
   patchConfigMock.mockResolvedValue({})
-  kirocrewConfigMock.mockClear()
-  kirocrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'kiro' } })
+  ajcrewConfigMock.mockClear()
+  ajcrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'kiro' } })
   acpBackendRecheckMock.mockClear()
   // The shipped core: every known agent is selectable. Claude Code is in the public
   // baseline because acp/client.py owns its whole spawn path and the adapter it needs
@@ -134,21 +134,21 @@ describe('AgentBackendTab list', () => {
   })
 
   it('marks the configured backend as the current one', async () => {
-    kirocrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'claude' } })
+    ajcrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'claude' } })
     wrap()
     await waitFor(() => expect(row('Claude Code')).toHaveAttribute('aria-current', 'true'))
     expect(row('Kiro CLI')).not.toHaveAttribute('aria-current')
   })
 
   it('treats a missing acp_backend as the KAS default', async () => {
-    kirocrewConfigMock.mockResolvedValue({})
+    ajcrewConfigMock.mockResolvedValue({})
     wrap()
     await waitFor(() => expect(row('Kiro Agent')).toHaveAttribute('aria-current', 'true'))
   })
 
   it('opens on the current backend detail', async () => {
     // The useful default and the one id the row list always contains.
-    kirocrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'kas' } })
+    ajcrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'kas' } })
     wrap()
     await waitFor(() => expect(row('Kiro Agent')).toBeChecked())
     expect(row('Kiro CLI')).not.toBeChecked()
@@ -166,7 +166,7 @@ describe('AgentBackendTab list', () => {
 
   it('keeps the current backend listed even if it reads as unselectable', async () => {
     // A control that lists no active harness is a worse failure than one extra row.
-    kirocrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'claude' } })
+    ajcrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'claude' } })
     schemaMock.mockReturnValue(schemaWith(['kiro']))
     wrap()
     await waitFor(() => expect(row('Claude Code')).toHaveAttribute('aria-current', 'true'))
@@ -248,7 +248,7 @@ describe('AgentBackendTab list', () => {
   it('offers a retry instead of a false current backend when the config read fails', async () => {
     // `?? KIRO` is right for a config that omits the key and wrong for a read that
     // FAILED: defaulting would paint Kiro CLI as active to an operator running KAS.
-    kirocrewConfigMock.mockRejectedValue(new Error('boom'))
+    ajcrewConfigMock.mockRejectedValue(new Error('boom'))
     wrap()
     expect(await screen.findByText('Could not load the agent backend.')).toBeInTheDocument()
     // A `useQuery` failure, so it renders through `ErrorNotice` rather than as a
@@ -389,7 +389,7 @@ describe('AgentBackendTab checking a row is not selecting an agent', () => {
     // a precedence can only ever show the winner, which is why they are two things on
     // the row: a harness that is the one running AND missing its binary has to read
     // as "in use, and broken" rather than as one or the other.
-    kirocrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'claude' } })
+    ajcrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'claude' } })
     acpBackendsMock.mockResolvedValue({
       backends: [
         probeRow('kiro', card()),
@@ -419,7 +419,7 @@ describe('AgentBackendTab checking a row is not selecting an agent', () => {
   it('marks in-use independently of readiness, so a broken active row keeps its word', async () => {
     // The regression this guards: an earlier single-glyph row let a readiness problem
     // hide which backend was running.
-    kirocrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'claude' } })
+    ajcrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'claude' } })
     acpBackendsMock.mockResolvedValue({
       backends: [
         probeRow('kiro', card()),
@@ -640,7 +640,7 @@ describe('AgentBackendTab switching', () => {
   })
 
   it('stores an explicit Kiro CLI choice even though KAS is the default', async () => {
-    kirocrewConfigMock.mockResolvedValue({})
+    ajcrewConfigMock.mockResolvedValue({})
     wrap()
     await waitFor(() => expect(row('Kiro Agent')).toHaveAttribute('aria-current', 'true'))
     highlight('Kiro CLI')
@@ -650,7 +650,7 @@ describe('AgentBackendTab switching', () => {
   })
 
   it('reads a stored empty harness as no choice: KAS is in use, not Kiro CLI', async () => {
-    kirocrewConfigMock.mockResolvedValue({ agent: { acp_backend: '' } })
+    ajcrewConfigMock.mockResolvedValue({ agent: { acp_backend: '' } })
     wrap()
     await waitFor(() => expect(row('Kiro Agent')).toHaveAttribute('aria-current', 'true'))
     expect(row('Kiro CLI')).not.toHaveAttribute('aria-current')
@@ -694,7 +694,7 @@ describe('AgentBackendTab switching', () => {
   })
 
   it('names the agent actually running as the switch-from, not the default', async () => {
-    kirocrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'claude' } })
+    ajcrewConfigMock.mockResolvedValue({ agent: { acp_backend: 'claude' } })
     wrap()
     await waitFor(() => expect(row('Kiro CLI')).toBeInTheDocument())
     highlight('Kiro CLI')
@@ -800,7 +800,7 @@ describe('AgentBackendTab switching', () => {
     )
     expect(screen.queryByText('Could not save the agent backend.')).toBeNull()
     await waitFor(() => expect(reset).toHaveBeenCalledWith({ queryKey: ['available-models'] }))
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['kirocrewConfig'] })
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ['ajcrewConfig'] })
     expect(qc.getQueryData(['available-models', 'acp'])).toBeUndefined()
   })
 })
@@ -1076,7 +1076,7 @@ describe('AgentBackendTab status strip', () => {
     // and "Settings > About" here against "that host" there read as two problems.
     expect(
       panel().getByText(
-        'Claude Code is installed on the gateway host. Press Check again to pick it up. If this line is still here after that, restart Kiro Crew on that host.',
+        'Claude Code is installed on the gateway host. Press Check again to pick it up. If this line is still here after that, restart Aj Crew on that host.',
       ),
     ).toBeInTheDocument()
     expect(panel().queryByText(/Settings > About/)).toBeNull()

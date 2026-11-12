@@ -74,7 +74,7 @@ const accepted = () => ({ ok: true, json: async () => ({ ok: true }) })
 function row(overrides: Record<string, unknown> = {}) {
   return {
     name: 'oncall', slug: 'oncall', bound: false, slot_key: '', running: false,
-    kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', model: '',
+    kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', model: '',
     ...overrides,
   }
 }
@@ -96,7 +96,7 @@ function storedComments(): InlineComment[] | undefined {
 /** Opens crewmate `oncall`, waits for its thread to be confirmed, then opens
  *  the document in the side panel the way a reply's file link does. */
 async function openDocument() {
-  ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: [row()], default_agent: 'kirocrew' })
+  ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: [row()], default_agent: 'ajcrew' })
   ;(api.memberThread as ReturnType<typeof vi.fn>).mockResolvedValue({ slot_key: 'member-oncall', slug: 'oncall', member: 'oncall', created: true })
   const utils = renderWithProviders(<MembersPage />, { store: createConnectedTestStore() })
   fireEvent.click(await screen.findByText('oncall'))
@@ -346,7 +346,7 @@ describe('MembersPage side panel: inline comments on a document', () => {
     sendChat.mockResolvedValue(accepted())
     ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({
       members: [row(), row({ name: 'fixer', slug: 'fixer' })],
-      default_agent: 'kirocrew',
+      default_agent: 'ajcrew',
     })
     ;(api.memberThread as ReturnType<typeof vi.fn>).mockImplementation((slug: string) =>
       Promise.resolve({ slot_key: `member-${slug}`, slug, member: slug, created: true }),

@@ -28,9 +28,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import autonudge_authz, mcp_core, session_directive
-from kiro_crew.dashboard.handlers import autonudge as handlers
-from kiro_crew.mcp_tools import control
+from aj_crew import autonudge_authz, mcp_core, session_directive
+from aj_crew.dashboard.handlers import autonudge as handlers
+from aj_crew.mcp_tools import control
 
 SLOT = "chat-1-123"
 SESSION_KEY = f"dashboard:{SLOT}"

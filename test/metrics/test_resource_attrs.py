@@ -18,18 +18,18 @@ import os
 import platform
 import re
 
-import kiro_crew
-from kiro_crew import beacon
-from kiro_crew.config.loader import KiroCrewConfig, TelemetryConfig
-from kiro_crew.metrics import provider
-from kiro_crew.metrics.provider import get_recorder, reset_for_testing
-from kiro_crew.metrics.provider import shutdown as provider_shutdown
+import aj_crew
+from aj_crew import beacon
+from aj_crew.config.loader import AjCrewConfig, TelemetryConfig
+from aj_crew.metrics import provider
+from aj_crew.metrics.provider import get_recorder, reset_for_testing
+from aj_crew.metrics.provider import shutdown as provider_shutdown
 
 
 def _patch_config(monkeypatch, **tel_kwargs):
-    fake = KiroCrewConfig(telemetry=TelemetryConfig(**tel_kwargs))
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: fake))
-    monkeypatch.delenv("KIROCREW_TELEMETRY", raising=False)
+    fake = AjCrewConfig(telemetry=TelemetryConfig(**tel_kwargs))
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: fake))
+    monkeypatch.delenv("AJCREW_TELEMETRY", raising=False)
 
 
 def _own_home(monkeypatch, tmp_path):
@@ -37,13 +37,13 @@ def _own_home(monkeypatch, tmp_path):
 
     Every test that asserts the id file is absent (or that something created
     it) reads one shared piece of on-disk state, and a sibling test that mints
-    would otherwise decide the outcome -- an order-dependent pass. ``KIROCREW_HOME``
+    would otherwise decide the outcome -- an order-dependent pass. ``AJCREW_HOME``
     is the seam: ``config_dir()`` memoizes keyed on its raw value, so setting it
     re-resolves rather than serving the previous test's home.
     """
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     assert beacon.install_id(create=False) == "", "the home was not actually fresh"
     return home
 
@@ -54,11 +54,11 @@ def test_attrs_carry_identity_version_and_environment():
     beacon.install_id(create=True)
     attrs = provider._resource_attributes("kiro")
 
-    assert attrs["service.name"] == "kirocrew"
+    assert attrs["service.name"] == "ajcrew"
 
     # Release-clamped, never a raw dev/nightly stamp: same clamp the beacon
     # ships, so the two surfaces can never disagree about one build.
-    assert attrs["service.version"] == beacon.release(kiro_crew.__version__)
+    assert attrs["service.version"] == beacon.release(aj_crew.__version__)
     version = str(attrs["service.version"])
     assert re.fullmatch(r"\d+\.\d+\.\d+", version) or version == beacon.UNKNOWN_VERSION
 
@@ -121,7 +121,7 @@ def test_version_probe_failure_omits_only_that_attribute(monkeypatch):
     attrs = provider._resource_attributes("kiro")
     assert "service.version" not in attrs
     # The other groups are untouched by the failed probe.
-    assert attrs["service.name"] == "kirocrew"
+    assert attrs["service.name"] == "ajcrew"
     assert "os.type" in attrs
 
 
@@ -171,7 +171,7 @@ def test_first_build_on_a_fresh_install_exports_the_id(tmp_path, monkeypatch):
         minted = beacon.install_id(create=False)
         assert minted, "the build path never minted the id"
 
-        rec.counter("kirocrew.session.idle_expired", attrs={"turn_active": False})
+        rec.counter("ajcrew.session.idle_expired", attrs={"turn_active": False})
         provider_shutdown()
         shards = sorted(metrics_dir.glob("metrics-*.jsonl"))
         assert shards
@@ -206,7 +206,7 @@ def test_a_failed_mint_costs_only_the_attribute(tmp_path, monkeypatch):
     try:
         rec = get_recorder()
         assert rec.enabled is True
-        rec.counter("kirocrew.session.idle_expired", attrs={"turn_active": False})
+        rec.counter("ajcrew.session.idle_expired", attrs={"turn_active": False})
         provider_shutdown()
         shards = sorted(metrics_dir.glob("metrics-*.jsonl"))
         assert shards
@@ -218,7 +218,7 @@ def test_a_failed_mint_costs_only_the_attribute(tmp_path, monkeypatch):
         assert re.fullmatch(r"[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}", substitute)
         assert not re.fullmatch(r"[0-9a-f]{32}", substitute)
         # The rest of the resource is untouched by the failed mint.
-        assert resource_attrs["service.name"] == "kirocrew"
+        assert resource_attrs["service.name"] == "ajcrew"
         assert "os.type" in resource_attrs
     finally:
         reset_for_testing()
@@ -262,7 +262,7 @@ def test_exported_shard_carries_the_resource(tmp_path, monkeypatch):
     try:
         rec = get_recorder()
         assert rec.enabled is True
-        rec.counter("kirocrew.session.idle_expired", attrs={"turn_active": False})
+        rec.counter("ajcrew.session.idle_expired", attrs={"turn_active": False})
         # shutdown() performs the final flush on the calling thread.
         provider_shutdown()
 
@@ -270,8 +270,8 @@ def test_exported_shard_carries_the_resource(tmp_path, monkeypatch):
         assert shards, "no shard written by the final flush"
         record = json.loads(shards[0].read_text().splitlines()[0])
         resource_attrs = record["resource_metrics"][0]["resource"]["attributes"]
-        assert resource_attrs["service.name"] == "kirocrew"
-        assert resource_attrs["service.version"] == beacon.release(kiro_crew.__version__)
+        assert resource_attrs["service.name"] == "ajcrew"
+        assert resource_attrs["service.version"] == beacon.release(aj_crew.__version__)
         assert resource_attrs["os.type"] == platform.system().lower()
         assert resource_attrs["host.cpu.logical_count"] == os.cpu_count()
         assert resource_attrs["process.pid"] == os.getpid()

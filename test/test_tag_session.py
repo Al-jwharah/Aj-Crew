@@ -22,14 +22,14 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard import chat_auto_tag
-from kiro_crew.dashboard.chat_auto_tag import maybe_auto_tag
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard import chat_auto_tag
+from aj_crew.dashboard.chat_auto_tag import maybe_auto_tag
+from aj_crew.testing.wait import await_until
 
 
 def _make_state(tags=None):
     """Build a minimal mock DashboardState for testing."""
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard.state import DashboardState
 
     state = MagicMock()
     state._tags = list(tags or [])
@@ -64,15 +64,15 @@ def patch_save_slot(tmp_path):
     # import), so the patch target must be chat_auto_tag's binding — patching
     # chat_persistence would be a silent no-op.
     with patch(
-        "kiro_crew.dashboard.chat_auto_tag.save_slot_off_loop",
+        "aj_crew.dashboard.chat_auto_tag.save_slot_off_loop",
         mock,
     ):
 
         async def _sync_to_thread(fn, *args, **kwargs):
             return fn(*args, **kwargs)
 
-        with patch("kiro_crew.dashboard.chat_tags.asyncio.to_thread", side_effect=_sync_to_thread):
-            with patch("kiro_crew.dashboard.state.config_dir", return_value=tmp_path):
+        with patch("aj_crew.dashboard.chat_tags.asyncio.to_thread", side_effect=_sync_to_thread):
+            with patch("aj_crew.dashboard.state.config_dir", return_value=tmp_path):
                 yield mock
 
 
@@ -141,7 +141,7 @@ class TestAutoTagDerivation:
         assert state._tags[0]["name"] == "DisapereBackend"
 
     @pytest.mark.parametrize(
-        "name", ["workspace", "workspaces", "workplace", "kirocrew-workspace", "default"]
+        "name", ["workspace", "workspaces", "workplace", "ajcrew-workspace", "default"]
     )
     async def test_trivial_workspace_basenames_are_noop(self, patch_save_slot, name):
         """Default/generic workspace dir names carry no signal — suppress them."""
@@ -310,13 +310,13 @@ class TestAutoTagFlagSetBeforeSave:
         async def _recording_save(state_arg, slot_arg, **kwargs):
             flag_at_save.append(bool(getattr(slot_arg, "_auto_tagged", False)))
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_auto_tag.save_slot_off_loop", _recording_save)
+        monkeypatch.setattr("aj_crew.dashboard.chat_auto_tag.save_slot_off_loop", _recording_save)
 
         async def _sync_to_thread(fn, *args, **kwargs):
             return fn(*args, **kwargs)
 
-        with patch("kiro_crew.dashboard.chat_tags.asyncio.to_thread", side_effect=_sync_to_thread):
-            with patch("kiro_crew.dashboard.state.config_dir", return_value=tmp_path):
+        with patch("aj_crew.dashboard.chat_tags.asyncio.to_thread", side_effect=_sync_to_thread):
+            with patch("aj_crew.dashboard.state.config_dir", return_value=tmp_path):
                 await maybe_auto_tag(state, slot)
 
         assert flag_at_save == [True]
@@ -333,13 +333,13 @@ class TestAutoTagFlagSetBeforeSave:
         async def _refuse(*_args, **_kwargs):
             return False
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_auto_tag.save_slot_off_loop", _refuse)
+        monkeypatch.setattr("aj_crew.dashboard.chat_auto_tag.save_slot_off_loop", _refuse)
 
         async def _sync_to_thread(fn, *args, **kwargs):
             return fn(*args, **kwargs)
 
-        with patch("kiro_crew.dashboard.chat_tags.asyncio.to_thread", side_effect=_sync_to_thread):
-            with patch("kiro_crew.dashboard.state.config_dir", return_value=tmp_path):
+        with patch("aj_crew.dashboard.chat_tags.asyncio.to_thread", side_effect=_sync_to_thread):
+            with patch("aj_crew.dashboard.state.config_dir", return_value=tmp_path):
                 await maybe_auto_tag(state, slot)
 
         assert slot.tags == []
@@ -381,9 +381,9 @@ class TestAutoTagDeleteRace:
     """Concurrent auto_tag + tag delete must not leave dangling references."""
 
     async def test_no_dangling_reference(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_tags import api_chat_tag_delete
+        from aj_crew.dashboard.chat_tags import api_chat_tag_delete
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
         async def _sync_to_thread(fn, *args, **kwargs):
             return fn(*args, **kwargs)
@@ -409,13 +409,13 @@ class TestAutoTagDeleteRace:
             state._slots["test-slot"] = slot
 
             with patch(
-                "kiro_crew.dashboard.chat_tags.asyncio.to_thread", side_effect=_sync_to_thread
+                "aj_crew.dashboard.chat_tags.asyncio.to_thread", side_effect=_sync_to_thread
             ):
                 with patch(
-                    "kiro_crew.dashboard.chat_tags.save_slot_off_loop", new_callable=AsyncMock
+                    "aj_crew.dashboard.chat_tags.save_slot_off_loop", new_callable=AsyncMock
                 ):
                     with patch(
-                        "kiro_crew.dashboard.chat_persistence.save_slot_off_loop",
+                        "aj_crew.dashboard.chat_persistence.save_slot_off_loop",
                         new_callable=AsyncMock,
                     ):
 
@@ -447,7 +447,7 @@ class TestAutoTagTrigger:
 
     async def test_import_succeeds(self):
         """chat_handlers can import maybe_auto_tag without cycle."""
-        from kiro_crew.dashboard.chat_handlers import maybe_auto_tag as imported
+        from aj_crew.dashboard.chat_handlers import maybe_auto_tag as imported
 
         assert callable(imported)
 
@@ -470,7 +470,7 @@ class TestAutoTagPersistFailureRollback:
             raise IOError("disk full")
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_auto_tag.persist_tags_snapshot_unlocked",
+            "aj_crew.dashboard.chat_auto_tag.persist_tags_snapshot_unlocked",
             _failing_persist,
         )
         await maybe_auto_tag(state, slot)
@@ -491,7 +491,7 @@ class TestAutoTagTruncationBeforeMatch:
     the cut would create duplicate definitions with identical names."""
 
     async def test_long_basenames_reuse_one_definition(self, patch_save_slot):
-        from kiro_crew.dashboard.chat_auto_tag import _NAME_MAX
+        from aj_crew.dashboard.chat_auto_tag import _NAME_MAX
 
         state = _make_state()
         base = "x" * _NAME_MAX
@@ -529,16 +529,16 @@ def topic_model(monkeypatch):
         calls.append({"prompt": prompt, **kw})
         return box["reply"]
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_auto_tag.KiroCrewConfig.load", _load)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_auto_tag.run_bg_oneliner", _oneliner)
+    monkeypatch.setattr("aj_crew.dashboard.chat_auto_tag.AjCrewConfig.load", _load)
+    monkeypatch.setattr("aj_crew.dashboard.chat_auto_tag.run_bg_oneliner", _oneliner)
     # Protected grants: a healthy store with no rows unless a test adds them.
-    from kiro_crew.dashboard.chat_tag_grants import GrantsSnapshot
+    from aj_crew.dashboard.chat_tag_grants import GrantsSnapshot
 
     box["rows"] = {}
     box["reduced"] = None
-    monkeypatch.setattr("kiro_crew.dashboard.chat_auto_tag.refresh_cache", lambda: None)
+    monkeypatch.setattr("aj_crew.dashboard.chat_auto_tag.refresh_cache", lambda: None)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_auto_tag.capture_grants_snapshot",
+        "aj_crew.dashboard.chat_auto_tag.capture_grants_snapshot",
         lambda: GrantsSnapshot(None, box["reduced"], box["rows"]),
     )
     box["calls"] = calls
@@ -551,7 +551,7 @@ def _names(state, slot):
 
 
 def test_topic_tags_are_off_by_default():
-    from kiro_crew.config.sections import DashboardConfig
+    from aj_crew.config.sections import DashboardConfig
 
     assert DashboardConfig().topic_tags_enabled is False
 
@@ -645,7 +645,7 @@ class TestTopicTags:
         slot = _topic_slot(project="")
 
         events: list[dict] = []
-        with patch("kiro_crew.dashboard.chat_auto_tag.sel") as fake_sel:
+        with patch("aj_crew.dashboard.chat_auto_tag.sel") as fake_sel:
             fake_sel.return_value.log_api_access.side_effect = lambda **kw: events.append(kw)
             await maybe_auto_tag(state, slot)
 
@@ -686,7 +686,7 @@ class TestTopicTags:
         slot = _topic_slot(project="")
 
         events: list[dict] = []
-        with patch("kiro_crew.dashboard.chat_auto_tag.sel") as fake_sel:
+        with patch("aj_crew.dashboard.chat_auto_tag.sel") as fake_sel:
             fake_sel.return_value.log_api_access.side_effect = lambda **kw: events.append(kw)
             await maybe_auto_tag(state, slot)
 
@@ -721,7 +721,7 @@ class TestTopicTags:
             await gate.wait()
             return "debugging"
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_auto_tag.run_bg_oneliner", _slow)
+        monkeypatch.setattr("aj_crew.dashboard.chat_auto_tag.run_bg_oneliner", _slow)
         state = _make_state()
         slot = _topic_slot(project="")
 
@@ -742,8 +742,8 @@ class TestTopicTags:
     ):
         # An owner's grant change holds this lock, so a read under it cannot see
         # a grant that change has already replaced.
-        from kiro_crew.dashboard.chat_tag_grants import GrantsSnapshot
-        from kiro_crew.dashboard.chat_tags import _tags_write_lock
+        from aj_crew.dashboard.chat_tag_grants import GrantsSnapshot
+        from aj_crew.dashboard.chat_tags import _tags_write_lock
 
         state = _make_state()
         held: list[bool] = []
@@ -752,7 +752,7 @@ class TestTopicTags:
             held.append(_tags_write_lock(state).locked())
             return GrantsSnapshot(None, None, {})
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_auto_tag.capture_grants_snapshot", _snap)
+        monkeypatch.setattr("aj_crew.dashboard.chat_auto_tag.capture_grants_snapshot", _snap)
         slot = _topic_slot(project="")
 
         await maybe_auto_tag(state, slot)
@@ -765,14 +765,14 @@ class TestTopicTags:
     ):
         keys = {"k": "dashboard:test-slot"}
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_auto_tag.slot_history_key", lambda _slot: keys["k"]
+            "aj_crew.dashboard.chat_auto_tag.slot_history_key", lambda _slot: keys["k"]
         )
 
         async def _rebinding(_sessions, _prompt, **_kw):
             keys["k"] = "cron:job-1"  # the slot is rebound while the model call runs
             return "debugging"
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_auto_tag.run_bg_oneliner", _rebinding)
+        monkeypatch.setattr("aj_crew.dashboard.chat_auto_tag.run_bg_oneliner", _rebinding)
         state = _make_state()
         slot = _topic_slot(project="")
 
@@ -785,7 +785,7 @@ class TestTopicTags:
     async def test_a_credential_across_the_cut_is_still_redacted(
         self, patch_save_slot, topic_model
     ):
-        from kiro_crew.dashboard.chat_auto_tag import _TOPIC_MESSAGE_CHARS
+        from aj_crew.dashboard.chat_auto_tag import _TOPIC_MESSAGE_CHARS
 
         key = "AKIA" + "ABCDEFGHIJKLMNOP"
         pad = "x " * ((_TOPIC_MESSAGE_CHARS - 8) // 2)
@@ -829,16 +829,14 @@ class TestTopicTags:
     ):
         keys = {"k": "dashboard:test-slot"}
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_auto_tag.slot_history_key", lambda _slot: keys["k"]
+            "aj_crew.dashboard.chat_auto_tag.slot_history_key", lambda _slot: keys["k"]
         )
 
         async def _rebinding_load():
             keys["k"] = "cron:job-1"  # rebound during the config read
             return True
 
-        monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_auto_tag._topic_tags_enabled", _rebinding_load
-        )
+        monkeypatch.setattr("aj_crew.dashboard.chat_auto_tag._topic_tags_enabled", _rebinding_load)
         state = _make_state()
         slot = _topic_slot(project="")
 
@@ -852,10 +850,10 @@ class TestTopicTags:
             raise RuntimeError("model unavailable")
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_auto_tag.KiroCrewConfig.load",
+            "aj_crew.dashboard.chat_auto_tag.AjCrewConfig.load",
             lambda: SimpleNamespace(dashboard=SimpleNamespace(topic_tags_enabled=True)),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.chat_auto_tag.run_bg_oneliner", _boom)
+        monkeypatch.setattr("aj_crew.dashboard.chat_auto_tag.run_bg_oneliner", _boom)
         state = _make_state()
         slot = _topic_slot()
 
@@ -877,7 +875,7 @@ class TestTopicTagsUiLanguage:
             dashboard = SimpleNamespace(topic_tags_enabled=True, language=language)
             return SimpleNamespace(dashboard=dashboard)
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_auto_tag.KiroCrewConfig.load", _load)
+        monkeypatch.setattr("aj_crew.dashboard.chat_auto_tag.AjCrewConfig.load", _load)
 
     async def test_prompt_names_the_ui_language(self, patch_save_slot, topic_model, monkeypatch):
         self._configure(monkeypatch, "zh-CN")
@@ -954,7 +952,7 @@ class TestTopicTagsUiLanguage:
         # Scoped to the call, not to the test: ``patch_save_slot`` already holds
         # this attribute, and an outer patch that unwinds after the fixture
         # would leave the fixture's mock installed for every later test.
-        with patch("kiro_crew.dashboard.chat_auto_tag.asyncio.to_thread", _inline_to_thread):
+        with patch("aj_crew.dashboard.chat_auto_tag.asyncio.to_thread", _inline_to_thread):
             await maybe_auto_tag(state, slot)
 
         assert chat_auto_tag._ui_language in dispatched

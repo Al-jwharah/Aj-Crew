@@ -16,10 +16,10 @@ test("shouldDisableGpu: off by default (no env, no flag)", () => {
   assert.equal(shouldDisableGpu({ env: {}, argv: ["node", "main.js"] }), false);
 });
 
-test("shouldDisableGpu: truthy KIROCREW_DISABLE_GPU values enable it", () => {
+test("shouldDisableGpu: truthy AJCREW_DISABLE_GPU values enable it", () => {
   for (const v of ["1", "true", "TRUE", "yes", "on", " On "]) {
     assert.equal(
-      shouldDisableGpu({ env: { KIROCREW_DISABLE_GPU: v }, argv: [] }),
+      shouldDisableGpu({ env: { AJCREW_DISABLE_GPU: v }, argv: [] }),
       true,
       `expected ${JSON.stringify(v)} to enable`
     );
@@ -29,7 +29,7 @@ test("shouldDisableGpu: truthy KIROCREW_DISABLE_GPU values enable it", () => {
 test("shouldDisableGpu: falsey/garbage env values do NOT enable it", () => {
   for (const v of ["0", "false", "no", "off", "", "maybe"]) {
     assert.equal(
-      shouldDisableGpu({ env: { KIROCREW_DISABLE_GPU: v }, argv: [] }),
+      shouldDisableGpu({ env: { AJCREW_DISABLE_GPU: v }, argv: [] }),
       false,
       `expected ${JSON.stringify(v)} to stay disabled`
     );
@@ -66,7 +66,7 @@ test("initGpuPolicy: appends all switches when opted in", () => {
   const seen = [];
   const res = initGpuPolicy({
     appendSwitch: (n) => seen.push(n),
-    env: { KIROCREW_DISABLE_GPU: "1" },
+    env: { AJCREW_DISABLE_GPU: "1" },
     argv: [],
   });
   assert.equal(res.disabled, true);
@@ -85,7 +85,7 @@ test("initGpuPolicy: a throwing appendSwitch does not abort the rest", () => {
       if (n === "disable-gpu-compositing") throw new Error("boom");
       seen.push(n);
     },
-    env: { KIROCREW_DISABLE_GPU: "true" },
+    env: { AJCREW_DISABLE_GPU: "true" },
     argv: [],
   });
   assert.equal(res.disabled, true);
@@ -129,9 +129,9 @@ test("shouldDisableGpu: an RDP host disables the GPU with no explicit control", 
 test("shouldDisableGpu: force ON (falsy env or --enable-gpu) beats RDP auto-detect", () => {
   for (const v of ["0", "false", "no", "off", " OFF "]) {
     assert.equal(
-      shouldDisableGpu({ env: { KIROCREW_DISABLE_GPU: v, SESSIONNAME: "RDP-Tcp#0" }, argv: [] }),
+      shouldDisableGpu({ env: { AJCREW_DISABLE_GPU: v, SESSIONNAME: "RDP-Tcp#0" }, argv: [] }),
       false,
-      `KIROCREW_DISABLE_GPU=${JSON.stringify(v)}`,
+      `AJCREW_DISABLE_GPU=${JSON.stringify(v)}`,
     );
   }
   assert.equal(shouldDisableGpu({ env: { SESSIONNAME: "RDP-Tcp#0" }, argv: ["--enable-gpu"] }), false);

@@ -8,7 +8,7 @@ security read endpoints, the loopback-gated local endpoints, the app-secret exch
 and ``..._agent_settings.py`` (the agent-settings PUT and PATCH validators, the session
 sub-agent routes). Shared stubs live in ``dashboard_handlers_core_coverage_helpers.py``.
 
-Every write lands under the autouse-isolated ``KIROCREW_HOME``; nothing here touches the
+Every write lands under the autouse-isolated ``AJCREW_HOME``; nothing here touches the
 network, downloads a model, or spawns a process.
 """
 
@@ -28,12 +28,12 @@ from dashboard_handlers_core_coverage_helpers import fake_sel_fixture  # noqa: F
 from dashboard_handlers_core_coverage_helpers import seeded_config_fixture  # noqa: F401
 from dashboard_handlers_core_coverage_helpers import _json_req, _req, _seed_stt
 
-from kiro_crew import extras
-from kiro_crew.dashboard.dist_file_response import DistFileResponse
-from kiro_crew.dashboard.handlers import core as core_mod
-from kiro_crew.stt import models as stt_models
-from kiro_crew.stt.limits import MAX_THREADS, MIN_PARTIAL_INTERVAL_MS, MIN_SILENCE_MS
-from kiro_crew.stt.limits import THREADS_ENV as STT_THREADS_ENV
+from aj_crew import extras
+from aj_crew.dashboard.dist_file_response import DistFileResponse
+from aj_crew.dashboard.handlers import core as core_mod
+from aj_crew.stt import models as stt_models
+from aj_crew.stt.limits import MAX_THREADS, MIN_PARTIAL_INTERVAL_MS, MIN_SILENCE_MS
+from aj_crew.stt.limits import THREADS_ENV as STT_THREADS_ENV
 
 # ── Page + static assets ─────────────────────────────────────────────────
 
@@ -67,7 +67,7 @@ class TestPageAndAssets:
         resp = await core_mod.api_branding(_req())
         body = json.loads(resp.body)
         assert body == {
-            "bot_name": "Kiro Crew",
+            "bot_name": "Aj Crew",
             "avatar": "/logo.png",
             "direct_local": True,
             "desktop_launcher": True,
@@ -79,10 +79,10 @@ class TestPageAndAssets:
         """A configured avatar pointing at a credential path is 404, never served."""
         cfg = SimpleNamespace(dashboard=SimpleNamespace(avatar="/home/u/.ssh/id_rsa"))
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.KiroCrewConfig",
+            "aj_crew.dashboard.handlers.AjCrewConfig",
             SimpleNamespace(load=lambda: cfg),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_sensitive_path", lambda _p: True)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_sensitive_path", lambda _p: True)
         resp = await core_mod.logo(_req())
         assert resp.status == 404
 
@@ -92,12 +92,12 @@ class TestPageAndAssets:
         avatar.write_bytes(b"png")
         cfg = SimpleNamespace(dashboard=SimpleNamespace(avatar=str(avatar)))
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.KiroCrewConfig",
+            "aj_crew.dashboard.handlers.AjCrewConfig",
             SimpleNamespace(load=lambda: cfg),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.handlers.is_sensitive_path", lambda _p: False)
+        monkeypatch.setattr("aj_crew.dashboard.handlers.is_sensitive_path", lambda _p: False)
         monkeypatch.setattr(
-            "kiro_crew.hooks.validate_file_path", lambda p: str(avatar) if p else None
+            "aj_crew.hooks.validate_file_path", lambda p: str(avatar) if p else None
         )
         resp = await core_mod.logo(_req())
         assert isinstance(resp, DistFileResponse)
@@ -108,16 +108,16 @@ class TestPageAndAssets:
     ) -> None:
         """Nightly builds serve the night-sky logo so the in-app identity
         matches the nightly desktop shell."""
-        (tmp_path / "kirocrew-logo.png").write_bytes(b"day")
-        nightly = tmp_path / "kirocrew-logo-nightly.png"
+        (tmp_path / "ajcrew-logo.png").write_bytes(b"day")
+        nightly = tmp_path / "ajcrew-logo-nightly.png"
         nightly.write_bytes(b"night")
         cfg = SimpleNamespace(dashboard=SimpleNamespace(avatar=""))
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.KiroCrewConfig",
+            "aj_crew.dashboard.handlers.AjCrewConfig",
             SimpleNamespace(load=lambda: cfg),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.handlers._STATIC_DIR", tmp_path)
-        monkeypatch.setattr("kiro_crew.__version__", "9.9.9-nightly.20260812")
+        monkeypatch.setattr("aj_crew.dashboard.handlers._STATIC_DIR", tmp_path)
+        monkeypatch.setattr("aj_crew.__version__", "9.9.9-nightly.20260812")
         resp = await core_mod.logo(_req())
         assert isinstance(resp, DistFileResponse)
         assert os.path.realpath(resp._path) == os.path.realpath(nightly)
@@ -126,11 +126,11 @@ class TestPageAndAssets:
     async def test_logo_404_when_no_asset_exists(self, monkeypatch, tmp_path) -> None:
         cfg = SimpleNamespace(dashboard=SimpleNamespace(avatar=""))
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.KiroCrewConfig",
+            "aj_crew.dashboard.handlers.AjCrewConfig",
             SimpleNamespace(load=lambda: cfg),
         )
-        monkeypatch.setattr("kiro_crew.dashboard.handlers._STATIC_DIR", tmp_path / "empty")
-        monkeypatch.setattr("kiro_crew.__version__", "9.9.9")
+        monkeypatch.setattr("aj_crew.dashboard.handlers._STATIC_DIR", tmp_path / "empty")
+        monkeypatch.setattr("aj_crew.__version__", "9.9.9")
         resp = await core_mod.logo(_req())
         assert resp.status == 404
 
@@ -141,7 +141,7 @@ class TestPageAndAssets:
         <link rel="icon"> otherwise receive text/html and show no icon."""
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.routes import realtime
+        from aj_crew.dashboard.routes import realtime
 
         app = web.Application()
         realtime.register(app)
@@ -176,7 +176,7 @@ class TestSttProviders:
         must not be offered a provider it cannot select. `local` has no
         precondition at all and stays advertised everywhere."""
         monkeypatch.setattr(
-            "kiro_crew.apple_speech.availability",
+            "aj_crew.apple_speech.availability",
             lambda: SimpleNamespace(ok=False),
         )
         providers = core_mod._stt_providers()
@@ -185,7 +185,7 @@ class TestSttProviders:
 
     def test_apple_appears_once_the_framework_answers_yes(self, monkeypatch) -> None:
         monkeypatch.setattr(
-            "kiro_crew.apple_speech.availability",
+            "aj_crew.apple_speech.availability",
             lambda: SimpleNamespace(ok=True),
         )
         assert "apple" in core_mod._stt_providers()
@@ -196,7 +196,7 @@ class TestSttProviders:
         (a whisper CLI on PATH, an mlx or faster-whisper wheel) that the resident
         local engine exists to remove."""
         monkeypatch.setattr(
-            "kiro_crew.apple_speech.availability",
+            "aj_crew.apple_speech.availability",
             lambda: SimpleNamespace(ok=True),
         )
         offered = set(core_mod._stt_providers())
@@ -257,7 +257,7 @@ class TestFfmpegInstallCommands:
         scripts = tmp_path / "scripts"
         scripts.mkdir()
         (scripts / "build-ffmpeg.sh").write_text("#!/bin/sh\n", encoding="utf-8", newline="\n")
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         cmds = core_mod._ffmpeg_install_commands()
         assert any("dnf install -y gcc make nasm diffutils" in c for c in cmds)
         assert any("build-ffmpeg.sh" in c for c in cmds)
@@ -273,7 +273,7 @@ class TestFfmpegInstallCommands:
         monkeypatch.setattr(platform, "system", lambda: "Linux")
         monkeypatch.setattr(core_mod, "_find_ffmpeg", lambda: None)
         monkeypatch.setattr(core_mod.shutil, "which", lambda _n, path=None: None)
-        monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+        monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
         cmds = core_mod._ffmpeg_install_commands()
         assert cmds == []
         assert not any("echo" in c for c in cmds)
@@ -306,7 +306,7 @@ class TestSttPrereqCommands:
         than on one without, which is the whole verdict under test.
         """
         monkeypatch.setattr(
-            "kiro_crew.stt.availability",
+            "aj_crew.stt.availability",
             lambda: core_mod.stt.Availability(ok, code, ""),
         )
 
@@ -319,9 +319,9 @@ class TestSttPrereqCommands:
         monkeypatch.setattr(core_mod.os, "name", "posix")
         cmds = core_mod._stt_prereq_commands("local")
         assert len(cmds) == 1
-        # The extra's own distributions, never `kirocrew[voice]`: this project is
+        # The extra's own distributions, never `ajcrew[voice]`: this project is
         # published on no index, so the extras form cannot resolve for anyone.
-        assert "kirocrew[" not in cmds[0]
+        assert "ajcrew[" not in cmds[0]
         for req in extras.requirements_for_extra("voice"):
             assert f"'{req}'" in cmds[0]
         assert "-m pip install" in cmds[0]
@@ -359,7 +359,7 @@ class TestSttPrereqCommands:
         # The CLOUD half alone. An extra resolves atomically, so naming the full
         # `voice` set here would drag in the local recogniser and fail the whole
         # install on a platform that has no wheel for it.
-        assert "kirocrew[" not in cmds[0]
+        assert "ajcrew[" not in cmds[0]
         assert "pywhispercpp" not in cmds[0]
         for req in extras.requirements_for_extra("voice-aws"):
             assert f"'{req}'" in cmds[0]
@@ -475,8 +475,8 @@ class TestSttPrereqCommands:
         """
         import importlib.util
 
-        from kiro_crew import sandbox
-        from kiro_crew.stt import codex
+        from aj_crew import sandbox
+        from aj_crew.stt import codex
 
         real_find_spec = importlib.util.find_spec
 
@@ -485,7 +485,7 @@ class TestSttPrereqCommands:
                 return object() if aiortc else None
             return real_find_spec(name, *args, **kwargs)
 
-        from kiro_crew.acp import client_spawn_env
+        from aj_crew.acp import client_spawn_env
 
         monkeypatch.setattr(
             codex,
@@ -996,16 +996,16 @@ class TestSttConfigEndpoint:
         """
         monkeypatch.setattr(core_mod, "affinity_cpu_count", lambda: 20)
         monkeypatch.setenv(STT_THREADS_ENV, "64")
-        import kiro_crew.stt as stt_pkg
+        import aj_crew.stt as stt_pkg
 
         # Evict the module AND the package attribute; teardown restores both, so
         # later tests patch the same engine object the code reads.
         monkeypatch.delattr(stt_pkg, "engine", raising=False)
         for name in list(sys.modules):
-            if name == "kiro_crew.stt.engine" or name.startswith("kiro_crew.stt.engine."):
+            if name == "aj_crew.stt.engine" or name.startswith("aj_crew.stt.engine."):
                 monkeypatch.delitem(sys.modules, name)
         assert core_mod._stt_threads_env() == "20"
-        assert "kiro_crew.stt.engine" not in sys.modules
+        assert "aj_crew.stt.engine" not in sys.modules
 
 
 class TestSttConfigCustomModelBoundary:
@@ -1372,7 +1372,7 @@ class TestCustomModelPairIsMaskedOnTheGeneralConfigRead:
         )
         req.method = "GET"
 
-        stt_section = json.loads((await core_mod.api_kirocrew_config(req)).body)["stt"]
+        stt_section = json.loads((await core_mod.api_ajcrew_config(req)).body)["stt"]
 
         assert stt_section["custom_model_path"] == core_mod._SENSITIVE_MASK
         assert stt_section["custom_model_sha256"] == core_mod._SENSITIVE_MASK

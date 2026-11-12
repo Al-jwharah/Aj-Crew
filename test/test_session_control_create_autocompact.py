@@ -26,13 +26,13 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _slot,
 )
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.config.sections import AutocompactPctError, parse_autocompact_pct
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import effective_session_key, slot_history_key
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.session import SessionManager, _Session
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.config.sections import AutocompactPctError, parse_autocompact_pct
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import effective_session_key, slot_history_key
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.session import SessionManager, _Session
 
 # ── the shared validator ─────────────────────────────────────────────
 
@@ -102,8 +102,8 @@ def test_a_created_sessions_threshold_wins_over_its_agents_default(tmp_path):
     against a real session manager, so a threshold that never reached the
     override would leave the child at the agent's 40.
     """
-    cfg = KiroCrewConfig()
-    cfg.agents = {"orch": KiroCrewAgentConfig(kiro_agent="kirocrew", autocompact_pct=40.0)}
+    cfg = AjCrewConfig()
+    cfg.agents = {"orch": AjCrewAgentConfig(kiro_agent="ajcrew", autocompact_pct=40.0)}
     manager = SessionManager(cfg, provider_factory=lambda *a, **k: object())
     state = _make_state(tmp_path)
     state.sessions.set_autocompact_pct = manager.set_autocompact_pct
@@ -117,7 +117,7 @@ def test_a_created_sessions_threshold_wins_over_its_agents_default(tmp_path):
     child_key = effective_session_key(child)
 
     for key in (child_key, "chat-sibling"):
-        live = _Session(provider=MagicMock(), agent="kirocrew")
+        live = _Session(provider=MagicMock(), agent="ajcrew")
         live.capability_member = "orch"
         manager._sessions[manager._fold_key(key)] = live
 

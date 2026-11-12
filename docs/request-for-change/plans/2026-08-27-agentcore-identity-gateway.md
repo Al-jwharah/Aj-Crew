@@ -38,8 +38,8 @@ Two exclusive postures, selected by `capabilities.agentcore.posture`:
 
 The launcher `iam.policy_json()` never grows those instance actions.
 A new helper emits the instance fragment; a new named boundary
-(`kirocrew-ec2-boundary-agentcore`) is the ceiling. The original
-`kirocrew-ec2-boundary` is not re-versioned.
+(`ajcrew-ec2-boundary-agentcore`) is the ceiling. The original
+`ajcrew-ec2-boundary` is not re-versioned.
 
 **Tech Stack:** Python 3.10+, existing CPP (`platform/`), MCP gateway
 rewriter, governance `SCOPE_CATALOG`, pytest-asyncio. Companion-only:
@@ -53,7 +53,7 @@ rewriter, governance `SCOPE_CATALOG`, pytest-asyncio. Companion-only:
 - Core never imports `bedrock_agentcore`, `boto3` AgentCore clients, or
   names Cognito / Midway / a discovery URL.
 - Do not consume `IdentityProvider.whoami` or `issuer` (RESERVED).
-- Do not write tokens into `~/.kiro/agents/kirocrew.json`, transcripts,
+- Do not write tokens into `~/.kiro/agents/ajcrew.json`, transcripts,
   SEL payloads, or `status()`.
 - Do not take `userId` from the model, a tool argument, or a query
   string.
@@ -63,13 +63,13 @@ rewriter, governance `SCOPE_CATALOG`, pytest-asyncio. Companion-only:
 - `capabilities.agentcore` defaults **off**. No new default-on egress.
 - Postures are exclusive. Do not layer `workload` IAM inbound on top
   of `login` JWT inbound.
-- Do not `CreatePolicyVersion` `kirocrew-ec2-boundary`. AgentCore
+- Do not `CreatePolicyVersion` `ajcrew-ec2-boundary`. AgentCore
   ceiling is a new named boundary, opt-in at launch.
 - Do not put `InvokeGateway` / `GetWorkloadAccessToken*` on the
   launcher Policy.json. Those belong on
   `iam.agentcore_instance_policy_document(posture)`.
 - `login` withholds Kiro defaults at `rebuild_agent_config()` emit
-  time (same control as `kirocrew-computer` `spec_gate`), not only
+  time (same control as `ajcrew-computer` `spec_gate`), not only
   at the tool gate.
 - `sso_status.py` stays a stub. No `CHANGELOG.md` edit.
 - Computer use stays ungoverned. No `computer_use.*` scopes.
@@ -90,7 +90,7 @@ rewriter, governance `SCOPE_CATALOG`, pytest-asyncio. Companion-only:
 | 4 | `probe` | Phase 0 verdict written back into the RFC (kiro-cli headers + standalone workload) |
 | 5 | `inject` | per-session Gateway header sidecar **or** header-proxy MCP; unpooled Gateway server |
 | 6 | `consent-unattended` | 3LO allowlist + dashboard/channel prompt + posture-aware cron/M2M policy + SEL; `security.md` |
-| 7 | extra + IaC (this repo) | `kirocrew[agentcore]` (`AwsAgentIdentityProvider`), CFN Gateway URL, `install.sh --agentcore`, systemd env |
+| 7 | extra + IaC (this repo) | `ajcrew[agentcore]` (`AwsAgentIdentityProvider`), CFN Gateway URL, `install.sh --agentcore`, systemd env |
 
 PRs 2, 2b, 3, 5, 6, and 7 are this repository. PR 4 is a research commit
 that only edits the RFC. Operator IdP JWT annotation and Gateway/target
@@ -181,12 +181,12 @@ return `None` / `{}` / the input principal unchanged.
 
 **Files:**
 
-- Modify: `src/kiro_crew/platform/interfaces.py` (add dataclasses + Protocol)
-- Modify: `src/kiro_crew/platform/defaults.py` (add `DefaultAgentIdentityProvider`)
-- Modify: `src/kiro_crew/platform/context.py` (add `agent_identity` field)
-- Modify: `src/kiro_crew/platform/bootstrap.py` (wire Default)
-- Modify: `src/kiro_crew/platform/__init__.py` (exports)
-- Modify: `src/kiro_crew/platform/governance.py` (`capabilities.agentcore`)
+- Modify: `src/aj_crew/platform/interfaces.py` (add dataclasses + Protocol)
+- Modify: `src/aj_crew/platform/defaults.py` (add `DefaultAgentIdentityProvider`)
+- Modify: `src/aj_crew/platform/context.py` (add `agent_identity` field)
+- Modify: `src/aj_crew/platform/bootstrap.py` (wire Default)
+- Modify: `src/aj_crew/platform/__init__.py` (exports)
+- Modify: `src/aj_crew/platform/governance.py` (`capabilities.agentcore`)
 - Modify: `test/test_platform_cpp_seam_coverage.py` (and any bootstrap/context tests the coverage file names)
 - Modify: `docs/system-specs/modules/platform-context.md`
 - Modify: `docs/system-specs/modules/governance.md`
@@ -221,7 +221,7 @@ return `None` / `{}` / the input principal unchanged.
 
 - [ ] **Step 4: Grep the public tree for AWS leakage.**
 
-  Run: `rg -n "bedrock.agentcore|bedrock_agentcore|GetWorkloadAccessToken|cognito-idp" src/kiro_crew website/src`
+  Run: `rg -n "bedrock.agentcore|bedrock_agentcore|GetWorkloadAccessToken|cognito-idp" src/aj_crew website/src`
   Expected: no matches.
 
 - [ ] **Step 5: Update specs and run gates.**
@@ -231,7 +231,7 @@ return `None` / `{}` / the input principal unchanged.
   the inner `posture` field (`workload` | `login`).
   Run: `black --target-version py310 <touched py>` then
   `python3 scripts/check_black_formatting.py` and
-  `mypy --platform linux src/kiro_crew`.
+  `mypy --platform linux src/aj_crew`.
 
 - [ ] **Step 6: Commit.**
 
@@ -245,21 +245,21 @@ return `None` / `{}` / the input principal unchanged.
 
 **Files:**
 
-- Modify: `src/kiro_crew/cloud/iam.py`
+- Modify: `src/aj_crew/cloud/iam.py`
   (`agentcore_instance_policy_document(posture)`,
-  `AGENTCORE_BOUNDARY_NAME = "kirocrew-ec2-boundary-agentcore"`,
+  `AGENTCORE_BOUNDARY_NAME = "ajcrew-ec2-boundary-agentcore"`,
   `agentcore_boundary_policy_document(account, posture)`,
   launcher `CreateRole` / `CreatePolicy` statements accept either
   boundary name)
-- Modify: `src/kiro_crew/cloud/source.py` (create-once helper for the
+- Modify: `src/aj_crew/cloud/source.py` (create-once helper for the
   new boundary name; still never `CreatePolicyVersion`)
-- Modify: `src/kiro_crew/cloud/templates/kirocrew-ec2.yaml`
+- Modify: `src/aj_crew/cloud/templates/ajcrew-ec2.yaml`
   (`PermissionsBoundaryArn` `AllowedPattern` lists both names;
   `AgentCorePosture` creates `AWS::BedrockAgentCore::WorkloadIdentity`
-  named `kirocrew-<StackTag>` and attaches the instance grant)
+  named `ajcrew-<StackTag>` and attaches the instance grant)
 - Modify: dashboard cloud IAM copy + `cli_cloud` `iam-policy` (labeled
   sibling document; query/flag `--instance --posture`)
-- Modify: `src/kiro_crew/agent.py` / MCP merge (`rebuild_agent_config`
+- Modify: `src/aj_crew/agent.py` / MCP merge (`rebuild_agent_config`
   withholds Kiro-global, seam-global, crew-store, leftover non-managed
   when posture is `login` and the capability is on)
 - Create: `test/test_agentcore_iam_posture.py`
@@ -267,14 +267,14 @@ return `None` / `{}` / the input principal unchanged.
   `BOUNDARY_NAME` or merge order
 - Modify: `docs/system-specs/modules/cloud.md`
 - Modify: `docs/architecture/mcp.md` (login withhold = emit-time
-  `spec_gate`, same as `kirocrew-computer`)
+  `spec_gate`, same as `ajcrew-computer`)
 
 **Interfaces:**
 
 - Consumes: `capabilities.agentcore.{enabled,posture}` from PR 2.
 - Produces: posture-correct instance Policy.json; a new immutable
   boundary name; login-mode rebuild that emits only managed
-  `kirocrew-*` plus (later) a URL-only Gateway spec.
+  `ajcrew-*` plus (later) a URL-only Gateway spec.
 
 - [ ] **Step 1: Write failing IAM + rebuild tests.**
 
@@ -296,8 +296,8 @@ return `None` / `{}` / the input principal unchanged.
 
   def test_login_rebuild_withholds_kiro_global(tmp_path):
       # seed ~/.kiro/settings/mcp.json with a dummy server
-      # posture=login + capability on → rebuilt kirocrew.json
-      # has kirocrew-core / kirocrew-cron, no dummy, no Gateway yet
+      # posture=login + capability on → rebuilt ajcrew.json
+      # has ajcrew-core / ajcrew-cron, no dummy, no Gateway yet
 
   def test_workload_rebuild_still_merges_kiro_global(tmp_path):
       ...
@@ -313,12 +313,12 @@ return `None` / `{}` / the input principal unchanged.
 
 - [ ] **Step 3: Implement helper, successor boundary, withhold, probe.**
 
-  Keep `BOUNDARY_NAME = "kirocrew-ec2-boundary"` as the default
+  Keep `BOUNDARY_NAME = "ajcrew-ec2-boundary"` as the default
   launch path. AgentCore launches pass the successor ARN. The
   successor document is the **union** ceiling (SSM-core +
   source-bucket + every AgentCore action either posture may grant).
   Resource ARNs in the instance fragment are fleet-pinned (workload
-  name `kirocrew`, gateway `kirocrew-*`), never `*`, except on the
+  name `ajcrew`, gateway `ajcrew-*`), never `*`, except on the
   explicit Deny SIDs.
 
 - [ ] **Step 4: Update cloud.md + mcp.md and run gates.**
@@ -339,7 +339,7 @@ return `None` / `{}` / the input principal unchanged.
 
 **Files:**
 
-- Create: `src/kiro_crew/platform/agent_identity.py` (dataclasses if not
+- Create: `src/aj_crew/platform/agent_identity.py` (dataclasses if not
   already in interfaces; `derive_session_principal(slot_or_session)`)
 - Create: `test/test_agent_identity_principal.py`
 - Modify: session start site(s) — the smallest existing hook that already
@@ -424,8 +424,8 @@ exists.
 
 **Files (sidecar path, if Phase 0 said yes):**
 
-- Modify: `src/kiro_crew/mcp_gateway/` rewriter / session spawn
-- Modify: `src/kiro_crew/agent.py` (`_extra_mcp_servers` merge of
+- Modify: `src/aj_crew/mcp_gateway/` rewriter / session spawn
+- Modify: `src/aj_crew/agent.py` (`_extra_mcp_servers` merge of
   `gateway_mcp_spec()`, URL only)
 - Create: `test/test_agentcore_gateway_inject.py`
 - Modify: `docs/architecture/mcp.md` only if the inject path needs a
@@ -433,7 +433,7 @@ exists.
 
 **Files (proxy path, if Phase 0 said no):**
 
-- Create: `src/kiro_crew/mcp_gateway/agentcore_proxy.py` (stdio MCP that
+- Create: `src/aj_crew/mcp_gateway/agentcore_proxy.py` (stdio MCP that
   forwards to the Gateway URL with the session inbound token)
 - Same tests and `mcp.md` update
 
@@ -448,7 +448,7 @@ exists.
   - `enabled() is True` / posture `workload` → IAM inbound, no JWT
     sidecar. Gateway URL-only spec is present at boot.
   - Successful `login` vend → transport has `Authorization: Bearer …`
-    and `~/.kiro/agents/kirocrew.json` does not.
+    and `~/.kiro/agents/ajcrew.json` does not.
   - Two sessions with different principals do not share a backend
     (unpooled).
   - Token bytes never appear in a captured log / SEL fixture.
@@ -473,7 +473,7 @@ tests exist.
 
 **Files:**
 
-- Modify: `src/kiro_crew/security.py` (consent-host allowlist reuse of
+- Modify: `src/aj_crew/security.py` (consent-host allowlist reuse of
   `oauth_endpoints.json`; do not add a second file unless the existing
   keystone cannot express AgentCore consent hosts)
 - Modify: dashboard handler + a small Settings / modal component
@@ -509,26 +509,26 @@ tests exist.
 
 ### Task 7: In-repo extra + IaC (this repository) — planned, not on main
 
-Planned as an opt-in extra in Kiro Crew, not a `kirocrew.plugins`
+Planned as an opt-in extra in Aj Crew, not an `ajcrew.plugins`
 companion, so a launched box that opts into AgentCore actually vends. None of
 it is on `main`: there is no `agentcore` extra, `platform/agentcore_aws.py`,
 `platform/agentcore_sigv4.py`, `platform/agentcore_inspect.py`, or
 `/api/agentcore` route.
 
-- Extra: `kirocrew[agentcore]` = `boto3>=1.34,<2` (`setup.cfg`)
+- Extra: `ajcrew[agentcore]` = `boto3>=1.34,<2` (`setup.cfg`)
 - Adapter: `platform/agentcore_aws.py` `AwsAgentIdentityProvider`
 - Bootstrap (standalone only): `dataclasses.replace` of
   `agent_identity` when `opted_in()` — home-policy or env posture
   `workload`/`login`, or a named workload plus
-  `KIROCREW_AGENTCORE_AWS=1`. `ensure_extra()` pips
-  `kirocrew[agentcore]` on that path and on Settings PUT
+  `AJCREW_AGENTCORE_AWS=1`. `ensure_extra()` pips
+  `ajcrew[agentcore]` on that path and on Settings PUT
   (not on GET; not uninstalled when posture returns to `none`)
 - Settings/policy `capabilities.agentcore.gateway_url` is the
   this-crew Gateway MCP URL (https); runtime prefers that over
-  `KIROCREW_AGENTCORE_GATEWAY_URL`
+  `AJCREW_AGENTCORE_GATEWAY_URL`
 - IaC: `install.sh --agentcore`; CFN `AgentCoreGatewayUrl`; systemd
-  `KIROCREW_AGENTCORE_GATEWAY_URL`
-- CLI: `kirocrew cloud launch --agentcore-gateway-url https://…`
+  `AJCREW_AGENTCORE_GATEWAY_URL`
+- CLI: `ajcrew cloud launch --agentcore-gateway-url https://…`
 - Calls: `GetWorkloadAccessToken` / `GetWorkloadAccessTokenForJWT`
   via boto3 client name `bedrock-agentcore`
 - Gateway spec: URL-only; never a WAT bearer. Workload posture
@@ -542,7 +542,7 @@ it is on `main`: there is no `agentcore` extra, `platform/agentcore_aws.py`,
   `GET`/`POST /api/agentcore/gateway` (verify, targets, tools/list,
   optional Sync). Instance inspect SID on `gateway/*`. Launcher
   Policy.json still has no inspect / Invoke verbs.
-- Do **not** register `kirocrew.plugins` (that flips enterprise
+- Do **not** register `ajcrew.plugins` (that flips enterprise
   profile / fail-closed)
 
 Still companion-owned (other repo):
@@ -583,9 +583,9 @@ Still companion-owned (other repo):
   `GetWorkloadAccessToken*` action.
 - `iam.boundary_policy_document()` is byte-stable vs the pre-PR
   SSM-core + source-bucket shape.
-- Login-posture rebuild fixtures contain managed `kirocrew-*` only
+- Login-posture rebuild fixtures contain managed `ajcrew-*` only
   (no Kiro global, no crew-store leftover).
-- `kirocrew.json` fixtures contain no `Authorization` header.
+- `ajcrew.json` fixtures contain no `Authorization` header.
 - Injected cron / subagent envelopes cannot vend a user token.
 - `scripts/docs-lint.sh` and
   `BRAND_BASE_REF=origin/main python3 scripts/check_brand_name.py`

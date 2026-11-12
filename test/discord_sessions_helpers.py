@@ -16,19 +16,19 @@ from typing import Any
 import pytest
 from test_discord import MultipartFake
 
-from kiro_crew.discord.client import DiscordInteraction
-from kiro_crew.discord.transport_dispatch import DiscordDispatcher
-from kiro_crew.history import transcript_stem
-from kiro_crew.messaging.link import UNBIND_REASON_UNSPECIFIED, ChannelLink
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.session import _opt_out_key
-from kiro_crew.session_allocation import SessionClosingError
-from kiro_crew.session_map import ConversationOwnershipConflict
+from aj_crew.discord.client import DiscordInteraction
+from aj_crew.discord.transport_dispatch import DiscordDispatcher
+from aj_crew.history import transcript_stem
+from aj_crew.messaging.link import UNBIND_REASON_UNSPECIFIED, ChannelLink
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.session import _opt_out_key
+from aj_crew.session_allocation import SessionClosingError
+from aj_crew.session_map import ConversationOwnershipConflict
 
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
 
 
 class _Client(MultipartFake):
@@ -95,7 +95,7 @@ class _Provider:
     supports_steer, cwd = False, str(Path.cwd())
 
     async def stream(self, message: str):
-        from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+        from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK
 
         yield SimpleNamespace(
             kind=EVENT_TEXT_CHUNK,
@@ -332,7 +332,7 @@ class _ConversationLog:
         return list(self.rows)
 
     def search_sessions(self, query: str, limit: int = 50) -> list[dict]:
-        """Mirror KiroCrewHistory.search_sessions' FIELD COVERAGE and phrase
+        """Mirror AjCrewHistory.search_sessions' FIELD COVERAGE and phrase
         semantics: one casefolded phrase matched against title OR message
         content, title hits ranked first. Deliberately not a reimplementation of
         the real scorer -- the ranking formula is tested in the history tests;
@@ -426,7 +426,7 @@ def _config() -> Any:
             restore_window_minutes=30,
             surface_channel_sessions=True,
         ),
-        agent=SimpleNamespace(default_agent="kirocrew"),
+        agent=SimpleNamespace(default_agent="ajcrew"),
         messaging=SimpleNamespace(
             dm_scope="per-channel-peer",
             idle_reset_minutes=0,

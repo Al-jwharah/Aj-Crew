@@ -1,6 +1,6 @@
 # macOS Signing and Notarization Runbook
 
-Operational reference for Kiro Crew's macOS signing chain: signing via the
+Operational reference for Aj Crew's macOS signing chain: signing via the
 enterprise signing service (CDSigner), Apple notarization and stapling, and
 rotation of the notary credential.
 
@@ -98,19 +98,19 @@ per-identifier, so an unfamiliar identifier is rejected; any future distinct
 identifier needs onboarding first. `sign-dmg.sh` defaults to the onboarded app
 identifier for that reason, and it must not be changed as part of a string scrub.
 
-Published **filenames** are pinned to the `KiroCrew` basename on every channel,
-even though the nightly bundle is `KiroCrew Nightly.app`. CDN keys and the
-latest-DMG permalink (`desktop/<channel>/latest/KiroCrew.dmg`) are a public
+Published **filenames** are pinned to the `AjCrew` basename on every channel,
+even though the nightly bundle is `AjCrew Nightly.app`. CDN keys and the
+latest-DMG permalink (`desktop/<channel>/latest/AjCrew.dmg`) are a public
 contract, so deriving filenames from the bundle name would silently rename keys
 and break the permalink. The DMG's **volume** name does follow the bundle.
 
 The single-arch legs (`mac_variant: arm64 | x64`, on nightly and on both release
 channels) run the same three jobs once more per DMG and append the arch to every
 name the legs would otherwise share: the signing-bucket keys (`SIGN_KEY_SUFFIX`, read by
-`sign.sh`), `notarized/…/KiroCrew-<arch>.zip`, the gated artifact
-`KiroCrew-notarized-<channel>-<version>-<arch>`, the public
-`desktop/<channel>/<version>/KiroCrew-<arch>.{zip,dmg}` and alias
-`desktop/<channel>/latest/KiroCrew-<arch>.dmg`, and the channel file directory
+`sign.sh`), `notarized/…/AjCrew-<arch>.zip`, the gated artifact
+`AjCrew-notarized-<channel>-<version>-<arch>`, the public
+`desktop/<channel>/<version>/AjCrew-<arch>.{zip,dmg}` and alias
+`desktop/<channel>/latest/AjCrew-<arch>.dmg`, and the channel file directory
 `feed/<channel>/<arch>/`. Three legs of one channel+version therefore never
 touch each other's keys, and with the variant empty the universal leg's names
 are unchanged. A single-arch app follows its directory because
@@ -219,14 +219,14 @@ tags it, which is the same principal who could merge it.
 The credential is an Apple app-specific password for the team's enrolled Apple
 account. Custody rules:
 
-- **CI copy: AWS Secrets Manager**, secret id `kirocrew/signing/apple-notary`,
+- **CI copy: AWS Secrets Manager**, secret id `ajcrew/signing/apple-notary`,
   fetched by the same OIDC role used for signing. The JSON carries `apple_id`,
   `password` and `team_id`. It is never a GitHub secret and never a workflow env
   literal: a dedicated secret store gives custody, an audit trail, and a rotation
   lifecycle that a repository secret does not.
 - **Local copy: the macOS Keychain**, via
-  `xcrun notarytool store-credentials "KiroCrewNotary" ...`. Every local command
-  then uses `--keychain-profile "KiroCrewNotary"`.
+  `xcrun notarytool store-credentials "AjCrewNotary" ...`. Every local command
+  then uses `--keychain-profile "AjCrewNotary"`.
 - **Never paste the password** into chat, tickets, docs, or a shell command line
   that lands in a shared log. Type it only into the Apple portal, into
   `store-credentials` in your own terminal, or into the Secrets Manager console
@@ -267,7 +267,7 @@ whenever convenient, and not urgent while the password path works.
 ## Troubleshooting
 
 **Notarization returns `Invalid`.** Pull the itemized log with
-`xcrun notarytool log <submission-id> --keychain-profile KiroCrewNotary`. Every
+`xcrun notarytool log <submission-id> --keychain-profile AjCrewNotary`. Every
 listed binary must be Developer ID signed with hardened runtime and a secure
 timestamp. If binaries are listed, manifest coverage regressed: check
 `generate-manifest.py`'s scope rules and its layout tripwire.

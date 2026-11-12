@@ -73,7 +73,7 @@ describe('a real local path used as a link label', () => {
   // The issue's own shape (a repo file linked to its forge URL) and a generic
   // host, for a file and for a directory.
   const cases = [
-    { kind: 'file', path: 'src/kiro_crew/context.py', href: 'https://github.com/kirodotdev/KiroCrew/blob/main/src/kiro_crew/context.py' },
+    { kind: 'file', path: 'src/aj_crew/context.py', href: 'https://github.com/Al-jwharah/Aj-Crew/blob/main/src/aj_crew/context.py' },
     { kind: 'file', path: 'src/app/main.py', href: 'https://example.com/blob/src/app/main.py' },
     { kind: 'dir', path: './src/app/', href: 'https://example.com/tree/src/app' },
   ] as const

@@ -29,13 +29,13 @@ from pathlib import Path
 import pytest
 from test_stall_enrichment import loop_thread, wait_until_inside_handle
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard import loop_watchdog
-from kiro_crew.dashboard.loop_watchdog import (
+from aj_crew import platform_compat
+from aj_crew.dashboard import loop_watchdog
+from aj_crew.dashboard.loop_watchdog import (
     SUSPEND_SKEW_MIN_SECS,
     LoopStallWatchdog,
 )
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 
 class _Clock:
@@ -214,7 +214,7 @@ def test_exit_after_none_disables_armed_timer() -> None:
         wd.beat()
         wd.beat()
         # Armed timer fully off; only the soft daemon-thread dump remains. This
-        # is the dashboard-only process configuration (e.g. `kirocrew chat`,
+        # is the dashboard-only process configuration (e.g. `ajcrew chat`,
         # which never enables faulthandler): NO process-killing timer is ever
         # armed, even across start()+beats, so a non-gateway process can never
         # be _exit()'d by the watchdog.
@@ -1436,7 +1436,7 @@ def _child_script(dump: Path, blocker: str) -> str:
     """
     return textwrap.dedent(f"""
         import logging, re, signal, sys, time
-        from kiro_crew.dashboard.loop_watchdog import LoopStallWatchdog
+        from aj_crew.dashboard.loop_watchdog import LoopStallWatchdog
         f = open({str(dump)!r}, "w", encoding="utf-8")
         f.write("# header\\n\\n")
         wd = LoopStallWatchdog(
@@ -1522,7 +1522,7 @@ def test_restart_exec_does_not_hand_the_successor_the_alarm(tmp_path: Path) -> N
         "import sys, time; time.sleep(1.0); print('successor alive', file=sys.stderr); sys.exit(7)"
     )
     blocker = (
-        "from kiro_crew.platform_compat import reexec_launcher; "
+        "from aj_crew.platform_compat import reexec_launcher; "
         f"reexec_launcher(sys.executable, ['-c', {successor!r}])"
     )
     proc = _run_child(_child_script(dump, blocker), tmp_path)

@@ -20,11 +20,11 @@ from app_bridges_helpers import app_env_fixture  # noqa: F401
 from app_bridges_helpers import _make_app_source
 from test_app_bridges_deps_exposure import _isolated_python_args, _plant_deps_stamp
 
-from kiro_crew import platform_compat
-from kiro_crew.apps.bridges import _register_mcp_servers, resolve_stdio_command
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import platform_compat
+from aj_crew.apps.bridges import _register_mcp_servers, resolve_stdio_command
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 _LAUNCHER = "src/pkg/_mcp_launch.py"
 
@@ -47,7 +47,7 @@ def _plant(app_root, rel=_LAUNCHER):
 
 
 def _register_stdio(tmp_path, app_env, monkeypatch, server_cfg, setup):
-    import kiro_crew.apps.bridges as bmod
+    import aj_crew.apps.bridges as bmod
 
     mcp_path = tmp_path / "mcp.json"
     monkeypatch.setattr(bmod, "_mcp_json_path", lambda: mcp_path)
@@ -103,7 +103,7 @@ def test_launcher_after_a_double_dash_is_resolved(tmp_path):
 
 
 def test_relative_launcher_still_starts_with_a_provisioned_deps_tree(tmp_path):
-    from kiro_crew.apps.interpreter import app_deps_dir
+    from aj_crew.apps.interpreter import app_deps_dir
 
     launcher = _plant(tmp_path)
     (tmp_path / "requirements.txt").write_bytes(b"requests\n")
@@ -188,6 +188,6 @@ def test_args_after_the_script_operand_are_not_touched(tmp_path):
 
 
 def test_gateway_module_server_is_unchanged(tmp_path):
-    cfg = _resolve(tmp_path, ["-m", "kiro_crew.apps.builtins.x.mcp_server"])
+    cfg = _resolve(tmp_path, ["-m", "aj_crew.apps.builtins.x.mcp_server"])
     assert cfg["command"] == sys.executable, cfg
-    assert _isolated_python_args(cfg) == ["-m", "kiro_crew.apps.builtins.x.mcp_server"], cfg
+    assert _isolated_python_args(cfg) == ["-m", "aj_crew.apps.builtins.x.mcp_server"], cfg

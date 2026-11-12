@@ -32,7 +32,7 @@ test("fetchRemoteToken runs one bounded ssh against the port's crew and parses i
   const { supervisor, logs } = harness({
     store: remoteCrewStore(5476, {
       host: "myhost.example.com",
-      binPath: "/opt/kc/bin/kirocrew",
+      binPath: "/opt/kc/bin/ajcrew",
       remotePort: "7000",
       remotePath: "",
     }, { sshTimeoutMs: 1000 }),
@@ -51,7 +51,7 @@ test("fetchRemoteToken runs one bounded ssh against the port's crew and parses i
     "stdin closed, no prompt, and ssh's connect deadline inside the kill budget",
   );
   assert.strictEqual(calls[0].args.length, 7);
-  assert.match(calls[0].args[6], /KIROCREW_PORT=7000/, "the crew's own port, not the local end");
+  assert.match(calls[0].args[6], /AJCREW_PORT=7000/, "the crew's own port, not the local end");
   assert.deepStrictEqual(calls[0].options, { timeout: 5000 }, "the SSH budget never drops below 5s");
   assert.ok(logs.includes("SSH token fetch: /usr/bin/ssh myhost.example.com for port 7000"));
 });
@@ -62,7 +62,7 @@ test("fetchRemoteToken defaults the SSH budget and the remote port to the tab's 
   const { supervisor } = harness({
     store: remoteCrewStore(7778, {
       host: "clouddesk",
-      binPath: "/opt/kc/bin/kirocrew",
+      binPath: "/opt/kc/bin/ajcrew",
       remotePort: "",
       remotePath: "",
     }),
@@ -75,7 +75,7 @@ test("fetchRemoteToken defaults the SSH budget and the remote port to the tab's 
   assert.deepStrictEqual(await supervisor.fetchRemoteToken(7778), { token: "", error: null });
   assert.deepStrictEqual(calls[0].options, { timeout: 20000 });
   assert.ok(calls[0].args.includes("ConnectTimeout=18"));
-  assert.match(calls[0].args[6], /KIROCREW_PORT=7778/);
+  assert.match(calls[0].args[6], /AJCREW_PORT=7778/);
 });
 
 function windowsCrewHarness(kernelRoot, execFileFn) {
@@ -83,7 +83,7 @@ function windowsCrewHarness(kernelRoot, execFileFn) {
     processRef: {
       platform: "win32",
       arch: "x64",
-      env: { KIROCREW_HOME: "C:\\virtual\\kirocrew-home", SystemRoot: "C:\\planted" },
+      env: { AJCREW_HOME: "C:\\virtual\\ajcrew-home", SystemRoot: "C:\\planted" },
       resourcesPath: "C:\\virtual\\resources",
       kill() { throw new Error("process kill must not run in this harness"); },
     },
@@ -102,7 +102,7 @@ function windowsCrewHarness(kernelRoot, execFileFn) {
     },
     store: remoteCrewStore(5476, {
       host: "devbox",
-      binPath: "/opt/kc/bin/kirocrew",
+      binPath: "/opt/kc/bin/ajcrew",
       remotePort: "",
       remotePath: "",
     }),
@@ -140,7 +140,7 @@ test("fetchRemoteToken reports ssh's stderr, else its error message", async (t) 
   const { supervisor } = harness({
     store: remoteCrewStore(5476, {
       host: "myhost.example.com",
-      binPath: "/opt/kc/bin/kirocrew",
+      binPath: "/opt/kc/bin/ajcrew",
       remotePort: "",
       remotePath: "",
     }),
@@ -166,7 +166,7 @@ test("fetchRemoteToken names a missing ssh client and a timeout kill", async (t)
   const { supervisor } = harness({
     store: remoteCrewStore(5476, {
       host: "devbox",
-      binPath: "/opt/kc/bin/kirocrew",
+      binPath: "/opt/kc/bin/ajcrew",
       remotePort: "",
       remotePath: "",
     }),
@@ -195,7 +195,7 @@ test("fetchRemoteToken refuses invalid settings and runs nothing without a crew"
   const invalid = harness({
     store: remoteCrewStore(5476, {
       host: "bad host name",
-      binPath: "/opt/kc/bin/kirocrew",
+      binPath: "/opt/kc/bin/ajcrew",
       remotePort: "",
       remotePath: "",
     }),
@@ -214,13 +214,13 @@ test("the spawned gateway's project dir is the Electron app's parent off Windows
   const { supervisor, spawnCalls } = harness();
   assert.strictEqual(await supervisor.start(), true);
   const [bin, args, options] = spawnCalls[0];
-  assert.strictEqual(bin, "kirocrew");
+  assert.strictEqual(bin, "ajcrew");
   assert.deepStrictEqual(args, ["gateway", "--no-open", "--port", "5476"]);
-  assert.strictEqual(options.env.KIROCREW_PROJECT_DIR, "/virtual");
+  assert.strictEqual(options.env.AJCREW_PROJECT_DIR, "/virtual");
   assert.deepStrictEqual(options.stdio, ["ignore", 41, 41]);
   assert.strictEqual(options.detached, false);
   assert.strictEqual(options.windowsHide, true);
-  assert.strictEqual(options.env.KIROCREW_DESKTOP_STDIO_LOG, undefined);
+  assert.strictEqual(options.env.AJCREW_DESKTOP_STDIO_LOG, undefined);
 });
 
 test("a Windows gateway inherits no descriptor, so Node adds CREATE_NO_WINDOW, and its early stderr reaches the log", async () => {
@@ -231,7 +231,7 @@ test("a Windows gateway inherits no descriptor, so Node adds CREATE_NO_WINDOW, a
     processRef: {
       platform: "win32",
       arch: "x64",
-      env: { KIROCREW_HOME: "/virtual/kirocrew-home" },
+      env: { AJCREW_HOME: "/virtual/ajcrew-home" },
       resourcesPath: "/virtual/resources",
       kill() { throw new Error("process kill must not run in this harness"); },
     },
@@ -247,7 +247,7 @@ test("a Windows gateway inherits no descriptor, so Node adds CREATE_NO_WINDOW, a
   // a pipe is not one.
   assert.deepStrictEqual(options.stdio, ["ignore", "ignore", "pipe"]);
   assert.strictEqual(options.windowsHide, true);
-  assert.strictEqual(options.env.KIROCREW_DESKTOP_STDIO_LOG, "/virtual/logs/gateway-launch.log");
+  assert.strictEqual(options.env.AJCREW_DESKTOP_STDIO_LOG, "/virtual/logs/gateway-launch.log");
   assert.deepStrictEqual(
     opened.filter(([target]) => target === "/virtual/logs/gateway-launch.log"),
     [],
@@ -268,7 +268,7 @@ test("Windows takes the first tree above the Electron sources carrying agents an
     processRef: {
       platform: "win32",
       arch: "x64",
-      env: { KIROCREW_HOME: "/virtual/kirocrew-home" },
+      env: { AJCREW_HOME: "/virtual/ajcrew-home" },
       resourcesPath: "/virtual/resources",
       kill() { throw new Error("process kill must not run in this harness"); },
     },
@@ -283,14 +283,14 @@ test("Windows takes the first tree above the Electron sources carrying agents an
 
   const twoUp = harness(windowsProcess(new Set(["/agents", "/skills"])));
   assert.strictEqual(await twoUp.supervisor.start(), true);
-  assert.strictEqual(twoUp.spawnCalls[0][2].env.KIROCREW_PROJECT_DIR, "/");
+  assert.strictEqual(twoUp.spawnCalls[0][2].env.AJCREW_PROJECT_DIR, "/");
   assert.notStrictEqual(probed.indexOf("/virtual/agents"), -1);
   assert.ok(probed.indexOf("/virtual/agents") < probed.indexOf("/agents"), "one level up is probed first");
 
   const both = harness(windowsProcess(new Set(["/virtual/agents", "/virtual/skills", "/agents", "/skills"])));
   assert.strictEqual(await both.supervisor.start(), true);
   assert.strictEqual(
-    both.spawnCalls[0][2].env.KIROCREW_PROJECT_DIR,
+    both.spawnCalls[0][2].env.AJCREW_PROJECT_DIR,
     "/virtual",
     "when both levels carry the trees, the nearer one wins",
   );
@@ -298,7 +298,7 @@ test("Windows takes the first tree above the Electron sources carrying agents an
   const neither = harness(windowsProcess(new Set(["/agents"])));
   assert.strictEqual(await neither.supervisor.start(), true);
   assert.strictEqual(
-    neither.spawnCalls[0][2].env.KIROCREW_PROJECT_DIR,
+    neither.spawnCalls[0][2].env.AJCREW_PROJECT_DIR,
     "/virtual",
     "a tree missing either directory falls back to the app's parent",
   );
@@ -310,7 +310,7 @@ test("a GUI-launched macOS gateway appends only the launchd domain's new PATH en
     processRef: {
       platform: "darwin",
       arch: "arm64",
-      env: { KIROCREW_HOME: "/virtual/kirocrew-home", PATH: "/usr/bin:/bin" },
+      env: { AJCREW_HOME: "/virtual/ajcrew-home", PATH: "/usr/bin:/bin" },
       resourcesPath: "/virtual/resources",
       kill() { throw new Error("process kill must not run in this harness"); },
     },
@@ -336,7 +336,7 @@ test("a GUI-launched macOS gateway appends only the launchd domain's new PATH en
     "a proxy-less scutil answer discovers nothing",
   );
   assert.ok(logs.includes("PATH recovered from launchd domain: +1 dir(s) appended"));
-  assert.strictEqual(spawnCalls[0][2].env.KIROCREW_PORT, undefined, "the explicit --port wins");
+  assert.strictEqual(spawnCalls[0][2].env.AJCREW_PORT, undefined, "the explicit --port wins");
 });
 
 test("a proxy-only macOS host gets the system store's proxy into the gateway env", async () => {
@@ -348,7 +348,7 @@ test("a proxy-only macOS host gets the system store's proxy into the gateway env
     processRef: {
       platform: "darwin",
       arch: "arm64",
-      env: { KIROCREW_HOME: "/virtual/kirocrew-home", PATH: "/usr/bin:/bin" },
+      env: { AJCREW_HOME: "/virtual/ajcrew-home", PATH: "/usr/bin:/bin" },
       resourcesPath: "/virtual/resources",
       kill() { throw new Error("process kill must not run in this harness"); },
     },
@@ -388,7 +388,7 @@ test("an inherited proxy variable suppresses the system-proxy read at spawn", as
       platform: "darwin",
       arch: "arm64",
       env: {
-        KIROCREW_HOME: "/virtual/kirocrew-home",
+        AJCREW_HOME: "/virtual/ajcrew-home",
         PATH: "/usr/bin:/bin",
         HTTPS_PROXY: "http://operator.example:3128",
       },
@@ -416,7 +416,7 @@ test("PATH is left exactly as inherited off macOS", async () => {
     processRef: {
       platform: "linux",
       arch: "x64",
-      env: { KIROCREW_HOME: "/virtual/kirocrew-home", PATH: "/usr/bin:/bin", KIROCREW_PORT: "9999" },
+      env: { AJCREW_HOME: "/virtual/ajcrew-home", PATH: "/usr/bin:/bin", AJCREW_PORT: "9999" },
       resourcesPath: "/virtual/resources",
       kill() { throw new Error("process kill must not run in this harness"); },
     },
@@ -426,7 +426,7 @@ test("PATH is left exactly as inherited off macOS", async () => {
   assert.strictEqual(await supervisor.start(), true);
   assert.strictEqual(reads, 0);
   assert.strictEqual(spawnCalls[0][2].env.PATH, "/usr/bin:/bin");
-  assert.strictEqual(spawnCalls[0][2].env.KIROCREW_PORT, undefined);
+  assert.strictEqual(spawnCalls[0][2].env.AJCREW_PORT, undefined);
   assert.ok(!logs.some((line) => line.startsWith("PATH recovered")));
 });
 
@@ -437,14 +437,14 @@ test("the conflict prompt quits the other family's app through AppleScript by NA
     processRef: {
       platform: "darwin",
       arch: "arm64",
-      env: { KIROCREW_HOME: "/virtual/kirocrew-home" },
+      env: { AJCREW_HOME: "/virtual/ajcrew-home" },
       resourcesPath: "/virtual/resources",
       kill() { throw new Error("process kill must not run in this harness"); },
     },
     app: { getVersion: () => "0.6.0" },
     httpMod: switchableHttp({
       status: 200,
-      body: JSON.stringify({ app: "kirocrew", version: "0.6.0-nightly.20260101t000000" }),
+      body: JSON.stringify({ app: "ajcrew", version: "0.6.0-nightly.20260101t000000" }),
     }),
     dialog: { showMessageBox: async () => ({ response: 0 }) },
     execFileFn: (file, args, options, callback) => {
@@ -459,7 +459,7 @@ test("the conflict prompt quits the other family's app through AppleScript by NA
         return;
       }
       if (file === "/bin/ps") {
-        callback(null, args.includes("ppid=") ? "999\n" : "/opt/kc/bin/kirocrew gateway\n", "");
+        callback(null, args.includes("ppid=") ? "999\n" : "/opt/kc/bin/ajcrew gateway\n", "");
         return;
       }
       throw new Error(`unexpected ${file}`);
@@ -468,7 +468,7 @@ test("the conflict prompt quits the other family's app through AppleScript by NA
 
   assert.strictEqual(await supervisor.start(), true);
   assert.strictEqual(osascript.length, 1, "the nightly-owned port prompts one takeover");
-  assert.deepStrictEqual(osascript[0].args, ["-e", 'quit app "KiroCrew Nightly"']);
+  assert.deepStrictEqual(osascript[0].args, ["-e", 'quit app "AjCrew Nightly"']);
   assert.deepStrictEqual(osascript[0].options, { timeout: 10000 });
   assert.strictEqual(spawnCalls.length, 1, "the released port is spawned into");
 });
@@ -495,7 +495,7 @@ function staleWarningHarness({ response = 0, parentPid = 99 } = {}) {
           callback(res);
           res.emit("data", JSON.stringify(url.endsWith("/api/ready")
             ? { ready: true }
-            : { app: "kirocrew", version: "0.7.0" }));
+            : { app: "ajcrew", version: "0.7.0" }));
           res.emit("end");
         });
         return req;
@@ -504,7 +504,7 @@ function staleWarningHarness({ response = 0, parentPid = 99 } = {}) {
     execFileFn(file, args, _options, callback) {
       if (file.endsWith("lsof")) callback(null, "123", "");
       else if (args.includes("ppid=")) callback(null, String(parentPid), "");
-      else callback(null, "/virtual/resources/backend-dist/bin/python -m kiro_crew gateway", "");
+      else callback(null, "/virtual/resources/backend-dist/bin/python -m aj_crew gateway", "");
     },
     dialog: { async showMessageBox(options) { dialogs.push(options); return { response }; } },
   });
@@ -519,7 +519,7 @@ test("a stale bundled gateway warns and continues without requesting a restart",
   assert.equal(state.dialogs[0].message, "The gateway is still running an older version.");
   assert.match(state.dialogs[0].detail, /app is version 0\.7\.1/);
   assert.match(state.dialogs[0].detail, /gateway is still running version 0\.7\.0/);
-  assert.match(state.dialogs[0].detail, /Run this command in Terminal:\nkirocrew stop --port 5476/);
+  assert.match(state.dialogs[0].detail, /Run this command in Terminal:\najcrew stop --port 5476/);
   assert.doesNotMatch(state.dialogs[0].detail, /[“”]/);
   assert.deepEqual(state.dialogs[0].buttons, ["Continue with existing gateway", "Quit"]);
   assert.deepEqual(state.requests, [
@@ -547,9 +547,9 @@ test("a service-owned stale bundle adds conditional service recovery guidance", 
 // previous version's gateway, left running when the old app quit, runs from the
 // sibling folder and has been reparented to launchd (PPID 1) without being a
 // launchd job: an orphan nothing restarts.
-const MANAGED_RESOURCES = "/X/0.11.0.3/KiroCrew.app/Contents/Resources";
+const MANAGED_RESOURCES = "/X/0.11.0.3/AjCrew.app/Contents/Resources";
 const PREVIOUS_MANAGED_GATEWAY =
-  "/X/0.10.0.3/KiroCrew.app/Contents/Resources/backend-dist/kirocrew-backend-arm64/bin/python3.12 -s -P -m kiro_crew gateway --no-open --port 5476";
+  "/X/0.10.0.3/AjCrew.app/Contents/Resources/backend-dist/ajcrew-backend-arm64/bin/python3.12 -s -P -m aj_crew gateway --no-open --port 5476";
 const STALE_MESSAGE = "The gateway is still running an older version.";
 
 // `choose` is the label of the button every dialog answers with; a dialog
@@ -593,7 +593,7 @@ function managedStaleHarness({
           callback(res);
           res.emit("data", JSON.stringify(String(url).endsWith("/api/ready")
             ? { ready: true }
-            : { app: "kirocrew", version: gatewayVersion }));
+            : { app: "ajcrew", version: gatewayVersion }));
           res.emit("end");
         });
         return req;
@@ -627,7 +627,7 @@ function managedStaleHarness({
 }
 
 test("a managed update's previous-version orphan is a plain local gateway, not a service", async () => {
-  assert.equal(await managedStaleHarness().supervisor.probePrimaryPortOwner(), "kirocrew");
+  assert.equal(await managedStaleHarness().supervisor.probePrimaryPortOwner(), "ajcrew");
   assert.equal(await managedStaleHarness({ launchdJobs: [310, 123] }).supervisor.probePrimaryPortOwner(), "service");
   assert.equal(await managedStaleHarness({ launchdFails: true }).supervisor.probePrimaryPortOwner(), "service",
     "an unreadable job list keeps the service verdict");
@@ -644,7 +644,7 @@ test("a managed update's previous-version orphan gets the stale warning with Sto
   assert.equal(state.dialogs[0].cancelId, 1, "Escape continues; it never stops the gateway");
   assert.match(state.dialogs[0].detail, /app is version 0\.11\.0\.3/);
   assert.match(state.dialogs[0].detail, /gateway is still running version 0\.10\.0\.3/);
-  assert.match(state.dialogs[0].detail, /Stop and restart stops that gateway with kirocrew stop --port 5476 and starts this version's gateway\./);
+  assert.match(state.dialogs[0].detail, /Stop and restart stops that gateway with ajcrew stop --port 5476 and starts this version's gateway\./);
   assert.doesNotMatch(state.dialogs[0].detail, /If the gateway starts again automatically/,
     "an orphan has no service restarting it");
   assert.ok(state.logs.some((line) => line.includes("pid 123 on :5476 has launchd as its parent but is no launchd job")));
@@ -657,8 +657,8 @@ test("Stop and restart on a previous-version orphan runs the port stop, then sta
   assert.equal(state.stops.length, 1, "the CLI stop ran once");
   assert.deepStrictEqual(state.stops[0].args, ["stop", "--port", "5476"],
     "the command the dialog names; --expect-pid needs a pidfd macOS lacks");
-  assert.equal(state.stops[0].options.env.KIROCREW_HOME, "/virtual/kirocrew-home");
-  assert.equal(state.stops[0].options.env.KIROCREW_PORT, undefined);
+  assert.equal(state.stops[0].options.env.AJCREW_HOME, "/virtual/ajcrew-home");
+  assert.equal(state.stops[0].options.env.AJCREW_PORT, undefined);
   assert.equal(state.spawnCalls.length, 1, "the freed port gets this version's gateway");
   assert.deepStrictEqual(state.spawnCalls[0][1].slice(0, 4), ["gateway", "--no-open", "--port", "5476"]);
 });
@@ -668,7 +668,7 @@ test("a stop that leaves the orphan on its port fails the start instead of spawn
   assert.equal(await state.supervisor.start(), false);
   assert.equal(state.stops.length, 1);
   assert.equal(state.spawnCalls.length, 0);
-  assert.ok(state.logs.some((line) => line.includes("kirocrew stop --port 5476` failed")));
+  assert.ok(state.logs.some((line) => line.includes("ajcrew stop --port 5476` failed")));
 });
 
 test("an orphan that exits while the stale warning is open is replaced without a stop", async () => {
@@ -711,10 +711,10 @@ test("an orphaned gateway of the other release family is offered a stop, not a q
   assert.equal(await state.supervisor.start(), true);
   assert.equal(state.dialogs.length, 1, "one takeover prompt, no stale dialog");
   assert.equal(state.dialogs[0].message,
-    "A Kiro Crew Nightly gateway (0.1.2-nightly.20260729t073648) is still running with your Kiro Crew data.");
+    "An Aj Crew Nightly gateway (0.1.2-nightly.20260729t073648) is still running with your Aj Crew data.");
   assert.deepStrictEqual(state.dialogs[0].buttons, ["Stop and continue", "Cancel"]);
-  assert.match(state.dialogs[0].detail, /quitting Kiro Crew Nightly would not stop it/);
-  assert.match(state.dialogs[0].detail, /kirocrew stop --port 5476/);
+  assert.match(state.dialogs[0].detail, /quitting Aj Crew Nightly would not stop it/);
+  assert.match(state.dialogs[0].detail, /ajcrew stop --port 5476/);
   assert.equal(state.stops.length, 1);
   assert.deepStrictEqual(state.stops[0].args, ["stop", "--port", "5476"]);
   assert.equal(state.spawnCalls.length, 1);
@@ -739,9 +739,9 @@ test("the other family's launchd job keeps today's reuse, never a takeover", asy
 
 test("no stale warning when the gateway's version does not name the sibling folder it runs from", async () => {
   for (const command of [
-    "/X/0.9.0.1/KiroCrew.app/Contents/Resources/backend-dist/bin/python3.12 -m kiro_crew gateway --port 5476",
-    "/Y/0.10.0.3/KiroCrew.app/Contents/Resources/backend-dist/bin/python3.12 -m kiro_crew gateway --port 5476",
-    "/usr/local/bin/python3 -m kiro_crew gateway --port 5476",
+    "/X/0.9.0.1/AjCrew.app/Contents/Resources/backend-dist/bin/python3.12 -m aj_crew gateway --port 5476",
+    "/Y/0.10.0.3/AjCrew.app/Contents/Resources/backend-dist/bin/python3.12 -m aj_crew gateway --port 5476",
+    "/usr/local/bin/python3 -m aj_crew gateway --port 5476",
   ]) {
     const state = managedStaleHarness({ command });
     assert.equal(await state.supervisor.start(), true);
@@ -752,7 +752,7 @@ test("no stale warning when the gateway's version does not name the sibling fold
 test("no stale warning for a newer gateway in a sibling folder", async () => {
   const state = managedStaleHarness({
     gatewayVersion: "0.12.0.1",
-    command: "/X/0.12.0.1/KiroCrew.app/Contents/Resources/backend-dist/bin/python3.12 -m kiro_crew gateway --port 5476",
+    command: "/X/0.12.0.1/AjCrew.app/Contents/Resources/backend-dist/bin/python3.12 -m aj_crew gateway --port 5476",
   });
   assert.equal(await state.supervisor.start(), true);
   assert.equal(state.dialogs.length, 0);
@@ -763,9 +763,9 @@ test("no stale warning for a newer gateway in a sibling folder", async () => {
 // release shares. The gateway reports the build number of the folder it runs
 // from.
 function buildNumberedGateway(folder) {
-  return `/T/kirocrew/${folder}/payload/KiroCrew.app/Contents/Resources/backend-dist/kirocrew-backend-arm64/bin/python3.12 -s -P -m kiro_crew gateway --no-open --port 5476`;
+  return `/T/ajcrew/${folder}/payload/AjCrew.app/Contents/Resources/backend-dist/ajcrew-backend-arm64/bin/python3.12 -s -P -m aj_crew gateway --no-open --port 5476`;
 }
-const buildNumberedResources = (folder) => `/T/kirocrew/${folder}/payload/KiroCrew.app/Contents/Resources`;
+const buildNumberedResources = (folder) => `/T/ajcrew/${folder}/payload/AjCrew.app/Contents/Resources`;
 
 test("a previous build that differs only in the fourth part gets the stale warning", async () => {
   const state = managedStaleHarness({
@@ -833,9 +833,9 @@ test("a gateway from this build reporting its build number is not stale", async 
 
 test("a swap at a folder that is not named like a version never matches", async () => {
   for (const [resourcesPath, gatewayVersion, command] of [
-    ["/T/kirocrew/current/payload/KiroCrew.app/Contents/Resources", "0.12.0.3", buildNumberedGateway("0.12.0.3")],
-    [buildNumberedResources("0.12.0.4"), "Contents", "/T/kirocrew/0.12.0.4/payload/KiroCrew.app/Contents/Resources/backend-dist/bin/python3.12 -m kiro_crew gateway"],
-    [buildNumberedResources("0.12.0.4"), "../0.12.0.3", "/T/kirocrew/../0.12.0.3/payload/KiroCrew.app/Contents/Resources/backend-dist/bin/python3.12 -m kiro_crew gateway"],
+    ["/T/ajcrew/current/payload/AjCrew.app/Contents/Resources", "0.12.0.3", buildNumberedGateway("0.12.0.3")],
+    [buildNumberedResources("0.12.0.4"), "Contents", "/T/ajcrew/0.12.0.4/payload/AjCrew.app/Contents/Resources/backend-dist/bin/python3.12 -m aj_crew gateway"],
+    [buildNumberedResources("0.12.0.4"), "../0.12.0.3", "/T/ajcrew/../0.12.0.3/payload/AjCrew.app/Contents/Resources/backend-dist/bin/python3.12 -m aj_crew gateway"],
   ]) {
     const state = managedStaleHarness({ appVersion: "0.12.0-rc.5", resourcesPath, gatewayVersion, command });
     assert.equal(await state.supervisor.start(), true);
@@ -858,7 +858,7 @@ test("no stale warning when the port belongs to a configured remote crew", async
 // the gateway accepts the stop it releases the port and exits; `rebindPid`
 // models a service manager starting it again from the same files.
 function adoptedGatewayHarness({
-  command = "/virtual/resources/backend-dist/bin/python -m kiro_crew gateway",
+  command = "/virtual/resources/backend-dist/bin/python -m aj_crew gateway",
   gatewayVersion = "0.7.0",
   shutdownStatus = 200,
   parentPid = 99,
@@ -932,7 +932,7 @@ function adoptedGatewayHarness({
           callback(res);
           res.emit("data", JSON.stringify(String(url).endsWith("/api/ready")
             ? { ready: true }
-            : { app: "kirocrew", version: gatewayVersion }));
+            : { app: "ajcrew", version: gatewayVersion }));
           res.emit("end");
         });
         return req;
@@ -960,7 +960,7 @@ function adoptedGatewayHarness({
         if (cliStop === "accept") releasePort();
         callback(cliStop === "accept" ? null : new Error("refused"), "", "");
       } else if (file.endsWith("lsof") && args.includes("-Fn")) {
-        callback(null, "n/virtual/kirocrew-home/gateway.lock\n", "");
+        callback(null, "n/virtual/ajcrew-home/gateway.lock\n", "");
       } else if (file.endsWith("lsof")) {
         callback(null, listenerProbe(), "");
       } else if (args.includes("ppid=")) {
@@ -1011,7 +1011,7 @@ test("an adopted bundled gateway that refuses the stop fails the update stop and
 
   await assert.rejects(supervisor.stopForUpdate(), {
     code: "gateway-still-running",
-    stopCommand: "kirocrew stop --port 5476",
+    stopCommand: "ajcrew stop --port 5476",
   });
 
   assert.equal(state.shutdowns.length, 1);
@@ -1055,7 +1055,7 @@ test("an adopted bundled gateway its service manager starts again fails the upda
   // the CLI stop that stops the service itself.
   await assert.rejects(supervisor.stopForUpdate(), {
     code: "gateway-still-running",
-    stopCommand: "kirocrew stop",
+    stopCommand: "ajcrew stop",
   });
 
   assert.equal(state.shutdowns.length, 1);
@@ -1064,7 +1064,7 @@ test("an adopted bundled gateway its service manager starts again fails the upda
 
 test("an adopted gateway from another install is left alone by the update stop", async () => {
   const { supervisor, state } = adoptedGatewayHarness({
-    command: "/usr/local/bin/kirocrew gateway",
+    command: "/usr/local/bin/ajcrew gateway",
     gatewayVersion: "0.7.1",
   });
   assert.equal(await supervisor.start(), true);
@@ -1082,7 +1082,7 @@ test("a client-only launch whose crew opted in opens the managed tunnel before a
     timers,
     store: remoteCrewStore(5477, {
       host: "devbox.example.com",
-      binPath: "kirocrew",
+      binPath: "ajcrew",
       remotePort: "5476",
       remotePath: "",
       manageTunnel: true,
@@ -1117,7 +1117,7 @@ test("without the opt-in a client-only launch spawns nothing and does not wait",
   const { supervisor, spawnCalls } = harness({
     store: remoteCrewStore(5477, {
       host: "devbox.example.com",
-      binPath: "kirocrew",
+      binPath: "ajcrew",
       remotePort: "5476",
       remotePath: "",
     }, { runLocalGateway: false }),

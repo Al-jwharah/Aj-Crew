@@ -19,18 +19,18 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import agent_scratch
-from kiro_crew import sandbox as sandbox_mod
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp import runtime as runtime_mod
-from kiro_crew.acp.codex_sqlite import seed_private_state
-from kiro_crew.acp.harness import SpawnContext
-from kiro_crew.acp.harness import codex as codex_mod
-from kiro_crew.acp.harness import harness_for
-from kiro_crew.acp.harness.base import SpawnPlan
-from kiro_crew.acp.harness.codex import _read_codex_mcp_disable_overrides
-from kiro_crew.acp.types import ACP_BACKEND_CODEX, ACP_BACKEND_KIRO
+from aj_crew import agent as agent_mod
+from aj_crew import agent_scratch
+from aj_crew import sandbox as sandbox_mod
+from aj_crew.acp import client as client_mod
+from aj_crew.acp import runtime as runtime_mod
+from aj_crew.acp.codex_sqlite import seed_private_state
+from aj_crew.acp.harness import SpawnContext
+from aj_crew.acp.harness import codex as codex_mod
+from aj_crew.acp.harness import harness_for
+from aj_crew.acp.harness.base import SpawnPlan
+from aj_crew.acp.harness.codex import _read_codex_mcp_disable_overrides
+from aj_crew.acp.types import ACP_BACKEND_CODEX, ACP_BACKEND_KIRO
 
 SQLITE_HOME = "CODEX_SQLITE_HOME"
 
@@ -204,7 +204,7 @@ def test_a_plan_without_a_seed_is_a_no_op(tmp_path):
 
 # ── Background sessions: per-server MCP disable via CODEX_CONFIG ──
 
-_BACKGROUND = "kirocrew-lite"  # session.BACKGROUND_AGENT
+_BACKGROUND = "ajcrew-lite"  # session.BACKGROUND_AGENT
 
 
 def _bg_ctx(tmp_path: Path, environ: dict[str, str] | None = None) -> SpawnContext:

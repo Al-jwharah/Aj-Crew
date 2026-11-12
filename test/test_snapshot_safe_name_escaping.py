@@ -12,7 +12,7 @@ import os
 import pytest
 from test_snapshot import unpinnable_argv
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 
 class TestABrokenDestinationLinkDoesNotAbortAMerge:
@@ -77,7 +77,7 @@ class TestArchiveNamesAreSanitizedBeforeReachingATerminal:
         assert "truncated" in out
 
     def test_ordinary_names_are_untouched(self):
-        key = "backups/workstation/kirocrew-snapshot-20260811T000000Z.tar.gz"
+        key = "backups/workstation/ajcrew-snapshot-20260811T000000Z.tar.gz"
         assert snap._safe_name(key) == key
 
     def test_bidi_overrides_are_escaped(self):

@@ -25,19 +25,19 @@ import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-from conftest import make_dir_link, requires_symlinks
-from kiro_crew import folder_steering
-from kiro_crew.dashboard.chat_folders import _resolve_folder_steering_dirs
-from kiro_crew.folder_steering import (
+from aj_crew import folder_steering
+from aj_crew.dashboard.chat_folders import _resolve_folder_steering_dirs
+from aj_crew.folder_steering import (
     _MAX_FOLDER_STEERING_DOCUMENTS,
     FOLDER_STEERING_FOOTER,
     FOLDER_STEERING_HEADER,
     collect_folder_steering,
     render_folder_steering,
 )
-from kiro_crew.member_essential_context import _MAX_SOURCE_BYTES
+from aj_crew.member_essential_context import _MAX_SOURCE_BYTES
+from conftest import make_dir_link, requires_symlinks
 
-_LOGGER_NAME = "kiro_crew.folder_steering"
+_LOGGER_NAME = "aj_crew.folder_steering"
 
 #: Every test here collects documents, and collection REFUSES where a directory
 #: cannot be opened relative to a descriptor (Windows) -- see the refusal pin in
@@ -176,7 +176,7 @@ def test_unreadable_document_is_skipped_and_debug_logged(tmp_path, caplog, monke
             return None
         return Path(path).read_bytes()
 
-    monkeypatch.setattr("kiro_crew.folder_steering.safe_read_file_bytes_nolink", _refuse)
+    monkeypatch.setattr("aj_crew.folder_steering.safe_read_file_bytes_nolink", _refuse)
     with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
         docs = collect_folder_steering([str(root)], project=None, home=_fake_home(tmp_path))
     assert [path for path, _ in docs] == [str(readable.resolve())]
@@ -204,7 +204,7 @@ def test_oversized_document_is_read_bounded_not_sliced(tmp_path, monkeypatch):
         calls.append({"path": path, "within_root": within_root, **kw})
         return real(path, within_root, **kw)
 
-    monkeypatch.setattr("kiro_crew.folder_steering.safe_read_file_bytes_nolink", _spy)
+    monkeypatch.setattr("aj_crew.folder_steering.safe_read_file_bytes_nolink", _spy)
     docs = collect_folder_steering([str(root)], project=None, home=_fake_home(tmp_path))
     assert [path for path, _ in docs] == [str(big.resolve())]
     (call,) = [c for c in calls if os.path.realpath(c["path"]) == str(big.resolve())]
@@ -541,7 +541,7 @@ def test_collection_bounds_aggregate_via_the_document_ceiling(tmp_path):
     document-count ceiling also bounds total memory. With many near-cap docs,
     collection still stops at the ceiling.
     """
-    from kiro_crew.folder_steering import _MAX_SOURCE_BYTES
+    from aj_crew.folder_steering import _MAX_SOURCE_BYTES
 
     root = tmp_path / "standards"
     big = "x" * (_MAX_SOURCE_BYTES - 8)

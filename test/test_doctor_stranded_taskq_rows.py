@@ -1,4 +1,4 @@
-"""``kirocrew doctor`` names task rows nothing is picking up, and writes nothing.
+"""``ajcrew doctor`` names task rows nothing is picking up, and writes nothing.
 
 A row that is not terminal, holds no lease and fell due long ago is what a lost
 terminal write leaves: a stopped sub-agent whose cancel never landed, parked in
@@ -16,11 +16,11 @@ from pathlib import Path
 import pytest
 from overload_fakes import Clock, open_task_store
 
-from kiro_crew import cli_doctor
-from kiro_crew.doctor_checks import resources, workload
-from kiro_crew.taskq import model
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew import cli_doctor
+from aj_crew.doctor_checks import resources, workload
+from aj_crew.taskq import model
+from aj_crew.taskq.store import TaskStore
+from aj_crew.testing.ids import UNALLOCATABLE_PID
 
 _SIX_HOURS = 6 * 3600
 
@@ -88,13 +88,13 @@ def test_the_read_returns_only_unleased_non_terminal_rows_long_past_due(
 def _seed_home(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, gateway: bool | None = True
 ) -> Path:
-    """A ``KIROCREW_HOME`` under *tmp_path*, with the gateway probe answering *gateway*.
+    """An ``AJCREW_HOME`` under *tmp_path*, with the gateway probe answering *gateway*.
 
     True is a running gateway, the case the warning is for, False a stopped one and
     None a lock probe that cannot tell. The pair doctor reads is pinned, so the
     verdict never depends on a gateway the test host happens to run.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     pid = UNALLOCATABLE_PID if gateway else None
     monkeypatch.setattr(cli_doctor, "_read_gateway_pid", lambda: pid)
     monkeypatch.setattr(resources, "_gateway_lock_indeterminate", lambda: gateway is None)
@@ -186,7 +186,7 @@ def test_doctor_caps_the_named_rows_and_counts_the_rest(
 def test_a_refused_stranded_read_is_reported_unread_and_the_counts_still_print(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    from kiro_crew.taskq import TaskStoreUnavailable
+    from aj_crew.taskq import TaskStoreUnavailable
 
     path = _seed_home(tmp_path, monkeypatch)
     s = TaskStore(path, network_fs=False).open()

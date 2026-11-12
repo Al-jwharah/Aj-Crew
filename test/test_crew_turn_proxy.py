@@ -30,7 +30,7 @@ from crew_turn_proxy_helpers import (
     _wire_handler,
 )
 
-from kiro_crew.dashboard import handlers_crew_turn as mod
+from aj_crew.dashboard import handlers_crew_turn as mod
 
 
 def test_a_disconnected_crew_has_no_turn_target():
@@ -79,7 +79,7 @@ def test_the_control_header_matches_the_containers_own_constant():
 
     config = (
         pathlib.Path(__file__).resolve().parents[1]
-        / "src/kiro_crew/apps/builtins/aws_control/crew/runtime/container/common/config.py"
+        / "src/aj_crew/apps/builtins/aws_control/crew/runtime/container/common/config.py"
     )
     spec = importlib.util.spec_from_file_location("_container_config_probe", config)
     assert spec is not None and spec.loader is not None
@@ -128,7 +128,7 @@ class TestAHeadlessCrewIsNotMintedFor:
     """
 
     def test_the_two_headless_lanes_are_recognised(self):
-        from kiro_crew.instances.registry import is_headless_provisioner
+        from aj_crew.instances.registry import is_headless_provisioner
 
         assert is_headless_provisioner("microvm")
         assert is_headless_provisioner("aws_fargate")
@@ -136,7 +136,7 @@ class TestAHeadlessCrewIsNotMintedFor:
     def test_a_crew_with_a_dashboard_is_not_headless(self):
         """The EC2 lane shares the `ssm` method and DOES run a full gateway, so a
         transport-keyed answer would be wrong in both directions."""
-        from kiro_crew.instances.registry import is_headless_provisioner
+        from aj_crew.instances.registry import is_headless_provisioner
 
         assert not is_headless_provisioner("aws_ec2")
         assert not is_headless_provisioner("builtin")
@@ -145,15 +145,15 @@ class TestAHeadlessCrewIsNotMintedFor:
     def test_the_registry_and_the_lanes_agree_on_the_ids(self):
         """One set, asserted against the lanes' own constants, so a rename is a
         failure rather than a crew the registry stops recognising."""
-        from kiro_crew.cloud.microvm.engine import MICROVM_PROVISIONER_ID
-        from kiro_crew.instances.registry import HEADLESS_CREW_PROVISIONERS
-        from kiro_crew.platform.defaults import FARGATE_PROVISIONER_ID
+        from aj_crew.cloud.microvm.engine import MICROVM_PROVISIONER_ID
+        from aj_crew.instances.registry import HEADLESS_CREW_PROVISIONERS
+        from aj_crew.platform.defaults import FARGATE_PROVISIONER_ID
 
         assert HEADLESS_CREW_PROVISIONERS == {FARGATE_PROVISIONER_ID, MICROVM_PROVISIONER_ID}
 
     def test_the_pane_and_the_tunnel_read_the_same_set(self):
-        from kiro_crew.dashboard import handlers_crew_turn
-        from kiro_crew.instances.registry import HEADLESS_CREW_PROVISIONERS
+        from aj_crew.dashboard import handlers_crew_turn
+        from aj_crew.instances.registry import HEADLESS_CREW_PROVISIONERS
 
         assert handlers_crew_turn.HEADLESS_CREW_PROVISIONERS is HEADLESS_CREW_PROVISIONERS
 
@@ -163,7 +163,7 @@ class TestAHeadlessCrewIsNotMintedFor:
         import pathlib
         import sys
 
-        import kiro_crew.instances.ssh_tunnel_manager as mod
+        import aj_crew.instances.ssh_tunnel_manager as mod
 
         source = "".join(
             pathlib.Path(sys.modules[name].__file__).read_text(encoding="utf-8")
@@ -180,8 +180,8 @@ class TestAHeadlessCrewIsNotMintedFor:
     def test_the_microvm_registration_targets_the_guests_front_port(self):
         """And not the gateway dashboard port the registry defaults to, which a
         headless crew serves nothing on."""
-        from kiro_crew.cloud.microvm import recipe as recipe_mod
-        from kiro_crew.instances.registry import DEFAULT_REMOTE_PORT
+        from aj_crew.cloud.microvm import recipe as recipe_mod
+        from aj_crew.instances.registry import DEFAULT_REMOTE_PORT
 
         assert recipe_mod.GUEST_FRONT_PORT != DEFAULT_REMOTE_PORT
 
@@ -193,10 +193,10 @@ def _lane_row(tmp_path, monkeypatch, *, tag, node_id, profile="", region=""):
     the ``mi-`` node id in ``ssm_target``. A hand-built ``id="mi-..."`` row is a shape
     production never writes, and tests against it pass while real crews get 503.
     """
-    from kiro_crew.cloud import connect
-    from kiro_crew.cloud.microvm import recipe as recipe_mod
-    from kiro_crew.instances import registry as registry_mod
-    from kiro_crew.platform.defaults import MICROVM_PROVISIONER_ID
+    from aj_crew.cloud import connect
+    from aj_crew.cloud.microvm import recipe as recipe_mod
+    from aj_crew.instances import registry as registry_mod
+    from aj_crew.platform.defaults import MICROVM_PROVISIONER_ID
 
     reg = registry_mod.InstancesRegistry(tmp_path / "instances.json")
     monkeypatch.setattr(registry_mod, "InstancesRegistry", lambda *a, **k: reg)
@@ -225,11 +225,11 @@ class TestTheRowTheLaneWritesResolvesItsOwnRecord:
 
     @staticmethod
     def _record(tmp_path, monkeypatch, **kw):
-        from kiro_crew.cloud.microvm.record import CrewRecord, CrewStore
+        from aj_crew.cloud.microvm.record import CrewRecord, CrewStore
 
         store = CrewStore(tmp_path / "crews.json")
         store.put(CrewRecord(**kw))
-        monkeypatch.setattr("kiro_crew.cloud.microvm.record.CrewStore", lambda *a, **k: store)
+        monkeypatch.setattr("aj_crew.cloud.microvm.record.CrewStore", lambda *a, **k: store)
         return store
 
     def test_the_registered_rows_id_is_the_tag_and_not_the_node(self, tmp_path, monkeypatch):
@@ -247,11 +247,11 @@ class TestTheRowTheLaneWritesResolvesItsOwnRecord:
             monkeypatch,
             tag="kc-22d27f",
             mi_id=_REAL_NODE,
-            control_secret_ref="kirocrew/crew/l2crew/CONTROL_SECRET",
+            control_secret_ref="ajcrew/crew/l2crew/CONTROL_SECRET",
             crew_name="l2crew",
         )
         row = _lane_row(tmp_path, monkeypatch, tag="kc-22d27f", node_id=_REAL_NODE)
-        assert mod.control_secret_id(row) == "kirocrew/crew/l2crew/CONTROL_SECRET"
+        assert mod.control_secret_id(row) == "ajcrew/crew/l2crew/CONTROL_SECRET"
 
     def test_the_crew_name_resolves_for_a_really_registered_row(self, tmp_path, monkeypatch):
         self._record(tmp_path, monkeypatch, tag="kc-22d27f", mi_id=_REAL_NODE, crew_name="l2crew")
@@ -274,7 +274,7 @@ class TestTheRowTheLaneWritesResolvesItsOwnRecord:
             monkeypatch,
             tag="kc-22d27f",
             mi_id=_REAL_NODE,
-            control_secret_ref="kirocrew/crew/l2crew/CONTROL_SECRET",
+            control_secret_ref="ajcrew/crew/l2crew/CONTROL_SECRET",
             crew_name="l2crew",
         )
         row = _lane_row(tmp_path, monkeypatch, tag="kc-22d27f", node_id=_REAL_NODE)
@@ -306,59 +306,59 @@ class TestTheRowTheLaneWritesResolvesItsOwnRecord:
 class TestTheSecretIsNamedByTheLaneNotTheDisplayName:
     """A crew's display name is a label, and labels are not secret names.
 
-    ``Kiro Crew Cloud (<tag>)`` is not a valid Secrets Manager name.
+    ``Aj Crew Cloud (<tag>)`` is not a valid Secrets Manager name.
     """
 
     def test_a_recorded_reference_is_preferred(self, tmp_path, monkeypatch):
-        from kiro_crew.cloud.microvm.record import CrewRecord, CrewStore
-        from kiro_crew.dashboard.handlers_crew_turn import control_secret_id
+        from aj_crew.cloud.microvm.record import CrewRecord, CrewStore
+        from aj_crew.dashboard.handlers_crew_turn import control_secret_id
 
         store = CrewStore(tmp_path / "crews.json")
         store.put(
             CrewRecord(
                 tag="l2crew",
                 mi_id=_REAL_NODE,
-                control_secret_ref="kirocrew/crew/l2crew/CONTROL_SECRET",
+                control_secret_ref="ajcrew/crew/l2crew/CONTROL_SECRET",
             )
         )
-        monkeypatch.setattr("kiro_crew.cloud.microvm.record.CrewStore", lambda *a, **k: store)
+        monkeypatch.setattr("aj_crew.cloud.microvm.record.CrewStore", lambda *a, **k: store)
 
         # The record is matched on the node the row's tunnel dials, which the
         # registry keeps in ``ssm_target``; see
         # ``TestTheCredentialIsBoundToTheNodeTheTunnelDials`` for why neither a
         # label nor the row's id can stand in for it.
         class Inst:
-            name = "Kiro Crew Cloud (l2crew)"
+            name = "Aj Crew Cloud (l2crew)"
             id = "l2crew"
             ssm_target = _REAL_NODE
             connection_method = "ssm"
             aws_profile = ""
             aws_region = ""
 
-        assert control_secret_id(Inst()) == "kirocrew/crew/l2crew/CONTROL_SECRET"
+        assert control_secret_id(Inst()) == "ajcrew/crew/l2crew/CONTROL_SECRET"
 
     def test_a_display_name_is_never_used_as_the_secret_name(self, tmp_path, monkeypatch):
-        from kiro_crew.cloud.microvm.record import CrewStore
-        from kiro_crew.dashboard.handlers_crew_turn import control_secret_id
+        from aj_crew.cloud.microvm.record import CrewStore
+        from aj_crew.dashboard.handlers_crew_turn import control_secret_id
 
         monkeypatch.setattr(
-            "kiro_crew.cloud.microvm.record.CrewStore",
+            "aj_crew.cloud.microvm.record.CrewStore",
             lambda *a, **k: CrewStore(tmp_path / "empty.json"),
         )
 
         class Inst:
-            name = "Kiro Crew Cloud (l2crew)"
+            name = "Aj Crew Cloud (l2crew)"
 
-        assert "Kiro Crew Cloud" not in control_secret_id(Inst())
+        assert "Aj Crew Cloud" not in control_secret_id(Inst())
 
     def test_an_instance_with_no_name_resolves_nothing(self, tmp_path, monkeypatch):
         """Reported as a crew that cannot be authenticated to, rather than a
         guessed name that reads some other crew's secret."""
-        from kiro_crew.cloud.microvm.record import CrewStore
-        from kiro_crew.dashboard.handlers_crew_turn import control_secret_id
+        from aj_crew.cloud.microvm.record import CrewStore
+        from aj_crew.dashboard.handlers_crew_turn import control_secret_id
 
         monkeypatch.setattr(
-            "kiro_crew.cloud.microvm.record.CrewStore",
+            "aj_crew.cloud.microvm.record.CrewStore",
             lambda *a, **k: CrewStore(tmp_path / "empty.json"),
         )
 
@@ -381,17 +381,17 @@ class TestTheCrewIsAddressedByItsOwnNameNotTheLaunchTag:
 
     @staticmethod
     def _store(tmp_path, monkeypatch, record=None):
-        from kiro_crew.cloud.microvm.record import CrewStore
+        from aj_crew.cloud.microvm.record import CrewStore
 
         store = CrewStore(tmp_path / "crews.json")
         if record is not None:
             store.put(record)
-        monkeypatch.setattr("kiro_crew.cloud.microvm.record.CrewStore", lambda *a, **k: store)
+        monkeypatch.setattr("aj_crew.cloud.microvm.record.CrewStore", lambda *a, **k: store)
         return store
 
     def test_a_tag_that_is_not_the_crew_name_still_resolves_the_name(self, tmp_path, monkeypatch):
-        from kiro_crew.cloud.microvm.record import CrewRecord
-        from kiro_crew.dashboard.handlers_crew_turn import served_crew_name
+        from aj_crew.cloud.microvm.record import CrewRecord
+        from aj_crew.dashboard.handlers_crew_turn import served_crew_name
 
         self._store(
             tmp_path,
@@ -406,8 +406,8 @@ class TestTheCrewIsAddressedByItsOwnNameNotTheLaunchTag:
     ):
         """The red half of the contract, on this side: a record that carries both
         must yield the crew name. Sending the tag is the 404 the live take hit."""
-        from kiro_crew.cloud.microvm.record import CrewRecord
-        from kiro_crew.dashboard.handlers_crew_turn import served_crew_name
+        from aj_crew.cloud.microvm.record import CrewRecord
+        from aj_crew.dashboard.handlers_crew_turn import served_crew_name
 
         self._store(
             tmp_path,
@@ -426,15 +426,15 @@ class TestTheCrewIsAddressedByItsOwnNameNotTheLaunchTag:
         look like it works and leave every other crew answering 404, so a record
         written before the name was stored resolves to nothing and the turn says
         so."""
-        from kiro_crew.cloud.microvm.record import CrewRecord
-        from kiro_crew.dashboard.handlers_crew_turn import served_crew_name
+        from aj_crew.cloud.microvm.record import CrewRecord
+        from aj_crew.dashboard.handlers_crew_turn import served_crew_name
 
         self._store(tmp_path, monkeypatch, CrewRecord(tag="kc-22d27f", mi_id=_REAL_NODE))
         row = _lane_row(tmp_path, monkeypatch, tag="kc-22d27f", node_id=_REAL_NODE)
         assert served_crew_name(row) == ""
 
     def test_a_lane_with_no_headless_crew_resolves_nothing(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers_crew_turn import served_crew_name
+        from aj_crew.dashboard.handlers_crew_turn import served_crew_name
 
         class Inst:
             name = "some-ec2-box"
@@ -787,14 +787,14 @@ class TestReadingTheControlSecret:
 
     @pytest.mark.asyncio
     async def test_a_present_secret_string_is_returned(self, monkeypatch):
-        import kiro_crew.cloud.aws as aws
+        import aj_crew.cloud.aws as aws
 
         monkeypatch.setattr(aws, "checked_json", lambda *a, **k: {"SecretString": "the-secret"})
         assert await mod._read_control_secret("sid", "prof", "us-east-1") == "the-secret"
 
     @pytest.mark.asyncio
     async def test_an_unreadable_secret_becomes_none_without_raising(self, monkeypatch):
-        import kiro_crew.cloud.aws as aws
+        import aj_crew.cloud.aws as aws
 
         def _boom(*a, **k):
             raise RuntimeError("access denied")
@@ -804,14 +804,14 @@ class TestReadingTheControlSecret:
 
     @pytest.mark.asyncio
     async def test_a_response_with_no_secret_string_is_none(self, monkeypatch):
-        import kiro_crew.cloud.aws as aws
+        import aj_crew.cloud.aws as aws
 
         monkeypatch.setattr(aws, "checked_json", lambda *a, **k: {})
         assert await mod._read_control_secret("sid", "prof", "us-east-1") is None
 
     @pytest.mark.asyncio
     async def test_a_non_dict_response_is_none(self, monkeypatch):
-        import kiro_crew.cloud.aws as aws
+        import aj_crew.cloud.aws as aws
 
         monkeypatch.setattr(aws, "checked_json", lambda *a, **k: "unexpected")
         assert await mod._read_control_secret("sid", "prof", "us-east-1") is None
@@ -820,7 +820,7 @@ class TestReadingTheControlSecret:
     async def test_the_secret_value_is_never_logged(self, monkeypatch, caplog):
         import logging
 
-        import kiro_crew.cloud.aws as aws
+        import aj_crew.cloud.aws as aws
 
         def _boom(*a, **k):
             raise RuntimeError("boom")
@@ -843,7 +843,7 @@ class TestOnlyTheMicrovmLaneIsServed:
     """
 
     def test_the_served_lanes_are_exactly_the_microvm_lane(self):
-        from kiro_crew.platform.defaults import FARGATE_PROVISIONER_ID, MICROVM_PROVISIONER_ID
+        from aj_crew.platform.defaults import FARGATE_PROVISIONER_ID, MICROVM_PROVISIONER_ID
 
         assert mod.TURN_LANE == MICROVM_PROVISIONER_ID
         assert FARGATE_PROVISIONER_ID != mod.TURN_LANE
@@ -853,7 +853,7 @@ class TestOnlyTheMicrovmLaneIsServed:
         is not one -- so nothing here resolves a name from the configuration."""
         from types import SimpleNamespace
 
-        inst = SimpleNamespace(name="Kiro Crew Cloud (kc-22d27f)", provisioner_id="aws_fargate")
+        inst = SimpleNamespace(name="Aj Crew Cloud (kc-22d27f)", provisioner_id="aws_fargate")
         assert mod.served_crew_name(inst) == ""
 
     @pytest.mark.asyncio
@@ -891,20 +891,20 @@ class TestControlSecretIdLanePrecedence:
         reference nor a path derived from the row's own label."""
         from types import SimpleNamespace
 
-        from kiro_crew.cloud.microvm.record import CrewRecord, CrewStore
+        from aj_crew.cloud.microvm.record import CrewRecord, CrewStore
 
         store = CrewStore(tmp_path / "crews.json")
         store.put(
             CrewRecord(
                 tag="someone-else",
                 mi_id=_OTHER_NODE,
-                control_secret_ref="kirocrew/crew/someone-else/CONTROL_SECRET",
+                control_secret_ref="ajcrew/crew/someone-else/CONTROL_SECRET",
             )
         )
-        monkeypatch.setattr("kiro_crew.cloud.microvm.record.CrewStore", lambda *a, **k: store)
+        monkeypatch.setattr("aj_crew.cloud.microvm.record.CrewStore", lambda *a, **k: store)
 
         inst = SimpleNamespace(
-            name="Kiro Crew Cloud (l2crew)",
+            name="Aj Crew Cloud (l2crew)",
             provisioner_id="microvm",
             id="l2crew",
             ssm_target=_REAL_NODE,
@@ -920,14 +920,14 @@ class TestControlSecretIdLanePrecedence:
         secret, so the route answers ``crew_secret_unavailable``."""
         from types import SimpleNamespace
 
-        from kiro_crew.cloud.microvm.record import CrewRecord, CrewStore
+        from aj_crew.cloud.microvm.record import CrewRecord, CrewStore
 
         store = CrewStore(tmp_path / "crews.json")
         store.put(CrewRecord(tag="l2crew", mi_id=_REAL_NODE))
-        monkeypatch.setattr("kiro_crew.cloud.microvm.record.CrewStore", lambda *a, **k: store)
+        monkeypatch.setattr("aj_crew.cloud.microvm.record.CrewStore", lambda *a, **k: store)
 
         inst = SimpleNamespace(
-            name="Kiro Crew Cloud (l2crew)",
+            name="Aj Crew Cloud (l2crew)",
             provisioner_id="microvm",
             id="l2crew",
             connection_method="ssm",
@@ -984,9 +984,9 @@ def _wire_resume(monkeypatch, *, state, raises=None, on_resume=None, on_lookup=N
     """
     from types import SimpleNamespace
 
-    import kiro_crew.cloud.config as cloud_config_mod
-    from kiro_crew.cloud.microvm import record as record_mod
-    from kiro_crew.cloud.microvm import wiring as wiring_mod
+    import aj_crew.cloud.config as cloud_config_mod
+    from aj_crew.cloud.microvm import record as record_mod
+    from aj_crew.cloud.microvm import wiring as wiring_mod
 
     class _Store:
         def get(self, tag):
@@ -1020,10 +1020,10 @@ class TestTheCredentialIsBoundToTheNodeTheTunnelDials:
     because they are what the secret is read with.
     """
 
-    REAL_REF = "kirocrew/crew/realcrew/CONTROL_SECRET"
+    REAL_REF = "ajcrew/crew/realcrew/CONTROL_SECRET"
 
     def _store(self, tmp_path, monkeypatch):
-        from kiro_crew.cloud.microvm.record import CrewRecord, CrewStore
+        from aj_crew.cloud.microvm.record import CrewRecord, CrewStore
 
         store = CrewStore(tmp_path / "crews.json")
         store.put(
@@ -1036,12 +1036,12 @@ class TestTheCredentialIsBoundToTheNodeTheTunnelDials:
                 crew_name="real",
             )
         )
-        monkeypatch.setattr("kiro_crew.cloud.microvm.record.CrewStore", lambda *a, **k: store)
+        monkeypatch.setattr("aj_crew.cloud.microvm.record.CrewStore", lambda *a, **k: store)
         return store
 
     class _Inst:
         def __init__(self, **kw):
-            from kiro_crew.platform.defaults import MICROVM_PROVISIONER_ID
+            from aj_crew.platform.defaults import MICROVM_PROVISIONER_ID
 
             self.name = ""
             # The slug of the launch tag, which is what `reg.add` writes here.
@@ -1059,7 +1059,7 @@ class TestTheCredentialIsBoundToTheNodeTheTunnelDials:
 
     def test_the_real_crews_own_row_still_resolves(self, tmp_path, monkeypatch):
         """Non-vacuity: the binding must not refuse the legitimate crew."""
-        from kiro_crew.dashboard.handlers_crew_turn import control_secret_id, served_crew_name
+        from aj_crew.dashboard.handlers_crew_turn import control_secret_id, served_crew_name
 
         self._store(tmp_path, monkeypatch)
         inst = self._Inst(ssm_target=_REAL_NODE, provisioner_tag="realcrew")
@@ -1068,7 +1068,7 @@ class TestTheCredentialIsBoundToTheNodeTheTunnelDials:
 
     def test_a_relabelled_hostile_row_gets_no_credential(self, tmp_path, monkeypatch):
         """The attack: the hostile peer's own tunnel, wearing the real crew's tag."""
-        from kiro_crew.dashboard.handlers_crew_turn import control_secret_id
+        from aj_crew.dashboard.handlers_crew_turn import control_secret_id
 
         self._store(tmp_path, monkeypatch)
         hostile = self._Inst(ssm_target=_OTHER_NODE, provisioner_tag="realcrew")
@@ -1080,7 +1080,7 @@ class TestTheCredentialIsBoundToTheNodeTheTunnelDials:
         """An ``ssh`` row dials its own host whatever ``ssm_target`` it holds, so
         copying a real crew's node, profile and region onto an SSH peer must not
         resolve that crew's secret."""
-        from kiro_crew.dashboard.handlers_crew_turn import control_secret_id
+        from aj_crew.dashboard.handlers_crew_turn import control_secret_id
 
         self._store(tmp_path, monkeypatch)
         hostile = self._Inst(connection_method="ssh", ssm_target=_REAL_NODE)
@@ -1088,16 +1088,16 @@ class TestTheCredentialIsBoundToTheNodeTheTunnelDials:
 
     def test_a_relabelled_display_name_gets_no_credential(self, tmp_path, monkeypatch):
         """Same attack through the display name, which the old tag parser read."""
-        from kiro_crew.dashboard.handlers_crew_turn import control_secret_id
+        from aj_crew.dashboard.handlers_crew_turn import control_secret_id
 
         self._store(tmp_path, monkeypatch)
-        hostile = self._Inst(ssm_target=_OTHER_NODE, name="Kiro Crew Cloud (realcrew)")
+        hostile = self._Inst(ssm_target=_OTHER_NODE, name="Aj Crew Cloud (realcrew)")
         assert control_secret_id(hostile) == ""
 
     def test_a_relabelled_hostile_row_is_not_told_the_crew_name(self, tmp_path, monkeypatch):
         """`model` is also resolved from the record, and naming the real crew to a
         hostile front is what lets it answer as that crew instead of 404ing."""
-        from kiro_crew.dashboard.handlers_crew_turn import served_crew_name
+        from aj_crew.dashboard.handlers_crew_turn import served_crew_name
 
         self._store(tmp_path, monkeypatch)
         hostile = self._Inst(ssm_target=_OTHER_NODE, provisioner_tag="realcrew")
@@ -1111,7 +1111,7 @@ class TestTheCredentialIsBoundToTheNodeTheTunnelDials:
         A row keeping the real crew's `id` but pointing `ssm_target` at another node
         would pass a check on `id` and send the secret down the other node's tunnel.
         """
-        from kiro_crew.dashboard.handlers_crew_turn import control_secret_id, served_crew_name
+        from aj_crew.dashboard.handlers_crew_turn import control_secret_id, served_crew_name
 
         self._store(tmp_path, monkeypatch)
         # The row the reviewer described: `id` is the real crew's NODE id, which
@@ -1124,7 +1124,7 @@ class TestTheCredentialIsBoundToTheNodeTheTunnelDials:
 
     def test_a_row_with_no_node_at_all_gets_no_credential(self, tmp_path, monkeypatch):
         """There is nothing to match and nothing to dial, so there is no crew."""
-        from kiro_crew.dashboard.handlers_crew_turn import control_secret_id
+        from aj_crew.dashboard.handlers_crew_turn import control_secret_id
 
         self._store(tmp_path, monkeypatch)
         assert control_secret_id(self._Inst(ssm_target="", provisioner_tag="realcrew")) == ""
@@ -1138,7 +1138,7 @@ class TestTheCredentialIsBoundToTheNodeTheTunnelDials:
         """The secret is READ with the row's profile and region, so a row that
         keeps the node but moves the account points the read at an account the
         attacker controls, where that secret name can be made to exist."""
-        from kiro_crew.dashboard.handlers_crew_turn import control_secret_id
+        from aj_crew.dashboard.handlers_crew_turn import control_secret_id
 
         self._store(tmp_path, monkeypatch)
         inst = self._Inst(ssm_target=_REAL_NODE, provisioner_tag="realcrew", **{field: value})

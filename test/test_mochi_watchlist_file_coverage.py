@@ -13,8 +13,8 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.apps.builtins.mochi import queue_file as qf
-from kiro_crew.apps.builtins.mochi import watchlist_file as wf
+from aj_crew.apps.builtins.mochi import queue_file as qf
+from aj_crew.apps.builtins.mochi import watchlist_file as wf
 
 NOW = 1_800_000_000_000  # epoch milliseconds, on a whole second
 STAMP = qf._iso(NOW)

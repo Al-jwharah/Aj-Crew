@@ -33,7 +33,7 @@ vi.mock('../api/client', async () => ({
   api: {
     kiroPrerequisite: vi.fn(),
     repairKiroPrerequisiteSpecs: vi.fn(),
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     acpBackends: vi.fn(),
     acpBackendRecheck: vi.fn(),
     patchConfig: vi.fn(),
@@ -61,7 +61,7 @@ describe('KiroPrerequisiteGate', () => {
     localStorage.clear()
     // Default: Kiro CLI is the configured agent and no other harness is listed,
     // so every pre-existing case exercises the Kiro checks exactly as before.
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ agent: { acp_backend: 'kiro' } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ agent: { acp_backend: 'kiro' } })
     vi.mocked(api.acpBackends).mockResolvedValue({ backends: [] })
   })
 
@@ -112,10 +112,10 @@ describe('KiroPrerequisiteGate', () => {
     // A too-old kiro-cli (acp_supported false) refuses KAS — keep polling. This
     // is the case the marker also refuses, so the two cannot drift.
     expect(acpBackendsRefetchInterval(status({ acp_supported: false }), true, kas)).toBe(30_000)
-    // KAS loads Kiro Crew's agent specs: a missing or rejected spec keeps the
+    // KAS loads Aj Crew's agent specs: a missing or rejected spec keeps the
     // gate on its repair card instead of opening the dashboard.
-    expect(acpBackendsRefetchInterval(status({ missing_agent_specs: ['kirocrew-lite'] }), true, kas)).toBe(30_000)
-    expect(acpBackendsRefetchInterval(status({ rejected_agent_specs: ['kirocrew'] }), true, kas)).toBe(30_000)
+    expect(acpBackendsRefetchInterval(status({ missing_agent_specs: ['ajcrew-lite'] }), true, kas)).toBe(30_000)
+    expect(acpBackendsRefetchInterval(status({ rejected_agent_specs: ['ajcrew'] }), true, kas)).toBe(30_000)
     // Only KAS takes the acp_supported rule: any other backend without
     // independent_setup keeps polling, exactly as the marker refuses it.
     const other = probe({ id: 'goose', policy_id: 'goose', independent_setup: false })
@@ -203,7 +203,7 @@ describe('KiroPrerequisiteGate', () => {
   })
 
   it('sends the user to Kiro CLI setup instead of installing anything', async () => {
-    // Kiro Crew does not install Kiro CLI. A missing CLI must offer a link to
+    // Aj Crew does not install Kiro CLI. A missing CLI must offer a link to
     // Kiro's own setup page and NO install action of any kind, so there is
     // nothing for the user to press that would download and run a script.
     vi.mocked(api.kiroPrerequisite).mockResolvedValue(status({ platform: 'Windows' }))
@@ -286,7 +286,7 @@ describe('KiroPrerequisiteGate', () => {
     // text is still the whole command. The hint saying what the path is applies
     // to both commands equally, so it appears ONCE before either path is read.
     const bin =
-      "'/Applications/Kiro Crew.app/Contents/Resources/backend-dist/kiro-cli/kiro-cli-chat'"
+      "'/Applications/Aj Crew.app/Contents/Resources/backend-dist/kiro-cli/kiro-cli-chat'"
     vi.mocked(api.kiroPrerequisite).mockResolvedValue(status({
       installed: true,
       authenticated: false,
@@ -327,7 +327,7 @@ describe('KiroPrerequisiteGate', () => {
     // the hint says what that run does and names the executable it ends in.
     const prefix =
       'powershell.exe -NoProfile -Command "Set-Item Env:KIRO_NO_AUTO_UPDATE 1; '
-      + "& 'C:\\Program Files\\Kiro Crew\\resources\\kiro-cli\\kiro-cli.exe'"
+      + "& 'C:\\Program Files\\Aj Crew\\resources\\kiro-cli\\kiro-cli.exe'"
     vi.mocked(api.kiroPrerequisite).mockResolvedValue(status({
       installed: true,
       authenticated: false,
@@ -374,7 +374,7 @@ describe('KiroPrerequisiteGate', () => {
   })
 
   it('exposes no way to start a sign-in from the dashboard', async () => {
-    // Kiro Crew does not authenticate for the user: there is no device-flow
+    // Aj Crew does not authenticate for the user: there is no device-flow
     // trigger, no sign-in URL, and no device code surfaced anywhere.
     vi.mocked(api.kiroPrerequisite).mockResolvedValue(status({ installed: true }))
 
@@ -493,24 +493,24 @@ describe('KiroPrerequisiteGate', () => {
       ready: false,
       initial_setup_complete: true,
       repair_required: true,
-      missing_agent_specs: ['kirocrew.json', 'kirocrew-lite.json'],
+      missing_agent_specs: ['ajcrew.json', 'ajcrew-lite.json'],
     }))
 
     renderWithProviders(
       <KiroPrerequisiteGate><div>Dashboard loaded</div></KiroPrerequisiteGate>,
     )
 
-    expect(await screen.findByText("Kiro Crew's agent specs are not installed")).toBeInTheDocument()
+    expect(await screen.findByText("Aj Crew's agent specs are not installed")).toBeInTheDocument()
     expect(screen.queryByText('Dashboard loaded')).not.toBeInTheDocument()
     // Names the actual files, so the user can see what to look for on disk.
-    expect(screen.getByText(/kirocrew\.json/)).toBeInTheDocument()
-    expect(screen.getByText(/kirocrew-lite\.json/)).toBeInTheDocument()
+    expect(screen.getByText(/ajcrew\.json/)).toBeInTheDocument()
+    expect(screen.getByText(/ajcrew-lite\.json/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Check again' })).toBeEnabled()
   })
 
   it('gates on a spec that is PRESENT but which kiro-cli refuses', async () => {
     // The gap the missing-specs card cannot cover: statting the file says it is
-    // there, while kiro-cli drops it from its agent table, so Kiro Crew's agent
+    // there, while kiro-cli drops it from its agent table, so Aj Crew's agent
     // silently becomes kiro-cli's default one with none of its MCP servers.
     vi.mocked(api.kiroPrerequisite).mockResolvedValue(status({
       installed: true,
@@ -519,9 +519,9 @@ describe('KiroPrerequisiteGate', () => {
       initial_setup_complete: true,
       repair_required: true,
       missing_agent_specs: [],
-      rejected_agent_specs: ['kirocrew.json'],
+      rejected_agent_specs: ['ajcrew.json'],
       agent_spec_rejection_detail:
-        'Error: Json supplied at /home/u/.kiro/agents/kirocrew.json is invalid: '
+        'Error: Json supplied at /home/u/.kiro/agents/ajcrew.json is invalid: '
         + 'data did not match any variant of untagged enum Repr',
     }))
 
@@ -530,12 +530,12 @@ describe('KiroPrerequisiteGate', () => {
     )
 
     expect(
-      await screen.findByText("Kiro CLI will not load Kiro Crew's agent specs"),
+      await screen.findByText("Kiro CLI will not load Aj Crew's agent specs"),
     ).toBeInTheDocument()
     expect(screen.queryByText('Dashboard loaded')).not.toBeInTheDocument()
     // Exact match on the list entry: the reason below also contains the filename
     // as part of a full path, so a loose regex matches both nodes.
-    expect(screen.getByText('kirocrew.json')).toBeInTheDocument()
+    expect(screen.getByText('ajcrew.json')).toBeInTheDocument()
     // kiro-cli's own words are what make the report actionable, so they are
     // surfaced verbatim rather than replaced with our own paraphrase.
     expect(screen.getByText(/data did not match any variant/)).toBeInTheDocument()
@@ -552,7 +552,7 @@ describe('KiroPrerequisiteGate', () => {
       installed: true,
       authenticated: true,
       initial_setup_complete: true,
-      rejected_agent_specs: ['kirocrew.json'],
+      rejected_agent_specs: ['ajcrew.json'],
     }))
 
     renderWithProviders(
@@ -563,11 +563,11 @@ describe('KiroPrerequisiteGate', () => {
     expect(note).toHaveTextContent('does not rewrite them')
     // The leading cause is a kiro-cli upgrade, which re-checking cannot fix, so
     // both remedies must be present as their own lines rather than buried.
-    expect(screen.getByText(/Update Kiro Crew\./)).toBeInTheDocument()
+    expect(screen.getByText(/Update Aj Crew\./)).toBeInTheDocument()
     expect(screen.getByText(/Rewrite the specs from scratch/)).toBeInTheDocument()
     // The command must NOT come from a catalog value: a translator must not be
     // able to alter a string the user pastes into a shell.
-    const command = screen.getByText('kirocrew setup --agent-only --clean')
+    const command = screen.getByText('ajcrew setup --agent-only --clean')
     expect(command.tagName).toBe('CODE')
     // The label the copy names must be the label actually rendered.
     expect(screen.getByRole('button', { name: 'Check again' })).toBeInTheDocument()
@@ -580,8 +580,8 @@ describe('KiroPrerequisiteGate', () => {
       installed: true,
       authenticated: true,
       initial_setup_complete: true,
-      missing_agent_specs: ['kirocrew.json'],
-      rejected_agent_specs: ['kirocrew-lite.json'],
+      missing_agent_specs: ['ajcrew.json'],
+      rejected_agent_specs: ['ajcrew-lite.json'],
     }))
 
     renderWithProviders(
@@ -589,10 +589,10 @@ describe('KiroPrerequisiteGate', () => {
     )
 
     expect(
-      await screen.findByText("Kiro Crew's agent specs are not installed"),
+      await screen.findByText("Aj Crew's agent specs are not installed"),
     ).toBeInTheDocument()
     expect(
-      screen.queryByText("Kiro CLI will not load Kiro Crew's agent specs"),
+      screen.queryByText("Kiro CLI will not load Aj Crew's agent specs"),
     ).not.toBeInTheDocument()
   })
 
@@ -604,7 +604,7 @@ describe('KiroPrerequisiteGate', () => {
       installed: true,
       authenticated: true,
       initial_setup_complete: true,
-      missing_agent_specs: ['kirocrew.json'],
+      missing_agent_specs: ['ajcrew.json'],
     }))
 
     renderWithProviders(
@@ -623,7 +623,7 @@ describe('KiroPrerequisiteGate', () => {
       installed: true,
       authenticated: true,
       initial_setup_complete: true,
-      missing_agent_specs: ['kirocrew.json'],
+      missing_agent_specs: ['ajcrew.json'],
       agent_spec_repair_error: 'FileNotFoundError: no shipped defaults.json',
     }))
 
@@ -645,7 +645,7 @@ describe('KiroPrerequisiteGate', () => {
       installed: true,
       authenticated: true,
       initial_setup_complete: true,
-      missing_agent_specs: ['kirocrew.json'],
+      missing_agent_specs: ['ajcrew.json'],
     }))
     vi.mocked(api.repairKiroPrerequisiteSpecs).mockResolvedValue(status({
       installed: true,
@@ -678,13 +678,13 @@ describe('KiroPrerequisiteGate', () => {
       installed: true,
       authenticated: true,
       initial_setup_complete: true,
-      missing_agent_specs: ['kirocrew.json'],
+      missing_agent_specs: ['ajcrew.json'],
     }))
     vi.mocked(api.repairKiroPrerequisiteSpecs).mockResolvedValue(status({
       installed: true,
       authenticated: true,
       initial_setup_complete: true,
-      missing_agent_specs: ['kirocrew.json'],
+      missing_agent_specs: ['ajcrew.json'],
       agent_spec_repair_error: 'FileNotFoundError: no shipped defaults.json',
     }))
 
@@ -706,7 +706,7 @@ describe('KiroPrerequisiteGate', () => {
       installed: true,
       authenticated: true,
       initial_setup_complete: true,
-      missing_agent_specs: ['kirocrew.json'],
+      missing_agent_specs: ['ajcrew.json'],
     }))
     vi.mocked(api.repairKiroPrerequisiteSpecs).mockRejectedValue(
       new ApiError(403, 'dashboard owner required'),
@@ -769,7 +769,7 @@ describe('KiroPrerequisiteGate', () => {
     )
 
     expect(await screen.findByText('Dashboard loaded')).toBeInTheDocument()
-    expect(screen.queryByText('Kiro Crew needs Kiro sign-in.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Aj Crew needs Kiro sign-in.')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Sign in to Kiro' })).not.toBeInTheDocument()
     expect(screen.queryByText('kiro-cli login')).not.toBeInTheDocument()
     // Nothing is paused: no gate chrome of any kind renders over the app.
@@ -865,7 +865,7 @@ describe('KiroPrerequisiteGate', () => {
 
     await waitFor(() => expect(api.kiroPrerequisite).toHaveBeenCalled())
     expect(screen.getByText('Dashboard loaded')).toBeInTheDocument()
-    expect(screen.queryByText('Kiro Crew needs Kiro sign-in.')).not.toBeInTheDocument()
+    expect(screen.queryByText('Aj Crew needs Kiro sign-in.')).not.toBeInTheDocument()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(screen.queryByText('Your crew is almost ready.')).not.toBeInTheDocument()
   })
@@ -1014,7 +1014,7 @@ describe('KiroPrerequisiteGate', () => {
     // so the gate would render full-screen setup-branded chrome at a user who has
     // completed setup. The client remembers first-run completion locally, so a
     // returning user gets the dashboard plus a reauth banner instead.
-    localStorage.setItem('kirocrew:kiro-setup-complete', '1')
+    localStorage.setItem('ajcrew:kiro-setup-complete', '1')
     vi.mocked(api.kiroPrerequisite).mockRejectedValue(new ApiError(500, 'Probe failed'))
 
     renderWithProviders(
@@ -1030,7 +1030,7 @@ describe('KiroPrerequisiteGate', () => {
     // An unreachable status check is not evidence the CLI is broken, and the
     // turn reports the truth either way — so a returning user keeps a clean,
     // fully usable dashboard rather than a "could not check" banner.
-    localStorage.setItem('kirocrew:kiro-setup-complete', '1')
+    localStorage.setItem('ajcrew:kiro-setup-complete', '1')
     vi.mocked(api.kiroPrerequisite).mockResolvedValue(
       null as unknown as KiroPrerequisiteStatus,
     )
@@ -1073,7 +1073,7 @@ describe('KiroPrerequisiteGate', () => {
 
     expect(await screen.findByText('Dashboard loaded')).toBeInTheDocument()
     await waitFor(() =>
-      expect(localStorage.getItem('kirocrew:kiro-setup-complete')).toBe('1'),
+      expect(localStorage.getItem('ajcrew:kiro-setup-complete')).toBe('1'),
     )
   })
 
@@ -1144,7 +1144,7 @@ describe('KiroPrerequisiteGate', () => {
     // A momentary failure identifies nothing to reconfigure, so the host
     // remedies must stay hidden — they would be advice to break a working setup.
     expect(screen.queryByText('How to fix')).not.toBeInTheDocument()
-    expect(screen.queryByText('kirocrew service install')).not.toBeInTheDocument()
+    expect(screen.queryByText('ajcrew service install')).not.toBeInTheDocument()
   })
 
   it('offers the cap remedy on a transient verdict without telling the user to act now', async () => {
@@ -1193,7 +1193,7 @@ describe('KiroPrerequisiteGate', () => {
     )
 
     expect(await screen.findByText('How to fix')).toBeInTheDocument()
-    expect(screen.getByText('kirocrew service install')).toBeInTheDocument()
+    expect(screen.getByText('ajcrew service install')).toBeInTheDocument()
     // `aa-exec -p` must NOT be offered: entering a named profile is not
     // permitted for an unconfined user and aa-exec execs unconfined instead of
     // failing, so the command looks applied and changes nothing.
@@ -1203,7 +1203,7 @@ describe('KiroPrerequisiteGate', () => {
     expect(screen.queryByText(/provides no OS-level sandbox/)).not.toBeInTheDocument()
     expect(screen.getByText(/allows user namespaces/)).toBeInTheDocument()
     // The reporter's explicit ask: tell me to run doctor.
-    expect(screen.getByText('kirocrew doctor')).toBeInTheDocument()
+    expect(screen.getByText('ajcrew doctor')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Linux sandbox guide/ })).toHaveAttribute(
       'href',
       expect.stringContaining('docs/guides/install.md'),
@@ -1227,7 +1227,7 @@ describe('KiroPrerequisiteGate', () => {
       <KiroPrerequisiteGate><div>Dashboard loaded</div></KiroPrerequisiteGate>,
     )
 
-    const command = await screen.findByText('kirocrew service install')
+    const command = await screen.findByText('ajcrew service install')
     const button = command.closest('button')
     expect(button).not.toBeNull()
     fireEvent.click(button!)
@@ -1235,7 +1235,7 @@ describe('KiroPrerequisiteGate', () => {
     // Read out of the DOM, so what is copied is exactly what is shown — not a
     // duplicated prop that could drift from the rendered text.
     await waitFor(() =>
-      expect(copyToClipboard).toHaveBeenCalledWith('kirocrew service install'),
+      expect(copyToClipboard).toHaveBeenCalledWith('ajcrew service install'),
     )
   })
 
@@ -1256,7 +1256,7 @@ describe('KiroPrerequisiteGate', () => {
       <KiroPrerequisiteGate><div>Dashboard loaded</div></KiroPrerequisiteGate>,
     )
 
-    const command = await screen.findByText('kirocrew service install')
+    const command = await screen.findByText('ajcrew service install')
     const list = command.closest('ul, ol')
     expect(list).not.toBeNull()
     expect(list!.querySelectorAll('li')).toHaveLength(1)
@@ -1297,9 +1297,9 @@ describe('KiroPrerequisiteGate', () => {
     expect(screen.queryByText(/provides no OS-level sandbox/)).not.toBeInTheDocument()
     expect(screen.getByText(/grants the user and mount namespaces/)).toBeInTheDocument()
     // A host userns remedy would be the wrong fix for a pod that already grants them.
-    expect(screen.queryByText('kirocrew service install')).not.toBeInTheDocument()
+    expect(screen.queryByText('ajcrew service install')).not.toBeInTheDocument()
     expect(screen.queryByText(/sysctl/)).not.toBeInTheDocument()
-    expect(screen.getByText('kirocrew doctor')).toBeInTheDocument()
+    expect(screen.getByText('ajcrew doctor')).toBeInTheDocument()
   })
 
   it('copies each container spelling on its own', async () => {
@@ -1329,7 +1329,7 @@ describe('KiroPrerequisiteGate', () => {
     fireEvent.click(docker.closest('button')!)
     await waitFor(() =>
       expect(copyToClipboard).toHaveBeenLastCalledWith(
-        '--security-opt apparmor=unconfined --security-opt seccomp=kirocrew-seccomp.json',
+        '--security-opt apparmor=unconfined --security-opt seccomp=ajcrew-seccomp.json',
       ),
     )
   })
@@ -1351,9 +1351,9 @@ describe('KiroPrerequisiteGate', () => {
       <KiroPrerequisiteGate><div>Dashboard loaded</div></KiroPrerequisiteGate>,
     )
 
-    expect(await screen.findByText('kirocrew doctor')).toBeInTheDocument()
+    expect(await screen.findByText('ajcrew doctor')).toBeInTheDocument()
     expect(screen.queryByText('How to fix')).not.toBeInTheDocument()
-    expect(screen.queryByText('kirocrew service install')).not.toBeInTheDocument()
+    expect(screen.queryByText('ajcrew service install')).not.toBeInTheDocument()
     // Unclassified means the generic body is the honest one.
     expect(screen.getByText(/provides no OS-level sandbox/)).toBeInTheDocument()
   })

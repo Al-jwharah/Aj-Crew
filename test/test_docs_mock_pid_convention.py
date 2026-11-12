@@ -35,7 +35,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DOC = REPO_ROOT / "docs" / "system-specs" / "common" / "testing-conventions.md"
-PLATFORM_COMPAT = REPO_ROOT / "src" / "kiro_crew" / "platform_compat.py"
+PLATFORM_COMPAT = REPO_ROOT / "src" / "aj_crew" / "platform_compat.py"
 
 # The sentence that opens the entry. Matched on prose rather than a heading
 # because the entry sits inside a shared section.

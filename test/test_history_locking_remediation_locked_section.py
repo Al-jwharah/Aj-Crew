@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.history import ConversationLog
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import platform_compat
+from aj_crew.history import ConversationLog
+from aj_crew.testing.wait import async_wait_until
 
 # ── Bug 6: reduced lock hold — no fsync under lock for one-line metadata ──────
 #: The three hot metadata writes, each as ``(write, applied)``: *applied* checks
@@ -80,7 +80,7 @@ class TestReducedLockHold:
     ) -> None:
         import stat
 
-        from kiro_crew import history_rewrite
+        from aj_crew import history_rewrite
 
         log = _two_rows(tmp_path)
         depth = _record_lock_depth(monkeypatch)
@@ -120,7 +120,7 @@ class TestReducedLockHold:
         The staged copy does not match the file, so it is discarded and the edit
         is recomputed under the lock: the other writer's row or field survives.
         """
-        from kiro_crew import history_rewrite
+        from aj_crew import history_rewrite
 
         log = _two_rows(tmp_path)
         real_stage = history_rewrite.stage_replacement
@@ -162,7 +162,7 @@ class TestReducedLockHold:
         before the locked rewrite writes its own copy, so a disk with room for
         one replacement still takes the edit.
         """
-        from kiro_crew import history_rewrite
+        from aj_crew import history_rewrite
 
         log = _two_rows(tmp_path)
         real_stage = history_rewrite.stage_replacement
@@ -202,7 +202,7 @@ class TestReducedLockHold:
         The staged copy must be discarded and the edit rebuilt under the lock,
         or the other writer's row is lost.
         """
-        from kiro_crew import history_rewrite
+        from aj_crew import history_rewrite
 
         log = _two_rows(tmp_path)
         path = log._path("k")
@@ -328,7 +328,7 @@ class TestReducedLockHold:
         so only the writer's cleanup around the call can remove the staged file,
         a whole copy of the transcript. The transcript keeps its old bytes.
         """
-        from kiro_crew import history_rewrite
+        from aj_crew import history_rewrite
 
         log = _two_rows(tmp_path)
         path = log._path("k")
@@ -359,7 +359,7 @@ class TestReducedLockHold:
         returns. The writer's cleanup then targets a name the rename already
         moved, so the published edit and both rows survive.
         """
-        from kiro_crew import history_rewrite
+        from aj_crew import history_rewrite
 
         log = _two_rows(tmp_path)
         real_publish = history_rewrite.publish_replacement
@@ -454,7 +454,7 @@ class TestOnLoopFdCleanupDeferred:
                 # must be dispatched to the default executor, not run inline.
                 # This deliberately exercises the low-level on-loop primitive, so
                 # it bypasses the strict off-loop discipline guard.
-                from kiro_crew.history import allow_on_loop_persist
+                from aj_crew.history import allow_on_loop_persist
 
                 with allow_on_loop_persist():
                     log.append("k", "assistant", "on-loop-append")
@@ -542,7 +542,7 @@ class TestAppendIfAbsent:
                 slowed_once.set()
                 go.set()
                 # flake-ok: pre-existing 300 ms hold inside the first writer's slowed read that widens the check window the second writer races, moved verbatim; tracked for a de-flake pass
-                # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing sleep, moved verbatim; tracked for a de-flake pass
+                # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing sleep, moved verbatim; tracked for a de-flake pass
                 time.sleep(0.3)
             return res
 
@@ -572,7 +572,7 @@ class TestAppendIfAbsent:
         import asyncio
         import threading
 
-        from kiro_crew.history import append_if_absent_off_loop
+        from aj_crew.history import append_if_absent_off_loop
 
         log = ConversationLog(base_dir=tmp_path)
         loop_thread = threading.get_ident()

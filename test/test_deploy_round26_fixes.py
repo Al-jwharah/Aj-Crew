@@ -1,4 +1,4 @@
-"""Regression tests for Round-26 findings (KiroCrew PR #6).
+"""Regression tests for Round-26 findings (Aj Crew PR #6).
 
 F1: recall gets the same preview-binding as destroy (R25) — BE verifies
     expected ids at confirm; FE runs the two-call flow.
@@ -11,7 +11,7 @@ _ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_f1_backend_recall_verifies_expected_resource_ids():
-    src = (_ROOT / "src/kiro_crew/deploy/handlers_sites.py").read_text(encoding="utf-8")
+    src = (_ROOT / "src/aj_crew/deploy/handlers_sites.py").read_text(encoding="utf-8")
     seg = src.split("async def _do_recall", 1)[1].split("\nasync def ", 1)[0]
     assert "expected_distribution_id" in seg
     assert "resource ids changed since preview" in seg
@@ -33,7 +33,7 @@ def test_f1_frontend_two_call_recall():
 
 
 def test_f2_no_raw_json_response_result_in_deploy_handlers():
-    deploy = _ROOT / "src/kiro_crew/deploy"
+    deploy = _ROOT / "src/aj_crew/deploy"
     names = ("handlers_guards.py", "handlers_content.py", "handlers_sites.py", "handlers.py")
     src = "".join((deploy / name).read_text(encoding="utf-8") for name in names)
     assert "web.json_response(result)" not in src

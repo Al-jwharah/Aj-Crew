@@ -42,7 +42,7 @@ const tags = [
 
 const now = Math.floor(Date.now() / 1000)
 const mkSlot = (key, title, state) => ({
-  key, title, running: false, last_message: '', messages: 6, agent: 'kirocrew',
+  key, title, running: false, last_message: '', messages: 6, agent: 'ajcrew',
   memory_mode: 'persistent', project: '', folder_id: '', modified: now,
   tags: [], source_links: [], source_links_total: 0,
   ...state,

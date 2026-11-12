@@ -146,7 +146,7 @@ def test_the_patrol_still_reads_a_torn_state_as_empty(
 ):
     proc_root = tmp_path / "proc-empty"
     proc_root.mkdir()
-    monkeypatch.setenv("KIROCREW_PROBE_PROC_ROOT", str(proc_root))
+    monkeypatch.setenv("AJCREW_PROBE_PROC_ROOT", str(proc_root))
     state = _state_of(config)
     state.write_text("{torn", encoding="utf-8")
     assert mod.main(["--config", str(config)]) == 0

@@ -22,15 +22,15 @@ from apps_registry_helpers import _install_script_runs_on_this_host  # noqa: F40
 from apps_registry_helpers import unsandboxed_spawn  # noqa: F401 - fixture
 from apps_registry_helpers import _identity_harness
 
+from aj_crew.apps import registry
+from aj_crew.apps.manifest import AppManifest
 from conftest import requires_symlinks
-from kiro_crew.apps import registry
-from kiro_crew.apps.manifest import AppManifest
 
 #: The install's refusal for a root `data` the data directory cannot stand beside,
 #: as `manager.gateway_data_dir_obstruction` spells it -- the transaction must carry it
 #: unchanged, so it is pinned here as text.
 _DATA_IS_A_FILE = (
-    "`data` in the app tree is a file; Kiro Crew creates the app's data directory at "
+    "`data` in the app tree is a file; Aj Crew creates the app's data directory at "
     "that path and cannot install beside it."
 )
 
@@ -134,7 +134,7 @@ async def test_onInstall_rewriting_the_manifest_loses_the_desktop_requirements_w
 
     assert result["ok"] is False
     assert result["error"] == (
-        "Python apps that require a build step are not supported in Kiro Crew's desktop "
+        "Python apps that require a build step are not supported in Aj Crew's desktop "
         "build: its bundled interpreter is inside the signed application bundle and cannot "
         "install packages"
     )
@@ -369,7 +369,7 @@ async def test_a_self_managed_entry_keeps_the_desktop_refusal(monkeypatch, tmp_p
         return MagicMock(ok=True, notice="")
 
     # Imported inside the self-managed branch, so patched at its home.
-    monkeypatch.setattr("kiro_crew.apps.manager.register_external_app", _register)
+    monkeypatch.setattr("aj_crew.apps.manager.register_external_app", _register)
     monkeypatch.setattr(registry, "set_app_provenance", lambda *a, **k: None)
     monkeypatch.setattr(registry.install_receipt, "dispatch_async", AsyncMock())
     monkeypatch.setattr(registry, "install_app", lambda *a, **k: pytest.fail("managed path"))
@@ -379,7 +379,7 @@ async def test_a_self_managed_entry_keeps_the_desktop_refusal(monkeypatch, tmp_p
     assert build_kwargs and build_kwargs[0]["self_managed"] is True
     assert result["ok"] is False
     assert result["error"] == (
-        "Python apps that require a build step are not supported in Kiro Crew's desktop "
+        "Python apps that require a build step are not supported in Aj Crew's desktop "
         "build: its bundled interpreter is inside the signed application bundle and cannot "
         "install packages"
     )
@@ -452,8 +452,8 @@ async def test_a_final_desktop_refusal_removes_the_layout_files_that_appeared(
             # Neither a layout input: a RUNTIME artifact (the provisioned deps tree)
             # and a GATEWAY-owned root name. The removal touches the build gate's
             # four inputs and nothing else, so both stay put.
-            (src / ".kirocrew-deps").mkdir()
-            (src / ".kirocrew-deps" / "marker").write_text("", encoding="utf-8")
+            (src / ".ajcrew-deps").mkdir()
+            (src / ".ajcrew-deps" / "marker").write_text("", encoding="utf-8")
             (src / ".app_secret").write_text("not-the-gateway's\n", encoding="utf-8")
         # `git reset --keep` is recorded, not run: it restores tracked files only,
         # and both new files are untracked either way.
@@ -496,7 +496,7 @@ async def test_a_final_desktop_refusal_removes_the_layout_files_that_appeared(
     assert (src / "NOTES.md").read_text(encoding="utf-8") == "mine\n"
     # The runtime's and the gateway's leaves are not the removal's to touch: they
     # are exactly where the script left them.
-    assert (src / ".kirocrew-deps" / "marker").is_file()
+    assert (src / ".ajcrew-deps" / "marker").is_file()
     assert (src / ".app_secret").read_text(encoding="utf-8") == "not-the-gateway's\n"
     # Set aside, not removed: exactly one `.stale-*` sibling appears under
     # app-sources, holding exactly the two files that appeared, and the log names
@@ -815,11 +815,11 @@ async def test_a_root_data_file_is_refused_before_any_record_is_written(monkeypa
     copy raises the install's own refusal: the transaction reports it as a refusal
     (no desktop code -- a browser install refuses the same tree), registration is
     never reached, no record exists, and the fresh clone is rolled back."""
-    from kiro_crew.apps.manager import _read_installed
+    from aj_crew.apps.manager import _read_installed
 
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     sources, src = _fresh_checkout_refused_by_the_final_pass(monkeypatch, tmp_path)
     (src / "data").write_text("a file where the gateway's data directory goes\n", encoding="utf-8")
 
@@ -858,11 +858,11 @@ async def test_a_preview_copy_failure_after_the_script_rolls_the_fresh_checkout_
     It is not a verdict, so a generic handler would leave the poisoned fresh clone in
     the slot. The clone is deleted whole, with no desktop code, and a re-clone installs.
     """
-    from kiro_crew.apps.manager import _read_installed
+    from aj_crew.apps.manager import _read_installed
 
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     sources, src = _fresh_checkout_refused_by_the_final_pass(monkeypatch, tmp_path)
 
     class _Proc:
@@ -936,11 +936,11 @@ async def test_a_subdirectory_swapped_for_a_symlink_loop_still_rolls_the_fresh_c
     ``Path.resolve`` raises ``RuntimeError`` on a loop, not ``OSError``, so the
     containment re-check must skip it like an escape and the fresh clone is deleted.
     """
-    from kiro_crew.apps.manager import _read_installed
+    from aj_crew.apps.manager import _read_installed
 
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     sources, src = _fresh_checkout_refused_by_the_final_pass(monkeypatch, tmp_path)
     pkg = src / "pkg"
     pkg.mkdir()
@@ -995,11 +995,11 @@ async def test_the_streamed_refusal_names_the_update_when_the_app_is_installed(
     The fresh-install fixture above, plus the installed record the page's
     `app.installed` is read from: the final desktop pass refuses as before, and
     the streamed line says which action it refused."""
-    from kiro_crew.apps.manager import InstalledApp, _write_installed, app_dir
+    from aj_crew.apps.manager import InstalledApp, _write_installed, app_dir
 
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     sources, src = _fresh_checkout_refused_by_the_final_pass(monkeypatch, tmp_path)
     monkeypatch.setattr(registry, "update_app", lambda *a, **k: pytest.fail("registered"))
     app_dir("demoapp").mkdir(parents=True)
@@ -1350,10 +1350,10 @@ async def test_a_refusal_after_the_build_rolls_the_checkout_back(monkeypatch, tm
     or ``install_app``/``update_app`` refusing) can come after an update has
     fast-forwarded the checkout in place, which the ``finally`` does not restore.
     It takes the shared post-script rollback, with the pre-pull commit."""
-    from kiro_crew.apps import admission
-    from kiro_crew.apps import manager as app_manager
-    from kiro_crew.apps.manager import AppResult
-    from kiro_crew.apps.registry_pipeline import install as install_mod
+    from aj_crew.apps import admission
+    from aj_crew.apps import manager as app_manager
+    from aj_crew.apps.manager import AppResult
+    from aj_crew.apps.registry_pipeline import install as install_mod
 
     src = tmp_path / "app-sources" / "demoapp"
     src.mkdir(parents=True)

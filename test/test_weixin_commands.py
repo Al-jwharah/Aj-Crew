@@ -8,7 +8,7 @@ appear in its help — is pinned in each channel's own suite.
 
 from __future__ import annotations
 
-from kiro_crew.weixin.commands import CommandSpec, build_help_text, match_command
+from aj_crew.weixin.commands import CommandSpec, build_help_text, match_command
 
 SPECS = (
     CommandSpec("new", "Start fresh", aliases=("新对话", "清空")),

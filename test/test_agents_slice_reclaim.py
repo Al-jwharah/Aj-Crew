@@ -21,9 +21,9 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.config.loader as config_loader
-import kiro_crew.sandbox as sb
-from kiro_crew.notifications import resource_pressure
+import aj_crew.config.loader as config_loader
+import aj_crew.sandbox as sb
+from aj_crew.notifications import resource_pressure
 
 GIB = 1024**3
 MIB = 1024**2
@@ -46,10 +46,10 @@ class _Clock:
 
 
 class _Slice:
-    """A fabricated ``kirocrew-agents.slice`` directory and its memory files."""
+    """A fabricated ``ajcrew-agents.slice`` directory and its memory files."""
 
     def __init__(self, root: Path) -> None:
-        self.dir = root / "kirocrew.slice" / sb._CGROUP_AGENTS_SLICE
+        self.dir = root / "ajcrew.slice" / sb._CGROUP_AGENTS_SLICE
         self.dir.mkdir(parents=True)
         self.high_events = 0
         # Throttle passes child scopes counted against their own limits before
@@ -178,7 +178,7 @@ def cg(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, clock: _Clock) -> _Slice
     monkeypatch.setattr(sb, "_SLICE_RECLAIM_DISARMED", False)
     monkeypatch.setattr(sb, "_SLICE_RECLAIM_LAST_AT", None)
     monkeypatch.setattr(sb, "_SLICE_RECLAIM_SKIP_LOGGED", set())
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
+    monkeypatch.delenv("AJCREW_POD", raising=False)
     meminfo = tmp_path / "meminfo"
     meminfo.write_text("MemTotal: 100 kB\nSwapTotal:       0 kB\n", encoding="utf-8")
     monkeypatch.setattr(sb, "_PROC_MEMINFO", str(meminfo))
@@ -209,13 +209,13 @@ def _set_config(
         )
     config_loader._WARNED_RESOURCE_LIMIT_KEYS.discard("slice_reclaim_trigger_pct")
     loads: list[int] = []
-    real_load = config_loader.KiroCrewConfig.load.__func__
+    real_load = config_loader.AjCrewConfig.load.__func__
 
     def counting_load(cls):
         loads.append(1)
         return real_load(cls)
 
-    monkeypatch.setattr(config_loader.KiroCrewConfig, "load", classmethod(counting_load))
+    monkeypatch.setattr(config_loader.AjCrewConfig, "load", classmethod(counting_load))
     return loads
 
 
@@ -253,7 +253,7 @@ class TestReclaimEndsTheThrottle:
         cg.kernel_tick()
         assert sb.agents_slice_throttling() is True
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.sandbox"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.sandbox"):
             _run()
 
         # Down to 85% of memory.high: 15 GiB in 1 GiB chunks, never one big write.
@@ -310,7 +310,7 @@ class TestReclaimEndsTheThrottle:
         _cache_dominated(cg)
         kernel = _FakeKernel(cg, shortfall_after=2)
         monkeypatch.setattr(sb, "_write_memory_reclaim", kernel)
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.sandbox"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.sandbox"):
             _run()
         assert len(kernel.writes) == 3
         assert sb._SLICE_RECLAIM_DISARMED is False
@@ -384,9 +384,9 @@ class TestPod:
         """A pod runs under the same user as the live gateway, so the slice it
         sees is the live one; only the gateway outside a pod reclaims it."""
         _cache_dominated(cg)
-        monkeypatch.setenv("KIROCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_POD", "1")
         TestNoWrite()._assert_no_write(cg, monkeypatch)
-        monkeypatch.delenv("KIROCREW_POD")
+        monkeypatch.delenv("AJCREW_POD")
         kernel = _FakeKernel(cg)
         monkeypatch.setattr(sb, "_write_memory_reclaim", kernel)
         _run()
@@ -424,7 +424,7 @@ class TestSwapGuard:
     def test_host_swap_and_an_unbounded_slice_swap_skip(self, cg, monkeypatch, caplog) -> None:
         _cache_dominated(cg, swap_max="max")
         Path(sb._PROC_MEMINFO).write_text("SwapTotal:  8388604 kB\n", encoding="utf-8")
-        with caplog.at_level(logging.INFO, logger="kiro_crew.sandbox"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.sandbox"):
             TestNoWrite()._assert_no_write(cg, monkeypatch)
             TestNoWrite()._assert_no_write(cg, monkeypatch)
         skips = [r for r in caplog.records if "reclaim skipped" in r.getMessage()]
@@ -455,7 +455,7 @@ class TestDisarm:
     def test_a_kernel_without_memory_reclaim_disarms_once(self, cg, monkeypatch, caplog) -> None:
         """Normal on a pre-5.19 kernel, so it is one INFO line, not a warning."""
         _cache_dominated(cg, reclaim_file=False)
-        with caplog.at_level(logging.INFO, logger="kiro_crew.sandbox"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.sandbox"):
             assert sb.reclaim_agents_slice_page_cache() is None
             assert sb.reclaim_agents_slice_page_cache() is None
         lines = [r for r in caplog.records if "reclaim is off" in r.getMessage()]
@@ -469,7 +469,7 @@ class TestDisarm:
         _cache_dominated(cg)
         kernel = _FakeKernel(cg, fail=code)
         monkeypatch.setattr(sb, "_write_memory_reclaim", kernel)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.sandbox"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.sandbox"):
             _run()
             clock.now += sb._SLICE_RECLAIM_MIN_INTERVAL_SECS + 1
             _run(expect_thread=False)
@@ -518,7 +518,7 @@ class TestConfig:
         assert sb._slice_reclaim_trigger_pct() == 95
 
     def test_the_local_overlay_off_switch_turns_it_off(self, cg, monkeypatch) -> None:
-        """``kirocrew config set --local ... 0`` writes only config.local.json; the
+        """``ajcrew config set --local ... 0`` writes only config.local.json; the
         base file leaves the key unset, and the overlay still wins."""
         _cache_dominated(cg)
         _set_config(monkeypatch, None, local=0)
@@ -583,7 +583,7 @@ class TestDefaultTestFloor:
         base.mkdir()
         monkeypatch.setattr(sb, "_USER_MANAGER_CGROUP_BASE", str(base))
         monkeypatch.setattr(sb, "_SLICE_RECLAIM_LAST_AT", None)
-        monkeypatch.delenv("KIROCREW_POD", raising=False)
+        monkeypatch.delenv("AJCREW_POD", raising=False)
         meminfo = tmp_path / "meminfo"
         meminfo.write_text("MemTotal: 100 kB\nSwapTotal:       0 kB\n", encoding="utf-8")
         monkeypatch.setattr(sb, "_PROC_MEMINFO", str(meminfo))

@@ -15,9 +15,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.handlers import knowledge as handler
-from kiro_crew.knowledge.connectors import bedrock_kb
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.dashboard.handlers import knowledge as handler
+from aj_crew.knowledge.connectors import bedrock_kb
+from aj_crew.knowledge.store import KnowledgeStore
 
 
 def _searched_limit(monkeypatch, tmp_path, limit: object) -> tuple[int, int | None]:

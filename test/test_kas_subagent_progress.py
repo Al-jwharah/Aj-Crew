@@ -12,8 +12,8 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     EVENT_SUBAGENT_ACTIVITY,
@@ -127,7 +127,7 @@ def test_pipeline_frame_creates_entries_per_stage() -> None:
 def test_child_nested_tool_call_emits_activity() -> None:
     """A child nested tool_call emits ONLY activity (not a top-level tool event)
     yet still populates the security caches via a side-effect parser call."""
-    from kiro_crew.acp.types import EVENT_TOOL_CALL
+    from aj_crew.acp.types import EVENT_TOOL_CALL
 
     handle = _handle(ACP_BACKEND_KAS)
     events = _update(handle, {
@@ -336,7 +336,7 @@ def test_normal_tool_call_not_intercepted_on_kas() -> None:
         "_meta": {"kiro": {}},
     })
     # Falls through to parse_session_update → normal EVENT_TOOL_CALL
-    from kiro_crew.acp.types import EVENT_TOOL_CALL
+    from aj_crew.acp.types import EVENT_TOOL_CALL
     assert any(e.kind == EVENT_TOOL_CALL for e in events)
 
 

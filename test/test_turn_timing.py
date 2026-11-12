@@ -17,12 +17,12 @@ from chat_runner_coverage_helpers import _complete, _drive, _runner_state, _set_
 from chat_test_helpers import _make_app
 from test_chat_send_echo_scope import _SLOT, echo_state  # noqa: F401 -- fixture
 
-import kiro_crew.memory_startup as memory_startup_mod
-from kiro_crew import start_priority, turn_timing
-from kiro_crew.acp.types import EVENT_TEXT_CHUNK
-from kiro_crew.dashboard import token_auth
-from kiro_crew.providers.base import LLMEvent
-from kiro_crew.testing.wait import finished
+import aj_crew.memory_startup as memory_startup_mod
+from aj_crew import start_priority, turn_timing
+from aj_crew.acp.types import EVENT_TEXT_CHUNK
+from aj_crew.dashboard import token_auth
+from aj_crew.providers.base import LLMEvent
+from aj_crew.testing.wait import finished
 
 _FIELDS = (
     "handler_ms",
@@ -56,12 +56,12 @@ _LEAK_MARKERS = ("wait_ms", "exec_q", "start_queue", "queue_wait")
 @pytest.fixture
 def timing_on(monkeypatch, caplog):
     monkeypatch.setattr(turn_timing, "ENABLED", True)
-    caplog.set_level(logging.INFO, logger="kiro_crew.turn_timing")
+    caplog.set_level(logging.INFO, logger="aj_crew.turn_timing")
     return caplog
 
 
 def _lines(caplog) -> list[str]:
-    return [r.getMessage() for r in caplog.records if r.name == "kiro_crew.turn_timing"]
+    return [r.getMessage() for r in caplog.records if r.name == "aj_crew.turn_timing"]
 
 
 def _fields(line: str) -> dict[str, str]:
@@ -69,12 +69,12 @@ def _fields(line: str) -> dict[str, str]:
 
 
 def _import_level(flag: str | None) -> str:
-    env = {k: v for k, v in os.environ.items() if k != "KIROCREW_TURN_TIMING"}
+    env = {k: v for k, v in os.environ.items() if k != "AJCREW_TURN_TIMING"}
     if flag is not None:
-        env["KIROCREW_TURN_TIMING"] = flag
+        env["AJCREW_TURN_TIMING"] = flag
     code = (
-        "import logging; from kiro_crew import turn_timing as t; "
-        "print(t.ENABLED, logging.getLogger('kiro_crew.turn_timing').level)"
+        "import logging; from aj_crew import turn_timing as t; "
+        "print(t.ENABLED, logging.getLogger('aj_crew.turn_timing').level)"
     )
     out = subprocess.run(
         [sys.executable, "-c", code],
@@ -95,7 +95,7 @@ def test_flag_off_leaves_logger_level_alone_and_flag_on_sets_info():
 
 def test_flag_off_logs_no_marker_line(monkeypatch, caplog):
     monkeypatch.setattr(turn_timing, "ENABLED", False)
-    caplog.set_level(logging.INFO, logger="kiro_crew.turn_timing")
+    caplog.set_level(logging.INFO, logger="aj_crew.turn_timing")
 
     async def turn():
         turn_timing.begin("s", "sse")
@@ -110,7 +110,7 @@ def test_flag_off_logs_no_marker_line(monkeypatch, caplog):
 
 @pytest.mark.asyncio
 async def test_runner_turn_logs_one_line_with_every_field(tmp_path, timing_on, monkeypatch):
-    import kiro_crew.memory_startup as memory_startup
+    import aj_crew.memory_startup as memory_startup
 
     state, client = _runner_state(tmp_path)
     published: list[tuple[str, object]] = []
@@ -153,7 +153,7 @@ async def test_a_nested_prompts_get_turn_records_nothing_into_the_outer_line(
     state, client = _runner_state(tmp_path)
     _set_stream(client, [LLMEvent(kind=EVENT_TEXT_CHUNK, text="hi"), _complete()])
     monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_runner._resolve_prompt_mention",
+        "aj_crew.dashboard.chat_runner._resolve_prompt_mention",
         lambda message, project_dir: ("expanded prompt body", "ok", ""),
     )
     log = logging.getLogger("test")
@@ -235,7 +235,7 @@ async def test_a_task_the_turn_starts_does_not_record_into_the_turn(timing_on):
 def test_a_gate_acquire_never_reaches_the_metrics_recorder(monkeypatch, enabled):
     # The first get_recorder() of a process builds the recorder on the calling
     # thread; on the spawn path that thread is the event loop.
-    import kiro_crew.metrics.provider as provider
+    import aj_crew.metrics.provider as provider
 
     def refuse():
         raise AssertionError("gate acquire reached the metrics recorder")
@@ -258,7 +258,7 @@ async def test_post_api_chat_streams_with_the_flag_on_and_off(
     echo_state, monkeypatch, caplog, enabled  # noqa: F811
 ):
     monkeypatch.setattr(turn_timing, "ENABLED", enabled)
-    caplog.set_level(logging.INFO, logger="kiro_crew.turn_timing")
+    caplog.set_level(logging.INFO, logger="aj_crew.turn_timing")
     app = _make_app(echo_state)
     app.middlewares.insert(0, token_auth.token_auth_middleware())
     async with TestClient(TestServer(app)) as client:

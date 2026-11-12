@@ -19,7 +19,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.server import _register_dist_static_routes
+from aj_crew.dashboard.server import _register_dist_static_routes
 
 pytestmark = pytest.mark.skipif(
     os.name == "nt", reason="drop_precompressed_dist is a POSIX bash helper"
@@ -58,7 +58,7 @@ def test_build_backend_drops_the_twins_after_staging() -> None:
     """Wiring guard: ``build_backend`` calls the helper, after the dist is staged."""
     body = _function("build_backend")
     staged = body.index('echo "ERROR: dashboard dist not staged"')
-    assert body.index('drop_precompressed_dist "$sp/kiro_crew/static/dist"') > staged
+    assert body.index('drop_precompressed_dist "$sp/aj_crew/static/dist"') > staged
 
 
 def test_only_the_twins_are_removed(tmp_path: Path) -> None:

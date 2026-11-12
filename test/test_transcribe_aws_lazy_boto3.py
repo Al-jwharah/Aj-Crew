@@ -1,4 +1,4 @@
-"""``import kiro_crew.transcribe_aws`` must not load ``boto3``.
+"""``import aj_crew.transcribe_aws`` must not load ``boto3``.
 
 The module is on the dashboard server's import chain (``handlers → files →
 messaging → core → stt_stream → transcribe → transcribe_aws``), so a
@@ -23,8 +23,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import stt, transcribe_aws
-from kiro_crew.config.loader import SttConfig
+from aj_crew import stt, transcribe_aws
+from aj_crew.config.loader import SttConfig
 
 
 @pytest.mark.skipif(
@@ -34,7 +34,7 @@ from kiro_crew.config.loader import SttConfig
 def test_import_does_not_load_boto3(tmp_path: Path) -> None:
     code = (
         "import sys; "
-        "import kiro_crew.transcribe_aws; "
+        "import aj_crew.transcribe_aws; "
         "print(repr(('boto3' in sys.modules, 'botocore' in sys.modules)))"
     )
     res = subprocess.run(
@@ -44,10 +44,10 @@ def test_import_does_not_load_boto3(tmp_path: Path) -> None:
         timeout=120,
         cwd=tmp_path,
     )
-    assert res.returncode == 0, f"import kiro_crew.transcribe_aws failed:\n{res.stderr}"
+    assert res.returncode == 0, f"import aj_crew.transcribe_aws failed:\n{res.stderr}"
     loaded = ast.literal_eval(res.stdout.strip().splitlines()[-1])
     assert loaded == (False, False), (
-        "import kiro_crew.transcribe_aws loaded boto3/botocore at module scope; "
+        "import aj_crew.transcribe_aws loaded boto3/botocore at module scope; "
         "it must stay deferred until an AWS Transcribe call needs it"
     )
 
@@ -78,7 +78,7 @@ def broken_boto3(monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.mark.usefixtures("broken_boto3")
 def test_a_boto3_that_fails_to_import_reads_as_the_missing_extra() -> None:
-    from kiro_crew.dashboard.handlers import core_stt_settings
+    from aj_crew.dashboard.handlers import core_stt_settings
 
     detail = transcribe_aws._aws_availability()
     assert (detail.ok, detail.code) == (False, stt.CODE_EXTRA_MISSING)
@@ -98,7 +98,7 @@ def test_a_boto3_that_fails_to_import_is_a_vocabulary_list_failure() -> None:
 async def test_a_boto3_that_fails_to_import_stops_batch_transcription(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    from kiro_crew import aws_consent
+    from aj_crew import aws_consent
 
     async def _granted(*args, **kwargs):
         return True

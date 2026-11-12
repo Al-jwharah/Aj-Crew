@@ -37,7 +37,7 @@ const ROOTS = panelRoots(path.resolve(__dirname, '../../..'))
 const AGENT_REGISTRY_FILE = path.resolve(
   __dirname,
   '../../../../..',
-  'src/kiro_crew/docs/settings-registry.generated.json',
+  'src/aj_crew/docs/settings-registry.generated.json',
 )
 
 // Valid tabs from SettingsPage.tsx (fork: KiroACP-only + de-Amazoned, so no

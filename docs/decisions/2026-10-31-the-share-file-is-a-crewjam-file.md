@@ -6,7 +6,7 @@ Supersedes: 2026-10-15-the-standing-teammate-agent-is-called-a-mate.md
 
 ## Decision
 
-Export writes the share file as `<name>.crewjam`, with `"format": "kirocrew.crewjam"` and the manifest entry `crewjam.json`; import keeps accepting the old `.crewmate` / `kirocrew.crewmate` / `crewmate.json` form through the same reader checks.
+Export writes the share file as `<name>.crewjam`, with `"format": "ajcrew.crewjam"` and the manifest entry `crewjam.json`; import keeps accepting the old `.crewmate` / `ajcrew.crewmate` / `crewmate.json` form through the same reader checks.
 
 ## Why
 

@@ -15,16 +15,16 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.dashboard.handlers import mcp_discover
-from kiro_crew.dashboard.handlers.member_capability_catalog import resolve_server
-from kiro_crew.mate_capability_catalog import AdditionError
-from kiro_crew.mcp_providers.base import (
+from aj_crew.dashboard.handlers import mcp_discover
+from aj_crew.dashboard.handlers.member_capability_catalog import resolve_server
+from aj_crew.mate_capability_catalog import AdditionError
+from aj_crew.mcp_providers.base import (
     McpInstallPlan,
     McpServerDetail,
     ProviderRegistry,
     ProviderUnavailableError,
 )
-from kiro_crew.mcp_providers.capability import CapabilityProvider
+from aj_crew.mcp_providers.capability import CapabilityProvider
 
 
 class _EditionManager:
@@ -125,7 +125,7 @@ async def test_an_id_no_reachable_registry_holds_keeps_the_registry_refusal(monk
 async def test_an_official_entry_still_resolves_to_its_install_plan(monkeypatch):
     _providers(monkeypatch, _Official(known=("example-mcp",)), _edition("example-mcp"))
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.mcp._find_server_spec_anywhere", lambda name: None
+        "aj_crew.dashboard.handlers.mcp._find_server_spec_anywhere", lambda name: None
     )
 
     name, transport, origin = await resolve_server(

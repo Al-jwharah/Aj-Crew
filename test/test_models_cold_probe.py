@@ -8,8 +8,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.handlers import models_cold_probe
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.handlers import models_cold_probe
+from aj_crew.testing.wait import await_until
 
 
 def _state(*, backend: str = "codex", runtime: bool = True, fails: bool = False) -> SimpleNamespace:
@@ -105,7 +105,7 @@ def test_no_dashboard_state_is_not_an_error() -> None:
 
 
 def test_cold_advertised_list_starts_the_probe(monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import agents
+    from aj_crew.dashboard.handlers import agents
 
     calls: list[str] = []
     monkeypatch.setattr(agents, "_advertised_cc_models", lambda _req, _ns: [])
@@ -119,7 +119,7 @@ def test_cold_advertised_list_starts_the_probe(monkeypatch) -> None:
 
 
 def test_warm_advertised_list_starts_no_probe(monkeypatch) -> None:
-    from kiro_crew.dashboard.handlers import agents
+    from aj_crew.dashboard.handlers import agents
 
     calls: list[str] = []
     monkeypatch.setattr(

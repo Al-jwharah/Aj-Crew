@@ -29,7 +29,7 @@ const OUT = process.argv[2] || '../temp-screenshots/sidebar-chip-panel'
 const ACTIVE = 'chat-a'
 const OTHER = 'chat-b'
 const BUSY = 'chat-c'
-const REPO = 'https://github.com/kirodotdev/KiroCrew'
+const REPO = 'https://github.com/Al-jwharah/Aj-Crew'
 const PR_URL = 'https://github.com/kirodotdev/KiroCrew/pull/634'
 const ISSUE_URL = 'https://github.com/kirodotdev/KiroCrew/issues/701'
 
@@ -40,12 +40,12 @@ const now = Math.floor(Date.now() / 1000)
 const slots = [
   {
     key: ACTIVE, title: 'Draft the release notes', running: false, messages: 4,
-    agent: 'kirocrew', modified: now, last_ts: '2026-08-07T00:10:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now, last_ts: '2026-08-07T00:10:00Z', folder_id: '',
     last_message: 'Grouped the entries by area.',
   },
   {
     key: OTHER, title: 'Session flyout for the collapsed sidebar', running: false, messages: 6,
-    agent: 'kirocrew', modified: now - 900, last_ts: '2026-08-07T00:00:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now - 900, last_ts: '2026-08-07T00:00:00Z', folder_id: '',
     last_message: 'All checks pass; waiting on review.',
     source_links: [
       { provider: 'github', number: 634, url: PR_URL, state: 'open', ci: 'passed', kind: 'change' },
@@ -59,7 +59,7 @@ const slots = [
     // the three most recent and collapses the OLDEST two into "+2" -- previously
     // this row showed #612/#613/#614 and hid the one being worked on.
     key: BUSY, title: 'Sweep the native selects', running: false, messages: 24,
-    agent: 'kirocrew', modified: now - 1800, last_ts: '2026-08-06T23:30:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now - 1800, last_ts: '2026-08-06T23:30:00Z', folder_id: '',
     last_message: 'Rebased and pushed; 47 checks green.',
     source_links: [
       { provider: 'github', number: 648, url: `${REPO}/pull/648`, state: 'open', ci: 'running', kind: 'change' },

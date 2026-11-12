@@ -1,5 +1,5 @@
 import type { ManualSettingEntry } from './settingsTypes'
-import connectionsRegistry from '../../../../src/kiro_crew/connections/registry.json'
+import connectionsRegistry from '../../../../src/aj_crew/connections/registry.json'
 
 /** The registry fields this file reads; the full shape lives in pages/connections/registry.ts. */
 type ConnectionsRegistryRow = { slug: string; name: string; auth?: { mode?: string } }

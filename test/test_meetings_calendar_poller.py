@@ -30,13 +30,13 @@ from meetings_helpers import (  # noqa: F401
     root_fixture,
 )
 
-from kiro_crew.apps.builtins.meetings.backend import calendar_poller as poller
-from kiro_crew.apps.builtins.meetings.backend import calendar_sync
-from kiro_crew.apps.builtins.meetings.backend import constants as k
-from kiro_crew.apps.builtins.meetings.backend import store
-from kiro_crew.apps.builtins.meetings.backend.providers import calendar as cal
-from kiro_crew.apps.builtins.meetings.backend.routes import _common
-from kiro_crew.testing.wait import await_until
+from aj_crew.apps.builtins.meetings.backend import calendar_poller as poller
+from aj_crew.apps.builtins.meetings.backend import calendar_sync
+from aj_crew.apps.builtins.meetings.backend import constants as k
+from aj_crew.apps.builtins.meetings.backend import store
+from aj_crew.apps.builtins.meetings.backend.providers import calendar as cal
+from aj_crew.apps.builtins.meetings.backend.routes import _common
+from aj_crew.testing.wait import await_until
 
 BASE = k.API_BASE
 
@@ -259,7 +259,7 @@ class TestPollOnce:
         self, root: Path, enabled, tmp_path: Path, caplog: pytest.LogCaptureFixture
     ):
         _configure_ics(root, tmp_path / "missing.ics")
-        with caplog.at_level(logging.INFO, logger="kirocrew.app.meetings"):
+        with caplog.at_level(logging.INFO, logger="ajcrew.app.meetings"):
             delay = await poller.poll_once(make_app(root))
         assert delay == k.CALENDAR_POLL_INTERVAL_SECS
         assert any("background calendar sync failed" in r.getMessage() for r in caplog.records)
@@ -292,7 +292,7 @@ class TestPollOnce:
 
 class TestLoopAndHooks:
     def test_register_routes_installs_the_hooks_in_teardown_order(self, root: Path):
-        from kiro_crew.apps.builtins.meetings.backend import routes as routes_pkg
+        from aj_crew.apps.builtins.meetings.backend import routes as routes_pkg
 
         app = make_app(root)
         assert poller.start_poller in app.on_startup
@@ -361,7 +361,7 @@ class TestLoopAndHooks:
 
         monkeypatch.setattr(poller, "poll_once", flaky_tick)
         app = make_app(root)
-        with caplog.at_level(logging.WARNING, logger="kirocrew.app.meetings"):
+        with caplog.at_level(logging.WARNING, logger="ajcrew.app.meetings"):
             await poller.start_poller(app)
             await await_until(recovered, what="poller recovered from tick error")
             await poller.stop_poller(app)

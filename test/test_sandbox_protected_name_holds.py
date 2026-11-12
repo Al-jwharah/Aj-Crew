@@ -29,7 +29,7 @@ import sys
 
 import pytest
 
-from kiro_crew import sandbox, sandbox_plan
+from aj_crew import sandbox, sandbox_plan
 
 pytestmark = pytest.mark.skipif(
     sys.platform == "win32",
@@ -283,7 +283,7 @@ class TestLeafOnlyPopulationIsRecorded:
     #: The launcher spells every data-home leaf once per spelling of the crew
     #: home it protects (the two ``$HOME``-joined ``_CREW_HOME_PREFIXES`` plus
     #: the resolved ``config_dir()`` when it is a third place, as the relocated
-    #: ``KIROCREW_HOME`` the conftest pins always is), so one new root-level
+    #: ``AJCREW_HOME`` the conftest pins always is), so one new root-level
     #: leaf is three entries in every tier. Seven landed after the first
     #: measurement, all at the data-home root, whose parent no stand-in can
     #: hold, so leaf-only is the only hold available to them:
@@ -352,7 +352,7 @@ class TestLeafOnlyPopulationIsRecorded:
     #: own name for the same reason as the root leaves above.
     #:
     #: ``skill-projection`` holds the skill projection's side files: the ownership
-    #: sidecars and view ledger a stored ``kirocrew-skill-view-*`` name is mapped
+    #: sidecars and view ledger a stored ``ajcrew-skill-view-*`` name is mapped
     #: back through to the agent a resumed conversation runs as, plus its leases and
     #: lock. Sealed read-only so a sandboxed shell cannot forge that mapping (the
     #: agents tree it moved out of was already sealed). A data-home root leaf,
@@ -360,7 +360,7 @@ class TestLeafOnlyPopulationIsRecorded:
     #:
     #: One more root-level directory, three entries per tier:
     #:
-    #: * ``engines`` -- the KAS engine bundles ``kirocrew kas install`` lays down
+    #: * ``engines`` -- the KAS engine bundles ``ajcrew kas install`` lays down
     #:   (``acp/kas_bundle.py``), sealed read-only like ``browser-harness`` so a
     #:   sandboxed session cannot rewrite the engine code and Node runtime its
     #:   next session runs. At the data-home root beside writable siblings, so
@@ -381,7 +381,7 @@ class TestLeafOnlyPopulationIsRecorded:
     #:   Three more entries per tier.
     #: * ``browser-harness``, ``browser-harness-ipc``, ``browser-profile`` -- the
     #:   Browser Harness prefix the gateway executes (sealed read-only), the daemon's
-    #:   IPC directory and Kiro's Chromium profile (both hidden). They sit at the
+    #:   IPC directory and Aj's Chromium profile (both hidden). They sit at the
     #:   data-home root beside writable siblings, exactly where the retired browser
     #:   CLI's one leaf sat, so leaf-only is the only hold. Three names in, one
     #:   out, both spellings of the data home: four more entries per tier.
@@ -403,7 +403,7 @@ class TestLeafOnlyPopulationIsRecorded:
     #: One more root-level directory, three entries per tier:
     #:
     #: * ``secret-request-policy`` -- the mediated-secret request directory: the
-    #:   owner-signed egress policy ``kirocrew secrets authorize`` writes and its
+    #:   owner-signed egress policy ``ajcrew secrets authorize`` writes and its
     #:   authorize lock, masked whole so an agent can neither read the allowlist nor
     #:   plant an entry. Every publication renames INSIDE it, so the directory's own
     #:   inode stays the same on a republish. It sits at the data-home root beside
@@ -461,9 +461,9 @@ class TestLeafOnlyPopulationIsRecorded:
     #:
     #: One more root-level directory, three entries per tier:
     #:
-    #: * ``kirocrew-bin`` -- the one ``kirocrew`` link ``env.augmented_path`` puts
+    #: * ``ajcrew-bin`` -- the one ``ajcrew`` link ``env.augmented_path`` puts
     #:   ahead of ``~/.local/bin`` on every agent PATH, sealed read-only so an agent
-    #:   cannot plant the ``kirocrew`` every later lookup runs. The gateway replaces
+    #:   cannot plant the ``ajcrew`` every later lookup runs. The gateway replaces
     #:   the link by a rename INSIDE the directory, so the directory's own inode
     #:   stays the same; at the data-home root beside writable siblings, so
     #:   leaf-only is the only hold, as for ``models``.
@@ -474,7 +474,7 @@ class TestLeafOnlyPopulationIsRecorded:
     #: plant one, and no-follow so a pre-upgrade symlink cannot leave the real path
     #: replaceable. The marker is written by a create INSIDE the directory, so the
     #: directory's own inode stays the same; at the data-home root beside writable
-    #: siblings, so leaf-only is the only hold, as for ``kirocrew-bin``.
+    #: siblings, so leaf-only is the only hold, as for ``ajcrew-bin``.
     #: One more root-level directory, two entries per tier: ``crew-oauth-bridge`` --
     #: the Connection bridge snapshots (``kas_env_shim.BRIDGE_LEAF``), sealed read-only
     #: and no-follow like ``kas-mcp-launch`` so an agent cannot choose what a later

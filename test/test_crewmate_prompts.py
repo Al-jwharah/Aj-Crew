@@ -3,7 +3,7 @@
 ``docs/system-specs/modules/crew-mode.md`` states two rules about the text a crewmate
 is told, and this file is where they are checked.
 
-The prompt file rule: every piece in ``src/kiro_crew/crewmate_prompts.json`` is read
+The prompt file rule: every piece in ``src/aj_crew/crewmate_prompts.json`` is read
 by an assembler, every key an assembler names exists in the file, and no sentence of
 any piece is left behind as a literal in those modules. The loader itself refuses a
 piece with no ``_about`` note; it cannot see the other direction (a key an assembler
@@ -25,10 +25,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import crewmate_prompts
+from aj_crew import crewmate_prompts
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "src" / "kiro_crew"
+SRC = ROOT / "src" / "aj_crew"
 
 #: The modules that assemble crewmate prompts from the file, as the spec lists them.
 ASSEMBLERS: tuple[str, ...] = (
@@ -333,7 +333,7 @@ _LEDGER_TOOLS = ("work_ledger_record", "work_ledger_read", "work_ledger_rebuild"
 
 
 def test_the_patrol_piece_names_the_gated_ledger_watch_band_and_renewal() -> None:
-    from kiro_crew.context_assembly import member
+    from aj_crew.context_assembly import member
 
     text = member.ledger_rules_block("conductor.patrol")
     for mark in _PATROL_MARKS:
@@ -358,8 +358,8 @@ def test_the_patrol_piece_names_the_gated_ledger_watch_band_and_renewal() -> Non
 def test_both_conductors_send_one_final_report_before_they_stop_the_patrol() -> None:
     """Bot and Ultra Mode end a patrol the same way: the final report first, the stop
     in a later step, and no bound for the model to pick (rfc-permanent-patrol.md)."""
-    from kiro_crew import agent
-    from kiro_crew.context_assembly import member
+    from aj_crew import agent
+    from aj_crew.context_assembly import member
 
     bot = " ".join(member.ledger_rules_block("conductor.patrol").split())
     root = " ".join(agent._CONDUCTOR_SYSTEM_PROMPT.split())
@@ -397,16 +397,16 @@ def _render(monkeypatch: pytest.MonkeyPatch, *, ledger: bool) -> str:
     joins them, with the ledger answer forced either way."""
     from types import SimpleNamespace
 
-    from kiro_crew import context as ctx
-    from kiro_crew import member_mate_tools
-    from kiro_crew.context_assembly import member
+    from aj_crew import context as ctx
+    from aj_crew import member_mate_tools
+    from aj_crew.context_assembly import member
 
     binding = SimpleNamespace(
         description="", triggers="", kiro_agent="", workspace="", member_id=""
     )
-    cfg = ctx.KiroCrewConfig()
+    cfg = ctx.AjCrewConfig()
     cfg.agents["Atlas"] = binding
-    monkeypatch.setattr(ctx.KiroCrewConfig, "load", staticmethod(lambda *a, **k: cfg))
+    monkeypatch.setattr(ctx.AjCrewConfig, "load", staticmethod(lambda *a, **k: cfg))
     monkeypatch.setattr(member_mate_tools, "binding_has_ledger_tools", lambda _b: ledger)
     section = member.build_member_section("Atlas", include_briefing=False)
     return section + member.operating_mode_block("Atlas", ledger=ledger)
@@ -415,9 +415,9 @@ def _render(monkeypatch: pytest.MonkeyPatch, *, ledger: bool) -> str:
 def test_a_render_with_the_ledger_teaches_tracking_and_the_gated_patrol(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    from kiro_crew.context_assembly import member
+    from aj_crew.context_assembly import member
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     text = _render(monkeypatch, ledger=True)
     for mark in _PATROL_MARKS:
         assert mark in text, mark
@@ -431,7 +431,7 @@ _READ_THE_SKILL = "before planning work with more than one item"
 
 
 def test_the_skill_line_points_at_goal_conductor_for_the_whole_procedure() -> None:
-    from kiro_crew.context_assembly import member
+    from aj_crew.context_assembly import member
 
     text = member.ledger_rules_block("conductor.patrol")
     head = text[: text.index("Tracked work:")]
@@ -442,7 +442,7 @@ def test_the_skill_line_points_at_goal_conductor_for_the_whole_procedure() -> No
 def test_a_render_without_the_ledger_never_sends_the_crewmate_to_the_skill(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     text = _render(monkeypatch, ledger=False)
     assert _READ_THE_SKILL not in text
     assert "goal-conductor" not in text
@@ -451,9 +451,9 @@ def test_a_render_without_the_ledger_never_sends_the_crewmate_to_the_skill(
 def test_a_render_without_the_ledger_is_the_text_every_crewmate_had(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    from kiro_crew.context_assembly import member
+    from aj_crew.context_assembly import member
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     text = _render(monkeypatch, ledger=False)
     for mark in _PATROL_MARKS:
         assert mark not in text, mark
@@ -470,11 +470,11 @@ def test_a_render_without_the_ledger_is_the_text_every_crewmate_had(
 
 def _conductor_spec(**over: object) -> dict:
     spec: dict = {
-        "mcpServers": {"kirocrew-work": {"command": "kirocrew", "args": ["mcp-work"]}},
-        "tools": ["fs_read", "@kirocrew-work"],
+        "mcpServers": {"ajcrew-work": {"command": "ajcrew", "args": ["mcp-work"]}},
+        "tools": ["fs_read", "@ajcrew-work"],
         "allowedTools": [
-            "@kirocrew-work/work_ledger_read",
-            "@kirocrew-work/work_ledger_record",
+            "@ajcrew-work/work_ledger_read",
+            "@ajcrew-work/work_ledger_record",
         ],
     }
     spec.update(over)
@@ -482,12 +482,12 @@ def _conductor_spec(**over: object) -> dict:
 
 
 def test_a_spec_that_mounts_and_grants_the_ledger_has_it() -> None:
-    from kiro_crew.member_mate_tools import spec_has_ledger_tools
+    from aj_crew.member_mate_tools import spec_has_ledger_tools
 
     assert spec_has_ledger_tools(_conductor_spec())
     assert spec_has_ledger_tools(_conductor_spec(tools="*"))
-    assert spec_has_ledger_tools(_conductor_spec(allowedTools=["@kirocrew-work"]))
-    assert spec_has_ledger_tools(_conductor_spec(tools=["@kirocrew-work/work_ledger_record"]))
+    assert spec_has_ledger_tools(_conductor_spec(allowedTools=["@ajcrew-work"]))
+    assert spec_has_ledger_tools(_conductor_spec(tools=["@ajcrew-work/work_ledger_record"]))
 
 
 @pytest.mark.parametrize(
@@ -495,26 +495,26 @@ def test_a_spec_that_mounts_and_grants_the_ledger_has_it() -> None:
     [
         pytest.param({"mcpServers": {}}, id="not-mounted"),
         pytest.param({"tools": ["fs_read"]}, id="server-not-in-tools"),
-        pytest.param({"tools": ["@kirocrew-work/work_ledger_read"]}, id="only-read-selected"),
+        pytest.param({"tools": ["@ajcrew-work/work_ledger_read"]}, id="only-read-selected"),
         pytest.param(
-            {"mcpServers": {"kirocrew-work": {"command": "k", "disabled": True}}},
+            {"mcpServers": {"ajcrew-work": {"command": "k", "disabled": True}}},
             id="muted",
         ),
         pytest.param(
-            {"excludedTools": ["@kirocrew-work/work_ledger_record"]},
+            {"excludedTools": ["@ajcrew-work/work_ledger_record"]},
             id="record-excluded",
         ),
         # What ``auto_approve._apply_allowed_tools_ceiling`` leaves when the ceiling
         # withholds the verb: mounted, but not granted.
         pytest.param(
-            {"allowedTools": ["@kirocrew-work/work_ledger_read"]},
+            {"allowedTools": ["@ajcrew-work/work_ledger_read"]},
             id="ceiling-withholds-record",
         ),
         pytest.param({"allowedTools": []}, id="nothing-granted"),
     ],
 )
 def test_a_spec_without_the_mounted_granted_ledger_has_none(over: dict) -> None:
-    from kiro_crew.member_mate_tools import spec_has_ledger_tools
+    from aj_crew.member_mate_tools import spec_has_ledger_tools
 
     assert not spec_has_ledger_tools(_conductor_spec(**over))
 
@@ -522,7 +522,7 @@ def test_a_spec_without_the_mounted_granted_ledger_has_none(over: dict) -> None:
 def test_a_binding_whose_chat_spec_cannot_be_read_has_no_ledger(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew import member_mate_tools
+    from aj_crew import member_mate_tools
 
     def boom(_b: object) -> dict:
         raise OSError("unreadable")

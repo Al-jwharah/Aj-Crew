@@ -19,7 +19,7 @@ import CrewComposer, { SESSION_CHROME_PROPS } from './CrewComposer'
 
 const noop = () => {}
 const CHROME: Partial<ChatInputProps> = {
-  onAgentClick: noop, agentLabel: 'oncall', agentIsInheritedDefault: false, agentSource: 'kirocrew',
+  onAgentClick: noop, agentLabel: 'oncall', agentIsInheritedDefault: false, agentSource: 'ajcrew',
   onModelClick: noop, modelName: 'claude-opus-5', modelIsInheritedDefault: true, modelIsAutoChosen: false, modelIsJevRouted: false,
   reasoningEffort: 'high', effortIsDefault: false, hasEffort: true,
   contextPct: 42, contextUsedTokens: 4200, contextWindowTokens: 10000,

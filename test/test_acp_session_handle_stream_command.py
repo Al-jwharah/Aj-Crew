@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.session_handle import AcpRuntimeError, AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.session_handle import AcpRuntimeError, AcpSessionHandle
+from aj_crew.acp.types import (
     EVENT_AGENT_SWITCHED,
     EVENT_COMPACTION_STATUS,
     EVENT_COMPLETE,
@@ -190,12 +190,12 @@ async def test_agent_switch_extracted_from_result():
     handle, _ = _make(
         response_result={
             "message": "switched",
-            "data": {"agent": {"name": "kirocrew"}},
+            "data": {"agent": {"name": "ajcrew"}},
         }
     )
-    events = await _collect(handle, "/agent kirocrew")
+    events = await _collect(handle, "/agent ajcrew")
     switches = [ev for ev in events if ev.kind == EVENT_AGENT_SWITCHED]
-    assert [ev.text for ev in switches] == ["kirocrew"]
+    assert [ev.text for ev in switches] == ["ajcrew"]
 
 
 @pytest.mark.asyncio
@@ -204,13 +204,13 @@ async def test_agent_switch_not_duplicated_when_notification_arrived():
     the result-extracted fallback must not emit a second event."""
     notification = JsonRpcMessage(
         method=METHOD_AGENT_SWITCHED,
-        params={"sessionId": "sA", "agentName": "kirocrew"},
+        params={"sessionId": "sA", "agentName": "ajcrew"},
     )
     handle, _ = _make(
-        response_result={"data": {"agent": {"name": "kirocrew"}}},
+        response_result={"data": {"agent": {"name": "ajcrew"}}},
         updates=[notification],
     )
-    events = await _collect(handle, "/agent kirocrew")
+    events = await _collect(handle, "/agent ajcrew")
     switches = [ev for ev in events if ev.kind == EVENT_AGENT_SWITCHED]
     assert len(switches) == 1
 
@@ -285,7 +285,7 @@ async def test_prompt_transport_commands_stay_on_prompt(command):
     no response for them over commands/execute, and the compaction flow
     (session.py, Slack !compact) watches compaction status on the prompt
     stream — routing them natively would strand it until timeout."""
-    from kiro_crew.acp.types import METHOD_PROMPT
+    from aj_crew.acp.types import METHOD_PROMPT
 
     handle, rt = _make(response_result={"stopReason": "end_turn"})
     events = await _collect(handle, command)
@@ -298,7 +298,7 @@ async def test_kas_backend_falls_back_to_prompt():
     """_kiro.dev/commands/execute is kiro-cli-specific: a KAS shared-runtime
     session must keep degrading softly through session/prompt instead of
     erroring on an unimplemented method."""
-    from kiro_crew.acp.types import ACP_BACKEND_KAS, METHOD_PROMPT
+    from aj_crew.acp.types import ACP_BACKEND_KAS, METHOD_PROMPT
 
     handle, rt = _make(response_result={"stopReason": "end_turn"}, acp_backend=ACP_BACKEND_KAS)
     events = await _collect(handle, "/tools")
@@ -342,7 +342,7 @@ async def test_failed_compaction_then_no_response_ends_the_turn(monkeypatch):
     response, no end_turn. The turn must end at the post-failure budget with
     STOP_REASON_COMPACTION_FAILED instead of draining to the turn ceiling and
     holding the slot."""
-    from kiro_crew.acp import session_handle as sh
+    from aj_crew.acp import session_handle as sh
 
     monkeypatch.setattr(sh, "_COMPACTION_FAILED_TURN_BUDGET", 0.2)
 
@@ -370,7 +370,7 @@ async def test_a_tool_in_flight_suspends_the_post_failure_budget(monkeypatch):
     compaction is live work, so the budget must not cancel the session under it.
     The tool-stall watchdog owns that case on its own longer, liveness-gated
     budget."""
-    from kiro_crew.acp import session_handle as sh
+    from aj_crew.acp import session_handle as sh
 
     monkeypatch.setattr(sh, "_COMPACTION_FAILED_TURN_BUDGET", 0.05)
 
@@ -402,7 +402,7 @@ async def test_failed_compaction_notice_carries_the_reason(monkeypatch):
     """The dashboard notice reads AcpEvent.title, and kiro-cli leaves `summary`
     empty on failure — the notification's own reason rides the title so the row
     stops collapsing to "unknown error"."""
-    from kiro_crew.acp import session_handle as sh
+    from aj_crew.acp import session_handle as sh
 
     monkeypatch.setattr(sh, "_COMPACTION_FAILED_TURN_BUDGET", 0.2)
 
@@ -422,7 +422,7 @@ async def test_co_tenant_fanout_frames_do_not_defer_the_budget(monkeypatch):
     traffic: if they reset this session's post-failure silence clock, a busy
     co-tenant defers the budget to the multi-hour outer deadline and the
     the abandoned-turn hang survives on shared runtimes."""
-    from kiro_crew.acp import session_handle as sh
+    from aj_crew.acp import session_handle as sh
 
     monkeypatch.setattr(sh, "_COMPACTION_FAILED_TURN_BUDGET", 0.2)
 
@@ -460,7 +460,7 @@ async def test_ownerless_failure_does_not_arm_a_co_tenant_budget(monkeypatch):
     session's budget from a peer's failure would reap this session's live turn
     at the budget — and every consumer resets the session on that terminal, so
     the peer's failure destroys unrelated work."""
-    from kiro_crew.acp import session_handle as sh
+    from aj_crew.acp import session_handle as sh
 
     monkeypatch.setattr(sh, "_COMPACTION_FAILED_TURN_BUDGET", 0.2)
 
@@ -488,7 +488,7 @@ async def test_ownerless_completion_does_not_disarm_the_budget(monkeypatch):
     a peer's SUCCESSFUL compaction is fanned out too, and clearing this
     session's armed budget from it would leave a genuinely abandoned turn
     draining to the multi-hour turn ceiling again."""
-    from kiro_crew.acp import session_handle as sh
+    from aj_crew.acp import session_handle as sh
 
     monkeypatch.setattr(sh, "_COMPACTION_FAILED_TURN_BUDGET", 0.2)
 
@@ -510,7 +510,7 @@ async def test_ownerless_completion_does_not_disarm_the_budget(monkeypatch):
 async def test_completed_compaction_does_not_arm_the_budget(monkeypatch):
     """A successful compaction must not arm the budget: the turn keeps running
     and completes on the backend's own response."""
-    from kiro_crew.acp import session_handle as sh
+    from aj_crew.acp import session_handle as sh
 
     monkeypatch.setattr(sh, "_COMPACTION_FAILED_TURN_BUDGET", 0.2)
 
@@ -591,7 +591,7 @@ async def _run_with_late_frame(monkeypatch, clock: _Clock, late_frame: JsonRpcMe
     ``check_after_secs`` at 30s, measuring from the late frame or the own frame lands on
     opposite sides of the threshold.
     """
-    from kiro_crew.acp import session_handle as sh
+    from aj_crew.acp import session_handle as sh
 
     monkeypatch.setattr(sh, "time", clock)
 

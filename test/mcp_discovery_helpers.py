@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.mcp_discovery import _probe_cache
+from aj_crew.mcp_discovery import _probe_cache
 
 
 def _clear_cache() -> None:
@@ -30,7 +30,7 @@ def _passthrough_sandbox(_floor_monkeypatch):
     def _passthrough(argv, *a, env=None, **k):
         return list(argv), dict(env if env is not None else _os.environ), None
 
-    _floor_monkeypatch.setattr("kiro_crew.mcp_discovery.sandboxed_spawn_argv", _passthrough)
+    _floor_monkeypatch.setattr("aj_crew.mcp_discovery.sandboxed_spawn_argv", _passthrough)
 
 
 @pytest.fixture(autouse=True)
@@ -56,7 +56,7 @@ def _stub_remote_probe_ssrf_vet(_floor_monkeypatch):
     ``monkeypatch.undo()`` mid-body cannot lift this stub (testing-conventions
     D11); it also keeps this autouse fixture off the shared-monkeypatch lint.
     """
-    from kiro_crew import link_unfurl as lu
+    from aj_crew import link_unfurl as lu
 
     _floor_monkeypatch.setattr(lu, "_default_resolve", lambda _host, _port: ["93.184.216.34"])
     _floor_monkeypatch.setattr(lu, "pinned_connector", lambda _vetted: None)

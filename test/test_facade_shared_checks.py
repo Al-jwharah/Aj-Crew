@@ -36,8 +36,8 @@ from types import ModuleType
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 TEST_DIR = Path(__file__).resolve().parent
 _THIS_STEM = Path(__file__).stem
@@ -605,14 +605,14 @@ def test_only_the_family_imports_an_owner(contract: str) -> None:
 @_each_contract("the_owner_import_scan_finds_an_outside_importer")
 def test_the_owner_import_scan_finds_an_outside_importer(contract: str, tmp_path: Path) -> None:
     subject = _load(contract)
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     owner = subject.OWNERS[0]
     sources = {
-        root / "pkg" / "caller.py": f"from kiro_crew.discord.{owner} import x\n",
-        root / "other.py": f"from kiro_crew.discord import {owner} as low\n",
+        root / "pkg" / "caller.py": f"from aj_crew.discord.{owner} import x\n",
+        root / "other.py": f"from aj_crew.discord import {owner} as low\n",
         root / "discord" / "relative.py": f"from .{owner} import x\n",
         root / "discord" / "deep" / "up.py": f"from .. import {owner}\n",
-        root / "facade_user.py": f"from kiro_crew.discord.{subject.STEM} import x\n",
+        root / "facade_user.py": f"from aj_crew.discord.{subject.STEM} import x\n",
     }
     assert subject._owner_importers(sources.items(), root) == {
         "pkg/caller.py",

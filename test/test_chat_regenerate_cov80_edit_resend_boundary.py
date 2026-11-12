@@ -1,4 +1,4 @@
-"""Edit-resend's boundaries in :mod:`kiro_crew.dashboard.chat_regenerate`.
+"""Edit-resend's boundaries in :mod:`aj_crew.dashboard.chat_regenerate`.
 
 What edit-and-resend may touch, who may call it, and what its commit re-checks. The rest
 of edit-resend, regenerate and the refusal codes are in ``test_chat_regenerate_cov80.py``;
@@ -15,8 +15,8 @@ from aiohttp.test_utils import make_mocked_request
 from chat_regenerate_cov80_helpers import state_fixture  # noqa: F401
 from chat_regenerate_cov80_helpers import _client, _make_regen_app
 
-from kiro_crew.dashboard.chat_regenerate import api_chat_slot_edit_resend
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard.chat_regenerate import api_chat_slot_edit_resend
+from aj_crew.testing.wait import async_wait_until
 
 # ── edit-resend: the prospective copy must not touch the live slot ──
 # ``copy.copy`` is shallow, so reassigning ``messages`` alone leaves every other
@@ -49,8 +49,8 @@ async def test_edit_resend_refusal_leaves_the_live_pending_and_cards_alone(state
     state.sessions.discard_conversation = AsyncMock(side_effect=OSError("map write failed"))
 
     with (
-        patch("kiro_crew.dashboard.chat_persistence._save_slot_to_history"),
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_persistence._save_slot_to_history"),
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()),
     ):
         async with _client(state) as client:
             resp = await client.post(
@@ -82,7 +82,7 @@ async def test_edit_resend_commit_adopts_the_prepared_pending_and_retires_cards(
     slot.event.clear()
     question_id, announced = _arm_pending_question(slot)
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
         async with _client(state) as client:
             resp = await client.post(
                 "/api/chat/slots/s1/edit-resend", json={"index": 0, "content": "edited"}
@@ -110,7 +110,7 @@ async def test_edit_resend_commit_advances_the_lifetime_message_counter(state) -
     slot.drain()
     before = slot.total_messages
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
         async with _client(state) as client:
             resp = await client.post(
                 "/api/chat/slots/s1/edit-resend", json={"index": 0, "content": "edited"}
@@ -126,8 +126,8 @@ async def test_edit_resend_commit_advances_the_lifetime_message_counter(state) -
     # A refused edit leaves it alone.
     state.sessions.discard_conversation = AsyncMock(side_effect=OSError("map write failed"))
     with (
-        patch("kiro_crew.dashboard.chat_persistence._save_slot_to_history"),
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_persistence._save_slot_to_history"),
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()),
     ):
         async with _client(state) as client:
             resp = await client.post(
@@ -172,7 +172,7 @@ async def test_edit_resend_denies_an_app_that_does_not_own_the_slot(state) -> No
     slot.drain()
     original_messages = list(slot.messages)
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run:
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run:
         resp = await api_chat_slot_edit_resend(
             _app_request(state, "s1", "other-app", {"index": 0, "content": "edited"})
         )
@@ -200,7 +200,7 @@ async def test_edit_resend_denies_an_app_reaching_a_channel_linked_session(state
     slot.linked_session_key = "slack:1234567890.123"
     original_messages = list(slot.messages)
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run:
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run:
         resp = await api_chat_slot_edit_resend(
             _app_request(state, "s1", "some-app", {"index": 0, "content": "edited"})
         )
@@ -240,7 +240,7 @@ async def test_edit_resend_reauthorizes_the_slot_after_the_body_read(state) -> N
 
     request.json = _json  # type: ignore[method-assign]
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run:
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run:
         resp = await api_chat_slot_edit_resend(request)
 
     assert resp.status == 404
@@ -269,7 +269,7 @@ async def test_edit_resend_refuses_while_subagents_are_attached(state) -> None:
     subs._queued_depth = MagicMock(return_value=0)
     state.subagents = subs
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run:
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run:
         async with _client(state) as client:
             resp = await client.post(
                 "/api/chat/slots/s1/edit-resend", json={"index": 0, "content": "edited"}
@@ -330,7 +330,7 @@ async def test_edit_resend_reserves_the_slot_so_a_concurrent_send_queues(state) 
 
     state.sessions.discard_conversation = AsyncMock(side_effect=_discard)
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
         async with _client(state) as client:
             resp = await client.post(
                 "/api/chat/slots/s1/edit-resend", json={"index": 0, "content": "edited"}
@@ -365,8 +365,8 @@ async def test_edit_resend_abort_hands_a_diverted_send_to_the_queue_drain(state)
     drain = AsyncMock(return_value=True)
 
     with (
-        patch("kiro_crew.dashboard.chat_regenerate._start_next_queued_turn", new=drain),
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run,
+        patch("aj_crew.dashboard.chat_regenerate._start_next_queued_turn", new=drain),
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run,
     ):
         async with _client(state) as client:
             resp = await client.post(
@@ -398,8 +398,8 @@ async def test_edit_resend_abort_leaves_a_pre_existing_queue_entry_waiting(state
     drain = AsyncMock(return_value=True)
 
     with (
-        patch("kiro_crew.dashboard.chat_regenerate._start_next_queued_turn", new=drain),
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run,
+        patch("aj_crew.dashboard.chat_regenerate._start_next_queued_turn", new=drain),
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()) as run,
     ):
         async with _client(state) as client:
             resp = await client.post(
@@ -447,8 +447,8 @@ async def test_edit_resend_commit_keeps_a_row_injected_during_the_boundary(state
         return True
 
     with (
-        patch("kiro_crew.dashboard.chat_persistence._save_slot_to_history", side_effect=_save),
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()),
+        patch("aj_crew.dashboard.chat_persistence._save_slot_to_history", side_effect=_save),
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()),
     ):
         async with _client(state) as client:
             resp = await client.post(
@@ -500,7 +500,7 @@ async def test_edit_resend_commit_does_not_resurrect_a_card_retired_meanwhile(st
 
     state.sessions.discard_conversation = AsyncMock(side_effect=_discard)
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
         async with _client(state) as client:
             resp = await client.post(
                 "/api/chat/slots/s1/edit-resend", json={"index": 0, "content": "edited"}
@@ -538,7 +538,7 @@ async def test_edit_resend_commit_keeps_a_blocking_card_answered_meanwhile(state
 
     state.sessions.discard_conversation = AsyncMock(side_effect=_discard)
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
         async with _client(state) as client:
             resp = await client.post(
                 "/api/chat/slots/s1/edit-resend", json={"index": 0, "content": "edited"}
@@ -574,7 +574,7 @@ async def test_edit_resend_commit_keeps_a_card_that_arrived_meanwhile(state) -> 
 
     state.sessions.discard_conversation = AsyncMock(side_effect=_discard)
 
-    with patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
+    with patch("aj_crew.dashboard.chat_regenerate._run_chat", new=AsyncMock()):
         async with _client(state) as client:
             resp = await client.post(
                 "/api/chat/slots/s1/edit-resend", json={"index": 0, "content": "edited"}
@@ -618,10 +618,10 @@ async def test_edit_resend_refuses_the_commit_when_the_slot_is_rebound(state) ->
 
     with (
         patch(
-            "kiro_crew.dashboard.chat_persistence._save_slot_to_history",
+            "aj_crew.dashboard.chat_persistence._save_slot_to_history",
             MagicMock(return_value=True),
         ),
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=run),
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=run),
     ):
         async with _client(state) as client:
             resp = await client.post(
@@ -667,10 +667,10 @@ async def test_edit_resend_refuses_the_commit_when_the_slot_is_replaced(state) -
 
     with (
         patch(
-            "kiro_crew.dashboard.chat_persistence._save_slot_to_history",
+            "aj_crew.dashboard.chat_persistence._save_slot_to_history",
             MagicMock(side_effect=_replacing_save),
         ),
-        patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=run),
+        patch("aj_crew.dashboard.chat_regenerate._run_chat", new=run),
     ):
         async with _client(state) as client:
             resp = await client.post(
@@ -700,7 +700,7 @@ async def test_edit_resend_refuses_the_commit_when_the_reservation_is_displaced(
     async def _displacing_discard(key, **kwargs):
         async def _other_turn() -> None:
             # flake-ok: pre-existing 10 s park of the stand-in usurping turn, which the finally block cancels, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 10 s park of the stand-in usurping turn, which the finally block cancels, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 10 s park of the stand-in usurping turn, which the finally block cancels, moved verbatim; tracked for a de-flake pass
             await asyncio.sleep(10)
 
         # Another dispatcher claims the slot while the boundary is pending.
@@ -714,10 +714,10 @@ async def test_edit_resend_refuses_the_commit_when_the_reservation_is_displaced(
     try:
         with (
             patch(
-                "kiro_crew.dashboard.chat_persistence._save_slot_to_history",
+                "aj_crew.dashboard.chat_persistence._save_slot_to_history",
                 MagicMock(return_value=True),
             ),
-            patch("kiro_crew.dashboard.chat_regenerate._run_chat", new=run),
+            patch("aj_crew.dashboard.chat_regenerate._run_chat", new=run),
         ):
             async with _client(state) as client:
                 resp = await client.post(

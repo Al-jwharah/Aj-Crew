@@ -2,9 +2,9 @@
 
 from types import SimpleNamespace
 
-from kiro_crew import dashboard_types, mcp_panel
-from kiro_crew.crew_log import projection_crewmate as crewmate
-from kiro_crew.crew_log import projection_workstreams as workstreams
+from aj_crew import dashboard_types, mcp_panel
+from aj_crew.crew_log import projection_crewmate as crewmate
+from aj_crew.crew_log import projection_workstreams as workstreams
 
 
 def test_mcp_preserves_row_keys_and_row_names_from_the_catalog():

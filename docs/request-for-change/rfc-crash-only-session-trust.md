@@ -78,7 +78,7 @@ chooses, and it keeps the record out of the agent's reach.
 
 ## Non-goals
 
-- Trust surviving `kirocrew stop` / `restart`, a signal stop or a host reboot,
+- Trust surviving `ajcrew stop` / `restart`, a signal stop or a host reboot,
   including an unattended one (§1, Limitation).
 - Persisting any other grant: trust read-only bash, per-command patterns, app or
   crew-worker trust, inherited subagent trust, or the safety override.
@@ -93,7 +93,7 @@ chooses, and it keeps the record out of the agent's reach.
 
 The gateway already encodes whether the owner asked for an exit in its exit
 status. `_shutdown_and_exit` in `slack/gateway_runtime/exit_path.py` exits **0** only for an owner
-stop: SIGTERM or SIGINT (`kirocrew stop`, `kirocrew restart`, Ctrl-C,
+stop: SIGTERM or SIGINT (`ajcrew stop`, `ajcrew restart`, Ctrl-C,
 `systemctl stop`, and the SIGTERM a host reboot delivers) and the owner shutdown
 route. Every self-initiated shutdown that exists to be relaunched exits non-zero
 so a restart-on-failure supervisor brings it back. That includes the stale-asset
@@ -101,12 +101,12 @@ watchdog (`STALE_ASSET_EXIT_CODE = 75`) and the listener guard.
 
 | Exit | Exit status | Trust |
 |---|---|---|
-| `kirocrew stop` / `restart`, Ctrl-C, `systemctl stop`, host reboot, owner shutdown route (including the desktop app's stop before it installs an update) | 0 | **cleared** |
+| `ajcrew stop` / `restart`, Ctrl-C, `systemctl stop`, host reboot, owner shutdown route (including the desktop app's stop before it installs an update) | 0 | **cleared** |
 | Second signal (force exit) | 0 | **cleared**: the first signal already wrote the owner-stop marker; the force exit never waits, and holds once if that marker is not down yet |
 | Dashboard Restart button, an applied in-app update (`_restart_gateway`, which `os.execv`s in place) | none: the image is replaced | **cleared** before sessions drain; the restart is refused if the clear fails |
-| Slack owner `/kirocrew restart` (exits non-zero for the supervisor) | non-zero | **cleared** first; the restart is refused if the clear fails |
-| `kirocrew stop` / `restart` on Windows (`taskkill /T /F`, no signal delivered) | none | **cleared**: the CLI leaves the owner-stop marker before the kill, and takes it back only if no kill landed; if it cannot write the marker it warns and stops anyway |
-| `kirocrew restart` after a crash (nothing running to clear its own record, or a crashed service unit the manager restarts) | the crashed gateway's | **cleared**: the CLI writes the owner-stop marker before it starts (refusing if it cannot while a record exists), and takes back one it wrote only if the restart fails before it delivered any stop while the gateway it found still holds the lock (a gateway still shutting down past the timeout keeps it) |
+| Slack owner `/ajcrew restart` (exits non-zero for the supervisor) | non-zero | **cleared** first; the restart is refused if the clear fails |
+| `ajcrew stop` / `restart` on Windows (`taskkill /T /F`, no signal delivered) | none | **cleared**: the CLI leaves the owner-stop marker before the kill, and takes it back only if no kill landed; if it cannot write the marker it warns and stops anyway |
+| `ajcrew restart` after a crash (nothing running to clear its own record, or a crashed service unit the manager restarts) | the crashed gateway's | **cleared**: the CLI writes the owner-stop marker before it starts (refusing if it cannot while a record exists), and takes back one it wrote only if the restart fails before it delivered any stop while the gateway it found still holds the lock (a gateway still shutting down past the timeout keeps it) |
 | Stale-asset self-restart, listener-guard self-restart | non-zero | kept |
 | Loop-stall watchdog (faulthandler dump-then-`_exit`) | never enters the shutdown path | kept |
 | OOM kill, segfault, any crash | never enters the shutdown path | kept |

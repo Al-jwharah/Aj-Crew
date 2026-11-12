@@ -18,24 +18,24 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state, _make_tags_app
 
-from kiro_crew.dashboard import chat_tag_grants
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
-from kiro_crew.mcp_dashboard import TABLE, _list_tools
-from kiro_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.dashboard import chat_tag_grants
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
+from aj_crew.mcp_dashboard import TABLE, _list_tools
+from aj_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
 
-_INTERNAL = {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "kirocrew-dashboard"}
-_SAVE = "kiro_crew.dashboard.chat_tags.save_slot_off_loop"
+_INTERNAL = {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "ajcrew-dashboard"}
+_SAVE = "aj_crew.dashboard.chat_tags.save_slot_off_loop"
 
 
 @pytest.fixture(autouse=True)
 def _hermetic(tmp_path, _floor_monkeypatch):
     # The private patch stack (D11): a test calling monkeypatch.undo() cannot
     # lift the config-dir and signing-key isolation.
-    _floor_monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    from kiro_crew.dashboard import token_secret
+    _floor_monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    from aj_crew.dashboard import token_secret
 
     _floor_monkeypatch.setattr(token_secret, "_get_secret", lambda: b"test-signing-key")
 
@@ -232,7 +232,7 @@ class TestDropRoute:
         slot._app = "an-app"
         _mark(app, {"app": "an-app"})
         with patch(
-            "kiro_crew.dashboard.chat_tags.app_owns_transcript", side_effect=[True, False]
+            "aj_crew.dashboard.chat_tags.app_owns_transcript", side_effect=[True, False]
         ) as owns:
             status, body, saves = await _drop(app, {"column_id": "col-done"}, _INTERNAL)
         assert owns.call_count == 2

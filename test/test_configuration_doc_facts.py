@@ -1,6 +1,6 @@
 """Pin facts the packaged configuration reference states against the code that owns them.
 
-``src/kiro_crew/docs/configuration.md`` ships with the package and running agents
+``src/aj_crew/docs/configuration.md`` ships with the package and running agents
 read it, so a value that drifts from the code misleads an agent at run time.
 """
 
@@ -9,11 +9,11 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KIRO, BASELINE_SELECTABLE_BACKENDS
-from kiro_crew.config.sections import _VALID_STT_PROVIDERS
-from kiro_crew.effort import EFFORT_LEVELS
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KIRO, BASELINE_SELECTABLE_BACKENDS
+from aj_crew.config.sections import _VALID_STT_PROVIDERS
+from aj_crew.effort import EFFORT_LEVELS
 
-DOC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "docs" / "configuration.md"
+DOC = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "docs" / "configuration.md"
 
 
 def _doc() -> str:
@@ -50,7 +50,7 @@ def test_knowledge_extraction_effort_row_names_every_effort_level() -> None:
 def test_dm_single_session_row_names_both_preconditions() -> None:
     import inspect
 
-    from kiro_crew.slack import events
+    from aj_crew.slack import events
 
     src = inspect.getsource(events._dm_single_session_enabled)
     assert "use_transport" in src and "ACTIVATION_REVIEW" in src
@@ -60,7 +60,7 @@ def test_dm_single_session_row_names_both_preconditions() -> None:
 
 
 def test_stt_rows_name_the_range_the_loader_clamps_into() -> None:
-    from kiro_crew.stt import limits
+    from aj_crew.stt import limits
 
     idle = _row("stt.idle_evict_secs")
     assert f"{limits.MIN_IDLE_EVICT_SECS}-{limits.MAX_IDLE_EVICT_SECS} s" in idle
@@ -73,7 +73,7 @@ def test_stt_rows_name_the_range_the_loader_clamps_into() -> None:
 def test_restore_window_row_names_the_settings_range_and_no_limit() -> None:
     import inspect
 
-    from kiro_crew.dashboard.file_api import dashboard_config
+    from aj_crew.dashboard.file_api import dashboard_config
 
     src = inspect.getsource(dashboard_config)
     # The Settings save is the one place this key is bounded; the loader keeps it as given.

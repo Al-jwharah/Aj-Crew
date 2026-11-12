@@ -13,11 +13,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.remote_session import client as client_mod
-from kiro_crew.remote_session import link as link_mod
-from kiro_crew.remote_session import wire
-from kiro_crew.remote_session import worker as worker_mod
-from kiro_crew.testing.wait import async_wait_until, wait_until
+from aj_crew.remote_session import client as client_mod
+from aj_crew.remote_session import link as link_mod
+from aj_crew.remote_session import wire
+from aj_crew.remote_session import worker as worker_mod
+from aj_crew.testing.wait import async_wait_until, wait_until
 
 pytestmark = pytest.mark.skipif(not hasattr(os, "getuid"), reason="POSIX guest paths")
 
@@ -112,7 +112,7 @@ def _worker(secret: bytes):
 def test_link_through_a_worker_attach_dial_delivers_and_finishes():
     # The relay's dial: a command whose stdio is the tunnel (``worker attach``).
     secret = wire.new_secret()
-    attach = [sys.executable, "-m", "kiro_crew.remote_session.worker", "attach"]
+    attach = [sys.executable, "-m", "aj_crew.remote_session.worker", "attach"]
 
     async def run(port: int) -> tuple[bytes, str]:
         # Wrap the dial so we can capture the attach subprocess and await its

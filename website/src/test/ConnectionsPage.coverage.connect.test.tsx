@@ -1250,7 +1250,7 @@ describe('the authorization status feed', () => {
       connections: [{ slug: 'notion', status: 'awaiting_consent', grantPresent: false }],
     })
     // flake-ok: pre-existing sleep barrier, moved verbatim; tracked for a de-flake pass
-    // nosemgrep: semgrep.kirocrew.test-promise-sleep -- pre-existing sleep barrier, moved verbatim; tracked for a de-flake pass
+    // nosemgrep: semgrep.ajcrew.test-promise-sleep -- pre-existing sleep barrier, moved verbatim; tracked for a de-flake pass
     await new Promise(resolve => setTimeout(resolve, 50))
     expect(card('notion')).not.toHaveAttribute('data-state', 'waiting-for-approval')
   })

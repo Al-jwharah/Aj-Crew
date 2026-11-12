@@ -17,9 +17,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from test_subagent import _mock_ctx_builder, _mock_sessions
 
-from kiro_crew.dashboard import card_send
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard import card_send
+from aj_crew.subagent import SubagentManager
+from aj_crew.testing.wait import await_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -45,7 +45,7 @@ def _spawn(*, card_turn: bool, policy: str = "", **spawn_kwargs):
     )
     manager.test_on_done = on_done
     manager.test_announced = announced
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel") as audit:
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel") as audit:
         if card_turn:
             with card_send.card_turn(_PARENT):
                 info = manager.spawn("do the thing", parent_session_key=_PARENT, **spawn_kwargs)
@@ -195,7 +195,7 @@ async def test_stopping_a_card_turn_mid_request_does_not_let_a_delegation_throug
     )
     app.router.add_post("/api/session-control/send", _ok)
     with (
-        patch("kiro_crew.dashboard.chat_handlers.sel", lambda: MagicMock()),
+        patch("aj_crew.dashboard.chat_handlers.sel", lambda: MagicMock()),
         patch.object(card_send, "_running_card_turns", marks),
     ):
         async with TestClient(TestServer(app)) as client:
@@ -213,7 +213,7 @@ def test_the_spawn_handler_hands_the_arrival_snapshot_to_the_gate(tmp_path, monk
     """``api_spawn`` reads the snapshot and passes ``_card_turn`` to the manager, so its
     own awaits (warm-up, memory reads) cannot outlast the card mark unnoticed."""
     cov = pytest.importorskip("test_handlers_messaging_coverage")
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
     def _call(arrived: bool):
         mgr = cov._mgr()
@@ -344,7 +344,7 @@ def test_reads_and_stops_are_not_delegation(method, path):
 def test_a_card_turn_may_read_and_stop_cron_jobs_but_not_start_them(tool, marked, refused):
     audit = MagicMock()
     with (
-        patch("kiro_crew.dashboard.chat_handlers.sel", lambda: audit),
+        patch("aj_crew.dashboard.chat_handlers.sel", lambda: audit),
         patch.object(card_send, "_running_card_turns", {_PARENT: 1} if marked else {}),
     ):
         refusal = card_send.card_turn_cron_tool_refusal(MagicMock(), _PARENT, tool)
@@ -387,7 +387,7 @@ async def test_the_delegation_middleware_refuses_only_a_marked_internal_caller(
 
     audit = MagicMock()
     with (
-        patch("kiro_crew.dashboard.chat_handlers.sel", lambda: audit),
+        patch("aj_crew.dashboard.chat_handlers.sel", lambda: audit),
         patch.object(card_send, "_running_card_turns", {_PARENT: 1} if marked else {}),
     ):
         async with TestClient(TestServer(_delegation_app(internal))) as client:

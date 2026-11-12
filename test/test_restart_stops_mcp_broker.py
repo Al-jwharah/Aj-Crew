@@ -29,11 +29,11 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.slack import gateway as slack_gateway
-from kiro_crew.slack.gateway import GatewayOrchestrator
+from aj_crew import platform_compat
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.handlers import updates
+from aj_crew.slack import gateway as slack_gateway
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 
 def _executable(tmp_path) -> str:
@@ -89,7 +89,7 @@ class TestTheDashboardRestart:
         in-flight count to 0, and an unowned gap would let the watchdog fire
         in the middle of the teardown.
         """
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         seen: list[str] = []
         owners: list[object] = []
@@ -107,7 +107,7 @@ class TestTheDashboardRestart:
     @pytest.mark.asyncio
     async def test_a_restart_that_coalesces_leaves_a_deferral_in_place(self, monkeypatch, tmp_path):
         """Only a restart that commits ends one; a coalesced click must not let the watchdog fire."""
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         seen: list[str] = []
         _dashboard_exec_seams(monkeypatch, seen)
@@ -123,7 +123,7 @@ class TestTheDashboardRestart:
     @pytest.mark.asyncio
     async def test_a_restart_with_no_interpreter_ends_the_deferral(self, monkeypatch, tmp_path):
         """The pruned tree took the bundle too; the watchdog's exit is what relaunches."""
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         seen: list[str] = []
         _dashboard_exec_seams(monkeypatch, seen)
@@ -140,7 +140,7 @@ class TestTheDashboardRestart:
 
     @pytest.mark.asyncio
     async def test_a_restart_that_commits_ends_the_deferral(self, monkeypatch, tmp_path):
-        from kiro_crew import update_ownership
+        from aj_crew import update_ownership
 
         seen: list[str] = []
         _dashboard_exec_seams(monkeypatch, seen)
@@ -258,8 +258,8 @@ class TestTheUpdateRestart:
 
 
 def _real_orchestrator() -> GatewayOrchestrator:
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U1"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U1"}):
         orch = GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
     orch.dashboard_state = None
     orch.sessions = None

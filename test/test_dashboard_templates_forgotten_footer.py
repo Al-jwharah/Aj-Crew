@@ -23,10 +23,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.dashboard_templates.manifest import TemplateManifest, load_template
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.dashboard_templates.manifest import TemplateManifest, load_template
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
-BUILTIN = Path(__file__).resolve().parents[1] / "src/kiro_crew/dashboard_templates/builtin"
+BUILTIN = Path(__file__).resolve().parents[1] / "src/aj_crew/dashboard_templates/builtin"
 
 #: A DOM just wide enough to run either page's script to its end. Every element id and
 #: every ``data-dashboard-field`` cell resolves to a recording element, so the probe can
@@ -106,7 +106,7 @@ def _run(page: str, fields: dict[str, Any]) -> dict[str, Any]:
     html = (BUILTIN / page / "template.html").read_text(encoding="utf-8")
     script = html.split("<script>")[1].split("</script>")[0]
     program = "\n".join(
-        (f"globalThis.kirocrew = {{ fields: {json.dumps(fields)} }};", _DOM, script, _PROBE)
+        (f"globalThis.ajcrew = {{ fields: {json.dumps(fields)} }};", _DOM, script, _PROBE)
     )
     done = subprocess.run(
         [node, "-"], input=program, capture_output=True, timeout=60, check=False, **UTF8_TEXT
@@ -185,12 +185,12 @@ class TestAnAdoptedCopyOfTheOldFooterTurnsStale:
 
     @pytest.fixture(autouse=True)
     def _home(self, tmp_path, _floor_monkeypatch):
-        _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         yield
 
     @pytest.mark.parametrize("page", sorted(_PRE_FIX_VERSION))
     def test_a_pre_fix_copy_reads_stale(self, page: str) -> None:
-        from kiro_crew.dashboard_templates import instance
+        from aj_crew.dashboard_templates import instance
 
         slug = f"pre-fix-{page}"
         instance.stage_preview(slug, template_id=page)

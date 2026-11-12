@@ -16,10 +16,10 @@ from typing import Any
 
 import pytest
 
-import kiro_crew.config.loader as loader
-import kiro_crew.dashboard.handlers.messaging as mod
-import kiro_crew.teams.client as teams_client
-from kiro_crew.secrets import SecretVault
+import aj_crew.config.loader as loader
+import aj_crew.dashboard.handlers.messaging as mod
+import aj_crew.teams.client as teams_client
+from aj_crew.secrets import SecretVault
 
 
 def _vault_value(env: Path, key: str) -> str | None:
@@ -189,7 +189,7 @@ class TestGet:
         assert "-m pip install" in cmd
         assert "PyJWT" in cmd
         assert not cmd.startswith("pip ")
-        assert "kirocrew[" not in cmd
+        assert "ajcrew[" not in cmd
 
     def test_missing_sdk_without_an_install_channel_withholds_the_command(
         self, monkeypatch, tmp_path: Path
@@ -583,7 +583,7 @@ class TestCredentialVerifier:
         """A bot with no tenant is multi-tenant, and its client-credentials token
         comes from the Bot Framework authority — the same substitution the running
         client makes, so the check exercises the real endpoint."""
-        from kiro_crew.teams.client import TEAMS_MULTITENANT_AUTHORITY
+        from aj_crew.teams.client import TEAMS_MULTITENANT_AUTHORITY
 
         seen: list[str] = []
         await self._probe(monkeypatch, 200, {"access_token": "t"}, tenant="  ", seen=seen)

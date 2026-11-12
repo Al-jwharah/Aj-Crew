@@ -37,9 +37,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard import refresh_tokens as rt
-from kiro_crew.dashboard.handlers import auth_refresh as h
-from kiro_crew.dashboard.refresh_tokens import (
+from aj_crew.dashboard import refresh_tokens as rt
+from aj_crew.dashboard.handlers import auth_refresh as h
+from aj_crew.dashboard.refresh_tokens import (
     MAX_REFRESH_TTL_SECS,
     RefreshStateManager,
     generate_refresh_token,
@@ -48,8 +48,8 @@ from kiro_crew.dashboard.refresh_tokens import (
     refresh_token_requires_peer,
     validate_refresh_token,
 )
-from kiro_crew.dashboard.tailnet import ForwardedPeer, TailnetTrust
-from kiro_crew.dashboard.token_auth import (
+from aj_crew.dashboard.tailnet import ForwardedPeer, TailnetTrust
+from aj_crew.dashboard.token_auth import (
     MAX_SESSION_TTL_SECS,
     _b64url_decode,
     generate_token,
@@ -307,13 +307,13 @@ async def test_me_401_without_an_authenticated_user() -> None:
 
 @pytest.mark.asyncio
 async def test_me_reports_the_published_principal_and_unknown_without_one() -> None:
-    from kiro_crew.shared_crew.contracts import (
+    from aj_crew.shared_crew.contracts import (
         ACTOR_REQUEST_KEY,
         ActorContext,
         Provenance,
         Transport,
     )
-    from kiro_crew.shared_crew.identity import tailnet_principal
+    from aj_crew.shared_crew.identity import tailnet_principal
 
     alice = tailnet_principal("alice@example.com", "laptop", Provenance.TAILSCALE_SERVE)
     request = _mk("GET", "/api/auth/me", user="local-app")
@@ -372,7 +372,7 @@ async def test_me_reports_owner_authorization_separately_from_token_acceptance()
     """A VALID token can be accepted and still be denied by the owner gate.
 
     Token validity is signature, expiry and nonce; the owner decision happens
-    after. So a token minted before ``KIROCREW_OWNER_ID`` was configured is
+    after. So a token minted before ``AJCREW_OWNER_ID`` was configured is
     accepted -- and its subject is still the bootstrap one the gate refuses. A
     caller recovering an owner denial that read only ``token_accepted`` would
     drop its prompt on such a token while every owner-gated call kept failing,
@@ -809,8 +809,8 @@ async def test_rotation_carries_the_boot_binding_onto_both_new_cookies(
     body deliberately carries no tokens — the cookies are the credential that
     the phone actually keeps.
     """
-    from kiro_crew.dashboard import boot_id
-    from kiro_crew.dashboard.refresh_tokens import refresh_token_boot
+    from aj_crew.dashboard import boot_id
+    from aj_crew.dashboard.refresh_tokens import refresh_token_boot
 
     bid = boot_id.current_boot_id()
     token, _chain, _jti, _exp = generate_refresh_token("alice", boot=bid)
@@ -847,9 +847,9 @@ async def test_a_boot_bound_rotation_keeps_its_address_pin(
     asserts against, on the path where tailnet identity trust is OFF (the
     default) and the tailnet branch therefore does nothing.
     """
-    from kiro_crew.dashboard import boot_id
-    from kiro_crew.dashboard.token_auth import _state as _token_state
-    from kiro_crew.dashboard.token_auth import check_token_ip
+    from aj_crew.dashboard import boot_id
+    from aj_crew.dashboard.token_auth import _state as _token_state
+    from aj_crew.dashboard.token_auth import check_token_ip
 
     def rt_state_has_binding(tok: str) -> bool:
         return _token_state.has_binding(tok)
@@ -878,8 +878,8 @@ async def test_an_unbound_rotation_is_left_unpinned(
     which currently survives because its rotated token is unbound. That is a
     separate decision, so this pins the scope of the fix above.
     """
-    from kiro_crew.dashboard.token_auth import _state as _token_state
-    from kiro_crew.dashboard.token_auth import check_token_ip
+    from aj_crew.dashboard.token_auth import _state as _token_state
+    from aj_crew.dashboard.token_auth import check_token_ip
 
     token, _chain, _jti, _exp = generate_refresh_token("alice")
     response = await h.api_auth_refresh(_mk(cookies={refresh_cookie_name(str(PORT)): token}))
@@ -897,7 +897,7 @@ async def test_rotation_of_an_unbound_chain_stays_unbound(
     state: RefreshStateManager, audit: list
 ) -> None:
     """The default path must not acquire a binding it never asked for."""
-    from kiro_crew.dashboard.refresh_tokens import refresh_token_boot
+    from aj_crew.dashboard.refresh_tokens import refresh_token_boot
 
     token, _chain, _jti, _exp = generate_refresh_token("alice")
     response = await h.api_auth_refresh(_mk(cookies={refresh_cookie_name(str(PORT)): token}))
@@ -971,7 +971,7 @@ def _rebind_spy(monkeypatch: pytest.MonkeyPatch) -> tuple[MagicMock, str]:
 
 @pytest.mark.asyncio
 async def test_rebind_is_a_noop_without_tailnet_trust(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.dashboard.token_auth import _state as _token_state
+    from aj_crew.dashboard.token_auth import _state as _token_state
 
     bind, tok = _rebind_spy(monkeypatch)
     await h._rebind_rotated_token_to_peer(_mk(), tok, time.time() + 60)
@@ -983,7 +983,7 @@ async def test_rebind_is_a_noop_without_tailnet_trust(monkeypatch: pytest.Monkey
 async def test_rebind_is_a_noop_when_no_login_is_allowlisted(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard.token_auth import _state as _token_state
+    from aj_crew.dashboard.token_auth import _state as _token_state
 
     bind, tok = _rebind_spy(monkeypatch)
     trust = TailnetTrust(trust_identity=True, allowed_logins=())
@@ -996,7 +996,7 @@ async def test_rebind_is_a_noop_when_no_login_is_allowlisted(
 
 @pytest.mark.asyncio
 async def test_rebind_is_a_noop_when_no_peer_resolves(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.dashboard.token_auth import _state as _token_state
+    from aj_crew.dashboard.token_auth import _state as _token_state
 
     bind, tok = _rebind_spy(monkeypatch)
     monkeypatch.setattr(h, "resolve_forwarded_peer", AsyncMock(return_value=None))
@@ -1012,7 +1012,7 @@ async def test_rebind_is_a_noop_when_no_peer_resolves(monkeypatch: pytest.Monkey
 async def test_rebind_pins_the_rotated_token_to_the_resolved_peer(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard.token_auth import check_token_peer
+    from aj_crew.dashboard.token_auth import check_token_peer
 
     bind, tok = _rebind_spy(monkeypatch)
     monkeypatch.setattr(h, "resolve_forwarded_peer", AsyncMock(return_value=("alice", "node")))

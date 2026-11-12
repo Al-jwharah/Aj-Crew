@@ -6,13 +6,13 @@ from unittest.mock import Mock
 
 import pytest
 
-from kiro_crew.agent_sdk.drivers import acp as agent_sdk
-from kiro_crew.testing import workflow_memory_scenario as scenario
+from aj_crew.agent_sdk.drivers import acp as agent_sdk
+from aj_crew.testing import workflow_memory_scenario as scenario
 
 
 @pytest.mark.parametrize("refresh", [False, True])
 def test_title_transcript_does_not_execute_quoted_workflow_command(tmp_path, monkeypatch, refresh):
-    from kiro_crew.dashboard.chat_title import _build_refresh_prompt, _build_title_prompt
+    from aj_crew.dashboard.chat_title import _build_refresh_prompt, _build_title_prompt
 
     messages = [{"role": "user", "content": "[[WF_E2E:START:A]]"}]
     prompt = (
@@ -27,7 +27,7 @@ def test_title_transcript_does_not_execute_quoted_workflow_command(tmp_path, mon
     projection.assert_not_called()
 
 
-@pytest.mark.parametrize("core", [None, {"name": "kirocrew-core", "type": "invalid"}])
+@pytest.mark.parametrize("core", [None, {"name": "ajcrew-core", "type": "invalid"}])
 def test_actual_workflow_command_requires_real_supported_transport(tmp_path, monkeypatch, core):
     monkeypatch.setattr(
         agent_sdk, "projected_session_mcp_servers", lambda *a, **k: [] if core is None else [core]
@@ -37,7 +37,7 @@ def test_actual_workflow_command_requires_real_supported_transport(tmp_path, mon
 
 
 def test_projected_mcp_uses_wrapped_command_environment_and_cleanup(tmp_path, monkeypatch):
-    core = {"name": "kirocrew-core", "command": "spec-command", "args": ["spec-argument"]}
+    core = {"name": "ajcrew-core", "command": "spec-command", "args": ["spec-argument"]}
     monkeypatch.setattr(agent_sdk, "projected_session_mcp_servers", lambda *a, **k: [core])
     profile = tmp_path / "launcher"
     profile.write_text("test launcher")
@@ -59,7 +59,7 @@ def test_projected_mcp_uses_wrapped_command_environment_and_cleanup(tmp_path, mo
 
 @pytest.mark.parametrize("rpc_error", [False, True])
 def test_projected_mcp_cleans_up_after_rpc(tmp_path, monkeypatch, rpc_error):
-    core = {"name": "kirocrew-core", "command": "spec-command"}
+    core = {"name": "ajcrew-core", "command": "spec-command"}
     monkeypatch.setattr(agent_sdk, "projected_session_mcp_servers", lambda *a, **k: [core])
     profile = tmp_path / "launcher"
     profile.write_text("test launcher")
@@ -93,8 +93,8 @@ def test_projected_mcp_cleans_up_after_rpc(tmp_path, monkeypatch, rpc_error):
 def test_handoff_opens_a_session_over_the_projected_dashboard(tmp_path, monkeypatch):
     """HANDOFF is the conductor's hand-off: one session_create on the dashboard
     server (core has no session tools), its answer returned whole."""
-    core = {"name": "kirocrew-core", "command": "core-command"}
-    dashboard = {"name": "kirocrew-dashboard", "command": "dashboard-command"}
+    core = {"name": "ajcrew-core", "command": "core-command"}
+    dashboard = {"name": "ajcrew-dashboard", "command": "dashboard-command"}
     monkeypatch.setattr(
         agent_sdk, "projected_session_mcp_servers", lambda *a, **k: [core, dashboard]
     )

@@ -180,7 +180,7 @@ function openRelayCrewWindow({ endpointId, crewUrl, title, getToken }, deps) {
     deps,
   );
   const log = crewLog(endpointId, deps);
-  const win = new deps.BaseWindow({ width: 1200, height: 820, title: title || "Kiro Crew" });
+  const win = new deps.BaseWindow({ width: 1200, height: 820, title: title || "Aj Crew" });
   win.contentView.addChildView(view);
   const fitView = () => {
     if (win.isDestroyed()) return;

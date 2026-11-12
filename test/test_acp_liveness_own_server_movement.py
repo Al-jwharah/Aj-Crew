@@ -15,14 +15,14 @@ from unittest.mock import MagicMock
 
 from test_acp_liveness import FakeProc, _Clock
 
-from kiro_crew.acp.liveness import (
+from aj_crew.acp.liveness import (
     EVIDENCE_MCP_SUBTREE_ACTIVE,
     VERDICT_UNKNOWN,
     VERDICT_WORKING,
     LivenessOracle,
     ToolCallState,
 )
-from kiro_crew.acp.session_handle import AcpSessionHandle, WatchdogSettings
+from aj_crew.acp.session_handle import AcpSessionHandle, WatchdogSettings
 
 _SERVER = "hang"
 _ROSTER = {_SERVER: (("python3", "hang_server.py"),)}

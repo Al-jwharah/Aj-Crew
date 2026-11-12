@@ -18,13 +18,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import _BG_BLIND_RECYCLE_PROMPTS, BACKGROUND_KEY, SessionManager
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import _BG_BLIND_RECYCLE_PROMPTS, BACKGROUND_KEY, SessionManager
 
 
 @pytest.fixture
 def cfg():
-    c = KiroCrewConfig()
+    c = AjCrewConfig()
     c.session.timeout_secs = 2
     return c
 
@@ -109,7 +109,7 @@ class TestBlindRecycleBackstopIsNotPctGated:
         provider.context_usage_unknown = lambda: False
         mgr._sessions[BACKGROUND_KEY].prompt_count = _BG_BLIND_RECYCLE_PROMPTS - 1
 
-        with caplog.at_level("INFO", logger="kiro_crew.session"):
+        with caplog.at_level("INFO", logger="aj_crew.session"):
             await mgr.recycle_background()
 
         assert f"blind ({_BG_BLIND_RECYCLE_PROMPTS} prompts" in caplog.text
@@ -151,7 +151,7 @@ class TestStaleBusyBgRuntimeIsDisplaced:
         mgr._bg_runtime = stale
 
         fresh = self._fresh_runtime()
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=fresh) as ctor:
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=fresh) as ctor:
             result = await mgr.get_bg_session()
 
         assert ctor.call_count == 1
@@ -177,7 +177,7 @@ class TestStaleBusyBgRuntimeIsDisplaced:
         mgr._bg_runtime = stale
 
         fresh = self._fresh_runtime()
-        with patch("kiro_crew.acp.runtime.AcpRuntime", return_value=fresh):
+        with patch("aj_crew.acp.runtime.AcpRuntime", return_value=fresh):
             await mgr.get_bg_session()
 
         # The retiree's last handle unregisters.
@@ -198,7 +198,7 @@ class TestStaleBusyBgRuntimeIsDisplaced:
         mgr._bg_runtime = healthy
 
         with patch(
-            "kiro_crew.acp.runtime.AcpRuntime",
+            "aj_crew.acp.runtime.AcpRuntime",
             side_effect=AssertionError("must not respawn a healthy runtime"),
         ):
             result = await mgr.get_bg_session()
@@ -217,8 +217,8 @@ class TestStaleBusyBgRuntimeIsDisplaced:
 
         fresh = self._fresh_runtime()
         with (
-            caplog.at_level("INFO", logger="kiro_crew.session"),
-            patch("kiro_crew.acp.runtime.AcpRuntime", return_value=fresh),
+            caplog.at_level("INFO", logger="aj_crew.session"),
+            patch("aj_crew.acp.runtime.AcpRuntime", return_value=fresh),
         ):
             await mgr.get_bg_session()
 

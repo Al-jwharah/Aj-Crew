@@ -5,7 +5,7 @@ source this account could rewrite (on POSIX, and treated as writable where it ca
 tell), the proxy bypass for loopback, refusing malformed or non-finite declarations
 rather than crashing on them and a published source that carries a credential, the
 two-channel split where the environment owns the address,
-what a ``304`` does and does not establish, what ``kirocrew policy fetch`` may claim
+what a ``304`` does and does not establish, what ``ajcrew policy fetch`` may claim
 it did, and a boot-only source that is not fetched again.
 
 One topic of the ``test_governance_distribution*.py`` family; the constants, document
@@ -39,10 +39,10 @@ from governance_distribution_helpers import (
     _write_policy,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.platform import governance
-from kiro_crew.platform import policy_distribution as pd
-from kiro_crew.platform.context import PlatformCompositionError
+from aj_crew import platform_compat
+from aj_crew.platform import governance
+from aj_crew.platform import policy_distribution as pd
+from aj_crew.platform.context import PlatformCompositionError
 
 #: The uid/gid mode-bit tests below monkeypatch ``os.getuid`` and friends, and none of
 #: them exist on Windows -- ``monkeypatch.setattr`` would raise before the assertion ran.
@@ -132,7 +132,7 @@ class TestAFileSourceMustNotBeAgentWritable:
 
     def test_the_walk_answers_false_for_a_genuinely_root_owned_chain(self):
         """The other direction, against a real path, so the refusal is not vacuous."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         # /etc is root-owned on every supported POSIX host; skip where it is not present.
         if not os.path.isfile("/etc/hostname"):
@@ -140,7 +140,7 @@ class TestAFileSourceMustNotBeAgentWritable:
         assert platform_compat.path_writable_by_current_user("/etc/hostname") is False
 
     def test_the_walk_finds_a_writable_ancestor_above_a_read_only_leaf(self, tmp_path):
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         nested = tmp_path / "a" / "b"
         nested.mkdir(parents=True)
@@ -157,7 +157,7 @@ class TestAFileSourceMustNotBeAgentWritable:
         """An operator refused here needs to be told where to go instead."""
         path = _write_policy(tmp_path / "policy.json", "published")
         path.chmod(0o644)
-        with pytest.raises(PlatformCompositionError, match="KIROCREW_SECURITY_POLICY"):
+        with pytest.raises(PlatformCompositionError, match="AJCREW_SECURITY_POLICY"):
             pd.fetch_once(governance.PolicyDistribution(source=path.as_uri()))
 
 
@@ -427,15 +427,15 @@ class TestOwningTheSourceIsEnoughToBeWritable:
 
 class TestTheFetchCommandDoesNotOverclaim:
     """``refresh_now`` installs the ceiling in the CALLING process, and
-    ``kirocrew policy fetch`` exits immediately — so a bare "applied" would claim
+    ``ajcrew policy fetch`` exits immediately — so a bare "applied" would claim
     something the command cannot do. A running gateway is a different process and keeps
     its own ceiling until its refresher polls; with a boot-only source there is no poll.
     """
 
     @staticmethod
     def _run(capsys, *, interval, monkeypatch):
-        from kiro_crew import cli_commands
-        from kiro_crew.platform import policy_distribution as dist_mod
+        from aj_crew import cli_commands
+        from aj_crew.platform import policy_distribution as dist_mod
 
         monkeypatch.setattr(
             dist_mod,
@@ -702,7 +702,7 @@ class TestAPublishedSourceMayNotCarryACredential:
     byte-identical for its signature to verify — and that file is readable by an app
     backend, which is arbitrary third-party code. So a credential placed in a *declared*
     source would be published to every host and then handed to every app. The module's rule
-    was already that the per-machine credential travels in ``KIROCREW_POLICY_HEADERS``,
+    was already that the per-machine credential travels in ``AJCREW_POLICY_HEADERS``,
     which "a published document must not" carry; this makes it enforceable.
     """
 
@@ -729,7 +729,7 @@ class TestAPublishedSourceMayNotCarryACredential:
         [
             "https://config.corp.example/p.json",
             "https://config.corp.example:8443/deep/path/p.json",
-            "file:///etc/kirocrew/security_policy.json",
+            "file:///etc/ajcrew/security_policy.json",
             "kctest://policy.example/security_policy.json",
         ],
         ids=["plain", "port-and-path", "file", "custom-scheme"],
@@ -747,7 +747,7 @@ class TestAPublishedSourceMayNotCarryACredential:
 
 class TestAnUnconditional304IsNotSuccess:
     """``--force`` skips the validators deliberately, so a fetcher that answers "unchanged"
-    anyway has answered nothing. Reporting that as UNCHANGED made ``kirocrew policy fetch
+    anyway has answered nothing. Reporting that as UNCHANGED made ``ajcrew policy fetch
     --force`` exit 0 having established nothing — and exiting 0 is exactly what a
     config-management run reads as "this host took the change".
     """
@@ -765,7 +765,7 @@ class TestAnUnconditional304IsNotSuccess:
     def test_the_cli_exits_non_zero_on_it(self, transport, install_ceiling, capsys):
         """Which is the whole point: a verification step must fail on the host that did not
         take the change."""
-        from kiro_crew import cli_commands
+        from aj_crew import cli_commands
 
         source = transport(_static_fetcher(pd.FetchedPolicy(etag="v1", not_modified=True)))
         install_ceiling(governance.parse_policy(_doc("running", distribution={"source": source})))

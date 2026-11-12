@@ -44,7 +44,7 @@ const OUT = process.argv[2] || '/tmp/question-card-pager-shots'
    names: CARD_VIEWPORT=390x844 retakes the same pages at iPhone-class width. */
 const [VW, VH] = (process.env.CARD_VIEWPORT || '1440x900').split('x').map(Number)
 const SLOT = 'chat-ask'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 mkdirSync(OUT, { recursive: true })
 
 /** Three questions, mixed modes: the multi-select in the middle is the case the
@@ -91,7 +91,7 @@ const slots = [{
   running: true,
   last_message: 'I need three decisions before I can continue.',
   messages: 4,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

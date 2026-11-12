@@ -1,4 +1,4 @@
-"""Branch coverage for the per-source readers of :mod:`kiro_crew.onboarding_import`.
+"""Branch coverage for the per-source readers of :mod:`aj_crew.onboarding_import`.
 
 SQLite sidecar safety, Codex automations, the Hermes projects database, roots and
 skill locks, the Lineage memory database, OpenClaw projection, root discovery, the
@@ -20,12 +20,12 @@ from typing import Any
 import pytest
 from onboarding_import_coverage_helpers import _POSIX_FS_ONLY, _reasons, _scan
 
-from kiro_crew import onboarding_plan, onboarding_scan, onboarding_sources
-from kiro_crew.dashboard.handlers import onboarding_import as onboarding_handler
-from kiro_crew.onboarding_sources import codex as codex_source
-from kiro_crew.onboarding_sources import hermes as hermes_source
-from kiro_crew.onboarding_sources import lineage as lineage_source
-from kiro_crew.onboarding_sources import openclaw as openclaw_source
+from aj_crew import onboarding_plan, onboarding_scan, onboarding_sources
+from aj_crew.dashboard.handlers import onboarding_import as onboarding_handler
+from aj_crew.onboarding_sources import codex as codex_source
+from aj_crew.onboarding_sources import hermes as hermes_source
+from aj_crew.onboarding_sources import lineage as lineage_source
+from aj_crew.onboarding_sources import openclaw as openclaw_source
 
 # Keep apply_import's MCP sidecar lock off the real ~/.kiro/settings (see the
 # shared fixture in test/conftest.py).
@@ -33,7 +33,7 @@ pytestmark = pytest.mark.usefixtures("isolate_mcp_host_paths")
 
 
 def _api() -> ModuleType:
-    return importlib.import_module("kiro_crew.onboarding_import")
+    return importlib.import_module("aj_crew.onboarding_import")
 
 
 class TestSqliteSafety:

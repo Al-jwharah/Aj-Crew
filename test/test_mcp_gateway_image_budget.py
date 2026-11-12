@@ -22,15 +22,15 @@ import random
 
 import pytest
 
-from kiro_crew import imaging
-from kiro_crew.imaging import (
+from aj_crew import imaging
+from aj_crew.imaging import (
     MAX_IMAGE_B64_BYTES,
     MAX_IMAGE_EDGE_PX,
     MIN_IMAGE_EDGE_PX,
     downscale_image_block,
 )
-from kiro_crew.mcp_gateway import image_budget as image_budget_mod
-from kiro_crew.mcp_gateway.image_budget import (
+from aj_crew.mcp_gateway import image_budget as image_budget_mod
+from aj_crew.mcp_gateway.image_budget import (
     line_may_carry_image_block,
     parse_image_bearing_frame,
     rewrite_image_frame,
@@ -368,7 +368,7 @@ class TestFailClosed:
         """One-for-one omission notes amplify a many-block frame (each note
         is ~10x an empty image block), so notes past the ceiling collapse
         into a single counted summary: output stays bounded near input size."""
-        from kiro_crew.mcp_gateway.image_budget import _MAX_OMISSION_NOTES
+        from aj_crew.mcp_gateway.image_budget import _MAX_OMISSION_NOTES
 
         n_blocks = 500
         line = _result_line(
@@ -566,7 +566,7 @@ class TestDownscaleImageBlock:
         """The tool-result seam must enforce the SAME budget as the prompt
         path -- both feed the same per-image backend limits, and prompt_blocks
         re-exports these very objects."""
-        from kiro_crew.acp import prompt_blocks
+        from aj_crew.acp import prompt_blocks
 
         assert MAX_IMAGE_EDGE_PX == 2000
         assert MAX_IMAGE_B64_BYTES == 5 * 1024 * 1024

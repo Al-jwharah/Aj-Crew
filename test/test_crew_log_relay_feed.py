@@ -12,16 +12,16 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew import session_ledger
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import eager as crew_log_eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import work_relay, work_relay_feed
-from kiro_crew.crew_log.emit_runtime import _write as emit_write
-from kiro_crew.testing.wait import default_timeout, wait_until
-from kiro_crew.work_ledger_writes import _write_binding
+from aj_crew import crew_log as lg
+from aj_crew import session_ledger
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import eager as crew_log_eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import work_relay, work_relay_feed
+from aj_crew.crew_log.emit_runtime import _write as emit_write
+from aj_crew.testing.wait import default_timeout, wait_until
+from aj_crew.work_ledger_writes import _write_binding
 
 LEAD = "chat-relay-feed-lead"
 OTHER = "chat-relay-feed-other"
@@ -34,8 +34,8 @@ WORKER_UNIT = "u-feed-worker"
 @pytest.fixture(autouse=True)
 def _live_crew_log(tmp_path):
     with pytest.MonkeyPatch.context() as patch:
-        patch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-        patch.setenv("KIROCREW_CREW_LOG", "1")
+        patch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+        patch.setenv("AJCREW_CREW_LOG", "1")
         crew_log_emit.reset_caches()
         crew_log_eager.stop_for_tests()
         crew_log.forget_slot_folds()
@@ -54,7 +54,7 @@ def _unit(unit: str, slot: str) -> None:
 
 def _noted_unit(unit: str, slot: str) -> None:
     """A unit the writer knows the slot of, as a unit opened through the emitter is."""
-    from kiro_crew.crew_log import writer_groups
+    from aj_crew.crew_log import writer_groups
 
     _unit(unit, slot)
     writer_groups.note_unit_slot(unit, slot)
@@ -248,14 +248,14 @@ def test_copies_decided_together_are_written_with_one_append_many(_live_crew_log
 
 
 def _settle_writer_only() -> None:
-    from kiro_crew.crew_log import emit_runtime
+    from aj_crew.crew_log import emit_runtime
 
     assert emit_runtime._writer().flush(timeout=default_timeout())
 
 
 def test_a_refused_copy_in_a_run_costs_only_itself(_live_crew_log):
     """A run the store refuses whole is written one at a time; only the bad copy is lost."""
-    from kiro_crew.crew_log.errors import CrewLogError
+    from aj_crew.crew_log.errors import CrewLogError
 
     _boards()
     _noted_unit(WORKER_UNIT, WORKER)
@@ -291,7 +291,7 @@ def test_flush_waits_for_a_copy_the_relay_hands_over_after_the_writer_drained(
     _live_crew_log,
 ):
     """The relay hands its copy to the writer just after the writer drained: still waited."""
-    from kiro_crew.crew_log import emit_runtime
+    from aj_crew.crew_log import emit_runtime
 
     _boards()
     _noted_unit(WORKER_UNIT, WORKER)
@@ -326,7 +326,7 @@ def test_flush_waits_for_a_copy_the_relay_hands_over_after_the_writer_drained(
 
 def test_the_shutdown_drain_writes_what_the_relay_had_queued(_live_crew_log):
     """``drain_for_shutdown`` decides the queued wakes first, so their copies land."""
-    from kiro_crew.crew_log import emit_runtime
+    from aj_crew.crew_log import emit_runtime
 
     _boards()
     _noted_unit(WORKER_UNIT, WORKER)
@@ -367,7 +367,7 @@ def _nested_boards() -> None:
 def _hand_over_after_each_drain(patch: pytest.MonkeyPatch) -> threading.Event:
     """Hold a hand-over decided while the writer's shutdown drain runs until that drain has
     returned, so each such copy is the late one the drain did not see."""
-    from kiro_crew.crew_log import emit_runtime
+    from aj_crew.crew_log import emit_runtime
 
     writer = emit_runtime._writer()
     returned = threading.Event()
@@ -392,7 +392,7 @@ def _hand_over_after_each_drain(patch: pytest.MonkeyPatch) -> threading.Event:
 
 def _sub_closer(credits: float) -> None:
     """The sub-board worker's closer, left buffered for the shutdown drain to write."""
-    from kiro_crew.crew_log import emit_runtime
+    from aj_crew.crew_log import emit_runtime
 
     with pytest.MonkeyPatch.context() as buffered:
         buffered.setattr(emit_runtime._writer(), "_claim_inline", lambda unit: None)
@@ -422,7 +422,7 @@ def _sub_charges(unit: str) -> "list[str]":
 def test_the_shutdown_drain_lands_a_nested_boards_parent_copy_once(_live_crew_log):
     """With the writer pool gone, the drain writes the closer, then the sub-board's copy,
     then the parent's copy the relay made from it: each round queues the next."""
-    from kiro_crew.crew_log import emit_runtime
+    from aj_crew.crew_log import emit_runtime
 
     _nested_boards()
     _live_crew_log.setattr(emit_runtime._writer(), "_executor", lambda: _GonePool())
@@ -437,10 +437,10 @@ def test_a_relay_first_loaded_during_the_shutdown_drain_is_settled(_live_crew_lo
     """The drain's own first relayable append is what loads the relay module."""
     import sys
 
-    from kiro_crew.crew_log import emit_runtime
+    from aj_crew.crew_log import emit_runtime
 
     _nested_boards()
-    name = "kiro_crew.crew_log.work_relay_feed"
+    name = "aj_crew.crew_log.work_relay_feed"
     _live_crew_log.setattr(emit_runtime._writer(), "_executor", lambda: _GonePool())
     _live_crew_log.delitem(sys.modules, name)
     real_note = work_relay_feed.note
@@ -462,7 +462,7 @@ def test_a_shutdown_drain_that_runs_out_with_relay_work_left_says_so(_live_crew_
     a WARNING naming what is left."""
     import logging
 
-    from kiro_crew.crew_log import emit_runtime
+    from aj_crew.crew_log import emit_runtime
 
     _nested_boards()
     caplog.set_level(logging.WARNING, logger=emit_runtime.logger.name)
@@ -476,7 +476,7 @@ def test_a_shutdown_drain_that_runs_out_with_relay_work_left_says_so(_live_crew_
 
 def test_the_writer_shutdown_drain_can_run_again_after_more_is_written(_live_crew_log):
     """A second ``drain_for_shutdown`` on the same writer writes what was queued since."""
-    from kiro_crew.crew_log import emit_runtime
+    from aj_crew.crew_log import emit_runtime
 
     _boards()
     _noted_unit(WORKER_UNIT, WORKER)
@@ -532,7 +532,7 @@ def test_flush_without_a_deadline_waits_for_the_relayed_copy(_live_crew_log):
 def _mid_import(
     patch: pytest.MonkeyPatch,
     reader: Any = None,
-    name: str = "kiro_crew.crew_log.work_relay_feed",
+    name: str = "aj_crew.crew_log.work_relay_feed",
 ) -> list[str]:
     """List *name* as another thread's import leaves it before its body ran.
 
@@ -544,7 +544,7 @@ def _mid_import(
     import sys
     import types
 
-    from kiro_crew.crew_log import emit_runtime
+    from aj_crew.crew_log import emit_runtime
 
     finished = types.SimpleNamespace(generation=lambda: 0, drain=lambda _t: True, idle=lambda: True)
     asked: list[str] = []
@@ -561,7 +561,7 @@ def _mid_import(
 
 def test_a_flush_waits_for_the_relay_module_another_thread_is_importing():
     """A half-imported relay module has no ``generation`` yet; reading it raised."""
-    from kiro_crew.crew_log import emit_runtime
+    from aj_crew.crew_log import emit_runtime
 
     emit_runtime._writer()
     # Undone before the fixture's own teardown flush, which must see the real module.
@@ -570,13 +570,13 @@ def test_a_flush_waits_for_the_relay_module_another_thread_is_importing():
         flushed = crew_log_emit.flush(timeout=default_timeout())
 
     assert flushed
-    assert "kiro_crew.crew_log.work_relay_feed" in asked
+    assert "aj_crew.crew_log.work_relay_feed" in asked
 
 
 def test_the_shutdown_drain_waits_for_the_relay_module_another_thread_is_importing():
     import time
 
-    from kiro_crew.crew_log import emit_runtime
+    from aj_crew.crew_log import emit_runtime
 
     writer = emit_runtime._writer()
     with pytest.MonkeyPatch.context() as patch:
@@ -584,12 +584,12 @@ def test_the_shutdown_drain_waits_for_the_relay_module_another_thread_is_importi
         drained = emit_runtime._drain_writer_and_relay(writer, time.monotonic(), default_timeout())
 
     assert drained
-    assert "kiro_crew.crew_log.work_relay_feed" in asked
+    assert "aj_crew.crew_log.work_relay_feed" in asked
 
 
 def test_the_eager_barrier_waits_for_the_prime_module_its_worker_is_importing():
     """The same gap on ``slot_prime``, which the eager worker imports lazily."""
-    name = "kiro_crew.crew_log.slot_prime"
+    name = "aj_crew.crew_log.slot_prime"
     with pytest.MonkeyPatch.context() as patch:
         asked = _mid_import(patch, crew_log_eager, name)
         drained = crew_log_eager.drain(timeout=default_timeout())

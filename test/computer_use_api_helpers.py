@@ -22,10 +22,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.computer_use.types import PERMISSION_GRANTED, PERMISSION_UNSUPPORTED, PLATFORM_MACOS
-from kiro_crew.dashboard.handlers import computer_use as cu_api
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
+from aj_crew.computer_use.types import PERMISSION_GRANTED, PERMISSION_UNSUPPORTED, PLATFORM_MACOS
+from aj_crew.dashboard.handlers import computer_use as cu_api
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
 
 _GRANTED = {
     "accessibility": PERMISSION_GRANTED,
@@ -36,8 +36,8 @@ _GRANTED = {
 
 @pytest.fixture(name="home")
 def home_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """Redirect KIROCREW_HOME so the keystone + config writes land in a tmp dir."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    """Redirect AJCREW_HOME so the keystone + config writes land in a tmp dir."""
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return tmp_path
 
 
@@ -54,7 +54,7 @@ def config_file_fixture(home: Path) -> Path:
 
 
 @pytest.fixture(name="profiles_dir", autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture, moved verbatim; no test in a module that imports it calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture, moved verbatim; no test in a module that imports it calls monkeypatch.undo()
 def profiles_dir_fixture(tmp_path, monkeypatch):
     """Isolate the governance profile store (never read the developer's own)."""
     directory = tmp_path / "profiles"
@@ -66,14 +66,14 @@ def profiles_dir_fixture(tmp_path, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture, moved verbatim; no test in a module that imports it calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture, moved verbatim; no test in a module that imports it calls monkeypatch.undo()
 def no_agent_spec_rewrite(monkeypatch):
     """Never let a test rewrite the operator's real ``~/.kiro/agents``.
 
     Flipping the computer-use enable rebuilds the agent spec (the enable is a
     spec-emission gate, so the tools would otherwise not appear until the next
-    gateway start). That rebuild writes ``~/.kiro/agents/kirocrew.json``, which is
-    machine-wide and deliberately NOT under the ``KIROCREW_HOME`` this module's
+    gateway start). That rebuild writes ``~/.kiro/agents/ajcrew.json``, which is
+    machine-wide and deliberately NOT under the ``AJCREW_HOME`` this module's
     ``home`` fixture redirects — so every enable-flipping test would touch the
     developer's live agent config, and a plain clone (CI, or a checkout that is not
     a git worktree) has no guard that stops it.
@@ -84,8 +84,8 @@ def no_agent_spec_rewrite(monkeypatch):
     rebuild re-patch it with their own recorder, which still wins — a later
     ``monkeypatch.setattr`` overrides this one and both unwind at teardown.
     """
-    import kiro_crew.agent as agent_mod
-    from kiro_crew.apps import bridges
+    import aj_crew.agent as agent_mod
+    from aj_crew.apps import bridges
 
     monkeypatch.setattr(agent_mod, "rebuild_agent_config", lambda **_: Path("/dev/null"))
     # The flip also rewrites enabled apps' agent configs in that same directory.
@@ -99,7 +99,7 @@ def _reset_ctx():
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture, moved verbatim; no test in a module that imports it calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture, moved verbatim; no test in a module that imports it calls monkeypatch.undo()
 def no_real_probe(monkeypatch):
     """Never spawn the real permission-probe child in CI.
 

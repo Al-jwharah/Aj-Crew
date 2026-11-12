@@ -10,9 +10,9 @@ from types import SimpleNamespace
 import pytest
 from _clock_isolation import assert_clock_is_private
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.pod import _windows_job as jobs
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import platform_compat as pc
+from aj_crew.pod import _windows_job as jobs
+from aj_crew.testing.clock import ManualClock
 
 
 class Kernel:

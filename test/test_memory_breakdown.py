@@ -14,11 +14,11 @@ from typing import Optional
 
 import pytest
 
-from kiro_crew.dashboard import memory_breakdown as mb
+from aj_crew.dashboard import memory_breakdown as mb
 
 _MIB = 1024 * 1024
-_APP = "/Applications/Kiro Crew.app/Contents"
-_PY = f"{_APP}/Resources/backend-dist/kirocrew-backend/bin/python3.12"
+_APP = "/Applications/Aj Crew.app/Contents"
+_PY = f"{_APP}/Resources/backend-dist/ajcrew-backend/bin/python3.12"
 
 # A host as one parent map. 900 is the desktop shell, and it launched the
 # gateway (100), as a freshly started desktop app does. Under the gateway:
@@ -33,8 +33,8 @@ _CHILDREN: dict[int, list[int]] = {
     400: [401],
 }
 _EXES = {
-    900: f"{_APP}/MacOS/Kiro Crew",
-    901: f"{_APP}/Frameworks/Kiro Crew Helper (Renderer).app/Contents/MacOS/Kiro Crew Helper (Renderer)",
+    900: f"{_APP}/MacOS/Aj Crew",
+    901: f"{_APP}/Frameworks/Aj Crew Helper (Renderer).app/Contents/MacOS/Aj Crew Helper (Renderer)",
     100: _PY,
     200: "/usr/local/bin/kiro-cli",
     201: _PY,
@@ -133,7 +133,7 @@ def test_no_desktop_matcher_means_no_desktop_category() -> None:
 def test_a_macos_bundle_matches_its_app_and_helpers_but_not_its_own_backend() -> None:
     matcher = _desktop()
 
-    assert matcher(f"{_APP}/MacOS/Kiro Crew")
+    assert matcher(f"{_APP}/MacOS/Aj Crew")
     assert matcher(
         f"{_APP}/Frameworks/Electron Framework.framework/Helpers/chrome_crashpad_handler"
     )
@@ -143,13 +143,13 @@ def test_a_macos_bundle_matches_its_app_and_helpers_but_not_its_own_backend() ->
 
 def test_a_resources_layout_matches_everything_beside_resources() -> None:
     matcher = mb.desktop_shell_matcher(
-        "/opt/KiroCrew/resources/backend-dist/kirocrew-backend/bin/python3"
+        "/opt/AjCrew/resources/backend-dist/ajcrew-backend/bin/python3"
     )
     assert matcher is not None
 
-    assert matcher("/opt/KiroCrew/kirocrew")
-    assert matcher("/opt/KiroCrew/chrome_crashpad_handler")
-    assert not matcher("/opt/KiroCrew/resources/backend-dist/kirocrew-backend/bin/python3")
+    assert matcher("/opt/AjCrew/ajcrew")
+    assert matcher("/opt/AjCrew/chrome_crashpad_handler")
+    assert not matcher("/opt/AjCrew/resources/backend-dist/ajcrew-backend/bin/python3")
     assert not matcher("/usr/bin/ssh")
 
 
@@ -381,5 +381,5 @@ def test_a_daemon_without_a_start_time_is_checked_every_time(
 def test_a_bundle_at_the_filesystem_root_is_not_a_desktop_shell() -> None:
     """``/x/backend-dist/...`` would make ``/`` the app root and every process on
     the host part of the shell."""
-    assert mb.desktop_shell_matcher("/x/backend-dist/kirocrew-backend/bin/python3") is None
-    assert mb.desktop_shell_matcher("C:/x/backend-dist/kirocrew-backend/python.exe") is None
+    assert mb.desktop_shell_matcher("/x/backend-dist/ajcrew-backend/bin/python3") is None
+    assert mb.desktop_shell_matcher("C:/x/backend-dist/ajcrew-backend/python.exe") is None

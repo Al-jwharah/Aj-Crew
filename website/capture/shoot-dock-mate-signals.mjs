@@ -18,9 +18,9 @@ const now = Math.floor(Date.now() / 1000)
 
 const mate = (name, display_name, extra = {}) => ({
   name, slug: name, display_name, slot_key: `chat-mate-${name}`, running: false,
-  last_active_ts: now - 600, last_message: '', kiro_agent: 'kirocrew',
+  last_active_ts: now - 600, last_message: '', kiro_agent: 'ajcrew',
   workspace: 'default', memory_store: name, memory_version: 2, memory_owner: name,
-  model: '', avatar: {}, source: 'kirocrew', starred: true, dashboard_created: true,
+  model: '', avatar: {}, source: 'ajcrew', starred: true, dashboard_created: true,
   has_dm_message: true, has_goal: true, projections: { asOfSeq: -1, values: {} }, ...extra,
 })
 const MEMBERS = [
@@ -34,14 +34,14 @@ const memberSlot = (m, extra = {}) => ({
   modified: now - 60, source_links: [], source_links_total: 0, ...extra,
 })
 const SLOTS = [
-  { key: 'chat-1-1', title: 'Fix the flaky shard', running: false, last_message: 'ok', messages: 1, agent: 'kirocrew', memory_mode: 'persistent', project: 'default', modified: now, source_links: [], source_links_total: 0 },
+  { key: 'chat-1-1', title: 'Fix the flaky shard', running: false, last_message: 'ok', messages: 1, agent: 'ajcrew', memory_mode: 'persistent', project: 'default', modified: now, source_links: [], source_links_total: 0 },
   memberSlot(MEMBERS[0], { running: true }),
   memberSlot(MEMBERS[1]),
   memberSlot(MEMBERS[2], { needs_input: true }),
 ]
 // Issue Triage has a reply the person has not read.
 const UNREAD = { [MEMBERS[1].slot_key]: '' }
-const crew = m => ({ name: m.name, display_name: m.display_name, scope: 'global', kiro_agent: 'kirocrew', workspace: 'default', memory_store: m.name, model: '', reasoning_effort: '', description: '', triggers: '', source: 'kirocrew', session_color: '', avatar: {}, starred: true, paused: false, last_active_ts: 0 })
+const crew = m => ({ name: m.name, display_name: m.display_name, scope: 'global', kiro_agent: 'ajcrew', workspace: 'default', memory_store: m.name, model: '', reasoning_effort: '', description: '', triggers: '', source: 'ajcrew', session_color: '', avatar: {}, starred: true, paused: false, last_active_ts: 0 })
 
 const { srv, base } = await serveDist()
 const browser = await chromium.launch({ executablePath: chromiumExecutable(), env: { ...process.env, LD_LIBRARY_PATH: '' } })
@@ -53,7 +53,7 @@ async function scene(file, { view = { width: 1280, height: 760 }, collapsed = fa
     if (path.endsWith('/panel')) return json(route, { error: 'none' }, 404), true
     if (path.startsWith('/api/members/')) return json(route, {}), true
     if (path === '/api/agents' || path === '/api/agents/catalog') {
-      return json(route, { agents: [crew({ name: 'kirocrew', display_name: '' }), ...MEMBERS.map(crew)], default_agent: 'kirocrew' }), true
+      return json(route, { agents: [crew({ name: 'ajcrew', display_name: '' }), ...MEMBERS.map(crew)], default_agent: 'ajcrew' }), true
     }
     if (path === '/api/crons') return json(route, { jobs: [] }), true
     if (/^\/api\/chat\/slots\/[^/]+/.test(path)) return json(route, { running: false, has_more: false, total: 0, queue: [], messages: [] }), true

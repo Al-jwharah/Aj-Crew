@@ -27,13 +27,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.knowledge import ingestion as ingestion_mod
-from kiro_crew.knowledge.chunker import HeadingAwareChunker
-from kiro_crew.knowledge.folder_watcher import FolderWatcher
-from kiro_crew.knowledge.ingestion import FileTooLargeError, IngestionPipeline
-from kiro_crew.knowledge.readers import FileReader
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.knowledge.watcher import KnowledgeWatcher
+from aj_crew.knowledge import ingestion as ingestion_mod
+from aj_crew.knowledge.chunker import HeadingAwareChunker
+from aj_crew.knowledge.folder_watcher import FolderWatcher
+from aj_crew.knowledge.ingestion import FileTooLargeError, IngestionPipeline
+from aj_crew.knowledge.readers import FileReader
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.watcher import KnowledgeWatcher
 
 
 @pytest.fixture()
@@ -72,7 +72,7 @@ class TestSizeGuard:
         sel_spy = MagicMock()
         monkeypatch.setattr(ingestion_mod, "sel", lambda: sel_spy)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.knowledge.ingestion"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.knowledge.ingestion"):
             with pytest.raises(FileTooLargeError) as exc_info:
                 await pipeline.ingest_file(str(big))
 
@@ -124,9 +124,9 @@ class TestSizeGuard:
         assert job_id is not None
 
     def test_config_load_failure_falls_back_to_default(self, monkeypatch):
-        import kiro_crew.config.loader as loader_mod
+        import aj_crew.config.loader as loader_mod
         monkeypatch.setattr(
-            loader_mod.KiroCrewConfig, "load",
+            loader_mod.AjCrewConfig, "load",
             classmethod(MagicMock(side_effect=RuntimeError("boom"))))
         assert ingestion_mod._max_ingest_file_mb() == ingestion_mod.DEFAULT_MAX_INGEST_FILE_MB
 
@@ -385,7 +385,7 @@ class TestChunkPropsCoercion:
             "SELECT status FROM ingestion_jobs WHERE id = ?", (job_id,)).fetchone()
         assert row["status"] == "completed"
         assert built, "per-source chunker was not built"
-        from kiro_crew.knowledge.chunker import CHUNK_OVERLAP, CHUNK_TOKEN_SIZE
+        from aj_crew.knowledge.chunker import CHUNK_OVERLAP, CHUNK_TOKEN_SIZE
         assert built[-1].target_size == CHUNK_TOKEN_SIZE
         assert built[-1].overlap == CHUNK_OVERLAP
 
@@ -446,8 +446,8 @@ def test_persistent_source_outranks_a_transient_holder(tmp_path):
     so arrival order cannot leave the only searchable copy inside a transient
     upload whose deletion would take the content with it.
     """
-    from kiro_crew.knowledge.ingestion import IngestionPipeline
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.ingestion import IngestionPipeline
+    from aj_crew.knowledge.store import KnowledgeStore
 
     store = KnowledgeStore(str(tmp_path / "k.db"))
     try:
@@ -487,9 +487,9 @@ def test_oversized_file_message_redacts_the_caller_supplied_name(tmp_path, monke
     import asyncio
     import logging
 
-    from kiro_crew.knowledge.ingestion import FileTooLargeError, IngestionPipeline
-    from kiro_crew.knowledge.readers import FileReader
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.ingestion import FileTooLargeError, IngestionPipeline
+    from aj_crew.knowledge.readers import FileReader
+    from aj_crew.knowledge.store import KnowledgeStore
 
     store = KnowledgeStore(str(tmp_path / "k.db"))
     try:
@@ -521,8 +521,8 @@ def test_the_duplicate_gate_records_the_refusing_source_as_a_holder(tmp_path):
     invisible to the reference count: deleting the holder destroys the only items
     while this source's file is still on disk, and nothing brings the content back.
     """
-    from kiro_crew.knowledge.ingestion import IngestionPipeline
-    from kiro_crew.knowledge.store import KnowledgeStore
+    from aj_crew.knowledge.ingestion import IngestionPipeline
+    from aj_crew.knowledge.store import KnowledgeStore
 
     store = KnowledgeStore(str(tmp_path / "k.db"))
     try:
@@ -621,7 +621,7 @@ class TestZipArchivePreflight:
     def test_a_forged_directory_size_is_refused_before_zipfile(self, tmp_path, monkeypatch):
         import zipfile
 
-        from kiro_crew.dashboard.handlers import knowledge
+        from aj_crew.dashboard.handlers import knowledge
 
         path = tmp_path / "crafted.docx"
         with zipfile.ZipFile(path, "w") as z:
@@ -642,7 +642,7 @@ class TestZipArchivePreflight:
     def test_an_over_cap_member_count_is_refused_before_zipfile(self, tmp_path, monkeypatch):
         import zipfile
 
-        from kiro_crew.dashboard.handlers import knowledge
+        from aj_crew.dashboard.handlers import knowledge
 
         path = tmp_path / "many.docx"
         with zipfile.ZipFile(path, "w") as z:
@@ -657,7 +657,7 @@ class TestZipArchivePreflight:
         assert knowledge._inspect_zip_archive(str(path)) == "too_many_members"
 
     def test_a_non_archive_still_reads_as_a_bad_archive(self, tmp_path):
-        from kiro_crew.dashboard.handlers import knowledge
+        from aj_crew.dashboard.handlers import knowledge
 
         path = tmp_path / "not.docx"
         path.write_bytes(b"PK\x03\x04" + b"\x00" * 32)
@@ -666,7 +666,7 @@ class TestZipArchivePreflight:
     def test_a_valid_archive_within_caps_still_passes(self, tmp_path):
         import zipfile
 
-        from kiro_crew.dashboard.handlers import knowledge
+        from aj_crew.dashboard.handlers import knowledge
 
         path = tmp_path / "ok.docx"
         with zipfile.ZipFile(path, "w") as z:

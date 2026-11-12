@@ -1,7 +1,7 @@
 """The cloud wizard's terminal UI: prompts, pickers, output helpers and spinner.
 
 ``test_cloud_ui.py`` pins the cursor-key mapping, the cursor-menu guard and the
-Ctrl-C re-raise. This file pins the rest of :mod:`kiro_crew.cloud.ui`:
+Ctrl-C re-raise. This file pins the rest of :mod:`aj_crew.cloud.ui`:
 
 * ``prompt`` / ``confirm`` fall back to their default on empty input and on EOF,
   which is what an unattended ``curl | bash`` install sees;
@@ -24,7 +24,7 @@ from collections.abc import Iterable
 
 import pytest
 
-from kiro_crew.cloud import ui
+from aj_crew.cloud import ui
 
 _COLORS = ("BOLD", "DIM", "RESET", "RED", "GREEN", "YELLOW", "BLUE", "MAGENTA", "CYAN")
 

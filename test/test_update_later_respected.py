@@ -18,8 +18,8 @@ from update_check_install_aware_helpers import (  # noqa: F401 -- the autouse fi
     _wheel_install,
 )
 
-from kiro_crew.platform.update_capability import AutoUpdateEffect
-from kiro_crew.platform.update_provider import CommandProvider, UpdateCheckResult
+from aj_crew.platform.update_capability import AutoUpdateEffect
+from aj_crew.platform.update_provider import CommandProvider, UpdateCheckResult
 
 _NOW = 1_800_000_000.0
 _DAY = 24 * 60 * 60
@@ -36,7 +36,7 @@ def _snoozed(version: str, until: float) -> dict:
     return {"version": version, "snoozed_until": until, "skipped": False}
 
 
-_GATEWAY_LOGGER = "kiro_crew.slack.gateway"
+_GATEWAY_LOGGER = "aj_crew.slack.gateway"
 _NOT_INSTALLED = "was put off by the user — not installing it unattended"
 _NOT_RESTARTED = "is ready but was put off by the user — not restarting"
 _BUILDING = "Auto-update enabled for managed install — building beside it"
@@ -69,13 +69,13 @@ def gateway_logs(caplog):
     ],
 )
 def test_the_record_defers_only_its_own_version_while_it_lasts(record, deferred) -> None:
-    from kiro_crew.update_deferral import user_deferred_update
+    from aj_crew.update_deferral import user_deferred_update
 
     assert user_deferred_update(_cfg(record), "9.9.9", now=_NOW) is deferred
 
 
 def test_an_unknown_version_is_never_deferred() -> None:
-    from kiro_crew.update_deferral import user_deferred_update
+    from aj_crew.update_deferral import user_deferred_update
 
     assert user_deferred_update(_cfg(_snoozed("", _NOW + _DAY)), "", now=_NOW) is False
 
@@ -84,7 +84,7 @@ def test_an_unknown_version_is_never_deferred() -> None:
 
 
 def _orchestrator():
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     orch = object.__new__(GatewayOrchestrator)
     orch.dashboard_state = MagicMock()
@@ -107,7 +107,7 @@ def _orchestrator():
 _MANAGED_UPDATE = {
     "update_available": True,
     "can_apply": False,
-    "managed_by": "kirocrew",
+    "managed_by": "ajcrew",
     "channel": "stable",
     "latest_version": "9.9.9",
     "remediation": {"kind": "command", "message": "m", "command": "curl -fsSL … | sh"},
@@ -124,8 +124,8 @@ _GIT_UPDATE = {
 
 
 def _run_legacy(cfg: SimpleNamespace, *, info: dict = _MANAGED_UPDATE, route: str = "wheel"):
-    import kiro_crew.dashboard.handlers as handlers
-    from kiro_crew.platform.governance import UpdatePins
+    import aj_crew.dashboard.handlers as handlers
+    from aj_crew.platform.governance import UpdatePins
 
     orch = _orchestrator()
     orch._prepare_auto_update_apply = AsyncMock(return_value=True)
@@ -136,12 +136,12 @@ def _run_legacy(cfg: SimpleNamespace, *, info: dict = _MANAGED_UPDATE, route: st
         handlers._update_info.update(info)
         with (
             patch.object(handlers, "_do_update_check", new_callable=AsyncMock),
-            patch("kiro_crew.config.KiroCrewConfig.load", return_value=cfg),
-            patch("kiro_crew.platform.update_governance.update_required", return_value=False),
-            patch("kiro_crew.platform.wheel_engine.running_from_managed_venv", return_value=True),
-            patch("kiro_crew.platform.governance.active_update_pins", return_value=UpdatePins()),
+            patch("aj_crew.config.AjCrewConfig.load", return_value=cfg),
+            patch("aj_crew.platform.update_governance.update_required", return_value=False),
+            patch("aj_crew.platform.wheel_engine.running_from_managed_venv", return_value=True),
+            patch("aj_crew.platform.governance.active_update_pins", return_value=UpdatePins()),
             patch(
-                "kiro_crew.slack.gateway.auto_update_effect",
+                "aj_crew.slack.gateway.auto_update_effect",
                 return_value=AutoUpdateEffect("install", route),
             ),
         ):
@@ -180,7 +180,7 @@ def test_without_a_live_deferral_the_update_still_installs(record, gateway_logs)
 
 
 def _run_provider(cfg: SimpleNamespace):
-    import kiro_crew.dashboard.handlers as handlers
+    import aj_crew.dashboard.handlers as handlers
 
     orch = _orchestrator()
     orch._auto_update_effect = AsyncMock(return_value=AutoUpdateEffect("install", "provider"))
@@ -201,10 +201,10 @@ def _run_provider(cfg: SimpleNamespace):
                 ),
             ),
             patch.object(CommandProvider, "apply", AsyncMock(return_value=True)) as apply,
-            patch("kiro_crew.config.KiroCrewConfig.load", return_value=cfg),
-            patch("kiro_crew.platform.update_governance.update_required", return_value=False),
+            patch("aj_crew.config.AjCrewConfig.load", return_value=cfg),
+            patch("aj_crew.platform.update_governance.update_required", return_value=False),
             patch(
-                "kiro_crew.platform.wheel_apply.snapshot_memory_before_update",
+                "aj_crew.platform.wheel_apply.snapshot_memory_before_update",
                 return_value=(0, ""),
             ),
         ):
@@ -245,7 +245,7 @@ def test_a_snoozed_git_update_is_not_pulled_unattended(gateway_logs) -> None:
 def test_a_git_update_nobody_put_off_still_pulls_and_queues_an_unheld_restart() -> None:
     orch = _run_legacy(_cfg(_snoozed("9.9.8", _FAR_FUTURE)), info=_GIT_UPDATE, route="git")
     orch._auto_apply_update.assert_awaited_once_with()
-    # The git apply reloads `kiro_crew`; its queued restart must never be held.
+    # The git apply reloads `aj_crew`; its queued restart must never be held.
     assert orch._pending_update_version == ""
 
 
@@ -264,9 +264,9 @@ def test_a_reloaded_git_restart_still_restarts_after_skip_and_a_raised_floor() -
     orch._restart_after_update = AsyncMock()
     orch._check_for_updates = AsyncMock()
     with (
-        patch("kiro_crew.config.KiroCrewConfig.load", return_value=_cfg(_SKIPPED_999)),
+        patch("aj_crew.config.AjCrewConfig.load", return_value=_cfg(_SKIPPED_999)),
         # The raised floor reads as met against the reloaded version.
-        patch("kiro_crew.platform.update_governance.update_required", return_value=False),
+        patch("aj_crew.platform.update_governance.update_required", return_value=False),
         _stop_after_one_cycle(),
         pytest.raises(_OneCycle),
     ):
@@ -298,7 +298,7 @@ def _run_one_pending_cycle(cfg: SimpleNamespace, *, mandatory: bool = False):
     orch._finish_auto_update_apply = AsyncMock()
     orch._check_for_updates = AsyncMock()
     with (
-        patch("kiro_crew.config.KiroCrewConfig.load", return_value=cfg),
+        patch("aj_crew.config.AjCrewConfig.load", return_value=cfg),
         _stop_after_one_cycle(),
         pytest.raises(_OneCycle),
     ):
@@ -341,8 +341,8 @@ def _run_held_cycle_through_the_real_check(
     cfg: SimpleNamespace, info: dict, effect: AutoUpdateEffect, *, floor: bool
 ):
     """One coordinator cycle with a skipped restart queued and the real check."""
-    import kiro_crew.dashboard.handlers as handlers
-    from kiro_crew.platform.governance import UpdatePins
+    import aj_crew.dashboard.handlers as handlers
+    from aj_crew.platform.governance import UpdatePins
 
     orch = _orchestrator()
     orch._pending_update_respawn = lambda: "/venv/bin/python"
@@ -357,12 +357,12 @@ def _run_held_cycle_through_the_real_check(
         handlers._update_info.update(info)
         with (
             patch.object(handlers, "_do_update_check", new_callable=AsyncMock),
-            patch("kiro_crew.config.KiroCrewConfig.load", return_value=cfg),
-            patch("kiro_crew.platform.update_governance.update_required", return_value=floor),
-            patch("kiro_crew.platform.update_governance.min_version", return_value="9.9.9"),
-            patch("kiro_crew.platform.wheel_engine.running_from_managed_venv", return_value=True),
-            patch("kiro_crew.platform.governance.active_update_pins", return_value=UpdatePins()),
-            patch("kiro_crew.slack.gateway.auto_update_effect", return_value=effect),
+            patch("aj_crew.config.AjCrewConfig.load", return_value=cfg),
+            patch("aj_crew.platform.update_governance.update_required", return_value=floor),
+            patch("aj_crew.platform.update_governance.min_version", return_value="9.9.9"),
+            patch("aj_crew.platform.wheel_engine.running_from_managed_venv", return_value=True),
+            patch("aj_crew.platform.governance.active_update_pins", return_value=UpdatePins()),
+            patch("aj_crew.slack.gateway.auto_update_effect", return_value=effect),
             _stop_after_one_cycle(),
             pytest.raises(_OneCycle),
         ):
@@ -419,16 +419,16 @@ def test_a_managed_venv_build_then_later_keeps_the_restart_queued() -> None:
     orch._finish_auto_update_apply = AsyncMock()
     orch._check_for_updates = AsyncMock()
     with (
-        patch("kiro_crew.platform.wheel_engine.check_release_version"),
-        patch("kiro_crew.platform.wheel_apply.preflight_bases", return_value=("f", "a")),
-        patch("kiro_crew.platform.wheel_apply.userns_reattach_needed", return_value=False),
-        patch("kiro_crew.platform.wheel_apply.relaunch_before_apply", return_value=False),
+        patch("aj_crew.platform.wheel_engine.check_release_version"),
+        patch("aj_crew.platform.wheel_apply.preflight_bases", return_value=("f", "a")),
+        patch("aj_crew.platform.wheel_apply.userns_reattach_needed", return_value=False),
+        patch("aj_crew.platform.wheel_apply.relaunch_before_apply", return_value=False),
         patch(
-            "kiro_crew.platform.wheel_apply.run_wheel_apply",
+            "aj_crew.platform.wheel_apply.run_wheel_apply",
             AsyncMock(return_value=SimpleNamespace(status="promoted")),
         ),
-        patch("kiro_crew.platform.wheel_apply.restart_reaches", return_value=True),
-        patch("kiro_crew.config.KiroCrewConfig.load", return_value=_cfg({})),
+        patch("aj_crew.platform.wheel_apply.restart_reaches", return_value=True),
+        patch("aj_crew.config.AjCrewConfig.load", return_value=_cfg({})),
     ):
         asyncio.run(orch._auto_apply_wheel_update("stable", "9.9.9"))
     assert orch._pending_update_respawn is not None
@@ -437,7 +437,7 @@ def test_a_managed_venv_build_then_later_keeps_the_restart_queued() -> None:
     orch._prepare_auto_update_apply = AsyncMock(return_value=True)
     with (
         patch(
-            "kiro_crew.config.KiroCrewConfig.load",
+            "aj_crew.config.AjCrewConfig.load",
             return_value=_cfg(_snoozed("9.9.9", _FAR_FUTURE)),
         ),
         _stop_after_one_cycle(),

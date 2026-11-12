@@ -8,8 +8,8 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import AcpPromptStats
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import AcpPromptStats
 
 
 class TestSetModelRebasesContextStats:
@@ -26,7 +26,7 @@ class TestSetModelRebasesContextStats:
         return client
 
     def _usage_msg(self, used, size):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         return JsonRpcMessage(
             method="session/update",
@@ -35,7 +35,7 @@ class TestSetModelRebasesContextStats:
 
     @pytest.mark.asyncio
     async def test_rebases_window_and_clears_usage_flag(self, tmp_path, monkeypatch):
-        import kiro_crew.acp.client as c
+        import aj_crew.acp.client as c
 
         monkeypatch.setattr(c.model_registry, "has_known_window", lambda mid: True)
         monkeypatch.setattr(c.model_registry, "model_window", lambda mid, **kw: 272_000)
@@ -62,7 +62,7 @@ class TestSetModelRebasesContextStats:
         against the substitute's token counts, so the percentage was wrong for
         exactly the sessions that were silently moved.
         """
-        import kiro_crew.acp.client as c
+        import aj_crew.acp.client as c
 
         windows = {"gpt-5.6-sol": 272_000, "substitute-model": 128_000}
         monkeypatch.setattr(c.model_registry, "has_known_window", lambda mid: mid in windows)
@@ -86,8 +86,8 @@ class TestSetModelRebasesContextStats:
         """Load-bearing: with the rebase reverted, context_tokens_from_usage
         stays True and this metadata pct would be ignored, leaving the window
         at the OLD model's 1M forever."""
-        import kiro_crew.acp.client as c
-        from kiro_crew.acp.types import JsonRpcMessage
+        import aj_crew.acp.client as c
+        from aj_crew.acp.types import JsonRpcMessage
 
         monkeypatch.setattr(c.model_registry, "has_known_window", lambda mid: True)
         monkeypatch.setattr(c.model_registry, "model_window", lambda mid, **kw: 272_000)
@@ -111,7 +111,7 @@ class TestSetModelRebasesContextStats:
     async def test_unknown_window_zeroes_out(self, tmp_path, monkeypatch):
         """A registry miss must not keep the old window: zero it so downstream
         consumers fall back to their own model-derived value."""
-        import kiro_crew.acp.client as c
+        import aj_crew.acp.client as c
 
         monkeypatch.setattr(c.model_registry, "has_known_window", lambda mid: False)
         client = self._client(tmp_path)
@@ -150,7 +150,7 @@ class TestModelEntitlementPreflight:
 
     @staticmethod
     def _client(advertised, model, is_claude=False):
-        from kiro_crew.acp.client import ACP_BACKEND_CLAUDE, AcpClient
+        from aj_crew.acp.client import ACP_BACKEND_CLAUDE, AcpClient
 
         client = AcpClient()
         client._session_id = "sess-1"
@@ -203,7 +203,7 @@ class TestModelEntitlementPreflight:
         Nothing goes on the wire and the session is recorded as running the
         backend default, so the turn proceeds instead of dying three retries in.
         """
-        from kiro_crew.acp.client import DEFAULT_MODEL
+        from aj_crew.acp.client import DEFAULT_MODEL
 
         client = self._client(["claude-sonnet-4.6"], "claude-opus-4.8")
         client._resolved_model_id = "claude-sonnet-4.6"
@@ -231,7 +231,7 @@ class TestModelEntitlementPreflight:
 
     @pytest.mark.asyncio
     async def test_startup_auto_keeps_the_backend_default(self):
-        from kiro_crew.acp.client import DEFAULT_MODEL
+        from aj_crew.acp.client import DEFAULT_MODEL
 
         client = self._client(["gpt-5.6-terra"], DEFAULT_MODEL)
         client._resolved_model_id = "gpt-5.6-terra"
@@ -283,7 +283,7 @@ class TestModelEntitlementPreflight:
     @pytest.mark.asyncio
     async def test_startup_still_withholds_namespaced_pin_absent_when_peeled(self):
         """The resolve is not a rubber stamp: absent under BOTH spellings withholds."""
-        from kiro_crew.acp.client import DEFAULT_MODEL
+        from aj_crew.acp.client import DEFAULT_MODEL
 
         client = self._client(["z-ai/glm-5.3-flash"], "openrouter::no-such-model")
         sent = []
@@ -415,7 +415,7 @@ class TestModelEntitlementPreflight:
     @pytest.mark.asyncio
     async def test_explicit_switch_is_refused_not_downgraded(self):
         """An explicit pick gets an error, because silence would misreport it."""
-        from kiro_crew.acp.client import AcpModelUnavailable
+        from aj_crew.acp.client import AcpModelUnavailable
 
         client = self._client(["claude-sonnet-4.6", "claude-haiku-4.5"], "claude-sonnet-4.6")
         sent = []
@@ -515,13 +515,13 @@ class TestColdCacheModelFallback:
         The advertised set is a module global another xdist test may warm; warm, the
         fold sends one push instead of three fallbacks.
         """
-        from kiro_crew import model_registry
+        from aj_crew import model_registry
 
         _floor_monkeypatch.setattr(model_registry, "_ADVERTISED_MODELS", {})
 
     @staticmethod
     def _claude_client(model):
-        from kiro_crew.acp.client import ACP_BACKEND_CLAUDE, AcpClient
+        from aj_crew.acp.client import ACP_BACKEND_CLAUDE, AcpClient
 
         client = AcpClient()
         client._session_id = "sess-1"
@@ -532,7 +532,7 @@ class TestColdCacheModelFallback:
 
     @staticmethod
     def _rejecting_set_config_option(applied, accepted):
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         async def _set_config_option(config_id, value):
             applied.append((config_id, value))
@@ -544,7 +544,7 @@ class TestColdCacheModelFallback:
     @pytest.mark.asyncio
     async def test_startup_falls_back_to_bare_spelling(self):
         """The reported failure: prefixed [1m] id refused, bare spelling served."""
-        from kiro_crew.acp.client import DEFAULT_MODEL
+        from aj_crew.acp.client import DEFAULT_MODEL
 
         client = self._claude_client("global.anthropic.claude-sonnet-4-6[1m]")
         applied = []
@@ -580,7 +580,7 @@ class TestColdCacheModelFallback:
     @pytest.mark.asyncio
     async def test_startup_all_refused_stays_on_default(self):
         """Every spelling refused = the withhold contract, not a crash."""
-        from kiro_crew.acp.client import DEFAULT_MODEL
+        from aj_crew.acp.client import DEFAULT_MODEL
 
         client = self._claude_client("global.anthropic.claude-sonnet-4-6[1m]")
         applied = []
@@ -594,7 +594,7 @@ class TestColdCacheModelFallback:
     @pytest.mark.asyncio
     async def test_explicit_switch_refused_raises_unavailable(self):
         """set_model is an explicit pick: refusal is typed, never a silent lie."""
-        from kiro_crew.acp.client import AcpModelUnavailable
+        from aj_crew.acp.client import AcpModelUnavailable
 
         client = self._claude_client("claude-sonnet-4-6[1m]")
         client.set_config_option = self._rejecting_set_config_option([], set())
@@ -620,7 +620,7 @@ class TestColdCacheModelFallback:
     @pytest.mark.asyncio
     async def test_unknown_config_option_skips_push(self):
         """No 'model' option at all (other adapter build): no spelling retry."""
-        from kiro_crew.acp.client import DEFAULT_MODEL, AcpError
+        from aj_crew.acp.client import DEFAULT_MODEL, AcpError
 
         client = self._claude_client("global.anthropic.claude-sonnet-4-6[1m]")
         applied = []
@@ -639,7 +639,7 @@ class TestColdCacheModelFallback:
     @pytest.mark.asyncio
     async def test_transport_error_propagates(self):
         """A non-value-rejection failure is not ours to swallow."""
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         client = self._claude_client("claude-sonnet-4-6[1m]")
 
@@ -652,7 +652,7 @@ class TestColdCacheModelFallback:
             await client._apply_startup_model()
 
     def test_candidate_order_is_derived_from_the_id(self):
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         assert AcpClient._model_config_candidates("global.anthropic.claude-sonnet-4-6[1m]") == [
             "global.anthropic.claude-sonnet-4-6[1m]",

@@ -23,11 +23,11 @@ from test_acp_runtime import (
     _stop_reader,
 )
 
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import METHOD_SESSION_UPDATE
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CODEX, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.skill_usage import get_global_skill_read_observer, set_global_skill_read_observer
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import METHOD_SESSION_UPDATE
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CODEX, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.skill_usage import get_global_skill_read_observer, set_global_skill_read_observer
+from aj_crew.testing.wait import await_until
 
 SKILL = "/x/skills/demo/SKILL.md"
 SHARED_RUNTIME_BACKENDS = (ACP_BACKEND_KIRO, ACP_BACKEND_KAS, ACP_BACKEND_CODEX)

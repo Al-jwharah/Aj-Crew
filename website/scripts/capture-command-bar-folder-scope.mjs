@@ -81,9 +81,9 @@ const APPS_LAUNCHER_OFF = [{ ...APPS[0], enabled: false }]
  * when two parents both hold one.
  */
 const FOLDERS = [
-  { id: 'f-kirocrew', name: 'kirocrew', order: 0, collapsed: false },
-  { id: 'f-oss', name: 'oss', order: 0, collapsed: false, parent_id: 'f-kirocrew' },
-  { id: 'f-reviews', name: 'reviews', order: 1, collapsed: false, parent_id: 'f-kirocrew' },
+  { id: 'f-ajcrew', name: 'ajcrew', order: 0, collapsed: false },
+  { id: 'f-oss', name: 'oss', order: 0, collapsed: false, parent_id: 'f-ajcrew' },
+  { id: 'f-reviews', name: 'reviews', order: 1, collapsed: false, parent_id: 'f-ajcrew' },
   { id: 'f-personal', name: 'personal', order: 1, collapsed: false },
   { id: 'f-finance', name: 'finance', order: 0, collapsed: false, parent_id: 'f-personal' },
   { id: 'f-travel', name: 'travel', order: 1, collapsed: false, parent_id: 'f-personal' },
@@ -209,7 +209,7 @@ async function shot(page, name) {
   await page.getByRole('option').filter({ hasText: 'travel' }).first().waitFor({ state: 'detached', timeout: 5_000 })
   const rows = await page.getByRole('option').allTextContents()
   assert('query narrows the corpus', rows.length < FOLDERS.length, `${rows.length} rows`)
-  assert('row carries its parent path', /kirocrew/.test(rows.join(' | ')), rows.join(' | ').slice(0, 200))
+  assert('row carries its parent path', /ajcrew/.test(rows.join(' | ')), rows.join(' | ').slice(0, 200))
   await shot(page, '3-scope-query-narrowed.png')
   await context.close()
 }

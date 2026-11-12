@@ -1,7 +1,7 @@
 """The app backend's composition: one facade over private supervision owners.
 
-``kiro_crew.apps.backend`` is the backend's only import path and patch surface, and its
-responsibilities live in ``kiro_crew.apps.backend_runtime``. For that split to be
+``aj_crew.apps.backend`` is the backend's only import path and patch surface, and its
+responsibilities live in ``aj_crew.apps.backend_runtime``. For that split to be
 invisible to every caller, each property below is pinned in the direction that would
 catch a regression rather than in the direction that restates the code.
 
@@ -11,7 +11,7 @@ catch a regression rather than in the direction that restates the code.
 * A name and the symbol it denotes cannot come apart: every module holding a name holds
   the same object -- the process table and its locks included -- and a write through
   the facade reaches all of them, which is what the suite's ``monkeypatch.setattr(bmod,
-  ...)``, ``mock.patch("kiro_crew.apps.backend....")`` and ``bmod._processes.clear()``
+  ...)``, ``mock.patch("aj_crew.apps.backend....")`` and ``bmod._processes.clear()``
   sites rely on.
 * The owners form one acyclic stack under the facade and none imports it. The
   constructs repository guards pin to ``backend.py`` stay there, and exactly seven call
@@ -44,8 +44,8 @@ from unittest import mock
 import composition_contract_checks
 import pytest
 
-from kiro_crew.apps import backend
-from kiro_crew.apps.backend_runtime import (
+from aj_crew.apps import backend
+from aj_crew.apps.backend_runtime import (
     pidfile,
     ports,
     probe,
@@ -64,8 +64,8 @@ from kiro_crew.apps.backend_runtime import (
 pytestmark = pytest.mark.xdist_group(name="tree_scan_app_backend_composition")
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
-_RUNTIME_DIR = _REPO_ROOT / "src/kiro_crew/apps/backend_runtime"
-_RUNTIME_PACKAGE = "kiro_crew.apps.backend_runtime"
+_RUNTIME_DIR = _REPO_ROOT / "src/aj_crew/apps/backend_runtime"
+_RUNTIME_PACKAGE = "aj_crew.apps.backend_runtime"
 
 #: The owners in the facade's declared layer order, lowest first.
 PARTS: tuple[ModuleType, ...] = (
@@ -93,9 +93,9 @@ FROZEN_NAMES: tuple[str, ...] = (
     "GOVERNANCE_ERROR_REASON",
     "HealthProbeOutcome",
     "Iterator",
-    "KIROCREW_SPAWNED_ENV",
-    "KIROCREW_SPAWNED_VALUE",
-    "KIROCREW_SPAWN_INSTANCE_ENV",
+    "AJCREW_SPAWNED_ENV",
+    "AJCREW_SPAWNED_VALUE",
+    "AJCREW_SPAWN_INSTANCE_ENV",
     "Literal",
     "MD_NOTEBOOK_APP_NAME",
     "Path",
@@ -366,9 +366,9 @@ FACADE_MACHINERY: frozenset[str] = frozenset(
 #: The residents the facade calls into from the spawn transaction, and the text
 #: read-only guards read in the facade's source: ``(guard, text)``.
 GUARDED_FACADE_TEXT: tuple[tuple[str, str], ...] = (
-    ("test_frontend_edition_build.py", '_platform_extra["KIROCREW_EDITION_DIR"]'),
-    ("test_dev_fleet_app.py", "KIROCREW_HOME=str(config_dir())"),
-    ("test_dev_fleet_app.py", '"KIROCREW_PROJECT_DIR"'),
+    ("test_frontend_edition_build.py", '_platform_extra["AJCREW_EDITION_DIR"]'),
+    ("test_dev_fleet_app.py", "AJCREW_HOME=str(config_dir())"),
+    ("test_dev_fleet_app.py", '"AJCREW_PROJECT_DIR"'),
     ("test_sandbox_dev_fleet_live_target.py", "_shipped_md_notebook"),
     ("test_app_bridges.py", "resolve_app_python("),
     ("test_app_backend_spawn_env.py", "_host_grants.backend_env_names()"),
@@ -379,7 +379,7 @@ GUARDED_FACADE_TEXT: tuple[tuple[str, str], ...] = (
 FORBIDDEN_BACKEND_TEXT: tuple[tuple[str, str], ...] = (
     ("test_app_bridges.py", '".venv" / "bin" / "python3").is_file()'),
     ("test_sandbox_dev_fleet_live_target.py", "_shipped_dev_fleet"),
-    ("test_frontend_edition_build.py", '_platform_extra["KIROCREW_ALLOW_EDITION"]'),
+    ("test_frontend_edition_build.py", '_platform_extra["AJCREW_ALLOW_EDITION"]'),
 )
 
 #: Names the owners rebind with ``global``, and the one module that may hold each.
@@ -559,7 +559,7 @@ class TestTheSurfaceSurvivesTheSplit(composition_contract_checks.TheFrozenInvent
         public = {name for name in FROZEN_NAMES if not name.startswith("_")}
         assert set(backend.__all__) == public
         probe_path = tmp_path / "backend_star_probe.py"
-        probe_path.write_text("from kiro_crew.apps.backend import *\n", encoding="utf-8")
+        probe_path.write_text("from aj_crew.apps.backend import *\n", encoding="utf-8")
         spec = importlib.util.spec_from_file_location("backend_star_probe", probe_path)
         assert spec and spec.loader
         star = importlib.util.module_from_spec(spec)
@@ -673,7 +673,7 @@ class TestOneNamespaceForWrites:
             assert vars(module)[_MULTI_HOLDER] is original
 
     def test_a_dotted_string_patch_restores_every_holder(self) -> None:
-        # The spelling most of the suite uses: ``mock.patch("kiro_crew.apps.backend.X")``.
+        # The spelling most of the suite uses: ``mock.patch("aj_crew.apps.backend.X")``.
         holders = [module for module in _holders(_MULTI_HOLDER) if module is not backend]
         original = getattr(backend, _MULTI_HOLDER)
         with mock.patch(f"{backend.__name__}.{_MULTI_HOLDER}") as fake:
@@ -769,11 +769,11 @@ class TestOneNamespaceForWrites:
             assert vars(module)[_MULTI_HOLDER] is original
 
     def test_every_part_logs_through_the_facades_logger(self) -> None:
-        # Log routing, filters and ``caplog.at_level(..., logger="kiro_crew.apps.backend")``
+        # Log routing, filters and ``caplog.at_level(..., logger="aj_crew.apps.backend")``
         # captures key on the facade's name.
         for part in PARTS:
             assert part.logger is backend.logger, part.__name__
-        assert backend.logger.name == backend.__name__ == "kiro_crew.apps.backend"
+        assert backend.logger.name == backend.__name__ == "aj_crew.apps.backend"
 
 
 # A patch on the facade reaches the call site in whichever owner makes the call
@@ -910,7 +910,7 @@ class TestAPatchOnTheFacadeReachesEveryCallSite:
     ) -> None:
         # The facade's own transaction: the public start calls the body the facade
         # binds, so the suite's many body replacements keep reaching it.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         manifest = SimpleNamespace(backend=SimpleNamespace(entryPoint="server.py"))
         monkeypatch.setattr(backend, "get_app_manifest", lambda name: manifest)
         record = backend.AppProcess(app_name="body-app", port=9140)
@@ -1076,7 +1076,7 @@ class TestLayering(composition_contract_checks.TheFacadeHelperIsOnlyEverCalledIn
         assert _facade_reads("def f():\n    return facade()._pid_alive(1)\n") == set()
 
     def test_the_runtime_helper_answers_the_facade(self) -> None:
-        from kiro_crew.apps import backend_runtime
+        from aj_crew.apps import backend_runtime
 
         assert backend_runtime._FACADE == backend.__name__
         assert backend_runtime._facade() is backend
@@ -1086,7 +1086,7 @@ class TestLayering(composition_contract_checks.TheFacadeHelperIsOnlyEverCalledIn
         # then for the facade by name. Run as a copy of the helper bound to stand-in
         # ``sys`` and ``importlib``, so the process's module table is never touched
         # while other threads may be resolving the facade.
-        from kiro_crew.apps import backend_runtime
+        from aj_crew.apps import backend_runtime
 
         stand_in = ModuleType(backend.__name__)
         imported: list[str] = []
@@ -1174,7 +1174,7 @@ class TestTheFacadesOwnCode:
         assert (
             _bare_loads(
                 "if TYPE_CHECKING:\n"
-                "    from kiro_crew.apps.backend_runtime.pidfile import _pidfile_path\n"
+                "    from aj_crew.apps.backend_runtime.pidfile import _pidfile_path\n"
                 "def f():\n"
                 "    return _part('x')._pidfile_path()\n"
             )
@@ -1217,7 +1217,7 @@ class TestTheFacadesOwnCode:
             assert refused.call_count == 0
             # The refusal sits on the binding the miss path calls.
             with pytest.raises(AssertionError, match="resolution imported"):
-                backend._part("kiro_crew._backend_absent_probe")
+                backend._part("aj_crew._backend_absent_probe")
             assert refused.call_count == 1
 
     def test_the_facade_call_sites_resolve_without_import_module(
@@ -1226,7 +1226,7 @@ class TestTheFacadesOwnCode:
         # The boot wave reaches the facade's start through ``backend_runtime._facade()``.
         # A test that stubs ``importlib.import_module`` for its own reasons must not be
         # able to answer it.
-        from kiro_crew.apps import backend_runtime
+        from aj_crew.apps import backend_runtime
 
         monkeypatch.setattr(backend, "_preclaim_fixed_ports", lambda names: None)
         monkeypatch.setattr(
@@ -1245,8 +1245,8 @@ class TestTheFacadesOwnCode:
 
 _RELOAD_PROBE = """
 import importlib, json, sys
-from kiro_crew.apps import backend
-from kiro_crew.apps.backend_runtime import probe, tracking
+from aj_crew.apps import backend
+from aj_crew.apps.backend_runtime import probe, tracking
 before_record = tracking.AppProcess
 before_table = tracking._processes
 importlib.reload(backend)
@@ -1276,14 +1276,14 @@ def test_a_reload_of_the_facade_reloads_every_owner(tmp_path: Path) -> None:
     import os
     import subprocess
 
-    from kiro_crew.subprocess_utf8 import UTF8_TEXT
+    from aj_crew.subprocess_utf8 import UTF8_TEXT
 
     # The child imports this checkout's package, as the parent does through pytest's
-    # ``pythonpath``, not whichever ``kiro_crew`` its interpreter would otherwise find.
+    # ``pythonpath``, not whichever ``aj_crew`` its interpreter would otherwise find.
     source = _REPO_ROOT / "src"
     env = {
         **os.environ,
-        "KIROCREW_HOME": str(tmp_path / "data"),
+        "AJCREW_HOME": str(tmp_path / "data"),
         "PYTHONPATH": os.pathsep.join([str(source), os.environ.get("PYTHONPATH", "")]),
     }
     completed = subprocess.run(

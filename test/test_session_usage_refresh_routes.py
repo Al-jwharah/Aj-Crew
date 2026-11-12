@@ -24,8 +24,8 @@ from session_usage_helpers import (
     _reset_usage_globals,
 )
 
-import kiro_crew.dashboard.handlers.sessions as sessions_mod
-from kiro_crew.testing.wait import async_wait_until, await_until
+import aj_crew.dashboard.handlers.sessions as sessions_mod
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 class TestPollNeverRefreshesInsideTheInterval:
@@ -118,7 +118,7 @@ def _refresh_app():
 def _owner(verdict: bool):
     """Pin the shared owner predicate, to prove the route does not consult it."""
     return patch(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         return_value=verdict,
     )
 
@@ -133,11 +133,11 @@ class TestUsageRefreshRoute:
     """
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture, moved verbatim; no test of the class calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture, moved verbatim; no test of the class calls monkeypatch.undo()
     def _reset(self, monkeypatch):
         _reset_usage_globals()
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.sessions.wrap_argv",
+            "aj_crew.dashboard.handlers.sessions.wrap_argv",
             lambda argv, **k: (list(argv), None),
         )
         # The API yields no plan -- the case where only the scrape can produce a
@@ -412,7 +412,7 @@ class TestUsageRefreshRoute:
     def test_the_route_is_registered_next_to_the_get(self):
         from aiohttp import web
 
-        from kiro_crew.dashboard.routes.system import register as register_system_routes
+        from aj_crew.dashboard.routes.system import register as register_system_routes
 
         app = web.Application()
         register_system_routes(app)

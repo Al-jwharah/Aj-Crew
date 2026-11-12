@@ -34,14 +34,14 @@ async def _noop_probe_server(server):
 
 
 def _write_agent_config(path: Path, *, tools: list[str], allowed: list[str], servers: dict) -> None:
-    """Write a ``kirocrew.json`` agent config with the given managed
+    """Write an ``ajcrew.json`` agent config with the given managed
     servers + tool references. Typed keyword arguments make it obvious
     which fields each test cares about.
     """
     path.write_text(
         json.dumps(
             {
-                "name": "kirocrew",
+                "name": "ajcrew",
                 "tools": tools,
                 "allowedTools": allowed,
                 "mcpServers": servers,
@@ -54,37 +54,37 @@ def _write_agent_config(path: Path, *, tools: list[str], allowed: list[str], ser
 
 
 def _healthy_agent_file(path: Path) -> None:
-    """Write a ``kirocrew.json`` whose managed MCP servers are all present
+    """Write an ``ajcrew.json`` whose managed MCP servers are all present
     so ``_doctor()``'s MCP section passes its static config check and only
     the (mocked) live probe remains. Used by doctor tests that exercise an
     unrelated section and must not trip the MCP exit path on an empty config.
 
     The server set is DERIVED from the same registry ``cli_doctor`` iterates
-    (``mcp_cleanup.KIROCREW_BIN_MCP_SERVERS``) rather than hardcoded: doctor
+    (``mcp_cleanup.AJCREW_BIN_MCP_SERVERS``) rather than hardcoded: doctor
     reports every managed server missing from ``mcpServers`` as an issue and
     exits 1, so a literal list here silently rots the moment a managed server is
-    added — which is exactly how these fixtures broke when ``kirocrew-computer``
+    added — which is exactly how these fixtures broke when ``ajcrew-computer``
     landed.
     """
-    from kiro_crew.mcp_cleanup import KIROCREW_BIN_MCP_SERVERS
+    from aj_crew.mcp_cleanup import AJCREW_BIN_MCP_SERVERS
 
-    refs = [f"@{name}" for name in KIROCREW_BIN_MCP_SERVERS]
+    refs = [f"@{name}" for name in AJCREW_BIN_MCP_SERVERS]
     _write_agent_config(
         path,
         tools=refs,
         allowed=refs,
         servers={
             name: {
-                # sys.executable, not a literal like /usr/local/bin/kirocrew:
+                # sys.executable, not a literal like /usr/local/bin/ajcrew:
                 # doctor's dead-path scan stats every absolute command for real
                 # (no shutil.which stub covers it), so the fixture's "healthy"
                 # spec must name a binary that actually exists on the runner.
                 "command": sys.executable,
-                # The subcommand is the server name minus the "kirocrew-" prefix
-                # ("kirocrew-core" -> "mcp-core"), matching the real invocation.
+                # The subcommand is the server name minus the "ajcrew-" prefix
+                # ("ajcrew-core" -> "mcp-core"), matching the real invocation.
                 "args": [f"mcp-{name.split('-', 1)[1]}"],
             }
-            for name in KIROCREW_BIN_MCP_SERVERS
+            for name in AJCREW_BIN_MCP_SERVERS
         },
     )
 
@@ -92,8 +92,8 @@ def _healthy_agent_file(path: Path) -> None:
 def _pin_default_config(monkeypatch) -> None:
     """Make ``_doctor()``'s config read hermetic for doctor tests.
 
-    ``_doctor()`` calls the real ``KiroCrewConfig.load()`` / ``load_credentials()``,
-    which read the shared ``~/.kirocrew`` config at runtime. ``KiroCrewConfig.save()``
+    ``_doctor()`` calls the real ``AjCrewConfig.load()`` / ``load_credentials()``,
+    which read the shared ``~/.ajcrew`` config at runtime. ``AjCrewConfig.save()``
     writes that same shared path non-atomically, so under ``pytest -n auto`` a
     concurrent worker's config write races these reads: a polluted/foreign config
     flips a check and ``_doctor()`` exits 1. xdist worker interleaving differs per
@@ -112,23 +112,23 @@ def _pin_default_config(monkeypatch) -> None:
     ``kiro-cli 1.0.0`` does not report. That kiro-cli resolves too, because a
     selected Kiro CLI role with none installed is an issue.
     """
-    from kiro_crew import cli_doctor
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_KIRO
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew import cli_doctor
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_KIRO
+    from aj_crew.config.loader import AjCrewConfig
 
-    def _pristine() -> KiroCrewConfig:
-        cfg = KiroCrewConfig()
+    def _pristine() -> AjCrewConfig:
+        cfg = AjCrewConfig()
         cfg.stt.enabled = False
         cfg.agent.acp_backend = ACP_BACKEND_KIRO
         return cfg
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: _pristine()))
-    monkeypatch.setattr(KiroCrewConfig, "load_credentials", lambda self, **kw: {})
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: _pristine()))
+    monkeypatch.setattr(AjCrewConfig, "load_credentials", lambda self, **kw: {})
     monkeypatch.setattr(cli_doctor, "resolve_kiro_cli", lambda: "/usr/local/bin/kiro-cli")
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim; no importing module calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim; no importing module calls monkeypatch.undo()
 def _doctor_reads_the_warm_probe_cache(monkeypatch):
     """The doctor's blocking ``warm_backend()`` is a no-op here.
 
@@ -142,7 +142,7 @@ def _doctor_reads_the_warm_probe_cache(monkeypatch):
     thing a warmed boot gives it. Nothing in this file tests the warm itself
     (``test_sandbox_backend_cache.py`` does).
     """
-    import kiro_crew.cli_doctor as _doc
+    import aj_crew.cli_doctor as _doc
 
     monkeypatch.setattr(_doc, "warm_backend", lambda timeout=None: None)
 
@@ -162,10 +162,10 @@ class _TestChatPermissionRequestHarness:
     _TIMEOUT = 10.0
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture moved verbatim; no test of these classes calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class autouse fixture moved verbatim; no test of these classes calls monkeypatch.undo()
     def _fresh_stdin_state(self, monkeypatch):
         """Poisoning is process-wide state; monkeypatch restores it per test."""
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         monkeypatch.setattr(cli_chat, "_stdin_poisoned", False)
 
@@ -199,7 +199,7 @@ class _TestChatPermissionRequestHarness:
         miss -- where nothing was classified and the gate must refuse rather than
         read the payload's own kind -- is opted into explicitly.
         """
-        from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+        from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
 
         return LLMEvent(
             kind=EVENT_PERMISSION_REQUEST,
@@ -233,7 +233,7 @@ class _TestChatPermissionRequestHarness:
             return [t for t in self.trace if t[0] in ("approve", "reject")]
 
         async def stream(self, message):
-            from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+            from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
             yield LLMEvent(kind=EVENT_TEXT_CHUNK, text="I'll check that. ")
             yield self._event
@@ -258,8 +258,8 @@ class _TestChatPermissionRequestHarness:
     def _gate():
         """A gate carrying the REAL HookManager: the built-in sensitive-path and
         denied-command rules are the thing under test in several cases."""
-        import kiro_crew.cli_chat as cli_chat
-        from kiro_crew.hooks import HookManager, HooksConfig
+        import aj_crew.cli_chat as cli_chat
+        from aj_crew.hooks import HookManager, HooksConfig
 
         return cli_chat._ToolGate(hooks=HookManager(HooksConfig.from_dict({})), agent="cli-tester")
 
@@ -272,7 +272,7 @@ class _TestChatPermissionRequestHarness:
         rule, the daemon-thread plumbing, the gate call and the audit ordering
         all run as production code.
         """
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         monkeypatch.setattr(sys.stdin, "isatty", lambda: tty, raising=False)
         monkeypatch.setattr(sys.stdout, "isatty", lambda: tty, raising=False)
@@ -309,7 +309,7 @@ class _TestChatPermissionRequestHarness:
         patched onto the real streams, so the production ``_can_prompt`` decides
         -- patching that helper would test the stub rather than the rule.
         """
-        import kiro_crew.cli_chat as cli_chat
+        import aj_crew.cli_chat as cli_chat
 
         trace: list = []
         provider = self._GatedProvider(event or self._event(), trace)

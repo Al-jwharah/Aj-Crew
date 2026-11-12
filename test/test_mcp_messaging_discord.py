@@ -16,19 +16,19 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import api_send_message
-from kiro_crew.discord.client import DISCORD_CHUNK_LIMIT
-from kiro_crew.discord.transport import DiscordTransport
-from kiro_crew.mcp_core import _call_tool
-from kiro_crew.mcp_tools.messaging import (
+from aj_crew.dashboard.handlers import api_send_message
+from aj_crew.discord.client import DISCORD_CHUNK_LIMIT
+from aj_crew.discord.transport import DiscordTransport
+from aj_crew.mcp_core import _call_tool
+from aj_crew.mcp_tools.messaging import (
     _CHANNEL_SESSIONS,
     _SESSION_TARGETS,
     _SLACK_ONLY_FIELDS,
     schemas,
 )
-from kiro_crew.messaging.transport import ConfiguredChannelTarget, TransportCapabilities
-from kiro_crew.platform.governance import Decision
-from kiro_crew.validation import SEND_MESSAGE_SCHEMA, ValidationError, validate_tool_args
+from aj_crew.messaging.transport import ConfiguredChannelTarget, TransportCapabilities
+from aj_crew.platform.governance import Decision
+from aj_crew.validation import SEND_MESSAGE_SCHEMA, ValidationError, validate_tool_args
 
 CRON_CALLER = "cron:abc123"
 OWNER_ID = "424242424242424242"
@@ -39,12 +39,12 @@ def _PINNED_HOME_ONLY() -> dict[str, str]:
     """An otherwise-empty environment that KEEPS the suite's data-home pin.
 
     ``patch.dict(os.environ, {}, clear=True)`` is the right shape for "no caller
-    identity in the environment", but it also dropped ``KIROCREW_HOME``, so the
+    identity in the environment", but it also dropped ``AJCREW_HOME``, so the
     session-key resolver inside the call fell through to, and created, the
     operator's real ``~/.kiro/crew`` (audit 3). The pin is not an identity.
     """
-    home = os.environ.get("KIROCREW_HOME")
-    return {"KIROCREW_HOME": home} if home else {}
+    home = os.environ.get("AJCREW_HOME")
+    return {"AJCREW_HOME": home} if home else {}
 
 
 def _descriptor() -> dict:
@@ -110,12 +110,12 @@ def _channels_policy(allowed: str):
 @pytest.fixture
 def cron_caller():
     """Run the tool as a cron, the caller whose bare sends default to Slack."""
-    with patch.dict("os.environ", {"KIROCREW_SESSION_KEY": CRON_CALLER}):
+    with patch.dict("os.environ", {"AJCREW_SESSION_KEY": CRON_CALLER}):
         yield
 
 
 def test_discord_session_reaches_the_gateway(cron_caller) -> None:
-    with patch("kiro_crew.mcp_core._post") as post:
+    with patch("aj_crew.mcp_core._post") as post:
         post.return_value = {"ok": True, "delivered_to": "discord"}
         result = _call_tool("send_message", {"text": "hi", "session": "discord"})
     assert post.call_args[0][1]["session"] == "discord"
@@ -129,9 +129,9 @@ def test_discord_session_is_vetted_on_discord_and_not_on_slack(cron_caller) -> N
     never touches Slack.
     """
     with (
-        patch("kiro_crew.mcp_core._post") as post,
+        patch("aj_crew.mcp_core._post") as post,
         patch(
-            "kiro_crew.mcp_core._vet_channel_governance", side_effect=_channels_policy("discord")
+            "aj_crew.mcp_core._vet_channel_governance", side_effect=_channels_policy("discord")
         ) as vet,
     ):
         post.return_value = {"ok": True, "delivered_to": "discord"}
@@ -143,9 +143,9 @@ def test_discord_session_is_vetted_on_discord_and_not_on_slack(cron_caller) -> N
 
 def test_slack_session_is_still_vetted_on_slack(cron_caller) -> None:
     with (
-        patch("kiro_crew.mcp_core._post") as post,
+        patch("aj_crew.mcp_core._post") as post,
         patch(
-            "kiro_crew.mcp_core._vet_channel_governance", side_effect=_channels_policy("discord")
+            "aj_crew.mcp_core._vet_channel_governance", side_effect=_channels_policy("discord")
         ) as vet,
     ):
         post.return_value = {"ok": True, "delivered_to": "slack"}
@@ -158,9 +158,9 @@ def test_slack_session_is_still_vetted_on_slack(cron_caller) -> None:
 
 def test_governance_denial_stops_the_discord_send(cron_caller) -> None:
     with (
-        patch("kiro_crew.mcp_core._post") as post,
+        patch("aj_crew.mcp_core._post") as post,
         patch(
-            "kiro_crew.mcp_core._vet_channel_governance",
+            "aj_crew.mcp_core._vet_channel_governance",
             return_value="messaging via transport 'discord' blocked by governance policy",
         ),
     ):
@@ -184,7 +184,7 @@ def test_governance_denial_stops_the_discord_send(cron_caller) -> None:
 )
 def test_slack_only_option_with_discord_is_refused(cron_caller, field: str, value) -> None:
     """Refused, not delivered with the option dropped: the caller cannot see a drop."""
-    with patch("kiro_crew.mcp_core._post") as post:
+    with patch("aj_crew.mcp_core._post") as post:
         result = _call_tool("send_message", {"text": "hi", "session": "discord", field: value})
     post.assert_not_called()
     assert result.startswith("Error:")
@@ -211,7 +211,7 @@ def test_channel_target_with_a_slack_routing_field_is_refused(cron_caller, field
     Refused, not dropped: a silently discarded ``channel`` or ``thread_ts`` would let
     the caller read a private Webex DM as a Slack thread post. Nothing is posted.
     """
-    with patch("kiro_crew.mcp_core._post") as post:
+    with patch("aj_crew.mcp_core._post") as post:
         result = _call_tool(
             "send_message",
             {"text": "hi", "channel_type": "webex", "target_id": "user:a@b.com", field: value},
@@ -230,7 +230,7 @@ def test_a_channel_addressed_send_does_not_claim_a_dm_or_notification(cron_calle
     REQUIRES a strictly-resolved one; the refusal itself is pinned below.
     """
     with patch(
-        "kiro_crew.mcp_core._post", return_value={"ok": True, "delivered_to": "webex", "parts": 1}
+        "aj_crew.mcp_core._post", return_value={"ok": True, "delivered_to": "webex", "parts": 1}
     ):
         result = _call_tool(
             "send_message",
@@ -245,7 +245,7 @@ def test_a_channel_send_that_reached_nobody_is_an_error(cron_caller, code) -> No
     """A fault and a permission refusal both return "Error:", the prefix
     ``call_tool_with_logging`` audits as a failed call."""
     with patch(
-        "kiro_crew.mcp_core._post",
+        "aj_crew.mcp_core._post",
         return_value={"ok": False, "code": code, "error": "telegram delivery failed: no"},
     ):
         result = _call_tool("send_message", {"text": "hi", "channel_type": "telegram"})
@@ -260,7 +260,7 @@ def test_an_addressed_send_is_refused_without_a_verifiable_identity() -> None:
     """
     with (
         patch.dict("os.environ", _PINNED_HOME_ONLY(), clear=True),
-        patch("kiro_crew.mcp_core._post") as post,
+        patch("aj_crew.mcp_core._post") as post,
     ):
         result = _call_tool(
             "send_message",
@@ -279,7 +279,7 @@ def test_a_bare_send_still_works_without_a_verifiable_identity() -> None:
     """
     with (
         patch.dict("os.environ", _PINNED_HOME_ONLY(), clear=True),
-        patch("kiro_crew.mcp_core._post", return_value={"ok": True}) as post,
+        patch("aj_crew.mcp_core._post", return_value={"ok": True}) as post,
     ):
         result = _call_tool("send_message", {"text": "hi"})
     post.assert_called_once()
@@ -312,7 +312,7 @@ def test_every_slack_only_field_is_covered_by_the_refusal() -> None:
 
 def test_notification_only_fallback_warns_that_discord_missed(cron_caller) -> None:
     """A notification is not a DM; a success string here would hide the miss."""
-    with patch("kiro_crew.mcp_core._post") as post:
+    with patch("aj_crew.mcp_core._post") as post:
         post.return_value = {"ok": True, "delivered_to": "notification"}
         result = _call_tool("send_message", {"text": "hi", "session": "discord"})
     assert "⚠️" in result
@@ -365,7 +365,7 @@ def _app(state) -> web.Application:
 
 @pytest.fixture
 def audit():
-    with patch("kiro_crew.sel.sel") as factory:
+    with patch("aj_crew.sel.sel") as factory:
         recorder = MagicMock()
         factory.return_value = recorder
         yield recorder
@@ -436,7 +436,7 @@ async def test_a_body_caller_session_is_ignored_without_internal_auth() -> None:
         return web.json_response({"ok": True, "delivered_to": channel_type, "parts": 1})
 
     with patch.object(
-        __import__("kiro_crew.dashboard.handlers.messaging", fromlist=["_send_to_channel_target"]),
+        __import__("aj_crew.dashboard.handlers.messaging", fromlist=["_send_to_channel_target"]),
         "_send_to_channel_target",
         _capture,
     ):
@@ -478,7 +478,7 @@ async def test_governance_denial_blocks_delivery_and_is_audited(audit) -> None:
         permitted=False, reason="channels denies discord", rule="rule1-deny", layer="policy"
     )
     with patch(
-        "kiro_crew.platform.governance_profiles.governance_permits", return_value=denied
+        "aj_crew.platform.governance_profiles.governance_permits", return_value=denied
     ) as permits:
         async with TestClient(TestServer(_app(_state(transport)))) as client:
             resp = await client.post(
@@ -680,7 +680,7 @@ async def test_a_non_cron_channel_session_vets_on_the_headers_attested_identity(
         seen.append(caller_session)
         return True, "", ""
 
-    module = __import__("kiro_crew.dashboard.handlers.messaging", fromlist=["_deliver_channel_dm"])
+    module = __import__("aj_crew.dashboard.handlers.messaging", fromlist=["_deliver_channel_dm"])
     with patch.object(module, "_deliver_channel_dm", _capture):
         async with TestClient(TestServer(_app(_state(_discord_transport())))) as client:
             resp = await client.post(

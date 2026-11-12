@@ -250,14 +250,14 @@
     "events": [
       {
         "kind": "text_chunk",
-        "text": "{\"kiro-crew-steer\":1,\"nonce\":\"bf46895eeacd42b7a7f2b86d4242ea47\",\"seq\":1}"
+        "text": "{\"aj-crew-steer\":1,\"nonce\":\"bf46895eeacd42b7a7f2b86d4242ea47\",\"seq\":1}"
       }
     ],
     "frame": "session/update",
     "pi_steer_consumed": 1,
     "session_update": "agent_message_chunk",
     "text_chunk": {
-      "text": "{\"kiro-crew-steer\":1,\"nonce\":\"bf46895eeacd42b7a7f2b86d4242ea47\",\"seq\":1}",
+      "text": "{\"aj-crew-steer\":1,\"nonce\":\"bf46895eeacd42b7a7f2b86d4242ea47\",\"seq\":1}",
       "thinking": false
     }
   },

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.skills import AutoSkillProvenance, SkillsLoader
+from aj_crew.skills import AutoSkillProvenance, SkillsLoader
 
 
 def _iso(days_ago: float) -> str:
@@ -147,7 +147,7 @@ def test_pin_write_failure_preserves_skill(loader, monkeypatch):
     atomic_write leaves the original content intact on error."""
     import pathlib
 
-    import kiro_crew.skills as S
+    import aj_crew.skills as S
 
     name = _mk(loader, "keepme", created_days_ago=1)
     skill_file = pathlib.Path(loader._dir / name / "SKILL.md")
@@ -164,7 +164,7 @@ def test_pin_write_failure_preserves_skill(loader, monkeypatch):
 
 def test_update_skill_routes_windows_dacl_preservation_through_atomic_write(loader, monkeypatch):
     """A SKILL.md save keeps the file's own Windows DACL, like the other two overwrites."""
-    import kiro_crew.skills as S
+    import aj_crew.skills as S
 
     loader.create_skill("hand/kept", "---\nname: hand/kept\n---\nbody")
     captured: dict[str, object] = {}

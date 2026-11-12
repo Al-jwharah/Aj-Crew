@@ -1,11 +1,11 @@
-# Kiro Crew Website — Agent Guidelines
+# Aj Crew Website — Agent Guidelines
 
 **This file is a ROUTER, not a manual.** It carries only the rules whose violation
 causes damage before a pointer could be read. Everything else is a link you MUST
 open before touching that area. The backend router is [`../AGENTS.md`](../AGENTS.md).
 
-React + TypeScript + Vite SPA for the Kiro Crew dashboard. Built assets go to
-`dist/` and are staged into `../src/kiro_crew/static/dist/` so the gateway serves
+React + TypeScript + Vite SPA for the Aj Crew dashboard. Built assets go to
+`dist/` and are staged into `../src/aj_crew/static/dist/` so the gateway serves
 them.
 
 ## Read before you touch
@@ -56,7 +56,7 @@ the `internal-content-scan` check.
 
 ## No built-in app pages
 
-Kiro Crew accepts no new built-in app, so the frontend gets no new per-app code:
+Aj Crew accepts no new built-in app, so the frontend gets no new per-app code:
 never add a per-app directory under `src/apps/<app>/`, a per-app entry in
 `src/apps/builtinRegistry.ts`, `overlayRegistry.ts` or `builtinIcons.tsx`, a
 per-app asset directory under `public/app-assets/`, or an `app.json` outside a
@@ -129,6 +129,6 @@ seam. Rule: `no-new-builtin-apps` in `../AUTOSDE.yaml`; the backend half:
   header; use `PanelSectionHeader`.
 - **`src/extensions.ts` is core-owned and must register nothing.** Core
   registrations belong in the seed maps.
-- **Edition composition is fail-closed:** it needs `KIROCREW_EDITION_DIR` **and**
-  `KIROCREW_ALLOW_EDITION=1`. Never set the latter in a release or publish job. A
+- **Edition composition is fail-closed:** it needs `AJCREW_EDITION_DIR` **and**
+  `AJCREW_ALLOW_EDITION=1`. Never set the latter in a release or publish job. A
   contaminated public wheel cannot be unpublished.

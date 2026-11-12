@@ -21,7 +21,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_folder_app, _make_state
 
-from kiro_crew.config.paths import config_dir
+from aj_crew.config.paths import config_dir
 
 
 @pytest.fixture
@@ -77,7 +77,7 @@ class TestMutateFolders:
         def unexpected_path_lookup() -> Any:
             raise AssertionError("a no-op transaction must not resolve the store path")
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", unexpected_path_lookup)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", unexpected_path_lookup)
 
         def _noop(folders: list[dict[str, Any]]) -> tuple[bool, str]:
             return False, "untouched"
@@ -324,7 +324,7 @@ class TestPlacementRacesTheStore:
         delete committing in that window would leave the slot pointing at a
         folder that does not exist — persisted, with a 200 response.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("myslot")
         slot.append("user", "hello")
@@ -357,7 +357,7 @@ class TestPlacementRacesTheStore:
         Restoring unconditionally both discards that move and files the slot back
         into the very folder the failed request was deleting.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("myslot")
         slot.append("user", "hello")
@@ -390,8 +390,8 @@ class TestGuardedMetadataMerge:
     """update_metadata_if re-decides under the lock, not before taking it."""
 
     def test_merge_is_skipped_when_the_guard_no_longer_holds(self, tmp_path: Any) -> None:
-        from kiro_crew.dashboard.channel_slots import needs_default_filing
-        from kiro_crew.history import ConversationLog
+        from aj_crew.dashboard.channel_slots import needs_default_filing
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog(tmp_path)
         log.update_metadata("k", {"title": "t"})
@@ -408,8 +408,8 @@ class TestGuardedMetadataMerge:
         assert "channel_folder_filed" not in log.get_metadata("k")
 
     def test_merge_applies_when_the_record_is_still_unplaced(self, tmp_path: Any) -> None:
-        from kiro_crew.dashboard.channel_slots import needs_default_filing
-        from kiro_crew.history import ConversationLog
+        from aj_crew.dashboard.channel_slots import needs_default_filing
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog(tmp_path)
         log.update_metadata("k", {"title": "t"})
@@ -428,7 +428,7 @@ class TestGuardedMetadataMerge:
         A write issued by another holder while this call waited on the lock is
         exactly the case the guard exists for, so it has to be visible to it.
         """
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog(tmp_path)
         log.update_metadata("k", {"title": "t"})
@@ -454,7 +454,7 @@ class TestGuardFailsClosed:
         (on Windows, an AV scanner holding a freshly written file) authorise a
         write over a placement the user had made.
         """
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog(tmp_path)
         log.update_metadata("k", {"folder_id": "user-picked"})
@@ -476,7 +476,7 @@ class TestGuardFailsClosed:
         A session with no file on disk is genuinely empty, not unreadable, so the
         guard still gets to decide.
         """
-        from kiro_crew.history import ConversationLog
+        from aj_crew.history import ConversationLog
 
         log = ConversationLog(tmp_path)
         assert log.update_metadata_if("fresh", {"folder_id": "x"}, lambda m: True)
@@ -496,8 +496,8 @@ class TestSlotCreateFolderAssignment:
         unfiled a conversation sitting in a different, perfectly valid folder — a
         move that failed took the old placement with it.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-        from kiro_crew.dashboard import chat_handlers
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+        from aj_crew.dashboard import chat_handlers
 
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("myslot")

@@ -10,17 +10,17 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.boxd_session.launch import BoxdSessionEnvironments
-from kiro_crew.coder import retention
-from kiro_crew.session_environment import SessionEnvironmentUnavailable
-from kiro_crew.session_environments import persistent_vm
-from kiro_crew.session_environments.persistent_vm import SessionResource, stamp
+from aj_crew.boxd_session.launch import BoxdSessionEnvironments
+from aj_crew.coder import retention
+from aj_crew.session_environment import SessionEnvironmentUnavailable
+from aj_crew.session_environments import persistent_vm
+from aj_crew.session_environments.persistent_vm import SessionResource, stamp
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)

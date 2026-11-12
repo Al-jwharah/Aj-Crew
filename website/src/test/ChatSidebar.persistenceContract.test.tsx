@@ -93,7 +93,7 @@ const mocks = vi.hoisted(() => ({
   chatTags: vi.fn(),
   tagColumns: vi.fn(),
   createTagColumn: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
   sessions: vi.fn(),
   sessionsSearch: vi.fn(),
 }))
@@ -210,7 +210,7 @@ beforeEach(() => {
   mocks.chatTags.mockResolvedValue([])
   mocks.tagColumns.mockResolvedValue([])
   mocks.createTagColumn.mockResolvedValue({ id: 'col-new' })
-  mocks.kirocrewConfig.mockResolvedValue({ dashboard: {} })
+  mocks.ajcrewConfig.mockResolvedValue({ dashboard: {} })
   mocks.sessions.mockResolvedValue({ sessions: [], has_more: false })
   mocks.sessionsSearch.mockResolvedValue({ sessions: [] })
 })

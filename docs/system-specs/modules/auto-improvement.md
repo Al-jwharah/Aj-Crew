@@ -3,7 +3,7 @@
 ## Overview
 
 > **Using the app rather than changing it?** The operator's guide is
-> [`src/kiro_crew/apps/builtins/auto_improvement/docs/MANUAL.md`](../../../src/kiro_crew/apps/builtins/auto_improvement/docs/MANUAL.md).
+> [`src/aj_crew/apps/builtins/auto_improvement/docs/MANUAL.md`](../../../src/aj_crew/apps/builtins/auto_improvement/docs/MANUAL.md).
 > This spec describes internals.
 
 Auto-Improvement is an opt-in (`defaultEnabled: false`) built-in app that runs a
@@ -20,7 +20,7 @@ own work.
 
 The app's origin as a port of an upstream app, and the design decisions the port
 made, are recorded in
-[`PORT_PLAN.md`](../../../src/kiro_crew/apps/builtins/auto_improvement/docs/PORT_PLAN.md).
+[`PORT_PLAN.md`](../../../src/aj_crew/apps/builtins/auto_improvement/docs/PORT_PLAN.md).
 
 ## Routes
 
@@ -100,7 +100,7 @@ echoed back in `rejected` rather than silently dropped.
 ## PR status and the watcher verdict
 
 `backend/pr_checks.py` is an interpreter over
-`kiro_crew.dashboard.handlers.source_providers`, reusing the core's cached (30 s
+`aj_crew.dashboard.handlers.source_providers`, reusing the core's cached (30 s
 TTL), request-coalescing, credential-redacting `gh`/`glab` reader rather than
 introducing a second GitHub client.
 
@@ -242,7 +242,7 @@ The class keeps its hardening for any future caller that routes it properly:
   agent that needs no credentials; under `strict` the child sees no `~/.aws`
   entries. `TestFallbackAgentCannotSeeCredentials` pins the mode rather than the
   filesystem, so it stays meaningful on a host without user namespaces.
-- **Credential-shaped env names stripped.** `kiro_crew.sandbox.scrub_env` does not
+- **Credential-shaped env names stripped.** `aj_crew.sandbox.scrub_env` does not
   cover `GITHUB_*`, so after the sandbox builds the env the spawn also strips
   credential-shaped names (`*TOKEN*`, `*SECRET*`, `*PASSWORD*`, `*API_KEY*`,
   `*CREDENTIAL*`) through `push_policy.strip_credential_env`, the same filter the
@@ -517,7 +517,7 @@ file such as `~/.probe` for writing.
 So a candidate's own `conftest.py` or reproducing test — code the model wrote, executed by the
 gate — can modify same-user files outside the worktree.
 
-**Kiro Crew's own control files are closed.** The paths in `security.write_protected_home_paths()`
+**Aj Crew's own control files are closed.** The paths in `security.write_protected_home_paths()`
 are protected by the platform HOOK layer, which a sandboxed subprocess never passes through. So
 `_run` passes the PARENT directory of each write-protected path as `extra_hidden_dirs`
 (`spine/push_policy.py:write_protected_targets`, shared with the candidate admission checker),
@@ -531,14 +531,14 @@ widened to `$HOME`: the interpreter's own stdlib can live there — hiding `~/.l
 `import platform`.
 
 **What remains open**: arbitrary same-user files elsewhere (`~/notes.txt`) are still writable.
-Kiro Crew's own home is sealed per leaf (`sandbox_leaves.py` marks each crew-home leaf hidden,
-read-only or visible), but `kiro_crew.sandbox` has no general write confinement for arbitrary
+Aj Crew's own home is sealed per leaf (`sandbox_leaves.py` marks each crew-home leaf hidden,
+read-only or visible), but `aj_crew.sandbox` has no general write confinement for arbitrary
 same-user files, and adding one changes the shared sandbox for every caller. Failing closed at
 `profile._run` until then would disable the entire bug track (no test could run at all).
 
 **Pinned invariants.**
 
-- `_run` masks the PARENT directory of each `write_protected_home_paths()` entry through `extra_hidden_dirs`, so a strict-mode child cannot write Kiro Crew's own control files. (D-53)
+- `_run` masks the PARENT directory of each `write_protected_home_paths()` entry through `extra_hidden_dirs`, so a strict-mode child cannot write Aj Crew's own control files. (D-53)
 
 ### Why the credential scan resolves its base (and a refused push rolls back)
 
@@ -897,7 +897,7 @@ privilege, default deny.
 
 **Pinned invariants.**
 
-- Discovery runs under a tool-scoped agent with no `@kirocrew-core` (so no `spawn_sub_agents`) and a read-only stage allowlist, and ends in a terminal state with no `Reaper: force-killing` lines. (D-8)
+- Discovery runs under a tool-scoped agent with no `@ajcrew-core` (so no `spawn_sub_agents`) and a read-only stage allowlist, and ends in a terminal state with no `Reaper: force-killing` lines. (D-8)
 - Every config under `agents/` has an empty `allowedTools`, so no tool is auto-approved past `hooks.on_tool_call`; `tools` stays so requests are governed and audited. (D-43)
 - Discovery's allowlist has no `Bash` (`Read`/`Grep`/`Glob` only), and its prompt offers no shell commands. (D-89)
 
@@ -1006,14 +1006,14 @@ properties each must keep.
 - `pollute._is_excluded` matches a subtree with `os.sep`, so on Windows the orchestrator's own data dir is not reported as a leak. (D-31)
 - An unresolvable `scopeDiffBase` refuses rather than widening the edit fence; the legitimate base==HEAD empty diff is allowed (see D-67, D-86). (D-39)
 - `scoped_relpaths` returns `set()` for a successful empty diff and `None` only for a blank ref or a git error, so an empty scope means no file may be edited. (D-67)
-- `profile.py` imports `kiro_crew.sandbox` at module scope, and `test_the_gate_requests_strict_mode` patches the consuming module so it asserts the strict mode for real. (D-78)
+- `profile.py` imports `aj_crew.sandbox` at module scope, and `test_the_gate_requests_strict_mode` patches the consuming module so it asserts the strict mode for real. (D-78)
 - A configured diff scope that cannot be computed, for any cause, refuses rather than running unscoped. (D-86)
 - `RepoEditAllowlist` receives the track (default `TRACK_BUG`), and the added-reproducing-test carve-out applies only on the bug track, so the perf track may not touch `tests/**` at all; a structural test asserts the profile passes its track. (D-101)
 - `Gate._stage_test_only_base` copies the candidate tree with `symlinks=True`, so a planted link to a credential is copied as a link, never its contents. (D-131)
 
 ## Storage
 
-Under `app_data_dir("auto-improvement")` (i.e. `$KIROCREW_HOME/apps/auto-improvement/data`):
+Under `app_data_dir("auto-improvement")` (i.e. `$AJCREW_HOME/apps/auto-improvement/data`):
 
 ```
 config.json                    active run configuration
@@ -1079,7 +1079,7 @@ Three tiers, each where it fits:
    A missing recorded member or store, an occupied foreign name or an incompatible
    template refuses initialization.
    Disable and uninstall retain the members and their history.
-   [Owner recovery](../../../src/kiro_crew/apps/builtins/auto_improvement/docs/MANUAL.md#recover-a-missing-or-changed-member)
+   [Owner recovery](../../../src/aj_crew/apps/builtins/auto_improvement/docs/MANUAL.md#recover-a-missing-or-changed-member)
    restores an intact member's template through the existing editor, retaining its
    identity. Fresh replacement requires a stopped gateway and backups of `config.json`
    and `crew.json`: the owner frees any canonical-name collision by renaming the
@@ -1260,7 +1260,7 @@ the instance.
 
 `driver.py` stays the import path. It serves the git helpers from `driver_git`, and a
 patch through it (`monkeypatch.setattr(driver, "_git", ...)`) reaches every owner that
-binds the name (`kiro_crew._facade_mirror`). A bound member reports its owner module as
+binds the name (`aj_crew._facade_mirror`). A bound member reports its owner module as
 `__module__` and its bare name as `__qualname__`; nothing reads either. New publish or
 commit mechanics go to their owner, and new loop behaviour stays in `driver.py`.
 `test/test_driver_owner_bindings.py` pins the member inventory, the bindings and the
@@ -1271,7 +1271,7 @@ patch reach.
 `spine/agent_runner.py` holds both runners: `AgentRunner`, the `claude -p` subprocess
 path, and `SessionAgentRunner`, the provider session the backend selects, with
 `AgentResult` and the helpers only they call (the launch and per-tool audits, the
-agent-copy install, the sandbox launcher cleanup). It also keeps the one `kiro_crew.acp`
+agent-copy install, the sandbox launcher cleanup). It also keeps the one `aj_crew.acp`
 import the agent-sdk boundary baseline records. Three owner modules beside it hold the
 rest:
 
@@ -1283,7 +1283,7 @@ rest:
 
 `agent_runner.py` stays the import path. It serves the moved names, and a patch through
 it (`monkeypatch.setattr(agent_runner, "HookManager", ...)`) reaches every owner that
-binds the name (`kiro_crew._facade_mirror`). The owners log through the facade's logger,
+binds the name (`aj_crew._facade_mirror`). The owners log through the facade's logger,
 named from their package, so a record keeps the name it had. `_GovernanceDeny` reports
 the gate module as its `__module__`; nothing reads it. New tool-gate, feed or authoring
 work goes to its owner, and new runner behaviour stays in `agent_runner.py`.
@@ -1359,7 +1359,7 @@ makes them dead weight rather than because they were missed:
 |---|---|
 | `proxy_auth.py`, `middleware.py` | the gateway authenticates same-origin requests; there is no proxy hop to sign |
 | `app.py`, `bin/` launcher | `register_routes(app)` mounts on the gateway's own aiohttp app — no second process, no port |
-| `config.py` | paths come from `store.py`, which reads the Kiro Crew data home |
+| `config.py` | paths come from `store.py`, which reads the Aj Crew data home |
 
 One transport difference: the upstream served its MCP tools over HTTP on its own
 allocated port. A builtin has no port, and the app bridge deliberately SKIPS a
@@ -1376,17 +1376,17 @@ mid-session.
 
 ## Repository boundary
 
-Auto-Improvement is to leave this repository whole, so no module under `src/kiro_crew`
+Auto-Improvement is to leave this repository whole, so no module under `src/aj_crew`
 outside `apps/builtins/`, and no `scripts/` file, imports
-`kiro_crew.apps.builtins.auto_improvement`. The dependency runs one way: the app imports
+`aj_crew.apps.builtins.auto_improvement`. The dependency runs one way: the app imports
 core (`git_config_hooks`, `git_tmp_packs`, `sandbox`, `members`, `llm_helpers`, the
 redaction helpers), never the other way round, so it fills no seam in
-`kiro_crew/apps/seams.py`. The member-activity `via` value is the app's own id, which
+`aj_crew/apps/seams.py`. The member-activity `via` value is the app's own id, which
 core records and the drawer renders without knowing it. Some of those imports are
 private core names (`llm_helpers._steer_host_deny`, `llm_helpers._extract_json_of_type`,
 `agent_discovery._read_agent_spec`, `config.loader._session_work_dir`,
 `workflows.registry._await_owned`); the app's own repository has to reach them through a
-public surface before it can build against an installed Kiro Crew.
+public surface before it can build against an installed Aj Crew.
 
 `test/test_core_auto_improvement_decoupling.py` is the gate, on the shared
 `test/core_app_independence.py` scanner. The core strings left naming the app are a
@@ -1427,11 +1427,11 @@ the frontend cases and the full keep-or-revert loop against a real GitHub reposi
 are covered by the **manual acceptance plan** further down, not by an automated
 integration test — nothing in the tree runs the full loop against a live repository.
 
-- `src/kiro_crew/apps/builtins/auto_improvement/tests/` — tests covering verdict
+- `src/aj_crew/apps/builtins/auto_improvement/tests/` — tests covering verdict
   derivation, check summarization, provider-error degradation, PR-recipe protocol
   conformance, branch naming, draft-only policy, queue degradation, the audit-or-deny
   approval, MCP dispatch auditing, and evidence redaction. `setup.cfg` `testpaths`
-  collects all of `src/kiro_crew/apps/builtins`, so the app's safety-control tests
+  collects all of `src/aj_crew/apps/builtins`, so the app's safety-control tests
   run in CI. Four sandbox-dependent files (`test_lint_findings.py`,
   `test_github_profile.py`, `test_profile_capture.py`, `test_runner.py`) are only
   omitted from coverage, a rule `test/test_coverage_omit_contract.py` enforces.

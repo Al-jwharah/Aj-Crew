@@ -17,8 +17,8 @@ import logging
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_utils
-from kiro_crew.dashboard.state import _SESSION_RECYCLED_NOTICE, stuck_turn_notice
+from aj_crew.dashboard import chat_utils
+from aj_crew.dashboard.state import _SESSION_RECYCLED_NOTICE, stuck_turn_notice
 
 #: Session key -> the dashboard tab that displays it; anything else has no tab.
 _TABS = {"dashboard:t1": "t1", "dashboard:gone": "gone"}
@@ -98,8 +98,8 @@ def test_a_stuck_turn_posts_its_notice_into_the_tab(wired):
 def test_an_rss_hold_tells_a_used_tab_the_ceiling_and_the_setting(wired):
     # Resolved here, not at module top, so a missing module fails this test
     # alone instead of the whole file's collection.
-    from kiro_crew.dashboard.state_parts.session_events import rss_hold_notice
-    from kiro_crew.session_rss_rebound import RssHold
+    from aj_crew.dashboard.state_parts.session_events import rss_hold_notice
+    from aj_crew.session_rss_rebound import RssHold
 
     state, slot, _on_recycled, _on_stuck, _banners = wired
     fresh = state.get_or_create_slot("fresh")
@@ -132,13 +132,13 @@ async def test_a_session_with_no_live_tab_gets_no_notice(wired, key, caplog):
     _state, slot, on_recycled, on_stuck, banners = wired
     before = len(slot._messages)
 
-    with caplog.at_level(logging.ERROR, logger="kiro_crew.dashboard.state"):
+    with caplog.at_level(logging.ERROR, logger="aj_crew.dashboard.state"):
         await on_recycled(key, reason="RSS over the limit")
         on_stuck(key, 600.0)
 
     assert len(slot._messages) == before
     assert banners == []
-    assert [r for r in caplog.records if r.name == "kiro_crew.dashboard.state"] == []
+    assert [r for r in caplog.records if r.name == "aj_crew.dashboard.state"] == []
 
 
 @pytest.mark.asyncio
@@ -155,11 +155,11 @@ async def test_a_failing_append_or_banner_push_is_logged_not_raised(wired, monke
     # ``_ChatSlot`` has ``__slots__``, so the method is patched on the class.
     monkeypatch.setattr(type(slot), "append", _refuse)
     monkeypatch.setattr(chat_utils, "_broadcast_expired_oauth_banners", _banner_boom)
-    with caplog.at_level(logging.ERROR, logger="kiro_crew.dashboard.state"):
+    with caplog.at_level(logging.ERROR, logger="aj_crew.dashboard.state"):
         await on_recycled("dashboard:t1", reason="RSS over the limit")
         on_stuck("dashboard:t1", 600.0)
 
-    logged = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.dashboard.state"]
+    logged = [r.getMessage() for r in caplog.records if r.name == "aj_crew.dashboard.state"]
     assert "Failed to append recycle notice to slot t1" in logged
     assert "Failed to broadcast OAuth banner expiry for slot t1" in logged
     assert "Failed to append stuck-turn notice to slot t1" in logged

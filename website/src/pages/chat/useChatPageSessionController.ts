@@ -474,7 +474,7 @@ export function useChatPageSessionController({
   const newSlotMutation = useMutation({
     // The launcher's prompt rides the create itself: the thunk stages it before
     // the action that activates the slot, which is the only commit on which
-    // ChatPage's slot-restore effect reads `kirocrew_prefill`. Staging it in
+    // ChatPage's slot-restore effect reads `ajcrew_prefill`. Staging it in
     // onSuccess would land after that read, so nothing would consume it.
     mutationFn: async () => {
       const prompt = initialPrefillRef.current

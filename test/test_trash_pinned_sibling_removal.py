@@ -21,8 +21,8 @@ from pathlib import Path
 
 import pytest
 
+from aj_crew import pinned_fs, platform_compat, session_storage
 from conftest import make_dir_link
-from kiro_crew import pinned_fs, platform_compat, session_storage
 
 _NOW = 1_700_000_000.0
 _BATCH = "20231114-batch"
@@ -113,7 +113,7 @@ class TestAncestorSwapContainment:
 
         monkeypatch.setattr(session_storage, "_unlisted_files", _screen_then_swap)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             # The identity comes from the caller, recorded before the restore read anything -
             # here, before the swap the scan performs below.
             session_storage._discard_restored_batch(batch, _identity(batch))
@@ -145,7 +145,7 @@ class TestAncestorSwapContainment:
 
         _swap_parent_for_a_link(root, victim)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             session_storage._remove_emptied_batch(batch, "the empty batch", expect=identity)
 
         assert precious.read_text() == "staged, unlisted, the only copy"
@@ -199,7 +199,7 @@ class TestAncestorSwapContainment:
         test is the real one.
         """
         home = tmp_path / "home"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         monkeypatch.setenv("KIRO_HOME", str(home / "kiro"))
         (home / "sessions").mkdir(parents=True)
         (home / "kiro" / "sessions" / "cli").mkdir(parents=True)
@@ -239,7 +239,7 @@ class TestAncestorSwapContainment:
             return found
 
         monkeypatch.setattr(session_storage, "_unlisted_files", _screen_then_swap)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             assert session_storage.restore(batch.batch_id) == 1
 
         assert precious.read_text() == "the only copy", "the victim's file must survive"
@@ -257,7 +257,7 @@ class TestAncestorSwapContainment:
         root = tmp_path / "trash"
         batch = _batch_with_manifest(root, _BATCH, entries=[])
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             session_storage._remove_emptied_batch(batch, "the empty batch", expect=None)
 
         assert batch.is_dir()
@@ -330,7 +330,7 @@ class TestUnswappedRemovalStillHappens:
         batch = _batch_with_manifest(root, _BATCH, entries=[])
         (batch / "orphan.jsonl").write_text("staged but never recorded")
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             session_storage._remove_emptied_batch(batch, "the empty batch", expect=_identity(batch))
 
         assert (batch / "orphan.jsonl").read_text() == "staged but never recorded"
@@ -350,7 +350,7 @@ class TestUnswappedRemovalStillHappens:
         batch = _batch_with_manifest(root, _BATCH, entries=[])
         (batch / "planted").symlink_to(tmp_path / "nowhere")
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             removed = session_storage._remove_emptied_batch(
                 batch, "the restored batch", expect=_identity(batch)
             )
@@ -381,7 +381,7 @@ class TestUnswappedRemovalStillHappens:
         replanted = batch / "cli" / "aaaa1111.jsonl"
         replanted.write_text("arrived after the restore moved the real one out")
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             session_storage._remove_emptied_batch(
                 batch, "the restored batch", expect=_identity(batch)
             )
@@ -548,7 +548,7 @@ class TestTheApprovalReadsOneFile:
         batch = _batch_with_manifest(root, _BATCH, entries=[])
         (batch / session_storage.MANIFEST_NAME).write_bytes(b'{"schema": "\xff\xfe not utf8"}\n')
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             removed = session_storage._remove_emptied_batch(
                 batch, "the restored batch", expect=_identity(batch)
             )
@@ -901,7 +901,7 @@ class TestTheCoarsePlatform:
         (batch / "keep.me").write_text("not the selected batch")
 
         monkeypatch.setattr(session_storage, "_FD_SAFE_DELETE", False)
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.session_storage"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.session_storage"):
             removed = session_storage._remove_emptied_batch(
                 batch, "the empty batch", expect=stale_identity
             )
@@ -961,7 +961,7 @@ class TestTheCoarsePlatform:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A cloud-files or dedup directory stands for no other name, so it is swept."""
-        from kiro_crew import platform_compat_links
+        from aj_crew import platform_compat_links
 
         root = tmp_path / "trash"
         batch = _batch_with_manifest(root, _BATCH, entries=[])
@@ -1003,7 +1003,7 @@ class TestTheCoarsePlatform:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """``Trash`` and ``trash`` are distinct under a case-sensitive directory."""
-        from kiro_crew import platform_compat_links
+        from aj_crew import platform_compat_links
 
         finals = {1: r"C:\store\Trash", 2: r"C:\store\trash\keep.jsonl", 3: r"C:\store\Trash\x"}
         monkeypatch.setattr(

@@ -55,7 +55,7 @@ export function SetupShell({
               asideHeadline || i18nT('components.kiroPrerequisiteGate.your_crew_is_almost_ready'),
             panelBody:
               asideBody
-              || i18nT('components.kiroPrerequisiteGate.install_kiro_cli_sign_in_once_and_kiro_crew_will'),
+              || i18nT('components.kiroPrerequisiteGate.install_kiro_cli_sign_in_once_and_aj_crew_will'),
             panelFootnote: i18nT(
               'components.kiroPrerequisiteGate.secure_setup_on_your_gateway_host',
             ),

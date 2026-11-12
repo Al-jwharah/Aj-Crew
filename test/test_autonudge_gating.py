@@ -14,8 +14,8 @@ from autonudge_helpers import _enable  # noqa: F401
 from autonudge_helpers import svc_fixture  # noqa: F401
 from autonudge_helpers import _structured_monitor
 
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop
-from kiro_crew.monitoring.models import MONITOR_STATE_VERSION, MonitorOutcome
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop
+from aj_crew.monitoring.models import MONITOR_STATE_VERSION, MonitorOutcome
 
 
 @pytest.mark.asyncio
@@ -97,7 +97,7 @@ async def test_add_and_fire_on_idle(svc, monkeypatch):
     svc._on_fire = on_fire
     # Patch asyncio.sleep inside the service's _timer to a no-op so the
     # test exercises the real fire path without waiting _MIN_IDLE_SECS.
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def _nosleep(_secs):
         return None
@@ -218,7 +218,7 @@ async def test_a_work_ledger_watch_arms_through_the_service_and_gates_on_itself(
     An explicit ``watch`` gates without ``gate`` (``gate=bool(gate or watch)``). The
     subject is the ``slot_key``, which no reading of the message can recover.
     """
-    from kiro_crew.autonudge_service.subject import loop_subject
+    from aj_crew.autonudge_service.subject import loop_subject
 
     service = AutoNudgeService(base_dir=tmp_path)
     loop = await service.add(
@@ -376,7 +376,7 @@ async def test_a_terminal_work_ledger_verdict_reaches_the_terminal_branch_and_de
     named (``irq.run`` turns that ``ValueError`` into ``Done``), and that records
     as BLOCKED: no key at all is not a success.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     async def on_fire(loop):
         return True
@@ -421,7 +421,7 @@ async def test_a_work_ledger_recheck_confirms_from_the_verdict_not_an_observatio
     The ``_terminal_still_holds`` recheck of a ``terminal_pending`` debt must classify
     from ``verdict.outcome``/``verdict.keys``: this probe sets no ``probe.observation``.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     def _ledger_settled(identity, message, probe):
         # The real work-ledger probe sets NO observation; the end rides the kernel's
@@ -458,7 +458,7 @@ async def test_a_work_ledger_recheck_with_a_changed_class_drops_the_owed_debt(
     Mirrors the gh-pr classification-change guard: an owed ``success`` that now revalidates
     as a non-success terminal must not settle under the stale marker.
     """
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     def _ledger_rejected(identity, message, probe):
         # Terminal but NOT all-accepted -> terminal_succeeded() is False -> "blocked".
@@ -488,7 +488,7 @@ async def test_a_work_ledger_recheck_with_a_changed_class_drops_the_owed_debt(
 @pytest.mark.asyncio
 async def test_a_work_ledger_recheck_keeps_a_still_running_watch_alive(tmp_path, monkeypatch):
     """A non-terminal recheck (the ledger is still open) must not settle the watch."""
-    import kiro_crew.autonudge as _an
+    import aj_crew.autonudge as _an
 
     def _still_open(identity, message, probe):
         return _an.irq.Verdict(_an.irq.Outcome.QUIET, "still working", ())
@@ -668,7 +668,7 @@ async def test_an_unsupported_monitor_version_is_never_armed(tmp_path, monkeypat
     Load leaves ``active`` alone (the writing gateway owns it), so inertness comes from
     the arm refusing: this asserts the ABSENCE of a timer.
     """
-    from kiro_crew.monitoring.models import MONITOR_STATE_VERSION
+    from aj_crew.monitoring.models import MONITOR_STATE_VERSION
 
     fired: list[NudgeLoop] = []
 

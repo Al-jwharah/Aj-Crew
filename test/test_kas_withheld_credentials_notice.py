@@ -2,7 +2,7 @@
 
 KAS takes the agent spec over the ACP wire, so the projection withholds every
 ``env`` value it cannot prove is not a credential, and every ``headers`` block
-(:func:`kiro_crew.acp.kas_agents._withhold_credential_fields`). The server is still
+(:func:`aj_crew.acp.kas_agents._withhold_credential_fields`). The server is still
 declared and still starts, so a credentialed server left unwrapped by the gateway
 started with none of its settings and failed with no visible cause: the only trace
 was an INFO log line. These tests pin the projection's record of what it withheld
@@ -18,21 +18,21 @@ from types import SimpleNamespace
 import pytest
 from kas_agents_helpers import _spec
 
-from kiro_crew import agent as agent_mod
-from kiro_crew.acp.harness import harness_for
-from kiro_crew.acp.kas_agents import (
+from aj_crew import agent as agent_mod
+from aj_crew.acp.harness import harness_for
+from aj_crew.acp.kas_agents import (
     NOT_RUN_INSECURE_URL,
     WithheldOut,
     build_kas_custom_agents,
     to_client_custom_agent,
 )
-from kiro_crew.acp.kas_withheld_notice import withheld_credentials_notice
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.types import ACP_BACKEND_KAS
-from kiro_crew.config import paths as paths_mod
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.mcp_gateway import session_servers as session_servers_mod
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.acp.kas_withheld_notice import withheld_credentials_notice
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.types import ACP_BACKEND_KAS
+from aj_crew.config import paths as paths_mod
+from aj_crew.dashboard import chat_runner
+from aj_crew.mcp_gateway import session_servers as session_servers_mod
+from aj_crew.providers.acp import AcpProvider
 
 #: Values that must never reach the notice. Long enough to be unique.
 _REFERENCE_VALUE = "${GITLAB_PERSONAL_ACCESS_TOKEN}"
@@ -52,14 +52,14 @@ _GITLAB = {
 }
 
 #: Set in the gateway's own environment and declared by no server.
-_UNDECLARED = "KIROCREW_TEST_GATEWAY_ONLY_SETTING"
+_UNDECLARED = "AJCREW_TEST_GATEWAY_ONLY_SETTING"
 _UNDECLARED_VALUE = "gateway-only-value-4d1f"
 
 _GITLAB_NOTICE = {"gitlab-mcp": (("GITLAB_API_URL",), ("env",), True)}
 
 
 def _servers(**servers) -> dict:
-    return _spec(mcpServers={"kirocrew-core": {"command": "x"}, **servers})
+    return _spec(mcpServers={"ajcrew-core": {"command": "x"}, **servers})
 
 
 def _collect(spec: dict, stubbed: frozenset[str] = frozenset()) -> WithheldOut:
@@ -93,7 +93,7 @@ class TestTheProjectionRecordsWhatItWithheld:
         """With a session key the projection hands a stdio server's withheld env to
         the local launcher, which starts it with those values on this machine, so the
         notice must not claim the server starts without them."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         withheld: WithheldOut = {}
         to_client_custom_agent(
             "a",
@@ -125,12 +125,12 @@ class TestTheProjectionRecordsWhatItWithheld:
         """In a session the projection hands a streamable-HTTP server's headers to
         the local bridge, which adds them on this machine, so the notice is recorded
         after that step and must not claim the server starts without them."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         remote = {"type": "http", "url": "https://mcp.example/v1", "headers": {"X": "y"}}
         assert self._collect_in_session(_servers(remote=remote)) == {}
 
     def test_an_sse_server_the_bridge_cannot_carry_is_still_recorded(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         remote = {"type": "sse", "url": "https://mcp.example/sse", "headers": {"X": "y"}}
         assert self._collect_in_session(_servers(remote=remote)) == {
             "remote": ((), ("headers",), False)
@@ -144,7 +144,7 @@ class TestTheProjectionRecordsWhatItWithheld:
         """A managed server's extra keys are a hand edit, and a stubbed server gets
         its env through the gateway, so neither is the user's missing setting."""
         spec = _servers(**{"gitlab-mcp": _GITLAB})
-        spec["mcpServers"]["kirocrew-core"]["env"] = {"STRAY": "value"}
+        spec["mcpServers"]["ajcrew-core"]["env"] = {"STRAY": "value"}
         assert _collect(spec, stubbed=frozenset({"gitlab-mcp"})) == {}
 
     def test_the_wire_is_unchanged(self, monkeypatch):
@@ -159,7 +159,7 @@ class TestTheProjectionRecordsWhatItWithheld:
         assert _UNDECLARED not in json.dumps(plain)
 
     def test_build_kas_custom_agents_passes_the_collector_through(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         sse = {"type": "sse", "url": "https://mcp.example/sse", "headers": {"X": "y"}}
         withheld: WithheldOut = {}
         build_kas_custom_agents(tmp_path, "a", _servers(sse=sse), withheld_out=withheld)
@@ -181,7 +181,7 @@ class TestTheNotice:
         """The gateway leaves a shared server unwrapped while its env holds a key it
         does not forward, so Share would change nothing and the chat says nothing,
         exactly when the gateway's own count says so."""
-        from kiro_crew.mcp_gateway.rewriter_env import _withheld_env_count
+        from aj_crew.mcp_gateway.rewriter_env import _withheld_env_count
 
         assert _withheld_env_count({key: "x"}, True) == 1
         assert withheld_credentials_notice({"vendor": ((key,), ("env",), True)}) == ""
@@ -189,7 +189,7 @@ class TestTheNotice:
     @pytest.mark.parametrize("key", ["GITLAB_API_URL", "GITHUB_TOKEN"])
     def test_env_share_forwards_gets_share_alone(self, key):
         """The gateway forwards these to a shared server, so Share is enough."""
-        from kiro_crew.mcp_gateway.rewriter_env import _withheld_env_count
+        from aj_crew.mcp_gateway.rewriter_env import _withheld_env_count
 
         assert _withheld_env_count({key: "x"}, True) == 0
         notice = withheld_credentials_notice({"vendor": ((key,), ("env",), True)})
@@ -198,7 +198,7 @@ class TestTheNotice:
     def test_forwarding_off_shows_nothing(self, monkeypatch):
         """With ``forward_declared_env`` off the gateway forwards no declared env,
         so Share alone never carries a key; the notice follows that setting."""
-        from kiro_crew.mcp_gateway import rewriter
+        from aj_crew.mcp_gateway import rewriter
 
         monkeypatch.setattr(rewriter, "forward_declared_env_enabled", lambda: False)
         assert withheld_credentials_notice(_GITLAB_NOTICE) == ""
@@ -208,7 +208,7 @@ class TestTheNotice:
         carries no key, no ``env``, no ``secret://`` recipe and no CLI command."""
         notice = withheld_credentials_notice(_GITLAB_NOTICE)
         assert "GITLAB_API_URL" not in notice
-        for text in ("secret://", "kirocrew ", "config set", "acp_backend", "env", "\n"):
+        for text in ("secret://", "ajcrew ", "config set", "acp_backend", "env", "\n"):
             assert text not in notice
 
     def test_a_remote_server_is_left_to_the_log(self):
@@ -224,13 +224,13 @@ class TestTheNotice:
         )
         withheld: WithheldOut = {
             "edition-tools": (("X",), ("env",), True),
-            "kirocrew-core": (("X",), ("env",), True),
+            "ajcrew-core": (("X",), ("env",), True),
         }
         assert withheld_credentials_notice(withheld) == ""
         withheld.update(_GITLAB_NOTICE)
         notice = withheld_credentials_notice(withheld)
         assert "gitlab-mcp" in notice
-        assert "edition-tools" not in notice and "kirocrew-core" not in notice
+        assert "edition-tools" not in notice and "ajcrew-core" not in notice
 
     def test_a_not_run_server_keeps_its_line_beside_the_share_line(self):
         """A server KAS will not run keeps its own line, and a server Share would
@@ -288,7 +288,7 @@ async def test_the_session_payload_carries_the_notice(kas_spec_on_disk, tmp_path
     stdio server's env reaches it through the launcher even with no session key,
     and the ``sse`` server, which the bridge cannot carry, is left to the log, so
     neither is named."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     sse = {"type": "sse", "url": "https://mcp.example/sse", "headers": {"X": _URL_VALUE}}
     spec = {
         "name": "a",
@@ -306,13 +306,13 @@ async def test_the_session_payload_carries_the_notice(kas_spec_on_disk, tmp_path
 async def test_a_keyed_session_names_no_stdio_server(kas_spec_on_disk, tmp_path, monkeypatch):
     """The ordinary chat path: with a session key the local launcher carries every
     withheld stdio value, so the notice the same build returns is empty."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     extras = await harness_for(ACP_BACKEND_KAS).session_extras(
         "a", work_dir=str(tmp_path), session_key="chat-1"
     )
     assert extras.withheld_credentials_notice == ""
     entry = extras.custom_agents[0]["mcpServers"]["gitlab-mcp"]
-    assert "kiro_crew.kas_env_shim" in entry["args"]
+    assert "aj_crew.kas_env_shim" in entry["args"]
 
 
 @pytest.mark.asyncio

@@ -20,12 +20,12 @@ from dev_fleet_app_helpers import _sweep_staged_sync_tempdirs  # noqa: F401 - fi
 from dev_fleet_app_helpers import _venv_maps_to_the_synced_checkout  # noqa: F401 - fixture
 from dev_fleet_app_helpers import _cleanup_sync_tempdirs, _install_step, _run_sync
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
-from kiro_crew.apps.builtins.dev_fleet import repository as repository_mod
-from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod
-from kiro_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
-from kiro_crew.testing.wait import async_wait_until
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew.apps.builtins.dev_fleet import fleet_state as fleet_state_mod
+from aj_crew.apps.builtins.dev_fleet import repository as repository_mod
+from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod
+from aj_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
+from aj_crew.testing.wait import async_wait_until
 
 
 # --- sync runner emits ::step:: markers ---
@@ -38,8 +38,8 @@ async def test_sync_script_emits_step_markers():
     proven by execution in test_dev_fleet_sync_runner.py. Here we pin that the
     sync invokes the runner by path and that the module still emits the marker.
     """
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
-    from kiro_crew.apps.builtins.dev_fleet import sync_runner
+    import aj_crew.apps.builtins.dev_fleet.server as mod
+    from aj_crew.apps.builtins.dev_fleet import sync_runner
 
     repository_mod._UPSTREAM_REMOTE = "origin"
     worktree_ops_mod._SYNC_RID = None
@@ -48,7 +48,7 @@ async def test_sync_script_emits_step_markers():
         patch.object(worktree_ops_mod, "_venv_python", return_value=Path("/fake/.venv/bin/python")),
         patch.object(runtime_mod, "_trusted_bin", side_effect=lambda n: f"/usr/bin/{n}"),
         patch(
-            "kiro_crew.apps.builtins.dev_fleet.worktree_ops.sandboxed_spawn_argv",
+            "aj_crew.apps.builtins.dev_fleet.worktree_ops.sandboxed_spawn_argv",
             side_effect=lambda cmd, mode, env=None: (cmd, env or {}, None),
         ),
         patch.object(
@@ -72,7 +72,7 @@ async def test_sync_script_emits_step_markers():
 
 
 # --- Windows: a write-locked console script must not be handed to pip ---
-# The probe itself moved to kiro_crew.dep_sync with the substitute it feeds, and
+# The probe itself moved to aj_crew.dep_sync with the substitute it feeds, and
 # its tests moved with it (test/test_dep_sync.py). What stays here is the sync's
 # use of the result: which install step gets built.
 
@@ -88,10 +88,10 @@ async def test_sync_substitutes_a_dependency_only_install_when_a_script_is_locke
     own console script. Refusing the whole sync instead left the single-checkout
     Windows layout — the ordinary one — with no working Pull+build at all.
     """
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
-    from kiro_crew import dep_sync
+    import aj_crew.apps.builtins.dev_fleet.server as mod
+    from aj_crew import dep_sync
 
-    result, cmd, steps = await _run_sync(mod, [r"C:\repo\.venv\Scripts\kirocrew.exe"])
+    result, cmd, steps = await _run_sync(mod, [r"C:\repo\.venv\Scripts\ajcrew.exe"])
 
     assert result["ok"] is True
     # A run was started, so fetch and merge do happen.
@@ -102,7 +102,7 @@ async def test_sync_substitutes_a_dependency_only_install_when_a_script_is_locke
     argv_flat = " ".join(install["argv"])
     assert "dep_sync.py" in argv_flat
     assert "-e" not in install["argv"]
-    # It must NOT be run as `-m kiro_crew...dep_sync`. That would import the
+    # It must NOT be run as `-m aj_crew...dep_sync`. That would import the
     # module from the working tree after the merge has landed, pulling the whole
     # package __init__ chain with it, so a revision that raises the
     # `requires-python` floor with newer syntax would SyntaxError while being
@@ -128,8 +128,8 @@ async def test_sync_keeps_the_editable_reinstall_when_nothing_is_locked():
     cannot refresh a console script, so anywhere pip can do the whole job, it
     should.
     """
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
-    from kiro_crew import dep_sync
+    import aj_crew.apps.builtins.dev_fleet.server as mod
+    from aj_crew import dep_sync
 
     result, cmd, steps = await _run_sync(mod, [])
 
@@ -155,7 +155,7 @@ async def test_every_step_gets_a_utf8_pin_in_its_environment():
     utf-8 pin). What stays here is the module contract: run_step assigns the
     pin onto every step's env before spawning.
     """
-    from kiro_crew.apps.builtins.dev_fleet import sync_runner
+    from aj_crew.apps.builtins.dev_fleet import sync_runner
 
     src = Path(sync_runner.__file__).read_text(encoding="utf-8")
     run_step_body = src.split("def run_step(", 1)[1].split("\ndef ", 1)[0]
@@ -173,7 +173,7 @@ async def test_every_step_gets_a_utf8_pin_in_its_environment():
 @pytest.mark.asyncio
 async def test_sync_runs_every_step_when_nothing_is_locked():
     """Control: an unlocked venv gets the full sync, reinstall included."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     result, cmd, steps = await _run_sync(mod, [])
 
@@ -186,7 +186,7 @@ async def test_sync_runs_every_step_when_nothing_is_locked():
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "locked",
-    [[], [r"C:\repo\.venv\Scripts\kirocrew.exe"]],
+    [[], [r"C:\repo\.venv\Scripts\ajcrew.exe"]],
     ids=["reinstall-branch", "substitute-branch"],
 )
 async def test_sync_refuses_a_venv_that_serves_another_checkout(locked):
@@ -200,8 +200,8 @@ async def test_sync_refuses_a_venv_that_serves_another_checkout(locked):
     guarded one. Parametrized over both branches because that asymmetry is
     exactly the bug: a fix that only covers the one it was found on is not one.
     """
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
-    from kiro_crew import dep_sync
+    import aj_crew.apps.builtins.dev_fleet.server as mod
+    from aj_crew import dep_sync
 
     with patch.object(
         dep_sync,
@@ -227,8 +227,8 @@ async def test_sync_runner_pins_utf8_stdout_before_its_first_print():
     encodes with the process locale codepage — a mismatch that mangles or kills
     any non-ASCII print. Pinned before the step loop so no print predates it.
     """
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
-    from kiro_crew.apps.builtins.dev_fleet import sync_runner
+    import aj_crew.apps.builtins.dev_fleet.server as mod
+    from aj_crew.apps.builtins.dev_fleet import sync_runner
 
     _, cmd, _ = await _run_sync(mod, [])
 
@@ -277,7 +277,7 @@ def test_pythonioencoding_saves_a_step_child_that_prints_a_non_ascii_path():
     import subprocess
     import sys as _sys
 
-    path = "C:\\Users\\\u9648\u660e\u4f2a\\KiroCrew"
+    path = "C:\\Users\\\u9648\u660e\u4f2a\\AjCrew"
     body = f"print({path!r}, flush=True)\n"
     codepage = {**os.environ, "PYTHONIOENCODING": "cp1252"}
 
@@ -302,38 +302,38 @@ def test_pythonioencoding_saves_a_step_child_that_prints_a_non_ascii_path():
 # --- repo owner/name parsing ---
 @pytest.mark.asyncio
 async def test_repo_owner_name_ssh():
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     fleet_state_mod._OWNER_REPO = None
     with patch.object(
         runtime_mod,
         "_run_cmd",
         new_callable=AsyncMock,
-        return_value=(0, "git@github.com:kirodotdev/KiroCrew.git\n", ""),
+        return_value=(0, "git@github.com:Al-jwharah/Aj-Crew.git\n", ""),
     ):
         result = await mod._repo_owner_name()
-    assert result == "kirodotdev/KiroCrew"
+    assert result == "Al-jwharah/Aj-Crew"
 
 
 @pytest.mark.asyncio
 async def test_repo_owner_name_https():
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     fleet_state_mod._OWNER_REPO = None
     with patch.object(
         runtime_mod,
         "_run_cmd",
         new_callable=AsyncMock,
-        return_value=(0, "https://github.com/kirodotdev/KiroCrew.git\n", ""),
+        return_value=(0, "https://github.com/Al-jwharah/Aj-Crew.git\n", ""),
     ):
         result = await mod._repo_owner_name()
-    assert result == "kirodotdev/KiroCrew"
+    assert result == "Al-jwharah/Aj-Crew"
 
 
 # --- _find_worktree ambiguity rejection ---
 @pytest.mark.asyncio
 async def test_find_worktree_ambiguous():
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     wts = [
         {"path": "/a/feature-x", "is_main": False},
@@ -349,7 +349,7 @@ async def test_find_worktree_ambiguous():
 
 @pytest.mark.asyncio
 async def test_find_worktree_not_found():
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with patch.object(
         repository_mod, "_discover_worktrees", new_callable=AsyncMock, return_value=[]
@@ -363,7 +363,7 @@ async def test_find_worktree_not_found():
 @pytest.mark.asyncio
 async def test_worktree_remove_force_must_be_bool():
     """The /worktree/remove handler rejects non-boolean force."""
-    from kiro_crew.apps.builtins.dev_fleet.server import api_dev_fleet_worktree_remove
+    from aj_crew.apps.builtins.dev_fleet.server import api_dev_fleet_worktree_remove
 
     # Build a mock request with non-bool force
     async def fake_json():
@@ -374,7 +374,7 @@ async def test_worktree_remove_force_must_be_bool():
     request.content_length = 100
 
     with patch(
-        "kiro_crew.apps.builtins.dev_fleet.repository._valid_worktree_names",
+        "aj_crew.apps.builtins.dev_fleet.repository._valid_worktree_names",
         new_callable=AsyncMock,
         return_value={"test-wt"},
     ):
@@ -389,7 +389,7 @@ async def test_worktree_remove_force_must_be_bool():
 async def test_sync_returns_409_when_already_running():
     import asyncio
 
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     # Inject a fake running sync with a live task + process
     worktree_ops_mod._SYNC_RID = "fake123"
@@ -425,7 +425,7 @@ async def test_sync_returns_409_when_already_running():
 
 # --- redaction ---
 def test_redact_applied():
-    from kiro_crew.apps.builtins.dev_fleet.server import _redact
+    from aj_crew.apps.builtins.dev_fleet.server import _redact
 
     # Should not crash on normal strings
     assert _redact("hello world") == "hello world"
@@ -438,13 +438,13 @@ def test_redact_applied():
 @pytest.mark.asyncio
 async def test_disk_name_derivation_from_path():
     """_disk() derives worktree name from w['path']."""
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     mod._DISK.update({"status": "idle", "total_mb": None, "per": {}})
 
     fake_worktrees = [
-        {"path": "/home/user/kirocrew", "is_main": True},
-        {"path": "/home/user/kirocrew-wt-feature-x", "is_main": False},
+        {"path": "/home/user/ajcrew", "is_main": True},
+        {"path": "/home/user/ajcrew-wt-feature-x", "is_main": False},
     ]
 
     with (
@@ -467,13 +467,13 @@ async def test_disk_name_derivation_from_path():
         )
 
     assert mod._DISK["status"] == "done"
-    assert "kirocrew" in mod._DISK["per"] or "kirocrew-wt-feature-x" in mod._DISK["per"]
+    assert "ajcrew" in mod._DISK["per"] or "ajcrew-wt-feature-x" in mod._DISK["per"]
     assert mod._DISK["total_mb"] == 200
 
 
 # --- _build_pending (server-side truth for build-pending chip) ---
 def test_build_pending_false_when_dist_older():
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     original_start = mod._START_EPOCH
     # Set start epoch far in the future so dist mtime is always older
@@ -491,7 +491,7 @@ def test_build_pending_true_when_dist_newer():
     import tempfile
     from pathlib import Path
 
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     # Create a temp dir to act as dist
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -513,7 +513,7 @@ def test_build_pending_false_when_dist_missing():
     import tempfile
     from pathlib import Path
 
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     original_start = mod._START_EPOCH
     fleet_state_mod._START_EPOCH = 0  # very old — would be pending IF dist existed
@@ -551,7 +551,7 @@ async def test_fleet_build_does_not_bake_run_pointers():
     pointers; this pins that there is only one owner, so a future edit cannot
     quietly reintroduce a second, staler one.
     """
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     worktree_ops_mod._SYNC_RID = "test-rid-abc"
     try:
@@ -594,7 +594,7 @@ async def test_fleet_build_does_not_bake_run_pointers():
 
 @pytest.mark.asyncio
 async def test_fleet_includes_build_pending():
-    import kiro_crew.apps.builtins.dev_fleet.server as mod
+    import aj_crew.apps.builtins.dev_fleet.server as mod
 
     with (
         patch.object(

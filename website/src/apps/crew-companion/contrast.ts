@@ -1,9 +1,9 @@
 /**
  * Colour contrast maths — pure, so the rules can be unit-tested without a DOM.
  *
- * Needed because the panel follows the user's Kiro Crew theme rather than a palette
+ * Needed because the panel follows the user's Aj Crew theme rather than a palette
  * we control. That is the right behaviour, but it means readability can no longer be
- * guaranteed at build time: measured against the app's own `kiro-dark` fallback, the
+ * guaranteed at build time: measured against the app's own `aj-dark` fallback, the
  * accent purple as TEXT sits at 3.57:1 on the card and 2.58:1 on a tinted accent
  * pill — both below the 4.5:1 WCAG AA threshold for normal text.
  *
@@ -52,7 +52,7 @@ export function parseCssColor(input: string): Rgb | null {
  * Flatten a translucent colour onto an opaque background.
  *
  * Theme accents are often given as rgba tints (the fallback's accent pill is
- * `rgba(142,72,255,0.3)`), and a contrast ratio computed from the raw rgba would
+ * `rgba(45,212,191,0.28)`), and a contrast ratio computed from the raw rgba would
  * describe a colour nobody can see.
  */
 export function compositeOver(fg: Rgb, bg: Rgb): Rgb {

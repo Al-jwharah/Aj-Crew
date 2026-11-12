@@ -23,15 +23,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import kiro_crew.sel as sel_mod
-from kiro_crew.acp import _dispatch as d
-from kiro_crew.acp.client_permissions import _foreign_mcp_identity
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_GOOSE, ACP_BACKEND_KIRO
-from kiro_crew.hook_runtime.tool_identity import hook_gate_kwargs
-from kiro_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY, HookManager, HooksConfig
-from kiro_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
-from kiro_crew.slack.gateway import _is_heartbeat_safe_tool
+import aj_crew.sel as sel_mod
+from aj_crew.acp import _dispatch as d
+from aj_crew.acp.client_permissions import _foreign_mcp_identity
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_GOOSE, ACP_BACKEND_KIRO
+from aj_crew.hook_runtime.tool_identity import hook_gate_kwargs
+from aj_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY, HookManager, HooksConfig
+from aj_crew.llm_helpers import ToolApprovalPolicy, _resolve_permission
+from aj_crew.slack.gateway import _is_heartbeat_safe_tool
 
 _CAPTURES = Path(__file__).parent / "fixtures" / "acp_frames" / "claude"
 
@@ -93,7 +93,7 @@ def _with_meta(**changes) -> dict:
     return permission
 
 
-def _core_pair(tool: str, args: dict, *, server: str = "kirocrew-core") -> tuple[dict, dict]:
+def _core_pair(tool: str, args: dict, *, server: str = "ajcrew-core") -> tuple[dict, dict]:
     """A claude MCP call on *server*, shaped exactly as the probe capture is."""
     fused = f"mcp__{server}__{tool}"
     tool_call = copy.deepcopy(_PROBE_CALL)
@@ -155,10 +155,10 @@ class TestEveryOtherFrameKeepsNoIdentity:
     def test_an_unplaced_server_names_nothing_and_is_not_refused(self):
         # A user's own ``~/.claude`` server Crew never placed: today's reading,
         # and no foreign-server refusal starts firing on it.
-        event = _replay(_PROBE_CALL, _PROBE_PERMISSION, placed=("kirocrew-core",))
+        event = _replay(_PROBE_CALL, _PROBE_PERMISSION, placed=("ajcrew-core",))
         assert (event.mcp_server_name, event.tool_name) == ("", "")
         client = SimpleNamespace(
-            backend=ACP_BACKEND_CLAUDE, _session_mcp_servers=lambda: [{"name": "kirocrew-core"}]
+            backend=ACP_BACKEND_CLAUDE, _session_mcp_servers=lambda: [{"name": "ajcrew-core"}]
         )
         assert _foreign_mcp_identity(client, event) is False  # type: ignore[arg-type]
 
@@ -180,10 +180,10 @@ class TestEveryOtherFrameKeepsNoIdentity:
 
     def test_a_title_naming_another_server_cannot_change_the_pair(self):
         permission = copy.deepcopy(_PROBE_PERMISSION)
-        permission["params"]["toolCall"]["title"] = "mcp__kirocrew-core__spawn_list"
+        permission["params"]["toolCall"]["title"] = "mcp__ajcrew-core__spawn_list"
         tool_call = copy.deepcopy(_PROBE_CALL)
-        tool_call["title"] = "mcp__kirocrew-core__spawn_list"
-        event = _replay(tool_call, permission, placed=("crew-probe", "kirocrew-core"))
+        tool_call["title"] = "mcp__ajcrew-core__spawn_list"
+        event = _replay(tool_call, permission, placed=("crew-probe", "ajcrew-core"))
         assert (event.mcp_server_name, event.tool_name) == ("crew-probe", "crew_probe_echo")
 
 
@@ -217,8 +217,8 @@ class TestTheGateReadsTheIdentity:
 
 class TestHeartbeatReadsTheIdentity:
     def test_a_core_read_is_heartbeat_safe(self):
-        event = _replay(*_core_pair("spawn_list", {}), placed=("kirocrew-core",))
-        assert (event.mcp_server_name, event.tool_name) == ("kirocrew-core", "spawn_list")
+        event = _replay(*_core_pair("spawn_list", {}), placed=("ajcrew-core",))
+        assert (event.mcp_server_name, event.tool_name) == ("ajcrew-core", "spawn_list")
         assert _is_heartbeat_safe_tool(event) is True
 
     def test_the_same_name_on_another_server_is_not(self):
@@ -261,13 +261,13 @@ class TestTheDocumentBodyExemptionApplies:
     @pytest.mark.asyncio
     async def test_a_core_message_quoting_a_command_is_sent(self):
         args = {"text": _QUOTED, "channel": "general"}
-        event = _replay(*_core_pair("send_message", args), placed=("kirocrew-core",))
+        event = _replay(*_core_pair("send_message", args), placed=("ajcrew-core",))
         assert await _resolve(event) is True
 
     @pytest.mark.asyncio
     async def test_the_same_text_in_a_non_body_field_is_refused(self):
         args = {"text": "hello", "channel": _QUOTED}
-        event = _replay(*_core_pair("send_message", args), placed=("kirocrew-core",))
+        event = _replay(*_core_pair("send_message", args), placed=("ajcrew-core",))
         assert await _resolve(event) is False
 
     @pytest.mark.asyncio

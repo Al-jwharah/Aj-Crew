@@ -74,7 +74,7 @@ only one that needs no config on the runner.
 That is the gate's primary use case, and it needs one rule to work at all. The
 table is the harness's (in this lane the change's own checkout, so head's), and the
 script hands that one table to the child for both trees, so the base tree of a
-check-adding PR lacks the `kiro_crew.security` attribute the new row names.
+check-adding PR lacks the `aj_crew.security` attribute the new row names.
 Treating that as an error would exit 2 on exactly the tightening the gate exists to
 measure.
 
@@ -96,12 +96,12 @@ into its own directory, and a child process classifies against it with
 - **The parent never imports the product.** The composite is the thing under
   test, so importing it in the harness would pin the comparison to one side.
 - **Each child proves which tree answered.** It re-reports the file
-  `kiro_crew.security` resolved to and exits 2 when that sits outside the
+  `aj_crew.security` resolved to and exits 2 when that sits outside the
   checkout it was given. Without the check, an installed copy of the package
   shadowing the path would serve *both* refs from one tree and every differential
   would come back empty — a false green with no symptom.
-- **Each child is hermetic.** Every `KIROCREW_*` variable is stripped, and both
-  the OS home (`HOME` / `USERPROFILE`) and `KIROCREW_HOME` are repointed at a
+- **Each child is hermetic.** Every `AJCREW_*` variable is stripped, and both
+  the OS home (`HOME` / `USERPROFILE`) and `AJCREW_HOME` are repointed at a
   throwaway directory. `KIRO_HOME` and the agent harnesses' declared credential
   home overrides are also stripped. The sensitive-path target set therefore
   never probes an inherited operator home, the verdict depends on the checkout
@@ -114,7 +114,7 @@ fails the job — a differential that could not run is not a pass.
 
 The gate calls the three `security.*` checks directly, so it measures the **rules**,
 not the hooks gate's own composition of them. That composition lives in
-`hooks.py` and `src/kiro_crew/hook_runtime/`: how the targets are built
+`hooks.py` and `src/aj_crew/hook_runtime/`: how the targets are built
 (`hook_runtime/search_targets.py` builds the search target), the effective
 denied set (`hook_runtime/denied_commands.py`), the context-derived enabled set, and
 the tier bodies themselves (`hook_runtime/gate_tiers.py`).
@@ -132,7 +132,7 @@ rule checks", and that is narrower than "no golden path is newly refused".
 
 ## The corpus
 
-The corpus is `src/kiro_crew/builtin_skills/security-conductor/golden-paths.json`, the
+The corpus is `src/aj_crew/builtin_skills/security-conductor/golden-paths.json`, the
 security-conductor's committed golden-paths seed, whose rows each name an operation
 that is legitimate **by decision** plus the reason it is:
 
@@ -238,7 +238,7 @@ cannot: a row the PR *adds*, which the base-owned corpus does not contain.
 
 ```
 python3 scripts/deny_diff.py --base origin/main --head HEAD \
-    --corpus src/kiro_crew/builtin_skills/security-conductor/golden-paths.json
+    --corpus src/aj_crew/builtin_skills/security-conductor/golden-paths.json
 ```
 
 Add `--json` for machine-readable rows, or `--platform posix|windows` to classify

@@ -1,6 +1,6 @@
 """Packaged docs (slack..telegram) state facts that match the code they describe.
 
-Each test reads one shipped doc under ``src/kiro_crew/docs`` and checks a fact
+Each test reads one shipped doc under ``src/aj_crew/docs`` and checks a fact
 against the constant or grammar that defines it, so a later code change that
 moves the fact fails here instead of leaving a running agent reading stale text.
 """
@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-DOCS = Path(__file__).resolve().parent.parent / "src" / "kiro_crew" / "docs"
+DOCS = Path(__file__).resolve().parent.parent / "src" / "aj_crew" / "docs"
 
 
 def _doc(name: str) -> str:
@@ -19,7 +19,7 @@ def _doc(name: str) -> str:
 
 def test_task_runner_docs_use_the_task_run_keyword_grammar():
     """Only ``task run``/``project run`` is intercepted; a bare ``run`` is not."""
-    from kiro_crew.messaging.commands import task_command_reply  # noqa: F401
+    from aj_crew.messaging.commands import task_command_reply  # noqa: F401
 
     for name in ("task-runner.md", "slack-integration.md"):
         text = _doc(name)
@@ -30,8 +30,8 @@ def test_task_runner_docs_use_the_task_run_keyword_grammar():
 
 
 def test_slack_sessions_limit_numbers_match_the_code():
-    from kiro_crew.config.sections import SlackConfig
-    from kiro_crew.slack.sessions_view import MAX_MESSAGE_SESSION_ROWS
+    from aj_crew.config.sections import SlackConfig
+    from aj_crew.slack.sessions_view import MAX_MESSAGE_SESSION_ROWS
 
     default = SlackConfig.__dataclass_fields__["sessions_limit"].default
     text = _doc("slack-integration.md")
@@ -41,7 +41,7 @@ def test_slack_sessions_limit_numbers_match_the_code():
 def test_hook_context_cap_is_documented():
     import inspect
 
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     src = inspect.getsource(hooks._hook_subprocess_env)
     cap = int(re.search(r"context\[:(\d+)\]", src).group(1))
@@ -49,20 +49,20 @@ def test_hook_context_cap_is_documented():
 
 
 def test_telegram_agent_picker_cap_is_documented():
-    from kiro_crew.telegram.dispatch.pickers import _PICKER_LIMIT
+    from aj_crew.telegram.dispatch.pickers import _PICKER_LIMIT
 
     assert f"It shows at most {_PICKER_LIMIT};" in _doc("telegram-integration.md")
 
 
 def test_snapshot_component_table_lists_crew_teams():
-    from kiro_crew.snapshot_components import COMPONENTS
+    from aj_crew.snapshot_components import COMPONENTS
 
     assert "crew-teams" in COMPONENTS
     assert "| crew-teams | `crew-teams/teams.json`" in _doc("snapshot-and-restore.md")
 
 
 def test_teams_doc_names_the_real_dashboard_url_key():
-    from kiro_crew.config.sections import DashboardConfig
+    from aj_crew.config.sections import DashboardConfig
 
     fields = DashboardConfig.__dataclass_fields__
     assert "url" in fields and "host" not in fields
@@ -105,7 +105,7 @@ def test_slack_slash_command_table_lists_every_registered_command():
     """The doc's Slash Commands table names exactly the registered sub-commands."""
     text = _doc("slack-integration.md")
     section = text.split("\n## Slash Commands\n", 1)[1].split("\n## ", 1)[0]
-    documented = set(re.findall(r"^\| `/kirocrew (\w+)", section, re.MULTILINE))
+    documented = set(re.findall(r"^\| `/ajcrew (\w+)", section, re.MULTILINE))
 
     registered = _registered_slash_commands()
     assert registered, "no register_slash_command call found"
@@ -117,7 +117,7 @@ def test_slack_slash_command_table_lists_every_registered_command():
 
 def test_open_channels_is_documented_as_granting_no_access():
     """``is_open_channel`` refuses every channel, so no doc may present the key as access."""
-    from kiro_crew.slack.handler_runtime.access import is_open_channel
+    from aj_crew.slack.handler_runtime.access import is_open_channel
 
     assert not is_open_channel("C0123456789")
     assert "| `slack.open_channels` | Ignored for access" in _doc("configuration.md")
@@ -131,8 +131,8 @@ def test_slack_tool_approval_flow_marks_the_configured_default_mode():
     An unset ``agent.approval_mode`` is what every channel turn resolves, so the
     item marked default is the behaviour an operator gets without configuring one.
     """
-    from kiro_crew.config.fields import field_default
-    from kiro_crew.config.sections import AgentConfig
+    from aj_crew.config.fields import field_default
+    from aj_crew.config.sections import AgentConfig
 
     default = field_default(AgentConfig, "approval_mode")
     text = _doc("slack-integration.md")

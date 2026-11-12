@@ -55,9 +55,9 @@ Other places link in: `ConnectionsRedirect` in `shell/routes.tsx` (`/connections
 by OAuth Apps" link (`SecretsPanel.tsx`); the command palette's one entry
 per pre-registered provider (`settingsManual.ts`, tab `connections`) and its
 generated files `settingsRegistry.gen.ts` and
-`src/kiro_crew/docs/settings-registry.generated.json`. The backend and docs
-hold more of these links: `src/kiro_crew/data/tips_curated.json`,
-`src/kiro_crew/doctor_checks/mcp.py`, `src/kiro_crew/docs/{agents,mcp-apps,troubleshooting,connections}.md`,
+`src/aj_crew/docs/settings-registry.generated.json`. The backend and docs
+hold more of these links: `src/aj_crew/data/tips_curated.json`,
+`src/aj_crew/doctor_checks/mcp.py`, `src/aj_crew/docs/{agents,mcp-apps,troubleshooting,connections}.md`,
 `docs/guides/oauth-app-registration/*.md`, `docs/guides/secrets-env.md`
 and `docs/system-specs/modules/connections.md`.
 
@@ -151,7 +151,7 @@ The owner clarified this on 2026-11-10, and it binds the code PR.
      issuing client and account, Disconnect deletes only its own entry
      (`revoked: false, shared: true`). An unknown account or client counts
      as not shared, so the revoke happens. This is already on main
-     (`_shares_upstream_grant` in `src/kiro_crew/connections/crew_oauth.py`).
+     (`_shares_upstream_grant` in `src/aj_crew/connections/crew_oauth.py`).
      The page shows it and must not change it.
 9. **Who builds what.**
    - [#34290](https://github.com/kirodotdev/KiroCrew/pull/34290) builds the
@@ -200,7 +200,7 @@ including `en.manual.json` and the pseudolocale.
 | Advanced removed | `test/McpManagement*.test.tsx` (8 files) drop `initialAdvancedOpen`; `test/McpManagementMove.test.tsx` asserts sharing renders above the list |
 | Link targets | `test/ConnectionsPage.coverage.test.tsx`, `test/ConnectionsPage.searchMemory.test.tsx`, `test/McpShareRefusedNotice.test.tsx`, `test/AgentBackendTab.detailCard.test.tsx`, `test/DeveloperPanel*.test.tsx` |
 | Routing / shell | `test/App.shell.routes.test.tsx` (new redirects), `test/SettingsPage.agentHarness.test.tsx`, `test/settingsCoverage.test.ts`, `test/previewSurfaces.test.tsx`, nav-rail and pin tests (new `mcp` row, `capabilities-mcp` gone) |
-| Guide / UI index | `guide/GuideLayer.*.test.tsx`, `uiLocations/*.test.ts`; regenerate `uiLocations/guidePlans.gen.ts`, `settingsRegistry.gen.ts`, `src/kiro_crew/docs/ui-index.generated.json`, `src/kiro_crew/docs/settings-registry.generated.json` |
+| Guide / UI index | `guide/GuideLayer.*.test.tsx`, `uiLocations/*.test.ts`; regenerate `uiLocations/guidePlans.gen.ts`, `settingsRegistry.gen.ts`, `src/aj_crew/docs/ui-index.generated.json`, `src/aj_crew/docs/settings-registry.generated.json` |
 | Backend | `test/test_doctor_mcp_share_refused.py`, `test/test_find_ui*.py`, `test/test_guide_ui_find.py`, `test/gui_user/features.json` |
 
 New tests:

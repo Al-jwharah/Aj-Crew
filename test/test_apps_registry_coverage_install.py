@@ -15,7 +15,7 @@ from apps_registry_coverage_helpers import _explicit_registry_execution_admissio
 from apps_registry_coverage_helpers import bundled_interpreter_fixture  # noqa: F401
 from apps_registry_coverage_helpers import _DATA_IS_A_FILE, _asgi_backend, _fake_sandbox, _FakeProc
 
-from kiro_crew.apps import registry
+from aj_crew.apps import registry
 
 
 class TestRefusalLineVerb:
@@ -286,7 +286,7 @@ class TestInstallFromRegistryRefusals:
         ``app-sources`` is redirected at *tmp_path* as a belt-and-braces guard:
         the refusals all return before the stale-checkout sweep, and this makes
         a future regression fail loudly in the sandbox instead of quietly
-        touching the real Kiro Crew home.
+        touching the real Aj Crew home.
         """
         _floor_monkeypatch.setattr(registry, "sel", lambda: MagicMock())
         _floor_monkeypatch.setattr(registry, "_app_sources_dir", lambda: tmp_path / "app-sources")
@@ -419,11 +419,11 @@ class TestInstallFromRegistryRefusals:
     async def test_legacy_name_grant_refuses_before_manifest_fetch_or_clone(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.config.loader import _invalidate_config_cache
 
         home = tmp_path / "home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         (home / "config.json").write_text(
             json.dumps({"agent": {"apps_trusted": ["demo"]}}),
             encoding="utf-8",
@@ -475,11 +475,11 @@ class TestInstallFromRegistryRefusals:
         must not carry the code that reopens the consent dialog. It carries the
         repository the update installs instead, normalized and credential-free,
         as the consent proof the update route takes to switch the grant."""
-        from kiro_crew.config.loader import _invalidate_config_cache
+        from aj_crew.config.loader import _invalidate_config_cache
 
         home = tmp_path / "home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         (home / "config.json").write_text(
             json.dumps(
                 {
@@ -626,14 +626,14 @@ class TestInstallFromRegistryRefusals:
         )
 
         async def _manifest(*a, **k):
-            return {"name": "demo", "minKiroCrewVersion": "999.0.0"}
+            return {"name": "demo", "minAjCrewVersion": "999.0.0"}
 
         monkeypatch.setattr(registry, "_fetch_app_manifest", _manifest)
         monkeypatch.setattr(registry, "get_app", lambda name: None)
         monkeypatch.setattr(
             registry, "app_admission_denied", lambda name, manifest=None, action="", **_k: None
         )
-        monkeypatch.setattr("kiro_crew.apps.version.check_min_version", lambda mv: "needs 999.0.0")
+        monkeypatch.setattr("aj_crew.apps.version.check_min_version", lambda mv: "needs 999.0.0")
         result = await registry.install_from_registry("demo")
         assert result == {"ok": False, "name": "demo", "error": "needs 999.0.0"}
 

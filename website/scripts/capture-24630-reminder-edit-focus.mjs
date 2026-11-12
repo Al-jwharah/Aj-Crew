@@ -31,7 +31,7 @@ function assert(label, ok, detail = '') {
 }
 
 const MANIFEST = JSON.parse(readFileSync(fileURLToPath(
-  new URL('../../src/kiro_crew/apps/builtins/crew_companion/app.json', import.meta.url)), 'utf8'))
+  new URL('../../src/aj_crew/apps/builtins/crew_companion/app.json', import.meta.url)), 'utf8'))
 const installed = [{
   name: 'crew-companion', version: MANIFEST.version, displayName: MANIFEST.displayName,
   enabled: true, installedAt: '2026-08-25T12:00:00Z', source: 'builtin', origin: 'builtin',

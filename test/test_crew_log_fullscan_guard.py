@@ -31,14 +31,14 @@ from typing import Any, Iterator
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, bus, eager, emit, lease
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import projection_catalogue, slot_prime
-from kiro_crew.crew_log import store as crew_log_store
-from kiro_crew.crew_log import store_cuts, store_paths, store_units
-from kiro_crew.crew_log.session_tree import SessionTree
-from kiro_crew.testing.wait import await_until
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, bus, eager, emit, lease
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import projection_catalogue, slot_prime
+from aj_crew.crew_log import store as crew_log_store
+from aj_crew.crew_log import store_cuts, store_paths, store_units
+from aj_crew.crew_log.session_tree import SessionTree
+from aj_crew.testing.wait import await_until
 
 GATEWAY = "gateway"
 BOARD = "dashboard:guard-board"
@@ -73,8 +73,8 @@ RESUME_FOLD = "ledger"
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
     """Own data home, crew log on, no warm cell, subscriber or worker left over."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     _reset()
     yield
     _reset()
@@ -237,11 +237,11 @@ def meter(monkeypatch) -> ScanMeter:
 
 def _unit(unit_id: str, slot: str, *, filler: int, work_items: int = 0) -> CrewLog:
     """One session unit on *slot*: an opener, *work_items* work creates, then filler."""
-    handle = CrewLog.create(lg.KIND_SESSION, unit_id, owner="guard", agent="kirocrew", slot=slot)
+    handle = CrewLog.create(lg.KIND_SESSION, unit_id, owner="guard", agent="ajcrew", slot=slot)
     handle.append(
         "session/opened",
         {
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "slot": slot,
             "model": "m",
             "cwd": "/w",
@@ -369,7 +369,7 @@ SAVEPOINT_GAP = 300
 
 
 def test_a_warm_session_read_that_earns_a_savepoint_reads_only_the_gap(meter):
-    from kiro_crew.crew_log import checkpoint
+    from aj_crew.crew_log import checkpoint
 
     assert SAVEPOINT_GAP >= checkpoint.MIN_ADVANCE_ENTRIES
     handle = _unit("acp-session-gap", BOARD, filler=ENTRIES_PER_UNIT)
@@ -411,7 +411,7 @@ def test_a_cold_prime_copies_the_fold_state_a_fixed_number_of_times(meter):
     Driven through the cold fold call itself, not through a subscribe, so the count
     still measures the prime once a subscribe stops folding.
     """
-    from kiro_crew.crew_log import projection_slot_memo
+    from aj_crew.crew_log import projection_slot_memo
 
     units = [_unit(f"acp-copy-{index}", BOARD, filler=10, work_items=150).id for index in range(2)]
     with meter.measure():
@@ -421,7 +421,7 @@ def test_a_cold_prime_copies_the_fold_state_a_fixed_number_of_times(meter):
 
 def _savepoint_bytes(handle: CrewLog, fold: str) -> bytes:
     """The slot savepoint *fold* keeps at *handle*'s unit, or ``b""`` when there is none."""
-    from kiro_crew.crew_log import checkpoint
+    from aj_crew.crew_log import checkpoint
 
     path = checkpoint.slot_checkpoint_path(lg.KIND_SESSION, handle.id, fold)
     return path.read_bytes() if path.exists() else b""
@@ -434,7 +434,7 @@ def _earn_a_savepoint_write(handle: CrewLog, read: Any, fold: str) -> None:
     a smaller gap leaves it where the cold read put it and a restart bound would measure
     the write interval instead of the resume.
     """
-    from kiro_crew.crew_log import checkpoint
+    from aj_crew.crew_log import checkpoint
 
     before = _savepoint_bytes(handle, fold)
     _append_work(handle, checkpoint.MIN_ADVANCE_ENTRIES + 4, "earn")
@@ -553,7 +553,7 @@ def test_an_eager_advance_on_a_log_without_a_cut_counter_reads_only_the_new_entr
 
 
 def test_a_dispatch_view_for_one_unit_reads_a_fixed_number_of_units(meter, monkeypatch):
-    from kiro_crew.crew_log.read import dispatch_view
+    from aj_crew.crew_log.read import dispatch_view
 
     units = _board_slot()
     _other_slots()
@@ -578,7 +578,7 @@ def test_a_dispatch_view_for_one_unit_reads_a_fixed_number_of_units(meter, monke
 
 
 async def _ws_connect_and_replay(app: Any, client: Any, done: asyncio.Event) -> None:
-    from kiro_crew.dashboard import token_auth
+    from aj_crew.dashboard import token_auth
 
     token = token_auth.generate_token("local-app")
     tab = await client.ws_connect("/api/ws", params={"token": token})
@@ -599,11 +599,11 @@ def ws_harness(tmp_path, monkeypatch):
     from aiohttp.test_utils import TestClient, TestServer
     from chat_test_helpers import _make_app, _make_state
 
-    from kiro_crew.dashboard import token_auth, ws
-    from kiro_crew.dashboard.state import SlotOrigin
+    from aj_crew.dashboard import token_auth, ws
+    from aj_crew.dashboard.state import SlotOrigin
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.ws.load_declared_events_for_connect",
+        "aj_crew.dashboard.ws.load_declared_events_for_connect",
         lambda _app: (True, frozenset()),
     )
     state = _make_state(tmp_path)
@@ -664,9 +664,9 @@ def test_a_ws_reconnect_with_nothing_new_reads_a_fixed_number_of_entries(meter, 
 
 
 def test_a_first_history_page_in_a_new_process_reads_the_page_not_the_file(tmp_path, monkeypatch):
-    from kiro_crew import history, history_projection
-    from kiro_crew.history import ConversationLog
-    from kiro_crew.history_projection_contract import _TRANSCRIPT_PAGE_INDEX_STRIDE
+    from aj_crew import history, history_projection
+    from aj_crew.history import ConversationLog
+    from aj_crew.history_projection_contract import _TRANSCRIPT_PAGE_INDEX_STRIDE
 
     monkeypatch.setattr(history, "_SESSION_MAX_BYTES", 10**12)
     key = "dashboard:guard-history"
@@ -703,11 +703,11 @@ def test_a_first_history_page_in_a_new_process_reads_the_page_not_the_file(tmp_p
 
 
 def test_the_memory_graph_reads_a_bounded_number_of_semantic_rows(tmp_path):
-    from kiro_crew.dashboard.handlers.memory_graph import (
+    from aj_crew.dashboard.handlers.memory_graph import (
         GRAPH_SEMANTIC_LIMIT,
         _build_memory_graph,
     )
-    from kiro_crew.vector_memory import VectorMemoryStore
+    from aj_crew.vector_memory import VectorMemoryStore
 
     store = VectorMemoryStore(db_path=tmp_path / "guard-vm.db")
     store.init()

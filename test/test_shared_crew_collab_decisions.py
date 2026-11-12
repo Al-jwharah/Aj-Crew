@@ -17,15 +17,15 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_approve
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.shared_crew.collab import (
+from aj_crew.dashboard.chat_handlers import api_chat_slot_approve
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.shared_crew.collab import (
     FRAME_DECISION,
     DecisionKind,
     DecisionState,
     ResolveOutcome,
 )
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew.contracts import (
     ACTOR_REQUEST_KEY,
     ActorContext,
     DisplaySnapshot,
@@ -35,7 +35,7 @@ from kiro_crew.shared_crew.contracts import (
     Transport,
     principal_id_for,
 )
-from kiro_crew.shared_crew.decisions import (
+from aj_crew.shared_crew.decisions import (
     DecisionRegistry,
     approval_decision_id,
     decisions_for,
@@ -44,7 +44,7 @@ from kiro_crew.shared_crew.decisions import (
     state_approval_decision_id,
     turn_initiator,
 )
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 
 def _person(login: str, name: str) -> Principal:
@@ -93,7 +93,7 @@ def test_a_verified_person_settles_as_a_person_and_the_host_as_the_host():
 def test_settle_after_wait_with_an_outcome_is_the_host_settling_it():
     from types import SimpleNamespace
 
-    from kiro_crew.shared_crew.decisions import settle_after_wait
+    from aj_crew.shared_crew.decisions import settle_after_wait
 
     state = SimpleNamespace(
         broadcast_ws=lambda *a, **k: None, _log=MagicMock(), _shared_crew_decisions=_registry()
@@ -107,7 +107,7 @@ def test_settle_after_wait_with_an_outcome_is_the_host_settling_it():
 
 
 def test_settled_by_survives_a_round_trip_and_an_older_record_reads_as_person():
-    from kiro_crew.shared_crew.collab import SharedDecision
+    from aj_crew.shared_crew.collab import SharedDecision
 
     reg = _registry()
     reg.open("d1", DecisionKind.APPROVAL, "s1", ALICE)
@@ -252,12 +252,12 @@ SLOT = "selected"
 
 @pytest.fixture(autouse=True)
 def _hermetic_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()
@@ -473,7 +473,7 @@ async def test_state_level_approval_that_expires_closes_the_decision(state):
 async def test_question_first_answer_wins_and_names_responder(state):
     slot = state.get_or_create_slot(SLOT, origin=SlotOrigin.USER)
     slot.append("user", "ask me", "msg msg-u", meta={"author": ALICE.to_dict()})
-    from kiro_crew.dashboard.interaction_coordinator import QuestionCoordinator
+    from aj_crew.dashboard.interaction_coordinator import QuestionCoordinator
 
     task = asyncio.get_running_loop().create_task(
         QuestionCoordinator().request(state, "ask-1", slot.key, [{"question": "Q?"}], 30)
@@ -516,7 +516,7 @@ def _request_as(principal: Principal) -> dict:
 
 @pytest.mark.asyncio
 async def test_by_id_slot_approval_first_wins_then_conflict_then_replay(state):
-    from kiro_crew.shared_crew.decisions import resolve_approval_by_id
+    from aj_crew.shared_crew.decisions import resolve_approval_by_id
 
     _slot, fut = _slot_with_pending(state, "rid-20")
     won = resolve_approval_by_id(
@@ -556,7 +556,7 @@ async def test_by_id_slot_approval_first_wins_then_conflict_then_replay(state):
 async def test_by_id_slot_approval_records_the_action_as_its_outcome(
     state, approved, rejected_once, expected
 ):
-    from kiro_crew.shared_crew.decisions import resolve_approval_by_id
+    from aj_crew.shared_crew.decisions import resolve_approval_by_id
 
     _slot, fut = _slot_with_pending(state, "rid-30")
     won = resolve_approval_by_id(
@@ -576,7 +576,7 @@ async def test_by_id_slot_approval_records_the_action_as_its_outcome(
 
 @pytest.mark.asyncio
 async def test_by_id_with_nothing_pending_returns_none(state):
-    from kiro_crew.shared_crew.decisions import resolve_approval_by_id
+    from aj_crew.shared_crew.decisions import resolve_approval_by_id
 
     assert (
         resolve_approval_by_id(
@@ -592,7 +592,7 @@ async def test_coordinator_target_decide_records_the_verified_responder(state, s
     """A decide that names its coordinator target (slot and instance) settles
     through the registry like a decide by id, so the decision names the person
     who pressed it, not an unknown responder settled by the host."""
-    from kiro_crew.dashboard.handlers.sessions_parts.live_turn import api_approval_resolve
+    from aj_crew.dashboard.handlers.sessions_parts.live_turn import api_approval_resolve
 
     task = asyncio.get_running_loop().create_task(
         state.request_approval("rid-c", "cron:nightly", "fs_write", slot=slot)
@@ -606,7 +606,7 @@ async def test_coordinator_target_decide_records_the_verified_responder(state, s
     app.router.add_post("/api/approvals/{id}/{action}", api_approval_resolve)
     if not slot:
         # A slotless approval is decided only from the owner's browser session.
-        import kiro_crew.dashboard.chat_handlers as chat_handlers
+        import aj_crew.dashboard.chat_handlers as chat_handlers
 
         original = chat_handlers.bare_approval_decide_allowed
         chat_handlers.bare_approval_decide_allowed = lambda _request: True
@@ -635,7 +635,7 @@ async def test_a_coordinator_target_decide_after_the_winner_keeps_its_responder(
     """A second decide that reaches the route after the first settled the future,
     while the record is still listed, is a lost race: it leaves the winner's
     decision and responder as they were."""
-    from kiro_crew.dashboard.handlers.sessions_parts.live_turn import api_approval_resolve
+    from aj_crew.dashboard.handlers.sessions_parts.live_turn import api_approval_resolve
 
     future = asyncio.get_running_loop().create_future()
     state._approval_futures["rid-r"] = future

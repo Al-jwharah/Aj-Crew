@@ -1,4 +1,4 @@
-"""Tests for :mod:`kiro_crew.skill_trust` -- the project-skills consent record.
+"""Tests for :mod:`aj_crew.skill_trust` -- the project-skills consent record.
 
 A ``SKILL.md`` is prose that enters the agent's context and can instruct it to
 run anything, so loading one out of whatever repository the operator happened to
@@ -6,7 +6,7 @@ clone is an execution-adjacent decision. This module is the gate on that
 decision, which makes every property below a security property rather than a
 convenience: each test therefore says WHY it matters, not just what it checks.
 
-Isolation: ``KIROCREW_HOME`` is pinned to this test's ``tmp_path`` (the same
+Isolation: ``AJCREW_HOME`` is pinned to this test's ``tmp_path`` (the same
 lever the rootdir conftest uses) and ``config.paths._resolved_home`` is reset
 with it, because ``config_dir()`` memoises the resolved home in a module global
 for the process lifetime and one xdist worker runs thousands of tests in one
@@ -25,10 +25,10 @@ from unittest.mock import patch
 
 import pytest
 
+from aj_crew import platform_compat, security, skill_trust
+from aj_crew.config import paths
+from aj_crew.config.loader import AjCrewConfig
 from conftest import make_dir_link, requires_symlinks
-from kiro_crew import platform_compat, security, skill_trust
-from kiro_crew.config import paths
-from kiro_crew.config.loader import KiroCrewConfig
 
 pytestmark = pytest.mark.skipif(
     not skill_trust.project_skill_traversal_supported(),
@@ -45,7 +45,7 @@ def _isolated_data_home(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
     here could land in -- or be read from -- another test's store.
     """
     home = tmp_path / "data-home"
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setattr(paths, "_resolved_home", None, raising=False)
     skill_trust.reset_cache_for_tests()
     yield
@@ -414,9 +414,9 @@ class TestOffSwitch:
         skill_trust.grant_project_trust(project)
         assert skill_trust.is_project_trusted(project) is True
 
-        disabled = KiroCrewConfig.load()
+        disabled = AjCrewConfig.load()
         object.__setattr__(disabled.skills, "project_skills_enabled", False)
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=disabled):
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=disabled):
             skill_trust.reset_cache_for_tests()
 
             assert skill_trust.is_project_trusted(project) is False
@@ -438,7 +438,7 @@ class TestOffSwitch:
         skill_trust.grant_project_trust(project)
 
         with patch(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             side_effect=RuntimeError("config unreadable"),
         ):
             skill_trust.reset_cache_for_tests()

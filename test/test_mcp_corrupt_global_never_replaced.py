@@ -20,8 +20,8 @@ import pytest
 from handlers_mcp_coverage_helpers import sandbox_fixture  # noqa: F401
 from handlers_mcp_coverage_helpers import _payload, _read_global, _request, _write_global
 
-from kiro_crew.dashboard.handlers import mcp as mcp_mod
-from kiro_crew.mcp_discovery import McpServerInfo
+from aj_crew.dashboard.handlers import mcp as mcp_mod
+from aj_crew.mcp_discovery import McpServerInfo
 
 # The reproduction from the issue: one missing comma between two entries.
 _BROKEN = '{"mcpServers": {"usera": {"command": "a"} "userb": {"command": "b"}}}'
@@ -81,7 +81,7 @@ async def test_put_keeps_the_other_servers_of_a_valid_file(sandbox: SimpleNamesp
 async def test_sync_refuses_an_unparseable_file_before_any_write(
     sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    import kiro_crew.mcp_discovery as disc
+    import aj_crew.mcp_discovery as disc
 
     calls: list[None] = []
 
@@ -110,14 +110,14 @@ async def test_sync_refuses_a_file_that_breaks_after_the_first_check(
     file survives; the request is refused whole only when the file is broken at
     request start (the tests above).
     """
-    import kiro_crew.mcp_discovery as disc
+    import aj_crew.mcp_discovery as disc
 
     def _discover() -> list[McpServerInfo]:
         sandbox.global_json.write_text(_BROKEN, encoding="utf-8")
         return [McpServerInfo(name="found", command="found-cmd")]
 
     monkeypatch.setattr(disc, "sync_discovered_servers", _discover)
-    monkeypatch.setattr(disc, "kirocrew_managed_names", set)
+    monkeypatch.setattr(disc, "ajcrew_managed_names", set)
     _write_global(sandbox, {"usera": {"command": "a"}})
 
     resp = await mcp_mod.api_mcp_sync(_request(None))
@@ -158,7 +158,7 @@ async def test_put_refuses_every_non_config_shape(sandbox: SimpleNamespace, raw:
 async def test_sync_refuses_every_non_config_shape_before_discovery(
     sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch, raw: bytes
 ) -> None:
-    import kiro_crew.mcp_discovery as disc
+    import aj_crew.mcp_discovery as disc
 
     calls: list[None] = []
     monkeypatch.setattr(disc, "sync_discovered_servers", lambda: calls.append(None) or [])
@@ -179,7 +179,7 @@ async def test_apply_refuses_an_unparseable_global_before_any_write(
     sandbox.global_json.write_text(_BROKEN, encoding="utf-8")
 
     resp = await mcp_mod.api_mcp_apply(
-        _request({"changes": [{"name": "newsrv", "kirocrew": True, "kiroGlobal": True}]})
+        _request({"changes": [{"name": "newsrv", "ajcrew": True, "kiroGlobal": True}]})
     )
 
     assert resp.status == 500
@@ -217,7 +217,7 @@ async def test_apply_refuses_an_unparseable_extra_scope_global(
     before = sandbox.global_json.read_bytes()
 
     resp = await mcp_mod.api_mcp_apply(
-        _request({"changes": [{"name": "newsrv", "kirocrew": True, "kiroGlobal": True}]})
+        _request({"changes": [{"name": "newsrv", "ajcrew": True, "kiroGlobal": True}]})
     )
 
     assert resp.status == 500
@@ -242,7 +242,7 @@ async def test_sync_refuses_a_file_that_cannot_be_read_as_unreadable(
     sandbox: SimpleNamespace, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A read failure is not reported as a parse failure, and nothing is discovered."""
-    import kiro_crew.mcp_discovery as disc
+    import aj_crew.mcp_discovery as disc
 
     calls: list[None] = []
     monkeypatch.setattr(disc, "sync_discovered_servers", lambda: calls.append(None) or [])
@@ -283,9 +283,9 @@ async def test_put_keeps_the_commented_file_refusal(sandbox: SimpleNamespace) ->
 @pytest.mark.parametrize("raw", [p[1] for p in _NOT_A_CONFIG], ids=[p[0] for p in _NOT_A_CONFIG])
 def test_cc_sidecar_is_not_replaced(tmp_path, monkeypatch: pytest.MonkeyPatch, raw: bytes) -> None:
     """The sync's Claude Code sidecar write refuses the same shapes."""
-    from kiro_crew import mcp_discovery
+    from aj_crew import mcp_discovery
 
-    monkeypatch.setattr(mcp_discovery, "kirocrew_managed_names", set)
+    monkeypatch.setattr(mcp_discovery, "ajcrew_managed_names", set)
     sidecar = tmp_path / ".mcp.json"
     sidecar.write_bytes(raw)
     server = McpServerInfo(name="found", command="found-cmd")
@@ -295,9 +295,9 @@ def test_cc_sidecar_is_not_replaced(tmp_path, monkeypatch: pytest.MonkeyPatch, r
 
 
 def test_cc_sidecar_is_still_created_when_missing(tmp_path, monkeypatch) -> None:
-    from kiro_crew import mcp_discovery
+    from aj_crew import mcp_discovery
 
-    monkeypatch.setattr(mcp_discovery, "kirocrew_managed_names", set)
+    monkeypatch.setattr(mcp_discovery, "ajcrew_managed_names", set)
     sidecar = tmp_path / ".mcp.json"
     server = McpServerInfo(name="found", command="found-cmd")
 
@@ -325,8 +325,8 @@ async def test_apply_refuses_when_a_global_breaks_mid_batch(
         _request(
             {
                 "changes": [
-                    {"name": "first", "kirocrew": True, "kiroGlobal": True},
-                    {"name": "second", "kirocrew": True, "kiroGlobal": True},
+                    {"name": "first", "ajcrew": True, "kiroGlobal": True},
+                    {"name": "second", "ajcrew": True, "kiroGlobal": True},
                 ]
             }
         )

@@ -6,7 +6,7 @@ Pins the literal answers of the shared model predicates (``resolve_usable_model`
 the claude-agent-acp model-substitution advisory readers. The model ids below are
 test INPUTS, never defaults.
 
-The code is reached only through the ``kiro_crew.acp.client`` facade, so these
+The code is reached only through the ``aj_crew.acp.client`` facade, so these
 tests hold unchanged before and after the definitions move to their owner module.
 """
 
@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.acp import client as acp_client
+from aj_crew.acp import client as acp_client
 
 
 def test_default_model_is_the_auto_sentinel():

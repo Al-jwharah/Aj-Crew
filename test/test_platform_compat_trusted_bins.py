@@ -29,7 +29,7 @@ def test_parent_map_ignores_a_planted_ps_earlier_on_path(tmp_path, monkeypatch):
     The shim below would report a bogus tree (and could run any code) if the
     lookup honored PATH.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX lookup
         pytest.skip("POSIX binary resolution")
@@ -52,7 +52,7 @@ def test_parent_map_ignores_a_planted_ps_earlier_on_path(tmp_path, monkeypatch):
 
 
 def test_trusted_system_bin_rejects_a_name_not_in_system_dirs(tmp_path, monkeypatch):
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX lookup
         pytest.skip("POSIX binary resolution")
@@ -68,7 +68,7 @@ def test_trusted_system_bin_rejects_a_name_not_in_system_dirs(tmp_path, monkeypa
 def test_trusted_system_bin_dirs_are_not_limited_to_fhs():
     # A distribution may keep ps/lsof/systemd-run outside /usr/{s}bin; an
     # FHS-only pin resolves nothing at all there.
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     fhs = {"/usr/bin", "/bin", "/usr/sbin", "/sbin"}
     assert set(platform_compat._TRUSTED_SYSTEM_BIN_DIRS) - fhs
@@ -76,7 +76,7 @@ def test_trusted_system_bin_dirs_are_not_limited_to_fhs():
 
 def test_trusted_system_bin_resolves_outside_fhs(tmp_path, monkeypatch):
     # A tool reachable only through a non-FHS pinned directory still resolves.
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX lookup
         pytest.skip("POSIX binary resolution")
@@ -127,7 +127,7 @@ def test_root_owned_path_accepts_a_system_dir_and_rejects_a_user_one(tmp_path, m
     the user directory keeps its REAL ownership, so the two verdicts turn on the
     one property that separates them.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX ownership
         pytest.skip("POSIX ownership semantics")
@@ -162,7 +162,7 @@ def test_root_owned_path_declines_a_root_leaf_under_a_writable_directory(tmp_pat
     root-owned binary under a uid-writable directory can be swapped for anything.
     Only the walk can see that: the leaf itself passes every check.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX ownership
         pytest.skip("POSIX ownership semantics")
@@ -194,7 +194,7 @@ def test_root_owned_path_declines_a_root_leaf_under_a_writable_directory(tmp_pat
 
 def test_root_owned_path_declines_a_group_writable_component(tmp_path, monkeypatch):
     """Ownership is not enough: group/world write is writable by more than root."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX ownership
         pytest.skip("POSIX ownership semantics")
@@ -228,7 +228,7 @@ def test_root_owned_path_declines_an_acl_write_grant(tmp_path, monkeypatch):
     the principal this gate defends against. ``os.access`` is what sees it, because
     the kernel evaluates ACLs and this function cannot.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX ownership
         pytest.skip("POSIX ownership semantics")
@@ -307,7 +307,7 @@ def test_aws_bin_declined_is_none_when_the_system_copy_won(monkeypatch):
     Reporting "the local copy was refused" while `/usr/bin/aws` is what got used
     offers that refusal as the cause of some later, unrelated failure.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "trusted_system_bin", lambda name: "/usr/bin/aws")
     monkeypatch.setattr(platform_compat, "_local_aws_bin_candidate", lambda: "/usr/local/bin/aws")
@@ -324,7 +324,7 @@ def test_root_owned_path_accepts_an_absolute_symlink_through_root_owned_dirs(tmp
     and the whole fallback is dead code on exactly the hosts it was added for. So
     this is the positive case: every component root-owned, verdict True.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX symlinks
         pytest.skip("POSIX symlink semantics")
@@ -383,7 +383,7 @@ def test_root_owned_path_declines_a_writable_ancestor_of_a_symlinked_component(
     ``/usr/local`` and never ``/opt/x`` -- the directory that can replace the target
     wholesale. Only resolving component by component reaches it.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX symlinks
         pytest.skip("POSIX symlink semantics")
@@ -432,7 +432,7 @@ def test_root_owned_path_accepts_a_real_system_binary(tmp_path, monkeypatch):
     Presented through ``os.stat`` rather than read from ``/usr/bin/env`` -- see
     ``_root_owned_everywhere_except`` for why the real directory cannot serve.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX layout
         pytest.skip("POSIX filesystem layout")
@@ -457,7 +457,7 @@ def test_root_owned_path_declines_a_group_writable_directory_on_the_chain(tmp_pa
     ``2775``, so anyone in ``staff`` can replace the entry. Owner-only checking
     would accept it.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX ownership
         pytest.skip("POSIX ownership semantics")
@@ -495,7 +495,7 @@ def test_root_owned_path_walks_past_the_immediate_parent(tmp_path, monkeypatch):
     whoever owns the grandparent can swap the parent directory wholesale. Checking
     only the immediate parent would accept it.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX ownership
         pytest.skip("POSIX ownership semantics")
@@ -539,7 +539,7 @@ def test_root_owned_path_declines_a_writable_hop_in_the_middle_of_a_chain(tmp_pa
     and ``/tmp`` -- the one directory where the retarget actually happens -- is
     never looked at. Whoever can write that directory chooses what executes.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX symlinks
         pytest.skip("POSIX symlink semantics")
@@ -581,7 +581,7 @@ def test_root_owned_path_declines_a_writable_hop_in_the_middle_of_a_chain(tmp_pa
 
 def test_root_owned_path_declines_a_symlink_loop(tmp_path, monkeypatch):
     """A cycle answers False rather than spinning: an unbounded walk is a hang."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX symlinks
         pytest.skip("POSIX symlink semantics")
@@ -647,7 +647,7 @@ def test_traversed_components_of_a_symlink_free_path_is_its_lexical_chain(tmp_pa
     question over the lexical chain asks it over the very same directories here
     whenever no symlink is involved, in root-first order with the target last.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX path semantics
         pytest.skip("POSIX path semantics")
@@ -670,7 +670,7 @@ def test_traversed_components_visits_a_hop_in_the_middle_of_a_chain(tmp_path):
     ``traversed_components_and_links`` reports them for a question that needs
     their owners.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX symlinks
         pytest.skip("POSIX symlink semantics")
@@ -696,7 +696,7 @@ def test_traversed_components_visits_both_sides_of_a_symlinked_directory_compone
     walk over the collapsed path names ``holder`` and never ``prefix``. Either
     directory's owner can choose what the entry resolves to, so both are here.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX symlinks
         pytest.skip("POSIX symlink semantics")
@@ -720,7 +720,7 @@ def test_traversed_components_and_links_names_every_symlink_the_walk_follows(tmp
     right to replace it is decided in a sticky directory, and the directories
     are exactly what ``traversed_components`` answers for the same path.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX symlinks
         pytest.skip("POSIX symlink semantics")
@@ -749,7 +749,7 @@ def test_traversed_components_and_links_names_every_symlink_the_walk_follows(tmp
 
 def test_traversed_components_is_none_on_a_symlink_loop(tmp_path):
     """A cycle answers ``None``, never a partial list: unknown is not a shorter walk."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX symlinks
         pytest.skip("POSIX symlink semantics")
@@ -764,7 +764,7 @@ def test_traversed_components_is_none_on_a_symlink_loop(tmp_path):
 
 def test_traversed_components_is_none_when_a_link_cannot_be_read(tmp_path, monkeypatch):
     """An ``OSError`` mid-walk is ``None``: the caller decides what unknown means."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX symlinks
         pytest.skip("POSIX symlink semantics")
@@ -786,7 +786,7 @@ def test_root_owned_path_is_the_root_owned_predicate_over_the_walk(tmp_path, mon
     refusals stay refusals: the walk finds the one directory left as the test
     user's in each shape and the predicate declines it.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX ownership
         pytest.skip("POSIX ownership semantics")
@@ -831,7 +831,7 @@ def test_root_owned_path_declines_a_symlink_into_a_writable_directory(tmp_path, 
     symlinked from a trusted prefix therefore passes the literal walk end to end
     and is caught only when the walk restarts from the resolved path.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX symlinks
         pytest.skip("POSIX symlink semantics")
@@ -871,7 +871,7 @@ def test_root_owned_path_declines_a_symlink_into_a_writable_directory(tmp_path, 
 
 def test_trusted_aws_bin_prefers_the_trusted_system_copy(monkeypatch):
     """The local-prefix half is a FALLBACK, never a first choice."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "trusted_system_bin", lambda name: "/usr/bin/aws")
     assert platform_compat.trusted_aws_bin() == "/usr/bin/aws"
@@ -883,7 +883,7 @@ def test_trusted_aws_bin_declines_a_candidate_the_caller_could_replace(tmp_path,
     Same answer as an absent tool, on purpose: the caller's degradation is
     "cannot ask", never "ask this binary anyway".
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX lookup
         pytest.skip("POSIX binary resolution")
@@ -901,7 +901,7 @@ def test_trusted_aws_bin_declines_a_candidate_the_caller_could_replace(tmp_path,
 
 
 def test_trusted_aws_bin_resolves_a_candidate_that_passes_the_gate(tmp_path, monkeypatch):
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX lookup
         pytest.skip("POSIX binary resolution")
@@ -920,7 +920,7 @@ def test_trusted_aws_bin_resolves_a_candidate_that_passes_the_gate(tmp_path, mon
 
 def test_trusted_aws_bin_is_none_when_no_copy_exists_anywhere(tmp_path, monkeypatch):
     """An open gate cannot invent a binary that is not there."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX lookup
         pytest.skip("POSIX binary resolution")
@@ -941,7 +941,7 @@ def test_trusted_aws_bin_declines_a_shebang_script(tmp_path, monkeypatch):
     endless road of validating the interpreter, then its libraries, then its module
     search path.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX lookup
         pytest.skip("POSIX binary resolution")
@@ -977,7 +977,7 @@ def test_local_aws_bin_trust_is_one_predicate_for_both_callers(tmp_path, monkeyp
     verdicts rather than over a particular condition, so it survives the next
     condition being added.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX lookup
         pytest.skip("POSIX binary resolution")
@@ -1003,7 +1003,7 @@ def test_aws_bin_declined_names_the_copy_the_gate_refused(tmp_path, monkeypatch)
     that could only see ``None`` would tell those operators to install a tool they
     already have.
     """
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX lookup
         pytest.skip("POSIX binary resolution")
@@ -1022,7 +1022,7 @@ def test_aws_bin_declined_names_the_copy_the_gate_refused(tmp_path, monkeypatch)
 
 def test_aws_bin_declined_is_none_when_there_is_no_copy(tmp_path, monkeypatch):
     """An absent tool is not a declined one -- nothing was refused."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX lookup
         pytest.skip("POSIX binary resolution")
@@ -1034,7 +1034,7 @@ def test_aws_bin_declined_is_none_when_there_is_no_copy(tmp_path, monkeypatch):
 
 def test_aws_bin_declined_is_silent_about_a_copy_the_gate_accepts(tmp_path, monkeypatch):
     """The accepted case must report NOTHING, or the caller slanders a trusted copy."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     if platform_compat.IS_WINDOWS:  # pragma: no cover - POSIX lookup
         pytest.skip("POSIX binary resolution")
@@ -1063,7 +1063,7 @@ def test_aws_bin_declined_is_silent_about_a_copy_the_gate_accepts(tmp_path, monk
 )
 def test_parent_map_is_empty_when_no_trusted_ps_exists(monkeypatch):
     """No trusted binary must degrade to best-effort, never fall back to PATH."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "trusted_system_bin", lambda name: None)
     assert platform_compat._posix_process_parent_map() == {}

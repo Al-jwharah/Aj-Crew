@@ -10,14 +10,14 @@ import pytest
 from chat_test_helpers import _make_state
 from test_shared_crew_turn_outcome import ALICE, _service, _Slot
 
-from kiro_crew.dashboard import chat_runner, server
-from kiro_crew.dashboard.slot_queue_repository import durable_queue_entries, sanitize_restored_queue
-from kiro_crew.shared_crew import admission_entry
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import turn_gate
-from kiro_crew.shared_crew.admission import OperationKind, OperationState, ReasonCode
-from kiro_crew.shared_crew.contracts import Principal
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard import chat_runner, server
+from aj_crew.dashboard.slot_queue_repository import durable_queue_entries, sanitize_restored_queue
+from aj_crew.shared_crew import admission_entry
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import turn_gate
+from aj_crew.shared_crew.admission import OperationKind, OperationState, ReasonCode
+from aj_crew.shared_crew.contracts import Principal
+from aj_crew.testing.wait import async_wait_until
 
 BOUND = 30
 S = OperationState
@@ -28,7 +28,7 @@ def service(tmp_path, monkeypatch):
     svc = _service(tmp_path)
     monkeypatch.setattr(ag, "current_service", AsyncMock(return_value=svc))
     monkeypatch.setattr(ag, "_SERVICE", svc)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_slack.slot_is_live", lambda *_: True)
+    monkeypatch.setattr("aj_crew.dashboard.chat_slack.slot_is_live", lambda *_: True)
     yield svc
     svc._store.tasks.close()
 

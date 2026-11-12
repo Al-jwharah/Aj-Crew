@@ -15,9 +15,9 @@ import member_essential_context_helpers
 import pytest
 from member_essential_context_helpers import _declare_steering_glob_only, _snapshot_bodies
 
-from kiro_crew import member_essential_context as _mec
-from kiro_crew.hooks import safe_read_file_bytes_nolink
-from kiro_crew.member_essential_context import MemberEssentialContextError
+from aj_crew import member_essential_context as _mec
+from aj_crew.hooks import safe_read_file_bytes_nolink
+from aj_crew.member_essential_context import MemberEssentialContextError
 
 _close_skills_loaders = member_essential_context_helpers._close_skills_loaders
 env = member_essential_context_helpers.env
@@ -119,7 +119,7 @@ def test_oversized_project_agents_md_still_refuses_and_names_the_file(env):
 
 
 def test_nolink_read_names_the_size_and_cap_in_bytes(tmp_path):
-    from kiro_crew.hooks import FileTooLargeError
+    from aj_crew.hooks import FileTooLargeError
 
     target = tmp_path / "big.md"
     target.write_bytes(b"x" * 1_001)
@@ -139,7 +139,7 @@ def test_oversized_note_names_each_file_once():
 
 
 def test_read_error_carries_the_size_the_read_measured(tmp_path):
-    from kiro_crew.hooks import FileTooLargeError
+    from aj_crew.hooks import FileTooLargeError
 
     target = tmp_path / "big.md"
     target.write_bytes(b"x" * 1_001)

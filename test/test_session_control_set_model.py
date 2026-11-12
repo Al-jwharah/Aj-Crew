@@ -17,12 +17,12 @@ from unittest.mock import MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.mcp_dashboard import TABLE
-from kiro_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.mcp_dashboard import TABLE
+from aj_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
 
 
 @pytest.fixture(autouse=True)
@@ -208,7 +208,7 @@ def test_the_model_check_uses_the_targets_backend(tmp_path, monkeypatch):
     judged on the TARGET's backend, not the global ACP provider."""
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     seen: list[str | None] = []
 
@@ -320,7 +320,7 @@ def test_the_alias_correction_follows_the_targets_own_backend(tmp_path, monkeypa
     backend the target will actually run, not the global default."""
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.chat_utils import effective_session_key
+    from aj_crew.dashboard.chat_utils import effective_session_key
 
     monkeypatch.setattr(sc.model_registry, "acp_id_correction", lambda m: f"wire-{m}")
     monkeypatch.setattr(sc, "is_claude_code", lambda _provider: False)
@@ -378,7 +378,7 @@ def test_a_pick_equal_to_the_pin_still_resets_while_a_fallback_serves(tmp_path):
 def test_the_turn_arms_the_reset_for_a_live_or_spawning_session_only():
     """Source pin: a committed pick arms the reset through the shared helper,
     whose behaviour is pinned below."""
-    import kiro_crew.dashboard.chat_runner as runner
+    import aj_crew.dashboard.chat_runner as runner
 
     source = "\n".join(
         turn_file.read_text(encoding="utf-8")
@@ -434,7 +434,7 @@ def test_the_turn_persists_a_committed_pick_before_it_acquires_a_session():
     """Source pin: the memory-only commit is saved off the loop before the
     provider is acquired, so a gateway exit mid-turn keeps the new pin, and a
     refused save leaves the slot dirty for the periodic flush."""
-    import kiro_crew.dashboard.chat_runner as runner
+    import aj_crew.dashboard.chat_runner as runner
 
     source = "\n".join(
         turn_file.read_text(encoding="utf-8")
@@ -460,7 +460,7 @@ def test_the_turn_applies_the_pick_before_it_acquires_a_session():
     """Source-order pin: the pick is applied in the turn's admission phase
     (``_turn_admit``, which ``_run_chat`` awaits) before the pending reset is
     consumed and before get_or_create reads ``slot.model``."""
-    import kiro_crew.dashboard.chat_runner as runner
+    import aj_crew.dashboard.chat_runner as runner
 
     source = "\n".join(
         turn_file.read_text(encoding="utf-8")
@@ -512,7 +512,7 @@ def test_a_picker_switch_in_flight_is_refused_and_gets_no_pick(tmp_path):
 
 
 def test_a_target_with_attached_subagents_is_refused(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = state.get_or_create_slot("chat-1")
@@ -533,7 +533,7 @@ def test_a_target_with_attached_subagents_is_refused(tmp_path, monkeypatch):
 
 
 def test_a_subagent_refusal_names_the_attached_runs(tmp_path, monkeypatch):
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = state.get_or_create_slot("chat-1")
@@ -561,7 +561,7 @@ def test_a_subagent_refusal_names_the_attached_runs(tmp_path, monkeypatch):
 
 def test_a_turn_starting_during_the_idle_check_is_refused(tmp_path, monkeypatch):
     """The idle check re-runs after the sub-agent probe's await."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = state.get_or_create_slot("chat-1")
@@ -605,7 +605,7 @@ def test_a_caller_fenced_at_call_time_stays_fenced(tmp_path, monkeypatch):
 def test_a_target_linked_during_the_idle_check_is_refused(tmp_path, monkeypatch):
     """The gate re-runs after the sub-agent probe's await, right before the pick
     is stored."""
-    from kiro_crew.dashboard import chat_handlers
+    from aj_crew.dashboard import chat_handlers
 
     state = _make_state(tmp_path)
     caller = state.get_or_create_slot("chat-1")
@@ -625,7 +625,7 @@ def test_a_target_linked_during_the_idle_check_is_refused(tmp_path, monkeypatch)
 
 
 def test_auto_jev_is_owner_only(tmp_path):
-    from kiro_crew.dashboard.chat_handlers import JEV_ROUTE_MODEL
+    from aj_crew.dashboard.chat_handlers import JEV_ROUTE_MODEL
 
     state = _make_state(tmp_path)
     caller = state.get_or_create_slot("chat-1")
@@ -682,9 +682,7 @@ def test_model_rejection_check_receives_resolved_provider(tmp_path, monkeypatch)
         seen.append(provider)
         return None
 
-    monkeypatch.setattr(
-        "kiro_crew.dashboard.chat_handlers._model_rejected_reason", _capture_provider
-    )
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._model_rejected_reason", _capture_provider)
 
     _set_model(state, caller, "chat-2", "sonnet")
 
@@ -840,7 +838,7 @@ def test_a_pick_waits_while_an_alias_slot_runs_the_same_session(tmp_path):
     """Two alias slots can drive one session. While the other one has a turn
     in flight, a commit would reset nothing this turn attaches to, so the
     pick stays pending and applies once the alias is idle."""
-    from kiro_crew.dashboard.chat_utils import effective_session_key
+    from aj_crew.dashboard.chat_utils import effective_session_key
 
     state = _make_state(tmp_path)
     caller = state.get_or_create_slot("chat-1")
@@ -862,15 +860,15 @@ def test_a_pick_waits_while_an_alias_slot_runs_the_same_session(tmp_path):
 
 
 def test_unknown_worker_harness_pin_refuses_without_echoing_it(tmp_path, monkeypatch, caplog):
-    from kiro_crew import members
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
+    from aj_crew import members
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
     secret = "sk-test-not-a-real-secret-0000"
-    cfg = KiroCrewConfig()
-    cfg.agents["atlas"] = KiroCrewAgentConfig(
+    cfg = AjCrewConfig()
+    cfg.agents["atlas"] = AjCrewAgentConfig(
         member_id="atlas-0123456789ab", kiro_agent="atlas", acp_backend=secret
     )
-    monkeypatch.setattr(KiroCrewConfig, "load", lambda: cfg)
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: cfg)
     state = _make_state(tmp_path)
     caller = state.get_or_create_slot("chat-1")
     target = state.get_or_create_slot("chat-2")

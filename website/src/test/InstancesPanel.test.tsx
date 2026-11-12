@@ -65,9 +65,9 @@ describe('InstancesPanel', () => {
     // #22104: one sentence that says where the command runs and what works after,
     // with no internal "tunnel manager" wording.
     expect(banner.textContent).toBe(
-      'Remote crew management is on, but not active yet. Run kirocrew restart in a terminal on the computer this dashboard runs on, not on a remote crew. Then you can connect to your remote crews.',
+      'Remote crew management is on, but not active yet. Run ajcrew restart in a terminal on the computer this dashboard runs on, not on a remote crew. Then you can connect to your remote crews.',
     )
-    expect(banner.querySelector('code')?.textContent).toBe('kirocrew restart')
+    expect(banner.querySelector('code')?.textContent).toBe('ajcrew restart')
     expect(screen.getByRole('button', { name: /Disable remote crew management/i })).toBeInTheDocument()
   })
 
@@ -89,7 +89,7 @@ describe('InstancesPanel', () => {
     await u.type(screen.getByPlaceholderText('host-1-alias'), 'nimbus-alias')
     await u.type(
       screen.getByPlaceholderText(/leave blank for standard installs/i),
-      '/home/nimbus/.local/bin/kirocrew',
+      '/home/nimbus/.local/bin/ajcrew',
     )
     await u.click(screen.getByRole('button', { name: 'Add remote crew' }))
 
@@ -98,7 +98,7 @@ describe('InstancesPanel', () => {
         expect.objectContaining({
           name: 'Nimbus',
           ssh_host: 'nimbus-alias',
-          remote_bin: '/home/nimbus/.local/bin/kirocrew',
+          remote_bin: '/home/nimbus/.local/bin/ajcrew',
         }),
       ),
     )
@@ -196,7 +196,7 @@ describe('InstancesPanel', () => {
   })
 
   it('switching to AWS Fargate asks for an ECS task target and drops the fields a task cannot use', async () => {
-    // A Fargate task has no remote user, mints no token, and runs no kirocrew
+    // A Fargate task has no remote user, mints no token, and runs no ajcrew
     // binary, so those three fields would be inputs the backend ignores. The
     // port default follows the transport: the task's front proxy listens on
     // 8080, not the dashboard's 5476.
@@ -217,7 +217,7 @@ describe('InstancesPanel', () => {
     expect(screen.queryByLabelText('SSH host / alias')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Remote user')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Token TTL')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText(/Remote kirocrew path/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/Remote ajcrew path/i)).not.toBeInTheDocument()
     // The footer under the form describes the connect that will happen. A task
     // mints nothing, so the sentence about a short-lived token gives way to the
     // transport hint the crew card uses for the same method.

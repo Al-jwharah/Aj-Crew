@@ -7,7 +7,7 @@ bell note announces each pending version. These tests pin: pending detection and
 redacted key diff, apply and discard through each leaf's writer, the owner gate and
 CSRF barrier, the absence of any agent/MCP path, the boot behaviour, and the note.
 
-The conftest pins ``KIROCREW_HOME`` per test, so ``config_dir()`` is a fresh temp dir.
+The conftest pins ``AJCREW_HOME`` per test, so ``config_dir()`` is a fresh temp dir.
 """
 
 from __future__ import annotations
@@ -21,10 +21,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config import loosening_provenance as lp
-from kiro_crew.config.paths import config_dir
-from kiro_crew.dashboard.handlers import config_pending
-from kiro_crew.notifications.bus import NotificationBus
+from aj_crew.config import loosening_provenance as lp
+from aj_crew.config.paths import config_dir
+from aj_crew.dashboard.handlers import config_pending
+from aj_crew.notifications.bus import NotificationBus
 
 pytestmark = pytest.mark.asyncio
 
@@ -40,7 +40,7 @@ def enforcing(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture(autouse=True)
 def quiet_sel():
-    with patch("kiro_crew.dashboard.handlers.security._sel") as m:
+    with patch("aj_crew.dashboard.handlers.security._sel") as m:
         m.return_value = MagicMock()
         yield
 
@@ -49,8 +49,8 @@ def quiet_sel():
 def enable_followups(_floor_monkeypatch: pytest.MonkeyPatch) -> list[str]:
     """Record the spec rebuild and session reset a computer-use enable flip runs,
     without touching the real agent spec or sessions."""
-    import kiro_crew.agent as agent_mod
-    import kiro_crew.dashboard.handlers.sessions as sessions_mod
+    import aj_crew.agent as agent_mod
+    import aj_crew.dashboard.handlers.sessions as sessions_mod
 
     calls: list[str] = []
 
@@ -122,7 +122,7 @@ def _live_notes(state: _State) -> list[dict]:
 
 
 async def test_a_hand_edit_is_pending_and_not_applied() -> None:
-    from kiro_crew.config.loader import read_config_for_update
+    from aj_crew.config.loader import read_config_for_update
 
     path = _seal("config.json", _doc(agent={"sandbox": "auto"}), _doc(agent={"sandbox": "off"}))
     [entry] = lp.pending_changes()
@@ -370,8 +370,8 @@ async def test_an_internal_secret_caller_is_refused() -> None:
 
 
 async def test_the_writes_sit_behind_the_csrf_barrier() -> None:
-    from kiro_crew.dashboard import server as server_mod
-    from kiro_crew.dashboard.token_auth_paths import is_csrf_exempt
+    from aj_crew.dashboard import server as server_mod
+    from aj_crew.dashboard.token_auth_paths import is_csrf_exempt
 
     for verb in ("apply", "discard"):
         assert not is_csrf_exempt(f"/api/security/config-pending/config.json/{verb}", "POST")
@@ -407,7 +407,7 @@ async def test_no_agent_or_mcp_tool_names_these_routes() -> None:
     assert referencing <= allowed, sorted(referencing - allowed)
     assert {"dashboard/handlers/config_pending.py", "dashboard/routes/system.py"} <= referencing
 
-    from kiro_crew.dashboard import server_internal_paths as paths
+    from aj_crew.dashboard import server_internal_paths as paths
 
     for name in ("_STRICT_INTERNAL_API_PATHS", "_MIXED_INTERNAL_API_PATHS"):
         assert not any("config-pending" in p for p in getattr(paths, name, ()))
@@ -450,7 +450,7 @@ async def test_a_stalled_note_write_does_not_hold_the_heartbeat(monkeypatch) -> 
     """The bound covers the note writes, not only the scan; a stalled sync is not doubled."""
     import asyncio
 
-    from kiro_crew.testing.wait import await_until, finished
+    from aj_crew.testing.wait import await_until, finished
 
     _seal("config.json", _doc(a=1), _doc(a=2))
     release = asyncio.Event()
@@ -485,8 +485,8 @@ async def test_a_stalled_note_write_does_not_hold_the_heartbeat(monkeypatch) -> 
 
 async def test_muting_every_mutable_channel_does_not_silence_the_note() -> None:
     """The edit is not in effect until the owner decides, so the note is never muted."""
-    from kiro_crew.notifications.bus import SYSTEM_CHANNELS
-    from kiro_crew.notifications.settings import PROTECTED_CHANNELS, ChannelSettings
+    from aj_crew.notifications.bus import SYSTEM_CHANNELS
+    from aj_crew.notifications.settings import PROTECTED_CHANNELS, ChannelSettings
 
     settings = ChannelSettings()
     for channel in set(SYSTEM_CHANNELS) - PROTECTED_CHANNELS:
@@ -506,7 +506,7 @@ async def test_muting_every_mutable_channel_does_not_silence_the_note() -> None:
 async def test_a_meta_forged_note_does_not_suppress_the_real_one() -> None:
     path = _seal("config.json", _doc(a=1), _doc(a=2))
     state = _State()
-    from kiro_crew.notifications.bus import NotificationPayload
+    from aj_crew.notifications.bus import NotificationPayload
 
     state.notification_bus.push(
         NotificationPayload(
@@ -642,7 +642,7 @@ async def test_a_deeply_nested_file_is_listed_as_invalid_and_the_rest_still_list
 
 
 async def test_a_document_past_the_nesting_bound_cannot_be_applied() -> None:
-    from kiro_crew.user_json import MAX_DOCUMENT_NESTING
+    from aj_crew.user_json import MAX_DOCUMENT_NESTING
 
     nested: object = 1
     for _ in range(MAX_DOCUMENT_NESTING + 1):

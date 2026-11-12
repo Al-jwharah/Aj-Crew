@@ -11,8 +11,8 @@ import pathlib
 
 import pytest
 
-from kiro_crew.messaging.conversation import ConversationState
-from kiro_crew.messaging.pre_turn import resolve_pre_turn
+from aj_crew.messaging.conversation import ConversationState
+from aj_crew.messaging.pre_turn import resolve_pre_turn
 
 
 class FakeSessions:
@@ -165,7 +165,7 @@ async def _unreachable(session_key: str) -> None:  # pragma: no cover - guard
     raise AssertionError(f"on_busy must not run for an idle key ({session_key})")
 
 
-_SRC = pathlib.Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+_SRC = pathlib.Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 #: Channels whose dispatcher drives the shared pre-turn sequence. The others are
 #: deliberately absent: their dispatchers carry extra pre-turn work between the
@@ -219,7 +219,7 @@ class TestPreTurnRatchet:
         migrated to the helper or named in the exempt list, so "not yet migrated"
         stays an explicit decision instead of a silent omission.
         """
-        from kiro_crew.channels import builtin_channel_descriptors
+        from aj_crew.channels import builtin_channel_descriptors
 
         rostered = {d.channel_type for d in builtin_channel_descriptors()}
         unrostered = _EXEMPT_CHANNELS - rostered
@@ -240,7 +240,7 @@ class TestPreTurnRatchet:
         """
         missing = {c for c in _EXEMPT_CHANNELS if not (_SRC / c).is_dir()}
         assert not missing, (
-            "exempt channels without a package dir under src/kiro_crew "
+            "exempt channels without a package dir under src/aj_crew "
             f"(the graduation scan cannot see them): {sorted(missing)}"
         )
         graduated = {

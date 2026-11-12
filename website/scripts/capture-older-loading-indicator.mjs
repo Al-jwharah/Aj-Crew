@@ -54,7 +54,7 @@ const loaded = [
 // The archived session, as the Older Sessions pane lists it.
 const history = [{
   key: SLOT, title: 'Release checklist review', messages: TOTAL,
-  created: '2026-06-01T09:00:00Z', modified: 1786000000, agent: 'kirocrew',
+  created: '2026-06-01T09:00:00Z', modified: 1786000000, agent: 'ajcrew',
   memory_mode: 'persistent',
 }]
 
@@ -88,7 +88,7 @@ async function main() {
   // switchSlot (cursor 0). See scripts/README note in the header.
   const openSlots = [{
     key: 'chat-current', title: 'Scratch', messages: 2, running: false,
-    agent: 'kirocrew', created: '2026-08-13T09:00:00Z', last_ts: '2026-08-13T09:30:00Z', folder_id: '',
+    agent: 'ajcrew', created: '2026-08-13T09:00:00Z', last_ts: '2026-08-13T09:30:00Z', folder_id: '',
   }]
 
   await stubDashboardApi(page, {

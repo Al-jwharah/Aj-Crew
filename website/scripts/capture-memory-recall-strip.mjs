@@ -31,7 +31,7 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/memory-recall-strip'
 const SLOT = 'chat-memory-recall'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -126,7 +126,7 @@ const slots = [
     running: false,
     last_message: 'us-west-2, and the rollback runbook is in the ops repo.',
     messages: 6,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     memory_mode: 'persistent',
     project: PROJECT,
     modified: Math.floor(Date.now() / 1000),

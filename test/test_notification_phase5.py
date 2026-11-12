@@ -12,8 +12,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.messaging import api_notification_agent_push
-from kiro_crew.dashboard.state import (
+from aj_crew.dashboard.handlers.messaging import api_notification_agent_push
+from aj_crew.dashboard.state import (
     _MAX_PERSISTED_NOTIFICATIONS,
     DashboardState,
     sweep_expired_notifications,
@@ -21,8 +21,8 @@ from kiro_crew.dashboard.state import (
 
 
 def _make_state(monkeypatch, tmp_path) -> DashboardState:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.notifications.settings.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.notifications.settings.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),
@@ -63,7 +63,7 @@ class TestTtlSweeper:
         # LIVE rows, so the trim sweeps expired rows before applying the cap.
         import json as _json
 
-        from kiro_crew.dashboard.state import (
+        from aj_crew.dashboard.state import (
             _MAX_PERSISTED_NOTIFICATIONS,
             _maybe_trim_notifications,
         )
@@ -89,13 +89,13 @@ class TestTtlSweeper:
         # displace older LIVE rows; the sweep then removes the expired rows and
         # the next rewrite deletes the live rows permanently. The sweep must run
         # on the full parsed list first.
-        from kiro_crew.dashboard.state import (
+        from aj_crew.dashboard.state import (
             _MAX_PERSISTED_NOTIFICATIONS,
             _load_notifications,
             _persist_notification,
         )
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         live = _MAX_PERSISTED_NOTIFICATIONS
         for i in range(live):
             _persist_notification(_note(title=f"live-{i}"))
@@ -202,7 +202,7 @@ class TestTrimUnservableLines:
 
     @staticmethod
     def _trim(path, rows) -> list[str]:
-        from kiro_crew.dashboard.state import _maybe_trim_notifications
+        from aj_crew.dashboard.state import _maybe_trim_notifications
 
         path.write_text("".join(f"{row}\n" for row in rows), encoding="utf-8")
         _maybe_trim_notifications(path)
@@ -212,7 +212,7 @@ class TestTrimUnservableLines:
     def _live_titles(lines) -> set[str]:
         # Judged by the production acceptance predicate, so the assertion is about
         # what the loader would actually serve rather than about what parses.
-        from kiro_crew.dashboard.state import _servable_note
+        from aj_crew.dashboard.state import _servable_note
 
         titles = set()
         for line in lines:
@@ -286,7 +286,7 @@ class TestTrimUnservableLines:
         # way rewrites the terminator of every row it keeps. The snapshot dedupe key
         # for a timestamp-less row is its raw bytes, and a bare CR is the byte that
         # split a record into the fragments the merge deliberately keeps.
-        from kiro_crew.dashboard.state import _maybe_trim_notifications
+        from aj_crew.dashboard.state import _maybe_trim_notifications
 
         live = _MAX_PERSISTED_NOTIFICATIONS
         rows = [json.dumps(_note(title=f"live-{i}")) for i in range(live)]
@@ -336,7 +336,7 @@ class TestTrimUnservableLines:
         # A cap whose division floors to zero must not lose the bound: a
         # ``[-0:]`` slice is the whole list, so rounding down would retain every
         # unservable line rather than a recent sample of them.
-        monkeypatch.setattr("kiro_crew.dashboard.state._MAX_PERSISTED_NOTIFICATIONS", 2)
+        monkeypatch.setattr("aj_crew.dashboard.state._MAX_PERSISTED_NOTIFICATIONS", 2)
         rows = [json.dumps(_note(title=f"live-{i}")) for i in range(2)]
         rows += [f'{{"a": "x{i}' for i in range(4)]
 
@@ -353,7 +353,7 @@ class TestSendNotificationToolIdentity:
     and audit attribution."""
 
     def test_fails_closed_without_verified_identity(self, monkeypatch):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         monkeypatch.setattr(mcp_core, "_resolve_session_key_strict", lambda: "")
         posted: list = []
@@ -363,7 +363,7 @@ class TestSendNotificationToolIdentity:
         assert not posted  # nothing published
 
     def test_verified_identity_travels_in_payload(self, monkeypatch):
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         monkeypatch.setattr(
             mcp_core, "_resolve_session_key_strict", lambda: "dashboard:chat-9"
@@ -389,7 +389,7 @@ class TestSendNotificationToolIdentity:
         # call_tool_with_logging classifies only "Error:"-prefixed strings as
         # failures -- a "Failed:" return would be SEL-recorded as completed,
         # contradicting the actual outcome.
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         monkeypatch.setattr(
             mcp_core, "_resolve_session_key_strict", lambda: "dashboard:chat-9"
@@ -406,7 +406,7 @@ class TestSendNotificationToolIdentity:
     def test_governance_allowed_sel_record_on_permit(self, monkeypatch):
         # The shared helper must audit ALLOWED decisions too, not only denials
         # (backend-security-controls).
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         class Allow:
             permitted = True
@@ -415,13 +415,13 @@ class TestSendNotificationToolIdentity:
             reason = ""
 
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.governance_permits",
+            "aj_crew.platform.governance_profiles.governance_permits",
             lambda *a, **k: Allow(),
         )
         audits: list[dict] = []
         sel_mock = MagicMock()
         sel_mock.log_governance_decision = lambda **kw: audits.append(kw)
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_mock)
         assert (
             mcp_core._vet_messaging_governance(
                 "dashboard:chat-9", tool_name="send_notification"
@@ -437,7 +437,7 @@ class TestSendNotificationToolIdentity:
         # tool_name="send_message" in its SEL denial record, or it misattributes
         # every governance-denied send_notification call in the persisted audit
         # trail.
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         monkeypatch.setattr(
             mcp_core, "_resolve_session_key_strict", lambda: "dashboard:chat-9"
@@ -450,13 +450,13 @@ class TestSendNotificationToolIdentity:
             reason = "policy denies messaging"
 
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.governance_permits",
+            "aj_crew.platform.governance_profiles.governance_permits",
             lambda *a, **k: Deny(),
         )
         audits: list[dict] = []
         sel_mock = MagicMock()
         sel_mock.log_governance_decision = lambda **kw: audits.append(kw)
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_mock)
         result = mcp_core._call_tool_inner("send_notification", {"title": "t"})
         assert "blocked by governance" in result
         assert audits and audits[0]["outcome"] == "denied"
@@ -464,7 +464,7 @@ class TestSendNotificationToolIdentity:
 
     def test_governance_denial_sel_still_names_send_message(self, monkeypatch):
         # Companion pin: the helper's default keeps send_message attribution.
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         class Deny:
             permitted = False
@@ -473,13 +473,13 @@ class TestSendNotificationToolIdentity:
             reason = "policy denies messaging"
 
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.governance_permits",
+            "aj_crew.platform.governance_profiles.governance_permits",
             lambda *a, **k: Deny(),
         )
         audits: list[dict] = []
         sel_mock = MagicMock()
         sel_mock.log_governance_decision = lambda **kw: audits.append(kw)
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_mock)
         denial = mcp_core._vet_messaging_governance("dashboard:chat-9")
         assert denial is not None
         assert audits and audits[0]["tool_name"] == "send_message"
@@ -489,7 +489,7 @@ class TestSendNotificationToolIdentity:
         # malformed profile or governance read failure would let
         # send_notification bypass a configured messaging denial. The
         # notification path must deny on error (deny-by-default backend rule).
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         monkeypatch.setattr(
             mcp_core, "_resolve_session_key_strict", lambda: "dashboard:chat-9"
@@ -499,7 +499,7 @@ class TestSendNotificationToolIdentity:
             raise RuntimeError("governance backend down")
 
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.governance_permits", _boom
+            "aj_crew.platform.governance_profiles.governance_permits", _boom
         )
         posted: list = []
         monkeypatch.setattr(
@@ -512,13 +512,13 @@ class TestSendNotificationToolIdentity:
     def test_governance_error_still_degrades_open_for_send_message(self, monkeypatch):
         # Companion pin: send_message keeps its documented best-effort
         # (degrade-open) posture -- only the notification path fails closed.
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         def _boom(*a, **k):
             raise RuntimeError("governance backend down")
 
         monkeypatch.setattr(
-            "kiro_crew.platform.governance_profiles.governance_permits", _boom
+            "aj_crew.platform.governance_profiles.governance_permits", _boom
         )
         assert mcp_core._vet_messaging_governance("dashboard:chat-9") is None
 
@@ -528,14 +528,14 @@ class TestAgentEndpointAuthWiring:
     falls through to cookie auth and 403s."""
 
     def test_agent_path_in_strict_internal_allowlist(self):
-        from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
+        from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
 
         assert "/api/notifications/agent" in _STRICT_INTERNAL_API_PATHS
 
     @pytest.mark.asyncio
     async def test_middleware_admits_internal_secret_on_agent_path(self):
-        from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
-        from kiro_crew.dashboard.token_auth import token_auth_middleware
+        from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
+        from aj_crew.dashboard.token_auth import token_auth_middleware
 
         async def ok(_request):
             return web.Response(text="ok")
@@ -581,7 +581,7 @@ class TestAgentPushEndpoint:
         state = _make_state(monkeypatch, tmp_path)
         sel_mock = MagicMock()
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.messaging._sel", lambda: sel_mock
+            "aj_crew.dashboard.handlers.messaging._sel", lambda: sel_mock
         )
         async with TestClient(
             TestServer(self._app(state, internal_auth=False))
@@ -693,7 +693,7 @@ class TestAgentPushEndpoint:
         state = _make_state(monkeypatch, tmp_path)
         sel_mock = MagicMock()
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.messaging._sel", lambda: sel_mock
+            "aj_crew.dashboard.handlers.messaging._sel", lambda: sel_mock
         )
 
         @web.middleware
@@ -728,7 +728,7 @@ class TestAgentPushEndpoint:
         # silent acknowledgment.
         state = _make_state(monkeypatch, tmp_path)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.state._persist_notification", lambda note: False
+            "aj_crew.dashboard.state._persist_notification", lambda note: False
         )
         async with TestClient(TestServer(self._app(state))) as client:
             resp = await client.post(
@@ -751,9 +751,9 @@ class TestSendNotificationSchemaRegistry:
     def test_missing_title_rejected_before_tool_body(self):
         from unittest.mock import patch as _patch
 
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
-        with _patch("kiro_crew.mcp_core._post") as mock_post:
+        with _patch("aj_crew.mcp_core._post") as mock_post:
             result = mcp_core._call_tool("send_notification", {})
         assert result.startswith("Error:")
         mock_post.assert_not_called()
@@ -765,13 +765,13 @@ class TestRound17Fixes:
 
     def test_strict_resolver_accepts_gateway_caller_context(self, monkeypatch):
         # Warm-pool on macOS/Windows: the backend process has neither
-        # KIROCREW_SESSION_KEY nor KIROCREW_HOST_PID. The gateway-injected
+        # AJCREW_SESSION_KEY nor AJCREW_HOST_PID. The gateway-injected
         # per-call caller context (pooled topology) must resolve instead of
         # failing closed.
-        from kiro_crew import mcp_caller, mcp_core
+        from aj_crew import mcp_caller, mcp_core
 
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
         assert mcp_core._resolve_session_key_strict() == ""
         ctx = mcp_caller.CallerContext(
             session_key="dashboard:chat-7", from_gateway=True
@@ -788,10 +788,10 @@ class TestRound17Fixes:
     ):
         # End-to-end warm-pool shape: no env identity at all, caller context
         # installed by the dispatch loop -> the tool publishes with it.
-        from kiro_crew import mcp_caller, mcp_core
+        from aj_crew import mcp_caller, mcp_core
 
-        monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-        monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
+        monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+        monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
         monkeypatch.setattr(mcp_core, "_vet_messaging_governance", lambda *a, **k: None)
         posted: list = []
 
@@ -812,10 +812,10 @@ class TestRound17Fixes:
 
     @pytest.mark.parametrize("tool", ["send_message", "send_notification"])
     def test_channel_agent_denied_at_mcp_dispatch(self, monkeypatch, tool):
-        # Auto-approved kirocrew-core calls emit no permission event, so
+        # Auto-approved ajcrew-core calls emit no permission event, so
         # channel.py's guard never fires — the containment boundary must hold at
         # MCP dispatch on the verified caller identity.
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         monkeypatch.setattr(
             mcp_core, "_resolve_session_key", lambda: "channel:C1:agent-1"
@@ -828,7 +828,7 @@ class TestRound17Fixes:
         audits: list = []
         sel_mock = MagicMock()
         sel_mock.log_tool_invocation = lambda **kw: audits.append(kw)
-        monkeypatch.setattr("kiro_crew.sel.sel", lambda: sel_mock)
+        monkeypatch.setattr("aj_crew.sel.sel", lambda: sel_mock)
         posted: list = []
         monkeypatch.setattr(
             mcp_core, "_post", lambda *a, **k: posted.append(a) or {"ok": True}
@@ -844,7 +844,7 @@ class TestRound17Fixes:
         # The disk-load path is not the only cap on the in-memory list;
         # sustained live deliveries would otherwise grow it without bound (and
         # the per-delivery sweep scans it -> O(N^2) delivery).
-        from kiro_crew.dashboard import state as state_mod
+        from aj_crew.dashboard import state as state_mod
 
         state = _make_state(monkeypatch, tmp_path)
         cap = state_mod._MAX_PERSISTED_NOTIFICATIONS
@@ -877,7 +877,7 @@ class TestRound17Fixes:
         # The endpoint documents inline actions, so the tool schema must carry
         # them too -- otherwise a schema-valid MCP call can never carry the
         # Phase 4 action contract.
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
         monkeypatch.setattr(
             mcp_core, "_resolve_session_key_strict", lambda: "dashboard:chat-9"
@@ -900,9 +900,9 @@ class TestRound17Fixes:
     def test_actions_wrong_type_rejected_by_schema(self, monkeypatch):
         from unittest.mock import patch as _patch
 
-        from kiro_crew import mcp_core
+        from aj_crew import mcp_core
 
-        with _patch("kiro_crew.mcp_core._post") as mock_post:
+        with _patch("aj_crew.mcp_core._post") as mock_post:
             result = mcp_core._call_tool(
                 "send_notification", {"title": "t", "actions": "not-a-list"}
             )
@@ -913,7 +913,7 @@ class TestRound17Fixes:
         # _redact_note_value scrubs VALUES, not dict KEYS -- a credential
         # smuggled as an extra property NAME would reach JSONL and dashboard
         # responses unredacted. The contract is a closed {id, label, url?} set.
-        from kiro_crew.notifications.bus import (
+        from aj_crew.notifications.bus import (
             NotificationPayload,
             NotificationValidationError,
         )

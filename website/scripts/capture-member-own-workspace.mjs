@@ -34,8 +34,8 @@ const HINT = 'Pick an existing workspace only to share files with another mate.'
 // server allocated for it.
 const RADAR = {
   name: 'Radar', slug: 'radar', bound: true, slot_key: 'member-radar', running: false,
-  kiro_agent: 'kirocrew', workspace: 'member-radar', memory_store: 'member-radar', memory_version: 2, memory_owner: 'Radar',
-  model: '', description: 'Triage new GitHub issues every morning', source: 'kirocrew',
+  kiro_agent: 'ajcrew', workspace: 'member-radar', memory_store: 'member-radar', memory_version: 2, memory_owner: 'Radar',
+  model: '', description: 'Triage new GitHub issues every morning', source: 'ajcrew',
   last_active_ts: Math.floor(Date.now() / 1000) - 30,
   last_message: "Hi! I'm Radar. Each morning I'll read the new issues, sort them by what they need, and bring you only the ones that need a decision.",
 }
@@ -54,22 +54,22 @@ async function newPage(theme, scene, viewport = { width: 1440, height: 1100 }) {
   await page.route(u => new URL(u).pathname.startsWith('/api/'), route => {
     const path = new URL(route.request().url()).pathname
     const json = (body) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
-    if (path === '/api/members') return json({ members, default_agent: 'kirocrew' })
+    if (path === '/api/members') return json({ members, default_agent: 'ajcrew' })
     if (path === '/api/agents' && route.request().method() === 'POST') return json({ ok: true })
     if (path === '/api/crons') return json({ jobs: [] })
     if (path === '/api/webhooks') return json({ tokens: [] })
-    if (path === '/api/agents') return json({ agents: [], default_agent: 'kirocrew' })
+    if (path === '/api/agents') return json({ agents: [], default_agent: 'ajcrew' })
     if (path === '/api/agents/catalog') return json({
       agents: [
-        { name: 'kirocrew', selection_kind: 'template', kiro_agent: 'kirocrew', scope: 'global' },
-        { name: 'kirocrew-research', selection_kind: 'template', kiro_agent: 'kirocrew-research', scope: 'global' },
+        { name: 'ajcrew', selection_kind: 'template', kiro_agent: 'ajcrew', scope: 'global' },
+        { name: 'ajcrew-research', selection_kind: 'template', kiro_agent: 'ajcrew-research', scope: 'global' },
       ],
-      default_agent: 'kirocrew',
+      default_agent: 'ajcrew',
     })
     // Two declared workspaces, so the open list shows the own-workspace option
     // ABOVE existing names rather than alone.
     if (path === '/api/workspaces') return json({ workspaces: [{ name: 'default' }, { name: 'research' }] })
-    if (path === '/api/config/default-agent') return json({ default_agent: 'kirocrew' })
+    if (path === '/api/config/default-agent') return json({ default_agent: 'ajcrew' })
     if (path === '/api/autonudge') return json({ enabled: true, loops: [] })
     // The opened thread reads the work board for its resume summary.
     if (path === '/api/crew-board') return json({ conductor: null, conductor_alive: 'closed', items: [], take_over_available: false })

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.connections.vendors.github.pagination import (
+from aj_crew.connections.vendors.github.pagination import (
     CURSOR_PARAM,
     MAX_PER_PAGE,
     REST_PAGE_PARAM,

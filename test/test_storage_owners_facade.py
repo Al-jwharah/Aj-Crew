@@ -1,7 +1,7 @@
 """The AWS Control drive storage facade keeps the patch seams the one module had.
 
-``kiro_crew.apps.builtins.aws_control.backend.storage`` is a mirror facade
-(:mod:`kiro_crew._facade_mirror`) over the ``storage_drive``, ``storage_staging`` and
+``aj_crew.apps.builtins.aws_control.backend.storage`` is a mirror facade
+(:mod:`aj_crew._facade_mirror`) over the ``storage_drive``, ``storage_staging`` and
 ``storage_versions`` owners, and keeps the object operations itself. Callers and tests
 still reach every name as ``...backend.storage.<name>``, and the moved code reads its
 names as plain module globals, so a patch through the facade reaches it only because the
@@ -27,8 +27,8 @@ import pytest
 import source_corpus
 from facade_mirror_scan import names_by_target, needs_syntax_tree, patch_events, text_patched_names
 
-from kiro_crew import _facade_mirror
-from kiro_crew.apps.builtins.aws_control.backend import storage
+from aj_crew import _facade_mirror
+from aj_crew.apps.builtins.aws_control.backend import storage
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_storage_owners_facade")
 
@@ -36,7 +36,7 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_storage_owners_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-BACKEND = "kiro_crew.apps.builtins.aws_control.backend"
+BACKEND = "aj_crew.apps.builtins.aws_control.backend"
 FACADE = f"{BACKEND}.storage"
 BACKEND_DIR = Path(storage.__file__).resolve().parent
 
@@ -190,7 +190,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for path in _owner_paths().values():
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     found.setdefault(alias.asname or alias.name, (node.module, alias.name))

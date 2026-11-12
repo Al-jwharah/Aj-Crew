@@ -1,4 +1,4 @@
-"""Embedding inference in a child process (``kiro_crew.embeddings_child``).
+"""Embedding inference in a child process (``aj_crew.embeddings_child``).
 
 Every test here spawns a real child interpreter over real pipes. The child loads
 ``embed_child_fake.FakeLlama`` (this directory is put on its ``PYTHONPATH``)
@@ -24,17 +24,17 @@ import embeddings_helpers
 import pytest
 from embeddings_helpers import _write_model_file
 
-import kiro_crew.embeddings as embeddings_mod
-import kiro_crew.embeddings_child as child_mod
-from kiro_crew.embeddings import (
+import aj_crew.embeddings as embeddings_mod
+import aj_crew.embeddings_child as child_mod
+from aj_crew.embeddings import (
     PRIORITY_BULK,
     PRIORITY_INTERACTIVE,
     EmbeddingWork,
     LlamaCppEmbedder,
     embedding_work,
 )
-from kiro_crew.embeddings_child import ChildEmbeddingError, ChildLlama
-from kiro_crew.testing.wait import wait_until
+from aj_crew.embeddings_child import ChildEmbeddingError, ChildLlama
+from aj_crew.testing.wait import wait_until
 
 _reset_embedding_singletons = embeddings_helpers._reset_embedding_singletons
 
@@ -404,7 +404,7 @@ class TestLifecycle:
         script = tmp_path / "parent.py"
         script.write_text(textwrap.dedent(f"""
                 import sys, time
-                from kiro_crew.embeddings_child import ChildLlama
+                from aj_crew.embeddings_child import ChildLlama
                 llm = ChildLlama({{}}, stamp=None, factory={_FACTORY!r})
                 print(llm.pid, flush=True)
                 time.sleep(120)
@@ -535,7 +535,7 @@ class TestChildSide:
                 def set_n_threads(a: int, b: int) -> None:
                     raise RuntimeError("no dial")
 
-        with caplog.at_level("DEBUG", logger="kiro_crew.embeddings"):
+        with caplog.at_level("DEBUG", logger="aj_crew.embeddings"):
             child_mod._set_threads(object(), 2, 2)  # no _ctx: keeps the loaded count
             child_mod._set_threads(_Broken(), 2, 2)
         # This thread's records only: an earlier test's child-respawn thread on the same
@@ -544,7 +544,7 @@ class TestChildSide:
         logged = [
             r.getMessage()
             for r in caplog.records
-            if r.name == "kiro_crew.embeddings" and r.thread == me
+            if r.name == "aj_crew.embeddings" and r.thread == me
         ]
         # Only the dial that raised is reported; a runtime without one is silent.
         assert logged == ["Could not set the embedding thread count"]
@@ -560,7 +560,7 @@ class TestChildSide:
         assert child_mod._parent_gone(os.getppid() + 1) is True
 
     def test_parent_gone_asks_liveness_on_windows(self, monkeypatch):
-        import kiro_crew.platform_compat as platform_compat
+        import aj_crew.platform_compat as platform_compat
 
         monkeypatch.setattr(child_mod, "_IS_WINDOWS", True)
         monkeypatch.setattr(platform_compat, "pid_exists", lambda pid: pid == 42)

@@ -16,14 +16,14 @@ export interface SessionSortKeyRead {
 
 /**
  * The person's sidebar session sort (`dashboard.session_sort`), read through the
- * shared `['kirocrewConfig']` query rather than a fetch of its own: the sidebar
+ * shared `['ajcrewConfig']` query rather than a fetch of its own: the sidebar
  * already holds that query, and the sort menu settles its write back into the
  * same cache entry, so every reader switches together when a save lands.
  */
 export function useSessionSortKey(): SessionSortKeyRead {
   const q = useQuery<SessionSortConfigBody>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
   return {
     sortKey: readSessionSortKey(q.data?.dashboard?.session_sort),

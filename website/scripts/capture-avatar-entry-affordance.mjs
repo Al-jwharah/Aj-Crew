@@ -6,13 +6,13 @@
  * editable?", which is a question about the rendered surface under a real
  * pointer: the scrim on hover, the badge where hover cannot happen, the text
  * button, the first-run chip, and the transition into the builder. So the
- * shots come from a live gateway (`kirocrew pod up <worktree> --json`) with a
+ * shots come from a live gateway (`ajcrew pod up <worktree> --json`) with a
  * crew created through the real API, and the GIF is a real hover → click →
  * builder-open sequence recorded from the same page.
  *
  * Usage:
- *   kirocrew pod up <worktree> --json | tail -1 > "$KIROCREW_SCRATCH/pod-info.json"
- *   POD_INFO="$KIROCREW_SCRATCH/pod-info.json" \
+ *   ajcrew pod up <worktree> --json | tail -1 > "$AJCREW_SCRATCH/pod-info.json"
+ *   POD_INFO="$AJCREW_SCRATCH/pod-info.json" \
  *     node scripts/capture-avatar-entry-affordance.mjs ../temp-screenshots/avatar-entry-affordance
  *
  * Every frame asserts the text it photographs before writing the PNG — a

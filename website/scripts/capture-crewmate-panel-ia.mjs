@@ -20,15 +20,15 @@ import { json } from './lib/boot-api.mjs'
 import { serveDist } from './lib/serve-dist.mjs'
 import { stubDashboardApi, logPageProblems } from './lib/stub-dashboard-api.mjs'
 
-const OUT = process.argv[2] || join(process.env.KIROCREW_SCRATCH || '/tmp', 'crewmate-panel-ia')
-const PROFILE_ONLY = process.env.KIROCREW_PROFILE_ONLY === '1'
+const OUT = process.argv[2] || join(process.env.AJCREW_SCRATCH || '/tmp', 'crewmate-panel-ia')
+const PROFILE_ONLY = process.env.AJCREW_PROFILE_ONLY === '1'
 mkdirSync(OUT, { recursive: true })
 
 const now = Math.floor(Date.now() / 1000)
 const member = (name, extra = {}) => ({
   name, slug: name, bound: true, slot_key: `member-${name}`, running: false,
-  kiro_agent: 'kirocrew', workspace: `/srv/repos/${name}`, memory_store: `member-${name}`,
-  memory_version: 2, memory_owner: name, model: '', source: 'kirocrew', ...extra,
+  kiro_agent: 'ajcrew', workspace: `/srv/repos/${name}`, memory_store: `member-${name}`,
+  memory_version: 2, memory_owner: name, model: '', source: 'ajcrew', ...extra,
 })
 const MEMBERS = [
   member('kiro', { display_name: 'Kiro', kiro_agent: 'frontend', running: true, last_active_ts: now - 60, last_message: 'All 85 checks are green. Only human review is left.' }),
@@ -39,7 +39,7 @@ const MEMBERS = [
   member('scribe', { display_name: 'Scribe', kiro_agent: 'docs', last_active_ts: now - 90000, last_message: 'Spec updated in the same commit.' }),
 ]
 const DESC = {
-  kiro: 'Frontend mate for the Kiro Crew dashboard. Owns the chat surface, the members page and the Glass design language. Reviews every UI PR from a new-user point of view before it ships, and never merges.',
+  kiro: 'Frontend mate for the Aj Crew dashboard. Owns the chat surface, the members page and the Glass design language. Reviews every UI PR from a new-user point of view before it ships, and never merges.',
   atlas: 'Backend mate. Owns the gateway, the ACP client and the session store. Keeps the test suite green and the startup path fast.',
   scout: 'Research mate. Reads papers, repos and docs, then writes short briefs with sources. Never pushes code.',
   pixel: 'Design mate. Turns ideas into mockups rendered with the real theme tokens, and asks you to choose before any code.',
@@ -48,7 +48,7 @@ const DESC = {
 }
 const AGENTS = MEMBERS.map((m) => ({
   name: m.name, display_name: m.display_name, kiro_agent: m.kiro_agent, workspace: m.workspace,
-  memory_store: m.memory_store, model: m.model, description: DESC[m.name], source: 'kirocrew',
+  memory_store: m.memory_store, model: m.model, description: DESC[m.name], source: 'ajcrew',
 }))
 /** Sessions this crewmate opened and steers (`created_by` = its DM slot). */
 const iso = (secsAgo) => new Date((now - secsAgo) * 1000).toISOString()
@@ -73,8 +73,8 @@ const PANEL = { template: 'custom', title: 'Campaign dashboard', crew: 'kiro', p
 const STORAGE = { 'mc-lang': 'en', 'mc-nav': '1', 'mc-members-panel-open': '0', 'mc-unread-shared': JSON.stringify({ 'member-scout': '' }) }
 
 const JOBS = [
-  { id: 'cron-digest', name: 'Daily digest', message: 'Summarise what moved.', enabled: true, schedule: 'At 9:00 AM UTC', agent: 'kirocrew', member_id: 'kiro', last_run_ts: now - 10800, next_run_ts: now + 75600, last_status: 'ok' },
-  { id: 'cron-babysit', name: 'PR babysit', message: 'Watch the open PR.', enabled: false, schedule: 'every 5m', agent: 'kirocrew', member_id: 'kiro', last_run_ts: now - 540000, last_status: 'ok' },
+  { id: 'cron-digest', name: 'Daily digest', message: 'Summarise what moved.', enabled: true, schedule: 'At 9:00 AM UTC', agent: 'ajcrew', member_id: 'kiro', last_run_ts: now - 10800, next_run_ts: now + 75600, last_status: 'ok' },
+  { id: 'cron-babysit', name: 'PR babysit', message: 'Watch the open PR.', enabled: false, schedule: 'every 5m', agent: 'ajcrew', member_id: 'kiro', last_run_ts: now - 540000, last_status: 'ok' },
 ]
 
 const MONITORS = [{
@@ -131,11 +131,11 @@ function check(name, ok, detail = '') {
 }
 
 const extra = async (path, route) => {
-  if (path === '/api/members') { await json(route, { members: MEMBERS, default_agent: 'kirocrew' }); return true }
+  if (path === '/api/members') { await json(route, { members: MEMBERS, default_agent: 'ajcrew' }); return true }
   if (path === '/api/agents') { await json(route, { agents: AGENTS, default_agent: 'kiro' }); return true }
   if (path === '/api/crons') { await json(route, { jobs: JOBS }); return true }
   if (path === '/api/cron-folders') { await json(route, []); return true }
-  if (path === '/api/default-agent') { await json(route, { default_agent: 'kirocrew' }); return true }
+  if (path === '/api/default-agent') { await json(route, { default_agent: 'ajcrew' }); return true }
   const thread = path.match(/^\/api\/members\/([^/]+)\/thread$/)
   if (thread) {
     const slug = decodeURIComponent(thread[1])

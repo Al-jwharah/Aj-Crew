@@ -22,17 +22,17 @@ from typing import Any
 import pytest
 from acp_frame_replay_harness import read_fixture, replay_frames
 
-from kiro_crew.acp import client_mcp_array
-from kiro_crew.acp import mcp_mount_check as mc
-from kiro_crew.acp.mcp_session_report import NOT_MOUNTED_REASON, McpSessionReport
-from kiro_crew.acp.types import ACP_BACKENDS_SESSION_MCP_ARRAY
-from kiro_crew.mcp_gateway import STUB_MODULE
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.mcp_gateway import socketsec, transport
-from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV, mint_stub_session_token
-from kiro_crew.mcp_gateway.mount_query import SessionMounts, query_session_mounts
-from kiro_crew.mcp_gateway.session_servers import attach_stub_session_token
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.acp import client_mcp_array
+from aj_crew.acp import mcp_mount_check as mc
+from aj_crew.acp.mcp_session_report import NOT_MOUNTED_REASON, McpSessionReport
+from aj_crew.acp.types import ACP_BACKENDS_SESSION_MCP_ARRAY
+from aj_crew.mcp_gateway import STUB_MODULE
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway import socketsec, transport
+from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV, mint_stub_session_token
+from aj_crew.mcp_gateway.mount_query import SessionMounts, query_session_mounts
+from aj_crew.mcp_gateway.session_servers import attach_stub_session_token
+from aj_crew.testing.wait import default_timeout
 
 _DROPPED = (
     Path(__file__).parent / "fixtures" / "acp_frames" / "goose" / "mcp-stdio-dropped-live.jsonl"
@@ -43,7 +43,7 @@ def _stub(name: str, server: str | None = None) -> dict[str, Any]:
     return {
         "name": name,
         "command": "/usr/bin/python3",
-        "args": ["-m", STUB_MODULE, "--server", server or name, "--agent", "kirocrew"],
+        "args": ["-m", STUB_MODULE, "--server", server or name, "--agent", "ajcrew"],
         "env": [],
     }
 
@@ -62,7 +62,7 @@ class _FakeSEL:
 @pytest.fixture(autouse=True)
 def _sel(_floor_monkeypatch: pytest.MonkeyPatch) -> list[Any]:
     """A fake SEL and an empty ledger per test, patched on the floor's own stack."""
-    import kiro_crew.sel as sel
+    import aj_crew.sel as sel
 
     _FakeSEL.events = []
     _floor_monkeypatch.setattr(sel, "SecurityEventLog", _FakeSEL)
@@ -100,7 +100,7 @@ def test_roster_keys_on_the_registered_server_name() -> None:
 
 
 def test_roster_is_bounded_where_it_is_kept() -> None:
-    from kiro_crew.mcp_gateway.mount_query import MOUNT_SERVERS_CAP
+    from aj_crew.mcp_gateway.mount_query import MOUNT_SERVERS_CAP
 
     token = mint_stub_session_token()
     names = [f"{i}-{'n' * 300}" for i in range(MOUNT_SERVERS_CAP + 1)]
@@ -112,7 +112,7 @@ def test_roster_is_bounded_where_it_is_kept() -> None:
 
 @pytest.mark.asyncio
 async def test_more_stubs_than_the_cap_is_unavailable_not_missing(_sel: list[Any]) -> None:
-    from kiro_crew.mcp_gateway.mount_query import MOUNT_SERVERS_CAP
+    from aj_crew.mcp_gateway.mount_query import MOUNT_SERVERS_CAP
 
     token = mint_stub_session_token()
     servers = _array(token, *(f"s{i}" for i in range(MOUNT_SERVERS_CAP + 1)))
@@ -355,7 +355,7 @@ async def test_a_long_server_name_matches_the_ledger(sock_path: str, _sel: list[
 async def test_a_full_failed_bucket_still_logs_and_audits(
     caplog: pytest.LogCaptureFixture, _sel: list[Any]
 ) -> None:
-    from kiro_crew.acp.mcp_session_report import BUCKET_CAP
+    from aj_crew.acp.mcp_session_report import BUCKET_CAP
 
     token = mint_stub_session_token()
     servers = _array(token, "crew")
@@ -402,7 +402,7 @@ async def test_a_session_closed_inside_the_window_gets_nothing(_sel: list[Any]) 
 
 
 def test_runtime_passes_send_time_and_liveness(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.acp import runtime as rt
+    from aj_crew.acp import runtime as rt
 
     calls: list[dict[str, Any]] = []
     monkeypatch.setattr(rt, "schedule_mount_check", lambda r, s, **kw: calls.append(kw))

@@ -14,8 +14,8 @@ import connections_warm_helpers
 import pytest
 from connections_warm_helpers import _claim, _provider, _result, _Runtime, _SessionHandle
 
-from kiro_crew.connections import warm
-from kiro_crew.connections.mint import _mints
+from aj_crew.connections import warm
+from aj_crew.connections.mint import _mints
 
 # Bound here by name: pytest registers the fixtures from this namespace, and other
 # suites import the rest from this module.
@@ -128,14 +128,14 @@ async def test_a_failed_spawn_logs_the_exception_message_not_only_its_class(
     monkeypatch.setattr(warm, "_acp_runtime_factory", lambda: _RaisesWithDetail)
     monkeypatch.setattr(warm._warm_mint, "_retiring", [])
 
-    with caplog.at_level("WARNING", logger="kiro_crew.connections.warm"):
+    with caplog.at_level("WARNING", logger="aj_crew.connections.warm"):
         result = await warm._warm_mint._ensure_locked([_provider("linear")])
 
     assert result is None, "a failed spawn must degrade to the cold path"
     spawn_warnings = [
         rec.getMessage()
         for rec in caplog.records
-        if rec.name == "kiro_crew.connections.warm"
+        if rec.name == "aj_crew.connections.warm"
         and "Shared mint process spawn failed" in rec.getMessage()
     ]
     assert spawn_warnings, "the failed spawn left no warning"
@@ -190,20 +190,20 @@ async def test_a_failed_activation_logs_the_exception_message_not_only_its_class
     """An activation that fails on a live process degrades to the cold path, which hides
     the failure, so the warning is the only place its cause is recorded. A refused mode
     raises a sentence naming the mode and the remedy; the class name alone loses it."""
-    detail = "Agent mode 'kirocrew-mint-warm-all' is not available on this session"
+    detail = "Agent mode 'ajcrew-mint-warm-all' is not available on this session"
 
     async def _raises() -> Any:
         raise RuntimeError(detail)
 
     monkeypatch.setattr(warm._warm_mint, "mint_for", _raises)
 
-    with caplog.at_level("WARNING", logger="kiro_crew.connections.warm"):
+    with caplog.at_level("WARNING", logger="aj_crew.connections.warm"):
         assert await warm._warm_activate() is None
 
     messages = [
         rec.getMessage()
         for rec in caplog.records
-        if rec.name == "kiro_crew.connections.warm"
+        if rec.name == "aj_crew.connections.warm"
         and "Shared mint activation failed" in rec.getMessage()
     ]
     assert messages, "the failed activation left no warning"

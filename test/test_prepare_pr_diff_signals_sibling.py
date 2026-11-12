@@ -18,10 +18,10 @@ import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 from skill_script_helpers import load_skill_script
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 ROOT = Path(__file__).resolve().parent.parent
-PREPARE_PR = ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev" / "kirocrew-prepare-pr"
+PREPARE_PR = ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr"
 SCRIPT = PREPARE_PR / "scripts" / "diff_signals.py"
 SIBLING = ROOT / ".github" / "scripts" / "sibling_list_check.py"
 
@@ -33,8 +33,8 @@ BODY_HEAD = (
     # A fix body CI's PR Hygiene accepts, so only the sibling check decides the exit.
     "## Pattern harvest\n\nNot generalizable: test fixture\n\n"
 )
-GOOD_SWEEP = "## Sibling sweep\n\nSibling: src/kiro_crew/chat/other.py -- tracked in #5\n"
-BAD_SWEEP = "## Sibling sweep\n\nSibling: src/kiro_crew/chat/ghost.py -- tracked in #5\n"
+GOOD_SWEEP = "## Sibling sweep\n\nSibling: src/aj_crew/chat/other.py -- tracked in #5\n"
+BAD_SWEEP = "## Sibling sweep\n\nSibling: src/aj_crew/chat/ghost.py -- tracked in #5\n"
 
 
 def _git_env() -> dict[str, str]:
@@ -62,10 +62,10 @@ def _git(cwd: Path, *args: str) -> None:
 
 def _make_repo(tmp_path: Path, *, enforce_from: str | None, subject: str, with_script: bool = True):
     repo = tmp_path / "repo"
-    (repo / "src" / "kiro_crew" / "chat").mkdir(parents=True)
+    (repo / "src" / "aj_crew" / "chat").mkdir(parents=True)
     _git(repo, "init", "-q", "-b", "main")
-    (repo / "src" / "kiro_crew" / "chat" / "other.py").write_text("x = 1\n")
-    (repo / "src" / "kiro_crew" / "chat" / "send.py").write_text("x = 1\n")
+    (repo / "src" / "aj_crew" / "chat" / "other.py").write_text("x = 1\n")
+    (repo / "src" / "aj_crew" / "chat" / "send.py").write_text("x = 1\n")
     if with_script:
         (repo / ".github" / "scripts").mkdir(parents=True)
         text = SIBLING.read_text(encoding="utf-8")
@@ -78,7 +78,7 @@ def _make_repo(tmp_path: Path, *, enforce_from: str | None, subject: str, with_s
     _git(repo, "add", ".")
     _git(repo, "commit", "-q", "-m", "base")
     _git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
-    (repo / "src" / "kiro_crew" / "chat" / "send.py").write_text("x = 2\n")
+    (repo / "src" / "aj_crew" / "chat" / "send.py").write_text("x = 2\n")
     _git(repo, "add", ".")
     _git(repo, "commit", "-q", "-m", subject)
     if with_script:

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """A crewmate's conductor keeps what the root conductor has, or says why not.
 
-Two agents conduct work through a work ledger: ``kirocrew-conductor`` (Crew Mode,
-Ultra chats) and ``kirocrew-mate-conductor`` (every crewmate's own chat). They are
+Two agents conduct work through a work ledger: ``ajcrew-conductor`` (Crew Mode,
+Ultra chats) and ``ajcrew-mate-conductor`` (every crewmate's own chat). They are
 built by different installers (``agent_materialization/conductor_agents.py`` and
 ``agent_materialization/service_agents.py``) and prompted from different files, so
 a change that lands on one is easy to leave off the other. These tests fail when
@@ -38,10 +38,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import agent, crewmate_prompts
-from kiro_crew.agent_files import CONDUCTOR_AGENT_FILENAME, MATE_CONDUCTOR_AGENT_FILENAME
-from kiro_crew.agent_materialization import service_agents
-from kiro_crew.config import paths as paths_mod
+from aj_crew import agent, crewmate_prompts
+from aj_crew.agent_files import CONDUCTOR_AGENT_FILENAME, MATE_CONDUCTOR_AGENT_FILENAME
+from aj_crew.agent_materialization import service_agents
+from aj_crew.config import paths as paths_mod
 
 #: Every intended difference, one line of reason each. Keys are ``<kind>:<name>``,
 #: read off the effective agents (:func:`_effective`): ``prompt:`` a section of
@@ -51,13 +51,13 @@ from kiro_crew.config import paths as paths_mod
 #: has that is not here must be on the crewmate's conductor too.
 ALLOWLIST: dict[str, str] = {
     # -- prompt sections of the root charter --
-    "prompt:role": "names kirocrew-conductor and its round loop; the crewmate's identity comes from its member section",
+    "prompt:role": "names ajcrew-conductor and its round loop; the crewmate's identity comes from its member section",
     "prompt:reports_as_data": "a crewmate's worker also wakes its thread with [Worker report] turns (page line, capability gaps, Bots without the ledger); conductor.patrol puts every dispatched task in the ledger",
     "prompt:never_do_work": "a crewmate may do a quick command or small edit itself (conductor.operating_mode), so it keeps the default built-ins",
     "prompt:shell_scope": "states why the root conductor's shell exists; a crewmate's conductor has the default shell for any work",
-    "prompt:dispatch_in_one_call": "work_dispatch requires `agent`, which a crewmate's session_create overrides to kirocrew-mate-worker; the crewmate runs the four calls",
-    "prompt:dispatch_session_create": "names an explicit `agent`; a crewmate's session_create forces kirocrew-mate-worker, so its step 2 is worded in conductor.patrol",
-    "prompt:which_agent": "a crewmate's session_create always opens kirocrew-mate-worker (session_create.py), so there is no agent to choose",
+    "prompt:dispatch_in_one_call": "work_dispatch requires `agent`, which a crewmate's session_create overrides to ajcrew-mate-worker; the crewmate runs the four calls",
+    "prompt:dispatch_session_create": "names an explicit `agent`; a crewmate's session_create forces ajcrew-mate-worker, so its step 2 is worded in conductor.patrol",
+    "prompt:which_agent": "a crewmate's session_create always opens ajcrew-mate-worker (session_create.py), so there is no agent to choose",
     "prompt:patrol_refused": "a crewmate whose arm is refused keeps its [Worker report] turns as the patrol instead of a blocking `wait`, worded in conductor.patrol",
     "prompt:rounds_back_to_back": "a crewmate's thread is driven by the user and its Heartbeat, not by a round loop",
     "prompt:round_close_reset": "a crewmate's DM thread lives for years and is never reset at a round close",
@@ -84,7 +84,7 @@ _MATE_PIECE = "conductor.patrol"
 
 
 def _mate_ledger_text() -> str:
-    from kiro_crew.context_assembly import member
+    from aj_crew.context_assembly import member
 
     return member.operating_mode_block("Cove", ledger=True)
 
@@ -118,8 +118,8 @@ def test_every_root_charter_section_is_shared_or_allowlisted() -> None:
     assert unclassified == [], (
         f"root conductor prompt sections the crewmate's conductor neither carries nor "
         f"allowlists: {unclassified}. A rule both need goes into _LEDGER_CONDUCTOR_RULES "
-        f"in src/kiro_crew/agent_parts/spec_prompts.py and its placeholder into "
-        f"{_MATE_PIECE} in src/kiro_crew/crewmate_prompts.json. {_WHERE}"
+        f"in src/aj_crew/agent_parts/spec_prompts.py and its placeholder into "
+        f"{_MATE_PIECE} in src/aj_crew/crewmate_prompts.json. {_WHERE}"
     )
 
 
@@ -130,7 +130,7 @@ def test_every_shared_rule_reaches_the_crewmate_conductor() -> None:
     )
     assert missing == [], (
         f"shared conductor rules the crewmate's conductor is not told: {missing}. Add "
-        f"each as a {{placeholder}} to {_MATE_PIECE} in src/kiro_crew/crewmate_prompts.json. "
+        f"each as a {{placeholder}} to {_MATE_PIECE} in src/aj_crew/crewmate_prompts.json. "
         f"{_WHERE}"
     )
 
@@ -210,10 +210,10 @@ def _install(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[dict, dic
 def _effective(agent_id: str, spec: dict, *, member: bool) -> dict:
     """The agent a session actually runs: *spec* through the per-session projection
     (``acp.kas_agents.to_client_custom_agent``). For a crewmate's DM thread that
-    projection adds the session-level ``@kirocrew-dashboard`` with
-    ``agent._MEMBER_DASHBOARD_GRANTS`` and ``@kirocrew-panel`` with its grants, which
+    projection adds the session-level ``@ajcrew-dashboard`` with
+    ``agent._MEMBER_DASHBOARD_GRANTS`` and ``@ajcrew-panel`` with its grants, which
     the spec file never holds; the root conductor runs its spec as written."""
-    from kiro_crew.acp.kas_agents import to_client_custom_agent
+    from aj_crew.acp.kas_agents import to_client_custom_agent
 
     return to_client_custom_agent(agent_id, spec, "", member_dispatch=member, crew_panel=member)
 
@@ -234,7 +234,7 @@ def _rules(projected: dict, effect: str) -> set[str]:
 
 def _skill_keys(spec: dict) -> set[str]:
     """Catalog keys of the ``skill://`` entries in *spec*'s ``resources``."""
-    from kiro_crew.skills import skills_dir
+    from aj_crew.skills import skills_dir
 
     base = skills_dir()
     keys = set()
@@ -270,8 +270,8 @@ def _view(projected: dict) -> dict[str, Any]:
 def _differences(root_spec: dict, mate_spec: dict) -> dict[str, list[str]]:
     """What the effective root conductor mounts, grants or maps that the effective
     crewmate conductor does not, per kind."""
-    root = _view(_effective("kirocrew-conductor", root_spec, member=False))
-    mate = _view(_effective("kirocrew-mate-conductor", mate_spec, member=True))
+    root = _view(_effective("ajcrew-conductor", root_spec, member=False))
+    mate = _view(_effective("ajcrew-mate-conductor", mate_spec, member=True))
 
     def withheld(resource: str) -> bool:
         server = resource.split("/", 1)[0]
@@ -318,14 +318,14 @@ _FIX = {
 @pytest.mark.parametrize("home_form", [True, False], ids=["tilde", "absolute"])
 def test_skill_keys_read_both_uri_forms(monkeypatch: pytest.MonkeyPatch, home_form: bool) -> None:
     """A skills tree under the home directory is mapped as ``skill://~/...``."""
-    from kiro_crew.agent_materialization import skill_resources
-    from kiro_crew.skills import skills_dir
+    from aj_crew.agent_materialization import skill_resources
+    from aj_crew.skills import skills_dir
 
     home = skills_dir().parent if home_form else skills_dir() / "elsewhere"
     monkeypatch.setattr(Path, "home", classmethod(lambda _cls: home))
-    uris = skill_resources.prompt_skill_uris("goal-conductor", "kirocrew-dev/babysit")
+    uris = skill_resources.prompt_skill_uris("goal-conductor", "ajcrew-dev/babysit")
     assert all(u.startswith("skill://~/") for u in uris) is home_form
-    assert _skill_keys({"resources": uris}) == {"goal-conductor", "kirocrew-dev/babysit"}
+    assert _skill_keys({"resources": uris}) == {"goal-conductor", "ajcrew-dev/babysit"}
 
 
 #: A minimal skill file whose name the KAS scope reads (``kas_skill_scope.skill_names``).
@@ -341,9 +341,9 @@ def test_a_mapped_crewmate_conductor_loads_only_its_mapped_skills(
     (the decision entry ``conductors-stay-simple-and-new-abilities-go-to-workers``).
     Both trees exist here, so the inherited set is not empty and the check cannot
     pass vacuously."""
-    from kiro_crew import skills as skills_mod
-    from kiro_crew.agent_discovery_parts import skill_scope
-    from kiro_crew.agent_discovery_parts.skill_scope import (
+    from aj_crew import skills as skills_mod
+    from aj_crew.agent_discovery_parts import skill_scope
+    from aj_crew.agent_discovery_parts.skill_scope import (
         agent_skill_globs,
         inherited_skill_globs,
     )
@@ -370,7 +370,7 @@ def test_a_mapped_crewmate_conductor_loads_only_its_mapped_skills(
     assert any(str(kiro_home) in g for g in inherited), inherited
     assert any(str(project) in g for g in inherited), inherited
     scope = agent_skill_globs(
-        "kirocrew-mate-conductor", project_dir=project, strict=True, inherit_defaults=True
+        "ajcrew-mate-conductor", project_dir=project, strict=True, inherit_defaults=True
     )
     assert scope, "the mapped conductor resolved no skill at all"
     added = [g for g in inherited if g in scope]
@@ -378,9 +378,9 @@ def test_a_mapped_crewmate_conductor_loads_only_its_mapped_skills(
 
     # The per-turn triggered-skill filter asks without ``inherit_defaults``
     # (``context_assembly/turn_message.py``); it must hold the mapping alone too.
-    from kiro_crew import context as ctx
+    from aj_crew import context as ctx
 
-    per_turn = ctx.agent_skill_globs("kirocrew-mate-conductor", project_dir=project)
+    per_turn = ctx.agent_skill_globs("ajcrew-mate-conductor", project_dir=project)
     added = [g for g in inherited if g in per_turn]
     assert added == [], (
         f"the per-turn triggered-skill filter gives a mapped crewmate conductor the "
@@ -388,10 +388,10 @@ def test_a_mapped_crewmate_conductor_loads_only_its_mapped_skills(
     )
 
     # KAS loads both trees by itself; the scope must send a rule that denies them.
-    from kiro_crew.acp.kas_skill_scope import scope_globs, skill_scope_rules
+    from aj_crew.acp.kas_skill_scope import scope_globs, skill_scope_rules
 
     globs = scope_globs(
-        "kirocrew-mate-conductor",
+        "ajcrew-mate-conductor",
         mate_spec,
         agents_dir=paths_mod.mate_agents_dir(),
         work_dir=project,
@@ -427,47 +427,45 @@ def test_the_root_conductors_surface_is_on_the_crewmates(specs, kind: str) -> No
 
 def test_both_effective_agents_run_the_ledger_and_goal_conductor(specs) -> None:
     root_spec, mate_spec = specs
-    root = _view(_effective("kirocrew-conductor", root_spec, member=False))
-    mate = _view(_effective("kirocrew-mate-conductor", mate_spec, member=True))
+    root = _view(_effective("ajcrew-conductor", root_spec, member=False))
+    mate = _view(_effective("ajcrew-mate-conductor", mate_spec, member=True))
     for view in (root, mate):
-        assert {"kirocrew-work", "kirocrew-dashboard"} <= view["servers"]
-        assert {"kirocrew-work/work_ledger_read", "kirocrew-work/work_ledger_record"} <= (
-            view["allow"]
-        )
+        assert {"ajcrew-work", "ajcrew-dashboard"} <= view["servers"]
+        assert {"ajcrew-work/work_ledger_read", "ajcrew-work/work_ledger_record"} <= (view["allow"])
         assert "goal-conductor" in view["skills"]
 
 
 def test_the_crewmates_dashboard_comes_from_the_projection_not_the_file(specs) -> None:
     """Why the comparison is on the effective agent: the spec file alone lacks it."""
     _root, mate_spec = specs
-    assert "kirocrew-dashboard" not in mate_spec["mcpServers"]
-    mate = _view(_effective("kirocrew-mate-conductor", mate_spec, member=True))
-    assert "kirocrew-dashboard" in mate["servers"]
-    assert "kirocrew-dashboard/session_create" in mate["allow"]
+    assert "ajcrew-dashboard" not in mate_spec["mcpServers"]
+    mate = _view(_effective("ajcrew-mate-conductor", mate_spec, member=True))
+    assert "ajcrew-dashboard" in mate["servers"]
+    assert "ajcrew-dashboard/session_create" in mate["allow"]
 
 
 def test_the_work_ledger_entry_is_the_same_on_both(specs) -> None:
     root, mate = specs
-    assert mate["mcpServers"]["kirocrew-work"] == root["mcpServers"]["kirocrew-work"]
+    assert mate["mcpServers"]["ajcrew-work"] == root["mcpServers"]["ajcrew-work"]
 
 
 def test_a_new_mount_on_the_root_conductor_alone_is_caught(specs) -> None:
     """Positive control: a future root-only change, made in the root spec and seen
     through the projection, is reported for every kind."""
-    from kiro_crew.agent_materialization import skill_resources
+    from aj_crew.agent_materialization import skill_resources
 
     root, mate = specs
     root = json.loads(json.dumps(root))
-    root["mcpServers"]["kirocrew-new"] = {"command": "kirocrew", "args": ["mcp-new"]}
-    root["tools"].extend(["@kirocrew-new", "fs_new"])
+    root["mcpServers"]["ajcrew-new"] = {"command": "ajcrew", "args": ["mcp-new"]}
+    root["tools"].extend(["@ajcrew-new", "fs_new"])
     # Mounted whole on the crewmate's conductor, but withheld there by excludedTools.
-    root["allowedTools"].append("@kirocrew-core/spawn_run")
-    skill_resources.map_prompt_skills(root, "kirocrew-dev/babysit")
+    root["allowedTools"].append("@ajcrew-core/spawn_run")
+    skill_resources.map_prompt_skills(root, "ajcrew-dev/babysit")
     found = _differences(root, mate)
-    assert "kirocrew-new" in found["server"]
+    assert "ajcrew-new" in found["server"]
     assert "fs_new" in found["tool"]
-    assert "kirocrew-core/spawn_run" in found["grant"]
-    assert "kirocrew-dev/babysit" in found["skill"]
+    assert "ajcrew-core/spawn_run" in found["grant"]
+    assert "ajcrew-dev/babysit" in found["skill"]
 
 
 def test_a_new_root_charter_section_is_caught(monkeypatch: pytest.MonkeyPatch) -> None:

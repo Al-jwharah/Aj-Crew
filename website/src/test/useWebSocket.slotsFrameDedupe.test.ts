@@ -98,7 +98,7 @@ describe('useWebSocket slots frame dedupe', () => {
 
   const frame = (title: string) => ({
     type: 'slots',
-    data: [{ key: 'slot-a', title, agent: 'kirocrew' }],
+    data: [{ key: 'slot-a', title, agent: 'ajcrew' }],
   })
 
   const title = () => globalStore.getState().dashboard.slots[0]?.title
@@ -145,7 +145,7 @@ describe('useWebSocket slots frame dedupe', () => {
 
     // An in-flight fetchSlots resolves after the frame and replaces the list —
     // the ordering the reconnect path already documents as expected.
-    const stale = [{ key: 'slot-a', title: 'from-http', agent: 'kirocrew' }] as ChatSlot[]
+    const stale = [{ key: 'slot-a', title: 'from-http', agent: 'ajcrew' }] as ChatSlot[]
     act(() => { globalStore.dispatch(fetchSlots.fulfilled(stale, 'req-1', undefined as never)) })
     expect(title()).toBe('from-http')
 

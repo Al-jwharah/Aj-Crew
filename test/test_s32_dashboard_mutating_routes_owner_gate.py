@@ -2,7 +2,7 @@
 
 Threat model, all of it in-tree:
 
-``kiro_crew/slack/allowlist.py::send_dashboard_link`` mints
+``aj_crew/slack/allowlist.py::send_dashboard_link`` mints
 ``generate_token(user_id, session_ttl)`` for any Slack-allowlisted user, with the
 default ``app=""``.  The token-auth middleware therefore sets
 ``request["user"] = <that channel user's id>`` and ``request["app"] = ""``, which
@@ -57,7 +57,7 @@ def fake_home(tmp_path, monkeypatch):
     home = tmp_path / "home"
     home.mkdir()
     monkeypatch.setenv("HOME", str(home))
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     monkeypatch.setattr(Path, "home", lambda: home)
     return home
 
@@ -72,7 +72,7 @@ async def test_steering_create_refuses_non_owner(fake_home) -> None:
     session, so an ordinary non-owner session writes instructions the owner's
     agents then obey.
     """
-    from kiro_crew.dashboard.handlers.steering import api_steering_create
+    from aj_crew.dashboard.handlers.steering import api_steering_create
 
     app = web.Application()
     app["state"] = MagicMock(
@@ -104,7 +104,7 @@ async def test_steering_create_refuses_non_owner(fake_home) -> None:
 
 async def test_spawn_refuses_non_owner() -> None:
     """POST /api/spawn — starts a subagent with a caller-chosen task, agent and cwd."""
-    from kiro_crew.dashboard.handlers.messaging import api_spawn
+    from aj_crew.dashboard.handlers.messaging import api_spawn
 
     info = SimpleNamespace(id="a1", agent_id="a1", done=False, error=None, error_code=None)
     spawn = MagicMock(return_value=info)
@@ -131,7 +131,7 @@ async def test_workflow_run_refuses_non_owner() -> None:
     The sibling library routes call ``_require_dashboard_user``; this one does not,
     and that helper only asserts ``app == ""`` anyway, never owner identity.
     """
-    from kiro_crew.dashboard.handlers.workflows import api_workflow_run
+    from aj_crew.dashboard.handlers.workflows import api_workflow_run
 
     start = AsyncMock(return_value={"run_id": "wf_1"})
     app = web.Application()
@@ -154,7 +154,7 @@ async def test_workflow_run_refuses_non_owner() -> None:
 async def test_crons_create_refuses_non_owner() -> None:
     """POST /api/crons — persists a job whose ``approval_mode: "auto"`` turns off the
     per-tool approval prompt, then runs it unattended on the owner's host."""
-    from kiro_crew.dashboard.handlers.cron import api_crons_create
+    from aj_crew.dashboard.handlers.cron import api_crons_create
 
     add_job = AsyncMock(return_value=SimpleNamespace(id="j1", job_id="j1", name="j"))
     app = web.Application()

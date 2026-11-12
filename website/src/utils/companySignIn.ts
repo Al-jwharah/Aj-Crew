@@ -12,7 +12,7 @@ import { safeSetItem } from './safeStorage'
  * keys and write them when the user submits, so one entry fills the other too.
  *
  * A portal URL and a region name are not secrets (the sign-in already records the
- * URL and `kirocrew kas whoami` prints it). Only what the user actually submitted
+ * URL and `ajcrew kas whoami` prints it). Only what the user actually submitted
  * is kept, never a half-typed value.
  */
 export const COMPANY_SIGN_IN_URL_KEY = 'mc-company-sign-in-url'

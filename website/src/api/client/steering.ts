@@ -17,7 +17,7 @@ export function createSteeringEndpoints({ post, put, del, j, jfetch: fetch, sess
   const files = {
     // Steering (Kiro steering files — ~/.kiro/steering + <project>/.kiro/steering)
     // sessionKey names the CHAT SLOT whose project `workspace/` keys resolve
-    // against, exactly as it does for kirocrewAgents. Without it the server can
+    // against, exactly as it does for ajcrewAgents. Without it the server can
     // only fall back to "the single project every slot shares" and fails closed
     // with two chats on different projects, so project steering silently
     // disappears from a tab that has no way to say why. All five verbs take it:

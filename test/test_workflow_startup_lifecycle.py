@@ -9,11 +9,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import server
-from kiro_crew.taskrunner import TaskRunner, WorkflowInitializing
-from kiro_crew.testing.wait import await_until, finished
-from kiro_crew.workflows.service import WorkflowService
-from kiro_crew.workflows.store import WorkflowRunStore
+from aj_crew.dashboard import server
+from aj_crew.taskrunner import TaskRunner, WorkflowInitializing
+from aj_crew.testing.wait import await_until, finished
+from aj_crew.workflows.service import WorkflowService
+from aj_crew.workflows.store import WorkflowRunStore
 
 
 def _state():
@@ -273,9 +273,9 @@ async def test_shared_shutdown_gate_prevents_publication_before_app_shutdown(mon
 
 @pytest.mark.asyncio
 async def test_api_only_gateway_forwards_existing_context_builder(monkeypatch):
-    import kiro_crew.dashboard as dashboard
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    import aj_crew.dashboard as dashboard
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     builder = object()
     state = SimpleNamespace()
@@ -285,7 +285,7 @@ async def test_api_only_gateway_forwards_existing_context_builder(monkeypatch):
         sessions=object(),
         cron_svc=object(),
         ctx_builder=builder,
-        _cfg=KiroCrewConfig(),
+        _cfg=AjCrewConfig(),
         _port_override=None,
         _slack_enabled=False,
         subagent_mgr=None,
@@ -332,9 +332,9 @@ async def test_canonical_gate_preserves_reads_and_cancel_and_reports_failure(
 ):
     from unittest.mock import MagicMock
 
-    from kiro_crew.dashboard.handlers import taskrunner as handlers
-    from kiro_crew.task_models import Project, Task
-    from kiro_crew.taskrunner import WorkflowInitializing
+    from aj_crew.dashboard.handlers import taskrunner as handlers
+    from aj_crew.task_models import Project, Task
+    from aj_crew.taskrunner import WorkflowInitializing
 
     state = _state()
     driver = TaskRunner(sessions=state.sessions, work_dir=tmp_path / "tasks")
@@ -424,7 +424,7 @@ async def test_canonical_gate_preserves_reads_and_cancel_and_reports_failure(
 
 
 def test_canonical_explicit_none_releases_standalone_fallback(tmp_path):
-    from kiro_crew.taskrunner import WorkflowInitializing
+    from aj_crew.taskrunner import WorkflowInitializing
 
     driver = TaskRunner(sessions=None, work_dir=tmp_path)
     driver._require_workflow_ready()
@@ -442,7 +442,7 @@ _ORIGINAL_CREATE = WorkflowService.create
 
 
 def _persist_run(store, run_id, *, finished=False):
-    from kiro_crew.workflows.registry import RunHandle, RunRegistry
+    from aj_crew.workflows.registry import RunHandle, RunRegistry
 
     registry = RunRegistry(store=store)
     registry.register(RunHandle(run_id=run_id, name="research", session_key="dashboard:chat-1"))
@@ -452,7 +452,7 @@ def _persist_run(store, run_id, *, finished=False):
 
 async def _start_and_collect_notices(monkeypatch, store):
     """Run the real startup over *store*; return the completion notices it sent."""
-    from kiro_crew.dashboard import workflow_inject
+    from aj_crew.dashboard import workflow_inject
 
     notices = []
 
@@ -478,7 +478,7 @@ async def test_a_run_cut_off_by_a_restart_is_reported_to_its_chat_once(monkeypat
     """The chat that started a run is promised its result on completion. A run the
     restart ended is failed at load, and its chat gets that outcome once, on the
     first boot only."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     store = WorkflowRunStore(tmp_path / "runs")
     _persist_run(store, "wf_000001")
     first = await _start_and_collect_notices(monkeypatch, store)
@@ -489,14 +489,14 @@ async def test_a_run_cut_off_by_a_restart_is_reported_to_its_chat_once(monkeypat
 
 @pytest.mark.asyncio
 async def test_a_run_finished_before_the_restart_is_not_reported_again(monkeypatch, tmp_path):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     store = WorkflowRunStore(tmp_path / "runs")
     _persist_run(store, "wf_000002", finished=True)
     assert await _start_and_collect_notices(monkeypatch, store) == []
 
 
 def test_a_run_that_finishes_is_reported_to_its_chat_once(tmp_path):
-    from kiro_crew.workflows.registry import RunHandle, RunRegistry
+    from aj_crew.workflows.registry import RunHandle, RunRegistry
 
     notices = []
     registry = RunRegistry(store=WorkflowRunStore(tmp_path / "runs"))

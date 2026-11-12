@@ -27,7 +27,7 @@ import '../src/index.css'
 
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
-document.documentElement.dataset.theme = `kiro-${theme}`
+document.documentElement.dataset.theme = `aj-${theme}`
 document.documentElement.dataset.mode = theme
 
 const STEER = 'Also check whether the search cluster is still on the old instance type.'

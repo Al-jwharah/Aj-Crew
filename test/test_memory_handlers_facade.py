@@ -1,9 +1,9 @@
 """The memory API handlers' facade keeps the patch seams the one module had.
 
-``kiro_crew.dashboard.handlers.memory`` is a mirror facade (:mod:`kiro_crew._facade_mirror`)
+``aj_crew.dashboard.handlers.memory`` is a mirror facade (:mod:`aj_crew._facade_mirror`)
 over three owners: ``memory_services`` (the SEL and the vector store), ``memory_embeddings``
 (the embedding model) and ``memory_graph`` (building the memory graph). Callers, tests and
-documents still reach every name as ``kiro_crew.dashboard.handlers.memory.<name>``, and the
+documents still reach every name as ``aj_crew.dashboard.handlers.memory.<name>``, and the
 moved code reads its names as plain module globals, so a patch through the facade reaches that
 code only because the mirror writes it into every module holding the name.
 
@@ -28,9 +28,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard.handlers import memory
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror
+from aj_crew.dashboard.handlers import memory
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_memory_handlers_facade")
 
@@ -38,14 +38,14 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_memory_handlers_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.dashboard.handlers.memory"
+FACADE = "aj_crew.dashboard.handlers.memory"
 HANDLERS_DIR = Path(memory.__file__).resolve().parent
 #: The owners, lowest layer first. ``handlers/`` holds other ``memory_*.py`` handler
 #: modules of its own (the admin, editor and member routes), so the set is spelled out.
 OWNERS = (
-    "kiro_crew.dashboard.handlers.memory_services",
-    "kiro_crew.dashboard.handlers.memory_embeddings",
-    "kiro_crew.dashboard.handlers.memory_graph",
+    "aj_crew.dashboard.handlers.memory_services",
+    "aj_crew.dashboard.handlers.memory_embeddings",
+    "aj_crew.dashboard.handlers.memory_graph",
 )
 _THIS_FILE = Path(__file__).resolve()
 
@@ -204,7 +204,7 @@ def test_the_embedding_setup_status_lives_in_one_owner() -> None:
     """``api_memory_enable_embeddings`` rebinds ``_embedding_setup_status`` with
     ``global``, so the routes that read it share its owner and the facade binds no copy:
     a read through the facade is the owner's current binding."""
-    embeddings = sys.modules["kiro_crew.dashboard.handlers.memory_embeddings"]
+    embeddings = sys.modules["aj_crew.dashboard.handlers.memory_embeddings"]
     assert "_embedding_setup_status" not in vars(memory)
     assert [m.__name__ for m in _family() if "_embedding_setup_status" in vars(m)] == [
         embeddings.__name__
@@ -230,7 +230,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for owner in _index().owners:
         for node in ast.parse(_owner_path(owner).read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -254,7 +254,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
     """An owner binds these by import, so the facade names each one from its home module
-    under ``TYPE_CHECKING`` and ``from kiro_crew.dashboard.handlers.memory import
+    under ``TYPE_CHECKING`` and ``from aj_crew.dashboard.handlers.memory import
     model_download_manager`` type-checks."""
     served = set(_index().exports)
     expected = {name: home for name, home in _home_imports().items() if name in served}
@@ -264,7 +264,7 @@ def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers()
 
 def test_the_family_logs_under_the_facade_name() -> None:
     """One logger, still named for the facade module, held by every module that logs:
-    ``caplog`` filters keyed on ``kiro_crew.dashboard.handlers.memory`` keep seeing the
+    ``caplog`` filters keyed on ``aj_crew.dashboard.handlers.memory`` keep seeing the
     embedding setup's warnings."""
     assert memory.logger.name == FACADE
     others = [
@@ -274,7 +274,7 @@ def test_the_family_logs_under_the_facade_name() -> None:
 
 
 def test_the_facade_runs_as_a_module(tmp_path: Path) -> None:
-    """``python -m kiro_crew.dashboard.handlers.memory`` imports cleanly: the mirror
+    """``python -m aj_crew.dashboard.handlers.memory`` imports cleanly: the mirror
     installs on ``__main__`` too, because every member binds one logger by name."""
     env = dict(os.environ)
     src = str(Path(memory.__file__).resolve().parents[3])

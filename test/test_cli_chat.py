@@ -6,13 +6,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import cli_chat
-from kiro_crew.acp.client import AcpTimeoutError
-from kiro_crew.acp.types import STOP_REASON_STALE_RECOVER
-from kiro_crew.config import KiroCrewConfig, loader
-from kiro_crew.config.sections import KiroCrewAgentConfig
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.shell_audit_log import SHELL_AUDIT_LOG_MAX_BYTES, SHELL_AUDIT_LOG_NAME
+from aj_crew import cli_chat
+from aj_crew.acp.client import AcpTimeoutError
+from aj_crew.acp.types import STOP_REASON_STALE_RECOVER
+from aj_crew.config import AjCrewConfig, loader
+from aj_crew.config.sections import AjCrewAgentConfig
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.shell_audit_log import SHELL_AUDIT_LOG_MAX_BYTES, SHELL_AUDIT_LOG_NAME
 
 #: ``_chat`` builds a ``SkillsLoader``, whose index and catalog worker outlive the test.
 pytestmark = pytest.mark.usefixtures("close_skills_loaders")
@@ -22,8 +22,8 @@ def _patch_provider(monkeypatch) -> MagicMock:
     provider = MagicMock()
     provider.start = AsyncMock()
     provider.shutdown = AsyncMock()
-    cfg = KiroCrewConfig()
-    monkeypatch.setattr(cli_chat.KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    cfg = AjCrewConfig()
+    monkeypatch.setattr(cli_chat.AjCrewConfig, "load", classmethod(lambda cls: cfg))
     monkeypatch.setattr(
         cli_chat,
         "build_provider_factory",
@@ -49,7 +49,7 @@ async def test_cancelled_turn_shuts_down_provider(monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_a_stored_kiro_pick_runs_on_kas_in_cli_chat(monkeypatch, tmp_path) -> None:
-    """End-to-end: ``kirocrew chat`` runs a stored Kiro CLI pick on KAS.
+    """End-to-end: ``ajcrew chat`` runs a stored Kiro CLI pick on KAS.
 
     The CLI does not run the gateway's KAS floor, so ``ensure_kiro_cli_kas_verdict``
     is what establishes the v3 evidence a stored ``"kiro"`` pick needs to resolve to
@@ -58,9 +58,9 @@ async def test_a_stored_kiro_pick_runs_on_kas_in_cli_chat(monkeypatch, tmp_path)
     """
     import json
 
-    from kiro_crew.acp.types import ACP_BACKEND_KAS
-    from kiro_crew.acp_backends import STORED_BACKEND_KIRO
-    from kiro_crew.agent_sdk import backends
+    from aj_crew.acp.types import ACP_BACKEND_KAS
+    from aj_crew.acp_backends import STORED_BACKEND_KIRO
+    from aj_crew.agent_sdk import backends
 
     # A fresh process: no floor verdict, nothing probed yet.
     monkeypatch.setattr(backends, "_selectable", set(backends._selectable))
@@ -68,12 +68,12 @@ async def test_a_stored_kiro_pick_runs_on_kas_in_cli_chat(monkeypatch, tmp_path)
     monkeypatch.setattr(backends, "_kiro_cli_offers_kas", False)
     monkeypatch.setattr(backends, "_kiro_cli_kas_probed", False)
     # The host's kiro-cli offers v3 (positive probe), and the stored pick is Kiro CLI.
-    monkeypatch.setattr("kiro_crew.agent_sdk.kas_engine_verdict", lambda: (True, None))
+    monkeypatch.setattr("aj_crew.agent_sdk.kas_engine_verdict", lambda: (True, None))
 
     cfg_file = tmp_path / "config.json"
     cfg_file.write_text(json.dumps({"agent": {"acp_backend": STORED_BACKEND_KIRO}}), "utf-8")
     # The real loader reads config_path(); point it at the file just written so
-    # ``_chat``'s own ``KiroCrewConfig.load()`` runs the remap against our pick.
+    # ``_chat``'s own ``AjCrewConfig.load()`` runs the remap against our pick.
     monkeypatch.setattr(loader, "config_path", lambda: cfg_file)
 
     seen = {}
@@ -99,7 +99,7 @@ async def test_default_chat_uses_canonical_agent_for_provider_and_gate(monkeypat
     provider = MagicMock()
     provider.start = AsyncMock()
     provider.shutdown = AsyncMock()
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     assert cfg.agent.default_agent == "", "exercise the provider-default path"
 
     provider_agents: list[str | None] = []
@@ -114,7 +114,7 @@ async def test_default_chat_uses_canonical_agent_for_provider_and_gate(monkeypat
 
         return _provider
 
-    monkeypatch.setattr(cli_chat.KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(cli_chat.AjCrewConfig, "load", classmethod(lambda cls: cfg))
     monkeypatch.setattr(cli_chat, "build_provider_factory", _factory)
     monkeypatch.setattr(
         cli_chat,
@@ -125,8 +125,8 @@ async def test_default_chat_uses_canonical_agent_for_provider_and_gate(monkeypat
 
     await cli_chat._chat("hello", None)
 
-    assert provider_agents == ["kirocrew"]
-    assert gate_agents == ["kirocrew"]
+    assert provider_agents == ["ajcrew"]
+    assert gate_agents == ["ajcrew"]
 
 
 @pytest.mark.asyncio
@@ -139,7 +139,7 @@ async def test_default_chat_uses_canonical_agent_for_provider_and_gate(monkeypat
         # An explicit --model outranks the member's pin.
         ("reviewer", "", "picked-model", ("review-bot", "reviewer", "picked-model")),
         # A member bound to no kiro agent runs the built-in one, not its own name.
-        ("unbound", "", None, ("kirocrew", "unbound", None)),
+        ("unbound", "", None, ("ajcrew", "unbound", None)),
         # A kiro agent name that is not a member passes through unchanged.
         ("review-bot", "", None, ("review-bot", None, None)),
         # agent.default_agent is a template name, so it is never member-resolved.
@@ -149,10 +149,10 @@ async def test_default_chat_uses_canonical_agent_for_provider_and_gate(monkeypat
 async def test_a_crew_member_name_starts_its_bound_kiro_agent(
     monkeypatch, agent, default_agent, model, expected
 ) -> None:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.default_agent = default_agent
-    cfg.agents["reviewer"] = KiroCrewAgentConfig(kiro_agent="review-bot", model="member-model")
-    cfg.agents["unbound"] = KiroCrewAgentConfig(kiro_agent="")
+    cfg.agents["reviewer"] = AjCrewAgentConfig(kiro_agent="review-bot", model="member-model")
+    cfg.agents["unbound"] = AjCrewAgentConfig(kiro_agent="")
     provider = MagicMock()
     provider.start = AsyncMock()
     provider.shutdown = AsyncMock()
@@ -170,7 +170,7 @@ async def test_a_crew_member_name_starts_its_bound_kiro_agent(
     # agents directory and no snapshot state leaks to other tests.
     monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS_READY", True)
     monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"review-bot"}))
-    monkeypatch.setattr(cli_chat.KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(cli_chat.AjCrewConfig, "load", classmethod(lambda cls: cfg))
     monkeypatch.setattr(cli_chat, "build_provider_factory", _factory)
     monkeypatch.setattr(
         cli_chat,
@@ -191,12 +191,12 @@ async def test_a_crew_member_name_starts_its_bound_kiro_agent(
 async def test_a_member_whose_store_is_unusable_is_refused_before_spawn(
     monkeypatch, capsys
 ) -> None:
-    cfg = KiroCrewConfig()
-    cfg.agents["reviewer"] = KiroCrewAgentConfig(kiro_agent="review-bot", memory_store="gone")
+    cfg = AjCrewConfig()
+    cfg.agents["reviewer"] = AjCrewAgentConfig(kiro_agent="review-bot", memory_store="gone")
     factory = MagicMock()
     monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS_READY", True)
     monkeypatch.setattr(loader, "_MATERIALIZED_AGENTS", frozenset({"review-bot"}))
-    monkeypatch.setattr(cli_chat.KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(cli_chat.AjCrewConfig, "load", classmethod(lambda cls: cfg))
     monkeypatch.setattr(cli_chat, "build_provider_factory", factory)
 
     with pytest.raises(SystemExit) as exited:
@@ -216,7 +216,7 @@ def test_run_chat_renders_keyboard_interrupt_as_clean_exit(monkeypatch, capsys) 
 
     cli_chat._run_chat(None, None)
 
-    assert capsys.readouterr().out == "\nBye! 👻\n"
+    assert capsys.readouterr().out == "\nBye! 💎\n"
 
 
 @pytest.mark.asyncio
@@ -226,11 +226,11 @@ async def test_a_chat_start_rotates_an_over_cap_audit_log_before_the_backend_sta
     """The bundled hook appends from inside kiro-cli, whichever process launched it.
 
     Only the gateway's cleanup loop bounded ``audit.log``, so an install that only
-    ever runs ``kirocrew chat`` never rotated the file. The chat start now runs
+    ever runs ``ajcrew chat`` never rotated the file. The chat start now runs
     the same sweep, and it runs BEFORE the backend that will append is spawned:
     the live file is bounded on entry to the session, not after it.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     live = tmp_path / SHELL_AUDIT_LOG_NAME
     live.write_bytes(b"x" * SHELL_AUDIT_LOG_MAX_BYTES)
     provider = _patch_provider(monkeypatch)
@@ -256,7 +256,7 @@ async def test_a_chat_start_rotates_an_over_cap_audit_log_before_the_backend_sta
 @pytest.mark.asyncio
 async def test_a_chat_start_leaves_a_fresh_data_home_untouched(monkeypatch, tmp_path) -> None:
     """No audit log yet: the sweep costs one ``stat`` and creates nothing, not even the lock file."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _patch_provider(monkeypatch)
     monkeypatch.setattr(cli_chat, "_build_tool_gate", lambda agent: MagicMock())
     monkeypatch.setattr(cli_chat, "_send_and_print", AsyncMock())

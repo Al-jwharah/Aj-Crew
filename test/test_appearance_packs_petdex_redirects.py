@@ -22,7 +22,7 @@ import urllib.request
 
 import pytest
 
-from kiro_crew.appearance_packs import transfer as pack_transfer
+from aj_crew.appearance_packs import transfer as pack_transfer
 
 
 def _would_follow(newurl: str) -> bool:
@@ -86,9 +86,9 @@ class TestRedirectsStayPinned:
         import sys
 
         code = (
-            "import kiro_crew.dashboard.appearances\n"
-            "import kiro_crew.dashboard.handlers.appearances\n"
-            "from kiro_crew.appearance_packs import transfer\n"
+            "import aj_crew.dashboard.appearances\n"
+            "import aj_crew.dashboard.handlers.appearances\n"
+            "from aj_crew.appearance_packs import transfer\n"
             "print(transfer._shared_opener is None)\n"
         )
         out = subprocess.run(

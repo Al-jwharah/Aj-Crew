@@ -56,7 +56,7 @@ OWNER_PATHS = {stem: SCRIPTS / f"{stem}.py" for stem in OWNERS}
 LOADER_TWIN = ("_NoBytecodeSourceLoader", "_load_sibling")
 #: The modules ``_review_contract.py`` loads, so the sweep needs them too.
 CONTRACT_OWNERS = ("_review_fences.py", "_review_pushes.py", "_review_rounds.py")
-#: A dotted load name OUTSIDE ``kiro_crew``: a ``kiro_crew.`` prefix would make a
+#: A dotted load name OUTSIDE ``aj_crew``: an ``aj_crew.`` prefix would make a
 #: coverage run start measuring these files from this module's partial use of them.
 DOTTED = "s56_probe.pr_status"
 
@@ -586,7 +586,7 @@ def test_a_dotted_load_names_the_owners_under_the_same_package_and_registers_not
 
 def _copy_scripts(tmp_path: Path) -> Path:
     """Every script of the skill, the way the installed skill holds them."""
-    scripts = tmp_path / "skills" / "kirocrew-prepare-pr" / "scripts"
+    scripts = tmp_path / "skills" / "ajcrew-prepare-pr" / "scripts"
     scripts.mkdir(parents=True)
     for path in SCRIPTS.glob("*.py"):
         (scripts / path.name).write_bytes(path.read_bytes())

@@ -22,14 +22,14 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.acp.types import EVENT_COMPACTION_STATUS, EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.discord.transport import DiscordInboundMessage
-from kiro_crew.discord.transport_dispatch import DiscordDispatcher, _origin_kwargs, _QueuedOrigin
-from kiro_crew.messaging.link import UNBIND_REASON_UNSPECIFIED
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.session import _opt_out_key
-from kiro_crew.session_allocation import SessionClosingError
-from kiro_crew.session_map import ConversationOwnershipConflict
+from aj_crew.acp.types import EVENT_COMPACTION_STATUS, EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.discord.transport import DiscordInboundMessage
+from aj_crew.discord.transport_dispatch import DiscordDispatcher, _origin_kwargs, _QueuedOrigin
+from aj_crew.messaging.link import UNBIND_REASON_UNSPECIFIED
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.session import _opt_out_key
+from aj_crew.session_allocation import SessionClosingError
+from aj_crew.session_map import ConversationOwnershipConflict
 
 _PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
 
@@ -598,7 +598,7 @@ def _prime_live(cfg: Any) -> None:
     watcher rather than from the ``cfg=`` copy it was constructed with, so a
     test that varies one of them has to put the value where the turn actually
     looks for it. Every field the test's SimpleNamespace carries is copied onto
-    a real ``KiroCrewConfig``, so the production readers see real sections and
+    a real ``AjCrewConfig``, so the production readers see real sections and
     the loader's own defaults fill the rest.
 
     Call it again after mutating ``d.cfg`` mid-test -- the snapshot is a copy,
@@ -606,10 +606,10 @@ def _prime_live(cfg: Any) -> None:
     """
     import dataclasses
 
-    from kiro_crew.config import live
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config import live
+    from aj_crew.config.loader import AjCrewConfig
 
-    base = KiroCrewConfig()
+    base = AjCrewConfig()
     sections = {}
     for name in ("discord", "messaging", "agent"):
         section = getattr(cfg, name, None)
@@ -634,7 +634,7 @@ def _drop_live_config_snapshot():
     set the live config for every test after it in the same worker.
     """
     yield
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     live.reset_for_tests()
 
@@ -650,11 +650,11 @@ def _live_discord(**discord_kw: Any):
     """
     import dataclasses
 
-    from kiro_crew.config import live
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config import live
+    from aj_crew.config.loader import AjCrewConfig
 
     previous = live.snapshot()
-    base = previous if previous is not None else KiroCrewConfig()
+    base = previous if previous is not None else AjCrewConfig()
     live.reset_for_tests()
     try:
         live.watch().prime(

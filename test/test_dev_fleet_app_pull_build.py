@@ -18,11 +18,11 @@ from dev_fleet_app_helpers import _sweep_staged_sync_tempdirs  # noqa: F401 - fi
 from dev_fleet_app_helpers import _venv_maps_to_the_synced_checkout  # noqa: F401 - fixture
 from dev_fleet_app_helpers import _LAST_CLEANUP_PATHS, _SYNC_REPO, _run_sync, _sync_step_argvs
 
-import kiro_crew.apps.builtins.dev_fleet.server as mod
-from kiro_crew.apps.builtins.dev_fleet import npm_preflight
-from kiro_crew.apps.builtins.dev_fleet import repository as repository_mod
-from kiro_crew.apps.builtins.dev_fleet import runtime as runtime_mod
-from kiro_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
+import aj_crew.apps.builtins.dev_fleet.server as mod
+from aj_crew.apps.builtins.dev_fleet import npm_preflight
+from aj_crew.apps.builtins.dev_fleet import repository as repository_mod
+from aj_crew.apps.builtins.dev_fleet import runtime as runtime_mod
+from aj_crew.apps.builtins.dev_fleet import worktree_ops as worktree_ops_mod
 
 # `npm ci` deletes node_modules before installing, so a registry refusal mid-reify
 # would leave the checkout with new source and no frontend dependencies. These pin
@@ -101,14 +101,14 @@ async def test_sync_never_runs_an_operator_supplied_command(monkeypatch):
     declared command the code that runs, so it does not belong on an unattended
     path. Adding one needs its own threat model.
     """
-    monkeypatch.setenv("KIROCREW_DEVFLEET_NPM_AUTH_REPAIR", "/bin/sh -c true")
+    monkeypatch.setenv("AJCREW_DEVFLEET_NPM_AUTH_REPAIR", "/bin/sh -c true")
     monkeypatch.setattr(worktree_ops_mod.frontend, "edition_configured", lambda: False)
     _, cmd, steps = await _run_sync(mod, [])
 
     assert not any("repair" in s["label"] for s in steps), steps
     assert not hasattr(mod, "_npm_auth_repair_argv")
     cmd_flat = " ".join(map(str, cmd))
-    for token in ("KIROCREW_DEVFLEET_NPM_AUTH_REPAIR", "npm_auth_repair"):
+    for token in ("AJCREW_DEVFLEET_NPM_AUTH_REPAIR", "npm_auth_repair"):
         assert token not in cmd_flat, cmd
     # Checked by absence, not an argv[0] allowlist: toolchain paths differ by
     # host (/usr/bin/npm vs /opt/homebrew/bin/npm).
@@ -127,7 +127,7 @@ async def test_a_stashed_tree_is_recovered_before_any_step_runs(monkeypatch):
     leave it missing. Reconciliation therefore happens before the step loop.
     """
     monkeypatch.setattr(worktree_ops_mod.frontend, "edition_configured", lambda: False)
-    from kiro_crew.apps.builtins.dev_fleet import sync_runner
+    from aj_crew.apps.builtins.dev_fleet import sync_runner
 
     _, cmd, steps = await _run_sync(mod, [])
     assert cmd is not None
@@ -150,7 +150,7 @@ async def test_the_failure_cause_is_never_taken_from_child_output(monkeypatch):
     stdout carries worktree-controlled output, so an in-band marker could be
     printed by an npm lifecycle script; the cause comes from the exit code.
     """
-    from kiro_crew.apps.builtins.dev_fleet import sync_runner
+    from aj_crew.apps.builtins.dev_fleet import sync_runner
 
     _, cmd, _ = await _run_sync(mod, [])
     assert cmd is not None
@@ -201,7 +201,7 @@ async def test_only_the_preflight_step_may_assert_a_diagnosis(monkeypatch):
 
     # The gate is driven in test_dev_fleet_sync_runner.py (TestDemoteReserved,
     # TestRunSteps). Here: the gateway passes the reserved set and trusted label
-    # IN, so the runner imports nothing from kiro_crew and cannot drift.
+    # IN, so the runner imports nothing from aj_crew and cannot drift.
     assert "--reserved" in cmd
     reserved = sorted(npm_preflight.RESERVED_EXIT_CODES)
     passed = cmd[cmd.index("--reserved") + 1]
@@ -263,7 +263,7 @@ async def test_probe_and_merge_consume_one_immutable_commit(monkeypatch):
     # ...the ref is PER PROCESS: _SYNC_LOCK is single-flight only inside one
     # gateway, and a second gateway's fetch must not move this one's pin.
     assert str(os.getpid()) in pinned, pinned
-    assert pinned.startswith("refs/kirocrew/sync-base-"), pinned
+    assert pinned.startswith("refs/ajcrew/sync-base-"), pinned
     # ...and neither still names the mutable one, which is the actual defect.
     mutable = [a for a in merge + probe if a.endswith("/" + mod.BASE_BRANCH)]
     assert not mutable, (
@@ -466,9 +466,9 @@ async def test_prune_clears_dead_sync_refs_and_spares_live_ones(tmp_path, monkey
     # Only the live foreign PID's survival depends on the liveness check.
     mine = mod._sync_base_ref()
     dead_pid = 999_999_999  # above any real pid_max
-    dead = f"refs/kirocrew/sync-base-{dead_pid}"
-    live_other = "refs/kirocrew/sync-base-1"
-    foreign = "refs/kirocrew/something-else"
+    dead = f"refs/ajcrew/sync-base-{dead_pid}"
+    live_other = "refs/ajcrew/sync-base-1"
+    foreign = "refs/ajcrew/something-else"
     for ref in (mine, dead, live_other, foreign):
         git("update-ref", ref, head)
 
@@ -487,7 +487,7 @@ async def test_prune_clears_dead_sync_refs_and_spares_live_ones(tmp_path, monkey
 
     await mod._prune_dead_sync_base_refs(str(repo))
 
-    remaining = set(git("for-each-ref", "--format=%(refname)", "refs/kirocrew/").splitlines())
+    remaining = set(git("for-each-ref", "--format=%(refname)", "refs/ajcrew/").splitlines())
     assert mine in remaining, (
         "the prune deleted THIS process's live pin; a sync would then fetch into "
         "a ref another gateway could move"
@@ -526,7 +526,7 @@ async def test_preflight_runs_a_snapshot_not_the_editable_source(monkeypatch):
     """The probe must execute a private COPY by path, never import the checkout.
 
     ``-c`` puts the checkout first on ``sys.path`` (``-I`` fixes that), and the
-    editable install resolves ``import kiro_crew...`` into the checkout even
+    editable install resolves ``import aj_crew...`` into the checkout even
     under ``-I``. This step is trusted because its binary is ours, so it runs a
     snapshot by path; npm_preflight imports only stdlib.
     """
@@ -550,7 +550,7 @@ async def test_preflight_runs_a_snapshot_not_the_editable_source(monkeypatch):
     script = [str(x) for x in argv if str(x).endswith("npm_preflight.py")]
     assert len(script) == 1, argv
     assert (
-        "/src/kiro_crew/" not in script[0]
+        "/src/aj_crew/" not in script[0]
     ), f"{script[0]} is the editable source itself, not a snapshot"
     # Isolated, with the flags ahead of the script path -- after it they would be
     # argv for the program and the protection would vanish silently.
@@ -622,7 +622,7 @@ async def test_a_full_tmpdir_refuses_the_sync_instead_of_raising(monkeypatch, tm
     assert "preflight" in result["error"].lower(), result
     assert "No space left on device" in result["error"], result
     assert cmd is None, "the sync started a run despite failing to stage"
-    leaked = list(tmp_path.glob("kirocrew-npm-preflight-*"))
+    leaked = list(tmp_path.glob("ajcrew-npm-preflight-*"))
     assert not leaked, f"the refusal left {leaked} behind; every failed sync would leak one"
 
 
@@ -678,7 +678,7 @@ async def test_every_stash_presence_gate_uses_lexists(monkeypatch):
     ``os.rename`` fails ENOTDIR on every sync; a symlinked tree is never stashed.
     """
     monkeypatch.setattr(worktree_ops_mod.frontend, "edition_configured", lambda: False)
-    from kiro_crew.apps.builtins.dev_fleet import sync_runner
+    from aj_crew.apps.builtins.dev_fleet import sync_runner
 
     _, cmd, _ = await _run_sync(mod, [])
     assert cmd is not None

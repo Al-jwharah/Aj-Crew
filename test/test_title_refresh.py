@@ -37,8 +37,8 @@ from real_dashboard_state import _settle_real_dashboard_states  # noqa: F401
 from real_dashboard_state import drain, open_feed, real_dashboard_state
 from title_refresh_helpers import _fake_state, _patch_generator, _titled_slot
 
-from kiro_crew.dashboard import chat_persistence, chat_title, title_audit
-from kiro_crew.dashboard.chat_title import (
+from aj_crew.dashboard import chat_persistence, chat_title, title_audit
+from aj_crew.dashboard.chat_title import (
     _TITLE_EARLY_REFRESH_MILESTONE,
     _TITLE_ORIGIN_AUTO,
     _TITLE_ORIGIN_USER,
@@ -48,7 +48,7 @@ from kiro_crew.dashboard.chat_title import (
     _title_refresh_due,
     maybe_refresh_title,
 )
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
 
 # ── milestone gating: the token budget ───────────────────────────────────────
@@ -616,10 +616,10 @@ class TestRehydration:
 
 # ── rehydration: the mark is re-based against the rows a reload holds ────────
 def _restore_state(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.state import DashboardState
-    from kiro_crew.history import ConversationLog
+    from aj_crew.dashboard.state import DashboardState
+    from aj_crew.history import ConversationLog
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     sessions = MagicMock(count=0)
     sessions.get_pid = MagicMock(return_value=None)
     return DashboardState(
@@ -679,7 +679,7 @@ async def _rehydrate(state, driver: str) -> _ChatSlot:
             )
             assert resp.status == 200, await resp.text()
         return state._slots["chat1"]
-    from kiro_crew.dashboard.chat import restore_recent_sessions
+    from aj_crew.dashboard.chat import restore_recent_sessions
 
     assert restore_recent_sessions(state, window_minutes=60) == 1
     return state._slots["chat1"]
@@ -888,7 +888,7 @@ class TestRehydratedMarkRebase:
         # all 600 rows are held (no frozen prefix), so the user count is the
         # count the mark was taken over and the re-base moves nothing, where
         # resume's 500-row window would have pulled the mark down to 250.
-        from kiro_crew.dashboard import chat_handlers
+        from aj_crew.dashboard import chat_handlers
 
         _write_transcript(tmp_path, _turn_rows(300), mark=300)
         state = _restore_state(tmp_path, monkeypatch)
@@ -1109,7 +1109,7 @@ class TestRefreshCadence:
     async def test_the_count_stops_rising_once_the_window_is_full(self, monkeypatch):
         # Once this full window drops one user row for each new user row, its
         # retained user count stays at four and later cadence marks are not due.
-        from kiro_crew.dashboard import state as state_mod
+        from aj_crew.dashboard import state as state_mod
 
         monkeypatch.setattr(state_mod, "_MAX_SLOT_MESSAGES", 8)
         calls = _patch_generator(monkeypatch, "KEEP-unused")
@@ -1124,7 +1124,7 @@ class TestRefreshCadence:
 
     @pytest.mark.asyncio
     async def test_refresh_fires_while_a_full_window_drops_assistant_rows(self, monkeypatch):
-        from kiro_crew.dashboard import state as state_mod
+        from aj_crew.dashboard import state as state_mod
 
         monkeypatch.setattr(state_mod, "_MAX_SLOT_MESSAGES", 8)
         calls = _patch_generator(monkeypatch, "KEEP-unused")
@@ -1147,7 +1147,7 @@ class TestRefreshCadence:
         # "Takes effect on the next turn; no restart", measured through the real
         # config load rather than a patched reader.
         cfg = tmp_path / "config.json"
-        with patch("kiro_crew.config.loader.config_path", return_value=cfg):
+        with patch("aj_crew.config.loader.config_path", return_value=cfg):
             for every in (10, 100):
                 cfg.write_text(
                     json.dumps({"dashboard": {"title_refresh_every_turns": every}}),
@@ -1162,8 +1162,8 @@ class TestRefreshCadence:
         from dataclasses import fields
         from pathlib import Path
 
-        from kiro_crew.config import sections
-        from kiro_crew.dashboard.state import _MAX_SLOT_MESSAGES
+        from aj_crew.config import sections
+        from aj_crew.dashboard.state import _MAX_SLOT_MESSAGES
 
         floor = sections.TITLE_REFRESH_EVERY_TURNS_MIN
         ceiling = sections.TITLE_REFRESH_EVERY_TURNS_MAX
@@ -1176,7 +1176,7 @@ class TestRefreshCadence:
             if f.name == "title_refresh_every_turns"
         )
         root = Path(__file__).resolve().parents[1]
-        docs = (root / "src/kiro_crew/docs/configuration.md").read_text(encoding="utf-8")
+        docs = (root / "src/aj_crew/docs/configuration.md").read_text(encoding="utf-8")
         doc_row = next(line for line in docs.splitlines() if key in line)
         spec = (root / "docs/system-specs/modules/learn-cron-dashboard.md").read_text(
             encoding="utf-8"
@@ -1200,7 +1200,7 @@ class TestRefreshCadence:
         def _boom():
             raise OSError("config unreadable")
 
-        monkeypatch.setattr(chat_title.KiroCrewConfig, "load", staticmethod(_boom))
+        monkeypatch.setattr(chat_title.AjCrewConfig, "load", staticmethod(_boom))
         assert chat_title._title_refresh_every() == 0
 
     @pytest.mark.parametrize(
@@ -1219,12 +1219,12 @@ class TestRefreshCadence:
         ],
     )
     def test_loader_bounds(self, raw, parsed):
-        from kiro_crew.config.loader import _build_dashboard_config
+        from aj_crew.config.loader import _build_dashboard_config
 
         config = _build_dashboard_config(set(), {"title_refresh_every_turns": raw})
         assert config.title_refresh_every_turns == parsed
 
     def test_default_is_off(self):
-        from kiro_crew.config.loader import _build_dashboard_config
+        from aj_crew.config.loader import _build_dashboard_config
 
         assert _build_dashboard_config(set(), {}).title_refresh_every_turns == 0

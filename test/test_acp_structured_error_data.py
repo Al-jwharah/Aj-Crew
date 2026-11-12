@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.acp.client import (
+from aj_crew.acp.client import (
     PROVIDER_ERROR_MODEL_UNAVAILABLE,
     PROVIDER_ERROR_USAGE_LIMIT,
     AcpError,
@@ -21,9 +21,9 @@ from kiro_crew.acp.client import (
     _raise_acp_error,
     classify_provider_error,
 )
-from kiro_crew.acp.structured_error_data import provider_data_text, structured_data_prose
-from kiro_crew.taskq.adapters import acp_provider
-from kiro_crew.taskq.dependency import KIND_DEPENDENCY_UNAVAILABLE, KIND_QUOTA_EXHAUSTED
+from aj_crew.acp.structured_error_data import provider_data_text, structured_data_prose
+from aj_crew.taskq.adapters import acp_provider
+from aj_crew.taskq.dependency import KIND_DEPENDENCY_UNAVAILABLE, KIND_QUOTA_EXHAUSTED
 
 _LIMIT_SENTENCE = "The monthly usage limit has been reached for this account"
 _UNAVAILABLE_SENTENCE = (

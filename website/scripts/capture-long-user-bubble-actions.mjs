@@ -102,7 +102,7 @@ const REPLY_3 = [
 
 const slots = [{
   key: SLOT, title: 'Deployment plan review', running: false,
-  last_message: 'The revised order is below.', messages: 6, agent: 'kirocrew',
+  last_message: 'The revised order is below.', messages: 6, agent: 'ajcrew',
   memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now),
   source_links: [], source_links_total: 0,
 }]

@@ -14,15 +14,15 @@ import pathlib
 
 import pytest
 
-from kiro_crew.cloud.fargate import identity as ident
-from kiro_crew.cloud.fargate import taskdef as td
-from kiro_crew.cloud.fargate.identity import CrewBinding, DocumentRefused, SecretRef
+from aj_crew.cloud.fargate import identity as ident
+from aj_crew.cloud.fargate import taskdef as td
+from aj_crew.cloud.fargate.identity import CrewBinding, DocumentRefused, SecretRef
 
 ACCOUNT = "123456789012"
 OTHER_ACCOUNT = "210987654321"
 REGION = "us-east-1"
 DIGEST = "sha256:" + "b" * 64
-IMAGE = f"{ACCOUNT}.dkr.ecr.{REGION}.amazonaws.com/kirocrew-crew@{DIGEST}"
+IMAGE = f"{ACCOUNT}.dkr.ecr.{REGION}.amazonaws.com/ajcrew-crew@{DIGEST}"
 FILE_SYSTEM_ID = "fs-0123456789abcdef0"
 
 BINDING = CrewBinding(partition="aws", account=ACCOUNT, crew="frontdesk")
@@ -31,7 +31,7 @@ OTHER_BINDING = CrewBinding(partition="aws", account=ACCOUNT, crew="backoffice")
 
 def secret_ref(crew: str, key: str, *, account: str = ACCOUNT) -> SecretRef:
     """A secret named twice: canonically, and as the ARN that resolves to it."""
-    name = f"kirocrew/crew/{crew}/{key}"
+    name = f"ajcrew/crew/{crew}/{key}"
     return SecretRef(
         name=name,
         arn=f"arn:aws:secretsmanager:{REGION}:{account}:secret:{name}-AbCdEf",
@@ -236,7 +236,7 @@ def test_two_secrets_competing_for_one_variable_are_refused():
 _CONTAINER = (
     pathlib.Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "apps"
     / "builtins"
     / "aws_control"
@@ -456,8 +456,8 @@ def test_a_document_coherent_about_the_wrong_crew_is_still_refused():
 @pytest.mark.parametrize(
     "image",
     [
-        f"{ACCOUNT}.dkr.ecr.{REGION}.amazonaws.com/kirocrew-crew:latest",
-        f"{ACCOUNT}.dkr.ecr.{REGION}.amazonaws.com/kirocrew-crew",
+        f"{ACCOUNT}.dkr.ecr.{REGION}.amazonaws.com/ajcrew-crew:latest",
+        f"{ACCOUNT}.dkr.ecr.{REGION}.amazonaws.com/ajcrew-crew",
         "repo@sha256:" + "b" * 63,
         "repo@sha256:" + "B" * 64,
         "repo@sha512:" + "b" * 64,
@@ -547,7 +547,7 @@ def test_the_init_process_is_on_the_definition_because_runtask_cannot_override_i
     admits ``linuxParameters``, so the task would run with no init process and
     nothing would report a problem.
     """
-    from kiro_crew.cloud.fargate import runtask as rt
+    from aj_crew.cloud.fargate import runtask as rt
 
     assert "linuxParameters" not in rt.TASK_OVERRIDE_KEYS
     assert "linuxParameters" not in rt.CONTAINER_OVERRIDE_KEYS
@@ -576,7 +576,7 @@ def test_the_scheme_actually_participates_in_the_key(monkeypatch):
 
 #: The image's own drain constants, read as DATA. Importing that tree from here would
 #: mirror the import the spawn audit forbids in gateway code, and the tree assumes an
-#: installed layout where ``kiro_crew`` is absent, so it may not be importable at all.
+#: installed layout where ``aj_crew`` is absent, so it may not be importable at all.
 _CONTAINER_CONFIG = (
     pathlib.Path(td.__file__).parents[2]
     / "apps"

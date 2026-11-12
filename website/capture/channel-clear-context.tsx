@@ -40,11 +40,11 @@ const CHANNEL = {
   topic: 'Release notes for 0.5.0',
   members: {
     a1: {
-      id: 'a1', role: 'Researcher', agent_name: 'kirocrew', state: 'listening',
+      id: 'a1', role: 'Researcher', agent_name: 'ajcrew', state: 'listening',
       listen_mode: 'mention', approval_policy: 'writes', session_key: 'k1',
     },
     a2: {
-      id: 'a2', role: 'Scribe', agent_name: 'kirocrew', state: 'listening',
+      id: 'a2', role: 'Scribe', agent_name: 'ajcrew', state: 'listening',
       listen_mode: 'mention', approval_policy: 'writes', session_key: 'k2',
     },
   },
@@ -56,7 +56,7 @@ type Clear = Awaited<ReturnType<typeof api.channelClearContext>>
 api.channelsList = async () => ({ channels: [CHANNEL] }) as Awaited<ReturnType<typeof api.channelsList>>
 api.channelGet = async () => CHANNEL as Awaited<ReturnType<typeof api.channelGet>>
 api.channelPresets = async () => ({ presets: [] }) as Awaited<ReturnType<typeof api.channelPresets>>
-api.themeBoot = async () => ({ mode: theme, color: 'kiro' }) as Awaited<ReturnType<typeof api.themeBoot>>
+api.themeBoot = async () => ({ mode: theme, color: 'aj' }) as Awaited<ReturnType<typeof api.themeBoot>>
 const REFUSAL = JSON.stringify({ error: 'not found' })
 
 api.channelClearContext = scene === 'busy' || scene === 'row-busy'

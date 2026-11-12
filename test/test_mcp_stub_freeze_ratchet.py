@@ -19,13 +19,13 @@ import ast
 import importlib
 import pathlib
 
-SRC = pathlib.Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+SRC = pathlib.Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 HANDLER = SRC / "dashboard" / "handlers" / "mcp.py"
 
 
 def _handler_family_text() -> str:
     """``HANDLER`` and the owners its ``_OWNERS`` names, read as one text."""
-    from kiro_crew.dashboard.handlers import mcp
+    from aj_crew.dashboard.handlers import mcp
 
     return "\n".join(
         pathlib.Path(importlib.import_module(module).__file__).read_text(encoding="utf-8")

@@ -2,7 +2,7 @@
 """A chat that keeps its record's agent after its Bot was set to another one says so.
 
 A ``member`` record keeps the template it names (``test_mate_chat_agent_resolution``
-pins that rule), so after ``kirocrew agent update <bot> --kiro-agent <new>`` an open
+pins that rule), so after ``ajcrew agent update <bot> --kiro-agent <new>`` an open
 chat keeps running its old agent while a new chat runs ``<new>``. The chat tells the
 user once per new agent: a notice row naming both agents, and in the Bot's own
 thread, whose chat draws no notice row, one hidden turn in which the Bot says it.
@@ -21,22 +21,22 @@ from chat_agent_selection_helpers import _finished, _turn_state
 from chat_test_helpers import _make_app_with_agent_routes, drain_background_tasks
 from dashboard_owner_helpers import as_owner
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew import members as members_mod
-from kiro_crew.config import loader
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, resolve_agent_bindings
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard import gateway_notice as gn
-from kiro_crew.dashboard import mate_thread_wakes as wakes
-from kiro_crew.dashboard import member_rebind_notice as rebind
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef, read_session_execution
-from kiro_crew.history import ConversationLog
-from kiro_crew.mate_worker import MATE_CONDUCTOR_AGENT
-from kiro_crew.memory_stores import provision_member_memory
-from kiro_crew.session_agent_selection import resolve_session_agent_bindings
-from kiro_crew.testing.wait import default_timeout
+import aj_crew.config.paths as paths_mod
+from aj_crew import members as members_mod
+from aj_crew.config import loader
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, resolve_agent_bindings
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard import gateway_notice as gn
+from aj_crew.dashboard import mate_thread_wakes as wakes
+from aj_crew.dashboard import member_rebind_notice as rebind
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef, read_session_execution
+from aj_crew.history import ConversationLog
+from aj_crew.mate_worker import MATE_CONDUCTOR_AGENT
+from aj_crew.memory_stores import provision_member_memory
+from aj_crew.session_agent_selection import resolve_session_agent_bindings
+from aj_crew.testing.wait import default_timeout
 
-_SHARED = ("alpha-agent", "beta-agent", "gamma-agent", "kirocrew")
+_SHARED = ("alpha-agent", "beta-agent", "gamma-agent", "ajcrew")
 
 
 @pytest.fixture
@@ -63,10 +63,10 @@ def home(monkeypatch, tmp_path):
     return kiro
 
 
-def _config(**bindings: str) -> KiroCrewConfig:
-    cfg = KiroCrewConfig()
+def _config(**bindings: str) -> AjCrewConfig:
+    cfg = AjCrewConfig()
     cfg.agents = {
-        name: KiroCrewAgentConfig(member_id=name, kiro_agent=kiro_agent)
+        name: AjCrewAgentConfig(member_id=name, kiro_agent=kiro_agent)
         for name, kiro_agent in bindings.items()
     }
     return cfg
@@ -82,7 +82,7 @@ def _record(member_id: str, template_id: str, kind: str = "member") -> Execution
 
 
 def _bound_session(session_key: str, record: ExecutionContext) -> None:
-    from kiro_crew.execution_context import bind_session_execution
+    from aj_crew.execution_context import bind_session_execution
 
     bind_session_execution(session_key, record)
 
@@ -90,7 +90,7 @@ def _bound_session(session_key: str, record: ExecutionContext) -> None:
 _KEYS = iter(range(1, 1000))
 
 
-def _resolved(cfg: KiroCrewConfig, record: ExecutionContext, key: str = ""):
+def _resolved(cfg: AjCrewConfig, record: ExecutionContext, key: str = ""):
     """The bindings a turn resolves for a session bound to *record* under *cfg*.
 
     With no *key*, a session of its own, named apart from every key a test spells.
@@ -179,7 +179,7 @@ def surfaced(monkeypatch):
         rows.append((slot.key, role, content, dict(meta or {})))
         return {}
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.append_and_surface", append_and_surface)
+    monkeypatch.setattr("aj_crew.dashboard.state.append_and_surface", append_and_surface)
     return rows
 
 
@@ -190,7 +190,7 @@ def dispatched(monkeypatch):
     def dispatch(state, slot, prompt, *, human_seen, heartbeat=False):
         calls.append((slot.key, prompt))
 
-    monkeypatch.setattr("kiro_crew.dashboard.mate_welcome.dispatch_hidden_turn", dispatch)
+    monkeypatch.setattr("aj_crew.dashboard.mate_welcome.dispatch_hidden_turn", dispatch)
     return calls
 
 
@@ -349,8 +349,8 @@ async def test_turn_admission_appends_the_notice_naming_the_agent_the_record_run
     tmp_path, monkeypatch
 ):
     """End to end through ``_run_chat``: the turn after a rebind reuses the record and says so."""
-    cfg = KiroCrewConfig.load()
-    cfg.agents["fixer"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["fixer"] = AjCrewAgentConfig(kiro_agent="ajcrew")
     provision_member_memory(cfg, "fixer")
     cfg.save()
     state = _turn_state(tmp_path, monkeypatch)
@@ -371,8 +371,8 @@ async def test_turn_admission_appends_the_notice_naming_the_agent_the_record_run
 
     key = "dashboard:rebound"
     await turn("before the rebind")
-    assert read_session_execution(key).template_id == "kirocrew"
-    rebound = KiroCrewConfig.load()
+    assert read_session_execution(key).template_id == "ajcrew"
+    rebound = AjCrewConfig.load()
     rebound.agents["fixer"].kiro_agent = "beta-agent"
     rebound.save()
     await turn("after the rebind")
@@ -391,6 +391,6 @@ async def test_turn_admission_appends_the_notice_naming_the_agent_the_record_run
     assert row["meta"]["notice_args"] == {
         "bot": "fixer",
         "agent": "beta-agent",
-        "recorded": "kirocrew",
+        "recorded": "ajcrew",
     }
-    assert read_session_execution(key).template_id == "kirocrew"
+    assert read_session_execution(key).template_id == "ajcrew"

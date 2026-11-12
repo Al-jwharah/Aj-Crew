@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+    from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 def seed_key(i: int) -> str:

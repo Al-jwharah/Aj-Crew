@@ -17,7 +17,7 @@ const mockApi = vi.hoisted(() => ({
   mcpApply: vi.fn(),
   mcpGlobalScopes: vi.fn(),
   mcpResetProbeFailures: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
 }))
 vi.mock('../api/client', () => ({ api: mockApi }))
 vi.mock('../providers', () => ({
@@ -69,7 +69,7 @@ describe('McpTab sign-in rows on the KAS harness (#24693)', () => {
     ['KAS by default (no harness choice)', {}],
     ['KAS with sign-in persistence on', { agent: { acp_backend: 'kas', kas_persist_mcp_sign_in: true } }],
   ])('puts the line under every sign-in control: %s', async (_label, cfg) => {
-    mockApi.kirocrewConfig.mockResolvedValue(cfg)
+    mockApi.ajcrewConfig.mockResolvedValue(cfg)
     renderTab()
 
     await waitFor(() => expect(screen.getAllByTestId('mcp-sign-in-kas-chat-note')).toHaveLength(3))
@@ -81,7 +81,7 @@ describe('McpTab sign-in rows on the KAS harness (#24693)', () => {
 
   it('a Crew-held row reads signed in, with no Sign in again and no KAS line', async () => {
     // dashboard.feature_previews.crew_oauth on KAS: Crew holds the grant and serves KAS chats.
-    mockApi.kirocrewConfig.mockResolvedValue({ agent: { acp_backend: 'kas' } })
+    mockApi.ajcrewConfig.mockResolvedValue({ agent: { acp_backend: 'kas' } })
     mockApi.mcpServers.mockResolvedValue([
       userAdded('github', { authGrantPresent: true, authCrewHeld: true }),
     ])
@@ -94,7 +94,7 @@ describe('McpTab sign-in rows on the KAS harness (#24693)', () => {
   })
 
   it('a Crew-held row not yet signed in offers Sign in without the KAS line', async () => {
-    mockApi.kirocrewConfig.mockResolvedValue({ agent: { acp_backend: 'kas' } })
+    mockApi.ajcrewConfig.mockResolvedValue({ agent: { acp_backend: 'kas' } })
     mockApi.mcpServers.mockResolvedValue([
       userAdded('github', { authGrantPresent: false, authCrewHeld: true }),
     ])
@@ -105,7 +105,7 @@ describe('McpTab sign-in rows on the KAS harness (#24693)', () => {
   })
 
   it('shows no line on the kiro-cli harness', async () => {
-    mockApi.kirocrewConfig.mockResolvedValue({ agent: { acp_backend: 'kiro' } })
+    mockApi.ajcrewConfig.mockResolvedValue({ agent: { acp_backend: 'kiro' } })
     renderTab()
 
     await waitFor(() => expect(screen.getAllByRole('button', { name: 'Sign in again' })).toHaveLength(2))

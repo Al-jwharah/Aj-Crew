@@ -28,10 +28,10 @@ from issue_radar_crew_store_helpers import (  # noqa: F401 -- the autouse fixtur
     _sweep,
 )
 
-from kiro_crew.apps.builtins.issue_radar.backend import crew_runtime
-from kiro_crew.apps.builtins.issue_radar.backend import crew_store as cs
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log_projection
+from aj_crew.apps.builtins.issue_radar.backend import crew_runtime
+from aj_crew.apps.builtins.issue_radar.backend import crew_store as cs
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log_projection
 
 
 def test_the_carry_marks_its_files_only_after_every_entry_landed(tmp_path, monkeypatch):
@@ -41,7 +41,7 @@ def test_the_carry_marks_its_files_only_after_every_entry_landed(tmp_path, monke
     crew, sid = _live_crew(tmp_path)
     cid = crew["id"]
     item_file = _legacy_item(tmp_path, cid, 2251)
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     real_recorded = crew_log_emit.on_radar_recorded
     calls = {"n": 0}
@@ -95,7 +95,7 @@ def test_a_carry_still_queued_in_the_writer_refuses_the_write_that_triggered_it(
     crew, sid = _live_crew(tmp_path)
     cid = crew["id"]
     item_file = _legacy_item(tmp_path, cid, 2251)  # phase implementing: an EDITING item
-    from kiro_crew.crew_log import emit as crew_log_emit
+    from aj_crew.crew_log import emit as crew_log_emit
 
     real_flush = crew_log_emit.flush
     behind = {"on": True}

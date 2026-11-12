@@ -28,8 +28,8 @@ const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 // own mode from `mc-theme` on mount, so setting only the attribute gets overwritten
 // and every shot comes out in the default palette.
 localStorage.setItem('mc-theme', theme)
-localStorage.setItem('mc-color-theme', 'kiro')
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+localStorage.setItem('mc-color-theme', 'aj')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 //: Exactly what the route answers for a crewmate that adopted nothing: an EMPTY
 //: body, not an absent key, which is what `instance._empty_instance` writes.

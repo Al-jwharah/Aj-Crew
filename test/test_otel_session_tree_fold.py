@@ -9,7 +9,7 @@ the two measurements are right in isolation.
 
 from __future__ import annotations
 
-from kiro_crew.crew_log.otel_session_tree_fold import (
+from aj_crew.crew_log.otel_session_tree_fold import (
     DEPTH_BUCKETS,
     NTH_BUCKETS,
     count_roots_with_children,
@@ -17,7 +17,7 @@ from kiro_crew.crew_log.otel_session_tree_fold import (
     depth_observation,
     nth_bucket_counts,
 )
-from kiro_crew.crew_log.session_tree import TreeNode
+from aj_crew.crew_log.session_tree import TreeNode
 
 
 def _node(slot: str, parent_slot: str | None = None, cycle: bool = False) -> TreeNode:
@@ -42,7 +42,7 @@ def test_depth_zero_is_observed_not_skipped():
 
 def test_missing_depth_is_skipped():
     # An old entry (no depth key) contributes nothing, never a zero.
-    assert depth_observation({"agent": "kirocrew", "slot": "chat-7"}) is None
+    assert depth_observation({"agent": "ajcrew", "slot": "chat-7"}) is None
 
 
 def test_a_negative_depth_is_skipped():

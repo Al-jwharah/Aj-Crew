@@ -19,22 +19,22 @@ import time
 
 import pytest
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import SESSION_START_FAILURE_REASON, AutoNudgeService
-from kiro_crew.autonudge_service.model import (
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import SESSION_START_FAILURE_REASON, AutoNudgeService
+from aj_crew.autonudge_service.model import (
     _CONSECUTIVE_FAILURE_STANDDOWN_AFTER,
     _START_FAILURE_STANDDOWN_AFTER,
     CONSECUTIVE_FAILURE_REASON,
 )
-from kiro_crew.autonudge_service.timers import _ACTING_TIMER
-from kiro_crew.testing.wait import await_until, default_timeout
+from aj_crew.autonudge_service.timers import _ACTING_TIMER
+from aj_crew.testing.wait import await_until, default_timeout
 
 SLOT = "chat-1-4242"
 
 
 @pytest.fixture(autouse=True)
 def _enable(_floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    _floor_monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.fixture(autouse=True)

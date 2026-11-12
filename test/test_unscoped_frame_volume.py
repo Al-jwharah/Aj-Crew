@@ -20,13 +20,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, bus, eager, emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.dashboard.handlers import crew_log as routes
-from kiro_crew.dashboard.handlers.crew_log import FRAME, CrewLogPublisher
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, bus, eager, emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.dashboard.handlers import crew_log as routes
+from aj_crew.dashboard.handlers.crew_log import FRAME, CrewLogPublisher
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.testing.wait import async_wait_until
 
 SOCKETS = 6
 SESSION = "s-frame-volume"
@@ -38,8 +38,8 @@ SESSION_PROJECTION_FRAMES_PER_TURN = 36
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     eager.stop_for_tests()
     crew_log.forget_slot_folds()
     crew_log.forget_session_folds()
@@ -104,7 +104,7 @@ async def test_one_turn_sends_a_fixed_number_of_session_projection_frames(monkey
     publisher.bind(asyncio.get_running_loop(), state)
     publisher.subscribe_bus()
     try:
-        handle = CrewLog.create(lg.KIND_SESSION, SESSION, owner="raymond", agent="kirocrew")
+        handle = CrewLog.create(lg.KIND_SESSION, SESSION, owner="raymond", agent="ajcrew")
         eager.note_commit(SESSION, "turn/completed", _one_turn(handle))
         assert await asyncio.to_thread(eager.drain, 10.0)
         # Every fold callback was queued on this loop before ``to_thread`` queued its

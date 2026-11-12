@@ -1,10 +1,10 @@
 # Design Document: Subagent Session Cleanup
 
-Status: implemented in `src/kiro_crew/session_allocation.py`, `src/kiro_crew/subagent_persistence.py`, and provider cleanup hooks. The ClaudeCodeProvider and Bedrock sections describe providers that are not shipped; ACP is the only provider. The shipped `_is_safe_path` (`src/kiro_crew/providers/cleanup.py`) refuses the root directory itself.
+Status: implemented in `src/aj_crew/session_allocation.py`, `src/aj_crew/subagent_persistence.py`, and provider cleanup hooks. The ClaudeCodeProvider and Bedrock sections describe providers that are not shipped; ACP is the only provider. The shipped `_is_safe_path` (`src/aj_crew/providers/cleanup.py`) refuses the root directory itself.
 
 ## Overview
 
-This feature adds a provider-agnostic session file cleanup mechanism to the KiroCrew gateway. Each LLM provider backend stores session data differently on disk — the ACP provider uses `~/.kiro/sessions/cli/{session_id}.json` and `{session_id}.jsonl` files, while the removed standalone provider and Bedrock had different (or no) persistence. The cleanup mechanism integrates with the existing subagent lifecycle at three points: normal completion, reaper force-kill, and tombstone pruning.
+This feature adds a provider-agnostic session file cleanup mechanism to the Aj Crew gateway. Each LLM provider backend stores session data differently on disk — the ACP provider uses `~/.kiro/sessions/cli/{session_id}.json` and `{session_id}.jsonl` files, while the removed standalone provider and Bedrock had different (or no) persistence. The cleanup mechanism integrates with the existing subagent lifecycle at three points: normal completion, reaper force-kill, and tombstone pruning.
 
 The design adds a `session_id` property and a `cleanup_session` method to `LLMProvider`, a `cleanup` parameter to `SessionManager.release()`, session ID tracking in subagent persistence, and a startup sweep that runs during orphan reconciliation.
 
@@ -229,7 +229,7 @@ def _is_safe_path(target: Path, expected_root: Path) -> bool:
 {
     "id": "abc123",
     "task": "...",
-    "agent": "kirocrew",
+    "agent": "ajcrew",
     "parent_session": "dashboard:chat-1",
     "started": 1700000000.0,
     "max_turns": 100,

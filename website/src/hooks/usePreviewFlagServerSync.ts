@@ -14,10 +14,10 @@ import {
 } from '../utils/previewFlags'
 import { safeGetItem, safeRemoveItem } from '../utils/safeStorage'
 
-/** The slice of the `['kirocrewConfig']` body this sync reads. */
+/** The slice of the `['ajcrewConfig']` body this sync reads. */
 export type PreviewFlagsConfigBody = { dashboard?: { feature_previews?: unknown }; locked_controls?: unknown }
 
-const CONFIG_KEY = ['kirocrewConfig'] as const
+const CONFIG_KEY = ['ajcrewConfig'] as const
 
 /**
  * Toggles whose PATCH has not settled yet, counted per flag. While a flag has
@@ -215,7 +215,7 @@ export function reconcilePreviewFlags(body: PreviewFlagsConfigBody | undefined):
  * Keep the Feature previews switches on the gateway, with the browser copy as a
  * cache (see `utils/previewFlags.ts`). Mount once, in the app shell.
  *
- * Reads the shared `['kirocrewConfig']` query, which a config `refresh` frame
+ * Reads the shared `['ajcrewConfig']` query, which a config `refresh` frame
  * already invalidates, so a switch flipped on another surface reaches this one
  * without a reload. Installs the persister `setPreviewFlag` hands each toggle to.
  */
@@ -223,7 +223,7 @@ export function usePreviewFlagServerSync(): void {
   const qc = useQueryClient()
   const { data } = useQuery<PreviewFlagsConfigBody>({
     queryKey: CONFIG_KEY,
-    queryFn: () => api.kirocrewConfig(),
+    queryFn: () => api.ajcrewConfig(),
   })
   useEffect(() => {
     for (const key of RETIRED_SYNC_KEYS) safeRemoveItem(key)

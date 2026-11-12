@@ -14,20 +14,20 @@ from urllib.request import Request
 
 import pytest
 
-from kiro_crew import github_runner
-from kiro_crew import sandbox as sandbox_module
-from kiro_crew.acp import client as acp_client_module
-from kiro_crew.monitoring import azure_devops_pull_request as azure_module
-from kiro_crew.monitoring import bitbucket_pull_request as bitbucket_module
-from kiro_crew.monitoring import github_pull_request as github_module
-from kiro_crew.monitoring import provider_cli as provider_cli_module
-from kiro_crew.monitoring.azure_devops_pull_request import AzureDevOpsPullRequestProvider
-from kiro_crew.monitoring.bitbucket_pull_request import BitbucketPullRequestProvider
-from kiro_crew.monitoring.gitlab_merge_request import GitLabMergeRequestProvider
-from kiro_crew.monitoring.models import MonitorObservationStatus, ProviderErrorKind
-from kiro_crew.monitoring.provider_cli import provider_cli_env, run_provider_cli
-from kiro_crew.monitoring.pull_request import opaque_provider_check_identity
-from kiro_crew.sel import SecurityEventLog
+from aj_crew import github_runner
+from aj_crew import sandbox as sandbox_module
+from aj_crew.acp import client as acp_client_module
+from aj_crew.monitoring import azure_devops_pull_request as azure_module
+from aj_crew.monitoring import bitbucket_pull_request as bitbucket_module
+from aj_crew.monitoring import github_pull_request as github_module
+from aj_crew.monitoring import provider_cli as provider_cli_module
+from aj_crew.monitoring.azure_devops_pull_request import AzureDevOpsPullRequestProvider
+from aj_crew.monitoring.bitbucket_pull_request import BitbucketPullRequestProvider
+from aj_crew.monitoring.gitlab_merge_request import GitLabMergeRequestProvider
+from aj_crew.monitoring.models import MonitorObservationStatus, ProviderErrorKind
+from aj_crew.monitoring.provider_cli import provider_cli_env, run_provider_cli
+from aj_crew.monitoring.pull_request import opaque_provider_check_identity
+from aj_crew.sel import SecurityEventLog
 
 
 def _probe(provider, target: str, **kwargs):
@@ -51,7 +51,7 @@ def _isolate_azure_cli_config_dirs(monkeypatch):
     """Provider tests must not inherit Azure CLI paths from the CI host."""
     monkeypatch.delenv("AZURE_CONFIG_DIR", raising=False)
     monkeypatch.delenv("AZURE_EXTENSION_DIR", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
+    monkeypatch.delenv("AJCREW_POD", raising=False)
 
 
 def test_gitlab_failed_pipeline_beats_pending_mergeability():
@@ -426,7 +426,7 @@ def test_gitlab_native_fetch_reads_only_the_latest_current_head_pipeline(monkeyp
         return subprocess.CompletedProcess(["glab"], 0, stdout=json.dumps(payload), stderr="")
 
     monkeypatch.setattr(
-        "kiro_crew.monitoring.gitlab_merge_request.run_provider_cli",
+        "aj_crew.monitoring.gitlab_merge_request.run_provider_cli",
         succeed,
     )
 
@@ -466,7 +466,7 @@ def test_gitlab_exactly_two_full_discussion_pages_are_complete(monkeypatch):
         return subprocess.CompletedProcess(["glab"], 0, stdout=json.dumps(payload), stderr="")
 
     monkeypatch.setattr(
-        "kiro_crew.monitoring.gitlab_merge_request.run_provider_cli",
+        "aj_crew.monitoring.gitlab_merge_request.run_provider_cli",
         succeed,
     )
 
@@ -784,7 +784,7 @@ def test_bitbucket_loads_one_non_propagating_credential_snapshot(monkeypatch):
 
     monkeypatch.setattr(
         bitbucket_module,
-        "KiroCrewConfig",
+        "AjCrewConfig",
         SimpleNamespace(load=lambda: SimpleNamespace(load_credentials=load_credentials)),
     )
     monkeypatch.setattr(BitbucketPullRequestProvider, "_fetch_https", staticmethod(fetch))
@@ -822,7 +822,7 @@ def test_bitbucket_channel_probe_does_not_load_owner_credentials(monkeypatch):
 
     monkeypatch.setattr(
         bitbucket_module,
-        "KiroCrewConfig",
+        "AjCrewConfig",
         SimpleNamespace(load=fail_load),
     )
     monkeypatch.setattr(BitbucketPullRequestProvider, "_fetch_https", staticmethod(fetch))
@@ -991,7 +991,7 @@ def test_gitlab_not_found_is_terminal_and_omits_provider_text(monkeypatch):
         )
 
     monkeypatch.setattr(
-        "kiro_crew.monitoring.gitlab_merge_request.run_provider_cli",
+        "aj_crew.monitoring.gitlab_merge_request.run_provider_cli",
         fail,
     )
 
@@ -1015,7 +1015,7 @@ def test_azure_forbidden_is_terminal_and_omits_provider_text(monkeypatch):
         )
 
     monkeypatch.setattr(
-        "kiro_crew.monitoring.azure_devops_pull_request.run_provider_cli",
+        "aj_crew.monitoring.azure_devops_pull_request.run_provider_cli",
         fail,
     )
 
@@ -1047,7 +1047,7 @@ def test_gitlab_throttling_refusal_is_rate_limited(monkeypatch):
         )
 
     monkeypatch.setattr(
-        "kiro_crew.monitoring.gitlab_merge_request.run_provider_cli",
+        "aj_crew.monitoring.gitlab_merge_request.run_provider_cli",
         fail,
     )
 
@@ -1077,7 +1077,7 @@ def test_azure_throttling_refusal_is_rate_limited(monkeypatch):
         )
 
     monkeypatch.setattr(
-        "kiro_crew.monitoring.azure_devops_pull_request.run_provider_cli",
+        "aj_crew.monitoring.azure_devops_pull_request.run_provider_cli",
         fail,
     )
 
@@ -1098,11 +1098,11 @@ def test_azure_channel_probe_does_not_load_owner_credentials_or_cli_state(monkey
         pytest.fail("channel probe reached operator-owned Azure state")
 
     monkeypatch.setattr(
-        "kiro_crew.monitoring.azure_devops_pull_request.KiroCrewConfig",
+        "aj_crew.monitoring.azure_devops_pull_request.AjCrewConfig",
         SimpleNamespace(load=fail),
     )
     monkeypatch.setattr(
-        "kiro_crew.monitoring.azure_devops_pull_request.run_provider_cli",
+        "aj_crew.monitoring.azure_devops_pull_request.run_provider_cli",
         fail,
     )
     monkeypatch.setattr(
@@ -1133,7 +1133,7 @@ def test_azure_cli_uses_supported_project_scoping_for_each_command(monkeypatch):
         return credentials
 
     monkeypatch.setattr(
-        "kiro_crew.monitoring.azure_devops_pull_request.KiroCrewConfig",
+        "aj_crew.monitoring.azure_devops_pull_request.AjCrewConfig",
         SimpleNamespace(load=lambda: SimpleNamespace(load_credentials=load_credentials)),
     )
 
@@ -1161,7 +1161,7 @@ def test_azure_cli_uses_supported_project_scoping_for_each_command(monkeypatch):
         )
 
     monkeypatch.setattr(
-        "kiro_crew.monitoring.azure_devops_pull_request.run_provider_cli",
+        "aj_crew.monitoring.azure_devops_pull_request.run_provider_cli",
         succeed,
     )
 
@@ -1225,7 +1225,7 @@ def test_bitbucket_https_fetch_pins_auth_host_and_response_bound(monkeypatch):
     )
     monkeypatch.setattr(
         bitbucket_module,
-        "KiroCrewConfig",
+        "AjCrewConfig",
         SimpleNamespace(load=lambda: credentials),
     )
     monkeypatch.setattr(bitbucket_module, "build_opener", lambda _redirect: Opener())
@@ -1324,7 +1324,7 @@ def test_bitbucket_https_fetch_rejects_oversized_response(monkeypatch):
     credentials = SimpleNamespace(load_credentials=lambda: {})
     monkeypatch.setattr(
         bitbucket_module,
-        "KiroCrewConfig",
+        "AjCrewConfig",
         SimpleNamespace(load=lambda: credentials),
     )
     monkeypatch.setattr(bitbucket_module, "build_opener", lambda _redirect: Opener())
@@ -1375,15 +1375,15 @@ def test_bitbucket_redirect_policy_rejects_origin_changes():
 def test_resolve_provider_cli_uses_only_validated_candidates(monkeypatch):
     assert provider_cli_module.PROVIDER_CLI_OVERRIDE_ENV is github_runner.PROVIDER_CLI_OVERRIDE_ENV
     assert github_runner.PROVIDER_CLI_OVERRIDE_ENV == {
-        "gh": "KIROCREW_GH_BIN",
-        "glab": "KIROCREW_GLAB_BIN",
-        "az": "KIROCREW_AZ_BIN",
+        "gh": "AJCREW_GH_BIN",
+        "glab": "AJCREW_GLAB_BIN",
+        "az": "AJCREW_AZ_BIN",
     }
 
     with pytest.raises(provider_cli_module.SetupError, match="unsupported"):
         provider_cli_module.resolve_provider_cli("unknown")
 
-    monkeypatch.delenv("KIROCREW_GLAB_BIN", raising=False)
+    monkeypatch.delenv("AJCREW_GLAB_BIN", raising=False)
     monkeypatch.setattr(
         provider_cli_module,
         "provider_executable_candidates",
@@ -1400,7 +1400,7 @@ def test_resolve_provider_cli_uses_only_validated_candidates(monkeypatch):
 
     assert provider_cli_module.resolve_provider_cli("glab") == "/trusted/glab"
 
-    monkeypatch.setenv("KIROCREW_GLAB_BIN", "")
+    monkeypatch.setenv("AJCREW_GLAB_BIN", "")
     with pytest.raises(provider_cli_module.SetupError, match="empty override"):
         provider_cli_module.resolve_provider_cli("glab")
 
@@ -1408,7 +1408,7 @@ def test_resolve_provider_cli_uses_only_validated_candidates(monkeypatch):
 def test_monitor_provider_resolution_requires_a_protected_provider_binary(monkeypatch):
     """Credential-bearing monitor probes reject same-user provider CLIs."""
     validations: list[tuple[str, bool]] = []
-    monkeypatch.delenv("KIROCREW_AZ_BIN", raising=False)
+    monkeypatch.delenv("AJCREW_AZ_BIN", raising=False)
     monkeypatch.setattr(
         provider_cli_module,
         "provider_executable_candidates",
@@ -1790,18 +1790,18 @@ def test_explicit_session_bus_address_survives_both_spawn_paths(monkeypatch, tmp
 
 def test_provider_cli_rejects_output_over_the_transport_bound(monkeypatch, tmp_path):
     monkeypatch.setattr(
-        "kiro_crew.monitoring.provider_cli.resolve_provider_cli",
+        "aj_crew.monitoring.provider_cli.resolve_provider_cli",
         lambda _executable: sys.executable,
     )
     monkeypatch.setattr(
-        "kiro_crew.monitoring.provider_cli._audit_provider_cli",
+        "aj_crew.monitoring.provider_cli._audit_provider_cli",
         lambda *_args, **_kwargs: None,
     )
     monkeypatch.setattr(
-        "kiro_crew.monitoring.provider_cli.sandboxed_spawn_argv",
+        "aj_crew.monitoring.provider_cli.sandboxed_spawn_argv",
         lambda argv, **kwargs: (argv, kwargs["env"], None),
     )
-    monkeypatch.setenv("KIROCREW_HOME", os.fspath(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", os.fspath(tmp_path / "home"))
 
     with pytest.raises(ValueError, match="output exceeds"):
         run_provider_cli(
@@ -1825,18 +1825,18 @@ def test_provider_cli_routes_through_sandbox_and_restores_only_explicit_credenti
         return argv, scrubbed, None
 
     monkeypatch.setattr(
-        "kiro_crew.monitoring.provider_cli.resolve_provider_cli",
+        "aj_crew.monitoring.provider_cli.resolve_provider_cli",
         lambda _executable: sys.executable,
     )
     monkeypatch.setattr(
-        "kiro_crew.monitoring.provider_cli._audit_provider_cli",
+        "aj_crew.monitoring.provider_cli._audit_provider_cli",
         lambda *_args, **_kwargs: None,
     )
     monkeypatch.setattr(
-        "kiro_crew.monitoring.provider_cli.sandboxed_spawn_argv",
+        "aj_crew.monitoring.provider_cli.sandboxed_spawn_argv",
         fake_sandbox,
     )
-    monkeypatch.setenv("KIROCREW_HOME", os.fspath(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", os.fspath(tmp_path / "home"))
     monkeypatch.setenv("HOME", os.fspath(tmp_path / "home"))
     monkeypatch.setenv("AZURE_CONFIG_DIR", azure_config_dir)
 
@@ -1860,7 +1860,7 @@ def test_provider_cli_routes_through_sandbox_and_restores_only_explicit_credenti
 
 def test_provider_cli_rejects_azure_visibility_outside_owned_homes(monkeypatch, tmp_path):
     monkeypatch.setenv("HOME", os.fspath(tmp_path / "home"))
-    monkeypatch.setenv("KIROCREW_HOME", os.fspath(tmp_path / "crew"))
+    monkeypatch.setenv("AJCREW_HOME", os.fspath(tmp_path / "crew"))
     monkeypatch.setenv("AZURE_CONFIG_DIR", os.fspath(tmp_path.parent / "outside"))
 
     with pytest.raises(provider_cli_module.SetupError, match="must stay beneath HOME/.azure"):
@@ -1869,7 +1869,7 @@ def test_provider_cli_rejects_azure_visibility_outside_owned_homes(monkeypatch, 
 
 def test_provider_cli_rejects_host_azure_config_beneath_crew_home(monkeypatch, tmp_path):
     monkeypatch.setenv("HOME", os.fspath(tmp_path / "operator-home"))
-    monkeypatch.setenv("KIROCREW_HOME", os.fspath(tmp_path / "crew-home"))
+    monkeypatch.setenv("AJCREW_HOME", os.fspath(tmp_path / "crew-home"))
     monkeypatch.setenv("AZURE_CONFIG_DIR", os.fspath(tmp_path / "crew-home" / ".azure"))
     monkeypatch.setattr(provider_cli_module, "agent_writable_roots", lambda: ())
 
@@ -1881,8 +1881,8 @@ def test_provider_cli_accepts_only_pod_local_azure_config_in_a_pod(monkeypatch, 
     operator_home = tmp_path / "operator-home"
     pod_home = tmp_path / "pod-home"
     monkeypatch.setenv("HOME", os.fspath(operator_home))
-    monkeypatch.setenv("KIROCREW_HOME", os.fspath(pod_home))
-    monkeypatch.setenv("KIROCREW_POD", "1")
+    monkeypatch.setenv("AJCREW_HOME", os.fspath(pod_home))
+    monkeypatch.setenv("AJCREW_POD", "1")
     monkeypatch.setenv("AZURE_CONFIG_DIR", os.fspath(pod_home / ".azure"))
     monkeypatch.setenv("AZURE_EXTENSION_DIR", os.fspath(pod_home / ".azure" / "cliextensions"))
     monkeypatch.setattr(provider_cli_module, "agent_writable_roots", lambda: (pod_home,))
@@ -1897,27 +1897,27 @@ def test_provider_cli_accepts_only_pod_local_azure_config_in_a_pod(monkeypatch, 
         "AZURE_EXTENSION_DIR",
         os.fspath(operator_home / ".azure" / "cliextensions"),
     )
-    with pytest.raises(provider_cli_module.SetupError, match="must stay beneath KIROCREW_HOME"):
+    with pytest.raises(provider_cli_module.SetupError, match="must stay beneath AJCREW_HOME"):
         provider_cli_env("az")
 
 
 def _stub_az_spawn(monkeypatch, sandbox_stub):
     monkeypatch.setattr(
-        "kiro_crew.monitoring.provider_cli.resolve_provider_cli",
+        "aj_crew.monitoring.provider_cli.resolve_provider_cli",
         lambda _executable: sys.executable,
     )
     monkeypatch.setattr(
-        "kiro_crew.monitoring.provider_cli._audit_provider_cli",
+        "aj_crew.monitoring.provider_cli._audit_provider_cli",
         lambda *_args, **_kwargs: None,
     )
-    monkeypatch.setattr("kiro_crew.monitoring.provider_cli.sandboxed_spawn_argv", sandbox_stub)
+    monkeypatch.setattr("aj_crew.monitoring.provider_cli.sandboxed_spawn_argv", sandbox_stub)
 
 
 def _pod_azure_env(monkeypatch, operator_home, pod_home):
     monkeypatch.setattr(sandbox_module.Path, "home", staticmethod(lambda: operator_home))
     monkeypatch.setenv("HOME", os.fspath(operator_home))
-    monkeypatch.setenv("KIROCREW_HOME", os.fspath(pod_home))
-    monkeypatch.setenv("KIROCREW_POD", "1")
+    monkeypatch.setenv("AJCREW_HOME", os.fspath(pod_home))
+    monkeypatch.setenv("AJCREW_POD", "1")
     monkeypatch.setenv("AZURE_CONFIG_DIR", os.fspath(pod_home / ".azure"))
     monkeypatch.setenv("AZURE_EXTENSION_DIR", os.fspath(pod_home / ".azure" / "cliextensions"))
 
@@ -1940,7 +1940,7 @@ def test_pod_azure_spawn_carves_both_dirs_on_the_default_pod_layout(monkeypatch,
         calls.append(kwargs)
         return argv, kwargs["env"], None
 
-    pod_home = tmp_path / ".kirocrew-pods" / "p1"
+    pod_home = tmp_path / ".ajcrew-pods" / "p1"
     _stub_az_spawn(monkeypatch, _record)
     _pod_azure_env(monkeypatch, tmp_path, pod_home)
 
@@ -1969,7 +1969,7 @@ def test_host_azure_spawn_does_not_ask_the_shadow_guard(monkeypatch, tmp_path):
     monkeypatch.setattr(provider_cli_module, "carveout_shadowed_by_foreign_mask", _never_asked)
     monkeypatch.setattr(provider_cli_module, "agent_writable_roots", lambda: ())
     monkeypatch.setenv("HOME", os.fspath(tmp_path / "home"))
-    monkeypatch.setenv("KIROCREW_HOME", os.fspath(tmp_path / "crew"))
+    monkeypatch.setenv("AJCREW_HOME", os.fspath(tmp_path / "crew"))
 
     result = run_provider_cli("az", ["-c", "print('ok')"], timeout=5)
 

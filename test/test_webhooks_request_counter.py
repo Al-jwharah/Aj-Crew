@@ -1,4 +1,4 @@
-"""``kirocrew.webhook.requests`` over the WHOLE population it claims to count.
+"""``ajcrew.webhook.requests`` over the WHOLE population it claims to count.
 
 The series says it counts every inbound request the endpoint decides, and the
 run-history ring is only part of that: ``api_hooks_agent`` turns a request away
@@ -30,9 +30,9 @@ from unittest.mock import patch
 import pytest
 from webhooks_api_helpers import _payload, _req, wired_fixture  # noqa: F401
 
-from kiro_crew import webhooks
-from kiro_crew.dashboard.handlers import hooks as H
-from kiro_crew.metrics import events as ev
+from aj_crew import webhooks
+from aj_crew.dashboard.handlers import hooks as H
+from aj_crew.metrics import events as ev
 
 
 class _CapturingRecorder:
@@ -49,7 +49,7 @@ class _CapturingRecorder:
 @pytest.fixture
 def rec():
     r = _CapturingRecorder()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=r):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=r):
         yield r
 
 
@@ -139,18 +139,16 @@ def test_count_request_records_nothing_to_the_run_store(rec, wired):  # noqa: F8
 
 def test_count_request_never_raises_when_the_recorder_is_broken():
     """A refusal path must answer its caller even if telemetry is wedged."""
-    with patch(
-        "kiro_crew.metrics.provider.get_recorder", side_effect=RuntimeError("provider down")
-    ):
+    with patch("aj_crew.metrics.provider.get_recorder", side_effect=RuntimeError("provider down")):
         webhooks.count_request(webhooks.METRIC_OUTCOME_THROTTLED)
 
 
 def test_nothing_is_recorded_with_telemetry_off():
-    from kiro_crew.metrics.recorder import MetricsRecorder
+    from aj_crew.metrics.recorder import MetricsRecorder
 
     off = MetricsRecorder(None)
     assert off.enabled is False
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=off):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=off):
         webhooks.count_request(webhooks.METRIC_OUTCOME_THROTTLED)
 
 

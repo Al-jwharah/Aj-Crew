@@ -60,13 +60,13 @@ describe('gauge instruments', () => {
     vi.mocked(api.telemetryStartup).mockResolvedValue(resp({
       other: [
         {
-          name: 'kirocrew.process.threads.os',
+          name: 'ajcrew.process.threads.os',
           kind: 'gauge',
           latest: 72,
           by_attr: {},
         },
         {
-          name: 'kirocrew.mcp.warm_pool.acquire',
+          name: 'ajcrew.mcp.warm_pool.acquire',
           kind: 'counter',
           total: 4,
           by_attr: { 'result=hit': 3, 'result=miss': 1 },
@@ -77,16 +77,16 @@ describe('gauge instruments', () => {
     render(<TelemetryPanel />, { wrapper: Wrapper })
 
     await waitFor(() => {
-      expect(screen.getByText('kirocrew.process.threads.os')).toBeInTheDocument()
+      expect(screen.getByText('ajcrew.process.threads.os')).toBeInTheDocument()
     })
-    const gaugeRow = screen.getByText('kirocrew.process.threads.os').closest('div')!
+    const gaugeRow = screen.getByText('ajcrew.process.threads.os').closest('div')!
     // The one number a gauge carries is `latest` — 72 here. A zero would mean
     // the panel read count/total, the exact regression this test pins.
     expect(gaugeRow.textContent).toContain('72')
     expect(gaugeRow.textContent).not.toMatch(/\b0\b/)
 
     // The counter keeps its summed rendering untouched.
-    const counterRow = screen.getByText('kirocrew.mcp.warm_pool.acquire').closest('div')!
+    const counterRow = screen.getByText('ajcrew.mcp.warm_pool.acquire').closest('div')!
     expect(counterRow.textContent).toContain('4')
 
     // Both section headings are present and distinct.
@@ -98,7 +98,7 @@ describe('gauge instruments', () => {
     vi.mocked(api.telemetryStartup).mockResolvedValue(resp({
       other: [
         {
-          name: 'kirocrew.process.memory.rss_bytes',
+          name: 'ajcrew.process.memory.rss_bytes',
           kind: 'gauge',
           latest: 4402341888,
           by_attr: { 'pid=5346': 4402341888, 'pid=9121': 287309824 },
@@ -109,7 +109,7 @@ describe('gauge instruments', () => {
     render(<TelemetryPanel />, { wrapper: Wrapper })
 
     await waitFor(() => {
-      expect(screen.getByText('kirocrew.process.memory.rss_bytes')).toBeInTheDocument()
+      expect(screen.getByText('ajcrew.process.memory.rss_bytes')).toBeInTheDocument()
     })
     // A raw 4,402,341,888 forces digit-counting; byte gauges render in GB/GiB
     // units with the exact value preserved in the title attribute.

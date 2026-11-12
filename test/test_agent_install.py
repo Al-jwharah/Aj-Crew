@@ -23,8 +23,8 @@ from agent_helpers import _run_install
 from mcp_merge_helpers import DEFAULT_MANAGED_MCPS as _DEFAULT_MANAGED_MCPS
 from mcp_merge_helpers import bundled_defaults as _bundled_defaults
 
-from kiro_crew import agent_state
-from kiro_crew.agent import _MANAGED_MCP_ENTRY_KEYS
+from aj_crew import agent_state
+from aj_crew.agent import _MANAGED_MCP_ENTRY_KEYS
 
 
 def _reject_json_constant(name: str):  # pragma: no cover - raises by design
@@ -63,7 +63,7 @@ def _sidecar_unreadable_once(monkeypatch, attr: str = "get_model_managed") -> li
 
 class TestInstallAgent:
     def test_fresh_install_generates_from_defaults(self, tmp_path: Path):
-        """No existing kirocrew.json → config built from defaults."""
+        """No existing ajcrew.json → config built from defaults."""
         cfg_dir = _bundled_defaults(tmp_path)
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
@@ -73,7 +73,7 @@ class TestInstallAgent:
     def test_fresh_install_applies_bom_saved_user_overrides(self, tmp_path: Path):
         """An agent.json saved with a UTF-8 byte-order mark still overrides."""
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir()
         (user_home / "agent.json").write_bytes(
             codecs.BOM_UTF8 + json.dumps({"model": "user-pick"}).encode("utf-8")
@@ -86,18 +86,18 @@ class TestInstallAgent:
     def test_fresh_install_preserves_safe_managed_server_overrides(self, tmp_path: Path):
         """A clean rebuild keeps preferences without ceding invocation ownership."""
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir()
         (user_home / "agent.json").write_text(
             json.dumps(
                 {
                     "mcpServers": {
-                        "kirocrew-core": {
+                        "ajcrew-core": {
                             "command": "/tmp/untrusted",
                             "args": ["other"],
                             "url": "https://example.invalid/mcp",
                             "timeout": 45,
-                            "env": {"MINE": "keep", "KIROCREW_HOME": "/tmp/wrong"},
+                            "env": {"MINE": "keep", "AJCREW_HOME": "/tmp/wrong"},
                             "autoApprove": ["unreviewed_tool"],
                         }
                     }
@@ -106,30 +106,30 @@ class TestInstallAgent:
         )
 
         path = _run_install(tmp_path, cfg_dir)
-        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["kirocrew-core"]
+        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["ajcrew-core"]
 
-        assert entry["command"] == "/usr/bin/kirocrew"
+        assert entry["command"] == "/usr/bin/ajcrew"
         assert entry["args"] == ["mcp-core"]
         assert "url" not in entry
         assert entry["timeout"] == 45
         assert entry["env"]["MINE"] == "keep"
-        assert entry["env"].get("KIROCREW_HOME") != "/tmp/wrong"
+        assert entry["env"].get("AJCREW_HOME") != "/tmp/wrong"
         assert "autoApprove" not in entry
 
     def test_fresh_install_drops_unsupported_entry_keys(self, tmp_path: Path):
         """A managed entry carries only our fields plus the user's own.
 
         kiro-cli rejects the WHOLE agent for an unknown field, so one stray ``cwd`` on a
-        managed server would take every Kiro Crew tool down.
+        managed server would take every Aj Crew tool down.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir()
         (user_home / "agent.json").write_text(
             json.dumps(
                 {
                     "mcpServers": {
-                        "kirocrew-core": {
+                        "ajcrew-core": {
                             "cwd": "/tmp/elsewhere",
                             "initializationOptions": {"x": 1},
                             "url": "https://example.invalid/mcp",
@@ -145,7 +145,7 @@ class TestInstallAgent:
         )
 
         path = _run_install(tmp_path, cfg_dir)
-        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["kirocrew-core"]
+        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["ajcrew-core"]
 
         # The supported customizations survive -- that is the fix.
         assert entry["timeout"] == 45
@@ -166,15 +166,15 @@ class TestInstallAgent:
         cfg_dir = _bundled_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir(exist_ok=True)
-        (kiro_dir / "kirocrew.json").write_text(
+        (kiro_dir / "ajcrew.json").write_text(
             json.dumps(
                 {
                     "model": "claude-user-custom",
                     "tools": [],
                     "allowedTools": [],
                     "mcpServers": {
-                        "kirocrew-core": {
-                            "command": "/old/path/kirocrew",
+                        "ajcrew-core": {
+                            "command": "/old/path/ajcrew",
                             "args": ["mcp-core"],
                             "cwd": "/tmp/elsewhere",
                             "timeout": 30,
@@ -187,7 +187,7 @@ class TestInstallAgent:
         )
 
         path = _run_install(tmp_path, cfg_dir)
-        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["kirocrew-core"]
+        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["ajcrew-core"]
 
         assert entry["timeout"] == 30
         assert entry["env"]["MINE"] == "keep"
@@ -204,13 +204,13 @@ class TestInstallAgent:
         the program. Case variants matter: Windows env names are case-insensitive.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir()
         (user_home / "agent.json").write_text(
             json.dumps(
                 {
                     "mcpServers": {
-                        "kirocrew-core": {
+                        "ajcrew-core": {
                             "env": {
                                 "PATH": "/tmp/evil/bin",
                                 "BASH_ENV": "/tmp/evil.sh",
@@ -231,9 +231,9 @@ class TestInstallAgent:
 
         # Simulated DEFAULT install, so no data-home pin is emitted and the
         # assertion below can be an exact equality on the whole env.
-        with patch("kiro_crew.agent._valid_override_home", return_value=None):
+        with patch("aj_crew.agent._valid_override_home", return_value=None):
             path = _run_install(tmp_path, cfg_dir)
-        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["kirocrew-core"]
+        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["ajcrew-core"]
 
         # The user's own variable is still preserved.
         assert entry["env"] == {"MINE": "keep"}
@@ -246,15 +246,15 @@ class TestInstallAgent:
         reject. All three are listed so a check naming only ``NaN`` fails.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir()
         (user_home / "agent.json").write_text(
-            '{"mcpServers": {"kirocrew-core": {"timeout": ' + literal + "}}}"
+            '{"mcpServers": {"ajcrew-core": {"timeout": ' + literal + "}}}"
         )
 
         path = _run_install(tmp_path, cfg_dir)
         raw = path.read_text(encoding="utf-8")
-        entry = json.loads(raw)["mcpServers"]["kirocrew-core"]
+        entry = json.loads(raw)["mcpServers"]["ajcrew-core"]
 
         assert "timeout" not in entry
         # The emitted file is parseable by a STRICT reader, which is the property
@@ -269,24 +269,24 @@ class TestInstallAgent:
         dropping the list would re-expose every tool the user named correctly.
         ``mcp.honour_auto_approve`` is on, or the floor drops the key and nothing is filtered.
         """
-        from kiro_crew.config import live
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config import live
+        from aj_crew.config.loader import AjCrewConfig
 
-        _cfg = KiroCrewConfig()
+        _cfg = AjCrewConfig()
         _cfg.mcp.honour_auto_approve = True
         monkeypatch.setattr(live, "snapshot", lambda: _cfg)
         cfg_dir = _bundled_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir(exist_ok=True)
-        (kiro_dir / "kirocrew.json").write_text(
+        (kiro_dir / "ajcrew.json").write_text(
             json.dumps(
                 {
                     "model": "claude-user-custom",
                     "tools": [],
                     "allowedTools": [],
                     "mcpServers": {
-                        "kirocrew-core": {
-                            "command": "/old/path/kirocrew",
+                        "ajcrew-core": {
+                            "command": "/old/path/ajcrew",
                             "args": ["mcp-core"],
                             "disabledTools": ["delete_file", 1, None, {"a": 1}],
                             "autoApprove": ["read_file", 2],
@@ -298,7 +298,7 @@ class TestInstallAgent:
 
         path = _run_install(tmp_path, cfg_dir)
         raw = path.read_text(encoding="utf-8")
-        entry = json.loads(raw)["mcpServers"]["kirocrew-core"]
+        entry = json.loads(raw)["mcpServers"]["ajcrew-core"]
 
         # The correctly-named guard survives its malformed neighbours.
         assert entry["disabledTools"] == ["delete_file"]
@@ -314,13 +314,13 @@ class TestInstallAgent:
         the same reason as env entries: a value we invent is not the one they wrote.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir()
         (user_home / "agent.json").write_text(
             json.dumps(
                 {
                     "mcpServers": {
-                        "kirocrew-core": {
+                        "ajcrew-core": {
                             "disabled": "false",
                             "timeout": "45",
                             "disabledTools": "delete_file",
@@ -333,57 +333,57 @@ class TestInstallAgent:
         )
 
         path = _run_install(tmp_path, cfg_dir)
-        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["kirocrew-core"]
+        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["ajcrew-core"]
 
         for ill_typed in ("disabled", "timeout", "disabledTools"):
             assert ill_typed not in entry, ill_typed
         # The well-typed sibling in the same entry still survives, so one bad
         # value does not discard the rest of the user's customization.
         assert entry["env"]["MINE"] == "keep"
-        assert entry["command"] == "/usr/bin/kirocrew"
+        assert entry["command"] == "/usr/bin/ajcrew"
 
     def test_fresh_install_drops_a_boolean_timeout(self, tmp_path: Path):
         """``bool`` is an ``int`` subclass, so a bare isinstance check leaks here."""
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir()
         (user_home / "agent.json").write_text(
-            json.dumps({"mcpServers": {"kirocrew-core": {"timeout": True}}})
+            json.dumps({"mcpServers": {"ajcrew-core": {"timeout": True}}})
         )
 
         path = _run_install(tmp_path, cfg_dir)
-        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["kirocrew-core"]
+        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["ajcrew-core"]
 
         assert "timeout" not in entry
 
     def test_fresh_install_strips_reserved_control_env_keys(self, tmp_path: Path):
         """agent.json cannot smuggle control-plane env vars into a managed server.
 
-        ``KIROCREW_APPROVAL_MODE`` on kirocrew-core would give every ``spawn_run``
+        ``AJCREW_APPROVAL_MODE`` on ajcrew-core would give every ``spawn_run``
         subagent auto-approval, and ``PYTHONPATH`` would run a ``sitecustomize`` inside
         the process holding the API secret.
 
-        ``env.sanitize_spec_env`` refuses the ``KIROCREW_`` and ``PYTHON`` namespaces by
+        ``env.sanitize_spec_env`` refuses the ``AJCREW_`` and ``PYTHON`` namespaces by
         prefix, case-insensitively (Windows env names are). The ``*NOT_YET_INVENTED``
         names stand for variables nobody has added yet.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir()
         (user_home / "agent.json").write_text(
             json.dumps(
                 {
                     "mcpServers": {
-                        "kirocrew-core": {
+                        "ajcrew-core": {
                             "env": {
                                 "MINE": "keep",
-                                "KIROCREW_APPROVAL_MODE": "auto",
-                                "KIROCREW_SESSION_KEY": "forged",
-                                "KIROCREW_INTERNAL_SECRET": "forged",
-                                "KIROCREW_PRINCIPAL": "forged",
-                                "KIROCREW_CLI": "1",
-                                "KIROCREW_NOT_YET_INVENTED": "forged",
-                                "Kirocrew_Approval_Mode": "auto",
+                                "AJCREW_APPROVAL_MODE": "auto",
+                                "AJCREW_SESSION_KEY": "forged",
+                                "AJCREW_INTERNAL_SECRET": "forged",
+                                "AJCREW_PRINCIPAL": "forged",
+                                "AJCREW_CLI": "1",
+                                "AJCREW_NOT_YET_INVENTED": "forged",
+                                "Ajcrew_Approval_Mode": "auto",
                                 "pythonpath": "/x/evil-lowercase",
                                 "PYTHONPATH": "/x/evil",
                                 "PYTHONHOME": "/x/evil",
@@ -406,17 +406,17 @@ class TestInstallAgent:
         )
 
         path = _run_install(tmp_path, cfg_dir)
-        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["kirocrew-core"]
+        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["ajcrew-core"]
 
         assert entry["env"]["MINE"] == "keep"
         for reserved in (
-            "KIROCREW_APPROVAL_MODE",
-            "KIROCREW_SESSION_KEY",
-            "KIROCREW_INTERNAL_SECRET",
-            "KIROCREW_PRINCIPAL",
-            "KIROCREW_CLI",
-            "KIROCREW_NOT_YET_INVENTED",
-            "Kirocrew_Approval_Mode",
+            "AJCREW_APPROVAL_MODE",
+            "AJCREW_SESSION_KEY",
+            "AJCREW_INTERNAL_SECRET",
+            "AJCREW_PRINCIPAL",
+            "AJCREW_CLI",
+            "AJCREW_NOT_YET_INVENTED",
+            "Ajcrew_Approval_Mode",
             "pythonpath",
             "PYTHONPATH",
             "PYTHONHOME",
@@ -435,7 +435,7 @@ class TestInstallAgent:
             assert reserved not in entry["env"], reserved
 
     def test_refresh_strips_reserved_control_env_keys(self, tmp_path: Path):
-        """The refresh path (existing kirocrew.json) scrubs the same reserved keys.
+        """The refresh path (existing ajcrew.json) scrubs the same reserved keys.
 
         Asserted on this path too because the shared enforcer is what makes the
         two agree -- a key stripped on one emit path and preserved on the other
@@ -449,30 +449,30 @@ class TestInstallAgent:
             "tools": [],
             "allowedTools": [],
             "mcpServers": {
-                "kirocrew-core": {
-                    "command": "/old/path/kirocrew",
+                "ajcrew-core": {
+                    "command": "/old/path/ajcrew",
                     "args": ["mcp-core"],
                     "env": {
                         "MINE": "keep",
-                        "KIROCREW_APPROVAL_MODE": "auto",
-                        "KIROCREW_CLI": "1",
-                        "KIROCREW_NOT_YET_INVENTED": "forged",
+                        "AJCREW_APPROVAL_MODE": "auto",
+                        "AJCREW_CLI": "1",
+                        "AJCREW_NOT_YET_INVENTED": "forged",
                         "PYTHONPATH": "/x/evil",
                         "LD_PRELOAD": "/x/evil.so",
                     },
                 },
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         path = _run_install(tmp_path, cfg_dir)
-        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["kirocrew-core"]
+        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["ajcrew-core"]
 
         assert entry["env"]["MINE"] == "keep"
         for reserved in (
-            "KIROCREW_APPROVAL_MODE",
-            "KIROCREW_CLI",
-            "KIROCREW_NOT_YET_INVENTED",
+            "AJCREW_APPROVAL_MODE",
+            "AJCREW_CLI",
+            "AJCREW_NOT_YET_INVENTED",
             "PYTHONPATH",
             "LD_PRELOAD",
         ):
@@ -486,20 +486,20 @@ class TestInstallAgent:
         abort the whole config rebuild over a single bad agent.json value.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir()
         (user_home / "agent.json").write_text(
-            json.dumps({"mcpServers": {"kirocrew-core": {"env": "not-a-dict"}}})
+            json.dumps({"mcpServers": {"ajcrew-core": {"env": "not-a-dict"}}})
         )
 
         path = _run_install(tmp_path, cfg_dir)
-        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["kirocrew-core"]
+        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["ajcrew-core"]
 
-        assert entry["command"] == "/usr/bin/kirocrew"
+        assert entry["command"] == "/usr/bin/ajcrew"
         # The malformed string is discarded rather than fed to dict(...); any
-        # remaining ``env`` key is only Kiro Crew's own KIROCREW_HOME pin (the
+        # remaining ``env`` key is only Aj Crew's own AJCREW_HOME pin (the
         # test harness's tmp_path counts as an override home).
-        assert set(entry.get("env", {})) <= {"KIROCREW_HOME"}
+        assert set(entry.get("env", {})) <= {"AJCREW_HOME"}
 
     def test_fresh_install_drops_non_string_env_values(self, tmp_path: Path):
         """An ill-typed ``env`` value never reaches the emitted spec.
@@ -508,13 +508,13 @@ class TestInstallAgent:
         ``{"PORT": 3000}``. Bad entries are dropped, not coerced; good siblings survive.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir()
         (user_home / "agent.json").write_text(
             json.dumps(
                 {
                     "mcpServers": {
-                        "kirocrew-core": {
+                        "ajcrew-core": {
                             "env": {
                                 "GOOD": "kept",
                                 "PORT": 3000,
@@ -530,7 +530,7 @@ class TestInstallAgent:
         )
 
         path = _run_install(tmp_path, cfg_dir)
-        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["kirocrew-core"]
+        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["ajcrew-core"]
 
         assert entry["env"]["GOOD"] == "kept"
         for bad in ("PORT", "FLAG", "NOTHING", "LISTY", "NESTED"):
@@ -546,13 +546,13 @@ class TestInstallAgent:
         ``env``. Case variants matter because Windows env names are case-insensitive.
         """
         cfg_dir = _bundled_defaults(tmp_path)
-        user_home = tmp_path / "kirocrew_home"
+        user_home = tmp_path / "ajcrew_home"
         user_home.mkdir(exist_ok=True)
         (user_home / "agent.json").write_text(
             json.dumps(
                 {
                     "mcpServers": {
-                        "kirocrew-cron": {
+                        "ajcrew-cron": {
                             "env": {
                                 "HOME": "/x/evil-home",
                                 "USERPROFILE": "C:\\x\\evil-home",
@@ -569,9 +569,9 @@ class TestInstallAgent:
 
         # Simulated DEFAULT install: no override home, so nothing pins the child
         # and the declared HOME would otherwise decide where our data lives.
-        with patch("kiro_crew.agent._valid_override_home", return_value=None):
+        with patch("aj_crew.agent._valid_override_home", return_value=None):
             path = _run_install(tmp_path, cfg_dir)
-        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["kirocrew-cron"]
+        entry = json.loads(path.read_text(encoding="utf-8"))["mcpServers"]["ajcrew-cron"]
 
         for spelling in ("HOME", "USERPROFILE", "userprofile", "UserProfile", "Home"):
             assert spelling not in entry["env"], spelling
@@ -580,7 +580,7 @@ class TestInstallAgent:
         assert entry["env"] == {"MINE": "keep"}
 
     def test_existing_config_preserves_user_model(self, tmp_path: Path):
-        """Existing kirocrew.json → user's model choice survives restart."""
+        """Existing ajcrew.json → user's model choice survives restart."""
         cfg_dir = _bundled_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir(exist_ok=True)
@@ -591,7 +591,7 @@ class TestInstallAgent:
             "mcpServers": {},
             "toolsSettings": {"execute_bash": {"deniedCommands": ["old"]}},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
@@ -606,7 +606,7 @@ class TestInstallAgent:
         assert config["model"] == "claude-default"
         # kiro spec must stay schema-clean; managed-state lives in the sidecar.
         assert "model_managed" not in config
-        assert agent_state.get_model_managed("kirocrew") is True
+        assert agent_state.get_model_managed("ajcrew") is True
 
     @pytest.mark.parametrize(
         ("model", "managed", "want_model"),
@@ -642,13 +642,13 @@ class TestInstallAgent:
             "allowedTools": [],
             "mcpServers": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
         assert config["model"] == want_model
         assert "model_managed" not in config
-        assert agent_state.get_model_managed("kirocrew") is managed
+        assert agent_state.get_model_managed("ajcrew") is managed
 
     def test_legacy_config_without_marker_frozen(self, tmp_path: Path):
         """A legacy config (no marker) stays frozen: model untouched."""
@@ -661,13 +661,13 @@ class TestInstallAgent:
             "allowedTools": [],
             "mcpServers": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
         assert config["model"] == "claude-legacy-4.6"
         assert "model_managed" not in config
-        assert agent_state.get_model_managed("kirocrew") is None
+        assert agent_state.get_model_managed("ajcrew") is None
 
     @pytest.mark.parametrize(
         ("recorded", "expected_after"),
@@ -686,19 +686,19 @@ class TestInstallAgent:
         """
         cfg_dir = _bundled_defaults(tmp_path)
         if recorded is not None:
-            agent_state.set_model_managed("kirocrew", recorded)
+            agent_state.set_model_managed("ajcrew", recorded)
         seen = _sidecar_unreadable_once(monkeypatch, "claim_model_managed_if_unset")
 
         with pytest.raises(OSError):
             _run_install(tmp_path, cfg_dir)
 
         assert seen == [True], "the seed must reach the sidecar through the strict claim"
-        assert agent_state.get_model_managed("kirocrew") is recorded
-        assert not (tmp_path / "kiro_agents" / "kirocrew.json").exists()
+        assert agent_state.get_model_managed("ajcrew") is recorded
+        assert not (tmp_path / "kiro_agents" / "ajcrew.json").exists()
 
         path = _run_install(tmp_path, cfg_dir)
         assert json.loads(path.read_text(encoding="utf-8"))["model"] == "claude-default"
-        assert agent_state.get_model_managed("kirocrew") is expected_after
+        assert agent_state.get_model_managed("ajcrew") is expected_after
 
     def test_managed_resync_holds_on_an_unreadable_sidecar_then_applies_next_pass(
         self, tmp_path: Path, monkeypatch, caplog
@@ -717,20 +717,20 @@ class TestInstallAgent:
             "allowedTools": [],
             "mcpServers": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
-        agent_state.set_model_managed("kirocrew", True)
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
+        agent_state.set_model_managed("ajcrew", True)
         seen = _sidecar_unreadable_once(monkeypatch)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             path = _run_install(tmp_path, cfg_dir)
         held = json.loads(path.read_text(encoding="utf-8"))
 
         assert seen == [True], "the re-sync read must reach the sidecar strict"
         assert held["model"] == "claude-old-default"
         assert "ReadFile" in held["tools"], "held, not rebuilt from defaults"
-        assert agent_state.get_model_managed("kirocrew") is True
+        assert agent_state.get_model_managed("ajcrew") is True
         assert any(
-            "leaving the kirocrew spec's model as it is" in record.getMessage()
+            "leaving the ajcrew spec's model as it is" in record.getMessage()
             for record in caplog.records
         )
 
@@ -754,7 +754,7 @@ class TestInstallAgent:
             "toolsSettings": {"execute_bash": {"deniedCommands": ["stale"]}},
             "hooks": {"old": "hook"},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
@@ -763,7 +763,7 @@ class TestInstallAgent:
         assert config["hooks"] == {"preToolUse": "audit"}
 
     def test_existing_config_refreshes_dynamic_mcp_servers(self, tmp_path: Path):
-        """kirocrew-cron and kirocrew-core commands are always refreshed."""
+        """ajcrew-cron and ajcrew-core commands are always refreshed."""
         cfg_dir = _bundled_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir(exist_ok=True)
@@ -772,15 +772,15 @@ class TestInstallAgent:
             "tools": [],
             "allowedTools": [],
             "mcpServers": {
-                "kirocrew-cron": {"command": "/old/path/kirocrew", "args": ["mcp-cron"]},
+                "ajcrew-cron": {"command": "/old/path/ajcrew", "args": ["mcp-cron"]},
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
-        assert config["mcpServers"]["kirocrew-cron"]["command"] == "/usr/bin/kirocrew"
-        assert config["mcpServers"]["kirocrew-core"]["command"] == "/usr/bin/kirocrew"
+        assert config["mcpServers"]["ajcrew-cron"]["command"] == "/usr/bin/ajcrew"
+        assert config["mcpServers"]["ajcrew-core"]["command"] == "/usr/bin/ajcrew"
 
     def test_existing_config_keeps_a_hand_added_mcp_auto_approve(self, tmp_path: Path):
         """A hand-added ``autoApprove`` survives a restart.
@@ -797,13 +797,13 @@ class TestInstallAgent:
             "tools": [],
             "allowedTools": [],
             "mcpServers": {
-                "kirocrew-cron": {
-                    "command": "/old/path/kirocrew",
+                "ajcrew-cron": {
+                    "command": "/old/path/ajcrew",
                     "args": ["mcp-cron"],
                     "autoApprove": ["cron_list", "cron_add"],
                 },
-                "kirocrew-core": {
-                    "command": "/old/path/kirocrew",
+                "ajcrew-core": {
+                    "command": "/old/path/ajcrew",
                     "args": ["mcp-core"],
                     "autoApprove": ["learn_list"],
                 },
@@ -815,14 +815,14 @@ class TestInstallAgent:
             "toolsSettings": {"execute_bash": {"deniedCommands": []}},
             "hooks": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
-        # kirocrew-cron/core: command still refreshed, and the owner's grant kept
-        assert config["mcpServers"]["kirocrew-cron"]["command"] == "/usr/bin/kirocrew"
-        assert config["mcpServers"]["kirocrew-cron"]["autoApprove"] == ["cron_list", "cron_add"]
-        assert config["mcpServers"]["kirocrew-core"]["autoApprove"] == ["learn_list"]
+        # ajcrew-cron/core: command still refreshed, and the owner's grant kept
+        assert config["mcpServers"]["ajcrew-cron"]["command"] == "/usr/bin/ajcrew"
+        assert config["mcpServers"]["ajcrew-cron"]["autoApprove"] == ["cron_list", "cron_add"]
+        assert config["mcpServers"]["ajcrew-core"]["autoApprove"] == ["learn_list"]
         # a user's own server is the reported case, and it is kept too
         assert config["mcpServers"]["builder-mcp"]["autoApprove"] == ["ReadInternalWebsites"]
         # hooks are always refreshed from bundled defaults; the retired
@@ -838,8 +838,8 @@ class TestInstallAgent:
         switch that does it, and the server itself stays reachable: only the
         exemption goes, so the tool shows an approval card instead.
         """
-        from kiro_crew.config import live as _live
-        from kiro_crew.config.loader import KiroCrewConfig as _Cfg
+        from aj_crew.config import live as _live
+        from aj_crew.config.loader import AjCrewConfig as _Cfg
 
         _cfg = _Cfg()
         _cfg.mcp.honour_auto_approve = False
@@ -848,7 +848,7 @@ class TestInstallAgent:
         cfg_dir = _bundled_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir(exist_ok=True)
-        (kiro_dir / "kirocrew.json").write_text(
+        (kiro_dir / "ajcrew.json").write_text(
             json.dumps(
                 {
                     "model": "claude-user-custom",
@@ -877,12 +877,12 @@ class TestInstallAgent:
         """The rebuild never turns a kept ``autoApprove`` verb into an ``allowedTools`` entry.
 
         kiro-cli has no ``autoApprove`` field; the skill view it runs carries the grant,
-        rebuilt at every spawn, so ``kirocrew.json`` holds none that could outlive the
+        rebuilt at every spawn, so ``ajcrew.json`` holds none that could outlive the
         verb when the owner narrows or deletes the list or turns the opt-in off. A grant
         the owner wrote in ``allowedTools`` is theirs, and the opt-in does not touch it.
         """
-        from kiro_crew.config import live as _live
-        from kiro_crew.config.loader import KiroCrewConfig as _Cfg
+        from aj_crew.config import live as _live
+        from aj_crew.config.loader import AjCrewConfig as _Cfg
 
         _cfg = _Cfg()
         _cfg.mcp.honour_auto_approve = honour
@@ -892,7 +892,7 @@ class TestInstallAgent:
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir(exist_ok=True)
         own = "@builder-mcp/OwnersOwn"
-        (kiro_dir / "kirocrew.json").write_text(
+        (kiro_dir / "ajcrew.json").write_text(
             json.dumps(
                 {
                     "model": "claude-user-custom",
@@ -916,15 +916,15 @@ class TestInstallAgent:
             granted = [r for r in config["allowedTools"] if r.startswith("@builder-mcp")]
             assert granted == [own]
 
-    def test_kirocrew_mcp_json_overrides_kiro_mcp(self, tmp_path: Path, monkeypatch):
-        """~/.kirocrew/mcp.json overrides ~/.kiro/settings/mcp.json for kirocrew agent.
+    def test_ajcrew_mcp_json_overrides_kiro_mcp(self, tmp_path: Path, monkeypatch):
+        """~/.ajcrew/mcp.json overrides ~/.kiro/settings/mcp.json for ajcrew agent.
 
         The subject is which file wins, so the opt-in is pinned on: the fixture's
         ``autoApprove`` is hand-added and the floor would otherwise drop it from
         both candidates, leaving nothing to compare.
         """
-        from kiro_crew.config import live as _live
-        from kiro_crew.config.loader import KiroCrewConfig as _Cfg
+        from aj_crew.config import live as _live
+        from aj_crew.config.loader import AjCrewConfig as _Cfg
 
         _cfg = _Cfg()
         _cfg.mcp.honour_auto_approve = True
@@ -945,9 +945,9 @@ class TestInstallAgent:
                 },
             },
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
-        # kirocrew mcp.json overrides args (removes --include-tools)
-        mc_home = tmp_path / "kirocrew_home"
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
+        # ajcrew mcp.json overrides args (removes --include-tools)
+        mc_home = tmp_path / "ajcrew_home"
         mc_home.mkdir(exist_ok=True)
         (mc_home / "mcp.json").write_text(
             json.dumps(
@@ -961,12 +961,12 @@ class TestInstallAgent:
         )
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
-        # builder-mcp args overridden by kirocrew mcp.json (no tool-tag injection
+        # builder-mcp args overridden by ajcrew mcp.json (no tool-tag injection
         # on a public install — that downstream-edition wiring was removed)
         assert config["mcpServers"]["builder-mcp"]["args"] == []
-        # autoApprove preserved (not in kirocrew mcp.json)
+        # autoApprove preserved (not in ajcrew mcp.json)
         assert config["mcpServers"]["builder-mcp"]["autoApprove"] == ["ReadInternalWebsites"]
-        # new server added from kirocrew mcp.json
+        # new server added from ajcrew mcp.json
         assert config["mcpServers"]["new-server"]["command"] == "new-cmd"
 
     def test_new_managed_server_seeds_auto_approve(self, tmp_path: Path):
@@ -989,19 +989,19 @@ class TestInstallAgent:
         cfg_dir = _bundled_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir(exist_ok=True)
-        # Existing config has kirocrew-cron/core but NOT playwright-mcp
+        # Existing config has ajcrew-cron/core but NOT playwright-mcp
         existing = {
             "model": "claude-user-custom",
             "tools": [],
             "allowedTools": [],
             "mcpServers": {
-                "kirocrew-cron": {"command": "/old/kirocrew", "args": ["mcp-cron"]},
-                "kirocrew-core": {"command": "/old/kirocrew", "args": ["mcp-core"]},
+                "ajcrew-cron": {"command": "/old/ajcrew", "args": ["mcp-cron"]},
+                "ajcrew-core": {"command": "/old/ajcrew", "args": ["mcp-core"]},
             },
             "toolsSettings": {"execute_bash": {"deniedCommands": []}},
             "hooks": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         mcps = {
             **_DEFAULT_MANAGED_MCPS,
@@ -1035,7 +1035,7 @@ class TestInstallAgent:
             "toolsSettings": {"execute_bash": {"deniedCommands": []}},
             "hooks": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         mcps = {
             **_DEFAULT_MANAGED_MCPS,
@@ -1062,7 +1062,7 @@ class TestInstallAgent:
             "allowedTools": [],
             "mcpServers": {},
         }
-        (kiro_dir / "kirocrew.json").write_text(json.dumps(existing))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps(existing))
 
         path = _run_install(tmp_path, cfg_dir, clean=True)
         config = json.loads(path.read_text(encoding="utf-8"))
@@ -1077,12 +1077,12 @@ class TestInstallAgent:
         ],
     )
     def test_an_unusable_existing_spec_falls_back_to_defaults(self, tmp_path: Path, existing):
-        """Corrupt kirocrew.json, or valid JSON that is not a dict, falls back to
+        """Corrupt ajcrew.json, or valid JSON that is not a dict, falls back to
         build_agent_config()."""
         cfg_dir = _bundled_defaults(tmp_path)
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir(exist_ok=True)
-        (kiro_dir / "kirocrew.json").write_text(existing)
+        (kiro_dir / "ajcrew.json").write_text(existing)
 
         path = _run_install(tmp_path, cfg_dir)
         config = json.loads(path.read_text(encoding="utf-8"))
@@ -1095,7 +1095,7 @@ class TestInstallAgent:
         # No defaults.json written — bundled config is absent
         kiro_dir = tmp_path / "kiro_agents"
         kiro_dir.mkdir()
-        (kiro_dir / "kirocrew.json").write_text(json.dumps({"model": "x", "mcpServers": {}}))
+        (kiro_dir / "ajcrew.json").write_text(json.dumps({"model": "x", "mcpServers": {}}))
 
         with pytest.raises(RuntimeError, match="Cannot build agent config"):
             _run_install(tmp_path, cfg_dir)
@@ -1105,7 +1105,7 @@ class TestSecretReferenceRoutedByRawName:
     """A slashed server routed under its raw name stays one live entry across rebuilds."""
 
     def test_repeated_rebuilds_keep_one_live_entry(self, tmp_path: Path, monkeypatch) -> None:
-        from kiro_crew.agent_materialization import mcp_sources
+        from aj_crew.agent_materialization import mcp_sources
 
         cfg_dir = _bundled_defaults(tmp_path)
         (tmp_path / "fake_kiro_mcp.json").write_text(

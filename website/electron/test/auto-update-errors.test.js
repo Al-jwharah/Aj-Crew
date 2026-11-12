@@ -188,19 +188,19 @@ const { manualDownloadUrl, DOWNLOAD_BASE } = require("../auto-update");
 test("manualDownloadUrl: per-platform artifact on the byte host", () => {
   assert.strictEqual(
     manualDownloadUrl("nightly", "darwin"),
-    `${DOWNLOAD_BASE}/desktop/nightly/latest/KiroCrew.dmg`,
+    `${DOWNLOAD_BASE}/desktop/nightly/latest/AjCrew.dmg`,
   );
   assert.strictEqual(
     manualDownloadUrl("stable", "linux", "x64"),
-    `${DOWNLOAD_BASE}/desktop/stable/latest/KiroCrew-x86_64.AppImage`,
+    `${DOWNLOAD_BASE}/desktop/stable/latest/AjCrew-x86_64.AppImage`,
   );
   assert.strictEqual(
     manualDownloadUrl("insider", "darwin"),
-    `${DOWNLOAD_BASE}/desktop/insider/latest/KiroCrew.dmg`,
+    `${DOWNLOAD_BASE}/desktop/insider/latest/AjCrew.dmg`,
   );
   assert.strictEqual(
     manualDownloadUrl("nightly", "win32", "x64"),
-    `${DOWNLOAD_BASE}/desktop/nightly/latest/KiroCrew-Setup.exe`,
+    `${DOWNLOAD_BASE}/desktop/nightly/latest/AjCrew-Setup.exe`,
   );
 });
 
@@ -208,13 +208,13 @@ test("manualDownloadUrl: Windows publishes x64 on every known channel", () => {
   // The published basename is publish-windows.yml's contract.
   assert.strictEqual(
     manualDownloadUrl("insider", "win32", "x64"),
-    `${DOWNLOAD_BASE}/desktop/insider/latest/KiroCrew-Setup.exe`,
+    `${DOWNLOAD_BASE}/desktop/insider/latest/AjCrew-Setup.exe`,
   );
   // Stable publishes too, by promoting the verified bundle's installer rather
   // than rebuilding. Windows carries no channel restriction of its own.
   assert.strictEqual(
     manualDownloadUrl("stable", "win32", "x64"),
-    `${DOWNLOAD_BASE}/desktop/stable/latest/KiroCrew-Setup.exe`,
+    `${DOWNLOAD_BASE}/desktop/stable/latest/AjCrew-Setup.exe`,
   );
   // An unknown channel still yields nothing: a link there would be a 404, and
   // offering nothing beats offering a dead link.
@@ -225,7 +225,7 @@ test("manualDownloadUrl: Windows publishes x64 on every known channel", () => {
   // The arch gate is Windows-specific: the other platforms are unaffected.
   assert.strictEqual(
     manualDownloadUrl("stable", "darwin"),
-    `${DOWNLOAD_BASE}/desktop/stable/latest/KiroCrew.dmg`,
+    `${DOWNLOAD_BASE}/desktop/stable/latest/AjCrew.dmg`,
   );
 });
 
@@ -235,11 +235,11 @@ test("manualDownloadUrl: Linux picks the AppImage for the running arch", () => {
   // dead end this link exists to escape.
   assert.strictEqual(
     manualDownloadUrl("stable", "linux", "arm64"),
-    `${DOWNLOAD_BASE}/desktop/stable/latest/KiroCrew-aarch64.AppImage`,
+    `${DOWNLOAD_BASE}/desktop/stable/latest/AjCrew-aarch64.AppImage`,
   );
   assert.strictEqual(
     manualDownloadUrl("stable", "linux", "x64"),
-    `${DOWNLOAD_BASE}/desktop/stable/latest/KiroCrew-x86_64.AppImage`,
+    `${DOWNLOAD_BASE}/desktop/stable/latest/AjCrew-x86_64.AppImage`,
   );
   // The mac DMG is universal, so darwin must ignore the arch entirely.
   assert.strictEqual(
@@ -255,21 +255,21 @@ test("manualDownloadUrl: the link matches the format they installed", () => {
   // package manager then knows nothing about the copy they actually run.
   assert.strictEqual(
     manualDownloadUrl("stable", "linux", "x64", "deb"),
-    `${DOWNLOAD_BASE}/desktop/stable/latest/KiroCrew-x86_64.deb`,
+    `${DOWNLOAD_BASE}/desktop/stable/latest/AjCrew-x86_64.deb`,
   );
   assert.strictEqual(
     manualDownloadUrl("stable", "linux", "arm64", "rpm"),
-    `${DOWNLOAD_BASE}/desktop/stable/latest/KiroCrew-aarch64.rpm`,
+    `${DOWNLOAD_BASE}/desktop/stable/latest/AjCrew-aarch64.rpm`,
   );
   // No format, or one we do not publish, falls back to the AppImage rather than
   // inventing an extension no lane serves.
   assert.strictEqual(
     manualDownloadUrl("stable", "linux", "x64", ""),
-    `${DOWNLOAD_BASE}/desktop/stable/latest/KiroCrew-x86_64.AppImage`,
+    `${DOWNLOAD_BASE}/desktop/stable/latest/AjCrew-x86_64.AppImage`,
   );
   assert.strictEqual(
     manualDownloadUrl("stable", "linux", "x64", "pacman"),
-    `${DOWNLOAD_BASE}/desktop/stable/latest/KiroCrew-x86_64.AppImage`,
+    `${DOWNLOAD_BASE}/desktop/stable/latest/AjCrew-x86_64.AppImage`,
   );
 });
 
@@ -286,6 +286,8 @@ test("manualDownloadUrl: null wherever there is no publish lane", () => {
 });
 
 test("manualDownloadUrl: points at the same CDN the updater pulls from", () => {
-  // A manual reinstall must land on identical artifacts, not a different host.
-  assert.match(manualDownloadUrl("nightly", "darwin"), /^https:\/\/download\.crew\.kiro\.dev\//);
+  // A manual reinstall must land on identical artifacts, not a different host:
+  // the link is built on the one byte host this run names (test/_preload.cjs).
+  assert.strictEqual(DOWNLOAD_BASE, process.env.AJCREW_DOWNLOAD_BASE);
+  assert.ok(manualDownloadUrl("nightly", "darwin").startsWith(`${DOWNLOAD_BASE}/`));
 });

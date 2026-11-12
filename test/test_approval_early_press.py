@@ -27,7 +27,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.slack.renderer import (
+from aj_crew.slack.renderer import (
     TOOL_APPROVE_ACTION_PREFIX,
     SlackApprovalDecider,
     SlackRenderer,
@@ -35,12 +35,12 @@ from kiro_crew.slack.renderer import (
     build_approval_token,
     split_approval_token,
 )
-from kiro_crew.teams.approvals import TeamsApprovalDecider, registry_key
-from kiro_crew.teams.renderer import TeamsRenderer
-from kiro_crew.teams.transport import TEAMS_CAPABILITIES
-from kiro_crew.telegram.renderer import TelegramApprovalDecider, TelegramRenderer
-from kiro_crew.telegram.transport import TELEGRAM_CAPABILITIES
-from kiro_crew.testing.wait import await_until
+from aj_crew.teams.approvals import TeamsApprovalDecider, registry_key
+from aj_crew.teams.renderer import TeamsRenderer
+from aj_crew.teams.transport import TEAMS_CAPABILITIES
+from aj_crew.telegram.renderer import TelegramApprovalDecider, TelegramRenderer
+from aj_crew.telegram.transport import TELEGRAM_CAPABILITIES
+from aj_crew.testing.wait import await_until
 
 _SESSION = "telegram:1:0"
 _RID = "7"
@@ -306,7 +306,7 @@ class TestTelegramEarlyPress:
         key = TelegramApprovalDecider.key(_SESSION, _RID)
         TelegramApprovalDecider.arm(key, "n1")
         decider = TelegramApprovalDecider(session_key=_SESSION)
-        import kiro_crew.telegram.renderer as tg
+        import aj_crew.telegram.renderer as tg
 
         with pytest.MonkeyPatch.context() as mp:
             mp.setattr(tg, "_APPROVAL_TIMEOUT_S", 0.01)
@@ -466,7 +466,7 @@ class TestAReservationFromAClosedLoop:
         key = TelegramApprovalDecider.key(_SESSION, _RID)
         TelegramApprovalDecider._REGISTRY[key] = _future_on_a_closed_loop()
         decider = TelegramApprovalDecider(session_key=_SESSION)
-        import kiro_crew.telegram.renderer as tg
+        import aj_crew.telegram.renderer as tg
 
         with pytest.MonkeyPatch.context() as mp:
             mp.setattr(tg, "_APPROVAL_TIMEOUT_S", 0.01)
@@ -615,7 +615,7 @@ class TestSlackEarlyPress:
     async def test_an_unanswered_window_denies_with_the_expiry_cause(self) -> None:
         decider = SlackApprovalDecider(session_key=_SESSION)
         nonce = decider.reserve(_RID)
-        import kiro_crew.slack.renderer as sl
+        import aj_crew.slack.renderer as sl
 
         with pytest.MonkeyPatch.context() as mp:
             mp.setattr(sl, "_APPROVAL_TIMEOUT", 0.01)
@@ -933,7 +933,7 @@ class TestTeamsEarlyPress:
 
         class _Refusing(_PressingTeamsClient):
             async def send_card(self, conversation_id: str, card: dict, service_url: str) -> str:
-                from kiro_crew.teams.client import TeamsSendError
+                from aj_crew.teams.client import TeamsSendError
 
                 raise TeamsSendError("no")
 
@@ -951,7 +951,7 @@ class TestTeamsEarlyPress:
     async def test_an_unanswered_window_denies_with_the_expiry_cause(self) -> None:
         decider = TeamsApprovalDecider(session_key=_SESSION)
         decider.arm(_RID, "n1")
-        import kiro_crew.teams.approvals as tm
+        import aj_crew.teams.approvals as tm
 
         with pytest.MonkeyPatch.context() as mp:
             mp.setattr(tm, "APPROVAL_TIMEOUT_SECS", 0.01)
@@ -1021,12 +1021,12 @@ class TestTheSweepReachesTheRealRegistry:
     """
 
     def test_the_slack_sweep_is_the_class_that_holds_the_reservations(self) -> None:
-        from kiro_crew.slack import transport_dispatch as slack_dispatch
+        from aj_crew.slack import transport_dispatch as slack_dispatch
 
         assert slack_dispatch._APPROVAL_REGISTRY is SlackApprovalDecider
 
     def test_the_telegram_sweep_is_the_class_that_holds_the_reservations(self) -> None:
-        from kiro_crew.telegram import transport_dispatch as telegram_dispatch
+        from aj_crew.telegram import transport_dispatch as telegram_dispatch
 
         assert telegram_dispatch._APPROVAL_REGISTRY is TelegramApprovalDecider
 
@@ -1034,7 +1034,7 @@ class TestTheSweepReachesTheRealRegistry:
     async def test_substituting_the_slack_construction_seam_leaves_the_sweep_working(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.slack import transport_dispatch as slack_dispatch
+        from aj_crew.slack import transport_dispatch as slack_dispatch
 
         def spy(*a: Any, **k: Any) -> Any:
             return SlackApprovalDecider(*a, **k)
@@ -1050,7 +1050,7 @@ class TestTheSweepReachesTheRealRegistry:
     async def test_substituting_the_telegram_construction_seam_leaves_the_sweep_working(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.telegram import transport_dispatch as telegram_dispatch
+        from aj_crew.telegram import transport_dispatch as telegram_dispatch
 
         def spy(*a: Any, **k: Any) -> Any:
             return TelegramApprovalDecider(*a, **k)
@@ -1064,8 +1064,8 @@ class TestTheSweepReachesTheRealRegistry:
     @pytest.mark.parametrize(
         ("module_name", "seam"),
         [
-            ("kiro_crew.slack.transport_dispatch", "SlackApprovalDecider"),
-            ("kiro_crew.telegram.transport_dispatch", "TelegramApprovalDecider"),
+            ("aj_crew.slack.transport_dispatch", "SlackApprovalDecider"),
+            ("aj_crew.telegram.transport_dispatch", "TelegramApprovalDecider"),
         ],
     )
     def test_no_dispatcher_sweeps_through_its_construction_seam(

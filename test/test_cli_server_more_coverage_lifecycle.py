@@ -1,4 +1,4 @@
-"""The process commands of ``kiro_crew.cli_server``: stop, restart, service, logs and runs.
+"""The process commands of ``aj_crew.cli_server``: stop, restart, service, logs and runs.
 
 This file pins ``_stop`` (the service manager first, the gateway-lock holder a port
 probe misses, the whole-tree kill on Windows) and ``restart`` on an indeterminate lock,
@@ -22,11 +22,11 @@ from cli_server_more_coverage_helpers import (  # noqa: F401 -- the fixture is r
     sel_rec_fixture,
 )
 
-from kiro_crew import cli_server, platform_compat
-from kiro_crew.gateway_lock import LockHolder, LockProbeError
-from kiro_crew.service import linux as svc_linux
-from kiro_crew.service import macos as svc_macos
-from kiro_crew.service.common import Platform, RestartReport
+from aj_crew import cli_server, platform_compat
+from aj_crew.gateway_lock import LockHolder, LockProbeError
+from aj_crew.service import linux as svc_linux
+from aj_crew.service import macos as svc_macos
+from aj_crew.service.common import Platform, RestartReport
 
 # --------------------------------------------------------------------------
 # _stop
@@ -45,7 +45,7 @@ class TestStopViaService:
 
         monkeypatch.setattr(platform_compat, "find_listening_pids", unreachable)
         cli_server._stop(None)
-        assert "Stopped kirocrew service" in capsys.readouterr().out
+        assert "Stopped ajcrew service" in capsys.readouterr().out
         assert sel_rec.calls[0]["resources"].endswith("via=service")
 
     def test_explicit_port_bypasses_the_service(self, monkeypatch, sel_rec, capsys) -> None:
@@ -62,7 +62,7 @@ class TestStopViaService:
         with pytest.raises(SystemExit) as exc:
             cli_server._stop(8123)
         assert exc.value.code == 1
-        assert "No Kiro Crew gateway currently running on port 8123" in capsys.readouterr().out
+        assert "No Aj Crew gateway currently running on port 8123" in capsys.readouterr().out
         assert sel_rec.calls[-1]["outcome"] == "no_target"
 
 
@@ -70,7 +70,7 @@ class TestStopLockHolderFallback:
     """The port probe is not how single-instance is enforced -- gateway.lock
     is (gateway_lock.py). A gateway the port probe misses (unix-socket-only,
     or a probe blind spot) must still be VISIBLE through the lock, or
-    `kirocrew stop` reports "nothing running" the same moment `kirocrew
+    `ajcrew stop` reports "nothing running" the same moment `ajcrew
     gateway` refuses to start for a live pid -- the split-brain this fixes.
     The lock is an oracle, not a signalling path: a live holder is refused
     and named (lock path, pid, manual command) with one ``denied`` event, and
@@ -78,7 +78,7 @@ class TestStopLockHolderFallback:
     """
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class-scoped autouse fixture moved verbatim and no test in the cli_server coverage files calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class-scoped autouse fixture moved verbatim and no test in the cli_server coverage files calls monkeypatch.undo()
     def _arrange(self, monkeypatch):
         monkeypatch.setattr(cli_server, "resolve_client_port", lambda p: 5476)
         monkeypatch.setattr(cli_server.service_controller, "stop_service", lambda: False)
@@ -88,7 +88,7 @@ class TestStopLockHolderFallback:
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
         monkeypatch.setattr(cli_server, "_pid_exited", lambda pid: True)
         # flake-ok: pre-existing time.sleep stub moved verbatim; the stop path's exit poll returns at once and no test waits on real time
-        # nosemgrep: kirocrew.test-stdlib-clock-rebound -- pre-existing time.sleep stub moved verbatim so the stop path's exit poll returns at once
+        # nosemgrep: ajcrew.test-stdlib-clock-rebound -- pre-existing time.sleep stub moved verbatim so the stop path's exit poll returns at once
         monkeypatch.setattr("time.sleep", lambda s: None)
 
     @pytest.fixture
@@ -99,7 +99,7 @@ class TestStopLockHolderFallback:
         monkeypatch.setattr(platform_compat, "kill_process_tree", lambda pid, sig: sent.append(pid))
         return sent
 
-    def test_live_kirocrew_lock_holder_is_refused_and_named(
+    def test_live_ajcrew_lock_holder_is_refused_and_named(
         self, monkeypatch, sel_rec, capsys, signals
     ) -> None:
         monkeypatch.setattr(
@@ -107,7 +107,7 @@ class TestStopLockHolderFallback:
             "lock_holder",
             lambda home: LockHolder(pid=4242, alive=True, source="flock_owner"),
         )
-        monkeypatch.setattr(cli_server, "_is_kirocrew_process", lambda pid: True)
+        monkeypatch.setattr(cli_server, "_is_ajcrew_process", lambda pid: True)
         daemon_stops: list[int] = []
         monkeypatch.setattr(cli_server, "_stop_mcp_gateway_daemon", lambda: daemon_stops.append(1))
         with pytest.raises(SystemExit) as exc:
@@ -124,9 +124,9 @@ class TestStopLockHolderFallback:
         assert sel_rec.calls[0]["operation"] == "gateway_stop"
         assert sel_rec.calls[0]["outcome"] == "denied"
         assert "pids=[4242]" in sel_rec.calls[0]["resources"]
-        assert "reason=lock_holder_kirocrew" in sel_rec.calls[0]["resources"]
+        assert "reason=lock_holder_ajcrew" in sel_rec.calls[0]["resources"]
 
-    def test_live_kirocrew_lock_holder_on_windows_names_taskkill(
+    def test_live_ajcrew_lock_holder_on_windows_names_taskkill(
         self, monkeypatch, sel_rec, capsys, signals
     ) -> None:
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
@@ -135,7 +135,7 @@ class TestStopLockHolderFallback:
             "lock_holder",
             lambda home: LockHolder(pid=4242, alive=True, source="flock_owner"),
         )
-        monkeypatch.setattr(cli_server, "_is_kirocrew_process", lambda pid: True)
+        monkeypatch.setattr(cli_server, "_is_ajcrew_process", lambda pid: True)
         with pytest.raises(SystemExit) as exc:
             cli_server._stop(None)
         assert exc.value.code == 1
@@ -152,14 +152,14 @@ class TestStopLockHolderFallback:
         with pytest.raises(SystemExit) as exc:
             cli_server._stop(None)
         assert exc.value.code == 1
-        assert "No Kiro Crew gateway currently running" in capsys.readouterr().out
+        assert "No Aj Crew gateway currently running" in capsys.readouterr().out
         assert sel_rec.calls[-1]["outcome"] == "no_target"
 
     def test_live_lock_holder_is_refused_without_a_port_tool(
         self, monkeypatch, sel_rec, capsys, signals
     ) -> None:
         """The lock file needs no `lsof`: with the port tool unavailable and a
-        live Kiro Crew holder, stop names the holder instead of exiting on the
+        live Aj Crew holder, stop names the holder instead of exiting on the
         tool diagnostic. The diagnostic is for the case where nothing found a
         gateway, not a gate in front of the fallbacks that need no tool."""
         monkeypatch.setattr(platform_compat, "listening_pid_tool_available", lambda: False)
@@ -170,7 +170,7 @@ class TestStopLockHolderFallback:
             "lock_holder",
             lambda home: LockHolder(pid=4242, alive=True, source="flock_owner"),
         )
-        monkeypatch.setattr(cli_server, "_is_kirocrew_process", lambda pid: True)
+        monkeypatch.setattr(cli_server, "_is_ajcrew_process", lambda pid: True)
         daemon_stops: list[int] = []
         monkeypatch.setattr(cli_server, "_stop_mcp_gateway_daemon", lambda: daemon_stops.append(1))
         with pytest.raises(SystemExit) as exc:
@@ -183,7 +183,7 @@ class TestStopLockHolderFallback:
         assert "kill -TERM 4242" in out
         assert len(sel_rec.calls) == 1
         assert sel_rec.calls[0]["outcome"] == "denied"
-        assert "reason=lock_holder_kirocrew" in sel_rec.calls[0]["resources"]
+        assert "reason=lock_holder_ajcrew" in sel_rec.calls[0]["resources"]
 
     def test_no_holder_and_no_port_tool_keeps_the_tool_diagnostic(
         self, monkeypatch, sel_rec, capsys
@@ -203,7 +203,7 @@ class TestStopLockHolderFallback:
         assert "Install lsof and retry." in capsys.readouterr().out
         assert "reason=lsof_not_found" in sel_rec.calls[-1]["resources"]
 
-    def test_non_kirocrew_lock_holder_is_refused_not_stopped(
+    def test_non_ajcrew_lock_holder_is_refused_not_stopped(
         self, monkeypatch, sel_rec, capsys, signals
     ) -> None:
         monkeypatch.setattr(
@@ -211,13 +211,13 @@ class TestStopLockHolderFallback:
             "lock_holder",
             lambda home: LockHolder(pid=99, alive=True, source="flock_owner"),
         )
-        monkeypatch.setattr(cli_server, "_is_kirocrew_process", lambda pid: False)
+        monkeypatch.setattr(cli_server, "_is_ajcrew_process", lambda pid: False)
         with pytest.raises(SystemExit) as exc:
             cli_server._stop(None)
         assert exc.value.code == 1
         assert signals == []
         out = capsys.readouterr().out
-        assert "does not look like a Kiro Crew gateway" in out
+        assert "does not look like an Aj Crew gateway" in out
         assert "kill -TERM 99" in out
         assert len(sel_rec.calls) == 1
         assert sel_rec.calls[0]["operation"] == "gateway_stop"
@@ -231,7 +231,7 @@ class TestStopLockHolderFallback:
         # The probe could not say held-or-free. Signalling the pid the file
         # records could hit an unrelated process that reused the number, so
         # `stop` names the problem and exits 1 without touching any pid.
-        lock_path = Path("/var/lib/kirocrew/gateway.lock")
+        lock_path = Path("/var/lib/ajcrew/gateway.lock")
 
         def indeterminate(home):
             raise LockProbeError(lock_path, OSError("flock unsupported"))
@@ -265,7 +265,7 @@ class TestRestartIndeterminateLock:
         monkeypatch.setattr(platform_compat, "listening_pid_tool_available", lambda: True)
         monkeypatch.setattr(cli_server, "_report_authenticated_shutdown", lambda port: False)
         monkeypatch.setattr(cli_server.run_marker, "read_pid", lambda port: None)
-        lock_path = Path("/var/lib/kirocrew/gateway.lock")
+        lock_path = Path("/var/lib/ajcrew/gateway.lock")
 
         def indeterminate(home):
             raise LockProbeError(lock_path, OSError("flock unsupported"))
@@ -293,16 +293,16 @@ class TestStopOnWindows:
     """The Windows branch kills the whole tree via ``platform_compat``."""
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class-scoped autouse fixture moved verbatim and no test in the cli_server coverage files calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class-scoped autouse fixture moved verbatim and no test in the cli_server coverage files calls monkeypatch.undo()
     def _windows(self, monkeypatch):
         monkeypatch.setattr(cli_server, "resolve_client_port", lambda p: 5476)
         monkeypatch.setattr(cli_server.service_controller, "stop_service", lambda: False)
         monkeypatch.setattr(platform_compat, "find_listening_pids", lambda port: [4242])
-        monkeypatch.setattr(cli_server, "_is_kirocrew_process", lambda pid: True)
+        monkeypatch.setattr(cli_server, "_is_ajcrew_process", lambda pid: True)
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
         monkeypatch.setattr(cli_server, "_pid_exited", lambda pid: True)
         # flake-ok: pre-existing time.sleep stub moved verbatim; the stop path's exit poll returns at once and no test waits on real time
-        # nosemgrep: kirocrew.test-stdlib-clock-rebound -- pre-existing time.sleep stub moved verbatim so the stop path's exit poll returns at once
+        # nosemgrep: ajcrew.test-stdlib-clock-rebound -- pre-existing time.sleep stub moved verbatim so the stop path's exit poll returns at once
         monkeypatch.setattr("time.sleep", lambda s: None)
 
     def test_tree_kill_reports_terminated(self, monkeypatch, sel_rec, capsys) -> None:
@@ -395,7 +395,7 @@ class TestServiceCmd:
 
     def test_unknown_action_prints_usage_and_returns_2(self, sel_rec, capsys) -> None:
         assert cli_server._service_cmd(argparse.Namespace(service_action=None)) == 2
-        assert "Usage: kirocrew service" in capsys.readouterr().err
+        assert "Usage: ajcrew service" in capsys.readouterr().err
         assert sel_rec.calls == []
 
 
@@ -441,7 +441,7 @@ class TestSandboxCmd:
 
     def test_unknown_action_prints_usage_and_returns_2(self, sel_rec, capsys) -> None:
         assert cli_server._sandbox_cmd(argparse.Namespace(sandbox_action="bogus")) == 2
-        assert "Usage: kirocrew sandbox" in capsys.readouterr().err
+        assert "Usage: ajcrew sandbox" in capsys.readouterr().err
         assert sel_rec.calls == []
 
 
@@ -461,7 +461,7 @@ class _ExecCalled(Exception):
 
 # One journal ENTRY as `journalctl -o short` prints it: a timestamp first. The
 # probes below answer this where they mean "the journal has rows".
-_ENTRY_LINE = "Sep 26 03:00:00 host kirocrew[4242]: gateway listening\n"
+_ENTRY_LINE = "Sep 26 03:00:00 host ajcrew[4242]: gateway listening\n"
 
 
 @pytest.fixture
@@ -476,9 +476,9 @@ class TestLogsCmdSystemd:
     """Journal first, sudo only as a fallback, and never a blind sudo prompt."""
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class-scoped autouse fixture moved verbatim and no test in the cli_server coverage files calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class-scoped autouse fixture moved verbatim and no test in the cli_server coverage files calls monkeypatch.undo()
     def _systemd(self, monkeypatch, tmp_path):
-        unit = tmp_path / "kirocrew.service"
+        unit = tmp_path / "ajcrew.service"
         unit.write_text("[Unit]\n", encoding="utf-8", newline="\n")
         monkeypatch.setattr(cli_server, "current_platform", lambda: Platform.SYSTEMD)
         monkeypatch.setattr(svc_linux, "UNIT_PATH", unit)
@@ -602,7 +602,7 @@ class TestLogsCmdUserScope:
     the USER journal, which `journalctl --user` reads without privilege."""
 
     @pytest.fixture(autouse=True)
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class-scoped autouse fixture moved verbatim and no test in the cli_server coverage files calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class-scoped autouse fixture moved verbatim and no test in the cli_server coverage files calls monkeypatch.undo()
     def _user_unit_only(self, monkeypatch, tmp_path):
         monkeypatch.setattr(cli_server, "current_platform", lambda: Platform.SYSTEMD)
         monkeypatch.setattr(svc_linux, "UNIT_PATH", tmp_path / "absent.service")
@@ -622,7 +622,7 @@ class TestLogsCmdUserScope:
             cli_server._logs_cmd(argparse.Namespace(follow=True, lines=42))
         assert exc.value.file == "journalctl"
         assert exc.value.argv[:2] == ["journalctl", "--user"]
-        assert "-u" in exc.value.argv and "kirocrew.service" in exc.value.argv
+        assert "-u" in exc.value.argv and "ajcrew.service" in exc.value.argv
         assert "42" in exc.value.argv
         assert exc.value.argv[-1] == "-f"
         assert probes == [
@@ -631,7 +631,7 @@ class TestLogsCmdUserScope:
                 "--user",
                 "--quiet",
                 "-u",
-                "kirocrew.service",
+                "ajcrew.service",
                 "-n",
                 "1",
                 "--no-pager",
@@ -687,7 +687,7 @@ class TestLogsCmdUserScope:
         """Both scopes have a unit (a stopped system unit from an earlier install,
         the gateway running as the user unit): the journal shown is the running
         unit's, not the dead one's."""
-        unit = tmp_path / "kirocrew.service"
+        unit = tmp_path / "ajcrew.service"
         unit.write_text("[Unit]\n", encoding="utf-8", newline="\n")
         monkeypatch.setattr(svc_linux, "UNIT_PATH", unit)
         monkeypatch.setattr(svc_linux, "user_unit_active", lambda: True)
@@ -703,7 +703,7 @@ class TestLogsCmdUserScope:
     def test_an_inactive_user_unit_leaves_the_system_journal_first(
         self, monkeypatch, tmp_path, sel_rec, fake_execvp
     ) -> None:
-        unit = tmp_path / "kirocrew.service"
+        unit = tmp_path / "ajcrew.service"
         unit.write_text("[Unit]\n", encoding="utf-8", newline="\n")
         monkeypatch.setattr(svc_linux, "UNIT_PATH", unit)
         monkeypatch.setattr(svc_linux, "user_unit_active", lambda: False)
@@ -831,8 +831,8 @@ class TestGateway:
         class _Cfg(_FakeCfg):
             saved = 0
 
-        monkeypatch.setattr(cli_server, "KiroCrewConfig", _Cfg)
-        monkeypatch.setattr("kiro_crew.cli._node_ok", lambda: True)
+        monkeypatch.setattr(cli_server, "AjCrewConfig", _Cfg)
+        monkeypatch.setattr("aj_crew.cli._node_ok", lambda: True)
         return captured, _Cfg
 
     def test_flags_are_forwarded_to_run_gateway(self, gw) -> None:
@@ -858,14 +858,14 @@ class TestGateway:
     def test_missing_dist_warns_but_still_starts(self, gw, monkeypatch, caplog) -> None:
         captured, _ = gw
         monkeypatch.setattr(cli_server, "ensure_dev_dist_symlink", lambda: None)
-        with caplog.at_level("WARNING", logger="kiro_crew.cli_server"):
+        with caplog.at_level("WARNING", logger="aj_crew.cli_server"):
             asyncio.run(cli_server._gateway(no_dashboard=False))
         assert any("dist/ not found" in r.message for r in caplog.records)
         assert "kw" in captured
 
     def test_the_dist_is_resolved_off_the_event_loop(self, gw, monkeypatch) -> None:
         """An edition start waits for the staging lock; on the loop thread that wait is skipped."""
-        from kiro_crew.atomic_write import on_event_loop
+        from aj_crew.atomic_write import on_event_loop
 
         seen: list[bool] = []
         monkeypatch.setattr(
@@ -886,8 +886,8 @@ class TestGateway:
 
     def test_stale_node_triggers_ensure_node(self, gw, monkeypatch) -> None:
         calls: list[str] = []
-        monkeypatch.setattr("kiro_crew.cli._node_ok", lambda: False)
-        monkeypatch.setattr("kiro_crew.cli._ensure_node", lambda *a: calls.append("ensured"))
+        monkeypatch.setattr("aj_crew.cli._node_ok", lambda: False)
+        monkeypatch.setattr("aj_crew.cli._ensure_node", lambda *a: calls.append("ensured"))
         asyncio.run(cli_server._gateway(no_dashboard=True))
         assert calls == ["ensured"]
 
@@ -895,7 +895,7 @@ class TestGateway:
         self, gw, monkeypatch, caplog
     ) -> None:
         monkeypatch.setattr(cli_server, "activate_mise", lambda: ["PATH"])
-        with caplog.at_level("INFO", logger="kiro_crew.cli_server"):
+        with caplog.at_level("INFO", logger="aj_crew.cli_server"):
             asyncio.run(cli_server._gateway(no_dashboard=True))
         assert any("Activated mise" in r.message for r in caplog.records)
 
@@ -907,7 +907,7 @@ class TestGateway:
             raise OSError("read-only Application Support")
 
         monkeypatch.setattr(svc_macos, "ensure_live_program", boom)
-        with caplog.at_level("WARNING", logger="kiro_crew.cli_server"):
+        with caplog.at_level("WARNING", logger="aj_crew.cli_server"):
             asyncio.run(cli_server._gateway(no_dashboard=True))
         assert any("live-gateway launcher" in r.message for r in caplog.records)
         assert "kw" in captured  # the gateway still started
@@ -963,12 +963,12 @@ class _Result:
 @pytest.fixture
 def taskrunner_env(monkeypatch, tmp_path):
     """Replace every collaborator ``_run_task`` constructs, and expose the spies."""
-    from kiro_crew.config import KiroCrewConfig
+    from aj_crew.config import AjCrewConfig
 
     state: dict = {"vector": None, "sessions": None, "runner_kwargs": None, "observed": []}
 
-    monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cls()))
-    monkeypatch.setattr(cli_server, "KiroCrewConfig", KiroCrewConfig)
+    monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cls()))
+    monkeypatch.setattr(cli_server, "AjCrewConfig", AjCrewConfig)
     monkeypatch.setattr(cli_server, "build_provider_factory", lambda cfg: object())
 
     def _sessions(cfg, provider_factory=None):
@@ -1052,12 +1052,12 @@ class TestRunTask:
     def test_configured_test_command_reaches_the_runner(
         self, taskrunner_env, tmp_path, monkeypatch
     ) -> None:
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.taskrunner.test_command = ["python", "-m", "pytest", "-q"]
         cfg.taskrunner.require_verification = True
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
         taskrunner_env["install_runner"](_Result("completed"))
         args = argparse.Namespace(
             spec=str(_spec(tmp_path)), no_test=False, fresh=False, timeout=0, name=""
@@ -1097,11 +1097,11 @@ class TestRunTask:
         # The live config watcher only fires on change, so the boot value
         # must reach the consolidator, or markdown memory is rewritten on a
         # migrated install.
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.memory.migrated = True
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
         seen: list[dict] = []
         monkeypatch.setattr(
             cli_server, "HistoryConsolidator", lambda **kw: seen.append(kw) or object()

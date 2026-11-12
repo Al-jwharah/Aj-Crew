@@ -23,11 +23,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.testing.wait import default_timeout
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _SCRIPT = _REPO_ROOT / "scripts" / "verify_no_internal_host.py"
-_WHEEL = "kirocrew-0.0.0-py3-none-any.whl"
+_WHEEL = "ajcrew-0.0.0-py3-none-any.whl"
 
 #: Public dummies standing in for the real (hashed) denylist.
 _DOMAIN = "planted.example.test"
@@ -69,7 +69,7 @@ def _build(tmp_path: Path, wheel_files: dict, web_files: dict) -> tuple[Path, Pa
     dist.mkdir()
     web.mkdir()
     with zipfile.ZipFile(dist / _WHEEL, "w") as whl:
-        whl.writestr("kiro_crew/__init__.py", "VERSION = '0.0.0'\n")
+        whl.writestr("aj_crew/__init__.py", "VERSION = '0.0.0'\n")
         for name, body in wheel_files.items():
             whl.writestr(name, body)
     (web / "index.html").write_text("<html>https://kiro.dev</html>", encoding="utf-8")
@@ -108,7 +108,7 @@ def test_the_denylist_is_digests_only(script: dict) -> None:
 def test_a_clean_build_passes(tmp_path: Path) -> None:
     dist, web = _build(
         tmp_path,
-        {"kiro_crew/config.py": "URL = 'https://kiro.dev'\n"},
+        {"aj_crew/config.py": "URL = 'https://kiro.dev'\n"},
         {"assets/index-abc.js": "fetch('https://api.github.com')"},
     )
     result = _run(dist, web)
@@ -135,8 +135,8 @@ def test_a_planted_host_fails_with_file_line_and_digest(
     """The fixture that proves the scan fails when it should."""
     body = f"// header\nconst u = '{planted}'\n"
     if where == "wheel":
-        dist, web = _build(tmp_path, {"kiro_crew/planted.js": body}, {})
-        expected = f"{_WHEEL}!kiro_crew/planted.js:2: matches "
+        dist, web = _build(tmp_path, {"aj_crew/planted.js": body}, {})
+        expected = f"{_WHEEL}!aj_crew/planted.js:2: matches "
     else:
         dist, web = _build(tmp_path, {}, {"assets/planted-123.js": body})
         expected = "website dist: assets/planted-123.js:2: matches "
@@ -175,13 +175,13 @@ def test_an_exclusion_excuses_only_its_own_digests_in_its_own_file(
     tmp_path: Path, script: dict
 ) -> None:
     other = "other.example.test"
-    script["EXCLUSIONS"] = {"kiro_crew/detector.py": ("a detector", frozenset({_sha(_DOMAIN)}))}
+    script["EXCLUSIONS"] = {"aj_crew/detector.py": ("a detector", frozenset({_sha(_DOMAIN)}))}
     body = f"PATTERN = '{_DOMAIN}'\n"
     dist, web = _build(
         tmp_path,
         {
-            "kiro_crew/detector.py": body + f"ALSO = '{other}'\n",
-            "kiro_crew/elsewhere.py": body,
+            "aj_crew/detector.py": body + f"ALSO = '{other}'\n",
+            "aj_crew/elsewhere.py": body,
         },
         {},
     )
@@ -193,22 +193,22 @@ def test_an_exclusion_excuses_only_its_own_digests_in_its_own_file(
         markers=frozenset(),
     )
     assert sorted(h.split(": matches ")[0] for h in hits) == [
-        f"{_WHEEL}!kiro_crew/detector.py:2",
-        f"{_WHEEL}!kiro_crew/elsewhere.py:1",
+        f"{_WHEEL}!aj_crew/detector.py:2",
+        f"{_WHEEL}!aj_crew/elsewhere.py:1",
     ]
 
 
 def test_main_exits_1_on_a_hit(tmp_path: Path, script: dict) -> None:
     """The exit code is the CI verdict; a hit must never exit 0."""
     script["HOST_DIGESTS"] = frozenset({_sha(_DOMAIN)})
-    dist, web = _build(tmp_path, {"kiro_crew/planted.py": f"U = '{_DOMAIN}'\n"}, {})
+    dist, web = _build(tmp_path, {"aj_crew/planted.py": f"U = '{_DOMAIN}'\n"}, {})
     assert script["main"](["verify", str(dist), str(web)]) == 1
 
 
 def _ks_bundle(source: dict | None) -> dict:
-    files = {"kiro_crew/vendor/ks/ks.mjs": "export const run = () => 0\n"}
+    files = {"aj_crew/vendor/ks/ks.mjs": "export const run = () => 0\n"}
     if source is not None:
-        files["kiro_crew/vendor/ks/SOURCE.json"] = json.dumps(source)
+        files["aj_crew/vendor/ks/SOURCE.json"] = json.dumps(source)
     return files
 
 
@@ -224,7 +224,7 @@ def test_a_ks_bundle_from_an_internal_build_fails(
 ) -> None:
     dist, web = _build(tmp_path, _ks_bundle(source), {})
     hits = _scan(script, dist, web)
-    assert any("kiro_crew/vendor/ks/ks.mjs: SOURCE.json names an internal build" in h for h in hits)
+    assert any("aj_crew/vendor/ks/ks.mjs: SOURCE.json names an internal build" in h for h in hits)
 
 
 def test_a_ks_bundle_without_provenance_fails(tmp_path: Path, script: dict) -> None:

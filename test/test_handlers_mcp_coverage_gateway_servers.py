@@ -22,17 +22,17 @@ from handlers_mcp_coverage_helpers import sandbox_fixture  # noqa: F401
 from handlers_mcp_coverage_helpers import _effective_stubs, _payload, _request
 from named_cases_helpers import named_cases
 
-from kiro_crew.dashboard.handlers import mcp as mcp_mod
-from kiro_crew.mcp_discovery import McpServerInfo
-from kiro_crew.testing.wait import LoopHop, async_wait_until, await_until, default_timeout
+from aj_crew.dashboard.handlers import mcp as mcp_mod
+from aj_crew.mcp_discovery import McpServerInfo
+from aj_crew.testing.wait import LoopHop, async_wait_until, await_until, default_timeout
 
 # ── GET /api/mcp-gateway/servers ────────────────────────────────────────
 
 
 @pytest.fixture
 def routed_allowlist(monkeypatch: pytest.MonkeyPatch):
-    """Pin ``KiroCrewConfig.load().mcp_gateway.stub_servers``."""
-    import kiro_crew.config.loader as loader
+    """Pin ``AjCrewConfig.load().mcp_gateway.stub_servers``."""
+    import aj_crew.config.loader as loader
 
     def _set(
         names: list[str], *, enabled: bool = False, forward_declared_env: bool = False
@@ -55,7 +55,7 @@ def routed_allowlist(monkeypatch: pytest.MonkeyPatch):
                 forward_declared_env=forward_declared_env,
             )
         )
-        monkeypatch.setattr(loader.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        monkeypatch.setattr(loader.AjCrewConfig, "load", staticmethod(lambda: cfg))
 
     return _set
 
@@ -68,7 +68,7 @@ def _seed_probe(monkeypatch, *names: str) -> None:
     """
     meta = SimpleNamespace(
         status="ok",
-        capabilities={"experimental": {"kirocrew.caller-identity": {}}},
+        capabilities={"experimental": {"ajcrew.caller-identity": {}}},
         protocol_version="2024-11-05",
         tool_annotations=[],
         tools=[SimpleNamespace(name="t")],
@@ -90,7 +90,7 @@ class TestGatewayServers:
         stub but not co-tenancy is written while sharing is off and skipped once it
         is on, with no guard, expectation or retry in between.
         """
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         cfg_path = tmp_path / "config.json"
         agents = tmp_path / "agents"
@@ -99,16 +99,16 @@ class TestGatewayServers:
             json.dumps({"name": "alpha", "mcpServers": {"a-mcp": {"command": "run"}}}),
             encoding="utf-8",
         )
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", agents)
         # Patch the LOADER's name: the handler re-imports ``config_path`` from
-        # ``kiro_crew.config.loader`` inside the function body, so patching this
+        # ``aj_crew.config.loader`` inside the function body, so patching this
         # module's copy is silently ignored.
         monkeypatch.setattr(loader, "config_path", lambda: cfg_path)
         # Supports a stub, does not support co-tenancy -- the case where the two
         # sharing states must disagree.
-        from kiro_crew.mcp_gateway.shareability import ShareVerdict, Strength
+        from aj_crew.mcp_gateway.shareability import ShareVerdict, Strength
 
         monkeypatch.setattr(
             mcp_mod,
@@ -160,7 +160,7 @@ class TestGatewayServers:
         let the batch report a stub whose backend is left direct. The sharing switch
         beside it is already read this way.
         """
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         cfg_path = tmp_path / "config.json"
         cfg_path.write_text(
@@ -205,7 +205,7 @@ class TestGatewayServers:
         an operator with a stub they explicitly asked to drop, on the grounds that
         the evidence for keeping it had weakened.
         """
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         cfg_path = tmp_path / "config.json"
         cfg_path.write_text(
@@ -229,16 +229,16 @@ class TestGatewayServers:
         looking at, so it needs no verdict lookup; and an older dashboard served
         from a previous build sends no such field. Neither may be filtered.
         """
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         cfg_path = tmp_path / "config.json"
         cfg_path.write_text(json.dumps({"mcp_gateway": {"enabled": True, "stub_servers": []}}))
         # Patch the LOADER's name: the handler re-imports ``config_path`` from
-        # ``kiro_crew.config.loader`` inside the function body, so patching this
+        # ``aj_crew.config.loader`` inside the function body, so patching this
         # module's copy is silently ignored.
         monkeypatch.setattr(loader, "config_path", lambda: cfg_path)
         monkeypatch.setattr(
-            loader.KiroCrewConfig,
+            loader.AjCrewConfig,
             "load",
             staticmethod(
                 lambda: SimpleNamespace(
@@ -273,7 +273,7 @@ class TestGatewayServers:
         ``write_config_atomically`` would reopen the window silently, since every
         behavioural test still passes with the lock removed.
         """
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         cfg_path = tmp_path / "config.json"
         cfg_path.write_text(json.dumps({"mcp_gateway": {"enabled": True, "stub_servers": []}}))
@@ -315,7 +315,7 @@ class TestGatewayServers:
         distinguishes the two is whether the write had FINISHED by the time
         cancellation was observable.
         """
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         cfg_path = tmp_path / "config.json"
         cfg_path.write_text(json.dumps({"mcp_gateway": {"enabled": True, "stub_servers": []}}))
@@ -379,8 +379,8 @@ class TestGatewayServers:
         offloaded write runs is what a behavioural test cannot see: removing
         ``_get_config_lock`` leaves every stub assertion in this file passing.
         """
-        import kiro_crew.config.loader as loader
-        from kiro_crew.dashboard.handlers.agents import _get_config_lock
+        import aj_crew.config.loader as loader
+        from aj_crew.dashboard.handlers.agents import _get_config_lock
 
         cfg_path = tmp_path / "config.json"
         cfg_path.write_text(json.dumps({"mcp_gateway": {"enabled": True, "stub_servers": []}}))
@@ -603,7 +603,7 @@ class TestGatewayServers:
     async def test_missing_agents_dir_yields_no_rows(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, routed_allowlist
     ) -> None:
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         routed_allowlist([])
         monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", tmp_path / "absent")
@@ -660,7 +660,7 @@ class TestGatewayServers:
     async def test_denylisted_server_can_never_be_pooled(
         self, agents_dir: Path, monkeypatch: pytest.MonkeyPatch, routed_allowlist
     ) -> None:
-        from kiro_crew.mcp_gateway import rewriter
+        from aj_crew.mcp_gateway import rewriter
 
         monkeypatch.setattr(rewriter, "UNPOOLABLE_SERVERS", frozenset({"never-mcp"}))
         routed_allowlist(["never-mcp"])
@@ -845,7 +845,7 @@ class TestGatewaySetStub:
 
     @pytest.mark.asyncio
     async def test_corrupt_config_json_is_500(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         path = config_path()
@@ -859,7 +859,7 @@ class TestGatewaySetStub:
 
     @pytest.mark.asyncio
     async def test_non_object_section_is_500(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         path = config_path()
@@ -882,7 +882,7 @@ class TestGatewaySetStub:
         reports. Answering ``applied: false`` alone would drop the client onto its
         fault branch and blame the gateway for a change that is safely saved.
         """
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         resp = await mcp_mod.api_mcp_gateway_set_stub(
@@ -941,7 +941,7 @@ class TestGatewaySetStub:
         enabling one server would persist only that server and silently unstub
         everything the migration was preserving.
         """
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         path = config_path()
@@ -966,7 +966,7 @@ class TestGatewaySetStub:
     ) -> None:
         """The same guard the resolver applies: a gateway that was off ran no
         stub, so its inert allowlist must not be revived by a toggle either."""
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         path = config_path()
@@ -988,7 +988,7 @@ class TestGatewaySetStub:
     async def test_removal_dedupes_and_drops_non_string_entries(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         path = config_path()
@@ -1020,7 +1020,7 @@ class TestGatewaySetStub:
         change. So an operator who toggles a server back to what the roster says is
         asking to follow the roster again, and the entry must go.
         """
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         path = config_path()
@@ -1055,7 +1055,7 @@ class TestGatewaySetStub:
         The operator turns one shipped server off; the edition then ships another.
         The new server must arrive, and the one they turned off must stay off.
         """
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         path = config_path()
@@ -1105,7 +1105,7 @@ class TestGatewaySetStub:
 
     @pytest.mark.asyncio
     async def test_apply_failure_is_500_and_audited(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         sel = MagicMock()
         monkeypatch.setattr(mcp_mod, "sel", lambda: sel)
@@ -1153,7 +1153,7 @@ class TestGatewaySetStubBatch:
 
     @pytest.mark.asyncio
     async def test_adds_every_name_in_one_write(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         path = config_path()
@@ -1177,7 +1177,7 @@ class TestGatewaySetStubBatch:
     async def test_removes_every_name_and_leaves_the_rest(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         monkeypatch.setattr(mcp_mod, "sel", lambda: MagicMock())
         path = config_path()
@@ -1278,7 +1278,7 @@ class TestStubEligibility:
     @staticmethod
     def _verdict(monkeypatch: pytest.MonkeyPatch, *, stub: bool, share: bool) -> None:
         """Pin the verdict so these test the RULE, not the engine behind it."""
-        from kiro_crew.mcp_gateway.shareability import ShareVerdict, Strength
+        from aj_crew.mcp_gateway.shareability import ShareVerdict, Strength
 
         monkeypatch.setattr(
             mcp_mod,
@@ -1414,7 +1414,7 @@ class TestStubEligibility:
         That keeps it independent of which credential vendors the live set lists;
         the live set has its own tests in this file.
         """
-        import kiro_crew.mcp_gateway.rewriter as rewriter_mod
+        import aj_crew.mcp_gateway.rewriter as rewriter_mod
 
         monkeypatch.setattr(rewriter_mod, "UNPOOLABLE_SERVERS", frozenset({"walled-mcp"}))
         self._spec(agents_dir, {"walled-mcp": {"command": "run"}})
@@ -1452,8 +1452,8 @@ class TestStubEligibility:
         ``VerdictCache.get`` with the CURRENT identity, where a mismatch reads as
         no measurement.
         """
-        from kiro_crew.mcp_gateway.evaluate import identity_for
-        from kiro_crew.mcp_gateway.verdict_cache import CachedPreflight, load_cache
+        from aj_crew.mcp_gateway.evaluate import identity_for
+        from aj_crew.mcp_gateway.verdict_cache import CachedPreflight, load_cache
 
         runtime = tmp_path / "runtime"
         runtime.mkdir()
@@ -1540,8 +1540,8 @@ class TestStubEligibility:
         command+args launch hash cannot see, so this fails if eligibility consults
         that proxy instead of the full identity.
         """
-        from kiro_crew.mcp_gateway.evaluate import identity_for
-        from kiro_crew.mcp_gateway.verdict_cache import CachedPreflight, load_cache
+        from aj_crew.mcp_gateway.evaluate import identity_for
+        from aj_crew.mcp_gateway.verdict_cache import CachedPreflight, load_cache
 
         runtime = tmp_path / "runtime"
         runtime.mkdir()
@@ -1658,9 +1658,9 @@ class TestShareabilityRefusesAProbeFromBeforeAnEdit:
     async def test_the_stub_write_passes_the_edit_check_through(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        import kiro_crew.agent as agent_mod
-        import kiro_crew.config.loader as loader
-        from kiro_crew.mcp_gateway.shareability import ShareVerdict, Strength
+        import aj_crew.agent as agent_mod
+        import aj_crew.config.loader as loader
+        from aj_crew.mcp_gateway.shareability import ShareVerdict, Strength
 
         cfg_path = tmp_path / "config.json"
         agents = tmp_path / "agents"
@@ -1700,7 +1700,7 @@ class TestShareabilityRefusesAProbeFromBeforeAnEdit:
     def test_probe_currency_compares_against_the_current_config(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         disc._probe_cache.clear()
         try:
@@ -1741,7 +1741,7 @@ class TestMeasureDue:
     async def test_counts_only_the_rows_a_pass_can_fill(
         self, monkeypatch: pytest.MonkeyPatch, routed_allowlist
     ) -> None:
-        import kiro_crew.mcp_discovery as disc
+        import aj_crew.mcp_discovery as disc
 
         routed_allowlist([])
         rows = {

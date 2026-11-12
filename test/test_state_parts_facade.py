@@ -1,10 +1,10 @@
 """``dashboard/state.py`` keeps its BASE surface while its code lives in ``state_parts``.
 
-``kiro_crew.dashboard.state`` was one module. Its helpers, the ``_ChatSlot`` class and
-``DashboardState`` now live in ``kiro_crew.dashboard.state_parts`` (see that package's
+``aj_crew.dashboard.state`` was one module. Its helpers, the ``_ChatSlot`` class and
+``DashboardState`` now live in ``aj_crew.dashboard.state_parts`` (see that package's
 docstring), and the
-facade imports them back and installs ``kiro_crew._facade_mirror`` so a patch of
-``kiro_crew.dashboard.state.<name>`` reaches every owner that reads it. These tests
+facade imports them back and installs ``aj_crew._facade_mirror`` so a patch of
+``aj_crew.dashboard.state.<name>`` reaches every owner that reads it. These tests
 freeze what the split must not change, measured on the one-module file:
 
 * every module-level name it bound still resolves through the facade, to the object
@@ -35,10 +35,10 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew
-from kiro_crew.dashboard import state as state_module
-from kiro_crew.dashboard import state_parts
-from kiro_crew.dashboard.state import _ChatSlot
+import aj_crew
+from aj_crew.dashboard import state as state_module
+from aj_crew.dashboard import state_parts
+from aj_crew.dashboard.state import _ChatSlot
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_state_parts_facade")
 
@@ -46,9 +46,9 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_state_parts_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("class_body_check_can_fail",)
 
-_SRC = Path(kiro_crew.__file__).resolve().parent
+_SRC = Path(aj_crew.__file__).resolve().parent
 _PARTS = Path(state_parts.__file__).resolve().parent
-_PARTS_PKG = "kiro_crew.dashboard.state_parts"
+_PARTS_PKG = "aj_crew.dashboard.state_parts"
 
 #: Every module-level name ``dashboard/state.py`` bound before the split, except the
 #: stdlib and typing imports below.
@@ -425,10 +425,10 @@ _BASE_SLOT_DEFAULTS: dict[str, tuple[str, str | None]] = {
     "_approval_stopped": ("value", "set()"),
     "_artifact": ("value", "''"),
     "_auto_tagged": ("value", "False"),
-    "_binding": ("type", "kiro_crew.dashboard.transcript_binding.TranscriptBinding"),
+    "_binding": ("type", "aj_crew.dashboard.transcript_binding.TranscriptBinding"),
     "_batch_rejected": ("value", "False"),
     "_batch_rejected_cause": ("value", "''"),
-    "_buffers": ("type", "kiro_crew.dashboard.slot_buffers.SlotBufferCoordinator"),
+    "_buffers": ("type", "aj_crew.dashboard.slot_buffers.SlotBufferCoordinator"),
     "_carried_ttft_clock": ("value", "None"),
     "_channel_folder_filed": ("value", "False"),
     "_channel_runtime_origin": ("value", "False"),
@@ -571,7 +571,7 @@ _BASE_SLOT_DEFAULTS: dict[str, tuple[str, str | None]] = {
     "_posttoken_retry_used": ("value", "False"),
     "_prefetch_ttl_task": ("value", "None"),
     "_prestream_exhausted_cycles": ("value", "0"),
-    "_projection": ("type", "kiro_crew.dashboard.slot_projection.SlotProjection"),
+    "_projection": ("type", "aj_crew.dashboard.slot_projection.SlotProjection"),
     "_promise_only_retries": ("value", "0"),
     "_prompt_busy_retries": ("value", "0"),
     "_question_pending": ("value", "{}"),
@@ -579,7 +579,7 @@ _BASE_SLOT_DEFAULTS: dict[str, tuple[str, str | None]] = {
     "_queue_persist_inflight": ("value", "False"),
     "_queue_persist_owed": ("value", "False"),
     "_queue_persisted_sig": ("str", None),
-    "_queue_repository": ("type", "kiro_crew.dashboard.slot_queue_repository.SlotQueueRepository"),
+    "_queue_repository": ("type", "aj_crew.dashboard.slot_queue_repository.SlotQueueRepository"),
     "_reasoning_effort": ("value", "''"),
     "_refusal_client_pick_epoch": ("value", "0"),
     "_refusal_fallback_attempted": ("value", "False"),
@@ -700,7 +700,7 @@ _BASE_SLOT_DEFAULTS: dict[str, tuple[str, str | None]] = {
     "color_index": ("value", "None"),
     "color_theme": ("value", "''"),
     "created_at": ("type", "builtins.str"),
-    "credential_evidence": ("type", "kiro_crew.security.credential_sources.CredentialEvidence"),
+    "credential_evidence": ("type", "aj_crew.security.credential_sources.CredentialEvidence"),
     "event": ("type", "asyncio.locks.Event"),
     "executor": ("value", "'local'"),
     "folder_id": ("value", "''"),
@@ -718,7 +718,7 @@ _BASE_SLOT_DEFAULTS: dict[str, tuple[str, str | None]] = {
     "mutes_opened": ("value", "False"),
     "pinned": ("value", "False"),
     "remote_slot": ("value", "''"),
-    "replays": ("type", "kiro_crew.dashboard.recovery_replays.RecoveryReplays"),
+    "replays": ("type", "aj_crew.dashboard.recovery_replays.RecoveryReplays"),
     "segment_message_id": ("value", "''"),
     "segment_raw_text": ("value", "''"),
     "segment_removed": ("value", "{}"),
@@ -836,10 +836,10 @@ def _owner_imports(source: str) -> list[str]:
         if isinstance(node, ast.ImportFrom) and node.module:
             if node.module == _PARTS_PKG or node.module.startswith(_PARTS_PKG + "."):
                 found.append(node.module)
-            elif node.module == "kiro_crew.dashboard" and "state_parts" in {
+            elif node.module == "aj_crew.dashboard" and "state_parts" in {
                 a.name for a in node.names
             }:
-                found.append("kiro_crew.dashboard.state_parts")
+                found.append("aj_crew.dashboard.state_parts")
         elif isinstance(node, ast.Import):
             found += [a.name for a in node.names if a.name.startswith(_PARTS_PKG)]
     return found
@@ -1038,5 +1038,5 @@ def test_only_the_facade_imports_an_owner() -> None:
 
 
 def test_the_owner_import_check_can_fail() -> None:
-    source = "from kiro_crew.dashboard.state_parts.slot_todo import set_todo\n"
-    assert _owner_imports(source) == ["kiro_crew.dashboard.state_parts.slot_todo"]
+    source = "from aj_crew.dashboard.state_parts.slot_todo import set_todo\n"
+    assert _owner_imports(source) == ["aj_crew.dashboard.state_parts.slot_todo"]

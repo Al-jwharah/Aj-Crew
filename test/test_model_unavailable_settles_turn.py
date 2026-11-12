@@ -22,10 +22,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from test_dashboard_chat import TestRunChatModelFallback as _FallbackSuite
 
-from kiro_crew.acp.client import AcpError, _raise_acp_error
-from kiro_crew.dashboard.chat_utils import MODEL_UNAVAILABLE_KIND, MODEL_UNENTITLED_KIND
-from kiro_crew.dashboard.state import is_model_unavailable_row, is_turn_interrupted
-from kiro_crew.llm_helpers import TRANSIENT_RETRIES
+from aj_crew.acp.client import AcpError, _raise_acp_error
+from aj_crew.dashboard.chat_utils import MODEL_UNAVAILABLE_KIND, MODEL_UNENTITLED_KIND
+from aj_crew.dashboard.state import is_model_unavailable_row, is_turn_interrupted
+from aj_crew.llm_helpers import TRANSIENT_RETRIES
 
 # kiro-cli's named capacity/rollout refusal, on a model the account IS served.
 _NAMED_FRAME = {
@@ -110,7 +110,7 @@ def test_phrase_echoed_only_in_message_does_not_tag():
 
 
 def test_terminal_error_meta_reads_the_tag():
-    from kiro_crew.dashboard.chat_runner import _terminal_error_meta
+    from aj_crew.dashboard.chat_runner import _terminal_error_meta
 
     assert _terminal_error_meta(_raised(_NAMED_FRAME)) == {"kind": MODEL_UNAVAILABLE_KIND}
     assert _terminal_error_meta(_raised(_THROTTLE_FRAME)) is None
@@ -119,7 +119,7 @@ def test_terminal_error_meta_reads_the_tag():
 
 
 def test_terminal_error_meta_ranks_the_tag_last():
-    from kiro_crew.dashboard.chat_runner import _terminal_error_meta
+    from aj_crew.dashboard.chat_runner import _terminal_error_meta
 
     exc = AcpError("x", transient=False)
     exc.rejected_model = "auto"
@@ -129,7 +129,7 @@ def test_terminal_error_meta_ranks_the_tag_last():
 
 
 def test_transcript_twin_matches_chat_utils():
-    from kiro_crew.dashboard.state_parts import transcript_rows
+    from aj_crew.dashboard.state_parts import transcript_rows
 
     assert transcript_rows._MODEL_UNAVAILABLE_KIND == MODEL_UNAVAILABLE_KIND
 
@@ -206,7 +206,7 @@ def test_a_user_stop_is_unchanged():
 def test_restart_reconcile_still_lands_a_row_for_a_later_nudge_turn(tmp_path, monkeypatch):
     """The card settles only its own turn: a monitor cycle after it whose marker
     outlived the process gets the restart-interruption row as before."""
-    from kiro_crew.dashboard.slot_persistence.turn_marker import _reconcile_local_turn_marker
+    from aj_crew.dashboard.slot_persistence.turn_marker import _reconcile_local_turn_marker
 
     state = _FallbackSuite._make_state(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -226,7 +226,7 @@ def test_restart_reconcile_still_lands_a_row_for_a_later_nudge_turn(tmp_path, mo
 
 
 def test_restart_reconcile_lands_a_row_for_a_later_subagent_turn(tmp_path, monkeypatch):
-    from kiro_crew.dashboard.slot_persistence.turn_marker import (
+    from aj_crew.dashboard.slot_persistence.turn_marker import (
         _latest_turn_settled_by_refused_model,
     )
 
@@ -238,7 +238,7 @@ def test_restart_reconcile_lands_a_row_for_a_later_subagent_turn(tmp_path, monke
 def test_restart_reconcile_adds_no_resume_row_after_the_card(tmp_path, monkeypatch):
     """A local-turn marker that outlived its process after the card landed must
     not append the restart-interruption row, which would offer Resume."""
-    from kiro_crew.dashboard.slot_persistence.turn_marker import _reconcile_local_turn_marker
+    from aj_crew.dashboard.slot_persistence.turn_marker import _reconcile_local_turn_marker
 
     state = _FallbackSuite._make_state(tmp_path, monkeypatch)
     slot = state.get_or_create_slot("s1")
@@ -269,10 +269,10 @@ class TestRefusedModelTurn:
         succeed_on_fallback=False,
         fallback_frame=None,
     ):
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner._agent_fallback_chain", lambda: chain)
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner._agent_fallback_chain", lambda: chain)
         calls: list[str] = []
 
         async def _stream(msg):

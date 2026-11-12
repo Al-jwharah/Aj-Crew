@@ -1,10 +1,10 @@
 """The policy-distribution facade keeps the patch seams and the surface the one module had.
 
-``kiro_crew.platform.policy_distribution`` is a mirror facade (:mod:`kiro_crew._facade_mirror`)
+``aj_crew.platform.policy_distribution`` is a mirror facade (:mod:`aj_crew._facade_mirror`)
 over three sibling owners -- ``policy_distribution_source``, ``policy_distribution_cache`` and
 ``policy_distribution_boot`` -- and keeps the live-refresh path, the refresher thread and the
 read-only posture itself. Callers, tests and documents still reach every name as
-``kiro_crew.platform.policy_distribution.<name>``, and the moved code reads its names as plain
+``aj_crew.platform.policy_distribution.<name>``, and the moved code reads its names as plain
 module globals, so a patch through the facade reaches that code only because the mirror
 writes it into every module holding the name.
 
@@ -33,9 +33,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.platform import policy_distribution
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror
+from aj_crew.platform import policy_distribution
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_policy_distribution_facade")
 
@@ -43,12 +43,12 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_policy_distribution_facade"
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate", "owners_in_layer_order")
 
-FACADE = "kiro_crew.platform.policy_distribution"
+FACADE = "aj_crew.platform.policy_distribution"
 #: The owners, lowest layer first: each imports only the ones listed before it.
 OWNERS = (
-    "kiro_crew.platform.policy_distribution_source",
-    "kiro_crew.platform.policy_distribution_cache",
-    "kiro_crew.platform.policy_distribution_boot",
+    "aj_crew.platform.policy_distribution_source",
+    "aj_crew.platform.policy_distribution_cache",
+    "aj_crew.platform.policy_distribution_boot",
 )
 _THIS_FILE = Path(__file__).resolve()
 
@@ -199,7 +199,7 @@ def _owner_project_imports() -> dict[str, str]:
     for owner in OWNERS:
         for node in ast.parse(_owner_path(owner).read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if node.module.startswith("kiro_crew") and node.module not in OWNERS:
+                if node.module.startswith("aj_crew") and node.module not in OWNERS:
                     for alias in node.names:
                         found[alias.asname or alias.name] = node.module
     return found
@@ -207,7 +207,7 @@ def _owner_project_imports() -> dict[str, str]:
 
 def test_every_project_name_the_family_imports_stays_bound_on_the_facade() -> None:
     """At BASE ``policy_distribution.py`` bound each of these by import, so ``from
-    kiro_crew.platform.policy_distribution import config_dir`` type-checked and resolved. The
+    aj_crew.platform.policy_distribution import config_dir`` type-checked and resolved. The
     facade still binds every one of them by its own import, as the same object its home holds,
     so none is served from an owner and none needs a second manifest."""
     imported = _owner_project_imports()
@@ -238,7 +238,7 @@ def test_the_process_state_is_read_through_the_facade_as_its_owner_holds_it() ->
     """``reset_process_state`` rebinds the installed-document digest and the cache-directory
     memo in their one owner; a read through the facade sees what that owner now holds, and
     the facade binds no copy of either."""
-    cache = sys.modules["kiro_crew.platform.policy_distribution_cache"]
+    cache = sys.modules["aj_crew.platform.policy_distribution_cache"]
     names = ("_installed_body_digest", "_cache_dir_ready")
     original = {name: vars(cache)[name] for name in names}
     with pytest.MonkeyPatch.context() as patch:
@@ -266,7 +266,7 @@ def test_the_facade_declares_the_unsplit_modules_all() -> None:
 
 
 def test_the_facade_runs_as_a_module(tmp_path: Path) -> None:
-    """``python -m kiro_crew.platform.policy_distribution`` imported cleanly before the split;
+    """``python -m aj_crew.platform.policy_distribution`` imported cleanly before the split;
     the mirror installs on ``__main__`` too, because every member binds one logger by name."""
     env = dict(os.environ)
     src = str(Path(policy_distribution.__file__).resolve().parents[2])

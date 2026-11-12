@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.apps.builtins.md_notebook import git_ops
+from aj_crew.apps.builtins.md_notebook import git_ops
 
 
 @pytest.mark.asyncio

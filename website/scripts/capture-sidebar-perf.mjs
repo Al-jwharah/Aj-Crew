@@ -15,7 +15,7 @@ const mkSlots = (n) => Array.from({ length: n }, (_, i) => ({
   title: `Session ${i} — demo work item`,
   running: i % 17 === 0,
   messages: 3 + (i % 9),
-  agent: i % 3 === 0 ? 'kirocrew' : 'kirocrew-lite',
+  agent: i % 3 === 0 ? 'ajcrew' : 'ajcrew-lite',
   last_ts: new Date(Date.now() - i * 3600_000).toISOString(),
 }))
 

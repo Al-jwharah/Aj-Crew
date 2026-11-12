@@ -17,13 +17,13 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state, drain_background_tasks
 
-from kiro_crew import pinned_fs
-from kiro_crew.context import ContextBuilder
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.memory import MemoryStore
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.wait import finished
+from aj_crew import pinned_fs
+from aj_crew.context import ContextBuilder
+from aj_crew.dashboard import chat_runner
+from aj_crew.memory import MemoryStore
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.wait import finished
 
 SLOT_NAME = "standards-chat"
 
@@ -147,7 +147,7 @@ async def test_stale_stored_entry_is_skipped_not_fatal(tmp_path, monkeypatch, ca
     state = _turn_state(tmp_path, monkeypatch)
     state._folders = [{"id": "f-1", "name": "Std", "steering_dirs": ["relative/dir"]}]
     slot = _slot(state, folder_id="f-1")
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.chat_folders"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.chat_folders"):
         await _turn(state, slot)
     assert _passed_dirs(state) == ()
     skipped = [
@@ -221,11 +221,11 @@ async def test_member_slot_receives_its_own_members_folder_steering(tmp_path, mo
     so the resolver needs ``slot_steering_principal``. A real provisioned member gives the
     execution context the runner captures.
     """
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-    from kiro_crew.memory_stores import provision_member_memory
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+    from aj_crew.memory_stores import provision_member_memory
 
-    cfg = KiroCrewConfig.load()
-    cfg.agents["reviewer"] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+    cfg = AjCrewConfig.load()
+    cfg.agents["reviewer"] = AjCrewAgentConfig(kiro_agent="ajcrew")
     store = provision_member_memory(cfg, "reviewer")
     cfg.save()
     rules = tmp_path / "member-rules"

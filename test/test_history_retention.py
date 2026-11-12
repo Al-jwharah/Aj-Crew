@@ -12,13 +12,13 @@ import json
 
 import pytest
 
-from kiro_crew.history import ConversationLog
+from aj_crew.history import ConversationLog
 
 
 class TestArchive:
     def test_rotate_archives_dropped_lines(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.history._SESSION_MAX_BYTES", 100)
-        monkeypatch.setattr("kiro_crew.history._SESSION_KEEP_LINES", 3)
+        monkeypatch.setattr("aj_crew.history._SESSION_MAX_BYTES", 100)
+        monkeypatch.setattr("aj_crew.history._SESSION_KEEP_LINES", 3)
         log = ConversationLog(base_dir=tmp_path)
         for i in range(20):
             log.append("t1", "user", f"message number {i} with enough text to exceed limits")
@@ -47,8 +47,8 @@ class TestArchive:
         import os
         import time
 
-        import kiro_crew.history as history_mod
-        from kiro_crew.history import _cleanup_old_archives
+        import aj_crew.history as history_mod
+        from aj_crew.history import _cleanup_old_archives
 
         history_mod._last_cleanup = 0.0  # reset rate-limit so cleanup actually runs
         adir = tmp_path / "archive"
@@ -67,7 +67,7 @@ class TestArchive:
         assert new.exists()
 
     def test_archive_empty_lines_noop(self, tmp_path):
-        from kiro_crew.history import _archive_lines
+        from aj_crew.history import _archive_lines
 
         result = _archive_lines("k", [], reason="rotate", base=tmp_path)
         assert result is None
@@ -75,7 +75,7 @@ class TestArchive:
 
     def test_same_second_conflict_suffixes_filename(self, tmp_path):
         """Multiple archives for same key in same second must not clobber each other."""
-        from kiro_crew.history import _archive_lines
+        from aj_crew.history import _archive_lines
 
         p1 = _archive_lines("k", ["line1\n"], reason="rotate", base=tmp_path)
         p2 = _archive_lines("k", ["line2\n"], reason="rotate", base=tmp_path)
@@ -87,8 +87,8 @@ class TestArchive:
         assert "line3" in p3.read_text(encoding="utf-8")
 
     def test_cleanup_old_archives_noop_when_dir_missing(self, tmp_path):
-        import kiro_crew.history as history_mod
-        from kiro_crew.history import _cleanup_old_archives
+        import aj_crew.history as history_mod
+        from aj_crew.history import _cleanup_old_archives
 
         history_mod._last_cleanup = 0.0
         removed = _cleanup_old_archives(retention_days=7, base=tmp_path)
@@ -99,8 +99,8 @@ class TestArchive:
         import os
         import time
 
-        import kiro_crew.history as history_mod
-        from kiro_crew.history import _cleanup_old_archives
+        import aj_crew.history as history_mod
+        from aj_crew.history import _cleanup_old_archives
 
         history_mod._last_cleanup = 0.0
         adir = tmp_path / "archive"
@@ -119,8 +119,8 @@ class TestArchive:
         import os
         import time
 
-        import kiro_crew.history as history_mod
-        from kiro_crew.history import _cleanup_old_archives
+        import aj_crew.history as history_mod
+        from aj_crew.history import _cleanup_old_archives
 
         monkeypatch.setattr(history_mod, "_resolve_retention_days", lambda: 7)
         history_mod._last_cleanup = 0.0
@@ -138,15 +138,15 @@ class TestArchive:
     def test_cleanup_throttled_skips_config_load(self, tmp_path, monkeypatch):
         """A rate-limited call must NOT resolve retention from config (Bug #6).
 
-        Config resolution (KiroCrewConfig.load — a disk read + parse) is
+        Config resolution (AjCrewConfig.load — a disk read + parse) is
         expensive and runs on every archive write via _archive_lines. The
         throttle guard must short-circuit BEFORE that read so the common
         once-per-hour-already-ran path stays cheap.
         """
         import time
 
-        import kiro_crew.history as history_mod
-        from kiro_crew.history import _cleanup_old_archives
+        import aj_crew.history as history_mod
+        from aj_crew.history import _cleanup_old_archives
 
         def _boom() -> int:
             raise AssertionError("config must not be loaded on a throttled call")
@@ -162,8 +162,8 @@ class TestArchive:
         """Explicit negative disables without touching config, even when throttled."""
         import time
 
-        import kiro_crew.history as history_mod
-        from kiro_crew.history import _cleanup_old_archives
+        import aj_crew.history as history_mod
+        from aj_crew.history import _cleanup_old_archives
 
         def _boom() -> int:
             raise AssertionError("config must not be loaded for explicit negative")
@@ -184,8 +184,8 @@ class TestArchive:
         first call should resolve config once; the immediate next call must be
         throttled and NOT resolve config again.
         """
-        import kiro_crew.history as history_mod
-        from kiro_crew.history import _cleanup_old_archives
+        import aj_crew.history as history_mod
+        from aj_crew.history import _cleanup_old_archives
 
         calls = {"n": 0}
 
@@ -203,7 +203,7 @@ class TestArchive:
 
     def test_safe_key_sanitizes_unsafe_chars(self, tmp_path):
         """Keys with slashes/colons must be sanitized into safe filenames."""
-        from kiro_crew.history import _archive_lines, _safe_key
+        from aj_crew.history import _archive_lines, _safe_key
 
         assert _safe_key("slack:C123/456") == "slack_C123_456"
         p = _archive_lines("slack:C123/456", ["x\n"], reason="rotate", base=tmp_path)
@@ -213,8 +213,8 @@ class TestArchive:
 
     def test_multiple_rotations_produce_multiple_archives(self, tmp_path, monkeypatch):
         """A session that keeps growing across multiple rotate cycles produces multiple archive files."""
-        monkeypatch.setattr("kiro_crew.history._SESSION_MAX_BYTES", 200)
-        monkeypatch.setattr("kiro_crew.history._SESSION_KEEP_LINES", 2)
+        monkeypatch.setattr("aj_crew.history._SESSION_MAX_BYTES", 200)
+        monkeypatch.setattr("aj_crew.history._SESSION_KEEP_LINES", 2)
         log = ConversationLog(base_dir=tmp_path)
         for _ in range(3):
             # Each round writes enough to trigger a rotate
@@ -225,7 +225,7 @@ class TestArchive:
 
     def test_archive_header_is_valid_json_metadata_line(self, tmp_path):
         """First line of archive is a JSON metadata row; remaining lines are original message jsonl."""
-        from kiro_crew.history import _archive_lines
+        from aj_crew.history import _archive_lines
 
         p = _archive_lines(
             "k",
@@ -255,7 +255,7 @@ class TestArchiveDashboardAPI:
         pytest.importorskip("aiohttp")
         from aiohttp import web
 
-        from kiro_crew.dashboard.handlers import (
+        from aj_crew.dashboard.handlers import (
             api_session_archive_list,
             api_session_archive_read,
         )
@@ -272,7 +272,7 @@ class TestArchiveDashboardAPI:
         import os
         import time
 
-        import kiro_crew.history as history_mod
+        import aj_crew.history as history_mod
 
         sessions = tmp_path / "sessions"
         archive = sessions / "archive"
@@ -328,7 +328,7 @@ class TestArchiveDashboardAPI:
     async def test_list_empty_when_no_archive_dir(self, tmp_path, monkeypatch):
         from aiohttp.test_utils import TestClient, TestServer
 
-        import kiro_crew.history as history_mod
+        import aj_crew.history as history_mod
 
         sessions = tmp_path / "sessions"
         sessions.mkdir()
@@ -419,7 +419,7 @@ class TestArchiveOnlyDropped:
         log.append("t1", "assistant", "B")
         log.append("t1", "user", "C")
         # Read back the three message lines so we can feed them exactly to rewrite_session
-        from kiro_crew.history import _safe_key
+        from aj_crew.history import _safe_key
 
         path = tmp_path / f"{_safe_key('t1')}.jsonl"
         lines = [

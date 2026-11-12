@@ -45,7 +45,7 @@ const scene = params.get('scene') ?? 'mochi-reset'
  *  about resetting everything. */
 const PET_NAME = 'Everything'
 
-document.documentElement.setAttribute('data-theme', 'kiro-dark')
+document.documentElement.setAttribute('data-theme', 'aj-dark')
 applyFallbackTheme()
 initI18n('en')
 

@@ -26,13 +26,13 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state, close_before_resume
 
-from kiro_crew.apps.manifest_sections import Permissions
-from kiro_crew.dashboard import slot_ownership
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.apps.manifest_sections import Permissions
+from aj_crew.dashboard import slot_ownership
+from aj_crew.dashboard.state import _ChatSlot
 
 APP = "crew-keyboard"
-_GRANT = "kiro_crew.apps.permissions.app_can_manage_session_approvals"
-_MANIFEST = "kiro_crew.apps.permissions.get_app_manifest"
+_GRANT = "aj_crew.apps.permissions.app_can_manage_session_approvals"
+_MANIFEST = "aj_crew.apps.permissions.get_app_manifest"
 _NOT_FOUND = {"error": "not found", "code": "slot_not_found"}
 
 
@@ -64,7 +64,7 @@ def sel_spy_fixture(monkeypatch: pytest.MonkeyPatch) -> _SelSpy:
 
 @pytest.fixture(name="state")
 def state_fixture(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()
@@ -86,7 +86,7 @@ def _as(app_name: str | None):
 
 
 def _client(state, caller: str | None) -> TestClient:
-    from kiro_crew.dashboard.chat import (
+    from aj_crew.dashboard.chat import (
         api_chat_slot_create,
         api_chat_slot_drop,
         api_chat_slot_generate_title,
@@ -94,7 +94,7 @@ def _client(state, caller: str | None) -> TestClient:
         api_chat_slot_slack_link,
         api_chat_slot_summary_generate,
     )
-    from kiro_crew.dashboard.session_export import api_chat_slot_export
+    from aj_crew.dashboard.session_export import api_chat_slot_export
 
     app = _make_app(state)
     app.router.add_post("/api/chat/slots/{slot}/generate-title", api_chat_slot_generate_title)
@@ -117,12 +117,12 @@ def _with_reply(slot: _ChatSlot, reply: str = "the user's ORIGINAL reply") -> No
 @pytest.fixture(name="regen_run")
 def regen_run_fixture(monkeypatch):
     run = AsyncMock()
-    monkeypatch.setattr("kiro_crew.dashboard.chat_regenerate._run_chat", run)
+    monkeypatch.setattr("aj_crew.dashboard.chat_regenerate._run_chat", run)
     return run
 
 
 async def _persist(state, slot: _ChatSlot) -> None:
-    from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
+    from aj_crew.dashboard.chat_persistence import save_slot_off_loop
 
     slot._titled = True
     slot.append("user", "USER-EARLIER")
@@ -131,7 +131,7 @@ async def _persist(state, slot: _ChatSlot) -> None:
 
 
 async def _persist_and_close(state, slot: _ChatSlot) -> None:
-    from kiro_crew.dashboard.chat_handlers import close_slot
+    from aj_crew.dashboard.chat_handlers import close_slot
 
     await _persist(state, slot)
     await close_slot(state, slot, slot.key)
@@ -143,5 +143,5 @@ async def _persist_and_close(state, slot: _ChatSlot) -> None:
 @pytest.fixture(name="chat_run")
 def chat_run_fixture(monkeypatch):
     run = AsyncMock()
-    monkeypatch.setattr("kiro_crew.dashboard.chat_handlers._run_chat", run)
+    monkeypatch.setattr("aj_crew.dashboard.chat_handlers._run_chat", run)
     return run

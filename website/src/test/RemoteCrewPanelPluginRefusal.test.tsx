@@ -216,7 +216,7 @@ describe('pluginRefusalCopy', () => {
   it.each([
     ['world_writable', /will not run it: any account can change the file or a folder above it\.$/],
     ['root_gateway', /will not run it: .+ is running as root, and it runs no helper program as root\.$/],
-    ['strict_policy', /will not run it: the strict check \(KIROCREW_PROVIDER_BIN_STRICT\) is on, and it accepts only a file and folders that only root can change, at a path with no symbolic links\.$/],
+    ['strict_policy', /will not run it: the strict check \(AJCREW_PROVIDER_BIN_STRICT\) is on, and it accepts only a file and folders that only root can change, at a path with no symbolic links\.$/],
   ])('says the %s refusal in its own sentence', (code, sentence) => {
     const copy = pluginRefusalCopy(refused({ ...base, session_manager_plugin_refused_code: code }))
     expect(copy?.failure).toMatch(sentence)

@@ -21,9 +21,9 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.mcp_gateway.backend import Backend
-from kiro_crew.mcp_gateway.pool import BackendPool, PoolAtCapacity, PoolKey
-from kiro_crew.testing.wait import finished
+from aj_crew.mcp_gateway.backend import Backend
+from aj_crew.mcp_gateway.pool import BackendPool, PoolAtCapacity, PoolKey
+from aj_crew.testing.wait import finished
 
 pytestmark = pytest.mark.xdist_group("mcp_gateway")
 
@@ -506,8 +506,8 @@ class _RecordingPool:
 
 
 async def _drive_handler(monkeypatch: pytest.MonkeyPatch, *, poolable: bool) -> _RecordingPool:
-    from kiro_crew.mcp_gateway import gatewayd as gw
-    from kiro_crew.mcp_gateway import socketsec
+    from aj_crew.mcp_gateway import gatewayd as gw
+    from aj_crew.mcp_gateway import socketsec
 
     monkeypatch.setattr(socketsec, "PEER_IDENTITY_SUPPORTED", True)
     monkeypatch.setattr(
@@ -586,7 +586,7 @@ def _install_hazard_sink(
     caller that overrides one is describing a DIFFERENT program -- which is the
     whole point of the identity-checked read.
     """
-    from kiro_crew.mcp_gateway import hazards
+    from aj_crew.mcp_gateway import hazards
 
     ledger = hazards.HazardLedger(tmp_path / hazards.HAZARDS_FILENAME)
     ledger.record(
@@ -653,7 +653,7 @@ async def test_clearing_the_record_lets_the_server_pool_again(
     ``hazards.clear_observed`` plus a flush, as an operator does offline by
     deleting the record from ``observed-hazards.json``.
     """
-    from kiro_crew.mcp_gateway import hazards
+    from aj_crew.mcp_gateway import hazards
 
     _install_hazard_sink(monkeypatch, tmp_path)
 
@@ -671,7 +671,7 @@ async def test_clearing_a_server_with_nothing_recorded_reports_no_change(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """False is the honest answer, not an error: there was nothing to forget."""
-    from kiro_crew.mcp_gateway import hazards
+    from aj_crew.mcp_gateway import hazards
 
     _install_hazard_sink(monkeypatch, tmp_path)
 

@@ -5,8 +5,8 @@ the state it leaves behind. A hold that cannot be made is reported as not held, 
 that cannot reach its unit is logged rather than raised, a unit whose lease cannot be taken
 stays where it is, a move whose sync fails is put back, a restore that cannot move a unit
 reports no id, and a companion cleanup that raises is a refusal. Every call goes through
-``kiro_crew.crew_log.store``, the path the trash and the sweep import, and every fault is
-patched there. The root conftest pins ``KIROCREW_HOME`` to a per-test directory, so each
+``aj_crew.crew_log.store``, the path the trash and the sweep import, and every fault is
+patched there. The root conftest pins ``AJCREW_HOME`` to a per-test directory, so each
 unit is written into a data home of the test's own.
 """
 
@@ -17,11 +17,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog, store
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog, store
 
 CREW = "crew-held"
-LOGGER = "kiro_crew.crew_log.store"
+LOGGER = "aj_crew.crew_log.store"
 
 
 def _unit() -> Path:

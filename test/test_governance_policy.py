@@ -10,7 +10,7 @@ Covers:
 
 Policy signature verification is in ``test_governance_policy_signatures.py``, and
 what ``resolve`` and ``gate_decision`` decide for an unnamed capability or an alias
-group, with the ungoverned rows ``kirocrew policy validate`` reports, is in
+group, with the ungoverned rows ``ajcrew policy validate`` reports, is in
 ``test_governance_policy_decisions.py``. The policy-body builder all
 three share is ``governance_policy_helpers.py``.
 """
@@ -23,9 +23,9 @@ import logging
 import pytest
 from governance_policy_helpers import _policy_body
 
-from kiro_crew.platform import governance
-from kiro_crew.platform.context import PlatformCompositionError
-from kiro_crew.platform.governance import (
+from aj_crew.platform import governance
+from aj_crew.platform.context import PlatformCompositionError
+from aj_crew.platform.governance import (
     CAPABILITY,
     MODE_ALLOW,
     MODE_DENY,
@@ -122,18 +122,18 @@ class TestScopedRuleset:
 
 class TestMcpMatcher:
     def test_server_grant_covers_all_tools(self):
-        r = ScopedRuleset(mode=MODE_DENY, deny=("@kirocrew-cron",), matcher="mcp")
-        assert not r.permits("@kirocrew-cron/cron_add").permitted
-        assert not r.permits("@kirocrew-cron").permitted
-        assert r.permits("@kirocrew-core/spawn_run").permitted
+        r = ScopedRuleset(mode=MODE_DENY, deny=("@ajcrew-cron",), matcher="mcp")
+        assert not r.permits("@ajcrew-cron/cron_add").permitted
+        assert not r.permits("@ajcrew-cron").permitted
+        assert r.permits("@ajcrew-core/spawn_run").permitted
 
     def test_tool_level_deny_is_specific(self):
-        r = ScopedRuleset(mode=MODE_DENY, deny=("@kirocrew-cron/cron_remove_all",), matcher="mcp")
-        assert not r.permits("@kirocrew-cron/cron_remove_all").permitted
-        assert r.permits("@kirocrew-cron/cron_add").permitted
+        r = ScopedRuleset(mode=MODE_DENY, deny=("@ajcrew-cron/cron_remove_all",), matcher="mcp")
+        assert not r.permits("@ajcrew-cron/cron_remove_all").permitted
+        assert r.permits("@ajcrew-cron/cron_add").permitted
 
     def test_title_to_ref_conversion(self):
-        assert mcp_title_to_ref("mcp__kirocrew-cron__cron_add") == "@kirocrew-cron/cron_add"
+        assert mcp_title_to_ref("mcp__ajcrew-cron__cron_add") == "@ajcrew-cron/cron_add"
         assert mcp_title_to_ref("mcp__builder-mcp") == "@builder-mcp"
         assert mcp_title_to_ref("execute_bash") == "execute_bash"
 
@@ -399,15 +399,15 @@ class TestScopedMap:
 # ──────────────────────────────────────────────────────────────────────────
 class TestLoader:
     def test_absent_returns_none(self, monkeypatch, tmp_path):
-        monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
         _nope = tmp_path / "nope.json"
-        monkeypatch.setattr("kiro_crew.platform.governance._policy_home_path", lambda: _nope)
+        monkeypatch.setattr("aj_crew.platform.governance._policy_home_path", lambda: _nope)
         assert load_security_policy() is None
 
     def test_env_path_wins(self, monkeypatch, tmp_path):
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(_policy_body(approval_mode="interactive")))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         ceiling = load_security_policy()
         assert ceiling is not None
         assert ceiling.version == 1
@@ -415,27 +415,27 @@ class TestLoader:
     def test_unreadable_env_fails_closed(self, monkeypatch, tmp_path):
         bad = tmp_path / "policy.json"
         bad.write_text("{ this is not json")
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(bad))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(bad))
         with pytest.raises(PlatformCompositionError):
             load_security_policy()
 
     def test_missing_env_path_fails_closed(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(tmp_path / "gone.json"))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(tmp_path / "gone.json"))
         with pytest.raises(PlatformCompositionError):
             load_security_policy()
 
     def test_home_path_used_when_no_env(self, monkeypatch, tmp_path):
-        monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
         home = tmp_path / "security_policy.json"
         home.write_text(json.dumps(_policy_body()))
-        monkeypatch.setattr("kiro_crew.platform.governance._policy_home_path", lambda: home)
+        monkeypatch.setattr("aj_crew.platform.governance._policy_home_path", lambda: home)
         ceiling = load_security_policy()
         assert ceiling is not None
 
     def test_bundled_loader_precedence(self, monkeypatch, tmp_path):
-        monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
         _nope = tmp_path / "nope.json"
-        monkeypatch.setattr("kiro_crew.platform.governance._policy_home_path", lambda: _nope)
+        monkeypatch.setattr("aj_crew.platform.governance._policy_home_path", lambda: _nope)
         called = {}
 
         def bundled():
@@ -463,10 +463,10 @@ class TestLoader:
         than on whether the loader ran, because "who won" is the invariant; "was
         bundled consulted" is an implementation detail that just changed.
         """
-        monkeypatch.delenv("KIROCREW_POLICY_URL", raising=False)
+        monkeypatch.delenv("AJCREW_POLICY_URL", raising=False)
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(_policy_body(identity={"issuer": "env-tier"})))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         resolved = {}
 
         def bundled():
@@ -731,7 +731,7 @@ class TestConformanceVectors:
                 sandbox={"min_level": "standard"},
                 commands={"mode": "deny", "deny": ["git push*", "*rm -rf /*"]},
                 tools={"mode": "deny", "deny": []},
-                mcp={"mode": "deny", "deny": ["@kirocrew-cron/cron_remove_all"]},
+                mcp={"mode": "deny", "deny": ["@ajcrew-cron/cron_remove_all"]},
                 apps={"mode": "allow", "allow": ["auto-research", "deploy-web"]},
                 network={"egress": {"mode": "allow", "allow": ["*.amazonaws.com"]}},
                 channels={
@@ -771,8 +771,8 @@ class TestConformanceVectors:
         assert resolve(ceiling, profile, "commands", "ls -la").permitted
 
     def test_e3_mcp_tool_deny_specific(self, ceiling, profile):
-        assert not resolve(ceiling, profile, "mcp", "@kirocrew-cron/cron_remove_all").permitted
-        assert resolve(ceiling, profile, "mcp", "@kirocrew-cron/cron_add").permitted
+        assert not resolve(ceiling, profile, "mcp", "@ajcrew-cron/cron_remove_all").permitted
+        assert resolve(ceiling, profile, "mcp", "@ajcrew-cron/cron_add").permitted
 
     def test_e4_app_within_policy_and_profile(self, ceiling, profile):
         assert resolve(ceiling, profile, "apps", "deploy-web").permitted
@@ -1051,7 +1051,7 @@ class TestProfileUnknownCapabilityTolerance:
             )
 
     def test_unknown_capability_child_is_logged_with_profile_and_key(self, caplog):
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.platform.governance"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.platform.governance"):
             parse_profile({"name": "host", "capabilities": {"vaulted": {"enabled": True}}})
         assert any(
             "host" in r.getMessage() and "capabilities.vaulted" in r.getMessage()
@@ -1135,11 +1135,9 @@ class TestSchemaStrictness:
     def test_allow_mode_deny_warning_never_carries_the_pasted_url(self, caplog):
         """The Rule-1 sibling fires on every boot too, so it must not echo a deny entry."""
         pasted = "https://user:pass@evil.example/p?api_key=SECRET123"
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.platform.governance"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.platform.governance"):
             ScopedRuleset.from_dict({"mode": "allow", "allow": ["skills.sh"], "deny": [pasted]})
-        warned = [
-            r.getMessage() for r in caplog.records if r.name == "kiro_crew.platform.governance"
-        ]
+        warned = [r.getMessage() for r in caplog.records if r.name == "aj_crew.platform.governance"]
         assert any("Rule 1: allow beats deny" in m for m in warned), warned
         for secret in ("user", "pass", "SECRET123", pasted):
             assert all(secret not in m for m in warned), (secret, warned)
@@ -1147,7 +1145,7 @@ class TestSchemaStrictness:
 
     @staticmethod
     def _host_warnings(caplog, body, *, matcher="host"):
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.platform.governance"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.platform.governance"):
             ScopedRuleset.from_dict(body, matcher=matcher, scope="network.egress")
         return [r.getMessage() for r in caplog.records if "matcher=host" in r.getMessage()]
 

@@ -1,9 +1,9 @@
 """The update, log and status-stream handlers' facade keeps the patch seams the one module had.
 
-``kiro_crew.dashboard.handlers.updates`` is a mirror facade (:mod:`kiro_crew._facade_mirror`)
-over the ``kiro_crew.dashboard.handlers.updates_<role>`` owners and keeps no code of its own.
+``aj_crew.dashboard.handlers.updates`` is a mirror facade (:mod:`aj_crew._facade_mirror`)
+over the ``aj_crew.dashboard.handlers.updates_<role>`` owners and keeps no code of its own.
 Callers, tests and documents still reach every name as
-``kiro_crew.dashboard.handlers.updates.<name>``, and the moved code reads its names as plain
+``aj_crew.dashboard.handlers.updates.<name>``, and the moved code reads its names as plain
 module globals, so a patch through the facade reaches that code only because the mirror writes
 it into every module holding the name.
 
@@ -34,9 +34,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import _facade_mirror
+from aj_crew.dashboard.handlers import updates
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_updates_handlers_facade")
 
@@ -44,8 +44,8 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_updates_handlers_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.dashboard.handlers.updates"
-OWNER_PREFIX = "kiro_crew.dashboard.handlers.updates_"
+FACADE = "aj_crew.dashboard.handlers.updates"
+OWNER_PREFIX = "aj_crew.dashboard.handlers.updates_"
 HANDLERS_DIR = Path(updates.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
 
@@ -220,7 +220,7 @@ def test_each_rebound_global_lives_in_one_owner_with_its_readers() -> None:
     family = _family()
     misplaced: dict[str, list[str]] = {}
     for name, stem in _REBOUND_HOMES.items():
-        home = sys.modules[f"kiro_crew.dashboard.handlers.{stem}"]
+        home = sys.modules[f"aj_crew.dashboard.handlers.{stem}"]
         binders = sorted(m.__name__ for m in family if name in vars(m))
         if binders != [home.__name__]:
             misplaced[name] = [f"bound by {binders}"]
@@ -246,7 +246,7 @@ def test_the_rebound_scan_sees_the_known_rebinders() -> None:
         "_log_ring_handler_installed": ("updates_streams", "install_log_ring_handler"),
     }
     for name, (stem, function) in known.items():
-        fn = vars(sys.modules[f"kiro_crew.dashboard.handlers.{stem}"])[function]
+        fn = vars(sys.modules[f"aj_crew.dashboard.handlers.{stem}"])[function]
         assert name in _global_names(fn.__code__), (name, function)
 
 
@@ -257,7 +257,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for path in _owner_paths().values():
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -281,7 +281,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
     """An owner binds these by import, so the facade names each one from its home module
-    under ``TYPE_CHECKING`` and ``from kiro_crew.dashboard.handlers.updates import
+    under ``TYPE_CHECKING`` and ``from aj_crew.dashboard.handlers.updates import
     resolve_provider`` type-checks."""
     served = set(_index().exports)
     expected = {name: home for name, home in _home_imports().items() if name in served}
@@ -307,7 +307,7 @@ def test_the_moved_exception_keeps_the_facade_module() -> None:
 
 
 def test_the_facade_runs_as_a_module(tmp_path: Path) -> None:
-    """``python -m kiro_crew.dashboard.handlers.updates`` imports cleanly: the mirror
+    """``python -m aj_crew.dashboard.handlers.updates`` imports cleanly: the mirror
     installs on ``__main__`` too, because every member binds one logger by name."""
     env = dict(os.environ)
     src = str(Path(updates.__file__).resolve().parents[3])

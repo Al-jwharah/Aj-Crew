@@ -4,6 +4,8 @@ import type { AppDispatch } from '../../../store'
 import type { ChatSlot, ChatFolder } from '../../../types'
 import { openActivityPanel, createSlot, deleteSlot, requestSlotFolderOpen, setSidePanelAlwaysOpen } from '../../../store/chatSlice'
 import { safeSetItem } from '../../../utils/safeStorage'
+import { useShellLayout } from '../../../hooks/useShellLayout'
+import { readSessionsPinned } from '../../../lib/simpleLayout'
 import { notePanelShown } from '../../../hooks/usePanelTabs'
 import type { useChatPageResourcesController } from '../useChatPageResourcesController'
 import type { useComposerChips } from './composerChips'
@@ -123,7 +125,19 @@ export function usePaneLayoutState({
     if (autoOpenGitPanel) dispatch(openActivityPanel())
   }, [activeSlot, _slotProject, projectGit?.repo, projectGitError, tabsCtl, dispatch, autoOpenGitPanel, autoOpenGitPanelKnown])
 
-  const [sidebarPinned, setSidebarPinned] = useState(() => localStorage.getItem('mc-sidebar-pinned') !== 'false')
+  // The Simple layout's sidebar already lists the recent chats, so there the
+  // sessions column starts closed and remembers its state under its own key
+  // (`sessionsPinnedKey`); the Advanced shell's `mc-sidebar-pinned` is never
+  // read or written by it. An embed or a popout draws no shell and keeps the
+  // Advanced rule. A live layout switch re-reads the state for the new layout.
+  const sessionsSimple = useShellLayout()[0] === 'simple' && !embedded
+  const [sidebarPinned, setSidebarPinned] = useState(() => readSessionsPinned(sessionsSimple))
+  const sessionsSimpleSeen = useRef(sessionsSimple)
+  useEffect(() => {
+    if (sessionsSimpleSeen.current === sessionsSimple) return
+    sessionsSimpleSeen.current = sessionsSimple
+    setSidebarPinned(readSessionsPinned(sessionsSimple))
+  }, [sessionsSimple])
   const sidebarPinnedRef = useRef(sidebarPinned)
   sidebarPinnedRef.current = sidebarPinned
   // Pre-focus session-list state while the Web Preview expand mode auto-hides
@@ -205,7 +219,7 @@ export function usePaneLayoutState({
   }, [embedMode, splitMode, enterSplit, splitFeatureEnabled, activeSlot])
   return {
     sidebarPinned, setSidebarPinned, sidebarPinnedRef, sidebarAutoHidden, sidePanelDock, sidePanelDockAnim, sidebarWidth, setSidebarWidth, sidebarDragging, setSidebarDragging, setEditingTitleSlot,
-    editingTitle, enterSplit, splitAnchorForActive, activeIsSplitAnchor, splitSeedDir,
+    editingTitle, enterSplit, splitAnchorForActive, activeIsSplitAnchor, splitSeedDir, sessionsSimple,
   }
 }
 

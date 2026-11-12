@@ -19,15 +19,15 @@ from agent_capabilities_helpers import _accepting_kiro_cli  # noqa: F401
 from agent_capabilities_helpers import capability_app_fixture  # noqa: F401
 from agent_capabilities_helpers import editor_fixture, save, spec_for
 
-from conftest import requires_symlinks
-from kiro_crew import agent, agent_state
-from kiro_crew.agent_capabilities import (
+from aj_crew import agent, agent_state
+from aj_crew.agent_capabilities import (
     CapabilityError,
     CapabilityService,
     prepare_member_capabilities,
     validate_request,
 )
-from kiro_crew.config import loader
+from aj_crew.config import loader
+from conftest import requires_symlinks
 
 #: ``test_materialization_restamp_probe.py`` imports the ``editor`` fixture by this name.
 editor = editor_fixture
@@ -259,7 +259,7 @@ def test_selected_parent_rows_can_be_accepted_for_multiple_members(editor):
 def test_batch_failure_preserves_reviewed_intent_until_binding_commit(
     editor, monkeypatch, kept_members, failed_step
 ):
-    import kiro_crew.agent_capabilities as capabilities
+    import aj_crew.agent_capabilities as capabilities
 
     service, home, specs, parent = editor
     for member in ("A", "B"):
@@ -381,7 +381,7 @@ async def test_http_failed_batch_can_review_and_retry_the_same_acceptance(
 ):
     from aiohttp.test_utils import TestClient, TestServer
 
-    import kiro_crew.agent_capabilities as capabilities
+    import aj_crew.agent_capabilities as capabilities
 
     service, home, specs, parent = editor
     app, refreshes = capability_app
@@ -546,8 +546,8 @@ async def test_http_owner_boundary(editor, caller, app_id, expected):
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers.agent_capabilities import _SERVICE
-    from kiro_crew.dashboard.routes.agents import register
+    from aj_crew.dashboard.handlers.agent_capabilities import _SERVICE
+    from aj_crew.dashboard.routes.agents import register
 
     service, _, _, _ = editor
 
@@ -638,7 +638,7 @@ def test_publish_flattens_saved_snapshot_without_accepting_pending_parent(editor
 
 
 def test_derived_permissions_follow_owner_approval_edits(editor):
-    from kiro_crew.agent_sdk.drivers.acp import derived_agent_permissions
+    from aj_crew.agent_sdk.drivers.acp import derived_agent_permissions
 
     service, home, specs, parent = editor
     parent["permissions"] = {"rules": []}
@@ -685,7 +685,7 @@ def test_reset_reviews_parent_permissions_the_derive_does_not_produce(editor):
 
 
 def test_reset_onto_reviewed_parent_keeps_derived_permissions(editor):
-    from kiro_crew.agent_sdk.drivers.acp import derived_agent_permissions
+    from aj_crew.agent_sdk.drivers.acp import derived_agent_permissions
 
     service, home, specs, parent = editor
     parent["allowedTools"] = ["@search"]
@@ -719,8 +719,8 @@ def test_ordinary_apply_leaves_untouched_approval_sections_alone(editor):
 def test_policy_withheld_approval_never_resurrects_on_relaxation(editor):
     from dataclasses import replace
 
-    from kiro_crew.platform.context import current_context, set_context
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.platform.context import current_context, set_context
+    from aj_crew.platform.governance import parse_policy
 
     service, home, specs, parent = editor
     parent["allowedTools"] = ["@search"]
@@ -756,8 +756,8 @@ def _approval_preview(service, *refs):
 def test_preview_names_a_governance_withheld_approval(editor):
     from dataclasses import replace
 
-    from kiro_crew.platform.context import current_context, set_context
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.platform.context import current_context, set_context
+    from aj_crew.platform.governance import parse_policy
 
     service, _, _, _ = editor
     original = current_context()
@@ -803,9 +803,9 @@ def test_preview_names_an_approval_for_a_disabled_connection(editor):
 
 
 def test_withheld_reason_is_read_from_the_projected_spec():
-    from kiro_crew.agent_capabilities import SECTIONS, _withheld_approvals
+    from aj_crew.agent_capabilities import SECTIONS, _withheld_approvals
 
-    refs = ("@gone/a", "@off/a", "@kept/a", "@kirocrew-mate/a", "@other/a", "@ruled/a")
+    refs = ("@gone/a", "@off/a", "@kept/a", "@ajcrew-mate/a", "@other/a", "@ruled/a")
     request = {
         "operations": [
             {"section": "autoApprove", "id": ref, "action": "set", "value": True} for ref in refs
@@ -815,7 +815,7 @@ def test_withheld_reason_is_read_from_the_projected_spec():
         "mcpServers": {
             "off": {"command": "off", "disabled": True},
             "kept": {"command": "kept", "autoApprove": ["a"]},
-            "kirocrew-mate": {"command": "mate"},
+            "ajcrew-mate": {"command": "mate"},
             "other": {"command": "other"},
             "ruled": {"command": "ruled"},
         }
@@ -825,7 +825,7 @@ def test_withheld_reason_is_read_from_the_projected_spec():
     assert _withheld_approvals(request, spec, intent, {}) == [
         {"section": "autoApprove", "id": "@gone/a", "reason": "not_connected"},
         {"section": "autoApprove", "id": "@off/a", "reason": "not_connected"},
-        {"section": "autoApprove", "id": "@kirocrew-mate/a", "reason": "managed"},
+        {"section": "autoApprove", "id": "@ajcrew-mate/a", "reason": "managed"},
         {"section": "autoApprove", "id": "@other/a", "reason": "unexplained"},
         {"section": "autoApprove", "id": "@ruled/a", "reason": "governed"},
     ]
@@ -853,7 +853,7 @@ def test_project_parent_is_pinned_and_never_falls_back(editor, monkeypatch):
     config["workspaces"] = {"default": {"dir": str(project)}}
     (home / "config.json").write_text(json.dumps(config))
     monkeypatch.setattr(
-        "kiro_crew.agent_capabilities.default_project_dir", loader.default_project_dir
+        "aj_crew.agent_capabilities.default_project_dir", loader.default_project_dir
     )
     loader._invalidate_config_cache()
     assert service.get("A")["template"]["scope"] == "project"
@@ -871,7 +871,7 @@ def _use_workspace_project(home, monkeypatch, project):
     config["workspaces"] = {"default": {"dir": str(project)}}
     (home / "config.json").write_text(json.dumps(config))
     monkeypatch.setattr(
-        "kiro_crew.agent_capabilities.default_project_dir", loader.default_project_dir
+        "aj_crew.agent_capabilities.default_project_dir", loader.default_project_dir
     )
     loader._invalidate_config_cache()
 
@@ -972,9 +972,9 @@ def test_project_file_shadowing_the_private_copy_names_that_file(editor, tmp_pat
     workspace.mkdir()
     _use_workspace_project(home, monkeypatch, workspace)
     save(service, enroll=True)
-    from kiro_crew.config import KiroCrewConfig
+    from aj_crew.config import AjCrewConfig
 
-    target = KiroCrewConfig.load().agents["A"].kiro_agent
+    target = AjCrewConfig.load().agents["A"].kiro_agent
     folder = tmp_path / "folder-project"
     (folder / ".kiro" / "agents").mkdir(parents=True)
     (folder / ".kiro" / "agents" / f"{target}.json").write_text(
@@ -994,9 +994,9 @@ def test_shadowing_file_is_named_as_it_is_on_disk(editor, tmp_path, monkeypatch,
     workspace.mkdir()
     _use_workspace_project(home, monkeypatch, workspace)
     save(service, enroll=True)
-    from kiro_crew.config import KiroCrewConfig
+    from aj_crew.config import AjCrewConfig
 
-    target = KiroCrewConfig.load().agents["A"].kiro_agent
+    target = AjCrewConfig.load().agents["A"].kiro_agent
     agents = tmp_path / "folder-project" / ".kiro" / "agents"
     agents.mkdir(parents=True)
     if form == "markdown":
@@ -1014,16 +1014,16 @@ def test_workspace_file_shadowing_the_private_copy_names_that_file_on_reconcile(
     editor, tmp_path, monkeypatch
 ):
     """A shadow in the member's own project is refused by reconcile, naming the file."""
-    from kiro_crew.agent_capabilities import reconcile_member_capabilities
+    from aj_crew.agent_capabilities import reconcile_member_capabilities
 
     service, home, specs, parent = editor
     workspace = tmp_path / "workspace"
     workspace.mkdir()
     _use_workspace_project(home, monkeypatch, workspace)
     save(service, enroll=True)
-    from kiro_crew.config import KiroCrewConfig
+    from aj_crew.config import AjCrewConfig
 
-    target = KiroCrewConfig.load().agents["A"].kiro_agent
+    target = AjCrewConfig.load().agents["A"].kiro_agent
     (workspace / ".kiro" / "agents").mkdir(parents=True)
     (workspace / ".kiro" / "agents" / f"{target}.json").write_text(
         (specs / f"{target}.json").read_text()
@@ -1124,7 +1124,7 @@ def test_existing_connection_preserves_secret_transport_fields(editor):
 
 @pytest.mark.parametrize("failed_step", ["spec", "receipt"])
 def test_failed_reconciliation_recovers_on_retry(editor, monkeypatch, failed_step):
-    import kiro_crew.agent_capabilities as capabilities
+    import aj_crew.agent_capabilities as capabilities
 
     service, home, specs, parent = editor
     save(service, enroll=True)
@@ -1236,8 +1236,8 @@ def test_preview_and_publication_use_identical_governance_without_preview_audit(
     from copy import deepcopy
     from dataclasses import replace
 
-    from kiro_crew.platform import governance
-    from kiro_crew.platform.context import current_context, set_context
+    from aj_crew.platform import governance
+    from aj_crew.platform.context import current_context, set_context
 
     service, _, specs, parent = editor
     parent["allowedTools"] = ["@search"]
@@ -1356,13 +1356,13 @@ def test_invalid_retain_paths_write_nothing(editor, paths):
 def test_absent_scalars_are_editable_and_managed_rows_identify_ownership(editor):
     service, _, specs, parent = editor
     parent.pop("prompt")
-    parent["mcpServers"]["kirocrew-core"] = {"command": "system", "args": []}
+    parent["mcpServers"]["ajcrew-core"] = {"command": "system", "args": []}
     (specs / "parent.json").write_text(json.dumps(parent))
     rows = service.get("A")["rows"]
     for section in ("prompt", "model"):
         row = next(r for r in rows if r["section"] == section)
         assert not row["present"] and row["value"] == ""
-    row = next(r for r in rows if r["id"] == "kirocrew-core")
+    row = next(r for r in rows if r["id"] == "ajcrew-core")
     assert row["managed"]
     assert all("editable" not in row and "locked_reason" not in row for row in rows)
 
@@ -1390,14 +1390,14 @@ def test_local_overlay_member_saves_in_overlay_and_preserves_base(editor):
     assert target.startswith("crew-") and (specs / (target + ".json")).is_file()
     assert service.get("A")["mode"] == "inherited"
     service.reset("A", target)
-    current = loader.KiroCrewConfig.load().agents["A"].kiro_agent
+    current = loader.AjCrewConfig.load().agents["A"].kiro_agent
     service.publish("A", current, "from-local")
-    assert loader.KiroCrewConfig.load().agents["A"].kiro_agent == "from-local"
+    assert loader.AjCrewConfig.load().agents["A"].kiro_agent == "from-local"
     assert (home / "config.json").read_bytes() == base
 
 
 def test_reconcile_changes_ordinary_parent_fields_in_new_generation_only(editor):
-    from kiro_crew.agent_capabilities import reconcile_member_capabilities
+    from aj_crew.agent_capabilities import reconcile_member_capabilities
 
     service, home, specs, parent = editor
     parent["description"] = "before"
@@ -1421,14 +1421,14 @@ def test_reconcile_changes_ordinary_parent_fields_in_new_generation_only(editor)
 
 def test_worker_refresh_and_capability_publication_preserve_each_others_state(editor):
     service, home, specs, parent = editor
-    parent["name"] = "kirocrew"
-    default_path = specs / "kirocrew.json"
+    parent["name"] = "ajcrew"
+    default_path = specs / "ajcrew.json"
     default_path.write_text(json.dumps(parent), encoding="utf-8")
     agent._install_worker_agent()
-    worker_path = specs / "kirocrew-worker.json"
+    worker_path = specs / "ajcrew-worker.json"
     worker_before = json.loads(worker_path.read_text())
     config = json.loads((home / "config.json").read_text())
-    config["agents"]["A"]["kiro_agent"] = "kirocrew-worker"
+    config["agents"]["A"]["kiro_agent"] = "ajcrew-worker"
     (home / "config.json").write_text(json.dumps(config), encoding="utf-8")
     loader._invalidate_config_cache()
     save(
@@ -1440,17 +1440,17 @@ def test_worker_refresh_and_capability_publication_preserve_each_others_state(ed
     private_path = specs / (private["name"] + ".json")
     private_bytes = private_path.read_bytes()
     state_before = json.loads(agent_state._state_path().read_text())
-    assert state_before["kirocrew-worker"]["mirrored_from"] == agent.default_spec_fingerprint()
-    assert state_before["kirocrew-worker"]["mirrored_stat"] == agent.default_spec_identity()
+    assert state_before["ajcrew-worker"]["mirrored_from"] == agent.default_spec_fingerprint()
+    assert state_before["ajcrew-worker"]["mirrored_stat"] == agent.default_spec_identity()
 
     parent["tools"].append("write")
     parent["allowedTools"].append("write")
     default_path.write_text(json.dumps(parent), encoding="utf-8")
     agent._install_worker_agent()
     state_after = json.loads(agent_state._state_path().read_text())
-    mirrored = state_after["kirocrew-worker"]
+    mirrored = state_after["ajcrew-worker"]
     assert mirrored["mirrored_from"] == agent.default_spec_fingerprint()
-    assert mirrored["mirrored_from"] != state_before["kirocrew-worker"]["mirrored_from"]
+    assert mirrored["mirrored_from"] != state_before["ajcrew-worker"]["mirrored_from"]
     assert mirrored["mirrored_stat"] == agent.default_spec_identity()
     assert state_after[private["name"]] == state_before[private["name"]]
     assert private_path.read_bytes() == private_bytes
@@ -1474,7 +1474,7 @@ def test_worker_refresh_and_capability_publication_preserve_each_others_state(ed
     assert "write" not in current["tools"]
     assert "write" not in current["allowedTools"]
     assert private_path.read_bytes() == private_bytes
-    assert json.loads(agent_state._state_path().read_text())["kirocrew-worker"] == mirrored
+    assert json.loads(agent_state._state_path().read_text())["ajcrew-worker"] == mirrored
     assert json.loads(worker_path.read_text()) == worker_after
 
 
@@ -1513,7 +1513,7 @@ def test_publish_respects_reserved_legacy_default_binding(editor):
 def test_publish_refuses_windows_device_names_in_any_case_or_extension(editor, name):
     from unittest.mock import patch
 
-    from kiro_crew import agent_capabilities
+    from aj_crew import agent_capabilities
 
     # One shared definition: constants.WINDOWS_DEVICE_STEMS, not an inline copy.
     service, home, specs, _ = editor
@@ -1541,29 +1541,29 @@ def test_publish_allows_names_that_only_resemble_device_names(editor, name):
 def test_owned_parent_refreshes_real_plumbing_without_regranting_tools(editor, monkeypatch):
     import sys
 
-    from kiro_crew.agent_capabilities import reconcile_member_capabilities
+    from aj_crew.agent_capabilities import reconcile_member_capabilities
 
     service, home, specs, parent = editor
-    parent.update(name="kirocrew", prompt="owner prompt", model="owner-selected-model")
+    parent.update(name="ajcrew", prompt="owner prompt", model="owner-selected-model")
     parent["mcpServers"] = {
-        "kirocrew-core": {
+        "ajcrew-core": {
             "command": "outdated",
             "args": ["old"],
-            "env": {"KIROCREW_HOME": "outdated", "KEEP": "custom"},
+            "env": {"AJCREW_HOME": "outdated", "KEEP": "custom"},
         }
     }
     parent["hooks"] = {"agentSpawn": [{"command": "outdated"}]}
-    (specs / "kirocrew.json").write_text(json.dumps(parent))
+    (specs / "ajcrew.json").write_text(json.dumps(parent))
     config = json.loads((home / "config.json").read_text())
-    config["agents"]["A"]["kiro_agent"] = "kirocrew"
+    config["agents"]["A"]["kiro_agent"] = "ajcrew"
     (home / "config.json").write_text(json.dumps(config))
     loader._invalidate_config_cache()
     monkeypatch.setattr(
         agent,
         "_MANAGED_MCP_SERVERS",
         {
-            "kirocrew-core": {"command": sys.executable, "args": ["mcp-core"]},
-            "kirocrew-cron": {"command": sys.executable, "args": ["mcp-cron"]},
+            "ajcrew-core": {"command": sys.executable, "args": ["mcp-core"]},
+            "ajcrew-cron": {"command": sys.executable, "args": ["mcp-cron"]},
         },
     )
     save(service, enroll=True)
@@ -1571,21 +1571,21 @@ def test_owned_parent_refreshes_real_plumbing_without_regranting_tools(editor, m
     assert first["prompt"] == "owner prompt"
     assert first["model"] == "owner-selected-model"
     assert first["tools"] == ["read"]
-    assert set(first["mcpServers"]) == {"kirocrew-core"}
-    assert first["mcpServers"]["kirocrew-core"]["command"] == sys.executable
-    assert first["mcpServers"]["kirocrew-core"]["env"]["KIROCREW_HOME"] == str(home)
-    assert first["mcpServers"]["kirocrew-core"]["env"]["KEEP"] == "custom"
+    assert set(first["mcpServers"]) == {"ajcrew-core"}
+    assert first["mcpServers"]["ajcrew-core"]["command"] == sys.executable
+    assert first["mcpServers"]["ajcrew-core"]["env"]["AJCREW_HOME"] == str(home)
+    assert first["mcpServers"]["ajcrew-core"]["env"]["KEEP"] == "custom"
     assert first["hooks"] != parent["hooks"]
     path = specs / (first["name"] + ".json")
     old_bytes = path.read_bytes()
     monkeypatch.setattr(
         agent,
         "_MANAGED_MCP_SERVERS",
-        {"kirocrew-core": {"command": sys.executable, "args": ["mcp-core", "--new"]}},
+        {"ajcrew-core": {"command": sys.executable, "args": ["mcp-core", "--new"]}},
     )
     reconcile_member_capabilities("A")
     assert path.read_bytes() == old_bytes
-    assert spec_for(home, specs)["mcpServers"]["kirocrew-core"]["args"] == ["mcp-core", "--new"]
+    assert spec_for(home, specs)["mcpServers"]["ajcrew-core"]["args"] == ["mcp-core", "--new"]
 
 
 def test_retained_secret_is_bound_to_member_revision(editor):
@@ -1645,7 +1645,7 @@ def test_mixed_layer_parent_acceptance_is_one_overlay_delta(editor):
     parent["tools"].append("write")
     (specs / "parent.json").write_text(json.dumps(parent))
     save(service, accept_parent=[{"section": "tools", "id": "write"}], accept_members=["B"])
-    cfg = loader.KiroCrewConfig.load()
+    cfg = loader.AjCrewConfig.load()
     for member in ("A", "B"):
         effective = json.loads((specs / (cfg.agents[member].kiro_agent + ".json")).read_text())
         assert effective["tools"] == ["read", "write"]
@@ -1653,8 +1653,8 @@ def test_mixed_layer_parent_acceptance_is_one_overlay_delta(editor):
 
 
 def test_prepare_detects_governance_change_during_spec_read(editor, monkeypatch):
-    import kiro_crew.agent_capabilities as capabilities
-    from kiro_crew.platform.context import current_context, set_context
+    import aj_crew.agent_capabilities as capabilities
+    from aj_crew.platform.context import current_context, set_context
 
     service, home, specs, _ = editor
     save(service, enroll=True)
@@ -1675,7 +1675,7 @@ def test_prepare_detects_governance_change_during_spec_read(editor, monkeypatch)
 
 @pytest.mark.parametrize("stage", ["receipt", "spec", "binding", "completion", "crash"])
 def test_publish_interruption_is_recoverable_with_same_name(editor, monkeypatch, stage):
-    import kiro_crew.agent_capabilities as capabilities
+    import aj_crew.agent_capabilities as capabilities
 
     class Interrupted(BaseException):
         pass

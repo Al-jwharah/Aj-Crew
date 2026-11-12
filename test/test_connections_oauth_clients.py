@@ -13,8 +13,8 @@ from copy import deepcopy
 
 import pytest
 
-from kiro_crew.connections import get_provider
-from kiro_crew.connections.oauth_clients import (
+from aj_crew.connections import get_provider
+from aj_crew.connections.oauth_clients import (
     CONFIG_CLIENTS_KEY,
     CONFIG_ROOT_KEY,
     ResolvedOAuthClient,
@@ -29,12 +29,12 @@ from kiro_crew.connections.oauth_clients import (
     validate_client_id,
     validate_client_secret,
 )
-from kiro_crew.mcp_utils import KIRO_OAUTH_KEY
+from aj_crew.mcp_utils import KIRO_OAUTH_KEY
 
 GITHUB_MCP_URL = "https://api.githubcopilot.com/mcp/"
 GITHUB_REDIRECT_URI = "http://127.0.0.1:48101/callback"
-ENV_ID = "KIROCREW_CONNECTIONS_GITHUB_CLIENT_ID"
-ENV_SECRET = "KIROCREW_CONNECTIONS_GITHUB_CLIENT_SECRET"
+ENV_ID = "AJCREW_CONNECTIONS_GITHUB_CLIENT_ID"
+ENV_SECRET = "AJCREW_CONNECTIONS_GITHUB_CLIENT_SECRET"
 VAULT_NAME = "CONNECTIONS_GITHUB_CLIENT_SECRET"
 
 
@@ -88,8 +88,8 @@ class _BrokenVault:
     [("github", "GITHUB"), ("google-drive", "GOOGLE_DRIVE"), ("microsoft-365", "MICROSOFT_365")],
 )
 def test_env_and_vault_names_upper_case_the_slug_and_swap_hyphens(slug, token):
-    assert client_id_env_name(slug) == f"KIROCREW_CONNECTIONS_{token}_CLIENT_ID"
-    assert client_secret_env_name(slug) == f"KIROCREW_CONNECTIONS_{token}_CLIENT_SECRET"
+    assert client_id_env_name(slug) == f"AJCREW_CONNECTIONS_{token}_CLIENT_ID"
+    assert client_secret_env_name(slug) == f"AJCREW_CONNECTIONS_{token}_CLIENT_SECRET"
     assert client_secret_name(slug) == f"CONNECTIONS_{token}_CLIENT_SECRET"
 
 
@@ -244,7 +244,7 @@ def test_a_dcr_provider_never_resolves_even_with_values_present():
         notion,
         config=_config("notion", "cfg"),
         vault=_Vault({"CONNECTIONS_NOTION_CLIENT_SECRET": _Held("s")}),
-        environ={"KIROCREW_CONNECTIONS_NOTION_CLIENT_ID": "env"},
+        environ={"AJCREW_CONNECTIONS_NOTION_CLIENT_ID": "env"},
     )
     assert resolved is None
 
@@ -366,7 +366,7 @@ def test_hyphenated_slug_reads_its_own_env_and_vault_names():
         provider,
         config=None,
         vault=vault,
-        environ={"KIROCREW_CONNECTIONS_GOOGLE_DRIVE_CLIENT_ID": "gd-id"},
+        environ={"AJCREW_CONNECTIONS_GOOGLE_DRIVE_CLIENT_ID": "gd-id"},
     )
     assert resolved is not None
     assert resolved.slug == "google-drive"
@@ -613,7 +613,7 @@ def test_provider_for_server_returns_a_copy_not_the_registry_object():
 
 
 def test_strip_removes_only_the_three_owned_keys_and_keeps_siblings():
-    from kiro_crew.connections.oauth_clients import strip_preregistered_oauth_client
+    from aj_crew.connections.oauth_clients import strip_preregistered_oauth_client
 
     entry = {
         "url": GITHUB_MCP_URL,
@@ -631,7 +631,7 @@ def test_strip_removes_only_the_three_owned_keys_and_keeps_siblings():
 
 
 def test_strip_drops_the_oauth_mapping_when_nothing_is_left():
-    from kiro_crew.connections.oauth_clients import strip_preregistered_oauth_client
+    from aj_crew.connections.oauth_clients import strip_preregistered_oauth_client
 
     out = strip_preregistered_oauth_client(
         {"url": GITHUB_MCP_URL, "oauth": {"clientId": "old", "clientSecret": "retired"}}
@@ -640,7 +640,7 @@ def test_strip_drops_the_oauth_mapping_when_nothing_is_left():
 
 
 def test_strip_is_a_no_op_without_an_oauth_block():
-    from kiro_crew.connections.oauth_clients import strip_preregistered_oauth_client
+    from aj_crew.connections.oauth_clients import strip_preregistered_oauth_client
 
     assert strip_preregistered_oauth_client({"url": GITHUB_MCP_URL}) == {"url": GITHUB_MCP_URL}
 
@@ -649,10 +649,10 @@ def test_strip_is_a_no_op_without_an_oauth_block():
 
 
 def test_redaction_masks_every_client_secret_and_nothing_else():
-    from kiro_crew.mcp_utils import OAUTH_CLIENT_SECRET_REDACTED, redact_oauth_client_secrets
+    from aj_crew.mcp_utils import OAUTH_CLIENT_SECRET_REDACTED, redact_oauth_client_secrets
 
     spec = {
-        "name": "kirocrew",
+        "name": "ajcrew",
         "mcpServers": {
             "github": {"url": GITHUB_MCP_URL, "oauth": {"clientId": "id", "clientSecret": "s3"}},
             "notion": {"url": "https://mcp.notion.com/mcp"},
@@ -672,7 +672,7 @@ def test_redaction_masks_every_client_secret_and_nothing_else():
 
 
 def test_restoring_a_marker_takes_the_on_disk_value_or_drops_it():
-    from kiro_crew.mcp_utils import (
+    from aj_crew.mcp_utils import (
         OAUTH_CLIENT_SECRET_REDACTED,
         redact_oauth_client_secrets,
         restore_redacted_oauth_client_secrets,
@@ -698,7 +698,7 @@ def test_restoring_a_marker_refuses_when_the_url_moved():
     """A secret is bound to the endpoint it was issued for: an entry whose ``url``
     was edited alongside the marker drops the key instead of inheriting the secret
     stored for the old endpoint."""
-    from kiro_crew.mcp_utils import (
+    from aj_crew.mcp_utils import (
         OAUTH_CLIENT_SECRET_REDACTED,
         restore_redacted_oauth_client_secrets,
     )
@@ -723,19 +723,17 @@ def test_rebuild_leaves_an_unmanaged_hand_authored_client_untouched(monkeypatch)
     """A user-owned ``github`` server at the provider URL keeps its own client.
 
     The rebuild merges onto the previous spec, so for a server defined only there
-    (``kiro-cli mcp add --agent kirocrew``) the hand-authored ``oauth`` block is
+    (``kiro-cli mcp add --agent ajcrew``) the hand-authored ``oauth`` block is
     the only copy -- and, GitHub refusing DCR, the only way that server can
     authenticate at all. Unmanaged means verbatim, for apply and strip alike; the
     vault must not even be opened.
     """
-    from kiro_crew import agent
+    from aj_crew import agent
 
     def _must_not_resolve(*_a, **_k):  # pragma: no cover - the assertion
         raise AssertionError("an unmanaged entry must not consult the operator client")
 
-    monkeypatch.setattr(
-        "kiro_crew.connections.oauth_clients.resolve_oauth_client", _must_not_resolve
-    )
+    monkeypatch.setattr("aj_crew.connections.oauth_clients.resolve_oauth_client", _must_not_resolve)
     hand_authored = {
         "url": GITHUB_MCP_URL,
         "oauth": {
@@ -749,13 +747,13 @@ def test_rebuild_leaves_an_unmanaged_hand_authored_client_untouched(monkeypatch)
 
 
 def test_rebuild_strips_a_cleared_client_only_from_a_managed_entry(monkeypatch):
-    from kiro_crew import agent
+    from aj_crew import agent
 
     monkeypatch.setattr(
-        "kiro_crew.connections.oauth_clients.resolve_oauth_client", lambda *a, **k: None
+        "aj_crew.connections.oauth_clients.resolve_oauth_client", lambda *a, **k: None
     )
     monkeypatch.setattr(agent, "_load_json", lambda *_a, **_k: {})
-    monkeypatch.setattr("kiro_crew.secrets.SecretVault", lambda *_a, **_k: object())
+    monkeypatch.setattr("aj_crew.secrets.SecretVault", lambda *_a, **_k: object())
     stale = {
         "url": GITHUB_MCP_URL,
         "oauth": {"clientId": "retired", "clientSecret": "retired", "issuer": "https://i"},
@@ -768,16 +766,16 @@ def test_rebuild_strips_a_cleared_client_only_from_a_managed_entry(monkeypatch):
 def test_rebuild_keeps_the_client_out_of_the_spec_under_crew_custody(monkeypatch, crew_owns):
     # Flag on + KAS: Crew signs in from the vault and KAS drops the block, so the
     # plaintext copy has no reader. Flag off: kiro-cli needs it, as before.
-    from kiro_crew import agent
-    from kiro_crew.connections import crew_oauth
+    from aj_crew import agent
+    from aj_crew.connections import crew_oauth
 
     monkeypatch.setattr(crew_oauth, "enabled", lambda: crew_owns)
     monkeypatch.setattr(crew_oauth, "_chat_backend_bridged", lambda: True)
     monkeypatch.setattr(
-        "kiro_crew.connections.oauth_clients.resolve_oauth_client", lambda *a, **k: _resolved()
+        "aj_crew.connections.oauth_clients.resolve_oauth_client", lambda *a, **k: _resolved()
     )
     monkeypatch.setattr(agent, "_load_json", lambda *_a, **_k: {})
-    monkeypatch.setattr("kiro_crew.secrets.SecretVault", lambda *_a, **_k: object())
+    monkeypatch.setattr("aj_crew.secrets.SecretVault", lambda *_a, **_k: object())
     out = agent._apply_operator_oauth_client("github", {"url": GITHUB_MCP_URL}, managed=True)
     keys = set(out.get("oauth", {}))
     if crew_owns:
@@ -798,25 +796,25 @@ def test_rebuild_binds_the_client_at_write_time_not_at_the_server_pass(tmp_path,
     import contextlib
     import json
 
-    from kiro_crew import agent as agent_mod
-    from kiro_crew.apps import bridges
-    from kiro_crew.connections import oauth_clients as oc
+    from aj_crew import agent as agent_mod
+    from aj_crew.apps import bridges
+    from aj_crew.connections import oauth_clients as oc
 
     project = tmp_path / "project" / "agents"
     project.mkdir(parents=True)
-    (project / "defaults.json").write_text(json.dumps({"name": "kirocrew"}), encoding="utf-8")
+    (project / "defaults.json").write_text(json.dumps({"name": "ajcrew"}), encoding="utf-8")
     (project / "prompt.md").write_text("prompt", encoding="utf-8")
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path / "project"))
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path / "project"))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     # The dashboard store owns `github`, so the entry is managed.
     (home / "mcp.json").write_text(
         json.dumps({"mcpServers": {"github": {"url": GITHUB_MCP_URL}}}), encoding="utf-8"
     )
     kiro_dir = tmp_path / ".kiro" / "agents"
     kiro_dir.mkdir(parents=True)
-    spec_path = kiro_dir / "kirocrew.json"
+    spec_path = kiro_dir / "ajcrew.json"
     monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", kiro_dir)
     monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", tmp_path / "absent-kiro.json")
     monkeypatch.setattr(agent_mod, "_CC_MCP_JSON", tmp_path / "absent-cc.json")
@@ -859,14 +857,12 @@ def test_rebuild_strips_the_client_from_a_managed_provider_whose_url_moved(monke
     old secret to the replacement endpoint. The client is bound to the endpoint
     it was registered for, so a moved URL retires it from this entry.
     """
-    from kiro_crew import agent
+    from aj_crew import agent
 
     def _must_not_resolve(*_a, **_k):  # pragma: no cover - the assertion
         raise AssertionError("a moved URL must not consult the operator client")
 
-    monkeypatch.setattr(
-        "kiro_crew.connections.oauth_clients.resolve_oauth_client", _must_not_resolve
-    )
+    monkeypatch.setattr("aj_crew.connections.oauth_clients.resolve_oauth_client", _must_not_resolve)
     moved = {
         "url": "https://mcp.example.test/github",
         "oauth": {"clientId": "op", "clientSecret": "op-secret", "issuer": "https://i"},
@@ -885,11 +881,11 @@ def test_find_server_spec_strips_the_projected_client_from_the_rendered_spec(tmp
     """A scope toggle copying the rendered `github` entry must not carry the secret."""
     import json
 
-    from kiro_crew.dashboard.handlers import mcp as mcp_handlers
+    from aj_crew.dashboard.handlers import mcp as mcp_handlers
 
     agents = tmp_path / "agents"
     agents.mkdir()
-    (agents / "kirocrew.json").write_text(
+    (agents / "ajcrew.json").write_text(
         json.dumps(
             {
                 "mcpServers": {
@@ -923,7 +919,7 @@ def test_scrub_removes_a_projected_client_copy_from_every_scope(tmp_path, monkey
     """Copies made before the strip-on-copy rule are purged on the next mutation."""
     import json
 
-    from kiro_crew.dashboard.handlers import mcp as mcp_handlers
+    from aj_crew.dashboard.handlers import mcp as mcp_handlers
 
     store = tmp_path / "mcp.json"
     kiro_global = tmp_path / "kiro-mcp.json"
@@ -953,13 +949,13 @@ def test_scrub_removes_a_projected_client_copy_from_every_scope(tmp_path, monkey
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr(mcp_handlers, "_kirocrew_mcp_json", lambda: store)
+    monkeypatch.setattr(mcp_handlers, "_ajcrew_mcp_json", lambda: store)
     monkeypatch.setattr(mcp_handlers, "_GLOBAL_MCP_JSON", kiro_global)
     monkeypatch.setattr(mcp_handlers, "_extra_mcp_scopes", lambda: [])
 
     actions = mcp_handlers._scrub_preregistered_oauth_copies("github")
 
-    assert actions == {"kirocrew": "scrubbed", "kiroGlobal": "noop"}
+    assert actions == {"ajcrew": "scrubbed", "kiroGlobal": "noop"}
     after = json.loads(store.read_text(encoding="utf-8"))["mcpServers"]
     assert after["github"] == {"url": GITHUB_MCP_URL, "oauth": {"issuer": "https://i"}}
     assert after["other"] == {"url": "https://x/mcp", "oauth": {"clientSecret": "mine"}}
@@ -975,11 +971,11 @@ def test_scrub_refuses_to_call_an_unreadable_scope_clean(tmp_path, monkeypatch):
 
     import pytest
 
-    from kiro_crew.dashboard.handlers import mcp as mcp_handlers
+    from aj_crew.dashboard.handlers import mcp as mcp_handlers
 
     store = tmp_path / "mcp.json"
     store.write_text("{not json", encoding="utf-8")
-    monkeypatch.setattr(mcp_handlers, "_kirocrew_mcp_json", lambda: store)
+    monkeypatch.setattr(mcp_handlers, "_ajcrew_mcp_json", lambda: store)
     monkeypatch.setattr(mcp_handlers, "_GLOBAL_MCP_JSON", tmp_path / "absent.json")
     monkeypatch.setattr(mcp_handlers, "_extra_mcp_scopes", lambda: [])
 

@@ -37,14 +37,14 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import mcp_discovery
-from kiro_crew.dashboard import handlers_instances, handlers_instances_peer
-from kiro_crew.dashboard.handlers import _shared as shared_handlers
-from kiro_crew.dashboard.handlers import mcp as mcp_handlers
-from kiro_crew.dashboard.routes import agent_config as agent_config_routes
-from kiro_crew.dashboard.routes import connections as connections_routes
-from kiro_crew.dashboard.routes import messaging as messaging_routes
-from kiro_crew.dashboard.routes import system as system_routes
+from aj_crew import mcp_discovery
+from aj_crew.dashboard import handlers_instances, handlers_instances_peer
+from aj_crew.dashboard.handlers import _shared as shared_handlers
+from aj_crew.dashboard.handlers import mcp as mcp_handlers
+from aj_crew.dashboard.routes import agent_config as agent_config_routes
+from aj_crew.dashboard.routes import connections as connections_routes
+from aj_crew.dashboard.routes import messaging as messaging_routes
+from aj_crew.dashboard.routes import system as system_routes
 
 pytestmark = pytest.mark.asyncio
 
@@ -60,18 +60,18 @@ _MUTATING = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 #: is its facade and the owner its peer-reading routes live in.
 _GATED_MODULES = frozenset(
     {
-        "kiro_crew.dashboard.handlers.hooks",
-        "kiro_crew.dashboard.handlers.hooks_scripts",
-        "kiro_crew.dashboard.handlers.hooks_webhooks",
-        "kiro_crew.dashboard.handlers.mcp_custom",
-        "kiro_crew.dashboard.handlers.mcp",
-        "kiro_crew.dashboard.handlers.security",
-        "kiro_crew.dashboard.handlers.security_audit",
-        "kiro_crew.dashboard.handlers.security_trusted_apps",
-        "kiro_crew.dashboard.handlers.security_governance_policy",
-        "kiro_crew.dashboard.handlers.security_trusted_registries",
-        "kiro_crew.dashboard.handlers_instances",
-        "kiro_crew.dashboard.handlers_instances_peer",
+        "aj_crew.dashboard.handlers.hooks",
+        "aj_crew.dashboard.handlers.hooks_scripts",
+        "aj_crew.dashboard.handlers.hooks_webhooks",
+        "aj_crew.dashboard.handlers.mcp_custom",
+        "aj_crew.dashboard.handlers.mcp",
+        "aj_crew.dashboard.handlers.security",
+        "aj_crew.dashboard.handlers.security_audit",
+        "aj_crew.dashboard.handlers.security_trusted_apps",
+        "aj_crew.dashboard.handlers.security_governance_policy",
+        "aj_crew.dashboard.handlers.security_trusted_registries",
+        "aj_crew.dashboard.handlers_instances",
+        "aj_crew.dashboard.handlers_instances_peer",
     }
     # ``handlers/mcp.py`` and every owner its ``_OWNERS`` names, routes or not yet.
     | {mcp_handlers.__name__, *mcp_handlers._OWNERS}
@@ -114,7 +114,7 @@ _REFUSAL = {"error": "owner authorization required", "code": "owner_only"}
 #: covered directly below, so it needs no route drive at all.
 _SHARED_GATE_MODULES = frozenset(
     _GATED_MODULES
-    - {"kiro_crew.dashboard.handlers_instances", "kiro_crew.dashboard.handlers_instances_peer"}
+    - {"aj_crew.dashboard.handlers_instances", "aj_crew.dashboard.handlers_instances_peer"}
 )
 
 #: Status the stand-in gate answers with. Outside every status any handler body
@@ -156,10 +156,10 @@ def no_operator_config_and_no_spawn(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     home = tmp_path / "home"
     (home / ".kiro" / "settings").mkdir(parents=True)
     monkeypatch.setenv("HOME", str(home))
-    monkeypatch.setenv("KIROCREW_HOME", str(home / ".kiro" / "crew"))
+    monkeypatch.setenv("AJCREW_HOME", str(home / ".kiro" / "crew"))
     monkeypatch.setattr(Path, "home", classmethod(lambda _cls: home))
     monkeypatch.setattr(mcp_handlers, "_GLOBAL_MCP_JSON", home / ".kiro" / "settings" / "mcp.json")
-    monkeypatch.setattr(mcp_handlers, "_KIROCREW_MCP_JSON", home / "kirocrew.mcp.json")
+    monkeypatch.setattr(mcp_handlers, "_AJCREW_MCP_JSON", home / "ajcrew.mcp.json")
     monkeypatch.setattr(mcp_discovery, "_MCP_JSON_PATHS", ())
 
     # Establish the stale precondition rather than inheriting it. ``_mcp_probe_ts``
@@ -420,7 +420,7 @@ async def test_the_standalone_local_install_is_admitted_by_the_predicate() -> No
     predicate itself rather than by driving routes, because a caller the gate
     ADMITS is exactly the caller whose handler body would then execute.
     """
-    from kiro_crew.dashboard.handlers.source_providers import is_owner_dashboard_request
+    from aj_crew.dashboard.handlers.source_providers import is_owner_dashboard_request
 
     for subject in ("local-app", "local-startup"):
         assert is_owner_dashboard_request(_req(subject, owner_id="")) is True, subject
@@ -490,7 +490,7 @@ async def test_the_instances_guard_refuses_a_non_owner_and_admits_the_owner(
     opening a peer socket.
     """
     monkeypatch.setattr(
-        handlers_instances.KiroCrewConfig,
+        handlers_instances.AjCrewConfig,
         "load",
         classmethod(lambda _cls: SimpleNamespace(instances=SimpleNamespace(enabled=True))),
     )
@@ -515,7 +515,7 @@ async def test_the_instances_guard_still_refuses_an_unauthenticated_caller(
     "not yours". Folding one into the other would lose that.
     """
     monkeypatch.setattr(
-        handlers_instances.KiroCrewConfig,
+        handlers_instances.AjCrewConfig,
         "load",
         classmethod(lambda _cls: SimpleNamespace(instances=SimpleNamespace(enabled=True))),
     )
@@ -544,7 +544,7 @@ async def test_every_instances_route_runs_the_guard() -> None:
         (r.method, r.resource.canonical)
         for r in app.router.routes()
         if getattr(r.handler, "__module__", "")
-        in {"kiro_crew.dashboard.handlers_instances", "kiro_crew.dashboard.handlers_instances_peer"}
+        in {"aj_crew.dashboard.handlers_instances", "aj_crew.dashboard.handlers_instances_peer"}
         and r.resource is not None
         and r.method != "HEAD"
     }
@@ -563,7 +563,7 @@ async def test_the_internal_secret_caller_still_reaches_the_mcp_server_routes() 
     ``/api/mcp/servers`` is listed in ``server._STRICT_INTERNAL_API_PATHS``, so its
     caller is an internal loopback process presenting ``X-Internal-Secret`` -- the
     App Kit SDK's ``register_mcp_server`` / ``remove_mcp_server`` in
-    ``packages/kirocrew-client-py``. ``token_auth`` grants that request, marks it
+    ``packages/ajcrew-client-py``. ``token_auth`` grants that request, marks it
     ``internal_auth`` and deliberately leaves ``request["app"]`` ABSENT, which the
     owner predicate reads as not-the-owner. An owner gate applied to it as well
     would answer 403 to the one caller the route exists for.
@@ -618,7 +618,7 @@ async def test_no_other_gated_route_belongs_to_the_strict_internal_set() -> None
     """
     import re
 
-    from kiro_crew.dashboard import server as server_mod
+    from aj_crew.dashboard import server as server_mod
 
     with open(
         Path(server_mod.__file__).parent / "server_internal_paths.py", encoding="utf-8"

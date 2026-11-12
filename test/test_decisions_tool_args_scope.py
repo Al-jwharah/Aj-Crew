@@ -24,8 +24,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.decisions import consent, gate
-from kiro_crew.decisions.points import tool_risk as tr
+from aj_crew.decisions import consent, gate
+from aj_crew.decisions.points import tool_risk as tr
 
 DEFAULT_ENDPOINT = "https://api.typesafe.ai/v1/systemone"
 
@@ -33,7 +33,7 @@ DEFAULT_ENDPOINT = "https://api.typesafe.ai/v1/systemone"
 @pytest.fixture
 def keystone(tmp_path, monkeypatch):
     path = tmp_path / "decisions_consent.json"
-    monkeypatch.setattr("kiro_crew.config.loader.decisions_consent_path", lambda: path)
+    monkeypatch.setattr("aj_crew.config.loader.decisions_consent_path", lambda: path)
     return path
 
 
@@ -181,7 +181,7 @@ class TestTheGateRefusesWithoutIt:
                 asked.append(state)
                 raise AssertionError("nothing may be sent for an unscoped point")
 
-        monkeypatch.setattr("kiro_crew.decisions.impl_systemone.SystemOneProvider", _Oracle)
+        monkeypatch.setattr("aj_crew.decisions.impl_systemone.SystemOneProvider", _Oracle)
         answers = await gate.decide("tool.risk", {"tool": "bash"}, tr.questions(), config=_config())
         assert answers is None
         assert asked == []
@@ -220,19 +220,19 @@ def _request(body=None):
 @pytest.fixture
 def quiet_route(monkeypatch):
     """Silence the SEL audit and pin the configured endpoint the PUT must echo."""
-    import kiro_crew.dashboard.handlers as handlers_pkg
+    import aj_crew.dashboard.handlers as handlers_pkg
 
     monkeypatch.setattr(handlers_pkg, "sel", lambda: MagicMock())
     monkeypatch.setattr(gate, "configured_endpoint", lambda *_a, **_kw: DEFAULT_ENDPOINT)
     monkeypatch.setattr(
-        "kiro_crew.decisions.capability.is_decisions_denied", lambda *_a, **_kw: False
+        "aj_crew.decisions.capability.is_decisions_denied", lambda *_a, **_kw: False
     )
 
 
 class TestTheRoute:
     @pytest.mark.asyncio
     async def test_the_get_reports_the_scope(self, keystone, quiet_route):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_get
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_get
 
         consent.save_enabled(True, endpoint=DEFAULT_ENDPOINT, tool_args=True)
         resp = await api_decisions_consent_get(_request())
@@ -240,7 +240,7 @@ class TestTheRoute:
 
     @pytest.mark.asyncio
     async def test_the_put_records_it(self, keystone, quiet_route):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         resp = await api_decisions_consent_put(
             _request({"enabled": True, "endpoint": DEFAULT_ENDPOINT, "tool_args": True})
@@ -252,7 +252,7 @@ class TestTheRoute:
     @pytest.mark.asyncio
     async def test_an_omitted_field_preserves_the_recorded_scope(self, keystone, quiet_route):
         """The card writes ``enabled`` and ``endpoint`` alone on an ordinary flip."""
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         consent.save_enabled(True, endpoint=DEFAULT_ENDPOINT, tool_args=True)
         resp = await api_decisions_consent_put(
@@ -264,7 +264,7 @@ class TestTheRoute:
 
     @pytest.mark.asyncio
     async def test_an_explicit_false_revokes_it(self, keystone, quiet_route):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         consent.save_enabled(True, endpoint=DEFAULT_ENDPOINT, tool_args=True)
         resp = await api_decisions_consent_put(
@@ -276,7 +276,7 @@ class TestTheRoute:
 
     @pytest.mark.asyncio
     async def test_disabling_through_the_route_clears_it(self, keystone, quiet_route):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         consent.save_enabled(True, endpoint=DEFAULT_ENDPOINT, tool_args=True)
         resp = await api_decisions_consent_put(_request({"enabled": False}))
@@ -287,7 +287,7 @@ class TestTheRoute:
     @pytest.mark.asyncio
     @pytest.mark.parametrize("bad", ["true", 1, 0, [], {}])
     async def test_a_truthy_stand_in_is_a_400_not_a_silent_yes(self, keystone, quiet_route, bad):
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         resp = await api_decisions_consent_put(
             _request({"enabled": True, "endpoint": DEFAULT_ENDPOINT, "tool_args": bad})
@@ -307,7 +307,7 @@ class TestTheRoute:
         The writer resolves it from the same read its write is based on, under the
         same lock, so the route must pass the sentinel through untouched.
         """
-        from kiro_crew.dashboard.handlers.decisions import api_decisions_consent_put
+        from aj_crew.dashboard.handlers.decisions import api_decisions_consent_put
 
         consent.save_enabled(True, endpoint=DEFAULT_ENDPOINT, tool_args=True)
         seen: list = []

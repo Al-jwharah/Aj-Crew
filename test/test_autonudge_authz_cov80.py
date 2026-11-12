@@ -1,4 +1,4 @@
-"""Coverage for ``kiro_crew.autonudge_authz`` guard clauses and audit fallbacks.
+"""Coverage for ``aj_crew.autonudge_authz`` guard clauses and audit fallbacks.
 
 The happy path lives in ``test/test_workflows_nudge_wiring.py``. This file covers the
 other rejection branches of BOTH chokepoints, the "auditing must never break the flow"
@@ -23,28 +23,28 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import autonudge_authz
-from kiro_crew.autonudge import (
+from aj_crew import autonudge_authz
+from aj_crew.autonudge import (
     AutoNudgeService,
     MonitorUpdateConflict,
     NudgeAdmissionReason,
     NudgeAdmissionRefused,
     NudgeLoop,
 )
-from kiro_crew.autonudge_authz import (
+from aj_crew.autonudge_authz import (
     authorize_and_add_nudge,
     authorize_and_update_nudge,
     normalize_banner,
 )
-from kiro_crew.autonudge_service.model import SERVICE_SHUTTING_DOWN_MESSAGE
-from kiro_crew.constants import MAX_BANNER_CHARS
-from kiro_crew.dashboard.handlers import autonudge as autonudge_handler
-from kiro_crew.monitoring.models import (
+from aj_crew.autonudge_service.model import SERVICE_SHUTTING_DOWN_MESSAGE
+from aj_crew.constants import MAX_BANNER_CHARS
+from aj_crew.dashboard.handlers import autonudge as autonudge_handler
+from aj_crew.monitoring.models import (
     MAX_MONITOR_WAKE_INSTRUCTIONS_CHARS,
     MonitorOutcome,
     MonitorState,
 )
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 
 class RecordingSvc:
@@ -677,7 +677,7 @@ async def test_add_denies_discord_when_the_transport_is_not_running(audits: list
     loop, error, status = await authorize_and_add_nudge(
         svc=svc,
         state=_state(transports={}),
-        slot_key="discord:kirocrew:direct:42",
+        slot_key="discord:ajcrew:direct:42",
         message="watch",
         source="dashboard",
     )
@@ -693,7 +693,7 @@ async def test_add_denies_webex_when_the_transport_is_not_running(audits: list[d
     loop, error, status = await authorize_and_add_nudge(
         svc=svc,
         state=_state(transports={}),
-        slot_key="webex:kirocrew:direct:user@example.com",
+        slot_key="webex:ajcrew:direct:user@example.com",
         message="watch",
         source="dashboard",
     )
@@ -712,7 +712,7 @@ async def test_add_denies_a_non_dm_webex_session(audits: list[dict]) -> None:
     loop, error, status = await authorize_and_add_nudge(
         svc=svc,
         state=_state(transports={"webex": transport}),
-        slot_key="webex:kirocrew:forum:space:ROOM1",
+        slot_key="webex:ajcrew:forum:space:ROOM1",
         message="watch",
         source="dashboard",
     )
@@ -730,7 +730,7 @@ async def test_add_denies_a_webex_user_off_the_allowlist(audits: list[dict]) -> 
     loop, error, status = await authorize_and_add_nudge(
         svc=svc,
         state=_state(transports={"webex": transport}),
-        slot_key="webex:kirocrew:direct:intruder@example.com",
+        slot_key="webex:ajcrew:direct:intruder@example.com",
         message="watch",
         source="dashboard",
     )
@@ -746,14 +746,14 @@ async def test_add_denies_a_webex_key_that_is_not_the_users_current_session(
     svc = RecordingSvc()
     transport = SimpleNamespace(
         dispatcher=SimpleNamespace(
-            current_session_key=lambda _e: "webex:kirocrew:direct:user@example.com:gen3"
+            current_session_key=lambda _e: "webex:ajcrew:direct:user@example.com:gen3"
         ),
         is_authorized=lambda _e: True,
     )
     loop, error, status = await authorize_and_add_nudge(
         svc=svc,
         state=_state(transports={"webex": transport}),
-        slot_key="webex:kirocrew:direct:user@example.com",
+        slot_key="webex:ajcrew:direct:user@example.com",
         message="watch",
         source="dashboard",
     )
@@ -767,7 +767,7 @@ async def test_add_webex_rechecks_session_ownership_at_commit_time(
 ) -> None:
     """An allow-listed Webex session removed during cleanup must not be
     recreated by an arm request that passed the initial authorization check."""
-    slot_key = "webex:kirocrew:direct:user@example.com"
+    slot_key = "webex:ajcrew:direct:user@example.com"
     dispatcher = SimpleNamespace(current_session_key=lambda _email: slot_key)
     transport = SimpleNamespace(
         dispatcher=dispatcher,
@@ -803,12 +803,12 @@ async def test_add_denies_a_non_dm_discord_session(audits: list[dict]) -> None:
     svc = RecordingSvc()
     dispatcher = SimpleNamespace(
         is_authorized=lambda uid: True,
-        current_session_key=lambda uid: "discord:kirocrew:guild:42",
+        current_session_key=lambda uid: "discord:ajcrew:guild:42",
     )
     loop, error, status = await authorize_and_add_nudge(
         svc=svc,
         state=_state(transports={"discord": SimpleNamespace(dispatcher=dispatcher)}),
-        slot_key="discord:kirocrew:guild:42",
+        slot_key="discord:ajcrew:guild:42",
         message="watch",
         source="dashboard",
     )
@@ -831,7 +831,7 @@ async def test_add_denies_discord_when_the_current_session_lookup_raises(
     loop, error, status = await authorize_and_add_nudge(
         svc=svc,
         state=_state(transports={"discord": SimpleNamespace(dispatcher=dispatcher)}),
-        slot_key="discord:kirocrew:direct:42",
+        slot_key="discord:ajcrew:direct:42",
         message="watch",
         source="dashboard",
     )
@@ -844,11 +844,11 @@ async def test_add_denies_discord_when_the_current_session_lookup_raises(
     "slot_key",
     [
         "telegram:9001",
-        "whatsapp:kirocrew:direct:15550100",
-        "unified:kirocrew",
-        "teams:kirocrew:direct:29:1abcdef",
-        "weixin:kirocrew:direct:oUserOpenId",
-        "imessage:kirocrew:direct:+15550100",
+        "whatsapp:ajcrew:direct:15550100",
+        "unified:ajcrew",
+        "teams:ajcrew:direct:29:1abcdef",
+        "weixin:ajcrew:direct:oUserOpenId",
+        "imessage:ajcrew:direct:+15550100",
     ],
 )
 async def test_add_rejects_a_channel_transport_it_cannot_authorize(
@@ -938,7 +938,7 @@ async def _finish_by_stop_file(
     svc: AutoNudgeService, state: SimpleNamespace, slot_key: str, sentinel: Path
 ) -> NudgeLoop:
     """Arm a goal on its default sentinel, write the file, and let a tick finish it."""
-    from kiro_crew.autonudge import STOP_SENTINEL_REASON
+    from aj_crew.autonudge import STOP_SENTINEL_REASON
 
     first, error, status = await authorize_and_add_nudge(
         svc=svc, state=state, slot_key=slot_key, message="first goal", source="dashboard"
@@ -961,7 +961,7 @@ async def test_a_new_goal_after_a_stop_file_finish_is_not_killed_by_the_stale_fi
     slot, so the person's sequence -- Clear, then set a new goal -- must not
     end on the new loop's first tick. The add transaction removes the stale
     file once the replacement is written, which is what this pins end to end."""
-    from kiro_crew.autonudge import STOP_SENTINEL_REASON, AutoNudgeService
+    from aj_crew.autonudge import STOP_SENTINEL_REASON, AutoNudgeService
 
     sentinel = tmp_path / ".stop-chat-1-1"
     monkeypatch.setattr(
@@ -1112,7 +1112,7 @@ async def test_a_failed_add_write_leaves_the_existing_stop_sentinel_in_place(
     """The removal follows the write, so a replacement whose write fails never
     reaches it: the loop it would have displaced comes back with its stop file,
     which still finishes it on its next tick."""
-    from kiro_crew.autonudge import STOP_SENTINEL_REASON
+    from aj_crew.autonudge import STOP_SENTINEL_REASON
 
     slot_key = "chat-1-1"
     sentinel = tmp_path / ".stop-chat-1-1"
@@ -1163,7 +1163,7 @@ async def test_a_stale_sentinel_that_cannot_be_unlinked_saves_the_goal_finished(
     new goal on its first tick, so the add saves it finished now, with no timer: the
     row, store record, events and stop line that tick would leave, plus a warning
     naming the path. Once the entry is gone the goal can run again."""
-    from kiro_crew.autonudge import STOP_SENTINEL_REASON
+    from aj_crew.autonudge import STOP_SENTINEL_REASON
 
     slot_key = "chat-1-1"
     sentinel = tmp_path / ".stop-chat-1-1"
@@ -1181,7 +1181,7 @@ async def test_a_stale_sentinel_that_cannot_be_unlinked_saves_the_goal_finished(
 
     svc.subscribe(_observe)
     try:
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.autonudge"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.autonudge"):
             loop, error, status = await authorize_and_add_nudge(
                 svc=svc,
                 state=_slot_state(slot_key),
@@ -1219,7 +1219,7 @@ async def test_a_stale_sentinel_whose_finished_save_fails_is_left_to_its_first_t
 ) -> None:
     """If saving the finished state fails too, the committed active row stands with
     its timer armed, and its first tick finishes it as it always did."""
-    from kiro_crew.autonudge import STOP_SENTINEL_REASON
+    from aj_crew.autonudge import STOP_SENTINEL_REASON
 
     slot_key = "chat-1-1"
     sentinel = tmp_path / ".stop-chat-1-1"
@@ -1296,7 +1296,7 @@ async def test_a_stale_sentinel_finish_is_published_only_after_its_write_commits
     written from a staged copy first; the live row (what a concurrent reader sees)
     changes only once that write is durable. While the write is in flight the goal
     still reads active, and the payload being written already carries the finish."""
-    from kiro_crew.autonudge import STOP_SENTINEL_REASON
+    from aj_crew.autonudge import STOP_SENTINEL_REASON
 
     slot_key = "chat-1-1"
     sentinel = tmp_path / ".stop-chat-1-1"

@@ -15,16 +15,16 @@ from types import SimpleNamespace
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import suggestions
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import suggestions
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.testing.wait import async_wait_until
 
 _CONTEXT = "## Recent Activity\n" + "Worked on the auth module refactor. " * 3
 
 
 def _configure(monkeypatch: pytest.MonkeyPatch, language: object) -> None:
     cfg = SimpleNamespace(dashboard=SimpleNamespace(language=language))
-    monkeypatch.setattr(KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    monkeypatch.setattr(AjCrewConfig, "load", staticmethod(lambda: cfg))
 
 
 def _capture_prompts(monkeypatch: pytest.MonkeyPatch, reply: str) -> list[str]:

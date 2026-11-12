@@ -20,9 +20,9 @@ from unittest.mock import patch
 import pytest
 from test_sandbox_launcher_program import launch, payload, rendered_payload
 
-import kiro_crew.sandbox as _sb_mod
-from kiro_crew import sandbox_launcher_program as program
-from kiro_crew.sandbox import (
+import aj_crew.sandbox as _sb_mod
+from aj_crew import sandbox_launcher_program as program
+from aj_crew.sandbox import (
     _AGENT_DENIED_ENV_KEYS,
     _CC_DIRS,
     _CC_EXPOSE_FILES,
@@ -35,7 +35,7 @@ from kiro_crew.sandbox import (
     scrub_env,
     wrap_argv,
 )
-from kiro_crew.sandbox_plan import BACKEND_NAMESPACE, ConfinementPlan, namespace_payload
+from aj_crew.sandbox_plan import BACKEND_NAMESPACE, ConfinementPlan, namespace_payload
 
 #: The launcher stages that MOUNT run against ``CoveringLibc``, which resolves each
 #: ``/proc/self/fd/<n>`` target as only Linux can; the namespace launcher runs nowhere else.
@@ -47,11 +47,11 @@ _LINUX_ONLY = pytest.mark.skipif(
 @pytest.fixture(autouse=True)
 def _neutralize_sandbox_env(monkeypatch):
     """Prevent the 'already inside sandbox' passthrough on sandboxed hosts."""
-    monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+    monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
     monkeypatch.setattr(
         _sb_mod,
         "_KIRO_INTERNAL_SETTINGS_PATH",
-        "/nonexistent/kirocrew-test/amazon-internal.json",
+        "/nonexistent/ajcrew-test/amazon-internal.json",
     )
     # Planning a namespace spawn asks the HOST's ``ssh -V`` whether it knows
     # ``StrictHostKeyChecking=accept-new``. Nothing here is about that probe, and
@@ -125,8 +125,8 @@ class TestCcFilesList:
     def test_has_git_credentials(self):
         assert ".git-credentials" in _CC_FILES
 
-    def test_has_kirocrew_env(self):
-        assert ".kirocrew/.env" in _CC_FILES
+    def test_has_ajcrew_env(self):
+        assert ".ajcrew/.env" in _CC_FILES
 
 
 class TestBuildLauncherScriptCcMode:
@@ -310,7 +310,7 @@ class TestBuildSeatbeltProfileCcMode:
         assert ".npmrc" in profile
         assert ".netrc" in profile
         assert ".git-credentials" in profile
-        assert ".kirocrew/.env" in profile
+        assert ".ajcrew/.env" in profile
         assert "literal" in profile
 
     def test_cc_does_not_deny_ssh(self):
@@ -327,7 +327,7 @@ class TestBuildSeatbeltProfileCcMode:
 
 
 class TestWrapArgvCcMode:
-    @patch("kiro_crew.sandbox.detect_backend", return_value="sandbox-exec")
+    @patch("aj_crew.sandbox.detect_backend", return_value="sandbox-exec")
     def test_cc_mode_routes_to_sandbox(self, _mock_backend):
         wrapped, cleanup = wrap_argv(["echo", "hi"], mode="cc")
         assert len(wrapped) > 2
@@ -339,7 +339,7 @@ class TestWrapArgvCcMode:
         assert wrapped == ["echo", "hi"]
         assert cleanup is None
 
-    @patch("kiro_crew.sandbox.detect_backend", return_value="sandbox-exec")
+    @patch("aj_crew.sandbox.detect_backend", return_value="sandbox-exec")
     def test_cc_seatbelt_denies_aws_except_config(self, _mock_backend):
         """The profile wrap_argv writes for cc on macOS hides ~/.aws but config."""
         wrapped, cleanup = wrap_argv(["echo", "hi"], mode="cc")
@@ -354,7 +354,7 @@ class TestWrapArgvCcMode:
         finally:
             os.unlink(cleanup)
 
-    @patch("kiro_crew.sandbox.detect_backend", return_value="sandbox-exec")
+    @patch("aj_crew.sandbox.detect_backend", return_value="sandbox-exec")
     def test_cc_seatbelt_profile_does_not_deny_ssh(self, _mock_backend):
         """CC profile should not contain ssh deny rules."""
         wrapped, cleanup = wrap_argv(["echo", "hi"], mode="cc")
@@ -375,7 +375,7 @@ class TestAgentDeniedEnvKeys:
     def test_default_set_includes_slack_tokens(self):
         assert "SLACK_BOT_TOKEN" in _AGENT_DENIED_ENV_KEYS
         assert "SLACK_APP_TOKEN" in _AGENT_DENIED_ENV_KEYS
-        assert "KIROCREW_OWNER_ID" in _AGENT_DENIED_ENV_KEYS
+        assert "AJCREW_OWNER_ID" in _AGENT_DENIED_ENV_KEYS
         assert "FEISHU_APP_ID" in _AGENT_DENIED_ENV_KEYS
         assert "FEISHU_APP_SECRET" in _AGENT_DENIED_ENV_KEYS
 
@@ -413,11 +413,11 @@ class TestAgentDeniedEnvKeys:
     def test_cc_sandbox_exec_scrubs_agent_creds(self, monkeypatch):
         """sandbox-exec (macOS) cc path emits env -u for cred keys present in env."""
         monkeypatch.setenv("SLACK_BOT_TOKEN", "xoxb-secret")
-        monkeypatch.setenv("KIROCREW_OWNER_ID", "U123")
+        monkeypatch.setenv("AJCREW_OWNER_ID", "U123")
         argv, cleanup = sandbox_exec_argv(["echo", "hi"], sandbox_level="cc")
         try:
             assert "-u" in argv and "SLACK_BOT_TOKEN" in argv
-            assert "KIROCREW_OWNER_ID" in argv
+            assert "AJCREW_OWNER_ID" in argv
         finally:
             if cleanup:
                 os.unlink(cleanup)
@@ -431,7 +431,7 @@ class TestAgentDeniedEnvKeys:
             if cleanup:
                 os.unlink(cleanup)
 
-    @patch("kiro_crew.sandbox.detect_backend", return_value="namespace")
+    @patch("aj_crew.sandbox.detect_backend", return_value="namespace")
     def test_cc_namespace_launcher_hides_aws_exposes_config(self, _mock_backend):
         """The launcher ``wrap_argv`` writes for cc carries the cc plan: ``~/.aws``
         masked with its ``config`` re-exposed, and ``~/.ssh`` left alone."""
@@ -454,7 +454,7 @@ _FAKE_CHANNEL_ENV = {
     "WECOM_BOT_ID": "FAKE-wecom-bot-id",
     "WECOM_SECRET": "FAKE-wecom-secret",
     "TELEGRAM_BOT_TOKEN": "0000:FAKE-telegram-token",
-    "KIROCREW_OWNER_ID": "U_FAKE_OWNER",
+    "AJCREW_OWNER_ID": "U_FAKE_OWNER",
 }
 
 
@@ -471,7 +471,7 @@ class TestChannelCredentialIsolation:
         (``config.loader.inject_kiro_cli_api_key``) instead of letting it ride
         the inherited environ.
         """
-        from kiro_crew.config.loader import CRED_KIRO_API_KEY, CREDENTIAL_KEYS
+        from aj_crew.config.loader import CRED_KIRO_API_KEY, CREDENTIAL_KEYS
 
         missing = set(CREDENTIAL_KEYS) - set(_AGENT_DENIED_ENV_KEYS) - {CRED_KIRO_API_KEY}
         assert not missing, f"loader credential keys not in agent denylist: {sorted(missing)}"
@@ -482,27 +482,27 @@ class TestChannelCredentialIsolation:
     def test_scrub_env_strips_channel_secrets(self, monkeypatch):
         for key, value in _FAKE_CHANNEL_ENV.items():
             monkeypatch.setenv(key, value)
-        monkeypatch.setenv("KIROCREW_UNRELATED_KEEPME", "keep-this-value")
+        monkeypatch.setenv("AJCREW_UNRELATED_KEEPME", "keep-this-value")
 
         cleaned = scrub_env()
 
         for key in _FAKE_CHANNEL_ENV:
             assert key not in cleaned, f"{key} leaked through scrub_env"
-        assert cleaned.get("KIROCREW_UNRELATED_KEEPME") == "keep-this-value"
+        assert cleaned.get("AJCREW_UNRELATED_KEEPME") == "keep-this-value"
 
     def test_standard_spawn_strips_channel_secrets(self, monkeypatch):
         for key, value in _FAKE_CHANNEL_ENV.items():
             monkeypatch.setenv(key, value)
-        monkeypatch.setenv("KIROCREW_UNRELATED_KEEPME", "keep-this-value")
+        monkeypatch.setenv("AJCREW_UNRELATED_KEEPME", "keep-this-value")
         with (
-            patch("kiro_crew.sandbox.detect_backend", return_value="none"),
-            patch("kiro_crew.sandbox._allow_unsandboxed_exec", return_value=True),
+            patch("aj_crew.sandbox.detect_backend", return_value="none"),
+            patch("aj_crew.sandbox._allow_unsandboxed_exec", return_value=True),
         ):
             _argv, env, cleanup = sandboxed_spawn_argv(["echo", "hi"], mode="standard")
         try:
             for key in _FAKE_CHANNEL_ENV:
                 assert key not in env, f"{key} leaked into standard spawn env"
-            assert env.get("KIROCREW_UNRELATED_KEEPME") == "keep-this-value"
+            assert env.get("AJCREW_UNRELATED_KEEPME") == "keep-this-value"
         finally:
             if cleanup:
                 os.unlink(cleanup)
@@ -532,7 +532,7 @@ class TestChannelCredentialIsolation:
 
     def test_scrub_agent_denied_env_strips_all_denied_keys(self):
         env = dict(_FAKE_CHANNEL_ENV)
-        env["KIROCREW_UNRELATED_KEEPME"] = "keep-this-value"
+        env["AJCREW_UNRELATED_KEEPME"] = "keep-this-value"
 
         cleaned = scrub_agent_denied_env(env)
 
@@ -540,7 +540,7 @@ class TestChannelCredentialIsolation:
             assert key not in cleaned, f"{key} survived scrub_agent_denied_env"
         for key in _FAKE_CHANNEL_ENV:
             assert key not in cleaned, f"{key} survived scrub_agent_denied_env"
-        assert cleaned.get("KIROCREW_UNRELATED_KEEPME") == "keep-this-value"
+        assert cleaned.get("AJCREW_UNRELATED_KEEPME") == "keep-this-value"
 
     def test_scrub_agent_denied_env_preserves_aws_ssh(self):
         # Unlike scrub_env, the parent channel-credential scrub must leave the

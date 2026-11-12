@@ -25,9 +25,9 @@ from aws_control_routes_helpers import (
     _request,
 )
 
-from kiro_crew import aws_consent
-from kiro_crew.apps.builtins.aws_control.backend import routes as routes_mod
-from kiro_crew.deploy.engine import AWSError
+from aj_crew import aws_consent
+from aj_crew.apps.builtins.aws_control.backend import routes as routes_mod
+from aj_crew.deploy.engine import AWSError
 
 # ---------------------------------------------------------------------------
 # Costs — fresh cache, fetch success, fetch error with/without cache
@@ -430,7 +430,7 @@ class TestLibrary:
 
         def _drive_then_move(*_a, **_kw):
             seen["n"] += 1
-            return "kirocrew-drive-abc" if seen["n"] <= 1 else "kirocrew-drive-def"
+            return "ajcrew-drive-abc" if seen["n"] <= 1 else "ajcrew-drive-def"
 
         with (
             mock.patch.object(routes_mod, "is_app_enabled", return_value=True),
@@ -687,7 +687,7 @@ class TestLibrary:
         push.assert_not_called()
 
     def test_push_404s_an_unknown_artifact(self):
-        from kiro_crew.artifacts import ArtifactNotFoundError
+        from aj_crew.artifacts import ArtifactNotFoundError
 
         resp = self._push(side_effect=ArtifactNotFoundError("nope"))
         assert resp.status == 404
@@ -755,7 +755,7 @@ class TestLibrary:
         assert removed.call_args.args == (
             "prof",
             "us-west-2",
-            "kirocrew-drive-abc",
+            "ajcrew-drive-abc",
             ACCOUNT,
             "art-1",
         )

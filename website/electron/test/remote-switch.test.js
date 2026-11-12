@@ -313,7 +313,7 @@ test("a rejected reconnect shows an actionable dialog without undoing a complete
 
   assert.equal(h.store.data.remoteHosts[5476].host, CREW.host);
   assert.equal(h.state.runLocalGateway, false, "do not restart locally over a possible remote tunnel");
-  assert.match(h.dialogs.at(-1).message, /could not reconnect.*Quit Kiro Crew and reopen it/);
+  assert.match(h.dialogs.at(-1).message, /could not reconnect.*Quit Aj Crew and reopen it/);
   assert.ok(h.logs.some((message) => message.includes("reconnecting failed")));
 });
 

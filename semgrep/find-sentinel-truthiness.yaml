@@ -10,7 +10,7 @@ rules:
   # Compare explicitly instead: `if s.find(x) != -1:` / `pos = s.rfind(x);
   # if pos == -1: pos = DEFAULT`. For pure membership, use `in`.
 
-  - id: kirocrew.find-sentinel-in-boolean-context
+  - id: ajcrew.find-sentinel-in-boolean-context
     languages: [python]
     severity: ERROR
     patterns:

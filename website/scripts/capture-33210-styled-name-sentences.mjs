@@ -34,11 +34,11 @@ const tr = key => key.split('.').reduce((node, part) => node?.[part], catalog)
 
 const now = Math.floor(Date.now() / 1000)
 const FLEET = {
-  base_branch: 'main', gateway_service_active: true, manual_restart: 'kirocrew restart',
+  base_branch: 'main', gateway_service_active: true, manual_restart: 'ajcrew restart',
   live_state_known: true, staged_target: null, staged_cancel_available: false,
   worktrees: [
     { name: 'main', is_main: true, is_live: true, is_staged: false, running: false, has_dist: true, behind: 0, branch: 'main', path: '/w/main', last_updated_at: now - 900 },
-    { name: 'kirocrew-wt-widgets', is_main: false, is_live: false, is_staged: false, running: true, port: 7780, health: 200, has_dist: true, behind: 2, branch: 'feat/widgets', path: '/w/kirocrew-wt-widgets', last_updated_at: now - 3600 },
+    { name: 'ajcrew-wt-widgets', is_main: false, is_live: false, is_staged: false, running: true, port: 7780, health: 200, has_dist: true, behind: 2, branch: 'feat/widgets', path: '/w/ajcrew-wt-widgets', last_updated_at: now - 3600 },
   ],
 }
 
@@ -79,7 +79,7 @@ const PULL = {
 const IR = '/api/apps/issue-radar'
 
 const extra = async (path, route) => {
-  if (path === '/api/members') return json(route, { members: [], default_agent: 'kirocrew' }), true
+  if (path === '/api/members') return json(route, { members: [], default_agent: 'ajcrew' }), true
   if (path === '/api/apps') {
     return json(route, [
       { name: 'issue-radar', displayName: 'Issue Radar', enabled: true, builtin: true, version: '0.1.0', ui: { pages: [{ route: '/issue-radar', label: 'Issue Radar', icon: 'Radar' }] } },
@@ -141,7 +141,7 @@ for (const theme of ['light', 'dark']) {
   // 1. Dev Fleet how-to paragraph
   {
     const { context, page } = await open('/dev-fleet', theme)
-    await page.getByText('kirocrew-wt-widgets').first().waitFor({ timeout: 30000 }).catch(() => fail('devfleet: rows did not render'))
+    await page.getByText('ajcrew-wt-widgets').first().waitFor({ timeout: 30000 }).catch(() => fail('devfleet: rows did not render'))
     await page.waitForTimeout(800)
     const how = LABEL === 'after'
       ? firstPlain(tr('pages.devFleetPage.row_actions_how_to'))

@@ -13,7 +13,7 @@ leaves the process. These tests close it by driving that live path and reading
 what an exporter actually received.
 
 Two tiers, because the OTLP exporter is an optional extra
-(``pip install "kirocrew[otlp]"``) that a default dev/CI environment does not
+(``pip install "ajcrew[otlp]"``) that a default dev/CI environment does not
 have:
 
 * **Tier 1 — serialization (always runs).** The live build's own JSONL exporter
@@ -43,10 +43,10 @@ from unittest.mock import patch
 import pytest
 from loopback_servers import LoopbackHTTPServer
 
-from kiro_crew.metrics import inventory_gauges as ig
-from kiro_crew.metrics import process_gauges as pg
-from kiro_crew.metrics import provider as pm
-from kiro_crew.metrics.schema import RESOURCE_ATTR_PROCESS_START_TIME
+from aj_crew.metrics import inventory_gauges as ig
+from aj_crew.metrics import process_gauges as pg
+from aj_crew.metrics import provider as pm
+from aj_crew.metrics.schema import RESOURCE_ATTR_PROCESS_START_TIME
 
 # OTEL AggregationTemporality, as it appears in serialized output.
 _DELTA = 1
@@ -79,7 +79,7 @@ _REAL = object()
 
 #: Instruments whose reading is a monotonic PROCESS-LIFETIME total (process CPU
 #: and the GC stats). They were observable COUNTERS, which made them the only
-#: CUMULATIVE series Kiro Crew exported; they are observable GAUGES now, so they
+#: CUMULATIVE series Aj Crew exported; they are observable GAUGES now, so they
 #: must carry NO temporality like every other gauge here. Named separately from
 #: the rest of the roster because they are the ones a regression would flip back.
 _LIFETIME_TOTAL_NAMES = pg.LIFETIME_TOTAL_METRICS
@@ -140,14 +140,14 @@ def _drive_live_build(tmp_path, monkeypatch, readings=None):
     provider's own resource alongside the serialized one, which is what lets the
     fidelity assertion compare them rather than restate a fixed list.
     """
-    monkeypatch.setenv("KIROCREW_TELEMETRY", "1")
+    monkeypatch.setenv("AJCREW_TELEMETRY", "1")
     # The MODULE-scoped `exported` fixture drives this before the function-scoped
-    # rootdir floor has pinned KIROCREW_HOME for the first test, and the live build
+    # rootdir floor has pinned AJCREW_HOME for the first test, and the live build
     # reads config through config_dir(), which then created the operator's real
     # ~/.kiro/crew (third side-effect audit). A fixture outside the floor pins what
     # it resolves itself.
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "kirocrew-home"))
-    import kiro_crew.config.paths as _paths
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "ajcrew-home"))
+    import aj_crew.config.paths as _paths
 
     monkeypatch.setattr(_paths, "_resolved_home", None)
     for name, value in (readings if readings is not None else _PINNED_READINGS).items():
@@ -205,7 +205,7 @@ def exported(tmp_path_factory):
     result is both faster and closer to how a real export cycle behaves than
     rebuilding per test.
 
-    The patches the build needs (``KIROCREW_HOME``, ``KIROCREW_TELEMETRY``, the
+    The patches the build needs (``AJCREW_HOME``, ``AJCREW_TELEMETRY``, the
     pinned readers) are undone BEFORE the value is handed out, not at module
     teardown. Only the parsed shards are shared; the build tears its provider
     down before returning, so nothing downstream reads that environment. Holding
@@ -295,7 +295,7 @@ def test_resource_attributes_survive_serialization_with_fidelity(exported):
 def test_service_name_identifies_the_product_on_the_wire(exported):
     data, _ = exported
     for serialized in data.resources:
-        assert serialized.get("service.name") == "kirocrew"
+        assert serialized.get("service.name") == "ajcrew"
 
 
 def test_local_shards_carry_the_process_identity_token(exported):
@@ -311,7 +311,7 @@ def test_local_shards_carry_the_process_identity_token(exported):
 
 
 def test_no_instrument_exports_cumulative(exported):
-    """The ratchet: not one Kiro Crew series is CUMULATIVE on either destination.
+    """The ratchet: not one Aj Crew series is CUMULATIVE on either destination.
 
     One cumulative series is enough to force a consumer into stateful whole-hour
     aggregation — its hourly increment is last-minus-first across the entire
@@ -420,10 +420,10 @@ def test_no_mcp_server_name_appears_anywhere_on_the_wire(tmp_path, monkeypatch):
     readings["read_mcp_server_classes"] = _REAL
 
     with patch(
-        "kiro_crew.mcp_discovery._load_agent_config",
+        "aj_crew.mcp_discovery._load_agent_config",
         return_value={"mcpServers": {secret: {}}},
     ):
-        with patch("kiro_crew.mcp_discovery._load_mcp_json_by_source", return_value={}):
+        with patch("aj_crew.mcp_discovery._load_mcp_json_by_source", return_value={}):
             data, _ = _drive_live_build(tmp_path, monkeypatch, readings)
 
     points = data.points(ig.GAUGE_MCP_SERVERS)
@@ -454,7 +454,7 @@ def _otlp_available():
 
 requires_otlp = pytest.mark.skipif(
     not _otlp_available(),
-    reason='OTLP wire tier needs the optional extra: pip install "kirocrew[otlp]"',
+    reason='OTLP wire tier needs the optional extra: pip install "ajcrew[otlp]"',
 )
 
 
@@ -516,22 +516,22 @@ def test_otlp_export_delivers_every_instrument_and_the_resource(monkeypatch, tmp
     """
     from opentelemetry.proto.collector.metrics.v1 import metrics_service_pb2
 
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     with _Receiver() as receiver:
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.telemetry.enabled = True
         cfg.telemetry.otlp_endpoint = receiver.endpoint
         cfg.telemetry.export_interval_seconds = 3600  # only force_flush should export
 
-        monkeypatch.setenv("KIROCREW_TELEMETRY", "1")
+        monkeypatch.setenv("AJCREW_TELEMETRY", "1")
         for name, value in _PINNED_READINGS.items():
             monkeypatch.setattr(ig, name, lambda _v=value: _v)
         ig.reset_for_testing()
         ig.mark_install_reporter()  # stand in for the gateway's claim
         pm.reset_for_testing()
         try:
-            with patch.object(KiroCrewConfig, "load", return_value=cfg):
+            with patch.object(AjCrewConfig, "load", return_value=cfg):
                 with patch.object(pm, "_default_metrics_dir", return_value=tmp_path):
                     recorder = pm.get_recorder()
                     assert recorder.enabled
@@ -587,10 +587,10 @@ def test_otlp_defaults_to_the_local_sink_temporality(monkeypatch, tmp_path):
     from opentelemetry.sdk.metrics import Counter, Histogram, UpDownCounter
     from opentelemetry.sdk.metrics.export import AggregationTemporality
 
-    from kiro_crew.metrics.local_exporter import JsonlMetricExporter
-    from kiro_crew.metrics.provider import _build_otlp_reader
-    from kiro_crew.metrics.temporality import TEMPORALITY_ENV_VAR
-    from kiro_crew.platform.interfaces import OtlpDestination
+    from aj_crew.metrics.local_exporter import JsonlMetricExporter
+    from aj_crew.metrics.provider import _build_otlp_reader
+    from aj_crew.metrics.temporality import TEMPORALITY_ENV_VAR
+    from aj_crew.platform.interfaces import OtlpDestination
 
     monkeypatch.delenv(TEMPORALITY_ENV_VAR, raising=False)
 
@@ -633,9 +633,9 @@ def test_otlp_temporality_preference_is_honored(monkeypatch, tmp_path):
     """
     from opentelemetry.sdk.metrics import Counter
 
-    from kiro_crew.metrics.provider import _build_otlp_reader
-    from kiro_crew.metrics.temporality import TEMPORALITY_ENV_VAR
-    from kiro_crew.platform.interfaces import OtlpDestination
+    from aj_crew.metrics.provider import _build_otlp_reader
+    from aj_crew.metrics.temporality import TEMPORALITY_ENV_VAR
+    from aj_crew.platform.interfaces import OtlpDestination
 
     class _Cfg:
         export_interval_seconds = 60

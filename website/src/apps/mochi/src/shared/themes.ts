@@ -3,9 +3,9 @@
  *
  * The original shipped six switchable themes (`THEMES`, `THEME_LIST`) plus a
  * picker in the settings panel. The team sync decision removed overall themes:
- * Mochi follows the KiroCrew theme instead. This module keeps the original's
+ * Mochi follows the Aj Crew theme instead. This module keeps the original's
  * EXPORT SURFACE so the vendored components compile unchanged, with a single
- * `'kirocrew'` id.
+ * `'ajcrew'` id.
  *
  * LIVE FOLLOW (the mechanism, in three layers):
  *
@@ -24,31 +24,31 @@
  *    so they re-resolve under every theme instead of being frozen literals.
  *
  * Custom/installed themes apply their variables via JS in the dashboard
- * window only; here they fall back to the base kiro palette. FALLBACK_PALETTE
+ * window only; here they fall back to the base aj palette. FALLBACK_PALETTE
  * remains as the no-stylesheet escape hatch (jsdom, future standalone use).
  */
 import coreCss from '../../../../index.css?inline'
 
 export const FALLBACK_PALETTE: Record<string, string> = {
-  '--bg': '#19161d',
-  '--bg-elevated': '#211d25',
-  '--bg-input': '#28242e',
-  '--border': '#352f3d',
-  '--border-focus': 'rgba(142,72,255,0.4)',
-  '--text': '#dcdadf',
-  '--text-muted': '#938f9b',
-  '--text-faint': '#5e5966',
-  '--bubble-user': 'rgba(178,127,255,0.18)',
+  '--bg': '#0b0c0f',
+  '--bg-elevated': '#15171c',
+  '--bg-input': '#1e2127',
+  '--border': '#272a31',
+  '--border-focus': 'rgba(45,212,191,0.4)',
+  '--text': '#d5d8de',
+  '--text-muted': '#8e96a3',
+  '--text-faint': '#59606b',
+  '--bubble-user': 'rgba(45,212,191,0.16)',
   '--bubble-assistant': 'rgba(255,255,255,0.04)',
-  '--accent': '#8e48ff',
-  '--accent-text': '#ffffff',
-  '--accent-glow': 'rgba(142,72,255,0.3)',
+  '--accent': '#2dd4bf',
+  '--accent-text': '#04110f',
+  '--accent-glow': 'rgba(45,212,191,0.28)',
   '--danger': '#f94359',
   '--success': '#008543',
-  '--header-bg': 'rgba(25,22,29,0.95)',
+  '--header-bg': 'rgba(11,12,15,0.95)',
   '--shadow': 'rgba(0,0,0,0.45)',
-  '--scrollbar': 'rgba(220,218,223,0.08)',
-  '--scrollbar-hover': 'rgba(220,218,223,0.15)',
+  '--scrollbar': 'rgba(213,216,222,0.08)',
+  '--scrollbar-hover': 'rgba(213,216,222,0.15)',
 }
 
 export function applyFallbackTheme(root: HTMLElement = document.documentElement): void {
@@ -61,7 +61,7 @@ export function applyFallbackTheme(root: HTMLElement = document.documentElement)
  * Only one id ever existed upstream; kept as a type so ported call sites
  * (`applyTheme(m.theme as ThemeId)`) compile unchanged.
  */
-export type ThemeId = 'kirocrew'
+export type ThemeId = 'ajcrew'
 
 /**
  * Vendored-vocabulary variables derived FROM core variables. These resolve at
@@ -88,10 +88,10 @@ const ALIAS_VARS: Record<string, string> = {
  * there — do not let these drift). Reimplemented because importing the hook
  * would drag the SPA's api client into every Mochi window bundle. */
 function computeDatasetTheme(): { theme: string; mode: string } {
-  let colorTheme = 'kiro'
+  let colorTheme = 'aj'
   let modePref = 'system'
   try {
-    colorTheme = localStorage.getItem('mc-color-theme') || 'kiro'
+    colorTheme = localStorage.getItem('mc-color-theme') || 'aj'
     modePref = localStorage.getItem('mc-theme') || 'system'
   } catch {
     /* storage unavailable: defaults stand */
@@ -202,7 +202,7 @@ export function applyTheme(_theme?: string | ThemeId): void {
  * values must be literal rather than resolved from a stylesheet.
  */
 export const BUBBLE_COLORS: Record<ThemeId, { bg: string; text: string; shadow: string }> = {
-  kirocrew: { bg: 'rgba(33,29,37,0.95)', text: '#f2f1f4', shadow: 'rgba(0,0,0,0.45)' },
+  ajcrew: { bg: 'rgba(21,23,28,0.95)', text: '#f4f5f7', shadow: 'rgba(0,0,0,0.45)' },
 }
 
 /**

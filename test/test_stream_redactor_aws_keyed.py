@@ -12,7 +12,7 @@ import re
 
 import pytest
 
-from kiro_crew.security import (
+from aj_crew.security import (
     _CRED_CLASS,
     _STREAM_HOLDBACK_JWT_MAX,
     REDACTED_CREDENTIAL_TAG,
@@ -206,7 +206,7 @@ def test_every_aws_label_rule_has_the_shape_the_stream_anchor_reads() -> None:
     """The stream anchor reads its key names off the batch AWS label rules. A rule
     of another shape, or a key name that is not a plain literal, would make the
     anchor miss that label, so the mismatch fails here instead of at import."""
-    from kiro_crew.security import redaction
+    from aj_crew.security import redaction
 
     for label, _rule in redaction._AWS_LABEL_RULES:
         assert label.pattern.endswith(stream_aws_anchor._LABEL_TAIL_RE), label.pattern

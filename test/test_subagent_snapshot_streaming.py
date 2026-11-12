@@ -24,8 +24,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 # Import cycle workaround: see test_subagent_snapshot_idle_secs.py for rationale.
-import kiro_crew.dashboard.handlers  # noqa: F401
-from kiro_crew.dashboard.ws import build_subagent_snapshot
+import aj_crew.dashboard.handlers  # noqa: F401
+from aj_crew.dashboard.ws import build_subagent_snapshot
 
 
 def _agent(**over):
@@ -34,7 +34,7 @@ def _agent(**over):
         id="a1",
         parent_session_key="dashboard:main",
         task="do a thing",
-        agent="kirocrew",
+        agent="ajcrew",
         resolved_model="model-1",
         requested_model="",
         streaming_text="",

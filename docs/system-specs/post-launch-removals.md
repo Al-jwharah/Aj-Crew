@@ -9,27 +9,27 @@ data to migrate). Track each item here; delete the code and its row together.
 > migration if removed early). Grouping them keeps the "is it safe to delete
 > yet?" decision in one place.
 
-## Legacy `~/.kirocrew` security-path spelling
+## Legacy `~/.ajcrew` security-path spelling
 
-Nothing migrates `~/.kirocrew` to `~/.kiro/crew`. What remains is the `.kirocrew`
+Nothing migrates `~/.ajcrew` to `~/.kiro/crew`. What remains is the `.ajcrew`
 **security-path spelling**, which still gates credentials in any leftover legacy
 home; it is the one item here.
 
-**Remove after:** confirming no supported machine can still have a `~/.kirocrew`
+**Remove after:** confirming no supported machine can still have a `~/.ajcrew`
 on disk — i.e. every legacy home has already been removed by its owner. Because
-nothing migrates or deletes `~/.kirocrew` any more, a legacy home persists until
+nothing migrates or deletes `~/.ajcrew` any more, a legacy home persists until
 the user removes it, so this is stricter than a "post-launch" cutoff. Removing
 the spelling while any legacy home could persist would un-gate real credentials
 (`.env`, `token_signing.key`, `security_policy.json`, …).
 
-**What to delete then:** the `.kirocrew` spelling in `src/kiro_crew/security/paths_lists.py`
-(`_CREW_HOME_PREFIXES`; re-exported by `src/kiro_crew/security/__init__.py`). Keep
+**What to delete then:** the `.ajcrew` spelling in `src/aj_crew/security/paths_lists.py`
+(`_CREW_HOME_PREFIXES`; re-exported by `src/aj_crew/security/__init__.py`). Keep
 `.kiro/crew`. The
-`kirocrew ... token` credential-exfil rule (`.*kirocrew.*token`) matches the CLI
+`ajcrew ... token` credential-exfil rule (`.*ajcrew.*token`) matches the CLI
 *name*, not the path — leave it.
 
 **Do NOT confuse with (these stay — permanent, not migration scaffolding):**
-- the `~/.kiro/crew` resolution itself, the `KIROCREW_HOME` override, and the
+- the `~/.kiro/crew` resolution itself, the `AJCREW_HOME` override, and the
   security keystone for `~/.kiro/crew`;
 - `legacy_home()` / `LEGACY_CONFIG_DIR_NAME` — still consumed by autonudge, seed,
   session storage, and other legacy-path readers, independent of the removed
@@ -38,6 +38,6 @@ the spelling while any legacy home could persist would un-gate real credentials
   `RECOVERY_BREADCRUMB_NAME`) — it points at the **current** home and lives
   outside `~/.kiro/` specifically to survive a Kiro-family uninstaller wiping
   `~/.kiro/`, so it is a permanent diagnostic, not a signpost for the legacy
-  move. The breadcrumb FILE is named `~/.kirocrew.breadcrumb`
+  move. The breadcrumb FILE is named `~/.ajcrew.breadcrumb`
   (`RECOVERY_BREADCRUMB_NAME`); its message text names only the current data
   home and `~/.kiro/`.

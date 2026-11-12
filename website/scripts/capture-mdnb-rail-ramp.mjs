@@ -116,7 +116,7 @@ async function main() {
         'mdnb-active-vault': MDNB_VAULT_ID,
         // `folders` is what puts folder rows on screen.
         'mdnb-list-view': 'folders',
-        'mc-color-theme': 'kiro',
+        'mc-color-theme': 'aj',
       },
     })
     logPageProblems(page)

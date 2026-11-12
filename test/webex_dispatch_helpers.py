@@ -12,10 +12,10 @@ from types import SimpleNamespace
 
 from _hot_reload_helpers import prime_live_sections
 
-from kiro_crew.messaging.queue_drain import tag_entry
-from kiro_crew.session_allocation import SessionClosingError
-from kiro_crew.webex.client import WebexInbound
-from kiro_crew.webex.transport_dispatch import WebexDispatcher
+from aj_crew.messaging.queue_drain import tag_entry
+from aj_crew.session_allocation import SessionClosingError
+from aj_crew.webex.client import WebexInbound
+from aj_crew.webex.transport_dispatch import WebexDispatcher
 
 # ------------------------------------------------------------------
 # Fakes
@@ -280,7 +280,7 @@ class FakeConvLog:
         self.metadata.setdefault(key, {}).update(fields)
         rows = getattr(self, "_rows", None)
         if isinstance(rows, list):
-            from kiro_crew.history import transcript_stem
+            from aj_crew.history import transcript_stem
 
             rows.insert(0, {"key": transcript_stem(key), **fields})
         return True

@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import session_storage
+from aj_crew import session_storage
 
 
 def _unit(uid: str) -> session_storage._RawUnit:
@@ -23,7 +23,7 @@ def _unit(uid: str) -> session_storage._RawUnit:
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch):
     # The floor's own stack, so a test's monkeypatch.undo() cannot drop the home redirect.
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "crew"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "crew"))
     _floor_monkeypatch.setenv("KIRO_HOME", str(tmp_path / "crew" / "kiro"))
     session_storage.invalidate_scan_cache()
     yield

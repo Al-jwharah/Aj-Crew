@@ -2,13 +2,13 @@
 
 ## Overview
 
-The heartbeat service (`kiro_crew/heartbeat.py`) runs periodic background tasks on a configurable interval (default 60s).
+The heartbeat service (`aj_crew/heartbeat.py`) runs periodic background tasks on a configurable interval (default 60s).
 
 ## Responsibilities
 
 1. **Task processing** — reads `~/.kiro/crew/workspace/HEARTBEAT.md`, sends non-empty tasks to the agent
 2. **FTS index rebuild** — every `_FTS_REBUILD_TICKS` ticks (~15 min at the default interval)
-3. **Daily retention prune** — every `_PRUNE_TICKS` ticks (~24h at the default interval): `prune_history(keep_days=memory.history_max_days)` plus `sel().prune()`. Both run on the maintenance executor, never on the event loop, and a failed SEL prune increments the `kirocrew.sel.prune_failed.count` counter rather than aborting the beat.
+3. **Daily retention prune** — every `_PRUNE_TICKS` ticks (~24h at the default interval): `prune_history(keep_days=memory.history_max_days)` plus `sel().prune()`. Both run on the maintenance executor, never on the event loop, and a failed SEL prune increments the `ajcrew.sel.prune_failed.count` counter rather than aborting the beat.
 4. **Idle-session consolidation** — `HistoryConsolidator.check_idle_sessions()` on **every** tick, not on a multiple
 5. **Rotating memory backup** — scheduled on the first beat and then every `_MEMORY_BACKUP_TICKS` (1440) ticks at offset `_MEMORY_BACKUP_OFFSET` (30), so it never lands on the prune tick; it copies every active memory store on the maintenance executor and runs only when `memory.backup_enabled` is on, keeping `memory.backup_keep` copies
 
@@ -19,7 +19,7 @@ While `require_memory_ready()` raises `MemoryStartupUnavailable` (Global memory 
 ```md
 # Heartbeat Tasks
 
-<!-- Add tasks below (one per line). KiroCrew picks them up on next heartbeat. -->
+<!-- Add tasks below (one per line). AjCrew picks them up on next heartbeat. -->
 - check my pipeline status
 - summarize open PRs
 ```
@@ -111,16 +111,16 @@ percentage is only logged. The next cycle's first task starts a fresh session.
 ## Gateway Wiring
 
 `HeartbeatService` is started in `slack/gateway_runtime/heartbeat_turns.py` after cron service:
-- `on_task` callback: prepends a `HEARTBEAT_KEEP` reminder to the task text, opens a session under `HEARTBEAT_KEY` with `agent="kirocrew-heartbeat"`, streams the response (gated by the heartbeat allowlist in `_heartbeat_approval`), posts the result, and releases the per-key semaphore
+- `on_task` callback: prepends a `HEARTBEAT_KEEP` reminder to the task text, opens a session under `HEARTBEAT_KEY` with `agent="ajcrew-heartbeat"`, streams the response (gated by the heartbeat allowlist in `_heartbeat_approval`), posts the result, and releases the per-key semaphore
 - `on_cycle_end` callback: invokes `SessionManager.recycle_heartbeat` once after `asyncio.gather` completes — tears the session down unconditionally
 - Callback re-raises exceptions so heartbeat can track failures
 - Stopped during gateway shutdown: `exit_path` calls `stop()` and then awaits `wait_closed()`
 
 ### Session Identity
 
-Heartbeat runs in its own session (`HEARTBEAT_KEY = "_hb"` in `session_parts/policy.py`), distinct from the shared `BACKGROUND_KEY = "_bg"` used by cron / consolidator / chat-title. The session uses the dedicated `kirocrew-heartbeat` agent (installed by `_install_heartbeat_agent` in `agent_parts/spec_rebuild.py`) — a minimal MCP surface (`kirocrew-core`, plus the default-spec servers behind the edition's `heartbeat_safe_tools()` pins; a standalone install pins none) so cycle cold-starts stay cheap. SEL audit logging stays gateway-side in `_heartbeat_approval` regardless; the per-agent narrowing is purely a cold-start cost reduction.
+Heartbeat runs in its own session (`HEARTBEAT_KEY = "_hb"` in `session_parts/policy.py`), distinct from the shared `BACKGROUND_KEY = "_bg"` used by cron / consolidator / chat-title. The session uses the dedicated `ajcrew-heartbeat` agent (installed by `_install_heartbeat_agent` in `agent_parts/spec_rebuild.py`) — a minimal MCP surface (`ajcrew-core`, plus the default-spec servers behind the edition's `heartbeat_safe_tools()` pins; a standalone install pins none) so cycle cold-starts stay cheap. SEL audit logging stays gateway-side in `_heartbeat_approval` regardless; the per-agent narrowing is purely a cold-start cost reduction.
 
-The heartbeat spec copies the default spec's `heartbeat_mirrored_servers()` entries: `kirocrew-core` with `autoApprove` included and the main agent's tool filters stripped, then each server an edition pinned a tool on verbatim minus `autoApprove` (a kept verb would become an auto-approval, an `allowedTools` entry of the skill view on kiro-cli and a `permissions` allow on KAS, and run the call before `_heartbeat_approval` saw it, on the one agent with no approver). So it is a derived spec like `kirocrew-worker`. A name the default spec does not mount is skipped, so an edition contributes a heartbeat server by also returning it from `extra_mcp_servers()`. Every spawn runs `require_fresh_derived_spec`, which compares the heartbeat file's own grant surface with the one `heartbeat_mcp_servers` derives from `kirocrew.json` as it stands: its `mcpServers` (volatile per-launch env values aside), its `tools`, no key the installer does not write, and an `includeMcpJson` that is literally `false` (kiro-cli reads a missing key as true and merges the global `mcp.json`). A copy that does not match is re-derived once, and the start is refused with `DerivedSpecStale` when the re-derived file still does not match. An edit to any other part of the default spec does not touch the heartbeat copy; the fingerprint covers exactly the mirrored servers, edition ones included.
+The heartbeat spec copies the default spec's `heartbeat_mirrored_servers()` entries: `ajcrew-core` with `autoApprove` included and the main agent's tool filters stripped, then each server an edition pinned a tool on verbatim minus `autoApprove` (a kept verb would become an auto-approval, an `allowedTools` entry of the skill view on kiro-cli and a `permissions` allow on KAS, and run the call before `_heartbeat_approval` saw it, on the one agent with no approver). So it is a derived spec like `ajcrew-worker`. A name the default spec does not mount is skipped, so an edition contributes a heartbeat server by also returning it from `extra_mcp_servers()`. Every spawn runs `require_fresh_derived_spec`, which compares the heartbeat file's own grant surface with the one `heartbeat_mcp_servers` derives from `ajcrew.json` as it stands: its `mcpServers` (volatile per-launch env values aside), its `tools`, no key the installer does not write, and an `includeMcpJson` that is literally `false` (kiro-cli reads a missing key as true and merges the global `mcp.json`). A copy that does not match is re-derived once, and the start is refused with `DerivedSpecStale` when the re-derived file still does not match. An edit to any other part of the default spec does not touch the heartbeat copy; the fingerprint covers exactly the mirrored servers, edition ones included.
 
 The session is shared across all tasks in one cycle (so concurrent gather'd tasks reuse the warm provider) and recycled by `recycle_heartbeat` at the end of every cycle; it is never reused across cycles.
 
@@ -140,9 +140,9 @@ A hook `TOOL_AUTO_APPROVE` that DOES fire in `_resolve_permission` (cron and aut
 
 The allowlist is identity-based and exact-match only — no verb / heuristic fallback, and no fallback to the model-authored title. `event.mcp_identity_trusted` must be set (the `tool_name` / `mcp_server_name` pair came from the adapter's `_meta` channel) and `tool_name` must be non-empty, since a cache hit on empty names also sets the flag; a backend that publishes none (`acp/_dispatch_parts/tool_call_identity.py` names claude-agent-acp and opencode) gets no heartbeat tool approval at all and runs as a text-only poller — intended, not a gap to paper over with a title fallback. Each such denial is audited as `reason=no_trusted_identity` and logs a gateway warning that the backend published no trusted tool identity, so every heartbeat tool call is denied on it. Heartbeat polls untrusted external content (CR comments, ticket bodies) where prompt-injection could try to widen approval via a clever read-shaped tool name (`get_all_credentials`, `list_env_secrets`, etc.). Strict enforcement is auditable and cannot be widened that way; this is deny-by-default per the security-controls guideline.
 
-The allowlist is curated for read-only / observation tools, each matched on its own identity shape (`slack-gateway.md`, Heartbeat Tool Allowlist, has the exact rules): the trusted host built-ins `hooks._HOST_READ_ONLY_BUILTIN_TOOLS` names (`fs_read`, `glob`, `grep`, `web_fetch`, `web_search` — the spellings are the trusted channel's own, not the `Read` / `Grep` / `Glob` / `WorkspaceSearch` titles an earlier allowlist carried), side-effect-free reads from `kirocrew-core` (`learn_list`, `spawn_list`, `spawn_status`, `artifact_list`, `artifact_get`, `artifact_versions`, `local_knowledge_search`), each matched only as its qualified `kirocrew-core` identity, a host shell command whose recovered text classifies read-only and runs no `git` (git reads `.git/config` on invocation and `core.fsmonitor` / `core.hooksPath` name a program there that no text classifier sees; the interactive and cron paths have a human behind them, heartbeat does not), and the `@server/tool` identities an edition pins in `SlackEnterpriseGate.heartbeat_safe_tools()`. Write tools (`send_message`, `file_send`, `cron_add`, `fs_write`) and any shell command the classifier does not confirm read-only are rejected.
+The allowlist is curated for read-only / observation tools, each matched on its own identity shape (`slack-gateway.md`, Heartbeat Tool Allowlist, has the exact rules): the trusted host built-ins `hooks._HOST_READ_ONLY_BUILTIN_TOOLS` names (`fs_read`, `glob`, `grep`, `web_fetch`, `web_search` — the spellings are the trusted channel's own, not the `Read` / `Grep` / `Glob` / `WorkspaceSearch` titles an earlier allowlist carried), side-effect-free reads from `ajcrew-core` (`learn_list`, `spawn_list`, `spawn_status`, `artifact_list`, `artifact_get`, `artifact_versions`, `local_knowledge_search`), each matched only as its qualified `ajcrew-core` identity, a host shell command whose recovered text classifies read-only and runs no `git` (git reads `.git/config` on invocation and `core.fsmonitor` / `core.hooksPath` name a program there that no text classifier sees; the interactive and cron paths have a human behind them, heartbeat does not), and the `@server/tool` identities an edition pins in `SlackEnterpriseGate.heartbeat_safe_tools()`. Write tools (`send_message`, `file_send`, `cron_add`, `fs_write`) and any shell command the classifier does not confirm read-only are rejected.
 
-When a legitimate new read tool needs to run in heartbeat, operators observe SEL `denied` events (or the gateway-log warning `Heartbeat blocked tool call: <name>`) and explicitly add the name to the right set behind the heartbeat allowlist (`_HEARTBEAT_SAFE_CORE_MCP_TOOLS` for a `kirocrew-core` read, or the hooks built-in allowlist). A `no_trusted_identity` denial is a property of the backend, not a missing name.
+When a legitimate new read tool needs to run in heartbeat, operators observe SEL `denied` events (or the gateway-log warning `Heartbeat blocked tool call: <name>`) and explicitly add the name to the right set behind the heartbeat allowlist (`_HEARTBEAT_SAFE_CORE_MCP_TOOLS` for an `ajcrew-core` read, or the hooks built-in allowlist). A `no_trusted_identity` denial is a property of the backend, not a missing name.
 
 ## Constants
 
@@ -157,9 +157,9 @@ When a legitimate new read tool needs to run in heartbeat, operators observe SEL
 | `_STOP_DRAIN_SECS` | 10 | `heartbeat.py` |
 | `HEARTBEAT_FILE` | `HEARTBEAT.md` | `heartbeat.py` |
 | `HEARTBEAT_KEY` | `_hb` | `session_parts/policy.py` |
-| `_HEARTBEAT_SAFE_CORE_MCP_TOOLS` | frozenset of `kirocrew-core` reads | `slack/gateway_runtime/tool_policy.py` |
+| `_HEARTBEAT_SAFE_CORE_MCP_TOOLS` | frozenset of `ajcrew-core` reads | `slack/gateway_runtime/tool_policy.py` |
 | `_HEARTBEAT_KEEP_INJECTION` | reminder string | `slack/gateway_runtime/heartbeat_turns.py` |
-| `kirocrew-heartbeat` agent | minimal-MCP agent JSON | installed by `agent_parts/spec_rebuild.py:_install_heartbeat_agent` |
+| `ajcrew-heartbeat` agent | minimal-MCP agent JSON | installed by `agent_parts/spec_rebuild.py:_install_heartbeat_agent` |
 
 ## Known Limitations
 
@@ -192,7 +192,7 @@ A `slack:` tag with an empty channel id (`<!-- deliver:slack: -->`) falls back t
 owner's DM: posting to channel `""` would raise inside the swallowed Slack error
 handler and lose the report.
 
-The deliver tag is agent-writable — the `kirocrew-dev/babysit` skill tells the agent to append
+The deliver tag is agent-writable — the `ajcrew-dev/babysit` skill tells the agent to append
 HEARTBEAT.md entries itself, and HEARTBEAT.md is not a fenced path — so the channel
 id on a `slack:<channel_id>` tag is untrusted input. Both channel forms therefore
 require the id to be a well-formed Slack channel id (`validation.CHANNEL_ID_RE`, so

@@ -7,7 +7,7 @@ describe('actText: what a dashboard page may put in the chat box', () => {
     expect(actText({ type: ACT_MESSAGE_TYPE, text: '  On "x": yes.  ' })).toBe('On "x": yes.')
   })
   it('refuses another type, a non-string, an empty or an over-long text', () => {
-    expect(actText({ type: 'kirocrew-dashboard:ready', text: 'hi' })).toBeNull()
+    expect(actText({ type: 'ajcrew-dashboard:ready', text: 'hi' })).toBeNull()
     expect(actText({ type: ACT_MESSAGE_TYPE, text: 42 })).toBeNull()
     expect(actText({ type: ACT_MESSAGE_TYPE, text: '   ' })).toBeNull()
     expect(actText({ type: ACT_MESSAGE_TYPE, text: 'a'.repeat(601) })).toBeNull()

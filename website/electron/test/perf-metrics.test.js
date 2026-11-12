@@ -17,7 +17,7 @@ function harness(overrides = {}) {
   const logs = [];
   const rec = createMetricsRecorder({
     dir: "/tmp/logs",
-    env: { KIROCREW_DEBUG: "1" },
+    env: { AJCREW_DEBUG: "1" },
     getAppMetrics: () => [
       { pid: 1, type: "Browser", cpu: { percentCPUUsage: 3.5 }, memory: { workingSetSize: 100 } },
       { pid: 2, type: "Tab", cpu: { percentCPUUsage: 1.5 }, memory: { workingSetSize: 50 } },
@@ -50,10 +50,10 @@ test("the gate is off by default and nothing is written", () => {
 
 test("an explicit falsey value reads as off, not as merely-set", () => {
   for (const raw of ["0", "false", "no", "off", ""]) {
-    assert.strictEqual(profilingEnabled({ KIROCREW_DEBUG: raw }), false, `${raw} should be off`);
+    assert.strictEqual(profilingEnabled({ AJCREW_DEBUG: raw }), false, `${raw} should be off`);
   }
   for (const raw of ["1", "true", "YES", " on "]) {
-    assert.strictEqual(profilingEnabled({ KIROCREW_DEBUG: raw }), true, `${raw} should be on`);
+    assert.strictEqual(profilingEnabled({ AJCREW_DEBUG: raw }), true, `${raw} should be on`);
   }
 });
 

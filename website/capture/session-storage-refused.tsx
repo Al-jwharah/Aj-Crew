@@ -19,7 +19,7 @@ const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 const several = params.get('refused') === 'several'
 
 localStorage.setItem('mc-theme', theme)
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 document.documentElement.setAttribute('data-mode', theme)
 
 const NOW = Date.UTC(2026, 9, 29, 12) / 1000

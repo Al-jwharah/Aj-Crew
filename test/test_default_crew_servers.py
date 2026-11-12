@@ -1,7 +1,7 @@
 """A user's custom agent gets Crew's default servers on kiro-cli and KAS alike.
 
-One helper (``acp/default_crew_servers.py``) adds ``kirocrew-core`` and
-``kirocrew-cron`` to a user-level spec Crew did not write. kiro-cli reads it
+One helper (``acp/default_crew_servers.py``) adds ``ajcrew-core`` and
+``ajcrew-cron`` to a user-level spec Crew did not write. kiro-cli reads it
 through the agent's skill view, KAS through the projected spec. These tests pin
 the helper, both backends' use of it, and the opt-outs.
 """
@@ -15,12 +15,12 @@ from types import SimpleNamespace
 import native_skill_projection_helpers
 import pytest
 
-import kiro_crew.agent as agent_mod
-import kiro_crew.config.paths as paths_mod
-from kiro_crew import agent_state
-from kiro_crew.acp import default_crew_servers as defaults
-from kiro_crew.acp.harness.kas import KasHarness
-from kiro_crew.dashboard.side_readonly_spec import OWNER_MARKER
+import aj_crew.agent as agent_mod
+import aj_crew.config.paths as paths_mod
+from aj_crew import agent_state
+from aj_crew.acp import default_crew_servers as defaults
+from aj_crew.acp.harness.kas import KasHarness
+from aj_crew.dashboard.side_readonly_spec import OWNER_MARKER
 
 # The skill view suites' shared fixtures, bound here by name so pytest registers them.
 native_tree = native_skill_projection_helpers.native_tree
@@ -36,7 +36,7 @@ _CRON = {"command": "test-core", "args": ["mcp-cron"]}
 
 def _managed(name, *, include_opt_in=False):
     del include_opt_in
-    return {"kirocrew-core": dict(_CORE), "kirocrew-cron": dict(_CRON)}.get(name)
+    return {"ajcrew-core": dict(_CORE), "ajcrew-cron": dict(_CRON)}.get(name)
 
 
 @pytest.fixture
@@ -67,7 +67,7 @@ def unopenable_state(tmp_path_factory):
 @pytest.fixture
 def managed(monkeypatch):
     monkeypatch.setattr(agent_mod, "managed_mcp_spec_entry", _managed)
-    monkeypatch.setattr("kiro_crew.apps.manager.owning_app_for_agent", lambda agent: None)
+    monkeypatch.setattr("aj_crew.apps.manager.owning_app_for_agent", lambda agent: None)
 
 
 class TestHelper:
@@ -75,8 +75,8 @@ class TestHelper:
         assert agent_state.get_capabilities("mine") is None
         spec = {"name": "mine", "tools": ["fs_read"]}
         out = defaults.with_default_crew_servers("mine", spec)
-        assert out["tools"] == ["fs_read", "@kirocrew-core", "@kirocrew-cron"]
-        assert out["mcpServers"] == {"kirocrew-core": _CORE, "kirocrew-cron": _CRON}
+        assert out["tools"] == ["fs_read", "@ajcrew-core", "@ajcrew-cron"]
+        assert out["mcpServers"] == {"ajcrew-core": _CORE, "ajcrew-cron": _CRON}
         assert spec == {"name": "mine", "tools": ["fs_read"]}, "the input is not mutated"
 
     @pytest.mark.parametrize("agent", ["crew-0123456789abcdef01234567", "mine"])
@@ -99,7 +99,7 @@ class TestHelper:
             "overrides": {section: {} for section in agent_state.CAPABILITY_SECTIONS},
             "status": status,
         }
-        record["overrides"]["mcpServers"]["kirocrew-core"] = {"action": "remove"}
+        record["overrides"]["mcpServers"]["ajcrew-core"] = {"action": "remove"}
         state_path.write_text(json.dumps({agent: {"capabilities": record}}), encoding="utf-8")
         assert agent_state.get_capabilities(agent) == record
         spec = {"name": agent, "tools": ["fs_read"], "mcpServers": {}}
@@ -135,21 +135,21 @@ class TestHelper:
         assert defaults.with_default_crew_servers("mine", spec) is spec
         assert spec == {"name": "mine", "tools": ["fs_read"], "mcpServers": {}}
 
-    def test_kirocrew_work_is_not_a_default(self, managed):
+    def test_ajcrew_work_is_not_a_default(self, managed):
         out = defaults.with_default_crew_servers("mine", {"tools": ["fs_read"]})
-        assert "kirocrew-work" not in out["mcpServers"]
-        assert "@kirocrew-work" not in out["tools"]
+        assert "ajcrew-work" not in out["mcpServers"]
+        assert "@ajcrew-work" not in out["tools"]
 
     def test_the_entry_carries_no_session_identity_or_approval(self, managed):
         out = defaults.with_default_crew_servers("mine", {"tools": ["fs_read"]})
         for entry in out["mcpServers"].values():
             assert "autoApprove" not in entry
-            assert "KIROCREW_SESSION_KEY" not in json.dumps(entry)
+            assert "AJCREW_SESSION_KEY" not in json.dumps(entry)
 
     def test_a_star_grant_gets_the_entries_only(self, managed):
         out = defaults.with_default_crew_servers("mine", {"tools": "*"})
         assert out["tools"] == "*"
-        assert set(out["mcpServers"]) == {"kirocrew-core", "kirocrew-cron"}
+        assert set(out["mcpServers"]) == {"ajcrew-core", "ajcrew-cron"}
         out = defaults.with_default_crew_servers("mine", {"tools": ["*", "fs_read"]})
         assert out["tools"] == ["*", "fs_read"]
 
@@ -160,24 +160,24 @@ class TestHelper:
 
     def test_an_authored_declaration_is_kept_as_written(self, managed):
         muted = {"command": "x", "disabled": True}
-        spec = {"tools": ["fs_read"], "mcpServers": {"kirocrew-cron": muted, "other": {}}}
+        spec = {"tools": ["fs_read"], "mcpServers": {"ajcrew-cron": muted, "other": {}}}
         out = defaults.with_default_crew_servers("mine", spec)
-        assert out["mcpServers"]["kirocrew-cron"] == muted
+        assert out["mcpServers"]["ajcrew-cron"] == muted
         assert out["mcpServers"]["other"] == {}
-        assert out["mcpServers"]["kirocrew-core"] == _CORE
-        assert out["tools"] == ["fs_read", "@kirocrew-core"]
+        assert out["mcpServers"]["ajcrew-core"] == _CORE
+        assert out["tools"] == ["fs_read", "@ajcrew-core"]
 
     def test_a_per_tool_grant_is_not_widened(self, managed):
-        out = defaults.with_default_crew_servers("mine", {"tools": ["@kirocrew-core/skill_search"]})
-        assert out["tools"] == ["@kirocrew-core/skill_search", "@kirocrew-cron"]
-        assert "kirocrew-core" in out["mcpServers"]
+        out = defaults.with_default_crew_servers("mine", {"tools": ["@ajcrew-core/skill_search"]})
+        assert out["tools"] == ["@ajcrew-core/skill_search", "@ajcrew-cron"]
+        assert "ajcrew-core" in out["mcpServers"]
 
     @pytest.mark.parametrize(
         "opt_out",
         [
-            {"managedToolPolicy": {"excludeServers": ["kirocrew-core", "kirocrew-cron"]}},
-            {"excludedTools": ["@kirocrew-core", "@kirocrew-cron"]},
-            {"excludedTools": ["@kirocrew-core/*", "@kirocrew-cron/*"]},
+            {"managedToolPolicy": {"excludeServers": ["ajcrew-core", "ajcrew-cron"]}},
+            {"excludedTools": ["@ajcrew-core", "@ajcrew-cron"]},
+            {"excludedTools": ["@ajcrew-core/*", "@ajcrew-cron/*"]},
         ],
     )
     def test_an_agent_that_excludes_the_servers_gets_neither(self, managed, opt_out):
@@ -185,27 +185,27 @@ class TestHelper:
         assert defaults.with_default_crew_servers("mine", spec) is spec
 
     def test_opting_out_of_one_server_keeps_the_other(self, managed):
-        spec = {"tools": ["fs_read"], "excludedTools": ["@kirocrew-cron"]}
+        spec = {"tools": ["fs_read"], "excludedTools": ["@ajcrew-cron"]}
         out = defaults.with_default_crew_servers("mine", spec)
-        assert set(out["mcpServers"]) == {"kirocrew-core"}
-        assert out["tools"] == ["fs_read", "@kirocrew-core"]
+        assert set(out["mcpServers"]) == {"ajcrew-core"}
+        assert out["tools"] == ["fs_read", "@ajcrew-core"]
 
     def test_a_per_tool_exclusion_is_not_an_opt_out(self, managed):
-        spec = {"tools": ["fs_read"], "excludedTools": ["@kirocrew-core/spawn_run"]}
+        spec = {"tools": ["fs_read"], "excludedTools": ["@ajcrew-core/spawn_run"]}
         out = defaults.with_default_crew_servers("mine", spec)
-        assert set(out["mcpServers"]) == {"kirocrew-core", "kirocrew-cron"}
-        assert out["excludedTools"] == ["@kirocrew-core/spawn_run"]
+        assert set(out["mcpServers"]) == {"ajcrew-core", "ajcrew-cron"}
+        assert out["excludedTools"] == ["@ajcrew-core/spawn_run"]
 
     @pytest.mark.parametrize(
         "agent",
         [
-            "kirocrew",
-            "kirocrew-guest",
-            "kirocrew-lite",
-            "kirocrew-worker",
-            "kirocrew-mate-worker",
-            "kirocrew-skill-view-0123456789abcdef01234567",
-            "kirocrew-app-launch-deploy",
+            "ajcrew",
+            "ajcrew-guest",
+            "ajcrew-lite",
+            "ajcrew-worker",
+            "ajcrew-mate-worker",
+            "ajcrew-skill-view-0123456789abcdef01234567",
+            "ajcrew-app-launch-deploy",
         ],
     )
     def test_crew_s_own_and_derived_specs_are_left_alone(self, managed, agent):
@@ -217,12 +217,12 @@ class TestHelper:
         assert defaults.with_default_crew_servers("mine--readonly", spec) is spec
 
     def test_an_app_agent_is_left_alone(self, managed, monkeypatch):
-        monkeypatch.setattr("kiro_crew.apps.manager.owning_app_for_agent", lambda agent: object())
+        monkeypatch.setattr("aj_crew.apps.manager.owning_app_for_agent", lambda agent: object())
         spec = {"tools": ["fs_read"]}
         assert defaults.with_default_crew_servers("deploy", spec) is spec
 
     def test_a_registry_governed_install_adds_nothing(self, managed, monkeypatch):
-        monkeypatch.setattr("kiro_crew.acp.session_mcp._registry_mode", lambda: True)
+        monkeypatch.setattr("aj_crew.acp.session_mcp._registry_mode", lambda: True)
         spec = {"tools": ["fs_read"]}
         assert defaults.with_default_crew_servers("mine", spec) is spec
 
@@ -265,14 +265,14 @@ async def test_kas_projects_the_default_servers_with_this_session_s_key(kas_layo
 
     entry = await _kas_entry("mine", checkout, session_key="chat-abc")
 
-    assert entry["tools"] == ["@kept", "@kirocrew-core", "@kirocrew-cron"]
-    for server in ("kirocrew-core", "kirocrew-cron"):
+    assert entry["tools"] == ["@kept", "@ajcrew-core", "@ajcrew-cron"]
+    for server in ("ajcrew-core", "ajcrew-cron"):
         projected = entry["mcpServers"][server]
         assert projected["args"] == _managed(server)["args"]
         # The session's own key: the server resolves the caller, and its memory
         # store, from this session and nothing the spec chose.
-        assert projected["env"]["KIROCREW_SESSION_KEY"] == "chat-abc"
-    assert not (user / "mine.json").read_text(encoding="utf-8").count("kirocrew-core")
+        assert projected["env"]["AJCREW_SESSION_KEY"] == "chat-abc"
+    assert not (user / "mine.json").read_text(encoding="utf-8").count("ajcrew-core")
 
 
 @pytest.mark.asyncio
@@ -285,14 +285,14 @@ async def test_kas_honours_the_opt_out(kas_layout):
             "name": "mine",
             "prompt": "p",
             "tools": ["@kept"],
-            "managedToolPolicy": {"excludeServers": ["kirocrew-core", "kirocrew-cron"]},
+            "managedToolPolicy": {"excludeServers": ["ajcrew-core", "ajcrew-cron"]},
         },
     )
 
     entry = await _kas_entry("mine", checkout)
 
     assert entry["tools"] == ["@kept"]
-    assert "kirocrew-core" not in (entry.get("mcpServers") or {})
+    assert "ajcrew-core" not in (entry.get("mcpServers") or {})
 
 
 @pytest.mark.asyncio
@@ -302,16 +302,16 @@ async def test_kas_leaves_a_project_only_agent_alone(kas_layout):
 
     entry = await _kas_entry("proj", checkout)
 
-    assert "@kirocrew-core" not in entry["tools"]
-    assert "kirocrew-core" not in (entry.get("mcpServers") or {})
+    assert "@ajcrew-core" not in entry["tools"]
+    assert "ajcrew-core" not in (entry.get("mcpServers") or {})
 
 
 # --- kiro-cli: the skill view and its per-session control plane --------------------
 
 
 def test_kiro_cli_view_and_control_plane_mount_both_servers(native_tree, managed):
-    from kiro_crew.acp import skill_projection as projection
-    from kiro_crew.acp.session_mcp import kiro_control_plane_servers
+    from aj_crew.acp import skill_projection as projection
+    from aj_crew.acp.session_mcp import kiro_control_plane_servers
 
     _home, agents, project = native_tree
     (agents / "custom.json").write_text(
@@ -319,8 +319,8 @@ def test_kiro_cli_view_and_control_plane_mount_both_servers(native_tree, managed
     )
     prepared = projection.prepare_native_skill_projection(project)
     view = prepared.specs["custom"]
-    assert view["tools"] == ["read", "@kirocrew-core", "@kirocrew-cron"]
-    assert set(view["mcpServers"]) == {"kirocrew-core", "kirocrew-cron"}
+    assert view["tools"] == ["read", "@ajcrew-core", "@ajcrew-cron"]
+    assert set(view["mcpServers"]) == {"ajcrew-core", "ajcrew-cron"}
     assert json.loads((agents / "custom.json").read_text(encoding="utf-8")) == {
         "name": "custom",
         "tools": ["read"],
@@ -329,16 +329,16 @@ def test_kiro_cli_view_and_control_plane_mount_both_servers(native_tree, managed
     mount = kiro_control_plane_servers(
         prepared.agent("custom"), work_dir=project, spec_override=view
     )
-    assert {element["name"] for element in mount.elements} >= {"kirocrew-core", "kirocrew-cron"}
+    assert {element["name"] for element in mount.elements} >= {"ajcrew-core", "ajcrew-cron"}
 
 
 def test_kiro_cli_projection_survives_unopenable_capability_state(
     native_tree, managed, unopenable_state, monkeypatch
 ):
-    from kiro_crew.acp import skill_projection as projection
+    from aj_crew.acp import skill_projection as projection
 
     _home, agents, project = native_tree
-    for name in ("custom", "kirocrew"):
+    for name in ("custom", "ajcrew"):
         (agents / f"{name}.json").write_text(
             json.dumps({"name": name, "tools": ["read"]}), encoding="utf-8"
         )
@@ -347,7 +347,7 @@ def test_kiro_cli_projection_survives_unopenable_capability_state(
         "list_agents",
         lambda **kw: [
             SimpleNamespace(name=name, filename=f"{name}.json", scope="global")
-            for name in ("custom", "kirocrew")
+            for name in ("custom", "ajcrew")
         ],
     )
     prepared = projection.prepare_native_skill_projection(project)
@@ -357,15 +357,15 @@ def test_kiro_cli_projection_survives_unopenable_capability_state(
 
 
 def test_kiro_cli_view_honours_the_opt_out(native_tree, managed):
-    from kiro_crew.acp import skill_projection as projection
+    from aj_crew.acp import skill_projection as projection
 
     _home, agents, project = native_tree
-    spec = {"name": "custom", "tools": ["read"], "excludedTools": ["@kirocrew-cron"]}
+    spec = {"name": "custom", "tools": ["read"], "excludedTools": ["@ajcrew-cron"]}
     (agents / "custom.json").write_text(json.dumps(spec), encoding="utf-8")
     prepared = projection.prepare_native_skill_projection(project)
     view = prepared.specs["custom"]
-    assert view["tools"] == ["read", "@kirocrew-core"]
-    assert set(view["mcpServers"]) == {"kirocrew-core"}
+    assert view["tools"] == ["read", "@ajcrew-core"]
+    assert set(view["mcpServers"]) == {"ajcrew-core"}
 
 
 # --- Approval grants on the derived copy -----------------------------------------
@@ -374,26 +374,26 @@ _APPROVALS = [
     "*",
     "@other",
     "@*",
-    "@kirocrew-*",
-    "@kirocrew-cron",
-    "@kirocrew-cron/*",
-    "@kirocrew-cron/cron_*",
-    "@kirocrew-*/cron_*",
+    "@ajcrew-*",
+    "@ajcrew-cron",
+    "@ajcrew-cron/*",
+    "@ajcrew-cron/cron_*",
+    "@ajcrew-*/cron_*",
     "web_search",
-    "@kirocrew-core",
+    "@ajcrew-core",
     "@other/read",
 ]
 
 
 @pytest.fixture
 def per_tool_ceiling(monkeypatch):
-    from kiro_crew.platform import context, governance, governance_profiles
+    from aj_crew.platform import context, governance, governance_profiles
 
     ceiling = governance.parse_policy(
         {
             "version": 1,
             "boot": {},
-            "mcp": {"mode": "deny", "deny": ["@kirocrew-cron/cron_remove_all"]},
+            "mcp": {"mode": "deny", "deny": ["@ajcrew-cron/cron_remove_all"]},
         }
     )
     monkeypatch.setattr(context, "current_context", lambda: SimpleNamespace(governance=ceiling))
@@ -407,7 +407,7 @@ def per_tool_ceiling(monkeypatch):
 
 @pytest.fixture(params=["helper", "kiro-cli"])
 def derive(request, native_tree, managed):
-    from kiro_crew.acp import skill_projection as projection
+    from aj_crew.acp import skill_projection as projection
 
     _home, agents, project = native_tree
 
@@ -430,29 +430,27 @@ def derive(request, native_tree, managed):
 
 
 def test_single_tool_deny_drops_covering_approvals(derive, per_tool_ceiling):
-    from kiro_crew.platform import governance
+    from aj_crew.platform import governance
 
     assert not governance.gate_decision(
-        per_tool_ceiling, None, "mcp__kirocrew-cron__cron_remove_all"
+        per_tool_ceiling, None, "mcp__ajcrew-cron__cron_remove_all"
     ).permitted
-    assert governance.gate_decision(
-        per_tool_ceiling, None, "mcp__kirocrew-cron__cron_add"
-    ).permitted
-    assert governance.may_skip_gate_now("@kirocrew-cron") is False
+    assert governance.gate_decision(per_tool_ceiling, None, "mcp__ajcrew-cron__cron_add").permitted
+    assert governance.may_skip_gate_now("@ajcrew-cron") is False
     assert governance.may_skip_gate_now("*") is True
-    assert governance.may_skip_gate_now("@kirocrew-*") is True
+    assert governance.may_skip_gate_now("@ajcrew-*") is True
 
     out = derive({"name": "custom", "tools": ["read"], "allowedTools": _APPROVALS})
 
-    assert out["allowedTools"] == ["@other", "web_search", "@kirocrew-core", "@other/read"]
-    assert set(out["mcpServers"]) == {"kirocrew-core", "kirocrew-cron"}
+    assert out["allowedTools"] == ["@other", "web_search", "@ajcrew-core", "@other/read"]
+    assert set(out["mcpServers"]) == {"ajcrew-core", "ajcrew-cron"}
 
 
 @pytest.fixture
 def audit_events(monkeypatch):
     events = []
     monkeypatch.setattr(
-        "kiro_crew.acp.kas_agents.sel",
+        "aj_crew.acp.kas_agents.sel",
         lambda: SimpleNamespace(log_api_access=lambda **kw: events.append(kw)),
     )
     return events
@@ -460,17 +458,17 @@ def audit_events(monkeypatch):
 
 def test_single_tool_deny_audits_withheld_approvals(derive, per_tool_ceiling, audit_events):
     out = derive({"name": "custom", "tools": ["read"], "allowedTools": _APPROVALS})
-    assert out["allowedTools"] == ["@other", "web_search", "@kirocrew-core", "@other/read"]
+    assert out["allowedTools"] == ["@other", "web_search", "@ajcrew-core", "@other/read"]
     withheld = ", ".join(
         sorted(
             [
                 "*",
                 "@*",
-                "@kirocrew-*",
-                "@kirocrew-cron",
-                "@kirocrew-cron/*",
-                "@kirocrew-cron/cron_*",
-                "@kirocrew-*/cron_*",
+                "@ajcrew-*",
+                "@ajcrew-cron",
+                "@ajcrew-cron/*",
+                "@ajcrew-cron/cron_*",
+                "@ajcrew-*/cron_*",
             ]
         )
     )
@@ -489,7 +487,7 @@ def test_single_tool_deny_audits_withheld_approvals(derive, per_tool_ceiling, au
 
 
 def test_ungoverned_keeps_approvals(derive, per_tool_ceiling, monkeypatch, audit_events):
-    monkeypatch.setattr("kiro_crew.platform.context.current_context", lambda: None)
+    monkeypatch.setattr("aj_crew.platform.context.current_context", lambda: None)
     out = derive({"name": "custom", "tools": ["read"], "allowedTools": _APPROVALS})
     assert out["allowedTools"] == _APPROVALS
     assert audit_events == []
@@ -500,33 +498,33 @@ def test_audit_failure_keeps_approvals_withheld(derive, per_tool_ceiling, monkey
         raise OSError("audit sink unavailable")
 
     monkeypatch.setattr(
-        "kiro_crew.acp.kas_agents.sel",
+        "aj_crew.acp.kas_agents.sel",
         lambda: SimpleNamespace(log_api_access=unavailable),
     )
     out = derive({"name": "custom", "tools": ["read"], "allowedTools": _APPROVALS})
-    assert out["allowedTools"] == ["@other", "web_search", "@kirocrew-core", "@other/read"]
+    assert out["allowedTools"] == ["@other", "web_search", "@ajcrew-core", "@other/read"]
 
 
 def test_unreadable_ceiling_withholds_approvals(derive, per_tool_ceiling, monkeypatch):
     def unreadable():
         raise RuntimeError("ceiling unavailable")
 
-    monkeypatch.setattr("kiro_crew.platform.context.current_context", unreadable)
+    monkeypatch.setattr("aj_crew.platform.context.current_context", unreadable)
     out = derive({"name": "custom", "tools": ["read"], "allowedTools": _APPROVALS})
     assert out["allowedTools"] == ["@other", "web_search", "@other/read"]
-    assert set(out["mcpServers"]) == {"kirocrew-core", "kirocrew-cron"}
+    assert set(out["mcpServers"]) == {"ajcrew-core", "ajcrew-cron"}
 
 
 def test_only_added_servers_narrow_covering_approvals(derive, per_tool_ceiling):
     spec = {
         "name": "custom",
         "tools": ["read"],
-        "allowedTools": ["*", "@kirocrew-*", "@other"],
-        "excludedTools": ["@kirocrew-cron"],
+        "allowedTools": ["*", "@ajcrew-*", "@other"],
+        "excludedTools": ["@ajcrew-cron"],
     }
     out = derive(spec)
     assert out["allowedTools"] == spec["allowedTools"]
-    assert set(out["mcpServers"]) == {"kirocrew-core"}
+    assert set(out["mcpServers"]) == {"ajcrew-core"}
 
 
 def test_entries_not_reaching_an_added_server_are_kept_as_written(derive, per_tool_ceiling):
@@ -541,20 +539,20 @@ _AUTHOR_BUILTINS = ["fs_read", "execute_bash", "@mine"]
 def test_ungoverned_host_keeps_author_builtin_approvals(
     derive, per_tool_ceiling, monkeypatch, audit_events
 ):
-    monkeypatch.setattr("kiro_crew.platform.context.current_context", lambda: None)
+    monkeypatch.setattr("aj_crew.platform.context.current_context", lambda: None)
     out = derive({"name": "custom", "tools": ["read"], "allowedTools": _AUTHOR_BUILTINS})
-    assert set(out["mcpServers"]) == {"kirocrew-core", "kirocrew-cron"}
+    assert set(out["mcpServers"]) == {"ajcrew-core", "ajcrew-cron"}
     assert out["allowedTools"] == _AUTHOR_BUILTINS
     assert audit_events == []
 
 
 def test_single_tool_deny_keeps_author_builtin_approvals(derive, per_tool_ceiling, audit_events):
-    allowed = ["*", "fs_read", "@kirocrew-*", "execute_bash", "@mine"]
+    allowed = ["*", "fs_read", "@ajcrew-*", "execute_bash", "@mine"]
     out = derive({"name": "custom", "tools": ["read"], "allowedTools": allowed})
-    assert set(out["mcpServers"]) == {"kirocrew-core", "kirocrew-cron"}
+    assert set(out["mcpServers"]) == {"ajcrew-core", "ajcrew-cron"}
     assert out["allowedTools"] == _AUTHOR_BUILTINS
     assert len(audit_events) == 1
-    assert audit_events[0]["resources"].startswith("*, @kirocrew-* projected without")
+    assert audit_events[0]["resources"].startswith("*, @ajcrew-* projected without")
 
 
 @pytest.mark.parametrize("allowed", [None, "*", {}, 42])
@@ -567,8 +565,8 @@ def test_non_list_approvals_are_untouched(derive, per_tool_ceiling, allowed):
     "changes",
     [
         {"tools": []},
-        {"mcpServers": {"kirocrew-core": _CORE, "kirocrew-cron": _CRON}},
-        {"excludedTools": ["@kirocrew-core", "@kirocrew-cron"]},
+        {"mcpServers": {"ajcrew-core": _CORE, "ajcrew-cron": _CRON}},
+        {"excludedTools": ["@ajcrew-core", "@ajcrew-cron"]},
     ],
 )
 def test_no_added_servers_preserves_approvals(managed, per_tool_ceiling, changes):

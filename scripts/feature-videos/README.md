@@ -45,8 +45,8 @@ whole folder, and the folder must hold nothing the manifest does not sign.
 
 `duration_s` is required: nothing here inspects the media, and the dashboard shows
 the length from it. `doc` must be in the tips doc allowlist
-(`src/kiro_crew/tips_allowlist.py`). The fields are described in
-[feature-videos](../../src/kiro_crew/docs/feature-videos.md).
+(`src/aj_crew/tips_allowlist.py`). The fields are described in
+[feature-videos](../../src/aj_crew/docs/feature-videos.md).
 
 Clips should be H.264 video with AAC or no audio, the formats a browser `<video>`
 plays everywhere the dashboard runs. The tool does not check this.
@@ -82,7 +82,7 @@ Publishing refuses, with the reason on stderr and nothing written:
 | A missing `<id>.mp4` or `<id>.jpg`, or a symlink in their place | A release folder with a hole in it is not publishable; the bytes hashed must be the bytes uploaded. |
 | A file the catalog does not name | It would be uploaded and served under a signature that never covered it. |
 | A folder already holding `manifest.json` | A release is never re-signed. |
-| A `doc` outside `src/kiro_crew/tips_allowlist.py` | So a clip cannot point at an internal design note. |
+| A `doc` outside `src/aj_crew/tips_allowlist.py` | So a clip cannot point at an internal design note. |
 | An empty file, or a clip or poster over the dashboard's limit for it | The dashboard drops an entry whose clip is over its cap and refuses an oversize poster. |
 | A release that is not `major.minor.patch` with no leading zeros | The only folder shape a dashboard ever asks for. |
 | A `--cdn-host` that is not a bare host name or IP, with at most a port | The host goes into every signed URL; a path in it would be served from nowhere. |
@@ -117,9 +117,9 @@ The tool enforces immutability on the folder it signs; the bucket side is yours.
 for example with S3 Object Lock on every uploaded release object. Versioning alone
 preserves old bytes but does not prevent replacing the current key.
 
-## The Kiro Crew intro
+## The Aj Crew intro
 
-The "Kiro Crew in 15 seconds" clip is a manifest entry like any other; the package
+The "Aj Crew in 15 seconds" clip is a manifest entry like any other; the package
 does not bundle it. The dashboard shows feature videos only in the video card at
 the top of Explore, which plays one unfinished clip at random. A verified manifest
 replaces the built-in list, so every release's `catalog.json` should carry the
@@ -127,10 +127,10 @@ intro entry for as long as the intro should stay on offer:
 
 ```json
 {
-  "id": "kiro-crew-intro",
-  "feature": "kiro-crew",
-  "title": "Kiro Crew in 15 seconds",
-  "description": "A short tour of what Kiro Crew does.",
+  "id": "aj-crew-intro",
+  "feature": "aj-crew",
+  "title": "Aj Crew in 15 seconds",
+  "description": "A short tour of what Aj Crew does.",
   "doc": "dashboard.md",
   "used_when": [],
   "min_version": "",
@@ -138,16 +138,16 @@ intro entry for as long as the intro should stay on offer:
 }
 ```
 
-Keep the id `kiro-crew-intro`: a verdict a user already recorded against it then
+Keep the id `aj-crew-intro`: a verdict a user already recorded against it then
 keeps the clip retired. The source clip is English only. Put it in the release
-folder as `kiro-crew-intro.mp4` with a still frame as `kiro-crew-intro.jpg`, then
+folder as `aj-crew-intro.mp4` with a still frame as `aj-crew-intro.jpg`, then
 run [Sign](#sign), [Verify](#verify) and [Upload](#upload) as for any clip.
 
 ## Size limits
 
 Every limit is the dashboard's own number: `_SIGNED_PAYLOAD_MAX_BYTES`,
 `_MANIFEST_MAX_BYTES`, `_MAX_ENTRIES`, `_MAX_ENTRY_BYTES` and `_MAX_DURATION_S` in
-`src/kiro_crew/feature_videos_manifest.py`, `MAX_POSTER_BYTES` in
-`src/kiro_crew/feature_videos_cache.py`. `_manifest.py` carries them as
+`src/aj_crew/feature_videos_manifest.py`, `MAX_POSTER_BYTES` in
+`src/aj_crew/feature_videos_cache.py`. `_manifest.py` carries them as
 `RUNTIME_LIMITS`, a test holds them equal to the source, and there is no flag to
 loosen one.

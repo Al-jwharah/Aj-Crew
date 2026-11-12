@@ -29,7 +29,7 @@ from turn_harness import (
     run_turn,
 )
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
@@ -38,9 +38,9 @@ from kiro_crew.acp.types import (
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.constants import TOOL_APPROVAL_TIMEOUT
-from kiro_crew.dashboard.chat_utils import effective_session_key
-from kiro_crew.llm_helpers import slot_switch_session_lock
+from aj_crew.constants import TOOL_APPROVAL_TIMEOUT
+from aj_crew.dashboard.chat_utils import effective_session_key
+from aj_crew.llm_helpers import slot_switch_session_lock
 
 _REPLY = AcpEvent(kind=EVENT_TEXT_CHUNK, text="the reply")
 _DONE = AcpEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_END_TURN)

@@ -1,4 +1,4 @@
-"""Tests for ``kiro_crew.service.live_target`` — the live-target pointer.
+"""Tests for ``aj_crew.service.live_target`` — the live-target pointer.
 
 Pins the security and correctness properties of the mechanism that decides which
 checkout the gateway executes:
@@ -23,7 +23,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.service.live_target import (
+from aj_crew.service.live_target import (
     _FILENAME,
     EXEC_MARKER,
     InvalidTarget,
@@ -43,14 +43,14 @@ from kiro_crew.service.live_target import (
 @pytest.fixture(autouse=True)
 def _isolate_pointer(tmp_path, monkeypatch):
     """Route pointer_path() to tmp_path so no test touches the real data home."""
-    monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
 
 
 def _place_entry_point(checkout: Path, mode: int = 0o755) -> Path:
     """Create the checkout's venv entry point where production looks for it.
 
     Routed through ``target_bin`` so the fixture tracks the platform layout
-    (``.venv/bin/kirocrew`` vs ``.venv/Scripts/kirocrew.exe``) instead of pinning
+    (``.venv/bin/ajcrew`` vs ``.venv/Scripts/ajcrew.exe``) instead of pinning
     one and failing validation everywhere else.
     """
     kcbin = target_bin(checkout)
@@ -64,7 +64,7 @@ def _make_valid_checkout(tmp_path: Path) -> Path:
     """Build a minimal valid checkout tree under tmp_path."""
     checkout = tmp_path / "my-checkout"
     checkout.mkdir()
-    (checkout / "src" / "kiro_crew").mkdir(parents=True)
+    (checkout / "src" / "aj_crew").mkdir(parents=True)
     _place_entry_point(checkout)
     return checkout
 
@@ -108,14 +108,14 @@ class TestValidate:
     def test_rejects_missing_venv_entry_point(self, tmp_path):
         checkout = tmp_path / "co"
         checkout.mkdir()
-        (checkout / "src" / "kiro_crew").mkdir(parents=True)
+        (checkout / "src" / "aj_crew").mkdir(parents=True)
         with pytest.raises(InvalidTarget, match="no .* in its .venv"):
             validate(str(checkout))
 
     def test_rejects_non_executable_entry_point(self, tmp_path):
         checkout = tmp_path / "co"
         checkout.mkdir()
-        (checkout / "src" / "kiro_crew").mkdir(parents=True)
+        (checkout / "src" / "aj_crew").mkdir(parents=True)
         kcbin = _place_entry_point(checkout, mode=0o644)
         if os.access(kcbin, os.X_OK):
             # Windows reports every existing file as executable, so the state
@@ -124,11 +124,11 @@ class TestValidate:
         with pytest.raises(InvalidTarget, match="not executable"):
             validate(str(checkout))
 
-    def test_rejects_directory_lacking_src_kiro_crew(self, tmp_path):
+    def test_rejects_directory_lacking_src_aj_crew(self, tmp_path):
         checkout = tmp_path / "co"
         checkout.mkdir()
         _place_entry_point(checkout)
-        with pytest.raises(InvalidTarget, match="no src/kiro_crew"):
+        with pytest.raises(InvalidTarget, match="no src/aj_crew"):
             validate(str(checkout))
 
     def test_happy_path_resolves_symlink(self, tmp_path):
@@ -338,7 +338,7 @@ class TestWriteTarget:
         sees that root and, same-uid, could ``link(2)`` the temp before the rename —
         a second name for the inode the gateway execs from, outside the pointer's
         mask. So the temp is staged in the masked ``live-target-staging`` directory."""
-        from kiro_crew.service import live_target as lt
+        from aj_crew.service import live_target as lt
 
         seen: list[Path] = []
         real = lt.atomic_write
@@ -355,7 +355,7 @@ class TestWriteTarget:
         assert not list((pointer_path().parent / lt._STAGING_LEAF).iterdir()), "temp left behind"
 
     def test_refuses_to_stage_through_a_symlinked_staging_dir(self, tmp_path):
-        from kiro_crew.service import live_target as lt
+        from aj_crew.service import live_target as lt
 
         if os.name != "posix":
             pytest.skip("symlink semantics are POSIX here")
@@ -373,7 +373,7 @@ class TestWriteTarget:
         """The materialiser creates the directory 0700; one that is wider was made by
         something else, and its temps' names would be listable by another account. The
         write is refused with the remedy rather than the mode being silently repaired."""
-        from kiro_crew.service import live_target as lt
+        from aj_crew.service import live_target as lt
 
         if os.name != "posix":
             pytest.skip("POSIX mode bits")
@@ -394,7 +394,7 @@ class TestWriteTarget:
         """If the published inode ends up with more than one name, the write is
         refused and the pointer removed: an absent pointer boots the gateway's own
         image, which is the safe default."""
-        from kiro_crew.service import live_target as lt
+        from aj_crew.service import live_target as lt
 
         if os.name != "posix":
             pytest.skip("hard-link counts are POSIX here")
@@ -412,7 +412,7 @@ class TestWriteTarget:
         assert not pointer_path().exists()
 
     def test_restore_stages_in_the_masked_directory(self, tmp_path, monkeypatch):
-        from kiro_crew.service import live_target as lt
+        from aj_crew.service import live_target as lt
 
         seen: list[Path] = []
         real = lt.atomic_write
@@ -436,7 +436,7 @@ class TestWriteTarget:
         stat passes even when lockdown follows the write, so measuring at
         lockdown time is what makes this assertion meaningful.
         """
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         calls: list[tuple[Path, int]] = []
         real_restrict = platform_compat.restrict_to_owner
@@ -445,7 +445,7 @@ class TestWriteTarget:
             calls.append((Path(target), os.stat(target).st_size))
             return real_restrict(target)
 
-        monkeypatch.setattr("kiro_crew.platform_compat.restrict_to_owner", _measuring)
+        monkeypatch.setattr("aj_crew.platform_compat.restrict_to_owner", _measuring)
         checkout = _make_valid_checkout(tmp_path)
         write_target(checkout)
         # Filter to the pointer's staging directory (the temp is locked down
@@ -490,7 +490,7 @@ class TestSnapshotRestore:
         -- indistinguishable from absence to every reader -- through the same
         hardened publisher.
         """
-        from kiro_crew.service import live_target as lt
+        from aj_crew.service import live_target as lt
 
         path = pointer_path()
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -507,7 +507,7 @@ class TestSnapshotRestore:
 
     def test_restore_none_when_already_absent_still_publishes_the_stub(self, tmp_path):
         """The first-cutover case: nothing was pinned, the cutover failed."""
-        from kiro_crew.service import live_target as lt
+        from aj_crew.service import live_target as lt
 
         path = pointer_path()
         assert not path.exists()
@@ -517,7 +517,7 @@ class TestSnapshotRestore:
 
     def test_restore_none_stages_in_the_masked_directory(self, tmp_path, monkeypatch):
         """The unpin takes the same link-safe path as every other publish."""
-        from kiro_crew.service import live_target as lt
+        from aj_crew.service import live_target as lt
 
         seen: list[Path] = []
         real = lt.atomic_write
@@ -531,7 +531,7 @@ class TestSnapshotRestore:
         assert seen and seen[-1].parent == pointer_path().parent / lt._STAGING_LEAF
 
     def test_restore_none_reports_false_when_the_publisher_refuses(self, tmp_path, monkeypatch):
-        from kiro_crew.service import live_target as lt
+        from aj_crew.service import live_target as lt
 
         def refuse(_payload):
             raise OSError(1, "refused")
@@ -566,7 +566,7 @@ class TestSnapshotRestore:
         input read at every startup, and on a shared data home another local
         account could otherwise redirect it during the write window.
         """
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         calls: list[tuple[Path, int]] = []
         real_restrict = platform_compat.restrict_to_owner
@@ -575,7 +575,7 @@ class TestSnapshotRestore:
             calls.append((Path(target), os.stat(target).st_size))
             return real_restrict(target)
 
-        monkeypatch.setattr("kiro_crew.platform_compat.restrict_to_owner", _measuring)
+        monkeypatch.setattr("aj_crew.platform_compat.restrict_to_owner", _measuring)
         path = pointer_path()
         path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -594,7 +594,7 @@ class TestSnapshotRestore:
         other pointer write — applied to the staged temp before any payload byte
         exists (a stub with inherited permissions would be a writable code-
         execution input under the pointer's name)."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         calls: list[tuple[Path, int]] = []
         real_restrict = platform_compat.restrict_to_owner
@@ -603,7 +603,7 @@ class TestSnapshotRestore:
             calls.append((Path(target), os.stat(target).st_size))
             return real_restrict(target)
 
-        monkeypatch.setattr("kiro_crew.platform_compat.restrict_to_owner", _measuring)
+        monkeypatch.setattr("aj_crew.platform_compat.restrict_to_owner", _measuring)
         path = pointer_path()
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text("anything")
@@ -625,7 +625,7 @@ class TestSnapshotRestore:
         def boom(_path):
             raise OSError(5, "icacls failed")
 
-        monkeypatch.setattr("kiro_crew.platform_compat.restrict_to_owner", boom)
+        monkeypatch.setattr("aj_crew.platform_compat.restrict_to_owner", boom)
         path = pointer_path()
         path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -639,7 +639,7 @@ class TestSnapshotRestore:
         blocker = tmp_path / "not-a-dir"
         blocker.write_text("x")
         monkeypatch.setattr(
-            "kiro_crew.service.live_target.pointer_path",
+            "aj_crew.service.live_target.pointer_path",
             lambda: blocker / "sub" / "file",
         )
         result = restore("some content")
@@ -676,7 +676,7 @@ class TestMaybeReexec:
         """The exec'd gateway drops the marker, so a restart's replacement follows the pointer."""
         checkout = _make_valid_checkout(tmp_path)
         write_target(checkout)
-        monkeypatch.setattr(sys, "argv", ["/other/bin/kirocrew", "gateway"])
+        monkeypatch.setattr(sys, "argv", ["/other/bin/ajcrew", "gateway"])
         monkeypatch.setenv(EXEC_MARKER, "1")
         mock_execve = MagicMock()
         monkeypatch.setattr(os, "execve", mock_execve)
@@ -732,7 +732,7 @@ class TestMaybeReexec:
         resolved = checkout.resolve()
         kcbin = target_bin(resolved)
         # argv[0] must differ from kcbin for the loop guard to pass
-        monkeypatch.setattr(sys, "argv", ["/usr/bin/kirocrew", "gateway", "--port", "5476"])
+        monkeypatch.setattr(sys, "argv", ["/usr/bin/ajcrew", "gateway", "--port", "5476"])
         monkeypatch.delenv(EXEC_MARKER, raising=False)
         monkeypatch.setenv("PATH", "/usr/bin:/bin")
         mock_execve = MagicMock()
@@ -748,7 +748,7 @@ class TestMaybeReexec:
         assert exec_path == str(kcbin)
         assert exec_argv == [str(kcbin), "gateway", "--port", "5476"]
         assert exec_env[EXEC_MARKER] == "1"
-        assert exec_env["KIROCREW_PROJECT_DIR"] == str(resolved)
+        assert exec_env["AJCREW_PROJECT_DIR"] == str(resolved)
         # Target venv bin is FIRST on PATH
         path_entries = exec_env["PATH"].split(os.pathsep)
         assert path_entries[0] == str(kcbin.parent)
@@ -757,7 +757,7 @@ class TestMaybeReexec:
         """Fail-safe: OSError from execve does not propagate."""
         checkout = _make_valid_checkout(tmp_path)
         write_target(checkout)
-        monkeypatch.setattr(sys, "argv", ["/other/bin/kirocrew", "gateway"])
+        monkeypatch.setattr(sys, "argv", ["/other/bin/ajcrew", "gateway"])
         monkeypatch.delenv(EXEC_MARKER, raising=False)
 
         def raise_oserror(*args, **kwargs):
@@ -778,7 +778,7 @@ class TestMaybeReexec:
         """A cwd we cannot enter is warned, not fatal — the exec still fires."""
         checkout = _make_valid_checkout(tmp_path)
         write_target(checkout)
-        monkeypatch.setattr(sys, "argv", ["/other/bin/kirocrew", "gateway"])
+        monkeypatch.setattr(sys, "argv", ["/other/bin/ajcrew", "gateway"])
         monkeypatch.delenv(EXEC_MARKER, raising=False)
 
         def chdir_fail(path):
@@ -804,11 +804,11 @@ class TestSecurityRatchet:
 
     def test_live_target_json_in_sensitive_home_dirs_both_prefixes(self):
         """live_target.json must be protected under both crew-home prefixes."""
-        from kiro_crew import security
+        from aj_crew import security
 
         dirs = security.sensitive_home_dirs()
         prefixes = security.crew_home_prefixes()
-        # Must be at least .kiro/crew and .kirocrew
+        # Must be at least .kiro/crew and .ajcrew
         assert len(prefixes) >= 2
         for prefix in prefixes:
             expected = f"{prefix}/{_FILENAME}"

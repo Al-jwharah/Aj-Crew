@@ -1,8 +1,8 @@
 """The hooks handler facade keeps the patch seams and the import surface the one module had.
 
-``kiro_crew.dashboard.handlers.hooks`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over
-the ``kiro_crew.dashboard.handlers.hooks_<role>`` owners. The handlers package, the route tables
-and tests still reach every name as ``kiro_crew.dashboard.handlers.hooks.<name>``, and the moved
+``aj_crew.dashboard.handlers.hooks`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over
+the ``aj_crew.dashboard.handlers.hooks_<role>`` owners. The handlers package, the route tables
+and tests still reach every name as ``aj_crew.dashboard.handlers.hooks.<name>``, and the moved
 code reads its names as plain module globals, so a patch through the facade reaches that code only
 because the mirror writes it into every module holding the name.
 
@@ -23,17 +23,17 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard.handlers import hooks
+from aj_crew import _facade_mirror
+from aj_crew.dashboard.handlers import hooks
 
-FACADE = "kiro_crew.dashboard.handlers.hooks"
+FACADE = "aj_crew.dashboard.handlers.hooks"
 HANDLERS_DIR = Path(hooks.__file__).resolve().parent
 
 #: The owners, lowest layer first: each imports only owners listed before it.
 _OWNERS = (
-    "kiro_crew.dashboard.handlers.hooks_webhook_intake",
-    "kiro_crew.dashboard.handlers.hooks_scripts",
-    "kiro_crew.dashboard.handlers.hooks_webhooks",
+    "aj_crew.dashboard.handlers.hooks_webhook_intake",
+    "aj_crew.dashboard.handlers.hooks_scripts",
+    "aj_crew.dashboard.handlers.hooks_webhooks",
 )
 
 
@@ -54,7 +54,7 @@ def test_the_owners_are_every_hooks_sibling_in_layer_order() -> None:
     """A ``hooks_*.py`` module the facade does not list would hold names a patch through
     the facade never reaches, so the sibling set and the owner tuple agree."""
     siblings = {
-        f"kiro_crew.dashboard.handlers.{path.stem}" for path in HANDLERS_DIR.glob("hooks_*.py")
+        f"aj_crew.dashboard.handlers.{path.stem}" for path in HANDLERS_DIR.glob("hooks_*.py")
     }
     assert set(_OWNERS) == siblings
     assert _index().owners == _OWNERS
@@ -70,7 +70,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
         tree = ast.parse(Path(sys.modules[owner].__file__).read_text(encoding="utf-8"))
         for node in tree.body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in _OWNERS:
+                if not node.module.startswith("aj_crew") or node.module in _OWNERS:
                     continue
                 for alias in node.names:
                     found.setdefault(alias.asname or alias.name, (node.module, alias.name))
@@ -92,7 +92,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
     """An owner holds these and the facade serves them, so ``from
-    kiro_crew.dashboard.handlers.hooks import agents_spec_lock`` type-checks only because the
+    aj_crew.dashboard.handlers.hooks import agents_spec_lock`` type-checks only because the
     facade names each one from its home under ``TYPE_CHECKING``; exactly those."""
     served = set(_index().exports)
     expected = {name: home for name, home in _home_imports().items() if name in served}
@@ -109,8 +109,8 @@ def test_the_owners_log_under_the_facade_name() -> None:
         if "logger" in vars(sys.modules[owner])
     }
     assert set(loggers) == {
-        "kiro_crew.dashboard.handlers.hooks_scripts",
-        "kiro_crew.dashboard.handlers.hooks_webhooks",
+        "aj_crew.dashboard.handlers.hooks_scripts",
+        "aj_crew.dashboard.handlers.hooks_webhooks",
     }
     assert all(found is hooks.logger for found in loggers.values())
 
@@ -132,7 +132,7 @@ def test_a_facade_patch_of_the_store_path_reaches_the_owner_reading_it(
 ) -> None:
     """``hooks._HOOK_STORE_PATH`` is patched through the facade across the webhook suites;
     ``_hook_store_path`` in ``hooks_webhook_intake`` reads it and sees the patch."""
-    intake = sys.modules["kiro_crew.dashboard.handlers.hooks_webhook_intake"]
+    intake = sys.modules["aj_crew.dashboard.handlers.hooks_webhook_intake"]
     target = tmp_path / "hooks.json"
     monkeypatch.setattr(hooks, "_HOOK_STORE_PATH", target)
     assert intake._HOOK_STORE_PATH == target

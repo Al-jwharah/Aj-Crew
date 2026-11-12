@@ -10,8 +10,8 @@ from pathlib import Path
 import pytest
 from overload_fakes import Clock, FixedRng, backoff, open_task_store
 
-from kiro_crew.taskq import model
-from kiro_crew.taskq.dependency import (
+from aj_crew.taskq import model
+from aj_crew.taskq.dependency import (
     EVENT_FAILED,
     EVENT_WAIT,
     EVENT_WAKE,
@@ -29,9 +29,9 @@ from kiro_crew.taskq.dependency import (
     register_coordinator,
     shared_retry_at,
 )
-from kiro_crew.taskq.store import TaskStore, TaskStoreUnavailable
-from kiro_crew.taskq.waits import WaitRecord
-from kiro_crew.testing.wait import await_until
+from aj_crew.taskq.store import TaskStore, TaskStoreUnavailable
+from aj_crew.taskq.waits import WaitRecord
+from aj_crew.testing.wait import await_until
 
 T0 = 1_000_000.0
 GH = "github:api"
@@ -559,7 +559,7 @@ class TestBackoffAndBounds:
         assert coord.backoff_ceiling(1_000) == 100.0
 
     def test_default_schedule_is_the_recovery_ladders(self, clock: Clock) -> None:
-        from kiro_crew.recovery.policy import DEFAULT_BACKOFF_BASE_SECS, DEFAULT_BACKOFF_MAX_SECS
+        from aj_crew.recovery.policy import DEFAULT_BACKOFF_BASE_SECS, DEFAULT_BACKOFF_MAX_SECS
 
         coord = DependencyCoordinator(None, clock=clock)
         assert coord.backoff_ceiling(1) == DEFAULT_BACKOFF_BASE_SECS
@@ -873,7 +873,7 @@ class TestMisc:
         assert coord._wake_batch() == 7
 
     def test_default_agent_config_has_the_keys(self) -> None:
-        from kiro_crew.config.sections import AgentConfig
+        from aj_crew.config.sections import AgentConfig
 
         cfg = AgentConfig()
         # The dependency schedule is the recovery ladder's: no keys of its own.
@@ -893,7 +893,7 @@ def test_infra_scope_survives_more_probes_than_max_attempts() -> None:
     its budget is the wall-clock deadline (a 20-minute gatewayd outage must be
     survived), one probe per backoff step, whole-scope. A provider scope with
     the same probe count still fails at the cap."""
-    from kiro_crew.taskq import dependency as dep
+    from aj_crew.taskq import dependency as dep
 
     clock = [1000.0]
     coordinator = dep.DependencyCoordinator(

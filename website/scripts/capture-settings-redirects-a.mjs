@@ -32,15 +32,15 @@ const STATUS = {
   lessons: 0, subagents: 0, no_crons: false, branch: '', commit: '',
   release_channel: 'stable', version: VERSION, version_display: VERSION,
   update_available: false, update_can_apply: false,
-  update_check_status: 'succeeded', update_command: 'kirocrew update',
+  update_check_status: 'succeeded', update_command: 'ajcrew update',
   update_latest_version: VERSION, update_channel: 'stable',
-  update_managed_by: 'kirocrew', update_commits_ahead: 0,
+  update_managed_by: 'ajcrew', update_commits_ahead: 0,
   update_commits_behind: 0, update_can_arm: false,
 }
 const UPDATE_CHECK_NONE = {
   check_status: 'succeeded', update_available: false, error_code: null,
-  latest_version: VERSION, channel: 'stable', managed_by: 'kirocrew',
-  can_apply: false, update_command: 'kirocrew update', current_version: VERSION,
+  latest_version: VERSION, channel: 'stable', managed_by: 'ajcrew',
+  can_apply: false, update_command: 'ajcrew update', current_version: VERSION,
   commits_ahead: 0, commits_behind: 0,
 }
 const INSTANCES_NONE = { active: false, instances: [], warm_set_cap: 0, sso: {} }
@@ -136,7 +136,7 @@ async function scene(id, fn) {
 await scene('A2', async () => {
   const INST = {
     id: 'remote-1', name: 'Remote crew', ssh_host: 'crew.example.internal', remote_port: 7788,
-    local_port: 0, ttl: '2h', remote_bin: 'kirocrew', connection_method: 'ssh', ssm_target: '',
+    local_port: 0, ttl: '2h', remote_bin: 'ajcrew', connection_method: 'ssh', ssm_target: '',
     aws_profile: '', aws_region: '', ssm_run_as: '', was_connected: true,
     status: { instance_id: 'remote-1', state: 'error', error: 'ssh: connect to host crew.example.internal port 22: Connection refused' },
   }

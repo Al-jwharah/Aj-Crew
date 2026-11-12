@@ -16,10 +16,10 @@ from datetime import datetime
 
 import pytest
 
-from kiro_crew.acp._dispatch import parse_prompt_token_usage, parse_usage_cost
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import AcpPromptStats, TurnUsage
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_COPILOT
+from aj_crew.acp._dispatch import parse_prompt_token_usage, parse_usage_cost
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import AcpPromptStats, TurnUsage
+from aj_crew.agent_sdk.backends import ACP_BACKEND_COPILOT
 
 # ── parse_usage_cost ─────────────────────────────────────────────────────
 
@@ -369,7 +369,7 @@ class TestClientTracking:
         client._oauth_emitted_servers = set()
         client.last_prompt_stats.apply_cost_cumulative(0.50)
 
-        with patch("kiro_crew.session._untrack_pid"):
+        with patch("aj_crew.session._untrack_pid"):
             client._reset_state()
 
         assert client.last_prompt_stats.cost_session_usd == pytest.approx(0.50)
@@ -387,7 +387,7 @@ class TestClientTracking:
 
 class TestPersistGateFires:
     def test_claude_seam_row_materializes(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.handlers import usage as usage_mod
+        from aj_crew.dashboard.handlers import usage as usage_mod
 
         shard_dir = tmp_path / "tokens"
         shard_dir.mkdir()

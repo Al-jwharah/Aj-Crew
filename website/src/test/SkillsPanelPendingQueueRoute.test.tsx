@@ -16,15 +16,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { MemoryRouter, useLocation } from 'react-router-dom'
 import React from 'react'
 
-const { patchConfigMock, kirocrewConfigMock } = vi.hoisted(() => ({
+const { patchConfigMock, ajcrewConfigMock } = vi.hoisted(() => ({
   patchConfigMock: vi.fn(() => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(() =>
+  ajcrewConfigMock: vi.fn(() =>
     Promise.resolve({ skills: { auto_create_from_sessions: true, approval_required: true } }),
   ),
 }))
 
 vi.mock('../api/client', () => ({
-  api: { kirocrewConfig: kirocrewConfigMock, patchConfig: patchConfigMock },
+  api: { ajcrewConfig: ajcrewConfigMock, patchConfig: patchConfigMock },
 }))
 
 import { SkillsPanel } from '../pages/settings/SkillsPanel'
@@ -52,7 +52,7 @@ const url = () => screen.getByTestId('url').textContent
 describe('Settings → Skills reaches the pending queue', () => {
   beforeEach(() => {
     patchConfigMock.mockClear()
-    kirocrewConfigMock.mockClear()
+    ajcrewConfigMock.mockClear()
   })
 
   it('links to the Capabilities skills tab that hosts the queue', async () => {

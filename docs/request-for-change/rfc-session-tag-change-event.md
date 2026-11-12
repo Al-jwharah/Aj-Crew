@@ -52,7 +52,7 @@ adding a subsystem. The positions this RFC takes, one line each:
 4. **Re-entrancy** is settled now, not deferred: the event carries **advisory
    provenance**, following the in-repo precedent that `Stop` self-limits by
    advisory `hook_continuation_count` / `stop_hook_active`
-   (`ScriptHookStore.fire`'s `Stop` payload in `src/kiro_crew/hook_runtime/script_hooks.py`) rather than an enforced cap.
+   (`ScriptHookStore.fire`'s `Stop` payload in `src/aj_crew/hook_runtime/script_hooks.py`) rather than an enforced cap.
 5. **Placement** is a **sixth `HOOK_EVENTS` entry** (a `SessionTagsChanged`
    script-hook event), because the ask is to *run an automation now* on the
    transition, which is precisely what the script-hook engine does, not to
@@ -62,16 +62,16 @@ adding a subsystem. The positions this RFC takes, one line each:
 
 ### Current state
 
-- `HOOK_EVENTS` (`src/kiro_crew/hooks.py`) carries the five agent-turn
+- `HOOK_EVENTS` (`src/aj_crew/hooks.py`) carries the five agent-turn
   lifecycle events - `AgentSpawn`, `UserPromptSubmit`, `PreToolUse`,
-  `PostToolUse`, `Stop`. `ALLOWED_HOOK_EVENTS` (`src/kiro_crew/validation.py`)
+  `PostToolUse`, `Stop`. `ALLOWED_HOOK_EVENTS` (`src/aj_crew/validation.py`)
   carries eleven: those five plus the six Kiro Agent triggers in
   `HOOK_EVENTS_KAS_ONLY` (`PreTaskExecution`, `PostTaskExecution`, `FileCreated`,
   `FileEdited`, `FileDeleted`, `UserTriggered`). None fires when a tag moves
   outside a turn. A tag change has no agent and no turn.
 - The tag writers mutate `slot.tags`, persist, and call `push_slots_update()` to
   the browser. That push is a client render signal; nothing server-side consumes
-  it. Verified: `api_chat_slot_tags` (`src/kiro_crew/dashboard/chat_tags.py`)
+  it. Verified: `api_chat_slot_tags` (`src/aj_crew/dashboard/chat_tags.py`)
   and `api_chat_slot_drop` (same file) both write `slot.tags` and end in a `push_slots_update()` with no server-side consumer of the
   transition.
 
@@ -101,11 +101,11 @@ Three neighbouring issues sit around this one; none asks for it:
   reaction raised a trust question about executing hook definitions that arrive
   inside a project checkout. **That concern does not apply here**: hook
   definitions live in a single global, user-authored store
-  (`_HOOKS_FILE = "hooks.json"` in `src/kiro_crew/hooks.py`), not per-agent and
+  (`_HOOKS_FILE = "hooks.json"` in `src/aj_crew/hooks.py`), not per-agent and
   not from a checkout.
 - **[#1861](https://github.com/kirodotdev/KiroCrew/issues/1861)** (closed,
   completed), an agent auto-tags its own session from context, shipped as
-  `src/kiro_crew/dashboard/chat_auto_tag.py`. Relevant because that path
+  `src/aj_crew/dashboard/chat_auto_tag.py`. Relevant because that path
   **deliberately never applies status/workflow tags**: the `NEVER apply
   status/workflow tags` guard sits in `chat_auto_tag.py` (the `if existing.get("status"): return`
   guard, and `create_tag_definition(..., status=False)` for new tags), beside its
@@ -119,14 +119,14 @@ Three neighbouring issues sit around this one; none asks for it:
   `hooks.json` store (`_HOOKS_FILE` in `hooks.py`) is not.
 - **No new capability surface.** Script hooks are already governance-gated by
   `capabilities.script_hooks`, default OFF, via
-  `_script_hooks_capability_denied` (`src/kiro_crew/hook_runtime/governance_gate.py`, checked
-  inside `run_script_hook` (`src/kiro_crew/hook_runtime/script_hooks.py`, offloaded through its
+  `_script_hooks_capability_denied` (`src/aj_crew/hook_runtime/governance_gate.py`, checked
+  inside `run_script_hook` (`src/aj_crew/hook_runtime/script_hooks.py`, offloaded through its
   `asyncio.to_thread` call)). A tag-change hook rides that same gate;
   the capability surface does not widen.
 - **Dispatch from an HTTP handler with no agent turn is already supported.**
-  `api_hook_test` (`src/kiro_crew/dashboard/handlers/hooks_scripts.py`) calls
+  `api_hook_test` (`src/aj_crew/dashboard/handlers/hooks_scripts.py`) calls
   `run_script_hook` with a synthesized payload, and `run_script_hook`
-  (`src/kiro_crew/hook_runtime/script_hooks.py`) builds a default `hook_event` itself when passed
+  (`src/aj_crew/hook_runtime/script_hooks.py`) builds a default `hook_event` itself when passed
   `None`, requiring no session and no agent config. A tag-write
   handler firing a hook is the same shape.
 
@@ -214,7 +214,7 @@ This follows the settled in-repo precedent: `Stop` controls its own re-entrancy
 with **advisory** signals, not an enforced cap. `hook_continuation_count` (the
 depth of the current continuation run) and `stop_hook_active` (its boolean
 shorthand) are stamped on the `Stop` payload unconditionally
-(`ScriptHookStore.fire` in `src/kiro_crew/hook_runtime/script_hooks.py`) precisely so a hook *may* self-limit while a
+(`ScriptHookStore.fire` in `src/aj_crew/hook_runtime/script_hooks.py`) precisely so a hook *may* self-limit while a
 real gate hook checks its own condition and ignores them. The comment there is
 explicit: *"Kiro's Stop contract defines no cap ... a hook may self-limit,
 diagnose, or surface the count."* We adopt the same stance: the runtime provides

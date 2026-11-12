@@ -19,8 +19,8 @@ from service_helpers import (  # noqa: F401 -- fixtures are found by name
     _restart_settle_without_waiting,
 )
 
-from kiro_crew.service import common, controller
-from kiro_crew.service.common import Platform, service_environment
+from aj_crew.service import common, controller
+from aj_crew.service.common import Platform, service_environment
 
 
 class TestHeadlessApiKeyDoctorReport:
@@ -37,7 +37,7 @@ class TestHeadlessApiKeyDoctorReport:
     SECRET = "sk-doctor-value-not-for-disclosure"
 
     def _warn(self, monkeypatch, unit, warning="Note: dropped key"):
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         monkeypatch.setattr(cli_doctor.service_controller, "installed_unit_path", lambda: unit)
         monkeypatch.setattr(cli_doctor.common_service, "headless_auth_warning", lambda: warning)
@@ -46,7 +46,7 @@ class TestHeadlessApiKeyDoctorReport:
         return issues
 
     def test_reports_when_a_service_is_installed(self, monkeypatch, capsys, tmp_path):
-        issues = self._warn(monkeypatch, tmp_path / "kirocrew.service")
+        issues = self._warn(monkeypatch, tmp_path / "ajcrew.service")
         out = capsys.readouterr().out
         assert "cannot see it" in out
         assert "Note: dropped key" in out
@@ -62,12 +62,12 @@ class TestHeadlessApiKeyDoctorReport:
         path only proves a definition exists on disk. Both halves are pinned --
         the append being absent, and the `sys.exit(1)` it would have reached.
         """
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         source = inspect.getsource(cli_doctor._doctor_headless_auth)
         assert "issues.append" not in source
         assert "del issues" in source
-        assert self._warn(monkeypatch, tmp_path / "kirocrew.service") == []
+        assert self._warn(monkeypatch, tmp_path / "ajcrew.service") == []
         assert "sys.exit(1)" in inspect.getsource(cli_doctor._doctor)
 
     def test_silent_when_no_service_is_installed(self, monkeypatch, capsys):
@@ -77,18 +77,18 @@ class TestHeadlessApiKeyDoctorReport:
         assert issues == []
 
     def test_silent_when_the_helper_has_nothing_to_say(self, monkeypatch, capsys, tmp_path):
-        issues = self._warn(monkeypatch, tmp_path / "kirocrew.service", warning="")
+        issues = self._warn(monkeypatch, tmp_path / "ajcrew.service", warning="")
         assert capsys.readouterr().out == ""
         assert issues == []
 
     def test_a_failing_probe_cannot_break_doctor(self, monkeypatch, capsys, tmp_path):
         """Doctor reports; it must not raise because a diagnostic could not run."""
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         monkeypatch.setattr(
             cli_doctor.service_controller,
             "installed_unit_path",
-            lambda: tmp_path / "kirocrew.service",
+            lambda: tmp_path / "ajcrew.service",
         )
 
         def boom():
@@ -104,7 +104,7 @@ class TestHeadlessApiKeyDoctorReport:
         real = common.headless_auth_warning
         monkeypatch.setenv(self.API_KEY, self.SECRET)
         monkeypatch.setattr(common.loader, "env_path", lambda: tmp_path / ".env")
-        issues = self._warn(monkeypatch, tmp_path / "kirocrew.service", warning=real())
+        issues = self._warn(monkeypatch, tmp_path / "ajcrew.service", warning=real())
         captured = capsys.readouterr().out
         assert captured, "expected a report for this fixture"
         assert self.SECRET not in captured
@@ -117,7 +117,7 @@ class TestHeadlessApiKeyDoctorReport:
         `_doctor` performs dozens of live host probes; the property under test is
         only that the call site exists.
         """
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         assert "_doctor_headless_auth(issues)" in inspect.getsource(cli_doctor._doctor)
 
@@ -197,11 +197,11 @@ class TestHeadlessApiKeyWarning:
     def test_custom_home_caveat_only_when_home_is_overridden(self, monkeypatch, tmp_path):
         self._dotenv(monkeypatch, tmp_path, "")
         plain = common.headless_auth_warning({self.API_KEY: self.SECRET})
-        assert "KIROCREW_HOME" not in plain
+        assert "AJCREW_HOME" not in plain
         with_home = common.headless_auth_warning(
-            {self.API_KEY: self.SECRET, "KIROCREW_HOME": "/srv/crew"}
+            {self.API_KEY: self.SECRET, "AJCREW_HOME": "/srv/crew"}
         )
-        assert "KIROCREW_HOME" in with_home
+        assert "AJCREW_HOME" in with_home
 
     def test_a_sudo_install_checks_and_names_the_service_accounts_dotenv(
         self, monkeypatch, tmp_path
@@ -212,7 +212,7 @@ class TestHeadlessApiKeyWarning:
         a key there must not silence the note, and the remedy must name the
         account's file and say to run it as that account.
         """
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         root_home = tmp_path / "root"
         root_home.mkdir()

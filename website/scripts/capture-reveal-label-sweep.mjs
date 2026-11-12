@@ -24,8 +24,8 @@ const BASE = process.argv[2] || 'http://127.0.0.1:6807'
 const OUT = process.argv[3] || '../temp-screenshots/reveal-label-sweep'
 mkdirSync(OUT, { recursive: true })
 
-const FILE = '/Users/diwm/.kiro/crew/workspace/KiroCrew/README.md'
-const DIR = '/Users/diwm/.kiro/crew/workspace/KiroCrew'
+const FILE = '/Users/diwm/.kiro/crew/workspace/AjCrew/README.md'
+const DIR = '/Users/diwm/.kiro/crew/workspace/AjCrew'
 
 /** Platform → the wording every surface must land on for that host. */
 const CASES = [

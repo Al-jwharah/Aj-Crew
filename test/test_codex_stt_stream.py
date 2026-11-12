@@ -10,8 +10,8 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from stt_stream_helpers import _cfg, _make_app, _recv_json, _wait_for_operation
 
-from kiro_crew.dashboard import stt_stream
-from kiro_crew.stt import codex
+from aj_crew.dashboard import stt_stream
+from aj_crew.stt import codex
 
 
 class FakeSession:
@@ -58,7 +58,7 @@ async def test_codex_socket_uses_normal_redaction_audit_and_cleanup(monkeypatch,
     audit = []
     monkeypatch.setattr(codex, "StreamingSession", lambda: session)
     monkeypatch.setattr(
-        stt_stream.KiroCrewConfig, "load", classmethod(lambda cls: _cfg(provider="codex"))
+        stt_stream.AjCrewConfig, "load", classmethod(lambda cls: _cfg(provider="codex"))
     )
     monkeypatch.setattr(stt_stream, "check_origin", lambda request, require: True)
     monkeypatch.setattr(
@@ -103,7 +103,7 @@ async def test_codex_session_error_relays_only_codex_codes(monkeypatch, emitted,
     audit = []
     monkeypatch.setattr(codex, "StreamingSession", lambda: session)
     monkeypatch.setattr(
-        stt_stream.KiroCrewConfig, "load", classmethod(lambda cls: _cfg(provider="codex"))
+        stt_stream.AjCrewConfig, "load", classmethod(lambda cls: _cfg(provider="codex"))
     )
     monkeypatch.setattr(stt_stream, "check_origin", lambda request, require: True)
     monkeypatch.setattr(

@@ -28,7 +28,7 @@
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { serveDist } from './lib/serve-dist.mjs'
-import { KIROCREW_CONFIG_FIXTURE, json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
+import { AJCREW_CONFIG_FIXTURE, json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/reserved-name-refusal'
 const PREFIX = process.argv[3] || 'after'
@@ -42,20 +42,20 @@ const CREWS = [
 ]
 
 const INSTALLED = [
-  { name: 'kirocrew', description: 'Built-in', source: 'kirocrew', model: '', skills: [], mcp_servers: ['kirocrew-core'], filename: 'kirocrew.json', kirocrew_owned: true },
+  { name: 'ajcrew', description: 'Built-in', source: 'ajcrew', model: '', skills: [], mcp_servers: ['ajcrew-core'], filename: 'ajcrew.json', ajcrew_owned: true },
   // The crewmate's private copy: the state every customized seeded crewmate is in.
-  { name: 'default-2', description: 'Built-in', source: 'user', model: '', skills: [], mcp_servers: ['kirocrew-core'], filename: 'default-2.json', kirocrew_owned: false, forked_from: 'kirocrew', private_to: 'default' },
-  { name: 'atlas', description: 'Long-horizon planner', source: 'builtin', model: 'claude-opus-4.8', skills: [], mcp_servers: ['kirocrew-core'], filename: 'atlas.json', kirocrew_owned: false },
+  { name: 'default-2', description: 'Built-in', source: 'user', model: '', skills: [], mcp_servers: ['ajcrew-core'], filename: 'default-2.json', ajcrew_owned: false, forked_from: 'ajcrew', private_to: 'default' },
+  { name: 'atlas', description: 'Long-horizon planner', source: 'builtin', model: 'claude-opus-4.8', skills: [], mcp_servers: ['ajcrew-core'], filename: 'atlas.json', ajcrew_owned: false },
 ]
 
 const tmpl = over => ({
   name: 'x', filename: 'x.json', description: '', model: '', skills: [], mcp_servers: [],
-  source: 'builtin', package: '', scope: 'global', kirocrew_owned: false, forked_from: '', private_to: '',
+  source: 'builtin', package: '', scope: 'global', ajcrew_owned: false, forked_from: '', private_to: '',
   read_only: null, used_by: [], ...over,
 })
 const TEMPLATES = [
   tmpl({ name: 'atlas', filename: 'atlas.json', description: 'Long-horizon planner', model: 'claude-opus-4.8', used_by: [{ kind: 'crew', id: 'atlas', label: 'atlas' }] }),
-  tmpl({ name: 'kirocrew', filename: 'kirocrew.json', description: 'Built-in', source: 'kirocrew', kirocrew_owned: true, read_only: 'runtime' }),
+  tmpl({ name: 'ajcrew', filename: 'ajcrew.json', description: 'Built-in', source: 'ajcrew', ajcrew_owned: true, read_only: 'runtime' }),
 ]
 
 const DETAIL = name => ({
@@ -67,11 +67,11 @@ const DETAIL = name => ({
   tools: ['fs_read', 'fs_write', 'execute_bash'],
   allowedTools: ['fs_read'],
   resources: [],
-  mcpServers: { 'kirocrew-core': {} },
+  mcpServers: { 'ajcrew-core': {} },
 })
 
 const CFG = {
-  ...KIROCREW_CONFIG_FIXTURE,
+  ...AJCREW_CONFIG_FIXTURE,
   agents: Object.fromEntries(CREWS.map(c => [c.name, { kiro_agent: c.kiro_agent, workspace: c.workspace, memory_store: c.memory_store, description: c.description, source: 'config' }])),
   default_agent: 'default',
   workspaces: { default: { dir: '~/.kiro/crew/workspace' } },
@@ -102,7 +102,7 @@ const CHAT_SLOT = {
 
 async function extra(path, route) {
   const method = route.request().method()
-  if (path === '/api/config/kirocrew') return json(route, CFG), true
+  if (path === '/api/config/ajcrew') return json(route, CFG), true
   if (path === '/api/agents') return json(route, { agents: CREWS, default_agent: 'default' }), true
   if (path === '/api/agents/installed') return json(route, INSTALLED), true
   if (path === '/api/agents/templates' && method === 'POST') {

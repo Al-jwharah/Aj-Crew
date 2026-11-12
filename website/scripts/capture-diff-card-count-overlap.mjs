@@ -40,7 +40,7 @@ mkdirSync(OUT, { recursive: true })
 
 const lines = (prefix, n) => Array.from({ length: n }, (_, i) => `${prefix} line ${i}`).join('\n')
 
-const WIN_HOME = 'C:\\Users\\reporter\\.kiro\\crew\\workspace\\kirocrew-github-autofix'
+const WIN_HOME = 'C:\\Users\\reporter\\.kiro\\crew\\workspace\\ajcrew-github-autofix'
 const ROWS = [
   // The reported row: a deep Windows path with a count wider than 8ch.
   { path: `${WIN_HOME}\\release-notes.md`, before: lines('old', 965), after: lines('new', 1032), basename: 'release-notes.md' },
@@ -73,7 +73,7 @@ const slots = [{
   running: false,
   last_message: 'Diff card count overlap',
   messages: messages.length,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

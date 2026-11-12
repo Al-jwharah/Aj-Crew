@@ -7,14 +7,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import session_environment as se_runtime
-from kiro_crew.config import session_environments as se
+from aj_crew import session_environment as se_runtime
+from aj_crew.config import session_environments as se
 
 
 @pytest.fixture(autouse=True)
 def _developer_flag_on(_floor_monkeypatch):
     # Session Environments are reachable only with the developer flag.
-    _floor_monkeypatch.setenv("KIROCREW_DEV_MODE", "1")
+    _floor_monkeypatch.setenv("AJCREW_DEV_MODE", "1")
 
 
 CODER = {"id": "dev", "name": "Dev", "template": "t", "workdir": "/w"}
@@ -54,8 +54,8 @@ def _slot(messages=0, key="chat-1"):
 
 @pytest.fixture
 def env(tmp_path, monkeypatch):
-    from kiro_crew.config import loader, paths
-    from kiro_crew.dashboard.handlers import session_environments as handlers
+    from aj_crew.config import loader, paths
+    from aj_crew.dashboard.handlers import session_environments as handlers
 
     monkeypatch.setattr(paths, "data_home", lambda: tmp_path)
     state = {"default": "dev"}
@@ -68,7 +68,7 @@ def env(tmp_path, monkeypatch):
         )
         return SimpleNamespace(session_environments=section)
 
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(load))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(load))
     monkeypatch.setattr(handlers, "effective_session_key", lambda slot: f"dashboard:{slot.key}")
     return handlers, state
 
@@ -77,7 +77,7 @@ def test_a_default_bind_retires_the_chats_local_shells(env, monkeypatch):
     """The chat is published before the default binds it, so another tab may have
     opened a local shell for it already: the bind retires that shell, and only it."""
     handlers, state = env
-    from kiro_crew.dashboard.handlers import terminal
+    from aj_crew.dashboard.handlers import terminal
 
     killed: list[str] = []
 
@@ -191,7 +191,7 @@ def test_the_profile_list_follows_the_applied_snapshot_not_the_disk(env, monkeyp
     """Placement and the file browser read one config: the applied snapshot. A
     profile edit on disk the watcher has not applied is not advertised yet."""
     handlers, _ = env
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     applied = SimpleNamespace(
         session_environments=SimpleNamespace(
@@ -214,14 +214,14 @@ def test_the_profile_list_sends_each_template_for_the_picker(env):
 
 def test_flag_off_offers_no_profile_and_binds_no_new_chat(env, monkeypatch):
     handlers, _ = env
-    monkeypatch.delenv("KIROCREW_DEV_MODE")
+    monkeypatch.delenv("AJCREW_DEV_MODE")
     assert handlers._profiles() == []
     assert asyncio.run(handlers.apply_default_environment(_slot())) is False
     assert _choice("dashboard:chat-1") is None
 
 
 def _choice(key):
-    from kiro_crew.dashboard.handlers.session_environments import _choices
+    from aj_crew.dashboard.handlers.session_environments import _choices
 
     return _choices().get(key)
 
@@ -237,7 +237,7 @@ def test_a_new_chat_is_bound_to_the_default(env):
 
 def test_the_default_never_moves_a_chat_that_has_a_choice_or_has_started(env):
     handlers, state = env
-    from kiro_crew.dashboard.handlers.session_environments import _choices
+    from aj_crew.dashboard.handlers.session_environments import _choices
 
     _choices().set("dashboard:chat-1", "big")
     assert asyncio.run(handlers.apply_default_environment(_slot())) is False
@@ -259,8 +259,8 @@ def test_a_first_turn_that_registered_first_keeps_the_chat_local(env):
 
 def test_the_default_waits_for_a_first_start_in_flight(env):
     """The bind takes the switch lock turn admission holds across a cold start."""
-    from kiro_crew.llm_helpers_parts.model_fallback import slot_switch_session_lock
-    from kiro_crew.testing.wait import until_parked
+    from aj_crew.llm_helpers_parts.model_fallback import slot_switch_session_lock
+    from aj_crew.testing.wait import until_parked
 
     handlers, _state = env
 

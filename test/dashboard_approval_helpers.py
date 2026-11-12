@@ -18,11 +18,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from chat_test_helpers import _make_ready_kiro_prerequisite
 
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.history import ConversationLog
-from kiro_crew.hooks import ToolHookResult
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST, LLMEvent
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.history import ConversationLog
+from aj_crew.hooks import ToolHookResult
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST, LLMEvent
+from aj_crew.testing.wait import async_wait_until
 
 
 async def _async_iter(items: list):  # type: ignore[type-arg]
@@ -32,7 +32,7 @@ async def _async_iter(items: list):  # type: ignore[type-arg]
 
 @contextmanager
 def _patch_stats():
-    with patch("kiro_crew.dashboard.chat.sel") as mock_sel:
+    with patch("aj_crew.dashboard.chat.sel") as mock_sel:
         mock_sel.return_value = MagicMock()
         yield
 
@@ -147,7 +147,7 @@ async def _answer_approval(
 
 
 def _context_builder(hook_result: ToolHookResult | None = None) -> MagicMock:
-    # ``allow()`` counts itself through kiro_crew.metrics. As a DEFAULT ARGUMENT it
+    # ``allow()`` counts itself through aj_crew.metrics. As a DEFAULT ARGUMENT it
     # ran at import, before any pin existed, and built the process-global recorder
     # from the operator's real config: an exporter bound to the real
     # ~/.kiro/crew/metrics for the life of the worker. Built per call instead.

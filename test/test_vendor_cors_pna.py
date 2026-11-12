@@ -27,8 +27,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard import token_auth
-from kiro_crew.dashboard.server import (
+from aj_crew.dashboard import token_auth
+from aj_crew.dashboard.server import (
     _apply_security_headers,
     _register_dist_static_routes,
 )
@@ -164,7 +164,7 @@ def test_middleware_uses_the_request_path() -> None:
     (e.g. to request.raw_path, or drops the path argument), which would
     silently decouple the fixture from what the browser actually receives.
     """
-    from kiro_crew.dashboard import server as server_mod
+    from aj_crew.dashboard import server as server_mod
 
     # The middleware is built by the chain installer start_dashboard calls.
     source = inspect.getsource(server_mod.start_dashboard)

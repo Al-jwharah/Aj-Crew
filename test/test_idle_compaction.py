@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_DEEPSEEK,
@@ -30,27 +30,27 @@ from kiro_crew.agent_sdk.backends import (
     idle_compaction_delay_secs,
     prompt_cache_lifetime_secs,
 )
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.config.live import ConfigChange
-from kiro_crew.config.loader_builders import _build_session_config
-from kiro_crew.dashboard import chat_utils_completion
-from kiro_crew.essential_delivery import EssentialDelivery
-from kiro_crew.session import SessionManager
-from kiro_crew.session_compaction import (
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.config import AjCrewConfig
+from aj_crew.config.live import ConfigChange
+from aj_crew.config.loader_builders import _build_session_config
+from aj_crew.dashboard import chat_utils_completion
+from aj_crew.essential_delivery import EssentialDelivery
+from aj_crew.session import SessionManager
+from aj_crew.session_compaction import (
     COMPACT_OUTCOME_COMPACTED,
     COMPACT_OUTCOME_COMPACTED_IDLE,
     COMPACT_OUTCOME_RECYCLED,
     COMPACT_TRIGGER_IDLE,
     COMPACT_TRIGGER_THRESHOLD,
 )
-from kiro_crew.session_idle_compaction import (
+from aj_crew.session_idle_compaction import (
     IDLE_COMPACT_DRAIN_SECS,
     IdleCompactionTimers,
     provider_prompt_cache_lifetime,
 )
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import async_wait_until, until_parked
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import async_wait_until, until_parked
 
 KEY = "dashboard:idle-compaction"
 #: The lost-run bound for awaiting the coordinator's own background tasks.
@@ -163,8 +163,8 @@ def clock() -> ManualClock:
 
 
 @pytest.fixture
-def cfg() -> KiroCrewConfig:
-    c = KiroCrewConfig()
+def cfg() -> AjCrewConfig:
+    c = AjCrewConfig()
     c.session.idle_compaction = True
     c.session.idle_compaction_min_context_pct = 40.0
     c.session.autocompact_pct = 70.0
@@ -175,7 +175,7 @@ def cfg() -> KiroCrewConfig:
 def counters(monkeypatch) -> list[tuple[str, dict]]:
     seen: list[tuple[str, dict]] = []
     monkeypatch.setattr(
-        "kiro_crew.session_compaction.emit_counter",
+        "aj_crew.session_compaction.emit_counter",
         lambda name, attrs: seen.append((name, dict(attrs))),
     )
     return seen
@@ -190,7 +190,7 @@ async def _drain(mgr: SessionManager) -> None:
 
 
 @contextlib.asynccontextmanager
-async def _managed(cfg: KiroCrewConfig, clock: ManualClock, factory: Any, *, probe: Any = None):
+async def _managed(cfg: AjCrewConfig, clock: ManualClock, factory: Any, *, probe: Any = None):
     """A manager on the fake clock, with the dashboard's idle probe answering *probe*."""
     mgr = SessionManager(cfg, provider_factory=factory)
     sched = FakeScheduler(clock)
@@ -284,7 +284,7 @@ class TestLifetimeTable:
 
 class TestConfig:
     def test_defaults(self):
-        session = KiroCrewConfig().session
+        session = AjCrewConfig().session
         assert session.idle_compaction is False
         assert session.idle_compaction_min_context_pct == 50.0
 
@@ -347,7 +347,7 @@ class TestTimer:
             assert _compactions(provider) == 1
             assert mgr._sessions[KEY].provider is provider
         assert (
-            "kirocrew.context.compactions",
+            "ajcrew.context.compactions",
             {"success": True, "trigger": COMPACT_TRIGGER_IDLE},
         ) in counters
 
@@ -497,7 +497,7 @@ class TestTimer:
         async with _managed(cfg, clock, _provider_factory()) as mgr:
             await _turn(mgr)
             assert mgr.sched.live() == 1
-            new = KiroCrewConfig()
+            new = AjCrewConfig()
             new.session.idle_compaction = False
             await mgr._on_config_change(
                 ConfigChange(old=cfg, new=new, changed=frozenset({"session.idle_compaction"}))
@@ -827,7 +827,7 @@ class TestThresholdAndFailure:
             provider.shutdown.assert_not_awaited()
             assert not mgr.is_compacting(KEY)
         assert (
-            "kirocrew.context.compactions",
+            "ajcrew.context.compactions",
             {"success": False, "trigger": COMPACT_TRIGGER_IDLE},
         ) in counters
 
@@ -855,7 +855,7 @@ class TestThresholdAndFailure:
             await _turn(mgr)
             await _drain(mgr)
         assert (
-            "kirocrew.context.compactions",
+            "ajcrew.context.compactions",
             {"success": True, "trigger": COMPACT_TRIGGER_THRESHOLD},
         ) in counters
 
@@ -889,10 +889,10 @@ class TestDashboardProbe:
         # Through the facade: several chat_utils owners bind this name, and the
         # facade mirrors a patch into each of them.
         _floor_monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_utils.dashboard_slot_key",
+            "aj_crew.dashboard.chat_utils.dashboard_slot_key",
             lambda key: "slot-a" if key == KEY else "",
         )
-        _floor_monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: None)
+        _floor_monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: None)
 
     @pytest.mark.parametrize(
         "overrides, expected",
@@ -931,7 +931,7 @@ class TestDashboardProbe:
 
     def test_an_armed_monitor_loop_blocks(self, monkeypatch):
         service = SimpleNamespace(get_by_slot=lambda key: SimpleNamespace(active=True))
-        monkeypatch.setattr("kiro_crew.autonudge.get_instance", lambda: service)
+        monkeypatch.setattr("aj_crew.autonudge.get_instance", lambda: service)
         state = self._state(self._slot())
         assert chat_utils_completion.idle_compaction_blocker(state, KEY) == "monitor_loop"
 
@@ -954,7 +954,7 @@ def _waits(mgr: SessionManager, provider: Any, results: list[dict]) -> list[bool
 
 def _tracked_compaction_statuses(provider: Any, tmp_path: Any, statuses: list[str]) -> Any:
     """Give a fake provider a real ACP reader and scripted compaction results."""
-    from kiro_crew.acp.client import AcpClient
+    from aj_crew.acp.client import AcpClient
 
     reader = AcpClient(work_dir=tmp_path)
     provider._client = reader
@@ -988,7 +988,7 @@ class _TrackedPromptRuntime:
         return None
 
     async def send_request(self, _method: str, _params: dict) -> int:
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         self._queue.put_nowait(JsonRpcMessage(id=1, result={"stopReason": "end_turn"}))
         return 1
@@ -996,7 +996,7 @@ class _TrackedPromptRuntime:
 
 def _tracked_handle_compaction_statuses(provider: Any, statuses: list[str]) -> Any:
     """Give a fake provider a shared-runtime reader and scripted results."""
-    from kiro_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.session_handle import AcpSessionHandle
 
     queue: asyncio.Queue = asyncio.Queue()
     reader = AcpSessionHandle("s1", queue, _TrackedPromptRuntime(queue))
@@ -1028,8 +1028,8 @@ class TestUnresolvedIdleCompactionThreshold:
     async def test_threshold_waits_for_the_pre_turn_drain_then_restarts_on_a_real_failure(
         self, cfg, clock, caplog
     ):
-        from kiro_crew.acp import stale_compaction
-        from kiro_crew.acp.types import (
+        from aj_crew.acp import stale_compaction
+        from aj_crew.acp.types import (
             EVENT_COMPACTION_STATUS,
             METHOD_COMPACTION_STATUS,
             JsonRpcMessage,
@@ -1083,7 +1083,7 @@ class TestUnresolvedIdleCompactionThreshold:
 
     @pytest.mark.asyncio
     async def test_codex_no_status_does_not_record_an_async_terminal(self, cfg, clock, tmp_path):
-        from kiro_crew.acp import stale_compaction
+        from aj_crew.acp import stale_compaction
 
         async with _managed(cfg, clock, _provider_factory(backend=ACP_BACKEND_CODEX)) as mgr:
             provider = await _turn(mgr)
@@ -1098,7 +1098,7 @@ class TestUnresolvedIdleCompactionThreshold:
     async def test_idle_stop_without_a_terminal_records_one_unresolved_status(
         self, cfg, clock, tmp_path, monkeypatch
     ):
-        from kiro_crew.acp import stale_compaction
+        from aj_crew.acp import stale_compaction
 
         async with _managed(cfg, clock, _provider_factory()) as mgr:
             provider = await _turn(mgr)
@@ -1124,7 +1124,7 @@ class TestUnresolvedIdleCompactionThreshold:
     async def test_threshold_stop_without_a_terminal_does_not_record_unresolved_status(
         self, cfg, clock, tmp_path, monkeypatch
     ):
-        from kiro_crew.acp import stale_compaction
+        from aj_crew.acp import stale_compaction
 
         async with _managed(cfg, clock, _provider_factory()) as mgr:
             provider = await _turn(mgr)
@@ -1179,10 +1179,10 @@ class TestUnresolvedCompactionDelivery:
     async def test_a_completion_the_pre_turn_drain_consumes_gets_the_full_essentials(self):
         import json
 
-        from kiro_crew.acp import stale_compaction
-        from kiro_crew.acp.session_handle import AcpSessionHandle
-        from kiro_crew.acp.session_provider import AcpSessionProvider
-        from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+        from aj_crew.acp import stale_compaction
+        from aj_crew.acp.session_handle import AcpSessionHandle
+        from aj_crew.acp.session_provider import AcpSessionProvider
+        from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
         queue: asyncio.Queue = asyncio.Queue()
         runtime = _TrackedPromptRuntime(queue)
@@ -1216,9 +1216,9 @@ class TestUnresolvedCompactionDelivery:
 
     @pytest.mark.asyncio
     async def test_a_direct_reader_with_a_debt_gets_the_full_essentials(self, tmp_path):
-        from kiro_crew.acp import stale_compaction
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.acp import stale_compaction
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.providers.acp import AcpProvider
 
         sent: list[str] = []
 
@@ -1227,7 +1227,7 @@ class TestUnresolvedCompactionDelivery:
             for event in []:
                 yield event
 
-        with patch("kiro_crew.providers.acp.AcpClient"):
+        with patch("aj_crew.providers.acp.AcpClient"):
             provider = AcpProvider(acp_backend="")
         reader = AcpClient(work_dir=tmp_path)
         reader.ensure_ready = AsyncMock()
@@ -1279,7 +1279,7 @@ class TestUnsettledIdleCompaction:
     async def test_a_streamed_failure_is_kept_when_the_stream_then_times_out(
         self, cfg, clock, monkeypatch
     ):
-        from kiro_crew.acp.types import EVENT_COMPACTION_STATUS
+        from aj_crew.acp.types import EVENT_COMPACTION_STATUS
 
         restarts: list[dict] = []
         async with _managed(cfg, clock, _provider_factory()) as mgr:
@@ -1314,7 +1314,7 @@ class TestUnsettledIdleCompaction:
     async def test_a_streamed_completion_is_a_success_when_the_stream_then_times_out(
         self, cfg, clock, monkeypatch
     ):
-        from kiro_crew.acp.types import EVENT_COMPACTION_STATUS
+        from aj_crew.acp.types import EVENT_COMPACTION_STATUS
 
         restarts: list[dict] = []
         async with _managed(cfg, clock, _provider_factory()) as mgr:
@@ -1355,7 +1355,7 @@ class TestUnsettledIdleCompaction:
             notices.append((success, outcome))
 
         monkeypatch.setattr(
-            "kiro_crew.agent_sdk.stale_compaction.discard_provider_stale_compaction_status",
+            "aj_crew.agent_sdk.stale_compaction.discard_provider_stale_compaction_status",
             lambda provider, *, within_secs: marked.append((provider, within_secs)) or True,
         )
         cfg.session.compact_wait_secs = 42.0
@@ -1704,7 +1704,7 @@ _COMMAND_OUTPUT = [
 
 def _kiro_session_provider(clock: ManualClock, *, native: bool) -> Any:
     """An ``AcpSessionProvider`` whose handle sends commands natively or not."""
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     handle = MagicMock()
     handle.command_is_native = lambda _command: native
@@ -1757,7 +1757,7 @@ class TestNativeCommandFloor:
 
     @pytest.mark.asyncio
     async def test_a_native_direct_command_keeps_the_real_turns_floor(self, clock):
-        from kiro_crew.providers import acp_turns
+        from aj_crew.providers import acp_turns
 
         provider = _direct_acp_provider(clock, ACP_BACKEND_KIRO)
         started = clock.monotonic()
@@ -1769,7 +1769,7 @@ class TestNativeCommandFloor:
 
     @pytest.mark.asyncio
     async def test_a_kiro_client_that_prompts_help_moves_the_floor(self, clock):
-        from kiro_crew.providers import acp_turns
+        from aj_crew.providers import acp_turns
 
         provider = _direct_acp_provider(clock, ACP_BACKEND_KIRO)
         # A session handle behind the provider keeps /help on session/prompt.
@@ -1788,7 +1788,7 @@ class TestNativeCommandFloor:
 
     @pytest.mark.asyncio
     async def test_a_shared_kiro_compact_moves_the_outer_floor(self, clock):
-        from kiro_crew.providers import acp_turns
+        from aj_crew.providers import acp_turns
 
         provider = _direct_acp_provider(clock, ACP_BACKEND_KIRO)
         # A shared kiro chat's client is an AcpSessionProvider, whose handle keeps
@@ -1803,7 +1803,7 @@ class TestNativeCommandFloor:
 
     @pytest.mark.asyncio
     async def test_a_prompt_transport_direct_command_moves_the_floor(self, clock):
-        from kiro_crew.providers import acp_turns
+        from aj_crew.providers import acp_turns
 
         provider = _direct_acp_provider(clock, ACP_BACKEND_CLAUDE)
         await _stream(provider.essential_delivery, clock, _MODEL_TURN)
@@ -1822,7 +1822,7 @@ class TestNativeCommandFloor:
         ],
     )
     def test_the_handle_names_its_native_commands(self, backend, command, native):
-        from kiro_crew.acp import session_handle_turn
+        from aj_crew.acp import session_handle_turn
 
         handle = SimpleNamespace(_runtime=SimpleNamespace(acp_backend=backend))
         assert session_handle_turn.command_is_native(handle, command) is native
@@ -1882,7 +1882,7 @@ class TestSlashCommandTurn:
 
 def _dashboard_slot(mgr: SessionManager) -> MagicMock:
     """Wire the dashboard's real compact callback onto *mgr*; return the slot it writes."""
-    from kiro_crew.dashboard.state_parts.session_events import wire_session_compact_callback
+    from aj_crew.dashboard.state_parts.session_events import wire_session_compact_callback
 
     slot = MagicMock()
     slot._compacting = False

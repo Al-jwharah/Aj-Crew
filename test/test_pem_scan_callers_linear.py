@@ -18,9 +18,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.apps.builtins.design_tweak.backend import server
-from kiro_crew.deploy import scan
-from kiro_crew.security import redaction
+from aj_crew.apps.builtins.design_tweak.backend import server
+from aj_crew.deploy import scan
+from aj_crew.security import redaction
 
 # The markers are assembled from their dashes, so no line of this file holds a whole
 # private-key header for a secret scanner to read.

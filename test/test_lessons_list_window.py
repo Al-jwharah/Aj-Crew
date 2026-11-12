@@ -14,10 +14,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.handlers import cron
-from kiro_crew.learn import LessonStore
-from kiro_crew.mcp_tools import learn
-from kiro_crew.validation import (
+from aj_crew.dashboard.handlers import cron
+from aj_crew.learn import LessonStore
+from aj_crew.mcp_tools import learn
+from aj_crew.validation import (
     LEARN_LIST_SCHEMA,
     LESSON_LIST_LIMIT,
     LESSON_LIST_LIMIT_MAX,
@@ -27,7 +27,7 @@ from kiro_crew.validation import (
     ValidationError,
     validate_tool_args,
 )
-from kiro_crew.vector_memory import VectorMemoryStore, create_member_database, open_member_database
+from aj_crew.vector_memory import VectorMemoryStore, create_member_database, open_member_database
 
 
 def _store(tmp_path) -> VectorMemoryStore:
@@ -107,9 +107,9 @@ def _window(body: dict) -> dict:
 async def test_member_sqlite_remains_authority_when_the_page_has_no_rows(
     tmp_path, monkeypatch, population
 ) -> None:
-    from kiro_crew import memory_stores
+    from aj_crew import memory_stores
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setattr(memory_stores, "memory_stores_root", lambda: tmp_path / "memory_stores")
     path = tmp_path / "memory_stores" / "member-store" / "memory.db"
     create_member_database(path, member_id="member-id", store_id="member-store")

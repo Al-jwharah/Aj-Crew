@@ -26,8 +26,8 @@ from collections.abc import Iterator
 import pytest
 
 import xdist_budget as ct
+from aj_crew.testing.wait import default_timeout
 from conftest import absent_sysconf
-from kiro_crew.testing.wait import default_timeout
 
 needs_symlinks = pytest.mark.skipif(
     os.name != "posix", reason="symlink creation needs privileges on Windows"
@@ -70,7 +70,7 @@ def _deterministic_live_memory(monkeypatch: pytest.MonkeyPatch) -> None:
     """
     monkeypatch.setattr(ct, "_cgroup_limit_mib", lambda: 0)
     monkeypatch.setattr(ct, "_host_available_mib", lambda: 0)
-    # The third reading that describes the CALLER rather than the host: Kiro
+    # The third reading that describes the CALLER rather than the host: Aj
     # Crew seeds ``PYTEST_XDIST_AUTO_NUM_WORKERS`` at every agent spawn
     # boundary (``resource_status.inject_xdist_auto_cap``), so a run started
     # from an agent shell inherits a cap of e.g. 7 and every "10-core host
@@ -156,7 +156,7 @@ def _holding_slots(slot_dir: pathlib.Path, count: int) -> Iterator[subprocess.Po
         import os, sys
         sys.path.insert(0, {str(pathlib.Path(ct.__file__).parent)!r})
         sys.path.insert(0, {str(pathlib.Path(ct.__file__).parent.parent / "src")!r})
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
         held = []
         for i in range({count}):
             fd = os.open(os.path.join({str(slot_dir)!r}, "worker-%03d.lock" % i),
@@ -197,14 +197,14 @@ def test_slot_dir_is_scoped_by_host(slot_dir: pathlib.Path) -> None:
     assert slot_dir.name == ct._host_key()
 
 
-def test_slot_root_defaults_under_cache_not_kirocrew_home(
+def test_slot_root_defaults_under_cache_not_ajcrew_home(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Must be host-global: two worktrees with different homes still coordinate."""
     monkeypatch.delenv(ct._SLOT_DIR_ENV, raising=False)
-    monkeypatch.setenv("KIROCREW_HOME", "/tmp/some-unrelated-home")
+    monkeypatch.setenv("AJCREW_HOME", "/tmp/some-unrelated-home")
     resolved = ct._slot_root()
-    assert resolved == pathlib.Path.home() / ".cache" / "kirocrew" / "test-slots"
+    assert resolved == pathlib.Path.home() / ".cache" / "ajcrew" / "test-slots"
     assert "some-unrelated-home" not in str(resolved)
 
 
@@ -493,7 +493,7 @@ def test_an_unwritable_slot_dir_drops_to_one_worker_and_says_why(
     ``ct._slot_dir()`` resolves under the per-test root: this test's own ``os.open``
     denial only fires for a path containing ``"worker-"``, but without the pin
     ``_slot_dir()`` still calls the real ``ct._slot_root()`` default
-    (``~/.cache/kirocrew/test-slots``), and the ``mkdir(exist_ok=True)`` this
+    (``~/.cache/ajcrew/test-slots``), and the ``mkdir(exist_ok=True)`` this
     module calls before the denied ``open`` runs against that real host directory.
     """
     monkeypatch.setattr(ct, "_held_slots", [])
@@ -586,7 +586,7 @@ def test_the_live_linux_reservation_is_5_gib_and_matches_the_spawn_cap() -> None
     the host can hold. The agent-spawn cap in ``resource_status`` sizes the
     same worker, so the two must not drift apart.
     """
-    from kiro_crew import resource_status
+    from aj_crew import resource_status
 
     assert ct._GIB_PER_WORKER_AVAILABLE == 5
     assert ct._GIB_PER_WORKER == ct._GIB_PER_WORKER_AVAILABLE
@@ -627,7 +627,7 @@ def test_the_xdist_env_var_is_honoured_as_a_ceiling(
 
     ``pytest_xdist_auto_num_workers`` is ``firstresult``, and a conftest impl
     outranks a plugin impl -- so this hook runs INSTEAD of xdist's default, which
-    is where the variable would otherwise have been read. Kiro Crew itself seeds
+    is where the variable would otherwise have been read. Aj Crew itself seeds
     it with a memory-aware cap at every agent spawn boundary, so discarding it
     would hand an agent session more workers than it deliberately asked for.
     """

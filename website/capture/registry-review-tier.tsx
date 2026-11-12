@@ -54,7 +54,7 @@ const OPERATOR = [
 
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 initI18n('en')
 
@@ -67,7 +67,7 @@ api.refreshRegistries = () => Promise.resolve({ ok: true })
  *  registries through the shared order helper, counting by the registry ID. */
 const COUNTS: Record<string, number> = { internal: 12, community: 30, 'my-team': 2 }
 const SOURCES = [
-  { name: '__builtin__', label: 'Built-in Kiro Crew', count: 8, builtin: true },
+  { name: '__builtin__', label: 'Built-in Aj Crew', count: 8, builtin: true },
   ...orderByReview([...PINNED, ...OPERATOR]).map(r => ({
     name: r.name,
     label: r.label || r.name || r.repo,

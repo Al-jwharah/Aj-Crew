@@ -15,14 +15,14 @@ import logging
 import pytest
 from chat_test_helpers import move_transcript_past
 
-from kiro_crew import history as history_mod
-from kiro_crew.config.loader import KiroCrewConfig, SessionSummaryConfig
-from kiro_crew.dashboard import chat_summary
-from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.history import ConversationLog, HistoryLockTimeout
-from kiro_crew.session_summary import (
+from aj_crew import history as history_mod
+from aj_crew.config.loader import AjCrewConfig, SessionSummaryConfig
+from aj_crew.dashboard import chat_summary
+from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.history import ConversationLog, HistoryLockTimeout
+from aj_crew.session_summary import (
     count_user_turns,
     count_user_turns_in_records,
     extract_turns,
@@ -76,7 +76,7 @@ class _FakeState:
 
 
 def _cfg(**overrides):
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session_summary = SessionSummaryConfig(**{"enabled": True, **overrides})
     return cfg
 
@@ -133,7 +133,7 @@ class TestGating:
         state, slot = env
         called = []
         _stub_llm(monkeypatch, _GOOD_REPLY, called)
-        ok = await chat_summary.generate_session_summary(state, slot, cfg=KiroCrewConfig())
+        ok = await chat_summary.generate_session_summary(state, slot, cfg=AjCrewConfig())
         assert ok is False
         assert called == []
 
@@ -858,7 +858,7 @@ class TestShouldSummarizeForceMatrix:
     def test_force_does_not_lift_disabled(self):
         """The feature's off switch is not a spending gate, so consent cannot
         override it."""
-        cfg = KiroCrewConfig()  # session_summary.enabled defaults to False
+        cfg = AjCrewConfig()  # session_summary.enabled defaults to False
         slot = _GateSlot()
         assert chat_summary._should_summarize(cfg, slot, 3, force=True) == "disabled"
 
@@ -901,7 +901,7 @@ class TestShouldSummarizeForceMatrix:
     def test_the_disabled_gate_precedes_everything_else(self):
         """Order matters for the reason string the panel is told: a disabled
         feature must not report itself as in-flight or as too short."""
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         slot = _GateSlot(stop="", in_flight=True, memory_mode="incognito")
         assert chat_summary._should_summarize(cfg, slot, 0, force=True) == "disabled"
 
@@ -1038,9 +1038,7 @@ class TestForcedGeneration:
         called = []
         _stub_llm(monkeypatch, _GOOD_REPLY, called)
         assert (
-            await chat_summary.generate_session_summary(
-                state, slot, cfg=KiroCrewConfig(), force=True
-            )
+            await chat_summary.generate_session_summary(state, slot, cfg=AjCrewConfig(), force=True)
             is False
         )
         assert called == []

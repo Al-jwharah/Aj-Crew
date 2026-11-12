@@ -9,10 +9,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard.server import _apply_startup_yolo
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.hooks import TOOL_DENY, HookManager
-from kiro_crew.safety_override import SafetyOverride, reset_singleton, safety_override
+from aj_crew.dashboard.server import _apply_startup_yolo
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.hooks import TOOL_DENY, HookManager
+from aj_crew.safety_override import SafetyOverride, reset_singleton, safety_override
 
 
 def _make_state() -> DashboardState:
@@ -41,7 +41,7 @@ def teardown_function() -> None:
 def test_declared_yolo_does_not_expire() -> None:
     """Declared YOLO does not lapse after 24h and revert to Normal."""
     state = _make_state()
-    with patch("kiro_crew.safety_override.sel"):
+    with patch("aj_crew.safety_override.sel"):
         _apply_startup_yolo(state, _cfg(yolo=True))
 
     so = safety_override()
@@ -53,7 +53,7 @@ def test_declared_yolo_does_not_expire() -> None:
     # Drive time past every deadline that would end it.
     base = time.monotonic()
     with patch(
-        "kiro_crew.safety_override.time.monotonic",
+        "aj_crew.safety_override.time.monotonic",
         return_value=base + SafetyOverride._MAX_TTL + 3600,
     ):
         assert so.is_active() is True, "declared YOLO must not expire"
@@ -63,7 +63,7 @@ def test_declared_yolo_does_not_expire() -> None:
 def test_declared_yolo_is_cleared_by_choosing_another_mode() -> None:
     """Permanence must never mean unrevokable."""
     state = _make_state()
-    with patch("kiro_crew.safety_override.sel"):
+    with patch("aj_crew.safety_override.sel"):
         _apply_startup_yolo(state, _cfg(yolo=True))
         safety_override().deactivate("dashboard")
 
@@ -76,8 +76,8 @@ def test_startup_seeds_the_adhoc_ttl_even_when_yolo_is_off() -> None:
     cfg = MagicMock()
     cfg.agent.dangerously_skip_permissions = False
     cfg.agent.yolo_duration = "1h"
-    with patch("kiro_crew.safety_override.sel"), patch(
-        "kiro_crew.config.loader.KiroCrewConfig.load", return_value=cfg
+    with patch("aj_crew.safety_override.sel"), patch(
+        "aj_crew.config.loader.AjCrewConfig.load", return_value=cfg
     ):
         _apply_startup_yolo(state, _cfg(yolo=False, duration="1h"))
 
@@ -92,9 +92,9 @@ def test_slack_only_path_also_gets_a_standing_grant() -> None:
     that path must grant permanence too — otherwise YOLO still dies for exactly
     the users driving the agent from another channel.
     """
-    from kiro_crew.slack.handler import set_yolo_mode
+    from aj_crew.slack.handler import set_yolo_mode
 
-    with patch("kiro_crew.safety_override.sel"):
+    with patch("aj_crew.safety_override.sel"):
         set_yolo_mode(True)
 
     so = safety_override()
@@ -105,7 +105,7 @@ def test_slack_only_path_also_gets_a_standing_grant() -> None:
 def _launch(approval_mode: str | None) -> DashboardState:
     """A dashboard state started the way ``gateway --approval <approval_mode>`` starts one."""
     state = _make_state()
-    with patch("kiro_crew.safety_override.sel"):
+    with patch("aj_crew.safety_override.sel"):
         _apply_startup_yolo(state, _cfg(yolo=False), approval_mode=approval_mode)
     return state
 
@@ -121,8 +121,8 @@ def test_gateway_approval_yolo_arms_a_cli_grant() -> None:
 
 def test_gateway_approval_yolo_leaves_slack_asking() -> None:
     """A Slack tool call under ``--approval yolo`` still asks, as before the flag armed a grant."""
-    from kiro_crew.slack.events_queue import _resolve_approval_mode
-    from kiro_crew.slack.handler import APPROVAL_INTERACTIVE, is_yolo_mode
+    from aj_crew.slack.events_queue import _resolve_approval_mode
+    from aj_crew.slack.handler import APPROVAL_INTERACTIVE, is_yolo_mode
 
     _launch("yolo")
     orch = SimpleNamespace(_approval_mode="yolo", _cfg=_cfg(yolo=False))
@@ -133,9 +133,9 @@ def test_gateway_approval_yolo_leaves_slack_asking() -> None:
 
 def test_a_slack_yolo_grant_still_reaches_slack() -> None:
     """Only the ``cli`` grant is withheld from Slack: the owner's own ``yolo on`` is not."""
-    from kiro_crew.slack.handler import is_yolo_mode
+    from aj_crew.slack.handler import is_yolo_mode
 
-    with patch("kiro_crew.safety_override.sel"):
+    with patch("aj_crew.safety_override.sel"):
         safety_override().activate("slack")
 
     assert is_yolo_mode() is True
@@ -172,7 +172,7 @@ def test_the_cli_grant_reaches_unlinked_dashboard_turns_only(slot, channel_origi
 def test_any_other_grant_reaches_every_dashboard_turn() -> None:
     """The narrowing is the ``cli`` grant's alone: a dashboard pick still covers linked slots."""
     state = _make_state()
-    with patch("kiro_crew.safety_override.sel"):
+    with patch("aj_crew.safety_override.sel"):
         safety_override().activate("dashboard")
 
     assert state.yolo_reaches(SimpleNamespace(_slack_channel="C1"), channel_origin=True) is True
@@ -181,7 +181,7 @@ def test_any_other_grant_reaches_every_dashboard_turn() -> None:
 def test_an_ended_cli_grant_is_not_one() -> None:
     """``is_cli_launch`` covers a live or renewable ``cli`` grant, never an ended one."""
     _launch("yolo")
-    with patch("kiro_crew.safety_override.sel"):
+    with patch("aj_crew.safety_override.sel"):
         safety_override().deactivate("dashboard")
 
     assert safety_override().is_cli_launch is False
@@ -191,8 +191,8 @@ def test_gateway_approval_yolo_is_refused_when_policy_denies_yolo() -> None:
     """An ``approval_modes`` deny of ``yolo`` still refuses the flag's grant."""
     state = _make_state()
     with (
-        patch("kiro_crew.safety_override.sel"),
-        patch("kiro_crew.safety_override.yolo_policy_permits", return_value=False),
+        patch("aj_crew.safety_override.sel"),
+        patch("aj_crew.safety_override.yolo_policy_permits", return_value=False),
     ):
         _apply_startup_yolo(state, _cfg(yolo=False), approval_mode="yolo")
 
@@ -202,7 +202,7 @@ def test_gateway_approval_yolo_is_refused_when_policy_denies_yolo() -> None:
 def test_gateway_approval_yolo_is_refused_when_its_audit_fails() -> None:
     """The grant's activation audit is critical: no audit row, no grant."""
     state = _make_state()
-    with patch("kiro_crew.safety_override.sel") as mock_sel:
+    with patch("aj_crew.safety_override.sel") as mock_sel:
         mock_sel.return_value.log_api_access.side_effect = RuntimeError("sel down")
         _apply_startup_yolo(state, _cfg(yolo=False), approval_mode="yolo")
 
@@ -211,12 +211,12 @@ def test_gateway_approval_yolo_is_refused_when_its_audit_fails() -> None:
 
 def test_gateway_approval_yolo_expires_at_the_time_cap(monkeypatch) -> None:
     """``yolo_max_seconds`` turns the flag's grant into a timed one that lapses."""
-    from kiro_crew import safety_override_grant
-    from kiro_crew.testing.clock import ManualClock
+    from aj_crew import safety_override_grant
+    from aj_crew.testing.clock import ManualClock
 
     clock = ManualClock()
     clock.install(monkeypatch, safety_override_grant)
-    with patch("kiro_crew.safety_override.yolo_ttl_cap", return_value=60):
+    with patch("aj_crew.safety_override.yolo_ttl_cap", return_value=60):
         state = _launch("yolo")
     assert safety_override().is_permanent is False
     assert state.is_yolo_active() is True
@@ -227,7 +227,7 @@ def test_gateway_approval_yolo_expires_at_the_time_cap(monkeypatch) -> None:
 
 def test_gateway_approval_yolo_shows_on_the_status_bar() -> None:
     """The status frame reports the flag's grant, so the bar shows auto-approve on."""
-    from kiro_crew.dashboard.status_counts import yolo_grant_fields
+    from aj_crew.dashboard.status_counts import yolo_grant_fields
 
     _launch("yolo")
     fields = yolo_grant_fields()
@@ -244,7 +244,7 @@ def test_only_gateway_approval_yolo_arms_the_grant(approval_mode) -> None:
 
 @pytest.mark.parametrize(
     "title",
-    ["Running: rm -rf /", f"{os.path.expanduser('~')}/.kirocrew/run/gateway-7781.bin"],
+    ["Running: rm -rf /", f"{os.path.expanduser('~')}/.ajcrew/run/gateway-7781.bin"],
 )
 def test_gateway_approval_yolo_keeps_the_tool_gate_floors(title) -> None:
     """The flag's grant never lifts the deny list or the protected-path gate."""
@@ -256,7 +256,7 @@ def test_gateway_approval_yolo_keeps_the_tool_gate_floors(title) -> None:
 def test_apply_startup_yolo_noop_when_config_false() -> None:
     """No declaration means no override at startup."""
     state = _make_state()
-    with patch("kiro_crew.safety_override.sel"):
+    with patch("aj_crew.safety_override.sel"):
         _apply_startup_yolo(state, _cfg(yolo=False))
 
     assert safety_override().is_active() is False
@@ -265,7 +265,7 @@ def test_apply_startup_yolo_noop_when_config_false() -> None:
 def test_apply_startup_yolo_logs_sel() -> None:
     """Activation emits SEL audit event via safety_override module."""
     state = _make_state()
-    with patch("kiro_crew.safety_override.sel") as mock_sel:
+    with patch("aj_crew.safety_override.sel") as mock_sel:
         _apply_startup_yolo(state, _cfg(yolo=True))
 
     mock_sel.return_value.log_api_access.assert_called()
@@ -279,7 +279,7 @@ def test_apply_startup_yolo_handles_exception_gracefully() -> None:
     """If the grant raises, startup continues without YOLO."""
     state = _make_state()
     with patch(
-        "kiro_crew.dashboard.server.grant_declared_yolo",
+        "aj_crew.dashboard.server.grant_declared_yolo",
         side_effect=RuntimeError("boom"),
     ) as mock_grant:
         _apply_startup_yolo(state, _cfg(yolo=True))
@@ -291,7 +291,7 @@ def test_apply_startup_yolo_handles_exception_gracefully() -> None:
 def test_apply_startup_yolo_refuses_when_sel_fails() -> None:
     """SEL audit failure must prevent activation (fail-closed)."""
     state = _make_state()
-    with patch("kiro_crew.safety_override.sel") as mock_sel:
+    with patch("aj_crew.safety_override.sel") as mock_sel:
         mock_sel.return_value.log_api_access.side_effect = RuntimeError("sel down")
         _apply_startup_yolo(state, _cfg(yolo=True))
     assert safety_override().is_active() is False

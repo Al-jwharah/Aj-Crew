@@ -1,8 +1,8 @@
-"""``cli.main()`` around a subcommand, and the ``kirocrew gateway`` command's boot.
+"""``cli.main()`` around a subcommand, and the ``ajcrew gateway`` command's boot.
 
-``main()`` rejects an unusable ``KIROCREW_PORT``, drops an inherited sandbox marker and records a
+``main()`` rejects an unusable ``AJCREW_PORT``, drops an inherited sandbox marker and records a
 direct CLI override's attestation before the jail gate; it dispatches ``mcp-<builtin>`` and
-``--seed``; ``kirocrew gateway`` exits with a status a supervisor can act on when the home's lock
+``--seed``; ``ajcrew gateway`` exits with a status a supervisor can act on when the home's lock
 refuses it; and ``_install_child_watcher`` installs the right asyncio child watcher, or nothing
 where the API is gone. The project-dir pointer path is pinned here too.
 """
@@ -21,12 +21,12 @@ from cli_helpers import (  # noqa: F401 -- the autouse fixture registers by impo
     _doctor_reads_the_warm_probe_cache,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.platform_compat_offloop_spawn import gateway_loop_factory
+from aj_crew import platform_compat
+from aj_crew.platform_compat_offloop_spawn import gateway_loop_factory
 
 
 class TestPortEnvValidatedAtEntry:
-    """`main()` rejects an unusable KIROCREW_PORT before any subcommand runs.
+    """`main()` rejects an unusable AJCREW_PORT before any subcommand runs.
 
     70000 parses as an int, so a type-only check would bake an unbindable port into a
     service unit. It must reject, not drop: dropping installs the default port silently.
@@ -36,13 +36,13 @@ class TestPortEnvValidatedAtEntry:
         import sys
 
         for bad in ("70000", "0", "-1"):
-            monkeypatch.setenv("KIROCREW_PORT", bad)
+            monkeypatch.setenv("AJCREW_PORT", bad)
             dispatched = []
             with (
-                patch.object(sys, "argv", ["kirocrew", "cron", "list"]),
-                patch("kiro_crew.cli_commands._cron", lambda _ns: dispatched.append(True)),
+                patch.object(sys, "argv", ["ajcrew", "cron", "list"]),
+                patch("aj_crew.cli_commands._cron", lambda _ns: dispatched.append(True)),
             ):
-                from kiro_crew.cli import main
+                from aj_crew.cli import main
 
                 with pytest.raises(SystemExit) as exc:
                     main()
@@ -53,20 +53,20 @@ class TestPortEnvValidatedAtEntry:
     def test_in_range_port_is_accepted(self, monkeypatch):
         import sys
 
-        monkeypatch.setenv("KIROCREW_PORT", "5477")
+        monkeypatch.setenv("AJCREW_PORT", "5477")
         dispatched = []
         with (
-            patch.object(sys, "argv", ["kirocrew", "cron", "list"]),
-            patch("kiro_crew.cli_commands._cron", lambda _ns: dispatched.append(True)),
+            patch.object(sys, "argv", ["ajcrew", "cron", "list"]),
+            patch("aj_crew.cli_commands._cron", lambda _ns: dispatched.append(True)),
         ):
-            from kiro_crew.cli import main
+            from aj_crew.cli import main
 
             main()
         assert dispatched == [True]
 
 
 class TestSandboxActiveMarkerCleared:
-    """cli.main() must drop an INHERITED KIROCREW_SANDBOX_ACTIVE marker.
+    """cli.main() must drop an INHERITED AJCREW_SANDBOX_ACTIVE marker.
 
     sandbox.wrap_argv trusts the marker to skip re-wrapping, and only the in-sandbox
     launcher sets it, so a value seen at the CLI entry would be a full sandbox bypass.
@@ -76,34 +76,34 @@ class TestSandboxActiveMarkerCleared:
         import os
         import sys
 
-        monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
+        monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
         # The companion tier record must be dropped with it: a stale inherited
         # level would be read as the ACTIVE tier by a descendant's passthrough
         # and corrupt its downgrade audit.
-        monkeypatch.setenv("KIROCREW_SANDBOX_LEVEL", "strict")
+        monkeypatch.setenv("AJCREW_SANDBOX_LEVEL", "strict")
         # A trivial subcommand so main() dispatches and returns cleanly; assert
         # the marker was popped before dispatch (patch the target to observe).
-        argv = ["kirocrew", "cron", "list"]
+        argv = ["ajcrew", "cron", "list"]
         seen = {}
 
         def _capture(_ns):
-            seen["marker"] = os.environ.get("KIROCREW_SANDBOX_ACTIVE")
-            seen["level"] = os.environ.get("KIROCREW_SANDBOX_LEVEL")
+            seen["marker"] = os.environ.get("AJCREW_SANDBOX_ACTIVE")
+            seen["level"] = os.environ.get("AJCREW_SANDBOX_LEVEL")
 
-        with patch.object(sys, "argv", argv), patch("kiro_crew.cli_commands._cron", _capture):
-            from kiro_crew.cli import main
+        with patch.object(sys, "argv", argv), patch("aj_crew.cli_commands._cron", _capture):
+            from aj_crew.cli import main
 
             main()
         assert seen.get("marker") is None
         assert seen.get("level") is None
-        assert os.environ.get("KIROCREW_SANDBOX_ACTIVE") is None
-        assert os.environ.get("KIROCREW_SANDBOX_LEVEL") is None
+        assert os.environ.get("AJCREW_SANDBOX_ACTIVE") is None
+        assert os.environ.get("AJCREW_SANDBOX_LEVEL") is None
 
 
 class TestDirectCliOverrideAttestation:
     def test_agent_command_pins_override_before_jail_gate(self, tmp_path, monkeypatch):
         """A direct CLI agent command must pin its override before any re-exec or spawn."""
-        from kiro_crew import cli, kiro_prerequisite
+        from aj_crew import cli, kiro_prerequisite
 
         executable = tmp_path / "kiro-cli"
         executable.write_bytes(b"direct CLI override")
@@ -111,10 +111,10 @@ class TestDirectCliOverrideAttestation:
         data_home = tmp_path / "data"
         observed = {}
 
-        monkeypatch.setenv("KIROCREW_HOME", str(data_home))
-        monkeypatch.setenv("KIROCREW_KIRO_BIN", str(executable))
+        monkeypatch.setenv("AJCREW_HOME", str(data_home))
+        monkeypatch.setenv("AJCREW_KIRO_BIN", str(executable))
         monkeypatch.setattr(cli, "boot_platform", lambda *_args, **_kwargs: None)
-        monkeypatch.setattr(cli.sys, "argv", ["kirocrew", "chat", "--no-jail"])
+        monkeypatch.setattr(cli.sys, "argv", ["ajcrew", "chat", "--no-jail"])
         # Exercise the POSIX-only override contract on every CI platform.
         register_attestation = kiro_prerequisite.register_process_start_override_attestation
         monkeypatch.setattr(
@@ -152,7 +152,7 @@ class TestMcpBuiltinDispatch:
         so register a synthetic builtin name to exercise the dispatch path
         (cli.py subparser registration + dynamic import).
         """
-        import kiro_crew.cli as cli_mod
+        import aj_crew.cli as cli_mod
 
         builtin_name = "fakebuiltin"
         # Patch the registry the CLI reads when building subparsers and dispatching.
@@ -164,14 +164,14 @@ class TestMcpBuiltinDispatch:
         # The server's own exit status must reach the caller unchanged.
         mock_module.run_mcp_server.side_effect = SystemExit(7)
 
-        target = f"kiro_crew.apps.builtins.{builtin_name}.mcp_server"
+        target = f"aj_crew.apps.builtins.{builtin_name}.mcp_server"
         real_import = importlib.import_module
 
         def fake_import(name, *args):
             # Only the synthetic module is faked; every other import stays real.
             return mock_module if name == target else real_import(name, *args)
 
-        monkeypatch.setattr(sys, "argv", ["kirocrew", f"mcp-{builtin_name}"])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", f"mcp-{builtin_name}"])
         with (
             patch("importlib.import_module", side_effect=fake_import) as mock_import,
             pytest.raises(SystemExit) as exc_info,
@@ -188,8 +188,8 @@ class TestProjectDirFile:
 
     def test_returns_config_dir_path(self, monkeypatch, tmp_path):
         """_project_dir_file should return config_dir() / 'project_dir'."""
-        monkeypatch.setattr("kiro_crew.cli.config_dir", lambda: tmp_path)
-        from kiro_crew.cli import _project_dir_file
+        monkeypatch.setattr("aj_crew.cli.config_dir", lambda: tmp_path)
+        from aj_crew.cli import _project_dir_file
 
         assert _project_dir_file() == tmp_path / "project_dir"
 
@@ -203,7 +203,7 @@ class TestSeedDispatch:
         """An in-app restart reaches this image through ``os.execv``, which
         preserves ``ITIMER_REAL``; the dispatch clears a deadline this image never
         armed, once, and before the gateway coroutine exists."""
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "gateway"])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "gateway"])
         order: list[str] = []
         # A plain MagicMock, as the sibling tests use: ``patch`` would otherwise
         # stand an AsyncMock in for the coroutine function, whose side effect runs
@@ -211,13 +211,13 @@ class TestSeedDispatch:
         mock_gateway = MagicMock(side_effect=lambda **_kw: order.append("gateway") or object())
         with (
             patch(
-                "kiro_crew.cli.disarm_inherited_alarm",
+                "aj_crew.cli.disarm_inherited_alarm",
                 side_effect=lambda: order.append("disarm") or True,
             ) as disarm,
-            patch("kiro_crew.cli_server._gateway", mock_gateway),
-            patch("kiro_crew.cli.asyncio.run"),
+            patch("aj_crew.cli_server._gateway", mock_gateway),
+            patch("aj_crew.cli.asyncio.run"),
         ):
-            from kiro_crew.cli import main
+            from aj_crew.cli import main
 
             main()
         disarm.assert_called_once_with()
@@ -228,18 +228,18 @@ class TestSeedDispatch:
         """Every gateway launcher reaches this branch, and the first status
         print happens inside the gateway coroutine, so the stdout seam must run
         here, once, before that coroutine exists."""
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "gateway"])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "gateway"])
         order: list[str] = []
         mock_gateway = MagicMock(side_effect=lambda **_kw: order.append("gateway") or object())
         with (
             patch(
-                "kiro_crew.platform_compat.ensure_line_buffered_stdout",
+                "aj_crew.platform_compat.ensure_line_buffered_stdout",
                 side_effect=lambda: order.append("line-buffer"),
             ) as line_buffer,
-            patch("kiro_crew.cli_server._gateway", mock_gateway),
-            patch("kiro_crew.cli.asyncio.run"),
+            patch("aj_crew.cli_server._gateway", mock_gateway),
+            patch("aj_crew.cli.asyncio.run"),
         ):
-            from kiro_crew.cli import main
+            from aj_crew.cli import main
 
             main()
         line_buffer.assert_called_once_with()
@@ -254,16 +254,16 @@ class TestSeedDispatch:
     )
     def test_seed_runs_before_gateway(self, monkeypatch, extra_argv, expect_replace):
         """--seed (optionally with --seed-replace) hands the parsed flags to seed_cmd, then the gateway runs."""
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "gateway", "--seed", "demo", *extra_argv])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "gateway", "--seed", "demo", *extra_argv])
         mock_seed = MagicMock(return_value=0)
         gateway_call = object()
         mock_gateway = MagicMock(return_value=gateway_call)
         with (
-            patch("kiro_crew.cli.seed_cmd", mock_seed),
-            patch("kiro_crew.cli_server._gateway", mock_gateway),
-            patch("kiro_crew.cli.asyncio.run") as mock_run,
+            patch("aj_crew.cli.seed_cmd", mock_seed),
+            patch("aj_crew.cli_server._gateway", mock_gateway),
+            patch("aj_crew.cli.asyncio.run") as mock_run,
         ):
-            from kiro_crew.cli import main
+            from aj_crew.cli import main
 
             main()
         mock_seed.assert_called_once()
@@ -274,10 +274,10 @@ class TestSeedDispatch:
 
     def test_seed_nonzero_exits(self, monkeypatch):
         """When seed_cmd returns non-zero, CLI should sys.exit with that code."""
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "gateway", "--seed", "bad"])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "gateway", "--seed", "bad"])
         mock_seed = MagicMock(return_value=1)
-        with patch("kiro_crew.cli.seed_cmd", mock_seed):
-            from kiro_crew.cli import main
+        with patch("aj_crew.cli.seed_cmd", mock_seed):
+            from aj_crew.cli import main
 
             with pytest.raises(SystemExit) as exc_info:
                 main()
@@ -285,16 +285,16 @@ class TestSeedDispatch:
 
     def test_no_seed_skips_seed_cmd(self, monkeypatch):
         """When --seed is not provided, seed_cmd should not be called."""
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "gateway"])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "gateway"])
         mock_seed = MagicMock()
         gateway_call = object()
         mock_gateway = MagicMock(return_value=gateway_call)
         with (
-            patch("kiro_crew.cli.seed_cmd", mock_seed),
-            patch("kiro_crew.cli_server._gateway", mock_gateway),
-            patch("kiro_crew.cli.asyncio.run") as mock_run,
+            patch("aj_crew.cli.seed_cmd", mock_seed),
+            patch("aj_crew.cli_server._gateway", mock_gateway),
+            patch("aj_crew.cli.asyncio.run") as mock_run,
         ):
-            from kiro_crew.cli import main
+            from aj_crew.cli import main
 
             main()
         mock_seed.assert_not_called()
@@ -303,7 +303,7 @@ class TestSeedDispatch:
 
 
 class TestGatewayLockRefusalExit:
-    """How ``kirocrew gateway`` exits when the home's lock refuses it.
+    """How ``ajcrew gateway`` exits when the home's lock refuses it.
 
     The exit status tells a supervisor whether a relaunch can help: a live holder refuses
     every relaunch. The systemd unit exempts that status from ``Restart=always`` (see
@@ -311,18 +311,18 @@ class TestGatewayLockRefusalExit:
     """
 
     def _refused_exit_code(self, monkeypatch, error):
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "gateway"])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "gateway"])
         lock_cls = MagicMock()
         lock_cls.return_value.acquire.side_effect = error
         with (
-            patch("kiro_crew.cli.GatewayLock", lock_cls),
-            patch("kiro_crew.cli_server._gateway") as mock_gateway,
-            patch("kiro_crew.cli.asyncio.run") as mock_run,
+            patch("aj_crew.cli.GatewayLock", lock_cls),
+            patch("aj_crew.cli_server._gateway") as mock_gateway,
+            patch("aj_crew.cli.asyncio.run") as mock_run,
             # The gateway path arms faulthandler on the real stderr descriptor,
             # which a capsys-replaced stream does not have.
-            patch("kiro_crew.cli.faulthandler.enable"),
+            patch("aj_crew.cli.faulthandler.enable"),
         ):
-            from kiro_crew.cli import main
+            from aj_crew.cli import main
 
             with pytest.raises(SystemExit) as excinfo:
                 main()
@@ -332,7 +332,7 @@ class TestGatewayLockRefusalExit:
         return excinfo.value.code
 
     def test_a_live_holder_refusal_exits_the_terminal_code(self, monkeypatch, tmp_path, capsys):
-        from kiro_crew.gateway_lock import LIVE_HOLDER_EXIT_CODE, GatewayLockError
+        from aj_crew.gateway_lock import LIVE_HOLDER_EXIT_CODE, GatewayLockError
 
         error = GatewayLockError(
             tmp_path,
@@ -347,7 +347,7 @@ class TestGatewayLockRefusalExit:
         assert "another gateway already owns" in capsys.readouterr().err
 
     def test_every_other_lock_refusal_keeps_the_restartable_exit(self, monkeypatch, tmp_path):
-        from kiro_crew.gateway_lock import GatewayLockError
+        from aj_crew.gateway_lock import GatewayLockError
 
         error = GatewayLockError(
             tmp_path,
@@ -365,7 +365,7 @@ class TestGatewayLockRefusalExit:
         Built from the REAL diagnosis. Without ``/proc/locks`` a reused pid on the port
         must not stand the unit down, so the exit stays 1 and systemd retries.
         """
-        from kiro_crew import gateway_lock, platform_compat
+        from aj_crew import gateway_lock, platform_compat
 
         (tmp_path / gateway_lock.LOCK_FILENAME).write_text("4242\n", encoding="utf-8")
         monkeypatch.setattr(platform_compat, "try_acquire_lock", lambda *a, **k: False)
@@ -393,7 +393,7 @@ class TestGatewayLockRefusalExit:
         Only a holder that answers HTTP earns the terminal code. One that listens without
         answering is wedged, and a terminal exit would park the unit `failed` for good.
         """
-        from kiro_crew import gateway_lock, platform_compat
+        from aj_crew import gateway_lock, platform_compat
 
         (tmp_path / gateway_lock.LOCK_FILENAME).write_text("16968\n", encoding="utf-8")
         monkeypatch.setattr(platform_compat, "try_acquire_lock", lambda *a, **k: False)
@@ -418,7 +418,7 @@ class TestGatewayLockRefusalExit:
     # Truth table of ``GatewayLock._serving_verdict``. ``owner``: what ``/proc/locks``
     # names (None = no owner surface); ``recorded``: the lock file's pid; ``listeners``:
     # LISTEN sockets on the port as ``(pid, address, family)``; ``answers_at``: addresses
-    # that answer HTTP; ``bind``: ``KIROCREW_BIND``; ``replaced``: the lock is reached via
+    # that answer HTTP; ``bind``: ``AJCREW_BIND``; ``replaced``: the lock is reached via
     # the deleted-lock-file path. Expected: ``live_holder`` and the exit code.
     _OWN = (16968, "127.0.0.1", "4")
     _TRUTH_TABLE = [
@@ -576,7 +576,7 @@ class TestGatewayLockRefusalExit:
         HTTP at the configured bind address. Every other row, including a stranger on the
         same port, keeps the restartable exit 1.
         """
-        from kiro_crew import gateway_lock, platform_compat
+        from aj_crew import gateway_lock, platform_compat
 
         owner = row["owner"]
         recorded = 4242
@@ -642,15 +642,15 @@ class TestGatewayLockRefusalExit:
         """The lock probes the bind the gateway itself resolves -- one resolver, not a copy.
 
         ``_diagnostic_bind_address`` calls ``dashboard.urls.bind_address_for`` with
-        ``local_only=True``: a valid ``KIROCREW_BIND`` is the bind either way, and
+        ``local_only=True``: a valid ``AJCREW_BIND`` is the bind either way, and
         the two fallbacks that flag can produce (loopback, the v4 wildcard) are
         probed at the same loopback address, so the flag cannot change the answer.
         """
-        from kiro_crew.cli import _diagnostic_bind_address
-        from kiro_crew.dashboard.urls import bind_address_for
-        from kiro_crew.gateway_lock import probe_host_for_bind
+        from aj_crew.cli import _diagnostic_bind_address
+        from aj_crew.dashboard.urls import bind_address_for
+        from aj_crew.gateway_lock import probe_host_for_bind
 
-        monkeypatch.setenv("KIROCREW_BIND", override)
+        monkeypatch.setenv("AJCREW_BIND", override)
         assert _diagnostic_bind_address() == bind_address_for(local_only=True)
         assert probe_host_for_bind(bind_address_for(local_only=False)) == probe_host_for_bind(
             bind_address_for(local_only=True)
@@ -658,7 +658,7 @@ class TestGatewayLockRefusalExit:
 
 
 class TestGatewayLogRotatesOnlyUnderTheLock:
-    """``kirocrew gateway`` moves gateway.log aside only once it holds the gateway lock.
+    """``ajcrew gateway`` moves gateway.log aside only once it holds the gateway lock.
 
     A start the lock refuses runs the whole logging setup first, so before the
     rotation waited for the lock every stray start renamed the running gateway's
@@ -667,16 +667,16 @@ class TestGatewayLogRotatesOnlyUnderTheLock:
 
     @staticmethod
     def _start(monkeypatch, lock_cls):
-        from kiro_crew.cli_logging import _stop_log_queue_listener
+        from aj_crew.cli_logging import _stop_log_queue_listener
 
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "gateway"])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "gateway"])
         with (
-            patch("kiro_crew.cli.GatewayLock", lock_cls),
-            patch("kiro_crew.cli_server._gateway"),
-            patch("kiro_crew.cli.asyncio.run"),
-            patch("kiro_crew.cli.faulthandler.enable"),
+            patch("aj_crew.cli.GatewayLock", lock_cls),
+            patch("aj_crew.cli_server._gateway"),
+            patch("aj_crew.cli.asyncio.run"),
+            patch("aj_crew.cli.faulthandler.enable"),
         ):
-            from kiro_crew.cli import main
+            from aj_crew.cli import main
 
             try:
                 main()
@@ -686,8 +686,8 @@ class TestGatewayLogRotatesOnlyUnderTheLock:
                 _stop_log_queue_listener()
 
     def test_five_refused_starts_leave_the_running_log_in_place(self, monkeypatch, tmp_path):
-        from kiro_crew.config import config_dir
-        from kiro_crew.gateway_lock import GatewayLockError
+        from aj_crew.config import config_dir
+        from aj_crew.gateway_lock import GatewayLockError
 
         log_file = config_dir() / "gateway.log"
         log_file.write_text("running gateway\n", encoding="utf-8")
@@ -705,7 +705,7 @@ class TestGatewayLogRotatesOnlyUnderTheLock:
         assert not (config_dir() / "logs" / "gateway-boots").exists()
 
     def test_the_start_that_holds_the_lock_rotates(self, monkeypatch):
-        from kiro_crew.config import config_dir
+        from aj_crew.config import config_dir
 
         log_file = config_dir() / "gateway.log"
         log_file.write_text("last run\n", encoding="utf-8")
@@ -736,7 +736,7 @@ class TestInstallPidfdChildWatcher:
 
         code = textwrap.dedent("""
             import asyncio
-            from kiro_crew.cli import _install_child_watcher
+            from aj_crew.cli import _install_child_watcher
 
             async def _spawn_true():
                 proc = await asyncio.create_subprocess_exec(
@@ -753,7 +753,7 @@ class TestInstallPidfdChildWatcher:
             )
             assert asyncio.run(_spawn_true()) == 0
             """).format(expected=expected_watcher)
-        # Propagate the runtime's import path so the child can import kiro_crew
+        # Propagate the runtime's import path so the child can import aj_crew
         # (a bare subprocess would not inherit it without PYTHONPATH).
         env = dict(os.environ)
         env["PYTHONPATH"] = os.pathsep.join(p for p in sys.path if p)
@@ -776,9 +776,9 @@ class TestInstallPidfdChildWatcher:
     def test_installs_safe_watcher_on_macos(self, monkeypatch) -> None:
         import asyncio
 
-        from kiro_crew.cli import _install_child_watcher
+        from aj_crew.cli import _install_child_watcher
 
-        monkeypatch.setattr("kiro_crew.cli.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.cli.sys.platform", "darwin")
         # On macOS (no pidfd) we install the SIGCHLD-based SafeChildWatcher to
         # eliminate the thread-per-child reaper storm, and must NOT touch the
         # Linux pidfd path. Spy on set_child_watcher; make the pidfd probe and
@@ -792,7 +792,7 @@ class TestInstallPidfdChildWatcher:
         def _boom(*_a) -> object:
             raise AssertionError("Linux pidfd path must not be reached on macOS")
 
-        monkeypatch.setattr("kiro_crew.cli.os.pidfd_open", _boom, raising=False)
+        monkeypatch.setattr("aj_crew.cli.os.pidfd_open", _boom, raising=False)
         monkeypatch.setattr(asyncio, "PidfdChildWatcher", _boom, raising=False)
         _install_child_watcher()
         assert called == ["fake-safe-watcher"], "macOS must install SafeChildWatcher"
@@ -800,9 +800,9 @@ class TestInstallPidfdChildWatcher:
     def test_noop_when_safe_watcher_unavailable(self, monkeypatch) -> None:
         import asyncio
 
-        from kiro_crew.cli import _install_child_watcher
+        from aj_crew.cli import _install_child_watcher
 
-        monkeypatch.setattr("kiro_crew.cli.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.cli.sys.platform", "darwin")
         # Simulate a runtime where SafeChildWatcher was removed (3.14+) or never
         # existed (Windows): the installer must leave the default watcher in
         # place rather than raise.
@@ -815,17 +815,17 @@ class TestInstallPidfdChildWatcher:
     def test_sets_watcher_on_linux(self, monkeypatch) -> None:
         import asyncio
 
-        from kiro_crew.cli import _install_child_watcher
+        from aj_crew.cli import _install_child_watcher
 
-        monkeypatch.setattr("kiro_crew.cli.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.cli.sys.platform", "linux")
         # Kernel supports pidfd_open -> probe succeeds -> watcher installed.
         # Fully fake the probe (sentinel fd + no-op close) so no real fd is used.
         opened = []
         closed = []
         monkeypatch.setattr(
-            "kiro_crew.cli.os.pidfd_open", lambda pid: opened.append(pid) or 4242, raising=False
+            "aj_crew.cli.os.pidfd_open", lambda pid: opened.append(pid) or 4242, raising=False
         )
-        monkeypatch.setattr("kiro_crew.cli.os.close", lambda fd: closed.append(fd))
+        monkeypatch.setattr("aj_crew.cli.os.close", lambda fd: closed.append(fd))
         called_with = []
         monkeypatch.setattr(asyncio, "set_child_watcher", lambda w: called_with.append(w))
         monkeypatch.setattr(
@@ -839,9 +839,9 @@ class TestInstallPidfdChildWatcher:
     def test_falls_back_to_safe_watcher_on_old_kernel(self, monkeypatch) -> None:
         import asyncio
 
-        from kiro_crew.cli import _install_child_watcher
+        from aj_crew.cli import _install_child_watcher
 
-        monkeypatch.setattr("kiro_crew.cli.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.cli.sys.platform", "linux")
         # Real 3.10 failure mode: PidfdChildWatcher.__init__ does NOT probe the
         # kernel, so the < 5.3 failure surfaces as os.pidfd_open raising OSError.
         # PidfdChildWatcher must NEVER be constructed (else the first
@@ -853,7 +853,7 @@ class TestInstallPidfdChildWatcher:
         def _no_pidfd(_pid):
             raise OSError(38, "Function not implemented")  # ENOSYS
 
-        monkeypatch.setattr("kiro_crew.cli.os.pidfd_open", _no_pidfd, raising=False)
+        monkeypatch.setattr("aj_crew.cli.os.pidfd_open", _no_pidfd, raising=False)
         installed = []
         monkeypatch.setattr(asyncio, "set_child_watcher", lambda w: installed.append(w))
         monkeypatch.setattr(asyncio, "SafeChildWatcher", lambda: "fake-safe-watcher", raising=False)
@@ -871,9 +871,9 @@ class TestInstallPidfdChildWatcher:
     def test_falls_back_to_safe_watcher_when_pidfd_open_missing(self, monkeypatch) -> None:
         import asyncio
 
-        from kiro_crew.cli import _install_child_watcher
+        from aj_crew.cli import _install_child_watcher
 
-        monkeypatch.setattr("kiro_crew.cli.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.cli.sys.platform", "linux")
         # The gateway startup kill scenario: a uv-managed /
         # Clang-built CPython 3.12 whose build omits the os.pidfd_open wrapper
         # (present on the system python, absent in the venv interpreter). The
@@ -882,7 +882,7 @@ class TestInstallPidfdChildWatcher:
         # os.waitpid reaper-thread storm starved the loop and got the gateway
         # killed by the loop-stall watchdog. It must now fall back to
         # SafeChildWatcher instead.
-        monkeypatch.delattr("kiro_crew.cli.os.pidfd_open", raising=False)
+        monkeypatch.delattr("aj_crew.cli.os.pidfd_open", raising=False)
         installed = []
         monkeypatch.setattr(asyncio, "set_child_watcher", lambda w: installed.append(w))
         monkeypatch.setattr(asyncio, "SafeChildWatcher", lambda: "fake-safe-watcher", raising=False)
@@ -936,7 +936,7 @@ class TestChildWatcherApiRemoved:
     """``_install_child_watcher()`` must no-op when the child-watcher API is gone.
 
     CPython 3.14 removed ``set_child_watcher`` and the watcher classes, so referencing
-    them raises ``AttributeError`` and ``kirocrew gateway`` dies before binding its port.
+    them raises ``AttributeError`` and ``ajcrew gateway`` dies before binding its port.
     """
 
     @staticmethod
@@ -959,17 +959,17 @@ class TestChildWatcherApiRemoved:
         """Simulated removal, so 3.10-3.13 CI also protects the 3.14 code path."""
         import asyncio
 
-        from kiro_crew.cli import _install_child_watcher
+        from aj_crew.cli import _install_child_watcher
 
-        monkeypatch.setattr("kiro_crew.cli.sys.platform", platform)
+        monkeypatch.setattr("aj_crew.cli.sys.platform", platform)
         # A pidfd-capable kernel is the WORST case: without the guard the Linux
         # branch reaches `asyncio.set_child_watcher(asyncio.PidfdChildWatcher())`
         # and raises. Keep the probe succeeding so the regression is real.
         # Hand back a REAL fd (the real os.close then reclaims it) rather than
-        # stubbing os.close: `kiro_crew.cli.os` IS the shared os module, so a
+        # stubbing os.close: `aj_crew.cli.os` IS the shared os module, so a
         # stub there would also be seen by asyncio's own internals.
         monkeypatch.setattr(
-            "kiro_crew.cli.os.pidfd_open",
+            "aj_crew.cli.os.pidfd_open",
             lambda pid: os.open(os.devnull, os.O_RDONLY),
             raising=False,
         )
@@ -992,7 +992,7 @@ class TestChildWatcherApiRemoved:
         """
         import asyncio
 
-        from kiro_crew.cli import _install_child_watcher
+        from aj_crew.cli import _install_child_watcher
 
         _install_child_watcher()  # mirror the gateway: install BEFORE run
 

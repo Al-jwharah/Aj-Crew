@@ -63,7 +63,7 @@ const slots = TITLES.map((title, i) => ({
   title,
   messages: 4,
   running: false,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   created: '2026-10-01T01:00:00Z',
   // Relative to now: a fixed date ages the rows into the collapsed
   // "sleeping sessions" group and leaves nothing to scroll.

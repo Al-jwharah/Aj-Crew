@@ -25,9 +25,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import md_notebook_state as mns
-from kiro_crew import sandbox
-from kiro_crew.sandbox import userns_available
+from aj_crew import md_notebook_state as mns
+from aj_crew import sandbox
+from aj_crew.sandbox import userns_available
 
 pytestmark = [
     pytest.mark.skipif(sys.platform != "linux", reason="the namespace launcher is Linux-only"),
@@ -42,7 +42,7 @@ pytestmark = [
 _BACKEND = r"""
 import errno, json, os, sys
 
-from kiro_crew.apps.builtins.md_notebook import server_store as store
+from aj_crew.apps.builtins.md_notebook import server_store as store
 
 def attempt(step):
     try:
@@ -52,7 +52,7 @@ def attempt(step):
 
 report = {
     "mnt_ns": os.readlink("/proc/self/ns/mnt"),
-    "marker": os.environ.get("KIROCREW_SANDBOX_ACTIVE"),
+    "marker": os.environ.get("AJCREW_SANDBOX_ACTIVE"),
     "read_moved_pat": attempt(store._read_pat_sync),
     "pat": attempt(lambda: store._write_pat_sync("ghp_written_inside")),
     "vaults": attempt(lambda: store._write_vaults_sync([{"id": "v1"}])),
@@ -80,7 +80,7 @@ def read(path):
 
 report = {
     "mnt_ns": os.readlink("/proc/self/ns/mnt"),
-    "marker": os.environ.get("KIROCREW_SANDBOX_ACTIVE"),
+    "marker": os.environ.get("AJCREW_SANDBOX_ACTIVE"),
     "listing": attempt(lambda: sorted(os.listdir(state_dir))),
     "read": attempt(lambda: read(os.path.join(state_dir, "pat"))),
 }
@@ -94,18 +94,18 @@ def home(tmp_path, monkeypatch) -> Path:
     # here too, and every path the tests compare is spelled the way the plan spells it.
     home = (tmp_path / "home").resolve()
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     # Spawn prep also sweeps the ``$HOME``-joined crew homes, so ``$HOME`` is pinned too:
     # no step of the launch may touch the developer's real data home.
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "0")
+    monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "0")
     sandbox.reset_backend()
     yield home
     sandbox.reset_backend()
 
 
 def _run(argv: list[str], home: Path, **kwargs) -> dict:
-    env = {k: v for k, v in os.environ.items() if k != "KIROCREW_SANDBOX_ACTIVE"}
+    env = {k: v for k, v in os.environ.items() if k != "AJCREW_SANDBOX_ACTIVE"}
     proc = subprocess.run(
         sandbox.namespace_argv(argv, "standard", **kwargs),
         cwd=home,

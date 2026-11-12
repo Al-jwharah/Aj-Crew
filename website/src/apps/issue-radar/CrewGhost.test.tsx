@@ -361,7 +361,7 @@ describe('djb2 / ghostVariantCount', () => {
     // copy never gets written; these values pin it.
     expect(djb2('')).toBe(5381)
     expect(djb2('a')).toBe(177670)
-    expect(djb2('kirocrew')).toBe(djb2('kirocrew'))
+    expect(djb2('ajcrew')).toBe(djb2('ajcrew'))
     expect(djb2('crew-1')).not.toBe(djb2('crew-2'))
     // Unsigned 32-bit, so `% ghostVariantCount` can never be negative.
     for (const s of ['andromeda', 'bode', 'whirlpool', 'sombrero', '', 'crëw-ünïcode']) {

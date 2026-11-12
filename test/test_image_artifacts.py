@@ -2,11 +2,11 @@
 
 Covers three layers:
 
-* :class:`kiro_crew.artifacts.ArtifactStore` — ``create_image`` round-trip,
+* :class:`aj_crew.artifacts.ArtifactStore` — ``create_image`` round-trip,
   ``read_image_bytes``, dimension sniffing, allowlist / oversize rejection,
   sidecar cleanup on delete, and tolerant meta serialization.
 * the dashboard ``_serialize`` shape the frontend consumes.
-* :mod:`kiro_crew.image_artifacts` — auto-registration of local markdown images
+* :mod:`aj_crew.image_artifacts` — auto-registration of local markdown images
   from finalized chat text (stable slug, idempotent, remote-skipping), and the
   restricted-session gate in the chat_runner scheduler.
 """
@@ -22,8 +22,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import image_artifacts
-from kiro_crew.artifacts import (
+from aj_crew import image_artifacts
+from aj_crew.artifacts import (
     MAX_CONTENT_BYTES,
     ArtifactAlreadyExistsError,
     ArtifactError,
@@ -32,7 +32,7 @@ from kiro_crew.artifacts import (
     ArtifactValidationError,
     ImageMetadata,
 )
-from kiro_crew.messaging.outbound_files import md_destination
+from aj_crew.messaging.outbound_files import md_destination
 
 # ── Fixtures / helpers ────────────────────────────────────────────────────────
 
@@ -218,7 +218,7 @@ class TestSerializeShape:
         the image block raw would route unredacted text onto the very surface
         ``name``'s redaction protects.
         """
-        from kiro_crew.dashboard.handlers.artifacts import _serialize
+        from aj_crew.dashboard.handlers.artifacts import _serialize
 
         leak = "AKIAIOSFODNN7EXAMPLE"
         art = store.create_image(
@@ -239,7 +239,7 @@ class TestSerializeShape:
         assert out["image"]["width"] == 4
 
     def test_serialize_includes_image_block(self, store: ArtifactStore) -> None:
-        from kiro_crew.dashboard.handlers.artifacts import _serialize
+        from aj_crew.dashboard.handlers.artifacts import _serialize
 
         art = store.create_image(
             name="Pic", image_bytes=_png_bytes(4, 4), mime="image/png", alt="alt"
@@ -534,7 +534,7 @@ class TestRegisterImages:
         assert image_artifacts.register_images(f"![a]({img})", "", "chat-1") == []
 
     def test_image_and_widget_slug_do_not_collide(self) -> None:
-        from kiro_crew.widget_slug import derive_widget_slug
+        from aj_crew.widget_slug import derive_widget_slug
 
         assert image_artifacts._derive_image_slug("ts", 0) != derive_widget_slug("ts", 0)
 
@@ -561,7 +561,7 @@ class TestSchedulerGate:
         return types.SimpleNamespace(_background_tasks=set())
 
     def test_restricted_session_registers_nothing(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         called = False
 
@@ -584,7 +584,7 @@ class TestSchedulerGate:
         assert called is False
 
     def test_local_image_schedules_registration(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         calls: list = []
 
@@ -663,7 +663,7 @@ class TestAssetReadHardening:
         self, store: ArtifactStore, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """An over-cap file is skipped; a lost thumbnail must not break the turn."""
-        from kiro_crew.hooks import FileTooLargeError
+        from aj_crew.hooks import FileTooLargeError
 
         img = tmp_path / "big.png"
         img.write_bytes(_png_bytes())
@@ -795,7 +795,7 @@ class TestAssetReadHardening:
         unauthenticated requester, and a synchronous read would stall the
         gateway's single event loop for the whole file.
         """
-        from kiro_crew.dashboard.handlers import artifacts as handlers
+        from aj_crew.dashboard.handlers import artifacts as handlers
 
         art = store.create_image(
             name="Pic", image_bytes=_png_bytes(2, 2), mime="image/png"
@@ -927,7 +927,7 @@ class TestLinkedAncestorGate:
         is_file() or is_sensitive_path could follow it."""
         import os as _os
 
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         linked = tmp_path / "Tasks"
         leaf = linked / "shot.png"

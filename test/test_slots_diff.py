@@ -17,9 +17,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.dashboard.state_parts import slots_diff
-from kiro_crew.dashboard.websocket_hub import SLOT_DIFF_WS_FLAG, SLOT_PATCH_WS_FLAG
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.state_parts import slots_diff
+from aj_crew.dashboard.websocket_hub import SLOT_DIFF_WS_FLAG, SLOT_PATCH_WS_FLAG
 
 _ENVELOPE_SKIP = ("type", "data", "slotsSeq")
 
@@ -78,18 +78,18 @@ class _Client:
 
 @pytest.fixture(name="state")
 def _state(monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> DashboardState:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers._session_card_chips_snapshot", True
+        "aj_crew.dashboard.handlers.source_providers._session_card_chips_snapshot", True
     )
     monkeypatch.setattr(
-        "kiro_crew.dashboard.state._cached_check_status",
+        "aj_crew.dashboard.state._cached_check_status",
         lambda url: {"ci": "passed", "state": "OPEN"},
     )
-    monkeypatch.setattr("kiro_crew.dashboard.state._repo_is_public", lambda url: "public" in url)
-    monkeypatch.setattr("kiro_crew.dashboard.state._audit_public_status_grant", lambda url: None)
-    monkeypatch.setattr("kiro_crew.dashboard.state._audit_public_status_denied", lambda url: None)
+    monkeypatch.setattr("aj_crew.dashboard.state._repo_is_public", lambda url: "public" in url)
+    monkeypatch.setattr("aj_crew.dashboard.state._audit_public_status_grant", lambda url: None)
+    monkeypatch.setattr("aj_crew.dashboard.state._audit_public_status_denied", lambda url: None)
     sessions = MagicMock(count=0)
     sessions.get_provider.return_value = None
     state = DashboardState(
@@ -374,7 +374,7 @@ def test_one_broadcast_gives_every_slots_frame_the_same_envelope_keys(
 def test_frames_built_from_row_texts_match_a_fresh_dump(
     state: DashboardState, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.dashboard.state_parts.slots_frame import _slots_ws_frame
+    from aj_crew.dashboard.state_parts.slots_frame import _slots_ws_frame
 
     _seed(state)
     raw: list[tuple[Any, str]] = []
@@ -415,7 +415,7 @@ def test_an_app_socket_with_the_flag_is_not_a_diff_socket(state: DashboardState)
 def test_a_user_view_diff_send_passes_the_chokepoint(
     state: DashboardState, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.dashboard import ws_event_scope
+    from aj_crew.dashboard import ws_event_scope
 
     granted: list[tuple[str, str]] = []
     monkeypatch.setattr(

@@ -10,7 +10,7 @@ const PATH = 'dashboard.title_refresh_every_turns'
 
 // A stateful stand-in for the gateway: a save changes what the next GET returns,
 // so the refetch after a save shows what the real server would.
-const { server, patchConfigMock, kirocrewConfigMock } = vi.hoisted(() => {
+const { server, patchConfigMock, ajcrewConfigMock } = vi.hoisted(() => {
   const server = { value: undefined as number | undefined }
   return {
     server,
@@ -18,7 +18,7 @@ const { server, patchConfigMock, kirocrewConfigMock } = vi.hoisted(() => {
       server.value = value as number
       return Promise.resolve({})
     }),
-    kirocrewConfigMock: vi.fn(() => Promise.resolve(
+    ajcrewConfigMock: vi.fn(() => Promise.resolve(
       server.value === undefined ? {} : { dashboard: { title_refresh_every_turns: server.value } },
     )),
   }
@@ -29,7 +29,7 @@ vi.mock('../api/client', () => ({
     dashboardConfig: () => Promise.resolve({ restore_sessions: false, restore_window_minutes: 30, merge_queued_messages: false, widget_density: 'more' }),
     voiceConfig: () => Promise.resolve({ enabled: false, voice: 'Ruth', engine: 'neural', rate: '100%', autoSpeak: false, aws_profile: '', region: '' }),
     sttConfig: () => Promise.resolve({ enabled: false, provider: '', model: '', available: false, streaming: false, transcribe_region: '', transcribe_profile: '', language_code: 'en-US', models: {}, language_codes: [] }),
-    kirocrewConfig: kirocrewConfigMock,
+    ajcrewConfig: ajcrewConfigMock,
     models: () => Promise.resolve([{ model_name: 'auto', description: 'Default' }]),
     patchConfig: patchConfigMock,
     updateDashboardConfig: () => Promise.resolve({}),
@@ -75,7 +75,7 @@ function readout(r: HTMLElement): string {
 describe('ChatPanel settings -- auto-title refresh cadence', () => {
   beforeEach(() => {
     patchConfigMock.mockClear()
-    kirocrewConfigMock.mockClear()
+    ajcrewConfigMock.mockClear()
     localStorage.clear()
   })
 

@@ -14,7 +14,7 @@ import time
 
 import pytest
 
-from kiro_crew.dashboard.handlers.path_token import PathTokenSigner
+from aj_crew.dashboard.handlers.path_token import PathTokenSigner
 
 
 def test_two_signers_do_not_accept_each_others_credentials() -> None:

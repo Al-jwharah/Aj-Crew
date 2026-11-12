@@ -17,8 +17,8 @@ from member_memory_helpers import env as _member_env
 from member_memory_helpers import make_request
 from test_spawn_release_queued import _close, _deferring_manager
 
-from kiro_crew import taskq
-from kiro_crew.dashboard.handlers import messaging
+from aj_crew import taskq
+from aj_crew.dashboard.handlers import messaging
 
 pytestmark = [
     pytest.mark.xdist_group("member_memory_api"),

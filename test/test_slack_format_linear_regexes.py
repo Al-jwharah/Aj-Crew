@@ -6,7 +6,7 @@ one pattern (CodeQL ``py/polynomial-redos``). These pin what each still converts
 
 from __future__ import annotations
 
-from kiro_crew.slack import format as slack_format
+from aj_crew.slack import format as slack_format
 
 
 def test_a_mermaid_block_with_blank_lines_before_the_diagram_still_converts():

@@ -22,7 +22,7 @@ ROUNDS = 25
 
 def _window_s() -> float:
     """The refresh coalescing window, from the module that owns it when it exists."""
-    module = optional_module("kiro_crew.dashboard.state_parts.refresh_coalesce")
+    module = optional_module("aj_crew.dashboard.state_parts.refresh_coalesce")
     return float(getattr(module, "REFRESH_COALESCE_WINDOW_S", 1.5))
 
 
@@ -104,7 +104,7 @@ def test_one_flush_reprojects_once_per_view_and_serializes_once_per_slot(state, 
     One flush at 400 slots runs at most 2 reprojections (owner and user view) and
     at most N slot row builds: one pass, the count measured on main.
     """
-    from kiro_crew.dashboard.state_parts import slots_frame
+    from aj_crew.dashboard.state_parts import slots_frame
 
     slots = seed_slots(state, SLOTS)
     add_socket(state, FakeWs(owner=True))
@@ -219,7 +219,7 @@ def test_warm_flush_builds_no_slot_links(state, spy) -> None:
     Positive control: one appended row then costs exactly 1 row summary, so the
     summary spy is on the name the projection calls.
     """
-    from kiro_crew.dashboard.state_parts import slot_transcript, slots_frame
+    from aj_crew.dashboard.state_parts import slot_transcript, slots_frame
 
     slots = seed_slots(state, SLOTS)
     add_socket(state, FakeWs(owner=True))
@@ -231,7 +231,7 @@ def test_warm_flush_builds_no_slot_links(state, spy) -> None:
         spy.wrap(slots_frame, "_build_slot_links", "links")
     else:
         spy.wrap(type(state), "_slot_links", "links")
-    projection = optional_module("kiro_crew.dashboard.slot_projection")
+    projection = optional_module("aj_crew.dashboard.slot_projection")
     summarize = projection is not None and hasattr(projection, "summarize_rows")
     if summarize:
         # The projection binds ``summarize_rows`` by name at import, so the spy
@@ -260,7 +260,7 @@ def test_warm_flush_builds_no_slot_links(state, spy) -> None:
 )
 def test_one_dirty_slot_serializes_at_most_10_rows(state, spy) -> None:
     """With one slot changed, a flush builds at most 10 slot rows."""
-    from kiro_crew.dashboard.state_parts import slots_frame
+    from aj_crew.dashboard.state_parts import slots_frame
 
     slots = seed_slots(state, SLOTS)
     add_socket(state, FakeWs(owner=True))

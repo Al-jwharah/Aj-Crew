@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.project_scan import (
+from aj_crew.project_scan import (
     MAX_DECLARATION_BYTES,
     SIGNAL_GIT,
     SIGNAL_KIRO,

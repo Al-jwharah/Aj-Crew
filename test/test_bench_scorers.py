@@ -12,7 +12,7 @@ golden values below are its output, frozen.
 
 DIVERGENCE, stated once and loudly: upstream stems with ``nltk.PorterStemmer()``,
 whose default mode is ``NLTK_EXTENSIONS`` (a small irregular-form table plus
-"leave words of length <= 2 alone"). nltk is not and will not be a Kiro Crew
+"leave words of length <= 2 alone"). nltk is not and will not be an Aj Crew
 dependency, so the port uses ``snowballstemmer.stemmer("porter")`` — already a
 hard install dependency — which is the *original* Porter algorithm. The two agree
 on the overwhelming majority of English tokens but are not bit-identical, so a
@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.eval.bench.corpus import (
+from aj_crew.eval.bench.corpus import (
     CAT_ADVERSARIAL,
     CAT_MULTI_HOP,
     CAT_PREFERENCE,
@@ -32,7 +32,7 @@ from kiro_crew.eval.bench.corpus import (
     CAT_TEMPORAL,
     BenchQuery,
 )
-from kiro_crew.eval.bench.scorers import (
+from aj_crew.eval.bench.scorers import (
     JUDGE_CALL_PARAMS,
     REFUSAL_MARKERS,
     AnswerScore,

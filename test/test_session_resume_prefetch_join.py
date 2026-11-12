@@ -21,10 +21,10 @@ from session_helpers import (  # noqa: F401 -- the fixture is requested by name
     cfg_fixture,
 )
 
-from kiro_crew.session import SessionManager, SpeculativeResumeRefused
-from kiro_crew.session_capabilities import CapabilityPreparation
-from kiro_crew.start_priority import StartPriority
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.session import SessionManager, SpeculativeResumeRefused
+from aj_crew.session_capabilities import CapabilityPreparation
+from aj_crew.start_priority import StartPriority
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 def _saved_session_factory(tmp_path, monkeypatch, sid: str, gate, providers: list, entered: list):
@@ -37,12 +37,12 @@ def _saved_session_factory(tmp_path, monkeypatch, sid: str, gate, providers: lis
     """
     sessions_dir = tmp_path / "kiro-sessions"
     sessions_dir.mkdir()
-    monkeypatch.setattr("kiro_crew.session_map._kiro_sessions_dir", lambda: sessions_dir)
+    monkeypatch.setattr("aj_crew.session_map._kiro_sessions_dir", lambda: sessions_dir)
     (sessions_dir / f"{sid}.json").write_text("{}")
     (sessions_dir / f"{sid}.jsonl").write_text("x" * 32)
     # Every provider reads as an ACP one, so the allocation reads the load's
     # outcome off ``client.resumed``.
-    monkeypatch.setattr("kiro_crew.providers.acp.AcpProvider", object)
+    monkeypatch.setattr("aj_crew.providers.acp.AcpProvider", object)
     base = _mock_provider_factory()
 
     def factory(session_key=None, agent=None, channel_id=None, **kwargs):
@@ -223,11 +223,9 @@ async def test_a_superseded_crew_member_prefetch_records_no_capability_failure(
     that stands down at its spawn door for the person's send did not fail: it leaves
     no record, so the status does not read ``failed`` after the send's session ends."""
     prepared = CapabilityPreparation("mate", "mate-template", "rev-1")
-    monkeypatch.setattr(
-        "kiro_crew.session_capabilities.prepare_runtime", lambda *_a, **_k: prepared
-    )
-    monkeypatch.setattr("kiro_crew.session_capabilities.verify_saved", lambda *_a, **_k: None)
-    monkeypatch.setattr("kiro_crew.session_capabilities.loaded_stamp", lambda *_a, **_k: "s")
+    monkeypatch.setattr("aj_crew.session_capabilities.prepare_runtime", lambda *_a, **_k: prepared)
+    monkeypatch.setattr("aj_crew.session_capabilities.verify_saved", lambda *_a, **_k: None)
+    monkeypatch.setattr("aj_crew.session_capabilities.loaded_stamp", lambda *_a, **_k: "s")
     sid = "prior-sid-member-prefetch"
     gate = asyncio.Event()
     gate.set()
@@ -310,7 +308,7 @@ async def test_a_resume_prefetch_a_provider_switch_left_nothing_to_load_stands_d
     providers: list = []
     entered: list = []
     factory = _saved_session_factory(tmp_path, monkeypatch, sid, gate, providers, entered)
-    monkeypatch.setattr("kiro_crew.session.detect_provider_switch", lambda *a: True)
+    monkeypatch.setattr("aj_crew.session.detect_provider_switch", lambda *a: True)
     mgr = SessionManager(cfg, provider_factory=factory)
     key = "dashboard:switched-resume-prefetch"
     mgr._session_map.set(key, sid)

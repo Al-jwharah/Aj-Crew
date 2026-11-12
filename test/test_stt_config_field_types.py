@@ -9,9 +9,9 @@ import pytest
 from aiohttp import web
 from dashboard_owner_helpers import NoConfiguredOwner
 
-import kiro_crew.dashboard.handlers.core as core
-from kiro_crew.config.loader import config_path
-from kiro_crew.testing.wait import finished
+import aj_crew.dashboard.handlers.core as core
+from aj_crew.config.loader import config_path
+from aj_crew.testing.wait import finished
 
 
 def _put(body: dict) -> MagicMock:

@@ -9,7 +9,7 @@ packaged fake model backend, then shells the in-tree Playwright suite at it. No
 model, no credentials, no network, no cost.
 
 The main browser job is Linux-only: it uses the CodeBuild fleet where eligible,
-otherwise the `kirocrew-runners` larger-runner group when the run executes in
+otherwise the `ajcrew-runners` larger-runner group when the run executes in
 this repository, and `ubuntu-latest` in a fork running its own CI. It cannot
 rely on an unprivileged
 user namespace (CodeBuild refuses `unshare(CLONE_NEWUSER)`, and this job does not
@@ -43,10 +43,10 @@ bounded machine code, keeping response prose and credentials out of diagnostics.
 `E2eTestCommand.run()` builds the child pytest invocation itself, so the
 environment is not something a caller has to remember:
 
-- `KIROCREW_E2E=1` lifts the `skipif` on both files. Neither runs in a bare
+- `AJCREW_E2E=1` lifts the `skipif` on both files. Neither runs in a bare
   `pytest` invocation, which is deliberate: the browser leg takes minutes per
   interpreter, far too slow for the per-commit gate.
-- `KIROCREW_STRICT_ON_LOOP_PERSIST=1` turns the on-loop session-JSONL persistence
+- `AJCREW_STRICT_ON_LOOP_PERSIST=1` turns the on-loop session-JSONL persistence
   discipline into an enforced invariant for the duration of the run. The harness
   gateway inherits this env, so any raw on-loop `ConversationLog._locked` entry
   that skipped the `*_off_loop` helpers raises `OnLoopPersistError` and fails the
@@ -75,7 +75,7 @@ order:
    Node >= 18 binary. Node resolution deliberately skips mise shims: a shim is
    cwd-sensitive and the website dir often pins an older Node, so the test scans
    real installs and prepends the winning bin dir to `PATH` for the child.
-2. Points `KIROCREW_KIRO_BIN` at `kiro_crew.testing.fake_acp_backend`. That is
+2. Points `AJCREW_KIRO_BIN` at `aj_crew.testing.fake_acp_backend`. That is
    the env var `kiro_cli.py` reads to override the agent binary, so the harness
    gateway spawns the fake instead of a real `kiro-cli`. The fake speaks the
    minimal ACP subset the client drives (`initialize`, `session/new`,
@@ -88,17 +88,17 @@ order:
    through `_kiro/mcp/status` / `_kiro/tools/didChange`, so the KAS harness's
    readiness barrier releases the first prompt instead of timing out.
 3. Boots a real gateway with `spawn_feature_gateway(fixture="minimal",
-   approval="reads")`, on an isolated temporary `KIROCREW_HOME` seeded
+   approval="reads")`, on an isolated temporary `AJCREW_HOME` seeded
    atomically with gateway startup.
 4. Exports the harness env into the Playwright child: `PLAYWRIGHT_BASE_URL`
    (the gateway's port), `PLAYWRIGHT_TOKEN`, `PLAYWRIGHT_RUN_AGENT_SPECS=1`,
-   `KIROCREW_E2E_EPHEMERAL=1`, `CI=1`, and `PLAYWRIGHT_JSON_OUTPUT_NAME`.
+   `AJCREW_E2E_EPHEMERAL=1`, `CI=1`, and `PLAYWRIGHT_JSON_OUTPUT_NAME`.
 5. Runs `playwright test --reporter=html,json` with `cwd=website`. A CLI
    `--reporter` replaces the config value, so both are named: `html` keeps the CI
    artifact the config asks for, `json` supplies the machine-readable counts the
    darkening floor below reads.
 
-`KIROCREW_KIRO_BIN` is restored (or removed) in a `finally` block, so the test
+`AJCREW_KIRO_BIN` is restored (or removed) in a `finally` block, so the test
 cannot leak a fake backend into a later test in the same interpreter.
 
 ### The gateway must already be running: `webServer` is not configured
@@ -140,7 +140,7 @@ When no token is supplied the setup project still writes an empty storage state,
 because `storageState` must resolve to an existing file or every spec fails with
 ENOENT.
 
-## `KIROCREW_E2E_REQUIRE=1`: why a graceful skip needs a marker
+## `AJCREW_E2E_REQUIRE=1`: why a graceful skip needs a marker
 
 The environment the browser leg needs (an in-tree `website/`, its installed
 Playwright CLI, a Node >= 18) is not present in a python-only checkout. So
@@ -148,11 +148,11 @@ Playwright CLI, a Node >= 18) is not present in a python-only checkout. So
 
 - **Marker unset** (ad-hoc local or dev run): `pytest.skip`. A contributor
   without the frontend toolchain installed still gets a useful smoke run.
-- **`KIROCREW_E2E_REQUIRE` set** (the CI gate): `pytest.fail`. A skip counts as
+- **`AJCREW_E2E_REQUIRE` set** (the CI gate): `pytest.fail`. A skip counts as
   a pass, so without this the required gate would go green having run **zero**
   browser specs, which is exactly the dead-suite drift the fold exists to catch.
 
-`.github/workflows/ci.yml`'s `e2e` job sets `KIROCREW_E2E_REQUIRE: "1"`. Set it
+`.github/workflows/ci.yml`'s `e2e` job sets `AJCREW_E2E_REQUIRE: "1"`. Set it
 on any job you expect to actually exercise the browser.
 
 ## The darkening floor
@@ -180,7 +180,7 @@ darkening rather than at the reported failure):
   where that file is writable. When a
   spec your change does not touch fails your run this way, it is someone else's
   flake: record it in the flake ledger (the open `Flaky: <test name>` issue, labelled
-  `area: tests`, as the `kirocrew-prepare-pr` skill describes) and rerun the job once.
+  `area: tests`, as the `ajcrew-prepare-pr` skill describes) and rerun the job once.
   Never raise the ceiling or `retries` for it.
 
 The run itself is bounded by `PLAYWRIGHT_RUN_CEILING_SECS`: the job's
@@ -200,7 +200,7 @@ silent darkening is no guard.
 
 `ci.yml`'s `e2e` job (`E2E (stub ACP backend, offline)`) installs the backend
 with `--group dev`, runs `npm ci` and `npm run build` in `website/`, stages
-`website/dist` into `src/kiro_crew/static/dist` so the specs render the real
+`website/dist` into `src/aj_crew/static/dist` so the specs render the real
 bundled dashboard rather than a 404, installs Chromium, then runs
 `python scripts/ci_e2e_parallel.py`. The separate `e2e-private-namespace` job
 owns the real private-workflow MCP test and does not serialize the browser job.
@@ -258,7 +258,7 @@ failure propagation and cancellation cleanup, not private-MCP or browser proof.
 The job's ceiling is route-aware, like `backend-test`'s: 30 minutes when the run
 is admitted to the CodeBuild fleet, the smallest budget whose derived Playwright
 run ceiling reaches the 1500 s cap, and 40 when it is not and the job falls back to
-`kirocrew-linux-4-core`, where the slowest observed fork run took 23.9 of the
+`ajcrew-linux-4-core`, where the slowest observed fork run took 23.9 of the
 old 25. The browser install is the step that historically consumed that budget.
 It carries three constraints, all in service of leaving the specs enough of it
 to actually run:
@@ -341,7 +341,7 @@ draws the staged page under its **Preview, not applied** label, and the dashboar
 Bot the link names. Before the browser starts, the harness
 (`test_playwright_e2e._stage_dashboard_preview`) seeds one Bot in the disposable
 config, stages the `standup` template for it with the production store, and passes
-the link that store's `wire()` returns in `KIROCREW_E2E_DASHBOARD_PREVIEW`. The spec
+the link that store's `wire()` returns in `AJCREW_E2E_DASHBOARD_PREVIEW`. The spec
 never builds the link itself. `standup` is not the default page, so a tab still
 showing the live page fails. The spec guards against a person being asked to approve
 a page they could not open.
@@ -387,7 +387,7 @@ prepares the state through production surfaces only, waits until
 passed as `PLAYWRIGHT_MEMORY_EVIDENCE_OUTPUT_DIR` and consumed by the Playwright
 configuration only when `PLAYWRIGHT_RUN_MEMORY_EVIDENCE=1`, not as a command-line
 argument. Playwright runs with `cwd=tmp_path`; its default evidence output is
-`tmp_path/evidence/<scenario>`. CI sets `KIROCREW_MEMORY_UI_EVIDENCE_DIR` to
+`tmp_path/evidence/<scenario>`. CI sets `AJCREW_MEMORY_UI_EVIDENCE_DIR` to
 `${{ runner.temp }}/memory-embedding-evidence`, with one scenario subdirectory
 per invocation (Playwright clears its output dir per run, so a shared one would erase the
 previous scenario). The driver requires one passed test from that file and zero
@@ -400,7 +400,7 @@ download manager; the fake ACP model backend is the only stand-in.
 | `missing-custom-pointer` | The same missing `memory.embed_model_path`, with NO `embed_model_legacy_ids` | `setup_error_code=model_path_not_found` and an empty `setup_warning_code`; no legacy warning, so the Vector Memory card renders the short `embedding-setup-error-pointer` (the fault and its cost: keyword search meanwhile) that carries neither the message nor the path, names "settings" exactly once through its only settings link (`href="#embed-model-path"`, focuses the field) rather than restating the destination in prose, and no diagnostic block; `No file at that path.` appears exactly once, under the field, the full path appears in no text node (it remains in the input value and disclosure tooltip), the custom filename appears exactly once in the existing model disclosure with the API's dimension and not in either error notice, `Rebuild memory vectors` is disabled, no rebuild line |
 | `configured-inactive` | A fresh gateway: the bundled file was never downloaded | `model_id`/`model_dim` known, `model_active=false`; header `data-state=inactive` reading `Configured: … · not active`, never `Active model unknown`; badge muted (`text-[var(--muted)]`, never the `text-ok` success colour); no re-embedding progressbar, no rebuild line, no field error, no alert, no raw `setup_error` prose, no keyword-search reassurance; the Vector Memory card's Embeddings stat tile (`embeddings-stat-badge`) reads `data-state=inactive` / `not active` in the same muted colour, never `text-warn`/`text-ok` and never `model loading`; the button offers an ENABLED `Rebuild memory vectors` for the unchanged bundled default. Second image: that stat tile scrolled into the viewport (it sits on the Vector Memory card, above the header framed by the first image) so the muted `not active` tile is photographed, not only asserted. Third image: that button clicked opens the confirm modal under the card's own neutral `Embedding Model` title (never `Change the embedding model?`), with a `Rebuild memory vectors` confirm (no `Change model`) and the configured-model reload and vector-rebuild warning (no "new one" claim); the modal is then CANCELLED, the dialog is gone, and the status read afterwards shows no apply in flight (`reembed.step` not `applying`/`running`, `model_active` still `false`) — nothing is submitted to a gateway whose bundled file is absent. The manifest records `reapplyConfirm.opened/cancelled` and the step read after cancel |
 | `deferred-repair` | `memory.embed_rebuild_generation` set, a `memory_stores` entry declared but never opened, two facts written through `PUT /api/memory/semantic` | `reembed.step=deferred`; the single `embed-model-repair-status` line names only the NON-ZERO counts exactly as the API reports them, each with its own plural form, joined by `Intl.ListFormat` for the UI language (the spec recomputes the expected sentence from the API counts), never their sum, never a `0 …` clause, and not `repair_unknown`; the status has no progress bar and no alert; the muted `Keyword search still works. Safe to leave this page.` reassurance renders exactly once under it, and no failure hint |
-| `download-failed` | Exported `KIROCREW_EMBED_MODEL_URL=https://127.0.0.1:<closed port>/…` and an empty `OLLAMA_MODELS`; boot with a missing custom path so the boot-time background download (6 attempts, hours of backoff, holds the manager lock) declines; `restart(skip_model_download=False)`; remove the path from `config.json`; the spec POSTs `/api/memory/enable-embeddings` (the dashboard's Retry) | Polls until `download_step == "failed"` (not `waiting_retry`), requires `waiting_retry` to have been observed, `download_attempt=3`, `setup_error_code=model_download_failed`; photographs the terminal notice with `View details` collapsed, then expanded, then collapsed again; the raw `setup_error` prose is inside the expanded details and nowhere else (not in the notice, not on the Embedding Model card), and no field error or rebuild line renders |
+| `download-failed` | Exported `AJCREW_EMBED_MODEL_URL=https://127.0.0.1:<closed port>/…` and an empty `OLLAMA_MODELS`; boot with a missing custom path so the boot-time background download (6 attempts, hours of backoff, holds the manager lock) declines; `restart(skip_model_download=False)`; remove the path from `config.json`; the spec POSTs `/api/memory/enable-embeddings` (the dashboard's Retry) | Polls until `download_step == "failed"` (not `waiting_retry`), requires `waiting_retry` to have been observed, `download_attempt=3`, `setup_error_code=model_download_failed`; photographs the terminal notice with `View details` collapsed, then expanded, then collapsed again; the raw `setup_error` prose is inside the expanded details and nowhere else (not in the notice, not on the Embedding Model card), and no field error or rebuild line renders |
 
 The configured-inactive scenario also captures a real checkpoint-storage warning
 on `/workflows`. After the workflow service is readable, the driver replaces only
@@ -427,7 +427,7 @@ assertions; the deferred count is not pinned to the one explicitly added store.
 
 `spawn_feature_gateway(skip_model_download=...)` and
 `GatewayHandle.restart(skip_model_download=...)` are the only harness switch this
-adds: `True` (default) exports `KIROCREW_SKIP_MODEL_DOWNLOAD=1` as before,
+adds: `True` (default) exports `AJCREW_SKIP_MODEL_DOWNLOAD=1` as before,
 `False` drops it for that one gateway. The production download manager honours
 that flag for the dashboard's Retry click as well as the boot task, which is why
 the terminal download state cannot be reached under the shared gateway. The
@@ -435,17 +435,17 @@ retry policy is the production constant (3 attempts, 60s then 120s), so the
 scenario costs about three minutes; the CI helper enforces a 12-minute ceiling
 for the dedicated UI lane, without imposing that ceiling on the shared suite.
 `harness_environment()` is unit-tested in `test/test_harness.py`: the default
-skip, the drop, and that `KIROCREW_HOME`/`KIRO_HOME` stay pinned either way.
-It also pins `KIROCREW_SKIP_APP_STORE_FETCH=1`, which no caller can drop: the
+skip, the drop, and that `AJCREW_HOME`/`KIRO_HOME` stay pinned either way.
+It also pins `AJCREW_SKIP_APP_STORE_FETCH=1`, which no caller can drop: the
 app store answers from the bundled seed, so `GET /api/apps/registry` never pays
 the live catalog's uncached HTTPS round trip (bounded by `FETCH_TIMEOUT`, the
 same 10 s the Discover specs wait for their ready signal) or a per-row manifest
-clone. `kiro_crew.apps.official_catalog.SKIP_FETCH_ENV` owns the name.
-It pins `KIROCREW_HARNESS_ADOPTION_PINS` too, to a path under the home that nothing
+clone. `aj_crew.apps.official_catalog.SKIP_FETCH_ENV` owns the name.
+It pins `AJCREW_HARNESS_ADOPTION_PINS` too, to a path under the home that nothing
 writes: the former built-in adoption pin table is read from there instead of the
 wheel, so a harness boot never fetches a shipped app from GitHub, and a test that
 drives adoption writes a fixture pin there (app-kit-platform.md § Former built-in
-adoption). `kiro_crew.apps.builtin_adoption_pins.HARNESS_PINS_ENV` owns the name.
+adoption). `aj_crew.apps.builtin_adoption_pins.HARNESS_PINS_ENV` owns the name.
 The supervisor restart test also verifies that only the download switch changes:
 all other environment values retain the initial launch snapshot. The failed
 mirror port stays bound without listening until teardown, and loopback hosts
@@ -498,7 +498,7 @@ Two legs cover it, and neither costs a PR any minutes: both live in
 | Leg | Job | Script | What only a real install shows |
 | --- | --- | --- | --- |
 | Linux | `build-desktop.yml` -> `Smoke-install Linux packages (deb + rpm)` | `scripts/smoke-linux-packages.sh` | dependency names resolve in Ubuntu 24.04 and Amazon Linux 2023, the `.desktop` entry's `StartupWMClass` equals Electron's app_id, the maintainer scripts place and remove `/usr/bin/<exe>`, and the beacon stamp names THIS format |
-| Windows | `build-windows.yml` -> `Smoke-install Windows installer (x64)` | `scripts/smoke-windows-install.ps1` | the uninstall registration and the `InstallLocation` in its paired install-info key (`<hive>\Software\<GUID>`, where electron-builder writes it), the install-root ownership boundary, where the Start Menu shortcut POINTS, that the bundled CLI runs, that the staged KAS engine root is in the installed tree and the installed `kirocrew kas status` reports it `(built into the app)` when `KIROCREW_BUNDLED_KAS_DIR` names it, that the installed gateway answers `/api/health`, and that a silent uninstall removes the registration, the install-info key and the tree |
+| Windows | `build-windows.yml` -> `Smoke-install Windows installer (x64)` | `scripts/smoke-windows-install.ps1` | the uninstall registration and the `InstallLocation` in its paired install-info key (`<hive>\Software\<GUID>`, where electron-builder writes it), the install-root ownership boundary, where the Start Menu shortcut POINTS, that the bundled CLI runs, that the staged KAS engine root is in the installed tree and the installed `ajcrew kas status` reports it `(built into the app)` when `AJCREW_BUNDLED_KAS_DIR` names it, that the installed gateway answers `/api/health`, and that a silent uninstall removes the registration, the install-info key and the tree |
 
 The Windows leg is gated on the build job's `artifact_uploaded` output rather
 than on `needs` alone: publish runs build Windows under `continue-on-error`
@@ -522,16 +522,16 @@ reads the registration that appeared.
 
 Reading the repository's `website/electron/package.json` would be just as wrong
 on Windows as hardcoding: those channel overrides are electron-builder CLI flags,
-so the file on disk still says `KiroCrew` while the artifact says otherwise.
+so the file on disk still says `AjCrew` while the artifact says otherwise.
 
 ### What the Windows smoke does NOT assert
 
 There is no `PATH` edit to assert. The `nsis` block in
 `website/electron/package.json` declares no PATH handling and
 `website/electron/build/installer.nsh` touches only shortcuts and the
-electron-updater cache, so a desktop install puts no `kirocrew` on `PATH`. The
+electron-updater cache, so a desktop install puts no `ajcrew` on `PATH`. The
 bundled CLI is exercised at its packaged path
-(`resources\backend-dist\kirocrew-backend\bin\kirocrew.cmd`) as its own new
+(`resources\backend-dist\ajcrew-backend\bin\ajcrew.cmd`) as its own new
 process instead, which is the path
 [windows-install.md](../guides/windows-install.md) describes and the one the
 managed-server invocation resolves.
@@ -552,22 +552,22 @@ Its backend payload is a real python-build-standalone runtime carrying the wheel
 `build-wheel` produced (the job `needs` it, so the bundled bytes are the ones
 users install). The job repeats the same assembly
 `packaging/build-desktop.sh`'s `build_backend_windows` performs -- PBS runtime,
-`pip install`, the relocatable `bin/kirocrew.cmd` shim, a self-containment check
+`pip install`, the relocatable `bin/ajcrew.cmd` shim, a self-containment check
 under `PYTHONNOUSERSITE=1`, then `packaging/precompile_windows.py` for the
 measured gateway import closure -- minus the voice extras, which add a
 pywhispercpp and numpy download for a code path a gateway boot never reaches.
 
-`KIROCREW_KIRO_BIN` points at a `.cmd` shim running
-`kiro_crew.testing.fake_acp_backend` out of the INSTALLED payload through the
+`AJCREW_KIRO_BIN` points at a `.cmd` shim running
+`aj_crew.testing.fake_acp_backend` out of the INSTALLED payload through the
 INSTALLED interpreter, so readiness needs no model, no network and no sign-in.
-`KIROCREW_SKIP_MODEL_DOWNLOAD=1` keeps the embedding model out of a 50-second
+`AJCREW_SKIP_MODEL_DOWNLOAD=1` keeps the embedding model out of a 50-second
 ceiling.
 
 Two ceilings are load-bearing. The install-duration ceiling measures a real
 install, at 200 s, about twice the slowest measured green install.
 `MinStartupPycs` is passed as 750 rather than the script's 1000 default, because
 the default describes the full release bundle and this job omits the voice
-extras: the core closure of `kiro_crew.cli_server` measures about 990 sources, so
+extras: the core closure of `aj_crew.cli_server` measures about 990 sources, so
 750 leaves headroom for the win32 closure differing while still catching what the
 assertion exists for, which is bytecode filtered out of the artifact or a
 launcher redirecting imports into an empty user cache. Both land near zero.
@@ -585,7 +585,7 @@ explicit V1-to-member copying with provenance, correction/reload/forgetting,
 cross-member isolation, persisted/cancellable backup staging, and the empty
 member's exact conversation binding across reload. Desktop and
 390px captures accompany the first flow. Their write guard requires
-`KIROCREW_E2E_EPHEMERAL=1`, which the isolated gateway harness sets; it must never
+`AJCREW_E2E_EPHEMERAL=1`, which the isolated gateway harness sets; it must never
 be set for an operator gateway. The strict reporter enforces the executed-test
 floor and refuses skips or flaky retries.
 
@@ -615,7 +615,7 @@ leg, and `nightly.yml`'s `pod-scenarios`, which boots a real service-managed pod
 ### Why it exists
 
 Outside this job, no macOS or Windows job starts a gateway: the whole E2E
-surface is gated on `KIROCREW_E2E`, which only `setup.py test_e2e` sets, and
+surface is gated on `AJCREW_E2E`, which only `setup.py test_e2e` sets, and
 only the Linux `e2e` job runs that. A unit test cannot close that gap.
 [#8117](https://github.com/kirodotdev/KiroCrew/pull/8117) is the defining case:
 a settings-file probe in `sandbox.wrap_argv`'s Windows delegation branch made
@@ -628,8 +628,8 @@ that.
 
 ### What it asserts
 
-Seven tests, each on its own gateway and its own scratch `KIROCREW_HOME`.
-`KIROCREW_KIRO_BIN` comes from `harness.fake_acp_backend_launcher`: the fake
+Seven tests, each on its own gateway and its own scratch `AJCREW_HOME`.
+`AJCREW_KIRO_BIN` comes from `harness.fake_acp_backend_launcher`: the fake
 backend's own `.py` on POSIX (exec'd through its shebang), and a generated
 `kiro-backend.cmd` shim on Windows, because `CreateProcess` refuses a `.py` path.
 The first Windows run of this module is why that helper exists: the gateway
@@ -641,8 +641,8 @@ and Windows that tail is the only evidence a maintainer without that OS gets.
 
 | Test | What it pins |
 |---|---|
-| `test_gateway_boots_and_answers_health` | `KIROCREW_READY:` then an unauthenticated `GET /api/health` 200. |
-| `test_resolved_provider_is_acp` | The provider resolves to `acp`, so the `KIROCREW_KIRO_BIN` seam fires. |
+| `test_gateway_boots_and_answers_health` | `AJCREW_READY:` then an unauthenticated `GET /api/health` 200. |
+| `test_resolved_provider_is_acp` | The provider resolves to `acp`, so the `AJCREW_KIRO_BIN` seam fires. |
 | `test_prompt_returns_the_fake_backend_reply` | One session create plus one prompt returns the fake backend's reply. `/api/health` can answer while the ACP spawn is refused, so this is the load-bearing one. |
 | `test_tool_marker_prompt_completes_the_turn` | A `[[TOOL]]` prompt still completes its turn. |
 | `test_seeded_sandbox_mode_boots_and_runs_a_turn[minimal]` | `agent.sandbox: "off"` boots and serves. |
@@ -658,7 +658,7 @@ twice.
 
 ### `READY` is not "recovery finished"
 
-The gateway binds its socket and prints `KIROCREW_READY:` **before** memory
+The gateway binds its socket and prints `AJCREW_READY:` **before** memory
 startup recovery ends, so HTTP answers during that window instead of hanging.
 A write issued inside it is refused: `memory_startup.require_memory_prepared()`
 raises, and callers see the one refusal through two shapes — 503 on a read, 409
@@ -674,7 +674,7 @@ becomes ready fails in the wait, carrying the gateway's own body and
 diagnostics, rather than at whichever line happened to write first.
 
 **A restart re-enters the window.** `handle.restart()` boots a second gateway on
-the same `KIROCREW_HOME`, so a client built from the new handle is back before
+the same `AJCREW_HOME`, so a client built from the new handle is back before
 recovery — and it does not come from `_booted`, so nothing waits for it.
 `test_private_workflow_memory.py` calls `_await_memory_recovery` itself there.
 
@@ -701,11 +701,11 @@ which is why `backend-test-sandbox` has to clear a sysctl to get one. On Windows
 the expectation is unconditionally the first, so a #8117-style regression cannot
 hide in the fail-closed branch.
 
-### `KIROCREW_E2E_REQUIRE=1` on the boot matrix
+### `AJCREW_E2E_REQUIRE=1` on the boot matrix
 
-The boot-matrix module reads the same `KIROCREW_E2E_REQUIRE` marker described
+The boot-matrix module reads the same `AJCREW_E2E_REQUIRE` marker described
 above, and the `e2e-boot-matrix` job sets it. An unmet PRECONDITION (the packaged
-fake ACP backend missing, `kiro_crew.testing` not importable) is a graceful
+fake ACP backend missing, `aj_crew.testing` not importable) is a graceful
 `pytest.skip` on a local run and a `pytest.fail` on the job.
 
 ## Real-`kiro-cli` opt-in smoke
@@ -714,14 +714,14 @@ fake ACP backend missing, `kiro_crew.testing` not importable) is a graceful
 host's signed-in CLI and real model service. It can incur network traffic, model
 latency, and account usage, so it is never part of the default offline gate.
 
-- `KIROCREW_E2E_REAL_KIRO=1` activates it.
-- `KIROCREW_E2E_REAL_KIRO_REQUIRE=1` both activates it and turns a missing CLI,
+- `AJCREW_E2E_REAL_KIRO=1` activates it.
+- `AJCREW_E2E_REAL_KIRO_REQUIRE=1` both activates it and turns a missing CLI,
   sign-in, or safe-host precondition into a failure. A required run cannot pass
   as a module-level skip.
-- Resolution ignores an inherited `KIROCREW_KIRO_BIN` test override. Immediately
+- Resolution ignores an inherited `AJCREW_KIRO_BIN` test override. Immediately
   before boot, the exact pinned binary runs `kiro-cli whoami` with the gateway's
   final child environment and cwd. `KIRO_HOME` remains the harness-owned
-  `<KIROCREW_HOME>/kiro`; authentication uses the existing independent OS/account
+  `<AJCREW_HOME>/kiro`; authentication uses the existing independent OS/account
   store without changing HOME, USERPROFILE, or account-store locations. Failed
   authentication never falls back to real-home session storage.
 - Every token-bearing dashboard request uses `build_loopback_opener`, which
@@ -803,7 +803,7 @@ account usage. Two named owners, two named moments:
 
 | Owner | When | Mode |
 |---|---|---|
-| The PR author | before requesting review on a change to the ACP client or kiro-cli transport (`src/kiro_crew/acp/`, `src/kiro_crew/kiro_cli.py`), the harness (`src/kiro_crew/testing/harness.py`), the private-agent derivation the smoke uses, or the tool-governance gate (`hooks.py`, the PreToolUse path) | required |
+| The PR author | before requesting review on a change to the ACP client or kiro-cli transport (`src/aj_crew/acp/`, `src/aj_crew/kiro_cli.py`), the harness (`src/aj_crew/testing/harness.py`), the private-agent derivation the smoke uses, or the tool-governance gate (`hooks.py`, the PreToolUse path) | required |
 | The release verifier | before adopting a new installed `kiro-cli` version as the one releases are cut against | required |
 
 Required mode is the exact invocation below; the `_REQUIRE` marker turns a
@@ -811,11 +811,11 @@ missing CLI, a failed `kiro-cli whoami`, or an unsafe host into a FAILURE, so a
 run that could not reach the real CLI cannot be filed as a pass:
 
 ```bash
-KIROCREW_E2E_REAL_KIRO_REQUIRE=1 python -m pytest -v -p no:cacheprovider \
+AJCREW_E2E_REAL_KIRO_REQUIRE=1 python -m pytest -v -p no:cacheprovider \
   -o addopts= -n0 --timeout=600 test/e2e/test_real_kiro_smoke.py
 ```
 
-`KIROCREW_E2E_REAL_KIRO=1` alone is the best-effort form for a developer who
+`AJCREW_E2E_REAL_KIRO=1` alone is the best-effort form for a developer who
 wants a skip rather than a failure when the host is not signed in. Both are
 opt-in flags read by the module's own `skipif`; nothing sets them for you.
 
@@ -829,7 +829,7 @@ any run made under it.
 
 ### The job's own honesty checks
 
-- **`KIROCREW_HARNESS_READY_TIMEOUT` per OS**: 60 on Ubuntu, 90 on macOS, 180 on
+- **`AJCREW_HARNESS_READY_TIMEOUT` per OS**: 60 on Ubuntu, 90 on macOS, 180 on
   Windows. It lives in the job env, not the test, so a slow runner is retunable
   without a code change. Windows needs the widest window: subprocess spawn and
   filesystem latency there are measurably slower, the conditions
@@ -876,7 +876,7 @@ cd website
 docker run --rm --network host -u "$(id -u):$(id -g)" -e HOME=/tmp \
   -v "$PWD":/work -w /work \
   -e PLAYWRIGHT_BASE_URL="http://localhost:$PORT" -e PLAYWRIGHT_TOKEN="$TOKEN" \
-  -e PLAYWRIGHT_RUN_WEBKIT=1 -e PLAYWRIGHT_RUN_AGENT_SPECS=1 -e KIROCREW_E2E_EPHEMERAL=1 \
+  -e PLAYWRIGHT_RUN_WEBKIT=1 -e PLAYWRIGHT_RUN_AGENT_SPECS=1 -e AJCREW_E2E_EPHEMERAL=1 \
   mcr.microsoft.com/playwright:v1.58.2-noble \
   npx playwright test playwright/chat-visibility-replace.webkit.spec.ts \
     --project=webkit-mobile --reporter=list --workers=1
@@ -901,7 +901,7 @@ observed values the spec prints (`[webkit-visibility]` lines and the attached
 ## The pod scenario suite (nightly on every OS; per-PR Windows is boot-only unless labelled)
 
 A second E2E lane, orthogonal to the browser gate above. `test/e2e/scenarios/`
-boots ONE real service-managed pod through the shipped `kirocrew pod` verbs and
+boots ONE real service-managed pod through the shipped `ajcrew pod` verbs and
 drives six scenario tests across five user-visible flows: a setting saved across
 a gateway restart, a cron firing, one agent turn with a tool call, the host service
 definition rendering inside a pod's environment, and the built wheel installing
@@ -928,22 +928,22 @@ retention policies; recover a failed plane before another tool reclaims its pare
 
 ### Gating
 
-Same shape as `KIROCREW_E2E_REQUIRE` above, and for the same reason.
+Same shape as `AJCREW_E2E_REQUIRE` above, and for the same reason.
 
-- `KIROCREW_E2E_SCENARIOS` unset: every scenario skips. The suite boots a real
+- `AJCREW_E2E_SCENARIOS` unset: every scenario skips. The suite boots a real
   pod, which is minutes and a service manager away from a bare `pytest`.
-- `KIROCREW_E2E_REQUIRE=1`: every precondition skip becomes a FAILURE. A skip
+- `AJCREW_E2E_REQUIRE=1`: every precondition skip becomes a FAILURE. A skip
   counts as a pass, so without this the job would report green having run zero
   scenarios. It is the same marker the browser gate reads, so one job env serves
   both suites; `test/e2e/scenarios/conftest.py::_required` is the reader.
 
-`KIROCREW_E2E_SCENARIOS_REAL_AGENT=1` is a pod backend-selection knob, and a
+`AJCREW_E2E_SCENARIOS_REAL_AGENT=1` is a pod backend-selection knob, and a
 narrower one than its name suggests. `conftest.py::_resolve_backend` checks that
 a `kiro-cli` is on `PATH` (REFUSING the run otherwise, rather than quietly
 serving the fake) and returns no fake path, so `_plane_env` does not ADD its
-`KIROCREW_POD_KIRO_BIN` override to the copied `os.environ`; an inherited value
+`AJCREW_POD_KIRO_BIN` override to the copied `os.environ`; an inherited value
 of that variable is not removed, and the pod's normal backend resolution decides
-what `KIROCREW_KIRO_BIN` its service definition carries. It pins no identity,
+what `AJCREW_KIRO_BIN` its service definition carries. It pins no identity,
 verifies no sign-in, and proves nothing positive or negative about what the
 pod's agent may read. Enabling it does NOT turn the 55-test suite into a
 supported real-model success gate: `test_subagent_spawn.py` unconditionally
@@ -954,7 +954,7 @@ answered. No successful live run under this flag is on record. It is retained
 for compatibility as an explicit opt-in that nothing sets for you; the presence
 check itself is free, but a turn that actually reaches a real model may incur
 the operator's own account usage. For a bounded real-`kiro-cli` proof use the
-dedicated [`KIROCREW_E2E_REAL_KIRO_REQUIRE=1` smoke](#real-kiro-cli-opt-in-smoke)
+dedicated [`AJCREW_E2E_REAL_KIRO_REQUIRE=1` smoke](#real-kiro-cli-opt-in-smoke)
 instead: a direct throwaway gateway with a confined nonce read, a governance
 denial and host-spec/session cleanup evidence. That smoke is not service-manager
 pod or cron lifecycle coverage, and this suite is not a real-model gate; neither
@@ -975,8 +975,8 @@ under
 below.
 
 Steps, in order: build the checkout's `.venv` (a pod boots the CHECKOUT's own
-`kirocrew`, and the suite refuses to fall back to a global one), `npm ci` plus
-`npm run build` in `website/` staged into `src/kiro_crew/static/dist` (a pod
+`ajcrew`, and the suite refuses to fall back to a global one), `npm ci` plus
+`npm run build` in `website/` staged into `src/aj_crew/static/dist` (a pod
 refuses to come up without a bundle), bring up a service manager, run the suite,
 upload the pod logs on failure.
 
@@ -1085,14 +1085,14 @@ Every step the label pays for carries the identical `if: env.POD_SCENARIOS ==
 'true'`: `actions/setup-node` (the repo's pinned SHA, `.nvmrc` major, npm cache
 keyed on `website/package-lock.json`), `uv pip install --system build==1.3.0`
 (the wheel scenario runs `python -m build --wheel` with `sys.executable` and,
-under `KIROCREW_E2E_REQUIRE=1`, fails rather than skips without it), the real
-`npm ci` + `npm run build` staged into `src/kiro_crew/static/dist`, and the
+under `AJCREW_E2E_REQUIRE=1`, fails rather than skips without it), the real
+`npm ci` + `npm run build` staged into `src/aj_crew/static/dist`, and the
 suite step itself. The one-file stand-in carries the negation, so a labelled run
 serves the built bundle to the boot canary too. The 3-test canary and its
 `3 passed` grep run on both paths, unconditionally. The suite step is the
 nightly leg's invocation (`-p no:cacheprovider -o addopts= -n0 --timeout=600`)
 plus `--basetemp "$RUNNER_TEMP/pod-scenarios-tmp"`, with
-`KIROCREW_E2E_SCENARIOS=1` and `KIROCREW_E2E_REQUIRE=1`; pytest's own exit code
+`AJCREW_E2E_SCENARIOS=1` and `AJCREW_E2E_REQUIRE=1`; pytest's own exit code
 is read from `PIPESTATUS[0]` through the `tee`, the anchored `55 passed` grep is
 checked first, and that status is returned after it. On failure the
 `pod-boot-windows` artifact (7 days) carries `pod-boot.log`, `pod-scenarios.log`
@@ -1149,7 +1149,7 @@ and in the boot canary above.
   `kernel.apparmor_restrict_unprivileged_userns=0` sysctl and
   `unshare --mount --map-root-user true` proof as the pod and private-namespace
   jobs, so the gateway's boot probe admits agent spawns.
-- **No silent skip.** `KIROCREW_E2E=1` and `KIROCREW_E2E_REQUIRE=1` turn each
+- **No silent skip.** `AJCREW_E2E=1` and `AJCREW_E2E_REQUIRE=1` turn each
   unmet precondition into a failure, and an anchored `3 passed` grep over the log
   fails the job when the suite reports any other count. Raise that count when a
   test is added to either module.

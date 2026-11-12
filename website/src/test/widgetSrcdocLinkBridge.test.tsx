@@ -4,7 +4,7 @@
  *
  *   A click on a `_blank` (or any non-`_self` target) link, or on a bare absolute
  *   `http(s)` link, is cancelled in the frame and handed to the host as
- *   `{type: 'kirocrew-dashboard:open', url}`. `window.open` posts the same and
+ *   `{type: 'ajcrew-dashboard:open', url}`. `window.open` posts the same and
  *   returns null. A non-web scheme on a window-opening link is cancelled and NOT
  *   posted. Fragment and relative links with no target, an explicit `_self`, and
  *   data-action buttons keep their in-frame behaviour. A document with no parent
@@ -16,7 +16,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { buildSrcdoc } from '../lib/widgetSrcdoc'
 
-const OPEN = 'kirocrew-dashboard:open'
+const OPEN = 'ajcrew-dashboard:open'
 
 function extractBridge(): string {
   const out = buildSrcdoc({ html: '<p>probe</p>', themeVars: {}, mode: 'dark', linkBridge: true })
@@ -361,7 +361,7 @@ describe('link-bridge shim', () => {
     b.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }))
     b.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
     b.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
-    expect(posted).toEqual([{ type: 'kirocrew-dashboard:input' }, { type: 'kirocrew-dashboard:input' }])
+    expect(posted).toEqual([{ type: 'ajcrew-dashboard:input' }, { type: 'ajcrew-dashboard:input' }])
   })
 
   it('turns window.open into a host request for a web URL only', () => {

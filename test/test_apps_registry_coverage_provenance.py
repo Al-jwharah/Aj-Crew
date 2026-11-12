@@ -1,4 +1,4 @@
-"""Behaviour coverage for where ``kiro_crew.apps.registry`` installs from.
+"""Behaviour coverage for where ``aj_crew.apps.registry`` installs from.
 
 Candidate resolution and the index cache's provenance key, the git-provenance reader
 (resolved commit, branch, origin URL), the stale-checkout sweep, and the process-group
@@ -18,8 +18,8 @@ from apps_registry_coverage_helpers import _explicit_registry_execution_admissio
 from apps_registry_coverage_helpers import cache_dir_fixture  # noqa: F401
 from apps_registry_coverage_helpers import _config_with, _fake_sandbox, _FakeProc, _reg
 
+from aj_crew.apps import registry
 from conftest import requires_symlinks
-from kiro_crew.apps import registry
 
 # Candidate resolution / provenance pinning
 
@@ -31,7 +31,7 @@ class TestCandidateResolution:
         # fails; pin "catalog reachable, app absent" so the assertion
         # exercises the bundled + external span deterministically.
         monkeypatch.setattr(
-            "kiro_crew.apps.official_catalog.inventory_for_install",
+            "aj_crew.apps.official_catalog.inventory_for_install",
             lambda name: None,
         )
         monkeypatch.setattr(
@@ -114,7 +114,7 @@ class TestCandidateResolution:
         self, monkeypatch, cache_dir
     ):
         monkeypatch.setattr(
-            "kiro_crew.apps.official_catalog.inventory_for_install", lambda name: None
+            "aj_crew.apps.official_catalog.inventory_for_install", lambda name: None
         )
         monkeypatch.setattr(registry, "_load_registry_file", lambda: [])
         reg = _reg("mine", "https://gitea.internal/idx.git")
@@ -273,7 +273,7 @@ class TestRepoLookups:
         def _boom(cls):
             raise RuntimeError("config exploded")
 
-        monkeypatch.setattr("kiro_crew.config.loader.KiroCrewConfig.load", classmethod(_boom))
+        monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", classmethod(_boom))
         assert registry._external_registry_app_by_repo("ext/demo") is None
         assert registry._external_registry_repos() == set()
 
@@ -344,7 +344,7 @@ class TestExternalRegistryCacheIdentity:
         # name while every writer had moved to the coordinate identity, so an
         # external source always counted 0 and the single-owner credential
         # grant was silently disabled.
-        from kiro_crew.apps.routes import _repo_key_owner_count
+        from aj_crew.apps.routes import _repo_key_owner_count
 
         monkeypatch.setattr(registry, "_load_registry_file", list)
         reg = _reg("mine", "https://gitea.internal/idx.git")
@@ -772,10 +772,10 @@ class TestStaleCheckoutSweep:
             raise RuntimeError("sweep exploded")
 
         monkeypatch.setattr(registry, "_sweep_stale_checkouts_sync", _boom)
-        caplog.set_level("DEBUG", logger="kiro_crew.apps.registry")
+        caplog.set_level("DEBUG", logger="aj_crew.apps.registry")
         await registry._sweep_stale_checkouts()
         assert swept == [tmp_path]
-        records = [r for r in caplog.records if r.name == "kiro_crew.apps.registry"]
+        records = [r for r in caplog.records if r.name == "aj_crew.apps.registry"]
         assert [r.getMessage() for r in records] == ["Stale checkout sweep failed (best-effort)"]
         assert records[0].exc_info is not None
 

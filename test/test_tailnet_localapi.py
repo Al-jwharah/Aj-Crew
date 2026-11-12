@@ -23,9 +23,9 @@ from typing import Any
 import pytest
 from tmpdir_helpers import SHORT_TMP_PREFIX, short_tmp_base
 
+from aj_crew.dashboard import tailnet
+from aj_crew.dashboard import tailnet_localapi as la
 from conftest import requires_symlinks
-from kiro_crew.dashboard import tailnet
-from kiro_crew.dashboard import tailnet_localapi as la
 
 # -- _root_owned_and_sealed ------------------------------------------------ #
 
@@ -391,7 +391,7 @@ def test_whois_quotes_the_address_and_status_omits_peers(monkeypatch: pytest.Mon
 
 
 def test_serve_and_direct_paths_name_a_peer_the_same_way(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew.dashboard import tailnet_direct
+    from aj_crew.dashboard import tailnet_direct
 
     body = {
         "UserProfile": {"ID": 7, "LoginName": "alice@example.com"},
@@ -409,7 +409,7 @@ def test_serve_and_direct_paths_name_a_peer_the_same_way(monkeypatch: pytest.Mon
 
 
 def test_serve_and_direct_paths_read_the_same_machine_name() -> None:
-    from kiro_crew.dashboard import tailnet_direct
+    from aj_crew.dashboard import tailnet_direct
 
     status = {
         "BackendState": "Running",

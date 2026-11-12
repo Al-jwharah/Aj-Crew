@@ -35,13 +35,13 @@ from split_credential_boundary_helpers import (
     _rejoins,
 )
 
-from kiro_crew.messaging.display_safety import (
+from aj_crew.messaging.display_safety import (
     canonicalize_display,
     joins_to_a_credential,
     redact_for_display,
 )
-from kiro_crew.messaging.renderer import _default_redactor, chunk_for_transport, chunk_text
-from kiro_crew.messaging.split import (
+from aj_crew.messaging.renderer import _default_redactor, chunk_for_transport, chunk_text
+from aj_crew.messaging.split import (
     _WHITESPACE_RUN,
     _redact_only_the_rejoined_span,
     _rejoins_a_key,
@@ -52,7 +52,7 @@ from kiro_crew.messaging.split import (
     split_markdown_bytes,
     split_markdown_safe,
 )
-from kiro_crew.messaging.transport import TransportCapabilities
+from aj_crew.messaging.transport import TransportCapabilities
 
 #: No splitter call needs an exception any more: an already-redacted argument (the
 #: WhatsApp prefix-stable branch's ``redact_for_display`` body) is recognised as
@@ -210,7 +210,7 @@ def _splitter_calls(tree: ast.AST) -> list[SplitterCall]:
 
 
 def _modules_that_split() -> dict[str, list[SplitterCall]]:
-    """Every module under ``src/kiro_crew`` that calls a redactor-accepting splitter.
+    """Every module under ``src/aj_crew`` that calls a redactor-accepting splitter.
 
     DERIVED by walking the tree, not curated. A curated list of delivery paths has
     one failure mode that matters: a path nobody adds to it is not merely
@@ -446,7 +446,7 @@ class TestChunkForTransportGradesTheByteSeam:
     """
 
     def _byte_capped(self, max_bytes: int) -> TransportCapabilities:
-        from kiro_crew.webex.transport import WEBEX_CAPABILITIES
+        from aj_crew.webex.transport import WEBEX_CAPABILITIES
 
         return dataclasses.replace(
             WEBEX_CAPABILITIES,
@@ -479,7 +479,7 @@ class TestChunkForTransportGradesTheByteSeam:
     def _char_capped(self, max_chars: int) -> TransportCapabilities:
         # A char-capped channel: max_message_bytes=0 takes chunk_for_transport's
         # CHARACTER branch (messaging/renderer.py), the one F2 lives on.
-        from kiro_crew.webex.transport import WEBEX_CAPABILITIES
+        from aj_crew.webex.transport import WEBEX_CAPABILITIES
 
         return dataclasses.replace(
             WEBEX_CAPABILITIES, max_message_bytes=0, max_message_chars=max_chars
@@ -496,7 +496,7 @@ class TestChunkForTransportGradesTheByteSeam:
         wide-space straddle -- no delivered sequence may read as a key, and the call
         must terminate.
         """
-        from kiro_crew.messaging.renderer import _default_redactor as _dr
+        from aj_crew.messaging.renderer import _default_redactor as _dr
 
         head, tail = "AKIAIOSFOD", "NN7EXAMPLE"
         bodies = (
@@ -528,7 +528,7 @@ class TestChunkForTransportGradesTheByteSeam:
         unchanged repair reproduces that unsafe sequence, so the byte path must
         re-grade and shrink the budget until the delivered sequence is clean.
         """
-        from kiro_crew.messaging.renderer import _default_redactor as _dr
+        from aj_crew.messaging.renderer import _default_redactor as _dr
 
         head, tail = "AKIAIOSFOD", "NN7EXAMPLE"
         # budget 10: the byte cut lands exactly so ``# NN7EXAMPLE`` is piece-leading
@@ -752,7 +752,7 @@ class TestTheTerminalKeepsWhatItCan:
         fresh way for a valid span to lose its formatting without anyone deciding
         it should.
         """
-        import kiro_crew.messaging.split as split_module
+        import aj_crew.messaging.split as split_module
 
         assert not hasattr(split_module, "_flush_whitespace")
         tree = ast.parse((SRC / "messaging" / "split.py").read_text(encoding="utf-8"))
@@ -928,7 +928,7 @@ class TestTheDashboardHandlerLegsOffloadTheSplitter:
         Offloaded = it is the first argument to ``asyncio.to_thread`` rather than a
         direct call.
         """
-        from kiro_crew.dashboard.handlers import messaging
+        from aj_crew.dashboard.handlers import messaging
 
         # The legs run from a messaging_api owner the facade composes, so the scan
         # parses the facade and every owner, and fails if a leg lives in a file it

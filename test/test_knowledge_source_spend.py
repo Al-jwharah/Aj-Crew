@@ -18,10 +18,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers.knowledge import list_sources
-from kiro_crew.knowledge.folder_watcher import DEFAULT_MAX_FILES, FolderWatcher
-from kiro_crew.knowledge.spend import source_spend
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.dashboard.handlers.knowledge import list_sources
+from aj_crew.knowledge.folder_watcher import DEFAULT_MAX_FILES, FolderWatcher
+from aj_crew.knowledge.spend import source_spend
+from aj_crew.knowledge.store import KnowledgeStore
 
 
 @pytest.fixture()
@@ -305,7 +305,7 @@ class TestListSourcesReportsAFolderScanInFlight:
             return source_spend(store, sources)
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.knowledge_sources.source_spend",
+            "aj_crew.dashboard.handlers.knowledge_sources.source_spend",
             finish_scan_during_spend_read,
         )
         await lock.acquire()

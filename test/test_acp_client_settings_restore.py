@@ -13,11 +13,11 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-import kiro_crew.acp.client as acp_client
+import aj_crew.acp.client as acp_client
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE
+from aj_crew.testing.clock import ManualClock
 from conftest import requires_symlinks
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE
-from kiro_crew.testing.clock import ManualClock
 
 
 class TestMovedAsideRestore:
@@ -32,8 +32,8 @@ class TestMovedAsideRestore:
     @pytest.fixture(autouse=True)
     def _isolated_provenance(self, _floor_monkeypatch):
         """Per-test provenance registries and a warm advertised-model cache."""
-        from kiro_crew import model_registry
-        from kiro_crew.acp import seed_provenance
+        from aj_crew import model_registry
+        from aj_crew.acp import seed_provenance
 
         _floor_monkeypatch.setattr(seed_provenance, "_RECORDS", {})
         _floor_monkeypatch.setattr(seed_provenance, "_LIVE", {})
@@ -144,7 +144,7 @@ class TestMovedAsideRestore:
 
     def test_crew_own_seed_restore_still_round_trips(self, tmp_path, monkeypatch):
         """Positive control: a refused durable revoke puts Crew's own seed back cleanly."""
-        from kiro_crew.acp import seed_provenance
+        from aj_crew.acp import seed_provenance
 
         client, path = self._authored(tmp_path)
         before = path.read_bytes()
@@ -160,7 +160,7 @@ class TestMovedAsideRestore:
 
         The POSIX fallback is the validated byte copy, called with no size cap.
         """
-        from kiro_crew.acp import seed_provenance
+        from aj_crew.acp import seed_provenance
 
         calls = self._force_the_copy_fallback(monkeypatch)
         client, path = self._authored(tmp_path)
@@ -408,8 +408,8 @@ class TestCreateRaceLoserPoll:
     @pytest.fixture(autouse=True)
     def _isolated_provenance(self, tmp_path, _floor_monkeypatch):
         """Per-test provenance registries, sidecar and a warm advertised-model cache."""
-        from kiro_crew import model_registry
-        from kiro_crew.acp import seed_provenance
+        from aj_crew import model_registry
+        from aj_crew.acp import seed_provenance
 
         _floor_monkeypatch.setattr(seed_provenance, "_RECORDS", {})
         _floor_monkeypatch.setattr(seed_provenance, "_LIVE", {})
@@ -430,7 +430,7 @@ class TestCreateRaceLoserPoll:
         the digest-only shape ``_read_disk_seeds`` accepts, so no live holder
         pins it and nothing in this process's memory knows of it.
         """
-        from kiro_crew.acp import seed_provenance
+        from aj_crew.acp import seed_provenance
 
         stale = '{"permissions": {"defaultMode": "bypassPermissions"}}'
         sidecar = seed_provenance._sidecar_path()
@@ -505,9 +505,9 @@ class TestCreateRaceLoserPoll:
         held the way a sibling's persist would hold it. ``held`` is set once the
         lock is taken.
         """
-        from kiro_crew import platform_lock_compat
-        from kiro_crew.acp import seed_provenance
-        from kiro_crew.config.paths import config_dir
+        from aj_crew import platform_lock_compat
+        from aj_crew.acp import seed_provenance
+        from aj_crew.config.paths import config_dir
 
         lock_file = config_dir() / seed_provenance._LOCK_FILENAME
         lock_file.parent.mkdir(parents=True, exist_ok=True)
@@ -534,7 +534,7 @@ class TestCreateRaceLoserPoll:
         The winner's ``record()`` is in flight and a stale record sits in the sidecar.
         Ending on any record would decline at once and run toolless.
         """
-        from kiro_crew.acp import seed_provenance
+        from aj_crew.acp import seed_provenance
 
         loser = AcpClient(
             work_dir=tmp_path, acp_backend=ACP_BACKEND_CLAUDE, permission_mode="default"
@@ -569,7 +569,7 @@ class TestCreateRaceLoserPoll:
         never unbounded -- and the loser declines exactly once. The clock is
         mocked so the deadline is a handful of iterations, not two real seconds.
         """
-        from kiro_crew.acp import seed_provenance
+        from aj_crew.acp import seed_provenance
 
         loser = AcpClient(
             work_dir=tmp_path,
@@ -640,7 +640,7 @@ class TestCreateRaceLoserPoll:
         Another holder has the lock at the ``held_by_another`` probe. The backoff adds no
         poll entry and runs no hook, so the race matches the deadline control above.
         """
-        from kiro_crew.acp import seed_provenance
+        from aj_crew.acp import seed_provenance
 
         loser = AcpClient(
             work_dir=tmp_path,
@@ -665,7 +665,7 @@ class TestCreateRaceLoserPoll:
         # once, so the contention is certain and the release is a signal, not a
         # timer. The backoff is seen at the seam the lock reads its clock through
         # (``platform_compat.time``, a module-level name); the stdlib stays as is.
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         release, held, backed_off = threading.Event(), threading.Event(), threading.Event()
         real_time = platform_compat.time

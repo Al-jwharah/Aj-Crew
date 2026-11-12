@@ -20,7 +20,7 @@ from dev_fleet_server_coverage_helpers import (  # noqa: F401 -- the autouse fix
     _pin_module_state,
 )
 
-from kiro_crew.apps.builtins.dev_fleet import repository
+from aj_crew.apps.builtins.dev_fleet import repository
 
 # --- Direct tests of _discard_untracked_files against a REAL filesystem. ---
 # No mocking, no git repo: the helper is a pure per-file os.unlink walk, so it

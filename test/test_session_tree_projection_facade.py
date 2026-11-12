@@ -1,17 +1,17 @@
-"""``kiro_crew.crew_log.session_tree_projection`` stays the one import path and patch surface.
+"""``aj_crew.crew_log.session_tree_projection`` stays the one import path and patch surface.
 
 ``SessionTreeProjection``'s checkpoint and cold start live in two owner modules beside it,
 ``session_tree_projection_checkpoint`` and ``session_tree_projection_seed``. An owner
 function whose first parameter is ``self`` is bound as the class attribute of the same
 name, and every other moved name is served from its owner through
-:mod:`kiro_crew._facade_mirror`. ``test/test_facade_mirror_guards.py`` holds every mirrored
+:mod:`aj_crew._facade_mirror`. ``test/test_facade_mirror_guards.py`` holds every mirrored
 facade to the shared rules; these tests pin what is particular to this one:
 
 * the owners are exactly the ``session_tree_projection_*`` siblings, layered lowest first,
   and nothing outside the family imports one;
 * every module-level name the unsplit file bound still resolves through the facade, and
   the facade serves only names its owners define, so every name it imports from the rest
-  of ``kiro_crew`` stays bound by that import and visible to type checkers;
+  of ``aj_crew`` stays bound by that import and visible to type checkers;
 * every name the test trees patch through the facade reaches every module holding it;
 * every owner logs under the facade's logger name;
 * the class keeps every member it had, each bound one is its owner's own function with its
@@ -39,11 +39,11 @@ import owner_import_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew.crew_log import session_tree_projection as facade
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew.crew_log import session_tree_projection as facade
 
-# Walks the test trees for patches and src/kiro_crew for owner imports; keep it on one worker.
+# Walks the test trees for patches and src/aj_crew for owner imports; keep it on one worker.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_session_tree_projection_facade")
 
 #: Checks ``test_facade_shared_checks.py`` runs against this module's helpers; each is
@@ -55,28 +55,28 @@ SHARED_FACADE_CHECKS = (
     "the_facade_installs_its_mirror_when_run_as_a_script",
 )
 
-FACADE = "kiro_crew.crew_log.session_tree_projection"
-OWNER_PREFIX = "kiro_crew.crew_log.session_tree_projection_"
+FACADE = "aj_crew.crew_log.session_tree_projection"
+OWNER_PREFIX = "aj_crew.crew_log.session_tree_projection_"
 CLS = facade.SessionTreeProjection
-_SRC = Path(kiro_crew.__file__).resolve().parent
+_SRC = Path(aj_crew.__file__).resolve().parent
 _CREW_LOG = Path(facade.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
 
 #: Owner modules, lowest layer first: an owner imports only owners listed before it.
 OWNERS = (
-    "kiro_crew.crew_log.session_tree_projection_checkpoint",
-    "kiro_crew.crew_log.session_tree_projection_seed",
+    "aj_crew.crew_log.session_tree_projection_checkpoint",
+    "aj_crew.crew_log.session_tree_projection_seed",
 )
 
 #: ``SessionTreeProjection`` members an owner defines, by owner, each bound on the class.
 MOVED_MEMBERS = {
-    "kiro_crew.crew_log.session_tree_projection_checkpoint": (
+    "aj_crew.crew_log.session_tree_projection_checkpoint": (
         "_schedule_checkpoint",
         "cancel_pending_checkpoint",
         "_debounced_write",
         "flush_checkpoint",
     ),
-    "kiro_crew.crew_log.session_tree_projection_seed": (
+    "aj_crew.crew_log.session_tree_projection_seed": (
         "ensure_seeded",
         "_retry_due_locked",
         "_install_seed_locked",
@@ -236,7 +236,7 @@ def test_the_facade_serves_a_mirror_over_every_sibling_owner_in_layer_order() ->
     assert isinstance(facade, _facade_mirror.MirroredModule)
     index = _index()
     on_disk = sorted(
-        f"kiro_crew.crew_log.{path.stem}" for path in _CREW_LOG.glob("session_tree_projection_*.py")
+        f"aj_crew.crew_log.{path.stem}" for path in _CREW_LOG.glob("session_tree_projection_*.py")
     )
     assert sorted(OWNERS) == on_disk
     assert tuple(index.owners) == OWNERS == facade._OWNERS
@@ -282,18 +282,18 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     sources = {
         root
         / "pkg"
         / "caller.py": (
-            "from kiro_crew.crew_log.session_tree_projection_seed import ensure_seeded\n"
+            "from aj_crew.crew_log.session_tree_projection_seed import ensure_seeded\n"
         ),
-        root / "other.py": "from kiro_crew.crew_log import session_tree_projection_checkpoint\n",
+        root / "other.py": "from aj_crew.crew_log import session_tree_projection_checkpoint\n",
         root / "crew_log" / "relative.py": "from .session_tree_projection_seed import x\n",
         root / "crew_log" / "deep" / "up.py": "from .. import session_tree_projection_seed\n",
         root
-        / "facade_user.py": "from kiro_crew.crew_log.session_tree_projection import projection\n",
+        / "facade_user.py": "from aj_crew.crew_log.session_tree_projection import projection\n",
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",
@@ -333,7 +333,7 @@ def _defined(owner: str) -> set[str]:
 def test_the_facade_serves_only_owner_defined_names_its_own_code_does_not_bind() -> None:
     """The facade binds every name its kept code reads and keeps every base import, so a
     name it serves is one an owner defines, and nothing from outside the family is
-    served: ``from kiro_crew.crew_log.session_tree_projection import TREE_UNIT_CAP`` still
+    served: ``from aj_crew.crew_log.session_tree_projection import TREE_UNIT_CAP`` still
     binds the import the facade itself holds, which is what type checkers read."""
     index = _index()
     defined = set().union(*(_defined(owner) for owner in OWNERS))

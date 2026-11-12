@@ -35,7 +35,7 @@ const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 // ThemeProvider is the authority (see side-panel-pinned-views.tsx): seed the
 // preference it reads, and set the attribute for the pre-effect first paint.
 localStorage.setItem('mc-theme', theme)
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const SLUG = 'quarterly-plan'
 // Sent ids persist per artifact; clear them so every load starts at the

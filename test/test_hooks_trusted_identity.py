@@ -19,7 +19,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY, HookManager, HooksConfig
+from aj_crew.hooks import TOOL_ALLOW, TOOL_AUTO_APPROVE, TOOL_DENY, HookManager, HooksConfig
 
 
 class TestShouldAutoApproveSpawn:
@@ -29,7 +29,7 @@ class TestShouldAutoApproveSpawn:
     def _spawn_event(**overrides):
         base = {
             "tool_name": "spawn_run",
-            "mcp_server_name": "kirocrew-core",
+            "mcp_server_name": "ajcrew-core",
             "mcp_identity_trusted": True,
             "title": "spawn_run",
             "is_shell": False,
@@ -39,24 +39,24 @@ class TestShouldAutoApproveSpawn:
         return SimpleNamespace(**base)
 
     def test_approves_spawn_run_when_flag_true(self):
-        from kiro_crew.hooks import HookManager
-        from kiro_crew.slack.handler import _should_auto_approve_spawn
+        from aj_crew.hooks import HookManager
+        from aj_crew.slack.handler import _should_auto_approve_spawn
 
         ctx = MagicMock()
         ctx.hooks = HookManager(HooksConfig.from_dict({"auto_approve_subagent_spawn": True}))
         assert _should_auto_approve_spawn(ctx, self._spawn_event()) is True
 
     def test_rejects_when_flag_false(self):
-        from kiro_crew.hooks import HookManager
-        from kiro_crew.slack.handler import _should_auto_approve_spawn
+        from aj_crew.hooks import HookManager
+        from aj_crew.slack.handler import _should_auto_approve_spawn
 
         ctx = MagicMock()
         ctx.hooks = HookManager(HooksConfig.from_dict({"auto_approve_subagent_spawn": False}))
         assert _should_auto_approve_spawn(ctx, self._spawn_event()) is False
 
     def test_rejects_non_spawn_tool(self):
-        from kiro_crew.hooks import HookManager
-        from kiro_crew.slack.handler import _should_auto_approve_spawn
+        from aj_crew.hooks import HookManager
+        from aj_crew.slack.handler import _should_auto_approve_spawn
 
         ctx = MagicMock()
         ctx.hooks = HookManager(HooksConfig.from_dict({"auto_approve_subagent_spawn": True}))
@@ -66,8 +66,8 @@ class TestShouldAutoApproveSpawn:
     def test_rejects_shell_event_with_forged_spawn_title(self):
         """The issue's attack: a SHELL event titled spawn_run must not ride
         the spawn rung — the title is model-authored."""
-        from kiro_crew.hooks import HookManager
-        from kiro_crew.slack.handler import _should_auto_approve_spawn
+        from aj_crew.hooks import HookManager
+        from aj_crew.slack.handler import _should_auto_approve_spawn
 
         ctx = MagicMock()
         ctx.hooks = HookManager(HooksConfig.from_dict({"auto_approve_subagent_spawn": True}))
@@ -98,7 +98,7 @@ class TestEventIsSpawnRun:
     def _genuine(self, **overrides):
         fields = dict(
             tool_name="spawn_run",
-            mcp_server_name="kirocrew-core",
+            mcp_server_name="ajcrew-core",
             mcp_identity_trusted=True,
             title="spawn_run",
         )
@@ -106,7 +106,7 @@ class TestEventIsSpawnRun:
         return self._event(**fields)
 
     def test_canonical_trusted_core_spawn_is_genuine(self):
-        from kiro_crew.hooks import event_is_spawn_run
+        from aj_crew.hooks import event_is_spawn_run
 
         assert event_is_spawn_run(self._genuine()) is True
 
@@ -115,12 +115,12 @@ class TestEventIsSpawnRun:
         # rung: the channel deny plane keys on the title, so approving here
         # would bypass a title-keyed deny rule. Falling to the ladder is a
         # downgrade (prompt/trust), never a hard block.
-        from kiro_crew.hooks import event_is_spawn_run
+        from aj_crew.hooks import event_is_spawn_run
 
         assert event_is_spawn_run(self._genuine(title="Spawn agents")) is False
 
     def test_canonical_mismatch_refuses_regardless_of_a_forged_title(self):
-        from kiro_crew.hooks import event_is_spawn_run
+        from aj_crew.hooks import event_is_spawn_run
 
         event = self._genuine(tool_name="execute_bash")
         assert event_is_spawn_run(event) is False
@@ -128,26 +128,26 @@ class TestEventIsSpawnRun:
     def test_untrusted_identity_provenance_fails_closed(self):
         # tool_name non-emptiness alone is not proof of provenance: a future
         # inline population path leaves the flag False and must fail closed.
-        from kiro_crew.hooks import event_is_spawn_run
+        from aj_crew.hooks import event_is_spawn_run
 
         assert event_is_spawn_run(self._genuine(mcp_identity_trusted=False)) is False
 
     def test_foreign_server_spawn_run_tool_is_refused(self):
         # A third-party MCP server exposing a tool literally named spawn_run
         # must not ride the crew's spawn rung.
-        from kiro_crew.hooks import event_is_spawn_run
+        from aj_crew.hooks import event_is_spawn_run
 
         assert event_is_spawn_run(self._genuine(mcp_server_name="evil-server")) is False
 
     def test_builtin_named_spawn_run_without_a_server_is_refused(self):
         # kiro-cli sets tool_name for built-ins too, with an empty server
         # name — a built-in cannot satisfy the MCP-server pin.
-        from kiro_crew.hooks import event_is_spawn_run
+        from aj_crew.hooks import event_is_spawn_run
 
         assert event_is_spawn_run(self._genuine(mcp_server_name="")) is False
 
     def test_shell_event_with_forged_title_refuses_without_canonical_identity(self):
-        from kiro_crew.hooks import event_is_spawn_run
+        from aj_crew.hooks import event_is_spawn_run
 
         event = self._event(tool_name="", title="spawn_run", is_shell=True, shell_classified=True)
         assert event_is_spawn_run(event) is False
@@ -156,7 +156,7 @@ class TestEventIsSpawnRun:
         # The correlated cache miss: tool_name empty AND shell_classified
         # False AND is_shell miss-default False. Canonical-only means no
         # evidence -> refuse.
-        from kiro_crew.hooks import event_is_spawn_run
+        from aj_crew.hooks import event_is_spawn_run
 
         event = self._event(tool_name="", title="spawn_run", shell_classified=False)
         assert event_is_spawn_run(event) is False
@@ -166,13 +166,13 @@ class TestEventIsSpawnRun:
         # re-titled "spawn_run") must not ride the rung either — there is no
         # title fallback. The rung not firing is a downgrade to the channel's
         # normal ladder, never a hard block.
-        from kiro_crew.hooks import event_is_spawn_run
+        from aj_crew.hooks import event_is_spawn_run
 
         event = self._event(tool_name="", title="spawn_run", is_shell=False, shell_classified=True)
         assert event_is_spawn_run(event) is False
 
     def test_plain_non_spawn_title_refuses(self):
-        from kiro_crew.hooks import event_is_spawn_run
+        from aj_crew.hooks import event_is_spawn_run
 
         assert event_is_spawn_run(self._event(tool_name="", title="grep")) is False
 
@@ -193,8 +193,8 @@ class TestClassifierOnlyHostTrustedProof:
         # Every allowlisted name is a governed built-in whose scopes are read
         # scopes only. A name absent from BUILTIN_TOOL_SCOPES has no governed
         # scope at all and is not presumed read-only either.
-        from kiro_crew.hooks import _HOST_READ_ONLY_BUILTIN_TOOLS
-        from kiro_crew.platform.governance import BUILTIN_TOOL_SCOPES
+        from aj_crew.hooks import _HOST_READ_ONLY_BUILTIN_TOOLS
+        from aj_crew.platform.governance import BUILTIN_TOOL_SCOPES
 
         read_scopes = {"filesystem.read", "network.egress"}
         for name in sorted(_HOST_READ_ONLY_BUILTIN_TOOLS):
@@ -207,15 +207,15 @@ class TestClassifierOnlyHostTrustedProof:
     def test_write_capable_builtins_are_not_allowlisted(self):
         # The converse pin: no built-in that can write, run commands, or govern
         # tools is on the read-only allowlist.
-        from kiro_crew.hooks import _HOST_READ_ONLY_BUILTIN_TOOLS
-        from kiro_crew.platform.governance import BUILTIN_TOOL_SCOPES
+        from aj_crew.hooks import _HOST_READ_ONLY_BUILTIN_TOOLS
+        from aj_crew.platform.governance import BUILTIN_TOOL_SCOPES
 
         for name, scopes in BUILTIN_TOOL_SCOPES.items():
             if self._WRITE_SCOPES & set(scopes):
                 assert name not in _HOST_READ_ONLY_BUILTIN_TOOLS, name
 
     def test_trusted_host_builtin_is_proven_read_only(self):
-        from kiro_crew.hooks import _is_host_read_only_builtin
+        from aj_crew.hooks import _is_host_read_only_builtin
 
         assert _is_host_read_only_builtin("fs_read", "", mcp_identity_trusted=True) is True
 
@@ -224,8 +224,8 @@ class TestClassifierOnlyHostTrustedProof:
         # alias a spec may still use. The allowlist carries the spec spelling, so
         # the stamped name must resolve through KIRO_TOOL_ALIASES before the
         # membership test, or a READ_ONLY surface refuses every file read.
-        from kiro_crew.hooks import _is_host_read_only_builtin
-        from kiro_crew.platform.tool_names import KIRO_TOOL_ALIASES
+        from aj_crew.hooks import _is_host_read_only_builtin
+        from aj_crew.platform.tool_names import KIRO_TOOL_ALIASES
 
         assert KIRO_TOOL_ALIASES["read"] == "fs_read"
         assert _is_host_read_only_builtin("read", "", mcp_identity_trusted=True) is True
@@ -233,15 +233,15 @@ class TestClassifierOnlyHostTrustedProof:
     def test_kiro_tool_aliases_resolve_to_governed_builtins(self):
         # Every spelling the alias step resolves a stamp to is a built-in the
         # deny rules, governance and the allowlist already judge by that name.
-        from kiro_crew.platform.governance import BUILTIN_TOOL_SCOPES
-        from kiro_crew.platform.tool_names import KIRO_TOOL_ALIASES
+        from aj_crew.platform.governance import BUILTIN_TOOL_SCOPES
+        from aj_crew.platform.tool_names import KIRO_TOOL_ALIASES
 
         assert set(KIRO_TOOL_ALIASES.values()) <= set(BUILTIN_TOOL_SCOPES)
 
     def test_kiro_cli_short_write_and_shell_names_are_not_read_only_proofs(self):
         # The alias step widens nothing: ``write`` and ``shell`` resolve to names
         # the allowlist does not hold, so the proof refuses them resolved or not.
-        from kiro_crew.hooks import (
+        from aj_crew.hooks import (
             _HOST_READ_ONLY_BUILTIN_TOOLS,
             _host_builtin_alias,
             _is_host_read_only_builtin,
@@ -254,7 +254,7 @@ class TestClassifierOnlyHostTrustedProof:
     def test_host_builtin_alias_is_for_host_stamps_only(self):
         # A server's own tool called ``read`` is not the host's file reader, and
         # a stamp with no alias resolves to nothing rather than to itself.
-        from kiro_crew.hooks import _host_builtin_alias
+        from aj_crew.hooks import _host_builtin_alias
 
         assert _host_builtin_alias("read", "") == "fs_read"
         assert _host_builtin_alias("read", "docs") == ""
@@ -262,7 +262,7 @@ class TestClassifierOnlyHostTrustedProof:
         assert _host_builtin_alias("", "") == ""
 
     def test_short_read_name_still_needs_trusted_identity_and_no_server(self):
-        from kiro_crew.hooks import _is_host_read_only_builtin
+        from aj_crew.hooks import _is_host_read_only_builtin
 
         assert _is_host_read_only_builtin("read", "", mcp_identity_trusted=False) is False
         assert _is_host_read_only_builtin("read", "evil-server", mcp_identity_trusted=True) is False
@@ -271,24 +271,24 @@ class TestClassifierOnlyHostTrustedProof:
         # The seam: a host-known name whose provenance is not the _meta.kiro
         # parse this client made (inline payload, hand-built event, cache miss)
         # is prose, not identity. The absence of a server name proves nothing.
-        from kiro_crew.hooks import _is_host_read_only_builtin
+        from aj_crew.hooks import _is_host_read_only_builtin
 
         assert _is_host_read_only_builtin("fs_read", "", mcp_identity_trusted=False) is False
 
     def test_mcp_served_tool_named_like_a_builtin_is_refused(self):
-        from kiro_crew.hooks import _is_host_read_only_builtin
+        from aj_crew.hooks import _is_host_read_only_builtin
 
         assert (
             _is_host_read_only_builtin("fs_read", "evil-server", mcp_identity_trusted=True) is False
         )
 
     def test_empty_identity_matches_nothing(self):
-        from kiro_crew.hooks import _is_host_read_only_builtin
+        from aj_crew.hooks import _is_host_read_only_builtin
 
         assert _is_host_read_only_builtin("", "", mcp_identity_trusted=True) is False
 
     def test_write_capable_builtin_is_not_a_read_only_proof(self):
-        from kiro_crew.hooks import _is_host_read_only_builtin
+        from aj_crew.hooks import _is_host_read_only_builtin
 
         for name in ("fs_write", "code", "execute_bash"):
             assert _is_host_read_only_builtin(name, "", mcp_identity_trusted=True) is False, name
@@ -299,7 +299,7 @@ class TestClassifierOnlyHostTrustedProof:
     def test_a_trusted_kas_read_builtin_is_proven_read_only_under_its_kiro_cli_name(self, kas_id):
         """KAS names the same work differently; under ``--approval reads`` a KAS
         read must be free exactly where kiro-cli's ``fs_read`` is."""
-        from kiro_crew.hooks import _is_host_read_only_builtin
+        from aj_crew.hooks import _is_host_read_only_builtin
 
         assert (
             _is_host_read_only_builtin(kas_id, "", mcp_identity_trusted=True, kas_builtin_ids=True)
@@ -308,7 +308,7 @@ class TestClassifierOnlyHostTrustedProof:
 
     @pytest.mark.parametrize("kas_id", ["str_replace", "fs_append", "delete_file", "run_command"])
     def test_a_kas_write_or_shell_alias_is_not_a_read_only_proof(self, kas_id):
-        from kiro_crew.hooks import _is_host_read_only_builtin
+        from aj_crew.hooks import _is_host_read_only_builtin
 
         assert (
             _is_host_read_only_builtin(kas_id, "", mcp_identity_trusted=True, kas_builtin_ids=True)
@@ -316,7 +316,7 @@ class TestClassifierOnlyHostTrustedProof:
         ), kas_id
 
     def test_the_alias_fold_still_demands_trust_and_no_server(self):
-        from kiro_crew.hooks import _is_host_read_only_builtin
+        from aj_crew.hooks import _is_host_read_only_builtin
 
         assert (
             _is_host_read_only_builtin(
@@ -360,7 +360,7 @@ class TestClassifierOnlyHostTrustedProof:
 
 
 class TestReadsModeFirstPartyMcpProof:
-    """Under the Reads approval mode, Kiro Crew's OWN read-only MCP tools auto-approve.
+    """Under the Reads approval mode, Aj Crew's OWN read-only MCP tools auto-approve.
 
     ``_is_first_party_read_only_mcp_tool`` is the MCP counterpart of the host
     built-in proof: the same positive ``mcp_identity_trusted`` provenance, an exact
@@ -369,7 +369,7 @@ class TestReadsModeFirstPartyMcpProof:
     when the surface passed ``trust_reads=True``.
     """
 
-    CORE = "kirocrew-core"
+    CORE = "ajcrew-core"
 
     #: Core tools that write, spend or send; none may ever be on the allowlist.
     _CORE_WRITE_TOOLS = frozenset(
@@ -400,9 +400,9 @@ class TestReadsModeFirstPartyMcpProof:
     def test_first_party_read_only_mcp_tools_are_core_reads(self):
         """The set is CLOSED: exactly these tools, all served by the core server,
         each a tool the core server really registers, none a write tool."""
-        from kiro_crew.hooks import _FIRST_PARTY_READ_ONLY_MCP_TOOLS
-        from kiro_crew.mcp_tools import build_tool_names
-        from kiro_crew.session_directive import CORE_MCP_SERVER
+        from aj_crew.hooks import _FIRST_PARTY_READ_ONLY_MCP_TOOLS
+        from aj_crew.mcp_tools import build_tool_names
+        from aj_crew.session_directive import CORE_MCP_SERVER
 
         served = set(build_tool_names())
         assert CORE_MCP_SERVER == self.CORE
@@ -423,7 +423,7 @@ class TestReadsModeFirstPartyMcpProof:
         assert self._CORE_WRITE_TOOLS <= served, sorted(self._CORE_WRITE_TOOLS - served)
 
     def test_a_trusted_allowlisted_pair_is_proven_read_only(self):
-        from kiro_crew.hooks import _is_first_party_read_only_mcp_tool
+        from aj_crew.hooks import _is_first_party_read_only_mcp_tool
 
         assert (
             _is_first_party_read_only_mcp_tool(
@@ -436,7 +436,7 @@ class TestReadsModeFirstPartyMcpProof:
         # Same pair, provenance not the ``_meta.kiro`` parse this client made:
         # prose, not identity. Harness parity is positive -- a harness that
         # stamps no identity simply never sets the flag.
-        from kiro_crew.hooks import _is_first_party_read_only_mcp_tool
+        from aj_crew.hooks import _is_first_party_read_only_mcp_tool
 
         assert (
             _is_first_party_read_only_mcp_tool(
@@ -445,9 +445,9 @@ class TestReadsModeFirstPartyMcpProof:
             is False
         )
 
-    @pytest.mark.parametrize("server", ["evil-server", "kirocrew-dashboard", "KIROCREW-CORE", ""])
+    @pytest.mark.parametrize("server", ["evil-server", "ajcrew-dashboard", "AJCREW-CORE", ""])
     def test_the_same_tool_name_on_another_server_is_not_proven(self, server):
-        from kiro_crew.hooks import _is_first_party_read_only_mcp_tool
+        from aj_crew.hooks import _is_first_party_read_only_mcp_tool
 
         assert (
             _is_first_party_read_only_mcp_tool("memory_recall", server, mcp_identity_trusted=True)
@@ -458,7 +458,7 @@ class TestReadsModeFirstPartyMcpProof:
         "tool", ["learn_add", "spawn_run", "send_message", "list_sessions", "Memory_Recall", ""]
     )
     def test_another_core_tool_is_not_proven(self, tool):
-        from kiro_crew.hooks import _is_first_party_read_only_mcp_tool
+        from aj_crew.hooks import _is_first_party_read_only_mcp_tool
 
         assert (
             _is_first_party_read_only_mcp_tool(tool, self.CORE, mcp_identity_trusted=True) is False
@@ -475,7 +475,7 @@ class TestReadsModeFirstPartyMcpProof:
         }
         call.update(overrides)
         return (manager or HookManager()).on_tool_call(
-            "Running: @kirocrew-core/memory_recall", **call
+            "Running: @ajcrew-core/memory_recall", **call
         )
 
     def test_under_reads_mode_an_allowlisted_call_auto_approves_as_read_only(self):
@@ -511,13 +511,13 @@ class TestReadsModeFirstPartyMcpProof:
     def test_an_operator_confirm_list_still_asks_first(self):
         # ``confirm_tools`` withholds every grant and the read-only classifier's
         # MCP verdicts; the Reads-mode proof sits below that check.
-        for pattern in ("@kirocrew-core", "@kirocrew-core/memory_recall", "*"):
+        for pattern in ("@ajcrew-core", "@ajcrew-core/memory_recall", "*"):
             manager = HookManager(HooksConfig(confirm_tools=[pattern]))
             assert self._judge(manager).action == TOOL_ALLOW, pattern
 
     def test_a_deny_on_the_identity_still_wins(self):
         # Deny tiers run before the classifier; Reads mode re-admits nothing.
-        manager = HookManager(HooksConfig(auto_deny_tools=["@kirocrew-core/memory_recall"]))
+        manager = HookManager(HooksConfig(auto_deny_tools=["@ajcrew-core/memory_recall"]))
         assert self._judge(manager).action == TOOL_DENY
 
     def test_reads_mode_is_a_surface_fact_of_the_gate(self):
@@ -527,7 +527,7 @@ class TestReadsModeFirstPartyMcpProof:
         import dataclasses
         import inspect
 
-        from kiro_crew.hooks import ToolCall
+        from aj_crew.hooks import ToolCall
 
         assert "trust_reads" in inspect.signature(HookManager.judge).parameters
         assert "trust_reads" in inspect.signature(HookManager.on_tool_call).parameters
@@ -542,7 +542,7 @@ class TestMutatingKindBeatsTheTitle:
     agent-controlled, which ``ToolCall.title``'s own documentation states outright. The
     computer-use read-only auto-approve must not be tested BEFORE any kind guard: otherwise,
     once the operator enabled computer use, an ``edit``/``execute``/``write``/
-    ``delete`` call titled ``mcp__kirocrew-computer__computer_get_state`` skipped
+    ``delete`` call titled ``mcp__ajcrew-computer__computer_get_state`` skipped
     interactive approval entirely.
 
     The first fix for that was a DENYLIST (``kind in _WRITE_TOOL_KINDS`` → allow),
@@ -553,7 +553,7 @@ class TestMutatingKindBeatsTheTitle:
     branch — so a kind nobody has enumerated fails closed.
     """
 
-    _CU_OBSERVE_TITLE = "mcp__kirocrew-computer__computer_get_state"
+    _CU_OBSERVE_TITLE = "mcp__ajcrew-computer__computer_get_state"
     #: A title no read-only rule recognises, so only the kind can approve it.
     _OPAQUE_TITLE = "mcp__ops__frobnicate"
 
@@ -578,7 +578,7 @@ class TestMutatingKindBeatsTheTitle:
     def test_a_non_read_kind_is_not_auto_approved_despite_a_cu_read_title(self, kind, monkeypatch):
         # Force the CU predicate True so the test pins the DECISION, not the
         # keystone read (which is off in CI and would mask a regression).
-        monkeypatch.setattr("kiro_crew.hooks._cu_read_only_auto_approve", lambda _name: True)
+        monkeypatch.setattr("aj_crew.hooks._cu_read_only_auto_approve", lambda _name: True)
         mgr = HookManager()
         result = mgr.on_tool_call(self._CU_OBSERVE_TITLE, tool_kind=kind)
         assert result.action == TOOL_ALLOW, (
@@ -608,7 +608,7 @@ class TestMutatingKindBeatsTheTitle:
         auto-approve a non-shell call whose title proves nothing -- and the
         vocabulary is exactly those two, since a behavioural sample alone would keep
         passing if the set were widened to a kind nobody listed here."""
-        from kiro_crew import hooks as hooks_mod
+        from aj_crew import hooks as hooks_mod
 
         assert hooks_mod._READ_ONLY_TOOL_KINDS == frozenset({"read", "fetch"})
         result = HookManager().on_tool_call(self._OPAQUE_TITLE, tool_kind=kind)
@@ -631,7 +631,7 @@ class TestMutatingKindBeatsTheTitle:
     @pytest.mark.parametrize("kind", ["read", "fetch"])
     def test_a_genuine_cu_observation_still_auto_approves(self, kind, monkeypatch):
         """The feature the fix must not break: a PROVEN read still doesn't nag."""
-        monkeypatch.setattr("kiro_crew.hooks._cu_read_only_auto_approve", lambda _name: True)
+        monkeypatch.setattr("aj_crew.hooks._cu_read_only_auto_approve", lambda _name: True)
         mgr = HookManager()
         assert mgr.on_tool_call(self._CU_OBSERVE_TITLE, tool_kind=kind).action == (
             TOOL_AUTO_APPROVE
@@ -649,10 +649,10 @@ class TestMutatingKindBeatsTheTitle:
 
         Narrower than GPT's prescription — the generic `_is_read_only_tool` fallback for
         absent kinds is deliberately left intact, because it rejects every
-        `mcp__kirocrew-computer__*` title anyway (asserted below), so blocking absent
+        `mcp__ajcrew-computer__*` title anyway (asserted below), so blocking absent
         kinds outright would have regressed every ordinary tool for no security gain.
         """
-        monkeypatch.setattr("kiro_crew.hooks._cu_read_only_auto_approve", lambda _name: True)
+        monkeypatch.setattr("aj_crew.hooks._cu_read_only_auto_approve", lambda _name: True)
         mgr = HookManager()
         assert mgr.on_tool_call(self._CU_OBSERVE_TITLE).action == TOOL_ALLOW, (
             "a computer-use title with NO kind auto-approved — a mutating call can "
@@ -666,15 +666,15 @@ class TestMutatingKindBeatsTheTitle:
         above would stop being the only way in and this PR's guarantee would quietly
         weaken — so it is asserted rather than assumed.
         """
-        from kiro_crew.slack.gateway import _is_read_only_tool
+        from aj_crew.slack.gateway import _is_read_only_tool
 
         for tool in ("computer_get_state", "computer_list_apps", "computer_click"):
-            title = f"mcp__kirocrew-computer__{tool}"
+            title = f"mcp__ajcrew-computer__{tool}"
             assert not _is_read_only_tool(title), title
 
     def test_a_read_sounding_title_cannot_rescue_a_non_read_kind(self, monkeypatch):
         """The same invariant for the generic title heuristic, not just the CU one."""
-        monkeypatch.setattr("kiro_crew.hooks._cu_read_only_auto_approve", lambda _name: False)
+        monkeypatch.setattr("aj_crew.hooks._cu_read_only_auto_approve", lambda _name: False)
         mgr = HookManager()
         for kind in ("execute", "other"):
             assert mgr.on_tool_call("read_the_docs", tool_kind=kind).action == TOOL_ALLOW, kind
@@ -683,11 +683,11 @@ class TestMutatingKindBeatsTheTitle:
         assert mgr.on_tool_call("read_the_docs").action == TOOL_AUTO_APPROVE
 
     def test_rejects_none_context(self):
-        from kiro_crew.slack.handler import _should_auto_approve_spawn
+        from aj_crew.slack.handler import _should_auto_approve_spawn
 
         event = SimpleNamespace(
             tool_name="spawn_run",
-            mcp_server_name="kirocrew-core",
+            mcp_server_name="ajcrew-core",
             mcp_identity_trusted=True,
             title="spawn_run",
             is_shell=False,
@@ -696,13 +696,13 @@ class TestMutatingKindBeatsTheTitle:
         assert _should_auto_approve_spawn(None, event) is False
 
     def test_rejects_none_hooks(self):
-        from kiro_crew.slack.handler import _should_auto_approve_spawn
+        from aj_crew.slack.handler import _should_auto_approve_spawn
 
         ctx = MagicMock()
         ctx.hooks = None
         event = SimpleNamespace(
             tool_name="spawn_run",
-            mcp_server_name="kirocrew-core",
+            mcp_server_name="ajcrew-core",
             mcp_identity_trusted=True,
             title="spawn_run",
             is_shell=False,
@@ -728,7 +728,7 @@ class TestCanonicalMcpIdentityGoverned:
         them and denies if any matches -- mirroring the real tightest-wins
         evaluation over a single profile snapshot.
         """
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         seen: list[str] = []
 
@@ -965,7 +965,7 @@ class TestBuiltinToolIdentityGoverned:
         # deny on either refuses it. An unverified stamp may not admit under a
         # name the model could have influenced: it is asked on its own name and
         # the alias may only deny.
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         seen: dict = {}
 
@@ -993,8 +993,8 @@ class TestBuiltinToolIdentityGoverned:
         # End to end through the real ``gate_decision``: {title, fs_write} and
         # {title, write} each admit a trusted ``write``; a profile naming neither
         # refuses it and reports the spec spelling; a deny on either refuses it.
-        import kiro_crew.platform.governance_profiles as profiles_mod
-        from kiro_crew.platform.governance import MODE_ALLOW, MODE_DENY, Profile, ScopedRuleset
+        import aj_crew.platform.governance_profiles as profiles_mod
+        from aj_crew.platform.governance import MODE_ALLOW, MODE_DENY, Profile, ScopedRuleset
 
         def with_profile(control):
             monkeypatch.setattr(
@@ -1041,7 +1041,7 @@ class TestBuiltinToolIdentityGoverned:
         # profile hot-reloaded mid-call answer each from a different snapshot, so
         # a tool both complete profiles deny could be permitted by every single
         # lookup -- and each resolve walked ``profiles/`` on the event loop.
-        import kiro_crew.platform.governance_profiles as profiles_mod
+        import aj_crew.platform.governance_profiles as profiles_mod
 
         calls = []
         real = profiles_mod.resolve_active_scope
@@ -1159,7 +1159,7 @@ class TestKasAliasesAreGovernedUnderTheirKiroCliName:
         (``gate_decision``'s ``alias_groups``), never as two separate items and
         never as the alias alone: a deny on either spelling binds, one permitted
         spelling admits. The deny tier still reads both spellings."""
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         groups: list = []
 
@@ -1189,7 +1189,7 @@ class TestKasAliasesAreGovernedUnderTheirKiroCliName:
         delete, so the id travels in ``extra_titles`` (it has to be permitted on
         its own name) and ``fs_write`` in ``deny_aliases``, never as an alias
         group whose permitted spelling would admit the deletion."""
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         seen: dict = {}
 
@@ -1217,8 +1217,8 @@ class TestKasAliasesAreGovernedUnderTheirKiroCliName:
         fs_write} written for kiro-cli admits a KAS ``str_replace`` and REFUSES a
         KAS ``delete_file``; naming ``delete_file`` admits it; a deny under
         ``fs_write`` still refuses it."""
-        import kiro_crew.platform.governance_profiles as profiles_mod
-        from kiro_crew.platform.governance import MODE_ALLOW, MODE_DENY, Profile, ScopedRuleset
+        import aj_crew.platform.governance_profiles as profiles_mod
+        from aj_crew.platform.governance import MODE_ALLOW, MODE_DENY, Profile, ScopedRuleset
 
         def with_profile(control):
             monkeypatch.setattr(
@@ -1256,8 +1256,8 @@ class TestKasAliasesAreGovernedUnderTheirKiroCliName:
         """End to end through the real ``gate_decision``: an allow set of {title,
         fs_write} admits a KAS ``str_replace``; a deny-mode profile denying the
         raw id still refuses it; and the deny TIER's raw-id rule still binds."""
-        import kiro_crew.platform.governance_profiles as profiles_mod
-        from kiro_crew.platform.governance import MODE_ALLOW, MODE_DENY, Profile, ScopedRuleset
+        import aj_crew.platform.governance_profiles as profiles_mod
+        from aj_crew.platform.governance import MODE_ALLOW, MODE_DENY, Profile, ScopedRuleset
 
         def with_profile(control):
             monkeypatch.setattr(
@@ -1389,7 +1389,7 @@ class TestKasIdFoldIsKasOnly:
 
     @pytest.mark.parametrize("bare_id", ["read_file", "run_command", "delete_file"])
     def test_governance_gets_no_alias_group_off_kas(self, bare_id, monkeypatch):
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.hooks as hooks_mod
 
         seen: dict = {}
 
@@ -1405,7 +1405,7 @@ class TestKasIdFoldIsKasOnly:
 
     @pytest.mark.parametrize("bare_id", ["read_file", "list_directory", "grep_search"])
     def test_a_bare_read_id_off_kas_is_no_read_only_proof(self, bare_id):
-        from kiro_crew.hooks import _is_host_read_only_builtin
+        from aj_crew.hooks import _is_host_read_only_builtin
 
         assert _is_host_read_only_builtin(bare_id, "", mcp_identity_trusted=True) is False
         assert (
@@ -1428,7 +1428,7 @@ class TestKasIdFoldIsKasOnly:
 
     def test_a_kiro_cli_read_alias_still_proves_read_only_on_its_own_harness(self):
         """kiro-cli's own ``read`` alias is unchanged by the KAS gating."""
-        from kiro_crew.hooks import _is_host_read_only_builtin
+        from aj_crew.hooks import _is_host_read_only_builtin
 
         assert _is_host_read_only_builtin("read", "", mcp_identity_trusted=True) is True
         assert _is_host_read_only_builtin("fs_read", "", mcp_identity_trusted=True) is True
@@ -1445,7 +1445,7 @@ class TestServerLevelGovernanceBindsOnPartialIdentity:
     @staticmethod
     def _ceiling_denying(server_ref: str):
         """A real ceiling whose ``mcp`` scope denies *server_ref*."""
-        from kiro_crew.platform.governance import (
+        from aj_crew.platform.governance import (
             MODE_DENY,
             GovernanceCeiling,
             ScopedRuleset,
@@ -1461,8 +1461,8 @@ class TestServerLevelGovernanceBindsOnPartialIdentity:
     @staticmethod
     def _install(monkeypatch, ceiling):
         """Run the gate against *ceiling* with the real security authority."""
-        import kiro_crew.hooks as hooks_mod
-        from kiro_crew.platform import current_context
+        import aj_crew.hooks as hooks_mod
+        from aj_crew.platform import current_context
 
         real = current_context()
 

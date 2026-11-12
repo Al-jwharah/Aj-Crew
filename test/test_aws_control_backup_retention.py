@@ -30,8 +30,8 @@ from aws_control_backup_retention_helpers import (
     _write_account,
 )
 
-from kiro_crew.apps.builtins.aws_control.backend import backup, storage
-from kiro_crew.deploy.engine import AWSError
+from aj_crew.apps.builtins.aws_control.backend import backup, storage
+from aj_crew.deploy.engine import AWSError
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 audit = aws_control_backup_retention_helpers.audit
@@ -51,7 +51,7 @@ class TestRecoveredUploadsKeepTheirVersion:
         # Asserted against the state FILE rather than `uploaded_versions`, because
         # that reader also merges the in-process records and would answer correctly
         # from memory while the persisted document had lost the version.
-        held_key = f"snapshots/{INSTALL}/kirocrew-snapshot-held.tar.gz"
+        held_key = f"snapshots/{INSTALL}/ajcrew-snapshot-held.tar.gz"
         backup._remember_unpersisted(
             ACCOUNT,
             backup.KIND_SNAPSHOT,
@@ -79,8 +79,8 @@ class TestRecoveredUploadsKeepTheirVersion:
         # `_unpersisted_runs` keeps only the newest run per kind, so the older
         # key's version lives in the by-key map alone. A single held upload sits
         # in both maps at once, so it cannot discriminate between them.
-        first = f"snapshots/{INSTALL}/kirocrew-snapshot-first.tar.gz"
-        second = f"snapshots/{INSTALL}/kirocrew-snapshot-second.tar.gz"
+        first = f"snapshots/{INSTALL}/ajcrew-snapshot-first.tar.gz"
+        second = f"snapshots/{INSTALL}/ajcrew-snapshot-second.tar.gz"
         for key, at, fingerprint, version in (
             (first, "2030-01-01T00:00:00.000000+00:00", "fp-first", "v-first"),
             (second, "2030-01-02T00:00:00.000000+00:00", "fp-second", "v-second"),
@@ -120,7 +120,7 @@ class TestHeldVersionsAreReleasedOncePersisted:
         map, because the bound's value IS the mechanism: a fixture that popped the entry
         by hand would still pass if the two maps were bounded together again.
         """
-        held_key = f"snapshots/{INSTALL}/kirocrew-snapshot-orphan.tar.gz"
+        held_key = f"snapshots/{INSTALL}/ajcrew-snapshot-orphan.tar.gz"
         backup._remember_unpersisted(
             ACCOUNT,
             backup.KIND_SNAPSHOT,
@@ -137,7 +137,7 @@ class TestHeldVersionsAreReleasedOncePersisted:
                 ACCOUNT,
                 backup.KIND_SNAPSHOT,
                 {
-                    "key": f"snapshots/{INSTALL}/kirocrew-snapshot-filler-{n:04d}.tar.gz",
+                    "key": f"snapshots/{INSTALL}/ajcrew-snapshot-filler-{n:04d}.tar.gz",
                     "bytes": 1,
                     "at": f"2030-02-01T00:00:{n % 60:02d}.000000+00:00",
                     "fingerprint": f"fp-filler-{n}",
@@ -191,7 +191,7 @@ class TestHeldVersionsAreReleasedOncePersisted:
             ACCOUNT,
             backup.KIND_SNAPSHOT,
             {
-                "key": f"snapshots/{INSTALL}/kirocrew-snapshot-later.tar.gz",
+                "key": f"snapshots/{INSTALL}/ajcrew-snapshot-later.tar.gz",
                 "bytes": 7,
                 "at": "2030-03-01T00:00:00.000000+00:00",
                 "fingerprint": "fp-later",
@@ -387,7 +387,7 @@ class TestKeepsTheNewest:
         # object cannot be trusted about which objects are old.
         state(1)
         drive.rows = _archives(backup.KIND_SNAPSHOT, ["01", "02", "03"])
-        result = _prune(drive, newest="snapshots/%s/kirocrew-snapshot-99.tar.gz" % INSTALL)
+        result = _prune(drive, newest="snapshots/%s/ajcrew-snapshot-99.tar.gz" % INSTALL)
         assert drive.deleted == []
         assert result["retired"] == 0
         assert "does not show" in result["skipped"]
@@ -438,7 +438,7 @@ class TestScoping:
     def test_a_delete_marked_key_holds_no_keep_slot_and_is_left_alone(self, drive, state):
         state(2)
         live = _archives(backup.KIND_SNAPSHOT, ["02", "03"])
-        gone_key = f"snapshots/{INSTALL}/kirocrew-snapshot-01.tar.gz"
+        gone_key = f"snapshots/{INSTALL}/ajcrew-snapshot-01.tar.gz"
         marker = _version(gone_key, "2026-01-04T00:00:00Z", latest=True, deleteMarker=True)
         body = _version(gone_key, "2026-01-01T00:00:00Z", latest=False)
         drive.rows = [body, marker] + live
@@ -469,7 +469,7 @@ class TestVersionAware:
         # delete, then push again to the same key -- and the marker is left alone.
         # It carries no bytes, so leaving it costs nothing billable.
         state(1)
-        old_key = f"snapshots/{INSTALL}/kirocrew-snapshot-01.tar.gz"
+        old_key = f"snapshots/{INSTALL}/ajcrew-snapshot-01.tar.gz"
         rows = [
             _version(old_key, "2026-01-01T00:00:00Z", "m1", latest=False, deleteMarker=True),
             _version(old_key, "2026-01-02T00:00:00Z", "v1"),
@@ -638,7 +638,7 @@ class TestOrdering:
         monkeypatch.setattr(backup, "_authorize_upload", lambda *a, **k: None)
 
         def fake_snapshot(argv: list[str]) -> int:
-            (Path(argv[0]) / "kirocrew-snapshot-20260101T000000Z.tar.gz").write_bytes(b"payload")
+            (Path(argv[0]) / "ajcrew-snapshot-20260101T000000Z.tar.gz").write_bytes(b"payload")
             return 0
 
         monkeypatch.setattr(backup, "snapshot_main", fake_snapshot)
@@ -663,7 +663,7 @@ class TestOrdering:
         monkeypatch.setattr(backup.storage, "put_file", lambda *a, **k: None)
 
         def fake_snapshot(argv: list[str]) -> int:
-            (Path(argv[0]) / "kirocrew-snapshot-20260101T000000Z.tar.gz").write_bytes(b"payload")
+            (Path(argv[0]) / "ajcrew-snapshot-20260101T000000Z.tar.gz").write_bytes(b"payload")
             return 0
 
         monkeypatch.setattr(backup, "snapshot_main", fake_snapshot)

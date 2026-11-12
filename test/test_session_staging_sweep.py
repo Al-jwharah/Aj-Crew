@@ -18,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from aj_crew import session_staging_sweep as sweep
 from conftest import requires_symlinks
-from kiro_crew import session_staging_sweep as sweep
 
 _NOW = 2_000_000_000.0
 _OLD = _NOW - sweep.STAGING_TEMP_MIN_AGE_SECS - 1
@@ -139,7 +139,7 @@ def test_the_cleanup_tick_runs_the_sweep_off_the_event_loop() -> None:
     """The janitor's pass calls the dependency on its maintenance executor."""
     from types import SimpleNamespace
 
-    from kiro_crew.session_cleanup import SessionCleanup
+    from aj_crew.session_cleanup import SessionCleanup
 
     calls: list[str] = []
     loop_thread: list[int] = []
@@ -177,7 +177,7 @@ def test_the_cleanup_tick_runs_the_sweep_off_the_event_loop() -> None:
 def test_a_failing_sweep_does_not_break_the_tick(caplog: pytest.LogCaptureFixture) -> None:
     from types import SimpleNamespace
 
-    from kiro_crew.session_cleanup import SessionCleanup
+    from aj_crew.session_cleanup import SessionCleanup
 
     def boom() -> int:
         raise OSError("disk gone")
@@ -227,7 +227,7 @@ def test_a_fresh_lock_is_kept(tmp_path: Path) -> None:
 
 def test_a_lock_another_descriptor_holds_is_kept(tmp_path: Path) -> None:
     """A held lock belongs to a live writer, however old the file is."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     lock = _file(tmp_path, "subagent_1.jsonl.lock", _OLD, data="")
     fd = os.open(str(lock), os.O_RDWR)
@@ -244,7 +244,7 @@ def test_a_lock_another_descriptor_holds_is_kept(tmp_path: Path) -> None:
 
 def test_a_lock_the_transcript_log_holds_is_kept(tmp_path: Path) -> None:
     """The gateway's own in-process hold blocks the prune too."""
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     log = ConversationLog(base_dir=tmp_path)
     with log.atomic_appends("k"):
@@ -287,7 +287,7 @@ def test_a_nested_lock_is_not_examined(tmp_path: Path) -> None:
 
 
 def test_a_pruned_session_lock_is_recreated_on_the_next_write(tmp_path: Path) -> None:
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     log = ConversationLog(base_dir=tmp_path)
     log.append("k", "user", "m")
@@ -310,8 +310,8 @@ def test_a_writer_that_locked_a_pruned_inode_reopens_the_name(tmp_path: Path) ->
     Otherwise that writer would hold an inode no one else can reach while the next
     opener creates and locks a fresh sidecar: two holders of one transcript.
     """
-    from kiro_crew import history_locks, platform_compat
-    from kiro_crew.history import ConversationLog
+    from aj_crew import history_locks, platform_compat
+    from aj_crew.history import ConversationLog
 
     log = ConversationLog(base_dir=tmp_path)
     lock = log._lock_path("k")
@@ -337,8 +337,8 @@ def test_a_writer_that_locked_a_pruned_inode_reopens_the_name(tmp_path: Path) ->
 
 
 def test_a_writer_whose_sidecar_was_not_pruned_keeps_its_descriptor(tmp_path: Path) -> None:
-    from kiro_crew import history_locks, platform_compat
-    from kiro_crew.history import ConversationLog
+    from aj_crew import history_locks, platform_compat
+    from aj_crew.history import ConversationLog
 
     log = ConversationLog(base_dir=tmp_path)
     lock = log._lock_path("k")

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.apps.builtins.personal_shopper.backend import store
+from aj_crew.apps.builtins.personal_shopper.backend import store
 
 
 class _Embedder:

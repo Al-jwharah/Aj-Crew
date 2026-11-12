@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.hooks import (
+from aj_crew.hooks import (
     HOOK_EVENT_USER_PROMPT_SUBMIT,
     ScriptHook,
     ScriptHookStore,
@@ -106,9 +106,9 @@ class TestScriptHookMatcherMode:
         assert d["matcher_mode"] == "regex"
 
     def test_to_dict_includes_skills(self):
-        hook = ScriptHook(name="test", skills=["kirocrew-dev/kirocrew-prepare-pr", "dev-fleet/pod-e2e"])
+        hook = ScriptHook(name="test", skills=["ajcrew-dev/ajcrew-prepare-pr", "dev-fleet/pod-e2e"])
         d = hook.to_dict()
-        assert d["skills"] == ["kirocrew-dev/kirocrew-prepare-pr", "dev-fleet/pod-e2e"]
+        assert d["skills"] == ["ajcrew-dev/ajcrew-prepare-pr", "dev-fleet/pod-e2e"]
 
 
 class TestScriptHookSkills:
@@ -150,13 +150,13 @@ class TestSkillsOnlyFire:
                 "command": "",
                 "matcher": r"\bPR\b|worktree",
                 "matcher_mode": "regex",
-                "skills": ["kirocrew-dev/kirocrew-prepare-pr", "dev-fleet/pod-e2e"],
+                "skills": ["ajcrew-dev/ajcrew-prepare-pr", "dev-fleet/pod-e2e"],
             }
         )
         results = await store.fire(HOOK_EVENT_USER_PROMPT_SUBMIT, "open a PR")
         assert len(results) == 1
         assert results[0].exit_code == 0
-        assert "$kirocrew-prepare-pr" in results[0].stdout
+        assert "$ajcrew-prepare-pr" in results[0].stdout
         assert "$pod-e2e" in results[0].stdout
         assert results[0].duration_ms == 0  # no subprocess
 
@@ -170,7 +170,7 @@ class TestSkillsOnlyFire:
                 "command": "",
                 "matcher": r"\bPR\b|worktree",
                 "matcher_mode": "regex",
-                "skills": ["kirocrew-dev/kirocrew-prepare-pr"],
+                "skills": ["ajcrew-dev/ajcrew-prepare-pr"],
             }
         )
         results = await store.fire(HOOK_EVENT_USER_PROMPT_SUBMIT, "hello world")
@@ -242,17 +242,17 @@ class TestReDoSProtection:
 
 def test_hook_create_requires_command_or_skills():
     """A hook must have either a command or skills — empty both is rejected."""
-    from kiro_crew.validation import ValidationError, _validate_hook_has_action
+    from aj_crew.validation import ValidationError, _validate_hook_has_action
 
     # Valid: command only
     _validate_hook_has_action({"command": "echo hi", "skills": []})
     # Valid: skills only (on a skills-capable event)
     _validate_hook_has_action(
-        {"command": "", "skills": ["kirocrew-prepare-pr"], "event": "UserPromptSubmit"}
+        {"command": "", "skills": ["ajcrew-prepare-pr"], "event": "UserPromptSubmit"}
     )
     # Invalid: both command and skills (skills would be inert)
     with pytest.raises(ValidationError, match="cannot be combined with a command"):
-        _validate_hook_has_action({"command": "echo hi", "skills": ["kirocrew-prepare-pr"]})
+        _validate_hook_has_action({"command": "echo hi", "skills": ["ajcrew-prepare-pr"]})
     # Invalid: neither
     with pytest.raises(ValidationError, match="either command or skills must be provided"):
         _validate_hook_has_action({"command": "", "skills": []})
@@ -294,24 +294,24 @@ class TestRegexValidationAtSave:
     """Verify invalid regex is rejected at save time."""
 
     def test_valid_regex_passes(self):
-        from kiro_crew.validation import _validate_hook_regex
+        from aj_crew.validation import _validate_hook_regex
 
         _validate_hook_regex({"matcher": r"\bPR\b", "matcher_mode": "regex"})
 
     def test_invalid_regex_rejected(self):
-        from kiro_crew.validation import ValidationError, _validate_hook_regex
+        from aj_crew.validation import ValidationError, _validate_hook_regex
 
         with pytest.raises(ValidationError, match="invalid regex"):
             _validate_hook_regex({"matcher": "[invalid", "matcher_mode": "regex"})
 
     def test_glob_mode_skips_regex_validation(self):
-        from kiro_crew.validation import _validate_hook_regex
+        from aj_crew.validation import _validate_hook_regex
 
         # An "invalid regex" in glob mode should not be rejected
         _validate_hook_regex({"matcher": "[invalid", "matcher_mode": "glob"})
 
     def test_empty_matcher_passes(self):
-        from kiro_crew.validation import _validate_hook_regex
+        from aj_crew.validation import _validate_hook_regex
 
         _validate_hook_regex({"matcher": "", "matcher_mode": "regex"})
 
@@ -320,52 +320,52 @@ class TestSkillsOnlyDeadConfigValidation:
     """Verify skills-only hooks on tool/Stop events are rejected at save time."""
 
     def test_skills_only_on_user_prompt_allowed(self):
-        from kiro_crew.validation import _validate_hook_has_action
+        from aj_crew.validation import _validate_hook_has_action
 
         _validate_hook_has_action(
-            {"command": "", "skills": ["kirocrew-prepare-pr"], "event": "UserPromptSubmit"}
+            {"command": "", "skills": ["ajcrew-prepare-pr"], "event": "UserPromptSubmit"}
         )
 
     def test_skills_only_on_agent_spawn_allowed(self):
-        from kiro_crew.validation import _validate_hook_has_action
+        from aj_crew.validation import _validate_hook_has_action
 
         _validate_hook_has_action(
-            {"command": "", "skills": ["kirocrew-prepare-pr"], "event": "AgentSpawn"}
+            {"command": "", "skills": ["ajcrew-prepare-pr"], "event": "AgentSpawn"}
         )
 
     def test_skills_only_on_pre_tool_use_rejected(self):
-        from kiro_crew.validation import ValidationError, _validate_hook_has_action
+        from aj_crew.validation import ValidationError, _validate_hook_has_action
 
         with pytest.raises(ValidationError, match="cannot fire on PreToolUse"):
             _validate_hook_has_action(
-                {"command": "", "skills": ["kirocrew-prepare-pr"], "event": "PreToolUse"}
+                {"command": "", "skills": ["ajcrew-prepare-pr"], "event": "PreToolUse"}
             )
 
     def test_skills_only_on_stop_rejected(self):
-        from kiro_crew.validation import ValidationError, _validate_hook_has_action
+        from aj_crew.validation import ValidationError, _validate_hook_has_action
 
         with pytest.raises(ValidationError, match="cannot fire on Stop"):
             _validate_hook_has_action(
-                {"command": "", "skills": ["kirocrew-prepare-pr"], "event": "Stop"}
+                {"command": "", "skills": ["ajcrew-prepare-pr"], "event": "Stop"}
             )
 
     def test_skills_with_command_rejected(self):
         """A hook with BOTH command and skills is rejected — skills would be inert."""
-        from kiro_crew.validation import ValidationError, _validate_hook_has_action
+        from aj_crew.validation import ValidationError, _validate_hook_has_action
 
         with pytest.raises(ValidationError, match="cannot be combined with a command"):
             _validate_hook_has_action(
-                {"command": "echo hi", "skills": ["kirocrew-prepare-pr"], "event": "UserPromptSubmit"}
+                {"command": "echo hi", "skills": ["ajcrew-prepare-pr"], "event": "UserPromptSubmit"}
             )
         # Rejected on Stop too (the command+skills check fires before the event check)
         with pytest.raises(ValidationError, match="cannot be combined with a command"):
             _validate_hook_has_action(
-                {"command": "echo hi", "skills": ["kirocrew-prepare-pr"], "event": "Stop"}
+                {"command": "echo hi", "skills": ["ajcrew-prepare-pr"], "event": "Stop"}
             )
 
     def test_command_only_on_stop_allowed(self):
         """A command-only hook is allowed on any event (no skills to strand)."""
-        from kiro_crew.validation import _validate_hook_has_action
+        from aj_crew.validation import _validate_hook_has_action
 
         _validate_hook_has_action(
             {"command": "echo hi", "skills": [], "event": "Stop"}

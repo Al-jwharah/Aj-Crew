@@ -21,7 +21,7 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 initI18n(params.get('lang') || 'en')
 
 const SERVED = 'gpt-5.6-sol, gpt-5.6-terra, gpt-5.6-luna, deepseek-3.2, minimax-m2.5, minimax-m2.1, glm-5, qwen3-coder-next'

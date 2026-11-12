@@ -16,10 +16,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.client import AcpProcessDied
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_persistence import create_agent_folder
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.client import AcpProcessDied
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_persistence import create_agent_folder
+from aj_crew.testing.wait import await_until
 
 _DEATH_TEXT = (
     "Runtime process died during prompt — killed (provider shutdown) "
@@ -29,7 +29,7 @@ _DEATH_TEXT = (
 
 @pytest.fixture()
 def agent_root(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
     return tmp_path
 
 
@@ -82,9 +82,9 @@ def _tombstone(agent_root, agent_id: str) -> dict:
 
 def _patches(manager: SubagentManager):
     return (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent_manager.terminal.sel", create=True),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent_manager.terminal.sel", create=True),
         patch.object(manager, "_fire_event", new_callable=AsyncMock),
         patch.object(manager, "_on_done", new_callable=AsyncMock),
     )
@@ -95,7 +95,7 @@ async def test_a_user_stop_is_reported_as_a_stop_not_a_runtime_death(agent_root,
     manager = _manager()
     info, _died = _arm_run(manager, "stopecho1", "dashboard:p")
     p = _patches(manager)
-    with p[0], p[1], p[2], p[3], p[4], caplog.at_level(logging.INFO, logger="kiro_crew.subagent"):
+    with p[0], p[1], p[2], p[3], p[4], caplog.at_level(logging.INFO, logger="aj_crew.subagent"):
         run_task = asyncio.create_task(manager._run(info))
         await asyncio.sleep(0)
         assert await manager.cancel("stopecho1") is True
@@ -123,7 +123,7 @@ async def test_a_parent_end_names_the_verb_that_ended_the_run(agent_root, caplog
     manager = _manager()
     info, _died = _arm_run(manager, "stopecho2", "dashboard:p")
     p = _patches(manager)
-    with p[0], p[1], p[2], p[3], p[4], caplog.at_level(logging.INFO, logger="kiro_crew.subagent"):
+    with p[0], p[1], p[2], p[3], p[4], caplog.at_level(logging.INFO, logger="aj_crew.subagent"):
         run_task = asyncio.create_task(manager._run(info))
         await asyncio.sleep(0)
         stopped = await manager.cancel_for_teardown(
@@ -157,7 +157,7 @@ async def test_a_deadline_reap_names_the_deadline_not_the_death(agent_root, capl
     manager = _manager()
     info, _died = _arm_run(manager, "stopecho3", "dashboard:p")
     p = _patches(manager)
-    with p[0], p[1], p[2], p[3], p[4], caplog.at_level(logging.INFO, logger="kiro_crew.subagent"):
+    with p[0], p[1], p[2], p[3], p[4], caplog.at_level(logging.INFO, logger="aj_crew.subagent"):
         run_task = asyncio.create_task(manager._run(info))
         await asyncio.sleep(0)
         await manager._force_reap("stopecho3", info, elapsed=900.0, reason="reaped")
@@ -210,7 +210,7 @@ async def test_an_unrelated_exception_under_a_reap_is_still_the_runs_own_failure
     manager._sessions.reset = _reset
     manager._run_inner = _run_inner  # type: ignore[method-assign]
     p = _patches(manager)
-    with p[0], p[1], p[2], p[3], p[4], caplog.at_level(logging.INFO, logger="kiro_crew.subagent"):
+    with p[0], p[1], p[2], p[3], p[4], caplog.at_level(logging.INFO, logger="aj_crew.subagent"):
         run_task = asyncio.create_task(manager._run(info))
         await asyncio.sleep(0)
         await manager._force_reap("stopecho4", info, elapsed=5.0, reason="reaped")
@@ -229,7 +229,7 @@ async def test_an_unrelated_exception_under_a_reap_is_still_the_runs_own_failure
 async def test_a_childless_parent_end_is_not_a_warning(caplog):
     """The audit line warns about discarded work; a parent end with none stays INFO."""
     manager = _manager()
-    with caplog.at_level(logging.INFO, logger="kiro_crew.subagent"):
+    with caplog.at_level(logging.INFO, logger="aj_crew.subagent"):
         stopped = await manager.cancel_for_teardown(
             (), parent_session_key="dashboard:empty", verb="remove"
         )
@@ -266,7 +266,7 @@ async def test_a_late_stop_does_not_turn_a_deadline_reap_neutral(agent_root, cap
     manager = _manager()
     info, _died = _arm_run(manager, "stopecho5", "dashboard:p")
     p = _patches(manager)
-    with p[0], p[1], p[2], p[3], p[4], caplog.at_level(logging.INFO, logger="kiro_crew.subagent"):
+    with p[0], p[1], p[2], p[3], p[4], caplog.at_level(logging.INFO, logger="aj_crew.subagent"):
         run_task = asyncio.create_task(manager._run(info))
         await asyncio.sleep(0)
         # The deadline reap owns the teardown; a Stop lands while its reset awaits.

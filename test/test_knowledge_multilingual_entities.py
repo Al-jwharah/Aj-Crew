@@ -6,7 +6,7 @@ import json
 
 from knowledge_helpers import store_factory_fixture, store_fixture  # noqa: F401
 
-from kiro_crew.knowledge.extractor import EntityExtractor
+from aj_crew.knowledge.extractor import EntityExtractor
 
 
 class TestMultilingualEntityResolution:
@@ -103,7 +103,7 @@ class TestMultilingualEntityResolution:
         # The LLM may return aliases as null, a string, or a number.
         # Exercises the production _coerce_aliases helper directly so deleting
         # it would break this test (not a local copy that drifts silently).
-        from kiro_crew.knowledge.ingestion import _coerce_aliases
+        from aj_crew.knowledge.ingestion import _coerce_aliases
 
         assert _coerce_aliases(None, "X") is None
         assert _coerce_aliases("bare_string", "X") is None
@@ -122,7 +122,7 @@ class TestMultilingualEntityResolution:
         # so unbounded LLM output cannot grow the DB or slow the alias scan.
         # Literal limits pin the intended values — importing the constants would let
         # either cap loosen without failing the test.
-        from kiro_crew.knowledge.ingestion import _coerce_aliases
+        from aj_crew.knowledge.ingestion import _coerce_aliases
 
         # Count bound: only the first 10 VALID entries survive (valid-count cap,
         # not raw input position cap).
@@ -144,7 +144,7 @@ class TestMultilingualEntityResolution:
         alias, not discard it because the Nones "filled" the first 10 slots.
         This was the bug with the old raw[:MAX] approach.
         """
-        from kiro_crew.knowledge.ingestion import _coerce_aliases
+        from aj_crew.knowledge.ingestion import _coerce_aliases
 
         raw = [None] * 10 + ["Music Bank"]  # 10 invalid + 1 valid
         result = _coerce_aliases(raw, "뮤직뱅크")
@@ -165,7 +165,7 @@ class TestMultilingualEntityResolution:
         the Korean entity because "Music Bank" is in its persisted aliases,
         and the guard confirms "Music Bank" ∈ existing aliases (casefold).
         """
-        from kiro_crew.knowledge.ingestion import IngestionPipeline, _coerce_aliases
+        from aj_crew.knowledge.ingestion import IngestionPipeline, _coerce_aliases
 
         # Simulate ingestion of a Korean chunk: entity "뮤직뱅크" with alias "Music Bank"
         ko_name = "뮤직뱅크"
@@ -214,7 +214,7 @@ class TestMultilingualEntityResolution:
 
     def test_entity_resolution_english_then_korean(self, store):
         """EN doc first, KO doc second -> must produce one entity, two mentions."""
-        from kiro_crew.knowledge.ingestion import IngestionPipeline
+        from aj_crew.knowledge.ingestion import IngestionPipeline
 
         # Simulate ingestion of an English chunk: entity "Music Bank"
         en_name = "Music Bank"
@@ -269,7 +269,7 @@ class TestMultilingualEntityResolution:
 
     def test_relation_keeps_acronym_separate_from_cross_script_name(self, store):
         """A relation may reuse a full-name bridge but never an acronym endpoint."""
-        from kiro_crew.knowledge.ingestion import IngestionPipeline
+        from aj_crew.knowledge.ingestion import IngestionPipeline
 
         # Seed: English-first entities with Korean aliases
         eid_bts = store.add_entity("BTS", "org", aliases=["방탄소년단"])
@@ -327,7 +327,7 @@ class TestMultilingualEntityResolution:
         → Tier 3: find_entity("Jordan") hits person entity (canonical-equality guard passes),
           but entity_type conflict (person vs org) → reject → new entity created.
         """
-        from kiro_crew.knowledge.ingestion import IngestionPipeline
+        from aj_crew.knowledge.ingestion import IngestionPipeline
 
         store.add_entity("Jordan", "person")
         pipeline = IngestionPipeline(
@@ -368,7 +368,7 @@ class TestMultilingualEntityResolution:
           "파리" ∈ existing aliases, BUT entity_type conflict (city vs org)
           → reject → new entity created for "파리".
         """
-        from kiro_crew.knowledge.ingestion import IngestionPipeline
+        from aj_crew.knowledge.ingestion import IngestionPipeline
 
         store.add_entity("Paris", "city", aliases=["파리"])
         pipeline = IngestionPipeline(
@@ -395,7 +395,7 @@ class TestMultilingualEntityResolution:
 
     def test_coerce_aliases_casefold_dedupe(self):
         """_coerce_aliases must casefold-deduplicate aliases within a single call."""
-        from kiro_crew.knowledge.ingestion import _coerce_aliases
+        from aj_crew.knowledge.ingestion import _coerce_aliases
 
         # "KBS" and "kbs" are casefold-equivalent → only the first should survive
         result = _coerce_aliases(["KBS", "kbs", "KBS 1TV", "kbs 1tv"], "SomeName")
@@ -427,7 +427,7 @@ class TestMultilingualEntityResolution:
         Path B: incoming alias matches another entity's alias (not canonical) ->
         alias fallback guard must block (alias != existing canonical).
         """
-        from kiro_crew.knowledge.ingestion import IngestionPipeline
+        from aj_crew.knowledge.ingestion import IngestionPipeline
 
         store.add_entity("Alpha", "service", aliases=["Shared"])
         store.add_entity("Beta", "service", aliases=["Shared"])
@@ -586,7 +586,7 @@ class TestEntityAliasIndex:
     def test_a_failed_alias_write_leaves_no_entity_row(self, store, monkeypatch):
         import pytest
 
-        from kiro_crew.knowledge.store_parts import entity_graph
+        from aj_crew.knowledge.store_parts import entity_graph
 
         def boom(*_a, **_k):
             raise RuntimeError("alias write failed")
@@ -629,11 +629,11 @@ class TestEntityAliasIndex:
 
 class TestAddEntityAliasesSaturation:
     def test_a_full_entity_logs_one_warning_and_keeps_its_aliases(self, store, caplog):
-        from kiro_crew.knowledge.store import MAX_ENTITY_ALIASES
+        from aj_crew.knowledge.store import MAX_ENTITY_ALIASES
 
         full = [f"alias {i}" for i in range(MAX_ENTITY_ALIASES)]
         eid = store.add_entity("Saturated", "concept", aliases=full)
-        with caplog.at_level("WARNING", logger="kiro_crew.knowledge.store"):
+        with caplog.at_level("WARNING", logger="aj_crew.knowledge.store"):
             store.add_entity_aliases(eid, ["one more", "and another"])
         warnings = [r for r in caplog.records if "add_entity_aliases" in r.getMessage()]
         assert len(warnings) == 1
@@ -642,11 +642,11 @@ class TestAddEntityAliasesSaturation:
         assert stored == full
 
     def test_room_left_is_filled_then_the_rest_is_counted(self, store, caplog):
-        from kiro_crew.knowledge.store import MAX_ENTITY_ALIASES
+        from aj_crew.knowledge.store import MAX_ENTITY_ALIASES
 
         eid = store.add_entity("Almost", "concept", aliases=[f"a{i}" for i in range(9)])
         assert MAX_ENTITY_ALIASES == 10
-        with caplog.at_level("WARNING", logger="kiro_crew.knowledge.store"):
+        with caplog.at_level("WARNING", logger="aj_crew.knowledge.store"):
             store.add_entity_aliases(eid, ["ALMOST", "A1", "fits", "spills"])
         stored = json.loads(store.find_entity("Almost")["aliases"])
         assert stored[-1] == "fits" and len(stored) == 10
@@ -677,7 +677,7 @@ def test_an_unbindable_alias_does_not_fail_an_import_or_an_add(store, store_fact
 
 def test_an_unbindable_extracted_alias_is_dropped_before_any_lookup(store):
     """A lone surrogate from the model never reaches find_entity, so the chunk still stores."""
-    from kiro_crew.knowledge.ingestion import IngestionPipeline, _coerce_aliases
+    from aj_crew.knowledge.ingestion import IngestionPipeline, _coerce_aliases
 
     assert _coerce_aliases(["\ud800", "Pusan"], "부산") == ["Pusan"]
     assert _coerce_aliases(["\ud800"], "부산") is None

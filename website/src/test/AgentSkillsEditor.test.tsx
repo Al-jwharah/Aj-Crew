@@ -12,9 +12,9 @@ vi.mock('../api/client', () => ({ api: mockApi }))
 import AgentSkillsEditor from '../components/AgentSkillsEditor'
 
 const CATALOG = [
-  { key: 'babysit', name: 'babysit', description: 'Monitor a PR', source: 'kirocrew' },
+  { key: 'babysit', name: 'babysit', description: 'Monitor a PR', source: 'ajcrew' },
   { key: 'kiro-user/prepare-pr', name: 'prepare-pr', description: 'Ship a PR', source: 'kiro-user' },
-  { key: 'widgets', name: 'widgets', description: 'Render HTML', source: 'kirocrew' },
+  { key: 'widgets', name: 'widgets', description: 'Render HTML', source: 'ajcrew' },
 ]
 
 function renderEditor(props: Partial<React.ComponentProps<typeof AgentSkillsEditor>> = {}) {
@@ -375,8 +375,8 @@ describe('an unresolved mapping', () => {
     // /api/skills lists one row per file; the dropped kiro-user/ key rides along
     // as an alias, so a mapping saved under it is neither dead nor re-offered.
     mockApi.skills.mockResolvedValue([
-      { key: 'tracker', name: 'tracker', source: 'kirocrew', aliases: ['kiro-user/tracker'] },
-      { key: 'widgets', name: 'widgets', source: 'kirocrew' },
+      { key: 'tracker', name: 'tracker', source: 'ajcrew', aliases: ['kiro-user/tracker'] },
+      { key: 'widgets', name: 'widgets', source: 'ajcrew' },
     ])
     renderEditor({ skills: ['kiro-user/tracker'] })
 

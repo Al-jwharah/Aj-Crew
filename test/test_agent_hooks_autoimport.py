@@ -41,7 +41,7 @@ class TestKiroHooksAutoimport:
 
     def test_kiro_hooks_autoimport_loads_executable_scripts(self, tmp_path: Path):
         """Two executable scripts both land under preToolUse with their absolute paths."""
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         hooks_dir = tmp_path / "hooks"
         s1 = self._make_script(hooks_dir, "a.sh")
@@ -55,7 +55,7 @@ class TestKiroHooksAutoimport:
 
     def test_kiro_hooks_autoimport_parses_event_header(self, tmp_path: Path):
         """A ``# event: PostToolUse`` header routes the script to postToolUse."""
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         hooks_dir = tmp_path / "hooks"
         self._make_script(hooks_dir, "audit.sh", body="# event: PostToolUse\nexit 0\n")
@@ -68,7 +68,7 @@ class TestKiroHooksAutoimport:
 
     def test_kiro_hooks_autoimport_parses_matcher_header(self, tmp_path: Path):
         """A ``# matcher:`` header is preserved on the resulting entry."""
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         hooks_dir = tmp_path / "hooks"
         self._make_script(hooks_dir, "guard.sh", body="# matcher: shell\nexit 0\n")
@@ -81,13 +81,13 @@ class TestKiroHooksAutoimport:
         """Non-executable ``.sh`` files are skipped; executable siblings still load."""
         import logging
 
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         hooks_dir = tmp_path / "hooks"
         self._make_script(hooks_dir, "ok.sh")
         self._make_script(hooks_dir, "disabled.sh", executable=False)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.agent"):
             result = _autoimport_kiro_hooks(hooks_dir)
 
         if sys.platform == "win32":
@@ -103,7 +103,7 @@ class TestKiroHooksAutoimport:
     @requires_symlinks
     def test_kiro_hooks_autoimport_skips_sensitive_path(self, tmp_path: Path, monkeypatch):
         """Scripts resolving into a sensitive path (~/.ssh) are rejected."""
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         # Pretend HOME is tmp_path so ~/.ssh is fabricated and isolated.
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
@@ -123,7 +123,7 @@ class TestKiroHooksAutoimport:
 
     def test_kiro_hooks_autoimport_dedupes_with_explicit_config(self, tmp_path: Path):
         """A script listed both explicitly and in the autoimport dir yields one entry."""
-        from kiro_crew.agent import _apply_user_kiro_hooks
+        from aj_crew.agent import _apply_user_kiro_hooks
 
         hooks_dir = tmp_path / "hooks"
         script = self._make_script(hooks_dir, "shared.sh")
@@ -144,7 +144,7 @@ class TestKiroHooksAutoimport:
 
     def test_kiro_hooks_autoimport_respects_disable_flag(self, tmp_path: Path):
         """``agent.kiro_hooks_autoimport=False`` skips the scan even when scripts exist."""
-        from kiro_crew.agent import _apply_user_kiro_hooks
+        from aj_crew.agent import _apply_user_kiro_hooks
 
         hooks_dir = tmp_path / "hooks"
         self._make_script(hooks_dir, "a.sh")
@@ -163,7 +163,7 @@ class TestKiroHooksAutoimport:
 
     def test_kiro_hooks_autoimport_honors_custom_dir(self, tmp_path: Path):
         """``agent.kiro_hooks_dir`` overrides the default ~/.kiro/hooks path."""
-        from kiro_crew.agent import _apply_user_kiro_hooks
+        from aj_crew.agent import _apply_user_kiro_hooks
 
         custom = tmp_path / "custom-hooks"
         self._make_script(custom, "only.sh")
@@ -180,7 +180,7 @@ class TestKiroHooksAutoimport:
         """More scripts than ``_MAX_TOTAL_USER_HOOKS`` get capped; one WARNING logged."""
         import logging
 
-        from kiro_crew.agent import _MAX_TOTAL_USER_HOOKS, _apply_user_kiro_hooks
+        from aj_crew.agent import _MAX_TOTAL_USER_HOOKS, _apply_user_kiro_hooks
 
         # Spread across events so the per-event cap (10) does not fire first.
         # Filename suffixes are used so the scripts route to different events
@@ -194,7 +194,7 @@ class TestKiroHooksAutoimport:
         config: dict = {"hooks": {}}
         mc_cfg = {"agent": {"kiro_hooks_dir": str(hooks_dir)}}
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             _apply_user_kiro_hooks(config, mc_cfg)
 
         merged_total = sum(len(v) for v in config["hooks"].values() if isinstance(v, list))
@@ -217,7 +217,7 @@ class TestKiroHooksAutoimport:
         """
         import logging
 
-        from kiro_crew.agent import _MAX_TOTAL_USER_HOOKS, _apply_user_kiro_hooks
+        from aj_crew.agent import _MAX_TOTAL_USER_HOOKS, _apply_user_kiro_hooks
 
         # Build explicit kiro_hooks with _MAX_TOTAL_USER_HOOKS entries,
         # spread across events so the per-event cap (10) is not what
@@ -264,7 +264,7 @@ class TestKiroHooksAutoimport:
             }
         }
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             _apply_user_kiro_hooks(config, mc_cfg)
 
         merged_total = sum(len(v) for v in config["hooks"].values() if isinstance(v, list))
@@ -291,8 +291,8 @@ class TestKiroHooksAutoimport:
         """
         import logging
 
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _MAX_USER_HOOKS_PER_EVENT, _apply_user_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _MAX_USER_HOOKS_PER_EVENT, _apply_user_kiro_hooks
 
         # Configure more scripts on a single event than the per-event cap.
         # All scripts route to preToolUse so the per-event cap fires before
@@ -322,7 +322,7 @@ class TestKiroHooksAutoimport:
             }
         }
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             _apply_user_kiro_hooks(config, mc_cfg)
 
         # Exactly _MAX_USER_HOOKS_PER_EVENT scripts should have been
@@ -341,8 +341,8 @@ class TestKiroHooksAutoimport:
         """Hooks dropped by the global cap ``_MAX_TOTAL_USER_HOOKS`` emit a SEL audit."""
         import logging
 
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _MAX_TOTAL_USER_HOOKS, _apply_user_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _MAX_TOTAL_USER_HOOKS, _apply_user_kiro_hooks
 
         # Spread over-cap scripts across events so the per-event cap (10)
         # does not fire first; only the global cap (20) gates.
@@ -372,7 +372,7 @@ class TestKiroHooksAutoimport:
             }
         }
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             _apply_user_kiro_hooks(config, mc_cfg)
 
         merged_total = sum(len(v) for v in config["hooks"].values() if isinstance(v, list))
@@ -396,8 +396,8 @@ class TestKiroHooksAutoimport:
         """
         import logging
 
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _apply_user_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _apply_user_kiro_hooks
 
         sel_calls: list[tuple[str, str, str]] = []
 
@@ -418,7 +418,7 @@ class TestKiroHooksAutoimport:
             }
         }
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             _apply_user_kiro_hooks(config, mc_cfg)
 
         assert config["hooks"] == {}
@@ -434,8 +434,8 @@ class TestKiroHooksAutoimport:
         """A non-list bucket for a valid event is dropped with a SEL audit."""
         import logging
 
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _apply_user_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _apply_user_kiro_hooks
 
         sel_calls: list[tuple[str, str, str]] = []
 
@@ -456,7 +456,7 @@ class TestKiroHooksAutoimport:
             }
         }
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             _apply_user_kiro_hooks(config, mc_cfg)
 
         non_list_sel = [c for c in sel_calls if "not a list" in c[2].lower()]
@@ -471,23 +471,21 @@ class TestKiroHooksAutoimport:
         """Missing directory returns empty dict with only a DEBUG log (no WARNINGs)."""
         import logging
 
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         missing = tmp_path / "does-not-exist"
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.agent"):
             result = _autoimport_kiro_hooks(missing)
 
         assert result == {}
-        # Scope to the kiro_crew.agent logger: under `pytest -n auto`, a leaked
+        # Scope to the aj_crew.agent logger: under `pytest -n auto`, a leaked
         # asyncio task exception from an unrelated test (e.g. "Task exception was
         # never retrieved" on the root `asyncio` logger) can land in caplog during
         # this window and falsely trip a bare records scan. We only care that THIS
         # code path emits no WARNING+.
         warnings = [
-            r
-            for r in caplog.records
-            if r.levelno >= logging.WARNING and r.name == "kiro_crew.agent"
+            r for r in caplog.records if r.levelno >= logging.WARNING and r.name == "aj_crew.agent"
         ]
         assert warnings == []
 
@@ -502,8 +500,8 @@ class TestKiroHooksAutoimport:
         """
         import logging
 
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         hooks_dir = tmp_path / "hooks"
         # Matcher with a space is rejected by _SAFE_MATCHER_RE.
@@ -518,7 +516,7 @@ class TestKiroHooksAutoimport:
 
         monkeypatch.setattr(_agent_mod, "_sel_hook_rejected", _record_sel)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             result = _autoimport_kiro_hooks(hooks_dir)
 
         assert result == {}
@@ -548,8 +546,8 @@ class TestKiroHooksAutoimport:
         """
         import logging
 
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         hooks_dir = tmp_path / "hooks"
         # ``NoSuchEvent`` is not in _HOOK_EVENT_CANONICAL, so _infer_hook_event
@@ -564,7 +562,7 @@ class TestKiroHooksAutoimport:
 
         monkeypatch.setattr(_agent_mod, "_sel_hook_rejected", _record_sel)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             result = _autoimport_kiro_hooks(hooks_dir)
 
         assert result == {}
@@ -585,8 +583,8 @@ class TestKiroHooksAutoimport:
         """A script whose ``entry.resolve()`` raises ``OSError`` is rejected with a SEL audit."""
         import logging
 
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         hooks_dir = tmp_path / "hooks"
         entry = self._make_script(hooks_dir, "broken.sh")
@@ -611,7 +609,7 @@ class TestKiroHooksAutoimport:
 
         monkeypatch.setattr(_agent_mod, "_sel_hook_rejected", _record_sel)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             result = _autoimport_kiro_hooks(hooks_dir)
 
         assert result == {}
@@ -630,8 +628,8 @@ class TestKiroHooksAutoimport:
         """A script whose ``resolved_entry.stat()`` raises is rejected with a SEL audit."""
         import logging
 
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         hooks_dir = tmp_path / "hooks"
         entry = self._make_script(hooks_dir, "broken.sh")
@@ -670,7 +668,7 @@ class TestKiroHooksAutoimport:
 
         monkeypatch.setattr(_agent_mod, "_sel_hook_rejected", _record_sel)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             result = _autoimport_kiro_hooks(hooks_dir)
 
         assert result == {}
@@ -693,8 +691,8 @@ class TestKiroHooksAutoimport:
         """
         import logging
 
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         hooks_dir = tmp_path / "hooks"
         entry = self._make_script(hooks_dir, "disabled.sh", executable=False)
@@ -706,7 +704,7 @@ class TestKiroHooksAutoimport:
 
         monkeypatch.setattr(_agent_mod, "_sel_hook_rejected", _record_sel)
 
-        with caplog.at_level(logging.INFO, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.agent"):
             result = _autoimport_kiro_hooks(hooks_dir)
 
         if sys.platform == "win32":
@@ -738,14 +736,14 @@ class TestKiroHooksAutoimport:
         """
         import logging
 
-        from kiro_crew.agent import _apply_user_kiro_hooks
+        from aj_crew.agent import _apply_user_kiro_hooks
 
         # ``_isolate_home`` fixture already sets Path.home() -> tmp_path.
         # Re-route the default fallback so failure does not touch the real
         # ~/.kiro/hooks.  Place an executable script directly at HOME root
         # to prove that home-root scanning would pick it up.
         monkeypatch.setattr(
-            "kiro_crew.agent._DEFAULT_KIRO_HOOKS_DIR",
+            "aj_crew.agent._DEFAULT_KIRO_HOOKS_DIR",
             tmp_path / ".kiro" / "hooks",
         )
         evil = tmp_path / "evil.sh"
@@ -757,7 +755,7 @@ class TestKiroHooksAutoimport:
         # after the _isolate_home fixture runs.
         mc_cfg = {"agent": {"kiro_hooks_dir": str(tmp_path)}}
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             _apply_user_kiro_hooks(config, mc_cfg)
 
         # Critical invariant: nothing from HOME-root got auto-registered.
@@ -785,7 +783,7 @@ class TestKiroHooksAutoimport:
         """
         import logging
 
-        from kiro_crew.agent import _apply_user_kiro_hooks
+        from aj_crew.agent import _apply_user_kiro_hooks
 
         # Stage a fake HOME so our default hooks dir doesn't exist and so
         # tmp_path's /private/var/folders path is *outside* HOME.
@@ -795,7 +793,7 @@ class TestKiroHooksAutoimport:
         # Also re-route the default hooks dir into the fake HOME so fallback
         # does not hit the caller's real ~/.kiro/hooks directory.
         monkeypatch.setattr(
-            "kiro_crew.agent._DEFAULT_KIRO_HOOKS_DIR",
+            "aj_crew.agent._DEFAULT_KIRO_HOOKS_DIR",
             fake_home / ".kiro" / "hooks",
         )
 
@@ -808,7 +806,7 @@ class TestKiroHooksAutoimport:
         config: dict = {"hooks": {}}
         mc_cfg = {"agent": {"kiro_hooks_dir": str(outside)}}
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             _apply_user_kiro_hooks(config, mc_cfg)
 
         # Fallback is fake_home/.kiro/hooks (doesn't exist), so nothing gets
@@ -828,7 +826,7 @@ class TestKiroHooksAutoimport:
         """
         import logging
 
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         hooks_dir = tmp_path / "hooks"
         hooks_dir.mkdir()
@@ -840,7 +838,7 @@ class TestKiroHooksAutoimport:
         outside_target.chmod(0o755)
         (hooks_dir / "guard.sh").symlink_to(outside_target)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             result = _autoimport_kiro_hooks(hooks_dir)
 
         assert result == {}
@@ -856,8 +854,8 @@ class TestKiroHooksAutoimport:
         """
         import logging
 
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         # One legitimate script inside hooks_dir (passes containment).
         hooks_dir = tmp_path / "hooks"
@@ -883,7 +881,7 @@ class TestKiroHooksAutoimport:
 
         monkeypatch.setattr(_agent_mod, "_sel_hook_rejected", _record_sel)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             result = _autoimport_kiro_hooks(hooks_dir)
 
         assert result == {}
@@ -909,8 +907,8 @@ class TestKiroHooksAutoimport:
         lets autoimport scan outside HOME. The race cannot be reproduced, and per-entry
         canonicalization hides it in the command paths, so the call argument is pinned.
         """
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _apply_user_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _apply_user_kiro_hooks
 
         # Real hooks directory plus a user-facing symlink that points at it.
         real_hooks = tmp_path / "real" / "hooks"
@@ -960,11 +958,11 @@ class TestKiroHooksAutoimport:
         ``Path.resolve`` raises ``ValueError`` on it, which would crash ``install_agent()``
         from LLM-writable config.
         """
-        from kiro_crew.agent import _apply_user_kiro_hooks
+        from aj_crew.agent import _apply_user_kiro_hooks
 
         # Re-route the default so fallback doesn't touch caller's HOME.
         monkeypatch.setattr(
-            "kiro_crew.agent._DEFAULT_KIRO_HOOKS_DIR",
+            "aj_crew.agent._DEFAULT_KIRO_HOOKS_DIR",
             tmp_path / "nonexistent" / "hooks",
         )
 
@@ -986,8 +984,8 @@ class TestKiroHooksAutoimport:
         """
         import logging
 
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         hooks_dir = tmp_path / "hooks"
         hooks_dir.mkdir()
@@ -1006,7 +1004,7 @@ class TestKiroHooksAutoimport:
 
         monkeypatch.setattr(_agent_mod, "_sel_hook_rejected", _record_sel)
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             result = _autoimport_kiro_hooks(hooks_dir)
 
         assert result == {}
@@ -1024,12 +1022,12 @@ class TestKiroHooksAutoimport:
 
         Nothing was rejected, so a SEL rejection would be a false positive.
         """
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _apply_user_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _apply_user_kiro_hooks
 
         # Re-route default so fallback is empty (hooks dir doesn't exist).
         monkeypatch.setattr(
-            "kiro_crew.agent._DEFAULT_KIRO_HOOKS_DIR",
+            "aj_crew.agent._DEFAULT_KIRO_HOOKS_DIR",
             tmp_path / "nonexistent" / "hooks",
         )
 
@@ -1065,7 +1063,7 @@ class TestKiroHooksAutoimport:
         """
         import logging
 
-        from kiro_crew.agent import _apply_user_kiro_hooks
+        from aj_crew.agent import _apply_user_kiro_hooks
 
         # Construct a real directory and a symlink to it.
         real_home = tmp_path / "real_home"
@@ -1078,7 +1076,7 @@ class TestKiroHooksAutoimport:
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: symlink_home))
         # Re-route default so fallback doesn't touch caller's real HOME.
         monkeypatch.setattr(
-            "kiro_crew.agent._DEFAULT_KIRO_HOOKS_DIR",
+            "aj_crew.agent._DEFAULT_KIRO_HOOKS_DIR",
             symlink_home / ".kiro" / "hooks",
         )
 
@@ -1094,7 +1092,7 @@ class TestKiroHooksAutoimport:
         # resolved == canonical HOME.
         mc_cfg = {"agent": {"kiro_hooks_dir": str(real_home)}}
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             _apply_user_kiro_hooks(config, mc_cfg)
 
         assert config["hooks"] == {}, (
@@ -1114,8 +1112,8 @@ class TestKiroHooksAutoimport:
         """An ``OSError`` from ``hooks_dir.resolve()`` emits a SEL audit."""
         import logging
 
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         hooks_dir = tmp_path / "hooks"
         hooks_dir.mkdir()
@@ -1137,7 +1135,7 @@ class TestKiroHooksAutoimport:
 
         monkeypatch.setattr(_agent_mod, "_sel_hook_rejected", _record_sel)
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.agent"):
             result = _autoimport_kiro_hooks(hooks_dir)
 
         assert result == {}
@@ -1157,8 +1155,8 @@ class TestKiroHooksAutoimport:
 
         A null byte in a filename raises ``ValueError``, not ``OSError``.
         """
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _autoimport_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _autoimport_kiro_hooks
 
         hooks_dir = tmp_path / "hooks"
         entry = self._make_script(hooks_dir, "bad.sh")
@@ -1200,12 +1198,12 @@ class TestKiroHooksAutoimport:
         """
         import logging
 
-        from kiro_crew import agent as _agent_mod
-        from kiro_crew.agent import _apply_user_kiro_hooks
+        from aj_crew import agent as _agent_mod
+        from aj_crew.agent import _apply_user_kiro_hooks
 
         # Re-route default so fallback is inert.
         monkeypatch.setattr(
-            "kiro_crew.agent._DEFAULT_KIRO_HOOKS_DIR",
+            "aj_crew.agent._DEFAULT_KIRO_HOOKS_DIR",
             tmp_path / "nonexistent" / "hooks",
         )
 
@@ -1234,7 +1232,7 @@ class TestKiroHooksAutoimport:
         # A path whose name triggers our resolve-fail shim.
         mc_cfg = {"agent": {"kiro_hooks_dir": str(tmp_path / "too-long")}}
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.agent"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.agent"):
             # Must not raise.
             _apply_user_kiro_hooks(config, mc_cfg)
 

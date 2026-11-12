@@ -1,21 +1,21 @@
-# API Reference — Kiro Crew Gateway API & Client
+# API Reference — Aj Crew Gateway API & Client
 
-Reference for the Kiro Crew Gateway HTTP and WebSocket APIs, and how apps consume
+Reference for the Aj Crew Gateway HTTP and WebSocket APIs, and how apps consume
 them.
 
 How you talk to the Gateway depends on where your code runs:
 
-- **Dashboard UI pages (TypeScript/React)** — use the `@kirocrew/app-sdk` hooks
+- **Dashboard UI pages (TypeScript/React)** — use the `@ajcrew/app-sdk` hooks
   (`useAppApi`, `useAppEvents`, …). You do **not** `npm install` this package;
   the dashboard host provides it at runtime through its import map (the bare
-  specifier `@kirocrew/app-sdk` resolves to the host's vendored copy via
-  `window.__kirocrew_modules`). See
+  specifier `@ajcrew/app-sdk` resolves to the host's vendored copy via
+  `window.__ajcrew_modules`). See
   [getting-started.md](getting-started.md) and the [App SDK Hooks](#app-sdk-hooks-dashboard-ui)
   section below.
 - **Python apps / external CLI tools / services** — use the standalone
-  `kirocrew-client` package, carried in this repository under
-  `packages/kirocrew-client-py/`. It is async (`aiohttp`) and has no dependency on
-  the Kiro Crew main package, but it is not published to PyPI — use it from a source
+  `ajcrew-client` package, carried in this repository under
+  `packages/ajcrew-client-py/`. It is async (`aiohttp`) and has no dependency on
+  the Aj Crew main package, but it is not published to PyPI — use it from a source
   checkout. See the [Python Client](#python-client) section.
 - **Node.js / Electron apps** — call the Gateway REST/WS endpoints directly via
   `fetch()` / a WebSocket. Selected endpoint paths are in
@@ -24,21 +24,21 @@ How you talk to the Gateway depends on where your code runs:
 There is no published TypeScript gateway-client npm package, and none is planned
 here — the camelCase names used throughout the sections below are **labels for
 Gateway endpoints**, not callable methods. Read them as endpoint identifiers.
-The `@kirocrew/app-sdk` hooks are real and callable — see the next section; they
-resolve from the host import map. The `kirocrew-client` Python package is **not
-published**: it lives in this repository under `packages/kirocrew-client-py/`, is
+The `@ajcrew/app-sdk` hooks are real and callable — see the next section; they
+resolve from the host import map. The `ajcrew-client` Python package is **not
+published**: it lives in this repository under `packages/ajcrew-client-py/`, is
 outside the installed distribution, and has no release on PyPI, so `pip install
-kirocrew-client` does not work. Use it from a source checkout, or call the
+ajcrew-client` does not work. Use it from a source checkout, or call the
 endpoints directly with `fetch` or `aiohttp`. Its method list is in
 [Python Client](#python-client).
 
 ## App SDK Hooks (dashboard UI)
 
-Dashboard UI pages import permission-scoped hooks from `@kirocrew/app-sdk`,
+Dashboard UI pages import permission-scoped hooks from `@ajcrew/app-sdk`,
 resolved at runtime via the host import map:
 
 ```tsx
-import { useAppApi, useAppEvents } from '@kirocrew/app-sdk'
+import { useAppApi, useAppEvents } from '@ajcrew/app-sdk'
 
 function MyPage() {
   const api = useAppApi()        // permission-scoped GET/POST/PUT/PATCH/DELETE
@@ -48,7 +48,7 @@ function MyPage() {
 ```
 
 For type checking, the dashboard serves the declarations of both
-`@kirocrew/app-sdk` and `@kirocrew/app-sdk/ui` at `/vendor/kirocrew-app-sdk.d.ts`
+`@ajcrew/app-sdk` and `@ajcrew/app-sdk/ui` at `/vendor/ajcrew-app-sdk.d.ts`
 (see [getting-started.md](getting-started.md#ui-page--react-component)).
 
 `useAppApi()` returns a client whose methods (`raw`, `request`, `get`, `post`,
@@ -132,22 +132,22 @@ resolves through:
 
 | Export | From | What |
 |---|---|---|
-| `fmtCurrency(value, currency = 'USD', options?)` | `@kirocrew/app-sdk` | Money in the host's locale. |
-| `APP_SDK_LEVEL` | `@kirocrew/app-sdk` | The seam level, equal to the gateway's `ctx.sdk_level`. |
-| `Select` | `@kirocrew/app-sdk/ui` | A themed inline dropdown: `options`, `optionLabels?`, `value`, `onChange`, `clearLabel?`, `disabled?`, `aria-label?`, `title?`, `className?`. Native list on touch devices. |
-| `guideCaution` | `@kirocrew/app-sdk/ui` | Spread onto a control that removes something (`<Btn {...guideCaution}>`), so a dashboard guide shows its caution line before a press there. |
+| `fmtCurrency(value, currency = 'USD', options?)` | `@ajcrew/app-sdk` | Money in the host's locale. |
+| `APP_SDK_LEVEL` | `@ajcrew/app-sdk` | The seam level, equal to the gateway's `ctx.sdk_level`. |
+| `Select` | `@ajcrew/app-sdk/ui` | A themed inline dropdown: `options`, `optionLabels?`, `value`, `onChange`, `clearLabel?`, `disabled?`, `aria-label?`, `title?`, `className?`. Native list on touch devices. |
+| `guideCaution` | `@ajcrew/app-sdk/ui` | Spread onto a control that removes something (`<Btn {...guideCaution}>`), so a dashboard guide shows its caution line before a press there. |
 
 A bundle that must also load on an older host reads these through a namespace import
-(`import * as sdk from '@kirocrew/app-sdk'`) and falls back when one is `undefined`. A
+(`import * as sdk from '@ajcrew/app-sdk'`) and falls back when one is `undefined`. A
 named import of a name the host lacks fails the whole bundle at load time.
 
 ## Embedded Chat
 
-`ChatEmbed` mounts Kiro Crew's native transcript and compact composer for an
+`ChatEmbed` mounts Aj Crew's native transcript and compact composer for an
 existing session. The required `slotKey` selects the session.
 
 ```tsx
-import { ChatEmbed } from '@kirocrew/app-sdk'
+import { ChatEmbed } from '@ajcrew/app-sdk'
 
 <ChatEmbed slotKey="coder-abc123" />
 ```
@@ -208,7 +208,7 @@ import {
   defaultMessageRenderers,
   resolveRenderer,
   type MessageRenderer,
-} from '@kirocrew/app-sdk'
+} from '@ajcrew/app-sdk'
 
 const BUILTIN_ASSISTANT = defaultMessageRenderers.find(r => r.id === 'assistant')!
 
@@ -235,7 +235,7 @@ const RENDERERS: MessageRenderer[] = [{
 `hide` removes parts of the embed. A hidden part is not mounted at all.
 
 ```tsx
-import { ChatEmbed, type ChatEmbedHideKey } from '@kirocrew/app-sdk'
+import { ChatEmbed, type ChatEmbedHideKey } from '@ajcrew/app-sdk'
 
 const HIDE: ChatEmbedHideKey[] = ['header', 'stop', 'toolDetails']
 
@@ -486,7 +486,7 @@ function defined outside the component.
 
 ```tsx
 import { useCallback } from 'react'
-import { ChatEmbed } from '@kirocrew/app-sdk'
+import { ChatEmbed } from '@ajcrew/app-sdk'
 
 // Defined outside the component, so it is the same function on every render.
 function openArtifactTab(slug: string) {
@@ -602,7 +602,7 @@ on its own chat POST. No permission is involved: nothing is uploaded.
 
 ## Native Chat Panel
 
-`ChatPanel` mounts Kiro Crew's native chat experience for an existing session. The required
+`ChatPanel` mounts Aj Crew's native chat experience for an existing session. The required
 `slotKey` selects the session. By default, the component keeps the standard embedded ChatPage
 behavior. A session the app has just created with `POST /api/chat/slots` can be passed straight
 away: the panel shows it before the dashboard's session list has caught up. The chat appears only
@@ -611,7 +611,7 @@ place: a session that no longer exists says so, and any other failure shows the 
 **Try again**.
 
 ```tsx
-import { ChatPanel } from '@kirocrew/app-sdk'
+import { ChatPanel } from '@ajcrew/app-sdk'
 
 <ChatPanel slotKey="coder-abc123" />
 ```
@@ -629,7 +629,7 @@ another session becomes active, so mount one `conversationOnly` panel at a time.
 
 | Prop | Type | Required | Purpose |
 |---|---|---|---|
-| `slotKey` | `string` | yes | Select the Kiro Crew session rendered by the panel |
+| `slotKey` | `string` | yes | Select the Aj Crew session rendered by the panel |
 | `conversationOnly` | `boolean` | no | Hide ChatPage's sessions rail and disable ChatPage URL synchronization |
 
 ## Pull Request Panel
@@ -640,7 +640,7 @@ commit list, with the same provider wording and caching. An app that shows a pul
 renders it instead of restating it. It needs `APP_SDK_LEVEL >= 2`.
 
 ```tsx
-import * as sdk from '@kirocrew/app-sdk'
+import * as sdk from '@ajcrew/app-sdk'
 
 const link = { url, provider: 'github', number: 42, repo: 'widgets', kind: 'change' }
 sdk.APP_SDK_LEVEL >= 2 && sdk.PullRequestPanel
@@ -707,11 +707,11 @@ website/src/app-sdk/protocol/
 
 ### Using it from an app
 
-Apps resolve `@kirocrew/app-sdk` through the host import map, the same way they get the hooks:
+Apps resolve `@ajcrew/app-sdk` through the host import map, the same way they get the hooks:
 
 ```tsx
-import { parseOptions, extractSteeringAcks, deriveFollowUpOptions } from '@kirocrew/app-sdk'
-import type { ChatMessage, ParsedOptions } from '@kirocrew/app-sdk'
+import { parseOptions, extractSteeringAcks, deriveFollowUpOptions } from '@ajcrew/app-sdk'
+import type { ChatMessage, ParsedOptions } from '@ajcrew/app-sdk'
 
 function AgentTurn({ message }: { message: ChatMessage }) {
   // Strip the steer acknowledgement first, then the option marker: the text you render is
@@ -783,7 +783,7 @@ also that no other non-test source defines the markers a second time.
 the message's `role`, so you add a row type or replace one instead of forking the list.
 
 ```jsx
-import { ChatMessageList } from '@kirocrew/app-sdk'
+import { ChatMessageList } from '@ajcrew/app-sdk'
 
 <ChatMessageList messages={messages} running={running} />
 ```
@@ -894,7 +894,7 @@ that genuinely needs live app state is supplied by the host as an entry.
 
 The sections below name the Gateway API surface. A name here is an **endpoint
 label**, not a guarantee that a client method exists for it: the source-only
-`kirocrew-client` Python package covers part of this surface, and
+`ajcrew-client` Python package covers part of this surface, and
 [Python Client](#python-client) marks which part. For anything it does not
 implement, call the endpoint directly — the paths are in
 [Gateway REST API Endpoints](#gateway-rest-api-endpoints).
@@ -912,7 +912,7 @@ after a 401/403 response.
 The Gateway names its authentication cookie from the Host header it receives,
 falling back to its own listen port. The Python client normally derives that name
 from `base_url`. For a port-less URL or a reverse proxy that strips or rewrites
-Host, pass `cookie_port=<gateway listen port>` to `KiroCrewClient`; the override
+Host, pass `cookie_port=<gateway listen port>` to `AjCrewClient`; the override
 applies to both HTTP requests and WebSocket handshakes created by `create_ws()`.
 
 ### Authentication
@@ -964,7 +964,7 @@ both wire shapes.
 WebSocket event types include `chat_chunk`, `chat_thinking`, `chat_status`,
 `chat_message`, `chat_done`, `tool_call`, `tool_result`, `notification`, `slots`,
 `slot_title`, `dashboard`, `log`, `refresh`, `approval`, `approval_resolved` and
-`subagent_done`. `src/kiro_crew/dashboard/ws_event_scope.py` owns the full set of
+`subagent_done`. `src/aj_crew/dashboard/ws_event_scope.py` owns the full set of
 emitted types and how each is scoped to an app; read it rather than this list
 when you need every type.
 
@@ -1016,20 +1016,20 @@ Any other id, foreign or missing, answers 403 `owner_only`. A job without an
 app stamp is owner-only. An acknowledgement's `ts` must name a cron
 notification of that same job.
 
-#### Watching something without paying for a model call (`kiro_crew.irq`)
+#### Watching something without paying for a model call (`aj_crew.irq`)
 
-> **Provisional surface.** `kiro_crew.irq` has two in-tree probes: `gh_pr`
+> **Provisional surface.** `aj_crew.irq` has two in-tree probes: `gh_pr`
 > (`PrWatchProbe`) and `work_ledger` (`WorkLedgerProbe`). Script crons and the
 > in-process autonudge loop both drive it. Treat the shapes below as subject
 > to change: build on them, but expect `Observation` / `Tick` to gain fields,
-> and pin the Kiro Crew version your app was tested against.
+> and pin the Aj Crew version your app was tested against.
 
 An app that needs to keep an eye on an external thing — a deploy, a ticket, a
 queue depth — should not schedule an **agent** cron to go look. That spends a
 full model turn per check, and on a quiet subject every one of those turns says
 "nothing changed".
 
-Schedule a **script** cron instead and build it on `kiro_crew.irq`, the
+Schedule a **script** cron instead and build it on `aj_crew.irq`, the
 interrupt controller. The script runs in a subprocess with no model call at
 all; a quiet tick is free. Only an unexpected observation raises a wake, and the
 wake is delivered into the session that armed the cron as a real agent turn.
@@ -1046,7 +1046,7 @@ and each failure looks like success.
 ```python
 import json
 
-from kiro_crew.irq import Observation, Probe, Severity, Tick, run
+from aj_crew.irq import Observation, Probe, Severity, Tick, run
 
 
 class DeployProbe(Probe):
@@ -1206,7 +1206,7 @@ and is checked against the app's governance profile and its
 `capabilities.spawn` scopes.
 
 ```python
-from kiro_crew.apps.spawn_sdk import CONVERSATION_BUSY, CONVERSATION_GONE, SpawnError
+from aj_crew.apps.spawn_sdk import CONVERSATION_BUSY, CONVERSATION_GONE, SpawnError
 
 run_id = await ctx.spawn.run("implement the plan", "coder", silent=True, keep=True)
 ...
@@ -1306,13 +1306,13 @@ state = await ctx.crewmate.status(card_id)     # {"status": "pending"} ... {"sta
 | Code | Cause |
 |---|---|
 | `unknown_param` | an unknown key in the bundle, `crewmate`, `agent`, `goals`, `rules`, `sender` or `avatar` (`{"type", "size"}`); crons and key results are only counted |
-| `invalid_bundle` | not `format: "kirocrew.crewmate"`, a bad shape, or a `dashboardTemplate` that is not a `builtin:` or `user:` id |
+| `invalid_bundle` | not `format: "ajcrew.crewmate"`, a bad shape, or a `dashboardTemplate` that is not a `builtin:` or `user:` id |
 | `newer_format` | a `formatVersion` this version does not read |
 | `grant_in_bundle` | `allowedTools`, `autoApprove` or `permissions` in `agent.json` |
 | `needs_mate_config` | any `mcpServers` or `skills` entry, until the mate-owned agent file exists (RFC §5.7) |
 | `rules_unsupported` | non-empty rules, which this version cannot import yet |
 
-The card creates the Bot from the `kirocrew` template with a fresh member id, its own empty memory and workspace, and `approval_mode: "normal"` in the create. It writes the long-term goal when the bundle has one. It lists the crons, key results, picture or face, model or effort hints and dashboard template a bundle carries under "Not brought over", as codes the dashboard words, and memory, history, credentials and the sender's approval settings under "Stays with the sender". A taken name becomes the first free `<name> 2` to `<name> 9`, and the owner can edit it.
+The card creates the Bot from the `ajcrew` template with a fresh member id, its own empty memory and workspace, and `approval_mode: "normal"` in the create. It writes the long-term goal when the bundle has one. It lists the crons, key results, picture or face, model or effort hints and dashboard template a bundle carries under "Not brought over", as codes the dashboard words, and memory, history, credentials and the sender's approval settings under "Stays with the sender". A taken name becomes the first free `<name> 2` to `<name> 9`, and the owner can edit it.
 
 The card is stored under the key `app:<name>` with no conversation, so an app's open cards count against one per-app cap. `status` reads only this app's own cards. The dashboard view where the owner presses an app card is not built yet.
 
@@ -1474,7 +1474,7 @@ line = await ctx.turns.run_oneshot(prompt, label="translate")
 | Call | Returns | What it does |
 |------|---------|--------------|
 | `run(key, text, *, agent="", timeout_secs=None, cancel_ack_secs=5.0)` | reply text | Send *text* to the session *key*, created on first use as *agent* (`""` is the default agent) and kept for the next call. Past `timeout_secs` the turn is cancelled (the session is reset if the agent does not acknowledge within `cancel_ack_secs`) and `asyncio.TimeoutError` is raised; the budget starts after the session is acquired |
-| `run_oneshot(prompt, *, label="oneshot")` | reply text | One call on a throwaway `<app>-<label>-<hex>` session running the tool-less `kirocrew-lite` agent, destroyed afterwards. `label` is 1-32 of `a-z 0-9 _ -` |
+| `run_oneshot(prompt, *, label="oneshot")` | reply text | One call on a throwaway `<app>-<label>-<hex>` session running the tool-less `ajcrew-lite` agent, destroyed afterwards. `label` is 1-32 of `a-z 0-9 _ -` |
 | `has_session(key)` | bool | Whether a live session exists for *key* |
 
 A key is `<app>-<id>`, where *id* is 1 to 400 of `A-Z a-z 0-9 . _ -`; any other key
@@ -1484,7 +1484,7 @@ app's name, so the operator's profile for your app applies, and `run_oneshot`
 rejects every tool. The operator's `capabilities.spawn` row for your app bounds
 which agents you may run, as it does for `ctx.spawn`: when spawning is off for your
 app, or the agent (for `agent=""`, the default agent; for `run_oneshot`,
-`kirocrew-lite`) is outside its `agents` scope, the call raises `AgentTurnRefused`
+`ajcrew-lite`) is outside its `agents` scope, the call raises `AgentTurnRefused`
 (a `PermissionError`) before any session opens. `agent=""` starts the session as
 the default agent by name, so the agent that runs is the one that was checked. A
 `run` that reuses a live session is asked again about the agent that session started
@@ -1637,7 +1637,7 @@ POST /api/member-records/{slug}
 | `approveAction(slotId, taskId, pattern?)` | `—` (no body) | Approve a pending tool action; command/base trust requires the pending card pattern |
 | `rejectAction(slotId, taskId)` | `—` (no body) | Reject a pending tool action |
 | `resolveApproval(approvalId, action, slotId?, pattern?)` | `—` (no body) | Resolve an approval by ID; `trust_command` and `trust_base` require `pattern` |
-| `getApprovalMode()` | `'auto'` \| `'interactive'` | Read the config setting `agent.approval_mode` from `GET /api/config/kirocrew` |
+| `getApprovalMode()` | `'auto'` \| `'interactive'` | Read the config setting `agent.approval_mode` from `GET /api/config/ajcrew` |
 | `setApprovalMode(mode)` | `—` (no body) | Set the chat trust mode (`normal`, `trust_reads`, `trust`, `yolo`) through `POST /api/chat/mode`; a different setting from `agent.approval_mode` |
 
 **Ownership for app callers** (a dashboard caller is unrestricted). The rule follows the request's app claim: an app token, and also an agent running in one of your app's sessions, whose internal calls carry your app's identity.
@@ -1666,7 +1666,7 @@ POST /api/member-records/{slug}
 | `removeMcpServer(name)` | `—` (no body) | Remove an MCP server |
 
 Apps declare their agents, skills and `mcpServers` in `app.json`, and
-`kirocrew app install` installs them. For an ad-hoc MCP server, use
+`ajcrew app install` installs them. For an ad-hoc MCP server, use
 `registerMcpServer`.
 
 ### Agent Runtime
@@ -1737,16 +1737,16 @@ Returns `{ ok, appended, visibleDeferred, deliveryConditional, contextSkipped, p
 
 ### Proxy Authentication (Server-side)
 
-Verify that an incoming request was signed by the Kiro Crew Gateway reverse proxy.
+Verify that an incoming request was signed by the Aj Crew Gateway reverse proxy.
 Use these main-package helpers in Python app backends:
 
 | Function | Returns | Description |
 |----------|---------|-------------|
 | `raw_request_target(request)` | `str` | Preserve the raw percent-encoded path and query that the Gateway signed |
-| `proxy_secret()` | `str` | Read the injected `KIROCREW_PROXY_SECRET`, or an empty string |
+| `proxy_secret()` | `str` | Read the injected `AJCREW_PROXY_SECRET`, or an empty string |
 | `verify_proxy_request(header, *, method, target, body, secret=None, now=None)` | `bool` | Verify the body-bound HMAC and fixed ±60-second freshness window; fail closed on malformed input |
-| `verify_proxy_principal_claim(header, *, method, target, body, replay_cache, secret=None, now=None)` | `ProxyPrincipalClaim \| None` | Verify and consume one `X-KiroCrew-Principal` claim for an app that sets `backend.signedPrincipal`. Returns `None` for any malformed, stale, mismatched or replayed claim. See [Signed principal claim](#signed-principal-claim) |
-| `verify_proxy_request_v2(header, nonce, *, method, target, body, replay_cache, secret=None, now=None)` | `bool` | Verify and consume one `X-KiroCrew-Proxy-V2` signature and its `X-KiroCrew-Proxy-Nonce`. Refuses a nonce it has already accepted. See [Replay-proof v2 signature](#replay-proof-v2-signature) |
+| `verify_proxy_principal_claim(header, *, method, target, body, replay_cache, secret=None, now=None)` | `ProxyPrincipalClaim \| None` | Verify and consume one `X-AjCrew-Principal` claim for an app that sets `backend.signedPrincipal`. Returns `None` for any malformed, stale, mismatched or replayed claim. See [Signed principal claim](#signed-principal-claim) |
+| `verify_proxy_request_v2(header, nonce, *, method, target, body, replay_cache, secret=None, now=None)` | `bool` | Verify and consume one `X-AjCrew-Proxy-V2` signature and its `X-AjCrew-Proxy-Nonce`. Refuses a nonce it has already accepted. See [Replay-proof v2 signature](#replay-proof-v2-signature) |
 | `ProxyPrincipalReplayCache(*, max_entries=4096)` | cache | The replay cache the verifiers need. Create one per backend process |
 
 ---
@@ -1754,18 +1754,18 @@ Use these main-package helpers in Python app backends:
 ## Python Client
 
 Standalone async client using `aiohttp`, carried in this repository under
-`packages/kirocrew-client-py/`. It is not published to PyPI or included in the
+`packages/ajcrew-client-py/`. It is not published to PyPI or included in the
 main wheel. Install it from a source checkout; it covers part of the Gateway API
 surface documented above.
 
 ```bash
-python -m pip install -e /path/to/KiroCrew/packages/kirocrew-client-py
+python -m pip install -e /path/to/AjCrew/packages/ajcrew-client-py
 ```
 
 ```python
-from kirocrew_client import KiroCrewClient
+from ajcrew_client import AjCrewClient
 
-async with KiroCrewClient(app_name="my-app") as mc:
+async with AjCrewClient(app_name="my-app") as mc:
     ok = await mc.ping()
     slots = await mc.list_slots()
 ```
@@ -1773,9 +1773,9 @@ async with KiroCrewClient(app_name="my-app") as mc:
 ### Constructor
 
 ```python
-KiroCrewClient(
+AjCrewClient(
     *,                        # every argument is keyword-only
-    base_url="",              # default: http://localhost:{KIROCREW_PORT or 5476}
+    base_url="",              # default: http://localhost:{AJCREW_PORT or 5476}
     token="",                 # optional for localhost
     app_name="",              # app-scoped storage and secret lookup
     timeout=30,               # request timeout seconds
@@ -1788,14 +1788,14 @@ KiroCrewClient(
 ```
 
 With `app_name` set and no `token` or `on_auth_expired`, the client reads the
-app secret from `$KIROCREW_HOME/apps/{name}/.app_secret` (`KIROCREW_HOME`
+app secret from `$AJCREW_HOME/apps/{name}/.app_secret` (`AJCREW_HOME`
 defaults to `~/.kiro/crew`).
 
 For a remote Gateway, pass `token=...` or call `await client.authenticate()`
 after entering the context. Local loopback requests need no token. Setting
 `app_name` alone only locates the app secret; it does not authenticate during
 `__aenter__`. The client sends `token` as the session cookie, so it must be an
-app token or a session the Gateway issued: a sign-in link (`kirocrew token`) is
+app token or a session the Gateway issued: a sign-in link (`ajcrew token`) is
 refused there until it is traded for a session with one
 `GET /api/status?token=<link>` (redirects off; keep the `mc_token_<port>`
 `Set-Cookie` value).
@@ -1865,11 +1865,11 @@ does so before each reconnect.
 | `rejectAction(slot, task)` | `resolve_approval(request_id, "rejected", slot_id=slot)` |
 | `resolveApproval(id, action, slot?, pattern?)` | `resolve_approval(id, action="approve", slot_id="", pattern="")`; `approve`/`approved` and `reject`/`rejected` are aliases; without a slot, accepted actions are `approve`, `reject`, `reject_once`; with a slot, accepted actions are `approved`, `rejected`, `trust`, `trust_reads`, `trust_command`, `trust_base`, `yolo`; command/base trust requires `pattern` |
 | `listApprovals()` | `list_approvals()`; pending background approvals only (cron, autonudge, subagent, task runner), never a slot's own tool prompts; empty for an app token |
-| `getApprovalMode()` | `get_gateway_config("kirocrew")`, then read `agent.approval_mode` |
+| `getApprovalMode()` | `get_gateway_config("ajcrew")`, then read `agent.approval_mode` |
 | `setApprovalMode(mode)` | `set_approval_mode(mode, slot_id="")`; accepted modes are `normal`, `trust_reads`, `trust`, `yolo`; `normal`, `trust_reads`, and `trust` may target one slot, while `yolo` is process-global and rejects `slot_id` |
 | `listModels()` | `list_models()` |
 | `setSlotModel(slot, model)` | `set_slot_model(slot, model)` |
-| `getGatewayConfig(key)` | `get_gateway_config(key)`; `key` is one of `GATEWAY_CONFIG_KEYS` (`kirocrew`, `stt`, `theme`, `default-agent`) |
+| `getGatewayConfig(key)` | `get_gateway_config(key)`; `key` is one of `GATEWAY_CONFIG_KEYS` (`ajcrew`, `stt`, `theme`, `default-agent`) |
 | `setGatewayConfig(key, val)` | `set_gateway_config(key, val)` (`PUT`, same keys) |
 | `listMcpServers()` | `list_mcp_servers()` (`GET /api/mcp`) |
 | `registerMcpServer(def)` | `register_mcp_server(name, cmd, args?, env?)` |
@@ -1911,17 +1911,17 @@ dropped = await mc.flush_pending_context("slot-1")
 await mc.send_message("slot-1", "hello")
 ```
 
-The standalone package exports `KiroCrewClient`, `KiroCrewError`, `ErrorCode`,
+The standalone package exports `AjCrewClient`, `AjCrewError`, `ErrorCode`,
 `WsClient`, `WsEvent` and `GATEWAY_CONFIG_KEYS`. It does not export
 `AppManifest`, `AppLifecycle`, `GatewayManager` or proxy-auth helpers. Validate
-manifests through the main package's install path, manage the Gateway with the `kirocrew` CLI, and use
-`kiro_crew.apps.proxy_auth` only from a backend that can import the main package.
+manifests through the main package's install path, manage the Gateway with the `ajcrew` CLI, and use
+`aj_crew.apps.proxy_auth` only from a backend that can import the main package.
 
 ---
 
 ## Error Handling
 
-All `kirocrew-client` errors are `KiroCrewError` instances with `code`,
+All `ajcrew-client` errors are `AjCrewError` instances with `code`,
 `status` and `body` attributes. The message is `str(e)`.
 
 | Code | Trigger | Retried? |
@@ -1938,11 +1938,11 @@ All `kirocrew-client` errors are `KiroCrewError` instances with `code`,
 | `WS_DISCONNECTED` | Reserved enum value; `WsClient` reconnects on its own and does not raise it | No |
 
 ```python
-from kirocrew_client import KiroCrewError
+from ajcrew_client import AjCrewError
 
 try:
     await mc.send_message("slot-1", "hello")
-except KiroCrewError as e:
+except AjCrewError as e:
     print(e.code, str(e), e.status)
 ```
 
@@ -2011,7 +2011,7 @@ token's own app permissions instead.
 
 ### Reverse Proxy Authentication
 
-The gateway signs each proxied request with `X-KiroCrew-Proxy: <timestamp>:<hmac-sha256>`. The
+The gateway signs each proxied request with `X-AjCrew-Proxy: <timestamp>:<hmac-sha256>`. The
 HMAC is computed over the message `timestamp:method:/api/path[?query]:sha256(body)` using the
 app secret as the key, where `sha256(body)` is the hex SHA-256 digest of the raw request body
 (an empty body hashes the empty byte string, `e3b0c442...`). Binding the body hash means a
@@ -2025,14 +2025,14 @@ query field reaches the backend with its exact bytes, and the signature covers t
 query the backend receives. Do not name one of your own API's query parameters
 `token`: the gateway would read it as a credential and the backend would never see it.
 
-A Python app backend whose environment can import `kiro_crew` (the built-in app backends run as child processes and still import it) verifies this with the gateway's own helper:
+A Python app backend whose environment can import `aj_crew` (the built-in app backends run as child processes and still import it) verifies this with the gateway's own helper:
 
 ```python
-from kiro_crew.apps.proxy_auth import raw_request_target, verify_proxy_request
+from aj_crew.apps.proxy_auth import raw_request_target, verify_proxy_request
 
 body = await request.read()
 if not verify_proxy_request(
-    request.headers.get('X-KiroCrew-Proxy', ''),
+    request.headers.get('X-AjCrew-Proxy', ''),
     method=request.method,
     target=raw_request_target(request),
     body=body,
@@ -2045,13 +2045,13 @@ Every argument after the header value is keyword-only. Pass the target through
 the wire, and rebuilding it from a decoded path diverges from the signed bytes as
 soon as a query parameter carries a space or a non-ASCII character.
 
-A backend that cannot import `kiro_crew` (a different language, or a Python
+A backend that cannot import `aj_crew` (a different language, or a Python
 environment without the package) computes the HMAC itself, exactly as the Node.js
 paragraph below describes.
 
 Node.js app backends can verify the signature directly: compute
 `HMAC-SHA256(timestamp:method:/api/path[?query]:sha256(body), app_secret)` and compare against
-the value in the `X-KiroCrew-Proxy` header (constant-time), rejecting stale timestamps.
+the value in the `X-AjCrew-Proxy` header (constant-time), rejecting stale timestamps.
 
 > **Body-bound signature:** every verifier must bind `sha256(body)` while keeping the
 > constant-time compare and the ±60s freshness window. A gateway that signs body-bound
@@ -2060,14 +2060,14 @@ the value in the `X-KiroCrew-Proxy` header (constant-time), rejecting stale time
 
 #### Replay-proof v2 signature
 
-`X-KiroCrew-Proxy` has no nonce. Anyone who sees one signed request can send the
+`X-AjCrew-Proxy` has no nonce. Anyone who sees one signed request can send the
 same bytes to the backend port again, and a v1 verifier accepts the copy until the
 60-second window closes. To close that gap, the gateway also sends two more headers
 on every proxied request, to every app, with no manifest change:
 
 ```text
-X-KiroCrew-Proxy-Nonce: <32 lowercase hex characters, fresh per request>
-X-KiroCrew-Proxy-V2: <timestamp>:<hmac-sha256>
+X-AjCrew-Proxy-Nonce: <32 lowercase hex characters, fresh per request>
+X-AjCrew-Proxy-V2: <timestamp>:<hmac-sha256>
 ```
 
 The v2 HMAC uses the app secret as the key, over:
@@ -2080,15 +2080,15 @@ v2:<timestamp>:<nonce>:<method>:<raw-target>:<sha256(body)>
 The `v2:` prefix keeps the two MACs apart, so neither header can stand in for the
 other. A backend that accepts a request only once per nonce refuses a replay.
 
-v1 still works. `X-KiroCrew-Proxy` keeps its name, its value and its signed string,
+v1 still works. `X-AjCrew-Proxy` keeps its name, its value and its signed string,
 and a backend that does not know the new headers ignores them. Moving to v2 is
 optional and adds replay protection. The gateway strips any copy of either new
 header that the caller sent, so a page cannot pick its own nonce.
 
-A Python backend that can import `kiro_crew` verifies v2 with the gateway's helper:
+A Python backend that can import `aj_crew` verifies v2 with the gateway's helper:
 
 ```python
-from kiro_crew.apps.proxy_auth import (
+from aj_crew.apps.proxy_auth import (
     ProxyPrincipalReplayCache,
     raw_request_target,
     verify_proxy_request_v2,
@@ -2098,8 +2098,8 @@ proxy_replays = ProxyPrincipalReplayCache()  # one per process, not per request
 
 body = await request.read()
 if not verify_proxy_request_v2(
-    request.headers.get('X-KiroCrew-Proxy-V2', ''),
-    request.headers.get('X-KiroCrew-Proxy-Nonce', ''),
+    request.headers.get('X-AjCrew-Proxy-V2', ''),
+    request.headers.get('X-AjCrew-Proxy-Nonce', ''),
     method=request.method,
     target=raw_request_target(request),
     body=body,
@@ -2129,7 +2129,7 @@ const TIMESTAMP_RE = /^[0-9]{1,12}$/;
 export function createProxyV2Verifier(secret, { maxEntries = 4096 } = {}) {
   const seen = new Map(); // nonce -> expiry, in epoch seconds
 
-  // signature: the X-KiroCrew-Proxy-V2 header. nonce: X-KiroCrew-Proxy-Nonce.
+  // signature: the X-AjCrew-Proxy-V2 header. nonce: X-AjCrew-Proxy-Nonce.
   // target: req.url, which is the raw request-target. body: the raw body as a Buffer.
   return function verify({ method, target, body, signature, nonce, now = Date.now() / 1000 }) {
     if (!secret || typeof signature !== 'string' || typeof nonce !== 'string') return false;
@@ -2161,14 +2161,14 @@ export function createProxyV2Verifier(secret, { maxEntries = 4096 } = {}) {
 Call it from the request handler after reading the whole body:
 
 ```js
-const verifyProxy = createProxyV2Verifier(process.env.KIROCREW_PROXY_SECRET ?? '');
+const verifyProxy = createProxyV2Verifier(process.env.AJCREW_PROXY_SECRET ?? '');
 
 if (!verifyProxy({
   method: req.method,
   target: req.url,
   body: rawBody,
-  signature: req.headers['x-kirocrew-proxy-v2'],
-  nonce: req.headers['x-kirocrew-proxy-nonce'],
+  signature: req.headers['x-ajcrew-proxy-v2'],
+  nonce: req.headers['x-ajcrew-proxy-nonce'],
 })) {
   res.writeHead(401).end();
   return;
@@ -2177,13 +2177,13 @@ if (!verifyProxy({
 
 #### Signed principal claim
 
-`X-KiroCrew-Proxy` proves that the gateway forwarded a request. It does not say who
+`X-AjCrew-Proxy` proves that the gateway forwarded a request. It does not say who
 the gateway authenticated. An app that needs to know sets
 [`backend.signedPrincipal: true`](manifest-reference.md) in its manifest. The gateway
-then adds `X-KiroCrew-Principal` to every request it proxies to that backend. An app
-without that exact opt-in receives no new header, and its `X-KiroCrew-Proxy` bytes
-do not change. The gateway strips any `X-KiroCrew-Proxy`, `X-KiroCrew-Proxy-V2`,
-`X-KiroCrew-Proxy-Nonce` or `X-KiroCrew-Principal` header the caller sent, so a
+then adds `X-AjCrew-Principal` to every request it proxies to that backend. An app
+without that exact opt-in receives no new header, and its `X-AjCrew-Proxy` bytes
+do not change. The gateway strips any `X-AjCrew-Proxy`, `X-AjCrew-Proxy-V2`,
+`X-AjCrew-Proxy-Nonce` or `X-AjCrew-Principal` header the caller sent, so a
 backend only ever sees the gateway's own values.
 
 The header value is the encoded claim, a period, and an HMAC:
@@ -2208,7 +2208,7 @@ Canonical JSON sorts the keys and adds no whitespace. The base64url encoding has
 padding. The HMAC uses the app secret as the key, over these newline-separated lines:
 
 ```text
-kirocrew-proxy-principal-v1
+ajcrew-proxy-principal-v1
 <issuedAt>
 <method>
 <raw-target>
@@ -2216,7 +2216,7 @@ kirocrew-proxy-principal-v1
 <base64url-canonical-json>
 ```
 
-`<raw-target>` and `<sha256(body)>` are the same values `X-KiroCrew-Proxy` signs, so
+`<raw-target>` and `<sha256(body)>` are the same values `X-AjCrew-Proxy` signs, so
 the claim is bound to one method, target and body.
 
 The gateway assigns the first kind that matches:
@@ -2231,11 +2231,11 @@ The gateway assigns the first kind that matches:
 `agent-tool` is checked first, so an internal caller never becomes `owner-session`,
 even when the same request also carries the owner's cookie.
 
-A Python backend that can import `kiro_crew` verifies the claim with the gateway's
+A Python backend that can import `aj_crew` verifies the claim with the gateway's
 helper:
 
 ```python
-from kiro_crew.apps.proxy_auth import (
+from aj_crew.apps.proxy_auth import (
     PRINCIPAL_OWNER_SESSION,
     ProxyPrincipalReplayCache,
     raw_request_target,
@@ -2246,7 +2246,7 @@ principal_replays = ProxyPrincipalReplayCache()  # one per process, not per requ
 
 body = await request.read()
 claim = verify_proxy_principal_claim(
-    request.headers.get('X-KiroCrew-Principal', ''),
+    request.headers.get('X-AjCrew-Principal', ''),
     method=request.method,
     target=raw_request_target(request),
     body=body,
@@ -2260,7 +2260,7 @@ The replay cache keeps each accepted `requestId` until its 60-second window clos
 and it rejects the same id a second time. When the cache is full, it rejects new
 claims instead of evicting a live id.
 
-A backend that cannot import `kiro_crew` verifies the claim in this order:
+A backend that cannot import `aj_crew` verifies the claim in this order:
 
 1. Require the header and the app secret.
 2. Split the header at its last period.
@@ -2285,27 +2285,27 @@ generic set of environment variables. No app-specific variables are ever injecte
 | Variable | Always set | Meaning |
 |---|---|---|
 | `PORT` | yes | The loopback port your backend must bind (`127.0.0.1:$PORT`). |
-| `KIROCREW_APP_NAME` | yes | This app's installed name. |
-| `KIROCREW_HOME` | yes | The gateway's resolved data home, so the backend reads the same app tree. |
-| `KIROCREW_GATEWAY_ORIGIN` | only with bound-port evidence | The gateway's own origin, `http://<bound host>:<bound port>`, for calling back to the gateway (for example `POST /api/notifications/push`). It is set ONLY from the address the gateway ACTUALLY bound: its exported `KIROCREW_BOUND_PORT` (required to be numeric and in `1..65535`), with the host `127.0.0.1` for loopback and wildcard binds and `[::1]` for an IPv6-loopback bind. A gateway bound to one specific interface omits the variable entirely: backend callbacks carry no `Origin` header, which the gateway's CSRF barrier trusts only from a loopback peer, so a specific-interface origin would have every mutating callback refused. It is never your app's `PORT`, an inherited `KIROCREW_PORT`, a config value, a default, or a request-derived value, so a child can never be pointed at a sibling gateway. Without loopback bound-address evidence the variable is omitted entirely (see below). |
-| `KIROCREW_PROXY_SECRET` | only if a secret exists | The per-app secret used to verify the `X-KiroCrew-Proxy` header (see above). |
-| `KIROCREW_SPAWNED` | yes | `1`: a Kiro Crew gateway spawned this process. |
-| `KIROCREW_SPAWN_INSTANCE` | yes | An id unique to this spawn. |
-| `KIROCREW_GATEWAY_ORIGIN_PROOF` | only if a secret exists and the origin is set | `HMAC-SHA256(app_secret, KIROCREW_GATEWAY_ORIGIN)`, hex. Recompute it with your secret to confirm the injected origin was minted by this gateway, rather than an inherited or spoofed env value. Omitted whenever the origin is omitted (nothing to prove) or no secret exists (nothing to key it with). |
+| `AJCREW_APP_NAME` | yes | This app's installed name. |
+| `AJCREW_HOME` | yes | The gateway's resolved data home, so the backend reads the same app tree. |
+| `AJCREW_GATEWAY_ORIGIN` | only with bound-port evidence | The gateway's own origin, `http://<bound host>:<bound port>`, for calling back to the gateway (for example `POST /api/notifications/push`). It is set ONLY from the address the gateway ACTUALLY bound: its exported `AJCREW_BOUND_PORT` (required to be numeric and in `1..65535`), with the host `127.0.0.1` for loopback and wildcard binds and `[::1]` for an IPv6-loopback bind. A gateway bound to one specific interface omits the variable entirely: backend callbacks carry no `Origin` header, which the gateway's CSRF barrier trusts only from a loopback peer, so a specific-interface origin would have every mutating callback refused. It is never your app's `PORT`, an inherited `AJCREW_PORT`, a config value, a default, or a request-derived value, so a child can never be pointed at a sibling gateway. Without loopback bound-address evidence the variable is omitted entirely (see below). |
+| `AJCREW_PROXY_SECRET` | only if a secret exists | The per-app secret used to verify the `X-AjCrew-Proxy` header (see above). |
+| `AJCREW_SPAWNED` | yes | `1`: an Aj Crew gateway spawned this process. |
+| `AJCREW_SPAWN_INSTANCE` | yes | An id unique to this spawn. |
+| `AJCREW_GATEWAY_ORIGIN_PROOF` | only if a secret exists and the origin is set | `HMAC-SHA256(app_secret, AJCREW_GATEWAY_ORIGIN)`, hex. Recompute it with your secret to confirm the injected origin was minted by this gateway, rather than an inherited or spoofed env value. Omitted whenever the origin is omitted (nothing to prove) or no secret exists (nothing to key it with). |
 
 Security and lifecycle:
 
 - When a backend's leader exits and leaves its process group behind, the gateway
   reaps that group by signalling only the members that carry both
-  `KIROCREW_SPAWNED` and this spawn's `KIROCREW_SPAWN_INSTANCE`. A child process
+  `AJCREW_SPAWNED` and this spawn's `AJCREW_SPAWN_INSTANCE`. A child process
   your backend starts must inherit both and stay in the backend's session group,
   or it is not reaped.
-- The per-app secret lives on disk at `<KIROCREW_HOME>/apps/<name>/.app_secret`, written
+- The per-app secret lives on disk at `<AJCREW_HOME>/apps/<name>/.app_secret`, written
   owner-only `0600` (owner-only DACL on Windows) by the gateway.
 - If no `.app_secret` exists, the gateway injects neither the secret nor anything derived from
   it (including the proof); a secret-less backend is otherwise unchanged.
-- `KIROCREW_GATEWAY_ORIGIN` is fail-closed: it is present only when the gateway has real
-  evidence of the port it bound. A gateway that has not exported a valid `KIROCREW_BOUND_PORT`
+- `AJCREW_GATEWAY_ORIGIN` is fail-closed: it is present only when the gateway has real
+  evidence of the port it bound. A gateway that has not exported a valid `AJCREW_BOUND_PORT`
   hands the backend no origin, so a backend that needs a callback base stays dormant rather
   than trusting a guessed address.
 - The origin and its proof are recomputed on every spawn, so a gateway restarted on a
@@ -2325,13 +2325,13 @@ Security and lifecycle:
 Using the origin for notifications:
 
 An entryPoint backend that declares `notifications.channels` in `app.json` pushes with
-`POST {KIROCREW_GATEWAY_ORIGIN}/api/notifications/push`, authenticating with its app secret
-(see App Notifications). Verify `KIROCREW_GATEWAY_ORIGIN_PROOF` before you trust the origin as
-your callback base. If `KIROCREW_GATEWAY_ORIGIN` is unset the gateway did not publish a
+`POST {AJCREW_GATEWAY_ORIGIN}/api/notifications/push`, authenticating with its app secret
+(see App Notifications). Verify `AJCREW_GATEWAY_ORIGIN_PROOF` before you trust the origin as
+your callback base. If `AJCREW_GATEWAY_ORIGIN` is unset the gateway did not publish a
 bound-port origin, so the backend has no callback base and should not push.
 
 To read and clear what it pushed, a backend that declares `/api/notifications/own` in
-`permissions.api` calls `GET {KIROCREW_GATEWAY_ORIGIN}/api/notifications/own` (returns
+`permissions.api` calls `GET {AJCREW_GATEWAY_ORIGIN}/api/notifications/own` (returns
 `{notifications, unread}`) and `POST .../own/ack` with `{"ts": "<note ts>"}`. The
 gateway answers only the notes it stamped with your app's name, so the list is exactly
 the one behind your sidebar badge; another app's note reads as `404`. The dashboard page
@@ -2375,7 +2375,7 @@ validating files against it.
   same event after any successful install or update of an app, dev mode or not,
   so an open dashboard does not keep running the old UI; a page that loaded the
   app earlier reloads when it next opens it.
-- **CLI — `kirocrew app dev <name> [--off] [--confirm-out-of-install-root]`**:
+- **CLI — `ajcrew app dev <name> [--off] [--confirm-out-of-install-root]`**:
   toggles the flag out-of-process; the gateway watcher picks up the change
   within one poll interval, so no gateway restart is needed.
 
@@ -2425,7 +2425,7 @@ refusal never disturbs existing state):
   endpoint therefore has no confirmation field at all. Enabling dev mode on a
   root outside the install directory always answers `400` with
   `code: "dev_mode_out_of_install_confirmation_required"` and an error naming
-  the fix: run `kirocrew app dev <name> --confirm-out-of-install-root` on the
+  the fix: run `ajcrew app dev <name> --confirm-out-of-install-root` on the
   gateway host. The CLI is the confirmation boundary because running it
   requires the operator's own process on the host — a boundary page code
   cannot cross. This gate is a fail-closed default that blocks self-granting

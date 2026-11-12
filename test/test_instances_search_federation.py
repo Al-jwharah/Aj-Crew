@@ -17,9 +17,9 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.dashboard import handlers_instances as hi
-from kiro_crew.history_search import SearchRows
-from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+from aj_crew.dashboard import handlers_instances as hi
+from aj_crew.history_search import SearchRows
+from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
 
 def _async_value(value):
@@ -31,7 +31,7 @@ def _async_value(value):
 
 def _enable_instances(monkeypatch):
     monkeypatch.setattr(
-        hi.KiroCrewConfig,
+        hi.AjCrewConfig,
         "load",
         staticmethod(lambda: SimpleNamespace(instances=SimpleNamespace(enabled=True))),
     )
@@ -322,7 +322,7 @@ class TestSearchAllEndpoint:
         """Same gate as every instances route: disabled feature -> 403, so the
         frontend's fallback-to-local branch is what serves a peerless install."""
         monkeypatch.setattr(
-            hi.KiroCrewConfig,
+            hi.AjCrewConfig,
             "load",
             staticmethod(lambda: SimpleNamespace(instances=SimpleNamespace(enabled=False))),
         )
@@ -380,7 +380,7 @@ class TestSearchSessionsRemote:
     """Tunnel-side GET: credential handling mirrors send_session_bundle."""
 
     def _mgr(self):
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         mgr = SshTunnelManager.__new__(SshTunnelManager)
         # The generation map: this carrier re-reads the forward it resolved
@@ -421,7 +421,7 @@ class TestSearchSessionsRemote:
         control planes); (2) a reply larger than SEARCH_REPLY_MAX_BYTES is
         refused BEFORE JSON decoding, so an unbounded peer stream cannot
         exhaust hub memory ahead of the per-field clamps."""
-        import kiro_crew.instances.ssh_tunnel_manager as mod
+        import aj_crew.instances.ssh_tunnel_manager as mod
 
         seen_kwargs: dict = {}
         big = b'{"pad": "' + b"x" * (mod._SEARCH_REPLY_MAX_BYTES + 64) + b'"}'

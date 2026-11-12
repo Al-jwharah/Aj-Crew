@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from kiro_crew.slack.events import _get_agent_names
+from aj_crew.slack.events import _get_agent_names
 
 
 def _write_agent(agents_dir, filename: str, data: dict) -> None:
@@ -34,8 +34,8 @@ def test_returns_name_field_not_stem(agents_dir):
 def test_multiple_agents_sorted(agents_dir):
     _write_agent(agents_dir, "local-B-zebra.json", {"name": "zebra"})
     _write_agent(agents_dir, "local-A-alpha.json", {"name": "alpha"})
-    _write_agent(agents_dir, "kirocrew.json", {"name": "kirocrew"})
-    assert _get_agent_names() == ["alpha", "kirocrew", "zebra"]
+    _write_agent(agents_dir, "ajcrew.json", {"name": "ajcrew"})
+    assert _get_agent_names() == ["ajcrew", "alpha", "zebra"]
 
 
 def test_falls_back_to_stem_when_name_missing(agents_dir):
@@ -89,7 +89,7 @@ def test_non_utf8_agent_file_does_not_crash(agents_dir):
 
     safe_read_file opens with encoding='utf-8'; the read raises
     UnicodeDecodeError (a ValueError subclass, NOT an OSError), which escaped the
-    old (json.JSONDecodeError, OSError) except and killed the `/kirocrew
+    old (json.JSONDecodeError, OSError) except and killed the `/ajcrew
     channels` handler / channel-modal refresh task before the modal opened.
     """
     _write_agent(agents_dir, "real-agent.json", {"name": "real"})

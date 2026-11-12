@@ -26,7 +26,7 @@ from issue_radar_routes_ai_coverage_helpers import (
     _stream,
 )
 
-from kiro_crew.apps.builtins.issue_radar.backend import routes, store
+from aj_crew.apps.builtins.issue_radar.backend import routes, store
 
 # ── AI output-language localization ──────
 

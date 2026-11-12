@@ -2,7 +2,7 @@
  * Stale pre-owner session signal — shared, dependency-free detection.
  *
  * The backend labels exactly one owner-gate denial with a machine-readable
- * code: a session whose token was minted before `KIROCREW_OWNER_ID` was
+ * code: a session whose token was minted before `AJCREW_OWNER_ID` was
  * configured (the subject is fixed at mint time and survives refresh, so only
  * a fresh sign-in recovers). The blessed transport (`api/client`) detects it
  * inside its `j`/`jNullable` pipeline, but several owner-gated surfaces fetch

@@ -1,9 +1,9 @@
 """``TelegramClient`` is one class composed from owner modules; these tests pin how.
 
-``kiro_crew.telegram.client`` keeps the client's state, its Bot API methods, the update
+``aj_crew.telegram.client`` keeps the client's state, its Bot API methods, the update
 parse and handler dispatch, and the public limits and records. An owner function whose
 first parameter is ``self`` is bound as the class attribute of the same name, and every
-other moved name is served from its owner through ``kiro_crew._facade_mirror``. Pinned
+other moved name is served from its owner through ``aj_crew._facade_mirror``. Pinned
 here: the owner set and its layer order, that each moved member is its owner's own
 function with its base kind and signature, the rules a function bound from outside the
 class body needs, and the logger name, which ``test_telegram_album.py`` captures. The
@@ -22,9 +22,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.telegram import client as FACADE_MODULE
+from aj_crew.telegram import client as FACADE_MODULE
 
-FACADE = "kiro_crew.telegram.client"
+FACADE = "aj_crew.telegram.client"
 STEM = "client"
 FACADE_PATH = Path(FACADE_MODULE.__file__).resolve()
 TELEGRAM_DIR = FACADE_PATH.parent
@@ -236,7 +236,7 @@ FACADE_PINNED = frozenset(
 
 
 def _owner(stem: str) -> ModuleType:
-    return importlib.import_module(f"kiro_crew.telegram.{stem}")
+    return importlib.import_module(f"aj_crew.telegram.{stem}")
 
 
 def _source(stem: str) -> str:

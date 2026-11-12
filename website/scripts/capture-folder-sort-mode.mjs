@@ -9,7 +9,7 @@
  * `03.` and `04.` and `98.` below - exactly his screenshot.
  *
  * The mode is driven through the real control: the sort-and-filter menu's
- * "Folder order" rows. A PATCH to /api/config/kirocrew is answered by mutating the
+ * "Folder order" rows. A PATCH to /api/config/ajcrew is answered by mutating the
  * fixture the GET serves, the way the real endpoint pair round-trips, so the
  * settle-time refetch sees the saved value.
  *
@@ -73,7 +73,7 @@
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { serveDist } from './lib/serve-dist.mjs'
-import { KIROCREW_CONFIG_FIXTURE, json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
+import { AJCREW_CONFIG_FIXTURE, json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/folder-sort-mode'
 mkdirSync(OUT, { recursive: true })
@@ -89,7 +89,7 @@ const folders = [
   { id: 'f98', name: '98. Someday', order: 5, collapsed: true, created_at: 1_758_640_000 },
 ]
 const slots = [{
-  key: 's1', title: 'Weekly planning', messages: 4, running: false, agent: 'kirocrew',
+  key: 's1', title: 'Weekly planning', messages: 4, running: false, agent: 'ajcrew',
   created: '2026-09-23T09:00:00Z', last_ts: '2026-09-23T09:30:00Z', folder_id: 'f01',
 }]
 
@@ -278,7 +278,7 @@ async function captureModes(browser, base) {
         await json(route, { ok: true })
         return true
       }
-      if (path !== '/api/config/kirocrew') return false
+      if (path !== '/api/config/ajcrew') return false
       if (method === 'PATCH') {
         const body = JSON.parse(route.request().postData() || '{}')
         if (body.path === 'dashboard.folder_sort') storedMode = body.value
@@ -286,7 +286,7 @@ async function captureModes(browser, base) {
         await json(route, { ok: true })
         return true
       }
-      await json(route, { ...KIROCREW_CONFIG_FIXTURE, dashboard: { ...(KIROCREW_CONFIG_FIXTURE.dashboard || {}), folder_sort: storedMode } })
+      await json(route, { ...AJCREW_CONFIG_FIXTURE, dashboard: { ...(AJCREW_CONFIG_FIXTURE.dashboard || {}), folder_sort: storedMode } })
       return true
     },
   })
@@ -475,7 +475,7 @@ async function captureFailedRead(browser, base) {
       const method = route.request().method()
       if (path === '/api/apps') { await json(route, [COMMAND_BAR_APP]); return true }
       if (path.startsWith('/api/chat/folders') && method !== 'GET') { await json(route, { ok: true }); return true }
-      if (path !== '/api/config/kirocrew') return false
+      if (path !== '/api/config/ajcrew') return false
       // The one read that fails; nothing else about the dashboard is broken.
       await json(route, { error: READ_FAILURE }, 503)
       return true

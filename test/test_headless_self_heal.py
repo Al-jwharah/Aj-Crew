@@ -20,7 +20,7 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.instances.registry import is_headless_provisioner
+from aj_crew.instances.registry import is_headless_provisioner
 
 
 @dataclass
@@ -75,7 +75,7 @@ class TestTheHealingArmIsChosenByTheCrew:
         import pathlib
         import sys
 
-        import kiro_crew.instances.ssh_tunnel_manager as mod
+        import aj_crew.instances.ssh_tunnel_manager as mod
 
         source = "".join(
             pathlib.Path(sys.modules[name].__file__).read_text(encoding="utf-8")
@@ -91,7 +91,7 @@ class TestTheHealingArmIsChosenByTheCrew:
     def test_a_headless_crew_takes_the_reforward_arm(self):
         """The arm is `fargate or headless or chained`, so a headless ssm crew is
         in it and a gateway-bearing ssm crew is not."""
-        import kiro_crew.instances.ssh_tunnel_manager as mod
+        import aj_crew.instances.ssh_tunnel_manager as mod
 
         headless = _params(mod, headless=True)
         gateway = _params(mod, headless=False)
@@ -104,7 +104,7 @@ class TestTheHealingArmIsChosenByTheCrew:
 
     def test_a_fargate_crew_is_still_in_that_arm(self):
         """The change widens the arm; it must not move anything out of it."""
-        import kiro_crew.instances.ssh_tunnel_manager as mod
+        import aj_crew.instances.ssh_tunnel_manager as mod
 
         params = _params(mod, headless=True, method="fargate")
         assert params.method == "fargate" or params.headless
@@ -115,7 +115,7 @@ class TestNoMintIsAttemptedForAHeadlessCrew:
 
     @pytest.mark.asyncio
     async def test_the_reforward_arm_never_calls_the_mint(self):
-        import kiro_crew.instances.ssh_tunnel_manager as mod
+        import aj_crew.instances.ssh_tunnel_manager as mod
 
         record = Recorder()
 
@@ -142,7 +142,7 @@ class TestNoMintIsAttemptedForAHeadlessCrew:
     @pytest.mark.asyncio
     async def test_a_gateway_crew_still_mints(self):
         """The arm must not swallow the lane that genuinely has a dashboard."""
-        import kiro_crew.instances.ssh_tunnel_manager as mod
+        import aj_crew.instances.ssh_tunnel_manager as mod
 
         record = Recorder()
 
@@ -174,7 +174,7 @@ class TestEverySiteThatAsksAboutTheCrewAsksTheRegistry:
         import pathlib
         import sys
 
-        import kiro_crew.instances.ssh_tunnel_manager as mod
+        import aj_crew.instances.ssh_tunnel_manager as mod
 
         return "".join(
             pathlib.Path(sys.modules[name].__file__).read_text(encoding="utf-8")
@@ -210,7 +210,7 @@ class TestEverySiteThatAsksAboutTheCrewAsksTheRegistry:
         assert 'headless=inst.provisioner_id == "microvm"' not in source
 
     def test_the_turn_url_is_offered_to_a_headless_crew(self):
-        import kiro_crew.instances.ssh_tunnel_manager as mod
+        import aj_crew.instances.ssh_tunnel_manager as mod
 
         assert _params(mod, headless=True).turn_url(7779)
         assert not _params(mod, headless=False).turn_url(7779)

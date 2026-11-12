@@ -16,15 +16,15 @@ from kiro_prerequisite_helpers import _isolate_agent_specs  # noqa: F401
 from kiro_prerequisite_helpers import _make_executable, _no_audit
 from named_cases_helpers import named_cases
 
-from kiro_crew import _process_group_supervisor as supervisor
-from kiro_crew import kiro_prerequisite as prerequisite_module
-from kiro_crew import platform_compat
-from kiro_crew.kiro_cli import (
+from aj_crew import _process_group_supervisor as supervisor
+from aj_crew import kiro_prerequisite as prerequisite_module
+from aj_crew import platform_compat
+from aj_crew.kiro_cli import (
     BUNDLED_KIRO_CLI_ENTRY,
     BUNDLED_KIRO_CLI_WINDOWS_ENTRY,
     resolve_kiro_cli,
 )
-from kiro_crew.kiro_prerequisite import (
+from aj_crew.kiro_prerequisite import (
     KIRO_CLI_LOGIN_COMMAND,
     KIRO_CLI_SSO_LOGIN_COMMAND,
     KiroPrerequisiteService,
@@ -36,7 +36,7 @@ from kiro_crew.kiro_prerequisite import (
 
 class TestHostSandboxReadiness:
     def test_probe_failure_payload_does_not_claim_host_sandbox(self) -> None:
-        from kiro_crew.dashboard.handlers.kiro_prerequisite import _not_ready_snapshot
+        from aj_crew.dashboard.handlers.kiro_prerequisite import _not_ready_snapshot
 
         assert _not_ready_snapshot()["sandbox_backend_available"] is False
 
@@ -45,11 +45,11 @@ class TestHostSandboxReadiness:
     async def test_effective_off_tier_blocks_only_enforced_backends(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, floor, blocked: bool
     ) -> None:
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         monkeypatch.setattr(sandbox, "configured_sandbox_mode", lambda: "off")
         monkeypatch.setattr(sandbox, "_governance_sandbox_floor", lambda: floor)
-        monkeypatch.setattr(sandbox, "_inside_kirocrew_sandbox", lambda: False)
+        monkeypatch.setattr(sandbox, "_inside_ajcrew_sandbox", lambda: False)
         monkeypatch.setattr(sandbox, "detect_backend", lambda **kwargs: "namespace")
         monkeypatch.setattr(
             prerequisite_module, "find_kiro_cli_candidates", lambda *args, **kwargs: []
@@ -80,7 +80,7 @@ class TestHostSandboxReadiness:
         backend: str,
         available: bool,
     ) -> None:
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         loop_thread = threading.get_ident()
 
@@ -131,7 +131,7 @@ class TestKiroPrerequisiteHelpers:
                 sizes.append(os.stat(target).st_size)
             return real_restrict(target)
 
-        monkeypatch.setattr("kiro_crew.platform_compat.restrict_to_owner", _measuring)
+        monkeypatch.setattr("aj_crew.platform_compat.restrict_to_owner", _measuring)
         target = tmp_path / "staged" / "kiro-token.json"
         prerequisite_module._atomic_write_secret_bytes(target, b"identity-bytes")
 
@@ -366,7 +366,7 @@ class TestKiroPrerequisiteHelpers:
         # bypass any more: it is a runnable packaged entry point, so the
         # ordinary in-place path launches it. The test-mode marker grants no
         # launch privilege, so the result must not depend on it.
-        import kiro_crew.testing as kc_testing
+        import aj_crew.testing as kc_testing
 
         fake = Path(kc_testing.__file__).with_name("fake_acp_backend.py")
         assert fake.is_file(), "packaged fake ACP backend is missing"
@@ -382,7 +382,7 @@ class TestKiroPrerequisiteHelpers:
             data_home=tmp_path,
             platform_name="darwin",
             environ={
-                "KIROCREW_KIRO_BIN": str(fake),
+                "AJCREW_KIRO_BIN": str(fake),
                 prerequisite_module.FAKE_ACP_TEST_MODE_ENV: "1",
             },
         )
@@ -397,7 +397,7 @@ class TestKiroPrerequisiteHelpers:
         platform_name: str,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        # An operator KIROCREW_KIRO_BIN=./kiro-cli resolves against the GATEWAY's
+        # An operator AJCREW_KIRO_BIN=./kiro-cli resolves against the GATEWAY's
         # cwd, but ACP spawns with cwd=<session work_dir> — so a relative launch
         # path dies with ENOENT there. Anchor it, without resolving symlinks.
         executable = tmp_path / "kiro-cli"
@@ -508,7 +508,7 @@ class TestKiroPrerequisiteHelpers:
         assert str(executable) in candidates
 
     def test_bundled_dir_ranks_above_system_installs(self, tmp_path: Path) -> None:
-        """KIROCREW_BUNDLED_KIRO_DIR (the desktop app's own copy) wins over a
+        """AJCREW_BUNDLED_KIRO_DIR (the desktop app's own copy) wins over a
         user install, because the app was built against that exact version. The
         bundled POSIX candidate is the chat binary, the only file it ships."""
         bundled = tmp_path / "resources" / "kiro-cli" / BUNDLED_KIRO_CLI_ENTRY
@@ -519,7 +519,7 @@ class TestKiroPrerequisiteHelpers:
         resolved = resolve_kiro_cli(
             platform_name="linux",
             home=tmp_path / "home",
-            environ={"KIROCREW_BUNDLED_KIRO_DIR": str(bundled.parent), "PATH": ""},
+            environ={"AJCREW_BUNDLED_KIRO_DIR": str(bundled.parent), "PATH": ""},
         )
 
         assert resolved == str(bundled)
@@ -536,7 +536,7 @@ class TestKiroPrerequisiteHelpers:
             platform_name="win32",
             home=tmp_path / "home",
             environ={
-                "KIROCREW_BUNDLED_KIRO_DIR": str(bundled.parent),
+                "AJCREW_BUNDLED_KIRO_DIR": str(bundled.parent),
                 "LOCALAPPDATA": str(local_app_data),
                 "PATH": "",
             },
@@ -560,7 +560,7 @@ class TestKiroPrerequisiteHelpers:
         resolved = resolve_kiro_cli(
             platform_name="linux",
             home=tmp_path / "home",
-            environ={"KIROCREW_BUNDLED_KIRO_DIR": str(launcher_only.parent), "PATH": ""},
+            environ={"AJCREW_BUNDLED_KIRO_DIR": str(launcher_only.parent), "PATH": ""},
         )
 
         assert resolved == str(user_install)
@@ -579,7 +579,7 @@ class TestKiroPrerequisiteHelpers:
             platform_name="linux",
             home=tmp_path / "home",
             environ={
-                "KIROCREW_BUNDLED_KIRO_DIR": str(bundled.parent),
+                "AJCREW_BUNDLED_KIRO_DIR": str(bundled.parent),
                 "PATH": str(on_path_only.parent),
             },
             include_inherited_path=False,
@@ -588,7 +588,7 @@ class TestKiroPrerequisiteHelpers:
         assert resolved == str(bundled)
 
     def test_operator_override_still_beats_the_bundled_dir(self, tmp_path: Path) -> None:
-        """KIROCREW_KIRO_BIN stays the highest-priority escape hatch: an
+        """AJCREW_KIRO_BIN stays the highest-priority escape hatch: an
         operator can force a different binary even on a bundled install."""
         bundled = tmp_path / "resources" / "kiro-cli" / BUNDLED_KIRO_CLI_ENTRY
         forced = tmp_path / "operator" / "kiro-cli"
@@ -599,8 +599,8 @@ class TestKiroPrerequisiteHelpers:
             platform_name="linux",
             home=tmp_path / "home",
             environ={
-                "KIROCREW_KIRO_BIN": str(forced),
-                "KIROCREW_BUNDLED_KIRO_DIR": str(bundled.parent),
+                "AJCREW_KIRO_BIN": str(forced),
+                "AJCREW_BUNDLED_KIRO_DIR": str(bundled.parent),
                 "PATH": "",
             },
         )
@@ -621,7 +621,7 @@ class TestKiroPrerequisiteHelpers:
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
 
         login, sso, bundled = login_commands_for(
-            str(binary), {"KIROCREW_BUNDLED_KIRO_DIR": str(bundled_dir)}
+            str(binary), {"AJCREW_BUNDLED_KIRO_DIR": str(bundled_dir)}
         )
 
         assert bundled is True
@@ -634,13 +634,13 @@ class TestKiroPrerequisiteHelpers:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        bundled_dir = tmp_path / "Kiro Crew" / "kiro-cli"
+        bundled_dir = tmp_path / "Aj Crew" / "kiro-cli"
         binary = bundled_dir / BUNDLED_KIRO_CLI_WINDOWS_ENTRY
         _make_executable(binary)
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
 
         login, sso, bundled = login_commands_for(
-            str(binary), {"KIROCREW_BUNDLED_KIRO_DIR": str(bundled_dir)}
+            str(binary), {"AJCREW_BUNDLED_KIRO_DIR": str(bundled_dir)}
         )
 
         quoted = str(binary).replace("'", "''")
@@ -659,7 +659,7 @@ class TestKiroPrerequisiteHelpers:
 
         login, sso, bundled = login_commands_for(
             "/usr/local/bin/kiro-cli",
-            {"KIROCREW_BUNDLED_KIRO_DIR": str(bundled_dir)},
+            {"AJCREW_BUNDLED_KIRO_DIR": str(bundled_dir)},
         )
 
         assert bundled is False
@@ -669,7 +669,7 @@ class TestKiroPrerequisiteHelpers:
     def test_off_path_override_serves_its_absolute_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """A ``KIROCREW_KIRO_BIN`` the user's shell would not find as ``kiro-cli``
+        """An ``AJCREW_KIRO_BIN`` the user's shell would not find as ``kiro-cli``
         gets the quoted absolute path, like the bundled copy: the bare command
         would fail or sign in a different install."""
         binary = tmp_path / "opt" / "kiro build" / "kiro-cli"
@@ -677,7 +677,7 @@ class TestKiroPrerequisiteHelpers:
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
 
         login, sso, bundled = login_commands_for(
-            str(binary), {"KIROCREW_KIRO_BIN": str(binary), "PATH": "/nonexistent"}
+            str(binary), {"AJCREW_KIRO_BIN": str(binary), "PATH": "/nonexistent"}
         )
 
         assert bundled is False
@@ -692,7 +692,7 @@ class TestKiroPrerequisiteHelpers:
         _make_executable(binary)
 
         login, _sso, bundled = login_commands_for(
-            str(binary), {"KIROCREW_KIRO_BIN": str(binary), "PATH": str(bin_dir)}
+            str(binary), {"AJCREW_KIRO_BIN": str(binary), "PATH": str(bin_dir)}
         )
 
         assert bundled is False
@@ -925,7 +925,7 @@ class TestConfigSetHintsForLauncher:
 
     @staticmethod
     def _hints(launcher: str, platform_name: str) -> dict[str, Any]:
-        from kiro_crew.kiro_prerequisite_status import config_set_hints_for_launcher
+        from aj_crew.kiro_prerequisite_status import config_set_hints_for_launcher
 
         return config_set_hints_for_launcher(launcher, platform_name)
 
@@ -936,7 +936,7 @@ class TestConfigSetHintsForLauncher:
         return {row["id"]: row["prefix"] for row in hints["shells"]}
 
     def test_windows_lists_powershell_then_cmd(self) -> None:
-        launcher = r"C:\Program Files\Kiro Crew\resources\bin\kirocrew.cmd"
+        launcher = r"C:\Program Files\Aj Crew\resources\bin\ajcrew.cmd"
 
         hints = self._hints(launcher, "win32")
 
@@ -947,27 +947,27 @@ class TestConfigSetHintsForLauncher:
         }
 
     def test_windows_path_with_ampersand_stays_one_quoted_token(self) -> None:
-        launcher = r"C:\a&b\kirocrew.cmd"
+        launcher = r"C:\a&b\ajcrew.cmd"
 
         prefixes = self._prefixes(self._hints(launcher, "win32"))
 
-        assert prefixes["powershell"] == r"& 'C:\a&b\kirocrew.cmd'"
-        assert prefixes["cmd"] == r'"C:\a&b\kirocrew.cmd"'
+        assert prefixes["powershell"] == r"& 'C:\a&b\ajcrew.cmd'"
+        assert prefixes["cmd"] == r'"C:\a&b\ajcrew.cmd"'
 
     def test_windows_apostrophe_is_doubled_for_powershell_only(self) -> None:
-        launcher = r"C:\Users\O'Brien\kirocrew.cmd"
+        launcher = r"C:\Users\O'Brien\ajcrew.cmd"
 
         prefixes = self._prefixes(self._hints(launcher, "win32"))
 
-        assert prefixes["powershell"] == r"& 'C:\Users\O''Brien\kirocrew.cmd'"
-        assert prefixes["cmd"] == r'"C:\Users\O' + "'" + r'Brien\kirocrew.cmd"'
+        assert prefixes["powershell"] == r"& 'C:\Users\O''Brien\ajcrew.cmd'"
+        assert prefixes["cmd"] == r'"C:\Users\O' + "'" + r'Brien\ajcrew.cmd"'
 
     def test_a_caret_stays_inside_the_quotes_when_there_is_no_percent(self) -> None:
-        launcher = r"C:\a^b\kirocrew.cmd"
+        launcher = r"C:\a^b\ajcrew.cmd"
 
         prefixes = self._prefixes(self._hints(launcher, "win32"))
 
-        assert prefixes["cmd"] == r'"C:\a^b\kirocrew.cmd"'
+        assert prefixes["cmd"] == r'"C:\a^b\ajcrew.cmd"'
 
     @pytest.mark.parametrize(
         ("launcher", "expected_powershell"),
@@ -976,34 +976,34 @@ class TestConfigSetHintsForLauncher:
                 "test_a_percent_in_the_path_leaves_only_the_powershell_row",
                 ("launcher", "expected_powershell"),
                 [
-                    (r"C:\100%\kirocrew.cmd", r"& 'C:\100%\kirocrew.cmd'"),
-                    (r"C:\%KC_MARK%\kirocrew.cmd", r"& 'C:\%KC_MARK%\kirocrew.cmd'"),
-                    (r"C:\%%\kirocrew.cmd", r"& 'C:\%%\kirocrew.cmd'"),
-                    (r"C:\a%b\kirocrew.CMD", r"& 'C:\a%b\kirocrew.CMD'"),
-                    (r"\\host\share\100%\kirocrew.bat", r"& '\\host\share\100%\kirocrew.bat'"),
+                    (r"C:\100%\ajcrew.cmd", r"& 'C:\100%\ajcrew.cmd'"),
+                    (r"C:\%KC_MARK%\ajcrew.cmd", r"& 'C:\%KC_MARK%\ajcrew.cmd'"),
+                    (r"C:\%%\ajcrew.cmd", r"& 'C:\%%\ajcrew.cmd'"),
+                    (r"C:\a%b\ajcrew.CMD", r"& 'C:\a%b\ajcrew.CMD'"),
+                    (r"\\host\share\100%\ajcrew.bat", r"& '\\host\share\100%\ajcrew.bat'"),
                     (
-                        r"C:\Program Files\100%\Scripts\kirocrew.exe",
-                        r"& 'C:\Program Files\100%\Scripts\kirocrew.exe'",
+                        r"C:\Program Files\100%\Scripts\ajcrew.exe",
+                        r"& 'C:\Program Files\100%\Scripts\ajcrew.exe'",
                     ),
-                    (r"C:\Users\O'Brien%\kirocrew.cmd", r"& 'C:\Users\O''Brien%\kirocrew.cmd'"),
+                    (r"C:\Users\O'Brien%\ajcrew.cmd", r"& 'C:\Users\O''Brien%\ajcrew.cmd'"),
                 ],
             ),
             *named_cases(
                 "test_a_bang_in_the_path_leaves_only_the_powershell_row",
                 ("launcher", "expected_powershell"),
                 [
-                    (r"C:\a!b\kirocrew.cmd", r"& 'C:\a!b\kirocrew.cmd'"),
-                    (r"C:\a!b\kirocrew.bat", r"& 'C:\a!b\kirocrew.bat'"),
-                    (r"C:\a!b\kirocrew.exe", r"& 'C:\a!b\kirocrew.exe'"),
+                    (r"C:\a!b\ajcrew.cmd", r"& 'C:\a!b\ajcrew.cmd'"),
+                    (r"C:\a!b\ajcrew.bat", r"& 'C:\a!b\ajcrew.bat'"),
+                    (r"C:\a!b\ajcrew.exe", r"& 'C:\a!b\ajcrew.exe'"),
                     (
-                        r"C:\Program Files\Hi!\Scripts\kirocrew.exe",
-                        r"& 'C:\Program Files\Hi!\Scripts\kirocrew.exe'",
+                        r"C:\Program Files\Hi!\Scripts\ajcrew.exe",
+                        r"& 'C:\Program Files\Hi!\Scripts\ajcrew.exe'",
                     ),
-                    (r"C:\x!y!z\kirocrew.cmd", r"& 'C:\x!y!z\kirocrew.cmd'"),
-                    (r"C:\100%!\kirocrew.cmd", r"& 'C:\100%!\kirocrew.cmd'"),
-                    (r"C:\a%b!c\kirocrew.CMD", r"& 'C:\a%b!c\kirocrew.CMD'"),
-                    (r"C:\100%!\kirocrew.exe", r"& 'C:\100%!\kirocrew.exe'"),
-                    (r"C:\Users\O'Brien!\kirocrew.cmd", r"& 'C:\Users\O''Brien!\kirocrew.cmd'"),
+                    (r"C:\x!y!z\ajcrew.cmd", r"& 'C:\x!y!z\ajcrew.cmd'"),
+                    (r"C:\100%!\ajcrew.cmd", r"& 'C:\100%!\ajcrew.cmd'"),
+                    (r"C:\a%b!c\ajcrew.CMD", r"& 'C:\a%b!c\ajcrew.CMD'"),
+                    (r"C:\100%!\ajcrew.exe", r"& 'C:\100%!\ajcrew.exe'"),
+                    (r"C:\Users\O'Brien!\ajcrew.cmd", r"& 'C:\Users\O''Brien!\ajcrew.cmd'"),
                 ],
             ),
         ],
@@ -1019,13 +1019,13 @@ class TestConfigSetHintsForLauncher:
     @pytest.mark.parametrize(
         ("launcher", "expected_powershell"),
         [
-            ("C:\\O\u2018Brien\\kirocrew.cmd", "& 'C:\\O\u2018\u2018Brien\\kirocrew.cmd'"),
-            ("C:\\O\u2019Brien\\kirocrew.cmd", "& 'C:\\O\u2019\u2019Brien\\kirocrew.cmd'"),
-            ("C:\\O\u201aBrien\\kirocrew.cmd", "& 'C:\\O\u201a\u201aBrien\\kirocrew.cmd'"),
-            ("C:\\O\u201bBrien\\kirocrew.cmd", "& 'C:\\O\u201b\u201bBrien\\kirocrew.cmd'"),
+            ("C:\\O\u2018Brien\\ajcrew.cmd", "& 'C:\\O\u2018\u2018Brien\\ajcrew.cmd'"),
+            ("C:\\O\u2019Brien\\ajcrew.cmd", "& 'C:\\O\u2019\u2019Brien\\ajcrew.cmd'"),
+            ("C:\\O\u201aBrien\\ajcrew.cmd", "& 'C:\\O\u201a\u201aBrien\\ajcrew.cmd'"),
+            ("C:\\O\u201bBrien\\ajcrew.cmd", "& 'C:\\O\u201b\u201bBrien\\ajcrew.cmd'"),
             (
-                "C:\\a'\u2018\u2019\u201a\u201b\\kirocrew.cmd",
-                "& 'C:\\a''\u2018\u2018\u2019\u2019\u201a\u201a\u201b\u201b\\kirocrew.cmd'",
+                "C:\\a'\u2018\u2019\u201a\u201b\\ajcrew.cmd",
+                "& 'C:\\a''\u2018\u2018\u2019\u2019\u201a\u201a\u201b\u201b\\ajcrew.cmd'",
             ),
         ],
     )
@@ -1038,7 +1038,7 @@ class TestConfigSetHintsForLauncher:
         assert prefixes["cmd"] == f'"{launcher}"'
 
     def test_a_double_quote_like_character_is_not_doubled_for_powershell(self) -> None:
-        launcher = "C:\\a\u201cb\u201d\\kirocrew.cmd"
+        launcher = "C:\\a\u201cb\u201d\\ajcrew.cmd"
 
         prefixes = self._prefixes(self._hints(launcher, "win32"))
 
@@ -1046,7 +1046,7 @@ class TestConfigSetHintsForLauncher:
 
     @pytest.mark.parametrize("platform_name", ["linux", "darwin"])
     def test_a_bang_in_a_posix_path_is_left_to_sh_quoting(self, platform_name: str) -> None:
-        launcher = "/opt/hi!/kirocrew"
+        launcher = "/opt/hi!/ajcrew"
 
         prefixes = self._prefixes(self._hints(launcher, platform_name))
 
@@ -1054,7 +1054,7 @@ class TestConfigSetHintsForLauncher:
 
     @pytest.mark.parametrize("platform_name", ["linux", "darwin"])
     def test_posix_has_one_row_quoted_for_sh(self, platform_name: str) -> None:
-        launcher = "/opt/kiro crew/it's/kirocrew"
+        launcher = "/opt/aj crew/it's/ajcrew"
 
         hints = self._hints(launcher, platform_name)
 
@@ -1062,13 +1062,13 @@ class TestConfigSetHintsForLauncher:
         assert self._prefixes(hints)["posix"] == shlex.quote(launcher)
 
     def test_a_percent_in_a_posix_path_is_left_to_sh_quoting(self) -> None:
-        launcher = "/opt/100%/kirocrew"
+        launcher = "/opt/100%/ajcrew"
 
         prefixes = self._prefixes(self._hints(launcher, "linux"))
 
         assert prefixes == {"posix": shlex.quote(launcher)}
 
     def test_a_plain_posix_launcher_is_not_quoted(self) -> None:
-        prefixes = self._prefixes(self._hints("/usr/bin/kirocrew", "linux"))
+        prefixes = self._prefixes(self._hints("/usr/bin/ajcrew", "linux"))
 
-        assert prefixes == {"posix": "/usr/bin/kirocrew"}
+        assert prefixes == {"posix": "/usr/bin/ajcrew"}

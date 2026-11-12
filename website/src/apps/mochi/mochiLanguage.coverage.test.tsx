@@ -85,7 +85,7 @@ describe('MochiLocalized', () => {
     expect(languageState.current).toBe('fr')
   })
 
-  it('follows the stored Kiro Crew language when the override is empty', async () => {
+  it('follows the stored Aj Crew language when the override is empty', async () => {
     getMochiConfig.mockResolvedValueOnce({ language: '' })
     render(
       <MochiLocalized>
@@ -97,7 +97,7 @@ describe('MochiLocalized', () => {
     expect(languageState.current).toBe('de')
   })
 
-  it('treats a non-string override as following Kiro Crew', async () => {
+  it('treats a non-string override as following Aj Crew', async () => {
     getMochiConfig.mockResolvedValueOnce({ language: 42 as unknown as string })
     render(
       <MochiLocalized>

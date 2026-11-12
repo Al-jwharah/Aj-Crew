@@ -11,12 +11,12 @@ import json
 
 import pytest
 
-from kiro_crew.config import session_environments as se
-from kiro_crew.config.loader import _KNOWN_CONFIG_SECTIONS, KiroCrewConfig
+from aj_crew.config import session_environments as se
+from aj_crew.config.loader import _KNOWN_CONFIG_SECTIONS, AjCrewConfig
 
 _BASE_CONFIG = {
-    "agents": {"kirocrew": {"kiro_agent": "kirocrew"}},
-    "default_agent": "kirocrew",
+    "agents": {"ajcrew": {"kiro_agent": "ajcrew"}},
+    "default_agent": "ajcrew",
     "session": {"timeout_secs": 1234},
     "an_edition_section": {"keep": "me"},
 }
@@ -46,7 +46,7 @@ def _profile(pid: str = "dev", **overrides: object) -> dict:
 def config_file(tmp_path, monkeypatch):
     path = tmp_path / "config.json"
     path.write_text(json.dumps(_BASE_CONFIG), encoding="utf-8")
-    monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: path)
+    monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: path)
     return path
 
 
@@ -172,7 +172,7 @@ class TestSection:
 
 class TestLoader:
     def test_absent_section_defaults(self, config_file):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg.session_environments.coder_url == ""
         assert cfg.session_environments.profiles == []
         assert cfg.to_dict()["session_environments"] == {
@@ -192,13 +192,13 @@ class TestLoader:
             "stop_on_shutdown": True,
         }
         _write_section(config_file, section)
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert cfg.to_dict()["session_environments"] == section
         cfg.save()
         stored = _stored(config_file)
         assert stored["session_environments"] == section
         assert stored["an_edition_section"] == {"keep": "me"}
-        assert KiroCrewConfig.load().to_dict()["session_environments"] == section
+        assert AjCrewConfig.load().to_dict()["session_environments"] == section
 
     def test_lenient_load_keeps_valid_parts(self, config_file):
         section = {
@@ -212,7 +212,7 @@ class TestLoader:
             ],
         }
         _write_section(config_file, section)
-        env = KiroCrewConfig.load().session_environments
+        env = AjCrewConfig.load().session_environments
         assert env.coder_url == ""
         assert [p.id for p in env.profiles] == ["good", "also-good"]
 

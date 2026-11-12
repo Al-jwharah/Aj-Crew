@@ -47,10 +47,10 @@ from test_mcp_gateway_claim import (
     _register,
 )
 
-from kiro_crew import mcp_caller, mcp_core
-from kiro_crew.mcp_caller import CallerContext
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.testing.wait import LoopHop, await_until
+from aj_crew import mcp_caller, mcp_core
+from aj_crew.mcp_caller import CallerContext
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.testing.wait import LoopHop, await_until
 
 # Fixtures shared with the sibling modules, bound by assignment so pytest registers
 # them for the tests in this module.
@@ -624,8 +624,8 @@ async def test_a_subagent_session_survives_its_parents_rekey(
     assert sub_caller.session_key == SUB_KEY
 
     # What a reflexive tool in the subagent's backend process then resolves.
-    monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-    monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
+    monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+    monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
     # Value-based restore, not token-based: this test crosses asyncio task
     # boundaries and pytest-xdist shares the worker's Context across tests.
     previous = mcp_caller._CURRENT_CALLER.get()

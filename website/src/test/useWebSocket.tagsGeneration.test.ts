@@ -121,8 +121,8 @@ describe('useWebSocket tag-vocabulary / board-column generation invalidation', (
     const ws = mountOpened()
     act(() => { ws.simulateMessage({ type: 'slots', data: [], tagsGeneration: 2 }) })
 
-    act(() => { ws.simulateMessage({ type: 'slots', data: [{ key: 'a', title: 'x', agent: 'kirocrew' }], tagsGeneration: 2 }) })
-    act(() => { ws.simulateMessage({ type: 'slots', data: [{ key: 'b', title: 'y', agent: 'kirocrew' }], tagsGeneration: 2 }) })
+    act(() => { ws.simulateMessage({ type: 'slots', data: [{ key: 'a', title: 'x', agent: 'ajcrew' }], tagsGeneration: 2 }) })
+    act(() => { ws.simulateMessage({ type: 'slots', data: [{ key: 'b', title: 'y', agent: 'ajcrew' }], tagsGeneration: 2 }) })
 
     expect(count('chat-tags')).toBe(1)
     expect(count('tag-columns')).toBe(1)

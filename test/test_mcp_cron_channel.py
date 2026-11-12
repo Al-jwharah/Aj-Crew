@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.mcp_cron import _call_tool_locally
+from aj_crew.mcp_cron import _call_tool_locally
 
 
 @pytest.fixture(autouse=True)
@@ -22,7 +22,7 @@ def _cron_caller_is_named(named_cron_caller):
 
 class TestCronAddChannel:
     def test_add_with_channel(self, tmp_path: Path) -> None:
-        with patch("kiro_crew.mcp_cron.CronService") as mock_svc_cls:
+        with patch("aj_crew.mcp_cron.CronService") as mock_svc_cls:
             mock_svc = mock_svc_cls.return_value
             mock_job = type(
                 "Job",
@@ -52,8 +52,8 @@ class TestCronAddChannel:
             assert "abc" in result
 
     def test_add_without_channel(self, tmp_path: Path, monkeypatch) -> None:
-        monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
-        with patch("kiro_crew.mcp_cron.CronService") as mock_svc_cls:
+        monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
+        with patch("aj_crew.mcp_cron.CronService") as mock_svc_cls:
             mock_svc = mock_svc_cls.return_value
             mock_job = type(
                 "Job",

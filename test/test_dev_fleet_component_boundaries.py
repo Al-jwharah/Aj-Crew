@@ -9,7 +9,7 @@ from types import ModuleType
 
 import pytest
 
-from kiro_crew.apps.builtins.dev_fleet import (
+from aj_crew.apps.builtins.dev_fleet import (
     fleet_state,
     http_api,
     live,
@@ -82,7 +82,7 @@ def test_the_owner_table_holds_dotted_names_not_modules() -> None:
     )
     for name, owner in server._EXPORT_OWNERS.items():
         assert isinstance(owner, str), name
-        assert owner.startswith("kiro_crew.apps.builtins.dev_fleet."), name
+        assert owner.startswith("aj_crew.apps.builtins.dev_fleet."), name
 
 
 def test_reads_and_writes_follow_a_component_to_a_new_module_object() -> None:
@@ -172,7 +172,7 @@ def test_component_imports_follow_the_ownership_dag() -> None:
         for node in ast.walk(tree):
             if not isinstance(node, ast.ImportFrom):
                 continue
-            if node.module != "kiro_crew.apps.builtins.dev_fleet":
+            if node.module != "aj_crew.apps.builtins.dev_fleet":
                 continue
             for alias in node.names:
                 imported_rank = _RANK.get(alias.name)

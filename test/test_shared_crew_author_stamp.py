@@ -7,9 +7,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import attribution, wiring
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import attribution, wiring
+from aj_crew.shared_crew.contracts import (
     ActorContext,
     DisplaySnapshot,
     Principal,
@@ -44,8 +44,8 @@ def _actor(principal: Principal) -> ActorContext:
 def dash_state(tmp_path, monkeypatch, _floor_monkeypatch):
     from chat_test_helpers import _make_state
 
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.broadcast_ws_owners = MagicMock()
@@ -86,7 +86,7 @@ async def test_request_author_is_stamped_only_in_the_request_task(dash_state):
 async def test_published_actor_binds_the_request_author():
     from aiohttp.test_utils import make_mocked_request
 
-    from kiro_crew.shared_crew import identity
+    from aj_crew.shared_crew import identity
 
     async def go():
         request = make_mocked_request("POST", "/api/chat")

@@ -46,7 +46,7 @@ function renderPane(onOpenApprovals?: () => void) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={qc}>
-      <WorkerKitPane member="pixel" name="Pixel" templates={['kirocrew', 'release-bot']} onOpenApprovals={onOpenApprovals} />
+      <WorkerKitPane member="pixel" name="Pixel" templates={['ajcrew', 'release-bot']} onOpenApprovals={onOpenApprovals} />
     </QueryClientProvider>,
   )
 }

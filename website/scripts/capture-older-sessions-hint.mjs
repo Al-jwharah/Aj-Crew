@@ -18,7 +18,7 @@ import { mkdirSync } from 'node:fs'
 import { serveDist } from './lib/serve-dist.mjs'
 import { logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 
-const OUT = process.argv[2] || (process.env.KIROCREW_SCRATCH || '/tmp') + '/older-sessions-hint'
+const OUT = process.argv[2] || (process.env.AJCREW_SCRATCH || '/tmp') + '/older-sessions-hint'
 mkdirSync(OUT, { recursive: true })
 
 const NOW = Date.now()
@@ -27,7 +27,7 @@ const hoursAgo = h => new Date(NOW - h * 3600_000).toISOString()
 const folders = [{ id: 'kiro', name: 'Kiro', order: 1, collapsed: false }]
 
 const slot = (key, title, folder_id, ageHours, extra = {}) => ({
-  key, title, messages: 4, running: false, agent: 'kirocrew',
+  key, title, messages: 4, running: false, agent: 'ajcrew',
   created: hoursAgo(ageHours + 2), last_turn_ts: hoursAgo(ageHours), folder_id, ...extra,
 })
 
@@ -40,8 +40,8 @@ const slots = [
 
 // Closed sessions: what the Older Sessions pane lists once opened.
 const history = [
-  { key: 'h-1', title: 'Bedrock payments research', modified: (NOW - 3 * 86400_000) / 1000, agent: 'kirocrew', messages: 12 },
-  { key: 'h-2', title: 'Theme pack debugging', modified: (NOW - 5 * 86400_000) / 1000, agent: 'kirocrew', messages: 7 },
+  { key: 'h-1', title: 'Bedrock payments research', modified: (NOW - 3 * 86400_000) / 1000, agent: 'ajcrew', messages: 12 },
+  { key: 'h-2', title: 'Theme pack debugging', modified: (NOW - 5 * 86400_000) / 1000, agent: 'ajcrew', messages: 7 },
 ]
 
 // Nav rail + the sessions sidebar; the chat pane to the right is not the subject.

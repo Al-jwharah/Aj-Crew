@@ -5,7 +5,7 @@ instance, reconcile two independent sources of truth and report where they
 disagree.
 
 * **The kernel** -- every pid inside that instance's own agent slice
-  (``kirocrew-agents-<token>.slice``), read straight out of cgroup v2's
+  (``ajcrew-agents-<token>.slice``), read straight out of cgroup v2's
   ``cgroup.procs`` files. A process cannot lie about this and nothing in the
   product has to remember to write it.
 * **The registry** -- the pid tracking files the product maintains under the
@@ -44,7 +44,7 @@ the recorded one is a STRANGER, so it counts as ``owned_dead`` (the tracked
 process is gone) and never as ``owned_alive``.
 
 Scope is one instance, never the shared parent slice. A host routinely runs
-several gateways at once, so "every pid in ``kirocrew-agents.slice``" is not
+several gateways at once, so "every pid in ``ajcrew-agents.slice``" is not
 "my pids", and a harness that assumed otherwise would report a co-resident
 gateway's healthy sessions as this one's leak.
 """
@@ -67,7 +67,7 @@ _USER_CGROUP_BASE = "/sys/fs/cgroup/user.slice/user-{uid}.slice/user@{uid}.servi
 #: ``sandbox._CGROUP_AGENTS_SLICE``; restated so a rename there surfaces as a
 #: named mismatch in :func:`assert_slice_contract` rather than silently
 #: pointing this module at a directory nothing creates.
-AGENTS_SLICE = "kirocrew-agents.slice"
+AGENTS_SLICE = "ajcrew-agents.slice"
 
 #: Registry file holding one line per runtime ROOT, as
 #: ``<gateway_pid>:<child_pid>:<start_token>``.
@@ -78,23 +78,23 @@ SESSION_PID_FILE = "kiro_session_pids.txt"
 PID_FILE = "kiro_pids.txt"
 
 #: argv fragment that identifies a managed MCP stub process. The stub is
-#: launched as ``python -m kiro_crew.mcp_gateway.stub --server <name> ...``, so
+#: launched as ``python -m aj_crew.mcp_gateway.stub --server <name> ...``, so
 #: the module path is the stable token; the ``--server`` value names which one.
-STUB_ARGV_TOKEN = "kiro_crew.mcp_gateway.stub"
+STUB_ARGV_TOKEN = "aj_crew.mcp_gateway.stub"
 
 #: argv fragment identifying the MCP gateway daemon, which owns the stubs.
-GATEWAYD_ARGV_TOKEN = "kiro_crew.mcp_gateway.gatewayd"
+GATEWAYD_ARGV_TOKEN = "aj_crew.mcp_gateway.gatewayd"
 
 #: Substrings that mark a file as the crew log, for the open-handle probe.
 CREW_LOG_PATH_TOKENS = ("crew-log", "crewlog", "crew_log")
 
 #: Environment variable the product sets on every agent-runtime child naming the
 #: authored agent it was spawned for. Matches
-#: ``kiro_crew.constants.KIROCREW_RUNTIME_AGENT_ENV``; restated so this module
+#: ``aj_crew.constants.AJCREW_RUNTIME_AGENT_ENV``; restated so this module
 #: stays importable without the product, and pinned equal by the leak gate before
 #: it classifies anything. A host that binds its agent over the wire carries no
 #: ``--agent`` in argv, so this is the only per-process record of the agent.
-RUNTIME_AGENT_ENV = "KIROCREW_RUNTIME_AGENT"
+RUNTIME_AGENT_ENV = "AJCREW_RUNTIME_AGENT"
 
 
 def _uid() -> int:
@@ -192,10 +192,10 @@ def instance_slice_token(home: Path) -> str:
 
 
 def agents_slice_parent(*, cgroup_base: str | None = None) -> Path | None:
-    """The shared ``kirocrew-agents.slice`` cgroup directory, or ``None``.
+    """The shared ``ajcrew-agents.slice`` cgroup directory, or ``None``.
 
     Mirrors ``sandbox._agents_slice_cgroup_dir``: the direct construction under
-    ``kirocrew.slice`` first, then a ONE-level scan for a manager that laid the
+    ``ajcrew.slice`` first, then a ONE-level scan for a manager that laid the
     hierarchy out differently. Never a recursive walk -- the cgroup tree is
     large and a deep match would be as likely to find the wrong thing as the
     right one. ``None`` means the slice is not active, which is a legitimate
@@ -213,7 +213,7 @@ def agents_slice_parent(*, cgroup_base: str | None = None) -> Path | None:
         base = Path(_USER_CGROUP_BASE.format(uid=_uid()))
     else:
         base = Path(cgroup_base)
-    direct = base / "kirocrew.slice" / AGENTS_SLICE
+    direct = base / "ajcrew.slice" / AGENTS_SLICE
     if direct.is_dir():
         return direct
     try:
@@ -244,7 +244,7 @@ def instance_slice_dir(home: Path, *, cgroup_base: str | None = None) -> Path | 
 def assert_slice_contract(home: Path, src: Path) -> None:
     """Fail unless the product derives the same slice name this module does.
 
-    Runs ``sandbox._agents_slice_name()`` in a CHILD with ``KIROCREW_HOME`` set
+    Runs ``sandbox._agents_slice_name()`` in a CHILD with ``AJCREW_HOME`` set
     to *home*, because that is the only way to ask the product what it would do
     for a home other than this process's own -- setting the variable in-process
     would mutate memoised state the test process shares with everything else.
@@ -255,14 +255,14 @@ def assert_slice_contract(home: Path, src: Path) -> None:
     assertions would pass by measuring nothing.
     """
     probe = (
-        "from kiro_crew import sandbox\n"
-        "from kiro_crew.config.paths import config_dir\n"
+        "from aj_crew import sandbox\n"
+        "from aj_crew.config.paths import config_dir\n"
         "print(sandbox._agents_slice_name())\n"
         "print(config_dir())\n"
     )
     env = {
         **os.environ,
-        "KIROCREW_HOME": str(home),
+        "AJCREW_HOME": str(home),
         "PYTHONPATH": str(src) + os.pathsep + os.environ.get("PYTHONPATH", ""),
     }
     # cwd is the instance's own home, never the caller's: a child that writes

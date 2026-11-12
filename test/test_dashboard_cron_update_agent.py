@@ -16,7 +16,7 @@ import pytest
 from body_stream_helpers import attach_body
 from dashboard_owner_helpers import owner_claims
 
-from kiro_crew.dashboard.handlers import api_cron_update
+from aj_crew.dashboard.handlers import api_cron_update
 
 
 def _make_request(body: dict, job_id: str = "abc123") -> MagicMock:

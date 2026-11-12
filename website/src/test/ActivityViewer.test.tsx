@@ -169,12 +169,12 @@ describe('ActivityViewer', () => {
           <ActivityViewer
             {...baseProps}
             // The Changes tab surfaces this PR, so it should NOT also appear in Resources.
-            sources={[{ url: prUrl, provider: 'github', number: 42, repo: 'KiroCrew' }]}
+            sources={[{ url: prUrl, provider: 'github', number: 42, repo: 'AjCrew' }]} // brand-ok: fixture data
             navLinks={[
               { url: prUrl, type: 'cr', label: 'PR #42', msgIdx: 0 },
               // Not in `sources` (a code-review host Changes can't render) — must stay reachable.
               { url: 'https://git.example.com/reviews/CR-1', type: 'cr', label: 'CR-1', msgIdx: 0 },
-              { url: 'https://git.example.com/packages/KiroCrew', type: 'other', label: 'KiroCrew repo', msgIdx: 0 },
+              { url: 'https://git.example.com/packages/AjCrew', type: 'other', label: 'AjCrew repo', msgIdx: 0 }, // brand-ok: fixture data
             ]}
           />
         </QueryClientProvider>
@@ -182,7 +182,7 @@ describe('ActivityViewer', () => {
     )
     expect(screen.getByText('Resources')).toBeInTheDocument()
     // Non-Changes links stay in Resources.
-    expect(screen.getByText('KiroCrew repo')).toBeInTheDocument()
+    expect(screen.getByText('AjCrew repo')).toBeInTheDocument() // brand-ok: fixture data
     expect(screen.getByText('CR-1')).toBeInTheDocument()
     // The link already shown in the Changes tab is hidden from Resources.
     expect(screen.queryByText('PR #42')).not.toBeInTheDocument()
@@ -646,7 +646,7 @@ describe('ActivityViewer — Artifacts tab', () => {
             slot="test-slot"
             subagents={{
               s1: {
-                id: 's1', task: 'READ-ONLY RESEARCH', agent: 'kirocrew', status: 'tool',
+                id: 's1', task: 'READ-ONLY RESEARCH', agent: 'ajcrew', status: 'tool',
                 streaming: '', lastTool: 'read', startedAt: Date.now() - 239_000, elapsed: 0,
               },
             }}
@@ -665,7 +665,7 @@ describe('ActivityViewer — Artifacts tab', () => {
     // Agent chip: yields BEFORE the status label (weighted shrink) and capped,
     // so a long agent name can neither wrap nor starve the label, the clock and
     // the Cancel button.
-    const chip = screen.getByText('kirocrew')
+    const chip = screen.getByText('ajcrew')
     expect(chip.className).toContain('shrink-[3]')
     expect(chip.className).toContain('truncate')
     expect(chip.className).toContain('min-w-0')
@@ -703,7 +703,7 @@ describe('ActivityViewer — Artifacts tab', () => {
             onToggle={vi.fn()}
             slot="test-slot"
             subagents={{
-              s1: { id: 's1', task: 'long run', agent: 'kirocrew', streaming: '', lastTool: 'read', ...timing },
+              s1: { id: 's1', task: 'long run', agent: 'ajcrew', streaming: '', lastTool: 'read', ...timing },
             }}
           />
         </QueryClientProvider>
@@ -733,17 +733,17 @@ describe('ActivityViewer — Artifacts tab', () => {
             slot="test-slot"
             subagents={{
               ok: {
-                id: 'ok', task: 'successful task', agent: 'kirocrew', status: 'done',
+                id: 'ok', task: 'successful task', agent: 'ajcrew', status: 'done',
                 streaming: '', lastTool: '', startedAt: Date.now() - 12_000,
                 elapsed: 12, credits,
               },
               failed: {
-                id: 'failed', task: 'failed task', agent: 'kirocrew', status: 'error',
+                id: 'failed', task: 'failed task', agent: 'ajcrew', status: 'error',
                 streaming: '', lastTool: '', startedAt: Date.now() - 65_000,
                 elapsed: 65, credits: 12.5, error: 'boom',
               },
               'native:child': {
-                id: 'native:child', task: 'native task', agent: 'kirocrew', status: 'done',
+                id: 'native:child', task: 'native task', agent: 'ajcrew', status: 'done',
                 streaming: '', lastTool: '', startedAt: Date.now() - 12_000,
                 elapsed: 12, credits,
               },

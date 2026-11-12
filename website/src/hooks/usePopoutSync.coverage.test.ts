@@ -165,7 +165,7 @@ describe('usePopoutSync openPopout', () => {
     expect(open).toHaveBeenCalledTimes(1)
     const [url, name, features] = open.mock.calls[0]
     expect(url).toBe('/worlds-popout')
-    expect(name).toBe('kirocrew-worlds')
+    expect(name).toBe('ajcrew-worlds')
     expect(features).toMatch(/^width=[\d.]+,height=[\d.]+,left=-?[\d.]+,top=-?[\d.]+,resizable=yes$/)
   })
 

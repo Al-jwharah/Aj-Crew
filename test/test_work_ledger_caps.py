@@ -15,7 +15,7 @@ import pytest
 import work_ledger_helpers
 from work_ledger_helpers import CONDUCTOR, _bytes_on_disk, _lift_goal_cap, _new_item
 
-from kiro_crew import work_ledger as wl
+from aj_crew import work_ledger as wl
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _isolated_home = work_ledger_helpers._isolated_home

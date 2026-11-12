@@ -28,9 +28,9 @@ import time
 import uuid
 from pathlib import Path
 
-from kiro_crew.knowledge import retrieval
-from kiro_crew.knowledge.retrieval import ANY_EMBEDDING_SPACE, HybridRetriever
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge import retrieval
+from aj_crew.knowledge.retrieval import ANY_EMBEDDING_SPACE, HybridRetriever
+from aj_crew.knowledge.store import KnowledgeStore
 
 # Row timestamps play no part in what is timed.
 _STAMP = "2026-01-01T00:00:00"

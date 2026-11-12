@@ -27,7 +27,7 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.history import ConversationLog
+from aj_crew.history import ConversationLog
 
 from .conftest import (
     FakeClock,
@@ -68,13 +68,13 @@ def _past_the_listing_memo(clock: FakeClock) -> None:
     scan. A sidebar polls further apart than that, so a steady-listing budget
     measures a listing that runs after the memo's entry has expired.
     """
-    memo = optional_module("kiro_crew.history_listing_memo")
+    memo = optional_module("aj_crew.history_listing_memo")
     clock.advance(float(getattr(memo, "TTL_SECS", 0.0)))
 
 
 def _listing(log: ConversationLog, query: str = QUERY) -> int:
     """One request through the real handler; the ``total`` it answered."""
-    from kiro_crew.dashboard.handlers.sessions_parts.history_reads import api_sessions
+    from aj_crew.dashboard.handlers.sessions_parts.history_reads import api_sessions
 
     response = asyncio.run(api_sessions(make_mocked_request("GET", query, app=_app(log))))
     return int(json.loads(response.body)["total"])
@@ -171,7 +171,7 @@ def test_reconcile_runs_off_the_request(seeded) -> None:
     """Past ``RECONCILE_SECS`` with nothing changed, the request still costs 1 stat, 0 scans."""
     from .conftest import optional_module
 
-    index = optional_module("kiro_crew.history_listing_index")
+    index = optional_module("aj_crew.history_listing_index")
     reconcile_secs = float(getattr(index, "RECONCILE_SECS", 5.0))
     first = _listing(seeded.log)
     _listing(seeded.log)
@@ -265,7 +265,7 @@ def test_listing_past_the_metadata_cache_reads_no_heads(
     tmp_path: Path, monkeypatch, fake_clock
 ) -> None:
     """9,000 one-line files, past ``_METADATA_CACHE_MAX``: the second listing opens 0."""
-    from kiro_crew import history
+    from aj_crew import history
 
     n = history._METADATA_CACHE_MAX + 808
     query = "/api/sessions?limit=30"
@@ -303,7 +303,7 @@ def test_concurrent_identical_listings_scan_once(tmp_path: Path, monkeypatch, fa
     seed_history(history_dir, per_class=20)
     log = _log(tmp_path)
     io = TranscriptIO(history_dir).install(monkeypatch)
-    memo = optional_module("kiro_crew.history_listing_memo")
+    memo = optional_module("aj_crew.history_listing_memo")
     if memo is not None:
         monkeypatch.setattr(memo, "lookup", lambda directory, key: None)
 
@@ -340,7 +340,7 @@ def test_concurrent_identical_listings_scan_once(tmp_path: Path, monkeypatch, fa
     monkeypatch.setattr(ConversationLog, join_point, entering_list_sessions)
     monkeypatch.setattr(os, "scandir", holding_scandir)
 
-    from kiro_crew.dashboard.handlers.sessions_parts.history_reads import api_sessions
+    from aj_crew.dashboard.handlers.sessions_parts.history_reads import api_sessions
 
     app = _app(log)
 

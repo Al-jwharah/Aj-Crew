@@ -8,7 +8,7 @@ of the wrong type. ``trust_grant_removal_blocked`` names the one case a write co
 fix (an overlay pinning this app's grant) and an unreadable base file, and ignores an
 unreadable overlay, as the loader does.
 
-Each test patches the config paths through ``kiro_crew.apps.manager``, the import path
+Each test patches the config paths through ``aj_crew.apps.manager``, the import path
 callers use, so it also exercises that a facade patch reaches the owner's code.
 """
 
@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps import manager
+from aj_crew.apps import manager
 
 
 @pytest.fixture()
@@ -27,7 +27,7 @@ def config_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> tuple[Path,
     """Point the base config and its overlay at files under *tmp_path*."""
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     base = tmp_path / "config.json"
     local = tmp_path / "config.local.json"
     monkeypatch.setattr(manager, "config_path", lambda: base)

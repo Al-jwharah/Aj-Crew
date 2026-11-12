@@ -18,7 +18,7 @@ const H = vi.hoisted(() => ({
     projectTree: vi.fn(),
     projectGitStatus: vi.fn(),
     revealPath: vi.fn(),
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
   },
 }))
 
@@ -44,7 +44,7 @@ const EXTERNAL_ROW = 'Open in kitty (separate window)'
 /** Bound for every wait in this suite, so none relies on the 1,000 ms
  *  default. The external-terminal checks are a chained query: the desktop
  *  shell's detection (`externalTerminalAPI.detect`) must answer "capable"
- *  before the config query (`api.kirocrewConfig`) is enabled, and only that
+ *  before the config query (`api.ajcrewConfig`) is enabled, and only that
  *  answer's picked app renders the row; either read failing renders the
  *  check-failed notice instead. A click on the row runs a second chain: the
  *  grant request, then the shell's launch, then the fallback. The menu and the
@@ -101,7 +101,7 @@ beforeEach(() => {
   H.api.projectTree.mockReset().mockResolvedValue({ root: DIR, paths: [], repo: true })
   H.api.projectGitStatus.mockReset().mockResolvedValue({ repo: true, files: [] })
   H.api.revealPath.mockReset().mockResolvedValue(undefined)
-  H.api.kirocrewConfig.mockReset().mockImplementation(async () => H.config)
+  H.api.ajcrewConfig.mockReset().mockImplementation(async () => H.config)
   brandingEnv.directLocal = true
   pick(undefined)
   bridge = undefined
@@ -121,7 +121,7 @@ describe('with no external app picked (the default)', () => {
     installBridge()
     pick(undefined)
     const { onOpenTerminal } = mount()
-    await waitFor(() => expect(H.api.kirocrewConfig).toHaveBeenCalled(), EXTERNAL_ROW_WAIT)
+    await waitFor(() => expect(H.api.ajcrewConfig).toHaveBeenCalled(), EXTERNAL_ROW_WAIT)
     openProjectActions()
     const rows = await menuRows()
     expect(rows).toHaveLength(1)
@@ -137,7 +137,7 @@ describe('with no external app picked (the default)', () => {
     installBridge()
     pick('')
     mount()
-    await waitFor(() => expect(H.api.kirocrewConfig).toHaveBeenCalled(), EXTERNAL_ROW_WAIT)
+    await waitFor(() => expect(H.api.ajcrewConfig).toHaveBeenCalled(), EXTERNAL_ROW_WAIT)
     openProjectActions()
     expect(await menuRows()).toHaveLength(1)
   })
@@ -183,7 +183,7 @@ describe('with an app picked', () => {
     openProjectActions()
     expect(await menuRows()).toHaveLength(1)
     expect(screen.queryByText(EXTERNAL_ROW)).toBeNull()
-    expect(H.api.kirocrewConfig).not.toHaveBeenCalled()
+    expect(H.api.ajcrewConfig).not.toHaveBeenCalled()
   })
 
   it('is absent for a gateway that is not on this machine', async () => {
@@ -210,13 +210,13 @@ describe('with an app picked', () => {
     expect(await menuRows()).toHaveLength(1)
     expect(screen.queryByText(EXTERNAL_ROW)).toBeNull()
     expect(screen.queryByTestId('files-home-external-terminal-check-error')).toBeNull()
-    expect(H.api.kirocrewConfig).not.toHaveBeenCalled()
+    expect(H.api.ajcrewConfig).not.toHaveBeenCalled()
   })
 
   it('reports no failed setting read for a window the desktop shell answers as not capable', async () => {
     installBridge()
     bridge!.detect.mockResolvedValue({ apps: [], capable: false })
-    H.api.kirocrewConfig.mockRejectedValue(new Error('HTTP 500'))
+    H.api.ajcrewConfig.mockRejectedValue(new Error('HTTP 500'))
     mount()
     await waitFor(() => expect(bridge!.detect).toHaveBeenCalled(), EXTERNAL_ROW_WAIT)
     await waitFor(() => expect(screen.getByTestId('tree')).toBeInTheDocument(), EXTERNAL_ROW_WAIT)
@@ -338,11 +338,11 @@ describe('with an app picked', () => {
     pick('kitty')
     mount()
     const notice = await screen.findByTestId('files-home-external-terminal-check-error', undefined, EXTERNAL_ROW_WAIT)
-    const configReads = H.api.kirocrewConfig.mock.calls.length
+    const configReads = H.api.ajcrewConfig.mock.calls.length
     fireEvent.click(within(notice.parentElement as HTMLElement).getByRole('button', { name: 'Retry' }))
     await waitFor(() => expect(screen.queryByTestId('files-home-external-terminal-check-error')).toBeNull(), EXTERNAL_ROW_WAIT)
     expect(bridge!.detect).toHaveBeenCalledTimes(2)
-    expect(H.api.kirocrewConfig.mock.calls.length).toBeGreaterThan(configReads)
+    expect(H.api.ajcrewConfig.mock.calls.length).toBeGreaterThan(configReads)
     openProjectActions()
     expect(await screen.findByText(EXTERNAL_ROW, undefined, EXTERNAL_ROW_WAIT)).toBeInTheDocument()
   })
@@ -377,13 +377,13 @@ describe('with an app picked', () => {
 
   it('reports a failed setting read the same way', async () => {
     installBridge()
-    H.api.kirocrewConfig.mockRejectedValue(new Error('HTTP 500'))
+    H.api.ajcrewConfig.mockRejectedValue(new Error('HTTP 500'))
     mount()
     expect(await screen.findByTestId('files-home-external-terminal-check-error', undefined, EXTERNAL_ROW_WAIT)).toBeInTheDocument()
   })
 
   it('reports nothing in the browser build, where nothing is checked', async () => {
-    H.api.kirocrewConfig.mockRejectedValue(new Error('HTTP 500'))
+    H.api.ajcrewConfig.mockRejectedValue(new Error('HTTP 500'))
     mount()
     await waitFor(() => expect(screen.getByTestId('tree')).toBeInTheDocument(), EXTERNAL_ROW_WAIT)
     expect(screen.queryByTestId('files-home-external-terminal-check-error')).toBeNull()
@@ -405,17 +405,17 @@ describe('while the Files tab is kept mounted but hidden', () => {
     expect(H.api.projectTree).not.toHaveBeenCalled()
     expect(H.api.projectGitStatus).not.toHaveBeenCalled()
     expect(bridge!.detect).not.toHaveBeenCalled()
-    expect(H.api.kirocrewConfig).not.toHaveBeenCalled()
+    expect(H.api.ajcrewConfig).not.toHaveBeenCalled()
 
     view.rerender(ui(true))
     await waitFor(() => expect(H.api.projectTree).toHaveBeenCalledWith(DIR), EXTERNAL_ROW_WAIT)
     await waitFor(() => expect(H.api.projectGitStatus).toHaveBeenCalledWith(DIR), EXTERNAL_ROW_WAIT)
-    await waitFor(() => expect(H.api.kirocrewConfig).toHaveBeenCalled(), EXTERNAL_ROW_WAIT)
+    await waitFor(() => expect(H.api.ajcrewConfig).toHaveBeenCalled(), EXTERNAL_ROW_WAIT)
     expect(bridge!.detect).toHaveBeenCalled()
 
     // Hidden again once everything has loaded: a focus refetches none of it.
     view.rerender(ui(false))
-    const reads = () => [H.api.projectTree.mock.calls.length, H.api.projectGitStatus.mock.calls.length, bridge!.detect.mock.calls.length, H.api.kirocrewConfig.mock.calls.length]
+    const reads = () => [H.api.projectTree.mock.calls.length, H.api.projectGitStatus.mock.calls.length, bridge!.detect.mock.calls.length, H.api.ajcrewConfig.mock.calls.length]
     const before = reads()
     await refocusWindow(qc)
     expect(reads()).toEqual(before)

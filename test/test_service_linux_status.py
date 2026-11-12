@@ -26,7 +26,7 @@ from service_helpers import (  # noqa: F401 -- fixtures are found by name
     _restart_settle_without_waiting,
 )
 
-from kiro_crew.service.common import (
+from aj_crew.service.common import (
     RESTART_NOT_UP,
     RESTART_REFUSED,
     RESTART_UNCONFIRMED,
@@ -39,23 +39,23 @@ class TestLinuxControlPaths:
     """Cover uninstall, stop, status, is_active, and the sudo helper paths."""
 
     def test_uninstall_runs_full_teardown_when_unit_exists(self, tmp_path, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         # Point UNIT_PATH at a real temp file so ``UNIT_PATH.exists()``
         # is True without monkeypatching ``Path.exists`` globally (which
         # would also affect pytest/fixture machinery).
-        unit_path = tmp_path / "kirocrew.service"
+        unit_path = tmp_path / "ajcrew.service"
         unit_path.write_text("")
         data_home = tmp_path / "crew-home"
         data_home.mkdir()
         sentinel = data_home / "memory.db"
         sentinel.write_text("user data")
-        monkeypatch.setenv("KIROCREW_HOME", str(data_home))
+        monkeypatch.setenv("AJCREW_HOME", str(data_home))
         monkeypatch.setattr(svc_linux, "UNIT_PATH", unit_path)
         # A unit the system manager has LOADED (stopped): the teardown must stop
         # and disable it before the file goes.
         run = _fake_systemctl(system=_DEAD, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             svc_linux.uninstall()
         called = run.calls
         # Each step must use sudo since /etc/systemd/system requires root.
@@ -68,10 +68,10 @@ class TestLinuxControlPaths:
         assert sentinel.read_text() == "user data"
 
     def test_is_active_returns_true_when_systemctl_says_active(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=_RUNNING, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             assert svc_linux.is_active() is True
         # is_active must NOT use sudo (state is queryable as a regular user).
         assert all(
@@ -79,28 +79,28 @@ class TestLinuxControlPaths:
         ), f"is_active must not call sudo; got {run.calls}"
 
     def test_is_active_returns_false_when_inactive(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=_DEAD, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             assert svc_linux.is_active() is False
 
     def test_stop_invokes_systemctl_stop(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         # stop() acts on the scope(s) running the unit, so the system unit must
         # answer `show` first (unprivileged); the stop itself still goes through sudo.
         run = _fake_systemctl(system=_RUNNING, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             svc_linux.stop()
         assert ["sudo", "systemctl", "stop", f"{SERVICE_NAME}.service"] in run.calls
         assert not any("--user" in c and "stop" in c for c in run.calls), run.calls
 
     def test_restart_returns_true_on_success(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=_RUNNING, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
         assert report.ok is True and [o.scope for o in report.outcomes] == ["system"]
         assert ["sudo", "systemctl", "restart", f"{SERVICE_NAME}.service"] in run.calls
@@ -110,27 +110,27 @@ class TestLinuxControlPaths:
         # refuses a system-scope restart without root). restart() must report
         # that failure, not swallow it -- this is the crux of the false-success
         # bug: the outcome has to reach restart_service() and its caller.
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         refused = subprocess.CompletedProcess([], 1, "", "Interactive authentication required")
         run = _fake_systemctl(system=_RUNNING, user=None, overrides={"restart": refused})
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
         assert report.ok is False
         (failure,) = report.failures
         assert failure.scope == "system" and failure.kind == RESTART_REFUSED
         assert "Interactive authentication required" in failure.reason
-        assert failure.hint == "sudo systemctl restart kirocrew"
+        assert failure.hint == "sudo systemctl restart ajcrew"
         assert ["sudo", "systemctl", "restart", f"{SERVICE_NAME}.service"] in run.calls
 
     def test_restart_invokes_systemctl_restart_atomic(self):
         # systemctl restart is preferred over stop+start: it's a single
         # atomic operation, smaller down-window, and the supervisor
         # stays in charge of the lifecycle the whole time.
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=_RUNNING, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             svc_linux.restart()
         called = run.calls
         assert ["sudo", "systemctl", "restart", f"{SERVICE_NAME}.service"] in called
@@ -141,22 +141,22 @@ class TestLinuxControlPaths:
         ), f"restart() should be atomic, not stop+start; got {called}"
 
     def test_status_returns_systemctl_output(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=_RUNNING, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             out = svc_linux.status()
         # The scope with a unit carries its `systemctl status` block.
-        assert f"● {SERVICE_NAME}.service - Kiro Crew gateway (system scope block)" in out
+        assert f"● {SERVICE_NAME}.service - Aj Crew gateway (system scope block)" in out
         # status() must NOT use sudo.
         assert all("sudo" not in c for c in run.calls)
 
     def test_status_falls_back_to_stderr_when_stdout_empty(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         quiet = subprocess.CompletedProcess([], 3, "", "status printed to stderr\n")
         run = _fake_systemctl(system=_RUNNING, user=None, overrides={"status": quiet})
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             out = svc_linux.status()
         assert "status printed to stderr" in out
 
@@ -193,7 +193,7 @@ class TestLinuxControlPaths:
         return respond
 
     def test_install_propagates_failure_at_daemon_reload(self, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         reload_failed = MagicMock(returncode=1, stdout="", stderr="systemctl: bad config")
@@ -201,17 +201,17 @@ class TestLinuxControlPaths:
 
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/usr/local/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/usr/local/bin/ajcrew",
             ),
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=responder),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=responder),
         ):
             with pytest.raises(svc_linux.ServiceInstallError) as exc_info:
                 svc_linux.install()
         assert "daemon-reload" in str(exc_info.value)
 
     def test_install_propagates_failure_at_enable(self, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         enable_failed = MagicMock(returncode=1, stdout="", stderr="enable failed: unit invalid")
@@ -221,17 +221,17 @@ class TestLinuxControlPaths:
 
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/usr/local/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/usr/local/bin/ajcrew",
             ),
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=responder),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=responder),
         ):
             with pytest.raises(svc_linux.ServiceInstallError) as exc_info:
                 svc_linux.install()
         assert "enable" in str(exc_info.value)
 
     def test_install_propagates_failure_at_restart(self, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setenv("USER", "tester")
         restart_failed = MagicMock(returncode=1, stdout="", stderr="job failed")
@@ -239,10 +239,10 @@ class TestLinuxControlPaths:
 
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/usr/local/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/usr/local/bin/ajcrew",
             ),
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=responder),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=responder),
         ):
             with pytest.raises(svc_linux.ServiceInstallError) as exc_info:
                 svc_linux.install()
@@ -255,12 +255,12 @@ class TestLinuxControlPaths:
         """If `id -gn` is missing or errors, fall back to using the username
         as the group name. Better to fail loudly at systemd start than to
         guess wrong here."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         # `id` resolves to a trusted path, but the exec itself errors.
         monkeypatch.setattr(svc_linux, "trusted_system_bin", lambda _n: "/usr/bin/id")
         with patch(
-            "kiro_crew.service.linux.subprocess.run",
+            "aj_crew.service.linux.subprocess.run",
             side_effect=FileNotFoundError("id"),
         ):
             assert svc_linux._current_group("alice") == "alice"
@@ -268,7 +268,7 @@ class TestLinuxControlPaths:
     def test_current_group_falls_back_when_id_not_in_trusted_dirs(self, monkeypatch):
         """When `id` is not in a trusted system directory the probe never shells
         out (a PATH shim must not run as root); it falls back to the username."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setattr(svc_linux, "trusted_system_bin", lambda _n: None)
         assert svc_linux._current_group("alice") == "alice"
@@ -287,7 +287,7 @@ class TestLinuxServiceScopesStatus:
 
     @pytest.fixture(autouse=True)
     def _not_root(self, _floor_monkeypatch, tmp_path):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         _floor_monkeypatch.setattr(svc_linux.os, "geteuid", lambda: 1000, raising=False)
         _floor_monkeypatch.setenv("USER", "tester")
@@ -310,10 +310,10 @@ class TestLinuxServiceScopesStatus:
 
     def test_status_names_a_running_user_unit_when_the_system_unit_is_absent(self):
         """The reported bug: a running user-scope gateway read as 'inactive (dead)'."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=None, user=_RUNNING)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             out = svc_linux.status()
             active = svc_linux.is_active()
 
@@ -325,10 +325,10 @@ class TestLinuxServiceScopesStatus:
         assert all("sudo" not in c for c in run.calls), run.calls
 
     def test_status_reports_both_scopes_as_not_installed(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=None, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             out = svc_linux.status()
             active = svc_linux.is_active()
 
@@ -341,10 +341,10 @@ class TestLinuxServiceScopesStatus:
     def test_status_reports_an_unreachable_user_bus_as_not_reachable(self):
         """No session bus (root without a login session, a stripped environment):
         the user scope is 'not reachable from this shell', never 'inactive'."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=_RUNNING, user_bus_error=_NO_BUS)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             out = svc_linux.status()
             active = svc_linux.is_active()
 
@@ -357,14 +357,14 @@ class TestLinuxServiceScopesStatus:
 
     def test_status_keeps_the_system_block_and_adds_the_user_line(self):
         """A system unit that is active keeps its `systemctl status` block."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=_RUNNING, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             out = svc_linux.status()
 
         system_line = out.index("system scope: active (running)")
-        block = out.index(f"● {_UNIT} - Kiro Crew gateway (system scope block)")
+        block = out.index(f"● {_UNIT} - Aj Crew gateway (system scope block)")
         user_line = out.index("user scope: not installed")
         assert system_line < block < user_line, out
         assert any(c[:3] == ["systemctl", "status", _UNIT] for c in run.calls), run.calls
@@ -372,16 +372,16 @@ class TestLinuxServiceScopesStatus:
 
     def test_status_shows_an_installed_but_stopped_system_unit_beside_the_user_unit(self):
         """The reporter's host: a disabled system unit AND the real user unit."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=_DEAD, user=_RUNNING)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             out = svc_linux.status()
             active = svc_linux.is_active()
 
         assert "system scope: inactive (dead)" in out
         assert "user scope: active (running)" in out
-        assert f"● {_UNIT} - Kiro Crew gateway (user scope block)" in out
+        assert f"● {_UNIT} - Aj Crew gateway (user scope block)" in out
         assert active is True
 
     def test_the_user_scope_spawn_carries_the_shared_backfilled_bus_env(
@@ -393,9 +393,9 @@ class TestLinuxServiceScopesStatus:
         The service module's `systemctl --user` goes through the SAME resolver, so
         an `unreachable` reading is a host fact, never a missing-variable artifact.
         The system-scope spawn is left with the inherited environment."""
-        from kiro_crew.pod import runtime as pod_runtime
-        from kiro_crew.service import common as svc_common
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.pod import runtime as pod_runtime
+        from aj_crew.service import common as svc_common
+        from aj_crew.service import linux as svc_linux
 
         runtime_dir = tmp_path / "run"
         runtime_dir.mkdir()
@@ -409,7 +409,7 @@ class TestLinuxServiceScopesStatus:
             envs.append((list(argv), kw.get("env")))
             return inner(argv, *a, **kw)
 
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             svc_linux.status()
 
         user_envs = [env for argv, env in envs if "--user" in argv]
@@ -429,12 +429,12 @@ class TestLinuxServiceScopesStatus:
         """Under sudo the process is root: `systemctl --user` would reach ROOT's
         manager, not the account's, so the scope is reported unreachable and no
         user-scope systemctl is spawned at all."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         monkeypatch.setattr(svc_linux.os, "geteuid", lambda: 0, raising=False)
         monkeypatch.setenv("SUDO_USER", "tester")
         run = _fake_systemctl(system=None, user=_RUNNING)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             out = svc_linux.status()
             active = svc_linux.is_active()
 
@@ -446,20 +446,20 @@ class TestLinuxServiceScopesStatus:
     # -- stop / restart follow the widened is_active -------------------------
 
     def test_stop_acts_on_the_scope_where_the_unit_runs(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=None, user=_RUNNING)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             svc_linux.stop()
 
         assert ["systemctl", "--user", "stop", _UNIT] in run.calls, run.calls
         assert all("sudo" not in c for c in run.calls), run.calls
 
     def test_restart_acts_on_the_scope_where_the_unit_runs(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=None, user=_RUNNING)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
         assert report.ok is True and [o.scope for o in report.outcomes] == ["user"]
 
@@ -467,10 +467,10 @@ class TestLinuxServiceScopesStatus:
         assert all("sudo" not in c for c in run.calls), run.calls
 
     def test_restart_reports_false_when_no_scope_runs_the_unit(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=None, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
         assert not report and report.attempted is False
 
@@ -486,12 +486,12 @@ class TestLinuxServiceScopesStatus:
         (auto-restart)`. That is a FAILED restart with the unit's real state and
         Result, not success — and not a refusal either: no restart hint, since a
         hand-run restart fails the same way; the remedy is the journal."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=None, user=_RUNNING, restart_lands_in=self._LOOPING)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
-            # The reach predicate still sees the unit: `kirocrew stop` can reach it.
+            # The reach predicate still sees the unit: `ajcrew stop` can reach it.
             assert svc_linux.is_active() is True
             assert svc_linux.is_up() is False
 
@@ -500,7 +500,7 @@ class TestLinuxServiceScopesStatus:
         (failure,) = report.failures
         assert failure.scope == "user"
         assert failure.kind == RESTART_NOT_UP
-        assert failure.hint == "journalctl --user -u kirocrew.service -n 50 --no-pager"
+        assert failure.hint == "journalctl --user -u ajcrew.service -n 50 --no-pager"
         assert "activating (auto-restart)" in failure.reason
         assert "last result: exit-code" in failure.reason
         assert "sudo" not in failure.reason
@@ -510,12 +510,12 @@ class TestLinuxServiceScopesStatus:
         `active (running)` (the SIGCHLD has not landed), the next one
         `activating (auto-restart)`. One reading is not confirmation; the window
         is walked and the death inside it is reported."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(
             system=None, user=_RUNNING, restart_lands_in=[_RUNNING, self._LOOPING]
         )
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
 
         assert report.ok is False
@@ -525,24 +525,24 @@ class TestLinuxServiceScopesStatus:
     def test_restart_waits_for_a_unit_still_starting(self):
         """`activating (start)` is a unit on its way up (a Type=notify/forking
         edit of the unit): not a failure, wait for it. Up by the deadline → ok."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         starting = {"ActiveState": "activating", "SubState": "start"}
         run = _fake_systemctl(
             system=None, user=_RUNNING, restart_lands_in=[starting, starting, _RUNNING]
         )
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
 
         assert report.ok is True
         assert len(svc_linux.time.sleeps) >= 2
 
     def test_restart_reports_a_unit_still_starting_at_the_deadline(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         starting = {"ActiveState": "activating", "SubState": "start"}
         run = _fake_systemctl(system=None, user=_RUNNING, restart_lands_in=starting)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
 
         assert report.ok is False
@@ -556,10 +556,10 @@ class TestLinuxServiceScopesStatus:
     def test_restart_confirmed_up_stays_ok_after_the_window(self):
         """A live gateway: `active (running)` at every poll → ok, with the window
         walked (a single immediate reading proves nothing for Type=simple)."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=None, user=_RUNNING, restart_lands_in=_RUNNING)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
 
         assert report.ok is True
@@ -569,28 +569,28 @@ class TestLinuxServiceScopesStatus:
         """`RestartSec=100ms`: the unit dies and is `active` again between two
         0.25 s reads, so every read says `active (running)`. The main process's
         start stamp changed between them, and that is a failed restart."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         first = dict(_RUNNING, Started="5000000")
         again = dict(_RUNNING, Started="5300000")
         run = _fake_systemctl(system=None, user=_RUNNING, restart_lands_in=[first, again])
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
 
         assert report.ok is False
         (failure,) = report.failures
         assert failure.kind == RESTART_NOT_UP
-        assert failure.hint == "journalctl --user -u kirocrew.service -n 50 --no-pager"
+        assert failure.hint == "journalctl --user -u ajcrew.service -n 50 --no-pager"
         assert "started again" in failure.reason
         assert "active (running)" in failure.reason
 
     def test_restart_with_a_steady_start_stamp_is_ok(self):
         """The same stamp at every read across the window: one exec, still up."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         steady = dict(_RUNNING, Started="5000000")
         run = _fake_systemctl(system=None, user=_RUNNING, restart_lands_in=steady)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
 
         assert report.ok is True
@@ -600,29 +600,29 @@ class TestLinuxServiceScopesStatus:
         """`0` is systemd's answer before the main process has ever been
         exec'd; going from `0` to a real stamp is the first exec, not a
         restart."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         unset = dict(_RUNNING, Started="0")
         stamped = dict(_RUNNING, Started="5000000")
         run = _fake_systemctl(system=None, user=_RUNNING, restart_lands_in=[unset, stamped])
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
 
         assert report.ok is True
 
     def test_restart_into_a_start_limit_hit_is_a_failure(self):
         """Three crashes in the burst window: `failed` with Result=start-limit-hit."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         limited = {"ActiveState": "failed", "SubState": "failed", "Result": "start-limit-hit"}
         run = _fake_systemctl(system=_RUNNING, user=None, restart_lands_in=limited)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
 
         assert report.ok is False
         (failure,) = report.failures
         assert failure.scope == "system" and failure.kind == RESTART_NOT_UP
-        assert failure.hint == "sudo journalctl -u kirocrew.service -n 50 --no-pager"
+        assert failure.hint == "sudo journalctl -u ajcrew.service -n 50 --no-pager"
         assert "failed (failed)" in failure.reason
         assert "start-limit-hit" in failure.reason
 
@@ -630,7 +630,7 @@ class TestLinuxServiceScopesStatus:
         """The bus goes away between the restart and the re-read: the unit's
         health is UNKNOWN — not "exits on start", not "restarted" — so the kind
         is unconfirmed and the remedy is to look, not a journal or a restart."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         inner = _fake_systemctl(system=None, user=_RUNNING)
 
@@ -645,13 +645,13 @@ class TestLinuxServiceScopesStatus:
                 return subprocess.CompletedProcess(tokens, 1, "", _NO_BUS + "\n")
             return inner(argv, *a, **k)
 
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
 
         assert report.ok is False
         (failure,) = report.failures
         assert failure.kind == RESTART_UNCONFIRMED
-        assert failure.hint == "kirocrew service status"
+        assert failure.hint == "ajcrew service status"
         assert "stopped answering after the restart" in failure.reason
         assert _NO_BUS in failure.reason
         assert "exits" not in failure.reason
@@ -660,37 +660,37 @@ class TestLinuxServiceScopesStatus:
         """`systemctl restart` exits non-zero and the unit is exactly as it was
         (still active): the manager did not run the job — an authorization
         refusal — so the remedy is the same restart with the privilege it needs."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         refused = subprocess.CompletedProcess([], 1, "", "Interactive authentication required")
         run = _fake_systemctl(system=_RUNNING, user=None, overrides={"restart": refused})
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
 
         (failure,) = report.failures
         assert failure.kind == RESTART_REFUSED
-        assert failure.hint == "sudo systemctl restart kirocrew"
+        assert failure.hint == "sudo systemctl restart ajcrew"
         assert "refused the restart: Interactive authentication required" in failure.reason
         # Classified by the unit's state after the exit: one extra `show`, no sudo.
         assert [c for c in run.calls if "show" in c and "sudo" in c] == []
 
     def test_the_report_hint_does_not_depend_on_the_host_running_the_module(self, monkeypatch):
         """The module drives systemd by construction, so a system-scope refusal
-        names `sudo systemctl restart kirocrew` whatever `current_platform()`
+        names `sudo systemctl restart ajcrew` whatever `current_platform()`
         says about the PROCESS building the report — the Windows and macOS test
         shards answer UNSUPPORTED / LAUNCHD there and must read the same hint."""
-        from kiro_crew.service import common as svc_common
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import common as svc_common
+        from aj_crew.service import linux as svc_linux
 
         refused = subprocess.CompletedProcess([], 1, "", "Interactive authentication required")
         run = _fake_systemctl(system=_RUNNING, user=_RUNNING, overrides={"restart": refused})
         for plat in (Platform.UNSUPPORTED, Platform.LAUNCHD):
             monkeypatch.setattr(svc_common, "current_platform", lambda p=plat: p)
-            with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+            with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
                 report = svc_linux.restart()
             assert [f.hint for f in report.failures] == [
-                "sudo systemctl restart kirocrew",
-                "systemctl --user restart kirocrew",
+                "sudo systemctl restart ajcrew",
+                "systemctl --user restart ajcrew",
             ], plat
 
     def test_a_manager_that_vanishes_after_stop_keeps_the_unit_file(self, tmp_path):
@@ -698,7 +698,7 @@ class TestLinuxServiceScopesStatus:
         got no answer (the bus went away). No answer is not "not running": the
         unlink rests on the manager's word, so the file stays and the scope is
         unfinished — never an unverified unlink."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         fragment = tmp_path / ".config" / "systemd" / "user" / _UNIT
         fragment.parent.mkdir(parents=True)
@@ -714,7 +714,7 @@ class TestLinuxServiceScopesStatus:
             return inner(argv, *a, **k)
 
         with (
-            patch("kiro_crew.service.linux.subprocess.run", side_effect=run),
+            patch("aj_crew.service.linux.subprocess.run", side_effect=run),
             patch.object(
                 svc_linux.os, "unlink", side_effect=AssertionError("unlinked without confirmation")
             ),
@@ -734,7 +734,7 @@ class TestLinuxServiceScopesStatus:
         process is gone and the unit reads `failed`. A privilege-oriented
         "run it yourself" hint would be wrong — the job would fail again — so
         the kind is not-up and the remedy is the journal."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         job_failed = subprocess.CompletedProcess(
             [], 1, "", f"Job for {_UNIT} failed because the control process exited with error code."
@@ -743,13 +743,13 @@ class TestLinuxServiceScopesStatus:
         run = _fake_systemctl(
             system=None, user=_RUNNING, overrides={"restart": job_failed}, restart_lands_in=limited
         )
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
 
         (failure,) = report.failures
         assert failure.scope == "user" and failure.kind == RESTART_NOT_UP
-        assert failure.hint == "journalctl --user -u kirocrew.service -n 50 --no-pager"
-        assert "exited 1 (Job for kirocrew.service failed" in failure.reason
+        assert failure.hint == "journalctl --user -u ajcrew.service -n 50 --no-pager"
+        assert "exited 1 (Job for ajcrew.service failed" in failure.reason
         assert "failed (failed) (last result: start-limit-hit)" in failure.reason
         assert "refused" not in failure.reason
 
@@ -757,12 +757,12 @@ class TestLinuxServiceScopesStatus:
 
     @pytest.mark.parametrize("scope", ["system", "user"])
     def test_an_alias_is_never_stopped_restarted_or_counted(self, scope):
-        """`Alias=kirocrew.service` on an operator's own unit: `show` on our name
+        """`Alias=ajcrew.service` on an operator's own unit: `show` on our name
         answers for THAT unit (`Id=shared.service`), and so would `stop` and
         `restart` issued on our name. The canonical-Id guard `uninstall` applies
         is one predicate for every verb: the alias is not selected, not counted
         as running or up, and the headline still says what it is."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         kwargs = (
             dict(system=_RUNNING, user=None, system_id="shared.service")
@@ -770,7 +770,7 @@ class TestLinuxServiceScopesStatus:
             else dict(system=None, user=_RUNNING, user_id="shared.service")
         )
         run = _fake_systemctl(**kwargs)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             assert svc_linux.is_active() is False
             assert svc_linux.is_up() is False
             svc_linux.stop()
@@ -785,10 +785,10 @@ class TestLinuxServiceScopesStatus:
     def test_a_running_alias_beside_our_stopped_unit_restarts_nothing(self):
         """Our unit stopped in one scope, an alias running in the other: neither
         is acted on — the stopped one is not running, the alias is not ours."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=_RUNNING, user=_DEAD, system_id="shared.service")
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             report = svc_linux.restart()
             assert svc_linux.is_active() is False
         assert report.attempted is False
@@ -798,14 +798,14 @@ class TestLinuxServiceScopesStatus:
         """`Id=` blank in `show`'s answer: the identity every verb would act on
         was never verified. Not counted, not stopped or restarted, and
         `uninstall` leaves the file in place naming why — the guard is exact
-        equality with `kirocrew.service`, not "not an alias"."""
-        from kiro_crew.service import linux as svc_linux
+        equality with `ajcrew.service`, not "not an alias"."""
+        from aj_crew.service import linux as svc_linux
 
         fragment = tmp_path / ".config" / "systemd" / "user" / _UNIT
         fragment.parent.mkdir(parents=True)
         fragment.write_text(_OURS_UNIT_TEXT, encoding="utf-8")
         run = _fake_systemctl(system=None, user=_RUNNING, user_id="", user_fragment=str(fragment))
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             assert svc_linux.is_active() is False
             assert svc_linux.is_up() is False
             svc_linux.stop()
@@ -818,17 +818,17 @@ class TestLinuxServiceScopesStatus:
         assert not any(verb in c for c in run.calls for verb in ("stop", "disable", "restart"))
 
     def test_logs_predicates_do_not_follow_an_alias(self):
-        """`kirocrew logs` picks the user journal off these two answers; a name
+        """`ajcrew logs` picks the user journal off these two answers; a name
         that is an alias of another unit is not the per-user gateway, so neither
         answers True for it."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=None, user=_RUNNING, user_id="shared.service")
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             assert svc_linux.user_unit_installed() is False
             assert svc_linux.user_unit_active() is False
         run = _fake_systemctl(system=None, user=_RUNNING)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             assert svc_linux.user_unit_installed() is True
             assert svc_linux.user_unit_active() is True
 
@@ -852,34 +852,34 @@ class TestLinuxServiceScopesStatus:
         mid-transition: reachable, not up. `is_up()` is what `systemctl
         is-active` exits 0 for, so the `service status` exit code keeps the
         meaning the base gave it while reading both scopes."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=None, user=state)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             assert svc_linux.is_active() is reach
             assert svc_linux.is_up() is up
         assert all("sudo" not in c for c in run.calls), run.calls
 
     def test_is_up_reads_either_scope(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=_RUNNING, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             assert svc_linux.is_up() is True
         run = _fake_systemctl(system=_DEAD, user=_RUNNING)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             assert svc_linux.is_up() is True
         run = _fake_systemctl(system=None, user_bus_error=_NO_BUS)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             assert svc_linux.is_up() is False
 
     def test_the_selinux_remedy_no_longer_disowns_the_user_unit(self, monkeypatch):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         with (
             patch(
-                "kiro_crew.service.common.shutil.which",
-                return_value="/home/tester/.local/bin/kirocrew",
+                "aj_crew.service.common.shutil.which",
+                return_value="/home/tester/.local/bin/ajcrew",
             ),
             patch.object(svc_linux, "_home_for_user", return_value="/home/tester"),
         ):
@@ -887,18 +887,18 @@ class TestLinuxServiceScopesStatus:
 
         assert "will not see" not in remedy
         assert "only looks at the system unit" not in remedy
-        assert "kirocrew service status|uninstall" in remedy
+        assert "ajcrew service status|uninstall" in remedy
 
     # -- alias_holder -------------------------------------------------------
 
     def test_alias_holder_names_the_scope_and_target_of_a_system_scope_alias(self):
-        """`show kirocrew.service` on an alias answers for the resolved unit;
+        """`show ajcrew.service` on an alias answers for the resolved unit;
         `alias_holder()` reports the scope and that unit's canonical Id so the
         CLI can refuse before it signals the alias target's process."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=_RUNNING, user=None, system_id="other.service")
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             holder = svc_linux.alias_holder()
 
         assert holder == svc_linux.AliasHolder("system", "other.service")
@@ -906,21 +906,21 @@ class TestLinuxServiceScopesStatus:
         assert all("sudo" not in c for c in run.calls), run.calls
 
     def test_alias_holder_names_the_user_scope_when_only_it_is_an_alias(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=None, user=_RUNNING, user_id="other.service")
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             holder = svc_linux.alias_holder()
 
         assert holder == svc_linux.AliasHolder("user", "other.service")
 
     def test_alias_holder_prefers_the_system_scope_when_both_are_aliases(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(
             system=_RUNNING, user=_RUNNING, system_id="sys.service", user_id="usr.service"
         )
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             holder = svc_linux.alias_holder()
 
         assert holder == svc_linux.AliasHolder("system", "sys.service")
@@ -931,26 +931,26 @@ class TestLinuxServiceScopesStatus:
         unit, and refusing would misdirect — the `systemctl` remedy names a unit
         that is already down while the real foreground gateway keeps running. The
         guard is `is_alias and running`, so a down alias lets the fallback proceed."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         for stopped in (_DEAD, {"ActiveState": "failed", "SubState": "failed"}):
             run = _fake_systemctl(system=stopped, user=None, system_id="other.service")
-            with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+            with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
                 assert svc_linux.alias_holder() is None, stopped
 
     def test_alias_holder_is_none_for_our_own_unit(self):
         """Our canonical name in both scopes is not an alias — nothing to refuse."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=_RUNNING, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             assert svc_linux.alias_holder() is None
 
     def test_alias_holder_is_none_when_no_unit_is_installed(self):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         run = _fake_systemctl(system=None, user=None)
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             assert svc_linux.alias_holder() is None
 
 
@@ -962,7 +962,7 @@ class TestLinuxStatusNamesAStaleLoadedUnit:
 
     @pytest.fixture(autouse=True)
     def _not_root(self, _floor_monkeypatch, tmp_path):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         _floor_monkeypatch.setattr(svc_linux.os, "geteuid", lambda: 1000, raising=False)
         _floor_monkeypatch.setenv("USER", "tester")
@@ -995,9 +995,9 @@ class TestLinuxStatusNamesAStaleLoadedUnit:
 
     @staticmethod
     def _status(run):
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
-        with patch("kiro_crew.service.linux.subprocess.run", side_effect=run):
+        with patch("aj_crew.service.linux.subprocess.run", side_effect=run):
             return svc_linux.status()
 
     def test_a_system_unit_loaded_without_the_exemption_is_named_with_the_reinstall_remedy(self):
@@ -1007,7 +1007,7 @@ class TestLinuxStatusNamesAStaleLoadedUnit:
         lines = out.splitlines()
         idx = next(i for i, line in enumerate(lines) if "lacks" in line)
         assert "`RestartPreventExitStatus=78`" in lines[idx], out
-        assert "`sudo kirocrew service install`" in lines[idx], out
+        assert "`sudo ajcrew service install`" in lines[idx], out
         assert lines[idx - 1].startswith("system scope: active (running)"), out
         assert all("sudo" not in c for c in run.calls), run.calls
         assert not any("daemon-reload" in c for c in run.calls), run.calls
@@ -1065,7 +1065,7 @@ class TestLinuxStatusNamesAStaleLoadedUnit:
     def test_the_freshly_rendered_unit_carries_the_exemption(self):
         """The renderer and the check name the same code: a unit this build
         writes carries the value the check looks for."""
-        from kiro_crew.service import linux as svc_linux
+        from aj_crew.service import linux as svc_linux
 
         with (
             patch.object(svc_linux, "_current_group", lambda _u: "tester"),

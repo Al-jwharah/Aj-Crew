@@ -18,10 +18,10 @@ from unittest.mock import patch
 import acp_launch_capture as capture_mod
 import pytest
 
-import kiro_crew.sandbox as sb
-from kiro_crew.acp import client as client_mod
-from kiro_crew.acp import launch as launch_mod
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KIRO
+import aj_crew.sandbox as sb
+from aj_crew.acp import client as client_mod
+from aj_crew.acp import launch as launch_mod
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KIRO
 
 _SSH_MASK = (os.path.expanduser("~/.ssh"),)
 
@@ -29,8 +29,8 @@ _SSH_MASK = (os.path.expanduser("~/.ssh"),)
 @pytest.fixture
 def _no_consent(monkeypatch, tmp_path):
     """Consent absent, non-Windows, ungoverned, consent leaf under *tmp_path*."""
-    from kiro_crew import ssh_auth_sock_consent as consent
-    from kiro_crew.config import loader
+    from aj_crew import ssh_auth_sock_consent as consent
+    from aj_crew.config import loader
 
     monkeypatch.setattr(sb.platform_compat, "IS_WINDOWS", False)
     monkeypatch.setattr(consent, "is_granted", lambda: False)
@@ -50,7 +50,7 @@ def test_masked_harness_without_consent_names_the_setting_and_how_to_grant_it(_n
     assert "ssh-agent forward consent" in notice
     assert '{"enabled": true}' in notice
     assert str(leaf) in notice
-    assert "outside Kiro Crew" in notice
+    assert "outside Aj Crew" in notice
 
 
 def test_strict_without_consent_gets_the_notice(_no_consent):
@@ -119,8 +119,8 @@ def test_the_socket_is_still_scrubbed_without_consent(_no_consent):
 
 def test_codex_mask_gets_the_notice_and_claude_does_not(_no_consent):
     """Under the default tier, Codex's own mask hides ~/.ssh; Claude's leaves it visible."""
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX
-    from kiro_crew.agent_sdk.tool_gate import adapter_hidden_credential_dirs
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX
+    from aj_crew.agent_sdk.tool_gate import adapter_hidden_credential_dirs
 
     codex_mask = tuple(adapter_hidden_credential_dirs(ACP_BACKEND_CODEX))
     claude_mask = tuple(adapter_hidden_credential_dirs(ACP_BACKEND_CLAUDE))
@@ -130,12 +130,12 @@ def test_codex_mask_gets_the_notice_and_claude_does_not(_no_consent):
     assert sb.ssh_auth_sock_consent_notice(ACP_BACKEND_CLAUDE, "auto", claude_mask) == ""
 
 
-# --- kirocrew doctor ---
+# --- ajcrew doctor ---
 
 
 def test_doctor_names_the_harnesses_and_the_remedy(_no_consent, monkeypatch, capsys):
-    from kiro_crew import cli_doctor
-    from kiro_crew.doctor_checks import confinement
+    from aj_crew import cli_doctor
+    from aj_crew.doctor_checks import confinement
 
     monkeypatch.setenv("SSH_AUTH_SOCK", "/tmp/a.sock")
     monkeypatch.setattr(cli_doctor.platform_compat, "IS_WINDOWS", False)
@@ -149,8 +149,8 @@ def test_doctor_names_the_harnesses_and_the_remedy(_no_consent, monkeypatch, cap
 
 
 def test_doctor_is_silent_once_consent_is_granted(_no_consent, monkeypatch, capsys):
-    from kiro_crew import cli_doctor
-    from kiro_crew.doctor_checks import confinement
+    from aj_crew import cli_doctor
+    from aj_crew.doctor_checks import confinement
 
     consent, _leaf = _no_consent
     monkeypatch.setattr(consent, "is_granted", lambda: True)
@@ -162,7 +162,7 @@ def test_doctor_is_silent_once_consent_is_granted(_no_consent, monkeypatch, caps
 
 
 def test_doctor_is_silent_without_an_ssh_agent(_no_consent, monkeypatch, capsys):
-    from kiro_crew.doctor_checks import confinement
+    from aj_crew.doctor_checks import confinement
 
     monkeypatch.delenv("SSH_AUTH_SOCK", raising=False)
     confinement._doctor_ssh_agent_forward()
@@ -266,7 +266,7 @@ def test_a_notice_that_raises_leaves_the_spawn_unchanged(tmp_path, caplog, _fres
     assert recorders and result["argv"], "the spawn did not proceed"
     # Same child as a spawn whose notice computes to nothing (minus the per-spawn
     # random session credential, which differs between any two spawns).
-    from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+    from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
 
     baseline = _spawn(tmp_path, forward=False, notice="", calls=[], sock="/tmp/a.sock")
     got = {k: v for k, v in recorders[0].env.items() if k != STUB_SESSION_TOKEN_ENV}
@@ -303,7 +303,7 @@ def test_concurrent_spawns_of_one_harness_log_once(_fresh_notice_memory, caplog)
     import threading
     from types import SimpleNamespace
 
-    from kiro_crew.testing.wait import await_until, wait_until
+    from aj_crew.testing.wait import await_until, wait_until
 
     entered = threading.Event()
     gate = threading.Event()

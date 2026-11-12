@@ -20,9 +20,9 @@ from apps_registry_helpers import _explicit_registry_execution_admission  # noqa
 from apps_registry_helpers import _install_script_runs_on_this_host  # noqa: F401 - fixture
 from apps_registry_helpers import unsandboxed_spawn  # noqa: F401 - fixture
 
-from kiro_crew import platform_compat
-from kiro_crew.apps import registry
-from kiro_crew.testing.wait import await_until
+from aj_crew import platform_compat
+from aj_crew.apps import registry
+from aj_crew.testing.wait import await_until
 
 # A portable long-lived child: sleeps well past any test timeout without
 # relying on POSIX-only binaries (``sleep``/``bash`` are absent on native
@@ -50,7 +50,7 @@ class _TimeoutProc:
     """
 
     def __init__(self) -> None:
-        # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing literal pid on the fake process, moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing literal pid on the fake process, moved verbatim; tracked for a de-flake pass
         self.pid = 987654
         self.returncode: int | None = None
         self.kill_calls = 0
@@ -230,11 +230,11 @@ async def test_list_registry_reaps_detect_probe_tree_on_timeout(monkeypatch):
 async def test_resolve_manifest_does_not_clone_under_the_skip_switch(monkeypatch, tmp_path):
     """A seed row with no cached manifest renders its minimal info, no clone.
 
-    ``KIROCREW_SKIP_APP_STORE_FETCH=1`` is what the E2E harness gateway runs
+    ``AJCREW_SKIP_APP_STORE_FETCH=1`` is what the E2E harness gateway runs
     with; the seed fallback otherwise pays a shallow clone per row, bounded by
     the clone timeout, on a rig that promises to stay offline.
     """
-    from kiro_crew.apps import official_catalog
+    from aj_crew.apps import official_catalog
 
     monkeypatch.setenv(official_catalog.SKIP_FETCH_ENV, "1")
     monkeypatch.setattr(registry, "_read_manifest_cache", lambda entry: None)
@@ -348,7 +348,7 @@ async def test_kill_process_group_escalation_reaps_via_communicate_not_wait(monk
                 # The site's own grace wait: SIGTERM is ignored, so this
                 # outlives _KILL_GRACE_PERIOD and the escalation fires.
                 # flake-ok: the stub's own grace-wait hang, which the patched _KILL_GRACE_PERIOD cuts short; moved verbatim
-                # nosemgrep: kirocrew.test-sleep-as-barrier -- the stub's own grace-wait hang, which _KILL_GRACE_PERIOD cuts short; not a barrier
+                # nosemgrep: ajcrew.test-sleep-as-barrier -- the stub's own grace-wait hang, which _KILL_GRACE_PERIOD cuts short; not a barrier
                 await asyncio.sleep(3600)
             raise AssertionError("bare wait() used as the post-SIGKILL reap (#5989)")
 
@@ -796,7 +796,7 @@ class _OrphanedGroupProc:
     """The shell already exited, but a child it backgrounded holds stdout open."""
 
     def __init__(self) -> None:
-        # nosemgrep: kirocrew.mock-pid-allocatable -- fake process; the group signal is patched out below
+        # nosemgrep: ajcrew.mock-pid-allocatable -- fake process; the group signal is patched out below
         self.pid = 987655
         self.returncode: int | None = 0
 

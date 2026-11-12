@@ -28,9 +28,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew import session_directive
-from kiro_crew.acp._dispatch import _build_tool_call_event, _kiro_mcp_server_name
-from kiro_crew.acp.types import (
+from aj_crew import session_directive
+from aj_crew.acp._dispatch import _build_tool_call_event, _kiro_mcp_server_name
+from aj_crew.acp.types import (
     EVENT_AGENT_SWITCHED,
     EVENT_COMPLETE,
     EVENT_SUBAGENT_ACTIVITY,
@@ -40,7 +40,7 @@ from kiro_crew.acp.types import (
     EVENT_TOOL_RESULT,
     AcpEvent,
 )
-from kiro_crew.dashboard.session_directive_apply import DirectiveOutcome
+from aj_crew.dashboard.session_directive_apply import DirectiveOutcome
 
 # ── Part 1: ACP identity plumbing ─────────────────────────────────────────────
 
@@ -50,8 +50,8 @@ class TestKiroMcpServerName:
     from ``_meta.kiro.mcpServerName``, failing closed to ``""``."""
 
     def test_returns_name_when_present(self) -> None:
-        update = {"_meta": {"kiro": {"mcpServerName": "kirocrew-core"}}}
-        assert _kiro_mcp_server_name(update) == "kirocrew-core"
+        update = {"_meta": {"kiro": {"mcpServerName": "ajcrew-core"}}}
+        assert _kiro_mcp_server_name(update) == "ajcrew-core"
 
     @pytest.mark.parametrize(
         "update",
@@ -84,14 +84,14 @@ class TestBuildToolCallEventIdentity:
             "kind": "other",
             "title": "Arming a monitor loop",
             "rawInput": {"message": "check PR", "idle_secs": 300},
-            "_meta": {"kiro": {"toolName": "monitor_start", "mcpServerName": "kirocrew-core"}},
+            "_meta": {"kiro": {"toolName": "monitor_start", "mcpServerName": "ajcrew-core"}},
         }
 
     def test_sets_tool_name_and_server_from_meta(self) -> None:
         event = _build_tool_call_event(self._mcp_update(), None)
         assert event.kind == EVENT_TOOL_CALL
         assert event.tool_name == "monitor_start"
-        assert event.mcp_server_name == "kirocrew-core"
+        assert event.mcp_server_name == "ajcrew-core"
         assert event.tool_identity_trusted is True
         # This builder populates the identity pair exclusively from _meta.kiro
         # (non-model-authored), so it earns the explicit provenance flag.
@@ -134,8 +134,8 @@ class TestClientToolCallEventIdentityProvenance:
     silently revoke the verified-identity half on the legacy client path."""
 
     def test_inline_tool_call_builder_sets_identity_flag(self) -> None:
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.types import AcpPromptStats, JsonRpcMessage
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.types import AcpPromptStats, JsonRpcMessage
 
         client = AcpClient.__new__(AcpClient)  # avoid spawning a real process
         client._tool_call_inputs = {}
@@ -157,7 +157,7 @@ class TestClientToolCallEventIdentityProvenance:
                     "_meta": {
                         "kiro": {
                             "toolName": "monitor_start",
-                            "mcpServerName": "kirocrew-core",
+                            "mcpServerName": "ajcrew-core",
                         }
                     },
                 }
@@ -166,7 +166,7 @@ class TestClientToolCallEventIdentityProvenance:
         event = client._extract_tool_event(msg)
         assert event is not None
         assert event.tool_name == "monitor_start"
-        assert event.mcp_server_name == "kirocrew-core"
+        assert event.mcp_server_name == "ajcrew-core"
         assert event.tool_identity_trusted is True
         assert event.mcp_identity_trusted is True
         # Counterfactual: a frame with no _meta.kiro populates nothing, so the
@@ -224,7 +224,7 @@ async def _drive(
     applied_result: str | None = "[applied]",
 ):
     """Stream *events* through _run_chat; optionally stub the directive applier."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     async def _stream(_msg):
         for ev in events:
@@ -273,32 +273,32 @@ class TestProviderConversionPreservesIdentity:
     AcpEvents straight into the runner still passes. This is that guard."""
 
     def test_to_llm_event_preserves_canonical_tool_identity(self) -> None:
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         src = AcpEvent(
             kind=EVENT_TOOL_CALL,
             tool_call_id="tc-1",
             title="Arming monitor",
             tool_name="monitor_start",
-            mcp_server_name="kirocrew-core",
+            mcp_server_name="ajcrew-core",
         )
         out = AcpProvider._to_llm_event(src)
         assert out.tool_name == "monitor_start"
-        assert out.mcp_server_name == "kirocrew-core"
+        assert out.mcp_server_name == "ajcrew-core"
 
     def test_to_llm_event_round_trips_every_dataclass_field(self) -> None:
         """Catch the NEXT dropped field too: every dataclass field must survive
         the conversion (compared on a fully-populated event)."""
         import dataclasses
 
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         src = AcpEvent(
             kind=EVENT_TOOL_CALL,
             tool_call_id="tc-2",
             title="t",
             tool_name="monitor_start",
-            mcp_server_name="kirocrew-core",
+            mcp_server_name="ajcrew-core",
             is_shell=True,
             kas_builtin_ids=True,
             spec_granted_builtins=frozenset({"execute_bash"}),
@@ -331,7 +331,7 @@ class TestChatRunnerDirectiveSeam:
                 tool_call_id="tc-ok",
                 title="Arming monitor",
                 tool_name="monitor_start",
-                mcp_server_name="kirocrew-core",
+                mcp_server_name="ajcrew-core",
             ),
             AcpEvent(
                 kind=EVENT_TOOL_RESULT,
@@ -366,7 +366,7 @@ class TestChatRunnerDirectiveSeam:
                 tool_call_id="tc-automation",
                 title="Switching project",
                 tool_name="set_project",
-                mcp_server_name="kirocrew-core",
+                mcp_server_name="ajcrew-core",
             ),
             AcpEvent(
                 kind=EVENT_TOOL_RESULT,
@@ -385,7 +385,7 @@ class TestChatRunnerDirectiveSeam:
             directive_user_origin=False,
         )
         # The real applier, fed what the turn forwarded, leaves the slot's project alone.
-        from kiro_crew.dashboard.session_directive_apply import apply_session_directive_outcome
+        from aj_crew.dashboard.session_directive_apply import apply_session_directive_outcome
 
         outcome = await apply_session_directive_outcome(*spy.call_args.args, **spy.call_args.kwargs)
         assert "only works from a user-facing session" in outcome.text
@@ -398,7 +398,7 @@ class TestChatRunnerDirectiveSeam:
     async def test_queued_automation_provenance_reaches_next_turn(self, tmp_path, monkeypatch):
         """A busy app-owned request cannot become user-origin when its queue
         entry is drained after the destination slot becomes idle."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = _stub_state(tmp_path)
         slot = state.get_or_create_slot("app-slot")
@@ -466,7 +466,7 @@ class TestChatRunnerDirectiveSeam:
                 tool_call_id="tc-dup",
                 title="Arming monitor",
                 tool_name="monitor_start",
-                mcp_server_name="kirocrew-core",
+                mcp_server_name="ajcrew-core",
             ),
             # Same tool_call_id delivered twice — the duplicate frame.
             AcpEvent(kind=EVENT_TOOL_RESULT, tool_call_id="tc-dup", tool_output=marker),
@@ -494,7 +494,7 @@ class TestChatRunnerDirectiveSeam:
     async def test_non_core_mcp_server_directive_is_not_applied(self, tmp_path, monkeypatch):
         """A tool named like a directive but served by a DIFFERENT (e.g.
         third-party) MCP server must NOT drive a session directive — the gate
-        pins mcp_server_name to KiroCrew's own core server."""
+        pins mcp_server_name to Aj Crew's own core server."""
         state = _stub_state(tmp_path)
         slot = state.get_or_create_slot("evilsrv")
         slot._titled = True
@@ -563,7 +563,7 @@ class TestChatRunnerDirectiveSeam:
                 tool_call_id="tc-nat",
                 title="Arming monitor",
                 tool_name="monitor_start",
-                mcp_server_name="kirocrew-core",
+                mcp_server_name="ajcrew-core",
             ),
             # 4. The tool result carries a valid marker.
             AcpEvent(
@@ -590,7 +590,7 @@ class TestChatRunnerDirectiveSeam:
         `_redact_tool_field` before it reaches broadcast_ws / the persisted
         transcript (backend-security-controls). Pattern-independent: we spy the
         redactor and assert the applier's return value flows through it."""
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         seen: list[str] = []
         _orig_redact = chat_runner._redact_tool_field
@@ -610,7 +610,7 @@ class TestChatRunnerDirectiveSeam:
                 tool_call_id="tc-r",
                 title="Stopping",
                 tool_name="autonudge_stop",
-                mcp_server_name="kirocrew-core",
+                mcp_server_name="ajcrew-core",
             ),
             AcpEvent(
                 kind=EVENT_TOOL_RESULT,
@@ -640,7 +640,7 @@ class TestChatRunnerDirectiveSeam:
         Before the fix this logged ``decode FAILED … effect dropped`` ~10x/day on
         this host -- a line whose purpose is to catch a rawOutput-envelope
         escaping regression."""
-        from kiro_crew.mcp_core import _call_tool
+        from aj_crew.mcp_core import _call_tool
 
         rejection = _call_tool("monitor_start", {"message": "x" * 9000})
         assert rejection.startswith("Error:")
@@ -653,7 +653,7 @@ class TestChatRunnerDirectiveSeam:
                 tool_call_id="tc-reject",
                 title="Arming monitor",
                 tool_name="monitor_start",
-                mcp_server_name="kirocrew-core",
+                mcp_server_name="ajcrew-core",
             ),
             AcpEvent(
                 kind=EVENT_TOOL_RESULT,
@@ -671,7 +671,7 @@ class TestChatRunnerDirectiveSeam:
         # The sentinel is a wire detail: the transcript shows the tool's own text.
         outputs = _tool_result_outputs(state)
         assert any(o.startswith("Error:") for o in outputs), outputs
-        assert not any("KIROCREW_SESSION_DIRECTIVE" in o for o in outputs), outputs
+        assert not any("AJCREW_SESSION_DIRECTIVE" in o for o in outputs), outputs
 
     @pytest.mark.asyncio
     async def test_a_genuinely_lost_marker_still_warns(self, tmp_path, monkeypatch, caplog):
@@ -687,7 +687,7 @@ class TestChatRunnerDirectiveSeam:
                 tool_call_id="tc-lost",
                 title="Arming monitor",
                 tool_name="monitor_start",
-                mcp_server_name="kirocrew-core",
+                mcp_server_name="ajcrew-core",
             ),
             AcpEvent(
                 kind=EVENT_TOOL_RESULT,
@@ -709,15 +709,15 @@ class TestInTurnAgentSwitchPreservesTheModelPin:
     async def test_provider_reported_switch_preserves_the_pin(
         self, tmp_path, monkeypatch, same_agent
     ):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         monkeypatch.setattr(chat_runner, "record_provider_agent_switch", MagicMock())
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         state = _stub_state(tmp_path)
         slot = state.get_or_create_slot("in-turn-switch")
         # The turn resolves both agent names against the fixture config.
-        others = [n for n in KiroCrewConfig.load().agents if n != slot.agent]
+        others = [n for n in AjCrewConfig.load().agents if n != slot.agent]
         assert others, "the fixture must offer a different agent"
         new_agent = slot.agent if same_agent else others[0]
         slot.model = "claude-opus-5"

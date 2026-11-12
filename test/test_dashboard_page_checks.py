@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from kiro_crew.dashboard.handlers import dashboard_page_checks as checks
+from aj_crew.dashboard.handlers import dashboard_page_checks as checks
 
 
 def _package(html: str, types: dict[str, Any], theme: dict[str, Any] | None = None) -> dict:
@@ -42,7 +42,7 @@ def test_a_list_and_a_time_bound_to_text_cells_are_named():
 
 
 def test_a_list_read_by_the_page_script_is_not_named():
-    html = "<ul id=items></ul><script>window.kirocrew.subscribe('work_items', draw)</script>"
+    html = "<ul id=items></ul><script>window.ajcrew.subscribe('work_items', draw)</script>"
     assert checks.shape_warnings(_package(html, _TYPES)) == []
 
 
@@ -210,7 +210,7 @@ def test_an_inline_style_var_counts_too():
 def test_the_host_stylesheet_falls_back_per_scheme_never_to_dark_only():
     """Read before the tab's variables land (or with none): the body must not be pale
     text on a dark-only fallback."""
-    from kiro_crew import dashboard_frame
+    from aj_crew import dashboard_frame
 
     css = dashboard_frame._HOST_CSS
     assert "color: var(--text, light-dark(" in css
@@ -255,7 +255,7 @@ def test_the_skill_has_unique_sections_and_a_discoverable_identity():
     """Structure is testable; the design prose needs a rendered-page review."""
     from pathlib import Path
 
-    skill = Path(__file__).resolve().parents[1] / "src/kiro_crew/builtin_skills/dashboard/SKILL.md"
+    skill = Path(__file__).resolve().parents[1] / "src/aj_crew/builtin_skills/dashboard/SKILL.md"
     text = skill.read_text("utf-8")
     assert text.startswith("---\nname: dashboard\n")
     headings = [line for line in text.splitlines() if line.startswith("## ")]
@@ -264,9 +264,9 @@ def test_the_skill_has_unique_sections_and_a_discoverable_identity():
 
 
 def test_dashboard_types_names_the_rows_a_page_draws():
-    from kiro_crew import dashboard_types
-    from kiro_crew.crew_log.projection_side_panel import TIMELINE_MOMENT_KEYS
-    from kiro_crew.crew_log.projection_subagents import SUBAGENT_ROW_KEYS
+    from aj_crew import dashboard_types
+    from aj_crew.crew_log.projection_side_panel import TIMELINE_MOMENT_KEYS
+    from aj_crew.crew_log.projection_subagents import SUBAGENT_ROW_KEYS
 
     types = {t["name"]: t for t in dashboard_types.describe()["types"]}
     moments = types["timeline"]["shape"]["properties"]["moments"]
@@ -279,7 +279,7 @@ def test_dashboard_types_names_the_rows_a_page_draws():
 def test_the_subagent_row_keys_are_the_keys_the_fold_writes():
     from types import SimpleNamespace
 
-    from kiro_crew.crew_log import projection_subagents as ps
+    from aj_crew.crew_log import projection_subagents as ps
 
     state = ps._subagents_start()
     entry = SimpleNamespace(

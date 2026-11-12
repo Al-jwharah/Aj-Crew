@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.security: redaction on output sinks and across stream chunks.
+"""Tests for aj_crew.security: redaction on output sinks and across stream chunks.
 
 ``redact_and_truncate``, the SEL emitters that redact before truncating, ``scan_history``,
 ``StreamRedactor`` (cross-chunk streaming redaction) and the ``scan_memory`` import guard. The
@@ -15,8 +15,8 @@ from datetime import datetime, timezone
 import pytest
 import security_helpers
 
-from kiro_crew import security
-from kiro_crew.security import REDACTED_CREDENTIAL_TAG, redact_and_truncate, scan_history
+from aj_crew import security
+from aj_crew.security import REDACTED_CREDENTIAL_TAG, redact_and_truncate, scan_history
 
 
 def _jose_header(min_len: int) -> str:
@@ -80,7 +80,7 @@ class TestSELEmittersRedactBeforeTruncate:
     def test_push_allow_event_redacts_straddling_secret(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import security
+        from aj_crew import security
 
         logged: list = []
 
@@ -109,7 +109,7 @@ class TestSELEmittersRedactBeforeTruncate:
     def test_injection_dropped_event_redacts_straddling_secret(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import security
+        from aj_crew import security
 
         logged: list = []
 
@@ -368,7 +368,7 @@ class TestScanHistory:
         self, tmp_path, monkeypatch
     ) -> None:
         """A file deleted between the listing and the read is gone, not unreadable."""
-        from kiro_crew.security import memory_audit
+        from aj_crew.security import memory_audit
 
         _write_rows(tmp_path / "gone.jsonl", [_shell_row("rm -rf /")])
         _write_rows(tmp_path / "kept.jsonl", [_shell_row("echo ok")])
@@ -402,7 +402,7 @@ class TestScanHistory:
 
     def test_the_kept_tail_holds_bounded_text_only(self, tmp_path) -> None:
         """A huge flagged row is kept as its 200-character snippet, not in full."""
-        from kiro_crew.security import memory_audit
+        from aj_crew.security import memory_audit
 
         huge = "chmod 777 /srv/app " + "x" * 100_000
         _write_rows(tmp_path / "s.jsonl", [_shell_row(huge)])
@@ -416,7 +416,7 @@ class TestStreamRedactor:
 
     @staticmethod
     def _run(chunks):
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         r = StreamRedactor()
         emits = [r.feed(c) for c in chunks]
@@ -433,7 +433,7 @@ class TestStreamRedactor:
         assert joined == "The access key is [REDACTED: credential]"
 
     def test_char_by_char_stream(self) -> None:
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         r = StreamRedactor()
         out = "".join(r.feed(c) for c in "x AKIAIOSFODNN7EXAMPLE y") + r.flush()
@@ -455,7 +455,7 @@ class TestStreamRedactor:
         assert "REDACTED" in joined
 
     def test_reset_discards_buffer(self) -> None:
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         r = StreamRedactor()
         assert r.feed("AKIA") == ""  # held
@@ -463,7 +463,7 @@ class TestStreamRedactor:
         assert r.flush() == ""  # nothing left after reset
 
     def test_flush_empty(self) -> None:
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         assert StreamRedactor().flush() == ""
 
@@ -471,7 +471,7 @@ class TestStreamRedactor:
         """A pathologically long unbroken credential-class run does not grow the
         held buffer without bound: the excess beyond the cap is committed, and
         no content is lost across feed+flush."""
-        from kiro_crew.security import _STREAM_HOLDBACK_MAX, StreamRedactor
+        from aj_crew.security import _STREAM_HOLDBACK_MAX, StreamRedactor
 
         r = StreamRedactor()
         blob = "a" * (_STREAM_HOLDBACK_MAX + 300)  # no terminator, all cred-class
@@ -569,7 +569,7 @@ class TestStreamRedactor:
         assert joined == "open ?token&#61;&x=1 done"
 
     def test_html_entity_equals_makes_token_anchor_strong(self) -> None:
-        from kiro_crew.security import (
+        from aj_crew.security import (
             _STREAM_HOLDBACK_JWT_MAX,
             _STREAM_HOLDBACK_MAX,
             StreamRedactor,
@@ -595,7 +595,7 @@ class TestStreamRedactor:
         anchor) must stay authoritative: once the withheld tail exceeds it the
         redactor stops accumulating, so the retained buffer stays bounded.
         """
-        from kiro_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
+        from aj_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
 
         r = StreamRedactor()
         r.feed("Authorization: Bearer ")
@@ -618,7 +618,7 @@ class TestStreamRedactor:
         default 512-char holdback would bisect a long terminal token, emitting the
         first (len-512) chars raw before flush() redacted only the held tail.
         """
-        from kiro_crew.security import _STREAM_HOLDBACK_MAX, StreamRedactor
+        from aj_crew.security import _STREAM_HOLDBACK_MAX, StreamRedactor
 
         payload = _jose_header(_STREAM_HOLDBACK_MAX + 800)
         jwt = f"{payload}.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6"
@@ -637,7 +637,7 @@ class TestStreamRedactor:
         header.key.iv.ciphertext.tag) so it escalates the cap instead of bisecting
         the >512-char JWE at the 512 floor and leaking its raw head.
         """
-        from kiro_crew.security import _STREAM_HOLDBACK_MAX, StreamRedactor
+        from aj_crew.security import _STREAM_HOLDBACK_MAX, StreamRedactor
 
         seg = _jose_header(_STREAM_HOLDBACK_MAX + 400)
         jwe = f"{seg}.QW5rZXk.aXY.Y2lwaGVydGV4dA.dGFn"  # 5 compact JWE segments
@@ -649,7 +649,7 @@ class TestStreamRedactor:
         assert "[REDACTED: credential]" in emitted
 
     def test_jose_validated_jwt_split_across_chunks(self) -> None:
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         jws = security_helpers._JWT
         jwe = security_helpers._JWE_DIR
@@ -664,7 +664,7 @@ class TestStreamRedactor:
             ), size
 
     def test_holdback_anchor_needs_a_json_header(self) -> None:
-        from kiro_crew.security import _partial_jwt_tail
+        from aj_crew.security import _partial_jwt_tail
 
         assert _partial_jwt_tail("see honeyJar.example.com") is None
         assert _partial_jwt_tail("eyJ0.honeyJar.example") is None
@@ -682,7 +682,7 @@ class TestStreamRedactor:
         head raw. `_BEARER_ANCHOR_PARTIAL_RE` now holds the whole anchor together
         and also escalates the cap.
         """
-        from kiro_crew.security import _STREAM_HOLDBACK_MAX, StreamRedactor
+        from aj_crew.security import _STREAM_HOLDBACK_MAX, StreamRedactor
 
         token = "A1b2C3d4" * ((_STREAM_HOLDBACK_MAX + 400) // 8)  # opaque, no eyJ
         assert len(token) > _STREAM_HOLDBACK_MAX
@@ -702,7 +702,7 @@ class TestStreamRedactor:
         stream raw. `_TOKEN_PARAM_PARTIAL_RE` recognises the trailing partial
         and escalates the cap, the same remedy the opaque Bearer case got.
         """
-        from kiro_crew.security import _STREAM_HOLDBACK_MAX, StreamRedactor
+        from aj_crew.security import _STREAM_HOLDBACK_MAX, StreamRedactor
 
         value = "Xk9fQ2mP" * ((_STREAM_HOLDBACK_MAX + 400) // 8)  # opaque, no eyJ
         assert len(value) > _STREAM_HOLDBACK_MAX
@@ -717,7 +717,7 @@ class TestStreamRedactor:
 
     def test_terminal_token_param_punctuation_not_split(self) -> None:
         """A legal non-credential-class byte cannot split a token value."""
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         value = "abc!Zk8qWm3v"
         r = StreamRedactor()
@@ -728,7 +728,7 @@ class TestStreamRedactor:
 
     def test_token_param_punctuation_at_chunk_boundary_not_split(self) -> None:
         """A chunk boundary after punctuation cannot detach a token tail."""
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         value = "abc!Zk8qWm3v"
         r = StreamRedactor()
@@ -741,7 +741,7 @@ class TestStreamRedactor:
 
     def test_token_param_punctuation_before_terminator_not_split(self) -> None:
         """A completed parameter spanning the commit point stays intact."""
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         r = StreamRedactor()
         emitted = r.feed("open http://h.example/?token=abc!Zk8qWm3v&next=1 done\n")
@@ -752,7 +752,7 @@ class TestStreamRedactor:
 
     def test_token_param_terminator_at_chunk_boundary_not_split(self) -> None:
         """A trailing terminator cannot detach a token tail across feeds."""
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         r = StreamRedactor()
         emitted = r.feed("open http://h.example/?token=abc!Zk8qWm3v&")
@@ -764,7 +764,7 @@ class TestStreamRedactor:
 
     def test_weak_token_name_prefix_past_ceiling_preserves_data(self) -> None:
         """A bare token-name prefix is bounded lookahead, not a credential."""
-        from kiro_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
+        from aj_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
 
         text = "a" * (_STREAM_HOLDBACK_JWT_MAX + 200) + "?t"
         assert len(text) > 4200
@@ -775,7 +775,7 @@ class TestStreamRedactor:
 
     def test_complete_token_anchor_past_ceiling_still_fails_closed(self) -> None:
         """A token parameter with ``=`` keeps the existing strong-anchor drop."""
-        from kiro_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
+        from aj_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
 
         text = "a" * (_STREAM_HOLDBACK_JWT_MAX + 200) + "?token=" + "b" * 600
         r = StreamRedactor()
@@ -784,7 +784,7 @@ class TestStreamRedactor:
 
     def test_forced_floor_cut_cannot_bisect_complete_token_param(self) -> None:
         """The 512-byte floor is repaired when it bisects a token value."""
-        from kiro_crew.security import _STREAM_HOLDBACK_MAX, StreamRedactor
+        from aj_crew.security import _STREAM_HOLDBACK_MAX, StreamRedactor
 
         marker = "rawtokensuffix"
         value = "A" * 500 + marker + "B" * 6
@@ -822,7 +822,7 @@ class TestStreamRedactor:
         token's head raw). feed() redacts+emits the safe prefix, appends the tag,
         and DROPS the oversized tail.
         """
-        from kiro_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
+        from aj_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
 
         jwt = _jose_header(_STREAM_HOLDBACK_JWT_MAX + 500) + ".eyJz.SflK"
         r = StreamRedactor()
@@ -835,7 +835,7 @@ class TestStreamRedactor:
 
     @staticmethod
     def _assert_oversized_continuation_is_hidden(head: str) -> None:
-        from kiro_crew.security import REDACTED_CREDENTIAL_TAG, StreamRedactor
+        from aj_crew.security import REDACTED_CREDENTIAL_TAG, StreamRedactor
 
         continuation = "tail_u7-Qp9_" * 24
         redactor = StreamRedactor()
@@ -853,28 +853,28 @@ class TestStreamRedactor:
         assert joined.endswith(" done")
 
     def test_oversized_jwt_continuation_is_discarded(self) -> None:
-        from kiro_crew.security import _STREAM_HOLDBACK_JWT_MAX
+        from aj_crew.security import _STREAM_HOLDBACK_JWT_MAX
 
         self._assert_oversized_continuation_is_hidden(
             "eyJ" + "A" * (_STREAM_HOLDBACK_JWT_MAX + 500)
         )
 
     def test_oversized_token_param_continuation_is_discarded(self) -> None:
-        from kiro_crew.security import _STREAM_HOLDBACK_JWT_MAX
+        from aj_crew.security import _STREAM_HOLDBACK_JWT_MAX
 
         self._assert_oversized_continuation_is_hidden(
             "?token=" + "T" * (_STREAM_HOLDBACK_JWT_MAX + 500)
         )
 
     def test_oversized_bearer_continuation_is_discarded(self) -> None:
-        from kiro_crew.security import _STREAM_HOLDBACK_JWT_MAX
+        from aj_crew.security import _STREAM_HOLDBACK_JWT_MAX
 
         self._assert_oversized_continuation_is_hidden(
             "Authorization: Bearer " + "B" * (_STREAM_HOLDBACK_JWT_MAX + 500)
         )
 
     def test_jwt_discard_preserves_non_jwt_continuation(self) -> None:
-        from kiro_crew.security import (
+        from aj_crew.security import (
             _STREAM_HOLDBACK_JWT_MAX,
             REDACTED_CREDENTIAL_TAG,
             StreamRedactor,
@@ -887,7 +887,7 @@ class TestStreamRedactor:
         assert redactor.feed("!Important") + redactor.flush() == "!Important"
 
     def test_bearer_discard_preserves_non_bearer_continuation(self) -> None:
-        from kiro_crew.security import (
+        from aj_crew.security import (
             _STREAM_HOLDBACK_JWT_MAX,
             REDACTED_CREDENTIAL_TAG,
             StreamRedactor,
@@ -900,7 +900,7 @@ class TestStreamRedactor:
         assert redactor.feed("!Important") + redactor.flush() == "!Important"
 
     def test_token_param_discard_keeps_own_class_until_terminator(self) -> None:
-        from kiro_crew.security import (
+        from aj_crew.security import (
             _STREAM_HOLDBACK_JWT_MAX,
             REDACTED_CREDENTIAL_TAG,
             StreamRedactor,
@@ -913,7 +913,7 @@ class TestStreamRedactor:
         assert redactor.feed("!SecretTail done") + redactor.flush() == " done"
 
     def test_jwt_discard_keeps_base64url_continuation_until_terminator(self) -> None:
-        from kiro_crew.security import (
+        from aj_crew.security import (
             _STREAM_HOLDBACK_JWT_MAX,
             REDACTED_CREDENTIAL_TAG,
             StreamRedactor,
@@ -926,7 +926,7 @@ class TestStreamRedactor:
         assert redactor.feed("More.JWT_- done") + redactor.flush() == " done"
 
     def test_flush_while_discarding_emits_no_continuation(self) -> None:
-        from kiro_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
+        from aj_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
 
         redactor = StreamRedactor()
         redactor.feed("?token=" + "T" * (_STREAM_HOLDBACK_JWT_MAX + 500))
@@ -935,7 +935,7 @@ class TestStreamRedactor:
         assert not redactor._discarding
 
     def test_reset_clears_discard_state(self) -> None:
-        from kiro_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
+        from aj_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
 
         redactor = StreamRedactor()
         redactor.feed("?token=" + "T" * (_STREAM_HOLDBACK_JWT_MAX + 500))
@@ -945,7 +945,7 @@ class TestStreamRedactor:
         assert redactor.feed("visible ") + redactor.flush() == "visible "
 
     def test_complete_over_ceiling_value_with_in_buffer_terminator_commits(self) -> None:
-        from kiro_crew.security import StreamRedactor
+        from aj_crew.security import StreamRedactor
 
         redactor = StreamRedactor()
         first = redactor.feed("?token=" + "T" * 5000 + " done")
@@ -954,7 +954,7 @@ class TestStreamRedactor:
         assert redactor.flush() == "done"
 
     def test_discard_stops_at_the_next_query_parameter(self) -> None:
-        from kiro_crew.security import (
+        from aj_crew.security import (
             _STREAM_HOLDBACK_JWT_MAX,
             REDACTED_CREDENTIAL_TAG,
             StreamRedactor,
@@ -969,7 +969,7 @@ class TestStreamRedactor:
         assert "TTTT" not in remainder
 
     def test_discard_stops_at_a_fragment(self) -> None:
-        from kiro_crew.security import (
+        from aj_crew.security import (
             _STREAM_HOLDBACK_JWT_MAX,
             REDACTED_CREDENTIAL_TAG,
             StreamRedactor,
@@ -985,7 +985,7 @@ class TestStreamRedactor:
 
     def test_drop_preserves_suffix_when_the_value_ended_inside_the_buffer(self) -> None:
         """Fail-closed drops only the token region, never its benign suffix."""
-        from kiro_crew.security import REDACTED_CREDENTIAL_TAG, StreamRedactor
+        from aj_crew.security import REDACTED_CREDENTIAL_TAG, StreamRedactor
 
         value = "A" * 5000 + "!" + "B" * 100
         redactor = StreamRedactor()
@@ -997,7 +997,7 @@ class TestStreamRedactor:
 
     def test_drop_arms_when_the_same_value_reaches_the_buffer_end(self) -> None:
         """The same oversized value remains sticky when its continuation is unknown."""
-        from kiro_crew.security import REDACTED_CREDENTIAL_TAG, StreamRedactor
+        from aj_crew.security import REDACTED_CREDENTIAL_TAG, StreamRedactor
 
         value = "A" * 5000 + "!" + "B" * 100
         redactor = StreamRedactor()
@@ -1017,7 +1017,7 @@ class TestStreamRedactor:
         cut at zero, and the only thing at the buffer end is a bare name prefix
         with no ``=`` (WEAK). Nothing STRONG reaches the buffer end.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         value = "A" * 2000 + ";" + "A" * (security._STREAM_HOLDBACK_JWT_MAX - 1500)
         text = f"?token={value}&tok"
@@ -1032,7 +1032,7 @@ class TestStreamRedactor:
         The drop covers the completed value only; the WEAK prefix is HELD (the
         existing holdback), and its completion follows the weak-completion rules.
         """
-        from kiro_crew.security import REDACTED_CREDENTIAL_TAG, StreamRedactor
+        from aj_crew.security import REDACTED_CREDENTIAL_TAG, StreamRedactor
 
         redactor = StreamRedactor()
         first = redactor.feed(self._over_ceiling_crossing_with_weak_tail())
@@ -1045,7 +1045,7 @@ class TestStreamRedactor:
 
     def test_weak_tail_never_arms_the_sticky_discard(self) -> None:
         """WEAK evidence holds bytes but never arms a drop or names a discard kind."""
-        from kiro_crew.security import REDACTED_CREDENTIAL_TAG, StreamRedactor
+        from aj_crew.security import REDACTED_CREDENTIAL_TAG, StreamRedactor
 
         redactor = StreamRedactor()
         first = redactor.feed(self._over_ceiling_crossing_with_weak_tail())
@@ -1056,7 +1056,7 @@ class TestStreamRedactor:
         assert redactor.feed(" visible") + redactor.flush() == "&tok visible"
 
     def test_drop_ending_at_terminator_does_not_suppress_next_chunk(self) -> None:
-        from kiro_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
+        from aj_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
 
         redactor = StreamRedactor()
         first = redactor.feed("?token=" + "T" * (_STREAM_HOLDBACK_JWT_MAX + 500) + " ")
@@ -1075,7 +1075,7 @@ class TestStreamRedactor:
         anchorless run (where the 512 floor would bisect it and stream it raw):
         every byte after the bound stays dropped, in ``feed()`` and ``flush()``.
         """
-        from kiro_crew.security import (
+        from aj_crew.security import (
             _STREAM_DISCARD_MAX,
             _STREAM_HOLDBACK_JWT_MAX,
             REDACTED_CREDENTIAL_TAG,
@@ -1113,7 +1113,7 @@ class TestStreamRedactor:
         O(1)) and keeps discarding; there is no permanent wedge because the next
         terminator byte still exits the discard and releases the trailing text.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
         monkeypatch.setattr(security, "_STREAM_DISCARD_MAX", 64)
         tag = security.REDACTED_CREDENTIAL_TAG
@@ -1145,7 +1145,7 @@ class TestStreamRedactor:
         past the ceiling is still committed verbatim (bisected, no data loss),
         keeping the DoS bound intact without corrupting non-secret output.
         """
-        from kiro_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
+        from aj_crew.security import _STREAM_HOLDBACK_JWT_MAX, StreamRedactor
 
         blob = "a" * (_STREAM_HOLDBACK_JWT_MAX + 600)  # no eyJ / Bearer anchor
         r = StreamRedactor()
@@ -1162,12 +1162,12 @@ class TestScanMemoryImportGuard:
     def test_non_importerror_degrades_to_empty(self, monkeypatch) -> None:
         import builtins
 
-        from kiro_crew.security import scan_memory
+        from aj_crew.security import scan_memory
 
         real_import = builtins.__import__
 
         def fake_import(name, *args, **kwargs):
-            if name == "kiro_crew.vector_memory" or name.endswith(".vector_memory"):
+            if name == "aj_crew.vector_memory" or name.endswith(".vector_memory"):
                 raise OSError("simulated C-extension load failure")
             return real_import(name, *args, **kwargs)
 

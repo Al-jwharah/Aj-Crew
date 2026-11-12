@@ -14,12 +14,12 @@ from pathlib import Path
 import pytest
 from test_embeddings import _make_failing_llama_class, _make_fake_llama_class, _write_model_file
 
-from kiro_crew import embeddings as embeddings_mod
-from kiro_crew.embeddings import LlamaCppEmbedder
-from kiro_crew.knowledge import retrieval
-from kiro_crew.knowledge.embedder import InProcessEmbedder, floats_to_bytes
-from kiro_crew.knowledge.retrieval import HybridRetriever, vector_leg
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew import embeddings as embeddings_mod
+from aj_crew.embeddings import LlamaCppEmbedder
+from aj_crew.knowledge import retrieval
+from aj_crew.knowledge.embedder import InProcessEmbedder, floats_to_bytes
+from aj_crew.knowledge.retrieval import HybridRetriever, vector_leg
+from aj_crew.knowledge.store import KnowledgeStore
 
 pytest.importorskip("numpy")
 
@@ -52,14 +52,14 @@ def store(tmp_path: Path):
 
 
 def _backend(tmp_path, monkeypatch, cls):
-    monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: cls)
+    monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: cls)
     emb = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"))
     monkeypatch.setattr(embeddings_mod, "get_shared_embedder", lambda: emb)
     return emb
 
 
 def _populate(store, embedder) -> None:
-    from kiro_crew.knowledge.embedder import embedder_signature
+    from aj_crew.knowledge.embedder import embedder_signature
 
     sig = embedder_signature(embedder)
     dim = embedder.dim
@@ -169,7 +169,7 @@ class TestFailureIsUnchanged:
 
     def test_not_serving_backend_is_not_loaded(self, tmp_path, monkeypatch):
         cls = _make_fake_llama_class()
-        monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: cls)
+        monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: cls)
         emb = LlamaCppEmbedder(model_path=_write_model_file(tmp_path / "model.gguf"), serving=False)
         try:
             emb.prefetch()

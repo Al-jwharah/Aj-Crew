@@ -21,7 +21,7 @@ export function goalPopoverSlots(key, project = GOAL_POPOVER_PROJECT) {
     running: false,
     last_message: 'Two candidates left.',
     messages: 2,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     memory_mode: 'persistent',
     project,
     folder_id: '',

@@ -22,10 +22,10 @@ import time
 
 import pytest
 
-from kiro_crew.computer_use import index as index_mod
-from kiro_crew.computer_use import render
-from kiro_crew.computer_use.index import SnapshotIndex, drift_message
-from kiro_crew.computer_use.types import (
+from aj_crew.computer_use import index as index_mod
+from aj_crew.computer_use import render
+from aj_crew.computer_use.index import SnapshotIndex, drift_message
+from aj_crew.computer_use.types import (
     DEFAULT_TEXT_LIMIT,
     MAX_INDEXED_APPS,
     SECURE_PLACEHOLDER,
@@ -40,7 +40,7 @@ from kiro_crew.computer_use.types import (
     SnapshotRequest,
     StaleIndex,
 )
-from kiro_crew.testing.fake_computer_use import (
+from aj_crew.testing.fake_computer_use import (
     FAKE_CREDENTIAL_FIXTURE,
     FAKE_FILES_APP,
     FAKE_LOGIN_APP,
@@ -303,7 +303,7 @@ class TestRendering:
     def test_app_list_rendering(self, fake):
         text = render.render_apps(fake.apps)
         assert "3 application(s)" in text
-        assert "dev.kirocrew.fake.files" in text
+        assert "dev.ajcrew.fake.files" in text
         assert "pid 4101" in text
 
     def test_empty_app_list_says_so(self):
@@ -354,13 +354,13 @@ class TestScreenshotSpoolNamesAreUnique:
     """
 
     def _service(self, tmp_path, monkeypatch):
-        from kiro_crew.computer_use import service as service_mod
+        from aj_crew.computer_use import service as service_mod
 
         monkeypatch.setattr(service_mod.tempfile, "gettempdir", lambda: str(tmp_path))
         return service_mod
 
     def _snap(self, service_mod, payload: bytes):
-        from kiro_crew.computer_use.types import AppRef, Snapshot
+        from aj_crew.computer_use.types import AppRef, Snapshot
 
         return Snapshot(
             app=AppRef(name="A", pid=1, bundle_id="com.acme.a", window_id=7),
@@ -421,13 +421,13 @@ class TestSpoolFailureLeavesNoOrphanFrame:
     """
 
     def _service(self, tmp_path, monkeypatch):
-        from kiro_crew.computer_use import service as service_mod
+        from aj_crew.computer_use import service as service_mod
 
         monkeypatch.setattr(service_mod.tempfile, "gettempdir", lambda: str(tmp_path))
         return service_mod
 
     def _snap(self, service_mod, payload: bytes):
-        from kiro_crew.computer_use.types import AppRef, Snapshot
+        from aj_crew.computer_use.types import AppRef, Snapshot
 
         return Snapshot(
             app=AppRef(name="A", pid=1, bundle_id="com.acme.a", window_id=7),
@@ -929,14 +929,14 @@ class TestTheCeilingRoundTripIsLossless:
         rather than being silently dropped by the next lossy rebuild."""
         import dataclasses
 
-        from kiro_crew.computer_use.tools import _element_from_payload, _element_payload
+        from aj_crew.computer_use.tools import _element_from_payload, _element_payload
 
         rec = ElementRec(
             index=4,
             role="AXTextField",
             subrole="AXSearchField",
             title="Query",
-            value="kirocrew",
+            value="ajcrew",
             actions=("AXConfirm",),
             depth=2,
             secure=False,
@@ -956,14 +956,14 @@ class TestTheCeilingRoundTripIsLossless:
 
     def test_the_tools_render_path_emits_the_geometry_and_traits(self, fake):
         """The model-facing surface, not ``render_tree`` in isolation."""
-        from kiro_crew.computer_use import tools as cu_tools
+        from aj_crew.computer_use import tools as cu_tools
 
         snap = _snap(fake, FAKE_FILES_APP)
         text = cu_tools._render_snapshot(
             snap,
             SnapshotRequest(),
             session_key="dashboard:main",
-            agent="kirocrew",
+            agent="ajcrew",
             app=FAKE_FILES_APP.name,
         )
         assert "@ x=18,y=12 28x24" in text, "element frames were dropped before rendering"
@@ -978,7 +978,7 @@ class TestTheCeilingRoundTripIsLossless:
         else is worse than no rect, because a model will pass it to a coordinate
         click. ``bool`` is excluded explicitly (it is an ``int`` subclass).
         """
-        from kiro_crew.computer_use.tools import _element_from_payload
+        from aj_crew.computer_use.tools import _element_from_payload
 
         for bad in ((1, 2, 3), (1, 2, 3, "x"), (1, 2, 3, True), "nope", (1, 2, 3, 4, 5), None):
             rec = _element_from_payload({"index": 1, "role": "AXButton", "frame": bad})
@@ -993,14 +993,14 @@ class TestTheCeilingRoundTripIsLossless:
         frame, so populating them in the payload cannot leak — asserted rather than
         assumed, because this fix is what put real values in those fields.
         """
-        from kiro_crew.computer_use import tools as cu_tools
+        from aj_crew.computer_use import tools as cu_tools
 
         snap = _snap(fake, FAKE_LOGIN_APP)
         text = cu_tools._render_snapshot(
             snap,
             SnapshotRequest(),
             session_key="dashboard:main",
-            agent="kirocrew",
+            agent="ajcrew",
             app=FAKE_LOGIN_APP.name,
         )
         line = next(ln for ln in text.splitlines() if SECURE_PLACEHOLDER in ln)
@@ -1112,15 +1112,15 @@ class TestASuppressedScreenshotAlwaysSaysSoWhy:
         """
         import json
 
-        from kiro_crew.computer_use import backend as cu_backend
-        from kiro_crew.computer_use import index as cu_index
-        from kiro_crew.computer_use import service as cu_service
-        from kiro_crew.computer_use import tools as cu_tools
+        from aj_crew.computer_use import backend as cu_backend
+        from aj_crew.computer_use import index as cu_index
+        from aj_crew.computer_use import service as cu_service
+        from aj_crew.computer_use import tools as cu_tools
 
         # The keystone primary enable, in an isolated home — the dispatcher refuses
         # everything before rendering otherwise, and a developer's real
         # ``~/.kiro/crew`` must never decide this test's outcome.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "computer_use.json").write_text(json.dumps({"enabled": True}), encoding="utf-8")
 
         fake.trees[FAKE_FILES_APP.key] = FakeNode(
@@ -1175,11 +1175,11 @@ class TestScreenshotNoteStaysOutsideRedaction:
 
     # Real shape: two-char bucket, 30 lowercase alphanumerics, no vowels, ``0000gn``.
     _HOST_ID = "6r/9f82r1996wq9g2scz0v53nph0000gn"
-    _LEAF = "kirocrew-computer-shots/shot-1700000000000-ab12cd34.jpeg"
+    _LEAF = "ajcrew-computer-shots/shot-1700000000000-ab12cd34.jpeg"
 
     @staticmethod
     def _as_host(monkeypatch, host_id):
-        from kiro_crew.security import redaction as redaction_mod
+        from aj_crew.security import redaction as redaction_mod
 
         monkeypatch.setattr(redaction_mod, "_host_darwin_user_dir_id", lambda: host_id)
 
@@ -1207,7 +1207,7 @@ class TestScreenshotNoteStaysOutsideRedaction:
         ],
     )
     def test_spool_path_reaches_the_model_byte_exact(self, monkeypatch, root, host_id):
-        from kiro_crew.computer_use import policy
+        from aj_crew.computer_use import policy
 
         self._as_host(monkeypatch, host_id)
         path = f"{root}/{self._LEAF}"

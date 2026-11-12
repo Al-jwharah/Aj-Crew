@@ -28,13 +28,13 @@ mkdirSync(OUT, { recursive: true })
 // f1 carries a project_dir so the nested-create shot can show inheritance;
 // f1a deliberately has none of its own.
 const folders = [
-  { id: 'f1', name: 'Kiro', icon: '🚀', order: 0, collapsed: false, project_dir: '/Volumes/workplace/KiroCrew' },
+  { id: 'f1', name: 'Kiro', icon: '🚀', order: 0, collapsed: false, project_dir: '/Volumes/workplace/AjCrew' },
   { id: 'f1a', name: 'Backend', icon: '🧩', order: 0, collapsed: false, parent_id: 'f1' },
-  // f2's default agent IS in the stubbed /api/agents roster ('kirocrew'), so its
+  // f2's default agent IS in the stubbed /api/agents roster ('ajcrew'), so its
   // Folder settings render the INSTALLED-agent else-branch: the plain helper hint
   // and no orphan notice. This is the counterpart to f3's orphan state below, and
   // the frame that demonstrates the notice is shown only when the agent is missing.
-  { id: 'f2', name: 'Payments', icon: '🎯', order: 1, collapsed: true, project_dir: '/repo/payments', default_agent: 'kirocrew' },
+  { id: 'f2', name: 'Payments', icon: '🎯', order: 1, collapsed: true, project_dir: '/repo/payments', default_agent: 'ajcrew' },
   // f3's default agent is not in the roster (see the /api/agents override in
   // main()), so its Folder settings render the orphan state: the
   // "(not installed)" option label AND the inline notice bound to the field.
@@ -42,7 +42,7 @@ const folders = [
 ]
 
 const slot = (key, title, folder_id, last_ts) => ({
-  key, title, messages: 4, running: false, agent: 'kirocrew',
+  key, title, messages: 4, running: false, agent: 'ajcrew',
   created: '2026-07-20T01:00:00Z', last_ts, folder_id,
 })
 
@@ -64,14 +64,14 @@ async function main() {
   const page = await context.newPage()
 
   // The shared stub answers /api/agents with a bare ARRAY, but useAgents (via
-  // api.kirocrewAgents) reads `d.agents` / `d.default_agent` off an OBJECT, so
+  // api.ajcrewAgents) reads `d.agents` / `d.default_agent` off an OBJECT, so
   // under the array shape `d.agents` is undefined, the roster is empty, and
   // every folder's default agent reads as an orphan -- which made the
   // installed-agent (no-notice) state unreachable in a shot. Override the shape
   // HERE rather than in the shared stub, which 200+ other harnesses depend on.
   const agentsRoster = {
-    agents: [{ name: 'kirocrew', source: 'builtin' }, { name: 'oncall', source: 'aim' }],
-    default_agent: 'kirocrew',
+    agents: [{ name: 'ajcrew', source: 'builtin' }, { name: 'oncall', source: 'aim' }],
+    default_agent: 'ajcrew',
   }
   const extra = async (path, route) => {
     if (path === '/api/agents' || path === '/api/chat/agents') {
@@ -127,7 +127,7 @@ async function main() {
   await closeModal()
 
   // ── 04: edit an existing folder via ⋯ → Folder settings ──
-  // f2's default agent ('kirocrew') IS installed, so this frame demonstrates the
+  // f2's default agent ('ajcrew') IS installed, so this frame demonstrates the
   // orphanAgent-toggle's else-branch: the plain Default agent hint with NO notice.
   // Assert the notice is absent so the frame proves the installed state rather
   // than merely not erroring.

@@ -21,14 +21,14 @@ from typing import Any
 import pytest
 from turn_harness import Do, TurnContext, TurnScript, run_turn
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.slack.client import SlackClientOps
+from aj_crew.slack.client import SlackClientOps
 
 _DONE = AcpEvent(kind=EVENT_COMPLETE, stop_reason=STOP_REASON_END_TURN)
 

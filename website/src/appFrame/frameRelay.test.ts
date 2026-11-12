@@ -65,7 +65,7 @@ describe('relayTarget: a frame reaches its own app and nothing else', () => {
   })
 
   it('only headers the frame could have sent cross-origin', () => {
-    expect(relayHeaders([['Content-Type', 'application/json'], ['X-KiroCrew-Capability', 'c']])?.get('x-kirocrew-capability')).toBe('c')
+    expect(relayHeaders([['Content-Type', 'application/json'], ['X-AjCrew-Capability', 'c']])?.get('x-ajcrew-capability')).toBe('c')
     expect(relayHeaders([['authorization', 'Bearer x']])).toBeNull()
     expect(relayHeaders([['cookie', 'a=b']])).toBeNull()
     expect(relayHeaders([['x-internal-secret', 's']])).toBeNull()
@@ -79,7 +79,7 @@ describe('serveFrameRelay: the dashboard makes the request the frame asked for',
     vi.stubGlobal('fetch', fetch)
     const el = frame()
     serveFrameRelay(el, 'cards', 'n1')
-    relayFrom(el, { path: '/app-frame-fetch/cards/kv?a=1', method: 'POST', headers: [['content-type', 'application/json'], ['x-kirocrew-capability', 'cap']], body: '{"k":1}' })
+    relayFrom(el, { path: '/app-frame-fetch/cards/kv?a=1', method: 'POST', headers: [['content-type', 'application/json'], ['x-ajcrew-capability', 'cap']], body: '{"k":1}' })
     await flush(); await flush()
     expect(fetch).toHaveBeenCalledTimes(1)
     const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit]
@@ -89,7 +89,7 @@ describe('serveFrameRelay: the dashboard makes the request the frame asked for',
     expect(init.mode).toBe('same-origin')
     expect(init.redirect).toBe('error')
     expect(init.body).toBe('{"k":1}')
-    expect([...new Headers(init.headers)]).toEqual([['content-type', 'application/json'], ['x-kirocrew-capability', 'cap']])
+    expect([...new Headers(init.headers)]).toEqual([['content-type', 'application/json'], ['x-ajcrew-capability', 'cap']])
     const [res] = answers(el)
     expect(res).toMatchObject({ id: 1, ok: true, status: 200 })
     // Only what a CORS read would expose.

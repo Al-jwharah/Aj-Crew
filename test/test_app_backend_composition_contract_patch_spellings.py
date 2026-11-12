@@ -1,6 +1,6 @@
 """The app backend's composition: no test patches a forwarded name with ``create=True``.
 
-``mock.patch`` undoes a name ``kiro_crew.apps.backend`` forwards by deleting it, so
+``mock.patch`` undoes a name ``aj_crew.apps.backend`` forwards by deleting it, so
 under ``create=True`` the name is gone from every backend module for the rest of the
 run. The guard reads every test module's AST and flags any patch of a forwarded name
 whose ``create`` is not literally ``False``, in any spelling. The rest of the contract
@@ -20,7 +20,7 @@ from typing import NamedTuple
 import pytest
 import source_corpus
 
-from kiro_crew.apps import backend
+from aj_crew.apps import backend
 
 # One group per file: the patch-spelling guard parses every test module, and the
 # production re-export scan parses part of the package, once per worker otherwise.
@@ -343,7 +343,7 @@ def _facade_reexports() -> frozenset[str]:
     for path, text in _python_files():
         if _module_name(path) is None or _in_a_test_directory(path):
             continue
-        if "kiro_crew.apps" in text or "apps" in path.relative_to(_REPO_ROOT).parts:
+        if "aj_crew.apps" in text or "apps" in path.relative_to(_REPO_ROOT).parts:
             candidates.append((_module_name(path) or "", _is_package(path), ast.parse(text)))
     found: frozenset[str] = frozenset()
     while True:
@@ -421,7 +421,7 @@ def _patch_sources() -> Iterator[tuple[Path, str]]:
 
 
 #: Imports most reader cases share.
-_CASE_IMPORTS = "from unittest import mock\nfrom kiro_crew.apps import backend\n"
+_CASE_IMPORTS = "from unittest import mock\nfrom aj_crew.apps import backend\n"
 
 #: ``(id, source, module, expected names)`` for the reader: each form the guard must
 #: catch beside a spelling of it the guard must leave alone. ``@EXP@`` is a forwarded
@@ -473,49 +473,49 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     (
         "another module",
         _CASE_IMPORTS
-        + "from kiro_crew import config\nmock.patch.object(config, '@EXP@', create=True)\n",
+        + "from aj_crew import config\nmock.patch.object(config, '@EXP@', create=True)\n",
         None,
         [],
     ),
     (
         "another module's .backend",
         _CASE_IMPORTS
-        + "from kiro_crew import config\n"
+        + "from aj_crew import config\n"
         + "mock.patch.object(config.backend, '@EXP@', create=True)\n",
         None,
         [],
     ),
     (
         "the facade module imported by its path",
-        "from unittest import mock\nimport kiro_crew.apps.backend as reg\n"
+        "from unittest import mock\nimport aj_crew.apps.backend as reg\n"
         "mock.patch.object(reg, '@EXP@', create=True)\n",
         None,
         ["@EXP@"],
     ),
     (
         "the facade module reached through its package",
-        "from unittest import mock\nimport kiro_crew.apps\n"
-        "mock.patch.object(kiro_crew.apps.backend, '@EXP@', create=True)\n",
+        "from unittest import mock\nimport aj_crew.apps\n"
+        "mock.patch.object(aj_crew.apps.backend, '@EXP@', create=True)\n",
         None,
         ["@EXP@"],
     ),
     (
         "patch as an alias",
-        "from unittest.mock import patch as P\nfrom kiro_crew.apps import backend\n"
+        "from unittest.mock import patch as P\nfrom aj_crew.apps import backend\n"
         "P.object(backend, '@EXP@', create=True)\n",
         None,
         ["@EXP@"],
     ),
     (
         "a local function named patch",
-        "from kiro_crew.apps import backend\ndef patch(*a, **k):\n    return None\n"
+        "from aj_crew.apps import backend\ndef patch(*a, **k):\n    return None\n"
         "patch.object(backend, '@EXP@', create=True)\n",
         None,
         [],
     ),
     (
         "mock as an alias",
-        "from unittest import mock as M\nfrom kiro_crew.apps import backend\n"
+        "from unittest import mock as M\nfrom aj_crew.apps import backend\n"
         "M.patch.object(backend, '@EXP@', create=True)\n",
         None,
         ["@EXP@"],
@@ -528,14 +528,14 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     ),
     (
         "unittest.mock by its path",
-        "import unittest.mock\nfrom kiro_crew.apps import backend\n"
+        "import unittest.mock\nfrom aj_crew.apps import backend\n"
         "unittest.mock.patch.multiple(backend, create=True, @EXP@=None)\n",
         None,
         ["@EXP@"],
     ),
     (
         "a third-party mock",
-        "import mock\nfrom kiro_crew.apps import backend\n"
+        "import mock\nfrom aj_crew.apps import backend\n"
         "mock.patch.object(backend, '@EXP@', create=True)\n",
         None,
         [],
@@ -568,7 +568,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     ),
     (
         "another dotted string",
-        "from unittest import mock\nmock.patch('kiro_crew.config.@EXP@', create=True)\n",
+        "from unittest import mock\nmock.patch('aj_crew.config.@EXP@', create=True)\n",
         None,
         [],
     ),
@@ -581,7 +581,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     (
         "an f-string of another __name__",
         _CASE_IMPORTS
-        + "from kiro_crew import config\nmock.patch(f'{config.__name__}.@EXP@', create=True)\n",
+        + "from aj_crew import config\nmock.patch(f'{config.__name__}.@EXP@', create=True)\n",
         None,
         [],
     ),
@@ -594,7 +594,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     ),
     (
         "an f-string of another constant",
-        "from unittest import mock\nOTHER = 'kiro_crew.config'\n"
+        "from unittest import mock\nOTHER = 'aj_crew.config'\n"
         "mock.patch(f'{OTHER}.@EXP@', create=True)\n",
         None,
         [],
@@ -614,7 +614,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     ),
     (
         "another constant concatenated",
-        "from unittest import mock\nOTHER = 'kiro_crew.config'\n"
+        "from unittest import mock\nOTHER = 'aj_crew.config'\n"
         "mock.patch(OTHER + '.@EXP@', create=True)\n",
         None,
         [],
@@ -628,7 +628,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     (
         "keyword target elsewhere",
         _CASE_IMPORTS
-        + "from kiro_crew import config\n"
+        + "from aj_crew import config\n"
         + "mock.patch.object(target=config, attribute='@EXP@', create=True)\n",
         None,
         [],
@@ -667,7 +667,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     ),
     (
         "an aliased patch with a positional create",
-        "from unittest.mock import patch as P\nfrom kiro_crew.apps import backend\n"
+        "from unittest.mock import patch as P\nfrom aj_crew.apps import backend\n"
         "P.object(backend, '@EXP@', None, None, True)\n",
         None,
         ["@EXP@"],
@@ -687,7 +687,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     (
         "a splat on another module",
         _CASE_IMPORTS
-        + "from kiro_crew import config\n"
+        + "from aj_crew import config\n"
         + "def test_x(opts):\n    mock.patch.object(config, '@EXP@', **opts)\n",
         None,
         [],
@@ -710,7 +710,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     (
         "**kwargs elsewhere",
         _CASE_IMPORTS
-        + "from kiro_crew import config\n"
+        + "from aj_crew import config\n"
         + "def test_x(kw):\n    mock.patch.multiple(config, create=True, **kw)\n",
         None,
         [],
@@ -724,7 +724,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     (
         "patch.multiple of another string",
         "from unittest import mock\n"
-        "mock.patch.multiple('kiro_crew.config', create=True, @EXP@=None)\n",
+        "mock.patch.multiple('aj_crew.config', create=True, @EXP@=None)\n",
         None,
         [],
     ),
@@ -739,7 +739,7 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
     (
         "import_module elsewhere",
         "import importlib\nfrom unittest import mock\n"
-        "other = importlib.import_module('kiro_crew.config')\n"
+        "other = importlib.import_module('aj_crew.config')\n"
         "mock.patch.object(other, '@EXP@', create=True)\n",
         None,
         [],
@@ -761,33 +761,33 @@ _READER_CASES: list[tuple[str, str, str | None, list[str]]] = [
         "a relative import in a package",
         "from unittest import mock\nfrom ... import backend\n"
         "mock.patch.object(backend, '@EXP@', create=True)\n",
-        "kiro_crew.apps.builtins.tests.test_case",
+        "aj_crew.apps.builtins.tests.test_case",
         ["@EXP@"],
     ),
     (
         "a relative import elsewhere",
         "from unittest import mock\nfrom ..crew import backend\n"
         "mock.patch.object(backend, '@EXP@', create=True)\n",
-        "kiro_crew.apps.builtins.tests.test_case",
+        "aj_crew.apps.builtins.tests.test_case",
         [],
     ),
 ]
 
 #: A production module that re-exports the facade under another name, for the two
 #: cases below: the scan finds none today, so the reader is shown one.
-_SYNTHETIC_REEXPORTS = frozenset({"kiro_crew.apps.routes.backend_mod"})
+_SYNTHETIC_REEXPORTS = frozenset({"aj_crew.apps.routes.backend_mod"})
 
 _REEXPORT_CASES: list[tuple[str, str, list[str]]] = [
     (
         "an assigned re-export",
-        "from unittest import mock\nfrom kiro_crew.apps import routes\n"
+        "from unittest import mock\nfrom aj_crew.apps import routes\n"
         "def test_x():\n    reg = routes.backend_mod\n"
         "    mock.patch.object(reg, '@EXP@', create=True)\n",
         ["@EXP@"],
     ),
     (
         "an assigned other attribute",
-        "from unittest import mock\nfrom kiro_crew.apps import routes\n"
+        "from unittest import mock\nfrom aj_crew.apps import routes\n"
         "def test_x():\n    reg = routes.backend_other\n"
         "    mock.patch.object(reg, '@EXP@', create=True)\n",
         [],
@@ -829,15 +829,15 @@ class TestPatchSpellings:
     def test_a_relative_import_resolves_against_the_right_package(
         self, is_package: bool, expected: list[str]
     ) -> None:
-        # ``from ... import backend`` in ``kiro_crew/apps/builtins/tests/__init__.py``
-        # names ``kiro_crew.apps.backend``; in a plain ``kiro_crew/apps/builtins/tests.py``
-        # it names ``kiro_crew.backend``, which is not the facade.
+        # ``from ... import backend`` in ``aj_crew/apps/builtins/tests/__init__.py``
+        # names ``aj_crew.apps.backend``; in a plain ``aj_crew/apps/builtins/tests.py``
+        # it names ``aj_crew.backend``, which is not the facade.
         source = _case(
             "from unittest import mock\nfrom ... import backend\n"
             "mock.patch.object(backend, '@EXP@', create=True)\n"
         )
         hits = _create_true_patches_of_forwarded_names(
-            source, "kiro_crew.apps.builtins.tests", is_package=is_package
+            source, "aj_crew.apps.builtins.tests", is_package=is_package
         )
         assert [hit.name for hit in hits] == expected
 
@@ -891,7 +891,7 @@ class TestPatchSpellings:
             if (path, hit.function) not in _ALLOWED_CREATE_TRUE
         ]
         assert found == _ALLOWED_CREATE_TRUE, (
-            "mock.patch(..., create=True) of a name kiro_crew.apps.backend forwards to "
+            "mock.patch(..., create=True) of a name aj_crew.apps.backend forwards to "
             "its owner deletes that name from every backend module when the patch "
             "exits. Drop create=True (the name exists) or patch it with "
             f"monkeypatch.setattr: {unexpected}; allowlisted but not found: "

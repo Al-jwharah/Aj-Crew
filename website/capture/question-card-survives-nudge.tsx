@@ -40,7 +40,7 @@ const scene = params.get('scene') || 'after'
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 const lang = params.get('lang') || 'en'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 initI18n(lang)
 
 const SLOT = 'chat-110'

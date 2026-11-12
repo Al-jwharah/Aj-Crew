@@ -12,9 +12,9 @@ from pathlib import Path
 
 import pytest
 
+from aj_crew import platform_compat
+from aj_crew.kiro_prerequisite import _AUTH_STAGING_RELATIVE, _ensure_auth_staging_parent
 from conftest import requires_symlinks
-from kiro_crew import platform_compat
-from kiro_crew.kiro_prerequisite import _AUTH_STAGING_RELATIVE, _ensure_auth_staging_parent
 
 
 def test_stray_file_is_removed(tmp_path: Path) -> None:
@@ -89,7 +89,7 @@ def test_junction_at_staging_path_is_not_certified_as_private(tmp_path: Path, mo
     the path with the existing OSError rather than return it as the private
     root.
     """
-    from kiro_crew import kiro_prerequisite as kp
+    from aj_crew import kiro_prerequisite as kp
 
     def reads_as_junction(path):
         return Path(path).name == Path(_AUTH_STAGING_RELATIVE).name

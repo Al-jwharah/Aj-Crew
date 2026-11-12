@@ -35,11 +35,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 from overload_fakes import STORE_OPEN_CEILING_SECS, mock_ctx, mock_sessions, wait_taskq_open
 
-import kiro_crew.subagent as subagent_mod
-import kiro_crew.subagent_wait_reasons as wait_reasons
-from kiro_crew import platform_compat
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.testing.wait import async_wait_until
+import aj_crew.subagent as subagent_mod
+import aj_crew.subagent_wait_reasons as wait_reasons
+from aj_crew import platform_compat
+from aj_crew.subagent import SubagentManager
+from aj_crew.testing.wait import async_wait_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -81,7 +81,7 @@ _DEFERRALS = frozenset({"low_memory", "memory_pressure"})
 
 def _string_constants(node: ast.AST) -> set[str]:
     """The strings *node* can be: its literals, and a module constant it names
-    (``outcome=SEL_...``), resolved through ``kiro_crew.subagent``, the namespace
+    (``outcome=SEL_...``), resolved through ``aj_crew.subagent``, the namespace
     the admission package's functions run in."""
     found: set[str] = set()
     for c in ast.walk(node):
@@ -327,11 +327,11 @@ async def test_every_capacity_condition_queues_and_only_policy_refuses(monkeypat
             return_value=MagicMock(admitted=False, posture="critical", available_gb=1.2)
         )
         # Patched where a re-added gate would read it too (the name ``spawn_impl``
-        # resolves in ``kiro_crew.subagent``'s namespace), not only at its source.
+        # resolves in ``aj_crew.subagent``'s namespace), not only at its source.
         with (
-            patch("kiro_crew.resource_status.cached_admission_check", critical),
-            patch("kiro_crew.resource_status.admission_check", critical),
-            patch("kiro_crew.subagent.cached_admission_check", critical, create=True),
+            patch("aj_crew.resource_status.cached_admission_check", critical),
+            patch("aj_crew.resource_status.admission_check", critical),
+            patch("aj_crew.subagent.cached_admission_check", critical, create=True),
         ):
             verdicts["posture_critical"] = await _verdict(mgr, started)
         critical.assert_not_called()
@@ -361,7 +361,7 @@ async def test_every_capacity_condition_queues_and_only_policy_refuses(monkeypat
         # The policy refusals, which stay refusals.
         verdicts["empty_task"] = await _verdict(mgr, started, task="   ")
         verdicts["cwd"] = await _verdict(mgr, started, cwd="/definitely/not/an/allowed/root")
-        with patch("kiro_crew.subagent._vet_spawn_governance", return_value="spawning is off"):
+        with patch("aj_crew.subagent._vet_spawn_governance", return_value="spawning is off"):
             verdicts["governance"] = await _verdict(mgr, started)
         verdicts["memory_identity"] = await _verdict(mgr, started, _memory_mode="unknown")
     finally:

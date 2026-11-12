@@ -28,11 +28,11 @@ from session_storage_helpers import (  # noqa: F401 -- fixtures are requested by
     stores_fixture,
 )
 
-from kiro_crew import session_storage
-from kiro_crew.dashboard.handlers.sessions import _clearable_history_keys
-from kiro_crew.history import ConversationLog
-from kiro_crew.history_listing_index import SessionListingIndex
-from kiro_crew.session_storage import SessionStorageError
+from aj_crew import session_storage
+from aj_crew.dashboard.handlers.sessions import _clearable_history_keys
+from aj_crew.history import ConversationLog
+from aj_crew.history_listing_index import SessionListingIndex
+from aj_crew.session_storage import SessionStorageError
 
 
 def _attachment(crew_home: Path, stem: str, name: str, *, size: int, age_days: float) -> int:
@@ -261,7 +261,7 @@ class TestRestoreIsAllOrNothing:
             raise AssertionError(f"the full-restore path wrote by name: {args!r}")
 
         # Scoped to just these two patches: `monkeypatch` is the same instance
-        # the `stores` fixture pins KIROCREW_HOME/KIRO_HOME with, and
+        # the `stores` fixture pins AJCREW_HOME/KIRO_HOME with, and
         # `monkeypatch.undo()` unwinds its WHOLE stack in LIFO order, including
         # entries pushed before this test ever ran. An `undo()` here to restore
         # `atomic_write` also unpins the data home, and the `empty_trash()` call
@@ -282,7 +282,7 @@ class TestRestoreIsAllOrNothing:
             assert kept[0].sessions == 1, "the listing goes stale rather than being rewritten"
 
         # And the user is not stuck with it: the explicit empty still takes the batch.
-        # KIROCREW_HOME/KIRO_HOME (set by the `stores` fixture, outside the `with`
+        # AJCREW_HOME/KIRO_HOME (set by the `stores` fixture, outside the `with`
         # above) are still pinned here.
         session_storage.empty_trash()
         assert session_storage.list_trash() == []

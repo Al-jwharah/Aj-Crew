@@ -19,11 +19,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import agent_discovery
-from kiro_crew.agent_discovery_parts import dir_revision, spec_reads
-from kiro_crew.config import loader, loader_snapshots
-from kiro_crew.dashboard.handlers import agent_catalog
-from kiro_crew.testing.wait import default_timeout
+from aj_crew import agent_discovery
+from aj_crew.agent_discovery_parts import dir_revision, spec_reads
+from aj_crew.config import loader, loader_snapshots
+from aj_crew.dashboard.handlers import agent_catalog
+from aj_crew.testing.wait import default_timeout
 
 _REAL_REVISION_ONLY = pytest.mark.skipif(
     sys.platform == "win32",
@@ -146,7 +146,7 @@ def test_a_raising_scan_is_not_memoized(home, monkeypatch):
 def test_a_failed_spec_read_is_not_memoized(home, monkeypatch):
     # A read can fail for a moment with no change to the entry's metadata, so a
     # scan that hit one is not memoized and the next refresh reads it again.
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     for i in range(3):
         _write_spec(home.user_dir, f"agent-{i}")
@@ -246,7 +246,7 @@ def test_an_unprovable_revision_always_scans(home, monkeypatch, probe):
 
 @_REAL_REVISION_ONLY
 def test_a_declined_memo_logs_once_per_key(home, monkeypatch, caplog):
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     def refused(path, *args, **kwargs):
         raise PermissionError("resolver busy")
@@ -314,7 +314,7 @@ def test_the_heal_runs_on_a_reuse_as_on_a_scan(home, heals):
 
 @_REAL_REVISION_ONLY
 def test_the_heal_waits_for_a_complete_snapshot(home, heals, monkeypatch):
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     monkeypatch.setattr(hooks, "safe_read_file", lambda *a, **k: (_ for _ in ()).throw(OSError()))
     loader.refresh_materialized_agents(heal_default=True)
@@ -345,7 +345,7 @@ def test_owner_fetch_heals_after_the_workspace_spec_is_deleted(monkeypatch, tmp_
     project = tmp_path / "proj"
     project_spec = _write_spec(project / ".kiro" / "agents", "reviewer")
     agents = tmp_path / "agents"
-    _write_spec(agents, "kirocrew")
+    _write_spec(agents, "ajcrew")
     global_spec = _write_spec(agents, "reviewer")
     config = tmp_path / "config.json"
     config.write_text(
@@ -353,7 +353,7 @@ def test_owner_fetch_heals_after_the_workspace_spec_is_deleted(monkeypatch, tmp_
             {
                 "default_agent": "pkg",
                 "agents": {
-                    "default": {"kiro_agent": "kirocrew"},
+                    "default": {"kiro_agent": "ajcrew"},
                     "pkg": {"kiro_agent": "reviewer", "workspace": "proj"},
                 },
                 "workspaces": {"proj": {"dir": str(project)}},

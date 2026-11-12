@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from test_dashboard_chat import TestRunChatTransientRetry as _TransientSuite
 
-from kiro_crew.dashboard.recovery_replays import ReplayFamily
+from aj_crew.dashboard.recovery_replays import ReplayFamily
 
 
 class TestRunChatTransientRetryBindingMismatch:
@@ -26,8 +26,8 @@ class TestRunChatTransientRetryBindingMismatch:
     async def test_thinking_binding_mismatch_rebuilds_once_on_fresh_conversation(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         events: list[str] = []
 
@@ -77,7 +77,7 @@ class TestRunChatTransientRetryBindingMismatch:
     async def test_thinking_binding_mismatch_arms_the_ledger_family(self, tmp_path, monkeypatch):
         """The queued retry is a ledger family, so the drain and consume seams own
         its Stop, steer, follow-up and rebind vetoes."""
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         async def fail(_message):
             self._binding_failure()
@@ -89,7 +89,7 @@ class TestRunChatTransientRetryBindingMismatch:
         state.sessions.get_or_create = AsyncMock(return_value=(client, True, False))
         slot = state.get_or_create_slot("s1")
         slot._titled = True
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         monkeypatch.setattr(chat_runner, "_start_next_queued_turn", AsyncMock(return_value=False))
 
@@ -102,7 +102,7 @@ class TestRunChatTransientRetryBindingMismatch:
 
     @pytest.mark.asyncio
     async def test_thinking_binding_mismatch_discard_is_one_shot(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         calls = 0
 
@@ -132,7 +132,7 @@ class TestRunChatTransientRetryBindingMismatch:
     ):
         """A spent one-shot refuses the rebuild; the mismatch falls through to the
         terminal error, so a self-wake loop's stand-down bound sees it."""
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         async def fail(_message):
             self._binding_failure()
@@ -143,7 +143,7 @@ class TestRunChatTransientRetryBindingMismatch:
         async def _note(slot_key, _exc, *, self_wake, **_kwargs):
             noted.append((slot_key, self_wake))
 
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         monkeypatch.setattr(chat_runner, "_note_cycle_failure", _note)
         state = self._make_state(tmp_path, monkeypatch)
@@ -177,8 +177,8 @@ class TestRunChatTransientRetryBindingMismatch:
         """A mismatch that lands after the turn already produced output (a reply
         chunk, a thought or a tool call) must not discard and replay: the replay
         could repeat what the user already saw or a side effect that ran."""
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import (
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import (
             EVENT_TEXT_CHUNK,
             EVENT_THINKING_CHUNK,
             EVENT_TOOL_CALL,
@@ -218,9 +218,9 @@ class TestRunChatTransientRetryBindingMismatch:
         the rebuild, and the replay is queued as the completion it is (no
         THINKING_BINDING record), so nothing can cancel it: the completion runs
         again on the fresh conversation, then the user's message."""
-        from kiro_crew.dashboard import chat_runner
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+        from aj_crew.dashboard import chat_runner
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
 
         calls: list[str] = []
 
@@ -268,7 +268,7 @@ class TestRunChatTransientRetryBindingMismatch:
         self, tmp_path, monkeypatch
     ):
         """The recovery clears retry/fallback counters before the discard."""
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         async def fail(_message):
             self._binding_failure()
@@ -304,8 +304,8 @@ class TestRunChatTransientRetryBindingMismatch:
     async def test_thinking_binding_retry_is_dropped_when_stop_lands_during_discard(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.dashboard.chat import _run_chat
-        from kiro_crew.dashboard.recovery_replays import THINKING_BINDING_CANCELLED_TEXT
+        from aj_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.recovery_replays import THINKING_BINDING_CANCELLED_TEXT
 
         calls = 0
 

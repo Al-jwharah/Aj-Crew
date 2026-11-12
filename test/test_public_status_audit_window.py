@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.dashboard import state
+from aj_crew.dashboard import state
 
 WINDOW = state._PUBLIC_STATUS_GRANT_WINDOW_SECS
 RECORDERS = [
@@ -31,7 +31,7 @@ class _Sink:
 
 @pytest.fixture
 def audit(monkeypatch, tmp_path):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     clock, sink = _Clock(), _Sink()
     monkeypatch.setattr(state, "time", SimpleNamespace(monotonic=clock.monotonic))
     monkeypatch.setattr(state, "sel", lambda: sink)

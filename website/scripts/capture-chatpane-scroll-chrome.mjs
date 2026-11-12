@@ -21,8 +21,8 @@ const OUT = process.argv[3] || '../temp-screenshots/chatpane-scroll-chrome'
 mkdirSync(OUT, { recursive: true })
 
 const MEMBERS = [
-  { name: 'radar', slug: 'radar', bound: true, slot_key: 'member-radar', running: true, kiro_agent: 'kirocrew-autofix', workspace: 'autofix', memory_store: 'default', model: '', last_active_ts: 1000, last_message: 'Six new issues: four covered by open PRs.' },
-  { name: 'fixer', slug: 'fixer', bound: true, slot_key: 'member-fixer', running: false, kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', model: '', last_active_ts: 900, last_message: 'Two PRs opened for the queue.' },
+  { name: 'radar', slug: 'radar', bound: true, slot_key: 'member-radar', running: true, kiro_agent: 'ajcrew-autofix', workspace: 'autofix', memory_store: 'default', model: '', last_active_ts: 1000, last_message: 'Six new issues: four covered by open PRs.' },
+  { name: 'fixer', slug: 'fixer', bound: true, slot_key: 'member-fixer', running: false, kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', model: '', last_active_ts: 900, last_message: 'Two PRs opened for the queue.' },
 ]
 
 // A transcript tall enough to scroll at 820px: alternating turns with a few
@@ -57,7 +57,7 @@ async function newPage(theme, viewport = { width: 1280, height: 820 }) {
   await page.route(u => new URL(u).pathname.startsWith('/api/'), route => {
     const path = new URL(route.request().url()).pathname
     if (path === '/api/members') {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ members: MEMBERS, default_agent: 'kirocrew' }) })
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ members: MEMBERS, default_agent: 'ajcrew' }) })
     }
     const thread = path.match(/^\/api\/members\/([^/]+)\/thread$/)
     if (thread) {
@@ -72,7 +72,7 @@ async function newPage(theme, viewport = { width: 1280, height: 820 }) {
     }
     if (path === '/api/crons') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ jobs: [] }) })
     if (path === '/api/webhooks') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ tokens: [] }) })
-    if (path === '/api/agents') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ agents: [], default_agent: 'kirocrew' }) })
+    if (path === '/api/agents') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ agents: [], default_agent: 'ajcrew' }) })
     const isList = /commands|skills|agents|sessions|files|history|models|artifacts|folders/.test(path)
     return route.fulfill({ status: 200, contentType: 'application/json', body: isList ? '[]' : '{}' })
   })

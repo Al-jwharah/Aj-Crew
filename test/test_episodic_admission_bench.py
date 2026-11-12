@@ -3,16 +3,16 @@
 A benchmark whose corpus has silently drifted into fragments ``write_episodic``
 would reject reports a rate for a haystack that never existed, and nothing else
 would catch that. These checks need no model and run in the default suite; the
-model-backed gate measurement is ``kiro_crew.eval.bench.member_v2`` (CI-run).
+model-backed gate measurement is ``aj_crew.eval.bench.member_v2`` (CI-run).
 """
 
 from __future__ import annotations
 
 import pytest
 
-from kiro_crew.eval.bench.admission import AdmissionRefusal, validate_corpus
-from kiro_crew.eval.bench.admission_corpus import ADMISSION_TOPICS, AdmissionTopic
-from kiro_crew.vector_memory import _EPISODIC_LONG_TEXT_CHARS
+from aj_crew.eval.bench.admission import AdmissionRefusal, validate_corpus
+from aj_crew.eval.bench.admission_corpus import ADMISSION_TOPICS, AdmissionTopic
+from aj_crew.vector_memory import _EPISODIC_LONG_TEXT_CHARS
 
 
 class TestCommittedCorpus:

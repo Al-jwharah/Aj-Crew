@@ -11,11 +11,11 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import dashboard_agentic, dashboard_feed
-from kiro_crew.dashboard.handlers import member_dashboard
-from kiro_crew.dashboard_feed import FOLD_UNSEEN, OLDER_VALUE, PATH_MISSING, FieldRead
-from kiro_crew.dashboard_templates import instance
-from kiro_crew.dashboard_templates.manifest import parse_manifest
+from aj_crew import dashboard_agentic, dashboard_feed
+from aj_crew.dashboard.handlers import member_dashboard
+from aj_crew.dashboard_feed import FOLD_UNSEEN, OLDER_VALUE, PATH_MISSING, FieldRead
+from aj_crew.dashboard_templates import instance
+from aj_crew.dashboard_templates.manifest import parse_manifest
 
 SLUG = "code-reviewer"
 MEMBER = "Code Reviewer"
@@ -24,7 +24,7 @@ MEMBER = "Code Reviewer"
 @pytest.fixture(autouse=True)
 def _home(tmp_path, _floor_monkeypatch):
     """Own data home, and ``project-report`` as the page named for the crewmate."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _floor_monkeypatch.setattr(
         instance, "default_template_id", lambda _slug, _ids: "project-report"
     )
@@ -109,7 +109,7 @@ class TestTheTurnBlock:
         assert "did not resolve" not in block and calls == [], block
 
     def test_with_the_crew_panel_off_no_nudge_is_made(self, monkeypatch) -> None:
-        """No kirocrew-panel means no dashboard_save to call."""
+        """No ajcrew-panel means no dashboard_save to call."""
         monkeypatch.setattr(dashboard_agentic, "_crew_panel_on", lambda: False)
         calls = _reads(monkeypatch, {_fold_fields()[0]: PATH_MISSING})
         assert "did not resolve" not in dashboard_agentic.turn_block(SLUG, MEMBER)
@@ -143,13 +143,13 @@ class TestTheTurnBlock:
     def test_the_member_section_passes_the_crew_name(self, monkeypatch) -> None:
         from unittest.mock import patch
 
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-        from kiro_crew.context_assembly.member import build_member_section
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+        from aj_crew.context_assembly.member import build_member_section
 
         calls = _reads(monkeypatch, {_fold_fields()[0]: PATH_MISSING})
-        cfg = KiroCrewConfig()
-        cfg.agents = {SLUG: KiroCrewAgentConfig(kiro_agent="kirocrew-autofix")}
-        with patch("kiro_crew.context.KiroCrewConfig.load", return_value=cfg):
+        cfg = AjCrewConfig()
+        cfg.agents = {SLUG: AjCrewAgentConfig(kiro_agent="ajcrew-autofix")}
+        with patch("aj_crew.context.AjCrewConfig.load", return_value=cfg):
             section = build_member_section(SLUG)
         assert calls and calls[0] == (SLUG, SLUG), calls
         assert "Fields on your page that did not resolve" in section
@@ -205,7 +205,7 @@ def _tree_manifest() -> Any:
     """A package-shaped manifest binding one TREE fold, which has no bus scope."""
     from types import SimpleNamespace
 
-    from kiro_crew.crew_log.projection import WORKTREE_FOLD_NAME
+    from aj_crew.crew_log.projection import WORKTREE_FOLD_NAME
 
     spec = SimpleNamespace(fold=WORKTREE_FOLD_NAME, path="boards", agentic=False)
     return SimpleNamespace(fields={"boards": spec}, folds=frozenset({WORKTREE_FOLD_NAME}))
@@ -223,7 +223,7 @@ class TestATreeField:
     def test_the_turn_block_reads_the_tree_and_drops_a_field_that_resolves(
         self, monkeypatch
     ) -> None:
-        from kiro_crew.crew_log import projection
+        from aj_crew.crew_log import projection
 
         manifest = _tree_manifest()
         _reads(monkeypatch, {"boards": FOLD_UNSEEN})
@@ -237,7 +237,7 @@ class TestATreeField:
         assert "boards" in dashboard_feed.resolved_before("slot-a")
 
     def test_the_turn_block_keeps_a_tree_field_whose_read_fails(self, monkeypatch) -> None:
-        from kiro_crew.crew_log import projection
+        from aj_crew.crew_log import projection
 
         def boom(_root: str, _fold: str) -> Any:
             raise OSError("unreadable")
@@ -253,7 +253,7 @@ class TestATreeField:
         assert dashboard_agentic.unresolved_line(_tree_manifest_parsed(), found) == ""
 
     def test_a_tree_without_the_path_after_a_hit_is_an_older_value(self, monkeypatch) -> None:
-        from kiro_crew.crew_log import projection
+        from aj_crew.crew_log import projection
 
         dashboard_feed.remember_resolved("slot-j", ["boards"])
         _reads(monkeypatch, {"boards": FOLD_UNSEEN})
@@ -270,8 +270,8 @@ class TestATreeField:
         import threading
         from types import SimpleNamespace
 
-        from kiro_crew.crew_log.projection import WORKTREE_FOLD_NAME
-        from kiro_crew.dashboard.handlers.member_dashboard_fields import LivePage
+        from aj_crew.crew_log.projection import WORKTREE_FOLD_NAME
+        from aj_crew.dashboard.handlers.member_dashboard_fields import LivePage
 
         page = SimpleNamespace(
             _lock=threading.RLock(),
@@ -341,7 +341,7 @@ class TestAMisspelledTreePath:
     ``path_missing`` so the crewmate is told."""
 
     def test_the_turn_block_names_a_misspelled_tree_path(self, monkeypatch) -> None:
-        from kiro_crew.crew_log import projection
+        from aj_crew.crew_log import projection
 
         _reads(monkeypatch, {"boards": FOLD_UNSEEN})
         monkeypatch.setattr(member_dashboard, "_dashboard_slot", lambda _m, _s: "slot-h")
@@ -357,8 +357,8 @@ class TestAMisspelledTreePath:
         import threading
         from types import SimpleNamespace
 
-        from kiro_crew.crew_log.projection import WORKTREE_FOLD_NAME
-        from kiro_crew.dashboard.handlers.member_dashboard_fields import LivePage
+        from aj_crew.crew_log.projection import WORKTREE_FOLD_NAME
+        from aj_crew.dashboard.handlers.member_dashboard_fields import LivePage
 
         page = SimpleNamespace(
             _lock=threading.RLock(),
@@ -378,7 +378,7 @@ def test_no_shipped_page_reads_stale() -> None:
     import re
     from pathlib import Path
 
-    from kiro_crew import dashboard_frame
+    from aj_crew import dashboard_frame
 
     assert "stale" not in dashboard_frame.read_payload({})
     root = Path(dashboard_frame.__file__).resolve().parent
@@ -388,7 +388,7 @@ def test_no_shipped_page_reads_stale() -> None:
         *sorted((root / "builtin_skills" / "dashboard" / "gallery").rglob("*.html")),
     ]
     assert pages, "no shipped page found; this guards nothing"
-    reader = re.compile(r"(?:kirocrew|api|read)\s*(?:\.\s*stale\b|\[\s*['\"]stale['\"])")
+    reader = re.compile(r"(?:ajcrew|api|read)\s*(?:\.\s*stale\b|\[\s*['\"]stale['\"])")
     offenders = [str(p) for p in pages if reader.search(p.read_text(encoding="utf-8"))]
     assert offenders == [], offenders
 
@@ -413,7 +413,7 @@ def test_no_shipped_page_draws_its_own_staleness_band() -> None:
     which reads to the person as the same "some numbers are older" message."""
     from pathlib import Path
 
-    from kiro_crew import dashboard_frame
+    from aj_crew import dashboard_frame
 
     root = Path(dashboard_frame.__file__).resolve().parent
     pages = sorted((root / "dashboard_templates" / "builtin").glob("*/template.html")) + sorted(
@@ -456,10 +456,10 @@ class TestAWarmV1Turn:
         and the member section does not."""
         from unittest.mock import patch
 
-        from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-        from kiro_crew.context import ContextBuilder
-        from kiro_crew.memory import MemoryStore
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+        from aj_crew.context import ContextBuilder
+        from aj_crew.memory import MemoryStore
+        from aj_crew.skills import SkillsLoader
 
         seen: list[tuple[str, str]] = []
 
@@ -468,13 +468,13 @@ class TestAWarmV1Turn:
             return "[DASHBOARD]\nFields on your page that did not resolve: x."
 
         monkeypatch.setattr(dashboard_agentic, "unresolved_notice", notice)
-        cfg = KiroCrewConfig()
-        cfg.agents = {SLUG: KiroCrewAgentConfig(kiro_agent="kirocrew-autofix")}
+        cfg = AjCrewConfig()
+        cfg.agents = {SLUG: AjCrewAgentConfig(kiro_agent="ajcrew-autofix")}
         builder = ContextBuilder(
             memory=MemoryStore(workspace=tmp_path / "ws"),
             skills=SkillsLoader(skills_path=tmp_path / "skills", install_builtins=False),
         )
-        with patch("kiro_crew.context.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.context.AjCrewConfig.load", return_value=cfg):
             full, _ = builder.build_message(
                 "hello again", False, f"dashboard:member-{SLUG}", agent=SLUG, member=SLUG
             )
@@ -580,7 +580,7 @@ def test_bound_script_runs_are_read_off_the_store(tmp_path, monkeypatch) -> None
     """Only a SCRIPT job bound to this member that has finished a run counts."""
     import json
 
-    from kiro_crew import cron
+    from aj_crew import cron
 
     monkeypatch.setattr(cron, "config_dir", lambda: tmp_path)
     jobs = [

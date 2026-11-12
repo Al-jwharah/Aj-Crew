@@ -31,7 +31,7 @@ const ERROR_COPY = "Couldn't load the agent list."
 mkdirSync(OUT, { recursive: true })
 
 const AGENTS = [
-  { name: 'kirocrew', kiro_agent: 'kirocrew', source: 'builtin', description: 'The built-in agent' },
+  { name: 'ajcrew', kiro_agent: 'ajcrew', source: 'builtin', description: 'The built-in agent' },
   { name: 'gpu-research', kiro_agent: 'gpu-research', source: 'package', description: 'Internal research' },
   { name: 'oncall', kiro_agent: 'oncall-agent', source: 'package', description: 'Paging and triage' },
 ]
@@ -63,7 +63,7 @@ try {
             await route.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"gateway restarting"}' })
             return true
           }
-          await json(route, { agents: AGENTS, default_agent: 'kirocrew' })
+          await json(route, { agents: AGENTS, default_agent: 'ajcrew' })
           return true
         }
         if (path === '/api/agents/sync') {

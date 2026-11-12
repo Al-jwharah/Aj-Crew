@@ -12,8 +12,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat import api_chat_slot_end_wait
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.chat import api_chat_slot_end_wait
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 def _make_app(
@@ -64,7 +64,7 @@ def _patch_sel():
     """Patch sel() to avoid SecurityEventLog initialization."""
     mock_sel = MagicMock()
     mock_sel.log_tool_invocation = MagicMock()
-    with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=mock_sel):
+    with patch("aj_crew.dashboard.chat_handlers.sel", return_value=mock_sel):
         yield mock_sel
 
 

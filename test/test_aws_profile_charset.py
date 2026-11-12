@@ -2,19 +2,19 @@
 
 IAM Identity Center derives profile names shaped ``<account>+<permission-set>``
 (e.g. ``AdminAccess+dev``), so ``+`` must be accepted. The accepted shape lives
-in ``kiro_crew.constants.AWS_PROFILE_NAME_RE`` as the single source of truth.
+in ``aj_crew.constants.AWS_PROFILE_NAME_RE`` as the single source of truth.
 These tests pin every consumer:
 
-* ``kiro_crew.cloud.ec2._PROFILE_SPEC`` (EC2 wizard — aliases
+* ``aj_crew.cloud.ec2._PROFILE_SPEC`` (EC2 wizard — aliases
   ``profiles.PROFILE_SPEC``)
-* ``kiro_crew.deploy.profiles._PROFILE_RE`` (deploy profile registry + the
+* ``aj_crew.deploy.profiles._PROFILE_RE`` (deploy profile registry + the
   ``aws configure list-profiles`` discovery filter)
-* ``kiro_crew.deploy.handlers._PROFILE_SPEC`` (deploy-web HTTP boundary —
+* ``aj_crew.deploy.handlers._PROFILE_SPEC`` (deploy-web HTTP boundary —
   aliases ``profiles.PROFILE_SPEC``)
-* ``kiro_crew.validation._WM_PROFILE_RE`` (workspace-manager webapp_metadata)
-* ``kiro_crew.instances.validation._AWS_PROFILE_RE`` (SSM tunnel inputs;
+* ``aj_crew.validation._WM_PROFILE_RE`` (workspace-manager webapp_metadata)
+* ``aj_crew.instances.validation._AWS_PROFILE_RE`` (SSM tunnel inputs;
   ``instances.registry`` aliases it for its early record check)
-* ``kiro_crew.aws_consent._PROFILE_RE`` (identity probe — a DELIBERATE
+* ``aj_crew.aws_consent._PROFILE_RE`` (identity probe — a DELIBERATE
   near-sibling that derives its class from the shared fragments)
 * the two standalone artifact-deploy scripts (``attach_backend.py`` /
   ``detach_backend.py``), which cannot import the package and embed the
@@ -36,16 +36,16 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import aws_consent, constants
-from kiro_crew import validation as validation_mod
-from kiro_crew.cloud import aws as cloud_aws
-from kiro_crew.cloud import ec2
-from kiro_crew.deploy import engine as engine_mod
-from kiro_crew.deploy import handlers
-from kiro_crew.deploy import profiles as profiles_mod
-from kiro_crew.instances import registry as instances_registry
-from kiro_crew.instances import validation as instances_validation
-from kiro_crew.validation import (
+from aj_crew import aws_consent, constants
+from aj_crew import validation as validation_mod
+from aj_crew.cloud import aws as cloud_aws
+from aj_crew.cloud import ec2
+from aj_crew.deploy import engine as engine_mod
+from aj_crew.deploy import handlers
+from aj_crew.deploy import profiles as profiles_mod
+from aj_crew.instances import registry as instances_registry
+from aj_crew.instances import validation as instances_validation
+from aj_crew.validation import (
     ARTIFACT_SAVE_SCHEMA,
     ValidationError,
     validate_field,
@@ -260,7 +260,7 @@ class TestSharedConstantAdoption:
 _SCRIPTS_DIR = (
     Path(__file__).resolve().parents[1]
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "deploy"
     / "skills"
     / "artifact-deploy"

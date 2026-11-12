@@ -18,8 +18,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-import kiro_crew.dashboard.handlers.kiro_usage_api as api
-import kiro_crew.dashboard.handlers.sessions as sessions_mod
+import aj_crew.dashboard.handlers.kiro_usage_api as api
+import aj_crew.dashboard.handlers.sessions as sessions_mod
 
 _FP_A = "fp-a"
 _FP_B = "fp-b"
@@ -69,11 +69,11 @@ def _vault(*, fps=(_FP_A, _FP_A), current=None, result=None):
         result = api.UsageResult(dict(_USAGE), api.AUTH_OK)
     return [
         patch(
-            "kiro_crew.auth.bridge.vault_identity_claims",
+            "aj_crew.auth.bridge.vault_identity_claims",
             lambda: (next(fp_iter), dict(_CLAIMS)),
         ),
-        patch("kiro_crew.auth.bridge.default_token_store", MagicMock()),
-        patch("kiro_crew.auth.provider.KasAuthProvider", MagicMock(return_value=provider)),
+        patch("aj_crew.auth.bridge.default_token_store", MagicMock()),
+        patch("aj_crew.auth.provider.KasAuthProvider", MagicMock(return_value=provider)),
         patch.object(
             sessions_mod.kiro_usage_api,
             "fetch_usage_limits_with_credential",
@@ -117,7 +117,7 @@ class TestRefreshFromVault:
 
     @pytest.mark.asyncio
     async def test_identity_center_reading_carries_whoami_parity_fields(self):
-        # The account modal on the vault route shows what `kirocrew kas whoami`
+        # The account modal on the vault route shows what `ajcrew kas whoami`
         # and kiro-cli's whoami show -- the e-mail (from the API), the
         # account type and the Identity Center portal (from the vault).
         portal = "https://acme.awsapps.com/start"
@@ -126,7 +126,7 @@ class TestRefreshFromVault:
         patches = _vault(result=api.UsageResult(usage, api.AUTH_OK))
         fp_iter = iter((_FP_A, _FP_A))
         patches[0] = patch(
-            "kiro_crew.auth.bridge.vault_identity_claims", lambda: (next(fp_iter), dict(claims))
+            "aj_crew.auth.bridge.vault_identity_claims", lambda: (next(fp_iter), dict(claims))
         )
         await _run(patches)
         cache = sessions_mod._usage_cache
@@ -151,7 +151,7 @@ class TestRefreshFromVault:
 
     @pytest.mark.asyncio
     async def test_signed_out_during_token_read_never_falls_back(self):
-        from kiro_crew.auth.provider import NotAuthenticated
+        from aj_crew.auth.provider import NotAuthenticated
 
         current = AsyncMock(side_effect=NotAuthenticated("gone"))
         resolve = await _run(_vault(current=current))
@@ -179,7 +179,7 @@ class TestRefreshFromVault:
 
     @pytest.mark.asyncio
     async def test_rejected_refresh_reports_signin(self):
-        from kiro_crew.auth.refresh import RefreshRejected
+        from aj_crew.auth.refresh import RefreshRejected
 
         current = AsyncMock(side_effect=RefreshRejected("social refresh failed: HTTP 400"))
         resolve = await _run(_vault(current=current))
@@ -191,7 +191,7 @@ class TestRefreshFromVault:
         # An entry is_usable passed on its refresh token alone, but a local
         # precondition (stored client credentials, a token endpoint) is missing:
         # permanent, so the pill names the remedy instead of a reasonless dash.
-        from kiro_crew.auth.refresh import RefreshBlocked
+        from aj_crew.auth.refresh import RefreshBlocked
 
         current = AsyncMock(
             side_effect=RefreshBlocked("SSO-OIDC refresh needs stored client credentials")
@@ -207,7 +207,7 @@ class TestRefreshFromVault:
         # against the pre-attempt fingerprint would keep A's balance on screen
         # (dimmed) under B; the adjacent read sees B and drops it, with no
         # sign-in prompt either, since the failure was A's.
-        from kiro_crew.auth.refresh import RefreshRejected
+        from aj_crew.auth.refresh import RefreshRejected
 
         sessions_mod._usage_cache = {"credits_plan": 1000.0, "credits_used": 1.0}
         sessions_mod._usage_cache_vault_fp = _FP_A
@@ -244,7 +244,7 @@ class TestVaultOwnership:
         # is: signed in or not, the kiro-cli gate has nothing to say about it.
         with (
             patch(
-                "kiro_crew.config.loader.KiroCrewConfig.load",
+                "aj_crew.config.loader.AjCrewConfig.load",
                 return_value=_config("kas", kas_bundle=True),
             ),
             self._holds(False) as holds,
@@ -257,7 +257,7 @@ class TestVaultOwnership:
         # another harness.
         with (
             patch(
-                "kiro_crew.config.loader.KiroCrewConfig.load",
+                "aj_crew.config.loader.AjCrewConfig.load",
                 return_value=_config("kiro", kas_bundle=True),
             ),
             self._holds(True) as holds,
@@ -270,7 +270,7 @@ class TestVaultOwnership:
         store = MagicMock()
         store.holds_no_identity.return_value = token is None
         store.resolve.return_value = token
-        return patch("kiro_crew.auth.bridge.default_token_store", return_value=store)
+        return patch("aj_crew.auth.bridge.default_token_store", return_value=store)
 
     @staticmethod
     def _token(usable: bool):
@@ -282,11 +282,11 @@ class TestVaultOwnership:
 
     @staticmethod
     def _holds(value: bool):
-        return patch("kiro_crew.auth.bridge.vault_holds_identity", MagicMock(return_value=value))
+        return patch("aj_crew.auth.bridge.vault_holds_identity", MagicMock(return_value=value))
 
     def test_kas_with_vault_identity_owns(self):
         with (
-            patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=_config("kas")),
+            patch("aj_crew.config.loader.AjCrewConfig.load", return_value=_config("kas")),
             self._holds(True) as holds,
         ):
             assert sessions_mod._vault_owns_usage_sync() is True
@@ -296,7 +296,7 @@ class TestVaultOwnership:
     def test_kiro_cli_backend_never_owns_even_with_vault_identity(self):
         # A leftover Crew sign-in must not relabel a kiro-cli user's usage.
         with (
-            patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=_config("kiro")),
+            patch("aj_crew.config.loader.AjCrewConfig.load", return_value=_config("kiro")),
             self._holds(True) as holds,
         ):
             assert sessions_mod._vault_owns_usage_sync() is False
@@ -304,7 +304,7 @@ class TestVaultOwnership:
 
     def test_kas_without_vault_identity_does_not_own(self):
         with (
-            patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=_config("kas")),
+            patch("aj_crew.config.loader.AjCrewConfig.load", return_value=_config("kas")),
             self._holds(False) as holds,
         ):
             assert sessions_mod._vault_owns_usage_sync() is False
@@ -316,19 +316,19 @@ class TestVaultOwnership:
         # the vault is still the sign-in (the spawn never falls back to kiro-cli),
         # so usage never relabels kiro-cli's account as this one's.
         with (
-            patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=_config("kas")),
+            patch("aj_crew.config.loader.AjCrewConfig.load", return_value=_config("kas")),
             self._store(self._token(False)),
-            caplog.at_level("DEBUG", logger="kiro_crew.auth.bridge"),
+            caplog.at_level("DEBUG", logger="aj_crew.auth.bridge"),
         ):
             assert sessions_mod._vault_owns_usage_sync() is True
         assert not [r for r in caplog.records if r.levelno >= 30]
         # The predicate did reach the unusable entry: its diagnostic is at DEBUG.
         assert any(
-            r.name == "kiro_crew.auth.bridge" and r.levelname == "DEBUG" for r in caplog.records
+            r.name == "aj_crew.auth.bridge" and r.levelname == "DEBUG" for r in caplog.records
         )
 
     def test_unreadable_config_keeps_gated_path(self):
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", side_effect=OSError("nope")):
+        with patch("aj_crew.config.loader.AjCrewConfig.load", side_effect=OSError("nope")):
             assert sessions_mod._vault_owns_usage_sync() is False
 
 
@@ -429,7 +429,7 @@ class TestUsageGateBypass:
         fetch = AsyncMock(return_value=None)
         with (
             patch.object(sessions_mod, "_vault_owns_usage", AsyncMock(return_value=True)),
-            patch("kiro_crew.auth.bridge.vault_identity_fingerprint", return_value=_FP_B),
+            patch("aj_crew.auth.bridge.vault_identity_fingerprint", return_value=_FP_B),
             patch.object(sessions_mod, "_fetch_usage_bg", fetch),
         ):
             resp = await sessions_mod.api_sessions_usage(_request())
@@ -457,7 +457,7 @@ class TestUsageGateBypass:
         with (
             patch.object(sessions_mod, "_vault_owns_usage", AsyncMock(return_value=True)),
             patch(
-                "kiro_crew.auth.bridge.vault_identity_fingerprint",
+                "aj_crew.auth.bridge.vault_identity_fingerprint",
                 fingerprint_while_b_publishes,
             ),
             patch.object(sessions_mod, "_fetch_usage_bg", fetch),
@@ -482,7 +482,7 @@ class TestUsageGateBypass:
         fingerprint = MagicMock(return_value="")
         with (
             patch.object(sessions_mod, "_vault_owns_usage", AsyncMock(return_value=True)),
-            patch("kiro_crew.auth.bridge.vault_identity_fingerprint", fingerprint),
+            patch("aj_crew.auth.bridge.vault_identity_fingerprint", fingerprint),
             patch.object(sessions_mod, "_fetch_usage_bg", fetch),
         ):
             resp = await sessions_mod.api_sessions_usage(_request())
@@ -537,7 +537,7 @@ class TestUsageGateBypass:
         fetch = AsyncMock(return_value=None)
         with (
             patch.object(sessions_mod, "_vault_owns_usage", AsyncMock(return_value=True)),
-            patch("kiro_crew.auth.bridge.vault_identity_fingerprint", return_value=_FP_A),
+            patch("aj_crew.auth.bridge.vault_identity_fingerprint", return_value=_FP_A),
             patch.object(sessions_mod, "_fetch_usage_bg", fetch),
         ):
             resp = await sessions_mod.api_sessions_usage(_request())
@@ -657,19 +657,19 @@ class TestSigninMarkerAfterResignIn:
 
 
 def sessions_mod_not_authenticated():
-    from kiro_crew.auth.provider import NotAuthenticated
+    from aj_crew.auth.provider import NotAuthenticated
 
     return NotAuthenticated("signed out")
 
 
 class TestTokenStoreWriteStamp:
     def test_absent_vault(self, tmp_path):
-        from kiro_crew.auth.store import TokenStore
+        from aj_crew.auth.store import TokenStore
 
         assert TokenStore(tmp_path).write_stamp() == "absent"
 
     def test_changes_when_the_vault_is_rewritten(self, tmp_path):
-        from kiro_crew.auth.store import TokenStore
+        from aj_crew.auth.store import TokenStore
 
         store = TokenStore(tmp_path)
         store._vault.set_sync("social", "one")

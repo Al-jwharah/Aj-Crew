@@ -31,7 +31,7 @@ class TestBuildFailureRestoresOldCheckout:
     @pytest.mark.asyncio
     async def test_build_failure_restores_old_checkout(self, tmp_path):
         """Clone succeeds + build fails → old checkout restored at pkg_dir."""
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         stale_url = "https://old.example.com/app.git"
         new_url = "https://new.example.com/app.git"
@@ -68,14 +68,14 @@ class TestBuildFailureRestoresOldCheckout:
         pending_cleanup: list[Path] = []
         log_lines: list[str] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_create_subprocess,
             ),
             patch(
-                "kiro_crew.apps.registry._clone_origin_url",
+                "aj_crew.apps.registry._clone_origin_url",
                 new=AsyncMock(return_value=stale_url),
             ),
         ):
@@ -111,7 +111,7 @@ class TestBuildFailureRestoresOldCheckout:
         accumulation on the happy path)."""
         import shutil
 
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         stale_url = "https://old.example.com/app.git"
         new_url = "https://new.example.com/app.git"
@@ -144,14 +144,14 @@ class TestBuildFailureRestoresOldCheckout:
         pending_cleanup: list[Path] = []
         log_lines: list[str] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_create_subprocess,
             ),
             patch(
-                "kiro_crew.apps.registry._clone_origin_url",
+                "aj_crew.apps.registry._clone_origin_url",
                 new=AsyncMock(return_value=stale_url),
             ),
         ):
@@ -188,7 +188,7 @@ class TestRestoreCollision:
     async def test_undeletable_dest_moved_aside_before_restore(self, tmp_path):
         """rmtree(dest) fails → dest moved to .partial-*, then moved_aside
         restored to dest."""
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         stale_url = "https://old.example.com/app.git"
         new_url = "https://new.example.com/app.git"
@@ -234,14 +234,14 @@ class TestRestoreCollision:
 
         log_lines: list[str] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_create_subprocess,
             ),
             patch(
-                "kiro_crew.apps.registry._clone_origin_url",
+                "aj_crew.apps.registry._clone_origin_url",
                 new=AsyncMock(return_value=stale_url),
             ),
             patch("shutil.rmtree", side_effect=_stubborn_rmtree),
@@ -281,7 +281,7 @@ class TestInstallScriptFailurePreservesStaleCheckout:
         (via its single-exit stamp) instead of deleting them (deferring to
         caller). The stamp lives on the wrapper so EVERY dict result carries
         it, refusals included, not only the ok path."""
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         stale_url = "https://old.example.com/app.git"
         new_url = "https://new.example.com/app.git"
@@ -316,22 +316,22 @@ class TestInstallScriptFailurePreservesStaleCheckout:
             return _SuccessProc()
 
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_create_subprocess,
             ),
             patch(
-                "kiro_crew.apps.registry._clone_origin_url",
+                "aj_crew.apps.registry._clone_origin_url",
                 new=AsyncMock(return_value=stale_url),
             ),
-            patch("kiro_crew.apps.registry.app_source_dir", return_value=pkg_dir),
+            patch("aj_crew.apps.registry.app_source_dir", return_value=pkg_dir),
             patch(
-                "kiro_crew.apps.registry._run_app_build",
+                "aj_crew.apps.registry._run_app_build",
                 new=AsyncMock(return_value={"ok": True}),
             ),
-            patch("kiro_crew.apps.registry._looks_like_git_url", return_value=True),
+            patch("aj_crew.apps.registry._looks_like_git_url", return_value=True),
         ):
             result = await reg._clone_build_app(
                 new_url, "testapp", [], branch="main", index_originated=False
@@ -358,7 +358,7 @@ class TestInstallScriptFailurePreservesStaleCheckout:
         This pins the WIRING, including the `onInstall` exit, with a SAME-REPOSITORY move,
         which must be put back rather than retained.
         """
-        from kiro_crew.apps.registry import install_from_registry
+        from aj_crew.apps.registry import install_from_registry
 
         pkg_dir = tmp_path / "testapp"
         pkg_dir.mkdir()
@@ -389,30 +389,30 @@ class TestInstallScriptFailurePreservesStaleCheckout:
 
         with (
             patch(
-                "kiro_crew.apps.registry.get_registry_app",
+                "aj_crew.apps.registry.get_registry_app",
                 return_value={"repo": "https://example.com/app.git", "branch": "main"},
             ),
             patch(
-                "kiro_crew.apps.registry._entry_git_url",
+                "aj_crew.apps.registry._entry_git_url",
                 return_value="https://example.com/app.git",
             ),
-            patch("kiro_crew.apps.registry._clone_build_app", new=_fake_clone_build),
-            patch("kiro_crew.apps.registry.app_admission_denied", return_value=None),
-            patch("kiro_crew.apps.registry.app_execution_denied", return_value=None),
+            patch("aj_crew.apps.registry._clone_build_app", new=_fake_clone_build),
+            patch("aj_crew.apps.registry.app_admission_denied", return_value=None),
+            patch("aj_crew.apps.registry.app_execution_denied", return_value=None),
             patch(
-                "kiro_crew.apps.registry._fetch_app_manifest",
+                "aj_crew.apps.registry._fetch_app_manifest",
                 new=AsyncMock(return_value=None),
             ),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 new=AsyncMock(return_value=_ScriptFailProc()),
             ),
             # The destination is derived from the app name in production
             # (`pkg_dir = app_source_dir(app_name)` is its only assignment), so the
             # test has to say where that is rather than relying on the result dict.
-            patch("kiro_crew.apps.registry.app_source_dir", return_value=pkg_dir),
-            patch("kiro_crew.apps.registry.sel"),
+            patch("aj_crew.apps.registry.app_source_dir", return_value=pkg_dir),
+            patch("aj_crew.apps.registry.sel"),
         ):
             result = await install_from_registry("testapp")
 
@@ -443,7 +443,7 @@ class TestInstallScriptFailurePreservesStaleCheckout:
         exactly the exits it exists for, and the suite was green because every existing
         test drove a failure that came AFTER an ok result carrying `pkg_dir`.
         """
-        from kiro_crew.apps.registry import install_from_registry
+        from aj_crew.apps.registry import install_from_registry
 
         pkg_dir = tmp_path / "testapp"
         pkg_dir.mkdir()
@@ -464,22 +464,22 @@ class TestInstallScriptFailurePreservesStaleCheckout:
 
         with (
             patch(
-                "kiro_crew.apps.registry.get_registry_app",
+                "aj_crew.apps.registry.get_registry_app",
                 return_value={"repo": "https://example.com/app.git", "branch": "main"},
             ),
             patch(
-                "kiro_crew.apps.registry._entry_git_url",
+                "aj_crew.apps.registry._entry_git_url",
                 return_value="https://example.com/app.git",
             ),
-            patch("kiro_crew.apps.registry._clone_build_app", new=_fake_clone_build),
-            patch("kiro_crew.apps.registry.app_admission_denied", return_value=None),
-            patch("kiro_crew.apps.registry.app_execution_denied", return_value=None),
+            patch("aj_crew.apps.registry._clone_build_app", new=_fake_clone_build),
+            patch("aj_crew.apps.registry.app_admission_denied", return_value=None),
+            patch("aj_crew.apps.registry.app_execution_denied", return_value=None),
             patch(
-                "kiro_crew.apps.registry._fetch_app_manifest",
+                "aj_crew.apps.registry._fetch_app_manifest",
                 new=AsyncMock(return_value=None),
             ),
-            patch("kiro_crew.apps.registry.app_source_dir", return_value=pkg_dir),
-            patch("kiro_crew.apps.registry.sel"),
+            patch("aj_crew.apps.registry.app_source_dir", return_value=pkg_dir),
+            patch("aj_crew.apps.registry.sel"),
         ):
             result = await install_from_registry("testapp")
 
@@ -494,7 +494,7 @@ class TestInstallScriptFailurePreservesStaleCheckout:
         """`install_app` has already copied the files, so treating a failed receipt as
         "not durable" would leave installed files from the NEW version beside a source
         tree from the OLD one -- worse than either outcome."""
-        from kiro_crew.apps.registry import install_from_registry
+        from aj_crew.apps.registry import install_from_registry
 
         pkg_dir = tmp_path / "testapp"
         pkg_dir.mkdir()
@@ -523,24 +523,24 @@ class TestInstallScriptFailurePreservesStaleCheckout:
 
         with (
             patch(
-                "kiro_crew.apps.registry.get_registry_app",
+                "aj_crew.apps.registry.get_registry_app",
                 return_value={"repo": "https://example.com/app.git", "branch": "main"},
             ),
             patch(
-                "kiro_crew.apps.registry._entry_git_url",
+                "aj_crew.apps.registry._entry_git_url",
                 return_value="https://example.com/app.git",
             ),
-            patch("kiro_crew.apps.registry._clone_build_app", new=_fake_clone_build),
-            patch("kiro_crew.apps.registry.app_admission_denied", return_value=None),
-            patch("kiro_crew.apps.registry.app_execution_denied", return_value=None),
+            patch("aj_crew.apps.registry._clone_build_app", new=_fake_clone_build),
+            patch("aj_crew.apps.registry.app_admission_denied", return_value=None),
+            patch("aj_crew.apps.registry.app_execution_denied", return_value=None),
             patch(
-                "kiro_crew.apps.registry._fetch_app_manifest",
+                "aj_crew.apps.registry._fetch_app_manifest",
                 new=AsyncMock(return_value=None),
             ),
-            patch("kiro_crew.apps.registry.get_app", return_value=None),
-            patch("kiro_crew.apps.registry.install_app", return_value=_Ok()),
-            patch("kiro_crew.apps.registry.set_app_provenance", side_effect=_boom),
-            patch("kiro_crew.apps.registry.sel"),
+            patch("aj_crew.apps.registry.get_app", return_value=None),
+            patch("aj_crew.apps.registry.install_app", return_value=_Ok()),
+            patch("aj_crew.apps.registry.set_app_provenance", side_effect=_boom),
+            patch("aj_crew.apps.registry.sel"),
         ):
             result = await install_from_registry("testapp")
 
@@ -554,7 +554,7 @@ class TestInstallScriptFailurePreservesStaleCheckout:
     async def test_a_successful_install_is_not_rolled_back(self, tmp_path):
         """Scope guard for the `finally`: a durable success must keep the freshly
         fetched tree, and retain the old one as a sibling rather than restoring it."""
-        from kiro_crew.apps.registry import install_from_registry
+        from aj_crew.apps.registry import install_from_registry
 
         pkg_dir = tmp_path / "testapp"
         pkg_dir.mkdir()
@@ -581,28 +581,28 @@ class TestInstallScriptFailurePreservesStaleCheckout:
 
         with (
             patch(
-                "kiro_crew.apps.registry.get_registry_app",
+                "aj_crew.apps.registry.get_registry_app",
                 return_value={"repo": "https://example.com/app.git", "branch": "main"},
             ),
             patch(
-                "kiro_crew.apps.registry._entry_git_url",
+                "aj_crew.apps.registry._entry_git_url",
                 return_value="https://example.com/app.git",
             ),
-            patch("kiro_crew.apps.registry._clone_build_app", new=_fake_clone_build),
-            patch("kiro_crew.apps.registry.app_admission_denied", return_value=None),
-            patch("kiro_crew.apps.registry.app_execution_denied", return_value=None),
+            patch("aj_crew.apps.registry._clone_build_app", new=_fake_clone_build),
+            patch("aj_crew.apps.registry.app_admission_denied", return_value=None),
+            patch("aj_crew.apps.registry.app_execution_denied", return_value=None),
             patch(
-                "kiro_crew.apps.registry._fetch_app_manifest",
+                "aj_crew.apps.registry._fetch_app_manifest",
                 new=AsyncMock(return_value=None),
             ),
-            patch("kiro_crew.apps.registry.get_app", return_value=None),
-            patch("kiro_crew.apps.registry.install_app", return_value=_Ok()),
-            patch("kiro_crew.apps.registry.set_app_provenance"),
+            patch("aj_crew.apps.registry.get_app", return_value=None),
+            patch("aj_crew.apps.registry.install_app", return_value=_Ok()),
+            patch("aj_crew.apps.registry.set_app_provenance"),
             # Needed for the rollback destination to be observable at all: without it a
             # wrongly-triggered restore would land outside tmp_path and the assertions
             # below would pass for the wrong reason.
-            patch("kiro_crew.apps.registry.app_source_dir", return_value=pkg_dir),
-            patch("kiro_crew.apps.registry.sel"),
+            patch("aj_crew.apps.registry.app_source_dir", return_value=pkg_dir),
+            patch("aj_crew.apps.registry.sel"),
         ):
             result = await install_from_registry("testapp")
 
@@ -614,7 +614,7 @@ class TestInstallScriptFailurePreservesStaleCheckout:
 
     @pytest.mark.asyncio
     async def test_self_managed_install_propagates_reconsent_notice(self, tmp_path):
-        from kiro_crew.apps.registry import install_from_registry
+        from aj_crew.apps.registry import install_from_registry
 
         pkg_dir = tmp_path / "testapp"
         pkg_dir.mkdir()
@@ -638,7 +638,7 @@ class TestInstallScriptFailurePreservesStaleCheckout:
         )
         with (
             patch(
-                "kiro_crew.apps.registry.get_registry_app",
+                "aj_crew.apps.registry.get_registry_app",
                 return_value={
                     "repo": "https://example.com/app.git",
                     "branch": "main",
@@ -646,27 +646,27 @@ class TestInstallScriptFailurePreservesStaleCheckout:
                 },
             ),
             patch(
-                "kiro_crew.apps.registry._entry_git_url",
+                "aj_crew.apps.registry._entry_git_url",
                 return_value="https://example.com/app.git",
             ),
-            patch("kiro_crew.apps.registry._clone_build_app", new=_fake_clone_build),
-            patch("kiro_crew.apps.registry.app_admission_denied", return_value=None),
-            patch("kiro_crew.apps.registry.app_execution_denied", return_value=None),
+            patch("aj_crew.apps.registry._clone_build_app", new=_fake_clone_build),
+            patch("aj_crew.apps.registry.app_admission_denied", return_value=None),
+            patch("aj_crew.apps.registry.app_execution_denied", return_value=None),
             patch(
-                "kiro_crew.apps.registry._fetch_app_manifest",
+                "aj_crew.apps.registry._fetch_app_manifest",
                 new=AsyncMock(return_value=None),
             ),
             patch(
-                "kiro_crew.apps.manager.register_external_app",
+                "aj_crew.apps.manager.register_external_app",
                 return_value=registration,
             ),
-            patch("kiro_crew.apps.registry.set_app_provenance"),
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.set_app_provenance"),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
             patch(
-                "kiro_crew.apps.registry._sweep_stale_checkouts",
+                "aj_crew.apps.registry._sweep_stale_checkouts",
                 new=AsyncMock(),
             ),
-            patch("kiro_crew.apps.registry.sel"),
+            patch("aj_crew.apps.registry.sel"),
         ):
             result = await install_from_registry("testapp")
 
@@ -680,7 +680,7 @@ class TestInstallScriptFailurePreservesStaleCheckout:
         installed app, so it must run in a worker, once, after the registration."""
         import threading
 
-        from kiro_crew.apps.registry import install_from_registry
+        from aj_crew.apps.registry import install_from_registry
 
         pkg_dir = tmp_path / "testapp"
         pkg_dir.mkdir()
@@ -706,7 +706,7 @@ class TestInstallScriptFailurePreservesStaleCheckout:
 
         with (
             patch(
-                "kiro_crew.apps.registry.get_registry_app",
+                "aj_crew.apps.registry.get_registry_app",
                 return_value={
                     "repo": "https://example.com/app.git",
                     "branch": "main",
@@ -714,22 +714,22 @@ class TestInstallScriptFailurePreservesStaleCheckout:
                 },
             ),
             patch(
-                "kiro_crew.apps.registry._entry_git_url",
+                "aj_crew.apps.registry._entry_git_url",
                 return_value="https://example.com/app.git",
             ),
-            patch("kiro_crew.apps.registry._clone_build_app", new=_fake_clone_build),
-            patch("kiro_crew.apps.registry.app_admission_denied", return_value=None),
-            patch("kiro_crew.apps.registry.app_execution_denied", return_value=None),
+            patch("aj_crew.apps.registry._clone_build_app", new=_fake_clone_build),
+            patch("aj_crew.apps.registry.app_admission_denied", return_value=None),
+            patch("aj_crew.apps.registry.app_execution_denied", return_value=None),
             patch(
-                "kiro_crew.apps.registry._fetch_app_manifest",
+                "aj_crew.apps.registry._fetch_app_manifest",
                 new=AsyncMock(return_value=None),
             ),
-            patch("kiro_crew.apps.manager.register_external_app", side_effect=_register),
-            patch("kiro_crew.apps.manager.refresh_app_config_keys", side_effect=_refresh),
-            patch("kiro_crew.apps.registry.set_app_provenance"),
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry._sweep_stale_checkouts", new=AsyncMock()),
-            patch("kiro_crew.apps.registry.sel"),
+            patch("aj_crew.apps.manager.register_external_app", side_effect=_register),
+            patch("aj_crew.apps.manager.refresh_app_config_keys", side_effect=_refresh),
+            patch("aj_crew.apps.registry.set_app_provenance"),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry._sweep_stale_checkouts", new=AsyncMock()),
+            patch("aj_crew.apps.registry.sel"),
         ):
             result = await install_from_registry("testapp")
 
@@ -741,8 +741,8 @@ class TestInstallScriptFailurePreservesStaleCheckout:
     async def test_self_managed_install_fails_when_registration_is_refused(self, tmp_path):
         """A refused pre-registration fails the install with its error and puts
         the previous checkout back, instead of reporting success."""
-        from kiro_crew.apps.manifest import CRON_PERMISSION_REQUIRED_ERROR
-        from kiro_crew.apps.registry import install_from_registry
+        from aj_crew.apps.manifest import CRON_PERMISSION_REQUIRED_ERROR
+        from aj_crew.apps.registry import install_from_registry
 
         pkg_dir = tmp_path / "testapp"
         pkg_dir.mkdir()
@@ -769,7 +769,7 @@ class TestInstallScriptFailurePreservesStaleCheckout:
         provenance = MagicMock()
         with (
             patch(
-                "kiro_crew.apps.registry.get_registry_app",
+                "aj_crew.apps.registry.get_registry_app",
                 return_value={
                     "repo": "https://example.com/app.git",
                     "branch": "main",
@@ -777,22 +777,22 @@ class TestInstallScriptFailurePreservesStaleCheckout:
                 },
             ),
             patch(
-                "kiro_crew.apps.registry._entry_git_url",
+                "aj_crew.apps.registry._entry_git_url",
                 return_value="https://example.com/app.git",
             ),
-            patch("kiro_crew.apps.registry._clone_build_app", new=_fake_clone_build),
-            patch("kiro_crew.apps.registry.app_admission_denied", return_value=None),
-            patch("kiro_crew.apps.registry.app_execution_denied", return_value=None),
+            patch("aj_crew.apps.registry._clone_build_app", new=_fake_clone_build),
+            patch("aj_crew.apps.registry.app_admission_denied", return_value=None),
+            patch("aj_crew.apps.registry.app_execution_denied", return_value=None),
             patch(
-                "kiro_crew.apps.registry._fetch_app_manifest",
+                "aj_crew.apps.registry._fetch_app_manifest",
                 new=AsyncMock(return_value=None),
             ),
-            patch("kiro_crew.apps.manager.register_external_app", return_value=refusal),
-            patch("kiro_crew.apps.registry.set_app_provenance", new=provenance),
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry._sweep_stale_checkouts", new=AsyncMock()),
-            patch("kiro_crew.apps.registry.app_source_dir", return_value=pkg_dir),
-            patch("kiro_crew.apps.registry.sel"),
+            patch("aj_crew.apps.manager.register_external_app", return_value=refusal),
+            patch("aj_crew.apps.registry.set_app_provenance", new=provenance),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry._sweep_stale_checkouts", new=AsyncMock()),
+            patch("aj_crew.apps.registry.app_source_dir", return_value=pkg_dir),
+            patch("aj_crew.apps.registry.sel"),
         ):
             result = await install_from_registry("testapp")
 
@@ -807,7 +807,7 @@ class TestInstallScriptFailurePreservesStaleCheckout:
     async def test_stale_not_cleaned_when_install_from_registry_fails(self, tmp_path):
         """Full install_from_registry flow: clone+build succeed but install
         script fails → stale checkout NOT deleted."""
-        from kiro_crew.apps.registry import install_from_registry
+        from aj_crew.apps.registry import install_from_registry
 
         stale_dir = tmp_path / "stale-checkout"
         stale_dir.mkdir()
@@ -839,35 +839,35 @@ class TestInstallScriptFailurePreservesStaleCheckout:
 
         with (
             patch(
-                "kiro_crew.apps.registry.get_registry_app",
+                "aj_crew.apps.registry.get_registry_app",
                 return_value={"repo": "https://example.com/app.git", "branch": "main"},
             ),
             patch(
-                "kiro_crew.apps.registry._entry_git_url",
+                "aj_crew.apps.registry._entry_git_url",
                 return_value="https://example.com/app.git",
             ),
             patch(
-                "kiro_crew.apps.registry._clone_build_app",
+                "aj_crew.apps.registry._clone_build_app",
                 new=_fake_clone_build,
             ),
             patch(
-                "kiro_crew.apps.registry.app_admission_denied",
+                "aj_crew.apps.registry.app_admission_denied",
                 return_value=None,
             ),
             patch(
-                "kiro_crew.apps.registry.app_execution_denied",
+                "aj_crew.apps.registry.app_execution_denied",
                 return_value=None,
             ),
             patch(
-                "kiro_crew.apps.registry._fetch_app_manifest",
+                "aj_crew.apps.registry._fetch_app_manifest",
                 new=AsyncMock(return_value=None),
             ),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 new=AsyncMock(return_value=_ScriptFailProc()),
             ),
-            patch("kiro_crew.apps.registry.sel"),
+            patch("aj_crew.apps.registry.sel"),
         ):
             result = await install_from_registry("testapp")
 
@@ -915,7 +915,7 @@ class TestBuildFailureRestoreRespectsRestorableStale:
         Fails at head 17372a70 (the loop renamed every aside back); passes
         after the restorable-membership gate.
         """
-        from kiro_crew.apps.registry import _clone_build_app
+        from aj_crew.apps.registry import _clone_build_app
 
         app_source = tmp_path / "app-sources" / "testapp"
         stale_dir = tmp_path / "app-sources" / "testapp.stale-deadbeef"
@@ -923,16 +923,16 @@ class TestBuildFailureRestoreRespectsRestorableStale:
         (stale_dir / "someone-elses-repo.txt").write_text("refused origin", encoding="utf-8")
 
         with (
-            patch("kiro_crew.apps.registry.app_source_dir", return_value=app_source),
+            patch("aj_crew.apps.registry.app_source_dir", return_value=app_source),
             patch(
-                "kiro_crew.apps.registry._git_clone_or_pull",
+                "aj_crew.apps.registry._git_clone_or_pull",
                 new=self._make_fake_clone(stale_dir, restorable=False),
             ),
             patch(
-                "kiro_crew.apps.registry._run_app_build",
+                "aj_crew.apps.registry._run_app_build",
                 new=AsyncMock(return_value={"ok": False, "name": "testapp"}),
             ),
-            patch("kiro_crew.apps.registry.sel"),
+            patch("aj_crew.apps.registry.sel"),
         ):
             log_lines: list[str] = []
             result = await _clone_build_app("https://example.com/app.git", "testapp", log_lines)
@@ -962,7 +962,7 @@ class TestBuildFailureRestoreRespectsRestorableStale:
         → the old checkout IS renamed back into the slot, with the existing
         "previous checkout restored" log line. Existing behaviour unchanged.
         """
-        from kiro_crew.apps.registry import _clone_build_app
+        from aj_crew.apps.registry import _clone_build_app
 
         app_source = tmp_path / "app-sources" / "testapp"
         stale_dir = tmp_path / "app-sources" / "testapp.stale-cafef00d"
@@ -970,16 +970,16 @@ class TestBuildFailureRestoreRespectsRestorableStale:
         (stale_dir / "my-work.txt").write_text("important local edits", encoding="utf-8")
 
         with (
-            patch("kiro_crew.apps.registry.app_source_dir", return_value=app_source),
+            patch("aj_crew.apps.registry.app_source_dir", return_value=app_source),
             patch(
-                "kiro_crew.apps.registry._git_clone_or_pull",
+                "aj_crew.apps.registry._git_clone_or_pull",
                 new=self._make_fake_clone(stale_dir, restorable=True),
             ),
             patch(
-                "kiro_crew.apps.registry._run_app_build",
+                "aj_crew.apps.registry._run_app_build",
                 new=AsyncMock(return_value={"ok": False, "name": "testapp"}),
             ),
-            patch("kiro_crew.apps.registry.sel"),
+            patch("aj_crew.apps.registry.sel"),
         ):
             log_lines: list[str] = []
             result = await _clone_build_app("https://example.com/app.git", "testapp", log_lines)
@@ -1001,8 +1001,8 @@ class TestBuildFailureRestoreRespectsRestorableStale:
         """Control: a RESTORABLE aside whose restore-rename raises OSError still
         reports the recovery hint and keeps the path in pending_cleanup so it is
         reported stranded (existing failure-path behaviour unchanged)."""
-        from kiro_crew.apps import registry as reg
-        from kiro_crew.apps.registry import _clone_build_app
+        from aj_crew.apps import registry as reg
+        from aj_crew.apps.registry import _clone_build_app
 
         app_source = tmp_path / "app-sources" / "testapp"
         stale_dir = tmp_path / "app-sources" / "testapp.stale-beefbeef"
@@ -1019,17 +1019,17 @@ class TestBuildFailureRestoreRespectsRestorableStale:
             return await real_to_thread(fn, *args, **kwargs)
 
         with (
-            patch("kiro_crew.apps.registry.app_source_dir", return_value=app_source),
+            patch("aj_crew.apps.registry.app_source_dir", return_value=app_source),
             patch(
-                "kiro_crew.apps.registry._git_clone_or_pull",
+                "aj_crew.apps.registry._git_clone_or_pull",
                 new=self._make_fake_clone(stale_dir, restorable=True),
             ),
             patch(
-                "kiro_crew.apps.registry._run_app_build",
+                "aj_crew.apps.registry._run_app_build",
                 new=AsyncMock(return_value={"ok": False, "name": "testapp"}),
             ),
             patch.object(reg.asyncio, "to_thread", side_effect=_to_thread_fail_rename),
-            patch("kiro_crew.apps.registry.sel"),
+            patch("aj_crew.apps.registry.sel"),
         ):
             log_lines: list[str] = []
             result = await _clone_build_app("https://example.com/app.git", "testapp", log_lines)

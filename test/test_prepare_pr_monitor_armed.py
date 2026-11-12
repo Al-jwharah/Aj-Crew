@@ -1,8 +1,8 @@
-"""Tests for the kirocrew-prepare-pr monitor_armed.py loop-arming check.
+"""Tests for the ajcrew-prepare-pr monitor_armed.py loop-arming check.
 
 ``monitor_start`` is a stateless session directive: the MCP tool returns "Monitor
 loop requested" and the loop is armed later, when the turn's tool result is
-consumed. Every drop on that path is silent to the model, so kirocrew-prepare-pr Phase 3
+consumed. Every drop on that path is silent to the model, so ajcrew-prepare-pr Phase 3
 verifies arming against the loop store instead of the reply text -- and these
 tests pin the two properties that verification depends on:
 
@@ -26,10 +26,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 MONITOR_ARMED = str(
     REPO_ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "scripts"
     / "monitor_armed.py"
 )
@@ -70,7 +70,7 @@ def _write_store(home: Path, payload: object) -> None:
 
 def _run(home: Path, *args: str) -> tuple[int, str]:
     """Run monitor_armed.py against *home*; return (rc, stdout + stderr)."""
-    env = dict(os.environ, KIROCREW_HOME=str(home))
+    env = dict(os.environ, AJCREW_HOME=str(home))
     proc = subprocess.run(
         [sys.executable, MONITOR_ARMED, *args],
         capture_output=True,

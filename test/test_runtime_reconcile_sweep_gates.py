@@ -23,8 +23,8 @@ from runtime_reconcile_helpers import (
     _LeaseHolder,
 )
 
-from kiro_crew import runtime_ownership as ro
-from kiro_crew import runtime_reconcile as rr
+from aj_crew import runtime_ownership as ro
+from aj_crew import runtime_reconcile as rr
 
 # Module-wide, like the other runtime reconciler test modules: the rootdir conftest
 # leaves runtime_ownership's tables as this module's own tests leave them, and the
@@ -102,7 +102,7 @@ async def test_an_unanswerable_gate_withholds_the_pid() -> None:
             raise RuntimeError("gate unavailable")
         return True
 
-    with patch("kiro_crew.session_cleanup.authorize_runtime_kill", raising_for_one):
+    with patch("aj_crew.session_cleanup.authorize_runtime_kill", raising_for_one):
         await service._sweep_periodic_pids()
 
     assert recorded["pid_kills"] == [6262], (
@@ -131,7 +131,7 @@ async def test_the_scope_reaper_does_not_stop_a_unit_holding_a_leased_pid(
     """
     from unittest.mock import patch
 
-    from kiro_crew import session_scope_reap as reap
+    from aj_crew import session_scope_reap as reap
 
     ro._reset_for_tests()
     scope = tmp_path / "run-test.scope"
@@ -193,7 +193,7 @@ def test_the_scope_reaper_signals_every_member_when_none_is_leased(tmp_path: Pat
     depends on is worth least on the platform where it does not run: the refusal would
     pass for free there, which is the whole failure mode the control exists to rule out.
     """
-    from kiro_crew import session_scope_reap as reap
+    from aj_crew import session_scope_reap as reap
 
     ro._reset_for_tests()
     scope = tmp_path / "run-plain.scope"
@@ -215,9 +215,9 @@ def test_the_slice_enumerator_reads_every_scope_under_the_slice(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Kernel truth is the union of the slice's own members and every scope's."""
-    from kiro_crew import session_scope_reap as reap
+    from aj_crew import session_scope_reap as reap
 
-    slice_dir = tmp_path / "kirocrew-agents-tok.slice"
+    slice_dir = tmp_path / "ajcrew-agents-tok.slice"
     slice_dir.mkdir()
     (slice_dir / "cgroup.procs").write_text("11\n", encoding="utf-8")
     for name, body in (("a.scope", "22\n33\n"), ("b.scope", "44\n")):
@@ -236,7 +236,7 @@ def test_the_slice_enumerator_reads_every_scope_under_the_slice(
 def test_an_unresolvable_slice_reads_as_empty(monkeypatch: pytest.MonkeyPatch) -> None:
     """Empty is the honest answer, and the reconciler's registry refusal is what
     stops an empty kernel reading from being acted on as an empty install."""
-    from kiro_crew import session_scope_reap as reap
+    from aj_crew import session_scope_reap as reap
 
     monkeypatch.setattr(reap, "_instance_scope_dir", lambda: (None, "no cgroup dir"))
     assert reap.instance_slice_pids() == set()
@@ -257,8 +257,8 @@ async def test_the_orphan_reconcile_withholds_a_leased_pid(agent_root: Path) -> 
     """
     from unittest.mock import MagicMock, patch
 
-    from kiro_crew.subagent import SubagentManager
-    from kiro_crew.subagent_persistence import create_agent_folder, update_state
+    from aj_crew.subagent import SubagentManager
+    from aj_crew.subagent_persistence import create_agent_folder, update_state
 
     ro._reset_for_tests()
     manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
@@ -295,8 +295,8 @@ def test_a_flagged_result_is_the_agents_answer(agent_root: Path) -> None:
     whole from memory, which makes the flag the proof: a flagged result is the
     agent's answer, ``result_available``, never a fragment.
     """
-    from kiro_crew.subagent_manager.monitoring import tombstone_recovery_action
-    from kiro_crew.subagent_persistence import create_agent_folder, write_result_chunk
+    from aj_crew.subagent_manager.monitoring import tombstone_recovery_action
+    from aj_crew.subagent_persistence import create_agent_folder, write_result_chunk
 
     create_agent_folder("flagged-finished", task="a finished answer")
     write_result_chunk("flagged-finished", "the whole answer, every byte of it", fresh=True)
@@ -314,8 +314,8 @@ def test_an_unflagged_result_still_under_claims_as_a_fragment(agent_root: Path) 
     ``result_complete``. That genuinely partial result must still be announced
     as cut off, never promoted to a whole answer.
     """
-    from kiro_crew.subagent_manager.monitoring import tombstone_recovery_action
-    from kiro_crew.subagent_persistence import create_agent_folder, write_result_chunk
+    from aj_crew.subagent_manager.monitoring import tombstone_recovery_action
+    from aj_crew.subagent_persistence import create_agent_folder, write_result_chunk
 
     create_agent_folder("truly-partial", task="an interrupted stream")
     write_result_chunk("truly-partial", "an opening sentence the restart", fresh=True)
@@ -339,8 +339,8 @@ async def test_the_reconcile_announces_a_finished_run_as_finished(agent_root: Pa
     """
     from unittest.mock import MagicMock, patch
 
-    from kiro_crew.subagent import SubagentManager
-    from kiro_crew.subagent_persistence import (
+    from aj_crew.subagent import SubagentManager
+    from aj_crew.subagent_persistence import (
         create_agent_folder,
         read_tombstone,
         update_state,
@@ -403,8 +403,8 @@ async def test_the_reset_ladder_withholds_the_kill_and_the_shared_child_sweep() 
     """
     from unittest.mock import MagicMock, patch
 
-    from kiro_crew.process_identity import ProcessHandle
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.process_identity import ProcessHandle
+    from aj_crew.subagent import SubagentManager
 
     ro._reset_for_tests()
     manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
@@ -419,8 +419,8 @@ async def test_the_reset_ladder_withholds_the_kill_and_the_shared_child_sweep() 
     swept: list[Any] = []
     try:
         with (
-            patch("kiro_crew.acp.client._kill_escaped_children", side_effect=swept.append),
-            patch("kiro_crew.subagent.kill_verified_process") as mock_verified_kill,
+            patch("aj_crew.acp.client._kill_escaped_children", side_effect=swept.append),
+            patch("aj_crew.subagent.kill_verified_process") as mock_verified_kill,
         ):
             failure = await manager._sigkill_session("hung", handle)
     finally:
@@ -468,8 +468,8 @@ async def test_a_teardown_is_not_refused_by_the_lease_it_is_tearing_down() -> No
     """
     from unittest.mock import patch
 
-    from kiro_crew.cron import CronService
-    from kiro_crew.process_identity import ProcessHandle
+    from aj_crew.cron import CronService
+    from aj_crew.process_identity import ProcessHandle
 
     ro._reset_for_tests()
     handle = ProcessHandle(pid=9292, start_id="abc", pgid=9292, child_pids={})
@@ -498,8 +498,8 @@ async def test_a_teardown_is_not_refused_by_the_lease_it_is_tearing_down() -> No
         return None
 
     with (
-        patch("kiro_crew.cron.kill_verified_process", fake_kill),
-        patch("kiro_crew.session.child_process_helpers", lambda: (None, None, None)),
+        patch("aj_crew.cron.kill_verified_process", fake_kill),
+        patch("aj_crew.session.child_process_helpers", lambda: (None, None, None)),
     ):
         failure = await CronService._sigkill_session(_Svc(), "cron:job", handle, who="Reaper")
 
@@ -517,8 +517,8 @@ async def test_another_tenants_lease_still_withholds_the_cron_kill() -> None:
     Without this, releasing before the gate could be 'release everything and
     always kill', which is the original bug with extra steps.
     """
-    from kiro_crew.cron import CronService
-    from kiro_crew.process_identity import ProcessHandle
+    from aj_crew.cron import CronService
+    from aj_crew.process_identity import ProcessHandle
 
     ro._reset_for_tests()
     handle = ProcessHandle(pid=9393, start_id="abc", pgid=9393, child_pids={})
@@ -558,8 +558,8 @@ async def test_only_the_lease_of_the_process_being_killed_is_released() -> None:
       because it is a lease on the pid being killed, releasing it wrongly would let
       the kill proceed.
     """
-    from kiro_crew.cron import CronService
-    from kiro_crew.process_identity import ProcessHandle
+    from aj_crew.cron import CronService
+    from aj_crew.process_identity import ProcessHandle
 
     ro._reset_for_tests()
     killing = ProcessHandle(pid=9494, start_id="mine", pgid=9494, child_pids={})
@@ -609,8 +609,8 @@ async def test_the_reset_ladder_kills_when_the_only_lease_is_its_own_subject() -
     """
     from unittest.mock import MagicMock, patch
 
-    from kiro_crew.process_identity import ProcessHandle
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.process_identity import ProcessHandle
+    from aj_crew.subagent import SubagentManager
 
     ro._reset_for_tests()
     manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
@@ -627,7 +627,7 @@ async def test_the_reset_ladder_kills_when_the_only_lease_is_its_own_subject() -
     )()
     manager._sessions.tearing_down = lambda key: [entry]
 
-    with patch("kiro_crew.subagent.kill_verified_process", return_value=None) as mock_verified_kill:
+    with patch("aj_crew.subagent.kill_verified_process", return_value=None) as mock_verified_kill:
         failure = await manager._sigkill_session("hung", handle)
 
     mock_verified_kill.assert_called_once()
@@ -653,7 +653,7 @@ async def test_the_sweep_gate_audits_both_outcomes() -> None:
     await holder.take()
     try:
         with patch(
-            "kiro_crew.session_cleanup.audit_kill_decision",
+            "aj_crew.session_cleanup.audit_kill_decision",
             lambda pid, outcome, reason, *, tool_name: events.append((pid, outcome)),
         ):
             await service._sweep_periodic_pids()
@@ -680,9 +680,9 @@ def test_the_shared_audit_emitter_reaches_sel_and_cannot_break_a_caller(
         def log_tool_invocation(self, **kwargs: Any) -> None:
             logged.append(kwargs)
 
-    from kiro_crew import process_identity
+    from aj_crew import process_identity
 
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: _Sel())
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: _Sel())
     process_identity.audit_kill_decision(4242, "refused", "because", tool_name="a-caller")
     assert logged and logged[0]["tool_name"] == "a-caller"
     assert logged[0]["tool_kind"] == "process_kill"
@@ -692,7 +692,7 @@ def test_the_shared_audit_emitter_reaches_sel_and_cannot_break_a_caller(
     def boom() -> Any:
         raise RuntimeError("sel is down")
 
-    monkeypatch.setattr("kiro_crew.sel.sel", boom)
+    monkeypatch.setattr("aj_crew.sel.sel", boom)
     process_identity.audit_kill_decision(4242, "killed", "because", tool_name="a-caller")
 
 
@@ -710,8 +710,8 @@ async def test_the_cron_reaper_reports_a_leased_runtime_instead_of_killing_it() 
     The refusal is RETURNED, not swallowed, so the run is never recorded as reaped
     over a process tree that is still standing.
     """
-    from kiro_crew.cron import CronService
-    from kiro_crew.process_identity import ProcessHandle
+    from aj_crew.cron import CronService
+    from aj_crew.process_identity import ProcessHandle
 
     ro._reset_for_tests()
     handle = ProcessHandle(pid=9191, start_id="abc", pgid=9191, child_pids={})
@@ -750,8 +750,8 @@ async def test_a_cancelled_resets_own_lease_is_still_released_from_the_captured_
     """
     from unittest.mock import patch
 
-    from kiro_crew.cron import CronService
-    from kiro_crew.process_identity import ProcessHandle
+    from aj_crew.cron import CronService
+    from aj_crew.process_identity import ProcessHandle
 
     ro._reset_for_tests()
     handle = ProcessHandle(pid=9494, start_id="abc", pgid=9494, child_pids={})
@@ -777,8 +777,8 @@ async def test_a_cancelled_resets_own_lease_is_still_released_from_the_captured_
         return None
 
     with (
-        patch("kiro_crew.cron.kill_verified_process", fake_kill),
-        patch("kiro_crew.session.child_process_helpers", lambda: (None, None, None)),
+        patch("aj_crew.cron.kill_verified_process", fake_kill),
+        patch("aj_crew.session.child_process_helpers", lambda: (None, None, None)),
     ):
         failure = await CronService._sigkill_session(
             _Svc(), "cron:job", handle, who="Reaper", popped=[(popped_session, handle)]
@@ -800,8 +800,8 @@ async def test_the_captured_pop_does_not_release_another_tenants_lease() -> None
     into an always-kill. Here the popped session's handle names a DIFFERENT process
     start on the same number, so its lease is not this teardown's to release.
     """
-    from kiro_crew.cron import CronService
-    from kiro_crew.process_identity import ProcessHandle
+    from aj_crew.cron import CronService
+    from aj_crew.process_identity import ProcessHandle
 
     ro._reset_for_tests()
     handle = ProcessHandle(
@@ -840,7 +840,7 @@ async def test_a_provider_reached_through_both_sources_is_released_once() -> Non
     is counted and logged per teardown, so a duplicate would report two teardowns
     where there was one.
     """
-    from kiro_crew.process_identity import ProcessHandle, release_teardown_lease
+    from aj_crew.process_identity import ProcessHandle, release_teardown_lease
 
     handle = ProcessHandle(pid=9696, start_id="abc", pgid=9696, child_pids={})
     releases: list[object] = []
@@ -856,7 +856,7 @@ async def test_a_provider_reached_through_both_sources_is_released_once() -> Non
         def tearing_down(self, key: str) -> list[object]:
             return [entry]
 
-    import kiro_crew.process_identity as pi
+    import aj_crew.process_identity as pi
 
     real = pi.release_session_lease
     try:
@@ -885,11 +885,11 @@ def test_the_kill_phase_reports_what_it_actually_killed() -> None:
     -- "prune, never kill" -- so a phase handed candidates and killing none is a real
     shape an operator needs when a leak reading will not come down.
     """
-    from kiro_crew.process_identity import audit_kill_phase
+    from aj_crew.process_identity import audit_kill_phase
 
     rows: list[tuple[str, str]] = []
 
-    import kiro_crew.process_identity as pi
+    import aj_crew.process_identity as pi
 
     real = pi._audit_kill
     try:
@@ -918,7 +918,7 @@ async def test_the_periodic_sweep_emits_one_phase_row_after_its_kill() -> None:
     phases: list[tuple[int, int]] = []
 
     with patch(
-        "kiro_crew.session_cleanup.audit_kill_phase",
+        "aj_crew.session_cleanup.audit_kill_phase",
         lambda *, allowed, killed, reason, tool_name: phases.append((allowed, killed)),
     ):
         await service._sweep_periodic_pids()
@@ -942,7 +942,7 @@ def test_a_lock_that_fails_to_open_is_reported_and_does_not_raise(
     """
     from contextlib import contextmanager
 
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     home = tmp_path / "home"
     home.mkdir()
@@ -955,7 +955,7 @@ def test_a_lock_that_fails_to_open_is_reported_and_does_not_raise(
 
     monkeypatch.setattr(session_pid, "_pid_file_lock", _failing_lock)
 
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.runtime_reconcile"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.runtime_reconcile"):
         rr._retract_descendant_rows(["8001:4242:TOK"])  # must not raise
 
     messages = [r.getMessage() for r in caplog.records if "could not retract" in r.getMessage()]

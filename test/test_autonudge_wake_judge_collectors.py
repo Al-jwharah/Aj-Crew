@@ -16,8 +16,8 @@ import pytest
 from autonudge_wake_judge_helpers import _restore_judge_process_globals  # noqa: F401 - fixture
 from autonudge_wake_judge_helpers import _loop
 
-from kiro_crew import autonudge_judge as judge
-from kiro_crew.autonudge import (
+from aj_crew import autonudge_judge as judge
+from aj_crew.autonudge import (
     AutoNudgeService,
     MonitorState,
     _bounded_judge_spec,
@@ -25,10 +25,10 @@ from kiro_crew.autonudge import (
     infer_subject,
     loop_subject,
 )
-from kiro_crew.decisions.points import nudge_wake as point
-from kiro_crew.irq import Outcome
-from kiro_crew.probes import targets as probe_targets
-from kiro_crew.validation import JUDGE_OFF_KEY, ValidationError, validate_judge_spec
+from aj_crew.decisions.points import nudge_wake as point
+from aj_crew.irq import Outcome
+from aj_crew.probes import targets as probe_targets
+from aj_crew.validation import JUDGE_OFF_KEY, ValidationError, validate_judge_spec
 
 
 class TestCollectors:
@@ -225,7 +225,7 @@ class TestCollectors:
         agree with the reader while the actual producer emits different keys, which
         is how a collector reading absent fields passed every test it had.
         """
-        from kiro_crew.monitoring.pull_request import (
+        from aj_crew.monitoring.pull_request import (
             PullRequestCheck,
             PullRequestFacts,
             canonical_pull_request_facts,
@@ -263,7 +263,7 @@ class TestCollectors:
         Driven through the same screen and state builder the tick uses, so this
         fails if the rendered row is dropped by the scrub or the kind check.
         """
-        from kiro_crew.monitoring.pull_request import (
+        from aj_crew.monitoring.pull_request import (
             PullRequestCheck,
             PullRequestFacts,
             canonical_pull_request_facts,
@@ -610,7 +610,7 @@ class TestTheStructuredPathRefusesABrief:
 
     @staticmethod
     def _refusal_set() -> set[str]:
-        from kiro_crew.dashboard import session_directive_apply_monitor
+        from aj_crew.dashboard import session_directive_apply_monitor
 
         source = inspect.getsource(session_directive_apply_monitor)
         line = next(ln for ln in source.splitlines() if "legacy_only = sorted(" in ln)
@@ -638,22 +638,22 @@ class TestEachBriefBoundHasOneSpelling:
     """
 
     def test_the_target_count_is_spelled_once(self) -> None:
-        from kiro_crew import autonudge as _autonudge
-        from kiro_crew import validation as _validation
+        from aj_crew import autonudge as _autonudge
+        from aj_crew import validation as _validation
 
         assert judge.MAX_TARGETS is _validation.MAX_JUDGE_TARGETS
         assert _autonudge._JUDGE_MAX_TARGETS is _validation.MAX_JUDGE_TARGETS
 
     def test_the_criterion_length_is_spelled_once(self) -> None:
-        from kiro_crew import autonudge as _autonudge
-        from kiro_crew import validation as _validation
+        from aj_crew import autonudge as _autonudge
+        from aj_crew import validation as _validation
 
         assert point.MAX_CRITERION_CHARS is _validation.MAX_JUDGE_CRITERION_CHARS
         assert _autonudge._JUDGE_MAX_CRITERION_CHARS is _validation.MAX_JUDGE_CRITERION_CHARS
 
     def test_the_target_length_is_spelled_once(self) -> None:
-        from kiro_crew import autonudge as _autonudge
-        from kiro_crew import validation as _validation
+        from aj_crew import autonudge as _autonudge
+        from aj_crew import validation as _validation
 
         assert _autonudge._JUDGE_MAX_TARGET_CHARS is _validation.MAX_JUDGE_TARGET_CHARS
 
@@ -935,7 +935,7 @@ class TestTheBriefsOwnTargetListDecidesTheWatchedSubject:
 
     def test_a_source_location_is_not_a_pull_request(self) -> None:
         """A cited line number must not read as a second subject and strip the gate."""
-        message = "Babysit PR 13936; the site is src/kiro_crew/autonudge.py#1751."
+        message = "Babysit PR 13936; the site is src/aj_crew/autonudge.py#1751."
         assert probe_targets.names_pull_request(message) is False
         monitor = infer_monitor(message, now=1_000.0, judge=self._spec())
         assert monitor is not None and monitor.target == self.SUBJECT

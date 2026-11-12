@@ -23,8 +23,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import browser_snapshots
-from kiro_crew.browser_harness import ops
+from aj_crew import browser_snapshots
+from aj_crew.browser_harness import ops
 
 _METHOD_RE = re.compile(r"\.(\w+)\((.*)\)$", re.DOTALL)
 
@@ -668,11 +668,11 @@ def test_browsing_available_fails_closed_without_the_install_plane(
     import sys
     import types
 
-    monkeypatch.setitem(sys.modules, "kiro_crew.browser_harness.install", None)
+    monkeypatch.setitem(sys.modules, "aj_crew.browser_harness.install", None)
     assert ops.browsing_available(tmp_path) is False
-    fake_install = types.ModuleType("kiro_crew.browser_harness.install")
+    fake_install = types.ModuleType("aj_crew.browser_harness.install")
     fake_install.install_state = lambda home: types.SimpleNamespace(installed=True)  # type: ignore[attr-defined]
-    monkeypatch.setitem(sys.modules, "kiro_crew.browser_harness.install", fake_install)
+    monkeypatch.setitem(sys.modules, "aj_crew.browser_harness.install", fake_install)
     assert ops.browsing_available(tmp_path) is True
 
 
@@ -785,9 +785,9 @@ def test_back_judges_where_history_landed_too(fake: FakeBrowser) -> None:
 def test_the_default_context_admits_every_landing_and_the_route_wires_the_real_gate() -> None:
     """``OpContext.url_allowed`` defaults open (tests, no gateway); the route binds the
     shared predicate so the gateway and the shim judge by ONE rule."""
-    from kiro_crew.browser_harness import url_gate
-    from kiro_crew.dashboard.handlers import browser_ops as route
-    from kiro_crew.mcp_tools import browser as shim
+    from aj_crew.browser_harness import url_gate
+    from aj_crew.dashboard.handlers import browser_ops as route
+    from aj_crew.mcp_tools import browser as shim
 
     async def _noop(*_a: Any, **_k: Any) -> None:
         return None
@@ -806,7 +806,7 @@ def test_the_default_context_admits_every_landing_and_the_route_wires_the_real_g
 
 @pytest.mark.parametrize("op", [op for op in ops.OPS if op not in {"navigate", "tabs", "ask"}])
 def test_current_private_page_is_refused_before_reads_actions_or_decisions(fake, op) -> None:
-    from kiro_crew.browser_harness.url_gate import url_allowed
+    from aj_crew.browser_harness.url_gate import url_allowed
 
     fake.helpers["current_tab"] = {"url": "http://127.0.0.1:5173/admin"}
     ctx = _gated_ctx(fake, lambda url: url_allowed(url, frozenset(), 6776))
@@ -822,7 +822,7 @@ def test_current_private_page_is_refused_before_reads_actions_or_decisions(fake,
 
 
 def test_link_to_private_page_is_refused_before_the_card_follows(fake) -> None:
-    from kiro_crew.browser_harness.url_gate import url_allowed
+    from aj_crew.browser_harness.url_gate import url_allowed
 
     tab = {"url": "https://example.com/"}
     fake.helpers["current_tab"] = lambda: dict(tab)

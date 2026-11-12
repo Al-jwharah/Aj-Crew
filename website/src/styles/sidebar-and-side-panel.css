@@ -67,7 +67,7 @@
    A sticky row needs an opaque surface or the session rows scroll visibly
    through it; it takes the card's own surface so it reads as part of the
    panel. `:where()` keeps this at one class of specificity so the row's
-   `hover:bg-bg-hover` still wins on hover. kiro-light steps the card back to
+   `hover:bg-bg-hover` still wins on hover. aj-light steps the card back to
    --panel (.sidebar-inner in chat-transcript.css), so the pinned row follows it. A host that
    repaints the card sets --folder-row-sticky-bg to the same surface (the
    /embed/sessions wrapper in SessionsSidebarChrome paints it --bg).
@@ -101,7 +101,7 @@
    arrow-key rove re-aligns such a row itself (chat/sessionRowNav.ts). */
 :where(.sidebar) .session-row{scroll-margin-top:var(--folder-pin-stack,0px)}
 :where(.sidebar) .folder-row-sticky{background-color:var(--folder-row-sticky-bg,var(--bg-elevated))}
-:where([data-theme="kiro-light"] .sidebar-inner) .folder-row-sticky{background-color:var(--folder-row-sticky-bg,var(--panel))}
+:where([data-theme="aj-light"] .sidebar-inner) .folder-row-sticky{background-color:var(--folder-row-sticky-bg,var(--panel))}
 /* The list dock's SHELF (components/ListDock.tsx): the filter chips and the
    list-level notices hang under the glass search field and the rows scroll
    under them too, but their fills are translucent tints tuned for a solid
@@ -109,9 +109,9 @@
    below the pane -- the composer's context shelf does the same onto the page
    colour (.glass-shelf). Same surface tokens as the pinned folder header
    above, so the scrim, the pinned header and the card are one colour on every
-   surface (kiro-light's --panel, the /embed/sessions host's --bg). */
+   surface (aj-light's --panel, the /embed/sessions host's --bg). */
 :where(.sidebar) .list-dock-shelf{background:linear-gradient(to bottom,transparent,var(--folder-row-sticky-bg,var(--bg-elevated)) 8px)}
-:where([data-theme="kiro-light"] .sidebar-inner) .list-dock-shelf{background:linear-gradient(to bottom,transparent,var(--folder-row-sticky-bg,var(--panel)) 8px)}
+:where([data-theme="aj-light"] .sidebar-inner) .list-dock-shelf{background:linear-gradient(to bottom,transparent,var(--folder-row-sticky-bg,var(--panel)) 8px)}
 /* Stalled goal loop (chat-sidebar/SessionRow.tsx `goalLoopStalled`): the loop is armed but its
    last turn died and nothing is executing — the whole card flashes danger-red
    until the user resumes. Two-class specificity outranks the Tailwind

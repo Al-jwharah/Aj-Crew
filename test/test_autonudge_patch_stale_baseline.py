@@ -16,9 +16,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import autonudge_authz as authz
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.dashboard.handlers import autonudge as handler
+from aj_crew import autonudge_authz as authz
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.dashboard.handlers import autonudge as handler
 
 SLOT = "chat-1-123"
 

@@ -4,7 +4,7 @@
  * (Playwright's recorder), then frames + a GIF cropped to the detail panel.
  *
  * Usage:
- *   POD_INFO="$KIROCREW_SCRATCH/pod-info.json" \
+ *   POD_INFO="$AJCREW_SCRATCH/pod-info.json" \
  *     node scripts/record-members-activity-days.mjs <outDir> [FFMPEG=/path]
  *
  * The GIF is assembled by Pillow (PIL) because Playwright's bundled ffmpeg has

@@ -21,16 +21,16 @@ outside the pooling budget.
   next roster change. A flat resulting list cannot do both — unstubbing one name out
   of a shipped roster means writing back the survivors, and that list then answers the
   question forever.
-- **Managed followers.** When `kirocrew-core` is stubbed (by the roster or an
-  override), Kiro Crew's other caller-aware managed servers are stubbed with it:
+- **Managed followers.** When `ajcrew-core` is stubbed (by the roster or an
+  override), Aj Crew's other caller-aware managed servers are stubbed with it:
   `MANAGED_STUB_FOLLOWERS` in `config/integration_sections.py` (guide, mate, panel,
   dashboard, work, crew-log, debug). `_resolve_stub_base` is the roster plus those
-  followers, and it is the layer overrides apply to. `kirocrew-computer` does not
-  follow (tenant-nonce gated), and neither does `kirocrew-cron` (outside what this
+  followers, and it is the layer overrides apply to. `ajcrew-computer` does not
+  follow (tenant-nonce gated), and neither does `ajcrew-cron` (outside what this
   layer was measured on). The roster on disk never gains the followers. Because
   a follower's default moves with the leader, MCP Management always stores a
   follower toggle as an override instead of pruning it, so a later toggle of
-  `kirocrew-core` cannot undo it.
+  `ajcrew-core` cannot undo it.
 - **`mcp_gateway.enabled`** — share backends. Global over the stub set; there is no
   per-server sharing switch.
 - **`mcp_gateway.poolable_servers`** — deprecated alias, read only when `stub_servers`
@@ -39,7 +39,7 @@ outside the pooling budget.
 - **`mcp_gateway.apps_enabled`** — retired from the UI and no longer written by
   MCP Management, but a stored `false` remains an honoured opt-out. Capability
   follows the stub, so this key cannot grant MCP Apps; for compatibility it can
-  still withdraw them. The `KIROCREW_MCP_APPS` environment flag is the other
+  still withdraw them. The `AJCREW_MCP_APPS` environment flag is the other
   kill switch, and explicit off wins.
 - **The broker starts iff something is stubbed.**
 
@@ -186,7 +186,7 @@ stub. The per-session token that names an ACP session is minted in
 `mcp_gateway/claim.py` (`mint_stub_session_token`). If the daemon, matching it
 against a claim frame, were its only reader, a server with no stub on an install
 with no daemon would have no per-session identity channel and would fall back to
-`KIROCREW_SESSION_KEY`, which is *wrong by construction* in the two topologies that
+`AJCREW_SESSION_KEY`, which is *wrong by construction* in the two topologies that
 matter most:
 
 - **warm-pool rekey.** A pooled process is re-keyed to a new session while the MCP
@@ -212,7 +212,7 @@ so a token read below a cache is inert on exactly the call it exists for. Three 
 - **It rides every control-plane element, not only stub entries** — through the one
   owner of that question (`providers/mirrors/identity.py`,
   `control_plane_identity_env`), plus the member-dispatch element and the kiro-cli
-  child env. `KIROCREW_SESSION_KEY` stays beside it as the fallback for the one case
+  child env. `AJCREW_SESSION_KEY` stays beside it as the fallback for the one case
   the token cannot cover: no SEL trust root to sign the mapping with.
 - **The resolver reads the token ABOVE the env var.** Where the two disagree the env
   var is the stale answer, so preferring it is the misattribution above. The
@@ -250,7 +250,7 @@ What the MAC buys, and what it does not:
   and verification opens `O_NOFOLLOW` and refuses a non-regular file.
 - **Out of scope, and UNCHANGED from the env var it sits beside:** a same-uid process
   that can read the mapping directory. It could already read the `session_pid` files
-  and present another session's key through `KIROCREW_SESSION_KEY`, and a shell-capable
+  and present another session's key through `AJCREW_SESSION_KEY`, and a shell-capable
   same-uid agent can bypass client-side resolution entirely by minting a local API
   token. Same-uid processes are inside the boundary. This narrows nothing and widens
   nothing; authenticating the calling PROCESS (SO_PEERCRED over a gateway-owned
@@ -276,7 +276,7 @@ requires the token that hashes to the name.
 ## Out of scope
 
 - Changing `PoolKey`. It gains no dimension, in this change or any other.
-- `UNPOOLABLE_SERVERS` excludes only the credential vendors. Kiro
+- `UNPOOLABLE_SERVERS` excludes only the credential vendors. Aj
   Crew's own MCP servers stay direct only while they are absent from
   `mcp_gateway.stub_servers`; the signed session-token mapping gives them identity
   without requiring a stub.

@@ -10,9 +10,9 @@ from typing import Any
 import pytest
 from test_slack_agent_session_status import _caps, make_client  # noqa: F401 - autouse fixture
 
-from kiro_crew.slack import handler
-from kiro_crew.slack.agent_sessions import fence
-from kiro_crew.testing.wait import await_until
+from aj_crew.slack import handler
+from aj_crew.slack.agent_sessions import fence
+from aj_crew.testing.wait import await_until
 
 pytestmark = pytest.mark.asyncio
 

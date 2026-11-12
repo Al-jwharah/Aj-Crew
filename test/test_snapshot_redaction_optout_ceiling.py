@@ -9,15 +9,15 @@ from pathlib import Path
 import pytest
 from test_snapshot import snapshot_family_source
 
-from kiro_crew import security
-from kiro_crew import snapshot as snap
-from kiro_crew import snapshot_redact as redact
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew import security
+from aj_crew import snapshot as snap
+from aj_crew import snapshot_redact as redact
+from aj_crew.config.loader import AjCrewConfig
 
 
 @pytest.fixture()
 def home(tmp_path: Path, monkeypatch) -> Path:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return tmp_path
 
 
@@ -40,7 +40,7 @@ class TestTheSwitchIsBeyondTheAgentsReach:
         matching cannot fence the path. `backup` carries the HIDDEN disposition: the whole
         directory is bind-masked in EVERY sandbox mode, for read, write and delete alike.
         """
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert "backup" in sandbox._CREW_HIDDEN_LEAVES
         assert redact.redaction_switch_path().parent.name == "backup"
@@ -70,7 +70,7 @@ class TestTheSwitchIsBeyondTheAgentsReach:
         out of `config.json` for exactly this reason, and states that the config section
         must carry no enable field so there is only one place the thing can be switched.
         """
-        assert not hasattr(KiroCrewConfig, "redact_backup_uploads")
+        assert not hasattr(AjCrewConfig, "redact_backup_uploads")
         assert "redact_backup_uploads" not in snapshot_family_source()
 
 
@@ -167,7 +167,7 @@ class TestTheDefaultNeedsNoFile:
     def test_the_upload_asks_the_switch_not_the_config(self) -> None:
         src = inspect.getsource(snap._redacted_upload_copy)
         assert "outbound_redaction_enabled()" in src
-        assert "KiroCrewConfig" not in src
+        assert "AjCrewConfig" not in src
 
     def test_an_unreadable_switch_refuses_the_upload(self, home: Path, monkeypatch) -> None:
         """Not a silent default in either direction: the upload stops and names the file."""

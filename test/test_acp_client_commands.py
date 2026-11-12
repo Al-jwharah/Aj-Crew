@@ -7,7 +7,7 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-from kiro_crew.acp.client import AcpClient, format_command_result, parse_slash_command
+from aj_crew.acp.client import AcpClient, format_command_result, parse_slash_command
 
 # ── Coverage push: command wrappers ──
 
@@ -30,7 +30,7 @@ class TestSendCommand:
 
     @pytest.mark.asyncio
     async def test_send_command_timeout_returns_empty(self, tmp_path):
-        from kiro_crew.acp.client import AcpTimeoutError
+        from aj_crew.acp.client import AcpTimeoutError
 
         client = AcpClient(work_dir=tmp_path)
         client._session_id = "s1"
@@ -60,7 +60,7 @@ class TestSendCommand:
         # here we verify the call site wires it up at all (a vacuous isinstance
         # check would not catch a missed redact step).
         with patch(
-            "kiro_crew.acp.client.redact_exfiltration_urls",
+            "aj_crew.acp.client.redact_exfiltration_urls",
             return_value=("[redacted]", ["url"]),
         ) as mock_redact:
             result = await client.send_command("/test")
@@ -128,7 +128,7 @@ class TestCancelSession:
     async def test_cancel_raises_grace_window_to_budget(self, tmp_path):
         """A budget above the 10s floor must extend the read-grace window so
         the read loop does not abort the turn early and force a hard kill."""
-        from kiro_crew.acp.client import _CANCEL_GRACE_SECS
+        from aj_crew.acp.client import _CANCEL_GRACE_SECS
 
         client = AcpClient(work_dir=tmp_path)
         client._session_id = "s1"
@@ -154,7 +154,7 @@ class TestWaitForCompaction:
     @pytest.mark.asyncio
     async def test_returns_completed(self, tmp_path):
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
         msg = JsonRpcMessage(
             method=METHOD_COMPACTION_STATUS,
@@ -168,7 +168,7 @@ class TestWaitForCompaction:
     @pytest.mark.asyncio
     async def test_returns_failed(self, tmp_path):
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
         msg = JsonRpcMessage(
             method=METHOD_COMPACTION_STATUS,
@@ -186,7 +186,7 @@ class TestWaitForCompaction:
         the reason the payload names -- read by the same extractor the dispatch
         loop uses -- and a manual /compact names its cause like auto-compaction."""
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
         msg = JsonRpcMessage(
             method=METHOD_COMPACTION_STATUS,
@@ -205,8 +205,8 @@ class TestWaitForCompaction:
         """No summary and no reason-bearing key: the result carries the
         extractor's own generic text, the same line the streaming notice shows."""
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.client import compaction_failure_detail
-        from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+        from aj_crew.acp.client import compaction_failure_detail
+        from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
         params = {"status": {"type": "failed"}, "summary": ""}
         msg = JsonRpcMessage(method=METHOD_COMPACTION_STATUS, params=params)
@@ -223,7 +223,7 @@ class TestWaitForCompaction:
         result carries it scrubbed -- the same ``redact_text`` the session
         handle applies -- before the dashboard or a channel mirror shows it."""
         client = AcpClient(work_dir=tmp_path)
-        from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_COMPACTION_STATUS, JsonRpcMessage
 
         msg = JsonRpcMessage(
             method=METHOD_COMPACTION_STATUS,
@@ -249,13 +249,13 @@ class TestWaitForCompaction:
 
     @pytest.mark.asyncio
     async def test_buffers_non_compaction_notifications(self, tmp_path, monkeypatch):
-        import kiro_crew.acp.client as c
+        import aj_crew.acp.client as c
 
         monkeypatch.setattr(c.model_registry, "has_known_window", lambda mid: True)
         monkeypatch.setattr(c.model_registry, "model_window", lambda mid, **kw: 200_000)
         client = AcpClient(work_dir=tmp_path)
         client._model = "some-model"
-        from kiro_crew.acp.types import METHOD_COMPACTION_STATUS, METHOD_METADATA, JsonRpcMessage
+        from aj_crew.acp.types import METHOD_COMPACTION_STATUS, METHOD_METADATA, JsonRpcMessage
 
         meta_msg = JsonRpcMessage(method=METHOD_METADATA, params={"contextUsagePercentage": 55.0})
         other_notif = JsonRpcMessage(method="mcp/something", params={"x": 1})
@@ -335,7 +335,7 @@ class TestStreamCommand:
 
     @pytest.mark.asyncio
     async def test_stream_command_yields_events(self):
-        from kiro_crew.acp.types import EVENT_COMPLETE, JsonRpcMessage
+        from aj_crew.acp.types import EVENT_COMPLETE, JsonRpcMessage
 
         client = AcpClient()
         client._session_id = "s1"

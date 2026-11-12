@@ -42,11 +42,11 @@ MAC = WORKFLOWS / "sign-and-notarize.yml"
 #: ``mac_artifact`` alone (test_publish_feed_contract.py pins that shape).
 MAC_LANES = ("sign-and-notarize", "sign-and-notarize-arm64", "sign-and-notarize-x64")
 DOCKER = WORKFLOWS / "publish-docker.yml"
-PROMOTION_ARTIFACT = "KiroCrew-notarized-stable-${{ needs.version.outputs.version }}"
-PROMOTION_ARTIFACT_FORMAT = "format('KiroCrew-notarized-stable-{0}', needs.version.outputs.version)"
+PROMOTION_ARTIFACT = "AjCrew-notarized-stable-${{ needs.version.outputs.version }}"
+PROMOTION_ARTIFACT_FORMAT = "format('AjCrew-notarized-stable-{0}', needs.version.outputs.version)"
 #: The artifact filename stem, named once: the brand gate exempts a literal
-#: ``KiroCrew.dmg`` but not the templated single-arch spelling used below.
-PRODUCT = "KiroCrew"  # brand-ok: artifact filename stem
+#: ``AjCrew.dmg`` but not the templated single-arch spelling used below.
+PRODUCT = "AjCrew"  # brand-ok: artifact filename stem
 #: Every lane's ``promote`` input reads promote_mode, never channel, so an
 #: opt-in stable rebuild flips all of them together or none of them.
 PROMOTE_EXPRESSION = "${{ needs.version.outputs.promote_mode == 'true' }}"
@@ -106,7 +106,7 @@ def test_stable_rebuild_is_the_default_and_promotion_is_opt_in_per_version() -> 
     """Stable must not be able to ship an RC-stamped version by omission.
 
     Promotion republishes the candidate's own bytes, which carry its ``rcN``
-    stamp in the wheel name, the feed, ``pip show`` and ``kirocrew --version``.
+    stamp in the wheel name, the feed, ``pip show`` and ``ajcrew --version``.
     That mode still exists -- it is the only one where stable runs the exact
     binary insiders validated -- but it cannot be the default, because then
     forgetting a setting silently ships a prerelease-looking version to stable
@@ -160,7 +160,7 @@ def test_stable_gate_requires_the_three_version_files_to_declare_the_bare_versio
     assert gate["env"]["PROMOTE_MODE"] == "${{ needs.version.outputs.promote_mode }}"
     run = gate["run"]
     for path in (
-        "src/kiro_crew/__init__.py",
+        "src/aj_crew/__init__.py",
         "pyproject.toml",
         "website/electron/package.json",
     ):
@@ -257,7 +257,7 @@ def test_the_windows_installer_is_chosen_per_mode_not_by_extension() -> None:
 
     ``build-windows`` carries no ``if:``, so a promotion run rebuilds the
     installer even though nothing consumes it -- while the promoted candidate's
-    own bytes sit in the gated bundle under ``KiroCrew-Setup.exe``.
+    own bytes sit in the gated bundle under ``AjCrew-Setup.exe``.
     electron-builder's default name embeds the version, so the two names differ
     and a bare ``-name "*.exe"`` in the collection glob attaches BOTH: a stable
     page would then offer a never-soaked rebuild beside the promoted installer,
@@ -276,7 +276,7 @@ def test_the_windows_installer_is_chosen_per_mode_not_by_extension() -> None:
     assert step["env"]["PROMOTE_MODE"] == "${{ needs.version.outputs.promote_mode }}"
     assert '[ "${PROMOTE_MODE:-}" = "true" ]' in assemble
     # Promotion republishes the bundle's byte-identical installer...
-    assert '"${NOTARIZED_DIR}/KiroCrew-Setup.exe"' in assemble
+    assert '"${NOTARIZED_DIR}/AjCrew-Setup.exe"' in assemble
     # ...and a rebuild takes the producing artifact, refusing to guess between two.
     assert '-path "*build-windows-x64*" -name "*.exe"' in assemble
     assert "expected at most one Windows installer" in assemble
@@ -308,11 +308,11 @@ def test_github_release_selects_explicit_versioned_macos_handoff() -> None:
         RELEASE, "github-release", "Assemble release assets (require gated macOS artifacts)"
     )["run"]
     assert (
-        'NOTARIZED_DIR="artifacts/KiroCrew-notarized-${{ needs.version.outputs.channel }}-'
+        'NOTARIZED_DIR="artifacts/AjCrew-notarized-${{ needs.version.outputs.channel }}-'
         '${{ needs.version.outputs.version }}"' in assemble
     )
-    assert "KiroCrew-notarized-stable-promotion" not in assemble
-    assert "*KiroCrew-notarized-*" not in assemble
+    assert "AjCrew-notarized-stable-promotion" not in assemble
+    assert "*AjCrew-notarized-*" not in assemble
 
 
 def test_prerelease_candidate_runs_same_sha_test_gate() -> None:
@@ -493,14 +493,14 @@ def test_the_promotion_bundle_carries_every_macos_leg_under_its_gated_name() -> 
         zip_name, dmg_name = f"notarized-{arch}.zip", f"{PRODUCT}-{arch}.dmg"
         assert required[f"mac_zip_{arch}"].fullmatch(zip_name)
         assert required[f"dmg_{arch}"].fullmatch(dmg_name)
-        assert f"-path '*KiroCrew-notarized-*-{arch}/*' -name '{zip_name}'" in run
-        assert f"-path '*KiroCrew-notarized-*-{arch}/*' -name '{dmg_name}'" in run
+        assert f"-path '*AjCrew-notarized-*-{arch}/*' -name '{zip_name}'" in run
+        assert f"-path '*AjCrew-notarized-*-{arch}/*' -name '{dmg_name}'" in run
         assert f"promotion-bundle/{zip_name}" in run and f"promotion-bundle/{dmg_name}" in run
     # The universal names stay the bare ones, so they cannot match an arch file.
     assert required["mac_zip"].fullmatch("notarized.zip")
     assert not required["mac_zip"].fullmatch("notarized-arm64.zip")
-    assert required["dmg"].fullmatch("KiroCrew.dmg")
-    assert not required["dmg"].fullmatch("KiroCrew-x64.dmg")
+    assert required["dmg"].fullmatch("AjCrew.dmg")
+    assert not required["dmg"].fullmatch("AjCrew-x64.dmg")
     # And the reusable workflow spells the in-artifact zip the same way on both
     # jobs that touch it, from the same variant input.
     jobs = _workflow(MAC)["jobs"]

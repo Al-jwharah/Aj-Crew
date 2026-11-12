@@ -26,7 +26,7 @@ superseded-by: []
 - Created: 2026-08-17 · Revised: 2026-09-11
 - Related: rfc-channel-plugin-architecture.md — its §9 amendment decided the opposite of §5.1 here, and §9.4's "exactly one builder/parser" is Phase 2 below. rfc-append-only-session-transcript.md owns the transcript write path this document only reads.
 
-Every claim below was measured at `707b8aef2`, current `main` on 2026-09-11. Citations name symbols rather than line numbers: this document's line citations rotted twice in three weeks (once between `fa6261c4f` and a maintainer's re-audit at `2ff4ce819`, and once when `session.py` shrank from 6489 lines to under 2800 after that re-audit), and a symbol survives the refactor that moves the line. Every symbol cited here was checked to exist in its named file at `707b8aef2`. Paths are relative to `src/kiro_crew/`.
+Every claim below was measured at `707b8aef2`, current `main` on 2026-09-11. Citations name symbols rather than line numbers: this document's line citations rotted twice in three weeks (once between `fa6261c4f` and a maintainer's re-audit at `2ff4ce819`, and once when `session.py` shrank from 6489 lines to under 2800 after that re-audit), and a symbol survives the refactor that moves the line. Every symbol cited here was checked to exist in its named file at `707b8aef2`. Paths are relative to `src/aj_crew/`.
 
 ## 1. Summary
 

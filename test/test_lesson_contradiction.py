@@ -15,18 +15,18 @@ import pytest
 from body_stream_helpers import attach_body
 from member_memory_helpers import declare_v2_store
 
-from kiro_crew.history import ConversationLog
-from kiro_crew.lesson_validation import (
+from aj_crew.history import ConversationLog
+from aj_crew.lesson_validation import (
     LESSON_APPLIES_ALWAYS,
     LESSON_APPLIES_ON_TOPIC,
 )
-from kiro_crew.providers.base import (
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
 )
-from kiro_crew.vector_memory import (
+from aj_crew.vector_memory import (
     _LESSON_NEGATIVE_SEP,
     LessonWriteOutcome,
     LessonWriteResult,
@@ -40,7 +40,7 @@ from kiro_crew.vector_memory import (
 #: memory posture is critical (see ``ample_host_free_memory``).
 pytestmark = pytest.mark.usefixtures("ample_host_free_memory")
 
-_CRON_LOGGER = "kiro_crew.dashboard.handlers.cron"
+_CRON_LOGGER = "aj_crew.dashboard.handlers.cron"
 
 
 def _discriminating_embed(text: str) -> list[float]:
@@ -199,7 +199,7 @@ class TestResolveContradictions:
     """Tests for _resolve_contradictions async helper (runs on the _bg runtime)."""
 
     async def test_contradictory_verdict_returns_key(self):
-        from kiro_crew.dashboard.handlers.cron import _resolve_contradictions
+        from aj_crew.dashboard.handlers.cron import _resolve_contradictions
 
         state = MagicMock()
         session = _FakeBgSession("CONTRADICTORY")
@@ -217,7 +217,7 @@ class TestResolveContradictions:
         session.destroy.assert_awaited_once()
 
     async def test_complementary_verdict_keeps_lesson(self):
-        from kiro_crew.dashboard.handlers.cron import _resolve_contradictions
+        from aj_crew.dashboard.handlers.cron import _resolve_contradictions
 
         state = MagicMock()
         session = _FakeBgSession("COMPLEMENTARY")
@@ -230,7 +230,7 @@ class TestResolveContradictions:
         session.destroy.assert_awaited_once()
 
     async def test_llm_failure_skips_gracefully(self):
-        from kiro_crew.dashboard.handlers.cron import _resolve_contradictions
+        from aj_crew.dashboard.handlers.cron import _resolve_contradictions
 
         state = MagicMock()
         state.sessions.get_bg_session = AsyncMock(side_effect=RuntimeError("no bg runtime"))
@@ -242,7 +242,7 @@ class TestResolveContradictions:
     async def test_rejects_tool_calls_and_still_classifies(self):
         """A tool-permission event mid-stream is rejected + SEL-audited; the
         verdict still lands."""
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         state = MagicMock()
         session = _FakeBgSession("CONTRADICTORY", emit_permission=True)
@@ -251,7 +251,7 @@ class TestResolveContradictions:
         candidates = [{"key": "lesson.old", "rule": "Use X", "similarity": 0.6}]
         # SEL logging happens inside run_bg_oneliner (cron delegates to it),
         # so patch where the name is looked up, not cron._sel.
-        with patch("kiro_crew.llm_helpers._sel") as mock_sel:
+        with patch("aj_crew.llm_helpers._sel") as mock_sel:
             result = await cron._resolve_contradictions(state, "Do NOT use X", candidates)
 
         assert result == [("lesson.old", None)]
@@ -266,7 +266,7 @@ class TestResolveContradictions:
     async def test_auto_approved_tool_call_is_audited(self):
         """An auto-approved EVENT_TOOL_CALL (no permission request to reject) is
         still SEL-audited so no invocation escapes the log."""
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         state = MagicMock()
         session = _FakeBgSession("UNRELATED", emit_tool_call=True)
@@ -274,7 +274,7 @@ class TestResolveContradictions:
 
         candidates = [{"key": "lesson.x", "rule": "r", "similarity": 0.6}]
         # SEL logging happens inside run_bg_oneliner (cron delegates to it).
-        with patch("kiro_crew.llm_helpers._sel") as mock_sel:
+        with patch("aj_crew.llm_helpers._sel") as mock_sel:
             result = await cron._resolve_contradictions(state, "new", candidates)
 
         assert result == []  # UNRELATED verdict keeps the lesson
@@ -288,7 +288,7 @@ class TestResolveContradictions:
     async def test_timeout_is_swallowed_and_handle_destroyed(self):
         """A hung classification times out per-candidate without aborting; the
         bg handle is still destroyed in the finally."""
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         state = MagicMock()
         destroyed = AsyncMock()
@@ -321,9 +321,9 @@ class TestResolveAndSupersede:
         self, tmp_path, monkeypatch, private_memory
     ):
         """Only V1 may remove a persisted rule on an inferred contradiction."""
-        from kiro_crew import memory_stores
-        from kiro_crew.dashboard.handlers.cron import _resolve_and_supersede
-        from kiro_crew.vector_memory import open_member_database
+        from aj_crew import memory_stores
+        from aj_crew.dashboard.handlers.cron import _resolve_and_supersede
+        from aj_crew.vector_memory import open_member_database
 
         root = tmp_path / "memory_stores"
         monkeypatch.setattr(memory_stores, "memory_stores_root", lambda: root)
@@ -349,7 +349,7 @@ class TestResolveAndSupersede:
             state.sessions.get_bg_session = AsyncMock(return_value=session)
             candidates = [{"key": "lesson.old", "rule": old_rule["rule"], "similarity": 0.6}]
 
-            with patch("kiro_crew.dashboard.handlers.cron._sel"):
+            with patch("aj_crew.dashboard.handlers.cron._sel"):
                 await _resolve_and_supersede(
                     state, "dashboard:ui", new_rule["rule"], candidates, vs
                 )
@@ -368,7 +368,7 @@ class TestResolveAndSupersede:
             await asyncio.to_thread(vs.close)
 
     async def test_deletes_contradicted_keys(self, tmp_path):
-        from kiro_crew.dashboard.handlers.cron import _resolve_and_supersede
+        from aj_crew.dashboard.handlers.cron import _resolve_and_supersede
 
         vs = VectorMemoryStore(db_path=tmp_path / "memory.db")
         await asyncio.to_thread(vs.init)
@@ -382,9 +382,9 @@ class TestResolveAndSupersede:
             seen_body = (await asyncio.to_thread(vs.get_lessons))[0]["value_json"]
             candidates = [{"key": "lesson.old", "rule": "Use X", "similarity": 0.6}]
             with patch(
-                "kiro_crew.dashboard.handlers.cron._resolve_contradictions",
+                "aj_crew.dashboard.handlers.cron._resolve_contradictions",
                 new=AsyncMock(return_value=[("lesson.old", seen_body)]),
-            ), patch("kiro_crew.dashboard.handlers.cron._sel"):
+            ), patch("aj_crew.dashboard.handlers.cron._sel"):
                 await _resolve_and_supersede(
                     MagicMock(), "dashboard:ui", "Do NOT use X", candidates, vs
                 )
@@ -394,13 +394,13 @@ class TestResolveAndSupersede:
 
     async def test_swallows_exceptions(self, caplog):
         """A failed sweep must not propagate — the lesson is already persisted."""
-        from kiro_crew.dashboard.handlers.cron import _resolve_and_supersede
+        from aj_crew.dashboard.handlers.cron import _resolve_and_supersede
 
         state = MagicMock()
         vs = MagicMock()
         candidates = [{"key": "lesson.x", "rule": "r", "similarity": 0.5}]
         with patch(
-            "kiro_crew.dashboard.handlers.cron._resolve_contradictions",
+            "aj_crew.dashboard.handlers.cron._resolve_contradictions",
             new=AsyncMock(side_effect=RuntimeError("boom")),
         ), caplog.at_level(logging.WARNING, logger=_CRON_LOGGER):
             # Must not raise.
@@ -413,7 +413,7 @@ class TestResolveAndSupersede:
 
     async def test_one_bad_key_does_not_abort_batch(self, tmp_path, monkeypatch):
         """A failure on one key still drains the remaining contradicted keys."""
-        from kiro_crew.dashboard.handlers.cron import _resolve_and_supersede
+        from aj_crew.dashboard.handlers.cron import _resolve_and_supersede
 
         vs = VectorMemoryStore(db_path=tmp_path / "memory.db")
         await asyncio.to_thread(vs.init)
@@ -433,9 +433,9 @@ class TestResolveAndSupersede:
             monkeypatch.setattr(vs, "delete_semantic", _delete)
             candidates = [{"key": "lesson.a", "rule": "r", "similarity": 0.6}]
             with patch(
-                "kiro_crew.dashboard.handlers.cron._resolve_contradictions",
+                "aj_crew.dashboard.handlers.cron._resolve_contradictions",
                 new=AsyncMock(return_value=[("lesson.a", None), ("lesson.b", None)]),
-            ), patch("kiro_crew.dashboard.handlers.cron._sel"):
+            ), patch("aj_crew.dashboard.handlers.cron._sel"):
                 await _resolve_and_supersede(MagicMock(), "dashboard:ui", "new", candidates, vs)
             # The second key is still retired despite the first raising.
             assert await asyncio.to_thread(vs.get_semantic, "lesson.b") is None
@@ -452,7 +452,7 @@ class TestResolveAndSupersede:
         """
         import json as _json
 
-        from kiro_crew.dashboard.handlers.cron import _resolve_and_supersede
+        from aj_crew.dashboard.handlers.cron import _resolve_and_supersede
 
         vs = VectorMemoryStore(db_path=tmp_path / "memory.db")
         await asyncio.to_thread(vs.init)
@@ -474,9 +474,9 @@ class TestResolveAndSupersede:
             )
 
             with patch(
-                "kiro_crew.dashboard.handlers.cron._resolve_contradictions",
+                "aj_crew.dashboard.handlers.cron._resolve_contradictions",
                 new=AsyncMock(return_value=[(key, seen_body)]),
-            ), patch("kiro_crew.dashboard.handlers.cron._sel"):
+            ), patch("aj_crew.dashboard.handlers.cron._sel"):
                 await _resolve_and_supersede(MagicMock(), "dashboard:ui", "new rule", [], vs)
 
             survivor = await asyncio.to_thread(vs.get_semantic, key)
@@ -509,7 +509,7 @@ class TestApiLessonsCreateSchedulesSweep:
     async def _run(
         self, candidates, wrote=True, algorithm_version="v1", submitted_applies=None
     ):
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         state = MagicMock()
         state._background_tasks = set()
@@ -649,8 +649,8 @@ class TestApiLessonsCreateSaturatedEmbedQueue:
         import time
         import types
 
-        from kiro_crew import embeddings
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew import embeddings
+        from aj_crew.dashboard.handlers import cron
 
         monkeypatch.setattr(cron, "_LESSON_EMBED_DEADLINE_SECS", self._LESSON_DEADLINE)
         # Only the route's monotonic clock is fixed; every other ``time`` call it
@@ -718,7 +718,7 @@ class TestApiLessonsCreateForwardsNegative:
         return request
 
     async def _post(self, state, vector_store):
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         with patch.object(cron, "_get_memory", return_value=MagicMock(vector_store=vector_store)), \
              patch.object(cron, "_is_restricted_session", return_value=False), \
@@ -751,7 +751,7 @@ class TestApiLessonsCreateForwardsNegative:
     async def test_jsonl_path_persists_negative(self, tmp_path):
         """Assert the stored record, not a mock call: the JSONL branch builds the
         ``Lesson`` itself, so only what lands on disk proves the kwarg was set."""
-        from kiro_crew.learn import LessonStore
+        from aj_crew.learn import LessonStore
 
         state = MagicMock()
         state._background_tasks = set()
@@ -775,7 +775,7 @@ class TestApiLessonsDeleteOffloadsRemove:
 
     @pytest.mark.asyncio
     async def test_remove_runs_off_the_event_loop(self):
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         loop_thread = threading.get_ident()
         seen: dict[str, int] = {}
@@ -1298,7 +1298,7 @@ class TestApiLessonsSanitizesStoredFields:
         return request
 
     async def _get(self, rows):
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         state = MagicMock()
         vs = MagicMock()
@@ -1368,7 +1368,7 @@ class TestApiLessonsSanitizesStoredFields:
         type-checking ``rule``, so a malformed line can carry a non-string.
         The chokepoint stringifies it before regex redaction instead of
         letting the endpoint return HTTP 500."""
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         state = MagicMock()
         bad = MagicMock()
@@ -1431,7 +1431,7 @@ class TestApiLessonsReturnsTheNewest:
         return vs
 
     async def _get_vector(self, rows):
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         state = MagicMock()
         vs = self._vector_store(rows)
@@ -1442,7 +1442,7 @@ class TestApiLessonsReturnsTheNewest:
         return json.loads(resp.text)["lessons"], vs
 
     async def _get_jsonl(self, rules):
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         state = MagicMock()
         state.lessons.load_all.return_value = [
@@ -1459,7 +1459,7 @@ class TestApiLessonsReturnsTheNewest:
         return json.loads(resp.text)["lessons"]
 
     async def test_vector_tier_answers_the_newest_lessons_not_the_oldest(self):
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         cap = cron.LESSON_LIST_LIMIT
         lessons, _ = await self._get_vector(self._rows(cap + 20))
@@ -1472,7 +1472,7 @@ class TestApiLessonsReturnsTheNewest:
         """Both tiers must agree on direction, because consumers depend on it: the
         dashboard Memory tab takes its recent rows from the TAIL of this list, so a
         newest-first response would show it the oldest end of the capped window."""
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         cap = cron.LESSON_LIST_LIMIT
         total = cap + 20
@@ -1483,7 +1483,7 @@ class TestApiLessonsReturnsTheNewest:
 
     async def test_a_lesson_saved_now_is_in_the_very_next_list(self):
         """As the user meets it: a just-saved lesson is in the next list."""
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         rows = self._rows(cron.LESSON_LIST_LIMIT)
         rows.append(
@@ -1501,14 +1501,14 @@ class TestApiLessonsReturnsTheNewest:
     async def test_the_vector_read_is_bounded_by_the_store_not_after_the_fact(self):
         """Lesson rows carry embedding blobs, so the cap goes to the store rather
         than materializing the whole population to discard all but the newest few."""
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         _, vs = await self._get_vector(self._rows(cron.LESSON_LIST_LIMIT + 20))
         vs.get_lessons.assert_called_once_with(cron.LESSON_LIST_LIMIT, 0)
 
     async def test_jsonl_tier_answers_the_newest_lessons(self):
         """The append-ordered tier keeps its tail slice."""
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         cap = cron.LESSON_LIST_LIMIT
         total = cap + 20
@@ -1557,7 +1557,7 @@ class TestLessonStorageShape:
         overhead cannot turn an acceptable lesson into a silent refusal (the
         CLI's JSONL fallback would print Saved while vector readers never see
         it)."""
-        from kiro_crew.vector_memory import _MAX_VALUE_BYTES
+        from aj_crew.vector_memory import _MAX_VALUE_BYTES
 
         store = self._store(tmp_path)
         try:
@@ -1581,7 +1581,7 @@ class TestLessonStorageShape:
         (memory import) with an oversized non-enum category, or with extra
         keys, is size-gated on its FULL envelope -- the content exemption must
         not let unbounded bytes ride into the store on the category field."""
-        from kiro_crew.vector_memory import _MAX_VALUE_BYTES
+        from aj_crew.vector_memory import _MAX_VALUE_BYTES
 
         store = self._store(tmp_path)
         try:
@@ -1827,17 +1827,17 @@ class TestNormalizeLessonCategory:
     """
 
     def test_strict_clamps_unknown_label_to_knowledge(self):
-        from kiro_crew.validation import normalize_lesson_category
+        from aj_crew.validation import normalize_lesson_category
 
         assert normalize_lesson_category("banana", strict=True) == "knowledge"
 
     def test_strict_preserves_enum_member(self):
-        from kiro_crew.validation import normalize_lesson_category
+        from aj_crew.validation import normalize_lesson_category
 
         assert normalize_lesson_category("preference", strict=True) == "preference"
 
     def test_strict_clamps_unhashable_label_without_raising(self):
-        from kiro_crew.validation import normalize_lesson_category
+        from aj_crew.validation import normalize_lesson_category
 
         assert normalize_lesson_category({"a": 1}, strict=True) == "knowledge"
         assert normalize_lesson_category(["tool"], strict=True) == "knowledge"
@@ -1845,19 +1845,19 @@ class TestNormalizeLessonCategory:
     def test_display_passes_through_non_enum_string(self):
         """strict=False must NOT clamp: a category accepted at write time
         after the enum grows keeps its own label on display surfaces."""
-        from kiro_crew.validation import normalize_lesson_category
+        from aj_crew.validation import normalize_lesson_category
 
         assert normalize_lesson_category("future-category", strict=False) == "future-category"
 
     def test_display_defaults_blank_and_non_string(self):
-        from kiro_crew.validation import normalize_lesson_category
+        from aj_crew.validation import normalize_lesson_category
 
         assert normalize_lesson_category("   ", strict=False) == "knowledge"
         assert normalize_lesson_category(None, strict=False) == "knowledge"
         assert normalize_lesson_category(123, strict=False) == "knowledge"
 
     def test_both_policies_agree_on_enum_members(self):
-        from kiro_crew.validation import ALLOWED_LESSON_CATEGORIES, normalize_lesson_category
+        from aj_crew.validation import ALLOWED_LESSON_CATEGORIES, normalize_lesson_category
 
         for cat in ALLOWED_LESSON_CATEGORIES:
             assert normalize_lesson_category(cat, strict=True) == cat

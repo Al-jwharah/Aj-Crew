@@ -12,18 +12,18 @@ from typing import Any
 import pytest
 from mcp_dashboard_folders_helpers import _CALLER, _call
 
-from kiro_crew.mcp_tools.dashboard_client import DashboardRequest
+from aj_crew.mcp_tools.dashboard_client import DashboardRequest
 
 _ITEM = "it_0000abcd"
 _WORKER = "chat-9-900"
 _ARGS = {
     "title": "Fix the flaky test",
     "acceptance": {"kind": "pr_checks", "pr": "TBD", "repo": "o/r"},
-    "agent": "kirocrew-worker",
+    "agent": "ajcrew-worker",
     "agent_kind": "template",
     "seed": "Call work_brief first.",
 }
-_CONDUCTOR_ROW = {"key": "chat-1-100", "title": "Conductor", "agent": "kirocrew-conductor"}
+_CONDUCTOR_ROW = {"key": "chat-1-100", "title": "Conductor", "agent": "ajcrew-conductor"}
 _LOST = {"error": "timed out", "transport_error": True}
 _RECORD = "POST /api/work-ledger/record"
 _CREATE = "POST /api/session-control/create"
@@ -80,7 +80,7 @@ def test_the_happy_path_returns_the_ids_the_routes_returned() -> None:
     (seed,) = dash.sent(_SEND)
     assert seed.body == {"target": _WORKER, "message": _ARGS["seed"], "steer": False}
     (create,) = dash.sent(_CREATE)
-    assert create.body["agent"] == "kirocrew-worker"
+    assert create.body["agent"] == "ajcrew-worker"
     assert create.body["agent_kind"] == "template"
     assert create.body["title"] == _ARGS["title"]
     assert f"item_id={_ITEM} worker_session_key={_WORKER}" in out
@@ -125,7 +125,7 @@ def test_a_preflight_refusal_keeps_its_code() -> None:
             _CREATE: _create,
         }
     )
-    out, dash = _call("work_dispatch", {**_ARGS, "folder": "Goal/kirocrew-worker"}, routes)
+    out, dash = _call("work_dispatch", {**_ARGS, "folder": "Goal/ajcrew-worker"}, routes)
     assert dash.sent("POST /api/chat/folders") == []
     assert "step=session_create outcome=refused code=memory_delegation_denied" in out
     assert _SEND not in _sent(dash)
@@ -134,7 +134,7 @@ def test_a_preflight_refusal_keeps_its_code() -> None:
 def test_a_folder_write_refusal_keeps_its_code() -> None:
     limited = {"error": "slow down", "code": "create_rate_limited"}
     routes = _routes(**{"GET /api/chat/folders": [], "POST /api/chat/folders": limited})
-    out, dash = _call("work_dispatch", {**_ARGS, "folder": "Goal/kirocrew-worker"}, routes)
+    out, dash = _call("work_dispatch", {**_ARGS, "folder": "Goal/ajcrew-worker"}, routes)
     # The dry run passed, the folder write was refused, the create was never sent.
     assert [r.body.get("dry_run") for r in dash.sent(_CREATE)] == [True]
     assert "step=session_create outcome=refused code=create_rate_limited" in out
@@ -144,7 +144,7 @@ def test_a_folder_write_refusal_keeps_its_code() -> None:
 def test_a_lost_folder_write_is_unknown_not_refused() -> None:
     """The folder may exist although its reply was lost; nothing was sent."""
     routes = _routes(**{"GET /api/chat/folders": [], "POST /api/chat/folders": _LOST})
-    out, dash = _call("work_dispatch", {**_ARGS, "folder": "Goal/kirocrew-worker"}, routes)
+    out, dash = _call("work_dispatch", {**_ARGS, "folder": "Goal/ajcrew-worker"}, routes)
     assert "step=session_create outcome=outcome_unknown" in out
     assert "Read your board" in out
     assert [r.body.get("dry_run") for r in dash.sent(_CREATE)] == [True]
@@ -261,7 +261,7 @@ def test_a_missing_seed_is_refused_by_the_schema() -> None:
 
 
 def test_no_shipped_grant_auto_approves_it() -> None:
-    from kiro_crew.agent_parts import spec_grants
+    from aj_crew.agent_parts import spec_grants
 
     for name in ("_CONDUCTOR_DASHBOARD_GRANTS", "_MEMBER_DASHBOARD_GRANTS"):
-        assert "@kirocrew-dashboard/work_dispatch" not in getattr(spec_grants, name), name
+        assert "@ajcrew-dashboard/work_dispatch" not in getattr(spec_grants, name), name

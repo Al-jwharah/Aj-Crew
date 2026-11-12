@@ -28,7 +28,7 @@ Two changes are pinned here:
 
 import pytest
 
-from kiro_crew.acp.client import (
+from aj_crew.acp.client import (
     _format_acp_error,
     _is_transient_raw_error,
     _provider_detail,
@@ -255,7 +255,7 @@ class TestThrottleWordingByBackend:
     _GENERIC_RATE = _err("rate limit exceeded")
 
     def test_kiro_backend_names_bedrock(self):
-        from kiro_crew.acp.types import ACP_BACKEND_KIRO
+        from aj_crew.acp.types import ACP_BACKEND_KIRO
 
         out = _format_acp_error(self._THROTTLE, backend=ACP_BACKEND_KIRO)
         assert out.startswith("Bedrock is throttling requests.")
@@ -275,7 +275,7 @@ class TestThrottleWordingByBackend:
     def test_throttle_stays_transient_on_every_backend(self, backend):
         # Wording changes, retry verdict does not: a throttle is retryable, and
         # the string fallback (llm_helpers "throttl" marker) must still agree.
-        from kiro_crew.llm_helpers import is_transient_backend_error
+        from aj_crew.llm_helpers import is_transient_backend_error
 
         assert _is_transient_raw_error(self._THROTTLE) is True
         assert is_transient_backend_error(_format_acp_error(self._THROTTLE, backend=backend))

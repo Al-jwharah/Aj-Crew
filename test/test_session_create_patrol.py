@@ -24,12 +24,12 @@ from unittest.mock import MagicMock
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew import autonudge, autonudge_authz, conductor_patrol, mcp_dashboard
-from kiro_crew.dashboard import create_rate_limit
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.monitoring.models import MonitorOutcome
+from aj_crew import autonudge, autonudge_authz, conductor_patrol, mcp_dashboard
+from aj_crew.dashboard import create_rate_limit
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.monitoring.models import MonitorOutcome
 
 
 class _Svc:
@@ -60,7 +60,7 @@ class _Svc:
 
 @pytest.fixture(autouse=True)
 def _env(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _floor_monkeypatch.setattr(sc, "session_control_enabled", lambda: True)
     _floor_monkeypatch.setattr(
         autonudge_authz, "sel", lambda: SimpleNamespace(log_tool_invocation=lambda **kw: None)
@@ -80,7 +80,7 @@ def svc(monkeypatch) -> _Svc:
 @pytest.fixture
 def ledger(monkeypatch) -> None:
     """The caller runs a work ledger, as a conductor does before it dispatches."""
-    from kiro_crew.dashboard.handlers import work_ledger as ledger_routes
+    from aj_crew.dashboard.handlers import work_ledger as ledger_routes
 
     async def _holds(key: str) -> bool:
         return key == "chat-1"

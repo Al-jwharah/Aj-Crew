@@ -11,8 +11,8 @@ from pathlib import Path
 import pytest
 from test_knowledge_bundle_ownership import AGGREGATE_URI, _folder_doc, _item_count, _owned_doc
 
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.knowledge.store_parts import bundle_ownership
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.store_parts import bundle_ownership
 
 
 @pytest.fixture()

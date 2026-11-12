@@ -10,7 +10,7 @@ import { TOGGLE_SIDE_TERMINAL_EVENT } from '../../../lib/panelToggleShortcuts'
 import { usePanelTerminalsPending } from '../../../hooks/usePanelTabs'
 import { useSelectionQuoteAsk } from '../../../chat-core/composer/selectionActions'
 import { api, type PlanStepInput } from '../../../api/client'
-import { safeSetItem } from '../../../utils/safeStorage'
+import { writeSessionsPinned } from '../../../lib/simpleLayout'
 import { renderUserContent } from '../ChatPageMessageContent'
 import type { useChatPageResourcesController } from '../useChatPageResourcesController'
 import { useComposerDockMetrics } from '../composerDockMetrics'
@@ -86,6 +86,8 @@ interface MessageActionsOptions {
   linkPreviewsOn: boolean
   planTaskId: string
   setSidebarPinned: Dispatch<SetStateAction<boolean>>
+  /** Whether the sessions column persists under the Simple layout's key (`sessionsPinnedKey`). */
+  sessionsSimple: boolean
   sidebarAutoHidden: MutableRefObject<boolean | null>
   sidebarWidth: number
   setRegenerating: Dispatch<SetStateAction<boolean>>
@@ -101,7 +103,7 @@ interface MessageActionsOptions {
  */
 export function useMessageActions({
   dispatch, navigate, filteredSlotsRef, connected, activeSlot, messages, messagesRef, slotRunning, activityOpen, activeSlotRef, activeSlotRemoteBound, showActionError, handleFileOpen, handleFolderOpen, search,
-  tabsCtl, sessionTitles, selectSessionTab, linkPreviewsOn, planTaskId, setSidebarPinned, sidebarAutoHidden, sidebarWidth, setRegenerating,
+  tabsCtl, sessionTitles, selectSessionTab, linkPreviewsOn, planTaskId, setSidebarPinned, sessionsSimple, sidebarAutoHidden, sidebarWidth, setRegenerating,
 }: MessageActionsOptions) {
   // Reads `messagesRef`, not `messages`: the array is new on every streamed
   // frame, and this callback feeds the transcript renderers memo, so a
@@ -191,13 +193,13 @@ export function useMessageActions({
       sidebarAutoHidden.current = null
       setSidebarPinned(p => {
         const next = !p
-        safeSetItem('mc-sidebar-pinned', String(next))
+        writeSessionsPinned(sessionsSimple, next)
         return next
       })
     }
     window.addEventListener('toggle-pin-chat-sidebar', togglePin)
     return () => window.removeEventListener('toggle-pin-chat-sidebar', togglePin)
-  }, [filteredSlotsRef, setSidebarPinned, sidebarAutoHidden])
+  }, [filteredSlotsRef, setSidebarPinned, sidebarAutoHidden, sessionsSimple])
 
   const lastRole = messages[messages.length - 1]?.role ?? ''
   // Advances with every streamed chunk, so ChatFooter can tell "text is arriving"

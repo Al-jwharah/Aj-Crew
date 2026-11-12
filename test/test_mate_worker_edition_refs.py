@@ -16,13 +16,13 @@ import json
 
 import pytest
 
-import kiro_crew.config.paths as paths_mod
-from kiro_crew import agent
-from kiro_crew.agent_files import MATE_WORKER_AGENT_FILENAME
-from kiro_crew.agent_materialization import service_agents
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.platform import build_default_context, set_context
-from kiro_crew.platform.context import reset_context
+import aj_crew.config.paths as paths_mod
+from aj_crew import agent
+from aj_crew.agent_files import MATE_WORKER_AGENT_FILENAME
+from aj_crew.agent_materialization import service_agents
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.platform import build_default_context, set_context
+from aj_crew.platform.context import reset_context
 
 EDITION_SERVERS = {
     "edition-tools": {"command": "edition-tools", "args": ["--stdio"]},
@@ -51,7 +51,7 @@ def mates(tmp_path, monkeypatch):
 
 @pytest.fixture
 def edition():
-    base = build_default_context(KiroCrewConfig())
+    base = build_default_context(AjCrewConfig())
     set_context(dataclasses.replace(base, mcp_tooling=_EditionTooling()))
     yield
     reset_context()
@@ -77,35 +77,35 @@ def test_the_refs_expose_the_tools_without_approving_them(mates, edition):
 
 def test_the_core_refs_are_kept(mates, edition):
     tools = _worker(mates)["tools"]
-    assert "@kirocrew-core" in tools
-    assert "@kirocrew-work" in tools
+    assert "@ajcrew-core" in tools
+    assert "@ajcrew-work" in tools
 
 
 def test_a_server_the_base_does_not_mount_gets_no_ref():
-    config = {"mcpServers": {"edition-tools": {}}, "tools": ["@kirocrew-core"]}
-    base = build_default_context(KiroCrewConfig())
+    config = {"mcpServers": {"edition-tools": {}}, "tools": ["@ajcrew-core"]}
+    base = build_default_context(AjCrewConfig())
     set_context(dataclasses.replace(base, mcp_tooling=_EditionTooling()))
     try:
         service_agents._register_edition_refs(config)
     finally:
         reset_context()
-    assert config["tools"] == ["@kirocrew-core", "@edition-tools"]
+    assert config["tools"] == ["@ajcrew-core", "@edition-tools"]
 
 
 def test_a_standalone_build_adds_no_ref():
-    set_context(build_default_context(KiroCrewConfig()))
-    config = {"mcpServers": {"edition-tools": {}}, "tools": ["@kirocrew-core"]}
+    set_context(build_default_context(AjCrewConfig()))
+    config = {"mcpServers": {"edition-tools": {}}, "tools": ["@ajcrew-core"]}
     try:
         service_agents._register_edition_refs(config)
     finally:
         reset_context()
-    assert config["tools"] == ["@kirocrew-core"]
+    assert config["tools"] == ["@ajcrew-core"]
 
 
 @pytest.mark.parametrize("tooling", [_EditionTooling(), None], ids=["edition", "standalone"])
 def test_a_scalar_wildcard_is_kept_as_every_tool(tooling):
     """An operator's ``"tools": "*"`` still exposes every tool; it never becomes ``[]``."""
-    base = build_default_context(KiroCrewConfig())
+    base = build_default_context(AjCrewConfig())
     set_context(base if tooling is None else dataclasses.replace(base, mcp_tooling=tooling))
     config = {"mcpServers": {"edition-tools": {}}, "tools": "*"}
     try:
@@ -119,11 +119,11 @@ def test_a_full_rebuild_and_a_member_cron_s_worker_keep_the_edition_refs(
     tmp_path, monkeypatch, edition
 ):
     """End to end: the start's own ``rebuild_agent_config``, then a Bot's cron worker session."""
-    from kiro_crew import mate_worker
-    from kiro_crew.agent_files import AGENT_FILENAME
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-    from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-    from kiro_crew.mate_worker import MATE_WORKER_AGENT
+    from aj_crew import mate_worker
+    from aj_crew.agent_files import AGENT_FILENAME
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+    from aj_crew.mate_worker import MATE_WORKER_AGENT
 
     monkeypatch.setattr(paths_mod, "_resolve_default_home", lambda: tmp_path / "default")
     user = tmp_path / "home" / "agents"
@@ -134,16 +134,16 @@ def test_a_full_rebuild_and_a_member_cron_s_worker_keep_the_edition_refs(
     monkeypatch.setattr(paths_mod, "mate_agents_dir", lambda: mates)
     monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", user)
     monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
+        "aj_crew.kiro_cli.installed_kiro_cli_version", lambda: SPEC_PERMISSIONS_MIN_VERSION
     )
-    launcher = tmp_path / "bin" / "kirocrew"
+    launcher = tmp_path / "bin" / "ajcrew"
     launcher.parent.mkdir()
     launcher.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
     launcher.chmod(0o755)
-    monkeypatch.setattr(agent, "_KIROCREW_BIN", str(launcher))
+    monkeypatch.setattr(agent, "_AJCREW_BIN", str(launcher))
     monkeypatch.setattr(agent, "_KIRO_MCP_JSON", tmp_path / "kiro-global-mcp.json")
     monkeypatch.setattr(agent, "_DEFAULT_KIRO_HOOKS_DIR", tmp_path / "hooks")
-    monkeypatch.setattr("kiro_crew.apps.bridges._mcp_json_path", lambda: user / AGENT_FILENAME)
+    monkeypatch.setattr("aj_crew.apps.bridges._mcp_json_path", lambda: user / AGENT_FILENAME)
 
     agent.rebuild_agent_config()
 
@@ -157,12 +157,10 @@ def test_a_full_rebuild_and_a_member_cron_s_worker_keep_the_edition_refs(
     monkeypatch.setattr(mate_worker, "mate_file_for_member", lambda member, config=None: member)
     monkeypatch.setattr(mate_worker, "globally_disabled_refs", lambda names: [])
     store = MemoryStoreRef("member-alpha", "alpha")
-    worker = mate_worker.cron_worker_execution(
-        ExecutionContext("alpha", store, "member", "kirocrew")
-    )
+    worker = mate_worker.cron_worker_execution(ExecutionContext("alpha", store, "member", "ajcrew"))
     assert worker is not None and worker.template_id == MATE_WORKER_AGENT
     monkeypatch.setattr(
-        "kiro_crew.execution_context.read_session_execution",
+        "aj_crew.execution_context.read_session_execution",
         lambda key: worker if key == "cron:hourly" else None,
     )
     spec = mate_worker.worker_session_spec(dict(on_disk), "cron:hourly")

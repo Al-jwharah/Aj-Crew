@@ -48,7 +48,7 @@ async function main() {
     const path = new URL(route.request().url()).pathname
     const method = route.request().method()
 
-    if (path === '/api/config/kirocrew' && method === 'PATCH') {
+    if (path === '/api/config/ajcrew' && method === 'PATCH') {
       const body = JSON.parse(route.request().postData() || '{}')
       if (body.path === 'dashboard.terminal.shell') {
         if (scene.rejectPatch) {
@@ -62,7 +62,7 @@ async function main() {
       }
       return json(route, { ok: true })
     }
-    if (path === '/api/config/kirocrew') {
+    if (path === '/api/config/ajcrew') {
       return json(route, {
         agent: { model: 'auto', reasoning_effort: '' },
         dashboard: { terminal: { enabled: true, shell: scene.shell } },

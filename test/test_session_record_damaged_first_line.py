@@ -17,10 +17,10 @@ import os
 
 import pytest
 
-from kiro_crew import execution_context as execution
-from kiro_crew.execution_context import EXECUTION_CONTEXT_KEY, STRICTEST_MEMORY_MODE
-from kiro_crew.history import METADATA_LINE_CORRUPT, ConversationLog
-from kiro_crew.memory_stores import UnknownMemoryStore
+from aj_crew import execution_context as execution
+from aj_crew.execution_context import EXECUTION_CONTEXT_KEY, STRICTEST_MEMORY_MODE
+from aj_crew.history import METADATA_LINE_CORRUPT, ConversationLog
+from aj_crew.memory_stores import UnknownMemoryStore
 
 KEY = "dashboard:damaged-record"
 
@@ -35,8 +35,8 @@ DAMAGED_FIRST_LINES = {
 
 @pytest.fixture
 def log(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    from kiro_crew.config import loader
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    from aj_crew.config import loader
 
     loader._invalidate_config_cache()
     execution._LIVE_EXECUTIONS.clear()
@@ -148,7 +148,7 @@ def test_a_short_write_does_not_publish_a_truncated_transcript(log, monkeypatch)
         # What a nearly full disk does: take part of the buffer, report the count.
         return real_write(fd, bytes(data)[:30])
 
-    from kiro_crew import history_projection
+    from aj_crew import history_projection
 
     monkeypatch.setattr(history_projection.os, "write", short_write)
     log.update_metadata(KEY, {"title": "renamed"})
@@ -169,8 +169,8 @@ def test_a_rewrite_outside_the_data_home_keeps_the_transcript_owner_only(
     # A transcript root outside the data home (an eval workspace) under a
     # permissive umask: the rewrite must keep the file owner-only, as its
     # first write made it, rather than take the umask's wider mode.
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    from kiro_crew.config import loader
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    from aj_crew.config import loader
 
     loader._invalidate_config_cache()
     outside = tmp_path / "workspace"
@@ -192,7 +192,7 @@ def test_a_rewrite_outside_the_data_home_keeps_the_transcript_owner_only(
 def test_a_create_that_fails_part_way_leaves_no_half_written_record(log, monkeypatch) -> None:
     from types import SimpleNamespace
 
-    from kiro_crew import history
+    from aj_crew import history
 
     def dumps(value, *args, **kwargs):
         if isinstance(value, dict) and value.get("_type") == "metadata":

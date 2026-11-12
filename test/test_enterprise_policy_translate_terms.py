@@ -1,4 +1,4 @@
-"""The existing policy-language terms Kiro Crew reads (RFC crew-lts-edition).
+"""The existing policy-language terms Aj Crew reads (RFC crew-lts-edition).
 
 Each term is translated and then asked through the real parser and evaluator in an
 LTS build, so a row is pinned by the decision its Crew read sites get: allow,
@@ -11,13 +11,13 @@ import sys
 
 import pytest
 
-from kiro_crew.platform import enterprise_policy_translate as t
-from kiro_crew.platform import governance
+from aj_crew.platform import enterprise_policy_translate as t
+from aj_crew.platform import governance
 
 
 @pytest.fixture(name="enterprise", autouse=True)
 def enterprise_fixture(_floor_monkeypatch):
-    _floor_monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    _floor_monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 #: The file cases use POSIX paths; on Windows an item gains a drive letter the

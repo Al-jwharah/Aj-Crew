@@ -22,9 +22,9 @@ from subagent_scale_helpers import (  # noqa: F401 -- the autouse fixture regist
     _mock_sessions,
 )
 
-from kiro_crew import taskq
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS, async_wait_until
+from aj_crew import taskq
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, async_wait_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -63,8 +63,8 @@ async def _manager(*, nested: bool) -> tuple[SubagentManager, list[SubagentInfo]
     assert store is not None
     store._window = 1
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
         patch.object(SubagentManager, "_run", new=AsyncMock()),
     ):
         mgr.spawn("blocker", parent_session_key="dashboard:other")
@@ -112,8 +112,8 @@ async def _wave_close_digest(*, nested: bool) -> str:
     slot._stopping = False
     slot._stop_state = "idle"
     orch.dashboard_state.get_slot = MagicMock(return_value=slot)
-    with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-        with patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm:
+    with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.gateway.SubagentManager") as mock_sm:
             mgr = MagicMock()
             mgr.start_reaper = MagicMock()
             mock_sm.return_value = mgr
@@ -137,8 +137,8 @@ async def _wave_close_digest(*, nested: bool) -> str:
     slot.queue_append = MagicMock(side_effect=_queue_append)
 
     with (
-        patch("kiro_crew.slack.gateway._start_next_queued_turn", new=AsyncMock()),
-        patch("kiro_crew.subagent_persistence.mark_delivered"),
+        patch("aj_crew.slack.gateway._start_next_queued_turn", new=AsyncMock()),
+        patch("aj_crew.subagent_persistence.mark_delivered"),
     ):
         for member in members:
             await on_done(member)

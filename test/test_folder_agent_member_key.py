@@ -19,32 +19,32 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, resolve_agent_bindings
-from kiro_crew.dashboard import chat_handlers
-from kiro_crew.dashboard.chat_folders_records import migrate_folder_member_labels
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, resolve_agent_bindings
+from aj_crew.dashboard import chat_handlers
+from aj_crew.dashboard.chat_folders_records import migrate_folder_member_labels
 
 MEMBER_KEY = "Jira ticket"
 SPEC = "jira-ticket"
 MEMBER_MODEL = "claude-sonnet-5"
 #: Templates kiro-cli declares in this test's world.
-TEMPLATES = {SPEC, "kirocrew"}
+TEMPLATES = {SPEC, "ajcrew"}
 
 
 @pytest.fixture
 def cfg(tmp_path, monkeypatch):
-    config = KiroCrewConfig()
+    config = AjCrewConfig()
     config.agents = {
-        "default": KiroCrewAgentConfig(kiro_agent="kirocrew"),
-        MEMBER_KEY: KiroCrewAgentConfig(kiro_agent=SPEC, display_name=SPEC, model=MEMBER_MODEL),
+        "default": AjCrewAgentConfig(kiro_agent="ajcrew"),
+        MEMBER_KEY: AjCrewAgentConfig(kiro_agent=SPEC, display_name=SPEC, model=MEMBER_MODEL),
     }
     config.default_agent = "default"
 
     def materialized(name, project_dir=None):
         return name if name in TEMPLATES else ""
 
-    for target in ("kiro_crew.config.loader", "kiro_crew.config.loader_agents"):
+    for target in ("aj_crew.config.loader", "aj_crew.config.loader_agents"):
         monkeypatch.setattr(f"{target}._materialized_kiro_agent", materialized)
-    monkeypatch.setattr(chat_handlers, "KiroCrewConfig", SimpleNamespace(load=lambda: config))
+    monkeypatch.setattr(chat_handlers, "AjCrewConfig", SimpleNamespace(load=lambda: config))
     monkeypatch.setattr(chat_handlers, "schedule_eager_spawn", lambda *a, **k: None)
     default_dir = tmp_path / "default-project"
     default_dir.mkdir()
@@ -114,7 +114,7 @@ async def test_a_folder_saved_with_a_crewmates_label_binds_the_crewmate_once(
     tmp_path, cfg, monkeypatch
 ):
     home = tmp_path / "home"
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     cfg.dashboard.default_session_folder = "jira"
     state = _state(tmp_path, SPEC)
 
@@ -135,11 +135,11 @@ async def test_a_folder_saved_with_a_crewmates_label_binds_the_crewmate_once(
 
 
 def _share_the_label(cfg):
-    cfg.agents["Jira copy"] = KiroCrewAgentConfig(kiro_agent=SPEC, display_name=SPEC)
+    cfg.agents["Jira copy"] = AjCrewAgentConfig(kiro_agent=SPEC, display_name=SPEC)
 
 
 def _key_the_label(cfg):
-    cfg.agents[SPEC] = KiroCrewAgentConfig(kiro_agent=SPEC)
+    cfg.agents[SPEC] = AjCrewAgentConfig(kiro_agent=SPEC)
 
 
 def _lose_the_crewmates(cfg):
@@ -151,7 +151,7 @@ def _lose_the_crewmates(cfg):
 async def test_a_label_naming_no_single_crewmate_is_left_as_saved(
     tmp_path, cfg, monkeypatch, change
 ):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     change(cfg)
     state = _state(tmp_path, SPEC)
 

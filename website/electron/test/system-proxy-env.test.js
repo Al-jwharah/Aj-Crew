@@ -71,7 +71,7 @@ test("a bare * exception means connect directly, so nothing is discovered", () =
 });
 
 test("the loopback is never proxied, even when the system store omits it", () => {
-  // loopback_http.py documents why Kiro Crew's own requests must not ride a
+  // loopback_http.py documents why Aj Crew's own requests must not ride a
   // proxy: the X-Internal-Secret would leave the machine in cleartext. The
   // macOS default ExceptionsList does not name localhost, so discovery has to
   // add the bypass itself rather than trust the store.

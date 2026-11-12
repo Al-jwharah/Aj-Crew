@@ -16,9 +16,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.cron import CronService
-from kiro_crew.cron_service.schedule import validate_cron_expr
-from kiro_crew.dashboard.handlers.cron import api_cron_update
+from aj_crew.cron import CronService
+from aj_crew.cron_service.schedule import validate_cron_expr
+from aj_crew.dashboard.handlers.cron import api_cron_update
 
 
 @web.middleware

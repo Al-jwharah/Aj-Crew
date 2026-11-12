@@ -17,8 +17,8 @@ import pathlib
 
 import pytest
 
-import kiro_crew.embeddings as embeddings_mod
-from kiro_crew.embeddings import LlamaCppEmbedder
+import aj_crew.embeddings as embeddings_mod
+from aj_crew.embeddings import LlamaCppEmbedder
 
 _VENDORED_LLAMA = (
     pathlib.Path(embeddings_mod.__file__).resolve().parent / "_vendor" / "llama_cpp" / "llama.py"
@@ -47,7 +47,7 @@ def test_only_an_explicit_false_turns_repacking_off(monkeypatch, section, expect
 
 
 def test_the_config_dataclass_defaults_to_repacking() -> None:
-    from kiro_crew.config.section_builders import _build_memory_config
+    from aj_crew.config.section_builders import _build_memory_config
 
     assert _build_memory_config({}).embedding_weight_repack is True
     assert _build_memory_config({"embedding_weight_repack": False}).embedding_weight_repack is False
@@ -69,8 +69,8 @@ def _load_kwargs(tmp_path: pathlib.Path, monkeypatch, *, repack: bool) -> dict:
         def create_embedding(self, texts):
             return {"data": [{"embedding": [0.1] * embeddings_mod._DEFAULT_DIM} for _ in texts]}
 
-    monkeypatch.setattr("kiro_crew.embeddings._load_llama_class", lambda: _RecordingLlama)
-    monkeypatch.setattr("kiro_crew.embeddings.embedding_weight_repack", lambda: repack)
+    monkeypatch.setattr("aj_crew.embeddings._load_llama_class", lambda: _RecordingLlama)
+    monkeypatch.setattr("aj_crew.embeddings.embedding_weight_repack", lambda: repack)
     model = tmp_path / "model.gguf"
     model.write_bytes(b"g" * (embeddings_mod._GGUF_MIN_BYTES + 100_000))
     emb = LlamaCppEmbedder(model_path=model)

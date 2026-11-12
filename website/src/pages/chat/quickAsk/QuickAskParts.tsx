@@ -71,7 +71,7 @@ export function OriginLine({ ask, className = '' }: { ask: QuickAsk; className?:
   )
 }
 
-/** The agent's own words: plain text, "Kiro says:", at most two lines. */
+/** The agent's own words: plain text, "Aj says:", at most two lines. */
 export function ReasonLine({ ask, className = '' }: { ask: QuickAsk; className?: string }) {
   const text = sanitizeLlmOutput(ask.reason).replace(/\s+/g, ' ').trim().slice(0, REASON_MAX)
   if (!text) return null

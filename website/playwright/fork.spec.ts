@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test'
  * click fork button → verify new tab.
  *
  * Tagged @needs-agent, so it runs only when an agent turn is available. The e2e
- * harness supplies one by pointing KIROCREW_KIRO_BIN at the stub ACP backend,
+ * harness supplies one by pointing AJCREW_KIRO_BIN at the stub ACP backend,
  * which answers deterministically and offline. A missing reply is a failure, not
  * an environment gap.
  */
@@ -101,7 +101,7 @@ test.describe('Fork Session E2E', { tag: '@needs-agent' }, () => {
 })
 
 
-const HARNESS_GATEWAY = process.env.KIROCREW_E2E_EPHEMERAL === '1'
+const HARNESS_GATEWAY = process.env.AJCREW_E2E_EPHEMERAL === '1'
 
 test.describe('Forking from long timestamped sessions', () => {
   test('forks immediately without loading earlier messages in the client', async ({ page, request }) => {

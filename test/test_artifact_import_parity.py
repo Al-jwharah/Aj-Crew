@@ -2,7 +2,7 @@
 
 ``IMPORTABLE_EXT_KINDS`` in ``website/src/lib/artifactImport.ts`` decides which
 files the Artifact Library's "Add Artifact" button accepts and what ``kind`` it
-stamps on the resulting artifact. ``_EXT_KIND_MAP`` in ``kiro_crew.artifacts``
+stamps on the resulting artifact. ``_EXT_KIND_MAP`` in ``aj_crew.artifacts``
 answers the same question for the backend's own kind inference.
 
 They must stay identical. If the frontend map gains an extension the backend
@@ -24,7 +24,7 @@ import json
 import re
 from pathlib import Path
 
-from kiro_crew.artifacts import _EXT_KIND_MAP, ALLOWED_KINDS
+from aj_crew.artifacts import _EXT_KIND_MAP, ALLOWED_KINDS
 
 _MODULE = (
     Path(__file__).resolve().parents[1]
@@ -81,7 +81,7 @@ def test_importable_kinds_exclude_unrenderable_kinds() -> None:
 
 def test_frontend_content_cap_matches_backend() -> None:
     """The client-side size check must not accept more than the store will."""
-    from kiro_crew.artifacts import MAX_CONTENT_BYTES
+    from aj_crew.artifacts import MAX_CONTENT_BYTES
 
     source = _MODULE.read_text(encoding="utf-8")
     match = re.search(r"MAX_IMPORT_BYTES\s*=\s*([0-9_]+)", source)

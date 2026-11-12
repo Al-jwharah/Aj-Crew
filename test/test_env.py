@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.env."""
+"""Tests for aj_crew.env."""
 
 from __future__ import annotations
 
@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.env as env_mod
-from kiro_crew.env import (
+import aj_crew.env as env_mod
+from aj_crew.env import (
     activate_mise,
     augmented_path,
     ensure_node,
@@ -69,11 +69,11 @@ def _fake_statfns(spec):
 
 
 def _patch_statfns(monkeypatch, spec, *, uid=4242):
-    """Patch os.getuid/os.lstat/os.stat in kiro_crew.env for a ccache test."""
-    monkeypatch.setattr("kiro_crew.env.os.getuid", lambda: uid)
+    """Patch os.getuid/os.lstat/os.stat in aj_crew.env for a ccache test."""
+    monkeypatch.setattr("aj_crew.env.os.getuid", lambda: uid)
     lstat, stat_fn = _fake_statfns(spec)
-    monkeypatch.setattr("kiro_crew.env.os.lstat", lstat)
-    monkeypatch.setattr("kiro_crew.env.os.stat", stat_fn)
+    monkeypatch.setattr("aj_crew.env.os.lstat", lstat)
+    monkeypatch.setattr("aj_crew.env.os.stat", stat_fn)
 
 
 class TestAugmentedPath:
@@ -93,9 +93,9 @@ class TestAugmentedPath:
         """The venv's own console-scripts dir must be discoverable — but LAST.
 
         On Windows a non-shell gateway does not inherit the venv's ``Scripts\\``
-        on ``$PATH``, so ``shutil.which("kirocrew")`` silently returns ``None``
-        and every user-configured MCP that spawns the ``kirocrew`` wrapper
-        (e.g. ``kirocrew-core``) is dropped. Appending ``sys.executable``'s
+        on ``$PATH``, so ``shutil.which("ajcrew")`` silently returns ``None``
+        and every user-configured MCP that spawns the ``ajcrew`` wrapper
+        (e.g. ``ajcrew-core``) is dropped. Appending ``sys.executable``'s
         parent restores parity with the POSIX ``bin/`` layout systemd already
         picks up. It must be the LAST entry: the dir also holds ``python`` /
         ``pip``, and placing it before base_path would rebind a user MCP's
@@ -129,7 +129,7 @@ class TestAugmentedPath:
             return real_access(path, mode, *args, **kwargs)
 
         monkeypatch.setattr(os, "access", _access_under_tmp_only)
-        backend = tmp_path / "kirocrew-backend"
+        backend = tmp_path / "ajcrew-backend"
         scripts = backend / "Scripts"
         scripts.mkdir(parents=True)
         win = sys.platform == "win32"
@@ -574,7 +574,7 @@ class TestAugmentedPath:
         """
         if sys.platform == "win32":
             pytest.skip("service_path() is the launchd/systemd PATH: colon-joined, POSIX only")
-        from kiro_crew.service.common import service_path
+        from aj_crew.service.common import service_path
 
         tail = [str(tmp_path / "interp"), str(tmp_path / "interp" / "scripts")]
         monkeypatch.setattr(env_mod, "_interpreter_script_dirs", lambda: list(tail))
@@ -762,12 +762,12 @@ class TestExtraMcpPathDirs:
         """The whole reason the value is pushed: this composition is reached from
         the event loop by every MCP probe (probe_server), so it must not
         stat/read/validate config.json."""
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         def _boom(cls):
             raise AssertionError("the search path must not load the config")
 
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(_boom))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(_boom))
         self._set_configured(monkeypatch, ["/opt/pixi/bin"])
         assert "/opt/pixi/bin" in self._mcp_dirs()
 
@@ -904,7 +904,7 @@ class TestContributedDirsNeverReachTheTrustedRuntime:
         assert "/opt/attacker-registered/bin" not in dirs
 
     def test_kiro_cli_search_dirs_exclude_contributed_dirs(self, tmp_path) -> None:
-        from kiro_crew.kiro_cli import known_kiro_cli_dirs
+        from aj_crew.kiro_cli import known_kiro_cli_dirs
 
         dirs = known_kiro_cli_dirs("linux", tmp_path, {"PATH": "/usr/bin"})
         assert "/opt/attacker/bin" not in dirs
@@ -1087,8 +1087,8 @@ class TestEnsureNode:
 
 class TestResolveKrb5Ccname:
     def test_prefers_uid_ccache(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "linux")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", True)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", True)
         _patch_statfns(monkeypatch, {"/tmp/krb5cc_4242": ("reg", 4242)})
         env: dict[str, str] = {}
         resolve_krb5_ccname(env)
@@ -1097,8 +1097,8 @@ class TestResolveKrb5Ccname:
     def test_falls_back_to_username_ccache(self, monkeypatch) -> None:
         import getpass
 
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "linux")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", True)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", True)
         monkeypatch.setattr(getpass, "getuser", lambda: "tuser")
         # uid path missing, username path present
         _patch_statfns(monkeypatch, {"/tmp/krb5cc_tuser": ("reg", 4242)})
@@ -1107,24 +1107,24 @@ class TestResolveKrb5Ccname:
         assert env["KRB5CCNAME"] == "FILE:/tmp/krb5cc_tuser"
 
     def test_respects_existing_file_value(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "linux")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", True)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", True)
         _patch_statfns(monkeypatch, {"/tmp/krb5cc_4242": ("reg", 4242)})
         env = {"KRB5CCNAME": "FILE:/custom/cc"}
         resolve_krb5_ccname(env)
         assert env["KRB5CCNAME"] == "FILE:/custom/cc"  # operator override wins
 
     def test_overrides_keyring_value(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "linux")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", True)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", True)
         _patch_statfns(monkeypatch, {"/tmp/krb5cc_4242": ("reg", 4242)})
         env = {"KRB5CCNAME": "KEYRING:persistent:1000"}
         resolve_krb5_ccname(env)
         assert env["KRB5CCNAME"] == "FILE:/tmp/krb5cc_4242"
 
     def test_noop_when_no_cache_file(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "linux")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", True)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", True)
         _patch_statfns(monkeypatch, {})
         env: dict[str, str] = {}
         resolve_krb5_ccname(env)
@@ -1133,8 +1133,8 @@ class TestResolveKrb5Ccname:
     def test_follows_uid_owned_symlink(self, monkeypatch) -> None:
         # sssd/systemd ship /tmp/krb5cc_<uid> as a uid-owned symlink into
         # /run/user/<uid>/krb5cc/... — follow it and trust the resolved target.
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "linux")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", True)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", True)
         _patch_statfns(monkeypatch, {"/tmp/krb5cc_4242": ("link", 4242, 4242)})
         env: dict[str, str] = {}
         resolve_krb5_ccname(env)
@@ -1143,8 +1143,8 @@ class TestResolveKrb5Ccname:
     def test_rejects_foreign_owned_symlink(self, monkeypatch) -> None:
         # A symlink owned by another uid is the attack vector — reject without
         # following (a co-tenant could point it anywhere).
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "linux")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", True)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", True)
         _patch_statfns(monkeypatch, {"/tmp/krb5cc_4242": ("link", 9999, 4242)})
         env: dict[str, str] = {}
         resolve_krb5_ccname(env)
@@ -1152,8 +1152,8 @@ class TestResolveKrb5Ccname:
 
     def test_rejects_uid_symlink_to_foreign_target(self, monkeypatch) -> None:
         # uid-owned symlink whose resolved target is owned by someone else.
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "linux")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", True)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", True)
         _patch_statfns(monkeypatch, {"/tmp/krb5cc_4242": ("link", 4242, 9999)})
         env: dict[str, str] = {}
         resolve_krb5_ccname(env)
@@ -1161,8 +1161,8 @@ class TestResolveKrb5Ccname:
 
     def test_rejects_dangling_uid_symlink(self, monkeypatch) -> None:
         # uid-owned symlink whose target does not exist.
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "linux")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", True)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", True)
         _patch_statfns(monkeypatch, {"/tmp/krb5cc_4242": ("link", 4242, None)})
         env: dict[str, str] = {}
         resolve_krb5_ccname(env)
@@ -1171,8 +1171,8 @@ class TestResolveKrb5Ccname:
     def test_rejects_foreign_owned_ccache(self, monkeypatch) -> None:
         # A regular file owned by a different uid (planted by a co-tenant on a
         # shared /tmp) must NOT be trusted.
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "linux")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", True)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", True)
         _patch_statfns(monkeypatch, {"/tmp/krb5cc_4242": ("reg", 9999)})
         env: dict[str, str] = {}
         resolve_krb5_ccname(env)
@@ -1180,16 +1180,16 @@ class TestResolveKrb5Ccname:
 
     def test_preserves_kcm_scheme(self, monkeypatch) -> None:
         # macOS default is KCM: — a stale /tmp file must NOT hijack it.
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "darwin")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", False)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", False)
         _patch_statfns(monkeypatch, {"/tmp/krb5cc_4242": ("reg", 4242)})
         env = {"KRB5CCNAME": "KCM:"}
         resolve_krb5_ccname(env)
         assert env["KRB5CCNAME"] == "KCM:"
 
     def test_preserves_dir_scheme(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "linux")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", True)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", True)
         _patch_statfns(monkeypatch, {"/tmp/krb5cc_4242": ("reg", 4242)})
         env = {"KRB5CCNAME": "DIR:/run/user/4242/krb5cc"}
         resolve_krb5_ccname(env)
@@ -1197,8 +1197,8 @@ class TestResolveKrb5Ccname:
 
     def test_noop_on_non_linux(self, monkeypatch) -> None:
         # On macOS with empty KRB5CCNAME, a stale /tmp file must not be adopted.
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "darwin")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", False)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "darwin")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", False)
         _patch_statfns(monkeypatch, {"/tmp/krb5cc_4242": ("reg", 4242)})
         env: dict[str, str] = {}
         resolve_krb5_ccname(env)
@@ -1207,11 +1207,11 @@ class TestResolveKrb5Ccname:
     def test_logs_resolved_path_on_success(self, monkeypatch, caplog) -> None:
         import logging
 
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "linux")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", True)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", True)
         _patch_statfns(monkeypatch, {"/tmp/krb5cc_4242": ("reg", 4242)})
         env: dict[str, str] = {}
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.env"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.env"):
             resolve_krb5_ccname(env)
         assert "FILE:/tmp/krb5cc_4242" in caplog.text
 
@@ -1220,11 +1220,11 @@ class TestResolveKrb5Ccname:
         # is distinguishable from the plain "no ccache" no-op.
         import logging
 
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "linux")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", True)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", True)
         _patch_statfns(monkeypatch, {"/tmp/krb5cc_4242": ("reg", 9999)})
         env: dict[str, str] = {}
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.env"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.env"):
             resolve_krb5_ccname(env)
         assert "KRB5CCNAME" not in env
         assert "foreign-owned" in caplog.text
@@ -1233,11 +1233,11 @@ class TestResolveKrb5Ccname:
         # The ordinary "no ccache present" case must NOT emit a rejection log.
         import logging
 
-        monkeypatch.setattr("kiro_crew.env.sys.platform", "linux")
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", True)
+        monkeypatch.setattr("aj_crew.env.sys.platform", "linux")
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", True)
         _patch_statfns(monkeypatch, {})
         env: dict[str, str] = {}
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.env"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.env"):
             resolve_krb5_ccname(env)
         assert "rejected ccache candidate" not in caplog.text
 
@@ -1249,7 +1249,7 @@ class TestResolveKrb5Ccname:
         to prevent: if a future refactor moves the ``getuid`` call above the
         platform check, this counter fires.
         """
-        monkeypatch.setattr("kiro_crew.env.platform_compat.IS_LINUX", False)
+        monkeypatch.setattr("aj_crew.env.platform_compat.IS_LINUX", False)
         calls: list[None] = []
 
         def _getuid_boom() -> int:
@@ -1259,7 +1259,7 @@ class TestResolveKrb5Ccname:
         # ``raising=False`` lets this run on Windows too, where ``os.getuid``
         # doesn't exist — that's the entire crash the shim prevents, and we
         # still want to prove the resolver returns without touching it.
-        monkeypatch.setattr("kiro_crew.env.os.getuid", _getuid_boom, raising=False)
+        monkeypatch.setattr("aj_crew.env.os.getuid", _getuid_boom, raising=False)
         env: dict[str, str] = {}
         resolve_krb5_ccname(env)
         assert calls == []
@@ -1268,28 +1268,28 @@ class TestResolveKrb5Ccname:
 
 class TestActivateMise:
     def test_noop_when_mise_absent(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.env._mise_bin", lambda: None)
+        monkeypatch.setattr("aj_crew.env._mise_bin", lambda: None)
         env: dict[str, str] = {"PATH": "/usr/bin"}
         assert activate_mise(env) == []
         assert env == {"PATH": "/usr/bin"}
 
     def test_noop_when_disabled_via_env(self, monkeypatch) -> None:
-        # KIROCREW_NO_MISE escape hatch short-circuits before mise is invoked.
+        # AJCREW_NO_MISE escape hatch short-circuits before mise is invoked.
         called = {"n": 0}
-        monkeypatch.setattr("kiro_crew.env._mise_bin", lambda: called.__setitem__("n", 1))
-        env = {"PATH": "/usr/bin", "KIROCREW_NO_MISE": "1"}
+        monkeypatch.setattr("aj_crew.env._mise_bin", lambda: called.__setitem__("n", 1))
+        env = {"PATH": "/usr/bin", "AJCREW_NO_MISE": "1"}
         assert activate_mise(env) == []
         assert called["n"] == 0  # _mise_bin never consulted
 
     def test_merges_path_and_added_vars(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.env._mise_bin", lambda: "/home/u/.local/bin/mise")
+        monkeypatch.setattr("aj_crew.env._mise_bin", lambda: "/home/u/.local/bin/mise")
         payload = json.dumps(
             {
                 "PATH": "/home/u/.local/share/mise/installs/node/24/bin:/usr/bin",
                 "NODE_ENV": "production",
             }
         )
-        monkeypatch.setattr("kiro_crew.env.subprocess.run", _fake_run(stdout=payload))
+        monkeypatch.setattr("aj_crew.env.subprocess.run", _fake_run(stdout=payload))
         env = {"PATH": "/usr/bin"}
         changed = activate_mise(env)
         assert changed == ["NODE_ENV", "PATH"]  # sorted
@@ -1297,126 +1297,126 @@ class TestActivateMise:
         assert env["NODE_ENV"] == "production"
 
     def test_skips_unchanged_vars(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.env._mise_bin", lambda: "/m")
+        monkeypatch.setattr("aj_crew.env._mise_bin", lambda: "/m")
         payload = json.dumps({"PATH": "/usr/bin"})  # identical to current
-        monkeypatch.setattr("kiro_crew.env.subprocess.run", _fake_run(stdout=payload))
+        monkeypatch.setattr("aj_crew.env.subprocess.run", _fake_run(stdout=payload))
         env = {"PATH": "/usr/bin"}
         assert activate_mise(env) == []
 
     def test_nonzero_exit_is_noop(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.env._mise_bin", lambda: "/m")
-        monkeypatch.setattr("kiro_crew.env.subprocess.run", _fake_run(returncode=1, stderr="boom"))
+        monkeypatch.setattr("aj_crew.env._mise_bin", lambda: "/m")
+        monkeypatch.setattr("aj_crew.env.subprocess.run", _fake_run(returncode=1, stderr="boom"))
         env = {"PATH": "/usr/bin"}
         assert activate_mise(env) == []
         assert env == {"PATH": "/usr/bin"}
 
     def test_unparsable_json_is_noop(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.env._mise_bin", lambda: "/m")
-        monkeypatch.setattr("kiro_crew.env.subprocess.run", _fake_run(stdout="not json{"))
+        monkeypatch.setattr("aj_crew.env._mise_bin", lambda: "/m")
+        monkeypatch.setattr("aj_crew.env.subprocess.run", _fake_run(stdout="not json{"))
         env = {"PATH": "/usr/bin"}
         assert activate_mise(env) == []
 
     def test_non_dict_json_is_noop(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.env._mise_bin", lambda: "/m")
-        monkeypatch.setattr("kiro_crew.env.subprocess.run", _fake_run(stdout="[1, 2, 3]"))
+        monkeypatch.setattr("aj_crew.env._mise_bin", lambda: "/m")
+        monkeypatch.setattr("aj_crew.env.subprocess.run", _fake_run(stdout="[1, 2, 3]"))
         env = {"PATH": "/usr/bin"}
         assert activate_mise(env) == []
 
     def test_skips_non_string_values(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.env._mise_bin", lambda: "/m")
+        monkeypatch.setattr("aj_crew.env._mise_bin", lambda: "/m")
         payload = json.dumps({"PATH": "/new", "BOGUS": 42, "ALSO": None})
-        monkeypatch.setattr("kiro_crew.env.subprocess.run", _fake_run(stdout=payload))
+        monkeypatch.setattr("aj_crew.env.subprocess.run", _fake_run(stdout=payload))
         env: dict[str, str] = {}
         assert activate_mise(env) == ["PATH"]
         assert env == {"PATH": "/new"}
 
     def test_subprocess_failure_is_swallowed(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.env._mise_bin", lambda: "/m")
+        monkeypatch.setattr("aj_crew.env._mise_bin", lambda: "/m")
 
         def _boom(*a, **k):  # noqa: ANN002, ANN003
             raise OSError("exec failed")
 
-        monkeypatch.setattr("kiro_crew.env.subprocess.run", _boom)
+        monkeypatch.setattr("aj_crew.env.subprocess.run", _boom)
         env = {"PATH": "/usr/bin"}
         assert activate_mise(env) == []
         assert env == {"PATH": "/usr/bin"}
 
 
 class TestGitBuildInfo:
-    """kiro_crew.env.git_build_info reports the running checkout's branch+sha."""
+    """aj_crew.env.git_build_info reports the running checkout's branch+sha."""
 
     def test_empty_when_no_project_dir(self, monkeypatch) -> None:
-        from kiro_crew.env import git_build_info
+        from aj_crew.env import git_build_info
 
         git_build_info.cache_clear()
-        monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+        monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
         assert git_build_info() == ("", "")
         git_build_info.cache_clear()
 
     def test_empty_when_not_a_git_tree(self, tmp_path, monkeypatch) -> None:
         # Project dir exists but has no .git (toolbox/pip-wheel layout).
-        from kiro_crew.env import git_build_info
+        from aj_crew.env import git_build_info
 
         git_build_info.cache_clear()
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         assert git_build_info() == ("", "")
         git_build_info.cache_clear()
 
     def test_reads_branch_and_commit(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew import env
+        from aj_crew import env
 
         env.git_build_info.cache_clear()
         (tmp_path / ".git").mkdir()
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
 
         def _run(argv, **kwargs):  # noqa: ANN001 - test shim
             out = "beta-braveheart\n" if "--abbrev-ref" in argv else "abc1234\n"
             return subprocess.CompletedProcess(argv, 0, stdout=out, stderr="")
 
-        monkeypatch.setattr("kiro_crew.env.subprocess.run", _run)
+        monkeypatch.setattr("aj_crew.env.subprocess.run", _run)
         assert env.git_build_info() == ("beta-braveheart", "abc1234")
         env.git_build_info.cache_clear()
 
     def test_reads_in_git_worktree(self, tmp_path, monkeypatch) -> None:
         # In a git worktree, .git is a FILE ("gitdir: ...") not a directory;
         # the .exists() gate must still let git run there.
-        from kiro_crew import env
+        from aj_crew import env
 
         env.git_build_info.cache_clear()
         (tmp_path / ".git").write_text("gitdir: /repo/.git/worktrees/wt\n")
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
 
         def _run(argv, **kwargs):  # noqa: ANN001 - test shim
             out = "wt-branch\n" if "--abbrev-ref" in argv else "def5678\n"
             return subprocess.CompletedProcess(argv, 0, stdout=out, stderr="")
 
-        monkeypatch.setattr("kiro_crew.env.subprocess.run", _run)
+        monkeypatch.setattr("aj_crew.env.subprocess.run", _run)
         assert env.git_build_info() == ("wt-branch", "def5678")
         env.git_build_info.cache_clear()
 
     def test_fails_open_on_nonzero_exit(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew import env
+        from aj_crew import env
 
         env.git_build_info.cache_clear()
         (tmp_path / ".git").mkdir()
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         monkeypatch.setattr(
-            "kiro_crew.env.subprocess.run", _fake_run(returncode=128, stderr="fatal")
+            "aj_crew.env.subprocess.run", _fake_run(returncode=128, stderr="fatal")
         )
         assert env.git_build_info() == ("", "")
         env.git_build_info.cache_clear()
 
     def test_fails_open_on_oserror(self, tmp_path, monkeypatch) -> None:
-        from kiro_crew import env
+        from aj_crew import env
 
         env.git_build_info.cache_clear()
         (tmp_path / ".git").mkdir()
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
 
         def _boom(*a, **k):  # noqa: ANN002, ANN003 - test shim
             raise OSError("git not on PATH")
 
-        monkeypatch.setattr("kiro_crew.env.subprocess.run", _boom)
+        monkeypatch.setattr("aj_crew.env.subprocess.run", _boom)
         assert env.git_build_info() == ("", "")
         env.git_build_info.cache_clear()
 
@@ -1630,7 +1630,7 @@ class TestSanitizeSpecEnv:
     def test_python_env_is_dropped(self) -> None:
         """PYTHON* is a launcher-execution channel here, not a server setting.
 
-        Kiro Crew's Linux sandbox launcher is itself a Python process
+        Aj Crew's Linux sandbox launcher is itself a Python process
         (``[sys.executable, <generated script>, *argv]``), started with the env
         handed to ``Popen`` — so a declared ``PYTHONPATH`` carrying
         ``sitecustomize.py`` executes at interpreter startup, before ``unshare``
@@ -1699,34 +1699,34 @@ class TestSanitizeSpecEnv:
 
 
 class TestSanitizeSpecEnvReservedNamespace:
-    """SECURITY: a config-declared ``env`` may not author the ``KIROCREW_``
+    """SECURITY: a config-declared ``env`` may not author the ``AJCREW_``
     namespace, because that namespace carries the caller identity our own
     authorization checks read.
 
     Distinct class from the loader prefixes: confinement does not mitigate it.
-    A sandbox bounds what the child may touch, not whose scheduled jobs Kiro
+    A sandbox bounds what the child may touch, not whose scheduled jobs Aj
     Crew believes the child is entitled to delete.
     """
 
     def test_caller_identity_keys_are_dropped(self) -> None:
         """The four vouched-for identity channels, and the shared secret.
 
-        ``KIROCREW_SESSION_KEY``/``KIROCREW_HOST_PID`` are two of the three
+        ``AJCREW_SESSION_KEY``/``AJCREW_HOST_PID`` are two of the three
         sources ``_resolve_session_key_strict`` accepts *on the grounds that an
-        agent cannot write them*; ``KIROCREW_OWNER_ID`` is the Slack owner.
-        ``KIROCREW_CLI`` was the cron admin-bypass flag, whose consumer was
+        agent cannot write them*; ``AJCREW_OWNER_ID`` is the Slack owner.
+        ``AJCREW_CLI`` was the cron admin-bypass flag, whose consumer was
         deleted rather than re-grounded (nothing in ``src/`` sets it); it is kept in
         this list because the deny is on the NAMESPACE, and a key-by-key list is
         exactly what would fail open for the next identity variable added.
         """
         out = env_mod.sanitize_spec_env(
             [
-                ("KIROCREW_CLI", "1"),
-                ("KIROCREW_SESSION_KEY", "victim-session"),
-                ("KIROCREW_HOST_PID", "4242"),
-                ("KIROCREW_CHANNEL_ID", "C0DEADBEEF"),
-                ("KIROCREW_OWNER_ID", "UATTACKER"),
-                ("KIROCREW_INTERNAL_SECRET", "s3cret"),
+                ("AJCREW_CLI", "1"),
+                ("AJCREW_SESSION_KEY", "victim-session"),
+                ("AJCREW_HOST_PID", "4242"),
+                ("AJCREW_CHANNEL_ID", "C0DEADBEEF"),
+                ("AJCREW_OWNER_ID", "UATTACKER"),
+                ("AJCREW_INTERNAL_SECRET", "s3cret"),
                 ("MCP_TOKEN", "keep-me"),
                 ("PATH", "/opt/helper/bin"),
             ]
@@ -1743,20 +1743,20 @@ class TestSanitizeSpecEnvReservedNamespace:
         """
         out = env_mod.sanitize_spec_env(
             [
-                ("KIROCREW_SANDBOX_LEVEL", "none"),
-                ("KIROCREW_APPROVAL_MODE", "yolo"),
-                ("KIROCREW_NOT_A_REAL_VAR_YET", "x"),
+                ("AJCREW_SANDBOX_LEVEL", "none"),
+                ("AJCREW_APPROVAL_MODE", "yolo"),
+                ("AJCREW_NOT_A_REAL_VAR_YET", "x"),
                 ("OK", "1"),
             ]
         )
         assert out == {"OK": "1"}
 
     def test_matching_is_case_insensitive(self) -> None:
-        """Windows env names are case-insensitive, so ``kirocrew_cli`` reaches
-        ``os.environ.get("KIROCREW_CLI")`` there exactly like the upper spelling.
+        """Windows env names are case-insensitive, so ``ajcrew_cli`` reaches
+        ``os.environ.get("AJCREW_CLI")`` there exactly like the upper spelling.
         """
         out = env_mod.sanitize_spec_env(
-            [("kirocrew_cli", "1"), ("KiroCrew_Session_Key", "v"), ("OK", "1")]
+            [("ajcrew_cli", "1"), ("AjCrew_Session_Key", "v"), ("OK", "1")]
         )
         assert out == {"OK": "1"}
 
@@ -1770,7 +1770,7 @@ class TestSanitizeSpecEnvReservedNamespace:
         pairs = [
             ("MC_MCP_LOG", "/tmp/x.log"),
             ("KIRO_SOMETHING", "1"),
-            ("MY_KIROCREW_VAR", "1"),
+            ("MY_AJCREW_VAR", "1"),
         ]
         assert env_mod.sanitize_spec_env(pairs) == dict(pairs)
 
@@ -1778,16 +1778,16 @@ class TestSanitizeSpecEnvReservedNamespace:
         """Why the namespace deny is safe, stated as a test.
 
         Callers build the child env from ``os.environ`` FIRST and overlay the
-        spec on top, so a gateway-authored ``KIROCREW_*`` value is inherited
+        spec on top, so a gateway-authored ``AJCREW_*`` value is inherited
         regardless. The sanitizer only decides whether a config may OVERRIDE
         one — so filtering the overlay removes the forgery and keeps the real
         value.
         """
-        inherited = {"KIROCREW_HOME": "/real/home", "KIROCREW_CLI": ""}
+        inherited = {"AJCREW_HOME": "/real/home", "AJCREW_CLI": ""}
         child = dict(inherited)
-        child.update(env_mod.sanitize_spec_env([("KIROCREW_CLI", "1"), ("OK", "1")]))
-        assert child["KIROCREW_HOME"] == "/real/home"
-        assert child["KIROCREW_CLI"] == ""
+        child.update(env_mod.sanitize_spec_env([("AJCREW_CLI", "1"), ("OK", "1")]))
+        assert child["AJCREW_HOME"] == "/real/home"
+        assert child["AJCREW_CLI"] == ""
         assert child["OK"] == "1"
 
 
@@ -1820,14 +1820,14 @@ class TestDeniedSpecEnvKeys:
         This function feeds ``_note_denied_env``, whose message says the key
         "execute[s] in the sandbox launcher before confinement, so the probe
         cannot honour them — a session still does". Every clause of that is false
-        for ``KIROCREW_CLI``: it is not a launcher-execution channel, and a
+        for ``AJCREW_CLI``: it is not a launcher-execution channel, and a
         session must not honour a forged caller identity either. The sanitizer
         still drops it (log-only); only the user-facing explanation is scoped to
         the loader class.
         """
-        env = {"KIROCREW_CLI": "1", "PYTHONPATH": "/srv", "TOKEN": "t"}
+        env = {"AJCREW_CLI": "1", "PYTHONPATH": "/srv", "TOKEN": "t"}
         assert env_mod.denied_spec_env_keys(env) == ["PYTHONPATH"]
-        assert "KIROCREW_CLI" not in env_mod.sanitize_spec_env([(k, v) for k, v in env.items()])
+        assert "AJCREW_CLI" not in env_mod.sanitize_spec_env([(k, v) for k, v in env.items()])
 
 
 class TestKnownKiroCliDirsIsPureInItsHome:
@@ -1853,7 +1853,7 @@ class TestKnownKiroCliDirsIsPureInItsHome:
         return tmp_path / "asked-home"
 
     def test_posix_dirs_never_mention_the_process_home(self, tmp_path, monkeypatch):
-        from kiro_crew.kiro_cli import known_kiro_cli_dirs
+        from aj_crew.kiro_cli import known_kiro_cli_dirs
 
         process_home = tmp_path / "process-home"
         asked = self._asked_home(tmp_path)
@@ -1880,7 +1880,7 @@ class TestKnownKiroCliDirsIsPureInItsHome:
         from ``home`` directly and it was always correct. The ``augmented_path``
         extras are the ones that were being taken from the wrong account.
         """
-        from kiro_crew.kiro_cli import known_kiro_cli_dirs
+        from aj_crew.kiro_cli import known_kiro_cli_dirs
 
         process_home = tmp_path / "process-home"
         asked = self._asked_home(tmp_path)
@@ -1904,7 +1904,7 @@ class TestKnownKiroCliDirsIsPureInItsHome:
         This is the control that shows the fix mirrors an existing convention
         rather than inventing one.
         """
-        from kiro_crew.kiro_cli import known_kiro_cli_dirs
+        from aj_crew.kiro_cli import known_kiro_cli_dirs
 
         process_home = tmp_path / "process-home"
         asked = self._asked_home(tmp_path)
@@ -1928,7 +1928,7 @@ class TestKnownKiroCliDirsIsPureInItsHome:
         calls, a live re-read makes them disagree and the message names
         directories that were never walked.
         """
-        from kiro_crew.kiro_cli import known_kiro_cli_dirs
+        from aj_crew.kiro_cli import known_kiro_cli_dirs
 
         asked = self._asked_home(tmp_path)
         monkeypatch.setattr(env_mod.os.path, "expanduser", lambda _p: str(tmp_path / "home-a"))

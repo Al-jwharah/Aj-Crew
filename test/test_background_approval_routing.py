@@ -21,11 +21,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.llm_helpers import LLMEvent
+from aj_crew.llm_helpers import LLMEvent
 
 
 def _make_gateway():
-    from kiro_crew.slack.gateway import GatewayOrchestrator
+    from aj_crew.slack.gateway import GatewayOrchestrator
 
     gateway = GatewayOrchestrator.__new__(GatewayOrchestrator)
     gateway.sessions = MagicMock()
@@ -77,7 +77,7 @@ class TestUnownedBackgroundApprovalHasNoSlot:
         gateway = _make_gateway()
         gateway.dashboard_state._slots = {"slot-unrelated": _slot(running=True)}
 
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
             approve_fn = gateway._interactive_approval("cron")
             result = await approve_fn(_event(), "")
 
@@ -101,7 +101,7 @@ class TestUnownedBackgroundApprovalHasNoSlot:
         # Make the outcome distinguishable from a trust short-circuit.
         gateway.dashboard_state.request_approval = AsyncMock(return_value=False)
 
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
             approve_fn = gateway._interactive_approval("cron")
             result = await approve_fn(_event(), "")
 
@@ -117,7 +117,7 @@ class TestUnownedBackgroundApprovalHasNoSlot:
             "slot-b": _slot(running=True),
         }
 
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
             approve_fn = gateway._interactive_approval("taskrunner")
             await approve_fn(_event("req-bg-2"), "")
 
@@ -139,7 +139,7 @@ class TestUnownedBackgroundApprovalHasNoSlot:
             "slot-b": _slot(running=False, trust=True),
         }
 
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
             approve_fn = gateway._interactive_approval("cron")
             await approve_fn(_event("req-bg-3"), "")
 
@@ -155,7 +155,7 @@ class TestUnownedBackgroundApprovalHasNoSlot:
         # A refusing prompt makes the answer tell the prompt from a trust short-circuit.
         gateway.dashboard_state.request_approval = AsyncMock(return_value=False)
 
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
             approve_fn = gateway._interactive_approval("cron")
             result = await approve_fn(_event("req-bg-3b"), "")
 
@@ -169,7 +169,7 @@ class TestUnownedBackgroundApprovalHasNoSlot:
         gateway._cfg.hooks.get = MagicMock(return_value=["cron"])
         gateway.dashboard_state._slots = {"slot-a": _slot(running=True, trust=False)}
 
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
             approve_fn = gateway._interactive_approval("cron")
             result = await approve_fn(_event("req-bg-3c"), "")
 
@@ -186,7 +186,7 @@ class TestOwnedApprovalStillRoutesToItsSlot:
         gateway = _make_gateway()
         gateway.dashboard_state._slots = {"slot-owner": _slot(running=True)}
 
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
             approve_fn = gateway._interactive_approval("autonudge")
             await approve_fn(_event("req-owned-1"), "dashboard:slot-owner")
 
@@ -198,7 +198,7 @@ class TestOwnedApprovalStillRoutesToItsSlot:
         gateway = _make_gateway()
         gateway.dashboard_state._slots = {"slot-owner": _slot(running=True, trust=True)}
 
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
             approve_fn = gateway._interactive_approval("autonudge")
             result = await approve_fn(_event("req-owned-2"), "dashboard:slot-owner")
 
@@ -211,7 +211,7 @@ class TestOwnedApprovalStillRoutesToItsSlot:
         gateway = _make_gateway()
         gateway.dashboard_state._slots = {"slot-other": _slot(running=True)}
 
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
             approve_fn = gateway._interactive_approval(
                 "subagent", slot_resolver=lambda _rid: "slot-spawner"
             )
@@ -225,7 +225,7 @@ class TestOwnedApprovalStillRoutesToItsSlot:
         gateway = _make_gateway()
         gateway.dashboard_state._slots = {"slot-other": _slot(running=True)}
 
-        with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
             approve_fn = gateway._interactive_approval(
                 "subagent", slot_resolver=lambda _rid: ""
             )
@@ -368,7 +368,7 @@ class TestIdentityTrustedChildHonorsUnconditionalGrants:
         gateway = _make_gateway()
         _override = MagicMock()
         _override.is_active = MagicMock(return_value=True)
-        with patch("kiro_crew.slack.gateway.safety_override", return_value=_override):
+        with patch("aj_crew.slack.gateway.safety_override", return_value=_override):
             approve_fn = gateway._interactive_approval("cron")
             assert await approve_fn(_child_identity_event()) is True
         gateway.dashboard_state.request_approval.assert_not_awaited()

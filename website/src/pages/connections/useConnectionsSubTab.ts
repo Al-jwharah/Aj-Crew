@@ -12,7 +12,7 @@ const SUB_TAB_PARAM = 'view'
 /** sessionStorage key for the sub-tab last shown. Session-scoped for the same
  *  reason as SidePanelLayout's tab memory: coming back to Customize inside one
  *  sitting resumes where you were, while a fresh browser tab opens on Services. */
-const SUB_TAB_MEMORY_KEY = 'kirocrew:connections-sub-tab'
+const SUB_TAB_MEMORY_KEY = 'ajcrew:connections-sub-tab'
 
 /** Where a link lands a reader on the MCP Servers list (#21303). One plain
  *  string: an interpolated literal under an ALL-CAPS name trips the i18n lint. */

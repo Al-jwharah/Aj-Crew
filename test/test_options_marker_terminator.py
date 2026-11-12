@@ -26,7 +26,7 @@ can only see one nesting level: ``list[dict[str, int]]`` defeats a one-level rul
 not nested", which is bracket BALANCE -- not a regular language at unbounded depth.
 
 So the decision lives OUTSIDE the pattern, in
-:func:`kiro_crew.constants._marker_labels_have_unmatched_opener`, and the raw patterns are
+:func:`aj_crew.constants._marker_labels_have_unmatched_opener`, and the raw patterns are
 private so no caller can obtain an unchecked match. What callers get is
 :data:`OPTIONS_RE_LINE` / :data:`OPTIONS_RE_TRAILER`, which apply both.
 
@@ -40,15 +40,15 @@ from __future__ import annotations
 import pytest
 from named_cases_helpers import named_cases
 
-from conftest import assert_rejected_without_backtracking
-from kiro_crew.constants import (
+from aj_crew.constants import (
     _RAW_OPTIONS_RE_LINE,
     MARKER_CLOSERS,
     OPTIONS_RE_LINE,
     OPTIONS_RE_TRAILER,
     _marker_labels_have_unmatched_opener,
 )
-from kiro_crew.messaging.renderer import split_options_trailer
+from aj_crew.messaging.renderer import split_options_trailer
+from conftest import assert_rejected_without_backtracking
 
 
 def skeleton(text: str) -> str:

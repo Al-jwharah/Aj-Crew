@@ -28,11 +28,11 @@ from dashboard_approval_helpers import (
     _set_stream,
 )
 
-from kiro_crew.dashboard.chat import _run_chat
-from kiro_crew.dashboard.handlers.sessions import api_approval_resolve
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot, parse_cls_meta
-from kiro_crew.providers.base import EVENT_TEXT_CHUNK, EVENT_THINKING_CHUNK, LLMEvent
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard.chat import _run_chat
+from aj_crew.dashboard.handlers.sessions import api_approval_resolve
+from aj_crew.dashboard.state import DashboardState, _ChatSlot, parse_cls_meta
+from aj_crew.providers.base import EVENT_TEXT_CHUNK, EVENT_THINKING_CHUNK, LLMEvent
+from aj_crew.testing.wait import async_wait_until
 
 
 def _card_outcomes(slot: _ChatSlot) -> dict[str, str]:
@@ -95,7 +95,7 @@ class TestBatchRejection:
 
         rejecter = asyncio.get_event_loop().create_task(_reject_first())
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew"), _patch_stats():
+        with caplog.at_level(logging.WARNING, logger="aj_crew"), _patch_stats():
             await _run_chat(state, slot, "hello")
         await _drain(rejecter)
 
@@ -440,7 +440,7 @@ class TestDenyOnce:
         fut: asyncio.Future[str] = loop.create_future()
         slot._approval_futures["req-audit"] = fut
 
-        with patch("kiro_crew.dashboard.state.sel") as mock_sel:
+        with patch("aj_crew.dashboard.state.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             state.resolve_approval("req-audit", False, rejected_once=True)
             outcomes = [
@@ -482,7 +482,7 @@ class TestDenyOnce:
         batch reject in production. The handler resolves through the Shared Crew
         decision registry, which is where the flag must arrive.
         """
-        from kiro_crew.shared_crew import decisions as shared_decisions
+        from aj_crew.shared_crew import decisions as shared_decisions
 
         state = MagicMock()
         seen: list[dict] = []
@@ -529,7 +529,7 @@ class TestDenyOnce:
         answerer = asyncio.get_event_loop().create_task(
             _answer_approval(slot, "req-1", "rejected_once")
         )
-        with patch("kiro_crew.dashboard.chat_runner.sel") as mock_sel:
+        with patch("aj_crew.dashboard.chat_runner.sel") as mock_sel:
             mock_sel.return_value = MagicMock()
             with _patch_stats():
                 await _run_chat(state, slot, "hello")
@@ -581,7 +581,7 @@ class TestBackgroundApprovalDenyFast:
             fut.cancel()  # don't leave a dangling future
             raise asyncio.TimeoutError
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.asyncio.wait_for", _fake_wait_for)
+        monkeypatch.setattr("aj_crew.dashboard.state.asyncio.wait_for", _fake_wait_for)
 
         result = await state.request_approval("req-bg", "heartbeat", "fs_write", is_background=True)
 
@@ -603,7 +603,7 @@ class TestBackgroundApprovalDenyFast:
             fut.cancel()
             raise asyncio.TimeoutError
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.asyncio.wait_for", _fake_wait_for)
+        monkeypatch.setattr("aj_crew.dashboard.state.asyncio.wait_for", _fake_wait_for)
 
         # Default is_background=False — interactive dashboard/slack path.
         result = await state.request_approval("req-ui", "dashboard", "fs_write")
@@ -618,7 +618,7 @@ class TestBackgroundApprovalDenyFast:
 
         async def _approve_soon():
             # flake-ok: pre-existing 10 ms delay before the answer lands inside the approval window -- moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing 10 ms delay before the answer lands inside the approval window moved verbatim
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing 10 ms delay before the answer lands inside the approval window moved verbatim
             await asyncio.sleep(0.01)
             state.resolve_approval("req-bg2", True)
 
@@ -705,7 +705,7 @@ class TestExpiredApprovalRetiresTheCard:
         state, _ = _make_state(tmp_path)
         slot = self._slot_with_permission(state, "req-exp")
         mock_sel = MagicMock()
-        monkeypatch.setattr("kiro_crew.dashboard.state.sel", lambda: mock_sel)
+        monkeypatch.setattr("aj_crew.dashboard.state.sel", lambda: mock_sel)
         self._expire_fast(state, monkeypatch)
 
         result = await state.request_approval("req-exp", "dashboard", "fs_write", slot=slot.key)
@@ -763,7 +763,7 @@ class TestExpiredApprovalRetiresTheCard:
         """A background approval has no slot messages: broadcast, no marker."""
         state, _ = _make_state(tmp_path)
         marker = MagicMock(return_value=True)
-        monkeypatch.setattr("kiro_crew.dashboard.state._mark_permission_resolved", marker)
+        monkeypatch.setattr("aj_crew.dashboard.state._mark_permission_resolved", marker)
         self._expire_fast(state, monkeypatch, background=True)
 
         result = await state.request_approval("req-bg", "cron", "fs_write", is_background=True)

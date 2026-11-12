@@ -3,7 +3,7 @@
 What this pins, and what it deliberately does not:
 
 * **No work scheduled before readiness.** The transfer is started after
-  ``KIROCREW_READY``, inside a ``dashboard.feature_videos_enabled`` test, and the
+  ``AJCREW_READY``, inside a ``dashboard.feature_videos_enabled`` test, and the
   starter is imported there rather than at module scope. ``_start_embeddings`` — which
   runs on the boot path — must not reach it at all.
 
@@ -34,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import feature_videos_manifest as manifest_mod
+from aj_crew import feature_videos_manifest as manifest_mod
 
 _CREDENTIAL = "sup3rs3cret"
 _URL_WITH_CREDENTIAL = f"https://carol:{_CREDENTIAL}@cdn.example.com:notaport/manifest.json"
@@ -54,15 +54,15 @@ def _run(snippet: str) -> subprocess.CompletedProcess:
 
 class TestNoWorkOnTheBootPath:
     def test_the_boot_path_method_never_reaches_the_starter(self) -> None:
-        """``_start_embeddings`` runs before KIROCREW_READY, so it must not start a transfer."""
-        from kiro_crew.slack.gateway import GatewayOrchestrator
+        """``_start_embeddings`` runs before AJCREW_READY, so it must not start a transfer."""
+        from aj_crew.slack.gateway import GatewayOrchestrator
 
         src = inspect.getsource(GatewayOrchestrator._start_embeddings)
         assert _STARTER not in src, "a clip transfer is being scheduled on the boot path"
 
     def test_the_gateway_module_has_no_top_level_import_of_the_starter(self) -> None:
         """A module-scope import runs on every boot, including a default-off one."""
-        from kiro_crew.slack import gateway as gw
+        from aj_crew.slack import gateway as gw
 
         slack_dir = Path(gw.__file__).resolve().parent
         for line in [
@@ -84,7 +84,7 @@ class TestNoWorkOnTheBootPath:
 
     def test_the_start_site_is_gated_on_the_kill_switch(self) -> None:
         """Off by default, so an install that never wanted this pays nothing for it."""
-        from kiro_crew.slack.gateway_runtime import service_boot
+        from aj_crew.slack.gateway_runtime import service_boot
 
         src = inspect.getsource(service_boot)
         marker = "if self._cfg.dashboard.feature_videos_enabled:"
@@ -95,7 +95,7 @@ class TestNoWorkOnTheBootPath:
     def test_the_starter_is_reachable_when_something_asks_for_it(self) -> None:
         """The deferral must not have orphaned the entry point it defers."""
         proc = _run("""
-            from kiro_crew.feature_videos_cache import start_background_feature_video_download
+            from aj_crew.feature_videos_cache import start_background_feature_video_download
 
             assert callable(start_background_feature_video_download)
             print("reachable")
@@ -115,8 +115,8 @@ class TestTheTaskIsHeldAndCancelled:
         import ast
         from pathlib import Path
 
-        from kiro_crew.slack import gateway
-        from kiro_crew.slack.gateway import GatewayOrchestrator
+        from aj_crew.slack import gateway
+        from aj_crew.slack.gateway import GatewayOrchestrator
 
         src = inspect.getsource(GatewayOrchestrator.__init__)
         assert "self._feature_video_task = None" in src
@@ -134,7 +134,7 @@ class TestTheTaskIsHeldAndCancelled:
 
     def test_shutdown_cancels_it_beside_its_sibling(self) -> None:
         """A pending transfer must not outlive the process it was started for."""
-        from kiro_crew.slack.gateway_runtime import exit_path
+        from aj_crew.slack.gateway_runtime import exit_path
 
         src = inspect.getsource(exit_path)
         assert (
@@ -153,7 +153,7 @@ class TestNoCredentialInTheLogRecord:
             raise http.client.InvalidURL(f"nonnumeric port: '{_CREDENTIAL}@cdn.example.com'")
 
         opener = type("_Opener", (), {"open": staticmethod(_explode)})()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: opener)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: opener)
 
         with caplog.at_level(logging.INFO, logger=manifest_mod.logger.name):
             assert manifest_mod._fetch_json(_URL_WITH_CREDENTIAL) is None
@@ -197,13 +197,13 @@ class TestTheDownloaderLeaksNothingEither:
         caplog: pytest.LogCaptureFixture,
         raised: Exception,
     ) -> None:
-        from kiro_crew import asset_downloader
+        from aj_crew import asset_downloader
 
         def _explode(*_a: object, **_k: object) -> object:
             raise raised
 
         opener = type("_Opener", (), {"open": staticmethod(_explode)})()
-        monkeypatch.setattr("kiro_crew.asset_downloader.build_opener", lambda *a, **k: opener)
+        monkeypatch.setattr("aj_crew.asset_downloader.build_opener", lambda *a, **k: opener)
 
         with caplog.at_level(logging.INFO):
             ok, err = asset_downloader.download_to(

@@ -11,11 +11,11 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.browser_harness import install as harness_install
-from kiro_crew.browser_harness.supervisor import HarnessSupervisor
-from kiro_crew.dashboard import handlers
-from kiro_crew.dashboard.handlers import browser_harness_status as routes
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.browser_harness import install as harness_install
+from aj_crew.browser_harness.supervisor import HarnessSupervisor
+from aj_crew.dashboard import handlers
+from aj_crew.dashboard.handlers import browser_harness_status as routes
+from aj_crew.testing.wait import async_wait_until
 
 _OWNER = "the-owner"
 
@@ -240,7 +240,7 @@ async def test_test_and_disconnect_answer_with_the_status(sel, sup, monkeypatch)
 def test_the_routes_are_registered_on_the_contract_paths() -> None:
     from aiohttp import web
 
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     app = web.Application()
     server._register_mcp_routes(app)

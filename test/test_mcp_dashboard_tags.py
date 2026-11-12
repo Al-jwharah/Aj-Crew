@@ -1,4 +1,4 @@
-"""Tests for the session tag tools on the kirocrew-dashboard server.
+"""Tests for the session tag tools on the ajcrew-dashboard server.
 
 Covers ``chat_tag_list`` / ``chat_tag_create`` / ``chat_tag_update`` /
 ``chat_tag_assign`` — schema validation, id-or-name resolution, the add/remove
@@ -12,14 +12,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from kiro_crew.mcp_dashboard import TABLE, _list_tools
-from kiro_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.mcp_dashboard import TABLE, _list_tools
+from aj_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
 
 _TAGS = [
     {"id": "aaaaaaaaaaaa", "name": "Active", "color": "#22c55e", "order": 0, "status": True},
     {"id": "bbbbbbbbbbbb", "name": "Blocked", "color": "#ef4444", "order": 1, "status": True},
-    {"id": "cccccccccccc", "name": "kirocrew", "color": "#6b7280", "order": 2, "status": False},
+    {"id": "cccccccccccc", "name": "ajcrew", "color": "#6b7280", "order": 2, "status": False},
 ]
 
 _SLOTS = [
@@ -73,7 +73,7 @@ class TestTagList:
         assert "`Active`" in out and "id=aaaaaaaaaaaa" in out and "#22c55e" in out
         assert out.count("[status]") == 2
         # Stored order, not alphabetical: what the sidebar shows.
-        assert out.index("Active") < out.index("Blocked") < out.index("kirocrew")
+        assert out.index("Active") < out.index("Blocked") < out.index("ajcrew")
 
     def test_empty_vocabulary_points_at_create(self) -> None:
         out, _ = _call("chat_tag_list", {}, _reads(tags=[]))
@@ -183,7 +183,7 @@ class TestTagUpdate:
         assert "renamed `Blocked` → `Waiting`" in out
 
     def test_patches_color_and_status_by_id(self) -> None:
-        updated = {"id": "cccccccccccc", "name": "kirocrew", "color": "#3b82f6", "status": True}
+        updated = {"id": "cccccccccccc", "name": "ajcrew", "color": "#3b82f6", "status": True}
         out, dash = _call(
             "chat_tag_update",
             {"tag": "cccccccccccc", "color": "#3b82f6", "status": True},
@@ -243,7 +243,7 @@ class TestTagAssign:
         }
         assert put.session_key == "dashboard:chat-1-100"
         assert "added `Blocked`" in out and "removed `Active`" in out
-        assert "`kirocrew`, `Blocked`" in out
+        assert "`ajcrew`, `Blocked`" in out
 
     def test_an_empty_stored_list_is_reported_not_the_request(self) -> None:
         """The endpoint drops a tag deleted between the GET and the PUT."""

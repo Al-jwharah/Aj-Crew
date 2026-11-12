@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.builtins.issue_radar.backend import pipeline_fold as fold
+from aj_crew.apps.builtins.issue_radar.backend import pipeline_fold as fold
 
 
 @pytest.fixture()

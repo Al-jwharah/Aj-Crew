@@ -20,10 +20,10 @@ from unittest.mock import MagicMock
 import pytest
 from test_mcp_gateway_wedge_ping_gate import _make_backend
 
-from kiro_crew.mcp_caller import INFLIGHT_CAPABILITY_KEY, INFLIGHT_NOTIFICATION
-from kiro_crew.mcp_gateway import backend as backend_mod
-from kiro_crew.mcp_gateway import hazards
-from kiro_crew.mcp_gateway.backend import (
+from aj_crew.mcp_caller import INFLIGHT_CAPABILITY_KEY, INFLIGHT_NOTIFICATION
+from aj_crew.mcp_gateway import backend as backend_mod
+from aj_crew.mcp_gateway import hazards
+from aj_crew.mcp_gateway.backend import (
     HARD_WEDGE_CEILING_SECS,
     HEARTBEAT_TIMEOUT_SECS,
     PING_STALE_SECS,
@@ -207,8 +207,8 @@ class TestProgressAwareWedgeDetection:
         import ast
         import inspect
 
-        from kiro_crew import mcp_core
-        from kiro_crew.mcp_shared import DEFERRED_STEP_STUCK_SECS
+        from aj_crew import mcp_core
+        from aj_crew.mcp_shared import DEFERRED_STEP_STUCK_SECS
 
         # The host-isolation floor replaces _post with a network-free double.
         source = ast.parse(inspect.getsource(mcp_core))
@@ -222,7 +222,7 @@ class TestProgressAwareWedgeDetection:
         assert post_timeout < DEFERRED_STEP_STUCK_SECS < PROGRESS_WEDGE_CEILING_SECS
 
     def test_ceiling_outlives_every_synchronous_tool_bound(self):
-        """A kirocrew-core tool that still runs on the worker bounds every call
+        """An ajcrew-core tool that still runs on the worker bounds every call
         it makes; the short ceiling must sit above each of those bounds with the
         slow-request margin, or a reporting backend is recycled under a healthy
         call. The bounds are scanned from source, not listed by hand: every
@@ -233,7 +233,7 @@ class TestProgressAwareWedgeDetection:
         import ast
         from pathlib import Path
 
-        from kiro_crew.mcp_shared import DEFERRED_STEP_STUCK_SECS
+        from aj_crew.mcp_shared import DEFERRED_STEP_STUCK_SECS
 
         bounds = _synchronous_tool_bounds(ast, Path(backend_mod.__file__).parents[1])
         assert bounds, "the scan found no bounds; it is no longer reading the tool sources"
@@ -251,7 +251,7 @@ class TestProgressAwareWedgeDetection:
 
 def _synchronous_tool_bounds(ast: Any, package: Any) -> dict[str, float]:
     """``{"file:line name": seconds}`` for each timeout bound named in the
-    kirocrew-core tool sources (see the test above). Names resolve against
+    ajcrew-core tool sources (see the test above). Names resolve against
     each module's own top-level numeric assignments, then ``mcp_core``'s."""
     files = (
         sorted((package / "mcp_tools").rglob("*.py"))

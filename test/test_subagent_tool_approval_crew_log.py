@@ -22,15 +22,15 @@ import pytest
 from crew_log_drain import assert_drained
 from off_loop_helpers import off_loop
 
-from kiro_crew.crew_log import crew_log_path, emit
-from kiro_crew.crew_log.projection import fold_approvals
-from kiro_crew.crew_log.store import CrewLog
-from kiro_crew.execution_context import execution_for_store
-from kiro_crew.hooks import TOOL_ALLOW, ToolHookResult
-from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_manager._component import ManagerComponent
-from kiro_crew.testing.wait import await_until
+from aj_crew.crew_log import crew_log_path, emit
+from aj_crew.crew_log.projection import fold_approvals
+from aj_crew.crew_log.store import CrewLog
+from aj_crew.execution_context import execution_for_store
+from aj_crew.hooks import TOOL_ALLOW, ToolHookResult
+from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_manager._component import ManagerComponent
+from aj_crew.testing.wait import await_until
 
 SESSION = "acp-child-tool-approval-1"
 ASKING_TURN = 4
@@ -57,7 +57,7 @@ def _close_subagent_managers(close_subagent_managers):
 @pytest.fixture(autouse=True)
 def _isolated_crew_log(tmp_path, monkeypatch):
     """Every test writes into its own data home with the crew log switched on."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
     emit.reset_caches()
@@ -103,7 +103,7 @@ def _folded() -> dict:
 def _open_session() -> None:
     emit.on_session_opened(
         SESSION,
-        agent="kirocrew",
+        agent="ajcrew",
         slot="chat-7",
         model="claude-opus-5",
         cwd="/home/dev/project",
@@ -195,10 +195,10 @@ def _manager(event: LLMEvent, *, agent_id: str = AGENT_ID, **manager_kw: object)
 async def _drive(manager: SubagentManager, info: SubagentInfo) -> None:
     """Run the child's event loop to completion."""
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state"),
-        patch("kiro_crew.subagent.create_agent_folder", MagicMock()),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state"),
+        patch("aj_crew.subagent.create_agent_folder", MagicMock()),
     ):
         await manager._run_inner(info, f"subagent:{info.id}")
 
@@ -460,7 +460,7 @@ def test_two_children_of_one_parent_sharing_a_wire_id_keep_separate_rows():
     Driven through the recorder pair; the arms' own tests prove they use
     ``_crew_log_approval_id``.
     """
-    from kiro_crew.subagent_manager.run import RunEventCoordinator
+    from aj_crew.subagent_manager.run import RunEventCoordinator
 
     _open_session()
     recorder = SimpleNamespace(

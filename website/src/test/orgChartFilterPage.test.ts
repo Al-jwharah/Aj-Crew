@@ -12,7 +12,7 @@ import { resolve } from 'node:path'
 
 const TEMPLATE = resolve(
   __dirname,
-  '../../../src/kiro_crew/dashboard_templates/builtin/org-chart/template.html',
+  '../../../src/aj_crew/dashboard_templates/builtin/org-chart/template.html',
 )
 const RAW = readFileSync(TEMPLATE, 'utf-8')
 
@@ -85,7 +85,7 @@ function crew() {
 const added: Array<[string, EventListenerOrEventListenerObject]> = []
 
 function mount(items: unknown[], locale?: string) {
-  ;(window as unknown as { kirocrew: unknown }).kirocrew = {
+  ;(window as unknown as { ajcrew: unknown }).ajcrew = {
     fields: { items, omitted: 0, spenders_omitted: 0, last_entry_at: new Date(NOW).toISOString() },
     agentic: [],
     seq: 1,
@@ -228,7 +228,7 @@ describe('org-chart: the Open / Closed / All filter', () => {
     pick('open').click()
     const before = document.querySelector<HTMLButtonElement>('#oc-graph .oc-empty button')!
     before.focus()
-    window.dispatchEvent(new Event('kirocrew-dashboard'))
+    window.dispatchEvent(new Event('ajcrew-dashboard'))
     vi.advanceTimersByTime(1)
     const after = document.querySelector('#oc-graph .oc-empty button')
     expect(after).not.toBe(before)
@@ -239,7 +239,7 @@ describe('org-chart: the Open / Closed / All filter', () => {
     mount(crew())
     pick('open').focus()
     pick('open').click()
-    window.dispatchEvent(new MessageEvent('message', { data: { type: 'kirocrew:fields' } }))
+    window.dispatchEvent(new MessageEvent('message', { data: { type: 'ajcrew:fields' } }))
     vi.advanceTimersByTime(1)
     expect(pick('open').getAttribute('aria-pressed')).toBe('true')
     expect(document.activeElement).toBe(pick('open'))

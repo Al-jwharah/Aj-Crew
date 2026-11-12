@@ -13,8 +13,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.slack import handler
-from kiro_crew.slack import renderer as slack_renderer
+from aj_crew.slack import handler
+from aj_crew.slack import renderer as slack_renderer
 
 
 def _resolver_double(window: float):
@@ -40,7 +40,7 @@ def _expiring_wait_for(seen: list[float]):
 
 
 def test_slack_modules_bind_the_dashboard_resolver():
-    from kiro_crew.dashboard import turn_dispatch
+    from aj_crew.dashboard import turn_dispatch
 
     assert handler.tool_approval_timeout_secs is turn_dispatch.tool_approval_timeout_secs
     assert slack_renderer.tool_approval_timeout_secs is turn_dispatch.tool_approval_timeout_secs

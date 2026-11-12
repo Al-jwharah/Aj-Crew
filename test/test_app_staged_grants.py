@@ -15,8 +15,8 @@ import json
 
 import pytest
 
-from kiro_crew.apps import manager as manager_mod
-from kiro_crew.apps.manager import (
+from aj_crew.apps import manager as manager_mod
+from aj_crew.apps.manager import (
     APP_MANIFEST_FILENAME,
     INSTALLED_META_FILENAME,
     app_dir,
@@ -28,7 +28,7 @@ from kiro_crew.apps.manager import (
     staged_app_grants,
     update_app,
 )
-from kiro_crew.dashboard import token_auth, ws_event_scope
+from aj_crew.dashboard import token_auth, ws_event_scope
 
 APP = "test-app"
 OLD_API = "/api/sessions"
@@ -52,9 +52,9 @@ def _source(tmp_path, sub, version="1.0.0", api=(), events=()):
 
 @pytest.fixture()
 def app_home(tmp_path, monkeypatch):
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     (home / "config.json").write_text(
         json.dumps({"agent": {"apps_allow_third_party": True}}), encoding="utf-8"
     )
@@ -409,7 +409,7 @@ def test_detail_read_does_not_write_back_over_an_approval(tmp_path, app_home, mo
 def test_approving_held_back_events_changes_the_hook_signature(tmp_path, app_home):
     # The hook context's EventBus is built once per load; the reconciler reloads
     # on a signature change, so approval must change it.
-    from kiro_crew.apps.hooks_integration import hook_signature
+    from aj_crew.apps.hooks_integration import hook_signature
 
     _installed_v1(tmp_path)
     assert update_app(

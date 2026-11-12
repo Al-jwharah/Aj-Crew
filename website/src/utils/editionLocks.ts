@@ -5,7 +5,7 @@
  * - `feature_previews`: every Feature Preview reads off (`utils/previewFlags.ts`).
  *   From `GET /api/config/schema`, which marks each preview path `lockedByPolicy`.
  * - `debug_tools`: Settings > Developer > Debug tools is hidden and its overlays stay
- *   off. From `locked_controls` on `GET /api/config/kirocrew`.
+ *   off. From `locked_controls` on `GET /api/config/ajcrew`.
  *
  * The bundle is the same for both editions, so the dashboard learns this from the
  * gateway. The list is cached in the browser so the first paint, before those

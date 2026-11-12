@@ -228,7 +228,7 @@ export const createSlot = createAsyncThunk<
     //
     // `prefill` seeds the new session's composer. It is staged HERE, before the
     // fulfilled action, because the composer's slot-restore effect reads
-    // `kirocrew_prefill` once, on the commit that activates the slot. A caller
+    // `ajcrew_prefill` once, on the commit that activates the slot. A caller
     // writing it after awaiting this thunk lands after that read and is never
     // consumed. `prefillStaged` is false when storage refused the write, so the
     // caller can fall back to another channel.

@@ -26,10 +26,10 @@ from unittest.mock import AsyncMock
 import pytest
 from aiohttp import web
 
-from kiro_crew.apps import builtin_adoption_pins
-from kiro_crew.apps.builtins.auto_research import handlers as h
-from kiro_crew.apps.builtins.auto_research.campaign import storage
-from kiro_crew.apps.manager import app_data_dir, app_dir
+from aj_crew.apps import builtin_adoption_pins
+from aj_crew.apps.builtins.auto_research import handlers as h
+from aj_crew.apps.builtins.auto_research.campaign import storage
+from aj_crew.apps.manager import app_data_dir, app_dir
 
 
 @pytest.fixture(autouse=True)

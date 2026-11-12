@@ -42,7 +42,7 @@ from computer_use_snapshot_macos_helpers import (  # noqa: F401 -- the fixture i
 # so the bare module name is the form that always resolves.
 from test_computer_use_ffi import _H_ELEMENT, _Fakes
 
-from kiro_crew.computer_use import macos_ffi, render, snapshot_macos
+from aj_crew.computer_use import macos_ffi, render, snapshot_macos
 
 # This file replaces ctypes.CDLL, find_library or a cached libc handle for a test,
 # so the shared macOS handle caches are put back after each one (see conftest.py).

@@ -29,9 +29,9 @@ const OUT = process.argv[3] || '../temp-screenshots/members-header-brand-mark'
 mkdirSync(OUT, { recursive: true })
 
 const ROSTER = { members: [
-  { name: 'Oncall', slug: 'oncall', slot_key: 'member-oncall', running: false, last_active_ts: 0, source: 'kirocrew' },
-], default_agent: 'kirocrew' }
-const EMPTY = { members: [], default_agent: 'kirocrew' }
+  { name: 'Oncall', slug: 'oncall', slot_key: 'member-oncall', running: false, last_active_ts: 0, source: 'ajcrew' },
+], default_agent: 'ajcrew' }
+const EMPTY = { members: [], default_agent: 'ajcrew' }
 
 let failed = false
 function check(name, ok, detail = '') {
@@ -56,7 +56,7 @@ function stub(page, roster) {
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ tokens: [] }) })
     }
     if (path === '/api/agents') {
-      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ agents: [], default_agent: 'kirocrew' }) })
+      return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ agents: [], default_agent: 'ajcrew' }) })
     }
     const isList = /commands|skills|sessions|files|history|models|artifacts|folders|crons|jobs/.test(path)
     return route.fulfill({ status: 200, contentType: 'application/json', body: isList ? '[]' : '{}' })

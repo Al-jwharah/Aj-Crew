@@ -6,7 +6,7 @@ Issue Radar is an opt-in (`defaultEnabled: false`) built-in app for tracked-item
 and change-request triage across THREE providers — GitHub, GitLab and Azure
 DevOps (see [Providers](#providers)). It connects one or more repos via the
 user's own vendor CLI session (`gh`, `glab` or `az` — no OAuth app, no PAT held
-by Kiro Crew) and provides a 3-column workbench: browse/filter issues (work
+by Aj Crew) and provides a 3-column workbench: browse/filter issues (work
 items on Azure DevOps), view AI-summarized detail + timeline, apply triage
 actions (label, close/reopen), and record per-issue investigation findings
 in a local ledger. A parallel PULL REQUESTS section reuses the same shape —
@@ -20,11 +20,11 @@ optionally notifies on new issues.
 
 ## Repository boundary
 
-The app is meant to leave this repository whole: `src/kiro_crew/apps/builtins/issue_radar/`
-and `website/src/apps/issue-radar/`. Kiro Crew core imports none of it.
+The app is meant to leave this repository whole: `src/aj_crew/apps/builtins/issue_radar/`
+and `website/src/apps/issue-radar/`. Aj Crew core imports none of it.
 `test/test_core_issue_radar_decoupling.py` runs the shared
-`test/core_app_independence.py` scans: no module under `src/kiro_crew` outside
-`apps/builtins/`, and no `scripts/` file, imports `kiro_crew.apps.builtins.issue_radar`.
+`test/core_app_independence.py` scans: no module under `src/aj_crew` outside
+`apps/builtins/`, and no `scripts/` file, imports `aj_crew.apps.builtins.issue_radar`.
 The non-docstring core strings that still name `issue_radar` / `issue-radar` are pinned
 in `KNOWN_NAME_REFERENCES`, each with its reason, and each is deleted in the change that
 removes what it names:
@@ -48,7 +48,7 @@ preference key. The auto-approve grant an unattended crew holds goes through the
 generic worker auto-approve seam (`app-kit-platform.md` section 36): the manifest
 declares `permissions.workerAutoApprove`, `crew_runtime_session._GRANTS` holds each
 crew's grant under the seam's scope `app:issue-radar:grant:crew-<id>:autoapprove`, audited
-under source `app:issue-radar`, and no backend module imports `kiro_crew.safety_override`
+under source `app:issue-radar`, and no backend module imports `aj_crew.safety_override`
 (`tests/test_auto_approve_seam.py`). No core grant code is specific to the app, so an
 adopted copy that declares the same permission gets the same grant through
 `ctx.auto_approve`.
@@ -58,7 +58,7 @@ adopted copy that declares the same permission gets the same grant through
 `app.json` `agentTools` block (route `agent-tools`; `app-kit-platform.md` section 30.1)
 with the names, descriptions and arguments they always had, each string and number
 bounded as the core validated it. App code never runs in the credential-holding MCP
-server (ruling 2 in #26967, comment 6713005850): `kirocrew-core` lists the tools,
+server (ruling 2 in #26967, comment 6713005850): `ajcrew-core` lists the tools,
 validates a call and forwards it to `POST /api/app-tools/call`, which hands it to the
 app's `backend/agent_tools.py` through the route registry (`backend.hooks.routes`,
 `agent_tools:register_routes`; the app's other routes are still mounted on the gateway
@@ -134,7 +134,7 @@ to the same security chokepoints.
 
 **`github_client` is a mirror façade over six owners.** Its code lives in the
 `github_client_*.py` siblings, one responsibility each, and the façade serves every
-name from the owner that binds it (`kiro_crew._facade_mirror`), so a patch of
+name from the owner that binds it (`aj_crew._facade_mirror`), so a patch of
 `github_client.<name>` reaches every owner holding that name, as it reached the one
 module. `github_client_cli` holds the exception aliases, the timeouts, the hardened
 `gh` spawn `_gh_run` and the REST runner `_run_gh_api`; `github_client_repo_reads`
@@ -178,7 +178,7 @@ goes to the owner of its responsibility, and an owner never imports the façade.
 | Assignees | a set, capped at 10 | a set (Free keeps only the first) | exactly ONE (`System.AssignedTo`); more than one is REFUSED |
 
 **Every provider is reached by shelling out to its vendor CLI as a raw REST
-passthrough, and Kiro Crew stores NO credential of its own.** `gh api`, `glab api`
+passthrough, and Aj Crew stores NO credential of its own.** `gh api`, `glab api`
 and `az devops invoke` are each the vendor's own generic REST verb, so the client
 modules speak the provider's REST API directly while the CLI owns the token — an
 authenticated `gh`/`glab` session, an `az login` session, or `AZURE_DEVOPS_EXT_PAT`.
@@ -296,7 +296,7 @@ for the same reason.** GitHub Enterprise Server and Azure DevOps Server are both
 unsupported because neither has a credential path this app's transport can use. For
 Azure the reason is concrete: the `azure-devops` CLI extension does not support
 Azure DevOps Server at all, so a CLI-passthrough client cannot serve it. Supporting
-it would mean raw REST plus a credential Kiro Crew stores itself, which is exactly
+it would mean raw REST plus a credential Aj Crew stores itself, which is exactly
 the posture stated above. Both providers are therefore listed in
 `_PINNED_HOSTS`, and `azure_client._resolve_host` refuses every host but
 `dev.azure.com` — including an EMPTY one, rather than defaulting, so a call site
@@ -368,7 +368,7 @@ per-repo store-scoping rule.
 | GET | `/me` | Current `gh` login |
 | GET/PUT | `/settings` | Per-repo triage settings. The PUT replaces the whole document, so it carries the `revision` it read and is refused with **409** if the stored revision has moved — otherwise a stale tab would erase a label appended meanwhile |
 | POST | `/settings/role` | APPEND one label to a triage-label role, under the config lock. Exists because the PUT replaces the whole document, so a client read-modify-write only serializes itself — two dashboard tabs would each read the same settings and the later full replacement would drop the other's label |
-| GET | `/issue-ai` | AI summary + suggested labels (kirocrew-lite) |
+| GET | `/issue-ai` | AI summary + suggested labels (ajcrew-lite) |
 | GET | `/pulls` | List open/closed PRs (cached, `poll=1` probe-gated as for `/issues`; `first_page=1` (open only) takes the progressive first-paint fast path — see First Paint; rows enriched with diff size + check tally via one GraphQL call and merge readiness via a second, lean one run CONCURRENTLY, each topped up by number for rows outside its `first:100` window). Rows whose enrichment failed carry `null` (unknown, not zero) and are deliberately NOT written to the cache, so the next read retries |
 | GET | `/pulls/search` | PRs matching a per-person filter, resolved server-side by GitHub search (escapes the list's page cap). Paginates only as far as its own cap and reports `truncated` so the UI says "newest N" rather than implying completeness |
 | GET | `/pull` | Full PR detail + conversation (issue timeline merged with inline review comments) + automated checks on the head commit. Cache-first with a short server-side TTL (`PR_DETAIL_CACHE_TTL_SEC`), so a plain GET self-refreshes and no caller has to pass `refresh=1` to stay current |
@@ -500,7 +500,7 @@ apart.
 
 ## Recording findings
 
-The Investigate / Review buttons open a KiroCrew chat session seeded with a
+The Investigate / Review buttons open an Aj Crew chat session seeded with a
 triage prompt. When the agent concludes it writes its verdict back into the
 item's investigation record — that is what puts a verdict + summary on the
 issue's card instead of leaving it in chat scrollback.
@@ -540,7 +540,7 @@ So a direct `PUT /api/apps/issue-radar/investigation` from the agent is refused
 with `403 {"error": "Token required"}`. A seed prompt that asked for that raw
 call would leave every investigation unrecorded and the card's verdict/summary
 render path unreachable. The tool is declared in the app's manifest and listed by the
-`kirocrew-core` MCP server, which holds the internal secret legitimately and forwards
+`ajcrew-core` MCP server, which holds the internal secret legitimately and forwards
 the validated call to `POST /api/app-tools/call`; the app's `agent-tools` route writes
 the record in-process. No `/api/apps/issue-radar` path is admitted to internal-secret
 callers, which would also risk the forge-write routes (`/labels/apply`,
@@ -643,7 +643,7 @@ findings, so reading a malformed root as "absent" would let the next write repla
 it.
 
 **Where the store's code lives.** `store.py` is a mirror façade
-(`kiro_crew._facade_mirror`): routes, tests and sibling modules still reach
+(`aj_crew._facade_mirror`): routes, tests and sibling modules still reach
 `store.<name>`, and a patch through it reaches every owner binding the name. The
 code is in six owners: `store_repos` (the data root, `config.json` and its lock, the
 provider-scoped directories, the connected repos with their name matching,
@@ -1198,9 +1198,9 @@ the parent RUN and needs its id.
 ## Security Controls
 
 - **Spawn hardening**: All `gh` calls funnel through `_gh_run`, a thin wrapper
-  over the shared hardened runner (`kiro_crew.github_runner.run_gh`), which
+  over the shared hardened runner (`aj_crew.github_runner.run_gh`), which
   resolves a validated `gh` via `github_runner.resolve_gh`
-  (`KIROCREW_ISSUE_RADAR_GH` override, then `KIROCREW_GH_BIN`, then the
+  (`AJCREW_ISSUE_RADAR_GH` override, then `AJCREW_GH_BIN`, then the
   well-known install dirs, then the ambient `PATH`) and validates it (and every
   parent) with `github_runner.validate_provider_executable`. The default policy
   accepts the user's OWN install (Homebrew/asdf/`~/.local/bin`) and refuses only
@@ -1208,7 +1208,7 @@ the parent RUN and needs its id.
   account, a world-writable one (a world-writable *directory* is tolerated only
   when sticky, where the owner check still decides), or one inside the
   agent-writable project/workspace tree. A gateway running as root is refused
-  outright in both modes. `KIROCREW_PROVIDER_BIN_STRICT=1` restores the
+  outright in both modes. `AJCREW_PROVIDER_BIN_STRICT=1` restores the
   historical root-owned, symlink-free requirement. The runner passes a minimal
   env (`github_runner.gh_env` — the safe-key base plus gh-scoped
   auth/network/TLS vars, with ambient ssh-agent/git-ssh identity stripped; no
@@ -1222,8 +1222,8 @@ the parent RUN and needs its id.
   and `azure_client._az_run` mirror `_gh_run`: one function every spawn passes
   through, argv[0] replaced with the validated binary (resolved through
   the shared `source_providers.provider_executable_candidates` +
-  `_validate_provider_executable` policy, with `KIROCREW_ISSUE_RADAR_GLAB` /
-  `KIROCREW_ISSUE_RADAR_AZ` as the override), a list argv rather than `shell=True`,
+  `_validate_provider_executable` policy, with `AJCREW_ISSUE_RADAR_GLAB` /
+  `AJCREW_ISSUE_RADAR_AZ` as the override), a list argv rather than `shell=True`,
   and a minimal environment instead of the gateway's. `_az_env` passes only az's own
   auth roots (`AZURE_CONFIG_DIR`, `AZURE_EXTENSION_DIR`) plus proxy/TLS vars, and
   forwards `AZURE_DEVOPS_EXT_PAT` **only** for the pinned cloud host — it is a single
@@ -1376,7 +1376,7 @@ when disabled. Lifecycle hooks registered via `app.on_startup`/`on_cleanup`.
 
 The same loop drives the crew sweep, `crew_runtime.sweep_repo`. `crew_runtime.py`
 keeps the sweep and its unblock signals, and is a mirror façade
-(`kiro_crew._facade_mirror`) for the rest of the crew runtime:
+(`aj_crew._facade_mirror`) for the rest of the crew runtime:
 `crew_runtime_prompt` (the brief, the nudge and the turn prompt),
 `crew_runtime_session` (a crew's slot, holding its auto-approve grant through the
 worker auto-approve seam, launch
@@ -1667,7 +1667,7 @@ the list, the filters, the selected item — is untouched.
   check is answered from POSIX ownership (`st_uid` + the group/other write bits)
   or, on Windows, from the object's ACL — see
   `github_runner.check_provider_path_component_windows` and
-  `kiro_crew.windows_acl`. A **root** POSIX gateway is refused: the sandbox
+  `aj_crew.windows_acl`. A **root** POSIX gateway is refused: the sandbox
   masks the credential homes from the agent's children but leaves the filesystem
   writable, and a provider child runs unsandboxed with those credentials, so a
   root agent could overwrite a root-owned `gh` that the ownership walk cannot
@@ -1689,13 +1689,13 @@ the list, the filters, the selected item — is untouched.
   provider (`reason: "not_installed"`), not an install-time refusal.
 - Any CLI the user can run from their terminal is accepted: the well-known dirs
   (`/opt/homebrew/bin`, `/usr/local/bin`, `/usr/bin`, `/home/linuxbrew/…`, the
-  managed `libexec/kirocrew` dirs, and on Windows a per-CLI subdirectory of each
+  managed `libexec/ajcrew` dirs, and on Windows a per-CLI subdirectory of each
   Program Files root from `github_runner.WINDOWS_PROVIDER_EXECUTABLE_SUBDIRS`:
   `GitHub CLI` for `gh`, `GitLab CLI` and `glab` for `glab`,
   `Microsoft SDKs/Azure/CLI2/wbin` for `az`) are searched first, then `PATH`. No `sudo`
-  copy is required. Override with `KIROCREW_ISSUE_RADAR_GH` /
-  `KIROCREW_ISSUE_RADAR_GLAB` / `KIROCREW_ISSUE_RADAR_AZ`; harden with
-  `KIROCREW_PROVIDER_BIN_STRICT=1`. All three executables carry the same
+  copy is required. Override with `AJCREW_ISSUE_RADAR_GH` /
+  `AJCREW_ISSUE_RADAR_GLAB` / `AJCREW_ISSUE_RADAR_AZ`; harden with
+  `AJCREW_PROVIDER_BIN_STRICT=1`. All three executables carry the same
   well-known-directory entries (`github_runner.PROVIDER_EXECUTABLE_CANDIDATES`),
   so strict mode resolves a packaged `/usr/bin/az` exactly as it does `gh`; what
   strict mode hides is any install reachable only through `PATH`, which is what

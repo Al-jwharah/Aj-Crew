@@ -17,10 +17,10 @@ import pytest
 from stray_line_helpers import cyclic_gc_quiesced  # noqa: F401 - fixture
 from stray_line_helpers import too_deep_to_decode
 
-import kiro_crew.dashboard.handlers.usage as usage_mod
-from kiro_crew.dashboard import slot_buffers
-from kiro_crew.dashboard.handlers import telemetry
-from kiro_crew.dashboard.handlers.usage_series import _shard_rows
+import aj_crew.dashboard.handlers.usage as usage_mod
+from aj_crew.dashboard import slot_buffers
+from aj_crew.dashboard.handlers import telemetry
+from aj_crew.dashboard.handlers.usage_series import _shard_rows
 
 pytestmark = pytest.mark.usefixtures("cyclic_gc_quiesced")
 

@@ -6,7 +6,7 @@ Supersedes: 2026-10-15-the-standing-teammate-agent-is-called-a-mate.md
 
 ## Decision
 
-Everywhere a person or the model reads it (dashboard copy, every locale, user-facing docs, CLI text and agent prompts), the always-on, goal-driven agent is a **Bot** (plural **Bots**), and the name "Bot" stays untranslated in every locale; code identifiers, i18n keys, API paths, the `kirocrew-mate` MCP server, data-file names and the `.crewjam` share-file extension ([2026-10-31](2026-10-31-the-share-file-is-a-crewjam-file.md)) keep their spelling.
+Everywhere a person or the model reads it (dashboard copy, every locale, user-facing docs, CLI text and agent prompts), the always-on, goal-driven agent is a **Bot** (plural **Bots**), and the name "Bot" stays untranslated in every locale; code identifiers, i18n keys, API paths, the `ajcrew-mate` MCP server, data-file names and the `.crewjam` share-file extension ([2026-10-31](2026-10-31-the-share-file-is-a-crewjam-file.md)) keep their spelling.
 
 ## Why
 

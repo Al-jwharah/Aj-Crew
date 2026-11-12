@@ -15,8 +15,8 @@ import os
 
 import pytest
 
-from kiro_crew.platform import governance
-from kiro_crew.platform.governance import (
+from aj_crew.platform import governance
+from aj_crew.platform.governance import (
     _PERMIT_NOT_GOVERNED,
     _SCOPE_ALIASES,
     SCOPE_CATALOG,
@@ -26,9 +26,9 @@ from kiro_crew.platform.governance import (
     parse_profile,
     resolve,
 )
-from kiro_crew.platform.governance_parts.baseline import BASELINE_CONTROLS, BASELINE_UNGATED
+from aj_crew.platform.governance_parts.baseline import BASELINE_CONTROLS, BASELINE_UNGATED
 
-_WORKSPACE_FILE = os.path.join("~", "workplace", "kirocrew-workspace", "notes.txt")
+_WORKSPACE_FILE = os.path.join("~", "workplace", "ajcrew-workspace", "notes.txt")
 
 # Built with the host's own separators: the path matcher absolutizes the item.
 _ETC = os.path.abspath(os.path.join(os.sep, "etc"))
@@ -88,7 +88,7 @@ def _ceiling(**controls: object) -> governance.GovernanceCeiling:
 
 @pytest.fixture
 def lts(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 def test_every_catalog_scope_has_a_baseline_entry() -> None:
@@ -389,7 +389,7 @@ def test_lts_local_authority_with_no_central_only_narrows_the_baseline(
         assert not resolve(composed, None, "capabilities.browse", "").permitted
         # Narrowing still holds: the baseline's ``kiro`` is denied by the local tier.
         assert not resolve(composed, None, "agent_backend", "kiro").permitted
-        assert resolve(composed, None, "mcp", "@kirocrew-core/x").permitted
+        assert resolve(composed, None, "mcp", "@ajcrew-core/x").permitted
 
 
 @pytest.mark.parametrize("doc", [None, {}], ids=["no-policy", "empty"])
@@ -399,14 +399,14 @@ def test_lts_process_switch_keeps_an_open_scope(
     """``policy_permits`` (milestones) lets an open scope's default permit stand."""
     from types import SimpleNamespace
 
-    from kiro_crew import edition_locks
+    from aj_crew import edition_locks
 
     ctx = SimpleNamespace(governance=None if doc is None else _ceiling(**doc))
-    monkeypatch.setattr("kiro_crew.platform.context.current_context", lambda: ctx)
+    monkeypatch.setattr("aj_crew.platform.context.current_context", lambda: ctx)
     assert edition_locks.policy_permits("capabilities.milestones")
     # A scope the baseline holds still needs a policy permit.
     assert not edition_locks.policy_permits("capabilities.computer_use")
     assert not edition_locks.policy_permits("capabilities.app_dev_mode")
     off = SimpleNamespace(governance=_ceiling(capabilities={"milestones": {"enabled": False}}))
-    monkeypatch.setattr("kiro_crew.platform.context.current_context", lambda: off)
+    monkeypatch.setattr("aj_crew.platform.context.current_context", lambda: off)
     assert not edition_locks.policy_permits("capabilities.milestones")

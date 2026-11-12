@@ -10,10 +10,10 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard import state as dashboard_state
-from kiro_crew.dashboard import ws_event_scope
-from kiro_crew.dashboard.handlers import source_providers as source
-from kiro_crew.dashboard.source_providers import chip_status, projection
+from aj_crew.dashboard import state as dashboard_state
+from aj_crew.dashboard import ws_event_scope
+from aj_crew.dashboard.handlers import source_providers as source
+from aj_crew.dashboard.source_providers import chip_status, projection
 
 PR_URL = "https://github.com/acme/repo/pull/12"
 

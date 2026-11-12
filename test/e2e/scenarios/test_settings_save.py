@@ -12,7 +12,7 @@ import pytest
 
 pytestmark = pytest.mark.timeout(600)
 
-# `agent.subagent_max_turns` is the target because PUT /api/config/kirocrew
+# `agent.subagent_max_turns` is the target because PUT /api/config/ajcrew
 # validates and persists it explicitly (an integer in 1..1000), so a write is
 # provably accepted rather than silently dropped as an unrecognised key -- and
 # GET returns it in the same masked config document, so the read-back needs no
@@ -22,8 +22,8 @@ SETTING_KEY = "subagent_max_turns"
 
 
 def _current(pod) -> object:
-    body = pod.api("GET", "config/kirocrew")
-    assert isinstance(body, dict), f"GET config/kirocrew gave {type(body).__name__}"
+    body = pod.api("GET", "config/ajcrew")
+    assert isinstance(body, dict), f"GET config/ajcrew gave {type(body).__name__}"
     section = body.get(SETTING_SECTION)
     assert isinstance(section, dict), f"config has no {SETTING_SECTION!r} object: {body.keys()}"
     return section.get(SETTING_KEY)
@@ -35,7 +35,7 @@ def test_setting_survives_a_gateway_restart(pod, restart_pod_gateway) -> None:
     # A no-op write would pass this scenario with persistence entirely broken.
     target = 37 if before != 37 else 41
 
-    pod.api("PUT", "config/kirocrew", {SETTING_SECTION: {SETTING_KEY: target}})
+    pod.api("PUT", "config/ajcrew", {SETTING_SECTION: {SETTING_KEY: target}})
 
     assert (
         _current(pod) == target

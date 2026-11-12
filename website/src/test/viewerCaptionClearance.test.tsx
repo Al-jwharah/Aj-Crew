@@ -16,7 +16,7 @@
  *   - plain browser, macOS, framed Linux         -> no inline style
  *
  * The platform consts in src/lib/electron.ts are captured once at module load
- * from `window.kirocrew`, so each case sets it, resets the module registry and
+ * from `window.ajcrew`, so each case sets it, resets the module registry and
  * re-imports the component fresh.
  */
 import { describe, it, expect, afterEach, vi } from 'vitest'
@@ -32,17 +32,17 @@ vi.mock('../utils/clipboard', () => ({
 
 type Shell = Record<string, unknown> | undefined
 
-function setShell(kirocrew: Shell) {
-  if (kirocrew === undefined) {
-    delete (window as unknown as { kirocrew?: unknown }).kirocrew
+function setShell(ajcrew: Shell) {
+  if (ajcrew === undefined) {
+    delete (window as unknown as { ajcrew?: unknown }).ajcrew
   } else {
-    ;(window as unknown as { kirocrew: unknown }).kirocrew = kirocrew
+    ;(window as unknown as { ajcrew: unknown }).ajcrew = ajcrew
   }
   vi.resetModules()
 }
 
-async function lightboxToolbar(kirocrew: Shell): Promise<HTMLElement> {
-  setShell(kirocrew)
+async function lightboxToolbar(ajcrew: Shell): Promise<HTMLElement> {
+  setShell(ajcrew)
   const { Lightbox } = await import('../components/markdown/Lightbox')
   render(<Lightbox />); const container = document.body
   act(() => {
@@ -55,8 +55,8 @@ async function lightboxToolbar(kirocrew: Shell): Promise<HTMLElement> {
   return el
 }
 
-async function diagramHeader(kirocrew: Shell): Promise<HTMLElement> {
-  setShell(kirocrew)
+async function diagramHeader(ajcrew: Shell): Promise<HTMLElement> {
+  setShell(ajcrew)
   const { default: DiagramLightbox } = await import('../components/DiagramLightbox')
   render(<DiagramLightbox svg="<svg></svg>" onClose={() => {}} />)
   const el = document.body.querySelector<HTMLElement>('[data-testid="diagram-lightbox-header"]')
@@ -73,7 +73,7 @@ async function diagramHeader(kirocrew: Shell): Promise<HTMLElement> {
  * write never runs because `copyImageToClipboard` is mocked.
  */
 async function copySurface(
-  kirocrew: Shell,
+  ajcrew: Shell,
   succeed: boolean,
   testId: 'lightbox-copy-status' | 'lightbox-copy-error',
 ): Promise<HTMLElement> {
@@ -84,7 +84,7 @@ async function copySurface(
   const hadClipboardItem = 'ClipboardItem' in globalThis
   ;(globalThis as unknown as { ClipboardItem: unknown }).ClipboardItem = function () {}
   try {
-    setShell(kirocrew)
+    setShell(ajcrew)
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, blob: () => Promise.resolve(new Blob()) }))
     const { Lightbox } = await import('../components/markdown/Lightbox')
     render(<Lightbox />); const container = document.body
@@ -123,7 +123,7 @@ async function copySurface(
 afterEach(() => {
   cleanup()
   copyOutcome.mockReset()
-  delete (window as unknown as { kirocrew?: unknown }).kirocrew
+  delete (window as unknown as { ajcrew?: unknown }).ajcrew
   document.documentElement.classList.remove('embedded-win-inset')
 })
 

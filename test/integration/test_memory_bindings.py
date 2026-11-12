@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 # A one-step workflow whose result is a literal: admission is the only thing
 # that can make it fail before a run exists.
@@ -159,17 +159,17 @@ async def test_workflow_runs_for_a_member_enrolled_in_private_memory(gateway_boo
     store and identity, and finishes. The report saw every such run refused
     with ``workflow_memory_unavailable``.
     """
-    from kiro_crew import cli_doctor
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew import cli_doctor
+    from aj_crew.config.loader import AjCrewConfig
 
     member = "bug-twelve"
     async with gateway_boot() as gw:
-        created = await gw.post_json("/api/agents", {"name": member, "kiro_agent": "kirocrew"})
+        created = await gw.post_json("/api/agents", {"name": member, "kiro_agent": "ajcrew"})
         store, member_id = created["memory_store"], created["member_id"]
         assert store and store != "default", created
         assert member_id, created
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         declaration = cfg.memory_stores[store]
         assert declaration.memory_version == 2, declaration
         assert declaration.owner_member_id == member_id, declaration
@@ -205,14 +205,14 @@ async def _agents_dir(*, secs: float = 30.0) -> Path:
     """The kiro agents directory once boot has written the managed specs.
 
     The spec rebuild runs after the dashboard is already serving, so a test
-    that writes beside the managed specs waits for ``kirocrew.json`` first, or
+    that writes beside the managed specs waits for ``ajcrew.json`` first, or
     it races the writer for the directory itself.
     """
-    from kiro_crew.config.paths import kiro_agents_dir
+    from aj_crew.config.paths import kiro_agents_dir
 
     directory = kiro_agents_dir()
     await async_wait_until(
-        (directory / "kirocrew.json").is_file,
+        (directory / "ajcrew.json").is_file,
         timeout=secs,
         describe=lambda: f"boot did not write the managed agent specs under {directory}",
     )

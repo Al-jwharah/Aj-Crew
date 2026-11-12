@@ -1,6 +1,6 @@
 """The native Slack turn's object and the plumbing between its phases.
 
-``kiro_crew.slack.handler.handle_message`` builds one ``_SlackTurn`` per call and runs its
+``aj_crew.slack.handler.handle_message`` builds one ``_SlackTurn`` per call and runs its
 turn as three phase coroutines that live in ``slack/handler_runtime`` --
 ``_dispatch_before_turn`` (``dispatch.py``), ``_run_turn`` (``turn.py``) and
 ``_deliver_answer`` (``delivery.py``) -- with the stream loop handing each tool call and
@@ -38,7 +38,7 @@ from types import SimpleNamespace
 import pytest
 from source_corpus import repo_root
 
-from kiro_crew.slack import handler
+from aj_crew.slack import handler
 
 _FACADE_PATH = Path(handler.__file__).resolve()
 _RUNTIME_DIR = _FACADE_PATH.parent / "handler_runtime"
@@ -73,7 +73,7 @@ SLACK_TURN_FUNCTIONS = (
 #: Where an entry point's turn takes its session, read as one source text: for the Slack
 #: handler, ``handle_message`` with the dispatch before the turn and the turn body.
 TURN_ENTRY_FUNCTIONS = {
-    ("kiro_crew.slack.handler", "handle_message"): SLACK_TURN_FUNCTIONS[:3],
+    ("aj_crew.slack.handler", "handle_message"): SLACK_TURN_FUNCTIONS[:3],
 }
 
 
@@ -94,7 +94,7 @@ def test_the_shared_turn_functions_are_handle_message_and_its_phases_in_run_orde
     ladder = tuple(name for _, name in _LADDER)
     assert SLACK_TURN_FUNCTIONS == ("handle_message", dispatch, run, *ladder, deliver)
     assert TURN_ENTRY_FUNCTIONS == {
-        ("kiro_crew.slack.handler", "handle_message"): ("handle_message", dispatch, run)
+        ("aj_crew.slack.handler", "handle_message"): ("handle_message", dispatch, run)
     }
     facade = _FACADE_PATH.read_text(encoding="utf-8")
     entry = ast.get_source_segment(facade, _function(facade, "handle_message")) or ""
@@ -138,7 +138,7 @@ def test_a_set_value_reads_back() -> None:
 def test_the_turn_class_keeps_its_owner_module_and_runs_on_the_facade() -> None:
     """``compose`` picks an owner's classes by ``__module__ == owner.__name__``: the turn
     class must keep ``turn.py``'s module, or its methods would keep their own globals."""
-    assert handler._SlackTurn.__module__ == "kiro_crew.slack.handler_runtime.turn"
+    assert handler._SlackTurn.__module__ == "aj_crew.slack.handler_runtime.turn"
     for name in ("__init__", "release_permit", "book_success", "book_failure", "__getattr__"):
         assert vars(handler._SlackTurn)[name].__globals__ is vars(handler), name
 
@@ -837,13 +837,13 @@ def _unread_imports(
 
 
 def test_the_import_check_reports_a_dead_module_level_import() -> None:
-    facade = "import json\nimport os\nfrom kiro_crew import x as y\n\n\ndef f():\n    return os\n"
+    facade = "import json\nimport os\nfrom aj_crew import x as y\n\n\ndef f():\n    return os\n"
     owner = "def g(turn):\n    return y\n"
     assert _unread_imports(facade, [owner]) == ["facade:1 imports json and nothing reads it"]
 
 
 def test_the_import_check_reports_a_dead_function_local_import() -> None:
-    facade = "def f():\n    from kiro_crew import x\n\n    return 1\n"
+    facade = "def f():\n    from aj_crew import x\n\n    return 1\n"
     assert _unread_imports(facade, []) == ["facade:2 f imports x and never reads it"]
     # Read in its own function: sound. Read only by another function: still dead.
     assert _unread_imports("def f():\n    from a import x\n\n    return x\n", []) == []
@@ -852,7 +852,7 @@ def test_the_import_check_reports_a_dead_function_local_import() -> None:
 
 
 def test_the_import_check_reports_a_dead_owner_reexport() -> None:
-    facade = "from kiro_crew.slack.handler_runtime.x import a, b\n\n\ndef f():\n    return a\n"
+    facade = "from aj_crew.slack.handler_runtime.x import a, b\n\n\ndef f():\n    return a\n"
     assert _unread_imports(facade, []) == ["facade:1 imports b and nothing reads it"]
     assert _unread_imports(facade, [], frozenset({"b"})) == []
 
@@ -887,8 +887,8 @@ def test_the_slack_messages_sink_redacts_what_its_render_let_through(
 
     from slack_handler_helpers import FakeProvider, FakeSessionManager
 
+    from aj_crew.providers.base import LLMEvent
     from conftest import MockSlackClient
-    from kiro_crew.providers.base import LLMEvent
 
     key = "AKIAIOSFODNN7EXAMPLE"
     monkeypatch.setattr(
@@ -993,6 +993,6 @@ def test_the_planted_sleep_needs_the_owners_plain_import() -> None:
     assert "\nimport time\n" in source
     planted = _plant_in(source, "_deliver_answer", "time.sleep(1)")
     assert "sleep" in {family for _line, family, _why in gate._violations_in_source(planted)}
-    hidden = source.replace("\nimport time\n", "\nfrom kiro_crew.slack.handler import time\n")
+    hidden = source.replace("\nimport time\n", "\nfrom aj_crew.slack.handler import time\n")
     planted = _plant_in(hidden, "_deliver_answer", "time.sleep(1)")
     assert "sleep" not in {family for _line, family, _why in gate._violations_in_source(planted)}

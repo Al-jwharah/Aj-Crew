@@ -19,17 +19,17 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from overload_fakes import ManagerHarness, settle_store_writes
 
-import kiro_crew.subagent as subagent_mod
-from kiro_crew.taskq import TaskStoreUnavailable, model
-from kiro_crew.taskq.waits import WaitRecord
-from kiro_crew.validation_parts.core_agent_schemas import SPAWN_BATCH_MEMBERS_MAX
+import aj_crew.subagent as subagent_mod
+from aj_crew.taskq import TaskStoreUnavailable, model
+from aj_crew.taskq.waits import WaitRecord
+from aj_crew.validation_parts.core_agent_schemas import SPAWN_BATCH_MEMBERS_MAX
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
 
 @pytest.fixture
 def quiet():
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         yield
 
 
@@ -272,7 +272,7 @@ class _Req(dict):
 async def test_release_route_answers_only_the_attested_run_itself(h, memory) -> None:
     import json
 
-    from kiro_crew.dashboard.handlers import spawn_resume
+    from aj_crew.dashboard.handlers import spawn_resume
 
     hz = await h(max_concurrent=2)
     s, a, b = await _blocked_on_running_a_and_deferred_b(hz, memory)
@@ -286,7 +286,7 @@ async def test_release_route_answers_only_the_attested_run_itself(h, memory) -> 
         return spawn_resume.api_spawn_release_deferred(req)  # type: ignore[arg-type]
 
     with patch(
-        "kiro_crew.member_memory_auth.session_key_is_attested",
+        "aj_crew.member_memory_auth.session_key_is_attested",
         lambda _req, _key: attested["ok"],
     ):
         refusals = [

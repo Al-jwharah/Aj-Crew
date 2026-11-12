@@ -115,7 +115,7 @@ export function LinkPatternsEditor({ label, description, hint, configKey, rules,
     if (draft) draft.current = { rows: rowsRef.current, adoptedKeyRef, pendingKeyRef, savesInFlightRef, saveChainRef }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- stash once, on unmount
   }, [])
-  // Adopt an external change (another tab, `kirocrew config set`) whenever
+  // Adopt an external change (another tab, `ajcrew config set`) whenever
   // the server VALUE moves somewhere new; identity-only refetches leave
   // local drafts alone because the key is the serialized value.
   useEffect(() => {

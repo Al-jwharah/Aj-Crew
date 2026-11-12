@@ -154,7 +154,7 @@ describe('embedded instance pane relays native notifications to the parent', () 
     const notes = relayed()
     expect(notes).toHaveLength(1)
     expect(notes[0]).toEqual({
-      type: 'mc-native-notify', v: 1, title: 'Deploy notes', body: 'Response ready', tag: 'kirocrew-chat-done:slot-bg', silent: false,
+      type: 'mc-native-notify', v: 1, title: 'Deploy notes', body: 'Response ready', tag: 'ajcrew-chat-done:slot-bg', silent: false,
     })
   })
 
@@ -225,7 +225,7 @@ describe('embedded instance pane relays native notifications to the parent', () 
       function wrapper({ children }: { children: React.ReactNode }) {
         return createElement(Provider, { store }, children)
       }
-      renderHook(() => useNativeNotification('Kiro Crew', '/avatar.png'), { wrapper })
+      renderHook(() => useNativeNotification('Aj Crew', '/avatar.png'), { wrapper })
       act(() => {
         store.dispatch(addNotification({ kind: 'approval', title: 'T', body: 'B', ts: '1.0', approval_id: 'ap-pane-4' } as AppNotification))
       })
@@ -249,7 +249,7 @@ describe('embedded instance pane relays native notifications to the parent', () 
     function wrapper({ children }: { children: React.ReactNode }) {
       return createElement(Provider, { store }, children)
     }
-    renderHook(() => useNativeNotification('Kiro Crew', '/avatar.png'), { wrapper })
+    renderHook(() => useNativeNotification('Aj Crew', '/avatar.png'), { wrapper })
 
     act(() => {
       store.dispatch(addNotification({

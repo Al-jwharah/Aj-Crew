@@ -10,7 +10,7 @@ from xml.etree import ElementTree as ET
 
 import pytest
 
-from kiro_crew import doc_parser
+from aj_crew import doc_parser
 
 _P = "http://schemas.openxmlformats.org/presentationml/2006/main"
 _A = "http://schemas.openxmlformats.org/drawingml/2006/main"

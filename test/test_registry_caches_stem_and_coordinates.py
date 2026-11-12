@@ -1,5 +1,5 @@
 """Unit coverage for the pure, dependency-free helpers in
-``kiro_crew.apps.registry_pipeline.caches``: the cache-stem sanitizer and the
+``aj_crew.apps.registry_pipeline.caches``: the cache-stem sanitizer and the
 manifest source-coordinate builder. Both feed cache FILE NAMES and KEYS derived
 from values an external registry index controls, so each must map a hostile or
 malformed value to a safe, distinct, non-crashing identity. These tests exercise
@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 from hashlib import sha256
 
-from kiro_crew.apps.registry_pipeline import caches
+from aj_crew.apps.registry_pipeline import caches
 
 
 def test_a_pure_safe_name_is_returned_byte_identical() -> None:

@@ -5,7 +5,7 @@
  * Apps provide a workspace path; the hook manages the rest.
  *
  * Usage:
- *   const { useChatSession } = window.__kirocrew_modules['@kirocrew/app-sdk']
+ *   const { useChatSession } = window.__ajcrew_modules['@ajcrew/app-sdk']
  *   const chat = useChatSession({ workspacePath: '/path/to/ws', label: 'CVS', agent: 'privacy-dev' })
  */
 import { useCallback, useEffect, useRef } from 'react'

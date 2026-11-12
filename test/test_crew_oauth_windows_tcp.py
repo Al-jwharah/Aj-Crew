@@ -20,8 +20,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing.wait import default_timeout
 
 windows_only = pytest.mark.skipif(sys.platform != "win32", reason="real Win32 TCP table and SIDs")
 
@@ -32,8 +32,8 @@ def test_the_bridge_path_never_imports_the_config_or_platform_stack(tmp_path):
     refused peer, which ends the send, pays for the audit's imports."""
     script = textwrap.dedent("""
         import io, sys, urllib.request
-        import kiro_crew.kas_env_shim
-        from kiro_crew import kas_connection_bridge
+        import aj_crew.kas_env_shim
+        from aj_crew import kas_connection_bridge
         doc = {"port": 1, "version": "v", "bridge_token": "t", "connection": "github"}
         bridge = kas_connection_bridge.build_bridge(
             doc, server="github", out=io.BytesIO(), err=io.StringIO()
@@ -42,12 +42,12 @@ def test_the_bridge_path_never_imports_the_config_or_platform_stack(tmp_path):
             bridge._opener.open(urllib.request.Request("http://127.0.0.1:1/x", data=b"{}"), 2)
         except Exception:
             pass
-        import kiro_crew.cli_server_peer  # the peer check every send runs
-        loaded = [m for m in ("kiro_crew.config.loader", "kiro_crew.platform") if m in sys.modules]
+        import aj_crew.cli_server_peer  # the peer check every send runs
+        loaded = [m for m in ("aj_crew.config.loader", "aj_crew.platform") if m in sys.modules]
         assert loaded == [], loaded
         print("ok")
         """)
-    env = {**os.environ, "KIROCREW_HOME": str(tmp_path)}
+    env = {**os.environ, "AJCREW_HOME": str(tmp_path)}
     result = subprocess.run(
         [sys.executable, "-c", script],
         capture_output=True,
@@ -62,7 +62,7 @@ def test_the_bridge_path_never_imports_the_config_or_platform_stack(tmp_path):
 
 def _record_gateway(monkeypatch, pid: int | None) -> None:
     """Point the recorded gateway at *pid* (``None``: no record)."""
-    from kiro_crew import cli_server_peer
+    from aj_crew import cli_server_peer
 
     run_marker = cli_server_peer.run_marker
     record = None if pid is None else (pid, run_marker.pid_start_token(pid))
@@ -121,7 +121,7 @@ class _Listener:
 
 @windows_only
 def test_the_bridge_refuses_a_listener_that_is_not_the_recorded_gateway(monkeypatch):
-    from kiro_crew import kas_connection_bridge
+    from aj_crew import kas_connection_bridge
 
     listener = _Listener()
     try:
@@ -142,7 +142,7 @@ def test_the_bridge_refuses_a_listener_that_is_not_the_recorded_gateway(monkeypa
 
 @windows_only
 def test_the_bridge_completes_a_round_trip_with_the_recorded_gateway(monkeypatch):
-    from kiro_crew import kas_connection_bridge
+    from aj_crew import kas_connection_bridge
 
     body = b'{"jsonrpc":"2.0","id":1,"result":{}}'
     answer = (
@@ -165,7 +165,7 @@ def test_the_bridge_completes_a_round_trip_with_the_recorded_gateway(monkeypatch
 
 @windows_only
 def test_mcp_secrets_refuses_a_listener_that_is_not_the_recorded_gateway(monkeypatch):
-    from kiro_crew import mcp_secrets
+    from aj_crew import mcp_secrets
 
     listener = _Listener()
     try:
@@ -229,8 +229,8 @@ def _again(proc: subprocess.Popen) -> int:
 @windows_only
 @pytest.mark.asyncio
 async def test_the_proxy_admits_and_pins_a_loopback_tcp_bridge(monkeypatch):
-    from kiro_crew import member_memory_auth
-    from kiro_crew.connections import crew_oauth, crew_oauth_proxy
+    from aj_crew import member_memory_auth
+    from aj_crew.connections import crew_oauth, crew_oauth_proxy
 
     monkeypatch.setattr(crew_oauth, "manages", lambda slug: False)
     monkeypatch.setattr(crew_oauth_proxy, "_bridges", {})

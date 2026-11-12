@@ -43,7 +43,7 @@ def _rebuild_that_declines(**_kwargs) -> Path:
 def fake_home(tmp_path, monkeypatch):
     """Pin $HOME to tmp_path so all config paths resolve into a sandbox."""
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     return tmp_path
 
@@ -51,20 +51,20 @@ def fake_home(tmp_path, monkeypatch):
 @pytest.fixture
 def sandbox(fake_home, monkeypatch):
     """Sandbox the mcp.py module-level config paths + collaborator seams."""
-    from kiro_crew.dashboard.handlers import mcp as mcp_mod
+    from aj_crew.dashboard.handlers import mcp as mcp_mod
 
-    monkeypatch.setattr(mcp_mod, "_KIROCREW_MCP_JSON", fake_home / "kirocrew.mcp.json")
+    monkeypatch.setattr(mcp_mod, "_AJCREW_MCP_JSON", fake_home / "ajcrew.mcp.json")
     monkeypatch.setattr(mcp_mod, "_GLOBAL_MCP_JSON", fake_home / "kiro.mcp.json")
     monkeypatch.setattr(mcp_mod, "_MCP_LOCK_PATH", fake_home / "kiro.mcp.lock")
 
-    import kiro_crew.agent as agent_mod
+    import aj_crew.agent as agent_mod
 
     rebuild = MagicMock(side_effect=_rebuild_that_writes)
     monkeypatch.setattr(agent_mod, "rebuild_agent_config", rebuild)
 
     return SimpleNamespace(
         home=fake_home,
-        kirocrew_json=fake_home / "kirocrew.mcp.json",
+        ajcrew_json=fake_home / "ajcrew.mcp.json",
         rebuild=rebuild,
         mcp_mod=mcp_mod,
     )
@@ -73,7 +73,7 @@ def sandbox(fake_home, monkeypatch):
 @pytest.fixture
 def fake_sel(monkeypatch):
     """Capture SEL calls made by the custom handlers."""
-    from kiro_crew.dashboard.handlers import mcp_custom as mod
+    from aj_crew.dashboard.handlers import mcp_custom as mod
 
     instance = MagicMock()
     monkeypatch.setattr(mod, "sel", lambda: instance)
@@ -81,7 +81,7 @@ def fake_sel(monkeypatch):
 
 
 def _make_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import mcp_custom as mod
+    from aj_crew.dashboard.handlers import mcp_custom as mod
 
     app = web.Application()
     state = MagicMock()
@@ -106,9 +106,9 @@ async def _client() -> TestClient:
 
 def _written(sandbox) -> dict:
     """The mcpServers block currently on disk (empty when never written)."""
-    if not sandbox.kirocrew_json.exists():
+    if not sandbox.ajcrew_json.exists():
         return {}
-    return json.loads(sandbox.kirocrew_json.read_text(encoding="utf-8")).get("mcpServers", {})
+    return json.loads(sandbox.ajcrew_json.read_text(encoding="utf-8")).get("mcpServers", {})
 
 
 # POST /api/mcp/custom — add
@@ -219,7 +219,7 @@ class TestCustomAdd:
         try:
             resp = await client.post("/api/mcp/custom", json={"servers": {"remote": spec}})
             assert resp.status == 200
-            mode = stat.S_IMODE(sandbox.kirocrew_json.stat().st_mode)
+            mode = stat.S_IMODE(sandbox.ajcrew_json.stat().st_mode)
             assert mode == 0o600, f"store mode {oct(mode)} leaks credentials"
         finally:
             await client.close()
@@ -262,7 +262,7 @@ class TestCustomAdd:
             await client.close()
 
     async def test_collision_409_lists_conflicts_and_writes_nothing(self, sandbox, fake_sel):
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"weather": dict(_STDIO)}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"weather": dict(_STDIO)}}))
         client = await _client()
         try:
             resp = await client.post(
@@ -383,7 +383,7 @@ class TestCustomAdd:
 class TestCustomUpdate:
     async def test_replaces_spec_and_preserves_disabled_state(self, sandbox, fake_sel):
         entry = dict(_STDIO, disabled=True)
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"weather": entry}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"weather": entry}}))
         client = await _client()
         try:
             resp = await client.put("/api/mcp/custom/weather", json={"spec": _REMOTE})
@@ -402,7 +402,7 @@ class TestCustomUpdate:
             await client.close()
 
     async def test_enabled_server_stays_enabled(self, sandbox, fake_sel):
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"weather": dict(_STDIO)}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"weather": dict(_STDIO)}}))
         client = await _client()
         try:
             new_spec = dict(_STDIO, args=["-y", "@acme/weather-mcp@2"])
@@ -417,7 +417,7 @@ class TestCustomUpdate:
     async def test_spec_cannot_smuggle_disabled_false(self, sandbox, fake_sel):
         """A pasted spec carrying ``disabled: false`` must not enable the server."""
         entry = dict(_STDIO, disabled=True)
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"weather": entry}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"weather": entry}}))
         client = await _client()
         try:
             resp = await client.put(
@@ -446,7 +446,7 @@ class TestCustomUpdate:
             await client.close()
 
     async def test_invalid_spec_400_and_nothing_written(self, sandbox, fake_sel):
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"weather": dict(_STDIO)}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"weather": dict(_STDIO)}}))
         client = await _client()
         try:
             resp = await client.put("/api/mcp/custom/weather", json={"spec": {"command": ""}})
@@ -456,7 +456,7 @@ class TestCustomUpdate:
             await client.close()
 
     async def test_sel_logged_on_update(self, sandbox, fake_sel):
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"weather": dict(_STDIO)}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"weather": dict(_STDIO)}}))
         client = await _client()
         try:
             await client.put("/api/mcp/custom/weather", json={"spec": _REMOTE})
@@ -470,7 +470,7 @@ class TestCustomUpdate:
         """An entry without stored headers accepts them like a fresh add —
         there is no prior credential a redacted round-trip could clobber."""
         entry = {"url": "https://mcp.example.com/sse", "disabled": True}
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
         client = await _client()
         try:
             spec = {"url": entry["url"], "headers": {"Authorization": "Bearer fresh"}}
@@ -486,7 +486,7 @@ class TestCustomUpdate:
         """An empty stored headers map carries no credential — presence alone
         must not make the entry permanently header-unauthorable."""
         entry = {"url": "https://mcp.example.com/sse", "headers": {}}
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
         client = await _client()
         try:
             spec = {"url": entry["url"], "headers": {"Authorization": "Bearer fresh"}}
@@ -505,7 +505,7 @@ class TestCustomUpdate:
             "headers": raw_headers,
             "disabledTools": ["write_file"],
         }
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
         client = await _client()
         try:
             resp = await client.get("/api/mcp/custom/remote")
@@ -569,7 +569,7 @@ class TestCustomUpdate:
         a new value replaces one; anything else is refused and nothing written."""
         raw_headers = {"Authorization": "Bearer old-secret", "X-Api-Key": "kept-key"}
         entry = {"url": "https://mcp.example.com/sse", "headers": raw_headers}
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
         client = await _client()
         try:
             resp = await client.get("/api/mcp/custom/remote")
@@ -588,10 +588,10 @@ class TestCustomUpdate:
     async def test_empty_value_refusal_quotes_the_placeholder_exactly(self, sandbox, fake_sel):
         """The refusal shows the exact text to put back, quoted, so it reads as
         something to type and not as a label."""
-        from kiro_crew.mcp_discovery import MCP_REDACTED_HEADER_VALUE
+        from aj_crew.mcp_discovery import MCP_REDACTED_HEADER_VALUE
 
         entry = {"url": "https://mcp.example.com/sse", "headers": {"Authorization": "Bearer s"}}
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
         client = await _client()
         try:
             resp = await client.get("/api/mcp/custom/remote")
@@ -607,10 +607,10 @@ class TestCustomUpdate:
     async def test_put_rejects_redaction_marker_as_fresh_header_value(self, sandbox, fake_sel):
         """A spec pasted from another server's read payload carries the marker;
         writing it would store a nonsense credential that fails auth silently."""
-        from kiro_crew.mcp_discovery import MCP_REDACTED_HEADER_VALUE
+        from aj_crew.mcp_discovery import MCP_REDACTED_HEADER_VALUE
 
         entry = {"url": "https://mcp.example.com/sse"}
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
         client = await _client()
         try:
             spec = {"url": entry["url"], "headers": {"Authorization": MCP_REDACTED_HEADER_VALUE}}
@@ -629,7 +629,7 @@ class TestCustomUpdate:
 class TestCustomGet:
     async def test_returns_full_spec_including_env(self, sandbox, fake_sel):
         entry = dict(_STDIO, disabled=True)
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"weather": entry}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"weather": entry}}))
         client = await _client()
         try:
             resp = await client.get("/api/mcp/custom/weather")
@@ -650,7 +650,7 @@ class TestCustomGet:
             "scopes": ["read:user"],
             "clientId": "public-client-id",
         }
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"github": entry}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"github": entry}}))
         client = await _client()
         try:
             resp = await client.get("/api/mcp/custom/github")
@@ -674,7 +674,7 @@ class TestCustomGet:
             "X-Api-Key": "custom-api-key",
         }
         entry = {"url": "https://mcp.example.com/sse", "headers": raw_headers}
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
         client = await _client()
         try:
             resp = await client.get("/api/mcp/custom/remote")
@@ -700,7 +700,7 @@ class TestCustomGet:
         """
         raw_headers = {"Authorization": "Bearer custom-secret"}
         entry = {"url": "https://old.example.com/sse", "headers": raw_headers}
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"remote": entry}}))
         client = await _client()
         try:
             resp = await client.get("/api/mcp/custom/remote")
@@ -735,38 +735,38 @@ class TestMalformedConfigNeverClobbered:
     while reporting success (GPT 5.6 HIGH on the lenient loader)."""
 
     async def test_add_refuses_to_write_over_malformed_file(self, sandbox, fake_sel):
-        sandbox.kirocrew_json.write_text("{not json")
+        sandbox.ajcrew_json.write_text("{not json")
         client = await _client()
         try:
             resp = await client.post("/api/mcp/custom", json={"servers": {"weather": dict(_STDIO)}})
             assert resp.status == 500
             assert "malformed" in (await resp.json())["error"]
             # The broken file is untouched — nothing was clobbered.
-            assert sandbox.kirocrew_json.read_text(encoding="utf-8") == "{not json"
+            assert sandbox.ajcrew_json.read_text(encoding="utf-8") == "{not json"
         finally:
             await client.close()
 
     async def test_add_refuses_non_object_mcpservers(self, sandbox, fake_sel):
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": ["broken"]}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": ["broken"]}))
         client = await _client()
         try:
             resp = await client.post("/api/mcp/custom", json={"servers": {"weather": dict(_STDIO)}})
             assert resp.status == 500
-            assert json.loads(sandbox.kirocrew_json.read_text(encoding="utf-8"))["mcpServers"] == [
+            assert json.loads(sandbox.ajcrew_json.read_text(encoding="utf-8"))["mcpServers"] == [
                 "broken"
             ]
         finally:
             await client.close()
 
     async def test_add_preserves_existing_entries(self, sandbox, fake_sel):
-        sandbox.kirocrew_json.write_text(
+        sandbox.ajcrew_json.write_text(
             json.dumps({"mcpServers": {"existing": {"command": "keepme"}}})
         )
         client = await _client()
         try:
             resp = await client.post("/api/mcp/custom", json={"servers": {"weather": dict(_STDIO)}})
             assert resp.status == 200
-            servers = json.loads(sandbox.kirocrew_json.read_text(encoding="utf-8"))["mcpServers"]
+            servers = json.loads(sandbox.ajcrew_json.read_text(encoding="utf-8"))["mcpServers"]
             assert servers["existing"] == {"command": "keepme"}
             assert servers["weather"]["disabled"] is True
         finally:
@@ -791,7 +791,7 @@ class TestCarriedKeyRoundTrip:
     }
 
     def _seed(self, sandbox) -> None:
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"weather": self._ENTRY}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"weather": self._ENTRY}}))
 
     async def test_unmodified_get_payload_saves_and_preserves_keys(self, sandbox, fake_sel):
         self._seed(sandbox)
@@ -800,7 +800,7 @@ class TestCarriedKeyRoundTrip:
             got = await (await client.get("/api/mcp/custom/weather")).json()
             resp = await client.put("/api/mcp/custom/weather", json={"spec": got["spec"]})
             assert resp.status == 200
-            data = json.loads(sandbox.kirocrew_json.read_text(encoding="utf-8"))
+            data = json.loads(sandbox.ajcrew_json.read_text(encoding="utf-8"))
             entry = data["mcpServers"]["weather"]
             assert entry["disabledTools"] == ["dangerous_tool"]
             assert entry["disabled"] is True  # enabled state also preserved
@@ -812,12 +812,12 @@ class TestCarriedKeyRoundTrip:
     ):
         """A hand-added marker in the store cannot ride a save back out.
 
-        Other non-allowlisted keys round-trip. The marker means Kiro Crew wrote into a
+        Other non-allowlisted keys round-trip. The marker means Aj Crew wrote into a
         file it does NOT own, so keeping it would let a hand-edit claim management.
         """
-        from kiro_crew.mcp_provenance import MARKER_KEY
+        from aj_crew.mcp_provenance import MARKER_KEY
 
-        sandbox.kirocrew_json.write_text(
+        sandbox.ajcrew_json.write_text(
             json.dumps(
                 {
                     "mcpServers": {
@@ -831,7 +831,7 @@ class TestCarriedKeyRoundTrip:
             got = await (await client.get("/api/mcp/custom/weather")).json()
             resp = await client.put("/api/mcp/custom/weather", json={"spec": got["spec"]})
             assert resp.status == 200
-            entry = json.loads(sandbox.kirocrew_json.read_text(encoding="utf-8"))["mcpServers"][
+            entry = json.loads(sandbox.ajcrew_json.read_text(encoding="utf-8"))["mcpServers"][
                 "weather"
             ]
             assert MARKER_KEY not in entry
@@ -857,7 +857,7 @@ class TestCarriedKeyRoundTrip:
                 json={"spec": {"command": "npx", "args": ["-y", "@acme/weather-mcp@2"]}},
             )
             assert resp.status == 200
-            entry = json.loads(sandbox.kirocrew_json.read_text(encoding="utf-8"))["mcpServers"][
+            entry = json.loads(sandbox.ajcrew_json.read_text(encoding="utf-8"))["mcpServers"][
                 "weather"
             ]
             assert entry["disabledTools"] == ["dangerous_tool"], "must never be dropped by edit"
@@ -875,7 +875,7 @@ class TestCarriedKeyRoundTrip:
             )
             assert resp.status == 400
             assert "managed by other flows" in (await resp.json())["error"]
-            entry = json.loads(sandbox.kirocrew_json.read_text(encoding="utf-8"))["mcpServers"][
+            entry = json.loads(sandbox.ajcrew_json.read_text(encoding="utf-8"))["mcpServers"][
                 "weather"
             ]
             assert entry["disabledTools"] == ["dangerous_tool"]
@@ -888,9 +888,9 @@ class TestCarriedKeyRoundTrip:
         A scope toggle can copy the WIRE spelling into the store; carried-key
         restoration would keep it, and the reader would fall through to it under a 200.
         """
-        from kiro_crew.mcp_utils import kiro_entry_client_id, kiro_entry_scopes
+        from aj_crew.mcp_utils import kiro_entry_client_id, kiro_entry_scopes
 
-        sandbox.kirocrew_json.write_text(
+        sandbox.ajcrew_json.write_text(
             json.dumps(
                 {
                     "mcpServers": {
@@ -921,9 +921,9 @@ class TestCarriedKeyRoundTrip:
 
     async def test_clearing_oauth_hints_also_drops_the_nested_wire_sibling(self, sandbox, fake_sel):
         """The reader falls through to ``oauth.oauthScopes`` too, so a clear must reach it."""
-        from kiro_crew.mcp_utils import kiro_entry_scopes
+        from aj_crew.mcp_utils import kiro_entry_scopes
 
-        sandbox.kirocrew_json.write_text(
+        sandbox.ajcrew_json.write_text(
             json.dumps(
                 {
                     "mcpServers": {
@@ -970,7 +970,7 @@ class TestCarriedKeyRoundTrip:
             {"oauth": {"clientId": ""}},
             {"oauth": "not-a-dict"},
         ):
-            sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"weather": {"url": url}}}))
+            sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"weather": {"url": url}}}))
             client = await _client()
             try:
                 resp = await client.put(
@@ -984,7 +984,7 @@ class TestCarriedKeyRoundTrip:
     async def test_valid_wire_oauth_fields_still_round_trip(self, sandbox, fake_sel):
         """The shape check must not break the preservation path it guards."""
         url = "https://mcp.acme.com/mcp"
-        sandbox.kirocrew_json.write_text(
+        sandbox.ajcrew_json.write_text(
             json.dumps(
                 {
                     "mcpServers": {
@@ -1027,7 +1027,7 @@ class TestCarriedKeyRoundTrip:
             # top-level wire spelling edited in place
             ({"oauthScopes": ["a"]}, {"oauthScopes": ["b"]}, ["b"]),
         ):
-            sandbox.kirocrew_json.write_text(
+            sandbox.ajcrew_json.write_text(
                 json.dumps({"mcpServers": {"weather": {"url": url, **before}}})
             )
             client = await _client()
@@ -1037,7 +1037,7 @@ class TestCarriedKeyRoundTrip:
                 )
                 assert resp.status == 200, f"{submit} rejected: {await resp.text()}"
                 entry = _written(sandbox)["weather"]
-                from kiro_crew.mcp_utils import kiro_entry_scopes
+                from aj_crew.mcp_utils import kiro_entry_scopes
 
                 assert (
                     kiro_entry_scopes(entry) == expect_scopes
@@ -1047,10 +1047,10 @@ class TestCarriedKeyRoundTrip:
 
     async def test_editing_a_nested_client_id_persists(self, sandbox, fake_sel):
         """Same rule for the other hint, and unrelated sub-keys survive."""
-        from kiro_crew.mcp_utils import kiro_entry_client_id
+        from aj_crew.mcp_utils import kiro_entry_client_id
 
         url = "https://mcp.acme.com/mcp"
-        sandbox.kirocrew_json.write_text(
+        sandbox.ajcrew_json.write_text(
             json.dumps(
                 {
                     "mcpServers": {
@@ -1090,7 +1090,7 @@ class TestCarriedKeyRoundTrip:
         success for a change that never happened.
         """
         url = "https://mcp.acme.com/mcp"
-        sandbox.kirocrew_json.write_text(
+        sandbox.ajcrew_json.write_text(
             json.dumps(
                 {
                     "mcpServers": {
@@ -1122,7 +1122,7 @@ class TestCarriedKeyRoundTrip:
         nothing turns that explicit refusal into a silent no-op.
         """
         url = "https://mcp.acme.com/mcp"
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"weather": {"url": url}}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"weather": {"url": url}}}))
         client = await _client()
         try:
             resp = await client.put(
@@ -1142,10 +1142,10 @@ class TestCarriedKeyRoundTrip:
         that sibling back would let the reader fall through to it and resurrect the
         grant the submission just cleared.
         """
-        from kiro_crew.mcp_utils import kiro_entry_scopes
+        from aj_crew.mcp_utils import kiro_entry_scopes
 
         url = "https://mcp.acme.com/mcp"
-        sandbox.kirocrew_json.write_text(
+        sandbox.ajcrew_json.write_text(
             json.dumps(
                 {
                     "mcpServers": {
@@ -1191,18 +1191,18 @@ class TestCarriedKeyRoundTrip:
 @pytest.mark.asyncio
 class TestServersListSurfacesCustomAdds:
     """End-to-end within the handler layer: a consent-disabled custom add
-    must appear in ``GET /api/mcp`` as a disabled, Kiro Crew-managed row.
+    must appear in ``GET /api/mcp`` as a disabled, Aj Crew-managed row.
 
     A row missing from the table would leave the enable/consent action unreachable."""
 
     async def test_disabled_custom_add_appears_in_servers_list(
         self, sandbox, fake_sel, monkeypatch
     ):
-        from kiro_crew.dashboard.handlers import mcp as mcp_mod
+        from aj_crew.dashboard.handlers import mcp as mcp_mod
 
-        # Route discovery at the sandboxed Kiro Crew scope file only.
-        monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (sandbox.kirocrew_json,))
-        monkeypatch.setattr("kiro_crew.mcp_discovery._extra_scope_sources", lambda: [])
+        # Route discovery at the sandboxed Aj Crew scope file only.
+        monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (sandbox.ajcrew_json,))
+        monkeypatch.setattr("aj_crew.mcp_discovery._extra_scope_sources", lambda: [])
 
         app = web.Application()
         state = MagicMock()
@@ -1212,7 +1212,7 @@ class TestServersListSurfacesCustomAdds:
         # supplies; a bare MagicMock attribute is a Mock no caller can equal.
         state.owner_id = ""
         app["state"] = state
-        from kiro_crew.dashboard.handlers import mcp_custom as custom_mod
+        from aj_crew.dashboard.handlers import mcp_custom as custom_mod
 
         app.router.add_post("/api/mcp/custom", custom_mod.api_mcp_custom_add)
         app.router.add_get("/api/mcp", mcp_mod.api_mcp_servers)
@@ -1229,7 +1229,7 @@ class TestServersListSurfacesCustomAdds:
             assert row is not None, "consent-disabled add must get a table row"
             assert row["enabled"] is False
             assert row["status"] == "disabled"
-            assert row["kirocrewManaged"] is True
+            assert row["ajcrewManaged"] is True
         finally:
             await client.close()
 
@@ -1238,7 +1238,7 @@ class TestServersListSurfacesCustomAdds:
 
 
 def _owner_record() -> dict:
-    from kiro_crew.config.loader import read_config_for_update
+    from aj_crew.config.loader import read_config_for_update
 
     return read_config_for_update().get("connections", {}).get("owner_mcp_servers", {})
 
@@ -1275,7 +1275,7 @@ class TestOwnerSignInRecord:
     ):
         # What an agent's shell can do: write the store file directly. Nothing
         # records it, so the gateway never offers or mints its sign-in.
-        sandbox.kirocrew_json.write_text(
+        sandbox.ajcrew_json.write_text(
             json.dumps({"mcpServers": {"agentServer": {"url": "https://agent.example.com/mcp"}}}),
             encoding="utf-8",
         )
@@ -1351,7 +1351,7 @@ class TestConfigReadOffTheLoop:
     """
 
     async def test_add_reads_the_config_off_the_loop(self, sandbox, fake_sel, config_reads):
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"kept": {"command": "x"}}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"kept": {"command": "x"}}}))
         loop_thread = threading.get_ident()
         client = await _client()
         try:
@@ -1360,13 +1360,13 @@ class TestConfigReadOffTheLoop:
         finally:
             await client.close()
         touched = {path for path, _ in config_reads}
-        assert sandbox.kirocrew_json in touched, "the add never loaded the config"
+        assert sandbox.ajcrew_json in touched, "the add never loaded the config"
         assert sandbox.home / "kiro.mcp.json" in touched, "the collision scan never ran"
         on_loop = sorted({str(path) for path, thread in config_reads if thread == loop_thread})
         assert on_loop == [], f"read on the event loop: {on_loop}"
 
     async def test_get_reads_the_config_off_the_loop(self, sandbox, fake_sel, config_reads):
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"weather": _STDIO}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"weather": _STDIO}}))
         loop_thread = threading.get_ident()
         client = await _client()
         try:
@@ -1374,12 +1374,12 @@ class TestConfigReadOffTheLoop:
             assert resp.status == 200
         finally:
             await client.close()
-        assert sandbox.kirocrew_json in {path for path, _ in config_reads}
+        assert sandbox.ajcrew_json in {path for path, _ in config_reads}
         on_loop = sorted({str(path) for path, thread in config_reads if thread == loop_thread})
         assert on_loop == [], f"read on the event loop: {on_loop}"
 
     async def test_update_reads_the_config_off_the_loop(self, sandbox, fake_sel, config_reads):
-        sandbox.kirocrew_json.write_text(json.dumps({"mcpServers": {"weather": _STDIO}}))
+        sandbox.ajcrew_json.write_text(json.dumps({"mcpServers": {"weather": _STDIO}}))
         loop_thread = threading.get_ident()
         client = await _client()
         try:
@@ -1387,6 +1387,6 @@ class TestConfigReadOffTheLoop:
             assert resp.status == 200
         finally:
             await client.close()
-        assert sandbox.kirocrew_json in {path for path, _ in config_reads}
+        assert sandbox.ajcrew_json in {path for path, _ in config_reads}
         on_loop = sorted({str(path) for path, thread in config_reads if thread == loop_thread})
         assert on_loop == [], f"read on the event loop: {on_loop}"

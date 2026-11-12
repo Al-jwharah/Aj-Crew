@@ -29,12 +29,12 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.autonudge_authz as autonudge_authz
-from kiro_crew.autonudge import NudgeAdmissionRefused, binding_key_for
-from kiro_crew.autonudge_authz import authorize_and_add_nudge
-from kiro_crew.monitoring.models import MonitorCreationSurface
-from kiro_crew.testing.wait import async_wait_until
-from kiro_crew.workflows.service import WorkflowService
+import aj_crew.autonudge_authz as autonudge_authz
+from aj_crew.autonudge import NudgeAdmissionRefused, binding_key_for
+from aj_crew.autonudge_authz import authorize_and_add_nudge
+from aj_crew.monitoring.models import MonitorCreationSurface
+from aj_crew.testing.wait import async_wait_until
+from aj_crew.workflows.service import WorkflowService
 
 pytestmark = pytest.mark.asyncio
 
@@ -127,10 +127,10 @@ async def test_nudge_port_swallows_authorizer_failure(caplog) -> None:
 
     # Arm failure must not propagate out of the fire-and-forget task.
     svc = _svc(boom)
-    caplog.set_level("WARNING", logger="kiro_crew.workflows.service")
+    caplog.set_level("WARNING", logger="aj_crew.workflows.service")
     svc._nudge_port(run_id="wf_t", session_key="dashboard:chat-1-1", idle_secs=90, message="poke")
     await svc._drain_nudge_tasks("wf_t")
-    messages = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.workflows.service"]
+    messages = [r.getMessage() for r in caplog.records if r.name == "aj_crew.workflows.service"]
     assert messages == ["workflow ctx.nudge: failed to arm loop"]
 
 
@@ -257,7 +257,7 @@ async def test_autonudge_add_survives_caller_cancellation(tmp_path, monkeypatch)
     shielded: the caller sees CancelledError, but the arm+persist completes."""
     import threading
 
-    from kiro_crew.autonudge import AutoNudgeService
+    from aj_crew.autonudge import AutoNudgeService
 
     svc = AutoNudgeService(base_dir=tmp_path)
     write_started = threading.Event()
@@ -385,11 +385,11 @@ async def test_authz_rejects_spoofed_discord_session() -> None:
     svc = FakeNudgeSvc()
     # User IS allowlisted, but the requested key is NOT their current session →
     # deny-by-default rejects the spoof (the core cross-session-injection guard).
-    disp = FakeDiscordDispatcher(authorized={"42"}, current={"42": "discord:kirocrew:direct:42"})
+    disp = FakeDiscordDispatcher(authorized={"42"}, current={"42": "discord:ajcrew:direct:42"})
     loop, error, status = await authorize_and_add_nudge(
         svc=svc,
         state=_state(discord=disp),
-        slot_key="discord:kirocrew:direct:99",  # someone else's user id
+        slot_key="discord:ajcrew:direct:99",  # someone else's user id
         message="pwn",
         source="workflow",
     )
@@ -403,7 +403,7 @@ async def test_authz_rejects_unallowlisted_discord_user() -> None:
     loop, error, status = await authorize_and_add_nudge(
         svc=svc,
         state=_state(discord=disp),
-        slot_key="discord:kirocrew:direct:42",
+        slot_key="discord:ajcrew:direct:42",
         message="pwn",
         source="workflow",
     )
@@ -555,7 +555,7 @@ async def test_author_prompt_advertises_only_wired_primitives() -> None:
     ctx.cron / ctx.memory / ctx.learn ...) MUST be wired in ``_runner`` first,
     or this test fails — the drift can't silently reappear.
     """
-    from kiro_crew.workflows.service import _AUTHOR_SYSTEM
+    from aj_crew.workflows.service import _AUTHOR_SYSTEM
 
     advertised = set(_CTX_TOKEN_RE.findall(_AUTHOR_SYSTEM))
     assert advertised, "coherence check: the authoring prompt names ctx primitives"

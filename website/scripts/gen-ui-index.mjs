@@ -4,7 +4,7 @@
  *
  * Two outputs, because they change at different rates:
  *
- * - `../src/kiro_crew/docs/ui-index.generated.json` (COMMITTED): the generated
+ * - `../src/aj_crew/docs/ui-index.generated.json` (COMMITTED): the generated
  *   tier (pages, tabs, Settings) and the curated tier (registered controls).
  *   It only moves when a registry, a marker, a descriptor or a catalog does.
  * - `ui-index.auto.json` (BUILD-TIME, never committed): the auto tier, every
@@ -14,7 +14,7 @@
  *   (with `--sites-out`, the stamp manifest) to node_modules/.cache/kc-ui-auto/,
  *   and the ui-auto-stamp Vite plugin (scripts/lib/ui-auto-stamp.mjs) stamps
  *   `data-ui-auto` on the pointable sites it lists and emits the tier into
- *   the vite output (website/dist, staged to src/kiro_crew/static/dist and
+ *   the vite output (website/dist, staged to src/aj_crew/static/dist and
  *   shipped with the dashboard) instead of the repo. Each auto location carries
  *   a `guide_policy` (point | search-only | deny); only `point` ones carry a
  *   single-step `ui.show` plan, at their one render site.
@@ -106,7 +106,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const REPO = path.resolve(ROOT, '..')
 const SRC = path.join(ROOT, 'src')
-const OUT = path.join(REPO, 'src/kiro_crew/docs/ui-index.generated.json')
+const OUT = path.join(REPO, 'src/aj_crew/docs/ui-index.generated.json')
 const PLANS_OUT = path.join(SRC, 'uiLocations/guidePlans.gen.ts')
 
 const args = process.argv.slice(2)
@@ -141,7 +141,7 @@ if (sitesIdx >= 0 && (!SITES_OUT || SITES_OUT.startsWith('--'))) {
   process.exit(2)
 }
 // `--auto-out <file>`: the build-time auto tier. Never the committed index,
-// and never anywhere under src/kiro_crew/docs (tracked): the tier is not committed.
+// and never anywhere under src/aj_crew/docs (tracked): the tier is not committed.
 if (autoIdx >= 0) {
   if (!AUTO_OUT || AUTO_OUT.startsWith('--')) {
     console.error('gen-ui-index: --auto-out needs a file path')
@@ -173,7 +173,7 @@ if (outIdx >= 0) {
 }
 
 /** Matches `DEFAULT_PRODUCT_NAME` in src/i18n/index.ts (not imported: it pulls i18next in). */
-const PRODUCT_NAME = 'Kiro Crew'
+const PRODUCT_NAME = 'Aj Crew'
 
 function read(abs) {
   return fs.readFileSync(abs, 'utf-8')
@@ -269,7 +269,7 @@ for (const code of locales) {
 // reproduces both committed files byte for byte: a renamed Settings label must
 // fail this check, not ride along in a stale registry.
 const genTsPath = path.join(SRC, 'components/commandPalette/settingsRegistry.gen.ts')
-const agentJsonPath = path.join(REPO, 'src/kiro_crew/docs/settings-registry.generated.json')
+const agentJsonPath = path.join(REPO, 'src/aj_crew/docs/settings-registry.generated.json')
 const genTs = read(genTsPath)
 const agentJson = read(agentJsonPath)
 {
@@ -500,10 +500,10 @@ function writeReport(file) {
   const full = autoBuilt.index
   const fullTiers = full.coverage.tiers
   const lines = ['# find_ui coverage report', '', `Generated from input ${built.index.input_digest}.`, '']
-  lines.push('Files: the generated and curated tiers are the committed `src/kiro_crew/docs/ui-index.generated.json` '
+  lines.push('Files: the generated and curated tiers are the committed `src/aj_crew/docs/ui-index.generated.json` '
     + `(${Buffer.byteLength(bytes)} bytes); the auto tier is the build-time \`${AUTO_ARTIFACT_NAME}\` `
     + `(${Buffer.byteLength(autoBytes)} bytes), written into website/dist by \`npm run build\` and shipped in `
-    + 'src/kiro_crew/static/dist. It is never committed.', '')
+    + 'src/aj_crew/static/dist. It is never committed.', '')
   lines.push(`## Indexed (${full.locations.length})`, '')
   for (const [k, v] of Object.entries(fullTiers)) lines.push(`- tier ${k}: ${v}${k === 'auto' ? ` (${AUTO_ARTIFACT_NAME})` : ' (committed)'}`)
   for (const [k, v] of Object.entries(counts)) lines.push(`- ${k} (non-auto): ${v}`)

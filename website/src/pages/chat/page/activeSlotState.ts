@@ -56,7 +56,7 @@ export function useActiveSlotState({
   }, [messages.length, probeServerTotal])
   const messagesRef = useRef(messages)
   messagesRef.current = messages
-  const kiroCrewVersion = useAppSelector(s => s.dashboard.status?.version) || ''
+  const ajCrewVersion = useAppSelector(s => s.dashboard.status?.version) || ''
   // Count COMPLETED back-and-forths (one user message answered by an assistant
   // reply), not raw assistant-role messages — see countCompletedTurns for why a
   // plain assistant-message tally over-counts. Extracted to a pure helper so the
@@ -262,7 +262,7 @@ export function useActiveSlotState({
   const history = useAppSelector(s => s.chat.history)
   const historyHasMore = useAppSelector(s => s.chat.historyHasMore)
   return {
-    messages, messagesRef, kiroCrewVersion, completedTurnCount, knowledgeFetch, knowledgeFetchRef, softStopAtMapRef, sentMessages, slotRunning, slotRunningRef, turnDisclosure, setTurnDisclosureFor,
+    messages, messagesRef, ajCrewVersion, completedTurnCount, knowledgeFetch, knowledgeFetchRef, softStopAtMapRef, sentMessages, slotRunning, slotRunningRef, turnDisclosure, setTurnDisclosureFor,
     toolDisclosure, setToolDisclosureFor, turnRowMayBeLive, composerBusy, projectLocked, slotStopping, slotLoading, slotSwitchTarget, pendingQuestion, restoredQuestionNotice, pendingFollowup,
     folderSuggestion, followupTsBySlot, splitMode, setSplitMode, clearSplitOnSelect, crewWindow, openEmbeddedCrewWindow, navigateToEmbeddedSlot, splitAnchor, setSplitAnchor, activeTip, dismissTip,
     slotState, contextPct, contextTokens, activityOpen, slotHasMore, slotOldestIndex, cursorIsForActiveSlot, loadingOlder, olderFailed, activeViewIsBoundedPage, history, historyHasMore, environmentStart,

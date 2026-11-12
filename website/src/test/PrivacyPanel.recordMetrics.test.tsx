@@ -43,14 +43,14 @@ const BEACON_OFF = {
   reason: 'disabled',
   endpoint_configured: true,
   env_override: false,
-  env_var: 'KIROCREW_TELEMETRY_DISABLED',
+  env_var: 'AJCREW_TELEMETRY_DISABLED',
   overlay_override: false,
 }
 
 const collection = (over: Record<string, unknown> = {}) => ({
   enabled: false,
   env_pinned: false,
-  env_var: 'KIROCREW_TELEMETRY',
+  env_var: 'AJCREW_TELEMETRY',
   overlay_override: false,
   otlp_configured: false,
   metrics_dir: '/home/u/.kiro/crew/metrics',
@@ -94,13 +94,13 @@ describe('PrivacyPanel metric-recording switch', () => {
   })
 
   it('disables itself and names the variable when an env var pins the setting', async () => {
-    mount({ env_pinned: true, env_var: 'KIROCREW_TELEMETRY' })
+    mount({ env_pinned: true, env_var: 'AJCREW_TELEMETRY' })
     const sw = await screen.findByRole('switch', { name: LABEL })
     await waitFor(() => expect(sw).toHaveAttribute('aria-disabled', 'true'))
     // Anchored on the note's own wording: the panel also lists the beacon's
-    // KIROCREW_TELEMETRY_DISABLED shell commands, which a bare variable-name
+    // AJCREW_TELEMETRY_DISABLED shell commands, which a bare variable-name
     // match would hit instead.
-    expect(screen.getByText(/KIROCREW_TELEMETRY environment variable is pinning/)).toBeInTheDocument()
+    expect(screen.getByText(/AJCREW_TELEMETRY environment variable is pinning/)).toBeInTheDocument()
     await userEvent.click(sw)
     expect(patchConfig).not.toHaveBeenCalled()
   })
@@ -123,7 +123,7 @@ describe('PrivacyPanel metric-recording switch', () => {
     // findByText, not getByText: the note only exists once the status query has
     // settled, and the switch renders before that.
     expect(
-      await screen.findByText(/KIROCREW_TELEMETRY environment variable is pinning/),
+      await screen.findByText(/AJCREW_TELEMETRY environment variable is pinning/),
     ).toBeInTheDocument()
     expect(screen.queryByText(/config\.local\.json/)).not.toBeInTheDocument()
   })
@@ -243,10 +243,10 @@ describe('PrivacyPanel metric-recording switch', () => {
   it('shows the egress fact even when an env var also pins the switch', async () => {
     // A pin reason and the egress fact answer different questions. Collapsing them
     // into one priority chain let the pin hide the fact that metrics leave the box.
-    mount({ enabled: true, env_pinned: true, env_var: 'KIROCREW_TELEMETRY', otlp_configured: true })
+    mount({ enabled: true, env_pinned: true, env_var: 'AJCREW_TELEMETRY', otlp_configured: true })
     const sw = await screen.findByRole('switch', { name: LABEL })
     // Both notes are announced, not just the first. Assert through the idrefs
-    // rather than by text: the panel also prints KIROCREW_TELEMETRY_DISABLED in
+    // rather than by text: the panel also prints AJCREW_TELEMETRY_DISABLED in
     // its CLI section, so a text query would be ambiguous.
     await waitFor(() => {
       const ids = (sw.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean)
@@ -254,7 +254,7 @@ describe('PrivacyPanel metric-recording switch', () => {
     })
     const ids = (sw.getAttribute('aria-describedby') ?? '').split(/\s+/).filter(Boolean)
     const texts = ids.map(id => document.getElementById(id)?.textContent ?? '')
-    expect(texts.some(t => /KIROCREW_TELEMETRY/.test(t))).toBe(true)
+    expect(texts.some(t => /AJCREW_TELEMETRY/.test(t))).toBe(true)
     expect(texts.some(t => /being sent off this machine/.test(t))).toBe(true)
   })
 
@@ -277,7 +277,7 @@ describe('PrivacyPanel metric-recording switch', () => {
     const describedBy = sw.getAttribute('aria-describedby')
     expect(describedBy).toBeTruthy()
     const note = document.getElementById(describedBy as string)
-    expect(note?.textContent ?? '').toMatch(/KIROCREW_TELEMETRY environment variable/)
+    expect(note?.textContent ?? '').toMatch(/AJCREW_TELEMETRY environment variable/)
   })
 
   it('drops the description link when nothing is pinning the switch', async () => {

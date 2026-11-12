@@ -24,13 +24,13 @@ from sandbox_absent_ceiling_seal_helpers import (  # noqa: F401 -- fixtures are 
     crew_home_fixture,
 )
 
-from kiro_crew import sandbox, sandbox_plan
-from kiro_crew.apps import credential_masks
-from kiro_crew.apps.manifest import AppManifest
+from aj_crew import sandbox, sandbox_plan
+from aj_crew.apps import credential_masks
+from aj_crew.apps.manifest import AppManifest
 
 _POSIX_ONLY = pytest.mark.skipif(sys.platform == "win32", reason="POSIX sandbox only")
 _MODES = ("standard", "cc", "strict")
-_PREFIXES = (".kiro/crew", ".kirocrew")
+_PREFIXES = (".kiro/crew", ".ajcrew")
 
 
 @pytest.fixture(autouse=True)
@@ -369,7 +369,7 @@ class TestTheAliasPassesCoverTheDeclaredLeaves:
         assert sandbox._refuse_aliased_masked_leaves() == ()
 
     def test_a_path_only_platform_refuses_any_second_name(self, home):
-        from kiro_crew import sandbox_aliases
+        from aj_crew import sandbox_aliases
 
         data = _install(home, "demo", ["secrets.json"])
         (data / "secrets.json").write_text("token", encoding="utf-8")
@@ -475,7 +475,7 @@ class TestTheMasksOutliveTheManifestBesideTheData:
     """The lifecycle moves ``data/`` aside and a default uninstall drops the manifest."""
 
     def _install_app(self, tmp_path, masks):
-        from kiro_crew.apps.manager import install_app
+        from aj_crew.apps.manager import install_app
 
         result = install_app(_make_app_source(tmp_path, name="demo", credentialMasks=masks))
         assert result.ok, result.error
@@ -489,7 +489,7 @@ class TestTheMasksOutliveTheManifestBesideTheData:
         }
 
     def test_a_default_uninstall_keeps_the_kept_data_masked(self, app_home, tmp_path):
-        from kiro_crew.apps.manager import uninstall_app
+        from aj_crew.apps.manager import uninstall_app
 
         self._install_app(tmp_path, ["secrets.json"])
         (app_home / "apps" / "demo" / "data" / "secrets.json").write_text("t", "utf-8")
@@ -511,7 +511,7 @@ class TestTheMasksOutliveTheManifestBesideTheData:
         ids=["not-json", "empty", "nested-past-the-parser-depth", "misnamed", "invalid-entry"],
     )
     def test_a_manifest_that_does_not_read_cleanly_keeps_the_record(self, app_home, tmp_path, body):
-        from kiro_crew.apps.manager import uninstall_app
+        from aj_crew.apps.manager import uninstall_app
 
         self._install_app(tmp_path, ["secrets.json"])
         record = app_home / "apps" / ".demo-credential-masks.json"
@@ -536,7 +536,7 @@ class TestTheMasksOutliveTheManifestBesideTheData:
     def test_an_uninstall_that_cannot_record_the_masks_refuses(
         self, app_home, tmp_path, monkeypatch
     ):
-        from kiro_crew.apps.manager import uninstall_app
+        from aj_crew.apps.manager import uninstall_app
 
         self._install_app(tmp_path, ["secrets.json"])
         (app_home / "apps" / ".demo-credential-masks.json").unlink()
@@ -549,8 +549,8 @@ class TestTheMasksOutliveTheManifestBesideTheData:
         assert (app_home / "apps" / "demo" / "app.json").is_file()
 
     def test_an_update_keeps_the_staged_data_masked(self, app_home, tmp_path, monkeypatch):
-        from kiro_crew.apps import manager
-        from kiro_crew.apps.manager import update_app
+        from aj_crew.apps import manager
+        from aj_crew.apps.manager import update_app
 
         self._install_app(tmp_path / "v1", ["secrets.json"])
         (app_home / "apps" / ".demo-credential-masks.json").unlink()

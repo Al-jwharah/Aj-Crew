@@ -1600,7 +1600,7 @@ describe('InstancesViewport last-chat hint (#16009)', () => {
     const store = renderWarm()
     await waitFor(() => expect(paneSrc()).toContain(':7778/'))
     const before = paneSrc()
-    await post({ source: 'kirocrew', type: 'mc-pane-active-slot', key: 'chat-2' }, 'http://127.0.0.1:7778')
+    await post({ source: 'ajcrew', type: 'mc-pane-active-slot', key: 'chat-2' }, 'http://127.0.0.1:7778')
     // Remembering must not reload the pane it came from.
     expect(paneSrc()).toBe(before)
     expect(before).not.toContain('lastSid')

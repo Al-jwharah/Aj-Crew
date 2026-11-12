@@ -19,9 +19,9 @@ from acp_client_more_coverage_helpers import (  # noqa: F401 -- the autouse fixt
 )
 from stray_line_helpers import too_deep_to_decode as _too_deep_to_decode
 
-import kiro_crew.acp.client as acp_client
-from kiro_crew.acp._dispatch import UNSERIALISABLE_SIBLING_VALUE
-from kiro_crew.acp.types import EVENT_TOOL_CALL, EVENT_TOOL_CALL_UPDATE, EVENT_TOOL_RESULT
+import aj_crew.acp.client as acp_client
+from aj_crew.acp._dispatch import UNSERIALISABLE_SIBLING_VALUE
+from aj_crew.acp.types import EVENT_TOOL_CALL, EVENT_TOOL_CALL_UPDATE, EVENT_TOOL_RESULT
 
 # ── Encoder and decoder refusal on the client's dispatch-path frames ──
 

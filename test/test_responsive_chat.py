@@ -13,14 +13,14 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.config.sections import KiroCrewAgentConfig
-from kiro_crew.dashboard import chat_handlers, chat_runner
-from kiro_crew.dashboard import responsive_chat as rc
-from kiro_crew.dashboard.slot_queue_repository import sanitize_restored_queue
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.dashboard.steer_settle import settle_consumed_steers
-from kiro_crew.history import HUMAN_TURN_META_KEY
+from aj_crew.config import AjCrewConfig
+from aj_crew.config.sections import AjCrewAgentConfig
+from aj_crew.dashboard import chat_handlers, chat_runner
+from aj_crew.dashboard import responsive_chat as rc
+from aj_crew.dashboard.slot_queue_repository import sanitize_restored_queue
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.steer_settle import settle_consumed_steers
+from aj_crew.history import HUMAN_TURN_META_KEY
 
 
 @pytest.fixture
@@ -31,12 +31,12 @@ def fixture(tmp_path, monkeypatch):
     slot._titled = True
     state.sessions.cancel_owned_turn = AsyncMock(return_value="acked")
     state.sessions.is_compacting = lambda key: False
-    monkeypatch.setattr("kiro_crew.dashboard.chat_delivery.start_queue_persist", lambda *a: None)
+    monkeypatch.setattr("aj_crew.dashboard.chat_delivery.start_queue_persist", lambda *a: None)
     monkeypatch.setattr(chat_runner, "_gateway_shutdown_requested", lambda state: False)
     monkeypatch.setattr(chat_runner, "_memory_preparation_pending", lambda state: False)
-    cfg = KiroCrewConfig()
-    cfg.agents = {"default": KiroCrewAgentConfig()}
-    monkeypatch.setattr(KiroCrewConfig, "load", lambda: cfg)
+    cfg = AjCrewConfig()
+    cfg.agents = {"default": AjCrewAgentConfig()}
+    monkeypatch.setattr(AjCrewConfig, "load", lambda: cfg)
     binding = {"member": "default", "slot_key": slot.key, "memory_store": ""}
     monkeypatch.setattr(chat_handlers.members_mod, "read_dm_binding_for_slot", lambda key: binding)
     request = MagicMock(spec=web.Request)
@@ -109,7 +109,7 @@ async def test_a_waiting_send_evicted_from_the_window_reuses_its_written_row(fix
     await rc.accept(request, slot, "New question", {"sendId": "send-a"})
     entry = slot._queue[0]
     row = entry["_responsive_row"]
-    monkeypatch.setattr("kiro_crew.dashboard.state._MAX_SLOT_MESSAGES", 20)
+    monkeypatch.setattr("aj_crew.dashboard.state._MAX_SLOT_MESSAGES", 20)
     slot._disk_window_len = len(slot.messages)
     # A long reply streams its text as many chunk rows, plus a few real ones,
     # and the capped window evicts the waiting send's row.
@@ -324,7 +324,7 @@ async def test_idle_parent_answers_ahead_of_children_and_keeps_ordinary_queue(fi
 
     monkeypatch.setattr(chat_runner, "_run_chat", run)
     # A pre-existing ordinary send still waits behind the child-work hold.
-    from kiro_crew.dashboard.chat_delivery import queue_for_next_turn
+    from aj_crew.dashboard.chat_delivery import queue_for_next_turn
 
     queue_for_next_turn(state, slot, "ordinary", directive_user_origin=True)
     result = json.loads((await rc.accept(request, slot, "responsive", {"sendId": "s1"})).text)
@@ -531,7 +531,7 @@ async def test_real_runner_injects_turn_guidance_without_changing_user_text(
 ):
     from test_chat_runner_coverage import _complete, _runner_state, _set_stream, _slot
 
-    from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
     state, client = _runner_state(tmp_path)
     slot = _slot("responsive-runner")
@@ -592,7 +592,7 @@ async def test_real_turn_keeps_a_waiting_send_where_it_was_sent(fixture, tmp_pat
     row -- the order the person's chat drew live, and what a reload reads."""
     from test_chat_runner_coverage import _complete, _runner_state, _slot
 
-    from kiro_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
+    from aj_crew.providers.base import EVENT_TEXT_CHUNK, LLMEvent
 
     state, client = _runner_state(tmp_path)
     slot = _slot("responsive-order")
@@ -668,7 +668,7 @@ async def test_real_turn_keeps_a_waiting_send_where_it_was_sent(fixture, tmp_pat
 async def test_real_running_turn_hands_one_message_to_same_parent(fixture, tmp_path, monkeypatch):
     from test_chat_runner_coverage import _complete, _runner_state, _slot
 
-    from kiro_crew.providers.base import EVENT_TEXT_CHUNK, EVENT_TOOL_CALL, LLMEvent
+    from aj_crew.providers.base import EVENT_TEXT_CHUNK, EVENT_TOOL_CALL, LLMEvent
 
     state, client = _runner_state(tmp_path)
     slot = _slot("responsive-handoff")
@@ -822,7 +822,7 @@ async def test_http_human_steer_gets_private_guidance_and_requeues_it(
 
 @pytest.mark.asyncio
 async def test_non_member_steer_keeps_wire_text(fixture):
-    from kiro_crew.dashboard.chat_delivery import steer_into_running_turn
+    from aj_crew.dashboard.chat_delivery import steer_into_running_turn
 
     state, slot, *_ = fixture
     _busy(slot)

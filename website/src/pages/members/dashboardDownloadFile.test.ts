@@ -165,7 +165,7 @@ describe('downloadFileName', () => {
   })
 })
 
-const ISLAND_OPEN = '<script type="application/json" id="kirocrew-dashboard-data">'
+const ISLAND_OPEN = '<script type="application/json" id="ajcrew-dashboard-data">'
 const HELD = { fields: { open: 3, closed: 1 }, agentic: [], seq: 4, missing: [], version: 2, generation: 'g1', subject: 'crewmate', last_user_at: 'yesterday' }
 const COMPOSED = `<style>x</style>\n${ISLAND_OPEN}${JSON.stringify(HELD)}</script>\n<div data-dashboard-field="open">3</div>`
 
@@ -236,7 +236,7 @@ describe('withIslandRead', () => {
   })
 
   it('finds the island by its id, whatever the order of its attributes', () => {
-    const reordered = COMPOSED.replace(ISLAND_OPEN, "<script id='kirocrew-dashboard-data' type='application/json'>")
+    const reordered = COMPOSED.replace(ISLAND_OPEN, "<script id='ajcrew-dashboard-data' type='application/json'>")
     const html = withIslandRead(reordered, { ...HELD, fields: { open: 9 } })
     expect(islandRead(html)?.fields).toEqual({ open: 9 })
   })

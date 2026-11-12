@@ -68,7 +68,7 @@ const COSTS = { monthToDate: 2.25, currency: 'USD', fetchedAt: new Date().toISOS
 // `sections` is REQUIRED by DriveUsage: the rail counts and the storage meter
 // both read it, so a fixture without it crashes the shell.
 const DRIVE = {
-  exists: true, bucket: 'kirocrew-drive-7f3a91c4', region: 'us-west-2',
+  exists: true, bucket: 'ajcrew-drive-7f3a91c4', region: 'us-west-2',
   usage: {
     bytes: 44677427, objects: 18,
     sections: {
@@ -176,7 +176,7 @@ async function answer(route) {
   if (path === '/api/auth/me') return json(route, { user: 'owner', app: '' })
   if (path === '/api/status') return json(route, { sessions: 0, messages: 0, cron_jobs: 0, subagents: 0, lessons: 0, uptime: 1, version: '0.1.0' })
   if (path === '/api/kiro-prerequisite') return json(route, { installed: true, authenticated: true, ready: true })
-  if (path === '/api/dashboard/branding') return json(route, { bot_name: 'Kiro Crew', avatar: '' })
+  if (path === '/api/dashboard/branding') return json(route, { bot_name: 'Aj Crew', avatar: '' })
   if (path === '/api/theme/boot') return json(route, { mode: 'dark', theme: '' })
   if (path === '/api/themes') return json(route, { themes: [], installed: [] })
   if (path === '/api/notifications') return json(route, { notifications: [], unread: 0 })

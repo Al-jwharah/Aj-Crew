@@ -1,7 +1,7 @@
 # Session Crew log Emitter
 
 `crew_log/emit.py` turns the gateway's ACP turn lifecycle into the append-only
-per-session crew log `kiro_crew.crew_log` keeps for each ACP session id. It is a **writer
+per-session crew log `aj_crew.crew_log` keeps for each ACP session id. It is a **writer
 only**: it owns which facts matter and where they are known, not storage or its layout.
 
 ## Who owns what
@@ -14,9 +14,9 @@ The emitter is three parts, and the line between them is where new work goes:
 | `crew_log/writer.py` | `CrewLogWriter`: the per-unit buffer and its order, retention and backoff, the refusal rule, the memory ceilings, the `write/dropped` loss marker, the inline path, stall reporting and the shutdown drain, all paced by one frozen `WriterLimits`; `WriteJob`, whose named constructors (`append`, `opening`, `follow_on`) select a row of the writer's policy table; the writer lanes that drain different units side by side, one unit per lane at a time; and `WarningBudget`, the one rate-limited failure report the writer and the emitter share, defined in `crew_log/writer_warnings.py` and re-exported here | how an append reaches the file |
 | `crew_log/turn_tracker.py` | `TurnTracker`: each live turn's record (its step and call ordinals, whether its closer is owed), the settle-once tool registry, the attempt counts, the supersede repair's debt, and the never-evict-a-live-turn rule the emitter's own caches are trimmed by | per-turn bookkeeping |
 
-`crew_log/emit.py` is the emitter's import path and patch surface: a `kiro_crew._facade_mirror`
+`crew_log/emit.py` is the emitter's import path and patch surface: an `aj_crew._facade_mirror`
 facade over the owners below, lowest layer first. It binds every name they define and serves the
-nine module globals they rebind with `global`, so `kiro_crew.crew_log.emit.<name>` is the object
+nine module globals they rebind with `global`, so `aj_crew.crew_log.emit.<name>` is the object
 the code reads and a patch through it reaches every owner holding the name
 (`test/test_emit_facade.py`). A function that rebinds or reads the installed writer, tracker or
 warning budget (`_writer_instance`, `_tracker_instance`, `_warnings_instance`, `_next_limits`),
@@ -50,7 +50,7 @@ read them around each record on the event loop while a backlog may be large. How
 sessions are still owed a `write/dropped` marker scans the backlog, so only the shutdown
 drain's report reads it.
 
-The emitter defaults **ON** and is switched off by `KIROCREW_CREW_LOG=0`
+The emitter defaults **ON** and is switched off by `AJCREW_CREW_LOG=0`
 (`constants.crew_log_enabled`, read per call, case- and space-insensitive: unset,
 empty or a truthy value `{1, true, yes, on}` leaves it on; `{0, false, no, off}` turns it
 off, and so does any other value, which is logged once as unrecognised). With the flag
@@ -528,7 +528,7 @@ same way, as text, through `store.log_exception_text`; so do the store's prefix 
 and the checkpoint module's savepoint paths, every `exc_info` site in the package whose
 frame holds a `CrewLog` handle. The `exc_info` sites that remain there hold no handle,
 and `test_crew_log_exc_info_sites.py` pins both halves by reading the package's source:
-no `exc_info` call inside a `CrewLog` method or in any function under `kiro_crew` that
+no `exc_info` call inside a `CrewLog` method or in any function under `aj_crew` that
 names a handle (a parameter, a local bound from an opener, an `isinstance`), and the
 sites remaining in this package exactly the vetted list. A frame with no handle of its
 own is not safe on that basis alone: a callee's `exc_info` retains its CALLERS' frames
@@ -876,7 +876,7 @@ only an empty label is reported as the `other` source. Three zeroed sources woul
 
 ## The resolver: which unit is this slot's work landing in
 
-Several sites that produce facts about a session do not hold an ACP client. `kiro_crew.crew_log.resolve`
+Several sites that produce facts about a session do not hold an ACP client. `aj_crew.crew_log.resolve`
 is the one place that gap is closed, and its contract is narrower than it looks.
 
 A slot owns exactly one ACP session id **at a time**, not for its whole life. A plain resume
@@ -1643,6 +1643,6 @@ handlers last-registered-first, and the registration happens immediately before 
 built, so the pool's own handler still runs ahead of this one.
 
 There is no second stream to reconcile with. The parallel lifecycle-event package this
-module was designed alongside is retired, so `kiro_crew.crew_log` is the only structured
+module was designed alongside is retired, so `aj_crew.crew_log` is the only structured
 record of a session's history and this module is its only writer;
 `docs/request-for-change/rfc-append-only-ledger.md` is the decision of record.

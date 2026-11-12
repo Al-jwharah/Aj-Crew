@@ -2,12 +2,12 @@
 
 Three questions these counters answer, and the tests that hold each one closed:
 
-* is a recommendation used -- ``kirocrew.tips.feedback`` and
-  ``kirocrew.feature_video.status``, each with closed value lists;
-* does the Explore panel get used -- the existing ``kirocrew.milestone.*``
+* is a recommendation used -- ``ajcrew.tips.feedback`` and
+  ``ajcrew.feature_video.status``, each with closed value lists;
+* does the Explore panel get used -- the existing ``ajcrew.milestone.*``
   counters, now exported, with every attribute value checked at the emit site;
 * does a recommended feature get used -- ``recommended_by`` on
-  ``kirocrew.milestone.reached``, read from a local, windowed record that holds
+  ``ajcrew.milestone.reached``, read from a local, windowed record that holds
   only catalog ids, channel names and timestamps.
 
 The route tests drive the REAL handlers (tips feedback, the feature-video status
@@ -28,17 +28,17 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from kiro_crew import milestones as m
-from kiro_crew.metrics import feature_usage as fu
-from kiro_crew.testing.wait import async_wait_until
-from kiro_crew.tips_allowlist import TIP_DOC_ALLOWLIST
+from aj_crew import milestones as m
+from aj_crew.metrics import feature_usage as fu
+from aj_crew.testing.wait import async_wait_until
+from aj_crew.tips_allowlist import TIP_DOC_ALLOWLIST
 
 _REAL_CONSENT = m._recommendation_consent
 
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch) -> Path:
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _floor_monkeypatch.setattr(m, "_catalog_cache", None)
     _floor_monkeypatch.setattr(m, "_policy_permits", lambda: True)
     _floor_monkeypatch.setattr(m, "_probe", lambda _signal: False)
@@ -71,7 +71,7 @@ class _Rec:
 @pytest.fixture
 def rec():
     r = _Rec()
-    with patch("kiro_crew.metrics.provider.get_recorder", return_value=r):
+    with patch("aj_crew.metrics.provider.get_recorder", return_value=r):
         yield r
 
 
@@ -103,7 +103,7 @@ def test_value_lists_are_pinned():
 def test_tip_actions_match_the_route():
     import inspect
 
-    from kiro_crew import tips
+    from aj_crew import tips
 
     src = inspect.getsource(tips.api_tips_feedback)
     for action in fu.TIP_ACTION_VALUES[:-1]:
@@ -111,7 +111,7 @@ def test_tip_actions_match_the_route():
 
 
 def test_video_statuses_match_the_store():
-    from kiro_crew.feature_videos import VALID_STATUSES
+    from aj_crew.feature_videos import VALID_STATUSES
 
     assert fu.VIDEO_STATUS_VALUES == (*VALID_STATUSES, "other")
 
@@ -153,7 +153,7 @@ def test_milestone_attribute_lists_are_pinned():
 
 
 def test_the_route_surfaces_are_the_closed_surface_list():
-    from kiro_crew.dashboard import milestones_api
+    from aj_crew.dashboard import milestones_api
 
     assert milestones_api._SURFACES == m._ATTR_VALUES["surface"]
 
@@ -207,7 +207,7 @@ def test_every_target_is_a_feature_row_and_every_row_is_reachable():
 
 
 def test_the_video_keys_are_real_video_features():
-    from kiro_crew.feature_videos import CATALOG
+    from aj_crew.feature_videos import CATALOG
 
     video_features = {e.feature for e in CATALOG}
     keys = {k for k in m.RECOMMENDATION_TARGETS if not k.endswith(".md")}
@@ -279,7 +279,7 @@ def test_record_functions_close_every_value(rec):
 
 
 def test_record_functions_never_raise():
-    with patch("kiro_crew.metrics.feature_usage._emit", side_effect=RuntimeError("x")):
+    with patch("aj_crew.metrics.feature_usage._emit", side_effect=RuntimeError("x")):
         fu.record_tip_feedback("shown", "catalog", "monitor-loops.md")
         fu.record_feature_video_status("seen", "monitor-loops")
 
@@ -321,7 +321,7 @@ class TestAttribution:
     def test_a_recommendation_outside_the_window_reads_none(
         self, metrics: list, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.testing.clock import ManualClock
+        from aj_crew.testing.clock import ManualClock
 
         clock = ManualClock()
         clock.install(monkeypatch, m)
@@ -333,7 +333,7 @@ class TestAttribution:
     def test_inside_the_window_it_still_counts(
         self, metrics: list, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.testing.clock import ManualClock
+        from aj_crew.testing.clock import ManualClock
 
         clock = ManualClock()
         clock.install(monkeypatch, m)
@@ -345,7 +345,7 @@ class TestAttribution:
     def test_expired_stamps_are_pruned_on_the_next_write(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.testing.clock import ManualClock
+        from aj_crew.testing.clock import ManualClock
 
         clock = ManualClock()
         clock.install(monkeypatch, m)
@@ -448,8 +448,8 @@ def _feedback_request(state: Any, body: dict[str, Any]):
 
 
 def _tips_cache():
-    from kiro_crew.tips import TipsCache, TipsState
-    from kiro_crew.tips_pool import CatalogEntry
+    from aj_crew.tips import TipsCache, TipsState
+    from aj_crew.tips_pool import CatalogEntry
 
     cache = TipsCache()
     cache.catalog = [CatalogEntry(feature="Monitor loops", summary="s", doc="monitor-loops.md")]
@@ -482,7 +482,7 @@ def _fallback_shape(doc: str, feature: str) -> dict[str, str]:
 
 @pytest.mark.asyncio
 async def test_tips_feedback_counts_and_feeds_attribution(rec, metrics: list) -> None:
-    from kiro_crew.tips import api_tips_feedback
+    from aj_crew.tips import api_tips_feedback
 
     cache = _tips_cache()
     state = types.SimpleNamespace(_tips_cache=cache)
@@ -524,7 +524,7 @@ async def test_tips_feedback_counts_and_feeds_attribution(rec, metrics: list) ->
     ],
 )
 async def test_tips_feedback_labels_each_source(rec, tip_id, action, source, feature) -> None:
-    from kiro_crew.tips import api_tips_feedback
+    from aj_crew.tips import api_tips_feedback
 
     state = types.SimpleNamespace(_tips_cache=_tips_cache())
     resp = await api_tips_feedback(_feedback_request(state, {"id": tip_id, "action": action}))
@@ -546,7 +546,7 @@ async def test_a_clicked_curated_tip_is_credited_when_its_feature_is_reached(
     rec, metrics: list
 ) -> None:
     """ack on a curated tip whose doc_link maps to a feature row reads ``tip``."""
-    from kiro_crew.tips import api_tips_feedback
+    from aj_crew.tips import api_tips_feedback
 
     state = types.SimpleNamespace(_tips_cache=_tips_cache())
     resp = await api_tips_feedback(
@@ -566,13 +566,11 @@ async def test_a_clicked_curated_tip_is_credited_when_its_feature_is_reached(
 
 @pytest.mark.asyncio
 async def test_a_tips_metric_error_does_not_change_the_response(tmp_path: Path) -> None:
-    from kiro_crew.tips import api_tips_feedback
+    from aj_crew.tips import api_tips_feedback
 
     cache = _tips_cache()
     state = types.SimpleNamespace(_tips_cache=cache)
-    with patch(
-        "kiro_crew.metrics.feature_usage.record_tip_feedback", side_effect=RuntimeError("x")
-    ):
+    with patch("aj_crew.metrics.feature_usage.record_tip_feedback", side_effect=RuntimeError("x")):
         resp = await api_tips_feedback(
             _feedback_request(state, {"id": "monitor-loops-tip", "action": "ack"})
         )
@@ -584,7 +582,7 @@ async def test_a_tips_metric_error_does_not_change_the_response(tmp_path: Path) 
 async def test_a_dismissed_tip_is_not_a_recommendation(
     rec, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.tips import api_tips_feedback
+    from aj_crew.tips import api_tips_feedback
 
     calls: list[tuple[str, object]] = []
     monkeypatch.setattr(m, "record_recommended", lambda c, k: calls.append((c, k)))
@@ -599,7 +597,7 @@ async def test_a_dismissed_tip_is_not_a_recommendation(
 
 
 def test_video_status_counts_and_feeds_attribution(rec, metrics: list) -> None:
-    from kiro_crew import feature_videos as fv
+    from aj_crew import feature_videos as fv
 
     fv.record_status("monitor-loops", "seen")
     # The status write itself, as before.
@@ -612,7 +610,7 @@ def test_video_status_counts_and_feeds_attribution(rec, metrics: list) -> None:
 
 
 def test_a_dismissed_video_counts_but_recommends_nothing(rec) -> None:
-    from kiro_crew import feature_videos as fv
+    from aj_crew import feature_videos as fv
 
     fv.record_status("monitor-loops", "dismissed")
     [point] = [c for c in rec.counters if c["name"] == fu.FEATURE_VIDEO_STATUS]
@@ -621,7 +619,7 @@ def test_a_dismissed_video_counts_but_recommends_nothing(rec) -> None:
 
 
 def test_an_unknown_video_id_is_never_an_attribute(rec) -> None:
-    from kiro_crew import feature_videos as fv
+    from aj_crew import feature_videos as fv
 
     fv.record_status("a-video-the-catalog-dropped", "seen")
     [point] = [c for c in rec.counters if c["name"] == fu.FEATURE_VIDEO_STATUS]
@@ -629,7 +627,7 @@ def test_an_unknown_video_id_is_never_an_attribute(rec) -> None:
 
 
 def test_a_video_metric_error_does_not_fail_the_write(monkeypatch: pytest.MonkeyPatch) -> None:
-    from kiro_crew import feature_videos as fv
+    from aj_crew import feature_videos as fv
 
     monkeypatch.setattr(fv, "_feature_of", Mock(side_effect=RuntimeError("x")))
     fv.record_status("monitor-loops", "seen")
@@ -644,7 +642,7 @@ def test_a_video_metric_error_does_not_fail_the_write(monkeypatch: pytest.Monkey
     [(True, "generated"), (False, "catalog")],
 )
 async def test_the_offered_tip_source_is_read_from_the_pool(rec, in_pool, source) -> None:
-    from kiro_crew.tips import api_tips_feedback
+    from aj_crew.tips import api_tips_feedback
 
     cache = _tips_cache()
     offered = {"id": "gen-2", "doc": "subagents.md", "title": "Fan out"}
@@ -663,7 +661,7 @@ class TestConsent:
 
     def _recorder(self, enabled: bool):
         return patch(
-            "kiro_crew.metrics.provider.get_recorder",
+            "aj_crew.metrics.provider.get_recorder",
             return_value=types.SimpleNamespace(enabled=enabled),
         )
 
@@ -686,7 +684,7 @@ class TestConsent:
         assert set(m.load()["recommended"]) == {"widgets"}
 
     def test_an_unreadable_consent_fails_closed(self) -> None:
-        with patch("kiro_crew.metrics.provider.get_recorder", side_effect=RuntimeError("x")):
+        with patch("aj_crew.metrics.provider.get_recorder", side_effect=RuntimeError("x")):
             m.record_recommended("tip", "artifacts.md")
             m.apply_now(m.op_recommended("tip", "artifacts.md"))
         assert not m._path().exists() or m.load()["recommended"] == {}
@@ -695,7 +693,7 @@ class TestConsent:
 @pytest.mark.asyncio
 async def test_the_tip_that_was_served_is_labelled_not_its_regenerated_namesake(rec) -> None:
     """A refresh can replace the pool under the same id before "shown" arrives."""
-    from kiro_crew.tips import api_tips_feedback
+    from aj_crew.tips import api_tips_feedback
 
     cache = _tips_cache()
     cache.state.offered = {"id": "automation-tip", "doc": "monitor-loops.md", "title": "Watch"}

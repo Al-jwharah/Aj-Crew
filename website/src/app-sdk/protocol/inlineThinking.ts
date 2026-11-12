@@ -6,7 +6,7 @@
  * (`agent_thought_chunk`) reaches the transcript as its own `thinking` row, but
  * this inline form arrives as ordinary message text, so without a split the
  * bubble prints the tag and the whole scratchpad verbatim. The messaging
- * channels already drop it (`kiro_crew.messaging.markup.strip_thinking_tags`);
+ * channels already drop it (`aj_crew.messaging.markup.strip_thinking_tags`);
  * this is the dashboard's half, which keeps the reasoning and shows it behind
  * the same collapsed row as the streamed kind.
  *

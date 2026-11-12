@@ -38,10 +38,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.messaging import dispatch as D
-from kiro_crew.messaging import inbound_spool as S
-from kiro_crew.messaging.dispatch import ChannelTurn, drive_turn
-from kiro_crew.messaging.inbound_spool import (
+from aj_crew.messaging import dispatch as D
+from aj_crew.messaging import inbound_spool as S
+from aj_crew.messaging.dispatch import ChannelTurn, drive_turn
+from aj_crew.messaging.inbound_spool import (
     SPOOL_MAX_ENTRIES,
     InboundRoute,
     SpooledInbound,
@@ -50,9 +50,9 @@ from kiro_crew.messaging.inbound_spool import (
     replay_spooled,
     spool_path,
 )
-from kiro_crew.messaging.transport import TransportCapabilities
-from kiro_crew.session_allocation import SessionClosingError
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.messaging.transport import TransportCapabilities
+from aj_crew.session_allocation import SessionClosingError
+from aj_crew.testing.wait import async_wait_until
 
 # ── Pipeline stand-ins, mirroring test_messaging_dispatch.py ──────────────────
 
@@ -214,7 +214,7 @@ def _spool(path: Path, **kw: Any) -> SpooledInbound:
 
 
 def test_every_shared_channel_turn_declares_an_inbound_route() -> None:
-    root = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+    root = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
     calls: list[tuple[Path, ast.Call]] = []
     # A channel's dispatcher includes the owners beside its facade (``transport_dispatch_*``).
     for path in [*root.glob("*/transport_dispatch.py"), *root.glob("*/transport_dispatch_*.py")]:
@@ -861,7 +861,7 @@ def test_a_revoked_discord_thread_gets_no_notice_even_from_an_allowed_sender(
     still-allowed sender authorizes via the DM arm and the notice lands in a
     thread that is off the roster.
     """
-    from kiro_crew.discord.transport import DiscordTransport
+    from aj_crew.discord.transport import DiscordTransport
 
     class _Client:
         pass
@@ -1393,7 +1393,7 @@ def test_the_spool_directory_is_fenced_from_agent_file_tools() -> None:
     unreachable. Read matters too: an entry holds the verbatim text of a message
     the operator sent.
     """
-    from kiro_crew.security import _CREW_SECRET_LEAVES
+    from aj_crew.security import _CREW_SECRET_LEAVES
 
     assert "inbound-spool" in _CREW_SECRET_LEAVES
     assert spool_path().parent.name == "inbound-spool", (
@@ -1404,7 +1404,7 @@ def test_the_spool_directory_is_fenced_from_agent_file_tools() -> None:
 
 def test_the_spool_directory_is_masked_in_agent_sandboxes() -> None:
     """The file fence covers tools; this covers a spawned command."""
-    from kiro_crew.sandbox import _CREW_HIDDEN_LEAVES
+    from aj_crew.sandbox import _CREW_HIDDEN_LEAVES
 
     assert "inbound-spool" in _CREW_HIDDEN_LEAVES
 
@@ -1427,7 +1427,7 @@ def test_the_spool_root_exists_before_a_mask_has_to_bind_over_it(
     arrived early. Its readers open the leaf INSIDE the root, so an empty root and
     an absent one give the same answer.
     """
-    from kiro_crew import sandbox
+    from aj_crew import sandbox
 
     home = tmp_path / "crew"
     home.mkdir()
@@ -1544,7 +1544,7 @@ def test_weixin_drive_takes_the_pre_ingestion_originals() -> None:
     """
     import inspect
 
-    from kiro_crew.weixin.transport_dispatch import WeixinDispatcher
+    from aj_crew.weixin.transport_dispatch import WeixinDispatcher
 
     parameters = inspect.signature(WeixinDispatcher._drive).parameters
     assert "original_text" in parameters
@@ -1555,7 +1555,7 @@ def test_weixin_route_text_has_no_fallback_to_the_ingested_prompt() -> None:
     """``original_text`` only: the ingested form inlines temp paths."""
     import inspect
 
-    from kiro_crew.weixin.transport_dispatch import WeixinDispatcher
+    from aj_crew.weixin.transport_dispatch import WeixinDispatcher
 
     source = inspect.getsource(WeixinDispatcher._drive)
     assert "text=original_text," in source
@@ -1565,11 +1565,11 @@ def test_weixin_route_text_has_no_fallback_to_the_ingested_prompt() -> None:
 def test_no_transport_still_carries_a_replay_hook() -> None:
     """Re-dispatch was removed on purpose; a stray override would be dead code
     reviewers keep re-deriving gates for."""
-    from kiro_crew.discord.transport import DiscordTransport
-    from kiro_crew.messaging.transport import MessagingTransport
-    from kiro_crew.telegram.transport import TelegramTransport
-    from kiro_crew.weixin.transport import WeixinTransport
-    from kiro_crew.whatsapp.transport import WhatsAppTransport
+    from aj_crew.discord.transport import DiscordTransport
+    from aj_crew.messaging.transport import MessagingTransport
+    from aj_crew.telegram.transport import TelegramTransport
+    from aj_crew.weixin.transport import WeixinTransport
+    from aj_crew.whatsapp.transport import WhatsAppTransport
 
     for cls in (
         MessagingTransport,
@@ -1597,7 +1597,7 @@ def test_a_webex_allowed_space_gets_its_notice_at_the_room_root(spool_home: Path
     with group rooms on) and grants there, so a space route carrying no principal
     is authorized by its ``room_id`` alone and the notice posts at the room root.
     """
-    from kiro_crew.webex.transport import WEBEX_CAPABILITIES, WebexTransport
+    from aj_crew.webex.transport import WEBEX_CAPABILITIES, WebexTransport
 
     transport = WebexTransport.__new__(WebexTransport)
     transport._allowed = frozenset()  # no sender principal; the room-id arm grants it

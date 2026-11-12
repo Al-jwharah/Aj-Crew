@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew import mcp_core, session_directive
-from kiro_crew.mcp_tools import control
+from aj_crew import mcp_core, session_directive
+from aj_crew.mcp_tools import control
 
 
 def test_monitor_watch_does_not_offer_an_unenforced_evidence_scope():
@@ -16,7 +16,7 @@ def test_monitor_watch_does_not_offer_an_unenforced_evidence_scope():
 
 
 def test_monitor_watch_is_stateless_and_canonical(gateway_posts):
-    with patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1"):
+    with patch("aj_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1"):
         result = mcp_core._call_tool(
             "monitor_watch",
             {
@@ -53,7 +53,7 @@ def test_monitor_watch_is_stateless_and_canonical(gateway_posts):
     ],
 )
 def test_monitor_watch_emits_each_supported_provider_kind(kind, target, gateway_posts):
-    with patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1"):
+    with patch("aj_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1"):
         result = control.monitor_watch(
             "monitor_watch",
             {"kind": kind, "target": target, "objective": "review_ready"},
@@ -66,7 +66,7 @@ def test_monitor_watch_emits_each_supported_provider_kind(kind, target, gateway_
 
 
 def test_monitor_watch_rejects_kind_target_mismatch_before_emitting_directive(gateway_posts):
-    with patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1"):
+    with patch("aj_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1"):
         result = control.monitor_watch(
             "monitor_watch",
             {
@@ -82,7 +82,7 @@ def test_monitor_watch_rejects_kind_target_mismatch_before_emitting_directive(ga
 
 
 def test_monitor_watch_rejects_native_subagent_binding(gateway_posts):
-    with patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value="subagent:child"):
+    with patch("aj_crew.mcp_core._resolve_session_key_strict", return_value="subagent:child"):
         result = control.monitor_watch(
             "monitor_watch",
             {
@@ -108,10 +108,10 @@ def test_monitor_watch_rejects_webex_while_legacy_stop_and_start_work(gateway_po
     audit = MagicMock()
     with (
         patch(
-            "kiro_crew.mcp_core._resolve_session_key_strict",
-            return_value="webex:kirocrew:direct:operator@example.com",
+            "aj_crew.mcp_core._resolve_session_key_strict",
+            return_value="webex:ajcrew:direct:operator@example.com",
         ),
-        patch("kiro_crew.mcp_core.sel", return_value=audit),
+        patch("aj_crew.mcp_core.sel", return_value=audit),
     ):
         structured = control.monitor_watch(
             "monitor_watch",
@@ -170,10 +170,10 @@ def test_monitor_watch_rejects_webex_while_legacy_stop_and_start_work(gateway_po
 def test_structured_monitor_session_refusals_are_failed_and_audited(tool_name, args):
     audit = MagicMock()
     with (
-        patch("kiro_crew.mcp_core._resolve_session_key", return_value="subagent:child"),
-        patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value="subagent:child"),
-        patch("kiro_crew.mcp_core.sel", return_value=audit),
-        patch("kiro_crew.mcp_shared.sel", return_value=audit),
+        patch("aj_crew.mcp_core._resolve_session_key", return_value="subagent:child"),
+        patch("aj_crew.mcp_core._resolve_session_key_strict", return_value="subagent:child"),
+        patch("aj_crew.mcp_core.sel", return_value=audit),
+        patch("aj_crew.mcp_shared.sel", return_value=audit),
     ):
         result = mcp_core._call_tool(tool_name, args)
 
@@ -202,8 +202,8 @@ def test_structured_monitor_session_refusals_are_failed_and_audited(tool_name, a
 def test_structured_monitor_mutations_require_strict_session_identity(tool_name, args):
     audit = MagicMock()
     with (
-        patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value=""),
-        patch("kiro_crew.mcp_core.sel", return_value=audit),
+        patch("aj_crew.mcp_core._resolve_session_key_strict", return_value=""),
+        patch("aj_crew.mcp_core.sel", return_value=audit),
     ):
         result = getattr(control, tool_name)(tool_name, args)
 
@@ -214,7 +214,7 @@ def test_structured_monitor_mutations_require_strict_session_identity(tool_name,
 
 
 def test_structured_update_and_stop_reject_native_subagent_binding(gateway_posts):
-    with patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value="subagent:child"):
+    with patch("aj_crew.mcp_core._resolve_session_key_strict", return_value="subagent:child"):
         update = control.monitor_update(
             "monitor_update",
             {"wake_instructions": "Check CI."},
@@ -231,9 +231,9 @@ def test_structured_update_and_stop_reject_native_subagent_binding(gateway_posts
 
 def test_monitor_inspect_passes_strict_identity_without_fallback():
     with (
-        patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value="slack:123"),
+        patch("aj_crew.mcp_core._resolve_session_key_strict", return_value="slack:123"),
         patch(
-            "kiro_crew.mcp_core._get",
+            "aj_crew.mcp_core._get",
             return_value={
                 "enabled": True,
                 "active": True,
@@ -326,8 +326,8 @@ def test_the_compact_inspection_does_not_claim_a_cut_on_a_bucket_at_the_bound():
 
 def test_monitor_inspect_never_uses_ancestor_fallback_without_strict_identity():
     with (
-        patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value=""),
-        patch("kiro_crew.mcp_core._get") as get,
+        patch("aj_crew.mcp_core._resolve_session_key_strict", return_value=""),
+        patch("aj_crew.mcp_core._get") as get,
     ):
         result = control.monitor_inspect("monitor_inspect", {})
     get.assert_not_called()
@@ -336,8 +336,8 @@ def test_monitor_inspect_never_uses_ancestor_fallback_without_strict_identity():
 
 def test_monitor_inspect_reports_internal_read_failure_as_error():
     with (
-        patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value="slack:123"),
-        patch("kiro_crew.mcp_core._get", return_value={"error": "gateway unavailable"}),
+        patch("aj_crew.mcp_core._resolve_session_key_strict", return_value="slack:123"),
+        patch("aj_crew.mcp_core._get", return_value={"error": "gateway unavailable"}),
     ):
         result = control.monitor_inspect("monitor_inspect", {})
 
@@ -352,9 +352,9 @@ def test_monitor_inspect_surfaces_armed_autonudge_loop():
     reading through so the caller can tell armed-auto-nudge from nothing armed.
     """
     with (
-        patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1-1"),
+        patch("aj_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1-1"),
         patch(
-            "kiro_crew.mcp_core._get",
+            "aj_crew.mcp_core._get",
             return_value={
                 "enabled": True,
                 "monitor": None,
@@ -384,9 +384,9 @@ def test_monitor_inspect_surfaces_armed_autonudge_loop():
 def test_monitor_inspect_reports_no_loop_distinctly_from_armed():
     """The no-loop reading carries ``autonudge_loop: None``, distinct from armed."""
     with (
-        patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1-1"),
+        patch("aj_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1-1"),
         patch(
-            "kiro_crew.mcp_core._get",
+            "aj_crew.mcp_core._get",
             return_value={"enabled": True, "monitor": None, "autonudge_loop": None},
         ),
     ):
@@ -413,10 +413,10 @@ def test_monitor_inspect_admits_a_webex_session():
     )
     with (
         patch(
-            "kiro_crew.mcp_core._resolve_session_key_strict",
-            return_value="webex:kirocrew:direct:operator@example.com",
+            "aj_crew.mcp_core._resolve_session_key_strict",
+            return_value="webex:ajcrew:direct:operator@example.com",
         ),
-        patch("kiro_crew.mcp_core._get", getter),
+        patch("aj_crew.mcp_core._get", getter),
     ):
         result = control.monitor_inspect("monitor_inspect", {})
 
@@ -448,7 +448,7 @@ def test_omitted_runtime_budget_defaults_within_the_operator_ceiling(
     ceiling below the default never refuses a value nobody sent. monitor_start's
     default IS the ceiling (rfc-permanent-patrol.md)."""
     monkeypatch.setattr(control, "runtime_ceiling_secs", lambda: ceiling)
-    with patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1"):
+    with patch("aj_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1"):
         result = getattr(control, tool_name)(tool_name, dict(args))
 
     emitted = session_directive.decode(result, tool_name)
@@ -471,7 +471,7 @@ def test_supplied_runtime_budget_is_passed_through_unclamped(tool_name, gateway_
             "objective": "review_ready",
         }
     )
-    with patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1"):
+    with patch("aj_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1"):
         result = getattr(control, tool_name)(tool_name, {**args, "max_runtime_secs": 7200})
 
     emitted = session_directive.decode(result, tool_name)
@@ -521,7 +521,7 @@ def test_monitor_tools_publish_an_integer_runtime_budget(tool_name):
     ],
 )
 def test_monitor_tools_normalize_integral_float_runtime(tool_name, args, expected, gateway_posts):
-    with patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1"):
+    with patch("aj_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1"):
         result = mcp_core._call_tool(tool_name, args)
 
     payload = session_directive.decode(result, tool_name)
@@ -543,7 +543,7 @@ def test_monitor_tools_reject_non_integral_or_boolean_runtime(tool_name, runtime
             objective="review_ready",
         )
 
-    with patch("kiro_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1"):
+    with patch("aj_crew.mcp_core._resolve_session_key_strict", return_value="dashboard:chat-1"):
         result = mcp_core._call_tool(tool_name, args)
 
     assert result.startswith("Error:")

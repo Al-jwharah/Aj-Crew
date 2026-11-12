@@ -16,7 +16,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from kiro_crew.cron import CronService
+from aj_crew.cron import CronService
 
 #: 14 hours ahead of UTC with no DST, so a clock time read in the wrong zone
 #: lands on a different hour whatever the date.
@@ -31,11 +31,11 @@ def _cron_caller_is_named(named_cron_caller):
 @pytest.fixture()
 def call_tool(monkeypatch, tmp_path):
     """The real ``cron_add`` against a private store, with the configured zone UTC."""
-    from kiro_crew.mcp_cron import _call_tool_locally
+    from aj_crew.mcp_cron import _call_tool_locally
 
-    monkeypatch.setattr("kiro_crew.mcp_cron.config_dir", lambda: tmp_path)
-    monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
-    monkeypatch.setattr("kiro_crew.cron.published_config_timezone", lambda: "UTC")
+    monkeypatch.setattr("aj_crew.mcp_cron.config_dir", lambda: tmp_path)
+    monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
+    monkeypatch.setattr("aj_crew.cron.published_config_timezone", lambda: "UTC")
 
     def _call(args: dict) -> tuple[str, list]:
         name = f"attz-{uuid.uuid4().hex[:8]}"

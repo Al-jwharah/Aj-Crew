@@ -20,8 +20,8 @@ import pytest
 from webhooks_api_helpers import wired_fixture  # noqa: F401
 from webhooks_api_helpers import _bearer, _payload, _req
 
-from kiro_crew import webhooks
-from kiro_crew.dashboard.handlers import hooks as H
+from aj_crew import webhooks
+from aj_crew.dashboard.handlers import hooks as H
 
 
 class TestWebhooksRead:
@@ -193,7 +193,7 @@ class TestTokenEndpoints:
         against a file the delete is about to remove. Here the agent vanishes
         between the loop-side pre-check and the locked commit: nothing is
         minted, and a re-pin leaves the stored pin alone."""
-        names = [{"kirocrew", "code-reviewer", "oncall"}]
+        names = [{"ajcrew", "code-reviewer", "oncall"}]
         monkeypatch.setattr(H, "_installed_agent_names", lambda: names[-1])
         held: list[bool] = []
         vanish: list[str] = ["code-reviewer"]  # what a concurrent delete removes, once
@@ -249,7 +249,7 @@ class TestTokenEndpoints:
     @pytest.mark.asyncio
     async def test_create_rejects_bad_label(self, wired):
         resp = await H.api_webhook_token_create(
-            _req("POST", "/api/webhooks/tokens", {"label": "  ", "agent": "kirocrew"})
+            _req("POST", "/api/webhooks/tokens", {"label": "  ", "agent": "ajcrew"})
         )
         assert resp.status == 400
         assert "required" in (await _payload(resp))["error"]
@@ -266,7 +266,7 @@ class TestTokenEndpoints:
                 _req(
                     "POST",
                     "/api/webhooks/tokens",
-                    {"label": f"Bot {i}", "agent": "kirocrew"},
+                    {"label": f"Bot {i}", "agent": "ajcrew"},
                 )
             )
             assert r.status == 201
@@ -274,7 +274,7 @@ class TestTokenEndpoints:
             _req(
                 "POST",
                 "/api/webhooks/tokens",
-                {"label": "Too many", "agent": "kirocrew"},
+                {"label": "Too many", "agent": "ajcrew"},
             )
         )
         assert resp.status == 400
@@ -311,7 +311,7 @@ class TestTokenEndpoints:
     @pytest.mark.asyncio
     async def test_patch_reports_an_unavailable_store(self, wired):
         store = webhooks.token_store()
-        _raw, _secret, entry = store.create("Review Bot", agent="kirocrew")
+        _raw, _secret, entry = store.create("Review Bot", agent="ajcrew")
         store.path.write_text("{truncated", encoding="utf-8")
 
         resp = await H.api_webhook_token_update(
@@ -380,7 +380,7 @@ class TestTokenEndpoints:
                 _req(
                     "POST",
                     "/api/webhooks/tokens",
-                    {"label": "A", "agent": "kirocrew"},
+                    {"label": "A", "agent": "ajcrew"},
                 )
             )
         )
@@ -389,7 +389,7 @@ class TestTokenEndpoints:
                 _req(
                     "POST",
                     "/api/webhooks/tokens",
-                    {"label": "B", "agent": "kirocrew"},
+                    {"label": "B", "agent": "ajcrew"},
                 )
             )
         )

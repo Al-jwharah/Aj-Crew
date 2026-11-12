@@ -16,17 +16,17 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 
-from kiro_crew.apps import registry as reg_mod
-from kiro_crew.apps.registry import (
+from aj_crew.apps import registry as reg_mod
+from aj_crew.apps.registry import (
     _blob_cache_dir,
     _blob_cache_key,
     _effective_registries,
     _entry_git_url,
 )
-from kiro_crew.config import loader as loader_mod
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.defaults import DefaultAppsLoader
+from aj_crew.config import loader as loader_mod
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.defaults import DefaultAppsLoader
 
 FORGE = "https://forge.example.com/org/app-registry.git"
 SIBLING = "https://forge.example.com/org/some-private-app.git"
@@ -59,10 +59,10 @@ class _Loader(DefaultAppsLoader):
 
 def _pin_registry(monkeypatch, trust: str) -> Any:
     """Pin one registry at *trust* through the edition seam; return its config row."""
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.registries = []
-    monkeypatch.setattr(loader_mod.KiroCrewConfig, "load", staticmethod(lambda: cfg))
-    base = build_default_context(KiroCrewConfig())
+    monkeypatch.setattr(loader_mod.AjCrewConfig, "load", staticmethod(lambda: cfg))
+    base = build_default_context(AjCrewConfig())
     ctx = dataclasses.replace(
         base,
         apps_loader=_Loader([{"name": "official", "repo": FORGE, "trust": trust}]),

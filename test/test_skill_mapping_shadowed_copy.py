@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.skills import SkillsLoader
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.skills import SkillsLoader
 
 _BODY = "---\nname: implementation\ndescription: implement code\n---\n# implementation\nBODY\n"
 
@@ -24,7 +24,7 @@ def _write(root: Path, body: str = _BODY) -> Path:
 
 
 def _loader(tmp_path: Path, roots: list[Path], opened) -> SkillsLoader:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.skills.extra_paths = [str(root) for root in roots]
     return opened(
         SkillsLoader(skills_path=tmp_path / "builtin-skills", install_builtins=False, config=cfg)
@@ -97,7 +97,7 @@ def test_a_mapped_copy_owned_by_a_disabled_app_is_not_served(tmp_path, opened, m
 
 
 def test_a_mapped_copy_the_path_screen_refuses_is_not_served(tmp_path, opened, monkeypatch):
-    from kiro_crew import skills as sk
+    from aj_crew import skills as sk
 
     winner = tmp_path / "upstream" / "skills"
     loser = tmp_path / "consumer" / "skills"
@@ -115,8 +115,8 @@ def test_a_mapped_copy_the_path_screen_refuses_is_not_served(tmp_path, opened, m
 
 
 def test_a_cached_losing_copy_is_screened_before_resolution(tmp_path, opened, monkeypatch):
-    from kiro_crew import skills as sk
-    from kiro_crew.skill_runtime import catalog
+    from aj_crew import skills as sk
+    from aj_crew.skill_runtime import catalog
 
     winner = tmp_path / "upstream" / "skills"
     loser = tmp_path / "consumer" / "skills"
@@ -145,7 +145,7 @@ def test_a_cached_losing_copy_is_screened_before_resolution(tmp_path, opened, mo
 
 
 def test_the_disabled_app_filter_keeps_a_confined_row_confined(tmp_path, opened, monkeypatch):
-    from kiro_crew.skill_runtime import catalog
+    from aj_crew.skill_runtime import catalog
 
     root = tmp_path / "upstream" / "skills"
     served = _write(root)
@@ -166,7 +166,7 @@ def test_the_disabled_app_filter_keeps_a_confined_row_confined(tmp_path, opened,
 
 
 def test_a_shadowed_mapped_copy_does_not_trigger_the_winning_copy(tmp_path, opened):
-    from kiro_crew.context_assembly.turn_message import _mapped_trigger_keys
+    from aj_crew.context_assembly.turn_message import _mapped_trigger_keys
 
     winner = tmp_path / "upstream" / "skills"
     loser = tmp_path / "consumer" / "skills"
@@ -263,7 +263,7 @@ def test_a_mapped_copy_behind_a_disabled_winner_is_read_by_path(tmp_path, opened
 
 
 def test_a_read_of_a_mapped_losing_copy_is_credited_to_its_key(tmp_path, opened):
-    from kiro_crew.skill_runtime.read_credit import _served_key_by_realpath
+    from aj_crew.skill_runtime.read_credit import _served_key_by_realpath
 
     winner = tmp_path / "upstream" / "skills"
     loser = tmp_path / "consumer" / "skills"
@@ -275,7 +275,7 @@ def test_a_read_of_a_mapped_losing_copy_is_credited_to_its_key(tmp_path, opened)
 
 
 def test_a_root_listed_twice_yields_one_row_per_copy(tmp_path, opened):
-    from kiro_crew.skill_runtime import catalog
+    from aj_crew.skill_runtime import catalog
 
     root = tmp_path / "upstream" / "skills"
     _write(root)
@@ -285,8 +285,8 @@ def test_a_root_listed_twice_yields_one_row_per_copy(tmp_path, opened):
 
 
 def test_a_copy_linked_into_the_skills_dir_yields_one_row(tmp_path, opened, monkeypatch):
-    from kiro_crew import skills
-    from kiro_crew.skill_runtime import catalog
+    from aj_crew import skills
+    from aj_crew.skill_runtime import catalog
 
     root = tmp_path / "upstream" / "skills"
     _write(root)
@@ -316,7 +316,7 @@ def test_a_losing_copy_is_fenced_to_the_narrowest_admitted_root(tmp_path, opened
 def _app_linked(root: Path, bundle: Path, body: str, monkeypatch) -> Path:
     """An installed app skill: ``<root>/app/a-first`` and a flat ``<root>/a-first``
     both link to one bundle directory, which the catalog row is stored under."""
-    from kiro_crew import skills, skills_discovery
+    from aj_crew import skills, skills_discovery
 
     target = bundle / "a-first"
     target.mkdir(parents=True)

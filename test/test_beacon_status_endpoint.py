@@ -17,11 +17,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import beacon
+from aj_crew import beacon
 
 
 def _make_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import api_beacon_status
+    from aj_crew.dashboard.handlers import api_beacon_status
 
     app = web.Application()
     app.router.add_get("/api/telemetry/beacon", api_beacon_status)
@@ -38,9 +38,20 @@ def _neutral_env(tmp_path, monkeypatch):
     a heartbeat until the disclosure has been shown, and an unacked tmp home would
     make every ``would_send`` false for that reason instead of the one under test.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    # The shipped default is off with no endpoint, so the positive path needs an
+    # install that opted in and named a collector.
     (tmp_path / "config.json").write_text(
-        json.dumps({"dashboard": {"privacy_acked": True}}), encoding="utf-8"
+        json.dumps(
+            {
+                "dashboard": {"privacy_acked": True},
+                "telemetry": {
+                    "beacon_enabled": True,
+                    "beacon_endpoint": "https://collector.example.test",
+                },
+            }
+        ),
+        encoding="utf-8",
     )
     monkeypatch.setattr(beacon, "config_dir", lambda: tmp_path)
     monkeypatch.setattr(beacon, "is_default_home", lambda: True)
@@ -66,6 +77,33 @@ class TestBeaconStatusEndpoint:
         assert body["reason"] == "ready"
         assert body["env_override"] is False
         assert body["env_var"] == beacon.DISABLE_ENV
+
+    @pytest.mark.asyncio
+    async def test_a_default_install_reports_off(self, _neutral_env) -> None:
+        """Nothing stored: the beacon is off, and the panel says so."""
+        (_neutral_env / "config.json").write_text(
+            json.dumps({"dashboard": {"privacy_acked": True}}), encoding="utf-8"
+        )
+        async with TestClient(TestServer(_make_app())) as c:
+            body = await _get(c)
+        assert body["enabled"] is False
+        assert body["would_send"] is False
+        assert body["env_override"] is False
+
+    @pytest.mark.asyncio
+    async def test_switched_on_without_an_endpoint_still_sends_nothing(self, _neutral_env) -> None:
+        """The switch alone is not enough: this build names no collector."""
+        (_neutral_env / "config.json").write_text(
+            json.dumps(
+                {"dashboard": {"privacy_acked": True}, "telemetry": {"beacon_enabled": True}}
+            ),
+            encoding="utf-8",
+        )
+        async with TestClient(TestServer(_make_app())) as c:
+            body = await _get(c)
+        assert body["enabled"] is True
+        assert body["would_send"] is False
+        assert "no endpoint configured" in body["reason"]
 
     @pytest.mark.asyncio
     async def test_env_override_is_flagged(self, _neutral_env, monkeypatch) -> None:
@@ -98,7 +136,7 @@ class TestBeaconStatusEndpoint:
             body = await _get(c)
         assert body["enabled"] is True
         assert body["would_send"] is False
-        assert "KIROCREW_HOME" in body["reason"]
+        assert "AJCREW_HOME" in body["reason"]
         # Not the env var — so the toggle stays usable.
         assert body["env_override"] is False
 
@@ -119,7 +157,7 @@ class TestBeaconStatusEndpoint:
             _json.dumps({"telemetry": {"beacon_enabled": True}}), encoding="utf-8"
         )
         monkeypatch.setattr(
-            "kiro_crew.config.loader.config_dir", lambda: _neutral_env, raising=False
+            "aj_crew.config.loader.config_dir", lambda: _neutral_env, raising=False
         )
         async with TestClient(TestServer(_make_app())) as c:
             body = await _get(c)
@@ -142,7 +180,7 @@ class TestBeaconStatusEndpoint:
             _json.dumps({"telemetry": {"export_interval_seconds": 30}}), encoding="utf-8"
         )
         monkeypatch.setattr(
-            "kiro_crew.config.loader.config_dir", lambda: _neutral_env, raising=False
+            "aj_crew.config.loader.config_dir", lambda: _neutral_env, raising=False
         )
         async with TestClient(TestServer(_make_app())) as c:
             body = await _get(c)
@@ -153,7 +191,7 @@ class TestBeaconStatusEndpoint:
         """A diagnostic must survive a broken overlay rather than 500."""
         (_neutral_env / "config.local.json").write_text("{not json", encoding="utf-8")
         monkeypatch.setattr(
-            "kiro_crew.config.loader.config_dir", lambda: _neutral_env, raising=False
+            "aj_crew.config.loader.config_dir", lambda: _neutral_env, raising=False
         )
         async with TestClient(TestServer(_make_app())) as c:
             body = await _get(c)
@@ -177,7 +215,7 @@ class TestBeaconStatusEndpoint:
     async def test_unreadable_config_fails_toward_off(self, _neutral_env) -> None:
         """A diagnostic must not 500, and must never claim telemetry is on."""
         with patch(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             side_effect=OSError("boom"),
         ):
             async with TestClient(TestServer(_make_app())) as c:

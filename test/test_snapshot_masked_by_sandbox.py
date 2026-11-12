@@ -1,6 +1,6 @@
-"""A snapshot run inside Kiro Crew's sandbox, and the retention and restore that read it.
+"""A snapshot run inside Aj Crew's sandbox, and the retention and restore that read it.
 
-A command cron runs ``kirocrew snapshot`` in the ``cc`` sandbox tier, and every tier
+A command cron runs ``ajcrew snapshot`` in the ``cc`` sandbox tier, and every tier
 masks the crew-hidden leaves, ``crew-teams`` among them: Linux binds an empty stand-in
 over the directory and macOS denies the read. Three things follow, each pinned here:
 
@@ -33,11 +33,11 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew, unpinnable_argv
+from test_snapshot import _setup_fake_ajcrew, unpinnable_argv
 
-from kiro_crew import pinned_fs, sandbox_launch_mark
-from kiro_crew import snapshot as snap
-from kiro_crew import snapshot_archive, snapshot_build
+from aj_crew import pinned_fs, sandbox_launch_mark
+from aj_crew import snapshot as snap
+from aj_crew import snapshot_archive, snapshot_build
 
 #: The platform's real answer, taken before any fixture wraps ``os``: a wrapped
 #: ``os.stat`` or ``os.open`` is not in ``os.supports_dir_fd``, so the probe would flip
@@ -66,10 +66,10 @@ def _read_teams(home: Path) -> dict | None:
 def home(tmp_path, monkeypatch):
     d = tmp_path / "home"
     d.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(d))
-    monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "0")
+    monkeypatch.setenv("AJCREW_HOME", str(d))
+    monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "0")
     monkeypatch.delenv(sandbox_launch_mark.SANDBOX_MARKER, raising=False)
-    _setup_fake_kirocrew(d)
+    _setup_fake_ajcrew(d)
     _write_teams(d, BEFORE)
     return d
 
@@ -110,7 +110,7 @@ def _deny_stat_of(monkeypatch, target: Path) -> None:
 
 
 def _bundles(out: Path) -> list[Path]:
-    return sorted(out.glob("kirocrew-snapshot-*.tar.gz"))
+    return sorted(out.glob("ajcrew-snapshot-*.tar.gz"))
 
 
 def _contents(bundle: Path) -> tuple[set[str], list[dict]]:
@@ -476,9 +476,9 @@ class TestAPermissionRefusalOnTheWayToTheDataHome:
     def test_it_ends_as_a_refusal_with_an_audit_entry(self, tmp_path, monkeypatch, capsys):
         home = tmp_path / "xo" / "crew"
         home.mkdir(parents=True)
-        _setup_fake_kirocrew(home)
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
-        monkeypatch.setenv("KIROCREW_ASSUME_GATEWAY_RUNNING", "0")
+        _setup_fake_ajcrew(home)
+        monkeypatch.setenv("AJCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_ASSUME_GATEWAY_RUNNING", "0")
         events: list[tuple[str, str]] = []
         monkeypatch.setattr(snap, "_audit", lambda ev, res: events.append((ev, res)))
         monkeypatch.setattr(pinned_fs, "supports_pinned_tree_walk", lambda: PINNED_TREE_WALK)

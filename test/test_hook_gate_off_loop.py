@@ -25,15 +25,15 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew
-import kiro_crew.executors as ex
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST, AcpEvent
-from kiro_crew.hooks import TOOL_DENY, HookManager, HooksConfig
-from kiro_crew.messaging import APPROVAL_AUTO, TransportCapabilities, TurnDriver
-from kiro_crew.messaging.dispatch import build_tool_gate
-from kiro_crew.messaging.renderer import Renderer
-from kiro_crew.security import is_unverifiable_path_refusal, paths
-from kiro_crew.subprocess_pool import SubprocessPoolTimeout
+import aj_crew
+import aj_crew.executors as ex
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_PERMISSION_REQUEST, AcpEvent
+from aj_crew.hooks import TOOL_DENY, HookManager, HooksConfig
+from aj_crew.messaging import APPROVAL_AUTO, TransportCapabilities, TurnDriver
+from aj_crew.messaging.dispatch import build_tool_gate
+from aj_crew.messaging.renderer import Renderer
+from aj_crew.security import is_unverifiable_path_refusal, paths
+from aj_crew.subprocess_pool import SubprocessPoolTimeout
 
 _BUDGET = 0.4
 _TICK = 0.01
@@ -66,7 +66,7 @@ def _busy(waited: float):
 def _read_kwargs() -> dict:
     return {
         "session_key": "dashboard:f6",
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "tool_kind": "read",
         "raw_params": {"path": _TARGET},
     }
@@ -232,7 +232,7 @@ def test_the_channel_turn_driver_runs_its_gate_off_the_loop() -> None:
             self.rejected.append(request_id)
 
     ctx_builder = SimpleNamespace(hooks=HookManager(HooksConfig()))
-    gate = build_tool_gate(ctx_builder, session_key="slack:f6", agent="kirocrew")
+    gate = build_tool_gate(ctx_builder, session_key="slack:f6", agent="ajcrew")
     provider = _Provider()
     driver = TurnDriver(provider, _Renderer(), approval_mode=APPROVAL_AUTO, tool_gate=gate)
 
@@ -254,7 +254,7 @@ def test_no_coroutine_consults_the_gate_inline() -> None:
     ``async def`` runs the path tier's wait on the loop. Async code awaits
     ``run_in_tool_gate_pool(hooks.on_tool_call, ...)`` instead. An awaited ``...on_tool_call(`` is a
     renderer's unrelated handler, not the gate, and is not an offender."""
-    root = Path(kiro_crew.__file__).resolve().parent
+    root = Path(aj_crew.__file__).resolve().parent
     offenders: list[str] = []
     for path in root.rglob("*.py"):
         rel = path.relative_to(root).as_posix()

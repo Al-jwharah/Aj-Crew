@@ -166,7 +166,7 @@ function windowsHarness(port) {
     processRef: {
       platform: "win32",
       arch: "x64",
-      env: { KIROCREW_HOME: "/virtual/kirocrew-home" },
+      env: { AJCREW_HOME: "/virtual/ajcrew-home" },
       resourcesPath: "/virtual/resources",
       kill() { throw new Error("process kill must not run in this harness"); },
     },

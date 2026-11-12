@@ -35,17 +35,17 @@ const now = Math.floor(Date.now() / 1000)
 const slots = [
   {
     key: ACTIVE, title: '侧边栏「较早的会话」重复问题', running: false, messages: 24,
-    agent: 'kirocrew', modified: now, last_ts: '2026-08-17T22:05:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now, last_ts: '2026-08-17T22:05:00Z', folder_id: '',
     last_message: 'The pane is the complement of the tab list.',
   },
   {
     key: 'chat-6-1755300000', title: 'App Store builtin rows from catalog', running: false,
-    messages: 61, agent: 'kirocrew', modified: now - 3600, last_ts: '2026-08-17T21:05:00Z',
+    messages: 61, agent: 'ajcrew', modified: now - 3600, last_ts: '2026-08-17T21:05:00Z',
     folder_id: '', last_message: 'PR #4200 is review-ready.',
   },
   {
     key: 'chat-5-1755200000', title: 'Advisory review lanes need teeth', running: false,
-    messages: 18, agent: 'kirocrew', modified: now - 7200, last_ts: '2026-08-17T20:05:00Z',
+    messages: 18, agent: 'ajcrew', modified: now - 7200, last_ts: '2026-08-17T20:05:00Z',
     folder_id: '', last_message: 'Four prompt edits plus ratchets.',
   },
 ]
@@ -55,9 +55,9 @@ const openStems = slots.map(s => `dashboard_${s.key}`)
 
 /** Sessions on disk that no live slot holds: the pane's real content. */
 const closedSessions = [
-  { key: 'dashboard_chat-4-1755100000', title: 'Credit pill error state', agent: 'kirocrew', modified: now - 86400 },
-  { key: 'dashboard_chat-3-1755000000', title: 'Thinking bursts per segment', agent: 'kirocrew', modified: now - 172800 },
-  { key: 'slack_1712793600.123456', title: 'Slack thread — release 0.1.4', agent: 'kirocrew', modified: now - 259200 },
+  { key: 'dashboard_chat-4-1755100000', title: 'Credit pill error state', agent: 'ajcrew', modified: now - 86400 },
+  { key: 'dashboard_chat-3-1755000000', title: 'Thinking bursts per segment', agent: 'ajcrew', modified: now - 172800 },
+  { key: 'slack_1712793600.123456', title: 'Slack thread — release 0.1.4', agent: 'ajcrew', modified: now - 259200 },
 ]
 
 /** Every session file on disk, newest first — what the endpoint used to return. */

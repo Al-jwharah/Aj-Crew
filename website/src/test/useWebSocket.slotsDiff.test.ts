@@ -59,8 +59,8 @@ class MockWebSocket {
   }
 }
 
-const rowA = { key: 'slot-a', title: 'A', agent: 'kirocrew', running: false } as ChatSlot
-const rowB = { key: 'slot-b', title: 'B', agent: 'kirocrew', running: false } as ChatSlot
+const rowA = { key: 'slot-a', title: 'A', agent: 'ajcrew', running: false } as ChatSlot
+const rowB = { key: 'slot-b', title: 'B', agent: 'ajcrew', running: false } as ChatSlot
 const envelope = { yolo: false, channelTrusted: false, folders: [], foldersGeneration: 1, governanceGeneration: 1, gitlabHostsGeneration: 1 }
 
 const listed = () => JSON.stringify(globalStore.getState().dashboard.slots.map(s => ({ key: s.key, title: s.title })))

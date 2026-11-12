@@ -45,18 +45,18 @@ from overload_integration_glue_helpers import (  # noqa: F401 -- fixtures are re
     store_fixture,
 )
 
-from kiro_crew.acp.session_handle import NATIVE_CHILD_NOT_RESUMABLE
-from kiro_crew.dashboard import session_health
-from kiro_crew.dashboard.handlers import tasks as tasks_mod
-from kiro_crew.slack.gateway import GatewayOrchestrator
-from kiro_crew.subagent_manager import admission as admission_mod
-from kiro_crew.subagent_manager.continuation import ContinuationCoordinator
-from kiro_crew.taskq import dependency as dep_mod
-from kiro_crew.taskq import model
-from kiro_crew.taskq.adapters import runner as runner_mod
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.taskq.waits import WaitRecord
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.session_handle import NATIVE_CHILD_NOT_RESUMABLE
+from aj_crew.dashboard import session_health
+from aj_crew.dashboard.handlers import tasks as tasks_mod
+from aj_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.subagent_manager import admission as admission_mod
+from aj_crew.subagent_manager.continuation import ContinuationCoordinator
+from aj_crew.taskq import dependency as dep_mod
+from aj_crew.taskq import model
+from aj_crew.taskq.adapters import runner as runner_mod
+from aj_crew.taskq.store import TaskStore
+from aj_crew.taskq.waits import WaitRecord
+from aj_crew.testing.wait import await_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -374,7 +374,7 @@ def test_native_child_refusal_without_a_registry_is_none() -> None:
 async def test_api_spawn_continue_and_steer_answer_409_for_a_native_child(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.handlers import messaging
 
     refusal = f"{NATIVE_CHILD_NOT_RESUMABLE}: kid-1 is a child of parent-1"
 
@@ -907,7 +907,7 @@ def test_owner_of_parses_runner_ids() -> None:
 
 
 def test_lane_for_is_the_shared_lane_key_policy() -> None:
-    from kiro_crew.taskq import lanes
+    from aj_crew.taskq import lanes
 
     assert runner_mod.lane_for("cron:job-1", "chat") == lanes.SYSTEM_LANE
     assert runner_mod.lane_for("_hb", "") == lanes.SYSTEM_LANE
@@ -953,7 +953,7 @@ class _Info:
 def test_resume_entry_is_granted_before_the_stagger_and_does_not_consume_it() -> None:
     import time as _t
 
-    from kiro_crew.subagent_manager.admission import CapacityView
+    from aj_crew.subagent_manager.admission import CapacityView
 
     info = _Info("r-1")
     mgr = SimpleNamespace(
@@ -1185,7 +1185,7 @@ async def _resume_stop_manager() -> Any:
     """A real manager on a real store, one lane slot, no stagger."""
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.subagent import SubagentManager
 
     sessions = MagicMock()
     sessions.get_pid = MagicMock(return_value=None)
@@ -1222,7 +1222,7 @@ async def test_stop_all_reaps_a_resident_resumed_run_it_never_treats_as_queued()
     """
     from unittest.mock import patch
 
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.subagent import SubagentManager
 
     mgr = await _resume_stop_manager()
     store = mgr._admission.taskq_store()
@@ -1283,7 +1283,7 @@ async def test_cancel_never_reports_a_queued_stop_over_a_run_that_already_ended(
     synthetic "(stopped before start)" one, plus a SECOND terminal to the parent.
     A run that has already ended is not cancellable: the answer is False.
     """
-    from kiro_crew.subagent import SubagentInfo
+    from aj_crew.subagent import SubagentInfo
 
     mgr = await _resume_stop_manager()
     try:
@@ -1322,7 +1322,7 @@ async def test_stop_all_never_takes_the_queued_stop_path_for_a_claimable_residen
     """
     from unittest.mock import patch
 
-    from kiro_crew.subagent import SubagentManager
+    from aj_crew.subagent import SubagentManager
 
     mgr = await _resume_stop_manager()
     store = mgr._admission.taskq_store()
@@ -1364,7 +1364,7 @@ async def test_stop_all_never_takes_the_queued_stop_path_for_a_claimable_residen
 
 
 def test_journal_mode_key_reaches_the_store(tmp_path: Path) -> None:
-    from kiro_crew import taskq
+    from aj_crew import taskq
 
     home = tmp_path / "home"
     (home / "tasks").mkdir(parents=True)
@@ -1385,12 +1385,12 @@ def test_journal_mode_key_reaches_the_store(tmp_path: Path) -> None:
 def test_journal_mode_config_key_parses_and_clamps(tmp_path: Path) -> None:
     import unittest.mock
 
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    def _loaded(data: dict) -> KiroCrewConfig:
+    def _loaded(data: dict) -> AjCrewConfig:
         (tmp_path / "config.json").write_text(json.dumps(data), encoding="utf-8")
-        with unittest.mock.patch("kiro_crew.config.loader.config_dir", return_value=tmp_path):
-            return KiroCrewConfig.load()
+        with unittest.mock.patch("aj_crew.config.loader.config_dir", return_value=tmp_path):
+            return AjCrewConfig.load()
 
     assert (
         _loaded({"agent": {"task_store_journal_mode": "DELETE"}}).agent.task_store_journal_mode

@@ -76,7 +76,7 @@ import {
 import type { SendMode } from '../pages/chat/ChatSettings'
 import InlineMarkdownPlugin, { INLINE_MARKDOWN_THEME } from './InlineMarkdownPlugin'
 
-const CONTROLLED_SYNC_TAG = 'kirocrew-controlled-composer-sync'
+const CONTROLLED_SYNC_TAG = 'ajcrew-controlled-composer-sync'
 
 interface LexicalComposerInputProps {
   value: string
@@ -885,7 +885,7 @@ export default function LexicalComposerInput({
   const initialValueRef = useRef({ value, blocks })
   const lastEmittedRef = useRef({ value, blocks })
   const initialConfig = useMemo(() => ({
-    namespace: 'KiroCrewComposer',
+    namespace: 'AjCrewComposer',
     nodes: [PasteTokenNode],
     theme: INLINE_MARKDOWN_THEME,
     editable: !disabled && !readOnly,

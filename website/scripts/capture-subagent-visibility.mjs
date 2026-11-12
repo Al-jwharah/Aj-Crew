@@ -20,7 +20,7 @@ import { mkdirSync } from 'node:fs'
 const BASE = process.argv[2] || 'http://127.0.0.1:6803'
 const OUT = process.argv[3] || '../temp-screenshots/subagent-visibility'
 const SLOT = 'chat-subagents'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -35,7 +35,7 @@ const AGENTS = [
  *  card's detector parses out of the persisted tool output. */
 const SPAWN_OUTPUT = [
   'Spawned 3 subagent(s). Results will arrive as completion events:',
-  ...AGENTS.map(a => `  ${a.id} (kirocrew): ${a.task}`),
+  ...AGENTS.map(a => `  ${a.id} (ajcrew): ${a.task}`),
   '',
   '⚠️ END YOUR TURN NOW — do no further work this turn.'
     + ' Wait for the [Subagent completion event] messages, which will resume you.',
@@ -48,7 +48,7 @@ const slots = [
     running: false,
     last_message: 'Spawned 3 investigation agents. Waiting for results.',
     messages: 4,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     memory_mode: 'persistent',
     project: PROJECT,
     modified: Math.floor(Date.now() / 1000),
@@ -61,7 +61,7 @@ const slots = [
     running: false,
     last_message: 'Renamed across 4 files.',
     messages: 6,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     memory_mode: 'persistent',
     project: PROJECT,
     modified: Math.floor(Date.now() / 1000) - 3600,
@@ -132,7 +132,7 @@ async function main() {
     if (path === '/api/spawn') {
       return json(route, {
         agents: AGENTS.map(a => ({
-          id: a.id, task: a.task, done: false, parent: `dashboard:${SLOT}`, agent: 'kirocrew',
+          id: a.id, task: a.task, done: false, parent: `dashboard:${SLOT}`, agent: 'ajcrew',
         })),
       })
     }
@@ -195,7 +195,7 @@ async function main() {
   /** Staggered ramp: agents start one at a time, so running and queued coexist. */
   async function startAgent(i) {
     await push('subagent_queued', { slot: SLOT, queued: 3 - (i + 1) }, 150)
-    await push('subagent_spawn', { slot: SLOT, id: AGENTS[i].id, task: AGENTS[i].task, agent: 'kirocrew' }, 150)
+    await push('subagent_spawn', { slot: SLOT, id: AGENTS[i].id, task: AGENTS[i].task, agent: 'ajcrew' }, 150)
     await push('subagent_tool', { slot: SLOT, id: AGENTS[i].id, tool: 'fs_read', turns: 1, tool_count: 3 })
   }
 

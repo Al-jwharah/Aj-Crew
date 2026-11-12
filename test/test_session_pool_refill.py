@@ -20,8 +20,8 @@ from session_pool_helpers import (  # noqa: F401 -- the autouse fixture register
     _make_provider,
 )
 
-from kiro_crew.start_priority import PrioritySemaphore
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.start_priority import PrioritySemaphore
+from aj_crew.testing.wait import await_until, finished
 
 # reload_provider_factory resets pool
 
@@ -35,7 +35,7 @@ class TestReloadProviderFactoryRefillsPool:
         old_provider = _make_provider()
         mgr._warm_pool.put_nowait((old_provider, time.monotonic()))
 
-        with patch("kiro_crew.session.KiroCrewConfig.load") as mock_load:
+        with patch("aj_crew.session.AjCrewConfig.load") as mock_load:
             new_cfg = _make_cfg(pool_size=1)
             new_factory = MagicMock(side_effect=lambda *a, **kw: _make_provider())
             new_cfg.create_provider_factory = MagicMock(return_value=new_factory)
@@ -60,7 +60,7 @@ class TestReloadProviderFactoryRefillsPool:
         fake_task.cancel = MagicMock()
         mgr._pool_health_task = fake_task
 
-        with patch("kiro_crew.session.KiroCrewConfig.load") as mock_load:
+        with patch("aj_crew.session.AjCrewConfig.load") as mock_load:
             new_cfg = _make_cfg(pool_size=1)
             new_cfg.create_provider_factory = MagicMock(
                 return_value=MagicMock(side_effect=lambda *a, **kw: _make_provider())
@@ -89,7 +89,7 @@ class TestRefreshDefaultsSparesLiveSessions:
         live_provider = _make_provider()
         mgr._sessions["dashboard:1"] = SimpleNamespace(provider=live_provider)
 
-        with patch("kiro_crew.session.KiroCrewConfig.load") as mock_load:
+        with patch("aj_crew.session.AjCrewConfig.load") as mock_load:
             new_cfg = _make_cfg(pool_size=0)
             new_cfg.create_provider_factory = MagicMock(
                 return_value=MagicMock(side_effect=lambda *a, **kw: _make_provider())
@@ -111,7 +111,7 @@ class TestRefreshDefaultsSparesLiveSessions:
         # factory in test_effort.py::TestFactoryDefaultEffortFallback.
         mgr, old_factory = _make_manager(pool_size=0)
 
-        with patch("kiro_crew.session.KiroCrewConfig.load") as mock_load:
+        with patch("aj_crew.session.AjCrewConfig.load") as mock_load:
             new_cfg = _make_cfg(pool_size=0)
             new_factory = MagicMock(side_effect=lambda *a, **kw: _make_provider())
             new_cfg.create_provider_factory = MagicMock(return_value=new_factory)
@@ -139,7 +139,7 @@ class TestRefreshDefaultsSparesLiveSessions:
         stale_pooled = _make_provider()
         mgr._warm_pool.put_nowait((stale_pooled, time.monotonic()))
 
-        with patch("kiro_crew.session.KiroCrewConfig.load") as mock_load:
+        with patch("aj_crew.session.AjCrewConfig.load") as mock_load:
             new_cfg = _make_cfg(pool_size=1)
             new_cfg.create_provider_factory = MagicMock(
                 return_value=MagicMock(side_effect=lambda *a, **kw: _make_provider())
@@ -167,7 +167,7 @@ class TestRefreshDefaultsSparesLiveSessions:
         mgr._pool_health_task = stale_task
         mgr._warm_pool.put_nowait((_make_provider(), time.monotonic()))
 
-        with patch("kiro_crew.session.KiroCrewConfig.load") as mock_load:
+        with patch("aj_crew.session.AjCrewConfig.load") as mock_load:
             new_cfg = _make_cfg(pool_size=1)
             new_cfg.create_provider_factory = MagicMock(
                 return_value=MagicMock(side_effect=lambda *a, **kw: _make_provider())
@@ -190,16 +190,16 @@ class TestDefaultProjectDir:
     def test_returns_realpath_of_workspace_dir(self, tmp_path):
         ws = tmp_path / "workspace"
         ws.mkdir()
-        with patch("kiro_crew.config.loader.workspace_dir_for", return_value=ws):
-            from kiro_crew.config.loader import default_project_dir
+        with patch("aj_crew.config.loader.workspace_dir_for", return_value=ws):
+            from aj_crew.config.loader import default_project_dir
 
             result = default_project_dir("default")
         assert result == str(ws.resolve())
 
     def test_returns_empty_when_dir_missing(self, tmp_path):
         missing = tmp_path / "nonexistent"
-        with patch("kiro_crew.config.loader.workspace_dir_for", return_value=missing):
-            from kiro_crew.config.loader import default_project_dir
+        with patch("aj_crew.config.loader.workspace_dir_for", return_value=missing):
+            from aj_crew.config.loader import default_project_dir
 
             result = default_project_dir("default")
         assert result == ""
@@ -208,17 +208,17 @@ class TestDefaultProjectDir:
         ws = tmp_path / "workspace"
         ws.mkdir()
         with (
-            patch("kiro_crew.config.loader.workspace_dir_for", return_value=ws),
-            patch("kiro_crew.security.is_sensitive_canonical_path", return_value=True),
+            patch("aj_crew.config.loader.workspace_dir_for", return_value=ws),
+            patch("aj_crew.security.is_sensitive_canonical_path", return_value=True),
         ):
-            from kiro_crew.config.loader import default_project_dir
+            from aj_crew.config.loader import default_project_dir
 
             result = default_project_dir("default")
         assert result == ""
 
     def test_returns_empty_on_exception(self):
-        with patch("kiro_crew.config.loader.workspace_dir_for", side_effect=RuntimeError("boom")):
-            from kiro_crew.config.loader import default_project_dir
+        with patch("aj_crew.config.loader.workspace_dir_for", side_effect=RuntimeError("boom")):
+            from aj_crew.config.loader import default_project_dir
 
             result = default_project_dir("default")
         assert result == ""
@@ -238,19 +238,19 @@ class TestPoolCwd:
         ],
     )
     def test_pool_cwd_follows_default_project_dir(self, project_dir, expected):
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         cfg = _make_cfg()
-        with patch("kiro_crew.session.default_project_dir", return_value=project_dir):
+        with patch("aj_crew.session.default_project_dir", return_value=project_dir):
             mgr = SessionManager(cfg)
         assert mgr._pool_cwd == expected
 
     @pytest.mark.asyncio
     async def test_pool_claimed_when_cwd_matches_pool_cwd(self):
         """cwd == _pool_cwd should NOT bypass pool."""
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
-        mgr, factory = _make_manager(pool_agent="kirocrew")
+        mgr, factory = _make_manager(pool_agent="ajcrew")
         pooled = _make_provider()
         pooled.__class__ = AcpProvider
         pooled.client = MagicMock()
@@ -263,8 +263,8 @@ class TestPoolCwd:
 
         provider, is_new, _ = await mgr.get_or_create(
             "test-key",
-            agent="kirocrew",
-            cwd="/home/user/.kirocrew/workspace",  # same as _pool_cwd
+            agent="ajcrew",
+            cwd="/home/user/.ajcrew/workspace",  # same as _pool_cwd
         )
 
         assert provider is pooled
@@ -274,11 +274,11 @@ class TestPoolCwd:
     @pytest.mark.asyncio
     async def test_pool_bypassed_when_pool_cwd_empty_and_cwd_set(self):
         """If _pool_cwd is empty, any cwd bypasses pool."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         cfg = _make_cfg()
         factory = MagicMock(side_effect=lambda *a, **kw: _make_provider())
-        with patch("kiro_crew.session.default_project_dir", return_value=""):
+        with patch("aj_crew.session.default_project_dir", return_value=""):
             mgr = SessionManager(cfg, provider_factory=factory)
 
         pooled = _make_provider()
@@ -287,7 +287,7 @@ class TestPoolCwd:
 
         provider, is_new, _ = await mgr.get_or_create(
             "test-key",
-            agent="kirocrew",
+            agent="ajcrew",
             cwd="/some/project",
         )
 
@@ -303,16 +303,16 @@ class TestPoolCwd:
         await mgr._fill_warm_pool()
 
         factory.assert_called_once()
-        assert factory.call_args.kwargs.get("cwd") == "/home/user/.kirocrew/workspace"
+        assert factory.call_args.kwargs.get("cwd") == "/home/user/.ajcrew/workspace"
 
     @pytest.mark.asyncio
     async def test_fill_warm_pool_passes_none_when_pool_cwd_empty(self):
         """Pool processes get cwd=None when _pool_cwd is empty."""
-        from kiro_crew.session import SessionManager
+        from aj_crew.session import SessionManager
 
         cfg = _make_cfg(pool_size=1)
         factory = MagicMock(side_effect=lambda *a, **kw: _make_provider())
-        with patch("kiro_crew.session.default_project_dir", return_value=""):
+        with patch("aj_crew.session.default_project_dir", return_value=""):
             mgr = SessionManager(cfg, provider_factory=factory)
 
         await mgr._fill_warm_pool()
@@ -371,7 +371,7 @@ class TestFillLockReleasedAcrossStart:
             # the fill lock released.
             await asyncio.wait_for(first_started.wait(), timeout=bound)
 
-            with patch("kiro_crew.session.KiroCrewConfig.load") as mock_load:
+            with patch("aj_crew.session.AjCrewConfig.load") as mock_load:
                 new_cfg = _make_cfg(pool_size=0)
                 new_cfg.create_provider_factory = MagicMock(
                     return_value=MagicMock(side_effect=lambda *a, **kw: _make_provider())

@@ -44,7 +44,7 @@ const slots = [
     title: 'Session summary — height caps',
     running: false,
     messages: 60,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     modified: Math.floor(Date.now() / 1000),
     last_ts: '2026-08-20T20:00:00Z',
     folder_id: '',

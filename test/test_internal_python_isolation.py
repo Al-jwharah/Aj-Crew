@@ -8,18 +8,18 @@ from typing import Callable, cast
 
 import pytest
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_internal_python_isolation")
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
-_SRC_ROOT = _REPO_ROOT / "src" / "kiro_crew"
+_SRC_ROOT = _REPO_ROOT / "src" / "aj_crew"
 
 # Each row owns an argv that can run under the desktop bundle's interpreter.
 # Keeping the inventory explicit makes a new process boundary a reviewed change.
 _INTERNAL_PYTHON_SPAWN_SITES = (
     ("platform_compat_runtime.py", "reexec_python_module"),
-    ("agent_parts/kirocrew_launcher.py", "_kirocrew_mcp_invocation"),
+    ("agent_parts/ajcrew_launcher.py", "_ajcrew_mcp_invocation"),
     ("apps/backend_runtime/provisioning.py", "_provision_app_deps_locked"),
     ("apps/backend.py", "_start_app_backend_body"),
     ("apps/bridges_mcp.py", "_pin_host_cli_command"),
@@ -40,7 +40,7 @@ _INTERNAL_PYTHON_SPAWN_SITES = (
     ("dashboard/handlers/memory_embeddings.py", "api_memory_enable_embeddings"),
     ("mcp_gateway/manager.py", "GatewayManager._spawn_once"),
     ("mcp_gateway/rewriter_spec.py", "_build_stub_entry"),
-    ("pod/unit.py", "_kirocrew_argv"),
+    ("pod/unit.py", "_ajcrew_argv"),
     ("slack/gateway_runtime/install_repair.py", "_check_missing_deps"),
     ("slack/gateway_runtime/update_apply.py", "_auto_apply_update"),
     ("testing/harness.py", "_launch_gateway"),
@@ -95,15 +95,15 @@ def test_isolated_python_argv_disables_user_site_without_weakening_I(monkeypatch
     monkeypatch.setattr(site, "ENABLE_USER_SITE", False)
     monkeypatch.setattr(platform_compat, "is_bundled_interpreter", lambda: False)
 
-    assert isolated("-m", "kiro_crew") == [sys.executable, "-s", "-m", "kiro_crew"]
-    assert isolated("-mkiro_crew.apps.x") == [sys.executable, "-s", "-mkiro_crew.apps.x"]
+    assert isolated("-m", "aj_crew") == [sys.executable, "-s", "-m", "aj_crew"]
+    assert isolated("-maj_crew.apps.x") == [sys.executable, "-s", "-maj_crew.apps.x"]
     assert isolated("-cimport server") == [sys.executable, "-s", "-cimport server"]
-    assert isolated("-s", "-m", "kiro_crew") == [sys.executable, "-s", "-m", "kiro_crew"]
-    assert isolated("-us", "-m", "kiro_crew") == [
+    assert isolated("-s", "-m", "aj_crew") == [sys.executable, "-s", "-m", "aj_crew"]
+    assert isolated("-us", "-m", "aj_crew") == [
         sys.executable,
         "-us",
         "-m",
-        "kiro_crew",
+        "aj_crew",
     ]
     assert isolated("-I", "-c", "pass") == [sys.executable, "-I", "-c", "pass"]
     assert isolated("server.py", executable="/opt/app/python") == [
@@ -118,12 +118,12 @@ def test_isolated_python_argv_preserves_nonbundled_user_site_parent(monkeypatch)
     monkeypatch.setattr(site, "ENABLE_USER_SITE", True)
     monkeypatch.setattr(platform_compat, "is_bundled_interpreter", lambda: False)
 
-    assert isolated("-m", "kiro_crew") == [sys.executable, "-m", "kiro_crew"]
-    assert isolated("-m", "kiro_crew", force_isolation=True) == [
+    assert isolated("-m", "aj_crew") == [sys.executable, "-m", "aj_crew"]
+    assert isolated("-m", "aj_crew", force_isolation=True) == [
         sys.executable,
         "-s",
         "-m",
-        "kiro_crew",
+        "aj_crew",
     ]
 
 
@@ -132,7 +132,7 @@ def test_bundled_parent_isolates_every_helper_routed_argv(
 ) -> None:
     isolated = cast(Callable[..., list[str]], platform_compat.isolated_python_argv)
 
-    assert isolated("-m", "kiro_crew") == [sys.executable, "-s", "-m", "kiro_crew"]
+    assert isolated("-m", "aj_crew") == [sys.executable, "-s", "-m", "aj_crew"]
     assert isolated("-m", "pip") == [sys.executable, "-s", "-m", "pip"]
     assert isolated("server.py", executable="/bundle/python") == [
         "/bundle/python",

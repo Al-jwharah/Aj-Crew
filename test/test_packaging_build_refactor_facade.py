@@ -2,7 +2,7 @@
 
 ``packaging/build.py`` is a facade: every name it serves is read from the ``pipeline`` owner
 that defines it. An owner binds what it imports by name when it first runs --
-``pipeline/scan.py`` takes ``redact_credentials`` from ``kiro_crew.security`` -- so an owner
+``pipeline/scan.py`` takes ``redact_credentials`` from ``aj_crew.security`` -- so an owner
 loaded on the facade's first read, inside a test's patch of that source, would keep the
 patched value for the rest of the worker. The facade therefore imports every owner at the
 end of its body.
@@ -18,12 +18,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 _SRC = Path(__file__).resolve().parents[1] / "src"
-_CREW_ROOT = _SRC / "kiro_crew" / "apps" / "builtins" / "aws_control" / "crew"
+_CREW_ROOT = _SRC / "aj_crew" / "apps" / "builtins" / "aws_control" / "crew"
 _BUILD_PY = _CREW_ROOT / "packaging" / "build.py"
-_FACADE = "kiro_crew.apps.builtins.aws_control.crew.packaging.build"
+_FACADE = "aj_crew.apps.builtins.aws_control.crew.packaging.build"
 
 #: The owners on disk, read without the facade, so an emptied export table cannot pass.
 _OWNERS = sorted(
@@ -50,12 +50,12 @@ def _child(argv: list[str], cwd: Path, *path: Path) -> subprocess.CompletedProce
 
 
 def test_importing_the_builder_binds_every_owner_before_a_test_can_patch(tmp_path: Path) -> None:
-    """A fresh interpreter that imports the facade, patches ``kiro_crew.security``'s
+    """A fresh interpreter that imports the facade, patches ``aj_crew.security``'s
     redactor, reads a moved name and undoes the patch must find every owner already
     loaded and ``scan`` holding the real redactor."""
     code = (
         "import sys\n"
-        "from kiro_crew import security\n"
+        "from aj_crew import security\n"
         f"import {_FACADE} as build\n"
         f"owners = {_OWNERS!r}\n"
         "print(sorted(set(build._EXPORTS.values())) == ['pipeline.' + o for o in owners])\n"

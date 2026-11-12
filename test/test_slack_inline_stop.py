@@ -13,8 +13,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.slack.blocks import build_working_blocks, session_task_card
-from kiro_crew.slack.format import LINK_DASHBOARD_ACTION
+from aj_crew.slack.blocks import build_working_blocks, session_task_card
+from aj_crew.slack.format import LINK_DASHBOARD_ACTION
 
 # ---------------------------------------------------------------------------
 # build_working_blocks
@@ -68,7 +68,7 @@ class TestSessionTaskCard:
             idx=0,
             key="sess-1",
             title="Test",
-            agent="kirocrew",
+            agent="ajcrew",
             status="active",
             messages=[],
         )
@@ -136,11 +136,11 @@ def mock_orch():
 @pytest.fixture
 def setup_interactions(mock_orch, monkeypatch):
     """Set up interactions module state for testing."""
-    import kiro_crew.slack.interactions as interactions
+    import aj_crew.slack.interactions as interactions
 
     monkeypatch.setattr(interactions, "_orch", mock_orch)
     # Set owner so is_owner returns True for U_OWNER
-    from kiro_crew.slack.handler import set_owner_id
+    from aj_crew.slack.handler import set_owner_id
 
     set_owner_id("U_OWNER")
     return interactions
@@ -149,7 +149,7 @@ def setup_interactions(mock_orch, monkeypatch):
 @pytest.fixture
 def audit(tmp_path, monkeypatch):
     """A real, synchronous security event log under tmp_path, read back by the tests."""
-    from kiro_crew import sel as sel_mod
+    from aj_crew import sel as sel_mod
 
     monkeypatch.setattr(sel_mod.SecurityEventLog, "_instance", None)
     monkeypatch.setattr(sel_mod.SecurityEventLog, "_initialized", False)
@@ -179,7 +179,7 @@ class TestHandleInlineStop:
         payload = {"user": {"id": "U_OTHER"}}
         action = {"value": "sess-key"}
 
-        with patch("kiro_crew.slack.interactions.sel") as mock_sel:
+        with patch("aj_crew.slack.interactions.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             mock_sel.return_value.log_tool_invocation = MagicMock()
             await interactions._handle_inline_stop(payload, action, "C1", "ts1", "U_OTHER")
@@ -206,7 +206,7 @@ class TestHandleInlineStop:
         payload = {"user": {"id": "U_OWNER"}}
         action = {"value": "my-session"}
 
-        with patch("kiro_crew.slack.interactions.sel") as mock_sel:
+        with patch("aj_crew.slack.interactions.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock(wraps=audit.log_api_access)
             mock_sel.return_value.log_tool_invocation = MagicMock(wraps=audit.log_tool_invocation)
             await interactions._handle_inline_stop(payload, action, "C1", "msg_ts", "U_OWNER")
@@ -236,7 +236,7 @@ class TestHandleInlineStop:
         payload = {"user": {"id": "U_OWNER"}}
         action = {"value": "sess-x"}
 
-        with patch("kiro_crew.slack.interactions.sel") as mock_sel:
+        with patch("aj_crew.slack.interactions.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock(wraps=audit.log_api_access)
             mock_sel.return_value.log_tool_invocation = MagicMock(wraps=audit.log_tool_invocation)
             await interactions._handle_inline_stop(payload, action, "C1", "ts1", "U_OWNER")
@@ -257,7 +257,7 @@ class TestHandleInlineStop:
         payload = {"user": {"id": "U_OWNER"}}
         action = {"value": "idle-sess"}
 
-        with patch("kiro_crew.slack.interactions.sel") as mock_sel:
+        with patch("aj_crew.slack.interactions.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             mock_sel.return_value.log_tool_invocation = MagicMock()
             await interactions._handle_inline_stop(payload, action, "C1", "ts1", "U_OWNER")
@@ -274,7 +274,7 @@ class TestHandleInlineStop:
         """The decline reply promises a repeat forces: the first press arms the
         marker for this presser, the second press by the same presser inside the
         window passes ``force=True``."""
-        from kiro_crew import session_lifecycle as sl
+        from aj_crew import session_lifecycle as sl
 
         sl._stop_declined_markers.clear()
         interactions = setup_interactions
@@ -283,7 +283,7 @@ class TestHandleInlineStop:
         payload = {"user": {"id": "U_OWNER"}}
         action = {"value": "sess-c"}
 
-        with patch("kiro_crew.slack.interactions.sel") as mock_sel:
+        with patch("aj_crew.slack.interactions.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             mock_sel.return_value.log_tool_invocation = MagicMock()
             await interactions._handle_inline_stop(payload, action, "C1", "ts1", "U_OWNER")
@@ -300,7 +300,7 @@ class TestHandleInlineStop:
         """This reply is a message update guarded by a client and a message id and
         wrapped in its own ``except``. An escalation armed behind a swallowed
         failure would turn the presser's retry into a silent session reset."""
-        from kiro_crew import session_lifecycle as sl
+        from aj_crew import session_lifecycle as sl
 
         sl._stop_declined_markers.clear()
         interactions = setup_interactions
@@ -310,7 +310,7 @@ class TestHandleInlineStop:
         payload = {"user": {"id": "U_OWNER"}}
         action = {"value": "sess-d"}
 
-        with patch("kiro_crew.slack.interactions.sel") as mock_sel:
+        with patch("aj_crew.slack.interactions.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             mock_sel.return_value.log_tool_invocation = MagicMock()
             await interactions._handle_inline_stop(payload, action, "C1", "ts1", "U_OWNER")
@@ -325,7 +325,7 @@ class TestHandleInlineStop:
         payload = {"user": {"id": "U_OWNER"}}
         action = {"value": ""}
 
-        with patch("kiro_crew.slack.interactions.sel") as mock_sel:
+        with patch("aj_crew.slack.interactions.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock(wraps=audit.log_api_access)
             mock_sel.return_value.log_tool_invocation = MagicMock(wraps=audit.log_tool_invocation)
             await interactions._handle_inline_stop(payload, action, "C1", "ts1", "U_OWNER")
@@ -367,7 +367,7 @@ class TestHandleSessionEnd:
         payload = {"user": {"id": "U_OWNER"}, "response_url": ""}
         action = {"value": value}
 
-        with patch("kiro_crew.slack.interactions.sel") as mock_sel:
+        with patch("aj_crew.slack.interactions.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock(wraps=audit.log_api_access)
             await interactions._handle_session_end(payload, action, "C1", "ts1", "U_OWNER")
 
@@ -384,15 +384,15 @@ class TestHandleSessionEnd:
         payload = {"user": {"id": "U_OTHER"}, "response_url": ""}
         action = {"value": "some-key"}
 
-        caplog.set_level("WARNING", logger="kiro_crew.slack.interactions")
-        with patch("kiro_crew.slack.interactions.sel") as mock_sel:
+        caplog.set_level("WARNING", logger="aj_crew.slack.interactions")
+        with patch("aj_crew.slack.interactions.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             await interactions._handle_session_end(payload, action, "C1", "ts1", "U_OTHER")
 
         rejections = [
             r.getMessage()
             for r in caplog.records
-            if r.name == "kiro_crew.slack.interactions" and "session_end rejected" in r.getMessage()
+            if r.name == "aj_crew.slack.interactions" and "session_end rejected" in r.getMessage()
         ]
         assert rejections == ["session_end rejected: non-owner U_OTHER"]
         mock_orch.sessions.find_key_by_sid.assert_not_called()
@@ -412,7 +412,7 @@ class TestHandleSessionEnd:
         payload = {"user": {"id": "U_OWNER"}, "response_url": ""}
         action = {"value": "sid-with-consol"}
 
-        with patch("kiro_crew.slack.interactions.sel") as mock_sel:
+        with patch("aj_crew.slack.interactions.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock(wraps=audit.log_api_access)
             await interactions._handle_session_end(payload, action, "C1", "ts1", "U_OWNER")
 
@@ -435,7 +435,7 @@ class TestHandleSessionEnd:
         payload = {"user": {"id": "U_OWNER"}, "response_url": ""}
         action = {"value": "sid-123456789abc"}
 
-        with patch("kiro_crew.slack.interactions.sel") as mock_sel:
+        with patch("aj_crew.slack.interactions.sel") as mock_sel:
             mock_sel.return_value.log_api_access = MagicMock()
             await interactions._handle_session_end(payload, action, "C1", "ts1", "U_OWNER")
 
@@ -456,9 +456,9 @@ class TestWorkingBlockPostFailure:
         never tries to delete a working block that was never posted."""
         import importlib
 
+        from aj_crew.providers.base import LLMEvent
+        from aj_crew.slack.handler import handle_message
         from conftest import MockSlackClient
-        from kiro_crew.providers.base import LLMEvent
-        from kiro_crew.slack.handler import handle_message
 
         handler_tests = importlib.import_module("test_slack_handler")
 
@@ -510,9 +510,9 @@ class TestWorkingBlockDashboardLinkGate:
         """
         import importlib
 
+        from aj_crew.providers.base import LLMEvent
+        from aj_crew.slack import handler
         from conftest import MockSlackClient
-        from kiro_crew.providers.base import LLMEvent
-        from kiro_crew.slack import handler
 
         handler_tests = importlib.import_module("test_slack_handler")
         provider = handler_tests.FakeProvider([LLMEvent(kind="text_chunk", text="answer")])
@@ -614,11 +614,11 @@ async def test_a_mid_turn_link_ends_with_the_turns_final_answer(
 
     from chat_test_helpers import _make_state
 
+    from aj_crew.acp.types import EVENT_TOOL_CALL
+    from aj_crew.dashboard import chat_persistence
+    from aj_crew.providers.base import LLMEvent
+    from aj_crew.slack import handler, interactions
     from conftest import MockSlackClient
-    from kiro_crew.acp.types import EVENT_TOOL_CALL
-    from kiro_crew.dashboard import chat_persistence
-    from kiro_crew.providers.base import LLMEvent
-    from kiro_crew.slack import handler, interactions
 
     handler_tests = importlib.import_module("test_slack_handler")
     provider = handler_tests.FakeProvider(
@@ -637,7 +637,7 @@ async def test_a_mid_turn_link_ends_with_the_turns_final_answer(
             ),
         ]
     )
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     monkeypatch.setattr(chat_persistence, "save_slot_off_loop", AsyncMock(return_value=True))
     state = _make_state(tmp_path)
 

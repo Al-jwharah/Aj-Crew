@@ -14,16 +14,16 @@ import subprocess
 
 import pytest
 
-from kiro_crew.github_runner import (
+from aj_crew.github_runner import (
     GITHUB_MAX_OWNER_CHARS,
     GITHUB_MAX_REPO_CHARS,
 )
-from kiro_crew.monitoring.github_workflow_run import (
+from aj_crew.monitoring.github_workflow_run import (
     GitHubWorkflowRunProvider,
     GitHubWorkflowRunTarget,
     parse_github_workflow_run_target,
 )
-from kiro_crew.monitoring.models import (
+from aj_crew.monitoring.models import (
     MonitorObservationStatus,
     MonitorProbeResult,
     ProviderErrorKind,
@@ -230,7 +230,7 @@ class TestProviderErrors:
 
 class TestTheKindIsRegisteredAsData:
     def test_the_registry_knows_the_kind_and_its_objective(self) -> None:
-        from kiro_crew.monitoring.registry import (
+        from aj_crew.monitoring.registry import (
             GITHUB_WORKFLOW_RUN,
             RUN_COMPLETE,
             kind_supports_objective,
@@ -245,7 +245,7 @@ class TestTheKindIsRegisteredAsData:
         assert kind_supports_shadow(GITHUB_WORKFLOW_RUN)
 
     def test_the_objective_is_this_kinds_own_not_review_ready(self) -> None:
-        from kiro_crew.monitoring.registry import (
+        from aj_crew.monitoring.registry import (
             GITHUB_WORKFLOW_RUN,
             REVIEW_READY,
             RUN_COMPLETE,
@@ -253,7 +253,7 @@ class TestTheKindIsRegisteredAsData:
         )
 
         assert not kind_supports_objective(GITHUB_WORKFLOW_RUN, REVIEW_READY)
-        from kiro_crew.monitoring.registry import GITHUB_PULL_REQUEST
+        from aj_crew.monitoring.registry import GITHUB_PULL_REQUEST
 
         assert not kind_supports_objective(GITHUB_PULL_REQUEST, RUN_COMPLETE)
 
@@ -261,7 +261,7 @@ class TestTheKindIsRegisteredAsData:
         """A workflow run cannot be inferred from a message by URL, so it is not
         namable by a caller. This also keeps the public armable sets pinned, which
         is what lets the existing engine tests pass unchanged."""
-        from kiro_crew.monitoring.registry import (
+        from aj_crew.monitoring.registry import (
             GITHUB_WORKFLOW_RUN,
             publicly_armable_kinds,
             publicly_armable_objectives,
@@ -276,13 +276,13 @@ async def test_the_shared_shadow_path_drives_the_kind_to_a_terminal_outcome() ->
     """End to end through the SHARED engine: a failed run stops the monitor blocked,
     a successful run stops it success -- with the workflow-run provider injected and
     no change to decision.py, models.py, or the probe protocol."""
-    from kiro_crew.monitoring.models import (
+    from aj_crew.monitoring.models import (
         MonitorDecision,
         MonitorOutcome,
         MonitorState,
     )
-    from kiro_crew.monitoring.registry import GITHUB_WORKFLOW_RUN, RUN_COMPLETE
-    from kiro_crew.monitoring.shadow import run_shadow_probe
+    from aj_crew.monitoring.registry import GITHUB_WORKFLOW_RUN, RUN_COMPLETE
+    from aj_crew.monitoring.shadow import run_shadow_probe
 
     persisted: list[MonitorState] = []
 
@@ -325,9 +325,9 @@ async def test_the_shared_shadow_path_drives_the_kind_to_a_terminal_outcome() ->
 
 @pytest.mark.asyncio
 async def test_a_running_run_records_and_reschedules_without_stopping() -> None:
-    from kiro_crew.monitoring.models import MonitorDecision, MonitorState
-    from kiro_crew.monitoring.registry import GITHUB_WORKFLOW_RUN, RUN_COMPLETE
-    from kiro_crew.monitoring.shadow import run_shadow_probe
+    from aj_crew.monitoring.models import MonitorDecision, MonitorState
+    from aj_crew.monitoring.registry import GITHUB_WORKFLOW_RUN, RUN_COMPLETE
+    from aj_crew.monitoring.shadow import run_shadow_probe
 
     async def persist(updated: MonitorState) -> None:
         return None

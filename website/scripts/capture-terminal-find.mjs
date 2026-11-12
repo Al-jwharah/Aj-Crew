@@ -79,7 +79,7 @@ async function stubContext(context, theme, ptyInput) {
     extra: async (path, route) => {
       // Create-slot must return a keyed slot object (a keyless one crashes the shell).
       if (path === '/api/chat/slots' && route.request().method() === 'POST') {
-        await json(route, { key: 'fixture-chat', title: 'New Session…', agent: 'kirocrew' })
+        await json(route, { key: 'fixture-chat', title: 'New Session…', agent: 'ajcrew' })
         return true
       }
       if (path.startsWith('/api/chat/slots/')) {

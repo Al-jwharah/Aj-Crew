@@ -56,7 +56,7 @@ const RECLAIM_TIERS: ReadonlyArray<(key: string) => boolean> = [
   // cleared agent-touched files re-surface on the next load after a sweep.
   (k) =>
     k === 'mc-paste-store-v1' ||
-    (k.startsWith('kirocrew:touched-files:') && !k.endsWith(':toolClearedAt')),
+    (k.startsWith('ajcrew:touched-files:') && !k.endsWith(':toolClearedAt')),
 ]
 
 /**

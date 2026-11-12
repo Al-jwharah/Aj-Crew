@@ -14,7 +14,7 @@ import os
 
 import pytest
 
-from kiro_crew.sandbox import (
+from aj_crew.sandbox import (
     _POD_OS_HOME_GRANT_STORE_LEAVES,
     _POD_OS_HOME_MASKED_SUBLEAVES,
     _pod_os_home_targets,
@@ -36,8 +36,8 @@ def _expected(leaf: str) -> str:
 
 @pytest.fixture()
 def pod_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("KIROCREW_POD", "1")
-    monkeypatch.setenv("KIROCREW_OS_HOME", _OS_HOME)
+    monkeypatch.setenv("AJCREW_POD", "1")
+    monkeypatch.setenv("AJCREW_OS_HOME", _OS_HOME)
 
 
 def test_grant_store_is_not_masked_so_the_child_can_read_and_write_it(
@@ -72,13 +72,13 @@ def test_every_other_tier_leaf_is_still_re_anchored(pod_env: None) -> None:
 
 def test_non_pod_masks_are_byte_identical(monkeypatch: pytest.MonkeyPatch) -> None:
     """Outside a pod the function yields nothing, so no mask changes anywhere."""
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
-    monkeypatch.setenv("KIROCREW_OS_HOME", _OS_HOME)
+    monkeypatch.delenv("AJCREW_POD", raising=False)
+    monkeypatch.setenv("AJCREW_OS_HOME", _OS_HOME)
     assert _pod_os_home_targets(_TIER) == []
-    monkeypatch.setenv("KIROCREW_POD", "0")
+    monkeypatch.setenv("AJCREW_POD", "0")
     assert _pod_os_home_targets(_TIER) == []
-    monkeypatch.setenv("KIROCREW_POD", "1")
-    monkeypatch.delenv("KIROCREW_OS_HOME", raising=False)
+    monkeypatch.setenv("AJCREW_POD", "1")
+    monkeypatch.delenv("AJCREW_OS_HOME", raising=False)
     assert _pod_os_home_targets(_TIER) == []
 
 
@@ -86,6 +86,6 @@ def test_a_leaf_that_matches_the_default_spelling_is_not_duplicated(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """An os-home equal to the real home yields no re-anchored duplicates."""
-    monkeypatch.setenv("KIROCREW_POD", "1")
-    monkeypatch.setenv("KIROCREW_OS_HOME", os.path.expanduser("~"))
+    monkeypatch.setenv("AJCREW_POD", "1")
+    monkeypatch.setenv("AJCREW_OS_HOME", os.path.expanduser("~"))
     assert _pod_os_home_targets(_TIER) == []

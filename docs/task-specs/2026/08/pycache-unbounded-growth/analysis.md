@@ -38,7 +38,7 @@ Deleting the directory caused no breakage.
    environments — `uv run`/`uvx` caches, per-task venvs spawned by subagents —
    live at **unique paths**, so each one mints a fresh, never-reused mirror of
    its whole stdlib + site-packages. CPython only ever *adds* to a pycache
-   prefix; nothing in CPython, and (before this fix) nothing in Kiro Crew,
+   prefix; nothing in CPython, and (before this fix) nothing in Aj Crew,
    ever deleted from it. Heavy subagent use therefore produced multiple GB of
    distinct entries per day.
 
@@ -51,7 +51,7 @@ Deleting the directory caused no breakage.
 - **Close the unbounded input** — `PYTHONPYCACHEPREFIX` joined `PYTHONPATH` /
   `PYTHONHOME` in `sandbox._PYTHON_ENV_PREFIXES`, the set scrubbed on the
   `strip_python_env=True` kiro-cli / agent spawn path (and only there:
-  Kiro Crew's own sandboxed Python children — cron scripts, app backends —
+  Aj Crew's own sandboxed Python children — cron scripts, app backends —
   keep the prefix so the packaged app's bundle stays clean). Foreign
   interpreters in the agent subtree now write `__pycache__` beside their own
   sources, Python's normal behavior.
@@ -70,7 +70,7 @@ Deleting the directory caused no breakage.
   a pure derived artifact with no user-visible tuning need once the leak is
   closed; module-owned constants keep the limit where the code-style index
   can find it. A config surface can be added later without migration cost.
-- **`kirocrew cache prune` CLI.** Unnecessary once GC is automatic; also
+- **`ajcrew cache prune` CLI.** Unnecessary once GC is automatic; also
   avoids the MCP-first obligation a new LLM-facing CLI command carries.
 - **Dropping `PYTHONPYCACHEPREFIX` in Electron.** Rejected — it would
   re-introduce the codesign-seal breakage the variable exists to prevent.

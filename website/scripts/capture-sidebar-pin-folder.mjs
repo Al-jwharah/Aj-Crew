@@ -60,7 +60,7 @@ const nestedFolders = [
 ]
 
 const slot = (key, title, folder_id, running, ago) => ({
-  key, title, running, messages: 4, agent: 'kirocrew', folder_id,
+  key, title, running, messages: 4, agent: 'ajcrew', folder_id,
   modified: now - ago, last_ts: new Date((now - ago) * 1000).toISOString(),
   last_message: running ? 'Reading the alarm history…' : 'Done. Summary posted.',
 })

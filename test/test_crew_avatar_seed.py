@@ -1,6 +1,6 @@
 """Parity tests for the backend name-seeded default ICON (``crew_avatar_seed``).
 
-The headless create paths (``POST /api/agents``, ``kirocrew agent create``) must
+The headless create paths (``POST /api/agents``, ``ajcrew agent create``) must
 default a new crew with no avatar to the SAME ``{kind: icon, pose, bg}`` the
 frontend posts for the same name, so the stored value matches the UI preview. The frontend derives pose/bg through ``@dicebear/core``'s seeded
 PRNG in ``website/src/lib/avatarPoses.ts``; the backend re-implements that
@@ -35,7 +35,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.crew_avatar_seed import (
+from aj_crew.crew_avatar_seed import (
     BLANK_LOOK_SEED,
     DEFAULT_POSE,
     DEFAULT_POSE_BG,
@@ -72,7 +72,7 @@ EXPECTED: dict[str, tuple[str, str]] = {
     "Orion": ("pose-3", "#259d85"),
     "zephyr": ("pose-7", "#21de21"),
     "Mira": ("pose-9", "#eeae4f"),
-    "A": ("pose-6", "#9046ff"),
+    "A": ("pose-6", "#30343c"),
     "ab": ("pose-11", "#21de21"),
     "abc": ("pose-7", "#259d85"),
     "Zephyr Quartz": ("pose-6", "#25679d"),
@@ -155,13 +155,13 @@ def test_pose_ids_match_frontend_source() -> None:
 
 
 def test_palette_matches_frontend_source() -> None:
-    """ICON_BG_PALETTE == [BRAND_PURPLE, ...TILES] from kiroGhostAvatar.ts."""
+    """ICON_BG_PALETTE == [BRAND_TILE, ...TILES] from kiroGhostAvatar.ts."""
     ghost = _GHOST_TS.read_text(encoding="utf-8")
-    brand = re.search(r"BRAND_PURPLE\s*=\s*'([^']+)'", ghost)
-    assert brand, "could not find BRAND_PURPLE in frontend source"
+    brand = re.search(r"BRAND_TILE\s*=\s*'([^']+)'", ghost)
+    assert brand, "could not find BRAND_TILE in frontend source"
     tiles = _ts_string_array(ghost, "TILES")
     assert list(ICON_BG_PALETTE) == [brand.group(1), *tiles]
-    # The backend's own default-bg constant is that brand purple.
+    # The backend's own default-bg constant is that brand graphite.
     assert DEFAULT_POSE_BG == brand.group(1)
 
 
@@ -196,7 +196,7 @@ def test_pick_tolerates_the_max_draw_index() -> None:
     past the end. JS reads arr[len] as undefined and its `?? fallback` yields the
     fallback; the Python port must do the same, not raise IndexError -- otherwise
     a valid crew name whose seed hits that draw crashes headless creation."""
-    from kiro_crew.crew_avatar_seed import _PRNG_MAX, _Prng
+    from aj_crew.crew_avatar_seed import _PRNG_MAX, _Prng
 
     prng = _Prng("anything")
     # Force the NEXT draw to the maximum (integer() calls next() and scales its

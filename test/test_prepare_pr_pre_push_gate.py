@@ -17,10 +17,10 @@ import pytest
 from git_maintenance_helpers import git_maintenance_off_entries
 from skill_script_helpers import load_skill_script
 
-from kiro_crew.platform.update_governance import _GIT_LOCATION_VARS
+from aj_crew.platform.update_governance import _GIT_LOCATION_VARS
 
 ROOT = Path(__file__).resolve().parent.parent
-PREPARE_PR = ROOT / "src" / "kiro_crew" / "builtin_skills" / "kirocrew-dev" / "kirocrew-prepare-pr"
+PREPARE_PR = ROOT / "src" / "aj_crew" / "builtin_skills" / "ajcrew-dev" / "ajcrew-prepare-pr"
 SCRIPT = PREPARE_PR / "scripts" / "pre_push_gate.py"
 
 gate = load_skill_script("prepare_pr_pre_push_gate_under_test", SCRIPT)
@@ -376,7 +376,7 @@ def test_a_config_only_change_runs_the_lint_and_type_gates(config) -> None:
         (".github/sync-io-in-async-fs-baseline.txt", "sync-io-in-async"),
         ("scripts/check_sync_io_in_async.py", "sync-io-in-async"),
         ("scripts/ratchet_scope.py", "agent-sdk-boundary"),
-        ("src/kiro_crew/chat.py", "mypy"),
+        ("src/aj_crew/chat.py", "mypy"),
         ("test/test_x.py", "flake8"),
         ("conftest.py", "isort"),
     ],
@@ -388,15 +388,15 @@ def test_a_change_to_an_input_of_a_slow_gate_runs_that_gate(changed, gate_id) ->
 # --------------------------------- git output is parsed as bytes, never as quoted text
 
 ODD_NAMES = [
-    "src/kiro_crew/caf\u00e9.py",  # non-ASCII: git quotes it unless the listing is NUL-separated
-    "src/kiro_crew/two words.py",  # a space
+    "src/aj_crew/caf\u00e9.py",  # non-ASCII: git quotes it unless the listing is NUL-separated
+    "src/aj_crew/two words.py",  # a space
 ]
 if sys.platform != "win32":
-    ODD_NAMES.append("src/kiro_crew/new\nline.py")  # Windows cannot hold a newline in a name
+    ODD_NAMES.append("src/aj_crew/new\nline.py")  # Windows cannot hold a newline in a name
 SRC_ONLY = {
     "id": "src-only",
     "cmd": ["{py}", "-c", "raise SystemExit(3)"],
-    "paths": ["^src/kiro_crew/"],
+    "paths": ["^src/aj_crew/"],
     "slow": "12.0 s",
     "ci": {"file": "ci.yml", "text": "x"},
 }
@@ -418,18 +418,18 @@ def test_changed_lists_odd_names_exactly(repo) -> None:
 
 
 def test_a_rename_lists_the_old_and_the_new_path(repo) -> None:
-    _commit_files(repo, ["src/kiro_crew/old name.py"])
+    _commit_files(repo, ["src/aj_crew/old name.py"])
     base = _git(repo, "merge-base", "HEAD", "origin/main")
     (repo / "test").mkdir()
-    _git(repo, "mv", "src/kiro_crew/old name.py", "test/n\u00e9w name.py")
+    _git(repo, "mv", "src/aj_crew/old name.py", "test/n\u00e9w name.py")
     _git(repo, "commit", "-qm", "move")
     assert gate._changed(base) == ["mine.py", "test/n\u00e9w name.py"]
     # A rename of a file the base already had lists both its old and its new path.
     _git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
     base2 = _git(repo, "merge-base", "HEAD", "origin/main")
-    _git(repo, "mv", "mine.py", "src/kiro_crew/m\u00ebne.py")
+    _git(repo, "mv", "mine.py", "src/aj_crew/m\u00ebne.py")
     _git(repo, "commit", "-qm", "move again")
-    assert gate._changed(base2) == ["mine.py", "src/kiro_crew/m\u00ebne.py"]
+    assert gate._changed(base2) == ["mine.py", "src/aj_crew/m\u00ebne.py"]
 
 
 @pytest.mark.parametrize("name", ODD_NAMES)
@@ -440,7 +440,7 @@ def test_a_change_to_an_odd_name_still_runs_the_path_gated_gate(repo, use_gates,
 
 
 def test_the_shipped_filters_select_a_non_ascii_source_path(repo) -> None:
-    _commit_files(repo, ["src/kiro_crew/caf\u00e9.py"])
+    _commit_files(repo, ["src/aj_crew/caf\u00e9.py"])
     base = _git(repo, "merge-base", "HEAD", "origin/main")
     chosen = {g["id"] for g in gate.select(gate.load_map()["gates"], gate._changed(base))}
     assert {"mypy", "flake8", "isort", "agent-sdk-boundary", "sync-io-in-async"} <= chosen
@@ -477,7 +477,7 @@ def test_a_repository_directory_with_spaces_and_non_ascii_gets_its_proof(
 def test_running_from_a_subdirectory_still_sees_top_relative_paths(
     repo, use_gates, monkeypatch
 ) -> None:
-    _commit_files(repo, ["src/kiro_crew/caf\u00e9.py"])
+    _commit_files(repo, ["src/aj_crew/caf\u00e9.py"])
     (repo / "docs").mkdir()
     monkeypatch.chdir(repo / "docs")
     use_gates(SRC_ONLY)
@@ -516,10 +516,10 @@ def test_an_untracked_file_in_a_new_directory_is_listed_by_name(repo) -> None:
 
 
 def test_a_changed_listing_ignores_diff_renames_and_color_config(repo) -> None:
-    _commit_files(repo, ["src/kiro_crew/old.py"])
+    _commit_files(repo, ["src/aj_crew/old.py"])
     _git(repo, "update-ref", "refs/remotes/origin/main", "HEAD")
     base = _git(repo, "merge-base", "HEAD", "origin/main")
-    _git(repo, "mv", "src/kiro_crew/old.py", "src/kiro_crew/new.py")
+    _git(repo, "mv", "src/aj_crew/old.py", "src/aj_crew/new.py")
     _git(repo, "commit", "-qm", "rename")
     for key, value in [
         ("diff.renames", "copies"),
@@ -527,7 +527,7 @@ def test_a_changed_listing_ignores_diff_renames_and_color_config(repo) -> None:
         ("diff.noprefix", "true"),
     ]:
         _config(repo, key, value)
-    assert gate._changed(base) == ["src/kiro_crew/new.py", "src/kiro_crew/old.py"]
+    assert gate._changed(base) == ["src/aj_crew/new.py", "src/aj_crew/old.py"]
     _config(repo, "status.renames", "copies")
     (repo / "mine.py").write_text("x = 3\n", encoding="utf-8")
     assert gate._worktree_state()[2] == [" M mine.py"]
@@ -541,11 +541,11 @@ def test_a_command_line_config_from_an_ancestor_git_is_overridden(repo, monkeypa
 
 
 def test_a_core_quotepath_setting_does_not_change_the_paths(repo) -> None:
-    _commit_files(repo, ["src/kiro_crew/caf\u00e9.py"])
+    _commit_files(repo, ["src/aj_crew/caf\u00e9.py"])
     base = _git(repo, "merge-base", "HEAD", "origin/main")
     for value in ("true", "false"):
         _config(repo, "core.quotepath", value)
-        assert "src/kiro_crew/caf\u00e9.py" in gate._changed(base)
+        assert "src/aj_crew/caf\u00e9.py" in gate._changed(base)
 
 
 @pytest.mark.parametrize("var", ["GIT_INDEX_FILE", "GIT_DIR", "GIT_WORK_TREE"])
@@ -762,11 +762,11 @@ def _hostile(repo: Path, tmp_path: Path, only: str | None = None) -> None:
 @pytest.fixture
 def branch_repo(repo: Path) -> Path:
     """Root, ``src/`` and ``website/`` files changed past ``origin/main``, one commit."""
-    _commit_files(repo, ["src/kiro_crew/x.py", "website/y.ts", "docs/guide.md"])
+    _commit_files(repo, ["src/aj_crew/x.py", "website/y.ts", "docs/guide.md"])
     return repo
 
 
-EXPECTED_CHANGED = sorted(["mine.py", "src/kiro_crew/x.py", "website/y.ts", "docs/guide.md"])
+EXPECTED_CHANGED = sorted(["mine.py", "src/aj_crew/x.py", "website/y.ts", "docs/guide.md"])
 
 
 def _selected_ids(base: str) -> list[str]:
@@ -781,7 +781,7 @@ def test_one_hostile_config_key_changes_nothing_from_a_subdirectory(
     base = _git(branch_repo, "merge-base", "HEAD", "origin/main")
     expected_gates = _selected_ids(base)
     _hostile(branch_repo, tmp_path, only=key)
-    for where in (branch_repo, branch_repo / "website", branch_repo / "src" / "kiro_crew"):
+    for where in (branch_repo, branch_repo / "website", branch_repo / "src" / "aj_crew"):
         monkeypatch.chdir(where)
         assert gate._changed(base) == EXPECTED_CHANGED, (key, where)
         assert _selected_ids(base) == expected_gates, (key, where)
@@ -820,11 +820,11 @@ def test_dirty_files_are_found_from_a_subdirectory_under_hostile_config(
     _hostile(branch_repo, tmp_path)
     monkeypatch.chdir(branch_repo / "website")
     (branch_repo / "website" / "new.ts").write_text("a\n", encoding="utf-8")
-    (branch_repo / "src" / "kiro_crew" / "x.py").write_text("y = 2\n", encoding="utf-8")
-    assert gate._worktree_state()[2] == [" M src/kiro_crew/x.py", "?? website/new.ts"]
+    (branch_repo / "src" / "aj_crew" / "x.py").write_text("y = 2\n", encoding="utf-8")
+    assert gate._worktree_state()[2] == [" M src/aj_crew/x.py", "?? website/new.ts"]
     assert gate.main(["pre_push_gate.py"]) == gate.EXIT_UNRUNNABLE
     out = capsys.readouterr().out
-    assert "website/new.ts" in out and "src/kiro_crew/x.py" in out
+    assert "website/new.ts" in out and "src/aj_crew/x.py" in out
     assert not _proof(branch_repo).exists()
 
 

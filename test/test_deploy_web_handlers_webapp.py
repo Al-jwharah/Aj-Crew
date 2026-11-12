@@ -20,7 +20,7 @@ from deploy_web_handlers_helpers import _isolate_config  # noqa: F401
 from deploy_web_handlers_helpers import _mock_base_stack  # noqa: F401
 from deploy_web_handlers_helpers import _run, _set_profile
 
-from kiro_crew.deploy import engine, handlers
+from aj_crew.deploy import engine, handlers
 
 # --- kind=webapp direct deploy -------------------------------------------
 #
@@ -218,11 +218,11 @@ def test_resolve_webapp_public_dir_uses_a_supplied_artifact_without_reading_agai
 def test_reaper_remediation_is_a_runnable_absolute_command(monkeypatch, tmp_path):
     """The bare script name was not runnable: it is on nobody's PATH.
 
-    The path is also not a constant — installs rooted at ``~/.kirocrew`` and at
+    The path is also not a constant — installs rooted at ``~/.ajcrew`` and at
     ``~/.kiro/crew`` both occur — so it is resolved from the live skills dir
     rather than spelled out.
     """
-    import kiro_crew.skills as skills_mod
+    import aj_crew.skills as skills_mod
 
     fake_skills = tmp_path / "skills"
     monkeypatch.setattr(skills_mod, "skills_dir", lambda: fake_skills)
@@ -234,7 +234,7 @@ def test_reaper_remediation_is_a_runnable_absolute_command(monkeypatch, tmp_path
 
 def test_reaper_remediation_survives_an_unresolvable_skills_root(monkeypatch):
     """Remediation text must never be what breaks the 409."""
-    import kiro_crew.skills as skills_mod
+    import aj_crew.skills as skills_mod
 
     def boom():
         raise RuntimeError("no skills root")
@@ -245,7 +245,7 @@ def test_reaper_remediation_survives_an_unresolvable_skills_root(monkeypatch):
 
 
 def test_base_remediation_names_the_template_by_absolute_path(monkeypatch, tmp_path):
-    import kiro_crew.skills as skills_mod
+    import aj_crew.skills as skills_mod
 
     fake_skills = tmp_path / "skills"
     monkeypatch.setattr(skills_mod, "skills_dir", lambda: fake_skills)
@@ -256,7 +256,7 @@ def test_base_remediation_names_the_template_by_absolute_path(monkeypatch, tmp_p
 
 
 def test_base_remediation_survives_an_unresolvable_skills_root(monkeypatch):
-    import kiro_crew.skills as skills_mod
+    import aj_crew.skills as skills_mod
 
     def boom():
         raise RuntimeError("no skills root")
@@ -264,9 +264,9 @@ def test_base_remediation_survives_an_unresolvable_skills_root(monkeypatch):
     monkeypatch.setattr(skills_mod, "skills_dir", boom)
     cmd = handlers._base_remediation("", "")
     assert cmd == (
-        "aws cloudformation deploy --stack-name kirocrew-deploy-base "
+        "aws cloudformation deploy --stack-name ajcrew-deploy-base "
         "--template-file templates/base-stack.yaml --no-fail-on-empty-changeset "
-        "--tags kirocrew:managed=true && install-reaper.sh"
+        "--tags ajcrew:managed=true && install-reaper.sh"
     )
 
 
@@ -282,7 +282,7 @@ def test_base_remediation_matches_deploy_sh_base_step():
     hint = handlers._base_remediation("", "").split(" && ")[0]
     hint_flags = re.findall(r"--[a-z-]+", hint)
     assert hint_flags == script_flags
-    assert "'kirocrew:managed=true'" in block and "kirocrew:managed=true" in hint
+    assert "'ajcrew:managed=true'" in block and "ajcrew:managed=true" in hint
     assert '--template-file "$TEMPLATE"' in block
     assert 'TEMPLATE="$SCRIPT_DIR/../templates/base-stack.yaml"' in script
 
@@ -309,10 +309,10 @@ def test_finite_ttl_without_base_stack_returns_a_keyed_409(monkeypatch, webapp_t
     # The banner sentence names no stack and no parameter: it says what happened
     # and what the user can do. The technical form moves to `details`, which the
     # UI shows behind a toggle.
-    assert "kirocrew-deploy-base" not in payload["error"]
+    assert "ajcrew-deploy-base" not in payload["error"]
     assert "ttl_hours" not in payload["error"]
     assert "72 hours" in payload["error"]
-    assert "kirocrew-deploy-base" in payload["details"]
+    assert "ajcrew-deploy-base" in payload["details"]
     assert payload["remediation"].endswith("--profile p --region us-west-2")
 
 
@@ -478,8 +478,8 @@ def test_backfill_failure_does_not_fail_a_successful_deploy(monkeypatch, webapp_
 # `remediation` is the runnable command, `code` is what the buttons key off.
 
 _JARGON = (
-    "kirocrew-deploy-base",
-    "kirocrew-deploy-reaper",
+    "ajcrew-deploy-base",
+    "ajcrew-deploy-reaper",
     "install-reaper.sh",
     "ttl_hours",
     "reaper",
@@ -508,7 +508,7 @@ def test_reaper_banner_sentence_carries_no_jargon(monkeypatch, webapp_tree):
     assert "72 hours" in payload["error"]
     assert "permanent" in payload["error"]
     # And nothing technical is LOST — it moved.
-    assert "kirocrew-deploy-base" in payload["details"]
+    assert "ajcrew-deploy-base" in payload["details"]
 
 
 def test_unbuilt_app_banner_sentence_carries_no_jargon(monkeypatch, tmp_path):
@@ -555,7 +555,7 @@ def test_pending_confirm_readds_entry_when_deploy_raises(monkeypatch, tmp_path):
     """A TimeoutExpired mid-deploy must leave a retryable entry and a reason."""
     import subprocess
 
-    from kiro_crew.deploy import pending as pending_mod
+    from aj_crew.deploy import pending as pending_mod
 
     # The handler refuses with 409 when the resolved profile/region drifted from
     # the previewed one, so the stored entry and the live config have to agree

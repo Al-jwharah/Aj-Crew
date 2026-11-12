@@ -15,9 +15,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.acp.runtime import AcpRuntime, AcpRuntimeError
-from kiro_crew.coder import remote_worker
-from kiro_crew.remote_session import relay
+from aj_crew.acp.runtime import AcpRuntime, AcpRuntimeError
+from aj_crew.coder import remote_worker
+from aj_crew.remote_session import relay
 
 pytestmark = pytest.mark.asyncio
 

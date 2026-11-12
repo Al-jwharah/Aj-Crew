@@ -13,16 +13,16 @@ import logging
 
 import pytest
 
-from kiro_crew import skill_trust
-from kiro_crew import skills as skills_mod
-from kiro_crew.skills import SkillsLoader
+from aj_crew import skill_trust
+from aj_crew import skills as skills_mod
+from aj_crew.skills import SkillsLoader
 
-_LOGGER = "kiro_crew.skills"
+_LOGGER = "aj_crew.skills"
 
 
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     skill_trust.reset_cache_for_tests()
     # Both the chain-refusal and the linked-entry warnings dedup through the one
     # _CHAIN_REFUSALS_WARNED set. It is a mirror-routed name (the skills facade

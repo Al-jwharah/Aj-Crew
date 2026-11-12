@@ -18,7 +18,7 @@
  *
  * Usage (from website/, with the pod up and this branch's dist provisioned):
  *
- *   kirocrew pod up <worktree> --seed rich --json | tail -1 > /tmp/pod.json
+ *   ajcrew pod up <worktree> --seed rich --json | tail -1 > /tmp/pod.json
  *   POD_INFO=/tmp/pod.json node scripts/capture-feature-previews.mjs [outDir]
  *
  * `outDir` defaults to `public/app-assets/feature-previews`. Budget the PR

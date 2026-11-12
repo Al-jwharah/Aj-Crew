@@ -13,7 +13,7 @@ import { ChannelFolderBackfill } from './ChannelFolderBackfill'
 /** Brand name — do-not-translate, so it lives here rather than in the catalog. */
 const CHANNEL_NAME = "iMessage"
 const BRIDGE_URL = 'https://github.com/steipete/imsg'
-const SETUP_GUIDE = 'https://github.com/kirodotdev/KiroCrew/blob/main/src/kiro_crew/docs/imessage-integration.md'
+const SETUP_GUIDE = 'https://github.com/Al-jwharah/Aj-Crew/blob/main/src/aj_crew/docs/imessage-integration.md'
 
 const SERVICES = ['imessage', 'sms', 'auto']
 

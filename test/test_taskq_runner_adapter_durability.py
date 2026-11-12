@@ -30,11 +30,11 @@ from taskq_runner_adapter_helpers import (  # noqa: F401 -- fixtures are request
     store_fixture,
 )
 
-from kiro_crew.taskq import model as m
-from kiro_crew.taskq.adapters import runner as r
-from kiro_crew.taskq.reconcile import reconcile_on_boot
-from kiro_crew.taskq.store import TaskStore, TaskStoreUnavailable
-from kiro_crew.testing.wait import await_until
+from aj_crew.taskq import model as m
+from aj_crew.taskq.adapters import runner as r
+from aj_crew.taskq.reconcile import reconcile_on_boot
+from aj_crew.taskq.store import TaskStore, TaskStoreUnavailable
+from aj_crew.testing.wait import await_until
 
 
 def _delete_mode_store(tmp_path: Path, clock: Clock) -> TaskStore:
@@ -472,7 +472,7 @@ async def test_adopt_ends_the_rows_a_dead_incarnation_accepted_or_admitted(
     one; ``workflow_agent`` has no dispatcher, so both claimable rows are the
     sweep's alone. Repeated sweeps settle nothing twice.
     """
-    from kiro_crew.taskq.reconcile import reconcile_on_boot
+    from aj_crew.taskq.reconcile import reconcile_on_boot
 
     path = tmp_path / "tasks.db"
     store_a = _reopen(path, clock)
@@ -625,7 +625,7 @@ async def test_adopt_leaves_a_retry_wait_row_carrying_an_answer_alone(
 
 
 def test_legacy_import_row_is_adopted(store: TaskStore, clock: Clock) -> None:
-    from kiro_crew.taskq.migrate import legacy_taskrunner_records
+    from aj_crew.taskq.migrate import legacy_taskrunner_records
 
     runs = Path(store.path).parent / "runs.json"
     runs.write_text(
@@ -791,7 +791,7 @@ async def test_crash_during_a_deferred_terminal_write_reconciles_the_row(
     reconcile settles it -- ``unknown_side_effect`` for the default class, a
     claimable ``recovering`` row for side-effect-free (retry-safe) work. The pending write is
     therefore durable BY RECONCILE, not by a second persisted record."""
-    from kiro_crew.taskq.reconcile import reconcile_on_boot
+    from aj_crew.taskq.reconcile import reconcile_on_boot
 
     path = tmp_path / "tasks.db"
     store_a = TaskStore(path, window=8, clock=clock, network_fs=False).open()
@@ -864,7 +864,7 @@ async def test_answer_is_restored_from_the_wake_event_after_a_rebuild(
     assert store_a.state_of(rec.id) == m.RETRY_WAIT  # claimable, no lease
     store_a.close()
     store_b = TaskStore(path, window=8, clock=clock, network_fs=False).open()
-    from kiro_crew.taskq.reconcile import reconcile_on_boot
+    from aj_crew.taskq.reconcile import reconcile_on_boot
 
     reconcile_on_boot(store_b, now=clock())
     assert store_b.state_of(rec.id) == m.RETRY_WAIT  # boot leaves a claimable row alone
@@ -891,7 +891,7 @@ async def test_waiting_input_falls_back_to_the_persisted_answer(
     h.running()
     wait = asyncio.create_task(adm.waiting_input(h, tool_call_id="q2"))
     await settle_store_writes(store)
-    from kiro_crew.taskq.waits import WaitLedger
+    from aj_crew.taskq.waits import WaitLedger
 
     # Another instance records the answer on the wake event and wakes the row.
     assert WaitLedger(store, clock=clock).wake(
@@ -911,7 +911,7 @@ async def test_terminal_decision_is_persisted_before_capacity_is_released(
     reconciler nor the runner adapter touches -- a cancelled retry-safe row is
     never re-run. Only an unreachable store (``TaskStoreUnavailable``) leaves
     the decision to reconcile."""
-    from kiro_crew.taskq.reconcile import reconcile_on_boot
+    from aj_crew.taskq.reconcile import reconcile_on_boot
 
     path = tmp_path / "tasks.db"
     store_a = TaskStore(path, window=8, clock=clock, network_fs=False).open()

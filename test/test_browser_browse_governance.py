@@ -20,17 +20,17 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 
-from kiro_crew.browser_harness import governance as gov
-from kiro_crew.browser_harness import install as harness_install
-from kiro_crew.browser_harness import live_hub as lh
-from kiro_crew.browser_harness.supervisor import HarnessSupervisor
-from kiro_crew.dashboard import handlers
-from kiro_crew.dashboard.handlers import browser_ask
-from kiro_crew.dashboard.handlers import browser_harness_status as status_routes
-from kiro_crew.dashboard.handlers import browser_live, browser_ops
-from kiro_crew.dashboard.routes import browser_live as route_slice
-from kiro_crew.mcp_tools import browser as shim
-from kiro_crew.testing.wait import await_until
+from aj_crew.browser_harness import governance as gov
+from aj_crew.browser_harness import install as harness_install
+from aj_crew.browser_harness import live_hub as lh
+from aj_crew.browser_harness.supervisor import HarnessSupervisor
+from aj_crew.dashboard import handlers
+from aj_crew.dashboard.handlers import browser_ask
+from aj_crew.dashboard.handlers import browser_harness_status as status_routes
+from aj_crew.dashboard.handlers import browser_live, browser_ops
+from aj_crew.dashboard.routes import browser_live as route_slice
+from aj_crew.mcp_tools import browser as shim
+from aj_crew.testing.wait import await_until
 
 _DENY_DOC = {
     "version": 1,
@@ -42,8 +42,8 @@ _DENY_DOC = {
 @pytest.fixture
 def ceiling(monkeypatch: pytest.MonkeyPatch):
     """Install a boot-frozen ceiling; returns a setter (``None`` = ungoverned)."""
-    from kiro_crew.platform import context as pc
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.platform import context as pc
+    from aj_crew.platform.governance import parse_policy
 
     def _set(doc: dict | None) -> None:
         parsed = parse_policy(doc) if doc is not None else None
@@ -57,7 +57,7 @@ def ceiling(monkeypatch: pytest.MonkeyPatch):
 def stops(monkeypatch: pytest.MonkeyPatch) -> list[int]:
     """Every ``stop_running_harness`` a refusal schedules, instead of a real stop."""
     seen: list[int] = []
-    import kiro_crew.dashboard.handlers.browser_policy as policy
+    import aj_crew.dashboard.handlers.browser_policy as policy
 
     monkeypatch.setattr(policy, "stop_running_harness", lambda: seen.append(1))
     return seen
@@ -65,13 +65,13 @@ def stops(monkeypatch: pytest.MonkeyPatch) -> list[int]:
 
 @pytest.fixture(autouse=True)
 def _quiet(tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch) -> Any:
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _floor_monkeypatch.setattr(handlers, "sel", lambda: MagicMock())
     _floor_monkeypatch.setattr(browser_ops, "_sel", lambda: MagicMock())
     _floor_monkeypatch.setattr(
         browser_live, "_sel", lambda: SimpleNamespace(log_api_access=lambda **_: None)
     )
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     _floor_monkeypatch.setattr(sel_mod, "sel", lambda: MagicMock())
     lh.reset_live_hub()
@@ -92,7 +92,7 @@ def test_a_policy_deny_denies_and_no_policy_permits(ceiling) -> None:
 
 def test_an_unevaluable_ceiling_denies(monkeypatch: pytest.MonkeyPatch) -> None:
     """Fail-closed: a wrong permit drives a browser on a fleet that forbade it."""
-    from kiro_crew.platform import context as pc
+    from aj_crew.platform import context as pc
 
     def _broken() -> Any:
         raise RuntimeError("ceiling unreadable")
@@ -103,7 +103,7 @@ def test_an_unevaluable_ceiling_denies(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_a_deny_is_audited_only_where_someone_acted(monkeypatch, ceiling) -> None:
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     rows: list[dict] = []
     monkeypatch.setattr(
@@ -137,7 +137,7 @@ async def test_the_engine_does_not_start_under_a_deny(tmp_path, monkeypatch, cei
 
 @pytest.mark.asyncio
 async def test_the_engine_does_not_start_when_permitted_is_unchanged(tmp_path, ceiling) -> None:
-    from kiro_crew.browser_harness.supervisor import HarnessNotInstalled
+    from aj_crew.browser_harness.supervisor import HarnessNotInstalled
 
     sup = HarnessSupervisor(tmp_path, config_reader=lambda: {})
     with pytest.raises(HarnessNotInstalled):
@@ -150,8 +150,8 @@ async def test_a_deny_during_the_allow_wait_does_not_finish_the_start(
 ) -> None:
     """The user's Chrome holds the start on its Allow sheet with no deadline: a deny
     that lands meanwhile must not start the daemon once Allow is clicked."""
-    from kiro_crew.browser_harness import discover
-    from kiro_crew.browser_harness import supervisor as sup_mod
+    from aj_crew.browser_harness import discover
+    from aj_crew.browser_harness import supervisor as sup_mod
 
     monkeypatch.setattr(
         harness_install,
@@ -303,7 +303,7 @@ def caller_deny(monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
     async def _denied(session_key: str = gov.DASHBOARD_SURFACE_KEY, *, audit: bool = True) -> bool:
         return session_key == "slack:x" and state["on"]
 
-    import kiro_crew.dashboard.handlers.browser_policy as policy
+    import aj_crew.dashboard.handlers.browser_policy as policy
 
     monkeypatch.setattr(browser_ops, "browse_denied_async", _denied)
     monkeypatch.setattr(policy, "browse_denied_async", _denied)
@@ -413,7 +413,7 @@ async def test_an_op_whose_start_another_caller_stopped_says_why(
     import asyncio
     import contextlib
 
-    from kiro_crew.browser_harness import supervisor as sup_mod
+    from aj_crew.browser_harness import supervisor as sup_mod
 
     stopped = asyncio.ensure_future(asyncio.Event().wait())
     stopped.cancel()
@@ -464,7 +464,7 @@ async def test_settings_connect_reports_a_start_another_caller_stopped(tmp_path)
 
 @pytest.mark.asyncio
 async def test_a_quick_ask_posted_as_the_deny_lands_is_refused(monkeypatch, ceiling) -> None:
-    from kiro_crew.dashboard.handlers import browser_ask as ask_mod
+    from aj_crew.dashboard.handlers import browser_ask as ask_mod
 
     class _Sup:
         relay = MagicMock()
@@ -703,7 +703,7 @@ async def test_the_startup_auto_install_does_nothing_under_a_deny(
 
 @pytest.mark.asyncio
 async def test_the_dashboard_config_reports_browse_enabled(ceiling) -> None:
-    from kiro_crew.dashboard.handlers.files import api_dashboard_config
+    from aj_crew.dashboard.handlers.files import api_dashboard_config
 
     resp = await api_dashboard_config(make_mocked_request("GET", "/api/dashboard/config"))
     assert json.loads(resp.text)["browse_enabled"] is True
@@ -742,7 +742,7 @@ async def test_a_refusal_stops_a_browser_that_is_still_running(monkeypatch) -> N
     """A policy pushed mid-session: the next refused route stops the running engine."""
     import asyncio
 
-    from kiro_crew.browser_harness import supervisor as sup_mod
+    from aj_crew.browser_harness import supervisor as sup_mod
 
     stopped = asyncio.Event()
     release = asyncio.Event()
@@ -776,7 +776,7 @@ async def test_a_refusal_stops_a_start_still_waiting_on_allow(tmp_path, monkeypa
     on Chrome's Allow sheet is cancelled by the refused route, not left to finish."""
     import asyncio
 
-    from kiro_crew.browser_harness import supervisor as sup_mod
+    from aj_crew.browser_harness import supervisor as sup_mod
 
     sup = HarnessSupervisor(tmp_path, config_reader=lambda: {})
     allow = asyncio.Event()

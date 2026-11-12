@@ -1,4 +1,4 @@
-"""Privacy modifiers and dashboard-linked thread routing in :mod:`kiro_crew.slack.handler`.
+"""Privacy modifiers and dashboard-linked thread routing in :mod:`aj_crew.slack.handler`.
 
 Pins the ``!temporary`` and ``!incognito`` modifiers: the Slack names that delegate to
 ``messaging.privacy_mode``, the flags persisted on and hydrated from the session map, the
@@ -23,9 +23,9 @@ from slack_handler_coverage_helpers import (  # noqa: F401 -- fixtures are reque
     slack_fixture,
 )
 
-from kiro_crew.messaging import auto_title as auto_title_mod
-from kiro_crew.messaging import privacy_mode
-from kiro_crew.slack import handler as h
+from aj_crew.messaging import auto_title as auto_title_mod
+from aj_crew.messaging import privacy_mode
+from aj_crew.slack import handler as h
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -60,7 +60,7 @@ class TestSharedPrivacyDelegation:
         ``session_key.startswith("slack:") and privacy_mode.is_restricted(...)`` —
         red here while every Slack test stays green.
         """
-        key = "telegram:kirocrew:direct:4242"
+        key = "telegram:ajcrew:direct:4242"
         privacy_mode.mark_incognito(key)
         assert h._is_slack_restricted(key) is True
 
@@ -117,9 +117,9 @@ class TestPrivacyModifiers:
     async def test_flags_are_persisted_on_the_session_map(
         self, slack, sessions, owner, tmp_path, monkeypatch
     ):
-        monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
-        from kiro_crew.session_map import SessionMap
+        monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
+        from aj_crew.session_map import SessionMap
 
         sessions._session_map = SessionMap()
         await h._apply_privacy_mode(
@@ -148,11 +148,11 @@ class TestPrivacyModifiers:
         honour by returning without a turn -- so the message is never run with
         the mode dropped. Mutation: drop the gate in ``SessionMap.set_flag`` --
         the flag is written, ``only_modifier`` is False and the turn would run."""
-        monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
-        import kiro_crew.session_map as session_map_mod
-        from kiro_crew.messaging import privacy_mode
-        from kiro_crew.session_map import SessionMap
+        monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
+        import aj_crew.session_map as session_map_mod
+        from aj_crew.messaging import privacy_mode
+        from aj_crew.session_map import SessionMap
 
         monkeypatch.setattr(session_map_mod, "PRIVACY_ROW_CAP", 1)
         sessions._session_map = SessionMap()
@@ -190,9 +190,9 @@ class TestPrivacyModifiers:
         assert not h.is_thread_incognito("t1")
 
     def test_hydrate_conv_flags_restores_both(self, sessions, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
-        from kiro_crew.session_map import SessionMap
+        monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.session_map._KIRO_SESSIONS_DIR", tmp_path / "kiro")
+        from aj_crew.session_map import SessionMap
 
         sm = SessionMap()
         sm.set_flag("t1", "temporary", True)

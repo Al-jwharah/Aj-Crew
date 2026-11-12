@@ -1,7 +1,7 @@
 """``agent.spec_pins``: one explicit choice among same-name specs, honoured by every reader.
 
 Two packages each install a differing spec under one declared name. With no pin every
-reader refuses, naming each file and the ``kirocrew agent pin`` command for it. With a
+reader refuses, naming each file and the ``ajcrew agent pin`` command for it. With a
 pin every reader (the KAS projection, the tool-policy read, the member mount gate, the
 model and flag lookups, the pooled overlay, the kiro-cli skill view) answers from the
 pinned file, and a pin naming none of the claimants is refused without falling back.
@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent_spec_pins
-from kiro_crew.agent_discovery import (
+from aj_crew import agent_spec_pins
+from aj_crew.agent_discovery import (
     AgentSpecPinError,
     AmbiguousAgentSpecError,
     declared_spec_claim,
@@ -63,8 +63,8 @@ def test_no_pin_refuses_and_names_every_file_and_its_pin_command(contested, pins
         spec_by_declared_name(contested, "helper", operation="t", source="test")
     message = str(exc.value)
     assert "with differing content" in message
-    assert "  kirocrew agent pin helper PkgA-helper.json" in message
-    assert "  kirocrew agent pin helper PkgB-helper.json" in message
+    assert "  ajcrew agent pin helper PkgA-helper.json" in message
+    assert "  ajcrew agent pin helper PkgB-helper.json" in message
     assert not isinstance(exc.value, AgentSpecPinError)
     assert exc.value.agent == "helper"
     assert {p.name: pkg for p, pkg in exc.value.packages.items()} == {
@@ -91,7 +91,7 @@ def test_a_broken_pin_fails_closed_without_falling_back(contested, pins, pin):
         spec_by_declared_name(contested, "helper", operation="t", source="test")
     assert exc.value.pin == pin
     assert "will not fall back" in str(exc.value)
-    assert "kirocrew agent pin helper --clear" in str(exc.value)
+    assert "ajcrew agent pin helper --clear" in str(exc.value)
 
 
 def test_an_unreadable_pinned_file_fails_closed(contested, pins):
@@ -112,7 +112,7 @@ def test_identical_claimants_without_a_pin_still_resolve(tmp_path, pins):
 
 
 def test_an_unreadable_agents_dir_is_reported_not_read_as_empty(contested, monkeypatch):
-    from kiro_crew import agent_spec_format, agent_spec_pin_ops
+    from aj_crew import agent_spec_format, agent_spec_pin_ops
 
     def refuse(_directory):
         raise PermissionError("denied")
@@ -174,9 +174,9 @@ def test_pin_store_rejects_paths_and_traversal():
 
 
 def test_the_kas_projection_follows_the_pin_and_a_pin_change_is_not_stale(contested, pins):
-    from kiro_crew.acp.kas_agents import KasAgentTranslationError, load_agent_spec
+    from aj_crew.acp.kas_agents import KasAgentTranslationError, load_agent_spec
 
-    with pytest.raises(KasAgentTranslationError, match="kirocrew agent pin helper"):
+    with pytest.raises(KasAgentTranslationError, match="ajcrew agent pin helper"):
         load_agent_spec(contested, "helper")
     pins["helper"] = "PkgA-helper.json"
     assert load_agent_spec(contested, "helper")["prompt"] == "A"
@@ -186,12 +186,12 @@ def test_the_kas_projection_follows_the_pin_and_a_pin_change_is_not_stale(contes
 
 
 def test_the_tool_policy_read_follows_the_pin(contested, pins):
-    from kiro_crew.dashboard.handlers.sessions_parts.tool_policy import (
+    from aj_crew.dashboard.handlers.sessions_parts.tool_policy import (
         _read_managed_tool_policy_sync,
     )
 
     spec_a = json.loads((contested / "PkgA-helper.json").read_text(encoding="utf-8"))
-    spec_a["managedToolPolicy"] = {"kirocrew-core": {"exclude": ["a_only"]}}
+    spec_a["managedToolPolicy"] = {"ajcrew-core": {"exclude": ["a_only"]}}
     (contested / "PkgA-helper.json").write_text(json.dumps(spec_a), encoding="utf-8")
     with pytest.raises(AmbiguousAgentSpecError):
         _read_managed_tool_policy_sync(contested, "helper")
@@ -203,17 +203,17 @@ def test_the_tool_policy_read_follows_the_pin(contested, pins):
 
 
 def test_the_tool_policy_reason_names_the_pin_command(contested, pins):
-    from kiro_crew.dashboard.handlers.sessions_parts.tool_policy import _ambiguous_spec_reason
+    from aj_crew.dashboard.handlers.sessions_parts.tool_policy import _ambiguous_spec_reason
 
     with pytest.raises(AmbiguousAgentSpecError) as exc:
         spec_by_declared_name(contested, "helper", operation="t", source="test")
     reason = _ambiguous_spec_reason("helper", exc.value)
-    assert "kirocrew agent pin helper PkgA-helper.json" in reason
+    assert "ajcrew agent pin helper PkgA-helper.json" in reason
     assert str(contested) not in reason
 
 
 def test_agent_spec_path_follows_the_pin_only_for_readers(contested, pins):
-    from kiro_crew.agent import agent_spec_path, session_agent_spec_path
+    from aj_crew.agent import agent_spec_path, session_agent_spec_path
 
     pins["helper"] = "PkgB-helper.json"
     assert session_agent_spec_path("helper", agents_dir=contested) == (
@@ -228,7 +228,7 @@ def test_agent_spec_path_follows_the_pin_only_for_readers(contested, pins):
 
 
 def test_the_member_mount_gate_reads_the_pinned_spec(contested, pins, monkeypatch):
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     real = session_mcp.session_agent_spec_path
     monkeypatch.setattr(
@@ -254,11 +254,11 @@ def test_first_match_readers_follow_the_pin(contested, pins):
 
 
 def test_the_model_readers_follow_the_pin(contested, pins, monkeypatch):
-    from kiro_crew import session
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew import session
+    from aj_crew.config.loader import AjCrewConfig
 
     pins["helper"] = "PkgB-helper.json"
-    assert KiroCrewConfig._resolve_named_agent_model("helper", agents_dir=contested) == "model-b"
+    assert AjCrewConfig._resolve_named_agent_model("helper", agents_dir=contested) == "model-b"
     monkeypatch.setattr(session, "kiro_agents_dir_path", lambda: contested)
     if hasattr(session.SessionManager, "_agent_model_cache"):
         monkeypatch.setattr(session.SessionManager, "_agent_model_cache", {}, raising=False)
@@ -269,8 +269,8 @@ def test_the_model_readers_follow_the_pin(contested, pins, monkeypatch):
 
 
 def test_the_crew_context_flag_reader_follows_the_pin(contested, pins, monkeypatch):
-    from kiro_crew import context
-    from kiro_crew.context_assembly.agent_spec import _read_include_crew_context
+    from aj_crew import context
+    from aj_crew.context_assembly.agent_spec import _read_include_crew_context
 
     spec_b = json.loads((contested / "PkgB-helper.json").read_text(encoding="utf-8"))
     spec_b["includeCrewContext"] = False
@@ -289,7 +289,7 @@ def test_the_crew_context_flag_reader_follows_the_pin(contested, pins, monkeypat
 
 def _user_claimants(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *files: str) -> None:
     """User-level files declaring ``helper``, so the overlay lookup sees a contest."""
-    from kiro_crew import agent
+    from aj_crew import agent
 
     agents = tmp_path / "user-agents"
     agents.mkdir()
@@ -302,7 +302,7 @@ def _user_claimants(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *files: str
 
 
 def test_the_pooled_overlay_stem_is_the_pinned_file(tmp_path, pins, monkeypatch):
-    from kiro_crew.mcp_gateway.session_servers import _load_overlay_for_agent
+    from aj_crew.mcp_gateway.session_servers import _load_overlay_for_agent
 
     _user_claimants(tmp_path, monkeypatch, "PkgA-helper.json", "PkgB-helper.json")
     overlay = tmp_path / "overlay"
@@ -314,7 +314,7 @@ def test_the_pooled_overlay_stem_is_the_pinned_file(tmp_path, pins, monkeypatch)
 
 
 def test_a_markdown_pin_pools_the_overlay_named_after_its_stem(tmp_path, pins, monkeypatch):
-    from kiro_crew.mcp_gateway.session_servers import _load_overlay_for_agent
+    from aj_crew.mcp_gateway.session_servers import _load_overlay_for_agent
 
     _user_claimants(tmp_path, monkeypatch, "PkgA-helper.json", "PkgB-helper.md")
     # The rewriter writes ``PkgB-helper.md``'s overlay as ``PkgB-helper.json``.
@@ -327,7 +327,7 @@ def test_a_markdown_pin_pools_the_overlay_named_after_its_stem(tmp_path, pins, m
 
 @pytest.mark.parametrize("pinned_overlay", [None, "{not json", {"name": "someone-else"}])
 def test_a_pin_without_a_usable_overlay_pools_nothing(tmp_path, pins, pinned_overlay, monkeypatch):
-    from kiro_crew.mcp_gateway.session_servers import _load_overlay_for_agent
+    from aj_crew.mcp_gateway.session_servers import _load_overlay_for_agent
 
     _user_claimants(tmp_path, monkeypatch, "PkgA-helper.json", "PkgB-helper.md")
     overlay = tmp_path / "overlay"
@@ -342,7 +342,7 @@ def test_a_pin_without_a_usable_overlay_pools_nothing(tmp_path, pins, pinned_ove
 
 
 def test_the_parent_spawn_allowlist_is_the_pinned_parents(tmp_path, pins):
-    from kiro_crew.subagent_parts.agent_policy import _scan_parent_spawn_allowlists
+    from aj_crew.subagent_parts.agent_policy import _scan_parent_spawn_allowlists
 
     agents = tmp_path / "agents"
     _write(agents, "PkgA-lead.json", name="lead", toolsSettings=_spawn(["alpha"]))
@@ -359,7 +359,7 @@ def test_the_parent_spawn_allowlist_is_the_pinned_parents(tmp_path, pins):
 
 
 def test_a_broken_pin_leaves_the_parent_spawn_allowlist_unknown(tmp_path, pins):
-    from kiro_crew.subagent_parts.agent_policy import _scan_parent_spawn_allowlists
+    from aj_crew.subagent_parts.agent_policy import _scan_parent_spawn_allowlists
 
     agents = tmp_path / "agents"
     _write(agents, "PkgA-lead.json", name="lead", toolsSettings=_spawn(["alpha"]))
@@ -378,8 +378,8 @@ def test_a_broken_pin_leaves_the_parent_spawn_allowlist_unknown(tmp_path, pins):
 def test_kiro_cli_launch_on_the_authored_name_is_refused_when_contested(
     contested, pins, monkeypatch
 ):
-    from kiro_crew import agent as agent_mod
-    from kiro_crew.agent_materialization import fork_refresh
+    from aj_crew import agent as agent_mod
+    from aj_crew.agent_materialization import fork_refresh
 
     monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: contested)
     with pytest.raises(fork_refresh.AgentSpecLaunchUnresolved) as exc:
@@ -390,7 +390,7 @@ def test_kiro_cli_launch_on_the_authored_name_is_refused_when_contested(
     with pytest.raises(fork_refresh.AgentSpecLaunchUnresolved, match="could not be handed"):
         fork_refresh.require_launch_resolves_one_file("helper", None)
     # A skill view (any Crew-owned name other than the authored one) passes.
-    fork_refresh.require_launch_resolves_one_file("helper", "kirocrew-view-abc")
+    fork_refresh.require_launch_resolves_one_file("helper", "ajcrew-view-abc")
     # An uncontested name passes on its authored name.
     fork_refresh.require_launch_resolves_one_file("other", "other")
 
@@ -398,8 +398,8 @@ def test_kiro_cli_launch_on_the_authored_name_is_refused_when_contested(
 def test_a_project_spec_shadows_contested_user_level_claimants(
     contested, pins, monkeypatch, tmp_path
 ):
-    from kiro_crew import agent
-    from kiro_crew.agent_materialization import fork_refresh
+    from aj_crew import agent
+    from aj_crew.agent_materialization import fork_refresh
 
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: contested)
     checkout = tmp_path / "checkout"
@@ -411,7 +411,7 @@ def test_a_project_spec_shadows_contested_user_level_claimants(
 
 
 def test_the_welcome_message_comes_from_the_pinned_file(contested, pins):
-    from kiro_crew.agent_discovery import agent_welcome_message
+    from aj_crew.agent_discovery import agent_welcome_message
 
     (contested / "PkgA-helper.json").write_text(
         json.dumps({"name": "helper", "prompt": "A", "welcomeMessage": "Hello from A"})
@@ -425,10 +425,10 @@ def test_the_welcome_message_comes_from_the_pinned_file(contested, pins):
 def test_a_pin_command_for_an_option_shaped_file_still_pins_it():
     import argparse
 
-    from kiro_crew.cli_parser_agent import register_agent_parser
+    from aj_crew.cli_parser_agent import register_agent_parser
 
     command = agent_spec_pins.pin_command("helper", "-helper.json")
-    assert command == "kirocrew agent pin helper -- -helper.json"
+    assert command == "ajcrew agent pin helper -- -helper.json"
     parser = argparse.ArgumentParser()
     register_agent_parser(parser.add_subparsers(dest="command"))
     args = parser.parse_args(command.split()[1:])
@@ -436,9 +436,9 @@ def test_a_pin_command_for_an_option_shaped_file_still_pins_it():
 
 
 def test_the_launch_refusal_runs_inside_the_ceiling_check(contested, pins, monkeypatch):
-    from kiro_crew import agent as agent_mod
-    from kiro_crew.acp_backends import ACP_BACKEND_KIRO
-    from kiro_crew.agent_materialization import fork_refresh
+    from aj_crew import agent as agent_mod
+    from aj_crew.acp_backends import ACP_BACKEND_KIRO
+    from aj_crew.agent_materialization import fork_refresh
 
     monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: contested)
     with pytest.raises(fork_refresh.SharedTemplateOverCeiling):
@@ -451,8 +451,8 @@ def test_the_launch_refusal_runs_inside_the_ceiling_check(contested, pins, monke
 
 
 def test_a_refused_start_carries_the_chooser_meta(contested, pins, monkeypatch):
-    from kiro_crew import agent_spec_pin_ops
-    from kiro_crew.dashboard.chat_turn.recovery import _terminal_error_meta
+    from aj_crew import agent_spec_pin_ops
+    from aj_crew.dashboard.chat_turn.recovery import _terminal_error_meta
 
     try:
         try:
@@ -490,12 +490,12 @@ def test_a_pin_command_never_carries_a_control_character():
     line = agent_spec_pins.pin_command("helper\x1b]0;x\x07", "PkgA\x1b[2J.json")
     assert "\x1b" not in line and "\x07" not in line
     assert agent_spec_pins.pin_command("helper", "PkgA-helper.json") == (
-        "kirocrew agent pin helper PkgA-helper.json"
+        "ajcrew agent pin helper PkgA-helper.json"
     )
 
 
 def test_the_chooser_counts_the_files_past_its_bound(tmp_path):
-    from kiro_crew import agent_spec_pin_ops
+    from aj_crew import agent_spec_pin_ops
 
     paths = [
         _write(tmp_path, f"P{i:02d}-helper.json", name="helper", prompt=str(i)) for i in range(35)
@@ -507,7 +507,7 @@ def test_the_chooser_counts_the_files_past_its_bound(tmp_path):
 
 
 def test_a_pin_past_the_readers_bound_is_refused_not_dropped(user_agents, monkeypatch):
-    from kiro_crew import agent_spec_pin_ops
+    from aj_crew import agent_spec_pin_ops
 
     monkeypatch.setattr(agent_spec_pins, "MAX_SPEC_PINS", 1)
     agent_spec_pin_ops.write_spec_pin("other", "other.json")
@@ -522,7 +522,7 @@ def test_a_pin_past_the_readers_bound_is_refused_not_dropped(user_agents, monkey
 
 
 def test_a_claimant_row_carries_its_own_description(tmp_path):
-    from kiro_crew.agent_spec_pin_ops import claimant_rows
+    from aj_crew.agent_spec_pin_ops import claimant_rows
 
     a = _write(tmp_path, "A.json", name="helper", description="Reviews pipelines", tools=["read"])
     b = _write(tmp_path, "B.json", name="helper", description="  ", tools=["read"])
@@ -532,7 +532,7 @@ def test_a_claimant_row_carries_its_own_description(tmp_path):
 
 
 def test_a_claimant_description_is_redacted_before_it_reaches_the_card(tmp_path):
-    from kiro_crew.agent_spec_pin_ops import claimant_rows
+    from aj_crew.agent_spec_pin_ops import claimant_rows
 
     secret = "ghp_" + "a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6q7R8"
     a = _write(tmp_path, "A.json", name="helper", description=f"Uses token {secret} to sync")
@@ -550,14 +550,14 @@ def test_a_claimant_description_is_redacted_before_it_reaches_the_card(tmp_path)
 
 @pytest.fixture
 def user_agents(contested, monkeypatch):
-    monkeypatch.setattr("kiro_crew.config.paths.kiro_agents_dir", lambda: contested)
+    monkeypatch.setattr("aj_crew.config.paths.kiro_agents_dir", lambda: contested)
     return contested
 
 
 def _cli(*argv: str) -> None:
     import argparse
 
-    from kiro_crew.cli_agent_pin import agent_pin
+    from aj_crew.cli_agent_pin import agent_pin
 
     parser = argparse.ArgumentParser()
     parser.add_argument("name", nargs="?")
@@ -567,14 +567,14 @@ def _cli(*argv: str) -> None:
 
 
 def _stored_pins() -> dict:
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     doc = json.loads(loader.config_path().read_text(encoding="utf-8"))
     return doc.get("agent", {}).get("spec_pins", {})
 
 
 def test_cli_pin_writes_and_clears_are_audited(user_agents, monkeypatch):
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     events: list[dict] = []
 
@@ -618,14 +618,14 @@ def test_cli_refuses_a_pin_the_resolver_could_not_honour(user_agents, capsys, fi
         _cli("helper", file_name)
     assert exc.value.code == 1
     assert fragment in capsys.readouterr().err
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     assert not loader.config_path().exists() or _stored_pins() == {}
 
 
 @pytest.mark.parametrize("argv", [("helper", "PkgB-helper.json"), ("helper", "--clear")])
 def test_cli_refuses_a_pin_the_local_overlay_overrides(user_agents, capsys, argv):
-    from kiro_crew.config.loader_locations import config_local_path
+    from aj_crew.config.loader_locations import config_local_path
 
     local = config_local_path()
     local.parent.mkdir(parents=True, exist_ok=True)
@@ -634,7 +634,7 @@ def test_cli_refuses_a_pin_the_local_overlay_overrides(user_agents, capsys, argv
         _cli(*argv)
     assert exc.value.code == 1
     assert "overrides config.json" in capsys.readouterr().err
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     assert not loader.config_path().exists() or _stored_pins() == {}
 
@@ -663,7 +663,7 @@ def test_cli_list_shows_a_pin_on_the_lone_claimant_as_not_contested(
 
 
 def test_a_pinned_lone_link_never_falls_back_to_a_file_declaring_another_name(tmp_path, pins):
-    from kiro_crew.agent_parts.spec_lookup import session_agent_spec_path
+    from aj_crew.agent_parts.spec_lookup import session_agent_spec_path
 
     user = tmp_path / "user-agents"
     _write(user, "helper.json", name="other", prompt="O")
@@ -679,8 +679,8 @@ def test_a_pinned_lone_link_never_falls_back_to_a_file_declaring_another_name(tm
 
 
 def test_an_empty_mate_scope_leaves_a_pinned_link_to_the_linked_reader(tmp_path, pins, monkeypatch):
-    from kiro_crew import agent
-    from kiro_crew.member_essential_context import resolve_template_path
+    from aj_crew import agent
+    from aj_crew.member_essential_context import resolve_template_path
 
     user = tmp_path / "user-agents"
     _write(user, "PkgA-helper.json", name="helper", prompt="A")
@@ -692,7 +692,7 @@ def test_an_empty_mate_scope_leaves_a_pinned_link_to_the_linked_reader(tmp_path,
     mates = tmp_path / "mates"
     mates.mkdir()
     monkeypatch.setattr(agent, "kiro_agents_dir_path", lambda: user)
-    monkeypatch.setattr("kiro_crew.config.paths.mate_agents_dir", lambda: mates)
+    monkeypatch.setattr("aj_crew.config.paths.mate_agents_dir", lambda: mates)
     pins["helper"] = "PkgB-helper.json"
     # No crewmate file declares the name: the mate probe must not refuse, so the
     # caller reaches the linked reader instead of a path-less pin error.
@@ -702,7 +702,7 @@ def test_an_empty_mate_scope_leaves_a_pinned_link_to_the_linked_reader(tmp_path,
 def test_the_parser_accepts_the_pin_subcommand():
     import argparse
 
-    from kiro_crew.cli_parser_agent import register_agent_parser
+    from aj_crew.cli_parser_agent import register_agent_parser
 
     parser = argparse.ArgumentParser()
     register_agent_parser(parser.add_subparsers(dest="command"))
@@ -721,7 +721,7 @@ def test_the_parser_accepts_the_pin_subcommand():
 def _app():
     from aiohttp import web
 
-    from kiro_crew.dashboard.routes import agent_config as agent_config_routes
+    from aj_crew.dashboard.routes import agent_config as agent_config_routes
 
     @web.middleware
     async def _identity(request, handler):
@@ -759,7 +759,7 @@ async def test_the_endpoint_sets_a_pin_and_serves_nothing_else(user_agents):
 
 
 def agent_spec_pin_ops_contested_pin_state() -> str:
-    from kiro_crew.agent_spec_pin_ops import contested_agents
+    from aj_crew.agent_spec_pin_ops import contested_agents
 
     (row,) = contested_agents(source="cli")
     return row["pin_state"]
@@ -789,7 +789,7 @@ async def test_endpoints_validate_like_the_cli(user_agents, path, body, status, 
         resp = await client.put(path, json=body)
         assert resp.status == status, await resp.text()
         assert (await resp.json())["code"] == code
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     assert not loader.config_path().exists() or _stored_pins() == {}
 
@@ -806,6 +806,6 @@ async def test_endpoints_are_owner_only(user_agents, method):
                 method, path, json={"file": "PkgB-helper.json"}, headers=headers
             )
             assert resp.status in (401, 403), (method, headers, resp.status)
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     assert not loader.config_path().exists() or _stored_pins() == {}

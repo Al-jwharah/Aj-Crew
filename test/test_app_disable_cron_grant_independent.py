@@ -15,7 +15,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.cron import CronService
+from aj_crew.cron import CronService
 
 # No "cron" key at all: the exact manifest the defect let through.
 _NO_GRANT_APP_INFO = {"manifest": {"permissions": {"jobs": True}}}
@@ -47,7 +47,7 @@ def _owners(svc: CronService) -> list[str]:
 async def test_disable_without_the_cron_grant_still_removes_the_apps_crons(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.apps import hooks_integration as hi
+    from aj_crew.apps import hooks_integration as hi
 
     svc = await _svc_with_three_owners(tmp_path)
     monkeypatch.setattr(hi, "_lifecycle_dispatcher", _dispatcher_stub(svc))
@@ -64,7 +64,7 @@ async def test_cleanup_helper_consults_no_manifest_at_all(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Grant-independence is testable on its own: the helper takes only a name."""
-    from kiro_crew.apps import hooks_integration as hi
+    from aj_crew.apps import hooks_integration as hi
 
     svc = await _svc_with_three_owners(tmp_path)
     monkeypatch.setattr(hi, "_lifecycle_dispatcher", _dispatcher_stub(svc))
@@ -82,7 +82,7 @@ async def test_an_app_with_no_crons_reports_nothing(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """NC: the unconditional call must stay silent when there is nothing to remove."""
-    from kiro_crew.apps import hooks_integration as hi
+    from aj_crew.apps import hooks_integration as hi
 
     svc = await _svc_with_three_owners(tmp_path)
     monkeypatch.setattr(hi, "_lifecycle_dispatcher", _dispatcher_stub(svc))

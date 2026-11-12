@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 from browser_live_helpers import SESSION, FakeRelay
 
-from kiro_crew.browser_harness import takeover as tk
+from aj_crew.browser_harness import takeover as tk
 
 
 def test_lock_refuses_the_agent_while_the_person_holds_it() -> None:

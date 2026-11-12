@@ -25,10 +25,10 @@ from meetings_helpers import (  # noqa: F401 — fixtures are used by name
     root_fixture,
 )
 
-from kiro_crew.apps.builtins.meetings.backend import constants as k
-from kiro_crew.apps.builtins.meetings.backend import store
-from kiro_crew.apps.builtins.meetings.backend.domain import images
-from kiro_crew.messaging.raster import SNIFF_BYTES
+from aj_crew.apps.builtins.meetings.backend import constants as k
+from aj_crew.apps.builtins.meetings.backend import store
+from aj_crew.apps.builtins.meetings.backend.domain import images
+from aj_crew.messaging.raster import SNIFF_BYTES
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
 JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 32
@@ -276,7 +276,7 @@ class TestUpload:
     ):
         # The pre-read count saw room (0); by the time this upload writes, another
         # one has filled the note (2 of 2). The count under the write's lock refuses.
-        from kiro_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle
+        from aj_crew.apps.builtins.meetings.backend.routes import meeting_lifecycle
 
         monkeypatch.setattr(k, "MAX_NOTE_IMAGES", 2)
         counts = iter([0, 2])
@@ -320,7 +320,7 @@ class TestAltText:
         meta["started_at"] = "2026-08-04T10:00:00Z"
         store.write_meeting_meta("m1", meta, root)
 
-        import kiro_crew.apps.builtins.meetings.backend.routes.meeting_lifecycle as lifecycle
+        import aj_crew.apps.builtins.meetings.backend.routes.meeting_lifecycle as lifecycle
 
         # 10:23 into the meeting.
         elapsed = lifecycle.images.format_elapsed(623)

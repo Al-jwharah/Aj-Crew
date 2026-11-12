@@ -26,9 +26,9 @@ from crew_log_fold_eager_helpers import (  # noqa: F401 -- the autouse fixture r
     _work_entry,
 )
 
-from kiro_crew.crew_log import CrewLog, eager
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log.entry_types import RADAR_ENTRY_TYPE
+from aj_crew.crew_log import CrewLog, eager
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log.entry_types import RADAR_ENTRY_TYPE
 
 # --------------------------------------------------------------------------- #
 # 6. The memory the warm memos hold
@@ -83,8 +83,8 @@ def test_a_closed_session_seals_the_cell_it_drops_so_a_reopen_reads_only_the_new
     only. Red without the seal: no savepoint exists below 256 entries and the reopen
     folds every unit from empty.
     """
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import checkpoint as savepoints
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import checkpoint as savepoints
 
     slot = WORK_SLOT
     handle = _slot_log("s-seal-1", slot)
@@ -439,7 +439,7 @@ def _append_row(handle: CrewLog, name: str, slot: str, index: int) -> None:
             handle.append(
                 "session/opened",
                 {
-                    "agent": "kirocrew",
+                    "agent": "ajcrew",
                     "slot": slot,
                     "model": "",
                     "cwd": "/tmp",

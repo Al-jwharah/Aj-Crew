@@ -7,7 +7,7 @@
  *
  * Every frame renders the SAME PAIR: two records with the same resolved alias and
  * opposite stored state -- one with no stored agent (resolves the current default
- * at run time) and one pinned to `kirocrew`, which happens to BE the current
+ * at run time) and one pinned to `ajcrew`, which happens to BE the current
  * default. That pair is the whole point: before this change both rendered the bare
  * alias, so nothing on the row distinguished them.
  *
@@ -40,7 +40,7 @@ const OUT = args.find(a => !a.startsWith('--')) || '/tmp/sidebar-default-agent-m
 
 if (!VERIFY_ONLY) mkdirSync(OUT, { recursive: true })
 
-const DEFAULT_AGENT = 'kirocrew'
+const DEFAULT_AGENT = 'ajcrew'
 /** The marker's visible spelling, English catalog. */
 const MARKED = `${DEFAULT_AGENT} \u00b7 default`
 
@@ -65,7 +65,7 @@ const pairSlots = (tags = []) => [
  *  which is the shape 28% of real transcripts on a live install have. */
 const PAIR_HISTORY = [
   { key: 'dashboard_chat-old-inherited', title: 'Archived, no agent recorded', messages: 40, modified: NOW_EPOCH, created: NOW_ISO },
-  { key: 'dashboard_chat-old-pinned', title: 'Archived, pinned to kirocrew', messages: 31, agent: DEFAULT_AGENT, modified: NOW_EPOCH, created: NOW_ISO },
+  { key: 'dashboard_chat-old-pinned', title: 'Archived, pinned to ajcrew', messages: 31, agent: DEFAULT_AGENT, modified: NOW_EPOCH, created: NOW_ISO },
 ]
 
 const { srv, base } = await serveDist()

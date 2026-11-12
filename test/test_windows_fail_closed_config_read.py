@@ -38,8 +38,8 @@ import pytest
 from test_windows_fail_closed_optin import _read_config_json
 from windows_sim import read_sharing_violation
 
-from kiro_crew import atomic_write as aw
-from kiro_crew import platform_compat
+from aj_crew import atomic_write as aw
+from aj_crew import platform_compat
 
 #: The document the gateway writes at boot on a host that refuses unsandboxed
 #: exec, reduced to the two keys the contract test reads out of it.

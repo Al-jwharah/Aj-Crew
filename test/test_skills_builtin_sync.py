@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.skills as sk
-from kiro_crew import pinned_fs
+import aj_crew.skills as sk
+from aj_crew import pinned_fs
 
 _FIXTURES = Path(__file__).parent / "fixtures" / "retired_conductor_skill"
 

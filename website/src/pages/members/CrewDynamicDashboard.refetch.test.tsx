@@ -81,8 +81,8 @@ const mountedFrame = async (container: HTMLElement) => {
 /* The two wire types, spelled here the way the component spells them: they are module
    constants rather than exports, and `test_dashboard_frame_subscribe.py` already pins
    the component's own copy against `dashboard_frame`'s. */
-const DATA_MESSAGE_TYPE = 'kirocrew-dashboard:data'
-const REFETCH_MESSAGE_TYPE = 'kirocrew-dashboard:refetch'
+const DATA_MESSAGE_TYPE = 'ajcrew-dashboard:data'
+const REFETCH_MESSAGE_TYPE = 'ajcrew-dashboard:refetch'
 
 /** The page asking for a whole read, as a message from THIS frame's window.
  *

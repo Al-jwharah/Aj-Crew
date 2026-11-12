@@ -100,7 +100,7 @@ runs:
         # CodeBuild can pass SIG_IGN for INT through runuser. Reset only INT
         # before Bash starts; Bash cannot undo an inherited ignore for children.
         exec runuser -m -u runner -- env --default-signal=INT \
-          HOME=/home/runner USER=runner LOGNAME=runner KIROCREW_LOCK_TEST_ROOT=/dev/shm \
+          HOME=/home/runner USER=runner LOGNAME=runner AJCREW_LOCK_TEST_ROOT=/dev/shm \
           bash --noprofile --norc -eo pipefail "$1"
         EOF
         echo "ci-shell: installed. jq $(jq --version), lsof $(command -v lsof)."

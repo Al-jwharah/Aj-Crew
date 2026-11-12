@@ -22,9 +22,9 @@ from __future__ import annotations
 import dataclasses
 import inspect
 
-from kiro_crew.acp.harness import KiroHarness, SpawnContext
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.member_essential_context import kiro_launch_documents
+from aj_crew.acp.harness import KiroHarness, SpawnContext
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.member_essential_context import kiro_launch_documents
 
 
 def test_spawn_context_carries_no_folder_steering_field() -> None:
@@ -64,7 +64,7 @@ def test_kiro_launch_documents_takes_no_extra_steering_dirs() -> None:
 
 def test_chat_slot_does_not_persist_steering_dirs() -> None:
     """Req 5.2 -- no slot-side cache to go stale when a folder is edited."""
-    from kiro_crew.dashboard.state import _ChatSlot
+    from aj_crew.dashboard.state import _ChatSlot
 
     slots = set(_ChatSlot.__slots__)
     assert "steering_dirs" not in slots

@@ -29,9 +29,9 @@ from typing import Iterator
 import pytest
 from opener_helpers import answer_with
 
-from kiro_crew.platform import tree_liveness, wheel_engine
-from kiro_crew.platform.wheel_engine import ManagedVenvLayout, WheelUpdateError
-from kiro_crew.platform_compat import IS_POSIX, trusted_system_bin, try_acquire_lock
+from aj_crew.platform import tree_liveness, wheel_engine
+from aj_crew.platform.wheel_engine import ManagedVenvLayout, WheelUpdateError
+from aj_crew.platform_compat import IS_POSIX, trusted_system_bin, try_acquire_lock
 
 pytestmark = pytest.mark.skipif(not IS_POSIX, reason="the shadow-venv engine is POSIX-only")
 
@@ -64,7 +64,7 @@ def _claim(layout: ManagedVenvLayout, tree: Path, *, sentinel: bool = True) -> N
 
 def _install_locking_release(tree: Path) -> None:
     """The file that tells the prune this tree's release holds its liveness lock."""
-    platform_pkg = tree / "lib" / "python3.12" / "site-packages" / "kiro_crew" / "platform"
+    platform_pkg = tree / "lib" / "python3.12" / "site-packages" / "aj_crew" / "platform"
     platform_pkg.mkdir(parents=True, exist_ok=True)
     (platform_pkg / "tree_liveness.py").write_text("", encoding="utf-8")
 
@@ -77,7 +77,7 @@ def _completed_tree(
     if locking:
         _install_locking_release(tree)
     (tree / "bin").mkdir()
-    for name in ("kirocrew", "python3"):
+    for name in ("ajcrew", "python3"):
         path = tree / "bin" / name
         path.write_text("", encoding="utf-8")
         path.chmod(0o755)
@@ -119,7 +119,7 @@ class TestRespawnLoadsItsOwnTree:
         (dist / "METADATA").write_text(
             f"Metadata-Version: 2.1\nName: tornpkg\nVersion: {version}\n", encoding="utf-8"
         )
-        (tree / "bin" / "kirocrew").write_text("", encoding="utf-8")
+        (tree / "bin" / "ajcrew").write_text("", encoding="utf-8")
         (tree / tree_liveness.TREE_MARKER).write_text(f"{layout.legacy}\n", encoding="utf-8")
         return tree
 
@@ -191,7 +191,7 @@ class TestAGatewayStartedThroughTheLinkMovesOffItFirst:
     def test_an_interpreter_started_through_the_link_is_recognised(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.platform import wheel_apply
+        from aj_crew.platform import wheel_apply
 
         layout = _layout(tmp_path, monkeypatch)
         tree = TestRespawnLoadsItsOwnTree._tree(layout, "1.0")
@@ -242,7 +242,7 @@ class TestAGatewayStartedThroughTheLinkMovesOffItFirst:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A respawn that falls back to ``sys.executable`` would repeat every cycle."""
-        from kiro_crew.platform import wheel_apply
+        from aj_crew.platform import wheel_apply
 
         layout = _layout(tmp_path, monkeypatch)
         layout.stable_link.symlink_to(_completed_tree(layout, "1.0", installed_at=time.time()))
@@ -349,7 +349,7 @@ class TestInterruptedWorkIsClearedNextTime:
         """A pre-lock release installed and promoted, killed before the sentinel came off."""
         tree = layout.versioned_tree("0.1.0")
         _claim(layout, tree)
-        package = tree / "lib" / "python3.12" / "site-packages" / "kiro_crew"
+        package = tree / "lib" / "python3.12" / "site-packages" / "aj_crew"
         package.mkdir(parents=True)
         (package / "__init__.py").write_text("", encoding="utf-8")
         return tree
@@ -372,9 +372,9 @@ class TestInterruptedWorkIsClearedNextTime:
         layout = _layout(tmp_path, monkeypatch)
         tree = self._interrupted_prelock_install(layout)
         monkeypatch.setattr(wheel_engine, "_run", lambda *_a, **_kw: None)
-        with pytest.raises(WheelUpdateError, match="a running kirocrew process uses it"):
+        with pytest.raises(WheelUpdateError, match="a running ajcrew process uses it"):
             wheel_engine.build_shadow_venv(tmp_path / "w.whl", tree)
-        assert (tree / "lib" / "python3.12" / "site-packages" / "kiro_crew").exists()
+        assert (tree / "lib" / "python3.12" / "site-packages" / "aj_crew").exists()
 
     def test_a_set_cancel_leaves_no_new_directory(self, tmp_path: Path) -> None:
         cancel = wheel_engine.ApplyCancel()
@@ -419,11 +419,11 @@ class TestSweep:
         debris = layout.versioned_tree("2.0")
         _claim(layout, debris)
         staging = wheel_engine._staging_dir()
-        stale = staging / "kirocrew-update-old"
+        stale = staging / "ajcrew-update-old"
         stale.mkdir()
         old = time.time() - wheel_engine._STAGING_STALE_SECS - 60
         os.utime(stale, (old, old))
-        fresh = staging / "kirocrew-update-new"
+        fresh = staging / "ajcrew-update-new"
         fresh.mkdir()
 
         wheel_engine._sweep_layout_debris(layout)
@@ -435,7 +435,7 @@ class TestSweep:
     def test_another_install_sharing_the_parent_is_never_touched(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """``KIROCREW_VENV=/srv/crew`` beside ``/srv/crew-beta`` and its trees."""
+        """``AJCREW_VENV=/srv/crew`` beside ``/srv/crew-beta`` and its trees."""
         legacy = tmp_path / "crew"
         legacy.mkdir()
         layout = ManagedVenvLayout(legacy=legacy, stable_link=tmp_path / "crew-current")
@@ -514,7 +514,7 @@ def _wire_apply(layout: ManagedVenvLayout, monkeypatch: pytest.MonkeyPatch) -> N
         _install_locking_release(shadow)
         (shadow / "bin").mkdir()
         clock[0] += 100
-        for name in ("kirocrew", "python3"):
+        for name in ("ajcrew", "python3"):
             path = shadow / "bin" / name
             path.write_text("", encoding="utf-8")
             path.chmod(0o755)
@@ -585,9 +585,9 @@ class TestPrune:
             _completed_tree(layout, f"{n}.0", installed_at=now - 1000 + n) for n in range(1, 5)
         ]
         layout.stable_link.symlink_to(trees[-1])
-        launcher = tmp_path / "home" / ".local" / "bin" / "kirocrew"
+        launcher = tmp_path / "home" / ".local" / "bin" / "ajcrew"
         launcher.parent.mkdir(parents=True)
-        launcher.symlink_to(trees[0] / "bin" / "kirocrew")
+        launcher.symlink_to(trees[0] / "bin" / "ajcrew")
 
         wheel_engine._prune_superseded_trees(layout)
 
@@ -684,7 +684,7 @@ class TestAKeptTreeIsRebuiltOnAMoveBack:
             if step == "venv creation":
                 bin_dir = Path(argv[-1]) / "bin"
                 bin_dir.mkdir(exist_ok=True)
-                for name in ("kirocrew", "python3"):
+                for name in ("ajcrew", "python3"):
                     (bin_dir / name).write_text("", encoding="utf-8")
                     (bin_dir / name).chmod(0o755)
 
@@ -716,9 +716,9 @@ class TestAKeptTreeIsRebuiltOnAMoveBack:
         tree = TestInterruptedWorkIsClearedNextTime._interrupted_prelock_install(layout)
         layout.stable_link.symlink_to(_completed_tree(layout, "0.4.1", installed_at=time.time()))
         self._wire(layout, monkeypatch, "0.1.0")
-        with pytest.raises(WheelUpdateError, match="a running kirocrew process uses it"):
+        with pytest.raises(WheelUpdateError, match="a running ajcrew process uses it"):
             _apply(monkeypatch, "0.1.0")
-        assert (tree / "lib" / "python3.12" / "site-packages" / "kiro_crew").exists()
+        assert (tree / "lib" / "python3.12" / "site-packages" / "aj_crew").exists()
 
     def test_a_kept_previous_tree_is_rebuilt_and_promoted(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -739,7 +739,7 @@ class TestAKeptTreeIsRebuiltOnAMoveBack:
         holder = os.open(str(kept / tree_liveness.LIVENESS_LOCK), os.O_RDWR)
         try:
             assert try_acquire_lock(holder, exclusive=False)
-            with pytest.raises(WheelUpdateError, match="running kirocrew process uses it"):
+            with pytest.raises(WheelUpdateError, match="running ajcrew process uses it"):
                 _apply(monkeypatch, "0.5.0rc4")
         finally:
             os.close(holder)
@@ -754,10 +754,10 @@ class TestAKeptTreeIsRebuiltOnAMoveBack:
         if pin == "running":
             monkeypatch.setattr(sys, "prefix", str(kept))
         else:
-            launcher = tmp_path / "home" / ".local" / "bin" / "kirocrew"
+            launcher = tmp_path / "home" / ".local" / "bin" / "ajcrew"
             launcher.parent.mkdir(parents=True)
-            launcher.symlink_to(kept / "bin" / "kirocrew")
-        with pytest.raises(WheelUpdateError, match="running kirocrew process uses it"):
+            launcher.symlink_to(kept / "bin" / "ajcrew")
+        with pytest.raises(WheelUpdateError, match="running ajcrew process uses it"):
             _apply(monkeypatch, "0.5.0rc4")
         assert (kept / "stale-from-the-first-build").exists()
 
@@ -903,8 +903,8 @@ class TestPersistedLaunchPaths:
         older = _completed_tree(layout, "1.0", installed_at=time.time() - 10)
         newer = _completed_tree(layout, "2.0", installed_at=time.time())
         wheel_engine.promote(newer, layout.stable_link)
-        persisted = tree_liveness.through_stable_link(str(older / "bin" / "kirocrew"))
-        assert persisted == str(layout.stable_link / "bin" / "kirocrew")
+        persisted = tree_liveness.through_stable_link(str(older / "bin" / "ajcrew"))
+        assert persisted == str(layout.stable_link / "bin" / "ajcrew")
 
     def test_a_file_the_link_tree_lacks_or_a_dangling_link_is_left_unchanged(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -912,14 +912,14 @@ class TestPersistedLaunchPaths:
         layout = _layout(tmp_path, monkeypatch)
         older = _completed_tree(layout, "1.0", installed_at=time.time() - 10)
         newer = _completed_tree(layout, "2.0", installed_at=time.time())
-        only_in_older = older / "bin" / "kirocrew-old-only"
+        only_in_older = older / "bin" / "ajcrew-old-only"
         only_in_older.write_text("", encoding="utf-8")
         wheel_engine.promote(newer, layout.stable_link)
         assert tree_liveness.through_stable_link(str(only_in_older)) == str(only_in_older)
 
         layout.stable_link.unlink()
         layout.stable_link.symlink_to(tmp_path / "gone")
-        target = str(older / "bin" / "kirocrew")
+        target = str(older / "bin" / "ajcrew")
         assert tree_liveness.through_stable_link(target) == target
 
     def test_a_path_inside_the_live_tree_is_persisted_through_the_stable_link(
@@ -928,21 +928,21 @@ class TestPersistedLaunchPaths:
         layout = _layout(tmp_path, monkeypatch)
         tree = _completed_tree(layout, "1.0", installed_at=time.time())
         layout.stable_link.symlink_to(tree)
-        persisted = tree_liveness.through_stable_link(str(tree / "bin" / "kirocrew"))
-        assert persisted == str(layout.stable_link / "bin" / "kirocrew")
+        persisted = tree_liveness.through_stable_link(str(tree / "bin" / "ajcrew"))
+        assert persisted == str(layout.stable_link / "bin" / "ajcrew")
 
     def test_the_launchd_repairer_names_the_stable_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.service import macos
+        from aj_crew.service import macos
 
         layout = _layout(tmp_path, monkeypatch)
         first = _completed_tree(layout, "1.0", installed_at=time.time() - 10)
         layout.stable_link.symlink_to(first)
-        monkeypatch.delenv("KIROCREW_SERVICE_BIN", raising=False)
+        monkeypatch.delenv("AJCREW_SERVICE_BIN", raising=False)
         monkeypatch.setattr(sys, "executable", str(first / "bin" / "python3"))
         persisted = macos._repairer_bin()
-        assert persisted == str(layout.stable_link / "bin" / "kirocrew")
+        assert persisted == str(layout.stable_link / "bin" / "ajcrew")
         # Two promotions and a prune later the persisted path still resolves.
         for n, version in enumerate(("2.0", "3.0")):
             nxt = _completed_tree(layout, version, installed_at=time.time() + n)
@@ -962,12 +962,12 @@ class TestPersistedLaunchPaths:
         """
         from unittest.mock import MagicMock, patch
 
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         layout = _layout(tmp_path, monkeypatch)
         first = _completed_tree(layout, "1.0", installed_at=time.time() - 10)
         (first / "pyvenv.cfg").write_text("", encoding="utf-8")
-        package = first / "lib" / "python3.12" / "site-packages" / "kiro_crew"
+        package = first / "lib" / "python3.12" / "site-packages" / "aj_crew"
         package.mkdir(parents=True, exist_ok=True)
         (package / "__init__.py").write_text("", encoding="utf-8")
         layout.stable_link.symlink_to(first)
@@ -979,38 +979,36 @@ class TestPersistedLaunchPaths:
             "_launcher_works",
             lambda path: str(path).startswith(str(tmp_path)) and real_works(path),
         )
-        monkeypatch.setattr(agent_mod, "_KIROCREW_BIN", None)
-        with patch.dict(sys.modules, {"kiro_crew": fake_package}):
-            command, args = agent_mod._kirocrew_mcp_invocation("mcp-core")
-        assert (command, args) == (str(first / "bin" / "kirocrew"), ["mcp-core"])
+        monkeypatch.setattr(agent_mod, "_AJCREW_BIN", None)
+        with patch.dict(sys.modules, {"aj_crew": fake_package}):
+            command, args = agent_mod._ajcrew_mcp_invocation("mcp-core")
+        assert (command, args) == (str(first / "bin" / "ajcrew"), ["mcp-core"])
 
         wheel_engine.promote(
             _completed_tree(layout, "2.0", installed_at=time.time()), layout.stable_link
         )
-        command, _args = agent_mod._kirocrew_mcp_invocation("mcp-core")
+        command, _args = agent_mod._ajcrew_mcp_invocation("mcp-core")
         assert Path(command).resolve().parent.parent == first.resolve()
 
     def test_the_path_shim_names_the_stable_link(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The ``~/.local/bin`` shim outlives the process that writes it."""
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         layout = _layout(tmp_path, monkeypatch)
         first = _completed_tree(layout, "1.0", installed_at=time.time())
         layout.stable_link.symlink_to(first)
-        monkeypatch.setattr(
-            agent_mod, "_resolve_kirocrew_bin", lambda: str(first / "bin" / "kirocrew")
-        )
+        monkeypatch.setattr(agent_mod, "_resolve_ajcrew_bin", lambda: str(first / "bin" / "ajcrew"))
         monkeypatch.setattr(agent_mod, "_in_linked_git_worktree", lambda _path: False)
         monkeypatch.setattr(agent_mod, "_in_ephemeral_tree", lambda _path: False)
         monkeypatch.setattr(agent_mod.shutil, "which", lambda _name: None)
         bin_dir = tmp_path / "localbin"
-        assert agent_mod.ensure_kirocrew_on_path(bin_dir=bin_dir) == str(bin_dir / "kirocrew")
-        assert os.readlink(bin_dir / "kirocrew") == str(layout.stable_link / "bin" / "kirocrew")
+        assert agent_mod.ensure_ajcrew_on_path(bin_dir=bin_dir) == str(bin_dir / "ajcrew")
+        assert os.readlink(bin_dir / "ajcrew") == str(layout.stable_link / "bin" / "ajcrew")
 
     def test_a_path_outside_any_engine_tree_is_unchanged(self, tmp_path: Path) -> None:
-        path = str(tmp_path / "bin" / "kirocrew")
+        path = str(tmp_path / "bin" / "ajcrew")
         assert tree_liveness.through_stable_link(path) == path
 
 
@@ -1058,15 +1056,15 @@ class TestBuildChildEnvironment:
         ``test_build_and_verify_a_real_shadow_venv`` below retains one
         real end-to-end proof.
         """
-        kirocrew = _wheel(
+        ajcrew = _wheel(
             tmp_path,
-            "kirocrew",
+            "ajcrew",
             "9.9.9",
             {
-                "kiro_crew/__init__.py": "__version__ = '9.9.9'\n",
-                "kiro_crew/cli.py": "import depdummy\n\ndef main():\n    pass\n",
-                "kirocrew-9.9.9.dist-info/entry_points.txt": (
-                    "[console_scripts]\nkirocrew = kiro_crew.cli:main\n"
+                "aj_crew/__init__.py": "__version__ = '9.9.9'\n",
+                "aj_crew/cli.py": "import depdummy\n\ndef main():\n    pass\n",
+                "ajcrew-9.9.9.dist-info/entry_points.txt": (
+                    "[console_scripts]\najcrew = aj_crew.cli:main\n"
                 ),
             },
             "Requires-Dist: depdummy\n",
@@ -1110,8 +1108,8 @@ class TestBuildChildEnvironment:
                     encoding="utf-8",
                 )
                 (di / "RECORD").write_text("", encoding="utf-8")
-                (shadow / "bin" / "kirocrew").write_text("", encoding="utf-8")
-                (shadow / "bin" / "kirocrew").chmod(0o755)
+                (shadow / "bin" / "ajcrew").write_text("", encoding="utf-8")
+                (shadow / "bin" / "ajcrew").chmod(0o755)
 
         def _fake_spawn(
             argv: list[str],
@@ -1142,7 +1140,7 @@ class TestBuildChildEnvironment:
         monkeypatch.setattr(wheel_engine, "_spawn_build_child", _fake_spawn)
 
         shadow = tmp_path / "crew-venv-9.9.9"
-        wheel_engine.build_shadow_venv(kirocrew, shadow, ctx=ctx)
+        wheel_engine.build_shadow_venv(ajcrew, shadow, ctx=ctx)
 
         site = next(shadow.glob("lib/python*/site-packages"))
         assert (site / "depdummy.py").exists()
@@ -1176,15 +1174,15 @@ class TestBuildChildEnvironment:
         links = tmp_path / "links"
         links.mkdir()
         _wheel(links, "depdummy", "1.0", {"depdummy.py": "VALUE = 1\n"}, "")
-        kirocrew = _wheel(
+        ajcrew = _wheel(
             tmp_path,
-            "kirocrew",
+            "ajcrew",
             "9.9.9",
             {
-                "kiro_crew/__init__.py": "__version__ = '9.9.9'\n",
-                "kiro_crew/cli.py": "import depdummy\n\ndef main():\n    pass\n",
-                "kirocrew-9.9.9.dist-info/entry_points.txt": (
-                    "[console_scripts]\nkirocrew = kiro_crew.cli:main\n"
+                "aj_crew/__init__.py": "__version__ = '9.9.9'\n",
+                "aj_crew/cli.py": "import depdummy\n\ndef main():\n    pass\n",
+                "ajcrew-9.9.9.dist-info/entry_points.txt": (
+                    "[console_scripts]\najcrew = aj_crew.cli:main\n"
                 ),
             },
             "Requires-Dist: depdummy\n",
@@ -1204,7 +1202,7 @@ class TestBuildChildEnvironment:
         ctx = wheel_engine._BuildContext(trusted_env=False)
 
         shadow = tmp_path / "crew-venv-9.9.9"
-        wheel_engine.build_shadow_venv(kirocrew, shadow, ctx=ctx)
+        wheel_engine.build_shadow_venv(ajcrew, shadow, ctx=ctx)
 
         site = next(shadow.glob("lib/python*/site-packages"))
         # pip installed from links/ (VALUE=1), not from PYTHONPATH (VALUE=0),

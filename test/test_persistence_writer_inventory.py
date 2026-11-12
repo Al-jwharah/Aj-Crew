@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 # A gate here parses a whole tree, so the module has its own ``tree_scan`` group
 # and takes that group's per-test timeout (``TREE_SCAN_TIMEOUT_SECS`` in conftest.py).
@@ -51,7 +51,7 @@ _WRITE_PRIMITIVES = frozenset(
 )
 
 #: Automatic writers that MUST be behind the persistence switch, as
-#: ``<module path relative to src/kiro_crew>::<enclosing function>``. Each is
+#: ``<module path relative to src/aj_crew>::<enclosing function>``. Each is
 #: gated at its entry point; see test_memory_context_toggles.py for the
 #: behavioural assertions.
 GATED_AUTOMATIC = {
@@ -123,7 +123,7 @@ EXEMPT = {
     "::test_assignments_build_real_context_from_only_their_private_store": (
         "test harness, isolated workspace"
     ),
-    # The CLI's own explicit `kirocrew learn add`, which carries its own check
+    # The CLI's own explicit `ajcrew learn add`, which carries its own check
     # (a refusal message rather than a silent skip) — see cli_commands.
     "cli_commands_learn.py::_learn": "carries its own refusal",
     # The app's nightly sweep gates its only caller, routes._index_ledger_safely,

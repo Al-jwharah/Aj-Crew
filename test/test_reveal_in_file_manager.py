@@ -24,8 +24,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import platform_compat, platform_compat_trust
-from kiro_crew.service import common as service_common
+from aj_crew import platform_compat, platform_compat_trust
+from aj_crew.service import common as service_common
 
 
 def _no_user_manager(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -95,7 +95,7 @@ class TestRevealInFileManager:
                      patch("subprocess.Popen") as popen:
                     popen.return_value.wait.return_value = returncode
                     assert platform_compat.open_with_default_app(
-                        "kirocrew://", wait_for_exit=2.0) is expected
+                        "ajcrew://", wait_for_exit=2.0) is expected
                 popen.return_value.wait.assert_called_once_with(timeout=2.0)
 
     def test_open_with_default_app_still_running_at_the_deadline_is_a_launch(self) -> None:
@@ -105,9 +105,9 @@ class TestRevealInFileManager:
              patch("os.path.isfile", return_value=True), \
              patch("subprocess.Popen") as popen:
             popen.return_value.wait.side_effect = subprocess.TimeoutExpired(
-                ["/usr/bin/xdg-open", "kirocrew://"], 2.0)
+                ["/usr/bin/xdg-open", "ajcrew://"], 2.0)
             assert platform_compat.open_with_default_app(
-                "kirocrew://", wait_for_exit=2.0) is True
+                "ajcrew://", wait_for_exit=2.0) is True
 
     def test_open_with_default_app_wait_with_no_launcher_answers_false(self) -> None:
         with patch("sys.platform", "linux"), \
@@ -115,7 +115,7 @@ class TestRevealInFileManager:
              patch("os.path.isfile", return_value=False), \
              patch("subprocess.Popen") as popen:
             assert platform_compat.open_with_default_app(
-                "kirocrew://", wait_for_exit=2.0) is False
+                "ajcrew://", wait_for_exit=2.0) is False
         popen.assert_not_called()
 
     def test_open_with_default_app_is_refused_on_windows(self) -> None:

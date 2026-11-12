@@ -1,7 +1,7 @@
-"""``kiro_crew.knowledge.ingestion`` stays the one import path and patch surface of its owners.
+"""``aj_crew.knowledge.ingestion`` stays the one import path and patch surface of its owners.
 
 The ingestion module was split into sibling owners (``ingestion_<role>.py``) behind a
-:mod:`kiro_crew._facade_mirror` facade that keeps ``IngestionPipeline`` and the helpers it
+:mod:`aj_crew._facade_mirror` facade that keeps ``IngestionPipeline`` and the helpers it
 reads. These tests pin what the split must keep:
 
 * the facade serves a mirror over exactly the ``ingestion_*`` modules beside it, and every
@@ -11,11 +11,11 @@ reads. These tests pin what the split must keep:
   ``bulk_pace_delay`` among them, which the re-embed sweep reads in its owner;
 * the owners load lowest layer first and never import the facade;
 * every name the facade serves from outside the family is named in a ``TYPE_CHECKING``
-  group, so ``from kiro_crew.knowledge.ingestion import <name>`` stays visible to type
+  group, so ``from aj_crew.knowledge.ingestion import <name>`` stays visible to type
   checkers;
 * nothing outside the family imports an owner: callers reach the budget and the re-embed
   sweep through the facade;
-* the family logs as ``kiro_crew.knowledge.ingestion``, and ``ImportChunkBudgetError``
+* the family logs as ``aj_crew.knowledge.ingestion``, and ``ImportChunkBudgetError``
   keeps the facade's ``__module__``: it is an exception, and its dotted name is what a
   traceback or a log line shows.
 
@@ -36,26 +36,26 @@ import owner_import_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew.knowledge import ingestion as facade
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew.knowledge import ingestion as facade
 
-# Walks the test trees and src/kiro_crew; keep it on one worker.
+# Walks the test trees and src/aj_crew; keep it on one worker.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_ingestion_facade")
 
 #: Checks ``test_facade_shared_checks.py`` runs against this module's helpers; each is
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-_SRC = Path(kiro_crew.__file__).resolve().parent
+_SRC = Path(aj_crew.__file__).resolve().parent
 _PKG_DIR = _SRC / "knowledge"
-_FACADE = "kiro_crew.knowledge.ingestion"
-_OWNER_PREFIX = "kiro_crew.knowledge.ingestion_"
+_FACADE = "aj_crew.knowledge.ingestion"
+_OWNER_PREFIX = "aj_crew.knowledge.ingestion_"
 #: The owners, lowest layer first.
 _OWNERS = (
-    "kiro_crew.knowledge.ingestion_budget",
-    "kiro_crew.knowledge.ingestion_rebuild",
-    "kiro_crew.knowledge.ingestion_jobs",
+    "aj_crew.knowledge.ingestion_budget",
+    "aj_crew.knowledge.ingestion_rebuild",
+    "aj_crew.knowledge.ingestion_jobs",
 )
 _THIS_FILE = Path(__file__).resolve()
 
@@ -123,7 +123,7 @@ def _family() -> list:
 def test_the_facade_serves_a_mirror_over_every_sibling_owner() -> None:
     assert isinstance(facade, _facade_mirror.MirroredModule)
     index = _index()
-    on_disk = sorted(f"kiro_crew.knowledge.{path.stem}" for path in _PKG_DIR.glob("ingestion_*.py"))
+    on_disk = sorted(f"aj_crew.knowledge.{path.stem}" for path in _PKG_DIR.glob("ingestion_*.py"))
     assert list(index.owners) == list(_OWNERS)
     assert sorted(index.owners) == on_disk
     assert index.excluded == ()
@@ -237,7 +237,7 @@ class _Embedder:
 def test_a_facade_patch_of_the_pace_derivation_reaches_the_rebuild_owner() -> None:
     """``_embed_row_paced`` reads ``bulk_pace_delay`` in ``ingestion_rebuild``; the bulk
     pacing tests patch it through the facade, so that patch is what the sweep reads."""
-    rebuild = importlib.import_module("kiro_crew.knowledge.ingestion_rebuild")
+    rebuild = importlib.import_module("aj_crew.knowledge.ingestion_rebuild")
     assert "bulk_pace_delay" not in vars(facade)
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(facade, "bulk_pace_delay", lambda elapsed: 0.25)
@@ -246,7 +246,7 @@ def test_a_facade_patch_of_the_pace_derivation_reaches_the_rebuild_owner() -> No
         assert facade._embed_row_paced(_Embedder(), "t", "s", "c", 3, False) == ([3.0], 0.0)
     assert (
         vars(rebuild)["bulk_pace_delay"]
-        is importlib.import_module("kiro_crew.embeddings").bulk_pace_delay
+        is importlib.import_module("aj_crew.embeddings").bulk_pace_delay
     )
 
 
@@ -285,7 +285,7 @@ def test_the_owners_load_lowest_layer_first_and_never_import_the_facade() -> Non
 
 
 def test_the_layer_scan_resolves_a_relative_import_of_the_facade() -> None:
-    owner = "kiro_crew.knowledge.ingestion_rebuild"
+    owner = "aj_crew.knowledge.ingestion_rebuild"
     planted = ast.parse("from .ingestion import IngestionPipeline\n")
     assert _FACADE in _resolved_imports(planted, owner)
     planted = ast.parse("from . import ingestion\n")
@@ -293,7 +293,7 @@ def test_the_layer_scan_resolves_a_relative_import_of_the_facade() -> None:
 
 
 def test_the_family_logs_as_the_facade() -> None:
-    """``caplog`` filters keyed on ``kiro_crew.knowledge.ingestion`` keep seeing the family."""
+    """``caplog`` filters keyed on ``aj_crew.knowledge.ingestion`` keep seeing the family."""
     shared = logging.getLogger(_FACADE)
     assert facade.logger is shared
     stray = {
@@ -307,7 +307,7 @@ def test_the_family_logs_as_the_facade() -> None:
 
 def test_the_refusal_exception_keeps_the_facade_module() -> None:
     """A traceback or a log line renders a raised class as ``module.qualname``, so the
-    exception class an owner defines reports ``kiro_crew.knowledge.ingestion``, as it did
+    exception class an owner defines reports ``aj_crew.knowledge.ingestion``, as it did
     before it moved."""
     found = {
         name: value
@@ -371,7 +371,7 @@ def test_every_served_import_is_named_for_type_checkers() -> None:
     """A name the family imports and the facade serves is in a ``TYPE_CHECKING`` group.
 
     The facade binds none of them, so this group is what keeps
-    ``from kiro_crew.knowledge.ingestion import bulk_pace_delay`` visible to mypy.
+    ``from aj_crew.knowledge.ingestion import bulk_pace_delay`` visible to mypy.
     """
     index = _index()
     served = _served_imports(index)
@@ -383,7 +383,7 @@ def test_every_served_import_is_named_for_type_checkers() -> None:
 
 def test_every_served_owner_name_is_named_for_type_checkers() -> None:
     """Every owner-defined name the facade serves is in its owner's ``TYPE_CHECKING``
-    import, so ``from kiro_crew.knowledge.ingestion import rebuild_embeddings`` type-checks."""
+    import, so ``from aj_crew.knowledge.ingestion import rebuild_embeddings`` type-checks."""
     index = _index()
     defined = set().union(
         *(_facade_mirror._defined_names(ast.parse(_source(o))) for o in index.owners)
@@ -431,14 +431,14 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     sources = {
-        root / "pkg" / "caller.py": "from kiro_crew.knowledge.ingestion_rebuild import x\n",
-        root / "other.py": "from kiro_crew.knowledge import ingestion_budget as low\n",
+        root / "pkg" / "caller.py": "from aj_crew.knowledge.ingestion_rebuild import x\n",
+        root / "other.py": "from aj_crew.knowledge import ingestion_budget as low\n",
         root / "knowledge" / "relative.py": "from .ingestion_budget import ImportChunkBudget\n",
         root / "knowledge" / "deep" / "up.py": "from .. import ingestion_rebuild\n",
-        root / "lazy.py": "def f():\n    import kiro_crew.knowledge.ingestion_rebuild\n",
-        root / "facade_user.py": "from kiro_crew.knowledge.ingestion import rebuild_embeddings\n",
+        root / "lazy.py": "def f():\n    import aj_crew.knowledge.ingestion_rebuild\n",
+        root / "facade_user.py": "from aj_crew.knowledge.ingestion import rebuild_embeddings\n",
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",

@@ -35,14 +35,14 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import autonudge, autonudge_authz, conductor_patrol, execution_context
-from kiro_crew.autonudge import AutoNudgeService
-from kiro_crew.autonudge_authz import authorize_and_add_nudge, external_arm_refusal
-from kiro_crew.autonudge_service import firing
-from kiro_crew.dashboard.handlers import session_control as handlers_sc
-from kiro_crew.dashboard.handlers import work_ledger as routes
-from kiro_crew.monitoring.models import MonitorOutcome
-from kiro_crew.slack.gateway import GatewayOrchestrator
+from aj_crew import autonudge, autonudge_authz, conductor_patrol, execution_context
+from aj_crew.autonudge import AutoNudgeService
+from aj_crew.autonudge_authz import authorize_and_add_nudge, external_arm_refusal
+from aj_crew.autonudge_service import firing
+from aj_crew.dashboard.handlers import session_control as handlers_sc
+from aj_crew.dashboard.handlers import work_ledger as routes
+from aj_crew.monitoring.models import MonitorOutcome
+from aj_crew.slack.gateway import GatewayOrchestrator
 
 MATE = "member-greener"
 OTHER = "chat-m-other"
@@ -105,7 +105,7 @@ _TEMPLATE_EXECUTION = SimpleNamespace(
 
 @pytest.fixture(autouse=True)
 def _env(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _SLOTS.clear()
 
     async def _recognized(*a: Any, **k: Any) -> None:
@@ -347,8 +347,8 @@ async def test_a_default_patrol_aimed_at_another_crewmates_thread_is_refused(
 
 
 def _create_as_member(monkeypatch, *, attested: bool, ledger: bool) -> dict[str, Any]:
-    from kiro_crew.dashboard import create_rate_limit
-    from kiro_crew.dashboard import session_control as sc
+    from aj_crew.dashboard import create_rate_limit
+    from aj_crew.dashboard import session_control as sc
 
     monkeypatch.setattr(sc, "session_control_enabled", lambda: True)
 
@@ -583,7 +583,7 @@ async def test_a_rewritten_patrol_row_is_refused_at_fire_time(tmp_path, audits, 
     """The loop store is agent-writable. The grant covers the fixed patrol only, so a
     row rewritten after the arm (and restored on restart) does not wake the thread,
     and the grant never passes for a self-arm."""
-    from kiro_crew import autonudge_selfarm
+    from aj_crew import autonudge_selfarm
 
     svc = AutoNudgeService(base_dir=tmp_path / "an")
     state = _real_state()
@@ -637,7 +637,7 @@ async def test_editing_the_member_patrols_wake_text_is_refused_and_it_keeps_waki
 ):
     """An edit that would break the fixed payload is refused up front, so the
     patrol never sits active and silent; the reply points at monitor_start."""
-    from kiro_crew.autonudge_authz import (
+    from aj_crew.autonudge_authz import (
         DEFAULT_PATROL_EDIT_REFUSAL,
         authorize_and_update_nudge,
     )
@@ -665,7 +665,7 @@ async def test_editing_the_member_patrols_wake_text_is_refused_and_it_keeps_waki
 
 @pytest.mark.asyncio
 async def test_the_member_patrols_bounds_still_update_and_it_keeps_waking(tmp_path, audits):
-    from kiro_crew.autonudge_authz import authorize_and_update_nudge
+    from aj_crew.autonudge_authz import authorize_and_update_nudge
 
     svc = AutoNudgeService(base_dir=tmp_path / "an")
     state = _real_state()
@@ -690,7 +690,7 @@ async def test_the_member_patrols_bounds_still_update_and_it_keeps_waking(tmp_pa
 @pytest.mark.asyncio
 async def test_an_ordinary_conductors_default_patrol_message_stays_editable(tmp_path, audits):
     """Only a crewmate's granted patrol is fixed; a plain slot's default patrol is not."""
-    from kiro_crew.autonudge_authz import authorize_and_update_nudge
+    from aj_crew.autonudge_authz import authorize_and_update_nudge
 
     svc = AutoNudgeService(base_dir=tmp_path / "an")
     state = SimpleNamespace(_slots={OTHER: _Slot()}, sessions=None, channel_transports={})

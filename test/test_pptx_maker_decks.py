@@ -2,7 +2,7 @@
 
 Lives in the repo-level ``test/`` tree (not the app's in-package ``tests/``)
 because ``setup.cfg`` sets ``testpaths = test transfer`` — a test under
-``src/kiro_crew/apps/builtins/...`` is never collected by CI.
+``src/aj_crew/apps/builtins/...`` is never collected by CI.
 
 The deck directory layout is the ENGINE's, not ours, so these tests build real
 fixture trees in that shape and assert the two behaviours the studio depends on:
@@ -27,7 +27,7 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.apps.builtins.pptx_maker.backend import decks, paths
+from aj_crew.apps.builtins.pptx_maker.backend import decks, paths
 
 
 class _DeckTree(unittest.TestCase):

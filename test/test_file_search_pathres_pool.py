@@ -27,11 +27,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew import security
-from kiro_crew.dashboard import file_index as file_index_mod
-from kiro_crew.dashboard.file_index import FileIndex
-from kiro_crew.dashboard.handlers import api_file_search
-from kiro_crew.dashboard.handlers import files as files_mod
+from aj_crew import security
+from aj_crew.dashboard import file_index as file_index_mod
+from aj_crew.dashboard.file_index import FileIndex
+from aj_crew.dashboard.handlers import api_file_search
+from aj_crew.dashboard.handlers import files as files_mod
 
 _ENTRIES = 40
 
@@ -61,7 +61,7 @@ def pool_submissions(monkeypatch):
 
 @pytest.fixture()
 def mock_sel():
-    with patch("kiro_crew.dashboard.handlers.sel") as m:
+    with patch("aj_crew.dashboard.handlers.sel") as m:
         m.return_value = MagicMock()
         yield m.return_value
 

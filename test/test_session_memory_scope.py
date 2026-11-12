@@ -17,14 +17,14 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard.handlers import session_memory_scope as scope_mod
-from kiro_crew.dashboard.handlers._shared import MemberScope
-from kiro_crew.dashboard.handlers.session_memory_scope import (
+from aj_crew.dashboard.handlers import session_memory_scope as scope_mod
+from aj_crew.dashboard.handlers._shared import MemberScope
+from aj_crew.dashboard.handlers.session_memory_scope import (
     api_spawn_session_memory,
     caller_memory_view,
 )
-from kiro_crew.mcp_tools.spawn_parts import session_memory as tool_mod
-from kiro_crew.session_allocation_parts.companions import subagent_runtime_row_key
+from aj_crew.mcp_tools.spawn_parts import session_memory as tool_mod
+from aj_crew.session_allocation_parts.companions import subagent_runtime_row_key
 
 ME = "dashboard:chat-mine"
 OTHER = "dashboard:chat-theirs"
@@ -305,7 +305,7 @@ class TestRoute:
         assert "412" not in resp.text
 
     def test_the_route_is_registered_before_the_run_id_route(self) -> None:
-        from kiro_crew.dashboard.server import _register_mcp_routes
+        from aj_crew.dashboard.server import _register_mcp_routes
 
         app = web.Application()
         _register_mcp_routes(app)

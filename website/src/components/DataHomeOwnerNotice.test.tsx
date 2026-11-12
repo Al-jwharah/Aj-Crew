@@ -9,7 +9,7 @@ vi.mock('../api/client', async importOriginal => {
   return { ...mod, api: { ...mod.api, status: vi.fn() } }
 })
 
-const HELP = 'https://github.com/kirodotdev/KiroCrew/blob/main/src/kiro_crew/docs/troubleshooting.md#kiro-crew-files-belong-to-another-account'
+const HELP = 'https://github.com/Al-jwharah/Aj-Crew/blob/main/src/aj_crew/docs/troubleshooting.md#aj-crew-files-belong-to-another-account'
 
 function access(owner: string) {
   return {
@@ -26,8 +26,8 @@ describe('DataHomeOwnerStatusNotice', () => {
     vi.mocked(api.status).mockResolvedValue(access('root'))
     renderWithProviders(<DataHomeOwnerStatusNotice />)
     const notice = await screen.findByTestId('settings-data-home-owner')
-    expect(notice).toHaveTextContent("Some Kiro Crew files in /srv/crew-data belong to root, so Kiro Crew can't read them.")
-    expect(notice).toHaveTextContent('Kiro Crew was probably started as root once, for example with sudo. Stop running it as root')
+    expect(notice).toHaveTextContent("Some Aj Crew files in /srv/crew-data belong to root, so Aj Crew can't read them.")
+    expect(notice).toHaveTextContent('Aj Crew was probably started as root once, for example with sudo. Stop running it as root')
     const link = screen.getByTestId('data-home-owner-help-link')
     expect(link).toHaveAttribute('href', HELP)
     expect(link).toHaveAttribute('rel', 'noopener noreferrer')
@@ -38,7 +38,7 @@ describe('DataHomeOwnerStatusNotice', () => {
     vi.mocked(api.status).mockResolvedValue(access(''))
     renderWithProviders(<DataHomeOwnerStatusNotice />)
     expect(await screen.findByTestId('settings-data-home-owner'))
-      .toHaveTextContent("Some Kiro Crew files in /srv/crew-data can't be used by this account, so Kiro Crew can't read them.")
+      .toHaveTextContent("Some Aj Crew files in /srv/crew-data can't be used by this account, so Aj Crew can't read them.")
   })
 
   it.each([
@@ -55,6 +55,6 @@ describe('DataHomeOwnerStatusNotice', () => {
     vi.mocked(api.status).mockRejectedValue(new Error('network down'))
     renderWithProviders(<DataHomeOwnerStatusNotice />)
     expect(await screen.findByTestId('settings-data-home-owner-check-failed'))
-      .toHaveTextContent("Couldn't check who owns the Kiro Crew files.")
+      .toHaveTextContent("Couldn't check who owns the Aj Crew files.")
   })
 })

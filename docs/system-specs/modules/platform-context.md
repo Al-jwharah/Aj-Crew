@@ -1,11 +1,11 @@
 # Platform Context (Composed Platform Providers)
 
-The `kiro_crew.platform` package defines the **Composed Platform Providers
+The `aj_crew.platform` package defines the **Composed Platform Providers
 (CPP)** contract: the seam that lets one core serve both the open-source
 edition and an enterprise companion without the core ever importing
 enterprise-specific code.
 
-> Authoring note: Kiro Crew is the public edition of this seam. The daily
+> Authoring note: Aj Crew is the public edition of this seam. The daily
 > de-branding content sync from the upstream authoring home strips the
 > enterprise-tinted Defaults (e.g. the internal git host, SSO sandbox dirs)
 > down to the public baseline; the enterprise companion re-adds them via overrides.
@@ -16,8 +16,8 @@ enterprise-specific code.
 
 The core defines a set of **extension points** — interfaces where behavior
 differs between editions — and ships a `Default*` adapter for each that
-reproduces today's Kiro Crew behavior. An enterprise companion package (module
-separate from `kiro_crew`) depends on the public wheel and supplies enterprise
+reproduces today's Aj Crew behavior. An enterprise companion package (module
+separate from `aj_crew`) depends on the public wheel and supplies enterprise
 adapters for the same interfaces.
 
 The dependency runs one way: **the companion depends on the core; the core never
@@ -44,13 +44,13 @@ omit the policy.
 
 ## PlatformContext
 
-`kiro_crew.platform.context.PlatformContext` is an immutable dataclass holding the chosen adapter for every extension point, plus four carriers. Boot installs the initial context once; a validated central-governance refresh replaces the active context only to carry a new `governance` value. `policy_distribution.apply_ceiling` performs that replacement through `set_context`, and `governance_generation()` makes dependent profile snapshots refresh rather than serving a profile composed against a retired ceiling:
+`aj_crew.platform.context.PlatformContext` is an immutable dataclass holding the chosen adapter for every extension point, plus four carriers. Boot installs the initial context once; a validated central-governance refresh replaces the active context only to carry a new `governance` value. `policy_distribution.apply_ceiling` performs that replacement through `set_context`, and `governance_generation()` makes dependent profile snapshots refresh rather than serving a profile composed against a retired ceiling:
 
 | Field | Kind | Default adapter | Companion supplies |
 |-------|------|-----------------|--------------------|
 | `contract_version` | carrier (int) | `CONTRACT_VERSION` | must match core |
 | `profile` | carrier (str) | `"standalone"` | `"enterprise"` |
-| `cfg` | carrier (`KiroCrewConfig`) | loaded config | same |
+| `cfg` | carrier (`AjCrewConfig`) | loaded config | same |
 | `providers` | adapter | `DefaultProviderRegistry` (the baseline in `agent_sdk/backends.py`; registration is a no-op) | registers an edition backend after the core knows and verifies its routing |
 | `publish` | adapter | `DefaultPublishRegistry` (registers the personal cloud drive under `PERSONAL_DRIVE_PROVIDER`; leaves the unnamed default unregistered) | registers enterprise artifact/publish providers |
 | `agent_runtime` | adapter | `DefaultAgentRuntime` (`run_first_run_setup` and `works_in_place` wired; `managed_mcp_servers` **RESERVED**) | extra one-time first-run provisioning; repositories a Bot's worker works in place |
@@ -85,10 +85,10 @@ omit the policy.
 | `mobile_connect` | adapter | `DefaultMobileConnectProvider` (personal-install pair: `tailnet_qr` + `login_link` (id == kind by design)) | edition-specific phone-connection methods (descriptor-only `{id, kind}`; minting stays on each method's own endpoint; an empty list hides the dashboard entry; list + mint governed by `capabilities.mobile_connect`) |
 | `remote_provisioners` | adapter | `DefaultRemoteProvisionerProvider` (the built-in `aws_ec2` lane backed by `RealLaunchEngine`, **plus a conditional `aws_fargate` lane** backed by `FargateLaunchEngine` that is offered only when `cloud.json` carries a complete `fargate` block; id == kind by design for both) | edition-specific ways to CREATE a remote instance (a managed dev environment, a container task): descriptor-only `{id, kind, label, posix_only, step_labels, confirm_before_launch}` plus a `LaunchEngine` per id (`confirm_before_launch` carries what the operator must see and confirm before that lane may launch -- `POST /api/cloud/launch` requires `confirm_recipient` to equal it, so the requirement is derived from the row rather than hard-coded to one id, and a lane with nothing to confirm leaves it empty); the core's durable launch job still drives every launch, so cancel, rollback and orphan reaping are inherited rather than reimplemented |
 | `cloud_instance_policy` | adapter | `DefaultCloudInstancePolicyProvider` (empty `CloudInstancePolicy`: nothing attached, boundary unchanged) | managed policies an organization requires on every EC2 crew's instance role, plus the `Allow` statements its permissions boundary needs so they are not capped away. Read and validated only by `cloud/host_policy.py`; a descriptor that fails validation refuses the launch. See `cloud.md` § Security model |
-| `feedback` | adapter | `DefaultFeedbackTrackerProvider` (`report_issue_url()` → `None`) | the edition's issue tracker behind **Report a Problem** and `kirocrew doctor`. **REPLACE-capable** like `tips`: a supplied URL takes over from the public pre-filled GitHub bug-report link rather than being appended to it, because that link's query string is GitHub's form. The backend half of the dashboard's `setFeedbackTracker` seam (`website/docs/extension-seams.md` § "Feedback tracker"): the frontend-built links live there; this one is built by the gateway because it carries the bundle's facts |
-| `browser_credentials` | adapter | `DefaultBrowserCredentialProvider` (`name()` → `None`; nothing else is called) | session cookies for Kiro's own Chromium on the edition's own domains; applied by the gateway's browser supervisor at every start and when the source or the settings changed before a navigation, never to the person's own Chrome ([browser](browser.md) § Credentials) |
+| `feedback` | adapter | `DefaultFeedbackTrackerProvider` (`report_issue_url()` → `None`) | the edition's issue tracker behind **Report a Problem** and `ajcrew doctor`. **REPLACE-capable** like `tips`: a supplied URL takes over from the public pre-filled GitHub bug-report link rather than being appended to it, because that link's query string is GitHub's form. The backend half of the dashboard's `setFeedbackTracker` seam (`website/docs/extension-seams.md` § "Feedback tracker"): the frontend-built links live there; this one is built by the gateway because it carries the bundle's facts |
+| `browser_credentials` | adapter | `DefaultBrowserCredentialProvider` (`name()` → `None`; nothing else is called) | session cookies for Aj's own Chromium on the edition's own domains; applied by the gateway's browser supervisor at every start and when the source or the settings changed before a navigation, never to the person's own Chrome ([browser](browser.md) § Credentials) |
 | `speech` | adapter | `DefaultSpeechProviderRegistry` (no STT or TTS providers, `default_stt()` / `default_tts()` → `None`) | edition-registered speech-to-text and text-to-speech providers and the edition's default choice. **ADD-only**: a registered name joins the built-in `stt.provider` / `voice_reply.provider` sets and can never shadow a built-in, a retired STT name or `off` (boot raises `PlatformCompositionError`). The edition default applies only to an absent key; a stored value always wins. Validation, defaults, STT/TTS dispatch, live dictation and the capability lists route through it (pluggable speech providers RFC, [#22982](https://github.com/kirodotdev/KiroCrew/issues/22982)) |
-| `acceptance_checks` | adapter | `DefaultAcceptanceCheckProvider` (`run_acceptance_check()` → exit 2, no report) | the edition's checks behind `kirocrew acceptance-check`, the goal conductor's `edition_check` ([Acceptance check command](#acceptance-check-command-edition_check)) |
+| `acceptance_checks` | adapter | `DefaultAcceptanceCheckProvider` (`run_acceptance_check()` → exit 2, no report) | the edition's checks behind `ajcrew acceptance-check`, the goal conductor's `edition_check` ([Acceptance check command](#acceptance-check-command-edition_check)) |
 | `feature_apps` | tuple | **RESERVED** — `()`; apps register via `apps_loader` (provenance record only) | — (slot inert) |
 
 > `remote_provisioners` note — this seam lets the Set-up tab under Settings →
@@ -125,7 +125,7 @@ omit the policy.
 > discovery (skills.sh) and MCP server discovery (the official registry) hardcoded
 > their public provider at registration time, so a managed deployment could not
 > restrict where installable code came from without patching the core. The third is
-> **cloud deployment**: `kiro_crew/deploy/` provisions S3, CloudFront, IAM roles and
+> **cloud deployment**: `aj_crew/deploy/` provisions S3, CloudFront, IAM roles and
 > a reaper Lambda in the operator's own account and carried no capability gate at
 > all — `capabilities.publish`, which bounds publish-provider destinations, does not
 > reach it.
@@ -180,7 +180,7 @@ only that one was written where a reviewer will read it.
 ## Boot sequence
 
 ```python
-cfg = KiroCrewConfig.load()
+cfg = AjCrewConfig.load()
 ctx = boot_platform(cfg)      # platform/bootstrap.py (idempotent)
 ```
 
@@ -200,15 +200,15 @@ installs the context. `bootstrap_context`:
 ## Profile resolution
 
 `resolve_profile(cfg, *, entry_points)` precedence (first match wins):
-0. An LTS build (`edition.is_lts()`, see [Build-time edition constant](#build-time-edition-constant)) → `enterprise`, before every step below; `KIROCREW_PROFILE`, the marker probe and entry points cannot change it. With no companion installed it boots on the core defaults; an installed companion that fails to compose still fails closed. An `oss` build skips this step.
-1. `KIROCREW_PROFILE` env (`standalone` | `enterprise`; unknown → standalone).
-2. Non-empty `kirocrew.plugins` entry-point group (companion installed).
+0. An LTS build (`edition.is_lts()`, see [Build-time edition constant](#build-time-edition-constant)) → `enterprise`, before every step below; `AJCREW_PROFILE`, the marker probe and entry points cannot change it. With no companion installed it boots on the core defaults; an installed companion that fails to compose still fails closed. An `oss` build skips this step.
+1. `AJCREW_PROFILE` env (`standalone` | `enterprise`; unknown → standalone).
+2. Non-empty `ajcrew.plugins` entry-point group (companion installed).
 3. Identity signal: a present SSO-marker directory (a cheap stat, no
-   subprocess) — **only when the opt-in `KIROCREW_SSO_PROFILE_PROBE` env var
-   is truthy**. The legacy name `KIROCREW_MIDWAY_PROFILE_PROBE` is honored too,
+   subprocess) — **only when the opt-in `AJCREW_SSO_PROFILE_PROBE` env var
+   is truthy**. The legacy name `AJCREW_MIDWAY_PROFILE_PROBE` is honored too,
    because already-deployed managed launchers set it: dropping it would let an
    enterprise host with the marker but a missing companion resolve `standalone`
-   instead of failing closed. `KIROCREW_SSO_MARKER_PATH` overrides the path that
+   instead of failing closed. `AJCREW_SSO_MARKER_PATH` overrides the path that
    is stat'd (default `~/.midway`). The probe is OFF by default so a stray marker
    directory left by some other tool cannot force the public edition into the
    `enterprise` profile (which has no companion to compose and would fail-closed
@@ -226,7 +226,7 @@ once loaded.
 ## Fail-closed discovery
 
 `discover_companion_context` (only for non-standalone profiles) looks up the
-`kirocrew.plugins` entry-point group via `importlib.metadata`:
+`ajcrew.plugins` entry-point group via `importlib.metadata`:
 - Empty → **raise** `PlatformCompositionError` (refuse to boot with OSS defaults).
 - More than one → raise (ambiguous).
 - Loads the single entry point (`build_enterprise_context`) and returns its context.
@@ -236,7 +236,7 @@ once loaded.
 
 ## Level-1 governance ceiling and distribution
 
-`PlatformContext.governance` is the optional Level-1 `GovernanceCeiling` that enforcement chokepoints read through `current_context()`. `governance.load_security_policy` composes a **tier ladder**, highest first: the centrally distributed document, then exactly one of the local sources (an explicit `KIROCREW_SECURITY_POLICY` path, a companion-bundled policy, or the data-home policy). The central document is the authority; every tier below it may only **tighten** it, through the same per-scope AND the profile layer uses. There is no local rollback lever above the fleet: recovery from a bad publication is re-publishing a good document at the source (`governance.md` → "Loading + precedence"). No source leaves editable standalone defaults.
+`PlatformContext.governance` is the optional Level-1 `GovernanceCeiling` that enforcement chokepoints read through `current_context()`. `governance.load_security_policy` composes a **tier ladder**, highest first: the centrally distributed document, then exactly one of the local sources (an explicit `AJCREW_SECURITY_POLICY` path, a companion-bundled policy, or the data-home policy). The central document is the authority; every tier below it may only **tighten** it, through the same per-scope AND the profile layer uses. There is no local rollback lever above the fleet: recovery from a bad publication is re-publishing a good document at the source (`governance.md` → "Loading + precedence"). No source leaves editable standalone defaults.
 
 `policy_distribution.resolve_distribution` takes the central source from the `distribution` declaration of the highest tier that made one, or from fleet environment settings when none did, with environment settings taking precedence individually. A declared distribution source cannot carry credentials; request headers remain host-local and `cache_only()` prevents child processes from receiving the means to contact the fleet control plane.
 
@@ -316,7 +316,7 @@ Defense in depth, evaluated by `evaluate_admission(ep, policy)`:
 2. **Marketplace allowlist** (`approved`) — when present, only listed plugins
    are admitted. Adding a plugin to the list *is* the marketplace review gate.
 3. **Verify-before-run signature** (`require_signature`) — the plugin ships a
-   signed `kirocrew_plugin.json` manifest; admission verifies the signature
+   signed `ajcrew_plugin.json` manifest; admission verifies the signature
    against a trust key the **policy** carries (R-11 / M-12 supply chain). POC
    uses HMAC. Production uses an asymmetric publisher key. The signature covers
    a canonical payload (name/publisher/version/capabilities and non-empty
@@ -333,7 +333,7 @@ Defense in depth, evaluated by `evaluate_admission(ep, policy)`:
    a capability category the fleet doesn't grant at all.
 
 **Trust-root invariant:** the policy loads from a fleet-controlled source
-(`KIROCREW_ADMISSION_POLICY` env path, else `~/.kiro/crew/admission_policy.json`),
+(`AJCREW_ADMISSION_POLICY` env path, else `~/.kiro/crew/admission_policy.json`),
 **never from the plugin** — a plugin cannot approve, sign, or un-ban itself. The
 manifest is read **import-free** from the plugin's installed distribution files,
 so plugin code never runs before the decision.
@@ -430,24 +430,24 @@ companion can pin against a frozen contract.
 The companion declares (in its `pyproject.toml`):
 ```toml
 [project]
-dependencies = ["kirocrew"]
+dependencies = ["ajcrew"]
 
-[project.entry-points."kirocrew.plugins"]
-enterprise = "kirocrew_enterprise.compose:build_enterprise_context"
+[project.entry-points."ajcrew.plugins"]
+enterprise = "ajcrew_enterprise.compose:build_enterprise_context"
 
 [project.scripts]
-kirocrew-enterprise = "kirocrew_enterprise.cli:main"
+ajcrew-enterprise = "ajcrew_enterprise.cli:main"
 ```
-The `kirocrew-enterprise` binary sets `KIROCREW_PROFILE=enterprise` and delegates to the
+The `ajcrew-enterprise` binary sets `AJCREW_PROFILE=enterprise` and delegates to the
 core `main` — the explicit composition-root path that a security review reads.
 
-**The companion's top-level module MUST be named `kirocrew_<edition>`** — lowercase
+**The companion's top-level module MUST be named `ajcrew_<edition>`** — lowercase
 letters, digits and underscores only, no dots or hyphens. Two matchers identify a
 running gateway from its command line and neither can read the companion's entry
 points: `port_resolution._gateway_module_roots()` derives the Python side's set
-from the installed `kirocrew.plugins` entry points, while the desktop launcher's
-`isKirocrewCommand` (`website/electron/gateway-stop.js`) runs in a process with no
-view of that Python environment and matches the name against `KIROCREW_MODULE_RE`
+from the installed `ajcrew.plugins` entry points, while the desktop launcher's
+`isAjcrewCommand` (`website/electron/gateway-stop.js`) runs in a process with no
+view of that Python environment and matches the name against `AJCREW_MODULE_RE`
 instead. Both also require a server subcommand (`gateway`, `dashboard`, `start`)
 as the first positional after the module. A companion named outside the
 convention classifies as ours on the Python side but as a foreign port holder on
@@ -456,7 +456,7 @@ the desktop side, and the app refuses to start on its own gateway's port.
 ### Acceptance check command (`edition_check`)
 
 The goal conductor's evaluator
-(`src/kiro_crew/builtin_skills/goal-conductor/scripts/accept_eval.py`) has one
+(`src/aj_crew/builtin_skills/goal-conductor/scripts/accept_eval.py`) has one
 acceptance kind an edition answers:
 `{"kind": "edition_check", "check": "<name>", "ref": "<id>"}`. The core names no
 check. It validates both fields, runs one fixed argv, and believes the answer only
@@ -464,7 +464,7 @@ when the exit code and the printed report agree. This section is the contract an
 edition builds against, and `test/test_accept_eval_edition_check.py` pins it to the
 evaluator's own tables.
 
-**Argv.** `kirocrew acceptance-check --json <check> <ref>`, run without a shell.
+**Argv.** `ajcrew acceptance-check --json <check> <ref>`, run without a shell.
 `<check>` matches `[a-z][a-z0-9-]{0,31}` and `<ref>` matches
 `[A-Za-z0-9][A-Za-z0-9._-]{0,127}`, both with `fullmatch`, so neither can read as a
 flag. A check that accepts a narrower ref checks it itself and answers exit 4.
@@ -484,16 +484,16 @@ the table) reads as `error`.
 | 4 | `error` | `error` | the check exists but could not answer: a ref it does not accept, or its own system unreachable |
 | 2 | (none) | `error` | usage: no installed edition provides this check |
 
-Exit 2 has that one meaning. The public `kirocrew` knows no check, so its
+Exit 2 has that one meaning. The public `ajcrew` knows no check, so its
 `acceptance-check` exits 2 for every name, and an edition exits 2 for a check name
 it does not know. An edition does not use exit 2 for anything else; a check that exists and
 cannot answer uses exit 4.
 
-**Which `kirocrew` runs.** The argv starts with the bare name, which the operating
+**Which `ajcrew` runs.** The argv starts with the bare name, which the operating
 system resolves from `PATH` in the process that runs the evaluator. The evaluator
-does not look for the gateway's own install, so a `kirocrew` earlier on `PATH` (a
+does not look for the gateway's own install, so an `ajcrew` earlier on `PATH` (a
 shim beside a virtual environment, say) answers instead. An `error` the evaluator
-writes itself names what `kirocrew` on `PATH` is, so that case is visible.
+writes itself names what `ajcrew` on `PATH` is, so that case is visible.
 
 **How an edition provides the command.** The core owns `acceptance-check` and
 parses the argv above. After boot it hands `<check>` and `<ref>` to
@@ -501,11 +501,11 @@ parses the argv above. After boot it hands `<check>` and `<ref>` to
 the code that returns; the adapter prints the report itself. The Default knows no
 check: it writes `no installed edition provides the acceptance check '<check>'` to
 stderr and returns 2. A companion supplies its own adapter like any other field, so
-its checks pass the same `kirocrew.plugins` admission, contract and floor gates as
+its checks pass the same `ajcrew.plugins` admission, contract and floor gates as
 the rest of it, and it claims no command name. That is how a companion installed
-beside the core under its own script name (the `kirocrew-<edition>` shape above)
-answers through the `kirocrew` on `PATH`. An edition that already answers the command
-in its own `kirocrew` launcher keeps working, because that launcher runs before the
+beside the core under its own script name (the `ajcrew-<edition>` shape above)
+answers through the `ajcrew` on `PATH`. An edition that already answers the command
+in its own `ajcrew` launcher keeps working, because that launcher runs before the
 core `main`.
 
 ### Distribution build version
@@ -513,11 +513,11 @@ core `main`.
 A distribution that repackages one core release as several builds of its own
 (an enterprise bundle vending `0.6.0.10`, `0.6.0.11`, … of the same `0.6.0`)
 names the build it shipped in a `BUILD_VERSION` file placed **beside
-`kiro_crew/__init__.py`** at packaging time (declared as optional package data;
-absent in this repo and in the wheels it publishes). `kiro_crew/__init__`
+`aj_crew/__init__.py`** at packaging time (declared as optional package data;
+absent in this repo and in the wheels it publishes). `aj_crew/__init__`
 resolves it **at import**, replacing `__version__` for every reader — the About
 page's version chip (`version_display`), `/api/status`, `/api/health`,
-`kirocrew --version`, the diagnostics report, and the governance minimum-version
+`ajcrew --version`, the diagnostics report, and the governance minimum-version
 floor (`update_required`), which a fleet writes in the distribution's build
 numbers. Two readers deliberately do not change: the anonymous usage beacon
 (`beacon.release` clamps to `major.minor.patch` for cardinality, so a stamped
@@ -526,7 +526,7 @@ build sends the same value as its base), and the About page's changelog, where
 so the build marks the `0.6.0` row rather than opening an empty `0.6.0.12` row. Import time is the only point that works:
 `dashboard/handlers/updates_verdict.py`, `dashboard/handlers/updates_check.py`,
 `dashboard/ws.py`, `config/loader_document.py` and
-`cli_server.py` bind `from kiro_crew import __version__` copies that nothing
+`cli_server.py` bind `from aj_crew import __version__` copies that nothing
 later can reach, so this is deliberately not a `PlatformContext` field — a
 context is composed after those imports.
 
@@ -546,13 +546,13 @@ A different base, a prerelease stamp, a non-numeric or second segment, or a
 suffix over an `rc` / nightly base is a build this core is not; it is ignored
 with one warning and the base stays, so a process can never claim bytes it does
 not run. The contract is the file — its name and that shape — not a Python API;
-the helpers in `kiro_crew/__init__` are private. The accepted shape parses as a
+the helpers in `aj_crew/__init__` are private. The accepted shape parses as a
 PEP 440 release wherever the version is compared (`_is_newer` orders `0.6.0.12`
 above `0.6.0` and below `0.6.1`; `release_channel.channel` still reads
 `stable`), and `base_version` — the stable-channel display fold — preserves the
 stamped string, which is what lets the chip show it. The one reader that does
 NOT take the stamp's word is the bug-report resolver
-(`release_channel.provenance`, behind `kirocrew doctor --bundle` and the
+(`release_channel.provenance`, behind `ajcrew doctor --bundle` and the
 dashboard's Report-a-problem link): because this rule admits a stamp only over
 a bare base, a stamped build has by construction lost whatever prerelease
 marker the release pipeline wrote, so the stamp claims no lane there — a
@@ -561,14 +561,14 @@ stamp never rewrites) or the `channel` record decides, and with neither the
 report says `Not sure` rather than Stable. The public `version` field is the
 release the stamp is a build of (`changelog.release_of_build`); the evidence
 the resolver weighed stays in the private bundle, where `versions.txt` and
-`manifest.json` both record the raw stamp (`kirocrew_version`), the folded
+`manifest.json` both record the raw stamp (`ajcrew_version`), the folded
 release (`release`), the distribution's metadata version
 (`distribution_version`), the proven lane (`channel`, `unknown` when none) and
 the `channel` record (`channel_record`) — the manifest spells a silent source
 as JSON `null`, the text file as `unavailable` / `absent`. `collect_bundle`
 resolves the provenance exactly ONCE, before it writes the first member, and
 keeps that snapshot on `BundleResult.provenance`: `versions.txt`, the manifest
-and the issue link are all written from it, and the terminal link `kirocrew
+and the issue link are all written from it, and the terminal link `ajcrew
 doctor` prints afterwards reads the same field rather than resolving again.
 The resolver reads host state that can change mid-collection — the dashboard's
 `set_release_channel` rewrites the `channel` record on the event loop while
@@ -590,35 +590,35 @@ those to differ must bump its own project version as well.
 
 ### Build-time edition constant
 
-`kiro_crew/edition.py` holds `EDITION`, one of `EDITIONS = {"oss", "lts"}`, and `is_lts()`. The checked-in value is always `"oss"`. A packaging build picks the value: `make wheel|backend-bin|desktop EDITION=lts` (only a command-line `EDITION=` counts, an exported shell `EDITION` is ignored, even under `make -e`, because the edition variables are `override`; without it, Make takes `KIROCREW_BUILD_EDITION` from the environment, else `oss`; both set and different is refused) passes it as `KIROCREW_BUILD_EDITION` to `setup.py`'s `build_py`, which rewrites the `EDITION` line in the BUILT copy only, through `kiro_crew/_edition_stamp.py`. The same variable works for a direct `python -m build` or `packaging/build-desktop.sh` run. An unknown value fails the build (Make checks first with an exact match, so `%` wildcards are refused; `build_py` checks again); an editable install (which `make.ps1 wheel` runs as a prerequisite) stamps nothing, since it runs the `oss` source tree, but still refuses an unknown value. The stamp is rewritten on every build, `oss` included, so a reused `build/` cannot carry an old LTS stamp into a default build.
+`aj_crew/edition.py` holds `EDITION`, one of `EDITIONS = {"oss", "lts"}`, and `is_lts()`. The checked-in value is always `"oss"`. A packaging build picks the value: `make wheel|backend-bin|desktop EDITION=lts` (only a command-line `EDITION=` counts, an exported shell `EDITION` is ignored, even under `make -e`, because the edition variables are `override`; without it, Make takes `AJCREW_BUILD_EDITION` from the environment, else `oss`; both set and different is refused) passes it as `AJCREW_BUILD_EDITION` to `setup.py`'s `build_py`, which rewrites the `EDITION` line in the BUILT copy only, through `aj_crew/_edition_stamp.py`. The same variable works for a direct `python -m build` or `packaging/build-desktop.sh` run. An unknown value fails the build (Make checks first with an exact match, so `%` wildcards are refused; `build_py` checks again); an editable install (which `make.ps1 wheel` runs as a prerequisite) stamps nothing, since it runs the `oss` source tree, but still refuses an unknown value. The stamp is rewritten on every build, `oss` included, so a reused `build/` cannot carry an old LTS stamp into a default build.
 
-Runtime code reads only the module constant, never the build variable or a config file, for the same reason as `BUILD_VERSION`: an installed build's edition is part of its bytes, not something the local operator sets. Read it at call time (`edition.is_lts()`), not as a `from kiro_crew.edition import EDITION` copy, so tests can flip it with `monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")`. Its readers are `resolve_profile` and `kiro_crew.edition_locks` (below). In `resolve_profile`, an LTS build always resolves the `enterprise` profile, so `PlatformContext.is_enterprise` stays the single property callers read and the edition only feeds it. An LTS build with no companion installed boots on the core defaults under the enterprise profile, so every LTS gate stays on (`bootstrap._lts_on_core_defaults`, RFC D1). An installed companion that is broken, rejected, ambiguous or contract-mismatched still fails closed (`discover_companion_context` or `_checked_companion` raises), and in an LTS build an entry-point scan that cannot read the metadata raises instead of reading as no companion. No environment variable or config changes the profile or the edition. An `oss` build resolves exactly as before. Tests: `test/test_edition.py`, `test/test_platform_context.py::TestLtsEditionProfile`, `test/test_platform_context.py::TestLtsBuildWithoutCompanion`, `test/test_enterprise_policy_fetch.py::TestBootWithoutCompanion`.
+Runtime code reads only the module constant, never the build variable or a config file, for the same reason as `BUILD_VERSION`: an installed build's edition is part of its bytes, not something the local operator sets. Read it at call time (`edition.is_lts()`), not as a `from aj_crew.edition import EDITION` copy, so tests can flip it with `monkeypatch.setattr("aj_crew.edition.EDITION", "lts")`. Its readers are `resolve_profile` and `aj_crew.edition_locks` (below). In `resolve_profile`, an LTS build always resolves the `enterprise` profile, so `PlatformContext.is_enterprise` stays the single property callers read and the edition only feeds it. An LTS build with no companion installed boots on the core defaults under the enterprise profile, so every LTS gate stays on (`bootstrap._lts_on_core_defaults`, RFC D1). An installed companion that is broken, rejected, ambiguous or contract-mismatched still fails closed (`discover_companion_context` or `_checked_companion` raises), and in an LTS build an entry-point scan that cannot read the metadata raises instead of reading as no companion. No environment variable or config changes the profile or the edition. An `oss` build resolves exactly as before. Tests: `test/test_edition.py`, `test/test_platform_context.py::TestLtsEditionProfile`, `test/test_platform_context.py::TestLtsBuildWithoutCompanion`, `test/test_enterprise_policy_fetch.py::TestBootWithoutCompanion`.
 
 #### Local switches with no governance key (`edition_locks.py`)
 
-[rfc-crew-lts-edition](../../request-for-change/rfc-crew-lts-edition.md) D3: in an LTS build only the remote policy can turn a control on, and local config, environment variables, profiles and dashboard settings may only narrow it. A control with a governance key gets that from the evaluator. A control with no key cannot be turned on by any remote rule, so its local switch is ignored: `kiro_crew/edition_locks.py` lists each one in `UNKEYED_LOCKS`, and the feature calls `local_enable_locked(<id>)` where it reads its own switch. The call returns `False` on `oss`, so nothing changes there; on LTS it returns `True` and logs one warning per control. A later change that adds a real key for a control replaces its row with a governance check.
+[rfc-crew-lts-edition](../../request-for-change/rfc-crew-lts-edition.md) D3: in an LTS build only the remote policy can turn a control on, and local config, environment variables, profiles and dashboard settings may only narrow it. A control with a governance key gets that from the evaluator. A control with no key cannot be turned on by any remote rule, so its local switch is ignored: `aj_crew/edition_locks.py` lists each one in `UNKEYED_LOCKS`, and the feature calls `local_enable_locked(<id>)` where it reads its own switch. The call returns `False` on `oss`, so nothing changes there; on LTS it returns `True` and logs one warning per control. A later change that adds a real key for a control replaces its row with a governance check.
 
 | Control id | Local source ignored | Read site | Setting API |
 |---|---|---|---|
 | `tunnel` | `tunnel.enabled`, `tunnel.relay_enabled`, `slack.use_tunnel_url` | `dashboard/server_runtime/tunnel.py::_start_aea_tunnel` (the edition's own `TunnelProvider` is not a local source); `dashboard/server.py::start_dashboard`, which builds the app's `RelayIngress` off there; `platform/bootstrap.py::_public_tunnel_provider`, which never selects or imports the relay client there; all three read the relay switch through `edition_locks.py::relay_selected`; `dashboard/urls.py::slack_tunnel_opt_in`, read by `tunnel_origin_if_opted_in` and by `send_dashboard_link` before its on-demand `ensure_available()` door, so Slack links stay on the local origin | `GET /api/config/schema` marks all three paths `lockedByPolicy` |
 | `telemetry.otlp_hosts` | `telemetry.otlp_endpoint`, `telemetry.otlp_endpoints` | `metrics/provider.py::_edition_locked_view`, read by `_otlp_destinations` and `otlp_egress_active` before any provider sees the config (an edition provider's own destinations stay) | `GET /api/config/schema` marks the path `lockedByPolicy` |
-| `developer_mode` | `KIROCREW_DEV_MODE` (and the `-dev` home suffix for the update simulator) | `session_environment.py::session_environments_enabled` (remote placement stays off) and `dashboard/routes/system.py` (`POST /api/update/simulate` is not registered) | none; an environment variable has no setting API. The flag's on-loop persistence strictness only raises more, so it is left as is |
-| `feature_previews` | `dashboard.feature_previews` and every path under it (RFC D12) | `edition_locks.py::feature_previews`, read by `connections/crew_oauth.py::enabled`, `crew_mode.py::mate_sessions_hidden` and `dashboard_agentic.py::stale_fields_enabled`; `dashboard/handlers/core_config_view.py::_config_body` reports them `{}` on `GET /api/config/kirocrew` and every PATCH reply; the dashboard reads every `mc-preview-*` flag off and refuses to set one (`website/src/utils/previewFlags.ts`) | `GET /api/config/schema` marks every preview path `lockedByPolicy`; the dashboard takes its preview lock from that (`hooks/usePreviewFlagServerSync.ts::applyConfigLocks`) |
-| `debug_tools` | Settings > Developer > Debug tools and its `mc-scroll-inspector` key (RFC D12) | dashboard only: `pages/settings/DeveloperPanel.tsx` drops the page, `pages/DeveloperPage.tsx` sends the old link to the first page, `dev/scrollInspector.ts` reads off. No gateway route | `locked_controls: ["debug_tools"]` on `GET /api/config/kirocrew` and every PATCH reply, a field only an LTS build sends |
+| `developer_mode` | `AJCREW_DEV_MODE` (and the `-dev` home suffix for the update simulator) | `session_environment.py::session_environments_enabled` (remote placement stays off) and `dashboard/routes/system.py` (`POST /api/update/simulate` is not registered) | none; an environment variable has no setting API. The flag's on-loop persistence strictness only raises more, so it is left as is |
+| `feature_previews` | `dashboard.feature_previews` and every path under it (RFC D12) | `edition_locks.py::feature_previews`, read by `connections/crew_oauth.py::enabled`, `crew_mode.py::mate_sessions_hidden` and `dashboard_agentic.py::stale_fields_enabled`; `dashboard/handlers/core_config_view.py::_config_body` reports them `{}` on `GET /api/config/ajcrew` and every PATCH reply; the dashboard reads every `mc-preview-*` flag off and refuses to set one (`website/src/utils/previewFlags.ts`) | `GET /api/config/schema` marks every preview path `lockedByPolicy`; the dashboard takes its preview lock from that (`hooks/usePreviewFlagServerSync.ts::applyConfigLocks`) |
+| `debug_tools` | Settings > Developer > Debug tools and its `mc-scroll-inspector` key (RFC D12) | dashboard only: `pages/settings/DeveloperPanel.tsx` drops the page, `pages/DeveloperPage.tsx` sends the old link to the first page, `dev/scrollInspector.ts` reads off. No gateway route | `locked_controls: ["debug_tools"]` on `GET /api/config/ajcrew` and every PATCH reply, a field only an LTS build sends |
 
-The update channel left this table when it gained its key, `updates.channel` (see governance.md, "Update pins"): an LTS build follows `lts`, its own channel, whatever the policy pins (RFC crew-lts-edition D11), and still ignores `$KIROCREW_HOME/channel`.
+The update channel left this table when it gained its key, `updates.channel` (see governance.md, "Update pins"): an LTS build follows `lts`, its own channel, whatever the policy pins (RFC crew-lts-edition D11), and still ignores `$AJCREW_HOME/channel`.
 
-Each locked config path is in `CONFIG_PATH_LOCKS`, or (for the preview switches) matched by its `dashboard.feature_previews` prefix in `config_path_locked`, which the schema endpoint reads. The dashboard shows a "Locked by policy" badge beside a schema setting reference with `lockedByPolicy` (`settingRef/SettingRef.tsx`) and beside the computer-use toggle, which it greys out, when its GET carries `locked_by_policy` (`settings/ComputerUsePanel.tsx`). A write of a `CONFIG_PATH_LOCKS` value is still stored and is ignored on read, so a saved setting never loops on an error. A preview path is refused instead: `PATCH /api/config/kirocrew` answers 409 `locked_by_policy` and a change card does not offer it, because the dashboard draws no switch for it to save from. A value written another way is still read as off. Tests: `test/test_lts_unkeyed_locks.py`, `test/test_lts_feature_previews_off.py`, `website/src/test/ltsFeaturePreviewsOff.test.tsx`.
+Each locked config path is in `CONFIG_PATH_LOCKS`, or (for the preview switches) matched by its `dashboard.feature_previews` prefix in `config_path_locked`, which the schema endpoint reads. The dashboard shows a "Locked by policy" badge beside a schema setting reference with `lockedByPolicy` (`settingRef/SettingRef.tsx`) and beside the computer-use toggle, which it greys out, when its GET carries `locked_by_policy` (`settings/ComputerUsePanel.tsx`). A write of a `CONFIG_PATH_LOCKS` value is still stored and is ignored on read, so a saved setting never loops on an error. A preview path is refused instead: `PATCH /api/config/ajcrew` answers 409 `locked_by_policy` and a change card does not offer it, because the dashboard draws no switch for it to save from. A value written another way is still read as off. Tests: `test/test_lts_unkeyed_locks.py`, `test/test_lts_feature_previews_off.py`, `website/src/test/ltsFeaturePreviewsOff.test.tsx`.
 
 ### LTS gate (login half)
 
-The second reader of `is_lts()` is the LTS gate ([RFC](../../request-for-change/rfc-crew-lts-edition.md), "LTS gate"). `kiro_crew/lts_gate.py` holds `LtsGate`: open, or closed while any reason holds it (`close(reason)` / `clear(reason)`, each concern clearing only its own reason; `status()` returns `open` plus the reasons). An LTS build does not start without a login or without its governance rules (`kiro_crew/lts_boot.py`). Every check reads one sign-in (RFC D4, `kiro_crew/lts_sign_in.py` `select`): Crew's own vault sign-in, the only source today. No vault entry is not signed in; a lapsed entry is not signed in but still names its account. `kiro-cli whoami` is not the LTS gate. The resolver does not read the edition; the enterprise wiring calls it. The rules fetch reads it first, so in `cli.main` the sign-in check and the fetch are one step inside `boot_platform`, before any port binds. A `PlatformCompositionError` from `boot_platform` in `cli.main` or `run_gateway` goes to `refuse_policy_boot`, which prints what failed and a fix sentence picked from the recorded cause (no sign-in names `kirocrew kas login --provider idc ...`; unusable, unreachable, refused, not eligible, account changed, bad rules) and exits 1. `GatewayOrchestrator.run` and both server entrypoints call `require_kiro_login`, which re-checks the same resolver (a plain store read) and does the same on a refusal. Both run before the HTTP server binds, so a failed boot never serves the gateway (the one exception, a signed-out `gateway` start, is the sign-in-only app below); the desktop app shows that stderr in its start-failure window's log pane. Those checks run before the bind with their own limits (vault refresh 30 s, policy fetch 10 s), so an LTS desktop build waits that much longer for its local gateway: `packaging/build-desktop.sh` stages `website/electron/EDITION` from the same `KIROCREW_BUILD_EDITION` stamp (LTS only), `website/electron/edition.js` reads it, and `gatewayWaitTimeoutMs` adds 80 s for a spawned local gateway. An `oss` desktop build stages nothing and keeps its 30 s (120 s on Windows) wait. Both gateway entrypoints then call `install_lts_gate` (`dashboard/lts_gate_middleware.py`), whose login source is `SignInLoginSource`, the same resolver; in an LTS build it puts a gate on the app that starts OPEN, refuses to install when the resolver finds no sign-in, and an `oss` build gets nothing. `LoginWatch` keeps `login_required` in step with the sign-in while the gateway runs: `SignInLoginSource.login_verified` re-reads the vault store off the loop, and a refusal or a read that raises answers signed out. It checks at once on startup, then every 5 s while closed and every 60 s while open (a close wakes a watch sleeping its open interval, so it moves to the closed cadence at once), so a new sign-in reopens the gate within one 5 s check. A check also fails when the sign-in names an account other than the one the account lock pinned. While signed out the source reads the store on every check; while signed in it reads again once the last read is 60 s old, whatever the watch's budget. Each request also reads the latched `authenticated` verdict, which only ever closes the gate. An ACP auth failure (`mark_signed_out`) no longer reaches the gate directly: the resolver reads stores, not the issuer. A vault sign-in whose access token has expired and whose refresh the issuer refused (`TokenStore.refresh_rejected`) is unusable, so the gate closes on it; saving a new sign-in clears the marker. Only the watch's check reopens it. An LTS build never assumes readiness: `KiroPrerequisiteService` drops `assume_ready` (`--test-mode`) there, so test mode cannot open the gate without a probe. `kirocrew doctor` prints a `sign-in:` row in the Platform block of an LTS build (`lts_sign_in.describe()`), a refusal counting as a blocking issue. A signed-out `gateway` start serves the sign-in-only app instead (below).
+The second reader of `is_lts()` is the LTS gate ([RFC](../../request-for-change/rfc-crew-lts-edition.md), "LTS gate"). `aj_crew/lts_gate.py` holds `LtsGate`: open, or closed while any reason holds it (`close(reason)` / `clear(reason)`, each concern clearing only its own reason; `status()` returns `open` plus the reasons). An LTS build does not start without a login or without its governance rules (`aj_crew/lts_boot.py`). Every check reads one sign-in (RFC D4, `aj_crew/lts_sign_in.py` `select`): Crew's own vault sign-in, the only source today. No vault entry is not signed in; a lapsed entry is not signed in but still names its account. `kiro-cli whoami` is not the LTS gate. The resolver does not read the edition; the enterprise wiring calls it. The rules fetch reads it first, so in `cli.main` the sign-in check and the fetch are one step inside `boot_platform`, before any port binds. A `PlatformCompositionError` from `boot_platform` in `cli.main` or `run_gateway` goes to `refuse_policy_boot`, which prints what failed and a fix sentence picked from the recorded cause (no sign-in names `ajcrew kas login --provider idc ...`; unusable, unreachable, refused, not eligible, account changed, bad rules) and exits 1. `GatewayOrchestrator.run` and both server entrypoints call `require_kiro_login`, which re-checks the same resolver (a plain store read) and does the same on a refusal. Both run before the HTTP server binds, so a failed boot never serves the gateway (the one exception, a signed-out `gateway` start, is the sign-in-only app below); the desktop app shows that stderr in its start-failure window's log pane. Those checks run before the bind with their own limits (vault refresh 30 s, policy fetch 10 s), so an LTS desktop build waits that much longer for its local gateway: `packaging/build-desktop.sh` stages `website/electron/EDITION` from the same `AJCREW_BUILD_EDITION` stamp (LTS only), `website/electron/edition.js` reads it, and `gatewayWaitTimeoutMs` adds 80 s for a spawned local gateway. An `oss` desktop build stages nothing and keeps its 30 s (120 s on Windows) wait. Both gateway entrypoints then call `install_lts_gate` (`dashboard/lts_gate_middleware.py`), whose login source is `SignInLoginSource`, the same resolver; in an LTS build it puts a gate on the app that starts OPEN, refuses to install when the resolver finds no sign-in, and an `oss` build gets nothing. `LoginWatch` keeps `login_required` in step with the sign-in while the gateway runs: `SignInLoginSource.login_verified` re-reads the vault store off the loop, and a refusal or a read that raises answers signed out. It checks at once on startup, then every 5 s while closed and every 60 s while open (a close wakes a watch sleeping its open interval, so it moves to the closed cadence at once), so a new sign-in reopens the gate within one 5 s check. A check also fails when the sign-in names an account other than the one the account lock pinned. While signed out the source reads the store on every check; while signed in it reads again once the last read is 60 s old, whatever the watch's budget. Each request also reads the latched `authenticated` verdict, which only ever closes the gate. An ACP auth failure (`mark_signed_out`) no longer reaches the gate directly: the resolver reads stores, not the issuer. A vault sign-in whose access token has expired and whose refresh the issuer refused (`TokenStore.refresh_rejected`) is unusable, so the gate closes on it; saving a new sign-in clears the marker. Only the watch's check reopens it. An LTS build never assumes readiness: `KiroPrerequisiteService` drops `assume_ready` (`--test-mode`) there, so test mode cannot open the gate without a probe. `ajcrew doctor` prints a `sign-in:` row in the Platform block of an LTS build (`lts_sign_in.describe()`), a refusal counting as a blocking issue. A signed-out `gateway` start serves the sign-in-only app instead (below).
 
-While closed (a login lost or expired while running), the gate middleware (inserted right after token auth in both chains) serves only `ALLOWED_WHILE_CLOSED` (method-scoped: the login status `GET /api/kiro-prerequisite` and its two owner-only remedies `POST /api/kiro-prerequisite/repair-specs` and `/update-cli`, the session-cookie routes `GET /api/auth/me` and `POST /api/auth/refresh`, session revocation `POST /api/auth/logout` and `POST /api/logout`, `GET /api/token/local`, the `/api/health|live|ready` probes, `POST /api/shutdown`, and the shell's static files) and answers a SPA document navigation with the static shell. Every other request, an unknown route and any WebSocket upgrade included, is refused 403 `lts_gate_closed` with the `reason`. Closing the gate also closes every connection that carried a gated request while it was open (tracked per connection until it closes, since aiohttp sends a returned response such as a download after the middleware returns). While closed, `GET /api/kiro-prerequisite` and both remedy POSTs (the dashboard caches each as its status) report `lts_login_required: true` and `initial_setup_complete: false`, and `KiroPrerequisiteGate` skips every bypass that would render the app (`ready`, an established install, another usable harness), so its first-run screens run in order: a missing CLI or a sandbox refusal shows its own remedy, then the sign-in step; the other-agents picker, which writes config, is hidden. That applies until the app has first been shown: a relock of a dashboard already in use keeps the app mounted and on screen, its requests refused until sign-in, and adds `KiroPrerequisiteRelockNotice` beside it: a display-only card (`pointer-events-none`, nothing focusable, no handlers, so it cannot reach an open dialog or popover) in the local pane's overlay container, saying to run the gateway's `lts_sign_in_command` in a terminal: the status carries it while the gate is closed, and it is `kirocrew kas login --provider idc ...`, because the gate reads Crew's vault sign-in (a non-owner is told to ask the owner). A first-run (never shown) closed gate renders `LtsSignInRequired`, the same command with a copy button and Check again, and no kiro-cli install or sign-in step. The dashboard's own vault sign-in routes (`/api/kas-login/*`) stay outside `ALLOWED_WHILE_CLOSED`, so recovery is that CLI command; on-screen sign-in is the signed-out sign-in screen task. A gateway that sends no `lts_sign_in_command` keeps the older `kiro-cli login` notice. The status poll clears it once the gate reopens. A managed MCP server whose tool-policy read meets that 403 records `gateway_locked`, which is in `mcp_shared_policy._UNRESOLVED_REFUSES_CALL`, so its tools refuse the call rather than drop the operator's exclusions. The on-disk marker is untouched. `test/test_lts_gate.py` walks the dashboard and MCP route tables and pins which registered routes stay open. A governance fetch failure at boot exits (above); a failed refresh while running is meant to close the same gate under its own reason, and that is not wired yet. Tests: `test/test_lts_boot.py`.
+While closed (a login lost or expired while running), the gate middleware (inserted right after token auth in both chains) serves only `ALLOWED_WHILE_CLOSED` (method-scoped: the login status `GET /api/kiro-prerequisite` and its two owner-only remedies `POST /api/kiro-prerequisite/repair-specs` and `/update-cli`, the session-cookie routes `GET /api/auth/me` and `POST /api/auth/refresh`, session revocation `POST /api/auth/logout` and `POST /api/logout`, `GET /api/token/local`, the `/api/health|live|ready` probes, `POST /api/shutdown`, and the shell's static files) and answers a SPA document navigation with the static shell. Every other request, an unknown route and any WebSocket upgrade included, is refused 403 `lts_gate_closed` with the `reason`. Closing the gate also closes every connection that carried a gated request while it was open (tracked per connection until it closes, since aiohttp sends a returned response such as a download after the middleware returns). While closed, `GET /api/kiro-prerequisite` and both remedy POSTs (the dashboard caches each as its status) report `lts_login_required: true` and `initial_setup_complete: false`, and `KiroPrerequisiteGate` skips every bypass that would render the app (`ready`, an established install, another usable harness), so its first-run screens run in order: a missing CLI or a sandbox refusal shows its own remedy, then the sign-in step; the other-agents picker, which writes config, is hidden. That applies until the app has first been shown: a relock of a dashboard already in use keeps the app mounted and on screen, its requests refused until sign-in, and adds `KiroPrerequisiteRelockNotice` beside it: a display-only card (`pointer-events-none`, nothing focusable, no handlers, so it cannot reach an open dialog or popover) in the local pane's overlay container, saying to run the gateway's `lts_sign_in_command` in a terminal: the status carries it while the gate is closed, and it is `ajcrew kas login --provider idc ...`, because the gate reads Crew's vault sign-in (a non-owner is told to ask the owner). A first-run (never shown) closed gate renders `LtsSignInRequired`, the same command with a copy button and Check again, and no kiro-cli install or sign-in step. The dashboard's own vault sign-in routes (`/api/kas-login/*`) stay outside `ALLOWED_WHILE_CLOSED`, so recovery is that CLI command; on-screen sign-in is the signed-out sign-in screen task. A gateway that sends no `lts_sign_in_command` keeps the older `kiro-cli login` notice. The status poll clears it once the gate reopens. A managed MCP server whose tool-policy read meets that 403 records `gateway_locked`, which is in `mcp_shared_policy._UNRESOLVED_REFUSES_CALL`, so its tools refuse the call rather than drop the operator's exclusions. The on-disk marker is untouched. `test/test_lts_gate.py` walks the dashboard and MCP route tables and pins which registered routes stay open. A governance fetch failure at boot exits (above); a failed refresh while running is meant to close the same gate under its own reason, and that is not wired yet. Tests: `test/test_lts_boot.py`.
 
 #### Sign-in-only app (RFC D5)
 
-A `gateway` start whose `boot_platform` failed only because nobody is signed in does not exit at once (`cli._serve_sign_in_first`, `kiro_crew/lts_signin_gateway.py`). It applies only when the failure's recorded cause is `CAUSE_NO_SIGN_IN` and `signed_in()` (the resolver's `select`, where only "no sign-in" reads as signed out) still finds none. A lapsed, unreadable or profile-less sign-in, any other composition failure, `--test-mode` or `--json-ready`, a process inside a Crew agent sandbox, and a gateway the desktop app spawned (`KIROCREW_DESKTOP_GATEWAY`, set by `website/electron/gateway-supervisor.js`, whose window cannot mint a token from this app yet) all exit as before. The app is a separate aiohttp application bound to `127.0.0.1` only. It composes no platform and starts no agent, cron, channel or session. Its routes are an allow-list (`ALLOWED_ROUTES` and the `/assets/` and `/fonts/` prefixes): the SPA shell and its static files, `/api/theme/boot`, `/api/health` and `/api/live`, a synthetic `GET /api/kiro-prerequisite` carrying `lts_sign_in_only: true`, and Crew's own sign-in `GET /api/kas-login` and `POST /api/kas-login/{device,poll,cancel}`. The outermost middleware answers 404 to anything else, WebSocket upgrades included. The dashboard's deny-audit, Host, CSRF and token middlewares follow, and the sign-in handlers keep their owner check. `POST /api/kas-login/device` accepts only `provider: "idc"` (400 `organisation_sign_in_required` otherwise), since a personal account has no organisation profile; the browser-redirect flow and sign-out are not served. The gateway prints a `http://127.0.0.1:<port>?token=` link and opens it unless `--no-open`. A link is accepted only within `LINK_WINDOW_SECS` (5 minutes), so while nobody has signed in the app prints a fresh link 30 s before the last one stops working (it does not open the browser again). `KiroPrerequisiteGate` renders `KasLoginGate organisationOnly` (Company SSO alone, already open). Once `signed_in()` sees a sign-in, the synthetic status carries `lts_signed_in_restart: true` and the page shows "Signed in. Start Kiro Crew again."; the app waits up to 15 s for that read, stops and closes its socket. A sign-in the next start could not use (lapsed, no profile, unreadable; `lts_sign_in.resolve`) exits with its own cause instead; otherwise it prints the same line with the start command and exits 0. The sign-in link carries the `boot` claim, so its session dies with the process and no other session is revoked. The app holds the data home's `GatewayLock` while it serves. No gateway starts in that process, so no listening socket is handed from the sign-in app to a gateway: the next start loads the rules with the new sign-in on the normal path. Tests: `test/test_lts_signin_gateway.py` walks every dashboard and MCP route and asserts each one off the allow-list answers 403 or 404, with and without the owner token.
+A `gateway` start whose `boot_platform` failed only because nobody is signed in does not exit at once (`cli._serve_sign_in_first`, `aj_crew/lts_signin_gateway.py`). It applies only when the failure's recorded cause is `CAUSE_NO_SIGN_IN` and `signed_in()` (the resolver's `select`, where only "no sign-in" reads as signed out) still finds none. A lapsed, unreadable or profile-less sign-in, any other composition failure, `--test-mode` or `--json-ready`, a process inside a Crew agent sandbox, and a gateway the desktop app spawned (`AJCREW_DESKTOP_GATEWAY`, set by `website/electron/gateway-supervisor.js`, whose window cannot mint a token from this app yet) all exit as before. The app is a separate aiohttp application bound to `127.0.0.1` only. It composes no platform and starts no agent, cron, channel or session. Its routes are an allow-list (`ALLOWED_ROUTES` and the `/assets/` and `/fonts/` prefixes): the SPA shell and its static files, `/api/theme/boot`, `/api/health` and `/api/live`, a synthetic `GET /api/kiro-prerequisite` carrying `lts_sign_in_only: true`, and Crew's own sign-in `GET /api/kas-login` and `POST /api/kas-login/{device,poll,cancel}`. The outermost middleware answers 404 to anything else, WebSocket upgrades included. The dashboard's deny-audit, Host, CSRF and token middlewares follow, and the sign-in handlers keep their owner check. `POST /api/kas-login/device` accepts only `provider: "idc"` (400 `organisation_sign_in_required` otherwise), since a personal account has no organisation profile; the browser-redirect flow and sign-out are not served. The gateway prints a `http://127.0.0.1:<port>?token=` link and opens it unless `--no-open`. A link is accepted only within `LINK_WINDOW_SECS` (5 minutes), so while nobody has signed in the app prints a fresh link 30 s before the last one stops working (it does not open the browser again). `KiroPrerequisiteGate` renders `KasLoginGate organisationOnly` (Company SSO alone, already open). Once `signed_in()` sees a sign-in, the synthetic status carries `lts_signed_in_restart: true` and the page shows "Signed in. Start Aj Crew again."; the app waits up to 15 s for that read, stops and closes its socket. A sign-in the next start could not use (lapsed, no profile, unreadable; `lts_sign_in.resolve`) exits with its own cause instead; otherwise it prints the same line with the start command and exits 0. The sign-in link carries the `boot` claim, so its session dies with the process and no other session is revoked. The app holds the data home's `GatewayLock` while it serves. No gateway starts in that process, so no listening socket is handed from the sign-in app to a gateway: the next start loads the rules with the new sign-in on the normal path. Tests: `test/test_lts_signin_gateway.py` walks every dashboard and MCP route and asserts each one off the allow-list answers 403 or 404, with and without the owner token.
 
 #### LTS hardcoded Red controls (`edition_locks.py`)
 
@@ -738,7 +738,7 @@ Wired sites:
 - `cli.py:main` / `slack/gateway_runtime/process_entry.py:run_gateway` — `boot_platform(cfg)` once at
   startup (gateway raises fail-closed; cli is defensive — standalone never raises). A
   `PlatformCompositionError` in `cli.main` still stops every command except `doctor` and the
-  sign-in verbs, but as one `❌ <error>` line plus a `kirocrew doctor` hint and exit 1, not a
+  sign-in verbs, but as one `❌ <error>` line plus an `ajcrew doctor` hint and exit 1, not a
   traceback (an LTS build's policy refusal exits through `refuse_policy_boot` first).
 - `slack/gateway_runtime/service_boot.py` gateway boot — `AgentRuntime.run_first_run_setup()` through
   `safe_context_call`. Previously this imported `agent.run_first_run_setup`
@@ -787,7 +787,7 @@ Wired sites:
   the kiro-hooks egress (`dashboard/handlers/hooks_scripts.py`) scrubs command/matcher
   through the shared `redact_via_context` shim.
 - Credential redaction — all egress scrubs route through the single
-  `kiro_crew.platform.redact_via_context` shim (the one canonical
+  `aj_crew.platform.redact_via_context` shim (the one canonical
   fail-closed-aware shim; modules import it as `redact`). Covers: `agent_parts/spec_build.py`
   SEL-audit callers, `mcp_core_parts/` chat-history/crew output, `mcp_cron_vet.py`
   deny-reason + script-vet and `mcp_cron.py` timezone messages, and the file-content egress the
@@ -799,7 +799,7 @@ Wired sites:
   exfil-then-credential two-pass (the Default `CredentialPolicy.redact` delegates
   to `security.redact`); a loaded companion adds its internal-token regexes
   uniformly across every egress surface.
-- Code text (`kiro_crew.platform.context.redact_code_via_context`) — `redact_via_context` run
+- Code text (`aj_crew.platform.context.redact_code_via_context`) — `redact_via_context` run
   inside a `security.redaction_switch.code_text()` scope, where pass 3 of the core credential pass
   (the entropy-and-shape guess at a secret key) spares an ordered alphabet and a data URI payload of
   64 characters or more and judges every other run as it does anywhere, while every other pass, the
@@ -815,7 +815,7 @@ Wired sites:
   governance generation nor this thread's redact-degrade count moved while it ran, so an
   answer the bare baseline gave in the active context's place is never reused; a scan that
   raises caches nothing and still fails closed.
-- Gate-side LOG lines (`kiro_crew.platform.redact_log_via_context`) — the same
+- Gate-side LOG lines (`aj_crew.platform.redact_log_via_context`) — the same
   companion-aware redaction for an operational log or audit line, which unlike an
   egress sink cannot afford to raise. `redact_via_context` propagates
   `PlatformCompositionError` because refusing to SEND is both safe and the point;
@@ -928,7 +928,7 @@ Wired sites:
   heuristics, it can never be the reason a credential reaches a log — the
   credential pass (`redact_credentials`) is independent of it and unchanged by a
   missing context. **Deferred-import exception:** `security` reads the set
-  through a FUNCTION-LOCAL import of `kiro_crew.platform.context` (the `sel.py`
+  through a FUNCTION-LOCAL import of `aj_crew.platform.context` (the `sel.py`
   pattern), so the CPP import-direction invariant holds — `platform/defaults.py`
   imports `security` at module load, and `security` never reaches `platform` at
   module-load time (only at call time). v1 method addition to the existing
@@ -1006,7 +1006,7 @@ Wired sites:
   standalone is byte-identical. Phase-1 scope is dashboard + slack only
   (cli_chat/cron/subagent/task_executor sites are deliberately not wired).
 - Preflight checks (`IdentityProvider.preflight_checks()`) —
-  `kiro_crew.preflight.run_preflight_checks()` runs seam-supplied pre-launch
+  `aj_crew.preflight.run_preflight_checks()` runs seam-supplied pre-launch
   checks at exactly two sites: the `gateway` dispatch in `cli.py` (before
   faulthandler/lock/`asyncio.run`) and `_token` in `cli_server_requests.py` (before TTL
   parsing). The method returns **already-resolved callables** — checks are
@@ -1088,7 +1088,7 @@ Wired sites:
   `start_api_server` (the `--slack-only`/headless path) never calls
   `setup_tunnel`, so it needs no hook.
   Import direction: `tunnel/` imports
-  `kiro_crew.platform.context`; `platform/` keeps zero imports of `kiro_crew.tunnel`.
+  `aj_crew.platform.context`; `platform/` keeps zero imports of `aj_crew.tunnel`.
   **The relay client in the slot.** `build_default_context` fills the slot through
   `platform/bootstrap.py::_public_tunnel_provider`: the no-op
   `DefaultTunnelProvider` unless `edition_locks.py::relay_selected` says
@@ -1126,7 +1126,7 @@ Wired sites:
   Crew shows as disconnected, and a team Crew can move to another instance, as
   soon as it stops instead of when the lease lapses. With no lease service, the
   default source refuses, so the client reports why it cannot connect.
-  `relay_client/` imports nothing from `kiro_crew.tunnel`, which keeps the import
+  `relay_client/` imports nothing from `aj_crew.tunnel`, which keeps the import
   direction above.
 - `dashboard/server.py` (the gate in `dashboard/server_runtime/tunnel.py`) — tunnel enable-gate
   ORs in `current_context().tunnel.enabled()`. **Dashboard contributor:**
@@ -1195,7 +1195,7 @@ Wired sites:
   (`chat`/`run`/`consolidate`/`eval` — the rule is "every command that
   builds a provider factory / runs in-process agent work"; `gateway` is excluded
   so its execv self-update path is never nested in a jail). Order: (0) **re-entry
-  guard** — if the `KIROCREW_JAILED` marker is PRESENT (any non-empty value) we
+  guard** — if the `AJCREW_JAILED` marker is PRESENT (any non-empty value) we
   are already the jailed child, so return immediately (no re-probe / re-jail).
   The gate sets this marker right before invoking the backend so the re-exec'd
   child inherits it; a `try/finally` restores the prior value on the no-re-exec
@@ -1203,7 +1203,7 @@ Wired sites:
   a fresh environment MUST set the marker to any non-empty value (detection is by
   presence, not truthiness) or the on-mode child would re-probe, get an "already
   jailed" `None`, and deadlock on the fail-closed floor. (1) if `off` this
-  invocation (`--no-jail` OR `KIROCREW_NO_JAIL` truthy — `1`/`true`/`yes`/`on`
+  invocation (`--no-jail` OR `AJCREW_NO_JAIL` truthy — `1`/`true`/`yes`/`on`
   via the shared `env_flag_enabled`, so a `=0`/`=false` typo does NOT bypass
   isolation), or the re-normalized `agent.jail` mode is `off`, return and run
   in-process (no probe). (2) Probe `current_context().jail.available()`: a clean
@@ -1278,7 +1278,7 @@ is byte-identical) with no `CONTRACT_VERSION` bump.
   rows name DIFFERENT repositories, **neither** is served, because the index cache
   is keyed by name and the displaced row's cache would otherwise be read under the
   winner's identity. Merged at the
-  consumption sites, never inside `KiroCrewConfig`, so a config save can never
+  consumption sites, never inside `AjCrewConfig`, so a config save can never
   persist an edition default into the operator's file. Default `[]`.
   A row may carry `allowDefaultInstall: true`, which lets that registry's index
   mark apps `defaultInstall` for a one-time install and trust grant on first
@@ -1327,9 +1327,9 @@ is byte-identical) with no `CONTRACT_VERSION` bump.
   `safe_context_call`), de-duped by name so an on-disk agent of the same name
   wins. Within the on-disk scan a **project** agent shadows a user-level one of
   the same name (and the shadowing is logged), mirroring kiro-cli — which resolves
-  `--agent` against its cwd first, and which Kiro Crew spawns with the session's
+  `--agent` against its cwd first, and which Aj Crew spawns with the session's
   project directory as that cwd, so the project entry is the one that would
-  actually run. Kiro Crew's legacy `<project>/.kiro/*.agent-spec.json` convention is
+  actually run. Aj Crew's legacy `<project>/.kiro/*.agent-spec.json` convention is
   deliberately NOT scanned here (only the Slack handler opts into it): kiro-cli
   cannot activate such a name, and this list is a dispatch surface. Each row is a
   plain dict of `AgentInfo` fields (`name` required;
@@ -1582,7 +1582,7 @@ is byte-identical) with no `CONTRACT_VERSION` bump.
   edition-specific carve-out. ADD-only and de-duped by name (the built-in wins a
   collision, so an edition cannot silently replace an identity the policy
   admitted). Each returned object implements the
-  `kiro_crew.skill_providers.base.SkillProvider` protocol and SHOULD expose an
+  `aj_crew.skill_providers.base.SkillProvider` protocol and SHOULD expose an
   `api_base` naming its catalog endpoint (the identity an allowlist is written
   against; a provider without one is gated on an empty base). Provider-sourced
   result fields flow through the existing `_redact_external` scrub before
@@ -1609,7 +1609,7 @@ is byte-identical) with no `CONTRACT_VERSION` bump.
   fork. v1 addition; `Default` returns `[]`.
 - `FeedbackTrackerProvider.report_issue_url(bundle, note, *, prefill) -> Optional[str]`
   — WIRED: `diagnostics._tracker_issue_url`, once per bundle for the dashboard's
-  `BundleResult.github_issue_url` (`prefill=True`) and once per `kirocrew doctor`
+  `BundleResult.github_issue_url` (`prefill=True`) and once per `ajcrew doctor`
   print (`terminal_issue_url`, `prefill=False`). `None` (the Default) keeps the
   public pre-filled GitHub link byte-for-byte; a string REPLACES it. `prefill`
   names the surface: the dashboard renders the URL from a JSON field no redactor
@@ -1618,12 +1618,12 @@ is byte-identical) with no `CONTRACT_VERSION` bump.
   that variant's query short. Read through `safe_context_call` (fallback `None`):
   diagnostics catches `PlatformCompositionError`, logs a warning and returns an
   empty issue link while keeping the bundle usable, without a standalone fallback.
-  `kirocrew doctor --bundle` prints the bundle path and explains why the link is
+  `ajcrew doctor --bundle` prints the bundle path and explains why the link is
   skipped. Any other error, a non-string or an empty string degrades to the public
   link. The wire field keeps its `github_issue_url` name (a rename is a take-away
   change). v1
   addition; the second half of the frontend `setFeedbackTracker` seam.
-- `SpeechProviderRegistry.stt_providers()` / `tts_providers()` / `default_stt()` / `default_tts()` -- WIRED through `kiro_crew.speech_providers`: `config.sections_stt.valid_stt_providers()` (the `stt.provider` loader, `stt_provider_is_coerced`, `kirocrew config set stt.provider`) and `voice_reply.valid_providers()` / `default_provider()` (`resolve_configured_provider`) union the registered names with the built-ins, and an absent key takes the edition default. An unusable stored value keeps its built-in fallback (STT fails closed to `off`, TTS falls back to `system`), so an edition default is never reached through a typo. Read through `installed_context()` (declared in `PEEK_CALLERS`): the STT half runs inside `KiroCrewConfig.load()`, where `current_context()` would re-enter the load; the no-context answer is the built-in sets. Because the boot config is loaded before any context exists, `bootstrap_context` re-reads `stt` once after install when the registry adds an STT provider or default (a no-op for the Default). The schema's `stt.provider` enum still lists only the built-ins; validation holds a registered value aside across the enum check. `validate_speech_registry` refuses, at boot, a name that collides with a built-in, retired or `off` provider, a duplicate or blank name, or a default naming no provider. Dispatch: every site keeps its built-in branches first and asks the registry only for a name that is not a built-in (`speech_providers.stt_provider()` / `tts_provider()` answer `None` for every built-in). `transcribe.availability_detail` / `is_available` answer through the provider's `check()`, `transcribe_audio` calls `transcribe_file`, `voice_reply.is_available` calls `check()`, `voice_reply.synthesize_speech` and `/api/voice/synthesize` call `synthesize` (one format per stream, `audio/mpeg` or `audio/wav`, at most 64 MiB, joined into one replay clip), and `/api/ws/stt` grants `stt_stream.streaming_providers()`: the built-ins plus a registered provider whose `streaming` is exactly `True`, whose `open_stream()` session runs through the same loop as `apple`. A registered STT provider may also set an optional `identifies_languages`; when it is exactly `True`, `speech_providers.language_identifying_stt_names` adds it after the built-in `transcribe` to the `language_identification_providers` list `GET /api/config/stt` serves, so the Settings page offers it the Mixed languages picker, and the provider reads `SttConfig.transcribe_language_identification` itself. Core calls every provider method on the caller's own event loop and pins none. Provider rule: a provider must not keep a loop-bound client (an aiohttp or httpx session) across calls; it creates one per call or keeps one per loop, because the gateway, a channel and a blocking caller may each call it from a different loop. Blocking callers (`transcribe.is_available`, `voice_reply.is_available`, run off-loop by Slack, Discord, Telegram, meetings and voice replies) use `check_status_sync`, which runs the check on a fresh loop in a daemon thread and waits at most `CHECK_TIMEOUT_SECS` plus a one-second grace, so a provider that ignores cancellation holds only that thread. A `check()` is bounded by `CHECK_TIMEOUT_SECS` and fail-closed: a timeout, a raise or a malformed status reads as unavailable, and an `action` survives only as `{kind: "login", label}`. Capabilities: `GET /api/config/stt` and `GET /api/voice/config` each serve `providers`, one row per selectable provider (a built-in is `{name, builtin: true}` with no probe; a registered one is `{name, label, builtin, available, reason, action, error}`; `error` is true only when the check timed out or raised, never for an answered "not available"), built-ins first in the picker's order, then the registered ones (STT keeps `off` last). Saving: `KiroCrewConfig.save()` writes a stored, non-built-in `stt.provider` back as stored when the snapshot degraded it to `off` and the registry is still pending or registers the name (`_restore_stored_stt_provider`), so a config loaded before boot never persists `off` over an edition choice; standalone still saves an unknown name as `off`. v1 addition; `Default` registers nothing.
+- `SpeechProviderRegistry.stt_providers()` / `tts_providers()` / `default_stt()` / `default_tts()` -- WIRED through `aj_crew.speech_providers`: `config.sections_stt.valid_stt_providers()` (the `stt.provider` loader, `stt_provider_is_coerced`, `ajcrew config set stt.provider`) and `voice_reply.valid_providers()` / `default_provider()` (`resolve_configured_provider`) union the registered names with the built-ins, and an absent key takes the edition default. An unusable stored value keeps its built-in fallback (STT fails closed to `off`, TTS falls back to `system`), so an edition default is never reached through a typo. Read through `installed_context()` (declared in `PEEK_CALLERS`): the STT half runs inside `AjCrewConfig.load()`, where `current_context()` would re-enter the load; the no-context answer is the built-in sets. Because the boot config is loaded before any context exists, `bootstrap_context` re-reads `stt` once after install when the registry adds an STT provider or default (a no-op for the Default). The schema's `stt.provider` enum still lists only the built-ins; validation holds a registered value aside across the enum check. `validate_speech_registry` refuses, at boot, a name that collides with a built-in, retired or `off` provider, a duplicate or blank name, or a default naming no provider. Dispatch: every site keeps its built-in branches first and asks the registry only for a name that is not a built-in (`speech_providers.stt_provider()` / `tts_provider()` answer `None` for every built-in). `transcribe.availability_detail` / `is_available` answer through the provider's `check()`, `transcribe_audio` calls `transcribe_file`, `voice_reply.is_available` calls `check()`, `voice_reply.synthesize_speech` and `/api/voice/synthesize` call `synthesize` (one format per stream, `audio/mpeg` or `audio/wav`, at most 64 MiB, joined into one replay clip), and `/api/ws/stt` grants `stt_stream.streaming_providers()`: the built-ins plus a registered provider whose `streaming` is exactly `True`, whose `open_stream()` session runs through the same loop as `apple`. A registered STT provider may also set an optional `identifies_languages`; when it is exactly `True`, `speech_providers.language_identifying_stt_names` adds it after the built-in `transcribe` to the `language_identification_providers` list `GET /api/config/stt` serves, so the Settings page offers it the Mixed languages picker, and the provider reads `SttConfig.transcribe_language_identification` itself. Core calls every provider method on the caller's own event loop and pins none. Provider rule: a provider must not keep a loop-bound client (an aiohttp or httpx session) across calls; it creates one per call or keeps one per loop, because the gateway, a channel and a blocking caller may each call it from a different loop. Blocking callers (`transcribe.is_available`, `voice_reply.is_available`, run off-loop by Slack, Discord, Telegram, meetings and voice replies) use `check_status_sync`, which runs the check on a fresh loop in a daemon thread and waits at most `CHECK_TIMEOUT_SECS` plus a one-second grace, so a provider that ignores cancellation holds only that thread. A `check()` is bounded by `CHECK_TIMEOUT_SECS` and fail-closed: a timeout, a raise or a malformed status reads as unavailable, and an `action` survives only as `{kind: "login", label}`. Capabilities: `GET /api/config/stt` and `GET /api/voice/config` each serve `providers`, one row per selectable provider (a built-in is `{name, builtin: true}` with no probe; a registered one is `{name, label, builtin, available, reason, action, error}`; `error` is true only when the check timed out or raised, never for an answered "not available"), built-ins first in the picker's order, then the registered ones (STT keeps `off` last). Saving: `AjCrewConfig.save()` writes a stored, non-built-in `stt.provider` back as stored when the snapshot degraded it to `off` and the registry is still pending or registers the name (`_restore_stored_stt_provider`), so a config loaded before boot never persists `off` over an edition choice; standalone still saves an unknown name as `off`. v1 addition; `Default` registers nothing.
 - `speech` capability `providers` list -- the dashboard half of the slot. `GET /api/config/stt` and `GET /api/voice/config` each serve `providers`: one entry per selectable provider, built-ins first in today's order. A built-in entry is `{name, builtin: true}` and runs no probe; a registered entry is `{name, label, builtin, available, reason, action, error}`, where `available` / `reason` come from the provider's `check()`, `action` is `{"kind": "login", "label": <account>}` or null, and `error` is true only when `check_status` timed out or raised (false for a missing login or install). The Settings pickers (`SttSettings`, `VoicePanel`) render their options from it through `website/src/lib/speechProviders.ts`, and fall back to their hardcoded built-in options when an older gateway serves no list. An unavailable registered provider stays selectable and shows its `reason` under the picker (`SpeechProviderNotice`): an `error` row through `ErrorNotice`, any other as status text with its sign-in hint; built-ins keep their existing availability UI, so a standalone install shows no new text. Field contract: `stt-streaming.md` § "The capability `providers` list"; TTS precedence: `voice-streaming.md` § "Registered providers".
 
 - `BrowserCredentialProvider` — `name() -> Optional[str]`, `domains() -> Sequence[str]`,
@@ -1631,7 +1631,7 @@ is byte-identical) with no `CONTRACT_VERSION` bump.
   Optional[str]`, `status() -> Optional[Dict]`, `default_settings() -> Dict` — WIRED:
   `browser_harness.supervisor.HarnessSupervisor` applies it with CDP
   `Storage.setCookies` on the gateway's own relay connection: in `_start` before the
-  daemon (every launch and relaunch of Kiro's Chromium), and in
+  daemon (every launch and relaunch of Aj's Chromium), and in
   `refresh_credentials_if_source_changed()`, which the op route calls before every
   agent `navigate`/`tabs` and which re-pulls only when `fingerprint()` or the
   resolved `browser.credentials` settings changed. `BrowserCredentialTarget` is
@@ -1664,13 +1664,13 @@ own interface rather than accreting onto the nearest existing one.
 **Agent discovery.** `agent_discovery.py`, the facade of the `agent_discovery_parts/` owners,
 owns it, and `AgentInfo` is the record
 it yields. The `source` classification is generic — no product-specific hardcode:
-`"kirocrew"` for `kirocrew.json` / `kirocrew-lite.json`, `"package"` for a
+`"ajcrew"` for `ajcrew.json` / `ajcrew-lite.json`, `"package"` for a
 package-installed agent, `"builtin"` for the rest. It has many consumers —
 `agent`, `session`, `context`, `subagent`, `mcp_core`, `cron_script`,
 `slack/handler` and several dashboard modules among them — so treat any list here as
 representative rather than exhaustive.
 - **There is no browser-auth provider hook.** The agent's browser is the user's
-  own Chrome (or Kiro's Chromium) behind the gateway's CDP relay
+  own Chrome (or Aj's Chromium) behind the gateway's CDP relay
   ([browser module spec](browser.md)); a login happens when the person takes
   the live card over and signs in themselves, never through an in-process
   provider and never through the agent.
@@ -1700,8 +1700,8 @@ representative rather than exhaustive.
 - `config.knowledge.doc_ingest_hosts` (list) — SSRF-safe allowlist for the
   server-side fetch path only; empty = deny-by-default. The agent-driven
   `auto_add_documents` path is NOT gated
-  on it: the agent hands over text it already fetched, Kiro Crew fetches nothing.
-- `KiroCrewConfig._extra_sections` (private) — unknown top-level config.json
+  on it: the agent hands over text it already fetched, Aj Crew fetches nothing.
+- `AjCrewConfig._extra_sections` (private) — unknown top-level config.json
   sections captured at `load()`, re-emitted by `to_dict()`, so an edition
   section is not dropped on `save()`/PATCH. Excluded from the JSON schema
   (`build_json_schema` skips leading-underscore fields). Data-preservation half
@@ -1806,7 +1806,7 @@ Three arms make the inertness impossible to miss:
    of a `Default*` adapter still warns — it can change behavior.
 3. **An anti-rot gate.** `test/test_platform_cpp_seam_coverage.py` drives off
    `dataclasses.fields(PlatformContext)` and discovers real consumption sites by
-   `ast` analysis of `src/kiro_crew` (excluding `platform/` itself and
+   `ast` analysis of `src/aj_crew` (excluding `platform/` itself and
    `_vendor/`). It asserts, in both directions:
    - every field is EITHER consumed by non-`platform` core code OR listed in
      `RESERVED_SLOTS` — so a **new** field with no call site fails the build

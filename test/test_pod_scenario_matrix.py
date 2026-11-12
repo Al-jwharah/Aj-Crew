@@ -43,8 +43,8 @@ EXPENSIVE_MARKERS = ("actions/setup-node@", "npm run build", "build==", "test/e2
 #: pods. ``None`` means the backend lives in ``runtime`` itself (systemd).
 BACKEND_FOR_RUNNER = {
     "ubuntu-latest": None,
-    "macos-15": "kiro_crew.pod.launchd",
-    "windows-latest": "kiro_crew.pod.windows",
+    "macos-15": "aj_crew.pod.launchd",
+    "windows-latest": "aj_crew.pod.windows",
 }
 
 #: Platforms whose backend EXISTS but which are deliberately not in the matrix yet.
@@ -179,8 +179,8 @@ def test_every_expensive_step_shares_the_one_opt_in_condition() -> None:
 def test_the_gated_full_suite_is_required_and_count_pinned() -> None:
     """When the label enables the suite, it must RUN all 55, not skip.
 
-    Same locks as the nightly leg: KIROCREW_E2E_SCENARIOS opens the suite,
-    KIROCREW_E2E_REQUIRE turns a precondition skip into a failure, and the
+    Same locks as the nightly leg: AJCREW_E2E_SCENARIOS opens the suite,
+    AJCREW_E2E_REQUIRE turns a precondition skip into a failure, and the
     anchored count grep refuses a collapsed collection. The 3-test canary still
     runs on the labelled path, unconditionally.
     """
@@ -189,8 +189,8 @@ def test_the_gated_full_suite_is_required_and_count_pinned() -> None:
     assert len(suite) == 1, f"expected one scenario step, found {len(suite)}"
     step = suite[0]
     assert str(step.get("if", "")) == OPT_IN_IF
-    assert step.get("env", {}).get("KIROCREW_E2E_SCENARIOS") == "1"
-    assert step.get("env", {}).get("KIROCREW_E2E_REQUIRE") == "1"
+    assert step.get("env", {}).get("AJCREW_E2E_SCENARIOS") == "1"
+    assert step.get("env", {}).get("AJCREW_E2E_REQUIRE") == "1"
     assert f"{NIGHTLY_SCENARIO_COUNT} passed" in str(step["run"])
     assert "PIPESTATUS[0]" in str(step["run"]), "pytest's own exit code must survive the tee"
 

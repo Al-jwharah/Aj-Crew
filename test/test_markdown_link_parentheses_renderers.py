@@ -21,16 +21,16 @@ from markdown_link_parentheses_helpers import (
     _slack_reader_sees,
 )
 
+from aj_crew.constants import md_link_destination
+from aj_crew.imessage.plaintext import to_plaintext
+from aj_crew.messaging import display_safety
+from aj_crew.messaging.display_safety import canonicalize_display, redact_for_display
+from aj_crew.messaging.outbound_files import _walk_destination
+from aj_crew.messaging.renderer import _default_redactor
+from aj_crew.slack import format as slack_format
+from aj_crew.telegram.renderer import _md_to_telegram_html, _strip_md
+from aj_crew.whatsapp.renderer import to_whatsapp_text
 from conftest import assert_rejected_without_backtracking
-from kiro_crew.constants import md_link_destination
-from kiro_crew.imessage.plaintext import to_plaintext
-from kiro_crew.messaging import display_safety
-from kiro_crew.messaging.display_safety import canonicalize_display, redact_for_display
-from kiro_crew.messaging.outbound_files import _walk_destination
-from kiro_crew.messaging.renderer import _default_redactor
-from kiro_crew.slack import format as slack_format
-from kiro_crew.telegram.renderer import _md_to_telegram_html, _strip_md
-from kiro_crew.whatsapp.renderer import to_whatsapp_text
 
 MSDN = "https://learn.microsoft.com/en-us/previous-versions/windows/desktop/ms123401(v=vs.85)"
 

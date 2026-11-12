@@ -25,8 +25,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.testing.wait import async_wait_until, finished, wait_until
+from aj_crew import platform_compat
+from aj_crew.testing.wait import async_wait_until, finished, wait_until
 
 pytestmark = pytest.mark.skipif(
     not platform_compat.IS_POSIX, reason="POSIX process groups and a POSIX shell"
@@ -89,7 +89,7 @@ _IGNORES_TERM = "trap '' TERM; echo ready > \"$1/phase\"; sleep 30 & wait $!; sl
 def _case(tmp_path: Path) -> Path:
     case = tmp_path / "case"
     (case / "venv" / "bin").mkdir(parents=True)
-    (case / "venv" / "bin" / "kirocrew").write_text("#!/bin/sh\n", encoding="utf-8")
+    (case / "venv" / "bin" / "ajcrew").write_text("#!/bin/sh\n", encoding="utf-8")
     (tmp_path / "installer.sh").write_text(_FAKE_INSTALLER, encoding="utf-8")
     return case
 
@@ -109,7 +109,7 @@ async def _wait_for_file(path: Path, timeout: float = 10.0) -> None:
 
 def _assert_restored(case: Path) -> None:
     assert (case / "outcome").read_text(encoding="utf-8").strip() == "restored"
-    assert (case / "venv" / "bin" / "kirocrew").is_file()
+    assert (case / "venv" / "bin" / "ajcrew").is_file()
     assert not (case / "venv.pre-rebuild").exists()
 
 
@@ -206,7 +206,7 @@ class TestTerminateAndReapSync:
 class TestCommandProviderRollsBack:
     @pytest.mark.asyncio
     async def test_cancel_arm_lets_the_apply_command_restore(self, tmp_path, reap_groups):
-        from kiro_crew.platform.update_provider import CommandProvider
+        from aj_crew.platform.update_provider import CommandProvider
 
         case = _case(tmp_path)
         provider = CommandProvider(
@@ -221,13 +221,13 @@ class TestCommandProviderRollsBack:
         _assert_restored(case)
 
     @pytest.mark.asyncio
-    async def test_kirocrew_update_route_lets_the_apply_command_restore(
+    async def test_ajcrew_update_route_lets_the_apply_command_restore(
         self, monkeypatch, tmp_path, reap_groups
     ):
-        # ``kirocrew update`` runs ``asyncio.run(apply_policy_update())``; a
+        # ``ajcrew update`` runs ``asyncio.run(apply_policy_update())``; a
         # Ctrl-C there cancels that task, which reaches the same cancel arm.
-        from kiro_crew.platform import update_provider
-        from kiro_crew.platform.update_provider import CommandProvider, apply_policy_update
+        from aj_crew.platform import update_provider
+        from aj_crew.platform.update_provider import CommandProvider, apply_policy_update
 
         case = _case(tmp_path)
         provider = CommandProvider(
@@ -248,7 +248,7 @@ class TestCommandProviderRollsBack:
     ):
         from asyncio import base_subprocess
 
-        from kiro_crew.platform.update_provider import CommandProvider
+        from aj_crew.platform.update_provider import CommandProvider
 
         case = _case(tmp_path)
         released = asyncio.Event()
@@ -281,8 +281,8 @@ class TestCommandProviderRollsBack:
     ):
         from asyncio import base_subprocess
 
-        from kiro_crew.platform import update_provider
-        from kiro_crew.platform.update_provider import CommandProvider
+        from aj_crew.platform import update_provider
+        from aj_crew.platform.update_provider import CommandProvider
 
         case = _case(tmp_path)
         released = asyncio.Event()
@@ -319,7 +319,7 @@ class TestCommandProviderRollsBack:
     async def test_a_start_that_uses_up_the_grace_logs_the_ungraceful_stop(
         self, monkeypatch, caplog
     ):
-        from kiro_crew.platform import update_provider
+        from aj_crew.platform import update_provider
 
         stop = AsyncMock()
         monkeypatch.setattr(update_provider, "_stop_installer", stop)
@@ -466,7 +466,7 @@ class TestTerminateAndReap:
 
 
 def test_the_shutdown_stop_fits_inside_the_graceful_shutdown_cap():
-    from kiro_crew.gateway_shutdown_budget import GRACEFUL_SHUTDOWN_SECS, UPDATE_INSTALLER_STOP_SECS
+    from aj_crew.gateway_shutdown_budget import GRACEFUL_SHUTDOWN_SECS, UPDATE_INSTALLER_STOP_SECS
 
     # Shutdown waits for the installer before its teardown; the rest of the cap
     # must remain for that teardown.

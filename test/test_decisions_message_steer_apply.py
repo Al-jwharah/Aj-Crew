@@ -17,7 +17,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.decisions.points import message_steer as ms
+from aj_crew.decisions.points import message_steer as ms
 
 #: What the point returns for each arm, and the row the handler stamps from it.
 _QUEUE = {"turn_id": "t-queue", "choice": ms.CHOICE_QUEUE, "p": 0.83, "latency_ms": 190}
@@ -40,7 +40,7 @@ def _record(decided):
 def _patch_sel():
     """Patch sel() so the handler does not touch a real SecurityEventLog."""
     mock_sel = MagicMock()
-    with patch("kiro_crew.dashboard.chat_handlers.sel", return_value=mock_sel):
+    with patch("aj_crew.dashboard.chat_handlers.sel", return_value=mock_sel):
         yield mock_sel
 
 
@@ -107,7 +107,7 @@ class TestTheAnswerPicksThePath:
     async def test_queue_sends_the_message_to_the_queue(
         self, tmp_path, monkeypatch, _patch_sel, decision
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -134,7 +134,7 @@ class TestTheAnswerPicksThePath:
     async def test_steer_injects_into_the_running_turn(
         self, tmp_path, monkeypatch, _patch_sel, decision
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -155,7 +155,7 @@ class TestTheAnswerPicksThePath:
         self, tmp_path, monkeypatch, _patch_sel, decision
     ):
         """The seam off, unsampled, timed out: the composer's own default, silently."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -176,7 +176,7 @@ class TestTheAnswerPicksThePath:
         self, tmp_path, monkeypatch, _patch_sel
     ):
         """``record_outcome`` returning ``None`` is a decision with no durable row."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
         async def _steer_or_queue(text, **kwargs):
             return _STEER
@@ -207,7 +207,7 @@ class TestTheAnswerPicksThePath:
         ``steerState``. Withholding it here would lose the only record that a
         decision was made at all.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -229,7 +229,7 @@ class TestTheManualModesAreUnchanged:
     async def test_a_manual_steer_is_never_decided(
         self, tmp_path, monkeypatch, _patch_sel, never_asked
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -248,7 +248,7 @@ class TestTheManualModesAreUnchanged:
     async def test_a_manual_queue_is_never_decided(
         self, tmp_path, monkeypatch, _patch_sel, never_asked
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -262,7 +262,7 @@ class TestTheManualModesAreUnchanged:
         assert "decisions_strip" not in (slot._queue[-1].get("meta") or {})
 
     def test_only_the_exact_auto_string_asks(self):
-        from kiro_crew.dashboard.chat_handlers import steer_is_auto
+        from aj_crew.dashboard.chat_handlers import steer_is_auto
 
         assert steer_is_auto("auto")
         assert steer_is_auto(" Auto ")
@@ -281,7 +281,7 @@ class TestTheReceiptIsTheGatewaysOwnClaim:
         """`meta` rides onto the persisted row, and the row's receipt carries a
         verdict control whose POST names the turn id in it -- so a caller-supplied
         one would render a decision nobody made and invite feedback about it."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = state.get_or_create_slot("test")
@@ -310,7 +310,7 @@ class TestTheReceiptIsTheGatewaysOwnClaim:
     ):
         """The busy branch's queue entry is the second door onto the same row: the
         drain unions entry meta onto what it appends."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -330,7 +330,7 @@ class TestTheReceiptIsTheGatewaysOwnClaim:
         assert "decisions_strip" not in (slot._queue[-1].get("meta") or {})
 
     def test_the_reserved_key_is_named_once(self):
-        from kiro_crew.dashboard.chat_handlers import RESERVED_ROW_META_KEYS
+        from aj_crew.dashboard.chat_handlers import RESERVED_ROW_META_KEYS
 
         assert "decisions_strip" in RESERVED_ROW_META_KEYS
 
@@ -345,7 +345,7 @@ class TestTheDecisionIsFencedToItsOwnTurn:
         about this send -- "interrupt what it is doing" names finished work, and a
         successor turn is a different subject -- so the send takes the branch's own
         default and carries no receipt."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -377,7 +377,7 @@ class TestTheDecisionIsFencedToItsOwnTurn:
         self, tmp_path, monkeypatch, _patch_sel, decision
     ):
         """The fence must not cost the ordinary case its decision."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -400,7 +400,7 @@ class TestOnlyTheOwnersOwnSendIsDecided:
     ):
         """An app has nobody watching the reply, and its text already fails closed
         into the queue -- so there is no question for the oracle to answer."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         slot = _running_slot(state)
@@ -428,7 +428,7 @@ class TestOnlyTheOwnersOwnSendIsDecided:
         self, tmp_path, monkeypatch, _patch_sel, never_asked
     ):
         """No running turn, nothing to steer INTO: the question does not apply."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.broadcast_ws = MagicMock()
         state.get_or_create_slot("test")

@@ -16,16 +16,16 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.chat_handlers import api_chat_slot_approve
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew.dashboard.chat_handlers import api_chat_slot_approve
+from aj_crew.dashboard.chat_runner import (
     _redact_fields_for_display,
     mark_elicitation_row_resolved,
 )
-from kiro_crew.dashboard.chat_turn.elicitation_prompt import read_elicitation_answer
-from kiro_crew.dashboard.chat_utils_slots import effective_session_key
-from kiro_crew.dashboard.handlers.chat_elicitation import api_chat_slot_elicitation
-from kiro_crew.dashboard.state import SlotOrigin, row_mid
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard.chat_turn.elicitation_prompt import read_elicitation_answer
+from aj_crew.dashboard.chat_utils_slots import effective_session_key
+from aj_crew.dashboard.handlers.chat_elicitation import api_chat_slot_elicitation
+from aj_crew.dashboard.state import SlotOrigin, row_mid
+from aj_crew.testing.wait import async_wait_until, await_until
 
 _FIELDS = [
     {"name": "confirm", "kind": "boolean", "required": True, "title": "Confirm"},
@@ -41,12 +41,12 @@ _FIELDS = [
 
 @pytest.fixture(autouse=True)
 def _hermetic_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     st = _make_state(tmp_path)
     st.broadcast_ws = MagicMock()
     st.push_slots_update = MagicMock()
@@ -383,16 +383,16 @@ async def test_the_app_approvals_route_cannot_settle_an_elicitation(state, actio
     PERSON, so the id reads as not found and the future stays pending."""
     from unittest.mock import AsyncMock, patch
 
-    from kiro_crew.dashboard.handlers.sessions import api_approval_resolve
+    from aj_crew.dashboard.handlers.sessions import api_approval_resolve
 
     _slot, fut, _row = _slot_with_pending(state, "rid-30", mode="url")
     app = web.Application(middlewares=[_app_caller])
     app["state"] = state
     app.router.add_post("/api/approvals/{id}/{action}", api_approval_resolve)
     with (
-        patch("kiro_crew.apps.permissions.app_can_manage_session_approvals", return_value=True),
+        patch("aj_crew.apps.permissions.app_can_manage_session_approvals", return_value=True),
         patch(
-            "kiro_crew.dashboard.chat_handlers._app_may_send_to_slot",
+            "aj_crew.dashboard.chat_handlers._app_may_send_to_slot",
             new=AsyncMock(return_value=True),
         ),
     ):
@@ -419,7 +419,7 @@ async def test_the_servers_opaque_url_token_never_reaches_the_dashboard_row(stat
     from types import SimpleNamespace
     from unittest.mock import AsyncMock
 
-    from kiro_crew.dashboard.chat_turn.elicitation_prompt import _on_elicitation_request
+    from aj_crew.dashboard.chat_turn.elicitation_prompt import _on_elicitation_request
 
     state.approval_timeout_for = lambda slot: 0.0
     slot = state.get_or_create_slot("selected", origin=SlotOrigin.USER)
@@ -497,8 +497,8 @@ def test_pending_elicitation_rows_survive_a_slot_detail_read() -> None:
     """A pending ask is actionable and the client reads it out of the transcript,
     so the bounded reader must hand it back like a pending permission; an
     answered one is history and drops out of the owed tail the same way."""
-    from kiro_crew.dashboard.chat_api.slot_detail import _is_answered_permission
-    from kiro_crew.dashboard.chat_handlers import _UNOWED_WINDOW_ROLES
+    from aj_crew.dashboard.chat_api.slot_detail import _is_answered_permission
+    from aj_crew.dashboard.chat_handlers import _UNOWED_WINDOW_ROLES
 
     assert "elicitation" not in _UNOWED_WINDOW_ROLES
     assert "permission" not in _UNOWED_WINDOW_ROLES
@@ -511,7 +511,7 @@ def test_pending_elicitation_rows_survive_a_slot_detail_read() -> None:
 def test_an_elicitation_row_keeps_its_mid_over_http() -> None:
     """The resolution frame names the row's ``mid``; a reload that dropped it
     would leave the client matching by a reusable request id again."""
-    from kiro_crew.dashboard.chat_utils_display import _prepare_messages
+    from aj_crew.dashboard.chat_utils_display import _prepare_messages
 
     rows = [
         {
@@ -540,7 +540,7 @@ def test_the_row_in_hand_is_stamped_not_the_oldest_with_the_id() -> None:
 
 @pytest.fixture
 def _isolate_safety_override():
-    from kiro_crew.safety_override import reset_singleton
+    from aj_crew.safety_override import reset_singleton
 
     reset_singleton()
     yield
@@ -556,7 +556,7 @@ async def test_switching_to_a_trust_tier_leaves_a_pending_ask_open(
     elicitation in the same registry is a server's own question to the person, so
     the sweep steps over it: the sibling permission resolves, the ask stays open
     for the elicitation route, and its row is not marked resolved."""
-    from kiro_crew.dashboard.chat_api.slot_approval import apply_approval_mode
+    from aj_crew.dashboard.chat_api.slot_approval import apply_approval_mode
 
     slot, ask, row = _slot_with_pending(state, "rid-ask")
     perm = asyncio.get_running_loop().create_future()
@@ -608,7 +608,7 @@ async def test_an_all_slots_grant_does_not_load_an_idle_restored_rows_window(
     restored sidebar row with no pending card has nothing to sweep, so the sweep
     never reads its rows: its window stays pending instead of loading on the event
     loop, while the sibling slot's pending permission still resolves."""
-    from kiro_crew.dashboard.chat_api.slot_approval import apply_approval_mode
+    from aj_crew.dashboard.chat_api.slot_approval import apply_approval_mode
 
     busy = state.get_or_create_slot("busy", origin=SlotOrigin.USER)
     perm = asyncio.get_running_loop().create_future()
@@ -670,7 +670,7 @@ def audited(monkeypatch):
     records: list[dict] = []
     fake = MagicMock()
     fake.log_tool_invocation.side_effect = lambda **kw: records.append(kw)
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.sel", lambda: fake)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.sel", lambda: fake)
     return records
 
 
@@ -680,7 +680,7 @@ async def test_an_accepted_answer_rides_the_resolution_frame_and_audits_as_resol
     and the SEL record says a person decided."""
     from unittest.mock import AsyncMock
 
-    from kiro_crew.dashboard.chat_turn.elicitation_prompt import _on_elicitation_request
+    from aj_crew.dashboard.chat_turn.elicitation_prompt import _on_elicitation_request
 
     slot = state.get_or_create_slot("selected", origin=SlotOrigin.USER)
     sent = AsyncMock()
@@ -716,7 +716,7 @@ async def test_an_expired_window_audits_as_window_expired_not_resolved(state, au
     approval window, set here to a millisecond nobody answers in."""
     from unittest.mock import AsyncMock
 
-    from kiro_crew.dashboard.chat_turn.elicitation_prompt import _on_elicitation_request
+    from aj_crew.dashboard.chat_turn.elicitation_prompt import _on_elicitation_request
 
     state.approval_timeout_for = lambda slot: 0.001
     slot = state.get_or_create_slot("selected", origin=SlotOrigin.USER)
@@ -742,7 +742,7 @@ async def test_a_stop_rejection_clears_the_stopped_mark_and_audits_as_stopped(st
     permission answer as the host's."""
     from unittest.mock import AsyncMock
 
-    from kiro_crew.dashboard.chat_turn.elicitation_prompt import _on_elicitation_request
+    from aj_crew.dashboard.chat_turn.elicitation_prompt import _on_elicitation_request
 
     slot = state.get_or_create_slot("selected", origin=SlotOrigin.USER)
     sent = AsyncMock()
@@ -768,12 +768,12 @@ async def test_a_failed_audit_or_fallback_write_still_settles_the_card(state, mo
     its buttons and hold its request id against a later permission."""
     from unittest.mock import AsyncMock
 
-    from kiro_crew.acp.elicitation import ElicitationContentError
-    from kiro_crew.dashboard.chat_turn.elicitation_prompt import _on_elicitation_request
+    from aj_crew.acp.elicitation import ElicitationContentError
+    from aj_crew.dashboard.chat_turn.elicitation_prompt import _on_elicitation_request
 
     broken = MagicMock()
     broken.log_tool_invocation.side_effect = RuntimeError("sel down")
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner.sel", lambda: broken)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner.sel", lambda: broken)
     slot = state.get_or_create_slot("selected", origin=SlotOrigin.USER)
     # The answer does not fit the form, and the decline that replaces it fails too.
     sent = AsyncMock(side_effect=[ElicitationContentError("bad"), RuntimeError("pipe gone")])
@@ -800,9 +800,9 @@ async def _ask_user_input_through_the_card(state, settle, *, option: str = "SQLi
     import time
     from unittest.mock import AsyncMock
 
-    from kiro_crew.acp.session_handle import AcpSessionHandle
-    from kiro_crew.acp.types import METHOD_KAS_USER_INPUT, JsonRpcMessage
-    from kiro_crew.dashboard.chat_turn.elicitation_prompt import _on_elicitation_request
+    from aj_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.types import METHOD_KAS_USER_INPUT, JsonRpcMessage
+    from aj_crew.dashboard.chat_turn.elicitation_prompt import _on_elicitation_request
 
     runtime = MagicMock()
     runtime.send_response = AsyncMock()

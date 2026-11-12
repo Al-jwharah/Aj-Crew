@@ -7,12 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.auth import bridge
-from kiro_crew.auth.login import external_idp
-from kiro_crew.auth.login.external_idp import ExternalIdpAuthError, ExternalIdpMetadata
-from kiro_crew.auth.provider import KasAuthProvider
-from kiro_crew.auth.shape import InstallShape, Transport, detect_shape, select_transport
-from kiro_crew.auth.store import KasToken, TokenStore
+from aj_crew.auth import bridge
+from aj_crew.auth.login import external_idp
+from aj_crew.auth.login.external_idp import ExternalIdpAuthError, ExternalIdpMetadata
+from aj_crew.auth.provider import KasAuthProvider
+from aj_crew.auth.shape import InstallShape, Transport, detect_shape, select_transport
+from aj_crew.auth.store import KasToken, TokenStore
 
 
 def _clear_env(monkeypatch):

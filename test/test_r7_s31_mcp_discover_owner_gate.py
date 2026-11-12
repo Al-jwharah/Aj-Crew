@@ -23,8 +23,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import mcp_discover
-from kiro_crew.mcp_providers.base import (
+from aj_crew.dashboard.handlers import mcp_discover
+from aj_crew.mcp_providers.base import (
     McpInstallPlan,
     McpServerDetail,
     ProviderRegistry,
@@ -87,10 +87,10 @@ def writes(monkeypatch: pytest.MonkeyPatch) -> list[tuple]:
         recorded.append((name, enabled, spec))
         return "added"
 
-    monkeypatch.setattr(mcp_discover, "_set_kirocrew_entry", _record)
+    monkeypatch.setattr(mcp_discover, "_set_ajcrew_entry", _record)
     monkeypatch.setattr(mcp_discover, "_find_server_spec_anywhere", lambda _name: None)
 
-    import kiro_crew.agent as agent_module
+    import aj_crew.agent as agent_module
 
     monkeypatch.setattr(agent_module, "rebuild_agent_config", lambda *a, **k: None)
 

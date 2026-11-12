@@ -20,8 +20,8 @@ from slack_gateway_helpers import (
     _mock_sessions,
 )
 
-from kiro_crew.slack import gateway as gw
-from kiro_crew.slack.gateway import (
+from aj_crew.slack import gateway as gw
+from aj_crew.slack.gateway import (
     _CRON_MSG_LIMIT,
     _EPOCH_RE,
     _EPOCH_WINDOW_SECS,
@@ -47,7 +47,7 @@ class TestInitCron:
         orch.ctx_builder = _mock_context_builder()
         orch.subagent_mgr = MagicMock()
         orch.subagent_mgr.running = []
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -64,7 +64,7 @@ class TestInitCron:
         orch.ctx_builder = _mock_context_builder()
         orch.subagent_mgr = MagicMock()
         orch.subagent_mgr.running = []
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -78,9 +78,9 @@ class TestInitCron:
     @pytest.mark.asyncio
     async def test_cron_callback_single_agent(self, tmp_path, monkeypatch):
         """Cron callback admits policy before the first model allocation."""
-        from kiro_crew.subagent_persistence import read_session_memory_mode
+        from aj_crew.subagent_persistence import read_session_memory_mode
 
-        monkeypatch.setattr("kiro_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path / "subagents")
+        monkeypatch.setattr("aj_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path / "subagents")
         orch = _make_orchestrator(slack_enabled=True, owner_id="U1")
         orch.sessions = _mock_sessions()
         acquire = orch.sessions.get_or_create
@@ -103,7 +103,7 @@ class TestInitCron:
         orch.slack.post_blocks = AsyncMock(return_value="ts1")
         orch.slack.post_message = AsyncMock()
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -142,12 +142,12 @@ class TestInitCron:
         job.consecutive_failures = 0
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             return_value="cron result",
         ):
             with patch(
-                "kiro_crew.slack.gateway.build_cron_session_context",
+                "aj_crew.slack.gateway.build_cron_session_context",
                 return_value=("cron:j1", "run task"),
             ):
                 result = await callback(job)
@@ -179,7 +179,7 @@ class TestInitCron:
         orch.slack.post_blocks = AsyncMock(return_value="ts1")
         orch.slack.post_message = AsyncMock()
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -217,12 +217,12 @@ class TestInitCron:
         job.memory_store = ""
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             return_value="cron result",
         ):
             with patch(
-                "kiro_crew.slack.gateway.build_cron_session_context",
+                "aj_crew.slack.gateway.build_cron_session_context",
                 return_value=("cron:j1", "run task"),
             ):
                 await callback(job)
@@ -235,7 +235,7 @@ class TestInitCron:
     async def test_cron_callback_publishes_turn_identity(self):
         """The cron turn must publish session_pid_<pid>.txt.
 
-        Under session sharing (no KIROCREW_SESSION_KEY, and no KIROCREW_HOST_PID on
+        Under session sharing (no AJCREW_SESSION_KEY, and no AJCREW_HOST_PID on
         macOS) that file is spawn_run's ONLY parent-identity source."""
         orch = _make_orchestrator(slack_enabled=True, owner_id="U1")
         orch.sessions = _mock_sessions()
@@ -250,7 +250,7 @@ class TestInitCron:
         orch.slack.post_blocks = AsyncMock(return_value="ts1")
         orch.slack.post_message = AsyncMock()
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -298,10 +298,10 @@ class TestInitCron:
             publish_events.append("stream")
             return "cron result"
 
-        with patch("kiro_crew.slack.gateway.publish_turn_identity", side_effect=_publish):
-            with patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=_stream):
+        with patch("aj_crew.slack.gateway.publish_turn_identity", side_effect=_publish):
+            with patch("aj_crew.slack.gateway.stream_and_collect", side_effect=_stream):
                 with patch(
-                    "kiro_crew.slack.gateway.build_cron_session_context",
+                    "aj_crew.slack.gateway.build_cron_session_context",
                     return_value=("cron:j1", "run task"),
                 ):
                     await callback(job)
@@ -326,7 +326,7 @@ class TestInitCron:
         orch.slack.post_blocks = AsyncMock(return_value="ts1")
         orch.slack.post_message = AsyncMock()
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -364,14 +364,14 @@ class TestInitCron:
         job.consecutive_failures = 0
 
         publish = AsyncMock()
-        with patch("kiro_crew.slack.gateway.publish_turn_identity", publish):
+        with patch("aj_crew.slack.gateway.publish_turn_identity", publish):
             with patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="cron result",
             ):
                 with patch(
-                    "kiro_crew.slack.gateway.build_cron_session_context",
+                    "aj_crew.slack.gateway.build_cron_session_context",
                     return_value=("cron:j1", "run task"),
                 ):
                     await callback(job)
@@ -415,7 +415,7 @@ class TestInitCron:
             )
         )
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -452,14 +452,14 @@ class TestInitCron:
         job.last_failure_at = 0.0
         job.consecutive_failures = 0
 
-        with patch("kiro_crew.slack.gateway.publish_turn_identity", new_callable=AsyncMock):
+        with patch("aj_crew.slack.gateway.publish_turn_identity", new_callable=AsyncMock):
             with patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="cron result",
             ):
                 with patch(
-                    "kiro_crew.slack.gateway.build_cron_session_context",
+                    "aj_crew.slack.gateway.build_cron_session_context",
                     return_value=("cron:j1", "run task"),
                 ):
                     await callback(job)
@@ -501,7 +501,7 @@ class TestInitCron:
             side_effect=lambda key: key == "cron:j1:planner"
         )
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -538,14 +538,14 @@ class TestInitCron:
         job.last_failure_at = 0.0
         job.consecutive_failures = 0
 
-        with patch("kiro_crew.slack.gateway.publish_turn_identity", new_callable=AsyncMock):
+        with patch("aj_crew.slack.gateway.publish_turn_identity", new_callable=AsyncMock):
             with patch(
-                "kiro_crew.slack.gateway.stream_and_collect",
+                "aj_crew.slack.gateway.stream_and_collect",
                 new_callable=AsyncMock,
                 return_value="cron result",
             ):
                 with patch(
-                    "kiro_crew.slack.gateway.build_cron_session_context",
+                    "aj_crew.slack.gateway.build_cron_session_context",
                     return_value=("cron:j1", "run task"),
                 ):
                     await callback(job)
@@ -575,7 +575,7 @@ class TestInitCron:
         orch.slack.post_blocks = AsyncMock(return_value="ts1")
         orch.slack.post_message = AsyncMock()
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -613,12 +613,12 @@ class TestInitCron:
         job.consecutive_failures = 0
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             return_value="cron result",
         ):
             with patch(
-                "kiro_crew.slack.gateway.build_cron_session_context",
+                "aj_crew.slack.gateway.build_cron_session_context",
                 return_value=("cron:j1", "run task"),
             ):
                 await callback(job)
@@ -644,7 +644,7 @@ class TestInitCron:
         orch.slack.post_blocks = AsyncMock(return_value="ts1")
         orch.slack.post_message = AsyncMock()
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -684,15 +684,15 @@ class TestInitCron:
         job.consecutive_failures = 0
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             return_value="stable output",
         ):
             with patch(
-                "kiro_crew.slack.gateway.build_cron_session_context",
+                "aj_crew.slack.gateway.build_cron_session_context",
                 return_value=("cron:j2", "run"),
             ):
-                with patch("kiro_crew.sel.sel") as mock_sel:
+                with patch("aj_crew.sel.sel") as mock_sel:
                     mock_sel.return_value.log_tool_invocation = MagicMock()
                     result = await callback(job)
 
@@ -714,7 +714,7 @@ class TestInitCron:
         orch.dashboard_state = None
         orch.slack = None
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -752,15 +752,15 @@ class TestInitCron:
         job.consecutive_failures = 0
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             return_value="silent result",
         ):
             with patch(
-                "kiro_crew.slack.gateway.build_cron_session_context",
+                "aj_crew.slack.gateway.build_cron_session_context",
                 return_value=("cron:j3", "run"),
             ):
-                with patch("kiro_crew.sel.sel") as mock_sel:
+                with patch("aj_crew.sel.sel") as mock_sel:
                     mock_sel.return_value.log_tool_invocation = MagicMock()
                     result = await callback(job)
 
@@ -828,7 +828,7 @@ class TestCronFailurePaths:
         orch.slack.open_dm = AsyncMock(return_value="D_U1")
         orch.slack.post_message = AsyncMock()
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -870,15 +870,15 @@ class TestCronFailurePaths:
         job._acp_retried = False
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             side_effect=RuntimeError("boom"),
         ):
             with patch(
-                "kiro_crew.slack.gateway.build_cron_session_context",
+                "aj_crew.slack.gateway.build_cron_session_context",
                 return_value=("cron:jfail", "run"),
             ):
-                with patch("kiro_crew.sel.sel") as mock_sel:
+                with patch("aj_crew.sel.sel") as mock_sel:
                     mock_sel.return_value.log_tool_invocation = MagicMock()
                     with pytest.raises(RuntimeError, match="boom"):
                         await callback(job)
@@ -903,7 +903,7 @@ class TestCronFailurePaths:
         orch.slack.open_dm = AsyncMock(return_value="D_U1")
         orch.slack.post_message = AsyncMock()
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -948,15 +948,15 @@ class TestCronFailurePaths:
         job._acp_retried = False
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             side_effect=RuntimeError("boom"),
         ):
             with patch(
-                "kiro_crew.slack.gateway.build_cron_session_context",
+                "aj_crew.slack.gateway.build_cron_session_context",
                 return_value=("cron:jfail2", "run"),
             ):
-                with patch("kiro_crew.sel.sel") as mock_sel:
+                with patch("aj_crew.sel.sel") as mock_sel:
                     mock_sel.return_value.log_tool_invocation = MagicMock()
                     with pytest.raises(RuntimeError, match="boom"):
                         await callback(job)
@@ -980,7 +980,7 @@ class TestCronFailurePaths:
         orch.dashboard_state = None
         orch.slack = None
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -1018,12 +1018,12 @@ class TestCronFailurePaths:
         job.consecutive_failures = 0
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             return_value="agent result",
         ):
             with patch(
-                "kiro_crew.slack.gateway.build_cron_session_context",
+                "aj_crew.slack.gateway.build_cron_session_context",
                 return_value=("cron:jmulti", "run"),
             ):
                 result = await callback(job)
@@ -1058,7 +1058,7 @@ class TestCronSuccessReminder:
         orch.slack.post_blocks = AsyncMock(return_value="ts1")
         orch.slack.post_message = AsyncMock()
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -1098,12 +1098,12 @@ class TestCronSuccessReminder:
         job.consecutive_failures = 0
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             return_value="same output",
         ):
             with patch(
-                "kiro_crew.slack.gateway.build_cron_session_context",
+                "aj_crew.slack.gateway.build_cron_session_context",
                 return_value=("cron:j_remind", "run"),
             ):
                 result = await callback(job)
@@ -1134,7 +1134,7 @@ class TestCronAcpRetry:
         orch.dashboard_state = _mock_dashboard_state()
         orch.slack = None
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -1172,7 +1172,7 @@ class TestCronAcpRetry:
         job.consecutive_failures = 0
         job._acp_retried = False
 
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         call_count = [0]
 
@@ -1182,9 +1182,9 @@ class TestCronAcpRetry:
                 raise AcpError("process not running")
             return "retry success"
 
-        with patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=_fake_stream):
+        with patch("aj_crew.slack.gateway.stream_and_collect", side_effect=_fake_stream):
             with patch(
-                "kiro_crew.slack.gateway.build_cron_session_context",
+                "aj_crew.slack.gateway.build_cron_session_context",
                 return_value=("cron:jacp", "run"),
             ):
                 result = await callback(job)
@@ -1212,7 +1212,7 @@ class TestCronAckedItems:
         orch.dashboard_state = None
         orch.slack = None
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -1250,15 +1250,15 @@ class TestCronAckedItems:
         job.consecutive_failures = 0
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             return_value="acked result",
         ):
             with patch(
-                "kiro_crew.slack.gateway.build_cron_session_context",
+                "aj_crew.slack.gateway.build_cron_session_context",
                 return_value=("cron:jack", "run"),
             ):
-                with patch("kiro_crew.sel.sel") as mock_sel:
+                with patch("aj_crew.sel.sel") as mock_sel:
                     mock_sel.return_value.log_tool_invocation = MagicMock()
                     result = await callback(job)
 
@@ -1291,7 +1291,7 @@ class TestCronSlackDeliveryFailure:
         orch.slack.open_dm = AsyncMock(return_value="D_U1")
         orch.slack.post_blocks = AsyncMock(side_effect=RuntimeError("slack error"))
 
-        with patch("kiro_crew.slack.gateway.CronService") as mock_cs:
+        with patch("aj_crew.slack.gateway.CronService") as mock_cs:
             mock_cs_inst = MagicMock()
             mock_cs_inst.start = AsyncMock()
             mock_cs_inst.start_reaper = MagicMock()
@@ -1329,12 +1329,12 @@ class TestCronSlackDeliveryFailure:
         job.consecutive_failures = 0
 
         with patch(
-            "kiro_crew.slack.gateway.stream_and_collect",
+            "aj_crew.slack.gateway.stream_and_collect",
             new_callable=AsyncMock,
             return_value="result",
         ):
             with patch(
-                "kiro_crew.slack.gateway.build_cron_session_context",
+                "aj_crew.slack.gateway.build_cron_session_context",
                 return_value=("cron:jslack", "run"),
             ):
                 result = await callback(job)

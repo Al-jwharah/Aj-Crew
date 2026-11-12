@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.cli_bench import bench_cmd
-from kiro_crew.eval.bench import datasets, kb_external
+from aj_crew.cli_bench import bench_cmd
+from aj_crew.eval.bench import datasets, kb_external
 
 
 class _Args:

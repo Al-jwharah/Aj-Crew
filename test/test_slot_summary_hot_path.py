@@ -17,13 +17,13 @@ import unicodedata
 
 import pytest
 
-from kiro_crew import preview_text
-from kiro_crew.dashboard import chat_utils as cu
-from kiro_crew.dashboard import chat_utils_display as cud
-from kiro_crew.dashboard import state as dashboard_state
-from kiro_crew.dashboard.state_parts import slot_transcript as st
-from kiro_crew.security import exfil, redact_credentials, redact_exfiltration_urls
-from kiro_crew.security.redaction_switch import code_text, owner_view
+from aj_crew import preview_text
+from aj_crew.dashboard import chat_utils as cu
+from aj_crew.dashboard import chat_utils_display as cud
+from aj_crew.dashboard import state as dashboard_state
+from aj_crew.dashboard.state_parts import slot_transcript as st
+from aj_crew.security import exfil, redact_credentials, redact_exfiltration_urls
+from aj_crew.security.redaction_switch import code_text, owner_view
 
 _AWS = "AKIAIOSFODNN7EXAMPLE"
 _HOST = "tenant.example.com"
@@ -225,7 +225,7 @@ def _reference(monkeypatch):
     assert st._redact is _battery and st._parse_options is _scan_parse_options
 
 
-@pytest.mark.parametrize("stamp", [_AWS, "kirocrew-conductor", ""])
+@pytest.mark.parametrize("stamp", [_AWS, "ajcrew-conductor", ""])
 def test_the_slot_crew_mode_stamp_uses_the_supplied_redactor(tmp_path, monkeypatch, stamp):
     from unittest.mock import Mock
 
@@ -251,7 +251,7 @@ def test_the_slot_crew_mode_stamp_uses_the_supplied_redactor(tmp_path, monkeypat
 def test_the_slot_payload_is_byte_identical_to_the_direct_computation(tmp_path, monkeypatch):
     from chat_test_helpers import _make_state
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     state = _make_state(tmp_path)
     contents = [
         f"**done** with `step` — café {_ZWSP}",

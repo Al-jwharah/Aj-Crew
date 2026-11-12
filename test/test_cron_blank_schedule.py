@@ -15,7 +15,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.cli_commands import _cron
+from aj_crew.cli_commands import _cron
 
 
 def _update_args(**fields) -> argparse.Namespace:
@@ -43,7 +43,7 @@ def _update_args(**fields) -> argparse.Namespace:
     ids=["every-zero", "cron-empty", "cron-blank"],
 )
 def test_update_with_only_a_blank_schedule_warns_and_updates_nothing(fields, warning, capsys):
-    with patch("kiro_crew.cli_commands.CronService") as mock_svc_cls:
+    with patch("aj_crew.cli_commands.CronService") as mock_svc_cls:
         mock_svc_cls.return_value.get_job.return_value = MagicMock()
         with pytest.raises(SystemExit) as exc:
             _cron(_update_args(**fields))
@@ -57,8 +57,8 @@ def test_update_with_only_a_blank_schedule_warns_and_updates_nothing(fields, war
 def test_a_blank_schedule_on_a_missing_job_still_fails_not_found(capsys):
     """A stale id fails with any field, so it fails with only a blank schedule too."""
     with (
-        patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-        patch("kiro_crew.cli_commands.sel") as mock_sel,
+        patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+        patch("aj_crew.cli_commands.sel") as mock_sel,
     ):
         mock_svc_cls.return_value.get_job.return_value = None
         with pytest.raises(SystemExit) as exc:
@@ -79,12 +79,12 @@ def test_a_blank_schedule_on_a_missing_job_still_fails_not_found(capsys):
 
 def test_a_blank_schedule_over_an_unreadable_store_refuses(tmp_path, monkeypatch, capsys):
     """A corrupt store reads as empty; it must refuse, not report "Job not found"."""
-    from kiro_crew.config.loader import config_dir
+    from aj_crew.config.loader import config_dir
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     (config_dir() / "crons").mkdir(parents=True)
     (config_dir() / "crons.json").write_text("{not json", encoding="utf-8")
-    with patch("kiro_crew.cli_commands.sel"), pytest.raises(SystemExit) as exc:
+    with patch("aj_crew.cli_commands.sel"), pytest.raises(SystemExit) as exc:
         _cron(_update_args(every_secs=0))
     assert exc.value.code == 1
     err = capsys.readouterr().err
@@ -94,8 +94,8 @@ def test_a_blank_schedule_over_an_unreadable_store_refuses(tmp_path, monkeypatch
 
 def test_update_with_a_blank_schedule_still_applies_the_other_fields(capsys):
     with (
-        patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-        patch("kiro_crew.cli_commands.sel"),
+        patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+        patch("aj_crew.cli_commands.sel"),
     ):
         job = MagicMock()
         job.id, job.name = "abc123", "renamed"
@@ -118,7 +118,7 @@ def test_update_with_a_blank_schedule_still_applies_the_other_fields(capsys):
 def test_add_names_the_blank_schedule_flag(
     every, cron_expr, expected, tmp_path, monkeypatch, capsys
 ):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     args = argparse.Namespace(
         cron_action="add",
         name="n",

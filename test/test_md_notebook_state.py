@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.sandbox as sb
-from kiro_crew import md_notebook_state as mns
+import aj_crew.sandbox as sb
+from aj_crew import md_notebook_state as mns
 
 _POSIX_ONLY = pytest.mark.skipif(os.name != "posix", reason="POSIX link and mode semantics")
 
@@ -71,7 +71,7 @@ class TestTheModuleAgreesWithTheSandbox:
                 imported.update(alias.name for alias in node.names)
         assert imported, "the scan found no import at all"
         for module in imported:
-            assert not module.startswith(("kiro_crew.apps", "aiohttp")), module
+            assert not module.startswith(("aj_crew.apps", "aiohttp")), module
 
 
 class TestTheFirstPass:
@@ -338,7 +338,7 @@ class TestPromotionClosesAfterTheFirstPass:
     def test_the_backend_spawn_refuses_while_unsealed(self):
         """No backend write can race the move: the backend does not start until the
         pass is sealed (spawn prep refuses the same way on sandboxed hosts)."""
-        from kiro_crew.apps import backend as backend_mod
+        from aj_crew.apps import backend as backend_mod
 
         source = inspect.getsource(backend_mod._start_app_backend_body)
         guard = source.index("if not _md_notebook_state.sealed_default_legacy_state():")
@@ -352,7 +352,7 @@ class TestTheMoveRunsBeforeAnySandboxLaunches:
 
     def test_the_notes_backend_spawn_runs_it(self):
         """A host with no sandbox wrap (Windows) reaches the backend without spawn prep."""
-        from kiro_crew.apps import backend as backend_mod
+        from aj_crew.apps import backend as backend_mod
 
         source = inspect.getsource(backend_mod._start_app_backend_body)
         assert "sealed_default_legacy_state()" in source
@@ -365,8 +365,8 @@ class TestTheMoveRunsBeforeAnySandboxLaunches:
         (legacy / "pat").write_text("ghp_real")
         monkeypatch.setattr(sb, "config_dir", lambda: home)
         monkeypatch.setattr(sb.Path, "home", staticmethod(lambda: tmp_path))
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
-        monkeypatch.setattr("kiro_crew.sandbox._ssh_supports_accept_new", lambda: True)
+        monkeypatch.setenv("AJCREW_HOME", str(home))
+        monkeypatch.setattr("aj_crew.sandbox._ssh_supports_accept_new", lambda: True)
 
         sb.namespace_argv(["/bin/true"])
 
@@ -386,8 +386,8 @@ class TestTheMoveRunsBeforeAnySandboxLaunches:
         (legacy / "vaults.json").write_text('[{"id": "v1"}]')
         monkeypatch.setattr(sb, "config_dir", lambda: home)
         monkeypatch.setattr(sb.Path, "home", staticmethod(lambda: tmp_path))
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
-        monkeypatch.setattr("kiro_crew.sandbox._ssh_supports_accept_new", lambda: True)
+        monkeypatch.setenv("AJCREW_HOME", str(home))
+        monkeypatch.setattr("aj_crew.sandbox._ssh_supports_accept_new", lambda: True)
         real = mns.atomic_write
 
         def _disk_full(path, *a, **k):

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Build the standalone KiroCrew desktop app end-to-end.
+# Build the standalone Aj Crew desktop app end-to-end.
 #
 # Pipeline (uses the python-build-standalone approach):
 #   1. Build the React dashboard (npm)         -> website/dist
 #   2. Provision a python-build-standalone (PBS) interpreter via uv
-#   3. pip-install kiro_crew + deps INTO the bundled interpreter
+#   3. pip-install aj_crew + deps INTO the bundled interpreter
 #   4. Stage the dashboard into the package's static dir
 #   5. Prune caches/tests/unused stdlib to shrink the bundle
 #   6. (opt-in, BUNDLE_KIRO_CLI=1) Stage a pinned kiro-cli into backend-dist/kiro-cli/
@@ -21,8 +21,8 @@
 # ARCHITECTURE: on macOS this builds ONE universal .app/DMG by default: the
 # Electron shell is lipo-merged (arm64 + x86_64) by electron-builder, and the
 # backend — which cannot be lipo-merged (a whole PBS tree, not one binary) —
-# ships as TWO complete trees (backend-dist/kirocrew-backend-arm64/ and
-# .../kirocrew-backend-x64/), selected at launch by find-bin.js via
+# ships as TWO complete trees (backend-dist/ajcrew-backend-arm64/ and
+# .../ajcrew-backend-x64/), selected at launch by find-bin.js via
 # process.arch. The x86_64 backend is built under Rosetta 2, so the universal
 # build needs an Apple-Silicon host. Linux always builds host-arch only
 # (AppImage). UNIVERSAL=0 forces a host-arch-only macOS build (faster local
@@ -94,13 +94,13 @@ linux_target_eb_args() {
   local target="$1" product_name="$2"
   case "$target" in
     AppImage)
-      if [ "$product_name" = "KiroCrew Nightly" ]; then
-        printf '%s\n' "-c.linux.desktop.entry.Name=Kiro Crew Nightly"
+      if [ "$product_name" = "AjCrew Nightly" ]; then
+        printf '%s\n' "-c.linux.desktop.entry.Name=Aj Crew Nightly"
         printf '%s\n' "-c.linux.icon=build/icons-nightly"
-      elif [ "$product_name" = "KiroCrew LTS" ]; then # brand-ok -- product name
-        printf '%s\n' "-c.linux.desktop.entry.Name=Kiro Crew LTS"
+      elif [ "$product_name" = "AjCrew LTS" ]; then # brand-ok -- product name
+        printf '%s\n' "-c.linux.desktop.entry.Name=Aj Crew LTS"
       else
-        printf '%s\n' "-c.linux.desktop.entry.Name=Kiro Crew"
+        printf '%s\n' "-c.linux.desktop.entry.Name=Aj Crew"
       fi
       ;;
   esac
@@ -209,10 +209,10 @@ esac
 ELECTRON_DIR="$ROOT/website/electron"
 
 # Version from the package.
-KC_VERSION="$(grep -m1 '__version__' "$ROOT/src/kiro_crew/__init__.py" \
+KC_VERSION="$(grep -m1 '__version__' "$ROOT/src/aj_crew/__init__.py" \
   | sed -E 's/.*=[[:space:]]*"([^"]+)".*/\1/')"
 if [ -z "$KC_VERSION" ]; then
-  echo "ERROR: could not parse __version__ from src/kiro_crew/__init__.py" >&2
+  echo "ERROR: could not parse __version__ from src/aj_crew/__init__.py" >&2
   exit 1
 fi
 
@@ -223,7 +223,7 @@ fi
 # there as semver (0.13.0.11 as "0.13.0-11"); the extraMetadata.version
 # override at packaging would otherwise replace it with the core release, and
 # every build of one release would report the same version. Accepted the way
-# kiro_crew/__init__ accepts a BUILD_VERSION stamp: the base itself, or the
+# aj_crew/__init__ accepts a BUILD_VERSION stamp: the base itself, or the
 # base plus one numeric "-N" over a bare numeric base. Anything else names a
 # build this core is not, so it is ignored with a warning and the base stays.
 PKG_VERSION="$( { grep -m1 -E '^  "version":' "$ELECTRON_DIR/package.json" || true; } \
@@ -244,20 +244,20 @@ fi
 # they are ONE app on two update lanes (the in-app channel switcher moves
 # between them), so they keep the package.json defaults. Derivation mirrors
 # auto-update.js channelForVersion: only a "-nightly." stamp changes
-# identity; unstamped dev builds and insider/stable stamps build "KiroCrew".
+# identity; unstamped dev builds and insider/stable stamps build "AjCrew". (brand-ok: desktop productName)
 case "$KC_VERSION" in
-  *-nightly.*) PRODUCT_NAME="KiroCrew Nightly" ;;
-  *)           PRODUCT_NAME="KiroCrew" ;;
+  *-nightly.*) PRODUCT_NAME="AjCrew Nightly" ;;
+  *)           PRODUCT_NAME="AjCrew" ;;  # brand-ok: desktop productName
 esac
 # The LTS edition (`EDITION=lts`) is a separate side-by-side app as well, on
 # the same pattern as nightly: it updates only from its own `lts` channel (RFC
 # crew-lts-edition D11), so sharing the production app's install identity would
 # let one edition's installer replace the other.
-if [ "${KIROCREW_BUILD_EDITION:-oss}" = "lts" ]; then
+if [ "${AJCREW_BUILD_EDITION:-oss}" = "lts" ]; then
   case "$KC_VERSION" in
     *-nightly.*) echo "ERROR: an LTS build cannot carry a nightly version ($KC_VERSION)" >&2; exit 1 ;;
   esac
-  PRODUCT_NAME="KiroCrew LTS" # brand-ok -- product name
+  PRODUCT_NAME="AjCrew LTS" # brand-ok -- product name
 fi
 
 log() { printf '\n\033[1;36m▶ %s\033[0m\n' "$*"; }
@@ -272,14 +272,14 @@ is_macos_intel_backend() {
 
 # Install the pinned audio decoder into a backend's site-packages, or nothing.
 #
-# The bytes come from kiro_crew.stt.decoder's own pin table (`python -m
-# kiro_crew.stt.decoder --install-into`), downloaded from that module's release
+# The bytes come from aj_crew.stt.decoder's own pin table (`python -m
+# aj_crew.stt.decoder --install-into`), downloaded from that module's release
 # and verified by size and SHA-256, so this build cannot ship a decoder the
-# runtime would refuse. It lands in site-packages/kirocrew_ffmpeg/bin
+# runtime would refuse. It lands in site-packages/ajcrew_ffmpeg/bin
 # (stt.decoder.PACKAGED_DIR), which is where the runtime looks for it.
 #
 # The macOS Intel backend installs NONE and resolves a system FFmpeg the way a
-# source install does (kiro_crew.stt.decoder.bundle_carries_decoder). Do not add
+# source install does (aj_crew.stt.decoder.bundle_carries_decoder). Do not add
 # one back for it: the runtime carries no pin for that platform, so a bundled
 # copy would never be authenticated or used.
 #   $1 = bundled interpreter, $2 = its site-packages, $3 = target arch
@@ -288,8 +288,8 @@ install_desktop_decoder() {
     return 0
   fi
   log "Installing the pinned audio decoder…"
-  env PYTHONNOUSERSITE=1 PYTHONPATH= "$1" -s -m kiro_crew.stt.decoder \
-    --install-into "$2/kirocrew_ffmpeg/bin"
+  env PYTHONNOUSERSITE=1 PYTHONPATH= "$1" -s -m aj_crew.stt.decoder \
+    --install-into "$2/ajcrew_ffmpeg/bin"
 }
 
 # NOTE ON THE APPLE-SILICON DECODER -- do NOT re-introduce a compressed payload.
@@ -308,7 +308,7 @@ install_desktop_decoder() {
 # not enabled). A raw Mach-O in the same submission drew no issue at all -- that
 # is the working shape.
 #
-# The runtime consequence is handled in kiro_crew.transcribe: the packaged decoder
+# The runtime consequence is handled in aj_crew.transcribe: the packaged decoder
 # is accepted either at the pinned digest (local builds and the build gate
 # below, which run BEFORE signing) or on a valid Developer ID signature from our
 # team (the released app, whose bytes signing necessarily rewrote).
@@ -345,8 +345,8 @@ local_voice_runtime_gate() {
   if report="$(env PYTHONNOUSERSITE=1 PYTHONPATH= "$python" -s -c '
 import sys
 
-from kiro_crew.stt.engine import probe
-from kiro_crew.transcribe import _packaged_ffmpeg_version_probe
+from aj_crew.stt.engine import probe
+from aj_crew.transcribe import _packaged_ffmpeg_version_probe
 
 state = probe()
 if not state.ok:
@@ -390,7 +390,7 @@ restamp_backends() {
     [ -n "$sp" ] || continue
     bash "$ROOT/scripts/stamp-distribution.sh" "$dist" "$sp" >/dev/null
     found=$((found + 1))
-  done < <(find "$ELECTRON_DIR/backend-dist" -type d -path "*/site-packages/kiro_crew" 2>/dev/null)
+  done < <(find "$ELECTRON_DIR/backend-dist" -type d -path "*/site-packages/aj_crew" 2>/dev/null)
   if [ "$found" -eq 0 ]; then
     echo "ERROR: no staged backend tree found to stamp as '$dist'" >&2
     exit 1
@@ -566,12 +566,12 @@ drop_precompressed_dist() {
 # Build ONE self-contained backend tree.
 #   $1 = PBS interpreter dir   $2 = output dir   $3 = required Mach-O arch tag
 #        ("" skips the arch gate — used by the non-universal Linux path)
-# Copies the interpreter, pip-installs kiro_crew (full closure), stages the
+# Copies the interpreter, pip-installs aj_crew (full closure), stages the
 # dashboard, writes the relocatable launcher, gates self-containment, prunes.
 build_backend() {
   local pbs_dir="$1" out="$2" want_arch="$3" sp
 
-  log "Installing kiro_crew into the bundled interpreter ($(basename "$out"))…"
+  log "Installing aj_crew into the bundled interpreter ($(basename "$out"))…"
   mkdir -p "$(dirname "$out")"
   cp -R "$pbs_dir" "$out"
 
@@ -589,7 +589,7 @@ build_backend() {
   # >= 49 is arm64-only), and a source build inside the bundle needs toolchains
   # (Rust targets) the build host may lack — an older universal2/x86_64 wheel is
   # the portable choice. No-op where the newest release has a usable wheel.
-  env PYTHONNOUSERSITE=1 PYTHONPATH= KIROCREW_SKIP_FRONTEND=1 \
+  env PYTHONNOUSERSITE=1 PYTHONPATH= AJCREW_SKIP_FRONTEND=1 \
     "$out/bin/python3.12" -m pip install --prefer-binary \
     --no-warn-script-location --disable-pip-version-check "$ROOT"
 
@@ -609,19 +609,19 @@ build_backend() {
   # the recogniser is attempted on its own. Codex remains opt-in and its media
   # packages load only when selected; a sealed bundle cannot pip-install later.
   #
-  # `--only-binary pywhispercpp` (scoped to that one name, so kirocrew itself still
+  # `--only-binary pywhispercpp` (scoped to that one name, so ajcrew itself still
   # installs from this checkout) prevents a surprise CMake/C++ source build. Missing
   # recogniser wheels fail every supported desktop build: local dictation is the
   # default and must be usable immediately. macOS Intel is the sole legacy exception.
-  env PYTHONNOUSERSITE=1 PYTHONPATH= KIROCREW_SKIP_FRONTEND=1 \
+  env PYTHONNOUSERSITE=1 PYTHONPATH= AJCREW_SKIP_FRONTEND=1 \
     "$out/bin/python3.12" -m pip install --prefer-binary \
     --no-warn-script-location --disable-pip-version-check \
     "$ROOT[voice-aws]"
-  env PYTHONNOUSERSITE=1 PYTHONPATH= KIROCREW_SKIP_FRONTEND=1 \
+  env PYTHONNOUSERSITE=1 PYTHONPATH= AJCREW_SKIP_FRONTEND=1 \
     "$out/bin/python3.12" -m pip install --prefer-binary \
     --no-warn-script-location --disable-pip-version-check \
     "$ROOT[voice-codex]"
-  if ! env PYTHONNOUSERSITE=1 PYTHONPATH= KIROCREW_SKIP_FRONTEND=1 \
+  if ! env PYTHONNOUSERSITE=1 PYTHONPATH= AJCREW_SKIP_FRONTEND=1 \
       "$out/bin/python3.12" -m pip install --prefer-binary \
       --only-binary pywhispercpp \
       --no-warn-script-location --disable-pip-version-check "$ROOT[voice]"; then
@@ -636,33 +636,33 @@ build_backend() {
 
   # The Feishu channel SDK. Settings offers no install command for this bundle,
   # and every app update replaces the whole bundle, so it ships here or not at all.
-  env PYTHONNOUSERSITE=1 PYTHONPATH= KIROCREW_SKIP_FRONTEND=1 \
+  env PYTHONNOUSERSITE=1 PYTHONPATH= AJCREW_SKIP_FRONTEND=1 \
     "$out/bin/python3.12" -m pip install --prefer-binary \
     --no-warn-script-location --disable-pip-version-check "$ROOT[feishu]"
 
   # Stage the dashboard dist into the package's static dir.
   sp="$out/lib/python3.12/site-packages"
   install_desktop_decoder "$out/bin/python3.12" "$sp" "$want_arch"
-  log "Staging dashboard dist into kiro_crew/static/dist…"
-  mkdir -p "$sp/kiro_crew/static"
-  ( cd "$sp/kiro_crew/static" && rm -rf dist && cp -R "$ROOT/website/dist" dist )
-  [ -f "$sp/kiro_crew/static/dist/index.html" ] || {
+  log "Staging dashboard dist into aj_crew/static/dist…"
+  mkdir -p "$sp/aj_crew/static"
+  ( cd "$sp/aj_crew/static" && rm -rf dist && cp -R "$ROOT/website/dist" dist )
+  [ -f "$sp/aj_crew/static/dist/index.html" ] || {
     echo "ERROR: dashboard dist not staged" >&2; exit 1
   }
-  drop_precompressed_dist "$sp/kiro_crew/static/dist"
+  drop_precompressed_dist "$sp/aj_crew/static/dist"
 
   # Beacon provenance, stamped into the INSTALLED tree (not $ROOT) so a
   # universal build's two backends are each stamped and no state leaks into the
   # developer's checkout. pip installed from $ROOT, where the module is
   # gitignored and absent, so this is the only place it exists.
-  bash "$ROOT/scripts/stamp-distribution.sh" "$KC_DISTRIBUTION" "$sp/kiro_crew"
+  bash "$ROOT/scripts/stamp-distribution.sh" "$KC_DISTRIBUTION" "$sp/aj_crew"
 
   # Relocatable launcher script.
-  cat > "$out/bin/kirocrew" <<'LAUNCH'
+  cat > "$out/bin/ajcrew" <<'LAUNCH'
 #!/bin/bash
 set -euo pipefail
 # Resolve symlinks before deriving DIR. When this launcher is reached through a
-# symlink (e.g. the ~/.local/bin/kirocrew shim planted on the user's PATH),
+# symlink (e.g. the ~/.local/bin/ajcrew shim planted on the user's PATH),
 # ${BASH_SOURCE[0]} is the symlink path, so a naive dirname points at the
 # symlink's directory and execs the wrong (or missing) python3.12. macOS ships
 # no `readlink -f`, so walk the symlink chain to the real wrapper location.
@@ -675,7 +675,7 @@ done
 DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 # -P keeps the caller's working directory OFF sys.path. `-m` otherwise puts the
 # cwd first, ahead of the standard library, so a `~/concurrent/`, `~/json/` or
-# any other stdlib-named directory in the directory kirocrew is run from (the
+# any other stdlib-named directory in the directory ajcrew is run from (the
 # home directory, for a service unit) is imported instead of the real module and
 # fails later with an unrelated-looking TypeError. -s does not cover this: it
 # removes the user site, not the launch entry.
@@ -685,17 +685,17 @@ DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 # interpreter import checkout code mixed into the shipped backend, and
 # PYTHONHOME points it at another Python's stdlib. The desktop shell scrubs
 # both for the gateway it spawns (website/electron/gateway-env.js), but this
-# launcher is also run directly -- `kirocrew token`, `kirocrew stop`, the
-# ~/.local/bin/kirocrew shim -- so the scrub has to live here, at the entry
+# launcher is also run directly -- `ajcrew token`, `ajcrew stop`, the
+# ~/.local/bin/ajcrew shim -- so the scrub has to live here, at the entry
 # point every caller shares. Only these two are dropped: PYTHONUTF8,
 # PYTHONIOENCODING and the bytecode knobs the shell hands down stay in force,
 # and -E would discard them too. Children spawned by the backend (operator
 # Python, MCP servers, cron) inherit this scrubbed environment, exactly as they
 # do under the desktop shell.
 unset PYTHONPATH PYTHONHOME
-exec "$DIR/python3.12" -s -P -m kiro_crew "$@"
+exec "$DIR/python3.12" -s -P -m aj_crew "$@"
 LAUNCH
-  chmod +x "$out/bin/kirocrew"
+  chmod +x "$out/bin/ajcrew"
 
   # Arch gate: the bundled interpreter must be the arch this tree claims to be
   # (a mismatch ships an app whose backend crashes at launch on the other arch).
@@ -711,13 +711,13 @@ LAUNCH
   fi
 
   # Self-containment gate: the full import chain must resolve with no user-site.
-  # Bare `--version` is a pre-dispatch fast-path that skips `kiro_crew.cli`'s
+  # Bare `--version` is a pre-dispatch fast-path that skips `aj_crew.cli`'s
   # heavy imports, so it cannot prove the chain alone: the import probe below
   # restores the gate's meaning.
   log "Verifying self-containment ($(basename "$out"))…"
-  PYTHONNOUSERSITE=1 "$out/bin/python3.12" -s -P -m kiro_crew --version >/dev/null \
+  PYTHONNOUSERSITE=1 "$out/bin/python3.12" -s -P -m aj_crew --version >/dev/null \
     || { echo "ERROR: bundled backend is NOT self-contained (missing dep under PYTHONNOUSERSITE=1)" >&2; exit 1; }
-  PYTHONNOUSERSITE=1 "$out/bin/python3.12" -c 'import kiro_crew.cli' \
+  PYTHONNOUSERSITE=1 "$out/bin/python3.12" -c 'import aj_crew.cli' \
     || { echo "ERROR: bundled backend is NOT self-contained (missing dep under PYTHONNOUSERSITE=1)" >&2; exit 1; }
 
   # Prune to shrink the bundle.
@@ -775,18 +775,18 @@ LAUNCH
 # PBS Windows layout differs everywhere the POSIX function assumes bin/ and
 # lib/python3.12: python.exe sits at the tree root, site-packages at
 # Lib/site-packages, and the launcher is a .cmd shim (find-bin.js probes
-# bin/kirocrew.cmd on win32; Electron unwraps the shim and spawns
+# bin/ajcrew.cmd on win32; Electron unwraps the shim and spawns
 # python.exe directly -- see main.js).
 #   $1 = PBS interpreter dir   $2 = output dir
 build_backend_windows() {
   local pbs_dir="$1" out="$2" sp root_uri
 
-  log "Installing kiro_crew into the bundled interpreter ($(basename "$out"))…"
+  log "Installing aj_crew into the bundled interpreter ($(basename "$out"))…"
   mkdir -p "$(dirname "$out")"
   cp -R "$pbs_dir" "$out"
   find "$out" -name "EXTERNALLY-MANAGED" -delete 2>/dev/null || true
 
-  env PYTHONNOUSERSITE=1 PYTHONPATH= KIROCREW_SKIP_FRONTEND=1 \
+  env PYTHONNOUSERSITE=1 PYTHONPATH= AJCREW_SKIP_FRONTEND=1 \
     "$out/python.exe" -m pip install --prefer-binary \
     --no-warn-script-location --disable-pip-version-check "$ROOT"
 
@@ -809,27 +809,27 @@ build_backend_windows() {
   # pip-invoking endpoint was deliberately removed, so a bundle without them
   # reports the default provider as unavailable with no in-app way to fix it.
   #
-  env PYTHONNOUSERSITE=1 PYTHONPATH= KIROCREW_SKIP_FRONTEND=1 \
+  env PYTHONNOUSERSITE=1 PYTHONPATH= AJCREW_SKIP_FRONTEND=1 \
     "$out/python.exe" -m pip install --prefer-binary \
     --no-warn-script-location --disable-pip-version-check \
-    "kirocrew[voice-aws] @ $root_uri"
-  env PYTHONNOUSERSITE=1 PYTHONPATH= KIROCREW_SKIP_FRONTEND=1 \
+    "ajcrew[voice-aws] @ $root_uri"
+  env PYTHONNOUSERSITE=1 PYTHONPATH= AJCREW_SKIP_FRONTEND=1 \
     "$out/python.exe" -m pip install --prefer-binary \
     --only-binary pywhispercpp \
     --no-warn-script-location --disable-pip-version-check \
-    "kirocrew[voice] @ $root_uri"
+    "ajcrew[voice] @ $root_uri"
   # The Feishu channel SDK, for the same reason as in build_backend.
-  env PYTHONNOUSERSITE=1 PYTHONPATH= KIROCREW_SKIP_FRONTEND=1 \
+  env PYTHONNOUSERSITE=1 PYTHONPATH= AJCREW_SKIP_FRONTEND=1 \
     "$out/python.exe" -m pip install --prefer-binary \
     --no-warn-script-location --disable-pip-version-check \
-    "kirocrew[feishu] @ $root_uri"
+    "ajcrew[feishu] @ $root_uri"
 
   sp="$out/Lib/site-packages"
   install_desktop_decoder "$out/python.exe" "$sp" ""
-  log "Staging dashboard dist into kiro_crew/static/dist…"
-  mkdir -p "$sp/kiro_crew/static"
-  ( cd "$sp/kiro_crew/static" && rm -rf dist && cp -R "$ROOT/website/dist" dist )
-  [ -f "$sp/kiro_crew/static/dist/index.html" ] || {
+  log "Staging dashboard dist into aj_crew/static/dist…"
+  mkdir -p "$sp/aj_crew/static"
+  ( cd "$sp/aj_crew/static" && rm -rf dist && cp -R "$ROOT/website/dist" dist )
+  [ -f "$sp/aj_crew/static/dist/index.html" ] || {
     echo "ERROR: dashboard dist not staged" >&2; exit 1
   }
 
@@ -837,7 +837,7 @@ build_backend_windows() {
   # the honest answer is "source", but stamp it explicitly rather than relying on
   # the module's absence: pip installed from $ROOT, and a stale stamp left in a
   # developer's checkout would otherwise be copied in and mislabel the build.
-  bash "$ROOT/scripts/stamp-distribution.sh" "$KC_DISTRIBUTION" "$sp/kiro_crew"
+  bash "$ROOT/scripts/stamp-distribution.sh" "$KC_DISTRIBUTION" "$sp/aj_crew"
 
   # Relocatable launcher shim: %~dp0 is the .cmd's own directory (bin\),
   # so the interpreter resolves relative to the bundle wherever it lands.
@@ -847,26 +847,26 @@ build_backend_windows() {
   # too: a dev shell's checkout must not be imported into the bundled backend.
   # `set "NAME="` deletes the variable, and cmd's environment is
   # case-insensitive, so a mixed-case `PythonPath` goes with it. `setlocal`
-  # keeps the deletion inside this shim: a user running kirocrew.cmd from an
+  # keeps the deletion inside this shim: a user running ajcrew.cmd from an
   # interactive cmd window keeps their own PYTHONPATH afterwards.
   mkdir -p "$out/bin"
-  printf '@echo off\r\nsetlocal\r\nset "PYTHONPATH="\r\nset "PYTHONHOME="\r\n"%%~dp0..\\python.exe" -s -P -m kiro_crew %%*\r\n' > "$out/bin/kirocrew.cmd"
-  # pip also dropped Scripts\kirocrew.exe, whose embedded shebang is THIS build
+  printf '@echo off\r\nsetlocal\r\nset "PYTHONPATH="\r\nset "PYTHONHOME="\r\n"%%~dp0..\\python.exe" -s -P -m aj_crew %%*\r\n' > "$out/bin/ajcrew.cmd"
+  # pip also dropped Scripts\ajcrew.exe, whose embedded shebang is THIS build
   # machine's absolute python.exe path, so it dies with "Fatal error in
   # launcher" once the bundle is installed anywhere else. Replace it
   # with the same relocatable shim: Scripts\ is one level below the bundle
   # root like bin\, so "%~dp0..\python.exe" resolves the same interpreter.
-  rm -f "$out/Scripts/kirocrew.exe" "$out/Scripts/kirocrew-script.py"
-  printf '@echo off\r\nsetlocal\r\nset "PYTHONPATH="\r\nset "PYTHONHOME="\r\n"%%~dp0..\\python.exe" -s -P -m kiro_crew %%*\r\n' > "$out/Scripts/kirocrew.cmd"
+  rm -f "$out/Scripts/ajcrew.exe" "$out/Scripts/ajcrew-script.py"
+  printf '@echo off\r\nsetlocal\r\nset "PYTHONPATH="\r\nset "PYTHONHOME="\r\n"%%~dp0..\\python.exe" -s -P -m aj_crew %%*\r\n' > "$out/Scripts/ajcrew.cmd"
   # Every other pip console script in Scripts\ (httpx, pwcpp, tqdm, ...) has
   # the same frozen shebang, and env.py puts Scripts\ on every agent's PATH.
   # Turn each into a relocatable <name>.cmd; native uv.exe is left alone.
   "$out/python.exe" -B -s "$ROOT/packaging/relocate_windows_scripts.py" --root "$out"
 
   log "Verifying self-containment ($(basename "$out"))…"
-  PYTHONNOUSERSITE=1 "$out/python.exe" -s -P -m kiro_crew --version >/dev/null \
+  PYTHONNOUSERSITE=1 "$out/python.exe" -s -P -m aj_crew --version >/dev/null \
     || { echo "ERROR: bundled backend is NOT self-contained (missing dep under PYTHONNOUSERSITE=1)" >&2; exit 1; }
-  PYTHONNOUSERSITE=1 "$out/python.exe" -s -c 'import kiro_crew.cli' \
+  PYTHONNOUSERSITE=1 "$out/python.exe" -s -c 'import aj_crew.cli' \
     || { echo "ERROR: bundled backend is NOT self-contained (missing dep under PYTHONNOUSERSITE=1)" >&2; exit 1; }
 
   log "Pruning bundle ($(basename "$out"))…"
@@ -875,11 +875,11 @@ build_backend_windows() {
     find Lib/site-packages -type d \( -name tests -o -name test \) -prune -exec rm -rf {} + 2>/dev/null || true
     rm -rf Lib/test Lib/idlelib Lib/tkinter Lib/turtledemo Lib/ensurepip Lib/lib2to3 \
            include libs tcl \
-           Lib/site-packages/kiro_crew/_vendor/llama_cpp_libs/linux_aarch64 \
-           Lib/site-packages/kiro_crew/_vendor/llama_cpp_libs/linux_aarch64_dotprod \
-           Lib/site-packages/kiro_crew/_vendor/llama_cpp_libs/linux_x86_64 \
-           Lib/site-packages/kiro_crew/_vendor/llama_cpp_libs/macos_arm64 \
-           Lib/site-packages/kiro_crew/_vendor/llama_cpp_libs/macos_x86_64 \
+           Lib/site-packages/aj_crew/_vendor/llama_cpp_libs/linux_aarch64 \
+           Lib/site-packages/aj_crew/_vendor/llama_cpp_libs/linux_aarch64_dotprod \
+           Lib/site-packages/aj_crew/_vendor/llama_cpp_libs/linux_x86_64 \
+           Lib/site-packages/aj_crew/_vendor/llama_cpp_libs/macos_arm64 \
+           Lib/site-packages/aj_crew/_vendor/llama_cpp_libs/macos_x86_64 \
            2>/dev/null || true
     rm -f DLLs/_tkinter.pyd DLLs/tcl*.dll DLLs/tk*.dll 2>/dev/null || true )
 
@@ -905,7 +905,7 @@ build_backend_windows() {
   log "Precompiling Windows gateway startup modules ($(basename "$out"))…"
   env PYTHONDONTWRITEBYTECODE=1 PYTHONNOUSERSITE=1 PYTHONPATH= \
     "$out/python.exe" -s "$ROOT/packaging/precompile_windows.py" \
-    --root "$out" --module kiro_crew.cli_server --module lark_oapi
+    --root "$out" --module aj_crew.cli_server --module lark_oapi
 
   echo "    $(basename "$out") size: $(du -sh "$out" 2>/dev/null | cut -f1)"
 }
@@ -946,7 +946,7 @@ stdlib_probe_gate() {
 # launcher we just wrote. This catches contract drift between this builder's
 # output layout and find-bin.js's candidate list — a silent mismatch there
 # ships an app that can't spawn its backend (falls through to the bare
-# "kirocrew" PATH fallback -> spawn ENOENT).
+# "ajcrew" PATH fallback -> spawn ENOENT).
 #   $1 = expected launcher path   $2 = arch argument ("" = default process.arch)
 resolver_gate() {
   local expected="$1" arch_arg="$2"
@@ -954,13 +954,13 @@ resolver_gate() {
     log "Verifying find-bin.js resolves ${expected#"$ELECTRON_DIR/"}…"
     node -e '
       const fs=require("fs"), os=require("os"), path=require("path");
-      const { findKirocrewBin } = require(path.join(process.argv[1], "find-bin"));
+      const { findAjcrewBin } = require(path.join(process.argv[1], "find-bin"));
       // Simulate the packaged app: resourcesPath and __dirname both point at the
       // electron dir where backend-dist currently lives.
       const arch = process.argv[3] || undefined;
       const resolved = arch
-        ? findKirocrewBin(fs, os, path, process.argv[1], process.argv[1], arch)
-        : findKirocrewBin(fs, os, path, process.argv[1], process.argv[1]);
+        ? findAjcrewBin(fs, os, path, process.argv[1], process.argv[1], arch)
+        : findAjcrewBin(fs, os, path, process.argv[1], process.argv[1]);
       const expected = process.argv[2];
       // Normalize separators: under Git Bash on Windows the expected path
       // arrives with forward slashes while Node resolves backslashes.
@@ -988,11 +988,11 @@ if [ "$UNIVERSAL" = "1" ]; then
   echo "    arm64 PBS:  $PBS_ARM64"
   echo "    x86_64 PBS: $PBS_X64"
 
-  build_backend "$PBS_ARM64" "$ELECTRON_DIR/backend-dist/kirocrew-backend-arm64" "arm64"
-  build_backend "$PBS_X64" "$ELECTRON_DIR/backend-dist/kirocrew-backend-x64" "x86_64"
+  build_backend "$PBS_ARM64" "$ELECTRON_DIR/backend-dist/ajcrew-backend-arm64" "arm64"
+  build_backend "$PBS_X64" "$ELECTRON_DIR/backend-dist/ajcrew-backend-x64" "x86_64"
 
-  resolver_gate "$ELECTRON_DIR/backend-dist/kirocrew-backend-arm64/bin/kirocrew" "arm64"
-  resolver_gate "$ELECTRON_DIR/backend-dist/kirocrew-backend-x64/bin/kirocrew" "x64"
+  resolver_gate "$ELECTRON_DIR/backend-dist/ajcrew-backend-arm64/bin/ajcrew" "arm64"
+  resolver_gate "$ELECTRON_DIR/backend-dist/ajcrew-backend-x64/bin/ajcrew" "x64"
 else
   log "Provisioning python-build-standalone interpreter (uv)…"
   # Pin to CPython 3.12 (latest stable, matches CI python-version).
@@ -1021,15 +1021,15 @@ else
   echo "    PBS interpreter: $PBS_DIR"
 
   if [ "$OS" = "windows" ]; then
-    build_backend_windows "$PBS_DIR" "$ELECTRON_DIR/backend-dist/kirocrew-backend"
-    resolver_gate "$ELECTRON_DIR/backend-dist/kirocrew-backend/bin/kirocrew.cmd" ""
+    build_backend_windows "$PBS_DIR" "$ELECTRON_DIR/backend-dist/ajcrew-backend"
+    resolver_gate "$ELECTRON_DIR/backend-dist/ajcrew-backend/bin/ajcrew.cmd" ""
   else
     # Arch-gate the tree only when an arch was NAMED: that is the one case
     # where the interpreter uv handed back can differ from the host, and the
     # gate is what turns a wrong wheel into a build failure instead of an app
     # whose backend crashes at launch. Host-arch builds keep the ungated path.
-    build_backend "$PBS_DIR" "$ELECTRON_DIR/backend-dist/kirocrew-backend" "${TARGET_ARCH:-}"
-    resolver_gate "$ELECTRON_DIR/backend-dist/kirocrew-backend/bin/kirocrew" ""
+    build_backend "$PBS_DIR" "$ELECTRON_DIR/backend-dist/ajcrew-backend" "${TARGET_ARCH:-}"
+    resolver_gate "$ELECTRON_DIR/backend-dist/ajcrew-backend/bin/ajcrew" ""
   fi
 fi
 
@@ -1064,9 +1064,9 @@ fi
 # updated from its About panel. Unset, nothing is staged: the unconditional
 # cleanup above (ahead of the SKIP_ELECTRON exit) already removed any leftover
 # from a previous local build, so a stale declaration cannot ride along.
-if [ -n "${KIROCREW_MANAGED_INSTALL_MARKER:-}" ]; then
-  MARKER_SRC="$KIROCREW_MANAGED_INSTALL_MARKER"
-  test -f "$MARKER_SRC" || { echo "❌ KIROCREW_MANAGED_INSTALL_MARKER does not name a file: $MARKER_SRC" >&2; exit 1; }
+if [ -n "${AJCREW_MANAGED_INSTALL_MARKER:-}" ]; then
+  MARKER_SRC="$AJCREW_MANAGED_INSTALL_MARKER"
+  test -f "$MARKER_SRC" || { echo "❌ AJCREW_MANAGED_INSTALL_MARKER does not name a file: $MARKER_SRC" >&2; exit 1; }
   node -e '
     const fs = require("fs");
     const [src] = process.argv.slice(1);
@@ -1099,7 +1099,7 @@ if [ -n "${KIROCREW_MANAGED_INSTALL_MARKER:-}" ]; then
       const path = require("path");
       if (!(p.startsWith("~/") || path.posix.isAbsolute(p) || path.win32.isAbsolute(p))) { console.error("marker field \"relaunchPath\" must be an absolute path or start with ~/"); process.exit(1); }
     }
-  ' "$MARKER_SRC" || { echo "❌ KIROCREW_MANAGED_INSTALL_MARKER rejected: $MARKER_SRC" >&2; exit 1; }
+  ' "$MARKER_SRC" || { echo "❌ AJCREW_MANAGED_INSTALL_MARKER rejected: $MARKER_SRC" >&2; exit 1; }
   # Staged for THIS build only: electron-builder packs it below, and the copy
   # must not outlive the run -- a later build of a different edition from the
   # same tree (or a hand-run electron-builder) would otherwise pack the previous
@@ -1124,28 +1124,28 @@ fi
 # `files` list, and removed again on exit. Bash keeps one EXIT trap, so this
 # one names the marker too: arming it after step 3b replaces that trap. Unset,
 # nothing is staged and the app appends no switch.
-if [ -n "${KIROCREW_AUTH_SERVER_ALLOWLIST:-}" ]; then
+if [ -n "${AJCREW_AUTH_SERVER_ALLOWLIST:-}" ]; then
   AUTH_ALLOWLIST="$(node -e '
     const { parseAuthServerAllowlist } = require(process.argv[1]);
     const v = parseAuthServerAllowlist(process.argv[2]);
     if (v === null) { console.error("not a comma-separated list of host or *.suffix patterns"); process.exit(1); }
     process.stdout.write(v);
-  ' "$ELECTRON_DIR/auth-allowlist.js" "$KIROCREW_AUTH_SERVER_ALLOWLIST")" \
-    || { echo "❌ KIROCREW_AUTH_SERVER_ALLOWLIST rejected: $KIROCREW_AUTH_SERVER_ALLOWLIST" >&2; exit 1; }
+  ' "$ELECTRON_DIR/auth-allowlist.js" "$AJCREW_AUTH_SERVER_ALLOWLIST")" \
+    || { echo "❌ AJCREW_AUTH_SERVER_ALLOWLIST rejected: $AJCREW_AUTH_SERVER_ALLOWLIST" >&2; exit 1; }
   trap 'rm -f "$ELECTRON_DIR/EXTERNALLY-MANAGED" "$ELECTRON_DIR/AUTH-SERVER-ALLOWLIST" "$ELECTRON_DIR/EDITION"' EXIT
   printf '%s\n' "$AUTH_ALLOWLIST" > "$ELECTRON_DIR/AUTH-SERVER-ALLOWLIST"
   log "Baking AUTH-SERVER-ALLOWLIST into the app: $AUTH_ALLOWLIST"
 fi
 
 # --- 3b3. Baked EDITION (lts only) -------------------------------------------
-# The same stamp the backend's kiro_crew/edition.py gets from setup.py:
-# KIROCREW_BUILD_EDITION (`make desktop EDITION=lts`). An LTS build
+# The same stamp the backend's aj_crew/edition.py gets from setup.py:
+# AJCREW_BUILD_EDITION (`make desktop EDITION=lts`). An LTS build
 # stages $ELECTRON_DIR/EDITION, packed into app.asar by package.json's `files`
 # list and read by website/electron/edition.js, so the app gives its local
 # gateway time for the login and policy checks it runs before binding. An oss
 # build stages nothing, so its app is unchanged. Any other value fails the
 # build, as setup.py refuses it. Removed on exit with the other baked inputs.
-case "${KIROCREW_BUILD_EDITION:-oss}" in
+case "${AJCREW_BUILD_EDITION:-oss}" in
   oss) ;;
   lts)
     trap 'rm -f "$ELECTRON_DIR/EXTERNALLY-MANAGED" "$ELECTRON_DIR/AUTH-SERVER-ALLOWLIST" "$ELECTRON_DIR/EDITION"' EXIT
@@ -1153,7 +1153,7 @@ case "${KIROCREW_BUILD_EDITION:-oss}" in
     log "Baking EDITION=lts into the app"
     ;;
   *)
-    echo "❌ KIROCREW_BUILD_EDITION must be oss or lts, not: ${KIROCREW_BUILD_EDITION}" >&2
+    echo "❌ AJCREW_BUILD_EDITION must be oss or lts, not: ${AJCREW_BUILD_EDITION}" >&2
     exit 1
     ;;
 esac
@@ -1180,9 +1180,9 @@ esac
 # `kiro-cli.exe` inside its MSI, so that platform stages the executable directly.
 # Landing inside backend-dist/ means the electron-builder extraResources entry
 # and the macOS x64ArchFiles glob both cover it with zero config changes; the
-# Electron shell exports the directory as KIROCREW_BUNDLED_KIRO_DIR at gateway
+# Electron shell exports the directory as AJCREW_BUNDLED_KIRO_DIR at gateway
 # spawn (main.js), and the backend ranks it above system installs but below the
-# KIROCREW_KIRO_BIN operator override (kiro_cli.known_kiro_cli_dirs). Without
+# AJCREW_KIRO_BIN operator override (kiro_cli.known_kiro_cli_dirs). Without
 # the payload the shell exports nothing and the app is detect-only.
 #
 # Payload budget: the macOS universal DMG download is ~360 MB and each Linux zip
@@ -1258,7 +1258,7 @@ fetch_kiro_cli() {
   local dest="$ELECTRON_DIR/backend-dist/kiro-cli"
   # Per-user download cache for the archive (and the manifest, when "latest"
   # resolves it), so a rebuild against the same pin fetches nothing.
-  local cache="$HOME/.cache/kirocrew-build/kiro-cli"
+  local cache="$HOME/.cache/ajcrew-build/kiro-cli"
   local entry="kiro-cli-chat" release_base="$KIRO_CLI_RELEASE_BASE"
   mkdir -p "$cache"
 
@@ -1407,7 +1407,7 @@ print(p["sha256"])' "$cache/manifest.json" "$file")"
     # entry, else a fresh download into a cache-local temp file renamed into
     # place only once it verifies.
     local vcrt_cache vcrt_source vcrt_sha vcrt_url vcrt_bundle vcrt_fresh
-    vcrt_cache="$HOME/.cache/kirocrew-build/vc-runtime"
+    vcrt_cache="$HOME/.cache/ajcrew-build/vc-runtime"
     mkdir -p "$vcrt_cache"
     vcrt_source="$(python3 "$ROOT/packaging/vc_runtime.py" source)"
     # Native Windows Python prints CRLF; command substitution removes only LF.
@@ -1438,13 +1438,13 @@ print(p["sha256"])' "$cache/manifest.json" "$file")"
   kiro_cli_layout_gate "$dest"
 
   # Record provenance beside the payload, mirroring the Docker image's
-  # /usr/local/share/kirocrew/kiro-cli-version audit file.
+  # /usr/local/share/ajcrew/kiro-cli-version audit file.
   printf '%s\n' "$version" > "$dest/BUNDLED-VERSION"
   # Build-time gate: the staged copy must actually run on this host class, in a
   # clean room -- empty HOME, minimal PATH -- so no user install on the build
   # machine can answer for it (the launcher used to pass this gate that way).
   # Three probes: `--version`, `login --help`, then one ACP `initialize` round trip,
-  # the call every Kiro Crew session opens with. A binary that answers it here,
+  # the call every Aj Crew session opens with. A binary that answers it here,
   # alone in its directory, is self-contained on THIS platform, which is the
   # premise the resolver rests on when it hands sessions exactly this file.
   # Enforced on EVERY platform: the Linux zip is selected by the build host's
@@ -1581,22 +1581,22 @@ else
 fi
 
 # --- 3d. Bundled KAS engine --------------------------------------------------
-# Stages the KAS engine bundle this release PINS (src/kiro_crew/acp/kas_pin.py:
+# Stages the KAS engine bundle this release PINS (src/aj_crew/acp/kas_pin.py:
 # KAS_PIN_VERSION + KAS_PIN_MANIFEST_SHA256) into the app's resources, so the
 # `agent.kas_bundle` route runs with no download and no kiro-cli at all. The
 # staging IS the backend's own installer (acp.kas_bundle.install_bundle, run
 # from the just-built backend tree): manifest bytes checked against the pin
 # before parsing, every artifact sha256+size-pinned by that manifest, tar
 # filter="data", a `node --version` probe on THIS host, one atomic publish --
-# the same code `kirocrew kas install` runs, so the staged tree is byte-for-byte
+# the same code `ajcrew kas install` runs, so the staged tree is byte-for-byte
 # what an install would lay down and the backend reads it with the same reader.
 #
 # One root, backend-dist/kas/, on every build. It holds
 # <version>/{bundle,node,install.json} plus a BUNDLED-VERSION provenance file
 # beside it, which the Electron shell reads to know which version directory's
 # record to check (gateway-env.js, bundledKasEnvironment) before it exports
-# KIROCREW_BUNDLED_KAS_DIR. The backend ranks the data home's own install ahead
-# of this root, so `kirocrew kas install` keeps working in the app.
+# AJCREW_BUNDLED_KAS_DIR. The backend ranks the data home's own install ahead
+# of this root, so `ajcrew kas install` keeps working in the app.
 #
 # A universal macOS build stages the engine ONCE: the engine tarball is already
 # darwin-universal, and make_universal_node `lipo -create`s the arm64 and x64
@@ -1604,12 +1604,12 @@ fi
 # through `arch`, then trims the tree to what runs (trim_for_shipping): Node's
 # binary and license, the engine minus its C sources, headers, source maps and
 # web-tree-sitter's debug build. A single-arch build stages the tree as
-# `kirocrew kas install` lays it down, untrimmed. The universal staged tree
+# `ajcrew kas install` lays it down, untrimmed. The universal staged tree
 # holds only regular files and directories -- no symlink, no hardlink (the
 # macOS signing service refuses a bundle with shared trees); the gate after the
 # installer fails the universal build on either.
 #
-# BUNDLE_KAS=0 opts a build out; the switch then needs `kirocrew kas install`
+# BUNDLE_KAS=0 opts a build out; the switch then needs `ajcrew kas install`
 # first, exactly as a pip install does. Fetches from KAS_BUNDLE_URL (default:
 # the project's CDN); no per-user cache -- the artifacts are ~55 MB per arch and
 # the manifest digest is the pin, so nothing stale can be reused by mistake.
@@ -1629,15 +1629,15 @@ stage_kas_bundle() {
   rm_rf_resilient "$dest"
   mkdir -p "$dest"
   # Paths and names reach Python via argv, never string splicing. -I (isolated):
-  # no user site, no PYTHONPATH, no PYTHON* env, so `kiro_crew` resolves to the
+  # no user site, no PYTHONPATH, no PYTHON* env, so `aj_crew` resolves to the
   # backend this build just installed and nothing else on the build host.
   "$py" -I - "$dest" "$system" "$machine" "${KAS_BUNDLE_URL:-}" "$universal" <<'PY'
 import sys
 from pathlib import Path
 
-from kiro_crew.acp import kas_bundle
-from kiro_crew.acp.kas_pin import KAS_PIN_MANIFEST_SHA256, KAS_PIN_VERSION
-from kiro_crew.config.sections import KAS_BUNDLE_DEFAULT_URL
+from aj_crew.acp import kas_bundle
+from aj_crew.acp.kas_pin import KAS_PIN_MANIFEST_SHA256, KAS_PIN_VERSION
+from aj_crew.config.sections import KAS_BUNDLE_DEFAULT_URL
 
 dest, system, machine, base = Path(sys.argv[1]), sys.argv[2], sys.argv[3], sys.argv[4]
 universal = sys.argv[5] == "universal"
@@ -1666,7 +1666,7 @@ PY
   if [ "$universal" = "universal" ]; then
     # Only regular files and directories: a symlink or a hardlinked file inside
     # the universal app is what the macOS signing service refuses. A single-arch
-    # tree is staged as `kirocrew kas install` lays it down, Node's bin links
+    # tree is staged as `ajcrew kas install` lays it down, Node's bin links
     # included, and is not checked here.
     links="$(find "$dest" \( -type l -o \( -type f -links +1 \) \) -print 2>/dev/null | head -5)"
     if [ -n "$links" ]; then
@@ -1686,7 +1686,7 @@ if [ "${BUNDLE_KAS:-1}" = "1" ]; then
   if [ "$UNIVERSAL" = "1" ]; then
     # The arm64 tree's interpreter runs the installer natively; the x64 Node
     # slice is probed under Rosetta, as the x64 backend gate is.
-    stage_kas_bundle "$ELECTRON_DIR/backend-dist/kirocrew-backend-arm64" "$ELECTRON_DIR/backend-dist/kas" Darwin arm64 universal
+    stage_kas_bundle "$ELECTRON_DIR/backend-dist/ajcrew-backend-arm64" "$ELECTRON_DIR/backend-dist/kas" Darwin arm64 universal
   else
     case "$OS" in
       darwin)  KAS_SYSTEM=Darwin ;;
@@ -1695,7 +1695,7 @@ if [ "${BUNDLE_KAS:-1}" = "1" ]; then
     esac
     KAS_MACHINE="$BUILD_ARCH"
     [ "$KAS_MACHINE" = "aarch64" ] && KAS_MACHINE="arm64"
-    stage_kas_bundle "$ELECTRON_DIR/backend-dist/kirocrew-backend" "$ELECTRON_DIR/backend-dist/kas" "$KAS_SYSTEM" "$KAS_MACHINE"
+    stage_kas_bundle "$ELECTRON_DIR/backend-dist/ajcrew-backend" "$ELECTRON_DIR/backend-dist/kas" "$KAS_SYSTEM" "$KAS_MACHINE"
   fi
 else
   log "BUNDLE_KAS=0: app ships without a bundled KAS engine"
@@ -1707,18 +1707,18 @@ log "Packaging desktop app (electron-builder, version: $KC_VERSION)…"
   if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
 
   EB_ARGS=( "-c.extraMetadata.version=$KC_VERSION" )
-  if [ "$PRODUCT_NAME" = "KiroCrew Nightly" ]; then
-    # Same appId (com.amazon.kiro.crew) as production ON PURPOSE:
+  if [ "$PRODUCT_NAME" = "AjCrew Nightly" ]; then
+    # Same appId (io.github.al-jwharah.ajcrew) as production ON PURPOSE:
     # - Finder decides install-replace by FILENAME only, so the distinct
     #   productName alone gives side-by-side installs.
     # - Squirrel.Mac validates updates against the host app's designated
     #   requirement (which pins the bundle id); a distinct nightly id would
     #   strand every existing install at the identity switch.
     # - CDSigner authz is per-identifier; the shared id is already onboarded.
-    # Cost accepted: shared TCC/notification identity, and a kirocrew:// URL
+    # Cost accepted: shared TCC/notification identity, and an ajcrew:// URL
     # scheme could not disambiguate the two apps (none is registered today).
     EB_ARGS+=(
-      "-c.productName=KiroCrew Nightly"
+      "-c.productName=AjCrew Nightly"
       "-c.mac.icon=icon-nightly.icns"
       "-c.linux.icon=icon-nightly.png"
       "-c.win.icon=icon-nightly.png"
@@ -1727,7 +1727,7 @@ log "Packaging desktop app (electron-builder, version: $KC_VERSION)…"
       # paths from that internal name, so changing it while productName stays
       # space-free makes the packaged app abort with "Unable to find helper
       # app". Nightly re-overrides the static display name to keep its suffix.
-      "-c.mac.extendInfo.CFBundleDisplayName=Kiro Crew Nightly"
+      "-c.mac.extendInfo.CFBundleDisplayName=Aj Crew Nightly"
       # Linux packages key their INSTALL identity off the package name, so
       # nightly needs its own or dpkg/rpm treat a nightly install as an UPGRADE
       # of stable and remove it -- the same hazard as the nsis.guid below, from
@@ -1741,10 +1741,10 @@ log "Packaging desktop app (electron-builder, version: $KC_VERSION)…"
       #                     entry's StartupWMClass, which must keep matching
       #
       # productName already differs, so the /opt directory does not collide.
-      "-c.deb.packageName=kirocrew-nightly"
-      "-c.rpm.packageName=kirocrew-nightly"
-      "-c.linux.executableName=kirocrew-desktop-nightly"
-      "-c.extraMetadata.desktopName=kirocrew-desktop-nightly.desktop"
+      "-c.deb.packageName=ajcrew-nightly"
+      "-c.rpm.packageName=ajcrew-nightly"
+      "-c.linux.executableName=ajcrew-desktop-nightly"
+      "-c.extraMetadata.desktopName=ajcrew-desktop-nightly.desktop"
       # The npm package `name` is per-channel for the same reason the Linux
       # package name is. It is not build metadata: appInfo derives
       # updaterCacheDirName from it (`sanitizedName.toLowerCase() +
@@ -1756,7 +1756,7 @@ log "Packaging desktop app (electron-builder, version: $KC_VERSION)…"
       # window state. productName and nsis.guid already separate the install
       # directory and the registry key; this separates the per-user state they
       # do not cover.
-      "-c.extraMetadata.name=kirocrew-desktop-nightly"
+      "-c.extraMetadata.name=ajcrew-desktop-nightly"
       # Squirrel.Windows keyed the INSTALL identity off squirrelWindows.name;
       # NSIS keys it off two separate things, and nightly needs both:
       #
@@ -1767,7 +1767,7 @@ log "Packaging desktop app (electron-builder, version: $KC_VERSION)…"
       #    channels claim one registry key and an assisted nightly install
       #    adopts -- then on uninstall removes -- the stable entry. The value
       #    below is exactly what electron-builder would derive from a
-      #    hypothetical `com.amazon.kiro.crew.nightly` appId, so it is stable,
+      #    hypothetical `io.github.al-jwharah.ajcrew.nightly` appId, so it is stable,
       #    reproducible, and collision-free without moving the real appId.
       # 2. The install DIRECTORY comes from productFilename (i.e. the spaced
       #    productName above) only because nsis.oneClick is false --
@@ -1777,7 +1777,7 @@ log "Packaging desktop app (electron-builder, version: $KC_VERSION)…"
       # As on mac, this identity persists on user machines from first install:
       # changing it later orphans installed updaters, so it is pinned from the
       # first shipped build.
-      "-c.nsis.guid=0f417bf9-2759-51d6-acfb-f864805d1f41"
+      "-c.nsis.guid=cf774884-978d-5528-814f-8d616b5621fb"
       # WINDOWS-ONLY appId split. The shared appId above is required on macOS
       # (Squirrel.Mac validates against the host's designated requirement, which
       # pins the bundle id), but on Windows it reaches ${APP_ID}, which the NSIS
@@ -1801,9 +1801,9 @@ log "Packaging desktop app (electron-builder, version: $KC_VERSION)…"
       # strand every installed mac app's updates. This is the same identity
       # main.js already claims at runtime via app.setAppUserModelId, so the
       # packaged shortcuts and the running process finally agree.
-      "-c.win.appId=com.amazon.kiro.crew.nightly"
+      "-c.win.appId=io.github.al-jwharah.ajcrew.nightly"
     )
-  elif [ "$PRODUCT_NAME" = "KiroCrew LTS" ]; then # brand-ok -- product name
+  elif [ "$PRODUCT_NAME" = "AjCrew LTS" ]; then # brand-ok -- product name
     # Same side-by-side identity split as nightly above, for the same reasons
     # and with the same shared macOS appId (no new signing identifier). The
     # standard icon: the name and the About channel row tell the editions apart.
@@ -1813,14 +1813,14 @@ log "Packaging desktop app (electron-builder, version: $KC_VERSION)…"
     BASE_APP_ID="$(node -p 'require(process.argv[1]).build.appId' "$ELECTRON_DIR/package.json")"
     [ -n "$BASE_APP_ID" ] || { echo "ERROR: website/electron/package.json has no build.appId" >&2; exit 1; }
     EB_ARGS+=(
-      "-c.productName=KiroCrew LTS" # brand-ok -- product name
-      "-c.mac.extendInfo.CFBundleDisplayName=Kiro Crew LTS"
-      "-c.deb.packageName=kirocrew-lts"
-      "-c.rpm.packageName=kirocrew-lts"
-      "-c.linux.executableName=kirocrew-desktop-lts"
-      "-c.extraMetadata.desktopName=kirocrew-desktop-lts.desktop"
-      "-c.extraMetadata.name=kirocrew-desktop-lts"
-      "-c.nsis.guid=fec201a5-e96c-5955-8d08-750be2d446a1"
+      "-c.productName=AjCrew LTS" # brand-ok -- product name
+      "-c.mac.extendInfo.CFBundleDisplayName=Aj Crew LTS"
+      "-c.deb.packageName=ajcrew-lts"
+      "-c.rpm.packageName=ajcrew-lts"
+      "-c.linux.executableName=ajcrew-desktop-lts"
+      "-c.extraMetadata.desktopName=ajcrew-desktop-lts.desktop"
+      "-c.extraMetadata.name=ajcrew-desktop-lts"
+      "-c.nsis.guid=f65957e7-68d2-5d0f-9654-e3298a4efcee"
       "-c.win.appId=${BASE_APP_ID}.lts"
     )
   fi
@@ -1846,7 +1846,7 @@ log "Packaging desktop app (electron-builder, version: $KC_VERSION)…"
     elif [ -n "${TARGET_ARCH:-}" ]; then
       # Named single arch. The explicit artifactName patterns exist for x64:
       # electron-builder's DEFAULT pattern drops "-${arch}" for x64 (an Intel
-      # build would land as "KiroCrew-1.2.3.dmg", indistinguishable from nothing
+      # build would land as "AjCrew-1.2.3.dmg", indistinguishable from nothing
       # in particular), and these two builds ship NEXT TO the universal DMG,
       # so every mac artifact must spell its arch. arm64 already does by
       # default; spelling the pattern out keeps both legs on one rule.
@@ -1959,4 +1959,4 @@ fi
 log "Done. Installer(s) are in $ELECTRON_DIR/dist/"
 ls -1 "$ELECTRON_DIR/dist/"*.{dmg,AppImage,deb,rpm,zip,exe} 2>/dev/null | sed 's/^/   /' || true
 echo ""
-echo "    The .app embeds the backend, so it runs with no PATH kirocrew needed."
+echo "    The .app embeds the backend, so it runs with no PATH ajcrew needed."

@@ -33,17 +33,17 @@ const slots = [
   },
   {
     key: 'chat-loop-capped', title: 'Dashboard audit patrol', running: false, messages: 40,
-    agent: 'kirocrew', modified: now, last_ts: ago(1), last_turn_ts: ago(1), folder_id: '',
+    agent: 'ajcrew', modified: now, last_ts: ago(1), last_turn_ts: ago(1), folder_id: '',
     last_message: 'PR #26295 CI 61 pass, 20 running, 0 red',
   },
   {
     key: 'chat-loop-open', title: 'Security fix patrol', running: false, messages: 22,
-    agent: 'kirocrew', modified: now - 120, last_ts: ago(2), last_turn_ts: ago(2), folder_id: '',
+    agent: 'ajcrew', modified: now - 120, last_ts: ago(2), last_turn_ts: ago(2), folder_id: '',
     last_message: 'Waiting on review lanes for #24812',
   },
   {
     key: 'chat-loop-stalled', title: 'Release notes watcher', running: false, interrupted: true,
-    messages: 9, agent: 'kirocrew', modified: now - 300, last_ts: ago(5), last_turn_ts: ago(5),
+    messages: 9, agent: 'ajcrew', modified: now - 300, last_ts: ago(5), last_turn_ts: ago(5),
     folder_id: '', last_message: 'Model error, retry pending',
   },
 ]

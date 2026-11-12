@@ -83,16 +83,16 @@ describe('mobile iOS-style two-level navigation', () => {
   it('does NOT auto-drill into the remembered tab — mobile always opens at root', () => {
     // iOS Settings opens at its root every time; a phone visit that teleports
     // into last week's tab reads as being lost, not resumed.
-    sessionStorage.setItem('kirocrew:sidepanel-tab:test-ios-nav', 'security')
+    sessionStorage.setItem('ajcrew:sidepanel-tab:test-ios-nav', 'security')
     renderAt('')
     expect(screen.queryByTestId('pane')).toBeNull()
     expect(screen.getByRole('button', { name: 'Security' })).toBeTruthy()
   })
 
   it('keeps the root visit from overwriting the remembered desktop tab', () => {
-    sessionStorage.setItem('kirocrew:sidepanel-tab:test-ios-nav', 'security')
+    sessionStorage.setItem('ajcrew:sidepanel-tab:test-ios-nav', 'security')
     renderAt('')
-    expect(sessionStorage.getItem('kirocrew:sidepanel-tab:test-ios-nav')).toBe('security')
+    expect(sessionStorage.getItem('ajcrew:sidepanel-tab:test-ios-nav')).toBe('security')
   })
 
   it('yields the whole level to the SubNav when a second level is drilled in', () => {
@@ -125,7 +125,7 @@ describe('mobile iOS-style two-level navigation', () => {
 
   it('leaves the desktop rail alone — remembered tab still restores there', () => {
     mobile = false
-    sessionStorage.setItem('kirocrew:sidepanel-tab:test-ios-nav', 'about')
+    sessionStorage.setItem('ajcrew:sidepanel-tab:test-ios-nav', 'about')
     renderAt('')
     expect(screen.getByTestId('pane').textContent).toBe('about')
     // Desktop renders the persistent rail, not the mobile root list — the

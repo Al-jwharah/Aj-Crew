@@ -10,15 +10,15 @@ from chat_test_helpers import _make_app_with_agent_routes
 from dashboard_owner_helpers import as_owner
 from test_chat_agent_selection import TEMPLATE, _template_chat, _turn_state
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.execution_context import read_session_execution
-from kiro_crew.member_memory_auth import read_private_session_store
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.execution_context import read_session_execution
+from aj_crew.member_memory_auth import read_private_session_store
 
 
 async def _same_name_state(tmp_path, monkeypatch):
     """A private member named exactly like an installed shared template."""
     state, _slot, private_store = await _template_chat(tmp_path, monkeypatch, first_turn=False)
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert cfg.agents[TEMPLATE].memory_store == private_store
     return state, private_store
 
@@ -222,7 +222,7 @@ async def test_member_thread_refuses_the_same_name_template_kind(tmp_path, monke
     shared template and detach the thread from the member's memory, which is a
     re-bind by another spelling and is refused like any other re-bind.
     """
-    from kiro_crew.members import DM_SLOT_MODE, write_dm_binding
+    from aj_crew.members import DM_SLOT_MODE, write_dm_binding
 
     state, private_store = await _same_name_state(tmp_path, monkeypatch)
     key = f"member-{TEMPLATE}"

@@ -15,10 +15,10 @@ import sys
 import pytest
 from knowledge_helpers import store_fixture  # noqa: F401
 
-from kiro_crew.knowledge.chunker import HeadingAwareChunker
-from kiro_crew.knowledge.extractor import EntityExtractor
-from kiro_crew.knowledge.readers import FileReader
-from kiro_crew.knowledge.retrieval import ANY_EMBEDDING_SPACE, HybridRetriever, _bytes_to_floats
+from aj_crew.knowledge.chunker import HeadingAwareChunker
+from aj_crew.knowledge.extractor import EntityExtractor
+from aj_crew.knowledge.readers import FileReader
+from aj_crew.knowledge.retrieval import ANY_EMBEDDING_SPACE, HybridRetriever, _bytes_to_floats
 
 # 8. HybridRetriever -- additional coverage
 
@@ -341,9 +341,9 @@ class TestPysqlite3Fallback:
     """Verify modules fall back to stdlib sqlite3 when pysqlite3 is unavailable."""
 
     _MODULES = (
-        "kiro_crew.knowledge.store",
-        "kiro_crew.knowledge.retrieval",
-        "kiro_crew.snapshot",
+        "aj_crew.knowledge.store",
+        "aj_crew.knowledge.retrieval",
+        "aj_crew.snapshot",
     )
 
     def _reload_without_pysqlite3(self, module_name: str):
@@ -355,7 +355,7 @@ class TestPysqlite3Fallback:
         """
         import sqlite3 as stdlib_sqlite3
 
-        compat = "kiro_crew._sqlite_compat"
+        compat = "aj_crew._sqlite_compat"
         missing = object()
         saved = sys.modules.pop("pysqlite3", missing)
         # Restore the original module objects afterwards: a reloaded module is a
@@ -395,13 +395,13 @@ class TestPysqlite3Fallback:
                     setattr(parent, child, value)
 
     def test_store_falls_back_to_stdlib_sqlite3(self):
-        self._reload_without_pysqlite3("kiro_crew.knowledge.store")
+        self._reload_without_pysqlite3("aj_crew.knowledge.store")
 
     def test_retrieval_falls_back_to_stdlib_sqlite3(self):
-        self._reload_without_pysqlite3("kiro_crew.knowledge.retrieval")
+        self._reload_without_pysqlite3("aj_crew.knowledge.retrieval")
 
     def test_snapshot_falls_back_to_stdlib_sqlite3(self):
-        self._reload_without_pysqlite3("kiro_crew.snapshot")
+        self._reload_without_pysqlite3("aj_crew.snapshot")
 
 
 # 12. chunk_markdown() -- heading-aware markdown chunking

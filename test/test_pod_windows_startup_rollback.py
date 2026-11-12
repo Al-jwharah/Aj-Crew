@@ -17,9 +17,9 @@ import subprocess
 import pytest
 from test_pod_windows_stop_race import _FakeClock, _held
 
-from kiro_crew.pod import _windows_run as runs
-from kiro_crew.pod import windows as win
-from kiro_crew.pod.config import PodConfig
+from aj_crew.pod import _windows_run as runs
+from aj_crew.pod import windows as win
+from aj_crew.pod.config import PodConfig
 
 
 @pytest.fixture
@@ -27,8 +27,8 @@ def cancelled_start(tmp_path, monkeypatch):
     """A reserved, never-run start whose task and wrapper the rollback must delete."""
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
     cfg = PodConfig.load()
     cfg.pods_dir.mkdir(parents=True, exist_ok=True)
     events: list[str] = []

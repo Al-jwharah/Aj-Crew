@@ -27,7 +27,7 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/diff-chip-toggle'
 const SLOT = 'chat-diff-chip-toggle'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 const CHIP = '[data-testid="tool-diff-chip"]'
 
 mkdirSync(OUT, { recursive: true })
@@ -60,7 +60,7 @@ const PROSE = [
 const t0 = Date.now() / 1000 - 900
 const slots = [{
   key: SLOT, title: 'Diff chip toggles its card', running: false, last_message: 'Wrote find_defs.py.',
-  messages: 3, agent: 'kirocrew', memory_mode: 'persistent', project: PROJECT,
+  messages: 3, agent: 'ajcrew', memory_mode: 'persistent', project: PROJECT,
   modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
 }]
 const detail = {

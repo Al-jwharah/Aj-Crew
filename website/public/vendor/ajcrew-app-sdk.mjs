@@ -1,0 +1,22 @@
+// Vendor stub: re-exports @ajcrew/app-sdk from the host.
+const m = window.__ajcrew_modules?.['@ajcrew/app-sdk']
+if (!m) throw new Error('[vendor/ajcrew-app-sdk] Host modules not initialized.')
+export const {
+  useAppApi, useAppEvents, useTheme, useAppInfo, useNavigate, useNotify,
+  useNavBadge, useAppNotifications, useChatLauncher, AppApiProvider,
+  useImeGuard, useLanguageGeneration, activeLocale,
+  fmtNumber, fmtCurrency, fmtDate, fmtTime, fmtDateTime, fmtRelative, compareText,
+  // The App Kit seam level, so an app can feature-detect what this host provides.
+  APP_SDK_LEVEL,
+  // Marker protocol. Naming an export the host does not provide is a load-time failure for the
+  // whole app, so this list is checked against the protocol barrel by chatProtocolBoundary.test.ts.
+  parseOptions, deriveFollowUpOptions, extractSteeringAcks, stripPartialOptionMarker,
+  // Chat surfaces and the transcript row registry.
+  useChatSession, ChatPanel, ChatEmbed, ChatMessageList,
+  // The dashboard's pull-request panel, behind the app's declared source paths (level 2).
+  PullRequestPanel,
+  defaultMessageRenderers, mergeRenderers, resolveRenderer, ToolCallPill, GROUPED_ROLES,
+  // WS event scope prediction, so a subscription that will never be delivered warns at
+  // development time instead of silently receiving nothing.
+  checkSubscribeAllowed,
+} = m

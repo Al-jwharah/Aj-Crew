@@ -44,7 +44,7 @@ const SLOTS = [
     title: 'Pinned nav evidence',
     messages: 2,
     running: false,
-    agent: 'kirocrew',
+    agent: 'ajcrew',
     mode: '',
     created: '2026-09-06T01:00:00Z',
     last_ts: '2026-09-06T04:00:00Z',
@@ -86,7 +86,7 @@ const SCENES = [
     pinned: ['capabilities-steering'],
     url: '/chat',
     theme: 'light',
-    themeAttr: 'kiro-light',
+    themeAttr: 'aj-light',
     clip: RAIL_CLIP,
     assert: async page =>
       (await page.locator('[data-onboarding-nav="capabilities-steering"]').count()) === 1
@@ -211,7 +211,7 @@ async function main() {
   let failed = 0
   try {
     for (const s of SCENES) {
-      const themeAttr = s.themeAttr ?? 'kiro-dark'
+      const themeAttr = s.themeAttr ?? 'aj-dark'
       const ctx = await browser.newContext({
         viewport: { width: 1400, height: 940 },
         deviceScaleFactor: 2,

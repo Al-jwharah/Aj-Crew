@@ -50,7 +50,7 @@ import { json, logPageProblems, stubDashboardApi } from './lib/stub-dashboard-ap
 const OUT = process.argv[2] || '../temp-screenshots/mcp-disabled-in-config'
 mkdirSync(OUT, { recursive: true })
 
-const PRESENCE = { kirocrew: true, kiroGlobal: true, ccGlobal: false }
+const PRESENCE = { ajcrew: true, kiroGlobal: true, ccGlobal: false }
 const PROBED_AT = Math.floor(Date.now() / 1000) - 90
 // The backend collapses the home prefix to `~` before it names the file.
 const SHARED_FILE = '~/.kiro/settings/mcp.json'
@@ -71,7 +71,7 @@ const live = (name, transport, tools) => ({
   presence: PRESENCE,
   probeMode: 'handshake',
   probedAt: PROBED_AT,
-  kirocrewManaged: false,
+  ajcrewManaged: false,
   enabled: true,
   disabledIn: null,
   disabledInFile: null,
@@ -91,7 +91,7 @@ const off = (name, transport, reason = null) => ({
   probeMode: 'handshake',
   probedAt: 0.0,
   disabled: true,
-  kirocrewManaged: false,
+  ajcrewManaged: false,
   enabled: false,
   disabledIn: 'shared',
   disabledInFile: SHARED_FILE,
@@ -134,7 +134,7 @@ async function capture(theme, scenes) {
     slots: [],
     localStorageEntries: { 'mc-onboarded': '1', 'mc-theme-mode': theme },
     extra: async (path, route) => {
-      if (path === '/api/config/kirocrew') return json(route, { connections_ui: true }), true
+      if (path === '/api/config/ajcrew') return json(route, { connections_ui: true }), true
       if (path === '/api/theme/boot') return json(route, { mode: theme, theme: '' }), true
       // GET /api/mcp and POST /api/mcp/probe answer the SAME list on this
       // branch: the probe no longer leaves disabled rows out.
@@ -210,7 +210,7 @@ async function capture(theme, scenes) {
       if ((await uninstall.getAttribute('title')) !== UNINSTALL_HELP) {
         throw new Error(`${name}: Uninstall hover text reads ${JSON.stringify(await uninstall.getAttribute('title'))}`)
       }
-      for (const scope of ['kirocrew', 'kiroGlobal']) {
+      for (const scope of ['ajcrew', 'kiroGlobal']) {
         if (await row.locator(`button[data-scope="${scope}"]`).isEnabled()) {
           throw new Error(`${name}: the ${scope} scope badge is live on a row disabled in the shared config`)
         }

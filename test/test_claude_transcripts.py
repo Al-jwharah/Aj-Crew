@@ -16,10 +16,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import subagent as sa
-from kiro_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO, PROVIDER_LABEL_CLAUDE
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.subagent import SubagentManager, _cleanup_session_files_sync
+from aj_crew import subagent as sa
+from aj_crew.acp.types import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO, PROVIDER_LABEL_CLAUDE
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.subagent import SubagentManager, _cleanup_session_files_sync
 
 SID = "0f8fad5b-d9cb-469f-a165-70867728950e"
 OTHER_SID = "7c9e6679-7425-40de-944b-e07fc1f90ae7"
@@ -31,7 +31,7 @@ def _project_name(cwd: str) -> str:
 
 
 def _delete(session_id: str, cwd: str) -> bool:
-    from kiro_crew.agent_sdk.claude_transcripts import delete_claude_session_files
+    from aj_crew.agent_sdk.claude_transcripts import delete_claude_session_files
 
     return delete_claude_session_files(session_id, cwd)
 
@@ -85,7 +85,7 @@ def _seeded_intact(store) -> bool:
 
 
 def test_the_project_name_is_spelled_from_the_resolved_path(store) -> None:
-    from kiro_crew.agent_sdk.claude_transcripts import claude_project_dir_name
+    from aj_crew.agent_sdk.claude_transcripts import claude_project_dir_name
 
     assert claude_project_dir_name(store["work_dir"]) == store["project"].name
     assert "linked" not in store["project"].name
@@ -149,9 +149,9 @@ def test_a_refused_or_failed_cleanup_logs_no_session_id_or_cwd(
     store, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
     """A log line names the component and the reason, never the path."""
-    caplog.set_level("DEBUG", logger="kiro_crew.agent_sdk.claude_transcripts")
+    caplog.set_level("DEBUG", logger="aj_crew.agent_sdk.claude_transcripts")
     denied = PermissionError(13, "Permission denied", str(store["project"] / SID))
-    with patch("kiro_crew.agent_sdk.claude_transcripts.shutil.rmtree", side_effect=denied):
+    with patch("aj_crew.agent_sdk.claude_transcripts.shutil.rmtree", side_effect=denied):
         assert _delete(SID, store["work_dir"]) is False
     history = store["config"] / "file-history" / SID
     outside = tmp_path / "outside-history"
@@ -170,7 +170,7 @@ def test_a_cwd_too_long_to_spell_deletes_nothing(store) -> None:
 
 
 def _provider(backend: str, memory_mode: str, work_dir: str) -> AcpProvider:
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider(acp_backend=backend, memory_mode=memory_mode)
     provider._client = MagicMock()
     provider._client.backend = backend
@@ -200,7 +200,7 @@ async def test_a_persistent_claude_chat_keeps_its_transcript(store) -> None:
 async def test_a_kiro_chat_never_reaches_the_claude_store(
     store, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.providers import acp as acp_mod
+    from aj_crew.providers import acp as acp_mod
 
     monkeypatch.setattr(acp_mod, "kiro_sessions_dir", lambda: tmp_path / "cli")
     await _provider(ACP_BACKEND_KIRO, "incognito", store["work_dir"]).shutdown()
@@ -221,7 +221,7 @@ async def test_spawn_release_disposes_a_claude_session_at_its_recorded_cwd(store
     with (
         patch.object(sa, "update_state"),
         patch(
-            "kiro_crew.subagent_persistence.trusted_cleanup_identity_record",
+            "aj_crew.subagent_persistence.trusted_cleanup_identity_record",
             return_value=record,
         ) as lookup,
     ):
@@ -235,7 +235,7 @@ async def test_spawn_release_without_a_trusted_cwd_is_not_disposed(store) -> Non
     with (
         patch.object(sa, "update_state"),
         patch(
-            "kiro_crew.subagent_persistence.trusted_cleanup_identity_record",
+            "aj_crew.subagent_persistence.trusted_cleanup_identity_record",
             return_value=None,
         ),
     ):

@@ -17,17 +17,17 @@ from unittest.mock import patch
 from autonudge_wake_judge_helpers import _restore_judge_process_globals  # noqa: F401 - fixture
 from autonudge_wake_judge_helpers import _loop, answers
 
-from kiro_crew import autonudge_judge as judge
-from kiro_crew.autonudge import (
+from aj_crew import autonudge_judge as judge
+from aj_crew.autonudge import (
     _JUDGE_QUIET_STREAK_FLOOR_DEFAULT,
     _MAX_QUIET_STREAK,
     AutoNudgeService,
     NudgeLoop,
 )
-from kiro_crew.decisions.points import nudge_wake as point
-from kiro_crew.decisions.types import Answer
-from kiro_crew.irq import Outcome, Verdict
-from kiro_crew.validation import JUDGE_OFF_KEY
+from aj_crew.decisions.points import nudge_wake as point
+from aj_crew.decisions.types import Answer
+from aj_crew.irq import Outcome, Verdict
+from aj_crew.validation import JUDGE_OFF_KEY
 
 
 class TestAnOwedWakeSurvives:
@@ -67,9 +67,9 @@ class TestAnOwedWakeSurvives:
             return Verdict(outcome=outcome, body="x")
 
         with (
-            patch("kiro_crew.decisions.is_enabled", lambda *a, **k: True),
-            patch("kiro_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
-            patch("kiro_crew.decisions.points.nudge_wake.judge_tick", tick),
+            patch("aj_crew.decisions.is_enabled", lambda *a, **k: True),
+            patch("aj_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
+            patch("aj_crew.decisions.points.nudge_wake.judge_tick", tick),
         ):
             asyncio.run(svc._judge_tick_is_quiet(loop))
         return loop
@@ -130,8 +130,8 @@ class TestAScreenedPullRequestTickLeavesTheProbesQuietAlone:
         loop.message = "https://github.com/o/r/pull/7"
 
         with (
-            patch("kiro_crew.decisions.is_enabled", lambda *a, **k: True),
-            patch("kiro_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
+            patch("aj_crew.decisions.is_enabled", lambda *a, **k: True),
+            patch("aj_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
         ):
             got = asyncio.run(svc._judge_tick_is_quiet(loop))
         assert got is True, "the probe already read this subject, so the tick stays free"
@@ -149,8 +149,8 @@ class TestAScreenedPullRequestTickLeavesTheProbesQuietAlone:
         loop.message = "https://github.com/o/r/pull/7"
 
         with (
-            patch("kiro_crew.decisions.is_enabled", lambda *a, **k: True),
-            patch("kiro_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
+            patch("aj_crew.decisions.is_enabled", lambda *a, **k: True),
+            patch("aj_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
         ):
             got = asyncio.run(svc._judge_tick_is_quiet(loop))
         assert got is False, "one target nobody read makes the reading incomplete"
@@ -211,9 +211,9 @@ class TestARetargetDoesNotLeakOrLie:
             return Verdict(outcome=Outcome.QUIET, body="quiet")
 
         with (
-            patch("kiro_crew.decisions.is_enabled", lambda *a, **k: True),
-            patch("kiro_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
-            patch("kiro_crew.decisions.points.nudge_wake.judge_tick", tick),
+            patch("aj_crew.decisions.is_enabled", lambda *a, **k: True),
+            patch("aj_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
+            patch("aj_crew.decisions.points.nudge_wake.judge_tick", tick),
         ):
             answer = asyncio.run(svc._judge_tick_is_quiet(loop))
 
@@ -260,8 +260,8 @@ class TestANarrowedWatchIsNeverWidened:
 
         svc._collect_judge_evidence = collect
         with (
-            patch("kiro_crew.decisions.is_enabled", lambda *a, **k: True),
-            patch("kiro_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
+            patch("aj_crew.decisions.is_enabled", lambda *a, **k: True),
+            patch("aj_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
         ):
             assert asyncio.run(svc._judge_tick_is_quiet(loop)) is False
 
@@ -300,9 +300,9 @@ class TestANarrowedWatchIsNeverWidened:
             return Verdict(outcome=Outcome.QUIET, body="quiet")
 
         with (
-            patch("kiro_crew.decisions.is_enabled", lambda *a, **k: True),
-            patch("kiro_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
-            patch("kiro_crew.decisions.points.nudge_wake.judge_tick", tick),
+            patch("aj_crew.decisions.is_enabled", lambda *a, **k: True),
+            patch("aj_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
+            patch("aj_crew.decisions.points.nudge_wake.judge_tick", tick),
         ):
             answer = asyncio.run(svc._judge_tick_is_quiet(loop))
 
@@ -357,9 +357,9 @@ class TestCursorsMoveOnlyWithAVerdict:
         loop.judge_cursors = {"chat-2-2": 7}
 
         with (
-            patch("kiro_crew.decisions.is_enabled", lambda *a, **k: True),
-            patch("kiro_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
-            patch("kiro_crew.decisions.points.nudge_wake.judge_tick", tick),
+            patch("aj_crew.decisions.is_enabled", lambda *a, **k: True),
+            patch("aj_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
+            patch("aj_crew.decisions.points.nudge_wake.judge_tick", tick),
         ):
             try:
                 asyncio.run(svc._judge_tick_is_quiet(loop))
@@ -377,9 +377,9 @@ class TestCursorsMoveOnlyWithAVerdict:
         loop.judge_cursors = {"chat-2-2": 7}
 
         with (
-            patch("kiro_crew.decisions.is_enabled", lambda *a, **k: True),
-            patch("kiro_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
-            patch("kiro_crew.decisions.points.nudge_wake.judge_tick", tick),
+            patch("aj_crew.decisions.is_enabled", lambda *a, **k: True),
+            patch("aj_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
+            patch("aj_crew.decisions.points.nudge_wake.judge_tick", tick),
         ):
             asyncio.run(svc._judge_tick_is_quiet(loop))
 
@@ -445,7 +445,7 @@ class TestTickLeavesEverythingAloneWhenItShould:
 
         svc._collect_judge_evidence = never
         loop = _loop({"wake_when": "x"})
-        with patch("kiro_crew.decisions.is_enabled", lambda *a, **k: False):
+        with patch("aj_crew.decisions.is_enabled", lambda *a, **k: False):
             assert asyncio.run(svc._judge_tick_is_quiet(loop)) is None
         assert loop.judge == {"wake_when": "x"}, "the brief is kept for when the scope arrives"
 
@@ -455,7 +455,7 @@ class TestTickLeavesEverythingAloneWhenItShould:
         A second resolver could pick a lane the gate refuses. The test checks the
         module's SYMBOLS: a call-level test passes even when a second rule exists.
         """
-        from kiro_crew import autonudge as _autonudge
+        from aj_crew import autonudge as _autonudge
 
         for gone in (
             "_judge_lane",
@@ -500,8 +500,8 @@ class TestTickVerdicts:
             return ans
 
         with (
-            patch("kiro_crew.decisions.is_enabled", lambda *a, **k: True),
-            patch("kiro_crew.decisions.decide", decide),
+            patch("aj_crew.decisions.is_enabled", lambda *a, **k: True),
+            patch("aj_crew.decisions.decide", decide),
         ):
             return asyncio.run(svc._judge_tick_is_quiet(loop))
 
@@ -712,11 +712,11 @@ class TestTheDefaultBrief:
             return Verdict(outcome=Outcome.QUIET, body="no new evidence")
 
         with (
-            patch("kiro_crew.decisions.is_enabled", lambda *a, **k: True),
+            patch("aj_crew.decisions.is_enabled", lambda *a, **k: True),
             # GRANTED, because the default brief's own precondition is this point's
             # egress scope -- these cases are a machine whose owner opted in.
-            patch("kiro_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
-            patch("kiro_crew.decisions.points.nudge_wake.judge_tick", tick),
+            patch("aj_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
+            patch("aj_crew.decisions.points.nudge_wake.judge_tick", tick),
         ):
             return asyncio.run(svc._judge_tick_is_quiet(loop))
 
@@ -761,9 +761,9 @@ class TestTheDefaultBrief:
             return Verdict(outcome=Outcome.QUIET, body="no new evidence")
 
         with (
-            patch("kiro_crew.decisions.is_enabled", lambda *a, **k: True),
-            patch("kiro_crew.decisions.judge_evidence_scope_granted", lambda **k: False),
-            patch("kiro_crew.decisions.points.nudge_wake.judge_tick", tick),
+            patch("aj_crew.decisions.is_enabled", lambda *a, **k: True),
+            patch("aj_crew.decisions.judge_evidence_scope_granted", lambda **k: False),
+            patch("aj_crew.decisions.points.nudge_wake.judge_tick", tick),
         ):
             got = asyncio.run(svc._judge_tick_is_quiet(_loop()))
         assert got is None, "scope off leaves the tick exactly as today"
@@ -779,9 +779,9 @@ class TestTheDefaultBrief:
             return Verdict(outcome=Outcome.QUIET, body="no new evidence")
 
         with (
-            patch("kiro_crew.decisions.is_enabled", lambda *a, **k: True),
-            patch("kiro_crew.decisions.judge_evidence_scope_granted", lambda **k: False),
-            patch("kiro_crew.decisions.points.nudge_wake.judge_tick", tick),
+            patch("aj_crew.decisions.is_enabled", lambda *a, **k: True),
+            patch("aj_crew.decisions.judge_evidence_scope_granted", lambda **k: False),
+            patch("aj_crew.decisions.points.nudge_wake.judge_tick", tick),
         ):
             got = asyncio.run(svc._judge_tick_is_quiet(_loop({"wake_when": "RULING"})))
         assert got is True
@@ -839,9 +839,9 @@ class TestPersistBeforePublish:
             return Verdict(outcome=outcome, body="x")
 
         with (
-            patch("kiro_crew.decisions.is_enabled", lambda *a, **k: True),
-            patch("kiro_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
-            patch("kiro_crew.decisions.points.nudge_wake.judge_tick", tick),
+            patch("aj_crew.decisions.is_enabled", lambda *a, **k: True),
+            patch("aj_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
+            patch("aj_crew.decisions.points.nudge_wake.judge_tick", tick),
         ):
             got = asyncio.run(svc._judge_tick_is_quiet(_loop({"wake_when": "RULING"})))
         return got, trail
@@ -895,9 +895,9 @@ class TestPersistBeforePublish:
             return Verdict(outcome=Outcome.QUIET, body="x")
 
         with (
-            patch("kiro_crew.decisions.is_enabled", lambda *a, **k: True),
-            patch("kiro_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
-            patch("kiro_crew.decisions.points.nudge_wake.judge_tick", tick),
+            patch("aj_crew.decisions.is_enabled", lambda *a, **k: True),
+            patch("aj_crew.decisions.judge_evidence_scope_granted", lambda **k: True),
+            patch("aj_crew.decisions.points.nudge_wake.judge_tick", tick),
         ):
             got = asyncio.run(svc._judge_tick_is_quiet(loop))
         assert got is False, "a verdict about a withdrawn question fires rather than suppressing"
@@ -940,8 +940,8 @@ class TestTranscriptNotice:
             return ans
 
         with (
-            patch("kiro_crew.decisions.is_enabled", lambda *a, **k: True),
-            patch("kiro_crew.decisions.decide", decide),
+            patch("aj_crew.decisions.is_enabled", lambda *a, **k: True),
+            patch("aj_crew.decisions.decide", decide),
         ):
             return asyncio.run(svc._judge_tick_is_quiet(loop))
 

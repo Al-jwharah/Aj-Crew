@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.apps.registry — External (federated) registry support.
+"""Tests for aj_crew.apps.registry — External (federated) registry support.
 
 This module covers the external index: its cache, fetch and parsing, lookups against it,
 the clone sandbox mode, install admission, ``refresh_registries`` and the clone-host trust
@@ -26,7 +26,7 @@ from external_registry_helpers import _catalog_absent  # noqa: F401
 from external_registry_helpers import _explicit_registry_execution_admission  # noqa: F401
 from external_registry_helpers import cache_dir_fixture  # noqa: F401
 
-from kiro_crew.apps.registry import (
+from aj_crew.apps.registry import (
     _EXTERNAL_REGISTRY_CACHE_TTL,
     _clone_sandbox_mode,
     _external_registry_cache_identity,
@@ -144,7 +144,7 @@ class TestExternalRegistryCache:
     def test_unnamed_raw_legacy_cache_filename_is_removed_without_logging_secret(
         self, cache_dir, caplog
     ):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         secret = "LegacyFilenameSecret"
         raw = f"https://user:{secret}@git.example.com/org/apps.git"
@@ -175,7 +175,7 @@ class TestExternalRegistryCache:
             encoding="utf-8",
         )
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.registry"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.apps.registry"):
             assert _read_external_registry_cache("corp", ignore_ttl=True) == []
 
         assert secret not in caplog.text
@@ -260,13 +260,11 @@ class TestFetchExternalRegistryValidation:
         """Patch _sel_fn so tests don't abort on SEL unavailability."""
         mock_sel_instance = MagicMock()
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._sel_fn",
+            "aj_crew.apps.registry._sel_fn",
             mock_sel_instance,
         )
         # Bypass OS-sandbox wrap — macOS 26 has no sandbox backend.
-        monkeypatch.setattr(
-            "kiro_crew.apps.registry.wrap_argv", lambda argv, **k: (list(argv), None)
-        )
+        monkeypatch.setattr("aj_crew.apps.registry.wrap_argv", lambda argv, **k: (list(argv), None))
 
     @pytest.mark.asyncio
     async def test_rejects_repo_with_path_traversal(self):
@@ -294,7 +292,7 @@ class TestFetchExternalRegistryValidation:
             )
             return None
 
-        monkeypatch.setattr("kiro_crew.apps.registry._git_fetch_branch", _fake_fetch)
+        monkeypatch.setattr("aj_crew.apps.registry._git_fetch_branch", _fake_fetch)
         result = await _fetch_external_registry_index(raw_registry, "main")
 
         assert result is not None
@@ -360,9 +358,7 @@ class TestFetchExternalRegistryValidation:
             return [sys.executable, str(fake_git), *argv], None
 
         monkeypatch.chdir(tmp_path)
-        monkeypatch.setattr(
-            "kiro_crew.apps.registry_pipeline.indexes.wrap_argv_async", _run_fake_git
-        )
+        monkeypatch.setattr("aj_crew.apps.registry_pipeline.indexes.wrap_argv_async", _run_fake_git)
         result = await _fetch_external_registry_index(
             "https://github.com/example/MyRepo.git", "feature/branch-name"
         )
@@ -378,7 +374,7 @@ class TestFetchExternalRegistryValidation:
 async def test_unnamed_credentialed_registry_cache_hit_and_stale_rows_are_public(
     cache_dir, monkeypatch, stale
 ):
-    from kiro_crew.apps import registry as reg
+    from aj_crew.apps import registry as reg
 
     secret = "CachedRegistrySecret"
     raw_registry = f"https://user:{secret}@git.example.com/org/apps.git"
@@ -407,7 +403,7 @@ async def test_unnamed_credentialed_registry_cache_hit_and_stale_rows_are_public
 
 @pytest.mark.asyncio
 async def test_url_shaped_registry_name_is_credential_free_in_cached_rows(cache_dir, monkeypatch):
-    from kiro_crew.apps import registry as reg
+    from aj_crew.apps import registry as reg
 
     secret = "RegistryNameSecret"
     raw_name = f"https://user:{secret}@registry.example/apps?token={secret}"
@@ -431,7 +427,7 @@ async def test_url_shaped_registry_name_is_credential_free_in_cached_rows(cache_
 
 
 def test_url_shaped_registry_name_still_rehydrates_exact_owner_transport(monkeypatch):
-    from kiro_crew.apps import registry as reg
+    from aj_crew.apps import registry as reg
 
     raw_name = "https://name-user:name-secret@registry.example/apps"
     raw_repo = "https://repo-user:repo-secret@git.example.com/org/apps.git"
@@ -462,13 +458,11 @@ class TestFetchExternalRegistryParsing:
         """Patch _sel_fn so tests don't abort on SEL unavailability."""
         mock_sel_instance = MagicMock()
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._sel_fn",
+            "aj_crew.apps.registry._sel_fn",
             mock_sel_instance,
         )
         # Bypass OS-sandbox wrap — macOS 26 has no sandbox backend.
-        monkeypatch.setattr(
-            "kiro_crew.apps.registry.wrap_argv", lambda argv, **k: (list(argv), None)
-        )
+        monkeypatch.setattr("aj_crew.apps.registry.wrap_argv", lambda argv, **k: (list(argv), None))
 
     @pytest.mark.asyncio
     async def test_parses_app_registry_json_from_clone(self, tmp_path):
@@ -538,7 +532,7 @@ class TestLoadExternalRegistries:
         mock_config = MagicMock()
         mock_config.registries = []
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
         result = await _load_external_registries()
@@ -557,7 +551,7 @@ class TestLoadExternalRegistries:
         mock_config = MagicMock()
         mock_config.registries = [mock_reg]
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
 
@@ -579,7 +573,7 @@ class TestLoadExternalRegistries:
         mock_config = MagicMock()
         mock_config.registries = [mock_reg]
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
 
@@ -610,11 +604,11 @@ class TestGetRegistryAppExternal:
         mock_config.registries = [mock_reg]
 
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._load_registry_file",
+            "aj_crew.apps.registry._load_registry_file",
             lambda: [],  # empty core registry
         )
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
 
@@ -627,11 +621,11 @@ class TestGetRegistryAppExternal:
         mock_config = MagicMock()
         mock_config.registries = []
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._load_registry_file",
+            "aj_crew.apps.registry._load_registry_file",
             lambda: [],
         )
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
 
@@ -652,11 +646,11 @@ class TestGetRegistryAppExternal:
         mock_config.registries = [mock_reg]
 
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._load_registry_file",
+            "aj_crew.apps.registry._load_registry_file",
             lambda: [core_entry],
         )
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
 
@@ -685,11 +679,11 @@ class TestGetRegistryAppByRepoExternal:
         mock_config.registries = [mock_reg]
 
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._load_registry_file",
+            "aj_crew.apps.registry._load_registry_file",
             lambda: [],  # empty core registry
         )
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
 
@@ -709,11 +703,11 @@ class TestGetRegistryAppByRepoExternal:
         mock_config.registries = [mock_reg]
 
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._load_registry_file",
+            "aj_crew.apps.registry._load_registry_file",
             lambda: [core_entry],
         )
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
 
@@ -724,11 +718,11 @@ class TestGetRegistryAppByRepoExternal:
         mock_config = MagicMock()
         mock_config.registries = []
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._load_registry_file",
+            "aj_crew.apps.registry._load_registry_file",
             lambda: [],
         )
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
 
@@ -815,13 +809,13 @@ class TestCloneSandboxMode:
 class TestKnownRegistryRepos:
     def test_includes_bundled_repos_when_no_external(self, cache_dir, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._load_registry_file",
+            "aj_crew.apps.registry._load_registry_file",
             lambda: [{"name": "core", "repo": "CoreRepo"}],
         )
         mock_config = MagicMock()
         mock_config.registries = []
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
         assert known_registry_repos() == {"CoreRepo"}
@@ -839,11 +833,11 @@ class TestKnownRegistryRepos:
         mock_config = MagicMock()
         mock_config.registries = [mock_reg]
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._load_registry_file",
+            "aj_crew.apps.registry._load_registry_file",
             lambda: [{"name": "core", "repo": "CoreRepo"}],
         )
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
         repos = known_registry_repos()
@@ -866,18 +860,18 @@ class TestKnownRegistryRepos:
         mock_config = MagicMock()
         mock_config.registries = [mock_reg]
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._load_registry_file",
+            "aj_crew.apps.registry._load_registry_file",
             lambda: [],
         )
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
         assert "PCNRadar" in known_registry_repos()
 
     def test_fails_open_to_bundled_when_config_raises(self, cache_dir, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._load_registry_file",
+            "aj_crew.apps.registry._load_registry_file",
             lambda: [{"name": "core", "repo": "CoreRepo"}],
         )
 
@@ -885,7 +879,7 @@ class TestKnownRegistryRepos:
             raise RuntimeError("config blew up")
 
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             _boom,
         )
         # Must not raise — the allowlist falls open to the bundled set.
@@ -910,7 +904,7 @@ class TestExternalRegistryRepos:
         mock_config = MagicMock()
         mock_config.registries = [mock_reg]
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
         # No bundled lookup here — helper returns ONLY external repos.
@@ -921,7 +915,7 @@ class TestExternalRegistryRepos:
             raise RuntimeError("config blew up")
 
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             _boom,
         )
         # Distinct from known_registry_repos: the helper falls open to EMPTY,
@@ -942,16 +936,16 @@ class TestRegistryInstallAdmission:
 
     @pytest.fixture()
     def reg_home(self, tmp_path, monkeypatch):
-        home = tmp_path / "kirocrew-home"
+        home = tmp_path / "ajcrew-home"
         home.mkdir()
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         return home
 
     def _signed_manifest(self, name, secret, signer="acme"):
         import hashlib
         import hmac
 
-        from kiro_crew.apps.manifest import AppManifest
+        from aj_crew.apps.manifest import AppManifest
 
         data = {
             "name": name,
@@ -969,7 +963,7 @@ class TestRegistryInstallAdmission:
 
     @pytest.mark.asyncio
     async def test_signed_app_admitted_under_require_signature(self, reg_home):
-        from kiro_crew.apps.registry import install_from_registry
+        from aj_crew.apps.registry import install_from_registry
 
         secret = "s3cr3t"
         self._write_policy(
@@ -984,7 +978,7 @@ class TestRegistryInstallAdmission:
         manifest = self._signed_manifest("signed-reg", secret)
         with (
             patch(
-                "kiro_crew.apps.registry.get_registry_app",
+                "aj_crew.apps.registry.get_registry_app",
                 return_value={
                     "name": "signed-reg",
                     "repo": "https://example.com/SignedRepo.git",
@@ -992,11 +986,11 @@ class TestRegistryInstallAdmission:
                 },
             ),
             patch(
-                "kiro_crew.apps.registry._fetch_app_manifest",
+                "aj_crew.apps.registry._fetch_app_manifest",
                 new=AsyncMock(return_value=manifest),
             ),
             patch(
-                "kiro_crew.apps.registry._clone_build_app",
+                "aj_crew.apps.registry._clone_build_app",
                 new=AsyncMock(return_value={"ok": False, "error": "stop-after-admission"}),
             ) as mock_build,
         ):
@@ -1008,7 +1002,7 @@ class TestRegistryInstallAdmission:
 
     @pytest.mark.asyncio
     async def test_unsigned_app_denied_under_require_signature(self, reg_home):
-        from kiro_crew.apps.registry import install_from_registry
+        from aj_crew.apps.registry import install_from_registry
 
         self._write_policy(
             reg_home,
@@ -1021,7 +1015,7 @@ class TestRegistryInstallAdmission:
         )
         with (
             patch(
-                "kiro_crew.apps.registry.get_registry_app",
+                "aj_crew.apps.registry.get_registry_app",
                 return_value={
                     "name": "unsigned-reg",
                     "repo": "https://example.com/UnsignedRepo.git",
@@ -1029,11 +1023,11 @@ class TestRegistryInstallAdmission:
                 },
             ),
             patch(
-                "kiro_crew.apps.registry._fetch_app_manifest",
+                "aj_crew.apps.registry._fetch_app_manifest",
                 new=AsyncMock(return_value={"name": "unsigned-reg", "version": "1.0.0"}),
             ),
             patch(
-                "kiro_crew.apps.registry._clone_build_app",
+                "aj_crew.apps.registry._clone_build_app",
                 new=AsyncMock(return_value={"ok": True, "pkg_dir": reg_home}),
             ) as mock_build,
         ):
@@ -1104,16 +1098,16 @@ class TestRefreshRegistries:
         mock_config = MagicMock()
         mock_config.registries = [mock_reg]
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
         # Successful refetch returns a fresh index.
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._fetch_external_registry_index",
+            "aj_crew.apps.registry._fetch_external_registry_index",
             AsyncMock(return_value=[{"name": "cool-app", "repo": "R"}]),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.registry.list_registry",
+            "aj_crew.apps.registry.list_registry",
             AsyncMock(return_value=[{"name": "cool-app"}]),
         )
 
@@ -1152,13 +1146,13 @@ class TestRefreshRegistries:
 
         mock_config = MagicMock()
         mock_config.registries = [mock_reg]
-        monkeypatch.setattr("kiro_crew.config.loader.KiroCrewConfig.load", lambda: mock_config)
+        monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", lambda: mock_config)
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._fetch_external_registry_index",
+            "aj_crew.apps.registry._fetch_external_registry_index",
             AsyncMock(return_value=[fresh_row]),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.registry.list_registry",
+            "aj_crew.apps.registry.list_registry",
             AsyncMock(return_value=[{"name": "cool-app"}]),
         )
 
@@ -1184,16 +1178,16 @@ class TestRefreshRegistries:
         mock_config = MagicMock()
         mock_config.registries = [mock_reg]
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
         # Refetch fails (unreachable forge / network blip).
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._fetch_external_registry_index",
+            "aj_crew.apps.registry._fetch_external_registry_index",
             AsyncMock(return_value=None),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.registry.list_registry",
+            "aj_crew.apps.registry.list_registry",
             AsyncMock(return_value=[{"name": "cool-app"}]),
         )
 
@@ -1224,14 +1218,14 @@ class TestRefreshRegistries:
         mock_config = MagicMock()
         mock_config.registries = [mock_reg]
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.registry.list_registry",
+            "aj_crew.apps.registry.list_registry",
             AsyncMock(return_value=[]),
         )
-        from kiro_crew.apps.registry_pipeline import indexes
+        from aj_crew.apps.registry_pipeline import indexes
 
         async def _unwrapped(argv, **_kwargs):
             return list(argv), None
@@ -1281,15 +1275,15 @@ class TestRefreshRegistries:
         mock_config = MagicMock()
         mock_config.registries = [reg_a, reg_b]
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._fetch_external_registry_index",
+            "aj_crew.apps.registry._fetch_external_registry_index",
             AsyncMock(return_value=[{"name": "a1", "repo": "R"}]),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.registry.list_registry",
+            "aj_crew.apps.registry.list_registry",
             AsyncMock(return_value=[]),
         )
 
@@ -1304,11 +1298,11 @@ class TestRefreshRegistries:
         mock_config = MagicMock()
         mock_config.registries = []
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.registry.list_registry",
+            "aj_crew.apps.registry.list_registry",
             AsyncMock(return_value=[]),
         )
         result = await refresh_registries()
@@ -1328,15 +1322,15 @@ class TestRefreshRegistries:
         mock_config = MagicMock()
         mock_config.registries = [mock_reg]
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._fetch_external_registry_index",
+            "aj_crew.apps.registry._fetch_external_registry_index",
             AsyncMock(return_value=["oops", {"name": "good", "repo": "R"}, 42]),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.registry.list_registry",
+            "aj_crew.apps.registry.list_registry",
             AsyncMock(return_value=[{"name": "good"}]),
         )
 
@@ -1372,11 +1366,11 @@ class TestRefreshRegistries:
         mock_config = MagicMock()
         mock_config.registries = [mock_reg]
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._fetch_external_registry_index",
+            "aj_crew.apps.registry._fetch_external_registry_index",
             AsyncMock(
                 return_value=[
                     {"name": "good-app", "repo": "R"},
@@ -1390,7 +1384,7 @@ class TestRefreshRegistries:
             ),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.registry.list_registry",
+            "aj_crew.apps.registry.list_registry",
             AsyncMock(return_value=[{"name": "good-app"}]),
         )
 
@@ -1416,12 +1410,12 @@ class TestRefreshRegistries:
         mock_config = MagicMock()
         mock_config.registries = [mock_reg]
         monkeypatch.setattr(
-            "kiro_crew.config.loader.KiroCrewConfig.load",
+            "aj_crew.config.loader.AjCrewConfig.load",
             lambda: mock_config,
         )
         # list_registry must NOT be invoked on the not-found short-circuit.
         list_mock = AsyncMock(return_value=[])
-        monkeypatch.setattr("kiro_crew.apps.registry.list_registry", list_mock)
+        monkeypatch.setattr("aj_crew.apps.registry.list_registry", list_mock)
 
         result = await refresh_registries(repo="https://github.com/nope/absent")
 
@@ -1434,7 +1428,7 @@ class TestRefreshRegistries:
     def test_manifest_cache_path_is_traversal_proof(self, cache_dir):
         # A hostile external-registry entry name must never resolve outside the
         # manifest cache dir (GPT 5.6 HIGH: `../../config` -> config.json unlink).
-        import kiro_crew.apps.registry as _reg  # module attr = the patched dir
+        import aj_crew.apps.registry as _reg  # module attr = the patched dir
 
         cache_root = _reg._manifest_cache_dir().resolve()
         for hostile in ("../../config", "../../../etc/passwd", "a/b/c", "..%2F..%2Fconfig"):
@@ -1486,7 +1480,7 @@ class TestRefreshRegistries:
 class TestIsCloneHostTrusted:
     def _no_configured_hosts(self, monkeypatch):
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._configured_registry_hosts",
+            "aj_crew.apps.registry._configured_registry_hosts",
             frozenset,
         )
 
@@ -1513,7 +1507,7 @@ class TestIsCloneHostTrusted:
         # trusted -- their deliberate trust decision (rebinding-proof: gated on
         # the hostname, not a resolvable IP).
         monkeypatch.setattr(
-            "kiro_crew.apps.registry._configured_registry_hosts",
+            "aj_crew.apps.registry._configured_registry_hosts",
             lambda: frozenset({"git.internal.example"}),
         )
         assert is_clone_host_trusted("https://git.internal.example/org/app") is True
@@ -1536,7 +1530,7 @@ class TestFetchGitBlobSsrfGate:
 
     @pytest.mark.asyncio
     async def test_untrusted_host_refused_without_spawning_git(self, tmp_path, monkeypatch):
-        from kiro_crew.apps import routes
+        from aj_crew.apps import routes
 
         # A malicious external index resolved this repo to a loopback URL; the
         # caller threads that resolved clone URL in as ``git_url`` (the callee no
@@ -1563,7 +1557,7 @@ class TestRecordedCloneFailure:
 
     @staticmethod
     async def _fetch_with_stderr(monkeypatch, stderr: bytes):
-        from kiro_crew.apps.registry_pipeline import indexes
+        from aj_crew.apps.registry_pipeline import indexes
 
         async def _unwrapped(argv, **_kwargs):
             return list(argv), None
@@ -1595,7 +1589,7 @@ class TestRecordedCloneFailure:
         ],
     )
     async def test_every_failure_records_its_cause(self, monkeypatch, stderr, cause):
-        from kiro_crew.apps.registry_pipeline import indexes
+        from aj_crew.apps.registry_pipeline import indexes
 
         assert await self._fetch_with_stderr(monkeypatch, stderr) is None
         assert indexes._registry_fetch_failure("ssh://git.example.com/acme/apps", "main") == cause
@@ -1621,8 +1615,8 @@ class TestRecordedCloneFailure:
         self, monkeypatch, caplog, stderr, label, cause
     ):
         """A credentialed remote's git output never reaches the log; a fixed label does."""
-        from kiro_crew.apps.registry_pipeline import indexes
-        from kiro_crew.apps.registry_pipeline.git_targets import _loggable_git_transport_output
+        from aj_crew.apps.registry_pipeline import indexes
+        from aj_crew.apps.registry_pipeline.git_targets import _loggable_git_transport_output
 
         async def _failing_fetch(url, branch, dest, log_lines, **_kwargs):
             # What the real credentialed fetch hands back: git's output already
@@ -1656,7 +1650,7 @@ class TestRecordedCloneFailure:
     @pytest.mark.asyncio
     async def test_a_later_fetch_replaces_the_recorded_cause(self, monkeypatch):
         """The record describes the latest fetch only, not any earlier one."""
-        from kiro_crew.apps.registry_pipeline import indexes
+        from aj_crew.apps.registry_pipeline import indexes
 
         repo = "ssh://git.example.com/acme/apps"
         await self._fetch_with_stderr(

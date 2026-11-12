@@ -1,7 +1,7 @@
 ---
 title: Goal loop approval hold -- an unanswered approval pauses a loop, and a work-ledger watch outlives its own bounds while work is open
 status: implemented
-author: iamwhatever, with kirocrew-worker
+author: iamwhatever, with ajcrew-worker
 created: 2026-10-05
 last-audited: 2026-10-05
 audited-at: a97659dfc3
@@ -25,9 +25,9 @@ Two ways an unattended goal loop ends while its work is still live.
 
 **An unanswered approval stops the loop for good.** A conductor patrol on a 30-minute interval with a 200-cycle cap was found stopped at cycle 47. The loop record (`97064f59` in `autonudge.json`) carried `stopped_reason: approval_stalled`. One cycle reached a tool that needed an interactive approval while nobody was at the dashboard. The prompt timed out, and the next wake turned the loop off.
 
-On main that is by design. `notify_approval_stalled` in `src/kiro_crew/autonudge_service/timers.py` sets `approval_stalled`. `_timer` in `src/kiro_crew/autonudge_service/firing.py` then deactivates the loop with that reason and emits `expired`. Nothing turns the loop back on. A person has to notice and re-arm it, so one missed prompt costs the rest of the night's patrol.
+On main that is by design. `notify_approval_stalled` in `src/aj_crew/autonudge_service/timers.py` sets `approval_stalled`. `_timer` in `src/aj_crew/autonudge_service/firing.py` then deactivates the loop with that reason and emits `expired`. Nothing turns the loop back on. A person has to notice and re-arm it, so one missed prompt costs the rest of the night's patrol.
 
-**A work-ledger watch is ended by its own bounds.** A conductor's `watch: "work-ledger"` loop exists to wake the conductor when its workers move. Its job ends when the ledger does: every item closed is the probe's terminal settlement (`WorkLedgerProbe.observe` in `src/kiro_crew/probes/work_ledger.py`). But `_timer` checks `max_cycles` and `max_runtime_secs` first. When either runs out with items still open, the watch stops with work in flight.
+**A work-ledger watch is ended by its own bounds.** A conductor's `watch: "work-ledger"` loop exists to wake the conductor when its workers move. Its job ends when the ledger does: every item closed is the probe's terminal settlement (`WorkLedgerProbe.observe` in `src/aj_crew/probes/work_ledger.py`). But `_timer` checks `max_cycles` and `max_runtime_secs` first. When either runs out with items still open, the watch stops with work in flight.
 
 The goal-conductor skill can renew its own bounds (`patrol_budget.py renew`). That depends on the model calling `monitor_update` on the right cycle. On the host that produced the evidence, that call itself needed an approval.
 

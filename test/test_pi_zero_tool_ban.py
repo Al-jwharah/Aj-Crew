@@ -21,17 +21,17 @@ from pathlib import Path
 import pytest
 import test_member_mount_deepseek as deepseek_mount
 
-import kiro_crew.validation  # noqa: F401 - break the legacy import cycle first
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.types import (
+import aj_crew.validation  # noqa: F401 - break the legacy import cycle first
+from aj_crew.acp import client as acp_client
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.types import (
     ACP_BACKEND_KIRO,
     ACP_BACKEND_PI,
     ACP_BACKENDS_SESSION_MCP_ARRAY,
     JsonRpcMessage,
 )
-from kiro_crew.agent_sdk.backends import ACP_BACKENDS_HONOR_ZERO_TOOL_BAN
-from kiro_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.agent_sdk.backends import ACP_BACKENDS_HONOR_ZERO_TOOL_BAN
+from aj_crew.agent_sdk.capabilities import capabilities_for
 
 FIXTURE = Path(__file__).parent / "fixtures" / "acp_frames" / "pi" / "zero-tools-refused-live.jsonl"
 
@@ -105,7 +105,7 @@ def _pi_client(*, zero_tools: bool) -> tuple[AcpClient, list]:
 
 class TestTheSpecParse:
     def test_pi_is_a_mirror_less_array_member(self):
-        from kiro_crew.providers.mirrors import MIRRORS
+        from aj_crew.providers.mirrors import MIRRORS
 
         assert ACP_BACKEND_PI not in MIRRORS
         assert ACP_BACKEND_PI in ACP_BACKENDS_SESSION_MCP_ARRAY
@@ -127,7 +127,7 @@ class TestTheSpecParse:
         "body",
         [
             {"mcpServers": {}},  # no tools key: no restriction stated
-            {"tools": ["@kirocrew-core"], "mcpServers": {}},
+            {"tools": ["@ajcrew-core"], "mcpServers": {}},
             {"tools": "none", "mcpServers": {}},  # not a list: not a ban
         ],
     )
@@ -142,7 +142,7 @@ class TestTheSpecParse:
         assert client._enforces_zero_tool_ban is False
 
     def test_an_unreadable_spec_leaves_it_off(self, agents_dir, tmp_path, monkeypatch):
-        from kiro_crew.acp import session_mcp
+        from aj_crew.acp import session_mcp
 
         def _boom(*_a, **_k):
             raise OSError("unreadable")
@@ -183,7 +183,7 @@ class TestTheReplayedRefusal:
         body = FIXTURE.read_text(encoding="utf-8")
         # The tool pi does not have never reached a permission frame: pi failed it.
         assert "Tool frobnicate not found" in body
-        assert "Denied by the Kiro Crew tool gate" in body
+        assert "Denied by the Aj Crew tool gate" in body
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("index", [0, 1, 2], ids=["write", "bash", "mcp"])

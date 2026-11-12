@@ -149,7 +149,7 @@ async function frame(lane, hide, name, theme = 'dark') {
   await page.waitForSelector('[data-slot-key]')
   const settled = await settledTheme()
   const label = `${name}`
-  check(`${label}: pinned Kiro ${theme}`, settled === `kiro-${theme}`, String(settled))
+  check(`${label}: pinned Aj ${theme}`, settled === `aj-${theme}`, String(settled))
 
   const unpainted = await paintedRows(expected)
   check(`${label}: every row a reader must see is painted`, unpainted === null,
@@ -192,7 +192,7 @@ for (const lane of ['conductor', 'board', 'board-flat', 'tree', 'flat']) {
   await page.waitForSelector('[data-capture-ready]')
   await page.waitForSelector('[data-slot-key]')
   const theme = await settledTheme()
-  check(`${name}: pinned Kiro dark`, theme === 'kiro-dark', String(theme))
+  check(`${name}: pinned Aj dark`, theme === 'aj-dark', String(theme))
   const funnel = page.locator('[data-folder-hide-active]')
   check(`${name}: the funnel is marked while the hide withholds rows`, await funnel.count() === 1,
     `${await funnel.count()} marked button(s)`)
@@ -243,7 +243,7 @@ for (const theme of ['dark', 'light']) {
     await page.goto(`${BASE}/capture/lane-folder-hide.html?lane=board&hide=${hide}&theme=${theme}`)
     await page.waitForSelector('[data-capture-ready]')
     const settled = await settledTheme()
-    check(`${name}: pinned Kiro ${theme}`, settled === `kiro-${theme}`, String(settled))
+    check(`${name}: pinned Aj ${theme}`, settled === `aj-${theme}`, String(settled))
 
     const row = page.locator('[data-testid="board-hidden-folders"]')
     const found = await row.count()
@@ -294,7 +294,7 @@ for (const theme of ['dark', 'light']) {
   await page.waitForSelector('[data-capture-ready]')
   await page.waitForSelector('[data-slot-key]')
   const settled = await settledTheme()
-  check(`${name}: pinned Kiro dark`, settled === 'kiro-dark', String(settled))
+  check(`${name}: pinned Aj dark`, settled === 'aj-dark', String(settled))
 
   const glyph = page.locator('[data-cites-parent]')
   const found = await glyph.count()

@@ -11,8 +11,8 @@ import json
 
 import pytest
 
-from kiro_crew.dashboard import session_pulse_counter as spc
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.dashboard import session_pulse_counter as spc
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.fixture(autouse=True)

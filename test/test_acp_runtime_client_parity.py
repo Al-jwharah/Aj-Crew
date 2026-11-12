@@ -26,9 +26,9 @@ from acp_runtime_helpers import (
     _stop_reader,
 )
 
-from kiro_crew.acp.runtime import AcpRuntime, AcpRuntimeDead, AcpSessionHandle
-from kiro_crew.acp.types import ACP_BACKEND_KIRO, JsonRpcMessage
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.runtime import AcpRuntime, AcpRuntimeDead, AcpSessionHandle
+from aj_crew.acp.types import ACP_BACKEND_KIRO, JsonRpcMessage
+from aj_crew.testing.wait import await_until
 
 # ── Round-1 follow-up fixes: #5b currentModelId backfill + send_command redaction ──
 
@@ -37,7 +37,7 @@ def test_backfill_uses_resolved_model_id_from_session_config(monkeypatch):
     """#5b (parity): store_session_config captures currentModelId into
     _resolved_model_id, so context-window backfill works even when the user
     never called set_model — and _model stays empty (no pinning)."""
-    import kiro_crew.acp.session_handle as sh
+    import aj_crew.acp.session_handle as sh
 
     monkeypatch.setattr(sh.model_registry, "has_known_window", lambda mid: True)
     monkeypatch.setattr(sh.model_registry, "model_window", lambda mid, **kw: 300000)
@@ -65,7 +65,7 @@ def test_backfill_uses_resolved_model_id_from_session_config(monkeypatch):
 async def test_send_command_redacts_output(monkeypatch):
     """#send_command (parity): the command response text is redacted before
     return, matching AcpClient.send_command."""
-    import kiro_crew.acp.session_handle as sh
+    import aj_crew.acp.session_handle as sh
 
     # send_command now applies the explicit two-pass redactors (parity with
     # AcpClient.send_command), not the redact_text helper.
@@ -123,8 +123,8 @@ async def test_stream_translates_runtime_dead_to_process_died():
     """#2: AcpSessionProvider.stream translates AcpRuntimeDead (an
     AcpRuntimeError, which chat_runner does NOT catch) into AcpProcessDied so
     the caller's AcpProcessDied handler fires (parity with AcpClient)."""
-    from kiro_crew.acp.client import AcpProcessDied
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.client import AcpProcessDied
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     rt = MagicMock()
     rt.saw_not_logged_in = MagicMock(return_value=False)
@@ -147,8 +147,8 @@ async def test_stream_translates_runtime_dead_to_process_died():
 async def test_stream_translates_auth_failure_to_auth_required():
     """#1: when stderr shows 'not logged in', a runtime death surfaces as
     AcpAuthRequired (non-retryable login prompt) rather than AcpProcessDied."""
-    from kiro_crew.acp.client import AcpAuthRequired
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.client import AcpAuthRequired
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     rt = MagicMock()
     rt.saw_not_logged_in = MagicMock(return_value=True)
@@ -210,7 +210,7 @@ async def test_handle_steer_stamps_write_time_and_provider_passes_it_through():
 
     rt.send_request = _send_request
     handle = AcpSessionHandle("sA", asyncio.Queue(), rt)
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     prov = AcpSessionProvider.__new__(AcpSessionProvider)
     prov._handle = handle
@@ -239,7 +239,7 @@ async def test_provider_cancel_session_accepts_and_forwards_grace():
     """Blocker #1: AcpSessionProvider.cancel_session must accept grace_secs
     (AcpProvider.cancel calls it with grace_secs=) and forward it to the
     handle — otherwise a kiro-path cancel raises TypeError."""
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     rt, _, _ = _make_runtime()
     rt.send_notification = AsyncMock()  # type: ignore[method-assign]
@@ -270,7 +270,7 @@ async def test_dispatch_mcp_oauth_guard_and_dedup():
     """Shared-path mcp_oauth_request mirrors AcpClient (R5 fix): unsafe-scheme
     URLs and empty serverName are dropped; duplicates deduped; a matching
     server_initialized discards the dedupe entry so a later retry re-emits."""
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         EVENT_MCP_OAUTH_REQUEST,
         METHOD_MCP_OAUTH_REQUEST,
         METHOD_MCP_SERVER_INITIALIZED,
@@ -380,7 +380,7 @@ async def test_set_model_rebases_context_stats(monkeypatch):
     last_prompt_stats to the new model's window and clears the authoritative
     usage flag, so the next metadata pct backfills against the NEW model
     instead of being gated forever by the old model's usage_update."""
-    from kiro_crew import model_registry
+    from aj_crew import model_registry
 
     monkeypatch.setattr(model_registry, "has_known_window", lambda mid: True)
     monkeypatch.setattr(model_registry, "model_window", lambda mid, **kw: 272_000)
@@ -428,9 +428,9 @@ def test_store_session_config_syncs_effort_levels(monkeypatch):
     import types
 
     calls = []
-    fake = types.ModuleType("kiro_crew.dashboard.chat_persistence")
+    fake = types.ModuleType("aj_crew.dashboard.chat_persistence")
     fake.update_reasoning_effort_values = lambda levels: calls.append(levels)
-    monkeypatch.setitem(sys.modules, "kiro_crew.dashboard.chat_persistence", fake)
+    monkeypatch.setitem(sys.modules, "aj_crew.dashboard.chat_persistence", fake)
     rt = MagicMock()
     rt.is_alive.return_value = True
     h = AcpSessionHandle("sA", asyncio.Queue(), rt)
@@ -449,7 +449,7 @@ async def test_stale_turn_probes_then_signals_recovery():
     which orphaned the wedged turn until the user's next message collided with
     'prompt already in progress'. (Stale DETECTION → probe is covered by
     test_acp_stale_recovery.py::test_genuine_stale_probes_via_cancel.)"""
-    from kiro_crew.acp.types import EVENT_COMPLETE, STOP_REASON_STALE_RECOVER
+    from aj_crew.acp.types import EVENT_COMPLETE, STOP_REASON_STALE_RECOVER
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -488,8 +488,8 @@ def test_build_permission_event_sets_raw_tool_params():
     the governance keystone (hooks.on_tool_call sensitive-path / write-protected
     checks) enforces on the shared-runtime path even when the display title
     hides the path."""
-    from kiro_crew.acp._dispatch import build_permission_event
-    from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION
+    from aj_crew.acp._dispatch import build_permission_event
+    from aj_crew.acp.types import METHOD_REQUEST_PERMISSION
 
     raw_cache = {"tc-1": {"path": "/home/u/.ssh/id_rsa", "content": "x"}}
     msg = JsonRpcMessage.from_dict(
@@ -515,8 +515,8 @@ def test_build_permission_event_sets_raw_tool_params():
 
 def test_build_permission_event_raw_params_none_without_cache():
     """No cache entry + no inline dict → raw_tool_params stays None (no crash)."""
-    from kiro_crew.acp._dispatch import build_permission_event
-    from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION
+    from aj_crew.acp._dispatch import build_permission_event
+    from aj_crew.acp.types import METHOD_REQUEST_PERMISSION
 
     msg = JsonRpcMessage.from_dict(
         {
@@ -532,8 +532,8 @@ def test_build_permission_event_raw_params_none_without_cache():
 @pytest.mark.parametrize("redaction_cache", [None, {}])
 def test_cached_input_without_redaction_provenance_fails_closed(redaction_cache):
     """Unknown cached-input provenance may display, but cannot grant trust."""
-    from kiro_crew.acp._dispatch import build_permission_event
-    from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION
+    from aj_crew.acp._dispatch import build_permission_event
+    from aj_crew.acp.types import METHOD_REQUEST_PERMISSION
 
     msg = JsonRpcMessage.from_dict(
         {
@@ -563,8 +563,8 @@ def test_build_permission_event_recovers_mcp_server_name_from_cache():
     hooks.on_tool_call's app-own-server auto-approve can fire on the dashboard
     permission path. Without this the event's mcp_server_name is always "" and
     the feature is inert."""
-    from kiro_crew.acp._dispatch import build_permission_event
-    from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION
+    from aj_crew.acp._dispatch import build_permission_event
+    from aj_crew.acp.types import METHOD_REQUEST_PERMISSION
 
     mcp_cache = {"tc-1": "mochi:mochi"}
     msg = JsonRpcMessage.from_dict(
@@ -586,8 +586,8 @@ def test_build_permission_event_recovers_mcp_server_name_from_cache():
 def test_build_permission_event_mcp_server_name_empty_without_cache():
     """No cache / no entry → mcp_server_name stays "" (fail-closed: the app-own
     auto-approve never matches on a forged title with no trusted server name)."""
-    from kiro_crew.acp._dispatch import build_permission_event
-    from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION
+    from aj_crew.acp._dispatch import build_permission_event
+    from aj_crew.acp.types import METHOD_REQUEST_PERMISSION
 
     msg = JsonRpcMessage.from_dict(
         {
@@ -606,8 +606,8 @@ def test_build_permission_event_recovers_tool_name_from_cache():
     preceding tool_call via tool_name_cache. This is what lets the
     app-own-server auto-approve rebuild the canonical mcp__<server>__<tool> and
     govern the real tool on the permission path."""
-    from kiro_crew.acp._dispatch import build_permission_event
-    from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION
+    from aj_crew.acp._dispatch import build_permission_event
+    from aj_crew.acp.types import METHOD_REQUEST_PERMISSION
 
     name_cache = {"tc-1": "perform_pet_action"}
     msg = JsonRpcMessage.from_dict(
@@ -633,8 +633,8 @@ def test_build_permission_event_recovers_tool_name_from_cache():
 def test_build_permission_event_tool_name_empty_without_cache():
     """No cache / no entry → tool_name stays "" (fail-closed: the app-own-server
     auto-approve cannot identify the tool to govern it, so it never fires)."""
-    from kiro_crew.acp._dispatch import build_permission_event
-    from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION
+    from aj_crew.acp._dispatch import build_permission_event
+    from aj_crew.acp.types import METHOD_REQUEST_PERMISSION
 
     msg = JsonRpcMessage.from_dict(
         {
@@ -699,7 +699,7 @@ def test_shared_handle_permission_inherits_origin_bound_tool_identity():
 
 def test_shared_handle_structured_non_shell_reprompt_keeps_argument_provenance():
     """Shared transport retains display and raw params across a re-prompt."""
-    from kiro_crew.trust_patterns import approval_command
+    from aj_crew.trust_patterns import approval_command
 
     rt, _, _ = _make_runtime()
     handle = AcpSessionHandle("sA", asyncio.Queue(), rt)
@@ -762,7 +762,7 @@ def test_shared_handle_structured_non_shell_reprompt_keeps_argument_provenance()
 @pytest.mark.parametrize("raw_input", ["/etc/secret", ["/etc/secret"]])
 def test_shared_non_dict_non_shell_reprompt_cannot_become_durable_tool_trust(raw_input):
     """String/list rawInput remains visible to the repeat trust gate."""
-    from kiro_crew.trust_patterns import approval_command
+    from aj_crew.trust_patterns import approval_command
 
     rt, _, _ = _make_runtime()
     handle = AcpSessionHandle("sA", asyncio.Queue(), rt)
@@ -823,8 +823,8 @@ def test_build_permission_event_non_string_option_entries_skipped():
     transport — the same class of crash AcpClient's copy guards against.
     Non-dict entries and non-string label/kind must be skipped/coerced while
     valid entries still parse."""
-    from kiro_crew.acp._dispatch import build_permission_event
-    from kiro_crew.acp.types import METHOD_REQUEST_PERMISSION
+    from aj_crew.acp._dispatch import build_permission_event
+    from aj_crew.acp.types import METHOD_REQUEST_PERMISSION
 
     msg = JsonRpcMessage.from_dict(
         {
@@ -854,7 +854,7 @@ def test_mark_dead_unregisters_protected_pid():
     """Regression (PR #21 follow-up): _mark_dead must release the sweep-protection
     shield on ANY death path (not just kill()), else the dead PID lingers in
     _PROTECTED_PIDS forever and could shield a recycled-orphan from the sweep."""
-    from kiro_crew.session_pid import _protected_pids, register_protected_pid
+    from aj_crew.session_pid import _protected_pids, register_protected_pid
 
     rt, _, _ = _make_runtime()
     rt._pid = 515151
@@ -870,7 +870,7 @@ def test_protected_runtime_pid_lands_in_sweep_active_set():
     They are not in ``self._sessions``; only ``register_protected_pid`` and
     ``_protected_pids()`` keep phase-2 from confirming them orphans.
     """
-    from kiro_crew.session_pid import (
+    from aj_crew.session_pid import (
         _collect_active_pids,
         register_protected_pid,
         unregister_protected_pid,
@@ -906,7 +906,7 @@ def test_periodic_sweep_skips_protected_runtime_pid():
     """
     from unittest.mock import patch
 
-    from kiro_crew.session_pid import (
+    from aj_crew.session_pid import (
         _collect_active_pids,
         _sweep_pid_entries,
         register_protected_pid,
@@ -938,20 +938,20 @@ async def test_runtime_spawn_scrubs_sensitive_env_on_default_auto(monkeypatch):
     This parent-side enforcement is what protects raw Windows Kiro delegation;
     POSIX launchers apply the same sensitive/Python scrub inline.
     """
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "0000:FAKE-telegram")
     monkeypatch.setenv("WECOM_BOT_ID", "FAKE-wecom-bot")
     monkeypatch.setenv("WECOM_SECRET", "FAKE-wecom-secret")
     monkeypatch.setenv("SLACK_BOT_TOKEN", "xoxb-FAKE")
-    monkeypatch.setenv("KIROCREW_OWNER_ID", "U_FAKE_OWNER")
+    monkeypatch.setenv("AJCREW_OWNER_ID", "U_FAKE_OWNER")
     monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "FAKE-secret")
     monkeypatch.setenv("SSH_AUTH_SOCK", "/tmp/fake-agent.sock")
     monkeypatch.setenv("PYTHONPATH", "/gateway/pythonpath")
     monkeypatch.setenv("PYTHONPYCACHEPREFIX", "/gateway/pycache")
     monkeypatch.setenv("PYTHONDONTWRITEBYTECODE", "1")
     monkeypatch.setenv("AWS_ACCESS_KEY_ID", "FAKE-akid")
-    monkeypatch.setenv("KIROCREW_UNRELATED_KEEPME", "keep-this-value")
+    monkeypatch.setenv("AJCREW_UNRELATED_KEEPME", "keep-this-value")
 
     captured: dict[str, object] = {}
 
@@ -992,7 +992,7 @@ async def test_runtime_spawn_scrubs_sensitive_env_on_default_auto(monkeypatch):
         "WECOM_BOT_ID",
         "WECOM_SECRET",
         "SLACK_BOT_TOKEN",
-        "KIROCREW_OWNER_ID",
+        "AJCREW_OWNER_ID",
         "AWS_SECRET_ACCESS_KEY",
         "PYTHONPATH",
         "PYTHONPYCACHEPREFIX",
@@ -1006,9 +1006,9 @@ async def test_runtime_spawn_scrubs_sensitive_env_on_default_auto(monkeypatch):
         assert "SSH_AUTH_SOCK" not in env, "SSH_AUTH_SOCK leaked into runtime child env"
     else:
         assert env.get("SSH_AUTH_SOCK") == "/tmp/fake-agent.sock"
-    assert env.get("KIROCREW_UNRELATED_KEEPME") == "keep-this-value"
+    assert env.get("AJCREW_UNRELATED_KEEPME") == "keep-this-value"
     assert env.get("AWS_ACCESS_KEY_ID") == "FAKE-akid"
-    assert env.get("KIROCREW_RUNTIME_PYTHON") == runtime_mod.sys.executable
+    assert env.get("AJCREW_RUNTIME_PYTHON") == runtime_mod.sys.executable
 
 
 class TestToolPurposeExtraction:
@@ -1027,7 +1027,7 @@ class TestToolPurposeExtraction:
         }
 
     def test_snake_case_key(self):
-        from kiro_crew.acp._dispatch import _build_tool_call_event
+        from aj_crew.acp._dispatch import _build_tool_call_event
 
         event = _build_tool_call_event(
             self._update({"command": "node kc-shot.mjs", "__tool_use_purpose": "check harness"}),
@@ -1036,7 +1036,7 @@ class TestToolPurposeExtraction:
         assert event.tool_purpose == "check harness"
 
     def test_camel_case_key(self):
-        from kiro_crew.acp._dispatch import _build_tool_call_event
+        from aj_crew.acp._dispatch import _build_tool_call_event
 
         event = _build_tool_call_event(
             self._update({"command": "node kc-shot.mjs", "__toolUsePurpose": "check harness"}),
@@ -1045,13 +1045,13 @@ class TestToolPurposeExtraction:
         assert event.tool_purpose == "check harness"
 
     def test_no_purpose_key_yields_empty(self):
-        from kiro_crew.acp._dispatch import _build_tool_call_event
+        from aj_crew.acp._dispatch import _build_tool_call_event
 
         event = _build_tool_call_event(self._update({"command": "node kc-shot.mjs"}), None)
         assert event.tool_purpose == ""
 
     def test_blank_and_non_string_values_ignored(self):
-        from kiro_crew.acp._dispatch import extract_tool_purpose
+        from aj_crew.acp._dispatch import extract_tool_purpose
 
         assert extract_tool_purpose({"__tool_use_purpose": "   "}) == ""
         assert extract_tool_purpose({"__toolUsePurpose": 123}) == ""

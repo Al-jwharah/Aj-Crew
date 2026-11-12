@@ -1,8 +1,8 @@
 """``TaskStore`` keeps every member it had, each bound from the owner that holds it.
 
-The store's behaviour lives in the ``kiro_crew.taskq.store_*`` owners: each member's body
+The store's behaviour lives in the ``aj_crew.taskq.store_*`` owners: each member's body
 is a module-level function there whose first parameter is ``self``, and the class in
-``kiro_crew.taskq.store`` binds it by name (``m = _owner.m``, or
+``aj_crew.taskq.store`` binds it by name (``m = _owner.m``, or
 ``staticmethod(_owner.f)``). The instance state stays on the instance, so tests that patch
 a method on the class or on a store, subclass it, or poke a private field, see the object
 they always did. This file pins the binding contract:
@@ -17,10 +17,10 @@ they always did. This file pins the binding contract:
 * no owner imports the facade at run time, each imports only modules listed before it
   in ``_STORE_OWNERS``, and nothing else in ``src/`` imports an owner;
 * each owner's docstring names the instance fields its members write and read, and an
-  owner that logs does so under the ``kiro_crew.taskq.store`` logger;
+  owner that logs does so under the ``aj_crew.taskq.store`` logger;
 * ``TaskStoreUnavailable`` renders under the facade path, and every module-level name the
   one-module file bound still resolves on the facade, to the object its owner holds;
-* no name the test trees patch through ``kiro_crew.taskq.store`` is read as a global by an
+* no name the test trees patch through ``aj_crew.taskq.store`` is read as a global by an
   owner: an owner reads its own namespace, so such a patch would not reach it.
 
 Each structural check has a self-test that shows it can fail.
@@ -43,8 +43,8 @@ import pytest
 import source_corpus
 from facade_mirror_scan import global_reads, patched_names
 
-from kiro_crew.taskq import store as store_module
-from kiro_crew.taskq.store import TaskStore, TaskStoreUnavailable
+from aj_crew.taskq import store as store_module
+from aj_crew.taskq.store import TaskStore, TaskStoreUnavailable
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_store_taskq_bindings")
 
@@ -58,8 +58,8 @@ SHARED_BINDINGS_CHECKS = (
     "leaf_test_scope_derives_this_file_as_a_corpus_gate",
 )
 
-_FACADE = "kiro_crew.taskq.store"
-_PACKAGE = "kiro_crew.taskq"
+_FACADE = "aj_crew.taskq.store"
+_PACKAGE = "aj_crew.taskq"
 _TEST_ROOT = Path(__file__).resolve().parent
 _REPO_ROOT = _TEST_ROOT.parent
 
@@ -267,8 +267,8 @@ def test_every_owner_is_listed_and_holds_a_member() -> None:
 def test_a_subclass_super_call_reaches_the_moved_member(tmp_path: Path) -> None:
     """``super().wake_wait`` in an override resolves to the owner's function, which the
     subclasses in the suite (``_RefusingStore`` and its kin) rely on."""
-    from kiro_crew.taskq import model, store_waits
-    from kiro_crew.taskq.waits import WaitRecord
+    from aj_crew.taskq import model, store_waits
+    from aj_crew.taskq.waits import WaitRecord
 
     calls: list[str] = []
 
@@ -411,12 +411,12 @@ def _runtime_imports(tree: ast.Module, package: str = _PACKAGE) -> set[str]:
 def test_the_runtime_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "from kiro_crew.taskq import store_vocab\n"
+        "from aj_crew.taskq import store_vocab\n"
         "if TYPE_CHECKING:\n"
         "    from .store import TaskStore\n"
         "from .store_events import events\n"
         "def f():\n"
-        "    import kiro_crew.taskq.store\n"
+        "    import aj_crew.taskq.store\n"
         "def g():\n"
         "    from .store import TaskStore\n"
     )
@@ -424,7 +424,7 @@ def test_the_runtime_import_scan_can_fail() -> None:
     assert f"{_PACKAGE}.store_vocab" in found
     assert f"{_PACKAGE}.store_events" in found  # a relative import, resolved
     assert _FACADE in found  # the function-local imports are run-time imports
-    assert "kiro_crew.taskq.store.TaskStore" in found  # from g's relative import
+    assert "aj_crew.taskq.store.TaskStore" in found  # from g's relative import
     typing_only = ast.parse(
         "from typing import TYPE_CHECKING\n"
         "if TYPE_CHECKING:\n"
@@ -488,20 +488,20 @@ def _owner_importers(src: Path, owners: frozenset[str]) -> list[str]:
 
 
 def test_the_owner_importer_scan_can_fail(tmp_path: Path) -> None:
-    pkg = tmp_path / "kiro_crew" / "taskq"
+    pkg = tmp_path / "aj_crew" / "taskq"
     pkg.mkdir(parents=True)
     (pkg / "other.py").write_text("from .store_events import events\n", encoding="utf-8")
     (pkg / "__init__.py").write_text("from . import store_reads\n", encoding="utf-8")
-    (pkg / "fine.py").write_text("from kiro_crew.taskq.store import X\n", encoding="utf-8")
+    (pkg / "fine.py").write_text("from aj_crew.taskq.store import X\n", encoding="utf-8")
     owners = frozenset({f"{_PACKAGE}.store_events", f"{_PACKAGE}.store_reads"})
     assert _owner_importers(tmp_path, owners) == [
-        "kiro_crew/taskq/__init__.py",
-        "kiro_crew/taskq/other.py",
+        "aj_crew/taskq/__init__.py",
+        "aj_crew/taskq/other.py",
     ]
 
 
 def test_nothing_else_in_src_imports_an_owner() -> None:
-    """``kiro_crew.taskq.store`` is the one import path of the store."""
+    """``aj_crew.taskq.store`` is the one import path of the store."""
     src = Path(store_module.__file__).resolve().parents[2]
     assert _owner_importers(src, frozenset(store_module._STORE_OWNERS)) == []
 
@@ -604,17 +604,17 @@ def _foreign_loggers(tree: ast.Module) -> list[str]:
 def test_the_logger_scan_can_fail() -> None:
     tree = ast.parse(
         "import logging\n"
-        "logger = logging.getLogger('kiro_crew.taskq.store')\n"
+        "logger = logging.getLogger('aj_crew.taskq.store')\n"
         "_log = logging.getLogger(__name__)\n"
         "from logging import getLogger\n"
-        "other = getLogger('kiro_crew.taskq.store_waits')\n"
+        "other = getLogger('aj_crew.taskq.store_waits')\n"
     )
     assert [line.split(":")[0] for line in _foreign_loggers(tree)] == ["3", "5"]
 
 
 @pytest.mark.parametrize("owner", store_module._STORE_OWNERS)
 def test_an_owner_that_logs_uses_the_store_logger(owner: str) -> None:
-    """The store logs under ``kiro_crew.taskq.store``; an owner that took a logger of its
+    """The store logs under ``aj_crew.taskq.store``; an owner that took a logger of its
     own would log under a name no filter or capture expects."""
     module = importlib.import_module(owner)
     assert _foreign_loggers(_tree(module)) == []
@@ -625,12 +625,12 @@ def test_an_owner_that_logs_uses_the_store_logger(owner: str) -> None:
 #: Every class an owner defines -> the ``__module__`` it carries. ``TaskStoreUnavailable``
 #: keeps the facade's name, because a traceback and ``subagent._describe_exception`` render
 #: a raised class as ``module.qualname``.
-_CLASS_MODULES = {"TaskStoreUnavailable": _FACADE, "WorkRow": "kiro_crew.taskq.store_work"}
+_CLASS_MODULES = {"TaskStoreUnavailable": _FACADE, "WorkRow": "aj_crew.taskq.store_work"}
 
 
 def test_a_store_failure_renders_under_the_facade_path() -> None:
     text = "".join(traceback.format_exception_only(TaskStoreUnavailable("locked")))
-    assert text == "kiro_crew.taskq.store.TaskStoreUnavailable: locked\n"
+    assert text == "aj_crew.taskq.store.TaskStoreUnavailable: locked\n"
 
 
 # --------------------------------------------------------------------------- #
@@ -690,7 +690,7 @@ def _test_tree_files() -> list[Path]:
         name = path.name
         if rel == "conftest.py" or path.is_relative_to(test_root):
             files.append(path)
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and (
+        elif rel.startswith("src/aj_crew/apps/builtins/") and (
             "/tests/" in rel
             or name.startswith("test_")
             or name.endswith("_test.py")
@@ -731,14 +731,14 @@ def _facade_spellings(src: Path) -> dict[str, str]:
 
 
 def test_the_spelling_scan_sees_an_aliased_binding(tmp_path: Path) -> None:
-    pkg = tmp_path / "kiro_crew" / "cli"
+    pkg = tmp_path / "aj_crew" / "cli"
     pkg.mkdir(parents=True)
-    (pkg / "tasks.py").write_text("from kiro_crew.taskq import store as tstore\n", encoding="utf-8")
+    (pkg / "tasks.py").write_text("from aj_crew.taskq import store as tstore\n", encoding="utf-8")
     (pkg / "rel.py").write_text("from ..taskq import store\n", encoding="utf-8")
     assert _facade_spellings(tmp_path) == {
         _FACADE: _FACADE,
-        "kiro_crew.cli.tasks.tstore": _FACADE,
-        "kiro_crew.cli.rel.store": _FACADE,
+        "aj_crew.cli.tasks.tstore": _FACADE,
+        "aj_crew.cli.rel.store": _FACADE,
     }
 
 
@@ -791,12 +791,12 @@ def test_no_name_patched_through_the_facade_is_read_by_an_owner() -> None:
 def test_the_reach_scan_can_fail(tmp_path: Path) -> None:
     probe = tmp_path / "test_probe.py"
     probe.write_text(
-        "from kiro_crew.taskq import store as store_mod\n"
+        "from aj_crew.taskq import store as store_mod\n"
         "def test_x(monkeypatch):\n"
         "    monkeypatch.setattr(store_mod, '_SQL_CLAIMABLE', '(1)')\n"
         "def test_y():\n"
         "    from unittest import mock\n"
-        "    with mock.patch('kiro_crew.taskq.store.TaskStoreUnavailable', RuntimeError):\n"
+        "    with mock.patch('aj_crew.taskq.store.TaskStoreUnavailable', RuntimeError):\n"
         "        pass\n",
         encoding="utf-8",
     )

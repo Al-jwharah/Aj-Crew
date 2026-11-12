@@ -12,8 +12,8 @@ import json
 import pytest
 from relay_client_helpers import CONTRACT, FIXTURES, fixture, valid_message
 
-from kiro_crew.relay_client import protocol
-from kiro_crew.relay_client.protocol import FrameError, parse_inbound
+from aj_crew.relay_client import protocol
+from aj_crew.relay_client.protocol import FrameError, parse_inbound
 
 #: Invalid examples a receiver accepts or never sees, and why.
 _NOT_REFUSED_ON_RECEIPT = {
@@ -219,10 +219,10 @@ def test_identifier_grammars_match_the_fixture() -> None:
 
 
 def test_the_caller_header_never_comes_from_the_relayed_headers() -> None:
-    from kiro_crew.dashboard.kiro_relay.caller import RELAY_USER_HEADER, CrewKind, HostBinding
-    from kiro_crew.dashboard.kiro_relay.ingress import RelayIngress
-    from kiro_crew.dashboard.relay_headers import is_relay_header
-    from kiro_crew.relay_client.ingress import LoopbackIngress
+    from aj_crew.dashboard.kiro_relay.caller import RELAY_USER_HEADER, CrewKind, HostBinding
+    from aj_crew.dashboard.kiro_relay.ingress import RelayIngress
+    from aj_crew.dashboard.relay_headers import is_relay_header
+    from aj_crew.relay_client.ingress import LoopbackIngress
 
     stamp = fixture("headers/caller-stamp")
     # The contract's caller header is the Crew's one shared definition of it.
@@ -243,7 +243,7 @@ def test_the_caller_header_never_comes_from_the_relayed_headers() -> None:
 
 
 def test_a_team_crew_binds_with_no_owner_and_a_personal_one_needs_one() -> None:
-    from kiro_crew.relay_client.token_source import HostCredential, host_binding
+    from aj_crew.relay_client.token_source import HostCredential, host_binding
 
     assert host_binding(HostCredential("a.b.c", crew_kind="team")) == ("team", "")
     assert host_binding(HostCredential("a.b.c", crew_kind="personal")) is None
@@ -256,7 +256,7 @@ def test_a_team_crew_binds_with_no_owner_and_a_personal_one_needs_one() -> None:
 def test_the_binding_reads_the_host_token_claims_when_the_source_names_none() -> None:
     import base64
 
-    from kiro_crew.relay_client.token_source import HostCredential, host_binding
+    from aj_crew.relay_client.token_source import HostCredential, host_binding
 
     upgrade = fixture("headers/host-upgrade")
     token = upgrade["cases"][0]["request"]["headers"]["authorization"].split(" ", 1)[1]
@@ -386,7 +386,7 @@ def test_ws_split_escapes_each_character_a_bounded_number_of_times(
     ids=["clear-text-remote", "not-websocket", "no-host", "garbage"],
 )
 def test_a_credential_never_carries_an_unsafe_dial_url(url: str) -> None:
-    from kiro_crew.relay_client.token_source import HostCredential
+    from aj_crew.relay_client.token_source import HostCredential
 
     with pytest.raises(ValueError):
         HostCredential("a.b.c", host_url=url)
@@ -404,14 +404,14 @@ def test_a_credential_never_carries_an_unsafe_dial_url(url: str) -> None:
     ids=["clear-text", "path", "userinfo", "query", "wildcard"],
 )
 def test_a_credential_never_carries_a_crew_url_that_is_not_an_origin(url: str) -> None:
-    from kiro_crew.relay_client.token_source import HostCredential
+    from aj_crew.relay_client.token_source import HostCredential
 
     with pytest.raises(ValueError):
         HostCredential("a.b.c", crew_url=url)
 
 
 def test_the_lease_shapes_of_both_urls_are_accepted() -> None:
-    from kiro_crew.relay_client.token_source import HostCredential
+    from aj_crew.relay_client.token_source import HostCredential
 
     HostCredential(
         "a.b.c",
@@ -477,7 +477,7 @@ def test_a_plain_body_length_is_read_from_the_head() -> None:
 
 
 def test_expect_never_crosses_to_the_crew() -> None:
-    from kiro_crew.relay_client.ingress import forwardable_request_headers
+    from aj_crew.relay_client.ingress import forwardable_request_headers
 
     out = forwardable_request_headers(
         [("Expect", "100-continue"), ("content-length", "5"), ("accept", "*/*")]
@@ -487,8 +487,8 @@ def test_expect_never_crosses_to_the_crew() -> None:
 
 @pytest.mark.asyncio
 async def test_each_hand_off_gets_its_own_loopback_connection() -> None:
-    from kiro_crew.dashboard.kiro_relay.ingress import RelayIngress
-    from kiro_crew.relay_client.ingress import LoopbackIngress
+    from aj_crew.dashboard.kiro_relay.ingress import RelayIngress
+    from aj_crew.relay_client.ingress import LoopbackIngress
 
     ingress = LoopbackIngress(
         "127.0.0.1", 9, gateway=RelayIngress(enabled=True), max_ws_message_bytes=1
@@ -501,8 +501,8 @@ async def test_each_hand_off_gets_its_own_loopback_connection() -> None:
 
 @pytest.mark.asyncio
 async def test_loopback_connector_has_no_cap_besides_host_stream_admission() -> None:
-    from kiro_crew.dashboard.kiro_relay.ingress import RelayIngress
-    from kiro_crew.relay_client.ingress import LoopbackIngress
+    from aj_crew.dashboard.kiro_relay.ingress import RelayIngress
+    from aj_crew.relay_client.ingress import LoopbackIngress
 
     ingress = LoopbackIngress(
         "127.0.0.1", 9, gateway=RelayIngress(enabled=True), max_ws_message_bytes=1
@@ -648,9 +648,9 @@ def test_the_display_grammars_match_the_fixture() -> None:
 
 
 def test_the_display_stamp_matches_the_fixture() -> None:
-    from kiro_crew.dashboard.kiro_relay.caller import CrewKind, HostBinding
-    from kiro_crew.dashboard.kiro_relay.ingress import RelayIngress
-    from kiro_crew.relay_client.ingress import LoopbackIngress
+    from aj_crew.dashboard.kiro_relay.caller import CrewKind, HostBinding
+    from aj_crew.dashboard.kiro_relay.ingress import RelayIngress
+    from aj_crew.relay_client.ingress import LoopbackIngress
 
     gateway = RelayIngress(enabled=True)
     ingress = LoopbackIngress("127.0.0.1", 9, gateway=gateway, max_ws_message_bytes=1)

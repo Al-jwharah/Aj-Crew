@@ -18,9 +18,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import api_send_message, api_update_message
-from kiro_crew.discord.transport import DiscordTransport
-from kiro_crew.messaging.link import ChannelLink
+from aj_crew.dashboard.handlers import api_send_message, api_update_message
+from aj_crew.discord.transport import DiscordTransport
+from aj_crew.messaging.link import ChannelLink
 
 APP = "test-app"
 ROOM = "C0ROOM123"
@@ -28,7 +28,7 @@ EDITED_TS = "1712793600.000001"
 OWNER_DM = "D0OWNERDM"
 OWNER_ID = "424242424242424242"
 DM_CHANNEL = "999000111222333444"
-TG_KEY = "telegram:kirocrew:dm:99887766"
+TG_KEY = "telegram:ajcrew:dm:99887766"
 TG_LINK = ChannelLink(channel_type="telegram", channel_id="99887766", thread_id="17")
 
 
@@ -79,12 +79,12 @@ class _Governance:
 
 def _governance(app_may_message: bool) -> tuple[_Governance, Any]:
     gov = _Governance(app_may_message)
-    return gov, patch("kiro_crew.platform.governance_profiles.vet_and_audit", side_effect=gov)
+    return gov, patch("aj_crew.platform.governance_profiles.vet_and_audit", side_effect=gov)
 
 
 @pytest.fixture(autouse=True)
 def _audit():
-    with patch("kiro_crew.sel.sel") as factory:
+    with patch("aj_crew.sel.sel") as factory:
         factory.return_value = MagicMock()
         yield
 
@@ -243,7 +243,7 @@ class TestTheVetFailsClosed:
         slack = _slack()
         state = _state(slack_client=slack, owner_id="U_OWNER")
         with patch(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             side_effect=RuntimeError("profile store unreadable"),
         ):
             status, data = await _post(
@@ -283,7 +283,7 @@ class TestTheEditLegRefusesAnAppWithoutMessaging:
     @pytest.fixture(autouse=True)
     def _room_is_tracked(self, _floor_monkeypatch: pytest.MonkeyPatch) -> None:
         _floor_monkeypatch.setattr(
-            "kiro_crew.slack.handler.is_tracked_channel", lambda cid: cid == ROOM
+            "aj_crew.slack.handler.is_tracked_channel", lambda cid: cid == ROOM
         )
 
     @pytest.mark.asyncio
@@ -330,7 +330,7 @@ class TestTheEditLegRefusesAnAppWithoutMessaging:
         slack = _slack()
         state = _state(slack_client=slack, owner_id="U_OWNER")
         with patch(
-            "kiro_crew.platform.governance_profiles.vet_and_audit",
+            "aj_crew.platform.governance_profiles.vet_and_audit",
             side_effect=RuntimeError("profile store unreadable"),
         ):
             status, data = await _edit(state, ROOM, {"X-Test-App": APP})

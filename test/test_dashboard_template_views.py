@@ -16,11 +16,11 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.dashboard_templates.manifest import MAX_FIELDS, ManifestError, load_template
+from aj_crew.dashboard_templates.manifest import MAX_FIELDS, ManifestError, load_template
 
 IDS = ("timeline", "org-chart")
 ROOT = Path(__file__).resolve().parents[1]
-BUILTIN = ROOT / "src/kiro_crew/dashboard_templates/builtin"
+BUILTIN = ROOT / "src/aj_crew/dashboard_templates/builtin"
 FIXTURES = ROOT / "test/fixtures/dashboard_templates"
 #: The shared sample every ``workstreams`` reader's paths are checked against, and this
 #: pair's own richer one -- five workers running at once, which the shared sample has

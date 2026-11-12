@@ -14,17 +14,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from subagent_helpers import _mock_ctx_builder, _mock_sessions
 
-from kiro_crew.execution_context import execution_for_store
+from aj_crew.execution_context import execution_for_store
 
 ROOT = "dashboard:default"
 
 
 def _store(*keys: str):
     """A real ``SessionManager`` holding one resident, trusted session per key."""
-    from kiro_crew.config.loader import KiroCrewConfig
-    from kiro_crew.session import SessionManager, _Session
+    from aj_crew.config.loader import AjCrewConfig
+    from aj_crew.session import SessionManager, _Session
 
-    store = SessionManager(KiroCrewConfig())
+    store = SessionManager(AjCrewConfig())
     for key in keys:
         store._sessions[key] = _Session(provider=SimpleNamespace(session_id=key), agent="")
         store.set_approval_policy(key, "auto")
@@ -33,15 +33,15 @@ def _store(*keys: str):
 
 @pytest.fixture(autouse=True)
 def _quiet_sel():
-    with patch("kiro_crew.session.sel"):
+    with patch("aj_crew.session.sel"):
         yield
 
 
 def _child(store, parent_key: str, between):
     """A child of *parent_key* whose stream calls *between* between two tool requests."""
-    from kiro_crew.hooks import ToolHookResult
-    from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
-    from kiro_crew.subagent import SubagentInfo, SubagentManager
+    from aj_crew.hooks import ToolHookResult
+    from aj_crew.providers.base import EVENT_PERMISSION_REQUEST, LLMEvent
+    from aj_crew.subagent import SubagentInfo, SubagentManager
 
     sessions = _mock_sessions()
     sessions.get_approval_policy = store.get_approval_policy
@@ -75,10 +75,10 @@ def _child(store, parent_key: str, between):
 
 async def _run(manager, info) -> None:
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.update_state"),
-        patch("kiro_crew.subagent.create_agent_folder", MagicMock(), create=True),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.update_state"),
+        patch("aj_crew.subagent.create_agent_folder", MagicMock(), create=True),
     ):
         await manager._run_inner(info, f"subagent:{info.id}")
 
@@ -149,7 +149,7 @@ async def test_a_grant_of_its_own_outlives_the_parent_revocation(grant) -> None:
 async def test_a_grandchild_loses_auto_once_the_root_is_revoked(child_lineage, expected) -> None:
     """The grandchild's parent is the child's session, whose stored ``"auto"`` the root's
     revocation never touches."""
-    from kiro_crew.subagent import SubagentInfo
+    from aj_crew.subagent import SubagentInfo
 
     store = _store(ROOT, "subagent:kid01")
     manager, info, provider = _child(
@@ -170,7 +170,7 @@ def _shared_child(manager, lineage, state: str = "shared") -> None:
     """The run on ``subagent:kid01``, a child of the root on the root's runtime: its
     session never enters the store, so only its run holds the trust it read. *state*
     ``done`` has finished; ``dedicated`` ran on its own process, whose session is gone."""
-    from kiro_crew.subagent import SubagentInfo
+    from aj_crew.subagent import SubagentInfo
 
     child = SubagentInfo(
         execution_context=execution_for_store(""), id="kid01", task="t", parent_session_key=ROOT
@@ -220,8 +220,8 @@ async def test_a_grandchild_reads_the_trust_its_shared_runtime_parent_run_holds(
 async def test_a_nested_spawn_is_admitted_on_its_shared_runtime_parent_runs_trust(
     child_lineage, revoked, asked
 ) -> None:
-    from kiro_crew.subagent import SubagentManager
-    from kiro_crew.testing.wait import await_until
+    from aj_crew.subagent import SubagentManager
+    from aj_crew.testing.wait import await_until
 
     store = _store(ROOT)
     if revoked:
@@ -235,7 +235,7 @@ async def test_a_nested_spawn_is_admitted_on_its_shared_runtime_parent_runs_trus
     )
     _shared_child(manager, child_lineage)
 
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = manager.spawn("nested", parent_session_key="subagent:kid01")
         await await_until(manager._tasks[info.id], what="the nested run finishes")
 
@@ -254,8 +254,8 @@ async def test_a_nested_spawn_is_admitted_on_its_shared_runtime_parent_runs_trus
 async def test_a_continuation_rests_on_its_founders_trust(founder, expected) -> None:
     """A continuation from another session keeps ``"auto"`` only while the session that
     founded the conversation holds it too, so revoking that founder reaches it."""
-    from kiro_crew.subagent import SubagentInfo
-    from kiro_crew.subagent_manager import turn_session
+    from aj_crew.subagent import SubagentInfo
+    from aj_crew.subagent_manager import turn_session
 
     store = _store(ROOT, founder)
     manager, info, _ = _child(store, ROOT, lambda: None)

@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import security
-from kiro_crew.artifacts import ArtifactError, ArtifactStore
+from aj_crew import security
+from aj_crew.artifacts import ArtifactError, ArtifactStore
 
 
 def _stall(monkeypatch) -> None:
@@ -86,7 +86,7 @@ async def test_artifact_file_helpers_keep_the_match_wording_on_the_loop(
 async def test_cron_script_resolution_stall_is_worded_as_a_stall_on_the_loop(
     tmp_path: Path, monkeypatch
 ) -> None:
-    from kiro_crew.cron_script import resolve_script_path
+    from aj_crew.cron_script import resolve_script_path
 
     script = tmp_path / "job.py"
     script.write_text("def run(ctx):\n    pass\n", encoding="utf-8")
@@ -104,7 +104,7 @@ async def test_cron_script_resolution_stall_is_worded_as_a_stall_on_the_loop(
 async def test_cron_script_vetting_stall_is_worded_as_a_stall_on_the_loop(
     tmp_path: Path, monkeypatch
 ) -> None:
-    from kiro_crew.mcp_cron import _vet_script_file
+    from aj_crew.mcp_cron import _vet_script_file
 
     script = tmp_path / "job.py"
     script.write_text("def run(ctx):\n    pass\n", encoding="utf-8")
@@ -119,7 +119,7 @@ async def test_cron_script_vetting_stall_is_worded_as_a_stall_on_the_loop(
 
 
 def test_mochi_pin_file_stall_is_worded_as_a_stall(tmp_path: Path, monkeypatch) -> None:
-    from kiro_crew.apps.builtins.mochi import mcp_server
+    from aj_crew.apps.builtins.mochi import mcp_server
 
     monkeypatch.setattr(mcp_server, "_data_dir", lambda: tmp_path)
     target = tmp_path / "notes.md"

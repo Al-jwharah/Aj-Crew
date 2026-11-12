@@ -28,13 +28,13 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import dashboard_agentic, dashboard_frame
-from kiro_crew.artifact_store import dashboard_package as dp
-from kiro_crew.artifacts import ArtifactValidationError
-from kiro_crew.dashboard import goal_reminder
-from kiro_crew.dashboard.handlers.member_dashboard_fields import package_manifest
-from kiro_crew.dashboard_templates import instance
-from kiro_crew.dashboard_templates.manifest import ManifestError, parse_manifest
+from aj_crew import dashboard_agentic, dashboard_frame
+from aj_crew.artifact_store import dashboard_package as dp
+from aj_crew.artifacts import ArtifactValidationError
+from aj_crew.dashboard import goal_reminder
+from aj_crew.dashboard.handlers.member_dashboard_fields import package_manifest
+from aj_crew.dashboard_templates import instance
+from aj_crew.dashboard_templates.manifest import ManifestError, parse_manifest
 
 SLUG = "code-reviewer"
 MEMBER = "Code Reviewer"
@@ -182,7 +182,7 @@ class TestTheStaleLine:
 @pytest.fixture
 def _member_page(tmp_path, _floor_monkeypatch):
     """A crewmate on ``project-report`` with the crew panel on, its fold reads stubbed."""
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _floor_monkeypatch.setattr(
         instance, "default_template_id", lambda _slug, _ids: "project-report"
     )
@@ -309,7 +309,7 @@ const nodes = NAMES.map(el);
 globalThis.document = {
   readyState: 'complete',
   documentElement: { setAttribute() {}, lang: '' },
-  getElementById: (id) => (id === 'kirocrew-dashboard-data' ? { textContent: ISLAND } : null),
+  getElementById: (id) => (id === 'ajcrew-dashboard-data' ? { textContent: ISLAND } : null),
   querySelectorAll: () => nodes,
 };
 globalThis.window = globalThis;
@@ -466,7 +466,7 @@ class TestTheLivePackagePage:
     preview is read once when the page arms, and every frame after carries the map."""
 
     def _live(self, frames: list[Any]) -> Any:
-        from kiro_crew.dashboard.handlers import member_dashboard_fields as mdf
+        from aj_crew.dashboard.handlers import member_dashboard_fields as mdf
 
         package = dp.validate_package(
             _package({"lane": {"type": "text", "source": {"agentic": True}}})
@@ -474,7 +474,7 @@ class TestTheLivePackagePage:
         return mdf.LivePage("stale-live", "stale-live", package, frames.append)
 
     def _write_lane(self, at: str) -> None:
-        from kiro_crew.crew_log import bus as crew_log_bus
+        from aj_crew.crew_log import bus as crew_log_bus
 
         crew_log_bus.publish(
             crew_log_bus.FOLD_ADVANCED,

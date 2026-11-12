@@ -1,6 +1,6 @@
 /**
  * Screenshot harness for the file viewer's type-first annotator, shot against
- * a REAL isolated pod (`kirocrew pod up <worktree> --json`) rather than a
+ * a REAL isolated pod (`ajcrew pod up <worktree> --json`) rather than a
  * stubbed dist: the pod serves the built SPA and answers `/api/**` itself, so
  * every frame shows the shipped selection → comment flow end to end.
  *
@@ -167,7 +167,7 @@ async function main() {
       localStorage.setItem('mc-active-slot-chat', slot)
       localStorage.setItem('mc-activity-open:' + slot, 'true')
       localStorage.setItem('mc-side-panel-width', '760')
-      localStorage.setItem('kirocrew:comment-hint-dismissed', '1')
+      localStorage.setItem('ajcrew:comment-hint-dismissed', '1')
       // Pending comments persist per file; each frame starts from none, because
       // clicking an already-commented range jumps to its row instead of selecting.
       localStorage.removeItem('mc-comment-drafts')
@@ -429,7 +429,7 @@ async function main() {
     await tpage.evaluate(([slot]) => {
       localStorage.setItem('mc-theme', 'dark'); localStorage.setItem('mc-onboarded', '1')
       localStorage.setItem('mc-active-slot-chat', slot); localStorage.setItem('mc-activity-open:' + slot, 'true')
-      localStorage.setItem('kirocrew:comment-hint-dismissed', '1'); localStorage.removeItem('mc-comment-drafts')
+      localStorage.setItem('ajcrew:comment-hint-dismissed', '1'); localStorage.removeItem('mc-comment-drafts')
       sessionStorage.clear()
     }, [slot])
     await tpage.goto(`${BASE}/?sid=${encodeURIComponent(slot)}`, { waitUntil: 'domcontentloaded' })
@@ -502,7 +502,7 @@ async function main() {
       await vpage.evaluate(([slot]) => {
         localStorage.setItem('mc-theme', 'dark'); localStorage.setItem('mc-onboarded', '1')
         localStorage.setItem('mc-active-slot-chat', slot); localStorage.setItem('mc-activity-open:' + slot, 'true')
-        localStorage.setItem('mc-side-panel-width', '620'); localStorage.setItem('kirocrew:comment-hint-dismissed', '1')
+        localStorage.setItem('mc-side-panel-width', '620'); localStorage.setItem('ajcrew:comment-hint-dismissed', '1')
         localStorage.removeItem('mc-comment-drafts')
       }, [slot])
       await vpage.goto(`${BASE}/?sid=${encodeURIComponent(slot)}`, { waitUntil: 'domcontentloaded' })

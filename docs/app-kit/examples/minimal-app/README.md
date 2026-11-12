@@ -1,11 +1,11 @@
-# Hello World — Minimal Kiro Crew App
+# Hello World — Minimal Aj Crew App
 
-The simplest possible Kiro Crew app: one agent + one skill, no UI.
+The simplest possible Aj Crew app: one agent + one skill, no UI.
 
 ## Install
 
 ```bash
-kirocrew app install ./minimal-app
+ajcrew app install ./minimal-app
 ```
 
 Trust the app before you enable it: enable refuses every app that is not built
@@ -17,9 +17,9 @@ After that, the command below works too. See
 [Third-party executable code is off by default](../../publishing-guide.md#third-party-executable-code-is-off-by-default).
 
 ```bash
-kirocrew app enable hello-world
+ajcrew app enable hello-world
 ```
 
 ## Use
 
-Chat with the `greeter` agent from any Kiro Crew chat after enabling the app.
+Chat with the `greeter` agent from any Aj Crew chat after enabling the app.

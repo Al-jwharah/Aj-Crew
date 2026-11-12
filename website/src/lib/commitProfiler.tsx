@@ -4,7 +4,7 @@
 // using React's own <Profiler>, without a devtools session attached.
 //
 // OFF by default and off in every normal load. It arms only when explicitly
-// asked for, via `?profile=commits` in the URL or a `kirocrew.profileCommits`
+// asked for, via `?profile=commits` in the URL or an `ajcrew.profileCommits`
 // localStorage key. When disarmed, `withCommitProfiler` returns its children
 // untouched, so React sees no extra element and there is no wrapper in the tree.
 //
@@ -18,7 +18,7 @@ import { Profiler, type ReactNode } from 'react'
 
 const URL_FLAG = 'profile'
 const URL_VALUE = 'commits'
-const STORAGE_KEY = 'kirocrew.profileCommits'
+const STORAGE_KEY = 'ajcrew.profileCommits'
 
 // Bounded so a long session cannot grow this without limit; commits are frequent.
 const MAX_RECORDS = 2000
@@ -173,10 +173,10 @@ export function installCommitProfilerConsoleApi(): void {
     raw: () => getCommits(),
     clear: () => clearCommits(),
   }
-  ;(window as unknown as Record<string, unknown>).kirocrewCommits = api
+  ;(window as unknown as Record<string, unknown>).ajcrewCommits = api
   // eslint-disable-next-line no-console
   console.info(
-    'Commit profiling armed. Call kirocrewCommits.summary() for a table.\n' +
+    'Commit profiling armed. Call ajcrewCommits.summary() for a table.\n' +
       'Note: React only reports real timings in a profiling-enabled build of ' +
       'react-dom, so use this with `npm run dev`; production numbers are inert.'
   )

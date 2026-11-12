@@ -35,7 +35,7 @@ import type { Result, ResourceProvider } from '../../components/commandPalette/t
  * the score and the highlight indices, over two fields —
  *
  *  - the folder's own NAME, which is what the user typed at, and
- *  - its full ancestry PATH, so "kirocrew oss" finds `kirocrew › oss` and a name
+ *  - its full ancestry PATH, so "ajcrew oss" finds `ajcrew › oss` and a name
  *    that only reads unambiguously in context is still reachable.
  *
  * A path match scores strictly below a name match ({@link PATH_MATCH_PENALTY}) so
@@ -145,7 +145,7 @@ export function createFoldersProvider(deps: FoldersProviderDeps): ResourceProvid
       ordered.forEach(({ folder, ancestors, path }, treeIndex) => {
         const parentPath = ancestors.length ? ancestors.join(FOLDER_PATH_SEP) : undefined
         const nameMatch = fuzzyMatch(q, folderNameText(folder))
-        // The ancestry path is matched as one string ("kirocrew › oss › thing"), so
+        // The ancestry path is matched as one string ("ajcrew › oss › thing"), so
         // a query spanning segments still hits. Only consulted when the name
         // missed: a folder whose name matched is already ranked, and highlighting
         // its path as well would double-mark the same row.

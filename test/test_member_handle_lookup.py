@@ -14,37 +14,35 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.config.loader import (
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+from aj_crew.config.loader import (
+    AjCrewAgentConfig,
+    AjCrewConfig,
     resolve_crew_identity,
 )
-from kiro_crew.config.loader_agents import _resolve_agent_selection
-from kiro_crew.members import canonical_member_key, member_slug
+from aj_crew.config.loader_agents import _resolve_agent_selection
+from aj_crew.members import canonical_member_key, member_slug
 
 LEGACY_KEY = "Crew Program Manager"
 LEGACY_ID = "crew-program-manager"
 NEW_KEY = "release-captain"
 NEW_LABEL = "Release Captain"
-TEMPLATE = "kirocrew"
+TEMPLATE = "ajcrew"
 
 
 @pytest.fixture
 def cfg(monkeypatch):
-    config = KiroCrewConfig()
+    config = AjCrewConfig()
     config.agents = {
-        "default": KiroCrewAgentConfig(kiro_agent=TEMPLATE),
-        LEGACY_KEY: KiroCrewAgentConfig(kiro_agent=TEMPLATE, member_id=LEGACY_ID),
-        NEW_KEY: KiroCrewAgentConfig(
-            kiro_agent=TEMPLATE, member_id=NEW_KEY, display_name=NEW_LABEL
-        ),
+        "default": AjCrewAgentConfig(kiro_agent=TEMPLATE),
+        LEGACY_KEY: AjCrewAgentConfig(kiro_agent=TEMPLATE, member_id=LEGACY_ID),
+        NEW_KEY: AjCrewAgentConfig(kiro_agent=TEMPLATE, member_id=NEW_KEY, display_name=NEW_LABEL),
     }
     config.default_agent = "default"
 
     def materialized(name, project_dir=None):
         return name if name == TEMPLATE else ""
 
-    for target in ("kiro_crew.config.loader", "kiro_crew.config.loader_agents"):
+    for target in ("aj_crew.config.loader", "aj_crew.config.loader_agents"):
         monkeypatch.setattr(f"{target}._materialized_kiro_agent", materialized)
     return config
 
@@ -97,7 +95,7 @@ def test_a_label_never_resolves_a_crew(cfg):
 
 
 def test_a_member_id_two_records_carry_resolves_to_nothing(cfg):
-    cfg.agents["other"] = KiroCrewAgentConfig(kiro_agent=TEMPLATE, member_id=LEGACY_ID)
+    cfg.agents["other"] = AjCrewAgentConfig(kiro_agent=TEMPLATE, member_id=LEGACY_ID)
     assert canonical_member_key(LEGACY_ID, cfg) == LEGACY_ID
     assert resolve_crew_identity(cfg, None, LEGACY_ID) == LEGACY_ID
     record, alias, _, resolved = _resolve_agent_selection(cfg, LEGACY_ID, selection_kind="member")
@@ -114,7 +112,7 @@ def test_unknown_name_is_unchanged(cfg):
 
 
 def test_an_empty_roster_leaves_a_handle_unchanged():
-    config = KiroCrewConfig()
+    config = AjCrewConfig()
     config.agents = {}
     assert canonical_member_key(LEGACY_ID, config) == LEGACY_ID
     assert resolve_crew_identity(config, None, LEGACY_ID) == LEGACY_ID

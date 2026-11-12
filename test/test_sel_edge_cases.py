@@ -1,4 +1,4 @@
-"""Edge-case tests for kiro_crew.sel, and its async and critical write paths.
+"""Edge-case tests for aj_crew.sel, and its async and critical write paths.
 
 Pins the ``SecurityEvent`` dataclass; edge cases of key management, hashing and the
 forward callback, integrity verification, tool-invocation and API-access audits,
@@ -22,9 +22,9 @@ from sel_helpers import (  # noqa: F401 -- the autouse fixture registers by impo
     reset_singleton,
 )
 
-from kiro_crew import sel_rotation
-from kiro_crew.sel import SecurityEventLog
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import sel_rotation
+from aj_crew.sel import SecurityEventLog
+from aj_crew.testing.clock import ManualClock
 
 # ─────────────────────────────────────────────────────────────────────────
 # Edge-case tests — paths the baseline coverage push doesn't exercise:
@@ -67,7 +67,7 @@ class TestHmacKeyManagementExtras:
         def _boom(*a, **kw):
             raise OSError("chmod denied")
 
-        monkeypatch.setattr("kiro_crew.platform_compat.os.chmod", _boom)
+        monkeypatch.setattr("aj_crew.platform_compat.os.chmod", _boom)
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
         assert (tmp_path / "trust" / "sel_hmac.key").exists()
         assert log._hmac_key
@@ -88,7 +88,7 @@ class TestHmacKeyManagementExtras:
         def _refuse(_target):
             raise OSError("icacls failed")
 
-        monkeypatch.setattr("kiro_crew.platform_compat.restrict_to_owner", _refuse)
+        monkeypatch.setattr("aj_crew.platform_compat.restrict_to_owner", _refuse)
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
         assert (tmp_path / "trust" / "sel_hmac.key").exists()
         assert log._hmac_key
@@ -105,7 +105,7 @@ class TestHmacKeyManagementExtras:
         window). Asserted by measuring the file's SIZE
         at lockdown time — zero means no key byte existed yet.
         """
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         trust_dir = tmp_path / "trust"
         calls: list[tuple[Path, int]] = []
@@ -117,7 +117,7 @@ class TestHmacKeyManagementExtras:
                 calls.append((p, os.stat(p).st_size))
             return real_restrict(target)
 
-        monkeypatch.setattr("kiro_crew.platform_compat.restrict_to_owner", _measuring)
+        monkeypatch.setattr("aj_crew.platform_compat.restrict_to_owner", _measuring)
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
 
         assert log._hmac_key
@@ -447,7 +447,7 @@ class TestAsyncWriter:
         monkeypatch = pytest.MonkeyPatch()
         monkeypatch.setattr(os, "open", _maybe_fail)
         log.log(_make_event(event_id="e1"))  # write fails — must roll back
-        # nosemgrep: kirocrew.test-bare-monkeypatch-undo -- pre-existing undo of a local pytest.MonkeyPatch() instance moved verbatim; it holds no fixture's patches
+        # nosemgrep: ajcrew.test-bare-monkeypatch-undo -- pre-existing undo of a local pytest.MonkeyPatch() instance moved verbatim; it holds no fixture's patches
         monkeypatch.undo()
 
         # _last_hash unchanged (the failed event left no trace).
@@ -533,7 +533,7 @@ class TestCriticalWrite:
     def test_non_critical_log_still_swallows_write_error(self, tmp_path: Path, caplog) -> None:
         """Regression guard: a NON-critical write must remain best-effort
         (swallow + warn), never propagate to the hot-path caller."""
-        caplog.set_level("WARNING", logger="kiro_crew.sel")
+        caplog.set_level("WARNING", logger="aj_crew.sel")
         log = SecurityEventLog(base_dir=tmp_path, sync=True)
         real_os_open = os.open
 
@@ -549,7 +549,7 @@ class TestCriticalWrite:
         finally:
             mp.undo()
         # Swallowed, not silent: the dropped write is reported on the SEL logger.
-        warned = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.sel"]
+        warned = [r.getMessage() for r in caplog.records if r.name == "aj_crew.sel"]
         assert "SEL append failed for 1 events" in warned
 
     def test_log_api_access_critical_raises(self, tmp_path: Path) -> None:

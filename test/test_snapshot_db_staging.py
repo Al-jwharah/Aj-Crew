@@ -22,10 +22,10 @@ from contextlib import closing
 from pathlib import Path
 
 import pytest
-from test_snapshot import _setup_fake_kirocrew
+from test_snapshot import _setup_fake_ajcrew
 
-from kiro_crew import pinned_fs
-from kiro_crew import snapshot as snap
+from aj_crew import pinned_fs
+from aj_crew import snapshot as snap
 
 pinned_only = pytest.mark.skipif(
     not pinned_fs.supports_pinned_tree_walk(),
@@ -42,8 +42,8 @@ UNPINNED_OK = {"allow_unpinned": True}
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     d = tmp_path / "home"
     d.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(d))
-    _setup_fake_kirocrew(d)
+    monkeypatch.setenv("AJCREW_HOME", str(d))
+    _setup_fake_ajcrew(d)
     return d
 
 
@@ -201,14 +201,14 @@ class TestStagingDoesNotWriteToTheLiveDatabase:
         """A symlinked data home reaches a decision instead of dying on a traceback.
 
         `PinnedPathRefusal` from the root open is left for `snapshot_main` to handle and
-        audit. A `KIROCREW_HOME` override is `.resolve()`d and can never present a
+        audit. An `AJCREW_HOME` override is `.resolve()`d and can never present a
         symlink; the default `_default_home()` is not, so the test patches `_mc_dir`.
         """
         if not pinned_fs.supports_pinned_walk():
             pytest.skip("the refusal only arises where descriptor pinning is available")
         real_home = tmp_path / "real-home"
         real_home.mkdir()
-        _setup_fake_kirocrew(real_home)
+        _setup_fake_ajcrew(real_home)
         linked = tmp_path / "linked-home"
         try:
             linked.symlink_to(real_home)
@@ -242,7 +242,7 @@ class TestACorruptCoreDatabaseFailsInsteadOfPruningAGoodBackup:
         """
         out = tmp_path / "out"
         out.mkdir()
-        previous = out / "kirocrew-snapshot-20260101-000000.tgz"
+        previous = out / "ajcrew-snapshot-20260101-000000.tgz"
         previous.write_bytes(b"the operator's only good backup\n")
         (home / "memory.db").write_bytes(b"this is not a database\n")
 
@@ -260,7 +260,7 @@ class TestACorruptCoreDatabaseFailsInsteadOfPruningAGoodBackup:
         """The other half of the asymmetry, asserted so nobody "fixes" it into symmetry.
 
         A `.db` under a tree that is NOT in `PRODUCT_TREE_DATABASES` is incidental, and
-        refusing the whole snapshot over it would be an outage. `_setup_fake_kirocrew`
+        refusing the whole snapshot over it would be an outage. `_setup_fake_ajcrew`
         leaves a stub `kb.sqlite3` that must ride as bytes; a corrupt `knowledge.db` (in
         the set) fails instead, pinned below.
         """
@@ -519,7 +519,7 @@ class TestASourceThatCannotBeVerifiedIsRefusedAndRecorded:
 
         out = tmp_path / "out"
         out.mkdir()
-        previous = out / "kirocrew-snapshot-20260101-000000.tgz"
+        previous = out / "ajcrew-snapshot-20260101-000000.tgz"
         previous.write_bytes(b"the operator's only good backup\n")
 
         real_stat_at = pinned_fs.stat_at

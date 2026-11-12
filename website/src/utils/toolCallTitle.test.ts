@@ -23,7 +23,7 @@ import { shortDisplayPath, tokenizeShell } from './shellCommandParse'
  * The TypeScript half of the tool-call title conformance suite.
  *
  * Reads the SAME fixture as `test/test_tool_call_title.py`. The two
- * implementations (this module for the dashboard, `kiro_crew/tool_call_title.py`
+ * implementations (this module for the dashboard, `aj_crew/tool_call_title.py`
  * for the Slack / Discord renderers) must agree on every case's ACTION and its
  * English TITLE, or a user sees one label in the dashboard and another in the
  * channel for the same call. The fixture is the contract; each side asserts it
@@ -125,9 +125,9 @@ describe('relDisplayPath', () => {
 
 describe('mcpIdentityFromTitle', () => {
   it.each([
-    ['@kirocrew-core/session_send', 'kirocrew-core', 'session_send'],
-    ['Running: @kirocrew-dashboard/chat_folder_tree', 'kirocrew-dashboard', 'chat_folder_tree'],
-    ['kirocrew-core___wait', 'kirocrew-core', 'wait'],
+    ['@ajcrew-core/session_send', 'ajcrew-core', 'session_send'],
+    ['Running: @ajcrew-dashboard/chat_folder_tree', 'ajcrew-dashboard', 'chat_folder_tree'],
+    ['ajcrew-core___wait', 'ajcrew-core', 'wait'],
     ['mcp__github__list_prs', 'github', 'list_prs'],
   ])('%s', (title, server, tool) => {
     expect(mcpIdentityFromTitle(title)).toEqual({ server, tool })
@@ -153,9 +153,9 @@ describe('humanizeToolName', () => {
 
 describe('declaredMcpToolTitle', () => {
   it('reads the server-keyed table and only its own properties', () => {
-    expect(declaredMcpToolTitle('kirocrew-dashboard', 'session_send')).toBe('Send to session')
+    expect(declaredMcpToolTitle('ajcrew-dashboard', 'session_send')).toBe('Send to session')
     expect(declaredMcpToolTitle('other-mcp', 'session_send')).toBeUndefined()
-    expect(declaredMcpToolTitle('kirocrew-core', 'constructor')).toBeUndefined()
+    expect(declaredMcpToolTitle('ajcrew-core', 'constructor')).toBeUndefined()
     expect(declaredMcpToolTitle('__proto__', 'toString')).toBeUndefined()
   })
 })
@@ -191,8 +191,8 @@ describe('deriveToolCallTitle rawTitle', () => {
   })
 
   it('keeps the incoming title for a non-shell call', () => {
-    const d = deriveToolCallTitle({ kind: 'other', title: '@kirocrew-core/session_send', rawInput: { target: 'x' } })
-    expect(d.rawTitle).toBe('@kirocrew-core/session_send')
+    const d = deriveToolCallTitle({ kind: 'other', title: '@ajcrew-core/session_send', rawInput: { target: 'x' } })
+    expect(d.rawTitle).toBe('@ajcrew-core/session_send')
   })
 })
 
@@ -205,7 +205,7 @@ describe('deriveToolCallTitle shell identity', () => {
     { name: 'backend description', input: { kind: 'execute', title: 'Read the source file', rawInput: { command: 'cat a.ts' } }, shell: true, kind: 'read', rawTitle: 'cat a.ts' },
     { name: 'unclassified shell command', input: { kind: 'execute', rawInput: { command: 'node app.js' } }, shell: true, kind: 'execute', rawTitle: 'node app.js' },
     { name: 'native read', input: { toolName: 'fs_read', kind: 'read', title: 'Reading a.ts', rawInput: { path: 'a.ts' } }, shell: false, kind: 'read', rawTitle: 'Reading a.ts' },
-    { name: 'live MCP title', input: { kind: 'unknown', title: 'Running: @kirocrew-core/session_send', rawInput: { target: 'x' } }, shell: false, kind: 'other', rawTitle: 'Running: @kirocrew-core/session_send' },
+    { name: 'live MCP title', input: { kind: 'unknown', title: 'Running: @ajcrew-core/session_send', rawInput: { target: 'x' } }, shell: false, kind: 'other', rawTitle: 'Running: @ajcrew-core/session_send' },
     { name: 'non-shell fallback', input: { title: 'Inspect the workspace' }, shell: false, kind: 'other', rawTitle: 'Inspect the workspace' },
     { name: 'shell stub without a command', input: { kind: 'execute', title: 'shell' }, shell: false, kind: 'execute', rawTitle: 'shell' },
   ])('$name', ({ input, shell, kind, rawTitle }) => {

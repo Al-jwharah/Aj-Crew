@@ -15,11 +15,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp import client as client_facade
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.transport_errors import AcpError
-from kiro_crew.acp.types import METHOD_SESSION_CLOSE, METHOD_SESSION_NEW
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_OPENCODE
+from aj_crew.acp import client as client_facade
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.transport_errors import AcpError
+from aj_crew.acp.types import METHOD_SESSION_CLOSE, METHOD_SESSION_NEW
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_OPENCODE
 
 
 def _live_claude(tmp_path, monkeypatch, steps: list[str]) -> AcpClient:
@@ -140,7 +140,7 @@ async def test_the_closed_sessions_connection_bridges_go_after_session_close(
 ):
     """The fresh array projects its own bridges; the closed session's would only pile
     up in the gateway's shared bridge table until the process ended."""
-    from kiro_crew.acp import kas_env_launch
+    from aj_crew.acp import kas_env_launch
 
     steps: list[str] = []
     discarded: list[list[str]] = []

@@ -30,8 +30,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from kiro_crew.dashboard.handlers import usage as usage_mod
-from kiro_crew.messaging.link import TELEMETRY_CHANNELS, telemetry_channel_of
+from aj_crew.dashboard.handlers import usage as usage_mod
+from aj_crew.messaging.link import TELEMETRY_CHANNELS, telemetry_channel_of
 
 #: Row surfaces written by the product that are NOT channel-taxonomy members:
 #: ``monitor`` (``slack/gateway.py``) and ``webhook`` (``handlers/hooks.py``).
@@ -50,7 +50,7 @@ def _row(*, slot, surface, credits=1.0, model="m"):
         "context_used": 0,
         "context_window": 1_000_000,
         "surface": surface,
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "provider": "acp",
     }
 

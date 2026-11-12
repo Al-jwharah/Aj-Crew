@@ -2,7 +2,7 @@
 
 Lives in the repo-level ``test/`` tree (not the app's in-package ``tests/``)
 because ``setup.cfg`` sets ``testpaths = test transfer`` — a test under
-``src/kiro_crew/apps/builtins/...`` is never collected by CI.
+``src/aj_crew/apps/builtins/...`` is never collected by CI.
 
 Covers the request contract every frontend call depends on, plus the input
 validation and redaction the AUTOSDE ``backend-security-controls`` rule requires.
@@ -34,11 +34,11 @@ from meetings_helpers import (  # noqa: F401
 )
 from meetings_routes_helpers import BASE, _start, _start_and_get_session
 
-from kiro_crew.apps.builtins.meetings.backend import constants as k
-from kiro_crew.apps.builtins.meetings.backend import store
-from kiro_crew.apps.builtins.meetings.backend.domain import session as sess
-from kiro_crew.apps.builtins.meetings.backend.routes import _common
-from kiro_crew.testing.wait import await_until
+from aj_crew.apps.builtins.meetings.backend import constants as k
+from aj_crew.apps.builtins.meetings.backend import store
+from aj_crew.apps.builtins.meetings.backend.domain import session as sess
+from aj_crew.apps.builtins.meetings.backend.routes import _common
+from aj_crew.testing.wait import await_until
 
 # Repo-root anchor for tests that read a checked-in source file. A relative
 # literal resolves against the process CWD, which no test owns: another test
@@ -643,7 +643,7 @@ class TestAgentRoutes:
     async def test_stop_waits_for_an_in_flight_transcript_append(
         self, app, root: Path, fake_sessions, monkeypatch: pytest.MonkeyPatch
     ):
-        from kiro_crew.apps.builtins.meetings.backend.routes import (
+        from aj_crew.apps.builtins.meetings.backend.routes import (
             agents,
             meeting_lifecycle,
         )
@@ -701,7 +701,7 @@ class TestAgentRoutes:
     async def test_review_status_waits_for_an_in_flight_transcript_append(
         self, app, fake_sessions, monkeypatch: pytest.MonkeyPatch
     ):
-        from kiro_crew.apps.builtins.meetings.backend.routes import (
+        from aj_crew.apps.builtins.meetings.backend.routes import (
             agents,
             meeting_lifecycle,
         )

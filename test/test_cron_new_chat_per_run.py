@@ -13,19 +13,19 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.cron import CronJob, CronService
-from kiro_crew.dashboard.chat_utils_slots import dashboard_slot_key
-from kiro_crew.session_surface import set_dashboard_surfaced
+from aj_crew.cron import CronJob, CronService
+from aj_crew.dashboard.chat_utils_slots import dashboard_slot_key
+from aj_crew.session_surface import set_dashboard_surfaced
 
 JOB_ID = "ab12cd34"
 
 
 @pytest.fixture(autouse=True)
 def _isolate(_floor_monkeypatch, tmp_path):
-    _floor_monkeypatch.setattr("kiro_crew.cron._DEFAULT_DIR", tmp_path)
-    _floor_monkeypatch.setattr("kiro_crew.mcp_cron.config_dir", lambda: tmp_path)
-    _floor_monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
-    _floor_monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:new-chat-slot")
+    _floor_monkeypatch.setattr("aj_crew.cron._DEFAULT_DIR", tmp_path)
+    _floor_monkeypatch.setattr("aj_crew.mcp_cron.config_dir", lambda: tmp_path)
+    _floor_monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
+    _floor_monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:new-chat-slot")
     set_dashboard_surfaced(())
     yield
     set_dashboard_surfaced(())
@@ -77,7 +77,7 @@ def _job(**over) -> CronJob:
 
 
 async def _deliver(state, job, session_key, result):
-    from kiro_crew.slack import gateway
+    from aj_crew.slack import gateway
 
     gw = gateway.GatewayOrchestrator.__new__(gateway.GatewayOrchestrator)
     gw.dashboard_state = state
@@ -257,7 +257,7 @@ def test_the_store_takes_the_switch_on_a_job_that_runs_at_most_once_a_day(tmp_pa
 
 
 def test_cron_add_with_the_switch_gets_a_fresh_session_per_run():
-    from kiro_crew.mcp_cron import _call_tool_inner
+    from aj_crew.mcp_cron import _call_tool_inner
 
     result = _call_tool_inner(
         "cron_add", {"name": "monthly", "message": "hi", "every": 86400, "new_chat_per_run": True}
@@ -290,7 +290,7 @@ def _rest_app(handler, route: str, **store):
 async def test_the_rest_routes_take_the_switch_and_refuse_a_non_boolean():
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.dashboard.handlers.cron import api_cron_update, api_crons_create
+    from aj_crew.dashboard.handlers.cron import api_cron_update, api_crons_create
 
     add = AsyncMock(return_value=_job())
     create = {"name": "m", "message": "x", "every": 3600}

@@ -9,12 +9,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import mcp_core
-from kiro_crew.channel import _blocked_tool_named
-from kiro_crew.dashboard.handlers import api_slack_history
-from kiro_crew.mcp_core import _call_tool
-from kiro_crew.slack import enterprise
-from kiro_crew.slack.client import RealSlackClient
+from aj_crew import mcp_core
+from aj_crew.channel import _blocked_tool_named
+from aj_crew.dashboard.handlers import api_slack_history
+from aj_crew.mcp_core import _call_tool
+from aj_crew.slack import enterprise
+from aj_crew.slack.client import RealSlackClient
 
 OWNER = "U0OWNER01"
 CHANNEL = "C0123ABC456"
@@ -23,7 +23,7 @@ TEAM = "T0HOME001"
 
 @pytest.fixture
 def mock_sel():
-    with patch("kiro_crew.sel.sel") as m:
+    with patch("aj_crew.sel.sel") as m:
         yield m.return_value
 
 
@@ -33,14 +33,14 @@ async def _post(slack, body, *, tracked=True, policy_refusal="", inbound=True):
     app.router.add_post("/api/slack-history", api_slack_history)
     app["state"] = MagicMock(slack_client=slack)
     with (
-        patch("kiro_crew.slack.handler.is_tracked_channel", return_value=tracked),
-        patch("kiro_crew.slack.handler.is_allowed_user", side_effect=lambda u: u == OWNER),
-        patch("kiro_crew.slack.channel_policy.channel_refusal", return_value=policy_refusal),
+        patch("aj_crew.slack.handler.is_tracked_channel", return_value=tracked),
+        patch("aj_crew.slack.handler.is_allowed_user", side_effect=lambda u: u == OWNER),
+        patch("aj_crew.slack.channel_policy.channel_refusal", return_value=policy_refusal),
         patch(
-            "kiro_crew.messaging.identity.channel_inbound_permitted",
+            "aj_crew.messaging.identity.channel_inbound_permitted",
             AsyncMock(return_value=inbound),
         ),
-        patch("kiro_crew.slack.team_ids.slack_team_id_for", return_value=TEAM),
+        patch("aj_crew.slack.team_ids.slack_team_id_for", return_value=TEAM),
     ):
         async with TestClient(TestServer(app)) as client:
             resp = await client.post("/api/slack-history", json=body)
@@ -207,7 +207,7 @@ def test_the_tool_refuses_a_channel_agent_before_reading(monkeypatch):
     out = _call_tool("read_slack_history", {"channel": CHANNEL})
     assert "not available to channel agents" in out
     # The permission-prompt guard names it too, for a call that is not auto-approved.
-    assert _blocked_tool_named("kirocrew-core___read_slack_history")
+    assert _blocked_tool_named("ajcrew-core___read_slack_history")
 
 
 def test_the_tool_refuses_a_caller_whose_channels_scope_leaves_out_slack(monkeypatch):

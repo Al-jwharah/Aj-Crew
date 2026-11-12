@@ -25,9 +25,9 @@ from apps_registry_helpers import _catalog_absent  # noqa: F401 - fixture
 from apps_registry_helpers import _explicit_registry_execution_admission  # noqa: F401 - fixture
 from apps_registry_helpers import unsandboxed_spawn  # noqa: F401 - fixture
 
-from kiro_crew import platform_compat
-from kiro_crew.apps import registry
-from kiro_crew.apps.manifest import AppManifest
+from aj_crew import platform_compat
+from aj_crew.apps import registry
+from aj_crew.apps.manifest import AppManifest
 
 
 def test_entry_git_url_tolerates_non_string_values():
@@ -107,7 +107,7 @@ class TestApplyTrustFields:
         entry = {
             "name": "evil-app",
             "_registry": "evil-registry",
-            "author": "KiroCrew",       # brand-ok: author-spoof fixture
+            "author": "AjCrew",       # brand-ok: author-spoof fixture
             "origin": "builtin",        # origin spoof
             "featured": True,           # spotlight self-flag
         }
@@ -496,22 +496,22 @@ class TestApplyTrustFields:
 
         assert "trustRepository" not in out
 
-    def test_core_kirocrew_index_author_is_verified(self):
+    def test_core_ajcrew_index_author_is_verified(self):
         """``verified`` derives from the INDEX-declared author snapshot
         (``_index_author``, taken by ``list_registry`` pre-merge)."""
-        entry = {"name": "good-app", "_index_author": "KiroCrew"}  # brand-ok: author-spoof fixture
+        entry = {"name": "good-app", "_index_author": "AjCrew"}  # brand-ok: author-spoof fixture
         (out,) = registry._apply_trust_fields([entry])
         assert out["provenance"] == "official"
         assert out["verified"] is True
 
     def test_manifest_author_alone_never_mints_verified(self):
-        """A third-party core repo publishing ``"author": "kirocrew"`` in its
+        """A third-party core repo publishing ``"author": "ajcrew"`` in its
         app.json gains nothing: the merged ``author`` display field is not
         consulted, only the pre-merge index snapshot is."""
-        entry = {"name": "sneaky", "author": "KiroCrew"}  # merged, no snapshot  # brand-ok: author-spoof fixture
+        entry = {"name": "sneaky", "author": "AjCrew"}  # merged, no snapshot  # brand-ok: author-spoof fixture
         (out,) = registry._apply_trust_fields([entry])
         assert out["verified"] is False
-        entry = {"name": "sneaky2", "author": "KiroCrew", "_index_author": "third-party"}  # brand-ok: author-spoof fixture
+        entry = {"name": "sneaky2", "author": "AjCrew", "_index_author": "third-party"}  # brand-ok: author-spoof fixture
         (out,) = registry._apply_trust_fields([entry])
         assert out["verified"] is False
 
@@ -549,7 +549,7 @@ class TestApplyTrustFields:
         assert out["provenance"] == "official"
 
     def test_index_author_snapshot_never_leaks_into_payload(self):
-        entry = {"name": "x", "_index_author": "KiroCrew"}  # brand-ok: author-spoof fixture
+        entry = {"name": "x", "_index_author": "AjCrew"}  # brand-ok: author-spoof fixture
         (out,) = registry._apply_trust_fields([entry])
         assert "_index_author" not in out
 
@@ -558,18 +558,18 @@ class TestApplyTrustFields:
         official published catalog state the org that way. A single-token-only
         comparison silently un-verified every first-party app whose index row
         spelled the org correctly."""
-        entry = {"name": "spec-builder", "_index_author": "Kiro Crew"}
+        entry = {"name": "spec-builder", "_index_author": "Aj Crew"}
         (out,) = registry._apply_trust_fields([entry])
         assert out["verified"] is True
 
     @pytest.mark.parametrize(
         "spelling",
         [
-            "Ｋｉｒｏ　Ｃｒｅｗ",  # fullwidth, ideographic space
-            "kiro\u200bcrew",  # zero-width space
-            "Kiro\u00adCrew",  # soft hyphen
-            "  kiro   crew  ",  # padded, doubled inner space
-            "KIROCREW",
+            "Ａｊ　Ｃｒｅｗ",  # fullwidth, ideographic space
+            "aj\u200bcrew",  # zero-width space
+            "Aj\u00adCrew",  # soft hyphen
+            "  aj   crew  ",  # padded, doubled inner space
+            "AJCREW",
         ],
     )
     def test_first_party_spelling_variants_still_verify(self, spelling):
@@ -583,14 +583,14 @@ class TestApplyTrustFields:
     def test_folding_does_not_grant_the_mark_to_an_external_row(self):
         """The fold widens the match, so pin the short-circuit that keeps it
         harmless: a tagged row is unverified BEFORE the author is consulted."""
-        entry = {"name": "app", "_registry": "labs", "_index_author": "Kiro Crew"}
+        entry = {"name": "app", "_registry": "labs", "_index_author": "Aj Crew"}
         (out,) = registry._apply_trust_fields([entry])
         assert out["provenance"] == "external"
         assert out["verified"] is False
 
     def test_near_miss_author_is_not_verified(self):
         """Folding must not blur a DIFFERENT name into ours."""
-        for name in ("kiro crews", "kiro-crew", "kirocrew labs", "crew kiro"):
+        for name in ("aj crews", "aj-crew", "ajcrew labs", "crew kiro"):
             entry = {"name": "app", "_index_author": name}
             (out,) = registry._apply_trust_fields([entry])
             assert out["verified"] is False, name
@@ -606,17 +606,17 @@ class TestApplyTrustFields:
     async def test_list_registry_stamps_trust_fields(self, monkeypatch):
         """End-to-end: every row returned by ``list_registry`` carries the
         server-computed fields; external spoofs and a manifest-published
-        ``author: "kirocrew"`` are all neutralized."""
-        core = {"name": "core-app", "author": "KiroCrew", "featured": 1}  # brand-ok: author-spoof fixture
+        ``author: "ajcrew"`` are all neutralized."""
+        core = {"name": "core-app", "author": "AjCrew", "featured": 1}  # brand-ok: author-spoof fixture
         # Third-party core entry whose REPO manifest claims the first-party
         # author (index declares none) — must not mint the badge.
         sneaky = {"name": "sneaky-app"}
         # Index entry trying to pre-seed the internal snapshot key directly.
-        preseed = {"name": "preseed-app", "_index_author": "KiroCrew"}  # brand-ok: author-spoof fixture
+        preseed = {"name": "preseed-app", "_index_author": "AjCrew"}  # brand-ok: author-spoof fixture
         ext = {
             "name": "ext-app",
             "_registry": "labs",
-            "author": "KiroCrew",  # brand-ok: author-spoof fixture
+            "author": "AjCrew",  # brand-ok: author-spoof fixture
             "origin": "builtin",
             "featured": True,
         }
@@ -630,7 +630,7 @@ class TestApplyTrustFields:
         async def _fake_resolve(entry):
             # Simulate the app.json merge overwriting the display author.
             if entry["name"] == "sneaky-app":
-                return {**entry, "author": "KiroCrew"}  # brand-ok: author-spoof fixture
+                return {**entry, "author": "AjCrew"}  # brand-ok: author-spoof fixture
             return entry
 
         monkeypatch.setattr(registry, "_load_external_registries", _fake_external)
@@ -1269,9 +1269,9 @@ class TestMergeManifestProjectsRegistryKeys:
     def test_index_author_snapshot_survives_the_merge(self):
         """``_apply_trust_fields`` runs AFTER the merge and consumes this key to
         decide the verified mark, so the projection has to carry it through."""
-        entry = {"name": "demo-app", "_index_author": "Kiro Crew"}
+        entry = {"name": "demo-app", "_index_author": "Aj Crew"}
         out = registry._merge_manifest(entry, self.MANIFEST)
-        assert out["_index_author"] == "Kiro Crew"
+        assert out["_index_author"] == "Aj Crew"
 
     def test_dark_icon_path_becomes_a_blob_url(self):
         """A raster icon cannot repaint from theme tokens, so an app may ship a

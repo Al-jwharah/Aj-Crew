@@ -11,10 +11,10 @@ from unittest.mock import patch
 
 import pytest
 
-import kiro_crew.dashboard.handlers.usage as usage_mod
-import kiro_crew.dashboard.handlers.usage_sessions as usage_sessions
-from kiro_crew import platform_compat
-from kiro_crew.dashboard.handlers.usage import _parse_sessions
+import aj_crew.dashboard.handlers.usage as usage_mod
+import aj_crew.dashboard.handlers.usage_sessions as usage_sessions
+from aj_crew import platform_compat
+from aj_crew.dashboard.handlers.usage import _parse_sessions
 
 _STAMP = "2026-04-20T12:00:00.000Z"
 
@@ -465,7 +465,7 @@ def windows_cloud_files_pins(monkeypatch):
     """
     import sys
 
-    import kiro_crew.platform_compat_links as links
+    import aj_crew.platform_compat_links as links
 
     calls: list[bool] = []
     real_pin = links.pin_directory

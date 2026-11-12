@@ -1,7 +1,7 @@
 """Every channel-config field an operator can set must actually be READ.
 
 A field on one of the channel dataclasses is only half a setting. The other half
-is a line in ``KiroCrewConfig.load()`` pulling it out of the JSON section. Miss
+is a line in ``AjCrewConfig.load()`` pulling it out of the JSON section. Miss
 that line and the field silently keeps its dataclass default forever: the schema
 advertises it, the dashboard writes it to ``config.json``, ``GET`` reads it back
 from disk and shows the operator their own choice — and the running channel never
@@ -29,9 +29,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config.loader import AjCrewConfig
 
-#: Config section name -> the attribute on ``KiroCrewConfig`` holding it. The
+#: Config section name -> the attribute on ``AjCrewConfig`` holding it. The
 #: channels only; a section whose parse block is generated rather than hand-written
 #: does not have this failure mode.
 _CHANNEL_SECTIONS = (
@@ -101,7 +101,7 @@ def _probe_value(section: str, name: str, current: Any) -> Any:
 
 def _scalar_fields(section: str) -> list[tuple[str, Any]]:
     """``(name, probe_value)`` for each scalar field of *section*'s dataclass."""
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     obj = getattr(cfg, section)
     assert is_dataclass(obj), section
     out: list[tuple[str, Any]] = []
@@ -124,12 +124,12 @@ def test_every_scalar_channel_field_survives_a_load(
     # failure mode it exists to catch, one level up.
     assert probes, f"no scalar fields discovered for {section!r}"
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "config.json").write_text(
         json.dumps({section: {name: value for name, value in probes}}), encoding="utf-8"
     )
 
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     loaded = getattr(cfg, section)
     unread = [
         f"{section}.{name} (wrote {value!r}, loaded {getattr(loaded, name)!r})"
@@ -138,14 +138,14 @@ def test_every_scalar_channel_field_survives_a_load(
     ]
     assert not unread, (
         "declared but never read out of config.json — add the missing "
-        f"`{section}_data.get(...)` line to KiroCrewConfig.load(), or list the "
+        f"`{section}_data.get(...)` line to AjCrewConfig.load(), or list the "
         f"field in _NOT_FROM_JSON with the reason: {unread}"
     )
 
 
 def test_the_side_tables_name_only_real_fields() -> None:
     """A stale entry in either table silently un-covers a field."""
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     stale = [
         f"{table}: {section}.{name}"
         for table, keys in (("_NOT_FROM_JSON", _NOT_FROM_JSON), ("_ENUM_PROBES", _ENUM_PROBES))
@@ -165,11 +165,11 @@ def test_an_unreadable_activation_degrades_to_the_narrower_mode(
     grant participation nobody asked for. Same posture as
     ``WeixinTransport.authorize`` on an unrecognized ``dm_policy``.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "config.json").write_text(
         json.dumps({"telegram": {"forum_activation": "menshun"}}), encoding="utf-8"
     )
-    assert KiroCrewConfig.load().telegram.forum_activation == "mention"
+    assert AjCrewConfig.load().telegram.forum_activation == "mention"
 
 
 def test_an_absent_activation_still_takes_the_documented_default(
@@ -182,17 +182,17 @@ def test_an_absent_activation_still_takes_the_documented_default(
     Narrowing that case too would be a silent behaviour change for every existing
     forum operator, which is what the typo path is guarding against in reverse.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "config.json").write_text(
         json.dumps({"telegram": {"allow_forum": True}}), encoding="utf-8"
     )
-    assert KiroCrewConfig.load().telegram.forum_activation == "always"
+    assert AjCrewConfig.load().telegram.forum_activation == "always"
 
     # An explicitly EMPTY value is the absent case, not a typo: it names nothing.
     (tmp_path / "config.json").write_text(
         json.dumps({"telegram": {"forum_activation": ""}}), encoding="utf-8"
     )
-    assert KiroCrewConfig.load().telegram.forum_activation == "always"
+    assert AjCrewConfig.load().telegram.forum_activation == "always"
 
 
 def test_telegram_does_not_advertise_an_activation_it_cannot_express() -> None:
@@ -203,7 +203,7 @@ def test_telegram_does_not_advertise_an_activation_it_cannot_express() -> None:
     rendering mode built on Slack Block Kit ephemerals. Advertising either would
     give the operator a mode that silently behaves like a different one.
     """
-    from kiro_crew.config.loader import _VALID_ACTIVATIONS, TELEGRAM_ACTIVATIONS
+    from aj_crew.config.loader import _VALID_ACTIVATIONS, TELEGRAM_ACTIVATIONS
 
     assert TELEGRAM_ACTIVATIONS == {"always", "mention", "off"}
     assert TELEGRAM_ACTIVATIONS < _VALID_ACTIVATIONS
@@ -218,8 +218,8 @@ def test_telegram_show_thinking_specifically_round_trips(
     regression is legible in a failure list, and because it is the one field with a
     settings toggle and a screenshot asserting it works.
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / "config.json").write_text(
         json.dumps({"telegram": {"show_thinking": True}}), encoding="utf-8"
     )
-    assert KiroCrewConfig.load().telegram.show_thinking is True
+    assert AjCrewConfig.load().telegram.show_thinking is True

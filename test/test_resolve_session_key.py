@@ -3,7 +3,7 @@
 The ancestor PID walk these exercise lives once, in
 ``mcp_caller.resolve_own_identity``, which every client-side resolver shares,
 so the seams are that module's: ``mcp_caller._parent_pid`` for the parent
-lookup and ``kiro_crew.config.loader.config_dir`` for the mapping directory.
+lookup and ``aj_crew.config.loader.config_dir`` for the mapping directory.
 """
 
 from __future__ import annotations
@@ -11,27 +11,27 @@ from __future__ import annotations
 import os
 from unittest.mock import patch
 
-from kiro_crew.mcp_core import _resolve_session_key
+from aj_crew.mcp_core import _resolve_session_key
 
-_PPID = "kiro_crew.mcp_caller._parent_pid"
-_CFG = "kiro_crew.config.paths.config_dir"
+_PPID = "aj_crew.mcp_caller._parent_pid"
+_CFG = "aj_crew.config.paths.config_dir"
 
 
 class TestResolveSessionKey:
     def test_env_var_takes_priority(self):
         """Env var is returned immediately without file I/O."""
-        with patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "dashboard:chat-1-123"}):
+        with patch.dict("os.environ", {"AJCREW_SESSION_KEY": "dashboard:chat-1-123"}):
             assert _resolve_session_key() == "dashboard:chat-1-123"
 
     def test_fresh_session_returns_env_without_walking_pids(self):
         """Fresh (non-pooled) session: the key is baked into the env at spawn
-        (AcpClient._spawn sets KIROCREW_SESSION_KEY), so resolution returns it
+        (AcpClient._spawn sets AJCREW_SESSION_KEY), so resolution returns it
         immediately and NEVER walks ancestor PIDs. Guards against regressing to
         a walk-first order, which would needlessly depend on the parent lookup
         (broken on sandboxed macOS) even when the env answer is already
         present."""
         with (
-            patch.dict("os.environ", {"KIROCREW_SESSION_KEY": "dashboard:chat-9-999"}),
+            patch.dict("os.environ", {"AJCREW_SESSION_KEY": "dashboard:chat-9-999"}),
             patch(_PPID) as mock_ppid,
         ):
             assert _resolve_session_key() == "dashboard:chat-9-999"
@@ -43,7 +43,7 @@ class TestResolveSessionKey:
         fall through to the PID walk and find that mapping."""
         ppid = os.getppid()
         (tmp_path / f"session_pid_{ppid}.txt").write_text("dashboard:chat-warm-7")
-        env = {k: v for k, v in os.environ.items() if k != "KIROCREW_SESSION_KEY"}
+        env = {k: v for k, v in os.environ.items() if k != "AJCREW_SESSION_KEY"}
         with patch.dict("os.environ", env, clear=True), patch(_CFG, return_value=tmp_path):
             assert _resolve_session_key() == "dashboard:chat-warm-7"
 
@@ -52,7 +52,7 @@ class TestResolveSessionKey:
         ppid = os.getppid()
         (tmp_path / f"session_pid_{ppid}.txt").write_text("dashboard:chat-2-456")
 
-        env = {k: v for k, v in os.environ.items() if k != "KIROCREW_SESSION_KEY"}
+        env = {k: v for k, v in os.environ.items() if k != "AJCREW_SESSION_KEY"}
         with patch.dict("os.environ", env, clear=True), patch(_CFG, return_value=tmp_path):
             assert _resolve_session_key() == "dashboard:chat-2-456"
 
@@ -64,7 +64,7 @@ class TestResolveSessionKey:
         def fake_get_ppid(pid):
             return {100: 50, 50: 25}.get(pid, 0)
 
-        env = {k: v for k, v in os.environ.items() if k != "KIROCREW_SESSION_KEY"}
+        env = {k: v for k, v in os.environ.items() if k != "AJCREW_SESSION_KEY"}
         with (
             patch.dict("os.environ", env, clear=True),
             patch(_CFG, return_value=tmp_path),
@@ -79,7 +79,7 @@ class TestResolveSessionKey:
         def fake_get_ppid(pid):
             return {100: 1}.get(pid, 0)
 
-        env = {k: v for k, v in os.environ.items() if k != "KIROCREW_SESSION_KEY"}
+        env = {k: v for k, v in os.environ.items() if k != "AJCREW_SESSION_KEY"}
         with (
             patch.dict("os.environ", env, clear=True),
             patch(_CFG, return_value=tmp_path),
@@ -90,7 +90,7 @@ class TestResolveSessionKey:
 
     def test_stops_on_ppid_failure(self, tmp_path):
         """Stops walking when the parent lookup returns 0 (failure)."""
-        env = {k: v for k, v in os.environ.items() if k != "KIROCREW_SESSION_KEY"}
+        env = {k: v for k, v in os.environ.items() if k != "AJCREW_SESSION_KEY"}
         with (
             patch.dict("os.environ", env, clear=True),
             patch(_CFG, return_value=tmp_path),
@@ -108,7 +108,7 @@ class TestResolveSessionKey:
         secret.write_text("dashboard:chat-stolen", encoding="utf-8")
         ppid = os.getppid()
         (tmp_path / f"session_pid_{ppid}.txt").symlink_to(secret)
-        env = {k: v for k, v in os.environ.items() if k != "KIROCREW_SESSION_KEY"}
+        env = {k: v for k, v in os.environ.items() if k != "AJCREW_SESSION_KEY"}
         with (
             patch.dict("os.environ", env, clear=True),
             patch(_CFG, return_value=tmp_path),
@@ -122,7 +122,7 @@ class TestResolveSessionKey:
         def fake_get_ppid(pid):
             return {100: 50, 50: 100}.get(pid, 0)
 
-        env = {k: v for k, v in os.environ.items() if k != "KIROCREW_SESSION_KEY"}
+        env = {k: v for k, v in os.environ.items() if k != "AJCREW_SESSION_KEY"}
         with (
             patch.dict("os.environ", env, clear=True),
             patch(_CFG, return_value=tmp_path),
@@ -148,7 +148,7 @@ class TestParentLookupSpawnsNothing:
     """
 
     def test_walk_never_spawns_a_subprocess(self, tmp_path):
-        env = {k: v for k, v in os.environ.items() if k != "KIROCREW_SESSION_KEY"}
+        env = {k: v for k, v in os.environ.items() if k != "AJCREW_SESSION_KEY"}
         with (
             patch.dict("os.environ", env, clear=True),
             patch(_CFG, return_value=tmp_path),
@@ -163,7 +163,7 @@ class TestParentLookupSpawnsNothing:
     def test_parent_lookup_normalises_failure_to_zero(self):
         """``platform_compat.get_ppid`` reports failure as -1; the walk's guard
         is ``while pid > 1``, so the seam must hand it 0 instead."""
-        from kiro_crew import mcp_caller
+        from aj_crew import mcp_caller
 
-        with patch("kiro_crew.platform_compat.get_ppid", return_value=-1):
+        with patch("aj_crew.platform_compat.get_ppid", return_value=-1):
             assert mcp_caller._parent_pid(1234) == 0

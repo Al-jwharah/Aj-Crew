@@ -6,8 +6,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKENDS_NATIVE_WORKFLOWS
-from kiro_crew.kas_workflows.engine import (
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKENDS_NATIVE_WORKFLOWS
+from aj_crew.kas_workflows.engine import (
     ENGINE_CREW,
     ENGINE_KAS,
     backend_brings_kas_workflows,

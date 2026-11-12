@@ -17,16 +17,16 @@ vi.mock('../pages/ChatPage', () => ({ default: () => <div data-testid="chat-page
 vi.mock('../pages/SystemPage', () => ({ default: () => null }))
 vi.mock('../pages/ProjectsPage', () => ({ default: () => null }))
 vi.mock('../pages/LogsPage', () => ({ default: () => null }))
-vi.mock('../pages/KiroCrewAgentsPage', () => ({ default: () => null }))
+vi.mock('../pages/AjCrewAgentsPage', () => ({ default: () => null }))
 vi.mock('../pages/NotificationsPage', () => ({ default: () => null }))
 vi.mock('../pages/SchedulePage', () => ({ default: () => null }))
 vi.mock('../hooks/useWebSocket', () => ({ useWebSocket: () => ({ subscribeLogs: () => {} }) }))
-vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'kirocrew' }], defaultAgent: 'kirocrew' })) }))
+vi.mock('../hooks/useAgents', () => ({ useAgents: vi.fn(() => ({ agents: [{ name: 'ajcrew' }], defaultAgent: 'ajcrew' })) }))
 vi.mock('../providers/context', () => ({ useProvider: () => ({ id: 'acp' }) }))
 vi.mock('../components/MarkdownRenderer', () => ({ default: ({ content }: { content: string }) => <span>{content}</span>, Lightbox: () => null }))
 
 const { COMMAND, statusOverride } = vi.hoisted(() => ({
-  COMMAND: 'python3 -m pip install --upgrade kiro-crew',
+  COMMAND: 'python3 -m pip install --upgrade aj-crew',
   statusOverride: { value: {} as Record<string, unknown> },
 }))
 
@@ -52,7 +52,7 @@ vi.mock('../api/client', () => ({
     changelog: vi.fn().mockResolvedValue({ content: '## [0.2.0rc9]\n- a new entry\n' }),
     setAutoUpdate: vi.fn().mockResolvedValue({}),
     // Empty record: no prior snooze/skip for this version, so the popup opens.
-    kirocrewConfig: vi.fn().mockResolvedValue({ dashboard: {} }),
+    ajcrewConfig: vi.fn().mockResolvedValue({ dashboard: {} }),
     patchConfig: vi.fn().mockResolvedValue({}),
     checkUpdate: vi.fn().mockResolvedValue({ changes: '', check_status: 'succeeded' }),
   },

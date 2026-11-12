@@ -31,7 +31,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.dashboard import handlers_system
+from aj_crew.dashboard import handlers_system
 
 _GIB_KB = 1024 * 1024
 _MEMINFO_OK = f"MemTotal:       {61 * _GIB_KB} kB\nMemFree:  {10 * _GIB_KB} kB\n"
@@ -222,10 +222,10 @@ class TestFailedProbeStaysCached:
 def _status_state(monkeypatch: pytest.MonkeyPatch, tmp_path):
     """A real DashboardState with every inline source stubbed, mirroring the
     ``test_ws_offload`` status tests, so ``api_status`` runs hermetically."""
-    from kiro_crew.dashboard import status_counts as sc_module
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard import status_counts as sc_module
+    from aj_crew.dashboard.state import DashboardState
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     crons = MagicMock()
     crons.list_jobs.return_value = []
     crons.status.return_value = {}

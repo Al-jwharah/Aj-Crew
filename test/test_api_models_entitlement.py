@@ -29,18 +29,18 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.client import (
+from aj_crew.acp.client import (
     catalog_row_would_drop,
     model_is_unusable,
     resolve_pin_spelling,
 )
-from kiro_crew.acp.session_handle import EntitlementRevalidating
-from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard.handlers import agents
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.base import LLMProvider
+from aj_crew.acp.session_handle import EntitlementRevalidating
+from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard.handlers import agents
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.base import LLMProvider
 
 CATALOG = [
     {"model_name": "auto", "description": "Models chosen by task"},
@@ -670,16 +670,16 @@ def _kiro_request(tmp_path: Path, *providers: MagicMock) -> MagicMock:
 def _run_api_models(request, payload: bytes):
     with (
         patch.object(
-            agents.KiroCrewConfig,
+            agents.AjCrewConfig,
             "load",
             return_value=SimpleNamespace(agent=SimpleNamespace(provider="kiro")),
         ),
-        patch("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", return_value="/usr/bin/kiro-cli"),
-        patch("kiro_crew.acp.client._resolve_ssh_auth_sock", lambda env: None),
-        patch("kiro_crew.env.augmented_path", lambda p: p),
-        patch("kiro_crew.dashboard.handlers.agents.wrap_argv", _stub_wrap_argv),
-        patch("kiro_crew.dashboard.handlers.agents.cgroup_scope_argv", lambda argv: argv),
-        patch("kiro_crew.sandbox.resource_limit_preexec", lambda: None),
+        patch("aj_crew.acp.client._resolve_kiro_bin_for_spawn", return_value="/usr/bin/kiro-cli"),
+        patch("aj_crew.acp.client._resolve_ssh_auth_sock", lambda env: None),
+        patch("aj_crew.env.augmented_path", lambda p: p),
+        patch("aj_crew.dashboard.handlers.agents.wrap_argv", _stub_wrap_argv),
+        patch("aj_crew.dashboard.handlers.agents.cgroup_scope_argv", lambda argv: argv),
+        patch("aj_crew.sandbox.resource_limit_preexec", lambda: None),
         patch.object(
             agents.asyncio, "create_subprocess_exec", return_value=_FakeProc(stdout=payload)
         ),

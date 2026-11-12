@@ -19,7 +19,7 @@ patterns (``test_*.py`` / ``*_test.py``) and whose path is not under one of the
 
 * A file inside a NESTED DISTRIBUTION — some ancestor directory below the repo
   root carries its own ``pyproject.toml`` or ``setup.cfg`` (e.g.
-  ``packages/kirocrew-client-py/``). That subtree has its own test runner and
+  ``packages/ajcrew-client-py/``). That subtree has its own test runner and
   its own collection config; this repo's ``testpaths`` was never meant to reach
   it.
 * A file whose first lines carry a ``testpaths-ok: <reason>`` marker — for the
@@ -175,7 +175,7 @@ def _read_repo_text(rel_path: str) -> str | None:
 
 # ── Self-test ──────────────────────────────────────────────────────────────
 
-_CFG_WITH_ROOTS = "[tool:pytest]\ntestpaths = test src/kiro_crew/apps/builtins\n"
+_CFG_WITH_ROOTS = "[tool:pytest]\ntestpaths = test src/aj_crew/apps/builtins\n"
 
 # (description, files, file_texts, expected violation count)
 _PROBES = [
@@ -187,7 +187,7 @@ _PROBES = [
     ),
     (
         "file under the builtins root is collected",
-        ["src/kiro_crew/apps/builtins/foo/tests/test_x.py"],
+        ["src/aj_crew/apps/builtins/foo/tests/test_x.py"],
         {},
         0,
     ),
@@ -259,7 +259,7 @@ _PROBES = [
 def self_test() -> int:
     failures = 0
     roots = parse_testpaths(_CFG_WITH_ROOTS)
-    assert roots == ["test", "src/kiro_crew/apps/builtins"], roots
+    assert roots == ["test", "src/aj_crew/apps/builtins"], roots
     for desc, files, texts, expected in _PROBES:
         got, _exempted = find_violations(files, roots, lambda p: texts.get(p, ""))
         status = "ok" if len(got) == expected else "FAIL"

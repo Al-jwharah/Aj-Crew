@@ -1,4 +1,4 @@
-"""Unit tests for kiro_crew.tips: the curated pool and the doc / doc_link split.
+"""Unit tests for aj_crew.tips: the curated pool and the doc / doc_link split.
 
 Curated, action-first tips are the primary user-facing pool. These pin what ships in
 it, how its actions and highlight anchors are sanitised, that ``doc`` (a tip's
@@ -17,8 +17,8 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.tips import (
+from aj_crew.testing.clock import ManualClock
+from aj_crew.tips import (
     TipsCache,
     TipsState,
     _is_eligible,
@@ -33,13 +33,13 @@ class TestCuratedTips:
     """Curated, action-first tips are the primary user-facing pool."""
 
     def test_curated_tips_ship_and_validate(self) -> None:
-        from kiro_crew.tips import _TIP_ALLOWED_FIELDS, _load_curated_tips
+        from aj_crew.tips import _TIP_ALLOWED_FIELDS, _load_curated_tips
 
         tips = _load_curated_tips()
         assert len(tips) >= 8
         ids = [t["id"] for t in tips]
         assert len(ids) == len(set(ids)), "curated tip ids must be unique"
-        # A few known Kiro Crew-native features must be present.
+        # A few known Aj Crew-native features must be present.
         for expected in ("split-view", "command-palette", "warm-pool", "secrets-vault"):
             assert expected in ids
         # The secrets-vault tip routes to the Secrets settings tab.
@@ -67,7 +67,7 @@ class TestCuratedTips:
         ),
     )
     def test_removed_tips_stay_out_of_core(self, tip_id: str) -> None:
-        from kiro_crew.tips import _load_curated_tips
+        from aj_crew.tips import _load_curated_tips
 
         assert tip_id not in {t["id"] for t in _load_curated_tips()}
 
@@ -136,7 +136,7 @@ class TestCuratedTips:
     def test_risky_tip_claims_are_qualified(
         self, tip_id: str, required: tuple[str, ...], forbidden: tuple[str, ...]
     ) -> None:
-        from kiro_crew.tips import _load_curated_tips
+        from aj_crew.tips import _load_curated_tips
 
         tip = next(t for t in _load_curated_tips() if t["id"] == tip_id)
         for phrase in required:
@@ -145,7 +145,7 @@ class TestCuratedTips:
             assert phrase not in tip["body"]
 
     def test_setup_tips_name_the_required_steps(self) -> None:
-        from kiro_crew.tips import _load_curated_tips
+        from aj_crew.tips import _load_curated_tips
 
         tips = {t["id"]: t for t in _load_curated_tips()}
         for tip_id, steps in (
@@ -209,11 +209,11 @@ class TestCuratedTips:
         assert tips["app-store"]["action"]["route"] == "/apps"
 
     def test_reusable_skill_doc_names_the_current_creation_controls(self) -> None:
-        from kiro_crew.tips import _load_curated_tips
+        from aj_crew.tips import _load_curated_tips
 
         tip = next(t for t in _load_curated_tips() if t["id"] == "reusable-skill")
         doc = (
-            Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "docs" / tip["doc_link"]
+            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "docs" / tip["doc_link"]
         ).read_text(encoding="utf-8")
         section = doc[doc.index("### Via Dashboard") : doc.index("### Via Chat")]
         steps = ("Customize → Skills", "Create New Skill", "name and content")
@@ -226,7 +226,7 @@ class TestCuratedTips:
         """The add-mcp-server tip links mcp-apps.md, which must not narrow the
         consent default to servers that need environment variables."""
         doc = (
-            Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "docs" / "mcp-apps.md"
+            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "docs" / "mcp-apps.md"
         ).read_text(encoding="utf-8")
         section = doc[doc.index("## Adding a server") : doc.index("## Enabling it")]
         assert "Every official-registry install lands disabled" in section
@@ -236,18 +236,18 @@ class TestCuratedTips:
         assert positions == sorted(positions)
 
     def test_service_tip_qualifies_supported_platforms(self) -> None:
-        from kiro_crew.tips import _load_curated_tips
+        from aj_crew.tips import _load_curated_tips
 
         tips = {t["id"]: t for t in _load_curated_tips()}
         body = tips["always-on-service"]["body"]
         assert "Linux with systemd" in body
         assert "macOS with launchd" in body
-        assert "**kirocrew service install**" in body
+        assert "**ajcrew service install**" in body
 
     def test_curated_tips_missing_file_returns_empty(self, tmp_path: Path) -> None:
         from unittest.mock import patch as mpatch
 
-        from kiro_crew import tips as tips_mod
+        from aj_crew import tips as tips_mod
 
         missing = tmp_path / "nope.json"
         with mpatch.object(tips_mod, "_CURATED_FILE", missing):
@@ -256,7 +256,7 @@ class TestCuratedTips:
     def test_curated_tips_malformed_returns_empty(self, tmp_path: Path) -> None:
         from unittest.mock import patch as mpatch
 
-        from kiro_crew import tips as tips_mod
+        from aj_crew import tips as tips_mod
 
         bad = tmp_path / "bad.json"
         bad.write_text("{ not json", encoding="utf-8")
@@ -270,7 +270,7 @@ class TestCuratedTips:
     def test_curated_tips_skip_invalid_entries(self, tmp_path: Path) -> None:
         from unittest.mock import patch as mpatch
 
-        from kiro_crew import tips as tips_mod
+        from aj_crew import tips as tips_mod
 
         f = tmp_path / "c.json"
         good = {
@@ -295,7 +295,7 @@ class TestCuratedTips:
 
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.tips import TipsCache, api_tips_next
+        from aj_crew.tips import TipsCache, api_tips_next
 
         curated = {
             "id": "split-view",
@@ -306,7 +306,7 @@ class TestCuratedTips:
             "doc": "",
             "cta_prompt": "",
         }
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             cache = TipsCache()
             cache.curated = [curated]
             cache.state = TipsState(tips=[])
@@ -322,8 +322,8 @@ class TestCuratedTips:
                 return None
 
             with (
-                mpatch("kiro_crew.tips.KiroCrewConfig") as mock_cfg_cls,
-                mpatch("kiro_crew.tips.maybe_refresh", noop_refresh),
+                mpatch("aj_crew.tips.AjCrewConfig") as mock_cfg_cls,
+                mpatch("aj_crew.tips.maybe_refresh", noop_refresh),
             ):
                 mock_cfg_cls.load.return_value = cfg
                 req = make_mocked_request("GET", "/api/tips/next")
@@ -342,7 +342,7 @@ class TestCuratedTips:
 
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.tips import TipsCache, api_tips_next
+        from aj_crew.tips import TipsCache, api_tips_next
 
         gen = {
             "id": "gen-1",
@@ -353,7 +353,7 @@ class TestCuratedTips:
             "doc": "",
             "cta_prompt": "",
         }
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             cache = TipsCache()  # curated defaults to []
             cache.state = TipsState(tips=[gen])
             state = types.SimpleNamespace(_tips_cache=cache)
@@ -368,8 +368,8 @@ class TestCuratedTips:
                 return None
 
             with (
-                mpatch("kiro_crew.tips.KiroCrewConfig") as mock_cfg_cls,
-                mpatch("kiro_crew.tips.maybe_refresh", noop_refresh),
+                mpatch("aj_crew.tips.AjCrewConfig") as mock_cfg_cls,
+                mpatch("aj_crew.tips.maybe_refresh", noop_refresh),
             ):
                 mock_cfg_cls.load.return_value = cfg
                 req = make_mocked_request("GET", "/api/tips/next")
@@ -381,7 +381,7 @@ class TestCuratedTips:
                 assert body["tip"]["id"] == "gen-1"
 
     def test_sanitize_tip_action_valid_and_invalid(self) -> None:
-        from kiro_crew.tips import _sanitize_tip_action
+        from aj_crew.tips import _sanitize_tip_action
 
         # Valid internal route (with query + highlight) is projected as-is.
         ok = _sanitize_tip_action(
@@ -406,7 +406,7 @@ class TestCuratedTips:
         assert _sanitize_tip_action({"kind": "route", "label": "L", "route": 5}) is None
 
     def test_persisted_tip_attaches_valid_action_drops_invalid(self) -> None:
-        from kiro_crew.tips import _sanitize_persisted_tip
+        from aj_crew.tips import _sanitize_persisted_tip
 
         base = {
             "id": "x",
@@ -435,7 +435,7 @@ class TestCuratedTips:
         assert "action" not in none
 
     def test_shipped_curated_actions_match_capable_features(self) -> None:
-        from kiro_crew.tips import _load_curated_tips, _sanitize_tip_action
+        from aj_crew.tips import _load_curated_tips, _sanitize_tip_action
 
         tips = {t["id"]: t for t in _load_curated_tips()}
         # Features with a navigable destination carry a valid, internal route action.
@@ -471,7 +471,7 @@ class TestCuratedTips:
             assert "action" not in tips[tid], f"{tid} must not carry an action"
 
     def test_zero_token_cron_uses_plain_title_and_schedule_action(self) -> None:
-        from kiro_crew.tips import _load_curated_tips
+        from aj_crew.tips import _load_curated_tips
 
         tip = next(t for t in _load_curated_tips() if t["id"] == "zero-token-cron")
         assert tip["title"] == "Run the same check without the model"
@@ -480,9 +480,9 @@ class TestCuratedTips:
 
     def test_curated_doc_links_resolve_to_shipped_docs(self) -> None:
         """Every rendering-only link has the filename shape the frontend accepts."""
-        from kiro_crew.tips import _load_curated_tips
+        from aj_crew.tips import _load_curated_tips
 
-        docs_dir = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "docs"
+        docs_dir = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "docs"
         invalid = {
             t["id"]: link
             for t in _load_curated_tips()
@@ -507,8 +507,8 @@ class TestCuratedTips:
         LLM-generated tips whose ids churn between regenerations; a curated tip
         has a hand-authored, permanent id and does not need it.
         """
-        from kiro_crew.tips import _load_curated_tips
-        from kiro_crew.tips_allowlist import TIP_DOC_ALLOWLIST
+        from aj_crew.tips import _load_curated_tips
+        from aj_crew.tips_allowlist import TIP_DOC_ALLOWLIST
 
         collisions = {
             t["id"]: t["doc"] for t in _load_curated_tips() if t.get("doc") in TIP_DOC_ALLOWLIST
@@ -533,7 +533,7 @@ class TestCuratedTips:
         deleted control silently turns the button into a navigation that
         highlights nothing. Pin the two together.
         """
-        from kiro_crew.tips import _load_curated_tips
+        from aj_crew.tips import _load_curated_tips
 
         registry_file = (
             Path(__file__).resolve().parents[1]
@@ -598,7 +598,7 @@ class TestCuratedTips:
 
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.tips import TipsCache, api_tips_next
+        from aj_crew.tips import TipsCache, api_tips_next
 
         curated = {
             "id": "split-view",
@@ -614,7 +614,7 @@ class TestCuratedTips:
                 "route": "/settings?tab=chat&highlight=chat.split-view-session-grid",
             },
         }
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             cache = TipsCache()
             cache.curated = [curated]
             cache.state = TipsState(tips=[])
@@ -630,8 +630,8 @@ class TestCuratedTips:
                 return None
 
             with (
-                mpatch("kiro_crew.tips.KiroCrewConfig") as mock_cfg_cls,
-                mpatch("kiro_crew.tips.maybe_refresh", noop_refresh),
+                mpatch("aj_crew.tips.AjCrewConfig") as mock_cfg_cls,
+                mpatch("aj_crew.tips.maybe_refresh", noop_refresh),
             ):
                 mock_cfg_cls.load.return_value = cfg
                 req = make_mocked_request("GET", "/api/tips/next")
@@ -668,8 +668,8 @@ class TestDocLinkSplit:
         from aiohttp import streams
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew import tips as tips_mod
-        from kiro_crew.tips import TipsCache, api_tips_feedback
+        from aj_crew import tips as tips_mod
+        from aj_crew.tips import TipsCache, api_tips_feedback
 
         # The feedback handler and the eligibility checks below read one frozen clock.
         manual_clock.install(monkeypatch, tips_mod)
@@ -684,7 +684,7 @@ class TestDocLinkSplit:
             "doc_link": "skills.md",
             "cta_prompt": "",
         }
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             cache = TipsCache()
             cache.curated = [curated]
             cache.state = TipsState(offered=dict(curated))
@@ -727,7 +727,7 @@ class TestDocLinkSplit:
     def test_restored_curated_tips_carry_doc_link(self) -> None:
         """The tips whose learn-more link was lost when their colliding `doc`
         was split off get it back through doc_link."""
-        from kiro_crew.tips import _load_curated_tips
+        from aj_crew.tips import _load_curated_tips
 
         tips = {t["id"]: t for t in _load_curated_tips()}
         expected = {
@@ -802,7 +802,7 @@ class TestDocLinkSplit:
             "doc": "d.md",
             "cta_prompt": "C",
         }
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             (tmp_path / "tips_state.json").write_text(
                 json.dumps({"tips": [legacy], "offered": legacy})
             )
@@ -837,7 +837,7 @@ class TestRelinkedStateMigration:
     _DOC = "cron-and-scheduling.md"
 
     def _load(self, tmp_path: Path, data: dict) -> TipsState:  # type: ignore[type-arg]
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             (tmp_path / "tips_state.json").write_text(json.dumps(data))
             return _load_state()
 
@@ -874,7 +874,7 @@ class TestRelinkedStateMigration:
         it must start with relink_migrated=True — otherwise its first
         curated+generated dismissal pair sharing a doc would be lifted on the
         next load, silently reverting a brand-new user's dismissal."""
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             st = _load_state()  # no file on disk
             assert st.relink_migrated is True
             # Simulate the user dismissing the curated tip AND a generated tip
@@ -919,7 +919,7 @@ class TestRelinkedStateMigration:
             "doc": self._DOC,
             "cta_prompt": "",
         }
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}):
             (tmp_path / "tips_state.json").write_text(
                 json.dumps(
                     {
@@ -1012,9 +1012,9 @@ class TestRetiredCuratedStateCleanup:
         relink_migrated: bool,
         retired_offered: bool,
     ) -> None:
-        from kiro_crew.tips import _load_curated_tips
+        from aj_crew.tips import _load_curated_tips
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         retired_id = "subagent-parallelism"
         retired_doc = "dynamic-subagent-sizing.md"
         retired = {
@@ -1075,7 +1075,7 @@ class TestRetiredCuratedStateCleanup:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "tips_state.json").write_text(
             json.dumps(
                 {
@@ -1104,7 +1104,7 @@ class TestRetiredCuratedStateCleanup:
     def test_generated_tips_citing_retired_doc_are_removed(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, field: str
     ) -> None:
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         retired_doc = "issue-radar-pipeline.md"
         cited = self._tip("gen-pipeline-1", **{field: retired_doc})
         keep = self._tip("gen-skills", doc="skills.md")
@@ -1128,7 +1128,7 @@ class TestRetiredCuratedStateCleanup:
     ) -> None:
         """Retirement is a public-pool decision: an edition pool reusing a retired
         id or doc keeps its cached, offered and shown-doc state."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         reused = self._tip("subagent-parallelism", doc="dynamic-subagent-sizing.md")
         cited = self._tip("edition-pipeline", doc="issue-radar-pipeline.md")
         data = {
@@ -1150,11 +1150,11 @@ class TestRetiredCuratedStateCleanup:
 
     def test_app_owned_doc_is_not_a_core_tip_source(self) -> None:
         """The Issue Radar Pipeline doc ships, but core can neither scan nor serve it."""
-        from kiro_crew.tips import _BUNDLED_CATALOG_FILE, _scan_docs_catalog
-        from kiro_crew.tips_allowlist import TIP_DOC_ALLOWLIST
+        from aj_crew.tips import _BUNDLED_CATALOG_FILE, _scan_docs_catalog
+        from aj_crew.tips_allowlist import TIP_DOC_ALLOWLIST
 
         doc = "issue-radar-pipeline.md"
-        assert (Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "docs" / doc).is_file()
+        assert (Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "docs" / doc).is_file()
         assert doc not in TIP_DOC_ALLOWLIST
         bundled = json.loads(_BUNDLED_CATALOG_FILE.read_text(encoding="utf-8"))
         assert doc not in {e["doc"] for e in bundled["entries"]}
@@ -1172,13 +1172,13 @@ class TestBrowseAllTips:
 
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.tips import api_tips_all
+        from aj_crew.tips import api_tips_all
 
         cfg = MagicMock()
         cfg.dashboard.tips_enabled = tips_enabled
         with (
-            patch.dict(os.environ, {"KIROCREW_HOME": str(tmp_path)}),
-            mpatch("kiro_crew.tips.KiroCrewConfig") as mock_cfg_cls,
+            patch.dict(os.environ, {"AJCREW_HOME": str(tmp_path)}),
+            mpatch("aj_crew.tips.AjCrewConfig") as mock_cfg_cls,
         ):
             mock_cfg_cls.load.return_value = cfg
             req = make_mocked_request("GET", "/api/tips/all")

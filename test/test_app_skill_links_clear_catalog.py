@@ -19,13 +19,13 @@ import pytest
 from app_bridges_helpers import app_env_fixture  # noqa: F401
 from app_bridges_helpers import _make_app_source
 
-from kiro_crew import skills as skills_module
-from kiro_crew.apps.bridges import _deregister_skills, _register_skills, reconcile_app_skills
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
-from kiro_crew.apps.manifest import AppManifest
-from kiro_crew.skill_runtime import catalog as catalog_module
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew import skills as skills_module
+from aj_crew.apps.bridges import _deregister_skills, _register_skills, reconcile_app_skills
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME, install_app
+from aj_crew.apps.manifest import AppManifest
+from aj_crew.skill_runtime import catalog as catalog_module
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 
 @pytest.fixture
@@ -109,7 +109,7 @@ class TestAppSkillLinksClearTheCatalog:
         mine, other = loaders(), loaders(other_root)
         assert _keys(mine) == set() and _keys(other) == set()
         before_mine, before_other = mine._catalog_generation, other._catalog_generation
-        from kiro_crew import skill_live_loaders as live_loaders
+        from aj_crew import skill_live_loaders as live_loaders
 
         assert live_loaders.invalidate_loaders_of(app_env["home"] / "skills") >= 1
 
@@ -120,7 +120,7 @@ class TestAppSkillLinksClearTheCatalog:
         loader = loaders()
         loader.close()
         generation = loader._catalog_generation
-        from kiro_crew import skill_live_loaders as live_loaders
+        from aj_crew import skill_live_loaders as live_loaders
 
         live_loaders.invalidate_loaders_of(app_env["home"] / "skills")
 

@@ -1,7 +1,7 @@
 ---
 title: Crewmate dynamic dashboard -- a project report beside every crewmate's chat
 status: partial
-author: chenmingwei23, with kirocrew-lead
+author: chenmingwei23, with ajcrew-lead
 created: 2026-10-03
 last-audited: 2026-10-15
 audited-at: 40139dc512
@@ -274,7 +274,7 @@ shut whenever the fold moved would be unusable.
 
 Every number comes from a **fold**: a small, always-current view the gateway
 keeps over the crew log, projected in
-[`../../src/kiro_crew/crew_log/projection.py`](../../src/kiro_crew/crew_log/projection.py).
+[`../../src/aj_crew/crew_log/projection.py`](../../src/aj_crew/crew_log/projection.py).
 The page never scans the whole log.
 
 | Source | Who writes it | Used for |
@@ -312,7 +312,7 @@ cannot be accumulated across reads into one worker's history.
 
 The crewmate is encouraged to read folds first, but it may fill values in
 itself through
-[`../../src/kiro_crew/dashboard_agentic.py`](../../src/kiro_crew/dashboard_agentic.py).
+[`../../src/aj_crew/dashboard_agentic.py`](../../src/aj_crew/dashboard_agentic.py).
 What it writes is type-checked against the template's contract. A wrong write is
 refused, recorded in `mistakes`, and the crewmate retries. On the page its values
 carry a dashed **crewmate wrote this** tag, so the reader can tell a recorded
@@ -327,9 +327,9 @@ gateway can load it at run time.
 
 | Part | What it does | Where |
 |---|---|---|
-| Registry | Built-in templates ship in the repo, and in P1 they are the only ones a crewmate can be given | [`../../src/kiro_crew/dashboard_templates/catalog.py`](../../src/kiro_crew/dashboard_templates/catalog.py) |
-| Manifest | Declares each field, its type and its fold path | [`../../src/kiro_crew/dashboard_templates/manifest.py`](../../src/kiro_crew/dashboard_templates/manifest.py) |
-| Adopt and versions | The crewmate copies a template into its own instance; each edit is a new version, and rollback is a new version too | [`../../src/kiro_crew/dashboard_templates/instance.py`](../../src/kiro_crew/dashboard_templates/instance.py) |
+| Registry | Built-in templates ship in the repo, and in P1 they are the only ones a crewmate can be given | [`../../src/aj_crew/dashboard_templates/catalog.py`](../../src/aj_crew/dashboard_templates/catalog.py) |
+| Manifest | Declares each field, its type and its fold path | [`../../src/aj_crew/dashboard_templates/manifest.py`](../../src/aj_crew/dashboard_templates/manifest.py) |
+| Adopt and versions | The crewmate copies a template into its own instance; each edit is a new version, and rollback is a new version too | [`../../src/aj_crew/dashboard_templates/instance.py`](../../src/aj_crew/dashboard_templates/instance.py) |
 | Share | Export to one file; import adds it to the registry | later: it ships with the chooser that calls it |
 | Snapshot | Freezes the template, its version and the fold values at that moment | later: it ships with the UI that offers it |
 
@@ -346,14 +346,14 @@ button rather than ahead of them.
 
 Built-ins today: `project-report` (the default, shown above), `work-kanban`,
 `goal-board` and `session-ledger`, documented in
-[`../../src/kiro_crew/dashboard_templates/builtin/README.md`](../../src/kiro_crew/dashboard_templates/builtin/README.md).
+[`../../src/aj_crew/dashboard_templates/builtin/README.md`](../../src/aj_crew/dashboard_templates/builtin/README.md).
 `work-kanban` is a stage-column board with one row per work item.
 
 ### Relationship to the dev-time template package already on main
 
-`src/kiro_crew/dashboard_templates/` exists before this change as a **dev-time**
+`src/aj_crew/dashboard_templates/` exists before this change as a **dev-time**
 contract model: a template is four files plus a registration line in
-[`../../src/kiro_crew/dashboard_templates/registry.py`](../../src/kiro_crew/dashboard_templates/registry.py),
+[`../../src/aj_crew/dashboard_templates/registry.py`](../../src/aj_crew/dashboard_templates/registry.py),
 its data half is built by typed Python whose return type mypy checks, and its
 `REGISTRY` is deliberately empty because the machinery shipped before the first
 template. This design adds a second source to the same package rather than
@@ -362,7 +362,7 @@ replacing that one: a template described entirely by `manifest.json` plus
 
 What the two share is the invariant that made the first one worth having. Both
 go through
-[`../../src/kiro_crew/dashboard_templates/parity.py`](../../src/kiro_crew/dashboard_templates/parity.py):
+[`../../src/aj_crew/dashboard_templates/parity.py`](../../src/aj_crew/dashboard_templates/parity.py):
 the set of `data-dashboard-field` names in the HTML must equal the set of fields
 the contract declares, in both directions. For a manifest-described template
 `check_parity` runs at load, so a malformed template is refused rather than
@@ -379,10 +379,10 @@ frame renders with the network blocked.
 
 The page runs in a sandboxed iframe with scripts allowed and the network
 blocked, minted by
-[`../../src/kiro_crew/dashboard_frame.py`](../../src/kiro_crew/dashboard_frame.py)
+[`../../src/aj_crew/dashboard_frame.py`](../../src/aj_crew/dashboard_frame.py)
 and mounted by
 [`../../website/src/pages/members/CrewDynamicDashboard.tsx`](../../website/src/pages/members/CrewDynamicDashboard.tsx).
-The host injects the fold values as `window.kirocrew` and fills each
+The host injects the fold values as `window.ajcrew` and fills each
 `data-dashboard-field` slot. If a field stops resolving, the page keeps its last
 good value and shows a stale banner.
 
@@ -417,7 +417,7 @@ Four of its management routes ship with it, and they do so because P1 now has a
 caller for them that is not a button: the AGENT. `templates`, `preview`, `apply`
 and `rollback` sit on `/api/agent-panel/dashboard/`, behind the same
 strict-internal gate as `fields` and `write`, and the six together are the
-`kirocrew-panel` tool surface a crewmate reaches through MCP. A person who wants
+`ajcrew-panel` tool surface a crewmate reaches through MCP. A person who wants
 another page says so in chat, and the crewmate they said it to carries it out --
 which is a caller, and a reviewable one, without a picker existing.
 
@@ -980,10 +980,10 @@ What does keep a page safe is unchanged by this amendment:
 
 | part | what it holds | where |
 | --- | --- | --- |
-| who wrote a template's script | only a `builtin` page (reviewed in this repo) or a `user` page (the operator put it in `panel-templates`) renders as a template | `RENDERABLE_SOURCES`, checked by `_check` in `src/kiro_crew/dashboard_templates/instance.py` |
-| who wrote a package's script | only the owner agent, resolved from the calling session | the package binding, `_page_binding` in `src/kiro_crew/dashboard/handlers/agent_panel_dashboard.py` |
+| who wrote a template's script | only a `builtin` page (reviewed in this repo) or a `user` page (the operator put it in `panel-templates`) renders as a template | `RENDERABLE_SOURCES`, checked by `_check` in `src/aj_crew/dashboard_templates/instance.py` |
+| who wrote a package's script | only the owner agent, resolved from the calling session | the package binding, `_page_binding` in `src/aj_crew/dashboard/handlers/agent_panel_dashboard.py` |
 | what reaches the page | typed values only, as text, never markup or a URL | `dashboard_write`, type-checked, redacted, bounded |
-| what the page can reach | `allow-scripts` only, `connect-src 'none'`, `frame-src 'none'`, `form-action 'none'` | `src/kiro_crew/dashboard_frame.py` |
+| what the page can reach | `allow-scripts` only, `connect-src 'none'`, `frame-src 'none'`, `form-action 'none'` | `src/aj_crew/dashboard_frame.py` |
 
 ### Decision 1 -- apply makes a page live, and it always writes a version
 
@@ -1016,7 +1016,7 @@ The first amendment of 2026-10-12 says removing the gate reopens the 2026-10-11 
 
 ### Decision 4 -- a guard test holds the "values are text" premise
 
-A reviewed template is safe to run because it never turns a value into markup or code. Checked at `40139dc512`: the 13 directories under `src/kiro_crew/dashboard_templates/builtin/` contain none of the calls below. Until now nothing enforced that. The pull request that removes the step adds the guard in the same change:
+A reviewed template is safe to run because it never turns a value into markup or code. Checked at `40139dc512`: the 13 directories under `src/aj_crew/dashboard_templates/builtin/` contain none of the calls below. Until now nothing enforced that. The pull request that removes the step adds the guard in the same change:
 
 | where | what it does |
 | --- | --- |

@@ -1,6 +1,6 @@
 """Crew Members DM threads: binding persistence, routes, and pin enforcement.
 
-Covers ``dm.json`` under ``$KIROCREW_HOME/members/<slug>/``, ``GET /api/members``, the
+Covers ``dm.json`` under ``$AJCREW_HOME/members/<slug>/``, ``GET /api/members``, the
 idempotent ``POST /api/members/{slug}/thread``, and the agent pin at every writer (send
 path, agent switch, ``EVENT_AGENT_SWITCHED`` veto). Each denial also checks the slot did
 not move.
@@ -33,8 +33,8 @@ from members_dm_thread_helpers import (
     _record_or_explain,
 )
 
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.members import (
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.members import (
     DM_SLOT_MODE,
     MemberSlugError,
     dm_binding_path,
@@ -44,8 +44,8 @@ from kiro_crew.members import (
     slug_for_name,
     write_dm_binding,
 )
-from kiro_crew.testing.wait import await_until
-from kiro_crew.validation import normalize_unicode
+from aj_crew.testing.wait import await_until
+from aj_crew.validation import normalize_unicode
 
 
 class TestDmBinding:
@@ -144,13 +144,13 @@ class TestRestrictedRestartMemberIdentity:
 
     @staticmethod
     def _member(cfg, tmp_path, alias, member_id, store):
-        from kiro_crew.config.sections import KiroCrewAgentConfig, MemoryStoreConfig
-        from kiro_crew.vector_memory import create_member_database
+        from aj_crew.config.sections import AjCrewAgentConfig, MemoryStoreConfig
+        from aj_crew.vector_memory import create_member_database
 
         path = tmp_path / "memory_stores" / store / "memory.db"
         path.parent.mkdir(parents=True, exist_ok=True)
         create_member_database(path, member_id=member_id, store_id=store)
-        cfg.agents[alias] = KiroCrewAgentConfig(
+        cfg.agents[alias] = AjCrewAgentConfig(
             member_id=member_id, memory_store=store, kiro_agent="shared-template"
         )
         cfg.memory_stores[store] = MemoryStoreConfig(
@@ -158,21 +158,21 @@ class TestRestrictedRestartMemberIdentity:
         )
 
     def test_dm_slot_refuses_after_alias_reassignment(self, tmp_path, monkeypatch):
-        from kiro_crew import execution_context as execution
-        from kiro_crew.config import loader
-        from kiro_crew.dashboard.chat_runner import (
+        from aj_crew import execution_context as execution
+        from aj_crew.config import loader
+        from aj_crew.dashboard.chat_runner import (
             _dm_member_binding_changed,
             _slot_member_slug,
         )
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         loader._invalidate_config_cache()
-        cfg = SimpleNamespace(agents={}, memory_stores={}, default_agent="kirocrew")
+        cfg = SimpleNamespace(agents={}, memory_stores={}, default_agent="ajcrew")
         # The original member the incognito DM chat ran as. Its slug IS its id
         # (a MemV2 member always gets an id-based slug), so the slot key encodes
         # the immutable id.
         self._member(cfg, tmp_path, "assistant", "id-alpha", "member-alpha")
-        monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+        monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(lambda cls: cfg))
 
         slot_key = member_slot_key("id-alpha")
 
@@ -194,18 +194,18 @@ class TestRestrictedRestartMemberIdentity:
         assert _dm_member_binding_changed(resolved.member_id, slot_key)
 
     def test_dm_slot_runs_normally_when_alias_is_unchanged(self, tmp_path, monkeypatch):
-        from kiro_crew import execution_context as execution
-        from kiro_crew.config import loader
-        from kiro_crew.dashboard.chat_runner import (
+        from aj_crew import execution_context as execution
+        from aj_crew.config import loader
+        from aj_crew.dashboard.chat_runner import (
             _dm_member_binding_changed,
             _slot_member_slug,
         )
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         loader._invalidate_config_cache()
-        cfg = SimpleNamespace(agents={}, memory_stores={}, default_agent="kirocrew")
+        cfg = SimpleNamespace(agents={}, memory_stores={}, default_agent="ajcrew")
         self._member(cfg, tmp_path, "assistant", "id-alpha", "member-alpha")
-        monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+        monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(lambda cls: cfg))
 
         slot_key = member_slot_key("id-alpha")
         resolved = execution.resolve_member_execution(
@@ -218,15 +218,15 @@ class TestRestrictedRestartMemberIdentity:
         assert not _dm_member_binding_changed(resolved.member_id, slot_key)
 
     def test_legacy_member_without_persisted_id_touches_neither_branch(self, tmp_path, monkeypatch):
-        from kiro_crew import execution_context as execution
-        from kiro_crew.config import loader
-        from kiro_crew.config.sections import KiroCrewAgentConfig
-        from kiro_crew.dashboard.chat_runner import (
+        from aj_crew import execution_context as execution
+        from aj_crew.config import loader
+        from aj_crew.config.sections import AjCrewAgentConfig
+        from aj_crew.dashboard.chat_runner import (
             _dm_member_binding_changed,
             _slot_member_slug,
         )
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         loader._invalidate_config_cache()
         # A legacy (MemV1) member has a name-derived slug and no persisted id, so
         # ``resolve_member_execution`` yields an empty ``member_id`` -- nothing
@@ -235,11 +235,11 @@ class TestRestrictedRestartMemberIdentity:
         slug = slug_for_name("legacy crew")
         slot_key = member_slot_key(slug)
         cfg = SimpleNamespace(
-            agents={"legacy crew": KiroCrewAgentConfig(kiro_agent="kirocrew")},
+            agents={"legacy crew": AjCrewAgentConfig(kiro_agent="ajcrew")},
             memory_stores={},
-            default_agent="kirocrew",
+            default_agent="ajcrew",
         )
-        monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+        monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(lambda cls: cfg))
         resolved = execution.resolve_member_execution(
             cfg, "legacy crew", memory_mode="incognito", validate_memory_files=False
         )
@@ -250,7 +250,7 @@ class TestRestrictedRestartMemberIdentity:
         assert not _dm_member_binding_changed(resolved.member_id or "", "chat-7-f00d")
 
     def test_non_member_slot_key_has_no_slug(self):
-        from kiro_crew.dashboard.chat_runner import _slot_member_slug
+        from aj_crew.dashboard.chat_runner import _slot_member_slug
 
         assert _slot_member_slug("chat-1-abc") == ""
 
@@ -258,8 +258,8 @@ class TestRestrictedRestartMemberIdentity:
 class TestMemberRoutes:
     @pytest.mark.asyncio
     async def test_roster_reuses_config_loaded_off_loop(self, tmp_path, monkeypatch):
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.platform import build_default_context, reset_context, set_context
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.platform import build_default_context, reset_context, set_context
 
         cfg = _fake_config([CREW, OTHER])
         loop_thread = threading.get_ident()
@@ -269,7 +269,7 @@ class TestMemberRoutes:
             loads.append(threading.get_ident())
             return cfg
 
-        monkeypatch.setattr(KiroCrewConfig, "load", load)
+        monkeypatch.setattr(AjCrewConfig, "load", load)
         state = _make_state(tmp_path)
         set_context(build_default_context(cfg))
         loads.clear()
@@ -308,7 +308,7 @@ class TestMemberRoutes:
 
     @pytest.mark.asyncio
     async def test_roster_hides_a_credential_shaped_legacy_name(self, tmp_path):
-        from kiro_crew.external_text import external_text_requires_redaction
+        from aj_crew.external_text import external_text_requires_redaction
 
         name = "crew password=shortvalue"
         assert external_text_requires_redaction(name)
@@ -322,12 +322,12 @@ class TestMemberRoutes:
     def test_shared_redactor_applies_a_companion_policy_on_top_of_the_baseline(self):
         import dataclasses
 
-        from kiro_crew import security
-        from kiro_crew.external_text import (
+        from aj_crew import security
+        from aj_crew.external_text import (
             external_text_requires_redaction,
             redact_external_text,
         )
-        from kiro_crew.platform import (
+        from aj_crew.platform import (
             PROFILE_ENTERPRISE,
             build_default_context,
             reset_context,
@@ -343,7 +343,7 @@ class TestMemberRoutes:
 
         set_context(
             dataclasses.replace(
-                build_default_context(KiroCrewConfig(), profile=PROFILE_ENTERPRISE),
+                build_default_context(AjCrewConfig(), profile=PROFILE_ENTERPRISE),
                 credentials=_Policy(),
             )
         )
@@ -363,7 +363,7 @@ class TestMemberRoutes:
 
         cfg = _fake_config([name], default=name)
         assert _record_or_explain(name, "dashboard_chat-1", "persistent", via="chat")
-        with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=cfg):
             async with TestClient(TestServer(_make_members_app(state))) as client:
                 roster_response = await client.get("/api/members")
                 assert roster_response.status == 200
@@ -398,7 +398,7 @@ class TestMemberRoutes:
         state = _make_state(tmp_path)
         cfg = _fake_config([name], default=name)
         assert _record_or_explain(name, "dashboard_chat-1", "persistent", via="chat")
-        with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=cfg):
             async with TestClient(TestServer(_make_members_app(state))) as client:
                 roster_response = await client.get("/api/members")
                 assert roster_response.status == 200
@@ -554,7 +554,7 @@ class TestMemberRoutes:
                 _tick["n"] += 1
                 return _base + _dt.timedelta(seconds=_tick["n"])
 
-        monkeypatch.setattr("kiro_crew.history.datetime", _IncDateTime)
+        monkeypatch.setattr("aj_crew.history.datetime", _IncDateTime)
 
         state = _make_state(tmp_path)
         write_dm_binding(CREW, member=CREW, slot_key=member_slot_key(CREW))
@@ -607,7 +607,7 @@ class TestMemberRoutes:
         state = _make_state(tmp_path)
         cfg = _fake_config([CREW])
         cfg.agents[CREW].display_name = "Code Reviewer"
-        with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=cfg):
             async with TestClient(TestServer(_make_members_app(state))) as client:
                 assert (await client.post("/api/members/code-reviewer/thread")).status == 200
                 slot = state._slots["member-code-reviewer"]
@@ -651,7 +651,7 @@ class TestMemberRoutes:
         state = _make_state(tmp_path)
         cfg = _fake_config([CREW])
         cfg.agents[CREW].display_name = "Code Reviewer"
-        with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=cfg):
             async with TestClient(TestServer(_make_members_app(state))) as client:
                 assert (await client.post("/api/members/code-reviewer/thread")).status == 200
                 slot = state._slots["member-code-reviewer"]
@@ -683,7 +683,7 @@ class TestMemberRoutes:
         cfg = _fake_config([CREW])
         secret = "AKIAIOSFODNN7EXAMPLE"
         cfg.agents[CREW].display_name = f"Reviewer {secret}"
-        with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=cfg):
             async with TestClient(TestServer(_make_members_app(state))) as client:
                 assert (await client.post("/api/members/code-reviewer/thread")).status == 200
         slot = state._slots["member-code-reviewer"]
@@ -706,14 +706,14 @@ class TestMemberRoutes:
     ):
         """A new member DM uses the configured workspace for cwd and project guides."""
 
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.config.sections import WorkspaceConfig
-        from kiro_crew.memory_stores import provision_member_memory
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.config.sections import WorkspaceConfig
+        from aj_crew.memory_stores import provision_member_memory
 
         team_dir = tmp_path / "team-a-workspace"
         team_dir.mkdir()
-        cfg = KiroCrewConfig.load()
-        cfg.agents[CREW] = KiroCrewAgentConfig(kiro_agent=CREW, workspace=workspace)
+        cfg = AjCrewConfig.load()
+        cfg.agents[CREW] = AjCrewAgentConfig(kiro_agent=CREW, workspace=workspace)
         cfg.workspaces["team-a"] = WorkspaceConfig(dir=str(team_dir))
         cfg.default_workspace = "team-a"
         if private:
@@ -761,7 +761,7 @@ class TestMemberRoutes:
 
         with (
             _patched_config([CREW]),
-            patch("kiro_crew.dashboard.handlers.members.default_project_dir", resolve),
+            patch("aj_crew.dashboard.handlers.members.default_project_dir", resolve),
         ):
             async with TestClient(TestServer(_make_members_app(state))) as client:
                 pending = asyncio.create_task(client.post(f"/api/members/{CREW}/thread"))
@@ -802,7 +802,7 @@ class TestMemberRoutes:
         with (
             _patched_config([CREW]),
             patch(
-                "kiro_crew.dashboard.handlers.members.default_project_dir",
+                "aj_crew.dashboard.handlers.members.default_project_dir",
                 return_value=resolved,
             ) as resolve,
         ):
@@ -836,7 +836,7 @@ class TestMemberRoutes:
         with (
             _patched_config([CREW]),
             patch(
-                "kiro_crew.dashboard.handlers.members.default_project_dir",
+                "aj_crew.dashboard.handlers.members.default_project_dir",
                 return_value=resolved,
             ),
         ):
@@ -857,7 +857,7 @@ class TestMemberRoutes:
         slot.project = str(tmp_path / "chosen")
         with (
             _patched_config([CREW]),
-            patch("kiro_crew.dashboard.handlers.members.default_project_dir", return_value=""),
+            patch("aj_crew.dashboard.handlers.members.default_project_dir", return_value=""),
         ):
             async with TestClient(TestServer(_make_members_app(state))) as client:
                 assert (await client.post(f"/api/members/{CREW}/thread")).status == 200
@@ -884,7 +884,7 @@ class TestMemberRoutes:
         with (
             _patched_config([CREW]),
             patch(
-                "kiro_crew.dashboard.handlers.members.default_project_dir",
+                "aj_crew.dashboard.handlers.members.default_project_dir",
                 return_value=resolved,
             ),
         ):
@@ -964,7 +964,7 @@ class TestMemberRoutes:
         a legacy one (pre-reservation install) by inserting the slot directly —
         the endpoint must still refuse to adopt it.
         """
-        from kiro_crew.dashboard.state import _ChatSlot
+        from aj_crew.dashboard.state import _ChatSlot
 
         state = _make_state(tmp_path)
         foreign = _ChatSlot("member-code-reviewer", agent="someone-else")
@@ -1075,10 +1075,10 @@ class TestPinEnforcement:
         name = "dr. eggbot"
         state = _make_state(tmp_path)
         slot = _member_slot(state, key="member-dr-eggbot", agent=name)
-        cfg = KiroCrewConfig()
-        cfg.agents = {name: KiroCrewAgentConfig(kiro_agent="kirocrew")}
+        cfg = AjCrewConfig()
+        cfg.agents = {name: AjCrewAgentConfig(kiro_agent="ajcrew")}
         cfg.default_agent = name
-        with patch("kiro_crew.config.loader.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.config.loader.AjCrewConfig.load", return_value=cfg):
             async with TestClient(TestServer(_make_app_with_agent_routes(state))) as client:
                 resp = await client.post(f"/api/chat/slots/{slot.key}/agent", json={"agent": name})
                 assert resp.status == 200, await resp.text()
@@ -1192,7 +1192,7 @@ class TestPinEnforcement:
         state = _make_state(tmp_path)
         slot = _member_slot(state, key="member-dr-eggbot", agent=name)
         cfg = _fake_config([name], default=name)
-        with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=cfg):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/chat", json={"slot": slot.key, "agent": name, "message": ""}
@@ -1210,7 +1210,7 @@ class TestPinEnforcement:
         state = _make_state(tmp_path)
         slot = _member_slot(state, key="member-legacy-credential", agent=name)
         cfg = _fake_config([name], default=name)
-        with patch("kiro_crew.dashboard.handlers.members.KiroCrewConfig.load", return_value=cfg):
+        with patch("aj_crew.dashboard.handlers.members.AjCrewConfig.load", return_value=cfg):
             async with TestClient(TestServer(_make_app(state))) as client:
                 for body in (
                     {"slot": slot.key, "agent": name, "message": ""},
@@ -1223,8 +1223,8 @@ class TestPinEnforcement:
 
     @pytest.mark.asyncio
     async def test_runner_refuses_a_redaction_requiring_stored_member_pin(self, tmp_path, caplog):
-        from kiro_crew.dashboard.chat_runner import _run_chat
-        from kiro_crew.eventlog.service import get_service
+        from aj_crew.dashboard.chat_runner import _run_chat
+        from aj_crew.eventlog.service import get_service
 
         name = "crew password=shortvalue"
         credential = "".join(["AKIA", "IOSFODNN7", "EXAMPLE"])
@@ -1244,8 +1244,8 @@ class TestPinEnforcement:
         autonudge = MagicMock()
 
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=autonudge),
-            caplog.at_level("WARNING", logger="kiro_crew.dashboard.chat_runner"),
+            patch("aj_crew.autonudge.get_instance", return_value=autonudge),
+            caplog.at_level("WARNING", logger="aj_crew.dashboard.chat_runner"),
         ):
             await _run_chat(state, slot, "hello")
 
@@ -1273,28 +1273,28 @@ class TestPinEnforcement:
         not bound to the replacement member's private store. Deleting the guard
         regresses this to a silent cross-member bind.
         """
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.config.sections import KiroCrewAgentConfig, MemoryStoreConfig
-        from kiro_crew.dashboard.chat_runner import _run_chat
-        from kiro_crew.vector_memory import create_member_database
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.config.sections import AjCrewAgentConfig, MemoryStoreConfig
+        from aj_crew.dashboard.chat_runner import _run_chat
+        from aj_crew.vector_memory import create_member_database
 
         def _member(cfg, alias, member_id, store):
             path = tmp_path / "memory_stores" / store / "memory.db"
             path.parent.mkdir(parents=True, exist_ok=True)
             create_member_database(path, member_id=member_id, store_id=store)
-            cfg.agents[alias] = KiroCrewAgentConfig(
-                member_id=member_id, memory_store=store, kiro_agent="kirocrew"
+            cfg.agents[alias] = AjCrewAgentConfig(
+                member_id=member_id, memory_store=store, kiro_agent="ajcrew"
             )
             cfg.memory_stores[store] = MemoryStoreConfig(
                 owner_member=alias, owner_member_id=member_id, memory_version=2
             )
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         # The DM slot the incognito chat ran as encodes id-alpha; the alias is
         # then reassigned to a brand-new member before the restart.
         _member(cfg, "assistant", "id-beta", "member-beta")
         cfg.save()
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda c: cfg))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda c: cfg))
 
         slot_key = "member-id-alpha"
         state = _make_state(tmp_path)
@@ -1313,9 +1313,9 @@ class TestPinEnforcement:
         slot.append("user", "hello", "msg msg-u")
 
         with (
-            patch("kiro_crew.autonudge.get_instance", return_value=MagicMock()),
+            patch("aj_crew.autonudge.get_instance", return_value=MagicMock()),
             patch(
-                "kiro_crew.dashboard.chat_runner.chat_done_payload",
+                "aj_crew.dashboard.chat_runner.chat_done_payload",
                 AsyncMock(return_value={}),
             ),
         ):
@@ -1332,7 +1332,7 @@ class TestPinEnforcement:
     async def test_runner_refuses_a_non_dispatchable_default_member_on_an_ordinary_slot(
         self, tmp_path, caplog
     ):
-        from kiro_crew.dashboard.chat_runner import _run_chat
+        from aj_crew.dashboard.chat_runner import _run_chat
 
         name = "crew password=shortvalue"
         credential = "".join(["AKIA", "IOSFODNN7", "EXAMPLE"])
@@ -1351,15 +1351,15 @@ class TestPinEnforcement:
         # and inherits no member, dispatchable or not.
         slot.agent = name
         slot.append("user", "hello", "msg msg-u")
-        cfg = KiroCrewConfig()
-        cfg.agents = {name: KiroCrewAgentConfig(kiro_agent="kirocrew")}
+        cfg = AjCrewConfig()
+        cfg.agents = {name: AjCrewAgentConfig(kiro_agent="ajcrew")}
         cfg.default_agent = name
         autonudge = MagicMock()
 
         with (
-            patch("kiro_crew.dashboard.chat_runner.KiroCrewConfig.load", return_value=cfg),
-            patch("kiro_crew.autonudge.get_instance", return_value=autonudge),
-            caplog.at_level("WARNING", logger="kiro_crew.dashboard.chat_runner"),
+            patch("aj_crew.dashboard.chat_runner.AjCrewConfig.load", return_value=cfg),
+            patch("aj_crew.autonudge.get_instance", return_value=autonudge),
+            caplog.at_level("WARNING", logger="aj_crew.dashboard.chat_runner"),
         ):
             await _run_chat(state, slot, "hello")
 
@@ -1423,20 +1423,20 @@ class TestPinEnforcement:
         assert slot.agent == CREW
 
     def _runner_harness(self, tmp_path, monkeypatch, *, mode, private=True, switch_to=OTHER):
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.dashboard.chat_runner import _run_chat
-        from kiro_crew.memory_stores import provision_member_memory
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.dashboard.chat_runner import _run_chat
+        from aj_crew.memory_stores import provision_member_memory
 
-        cfg = KiroCrewConfig.load()
-        cfg.agents[CREW] = KiroCrewAgentConfig(kiro_agent="kirocrew")
+        cfg = AjCrewConfig.load()
+        cfg.agents[CREW] = AjCrewAgentConfig(kiro_agent="ajcrew")
         provision_member_memory(cfg, CREW)
         cfg.save()
         # No real provider or embedding process runs in this stream harness.
         # Keep private ownership and the protected session binding real.
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.title_then_refresh", AsyncMock())
-        monkeypatch.setattr("kiro_crew.dashboard.chat_runner.generate_session_summary", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.title_then_refresh", AsyncMock())
+        monkeypatch.setattr("aj_crew.dashboard.chat_runner.generate_session_summary", AsyncMock())
         monkeypatch.setattr(
-            "kiro_crew.config.loader._materialized_kiro_agent",
+            "aj_crew.config.loader._materialized_kiro_agent",
             lambda name, project_dir=None: name if name == switch_to else "",
         )
         context = SimpleNamespace(
@@ -1466,7 +1466,7 @@ class TestPinEnforcement:
         if private:
             # The turn only confirms a grant an owner-gated route wrote; the
             # harness stands in for that route.
-            from kiro_crew.member_memory_auth import bind_private_session_store
+            from aj_crew.member_memory_auth import bind_private_session_store
 
             bind_private_session_store(f"dashboard:{slot_key}", cfg.agents[CREW].memory_store)
         slot.append("user", "hello", "msg msg-u")
@@ -1474,7 +1474,7 @@ class TestPinEnforcement:
         client = state.sessions.get_or_create.return_value[0]
         client.shutdown = AsyncMock()
 
-        from kiro_crew.providers.base import (
+        from aj_crew.providers.base import (
             EVENT_AGENT_SWITCHED,
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,
@@ -1547,11 +1547,11 @@ class TestPinEnforcement:
         card goes back on the queue with its durable hold, delivered again
         rather than lost.
         """
-        from kiro_crew.dashboard.chat_handlers import deliver_note
-        from kiro_crew.dashboard.chat_merge_back import MERGE_NOTE_SOURCE
-        from kiro_crew.dashboard.chat_utils import slot_history_key
-        from kiro_crew.dashboard.slot_buffers import sanitize_merged_from
-        from kiro_crew.providers.base import (
+        from aj_crew.dashboard.chat_handlers import deliver_note
+        from aj_crew.dashboard.chat_merge_back import MERGE_NOTE_SOURCE
+        from aj_crew.dashboard.chat_utils import slot_history_key
+        from aj_crew.dashboard.slot_buffers import sanitize_merged_from
+        from aj_crew.providers.base import (
             EVENT_AGENT_SWITCHED,
             EVENT_COMPLETE,
             EVENT_TEXT_CHUNK,

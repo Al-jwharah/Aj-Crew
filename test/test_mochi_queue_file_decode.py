@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.builtins.mochi.queue_file import read_queue
+from aj_crew.apps.builtins.mochi.queue_file import read_queue
 
 # "café" in latin-1: byte 0xe9 is not valid UTF-8.
 _LATIN1_QUEUE = b'{"tasks": [], "planned_at": "caf\xe9", "planned_until": "2026-10-26T00:00:00Z"}'

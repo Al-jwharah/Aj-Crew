@@ -26,7 +26,7 @@ import { mkdirSync } from 'node:fs'
 import { serveDist } from './lib/serve-dist.mjs'
 import { logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 
-const OUT = process.argv[2] || (process.env.KIROCREW_SCRATCH || '/tmp') + '/stale-collapse-hidden-count'
+const OUT = process.argv[2] || (process.env.AJCREW_SCRATCH || '/tmp') + '/stale-collapse-hidden-count'
 const BUILD = process.argv[3] || 'after'
 if (!['before', 'after'].includes(BUILD)) {
   console.error(`usage: … [outDir] [before|after]  (got "${BUILD}")`)
@@ -43,7 +43,7 @@ const folders = [
 ]
 
 const slot = (key, title, folder_id, ageHours, extra = {}) => ({
-  key, title, messages: 4, running: false, agent: 'kirocrew',
+  key, title, messages: 4, running: false, agent: 'ajcrew',
   created: hoursAgo(ageHours + 2), last_turn_ts: hoursAgo(ageHours), folder_id, ...extra,
 })
 

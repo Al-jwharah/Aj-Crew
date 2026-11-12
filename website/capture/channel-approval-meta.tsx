@@ -34,7 +34,7 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') === 'light' ? 'light' : 'dark'
 const scene = params.get('scene') || 'simple'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const SIMPLE = 'ls -la /home/dev/project'
 const COMPOUND = 'cat /home/dev/project/README.md | wc -l'
@@ -51,7 +51,7 @@ const LONG = [
   '--exclude=*.log --exclude=*.tmp --exclude=*.pyc --exclude=__pycache__ --exclude=.venv',
   '--exclude=.pytest_cache --exclude=.mypy_cache --exclude=.ruff_cache --exclude=playwright-report',
   '--directory=/home/dev/project website/src website/public website/capture website/scripts',
-  'src/kiro_crew test docs/system-specs README.md pyproject.toml package.json package-lock.json',
+  'src/aj_crew test docs/system-specs README.md pyproject.toml package.json package-lock.json',
 ].join(' ')
 
 function shell(cmd: string, base: string | null) {

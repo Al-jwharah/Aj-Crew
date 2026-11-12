@@ -1,6 +1,6 @@
 """Policy distribution: what the tier may say, log or hand an agent about its source.
 
-The source URL can be the fleet's credential, and ``kirocrew policy fetch``, the log
+The source URL can be the fleet's credential, and ``ajcrew policy fetch``, the log
 ring and the dashboard are all reachable by the agent. So no audit label, redirect
 refusal or re-raised boot error names the endpoint, a transport error that names only
 the host is redacted too, text the endpoint authored is sanitised, the distribution
@@ -32,9 +32,9 @@ from governance_distribution_helpers import (
     pd_format_exc,
 )
 
-from kiro_crew.platform import governance
-from kiro_crew.platform import policy_distribution as pd
-from kiro_crew.platform.context import PlatformCompositionError
+from aj_crew.platform import governance
+from aj_crew.platform import policy_distribution as pd
+from aj_crew.platform.context import PlatformCompositionError
 
 
 class _FakeRequest:
@@ -54,7 +54,7 @@ class TestTheDeniedEnvListCoversEveryVariable:
     """
 
     def test_every_distribution_variable_is_denied_to_agents_by_exact_name(self):
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         denied = set(sandbox._AGENT_DENIED_ENV_KEYS)
         missing = [v for v in pd.POLICY_DISTRIBUTION_ENV_VARS if v not in denied]
@@ -65,7 +65,7 @@ class TestTheDeniedEnvListCoversEveryVariable:
 
     def test_the_cron_scrub_actually_drops_them(self, monkeypatch):
         """The consumer with the exact-match rule, exercised rather than assumed."""
-        from kiro_crew import cron_script
+        from aj_crew import cron_script
 
         for var in pd.POLICY_DISTRIBUTION_ENV_VARS:
             monkeypatch.setenv(var, "secret-value")
@@ -87,7 +87,7 @@ class TestTheHostnameAloneIsRedacted:
         ids=["tls-mismatch", "dns", "timeout"],
     )
     def test_a_host_only_message_is_redacted(self, message):
-        source = "https://config.corp.example/kirocrew/security_policy.json"
+        source = "https://config.corp.example/ajcrew/security_policy.json"
         redacted = pd._redact_source(message, source)
         assert "config.corp.example" not in redacted
         assert "policy source" in redacted
@@ -104,7 +104,7 @@ class TestEndpointAuthoredTextIsSanitised:
 
     ``json``'s errors quote the offending text, so a document that echoes back the
     request's ``Authorization`` header — an endpoint reflecting its own request, a proxy
-    error page — would carry that credential into ``kirocrew policy fetch`` and into
+    error page — would carry that credential into ``ajcrew policy fetch`` and into
     ``GET /api/logs``.
     """
 
@@ -156,9 +156,9 @@ class TestTheSignatureAuditLabelIsRedacted:
         tooling can drive; the SEL record is on the keystone and is not reachable that
         way. So the reason and the policy label belong in the record, and the warning
         carries only the state plus a pointer to it."""
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.platform.governance"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.platform.governance"):
             gov._audit_policy_signature(
                 gov.SIGNATURE_UNVERIFIED,
                 "no trust key for issuer 'corp'",
@@ -244,7 +244,7 @@ class TestPosture:
         an operator asks: is this host centrally governed, and is it encrypted.
         """
         host = "config.corp.example"
-        source = f"https://{host}/kirocrew/policy.json"
+        source = f"https://{host}/ajcrew/policy.json"
         install_ceiling(
             governance.parse_policy(
                 _doc(
@@ -270,7 +270,7 @@ class TestPosture:
     def test_a_misconfigured_source_reports_a_code_and_still_no_url(self, monkeypatch):
         """A status panel must not raise, and an exception's prose leaks the URL."""
         host = "config.corp.example"
-        monkeypatch.setenv(pd.POLICY_URL_ENV, f"https://{host}/kirocrew/policy.json")
+        monkeypatch.setenv(pd.POLICY_URL_ENV, f"https://{host}/ajcrew/policy.json")
         monkeypatch.setenv(pd.POLICY_REFRESH_ENV, "15m")
         posture = pd.distribution_posture()
         assert posture["error_code"] == pd.POSTURE_ERROR_MISCONFIGURED

@@ -1,13 +1,13 @@
 """A Windows sharing violation on an agent spec is not an absent spec.
 
 On Windows a read that lands while ``spec_files._atomic_json_write`` replaces
-``kirocrew.json`` fails with ``PermissionError`` (WinError 32 or 33). POSIX
+``ajcrew.json`` fails with ``PermissionError`` (WinError 32 or 33). POSIX
 permits that read, so the fault is simulated here: ``open_fenced_for_read`` is
 patched to raise the sharing violation a set number of times, then open the real
 file.
 
 The spec reader retries that window with the budget
-:func:`kiro_crew.atomic_write.read_bytes_with_retry` uses, so
+:func:`aj_crew.atomic_write.read_bytes_with_retry` uses, so
 ``_load_agent_config`` still returns the configured server. A spec that stays
 locked past the budget still reads as ``None`` (the per-file contract callers
 depend on), now with one WARNING naming it. POSIX keeps a single attempt.
@@ -21,22 +21,22 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent_discovery
-from kiro_crew import atomic_write as aw
-from kiro_crew import platform_compat
-from kiro_crew.agent_files import AGENT_FILENAME
-from kiro_crew.mcp_discovery import _load_agent_config
+from aj_crew import agent_discovery
+from aj_crew import atomic_write as aw
+from aj_crew import platform_compat
+from aj_crew.agent_files import AGENT_FILENAME
+from aj_crew.mcp_discovery import _load_agent_config
 
-_LOGGER = "kiro_crew.agent_discovery"
+_LOGGER = "aj_crew.agent_discovery"
 
 
 @pytest.fixture
 def user_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    """A scratch home whose ``kirocrew.json`` declares one MCP server."""
-    monkeypatch.delenv("KIROCREW_PROJECT_DIR", raising=False)
+    """A scratch home whose ``ajcrew.json`` declares one MCP server."""
+    monkeypatch.delenv("AJCREW_PROJECT_DIR", raising=False)
     agents = tmp_path / ".kiro" / "agents"
     agents.mkdir(parents=True)
-    spec = {"name": "kirocrew", "mcpServers": {"locked-srv": {"command": "x"}}}
+    spec = {"name": "ajcrew", "mcpServers": {"locked-srv": {"command": "x"}}}
     (agents / AGENT_FILENAME).write_text(json.dumps(spec), encoding="utf-8")
     return tmp_path
 

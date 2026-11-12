@@ -13,8 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import requires_symlinks
-from kiro_crew.testing.channel_fixtures import (
+from aj_crew.testing.channel_fixtures import (
     Provenance,
     ShapeMismatch,
     Source,
@@ -25,9 +24,10 @@ from kiro_crew.testing.channel_fixtures import (
     unverified,
     write_fixture,
 )
+from conftest import requires_symlinks
 
 # The fixtures root lives in the TEST tree, so the layout coupling lives here
-# too -- kiro_crew.testing.channel_fixtures ships in the wheel and deliberately
+# too -- aj_crew.testing.channel_fixtures ships in the wheel and deliberately
 # has no default root (no test/ tree exists in an installed package).
 CHANNEL_FIXTURES = Path(__file__).resolve().parent / "fixtures" / "channels"
 
@@ -118,7 +118,7 @@ class TestFixtureIdentifiersCannotEscapeTheRoot:
 class TestNoImplicitFixturesRoot:
     """The shipped module must not guess a root.
 
-    ``kiro_crew.testing`` is in the runtime wheel, where no ``test/`` tree
+    ``aj_crew.testing`` is in the runtime wheel, where no ``test/`` tree
     exists, so any ``__file__``-derived default would resolve to an unpackaged
     path and fail for every installed consumer. The caller owns the layout.
     """
@@ -277,7 +277,7 @@ class TestRouteScriptSemantics:
     """A sequence route is an exact script, not a repeating steady state."""
 
     def test_a_shared_sequence_is_copied_not_consumed(self) -> None:
-        from kiro_crew.testing.fake_channel_wire import FakeWireSession
+        from aj_crew.testing.fake_channel_wire import FakeWireSession
 
         shared = [{"n": 1}, {"n": 2}]
         wire = FakeWireSession().route("POST", "/x", shared)
@@ -287,7 +287,7 @@ class TestRouteScriptSemantics:
         assert shared == [{"n": 1}, {"n": 2}], "the caller's script must be untouched"
 
     def test_calling_past_the_script_raises_instead_of_repeating(self) -> None:
-        from kiro_crew.testing.fake_channel_wire import (
+        from aj_crew.testing.fake_channel_wire import (
             FakeWireSession,
             UnroutedRequestError,
         )
@@ -303,7 +303,7 @@ class TestRouteScriptSemantics:
             wire._match("POST", "/x")
 
     def test_a_tuple_target_is_a_script_not_a_response_body(self) -> None:
-        from kiro_crew.testing.fake_channel_wire import FakeWireSession
+        from aj_crew.testing.fake_channel_wire import FakeWireSession
 
         # RouteTarget declares Iterable; handling only list would have used the
         # tuple itself as the response body.
@@ -313,7 +313,7 @@ class TestRouteScriptSemantics:
         assert wire._match("POST", "/x") == {"n": 2}
 
     def test_a_single_target_answers_every_call(self) -> None:
-        from kiro_crew.testing.fake_channel_wire import FakeWireSession
+        from aj_crew.testing.fake_channel_wire import FakeWireSession
 
         wire = FakeWireSession().route("POST", "/x", {"n": 1})
 
@@ -415,7 +415,7 @@ class TestSymlinkContainment:
         """
         import os as _os
 
-        from kiro_crew.testing import channel_fixtures as cf
+        from aj_crew.testing import channel_fixtures as cf
 
         closed: list[int] = []
         real_close = _os.close
@@ -456,7 +456,7 @@ class TestSymlinkContainment:
         """
         import os as _os
 
-        from kiro_crew.testing import channel_fixtures as cf
+        from aj_crew.testing import channel_fixtures as cf
 
         target = tmp_path / "x.json"
         target.write_text('{"original": true}', encoding="utf-8")
@@ -485,7 +485,7 @@ class TestSymlinkContainment:
 
     def test_a_successful_write_leaves_no_temporary_behind(self, tmp_path) -> None:
         """The happy path must replace the target and clean up after itself."""
-        from kiro_crew.testing import channel_fixtures as cf
+        from aj_crew.testing import channel_fixtures as cf
 
         target = tmp_path / "x.json"
         cf._write_no_follow(target, '{"new": true}')
@@ -500,7 +500,7 @@ class TestSymlinkContainment:
         The write never follows the link either way; the explicit check is what
         turns a confusing silent success into a stated refusal.
         """
-        from kiro_crew.testing import channel_fixtures as cf
+        from aj_crew.testing import channel_fixtures as cf
 
         outside = tmp_path / "outside.json"
         outside.write_text("untouched", encoding="utf-8")
@@ -521,7 +521,7 @@ class TestSymlinkContainment:
         """
         from types import MappingProxyType
 
-        from kiro_crew.testing.fake_channel_wire import FakeWireSession
+        from aj_crew.testing.fake_channel_wire import FakeWireSession
 
         body = MappingProxyType({"errcode": 0, "msg": "ok"})
         wire = FakeWireSession().route("POST", "/x", body)
@@ -540,7 +540,7 @@ class TestSymlinkContainment:
         import json as _json
         from types import MappingProxyType
 
-        from kiro_crew.testing.fake_channel_wire import WireResponse
+        from aj_crew.testing.fake_channel_wire import WireResponse
 
         flat = WireResponse(body=MappingProxyType({"errcode": 0, "msg": "ok"}))
         assert _json.loads(flat.text()) == {"errcode": 0, "msg": "ok"}
@@ -553,7 +553,7 @@ class TestSymlinkContainment:
 
     def test_an_unserializable_body_still_reports_its_type(self) -> None:
         """The fallback must not silently swallow a genuinely bad body."""
-        from kiro_crew.testing.fake_channel_wire import WireResponse
+        from aj_crew.testing.fake_channel_wire import WireResponse
 
         with pytest.raises(TypeError, match="object.*not JSON-serializable|not JSON"):
             WireResponse(body=object()).text()

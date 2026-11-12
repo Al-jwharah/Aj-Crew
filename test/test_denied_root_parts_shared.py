@@ -2,7 +2,7 @@
 
 Apps that screen operator-picked paths against a set of credential dot-dirs that
 the `is_sensitive_path()` floor does not enumerate consume
-:data:`kiro_crew.security.DENIED_ROOT_PARTS`, the SAME object — identity, not
+:data:`aj_crew.security.DENIED_ROOT_PARTS`, the SAME object — identity, not
 equality — so a credential directory added for one app can never silently miss
 another. Each consumer pins its own identity, in its own tests where it has them;
 `design_tweak` (previewed project folder) does it here.
@@ -10,8 +10,8 @@ another. Each consumer pins its own identity, in its own tests where it has them
 
 from __future__ import annotations
 
-from kiro_crew.apps.builtins.design_tweak.backend import server
-from kiro_crew.security import DENIED_ROOT_PARTS
+from aj_crew.apps.builtins.design_tweak.backend import server
+from aj_crew.security import DENIED_ROOT_PARTS
 
 
 class TestDeniedRootPartsSharedOwner:

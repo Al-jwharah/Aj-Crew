@@ -18,7 +18,7 @@ from typing import Any, Callable
 
 import pytest
 
-from kiro_crew.apps.dependency_ledger import (
+from aj_crew.apps.dependency_ledger import (
     _ledger_path,
     classify_and_clean_for_uninstall,
     classify_for_uninstall,
@@ -33,7 +33,7 @@ KEY = "capability/mcp/x"
 
 @pytest.fixture(autouse=True)
 def _ledger_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "kirocrew-home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "ajcrew-home"))
 
 
 def _write_raw(raw: bytes) -> None:
@@ -64,7 +64,7 @@ BAD_LEDGERS = [
 @pytest.mark.parametrize("raw", BAD_LEDGERS)
 def test_readers_treat_bad_ledger_as_empty(raw: bytes, caplog) -> None:
     _write_raw(raw)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.apps.dependency_ledger"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.apps.dependency_ledger"):
         assert _call(get_entry, KEY) is None
     assert "Failed to read dependency ledger" in caplog.text
     assert _call(list_by_app, "app-a") == []

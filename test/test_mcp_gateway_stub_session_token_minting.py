@@ -46,17 +46,17 @@ from test_mcp_gateway_claim import (
 )
 from test_mcp_gateway_session_inject import _PROBE_SCRIPT, REAL_CLI
 
-from kiro_crew import platform_compat
-from kiro_crew.mcp_gateway import claim as claim_mod
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.mcp_gateway import stub as stub_mod
-from kiro_crew.mcp_gateway.daemon import connection as connection_mod
-from kiro_crew.mcp_gateway.pool import PoolKey
-from kiro_crew.mcp_gateway.session_servers import (
+from aj_crew import platform_compat
+from aj_crew.mcp_gateway import claim as claim_mod
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway import stub as stub_mod
+from aj_crew.mcp_gateway.daemon import connection as connection_mod
+from aj_crew.mcp_gateway.pool import PoolKey
+from aj_crew.mcp_gateway.session_servers import (
     STUB_SESSION_TOKEN_ENV,
     attach_stub_session_token,
 )
-from kiro_crew.testing.wait import wait_until
+from aj_crew.testing.wait import wait_until
 
 # Fixtures shared with the sibling modules, bound by assignment so pytest registers
 # them for the tests in this module.
@@ -140,20 +140,20 @@ def test_an_owned_control_plane_register_names_the_stubs_code_generation(
     """Only Crew's own MCP target needs a daemon-generation compatibility gate.
 
     A third-party target keeps the wire shape it had before this field; otherwise
-    upgrading Kiro Crew would unpool every unrelated server even when its own
+    upgrading Aj Crew would unpool every unrelated server even when its own
     binary and protocol did not move.
     """
-    from kiro_crew import code_fingerprint as fingerprint_mod
+    from aj_crew import code_fingerprint as fingerprint_mod
 
     monkeypatch.setattr(fingerprint_mod, "code_fingerprint", lambda: "stub-generation")
     owned = stub_mod._parse_args(
         [
             "--server",
-            "kirocrew-core",
+            "ajcrew-core",
             "--agent",
             "cp-agent",
             "--target-command",
-            "kirocrew",
+            "ajcrew",
             "--target-args",
             "mcp-core",
             "--work-dir",
@@ -169,14 +169,14 @@ def test_register_generation_attestation_requires_managed_server_name(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A third-party name cannot opt into the Crew daemon-generation gate by argv."""
-    from kiro_crew import code_fingerprint as fingerprint_mod
+    from aj_crew import code_fingerprint as fingerprint_mod
 
     monkeypatch.setattr(fingerprint_mod, "code_fingerprint", lambda: "stub-generation")
     common_args = [
         "--agent",
         "cp-agent",
         "--target-command",
-        "kirocrew",
+        "ajcrew",
         "--target-args",
         "mcp-core",
         "--work-dir",
@@ -184,7 +184,7 @@ def test_register_generation_attestation_requires_managed_server_name(
         "--poolable",
     ]
     owned = stub_mod.build_register_payload(
-        stub_mod._parse_args(["--server", "kirocrew-core", *common_args])
+        stub_mod._parse_args(["--server", "ajcrew-core", *common_args])
     )
     third_party = stub_mod.build_register_payload(
         stub_mod._parse_args(["--server", "third-party", *common_args])
@@ -196,22 +196,22 @@ def test_register_generation_attestation_requires_managed_server_name(
 
 
 def test_the_stubs_owned_subcommand_set_is_the_managed_server_table() -> None:
-    """``_KIROCREW_MCP_SUBCOMMANDS`` must match the managed server table.
+    """``_AJCREW_MCP_SUBCOMMANDS`` must match the managed server table.
 
     It is copied into ``stub_register.py`` so the cold-start path never imports
     ``mcp_discovery``. A server missing from it skips the fingerprint and generation
     check, and keeps attaching to a pre-fingerprint daemon after an upgrade.
     """
-    from kiro_crew import mcp_discovery
+    from aj_crew import mcp_discovery
 
-    assert stub_mod._KIROCREW_MCP_SUBCOMMANDS == frozenset(
+    assert stub_mod._AJCREW_MCP_SUBCOMMANDS == frozenset(
         mcp_discovery._MANAGED_SERVER_SUBCOMMANDS.values()
     )
 
 
 @pytest.mark.parametrize(
     ("server", "subcommand"),
-    [("kirocrew-debug", "mcp-debug"), ("kirocrew-panel", "mcp-panel")],
+    [("ajcrew-debug", "mcp-debug"), ("ajcrew-panel", "mcp-panel")],
 )
 def test_the_caller_aware_opt_in_servers_name_the_stubs_code_generation(
     monkeypatch: pytest.MonkeyPatch, server: str, subcommand: str
@@ -219,7 +219,7 @@ def test_the_caller_aware_opt_in_servers_name_the_stubs_code_generation(
     """Exactly the servers whose mounts refuse every call as ``identity_unattested``
     without the per-session attestation must run the generation check, or a
     pre-fingerprint daemon keeps serving them after an upgrade."""
-    from kiro_crew import code_fingerprint as fingerprint_mod
+    from aj_crew import code_fingerprint as fingerprint_mod
 
     monkeypatch.setattr(fingerprint_mod, "code_fingerprint", lambda: "stub-generation")
     owned = stub_mod._parse_args(
@@ -229,7 +229,7 @@ def test_the_caller_aware_opt_in_servers_name_the_stubs_code_generation(
             "--agent",
             "cp-agent",
             "--target-command",
-            "kirocrew",
+            "ajcrew",
             "--target-args",
             subcommand,
             "--work-dir",
@@ -334,16 +334,16 @@ def _bare_runtime(
     pid: int = 4242,
     published: list[tuple[str, str]] | None = None,
 ) -> Any:
-    from kiro_crew.acp.runtime import AcpRuntime
+    from aj_crew.acp.runtime import AcpRuntime
 
     runtime = AcpRuntime(work_dir="/tmp")
-    runtime._mcp_gateway_socket = "/tmp/kirocrew-gw.sock"
+    runtime._mcp_gateway_socket = "/tmp/ajcrew-gw.sock"
     monkeypatch.setattr(type(runtime), "pid", property(lambda _self: pid))
     # ``_own_stub_session`` now also publishes the token's signed mapping (the
     # switch-free identity channel). Recorded rather than written: these are unit
     # tests of the naming/claim contract, and letting them touch the mapping
     # directory would make each one depend on a trust root it never set up.
-    import kiro_crew.acp.runtime as rt_mod
+    import aj_crew.acp.runtime as rt_mod
 
     sink = published if published is not None else []
     monkeypatch.setattr(
@@ -360,7 +360,7 @@ async def test_the_runtime_names_the_session_before_its_stubs_can_register(
     a claim sent afterwards races the register it exists to inform. The claim is
     pushed — and awaited — first, and the token it names is the one on the
     entries handed to that request."""
-    import kiro_crew.acp.runtime as rt_mod
+    import aj_crew.acp.runtime as rt_mod
 
     sent: list[tuple[Any, ...]] = []
 
@@ -375,7 +375,7 @@ async def test_the_runtime_names_the_session_before_its_stubs_can_register(
     )
     assert token
     assert {"name": STUB_SESSION_TOKEN_ENV, "value": token} in entries[0]["env"]
-    assert sent == [("/tmp/kirocrew-gw.sock", 4242, SUB_KEY, token)]
+    assert sent == [("/tmp/ajcrew-gw.sock", 4242, SUB_KEY, token)]
 
 
 @pytest.mark.asyncio
@@ -384,7 +384,7 @@ async def test_each_session_on_one_runtime_gets_its_own_token(
 ) -> None:
     """Two sessions sharing a kiro-cli process must not share the name that
     tells them apart."""
-    import kiro_crew.acp.runtime as rt_mod
+    import aj_crew.acp.runtime as rt_mod
 
     async def _ok(*_a: Any, **_k: Any) -> bool:
         return True
@@ -403,7 +403,7 @@ async def test_an_unclaimed_worker_mints_a_token_but_pushes_no_claim(
 ) -> None:
     """A warm-pool worker is spawned before any session claims it, so there is
     no owner to name yet — its ``rekey()`` carries the same token later."""
-    import kiro_crew.acp.runtime as rt_mod
+    import aj_crew.acp.runtime as rt_mod
 
     sent: list[Any] = []
 
@@ -428,10 +428,10 @@ async def test_no_stub_entries_still_names_the_session_but_pushes_no_claim(
     """Gateway off: nothing to CLAIM, but the session still gets a name.
 
     The strict identity resolver also reads the token through a MAC-signed mapping file
-    (:mod:`kiro_crew.session_token_sig`) with no daemon, so a session on the default
+    (:mod:`aj_crew.session_token_sig`) with no daemon, so a session on the default
     gateway-less install needs a name. With no stub entries, no claim is pushed.
     """
-    import kiro_crew.acp.runtime as rt_mod
+    import aj_crew.acp.runtime as rt_mod
 
     async def _boom(*_a: Any, **_k: Any) -> bool:
         raise AssertionError("claimed a session with no stub connections to inform")
@@ -451,7 +451,7 @@ def test_the_shared_runtime_rekey_claims_its_own_session_not_the_runtime(
 ) -> None:
     """A warm-pool re-claim on a runtime hosting subagents must reach only the
     claiming session's stubs — which is the token the handle carries."""
-    import kiro_crew.acp.session_provider as sp_mod
+    import aj_crew.acp.session_provider as sp_mod
 
     pushed: list[tuple[Any, ...]] = []
     monkeypatch.setattr(
@@ -475,7 +475,7 @@ def test_the_shared_runtime_rekey_claims_its_own_session_not_the_runtime(
                 pass
 
     class _Runtime:
-        _mcp_gateway_socket = "/tmp/kirocrew-gw.sock"
+        _mcp_gateway_socket = "/tmp/ajcrew-gw.sock"
         pid = 4242
         _crew_agent = ""
         _last_activity = 0.0
@@ -494,8 +494,8 @@ def test_the_shared_runtime_rekey_claims_its_own_session_not_the_runtime(
 #: shared runtime's process tree pointed at. Deleting one keyword argument
 #: re-opens exactly that, which no behavioural test on another file would catch.
 _SHARED_RUNTIME_SESSION_SITES = [
-    ("src/kiro_crew/subagent_manager/run_start.py", "session_key=session_key"),
-    ("src/kiro_crew/session_allocation.py", "session_key=key"),
+    ("src/aj_crew/subagent_manager/run_start.py", "session_key=session_key"),
+    ("src/aj_crew/session_allocation.py", "session_key=key"),
 ]
 
 
@@ -516,7 +516,7 @@ def test_every_turn_re_pushes_the_sessions_claim(monkeypatch: pytest.MonkeyPatch
     without stubs is left alone."""
     import asyncio as _asyncio
 
-    from kiro_crew.messaging import identity as identity_mod
+    from aj_crew.messaging import identity as identity_mod
 
     calls: list[str] = []
 
@@ -544,7 +544,7 @@ def test_a_provider_without_stubs_is_left_alone(
     """No stub token means no claim to push and nothing that would read one."""
     import asyncio as _asyncio
 
-    from kiro_crew.messaging import identity as identity_mod
+    from aj_crew.messaging import identity as identity_mod
 
     class _Sessions:
         def get_pid(self, _key: str) -> None:
@@ -567,7 +567,7 @@ async def test_warm_reuse_claims_the_fresh_sessions_stubs(
     """``new_conversation`` reuses the runtime and launches FRESH stubs, so it
     mints a fresh token that nothing has named. Left unclaimed, those stubs are
     refused — a warm worker would run its whole next task with no identity."""
-    import kiro_crew.acp.session_provider as sp_mod
+    import aj_crew.acp.session_provider as sp_mod
 
     class _Handle:
         def __init__(self, token: str = "") -> None:
@@ -583,9 +583,9 @@ async def test_warm_reuse_claims_the_fresh_sessions_stubs(
     fresh = _Handle(TOKEN_B)
 
     class _Runtime:
-        _mcp_gateway_socket = "/tmp/kirocrew-gw.sock"
+        _mcp_gateway_socket = "/tmp/ajcrew-gw.sock"
         _work_dir = "/tmp/ws"
-        _agent = "kirocrew"
+        _agent = "ajcrew"
         pid = 4242
         # ``new_conversation`` refuses a backend whose teardown does not evict the
         # old session, so it reads the backend before creating anything. ``""`` is
@@ -627,7 +627,7 @@ async def test_a_cold_started_session_can_re_bind_after_a_respawn(
     an empty key, which gatewayd rejects before binding: one daemon respawn leaves the
     session identity-less. The key arrives at construction; an empty key binds nothing.
     """
-    import kiro_crew.acp.session_provider as sp_mod
+    import aj_crew.acp.session_provider as sp_mod
 
     _attest(monkeypatch, _ANCESTORS)
     backend, reader, task = await _live_conn(monkeypatch, "", TOKEN_A, "stub-cold")
@@ -637,7 +637,7 @@ async def test_a_cold_started_session_can_re_bind_after_a_respawn(
         stub_session_token = TOKEN_A
 
     class _Runtime:
-        _mcp_gateway_socket = "/tmp/kirocrew-gw.sock"
+        _mcp_gateway_socket = "/tmp/ajcrew-gw.sock"
         pid = _PID
 
     pushed: list[tuple[Any, ...]] = []
@@ -678,8 +678,8 @@ async def test_a_cold_started_session_can_re_bind_after_a_respawn(
 #: shared-runtime session sites: one deleted keyword argument and the provider's
 #: re-claim carries no key, which gatewayd discards.
 _PROVIDER_OWNER_SITES = [
-    ("src/kiro_crew/providers/acp_runtime_start.py", "session_key=self._owning_session_key()"),
-    ("src/kiro_crew/subagent_manager/run_start.py", "session_key=session_key"),
+    ("src/aj_crew/providers/acp_runtime_start.py", "session_key=self._owning_session_key()"),
+    ("src/aj_crew/subagent_manager/run_start.py", "session_key=session_key"),
 ]
 
 
@@ -702,7 +702,7 @@ async def test_a_subagents_own_turn_re_establishes_its_claim(
     this token exists to protect. Its provider re-claims at its own turn
     boundary, so a daemon respawn mid-run costs it one turn rather than the whole
     remaining run."""
-    import kiro_crew.acp.session_provider as sp_mod
+    import aj_crew.acp.session_provider as sp_mod
 
     class _Handle:
         stub_session_token = TOKEN_B
@@ -714,7 +714,7 @@ async def test_a_subagents_own_turn_re_establishes_its_claim(
                 yield event
 
     class _Runtime:
-        _mcp_gateway_socket = "/tmp/kirocrew-gw.sock"
+        _mcp_gateway_socket = "/tmp/ajcrew-gw.sock"
         pid = _PID
         process_instance = "runtime-test-instance"
 
@@ -734,7 +734,7 @@ async def test_a_subagents_own_turn_re_establishes_its_claim(
 
 
 def test_the_client_reclaim_names_its_own_token(monkeypatch: pytest.MonkeyPatch) -> None:
-    import kiro_crew.acp.client as client_mod
+    import aj_crew.acp.client as client_mod
 
     pushed: list[tuple[Any, ...]] = []
     monkeypatch.setattr(
@@ -744,7 +744,7 @@ def test_the_client_reclaim_names_its_own_token(monkeypatch: pytest.MonkeyPatch)
     )
     client = client_mod.AcpClient.__new__(client_mod.AcpClient)
     client._stub_session_token = TOKEN_A
-    client._mcp_gateway_socket = "/tmp/kirocrew-gw.sock"
+    client._mcp_gateway_socket = "/tmp/ajcrew-gw.sock"
     client._session_key = PARENT_KEY
     client._channel_id = None
     client._process = None
@@ -763,7 +763,7 @@ def test_the_client_reclaim_names_its_own_token(monkeypatch: pytest.MonkeyPatch)
 # communicate(timeout=180); moved verbatim; tracked for a de-flake pass
 _TOKEN_DRIVER = r"""
 import json, os, subprocess, sys, threading, time
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 w = sys.argv[1]
 p = subprocess.Popen(["kiro-cli", "acp", "--agent", "pooltest"], cwd=w + "/proj",
@@ -803,7 +803,7 @@ send({"jsonrpc": "2.0", "id": 2, "method": "session/new",
       "params": {"cwd": w + "/proj", "mcpServers": [
           {"name": "shared", "command": sys.executable,
            "args": [sys.argv[2], w + "/marks/INJECTED"],
-           "env": [{"name": "KIROCREW_STUB_SESSION_TOKEN", "value": sys.argv[3]}]}]}})
+           "env": [{"name": "AJCREW_STUB_SESSION_TOKEN", "value": sys.argv[3]}]}]}})
 deadline = time.time() + 20
 injected = os.path.join(w, "marks", "INJECTED")
 while time.time() < deadline and not os.path.exists(injected):
@@ -817,7 +817,7 @@ teardown()
 _TOKEN_PROBE = _PROBE_SCRIPT.replace(
     'pathlib.Path(sys.argv[1]).write_text("x", encoding="utf-8")',
     "pathlib.Path(sys.argv[1]).write_text(\n"
-    '    os.environ.get("KIROCREW_STUB_SESSION_TOKEN", ""), encoding="utf-8"\n'
+    '    os.environ.get("AJCREW_STUB_SESSION_TOKEN", ""), encoding="utf-8"\n'
     ")",
 ).replace("import json\nimport pathlib", "import json\nimport os\nimport pathlib")
 

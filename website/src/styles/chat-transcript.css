@@ -128,7 +128,7 @@
 .typing-dots>span:nth-child(3){animation-delay:.36s}
 @keyframes typing-dot{0%,60%,100%{transform:translateY(0);opacity:.6}30%{transform:translateY(-3px);opacity:1}}
 
-/* ── The ghost-pose loader icons ──
+/* ── The gem-pose loader icons ──
    These are the DEFAULT loader artwork for every theme (see ChatFooter's
    DEFAULT_ICONS); a theme replaces them through the themeBranding `loaderIcons`
    seam. They are brand ASSETS rendered as <img> (the use-lucide-icons brand-mark
@@ -195,65 +195,67 @@ html[data-font-family="custom"][data-custom-ligatures="off"] body{font-variant-l
 .msg-content code{font-family:var(--mono);font-size:.9em}
 .msg-content :not(pre)>code{background:rgba(0,0,0,.15);padding:.15em .4em;border-radius:4px;overflow-wrap:break-word;word-break:break-all}
 [data-mode="light"] .msg-content :not(pre)>code{background:rgba(0,0,0,.06)}
-/* Kiro theme: inline code = neutral elevated surface (Prey/750) + light-purple text (Figma 3906:185658) */
-[data-theme="kiro-dark"] .msg-content :not(pre)>code{background:#28242e;color:#c19aff}
-[data-theme="kiro-light"] .msg-content :not(pre)>code{background:var(--bg-hover);color:#723acc}
+/* Aj theme: inline code = neutral elevated surface (the theme's --bg-hover step) + pale-teal text */
+[data-theme="aj-dark"] .msg-content :not(pre)>code{background:#1e2127;color:#99f6e4}
+[data-theme="aj-light"] .msg-content :not(pre)>code{background:var(--bg-hover);color:#0b5f58}
 /* Inline-code CHIPS (MarkdownRenderer): a chip's colour says what its click does. A chip whose
    click navigates (`navigate`: a confirmed path, a session, an autolinked work item or a span
    inside a link) wears the accent, the colour links wear; a chip that only copies (`copy`)
    wears the NEUTRAL text colour, plus its dotted underline and copy cursor (set by the
    component). Two values, because these two rules are the attribute's only consumer and two
-   kinds are all they tell apart. Neutral, not the Kiro inline-code purple above: on these
-   themes that purple and the accent are two near-identical purples, and a reader takes both
+   kinds are all they tell apart. Neutral, not the Aj inline-code teal above: on these
+   themes that teal and the accent are two near-identical teals, and a reader takes both
    for the same kind of chip — "link-coloured = navigates, neutral = copies" has to hold on
-   every theme, and on the others inline code already inherits the text colour. The two Kiro
+   every theme, and on the others inline code already inherits the text colour. The two Aj
    rules above set `color` at specificity (0,2,2), and the utilities are emitted unlayered, so
    the `text-accent` utility (0,1,0) the actionable chips carry lost to them: every chip
    painted in the code colour. Both chip states therefore get their own rule here, at (0,3,2),
    keyed on the `data-chip-action` the renderer sets (raw HTML cannot: InlineCode drops any
-   inbound one). Kiro dark uses Purple/300, the same step-up message links take below. A span
-   that is no chip at all (an image-only raw span) keeps the theme's purple. */
-[data-theme="kiro-dark"] .msg-content :not(pre)>code[data-chip-action="copy"]{color:var(--text)}
-[data-theme="kiro-light"] .msg-content :not(pre)>code[data-chip-action="copy"]{color:var(--text)}
-[data-theme="kiro-dark"] .msg-content :not(pre)>code[data-chip-action="navigate"]{color:#b07fff}
-[data-theme="kiro-light"] .msg-content :not(pre)>code[data-chip-action="navigate"]{color:var(--accent)}
-/* Kiro dark: brighten message links — #8e48ff (=accent, same as the button fill) reads dull as thin
-   text on the dark bg, so step up to Purple/300 for equal perceived vibrancy. Scoped to Kiro. */
-[data-theme="kiro-dark"] .msg-content a{color:#b07fff;text-decoration-color:rgba(176,127,255,.45)}
-/* Kiro dark: accent FOREGROUND (icons, spinners, accent text) reads dull/blue as thin strokes at
-   #8e48ff, so brighten the text-accent utility to Purple/300. Fills (bg-accent, e.g. buttons) are a
-   separate utility and stay #8e48ff. More-specific rules (e.g. .nav-active .text-accent) still win. */
-[data-theme="kiro-dark"] .text-accent{color:#b07fff}
-/* Kiro theme: selected nav item + session row = neutral surface (Prey/700) with purple text/icon,
-   not a purple-tinted fill (Figma SessionTitle 2010:46988). Hover stays --bg-hover (Prey/750). */
-[data-theme="kiro-dark"] .nav-active,[data-theme="kiro-dark"] .session-row.session-active,[data-theme="kiro-dark"] .list-selected{background:#352f3d;color:#c19aff;border-color:#4a464f}
-[data-theme="kiro-dark"] .nav-active .text-accent{color:#c19aff}
-[data-theme="kiro-light"] .nav-active,[data-theme="kiro-light"] .session-row.session-active,[data-theme="kiro-light"] .list-selected{background:#d8d2e0;color:#723acc;border-color:#c4bcd0}
-[data-theme="kiro-light"] .nav-active .text-accent{color:#723acc}
-/* Kiro light: the canvas is white and the app shell steps back. --bg is #ffffff so the chat
+   inbound one). Aj dark uses the teal one step lighter than the accent, the same step-up
+   message links take below. A span that is no chip at all (an image-only raw span) keeps the
+   theme's pale teal. */
+[data-theme="aj-dark"] .msg-content :not(pre)>code[data-chip-action="copy"]{color:var(--text)}
+[data-theme="aj-light"] .msg-content :not(pre)>code[data-chip-action="copy"]{color:var(--text)}
+[data-theme="aj-dark"] .msg-content :not(pre)>code[data-chip-action="navigate"]{color:#5eead4}
+[data-theme="aj-light"] .msg-content :not(pre)>code[data-chip-action="navigate"]{color:var(--accent)}
+/* Aj dark: brighten message links — #2dd4bf (=accent, same as the button fill) reads heavier as a
+   fill than as thin text on the near-black bg, so thin text steps one teal lighter for equal
+   perceived vibrancy. Scoped to Aj. */
+[data-theme="aj-dark"] .msg-content a{color:#5eead4;text-decoration-color:rgba(94,234,212,.45)}
+/* Aj dark: accent FOREGROUND (icons, spinners, accent text) is thin strokes, so the text-accent
+   utility takes the same lighter teal. Fills (bg-accent, e.g. buttons) are a separate utility and
+   stay #2dd4bf. More-specific rules (e.g. .nav-active .text-accent) still win. */
+[data-theme="aj-dark"] .text-accent{color:#5eead4}
+/* Aj theme: selected nav item + session row = neutral surface (the theme's --border step) with
+   teal text/icon, not a teal-tinted fill. Hover stays --bg-hover. */
+[data-theme="aj-dark"] .nav-active,[data-theme="aj-dark"] .session-row.session-active,[data-theme="aj-dark"] .list-selected{background:#272a31;color:#99f6e4;border-color:#3b3f48}
+[data-theme="aj-dark"] .nav-active .text-accent{color:#99f6e4}
+[data-theme="aj-light"] .nav-active,[data-theme="aj-light"] .session-row.session-active,[data-theme="aj-light"] .list-selected{background:#dfe3e8;color:#0b5f58;border-color:#c9ced6}
+[data-theme="aj-light"] .nav-active .text-accent{color:#0b5f58}
+/* Aj light: the canvas is white and the app shell steps back. --bg is #ffffff so the chat
    transcript and every page read as the primary surface; the nav rail and the list cards (the
    sessions list and the Crew Members roster, both built from components/listShell) take --panel
-   (#fafafa) instead of the elevated white they use elsewhere, which is the only thing separating
+   (#f8f9fa) instead of the elevated white they use elsewhere, which is the only thing separating
    them from the canvas — a white card on a white page has no edge but its border.
    The user bubble is a borderless bg-card fill, so on a white canvas it needs a tint or it
-   disappears entirely; --bg-hover (#f0f0f0) keeps it in the same grey family as the shell. The
+   disappears entirely; --bg-hover (#eef0f3) keeps it in the same grey family as the shell. The
    edit-mode box that replaces a bubble in place carries the same hook, so editing does not flip
    the surface back to white under the caret.
    Because --card equals --bg here, ANY borderless bg-card on the page is invisible in this theme.
    The convention (website/docs/theming-contract.md, "A card must carry its own edge") is that a
    card on --bg draws a border/ring/shadow; the surfaces that deliberately do not are the hooks
    below, and src/test/kiroLightShellHooks.test.ts pins that list.
-   Scoped to kiro-light: in every other theme --panel is the page colour, not a shell colour. */
-[data-theme="kiro-light"] .focus-chrome-rail,[data-theme="kiro-light"] .sidebar-inner{background-color:var(--panel)}
-[data-theme="kiro-light"] .user-bubble{background-color:var(--bg-hover)}
+   Scoped to aj-light: in every other theme --panel is the page colour, not a shell colour. */
+[data-theme="aj-light"] .focus-chrome-rail,[data-theme="aj-light"] .sidebar-inner{background-color:var(--panel)}
+[data-theme="aj-light"] .user-bubble{background-color:var(--bg-hover)}
 /* Amethyst OLED gives --card the page colour too (#000000 in dark, a near-match in light), so its
-   borderless user bubble takes the same --bg-hover step as kiro-light's. */
+   borderless user bubble takes the same --bg-hover step as aj-light's. */
 [data-theme="amethyst-oled-dark"] .user-bubble,[data-theme="amethyst-oled-light"] .user-bubble{background-color:var(--bg-hover)}
 /* Color-blind safe light keeps a white --card on a white page as well. */
 [data-theme="colorblind-light"] .user-bubble{background-color:var(--bg-hover)}
 /* Crewmate bubble (`crewmateBubbleClass`, a crewmate's chat, #17839): filled with the theme's
    `--bg-hover`, the one neutral step every theme keeps above the page. Its CONTENTS paint with
-   the same tokens — kiro-light's inline-code patch is `var(--bg-hover)` (rule above), every
+   the same tokens — aj-light's inline-code patch is `var(--bg-hover)` (rule above), every
    `hover:bg-bg-hover` control, a `bg-card` / `bg-bg-elevated` card — so on this fill they would
    vanish (Design review on #17918). The bubble therefore scopes those surface tokens one step off
    its fill for its subtree; `--crewmate-fill` is snapshotted on the PARENT first because the rule
@@ -266,10 +268,10 @@ html[data-font-family="custom"][data-custom-ligatures="off"] body{font-variant-l
   --card:color-mix(in srgb,var(--text) 6%,var(--crewmate-fill));
   --bg:var(--crewmate-fill);
 }
-/* Kiro dark paints inline code with the LITERAL #28242e, which is kiro-dark's --bg-hover — the
+/* Aj dark paints inline code with the LITERAL #1e2127, which is aj-dark's --bg-hover — the
    fill — so the token scope above cannot reach it; same step off the fill, by hand. (0,3,2) beats
    the (0,2,2) literal rule. */
-[data-theme="kiro-dark"] .message-bubble.crewmate-bubble :not(pre)>code{background:var(--bg-hover)}
+[data-theme="aj-dark"] .message-bubble.crewmate-bubble :not(pre)>code{background:var(--bg-hover)}
 /* Accent-filled user bubble (`tone="accent"` on UserMessage; a crewmate's chat, #17839). The
    bubble is `--accent` with `--accent-fg` text, and everything drawn INSIDE it was styled for the
    neutral surface: inline code, link pills, the sent quote card (`text-muted` excerpt, `bg-accent`
@@ -282,10 +284,10 @@ html[data-font-family="custom"][data-custom-ligatures="off"] body{font-variant-l
    not paint accent-on-accent), so the fill reads `--bubble-accent`, snapshotted from the outer
    accent on the bubble's PARENT: a custom property declared in the same rule that redefines
    `--accent` would already see the redefined value.
-   Specificity (0,3,0) on purpose: it beats the kiro-light `.user-bubble` tint (0,2,0) and the
-   Kiro code rules (0,2,2); the chip rules are (0,3,2) but now say `color:var(--text)` /
-   `var(--accent)`, which resolve to the redefined tokens anyway. The two Kiro-dark literals
-   (`#b07fff` links / code, `#28242e` code bg) are the one thing tokens cannot reach, hence the
+   Specificity (0,3,0) on purpose: it beats the aj-light `.user-bubble` tint (0,2,0) and the
+   Aj code rules (0,2,2); the chip rules are (0,3,2) but now say `color:var(--text)` /
+   `var(--accent)`, which resolve to the redefined tokens anyway. The two Aj-dark literals
+   (`#5eead4` links / code, `#1e2127` code bg) are the one thing tokens cannot reach, hence the
    two code / link rules that stay.
    CLI mode (`data-ui="cli"`) draws this bubble neutral, like every other user bubble.
    cli-mode.css paints user bubbles with `var(--bg-elevated)` and `var(--text)` under
@@ -301,7 +303,7 @@ html[data-font-family="custom"][data-custom-ligatures="off"] body{font-variant-l
      (accent-fg mixed in) would pull the fill toward the text colour and cost contrast where it
      is scarcest (white at 88% on a 14%-white-over-#8e48ff card measured 3.2:1); a darker patch
      moves the fill away from light text and barely dents dark text on a light accent. 90%, not
-     the ~78% a neutral surface's muted would be: that was 4.1:1 on kiro's accent. */
+     the ~78% a neutral surface's muted would be: that was 4.1:1 on that violet accent. */
   --muted:color-mix(in srgb,var(--accent-fg) 90%,transparent);
   --muted-strong:color-mix(in srgb,var(--accent-fg) 72%,transparent);
   --accent:var(--accent-fg);--accent-hover:var(--accent-fg);
@@ -321,24 +323,23 @@ html[data-font-family="custom"][data-custom-ligatures="off"] body{font-variant-l
 :where(:root:not([data-ui="cli"])) .msg-content.user-bubble.user-bubble-accent span.group:has(>a){background:var(--bg-hover);border-color:var(--border)}
 :where(:root:not([data-ui="cli"])) .msg-content.user-bubble.user-bubble-accent span.group>a.no-underline{text-decoration:underline}
 :where(:root:not([data-ui="cli"])) .msg-content.user-bubble.user-bubble-accent .text-accent{color:var(--accent-fg)}
-/* Kiro theme: lift unselected nav labels + section headers to Prey/300 (#c1bec6, ~9.8:1) per the
-   Figma settings-panel guideline (was Prey/400 #938f9b ~5.7:1). Inactive icons inherit this color
-   (they only carry opacity-70), lifting them from ~3.4:1 to ~5.6:1. Active items keep .nav-active. */
-[data-theme="kiro-dark"] .nav-item:not(.nav-active),[data-theme="kiro-dark"] .nav-section{color:#c1bec6}
-/* Kiro theme: lift the chat-header session title and the "Sessions" panel title from muted grey to
-   primary text (var(--text) = Prey/200 #dcdadf in dark) — titles were dim at ~5.7:1; now ~9-10:1. */
-[data-theme="kiro-dark"] .session-header-title,[data-theme="kiro-light"] .session-header-title,
-[data-theme="kiro-dark"] .sessions-panel-title,[data-theme="kiro-light"] .sessions-panel-title{color:var(--text)}
-/* Kiro dark: panel resize-handle highlight is a thin line, so match it to the brightened thin-accent
-   (#B07FFF) rather than the #8E48FF fill it inherits from bg-accent. Only applies while dragging-hover. */
-[data-theme="kiro-dark"] .group\/drag:hover .resize-accent{background-color:#b07fff}
-/* Kiro dark: the queued-message card used to take the Figma "Waiting for input"
-   snackbar's olive here. It is a Glass pane on the warn tint step now
+/* Aj theme: lift unselected nav labels + section headers one grey above --muted (#bcc1ca on the
+   near-black rail, where --muted is #8e96a3). Inactive icons inherit this color (they only carry
+   opacity-70), so they lift with the labels. Active items keep .nav-active. */
+[data-theme="aj-dark"] .nav-item:not(.nav-active),[data-theme="aj-dark"] .nav-section{color:#bcc1ca}
+/* Aj theme: lift the chat-header session title and the "Sessions" panel title from muted grey to
+   primary text (var(--text), #d5d8de in dark), so titles do not read dim beside the transcript. */
+[data-theme="aj-dark"] .session-header-title,[data-theme="aj-light"] .session-header-title,
+[data-theme="aj-dark"] .sessions-panel-title,[data-theme="aj-light"] .sessions-panel-title{color:var(--text)}
+/* Aj dark: panel resize-handle highlight is a thin line, so match it to the lighter thin-accent
+   (#5eead4) rather than the #2dd4bf fill it inherits from bg-accent. Only applies while dragging-hover. */
+[data-theme="aj-dark"] .group\/drag:hover .resize-accent{background-color:#5eead4}
+/* Aj dark: the queued-message card used to take an olive fill here. It is a Glass pane on the warn tint step now
    (components/QueueStack.tsx, `glass-warn`), and a background on the host
    would paint UNDER the glass layers and solidify them, so no theme override. */
-/* Kiro theme: the session agent-label is intentionally NOT tinted — it is metadata, not a link, and
-   the purple tint made every row's agent name compete with the session title for attention. It keeps
-   the row's neutral grey (`text-muted`), leaving purple to carry meaning: the running-state accent on
+/* Aj theme: the session agent-label is intentionally NOT tinted — it is metadata, not a link, and
+   an accent tint made every row's agent name compete with the session title for attention. It keeps
+   the row's neutral grey (`text-muted`), leaving the accent to carry meaning: the running-state accent on
    the last-message subtitle, and `--aim` on package-sourced agents. */
 .msg-content pre{background:rgba(0,0,0,.15);border-radius:var(--radius-sm);padding:10px 12px;overflow-x:auto;margin:4px 0;font-size:0.8125rem;font-family:var(--mono);line-height:1.5}
 [data-mode="light"] .msg-content pre{background:rgba(0,0,0,.04)}

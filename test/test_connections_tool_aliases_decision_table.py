@@ -1,7 +1,7 @@
 """Contract tests for Connections tool-name collision resolution: the resolver.
 
 Every reachable row of the resolver's governing decision table (EXPOSURE x IDENTITY x
-DECLARATION LIFECYCLE, see :mod:`kiro_crew.connections.tool_aliases`) has a named test
+DECLARATION LIFECYCLE, see :mod:`aj_crew.connections.tool_aliases`) has a named test
 here, with the registry's own declarations, endpoint identity, determinism, the derived
 alias name, the statically visible names a destination reservation reads, and the
 registry's validation of ``tool_aliases``.
@@ -18,9 +18,9 @@ from connections_tool_aliases_helpers import _isolated_alias_record  # noqa: F40
 from connections_tool_aliases_helpers import _pinned_kiro_cli_version  # noqa: F401
 from connections_tool_aliases_helpers import URLS
 
-from kiro_crew.connections import RegistryValidationError, get_all_registry_providers
-from kiro_crew.connections.registry import _load_registry
-from kiro_crew.connections.tool_aliases import (
+from aj_crew.connections import RegistryValidationError, get_all_registry_providers
+from aj_crew.connections.registry import _load_registry
+from aj_crew.connections.tool_aliases import (
     declared_tool_aliases,
     derived_alias,
     exposed_declared_tools,
@@ -191,7 +191,7 @@ def test_row1_whole_server_pair_with_no_shared_declaration_aliases_nothing():
 
 
 def test_row2_a_renamed_declaration_replaces_the_old_alias():
-    from kiro_crew.connections import tool_aliases as ta
+    from aj_crew.connections import tool_aliases as ta
 
     renamed = {
         "linear": {"list_projects": "linear_projects"},
@@ -207,7 +207,7 @@ def test_row2_a_renamed_declaration_replaces_the_old_alias():
 
 
 def test_row3_a_withdrawn_declaration_yields_no_alias():
-    from kiro_crew.connections import tool_aliases as ta
+    from aj_crew.connections import tool_aliases as ta
 
     with patch.object(ta, "declared_tool_aliases", return_value={"vercel": {"x": "vercel_x"}}):
         assert _aliases(_servers("linear", "vercel"), ["@linear", "@vercel"]) == {}
@@ -241,7 +241,7 @@ def test_row4_whole_server_against_a_non_overlapping_per_tool_aliases_nothing():
 
 
 def test_row5_a_renamed_declaration_applies_to_the_exposed_tool_only():
-    from kiro_crew.connections import tool_aliases as ta
+    from aj_crew.connections import tool_aliases as ta
 
     renamed = {
         "linear": {"list_issues": "linear_issues", "get_issue": "linear_issue"},

@@ -13,13 +13,13 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import messaging
-from kiro_crew.dashboard.notification_coordinator import unread_count
-from kiro_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.handlers import messaging
+from aj_crew.dashboard.notification_coordinator import unread_count
+from aj_crew.dashboard.state import DashboardState
 
 
 def _state(monkeypatch, tmp_path) -> DashboardState:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     return DashboardState(
         sessions=MagicMock(count=0),
         crons=MagicMock(),

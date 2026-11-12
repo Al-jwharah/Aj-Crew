@@ -30,8 +30,8 @@ def _patch_port_probe(monkeypatch, *, manager_free: bool = True, allocator_free:
     conflict case models a TOCTOU loss, where allocation succeeds and the
     re-probe then finds that port taken.
     """
-    import kiro_crew.instances.port_allocator as pa
-    import kiro_crew.instances.ssh_tunnel_manager as stm
+    import aj_crew.instances.port_allocator as pa
+    import aj_crew.instances.ssh_tunnel_manager as stm
 
     monkeypatch.setattr(stm, "_is_port_free", lambda port, host="127.0.0.1": manager_free)
     monkeypatch.setattr(pa, "_is_port_free", lambda port, host="127.0.0.1": allocator_free)
@@ -54,7 +54,7 @@ class _FakeTunnel:
         aws_profile="",
         aws_region="",
     ):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         self.iid = iid
         self.stopped = False
@@ -201,12 +201,12 @@ def _enable(tmp_path: Path, monkeypatch, *, enabled=True, warm_set_cap=None, cre
     """Turn the Instances feature on for a test; ``crew_reads`` opts the agent's
     ``crew=`` reads in as well, since every crew-read test wants them unless it is
     the one proving the default-off flag."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     section: dict = {"enabled": enabled, "crew_reads_enabled": crew_reads}
     if warm_set_cap is not None:
         section["warm_set_cap"] = warm_set_cap
     (tmp_path / "config.json").write_text(json.dumps({"instances": section}))
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     loader._invalidate_config_cache()
 

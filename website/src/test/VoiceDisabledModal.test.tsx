@@ -43,12 +43,12 @@ describe('VoiceDisabledModal', () => {
         reason="unavailable"
         provider="local"
         code="stt_extra_missing"
-        installCommand="pip install 'kiro-crew[voice]'"
+        installCommand="pip install 'aj-crew[voice]'"
         onClose={() => {}}
         onOpenSettings={onOpenSettings}
       />,
     )
-    expect(screen.getByText("pip install 'kiro-crew[voice]'")).toBeInTheDocument()
+    expect(screen.getByText("pip install 'aj-crew[voice]'")).toBeInTheDocument()
     fireEvent.click(screen.getByText('Open settings'))
     expect(onOpenSettings).toHaveBeenCalledTimes(1)
   })

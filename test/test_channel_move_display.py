@@ -22,7 +22,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard.handlers import updates as up
+from aj_crew.dashboard.handlers import updates as up
 
 
 @pytest.fixture

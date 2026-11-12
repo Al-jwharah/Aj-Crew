@@ -27,13 +27,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.mcp_gateway import backend as backend_mod
-from kiro_crew.mcp_gateway.backend import Backend
-from kiro_crew.mcp_gateway.pool import PoolKey
+from aj_crew.mcp_gateway import backend as backend_mod
+from aj_crew.mcp_gateway.backend import Backend
+from aj_crew.mcp_gateway.pool import PoolKey
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim; no test of the family calls monkeypatch.undo()
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing autouse fixture moved verbatim; no test of the family calls monkeypatch.undo()
 def _no_real_metrics_file(monkeypatch: pytest.MonkeyPatch) -> None:
     """Never append to the operator's real call-metrics file.
 
@@ -68,7 +68,7 @@ def _make_backend(
     """A real :class:`Backend` over a mock process + mock stdin writer."""
     proc = MagicMock()
     proc.returncode = returncode
-    # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing mock pid moved verbatim; the process double is never signalled
+    # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing mock pid moved verbatim; the process double is never signalled
     proc.pid = 4242
     proc.wait = AsyncMock(return_value=returncode if returncode is not None else 0)
     proc.kill = MagicMock()

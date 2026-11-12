@@ -11,7 +11,7 @@ import { normalizeWindowsPath } from '../utils/fileTokens'
 import { isUntokenizableDirPath } from '../utils/dropClassify'
 import { carriesFiles } from './fileDrag'
 
-export const TREE_ENTRY_DRAG_TYPE = 'application/x-kirocrew-tree-entry'
+export const TREE_ENTRY_DRAG_TYPE = 'application/x-ajcrew-tree-entry'
 
 export type TreeEntryDragKind = 'file' | 'dir'
 
@@ -58,7 +58,7 @@ export function readTreeEntry(dataTransfer: DataTransfer | null | undefined): Tr
  * the composer refuses it with the no-drop cursor. It is a type of its own
  * because a drop target can read only `types` mid-drag.
  */
-export const TREE_ENTRY_REFUSED_TYPE = 'application/x-kirocrew-tree-entry-refused'
+export const TREE_ENTRY_REFUSED_TYPE = 'application/x-ajcrew-tree-entry-refused'
 
 /**
  * Mark a drag as a tree row. Widens `effectAllowed` to include `copy`: the

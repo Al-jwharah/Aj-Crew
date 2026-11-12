@@ -41,10 +41,10 @@ from acp_runtime_helpers import (
     _stop_reader,
 )
 
-from kiro_crew.acp.harness.codex import CodexHarness
-from kiro_crew.acp.harness.kiro import KiroHarness
-from kiro_crew.acp.session_handle import NATIVE_CHILD_ROSTER_CAP
-from kiro_crew.acp.types import (
+from aj_crew.acp.harness.codex import CodexHarness
+from aj_crew.acp.harness.kiro import KiroHarness
+from aj_crew.acp.session_handle import NATIVE_CHILD_ROSTER_CAP
+from aj_crew.acp.types import (
     ACP_BACKEND_CODEX,
     ACP_CLIENT_CAPABILITIES,
     EVENT_COMPLETE,
@@ -54,7 +54,7 @@ from kiro_crew.acp.types import (
     EVENT_TOOL_CALL,
     JsonRpcMessage,
 )
-from kiro_crew.dashboard.chat_runner import _native_subagent_close_all, _native_subagent_sync
+from aj_crew.dashboard.chat_runner import _native_subagent_close_all, _native_subagent_sync
 
 _FIXTURES = Path(__file__).parent / "fixtures" / "codex_native_subagents"
 
@@ -336,7 +336,7 @@ async def test_lifecycle_frames_are_not_read_on_other_harnesses() -> None:
 
 @pytest.mark.asyncio
 async def test_a_legacy_row_remembers_only_bounded_ids_for_rows_it_made() -> None:
-    from kiro_crew.validation import MAX_ACP_SESSION_ID_LEN
+    from aj_crew.validation import MAX_ACP_SESSION_ID_LEN
 
     def start(tool_call_id: str, child: str) -> dict:
         return {
@@ -406,7 +406,7 @@ async def test_a_refused_announcement_draws_no_card_and_warns_once(caplog) -> No
     _register(rt, "other")
     task = await _start_reader(rt)
     try:
-        with caplog.at_level("WARNING", logger="kiro_crew.acp.runtime"):
+        with caplog.at_level("WARNING", logger="aj_crew.acp.runtime"):
             for child in ("over-1", "over-2"):
                 _feed(reader, _spawned("parent", child))
                 _feed(reader, _child_text(child, "lost"))
@@ -422,7 +422,7 @@ async def test_a_refused_announcement_draws_no_card_and_warns_once(caplog) -> No
 
 
 def _handle(backend: str = ACP_BACKEND_CODEX):
-    from kiro_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.session_handle import AcpSessionHandle
 
     queue: asyncio.Queue = asyncio.Queue()
     rt = MagicMock()
@@ -545,8 +545,8 @@ async def test_codex_terminal_states(state: str, expected: dict) -> None:
 def test_route_release_and_card_status_agree_on_terminal_states() -> None:
     """The runtime releases a child's route on exactly the states the handle
     closes its card on, so the two cannot drift apart."""
-    from kiro_crew.acp.codex_subagent_wire import SUBAGENT_TERMINAL_STATES
-    from kiro_crew.acp.session_handle_native_children import _LEGACY_STATE_STATUS
+    from aj_crew.acp.codex_subagent_wire import SUBAGENT_TERMINAL_STATES
+    from aj_crew.acp.session_handle_native_children import _LEGACY_STATE_STATUS
 
     assert set(_LEGACY_STATE_STATUS) == set(SUBAGENT_TERMINAL_STATES)
 
@@ -599,8 +599,8 @@ def _as_session(frames: list[dict], sid: str) -> list[dict]:
 
 async def _prompt_turns(turns: list[list[dict]], *, cotenant: bool = False) -> list[list]:
     """Real runtime, real reader loop, real ``prompt()``: one list of events per turn."""
-    from kiro_crew.acp.session_handle import AcpSessionHandle
-    from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS, await_until
+    from aj_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, await_until
 
     rt, reader, _ = _make_runtime()
     rt._acp_backend = ACP_BACKEND_CODEX
@@ -712,7 +712,7 @@ def _roster_text(handle) -> str:
 
 @pytest.mark.asyncio
 async def test_a_credential_the_label_cut_would_split_is_redacted_first() -> None:
-    from kiro_crew.acp.session_handle_native_children import NATIVE_CHILD_LABEL_CAP
+    from aj_crew.acp.session_handle_native_children import NATIVE_CHILD_LABEL_CAP
 
     # A connection URI whose password ends exactly at the storage cut: clipped
     # first, the "@host" is gone and the remainder does not read as a URI.
@@ -785,7 +785,7 @@ async def test_a_turn_cut_short_flushes_the_held_child_text() -> None:
 
 
 def test_the_provider_exposes_the_handles_flush() -> None:
-    from kiro_crew.acp.session_provider import AcpSessionProvider
+    from aj_crew.acp.session_provider import AcpSessionProvider
 
     provider = AcpSessionProvider.__new__(AcpSessionProvider)
     provider._handle = MagicMock()

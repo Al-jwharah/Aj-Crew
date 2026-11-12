@@ -7,7 +7,7 @@ as free and ignored compressed memory. See ``_macos_memory_gb``.
 
 from __future__ import annotations
 
-from kiro_crew.dashboard.handlers_system import _macos_memory_gb, _parse_vm_stat
+from aj_crew.dashboard.handlers_system import _macos_memory_gb, _parse_vm_stat
 
 GIB = 1024**3
 PAGE = 16384  # Apple Silicon page size

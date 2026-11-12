@@ -17,7 +17,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.security import redact_credentials
+from aj_crew.security import redact_credentials
 
 #: A neutral token of the two-segment shape: `eyJ` plus a 100-char payload in the
 #: base64url alphabet, a `.`, and a 43-char signature. Built from repeated filler,
@@ -93,7 +93,7 @@ def test_a_full_length_dotted_member_chain_is_kept(before, after):
 
 def test_minted_link_tokens_after_a_dot_are_redacted():
     """Every token the generator mints is removed after a `.`, whatever it holds."""
-    from kiro_crew.dashboard.token_auth import generate_token
+    from aj_crew.dashboard.token_auth import generate_token
 
     for n in range(200):
         token = generate_token(f"user-{n}", 300, register_nonce=False)
@@ -136,10 +136,10 @@ def _review_script_redact():
     path = (
         Path(__file__).resolve().parents[1]
         / "src"
-        / "kiro_crew"
+        / "aj_crew"
         / "builtin_skills"
-        / "kirocrew-dev"
-        / "kirocrew-prepare-pr"
+        / "ajcrew-dev"
+        / "ajcrew-prepare-pr"
         / "scripts"
         / "_review_contract.py"
     )

@@ -15,18 +15,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp import launch_tuning
-from kiro_crew.acp.harness import strands as strands_mod
-from kiro_crew.acp.transport_errors import AcpError, AcpModelUnavailable
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.acp import client as acp_client
+from aj_crew.acp import launch_tuning
+from aj_crew.acp.harness import strands as strands_mod
+from aj_crew.acp.transport_errors import AcpError, AcpModelUnavailable
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_STRANDS,
     ACP_BACKENDS_EFFORT_AT_LAUNCH,
     ACP_BACKENDS_MODEL_AT_LAUNCH,
 )
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.acp_model_effort import launch_effort_level
-from kiro_crew.testing.wait import await_until
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.acp_model_effort import launch_effort_level
+from aj_crew.testing.wait import await_until
 
 STRANDS = ACP_BACKEND_STRANDS
 
@@ -196,7 +196,7 @@ def test_a_kiro_id_is_refused_rather_than_relaunched_on() -> None:
 
 
 def test_set_model_on_the_client_relaunches() -> None:
-    from kiro_crew.acp import client_model_selection as selection
+    from aj_crew.acp import client_model_selection as selection
 
     client = _client()
     asyncio.run(selection.set_model(client, "anthropic/claude-b"))
@@ -222,7 +222,7 @@ def test_the_launch_passes_only_a_level_the_cli_knows(level: str, args: list[str
 def test_the_picker_default_is_the_strands_settings_model(
     provider: str, model: str, expected: str
 ) -> None:
-    from kiro_crew.agent_sdk.drivers.acp import settings_default_model
+    from aj_crew.agent_sdk.drivers.acp import settings_default_model
 
     agent = SimpleNamespace(strands_provider=provider, strands_model=model)
     assert settings_default_model(agent, STRANDS) == expected
@@ -233,7 +233,7 @@ def test_the_picker_default_is_the_strands_settings_model(
 
 
 def _provider(*, override: str = "") -> AcpProvider:
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider(acp_backend=STRANDS)
     client = MagicMock()
     client.backend = STRANDS
@@ -247,7 +247,7 @@ def _provider(*, override: str = "") -> AcpProvider:
 @pytest.fixture
 def relaunch():
     with patch(
-        "kiro_crew.providers.acp_model_effort.switch_launch_tuning", new=AsyncMock()
+        "aj_crew.providers.acp_model_effort.switch_launch_tuning", new=AsyncMock()
     ) as switch:
         yield switch
 
@@ -288,9 +288,7 @@ def test_the_session_starts_on_the_slot_level() -> None:
 
 def test_a_provider_model_switch_carries_the_level_in_one_relaunch(relaunch) -> None:
     provider = _provider(override="high")
-    with patch(
-        "kiro_crew.providers.acp_model_effort.switch_launch_model", new=AsyncMock()
-    ) as switch:
+    with patch("aj_crew.providers.acp_model_effort.switch_launch_model", new=AsyncMock()) as switch:
         asyncio.run(provider.set_model("anthropic/claude-b"))
     switch.assert_awaited_once_with(provider._client, "anthropic/claude-b", effort="high")
     relaunch.assert_not_awaited()
@@ -304,9 +302,7 @@ def test_a_provider_model_switch_carries_the_level_in_one_relaunch(relaunch) -> 
 
 def test_a_strands_provider_id_another_harness_also_lists_is_strands_own() -> None:
     """pi and opencode advertise ``provider/model`` ids of the same shape."""
-    with patch(
-        "kiro_crew.model_scope.foreign_namespaces", return_value=frozenset({"pi"})
-    ) as foreign:
+    with patch("aj_crew.model_scope.foreign_namespaces", return_value=frozenset({"pi"})) as foreign:
         assert strands_mod.strands_model_is_foreign("anthropic/claude-b") is False
         assert strands_mod.strands_model_args("anthropic/claude-b") == [
             "--model",
@@ -322,8 +318,8 @@ def test_a_strands_provider_id_another_harness_also_lists_is_strands_own() -> No
 
 def test_a_send_during_a_switch_waits_for_the_switch_to_land() -> None:
     """The prompt boundary takes the switch's lock around its own ensure_ready."""
-    from kiro_crew.providers import acp as providers_acp
-    from kiro_crew.providers import acp_turns
+    from aj_crew.providers import acp as providers_acp
+    from aj_crew.providers import acp_turns
 
     async def scenario() -> list[str]:
         order: list[str] = []
@@ -361,19 +357,19 @@ def test_a_send_during_a_switch_waits_for_the_switch_to_land() -> None:
 
 def test_a_saved_level_survives_a_cold_start_on_an_opaque_strands_id() -> None:
     """The factory carries the level: the registry knows none of the ids Strands runs."""
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     model = "bedrock/arn:aws:bedrock:us-east-1:000000000000:application-inference-profile/x"
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.provider = "acp"
     cfg.agent.acp_backend = STRANDS
     # The real provider the factory builds holds the level for that id.
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         built = cfg.create_provider_factory()(
             session_key="dashboard:1", model_override=model, reasoning_effort_override="high"
         )
     assert built._effort_per_model == {model: "high"}
-    with patch("kiro_crew.providers.acp.AcpProvider") as made:
+    with patch("aj_crew.providers.acp.AcpProvider") as made:
         made.return_value = MagicMock()
         cfg.create_provider_factory()(
             session_key="dashboard:1", model_override=model, reasoning_effort_override="high"
@@ -382,12 +378,12 @@ def test_a_saved_level_survives_a_cold_start_on_an_opaque_strands_id() -> None:
 
 
 def _cold_start(model: str, level: str) -> dict:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.provider = "acp"
     cfg.agent.acp_backend = STRANDS
-    with patch("kiro_crew.providers.acp.AcpProvider") as made:
+    with patch("aj_crew.providers.acp.AcpProvider") as made:
         made.return_value = MagicMock()
         cfg.create_provider_factory()(
             session_key="dashboard:1", model_override=model, reasoning_effort_override=level
@@ -431,12 +427,12 @@ def test_clearing_effort_relaunches_on_the_cli_default(relaunch) -> None:
 def test_a_cleared_level_does_not_come_back_with_the_model_left(relaunch) -> None:
     """A -> B carries A's level; clearing on B must not leave A's to return on A."""
     provider = _provider(override="low")
-    with patch("kiro_crew.providers.acp_model_effort.switch_launch_model", new=AsyncMock()):
+    with patch("aj_crew.providers.acp_model_effort.switch_launch_model", new=AsyncMock()):
         asyncio.run(provider.set_model("anthropic/claude-b"))
     provider._client._model = "anthropic/claude-b"
     assert asyncio.run(provider.clear_effort()) is True
     assert provider._effort_per_model == {}
-    with patch("kiro_crew.providers.acp_model_effort.switch_launch_model", new=AsyncMock()) as back:
+    with patch("aj_crew.providers.acp_model_effort.switch_launch_model", new=AsyncMock()) as back:
         asyncio.run(provider.set_model("openai/gpt-a"))
     back.assert_awaited_once_with(provider._client, "openai/gpt-a", effort=None)
 
@@ -450,7 +446,7 @@ def test_an_unpinned_level_launched_with_is_not_reported_dropped(caplog) -> None
     provider._client._launch_effort = launch_effort_level(provider)
     with (
         patch.object(AcpProvider, "served_model", new=""),
-        caplog.at_level(logging.WARNING, logger="kiro_crew.providers.acp_model_effort"),
+        caplog.at_level(logging.WARNING, logger="aj_crew.providers.acp_model_effort"),
     ):
         asyncio.run(provider._bind_unbound_effort())
     assert "will not be applied" not in caplog.text
@@ -469,7 +465,7 @@ def test_an_unpinned_bind_on_a_client_with_no_launch_effort_does_not_raise() -> 
 
 def test_an_auto_fallback_records_the_model_it_launched_and_restores_the_primary() -> None:
     """Strands launches its settings' model for ``auto``; the marker must name that."""
-    from kiro_crew.llm_helpers import (
+    from aj_crew.llm_helpers import (
         TURN_FALLBACK_ATTR,
         FallbackState,
         advance_fallback_candidate,
@@ -501,7 +497,7 @@ def test_an_auto_fallback_records_the_model_it_launched_and_restores_the_primary
         await probe_fallback_restore(provider, surface="test")
 
     with patch(
-        "kiro_crew.llm_helpers_parts.model_fallback.resolve_substitute_set_model",
+        "aj_crew.llm_helpers_parts.model_fallback.resolve_substitute_set_model",
         return_value=set_model,
     ):
         asyncio.run(scenario())
@@ -512,7 +508,7 @@ def test_an_auto_fallback_records_the_model_it_launched_and_restores_the_primary
 
 def test_an_auto_fallback_elsewhere_still_records_auto() -> None:
     """Only a launch-model harness rewrites ``auto``; every other keeps it (H13)."""
-    from kiro_crew.llm_helpers import TURN_FALLBACK_ATTR, FallbackState, advance_fallback_candidate
+    from aj_crew.llm_helpers import TURN_FALLBACK_ATTR, FallbackState, advance_fallback_candidate
 
     provider = SimpleNamespace(
         served_model="claude-a", _model="claude-a", client=SimpleNamespace(backend="")
@@ -524,7 +520,7 @@ def test_an_auto_fallback_elsewhere_still_records_auto() -> None:
 
     setattr(provider, TURN_FALLBACK_ATTR, None)
     with patch(
-        "kiro_crew.llm_helpers_parts.model_fallback.resolve_substitute_set_model",
+        "aj_crew.llm_helpers_parts.model_fallback.resolve_substitute_set_model",
         return_value=set_model,
     ):
         cand = asyncio.run(
@@ -536,8 +532,8 @@ def test_an_auto_fallback_elsewhere_still_records_auto() -> None:
 
 def test_an_error_frame_ends_the_turn_before_the_error_reaches_the_caller() -> None:
     """A fallback switch acts on the error at once; the turn must already be over."""
-    from kiro_crew.acp.client import AcpClient
-    from kiro_crew.acp.types import JsonRpcMessage
+    from aj_crew.acp.client import AcpClient
+    from aj_crew.acp.types import JsonRpcMessage
 
     client = AcpClient()
     closed: list[bool] = []
@@ -573,7 +569,7 @@ def test_a_failed_clear_keeps_the_unbound_level(relaunch) -> None:
 
 
 def test_only_a_relaunching_provider_answers_a_switch_failure_as_a_refusal() -> None:
-    from kiro_crew.providers.base import LLMProvider
+    from aj_crew.providers.base import LLMProvider
 
     assert _provider().switches_by_relaunch is True
     assert LLMProvider.switches_by_relaunch.fget(object()) is False
@@ -582,14 +578,14 @@ def test_only_a_relaunching_provider_answers_a_switch_failure_as_a_refusal() -> 
 def test_a_global_effort_never_reaches_the_strands_launch() -> None:
     """agent.reasoning_effort set for other harnesses, no slot pick: a Strands session
     starts with no --effort, so a plain-Agent project (which refuses one) still runs."""
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.provider = "acp"
     cfg.agent.acp_backend = STRANDS
     cfg.agent.reasoning_effort = "high"
     for model in ("openai/gpt-a", ""):
-        with patch("kiro_crew.providers.acp.AcpProvider") as made:
+        with patch("aj_crew.providers.acp.AcpProvider") as made:
             made.return_value = MagicMock()
             cfg.create_provider_factory()(session_key="dashboard:1", model_override=model)
         kwargs = made.call_args.kwargs
@@ -601,21 +597,21 @@ def test_a_global_effort_never_reaches_the_strands_launch() -> None:
 
 
 def test_a_slot_effort_still_reaches_the_strands_launch_over_a_global_one() -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agent.provider = "acp"
     cfg.agent.acp_backend = STRANDS
     cfg.agent.reasoning_effort = "high"
     # The real provider the factory builds launches on the slot's level.
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         built = cfg.create_provider_factory()(
             session_key="dashboard:1",
             model_override="openai/gpt-a",
             reasoning_effort_override="low",
         )
     assert built._effort_per_model == {"openai/gpt-a": "low"}
-    with patch("kiro_crew.providers.acp.AcpProvider") as made:
+    with patch("aj_crew.providers.acp.AcpProvider") as made:
         made.return_value = MagicMock()
         cfg.create_provider_factory()(
             session_key="dashboard:1",
@@ -627,7 +623,7 @@ def test_a_slot_effort_still_reaches_the_strands_launch_over_a_global_one() -> N
 
 def test_every_launch_effort_harness_has_a_cli_vocabulary() -> None:
     """A new member with no vocabulary would refuse every level and drop it silently."""
-    from kiro_crew.agent_sdk.backends import (
+    from aj_crew.agent_sdk.backends import (
         ACP_BACKENDS_EFFORT_AT_LAUNCH,
         EFFORT_LEVELS_AT_LAUNCH_BY_BACKEND,
     )
@@ -647,7 +643,7 @@ def test_a_live_change_refuses_a_level_the_cli_does_not_take(relaunch) -> None:
 
 def test_a_send_never_starts_its_process_inside_a_switch() -> None:
     """The send's own ensure_ready waits on the switch's barrier."""
-    from kiro_crew.acp import client_turn
+    from aj_crew.acp import client_turn
 
     class _Stop(Exception):
         pass

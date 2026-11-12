@@ -22,17 +22,17 @@ from unittest.mock import patch
 import pytest
 from queue_depth_reconcile_helpers import _PARENT, _close, _manager, _park, _record, _settle
 
-import kiro_crew.subagent_manager.admission.taskq_bridge as bridge_mod
-from kiro_crew.subagent import SubagentManager
-from kiro_crew.subagent_persistence import (
+import aj_crew.subagent_manager.admission.taskq_bridge as bridge_mod
+from aj_crew.subagent import SubagentManager
+from aj_crew.subagent_persistence import (
     create_agent_folder,
     prune_stale_tombstones,
     read_tombstone,
 )
-from kiro_crew.taskq import model
-from kiro_crew.taskq.reconcile import reconcile_on_boot
-from kiro_crew.taskq.store import TaskStore, TaskStoreUnavailable
-from kiro_crew.testing.wait import DEFAULT_INTERVAL_SECS, async_wait_until
+from aj_crew.taskq import model
+from aj_crew.taskq.reconcile import reconcile_on_boot
+from aj_crew.taskq.store import TaskStore, TaskStoreUnavailable
+from aj_crew.testing.wait import DEFAULT_INTERVAL_SECS, async_wait_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -131,7 +131,7 @@ async def test_a_queued_stop_on_a_wedged_store_is_answered_on_its_marker_and_can
     """Every cancel is refused: past the read bound the marker on disk releases the
     stop, the store holds the row out of every claim, and the next boot's
     reconcile, still refused its cancel, holds it for ``cancelled`` until that lands."""
-    from kiro_crew.taskq.reconcile import STOPPED
+    from aj_crew.taskq.reconcile import STOPPED
 
     monkeypatch.setattr(bridge_mod, "_SETTLE_RETRY_BACKOFF_CAP_SECS", DEFAULT_INTERVAL_SECS)
     mgr = await _manager(monkeypatch, pump_off_loop=True, max_concurrent=1)
@@ -169,7 +169,7 @@ async def test_a_shutdown_while_a_queued_stop_settles_keeps_its_marker(
     shutdown drain cancels that report, and the marker the next boot settles the
     row ``cancelled`` on stays on disk."""
     monkeypatch.setattr(bridge_mod, "_SETTLE_RETRY_BACKOFF_CAP_SECS", DEFAULT_INTERVAL_SECS)
-    monkeypatch.setattr("kiro_crew.subagent._REPORT_DRAIN_TIMEOUT", 0.05)
+    monkeypatch.setattr("aj_crew.subagent._REPORT_DRAIN_TIMEOUT", 0.05)
     mgr = await _manager(monkeypatch, pump_off_loop=True, max_concurrent=1)
     stop: asyncio.Future | None = None
     try:
@@ -205,9 +205,9 @@ async def test_a_stale_queued_stop_tombstone_is_kept_until_its_row_is_terminal(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The marker outlives the pruner's window while its row still owes ``cancelled``."""
-    from kiro_crew.subagent import write_queued_stop_tombstone
+    from aj_crew.subagent import write_queued_stop_tombstone
 
-    monkeypatch.setattr("kiro_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
     mgr = await _manager(monkeypatch, pump_off_loop=True)
     try:
         store = mgr._taskq

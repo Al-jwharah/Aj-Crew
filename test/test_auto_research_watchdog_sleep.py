@@ -16,8 +16,8 @@ from types import SimpleNamespace
 import pytest
 from auto_research_helpers import isolate_fixture  # noqa: F401
 
-from kiro_crew import platform_compat
-from kiro_crew.apps.builtins.auto_research.handlers import (
+from aj_crew import platform_compat
+from aj_crew.apps.builtins.auto_research.handlers import (
     CampaignStatus,
     create_campaign,
     get_campaign,
@@ -47,9 +47,9 @@ async def _three_polls(isolate: Path, tmp_path: Path, monkeypatch, *, wall: floa
     Returns the campaign row, whether the slot has its autonudge loop, and
     whether that loop is active.
     """
-    from kiro_crew.apps.builtins.auto_research import handlers as h
-    from kiro_crew.apps.builtins.auto_research.campaign import watchdog as wd
-    from kiro_crew.autonudge import AutoNudgeService
+    from aj_crew.apps.builtins.auto_research import handlers as h
+    from aj_crew.apps.builtins.auto_research.campaign import watchdog as wd
+    from aj_crew.autonudge import AutoNudgeService
 
     shift = {"wall": 0.0, "awake": 0.0}
     polls = 0

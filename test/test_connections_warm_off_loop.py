@@ -15,7 +15,7 @@ from typing import Any
 import connections_warm_helpers
 from test_connections_mint import _FS_ATTRS, _FS_NAMES, _called_names
 
-from kiro_crew.connections import warm
+from aj_crew.connections import warm
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 _clean_mint_table = connections_warm_helpers._clean_mint_table
@@ -38,7 +38,7 @@ def _warm_engine_trees() -> list[tuple[str, ast.Module]]:
     coroutines, and a coroutine that moved into an owner still owes the same invariant. Reading
     the facade alone would silently drop both.
     """
-    from kiro_crew.connections import warm_runtime
+    from aj_crew.connections import warm_runtime
 
     owners = sorted(Path(warm_runtime.__file__).parent.glob("*.py"))
     assert len(owners) > 1, "warm_runtime moved; this guard is reading the wrong tree"

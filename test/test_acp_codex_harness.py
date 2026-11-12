@@ -2,7 +2,7 @@
 
 Two halves, and they are separate on purpose.
 
-The first half drives :class:`~kiro_crew.acp.harness.codex.CodexHarness` against a
+The first half drives :class:`~aj_crew.acp.harness.codex.CodexHarness` against a
 FAKE ACP peer -- a scripted dict-in/dict-out stand-in for the adapter, no process and
 no pipe. What it proves is that the harness's own seam answers, sent in the order a
 session is built in, produce an exchange the adapter accepts: one handshake, two
@@ -39,24 +39,24 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from test_card_handshake_fields import live_init
 
-from kiro_crew.acp.client import (
+from aj_crew.acp.client import (
     CLIENT_NAME,
     CLIENT_VERSION,
     AcpError,
     AcpToolGateUnroutable,
 )
-from kiro_crew.acp.harness import codex as harness_mod
-from kiro_crew.acp.harness import harness_for
-from kiro_crew.acp.harness.base import SpawnContext, TeardownPolicy
-from kiro_crew.acp.harness.codex import CodexHarness
-from kiro_crew.acp.runtime import AcpRuntime, _MirroredSessionMcp
-from kiro_crew.acp.session_handle import (
+from aj_crew.acp.harness import codex as harness_mod
+from aj_crew.acp.harness import harness_for
+from aj_crew.acp.harness.base import SpawnContext, TeardownPolicy
+from aj_crew.acp.harness.codex import CodexHarness
+from aj_crew.acp.runtime import AcpRuntime, _MirroredSessionMcp
+from aj_crew.acp.session_handle import (
     AcpSessionHandle,
     advertised_models_from_session,
     models_from_config_options,
     parse_advertised_models,
 )
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KAS,
@@ -76,13 +76,13 @@ from kiro_crew.acp.types import (
     METHOD_SET_CONFIG_OPTION,
     METHOD_SET_MODE,
 )
-from kiro_crew.agent_sdk.backends import (
+from aj_crew.agent_sdk.backends import (
     ACP_BACKENDS_SESSION_EVICTION,
     effort_config_option_id,
 )
-from kiro_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.mirrors.registry import has_mirror
+from aj_crew.kiro_cli import SPEC_PERMISSIONS_MIN_VERSION
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.mirrors.registry import has_mirror
 
 
 @pytest.fixture(autouse=True)
@@ -93,7 +93,7 @@ def _pinned_kiro_cli_version(monkeypatch):
     host's real ``kiro-cli --version``. Pinned to the floor release, as in ``test_agent.py``.
     """
     monkeypatch.setattr(
-        "kiro_crew.kiro_cli.installed_kiro_cli_version",
+        "aj_crew.kiro_cli.installed_kiro_cli_version",
         lambda: SPEC_PERMISSIONS_MIN_VERSION,
     )
 
@@ -250,7 +250,7 @@ def adapter() -> CodexHarness:
 def _ctx(**over: Any) -> SpawnContext:
     """A spawn context with every field the harness reads, overridable per test."""
     base: dict[str, Any] = {
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "work_dir": "/w",
         "model": "gpt-5-codex",
         "environ": {},
@@ -393,7 +393,7 @@ class TestSessionExtras:
     @pytest.mark.asyncio
     async def test_extras_are_empty_and_carry_no_custom_agents(self, adapter):
         """``custom_agents`` is a kiro-family field; codex has no such channel."""
-        extras = await adapter.session_extras("kirocrew", work_dir="/w")
+        extras = await adapter.session_extras("ajcrew", work_dir="/w")
         assert extras.custom_agents is None
 
     @pytest.mark.asyncio
@@ -561,7 +561,7 @@ class TestTeardownAwaitsTheReplyTheHostGives:
     async def test_the_await_is_bounded_by_the_teardown_budget(self):
         """The reply is awaited, but never past ``_TERMINATE_TIMEOUT``: a stalled
         adapter costs one budget, then the local unregister still runs."""
-        from kiro_crew.acp.runtime import _TERMINATE_TIMEOUT
+        from aj_crew.acp.runtime import _TERMINATE_TIMEOUT
 
         rt = _codex_runtime()
         rt._session_queues["sid-codex"] = asyncio.Queue()
@@ -640,7 +640,7 @@ class TestWhatThisHarnessDoesNotHave:
 
     def test_the_kiro_family_vocabulary_is_not_inherited(self, adapter):
         """KAS speaks ``_kiro.dev/*`` because it is reached THROUGH kiro-cli. codex is not."""
-        from kiro_crew.acp.harness._common import KIRO_FAMILY_ALIASES
+        from aj_crew.acp.harness._common import KIRO_FAMILY_ALIASES
 
         assert adapter.notification_aliases != KIRO_FAMILY_ALIASES
 
@@ -670,7 +670,7 @@ def mask_resolved(monkeypatch):
     async def _preflight(_fn, _backend, _mode):
         return ("/h/.aws",)
 
-    from kiro_crew.acp import client as client_mod
+    from aj_crew.acp import client as client_mod
 
     monkeypatch.setattr(client_mod, "_run_preflight_bounded", _preflight)
     monkeypatch.setattr(
@@ -681,7 +681,7 @@ def mask_resolved(monkeypatch):
 class TestSpawn:
     @pytest.mark.asyncio
     async def test_the_resolved_entry_is_the_whole_argv(self, adapter, mask_resolved):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         with patch.object(
             client_mod, "_resolve_codex_acp_bin", return_value=(["/n/node", "/p/index.js"], "/s")
@@ -694,7 +694,7 @@ class TestSpawn:
     @pytest.mark.asyncio
     async def test_no_agent_and_no_model_flag_is_appended(self, adapter, mask_resolved):
         """codex takes no argv of its own: any invocation blocks on stdin."""
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         with patch.object(
             client_mod, "_resolve_codex_acp_bin", return_value=(["/n/node", "/p/index.js"], "/s")
@@ -702,13 +702,13 @@ class TestSpawn:
             plan = await adapter.resolve_spawn(_ctx())
         assert "--agent" not in plan.argv
         assert "--model" not in plan.argv
-        assert "kirocrew" not in plan.argv
+        assert "ajcrew" not in plan.argv
         assert "gpt-5-codex" not in plan.argv
 
     @pytest.mark.asyncio
     async def test_crew_never_owns_this_host_credential(self, adapter, mask_resolved):
         """codex raises nothing at Crew, so a process expecting a callback would wait."""
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         with patch.object(
             client_mod, "_resolve_codex_acp_bin", return_value=(["/n/node", "/p/index.js"], "/s")
@@ -718,8 +718,8 @@ class TestSpawn:
 
     @pytest.mark.asyncio
     async def test_a_missing_adapter_aborts_the_spawn_with_the_searched_path(self, adapter):
-        from kiro_crew.acp import client as client_mod
-        from kiro_crew.acp.session_handle import AcpRuntimeError
+        from aj_crew.acp import client as client_mod
+        from aj_crew.acp.session_handle import AcpRuntimeError
 
         with patch.object(client_mod, "_resolve_codex_acp_bin", return_value=(None, "/one:/two")):
             with pytest.raises(AcpRuntimeError) as exc:
@@ -758,7 +758,7 @@ class TestSpawnMasks:
 
     @pytest.mark.asyncio
     async def test_the_mask_is_resolved_and_the_carve_out_is_projected_over_it(self):
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         async def _preflight(_fn, backend, mode):
             assert (backend, mode) == (ACP_BACKEND_CODEX, "standard")
@@ -780,7 +780,7 @@ class TestSpawnMasks:
     @pytest.mark.asyncio
     async def test_a_refused_preflight_stops_the_spawn_rather_than_returning_empty(self):
         """An enforced adapter started with its mask dropped has no control at all."""
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         async def _refuse(*_args, **_kwargs):
             raise RuntimeError("sandbox floor refused")
@@ -797,7 +797,7 @@ class TestSpawnMasks:
         the operator's credential homes readable and nothing compensating for it, so
         the whole spawn has to fail rather than return an empty mask.
         """
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         async def _refuse(*_args, **_kwargs):
             raise RuntimeError("sandbox floor refused")
@@ -818,7 +818,7 @@ class TestSpawnMasks:
         Re-reading it would resolve a different tier than the one the argv was built
         for, which is the mismatch carrying the mask on the plan exists to prevent.
         """
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         seen: list[str] = []
 
@@ -865,7 +865,7 @@ class TestReclaimIsScopedToTheCore:
     @pytest.mark.asyncio
     async def test_the_spawn_scope_includes_a_resident_launcher(self, adapter):
         """The pid-relative depth reaches app-server through a resident launcher."""
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         with (
             patch.object(
@@ -898,7 +898,7 @@ class TestReclaimIsScopedToTheCore:
 
 
 def _build_provider(backend: str) -> AcpProvider:
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider(acp_backend=backend)
     provider._client = MagicMock()
     provider._client.backend = backend
@@ -1009,7 +1009,7 @@ class TestOneFactReadThreeWays:
         conversation. They are safe on this host exactly because every one of them
         is evicted on teardown; the eviction term in ``_bg_runtime_backends`` is what
         admits it, and would exclude it again the day the verb stopped evicting."""
-        from kiro_crew.session import _bg_runtime_backends
+        from aj_crew.session import _bg_runtime_backends
 
         assert ACP_BACKEND_CODEX in _bg_runtime_backends()
 
@@ -1019,7 +1019,7 @@ class TestOneFactReadThreeWays:
         that happens to read the same from the outside."""
         import inspect
 
-        from kiro_crew import session as session_mod
+        from aj_crew import session as session_mod
 
         source = inspect.getsource(session_mod._bg_runtime_backends)
         assert "ACP_BACKENDS_SESSION_EVICTION" in source
@@ -1382,7 +1382,7 @@ class TestTheRuntimeSendsCodexNoAgentMode:
 
         with ExitStack() as stack:
             plane.install(rt, stack)
-            handle = await rt.create_session(cwd="/w", agent="kirocrew")
+            handle = await rt.create_session(cwd="/w", agent="ajcrew")
 
         assert handle.session_id == "sid-codex"
         assert METHOD_SET_MODE not in plane.methods
@@ -1403,7 +1403,7 @@ class TestTheRuntimeSendsCodexNoAgentMode:
 
         with ExitStack() as stack:
             plane.install(rt, stack)
-            await rt.create_session(cwd="/w", agent="kirocrew")
+            await rt.create_session(cwd="/w", agent="ajcrew")
 
         assert METHOD_SET_MODE in plane.methods
 
@@ -1415,7 +1415,7 @@ class TestTheRuntimePersistsTheAdvertisedModelCacheForCodex:
         feeds the advertised-model cache and then offloads its persist after
         session/new; the kiro side of the same gate is pinned in
         test_acp_runtime_load_session.py."""
-        from kiro_crew import model_registry
+        from aj_crew import model_registry
 
         monkeypatch.setattr(model_registry, "_ADVERTISED_MODELS", {})
         monkeypatch.setattr(model_registry, "_ADVERTISED_META", {})
@@ -1436,7 +1436,7 @@ class TestTheRuntimePersistsTheAdvertisedModelCacheForCodex:
 
         with ExitStack() as stack:
             plane.install(rt, stack)
-            await rt.create_session(cwd="/w", agent="kirocrew")
+            await rt.create_session(cwd="/w", agent="ajcrew")
 
         assert model_registry.advertised_models("codex") == ids
         assert json.loads(sidecar.read_text(encoding="utf-8"))["codex"] == ids
@@ -1455,7 +1455,7 @@ class TestTheRuntimeArmsCodexPermissionRouting:
 
         with ExitStack() as stack:
             plane.install(rt, stack)
-            await rt.create_session(cwd="/w", agent="kirocrew")
+            await rt.create_session(cwd="/w", agent="ajcrew")
 
         writes = plane.params_for(METHOD_SET_CONFIG_OPTION)
         assert len(writes) == 1, plane.methods
@@ -1481,7 +1481,7 @@ class TestTheRuntimeArmsCodexPermissionRouting:
         with ExitStack() as stack:
             plane.install(rt, stack)
             with pytest.raises(AcpToolGateUnroutable):
-                await rt.create_session(cwd="/w", agent="kirocrew")
+                await rt.create_session(cwd="/w", agent="ajcrew")
 
         # As an awaited REQUEST: ``session/close`` is answered promptly, so the
         # refusal path pays one round-trip -- and the session actually leaves the
@@ -1507,7 +1507,7 @@ class TestTheRuntimeArmsCodexPermissionRouting:
         with ExitStack() as stack:
             plane.install(rt, stack)
             with pytest.raises(AcpToolGateUnroutable):
-                await rt.create_session(cwd="/w", agent="kirocrew")
+                await rt.create_session(cwd="/w", agent="ajcrew")
 
         assert METHOD_SET_CONFIG_OPTION not in plane.methods
         assert plane.methods[-1] == METHOD_SESSION_CLOSE
@@ -1528,7 +1528,7 @@ class TestTheRuntimeArmsCodexPermissionRouting:
 
         with ExitStack() as stack:
             plane.install(rt, stack)
-            await rt.create_session(cwd="/w", agent="kirocrew")
+            await rt.create_session(cwd="/w", agent="ajcrew")
 
         assert METHOD_SET_CONFIG_OPTION not in plane.methods
 
@@ -1558,16 +1558,16 @@ class TestTheRuntimeCarriesTheProjectionOntoTheSession:
     async def test_the_projected_array_is_what_session_new_carries(self):
         rt = _codex_runtime()
         plane = _ControlPlane(_codex_session_new_response())
-        projected = [{"name": "kirocrew-core", "type": "stdio", "command": "/x", "args": []}]
+        projected = [{"name": "ajcrew-core", "type": "stdio", "command": "/x", "args": []}]
         with ExitStack() as stack:
             plane.install(rt, stack)
             stack.enter_context(
                 patch.object(rt, "_mirrored_session_mcp", self._projection(projected, set()))
             )
-            handle = await rt.create_session(cwd="/w", agent="kirocrew")
+            handle = await rt.create_session(cwd="/w", agent="ajcrew")
 
         sent = plane.params_for(METHOD_SESSION_NEW)[0]["mcpServers"]
-        assert [e["name"] for e in sent] == ["kirocrew-core"]
+        assert [e["name"] for e in sent] == ["ajcrew-core"]
         # And the token the projection minted rides the handle, so a later warm-pool
         # rekey claim names THIS session rather than every session on the runtime.
         assert handle.stub_session_token == "tok-proj"
@@ -1582,12 +1582,12 @@ class TestTheRuntimeCarriesTheProjectionOntoTheSession:
                 patch.object(
                     rt,
                     "_mirrored_session_mcp",
-                    self._projection([], {("kirocrew-core", "spawn_run")}),
+                    self._projection([], {("ajcrew-core", "spawn_run")}),
                 )
             )
-            handle = await rt.create_session(cwd="/w", agent="kirocrew")
+            handle = await rt.create_session(cwd="/w", agent="ajcrew")
 
-        assert handle.spec_denied_tools == frozenset({("kirocrew-core", "spawn_run")})
+        assert handle.spec_denied_tools == frozenset({("ajcrew-core", "spawn_run")})
 
     @pytest.mark.asyncio
     async def test_a_host_with_no_mirror_gets_an_empty_deny_set(self):
@@ -1597,7 +1597,7 @@ class TestTheRuntimeCarriesTheProjectionOntoTheSession:
         plane = _ControlPlane({"sessionId": "sid-kiro"})
         with ExitStack() as stack:
             plane.install(rt, stack)
-            handle = await rt.create_session(cwd="/w", agent="kirocrew")
+            handle = await rt.create_session(cwd="/w", agent="ajcrew")
 
         assert handle.spec_denied_tools == frozenset()
         assert has_mirror(ACP_BACKEND_KIRO) is False

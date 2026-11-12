@@ -18,7 +18,7 @@ import pytest
 def _run_wf(args: dict) -> dict:
     """Call the workflow_run MCP handler with identity + _post stubbed, returning
     the body it POSTed to /api/workflows/run."""
-    from kiro_crew.mcp_tools import workflows
+    from aj_crew.mcp_tools import workflows
 
     captured: dict = {}
 
@@ -76,7 +76,7 @@ class _FakeRequest:
 @pytest.mark.asyncio
 async def test_resolver_empty_ref_files_nothing() -> None:
     # No folder given -> ("", None): the fallback stays unfiled (today's default).
-    from kiro_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
+    from aj_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
 
     fid, refusal = await _resolve_fallback_folder_id(_FakeRequest(_FakeFolderState()), "")
     assert (fid, refusal) == ("", None)
@@ -85,7 +85,7 @@ async def test_resolver_empty_ref_files_nothing() -> None:
 @pytest.mark.asyncio
 async def test_resolver_existing_id_files_the_session() -> None:
     # An existing folder id resolves to itself.
-    from kiro_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
+    from aj_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
 
     req = _FakeRequest(_FakeFolderState([{"id": "0123456789ab", "name": "MR"}]))
     fid, refusal = await _resolve_fallback_folder_id(req, "0123456789ab")
@@ -95,7 +95,7 @@ async def test_resolver_existing_id_files_the_session() -> None:
 @pytest.mark.asyncio
 async def test_resolver_existing_path_files_the_session() -> None:
     # An existing human path resolves to the folder's id — nothing created.
-    from kiro_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
+    from aj_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
 
     folders = [
         {"id": "id-a", "name": "A", "parent_id": ""},
@@ -112,7 +112,7 @@ async def test_resolver_existing_path_files_the_session() -> None:
 async def test_resolver_missing_folder_gives_caller_visible_400() -> None:
     # A folder that does not exist is refused with a 400, not silently dropped
     # and not created.
-    from kiro_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
+    from aj_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
 
     req = _FakeRequest(_FakeFolderState([{"id": "id-a", "name": "A", "parent_id": ""}]))
     fid, refusal = await _resolve_fallback_folder_id(req, "Nope")
@@ -123,7 +123,7 @@ async def test_resolver_missing_folder_gives_caller_visible_400() -> None:
 
 @pytest.mark.asyncio
 async def test_resolver_unknown_id_gives_400() -> None:
-    from kiro_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
+    from aj_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
 
     req = _FakeRequest(_FakeFolderState())
     fid, refusal = await _resolve_fallback_folder_id(req, "0123456789ab")
@@ -135,7 +135,7 @@ async def test_resolver_unknown_id_gives_400() -> None:
 async def test_resolver_ambiguous_path_gives_400() -> None:
     # Two folders rendering the same path ``A`` is refused by the canonical
     # resolver's ambiguity check (pass the id instead) -> a caller-visible 400.
-    from kiro_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
+    from aj_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
 
     folders = [
         {"id": "id-a1", "name": "A", "parent_id": ""},
@@ -167,7 +167,7 @@ def _mate_home_folders() -> list[dict]:
 @pytest.mark.asyncio
 async def test_resolver_refuses_mate_home_folder_by_id() -> None:
     # A member's home folder is refused with the shared 403; nothing is created.
-    from kiro_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
+    from aj_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
 
     req = _FakeRequest(_FakeFolderState(_mate_home_folders()))
     fid, refusal = await _resolve_fallback_folder_id(req, "home-1")
@@ -183,7 +183,7 @@ async def test_resolver_refuses_mate_home_folder_by_id() -> None:
 @pytest.mark.asyncio
 async def test_resolver_refuses_folder_inside_mate_home_by_id() -> None:
     # A folder nested inside a member's home is refused the same way.
-    from kiro_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
+    from aj_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
 
     req = _FakeRequest(_FakeFolderState(_mate_home_folders()))
     fid, refusal = await _resolve_fallback_folder_id(req, "child-1")
@@ -198,7 +198,7 @@ async def test_resolver_refuses_folder_inside_mate_home_by_id() -> None:
 @pytest.mark.asyncio
 async def test_resolver_refuses_mate_home_folder_by_path() -> None:
     # The same refusal when the member's home is named by its human path.
-    from kiro_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
+    from aj_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
 
     req = _FakeRequest(_FakeFolderState(_mate_home_folders()))
     fid, refusal = await _resolve_fallback_folder_id(req, "Home")
@@ -208,7 +208,7 @@ async def test_resolver_refuses_mate_home_folder_by_path() -> None:
 
 @pytest.mark.asyncio
 async def test_resolver_refuses_folder_inside_mate_home_by_path() -> None:
-    from kiro_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
+    from aj_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
 
     req = _FakeRequest(_FakeFolderState(_mate_home_folders()))
     fid, refusal = await _resolve_fallback_folder_id(req, "Home/Inside")
@@ -223,7 +223,7 @@ async def _member_refusal_body(ref: str, folders: list[dict]) -> tuple[int, dict
     """Resolve *ref* as a crew-member caller and return (status, body)."""
     import json
 
-    from kiro_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
+    from aj_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
 
     req = _FakeRequest(_FakeFolderState(folders), expected_store="store-member")
     fid, refusal = await _resolve_fallback_folder_id(req, ref)
@@ -267,7 +267,7 @@ async def test_member_caller_folder_refusal_is_uniform_and_leaks_nothing() -> No
 async def test_member_caller_empty_folder_is_still_allowed() -> None:
     # The refusal is only for a NON-EMPTY folder; a member run that names no
     # folder is unaffected (the fallback stays unfiled, today's default).
-    from kiro_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
+    from aj_crew.dashboard.handlers.workflows import _resolve_fallback_folder_id
 
     req = _FakeRequest(_FakeFolderState([{"id": "x"}]), expected_store="store-member")
     fid, refusal = await _resolve_fallback_folder_id(req, "")
@@ -284,8 +284,8 @@ async def test_resolver_no_admission_slot_patched_on_member_refusal() -> None:
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    import kiro_crew.dashboard.handlers.workflows as wf
-    from kiro_crew.dashboard.handlers.workflows import api_workflow_run
+    import aj_crew.dashboard.handlers.workflows as wf
+    from aj_crew.dashboard.handlers.workflows import api_workflow_run
 
     start = AsyncMock(return_value={"run_id": "wf_never"})
     app = web.Application()

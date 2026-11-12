@@ -21,8 +21,8 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.connections import mint
-from kiro_crew.dashboard.handlers import connections
+from aj_crew.connections import mint
+from aj_crew.dashboard.handlers import connections
 
 _DOCS_URL = "https://docs.example.com/mcp"
 NON_OWNER = {"X-Test-User": "someone-else"}
@@ -35,7 +35,7 @@ def _write_owner_record(home: Path, servers: dict[str, Any]) -> None:
 
 
 def _add_spec_entry(agents_dir: Path, name: str, entry: dict[str, Any]) -> None:
-    path = agents_dir / "kirocrew.json"
+    path = agents_dir / "ajcrew.json"
     spec = json.loads(path.read_text(encoding="utf-8"))
     spec["mcpServers"][name] = entry
     path.write_text(json.dumps(spec), encoding="utf-8")
@@ -46,7 +46,7 @@ def agents_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     """A scratch main agent spec holding one remote, one local, one registry entry."""
     directory = tmp_path / "agents"
     directory.mkdir()
-    (directory / "kirocrew.json").write_text(
+    (directory / "ajcrew.json").write_text(
         json.dumps(
             {
                 "mcpServers": {
@@ -59,10 +59,10 @@ def agents_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr("kiro_crew.agent.kiro_agents_dir_path", lambda: directory)
+    monkeypatch.setattr("aj_crew.agent.kiro_agents_dir_path", lambda: directory)
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     # The owner added docsServer from the dashboard. The other entries were not
     # recorded: plain-http and local-tool would be refused on shape alone, and
     # notion is a registry name.
@@ -184,7 +184,7 @@ async def test_the_configured_server_mint_is_owner_only(
 async def test_an_unreadable_main_spec_refuses_rather_than_minting(
     agents_dir: Path, started: list[tuple[str, str]]
 ):
-    (agents_dir / "kirocrew.json").write_text("[not an object]", encoding="utf-8")
+    (agents_dir / "ajcrew.json").write_text("[not an object]", encoding="utf-8")
     client = await _client()
     try:
         resp = await client.post("/api/connections/mint", json={"server": "docsServer"})
@@ -335,7 +335,7 @@ async def test_a_started_sign_in_counts_as_a_retry_for_the_chat_banner(
 ):
     """The MCP Servers page's Sign in is a retry: a chat that stopped repeating
     the server's unchanged rejection banner shows the next one again."""
-    from kiro_crew.dashboard import mcp_banner_dedupe
+    from aj_crew.dashboard import mcp_banner_dedupe
 
     monkeypatch.setattr(mcp_banner_dedupe, "_sign_in_rounds", {})
     client = await _client()
@@ -352,7 +352,7 @@ async def test_a_started_sign_in_counts_as_a_retry_for_the_chat_banner(
 async def test_a_refused_sign_in_is_not_a_retry(
     agents_dir: Path, started: list[tuple[str, str]], monkeypatch: pytest.MonkeyPatch
 ):
-    from kiro_crew.dashboard import mcp_banner_dedupe
+    from aj_crew.dashboard import mcp_banner_dedupe
 
     monkeypatch.setattr(mcp_banner_dedupe, "_sign_in_rounds", {})
     client = await _client()

@@ -14,7 +14,7 @@ import json
 import pytest
 from test_cloud_handlers import _body, _posix_host, _req, _state  # noqa: F401
 
-from kiro_crew.dashboard import handlers_cloud as hc
+from aj_crew.dashboard import handlers_cloud as hc
 
 # Contents of a job file that holds no readable job, so its status is unknown: one
 # entry per way the store can fail to parse a record that exists.

@@ -1,6 +1,6 @@
 # Resource Protection Mechanisms
 
-Kiro Crew runs long-lived LLM sessions that spawn OS processes (kiro-cli, MCP servers) across
+Aj Crew runs long-lived LLM sessions that spawn OS processes (kiro-cli, MCP servers) across
 several workflows: chat subagents, cron jobs, task runner steps, and background sessions.
 Each workflow has different failure modes (event-loop saturation, orphaned tasks, hung
 processes, context overflow), so protection is layered. Primary timeouts catch the common
@@ -29,13 +29,13 @@ anything that survived a gateway crash. No single mechanism is a single point of
 | Process group kill | `acp/client_lifecycle.py` | Process cleanup | Immediate | No | `killpg(SIGTERM)`, `killpg(SIGKILL)`, then `_kill_escaped_children` for descendants that changed PGID |
 | Per-process resource limits | `security/helpers.py` (`apply_resource_limits`, re-exported by the `security` package), delivered **after `exec`** by `_spawn_exec_shim.py` via `sandbox_rlimit.py` (`create_subprocess_limited` / `spawn_shim_argv`) | Every agent-influenced spawn (see the profile list below) | Kernel-enforced `RLIMIT_NOFILE=1024` default-on; `RLIMIT_NPROC` / `RLIMIT_CPU` / `RLIMIT_AS` opt-in (default off) | Yes, the kernel enforces at fork/alloc/open time, no sweep needed | Kernel refuses `open()` past the FD cap (EMFILE); on opt-in NPROC/CPU/AS: EAGAIN, SIGXCPU, ENOMEM |
 | Windows Job object (fork bomb + memory) | `platform_compat_winproc.py` (`apply_job_limits`) via `sandbox_slice.py` (`apply_windows_resource_ceiling`) | The ACP agent spawn tree on Windows (`AcpClient._spawn` and `AcpRuntime._spawn`), where `cgroup_scope_argv` is a no-op | `ActiveProcessLimit` plus `JobMemoryLimit`, read from the SAME `resource_limits` config as the cgroup path, so the per-spawn `max_processes` and `max_memory_mb` keys govern both platforms. The aggregate slice, CPU and rlimit keys (`cpu_weight`, `max_address_space_mb`, `max_cpu_percent`, `max_cpu_seconds`, `max_open_files`, `max_total_memory_mb`, `max_total_processes`, `scope_memory_high_pct`, `slice_reclaim_trigger_pct`) are not enforced on Windows; a value set for any of them logs one warning naming it. The memory limit is the true `MemoryMax` equivalent, and its default is derived from `GlobalMemoryStatusEx` because the POSIX `os.sysconf` probe does not exist on Windows and the flat fallback it fell back to could equal or exceed physical RAM on a small host, leaving the ceiling unable to engage. The process limit is NOT a one-for-one `TasksMax` mapping: `TasksMax` counts tasks (threads) while `ActiveProcessLimit` counts processes, so the same budget binds more loosely here, though it still bounds a fork bomb | Yes, the kernel refuses the spawn or allocation | Fork bomb bounded: past the process limit the member's `CreateProcess` fails with `ERROR_NOT_ENOUGH_QUOTA` (1816); past the memory limit allocations fail. `KILL_ON_JOB_CLOSE` is deliberately NOT set (it would make a gateway exit kill running agents, a lifecycle change rather than a ceiling); omitting it also means the limits do not depend on a held handle, since a job stays alive while processes are assigned. The handle is kept only by an admitted Windows cleanup tree, whose teardown ends the job after its exact-handle drain ([platform-compat](../system-specs/common/platform-compat.md#windows-session-tree-teardown)); a gateway exit just closes it. Applied while the child is still suspended (`CREATE_SUSPENDED`), then resumed via `resume_process_main_thread`, because job membership covers a member's FUTURE descendants only. Fails soft: any Win32 error logs a SECURITY warning and returns `False`, never failing the spawn |
-| cgroup v2 scope (fork bomb + memory) | `sandbox_slice.py` (`cgroup_scope_argv`) | Every agent-influenced spawn tree (each ACP harness process tree gets a scope; subagent sessions sharing that runtime stay in its tree, while a dedicated subagent process gets its own; each cron, app-backend, hook, git or tool spawn also gets its own) | `pids.max=8192` (`TasksMax`) plus `memory.max=65% of host RAM` (`MemoryMax`, `MemorySwapMax=0`) and `memory.high=90% of that MemoryMax` (`MemoryHigh`, `resource_limits.scope_memory_high_pct`, `0` = off) per transient `systemd-run --user --scope` under `kirocrew-agents.slice`, default-on where cgroup v2 delegation exists | Yes, the kernel enforces at `fork()`/alloc time; OOM-kills the scope on a memory breach, `fork()` fails EAGAIN past `pids.max` — **per scope**: the aggregate across concurrent scopes is bounded by the slice row below | Fork bomb bounded to `pids.max`; memory balloon OOM-killed at `memory.max`. Unavailable (no delegation, macOS): no-op plus one loud SECURITY warning, `RLIMIT_NOFILE` still applies |
-| cgroup v2 slice (aggregate across concurrent spawns) | `sandbox_slice.py` (`ensure_agents_slice_limits`), applied at gateway startup | ALL concurrent agent scopes together (they are siblings under `kirocrew-agents.slice`) | `memory.max=80% of host RAM` (`MemoryMax`, `MemorySwapMax=0`) plus `pids.max=32768` (`TasksMax`) on the slice, via `systemctl --user set-property --runtime`; overridable via `resource_limits.max_total_memory_mb` / `max_total_processes`. A pod (`KIROCREW_POD`) writes these on its own per-instance child slice instead, and on the parent fills only a property systemd shows as `infinity`, so it never replaces a value the host's gateway set | Yes — cgroup v2 bounds a descendant by the **minimum** effective limit of itself and all ancestors, so N scopes at 65% each can no longer jointly exceed the slice ceiling | Kernel OOM-kills some scope inside the slice on an aggregate breach; the resource-pressure sampler logs new kills with victim scopes, slice `memory.current`, and whether the slice ceiling (vs a scope's own) engaged. Same availability gate and single SECURITY warning as the scope row |
+| cgroup v2 scope (fork bomb + memory) | `sandbox_slice.py` (`cgroup_scope_argv`) | Every agent-influenced spawn tree (each ACP harness process tree gets a scope; subagent sessions sharing that runtime stay in its tree, while a dedicated subagent process gets its own; each cron, app-backend, hook, git or tool spawn also gets its own) | `pids.max=8192` (`TasksMax`) plus `memory.max=65% of host RAM` (`MemoryMax`, `MemorySwapMax=0`) and `memory.high=90% of that MemoryMax` (`MemoryHigh`, `resource_limits.scope_memory_high_pct`, `0` = off) per transient `systemd-run --user --scope` under `ajcrew-agents.slice`, default-on where cgroup v2 delegation exists | Yes, the kernel enforces at `fork()`/alloc time; OOM-kills the scope on a memory breach, `fork()` fails EAGAIN past `pids.max` — **per scope**: the aggregate across concurrent scopes is bounded by the slice row below | Fork bomb bounded to `pids.max`; memory balloon OOM-killed at `memory.max`. Unavailable (no delegation, macOS): no-op plus one loud SECURITY warning, `RLIMIT_NOFILE` still applies |
+| cgroup v2 slice (aggregate across concurrent spawns) | `sandbox_slice.py` (`ensure_agents_slice_limits`), applied at gateway startup | ALL concurrent agent scopes together (they are siblings under `ajcrew-agents.slice`) | `memory.max=80% of host RAM` (`MemoryMax`, `MemorySwapMax=0`) plus `pids.max=32768` (`TasksMax`) on the slice, via `systemctl --user set-property --runtime`; overridable via `resource_limits.max_total_memory_mb` / `max_total_processes`. A pod (`AJCREW_POD`) writes these on its own per-instance child slice instead, and on the parent fills only a property systemd shows as `infinity`, so it never replaces a value the host's gateway set | Yes — cgroup v2 bounds a descendant by the **minimum** effective limit of itself and all ancestors, so N scopes at 65% each can no longer jointly exceed the slice ceiling | Kernel OOM-kills some scope inside the slice on an aggregate breach; the resource-pressure sampler logs new kills with victim scopes, slice `memory.current`, and whether the slice ceiling (vs a scope's own) engaged. Same availability gate and single SECURITY warning as the scope row |
 | macOS memory (none) | None: `sandbox_slice.py` (`cgroup_scope_argv`) is a no-op off Linux, and the `session_host` rlimit profile sets only `RLIMIT_NOFILE` | The ACP agent spawn tree on macOS | **No ceiling.** `resource_limits.max_memory_mb` set or unset, nothing bounds the agent tree's resident memory: macOS has no cgroup or Job-object equivalent, `RLIMIT_AS` is never applied to the session host, and macOS accepts `RLIMIT_AS` without enforcing it anyway. The orphan MCP reaper below bounds leaked processes, not memory. Recorded in [`docs/decisions/2026-10-09-macos-has-no-agent-tree-memory-ceiling.md`](../decisions/2026-10-09-macos-has-no-agent-tree-memory-ceiling.md) | No | A runaway tree grows until the macOS kernel (jetsam) kills processes or the host stalls. What stands in front of that: the xdist `-n auto` cap (`resource_limits.xdist_auto_cap`) and the extractor's own RSS watchdog, each for its own child only. `session.watchdog_rss_max_mb` recycles an IDLE session over its limit and never a session mid-turn, so it is not a ceiling. Operators who need one run the gateway in a Linux VM or container, where the cgroup rows apply |
-| Aggregate agent-slice soft ceiling (throttle) | `sandbox_slice.py` (`_ensure_agent_slice_memory_high`) | The SUM of all concurrent agent scopes (`kirocrew-agents.slice` as one subtree); never the gateway, which runs outside the slice | `memory.high=75% of host RAM` on the slice (`systemctl --user set-property --runtime`); deliberately NOT config-driven — the slice is UID-global and shared by every gateway instance (live, dev, pods), so no single instance may lift the others' ceiling; default-on where cgroup v2 delegation exists | Yes, the kernel throttles-and-reclaims the whole subtree past `memory.high` | Concurrent agent trees that together cross 75% get throttled BEFORE the slice's hard 80% `MemoryMax` (row above) OOM-kills a scope; the reconcile worker also watches the slice's `memory.events` `high` counter and logs once per climbing episode so "agents mysteriously slow" is diagnosable as ceiling throttling. Two consumers read the slice as well: the cgroup-clamped memory probe behind `resource_status` / `admission_check` / `compute_max_subagents` takes the slice's headroom (`min(memory.high, memory.max)` minus the working set, which is `memory.current` less clean page cache, active and inactive) as one of its ceilings, so posture reaches `critical` once agent memory the kernel cannot drop fills the ceiling, even though host `MemAvailable` is still large, and a critical posture still defers cron's `every`/`at` firings (a cron-expression job is never deferred) and the TaskRunner and workflow rows, which read `admission_check` (the rows through `cached_admission_check`), and skips the background helper turns (`run_bg_oneliner` at `BACKGROUND` priority bar the `nudge.wake` judge, and `background_turn`) -- spawns do not read posture at all: only the per-spawn `agent.spawn_min_memory_gb` floor holds one, it reads the same clamped figure and must remain AFTER a start's price, and a start that does not fit waits in the queue (in memory when it has no durable row) instead of being refused on capacity -- the one refusal is a durable start whose wait the task store cannot record, which answers the store's error (`task_store_unavailable`); a slice held at `memory.high` only by clean file cache is not refused, because reclaiming that cache is cheap; and `AcpRuntime` reads `sandbox.agents_slice_throttling()` (`memory.current >= memory.high`, or the `high` counter climbing between probes) when its `initialize` handshake (cold-start budget `_INITIALIZE_TIMEOUT`, throttled or not) runs out — a deadline that lands with the process still alive under throttle raises `AcpRuntimeOverloaded` rather than reporting a killed process; that error carries `transient = False`, so the retry layers that read the verdict structurally do not respawn a fresh cold start into the same throttle, and the message names the remedy (free agent memory). Unavailable or `systemctl` fails: no-op plus one loud SECURITY warning, the slice and per-scope `MemoryMax` still apply |
+| Aggregate agent-slice soft ceiling (throttle) | `sandbox_slice.py` (`_ensure_agent_slice_memory_high`) | The SUM of all concurrent agent scopes (`ajcrew-agents.slice` as one subtree); never the gateway, which runs outside the slice | `memory.high=75% of host RAM` on the slice (`systemctl --user set-property --runtime`); deliberately NOT config-driven — the slice is UID-global and shared by every gateway instance (live, dev, pods), so no single instance may lift the others' ceiling; default-on where cgroup v2 delegation exists | Yes, the kernel throttles-and-reclaims the whole subtree past `memory.high` | Concurrent agent trees that together cross 75% get throttled BEFORE the slice's hard 80% `MemoryMax` (row above) OOM-kills a scope; the reconcile worker also watches the slice's `memory.events` `high` counter and logs once per climbing episode so "agents mysteriously slow" is diagnosable as ceiling throttling. Two consumers read the slice as well: the cgroup-clamped memory probe behind `resource_status` / `admission_check` / `compute_max_subagents` takes the slice's headroom (`min(memory.high, memory.max)` minus the working set, which is `memory.current` less clean page cache, active and inactive) as one of its ceilings, so posture reaches `critical` once agent memory the kernel cannot drop fills the ceiling, even though host `MemAvailable` is still large, and a critical posture still defers cron's `every`/`at` firings (a cron-expression job is never deferred) and the TaskRunner and workflow rows, which read `admission_check` (the rows through `cached_admission_check`), and skips the background helper turns (`run_bg_oneliner` at `BACKGROUND` priority bar the `nudge.wake` judge, and `background_turn`) -- spawns do not read posture at all: only the per-spawn `agent.spawn_min_memory_gb` floor holds one, it reads the same clamped figure and must remain AFTER a start's price, and a start that does not fit waits in the queue (in memory when it has no durable row) instead of being refused on capacity -- the one refusal is a durable start whose wait the task store cannot record, which answers the store's error (`task_store_unavailable`); a slice held at `memory.high` only by clean file cache is not refused, because reclaiming that cache is cheap; and `AcpRuntime` reads `sandbox.agents_slice_throttling()` (`memory.current >= memory.high`, or the `high` counter climbing between probes) when its `initialize` handshake (cold-start budget `_INITIALIZE_TIMEOUT`, throttled or not) runs out — a deadline that lands with the process still alive under throttle raises `AcpRuntimeOverloaded` rather than reporting a killed process; that error carries `transient = False`, so the retry layers that read the verdict structurally do not respawn a fresh cold start into the same throttle, and the message names the remedy (free agent memory). Unavailable or `systemctl` fails: no-op plus one loud SECURITY warning, the slice and per-scope `MemoryMax` still apply |
 | Bounded restart shutdown | `dashboard/handlers/sessions_parts/restart.py` | Dashboard Apply & Restart | 10s (`_SHUTDOWN_TIMEOUT_SECS`) | No | `asyncio.wait_for` on `provider.shutdown()`; `_sync_kill_provider` fallback on timeout |
 | Subagent injection outer cap | `subagent_parts/run_surface.py` `_run()` | Per-subagent completion | 1200s (`_ON_DONE_TIMEOUT`) | No | Covers semaphore wait plus injection; on timeout kills the stuck kiro-cli via `sessions.reset()`, unless the parent's own turn holds the session, and queues a failure event for the parent to drain |
-| Subagent injection inner cap | `slack/gateway_runtime/subagent_injection.py` | Per `stream_and_collect` | 900s (`INJECTION_TIMEOUT`, from `_DEFAULT_INJECTION_TIMEOUT`; override with `KIROCREW_INJECTION_TIMEOUT`, clamped down to `_ON_DONE_TIMEOUT`) | No | `_inject_with_retry` up to 3 attempts with backoff, bounded by the outer 1200s cap |
+| Subagent injection inner cap | `slack/gateway_runtime/subagent_injection.py` | Per `stream_and_collect` | 900s (`INJECTION_TIMEOUT`, from `_DEFAULT_INJECTION_TIMEOUT`; override with `AJCREW_INJECTION_TIMEOUT`, clamped down to `_ON_DONE_TIMEOUT`) | No | `_inject_with_retry` up to 3 attempts with backoff, bounded by the outer 1200s cap |
 | Prompt-busy recovery | `llm_helpers_parts/turn_stream.py` | Per `stream_and_collect` | 2 retries plus backoff | No | Cancels the orphaned prompt; kills the provider on exhaustion |
 | Message queue | `session_parts/claims.py` plus `slack/events.py`, `slack/events_queue.py` and `slack/events_inbound.py` | Per Slack thread | Unbounded FIFO | No | Queues when busy; `message_deleted` cancels; `!stop` clears |
 | Orphaned dashboard reaping | `session_parts/sweeps.py` | Dashboard sessions | Immediate | Yes | `set_active_dashboard_slots()` reaps sessions whose slot is gone |
@@ -76,7 +76,7 @@ Five profiles:
 | Profile | Used by | Effect |
 |---------|---------|--------|
 | `tool` (default) | Every ordinary agent-influenced spawn | The full rlimit ceiling plus `oom_score_adj=1000` |
-| `extractor` | The PDF text-extraction child (`pdf_extract.py` -> `python -m kiro_crew.pdf_extract_child`), fed untrusted document bytes on stdin by file-grep and knowledge ingest | A FIXED ceiling independent of `resource_limits`: `RLIMIT_AS` 1 GiB, `RLIMIT_CPU` 60 s, `RLIMIT_NOFILE` 1024, plus the OOM bias. `pdfplumber` allocates a page's whole character list before any caller can measure it, so the memory bound has to be on by default and one process down; a pure-CPython child measures ~270 MB virtual on a one-page document, which is why a virtual cap is safe here where `tool` leaves it opt-in. On Windows (no rlimits) `pdf_extract.py` spawns the child `CREATE_SUSPENDED`, attaches a Job object with `JobMemoryLimit` at the same byte count and `ActiveProcessLimit` of `1 + python_launcher_hops()` (a venv's `python.exe` redirector spawns the base interpreter as its child, which a limit of exactly one would refuse) via `platform_compat.apply_job_limits`, kills by tree (`kill_process_tree`, then `proc.kill()`) so the interpreter under a redirector is not orphaned, and FAILS CLOSED -- kills the unrun child and reports `unbounded` -- when the job cannot be attached. macOS accepts `RLIMIT_AS` without enforcing it, so the child additionally polices its own peak RSS (sampled every 20 ms) against the same 1 GiB and ends itself with the `memory` report: the ceiling there, a second layer on Linux. The sample is the CHILD's own high-water mark: `getrusage` `ru_maxrss` on macOS, but `/proc/self/status` `VmHWM` on Linux, because there `execve` folds the pre-exec image's peak into `ru_maxrss` and a child of a gateway already past 1 GiB would read its parent's peak on the first tick and lose every document unparsed |
+| `extractor` | The PDF text-extraction child (`pdf_extract.py` -> `python -m aj_crew.pdf_extract_child`), fed untrusted document bytes on stdin by file-grep and knowledge ingest | A FIXED ceiling independent of `resource_limits`: `RLIMIT_AS` 1 GiB, `RLIMIT_CPU` 60 s, `RLIMIT_NOFILE` 1024, plus the OOM bias. `pdfplumber` allocates a page's whole character list before any caller can measure it, so the memory bound has to be on by default and one process down; a pure-CPython child measures ~270 MB virtual on a one-page document, which is why a virtual cap is safe here where `tool` leaves it opt-in. On Windows (no rlimits) `pdf_extract.py` spawns the child `CREATE_SUSPENDED`, attaches a Job object with `JobMemoryLimit` at the same byte count and `ActiveProcessLimit` of `1 + python_launcher_hops()` (a venv's `python.exe` redirector spawns the base interpreter as its child, which a limit of exactly one would refuse) via `platform_compat.apply_job_limits`, kills by tree (`kill_process_tree`, then `proc.kill()`) so the interpreter under a redirector is not orphaned, and FAILS CLOSED -- kills the unrun child and reports `unbounded` -- when the job cannot be attached. macOS accepts `RLIMIT_AS` without enforcing it, so the child additionally polices its own peak RSS (sampled every 20 ms) against the same 1 GiB and ends itself with the `memory` report: the ceiling there, a second layer on Linux. The sample is the CHILD's own high-water mark: `getrusage` `ru_maxrss` on macOS, but `/proc/self/status` `VmHWM` on Linux, because there `execve` folds the pre-exec image's peak into `ru_maxrss` and a child of a gateway already past 1 GiB would read its parent's peak on the first tick and lose every document unparsed |
 | `session_host` | The trusted ACP session-host spawns (the launch tail `acp/launch.py`, for both `acp/client.py` and `acp/runtime.py`) | RAISES NOFILE to the inherited hard limit and does nothing else. A session host multiplexes many MCP pipe pairs, and the 1024 cap caused EMFILE crashes. No OOM bias: a trusted session host must not be the preferred kill target |
 | `build` | The dev-fleet build spawns (`apps/builtins/dev_fleet/runtime.py`) | Vite and npm need thousands of descriptors; keeps the OOM bias |
 | `none` | The user's own interactive terminal | No rlimits and no OOM bias, so the shim is skipped entirely unless the spawn also asks for a controlling terminal (`ctty_fd=`), which the terminal does |
@@ -97,7 +97,7 @@ backends under `apps/builtins/` and the two standalone scripts under
 `deploy/skills/`. No call site passes `resource_limit_preexec()` as `preexec_fn=`
 any more; the shrink-only ratchet in `test/test_spawn_preexec_guard.py` is empty
 and fails on any NEW synchronous `preexec_fn` spawn anywhere under
-`src/kiro_crew`. A synchronous spawn wedges a worker thread rather than the event
+`src/aj_crew`. A synchronous spawn wedges a worker thread rather than the event
 loop, so the hazard below does not apply to it with the same force, but it is the
 same `fork()` and the child still inherits every open fd until it `exec`s.
 
@@ -180,7 +180,7 @@ loop waiting for it.
   set through its own key, `max_address_space_mb`. `max_memory_mb` is the resident cap
   only and never sets it, because every script and command cron spawns on the `tool`
   profile, so a resident budget that also set `RLIMIT_AS` would stop those binaries from
-  starting in every cron child. `kirocrew config set` warns when the key is given a
+  starting in every cron child. `ajcrew config set` warns when the key is given a
   positive value.
 
 **Config.** Operators override the defaults with a `resource_limits` object in the config
@@ -198,7 +198,7 @@ Because RLIMIT is the wrong tool for the fork-bomb and memory-DoS threats (`RLIM
 is per-UID, `RLIMIT_AS` caps virtual rather than resident memory), the actual default-on
 defense for both is a **cgroup v2 scope** applied by `sandbox.cgroup_scope_argv()`. Every
 agent-influenced spawn is wrapped in a transient `systemd-run --user --scope` nested under
-an instance-specific child of `kirocrew-agents.slice`. The child separates live,
+an instance-specific child of `ajcrew-agents.slice`. The child separates live,
 dev, and pod gateway populations; the shared parent remains the aggregate hard
 and soft enforcement boundary. Each scope has:
 
@@ -251,7 +251,7 @@ only (`_PROFILE_OOM_BIAS`).
 `systemd-run` names a scope after the invocation (`run-u<N>.scope`) unless it is
 given a `--unit`, so a scope in a kernel OOM report or a `systemctl` listing
 identifies nothing about what it held. `AcpRuntime._spawn` passes
-`--unit kirocrew-rt-<spawn instance>.scope` (`sandbox.scope_unit_name` builds the
+`--unit ajcrew-rt-<spawn instance>.scope` (`sandbox.scope_unit_name` builds the
 name, `sandbox.name_scope_unit` inserts it) and logs that unit name beside the
 runtime's pid at initialization, so an operator reading a kill can join the scope
 back to the runtime it held, and from that pid to the sessions it served — those
@@ -264,14 +264,14 @@ child's environment, so a name alone would not outlive the kill it is meant to
 explain. Giving that path a durable token is harness-parity work, not part of this
 naming pass.
 
-### The aggregate slice ceiling (`memory.high` on `kirocrew-agents.slice`)
+### The aggregate slice ceiling (`memory.high` on `ajcrew-agents.slice`)
 
 `MemoryMax` is a **per-scope** cap, and scopes are created per spawn — so several
 concurrent agent trees, each legitimately under its own 65% ceiling, can still **sum past
 physical RAM** and livelock a swapless host: nothing individually breaches, everything
 collectively starves. The containment for that failure mode is one level up, on the slice
 every agent scope is parented under. `sandbox._ensure_agent_slice_memory_high()` sets
-**`MemoryHigh`** on `kirocrew-agents.slice`, always **75% of physical RAM**
+**`MemoryHigh`** on `ajcrew-agents.slice`, always **75% of physical RAM**
 (`_SLICE_MEMORY_HIGH_FRACTION`, with a `_SLICE_FALLBACK_MEMORY_HIGH_MB` = 12288 MB fallback
 when RAM cannot be read). The ceiling is deliberately **not config-driven**: the slice is
 UID-global — every gateway instance under the user (live, dev-backend, pods where delegation
@@ -283,7 +283,7 @@ instead of OOM-killing it — agents slow down, the host stays interactive, and 
 the slice, so slice pressure degrades agents, never the control plane.
 
 The mechanism is deliberately root-free and stateless on disk: `systemctl --user
-set-property --runtime kirocrew-agents.slice MemoryHigh=<N>M`, run by the unprivileged user
+set-property --runtime ajcrew-agents.slice MemoryHigh=<N>M`, run by the unprivileged user
 manager that owns the slice. `--runtime` keeps the drop-in under `$XDG_RUNTIME_DIR` (it
 vanishes with the login session), so no persistent unit files accumulate and a stale ceiling
 never outlives the login session. Reconciliation before each scope wrap is a no-op string
@@ -337,7 +337,7 @@ at most one episode starts per 60 s. Each episode logs one INFO line with
 `ENOENT`), turns the feature off for the process with one log line (INFO for the missing
 file, which is normal on an older kernel; WARNING for a refused write); nothing raises and no
 spawn depends on it. Without cgroup v2, off Linux, or with the slice not materialized it
-does nothing. A gateway inside a pod (`KIROCREW_POD` set) never reclaims: the slice it
+does nothing. A gateway inside a pod (`AJCREW_POD` set) never reclaims: the slice it
 sees is the user's live one. The slice is UID-global, so every non-pod gateway under the
 user may reclaim it, each on its own 60 s limit; `0` turns off reclaim only for the gateway
 whose config sets it, and a reclaim only drops clean cache and never moves the ceiling
@@ -379,9 +379,9 @@ the **minimum** effective limit of itself and all its ancestors, so the parent s
 scope already nests under is the natural aggregate boundary.
 `sandbox.ensure_agents_slice_limits()` puts a ceiling on it at gateway startup, or on the
 first agent spawn of a login session that started after the gateway did. A pod
-(`KIROCREW_POD`) is the exception: it boots from an empty home, so its defaults would replace
+(`AJCREW_POD`) is the exception: it boots from an empty home, so its defaults would replace
 the ceiling the host's gateway set for every gateway's agents. It writes the same properties
-on its own per-instance child (`kirocrew-agents-<token>.slice`), which the parent still
+on its own per-instance child (`ajcrew-agents-<token>.slice`), which the parent still
 bounds, and the sampler's self-heal reads that child. Where systemd shows the parent's
 `MemoryMax` or `TasksMax` as `infinity`, the pod also sets each such property on the parent,
 so a host that runs only pods keeps an aggregate hard cap; a value already set is never
@@ -390,7 +390,7 @@ gone, so the sampler's self-heal re-applies a gateway's ceiling once per new enf
 (a new login session), whatever the slice then reads. Each write logs the slice's previous `pids.max` and `memory.max`, at WARNING when
 it lowers either:
 
-- **`MemoryMax`** plus **`MemorySwapMax=0`** on `kirocrew-agents.slice`, default **80% of
+- **`MemoryMax`** plus **`MemorySwapMax=0`** on `ajcrew-agents.slice`, default **80% of
   physical RAM** (`_CGROUP_TOTAL_MEMORY_FRACTION`; 12288 MB fallback when RAM cannot be
   read; override via `resource_limits.max_total_memory_mb`). The fraction sits *above* the
   per-scope 65% — a slice tighter than one scope would silently shrink a single spawn's
@@ -467,7 +467,7 @@ explicitly, and the configured directory is read from the environment because
 `gettempdir()` skips one that is full. The tool keeps a second root only when it sits on a different device,
 and flags a root below 10% free space, below 10% free inodes, or under 1,000 free inodes.
 These are the doctor's Runtime tmpfs thresholds. A low root adds a guidance line that sends
-test homes and caches to `$KIROCREW_SCRATCH`, but only when that directory sits on a device
+test homes and caches to `$AJCREW_SCRATCH`, but only when that directory sits on a device
 none of the low roots share and is not low itself, since it is usually the same directory
 as `$TMPDIR`. Inodes are the usual limit on a tmpfs `/tmp`,
 because every fake HOME a test run creates there rebuilds its own bytecode, uv and npm
@@ -475,7 +475,7 @@ caches. `posture` stays memory-only: a full `/tmp` fails writes with `ENOSPC`, w
 admission gate holding back spawns would not fix. The doctor's Runtime tmpfs row adds `/tmp`
 and the same configured temp directory to the sandbox's mount-source roots when the chooser
 did not list them.
-When a root is low, it counts the top-level directories there that hold `.cache/kirocrew`,
+When a root is low, it counts the top-level directories there that hold `.cache/ajcrew`,
 which marks a leftover test home. The scan is bounded to 4,096 entries and deletes nothing.
 
 ### Availability and fallback
@@ -511,7 +511,7 @@ does not have is any ceiling that stops one growing in the first place.
 
 The reaper's fingerprint-less arm — the cmdlines a user's own shell could reproduce
 (`npx @playwright/mcp`, `<launcher> mcp start-server <name>`) — demands positive identity
-before it signals, and that identity is the process's exec-time `KIROCREW_SPAWNED` environ
+before it signals, and that identity is the process's exec-time `AJCREW_SPAWNED` environ
 entry. macOS reads it from `sysctl(CTL_KERN, KERN_PROCARGS2, pid)`
 (`platform_compat.darwin_process_environ`), the record `ps -E` prints: same-uid only, no
 entitlement, no elevated privilege, and a kernel copy fixed at exec, so it is evidence one
@@ -702,7 +702,7 @@ itself and the injection works as described above.
   the active set (surfacing as `process exited (rc=-9 (signal SIGKILL))` mid-chat on POSIX). Two runtime kinds live
   outside `self._sessions` and are invisible to `_collect_active_pids`: companion subagent
   runtimes (`_subagent_runtimes`, alive for the parent's whole lifetime) and the background
-  `kirocrew-lite` runtime (`_bg_runtime`). The sweep unions
+  `ajcrew-lite` runtime (`_bg_runtime`). The sweep unions
   `SessionManager._companion_runtime_pids()` into the active set in both the
   candidate-collection and the phase-2 re-check passes, so live shared runtimes are never
   swept. Only alive runtimes contribute, because a dead entry SHOULD be reaped.

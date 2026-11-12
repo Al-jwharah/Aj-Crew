@@ -31,7 +31,7 @@ const theme = params.get('theme') || 'dark'
 // in-progress form "思考中"), so the capture can pin the language too.
 const lang = params.get('lang') || undefined
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const SEED: Record<string, string> = {
   short: 'The user wants',

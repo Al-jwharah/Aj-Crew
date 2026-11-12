@@ -11,8 +11,8 @@ from pathlib import Path
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
-from kiro_crew.apps.discovery import discover_builtin_apps
-from kiro_crew.apps.manifest import RESERVED_APP_NAMES, UNPORTABLE_APP_NAMES
+from aj_crew.apps.discovery import discover_builtin_apps
+from aj_crew.apps.manifest import RESERVED_APP_NAMES, UNPORTABLE_APP_NAMES
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -238,7 +238,7 @@ class TestHiddenBuiltins:
 
     def test_shipped_workflows_is_hidden_and_deploy_web_is_gone(self) -> None:
         """`workflows` ships hidden; `deploy-web` was DELETED in the Artifact
-        Deploy fold-in (capability lives in src/kiro_crew/deploy/ + /deploy
+        Deploy fold-in (capability lives in src/aj_crew/deploy/ + /deploy
         console) and must not be discovered as a builtin at all."""
         shipped = {a["name"]: a for a in discover_builtin_apps()}
         assert "workflows" in shipped, "workflows builtin not discovered"
@@ -302,7 +302,7 @@ class TestAgentsAndSkillsSurviveDiscovery:
         including ones added later. A named list would instead have to be edited
         by the very change most likely to break the round-trip.
         """
-        import kiro_crew.apps.builtins as builtins_pkg
+        import aj_crew.apps.builtins as builtins_pkg
 
         builtins_dir = Path(builtins_pkg.__file__).resolve().parent
         shipped = {a["name"]: a for a in discover_builtin_apps()}

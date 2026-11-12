@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.security: ``apply_resource_limits``, the preexec that caps a child.
+"""Tests for aj_crew.security: ``apply_resource_limits``, the preexec that caps a child.
 
 The rlimit probes spawn a real Python child under the preexec, so the class runs only where the
 POSIX ``resource`` module exists.
@@ -12,7 +12,7 @@ import sys
 
 import pytest
 
-from kiro_crew.security import apply_resource_limits
+from aj_crew.security import apply_resource_limits
 
 # resource is POSIX-only. Import it conditionally + skip ONLY the class below
 # via skipif, so on non-POSIX platforms this module still imports and its tests
@@ -39,7 +39,7 @@ class TestApplyResourceLimits:
         test worker itself)."""
         from unittest.mock import patch
 
-        from kiro_crew.security import _bias_child_oom_score
+        from aj_crew.security import _bias_child_oom_score
 
         calls: dict = {}
 
@@ -49,10 +49,10 @@ class TestApplyResourceLimits:
             return 42
 
         with (
-            patch("kiro_crew.security.sys.platform", "linux"),
-            patch("kiro_crew.security.os.open", side_effect=fake_open),
-            patch("kiro_crew.security.os.write", return_value=4) as mwrite,
-            patch("kiro_crew.security.os.close") as mclose,
+            patch("aj_crew.security.sys.platform", "linux"),
+            patch("aj_crew.security.os.open", side_effect=fake_open),
+            patch("aj_crew.security.os.write", return_value=4) as mwrite,
+            patch("aj_crew.security.os.close") as mclose,
         ):
             _bias_child_oom_score()
         assert calls["path"] == "/proc/self/oom_score_adj"
@@ -64,22 +64,22 @@ class TestApplyResourceLimits:
         """A read-only /proc or containerized denial must never fail the spawn."""
         from unittest.mock import patch
 
-        from kiro_crew.security import _bias_child_oom_score
+        from aj_crew.security import _bias_child_oom_score
 
         with (
-            patch("kiro_crew.security.sys.platform", "linux"),
-            patch("kiro_crew.security.os.open", side_effect=OSError("denied")),
+            patch("aj_crew.security.sys.platform", "linux"),
+            patch("aj_crew.security.os.open", side_effect=OSError("denied")),
         ):
             _bias_child_oom_score()  # must not raise
 
     def test_bias_helper_noop_off_linux(self) -> None:
         from unittest.mock import patch
 
-        from kiro_crew.security import _bias_child_oom_score
+        from aj_crew.security import _bias_child_oom_score
 
         with (
-            patch("kiro_crew.security.sys.platform", "darwin"),
-            patch("kiro_crew.security.os.open") as mopen,
+            patch("aj_crew.security.sys.platform", "darwin"),
+            patch("aj_crew.security.os.open") as mopen,
         ):
             _bias_child_oom_score()
         mopen.assert_not_called()
@@ -113,7 +113,7 @@ class TestApplyResourceLimits:
         child cannot raise its own soft limit back up."""
         from unittest.mock import patch
 
-        from kiro_crew.security import helpers
+        from aj_crew.security import helpers
 
         fake, calls = self._fake_resource(hard=512)
         with (
@@ -127,7 +127,7 @@ class TestApplyResourceLimits:
     def test_preexec_leaves_a_request_under_an_infinite_hard_cap_alone(self) -> None:
         from unittest.mock import patch
 
-        from kiro_crew.security import helpers
+        from aj_crew.security import helpers
 
         fake, calls = self._fake_resource(hard=-1)
         with (
@@ -140,7 +140,7 @@ class TestApplyResourceLimits:
     def test_preexec_swallows_a_rejected_rlimit_so_the_spawn_proceeds(self) -> None:
         from unittest.mock import patch
 
-        from kiro_crew.security import helpers
+        from aj_crew.security import helpers
 
         fake, calls = self._fake_resource(hard=512, reject=True)
         with (
@@ -155,7 +155,7 @@ class TestApplyResourceLimits:
         """Windows has no ``resource``; the limiter must still be a callable."""
         from unittest.mock import patch
 
-        from kiro_crew.security import helpers
+        from aj_crew.security import helpers
 
         with (
             patch.object(helpers, "_resource", None),
@@ -415,7 +415,7 @@ class TestApplyResourceLimits:
 
     def test_none_resource_module_is_noop(self, monkeypatch) -> None:
         """On non-POSIX (resource is None) the helper returns a harmless no-op."""
-        import kiro_crew.security as sec
+        import aj_crew.security as sec
 
         monkeypatch.setattr(sec, "_resource", None)
         fn = sec.apply_resource_limits({"resource_limits": {"max_processes": 1}})

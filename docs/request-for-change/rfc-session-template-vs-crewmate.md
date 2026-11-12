@@ -40,7 +40,7 @@ kinds of selection and a session is always exactly one of them.
 A session created without picking a crewmate -- the dashboard's New chat with
 the picker untouched, a cron, channel or subagent session that names no agent --
 is a **template session on the default custom agent** (`agent.default_agent`,
-`kirocrew` when unset), on the default folder and Global memory. There is no
+`ajcrew` when unset), on the default folder and Global memory. There is no
 "default agent" as a product concept: there is a default custom agent (a
 template) for sessions, and the `default` crewmate is a crewmate. It is not the `default` crewmate. The `default`
 crewmate is one row of the roster like any other: it may bind a different
@@ -71,7 +71,7 @@ conversation is its DM thread.
 
 | Session | Template | Folder / memory | On the Crewmates page |
 |---|---|---|---|
-| Created without picking a crewmate | the default custom agent: `agent.default_agent`, else `kirocrew` | default workspace / Global | nothing: nobody's conversation |
+| Created without picking a crewmate | the default custom agent: `agent.default_agent`, else `ajcrew` | default workspace / Global | nothing: nobody's conversation |
 | Explicit template pick | that template | default workspace / Global | nothing |
 | Crewmate picked for an ordinary chat | the crewmate's | the crewmate's | nothing: the crewmate's conversation is its DM thread |
 | Crewmate DM thread | the crewmate's | the crewmate's | the conversation: listed once it holds a message, ordered by its newest message, `default` included |
@@ -131,15 +131,15 @@ Rules that follow:
 - Plain sessions keep their template on upgrade. When `agent.default_agent` is
   unset and the roster default's row (`config.default_agent`: the `default`
   crewmate, or the crewmate a ★ pointed at) binds a template other than
-  `kirocrew`, the first load writes that template to `agent.default_agent`, once
-  (`MIGRATE_STAR_DEFAULT_TEMPLATE`). A stored `agent.default_agent`, `kirocrew`
+  `ajcrew`, the first load writes that template to `agent.default_agent`, once
+  (`MIGRATE_STAR_DEFAULT_TEMPLATE`). A stored `agent.default_agent`, `ajcrew`
   included, is never overwritten. Existing sessions keep their recorded
   execution context; nothing live switches.
 - Only the template is carried. The row's folder, memory store and model pin
   stay the crewmate's own, so new plain sessions run on the default workspace
   and Global memory with no crewmate model pin (the template's own model, else
   `agent.model`, still applies). A roster default with its own memory store no
-  longer lends it to plain sessions; `kirocrew doctor` says so beside the
+  longer lends it to plain sessions; `ajcrew doctor` says so beside the
   binding. The store serves the crewmate's DM thread and explicit picks, and
   memories written before the upgrade stay where they were written.
 - Legacy plain slots stamped `default` run as before and are not credited to

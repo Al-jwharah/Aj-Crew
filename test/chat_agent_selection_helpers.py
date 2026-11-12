@@ -14,21 +14,21 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app_with_agent_routes, _make_state, drain_background_tasks
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.agent_discovery import AgentInfo
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.dashboard import chat_handlers, chat_runner
-from kiro_crew.dashboard.handlers import agents
-from kiro_crew.member_memory_auth import read_private_session_store
-from kiro_crew.memory import MemoryStore
-from kiro_crew.memory_stores import provision_member_memory
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.wait import async_wait_until, await_until, default_timeout
+from aj_crew.agent_discovery import AgentInfo
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.dashboard import chat_handlers, chat_runner
+from aj_crew.dashboard.handlers import agents
+from aj_crew.member_memory_auth import read_private_session_store
+from aj_crew.memory import MemoryStore
+from aj_crew.memory_stores import provision_member_memory
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.wait import async_wait_until, await_until, default_timeout
 
 # Not a conductor: every conductor is Crew Mode, and a Crew Mode root refuses another
 # agent (crew_mode_locked), which these switch tests are not about.
-TEMPLATE = "kirocrew-research"
+TEMPLATE = "ajcrew-research"
 
 
 async def _finished(coro, what: str, *, timeout: float | None = None):
@@ -80,13 +80,13 @@ def _turn_state(tmp_path, monkeypatch):
 
 
 async def _template_chat(tmp_path, monkeypatch, *, first_turn=True):
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     assert TEMPLATE not in cfg.agents
     cfg.save()
     # Keep discovery and the actual sync/config/private-store publication real;
     # the installed template catalog and provider are the external boundaries.
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: TEMPLATE if name == TEMPLATE else "",
     )
     monkeypatch.setattr(
@@ -104,7 +104,7 @@ async def _template_chat(tmp_path, monkeypatch, *, first_turn=True):
     )
     state = _turn_state(tmp_path, monkeypatch)
     app = _make_app_with_agent_routes(state)
-    app.router.add_post("/api/agents/sync", agents.api_kirocrew_agents_sync)
+    app.router.add_post("/api/agents/sync", agents.api_ajcrew_agents_sync)
     async with TestClient(TestServer(as_owner(app))) as client:
         response = await client.post(
             "/api/chat/slots", json={"name": "template-chat", "agent": TEMPLATE}
@@ -130,7 +130,7 @@ async def _template_chat(tmp_path, monkeypatch, *, first_turn=True):
         response = await client.post("/api/agents/sync", json={})
         assert response.status == 200, await response.text()
         assert TEMPLATE in (await response.json())["synced"]
-    synced = KiroCrewConfig.load()
+    synced = AjCrewConfig.load()
     assert synced.agents[TEMPLATE].memory_store == "default"
     # The namespace collision requires an owner-created private member.
     private_store = provision_member_memory(synced, TEMPLATE)

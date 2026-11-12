@@ -7,13 +7,11 @@
     "close": "Close",
     "cpu": "CPU",
     "credits": "credits",
-    "discord_community": "Discord community",
     "dismiss": "Dismiss",
     "dsk": "DSK",
     "k_search_for_anything": "⌘K — Search for anything…",
     "kiro_credit_usage_checking": "Kiro account & credits — checking…",
     "kiro_credit_usage_checking_2": "Kiro account & credits — checking",
-    "kiro_discord_community": "Kiro Discord community",
     "main_navigation": "Main navigation",
     "manage_account": "Manage account & subscription",
     "mem": "MEM",
@@ -52,7 +50,7 @@
     "update_error": "Update error",
     "update_failed": "Update Failed",
     "update_now": "Update Now",
-    "updating_kirocrew": "Updating {{productName}}…",
+    "updating_ajcrew": "Updating {{productName}}…",
     "v": "v",
     "what_s_new": "What's new",
     "you_re_on_the_latest_version": "You're on the latest version"
@@ -99,7 +97,7 @@
     },
     "agentWorlds": {
       "manifest": {
-        "description": "Turns your running agents into characters in an animated pixel-art scene, so a glance tells you how busy Kiro Crew is. Each active agent appears as a sprite that reacts as work starts and finishes, across themed scenes from a classic office to a wizard tower or an underwater lab. Pop it out into its own window to keep it on a second screen while you work.",
+        "description": "Turns your running agents into characters in an animated pixel-art scene, so a glance tells you how busy Aj Crew is. Each active agent appears as a sprite that reacts as work starts and finishes, across themed scenes from a classic office to a wizard tower or an underwater lab. Pop it out into its own window to keep it on a second screen while you work.",
         "display_name": "Agent Worlds",
         "highlight_1": "Live view of which agents are running, as characters rather than a list",
         "highlight_2": "Themed scenes including Office, Panda Den, Neural Net, Wizard Tower, and Deep Lab",
@@ -447,10 +445,10 @@
         "highlight_2": "No private agent-to-agent messaging — every exchange happens in the channel",
         "highlight_3": "You stay the final approver for any operation that mutates state",
         "highlight_4": "Agents persist in the channel until dismissed, the channel closes, or the agent fails",
-        "highlight_5": "Hidden from the App Store grid; enable with `kirocrew app enable channels`",
+        "highlight_5": "Hidden from the App Store grid; enable with `ajcrew app enable channels`",
         "page_label": "Channels",
         "use_case_1": "Run incident response, research, or code review with several named agent roles in one auditable shared transcript.",
-        "configuration_1": "Enable the hidden app with kirocrew app enable channels, create a channel from a preset or Custom, assign agents and listen modes, then use @mentions to hand off work."
+        "configuration_1": "Enable the hidden app with ajcrew app enable channels, create a channel from a preset or Custom, assign agents and listen modes, then use @mentions to hand off work."
       }
     },
     "codeReviewSage": {
@@ -948,7 +946,7 @@
     },
     "crewCompanion": {
       "manifest": {
-        "description": "A desktop companion for Kiro Crew that helps you pace your day: it nudges you to take breaks, holds the reminders you set in plain language, and runs a short breathing exercise when you need to reset. It also lets you know when a session finishes, fails, or needs your OK.",
+        "description": "A desktop companion for Aj Crew that helps you pace your day: it nudges you to take breaks, holds the reminders you set in plain language, and runs a short breathing exercise when you need to reset. It also lets you know when a session finishes, fails, or needs your OK.",
         "display_name": "Crew Companion",
         "highlight_1": "Gentle break nudges — water, stretch, look away — on an interval you choose",
         "highlight_2": "Reminders you set in plain language, like “drink water in 20 minutes”",
@@ -957,7 +955,7 @@
         "highlight_5": "Floats on your desktop with a swappable avatar",
         "page_label": "Crew Companion",
         "use_case_1": "Use a desktop companion for break nudges, plain-language reminders, breathing resets, and session notifications.",
-        "configuration_1": "Use Kiro Crew Desktop, enable the app, then set the break interval and completion notifications on its page; avatar choices live in the companion Gallery."
+        "configuration_1": "Use Aj Crew Desktop, enable the app, then set the break interval and completion notifications on its page; avatar choices live in the companion Gallery."
       }
     },
     "designCritique": {
@@ -1171,18 +1169,18 @@
     },
     "devFleet": {
       "manifest": {
-        "description": "A control panel for working on Kiro Crew itself. Lists every feature worktree alongside its pull request state, commit count, and disk usage, and can bring any of them up as a pod: a complete preview instance on its own port with its own data directory, so you can click through an unfinished change without disturbing your live gateway. It also handles the chores around that — pulling main and rebuilding, rebasing a branch, streaming pod logs, and pruning worktrees whose work has already merged. Enabling it also lets AGENT sessions start and stop pods through the pod tools, which means code from a worktree an agent can write runs outside the agent's sandbox, as you.",
+        "description": "A control panel for working on Aj Crew itself. Lists every feature worktree alongside its pull request state, commit count, and disk usage, and can bring any of them up as a pod: a complete preview instance on its own port with its own data directory, so you can click through an unfinished change without disturbing your live gateway. It also handles the chores around that — pulling main and rebuilding, rebasing a branch, streaming pod logs, and pruning worktrees whose work has already merged. Enabling it also lets AGENT sessions start and stop pods through the pod tools, which means code from a worktree an agent can write runs outside the agent's sandbox, as you.",
         "display_name": "Dev Fleet",
         "highlight_1": "Bring up any worktree as an isolated pod on its own port and data directory, leaving your live gateway untouched",
         "highlight_2": "Fleet view with per-branch PR status, commit counts, and disk usage",
         "highlight_3": "Sync (pull main and rebuild) or rebase a branch without leaving the dashboard",
         "highlight_4": "'Prune merged' refuses to delete a worktree with uncommitted or untracked work rather than discarding it",
         "highlight_5": "Stream pod logs and mint pod access tokens from the UI",
-        "highlight_6": "Built for people developing Kiro Crew itself — not needed for everyday use",
+        "highlight_6": "Built for people developing Aj Crew itself — not needed for everyday use",
         "highlight_7": "Pods run on Linux (systemd --user), macOS (launchd) and Windows (Task Scheduler) — but the macOS pod has no enforced memory/CPU ceiling; Make Live stages its pointer on every platform, and automatic restart needs a systemd --user unit or a macOS LaunchAgent; the fleet view, PR status, sync, rebase and prune work on any platform",
         "page_label": "Dev Fleet",
-        "use_case_1": "Operate Kiro Crew feature worktrees and isolated preview pods while keeping the live gateway untouched.",
-        "configuration_1": "Point the app at a Kiro Crew checkout; PR actions need authenticated gh, while pods need systemd --user on Linux, launchd on macOS or Task Scheduler on Windows and must be provisioned first."
+        "use_case_1": "Operate Aj Crew feature worktrees and isolated preview pods while keeping the live gateway untouched.",
+        "configuration_1": "Point the app at an Aj Crew checkout; PR actions need authenticated gh, while pods need systemd --user on Linux, launchd on macOS or Task Scheduler on Windows and must be provisioned first."
       }
     },
     "fileExplorer": {
@@ -1209,7 +1207,7 @@
         "truncated": "· truncated"
       },
       "manifest": {
-        "description": "Browse and read files on the machine running Kiro Crew without leaving the dashboard. Keep several files open in tabs, walk the directory tree with each file's git status shown beside it, search a whole folder for a string, and read markdown rendered rather than raw. It is read-only by design: it opens and searches files but never edits, moves, or deletes them, and it can only reach your home directory, the system temp directory, and on Linux and macOS the /home, /opt, and /workplace trees.",
+        "description": "Browse and read files on the machine running Aj Crew without leaving the dashboard. Keep several files open in tabs, walk the directory tree with each file's git status shown beside it, search a whole folder for a string, and read markdown rendered rather than raw. It is read-only by design: it opens and searches files but never edits, moves, or deletes them, and it can only reach your home directory, the system temp directory, and on Linux and macOS the /home, /opt, and /workplace trees.",
         "display_name": "Files",
         "highlight_1": "Read-only: opens and searches files, and never writes, moves, or deletes them",
         "highlight_2": "Multiple files open at once in tabs, with syntax highlighting",
@@ -2151,7 +2149,7 @@
       "manifest": {
         "description": "An AI meeting assistant. Transcribes a live meeting, keeps structured notes and diagrams as it goes, extracts action items, and lets you review them before filing.",
         "display_name": "Meetings",
-        "highlight_1": "Live transcription through Kiro Crew's own speech-to-text — no extra daemon, no cloud account beyond what you already use",
+        "highlight_1": "Live transcription through Aj Crew's own speech-to-text — no extra daemon, no cloud account beyond what you already use",
         "highlight_2": "A crew of agents works the meeting in parallel: structured notes, an HTML/Mermaid diagram, and an action-item list",
         "highlight_3": "Correct recurring speech-to-text mistakes once with a domain dictionary and every later meeting gets them right",
         "highlight_4": "Review extracted action items before anything is filed — archive the noise, file the rest",
@@ -2557,7 +2555,7 @@
         "highlight_6": "The autonomous core is fully in-process — no second app, no extra runtime",
         "page_label": "Mochi",
         "use_case_1": "Keep a quiet desktop pet that chats, tracks reminders and public-page changes, and adapts around connected calendar events.",
-        "configuration_1": "Use Kiro Crew Desktop, enable Mochi, choose its appearance and behavior, then add watch targets in chat or on the dashboard; schedule-aware planning requires a connected calendar MCP tool."
+        "configuration_1": "Use Aj Crew Desktop, enable Mochi, choose its appearance and behavior, then add watch targets in chat or on the dashboard; schedule-aware planning requires a connected calendar MCP tool."
       },
       "menu": {
         "clear_screen": "Clear screen",
@@ -3020,7 +3018,7 @@
         "highlight_6": "Rotation-aware: the on-shift automation tier arms and disarms itself",
         "page_label": "Mission Control",
         "use_case_1": "Watch operational signals, investigate incidents, reuse proven fixes, and hand over a complete local audit trail.",
-        "configuration_1": "Add providers in Settings using environment credentials or provider tokens, keep Observe for read-only use, and explicitly opt into allowed Propose or Act actions; Slack output reuses an existing Kiro Crew connection."
+        "configuration_1": "Add providers in Settings using environment credentials or provider tokens, keep Observe for read-only use, and explicitly opt into allowed Propose or Act actions; Slack output reuses an existing Aj Crew connection."
       },
       "opsMissionControlPage": {
         "act": "Act",
@@ -3390,7 +3388,7 @@
         "no_source_files": "No source files."
       },
       "manifest": {
-        "description": "A LaTeX paper editor with live PDF preview and an AI co-author. Write in a split-pane editor, press Cmd+S (Ctrl+S on Windows and Linux) to compile with pdflatex or tectonic, and read the rendered PDF beside your source. Compilation errors are parsed into a clickable list that jumps to the offending line. Clone an existing paper from any git remote, then commit and push from the toolbar. The co-author panel is a real Kiro Crew chat session scoped to the paper, so the agent can read and edit your LaTeX while you watch the PDF update.",
+        "description": "A LaTeX paper editor with live PDF preview and an AI co-author. Write in a split-pane editor, press Cmd+S (Ctrl+S on Windows and Linux) to compile with pdflatex or tectonic, and read the rendered PDF beside your source. Compilation errors are parsed into a clickable list that jumps to the offending line. Clone an existing paper from any git remote, then commit and push from the toolbar. The co-author panel is a real Aj Crew chat session scoped to the paper, so the agent can read and edit your LaTeX while you watch the PDF update.",
         "display_name": "Papyrus",
         "highlight_1": "Split-pane LaTeX editor with a live PDF preview beside it",
         "highlight_2": "Compile on save (Cmd+S, or Ctrl+S on Windows and Linux) via pdflatex or tectonic, with the bibtex cycle run for you",
@@ -3949,7 +3947,7 @@
         }
       },
       "manifest": {
-        "description": "Spec-driven development inside Kiro Crew: turn a feature idea into Requirements → Design → Tasks with an embedded agent, review the markdown in-app, then hand the approved plan off to an autonomous execution session.",
+        "description": "Spec-driven development inside Aj Crew: turn a feature idea into Requirements → Design → Tasks with an embedded agent, review the markdown in-app, then hand the approved plan off to an autonomous execution session.",
         "display_name": "Spec Builder",
         "page_label": "Spec Builder",
         "use_case_1": "Turn a feature, bug, or quick task into reviewable repository-aware requirements, design, and implementation steps.",
@@ -3962,7 +3960,7 @@
     },
     "workflows": {
       "manifest": {
-        "description": "Author, run, and watch dynamic workflows: Python scripts, usually written for you by an agent from a plain-English goal, that drive several Kiro Crew agents through ordered phases. A script is checked against a sandboxed set of workflow commands before anything runs, so mistakes surface without executing, and the page then streams each phase and agent event as the run progresses. In a source checkout, runnable examples are available to start from; packaged installs ship none.",
+        "description": "Author, run, and watch dynamic workflows: Python scripts, usually written for you by an agent from a plain-English goal, that drive several Aj Crew agents through ordered phases. A script is checked against a sandboxed set of workflow commands before anything runs, so mistakes surface without executing, and the page then streams each phase and agent event as the run progresses. In a source checkout, runnable examples are available to start from; packaged installs ship none.",
         "display_name": "Workflows",
         "highlight_1": "Validate a workflow before running it — errors surface without anything executing",
         "highlight_2": "Watch the run live, phase by phase, with per-agent progress events",
@@ -3971,7 +3969,7 @@
         "highlight_5": "Runnable examples to start from in a source checkout",
         "page_label": "Workflows",
         "use_case_1": "Validate and inspect restricted workflow scripts or monitor core multi-agent workflow runs phase by phase.",
-        "configuration_1": "Enable the hidden app with kirocrew app enable workflows; validate DSL Python in Author, or use chat or MCP workflow tools when you need real agent orchestration and monitor it in Runs."
+        "configuration_1": "Enable the hidden app with ajcrew app enable workflows; validate DSL Python in Author, or use chat or MCP workflow tools when you need real agent orchestration and monitor it in Runs."
       },
       "workflowRunTree": {
         "agent_one": "{{count}} agent",
@@ -4020,7 +4018,7 @@
     },
     "awsControl": {
       "manifest": {
-        "description": "Your cloud accounts, in plain language. See every AWS account Kiro Crew can use with a health light per account and matched reconnect guidance, plus an S3-backed cloud drive — files, a cloud artifact library, and backups — with time-boxed share links. Nothing is public unless you say so, and every paid service asks for your confirmation before it can bill you.",
+        "description": "Your cloud accounts, in plain language. See every AWS account Aj Crew can use with a health light per account and matched reconnect guidance, plus an S3-backed cloud drive — files, a cloud artifact library, and backups — with time-boxed share links. Nothing is public unless you say so, and every paid service asks for your confirmation before it can bill you.",
         "display_name": "AWS Control",
         "highlight_1": "One health light per account, each with reconnect guidance matched to how the profile authenticates",
         "highlight_2": "Private, encrypted, versioned storage that is created only after you confirm it",
@@ -4028,7 +4026,7 @@
         "highlight_4": "Share links always expire — nothing is public unless you say so",
         "highlight_5": "Every paid service is confirmed per account before its first use, and every change is on the record",
         "page_label": "AWS Control",
-        "use_case_1": "See every AWS account Kiro Crew can reach, which ones are healthy, and what this month is costing you -- without opening the AWS console.",
+        "use_case_1": "See every AWS account Aj Crew can reach, which ones are healthy, and what this month is costing you -- without opening the AWS console.",
         "configuration_1": "Add an account from the profiles already on this machine, then confirm each paid service once per account before it is first used."
       },
       "console": {
@@ -4216,9 +4214,9 @@
         "library_update": "Update copy",
         "library_search": "Search your artifacts",
         "library_push_failed": "Could not add this artifact. Try again.",
-        "library_blurb": "Things Kiro made for you, copied to the cloud. Files you upload yourself live in Files.",
+        "library_blurb": "Things Aj made for you, copied to the cloud. Files you upload yourself live in Files.",
         "library_empty_title": "Nothing copied to the cloud yet",
-        "library_empty_body": "This folder holds things Kiro made for you — widgets, pages, documents — once you copy them to the cloud. Files you upload from your computer belong in Files instead.",
+        "library_empty_body": "This folder holds things Aj made for you — widgets, pages, documents — once you copy them to the cloud. Files you upload from your computer belong in Files instead.",
         "library_cloud_only": "In the cloud only",
         "library_in_cloud": "In the cloud",
         "library_stale_preview": "Cloud copy is v{{version}}; preview shows your newer local copy",
@@ -4226,7 +4224,7 @@
         "library_added": "Added {{when}}",
         "library_open": "Open {{name}} in Artifacts",
         "files_empty_title": "Files is empty",
-        "files_empty_body": "This folder holds files you upload from your computer. It is separate from Artifact library, which holds things Kiro made for you.",
+        "files_empty_body": "This folder holds files you upload from your computer. It is separate from Artifact library, which holds things Aj made for you.",
         "library_remove": "Remove",
         "library_remove_confirm": "Remove “{{name}}” from the cloud library?",
         "library_actions": "Library item actions",
@@ -4251,7 +4249,7 @@
         "rename_shared": "This file has a live share link — renaming it would break the link. Remove the share (or let it expire) and try again.",
         "rename_failed": "Could not rename the file. Try again.",
         "rename_failed_named": "Could not rename “{{name}}”: {{reason}}",
-        "library_add_empty": "No artifacts yet. Things Kiro makes for you will show up here, ready to copy to the cloud.",
+        "library_add_empty": "No artifacts yet. Things Aj makes for you will show up here, ready to copy to the cloud.",
         "move_to": "Move to folder…",
         "move_title": "Move “{{name}}” to",
         "move_root": "Files (top level)",
@@ -4428,7 +4426,7 @@
       "continue": "Continue",
       "credentials_remain_with_their_source_rules_hooks": "Credentials remain with their source. Conversation history, hooks, agent definitions, and a source's persona identity are not imported. Your written rules and instructions are imported as high-priority memory.",
       "deduplicated": "Deduplicated",
-      "existing_kirocrew_setup_is_never_overwritten_mat": "Existing {{productName}} setup is never overwritten by default. Matching items are deduplicated, and a conflicting item keeps your current version unless you choose otherwise after the import.",
+      "existing_ajcrew_setup_is_never_overwritten_mat": "Existing {{productName}} setup is never overwritten by default. Matching items are deduplicated, and a conflicting item keeps your current version unless you choose otherwise after the import.",
       "import_agent_setup": "Import agent setup",
       "import_another": "Import another",
       "import_setup": "Import setup",
@@ -4436,7 +4434,7 @@
       "importing": "Importing",
       "items_already_exist_with_different_content": "items already exist with different content.",
       "keep_both": "Keep both",
-      "kirocrew_did_not_find_supported_setup_to_import": "{{productName}} did not find supported setup to import on this gateway host.",
+      "ajcrew_did_not_find_supported_setup_to_import": "{{productName}} did not find supported setup to import on this gateway host.",
       "merge_only": "Merge only",
       "merge_only_setup_credentials_stay_where_they_are": "Merge-only setup · credentials stay where they are",
       "no_supported_setup_found": "No supported setup found",
@@ -4452,7 +4450,7 @@
       "skipped": "Skipped",
       "try_again": "Try again",
       "we_could_not_scan_agent_setup": "We could not scan agent setup",
-      "found_setup_kirocrew_could_not_read": "Found setup {{productName}} could not read",
+      "found_setup_ajcrew_could_not_read": "Found setup {{productName}} could not read",
       "found_setup_but_could_not_read_it": "{{productName}} found {{sources}} but could not read the files, so nothing was imported.",
       "some_setup_could_not_be_read": "{{productName}} could not read {{sources}} — not listed below.",
       "files_could_not_be_read": "Files could not be read",
@@ -4464,7 +4462,7 @@
       "skip_reason_invalid": "Could not be read as valid settings",
       "skip_reason_other": "Skipped",
       "resolve_failed_title": "Your import is saved, but Keep both or Replace mine did not go through. Try again below.",
-      "your_existing_kirocrew_setup_will_not_be_affecte": "Your existing {{productName}} setup will not be affected.",
+      "your_existing_ajcrew_setup_will_not_be_affecte": "Your existing {{productName}} setup will not be affected.",
       "import_setup_stage": "Import setup · {{stage}} of {{stages}}",
       "source_item_count_one": "{{name}}, {{count}} item",
       "source_item_count_other": "{{name}}, {{count}} items",
@@ -4585,7 +4583,7 @@
       "sourcesPopover": {
         "developer_install_equivalent_to_command": "Developer install of a local app directory (equivalent to <command/>).",
         "install_from_path": "Install from Path",
-        "kirocrew_app_install_path": "kirocrew app install <path>",
+        "ajcrew_app_install_path": "ajcrew app install <path>",
         "manage_app_sources": "Manage app sources",
         "path_to_app_directory": "/path/to/app-directory",
         "app_directory_path_label": "App directory path"
@@ -5141,12 +5139,12 @@
       "s_elapsed": "s elapsed"
     },
     "kiroPrerequisiteGate": {
-      "ask_the_kiro_crew_owner_to_install_kiro_cli_and": "Ask the {{productName}} owner to install Kiro CLI and sign in on this gateway. This dashboard\n          will open for you as soon as the gateway is ready.",
+      "ask_the_aj_crew_owner_to_install_kiro_cli_and": "Ask the {{productName}} owner to install Kiro CLI and sign in on this gateway. This dashboard\n          will open for you as soon as the gateway is ready.",
       "check_again": "Check again",
       "could_not_check_kiro_cli": "Could not check Kiro CLI.",
       "gateway": "gateway",
       "gateway_setup_required": "Gateway setup required",
-      "install_kiro_cli_sign_in_once_and_kiro_crew_will": "Install Kiro CLI, sign in once, and {{productName}} will take it from here.",
+      "install_kiro_cli_sign_in_once_and_aj_crew_will": "Install Kiro CLI, sign in once, and {{productName}} will take it from here.",
       "or_run_in_terminal": "or run in terminal:",
       "refresh": "Refresh",
       "retry_the_gateway_check_before_starting_a_sessio": "Retry the gateway check before starting a session.",
@@ -5400,18 +5398,18 @@
       }
     },
     "onboardingChapterShell": {
-      "kiro_crew": "{{productName}}",
+      "aj_crew": "{{productName}}",
       "skip_all": "Skip all",
       "skip_all_setup_and_onboarding": "Skip all setup and onboarding"
     },
     "onboardingFlow": {
-      "answers_set_how_kiro_explains_things_plain_langu": "Answers set how Kiro explains things — plain language or full technical detail. Saved on this device; change anytime in Settings → Chat.",
+      "answers_set_how_kiro_explains_things_plain_langu": "Answers set how Aj explains things — plain language or full technical detail. Saved on this device; change anytime in Settings → Chat.",
       "back": "Back",
       "choose_a_color_theme_and_mode_you_can_change_it": "Choose a mode, a color theme and translucent panels — you can change it anytime.",
       "color_theme": "Color theme",
       "continue": "Continue",
       "couldn_t_save_your_answers_press_next_to_retry_o": "Couldn't save your answers — press Next to retry, or Skip again to\n            continue without saving.",
-      "customize_kirocrew": "Customize {{productName}}",
+      "customize_ajcrew": "Customize {{productName}}",
       "describe_your_role": "Describe your role",
       "e_g_solutions_architect_sre_founder": "e.g. solutions architect, SRE, founder",
       "how_technical_are_you": "How technical are you?",
@@ -5421,7 +5419,7 @@
       "mode_system": "System",
       "pick_your_look": "Pick your look",
       "skip": "Skip",
-      "tell_kiro_about_you": "Tell Kiro about you",
+      "tell_kiro_about_you": "Tell Aj about you",
       "your_role": "Your role"
     },
     "pierreEditorImpl": {
@@ -5546,7 +5544,7 @@
       "file_status_removed": "Removed",
       "file_status_renamed": "Renamed",
       "file_status_unchanged": "Unchanged",
-      "kiro_crew_uses_your_local_provider_cli_to_load_p": "{{productName}} uses your local provider CLI to load pull requests. Run this command in your terminal, then retry.",
+      "aj_crew_uses_your_local_provider_cli_to_load_p": "{{productName}} uses your local provider CLI to load pull requests. Run this command in your terminal, then retry.",
       "loading_diff": "Loading diff…",
       "loading_source_provider": "Loading source provider…",
       "mr_number": "MR !{{number}}",
@@ -5771,7 +5769,7 @@
     },
     "sessionPulseSurveyCard": {
       "dismiss": "Dismiss survey",
-      "email_disclosure": "We may want to contact you about your feedback. Your rating and any feedback are sent to the Kiro Crew team.",
+      "email_disclosure": "We may want to contact you about your feedback. Your rating and any feedback are sent to the Aj Crew team.",
       "email_placeholder": "you@example.com (optional)",
       "email_prompt": "Share your email to join our research panel",
       "feedback_question": "Do you have additional feedback about this experience?",
@@ -5813,7 +5811,7 @@
       "save_refused": "Not saved: the browser's storage is full. Free some space and try again.",
       "search": "Search",
       "search_everywhere": "Search Everywhere",
-      "show_or_focus_the_kiro_crew_window": "Show or focus the {{productName}} window",
+      "show_or_focus_the_aj_crew_window": "Show or focus the {{productName}} window",
       "use_ctrl_not_option_for_chat_1_9": "Use ⌃ Ctrl (not ⌥ Option) for chat 1–9",
       "use_ctrl_not_option_for_chat_1_to_9": "Use Ctrl (not Option) for chat 1 to 9"
     },
@@ -6015,7 +6013,7 @@
       "dismiss": "Dismiss",
       "dismiss_update_dialog": "Dismiss update dialog",
       "is_downloaded_and_ready_to_install": "is downloaded and ready to install.",
-      "kirocrew": "{{productName}}",
+      "ajcrew": "{{productName}}",
       "later": "Later",
       "update_ready": "Update ready"
     },
@@ -6578,7 +6576,7 @@
       "couldn_t_load_messages": "Couldn't load messages",
       "deny": "Deny",
       "failed": "failed",
-      "kiro_is_working": "kiro is working…",
+      "kiro_is_working": "aj is working…",
       "loading_thread": "Loading thread…",
       "needs_approval": "needs approval:",
       "no_messages_yet": "No messages yet",
@@ -6685,7 +6683,7 @@
       "session_approval_manifest_key": "Manifest key",
       "platform_list": "Platform: {{os}}",
       "previous": "Previous",
-      "removes_kirocrew_metadata_only_the_app_itself_is": "Removes {{productName}} metadata only — the app itself is managed externally",
+      "removes_ajcrew_metadata_only_the_app_itself_is": "Removes {{productName}} metadata only — the app itself is managed externally",
       "repository": "Repository:",
       "report_issue": "Report an issue",
       "requires_local_install": "Requires local install",
@@ -6747,7 +6745,7 @@
       "sort": "Sort:",
       "sort_apps": "Sort apps",
       "this_app_has_an_uninstall_script_that_will_run_b": "This app has an uninstall script that will run before removal. It may delete the app binary, agent configs, skills, and other resources it created during installation.",
-      "this_is_a_self_managed_app_only_kirocrew_metadat": "This is a self-managed app — only {{productName}} metadata and the app secret will be removed.\n                    The app itself and its agent/skill registrations are managed externally and will not be affected.\n                    If the app is still running, it may re-register on next launch.",
+      "this_is_a_self_managed_app_only_ajcrew_metadat": "This is a self-managed app — only {{productName}} metadata and the app secret will be removed.\n                    The app itself and its agent/skill registrations are managed externally and will not be affected.\n                    If the app is still running, it may re-register on next launch.",
       "this_will_remove_all_resources_provided_by_this": "This will remove all resources provided by this app:",
       "try_a_different_search_or_category": "Try a different search or category.",
       "uninstall_app_title": "Uninstall “{{name}}”?",
@@ -6775,7 +6773,7 @@
       "also_create_in_aws_config": "Also create in AWS config",
       "and_click": "and click",
       "apply_iam_policy_yourself": "— click <action/>, then apply it yourself to a dedicated role/identity — console or your own <iam/> command. {{productName}} never edits your IAM. The first deploy reports the exact missing permission if anything's off.",
-      "apply_this_policy_yourself_kirocrew_never_edits": "Apply this policy yourself ({{productName}} never edits your IAM).",
+      "apply_this_policy_yourself_ajcrew_never_edits": "Apply this policy yourself ({{productName}} never edits your IAM).",
       "artifact_deploy": "Artifact Deploy",
       "aws": "aws",
       "aws_2": "~/.aws",
@@ -6802,12 +6800,12 @@
       "found_in_your_aws_config": "Found in your AWS config:",
       "full_setup_guide_profile_aws_cli_v2_troubleshoot": "Full setup guide (profile, AWS CLI v2, troubleshooting) →",
       "full_setup_security_docs": "Full setup & security docs →",
-      "fullstack_tier_includes_lambda_api_gateway_dynam": "Fullstack tier: includes Lambda, API Gateway, DynamoDB, IAM PassRole — scoped to kirocrew-deploy-app-* resources.",
+      "fullstack_tier_includes_lambda_api_gateway_dynam": "Fullstack tier: includes Lambda, API Gateway, DynamoDB, IAM PassRole — scoped to ajcrew-deploy-app-* resources.",
       "get_iam_policy": "Get IAM policy",
       "getting_started_one_time_aws_setup": "Getting started (one-time AWS setup)",
       "h_scan": "h · Scan:",
       "how_this_is_secured": "How this is secured",
-      "in_your_terminal_kirocrew_never_sees_your_keys_p": "in your terminal ({{productName}} never sees your keys). Pick one:",
+      "in_your_terminal_ajcrew_never_sees_your_keys_p": "in your terminal ({{productName}} never sees your keys). Pick one:",
       "m_ago": "m ago",
       "missing_sso_start_url_sso_region": "missing … sso_start_url, sso_region",
       "new_profile": "New profile",
@@ -6852,7 +6850,7 @@
       "webapp_other": "{{count}} webapps",
       "worst_case_tiers_over_each_ttl_window_estimate_n": "(worst-case tiers, over each TTL window; estimate — not the AWS bill)",
       "writes_only_region_via_command": "(writes only region / credential_process via <cmd/> — never credentials)",
-      "your_credentials_never_touch_kirocrew": "Your credentials never touch {{productName}}.",
+      "your_credentials_never_touch_ajcrew": "Your credentials never touch {{productName}}.",
       "cloud_deployment_disabled": "Cloud deployment is disabled",
       "cloud_deployment_disabled_detail": "This installation does not permit provisioning infrastructure in a cloud account, so artifact deployment is unavailable. Contact your administrator if you believe this is a mistake.",
       "4_optional_install_auto_cleanup": "4. Optional: install auto-cleanup",
@@ -7219,9 +7217,9 @@
         "spec_choice_package_unknown": "Package unknown",
         "spec_choice_modified": "Modified {{date}}",
         "spec_choice_differs": "Differs from the others in: {{fields}}",
-        "spec_choice_more": "{{count}} more files declare {{agent}} and are not listed. Pin one of them with: kirocrew agent pin {{agent}} <file>",
-        "spec_choice_done_resuming": "Using {{file}} for {{agent}} from now on. Starting the session again. Change it later with kirocrew agent pin.",
-        "spec_choice_done": "Using {{file}} for {{agent}} from now on. Send your message again to start. Change it later with kirocrew agent pin.",
+        "spec_choice_more": "{{count}} more files declare {{agent}} and are not listed. Pin one of them with: ajcrew agent pin {{agent}} <file>",
+        "spec_choice_done_resuming": "Using {{file}} for {{agent}} from now on. Starting the session again. Change it later with ajcrew agent pin.",
+        "spec_choice_done": "Using {{file}} for {{agent}} from now on. Send your message again to start. Change it later with ajcrew agent pin.",
         "spec_choice_failed": "The choice could not be saved"
       },
       "knowledgePicker": {
@@ -7720,7 +7718,7 @@
       "chat_messages": "Chat messages",
       "continue_a_previous_chat": "Continue a previous chat?",
       "could_not_continue": "Couldn't continue",
-      "could_not_delete_cron_ownership_unknown": "Could not delete \"{{title}}\": its cron jobs could not be determined, so deleting it would leave them owned by nobody. Release candidate jobs with `kirocrew cron adopt <id> --release`, repair the transcript metadata, then delete again.",
+      "could_not_delete_cron_ownership_unknown": "Could not delete \"{{title}}\": its cron jobs could not be determined, so deleting it would leave them owned by nobody. Release candidate jobs with `ajcrew cron adopt <id> --release`, repair the transcript metadata, then delete again.",
       "could_not_delete_cron_store_busy": "Could not delete \"{{title}}\": the cron store is busy, so its cron jobs could not be checked. Try again in a moment.",
       "could_not_delete_cron_store_unreadable": "Could not delete \"{{title}}\": the cron store could not be read, so its cron jobs could not be checked. Repair the cron store, then delete again.",
       "could_not_delete_this_session": "Could not delete \"{{title}}\".",
@@ -8119,7 +8117,7 @@
       "earlier_range_starts_other": "Turns {{first}}–{{last}} earlier · {{n}} of them listed above",
       "earlier_single": "Turn {{n}} earlier",
       "empty": "No context breakdown recorded for this session yet.",
-      "empty_off": "Context breakdown is not recorded while the crew log is off. Remove KIROCREW_CREW_LOG from {{file}} (or wherever the gateway’s environment sets it) and restart the gateway to record it.",
+      "empty_off": "Context breakdown is not recorded while the crew log is off. Remove AJCREW_CREW_LOG from {{file}} (or wherever the gateway’s environment sets it) and restart the gateway to record it.",
       "engine_approximate": "A turn was sent again since then, so the {{productName}} share may count an attempt that is no longer in the context.",
       "engine_cat_agentsIndex": "Agents list",
       "engine_cat_attachedFiles": "Attached files",
@@ -8230,7 +8228,7 @@
       "behind": "Behind",
       "branch": "Branch:",
       "build_pending": "build pending",
-      "build_pending_restart_gateway_to_apply_kirocrew": "build pending — restart gateway to apply (kirocrew restart)",
+      "build_pending_restart_gateway_to_apply_ajcrew": "build pending — restart gateway to apply (ajcrew restart)",
       "cancel": "Cancel",
       "close": "Close",
       "closed_has_unmerged_commits": "closed PR — has commits not on main",
@@ -8376,7 +8374,7 @@
         "mcp_concern_model_allowlist": "The model list your agent config file allows — it does not limit what {{name}} offers",
         "mcp_concern_permission_mode": "The permission mode your agent config file asks for — {{name}} uses its own instead",
         "mcp_concern_tool_allowlist": "The tools your agent config file allows — that list does not narrow anything here",
-        "mcp_deny_exception": "One exception: {{productName}}'s own servers, such as kirocrew-core, keep working tool by tool on {{name}}.",
+        "mcp_deny_exception": "One exception: {{productName}}'s own servers, such as ajcrew-core, keep working tool by tool on {{name}}.",
         "mcp_deny_manage_link": "Open the MCP Servers list in Connections",
         "mcp_deny_rule": "Turning off one MCP tool on {{name}} stops every tool on the same server, not just the one you turned off.",
         "missing_components": "Missing on this machine: {{components}}",
@@ -8499,7 +8497,7 @@
       "timeout": "Timeout",
       "user": "user"
     },
-    "kiroCrewAgentsPage": {
+    "ajCrewAgentsPage": {
       "add_crew_member": "New bot",
       "agents": "Agents",
       "bindings_preview_info": "Memory V2 follows the member through private chats, Crew delegation, scheduled work and restart. Starting knowledge is copied only when you select it.",
@@ -9249,7 +9247,7 @@
       "dashboard_values_behind_old": "These values have not updated in a while, so they may be behind.",
       "dashboard_values_stale": "Live values stopped updating, so these are the last ones received.",
       "export_row": "Export as file",
-      "export_row_sub": "Share this bot as a .kirobot file",
+      "export_row_sub": "Share this bot as a .ajbot file",
       "export_title": "Export as file",
       "export_intro": "The file holds exactly what is listed here. Nothing is saved on this machine.",
       "export_identity": "Name, description and picture",
@@ -9350,7 +9348,7 @@
       "refresh": "Refresh",
       "the_old_builtin_entry_has_been_removed_your_data": "The old builtin entry has been removed. Your data has been preserved and is accessible to the standalone version.",
       "the_standalone_version_is_installed_and_ready_to": "The standalone version is installed and ready to use.",
-      "this_feature_was_previously_built_into_kirocrew": "This feature was previously built into {{productName}} but has been extracted into a standalone app package.\n                The builtin version has been removed from this {{productName}} release.",
+      "this_feature_was_previously_built_into_ajcrew": "This feature was previously built into {{productName}} but has been extracted into a standalone app package.\n                The builtin version has been removed from this {{productName}} release.",
       "you_can_clean_up_the_old_builtin_entry_to_remove": "You can clean up the old builtin entry to remove it from the sidebar.",
       "your_data_has_been_preserved_and_will_be_availab": "Your data has been preserved and will be available in the standalone version."
     },
@@ -9403,7 +9401,7 @@
         "confirm_detail": "Re-embedding runs in the background and can take a while on a large memory. Keyword search keeps working throughout.",
         "confirm_title": "Change the embedding model?",
         "counts": "{{done}} / {{total}} · {{pct}}%",
-        "err_env_override": "KIROCREW_EMBED_MODEL_PATH is set and overrides this setting. Unset it to change the model here.",
+        "err_env_override": "AJCREW_EMBED_MODEL_PATH is set and overrides this setting. Unset it to change the model here.",
         "err_in_progress": "A model change is already being applied.",
         "err_memory_unavailable": "Memory is not available, so the model cannot be changed: {{error}}",
         "err_not_a_file": "That path is a directory, not a file.",
@@ -9423,14 +9421,14 @@
         "path_placeholder": "/path/to/your-model.gguf",
         "reembed_done": "Re-embedding complete",
         "reembed_failed": "Re-embedding failed",
-        "reembed_failed_hint": "The model could not be applied. Hover for details, or run 'kirocrew doctor'.",
+        "reembed_failed_hint": "The model could not be applied. Hover for details, or run 'ajcrew doctor'.",
         "reembedding": "Re-embedding memories…",
         "subtitle": "Runs locally. Changing it re-embeds stored memories in the background.",
         "title": "Embedding Model",
         "will_revert": "Empty — this will revert to the bundled model.",
         "err_vector_store_unavailable": "Vector memory is unavailable, so the model cannot be changed. Try again shortly."
       },
-      "kiroCrewCfgTab": {
+      "ajCrewCfgTab": {
         "applies_to_sessions_started_after_the_change": "Applies to sessions started after the change. 'auto' sandboxes the agent but keeps credential tooling working; 'strict' also hides cloud, SSH, kube and registry credentials, so those tools stop working inside the agent — only where {{productName}}'s own sandbox confines the spawn, not on Windows or on a macOS spawn delegated to kiro-cli's internal sandbox; 'off' skips {{productName}}'s sandbox (on macOS kiro-cli's own sandbox still applies when enabled).",
         "approval_mode": "Approval Mode",
         "auto": "auto",
@@ -9444,7 +9442,7 @@
         "embedding_provider": "Embedding Provider",
         "enable_dynamic_mcp_tool_discovery_via_kiro_cli_t": "Enable dynamic MCP tool discovery via kiro-cli. Takes effect on next session.",
         "immediate_auto_approves_all_tools_interactive_as": "Applies after a gateway restart. 'auto' approves all tools; 'interactive' asks before each.",
-        "kirocrew_agents": "Bots",
+        "ajcrew_agents": "Bots",
         "max_channel_agents": "Max Channel Agents",
         "max_channels": "Max Channels",
         "max_concurrent_subagents": "Max Concurrent Subagents",
@@ -9482,7 +9480,7 @@
         "add_custom": "Add Custom",
         "add_server": "Add Server",
         "apply": "Apply",
-        "apply_commits_to_kirocrew_mcp_json_provider_glob": "— Apply commits to ~/.kiro/crew/mcp.json + provider globals as opted-in.",
+        "apply_commits_to_ajcrew_mcp_json_provider_glob": "— Apply commits to ~/.kiro/crew/mcp.json + provider globals as opted-in.",
         "applying": "Applying…",
         "clear_search": "Clear search",
         "discard": "Discard",
@@ -9490,7 +9488,7 @@
         "filter_servers_or_tools": "Filter servers or tools…",
         "globals": "Globals",
         "kiro": "Kiro",
-        "kirocrew": "{{productName}}",
+        "ajcrew": "{{productName}}",
         "last_probed": "Last probed",
         "name": "Name",
         "no_matching_servers": "No matching servers",
@@ -9605,7 +9603,7 @@
         "share_memory_title": "Export this memory?",
         "share_memory_warning": "Memory can hold anything the agent was told, such as names, file paths or a pasted password. Nothing is redacted. Anyone who gets the file can read all of it.",
         "skills": "Skills:",
-        "upload_a_kirocrew_export_zip_to_restore_settings": "Upload a {{productName}} export zip to restore settings on this instance. Chats in the archive are added; existing chats are never replaced.\n          Existing data will be merged by default (duplicates are skipped).",
+        "upload_a_ajcrew_export_zip_to_restore_settings": "Upload an {{productName}} export zip to restore settings on this instance. Chats in the archive are added; existing chats are never replaced.\n          Existing data will be merged by default (duplicates are skipped).",
         "workspace_files": "Workspace files:"
       },
       "promptsTab": {
@@ -9848,7 +9846,7 @@
         "active_projects": "Projects you worked on",
         "coding_time": "Coding time",
         "connect_body": "WakaTime is a free tool that tracks the time you spend coding in your editor.",
-        "connect_hint": "Set wakatime.enabled to true in $KIROCREW_HOME/config.json (default ~/.kiro/crew/config.json), then in Settings → Secrets set the WakaTime API key under Used automatically by {{productName}}. Get a key at wakatime.com/settings/account.",
+        "connect_hint": "Set wakatime.enabled to true in $AJCREW_HOME/config.json (default ~/.kiro/crew/config.json), then in Settings → Secrets set the WakaTime API key under Used automatically by {{productName}}. Get a key at wakatime.com/settings/account.",
         "connect_title": "Connect WakaTime",
         "daily_average": "Average per day",
         "export_csv": "Export hours (CSV)",
@@ -10283,8 +10281,8 @@
       "expand_sessions": "Expand sessions under {{name}}",
       "expand_tasks": "Expand tasks for {{name}}",
       "filter_sessions": "Filter sessions…",
-      "footer_kirocrew_gb": "{{productName}} (GB)",
-      "footer_kirocrew_gb_hint": "Everything {{productName}} runs on this computer, measured the way the operating system reports an app's memory. Select the number to see the parts.",
+      "footer_ajcrew_gb": "{{productName}} (GB)",
+      "footer_ajcrew_gb_hint": "Everything {{productName}} runs on this computer, measured the way the operating system reports an app's memory. Select the number to see the parts.",
       "breakdown_open": "{{value}} GB. Show the parts of this total",
       "breakdown_title": "Memory by part",
       "breakdown_total": "{{value}} GB in total",
@@ -10435,7 +10433,7 @@
       },
       "channelDisabledPanel": {
         "checking_your_organization_s_channel_policy": "Checking your organization's channel policy…",
-        "kirocrew_couldn_t_confirm_whether_your_organizat": "{{productName}} couldn't confirm whether your organization's security policy\n          permits this channel. Its settings are hidden until the status resolves —\n          enforcement is unaffected. Try reloading.",
+        "ajcrew_couldn_t_confirm_whether_your_organizat": "{{productName}} couldn't confirm whether your organization's security policy\n          permits this channel. Its settings are hidden until the status resolves —\n          enforcement is unaffected. Try reloading.",
         "your_organization_s_security_policy_disables_thi": "Your organization's security policy disables this channel. Its settings\n        are unavailable and any configuration here would not take effect.",
         "channel_policy_status_unavailable": "{{channel}} policy status unavailable",
         "channel_turned_off": "{{channel}} is turned off by your administrator"
@@ -10526,8 +10524,8 @@
         "how_much_an_automatically_registered_source_may_i": "How much an automatically-registered source may take in one pass. Each piece of a document costs one extraction call, so this is what bounds the cost; newest documents land first and the rest follow on later passes. 0 removes the bound. Default {{count}}.",
         "immediate_mode_shows_raw_chunks_as_they_arrive_s": "Immediate mode shows raw chunks as they arrive. Smooth mode buffers and fades text in at a steady pace.",
         "keep_your_computer_awake_while_a_task_is_running": "Keep your computer awake while a task is running. On some Windows laptops (Modern Standby), locking the screen can still let it sleep, so keep the screen on for long tasks.",
-        "kiro_matches_vocabulary_and_examples_to_your_pro": "Kiro matches vocabulary and examples to your professional background",
-        "kiro_quotes_this_back_to_itself_when_calibrating": "Kiro uses this description to adapt vocabulary and examples to your role.",
+        "kiro_matches_vocabulary_and_examples_to_your_pro": "Aj matches vocabulary and examples to your professional background",
+        "kiro_quotes_this_back_to_itself_when_calibrating": "Aj uses this description to adapt vocabulary and examples to your role.",
         "knowledge_library": "Knowledge Library",
         "let_the_agent_add_documents_it_reads_while_workin": "Let the agent add documents it reads while working to your knowledge library, so they stay searchable later. The agent reads documents with tools you approve; {{productName}} does not fetch them directly. Added documents appear in one “Auto-added” source you can remove in a click.",
         "link_previews": "Link Previews",
@@ -10739,7 +10737,7 @@
         "aws_profile": "AWS profile",
         "aws_region": "AWS region",
         "aws_ssm_session_manager": "AWS SSM Session Manager",
-        "command_v_kirocrew": "command -v kirocrew",
+        "command_v_ajcrew": "command -v ajcrew",
         "commonly_path_use_absolute": "(commonly <path/>). Use an absolute path (no <tilde/>).",
         "configured_instances": "Configured remote crews",
         "connection_method": "Connection method",
@@ -10760,13 +10758,13 @@
         "restart_to_activate": "Remote crew management is on, but not active yet. Run <restartCmd/> in a terminal on the computer this dashboard runs on, not on a remote crew. Then you can connect to your remote crews.",
         "fargate_method_hint": "Tunnels via aws ssm start-session to an ECS task that serves a chat API. No dashboard and no token: the card shows a URL to call. Needs the same AWS CLI, session-manager-plugin and permission as AWS SSM Session Manager.",
         "front_port_hint": "Use the port the task's front proxy listens on ({{port}} in the shipped task definition).",
-        "home_you_local_bin_kirocrew_leave_blank_for_stan": "/home/you/.local/bin/kirocrew  —  leave blank for standard installs",
+        "home_you_local_bin_ajcrew_leave_blank_for_stan": "/home/you/.local/bin/ajcrew  —  leave blank for standard installs",
         "host_1_alias": "host-1-alias",
         "is_installed_somewhere_non_standard_on_the_remot": "is installed somewhere non-standard on the crew. Leave blank for a normal pip install on PATH. To find it, run on the crew:",
-        "kirocrew": "kirocrew",
-        "kirocrew_restart": "kirocrew restart",
+        "ajcrew": "ajcrew",
+        "ajcrew_restart": "ajcrew restart",
         "loading": "Loading…",
-        "local_bin_kirocrew": "~/.local/bin/kirocrew",
+        "local_bin_ajcrew": "~/.local/bin/ajcrew",
         "multi_instance_management_is": "Remote crew management is",
         "multi_instance_management_is_off": "Remote crew management is off",
         "must_match_the_port_the_remote_gateway_serves_on": "Use the port the remote gateway listens on. Crews may share a port — the local forward port is allocated separately.",
@@ -10777,7 +10775,7 @@
         "optional": "(optional)",
         "refresh": "Refresh",
         "remote_host_1": "Crew 1",
-        "remote_kirocrew_path": "Remote kirocrew path",
+        "remote_ajcrew_path": "Remote ajcrew path",
         "remote_port": "Remote port",
         "remote_user": "Remote user",
         "retry": "Retry",
@@ -10900,9 +10898,9 @@
         "expand_all": "Expand all",
         "governance_policy": "Governance Policy",
         "governance_status_is_temporarily_unavailable_enf": "Governance status is temporarily unavailable. Enforcement is unaffected — this view could not resolve the ceiling for display.",
-        "i_understand_this_weakens_kirocrew_s_protection": "I understand this weakens {{productName}}'s protection.",
-        "kiro_crew_security_policy_json": "security_policy.json",
-        "kirocrew_implements_6_security_layers_each_layer": "{{productName}} implements 6 security layers. Each layer operates independently — an attacker must bypass all layers simultaneously to succeed.",
+        "i_understand_this_weakens_ajcrew_s_protection": "I understand this weakens {{productName}}'s protection.",
+        "aj_crew_security_policy_json": "security_policy.json",
+        "ajcrew_implements_6_security_layers_each_layer": "{{productName}} implements 6 security layers. Each layer operates independently — an attacker must bypass all layers simultaneously to succeed.",
         "live_security_posture": "Live Security Posture",
         "loading_built_in_rules": "Loading built-in rules…",
         "loading_governance_policy": "Loading governance policy…",
@@ -10970,7 +10968,7 @@
         "from_oauth_permissions_after_installing_your_sla": "From OAuth & Permissions after installing your Slack app (starts with xoxb-).",
         "get_your_credentials": "Get your credentials",
         "identity_access": "Identity & access",
-        "kirocrew": "kirocrew",
+        "ajcrew": "ajcrew",
         "loading_slack_config": "Loading Slack config…",
         "none": "(none)",
         "owner_slack_member_id": "Owner Slack member ID",
@@ -10988,7 +10986,7 @@
         "slack_settings_are_managed_on_the_machine_runnin": "Slack settings are managed on the machine running {{productName}} and are read-only from remote sessions.",
         "slash_command": "Slash command",
         "talk_to_your_agents_from_slack_over_socket_mode": "Talk to your agents from Slack over Socket Mode. Add allowed member IDs so connected bots can respond.",
-        "the_one_member_who_can_always_interact_with_the": "Your Slack member ID (KIROCREW_OWNER_ID): in Slack, open your profile, select ⋮, then Copy member ID. Starts with U or W.",
+        "the_one_member_who_can_always_interact_with_the": "Your Slack member ID (AJCREW_OWNER_ID): in Slack, open your profile, select ⋮, then Copy member ID. Starts with U or W.",
         "trigger_word_for_the_slack_slash_command_without": "Trigger word for the Slack slash command (without the leading /).",
         "u0123abc456": "U0123ABC456"
       },
@@ -11197,7 +11195,7 @@
         "approve_your_code_sso_for": "Approve the code for {{name}} with your company SSO account",
         "awaiting_sign_in": "Waiting for your approval",
         "aws_cli_refused": "Your AWS credentials were not checked. {{diagnosis}}",
-        "aws_check_no_sandbox": "The AWS check could not run because this computer has no sandbox for the aws command. Your credentials were not checked. Run kirocrew doctor in a terminal for the fix, then re-check.",
+        "aws_check_no_sandbox": "The AWS check could not run because this computer has no sandbox for the aws command. Your credentials were not checked. Run ajcrew doctor in a terminal for the fix, then re-check.",
         "aws_check_outer_sandbox": "The AWS check could not run because another sandbox already confines {{productName}}, so it cannot start its own sandbox for the aws command. Your credentials were not checked. Start {{productName}} outside that sandbox, then re-check.",
         "aws_check_sandbox_busy": "The AWS check could not run because the sandbox for the aws command hit a temporary limit. Your credentials were not checked. Re-check in a moment.",
         "before_you_start": "Before you start — your AWS setup",
@@ -11277,7 +11275,7 @@
         "launch_done_unsigned": "The crew is ready and appears in Your crews, but Kiro is not signed in on it yet. Finish the sign-in above.",
         "launch_failed_title": "Launch failed",
         "launch_wait_for_setup": "A crew setup is running below. You can launch another crew once it finishes.",
-        "launched_by_kiro_crew": "Launched by {{productName}}",
+        "launched_by_aj_crew": "Launched by {{productName}}",
         "launched_same_settings": "Launched. Its progress is shown below. To start a second crew with the same settings, choose Launch another crew.",
         "launching": "Launching…",
         "more_actions": "More actions for {{name}}",
@@ -11304,7 +11302,7 @@
         "plugin_refused_other_owner": "Found at {{path}}, but {{productName}} will not run it: it, or a folder above it, belongs to another user account ({{owner}}, user ID {{uid}}). {{productName}} runs only programs owned by its own account or by the system administrator account (root).",
         "plugin_refused_other_owner_uid": "Found at {{path}}, but {{productName}} will not run it: it, or a folder above it, belongs to another user account (user ID {{uid}}, which has no name on the computer that runs {{productName}}). {{productName}} runs only programs owned by its own account or by the system administrator account (root).",
         "plugin_refused_root_gateway": "Found at {{path}}, but {{productName}} will not run it: {{productName}} is running as root, and it runs no helper program as root.",
-        "plugin_refused_strict_policy": "Found at {{path}}, but {{productName}} will not run it: the strict check (KIROCREW_PROVIDER_BIN_STRICT) is on, and it accepts only a file and folders that only root can change, at a path with no symbolic links.",
+        "plugin_refused_strict_policy": "Found at {{path}}, but {{productName}} will not run it: the strict check (AJCREW_PROVIDER_BIN_STRICT) is on, and it accepts only a file and folders that only root can change, at a path with no symbolic links.",
         "plugin_refused_world_writable": "Found at {{path}}, but {{productName}} will not run it: any account can change the file or a folder above it.",
         "port_must_be_in_range": "Enter a port between 1 and 65535.",
         "prereq_cloudformation": "CloudFormation access",
@@ -11405,7 +11403,7 @@
       }
     },
     "settingsPage": {
-      "kirocrew_v": "{{productName}} v",
+      "ajcrew_v": "{{productName}} v",
       "search": {
         "aria_label": "Search settings",
         "no_results": "No matching settings",
@@ -11625,7 +11623,7 @@
       "bearer_token_proves_who_is_calling": "Bearer token — proves who is calling",
       "call_this_hook": "Call this hook",
       "caller_name": "Caller name",
-      "calls_must_send_signature_headers_detail": "Calls with this token must send X-KiroCrew-Timestamp and X-KiroCrew-Signature. The signature covers \"<timestamp>.<raw body>\", the timestamp must be within ±{{seconds}}s, and each signature is accepted once per gateway process.",
+      "calls_must_send_signature_headers_detail": "Calls with this token must send X-AjCrew-Timestamp and X-AjCrew-Signature. The signature covers \"<timestamp>.<raw body>\", the timestamp must be within ±{{seconds}}s, and each signature is accepted once per gateway process.",
       "calls_using_it_start_failing_with_401": "Calls using it start failing with 401.",
       "completed": "Completed",
       "completed_blurb": "The agent turn finished and its answer was handed to the delivery targets.",

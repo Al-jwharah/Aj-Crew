@@ -23,10 +23,10 @@ import pytest
 from body_stream_helpers import attach_body
 from lesson_write_outcome_helpers import _INJECTION, _store
 
-from kiro_crew.context_blocks import _MARKERS
-from kiro_crew.history import ConversationLog
-from kiro_crew.learn import Lesson, LessonStore
-from kiro_crew.vector_memory import LessonWriteOutcome, VectorMemoryStore
+from aj_crew.context_blocks import _MARKERS
+from aj_crew.history import ConversationLog
+from aj_crew.learn import Lesson, LessonStore
+from aj_crew.vector_memory import LessonWriteOutcome, VectorMemoryStore
 
 _ORDINARY = "run the linter before pushing a branch"
 
@@ -96,7 +96,7 @@ class TestLessonsRouteFallback:
         return request, state
 
     async def _post(self, tmp_path, rule: str, negative: str | None = None):
-        from kiro_crew.dashboard.handlers import cron
+        from aj_crew.dashboard.handlers import cron
 
         request, state = self._request(rule, negative)
         store = LessonStore(base_dir=tmp_path)
@@ -128,7 +128,7 @@ class TestLessonsRouteFallback:
 
 class TestCliLearnAdd:
     def _run(self, tmp_path, rule: str):
-        from kiro_crew import cli_commands
+        from aj_crew import cli_commands
 
         store = _store(tmp_path)
         jsonl = LessonStore(base_dir=tmp_path / "j")
@@ -137,7 +137,7 @@ class TestCliLearnAdd:
             closing(store),
             patch.object(cli_commands, "VectorMemoryStore", return_value=store),
             patch.object(cli_commands, "LessonStore", return_value=jsonl),
-            patch.object(cli_commands.KiroCrewConfig, "load", return_value=MagicMock()),
+            patch.object(cli_commands.AjCrewConfig, "load", return_value=MagicMock()),
         ):
             try:
                 cli_commands._learn(args)

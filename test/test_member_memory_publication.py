@@ -12,15 +12,15 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew import cli_commands
-from kiro_crew.agent_discovery import AgentInfo
-from kiro_crew.config.loader import (
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+from aj_crew import cli_commands
+from aj_crew.agent_discovery import AgentInfo
+from aj_crew.config.loader import (
+    AjCrewAgentConfig,
+    AjCrewConfig,
     update_config_locked,
 )
-from kiro_crew.dashboard.handlers import agents as handlers
-from kiro_crew.memory_stores import (
+from aj_crew.dashboard.handlers import agents as handlers
+from aj_crew.memory_stores import (
     _named_store_dir,
     persist_member_config,
     provision_member_memory,
@@ -42,12 +42,12 @@ _HANDSHAKE_CEILING_SECS = 60.0
 @pytest.fixture
 def owner_gateway(monkeypatch):
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request", lambda _: True
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request", lambda _: True
     )
     pass  # Member routing does not depend on OS isolation.
     monkeypatch.setattr(handlers, "list_agents", lambda: [])
-    cfg = KiroCrewConfig.load()
-    cfg.agents["legacy"] = KiroCrewAgentConfig()
+    cfg = AjCrewConfig.load()
+    cfg.agents["legacy"] = AjCrewAgentConfig()
     cfg.save()
     return cfg
 
@@ -60,18 +60,16 @@ def _request(monkeypatch, action):
         app=web.Application(),
         match_info={} if create else {"name": "legacy"},
     )
-    body = (
-        {"name": "new-member", "kiro_agent": "kirocrew"} if create else {"provision_memory": True}
-    )
+    body = {"name": "new-member", "kiro_agent": "ajcrew"} if create else {"provision_memory": True}
     monkeypatch.setattr(request, "json", AsyncMock(return_value=body))
     return request
 
 
 async def _dispatch(request, action):
     handler = (
-        handlers.api_kirocrew_agents_create
+        handlers.api_ajcrew_agents_create
         if action == "create"
-        else handlers.api_kirocrew_agent_update
+        else handlers.api_ajcrew_agent_update
     )
     return await handler(request)
 
@@ -79,14 +77,14 @@ async def _dispatch(request, action):
 def _removed_allocation(store, owner):
     # The unpublished allocation is gone; nothing in the namespace names it.
     assert not _named_store_dir(store).exists()
-    loaded = KiroCrewConfig.load()
+    loaded = AjCrewConfig.load()
     assert store not in loaded.memory_stores
     assert all(agent.memory_store != store for agent in loaded.agents.values())
 
 
 def _retained_allocation(store, owner):
     assert (_named_store_dir(store) / "evidence.txt").read_bytes() == b"retained allocation"
-    from kiro_crew.vector_memory import read_member_database_identity
+    from aj_crew.vector_memory import read_member_database_identity
 
     member_id, stored = read_member_database_identity(_named_store_dir(store) / "memory.db")
     assert stored == store
@@ -119,7 +117,7 @@ async def test_dashboard_publication_failure_removes_new_allocation_and_allows_r
     owner = "new-member" if action == "create" else "legacy"
     assert len(failed_stores) == 1
     await asyncio.to_thread(_removed_allocation, failed_stores[0], owner)
-    loaded = await asyncio.to_thread(KiroCrewConfig.load)
+    loaded = await asyncio.to_thread(AjCrewConfig.load)
     assert await asyncio.to_thread(require_member_memory_store, loaded, "legacy") == "default"
     monkeypatch.setattr(handlers, "persist_member_config", original)
     response = await _dispatch(request, action)
@@ -148,7 +146,7 @@ async def test_dashboard_failure_after_landed_publication_keeps_the_store(
     assert len(published) == 1
     store = published[0]
     assert (_named_store_dir(store) / "memory.db").is_file()
-    loaded = await asyncio.to_thread(KiroCrewConfig.load)
+    loaded = await asyncio.to_thread(AjCrewConfig.load)
     assert await asyncio.to_thread(require_member_memory_store, loaded, "new-member") == store
 
 
@@ -210,7 +208,7 @@ async def test_cancelled_dashboard_request_drains_worker_before_observing_public
     assert task.cancelled()
     assert len(allocated) == 1
     store, owner = allocated[0]
-    loaded = await asyncio.to_thread(KiroCrewConfig.load)
+    loaded = await asyncio.to_thread(AjCrewConfig.load)
     if phase == "provision":
         # Cancelled before publication: the drained worker still finished the
         # allocation, and the retire step removed it because nothing on disk
@@ -236,7 +234,7 @@ async def test_rejected_provisioning_update_preserves_existing_v2(owner_gateway,
     response = await _dispatch(_request(monkeypatch, "opt_in"), "opt_in")
     assert response.status == 400
     handlers.persist_member_config.assert_not_called()
-    loaded = await asyncio.to_thread(KiroCrewConfig.load)
+    loaded = await asyncio.to_thread(AjCrewConfig.load)
     assert await asyncio.to_thread(require_member_memory_store, loaded, "legacy") == store
 
 
@@ -258,7 +256,7 @@ def test_cli_publication_failure_keeps_legacy_binding_and_preserves_new_store(
             argparse.Namespace(
                 agent_action=action,
                 name="new-member" if action == "create" else "legacy",
-                kiro_agent="kirocrew" if action == "create" else None,
+                kiro_agent="ajcrew" if action == "create" else None,
                 workspace="default" if action == "create" else None,
                 memory_store="default" if action == "create" else None,
                 provision_memory=True,
@@ -268,7 +266,7 @@ def test_cli_publication_failure_keeps_legacy_binding_and_preserves_new_store(
     assert "publication refused" in capsys.readouterr().err
     assert len(failed_stores) == 1
     _removed_allocation(failed_stores[0], "new-member" if action == "create" else "legacy")
-    assert require_member_memory_store(KiroCrewConfig.load(), "legacy") == "default"
+    assert require_member_memory_store(AjCrewConfig.load(), "legacy") == "default"
 
 
 def test_every_create_purges_the_name_inside_the_locked_mutation(owner_gateway, monkeypatch):
@@ -276,11 +274,11 @@ def test_every_create_purges_the_name_inside_the_locked_mutation(owner_gateway, 
     option: it runs for the created name after the concurrency checks and
     BEFORE the record lands, and a store that cannot purge aborts the write
     with the config untouched."""
-    from kiro_crew import crew_teams
-    from kiro_crew.config import loader
+    from aj_crew import crew_teams
+    from aj_crew.config import loader
 
     cfg = owner_gateway
-    cfg.agents["new-member"] = KiroCrewAgentConfig()
+    cfg.agents["new-member"] = AjCrewAgentConfig()
     provision_member_memory(cfg, "new-member")
     seen: list[tuple[str, bool]] = []
 
@@ -292,12 +290,12 @@ def test_every_create_purges_the_name_inside_the_locked_mutation(owner_gateway, 
     monkeypatch.setattr(crew_teams, "release_for_create", purge)
     persist_member_config(cfg, "new-member", create=True)
     assert seen == [("new-member", False)]
-    assert require_member_memory_store(KiroCrewConfig.load(), "new-member") != "default"
+    assert require_member_memory_store(AjCrewConfig.load(), "new-member") != "default"
     # An update publishes without purging: only a create can inherit.
     persist_member_config(cfg, "legacy", create=False, expected_store="default")
     assert seen == [("new-member", False)]
 
-    cfg.agents["second"] = KiroCrewAgentConfig()
+    cfg.agents["second"] = AjCrewAgentConfig()
     provision_member_memory(cfg, "second")
 
     def refuse(name: str) -> None:
@@ -306,13 +304,13 @@ def test_every_create_purges_the_name_inside_the_locked_mutation(owner_gateway, 
     monkeypatch.setattr(crew_teams, "release_for_create", refuse)
     with pytest.raises(crew_teams.TeamsUnavailable):
         persist_member_config(cfg, "second", create=True)
-    assert "second" not in KiroCrewConfig.load().agents
+    assert "second" not in AjCrewConfig.load().agents
 
 
 def test_after_write_runs_only_once_the_registry_write_committed(owner_gateway, monkeypatch):
     """The hook the crew-teams drop rides: never before the rename, never when
     the mutation changed nothing, and a failed write never reaches it."""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     calls: list[bool] = []
 
@@ -344,7 +342,7 @@ def test_retire_keeps_a_store_the_disk_config_still_references(owner_gateway):
     # Direct contract of the retire helper: a store that config.json names is
     # never removed, and the in-memory binding is still restored for a retry.
     cfg = owner_gateway
-    cfg.agents["new-member"] = KiroCrewAgentConfig()
+    cfg.agents["new-member"] = AjCrewAgentConfig()
     store = provision_member_memory(cfg, "new-member")
     persist_member_config(cfg, "new-member", create=True)
     removed = retire_unpublished_allocation(
@@ -352,7 +350,7 @@ def test_retire_keeps_a_store_the_disk_config_still_references(owner_gateway):
     )
     assert removed is False
     assert (_named_store_dir(store) / "memory.db").is_file()
-    assert require_member_memory_store(KiroCrewConfig.load(), "new-member") == store
+    assert require_member_memory_store(AjCrewConfig.load(), "new-member") == store
 
 
 def test_retire_never_touches_a_pre_existing_binding(owner_gateway):
@@ -384,7 +382,7 @@ async def test_sync_never_allocates_private_memory_on_failed_or_skipped_publicat
     monkeypatch.setattr(handlers, "list_agents", lambda: [info])
     provision = Mock(side_effect=AssertionError("discovery must not allocate private memory"))
     monkeypatch.setattr(handlers, "provision_member_memory", provision)
-    before = await asyncio.to_thread(KiroCrewConfig.load)
+    before = await asyncio.to_thread(AjCrewConfig.load)
 
     def write(*args, **kwargs):
         if outcome == "failed_write":
@@ -392,7 +390,7 @@ async def test_sync_never_allocates_private_memory_on_failed_or_skipped_publicat
 
         def concurrent(doc):
             doc["agents"]["new-member"] = {
-                "kiro_agent": "kirocrew",
+                "kiro_agent": "ajcrew",
                 "memory_store": "default",
                 "description": "concurrent owner edit",
             }
@@ -403,15 +401,15 @@ async def test_sync_never_allocates_private_memory_on_failed_or_skipped_publicat
 
     monkeypatch.setattr(handlers, "update_config_locked", write)
     request = make_mocked_request("POST", "/api/agents/sync", app=web.Application())
-    response = await handlers.api_kirocrew_agents_sync(request)
+    response = await handlers.api_ajcrew_agents_sync(request)
     assert response.status == (200 if outcome == "concurrent_member" else 500)
     provision.assert_not_called()
-    loaded = await asyncio.to_thread(KiroCrewConfig.load)
+    loaded = await asyncio.to_thread(AjCrewConfig.load)
     assert loaded.memory_stores == before.memory_stores
     assert await asyncio.to_thread(require_member_memory_store, loaded, "legacy") == "default"
     if outcome == "concurrent_member":
         assert loaded.agents["new-member"].description == "concurrent owner edit"
-        assert loaded.agents["new-member"].kiro_agent == "kirocrew"
+        assert loaded.agents["new-member"].kiro_agent == "ajcrew"
         assert (
             await asyncio.to_thread(require_member_memory_store, loaded, "new-member") == "default"
         )

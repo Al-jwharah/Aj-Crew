@@ -25,7 +25,7 @@ _BOM = b"\xef\xbb\xbf"
 
 @pytest.fixture()
 def cfg(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     return tmp_path
 
 

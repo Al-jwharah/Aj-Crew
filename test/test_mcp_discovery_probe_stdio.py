@@ -27,10 +27,10 @@ from mcp_discovery_helpers import (  # noqa: F401 -- the autouse fixture registe
 )
 from stray_line_helpers import too_deep_line
 
+from aj_crew import platform_compat
+from aj_crew.mcp_discovery import McpServerInfo, _read_stdio_jsonrpc_response, probe_server
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS, async_wait_until
 from conftest import host_abs
-from kiro_crew import platform_compat
-from kiro_crew.mcp_discovery import McpServerInfo, _read_stdio_jsonrpc_response, probe_server
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS, async_wait_until
 
 
 class TestProbeServerProcessCleanup:
@@ -78,8 +78,8 @@ class TestProbeServerProcessCleanup:
         server = McpServerInfo(name="test", command="echo")
 
         with (
-            patch("kiro_crew.mcp_discovery.asyncio.create_subprocess_exec", return_value=proc),
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value="/usr/bin/echo"),
+            patch("aj_crew.mcp_discovery.asyncio.create_subprocess_exec", return_value=proc),
+            patch("aj_crew.mcp_discovery.shutil.which", return_value="/usr/bin/echo"),
         ):
             proc.stdout = AsyncMock()
             proc.stdout.readline = AsyncMock(return_value=b"")
@@ -98,7 +98,7 @@ class TestProbeServerProcessCleanup:
         ``install_agent`` agree — a divergence here is what let a server report
         healthy on the dashboard and fail in a session.
         """
-        from kiro_crew.env import spec_env_path
+        from aj_crew.env import spec_env_path
 
         # Spelled for the host (conftest.host_abs): the declared entry passes
         # through the ``os.path.isabs`` filter in env._spec_path_entries, and from
@@ -114,8 +114,8 @@ class TestProbeServerProcessCleanup:
             return proc
 
         with (
-            patch("kiro_crew.mcp_discovery.asyncio.create_subprocess_exec", side_effect=_spawn),
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value="/usr/bin/echo"),
+            patch("aj_crew.mcp_discovery.asyncio.create_subprocess_exec", side_effect=_spawn),
+            patch("aj_crew.mcp_discovery.shutil.which", return_value="/usr/bin/echo"),
         ):
             proc.stdout = AsyncMock()
             proc.stdout.readline = AsyncMock(return_value=b"")
@@ -133,25 +133,25 @@ class TestGetProbeTimeout:
 
     def test_get_probe_timeout_reads_config(self) -> None:
         """_get_probe_timeout() returns the config value when available."""
-        from kiro_crew.mcp_discovery import _get_probe_timeout
+        from aj_crew.mcp_discovery import _get_probe_timeout
 
         mock_cfg = MagicMock()
         mock_cfg.dashboard.mcp_probe_timeout_secs = 45
         mock_cls = MagicMock()
         mock_cls.load.return_value = mock_cfg
 
-        with patch("kiro_crew.config.loader.KiroCrewConfig", mock_cls):
+        with patch("aj_crew.config.loader.AjCrewConfig", mock_cls):
             result = _get_probe_timeout()
         assert result == 45
 
     def test_get_probe_timeout_fallback(self) -> None:
         """_get_probe_timeout() returns 15 when config is unavailable."""
-        from kiro_crew.mcp_discovery import _PROBE_TIMEOUT_SECS, _get_probe_timeout
+        from aj_crew.mcp_discovery import _PROBE_TIMEOUT_SECS, _get_probe_timeout
 
         mock_cls = MagicMock()
         mock_cls.load.side_effect = RuntimeError("no config")
 
-        with patch("kiro_crew.config.loader.KiroCrewConfig", mock_cls):
+        with patch("aj_crew.config.loader.AjCrewConfig", mock_cls):
             result = _get_probe_timeout()
         assert result == _PROBE_TIMEOUT_SECS
         assert result == 15
@@ -185,7 +185,7 @@ class TestProbeServerTimeout:
 
         with (
             patch("asyncio.create_subprocess_exec", return_value=mock_proc),
-            patch("kiro_crew.config.loader.KiroCrewConfig") as mock_cls,
+            patch("aj_crew.config.loader.AjCrewConfig") as mock_cls,
         ):
             mock_cfg = MagicMock()
             mock_cfg.dashboard.mcp_probe_timeout_secs = 42
@@ -218,7 +218,7 @@ class TestProbeServerTimeout:
 
         with (
             patch("asyncio.create_subprocess_exec", return_value=mock_proc),
-            patch("kiro_crew.config.loader.KiroCrewConfig") as mock_cls,
+            patch("aj_crew.config.loader.AjCrewConfig") as mock_cls,
         ):
             mock_cls.load.side_effect = RuntimeError("corrupt config")
 
@@ -238,7 +238,7 @@ class TestProbeServerStderrCapture:
     async def test_stderr_captured_when_child_exits_before_response(self, tmp_path) -> None:
         """Child writes to stderr and exits without speaking MCP → stderr
         tail is appended to `server.error`."""
-        from kiro_crew.mcp_discovery import probe_server
+        from aj_crew.mcp_discovery import probe_server
 
         stub = tmp_path / "broken-server.py"
         stub.write_text(
@@ -249,7 +249,7 @@ class TestProbeServerStderrCapture:
         )
 
         server = McpServerInfo(name="broken", command=sys.executable, args=[str(stub)])
-        with patch("kiro_crew.config.loader.KiroCrewConfig") as mock_cls:
+        with patch("aj_crew.config.loader.AjCrewConfig") as mock_cls:
             mock_cfg = MagicMock()
             mock_cfg.dashboard.mcp_probe_timeout_secs = 2
             mock_cls.load.return_value = mock_cfg
@@ -264,7 +264,7 @@ class TestProbeServerStderrCapture:
     async def test_successful_probe_does_not_mention_stderr(self, tmp_path) -> None:
         """Healthy server's benign stderr warnings must not bleed into
         `server.error`."""
-        from kiro_crew.mcp_discovery import probe_server
+        from aj_crew.mcp_discovery import probe_server
 
         stub = tmp_path / "noisy-ok-server.py"
         stub.write_text(
@@ -284,7 +284,7 @@ class TestProbeServerStderrCapture:
         )
 
         server = McpServerInfo(name="noisy-ok", command=sys.executable, args=[str(stub)])
-        with patch("kiro_crew.config.loader.KiroCrewConfig") as mock_cls:
+        with patch("aj_crew.config.loader.AjCrewConfig") as mock_cls:
             mock_cfg = MagicMock()
             mock_cfg.dashboard.mcp_probe_timeout_secs = 3
             mock_cls.load.return_value = mock_cfg
@@ -299,7 +299,7 @@ class TestProbeServerStderrCapture:
     async def test_stderr_tail_is_bounded(self, tmp_path) -> None:
         """Very large stderr is truncated so it cannot explode logs or
         dashboard responses."""
-        from kiro_crew.mcp_discovery import probe_server
+        from aj_crew.mcp_discovery import probe_server
 
         stub = tmp_path / "verbose-broken.py"
         stub.write_text(
@@ -312,7 +312,7 @@ class TestProbeServerStderrCapture:
         )
 
         server = McpServerInfo(name="verbose", command=sys.executable, args=[str(stub)])
-        with patch("kiro_crew.config.loader.KiroCrewConfig") as mock_cls:
+        with patch("aj_crew.config.loader.AjCrewConfig") as mock_cls:
             mock_cfg = MagicMock()
             mock_cfg.dashboard.mcp_probe_timeout_secs = 2
             mock_cls.load.return_value = mock_cfg
@@ -329,7 +329,7 @@ class TestProbeServerStderrCapture:
     async def test_credential_in_stderr_is_redacted(self, tmp_path) -> None:
         """stderr is untrusted output — credentials and exfiltration URLs
         must be scrubbed before they land in `server.error`."""
-        from kiro_crew.mcp_discovery import probe_server
+        from aj_crew.mcp_discovery import probe_server
 
         stub = tmp_path / "leaky-server.py"
         stub.write_text(
@@ -342,7 +342,7 @@ class TestProbeServerStderrCapture:
         )
 
         server = McpServerInfo(name="leaky", command=sys.executable, args=[str(stub)])
-        with patch("kiro_crew.config.loader.KiroCrewConfig") as mock_cls:
+        with patch("aj_crew.config.loader.AjCrewConfig") as mock_cls:
             mock_cfg = MagicMock()
             mock_cfg.dashboard.mcp_probe_timeout_secs = 2
             mock_cls.load.return_value = mock_cfg
@@ -363,7 +363,7 @@ class TestProbeServerStderrCapture:
         agent.sandbox_allow_unsandboxed_exec; the old 200-char cap discarded
         it, so a Windows user saw '...Probe detail: not Linux. I' and no fix.
         """
-        from kiro_crew.mcp_discovery import _PROBE_ERROR_MAX_CHARS, probe_server
+        from aj_crew.mcp_discovery import _PROBE_ERROR_MAX_CHARS, probe_server
 
         # A credential early in the message must be REDACTED (not merely
         # truncated away): raising the cap must not widen a disclosure hole.
@@ -380,12 +380,12 @@ class TestProbeServerStderrCapture:
 
         # Resolve the command, then fail at the sandbox chokepoint with the long
         # message — the real path a Windows host takes with no sandbox backend.
-        monkeypatch.setattr("kiro_crew.mcp_discovery.shutil.which", lambda *a, **k: "/usr/bin/srv")
+        monkeypatch.setattr("aj_crew.mcp_discovery.shutil.which", lambda *a, **k: "/usr/bin/srv")
 
         def boom(*_a: object, **_k: object) -> object:
             raise RuntimeError(long_msg)
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery.sandboxed_spawn_argv", boom)
+        monkeypatch.setattr("aj_crew.mcp_discovery.sandboxed_spawn_argv", boom)
         result = await probe_server(server)
 
         assert result.status == "error"
@@ -411,9 +411,9 @@ class TestProbeStdioReadLimit:
         self, tmp_path, monkeypatch, env_limit, status, tools
     ) -> None:
         if env_limit is None:
-            monkeypatch.delenv("KIROCREW_MCP_READ_LIMIT", raising=False)
+            monkeypatch.delenv("AJCREW_MCP_READ_LIMIT", raising=False)
         else:
-            monkeypatch.setenv("KIROCREW_MCP_READ_LIMIT", env_limit)
+            monkeypatch.setenv("AJCREW_MCP_READ_LIMIT", env_limit)
         stub = tmp_path / "large-tools-server.py"
         stub.write_text(
             "import json, sys\n"
@@ -431,7 +431,7 @@ class TestProbeStdioReadLimit:
         )
 
         server = McpServerInfo(name="large-tools", command=sys.executable, args=[str(stub)])
-        with patch("kiro_crew.config.loader.KiroCrewConfig") as mock_cls:
+        with patch("aj_crew.config.loader.AjCrewConfig") as mock_cls:
             mock_cfg = MagicMock()
             mock_cfg.dashboard.mcp_probe_timeout_secs = 10
             mock_cls.load.return_value = mock_cfg
@@ -478,7 +478,7 @@ class TestProbeStdioMalformedResponse:
 
         monkeypatch.setattr("shutil.which", lambda cmd, path=None: "/usr/bin/srv")
         with patch(
-            "kiro_crew.mcp_discovery.asyncio.create_subprocess_exec",
+            "aj_crew.mcp_discovery.asyncio.create_subprocess_exec",
             AsyncMock(return_value=proc),
         ):
             result = asyncio.run(probe_server(server))
@@ -500,7 +500,7 @@ class TestProbeStdioMalformedResponse:
 
         monkeypatch.setattr("shutil.which", lambda cmd, path=None: "/usr/bin/srv")
         with patch(
-            "kiro_crew.mcp_discovery.asyncio.create_subprocess_exec",
+            "aj_crew.mcp_discovery.asyncio.create_subprocess_exec",
             AsyncMock(return_value=proc),
         ):
             result = asyncio.run(probe_server(server))
@@ -520,7 +520,7 @@ class TestProbeStdioMalformedResponse:
 
         monkeypatch.setattr("shutil.which", lambda cmd, path=None: "/usr/bin/srv")
         with patch(
-            "kiro_crew.mcp_discovery.asyncio.create_subprocess_exec",
+            "aj_crew.mcp_discovery.asyncio.create_subprocess_exec",
             AsyncMock(return_value=proc),
         ):
             result = asyncio.run(probe_server(server))
@@ -545,7 +545,7 @@ class TestProbeStdioProtocolVersion:
         proc.wait = AsyncMock(return_value=0)
         monkeypatch.setattr("shutil.which", lambda cmd, path=None: "/usr/bin/srv")
         with patch(
-            "kiro_crew.mcp_discovery.asyncio.create_subprocess_exec",
+            "aj_crew.mcp_discovery.asyncio.create_subprocess_exec",
             AsyncMock(return_value=proc),
         ):
             result = asyncio.run(probe_server(McpServerInfo(name="srv", command="srv")))
@@ -654,7 +654,7 @@ class TestReadStdioJsonrpcResponse:
     )
     async def test_banner_cap_boundary(self, over_cap, expected_id) -> None:
         """Up to _MAX_BANNER_LINES junk lines are tolerated; one more gives up (None)."""
-        from kiro_crew.mcp_discovery import _MAX_BANNER_LINES
+        from aj_crew.mcp_discovery import _MAX_BANNER_LINES
 
         lines = [b"noise\n"] * (_MAX_BANNER_LINES + over_cap)
         lines.append(b'{"jsonrpc":"2.0","id":7,"result":{}}\n')
@@ -693,7 +693,7 @@ class TestReadStdioJsonrpcResponse:
     async def test_non_object_json_lines_do_not_count_toward_cap(self) -> None:
         """A server printing a JSON progress counter before it answers is not a
         flood: valid JSON is bounded by the timeout, like a notification."""
-        from kiro_crew.mcp_discovery import _MAX_BANNER_LINES
+        from aj_crew.mcp_discovery import _MAX_BANNER_LINES
 
         progress = [f"{n}\n".encode() for n in range(1, 2 * _MAX_BANNER_LINES + 1)]
         stream = _make_stream([*progress, b'{"jsonrpc":"2.0","id":1,"result":{}}\n'])
@@ -704,7 +704,7 @@ class TestReadStdioJsonrpcResponse:
     @pytest.mark.asyncio
     async def test_notifications_do_not_count_toward_cap(self) -> None:
         """>_MAX_BANNER_LINES JSON-RPC notifications must NOT trip the banner cap."""
-        from kiro_crew.mcp_discovery import _MAX_BANNER_LINES
+        from aj_crew.mcp_discovery import _MAX_BANNER_LINES
 
         notif = b'{"jsonrpc":"2.0","method":"notifications/progress","params":{}}\n'
         lines = [notif] * (_MAX_BANNER_LINES + 10)
@@ -717,7 +717,7 @@ class TestReadStdioJsonrpcResponse:
     @pytest.mark.asyncio
     async def test_blank_lines_do_not_count_toward_cap(self) -> None:
         """>_MAX_BANNER_LINES blank lines must NOT trip the banner cap."""
-        from kiro_crew.mcp_discovery import _MAX_BANNER_LINES
+        from aj_crew.mcp_discovery import _MAX_BANNER_LINES
 
         lines = [b"\n"] * (_MAX_BANNER_LINES + 10)
         lines.append(b'{"jsonrpc":"2.0","id":3,"result":{}}\n')
@@ -737,7 +737,7 @@ class TestReadStdioJsonrpcResponse:
     async def test_skipped_keeps_every_non_json_line(self) -> None:
         """``skipped`` collects every banner line, never a blank line or a
         notification; the probe redacts them all before it takes the tail."""
-        from kiro_crew.mcp_discovery import _STDOUT_TAIL_LINES
+        from aj_crew.mcp_discovery import _STDOUT_TAIL_LINES
 
         count = _STDOUT_TAIL_LINES + 3
         banners = [f"launcher step {n}\n".encode() for n in range(count)]
@@ -752,7 +752,7 @@ class TestReadStdioJsonrpcResponse:
 
     @pytest.mark.asyncio
     async def test_skipped_holds_a_bounded_slice_of_each_line(self) -> None:
-        from kiro_crew.mcp_discovery import _STDOUT_LINE_HELD_CHARS
+        from aj_crew.mcp_discovery import _STDOUT_LINE_HELD_CHARS
 
         stream = _make_stream([b"x" * (_STDOUT_LINE_HELD_CHARS + 10) + b"\n"])
         skipped: list[str] = []
@@ -785,8 +785,8 @@ class TestProbeServerBannerTolerance:
         server = McpServerInfo(name="local-chorus-mcp", command="local-chorus-mcp")
 
         with (
-            patch("kiro_crew.mcp_discovery.asyncio.create_subprocess_exec", return_value=proc),
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value="/usr/bin/local-chorus-mcp"),
+            patch("aj_crew.mcp_discovery.asyncio.create_subprocess_exec", return_value=proc),
+            patch("aj_crew.mcp_discovery.shutil.which", return_value="/usr/bin/local-chorus-mcp"),
         ):
             result = await probe_server(server)
 
@@ -822,8 +822,8 @@ class TestProbeServerLauncherStdout:
         proc.stderr.read = AsyncMock(return_value=b"")
         server = McpServerInfo(name="launched", command="launcher")
         with (
-            patch("kiro_crew.mcp_discovery.asyncio.create_subprocess_exec", return_value=proc),
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value="/usr/bin/launcher"),
+            patch("aj_crew.mcp_discovery.asyncio.create_subprocess_exec", return_value=proc),
+            patch("aj_crew.mcp_discovery.shutil.which", return_value="/usr/bin/launcher"),
         ):
             return await probe_server(server)
 
@@ -862,7 +862,7 @@ class TestProbeServerLauncherStdout:
     async def test_a_tools_list_failure_caches_the_stdout_tail(self, answer) -> None:
         """``GET /api/mcp`` renders the cached row, so a tools/list failure caches the
         error only after the stdout tail is on it."""
-        from kiro_crew.mcp_discovery import _probe_cache
+        from aj_crew.mcp_discovery import _probe_cache
 
         _probe_cache.pop("launched", None)
         try:
@@ -875,7 +875,7 @@ class TestProbeServerLauncherStdout:
 
     @pytest.mark.asyncio
     async def test_a_banner_flood_keeps_only_its_last_lines(self) -> None:
-        from kiro_crew.mcp_discovery import _MAX_BANNER_LINES, _STDOUT_TAIL_LINES
+        from aj_crew.mcp_discovery import _MAX_BANNER_LINES, _STDOUT_TAIL_LINES
 
         lines = [f"launcher line {n}\n".encode() for n in range(_MAX_BANNER_LINES + 1)]
         result = await self._probe(lines)
@@ -891,7 +891,7 @@ class TestProbeServerLauncherStdout:
         """stdout is untrusted output: both redactors run on whole lines, and a line
         is cut to its shown width only afterwards, so a credential straddling that
         width cannot leave its head behind."""
-        from kiro_crew.mcp_discovery import _STDOUT_TAIL_LINE_CHARS
+        from aj_crew.mcp_discovery import _STDOUT_TAIL_LINE_CHARS
 
         # Synthetic credentials, each split so no scanner reads it as one literal.
         key_line = ("launcher: key " + "AKIAIOSFODNN7" "EXAMPLE" + " rejected\n").encode()
@@ -918,7 +918,7 @@ class TestProbeServerLauncherStdout:
     async def test_a_key_longer_than_the_tail_is_redacted_whole(self) -> None:
         """A PEM block longer than the kept tail is redacted while its BEGIN line is
         still held, so no body line, even one too short for the base64 scan, is shown."""
-        from kiro_crew.mcp_discovery import _STDOUT_TAIL_LINES
+        from aj_crew.mcp_discovery import _STDOUT_TAIL_LINES
 
         # Synthetic key material, deterministic; the short last line is the one only
         # the PEM matcher catches.
@@ -937,7 +937,7 @@ class TestProbeServerLauncherStdout:
     async def test_a_line_cut_for_holding_withholds_the_whole_tail(self) -> None:
         """A line longer than the held width may have lost a key's BEGIN line, so
         nothing of the stdout tail is shown rather than a body line it left bare."""
-        from kiro_crew.mcp_discovery import _STDOUT_LINE_HELD_CHARS
+        from aj_crew.mcp_discovery import _STDOUT_LINE_HELD_CHARS
 
         short = "Qk9HVVNfVEFJTF9GUkFHTUVO"
         begin = "-----BEGIN " + "PRIVATE KEY-----"
@@ -1041,7 +1041,7 @@ class TestProbeGroupReap:
     @pytest.mark.asyncio
     async def test_teardown_tolerates_empty_group(self) -> None:
         """ESRCH (group already empty) must not surface as a probe error."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         if not platform_compat.IS_POSIX:
             pytest.skip("killpg is POSIX-only")
@@ -1050,11 +1050,11 @@ class TestProbeGroupReap:
 
         with (
             patch(
-                "kiro_crew.mcp_discovery.asyncio.create_subprocess_exec",
+                "aj_crew.mcp_discovery.asyncio.create_subprocess_exec",
                 return_value=proc,
             ),
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value="/usr/bin/echo"),
-            patch("kiro_crew.mcp_discovery.os.killpg", side_effect=ProcessLookupError),
+            patch("aj_crew.mcp_discovery.shutil.which", return_value="/usr/bin/echo"),
+            patch("aj_crew.mcp_discovery.os.killpg", side_effect=ProcessLookupError),
         ):
             result = await probe_server(server)
 
@@ -1064,7 +1064,7 @@ class TestProbeGroupReap:
     @pytest.mark.asyncio
     async def test_teardown_refuses_non_int_pid(self) -> None:
         """Mock/sentinel pids must never coerce into killpg(1) == init."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         if not platform_compat.IS_POSIX:
             pytest.skip("killpg is POSIX-only")
@@ -1074,11 +1074,11 @@ class TestProbeGroupReap:
 
         with (
             patch(
-                "kiro_crew.mcp_discovery.asyncio.create_subprocess_exec",
+                "aj_crew.mcp_discovery.asyncio.create_subprocess_exec",
                 return_value=proc,
             ),
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value="/usr/bin/echo"),
-            patch("kiro_crew.mcp_discovery.os.killpg") as mock_killpg,
+            patch("aj_crew.mcp_discovery.shutil.which", return_value="/usr/bin/echo"),
+            patch("aj_crew.mcp_discovery.os.killpg") as mock_killpg,
         ):
             await probe_server(server)
 
@@ -1088,7 +1088,7 @@ class TestProbeGroupReap:
     async def test_real_grandchild_is_reaped(self, monkeypatch, tmp_path) -> None:
         """End-to-end: a probed 'server' that forks a grandchild and never
         answers must leave NO survivors after the probe returns."""
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         if not platform_compat.IS_POSIX:
             pytest.skip("process groups are POSIX-only")
@@ -1104,13 +1104,13 @@ class TestProbeGroupReap:
         )
         script.chmod(0o755)
 
-        monkeypatch.setattr("kiro_crew.mcp_discovery._get_probe_timeout", lambda: 1)
+        monkeypatch.setattr("aj_crew.mcp_discovery._get_probe_timeout", lambda: 1)
         # The child deliberately never exits, so `probe_server`'s teardown pays its
         # graceful-exit budget AND its post-SIGKILL budget in full (2 x 5s) before
         # reaching the process-group reap this test is about. Shrink both: the reap
         # is what is asserted, and waiting out the real budget made this the single
         # slowest test in the suite at 12s.
-        monkeypatch.setattr("kiro_crew.mcp_discovery._PROBE_TEARDOWN_WAIT_SECS", 0.5)
+        monkeypatch.setattr("aj_crew.mcp_discovery._PROBE_TEARDOWN_WAIT_SECS", 0.5)
         server = McpServerInfo(name="fake", command=str(script))
         result = await probe_server(server)
         assert result.status == "error"  # timed out, as designed
@@ -1145,7 +1145,7 @@ class TestWindowsTeardownOffLoop:
     def test_kill_process_tree_is_offloaded(self) -> None:
         import inspect
 
-        from kiro_crew import mcp_discovery
+        from aj_crew import mcp_discovery
 
         src = inspect.getsource(mcp_discovery.probe_server)
         assert "kill_process_tree" in src, "teardown moved -- retarget this guard"
@@ -1186,7 +1186,7 @@ class TestWindowsProbeReapLogging:
 
     async def _run_probe_windows_reap(self, monkeypatch, reap_exc: BaseException | None):
         """Drive probe_server down the Windows reap arm with a faked reap."""
-        from kiro_crew import mcp_discovery
+        from aj_crew import mcp_discovery
 
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
         monkeypatch.setattr(platform_compat, "IS_POSIX", False)
@@ -1203,10 +1203,10 @@ class TestWindowsProbeReapLogging:
         server = McpServerInfo(name="win-reap", command="echo")
         with (
             patch(
-                "kiro_crew.mcp_discovery.asyncio.create_subprocess_exec",
+                "aj_crew.mcp_discovery.asyncio.create_subprocess_exec",
                 return_value=proc,
             ),
-            patch("kiro_crew.mcp_discovery.shutil.which", return_value="C:\\echo.exe"),
+            patch("aj_crew.mcp_discovery.shutil.which", return_value="C:\\echo.exe"),
         ):
             return await probe_server(server)
 
@@ -1215,7 +1215,7 @@ class TestWindowsProbeReapLogging:
         self, monkeypatch, caplog
     ) -> None:
         """rc=128 -> ProcessLookupError: no traceback, no 'reap failed' line."""
-        caplog.set_level(logging.DEBUG, logger="kiro_crew.mcp_discovery")
+        caplog.set_level(logging.DEBUG, logger="aj_crew.mcp_discovery")
         result = await self._run_probe_windows_reap(
             monkeypatch, ProcessLookupError("[taskkill rc=128] not found")
         )
@@ -1224,7 +1224,7 @@ class TestWindowsProbeReapLogging:
         reap_records = [
             r
             for r in caplog.records
-            if r.name == "kiro_crew.mcp_discovery" and "Probe tree" in r.message
+            if r.name == "aj_crew.mcp_discovery" and "Probe tree" in r.message
         ]
         assert reap_records, "expected a DEBUG line for the already-gone tree"
         for r in reap_records:
@@ -1236,7 +1236,7 @@ class TestWindowsProbeReapLogging:
     @pytest.mark.asyncio
     async def test_genuine_failure_retains_traceback(self, monkeypatch, caplog) -> None:
         """A non-ProcessLookupError OSError keeps its traceback diagnostic."""
-        caplog.set_level(logging.DEBUG, logger="kiro_crew.mcp_discovery")
+        caplog.set_level(logging.DEBUG, logger="aj_crew.mcp_discovery")
         result = await self._run_probe_windows_reap(
             monkeypatch, OSError("[taskkill rc=1] access denied")
         )
@@ -1244,7 +1244,7 @@ class TestWindowsProbeReapLogging:
         failed = [
             r
             for r in caplog.records
-            if r.name == "kiro_crew.mcp_discovery" and "Probe tree reap failed" in r.message
+            if r.name == "aj_crew.mcp_discovery" and "Probe tree reap failed" in r.message
         ]
         assert failed, "a genuine reap failure must still be logged"
         assert any(

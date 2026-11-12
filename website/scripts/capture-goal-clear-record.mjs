@@ -87,7 +87,7 @@ const slots = [{
   running: false,
   last_message: 'Monitor stopped. Nothing is watching the PR now.',
   messages: 6,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   folder_id: '',

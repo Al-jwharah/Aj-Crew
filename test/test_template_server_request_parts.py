@@ -14,8 +14,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import template_mcp_additions as additions
-from kiro_crew.dashboard.handlers import template_server_request as tsr
+from aj_crew import template_mcp_additions as additions
+from aj_crew.dashboard.handlers import template_server_request as tsr
 
 
 class _State:
@@ -34,8 +34,8 @@ def record(tmp_path, monkeypatch):
 
 
 def _execution(monkeypatch, by_key: dict[str, Any]) -> None:
-    from kiro_crew import execution_context
-    from kiro_crew.dashboard import chat_utils
+    from aj_crew import execution_context
+    from aj_crew.dashboard import chat_utils
 
     monkeypatch.setattr(chat_utils, "slot_history_key", lambda slot: slot.key)
 
@@ -49,8 +49,8 @@ def _execution(monkeypatch, by_key: dict[str, Any]) -> None:
 
 
 def _not_crewmate(monkeypatch, *, thread=False, worker=False, mate_owned=False) -> None:
-    from kiro_crew import mate_worker, members
-    from kiro_crew.dashboard import mate_thread_wakes
+    from aj_crew import mate_worker, members
+    from aj_crew.dashboard import mate_thread_wakes
 
     monkeypatch.setattr(mate_thread_wakes, "is_crewmate_thread", lambda slot: thread)
     monkeypatch.setattr(members, "is_crewmate_worker_session", lambda key: worker)
@@ -66,13 +66,13 @@ def _slot(key: str, title: str = "") -> SimpleNamespace:
 
 def test_the_caller_template_comes_from_the_session_record(monkeypatch):
     _not_crewmate(monkeypatch)
-    _execution(monkeypatch, {"s1": "kirocrew-conductor"})
+    _execution(monkeypatch, {"s1": "ajcrew-conductor"})
     state = _State({"s1": _slot("s1")})
-    assert tsr._caller_template(state, "s1", "sk") == ("kirocrew-conductor", "", "")
+    assert tsr._caller_template(state, "s1", "sk") == ("ajcrew-conductor", "", "")
 
 
 def test_a_crewmate_thread_or_worker_is_sent_elsewhere(monkeypatch):
-    _execution(monkeypatch, {"s1": "kirocrew-conductor"})
+    _execution(monkeypatch, {"s1": "ajcrew-conductor"})
     state = _State({"s1": _slot("s1")})
     _not_crewmate(monkeypatch, thread=True)
     assert tsr._caller_template(state, "s1", "sk")[1] == "crewmate_caller"
@@ -94,7 +94,7 @@ def test_a_session_with_no_readable_template_names_none(monkeypatch):
 
 
 def test_a_live_provider_names_its_own_backend():
-    from kiro_crew.agent_sdk.capabilities import capabilities_for
+    from aj_crew.agent_sdk.capabilities import capabilities_for
 
     caps = capabilities_for("claude")
     assert caps.backend == "claude"
@@ -103,11 +103,11 @@ def test_a_live_provider_names_its_own_backend():
 
 
 def test_with_no_provider_the_member_selector_answers(monkeypatch):
-    from kiro_crew import crewmate_harness, members
-    from kiro_crew.config import loader
+    from aj_crew import crewmate_harness, members
+    from aj_crew.config import loader
 
     cfg = SimpleNamespace(agent=SimpleNamespace(member_acp_backend={}, acp_backend="kas"))
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+    monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(lambda cls: cfg))
     pin = object()
     monkeypatch.setattr(crewmate_harness, "crewmate_backend_pin", lambda config, key: pin)
     seen: list[Any] = []
@@ -136,94 +136,94 @@ def test_an_unreadable_backend_is_the_default_harness():
 
 
 def test_the_reach_lists_templates_sessions_and_members(monkeypatch):
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     _execution(
         monkeypatch,
         {
-            "a": "kirocrew-conductor",
-            "b": "kirocrew",
+            "a": "ajcrew-conductor",
+            "b": "ajcrew",
             "c": OSError("gone"),
-            "d": "kirocrew-ledger-conductor",
+            "d": "ajcrew-ledger-conductor",
         },
     )
     slots = {k: _slot(k, title=f"chat {k}") for k in ("a", "b", "c", "d")}
     agents = {
-        "patrol": SimpleNamespace(display_name="Patrol", kiro_agent="kirocrew-conductor"),
-        "other": SimpleNamespace(display_name="", kiro_agent="kirocrew"),
+        "patrol": SimpleNamespace(display_name="Patrol", kiro_agent="ajcrew-conductor"),
+        "other": SimpleNamespace(display_name="", kiro_agent="ajcrew"),
     }
     monkeypatch.setattr(
-        loader.KiroCrewConfig, "load", classmethod(lambda cls: SimpleNamespace(agents=agents))
+        loader.AjCrewConfig, "load", classmethod(lambda cls: SimpleNamespace(agents=agents))
     )
-    view = tsr.addition_reach_view(_State(slots), "kirocrew-conductor")
-    assert view["templates"] == ["kirocrew-conductor", "kirocrew-ledger-conductor"]
-    assert view["aliases"] == {"kirocrew-ledger-conductor": "kirocrew-conductor"}
+    view = tsr.addition_reach_view(_State(slots), "ajcrew-conductor")
+    assert view["templates"] == ["ajcrew-conductor", "ajcrew-ledger-conductor"]
+    assert view["aliases"] == {"ajcrew-ledger-conductor": "ajcrew-conductor"}
     assert view["sessions"] == ["chat a", "chat d"]
     assert view["members"] == ["Patrol"]
 
 
 def test_an_unreadable_config_still_lists_templates_and_sessions(monkeypatch):
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     _execution(monkeypatch, {})
 
     def boom(cls):
         raise OSError("config unreadable")
 
-    monkeypatch.setattr(loader.KiroCrewConfig, "load", classmethod(boom))
-    view = tsr.addition_reach_view(_State(), "kirocrew-conductor")
+    monkeypatch.setattr(loader.AjCrewConfig, "load", classmethod(boom))
+    view = tsr.addition_reach_view(_State(), "ajcrew-conductor")
     assert view["members"] == [] and view["sessions"] == []
-    assert view["templates"][0] == "kirocrew-conductor"
+    assert view["templates"][0] == "ajcrew-conductor"
 
 
 # ── existing_grants / template_declares ──
 
 
 def test_an_unreadable_spec_names_no_grant(monkeypatch):
-    from kiro_crew.dashboard.handlers import agents as agents_handlers
+    from aj_crew.dashboard.handlers import agents as agents_handlers
 
     def boom(name):
         raise OSError("unreadable")
 
     monkeypatch.setattr(agents_handlers, "_agent_detail_candidates", boom)
-    assert tsr.existing_grants("kirocrew-conductor", "files") == []
+    assert tsr.existing_grants("ajcrew-conductor", "files") == []
 
 
 def test_a_server_the_template_itself_declares_is_found(record, monkeypatch):
-    from kiro_crew.dashboard.handlers import agents as agents_handlers
+    from aj_crew.dashboard.handlers import agents as agents_handlers
 
     spec = {"mcpServers": {"files": {"command": "x"}}}
     monkeypatch.setattr(agents_handlers, "_agent_detail_candidates", lambda name: [("p", spec)])
-    assert tsr.template_declares("kirocrew-conductor", "files") is True
-    assert tsr.template_declares("kirocrew-conductor", "other") is False
+    assert tsr.template_declares("ajcrew-conductor", "files") is True
+    assert tsr.template_declares("ajcrew-conductor", "other") is False
 
 
 def test_a_server_from_the_record_is_not_the_template_s_own(record, monkeypatch):
-    from kiro_crew.dashboard.handlers import agents as agents_handlers
+    from aj_crew.dashboard.handlers import agents as agents_handlers
 
     additions.add_addition(
-        "kirocrew-conductor", "files", {"command": "x"}, approved_by="u", card_id="c"
+        "ajcrew-conductor", "files", {"command": "x"}, approved_by="u", card_id="c"
     )
     spec = {"mcpServers": {"files": {"command": "x"}}}
     monkeypatch.setattr(agents_handlers, "_agent_detail_candidates", lambda name: [("p", spec)])
-    assert tsr.template_declares("kirocrew-conductor", "files") is False
+    assert tsr.template_declares("ajcrew-conductor", "files") is False
 
 
 def test_an_unreadable_template_declares_nothing(record, monkeypatch):
-    from kiro_crew.dashboard.handlers import agents as agents_handlers
+    from aj_crew.dashboard.handlers import agents as agents_handlers
 
     def boom(name):
         raise OSError("unreadable")
 
     monkeypatch.setattr(agents_handlers, "_agent_detail_candidates", boom)
-    assert tsr.template_declares("kirocrew-conductor", "files") is False
+    assert tsr.template_declares("ajcrew-conductor", "files") is False
 
 
 # ── server_tools / live_apply ──
 
 
 def test_server_tools_reads_the_last_probe(monkeypatch):
-    from kiro_crew import mcp_discovery as probe
+    from aj_crew import mcp_discovery as probe
 
     monkeypatch.setattr(probe, "probe_metadata", lambda name: SimpleNamespace(tools=["a", "b", 3]))
     assert tsr.server_tools("files") == ["a", "b"]
@@ -236,7 +236,7 @@ def test_server_tools_reads_the_last_probe(monkeypatch):
 
 
 def test_live_apply_asks_every_live_process_and_fails_closed(monkeypatch):
-    from kiro_crew import mcp_hot_reload
+    from aj_crew import mcp_hot_reload
 
     seen: list[list[Any]] = []
 
@@ -255,7 +255,7 @@ def test_live_apply_asks_every_live_process_and_fails_closed(monkeypatch):
 
 
 def _rebuild(monkeypatch, *, wrote=True, held=False, raises=False) -> None:
-    from kiro_crew import agent
+    from aj_crew import agent
 
     def rebuild(*, _held_out=None):
         if raises:
@@ -278,19 +278,19 @@ def test_a_rebuild_counts_only_when_every_spec_was_written(monkeypatch):
 
 def test_the_default_agent_s_outcome_is_read_from_its_spec(monkeypatch):
     """A held conductor spec says nothing about the default agent: what decides
-    is whether kirocrew.json now holds the server as a card addition."""
+    is whether ajcrew.json now holds the server as a card addition."""
     _rebuild(monkeypatch, held=True)
     monkeypatch.setattr(tsr, "_default_spec_mounts", lambda server: False)
-    assert tsr._rebuild_required("kirocrew", "fetch", present=False) is False
-    assert tsr._rebuild_required("kirocrew", "fetch", present=True) is True
-    assert tsr._rebuild_required("kirocrew-conductor", "fetch", present=False) is True
+    assert tsr._rebuild_required("ajcrew", "fetch", present=False) is False
+    assert tsr._rebuild_required("ajcrew", "fetch", present=True) is True
+    assert tsr._rebuild_required("ajcrew-conductor", "fetch", present=False) is True
     _rebuild(monkeypatch, raises=True)
     assert tsr._rebuild_specs() is False
 
 
 def test_a_composition_refused_rebuild_is_logged_as_governance(monkeypatch, caplog):
-    from kiro_crew import agent
-    from kiro_crew.platform import PlatformCompositionError
+    from aj_crew import agent
+    from aj_crew.platform import PlatformCompositionError
 
     def rebuild(*, _held_out=None):
         raise PlatformCompositionError("companion missing")
@@ -307,11 +307,11 @@ def test_a_composition_refused_rebuild_is_logged_as_governance(monkeypatch, capl
 
 def test_only_a_conductor_needs_its_spec_rewritten(monkeypatch):
     _rebuild(monkeypatch, wrote=False)
-    assert tsr._rebuild_required("kirocrew-conductor", "files", present=True) is True
-    assert tsr._rebuild_required("kirocrew-ledger-conductor", "files", present=True) is True
+    assert tsr._rebuild_required("ajcrew-conductor", "files", present=True) is True
+    assert tsr._rebuild_required("ajcrew-ledger-conductor", "files", present=True) is True
     assert tsr._rebuild_required("aim-installed-agent", "files", present=True) is False
     _rebuild(monkeypatch)
-    assert tsr._rebuild_required("kirocrew-conductor", "files", present=True) is False
+    assert tsr._rebuild_required("ajcrew-conductor", "files", present=True) is False
 
 
 def test_a_failed_reconcile_is_logged_not_raised(monkeypatch, caplog):
@@ -327,7 +327,7 @@ def test_a_failed_reconcile_is_logged_not_raised(monkeypatch, caplog):
 
 
 def test_sessions_reset_only_when_the_change_cannot_apply_live(monkeypatch):
-    from kiro_crew.dashboard.handlers import mcp, sessions
+    from aj_crew.dashboard.handlers import mcp, sessions
 
     async def reset(request):
         return 3

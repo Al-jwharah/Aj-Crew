@@ -19,7 +19,7 @@ from yaml_helpers import load_with
 
 REPO = Path(__file__).resolve().parents[1]
 TPL_DIR = (
-    REPO / "src" / "kiro_crew" / "deploy" / "skills" / "artifact-deploy" / "templates"
+    REPO / "src" / "aj_crew" / "deploy" / "skills" / "artifact-deploy" / "templates"
 )
 APIGW = (TPL_DIR / "app-apigw.yaml").read_text(encoding="utf-8")
 APIGW_DDB = (TPL_DIR / "app-apigw-ddb.yaml").read_text(encoding="utf-8")

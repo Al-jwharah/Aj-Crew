@@ -24,7 +24,7 @@ vi.mock('../api/client', async () => ({
   api: {
     kiroPrerequisite: vi.fn(),
     repairKiroPrerequisiteSpecs: vi.fn(),
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     acpBackends: vi.fn(),
     acpBackendRecheck: vi.fn(),
     patchConfig: vi.fn(),
@@ -53,7 +53,7 @@ describe('KiroPrerequisiteGate agent picker copy (UX round 5)', () => {
     vi.clearAllMocks()
     localStorage.clear()
     vi.mocked(api.kiroPrerequisite).mockResolvedValue(status())
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ agent: { acp_backend: 'kiro' } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ agent: { acp_backend: 'kiro' } })
     vi.mocked(api.acpBackends).mockResolvedValue({ backends: [] })
   })
 
@@ -123,7 +123,7 @@ describe('KiroPrerequisiteGate agent picker copy (UX round 5)', () => {
   })
 
   it('names the Use Kiro CLI instead button, by its rendered label, as the retry for a failed switch back', async () => {
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ agent: { acp_backend: 'claude' } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ agent: { acp_backend: 'claude' } })
     vi.mocked(api.acpBackends).mockResolvedValue({
       backends: [probe({ installed: 'missing', install_command: 'npm install -g x' })],
     })
@@ -164,7 +164,7 @@ describe('KiroPrerequisiteGate agent picker copy (UX round 5)', () => {
   })
 
   it('says "switch agents later" once when the configured-agent notice already says it', async () => {
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ agent: { acp_backend: 'claude' } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ agent: { acp_backend: 'claude' } })
     vi.mocked(api.acpBackends).mockResolvedValue({
       backends: [probe({ installed: 'missing', install_command: 'npm install -g x' })],
     })
@@ -193,12 +193,12 @@ describe('KiroPrerequisiteGate agent picker copy (UX round 5)', () => {
     // The notice and the footer swap rather than stack: while the configured
     // agent is not ready the notice carries the line; after Use Kiro CLI
     // instead saves, the notice is gone and the foot of the list says it.
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ agent: { acp_backend: 'claude' } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ agent: { acp_backend: 'claude' } })
     vi.mocked(api.acpBackends).mockResolvedValue({
       backends: [probe({ installed: 'missing', install_command: 'npm install -g x' })],
     })
     vi.mocked(api.patchConfig).mockImplementation(async () => {
-      vi.mocked(api.kirocrewConfig).mockResolvedValue({ agent: { acp_backend: 'kiro' } })
+      vi.mocked(api.ajcrewConfig).mockResolvedValue({ agent: { acp_backend: 'kiro' } })
       return {}
     })
     render()
@@ -281,7 +281,7 @@ describe('KiroPrerequisiteGate shared probe eligibility', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     localStorage.clear()
-    vi.mocked(api.kirocrewConfig).mockResolvedValue({ agent: { acp_backend: 'kiro' } })
+    vi.mocked(api.ajcrewConfig).mockResolvedValue({ agent: { acp_backend: 'kiro' } })
     vi.mocked(api.kiroPrerequisite).mockResolvedValue(status())
   })
 

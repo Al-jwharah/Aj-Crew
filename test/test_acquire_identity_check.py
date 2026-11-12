@@ -32,26 +32,26 @@ import pytest
 from external_logout_detection_helpers import _FakeProvider, _FakeRuntime, _write_store
 from test_cron_identity_gate import _kiro_provider, _Prerequisites
 
-from kiro_crew import kiro_prerequisite as kp
-from kiro_crew.channel import Channel, run_channel_agent
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.chat_runner import (
+from aj_crew import kiro_prerequisite as kp
+from aj_crew.channel import Channel, run_channel_agent
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.chat_runner import (
     _PENDING_SWEEP_RETRY_SECS,
     install_acquire_identity_check,
 )
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
-from kiro_crew.session import SessionManager, _Session
-from kiro_crew.testing.clock import ManualClock
-from kiro_crew.testing.wait import async_wait_until, await_until, until_parked
-from kiro_crew.workflows.agent_pool import _WorkflowSessionWorker
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK
+from aj_crew.session import SessionManager, _Session
+from aj_crew.testing.clock import ManualClock
+from aj_crew.testing.wait import async_wait_until, await_until, until_parked
+from aj_crew.workflows.agent_pool import _WorkflowSessionWorker
 
-_SRC = Path(__file__).resolve().parents[1] / "src" / "kiro_crew"
+_SRC = Path(__file__).resolve().parents[1] / "src" / "aj_crew"
 
 
 @asynccontextmanager
 async def _manager(provider_factory: Any = _kiro_provider) -> AsyncIterator[SessionManager]:
     """A real manager over fake kiro-backed providers, closed however the test ends."""
-    manager = SessionManager(KiroCrewConfig(), provider_factory=provider_factory)
+    manager = SessionManager(AjCrewConfig(), provider_factory=provider_factory)
     try:
         yield manager
     finally:
@@ -256,7 +256,7 @@ async def test_a_check_that_fails_does_not_fail_the_acquire(monkeypatch, caplog)
         with monkeypatch.context() as patched:
             allocation = _Allocation(manager, order)
             patched.setattr(manager, "_allocation_boundary", lambda: allocation)
-            with caplog.at_level(logging.WARNING, logger="kiro_crew.session"):
+            with caplog.at_level(logging.WARNING, logger="aj_crew.session"):
                 provider, _is_new, _resumed = await manager.get_or_create("taskrunner:step")
 
     assert provider is allocation.provider
@@ -1302,28 +1302,28 @@ def _held_runtime(manager: SessionManager, slot: str) -> object | None:
 
 
 def test_holds_kiro_process_of_unknown_account_finds_a_registered_session() -> None:
-    manager = SessionManager(KiroCrewConfig())
+    manager = SessionManager(AjCrewConfig())
     manager._sessions["session"] = _Session(provider=_identity_provider())
 
     assert manager.holds_kiro_process_of_unknown_account("fp-current") is True
 
 
 def test_holds_kiro_process_of_unknown_account_finds_a_companion_runtime() -> None:
-    manager = SessionManager(KiroCrewConfig())
+    manager = SessionManager(AjCrewConfig())
     manager._subagent_runtimes["parent"] = _identity_runtime()  # type: ignore[assignment]
 
     assert manager.holds_kiro_process_of_unknown_account("fp-current") is True
 
 
 def test_holds_kiro_process_of_unknown_account_finds_a_background_runtime() -> None:
-    manager = SessionManager(KiroCrewConfig())
+    manager = SessionManager(AjCrewConfig())
     manager._bg_runtime = _identity_runtime()  # type: ignore[assignment]
 
     assert manager.holds_kiro_process_of_unknown_account("fp-current") is True
 
 
 def test_holds_kiro_process_of_unknown_account_finds_a_warm_provider_without_consuming_it() -> None:
-    manager = SessionManager(KiroCrewConfig())
+    manager = SessionManager(AjCrewConfig())
     provider = _identity_provider()
     manager._warm_pool.put_nowait((provider, 0.0))
 
@@ -1334,7 +1334,7 @@ def test_holds_kiro_process_of_unknown_account_finds_a_warm_provider_without_con
 def test_holds_kiro_process_of_unknown_account_ignores_stamped_non_kiro_and_unclaimable_holders() -> (
     None
 ):
-    manager = SessionManager(KiroCrewConfig())
+    manager = SessionManager(AjCrewConfig())
     manager._sessions["spawned-under-live"] = _Session(provider=_identity_provider("fp-current"))
     manager._sessions["mismatched"] = _Session(provider=_identity_provider("fp-other"))
     manager._sessions["non-kiro"] = _Session(provider=_identity_provider(backend="claude"))
@@ -1360,7 +1360,7 @@ def test_holds_kiro_process_of_unknown_account_counts_a_stamp_whose_store_went_e
     stamp = kp._combine_identity_fingerprints("store", "vault")
     # An external logout empties the store while the Crew vault stays populated.
     live = kp._combine_identity_fingerprints("", "vault")
-    manager = SessionManager(KiroCrewConfig())
+    manager = SessionManager(AjCrewConfig())
     manager._subagent_runtimes["parent"] = _identity_runtime(stamp)  # type: ignore[assignment]
 
     assert manager.holds_kiro_process_of_unknown_account(live) is True
@@ -1369,9 +1369,9 @@ def test_holds_kiro_process_of_unknown_account_counts_a_stamp_whose_store_went_e
 def test_holds_kiro_process_of_unknown_account_counts_a_changed_key_the_holder_receives() -> None:
     stamp = kp._combine_identity_fingerprints("store", "vault", "old-key")
     live = kp._combine_identity_fingerprints("store", "vault", "new-key")
-    given_the_key = SessionManager(KiroCrewConfig())
+    given_the_key = SessionManager(AjCrewConfig())
     given_the_key._sessions["session"] = _Session(provider=_identity_provider(stamp))
-    keyless = SessionManager(KiroCrewConfig())
+    keyless = SessionManager(AjCrewConfig())
     relay = _identity_provider(stamp, backend="kas")
     relay._kas_host_auth = True
     keyless._sessions["session"] = _Session(provider=relay)
@@ -1388,7 +1388,7 @@ def test_holds_kiro_process_of_unknown_account_leaves_out_a_busy_runtime_until_i
 ) -> None:
     runtime = _identity_runtime(active=busy == "active")
     runtime._initializing = busy == "initializing"
-    manager = SessionManager(KiroCrewConfig())
+    manager = SessionManager(AjCrewConfig())
     _hold_runtime(manager, slot, runtime)
 
     # The sweep skips a busy runtime, so counting it would only re-run the sweep.
@@ -1406,7 +1406,7 @@ def test_holds_kiro_process_of_unknown_account_counts_a_runtime_whose_busy_probe
     runtime.has_active_or_initializing_sessions = MagicMock(  # type: ignore[method-assign]
         side_effect=RuntimeError("runtime state unreadable")
     )
-    manager = SessionManager(KiroCrewConfig())
+    manager = SessionManager(AjCrewConfig())
     _hold_runtime(manager, slot, runtime)
 
     assert manager.holds_kiro_process_of_unknown_account("fp-current") is True

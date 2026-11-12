@@ -18,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import session_scope_reap as r
-from kiro_crew.constants import KIROCREW_SPAWNED_ENV, KIROCREW_SPAWNED_VALUE
+from aj_crew import session_scope_reap as r
+from aj_crew.constants import AJCREW_SPAWNED_ENV, AJCREW_SPAWNED_VALUE
 
 # now_monotonic reference used across tests; ages are derived from active-enter.
 _NOW = 1_000_000.0
@@ -82,7 +82,7 @@ def _make_proc(
     d.mkdir(parents=True, exist_ok=True)
     environ = b"PATH=/usr/bin\x00"
     if marker:
-        environ += f"{KIROCREW_SPAWNED_ENV}={KIROCREW_SPAWNED_VALUE}".encode() + b"\x00"
+        environ += f"{AJCREW_SPAWNED_ENV}={AJCREW_SPAWNED_VALUE}".encode() + b"\x00"
     (d / "environ").write_bytes(environ)
     # /proc/<pid>/stat: "pid (comm) state ppid pgrp ...". After the last ')':
     # index 0 state, 1 ppid, 2 pgrp, ... 19 starttime.

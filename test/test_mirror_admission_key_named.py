@@ -1,6 +1,6 @@
 """A key-named session's mirror row must be one the gateway wrote.
 
-For a channel-born key (``discord:kirocrew:direct:42``) the per-send recipient
+For a channel-born key (``discord:ajcrew:direct:42``) the per-send recipient
 check reads the peer off the KEY, so the roster cannot tell which conversation the
 row points at. The session map is writable by in-sandbox code: a row whose
 ``channel_id`` is rewritten to another allow-listed user's DM would otherwise pass
@@ -17,14 +17,14 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.messaging.link import ChannelLink, bind_origin_mirror, rebind_conversation_location
-from kiro_crew.mirror_admission import (
+from aj_crew.messaging.link import ChannelLink, bind_origin_mirror, rebind_conversation_location
+from aj_crew.mirror_admission import (
     admission_required,
     sign_mirror_admission,
     verify_mirror_admission,
 )
 
-KEY = "discord:kirocrew:direct:42"
+KEY = "discord:ajcrew:direct:42"
 OWN_DM = "dm-channel-of-42"
 OTHER_DM = "dm-channel-of-77"
 
@@ -91,24 +91,24 @@ class _State:
 def _permit_governance(_floor_monkeypatch: pytest.MonkeyPatch) -> None:
     """Isolate the row decision from the channel-scope decision, and give every
     test a fresh said-once set so a refusal's first line is logged in any order."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     _floor_monkeypatch.setattr(chat_runner, "_RECIPIENT_LOGGED", set())
     _floor_monkeypatch.setattr(
-        "kiro_crew.platform.governance_profiles.vet_and_audit",
+        "aj_crew.platform.governance_profiles.vet_and_audit",
         lambda *a, **k: type("D", (), {"permitted": True})(),
     )
 
 
 def _discord() -> Any:
-    from kiro_crew.discord.transport import DiscordTransport
+    from aj_crew.discord.transport import DiscordTransport
 
     # Two allow-listed users: the attack needs the victim on the roster.
     return DiscordTransport(_Client(), allowed_user_ids=["42", "77"], allowed_thread_ids=[])
 
 
 def _resolve(state: _State, key: str = KEY) -> Any:
-    from kiro_crew.dashboard.chat_runner import _resolve_mirror_target
+    from aj_crew.dashboard.chat_runner import _resolve_mirror_target
 
     return _resolve_mirror_target(state, key)
 
@@ -129,7 +129,7 @@ def test_a_signed_row_rewritten_to_another_dm_is_refused() -> None:
 
 
 def test_a_signed_row_moved_to_another_session_is_refused() -> None:
-    other_key = "discord:kirocrew:direct:77"
+    other_key = "discord:ajcrew:direct:77"
     sessions = _Sessions()
     bind_origin_mirror(
         sessions, key=other_key, location=ChannelLink("discord", channel_id=OTHER_DM)
@@ -191,16 +191,16 @@ def test_the_re_sign_keeps_a_muted_mirror_muted_and_its_inbound_flag(tmp_path: A
     mute and the resume binding both survive it."""
     from unittest.mock import patch
 
-    from kiro_crew.session_map import SessionMap
+    from aj_crew.session_map import SessionMap
 
-    with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+    with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
         store = SessionMap()
         legacy = ChannelLink("discord", channel_id=OWN_DM)
         store.set_mirror_link(KEY, legacy, accepts_inbound=True)
         store.set_mirror_paused(KEY, True)
         assert not verify_mirror_admission(KEY, store.get_mirror_link(KEY))
         # The origin bind's repair step, driven on the store itself.
-        from kiro_crew.messaging.link import _resign_own_location
+        from aj_crew.messaging.link import _resign_own_location
 
         here = ChannelLink("discord", channel_id=OWN_DM)
         _resign_own_location(store, key=KEY, existing=store.get_mirror_link(KEY), location=here)
@@ -214,10 +214,10 @@ def test_the_re_sign_keeps_a_rebind_that_landed_after_its_read(tmp_path: Any) ->
     compare-and-set is. A dashboard re-link committed in between survives."""
     from unittest.mock import patch
 
-    from kiro_crew.messaging.link import _resign_own_location
-    from kiro_crew.session_map import SessionMap
+    from aj_crew.messaging.link import _resign_own_location
+    from aj_crew.session_map import SessionMap
 
-    with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+    with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
         store = SessionMap()
         here = ChannelLink("discord", channel_id=OWN_DM)
         store.set_mirror_link(KEY, here)
@@ -241,10 +241,10 @@ async def test_the_re_sign_never_writes_the_map_on_the_event_loop(tmp_path: Any)
     off the loop and still sees the mute."""
     from unittest.mock import patch
 
-    from kiro_crew.messaging.link import _resign_own_location
-    from kiro_crew.session_map import SessionMap
+    from aj_crew.messaging.link import _resign_own_location
+    from aj_crew.session_map import SessionMap
 
-    with patch("kiro_crew.session_map.config_dir", return_value=tmp_path):
+    with patch("aj_crew.session_map.config_dir", return_value=tmp_path):
         store = SessionMap()
         here = ChannelLink("discord", channel_id=OWN_DM)
         with store.batched_save():
@@ -287,7 +287,7 @@ def test_the_conversation_the_gateway_saw_is_admitted_unsigned() -> None:
 
 def test_a_forged_row_on_a_key_named_forum_route_is_refused() -> None:
     """A room-audience key names no peer, but its row is just as agent-writable."""
-    from kiro_crew.dashboard.chat_runner import _resolve_channel_target
+    from aj_crew.dashboard.chat_runner import _resolve_channel_target
 
     class _Permissive:
         capabilities = type("Caps", (), {"supports_proactive_send": True})()
@@ -295,7 +295,7 @@ def test_a_forged_row_on_a_key_named_forum_route_is_refused() -> None:
         def may_send_to(self, *a: Any, **k: Any) -> bool:
             return True
 
-    key = "telegram:kirocrew:forum:-100123:7"
+    key = "telegram:ajcrew:forum:-100123:7"
     sessions = _Sessions()
     forged = ChannelLink("telegram", channel_id="-100999", thread_id="1")
     assert _resolve_channel_target(_State(_Permissive(), sessions), key, forged) is None
@@ -307,9 +307,9 @@ def test_a_link_addressed_to_the_keys_own_peer_by_id_is_admitted() -> None:
     """Telegram's DM id is the user id, and the cron leg's stored-channel rung
     carries the peer's user id: aimed at the key's peer, the destination is the
     peer. The same shape aimed at another user is refused."""
-    from kiro_crew.dashboard.chat_runner import _resolve_channel_target
+    from aj_crew.dashboard.chat_runner import _resolve_channel_target
 
-    key = "telegram:kirocrew:direct:111"
+    key = "telegram:ajcrew:direct:111"
     sessions = _Sessions()
     transport = _StubTelegram()
     own = ChannelLink("telegram", channel_id="111")
@@ -334,7 +334,7 @@ class _StubTelegram:
 
 def test_a_caller_supplied_principal_is_not_held_to_the_row_rule() -> None:
     """The drop notice builds its link from in-memory entry metadata."""
-    from kiro_crew.dashboard.chat_runner import _resolve_channel_target
+    from aj_crew.dashboard.chat_runner import _resolve_channel_target
 
     sessions = _Sessions()
     link = ChannelLink("discord", channel_id=OWN_DM)
@@ -364,8 +364,8 @@ def test_the_cron_leg_signs_the_link_it_reads_from_the_live_origin_record() -> N
     survives the ``reset()`` that evicts the record before the ladder runs."""
     from unittest.mock import patch
 
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.slack import gateway as gw
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.slack import gateway as gw
 
     class _RealSessions:
         def get_origin_link(self, key: str) -> ChannelLink | None:
@@ -374,8 +374,8 @@ def test_the_cron_leg_signs_the_link_it_reads_from_the_live_origin_record() -> N
         def get_mirror_link(self, key: str) -> ChannelLink | None:
             return None
 
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U_OWNER"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U_OWNER"}):
         orch = gw.GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
     orch.sessions = _RealSessions()
     assert orch.sessions.get_origin_link is not orch.sessions.get_origin_link
@@ -385,6 +385,6 @@ def test_the_cron_leg_signs_the_link_it_reads_from_the_live_origin_record() -> N
     assert not needs_dm_resolution and verify_mirror_admission(KEY, link)
     # The record is gone by the time the ladder judges the snapshot.
     sessions = _Sessions()
-    from kiro_crew.dashboard.chat_runner import _resolve_channel_target
+    from aj_crew.dashboard.chat_runner import _resolve_channel_target
 
     assert _resolve_channel_target(_State(_discord(), sessions), KEY, link) is not None

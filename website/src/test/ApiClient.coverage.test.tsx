@@ -86,7 +86,7 @@ afterEach(() => {
 
 describe('client transport', () => {
   it('exposes the backend search threshold as a shared constant', () => {
-    // Must match kiro_crew.history.SEARCH_MIN_CHARS — the pages gate typing on it.
+    // Must match aj_crew.history.SEARCH_MIN_CHARS — the pages gate typing on it.
     expect(SEARCH_MIN_CHARS).toBe(2)
   })
 
@@ -627,7 +627,7 @@ describe('session-expired banner', () => {
     const el = banner() as HTMLElement
     // The recovery instructions are the point of the banner: the command to run
     // and a field to paste the resulting URL into.
-    expect(el.textContent).toContain('kirocrew token')
+    expect(el.textContent).toContain('ajcrew token')
     expect(el.querySelector('input')).not.toBeNull()
     expect(el.querySelector('button')?.textContent).toBe('✕')
   })
@@ -778,7 +778,7 @@ describe('session-expired banner', () => {
       return (fetchMock.mock.calls[0]?.[0] as string | undefined) ?? null
     }
 
-    it('extracts the token out of a pasted `kirocrew token` URL', async () => {
+    it('extracts the token out of a pasted `ajcrew token` URL', async () => {
       expect(await pasteAndEnter('http://127.0.0.1:6776/?token=abc123&x=1'))
         .toBe('/api/auth/me?token=abc123')
     })
@@ -868,7 +868,7 @@ describe('session-expired banner', () => {
       // the rendered text on the command itself. Without it the command reads as
       // prose and a reader cannot see where it begins and ends.
       const chip = banner()!.querySelector('code')
-      expect(chip?.textContent).toBe('kirocrew token')
+      expect(chip?.textContent).toBe('ajcrew token')
       // Still one sentence around it, not a fragment.
       expect(banner()!.textContent).toContain('in a terminal')
       expect(banner()!.textContent).toContain('press Enter')
@@ -894,7 +894,7 @@ describe('session-expired banner', () => {
         const root = (mod as { default?: Record<string, unknown> }).default ?? mod
         const client = (root as { api?: { client?: Record<string, string> } }).api?.client
         const command = client?.reauth_command
-        const instruction = client?.run_kirocrew_token_then_paste_sign_in_url
+        const instruction = client?.run_ajcrew_token_then_paste_sign_in_url
         if (command === undefined || instruction === undefined) continue
         checked += 1
         if (!instruction.includes(command)) broken.push(path)
@@ -940,13 +940,13 @@ describe('session-expired banner', () => {
       fetchMock.mockResolvedValue(res(401, 'revoked'))
       checkSessionExpired(res(403, '', { headers: { 'X-Auth-Required': 'true' } }))
       await vi.waitFor(() => expect(banner()).not.toBeNull())
-      // "Run kirocrew token" alone left a reader guessing where to run it; the
+      // "Run ajcrew token" alone left a reader guessing where to run it; the
       // panel's own error sentence already said "in a terminal", so the banner
       // saying less than the card was the inconsistency. The command sits inside
       // that sentence rather than in its own <code>, because a value that stops
       // mid-sentence cannot be reordered by a translator.
       expect(banner()!.textContent).toContain('in a terminal')
-      expect(banner()!.textContent).toContain('kirocrew token')
+      expect(banner()!.textContent).toContain('ajcrew token')
       // On this page the user is already holding a credential for the secrets
       // form, so a field labelled "token" invites pasting the wrong one.
       const input = banner()!.querySelector('input') as HTMLInputElement

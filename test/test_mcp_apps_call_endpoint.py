@@ -1,11 +1,11 @@
 """Tests for the MCP Apps UI→tool callback path.
 
-Gateway side (:mod:`kiro_crew.mcp_gateway.app_call`) is tested against the
+Gateway side (:mod:`aj_crew.mcp_gateway.app_call`) is tested against the
 REAL ``test/fake_mcp_app_server.py`` child process pooled in a real
 :class:`BackendPool` — proving spool-token gating, app-visibility enforcement
 and the ephemeral-stub forward on live pipes.
 
-Dashboard side (:mod:`kiro_crew.dashboard.handlers.mcp_apps`) is tested with
+Dashboard side (:mod:`aj_crew.dashboard.handlers.mcp_apps`) is tested with
 ``aiohttp``'s test client against a scripted unix-socket fake gateway.
 """
 
@@ -21,14 +21,14 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.handlers import mcp_apps as mcp_apps_handlers
-from kiro_crew.mcp_apps_render import load_spool
-from kiro_crew.mcp_gateway import apps
-from kiro_crew.mcp_gateway.app_call import handle_app_call
-from kiro_crew.mcp_gateway.apps import write_spool
-from kiro_crew.mcp_gateway.backend import MCP_APPS_ENV_FLAG, Backend
-from kiro_crew.mcp_gateway.pool import BackendPool, PoolKey
-from kiro_crew.testing.wait import finished
+from aj_crew.dashboard.handlers import mcp_apps as mcp_apps_handlers
+from aj_crew.mcp_apps_render import load_spool
+from aj_crew.mcp_gateway import apps
+from aj_crew.mcp_gateway.app_call import handle_app_call
+from aj_crew.mcp_gateway.apps import write_spool
+from aj_crew.mcp_gateway.backend import MCP_APPS_ENV_FLAG, Backend
+from aj_crew.mcp_gateway.pool import BackendPool, PoolKey
+from aj_crew.testing.wait import finished
 
 SERVER_PATH = Path(__file__).parent / "fake_mcp_app_server.py"
 
@@ -67,7 +67,7 @@ def _spool_record(
     server: str = "fake-mcp-app",
     pool_digest: str | None = None,
     session_key: str = "dashboard:sess-cb",
-    agent: str = "kirocrew",
+    agent: str = "ajcrew",
 ) -> str:
     """Write a plausible spool record (as interception would) and return its id.
 
@@ -205,7 +205,7 @@ async def test_app_call_cancellation_is_audited(apps_flag_on, spool_tmp, monkeyp
     leave a SEL record. The CancelledError is audited "cancelled" and
     re-raised — never silently swallowed (it is a BaseException, so the
     handler's `except Exception` never catches it)."""
-    import kiro_crew.mcp_gateway.app_call as app_call_mod
+    import aj_crew.mcp_gateway.app_call as app_call_mod
 
     audits: list[tuple[str, str]] = []
     monkeypatch.setattr(
@@ -329,7 +329,7 @@ async def test_app_call_denied_by_governance_mcp_scope(
 ):
     """An enterprise `mcp`-scope deny on @server/tool binds the app-originated
     path exactly like the model path (single ceiling across both invocation
-    authorities). Policy loaded via the real KIROCREW_SECURITY_POLICY seam."""
+    authorities). Policy loaded via the real AJCREW_SECURITY_POLICY seam."""
     policy = tmp_path / "policy.json"
     policy.write_text(
         json.dumps(
@@ -340,7 +340,7 @@ async def test_app_call_denied_by_governance_mcp_scope(
             }
         )
     )
-    monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(policy))
+    monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(policy))
     live = await _spawn_pooled_server()
     try:
         spool_id = _spool_record()
@@ -381,8 +381,8 @@ async def test_app_call_denied_when_the_reloaded_policy_signature_is_bad(
     the original bytes says nothing about what it loads now. Under a genuine
     ``require_policy_signature`` opt-in a non-verified reload denies.
     """
-    from kiro_crew.platform.admission import hmac_signature
-    from kiro_crew.platform.governance import policy_signing_payload
+    from aj_crew.platform.admission import hmac_signature
+    from aj_crew.platform.governance import policy_signing_payload
 
     adm = tmp_path / "admission_policy.json"
     adm.write_text(
@@ -393,7 +393,7 @@ async def test_app_call_denied_when_the_reloaded_policy_signature_is_bad(
             }
         )
     )
-    monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
+    monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
     body = {
         "version": 1,
         "boot": {"fail_closed": True},
@@ -404,7 +404,7 @@ async def test_app_call_denied_when_the_reloaded_policy_signature_is_bad(
     body["mcp"]["deny"].append("@never/matched")  # tampered AFTER signing
     policy = tmp_path / "policy.json"
     policy.write_text(json.dumps(body))
-    monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(policy))
+    monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(policy))
     live = await _spawn_pooled_server()
     try:
         spool_id = _spool_record()
@@ -445,10 +445,10 @@ async def test_app_call_is_not_denied_when_no_policy_is_readable_here(
             }
         )
     )
-    monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
-    monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
+    monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
+    monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
     monkeypatch.setattr(
-        "kiro_crew.platform.governance._policy_home_path", lambda: tmp_path / "nope.json"
+        "aj_crew.platform.governance._policy_home_path", lambda: tmp_path / "nope.json"
     )
     live = await _spawn_pooled_server()
     try:
@@ -475,12 +475,12 @@ def _record_session_transcript_agent(session_key: str, agent: str) -> None:
     writing it does NOT move governance, which reads the agent gatewayd stamped
     on the spool record instead.
     """
-    from kiro_crew.execution_context import (
+    from aj_crew.execution_context import (
         EXECUTION_CONTEXT_KEY,
         ExecutionContext,
         MemoryStoreRef,
     )
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     execution = ExecutionContext(
         member_id=None,
@@ -501,11 +501,11 @@ async def test_each_agents_own_profile_applies_through_one_shared_backend(
 
     The agent comes from each render's spool record, not ``backend.pool_key``. On one
     backend ``gpu-dev`` (profile denies ``@fake-mcp-app/draw``) is refused and
-    ``kirocrew`` (no profile) runs; one test, since a backend-keyed lookup fails one half.
+    ``ajcrew`` (no profile) runs; one test, since a backend-keyed lookup fails one half.
     """
-    import kiro_crew.platform.governance_profiles as gp
+    import aj_crew.platform.governance_profiles as gp
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     profiles = tmp_path / "profiles"
     profiles.mkdir()
     (profiles / "scoped.json").write_text(
@@ -525,7 +525,7 @@ async def test_each_agents_own_profile_applies_through_one_shared_backend(
     try:
         digest = live.backend.pool_key.stable_hash()
         scoped = _spool_record(pool_digest=digest, session_key="dashboard:scoped", agent="gpu-dev")
-        openly = _spool_record(pool_digest=digest, session_key="dashboard:open", agent="kirocrew")
+        openly = _spool_record(pool_digest=digest, session_key="dashboard:open", agent="ajcrew")
 
         denied = await handle_app_call(
             live.pool,
@@ -568,9 +568,9 @@ async def test_app_call_without_a_session_cannot_be_governed_so_it_is_denied(
     still names it. Control: the same shape from an agent with NO profile runs, so
     the refusal is about the profile, not the missing session key.
     """
-    import kiro_crew.platform.governance_profiles as gp
+    import aj_crew.platform.governance_profiles as gp
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     profiles = tmp_path / "profiles"
     profiles.mkdir()
     (profiles / "scoped.json").write_text(
@@ -603,7 +603,7 @@ async def test_app_call_without_a_session_cannot_be_governed_so_it_is_denied(
         assert denied["type"] == "app-call-rejected"
         assert "governance" in denied["reason"]
 
-        openly = _spool_record(pool_digest=digest, session_key="", agent="kirocrew")
+        openly = _spool_record(pool_digest=digest, session_key="", agent="ajcrew")
         allowed = await handle_app_call(
             live.pool,
             {
@@ -631,7 +631,7 @@ async def test_app_call_on_a_record_naming_no_producing_agent_is_denied(
     The shape an OLDER gateway's interception wrote, before the stamp existed,
     and the one case where "unknown" could be mistaken for "unrestricted".
     """
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     live = await _spawn_pooled_server()
     try:
         spool_id = _spool_record(
@@ -661,12 +661,12 @@ async def test_a_session_rewriting_its_own_transcript_cannot_pick_its_ceiling(
     """The governance agent comes off the record, so editing the transcript does nothing.
 
     A ``gpu-dev`` render stays refused after the session rewrites its transcript (the
-    store a sandboxed shell can write) to name ``kirocrew``. Control: the same name on
+    store a sandboxed shell can write) to name ``ajcrew``. Control: the same name on
     the RECORD, which only gatewayd writes, does move the answer.
     """
-    import kiro_crew.platform.governance_profiles as gp
+    import aj_crew.platform.governance_profiles as gp
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     profiles = tmp_path / "profiles"
     profiles.mkdir()
     (profiles / "scoped.json").write_text(
@@ -685,7 +685,7 @@ async def test_a_session_rewriting_its_own_transcript_cannot_pick_its_ceiling(
     session = "dashboard:forger"
     # The forgery: the subject session names a profile-free agent in the only
     # store it can reach.
-    _record_session_transcript_agent(session, "kirocrew")
+    _record_session_transcript_agent(session, "ajcrew")
 
     live = await _spawn_pooled_server()
     try:
@@ -708,7 +708,7 @@ async def test_a_session_rewriting_its_own_transcript_cannot_pick_its_ceiling(
 
         # Control: the stamp on the record, which the session cannot write, does
         # decide. Same session, same transcript, only the record's agent differs.
-        allowed_id = _spool_record(pool_digest=digest, session_key=session, agent="kirocrew")
+        allowed_id = _spool_record(pool_digest=digest, session_key=session, agent="ajcrew")
         allowed = await handle_app_call(
             live.pool,
             {
@@ -735,7 +735,7 @@ async def test_app_call_governance_evaluation_error_fails_closed(
     Plane A's soft fail-open — this path has no always-on deny floor)."""
     policy = tmp_path / "broken.json"
     policy.write_text("{not json")
-    monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(policy))
+    monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(policy))
     live = await _spawn_pooled_server()
     try:
         spool_id = _spool_record()
@@ -895,7 +895,7 @@ async def test_app_call_still_denies_model_only_tool(apps_flag_on, spool_tmp):
     """Loosening the DEFAULT must not loosen an explicit exclusion."""
     live = await _spawn_pooled_server()
     try:
-        from kiro_crew.mcp_gateway import app_call as app_call_mod
+        from aj_crew.mcp_gateway import app_call as app_call_mod
 
         async def _model_only(backend, **_):
             return {
@@ -931,7 +931,7 @@ async def test_app_call_denies_a_malformed_declaration(apps_flag_on, spool_tmp):
     """
     live = await _spawn_pooled_server()
     try:
-        from kiro_crew.mcp_gateway import app_call as app_call_mod
+        from aj_crew.mcp_gateway import app_call as app_call_mod
 
         async def _unreadable(backend, **_):
             return {
@@ -963,7 +963,7 @@ async def test_app_call_tools_list_is_fetched_fresh_per_call(apps_flag_on, spool
     """Authorization input is never cached: each app call re-fetches
     tools/list, so a server-side visibility revocation takes effect on the
     very next call (no stale-authorization window)."""
-    from kiro_crew.mcp_gateway import app_call as app_call_mod
+    from aj_crew.mcp_gateway import app_call as app_call_mod
 
     live = await _spawn_pooled_server()
     try:
@@ -1307,7 +1307,7 @@ async def test_the_round_trip_skips_stray_frames_to_its_own_response():
     the decoder's ceiling failed the app call instead of costing one frame."""
     from stray_line_helpers import STRAY_LINES
 
-    from kiro_crew.mcp_gateway import app_call as app_call_mod
+    from aj_crew.mcp_gateway import app_call as app_call_mod
 
     reply = {"jsonrpc": "2.0", "id": 4, "result": {"ok": True}}
     backend = _InboxBackend(

@@ -11,9 +11,9 @@ from __future__ import annotations
 
 import inspect
 
-from kiro_crew.cron_script import run_command_sandboxed
-from kiro_crew.mcp_cron_tool_list import _list_tools
-from kiro_crew.validation_parts.cron_schemas import CRON_ADD_SCHEMA
+from aj_crew.cron_script import run_command_sandboxed
+from aj_crew.mcp_cron_tool_list import _list_tools
+from aj_crew.validation_parts.cron_schemas import CRON_ADD_SCHEMA
 
 
 def _cron_add_properties() -> dict:

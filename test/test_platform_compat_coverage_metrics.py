@@ -1,4 +1,4 @@
-"""Coverage-raising unit tests for :mod:`kiro_crew.platform_compat`: resource metrics.
+"""Coverage-raising unit tests for :mod:`aj_crew.platform_compat`: resource metrics.
 
 RSS and peak RSS, open fds, the RSS of a pid and of its tree, CPU seconds, the system
 metrics, ``strftime`` and the nofile soft limit.
@@ -21,7 +21,7 @@ from typing import Any
 import pytest
 from platform_compat_coverage_helpers import _LINUX_ONLY, _POSIX_ONLY, _const, _fake_windows, _Fn
 
-from kiro_crew import platform_compat as pc
+from aj_crew import platform_compat as pc
 
 # The whole-module skip ``test_platform_compat_coverage.py`` applies, for the reasons given
 # there.
@@ -291,7 +291,7 @@ class TestProcPeakRss:
 class TestCountOpenFds:
     """``count_open_fds`` is the ONE shared open-fd probe.
 
-    Both the ``kirocrew.process.open_fds`` gauge and gatewayd's
+    Both the ``ajcrew.process.open_fds`` gauge and gatewayd's
     zombie-diagnostic ``fd_count`` delegate here, so these tests pin the probe
     once: the POSIX steady-state correction, the None contract, and the
     Windows handle-count route.

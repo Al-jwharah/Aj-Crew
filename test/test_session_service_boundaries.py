@@ -14,13 +14,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.session import FirstTurnState, SessionManager, _Session
+from aj_crew.config import AjCrewConfig
+from aj_crew.session import FirstTurnState, SessionManager, _Session
 
 
 @pytest.fixture
-def cfg() -> KiroCrewConfig:
-    config = KiroCrewConfig()
+def cfg() -> AjCrewConfig:
+    config = AjCrewConfig()
     config.session.timeout_secs = 2
     return config
 
@@ -43,7 +43,7 @@ def _provider(*, on_shutdown: Callable[[], None] | None = None) -> MagicMock:
 
 
 @pytest.mark.asyncio
-async def test_close_all_keeps_cross_boundary_teardown_order(cfg: KiroCrewConfig) -> None:
+async def test_close_all_keeps_cross_boundary_teardown_order(cfg: AjCrewConfig) -> None:
     events: list[str] = []
     manager = SessionManager(cfg, provider_factory=lambda **_: _provider())
 
@@ -125,7 +125,7 @@ async def test_close_all_keeps_cross_boundary_teardown_order(cfg: KiroCrewConfig
     ids=("reset", "remove", "destroy", "discard"),
 )
 async def test_missing_key_teardown_persistence_matrix(
-    cfg: KiroCrewConfig,
+    cfg: AjCrewConfig,
     operation: Callable[[SessionManager], Awaitable[object]],
     clear_sid_calls: int,
     delete_calls: int,
@@ -149,7 +149,7 @@ async def test_missing_key_teardown_persistence_matrix(
 
 
 @pytest.mark.asyncio
-async def test_hard_stop_orders_abort_reset_respawn_and_hook(cfg: KiroCrewConfig) -> None:
+async def test_hard_stop_orders_abort_reset_respawn_and_hook(cfg: AjCrewConfig) -> None:
     events: list[str] = []
     manager = SessionManager(cfg, provider_factory=lambda **_: _provider())
     session = _Session(
@@ -183,7 +183,7 @@ async def test_hard_stop_orders_abort_reset_respawn_and_hook(cfg: KiroCrewConfig
     async def on_hard() -> None:
         events.append("hard-hook")
 
-    with patch("kiro_crew.session.asyncio.create_task", side_effect=create_task):
+    with patch("aj_crew.session.asyncio.create_task", side_effect=create_task):
         outcome = await manager.stop_turn("key", force=True, on_hard=on_hard)
 
     assert outcome == "hard"
@@ -201,7 +201,7 @@ async def test_hard_stop_orders_abort_reset_respawn_and_hook(cfg: KiroCrewConfig
 
 
 @pytest.mark.asyncio
-async def test_soft_stop_marks_cancelled_context_before_hook(cfg: KiroCrewConfig) -> None:
+async def test_soft_stop_marks_cancelled_context_before_hook(cfg: AjCrewConfig) -> None:
     manager = SessionManager(cfg, provider_factory=lambda **_: _provider())
     provider = _provider()
     provider.cancel = AsyncMock(return_value="acked")
@@ -223,7 +223,7 @@ async def test_soft_stop_marks_cancelled_context_before_hook(cfg: KiroCrewConfig
 
 @pytest.mark.asyncio
 async def test_identity_retirement_preserves_map_and_drops_transient_state(
-    cfg: KiroCrewConfig,
+    cfg: AjCrewConfig,
 ) -> None:
     manager = SessionManager(cfg, provider_factory=lambda **_: _provider())
     provider = _provider()
@@ -242,7 +242,7 @@ async def test_identity_retirement_preserves_map_and_drops_transient_state(
     manager._retire_kiro_subagent_runtimes = AsyncMock(return_value=True)  # type: ignore[method-assign]
     manager._retire_kiro_bg_runtime = AsyncMock(return_value=True)  # type: ignore[method-assign]
 
-    with patch("kiro_crew.session._provider_uses_kiro_identity_store", return_value=True):
+    with patch("aj_crew.session._provider_uses_kiro_identity_store", return_value=True):
         retired, complete = await manager.retire_kiro_identity_sessions()
 
     assert (retired, complete) == (["key"], True)
@@ -271,7 +271,7 @@ async def test_identity_retirement_preserves_map_and_drops_transient_state(
     ids=("clearing-reset-suppresses", "plain-reset-replays", "missing-key-does-not-arm"),
 )
 async def test_conversation_clearing_reset_suppresses_the_successor_replay(
-    cfg: KiroCrewConfig,
+    cfg: AjCrewConfig,
     clear_conversation: bool,
     seed_session: bool,
     suppressed: bool,
@@ -297,7 +297,7 @@ async def test_conversation_clearing_reset_suppresses_the_successor_replay(
 
 
 @pytest.mark.asyncio
-async def test_remove_of_a_live_session_emits_no_close_edge(cfg: KiroCrewConfig) -> None:
+async def test_remove_of_a_live_session_emits_no_close_edge(cfg: AjCrewConfig) -> None:
     """``remove`` must not write a ``session/closed`` crew-log edge, live session or not.
 
     Many ``remove`` callers are not a worker finishing, and a torn-down worker reading
@@ -312,7 +312,7 @@ async def test_remove_of_a_live_session_emits_no_close_edge(cfg: KiroCrewConfig)
         first_turn=FirstTurnState.NOTHING_ARMED,
     )
 
-    with patch("kiro_crew.crew_log.emit.on_session_closed") as on_closed:
+    with patch("aj_crew.crew_log.emit.on_session_closed") as on_closed:
         await manager.remove("key")
 
     on_closed.assert_not_called()
@@ -321,14 +321,14 @@ async def test_remove_of_a_live_session_emits_no_close_edge(cfg: KiroCrewConfig)
 
 
 @pytest.mark.asyncio
-async def test_remove_of_a_missing_key_emits_no_close_edge(cfg: KiroCrewConfig) -> None:
+async def test_remove_of_a_missing_key_emits_no_close_edge(cfg: AjCrewConfig) -> None:
     """``remove`` on a key this gateway never held must touch nothing -- the same
     contract the persistence matrix pins -- so it writes no ``session/closed`` edge.
     """
     manager = SessionManager(cfg, provider_factory=lambda **_: _provider())
     manager.release_subagent_runtime = AsyncMock()  # type: ignore[method-assign]
 
-    with patch("kiro_crew.crew_log.emit.on_session_closed") as on_closed:
+    with patch("aj_crew.crew_log.emit.on_session_closed") as on_closed:
         await manager.remove("missing")
 
     on_closed.assert_not_called()

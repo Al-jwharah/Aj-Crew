@@ -23,7 +23,7 @@ from crew_turn_proxy_helpers import (
     _wire_handler,
 )
 
-from kiro_crew.dashboard import handlers_crew_turn as mod
+from aj_crew.dashboard import handlers_crew_turn as mod
 
 
 class TestTheCrewsReplyIsRedactedBeforeItReachesTheCaller:
@@ -189,7 +189,7 @@ class TestTheCrewsReplyIsBoundedAndTyped:
 
     def test_the_cap_is_the_shared_one_and_not_a_local_number(self):
         """The shrink above is only legitimate if the module reads the shared cap."""
-        from kiro_crew.instances import constants
+        from aj_crew.instances import constants
 
         assert mod.PROXY_REDACT_BUFFER_MAX_BYTES == constants.PROXY_REDACT_BUFFER_MAX_BYTES
 
@@ -488,7 +488,7 @@ class TestANonStreamedCrewErrorIsARefusalNotAContentTypeComplaint:
     async def test_a_forward_that_changed_mid_turn_gets_no_secret(self, monkeypatch, stream):
         """The tunnel drops while the secret is read and another forward takes the
         port. The second status read sees a new connection, so nothing is posted."""
-        import kiro_crew.dashboard.handlers_instances as hi
+        import aj_crew.dashboard.handlers_instances as hi
 
         calls: list = []
         _wire_handler(monkeypatch, status=_connected(connected_at=1.0, local_port=18081))
@@ -658,7 +658,7 @@ class TestEveryTurnIsAudited:
     ):
         """Some frames went out and the rest were dropped, which is neither of the
         two outcomes a reader would otherwise infer."""
-        from kiro_crew.dashboard.handlers_instances import ProxyReplyUnredactable
+        from aj_crew.dashboard.handlers_instances import ProxyReplyUnredactable
 
         _wire_handler(monkeypatch, status=_connected())
         _capture_stream(monkeypatch)

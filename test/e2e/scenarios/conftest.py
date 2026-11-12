@@ -1,4 +1,4 @@
-"""Scenario-level E2E over the existing ``kirocrew pod`` tooling.
+"""Scenario-level E2E over the existing ``ajcrew pod`` tooling.
 
 One session-scoped pod, five scenarios that each drive it through a user-visible
 flow: save a setting across a gateway restart, fire a cron, run an agent turn,
@@ -12,10 +12,10 @@ and a second framework would need a second isolation story to match. See
 
 Gating mirrors ``docs/ci/e2e-gate.md``:
 
-* ``KIROCREW_E2E_SCENARIOS`` unset -> every scenario skips. The suite boots a
+* ``AJCREW_E2E_SCENARIOS`` unset -> every scenario skips. The suite boots a
   real service-managed pod, which is minutes and a service manager away from a
   bare ``pytest`` run.
-* ``KIROCREW_E2E_REQUIRE=1`` -> every precondition skip becomes a
+* ``AJCREW_E2E_REQUIRE=1`` -> every precondition skip becomes a
   FAILURE. A skip counts as a pass, so without this the nightly job would go
   green having run zero scenarios. The same switch the Playwright gate and the
   gateway boot matrix read: one name for one mechanism, since each job runs one
@@ -49,16 +49,16 @@ from typing import Any, Optional
 
 import pytest
 
-from kiro_crew.loopback_http import build_loopback_opener
-from kiro_crew.platform_compat import IS_WINDOWS
-from kiro_crew.pod import provision as prov
-from kiro_crew.testing.wait import wait_until
+from aj_crew.loopback_http import build_loopback_opener
+from aj_crew.platform_compat import IS_WINDOWS
+from aj_crew.pod import provision as prov
+from aj_crew.testing.wait import wait_until
 
 # The pod plane these scenarios run on is hermetic: its own roots, its own unit
 # prefix and its own port band, so a run can never collide with (or reclaim) a
 # developer's real pods. `pod/README.md` documents this as the supported way to
 # get a test plane.
-PLANE_PREFIX = "kirocrew-e2e-pod"
+PLANE_PREFIX = "ajcrew-e2e-pod"
 PLANE_BASE_PORT = "7410"
 
 # Bounds. Every wait in this suite is a deadline plus a poll, never a fixed
@@ -84,7 +84,7 @@ _PLANE_MARKER = ".kce2e-plane"
 
 
 def _required() -> bool:
-    return os.environ.get("KIROCREW_E2E_REQUIRE", "") == "1"
+    return os.environ.get("AJCREW_E2E_REQUIRE", "") == "1"
 
 
 def unresolved(reason: str) -> None:
@@ -95,7 +95,7 @@ def unresolved(reason: str) -> None:
     can never report green on a suite that never ran.
     """
     if _required():
-        pytest.fail(f"KIROCREW_E2E_REQUIRE=1 but {reason}")
+        pytest.fail(f"AJCREW_E2E_REQUIRE=1 but {reason}")
     pytest.skip(reason)
 
 
@@ -124,7 +124,7 @@ class PodClient:
         expect_ok: bool = True,
         timeout: float = 120.0,
     ) -> Any:
-        """One authenticated request through ``kirocrew pod api`` -- or, on
+        """One authenticated request through ``ajcrew pod api`` -- or, on
         Windows, its documented equivalent.
 
         Deliberately NOT httpx against the TCP port on POSIX. ``pod api`` mints
@@ -136,11 +136,11 @@ class PodClient:
         second, test-only client that could drift from it.
 
         CPython on win32 has no ``AF_UNIX`` at all, so the pod's gateway binds no
-        dashboard socket there and ``kirocrew pod api`` REFUSES unconditionally
+        dashboard socket there and ``ajcrew pod api`` REFUSES unconditionally
         on that platform (``runtime.pod_api``'s own ``IS_WINDOWS`` branch) --
         that refusal is by design, not a gap to route around by weakening
         production code. Its own message names the supported alternative:
-        ``kirocrew pod token <name>`` then an authenticated request to
+        ``ajcrew pod token <name>`` then an authenticated request to
         ``127.0.0.1:<port>`` directly. This method takes exactly that path on
         Windows: mint via the shipped ``pod token`` verb (never read the pod's
         ``.local_secret`` from the test), then dial the SAME loopback port every
@@ -194,7 +194,7 @@ class PodClient:
         ``mc_token_<port>`` cookie; every requested endpoint -- including the
         mixed-internal routes -- is then called without a token in its URL.
         """
-        from kiro_crew.pod.runtime import api_path
+        from aj_crew.pod.runtime import api_path
 
         opener = self._windows_opener
         if opener is None:
@@ -276,7 +276,7 @@ class PodClient:
     def health(self) -> int:
         """The pod's OWN health code, via ``pod status --json``.
 
-        Never a bare probe of ``base_url``: every Kiro Crew gateway answers
+        Never a bare probe of ``base_url``: every Aj Crew gateway answers
         ``/api/health`` identically, so a 200 from that port proves only that
         something is there. ``pod status`` reports -2 when the responder is
         provably another instance.
@@ -317,13 +317,13 @@ def _envelope_or_fail(cp: subprocess.CompletedProcess[str], method: str, path: s
 def _plane_cwd(env: dict[str, str]) -> str:
     """The plane's scratch root, which every pod child runs FROM.
 
-    The pod CLI resolves the checkout through ``KIROCREW_POD_REPO`` (set in
+    The pod CLI resolves the checkout through ``AJCREW_POD_REPO`` (set in
     ``_plane_env``), never through its working directory, so nothing is lost by
     moving the child off the checkout; what is gained is that any path a child
     writes relative to its cwd lands under the plane root the fixture reclaims,
     never in the repository pytest happens to be running from.
     """
-    return str(Path(env["KIROCREW_POD_ROOT"]).parent)
+    return str(Path(env["AJCREW_POD_ROOT"]).parent)
 
 
 def _run_cli(
@@ -411,8 +411,8 @@ def _plane_root(name: str, basetemp: Path | None) -> Path:
 def _plane_env(root: Path, scratch: Path, fake_backend: Path | None) -> dict[str, str]:
     """Environment for every pod-plane command in this suite.
 
-    ``KIROCREW_POD_KIRO_BIN`` is the offline seam: a booted pod starts from the
-    service manager's clean environment, so exporting ``KIROCREW_KIRO_BIN`` here
+    ``AJCREW_POD_KIRO_BIN`` is the offline seam: a booted pod starts from the
+    service manager's clean environment, so exporting ``AJCREW_KIRO_BIN`` here
     would never reach its gateway. The plane knob is pinned into the service
     definition instead (pod/README.md).
     """
@@ -420,30 +420,30 @@ def _plane_env(root: Path, scratch: Path, fake_backend: Path | None) -> dict[str
     env.update(
         {
             # The CONTROL plane's own data home, pinned under scratch: every
-            # `kirocrew pod` verb runs `ensure_data_home()` against KIROCREW_HOME
+            # `ajcrew pod` verb runs `ensure_data_home()` against AJCREW_HOME
             # before anything else, and an inherited value (or none) would have
             # this suite create or migrate the operator's real `~/.kiro/crew`.
-            # The pods' homes live under KIROCREW_POD_ROOT and are unaffected.
-            "KIROCREW_HOME": str(scratch / "kh"),
-            "KIROCREW_WORKSPACE": str(scratch / "kw"),
-            # Separate from KIROCREW_HOME: kiro-cli's own agents/settings home
+            # The pods' homes live under AJCREW_POD_ROOT and are unaffected.
+            "AJCREW_HOME": str(scratch / "kh"),
+            "AJCREW_WORKSPACE": str(scratch / "kw"),
+            # Separate from AJCREW_HOME: kiro-cli's own agents/settings home
             # is machine-wide. The fake ACP backend means the pod gateway never
             # needs it, but every control-plane CLI child still inherits this
             # pin, so no incidental resolver can reach ~/.kiro.
             "KIRO_HOME": str(scratch / "kk"),
             # `h`, not `pod-homes`: every character here is charged against the
             # pod socket's AF_UNIX budget (see _plane_root).
-            "KIROCREW_POD_ROOT": str(scratch / "h"),
-            "KIROCREW_POD_ENV_DIR": str(scratch / "e"),
-            "KIROCREW_POD_ARTIFACTS_DIR": str(scratch / "a"),
-            "KIROCREW_POD_BASE_PORT": PLANE_BASE_PORT,
-            "KIROCREW_POD_UNIT_PREFIX": PLANE_PREFIX,
-            "KIROCREW_POD_REPO": str(root),
-            "KIROCREW_POD_WORKTREES_ROOT": str(root.parent),
+            "AJCREW_POD_ROOT": str(scratch / "h"),
+            "AJCREW_POD_ENV_DIR": str(scratch / "e"),
+            "AJCREW_POD_ARTIFACTS_DIR": str(scratch / "a"),
+            "AJCREW_POD_BASE_PORT": PLANE_BASE_PORT,
+            "AJCREW_POD_UNIT_PREFIX": PLANE_PREFIX,
+            "AJCREW_POD_REPO": str(root),
+            "AJCREW_POD_WORKTREES_ROOT": str(root.parent),
         }
     )
     if fake_backend is not None:
-        env["KIROCREW_POD_KIRO_BIN"] = str(fake_backend)
+        env["AJCREW_POD_KIRO_BIN"] = str(fake_backend)
     return env
 
 
@@ -455,14 +455,14 @@ def _resolve_backend(scratch: Path) -> Path | None:
     harness launcher so Windows gets a runnable ``.cmd`` instead of a raw ``.py``
     path that ``CreateProcess`` rejects with WinError 193.
     """
-    if os.environ.get("KIROCREW_E2E_SCENARIOS_REAL_AGENT", "") == "1":
+    if os.environ.get("AJCREW_E2E_SCENARIOS_REAL_AGENT", "") == "1":
         if shutil.which("kiro-cli") is None:
             unresolved(
-                "KIROCREW_E2E_SCENARIOS_REAL_AGENT=1 but no `kiro-cli` on PATH, so the "
+                "AJCREW_E2E_SCENARIOS_REAL_AGENT=1 but no `kiro-cli` on PATH, so the "
                 "requested driver is absent; unset it to run against the fake backend"
             )
         return None
-    from kiro_crew.testing.harness import fake_acp_backend_launcher
+    from aj_crew.testing.harness import fake_acp_backend_launcher
 
     backend = fake_acp_backend_launcher(scratch)
     if not backend.is_file():
@@ -511,7 +511,7 @@ def render_service_definition(pod: PodClient):
 
     def _render(env_overrides: dict[str, str] | None = None) -> str:
         env = dict(pod.env)
-        env["KIROCREW_E2E_POD_NAME"] = pod.name
+        env["AJCREW_E2E_POD_NAME"] = pod.name
         env.update(env_overrides or {})
         return render_host_service_definition(env)
 
@@ -546,10 +546,10 @@ def pod(tmp_path_factory: pytest.TempPathFactory):
        listing AND its isolated home gone, because ``down``'s zero-residue
        guarantee is the thing most worth regression-testing here.
     """
-    if not os.environ.get("KIROCREW_E2E_SCENARIOS"):
-        pytest.skip("pod scenario E2E. Set KIROCREW_E2E_SCENARIOS=1 to run.")
+    if not os.environ.get("AJCREW_E2E_SCENARIOS"):
+        pytest.skip("pod scenario E2E. Set AJCREW_E2E_SCENARIOS=1 to run.")
 
-    from kiro_crew.pod import runtime as rt
+    from aj_crew.pod import runtime as rt
 
     # The pod's own gate, not a platform test of our own: on Linux this is the
     # systemd + session-bus check, on macOS the launchd one, and on a host with a
@@ -563,15 +563,15 @@ def pod(tmp_path_factory: pytest.TempPathFactory):
     cli = prov.venv_bin(root)
     if not (cli.is_file() and os.access(cli, os.X_OK)):
         unresolved(
-            f"no kirocrew in the checkout venv at {cli}; the suite must drive the "
+            f"no ajcrew in the checkout venv at {cli}; the suite must drive the "
             "branch under test, not the host's installed build "
             "(build it: python -m venv .venv && "
             + (".venv\\Scripts\\pip install -e ." if IS_WINDOWS else ".venv/bin/pip install -e .")
             + ")"
         )
-    if not (root / "src" / "kiro_crew" / "static" / "dist").is_dir():
+    if not (root / "src" / "aj_crew" / "static" / "dist").is_dir():
         unresolved(
-            f"no built SPA dist under {root / 'src' / 'kiro_crew' / 'static' / 'dist'}; "
+            f"no built SPA dist under {root / 'src' / 'aj_crew' / 'static' / 'dist'}; "
             "a pod refuses to come up without one (cd website && npm ci && npm run build)"
         )
 
@@ -590,7 +590,7 @@ def pod(tmp_path_factory: pytest.TempPathFactory):
         raise
 
     # Cheapest possible probe that the CLI can BOOT before any assertion depends
-    # on it. `kirocrew` fails closed on a host whose platform profile it cannot
+    # on it. `ajcrew` fails closed on a host whose platform profile it cannot
     # compose (an enterprise marker with no companion package installed, which is
     # the state of an Amazon dev desktop), and that refusal is a property of the
     # host rather than of anything these scenarios assert. Reported as an
@@ -607,7 +607,7 @@ def pod(tmp_path_factory: pytest.TempPathFactory):
     except (subprocess.TimeoutExpired, OSError) as exc:
         shutil.rmtree(scratch, ignore_errors=True)
         unresolved(
-            f"`kirocrew pod ls` did not complete on this host ({type(exc).__name__}): "
+            f"`ajcrew pod ls` did not complete on this host ({type(exc).__name__}): "
             "the CLI could not be probed, so no scenario below can be trusted"
         )
         raise  # unreachable: `unresolved` always raises. Kept so a future change to
@@ -618,7 +618,7 @@ def pod(tmp_path_factory: pytest.TempPathFactory):
         # behind either.
         shutil.rmtree(scratch, ignore_errors=True)
         unresolved(
-            f"`kirocrew pod ls` could not run on this host: "
+            f"`ajcrew pod ls` could not run on this host: "
             f"{(probe.stderr or probe.stdout or '').strip()[-1200:]}"
         )
 
@@ -670,7 +670,7 @@ def pod(tmp_path_factory: pytest.TempPathFactory):
             name=name,
             base_url=base_url,
             port=port,
-            home=Path(env["KIROCREW_POD_ROOT"]) / name,
+            home=Path(env["AJCREW_POD_ROOT"]) / name,
             checkout=root,
             cli=cli,
             env=env,
@@ -723,7 +723,7 @@ def pod(tmp_path_factory: pytest.TempPathFactory):
             after = _run_cli(cli, ["pod", "ls", "--json"], env)
         except (subprocess.TimeoutExpired, OSError):
             after = None
-        leaked_home = (Path(env["KIROCREW_POD_ROOT"]) / name).exists()
+        leaked_home = (Path(env["AJCREW_POD_ROOT"]) / name).exists()
         rows: object = None
         if after is not None and after.returncode == 0:
             try:
@@ -748,7 +748,7 @@ def pod(tmp_path_factory: pytest.TempPathFactory):
             # The template unit `pod install` wrote is the one host-level artifact
             # that lives outside the plane root, so it is removed here by name and
             # the manager told to forget it. PLANE_PREFIX is this suite's own, so
-            # the developer's real `kirocrew-pod@.service` is never touched.
+            # the developer's real `ajcrew-pod@.service` is never touched.
             _remove_plane_unit_template()
         if client is not None and not pod_is_gone:
             detail = (
@@ -841,7 +841,7 @@ def render_host_service_definition(env_overrides: dict[str, str] | None = None) 
     rendering it in a child process IS the print-only path and it touches
     nothing -- no file written, no service manager consulted.
 
-    Windows has no host ``kirocrew service`` backend. There the equivalent
+    Windows has no host ``ajcrew service`` backend. There the equivalent
     service-managed artifact in this suite is the pod's generated Task Scheduler
     ``.cmd`` wrapper, so the child renders ``pod.windows.render_task_script``
     from the isolated plane instead of calling an unsupported service command.
@@ -854,21 +854,21 @@ def render_host_service_definition(env_overrides: dict[str, str] | None = None) 
     if IS_WINDOWS:
         script = (
             "import os\n"
-            "from kiro_crew.pod.config import PodConfig\n"
-            "from kiro_crew.pod.windows import render_task_script\n"
-            "name = os.environ['KIROCREW_E2E_POD_NAME']\n"
+            "from aj_crew.pod.config import PodConfig\n"
+            "from aj_crew.pod.windows import render_task_script\n"
+            "name = os.environ['AJCREW_E2E_POD_NAME']\n"
             "print(render_task_script(PodConfig.load(), name), end='')\n"
         )
     else:
         script = (
             "import sys\n"
-            "from kiro_crew.service.common import Platform, current_platform\n"
+            "from aj_crew.service.common import Platform, current_platform\n"
             "plat = current_platform()\n"
             "if plat is Platform.SYSTEMD:\n"
-            "    from kiro_crew.service import linux\n"
+            "    from aj_crew.service import linux\n"
             "    print(linux.render_unit(user_scope=True))\n"
             "elif plat is Platform.LAUNCHD:\n"
-            "    from kiro_crew.service import macos\n"
+            "    from aj_crew.service import macos\n"
             "    print(macos.render_plist())\n"
             "else:\n"
             "    sys.exit(f'no service backend for {plat}')\n"

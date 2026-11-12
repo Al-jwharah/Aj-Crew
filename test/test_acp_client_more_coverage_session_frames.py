@@ -20,9 +20,9 @@ from acp_client_more_coverage_helpers import (  # noqa: F401 -- the autouse fixt
     _pinned_kiro_cli_version,
 )
 
-import kiro_crew.acp.client as acp_client
-from kiro_crew.acp.client import AcpClient, AcpError, AcpTimeoutError
-from kiro_crew.acp.types import (
+import aj_crew.acp.client as acp_client
+from aj_crew.acp.client import AcpClient, AcpError, AcpTimeoutError
+from aj_crew.acp.types import (
     EVENT_AGENT_SWITCHED,
     EVENT_COMPLETE,
     EVENT_MCP_OAUTH_REQUEST,
@@ -510,7 +510,7 @@ class TestReadNewToolResults:
         past it so the lines after it are read on this scan."""
         import functools
 
-        from kiro_crew import jsonl_util
+        from aj_crew import jsonl_util
 
         monkeypatch.setattr(
             acp_client,

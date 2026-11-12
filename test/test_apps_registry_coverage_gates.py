@@ -1,4 +1,4 @@
-"""Behaviour coverage for the small gates and helpers ``kiro_crew.apps.registry`` checks
+"""Behaviour coverage for the small gates and helpers ``aj_crew.apps.registry`` checks
 before it fetches anything.
 
 Streamed log lines, the child environment, URL shape, the clone sandbox mode, the
@@ -18,8 +18,8 @@ import pytest
 from apps_registry_coverage_helpers import _explicit_registry_execution_admission  # noqa: F401
 from apps_registry_coverage_helpers import _config_with, _reg
 
-from kiro_crew.apps import registry
-from kiro_crew.platform import PlatformCompositionError
+from aj_crew.apps import registry
+from aj_crew.platform import PlatformCompositionError
 
 # ---------------------------------------------------------------------------
 # StreamingLogLines
@@ -265,7 +265,7 @@ class TestConfiguredRegistryHosts:
         def _boom(cls):
             raise OSError("config unreadable")
 
-        monkeypatch.setattr("kiro_crew.config.loader.KiroCrewConfig.load", classmethod(_boom))
+        monkeypatch.setattr("aj_crew.config.loader.AjCrewConfig.load", classmethod(_boom))
         assert registry._configured_registry_hosts() == frozenset()
 
 
@@ -334,10 +334,10 @@ class TestSelCredentialGrant:
     def test_audit_failure_is_swallowed(self, monkeypatch, caplog):
         sel_fn = MagicMock(side_effect=RuntimeError("sel down"))
         monkeypatch.setattr(registry, "_sel_fn", sel_fn)
-        caplog.set_level("DEBUG", logger="kiro_crew.apps.registry")
+        caplog.set_level("DEBUG", logger="aj_crew.apps.registry")
         registry._sel_credential_grant("op", "https://x/y.git")
         sel_fn.assert_called_once_with()
-        messages = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.apps.registry"]
+        messages = [r.getMessage() for r in caplog.records if r.name == "aj_crew.apps.registry"]
         assert messages == ["SEL audit log failed for op: sel down"]
 
     def test_grant_is_logged_when_sel_is_present(self, monkeypatch, tmp_path):
@@ -346,7 +346,7 @@ class TestSelCredentialGrant:
         registry._sel_credential_grant("install_from_registry", "https://x/y.git")
         assert sel_obj.log_api_access.call_args.kwargs["outcome"] == "granted"
 
-        from kiro_crew.sel import SecurityEventLog
+        from aj_crew.sel import SecurityEventLog
 
         monkeypatch.setattr(SecurityEventLog, "_instance", None)
         monkeypatch.setattr(SecurityEventLog, "_initialized", False)

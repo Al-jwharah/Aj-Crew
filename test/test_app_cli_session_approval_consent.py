@@ -1,4 +1,4 @@
-"""`kirocrew app enable` never gives session-approval consent; the dashboard does.
+"""`ajcrew app enable` never gives session-approval consent; the dashboard does.
 
 An app whose manifest declares ``permissions.sessionApproval`` is installed with
 ``sessionApprovalConsentPending``, and ``enable_app`` refuses it without consent
@@ -19,10 +19,10 @@ import urllib.error
 
 import pytest
 
-from kiro_crew import app_lifecycle_client
-from kiro_crew.apps.manager import APP_MANIFEST_FILENAME, _read_installed, install_app
-from kiro_crew.cli_commands import _handle_app
-from kiro_crew.cli_parser_agent import register_app_parser
+from aj_crew import app_lifecycle_client
+from aj_crew.apps.manager import APP_MANIFEST_FILENAME, _read_installed, install_app
+from aj_crew.cli_commands import _handle_app
+from aj_crew.cli_parser_agent import register_app_parser
 
 APP = "chat-keypad"
 LINK_TAIL = f":4321/apps/detail/{APP}"
@@ -42,16 +42,16 @@ class _Tty(io.StringIO):
 
 @pytest.fixture()
 def app_env(tmp_path, monkeypatch):
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
-    monkeypatch.setenv("KIROCREW_PORT", "4321")
+    monkeypatch.setenv("AJCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_PORT", "4321")
     kiro_agents = tmp_path / "kiro-agents"
     kiro_agents.mkdir()
-    import kiro_crew.apps.bridges as bridges_mod
+    import aj_crew.apps.bridges as bridges_mod
 
     monkeypatch.setattr(bridges_mod, "KIRO_AGENTS_DIR", kiro_agents)
-    monkeypatch.setattr("kiro_crew.apps.execution.third_party_execution_allowed", lambda: True)
+    monkeypatch.setattr("aj_crew.apps.execution.third_party_execution_allowed", lambda: True)
     # File-only path unless a test fakes a gateway.
     monkeypatch.setattr(app_lifecycle_client, "toggle_app", lambda *a, **k: None)
     return home

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { randomUUID } from 'crypto'
 import { pickFromDropdown } from './helpers/dropdown'
 
-const HARNESS_GATEWAY = !!process.env.KIROCREW_E2E_EPHEMERAL
+const HARNESS_GATEWAY = !!process.env.AJCREW_E2E_EPHEMERAL
 
 /**
  * Ids of knowledge items seeded by the current test, drained by afterEach.

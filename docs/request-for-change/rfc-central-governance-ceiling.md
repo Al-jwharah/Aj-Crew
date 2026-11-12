@@ -1,7 +1,7 @@
 ---
 title: Central governance ceiling — time-boxed local override (break_glass) and platform managed tier
 status: draft
-author: kirocrew agent session, directed by maintainers of #7362
+author: ajcrew agent session, directed by maintainers of #7362
 created: 2026-09-08
 last-audited: 2026-10-06
 audited-at: ea7e91c8e6
@@ -19,7 +19,7 @@ tier described below exists on main. `break_glass`, `BreakGlass`, `BREAK_GLASS`,
 `_read_managed_policy`, `_managed_policy_path` and `compose_local_ceiling` each
 return zero hits under `src/` (grep for callers, not just definitions).
 `compose_tier_ladder` does exist: #7362 shipped it, and it now lives in
-`src/kiro_crew/platform/governance_parts/tiers.py`, where `load_security_policy` calls it to
+`src/aj_crew/platform/governance_parts/tiers.py`, where `load_security_policy` calls it to
 compose the central document over the subordinate tier. This RFC names it only as
 the function the withdrawn `break_glass` replace branch modified.
 
@@ -45,12 +45,12 @@ scratch. It is a record of a decision, not a description of code on main.
 ## Summary
 
 The shipped ceiling composes tiers with the precedence, highest first:
-centrally-distributed document → `KIROCREW_SECURITY_POLICY` (local file) →
+centrally-distributed document → `AJCREW_SECURITY_POLICY` (local file) →
 companion-bundled → `~/.kiro/crew/security_policy.json` (home) → none
 (ungoverned). The central document is the authority; every local tier may only
 *tighten* it, and none is a rollback lever. See [`../system-specs/modules/governance.md`](../system-specs/modules/governance.md)
 and `load_security_policy` in
-[`../../src/kiro_crew/platform/governance_parts/tiers.py`](../../src/kiro_crew/platform/governance_parts/tiers.py)
+[`../../src/aj_crew/platform/governance_parts/tiers.py`](../../src/aj_crew/platform/governance_parts/tiers.py)
 for the shape that is actually on main.
 
 This RFC records two follow-ups that were designed but not shipped:
@@ -78,11 +78,11 @@ authoritative description is
 [governance.md — Loading + precedence](../system-specs/modules/governance.md#loading--precedence)):
 
 1. the centrally-distributed document — the authority, fetched from
-   `KIROCREW_POLICY_URL` or the `distribution.source` a lower tier declares,
+   `AJCREW_POLICY_URL` or the `distribution.source` a lower tier declares,
    served from a last-known-good cache when the endpoint is unreachable
    (`resolve_distribution` / `PolicyDistribution` in
-   [`../../src/kiro_crew/platform/policy_distribution_source.py`](../../src/kiro_crew/platform/policy_distribution_source.py)).
-2. `KIROCREW_SECURITY_POLICY` — an explicit local file, the local operator
+   [`../../src/aj_crew/platform/policy_distribution_source.py`](../../src/aj_crew/platform/policy_distribution_source.py)).
+2. `AJCREW_SECURITY_POLICY` — an explicit local file, the local operator
    channel; it tightens the central document and cannot loosen it.
 3. the companion-bundled resource (`bundled_loader`), supplied only by the
    `amazon` edition.
@@ -222,9 +222,9 @@ A macOS managed tier reads a configuration profile that `cfprefsd` materialises
 under `/Library/Managed Preferences`. Two gaps:
 
 - **Scope level.** A machine-path reader (`_read_managed_policy`) reads only the
-  machine path `/Library/Managed Preferences/dev.kirocrew.plist`. A profile
+  machine path `/Library/Managed Preferences/dev.ajcrew.plist`. A profile
   deployed at Jamf **User Level**, or through Intune's **user channel**, lands at
-  `/Library/Managed Preferences/<username>/dev.kirocrew.plist`, which a
+  `/Library/Managed Preferences/<username>/dev.ajcrew.plist`, which a
   machine-only reader does not read. The host then reports `managed<-absent` and
   governs from a local tier *with no error*. The guide must state that the
   profile has to be **Computer Level / device channel**, and the design must
@@ -240,7 +240,7 @@ under `/Library/Managed Preferences`. Two gaps:
 - **Advisory today.** With `_managed_policy_path()` returning `None` on Windows
   there is no managed `distribution` pin, so `resolve_distribution` keeps the
   per-setting environment override, and a standard user can set
-  `KIROCREW_POLICY_URL` to a document of their own — replacing the whole central
+  `AJCREW_POLICY_URL` to a document of their own — replacing the whole central
   rung. The RFC's goal sentence ("a person using the laptop cannot loosen it") is
   therefore **not met on Windows**. The current-behaviour statement that the
   Windows (and macOS) ceiling is *advisory* against a local account lives in
@@ -265,10 +265,10 @@ whose entry depends on an unanswered Open question is marked blocked on it.
 
 **Phase M1 — Windows managed tier (registry).** Implement `_managed_policy_path()`
 for Windows reading `HKLM\SOFTWARE\Policies\<vendor>\<product>` via `winreg`, so a
-machine-policy pin outranks the per-setting `KIROCREW_POLICY_URL` override.
+machine-policy pin outranks the per-setting `AJCREW_POLICY_URL` override.
 *Exit criteria:* on a Windows CI runner, a machine-policy value set under that key
 produces a managed `distribution` pin that `resolve_distribution` honours over a
-user-set `KIROCREW_POLICY_URL`; a standard user cannot replace the central rung.
+user-set `AJCREW_POLICY_URL`; a standard user cannot replace the central rung.
 
 **Phase M2 — macOS managed-tier scope + coverage.** Implement `_read_managed_policy`
 for the Computer-Level machine path, and decide the user-level policy (ignored vs.

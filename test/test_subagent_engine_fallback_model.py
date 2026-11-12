@@ -25,7 +25,7 @@ from subagent_stop_reason_helpers import (
     _text,
 )
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_MODEL_FALLBACK,
     STOP_CLASS_FAILED,
     STOP_CLASS_SUCCEEDED,
@@ -42,7 +42,7 @@ def _with_engine_walk(sessions: MagicMock, engine: str) -> None:
     The engine moved to model-b and promoted it. The provider is the object
     ``tracker_of`` finds the tracker on, exactly as on a real session handle.
     """
-    from kiro_crew.acp.engine_fallback import (
+    from aj_crew.acp.engine_fallback import (
         TRACKER_ATTR,
         EngineFallbackTracker,
         ModelFallbackNotice,
@@ -99,7 +99,7 @@ async def test_a_promotion_with_a_refusal_terminal_is_still_a_refused_run():
 
 def _moved_turn(stop_reason: str):
     """A stream on which the engine's promotion notice arrives mid-run."""
-    from kiro_crew.acp.engine_fallback import ModelFallbackNotice
+    from aj_crew.acp.engine_fallback import ModelFallbackNotice
 
     notice = ModelFallbackNotice("model-a", "model-b", "refused", promoted=True)
 

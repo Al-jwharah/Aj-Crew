@@ -11,7 +11,7 @@ create verb mints USER slots on purpose). So a new automated slot kind that keep
 a person's origin and none of the other marks would have its model cleared by
 the press.
 
-This registry is the guard. It walks ``src/kiro_crew`` for every
+This registry is the guard. It walks ``src/aj_crew`` for every
 ``get_or_create_slot(...)`` call and every direct ``_ChatSlot(...)``
 construction, charged to its innermost enclosing function, and pins one verdict
 per site:
@@ -32,9 +32,9 @@ import ast
 import unittest
 from pathlib import Path
 
-import kiro_crew
+import aj_crew
 
-#: Directories under ``src/kiro_crew`` that hold tests or test helpers, not
+#: Directories under ``src/aj_crew`` that hold tests or test helpers, not
 #: production slot creators.
 _SKIP_DIRS = frozenset({"tests", "container_tests", "testing"})
 
@@ -46,7 +46,7 @@ _RESTORED = (
     "created_by"
 )
 
-#: (module relative to src/kiro_crew, innermost function) -> checked verdict.
+#: (module relative to src/aj_crew, innermost function) -> checked verdict.
 SLOT_CREATORS: dict[tuple[str, str], str] = {
     ("apps/builtins/auto_research/campaign/agent_mode.py", "_launch_loop"): (
         "excluded: app=AUTO_RESEARCH_APP ('auto-research') at birth"
@@ -175,7 +175,7 @@ class _CreatorVisitor(ast.NodeVisitor):
 
 def _slot_creators() -> dict[tuple[str, str], list[dict[str, str]]]:
     """(module, innermost function) -> the keyword source text of each creator call."""
-    root = Path(kiro_crew.__file__).parent
+    root = Path(aj_crew.__file__).parent
     found: dict[tuple[str, str], list[dict[str, str]]] = {}
     for path in sorted(root.rglob("*.py")):
         rel = path.relative_to(root)

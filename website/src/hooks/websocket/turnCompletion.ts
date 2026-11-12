@@ -63,7 +63,7 @@ export function useTurnCompletion({ dispatch, queryClient, reconnectingRef }: Tu
         muted = isSlotMuted(
           soundState.dashboard.slots,
           data.slot,
-          appsMutingSessions(queryClient.getQueryData(['kirocrewConfig'])),
+          appsMutingSessions(queryClient.getQueryData(['ajcrewConfig'])),
         )
         const workflows = selectSidebarWorkflowActive(soundState)
         const workflowActive = !!(
@@ -131,7 +131,7 @@ export function useTurnCompletion({ dispatch, queryClient, reconnectingRef }: Tu
         // Best-effort (same as approval): the helper swallows Android
         // Chrome's "Illegal constructor" and relays to the parent frame
         // when this dashboard is an embedded instance pane.
-        postNativeNotification(doneTitle, { body: doneBody, tag: `kirocrew-chat-done:${doneSlot}`, silent: questionPending })
+        postNativeNotification(doneTitle, { body: doneBody, tag: `ajcrew-chat-done:${doneSlot}`, silent: questionPending })
       }
       // Off screen: badge the session, and warm its cache so switching to
       // it renders the finished answer instantly (no on-switch fetch). In

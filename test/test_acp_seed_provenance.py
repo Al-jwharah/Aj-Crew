@@ -38,10 +38,10 @@ from acp_seed_provenance_helpers import (
     _write_durable_holder,
 )
 
-from kiro_crew import model_registry as mr
-from kiro_crew.acp import client as acp_client
-from kiro_crew.acp import seed_provenance as sp
-from kiro_crew.acp.client import AcpClient
+from aj_crew import model_registry as mr
+from aj_crew.acp import client as acp_client
+from aj_crew.acp import seed_provenance as sp
+from aj_crew.acp.client import AcpClient
 
 
 class TestProvenanceRecord:
@@ -902,7 +902,7 @@ class TestCrossSessionAdoption:
     def test_an_orphaned_seed_is_reseeded_by_the_next_session(self, tmp_path, monkeypatch):
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         # Session 1: cold cache, so no model keys (the adapter's own provider list
@@ -1112,7 +1112,7 @@ class TestPostCaptureModelResolution:
     async def test_step_six_reseeds_off_the_loop(self, tmp_path, monkeypatch):
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         monkeypatch.setattr(mr, "_ADVERTISED_MODELS", {"claude_code": list(_SERVED)})
@@ -1219,7 +1219,7 @@ class TestPostCaptureModelResolution:
         """
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         monkeypatch.setattr(mr, "_ADVERTISED_MODELS", {})
@@ -1241,7 +1241,7 @@ class TestPostCaptureModelResolution:
     def test_the_seed_never_ships_a_base_window_sibling(self, tmp_path, monkeypatch):
         # Another settings source defines availableModels, so the warm cache is written.
         monkeypatch.setattr(
-            "kiro_crew.acp.client_claude_seed.other_sources_define_available_models",
+            "aj_crew.acp.client_claude_seed.other_sources_define_available_models",
             lambda *a, **k: True,
         )
         # The adapter reads [1m] as a context-window MODIFIER on one base model and

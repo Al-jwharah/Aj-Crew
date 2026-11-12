@@ -18,7 +18,7 @@ import stat
 
 import pytest
 
-from kiro_crew.dashboard.handlers import weixin_qr as qr
+from aj_crew.dashboard.handlers import weixin_qr as qr
 
 posix_only = pytest.mark.skipif(os.name != "posix", reason="POSIX mode bits only")
 
@@ -71,7 +71,7 @@ def test_atomic_write_secret_locks_down_before_any_content_byte(tmp_path, monkey
     whole write. The shared helper restricts the empty temp file first; assert
     the sequence through the same os.write seam the helper's own ordering test
     uses."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     events = []
     real_restrict = platform_compat.restrict_to_owner
@@ -99,7 +99,7 @@ def test_atomic_write_secret_survives_a_lockdown_refusal(tmp_path, monkeypatch):
     """A host where the owner lockdown fails (e.g. SID resolution refused) must
     warn and keep the credential save, not abort a sign-in that already
     succeeded: the writer's contract is enforce-and-warn."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     def _boom(path):
         raise OSError("icacls failed")
@@ -174,17 +174,17 @@ def test_successful_commit_replaces_the_credential_boot_propagated(tmp_path, mon
     """Boot copies ``.env`` into ``os.environ`` and ``load_credentials`` lets
     ``os.environ`` win, so a re-login left there would keep the channel restart
     and an in-app re-exec on the token the user just replaced."""
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     (tmp_path / ".env").write_text("WEIXIN_TOKEN=stale\n", encoding="utf-8")
     monkeypatch.setenv("WEIXIN_TOKEN", "stale")
-    monkeypatch.delenv("_KIROCREW_CREDS_SCRUBBED", raising=False)
+    monkeypatch.delenv("_AJCREW_CREDS_SCRUBBED", raising=False)
 
     qr._commit_credential_and_config(tmp_path / "config.json", {"weixin": {}}, "brand-new")
 
     assert os.environ["WEIXIN_TOKEN"] == "brand-new"
-    assert KiroCrewConfig().load_credentials(propagate=False)["WEIXIN_TOKEN"] == "brand-new"
+    assert AjCrewConfig().load_credentials(propagate=False)["WEIXIN_TOKEN"] == "brand-new"
 
 
 def test_first_sign_in_owns_the_token_so_removing_the_line_revokes_it(tmp_path, monkeypatch):
@@ -194,12 +194,12 @@ def test_first_sign_in_owns_the_token_so_removing_the_line_revokes_it(tmp_path, 
     and when the operator later deletes the ``.env`` line the live applier pops
     the token instead of leaving the revoked credential in force until a full
     restart. (Fixes the Opus Weixin ownership finding.)"""
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.setenv("WEIXIN_TOKEN", "x")
     monkeypatch.delenv("WEIXIN_TOKEN")
-    monkeypatch.delenv("_KIROCREW_CREDS_SCRUBBED", raising=False)
+    monkeypatch.delenv("_AJCREW_CREDS_SCRUBBED", raising=False)
     loader.discard_env_owned_key("WEIXIN_TOKEN")
     try:
         qr._commit_credential_and_config(tmp_path / "config.json", {"weixin": {}}, "brand-new")
@@ -220,16 +220,16 @@ def test_first_sign_in_owns_the_token_so_removing_the_line_revokes_it(tmp_path, 
 def test_successful_commit_keeps_a_scrubbed_environ_free_of_the_credential(tmp_path, monkeypatch):
     """The Docker entrypoint scrubs credentials out of ``os.environ`` so they stay
     off ``/proc/<pid>/environ``; the sign-in must not put one back."""
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     monkeypatch.delenv("WEIXIN_TOKEN", raising=False)
-    monkeypatch.setenv("_KIROCREW_CREDS_SCRUBBED", "1")
+    monkeypatch.setenv("_AJCREW_CREDS_SCRUBBED", "1")
 
     qr._commit_credential_and_config(tmp_path / "config.json", {"weixin": {}}, "brand-new")
 
     assert "WEIXIN_TOKEN" not in os.environ
-    assert KiroCrewConfig().load_credentials(propagate=False)["WEIXIN_TOKEN"] == "brand-new"
+    assert AjCrewConfig().load_credentials(propagate=False)["WEIXIN_TOKEN"] == "brand-new"
 
 
 def test_failed_config_commit_leaves_the_process_credential_alone(tmp_path, monkeypatch):
@@ -237,7 +237,7 @@ def test_failed_config_commit_leaves_the_process_credential_alone(tmp_path, monk
     ep.write_text("WEIXIN_TOKEN=previous\n", encoding="utf-8")
     monkeypatch.setattr(qr, "env_path", lambda: ep)
     monkeypatch.setenv("WEIXIN_TOKEN", "previous")
-    monkeypatch.delenv("_KIROCREW_CREDS_SCRUBBED", raising=False)
+    monkeypatch.delenv("_AJCREW_CREDS_SCRUBBED", raising=False)
     _fail_config_writes(monkeypatch)
 
     with pytest.raises(OSError):
@@ -282,11 +282,11 @@ def test_write_env_secret_upserts_and_preserves_other_lines(tmp_path, monkeypatc
 
 def test_stage_config_preserves_unrelated_sections(tmp_path, monkeypatch):
     cfg = tmp_path / "config.json"
-    cfg.write_text(json.dumps({"slack": {"command": "kirocrew"}, "agent": {"model": "auto"}}))
+    cfg.write_text(json.dumps({"slack": {"command": "ajcrew"}, "agent": {"model": "auto"}}))
     monkeypatch.setattr(qr, "config_path", lambda: cfg)
     path, data = qr._stage_weixin_config(account_id="acct1@im.bot", base_url="https://x")
     assert path == cfg
-    assert data["slack"] == {"command": "kirocrew"}  # untouched
+    assert data["slack"] == {"command": "ajcrew"}  # untouched
     assert data["agent"] == {"model": "auto"}
     assert data["weixin"]["enabled"] is True
     assert data["weixin"]["account_id"] == "acct1@im.bot"
@@ -382,7 +382,7 @@ def test_render_qr_round_trips_the_scan_url():
 
 # -- _delete_env_key: it rewrites the user's credential file, so what it PRESERVES
 #    matters as much as what it removes. Untested before; the QR-encoder body that
-#    covered this file, then moved to kiro_crew.qr, which made the gap visible.
+#    covered this file, then moved to aj_crew.qr, which made the gap visible.
 
 
 def test_delete_env_key_removes_only_the_named_key(tmp_path, monkeypatch):
@@ -494,7 +494,7 @@ def test_commit_credential_aborts_when_env_lock_is_held(tmp_path, monkeypatch):
       * does NOT write config.json,
       * raises OSError with a descriptive message.
     """
-    import kiro_crew.platform_compat as _pc
+    import aj_crew.platform_compat as _pc
 
     ep = tmp_path / ".env"
     ep.write_text("OTHER=keepme\n", encoding="utf-8")
@@ -612,7 +612,7 @@ def test_a_confirmed_sign_in_persists_while_the_config_watcher_is_held(monkeypat
     finding.)"""
     import asyncio
 
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     request, client = _confirmed_session(monkeypatch)
     depths: list[int] = []
@@ -637,7 +637,7 @@ def test_a_cancelled_sign_in_keeps_the_hold_until_the_write_finishes(monkeypatch
     import asyncio
     import threading
 
-    from kiro_crew.config import live
+    from aj_crew.config import live
 
     request, _client = _confirmed_session(monkeypatch)
     started, release, finished = threading.Event(), threading.Event(), threading.Event()
@@ -650,7 +650,7 @@ def test_a_cancelled_sign_in_keeps_the_hold_until_the_write_finishes(monkeypatch
     monkeypatch.setattr(qr, "_commit_credential_and_config", slow_commit)
 
     async def run():
-        from kiro_crew.testing.wait import async_wait_until
+        from aj_crew.testing.wait import async_wait_until
 
         task = asyncio.ensure_future(qr.weixin_qr_status(request))
         # Wait on the state, not the clock: the worker is inside the write.
@@ -675,7 +675,7 @@ def test_a_boot_record_from_another_env_file_is_not_adopted(tmp_path):
     """The boot ``.env`` record is tied to the file it was read from: a watcher
     resolving a different data home refuses it (and it is consumed either way),
     while the same file adopts it. (Fixes the Opus boot-record leak finding.)"""
-    from kiro_crew.config import loader_credentials as lc
+    from aj_crew.config import loader_credentials as lc
 
     here, elsewhere = tmp_path / "a" / ".env", tmp_path / "b" / ".env"
 
@@ -699,7 +699,7 @@ def test_the_sign_in_writer_handles_a_lowercase_spelling_per_platform(
     watcher's first-spelling rule would keep the OLD token in force. On POSIX the
     lowercase name is a different variable and is left alone. (Fixes the GPT
     Windows case-spelling finding, same class as the dashboard writer.)"""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", windows, raising=False)
     ep = tmp_path / ".env"
@@ -719,7 +719,7 @@ def test_the_sign_in_writer_handles_a_lowercase_spelling_per_platform(
 def test_the_rollback_delete_removes_case_spellings_per_platform(tmp_path, monkeypatch, windows):
     """Rolling back a first-time sign-in removes the key; on Windows that means
     every case-equivalent spelling, on POSIX only the exact name."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", windows, raising=False)
     ep = tmp_path / ".env"
@@ -742,7 +742,7 @@ def test_a_failed_commit_restores_every_spelling_byte_for_byte(tmp_path, monkeyp
     EMPTY lowercase alias ahead of the working uppercase token (boot skips the
     empty one and runs on the token) came back as the only line, and the working
     token was gone. (Fixes the GPT 6.1 Windows rollback finding.)"""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", windows, raising=False)
     ep = tmp_path / ".env"
@@ -788,7 +788,7 @@ def test_a_failed_commit_restores_crlf_line_endings_byte_for_byte(tmp_path, monk
 
 def test_read_env_value_skips_an_empty_case_spelling_on_windows(tmp_path, monkeypatch):
     """Boot propagates the first NON-EMPTY spelling, so that is the value in force."""
-    from kiro_crew import platform_compat
+    from aj_crew import platform_compat
 
     monkeypatch.setattr(platform_compat, "IS_WINDOWS", True, raising=False)
     ep = tmp_path / ".env"

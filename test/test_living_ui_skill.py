@@ -13,11 +13,11 @@ import re
 import shutil
 from pathlib import Path
 
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.skills import SkillsLoader
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.skills import SkillsLoader
 
 ROOT = Path(__file__).resolve().parent.parent
-BUILTIN = ROOT / "src" / "kiro_crew" / "builtin_skills"
+BUILTIN = ROOT / "src" / "aj_crew" / "builtin_skills"
 SKILL_DIR = BUILTIN / "living-ui"
 SKILL_FILE = SKILL_DIR / "SKILL.md"
 LICENSE_FILE = SKILL_DIR / "LICENSE-anatomy.md"
@@ -47,7 +47,7 @@ def _theme_var_names() -> set[str]:
 def test_the_skill_loads_by_its_name(tmp_path: Path, opened) -> None:
     root = tmp_path / "skills"
     shutil.copytree(SKILL_DIR, root / "living-ui")
-    loader = opened(SkillsLoader(skills_path=root, install_builtins=False, config=KiroCrewConfig()))
+    loader = opened(SkillsLoader(skills_path=root, install_builtins=False, config=AjCrewConfig()))
     content = loader.load_skill("living-ui")
     assert content is not None, "load_skill('living-ui') found nothing"
     assert SkillsLoader._parse_frontmatter_text(content).get("name") == "living-ui"

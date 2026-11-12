@@ -21,10 +21,10 @@ from unittest.mock import MagicMock
 import pytest
 from test_gateway_subagent_wiring import _Done, harness, make_info
 
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.slack.gateway import GatewayOrchestrator, _compose_subagent_completion
-from kiro_crew.subagent import SubagentDelivery, SubagentManager
-from kiro_crew.subagent_persistence import (
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.slack.gateway import GatewayOrchestrator, _compose_subagent_completion
+from aj_crew.subagent import SubagentDelivery, SubagentManager
+from aj_crew.subagent_persistence import (
     create_agent_folder,
     list_leaked_processes,
     settle_delivered_batch,
@@ -40,7 +40,7 @@ def _close_subagent_managers(close_subagent_managers):
 @pytest.fixture()
 def agent_root(tmp_path, monkeypatch):
     """Point the sub-agent registry at a temp directory."""
-    monkeypatch.setattr("kiro_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
     return tmp_path
 
 

@@ -10,12 +10,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import web
 
-from kiro_crew.dashboard.slot_ownership import slot_ownership_middleware
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
-from kiro_crew.messaging.link import ChannelLink, binding_token
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.slot_ownership import slot_ownership_middleware
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService
+from aj_crew.messaging.link import ChannelLink, binding_token
+from aj_crew.testing.wait import await_until
 
 #: Draining is a LOOP because a drained task may register another -- not because any
 #: current one does (``chat_slack`` has a single ``create_task``, and the backfill
@@ -33,8 +33,8 @@ def pin_harness_choice(**choices: str) -> None:
     is ``"kiro"``). ``save()`` writes these keys back from disk rather than from
     memory, so setting them on a loaded config object does not persist them.
     """
-    from kiro_crew.acp_backends import backend_to_stored
-    from kiro_crew.config.loader import _invalidate_config_cache, config_path
+    from aj_crew.acp_backends import backend_to_stored
+    from aj_crew.config.loader import _invalidate_config_cache, config_path
 
     path = config_path()
     data = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
@@ -54,7 +54,7 @@ def pin_kiro_cli_harness() -> None:
     test of the kiro-cli path through those commands states the choice the way a
     user does, in ``config.json``, so every reader in the turn agrees on it.
     """
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_KIRO
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_KIRO
 
     pin_harness_choice(acp_backend=ACP_BACKEND_KIRO)
 
@@ -155,7 +155,7 @@ def stub_readonly_spec_publisher(monkeypatch) -> list[tuple[str, str | None]]:
     A test home holds no base spec, so the real publisher refuses (``base_spec_missing``).
     The real one is covered by ``test_side_readonly_spec.py``.
     """
-    from kiro_crew.dashboard.side_readonly_spec import PublishedSpec
+    from aj_crew.dashboard.side_readonly_spec import PublishedSpec
 
     calls: list[tuple[str, str | None]] = []
 
@@ -163,7 +163,7 @@ def stub_readonly_spec_publisher(monkeypatch) -> list[tuple[str, str | None]]:
         calls.append((base_name, project_dir))
         return PublishedSpec(name=f"{base_name}--readonly", digest="d" * 64)
 
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.side.publish_readonly_spec", _fake_publish)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.side.publish_readonly_spec", _fake_publish)
     return calls
 
 
@@ -348,7 +348,7 @@ def _make_state(tmp_path, **kwargs):
 
 def _make_app(state: DashboardState) -> web.Application:
     """Minimal aiohttp app with chat endpoints."""
-    from kiro_crew.dashboard.chat import (
+    from aj_crew.dashboard.chat import (
         api_chat,
         api_chat_mode,
         api_chat_slot_approve,
@@ -418,7 +418,7 @@ def _make_app(state: DashboardState) -> web.Application:
 
 def _make_app_with_agent_routes(state: DashboardState) -> web.Application:
     """Minimal aiohttp app with chat endpoints including agent and create routes."""
-    from kiro_crew.dashboard.chat import (
+    from aj_crew.dashboard.chat import (
         api_chat_slot_agent,
         api_chat_slot_approve,
         api_chat_slot_create,
@@ -448,8 +448,8 @@ def _make_app_with_agent_routes(state: DashboardState) -> web.Application:
 
 def _make_folder_app(state: DashboardState) -> web.Application:
     """Minimal aiohttp app with folder endpoints."""
-    from kiro_crew.dashboard.chat import api_chat_slots
-    from kiro_crew.dashboard.chat_folders import (
+    from aj_crew.dashboard.chat import api_chat_slots
+    from aj_crew.dashboard.chat_folders import (
         api_chat_folder_create,
         api_chat_folder_delete,
         api_chat_folder_update,
@@ -474,7 +474,7 @@ def _make_tags_app(
     state: DashboardState, *, authenticate_owner: bool = True, booted_store: bool = True
 ) -> web.Application:
     """Minimal aiohttp app with chat_tags endpoints (vocabulary, columns, drop, slot tags)."""
-    from kiro_crew.dashboard import chat_tag_grants
+    from aj_crew.dashboard import chat_tag_grants
 
     # A real boot always writes the grant store (``DashboardState.load_tags``
     # seeds it, empty on an upgraded install), and an owner create refuses to
@@ -489,7 +489,7 @@ def _make_tags_app(
     ):
         chat_tag_grants.seed_default_grants([])
         chat_tag_grants.refresh_cache()
-    from kiro_crew.dashboard.chat_tags import (
+    from aj_crew.dashboard.chat_tags import (
         api_chat_slot_drop,
         api_chat_slot_tags,
         api_chat_tag_adopt,

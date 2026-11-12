@@ -12,11 +12,11 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat_utils import MCP_APP_MESSAGE_KIND
-from kiro_crew.dashboard.handlers import mcp_apps as mcp_apps_handlers
-from kiro_crew.mcp_apps_render import load_spool
-from kiro_crew.mcp_gateway import apps
-from kiro_crew.mcp_gateway.apps import write_spool
+from aj_crew.dashboard.chat_utils import MCP_APP_MESSAGE_KIND
+from aj_crew.dashboard.handlers import mcp_apps as mcp_apps_handlers
+from aj_crew.mcp_apps_render import load_spool
+from aj_crew.mcp_gateway import apps
+from aj_crew.mcp_gateway.apps import write_spool
 
 
 @pytest.fixture
@@ -134,7 +134,7 @@ def message_env(monkeypatch):
         return None
 
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.mcp_apps.rehydrate_slot_from_history_async",
+        "aj_crew.dashboard.handlers.mcp_apps.rehydrate_slot_from_history_async",
         _no_rehydrate,
     )
 
@@ -293,7 +293,7 @@ async def test_message_queues_behind_live_turn(message_env, spool_tmp):
             # Admission containment stamp: app messages are not structurally
             # exempt from _drop_stale_admissions, so the enqueue must record
             # the containment snapshot that held at admission.
-            from kiro_crew.dashboard.session_control import QUEUED_CONTAINMENT_META_KEY
+            from aj_crew.dashboard.session_control import QUEUED_CONTAINMENT_META_KEY
 
             assert QUEUED_CONTAINMENT_META_KEY in (entry.get("meta") or {})
             # The transcript twin rides along for the user to see.
@@ -319,7 +319,7 @@ async def test_message_starts_turn_on_idle_slot(message_env, spool_tmp, monkeypa
         _slot._queue.clear()
         return True
 
-    monkeypatch.setattr("kiro_crew.dashboard.chat_runner._start_next_queued_turn", _fake_drain)
+    monkeypatch.setattr("aj_crew.dashboard.chat_runner._start_next_queued_turn", _fake_drain)
     try:
         async with make_client() as client:
             resp = await client.post(
@@ -372,7 +372,7 @@ def test_queued_app_entries_are_synthetic_payloads():
     """A drained app-message entry must never mirror to a linked channel as the
     human's own words: the payload predicate classifies it as runner/app text
     structurally, by its enqueue-time kind."""
-    from kiro_crew.dashboard.chat_utils import is_synthetic_payload_item
+    from aj_crew.dashboard.chat_utils import is_synthetic_payload_item
 
     assert is_synthetic_payload_item({"kind": MCP_APP_MESSAGE_KIND, "content": "x"})
     assert not is_synthetic_payload_item({"kind": "", "content": "x"})
@@ -389,7 +389,7 @@ async def test_message_bounds_backend_declared_labels(message_env, spool_tmp):
     # have written it from a hostile backend's declaration.
     import json as _json
 
-    from kiro_crew.mcp_gateway.apps import spool_dir
+    from aj_crew.mcp_gateway.apps import spool_dir
 
     path = spool_dir() / f"{spool_id}.json"
     rec = _json.loads(path.read_text())
@@ -470,7 +470,7 @@ async def test_message_resolves_channel_born_sessions(message_env, spool_tmp, mo
     # dashboard_slot_key maps cron:job42 -> cron-job42 when a tab surface
     # exists; stub the mapping itself (surface registry is process state).
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.mcp_apps.dashboard_slot_key",
+        "aj_crew.dashboard.handlers.mcp_apps.dashboard_slot_key",
         lambda key: "cron-job42" if key == "cron:job42" else "",
     )
     state._slots["cron-job42"] = slot
@@ -491,7 +491,7 @@ def test_drain_derives_app_rows_structurally():
     """The drain's role/meta derivation for a queued app message is by KIND,
     mirroring the direct-dispatch inject twin — never by text prefix (a user
     typing the banner text has no kind tag and stays user speech)."""
-    from kiro_crew.dashboard.chat_utils import APP_MESSAGE_PREFIX
+    from aj_crew.dashboard.chat_utils import APP_MESSAGE_PREFIX
 
     banner = f'{APP_MESSAGE_PREFIX}"srv/tool"]\nclicked\n'
     tagged = {"kind": MCP_APP_MESSAGE_KIND, "content": banner}
@@ -510,7 +510,7 @@ async def test_message_hostile_tool_name_cannot_escape_envelope(message_env, spo
     spool_id = _spool_record()
     import json as _json
 
-    from kiro_crew.mcp_gateway.apps import spool_dir
+    from aj_crew.mcp_gateway.apps import spool_dir
 
     path = spool_dir() / f"{spool_id}.json"
     rec = _json.loads(path.read_text())
@@ -542,7 +542,7 @@ def test_queue_edit_refused_for_system_injection_kinds():
     """queue_edit_by_id must refuse a system-injection entry: rewriting only
     its content would drain the user's replacement words as machine-authored
     (round-2 Opus finding)."""
-    from kiro_crew.dashboard.slot_queue_repository import SlotQueueRepository
+    from aj_crew.dashboard.slot_queue_repository import SlotQueueRepository
 
     class _Owner:
         _queue = [
@@ -559,7 +559,7 @@ def test_queue_edit_refused_for_system_injection_kinds():
 def test_queue_entry_view_carries_kind():
     """The slot-detail queue view carries the entry's structural kind in meta
     so the frontend queue card classifies without parsing text."""
-    from kiro_crew.dashboard.chat_delivery import queue_entry_view
+    from aj_crew.dashboard.chat_delivery import queue_entry_view
 
     tagged = queue_entry_view({"id": "a", "content": "x", "kind": MCP_APP_MESSAGE_KIND})
     assert tagged["meta"]["kind"] == MCP_APP_MESSAGE_KIND
@@ -572,8 +572,8 @@ def test_queue_edit_still_works_for_cron_entries():
     were editable before this feature existed, and taking that away is not
     this feature's call (round-3 Opus blocker — the set-wide refusal was a
     silent regression behind a pencil that still rendered)."""
-    from kiro_crew.dashboard.chat_utils import CRON_NOTIFICATION_KIND
-    from kiro_crew.dashboard.slot_queue_repository import SlotQueueRepository
+    from aj_crew.dashboard.chat_utils import CRON_NOTIFICATION_KIND
+    from aj_crew.dashboard.slot_queue_repository import SlotQueueRepository
 
     class _Owner:
         _queue = [{"id": "q-cron", "content": "cron text", "kind": CRON_NOTIFICATION_KIND}]
@@ -593,10 +593,10 @@ async def test_message_refused_when_apps_disabled(message_env, spool_tmp, monkey
     spool_id = _spool_record()
     import json as _json
 
-    from kiro_crew.mcp_gateway.apps import spool_dir
+    from aj_crew.mcp_gateway.apps import spool_dir
 
     secret = _json.loads((spool_dir() / f"{spool_id}.json").read_text())["callback_secret"]
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.mcp_apps._mcp_apps_enabled", lambda: False)
+    monkeypatch.setattr("aj_crew.dashboard.handlers.mcp_apps._mcp_apps_enabled", lambda: False)
     async with make_client() as client:
         resp = await client.post(
             "/api/mcp-apps/message", headers=_OWNER_HDR, json=_msg_body(spool_id, secret)
@@ -612,7 +612,7 @@ def test_slot_detail_queue_snapshot_carries_kind():
     the wire `meta` — without this every reloaded tab shows the raw machine
     envelope on the queue card (round-3 Opus finding: the meta hop was dead
     on this route)."""
-    from kiro_crew.dashboard.chat_delivery import queue_entry_view
+    from aj_crew.dashboard.chat_delivery import queue_entry_view
 
     snapshot_entry = {
         "id": "q1",
@@ -632,13 +632,13 @@ async def test_message_lifetime_budget_exhausts(message_env, spool_tmp, monkeypa
     """The per-spool lifetime budget converts a mounted app's drain from
     "until TTL" into "at most N turns": the floor bounds cadence, not volume
     (round-4 design Watch)."""
-    import kiro_crew.dashboard.handlers.mcp_apps as mod
+    import aj_crew.dashboard.handlers.mcp_apps as mod
 
     make_client, state = message_env
     spool_id = _spool_record()
     import json as _json
 
-    from kiro_crew.mcp_gateway.apps import spool_dir
+    from aj_crew.mcp_gateway.apps import spool_dir
 
     secret = _json.loads((spool_dir() / f"{spool_id}.json").read_text())["callback_secret"]
     monkeypatch.setitem(mod._message_limiter._count, spool_id, mod._MESSAGE_MAX_PER_SPOOL)
@@ -662,13 +662,13 @@ async def test_message_rejection_does_not_burn_budget(message_env, spool_tmp):
     """The budget charges at ADMISSION, not attempt: a shape-rejected delivery
     must not count, or twenty rejected attempts would silence a legitimate app
     (round-6 GPT blocker)."""
-    import kiro_crew.dashboard.handlers.mcp_apps as mod
+    import aj_crew.dashboard.handlers.mcp_apps as mod
 
     make_client, state = message_env
     spool_id = _spool_record()
     import json as _json
 
-    from kiro_crew.mcp_gateway.apps import spool_dir
+    from aj_crew.mcp_gateway.apps import spool_dir
 
     secret = _json.loads((spool_dir() / f"{spool_id}.json").read_text())["callback_secret"]
     slot = _FakeSlot(running=True)
@@ -695,7 +695,7 @@ def test_remove_queued_reaps_the_app_twin_by_meta_queue_id():
     """The reaper matches the app twin's meta.queueId spelling, not only the
     cron twin's JSON-cls queue_id — a cls-only match left an unreapable ghost
     row for every app message queued behind a live turn (round-7 GPT blocker)."""
-    from kiro_crew.dashboard.chat_utils import _remove_queued_by_id
+    from aj_crew.dashboard.chat_utils import _remove_queued_by_id
 
     messages = [
         {"role": "user", "content": "hi", "cls": "msg msg-u"},
@@ -723,7 +723,7 @@ def test_limiter_evicts_both_meters_in_lockstep():
     re-implemented the loop in the test body and would pass with the
     behaviour deleted): reserve past the bound and assert the evicted spool
     is gone from BOTH meters while a survivor keeps its count."""
-    from kiro_crew.dashboard.handlers.mcp_apps import _SpoolRateLimiter
+    from aj_crew.dashboard.handlers.mcp_apps import _SpoolRateLimiter
 
     lim = _SpoolRateLimiter(min_interval=0.0, budget=5, max_tracked=512)
     for i in range(513):
@@ -740,7 +740,7 @@ def test_reserve_has_no_await():
     meters before any of them charges — a to_thread hop counts)."""
     import inspect
 
-    from kiro_crew.dashboard.handlers.mcp_apps import _SpoolRateLimiter
+    from aj_crew.dashboard.handlers.mcp_apps import _SpoolRateLimiter
 
     assert not inspect.iscoroutinefunction(_SpoolRateLimiter.reserve)
     assert "await" not in inspect.getsource(_SpoolRateLimiter.reserve)
@@ -752,7 +752,7 @@ def test_handler_does_not_touch_the_meters_directly():
     lesson — state lives with its owner — applied to the rate limiter)."""
     import inspect
 
-    import kiro_crew.dashboard.handlers.mcp_apps as mod
+    import aj_crew.dashboard.handlers.mcp_apps as mod
 
     source = inspect.getsource(mod)
     class_source = inspect.getsource(mod._SpoolRateLimiter)
@@ -768,13 +768,13 @@ async def test_concurrent_posts_admit_exactly_one(message_env, spool_tmp):
     other gets the 429 — no interleaving between check and charge."""
     import asyncio as _asyncio
 
-    import kiro_crew.dashboard.handlers.mcp_apps as mod
+    import aj_crew.dashboard.handlers.mcp_apps as mod
 
     make_client, state = message_env
     spool_id = _spool_record()
     import json as _json
 
-    from kiro_crew.mcp_gateway.apps import spool_dir
+    from aj_crew.mcp_gateway.apps import spool_dir
 
     secret = _json.loads((spool_dir() / f"{spool_id}.json").read_text())["callback_secret"]
     slot = _FakeSlot(running=True)
@@ -802,7 +802,7 @@ def test_exhausted_refusals_are_floor_throttled():
     inside the interval takes the un-audited rate_limited path, so a looping
     app cannot write one SEL line per request and roll real history off the
     bounded audit log."""
-    from kiro_crew.dashboard.handlers.mcp_apps import _SpoolRateLimiter
+    from aj_crew.dashboard.handlers.mcp_apps import _SpoolRateLimiter
 
     lim = _SpoolRateLimiter(min_interval=3.0, budget=1, max_tracked=512)
     assert lim.reserve("s", 100.0) is None  # spends the budget
@@ -818,7 +818,7 @@ async def test_message_is_delivered_through_the_session_entry_point(
     """The handler names its origin (`app`) and leaves idle vs running to the session."""
     from unittest.mock import AsyncMock
 
-    from kiro_crew.dashboard import session_deliver
+    from aj_crew.dashboard import session_deliver
 
     make_client, state = message_env
     spool_id = _spool_record()

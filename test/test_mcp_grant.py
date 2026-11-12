@@ -1,4 +1,4 @@
-"""kiro_crew.mcp_grant -- the pod-aware OAuth-cache-directory resolver.
+"""aj_crew.mcp_grant -- the pod-aware OAuth-cache-directory resolver.
 
 The resolver ``kiro_oauth_cache_dir()`` must not call ``Path.home()``
 directly. A pod's gateway process and its OWN kiro-cli children both keep the
@@ -22,13 +22,13 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import mcp_grant
-from kiro_crew.config import paths as paths_mod
+from aj_crew import mcp_grant
+from aj_crew.config import paths as paths_mod
 
 
 def _no_overrides(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("KIROCREW_OS_HOME", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
+    monkeypatch.delenv("AJCREW_OS_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_POD", raising=False)
 
 
 class TestKiroOauthCacheHome:
@@ -40,23 +40,23 @@ class TestKiroOauthCacheHome:
         _no_overrides(monkeypatch)
         assert paths_mod.kiro_oauth_cache_home() == Path.home()
 
-    def test_honors_kirocrew_os_home_override(
+    def test_honors_ajcrew_os_home_override(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(tmp_path / "pod-os-home"))
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", str(tmp_path / "pod-os-home"))
         assert paths_mod.kiro_oauth_cache_home() == (tmp_path / "pod-os-home").resolve()
 
     def test_expands_user(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", "~/some-os-home")
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", "~/some-os-home")
         assert paths_mod.kiro_oauth_cache_home() == (Path.home() / "some-os-home").resolve()
 
     def test_refuses_a_root(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """A malformed override must degrade to Path.home(), never scatter
         OAuth artifacts across a filesystem root."""
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", "/")
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", "/")
         assert paths_mod.kiro_oauth_cache_home() == Path.home()
 
     @pytest.mark.skipif(
@@ -65,27 +65,27 @@ class TestKiroOauthCacheHome:
     )
     @pytest.mark.parametrize("bad", ["/usr", "/etc"])
     def test_refuses_posix_system_dirs(self, monkeypatch: pytest.MonkeyPatch, bad: str) -> None:
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", bad)
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", bad)
         assert paths_mod.kiro_oauth_cache_home() == Path.home()
 
     def test_the_override_is_inert_outside_a_pod(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         """Reads and writes turn on together. `_apply_pod_home_remap` moves
-        kiro-cli's writes only when `KIROCREW_POD == "1"`, so honouring the
+        kiro-cli's writes only when `AJCREW_POD == "1"`, so honouring the
         override here without that marker would repoint grant READS while the
         writes stayed under the real home -- recreating the exact read/write
         split this resolver exists to close."""
-        monkeypatch.delenv("KIROCREW_POD", raising=False)
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(tmp_path / "pod-os-home"))
+        monkeypatch.delenv("AJCREW_POD", raising=False)
+        monkeypatch.setenv("AJCREW_OS_HOME", str(tmp_path / "pod-os-home"))
         assert paths_mod.kiro_oauth_cache_home() == Path.home()
 
     def test_shares_the_unsafe_home_predicate_with_kiro_home(self) -> None:
         """One predicate for both overrides, so they refuse the same targets --
         catching a future divergence where one resolver's guard is edited and
         the other's is not."""
-        from kiro_crew.config.paths import _is_unsafe_home
+        from aj_crew.config.paths import _is_unsafe_home
 
         assert paths_mod.kiro_oauth_cache_home.__module__ == paths_mod.kiro_home.__module__
         assert _is_unsafe_home(Path(Path("/").resolve().anchor))
@@ -97,12 +97,12 @@ class TestKiroOauthCacheDirResolvesThroughTheSharedDefault:
     ``cache_dir``/``home``.
     """
 
-    def test_default_follows_kirocrew_os_home(
+    def test_default_follows_ajcrew_os_home(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         pod_os_home = tmp_path / "pod-os-home"
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(pod_os_home))
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", str(pod_os_home))
         assert mcp_grant.kiro_oauth_cache_dir() == pod_os_home.resolve() / ".aws" / "sso" / "cache"
 
     def test_default_falls_back_to_real_home_outside_a_pod(
@@ -115,10 +115,10 @@ class TestKiroOauthCacheDirResolvesThroughTheSharedDefault:
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         """An explicit ``home=`` kwarg (tests, or a future caller that already
-        resolved a directory) must win over KIROCREW_OS_HOME -- the resolver is
+        resolved a directory) must win over AJCREW_OS_HOME -- the resolver is
         the DEFAULT, not the only path."""
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(tmp_path / "pod-os-home"))
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", str(tmp_path / "pod-os-home"))
         explicit = tmp_path / "explicit-home"
         assert mcp_grant.kiro_oauth_cache_dir(home=explicit) == explicit / ".aws" / "sso" / "cache"
 
@@ -135,13 +135,13 @@ class TestKiroOauthCacheDirResolvesThroughTheSharedDefault:
         (real_cache / f"{key}.token.json").write_text("{}")
         (real_cache / f"{key}.registration.json").write_text("{}")
 
-        monkeypatch.delenv("KIROCREW_OS_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_OS_HOME", raising=False)
         assert mcp_grant.grant_presence("https://mcp.example.com/mcp", cache_dir=real_cache) is True
 
-        # From "inside the pod" (KIROCREW_OS_HOME set), the same URL's grant is
+        # From "inside the pod" (AJCREW_OS_HOME set), the same URL's grant is
         # unreadable -- no artifacts exist under the pod-scoped tree.
-        monkeypatch.setenv("KIROCREW_POD", "1")
-        monkeypatch.setenv("KIROCREW_OS_HOME", str(pod_os_home))
+        monkeypatch.setenv("AJCREW_POD", "1")
+        monkeypatch.setenv("AJCREW_OS_HOME", str(pod_os_home))
         assert paths_mod.kiro_oauth_cache_home() == pod_os_home.resolve()
         pod_cache_dir = mcp_grant.kiro_oauth_cache_dir()
         assert pod_cache_dir == pod_os_home.resolve() / ".aws" / "sso" / "cache"

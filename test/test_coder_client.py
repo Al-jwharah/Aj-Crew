@@ -9,9 +9,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-import kiro_crew.coder.client as client_mod
-from kiro_crew import platform_compat
-from kiro_crew.coder.client import (
+import aj_crew.coder.client as client_mod
+from aj_crew import platform_compat
+from aj_crew.coder.client import (
     CoderClient,
     CoderClientError,
     CoderWorkspace,
@@ -31,7 +31,7 @@ def _listing(status, **extra) -> bytes:
         "name": "crew-abc123",
         "owner_id": "owner-immutable-uuid",
         **extra,
-        "template_name": "kirocrew-arm",
+        "template_name": "ajcrew-arm",
         "latest_build": {"status": status},
         "last_used_at": "2026-08-25T12:00:00Z",
     }
@@ -63,20 +63,20 @@ async def test_create_keeps_token_out_of_argv_and_reconciles_structured_record(t
 
     client = _client(tmp_path, run, token="secret-token-canary")
     workspace = await client.create_workspace(
-        name="crew-abc123", template="kirocrew-arm", preset="arm-small", stop_after_minutes=30
+        name="crew-abc123", template="ajcrew-arm", preset="arm-small", stop_after_minutes=30
     )
     assert workspace == CoderWorkspace(
         "workspace-uuid",
         "crew-abc123",
         "owner-immutable-uuid",
-        "kirocrew-arm",
+        "ajcrew-arm",
         "running",
         "2026-08-25T12:00:00Z",
     )
     flattened = json.dumps([argv for argv, _env in calls])
     assert "secret-token-canary" not in flattened
     assert all(env["CODER_SESSION_TOKEN"] == "secret-token-canary" for _argv, env in calls)
-    expected = "create crew-abc123 --template kirocrew-arm --preset arm-small --stop-after 30m"
+    expected = "create crew-abc123 --template ajcrew-arm --preset arm-small --stop-after 30m"
     assert calls[0][0] == ["/opt/coder", *expected.split(), "--yes", "--use-parameter-defaults"]
 
 
@@ -108,7 +108,7 @@ async def test_mutating_workspace_commands_reject_unsafe_names(tmp_path, operati
     with pytest.raises(CoderClientError, match="workspace name"):
         if operation == "create":
             await client.create_workspace(
-                name="crew;bad", template="kirocrew-arm", preset="", stop_after_minutes=30
+                name="crew;bad", template="ajcrew-arm", preset="", stop_after_minutes=30
             )
         elif operation == "start":
             await client.start_workspace("crew;bad")
@@ -125,12 +125,12 @@ async def test_probe_verifies_identity_and_template_without_creating_compute(tmp
             user = {"user_id": "0d5bd32b-20ba-4937-9f89-a6726be46ba1", "username": "kyleseaman"}
             return json.dumps([user]).encode()
         if argv[1:3] == ["templates", "list"]:
-            return json.dumps([{"Template": {"name": "kirocrew-arm"}}]).encode()
+            return json.dumps([{"Template": {"name": "ajcrew-arm"}}]).encode()
         raise AssertionError(argv)
 
-    assert await _client(tmp_path, run).probe(template="kirocrew-arm", preset="") == {
+    assert await _client(tmp_path, run).probe(template="ajcrew-arm", preset="") == {
         "owner": "kyleseaman",
-        "template": "kirocrew-arm",
+        "template": "ajcrew-arm",
     }
     assert calls[0] == ["/opt/coder", "whoami", "--output", "json"]
     assert all("create" not in call for call in calls)
@@ -143,7 +143,7 @@ async def test_probe_refuses_a_template_the_deployment_does_not_offer(tmp_path):
         return json.dumps([{"name": "some-other-template"}]).encode()
 
     with pytest.raises(CoderClientError, match="template is unavailable"):
-        await _client(tmp_path, run).probe(template="kirocrew-arm", preset="")
+        await _client(tmp_path, run).probe(template="ajcrew-arm", preset="")
 
 
 async def test_workspace_query_refuses_a_record_with_an_invalid_shape(tmp_path):

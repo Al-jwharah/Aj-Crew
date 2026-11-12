@@ -14,8 +14,8 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from kiro_crew.dashboard.handlers import usage as usage_mod
-from kiro_crew.messaging.link import TELEMETRY_CHANNELS, telemetry_channel_of
+from aj_crew.dashboard.handlers import usage as usage_mod
+from aj_crew.messaging.link import TELEMETRY_CHANNELS, telemetry_channel_of
 
 
 def _row(*, slot, model="m", credits=1.0, used=0, window=1_000_000, age_days=0.0,
@@ -24,7 +24,7 @@ def _row(*, slot, model="m", credits=1.0, used=0, window=1_000_000, age_days=0.0
     return {
         "_type": "tokens", "ts": ts.isoformat(), "slot": slot, "model": model,
         "credits": credits, "context_used": used, "context_window": window,
-        "surface": surface, "agent": "kirocrew", "provider": "acp",
+        "surface": surface, "agent": "ajcrew", "provider": "acp",
     }
 
 

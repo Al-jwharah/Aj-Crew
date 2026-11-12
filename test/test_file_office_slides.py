@@ -26,15 +26,15 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.dashboard.handlers import office_slides as mod
-from kiro_crew.dashboard.handlers.office_slides import (
+from aj_crew.dashboard.handlers import office_slides as mod
+from aj_crew.dashboard.handlers.office_slides import (
     api_file_office_slide,
     api_file_office_slides,
 )
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.testing.wait import await_until
 
-_MOD = "kiro_crew.dashboard.handlers.office_slides"
+_MOD = "aj_crew.dashboard.handlers.office_slides"
 
 
 def _make_app() -> web.Application:
@@ -47,8 +47,8 @@ def _make_app() -> web.Application:
 @pytest.fixture
 def mock_sel():
     with (
-        patch("kiro_crew.sel.sel") as m,
-        patch("kiro_crew.dashboard.handlers.files.is_sensitive_path", return_value=False),
+        patch("aj_crew.sel.sel") as m,
+        patch("aj_crew.dashboard.handlers.files.is_sensitive_path", return_value=False),
     ):
         instance = MagicMock()
         m.return_value = instance
@@ -71,7 +71,7 @@ def cache(tmp_path):
     root = tmp_path / "cache" / "slide-previews"
     with (
         patch(f"{_MOD}.cache_root", return_value=root),
-        patch("kiro_crew.dashboard.token_secret._get_secret", return_value=_TEST_ROOT_KEY),
+        patch("aj_crew.dashboard.token_secret._get_secret", return_value=_TEST_ROOT_KEY),
     ):
         yield root
 
@@ -145,7 +145,7 @@ def _seed_cache(root: Path, digest: str, count: int, *, signed: bool = True) -> 
 
 
 def _validated(path: Path):
-    return patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=str(path))
+    return patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=str(path))
 
 
 # --- degrade: no LibreOffice on the host --------------------------------------
@@ -543,7 +543,7 @@ async def test_without_a_trust_root_the_cache_is_inert(tmp_path, mock_sel, cache
     _seed_cache(cache, digest, 1)
     with (
         _validated(f),
-        patch("kiro_crew.dashboard.token_secret._get_secret", side_effect=OSError("unwritable")),
+        patch("aj_crew.dashboard.token_secret._get_secret", side_effect=OSError("unwritable")),
         patch(f"{_MOD}.soffice_path", return_value="/usr/bin/soffice"),
         patch(f"{_MOD}._run_soffice", AsyncMock()) as soffice,
     ):
@@ -792,7 +792,7 @@ async def test_sensitive_path_is_403(tmp_path, mock_sel, cache):
     _write_pptx(f)
     with (
         _validated(f),
-        patch("kiro_crew.dashboard.handlers.files.is_sensitive_path", return_value=True),
+        patch("aj_crew.dashboard.handlers.files.is_sensitive_path", return_value=True),
     ):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get(f"/api/file-office-slides?path={f}")
@@ -802,7 +802,7 @@ async def test_sensitive_path_is_403(tmp_path, mock_sel, cache):
 
 @pytest.mark.asyncio
 async def test_forbidden_path_is_400(mock_sel, cache):
-    with patch("kiro_crew.dashboard.handlers._validate_dashboard_path", return_value=None):
+    with patch("aj_crew.dashboard.handlers._validate_dashboard_path", return_value=None):
         async with TestClient(TestServer(_make_app())) as client:
             resp = await client.get("/api/file-office-slides?path=/etc/passwd.pptx")
             assert resp.status == 400
@@ -1057,8 +1057,8 @@ def test_soffice_discovery_needs_no_app(monkeypatch):
     """Slide previews resolve `soffice` and its hint with no app package importable:
     the discovery is a core capability, so no core feature depends on an app."""
     blocked = {
-        "kiro_crew.apps.builtins.pptx_maker": None,
-        "kiro_crew.apps.builtins.pptx_maker.backend": None,
+        "aj_crew.apps.builtins.pptx_maker": None,
+        "aj_crew.apps.builtins.pptx_maker.backend": None,
     }
     with (
         patch.dict("sys.modules", blocked),

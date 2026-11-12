@@ -14,9 +14,9 @@ import pytest
 from discord_helpers import _drop_live_config_snapshot  # noqa: F401
 from discord_helpers import FakeClient, _dispatcher
 
-from kiro_crew.discord.client import DiscordInbound, ThreadOrigin
-from kiro_crew.discord.transport import DiscordTransport
-from kiro_crew.messaging.transport import InboundMessage
+from aj_crew.discord.client import DiscordInbound, ThreadOrigin
+from aj_crew.discord.transport import DiscordTransport
+from aj_crew.messaging.transport import InboundMessage
 
 
 def _restarted(
@@ -48,7 +48,7 @@ def _in_thread(user: str = "u1", thread: str = "t9") -> DiscordInbound:
 def events(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, Any]]:
     seen: list[dict[str, Any]] = []
     monkeypatch.setattr(
-        "kiro_crew.discord.transport.sel",
+        "aj_crew.discord.transport.sel",
         lambda: SimpleNamespace(log_api_access=lambda **kw: seen.append(kw)),
     )
     return seen
@@ -352,7 +352,7 @@ class TestClientThreadOrigin:
     async def test_reads_origin_and_fails_closed(
         self, monkeypatch: pytest.MonkeyPatch, payload: Any, expected: ThreadOrigin | None
     ) -> None:
-        from kiro_crew.discord.client import DiscordClient
+        from aj_crew.discord.client import DiscordClient
 
         client = DiscordClient(token="bot-secret", proxy="http://proxy.invalid:8080")
         calls: list[str] = []

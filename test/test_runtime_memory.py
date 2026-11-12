@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
+from aj_crew import platform_compat
 
 
 def test_large_linux_heap_is_trimmed(monkeypatch) -> None:
@@ -157,7 +157,7 @@ async def test_maintainer_bounds_executor_wait_and_does_not_resubmit(monkeypatch
 
 
 def test_gateway_trim_maintainer_is_created_after_socket_bind() -> None:
-    source = Path(__file__).parents[1] / "src" / "kiro_crew" / "dashboard" / "server.py"
+    source = Path(__file__).parents[1] / "src" / "aj_crew" / "dashboard" / "server.py"
     tree = ast.parse(source.read_text(encoding="utf-8"))
     start_serving_line = next(
         node.lineno

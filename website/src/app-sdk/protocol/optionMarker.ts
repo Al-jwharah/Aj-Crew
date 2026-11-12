@@ -1,6 +1,6 @@
 // Canonical [OPTION(S):] follow-up-pill marker regex — the single source of truth
 // for the frontend, mirroring the backend's ReDoS-hardened OPTIONS_RE_LINE
-// (src/kiro_crew/constants.py). Import this instead of hand-rolling a copy so the
+// (src/aj_crew/constants.py). Import this instead of hand-rolling a copy so the
 // grammar can't drift between the dashboard's several parsers.
 //
 // The tempered body matches any run of characters in which no alternative begins a

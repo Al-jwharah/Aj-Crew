@@ -1,4 +1,4 @@
-"""How the skills loader serves a granted project's skills (``kiro_crew.skills``).
+"""How the skills loader serves a granted project's skills (``aj_crew.skills``).
 
 A grant names one directory, so discovery and every read stay inside it: a skills
 root, skill directory or ``SKILL.md`` that is a link is refused, cached paths are
@@ -23,8 +23,8 @@ from skill_trust_store_helpers import (  # noqa: F401 -- fixtures register by im
     project_fixture,
 )
 
-from kiro_crew import platform_compat, skill_trust
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
+from aj_crew import platform_compat, skill_trust
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
 
 pytestmark = pytest.mark.skipif(
     not skill_trust.project_skill_traversal_supported(),
@@ -36,7 +36,7 @@ class TestConsentCoversOnlyTheGrantedDirectory:
     """A grant names ONE directory; discovery must not reach outside it."""
 
     def test_a_symlinked_skills_root_is_refused(self, tmp_path, monkeypatch):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         # `.kiro/skills` is a link OUT of the project the operator trusted.
         outside = tmp_path / "outside" / "skills"
@@ -68,7 +68,7 @@ class TestConsentCoversOnlyTheGrantedDirectory:
         list_skills and the injected "Available Skills" index, which tells the
         agent to cat that path.
         """
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         outside = tmp_path / "outside"
         outside.mkdir(parents=True)
@@ -92,7 +92,7 @@ class TestConsentCoversOnlyTheGrantedDirectory:
 
     def test_a_symlinked_subdirectory_inside_a_real_root_is_refused(self, tmp_path):
         """Same escape one level up: the skill DIRECTORY is the link."""
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         outside = tmp_path / "outside" / "smuggled-dir"
         outside.mkdir(parents=True)
@@ -117,8 +117,8 @@ class TestConsentCoversOnlyTheGrantedDirectory:
         self, tmp_path, monkeypatch
     ):
         """Walking a project link must not resolve a target that could be UNC."""
-        from kiro_crew import skills as skills_mod
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew import skills as skills_mod
+        from aj_crew.skills import SkillsLoader
 
         outside = tmp_path / "outside" / "linked"
         outside.mkdir(parents=True)
@@ -147,8 +147,8 @@ class TestConsentCoversOnlyTheGrantedDirectory:
 
     def test_a_linked_project_skills_root_is_refused_before_resolution(self, tmp_path, monkeypatch):
         """The root link itself may target UNC and must not be probed."""
-        from kiro_crew import skills as skills_mod
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew import skills as skills_mod
+        from aj_crew.skills import SkillsLoader
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -176,7 +176,7 @@ class TestConsentCoversOnlyTheGrantedDirectory:
         self, project, monkeypatch
     ):
         """os.walk may follow a Windows reparse target just to classify it."""
-        from kiro_crew import skills as skills_mod
+        from aj_crew import skills as skills_mod
 
         genuine = project / ".kiro" / "skills" / "genuine"
         genuine.mkdir(parents=True, exist_ok=True)
@@ -197,7 +197,7 @@ class TestConsentCoversOnlyTheGrantedDirectory:
 
     def test_a_confined_walk_scans_only_open_directory_descriptors(self, project, monkeypatch):
         """Every traversed component stays pinned to a no-follow handle."""
-        from kiro_crew import skills as skills_mod
+        from aj_crew import skills as skills_mod
 
         genuine = project / ".kiro" / "skills" / "genuine"
         genuine.mkdir(parents=True, exist_ok=True)
@@ -224,7 +224,7 @@ class TestConsentCoversOnlyTheGrantedDirectory:
         self, project, tmp_path, monkeypatch
     ):
         """A caller cannot use confinement mode to open an unrelated tree."""
-        from kiro_crew import skills as skills_mod
+        from aj_crew import skills as skills_mod
 
         project_key = skill_trust.canonical_key(project)
         assert project_key is not None
@@ -241,7 +241,7 @@ class TestConsentCoversOnlyTheGrantedDirectory:
         self, project, tmp_path, monkeypatch
     ):
         """O_NOFOLLOW closes the exact race reported by review."""
-        from kiro_crew import skills as skills_mod
+        from aj_crew import skills as skills_mod
 
         category = project / ".kiro" / "skills" / "category"
         genuine = category / "genuine"
@@ -285,7 +285,7 @@ class TestConsentCoversOnlyTheGrantedDirectory:
         self, project, tmp_path, monkeypatch
     ):
         """Unsupported platforms never resolve or traverse a project path."""
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         skill_dir = project / ".kiro" / "skills" / "genuine"
         skill_dir.mkdir(parents=True)
@@ -328,8 +328,8 @@ class TestConsentCoversOnlyTheGrantedDirectory:
         rather than by copying. The GLOBAL tree keeps the allowance, which is what
         the second half of this test holds fixed.
         """
-        from kiro_crew import skills as skills_mod
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew import skills as skills_mod
+        from aj_crew.skills import SkillsLoader
 
         provider = tmp_path / "provider"
         (provider / "vendor-skill").mkdir(parents=True)
@@ -373,7 +373,7 @@ class TestConsentCoversOnlyTheGrantedDirectory:
         """
         import logging
 
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         outside = tmp_path / "outside" / "skills"
         (outside / "smuggled").mkdir(parents=True)
@@ -390,7 +390,7 @@ class TestConsentCoversOnlyTheGrantedDirectory:
         skill_trust.grant_project_trust(project)
         loader = SkillsLoader(skills_path=tmp_path / "home-skills", install_builtins=False)
 
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.skills"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.skills"):
             names = {n for n, _, _ in loader._iter(project)}
 
         assert "smuggled" not in names
@@ -399,7 +399,7 @@ class TestConsentCoversOnlyTheGrantedDirectory:
         ), f"no refusal logged; records={[r.getMessage() for r in caplog.records]}"
 
     def test_a_real_in_project_skills_dir_still_loads(self, tmp_path):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         project = tmp_path / "proj2"
         d = project / ".kiro" / "skills" / "genuine"
@@ -414,7 +414,7 @@ class TestConsentCoversOnlyTheGrantedDirectory:
         assert "GENUINE BODY" in (loader.load_skill("genuine", project) or "")
 
     def test_confined_walk_stops_before_python_recursion_can_fail(self, monkeypatch):
-        from kiro_crew import skills as skills_mod
+        from aj_crew import skills as skills_mod
 
         class FakeEntry:
             name = "nested"
@@ -458,7 +458,7 @@ class TestConsentCoversOnlyTheGrantedDirectory:
         and is skipped, contributing neither a body nor a pointer. The match
         would appear to succeed while injecting nothing at all.
         """
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         project = tmp_path / "proj3"
         d = project / ".kiro" / "skills" / "triggered"
@@ -489,7 +489,7 @@ class TestCachedPathsCannotEscapeAfterVetting:
         containment-checks the descriptor it actually read, so the swap is caught
         on the inode rather than on the stale path string.
         """
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         skill_dir = project / ".kiro" / "skills" / "legit"
         skill_dir.mkdir(parents=True)
@@ -525,7 +525,7 @@ class TestCachedPathsCannotEscapeAfterVetting:
         self, project, tmp_path, monkeypatch
     ):
         """Metadata reaches the no-link reader before any path-following stat."""
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         skill_dir = project / ".kiro" / "skills" / "legit"
         skill_dir.mkdir(parents=True)
@@ -620,8 +620,8 @@ class TestOversizedProjectSkillIsSkipped:
         since a pinned body is re-read each time. The global skills path applies
         no cap at all and cannot abort a turn, so skipping is the closer parity.
         """
-        from kiro_crew import hooks
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew import hooks
+        from aj_crew.skills import SkillsLoader
 
         skill_dir = project / ".kiro" / "skills" / "huge"
         skill_dir.mkdir(parents=True)
@@ -644,7 +644,7 @@ class TestEnumeratedMetadataIsAlsoConfined:
 
     def _swapped_project(self, project, tmp_path):
         """A project whose vetted SKILL.md is replaced by a link out of it."""
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         skill_dir = project / ".kiro" / "skills" / "legit"
         skill_dir.mkdir(parents=True)
@@ -712,7 +712,7 @@ class TestConfinementMapSharesTheCacheLifetime:
     """The recorded roots are dropped with the caches they belong to."""
 
     def test_invalidating_the_caches_clears_the_recorded_roots(self, project, tmp_path):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         skill_dir = project / ".kiro" / "skills" / "legit"
         skill_dir.mkdir(parents=True)
@@ -743,7 +743,7 @@ class TestEveryEnumeratedPathHasARecordedRoot:
     """
 
     def test_every_enumerated_path_has_a_recorded_root(self, project, tmp_path):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         # A project skill AND a global one, so both branches are covered.
         proj_skill = project / ".kiro" / "skills" / "from-project"
@@ -780,7 +780,7 @@ class TestEveryEnumeratedPathHasARecordedRoot:
 
     def test_an_in_project_symlinked_skill_directory_is_refused(self, project):
         """Project directory links are pruned even when their target stays inside."""
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         # The real skill lives outside .kiro/skills but inside the project.
         real = project / "shared" / "aliased"
@@ -813,7 +813,7 @@ class TestOneEnforcementPointForEnumeratedReads:
         import ast
         import pathlib
 
-        src_dir = pathlib.Path(__file__).resolve().parents[1] / "src/kiro_crew"
+        src_dir = pathlib.Path(__file__).resolve().parents[1] / "src/aj_crew"
         tree = ast.parse((src_dir / "skills_body_reads.py").read_text(encoding="utf-8"))
 
         wanted = {"_cached_frontmatter", "load_skill", "_read_enumerated_skill_bytes"}
@@ -864,8 +864,8 @@ class TestOneEnforcementPointForEnumeratedReads:
 
     def test_a_confined_refusal_is_not_reopened(self, tmp_path, monkeypatch):
         """A replaced project file must degrade without a second failing open."""
-        from kiro_crew import skills as skills_mod
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew import skills as skills_mod
+        from aj_crew.skills import SkillsLoader
 
         monkeypatch.setattr(skills_mod, "safe_read_file_bytes_nolink", lambda *_a, **_kw: None)
         loader = SkillsLoader(skills_path=tmp_path / "home-skills", install_builtins=False)
@@ -890,7 +890,7 @@ class TestCrlfSkillFilesParseLikeTextMode:
     """
 
     def _crlf_project_skill(self, project, tmp_path):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         skill_dir = project / ".kiro" / "skills" / "crlf"
         skill_dir.mkdir(parents=True)
@@ -929,7 +929,7 @@ class TestCrlfSkillFilesParseLikeTextMode:
         frontmatter key is found at column 0 -- the same silent outcome as the
         CRLF case, reached a different way.
         """
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         skill_dir = project / ".kiro" / "skills" / "crmac"
         skill_dir.mkdir(parents=True)
@@ -954,7 +954,7 @@ class TestCrlfSkillFilesParseLikeTextMode:
 
 class TestProjectSkillDecodeFailures:
     def test_invalid_utf8_metadata_does_not_abort_project_skill_listing(self, project, tmp_path):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         skill_dir = project / ".kiro" / "skills" / "invalid-utf8"
         skill_dir.mkdir(parents=True)
@@ -974,7 +974,7 @@ class TestEnforcementIsAudited:
 
     @staticmethod
     def _recorder(monkeypatch):
-        from kiro_crew import skills as skills_mod
+        from aj_crew import skills as skills_mod
 
         calls: list[dict] = []
 
@@ -986,7 +986,7 @@ class TestEnforcementIsAudited:
         return calls
 
     def test_admitting_a_trusted_project_is_audited(self, project, tmp_path, monkeypatch):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         calls = self._recorder(monkeypatch)
         skill_trust.grant_project_trust(project)
@@ -1003,7 +1003,7 @@ class TestEnforcementIsAudited:
 
     def test_withholding_an_untrusted_project_is_audited(self, tmp_path, monkeypatch):
         """The half an operator debugging a dead `$token` actually needs."""
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         calls = self._recorder(monkeypatch)
         untrusted = tmp_path / "no-grant"
@@ -1026,7 +1026,7 @@ class TestEnforcementIsAudited:
         hot-path cost on a path that runs on every message, so the record is
         written on first use per (directory, outcome).
         """
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         calls = self._recorder(monkeypatch)
         skill_trust.grant_project_trust(project)
@@ -1044,8 +1044,8 @@ class TestEnforcementIsAudited:
 
     def test_an_audit_failure_does_not_break_loading(self, project, tmp_path, monkeypatch):
         """A record must never be able to stop a turn."""
-        from kiro_crew import skills as skills_mod
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew import skills as skills_mod
+        from aj_crew.skills import SkillsLoader
 
         class _Boom:
             def log_governance_decision(self, **_kwargs):
@@ -1064,8 +1064,8 @@ class TestEnforcementIsAudited:
 
     def test_a_failed_audit_is_retried_until_it_is_recorded(self, project, tmp_path, monkeypatch):
         """A transient SEL failure must not suppress the enforcement record forever."""
-        from kiro_crew import skills as skills_mod
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew import skills as skills_mod
+        from aj_crew.skills import SkillsLoader
 
         attempts = 0
 
@@ -1094,7 +1094,7 @@ class TestTriggeredProjectSkillsReachThePrompt:
     """A match must produce a body (or a pointer), not just a log line."""
 
     def _project_with_triggered_skill(self, project, tmp_path, *, inject: bool):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         opt_out = "" if inject else "inject_on_trigger: false\n"
         skill_dir = project / ".kiro" / "skills" / "deploys"
@@ -1108,7 +1108,7 @@ class TestTriggeredProjectSkillsReachThePrompt:
         # max_triggered defaults to 0 -- trigger matching is OFF unless the
         # operator enables it, and with 0 the scored list is sliced to nothing.
         # So this feature is only reachable at all once it is switched on.
-        cfg = KiroCrewConfig(skills=SkillsConfig(max_triggered=3))
+        cfg = AjCrewConfig(skills=SkillsConfig(max_triggered=3))
         loader = SkillsLoader(
             skills_path=tmp_path / "home-skills", install_builtins=False, config=cfg
         )
@@ -1150,7 +1150,7 @@ class TestTriggeredProjectSkillsReachThePrompt:
     def test_ownership_never_reads_a_project_skill_unconfined(self, project, tmp_path, monkeypatch):
         """A repository's skill belongs to its repository, so the disabled-app check
         must not read its frontmatter: that read would be unconfined."""
-        import kiro_crew.apps.manager as mgr
+        import aj_crew.apps.manager as mgr
 
         loader = self._project_with_triggered_skill(project, tmp_path, inject=True)
         skill_md = project / ".kiro" / "skills" / "deploys" / "SKILL.md"
@@ -1169,7 +1169,7 @@ class TestTriggeredProjectSkillsReachThePrompt:
 
     def test_an_untrusted_project_skill_still_contributes_nothing(self, tmp_path):
         """Wiring the project through must not bypass consent."""
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         untrusted = tmp_path / "no-grant"
         skill_dir = untrusted / ".kiro" / "skills" / "deploys"
@@ -1178,7 +1178,7 @@ class TestTriggeredProjectSkillsReachThePrompt:
             "---\nname: deploys\ndescription: d\ntriggers: deploy release\n---\n\nSECRET\n",
             encoding="utf-8",
         )
-        cfg = KiroCrewConfig(skills=SkillsConfig(max_triggered=3))
+        cfg = AjCrewConfig(skills=SkillsConfig(max_triggered=3))
         loader = SkillsLoader(
             skills_path=tmp_path / "home-skills", install_builtins=False, config=cfg
         )
@@ -1195,7 +1195,7 @@ class TestProjectSkillsIndexConfinement:
 
     @pytest.mark.parametrize("budget", [None, 100_000])
     def test_on_demand_project_skill_is_injected_without_a_path(self, project, tmp_path, budget):
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         skill_file = project / ".kiro" / "skills" / "release" / "SKILL.md"
         skill_file.parent.mkdir(parents=True)
@@ -1216,7 +1216,7 @@ class TestProjectSkillsIndexConfinement:
 
     def test_project_bodies_stop_at_the_skills_section_budget(self, project, tmp_path):
         """Many large confined bodies must not be accumulated before truncation."""
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.skills import SkillsLoader
 
         for name in ("alpha", "beta", "gamma"):
             skill_file = project / ".kiro" / "skills" / name / "SKILL.md"

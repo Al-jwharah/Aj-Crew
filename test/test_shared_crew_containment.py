@@ -3,7 +3,7 @@ integration exercise.
 
 The integration test runs only where a systemd user manager with memory and pids
 delegation is reachable. It builds its own throwaway slice tree (never the
-gateway's ``kirocrew-agents`` slices), with tiny limits, and stops it at the end.
+gateway's ``ajcrew-agents`` slices), with tiny limits, and stops it at the end.
 """
 
 from __future__ import annotations
@@ -17,15 +17,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.shared_crew import containment as c
-from kiro_crew.testing.wait import wait_until
+from aj_crew.shared_crew import containment as c
+from aj_crew.testing.wait import wait_until
 
 
 def test_principal_slice_nests_under_the_instance_slice_without_leaking_the_id():
     pid = "p_" + "a" * 32
-    name = c.principal_slice_name(pid, instance_slice="kirocrew-agents-0123456789ab.slice")
-    assert name.startswith("kirocrew-agents-0123456789ab-p") and name.endswith(".slice")
-    token = name[len("kirocrew-agents-0123456789ab-p") : -len(".slice")]
+    name = c.principal_slice_name(pid, instance_slice="ajcrew-agents-0123456789ab.slice")
+    assert name.startswith("ajcrew-agents-0123456789ab-p") and name.endswith(".slice")
+    token = name[len("ajcrew-agents-0123456789ab-p") : -len(".slice")]
     assert len(token) == 12 and all(ch in "0123456789abcdef" for ch in token)
     assert "a" * 32 not in name
     assert c.principal_slice_name("p_other", instance_slice="x.slice") != c.principal_slice_name(
@@ -53,7 +53,7 @@ def test_probe_reason_classification_is_stable():
 
 
 def test_hard_mode_backstop_refuses_every_runtime_start(monkeypatch):
-    from kiro_crew.acp import runtime_start
+    from aj_crew.acp import runtime_start
 
     refusing = c.ContainmentReport(
         platform="linux",
@@ -112,7 +112,7 @@ def _delegation_reason() -> str | None:
 #: its own throwaway slice), which the root conftest's host-service guard refuses for
 #: an ordinary test run. It runs when this variable is set and the module is on the
 #: guard's allowlist, or directly: ``python test/test_shared_crew_containment.py``.
-REAL_CGROUP_ENV = "KIROCREW_SHARED_CREW_REAL_CGROUP"
+REAL_CGROUP_ENV = "AJCREW_SHARED_CREW_REAL_CGROUP"
 
 
 def _skip_reason() -> str | None:

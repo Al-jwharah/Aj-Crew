@@ -1,14 +1,14 @@
 """The egress facade keeps the patch seams the one module had.
 
-``kiro_crew.security.exfil`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the
+``aj_crew.security.exfil`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the
 owners ``exfil_url_rules``, ``exfil_oauth`` and ``exfil_bash``; the URL classifier, the
 blocked-link records, the URL redactor, the OAuth credential diagnosis and the IMDS check stay
 in the facade itself. The moved code reads its names as plain module globals, so a patch reaches
 it only because the mirror writes the patch into every module holding the name. Two spellings
-reach the facade: a write on ``kiro_crew.security.exfil`` itself, and a write on the package
-``kiro_crew.security`` of a name its ``_EXPORTS`` table lists (each row naming ``exfil``), which
+reach the facade: a write on ``aj_crew.security.exfil`` itself, and a write on the package
+``aj_crew.security`` of a name its ``_EXPORTS`` table lists (each row naming ``exfil``), which
 the package forwards here. Every other owner-defined name is reached through
-``kiro_crew.security.exfil`` only.
+``aj_crew.security.exfil`` only.
 
 ``test/test_facade_mirror_guards.py`` holds every mirrored facade to the shared rules, and its
 corpus counts patches spelled through the facade's own name only. These tests pin what is
@@ -32,9 +32,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-import kiro_crew.security as security
-from kiro_crew import _facade_mirror
-from kiro_crew.security import exfil
+import aj_crew.security as security
+from aj_crew import _facade_mirror
+from aj_crew.security import exfil
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_exfil_facade")
 
@@ -49,8 +49,8 @@ SHARED_FACADE_CHECKS = (
     "reach_rule_can_fail",
 )
 
-FACADE = "kiro_crew.security.exfil"
-PACKAGE = "kiro_crew.security"
+FACADE = "aj_crew.security.exfil"
+PACKAGE = "aj_crew.security"
 LEAF = "exfil"
 SECURITY_DIR = Path(exfil.__file__).resolve().parent
 #: The owner modules, in the layer order ``_OWNERS`` must list them.
@@ -114,7 +114,7 @@ def _family_sources() -> dict[str, str]:
 
 def _test_tree_files() -> list[Path]:
     """Every file pytest collects tests or fixtures from: the root conftest, ``test/``,
-    and the test modules and conftests under ``src/kiro_crew/apps/builtins`` -- the same
+    and the test modules and conftests under ``src/aj_crew/apps/builtins`` -- the same
     walk as ``test_facade_mirror_guards._test_tree_files``."""
     root = source_corpus.repo_root()
     test_root = source_corpus.repo_root() / "test"
@@ -124,7 +124,7 @@ def _test_tree_files() -> list[Path]:
         name = path.name
         if rel == "conftest.py" or path.is_relative_to(test_root):
             out.append(path)
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and (
+        elif rel.startswith("src/aj_crew/apps/builtins/") and (
             "/tests/" in rel
             or name.startswith("test_")
             or name.endswith("_test.py")
@@ -142,7 +142,7 @@ def _module_aliases(tree: ast.Module) -> dict[str, str]:
             for alias in node.names:
                 if alias.name in (FACADE, PACKAGE) and alias.asname:
                     aliases[alias.asname] = alias.name
-        elif isinstance(node, ast.ImportFrom) and node.module in ("kiro_crew", PACKAGE):
+        elif isinstance(node, ast.ImportFrom) and node.module in ("aj_crew", PACKAGE):
             for alias in node.names:
                 dotted = f"{node.module}.{alias.name}"
                 if dotted in (FACADE, PACKAGE):
@@ -238,7 +238,7 @@ def _corpus_patched_names() -> dict[str, frozenset[str]]:
 #: Each spelling the patch scan must read, and each it must skip, keyed by case id.
 _SPELLING_CASES = {
     "alias-setattr": (
-        "from kiro_crew.security import exfil as gate\n"
+        "from aj_crew.security import exfil as gate\n"
         "def test(monkeypatch):\n"
         "    monkeypatch.setattr(gate, '_load_operator_oauth_endpoints', None)\n",
         {FACADE: {"_load_operator_oauth_endpoints"}},
@@ -246,26 +246,26 @@ _SPELLING_CASES = {
     "dotted-string": (
         "from unittest import mock\n"
         "def test():\n"
-        "    with mock.patch('kiro_crew.security.exfil._exfil_exempt_hosts'):\n"
+        "    with mock.patch('aj_crew.security.exfil._exfil_exempt_hosts'):\n"
         "        pass\n",
         {FACADE: {"_exfil_exempt_hosts"}},
     ),
     "package": (
-        "import kiro_crew.security as security\n"
+        "import aj_crew.security as security\n"
         "def test(monkeypatch):\n"
         "    monkeypatch.setattr(security, '_OAUTH_EXTENSION_MEMO', None)\n"
         "    monkeypatch.setattr(security, 'is_denied', None)\n",
         {PACKAGE: {"_OAUTH_EXTENSION_MEMO", "is_denied"}},
     ),
     "loop": (
-        "from kiro_crew.security import exfil\n"
+        "from aj_crew.security import exfil\n"
         "def test(monkeypatch):\n"
         "    for name in ('_load_operator_oauth_endpoints', '_exfil_exempt_hosts'):\n"
         "        monkeypatch.setattr(exfil, name, None)\n",
         {FACADE: {"_load_operator_oauth_endpoints", "_exfil_exempt_hosts"}},
     ),
     "owner-not-facade": (
-        "from kiro_crew.security import exfil_url_rules\n"
+        "from aj_crew.security import exfil_url_rules\n"
         "def test(monkeypatch):\n"
         "    monkeypatch.setattr(exfil_url_rules, '_load_operator_oauth_endpoints', None)\n",
         {},
@@ -423,14 +423,14 @@ def _outside_imports() -> dict[str, tuple[str, str]]:
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.Import):
                 for alias in node.names:
-                    if alias.name.startswith("kiro_crew.") and alias.name not in owners:
+                    if alias.name.startswith("aj_crew.") and alias.name not in owners:
                         found.setdefault(alias.asname or alias.name, (alias.name, ""))
                 continue
             if not isinstance(node, ast.ImportFrom):
                 continue
             if node.level == 1:
                 home = f"{PACKAGE}.{node.module}" if node.module else PACKAGE
-            elif node.module and node.module.startswith("kiro_crew"):
+            elif node.module and node.module.startswith("aj_crew"):
                 home = node.module
             else:
                 continue
@@ -452,11 +452,11 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
             for stmt in node.body:
                 if isinstance(stmt, ast.Import):
                     for alias in stmt.names:
-                        if alias.name.startswith("kiro_crew."):
+                        if alias.name.startswith("aj_crew."):
                             out[alias.asname or alias.name] = (alias.name, "")
                 elif (
                     isinstance(stmt, ast.ImportFrom)
-                    and (stmt.module or "").startswith("kiro_crew")
+                    and (stmt.module or "").startswith("aj_crew")
                     and stmt.module not in owners
                 ):
                     for alias in stmt.names:
@@ -466,7 +466,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
     """A served name an owner imports from a project module outside the family is named
-    from its home module under ``TYPE_CHECKING``, so ``from kiro_crew.security.exfil
+    from its home module under ``TYPE_CHECKING``, so ``from aj_crew.security.exfil
     import <name>`` type-checks; exactly those names."""
     served = set(_index().exports)
     expected = {name: home for name, home in _outside_imports().items() if name in served}

@@ -250,7 +250,7 @@ export default [
       'src/pages/members/NewCrewmateDialog.tsx',
       'src/pages/overview/AgentCfgTab.tsx',
       'src/pages/overview/AgentTemplatesTab.tsx',
-      'src/pages/overview/KiroCrewCfgTab.tsx',
+      'src/pages/overview/AjCrewCfgTab.tsx',
       'src/pages/overview/MemoryTab.tsx',
       'src/pages/overview/PromptsTab.tsx',
       'src/utils/popoutController.ts',
@@ -458,14 +458,6 @@ export default [
     files: ['src/components/ui/**/*.{ts,tsx}'],
     rules: {
       'shadcn/require-static-classes': 'off',
-    },
-  },
-  {
-    // The ghost mascot is artwork: its white and black are the drawing's own
-    // colors, shared with the Electron boot sequence, not a theme surface.
-    files: ['src/components/KiroGhost.tsx'],
-    rules: {
-      'shadcn/no-raw-colors': 'off',
     },
   },
   {

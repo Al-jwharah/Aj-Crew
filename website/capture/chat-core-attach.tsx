@@ -10,7 +10,7 @@ const mode = params.get('mode') ?? 'dark'
 const deny = params.has('deny')
 const refuse = params.has('refuse')
 const running = params.has('running')
-document.documentElement.dataset.theme = mode === 'light' ? 'kiro-light' : 'kiro-dark'
+document.documentElement.dataset.theme = mode === 'light' ? 'aj-light' : 'aj-dark'
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
 window.fetch = async (input, init) => {
   const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url, location.origin)

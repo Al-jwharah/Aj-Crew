@@ -16,15 +16,15 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from model_registry_row_helpers import add_claude_only_row
 
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.model_registry import acp_id_correction
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.model_registry import acp_id_correction
 
 
 @pytest.fixture(autouse=True)
 def _owner_caller(monkeypatch):
     """Exercise the agent handlers past their independent owner-auth boundary."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
@@ -68,7 +68,7 @@ class TestAcpIdCorrection:
         Pins the rule rather than the three instances above, so a registry entry
         added later cannot reintroduce the bypass silently.
         """
-        from kiro_crew.model_registry import (
+        from aj_crew.model_registry import (
             available_models,
             from_provider_id,
             lacks_acp_id,
@@ -109,7 +109,7 @@ class TestDoctorFlagsSpecPins:
         )
 
     def test_reports_an_unusable_pin_with_the_right_id(self, tmp_path):
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         agents_dir = tmp_path / "agents"
         self._spec(agents_dir, "code-reviewer", "claude-opus-4-8")
@@ -119,7 +119,7 @@ class TestDoctorFlagsSpecPins:
         assert ("code-reviewer", "claude-opus-4-8", "claude-opus-4.5") in problems
 
     def test_silent_when_every_pin_is_usable(self, tmp_path):
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         agents_dir = tmp_path / "agents"
         self._spec(agents_dir, "fine", "claude-opus-4.8")
@@ -133,7 +133,7 @@ class TestDoctorFlagsSpecPins:
         Auditing only the global scope reports a clean bill of health for the
         very spec a session in that project actually runs.
         """
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         global_dir = tmp_path / "agents"
         self._spec(global_dir, "fine", "claude-opus-4.8")
@@ -154,7 +154,7 @@ class TestDoctorFlagsSpecPins:
         ``name`` that is a non-empty string labels the row in the global and
         the project scope alike.
         """
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         global_dir = tmp_path / "agents"
         global_dir.mkdir()
@@ -177,7 +177,7 @@ class TestDoctorFlagsSpecPins:
 
     def test_unreadable_specs_report_unchecked_not_clean(self, tmp_path):
         """A diagnostic must not print green for a check it never performed."""
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         agents_dir = tmp_path / "agents"
         agents_dir.mkdir()
@@ -188,7 +188,7 @@ class TestDoctorFlagsSpecPins:
         assert result is None, "an unrunnable check must be distinguishable from a clean one"
 
     def test_claude_code_provider_does_not_audit_its_valid_wire_id(self, tmp_path):
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         agents_dir = tmp_path / "agents"
         self._spec(
@@ -203,7 +203,7 @@ class TestDoctorFlagsSpecPins:
         )
 
     def test_appledouble_sidecar_is_not_an_unreadable_spec(self, tmp_path):
-        from kiro_crew import cli_doctor
+        from aj_crew import cli_doctor
 
         agents_dir = tmp_path / "agents"
         agents_dir.mkdir()
@@ -212,8 +212,8 @@ class TestDoctorFlagsSpecPins:
         assert cli_doctor._agent_spec_model_problems(agents_dir=agents_dir) == []
 
     def test_unreadable_project_enumeration_reports_unchecked(self, tmp_path, monkeypatch):
-        from kiro_crew import cli_doctor
-        from kiro_crew.config.paths import project_agents_dir
+        from aj_crew import cli_doctor
+        from aj_crew.config.paths import project_agents_dir
 
         project = tmp_path / "project"
         target = project_agents_dir(project)
@@ -239,7 +239,7 @@ class TestDoctorFlagsSpecPins:
         A planted or packaged spec whose name carries cursor moves, a screen
         clear or an OSC sequence could otherwise rewrite or hide this report.
         """
-        from kiro_crew.cli_doctor import _format_model_pin_problem
+        from aj_crew.cli_doctor import _format_model_pin_problem
 
         hostile = "\x1b[2J\x1b[1Aevil\x1b]52;c;cGFzcw==\x07"
         lines = _format_model_pin_problem(hostile, "claude-opus-4-8", "claude-opus-4.5")
@@ -252,7 +252,7 @@ class TestDoctorFlagsSpecPins:
 
     def test_a_hostile_pin_and_correction_are_escaped_too(self):
         """All three fields come from spec contents, so none may pass through raw."""
-        from kiro_crew.cli_doctor import _format_model_pin_problem
+        from aj_crew.cli_doctor import _format_model_pin_problem
 
         rendered = "\n".join(_format_model_pin_problem("ok", "\x1b[2Jpin", "\x1b[2Jfix"))
 
@@ -262,28 +262,28 @@ class TestDoctorFlagsSpecPins:
 class TestNoRedundantConfigLoad:
     """The validation path must not re-read config to learn what it was told.
 
-    ``KiroCrewConfig.load()`` deep-copies the validated dict even on a cache hit
+    ``AjCrewConfig.load()`` deep-copies the validated dict even on a cache hit
     and reads/validates files on a miss. The agent handlers run it inside
     ``_get_config_lock()`` on the event loop, so an extra load there stalls the
     loop while the lock is held.
     """
 
     def _counting_load(self, monkeypatch):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        original = KiroCrewConfig.load
+        original = AjCrewConfig.load
         calls: list[int] = []
 
         def counting(*args, **kwargs):
             calls.append(1)
             return original(*args, **kwargs)
 
-        monkeypatch.setattr(KiroCrewConfig, "load", staticmethod(counting))
+        monkeypatch.setattr(AjCrewConfig, "load", staticmethod(counting))
         return calls
 
     @staticmethod
     def _canonical_key() -> str:
-        from kiro_crew import model_registry
+        from aj_crew import model_registry
 
         return next(
             e["model_name"]
@@ -292,7 +292,7 @@ class TestNoRedundantConfigLoad:
         )
 
     def test_supplied_backend_skips_the_load(self, monkeypatch):
-        from kiro_crew.dashboard.chat_handlers import _model_rejected_reason
+        from aj_crew.dashboard.chat_handlers import _model_rejected_reason
 
         key = self._canonical_key()
         calls = self._counting_load(monkeypatch)
@@ -301,7 +301,7 @@ class TestNoRedundantConfigLoad:
 
     def test_omitted_backend_still_resolves_it(self, monkeypatch):
         """A canonical key with no backend supplied resolves the configured one."""
-        from kiro_crew.dashboard.chat_handlers import _model_rejected_reason
+        from aj_crew.dashboard.chat_handlers import _model_rejected_reason
 
         key = self._canonical_key()
         calls = self._counting_load(monkeypatch)
@@ -310,14 +310,14 @@ class TestNoRedundantConfigLoad:
 
     def test_a_non_canonical_id_never_loads(self, monkeypatch):
         """Only a canonical key's answer depends on the harness, so only it pays a read."""
-        from kiro_crew.dashboard.chat_handlers import _model_rejected_reason
+        from aj_crew.dashboard.chat_handlers import _model_rejected_reason
 
         calls = self._counting_load(monkeypatch)
         assert _model_rejected_reason("claude-opus-4-8") is None
         assert calls == []
 
     def test_validator_forwards_the_backend(self, monkeypatch):
-        from kiro_crew.dashboard.handlers.core import _validate_role_model
+        from aj_crew.dashboard.handlers.core import _validate_role_model
 
         key = self._canonical_key()
         calls = self._counting_load(monkeypatch)
@@ -328,10 +328,10 @@ class TestNoRedundantConfigLoad:
     def test_a_namespace_with_no_id_for_the_key_still_refuses_it(self):
         """A provider namespace passes a canonical key only when the registry gives
         it an id there -- the translation ``_wire_model_id`` would send."""
-        from kiro_crew import model_registry
-        from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX
-        from kiro_crew.agent_sdk.capabilities import capabilities_for
-        from kiro_crew.dashboard.chat_handlers import _model_rejected_reason
+        from aj_crew import model_registry
+        from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX
+        from aj_crew.agent_sdk.capabilities import capabilities_for
+        from aj_crew.dashboard.chat_handlers import _model_rejected_reason
 
         key = self._canonical_key()
         codex = capabilities_for(ACP_BACKEND_CODEX).model_id_namespace
@@ -348,7 +348,7 @@ class TestNoRedundantConfigLoad:
 
     def test_live_entitlements_preserve_the_registry_correction(self, monkeypatch):
         """A live advertised set must not replace the actionable spelling hint."""
-        from kiro_crew.dashboard.handlers import agents, core
+        from aj_crew.dashboard.handlers import agents, core
 
         monkeypatch.setattr(core, "_active_advertised_ids", lambda request: ["claude-opus-4.8"])
 
@@ -364,7 +364,7 @@ class TestNoRedundantConfigLoad:
         [("claude-opus-5-5", "claude-opus-5.5"), ("claude-sonnet-5-5", "claude-sonnet-5.5")],
     )
     def test_correction_lists_the_id_it_maps_to(self, spelling, target):
-        from kiro_crew.dashboard.handlers import agents
+        from aj_crew.dashboard.handlers import agents
 
         reason = agents._model_pin_rejected(spelling, SimpleNamespace(app={}), provider="acp")
 
@@ -372,7 +372,7 @@ class TestNoRedundantConfigLoad:
         assert target in reason.split("pick one of: ", 1)[1].split(", ")
 
     def test_claude_code_provider_keeps_its_wire_id(self, monkeypatch):
-        from kiro_crew.dashboard.handlers import agents, core
+        from aj_crew.dashboard.handlers import agents, core
 
         monkeypatch.setattr(core, "_active_advertised_ids", lambda request: ["claude-opus-4-8"])
 
@@ -386,14 +386,14 @@ class TestNoRedundantConfigLoad:
 
 
 def _crud_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import (
-        api_kirocrew_agent_update,
-        api_kirocrew_agents_create,
+    from aj_crew.dashboard.handlers import (
+        api_ajcrew_agent_update,
+        api_ajcrew_agents_create,
     )
 
     app = web.Application()
-    app.router.add_post("/api/agents", api_kirocrew_agents_create)
-    app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
+    app.router.add_post("/api/agents", api_ajcrew_agents_create)
+    app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
     return app
 
 
@@ -412,11 +412,11 @@ def seeded_agent():
     The config home is already redirected per test by the rootdir conftest, so
     this touches no real install.
     """
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
 
-    cfg = KiroCrewConfig.load()
-    cfg.agents["existing"] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew", workspace="default", memory_store="default"
+    cfg = AjCrewConfig.load()
+    cfg.agents["existing"] = AjCrewAgentConfig(
+        kiro_agent="ajcrew", workspace="default", memory_store="default"
     )
     cfg.save()
     return "existing"
@@ -442,9 +442,9 @@ class TestSavePathRefusesAnUnusablePin:
         status: int,
     ) -> None:
         """Another live harness must not decide a regular agent's entitlement."""
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agent.acp_backend = target_backend
         cfg.save()
         app = _crud_app()
@@ -458,7 +458,7 @@ class TestSavePathRefusesAnUnusablePin:
         )
         body = {"model": model}
         if method == "post":
-            body.update({"name": "target", "kiro_agent": "kirocrew"})
+            body.update({"name": "target", "kiro_agent": "ajcrew"})
 
         async with TestClient(TestServer(app)) as client:
             response = await getattr(client, method)(
@@ -475,9 +475,9 @@ class TestSavePathRefusesAnUnusablePin:
         self, seeded_agent, method: str
     ) -> None:
         """No live catalog at all: entitlement is unknown, not denied."""
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agent.acp_backend = "codex"
         cfg.agent.member_acp_backend = "kas"
         cfg.save()
@@ -485,7 +485,7 @@ class TestSavePathRefusesAnUnusablePin:
         app["state"] = SimpleNamespace(sessions=SimpleNamespace(active_providers=lambda: []))
         body = {"model": "regular-model"}
         if method == "post":
-            body.update({"name": "regular", "kiro_agent": "kirocrew"})
+            body.update({"name": "regular", "kiro_agent": "ajcrew"})
 
         async with TestClient(TestServer(app)) as client:
             response = await getattr(client, method)(
@@ -506,9 +506,9 @@ class TestSavePathRefusesAnUnusablePin:
         With no shared model namespace, validation uses the member backend's catalog:
         it admits what it advertises and rejects the rest.
         """
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agent.acp_backend = "codex"
         cfg.agent.member_acp_backend = "kas"
         cfg.save()
@@ -520,7 +520,7 @@ class TestSavePathRefusesAnUnusablePin:
         )
         body = {"model": model}
         if method == "post":
-            body.update({"name": "member", "kiro_agent": "kirocrew"})
+            body.update({"name": "member", "kiro_agent": "ajcrew"})
 
         async with TestClient(TestServer(app)) as client:
             response = await getattr(client, method)(
@@ -541,9 +541,9 @@ class TestSavePathRefusesAnUnusablePin:
         The scope is kas and the only live provider is codex, so entitlement is UNKNOWN
         (fail-open) rather than a false rejection by codex's catalog.
         """
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agent.acp_backend = "codex"
         cfg.agent.member_acp_backend = "kas"
         cfg.save()
@@ -555,7 +555,7 @@ class TestSavePathRefusesAnUnusablePin:
         )
         body = {"model": "kas-pin-the-codex-catalog-cannot-judge"}
         if method == "post":
-            body.update({"name": "divergent", "kiro_agent": "kirocrew"})
+            body.update({"name": "divergent", "kiro_agent": "ajcrew"})
 
         async with TestClient(TestServer(app)) as client:
             response = await getattr(client, method)(
@@ -567,14 +567,14 @@ class TestSavePathRefusesAnUnusablePin:
 
     @pytest.mark.asyncio
     async def test_create_refuses_and_carries_an_error_code(self, seeded_agent):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         async with TestClient(TestServer(_crud_app())) as client:
             resp = await client.post(
                 "/api/agents",
                 json={
                     "name": "reviewer",
-                    "kiro_agent": "kirocrew",
+                    "kiro_agent": "ajcrew",
                     "model": "claude-opus-4-8",
                 },
             )
@@ -587,11 +587,11 @@ class TestSavePathRefusesAnUnusablePin:
             assert "confirm that is the model you want" in body["error"]
             assert "claude-opus-4.8" in body["error"]
 
-        assert "reviewer" not in KiroCrewConfig.load().agents
+        assert "reviewer" not in AjCrewConfig.load().agents
 
     @pytest.mark.asyncio
     async def test_update_refuses_and_leaves_the_stored_value_alone(self, seeded_agent):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         async with TestClient(TestServer(_crud_app())) as client:
             resp = await client.put(
@@ -600,16 +600,16 @@ class TestSavePathRefusesAnUnusablePin:
             assert resp.status == 400
             assert (await resp.json())["code"] == "invalid_model"
 
-        assert KiroCrewConfig.load().agents[seeded_agent].model != "claude-opus-4-8"
+        assert AjCrewConfig.load().agents[seeded_agent].model != "claude-opus-4-8"
 
     @pytest.mark.asyncio
     async def test_update_refuses_a_pin_kiro_has_no_id_for_without_a_catalog(
         self, seeded_agent, monkeypatch
     ):
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         pin = add_claude_only_row(monkeypatch)
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agent.acp_backend = ACP_BACKEND_KIRO
         cfg.save()
         before = cfg.agents[seeded_agent].model
@@ -621,7 +621,7 @@ class TestSavePathRefusesAnUnusablePin:
             assert resp.status == 400
             assert (await resp.json())["code"] == "invalid_model"
 
-        assert KiroCrewConfig.load().agents[seeded_agent].model == before
+        assert AjCrewConfig.load().agents[seeded_agent].model == before
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("method", ["post", "put"])
@@ -629,9 +629,9 @@ class TestSavePathRefusesAnUnusablePin:
         self, seeded_agent, method: str
     ) -> None:
         """kiro-cli serves claude-fable-5.1, so no live catalog is no reason to refuse it."""
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agent.acp_backend = ACP_BACKEND_KIRO
         cfg.save()
         app = _crud_app()
@@ -639,7 +639,7 @@ class TestSavePathRefusesAnUnusablePin:
         name = "fable" if method == "post" else seeded_agent
         body = {"model": "claude-fable-5.1"}
         if method == "post":
-            body.update({"name": name, "kiro_agent": "kirocrew"})
+            body.update({"name": name, "kiro_agent": "ajcrew"})
 
         async with TestClient(TestServer(app)) as client:
             response = await getattr(client, method)(
@@ -648,7 +648,7 @@ class TestSavePathRefusesAnUnusablePin:
             )
             assert response.status == 200, await response.text()
 
-        assert KiroCrewConfig.load().agents[name].model == "claude-fable-5.1"
+        assert AjCrewConfig.load().agents[name].model == "claude-fable-5.1"
 
     @pytest.mark.asyncio
     async def test_a_usable_pin_is_accepted(self, seeded_agent):
@@ -657,7 +657,7 @@ class TestSavePathRefusesAnUnusablePin:
                 "/api/agents",
                 json={
                     "name": "good",
-                    "kiro_agent": "kirocrew",
+                    "kiro_agent": "ajcrew",
                     "model": "claude-opus-4.8",
                 },
             )
@@ -668,7 +668,7 @@ class TestSavePathRefusesAnUnusablePin:
         async with TestClient(TestServer(_crud_app())) as client:
             resp = await client.post(
                 "/api/agents",
-                json={"name": "inherits", "kiro_agent": "kirocrew", "model": "auto"},
+                json={"name": "inherits", "kiro_agent": "ajcrew", "model": "auto"},
             )
             assert resp.status == 200
 
@@ -697,7 +697,7 @@ class TestSavePathRefusesAnUnusablePin:
         )
         body = {"model": "healed-model"}
         if method == "post":
-            body.update({"name": "healed", "kiro_agent": "kirocrew"})
+            body.update({"name": "healed", "kiro_agent": "ajcrew"})
 
         async with TestClient(TestServer(app)) as client:
             response = await getattr(client, method)(
@@ -713,9 +713,9 @@ class TestSavePathRefusesAnUnusablePin:
     async def test_an_in_flight_revalidation_refuses_the_save(
         self, seeded_agent, method: str
     ) -> None:
-        from kiro_crew.agent_sdk.drivers.acp import EntitlementRevalidating
-        from kiro_crew.config.loader import KiroCrewConfig
-        from kiro_crew.dashboard.handlers.core import _ROLE_PIN_REVALIDATING
+        from aj_crew.agent_sdk.drivers.acp import EntitlementRevalidating
+        from aj_crew.config.loader import AjCrewConfig
+        from aj_crew.dashboard.handlers.core import _ROLE_PIN_REVALIDATING
 
         async def _pending(_catalog_ids: list[str]) -> list[dict[str, str]]:
             raise EntitlementRevalidating
@@ -731,7 +731,7 @@ class TestSavePathRefusesAnUnusablePin:
         )
         body = {"model": "pending-model"}
         if method == "post":
-            body.update({"name": "pending", "kiro_agent": "kirocrew"})
+            body.update({"name": "pending", "kiro_agent": "ajcrew"})
 
         async with TestClient(TestServer(app)) as client:
             response = await getattr(client, method)(
@@ -742,14 +742,14 @@ class TestSavePathRefusesAnUnusablePin:
             payload = await response.json()
             assert payload == {"error": _ROLE_PIN_REVALIDATING, "code": "invalid_model"}
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert "pending" not in cfg.agents
         assert cfg.agents[seeded_agent].model != "pending-model"
 
 
 class TestNoCatalogRefusesAPinKiroHasNoIdFor:
     def test_names_the_spelling_and_suggests_no_other_id(self, monkeypatch):
-        from kiro_crew.dashboard.handlers.core import _validate_role_model
+        from aj_crew.dashboard.handlers.core import _validate_role_model
 
         pin = add_claude_only_row(monkeypatch)
         reason = _validate_role_model(pin, SimpleNamespace(app={}), backend="")
@@ -758,7 +758,7 @@ class TestNoCatalogRefusesAPinKiroHasNoIdFor:
         assert "claude-" not in reason.replace(f"'{pin}'", "")
 
     def test_a_live_kiro_catalog_that_serves_it_is_asked_first(self, monkeypatch):
-        from kiro_crew.dashboard.handlers.core import _validate_role_model
+        from aj_crew.dashboard.handlers.core import _validate_role_model
 
         pin = add_claude_only_row(monkeypatch)
         provider = _catalog_provider(ACP_BACKEND_KIRO, pin)
@@ -773,8 +773,8 @@ class TestNoCatalogRefusesAPinKiroHasNoIdFor:
         assert _validate_role_model(pin, request, backend=ACP_BACKEND_KIRO) is None
 
     def test_the_claude_backend_serves_it_without_a_catalog(self, monkeypatch):
-        from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE
-        from kiro_crew.dashboard.handlers.core import _validate_role_model
+        from aj_crew.acp_backends import ACP_BACKEND_CLAUDE
+        from aj_crew.dashboard.handlers.core import _validate_role_model
 
         pin = add_claude_only_row(monkeypatch)
         reason = _validate_role_model(pin, SimpleNamespace(app={}), backend=ACP_BACKEND_CLAUDE)
@@ -784,7 +784,7 @@ class TestNoCatalogRefusesAPinKiroHasNoIdFor:
     @pytest.mark.parametrize("backend", [ACP_BACKEND_KIRO, ACP_BACKEND_KAS])
     def test_fable_5_1_is_not_refused_without_a_catalog(self, backend):
         # kiro-cli advertises claude-fable-5.1, so the registry row carries it as its acp id.
-        from kiro_crew.dashboard.handlers.core import _validate_role_model
+        from aj_crew.dashboard.handlers.core import _validate_role_model
 
         reason = _validate_role_model("claude-fable-5.1", SimpleNamespace(app={}), backend=backend)
 

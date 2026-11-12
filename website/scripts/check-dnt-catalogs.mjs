@@ -38,7 +38,7 @@
  *     `npm i`, `python -m`. Prose about denied commands is full of them.
  *   - **A term that is absent.** German genitive inflects (`Kiros eigenem Standard`),
  *     and a language that restructures the sentence may drop the addressee entirely
- *     (`Tell Kiro about you` -> `介绍一下你自己`). Both are correct translations, and a
+ *     (`Tell Aj about you` -> `介绍一下你自己`). Both are correct translations, and a
  *     presence check flags both — I wrote one first and it failed on main's own
  *     catalogs for exactly these two strings.
  *

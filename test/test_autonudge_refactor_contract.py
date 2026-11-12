@@ -1,11 +1,11 @@
-"""What the ``kiro_crew.autonudge`` surface and its store bytes must keep.
+"""What the ``aj_crew.autonudge`` surface and its store bytes must keep.
 
 The behaviour pins below were captured from the module before its responsibilities moved
-into ``kiro_crew/autonudge_service/`` and pass on both sides of that move; the composition
+into ``aj_crew/autonudge_service/`` and pass on both sides of that move; the composition
 and layering pins at the end describe the split itself:
 
 * every name the module defined, and every imported name callers and tests read off it,
-  still resolves on ``kiro_crew.autonudge``;
+  still resolves on ``aj_crew.autonudge``;
 * every ``AutoNudgeService`` and maintenance-view member keeps its kind (method,
   static, class, coroutine, async context manager) and its signature;
 * ``NudgeLoop`` keeps its fields, their order and their defaults;
@@ -37,15 +37,15 @@ from types import ModuleType
 
 import pytest
 
-import kiro_crew.autonudge as autonudge
-from kiro_crew.autonudge import AutoNudgeService, NudgeLoop, _AutoNudgeMaintenanceView
-from kiro_crew.monitoring.models import (
+import aj_crew.autonudge as autonudge
+from aj_crew.autonudge import AutoNudgeService, NudgeLoop, _AutoNudgeMaintenanceView
+from aj_crew.monitoring.models import (
     MonitorBudgets,
     MonitorCreationSurface,
     monitor_state_to_dict,
 )
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.testing.wait import await_until
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.testing.wait import await_until
 
 #: Every function, class and constant the pre-split ``autonudge.py`` defined.
 _BASE_DEFINED = frozenset(
@@ -144,7 +144,7 @@ _BASE_DEFINED = frozenset(
 
 #: The names it imported that callers and tests read off it (``autonudge.irq.poll``,
 #: ``autonudge.time.time``, ``autonudge.MAX_BANNER_CHARS`` ...), found by scanning the
-#: tree for every ``kiro_crew.autonudge.<name>`` access.
+#: tree for every ``aj_crew.autonudge.<name>`` access.
 _BASE_REACHED_IMPORTS = frozenset(
     {
         "MAX_BANNER_CHARS",
@@ -614,7 +614,7 @@ class TestSurface:
 
     @pytest.mark.parametrize("name", sorted(_MOVED_TO_STORE))
     def test_a_store_member_moved_with_its_kind_and_signature(self, name: str) -> None:
-        from kiro_crew.autonudge_service.store import LoopStore
+        from aj_crew.autonudge_service.store import LoopStore
 
         assert not hasattr(AutoNudgeService, name)
         assert _signature_row(LoopStore, _MOVED_TO_STORE[name]) == _BASE_SERVICE_MEMBERS[name]
@@ -623,7 +623,7 @@ class TestSurface:
     def test_a_service_member_s_annotations_still_resolve(self, name: str) -> None:
         """Every annotation resolved on the pre-split class, so ``typing.get_type_hints``
         still resolves it wherever the member lives now."""
-        from kiro_crew.autonudge_service.store import LoopStore
+        from aj_crew.autonudge_service.store import LoopStore
 
         owner, member = (
             (LoopStore, _MOVED_TO_STORE[name])
@@ -662,21 +662,21 @@ class TestSurface:
         """``mcp_tools/control_parts/monitor.py`` and ``workflows/service.py`` import the
         facade at the top, so everything it pulls in is paid by every MCP server process."""
         code = (
-            "import sys, kiro_crew.autonudge\n"
-            "print('\\n'.join(sorted(m for m in sys.modules if m.startswith('kiro_crew'))))"
+            "import sys, aj_crew.autonudge\n"
+            "print('\\n'.join(sorted(m for m in sys.modules if m.startswith('aj_crew'))))"
         )
         loaded = subprocess.run(
             [sys.executable, "-c", code], capture_output=True, check=True, **UTF8_TEXT
         ).stdout.split()
         for lazy in (
-            "kiro_crew.autonudge_judge",
-            "kiro_crew.autonudge_authz",
-            "kiro_crew.autonudge_selfarm",
-            "kiro_crew.autonudge_provider_trust",
-            "kiro_crew.decisions",
-            "kiro_crew.config.live",
-            "kiro_crew.dashboard.state",
-            "kiro_crew.messaging",
+            "aj_crew.autonudge_judge",
+            "aj_crew.autonudge_authz",
+            "aj_crew.autonudge_selfarm",
+            "aj_crew.autonudge_provider_trust",
+            "aj_crew.decisions",
+            "aj_crew.config.live",
+            "aj_crew.dashboard.state",
+            "aj_crew.messaging",
         ):
             assert lazy not in loaded, f"importing the facade loaded {lazy}"
 
@@ -757,7 +757,7 @@ async def _write_golden_scenario(base: Path) -> AutoNudgeService:
 class TestStoreBytes:
     @pytest.mark.asyncio
     async def test_the_store_and_sidecar_bytes_are_unchanged(self, tmp_path, monkeypatch) -> None:
-        monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+        monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
         monkeypatch.setattr(time, "time", lambda: _FIXED_NOW)
         svc = await _write_golden_scenario(tmp_path)
         try:
@@ -787,7 +787,7 @@ def _legacy(loop_id: str = "loop0001", **changes: object) -> NudgeLoop:
 
 
 class TestModuleSeamsReachTheCodeThatReadsThem:
-    """A patch on ``kiro_crew.autonudge.<name>`` reaches each place that reads the name."""
+    """A patch on ``aj_crew.autonudge.<name>`` reaches each place that reads the name."""
 
     def test_the_overdue_beat(self, tmp_path, monkeypatch) -> None:
         svc = AutoNudgeService(base_dir=tmp_path)
@@ -1067,7 +1067,7 @@ class TestInstanceSeamsReachEveryInternalCaller:
     async def test_start_goes_through_load_and_update_through_the_unserialized_body(
         self, tmp_path, monkeypatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+        monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
         loaded: list[str] = []
         real_load = AutoNudgeService._load
 
@@ -1244,7 +1244,7 @@ _OWNER_ORDER = (
     "store_loader",
 )
 
-#: The names owner code reads through ``kiro_crew.autonudge`` at call time: the seven
+#: The names owner code reads through ``aj_crew.autonudge`` at call time: the seven
 #: tests patch there, and the four that stay defined there (the sentinel repair, the
 #: singleton, and the two lock registries the boot smoke tracks by name).
 _SEAMS = frozenset(
@@ -1269,7 +1269,7 @@ _OWNER_DIR = Path(autonudge.__file__).resolve().parent / "autonudge_service"
 def _owner_modules() -> list:
     import importlib
 
-    return [importlib.import_module(f"kiro_crew.autonudge_service.{name}") for name in _OWNER_ORDER]
+    return [importlib.import_module(f"aj_crew.autonudge_service.{name}") for name in _OWNER_ORDER]
 
 
 def _owner_trees() -> dict[str, ast.Module]:
@@ -1280,13 +1280,13 @@ def _owner_trees() -> dict[str, ast.Module]:
 
 
 def _function_local_facade_imports(tree: ast.Module) -> list[tuple[ast.AST, str]]:
-    """Every ``from kiro_crew import autonudge as <alias>`` inside a function."""
+    """Every ``from aj_crew import autonudge as <alias>`` inside a function."""
     found = []
     for node in ast.walk(tree):
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
         for inner in ast.walk(node):
-            if isinstance(inner, ast.ImportFrom) and inner.module == "kiro_crew":
+            if isinstance(inner, ast.ImportFrom) and inner.module == "aj_crew":
                 for alias in inner.names:
                     if alias.name == "autonudge":
                         found.append((node, alias.asname or "autonudge"))
@@ -1321,7 +1321,7 @@ class TestTheComposition:
     def test_a_bound_member_is_its_owner_s_function(self, name: str) -> None:
         import importlib
 
-        owner: object = importlib.import_module(f"kiro_crew.autonudge_service.{_BINDINGS[name]}")
+        owner: object = importlib.import_module(f"aj_crew.autonudge_service.{_BINDINGS[name]}")
         for attribute in _BOUND_AS.get(name, name).split("."):
             owner = getattr(owner, attribute)
         raw = inspect.getattr_static(AutoNudgeService, name)
@@ -1348,7 +1348,7 @@ class TestTheComposition:
         import importlib
 
         for name, tree in _owner_trees().items():
-            module = importlib.import_module(f"kiro_crew.autonudge_service.{name}")
+            module = importlib.import_module(f"aj_crew.autonudge_service.{name}")
             for node in tree.body:
                 if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     continue
@@ -1363,14 +1363,14 @@ class TestTheComposition:
                     assert first[0].arg not in function.__annotations__, node.name
 
     def test_the_facade_is_a_plain_module(self) -> None:
-        assert type(sys.modules["kiro_crew.autonudge"]) is ModuleType
+        assert type(sys.modules["aj_crew.autonudge"]) is ModuleType
         assert "__getattr__" not in vars(autonudge)
 
     def test_a_star_import_still_exposes_every_public_name(self, tmp_path: Path) -> None:
         import importlib.util
 
         probe = tmp_path / "autonudge_star_probe.py"
-        probe.write_text("from kiro_crew.autonudge import *  # noqa: F401,F403\n", encoding="utf-8")
+        probe.write_text("from aj_crew.autonudge import *  # noqa: F401,F403\n", encoding="utf-8")
         spec = importlib.util.spec_from_file_location("autonudge_star_probe", probe)
         assert spec and spec.loader
         module = importlib.util.module_from_spec(spec)
@@ -1379,11 +1379,11 @@ class TestTheComposition:
         assert [name for name in public if not hasattr(module, name)] == []
 
     def test_every_owner_logs_on_the_service_channel(self) -> None:
-        """Operators filter, and tests ``caplog``, on ``kiro_crew.autonudge``."""
+        """Operators filter, and tests ``caplog``, on ``aj_crew.autonudge``."""
         for module in _owner_modules():
             logger = vars(module).get("logger")
             if logger is not None:
-                assert logger is logging.getLogger("kiro_crew.autonudge"), module.__name__
+                assert logger is logging.getLogger("aj_crew.autonudge"), module.__name__
 
     def test_no_owner_holds_a_mutable_module_global(self) -> None:
         """Runtime state lives on the service or its store; a module-level container
@@ -1395,7 +1395,7 @@ class TestTheComposition:
                 assert not isinstance(value, (dict, list, set)), f"{module.__name__}.{name}"
 
     def test_the_store_state_lives_on_the_composed_store(self, tmp_path: Path) -> None:
-        from kiro_crew.autonudge_service.store import LoopStore
+        from aj_crew.autonudge_service.store import LoopStore
 
         svc = AutoNudgeService(base_dir=tmp_path)
         assert isinstance(svc._store, LoopStore)
@@ -1422,24 +1422,23 @@ class TestTheComposition:
 class TestTheOwnersReadTheSeamsThroughTheFacade:
     def test_no_owner_imports_the_facade_or_a_later_owner_at_import_time(self) -> None:
         for position, (name, tree) in enumerate(_owner_trees().items()):
-            later = {f"kiro_crew.autonudge_service.{o}" for o in _OWNER_ORDER[position:]}
+            later = {f"aj_crew.autonudge_service.{o}" for o in _OWNER_ORDER[position:]}
             for node in tree.body:
                 if isinstance(node, ast.ImportFrom):
-                    assert node.module != "kiro_crew.autonudge", name
+                    assert node.module != "aj_crew.autonudge", name
                     assert not (
-                        node.module == "kiro_crew"
-                        and any(a.name == "autonudge" for a in node.names)
+                        node.module == "aj_crew" and any(a.name == "autonudge" for a in node.names)
                     ), name
                     assert node.module not in later, f"{name} imports {node.module}"
                 if isinstance(node, ast.Import):
-                    assert all(a.name != "kiro_crew.autonudge" for a in node.names), name
+                    assert all(a.name != "aj_crew.autonudge" for a in node.names), name
 
     def test_each_owner_imports_alone_without_the_facade(self) -> None:
         code = (
             "import importlib, sys\n"
             f"for name in {list(_OWNER_ORDER)!r}:\n"
-            "    importlib.import_module('kiro_crew.autonudge_service.' + name)\n"
-            "print('kiro_crew.autonudge' in sys.modules)"
+            "    importlib.import_module('aj_crew.autonudge_service.' + name)\n"
+            "print('aj_crew.autonudge' in sys.modules)"
         )
         out = subprocess.run(
             [sys.executable, "-c", code], capture_output=True, check=True, **UTF8_TEXT
@@ -1473,7 +1472,7 @@ class TestTheOwnersReadTheSeamsThroughTheFacade:
                 assert not bare, f"{name}:{node.name} reads {bare} without the facade"
 
     def test_every_facade_patch_in_the_tree_targets_a_name_the_moved_code_can_see(self) -> None:
-        """A test that patches ``kiro_crew.autonudge.<name>`` for a name owner code reads
+        """A test that patches ``aj_crew.autonudge.<name>`` for a name owner code reads
         as its OWN global reaches that owner only if the name is a declared seam, so the
         scan of every test tree must find no other such target -- except the patches
         listed in ``_FACADE_PATCHES_FOR_CONSUMERS``, which aim at a caller that imports
@@ -1489,7 +1488,7 @@ class TestTheOwnersReadTheSeamsThroughTheFacade:
         moved = {name for name in _BASE_DEFINED if any(name in vars(m) for m in _owner_modules())}
         found = set()
         for path in list((root / "test").rglob("*.py")) + list(
-            (root / "src/kiro_crew").rglob("tests/**/*.py")
+            (root / "src/aj_crew").rglob("tests/**/*.py")
         ):
             text = path.read_text(encoding="utf-8", errors="replace")
             if "autonudge" not in text:
@@ -1501,7 +1500,7 @@ class TestTheOwnersReadTheSeamsThroughTheFacade:
 
 
 #: ``(test file, name)`` facade patches aimed at a consumer outside the service. Each one
-#: was read at its call site: the consumer imports the name from ``kiro_crew.autonudge``
+#: was read at its call site: the consumer imports the name from ``aj_crew.autonudge``
 #: inside the function under test, so the patch reaches it, and the service is a stub there.
 _FACADE_PATCHES_FOR_CONSUMERS = {
     # dashboard/session_directive_apply_monitor.py imports is_structured_monitor_loop per call;
@@ -1514,18 +1513,18 @@ _FACADE_PATCHES_FOR_CONSUMERS = {
 
 
 def _facade_patch_targets(source: str) -> set[str]:
-    """Names a test patches on ``kiro_crew.autonudge`` (setattr, mock.patch, patch.object)."""
+    """Names a test patches on ``aj_crew.autonudge`` (setattr, mock.patch, patch.object)."""
     try:
         tree = ast.parse(source)
     except SyntaxError:
         return set()
-    aliases = {"kiro_crew.autonudge"}
+    aliases = {"aj_crew.autonudge"}
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                if alias.name == "kiro_crew.autonudge":
+                if alias.name == "aj_crew.autonudge":
                     aliases.add(alias.asname or alias.name)
-        elif isinstance(node, ast.ImportFrom) and node.module == "kiro_crew":
+        elif isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
             for alias in node.names:
                 if alias.name == "autonudge":
                     aliases.add(alias.asname or "autonudge")
@@ -1540,7 +1539,7 @@ def _facade_patch_targets(source: str) -> set[str]:
         args = node.args
         if args and isinstance(args[0], ast.Constant) and isinstance(args[0].value, str):
             text = args[0].value
-            if text.startswith("kiro_crew.autonudge.") and text.count(".") >= 2:
+            if text.startswith("aj_crew.autonudge.") and text.count(".") >= 2:
                 found.add(text.split(".")[2])
         elif (
             len(args) >= 2 and isinstance(args[1], ast.Constant) and isinstance(args[1].value, str)
@@ -1553,14 +1552,14 @@ def _facade_patch_targets(source: str) -> set[str]:
 
 def test_the_patch_target_scan_answers_both_ways() -> None:
     sample = (
-        "import kiro_crew.autonudge as an\n"
-        "from kiro_crew import autonudge as _an\n"
+        "import aj_crew.autonudge as an\n"
+        "from aj_crew import autonudge as _an\n"
         "def t(monkeypatch):\n"
         "    monkeypatch.setattr(an, '_MAX_QUIET_STREAK', 3)\n"
-        "    monkeypatch.setattr('kiro_crew.autonudge._OVERDUE_REARM_SECS', 1)\n"
+        "    monkeypatch.setattr('aj_crew.autonudge._OVERDUE_REARM_SECS', 1)\n"
         "    mock.patch.object(_an, 'infer_subject')\n"
         "    monkeypatch.setattr(other, '_MAX_IDLE_SECS', 1)\n"
-        "    monkeypatch.setattr('kiro_crew.autonudge_judge.owner_acted', f)\n"
+        "    monkeypatch.setattr('aj_crew.autonudge_judge.owner_acted', f)\n"
     )
     assert _facade_patch_targets(sample) == {
         "_MAX_QUIET_STREAK",

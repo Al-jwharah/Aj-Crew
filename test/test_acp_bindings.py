@@ -1,6 +1,6 @@
 """``AcpProvider`` keeps every member it had, and each is bound from the module that owns it.
 
-The class's behaviour lives in the ``kiro_crew.providers.acp_*`` owner modules: each moved
+The class's behaviour lives in the ``aj_crew.providers.acp_*`` owner modules: each moved
 member's body is a module-level function there whose first parameter is ``self``, and the
 class binds it by name (``m = _owner.m``, or ``staticmethod(_owner.f)``). The instance
 state stays on the instance, so tests, ``AcpProvider.__new__`` builds and
@@ -15,7 +15,7 @@ binding contract:
 * no owner imports the facade at run time, and an owner imports only owners listed before it;
 * each owner's docstring names the instance fields its members write and read;
 * owners log under the facade's logger;
-* a write through ``kiro_crew.providers.acp`` reaches every owner that reads the name, for
+* a write through ``aj_crew.providers.acp`` reaches every owner that reads the name, for
   every name the test trees patch there (the facade's mirror, ``_facade_mirror``), and the
   facade reads no name it serves as a bare global.
 """
@@ -35,8 +35,8 @@ from typing import Any
 import pytest
 from facade_mirror_scan import needs_syntax_tree, patched_names, text_patched_names
 
-from kiro_crew.providers import acp as acp_provider
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.providers import acp as acp_provider
+from aj_crew.providers.acp import AcpProvider
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_acp_bindings")
 
@@ -200,7 +200,7 @@ _MEMBERS: dict[str, tuple[str, object, str, str]] = {
 #: declared in the class so type checkers know them. An annotation creates no attribute.
 _DECLARED = frozenset({"_picker_probe_at"})
 
-_PACKAGE = "kiro_crew.providers"
+_PACKAGE = "aj_crew.providers"
 _FACADE = acp_provider.__name__
 
 
@@ -318,7 +318,7 @@ def test_no_bound_function_needs_its_class_body(owner: str) -> None:
 
 
 def _runtime_facade_imports(tree: ast.Module) -> list[int]:
-    """Lines that import the facade (``kiro_crew.providers.acp``) outside a
+    """Lines that import the facade (``aj_crew.providers.acp``) outside a
     ``TYPE_CHECKING`` block."""
     guarded: set[int] = set()
     for node in ast.walk(tree):
@@ -342,11 +342,11 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
 def test_the_facade_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n    from kiro_crew.providers.acp import AcpProvider\n"
-        "def f():\n    from kiro_crew.providers.acp import x\n"
-        "import kiro_crew.providers.acp\n"
-        "from kiro_crew.providers import acp\n"
-        "from kiro_crew.providers import acp_turns\n"
+        "if TYPE_CHECKING:\n    from aj_crew.providers.acp import AcpProvider\n"
+        "def f():\n    from aj_crew.providers.acp import x\n"
+        "import aj_crew.providers.acp\n"
+        "from aj_crew.providers import acp\n"
+        "from aj_crew.providers import acp_turns\n"
     )
     assert sorted(_runtime_facade_imports(tree)) == [5, 6, 7]
 
@@ -419,7 +419,7 @@ def test_each_owner_names_the_fields_it_writes_and_reads(owner: str) -> None:
 @pytest.mark.parametrize("owner", acp_provider._ACP_PROVIDER_OWNERS)
 def test_owners_log_under_the_provider_logger(owner: str) -> None:
     assert vars(sys.modules[owner])["logger"] is acp_provider.logger
-    assert acp_provider.logger.name == "kiro_crew.providers.acp"
+    assert acp_provider.logger.name == "aj_crew.providers.acp"
 
 
 def test_the_bound_function_scans_include_every_static_method() -> None:
@@ -455,14 +455,14 @@ def _owner_imports(tree: ast.Module) -> set[str]:
 
 def test_the_owner_import_scan_can_fail() -> None:
     tree = ast.parse(
-        "from kiro_crew.providers.acp_turns import X\n"
-        "from kiro_crew.providers import acp_lifecycle as _lc, base\n"
-        "import kiro_crew.providers.acp_model_effort\n"
+        "from aj_crew.providers.acp_turns import X\n"
+        "from aj_crew.providers import acp_lifecycle as _lc, base\n"
+        "import aj_crew.providers.acp_model_effort\n"
     )
     assert _owner_imports(tree) == {
-        "kiro_crew.providers.acp_turns",
-        "kiro_crew.providers.acp_lifecycle",
-        "kiro_crew.providers.acp_model_effort",
+        "aj_crew.providers.acp_turns",
+        "aj_crew.providers.acp_lifecycle",
+        "aj_crew.providers.acp_model_effort",
     }
 
 
@@ -486,13 +486,13 @@ _SPELLINGS = {_FACADE: _FACADE}
 
 
 def _patched_through_the_facade() -> set[str]:
-    """Every name a test file patches through ``kiro_crew.providers.acp``: the regular
+    """Every name a test file patches through ``aj_crew.providers.acp``: the regular
     expressions read every file, and the syntax tree the files holding a patch shape the
     expressions cannot read."""
     names: set[str] = set()
     for path in sorted(_TEST_ROOT.rglob("*.py")):
         text = path.read_text(encoding="utf-8", errors="replace")
-        if "kiro_crew.providers" not in text:
+        if "aj_crew.providers" not in text:
             continue
         names |= text_patched_names(text, _SPELLINGS).get(_FACADE, set())
         if not needs_syntax_tree(text, _SPELLINGS):
@@ -539,7 +539,7 @@ def test_every_name_patched_through_the_facade_reaches_the_owners_reading_it() -
 
 def test_the_reach_scan_can_fail() -> None:
     index = acp_provider._MIRROR
-    owner = "kiro_crew.providers.acp_lifecycle"
+    owner = "aj_crew.providers.acp_lifecycle"
     holders = dict(index.holders)
     holders["kiro_sessions_dir"] = tuple(h for h in holders["kiro_sessions_dir"] if h != owner)
     blind = dataclasses.replace(index, holders=holders)
@@ -600,8 +600,8 @@ def test_the_bare_global_scan_can_fail() -> None:
 def test_a_patch_through_the_facade_lands_on_every_owner_and_is_undone(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    start = sys.modules["kiro_crew.providers.acp_runtime_start"]
-    lifecycle = sys.modules["kiro_crew.providers.acp_lifecycle"]
+    start = sys.modules["aj_crew.providers.acp_runtime_start"]
+    lifecycle = sys.modules["aj_crew.providers.acp_lifecycle"]
     before = acp_provider.kiro_sessions_dir
     sentinel = object()
     with monkeypatch.context() as patch:
@@ -617,8 +617,8 @@ def test_a_patch_through_the_facade_lands_on_every_owner_and_is_undone(
 def test_a_patch_of_a_served_helper_lands_on_its_readers_and_is_undone(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    overlay = sys.modules["kiro_crew.providers.acp_cli_overlay"]
-    effort = sys.modules["kiro_crew.providers.acp_model_effort"]
+    overlay = sys.modules["aj_crew.providers.acp_cli_overlay"]
+    effort = sys.modules["aj_crew.providers.acp_model_effort"]
     before = overlay._clear_cli_overlay_effort
     sentinel = object()
     with monkeypatch.context() as patch:

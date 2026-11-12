@@ -1,10 +1,10 @@
-"""Coverage tests for :mod:`kiro_crew.cli_commands`: learn, memory, artifact, telemetry, eval.
+"""Coverage tests for :mod:`aj_crew.cli_commands`: learn, memory, artifact, telemetry, eval.
 
 The knowledge-store subcommands (``learn``, ``memory``, ``artifact``), pod
-dispatch, the telemetry beacon switches and the ``kirocrew eval`` runner. Same
+dispatch, the telemetry beacon switches and the ``ajcrew eval`` runner. Same
 conventions as ``test_cli_commands_coverage.py``: handlers are called directly
 with an ``argparse.Namespace``, HTTP goes through a patched
-``kiro_crew.cli_commands._gateway_send``, and every write lands in ``tmp_path``.
+``aj_crew.cli_commands._gateway_send``, and every write lands in ``tmp_path``.
 """
 
 from __future__ import annotations
@@ -24,11 +24,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from cli_commands_coverage_helpers import _FakeResponse, _http_error, _ns
 
-from kiro_crew import cli_commands as cc
-from kiro_crew.beacon import PRIVACY_NOTICE_VERSION
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.eval.scenario import AssertionType
-from kiro_crew.vector_memory import LessonWriteOutcome, LessonWriteResult
+from aj_crew import cli_commands as cc
+from aj_crew.beacon import PRIVACY_NOTICE_VERSION
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.eval.scenario import AssertionType
+from aj_crew.vector_memory import LessonWriteOutcome, LessonWriteResult
 
 # ── learn subcommands ──
 
@@ -40,9 +40,9 @@ class _LearnHarness:
         self.vs = MagicMock()
         self.jsonl = MagicMock()
         self._patches = [
-            patch("kiro_crew.cli_commands.VectorMemoryStore", return_value=self.vs),
-            patch("kiro_crew.cli_commands.LessonStore", return_value=self.jsonl),
-            patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
+            patch("aj_crew.cli_commands.VectorMemoryStore", return_value=self.vs),
+            patch("aj_crew.cli_commands.LessonStore", return_value=self.jsonl),
+            patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
         ]
 
     def __enter__(self) -> _LearnHarness:
@@ -225,7 +225,7 @@ class TestLearnCli:
         with _LearnHarness() as h:
             cc._learn(_ns(learn_action=None))
         h.vs.close.assert_called_once()
-        assert "Usage: kirocrew learn" in capsys.readouterr().out
+        assert "Usage: ajcrew learn" in capsys.readouterr().out
 
 
 # ── memory subcommands ──
@@ -235,8 +235,8 @@ class _MemHarness:
     def __init__(self) -> None:
         self.store = MagicMock()
         self._patches = [
-            patch("kiro_crew.cli_commands.declared_store", return_value=self.store),
-            patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
+            patch("aj_crew.cli_commands.declared_store", return_value=self.store),
+            patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
         ]
 
     def __enter__(self) -> _MemHarness:
@@ -372,12 +372,12 @@ class TestMemoryCli:
         assert "0 vectors" not in out
 
     def test_audit_with_and_without_findings(self, capsys: pytest.CaptureFixture[str]) -> None:
-        with _MemHarness(), patch("kiro_crew.cli_commands.scan_memory", return_value=[]):
+        with _MemHarness(), patch("aj_crew.cli_commands.scan_memory", return_value=[]):
             cc._memory_cmd(_ns(mem_action="audit"))
         assert "No suspicious content in memory." in capsys.readouterr().out
 
         findings = [{"type": "semantic", "key": "k", "warning": "w", "value": "v"}]
-        with _MemHarness(), patch("kiro_crew.cli_commands.scan_memory", return_value=findings):
+        with _MemHarness(), patch("aj_crew.cli_commands.scan_memory", return_value=findings):
             cc._memory_cmd(_ns(mem_action="audit"))
         assert "1 suspicious entries" in capsys.readouterr().out
 
@@ -414,7 +414,7 @@ class TestMemoryCli:
         with _MemHarness(), pytest.raises(SystemExit) as exc:
             cc._memory_cmd(_ns(mem_action="import", file=None))
         assert exc.value.code == 1
-        assert "Usage: kirocrew memory import" in capsys.readouterr().err
+        assert "Usage: ajcrew memory import" in capsys.readouterr().err
 
     def test_import_missing_file(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
         # A refused import must stop `memory import f && next`.
@@ -465,7 +465,7 @@ class TestMemoryCli:
     def test_export_ships_restorable_vectors_and_their_model(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        from kiro_crew import embeddings
+        from aj_crew import embeddings
 
         blob = struct.pack("2f", 0.5, -1.0)
         with _MemHarness() as h:
@@ -492,7 +492,7 @@ class TestMemoryCli:
     def test_export_names_no_space_when_it_changed_during_the_read(
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        from kiro_crew import embeddings
+        from aj_crew import embeddings
 
         with _MemHarness() as h:
             h.store.recorded_embedding_space.side_effect = ["aaaa", "bbbb", "bbbb"]
@@ -522,7 +522,7 @@ class TestMemoryCli:
         with _MemHarness() as h:
             cc._memory_cmd(_ns(mem_action="bogus"))
         h.store.close.assert_called_once()
-        assert "Usage: kirocrew memory" in capsys.readouterr().out
+        assert "Usage: ajcrew memory" in capsys.readouterr().out
 
 
 # ── artifact subcommands ──
@@ -538,10 +538,10 @@ class _ArtifactHarness:
 
     def __enter__(self) -> _ArtifactHarness:
         self._patches = [
-            patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
-            patch("kiro_crew.cli_commands.parse_dashboard_url", return_value=("localhost", 5476)),
-            patch("kiro_crew.cli_commands._internal_secret", return_value="s"),
-            patch("kiro_crew.cli_commands._gateway_send", side_effect=self._responses),
+            patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
+            patch("aj_crew.cli_commands.parse_dashboard_url", return_value=("localhost", 5476)),
+            patch("aj_crew.cli_commands._internal_secret", return_value="s"),
+            patch("aj_crew.cli_commands._gateway_send", side_effect=self._responses),
         ]
         started = [p.start() for p in self._patches]
         self.urlopen = started[-1]
@@ -671,7 +671,7 @@ class TestArtifactCli:
         captured = capsys.readouterr()
         assert "Saved: slug=run-summary-2 version=1" in captured.out
         assert "run-summary" in captured.err
-        assert "kirocrew artifact update run-summary" in captured.err
+        assert "ajcrew artifact update run-summary" in captured.err
 
     def test_save_is_silent_when_the_slug_was_free(
         self, capsys: pytest.CaptureFixture[str]
@@ -903,7 +903,7 @@ class TestArtifactCli:
         f.write_text("secret", encoding="utf-8")
         with (
             _ArtifactHarness([]),
-            patch("kiro_crew.cli_commands.is_sensitive_path", return_value=True),
+            patch("aj_crew.cli_commands.is_sensitive_path", return_value=True),
             pytest.raises(SystemExit) as exc,
         ):
             cc._artifact(
@@ -1036,7 +1036,7 @@ class TestArtifactCli:
         with _ArtifactHarness([]), pytest.raises(SystemExit) as exc:
             cc._artifact(_ns(artifact_action="bogus"))
         assert exc.value.code == 2
-        assert "Usage: kirocrew artifact" in capsys.readouterr().err
+        assert "Usage: ajcrew artifact" in capsys.readouterr().err
 
 
 class TestPodDispatch:
@@ -1044,7 +1044,7 @@ class TestPodDispatch:
         args = _ns(pod_action="ls")
         # The verb layer's exit status must reach the shell unchanged.
         with (
-            patch("kiro_crew.pod.cli.dispatch", side_effect=SystemExit(3)) as dispatch,
+            patch("aj_crew.pod.cli.dispatch", side_effect=SystemExit(3)) as dispatch,
             pytest.raises(SystemExit) as exc,
         ):
             cc._pod(args)
@@ -1058,8 +1058,8 @@ class TestPodDispatch:
 class TestTelemetryCli:
     def test_status_is_read_only(self, capsys: pytest.CaptureFixture[str]) -> None:
         with (
-            patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
-            patch("kiro_crew.cli_commands.beacon") as beacon,
+            patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
+            patch("aj_crew.cli_commands.beacon") as beacon,
         ):
             beacon.format_status.return_value = "beacon: OFF"
             cc._telemetry(_ns(telemetry_action="status"))
@@ -1067,8 +1067,8 @@ class TestTelemetryCli:
 
     def test_missing_action_defaults_to_status(self, capsys: pytest.CaptureFixture[str]) -> None:
         with (
-            patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
-            patch("kiro_crew.cli_commands.beacon") as beacon,
+            patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
+            patch("aj_crew.cli_commands.beacon") as beacon,
         ):
             beacon.format_status.return_value = "default-status"
             cc._telemetry(_ns(telemetry_action=None))
@@ -1076,7 +1076,7 @@ class TestTelemetryCli:
 
     def test_unknown_action_exits_1(self, capsys: pytest.CaptureFixture[str]) -> None:
         with (
-            patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
+            patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
             pytest.raises(SystemExit) as exc,
         ):
             cc._telemetry(_ns(telemetry_action="frobnicate"))
@@ -1088,14 +1088,14 @@ class TestTelemetryCli:
     ) -> None:
         path = tmp_path / "config.json"
         path.write_text(json.dumps({"agent": {"model": "auto"}}), encoding="utf-8")
-        effective = KiroCrewConfig()
+        effective = AjCrewConfig()
         effective.telemetry.beacon_enabled = False
         with (
-            patch.object(KiroCrewConfig, "load", return_value=effective),
-            patch("kiro_crew.cli_commands.config_path", return_value=path),
-            patch("kiro_crew.cli_commands.beacon") as beacon,
+            patch.object(AjCrewConfig, "load", return_value=effective),
+            patch("aj_crew.cli_commands.config_path", return_value=path),
+            patch("aj_crew.cli_commands.beacon") as beacon,
         ):
-            beacon.DISABLE_ENV = "KIROCREW_NO_BEACON"
+            beacon.DISABLE_ENV = "AJCREW_NO_BEACON"
             beacon.INSTALL_ID_FILE = "install_id"
             cc._telemetry(_ns(telemetry_action="disable"))
         data = json.loads(path.read_text())
@@ -1110,13 +1110,13 @@ class TestTelemetryCli:
 
     def test_enable_creates_config_when_absent(self, tmp_path: Path) -> None:
         path = tmp_path / "nested" / "config.json"
-        effective = KiroCrewConfig()
+        effective = AjCrewConfig()
         effective.telemetry.beacon_enabled = True
         effective.telemetry.enabled = True
         with (
-            patch.object(KiroCrewConfig, "load", return_value=effective),
-            patch("kiro_crew.cli_commands.config_path", return_value=path),
-            patch("kiro_crew.cli_commands.beacon") as beacon,
+            patch.object(AjCrewConfig, "load", return_value=effective),
+            patch("aj_crew.cli_commands.config_path", return_value=path),
+            patch("aj_crew.cli_commands.beacon") as beacon,
         ):
             beacon.is_governance_pinned_off.return_value = False
             cc._telemetry(_ns(telemetry_action="enable"))
@@ -1130,9 +1130,9 @@ class TestTelemetryCli:
     ) -> None:
         path = tmp_path / "config.json"
         with (
-            patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
-            patch("kiro_crew.cli_commands.config_path", return_value=path),
-            patch("kiro_crew.cli_commands.beacon") as beacon,
+            patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
+            patch("aj_crew.cli_commands.config_path", return_value=path),
+            patch("aj_crew.cli_commands.beacon") as beacon,
             pytest.raises(SystemExit) as exc,
         ):
             beacon.is_governance_pinned_off.return_value = True
@@ -1147,9 +1147,9 @@ class TestTelemetryCli:
         path = tmp_path / "config.json"
         path.write_text("{not json", encoding="utf-8")
         with (
-            patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
-            patch("kiro_crew.cli_commands.config_path", return_value=path),
-            patch("kiro_crew.cli_commands.beacon"),
+            patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
+            patch("aj_crew.cli_commands.config_path", return_value=path),
+            patch("aj_crew.cli_commands.beacon"),
             pytest.raises(SystemExit) as exc,
         ):
             cc._telemetry(_ns(telemetry_action="disable"))
@@ -1162,9 +1162,9 @@ class TestTelemetryCli:
         path = tmp_path / "config.json"
         path.write_text("[1, 2, 3]", encoding="utf-8")
         with (
-            patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
-            patch("kiro_crew.cli_commands.config_path", return_value=path),
-            patch("kiro_crew.cli_commands.beacon"),
+            patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
+            patch("aj_crew.cli_commands.config_path", return_value=path),
+            patch("aj_crew.cli_commands.beacon"),
             pytest.raises(SystemExit),
         ):
             cc._telemetry(_ns(telemetry_action="disable"))
@@ -1178,9 +1178,9 @@ class TestTelemetryCli:
         original = json.dumps({"telemetry": "yes-please"})
         path.write_text(original, encoding="utf-8")
         with (
-            patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
-            patch("kiro_crew.cli_commands.config_path", return_value=path),
-            patch("kiro_crew.cli_commands.beacon"),
+            patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
+            patch("aj_crew.cli_commands.config_path", return_value=path),
+            patch("aj_crew.cli_commands.beacon"),
             pytest.raises(SystemExit),
         ):
             cc._telemetry(_ns(telemetry_action="disable"))
@@ -1193,15 +1193,15 @@ class TestTelemetryCli:
         """A false promise on a privacy control is worse than an error."""
         path = tmp_path / "config.json"
         path.write_text("{}", encoding="utf-8")
-        still_on = KiroCrewConfig()
+        still_on = AjCrewConfig()
         still_on.telemetry.beacon_enabled = True
         with (
-            patch.object(KiroCrewConfig, "load", return_value=still_on),
-            patch("kiro_crew.cli_commands.config_path", return_value=path),
-            patch("kiro_crew.cli_commands.beacon") as beacon,
+            patch.object(AjCrewConfig, "load", return_value=still_on),
+            patch("aj_crew.cli_commands.config_path", return_value=path),
+            patch("aj_crew.cli_commands.beacon") as beacon,
             pytest.raises(SystemExit) as exc,
         ):
-            beacon.DISABLE_ENV = "KIROCREW_NO_BEACON"
+            beacon.DISABLE_ENV = "AJCREW_NO_BEACON"
             cc._telemetry(_ns(telemetry_action="disable"))
         assert exc.value.code == 1
         err = capsys.readouterr().err
@@ -1213,10 +1213,10 @@ class TestTelemetryCli:
         path = tmp_path / "config.json"
         path.write_text("{}", encoding="utf-8")
         with (
-            patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
-            patch("kiro_crew.cli_commands.config_path", return_value=path),
-            patch("kiro_crew.cli_commands.beacon"),
-            patch("kiro_crew.config.loader.atomic_write", side_effect=OSError("disk full")),
+            patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
+            patch("aj_crew.cli_commands.config_path", return_value=path),
+            patch("aj_crew.cli_commands.beacon"),
+            patch("aj_crew.config.loader.atomic_write", side_effect=OSError("disk full")),
             pytest.raises(SystemExit) as exc,
         ):
             cc._telemetry(_ns(telemetry_action="disable"))
@@ -1231,19 +1231,19 @@ class TestTelemetryCli:
         path.write_text("{}", encoding="utf-8")
         with (
             patch.object(
-                KiroCrewConfig,
+                AjCrewConfig,
                 "load",
-                side_effect=[KiroCrewConfig(), RuntimeError("bad config")],
+                side_effect=[AjCrewConfig(), RuntimeError("bad config")],
             ),
-            patch("kiro_crew.cli_commands.config_path", return_value=path),
-            patch("kiro_crew.cli_commands.beacon") as beacon,
+            patch("aj_crew.cli_commands.config_path", return_value=path),
+            patch("aj_crew.cli_commands.beacon") as beacon,
         ):
             beacon.INSTALL_ID_FILE = "install_id"
             cc._telemetry(_ns(telemetry_action="disable"))
         assert "DISABLED" in capsys.readouterr().out
 
 
-# ── eval runner (`kirocrew eval`) ──
+# ── eval runner (`ajcrew eval`) ──
 
 
 def _scenario(name: str = "smoke", *, turns: int = 2, judge_criteria: str = "") -> Any:
@@ -1284,12 +1284,12 @@ class _EvalHarness:
 
     def __enter__(self) -> _EvalHarness:
         self._patches = [
-            patch.object(KiroCrewConfig, "load", return_value=KiroCrewConfig()),
-            patch("kiro_crew.cli_commands.build_provider_factory", return_value=MagicMock()),
-            patch("kiro_crew.cli_commands.EvalRunner", return_value=self.runner),
-            patch("kiro_crew.cli_commands.LLMJudge", return_value=self.judge),
-            patch("kiro_crew.cli_commands.format_results", return_value="## Report"),
-            patch("kiro_crew.cli_commands.score_by_dimension", return_value={}),
+            patch.object(AjCrewConfig, "load", return_value=AjCrewConfig()),
+            patch("aj_crew.cli_commands.build_provider_factory", return_value=MagicMock()),
+            patch("aj_crew.cli_commands.EvalRunner", return_value=self.runner),
+            patch("aj_crew.cli_commands.LLMJudge", return_value=self.judge),
+            patch("aj_crew.cli_commands.format_results", return_value="## Report"),
+            patch("aj_crew.cli_commands.score_by_dimension", return_value={}),
         ]
         for p in self._patches:
             p.start()
@@ -1311,7 +1311,7 @@ class TestRunEval:
         monkeypatch.chdir(tmp_path)
         with (
             _EvalHarness([_scenario_result(True)]),
-            patch("kiro_crew.cli_commands.load_scenario", return_value=_scenario()) as loader,
+            patch("aj_crew.cli_commands.load_scenario", return_value=_scenario()) as loader,
         ):
             await cc._run_eval(_ns(all_scenarios=False, scenarios=None, judge=False))
         assert loader.call_args[0][0].name == "smoke_test.json"
@@ -1333,7 +1333,7 @@ class TestRunEval:
         scenarios = [_scenario("a"), _scenario("b")]
         with (
             _EvalHarness([_scenario_result(True), _scenario_result(False)]) as h,
-            patch("kiro_crew.cli_commands.load_scenarios", return_value=scenarios) as loader,
+            patch("aj_crew.cli_commands.load_scenarios", return_value=scenarios) as loader,
             pytest.raises(SystemExit) as exc,
         ):
             await cc._run_eval(_ns(all_scenarios=True, scenarios=None, judge=False))
@@ -1352,11 +1352,11 @@ class TestRunEval:
         monkeypatch.chdir(tmp_path)
         with (
             _EvalHarness([_scenario_result(False)]),
-            patch("kiro_crew.cli_commands.load_scenario", return_value=_scenario()),
+            patch("aj_crew.cli_commands.load_scenario", return_value=_scenario()),
             pytest.raises(SystemExit) as exc,
         ):
             await cc._run_eval(_ns(all_scenarios=False, scenarios=None, judge=False))
-        # `kirocrew eval && next` must stop on a failed scenario ...
+        # `ajcrew eval && next` must stop on a failed scenario ...
         assert exc.value.code == 1
         # ... and the exit comes after the report, so the evidence is kept.
         results_dir = tmp_path / "eval_results"
@@ -1374,7 +1374,7 @@ class TestRunEval:
     ) -> None:
         """The judge rewrites a turn's verdict after the run, and the exit code
         reads the rewritten one: real result types, not a frozen ``passed``."""
-        from kiro_crew.eval.runner import ScenarioResult, SessionResult, TurnResult
+        from aj_crew.eval.runner import ScenarioResult, SessionResult, TurnResult
 
         monkeypatch.chdir(tmp_path)
         assertion = SimpleNamespace(type=AssertionType.JUDGE, value="was it helpful")
@@ -1384,7 +1384,7 @@ class TestRunEval:
         result = ScenarioResult(name="smoke", sessions=[SessionResult(name="s1", turns=[turn])])
         with (
             _EvalHarness([result]) as h,
-            patch("kiro_crew.cli_commands.load_scenario", return_value=_scenario()),
+            patch("aj_crew.cli_commands.load_scenario", return_value=_scenario()),
             pytest.raises(SystemExit) as exc,
         ):
             h.judge.judge_turn.return_value = SimpleNamespace(score=1, reason="unhelpful")
@@ -1399,7 +1399,7 @@ class TestRunEval:
         monkeypatch.chdir(tmp_path)
         with (
             _EvalHarness([_scenario_result(True)]),
-            patch("kiro_crew.cli_commands.load_scenario", return_value=_scenario("named")) as ld,
+            patch("aj_crew.cli_commands.load_scenario", return_value=_scenario("named")) as ld,
         ):
             await cc._run_eval(
                 _ns(all_scenarios=False, scenarios=["memory_recall_basic"], judge=False)
@@ -1415,7 +1415,7 @@ class TestRunEval:
         monkeypatch.chdir(tmp_path)
         with _EvalHarness([]) as h, pytest.raises(SystemExit) as exc:
             await cc._run_eval(_ns(all_scenarios=False, scenarios=["does-not-exist"], judge=False))
-        # An unknown name ran nothing, so `kirocrew eval x && next` must stop.
+        # An unknown name ran nothing, so `ajcrew eval x && next` must stop.
         assert exc.value.code == 1
         captured = capsys.readouterr()
         assert captured.out == ""
@@ -1429,7 +1429,7 @@ class TestRunEval:
     _WRITE_CHILD = """
 import locale, sys
 from pathlib import Path
-from kiro_crew.cli_commands import write_eval_artifacts
+from aj_crew.cli_commands import write_eval_artifacts
 
 print("encoding=" + locale.getencoding())
 report_path, json_path = write_eval_artifacts(
@@ -1456,7 +1456,7 @@ print("wrote=" + report_path.name + "," + json_path.name)
         # The child is anchored outside the checkout, so hand it this
         # interpreter's own import path rather than relying on an installed copy.
         env["PYTHONPATH"] = os.pathsep.join(p for p in sys.path if p)
-        env["KIROCREW_HOME"] = str(tmp_path / "home")
+        env["AJCREW_HOME"] = str(tmp_path / "home")
         out_dir = tmp_path / "eval_results"
         proc = subprocess.run(
             [sys.executable, "-c", self._WRITE_CHILD, str(out_dir)],
@@ -1501,8 +1501,8 @@ print("wrote=" + report_path.name + "," + json_path.name)
         }
         with (
             _EvalHarness([_scenario_result(True)]),
-            patch("kiro_crew.cli_commands.load_scenario", return_value=_scenario()),
-            patch("kiro_crew.cli_commands.score_by_dimension", return_value=dims),
+            patch("aj_crew.cli_commands.load_scenario", return_value=_scenario()),
+            patch("aj_crew.cli_commands.score_by_dimension", return_value=dims),
         ):
             await cc._run_eval(_ns(all_scenarios=False, scenarios=None, judge=False))
         out = capsys.readouterr().out
@@ -1522,7 +1522,7 @@ print("wrote=" + report_path.name + "," + json_path.name)
         )
         with (
             _EvalHarness([_scenario_result(True, turn=turn)]) as h,
-            patch("kiro_crew.cli_commands.load_scenario", return_value=_scenario()),
+            patch("aj_crew.cli_commands.load_scenario", return_value=_scenario()),
         ):
             await cc._run_eval(_ns(all_scenarios=False, scenarios=None, judge=True))
         h.judge.start.assert_awaited_once()
@@ -1545,7 +1545,7 @@ print("wrote=" + report_path.name + "," + json_path.name)
         with (
             _EvalHarness([_scenario_result(True, turn=turn)]) as h,
             patch(
-                "kiro_crew.cli_commands.load_scenario",
+                "aj_crew.cli_commands.load_scenario",
                 return_value=_scenario(judge_criteria="be terse"),
             ),
         ):
@@ -1568,7 +1568,7 @@ print("wrote=" + report_path.name + "," + json_path.name)
         )
         with (
             _EvalHarness([_scenario_result(True, turn=turn)]) as h,
-            patch("kiro_crew.cli_commands.load_scenario", return_value=_scenario()),
+            patch("aj_crew.cli_commands.load_scenario", return_value=_scenario()),
         ):
             await cc._run_eval(_ns(all_scenarios=False, scenarios=None, judge=True))
         h.judge.judge_turn.assert_not_awaited()

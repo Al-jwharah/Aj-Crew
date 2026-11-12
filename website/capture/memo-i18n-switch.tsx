@@ -29,7 +29,7 @@ import PastedChip from '../src/components/PastedChip'
 import type { PasteBlock } from '../src/utils/pasteTokens'
 import '../src/index.css'
 
-document.documentElement.setAttribute('data-theme', 'kiro-dark')
+document.documentElement.setAttribute('data-theme', 'aj-dark')
 initI18n('en')
 
 const BLOCK: PasteBlock = {

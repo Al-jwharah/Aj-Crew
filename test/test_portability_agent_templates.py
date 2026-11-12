@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import portability
+from aj_crew import portability
 
 AGENTS_DIR = portability.AGENT_TEMPLATES_DIR
 
@@ -23,12 +23,12 @@ FAKE_HEADER_VALUE = "fake-header-value-for-tests"
 @pytest.fixture
 def home(tmp_path, monkeypatch):
     """A minimal install whose crews name two templates, one of which names a third."""
-    mc = tmp_path / ".kirocrew"
+    mc = tmp_path / ".ajcrew"
     mc.mkdir()
     (mc / "config.json").write_text(
         json.dumps(
             {
-                "agent": {"default_agent": "kirocrew"},
+                "agent": {"default_agent": "ajcrew"},
                 "agents": {
                     "alpha": {"kiro_agent": "researcher"},
                     "beta": {"kiro_agent": "by-declared-name"},
@@ -75,10 +75,10 @@ def home(tmp_path, monkeypatch):
     )
     (agents / "file.json").write_text(json.dumps({"name": "by-declared-name"}), encoding="utf-8")
     (agents / "unrelated.json").write_text(json.dumps({"name": "unrelated"}), encoding="utf-8")
-    (agents / "kirocrew.json").write_text(json.dumps({"name": "kirocrew"}), encoding="utf-8")
+    (agents / "ajcrew.json").write_text(json.dumps({"name": "ajcrew"}), encoding="utf-8")
     monkeypatch.setattr(portability, "kiro_agents_dir", lambda: agents)
-    with patch("kiro_crew.portability.config_dir", return_value=mc):
-        with patch.dict(os.environ, {"KIROCREW_HOME": str(mc)}):
+    with patch("aj_crew.portability.config_dir", return_value=mc):
+        with patch.dict(os.environ, {"AJCREW_HOME": str(mc)}):
             yield mc
 
 
@@ -255,7 +255,7 @@ class TestImport:
     def test_an_installed_template_passes_this_hosts_governance_ceiling(
         self, home, tmp_path, monkeypatch
     ):
-        from kiro_crew.platform import governance as gov
+        from aj_crew.platform import governance as gov
 
         bundle = _bundle(tmp_path, home, monkeypatch)
         monkeypatch.setattr(gov, "may_skip_gate_now", lambda ref: not ref.startswith("@governed"))

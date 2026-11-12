@@ -31,10 +31,10 @@ from chat_mode_security_helpers import (  # noqa: F401 -- fixtures are requested
     state_fixture,
 )
 
-from kiro_crew.dashboard.chat_handlers import api_chat_mode, api_chat_slot_approve
-from kiro_crew.dashboard.handlers.sessions import api_approval_resolve
-from kiro_crew.dashboard.state import SlotOrigin, row_mid
-from kiro_crew.safety_override import safety_override as real_safety_override
+from aj_crew.dashboard.chat_handlers import api_chat_mode, api_chat_slot_approve
+from aj_crew.dashboard.handlers.sessions import api_approval_resolve
+from aj_crew.dashboard.state import SlotOrigin, row_mid
+from aj_crew.safety_override import safety_override as real_safety_override
 
 
 @web.middleware
@@ -109,7 +109,7 @@ async def test_app_with_grant_can_set_user_slot_mode(
         slot._trust = True
         slot._trust_reads = True
     with patch(
-        "kiro_crew.apps.permissions.app_can_manage_session_approvals",
+        "aj_crew.apps.permissions.app_can_manage_session_approvals",
         return_value=True,
     ):
         async with _app_client(state) as client:
@@ -124,7 +124,7 @@ async def test_app_with_grant_can_set_user_slot_mode(
 async def test_app_non_yolo_mode_target_boundary(state, target: str, allowed: bool) -> None:
     slot = _make_app_control_target(state, target)
     with patch(
-        "kiro_crew.apps.permissions.app_can_manage_session_approvals",
+        "aj_crew.apps.permissions.app_can_manage_session_approvals",
         return_value=True,
     ):
         async with _app_client(state) as client:
@@ -139,10 +139,10 @@ async def test_app_cannot_arm_global_yolo_even_with_grant(state) -> None:
     override = _FakeOverride()
     with (
         patch(
-            "kiro_crew.apps.permissions.app_can_manage_session_approvals",
+            "aj_crew.apps.permissions.app_can_manage_session_approvals",
             return_value=True,
         ),
-        patch("kiro_crew.dashboard.chat_handlers.safety_override", return_value=override),
+        patch("aj_crew.dashboard.chat_handlers.safety_override", return_value=override),
     ):
         async with _app_client(state) as client:
             resp = await client.post("/api/chat/mode", json={"mode": "yolo", "slot": "s1"})
@@ -162,10 +162,10 @@ async def test_app_normal_does_not_revoke_global_yolo(state) -> None:
     override.active = True
     with (
         patch(
-            "kiro_crew.apps.permissions.app_can_manage_session_approvals",
+            "aj_crew.apps.permissions.app_can_manage_session_approvals",
             return_value=True,
         ),
-        patch("kiro_crew.dashboard.chat_handlers.safety_override", return_value=override),
+        patch("aj_crew.dashboard.chat_handlers.safety_override", return_value=override),
     ):
         async with _app_client(state) as client:
             resp = await client.post("/api/chat/mode", json={"mode": "normal", "slot": "s1"})
@@ -186,10 +186,10 @@ async def test_app_mode_change_requires_explicit_slot(state, body: dict) -> None
     audit = MagicMock()
     with (
         patch(
-            "kiro_crew.apps.permissions.app_can_manage_session_approvals",
+            "aj_crew.apps.permissions.app_can_manage_session_approvals",
             return_value=True,
         ),
-        patch("kiro_crew.dashboard.chat_handlers.sel", return_value=audit),
+        patch("aj_crew.dashboard.chat_handlers.sel", return_value=audit),
     ):
         async with _app_client(state) as client:
             resp = await client.post("/api/chat/mode", json=body)
@@ -214,10 +214,10 @@ async def test_app_with_grant_can_resolve_user_slot_approval(state) -> None:
     audit = MagicMock()
     with (
         patch(
-            "kiro_crew.apps.permissions.app_can_manage_session_approvals",
+            "aj_crew.apps.permissions.app_can_manage_session_approvals",
             return_value=True,
         ),
-        patch("kiro_crew.dashboard.chat_handlers.sel", return_value=audit),
+        patch("aj_crew.dashboard.chat_handlers.sel", return_value=audit),
     ):
         async with _app_client(state) as client:
             resp = await client.post(
@@ -237,7 +237,7 @@ async def test_app_approval_target_boundary(state, target: str, allowed: bool, a
     future = asyncio.get_running_loop().create_future()
     slot._approval_futures["req-1"] = future
     with patch(
-        "kiro_crew.apps.permissions.app_can_manage_session_approvals",
+        "aj_crew.apps.permissions.app_can_manage_session_approvals",
         return_value=True,
     ):
         async with _app_client(state) as client:
@@ -266,7 +266,7 @@ async def test_app_never_resolves_state_level_approvals(state, target: str, acti
     state._approval_futures["req-state"] = future
     state._pending_approvals["req-state"] = {"id": "req-state", "slot": "s1", "source": "subagent"}
     with patch(
-        "kiro_crew.apps.permissions.app_can_manage_session_approvals",
+        "aj_crew.apps.permissions.app_can_manage_session_approvals",
         return_value=True,
     ):
         async with _app_client(state) as client:
@@ -563,7 +563,7 @@ def test_a_coordinator_resolution_names_the_instance_it_resolved():
     """Both coordinator exits -- a decision and an expiry -- broadcast the
     instance of the record they resolved, so a client can tell it from an
     earlier request's row under the same recurring id."""
-    from kiro_crew.dashboard.interaction_coordinator import ApprovalCoordinator
+    from aj_crew.dashboard.interaction_coordinator import ApprovalCoordinator
 
     class _State:
         _log = MagicMock()
@@ -616,7 +616,7 @@ def test_a_coordinator_resolution_names_the_instance_it_resolved():
 def test_coordinator_records_carry_a_distinct_instance_per_request():
     """The request id is the caller's and can recur; the instance is minted here,
     once per request, so two requests sharing an id are told apart."""
-    from kiro_crew.dashboard.interaction_coordinator import ApprovalCoordinator
+    from aj_crew.dashboard.interaction_coordinator import ApprovalCoordinator
 
     class _State:
         _APPROVAL_TIMEOUT = 0.01
@@ -840,14 +840,14 @@ async def test_app_yolo_approval_is_refused_and_audited_as_the_app(state) -> Non
     audit = MagicMock()
     with (
         patch(
-            "kiro_crew.apps.permissions.app_can_manage_session_approvals",
+            "aj_crew.apps.permissions.app_can_manage_session_approvals",
             return_value=True,
         ),
         patch(
-            "kiro_crew.dashboard.chat_handlers.safety_override",
+            "aj_crew.dashboard.chat_handlers.safety_override",
             return_value=override,
         ),
-        patch("kiro_crew.dashboard.chat_handlers.sel", return_value=audit),
+        patch("aj_crew.dashboard.chat_handlers.sel", return_value=audit),
     ):
         async with _app_client(state) as client:
             resp = await client.post(
@@ -869,7 +869,7 @@ async def test_app_trust_does_not_persist_linked_channel_trust(state) -> None:
     channel = MagicMock(trusted=False)
     state.channel_manager = MagicMock(_channels={"ch1": channel})
     with patch(
-        "kiro_crew.apps.permissions.app_can_manage_session_approvals",
+        "aj_crew.apps.permissions.app_can_manage_session_approvals",
         return_value=True,
     ):
         async with _app_client(state) as client:
@@ -888,7 +888,7 @@ async def test_app_normal_does_not_clear_linked_channel_trust(state) -> None:
     channel = MagicMock(trusted=True)
     state.channel_manager = MagicMock(_channels={"ch1": channel})
     with patch(
-        "kiro_crew.apps.permissions.app_can_manage_session_approvals",
+        "aj_crew.apps.permissions.app_can_manage_session_approvals",
         return_value=True,
     ):
         async with _app_client(state) as client:
@@ -912,7 +912,7 @@ async def test_trust_reads_unknown_slot_is_400_and_revokes_nothing(state) -> Non
     state.get_or_create_slot("s1")
     state.get_or_create_slot("s2")
     override = _FakeOverride(active=True)
-    with patch("kiro_crew.dashboard.chat_handlers.safety_override", return_value=override):
+    with patch("aj_crew.dashboard.chat_handlers.safety_override", return_value=override):
         async with _client(state) as client:
             resp = await client.post(
                 "/api/chat/mode", json={"mode": "trust_reads", "slot": "ghost"}
@@ -944,7 +944,7 @@ async def test_falsy_non_string_slot_key_is_rejected_for_trust(state) -> None:
     state.get_or_create_slot("s1")
     state.get_or_create_slot("s2")
     override = _FakeOverride(active=True)
-    with patch("kiro_crew.dashboard.chat_handlers.safety_override", return_value=override):
+    with patch("aj_crew.dashboard.chat_handlers.safety_override", return_value=override):
         async with _client(state) as client:
             for bad in ([], {}, 0, False):
                 resp = await client.post("/api/chat/mode", json={"mode": "trust", "slot": bad})
@@ -959,7 +959,7 @@ async def test_falsy_non_string_slot_key_is_rejected_for_trust(state) -> None:
 async def test_falsy_non_string_slot_key_is_rejected_for_trust_reads(state) -> None:
     state.get_or_create_slot("s1")
     override = _FakeOverride(active=True)
-    with patch("kiro_crew.dashboard.chat_handlers.safety_override", return_value=override):
+    with patch("aj_crew.dashboard.chat_handlers.safety_override", return_value=override):
         async with _client(state) as client:
             resp = await client.post("/api/chat/mode", json={"mode": "trust_reads", "slot": []})
             assert resp.status == 400
@@ -982,7 +982,7 @@ async def test_rejected_normal_request_leaves_the_global_grant_active(state) -> 
     """
     state.get_or_create_slot("s1")
     override = _FakeOverride(active=True)
-    with patch("kiro_crew.dashboard.chat_handlers.safety_override", return_value=override):
+    with patch("aj_crew.dashboard.chat_handlers.safety_override", return_value=override):
         async with _client(state) as client:
             resp = await client.post("/api/chat/mode", json={"mode": "normal", "slot": " "})
             assert resp.status == 400
@@ -995,7 +995,7 @@ async def test_rejected_normal_request_leaves_the_global_grant_active(state) -> 
 async def test_rejected_trust_request_leaves_the_global_grant_active(state) -> None:
     state.get_or_create_slot("s1")
     override = _FakeOverride(active=True)
-    with patch("kiro_crew.dashboard.chat_handlers.safety_override", return_value=override):
+    with patch("aj_crew.dashboard.chat_handlers.safety_override", return_value=override):
         async with _client(state) as client:
             resp = await client.post("/api/chat/mode", json={"mode": "trust", "slot": "ghost"})
             assert resp.status == 400
@@ -1008,7 +1008,7 @@ async def test_rejected_trust_reads_does_not_touch_existing_slots(state) -> None
     state.get_or_create_slot("s1")
     state.get_or_create_slot("s2")
     with patch(
-        "kiro_crew.dashboard.chat_handlers.safety_override",
+        "aj_crew.dashboard.chat_handlers.safety_override",
         return_value=_FakeOverride(active=True),
     ):
         async with _client(state) as client:
@@ -1080,7 +1080,7 @@ async def test_named_slot_trust_reads_leaves_an_active_grant_live(state) -> None
     state.get_or_create_slot("s1")
     state.get_or_create_slot("s2")
     override = _FakeOverride(active=True)
-    with patch("kiro_crew.dashboard.chat_handlers.safety_override", return_value=override):
+    with patch("aj_crew.dashboard.chat_handlers.safety_override", return_value=override):
         async with _client(state) as client:
             resp = await client.post("/api/chat/mode", json={"mode": "trust_reads", "slot": "s1"})
             assert resp.status == 200
@@ -1096,7 +1096,7 @@ async def test_named_slot_trust_leaves_an_active_grant_live(state) -> None:
     state.get_or_create_slot("s1")
     state.get_or_create_slot("s2")
     override = _FakeOverride(active=True)
-    with patch("kiro_crew.dashboard.chat_handlers.safety_override", return_value=override):
+    with patch("aj_crew.dashboard.chat_handlers.safety_override", return_value=override):
         async with _client(state) as client:
             resp = await client.post("/api/chat/mode", json={"mode": "trust", "slot": "s1"})
             assert resp.status == 200
@@ -1150,7 +1150,7 @@ async def test_deactivate_runs_off_the_event_loop(state) -> None:
             return False
 
     with patch(
-        "kiro_crew.dashboard.chat_handlers.safety_override",
+        "aj_crew.dashboard.chat_handlers.safety_override",
         return_value=_TrackingOverride(),
     ):
         async with _client(state) as client:

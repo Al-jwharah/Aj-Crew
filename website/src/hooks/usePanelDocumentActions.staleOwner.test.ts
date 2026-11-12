@@ -1,7 +1,7 @@
 /**
  * The side panel's file save is an owner-gated direct fetch: `/api/file-write`
  * runs `require_owner_dashboard_request`, whose denial for a session minted
- * before `KIROCREW_OWNER_ID` was configured is `401 stale_session_reauth`.
+ * before `AJCREW_OWNER_ID` was configured is `401 stale_session_reauth`.
  * Like the other direct-fetch owner-gated surfaces, the save must raise the
  * installed re-auth prompt on that signal — and only that signal — while still
  * rejecting, so the editor keeps its unsaved buffer and the user's draft.

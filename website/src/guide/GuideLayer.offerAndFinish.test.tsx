@@ -490,8 +490,8 @@ describe('a surface the guide opened', () => {
 })
 
 describe('the way back once a guide ends', () => {
-  const pilotRow = { name: 'pilot', kiro_agent: 'kirocrew', slug: 'pilot', slot_key: 'slot-pilot', running: false }
-  const radarRow = { name: 'radar', kiro_agent: 'kirocrew', slug: 'radar', slot_key: 'slot-radar', running: false }
+  const pilotRow = { name: 'pilot', kiro_agent: 'ajcrew', slug: 'pilot', slot_key: 'slot-pilot', running: false }
+  const radarRow = { name: 'radar', kiro_agent: 'ajcrew', slug: 'radar', slot_key: 'slot-radar', running: false }
 
   beforeEach(() => {
     server.use(http.get('/api/members', () => HttpResponse.json({ members: [pilotRow, radarRow] })))
@@ -651,7 +651,7 @@ describe('the way back once a guide ends', () => {
     expect(memberSlugOfSlot('member-pilot.memory-pilot-v2')).toBe('pilot')
     for (const k of ['member-', 'member-Radar', 'member--x', 'xmember-radar', 'chat-1-2', 'slot-A']) expect(memberSlugOfSlot(k)).toBeNull()
     // Another crewmate's: by exact name when one row carries the slug.
-    const oncall = { name: 'Oncall', kiro_agent: 'kirocrew', slug: 'oncall', slot_key: 'member-oncall.memory-oncall-v2', running: false }
+    const oncall = { name: 'Oncall', kiro_agent: 'ajcrew', slug: 'oncall', slot_key: 'member-oncall.memory-oncall-v2', running: false }
     expect(guideReturnFor('member-oncall', [oncall, radarRow], false)).toEqual({ kind: 'chat', to: '/members?member=Oncall' })
     // ...by slug when the roster failed, or two rows share the lossy slug.
     expect(guideReturnFor('member-radar', undefined, true)).toEqual({ kind: 'chat', to: '/members?member=radar' })
@@ -893,7 +893,7 @@ describe("the offering mate's own words in a guide", () => {
   // crewmate's: the "From" line names it from the roster.
   beforeEach(() => {
     server.use(http.get('/api/members', () => HttpResponse.json({
-      members: [{ name: 'radar-keeper', display_name: 'Skipper', kiro_agent: 'kirocrew', slug: 'radar-keeper', slot_key: 'slot-A', running: false }],
+      members: [{ name: 'radar-keeper', display_name: 'Skipper', kiro_agent: 'ajcrew', slug: 'radar-keeper', slot_key: 'slot-A', running: false }],
     })))
   })
 

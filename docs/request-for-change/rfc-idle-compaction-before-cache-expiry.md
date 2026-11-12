@@ -41,14 +41,14 @@ context. The setting says all of that.
 ### 2.1 Current state
 
 Crew compacts a session in one situation: context use crosses a threshold.
-`CompactionCoordinator.check_context_usage` in `src/kiro_crew/session_compaction.py`
+`CompactionCoordinator.check_context_usage` in `src/aj_crew/session_compaction.py`
 runs at turn end and calls `_trigger_compaction` once usage reaches
 `effective_autocompact_pct`, which resolves the slot override, then the
 crew's `agents.<name>.autocompact_pct`, then `session.autocompact_pct`
 (default 70). No code path compacts because time has passed. The only timer over
 idle sessions is the idle expiry sweep, `_expire_idle`
-in `src/kiro_crew/session_cleanup.py`, which ends the process after
-`session.timeout_secs`; it does not compact. A search of `src/kiro_crew` at
+in `src/aj_crew/session_cleanup.py`, which ends the process after
+`session.timeout_secs`; it does not compact. A search of `src/aj_crew` at
 `cea787cbd5` for `idle_compact`, `cache_ttl` and `prompt_cache` finds no other
 candidate, and Crew sets no prompt-cache lifetime on any backend.
 
@@ -188,7 +188,7 @@ chat only to lose credits on the first request.
 It lives in the `session` section next to `autocompact_pct`, and on the Chat
 settings page beside the Auto-Compact Threshold control. A per-chat override,
 following the `slot.autocompact_pct` pattern
-in `src/kiro_crew/dashboard/chat_api/slot_settings.py`, is left for later.
+in `src/aj_crew/dashboard/chat_api/slot_settings.py`, is left for later.
 
 ### 5.2 Lifetime per backend
 
@@ -202,7 +202,7 @@ in `src/kiro_crew/dashboard/chat_api/slot_settings.py`, is left for later.
 | deepseek | skipped | | Not compactable, only recyclable (`ACP_BACKENDS_CONTEXT_RECYCLE`), which drops history. |
 
 The table is one constant mapping a backend id to a lifetime resolver, next to
-the capability sets in `src/kiro_crew/agent_sdk/backends_turns.py`. A backend
+the capability sets in `src/aj_crew/agent_sdk/backends_turns.py`. A backend
 absent from it is skipped. The margin, 45 s on lifetimes up to 600 s and 10% on longer
 ones, covers the time from the trigger to the request reaching the provider.
 Anthropic documents that the lifetime is counted from the start of the last
@@ -440,7 +440,7 @@ never used again is simply not compacted.
 
 ### 5.7 Visibility
 
-- `kirocrew.context.compactions` gains a `trigger` label, `threshold` or `idle`,
+- `ajcrew.context.compactions` gains a `trigger` label, `threshold` or `idle`,
   threaded through `_fire_compact_callback` in `session_compaction.py`.
 - The dashboard compaction notice says the chat was compacted while idle, so a
   user who returns knows why the context meter dropped.

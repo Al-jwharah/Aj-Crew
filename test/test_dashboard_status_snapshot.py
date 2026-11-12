@@ -8,13 +8,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.testing.wait import await_until
 
 
 @pytest.fixture
 def state(monkeypatch, tmp_path):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     crons = MagicMock()
     crons.list_jobs.return_value = [{"id": "j1"}, {"id": "j2"}]
     lessons = MagicMock()
@@ -126,7 +126,7 @@ class TestStatusSnapshot:
         to report a bug — or a stable user gets an affordance implying the build
         is expected to break.
         """
-        monkeypatch.setattr("kiro_crew.release_channel.__version__", version)
+        monkeypatch.setattr("aj_crew.release_channel.__version__", version)
         assert state.status_snapshot()["release_channel"] == expected
 
     def test_release_channel_is_always_present(self, state: DashboardState) -> None:
@@ -179,7 +179,7 @@ class TestAllStatusSnapshotCallersPassTheUpdateFields:
     """
 
     def test_the_shared_reader_carries_every_update_field(self) -> None:
-        from kiro_crew.dashboard.handlers.updates import status_update_fields
+        from aj_crew.dashboard.handlers.updates import status_update_fields
 
         assert set(status_update_fields()) == {
             "update_available",
@@ -206,7 +206,7 @@ class TestAllStatusSnapshotCallersPassTheUpdateFields:
         }
 
     def test_the_shared_reader_never_flattens_a_missing_verdict(self) -> None:
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
         original = dict(updates._update_info)
         try:
@@ -225,7 +225,7 @@ class TestAllStatusSnapshotCallersPassTheUpdateFields:
         compares it across pushes to force a reload over a gateway upgrade,
         and folding it would collapse two RCs of the same release into one
         string, masking the very upgrade that comparison exists to catch."""
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
         original = dict(updates._update_info)
         monkeypatch.setattr(updates, "_local_version", "0.4.0rc14")
@@ -253,7 +253,7 @@ class TestAllStatusSnapshotCallersPassTheUpdateFields:
         """The popup keys its per-version snooze/skip on this field, so an
         absent value must read as "" (no candidate), never as None or a stale
         non-string the cache happened to hold."""
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
         original = dict(updates._update_info)
         try:
@@ -273,8 +273,8 @@ class TestAllStatusSnapshotCallersPassTheUpdateFields:
         tier, or no command provider, names nothing."""
         from types import SimpleNamespace
 
-        from kiro_crew.dashboard.handlers import updates
-        from kiro_crew.platform import context, governance
+        from aj_crew.dashboard.handlers import updates
+        from aj_crew.platform import context, governance
 
         policy = tmp_path / "security_policy.json"
         monkeypatch.setattr(governance, "_policy_home_path", lambda: policy)
@@ -301,8 +301,8 @@ class TestAllStatusSnapshotCallersPassTheUpdateFields:
         /api/status, the WS status frame, and the SSE stream at once."""
         import inspect
 
-        from kiro_crew.dashboard.handlers.updates import status_update_fields
-        from kiro_crew.dashboard.state import DashboardState
+        from aj_crew.dashboard.handlers.updates import status_update_fields
+        from aj_crew.dashboard.state import DashboardState
 
         params = inspect.signature(DashboardState.status_snapshot).parameters
         missing = set(status_update_fields()) - set(params)
@@ -321,12 +321,12 @@ class TestAllStatusSnapshotCallersPassTheUpdateFields:
         """
         import asyncio
 
-        from kiro_crew.dashboard import status_counts
-        from kiro_crew.dashboard.handlers.updates import status_update_fields
+        from aj_crew.dashboard import status_counts
+        from aj_crew.dashboard.handlers.updates import status_update_fields
 
         sentinel = {key: f"S:{key}" for key in status_update_fields()}
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.updates.status_update_fields",
+            "aj_crew.dashboard.handlers.updates.status_update_fields",
             lambda: dict(sentinel),
         )
 
@@ -407,9 +407,9 @@ class TestAllStatusSnapshotCallersPassTheUpdateFields:
 
 def inspect_module_root() -> str:
     """The installed package root, so the walk follows the code under test."""
-    import kiro_crew
+    import aj_crew
 
-    return str(pathlib.Path(kiro_crew.__file__).parent)
+    return str(pathlib.Path(aj_crew.__file__).parent)
 
 
 def status_fields_of(updates_module) -> dict:
@@ -419,14 +419,14 @@ def status_fields_of(updates_module) -> dict:
 class TestBuildInfoResolution:
     """set_build_info() is the ONLY resolver — build info is never resolved at import.
 
-    Under systemd this module is imported before main() detects KIROCREW_PROJECT_DIR,
+    Under systemd this module is imported before main() detects AJCREW_PROJECT_DIR,
     so resolving at import would let lru_cache pin ("", "") for the process lifetime.
     """
 
     def test_setter_flows_into_new_state(self, monkeypatch, tmp_path) -> None:
-        from kiro_crew.dashboard import state as state_mod
+        from aj_crew.dashboard import state as state_mod
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state_mod.set_build_info(("beta-braveheart", "4f753ed0"))
         try:
             st = DashboardState(
@@ -440,9 +440,9 @@ class TestBuildInfoResolution:
             state_mod.set_build_info(("", ""))  # restore shared module global
 
     def test_default_is_empty_when_setter_never_called(self, monkeypatch, tmp_path) -> None:
-        from kiro_crew.dashboard import state as state_mod
+        from aj_crew.dashboard import state as state_mod
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state_mod.set_build_info(("", ""))  # simulate non-git / not-yet-resolved
         st = DashboardState(
             sessions=MagicMock(count=0),
@@ -500,21 +500,21 @@ class TestServedBundleId:
 
 class TestGatewayMemoryFields:
     """`/api/status` publishes the gateway's own RSS and the session ceiling so
-    `kirocrew status` can show what is bounding memory."""
+    `ajcrew status` can show what is bounding memory."""
 
     def test_fields_read_rss_and_the_configured_ceiling(self, monkeypatch) -> None:
-        from kiro_crew.dashboard import handlers_system
+        from aj_crew.dashboard import handlers_system
 
         monkeypatch.setattr(
             handlers_system.platform_compat, "proc_rss_bytes", lambda: 321 * 1024 * 1024 + 7
         )
         cfg = MagicMock()
         cfg.session.watchdog_rss_max_mb = 1536
-        monkeypatch.setattr(handlers_system.KiroCrewConfig, "load", lambda: cfg)
+        monkeypatch.setattr(handlers_system.AjCrewConfig, "load", lambda: cfg)
         assert handlers_system._gateway_memory_fields() == (321, 1536)
 
     def test_each_reading_degrades_alone(self, monkeypatch) -> None:
-        from kiro_crew.dashboard import handlers_system
+        from aj_crew.dashboard import handlers_system
 
         def _boom():
             raise OSError("no procfs")
@@ -522,19 +522,19 @@ class TestGatewayMemoryFields:
         monkeypatch.setattr(handlers_system.platform_compat, "proc_rss_bytes", _boom)
         cfg = MagicMock()
         cfg.session.watchdog_rss_max_mb = 1536
-        monkeypatch.setattr(handlers_system.KiroCrewConfig, "load", lambda: cfg)
+        monkeypatch.setattr(handlers_system.AjCrewConfig, "load", lambda: cfg)
         assert handlers_system._gateway_memory_fields() == (0, 1536)
 
         monkeypatch.setattr(handlers_system.platform_compat, "proc_rss_bytes", lambda: 2**30)
         monkeypatch.setattr(
-            handlers_system.KiroCrewConfig, "load", MagicMock(side_effect=RuntimeError)
+            handlers_system.AjCrewConfig, "load", MagicMock(side_effect=RuntimeError)
         )
         assert handlers_system._gateway_memory_fields() == (1024, 0)
 
     def test_api_status_publishes_both_fields_off_loop(self) -> None:
         import inspect
 
-        from kiro_crew.dashboard import handlers_system
+        from aj_crew.dashboard import handlers_system
 
         source = inspect.getsource(handlers_system.api_status)
         assert '"gateway_rss_mb": gateway_rss_mb' in source
@@ -548,14 +548,14 @@ class TestAutoUpdateEffectOnTheStatusFrame:
 
     @pytest.fixture(autouse=True)
     def _fresh(self, monkeypatch):
-        from kiro_crew.dashboard.handlers import updates
+        from aj_crew.dashboard.handlers import updates
 
         monkeypatch.setattr(updates, "_auto_effect", None)
         monkeypatch.setattr(updates, "_auto_effect_task", None)
         return updates
 
     def test_unknown_until_the_loop_derives_it(self, _fresh) -> None:
-        from kiro_crew.platform.update_capability import AutoUpdateEffect
+        from aj_crew.platform.update_capability import AutoUpdateEffect
 
         assert status_fields_of(_fresh)["update_auto_effect"] == "unknown"
         _fresh.record_auto_update_effect(AutoUpdateEffect("notify", None, "why"))
@@ -574,7 +574,7 @@ class TestAutoUpdateEffectOnTheStatusFrame:
     def test_manual_only_says_a_persons_update_still_installs(
         self, _fresh, effect, route, manual_only
     ) -> None:
-        from kiro_crew.platform.update_capability import AutoUpdateEffect
+        from aj_crew.platform.update_capability import AutoUpdateEffect
 
         assert status_fields_of(_fresh)["update_auto_manual_only"] is False
         _fresh.record_auto_update_effect(AutoUpdateEffect(effect, route, "why"))
@@ -585,7 +585,7 @@ class TestAutoUpdateEffectOnTheStatusFrame:
     @pytest.mark.asyncio
     async def test_a_stale_effect_is_rederived_off_the_loop(self, _fresh, monkeypatch) -> None:
         """A branch switch or policy edit shows within one TTL, never blocking the frame."""
-        from kiro_crew.platform.update_capability import AutoUpdateEffect
+        from aj_crew.platform.update_capability import AutoUpdateEffect
 
         _fresh.record_auto_update_effect(AutoUpdateEffect("install", "git"))
         monkeypatch.setattr(_fresh, "_AUTO_EFFECT_TTL_SECS", -1.0)
@@ -601,7 +601,7 @@ class TestAutoUpdateEffectOnTheStatusFrame:
 
     @pytest.mark.asyncio
     async def test_a_failing_rederivation_is_retried_once_per_ttl(self, _fresh, monkeypatch):
-        from kiro_crew.platform.update_capability import AutoUpdateEffect
+        from aj_crew.platform.update_capability import AutoUpdateEffect
 
         _fresh.record_auto_update_effect(AutoUpdateEffect("install", "git"))
         monkeypatch.setattr(_fresh, "_AUTO_EFFECT_TTL_SECS", 60.0)

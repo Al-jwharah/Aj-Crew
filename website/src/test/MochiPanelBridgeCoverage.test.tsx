@@ -837,7 +837,7 @@ describe('panelBridge send', () => {
   it('refuses when the slot resolves to a different effective agent', async () => {
     route(
       '/api/chat/slots',
-      { body: { agent: 'mochi', effective_agent: 'kirocrew' } },
+      { body: { agent: 'mochi', effective_agent: 'ajcrew' } },
       'POST',
     )
     const bridge = await loadBridge()

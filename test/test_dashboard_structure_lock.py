@@ -20,12 +20,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import members as _members_mod
-from kiro_crew.dashboard import server
-from kiro_crew.dashboard.handlers import agent_panel
-from kiro_crew.dashboard.handlers import member_dashboard as routes
-from kiro_crew.dashboard_templates import catalog, instance
-from kiro_crew.mcp_panel import _list_tools
+from aj_crew import members as _members_mod
+from aj_crew.dashboard import server
+from aj_crew.dashboard.handlers import agent_panel
+from aj_crew.dashboard.handlers import member_dashboard as routes
+from aj_crew.dashboard_templates import catalog, instance
+from aj_crew.mcp_panel import _list_tools
 
 _REAL_MEMBER_SLUG = _members_mod.member_slug
 
@@ -59,7 +59,7 @@ def _home(tmp_path, _floor_monkeypatch):
     The owner gate is stubbed OPEN so the internal-secret refusal below is the only
     thing between an agent's caller and the lock; its own test closes it.
     """
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     root = tmp_path / "builtin"
     other = _manifest(
         id="fixture-other",
@@ -74,7 +74,7 @@ def _home(tmp_path, _floor_monkeypatch):
     _floor_monkeypatch.setattr(catalog, "builtin_dir", lambda: root)
 
     cfg = SimpleNamespace(agents={MEMBER: SimpleNamespace(member_id="")})
-    _floor_monkeypatch.setattr(routes.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    _floor_monkeypatch.setattr(routes.AjCrewConfig, "load", staticmethod(lambda: cfg))
     _floor_monkeypatch.setattr(routes.members_mod, "member_slug", lambda name, config=None: SLUG)
     _floor_monkeypatch.setattr(routes.members_mod, "validate_slug", lambda slug: slug)
     _floor_monkeypatch.setattr(routes.members_mod, "is_dispatchable_member_name", bool)
@@ -252,8 +252,8 @@ class TestTheLockLivesWhereAnAgentCannotWrite:
             instance.adopt(SLUG, "fixture-other")
 
     def test_the_lock_file_is_in_the_sandbox_masked_tool_fenced_store(self) -> None:
-        from kiro_crew import sandbox
-        from kiro_crew.security.paths import is_sensitive_path
+        from aj_crew import sandbox
+        from aj_crew.security.paths import is_sensitive_path
 
         path = instance.lock_path(SLUG)
         assert path.parent.name == "crew-panels"
@@ -298,7 +298,7 @@ class TestTheCrewmateIsToldOnEveryTurn:
     """The ``[DASHBOARD]`` turn block says LOCKED, so the crewmate never offers a page."""
 
     def test_a_locked_adopted_page_carries_the_locked_line(self) -> None:
-        from kiro_crew import dashboard_agentic
+        from aj_crew import dashboard_agentic
 
         instance.adopt(SLUG, "fixture-board")
         assert "LOCKED" not in dashboard_agentic.turn_block(SLUG)
@@ -310,7 +310,7 @@ class TestTheCrewmateIsToldOnEveryTurn:
         assert "Fields you write: phase." in block, "values still flow while locked"
 
     def test_a_locked_crewmate_with_no_page_is_still_told(self) -> None:
-        from kiro_crew import dashboard_agentic
+        from aj_crew import dashboard_agentic
 
         instance.set_structure_lock(SLUG, True)
         # No page in force: the tab shows the suggestions page, and the lock still rides.
@@ -331,12 +331,12 @@ class TestTheLockOutlivesEverythingButTheUnlock:
         self, _floor_monkeypatch
     ) -> None:
         """A renamed crewmate keeps its member_id, so the lock lands on that slug."""
-        from kiro_crew import members as members_mod
+        from aj_crew import members as members_mod
 
         renamed = "Renamed Crewmate"
         cfg = SimpleNamespace(agents={renamed: SimpleNamespace(member_id=SLUG)})
         _floor_monkeypatch.setattr(routes.members_mod, "member_slug", _REAL_MEMBER_SLUG)
-        _floor_monkeypatch.setattr(routes.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        _floor_monkeypatch.setattr(routes.AjCrewConfig, "load", staticmethod(lambda: cfg))
         _floor_monkeypatch.setattr(routes, "_member_names_for_slug", lambda cfg, slug: [renamed])
         assert members_mod.slug_for_name(renamed) != SLUG, "the display name derives another slug"
         async with _client() as client:
@@ -350,8 +350,8 @@ class TestTheLockOutlivesEverythingButTheUnlock:
         """The real reset route on the mate's DM slot touches neither state of the lock."""
         from unittest.mock import AsyncMock, MagicMock
 
-        from kiro_crew.dashboard.chat_handlers import api_chat_slot_reset_conversation
-        from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+        from aj_crew.dashboard.chat_handlers import api_chat_slot_reset_conversation
+        from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
         slot = _ChatSlot(f"dashboard:member-{SLUG}")
         state = MagicMock(spec=DashboardState)
@@ -407,7 +407,7 @@ class TestTheLockOutlivesEverythingButTheUnlock:
             [
                 _sys.executable,
                 "-c",
-                "from kiro_crew.dashboard_templates import instance; "
+                "from aj_crew.dashboard_templates import instance; "
                 f"print(instance.is_locked({SLUG!r}))",
             ],
             env={**os.environ, "PYTHONPATH": str(REPO / "src")},
@@ -474,7 +474,7 @@ async def test_the_default_page_read_carries_the_lock(_floor_monkeypatch) -> Non
 async def test_the_internal_secret_refusal_is_audited(_floor_monkeypatch) -> None:
     from unittest.mock import MagicMock
 
-    from kiro_crew import sel as sel_mod
+    from aj_crew import sel as sel_mod
 
     recorder = MagicMock()
     _floor_monkeypatch.setattr(sel_mod, "sel", lambda: recorder)
@@ -528,7 +528,7 @@ async def _gated_client(user: str, *, internal: bool = False):
     ``request["internal_auth"]`` is set only for a caller that presented the internal
     secret. Those two stamps are how the route tells the person from an agent.
     """
-    from kiro_crew.dashboard.handlers import _shared
+    from aj_crew.dashboard.handlers import _shared
 
     @web.middleware
     async def stamp(request: web.Request, handler: Any) -> web.StreamResponse:
@@ -553,7 +553,7 @@ async def _gated_client(user: str, *, internal: bool = False):
 async def test_the_real_owner_gate_admits_the_owner_and_refuses_anyone_else(
     _floor_monkeypatch,
 ) -> None:
-    from kiro_crew.dashboard.handlers._shared import require_owner_dashboard_request
+    from aj_crew.dashboard.handlers._shared import require_owner_dashboard_request
 
     _floor_monkeypatch.setattr(routes, "_owner_only", require_owner_dashboard_request)
     async with _gated_client("someone-else") as (client, _):
@@ -569,7 +569,7 @@ async def test_an_internal_auth_grant_is_refused_even_for_the_owner_subject(
     _floor_monkeypatch,
 ) -> None:
     """The middleware's internal-secret grant alone refuses, whatever subject rides along."""
-    from kiro_crew.dashboard.handlers._shared import require_owner_dashboard_request
+    from aj_crew.dashboard.handlers._shared import require_owner_dashboard_request
 
     _floor_monkeypatch.setattr(routes, "_owner_only", require_owner_dashboard_request)
     async with _gated_client("owner-subject", internal=True) as (client, _):
@@ -586,8 +586,8 @@ def test_an_agent_shell_cannot_read_the_key_that_signs_owner_tokens(tmp_path) ->
     key for read and write, so an agent cannot mint the owner token the gate above asks
     for. (The sandbox also masks the file unreadable; see ``sandbox``.)
     """
-    from kiro_crew.config.paths import data_home
-    from kiro_crew.security.paths import is_sensitive_path
+    from aj_crew.config.paths import data_home
+    from aj_crew.security.paths import is_sensitive_path
 
     assert is_sensitive_path(str(data_home() / "token_signing.key"))
 
@@ -627,11 +627,11 @@ def test_only_the_owner_route_calls_the_setter() -> None:
         check=True,
     ).stdout.split()
     assert sorted(out) == [
-        "src/kiro_crew/dashboard/handlers/member_dashboard.py",
-        "src/kiro_crew/dashboard/server_runtime/mcp_routes.py",
-        "src/kiro_crew/dashboard_templates/instance.py",
+        "src/aj_crew/dashboard/handlers/member_dashboard.py",
+        "src/aj_crew/dashboard/server_runtime/mcp_routes.py",
+        "src/aj_crew/dashboard_templates/instance.py",
     ]
-    mcp_routes = (REPO / "src/kiro_crew/dashboard/server_runtime/mcp_routes.py").read_text(
+    mcp_routes = (REPO / "src/aj_crew/dashboard/server_runtime/mcp_routes.py").read_text(
         encoding="utf-8"
     )
     assert re.search(

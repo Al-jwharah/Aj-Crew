@@ -12,8 +12,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from kiro_crew.agent_sdk import backends as sdk_backends
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE as CLAUDE
+from aj_crew.agent_sdk import backends as sdk_backends
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE as CLAUDE
 
 FIXTURES = Path(__file__).parent / "fixtures" / "acp_frames" / "claude"
 
@@ -113,11 +113,11 @@ def test_the_captured_element_is_what_the_claude_mirror_projects(tmp_path, monke
     (``spec-probe``) is the one the projection emits, and the parse it emits it from
     is the one ``consumed_spec_matches`` confirms against the saved stamp.
     """
-    import kiro_crew.agent as agent_mod
-    from kiro_crew.acp import session_mcp
-    from kiro_crew.agent_capabilities import _digest
-    from kiro_crew.agent_capabilities_consumed import consumed_spec_matches
-    from kiro_crew.providers.mirrors import mirror_for
+    import aj_crew.agent as agent_mod
+    from aj_crew.acp import session_mcp
+    from aj_crew.agent_capabilities import _digest
+    from aj_crew.agent_capabilities_consumed import consumed_spec_matches
+    from aj_crew.providers.mirrors import mirror_for
 
     agents = tmp_path / "agents"
     agents.mkdir()

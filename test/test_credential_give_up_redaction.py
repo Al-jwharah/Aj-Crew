@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.llm_helpers import credential_give_up_text
+from aj_crew.llm_helpers import credential_give_up_text
 
 #: The AWS documentation's own example access key id: credential-shaped, not real.
 _EXAMPLE_KEY = "AKIAIOSFODNN7EXAMPLE"
@@ -44,7 +44,7 @@ _CASES = {
 
 def _raw_credential_error(case: str = "link-and-key") -> Exception:
     """A credential-reload ``AcpError`` whose text was never redacted."""
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
     err = AcpError(_CASES[case][0], transient=False)
     err.credential_reload = True
@@ -71,8 +71,8 @@ def test_give_up_text_redacts_links_and_credentials(source, case):
 def test_give_up_text_drops_the_frame_data_repr():
     """The text the ACP formatter builds for a credential frame ends on the
     frame's ``data`` dict; the user-facing line ends on the provider's words."""
-    from kiro_crew.acp.client import AcpError
-    from kiro_crew.acp.transport_errors import _raise_acp_error
+    from aj_crew.acp.client import AcpError
+    from aj_crew.acp.transport_errors import _raise_acp_error
 
     with pytest.raises(AcpError) as ei:
         _raise_acp_error(
@@ -119,7 +119,7 @@ async def test_dashboard_give_up_row_is_redacted(tmp_path, monkeypatch, case):
     """The dashboard chat ends a twice-failed credential load on a redacted row."""
     from test_chat_session_not_found_recovery import _client, _drain, _errors, _state, _wire
 
-    from kiro_crew.dashboard.chat import _run_chat
+    from aj_crew.dashboard.chat import _run_chat
 
     async def _fail(msg):
         raise _raw_credential_error(case)
@@ -147,7 +147,7 @@ async def test_channel_give_up_post_is_redacted(case):
 
     from test_channel_prompt_busy import FakeSessions, _raising_client
 
-    from kiro_crew import channel as channel_mod
+    from aj_crew import channel as channel_mod
 
     ch = channel_mod.Channel(id="c1", topic="review")
     agent = ch.add_agent(role="dev", agent_name="dev")

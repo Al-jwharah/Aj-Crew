@@ -16,10 +16,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.cloud import aws
-from kiro_crew.cloud import fargate_engine as fe
-from kiro_crew.cloud import launch_job as lj
-from kiro_crew.dashboard import handlers_cloud as hc
+from aj_crew.cloud import aws
+from aj_crew.cloud import fargate_engine as fe
+from aj_crew.cloud import launch_job as lj
+from aj_crew.dashboard import handlers_cloud as hc
 
 ARN = "arn:aws:ecs:us-east-1:123456789012:task/kc-crew/1abc2def3abc4def5abc6def7abc8def"
 SHORT_ARN = "arn:aws:ecs:us-east-1:123456789012:task/1abc2def3abc4def5abc6def7abc8def"
@@ -52,19 +52,19 @@ class TestSightingFromTask:
             "taskArn": ARN,
             "lastStatus": "STOPPED",
             "desiredStatus": "STOPPED",
-            "startedBy": "kirocrew-cloud-kc-abc123",
+            "startedBy": "ajcrew-cloud-kc-abc123",
             "createdAt": "2026-09-21T10:00:00.000000+00:00",
             "startedAt": "2026-09-21T10:01:00.000000+00:00",
             "stoppedAt": "2026-09-21T12:00:00.000000+00:00",
             "stoppedReason": "Essential container in task exited",
-            "tags": [{"key": "kirocrew:managed", "value": "true"}],
+            "tags": [{"key": "ajcrew:managed", "value": "true"}],
         }
         s = fe.sighting_from_task(task)
         assert s.task_arn == ARN
         assert s.last_status == "STOPPED"
         assert s.desired_status == "STOPPED"
-        assert s.started_by == "kirocrew-cloud-kc-abc123"
-        assert s.tags == {"kirocrew:managed": "true"}
+        assert s.started_by == "ajcrew-cloud-kc-abc123"
+        assert s.tags == {"ajcrew:managed": "true"}
         # startedAt wins over createdAt for the age; stoppedAt is its own moment.
         assert s.started_at is not None and s.stopped_at is not None
         assert s.stopped_at - s.started_at == pytest.approx(119 * 60)
@@ -294,8 +294,8 @@ class TestLaunchTaskRoute:
     async def test_success_carries_the_sighting_split_and_a_read_instant(self, tmp_path):
         sighting = fe.TaskSighting(
             task_arn=ARN,
-            tags={"kirocrew:managed": "true"},
-            started_by="kirocrew-cloud-kc-abc123",
+            tags={"ajcrew:managed": "true"},
+            started_by="ajcrew-cloud-kc-abc123",
             last_status="RUNNING",
             started_at=1_700_000_000.0,
             desired_status="RUNNING",

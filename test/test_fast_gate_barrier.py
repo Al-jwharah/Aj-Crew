@@ -39,7 +39,7 @@ import pytest
 import yaml
 from test_docs_gate_table_matches_fast_gate import fast_gate_source_gate_scripts
 
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _CI = _REPO_ROOT / ".github" / "workflows" / "ci.yml"
@@ -1113,7 +1113,7 @@ class TestTheSelectorBehavesOnRealPayloadShapes:
         assert self._select(barrier_script, payload) is None
 
     def test_a_fork_reusing_the_branch_name_is_refused(self, barrier_script: str) -> None:
-        payload = {"workflow_runs": [self._run(901, self._BRANCH, "attacker/KiroCrew")]}
+        payload = {"workflow_runs": [self._run(901, self._BRANCH, "attacker/AjCrew")]}
         assert self._select(barrier_script, payload) is None
 
     def test_a_newer_colliding_run_does_not_outrank_my_older_one(self, barrier_script: str) -> None:

@@ -17,9 +17,9 @@ import sys
 
 import pytest
 
-from kiro_crew.cloud import login
-from kiro_crew.cloud.login_target import KiroLoginTarget
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.cloud import login
+from aj_crew.cloud.login_target import KiroLoginTarget
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 # The guard runs on a POSIX remote instance; the two tests that execute it need
 # a POSIX bash plus POSIX mode bits and symlinks, so they skip elsewhere.
@@ -49,7 +49,7 @@ class TestPrivateLoginDir:
     @pytest.mark.parametrize("name", sorted(_PATH_COMMANDS))
     def test_guard_precedes_first_path_use(self, name):
         cmd = _PATH_COMMANDS[name]
-        guard_at = cmd.find('KC_LOGIN_DIR="${HOME:?}/.kirocrew/login"')
+        guard_at = cmd.find('KC_LOGIN_DIR="${HOME:?}/.ajcrew/login"')
         assert guard_at != -1, f"{name} is missing the login-dir guard"
         # First use of any of the three paths must come AFTER the guard.
         first_use = min(
@@ -65,13 +65,13 @@ class TestPrivateLoginDir:
 
     @pytest.mark.parametrize("name", sorted(_PATH_COMMANDS))
     def test_no_predictable_tmp_path(self, name):
-        assert "/tmp/kirocrew-kiro-login" not in _PATH_COMMANDS[name]
+        assert "/tmp/ajcrew-kiro-login" not in _PATH_COMMANDS[name]
 
     def test_guard_snippet_shape(self):
         guard = login._login_dir_guard()
-        assert 'KC_LOGIN_DIR="${HOME:?}/.kirocrew/login"' in guard
+        assert 'KC_LOGIN_DIR="${HOME:?}/.ajcrew/login"' in guard
         # Both levels are walked, parent first.
-        assert 'for kc_dir in "${HOME:?}/.kirocrew" "$KC_LOGIN_DIR"' in guard
+        assert 'for kc_dir in "${HOME:?}/.ajcrew" "$KC_LOGIN_DIR"' in guard
         # The symlink refusal comes before anything creates or chmods a path:
         # chmod follows links, so the order is the point.
         first_symlink_check = guard.index('[ -L "$kc_dir" ]')
@@ -102,7 +102,7 @@ class TestPrivateLoginDir:
     def test_guard_creates_private_dir_with_bash(self, tmp_path):
         res = self._run_guard(tmp_path)
         assert res.returncode == 0, res.stderr
-        for rel in (".kirocrew", ".kirocrew/login"):
+        for rel in (".ajcrew", ".ajcrew/login"):
             made = tmp_path / rel
             assert made.is_dir()
             mode = stat.S_IMODE(made.stat().st_mode)
@@ -112,10 +112,10 @@ class TestPrivateLoginDir:
     def test_guard_refuses_symlinked_dir_with_bash(self, tmp_path):
         # Plant a symlink where $KC_LOGIN_DIR should be a real directory: the
         # exact attack the guard exists to stop.
-        (tmp_path / ".kirocrew").mkdir()
+        (tmp_path / ".ajcrew").mkdir()
         elsewhere = tmp_path / "attacker"
         elsewhere.mkdir(mode=0o755)
-        (tmp_path / ".kirocrew" / "login").symlink_to(elsewhere)
+        (tmp_path / ".ajcrew" / "login").symlink_to(elsewhere)
         res = self._run_guard(tmp_path)
         assert res.returncode != 0
         assert "refusing" in res.stderr.lower()
@@ -124,11 +124,11 @@ class TestPrivateLoginDir:
 
     @_needs_posix_bash
     def test_guard_refuses_symlinked_parent_with_bash(self, tmp_path):
-        # The parent level gets the same treatment: a link at $HOME/.kirocrew
+        # The parent level gets the same treatment: a link at $HOME/.ajcrew
         # is refused before the guard creates or chmods anything beneath it.
         elsewhere = tmp_path / "attacker"
         elsewhere.mkdir(mode=0o755)
-        (tmp_path / ".kirocrew").symlink_to(elsewhere)
+        (tmp_path / ".ajcrew").symlink_to(elsewhere)
         res = self._run_guard(tmp_path)
         assert res.returncode != 0
         assert "refusing" in res.stderr.lower()
@@ -139,13 +139,13 @@ class TestPrivateLoginDir:
     def test_guard_tightens_a_loose_preexisting_dir_with_bash(self, tmp_path):
         # An owner-owned directory left group/world-writable is where a second
         # user could plant a log symlink; the guard must end with it at 0700.
-        loose = tmp_path / ".kirocrew" / "login"
+        loose = tmp_path / ".ajcrew" / "login"
         loose.mkdir(parents=True)
-        os.chmod(tmp_path / ".kirocrew", 0o777)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions  # noqa: E501  # fmt: skip
+        os.chmod(tmp_path / ".ajcrew", 0o777)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions  # noqa: E501  # fmt: skip
         os.chmod(loose, 0o777)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions  # noqa: E501  # fmt: skip
         res = self._run_guard(tmp_path)
         assert res.returncode == 0, res.stderr
-        for path in (tmp_path / ".kirocrew", loose):
+        for path in (tmp_path / ".ajcrew", loose):
             assert stat.S_IMODE(path.stat().st_mode) == 0o700
 
     @_needs_posix_bash
@@ -153,7 +153,7 @@ class TestPrivateLoginDir:
         # A chmod that fails (or leaves the mode loose) must stop the script,
         # since the redirects that follow would otherwise land in a directory
         # another user can write to.
-        loose = tmp_path / ".kirocrew" / "login"
+        loose = tmp_path / ".ajcrew" / "login"
         loose.mkdir(parents=True)
         os.chmod(loose, 0o777)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions  # noqa: E501  # fmt: skip
         shim = tmp_path / "shim"
@@ -226,5 +226,5 @@ class TestPrivateLoginDir:
             **UTF8_TEXT,
         )
         assert res.returncode == 0, res.stderr
-        for rel in (".kirocrew", ".kirocrew/login"):
+        for rel in (".ajcrew", ".ajcrew/login"):
             assert stat.S_IMODE((tmp_path / rel).stat().st_mode) == 0o700

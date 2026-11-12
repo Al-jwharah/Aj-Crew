@@ -7,7 +7,7 @@ import { initSceneCanvases, runSceneLoop, useVisibleSync } from '../../hooks/sce
 import { useSceneInteraction, type SceneTooltipTheme } from '../../hooks/useSceneInteraction'
 import { i18nT } from '../../i18n/t'
 
-const GHOST_THEME: SceneTooltipTheme = { active: 'Haunting the codebase', idle: 'Drifting through walls' }
+const GHOST_THEME: SceneTooltipTheme = { active: 'Polishing the codebase', idle: 'Catching the light' }
 
 /* ── Types ── */
 interface Ghost {
@@ -25,7 +25,7 @@ interface Firefly { x: number; y: number; drift: number; speed: number; blink: n
 
 /* ── Constants ── */
 const W = 440, H = 300, S = SCENE_SCALE
-// All ghosts stay classic Kiro white — hats, glasses, and capes differentiate them
+// Every gem stays the brand's white — hats, glasses, and capes differentiate them
 const GHOST_COLOR = '#e8ecf4'
 const EYE_COLOR = '#14141e'
 
@@ -41,10 +41,10 @@ const OUTFITS: Outfit[] = [
   { hat: 'none', glasses: 'shades', cape: true, capeColor: '#27408b' },
   { hat: 'beanie', glasses: 'none', cape: false, capeColor: '' },
   { hat: 'party', glasses: 'round', cape: false, capeColor: '' },
-  { hat: 'crown', glasses: 'none', cape: true, capeColor: '#5b2c6f' },
+  { hat: 'crown', glasses: 'none', cape: true, capeColor: '#0f766e' },
 ]
 
-/** Anchor positions for up to 8 ghosts — a loose two-row haunt */
+/** Anchor positions for up to 8 gems — two loose rows */
 const GHOST_SPOTS = [
   { x: 70, y: 120 }, { x: 170, y: 105 }, { x: 270, y: 125 }, { x: 360, y: 108 },
   { x: 115, y: 205 }, { x: 220, y: 195 }, { x: 320, y: 210 }, { x: 400, y: 190 },
@@ -141,10 +141,10 @@ export default function GhostScene({ agents, visible = true }: Props) {
   useEffect(() => {
     const { X, T, d } = initSceneCanvases(canvasRef.current!, textRef.current!, W, H, S)
 
-    /** Kiro ghost bitmap, 24×28 — shared trace from the reference art (eye holes filled; eyes drawn as overlay) */
+    /** The gem bitmap, 24×28 — shared with the thread popover (no eyes in it; they are drawn as an overlay) */
     const GHOST_PIXELS = KIRO_GHOST_PIXELS
 
-    /** Draw one Kiro ghost, 24×28, anchored at top-left (gx, gy) */
+    /** Draw one gem, 24×28, anchored at top-left (gx, gy) */
     const drawGhost = (gx: number, gy: number, color: string, g: Ghost, t: number) => {
       const o = g.outfit
       // Cape — drawn behind the body, fluttering with time
@@ -169,7 +169,7 @@ export default function GhostScene({ agents, visible = true }: Props) {
           }
         }
       })
-      // Eyes — tall rounded ovals right of center (traced from the reference); blink to 1px
+      // Eyes — tall rounded ovals right of center, as the gem glances that way; blink to 1px
       const eyeShift = g.dir > 0 ? 0.5 : -0.5
       const blinking = g.blinkTimer < 6
       if (blinking) {
@@ -202,12 +202,12 @@ export default function GhostScene({ agents, visible = true }: Props) {
         d(gx + 10.8 + eyeShift, gy + 7.5, 1.2, 0.9, '#8fa8ff')
         d(gx + 16.4 + eyeShift, gy + 7.5, 1.2, 0.9, '#8fa8ff')
       }
-      // Hats — perched on the dome (apex ~cols 10-16)
+      // Hats — perched on the table (cols 6-17)
       if (o.hat === 'witch') {
-        d(gx + 6, gy - 1, 16, 1.8, '#2d1b4e')
-        d(gx + 10, gy - 4.5, 7, 3.5, '#2d1b4e')
-        d(gx + 11.8, gy - 7.5, 3.4, 3.4, '#2d1b4e')
-        d(gx + 10, gy - 2, 7, 1.1, '#8e44ad')
+        d(gx + 6, gy - 1, 16, 1.8, '#12343a')
+        d(gx + 10, gy - 4.5, 7, 3.5, '#12343a')
+        d(gx + 11.8, gy - 7.5, 3.4, 3.4, '#12343a')
+        d(gx + 10, gy - 2, 7, 1.1, '#2dd4bf')
       } else if (o.hat === 'top') {
         d(gx + 7, gy - 1, 13, 1.4, '#181820')
         d(gx + 9, gy - 7, 9, 6, '#181820')
@@ -237,11 +237,11 @@ export default function GhostScene({ agents, visible = true }: Props) {
     }
 
     const drawBackground = (t: number) => {
-      // Friendly twilight gradient — cozy, only sort of spooky
+      // Night gradient in the brand's ink, warming to teal at the ground
       const grad = X.createLinearGradient(0, 0, 0, H * S)
-      grad.addColorStop(0, '#171232')
-      grad.addColorStop(0.6, '#251c48')
-      grad.addColorStop(1, '#332757')
+      grad.addColorStop(0, '#0b0c0f')
+      grad.addColorStop(0.6, '#0f1c21')
+      grad.addColorStop(1, '#153238')
       X.fillStyle = grad
       X.fillRect(0, 0, W * S, H * S)
 
@@ -292,7 +292,7 @@ export default function GhostScene({ agents, visible = true }: Props) {
       X.beginPath(); X.arc((mx + 2) * S, (my - 8) * S, 1.6 * S, 0, Math.PI * 2); X.fill()
 
       // Distant hills
-      X.fillStyle = '#1e1740'
+      X.fillStyle = '#0c2025'
       X.beginPath()
       X.moveTo(0, H * 0.82 * S)
       X.quadraticCurveTo(W * 0.25 * S, H * 0.72 * S, W * 0.5 * S, H * 0.8 * S)
@@ -319,15 +319,15 @@ export default function GhostScene({ agents, visible = true }: Props) {
       wispsRef.current.forEach(wp => {
         const wx = wp.x + Math.sin(t * wp.speed + wp.drift) * 24
         X.globalAlpha = wp.alpha + Math.sin(t * wp.speed * 1.4 + wp.drift) * 0.02
-        X.fillStyle = '#a9b4d8'
+        X.fillStyle = '#a9cfd2'
         X.beginPath(); X.ellipse(wx * S, wp.y * S, 34 * S, 6 * S, 0, 0, Math.PI * 2); X.fill()
       })
       X.globalAlpha = 1
 
       // Title
-      T.fillStyle = '#a89ee0'; T.font = sceneFont('title', 'bold')
+      T.fillStyle = '#5eead4'; T.font = sceneFont('title', 'bold')
       T.fillText(i18nT('pages.scenes.ghostScene.kiro_haunt'), (W / 2 - 22) * S, 26 * S)
-      T.fillStyle = '#7a70ad'; T.font = sceneFont('detail')
+      T.fillStyle = '#4f9d94'; T.font = sceneFont('detail')
       T.fillText(i18nT('pages.scenes.ghostScene.friendly_hauntings_only'), (W / 2 - 20) * S, 34 * S)
     }
 
@@ -359,7 +359,7 @@ export default function GhostScene({ agents, visible = true }: Props) {
 
         X.globalAlpha = g.enterProgress * (g.running ? 1 : 0.72)
 
-        // Spectral glow under active ghosts
+        // Soft glow under active gems
         if (g.running) {
           const glow = X.createRadialGradient(g.x * S, (g.y + bob) * S, 0, g.x * S, (g.y + bob) * S, 24 * S)
           glow.addColorStop(0, g.color + '30')
@@ -378,7 +378,7 @@ export default function GhostScene({ agents, visible = true }: Props) {
         X.globalAlpha = 1
 
         // Status label above
-        drawLabel(T, g.running ? 'haunting' : 'idle', g.x * S, (gy - 11) * S, { role: 'status', color: g.running ? '#4f4' : '#888', bgColor: 'rgba(0,0,0,0.5)', align: 'center', scale: S })
+        drawLabel(T, g.running ? 'shining' : 'idle', g.x * S, (gy - 11) * S, { role: 'status', color: g.running ? '#4f4' : '#888', bgColor: 'rgba(0,0,0,0.5)', align: 'center', scale: S })
       // Real-message speech bubble — appears when the session's latest message changes
       if (g.lastMessage && Date.now() - g.msgAt < SPEECH_BUBBLE_MS) {
         const msgAge = Date.now() - g.msgAt
@@ -390,14 +390,14 @@ export default function GhostScene({ agents, visible = true }: Props) {
         // Name (wraps up to ~45 chars) + detail below
         const nameLines = drawLabel(T, g.name, g.x * S, (g.y + 21) * S, { role: 'name', weight: 'bold', color: '#fff', align: 'center', scale: S, maxWidth: 64 * S })
         if (g.detail) {
-          drawLabel(T, g.detail, g.x * S, (g.y + 26) * S + (nameLines - 1) * sceneLineHeight('name'), { role: 'detail', color: '#8f86c9', align: 'center', scale: S })
+          drawLabel(T, g.detail, g.x * S, (g.y + 26) * S + (nameLines - 1) * sceneLineHeight('name'), { role: 'detail', color: '#7fb9b1', align: 'center', scale: S })
         }
       })
 
       // Counter
-      T.fillStyle = '#4c4670'
+      T.fillStyle = '#3f6b66'
       T.font = sceneFont('label')
-      T.fillText(`kiro haunt · ${ghostsRef.current.length} ghosts`, 4 * S, (H - 4) * S)
+      T.fillText(`gem glow · ${ghostsRef.current.length} gems`, 4 * S, (H - 4) * S)
     }
 
     return runSceneLoop(visibleRef, tickRef, update, draw)

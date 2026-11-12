@@ -857,7 +857,7 @@ describe('ToolCallLine auto-denied detection', () => {
     const store = createTestStore({
       chat: {
         messages: [pill, denySibling],
-        toolLog: [{ type: 'tool', text: 'kirocrew token', tool_call_id: 'tc_deny', output: 'User denied tool execution', ts: 1 }],
+        toolLog: [{ type: 'tool', text: 'ajcrew token', tool_call_id: 'tc_deny', output: 'User denied tool execution', ts: 1 }],
         slotRunning: false,
       } as unknown as ChatState,
     })
@@ -892,7 +892,7 @@ describe('ToolCallLine auto-denied detection', () => {
       role: 'tool',
       content:
         '🚫 Running: ls — Blocked: the safety check crashed while judging this call ' +
-        '(SystemError), so the call was refused and nothing ran. This is a Kiro Crew ' +
+        '(SystemError), so the call was refused and nothing ran. This is an Aj Crew ' +
         'bug, not a policy rule and not a user action.',
       cls: 'msg msg-tool',
       meta: { tool_call_id: 'tc_crash' },
@@ -1058,8 +1058,8 @@ describe('ToolCallLine ask_question answers card', () => {
   }
 
   // ToolCallLine lazily imports AskAnswersCard, so chip queries wait explicitly for that chunk.
-  it('renders for kirocrew-core', async () => {
-    renderAnswered('kirocrew-core')
+  it('renders for ajcrew-core', async () => {
+    renderAnswered('ajcrew-core')
     expect(await screen.findByTestId('ask-answers-chip', undefined, { timeout: 5_000 })).toBeTruthy()
   })
 
@@ -1073,7 +1073,7 @@ describe('ToolCallLine ask_question answers card', () => {
         activeSlot: 'S',
         toolLog: [
           { type: 'tool', text: 'ask_question', tool_name: 'ask_question', mcp_server: 'evil-server', tool_call_id: 'tc_evil', output: answered, ts: 1 },
-          { type: 'tool', text: 'ask_question', tool_name: 'ask_question', mcp_server: 'kirocrew-core', tool_call_id: 'tc_ok', output: answered, ts: 2 },
+          { type: 'tool', text: 'ask_question', tool_name: 'ask_question', mcp_server: 'ajcrew-core', tool_call_id: 'tc_ok', output: answered, ts: 2 },
         ],
         slotRunning: false,
       } as unknown as ChatState,
@@ -1097,7 +1097,7 @@ describe('ToolCallLine ask_question answers card', () => {
       chat: {
         messages: [older, newer],
         activeSlot: 'S',
-        toolLog: [{ type: 'tool', text: 'ask_question', tool_name: 'ask_question', mcp_server: 'kirocrew-core', tool_call_id: 'tc_ans', output: answered, ts: 1 }],
+        toolLog: [{ type: 'tool', text: 'ask_question', tool_name: 'ask_question', mcp_server: 'ajcrew-core', tool_call_id: 'tc_ans', output: answered, ts: 1 }],
         slotRunning: false,
       } as unknown as ChatState,
     })

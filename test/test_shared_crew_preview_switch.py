@@ -10,17 +10,17 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import sandbox, security
-from kiro_crew.shared_crew import preview, routes_invites, routes_preview
-from kiro_crew.shared_crew.contracts import ACTOR_REQUEST_KEY, ActorContext, Transport
-from kiro_crew.shared_crew.identity import local_operator_principal
+from aj_crew import sandbox, security
+from aj_crew.shared_crew import preview, routes_invites, routes_preview
+from aj_crew.shared_crew.contracts import ACTOR_REQUEST_KEY, ActorContext, Transport
+from aj_crew.shared_crew.identity import local_operator_principal
 
 LEAF = "shared_crew_preview.json"
 
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+    _floor_monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
     _floor_monkeypatch.delenv(preview.PREVIEW_ENV, raising=False)
     preview.reset_for_tests()
     yield tmp_path
@@ -293,7 +293,7 @@ async def test_a_failed_write_is_a_500_and_is_audited_as_failed(_home, monkeypat
 
 
 def test_the_audit_record_is_critical_and_never_raises(monkeypatch):
-    import kiro_crew.sel as sel_module
+    import aj_crew.sel as sel_module
 
     calls: list[dict[str, Any]] = []
     monkeypatch.setattr(
@@ -320,7 +320,7 @@ def test_the_audit_record_is_critical_and_never_raises(monkeypatch):
 
 
 def test_the_routes_are_registered_by_the_shared_crew_slice_whatever_the_preview():
-    from kiro_crew.dashboard.routes import shared_crew
+    from aj_crew.dashboard.routes import shared_crew
 
     app = web.Application()
     shared_crew.register(app)
@@ -342,12 +342,12 @@ def test_the_leaf_is_sealed_like_the_other_owner_consent_records():
 
 
 def test_the_location_follows_the_data_home(_home):
-    from kiro_crew.config import loader
+    from aj_crew.config import loader
 
     assert loader.shared_crew_preview_path() == _home / LEAF
 
 
 def test_the_preview_switch_is_not_a_config_field_or_a_change_card():
-    from kiro_crew.config.sections import FEATURE_PREVIEW_FLAGS
+    from aj_crew.config.sections import FEATURE_PREVIEW_FLAGS
 
     assert not any("shared" in flag for flag in FEATURE_PREVIEW_FLAGS)

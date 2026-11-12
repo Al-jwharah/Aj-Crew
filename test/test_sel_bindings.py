@@ -1,6 +1,6 @@
 """``SecurityEventLog`` keeps every member it had, and each is bound from the module that owns it.
 
-The log's collaborators live in the ``kiro_crew.sel_*`` owner modules: each member's body
+The log's collaborators live in the ``aj_crew.sel_*`` owner modules: each member's body
 there is a module-level function whose first parameter is ``self``, and the class binds it
 by name (``m = _owner.m``). The instance state stays on the instance, so the singleton,
 tests and every caller see the same object they always did. This file pins that contract:
@@ -10,12 +10,12 @@ tests and every caller see the same object they always did. This file pins that 
 * each bound member IS its owner's function, and no owner keeps an unbound ``self`` function;
 * no bound function uses zero-argument ``super()``, ``__class__`` or a name-mangled
   attribute, which only work inside a class body;
-* no owner imports ``kiro_crew.sel`` at run time, and each imports only owners below it;
+* no owner imports ``aj_crew.sel`` at run time, and each imports only owners below it;
 * each owner's docstring names the instance fields its members write and read;
-* every owner logs as ``kiro_crew.sel``, and a class that moved keeps ``kiro_crew.sel`` as
+* every owner logs as ``aj_crew.sel``, and a class that moved keeps ``aj_crew.sel`` as
   its module;
 * the facade serves exactly the module-level names that moved, every one defined by its
-  owner, and a write through ``kiro_crew.sel`` reaches every owner that reads the name;
+  owner, and a write through ``aj_crew.sel`` reaches every owner that reads the name;
 * no member of the family imports ``time`` (the on-loop guard in ``test_sel.py`` reads the
   facade's own attribute; this reads every owner).
 """
@@ -36,9 +36,9 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror
-from kiro_crew import sel as sel_mod
-from kiro_crew.sel import SecurityEventLog
+from aj_crew import _facade_mirror
+from aj_crew import sel as sel_mod
+from aj_crew.sel import SecurityEventLog
 
 # The reach check parses the test trees; keep it on one worker.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_sel_bindings")
@@ -101,9 +101,9 @@ _MEMBERS: dict[str, tuple[str, bool, str, str]] = {
     "log": ("function", False, "105f9e23f712", "sel"),
     "log_api_access": ("function", False, "205f9b11a348", "sel"),
     # `redact` added for the context-less MCP gateway daemon (OTLP host audit).
-    "log_governance_decision": ("function", False, "f3c3785395e6", "sel"),
+    "log_governance_decision": ("function", False, "165cb2b855e1", "sel"),
     "log_governance_degraded": ("function", False, "9b129b9270d1", "sel"),
-    "log_tool_invocation": ("function", False, "28f3ece4bc30", "sel"),
+    "log_tool_invocation": ("function", False, "83bb7a1fb850", "sel"),
     "prune": ("function", False, "254f3f4fcb91", "sel_rotation"),
     "recent": ("function", False, "612406e814ec", "sel_reader"),
     "set_forward_callback": ("function", False, "2c29453596f8", "sel"),
@@ -115,7 +115,7 @@ _MEMBERS: dict[str, tuple[str, bool, str, str]] = {
 #: attribute.
 _ANNOTATED = frozenset({"_hmac_key", "_hmac_key_file", "_initialized", "_instance", "_last_hash"})
 
-_FACADE = "kiro_crew.sel"
+_FACADE = "aj_crew.sel"
 
 
 def _owners() -> list[ModuleType]:
@@ -178,9 +178,9 @@ def test_each_member_keeps_its_kind_shape_and_owner(name: str) -> None:
     fn = _member_function(name)
     assert inspect.iscoroutinefunction(fn) is coroutine
     assert _signature_digest(fn) == digest, f"{name}{inspect.signature(fn)} changed signature"
-    assert fn.__module__ == f"kiro_crew.{owner}"
+    assert fn.__module__ == f"aj_crew.{owner}"
     if owner != "sel":
-        assert vars(sys.modules[f"kiro_crew.{owner}"])[name] is fn
+        assert vars(sys.modules[f"aj_crew.{owner}"])[name] is fn
 
 
 def test_every_owner_lists_in_the_facade_and_holds_its_members() -> None:
@@ -222,7 +222,7 @@ def test_no_bound_function_needs_its_class_body(owner: str) -> None:
 
 
 def _runtime_facade_imports(tree: ast.Module) -> list[int]:
-    """Lines that import ``kiro_crew.sel`` outside an ``if TYPE_CHECKING:`` block."""
+    """Lines that import ``aj_crew.sel`` outside an ``if TYPE_CHECKING:`` block."""
     guarded: set[int] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.If) and ast.unparse(node.test) == "TYPE_CHECKING":
@@ -233,7 +233,7 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
             continue
         if isinstance(node, ast.ImportFrom):
             if node.module == _FACADE or (
-                node.module == "kiro_crew" and any(a.name == "sel" for a in node.names)
+                node.module == "aj_crew" and any(a.name == "sel" for a in node.names)
             ):
                 lines.append(node.lineno)
         elif isinstance(node, ast.Import):
@@ -245,10 +245,10 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
 def test_the_facade_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n    from kiro_crew.sel import SecurityEventLog\n"
-        "def f():\n    from kiro_crew.sel import x\n"
-        "import kiro_crew.sel\n"
-        "from kiro_crew import sel\n"
+        "if TYPE_CHECKING:\n    from aj_crew.sel import SecurityEventLog\n"
+        "def f():\n    from aj_crew.sel import x\n"
+        "import aj_crew.sel\n"
+        "from aj_crew import sel\n"
     )
     assert sorted(_runtime_facade_imports(tree)) == [5, 6, 7]
 
@@ -259,29 +259,29 @@ def test_no_owner_imports_the_facade_at_run_time(owner: str) -> None:
 
 
 def _owner_imports(tree: ast.Module) -> set[str]:
-    """The ``kiro_crew.sel_*`` owner modules *tree* imports, by dotted name."""
+    """The ``aj_crew.sel_*`` owner modules *tree* imports, by dotted name."""
     found: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.module:
-            if node.module.startswith("kiro_crew.sel_"):
+            if node.module.startswith("aj_crew.sel_"):
                 found.add(node.module)
-            elif node.module == "kiro_crew":
-                found.update(f"kiro_crew.{a.name}" for a in node.names if a.name.startswith("sel_"))
+            elif node.module == "aj_crew":
+                found.update(f"aj_crew.{a.name}" for a in node.names if a.name.startswith("sel_"))
         elif isinstance(node, ast.Import):
-            found.update(a.name for a in node.names if a.name.startswith("kiro_crew.sel_"))
+            found.update(a.name for a in node.names if a.name.startswith("aj_crew.sel_"))
     return found
 
 
 def test_the_owner_import_scan_can_fail() -> None:
     tree = ast.parse(
-        "from kiro_crew.sel_reader import X\n"
-        "from kiro_crew import sel_rotation as _r, platform_compat\n"
-        "import kiro_crew.sel_append\n"
+        "from aj_crew.sel_reader import X\n"
+        "from aj_crew import sel_rotation as _r, platform_compat\n"
+        "import aj_crew.sel_append\n"
     )
     assert _owner_imports(tree) == {
-        "kiro_crew.sel_reader",
-        "kiro_crew.sel_rotation",
-        "kiro_crew.sel_append",
+        "aj_crew.sel_reader",
+        "aj_crew.sel_rotation",
+        "aj_crew.sel_append",
     }
 
 
@@ -359,7 +359,7 @@ def test_each_owner_names_the_fields_it_writes_and_reads(owner: str) -> None:
 
 @pytest.mark.parametrize("owner", sel_mod._OWNERS)
 def test_owners_log_as_the_facade(owner: str) -> None:
-    """Operator log filters and ``caplog`` scopes key on ``kiro_crew.sel``."""
+    """Operator log filters and ``caplog`` scopes key on ``aj_crew.sel``."""
     module = sys.modules[owner]
     assert getattr(module, "logger", sel_mod.logger) is sel_mod.logger
 
@@ -367,7 +367,7 @@ def test_owners_log_as_the_facade(owner: str) -> None:
 @pytest.mark.parametrize("owner", sel_mod._OWNERS)
 def test_a_moved_class_keeps_the_facade_as_its_module(owner: str) -> None:
     """A traceback or a warning logged with ``exc_info`` renders a raised class as
-    ``module.qualname``; a class that moved to an owner keeps naming ``kiro_crew.sel``."""
+    ``module.qualname``; a class that moved to an owner keeps naming ``aj_crew.sel``."""
     module = sys.modules[owner]
     defined = [n.name for n in _tree(module).body if isinstance(n, ast.ClassDef)]
     assert {name: vars(module)[name].__module__ for name in defined} == {
@@ -376,7 +376,7 @@ def test_a_moved_class_keeps_the_facade_as_its_module(owner: str) -> None:
 
 
 def test_the_chain_contention_error_names_the_facade_in_an_error_chain() -> None:
-    from kiro_crew.subagent import _describe_exception
+    from aj_crew.subagent import _describe_exception
 
     try:
         try:
@@ -386,7 +386,7 @@ def test_the_chain_contention_error_names_the_facade_in_an_error_chain() -> None
     except RuntimeError as outer:
         text = _describe_exception(outer)
     assert text == (
-        "RuntimeError: audit refused <- caused by " "kiro_crew.sel.SelChainContention: kept writing"
+        "RuntimeError: audit refused <- caused by " "aj_crew.sel.SelChainContention: kept writing"
     )
 
 
@@ -435,7 +435,7 @@ def _patched_through_the_facade() -> set[str]:
         if not (rel == "conftest.py" or rel.startswith("test/") or "/tests/" in rel):
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
-        if "kiro_crew" not in text or not re.search(r"\bsel\b|kiro_crew\.sel\b", text):
+        if "aj_crew" not in text or not re.search(r"\bsel\b|aj_crew\.sel\b", text):
             continue
         found = facade_mirror_scan.text_patched_names(text, {_FACADE: _FACADE})
         patched |= found.get(_FACADE, set())
@@ -477,7 +477,7 @@ def test_every_name_patched_through_the_facade_reaches_the_owners_reading_it() -
 
 def test_the_reach_scan_can_fail() -> None:
     index = sel_mod._MIRROR
-    owner = "kiro_crew.sel_rotation"
+    owner = "aj_crew.sel_rotation"
     holders = dict(index.holders)
     holders["_SEGMENT_MAX_BYTES"] = tuple(h for h in holders["_SEGMENT_MAX_BYTES"] if h != owner)
     blind = dataclasses.replace(index, holders=holders)
@@ -488,7 +488,7 @@ def test_the_reach_scan_can_fail() -> None:
 def test_a_patch_through_the_facade_lands_on_every_owner_and_is_undone(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    owner = sys.modules["kiro_crew.sel_rotation"]
+    owner = sys.modules["aj_crew.sel_rotation"]
     before = owner._SEGMENT_MAX_BYTES
     with monkeypatch.context() as patch:
         patch.setattr(sel_mod, "_SEGMENT_MAX_BYTES", 7)
@@ -497,7 +497,7 @@ def test_a_patch_through_the_facade_lands_on_every_owner_and_is_undone(
     assert owner._SEGMENT_MAX_BYTES is before
     assert sel_mod._SEGMENT_MAX_BYTES is before
     holders = sel_mod._MIRROR.holders["_on_event_loop"]
-    assert {"kiro_crew.sel_chain_lock", "kiro_crew.sel_append"} <= set(holders)
+    assert {"aj_crew.sel_chain_lock", "aj_crew.sel_append"} <= set(holders)
     with monkeypatch.context() as patch:
         patch.setattr(sel_mod, "_on_event_loop", lambda: True)
         assert all(sys.modules[h]._on_event_loop() for h in holders)

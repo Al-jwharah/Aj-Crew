@@ -17,7 +17,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.apps.builtins.issue_radar.backend import azure_client, azure_transport
+from aj_crew.apps.builtins.issue_radar.backend import azure_client, azure_transport
 
 # The autouse fixture below stubs ``azure_client._az_env`` to ``{}`` for the
 # decoding tests, which are not about the environment. Capture the real one at

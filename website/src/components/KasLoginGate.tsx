@@ -1117,7 +1117,7 @@ function KasLoginFlow({
             signed in, so the chat behind it (and the agent) is not reachable;
             Check again is the remedy. Card: the dashboard's own agent is
             reachable whatever this status read says, and a failed status read
-            (a vault it cannot open) is exactly what `kirocrew doctor` and the
+            (a vault it cannot open) is exactly what `ajcrew doctor` and the
             agent diagnose. */}
         <ErrorNotice
           className="mt-3 max-w-lg"

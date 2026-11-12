@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import mate_capabilities, mate_worker
+from aj_crew import mate_capabilities, mate_worker
 
 
 def _patch_base(monkeypatch, base):
@@ -18,7 +18,7 @@ def _patch_base(monkeypatch, base):
 
     ``worker_summary`` loads the base via ``agent_specs.load_agent_spec(dir, id)``;
     patch that so the base-diff has a known baseline without touching disk."""
-    from kiro_crew.agent_sdk import agent_specs
+    from aj_crew.agent_sdk import agent_specs
 
     def fake_load(_dir, agent_id, *a, **k):
         return dict(base)
@@ -93,7 +93,7 @@ def test_only_rows_beyond_the_worker_base_read_local(monkeypatch):
     its baseline reads "comes with" and only owner-added abilities read "added" —
     the file-membership rule marked the whole baseline removable, the reported bug."""
     base = {
-        "name": "kirocrew-mate-worker",
+        "name": "ajcrew-mate-worker",
         "mcpServers": {"platform": {"command": "plat"}},
         "tools": ["@platform", "fs_read"],
         "allowedTools": [],
@@ -138,17 +138,17 @@ def test_a_new_mate_that_only_copies_the_base_has_an_empty_added_band(monkeypatc
     row reads ``inherited`` and the "Added to mate" band is empty. This is the live
     ``retwerf`` case — its baseline must NOT show as removable."""
     base = {
-        "name": "kirocrew-mate-worker",
-        "mcpServers": {"kirocrew-core": {"command": "c"}},
-        "tools": ["fs_read", "@kirocrew-core"],
+        "name": "ajcrew-mate-worker",
+        "mcpServers": {"ajcrew-core": {"command": "c"}},
+        "tools": ["fs_read", "@ajcrew-core"],
         "allowedTools": [],
         "skills": [],
         "resources": [],
     }
     file_spec = {**base, "name": "retwerf"}
     merged = {
-        "mcpServers": {"kirocrew-core": {"command": "c"}},
-        "tools": ["fs_read", "@kirocrew-core"],
+        "mcpServers": {"ajcrew-core": {"command": "c"}},
+        "tools": ["fs_read", "@ajcrew-core"],
     }
     monkeypatch.setattr(mate_worker, "member_worker_spec", lambda member: merged)
     monkeypatch.setattr(mate_capabilities, "_load_spec", lambda member: (None, file_spec))
@@ -180,7 +180,7 @@ def test_each_added_row_removes_the_stored_row_it_names(monkeypatch):
     so it offers no Remove (the live miss: the remove popped a key that did not
     exist and saved).
     """
-    base = {"name": "kirocrew-mate-worker", "mcpServers": {}, "tools": [], "resources": []}
+    base = {"name": "ajcrew-mate-worker", "mcpServers": {}, "tools": [], "resources": []}
     file_spec = {
         "name": "ben",
         "mcpServers": {"notes": {"command": "notes"}, "jira": {"command": "jira"}},
@@ -221,12 +221,12 @@ def test_a_file_resource_the_worker_loads_is_listed_and_an_added_one_removes(mon
     ``resources`` row when the file adds it, ``inherited`` with none when the
     base carries it. Applying that Remove takes it off the file, the worker and
     the list; a ``skill://`` resource stays a skills row."""
-    from kiro_crew.agent_capabilities import _materialize, _rows
+    from aj_crew.agent_capabilities import _materialize, _rows
 
     steering = "file://.kiro/steering/**/*.md"
     notes = "file:///home/x/kit/kit-notes.md"
     skill = "skill:///home/x/skills/release-notes/SKILL.md"
-    base = {"name": "kirocrew-mate-worker", "mcpServers": {}, "tools": [], "resources": [steering]}
+    base = {"name": "ajcrew-mate-worker", "mcpServers": {}, "tools": [], "resources": [steering]}
     state = {"file": {"name": "ben", "mcpServers": {}, "tools": [], "resources": [notes, skill]}}
 
     def worker_spec(member):
@@ -337,7 +337,7 @@ def test_a_skill_a_base_glob_grants_comes_with_and_has_no_remove(monkeypatch):
 def test_behaviour_directions_show_as_one_removable_added_row(monkeypatch):
     """The file's prompt is the one behaviour-directions slot: one Added row
     carrying its text, whose Remove clears the slot; an empty prompt shows none."""
-    base = {"name": "kirocrew-mate-worker", "prompt": "Worker.", "mcpServers": {}, "tools": []}
+    base = {"name": "ajcrew-mate-worker", "prompt": "Worker.", "mcpServers": {}, "tools": []}
     file_spec = {"name": "ben", "prompt": "  Release SOP: tag, build.  ", "mcpServers": {}}
     monkeypatch.setattr(mate_worker, "member_worker_spec", lambda member: {"tools": []})
     monkeypatch.setattr(mate_capabilities, "_load_spec", lambda member: (None, file_spec))
@@ -370,7 +370,7 @@ def test_the_directions_row_shows_only_text_beyond_the_base_prompt(monkeypatch, 
     with) or the base's own text adds nothing, so it shows no directions row; a
     prompt that opens with the base's text shows only the rest."""
     base = {
-        "name": "kirocrew-mate-worker",
+        "name": "ajcrew-mate-worker",
         "prompt": "Worker.\n\nPrinciples.",
         "mcpServers": {},
         "tools": [],
@@ -386,8 +386,8 @@ def test_the_directions_row_shows_only_text_beyond_the_base_prompt(monkeypatch, 
 
 def test_removing_the_directions_row_clears_the_slot():
     """The Remove the row carries is an ordinary capabilities ``remove`` on ``prompt``."""
-    from kiro_crew.agent_capabilities import _materialize, _rows
-    from kiro_crew.mate_capabilities import _apply_operations
+    from aj_crew.agent_capabilities import _materialize, _rows
+    from aj_crew.mate_capabilities import _apply_operations
 
     spec = {"name": "ben", "prompt": "Release SOP.", "mcpServers": {}, "tools": []}
     rows = _rows(spec, {})
@@ -419,8 +419,8 @@ def test_a_glob_entry_withholds_remove_on_a_tool_it_still_grants(monkeypatch, se
 
 def test_a_flat_listed_app_skill_the_base_app_wildcard_grants_comes_with(monkeypatch, tmp_path):
     """An app skill listed under its flat link is granted by ``<app>/*/SKILL.md``."""
-    from kiro_crew.skills import skills_dir
-    from kiro_crew.testing.links import make_dir_link
+    from aj_crew.skills import skills_dir
+    from aj_crew.testing.links import make_dir_link
 
     root = skills_dir()
     target = tmp_path / "bundle" / "a-first"
@@ -448,7 +448,7 @@ def test_the_summary_resolves_the_skills_root_once_however_many_skill_links(monk
     """Resolving the skills root is a pooled sensitive-path check. Done once per
     skill link it costs ~1.3 s per crewmate screen on a 74-skill home, so the
     count must not grow with the catalog."""
-    from kiro_crew import skills as sk
+    from aj_crew import skills as sk
 
     root = sk.skills_dir()
     wildcard = f"skill://{root.as_posix()}/app/*/SKILL.md"

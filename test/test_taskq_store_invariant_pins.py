@@ -1,6 +1,6 @@
 """Mutation pins for the load-bearing lines in ``taskq.store`` that carried no test.
 
-These lines in ``kiro_crew.taskq.store``, its ``store_waits`` and ``store_reads``
+These lines in ``aj_crew.taskq.store``, its ``store_waits`` and ``store_reads``
 owners, and the legacy import that fills it carry invariants that no other test
 observes: delete any one of them and the whole suite stays green. This file pins
 the reachable ones, whose silent removal loses, misfiles or double-runs work.
@@ -32,11 +32,11 @@ from typing import Any
 import pytest
 from overload_fakes import Clock, open_task_store
 
-from kiro_crew.taskq import lanes, migrate, model
-from kiro_crew.taskq import store as store_mod
-from kiro_crew.taskq.model import InvalidTransition
-from kiro_crew.taskq.store import TaskStore, TaskStoreUnavailable
-from kiro_crew.taskq.waits import WaitRecord
+from aj_crew.taskq import lanes, migrate, model
+from aj_crew.taskq import store as store_mod
+from aj_crew.taskq.model import InvalidTransition
+from aj_crew.taskq.store import TaskStore, TaskStoreUnavailable
+from aj_crew.taskq.waits import WaitRecord
 
 
 @pytest.fixture

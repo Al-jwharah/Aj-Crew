@@ -13,14 +13,14 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import milestones as m
+from aj_crew import milestones as m
 
 _REAL_POLICY_PERMITS = m._policy_permits
 
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch) -> Path:
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _floor_monkeypatch.setattr(m, "_catalog_cache", None)
     # No platform context is installed in a unit test; the policy itself is
     # covered by the tests that restore the real check.
@@ -114,10 +114,10 @@ class TestCounting:
             raise OSError("disk full")
 
         monkeypatch.setattr(m, "_save", boom)
-        with caplog.at_level("WARNING", logger="kiro_crew.milestones"):
+        with caplog.at_level("WARNING", logger="aj_crew.milestones"):
             m.record("widgets")  # must not raise
             m.record_user_turn(mate_thread=True, crew_mode=True)
-        logged = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.milestones"]
+        logged = [r.getMessage() for r in caplog.records if r.name == "aj_crew.milestones"]
         # One record per failed flush; each call above flushes at least once.
         assert sorted(set(logged)) == ["milestones state write failed"]
 
@@ -131,8 +131,8 @@ class TestCounting:
             return False
 
         monkeypatch.setattr(m, "_policy_permits", _REAL_POLICY_PERMITS)
-        monkeypatch.setattr("kiro_crew.platform.context.installed_context", lambda: object())
-        monkeypatch.setattr("kiro_crew.edition_locks.policy_permits", deny)
+        monkeypatch.setattr("aj_crew.platform.context.installed_context", lambda: object())
+        monkeypatch.setattr("aj_crew.edition_locks.policy_permits", deny)
         m.record("widgets")
         m.record_user_turn(mate_thread=True, crew_mode=True)
         assert asked and set(asked) == {"capabilities.milestones"}
@@ -149,8 +149,8 @@ class TestCounting:
             raise AssertionError("composed a context")
 
         monkeypatch.setattr(m, "_policy_permits", _REAL_POLICY_PERMITS)
-        monkeypatch.setattr("kiro_crew.platform.context.installed_context", lambda: None)
-        monkeypatch.setattr("kiro_crew.platform.context.current_context", boom)
+        monkeypatch.setattr("aj_crew.platform.context.installed_context", lambda: None)
+        monkeypatch.setattr("aj_crew.platform.context.current_context", boom)
         assert m._policy_permits() is False
         m.record("widgets")
         assert not m._path().exists()
@@ -159,8 +159,8 @@ class TestCounting:
         self, monkeypatch: pytest.MonkeyPatch, metrics: list
     ) -> None:
         monkeypatch.setattr(m, "_policy_permits", _REAL_POLICY_PERMITS)
-        monkeypatch.setattr("kiro_crew.platform.context.installed_context", lambda: object())
-        monkeypatch.setattr("kiro_crew.edition_locks.policy_permits", lambda *_a, **_k: True)
+        monkeypatch.setattr("aj_crew.platform.context.installed_context", lambda: object())
+        monkeypatch.setattr("aj_crew.edition_locks.policy_permits", lambda *_a, **_k: True)
         m.record("widgets")
         m.record_user_turn(mate_thread=True, crew_mode=True)
         st = m.load()
@@ -305,12 +305,12 @@ class TestStreak:
 
         monkeypatch.setattr(m, "datetime", _Clock)
         with patch(
-            "kiro_crew.config.loader_snapshots.published_config_timezone",
+            "aj_crew.config.loader_snapshots.published_config_timezone",
             return_value="America/Los_Angeles",
         ):
             assert m.local_today() == date(2026, 10, 1)
         with patch(
-            "kiro_crew.config.loader_snapshots.published_config_timezone", return_value="Asia/Tokyo"
+            "aj_crew.config.loader_snapshots.published_config_timezone", return_value="Asia/Tokyo"
         ):
             assert m.local_today() == date(2026, 10, 2)
 
@@ -427,7 +427,7 @@ class TestBackfill:
     def test_backfill_reads_only_a_bounded_first_line(self, _home: Path) -> None:
         from io import BytesIO
 
-        from kiro_crew.history_derivation import TRANSCRIPT_HEADER_MAX_BYTES
+        from aj_crew.history_derivation import TRANSCRIPT_HEADER_MAX_BYTES
 
         sessions = _home / "sessions"
         sessions.mkdir()
@@ -612,7 +612,7 @@ class TestArrival:
     def test_arrival_long_after_the_click_does_nothing(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.testing.clock import ManualClock
+        from aj_crew.testing.clock import ManualClock
 
         clock = ManualClock()
         clock.install(monkeypatch, m)
@@ -702,7 +702,7 @@ class TestReadModel:
         assert set(snap["recommended"]) <= {r.id for r in m.feature_rows()}
 
     def test_notices_show_once(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from kiro_crew.testing.clock import ManualClock
+        from aj_crew.testing.clock import ManualClock
 
         clock = ManualClock(start=1000.0)
         clock.install(monkeypatch, m)
@@ -801,7 +801,7 @@ class TestProbes:
     )
     @pytest.mark.parametrize("terminal", ["completed", "success"])
     def test_sel_event_ok_requires_terminal_success(self, outcome: str, terminal: str) -> None:
-        from kiro_crew import feature_videos as fv
+        from aj_crew import feature_videos as fv
 
         rows = [{"operation": "cron_add", "outcome": outcome}]
         with patch.object(fv, "sel") as sel:
@@ -812,7 +812,7 @@ class TestProbes:
             assert fv.probe_fires("sel_event_ok:cron_add") is True
 
     def test_sel_directive_ok_needs_the_applied_directive_row(self) -> None:
-        from kiro_crew import feature_videos as fv
+        from aj_crew import feature_videos as fv
 
         rows = [
             {"operation": "monitor_start", "source": "mcp", "outcome": "completed"},
@@ -827,20 +827,20 @@ class TestProbes:
             assert fv.probe_fires("sel_directive_ok:monitor_start") is True
 
     def test_channel_connected_needs_all_three_slack_credentials(self) -> None:
-        from kiro_crew import feature_videos as fv
+        from aj_crew import feature_videos as fv
 
         creds = {"SLACK_BOT_TOKEN": "xoxb-1", "SLACK_APP_TOKEN": "xapp-1"}
-        with patch.object(fv.KiroCrewConfig, "load") as load:
+        with patch.object(fv.AjCrewConfig, "load") as load:
             load.return_value.load_credentials.return_value = creds
             assert fv.probe_fires("channel_connected:slack") is False
-            from kiro_crew.config.loader import CRED_OWNER_ID
+            from aj_crew.config.loader import CRED_OWNER_ID
 
             creds[CRED_OWNER_ID] = "U1"
             assert fv.probe_fires("channel_connected:slack") is True
             assert fv.probe_fires("channel_connected:discord") is False
 
     def test_mate_thread_has_user_turn_needs_a_human_row(self, _home: Path) -> None:
-        from kiro_crew import feature_videos as fv
+        from aj_crew import feature_videos as fv
 
         binding = {"slot_key": "member-mate"}
         path = _home / "sessions" / "dashboard_member-mate.jsonl"
@@ -852,14 +852,14 @@ class TestProbes:
             + "\n",
             encoding="utf-8",
         )
-        with patch("kiro_crew.members.read_dm_binding", return_value=binding):
+        with patch("aj_crew.members.read_dm_binding", return_value=binding):
             assert fv.probe_fires("mate_thread_has_user_turn") is False
             with path.open("a") as fh:
                 fh.write(
                     json.dumps({"role": "user", "content": "hi", "meta": {"human": True}}) + "\n"
                 )
             assert fv.probe_fires("mate_thread_has_user_turn") is True
-        with patch("kiro_crew.members.read_dm_binding", return_value=None):
+        with patch("aj_crew.members.read_dm_binding", return_value=None):
             assert fv.probe_fires("mate_thread_has_user_turn") is False
 
     @pytest.mark.parametrize(
@@ -877,13 +877,13 @@ class TestProbes:
     def test_mate_thread_rejects_restricted_or_unknown_headers(
         self, _home: Path, header: bytes
     ) -> None:
-        from kiro_crew import feature_videos as fv
+        from aj_crew import feature_videos as fv
 
         path = _home / "sessions" / "dashboard_member-mate.jsonl"
         path.parent.mkdir(parents=True)
         path.write_bytes(header + b'{"role":"user","meta":{"human":true}}\n')
         with patch(
-            "kiro_crew.members.read_dm_binding",
+            "aj_crew.members.read_dm_binding",
             return_value={"slot_key": "member-mate"},
         ):
             assert fv.probe_fires("mate_thread_has_user_turn") is False

@@ -1,4 +1,4 @@
-"""The ``kirocrew/status`` extension (version 1) and its origin rule.
+"""The ``ajcrew/status`` extension (version 1) and its origin rule.
 
 RFC §14.5: a structured status is trusted only from the EXECUTION LAYER of the
 session it names. The shape + version gate lives in
@@ -17,8 +17,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.session_handle import AcpSessionHandle, _watchdog_evidence_class
-from kiro_crew.acp.types import (
+from aj_crew.acp.session_handle import AcpSessionHandle, _watchdog_evidence_class
+from aj_crew.acp.types import (
     EVENT_STRUCTURED_STATUS,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
@@ -254,7 +254,7 @@ def test_status_on_a_frame_that_matches_this_session_id_is_accepted():
 def test_fanout_frame_status_is_rejected(caplog):
     """An ownerless frame fanned out to several sessions names no owner."""
     handle = _handle()
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.session_handle"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.session_handle"):
         events = handle._handle_update(
             _update_msg(
                 {"sessionUpdate": "plan", "entries": []},
@@ -309,7 +309,7 @@ def test_model_text_that_looks_like_a_status_is_only_text():
     """The model writing the wire shape into its answer creates nothing."""
     handle = _handle()
     prose = (
-        '{"kirocrew/status": {"version": 1, "phase": "waiting", '
+        '{"ajcrew/status": {"version": 1, "phase": "waiting", '
         '"wait_reason": "waiting_input", "cancellable": true}}'
     )
     events = handle._handle_update(
@@ -349,7 +349,7 @@ def test_version_gate_applies_on_the_handle_path():
 
 def test_rejection_logs_once_per_reason_per_turn(caplog):
     handle = _handle()
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.session_handle"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.acp.session_handle"):
         for _ in range(3):
             handle._handle_update(_update_msg(_tool_call(), meta=_meta(session_id="someone-else")))
     assert handle.status_rejections == {"session_mismatch": 3}

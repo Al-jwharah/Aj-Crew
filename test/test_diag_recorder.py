@@ -1,9 +1,9 @@
-"""Tests for :mod:`kiro_crew.diag.recorder`.
+"""Tests for :mod:`aj_crew.diag.recorder`.
 
 Every host read is injected — a fixture ``/proc`` tree, a fake clock, a fake
 ``statvfs`` — so the assertions are about the recorder's logic and not about
 whatever the machine running the suite happens to be doing. The one exception is
-:func:`kiro_crew.diag.recorder._read_posture`, which is stubbed where a test
+:func:`aj_crew.diag.recorder._read_posture`, which is stubbed where a test
 needs a specific posture.
 """
 
@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.diag import recorder as rec
+from aj_crew.diag import recorder as rec
 
 # ── fixtures ─────────────────────────────────────────────────────────────────
 
@@ -777,7 +777,7 @@ def test_the_boot_gate_spells_the_same_off_values_as_the_module() -> None:
         encoding="utf-8"
     )
     gate = re.search(
-        r'os\.environ\.get\("KIROCREW_DIAG_RECORDER".*?\)\s*\.strip\(\)\.lower\(\)\s*in\s*\((.*?)\)',
+        r'os\.environ\.get\("AJCREW_DIAG_RECORDER".*?\)\s*\.strip\(\)\.lower\(\)\s*in\s*\((.*?)\)',
         source,
         re.DOTALL,
     )
@@ -842,7 +842,7 @@ def _seed(recorder: rec.Recorder, count: int, start_ts: float = 1_700_000_000.0)
 
 
 def test_the_diag_package_resolves_its_exports_lazily() -> None:
-    """``kiro_crew.diag`` defers its imports (PEP 562).
+    """``aj_crew.diag`` defers its imports (PEP 562).
 
     The recorder starts on the gateway boot path, so importing the package must
     not drag in the thread module and its transitive imports; a route asking for
@@ -852,7 +852,7 @@ def test_the_diag_package_resolves_its_exports_lazily() -> None:
     that module's current value and binds nothing in the package: a binding here
     would shadow ``__getattr__`` for every later read.
     """
-    import kiro_crew.diag as diag
+    import aj_crew.diag as diag
 
     assert diag.Recorder is rec.Recorder
     assert diag.get_recorder is rec.get_recorder
@@ -863,7 +863,7 @@ def test_the_diag_package_resolves_its_exports_lazily() -> None:
 
 def test_the_diag_package_rejects_an_unknown_attribute() -> None:
     """A typo must be an AttributeError, not an accidental import."""
-    import kiro_crew.diag as diag
+    import aj_crew.diag as diag
 
     with pytest.raises(AttributeError):
         diag.no_such_name
@@ -1226,7 +1226,7 @@ def test_start_writes_nothing_when_disabled(tmp_path: Path) -> None:
 def test_lifecycle_blocking_work_runs_off_the_event_loop(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.diag import threads as diag_threads
+    from aj_crew.diag import threads as diag_threads
 
     recorder = _make(tmp_path)
     diag_dir = recorder._dir()
@@ -1281,7 +1281,7 @@ def test_lifecycle_blocking_work_runs_off_the_event_loop(
 def test_start_does_not_launch_the_probe_when_directory_creation_fails(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.diag import threads as diag_threads
+    from aj_crew.diag import threads as diag_threads
 
     config_file = tmp_path / "config-file"
     config_file.write_text("not a directory", encoding="utf-8")
@@ -1327,7 +1327,7 @@ def test_stop_hands_back_the_task_that_writes_the_closing_event(
     The finish runs in a thread, so a hook that calls ``stop`` and returns lets
     loop teardown race it and the closing event is the row that never lands.
     """
-    from kiro_crew.diag import threads as diag_threads
+    from aj_crew.diag import threads as diag_threads
 
     monkeypatch.setattr(diag_threads, "start_probe", lambda **_kwargs: None)
     monkeypatch.setattr(diag_threads, "stop_probe", lambda: None)

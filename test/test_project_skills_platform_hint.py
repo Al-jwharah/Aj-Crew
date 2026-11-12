@@ -16,21 +16,21 @@ from unittest.mock import Mock
 
 import pytest
 
-from kiro_crew import skill_trust
+from aj_crew import skill_trust
 
 pytestmark = pytest.mark.usefixtures("isolated_home")
 
 
 @pytest.fixture(name="isolated_home")
 def _isolated_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     skill_trust.reset_cache_for_tests()
     yield
     skill_trust.reset_cache_for_tests()
 
 
 async def _read_trust(monkeypatch, *, slots, supported, enabled):
-    from kiro_crew.dashboard.handlers import prompts
+    from aj_crew.dashboard.handlers import prompts
 
     monkeypatch.setattr(prompts, "is_owner_dashboard_request", lambda _request: True, raising=False)
     monkeypatch.setattr(prompts, "_sel", lambda: SimpleNamespace(log_api_access=Mock()))
@@ -85,6 +85,6 @@ async def test_flag_stays_off_otherwise(monkeypatch, slots, supported, enabled):
 
 
 def test_grant_and_revoke_snapshots_default_the_flag_off():
-    from kiro_crew.dashboard.handlers.prompts import _trust_snapshot
+    from aj_crew.dashboard.handlers.prompts import _trust_snapshot
 
     assert _trust_snapshot(None)["platform_unsupported"] is False

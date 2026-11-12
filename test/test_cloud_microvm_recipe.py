@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.cloud.microvm import recipe as recipe_module
-from kiro_crew.cloud.microvm.recipe import (
+from aj_crew.cloud.microvm import recipe as recipe_module
+from aj_crew.cloud.microvm.recipe import (
     DOCKERFILE_NAME,
     REQUIRED_BUNDLE_DIR,
     REQUIRED_BUNDLE_MEMBERS,
@@ -49,7 +49,7 @@ class _FakeRuntime:
 
 def _provide_runtime(monkeypatch, runtime_dir: Path) -> None:
     """Serve *runtime_dir* through the ``crew_runtime`` seam for one test."""
-    from kiro_crew.apps import seams
+    from aj_crew.apps import seams
 
     seams.crew_runtime()  # the shipped providers load first, so this one replaces theirs
     monkeypatch.setitem(
@@ -77,7 +77,7 @@ def _write_wheel(path: Path, members: dict[str, bytes]) -> Path:
     readable archive cannot exercise the code under test.
     """
     record = "".join(f"{name},sha256=deadbeef,{len(body)}\n" for name, body in members.items())
-    body_by_name = {**members, "kiro_crew-0.0.0.dist-info/RECORD": record.encode("utf-8")}
+    body_by_name = {**members, "aj_crew-0.0.0.dist-info/RECORD": record.encode("utf-8")}
     with zipfile.ZipFile(path, "w") as archive:
         for name, body in body_by_name.items():
             # An explicit timestamp, because `writestr` with a plain name stamps the
@@ -90,7 +90,7 @@ def _write_wheel(path: Path, members: dict[str, bytes]) -> Path:
 
 @pytest.fixture()
 def wheel(tmp_path) -> Path:
-    """A stand-in for the Kiro Crew wheel the base recipe installs.
+    """A stand-in for the Aj Crew wheel the base recipe installs.
 
     A minimal but REAL wheel. It is one of the inputs the base recipe digest covers,
     so a zip assembled without one would be an image with no serving code; and the
@@ -98,8 +98,8 @@ def wheel(tmp_path) -> Path:
     unreadable stand-in would refuse every test instead of the case under test.
     """
     return _write_wheel(
-        tmp_path / "kiro_crew-0.0.0-py3-none-any.whl",
-        {"kiro_crew/__init__.py": b"# serving code\n"},
+        tmp_path / "aj_crew-0.0.0-py3-none-any.whl",
+        {"aj_crew/__init__.py": b"# serving code\n"},
     )
 
 
@@ -173,7 +173,7 @@ class TestItReusesThePackagingDigest:
     def test_the_digest_is_packagings_own_function(self, bundle, wheel, monkeypatch):
         """Delegated, not reimplemented. Proven by patching the owner and seeing
         this module's answer change with it."""
-        import kiro_crew.apps.builtins.aws_control.crew.packaging.build as pkg
+        import aj_crew.apps.builtins.aws_control.crew.packaging.build as pkg
 
         monkeypatch.setattr(pkg, "bundle_digest", lambda root, also_skip=frozenset(): "sentinel")
         assert bundle_digest_of(bundle) == "sentinel"
@@ -236,7 +236,7 @@ class TestTheCrewNameIsReadableFromTheBundle:
     """
 
     def test_the_manifests_crew_name_is_returned(self, bundle):
-        from kiro_crew.cloud.microvm.recipe import bundle_crew_name
+        from aj_crew.cloud.microvm.recipe import bundle_crew_name
 
         assert bundle_crew_name(bundle) == "demo"
 
@@ -249,13 +249,13 @@ class TestTheCrewNameIsReadableFromTheBundle:
         """Empty rather than a raise: the caller's answer to empty is to say the
         name is not recorded, which is better than a launch that fails over a
         field only the turn path reads."""
-        from kiro_crew.cloud.microvm.recipe import bundle_crew_name
+        from aj_crew.cloud.microvm.recipe import bundle_crew_name
 
         (bundle / "manifest.json").write_text(content)
         assert bundle_crew_name(bundle) == ""
 
     def test_an_absent_bundle_reads_as_no_name(self, tmp_path):
-        from kiro_crew.cloud.microvm.recipe import bundle_crew_name
+        from aj_crew.cloud.microvm.recipe import bundle_crew_name
 
         assert bundle_crew_name(tmp_path / "nope") == ""
 
@@ -263,7 +263,7 @@ class TestTheCrewNameIsReadableFromTheBundle:
         """The launch reads the name before the snapshot validates the bundle, so
         this read goes through the same guard: a manifest symlinked to a file
         outside the bundle is not opened, even when that file parses."""
-        from kiro_crew.cloud.microvm.recipe import bundle_crew_name
+        from aj_crew.cloud.microvm.recipe import bundle_crew_name
 
         outside = tmp_path / "outside.json"
         outside.write_text('{"crew_name": "leaked"}')
@@ -273,7 +273,7 @@ class TestTheCrewNameIsReadableFromTheBundle:
 
     @pytest.mark.skipif(not hasattr(os, "link"), reason="needs hardlinks")
     def test_a_hardlinked_manifest_is_not_read(self, bundle, tmp_path):
-        from kiro_crew.cloud.microvm.recipe import bundle_crew_name
+        from aj_crew.cloud.microvm.recipe import bundle_crew_name
 
         outside = tmp_path / "outside.json"
         outside.write_text('{"crew_name": "leaked"}')
@@ -409,7 +409,7 @@ class TestAssemble:
     def test_a_recipe_with_no_wheel_is_refused(self, bundle, tmp_path):
         """The base recipe installs the wheel FROM the build context, so a zip
         without one builds an image with no serving code."""
-        with pytest.raises(RecipeRefused, match="no Kiro Crew wheel"):
+        with pytest.raises(RecipeRefused, match="no Aj Crew wheel"):
             assemble(
                 bundle_dir=bundle,
                 wheel=tmp_path / "nope.whl",
@@ -549,7 +549,7 @@ class TestUploader:
 
     def test_uploading_an_unassembled_recipe_is_refused(self):
         """A resolver that asked for an upload before assemble() ran is a caller bug."""
-        from kiro_crew.cloud.microvm.image import Recipe, default_build_digest
+        from aj_crew.cloud.microvm.image import Recipe, default_build_digest
 
         upload = recipe_module.uploader(bucket="kc-recipes", put_object=lambda b, k, p: None)
         with pytest.raises(RecipeRefused, match="no assembled recipe"):
@@ -605,7 +605,7 @@ class TestItFeedsTheImageCache:
             base_image_arn=BASE,
             out_zip=tmp_path / "a.zip",
         ).recipe.image_name()
-        _write_wheel(wheel, {"kiro_crew/__init__.py": b"# different serving code\n"})
+        _write_wheel(wheel, {"aj_crew/__init__.py": b"# different serving code\n"})
         after = assemble(
             bundle_dir=bundle,
             wheel=wheel,
@@ -843,7 +843,7 @@ class TestTheRunAsUserIsOneValue:
         assert "ssm_run_as=recipe_mod.GUEST_RUN_AS" in engine
 
     def test_it_is_not_the_registrys_ec2_default(self):
-        from kiro_crew.instances.registry import _DEFAULT_SSM_RUN_AS
+        from aj_crew.instances.registry import _DEFAULT_SSM_RUN_AS
 
         assert recipe_module.GUEST_RUN_AS != _DEFAULT_SSM_RUN_AS, (
             "this lane's guest has no ec2-user, so taking the registry default is "
@@ -852,7 +852,7 @@ class TestTheRunAsUserIsOneValue:
 
     def test_the_value_is_a_usable_unix_name(self):
         """The registry validates it, so a value this lane picked must pass."""
-        from kiro_crew.instances.registry import _SSM_RUN_AS_RE
+        from aj_crew.instances.registry import _SSM_RUN_AS_RE
 
         assert _SSM_RUN_AS_RE.match(recipe_module.GUEST_RUN_AS)
 
@@ -892,19 +892,19 @@ class TestTheStagedWheelCarriesNoDashboard:
 
     def _wheel_with_dashboard(self, tmp_path: Path, asset_bytes: int) -> Path:
         return _write_wheel(
-            tmp_path / "kiro_crew-0.0.0-py3-none-any.whl",
+            tmp_path / "aj_crew-0.0.0-py3-none-any.whl",
             {
-                "kiro_crew/__init__.py": b"# serving code\n",
-                "kiro_crew/static/dist/index.html": b"<html></html>",
-                "kiro_crew/static/dist/vendor/big.js": b"x" * asset_bytes,
+                "aj_crew/__init__.py": b"# serving code\n",
+                "aj_crew/static/dist/index.html": b"<html></html>",
+                "aj_crew/static/dist/vendor/big.js": b"x" * asset_bytes,
             },
         )
 
     def test_the_members_are_found_by_their_own_prefix(self, tmp_path):
         staged = self._wheel_with_dashboard(tmp_path, 32)
         assert recipe_module.dashboard_members(staged) == [
-            "kiro_crew/static/dist/index.html",
-            "kiro_crew/static/dist/vendor/big.js",
+            "aj_crew/static/dist/index.html",
+            "aj_crew/static/dist/vendor/big.js",
         ]
 
     def test_a_wheel_without_them_reports_none(self, wheel):
@@ -918,8 +918,8 @@ class TestTheStagedWheelCarriesNoDashboard:
         assert freed > 0, "nothing was removed, so the staged wheel is unchanged"
         assert recipe_module.dashboard_members(staged) == []
         with zipfile.ZipFile(staged) as archive:
-            assert archive.read("kiro_crew/__init__.py") == b"# serving code\n"
-            assert "kiro_crew-0.0.0.dist-info/RECORD" in archive.namelist()
+            assert archive.read("aj_crew/__init__.py") == b"# serving code\n"
+            assert "aj_crew-0.0.0.dist-info/RECORD" in archive.namelist()
 
     def test_the_record_drops_the_rows_for_what_it_removed(self, tmp_path):
         """A ``RECORD`` keeping rows for absent files describes a distribution that
@@ -927,10 +927,10 @@ class TestTheStagedWheelCarriesNoDashboard:
         staged = self._wheel_with_dashboard(tmp_path, 32)
         recipe_module.strip_dashboard(staged)
         with zipfile.ZipFile(staged) as archive:
-            record = archive.read("kiro_crew-0.0.0.dist-info/RECORD").decode("utf-8")
+            record = archive.read("aj_crew-0.0.0.dist-info/RECORD").decode("utf-8")
 
-        assert "kiro_crew/static/" not in record
-        assert "kiro_crew/__init__.py" in record, "stripping emptied the RECORD instead"
+        assert "aj_crew/static/" not in record
+        assert "aj_crew/__init__.py" in record, "stripping emptied the RECORD instead"
 
     def test_stripping_is_byte_stable(self, tmp_path):
         """``base_recipe_digest`` hashes this file, so a rewrite that varied run to
@@ -949,7 +949,7 @@ class TestTheStagedWheelCarriesNoDashboard:
         # across. Two strips of identical input would also agree if the rewrite
         # re-dated everything to now, so equality alone does not pin preservation.
         with zipfile.ZipFile(first) as archive:
-            assert archive.getinfo("kiro_crew/__init__.py").date_time == _FIXTURE_STAMP
+            assert archive.getinfo("aj_crew/__init__.py").date_time == _FIXTURE_STAMP
 
     def test_stripping_a_clean_wheel_changes_nothing(self, wheel):
         before = wheel.read_bytes()
@@ -968,11 +968,11 @@ class TestTheStagedWheelCarriesNoDashboard:
                 out_zip=tmp_path / "recipe.zip",
             )
         message = str(refusal.value)
-        assert "kiro_crew/static/" in message
+        assert "aj_crew/static/" in message
         assert "build_microvm_image_zip.py" in message
 
     def test_assemble_refuses_a_wheel_that_is_not_a_zip(self, bundle, tmp_path):
-        staged = tmp_path / "kiro_crew-0.0.0-py3-none-any.whl"
+        staged = tmp_path / "aj_crew-0.0.0-py3-none-any.whl"
         staged.write_bytes(b"PK\x03\x04 not really a wheel")
         with pytest.raises(recipe_module.RecipeRefused, match="not a readable zip"):
             assemble(
@@ -1002,7 +1002,7 @@ class TestTheStagedWheelCarriesNoDashboard:
         # the same bytes are drawn on every run and a failure here can be replayed.
         noise = random.Random(20261008).randbytes(2 * 1024 * 1024)
         with zipfile.ZipFile(staged, "a", compression=zipfile.ZIP_STORED) as archive:
-            archive.writestr("kiro_crew/static/dist/vendor/noise.js", noise)
+            archive.writestr("aj_crew/static/dist/vendor/noise.js", noise)
 
         # The prefix refusal stood down for this half, so the SIZE check is what
         # answers and the assertion is about bytes rather than about member names.
@@ -1123,8 +1123,8 @@ class TestTheStagedWheelIsBuiltReproducibly:
         def run(argv, **kwargs):
             seen.append(kwargs.get("env") or {})
             _write_wheel(
-                vendor / "kiro_crew-0.0.0-py3-none-any.whl",
-                {"kiro_crew/__init__.py": b"# serving code\n"},
+                vendor / "aj_crew-0.0.0-py3-none-any.whl",
+                {"aj_crew/__init__.py": b"# serving code\n"},
             )
             return None
 
@@ -1190,7 +1190,7 @@ class TestTheRecipeStampsTheGuestsPins:
         )
 
     def test_the_pins_are_in_the_digest(self, bundle, wheel, tmp_path):
-        from kiro_crew.cloud.microvm.image import default_build_digest
+        from aj_crew.cloud.microvm.image import default_build_digest
 
         out = self._assemble(bundle, wheel, tmp_path, account_id="123456789012", region="us-east-1")
         assert out.recipe.build_digest == default_build_digest(
@@ -1209,7 +1209,7 @@ class TestTheRecipeStampsTheGuestsPins:
     def test_an_unpinned_recipe_is_still_assemblable(self, bundle, wheel, tmp_path):
         """An operator may build an unpinned image deliberately, so the pins
         default to empty rather than being required."""
-        from kiro_crew.cloud.microvm.image import default_build_digest
+        from aj_crew.cloud.microvm.image import default_build_digest
 
         out = self._assemble(bundle, wheel, tmp_path)
         assert out.recipe.build_digest == default_build_digest()
@@ -1235,7 +1235,7 @@ class TestTheRuntimeComesFromTheCrewRuntimeSeam:
 
     def test_the_shipped_runtime_is_the_directory_the_lane_always_read(self):
         """The aws-control app provides it, as the app's ``crew/runtime`` directory."""
-        from kiro_crew.apps import seams
+        from aj_crew.apps import seams
 
         seams.crew_runtime()
         assert seams._providers[seams.SEAM_CREW_RUNTIME][0] == "aws-control"
@@ -1247,7 +1247,7 @@ class TestTheRuntimeComesFromTheCrewRuntimeSeam:
 
     def test_with_no_provider_every_runtime_read_is_refused(self, monkeypatch, bundle):
         """A missing runtime is a refusal naming the cause, never a substitute path."""
-        from kiro_crew.apps import seams
+        from aj_crew.apps import seams
 
         seams.crew_runtime()
         monkeypatch.delitem(seams._providers, seams.SEAM_CREW_RUNTIME)
@@ -1259,7 +1259,7 @@ class TestTheRuntimeComesFromTheCrewRuntimeSeam:
 
     def test_the_layout_check_needs_no_runtime(self, monkeypatch, bundle):
         """Checking a bundle reads only the bundle, so it answers without the app."""
-        from kiro_crew.apps import seams
+        from aj_crew.apps import seams
 
         seams.crew_runtime()
         monkeypatch.delitem(seams._providers, seams.SEAM_CREW_RUNTIME)

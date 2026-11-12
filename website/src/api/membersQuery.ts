@@ -15,14 +15,14 @@ import type { ErrorReport } from '../utils/errorReport'
  * Roster freshness follows the dashboard's sanctioned pattern (see
  * queryClient.ts): pushed invalidation first, a finite staleTime as the floor.
  * The roster is a projection of the crew registry, so its key lives UNDER
- * `['kirocrew-agents']` — the prefix useWebSocket invalidates on every
+ * `['ajcrew-agents']` — the prefix useWebSocket invalidates on every
  * `refresh` frame and the crew editor invalidates after a save — and a crew
  * created, renamed or starred anywhere reaches this cache without the page
  * knowing who wrote. The second segment keeps it a distinct entry: the
  * registry query returns `{ agents, default_agent }`, this one returns rows,
  * and sharing one key would let whichever mounted first decide the shape.
  */
-export const MEMBERS_ROSTER_QUERY_KEY = ['kirocrew-agents', 'members-roster'] as const
+export const MEMBERS_ROSTER_QUERY_KEY = ['ajcrew-agents', 'members-roster'] as const
 /** Prefix of every crewmate's Goals record query (`[...prefix, slug, member]`). */
 export const MEMBER_GOALS_QUERY_PREFIX = ['member-goals'] as const
 
@@ -90,7 +90,7 @@ export const memberActivityQueryKey = (slug: string, member: string) =>
  *  the same reason the activity read is: the server answers 409 rather than
  *  guessing which of two colliding names a slug-keyed log belongs to.
  *
- *  Nested under `['kirocrew-agents']` like the roster, so the same `refresh`
+ *  Nested under `['ajcrew-agents']` like the roster, so the same `refresh`
  *  frame and the same post-save invalidation that revalidate the roster also
  *  revalidate the open member's views -- a crew edited in another tab must not
  *  leave the drawer showing what the log held before the save. */
@@ -99,7 +99,7 @@ export const memberActivityQueryKey = (slug: string, member: string) =>
  *  roster: a torn-tail truncation drops EVERY held key for a slug, and a roster row
  *  restores only the view it carries, so the drawer's other views come back from
  *  their own read or not at all. One prefix, so the two sides cannot drift. */
-export const MEMBER_PROJECTIONS_QUERY_PREFIX = ['kirocrew-agents', 'member-projections'] as const
+export const MEMBER_PROJECTIONS_QUERY_PREFIX = ['ajcrew-agents', 'member-projections'] as const
 
 export const memberProjectionsQueryKey = (slug: string, member: string) =>
   [...MEMBER_PROJECTIONS_QUERY_PREFIX, slug, member] as const
@@ -155,14 +155,14 @@ export const memberProjectionsQuery = (slug: string, member: string) => ({
 
 /** Query key for a member's briefing markdown (Notes tab). Keyed by slug and
  *  exact name: slugs are lossy, so two names sharing a slug have distinct
- *  briefings. Nested under `['kirocrew-agents']` like the roster: whether the
+ *  briefings. Nested under `['ajcrew-agents']` like the roster: whether the
  *  briefing is one crewmate's to show and edit is a fact about the REGISTRY
  *  (a second crew deriving the same slug turns the read into a 409), so the
  *  same `refresh` frame that refetches the roster must revalidate cached
  *  notes -- otherwise a panel opened before the collision keeps stale text
  *  and an enabled Edit over a file that is now shared. */
 export const memberBriefingQueryKey = (slug: string, member: string) =>
-  ['kirocrew-agents', 'member-briefing', slug, member] as const
+  ['ajcrew-agents', 'member-briefing', slug, member] as const
 
 /**
  * The outcome of the last thread open for one member — what

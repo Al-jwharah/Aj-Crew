@@ -14,10 +14,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import history_projection
-from kiro_crew.dashboard.handlers import artifacts as h
-from kiro_crew.history import ConversationLog
-from kiro_crew.history_cache import _TRANSCRIPT_CACHE_MAX
+from aj_crew import history_projection
+from aj_crew.dashboard.handlers import artifacts as h
+from aj_crew.history import ConversationLog
+from aj_crew.history_cache import _TRANSCRIPT_CACHE_MAX
 
 #: More sessions than the general transcript cache bound.
 _SESSIONS = _TRANSCRIPT_CACHE_MAX + 44

@@ -36,7 +36,7 @@ class TestCloneFailureDiagnostics:
         """index_originated=True + failed fresh clone → error carries the
         credential-posture explanation and the monorepo-recipe pointer; the
         machine slug is in ``code``."""
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         git_url = "https://forge.example.com/owner/private-sibling.git"
         dest = tmp_path / "app-sources" / "myapp"
@@ -48,11 +48,11 @@ class TestCloneFailureDiagnostics:
 
         log_lines: list[str] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=self._fake_wrap_argv),
-            patch("kiro_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=self._fake_wrap_argv),
+            patch("aj_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_create_subprocess,
             ),
         ):
@@ -88,7 +88,7 @@ class TestCloneFailureDiagnostics:
         """index_originated=False + failed fresh clone → the bare
         ``git clone failed`` error, with NO credential-posture hint (the clone
         kept the ambient identity, so the hint would be wrong)."""
-        import kiro_crew.apps.registry as reg
+        import aj_crew.apps.registry as reg
 
         git_url = "https://forge.example.com/owner/app.git"
         dest = tmp_path / "app-sources" / "myapp"
@@ -99,11 +99,11 @@ class TestCloneFailureDiagnostics:
 
         log_lines: list[str] = []
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=self._fake_wrap_argv),
-            patch("kiro_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=self._fake_wrap_argv),
+            patch("aj_crew.apps.registry.cgroup_scope_argv", side_effect=lambda a: a),
             patch(
-                "kiro_crew.apps.registry.create_subprocess_limited",
+                "aj_crew.apps.registry.create_subprocess_limited",
                 side_effect=_fake_create_subprocess,
             ),
         ):
@@ -159,7 +159,7 @@ async def _run_index_clone_failure(
     selects the confused-deputy (credential-free) posture path (True, default)
     vs the owner-designated path (False) whose only failure shape is the bare
     ``git clone failed`` body."""
-    from kiro_crew.apps import registry as reg
+    from aj_crew.apps import registry as reg
 
     def _fake_wrap_argv(argv, mode="standard", **_kwargs):
         return argv, None
@@ -169,10 +169,10 @@ async def _run_index_clone_failure(
 
     dest = tmp_path / "clone-dest"  # does not exist → fresh-clone path
     with (
-        patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-        patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
-        patch("kiro_crew.apps.registry.cgroup_scope_argv", side_effect=lambda c: c),
-        patch("kiro_crew.apps.registry.create_subprocess_limited", new=_fake_create),
+        patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+        patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+        patch("aj_crew.apps.registry.cgroup_scope_argv", side_effect=lambda c: c),
+        patch("aj_crew.apps.registry.create_subprocess_limited", new=_fake_create),
     ):
         result = await reg._git_clone_or_pull(
             git_url,
@@ -312,7 +312,7 @@ class TestIndexOriginatedCloneFailureHintIsGated:
         # `permission denied` auth marker fires ONLY on the SSH method-list
         # forms, never on a bare local-FS errno. This is the property the
         # end-to-end tests above exercise, asserted directly on the boolean.
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         # Local FS errno forms — every one must fall open (not auth-shaped).
         assert (
@@ -356,7 +356,7 @@ class TestIndexOriginatedCloneFailureHintIsGated:
     def test_ssh_method_list_must_be_well_formed_and_closed(self):
         # The method list is a comma-separated run of names closed by `)`:
         # an empty name, an unclosed list or a stray character is not one.
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         assert reg._git_output_is_auth_shaped("Permission denied (publickey,).") is False
         assert reg._git_output_is_auth_shaped("Permission denied (,publickey).") is False
@@ -379,7 +379,7 @@ class TestIndexOriginatedCloneFailureHintIsGated:
     def test_ssh_refusal_check_reads_repeated_prefixes_in_one_pass(self):
         # Many back-to-back unmatched prefixes are each rejected at their own
         # first space, so the verdict is reached without rescanning the rest.
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         repeated = "permission denied (" * 40000
         assert reg._git_output_is_auth_shaped(repeated + "13)") is False
@@ -464,7 +464,7 @@ def _assert_strict_ssh_route_refusal(result) -> None:
     assert "~/.ssh/config" in banner
     assert "ssh-agent" in banner
     # And what the user can do instead.
-    assert "kirocrew app install <dir>" in banner
+    assert "ajcrew app install <dir>" in banner
     # ssh never reads the HTTP(S) proxy variables, so that hint would mislead.
     assert "HTTPS_PROXY" not in banner
     # A constant sentence: nothing from git's output or the URL reaches it.
@@ -486,7 +486,7 @@ class TestStrictSshRouteRefusal:
     async def test_pinned_index_fetch_of_an_unresolved_ssh_host_explains_the_strict_tier(
         self, tmp_path
     ):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         def _fake_wrap_argv(argv, mode="standard", **_kwargs):
             return argv, None
@@ -497,10 +497,10 @@ class TestStrictSshRouteRefusal:
             return _ScriptedGitProc(0)
 
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
-            patch("kiro_crew.apps.registry.cgroup_scope_argv", side_effect=lambda c: c),
-            patch("kiro_crew.apps.registry.create_subprocess_limited", new=_fake_create),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.cgroup_scope_argv", side_effect=lambda c: c),
+            patch("aj_crew.apps.registry.create_subprocess_limited", new=_fake_create),
         ):
             result = await reg._git_clone_or_pull(
                 _SSH_APP_URL,
@@ -514,7 +514,7 @@ class TestStrictSshRouteRefusal:
 
     @pytest.mark.asyncio
     async def test_index_pull_of_an_unresolved_ssh_host_explains_the_strict_tier(self, tmp_path):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         dest = tmp_path / "existing"
         (dest / ".git").mkdir(parents=True)
@@ -527,10 +527,10 @@ class TestStrictSshRouteRefusal:
             return _ScriptedGitProc(1, _SSH_NAME_UNRESOLVED)
 
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
-            patch("kiro_crew.apps.registry.cgroup_scope_argv", side_effect=lambda c: c),
-            patch("kiro_crew.apps.registry.create_subprocess_limited", new=_fake_create),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.cgroup_scope_argv", side_effect=lambda c: c),
+            patch("aj_crew.apps.registry.create_subprocess_limited", new=_fake_create),
             patch.object(reg, "_clone_origin_url", new=AsyncMock(return_value=_SSH_APP_URL)),
             patch.object(reg, "_read_clone_branch", return_value="main"),
         ):
@@ -562,7 +562,7 @@ class TestStrictSshRouteRefusal:
         assert result["code"] == "git_clone_failed_no_credentials"
 
     def test_only_ssh_own_unresolved_name_line_is_matched(self):
-        from kiro_crew.apps.registry_pipeline.git_targets import (
+        from aj_crew.apps.registry_pipeline.git_targets import (
             _git_output_is_ssh_name_unresolved,
         )
 
@@ -607,7 +607,7 @@ class TestCloneLocaleIsPinnedForDeterministicClassifier:
     PROPERTY (the pin on the constructed env), not a real non-English git."""
 
     def test_anonymous_git_env_pins_locale_over_operator_lang(self, monkeypatch):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         # Simulate a non-English operator host: LANG/LC_ALL are on os.environ
         # and pass through _SAFE_ENV_KEYS.
@@ -629,7 +629,7 @@ class TestCloneLocaleIsPinnedForDeterministicClassifier:
         # many other minimal_env subprocesses (pip installs, app backends, …),
         # and C.UTF-8 is invalid on macOS BSD libc. The operator's LANG/LC_ALL
         # pass through unchanged.
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         monkeypatch.setenv("LANG", "ja_JP.UTF-8")
         monkeypatch.setenv("LC_ALL", "ja_JP.UTF-8")
@@ -639,7 +639,7 @@ class TestCloneLocaleIsPinnedForDeterministicClassifier:
     def test_explicit_extra_still_overrides_the_pin(self, monkeypatch):
         # The pin is applied before *extra*, so an explicit caller override wins
         # (documented contract) — the pin is a default, not a lock.
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         env = reg.anonymous_git_env(LC_ALL="en_US.UTF-8")
         assert env["LC_ALL"] == "en_US.UTF-8"
@@ -650,7 +650,7 @@ class TestCloneLocaleIsPinnedForDeterministicClassifier:
         # credential-blocked clone is classified auth-shaped. A localized
         # (e.g. German) rendering of the same failure would NOT match — which is
         # exactly why the env must force English before the classifier runs.
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         english = "fatal: Authentication failed for 'https://github.com/acme/x.git/'"
         localized = "fatal: Authentifizierung fehlgeschlagen für 'https://github.com/acme/x.git/'"
@@ -664,7 +664,7 @@ class TestCloneLocaleIsPinnedForDeterministicClassifier:
         # and a credential-blocked index-originated clone keeps the posture hint
         # on a non-English host. Fails at 2db0acd4 (no pin: git would localize
         # and the hint would vanish); passes after.
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         captured: dict = {}
 
@@ -681,10 +681,10 @@ class TestCloneLocaleIsPinnedForDeterministicClassifier:
 
         dest = tmp_path / "clone-dest"
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
-            patch("kiro_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
-            patch("kiro_crew.apps.registry.cgroup_scope_argv", side_effect=lambda c: c),
-            patch("kiro_crew.apps.registry.create_subprocess_limited", new=_fake_create),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.wrap_argv", side_effect=_fake_wrap_argv),
+            patch("aj_crew.apps.registry.cgroup_scope_argv", side_effect=lambda c: c),
+            patch("aj_crew.apps.registry.create_subprocess_limited", new=_fake_create),
         ):
             result = await reg._git_clone_or_pull(
                 "https://github.com/acme/private-sibling.git",
@@ -705,7 +705,7 @@ class TestCloneLocaleIsPlatformValid:
     """``_GIT_CLONE_LOCALE`` is ``en_US.UTF-8`` on Darwin and ``C.UTF-8`` elsewhere.
 
     macOS libc lacks ``C.UTF-8``; an invalid ``LC_ALL`` falls to ASCII and non-ASCII
-    git output raises ``UnicodeDecodeError``. Mirrors :mod:`kiro_crew.service.common`.
+    git output raises ``UnicodeDecodeError``. Mirrors :mod:`aj_crew.service.common`.
     """
 
     def test_pinned_locale_is_valid_for_the_running_platform(self):
@@ -714,7 +714,7 @@ class TestCloneLocaleIsPlatformValid:
         # the hardcoded, BSD-libc-invalid "C.UTF-8"); passes after the split.
         import sys
 
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         expected = "en_US.UTF-8" if sys.platform == "darwin" else "C.UTF-8"
         assert reg._GIT_CLONE_LOCALE == expected
@@ -731,28 +731,28 @@ class TestCloneLocaleIsPlatformValid:
         import importlib
         import sys
 
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         try:
             monkeypatch.setattr(sys, "platform", "darwin")
             # flake-ok: pre-existing reload of the registry facade under a patched sys.platform, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-in-process-reload -- pre-existing reload of the registry facade under a patched sys.platform, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-in-process-reload -- pre-existing reload of the registry facade under a patched sys.platform, moved verbatim; tracked for a de-flake pass
             reloaded = importlib.reload(reg)
             assert reloaded._GIT_CLONE_LOCALE == "en_US.UTF-8"
 
             monkeypatch.setattr(sys, "platform", "linux")
             # flake-ok: pre-existing reload of the registry facade under a patched sys.platform, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-in-process-reload -- pre-existing reload of the registry facade under a patched sys.platform, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-in-process-reload -- pre-existing reload of the registry facade under a patched sys.platform, moved verbatim; tracked for a de-flake pass
             reloaded = importlib.reload(reg)
             assert reloaded._GIT_CLONE_LOCALE == "C.UTF-8"
         finally:
             # Restore the module to the real-platform value so later tests (and
             # the shared module object) see the genuine constant.
             # flake-ok: pre-existing undo in the finally that restores the real platform before the last reload, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-bare-monkeypatch-undo -- pre-existing undo in the finally that restores the real platform before the last reload, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-bare-monkeypatch-undo -- pre-existing undo in the finally that restores the real platform before the last reload, moved verbatim; tracked for a de-flake pass
             monkeypatch.undo()
             # flake-ok: pre-existing reload in the finally, after the undo restored the real sys.platform, so the shared registry facade carries the genuine constant again, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-in-process-reload -- pre-existing reload in the finally, after the undo restored the real sys.platform, so the shared registry facade carries the genuine constant again, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-in-process-reload -- pre-existing reload in the finally, after the undo restored the real sys.platform, so the shared registry facade carries the genuine constant again, moved verbatim; tracked for a de-flake pass
             importlib.reload(reg)
 
     def test_anonymous_git_env_pins_the_platform_valid_value(self):
@@ -760,7 +760,7 @@ class TestCloneLocaleIsPlatformValid:
         # carries the platform-appropriate locale, not a macOS-invalid one.
         import sys
 
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         env = reg.anonymous_git_env()
         expected = "en_US.UTF-8" if sys.platform == "darwin" else "C.UTF-8"
@@ -778,7 +778,7 @@ class TestSslMarkerIsAnchoredNotBareSubstring:
     _TLS_LABEL = "a TLS/SSL error occurred"
 
     def test_ssl_in_repo_url_is_not_labeled_a_tls_error(self):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         # A not-found failure whose stderr echoes a repo URL containing "ssl"
         # (openssl) is NOT a TLS error and must NOT get the TLS label. Fails at
@@ -789,7 +789,7 @@ class TestSslMarkerIsAnchoredNotBareSubstring:
         assert label != self._TLS_LABEL
 
     def test_gnutls_in_repo_url_is_not_labeled_a_tls_error(self):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         # A not-found failure whose stderr echoes a repo URL containing the
         # library name "gnutls" (github.com/gnutls/gnutls) is NOT a TLS error.
@@ -801,7 +801,7 @@ class TestSslMarkerIsAnchoredNotBareSubstring:
         assert label != self._TLS_LABEL
 
     def test_genuine_tls_errors_still_labeled(self):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         # git/curl/(open|gnu)tls real TLS-error phrasings still map to the TLS
         # label so the classifier keeps recognizing genuine transport failures.
@@ -819,7 +819,7 @@ class TestSslMarkerIsAnchoredNotBareSubstring:
             assert reg._redacted_git_failure_class(stderr) == self._TLS_LABEL
 
     def test_no_bare_ssl_token_marker_remains(self):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         # Every TLS-labeled marker is a multi-token phrase, never the bare token
         # "ssl" that would match a repo URL path segment.
@@ -842,7 +842,7 @@ class TestRefErrorMarkerPrecision:
     merely contains ``does not exist`` is not mislabeled a missing ref."""
 
     def test_non_ref_does_not_exist_is_not_labeled_a_ref_error(self):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         # A pathspec/path error that contains "does not exist" but is NOT a git
         # ref error must NOT be classified as the requested-ref failure.
@@ -852,7 +852,7 @@ class TestRefErrorMarkerPrecision:
         assert label != "the requested ref does not exist"
 
     def test_git_ref_error_still_classified(self):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         # git's actual missing-ref phrasing still maps to the ref label.
         assert (
@@ -873,7 +873,7 @@ class TestSiblingFailureShapesUseCodeNotError:
 
     @pytest.mark.asyncio
     async def test_destination_not_a_checkout_slug_in_code(self, tmp_path):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         dest = tmp_path / "app-source"
         dest.mkdir()
@@ -896,10 +896,10 @@ class TestSiblingFailureShapesUseCodeNotError:
 
     @pytest.mark.asyncio
     async def test_untrusted_clone_host_slug_in_code(self, tmp_path):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         dest = tmp_path / "clone-dest"
-        with patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=False):
+        with patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=False):
             result = await reg._git_clone_or_pull(
                 "https://169.254.169.254/internal.git",
                 "main",
@@ -915,7 +915,7 @@ class TestSiblingFailureShapesUseCodeNotError:
 
     @pytest.mark.asyncio
     async def test_existing_checkout_not_moved_aside_slug_in_code(self, tmp_path):
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         dest = tmp_path / "source"
         (dest / ".git").mkdir(parents=True)
@@ -924,7 +924,7 @@ class TestSiblingFailureShapesUseCodeNotError:
             raise AssertionError("a refused move-aside must not reach the fetch")
 
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
             patch.object(reg, "_clone_origin_url", new=AsyncMock(return_value="https://x/y.git")),
             patch.object(reg, "_git_fetch_commit", new=_must_not_fetch),
             patch.object(reg, "_move_checkout_aside", new=AsyncMock(return_value=None)),
@@ -941,13 +941,13 @@ class TestSiblingFailureShapesUseCodeNotError:
     @pytest.mark.asyncio
     async def test_originally_swapped_shapes_still_use_code(self, tmp_path):
         """Control: the two shapes swapped in the base PR are unchanged."""
-        from kiro_crew.apps import registry as reg
+        from aj_crew.apps import registry as reg
 
         # unreadable_clone_origin: origin remote unreadable, refuse in place.
         dest = tmp_path / "unreadable"
         (dest / ".git").mkdir(parents=True)
         with (
-            patch("kiro_crew.apps.registry.is_clone_host_trusted", return_value=True),
+            patch("aj_crew.apps.registry.is_clone_host_trusted", return_value=True),
             patch.object(reg, "_clone_origin_url", new=AsyncMock(return_value=None)),
         ):
             result = await reg._git_clone_or_pull("https://x/y.git", "main", dest, [], commit="")

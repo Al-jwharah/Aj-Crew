@@ -15,10 +15,10 @@ ANALYSIS = ROOT / ".github" / "workflows" / "fix-loop-analysis.yml"
 CONTRACT = (
     ROOT
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "scripts"
     / "_review_contract.py"
 )

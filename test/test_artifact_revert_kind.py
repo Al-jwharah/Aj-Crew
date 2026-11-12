@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from kiro_crew.artifacts import ArtifactStore
+from aj_crew.artifacts import ArtifactStore
 
 _WIDGET = "<div id='w'>hello widget</div>"
 _PULLED_DOC = "<!doctype html><html><body><p>upstream page</p></body></html>"

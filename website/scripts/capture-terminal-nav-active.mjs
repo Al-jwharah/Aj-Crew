@@ -28,8 +28,8 @@ import { logPageProblems, stubDashboardApi } from './lib/stub-dashboard-api.mjs'
 const OUT = process.argv[2] || '../temp-screenshots/terminal-nav-active'
 
 const SCENES = [
-  { name: 'dark', theme: 'dark', attr: 'kiro-dark' },
-  { name: 'light', theme: 'light', attr: 'kiro-light' },
+  { name: 'dark', theme: 'dark', attr: 'aj-dark' },
+  { name: 'light', theme: 'light', attr: 'aj-light' },
 ]
 const RAILS = [
   { name: 'expanded', collapsed: false, width: 560 },
@@ -41,7 +41,7 @@ const RAILS = [
 const AWAY = { x: 1000, y: 380 }
 
 const slots = [
-  { key: 's1', title: 'Docked panel rail state', messages: 4, running: false, agent: 'kirocrew', mode: '', created: '2026-08-05T01:00:00Z', last_ts: '2026-08-05T04:00:00Z', folder_id: '' },
+  { key: 's1', title: 'Docked panel rail state', messages: 4, running: false, agent: 'ajcrew', mode: '', created: '2026-08-05T01:00:00Z', last_ts: '2026-08-05T04:00:00Z', folder_id: '' },
 ]
 
 mkdirSync(OUT, { recursive: true })
@@ -64,7 +64,7 @@ async function main() {
       for (const s of SCENES) {
         const context = await browser.newContext({
           viewport: { width: 1400, height: 940 },
-          // The lit state is a low-contrast tinted background (#352f3d on the
+          // The lit state is a low-contrast tinted background (#272a31 on the
           // dark rail); a 1x shot loses it to PNG banding.
           deviceScaleFactor: 2,
         })
@@ -74,7 +74,7 @@ async function main() {
         // Registered after the stub, so it lands after the stub's
         // localStorage.clear() only while Chromium runs init scripts in
         // registration order: Playwright does not define that order.
-        // `mc-color-theme` picks the kiro palette; `mc-nav` is the
+        // `mc-color-theme` picks the aj palette; `mc-nav` is the
         // rail-collapsed flag App reads on mount.
         await page.addInitScript(([attr, collapsed]) => {
           localStorage.setItem('mc-color-theme', attr)

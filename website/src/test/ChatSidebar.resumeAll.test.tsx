@@ -70,7 +70,7 @@ vi.mock('../api/client', () => ({
   api: new Proxy({} as Record<string, unknown>, {
     get: (_t, name: string) => {
       if (name === 'chatSlotsResumeAll') return resumeAll
-      if (name === 'kirocrewConfig') return vi.fn().mockResolvedValue({ dashboard: {} })
+      if (name === 'ajcrewConfig') return vi.fn().mockResolvedValue({ dashboard: {} })
       return vi.fn().mockResolvedValue([])
     },
   }),
@@ -114,7 +114,7 @@ function renderSidebar(slots: ChatSlot[], connected = true) {
   })
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity, refetchOnMount: false }, mutations: { retry: false } } })
   qc.setQueryData(['chat-folders'], [])
-  qc.setQueryData(['kirocrewConfig'], { dashboard: {} })
+  qc.setQueryData(['ajcrewConfig'], { dashboard: {} })
   const tree = (rows: ChatSlot[]) => (
     <QueryClientProvider client={qc}>
       <Provider store={store}>
@@ -381,7 +381,7 @@ describe('chat sidebar — Resume all interrupted sessions', () => {
     const notice = await waitFor(() => getByTestId('resume-all-problems'))
     expect(notice.getAttribute('role')).toBe('alert')
     expect(notice.textContent).toContain('Some sessions were not resumed')
-    expect(notice.textContent).toContain('Parser refactor: The agent failed to start twice in a row. Restart the gateway (kirocrew restart), then send your message again.')
+    expect(notice.textContent).toContain('Parser refactor: The agent failed to start twice in a row. Restart the gateway (ajcrew restart), then send your message again.')
     expect(notice.textContent).toContain('Release notes: An error stopped it.')
     // A session that finished on its own needs nothing, so it is not named.
     expect(notice.textContent).not.toContain('d:')

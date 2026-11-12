@@ -8,9 +8,9 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.dashboard import state as state_facade
-from kiro_crew.dashboard import websocket_hub as wh
-from kiro_crew.dashboard.state_parts import dashboard_state, slots_push
+from aj_crew.dashboard import state as state_facade
+from aj_crew.dashboard import websocket_hub as wh
+from aj_crew.dashboard.state_parts import dashboard_state, slots_push
 
 pytestmark = pytest.mark.asyncio
 

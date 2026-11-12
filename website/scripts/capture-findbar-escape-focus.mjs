@@ -18,14 +18,14 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/findbar-escape-focus'
 const SLOT = 'chat-findbarfocus'
-const PROJECT = '/Users/diwm/workspace/KiroCrew'
+const PROJECT = '/Users/diwm/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
 const now = Date.now() / 1000
 const slots = [{
   key: SLOT, title: 'Find bar focus', running: false,
-  last_message: 'deployment finished', messages: 4, agent: 'kirocrew',
+  last_message: 'deployment finished', messages: 4, agent: 'ajcrew',
   memory_mode: 'persistent', project: PROJECT, modified: Math.floor(now),
   source_links: [], source_links_total: 0,
 }]

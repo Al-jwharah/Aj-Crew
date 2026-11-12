@@ -8,7 +8,7 @@
 ## File Layout
 
 Backend tests live under the roots `setup.cfg` pins in `testpaths`
-(`test` plus `src/kiro_crew/apps/builtins`): pytest recurses into
+(`test` plus `src/aj_crew/apps/builtins`): pytest recurses into
 `test`, so nested `test/<pkg>/test_*.py` files are collected too (for
 example `test/metrics/`, `test/e2e/`, `test/integration/`), alongside
 helper subdirectories that hold shared fixtures rather than tests (for
@@ -25,7 +25,7 @@ outside those roots is never collected, so it stays green by omission.
 
 Every backend test MUST keep these twelve rules. Each line names the shape to use and
 links the class that explains it; the rest of this document is the evidence behind
-them. The shared shapes live in `kiro_crew.testing` (`clock`, `wait`, `ids`), which
+them. The shared shapes live in `aj_crew.testing` (`clock`, `wait`, `ids`), which
 ships in the wheel, so the in-package app suites use them too; the rootdir
 `conftest.py` adds the `manual_clock`, `seeded_rng` and `local_tz` fixtures.
 `AUTOSDE.yaml`'s `tests-are-deterministic` rule holds review to them, and the SAST
@@ -39,7 +39,7 @@ promise-sleep, `waitForTimeout`); a deliberate one says why with
 
 - **D1. Wait on a signal, never a duration.** Poll the state you are about to assert
   under a bounded deadline that RAISES quoting the last state it read: `wait_until` /
-  `async_wait_until` in `kiro_crew.testing.wait`, `until_parked` for a task parked on a
+  `async_wait_until` in `aj_crew.testing.wait`, `until_parked` for a task parked on a
   lock, `drained_progress` for a batch whose speed the host owns; import it at module
   level. That deadline is a lost-run bound (D7), half the test's timeout by default. An
   absence assertion waits on a positive signal first (the waiter registered, the
@@ -59,7 +59,7 @@ promise-sleep, `waitForTimeout`); a deliberate one says why with
   keeps its line under its new path: `python test/test_wait_discipline_ratchet.py --move OLD NEW`.
   [Class 2](#2-wall-clock-races).
 - **D2. One clock, injected or frozen at the seam the code reads.** Replace the module's
-  own `time` / `datetime` name with a `ManualClock` (`kiro_crew.testing.clock`, or the
+  own `time` / `datetime` name with a `ManualClock` (`aj_crew.testing.clock`, or the
   `manual_clock` fixture): `clock.install(monkeypatch, module)`. Never rebind a stdlib
   clock or `time.sleep` for the whole worker. [Class 2](#2-wall-clock-races),
   [class 4](#4-order-dependence-and-shared-state).
@@ -88,7 +88,7 @@ promise-sleep, `waitForTimeout`); a deliberate one says why with
 - **D6. Seed every RNG that feeds an assertion** (`random.Random(SEED)`, or the
   `seeded_rng` fixture, seeded from the node id and printing the seed when the test
   fails), and give a fake PID a number no OS can allocate (`UNALLOCATABLE_PID` /
-  `unallocatable_pids()` in `kiro_crew.testing.ids`).
+  `unallocatable_pids()` in `aj_crew.testing.ids`).
   [Class 1](#1-nondeterministic-input).
 - **D7. No upper bound on a measured duration, rate or sample count, except a lost-run
   bound or a lower bound.** Assert the work, the schedule or the order. A wait's
@@ -116,7 +116,7 @@ promise-sleep, `waitForTimeout`); a deliberate one says why with
   registered under that name with `monkeypatch.setitem(sys.modules, name, mod)` before
   `exec_module` (a `@dataclass` module needs it), never under the real name.
   A `sys.modules` eviction restores the entry AND its parent package's attribute in the
-  same scope (the rootdir package-attribute floor puts back a `kiro_crew` one a test
+  same scope (the rootdir package-attribute floor puts back an `aj_crew` one a test
   left changed, and names the test), and a new process-global ships its floor entry.
   [Class 4](#4-order-dependence-and-shared-state).
 - **D12. Prove it.** Each new or changed test passes 20 times at `-n0`, 10 times at
@@ -128,14 +128,14 @@ promise-sleep, `waitForTimeout`); a deliberate one says why with
 
 ### Production deadlines are not test boundaries
 
-A test passes no value that is not literal ``0``/``None`` or a ``kiro_crew.testing``
+A test passes no value that is not literal ``0``/``None`` or an ``aj_crew.testing``
 import as a duration-named argument.
 
 - **``0`` for the timeout path.** Literal ``0`` (or ``None``) is the "no deadline /
   already expired" value.
-- **A ``kiro_crew.testing`` name for a generous safety net.** Use
-  ``from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS`` (60 s) for the
-  happy-path pin. Any name imported from ``kiro_crew.testing.*`` is allowed.
+- **An ``aj_crew.testing`` name for a generous safety net.** Use
+  ``from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS`` (60 s) for the
+  happy-path pin. Any name imported from ``aj_crew.testing.*`` is allowed.
 - **A fixture-pinned seam for a production constant.** ``_floor_monkeypatch.setattr``
   in an autouse fixture keeps the constant out of every test body.
 - **An injected clock** for a module that owns a ``time`` import.
@@ -149,10 +149,10 @@ _T = 30
 subprocess.run(cmd, timeout=_T)       # local constant counts
 ```
 
-**RIGHT** (``kiro_crew.testing`` import; literal ``0`` for the expired path):
+**RIGHT** (``aj_crew.testing`` import; literal ``0`` for the expired path):
 
 ```python
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 @pytest.fixture(autouse=True)
 def _raise_deadlines(_floor_monkeypatch):
@@ -163,7 +163,7 @@ def test_timeout_path(_floor_monkeypatch):
     assert run_something() is None
 ```
 
-K19 has two arms. The **setattr arm** flags any non-zero non-``kiro_crew.testing`` value
+K19 has two arms. The **setattr arm** flags any non-zero non-``aj_crew.testing`` value
 as the third argument of ``monkeypatch.setattr`` / ``_floor_monkeypatch.setattr`` on an
 attribute whose name ends in a time-unit suffix (``_s``, ``_secs``, ``_seconds``,
 ``_ms``, etc.) or starts with ``timeout``. This catches the five motivating flakes
@@ -194,7 +194,7 @@ module through any binding is the semgrep rule's), a `sys.modules` eviction with
 no restore in the same function, raw environment writes, duration bounds, literal waits
 under two seconds (the too-tight lost-run bound of class 6; a negative such as
 `assert not done.wait(0.3)` is not one), literal listener ports, fixed crew-log flush
-ceilings, crew-log removals outside `eager.paused()`, Event waits a test parks on a thread-pool executor, direct writes of asyncio Tasks or TimerHandles to a ``kiro_crew`` module attribute from a test function (K16), ``pytest.mark.xfail(strict=False)`` overrides (K18), a non-zero numeric literal used as a duration-named keyword argument or as a ``setattr`` value on a duration-named attribute — the production-deadline-as-test-boundary shape (K19), an `update_metadata` or `update_metadata_if` call in a coroutine's own frame (K20, [Async tests](#async-tests)), and five frontend shapes. In a file
+ceilings, crew-log removals outside `eager.paused()`, Event waits a test parks on a thread-pool executor, direct writes of asyncio Tasks or TimerHandles to an ``aj_crew`` module attribute from a test function (K16), ``pytest.mark.xfail(strict=False)`` overrides (K18), a non-zero numeric literal used as a duration-named keyword argument or as a ``setattr`` value on a duration-named attribute — the production-deadline-as-test-boundary shape (K19), an `update_metadata` or `update_metadata_if` call in a coroutine's own frame (K20, [Async tests](#async-tests)), and five frontend shapes. In a file
 the pinned semgrep reads no line of, it counts the `time` patches the semgrep rule would
 refuse as well: a file over 1,000,000 bytes, or one holding both a lambda with a bare `*`
 (`lambda a, *, b: ...`) and a parenthesized `with (a as b, ...):`, which semgrep 1.78
@@ -217,7 +217,7 @@ first parent, answers in about a minute, and fails when the ratchet still
 reports `compared nothing`. Run `python -m pytest -n0 test/test_flake_pattern_ratchet.py`
 before pushing to see the same verdict first. It does not
 count an order assertion (D4) or a network call (D10): those rest on review. For D10
-the same job also runs `scripts/net_strict_changed.py`, which sets `KIROCREW_NET_STRICT=1`
+the same job also runs `scripts/net_strict_changed.py`, which sets `AJCREW_NET_STRICT=1`
 for the test files the change adds or changes and names any that look up a non-local
 host or connect past loopback in the job summary; it is warn-only for now, and a file
 that already does so is held to the rule only once someone edits it. A
@@ -410,7 +410,7 @@ multi-phase uninstall's phase 1, a dependency coordinator's park, a policy-file 
 anything spanning them is a thin wrapper over `threading.Event` / `asyncio.Event` plus
 `try`/`finally` behind an indirection every reader must learn, and the seam form holds
 nothing at all, so a hold helper would not even cover it. A condition POLL is a different
-thing: wait on the state through `kiro_crew.testing.wait` (`wait_until`,
+thing: wait on the state through `aj_crew.testing.wait` (`wait_until`,
 `async_wait_until`, `until_parked`), which raises with the state it last read
 ([D1](#determinism-contract-read-this-first)), never another silent poll.
 
@@ -433,15 +433,15 @@ path, so the crash needs the full shard. The surface is every kill helper on
 one of the two spellings
 already in the tree rather than inventing a third: give the mock a pid above
 every supported platform's `pid_max`
-(`src/kiro_crew/testing/ids.py::UNALLOCATABLE_PID`, or `unallocatable_pids(n)` for
+(`src/aj_crew/testing/ids.py::UNALLOCATABLE_PID`, or `unallocatable_pids(n)` for
 several; `test/test_update_provider.py::_UNALLOCATABLE_PID` is the same value), or
 neutralise the killer
 and assert the ordering instead
 (`test/test_platform_compat_kill_reap.py::TestKillAndReap`). The first spelling IS gated:
-`semgrep/mock-pid-allocatable.yaml` (`kirocrew.mock-pid-allocatable`), which
+`semgrep/mock-pid-allocatable.yaml` (`ajcrew.mock-pid-allocatable`), which
 `code-review.yml`'s SAST job runs diff-scoped and blocking, refuses a literal below
 `2**32` assigned to `.pid` or passed as `pid=` to a `Mock` / `SimpleNamespace`
-constructor under `test/` and `src/kiro_crew/apps/builtins/**/tests/`. It is
+constructor under `test/` and `src/aj_crew/apps/builtins/**/tests/`. It is
 unconditional on purpose. Whether a given double is covered by the second spelling stays
 a convention, because one file does not carry the answer: the neutralising patch may sit
 in a class fixture or a conftest, and the killer is as often replaced one level down
@@ -453,11 +453,11 @@ tell a covered mock from an exposed one.
 Use `monkeypatch` to override config paths:
 ```python
 def test_load_from_file(self, tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: cfg_file)
+    monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: cfg_file)
 ```
 
 Chat-runner fixtures that resolve agent bindings must use a concrete
-`KiroCrewConfig`. A bare `MagicMock` can claim to contain agents while yielding
+`AjCrewConfig`. A bare `MagicMock` can claim to contain agents while yielding
 no entries, so binding resolution fails before the behavior under test runs.
 When stubbing the resolver itself, return `ResolvedBindings` with the intended
 member/template selection. A partial namespace can raise on a missing field
@@ -592,8 +592,8 @@ where these path semantics differ most. Two helpers in `test/conftest.py`:
 | A path that reaches OUT of a sandbox root through a link | `make_escaping_link(inside, outside)` |
 | A directory link at a chosen location (`ui/` -> the dev source tree) | `make_dir_link(link, target)` |
 
-`make_dir_link` lives in `kiro_crew.testing.links`; the conftest re-exports it, and
-app-embedded tests under `src/kiro_crew/apps/builtins` import it from there.
+`make_dir_link` lives in `aj_crew.testing.links`; the conftest re-exports it, and
+app-embedded tests under `src/aj_crew/apps/builtins` import it from there.
 
 Prefer either over a bare `Path.symlink_to` plus a `skipif(sys.platform == "win32")`:
 an unconditional skip drops the whole assertion on Windows. Reach for a skip only
@@ -604,7 +604,7 @@ say), and then still pair it with a Windows counterpart.
 
 `monkeypatch.setattr`/`patch` rebind a NAME in one module namespace. Code
 reads its globals from its **defining** module, so patching a package
-re-export (e.g. `kiro_crew.dashboard.handlers.X`, imported there from
+re-export (e.g. `aj_crew.dashboard.handlers.X`, imported there from
 `handlers/sessions.py`) is a **silent no-op** — the test still passes but
 exercises the production value. Symptom: a test that "shortens" a timeout yet
 still takes the full production duration.
@@ -612,15 +612,15 @@ still takes the full production duration.
 ```python
 # WRONG — handlers/__init__.py only re-exports the constant; the sessions
 # family still reads its own module global (test silently waits the real 10s):
-monkeypatch.setattr("kiro_crew.dashboard.handlers._SHUTDOWN_TIMEOUT_SECS", 0.05)
+monkeypatch.setattr("aj_crew.dashboard.handlers._SHUTDOWN_TIMEOUT_SECS", 0.05)
 
 # RIGHT — patch the sessions facade, whose mirror writes the owner that reads it:
-monkeypatch.setattr("kiro_crew.dashboard.handlers.sessions._SHUTDOWN_TIMEOUT_SECS", 0.05)
+monkeypatch.setattr("aj_crew.dashboard.handlers.sessions._SHUTDOWN_TIMEOUT_SECS", 0.05)
 ```
 
 One exception: a **forwarding facade** sends a write or delete of a re-exported
 name to the module that owns it, so a test patches through the facade and reaches
-the owner. `kiro_crew.agent`, `acp.client`, `acp.runtime`, `apps.backend`,
+the owner. `aj_crew.agent`, `acp.client`, `acp.runtime`, `apps.backend`,
 `apps.registry`, `artifacts`, `cli_doctor`, `onboarding_import` and the AWS Control
 `backup` / `packaging` modules are facades of this kind (see `_ReExportModule` in
 `agent.py`). Never `mock.patch(..., create=True)` a forwarded name: on restore it
@@ -629,7 +629,7 @@ skips the set and leaves the owner without the name, which
 module the facade holds) cannot be rebound at all; patch its attributes instead.
 
 A **mirrored facade** is the variant for a split whose owners import each other's
-names: `kiro_crew._facade_mirror` indexes, once, every owner that binds a name, and a
+names: `aj_crew._facade_mirror` indexes, once, every owner that binds a name, and a
 write or delete through the facade lands in all of them (and in the facade when it
 binds the name too), so a patch of `facade.name` reaches every reader the unsplit
 module had, module-valued names included; a name the patch creates, such as a builtin
@@ -749,7 +749,7 @@ Rules that decide whether one is worth having:
 
 ### Channel wire fakes: borrow the library's read side, do not model it
 
-`kiro_crew.testing.fake_channel_wire` fakes a channel's `aiohttp` session one layer
+`aj_crew.testing.fake_channel_wire` fakes a channel's `aiohttp` session one layer
 below the client, so the real client, transport, dispatcher and renderer run against
 canned vendor bytes. A fake at that seam has a standing hazard: a response object
 written by hand can disagree with `aiohttp` in ways that raise no `AttributeError`,
@@ -817,19 +817,19 @@ keystone paths instead.
 ## Which conftest you are standing on
 
 There are **two** testpaths (`setup.cfg`'s `testpaths = test
-src/kiro_crew/apps/builtins`) and they do **not** get the same fixtures. Know which
+src/aj_crew/apps/builtins`) and they do **not** get the same fixtures. Know which
 floor is under your file before you decide what to isolate yourself:
 
 | Your test lives in | It inherits |
 |---|---|
 | `test/` | the rootdir `conftest.py` **and** `test/conftest.py` |
-| `src/kiro_crew/apps/builtins/**/tests/` (one level down for most apps, deeper for `aws_control/crew/packaging/tests/`) | the rootdir `conftest.py`, plus that app's own `tests/conftest.py` where one exists (currently `auto_improvement`, `code_review_sage`, and `spec_builder`) |
-| `src/kiro_crew/apps/builtins/**/*_tests/` (today only `aws_control/crew/runtime/container_tests/`) | the rootdir `conftest.py`, plus its own `conftest.py`, which puts the docker build context on `sys.path` so the suite imports `container.*` the way the image does. Patterns written as `**/tests/**` skip it. |
+| `src/aj_crew/apps/builtins/**/tests/` (one level down for most apps, deeper for `aws_control/crew/packaging/tests/`) | the rootdir `conftest.py`, plus that app's own `tests/conftest.py` where one exists (currently `auto_improvement`, `code_review_sage`, and `spec_builder`) |
+| `src/aj_crew/apps/builtins/**/*_tests/` (today only `aws_control/crew/runtime/container_tests/`) | the rootdir `conftest.py`, plus its own `conftest.py`, which puts the docker build context on `sys.path` so the suite imports `container.*` the way the image does. Patterns written as `**/tests/**` skip it. |
 
 The **rootdir `conftest.py` is the host-mutation floor**: everything in it protects the
 developer's machine rather than the correctness of one suite, so it holds for all
 testpaths. It pins `$XDG_CONFIG_HOME` and the launchd paths, traps the spawn
-funnels against service mutation, pins `KIROCREW_HOME` and the import-time `~/.kiro`
+funnels against service mutation, pins `AJCREW_HOME` and the import-time `~/.kiro`
 bindings, scrubs the inherited shell-preload and exported-function variables
 `name_grant` refuses on (`BASH_ENV`/`SHELLOPTS`/`BASHOPTS`, `BASH_FUNC_*` keys,
 and the legacy `() {` value spelling — a RHEL-family host inherits `BASH_FUNC_which%%`
@@ -842,15 +842,15 @@ running gateway sweeps stray entries there as orphans), the 610MB embedding-mode
 download, and the agent-state sidecar.
 
 It also carries the [Determinism contract](#determinism-contract-read-this-first)'s
-floors. Two of them act: `_kiro_crew_package_attr_floor` puts back every `kiro_crew.*`
+floors. Two of them act: `_aj_crew_package_attr_floor` puts back every `aj_crew.*`
 module, parent-package attribute and root-package global a test replaced, evicted or
-rebound (and reports the test; `KIROCREW_PKG_ATTR_STRICT=1` fails it instead; a module the
+rebound (and reports the test; `AJCREW_PKG_ATTR_STRICT=1` fails it instead; a module the
 test imported meanwhile stays, bound to what it saw), and
 `_reset_member_eventlog_singleton` drains the member event-log queue (class 4). The rest
 only REPORT, in one `[determinism floors]` warning per worker at session end: a test that
 changed the process time zone, left work running or queued on a shared
-`kiro_crew.executors` pool, reached a host other than loopback (a test marked
-`@pytest.mark.real_network` is exempt; `KIROCREW_NET_STRICT=1` refuses the call and fails
+`aj_crew.executors` pool, reached a host other than loopback (a test marked
+`@pytest.mark.real_network` is exempt; `AJCREW_NET_STRICT=1` refuses the call and fails
 the test, except a datagram route probe, which sends nothing), or signalled the worker
 itself, its xdist controller, a process group, or, on Linux, a sibling xdist worker or
 another account's process. A network or kill finding is charged to the test running when
@@ -904,11 +904,11 @@ one scope down:
   `log_redaction.uninstall_log_redaction()` exists for a test that wants to assert on
   the uninstalled state itself.
 * `_restore_logger_levels` puts every logger's level and `disabled` flag back. A level is
-  process-global AND hierarchical, so an explicit one left on `kiro_crew` decides what
-  every `kiro_crew.*` logger in the worker may emit and it outranks the root level
+  process-global AND hierarchical, so an explicit one left on `aj_crew` decides what
+  every `aj_crew.*` logger in the worker may emit and it outranks the root level
   `caplog.at_level()` sets — the victim's `caplog.text` comes back **empty**, not wrong,
   which reads as "the code stopped logging" rather than as pollution.
-  `cli._setup_cli_logging` pins `kiro_crew` at WARNING, and test modules across the suite
+  `cli._setup_cli_logging` pins `aj_crew` at WARNING, and test modules across the suite
   run it for real by driving `cli.main()` in process. Restored rather than blamed, for the
   same reason the CWD restore is. **Handlers are deliberately not restored**: one is
   routinely paired with a module-global recording it as installed
@@ -965,7 +965,7 @@ only, so after editing a part also run the floor's own tests
 (`test/test_host_isolation_floor*.py`, `test/test_host_service_guard.py`,
 `test/test_testing_determinism_helpers.py`, `test/test_conftest_parts_reach.py`).
 
-Host-side `PodConfig` paths do not derive from `KIROCREW_HOME`. Tests that publish
+Host-side `PodConfig` paths do not derive from `AJCREW_HOME`. Tests that publish
 pod state must set `pod_root`, `pods_dir` and `artifacts_dir` under `tmp_path` on
 their configuration object. Keep the real publisher and reader so the fixture
 proves persistence without depending on an existing directory in the host home.
@@ -994,9 +994,9 @@ Three layers, told apart by how much of the product is real:
 
 | Layer | Where | What is real | What is fake | Runs |
 |---|---|---|---|---|
-| Unit | `test/`, `src/kiro_crew/apps/builtins/*/tests/` | one function or one handler on a bare `web.Application()` | everything else | every shard, every platform |
-| Integration | `test/integration/` | the whole gateway, booted by `GatewayOrchestrator.run()` in the pytest process, on a `tmp_path` home; real config, stores, policy files, routes | the model (`kiro_crew.testing.fake_acp_backend`) | the `integration` job, Linux, behind `KIROCREW_INTEGRATION=1` |
-| E2E | `test/test_e2e_smoke.py`, `test/e2e/`, `test/test_playwright_e2e.py` | a `kirocrew gateway` subprocess, and for the browser suite a real Chromium | the model | the `e2e*` jobs, behind `KIROCREW_E2E=1` |
+| Unit | `test/`, `src/aj_crew/apps/builtins/*/tests/` | one function or one handler on a bare `web.Application()` | everything else | every shard, every platform |
+| Integration | `test/integration/` | the whole gateway, booted by `GatewayOrchestrator.run()` in the pytest process, on a `tmp_path` home; real config, stores, policy files, routes | the model (`aj_crew.testing.fake_acp_backend`) | the `integration` job, Linux, behind `AJCREW_INTEGRATION=1` |
+| E2E | `test/test_e2e_smoke.py`, `test/e2e/`, `test/test_playwright_e2e.py` | an `ajcrew gateway` subprocess, and for the browser suite a real Chromium | the model | the `e2e*` jobs, behind `AJCREW_E2E=1` |
 
 The middle layer exists because the other two cannot see the seams between
 boot steps. A handler test mocks the store the handler reads; the E2E harness
@@ -1009,10 +1009,10 @@ and that is exactly what a test in `test/integration/` can hold in one hand.
 
 ### The fixtures
 
-`integration_home` is a fresh `KIROCREW_HOME` under `tmp_path` with the same
+`integration_home` is a fresh `AJCREW_HOME` under `tmp_path` with the same
 environment the E2E harness sets (`KIRO_HOME` moved under it so the boot's
 agent-spec rewrite cannot touch the operator's `~/.kiro/agents`;
-`KIROCREW_KIRO_BIN` pointing at the fake backend). Because the boot runs in the
+`AJCREW_KIRO_BIN` pointing at the fake backend). Because the boot runs in the
 test process, it also keeps the developer's own home and credentials out:
 `isolate_user_home` points `HOME`, `USERPROFILE`, `APPDATA`, `LOCALAPPDATA` and the
 XDG data, cache and state roots at an empty `tmp_path` sibling, drops every
@@ -1057,10 +1057,10 @@ same file by merging, never by replacing it.
 
 `integration_home` also releases the rootdir conftest's agent-spec pin: that
 pin sends the boot's spec WRITES to a per-test directory while request-time
-READS follow `KIRO_HOME`, so under it the boot would write `kirocrew.json`
+READS follow `KIRO_HOME`, so under it the boot would write `ajcrew.json`
 where no request reads it. Both sides resolve to `<home>/kiro/agents` here,
 which is the private target the shared-home write guard exempts. A test that
-edits the agents directory waits for the managed `kirocrew.json` first (the
+edits the agents directory waits for the managed `ajcrew.json` first (the
 spec rebuild runs after the dashboard is serving).
 
 `gw.registered_routes()` is every `(METHOD, canonical path)` the live router
@@ -1090,7 +1090,7 @@ A chat turn is the real thing too:
 returns the SSE response, and the test reads `resp.content` line by line
 (`data: {...}` events, `data: [DONE]` last). To order two turns, use the fake
 model's `[[SLOW_HOLD:<token>]]` marker (`fake_acp_backend.slow_hold_trigger`):
-set `KIROCREW_FAKE_ACP_HOLD_DIR` to a directory under `tmp_path` before the
+set `AJCREW_FAKE_ACP_HOLD_DIR` to a directory under `tmp_path` before the
 boot, and create `slow_hold_path(dir, token)` only once the event you order on
 has been observed; the held turn streams one chunk and waits there. A cold
 session start costs several seconds before the first chunk, so warm each slot
@@ -1146,14 +1146,14 @@ asyncio task the boot added that `_shutdown()` left running (production leaves
 those to `os._exit`), failing the test by name if one ignores cancellation.
 The lists are kept honest by
 `test_boot_smoke.py::test_a_second_boot_touches_only_known_module_globals`:
-it diffs every loaded `kiro_crew` module's globals across a second boot, and a
+it diffs every loaded `aj_crew` module's globals across a second boot, and a
 changed name that is neither restored by the harness nor listed with a reason
 in `_KNOWN_SECOND_BOOT_CHANGES` fails there. When startup grows a home-derived
 global, that test names it; put it on the reset list, or on the known list
 with its reason, in the same PR.
 
 The only fake is the model, but not every production step runs: the boot is
-`GatewayOrchestrator.run()`, not `kirocrew gateway`, with `test_mode=True` and
+`GatewayOrchestrator.run()`, not `ajcrew gateway`, with `test_mode=True` and
 `no_crons=True`. Skipped, and so left to the E2E layer: everything
 `run_gateway()` does before constructing the orchestrator (platform boot,
 slice limits, the agents-dir janitor, the agent scratch sweep, the kiro-cli
@@ -1172,13 +1172,13 @@ seconds here, and a file should hold a few tests, not fifty.
 
 Each request through the handle is attributed to the aiohttp route it
 resolved to (`/api/sessions/abc` counts toward `GET /api/sessions/{key}`).
-With `KIROCREW_INTEGRATION_HITS_DIR` set the conftest writes the hit set and
+With `AJCREW_INTEGRATION_HITS_DIR` set the conftest writes the hit set and
 the registered-route list per process; `scripts/check_integration_route_coverage.py`
 unions them and prints the share of registered routes the suite requested,
 `--missing` grouped by path prefix so the next file to write is obvious. A
 route served end to end proves the wiring; a line reached through a mock
 proves the line exists. Line coverage of the layer is still worth reading
-(`--cov=kiro_crew` works as usual), it is just not what the layer is gated on.
+(`--cov=aj_crew` works as usual), it is just not what the layer is gated on.
 `--min` in the `integration` job is a ratchet: a little under what `main`
 measures, never above.
 
@@ -1194,7 +1194,7 @@ measures, never above.
   has to come off in the same PR.
 - Seed the home through the product (a request, or the same store the
   product uses), not by hand-writing JSON the product never wrote.
-- Run locally with `KIROCREW_INTEGRATION=1 python -m pytest test/integration/test_x.py -n0`.
+- Run locally with `AJCREW_INTEGRATION=1 python -m pytest test/integration/test_x.py -n0`.
   A multi-file run keeps `-n 2 --dist loadgroup --max-worker-restart=2`.
 
 ## Rules
@@ -1222,17 +1222,17 @@ measures, never above.
 - In-process calls to `cli.main()` clear the inherited sandbox-active and tier
   markers as part of CLI startup hardening, and its real console initializer
   publishes the UTF-8 process contract. The root isolation floor snapshots
-  `KIROCREW_SANDBOX_ACTIVE`, `KIROCREW_SANDBOX_LEVEL`, `PYTHONUTF8` and
+  `AJCREW_SANDBOX_ACTIVE`, `AJCREW_SANDBOX_LEVEL`, `PYTHONUTF8` and
   `PYTHONIOENCODING`, then restores all four to their exact prior values
   (including absence and explicit emptiness) after the test's monkeypatches are
   undone. The CLI still performs both mutations during the call; tests must not
   disable either guard. The floor regression uses test-owned streams so Windows
   stream reconfiguration is observed without changing pytest's capture streams.
 - Tests MUST NOT depend on `~/.kiro/crew/` existing
-- Tests MUST NOT write into the operator's real data dir. `KIROCREW_HOME` is pinned
+- Tests MUST NOT write into the operator's real data dir. `AJCREW_HOME` is pinned
   per test by the rootdir conftest, which is what makes `config_dir()` safe — and it
   needs to be, because resolving it is **not a read**: it creates the home and its
-  marker on first use, and can run the one-time `~/.kirocrew` → `~/.kiro/crew`
+  marker on first use, and can run the one-time `~/.ajcrew` → `~/.kiro/crew`
   migration as a side effect.
 
   Two kinds of path escape that env var, and both need their own pin:
@@ -1242,7 +1242,7 @@ measures, never above.
      first import. The env var is read *after* the module captured the path, so
      `conftest.py` pins each such global with a dedicated autouse fixture
      (`_isolate_subagents_dir`, …). Paths that instead call `config_dir()` lazily on
-     each use (e.g. `agent_state`) already honor `KIROCREW_HOME`. A test that spawns
+     each use (e.g. `agent_state`) already honor `AJCREW_HOME`. A test that spawns
      subagents without isolating the import-time global leaks stub folders into
      `~/.kiro/crew/subagents/`, which a running gateway then sweeps as orphans on its
      next restart.
@@ -1252,7 +1252,7 @@ measures, never above.
      live agent's MCP server list. The rootdir conftest's `_isolate_shared_kiro_paths`
      redirects these from a table, and
      `test/test_host_isolation_floor.py::TestTheSharedKiroPathRatchet` fails when
-     `src/kiro_crew` grows a module-level `Path.home()` binding that is neither in the
+     `src/aj_crew` grows a module-level `Path.home()` binding that is neither in the
      table nor explicitly excluded with a reason. The guarantee is exactly that:
      **import-time bindings**. The floor patches only modules already in
      `sys.modules`, so a module first imported inside a test body (for example
@@ -1289,7 +1289,7 @@ measures, never above.
      against a pattern that no longer matches the thing it protects.
 
 - **Tests MUST NOT derive an expected value from the repo's declared version.**
-  `kiro_crew.__version__` is an input the checkout controls, not a constant: a release
+  `aj_crew.__version__` is an input the checkout controls, not a constant: a release
   branch declares `X.Y.Z-rc.N` by contract ([release](../../build/release.md)), a
   nightly tree carries `.dev<stamp>`, an insider wheel its own suffix. `main` declares
   a bare release, so an expectation COMPUTED from it is green there and red exactly
@@ -1329,7 +1329,7 @@ measures, never above.
 
 - **Never name one of the repository's own files by a bare relative path.** A
   structural test that reads the source it pins has to name a file, and
-  `Path("src/kiro_crew/dashboard/ws.py")` names it against whatever directory the
+  `Path("src/aj_crew/dashboard/ws.py")` names it against whatever directory the
   process started in. That holds only while pytest is launched from the root: from a
   subdirectory, an editor's runner, or any wrapper that changes directory first, the
   same literal resolves to nothing and the read raises `FileNotFoundError` before a
@@ -1341,7 +1341,7 @@ measures, never above.
   different file than the one the rest of the test exercises.
 
   ```python
-  from kiro_crew.dashboard import ws
+  from aj_crew.dashboard import ws
   source = Path(ws.__file__).read_text(encoding="utf-8")
   ```
 
@@ -1383,13 +1383,13 @@ measures, never above.
   The **lazy-resolving worker** is the second shape, and it writes into the operator's
   REAL home rather than a stray temp dir. `install_receipt.dispatch()` handed the
   receipt write to a daemon thread that called `beacon.config_dir()` *on that thread*.
-  `config_dir()` honours `KIROCREW_HOME` at call time; the test's pin was gone by the
+  `config_dir()` honours `AJCREW_HOME` at call time; the test's pin was gone by the
   time the thread ran, so `~/.kiro/crew/app_receipt_secret` appeared on the developer's
   machine (MEASURED, 1 of 5 runs — the per-test probe showed the
-  `kirocrew-install-receipt` thread alive after teardown in 3 of 5). Two rules follow:
+  `ajcrew-install-receipt` thread alive after teardown in 3 of 5). Two rules follow:
   **resolve every environment-derived input on the dispatching thread and pass it
-  in** — the data home AND the config fields, since `KiroCrewConfig.load()` honours
-  `KIROCREW_HOME` exactly as `config_dir()` does — so the worker reads nothing from
+  in** — the data home AND the config fields, since `AjCrewConfig.load()` honours
+  `AJCREW_HOME` exactly as `config_dir()` does — so the worker reads nothing from
   the environment; and **make the worker joinable and join it structurally**: the
   rootdir `pytest_runtest_teardown` hook calls `wait_for_pending_receipt_writes()`
   before any fixture (including `monkeypatch`) is torn down, so no test has to
@@ -1398,15 +1398,15 @@ measures, never above.
   The third instance of that shape is the **metrics consent-recheck worker**
   (`metrics/provider.py`): once per `_CONSENT_RECHECK_SECS`, `get_recorder()` -- on the
   path of `skills`, `session`, `context`, `hooks` and every metric helper -- hands a
-  consent re-read to a daemon thread whose `KiroCrewConfig.load()` reaches
-  `config_dir()` and `mkdir`s whatever `KIROCREW_HOME` names at that instant. The
+  consent re-read to a daemon thread whose `AjCrewConfig.load()` reaches
+  `config_dir()` and `mkdir`s whatever `AJCREW_HOME` names at that instant. The
   recorder is process-global and nothing resets it between tests, so the read lands a
   few milliseconds later under the NEXT test's pin and creates that test's data home
   from a thread it never started. The Windows fingerprint of that race is a
   `\\?\`-prefixed path: `os.path.realpath` keeps the prefix when the directory above a
   not-yet-existing path appears between its two lookups, which is how
   `test_pathres_loop_starvation.py::test_the_inline_anchors_are_the_bounded_anchors`
-  saw `\\?\...\<n>-kirocrew-home\diag` in one build of the sensitive-target set and not
+  saw `\\?\...\<n>-ajcrew-home\diag` in one build of the sensitive-target set and not
   the other (`diag` is the first anchor under the crew home; a recorder *creating*
   `diag` cannot produce that string -- an anchor that exists at both lookups resolves
   prefix-free). MEASURED by replaying one Windows shard's file list with a probe on
@@ -1432,13 +1432,13 @@ measures, never above.
   `setdefault`s every `.env` key. A test that drives that real startup — via a shared
   helper like `_start_dashboard` — inherits the mutation for every later test on the
   worker. The per-test probe in the 5x run caught `PLAYWRIGHT_MCP_OUTPUT_DIR`,
-  `KIROCREW_TELEMETRY`, `PATH`, and a test's own `TEST_CRON_VAR` surviving teardown
+  `AJCREW_TELEMETRY`, `PATH`, and a test's own `TEST_CRON_VAR` surviving teardown
   across ~50 tests. Snapshot the keys the production path is known to touch with
   `monkeypatch.setenv`/`delenv` **in the shared helper**, so every consumer is restored;
   never `os.environ[...] =` in a test body.
 
 - **A path that "cannot be created" has to be made uncreatable, not spelled that way.**
-  `test_mcp_gateway_oversize` pointed `KIROCREW_HOME` at
+  `test_mcp_gateway_oversize` pointed `AJCREW_HOME` at
   `/nonexistent/path/that/cannot/be/created` to prove the spill degrades when the
   sidecar dir cannot be made. On Windows a leading slash is drive-relative, the path
   resolved to a writable `C:\nonexistent\...`, the spill *succeeded*, and a 300 KiB
@@ -1449,7 +1449,7 @@ measures, never above.
   the test can assert afterwards that nothing beneath the file exists.
 
 - **A test that computes a budget pins every reading the caller could have inherited.**
-  Kiro Crew seeds `PYTEST_XDIST_AUTO_NUM_WORKERS` at every agent spawn boundary
+  Aj Crew seeds `PYTEST_XDIST_AUTO_NUM_WORKERS` at every agent spawn boundary
   (`resource_status.inject_xdist_auto_cap`), so a pytest run started from an agent shell
   carries the spawner's cap. Seven budget tests asserting "a 10-core host gets 10"
   read 7 there and were red for a reason that had nothing to do with the host. Whatever
@@ -1506,9 +1506,9 @@ measures, never above.
 - Tests MUST NOT reconfigure or restart a real host service. This is enforced,
   not just asked for: the **rootdir** `conftest.py` (distinct from
   `test/conftest.py`, which only applies to `test/` — `testpaths` also collects
-  `src/kiro_crew/apps/builtins`) pins `$XDG_CONFIG_HOME` to a tmp
+  `src/aj_crew/apps/builtins`) pins `$XDG_CONFIG_HOME` to a tmp
   dir so `dev_fleet._dropin_path()` cannot name the operator's real
-  `~/.config/systemd/user/kirocrew-gateway.service.d/`, and traps every stdlib
+  `~/.config/systemd/user/ajcrew-gateway.service.d/`, and traps every stdlib
   spawn funnel (`subprocess.Popen.__init__`,
   `BaseEventLoop.subprocess_exec`/`subprocess_shell`, `os.execve`) to
   refuse a `systemctl`/`launchctl` invocation carrying a **mutating verb**
@@ -1569,7 +1569,7 @@ measures, never above.
   long-lived CI host: it is bounded at one directory per killed run.
 
   Fatal in CI's `Backend Tests*` jobs, a warning elsewhere. Those six jobs in `ci.yml`
-  set `KIROCREW_TMP_RESIDUE_STRICT=1`, so a test that leaves residue fails the shard it
+  set `AJCREW_TMP_RESIDUE_STRICT=1`, so a test that leaves residue fails the shard it
   runs in. A local run only warns, because a developer host has its own tools writing under
   the redirected `TMPDIR` that CI does not have; set the variable yourself to hold a
   local run to the CI rule. Two classes under that root are deliberately **not** residue
@@ -1581,8 +1581,8 @@ measures, never above.
   worker. The usual cause is not a missing cleanup but a late writer: a background
   thread that still holds a path under the removed directory and calls
   `mkdir(parents=True)`, which re-creates it. The crew-log eager fold worker is one: a
-  fold still running when a test removes its private `KIROCREW_HOME` re-creates that
-  home. Use the conftest's per-test `KIROCREW_HOME` pin instead of a private home,
+  fold still running when a test removes its private `AJCREW_HOME` re-creates that
+  home. Use the conftest's per-test `AJCREW_HOME` pin instead of a private home,
   because the conftest stops that worker before the pin lifts.
 
   Why it is worth a guard rather than a convention: `/tmp` is commonly a tmpfs with a
@@ -1595,11 +1595,11 @@ measures, never above.
 
   **Finding the culprit.** The residue report runs in a session-fixture teardown, so it
   is attributed to the last test the worker ran, which is almost never the guilty one.
-  Re-run the suspect subset with `KIROCREW_TMP_PER_TEST=1` and each residue name
+  Re-run the suspect subset with `AJCREW_TMP_PER_TEST=1` and each residue name
   becomes the id of the test that leaked it:
 
   ```bash
-  KIROCREW_TMP_PER_TEST=1 pytest src/kiro_crew/apps/builtins/<app>/tests -n0 -q
+  AJCREW_TMP_PER_TEST=1 pytest src/aj_crew/apps/builtins/<app>/tests -n0 -q
   # AssertionError: 1 temporary entry outlived this run under /tmp/kc-pytest-you-951504:
   #     test_provider_listing_never_contains_a_token/tmpw2kvty2z
   ```
@@ -1692,7 +1692,7 @@ measures, never above.
 - **A reimported module is restored in both places.** Tests that reimport a module
   restore its `sys.modules` entry and its parent package's child attribute, including
   their original absence, and remove temporary module entries before restoring the
-  saved objects. The pysqlite3 fallback tests left `kiro_crew.knowledge.store`
+  saved objects. The pysqlite3 fallback tests left `aj_crew.knowledge.store`
   pointing at the stdlib-backed temporary module after restoring `sys.modules`, so
   the next schema-behind test failed to catch the optional driver's exception. Verify
   by running the fallback and its consumer in order in one `-n0` process.
@@ -1795,7 +1795,7 @@ Two things the survey CANNOT tell you, both of which misled the first pass:
 
 - **A background worker resolves its path when it RUNS.** `safety_override`'s breadcrumb
   publisher hands a job to a long-lived daemon thread; the job called `config_dir()`
-  inside the worker, so it ran after the enqueuing test's `KIROCREW_HOME` monkeypatch was
+  inside the worker, so it ran after the enqueuing test's `AJCREW_HOME` monkeypatch was
   torn down and DELETED the operator's real `~/.kiro/crew/safety_override_last_grant.json`
   on every full run. Fix: resolve every path on the calling thread and pass it into the
   job (`_sync_breadcrumb` now closes over `_breadcrumb_path()`), and give the worker a
@@ -1812,12 +1812,12 @@ Two things the survey CANNOT tell you, both of which misled the first pass:
   imports the package in a fresh interpreter with an empty `$HOME` and asserts nothing
   appeared.
 - **A second default that the data-home pin does not cover.** `workspace_root()` falls
-  back to `~/workplace/kirocrew-workspace`, not to anything under `KIROCREW_HOME`, so 19
+  back to `~/workplace/ajcrew-workspace`, not to anything under `AJCREW_HOME`, so 19
   files created the operator's real workspace and three wrote real `cli.json`/outbox files
   into it through `create_provider_factory(session_key=...)`. `kiro_sessions_dir()` is the
   same shape for kiro-cli's transcript store: session teardown deleted `sA.json` from the
   operator's real `~/.kiro/sessions/cli`. Both are now pinned per test by the rootdir
-  conftest (`KIROCREW_WORKSPACE`, `_sessions_dir_override`), and
+  conftest (`AJCREW_WORKSPACE`, `_sessions_dir_override`), and
   `test_host_isolation_floor.py` ratchets them. When you add a resolver with its own
   default, add it to the floor and the ratchet in the same change.
 - **The checkout's own git dir.** A watcher that ran `git -C ""` (an empty clone path)
@@ -1830,10 +1830,10 @@ Two things the survey CANNOT tell you, both of which misled the first pass:
   `tmp_path`, and monkeypatch the constant at its defining module when production owns
   the name.
 - **Writes into `src/`.** Skill registration created symlinks inside
-  `src/kiro_crew/apps/builtins/*/skills/`, a task runner wrote `runs.json` relative to
+  `src/aj_crew/apps/builtins/*/skills/`, a task runner wrote `runs.json` relative to
   CWD, a child interpreter left `__pycache__` in the tree, and hypothesis kept its
   example database at the repo root. `pytest_configure` now points hypothesis at the
-  per-user cache dir (`~/.cache/kirocrew/hypothesis`), where its shrunk counterexamples
+  per-user cache dir (`~/.cache/ajcrew/hypothesis`), where its shrunk counterexamples
   still persist across runs; the rest are the CWD rule above, applied.
 - **Real network.** Five system-handler test files reached `8.8.8.8:80` (a local-IP probe
   in `handlers_system`), the Webex client fetched `webexapis.com`, and the Slack config
@@ -1859,7 +1859,7 @@ Two things the survey CANNOT tell you, both of which misled the first pass:
 - **A repo-WIDE corpus scan enumerates via git, never the filesystem.** `rglob` and
   `os.walk` from the repo root descend every gitignored tree and every checkout nested
   under it, so a worktree under `.claude/worktrees/` (the Claude Code harness creates
-  them there), a local `.kirocrew-dev/` data home or a scratch clone puts a second copy
+  them there), a local `.ajcrew-dev/` data home or a scratch clone puts a second copy
   of every shipped file in front of the gate. That is not only a false positive naming a
   path the author cannot edit: where the gate asserts `any(...)` over its matches — the
   coverage omit contract does — a stale copy keeps satisfying it after the real file lost
@@ -1887,11 +1887,11 @@ found these further classes. Each one passed on the host that wrote it.
   round-one anti-pattern in reverse: it costs every later test a cold pool. Report a
   thread leak only when the SAME test, repeated, keeps adding threads.
 - **The systemd user manager is host state.** `sandbox.cgroup_scope_argv` wraps a spawn
-  in `systemd-run --user --scope --slice=kirocrew-agents-<token>.slice`, and the token is a
-  hash of the data home. The floor pins a fresh `KIROCREW_HOME` per test, so every test
-  (and every `kirocrew` CLI child a test spawned, which probes for itself) that reached the
+  in `systemd-run --user --scope --slice=ajcrew-agents-<token>.slice`, and the token is a
+  hash of the data home. The floor pins a fresh `AJCREW_HOME` per test, so every test
+  (and every `ajcrew` CLI child a test spawned, which probes for itself) that reached the
   wrapper created a NEW transient slice — and systemd never garbage-collects a slice. Five
-  runs left 4,000+ `kirocrew-agents-*.slice` units loaded in the operator's user manager,
+  runs left 4,000+ `ajcrew-agents-*.slice` units loaded in the operator's user manager,
   and a late reconcile thread ran a real `systemctl --user set-property` on the operator's
   agents slice after its test's monkeypatch was undone. Fix: the rootdir conftest runs the
   whole session with no systemd user session (`XDG_RUNTIME_DIR` and
@@ -1905,7 +1905,7 @@ found these further classes. Each one passed on the host that wrote it.
   — it passed alone and returned `EX_CONFIG` in every full run, because an earlier test on
   the worker had poisoned the sandbox probe. A dashboard-server fixture `mkdir`+`chmod`ed the
   real `~/.kiro/crew-auth-staging` through `KiroPrerequisiteService(home=Path.home())`. The
-  data-home pin cannot reach either: they hang off HOME, not `KIROCREW_HOME`. A test whose
+  data-home pin cannot reach either: they hang off HOME, not `AJCREW_HOME`. A test whose
   code path resolves anything from the operator's HOME pins `pathlib.Path.home` (the
   classmethod) and `HOME` to a fake host home under `tmp_path`; a HOME-relative constant that
   production must keep (the sandbox hides `~/.kiro/crew-auth-staging` by that spelling) is
@@ -1914,18 +1914,18 @@ found these further classes. Each one passed on the host that wrote it.
   one is absolute.
 - **A resolver that is unpinned ON PURPOSE.** `PodConfig.load()` roots `pods_dir` at the
   DEFAULT data home so a pod process finds the host's plane rather than its own
-  `KIROCREW_HOME`; the pin therefore cannot reach it. Two refusal tests wrote
+  `AJCREW_HOME`; the pin therefore cannot reach it. Two refusal tests wrote
   `<name>.refused` into the operator's real `~/.kiro/crew/pods` — and were red on the
   macOS runner, where that directory does not exist and a best-effort note silently
   vanishes. A deliberately host-rooted resolver needs its own lever in every test that
-  reaches it (`KIROCREW_POD_ROOT`, `KIROCREW_POD_ENV_DIR` under `tmp_path`).
+  reaches it (`AJCREW_POD_ROOT`, `AJCREW_POD_ENV_DIR` under `tmp_path`).
 - **A constant derived from a patchable one at import.** `design_tweak`'s `CONFIG_FILE` was
   computed from `DATA_DIR` at import; tests (and every pin) repoint `DATA_DIR`, so the
   registry write still landed in the operator's real app config and left it pointing at a
   pytest tmp path. Derive it at access time (a module `__getattr__`, or a function), and add
   a test that the written file sits under the pinned dir.
 - **`monkeypatch.undo()` unwinds the FIXTURE's pins too.** A test that called `undo()` on
-  the same `monkeypatch` its fixture had used to pin `KIROCREW_HOME` unpinned the data home
+  the same `monkeypatch` its fixture had used to pin `AJCREW_HOME` unpinned the data home
   mid-test, and its trailing `empty_trash()` wrote the real `~/.kiro/crew/trash` lock. Scope
   an ad hoc patch with `pytest.MonkeyPatch.context()`; never `undo()` a shared instance.
 - **A fire-and-forget task drains after the pin.** `_start_channel_transports()` detaches
@@ -1960,7 +1960,7 @@ found these further classes. Each one passed on the host that wrote it.
   tests that meant to exercise the PEP 668 branch failed on every uv host. Pin every probe
   the function reads, not just the one the test is about.
 - **A test-only import that CREATES the data home.** `test/conftest.py` imports
-  `slack.handler` (through `test/conftest_slack.py`), which built `_PHASE_EMOJIS` by calling `KiroCrewConfig.load()` at import —
+  `slack.handler` (through `test/conftest_slack.py`), which built `_PHASE_EMOJIS` by calling `AjCrewConfig.load()` at import —
   and loading resolves `config_dir()`, which `mkdir`s `~/.kiro/crew`. Import-time reads of
   the data home peek first (`peek_data_home()`) and load only when the file already exists.
 - **Bytecode written into the checkout by import-by-path.** Loading a script with
@@ -1982,29 +1982,29 @@ found these further classes. Each one passed on the host that wrote it.
   postinstall), so four test files raced the network on a fresh checkout. The `test` script
   now preloads `website/electron/test/_preload.cjs`, which sets `ELECTRON_OVERRIDE_DIST_PATH`
   before any source loads. Details: [website/docs/testing.md](../../../website/docs/testing.md).
-- **The basetemp can sit INSIDE a guarded root.** A Kiro Crew agent session sets `TMPDIR`
+- **The basetemp can sit INSIDE a guarded root.** An Aj Crew agent session sets `TMPDIR`
   to its scratch dir under `~/.kiro/crew/scratch/`, so pytest's basetemp — and every
   correctly pinned home — resolves inside the real `~/.kiro` while touching nothing of the
   operator's. The sessions-dir fence and `test_host_isolation_floor.py`'s guard therefore
   treat this run's own basetemp and `tempfile` root as test-owned (`_test_owned_roots`)
   and still catch a pin that escapes to the real tree. Sixteen tests were red in every
   agent-driven run before this.
-- **An agent's shell inherits the live `KIROCREW_HOME`.** When `KIROCREW_SCRATCH` is set
+- **An agent's shell inherits the live `AJCREW_HOME`.** When `AJCREW_SCRATCH` is set
   beside it, `conftest_floor_home` treats the value as inherited rather than chosen and
   installs the import-time floor anyway, under `$TMPDIR` first and the system temp dirs
-  after. The run's own scratch (`$KIROCREW_SCRATCH`, its `TMPDIR`, and the floor an xdist
-  worker inherits through `KIROCREW_TEST_HOME_FLOOR`) is not live data for the guard when
+  after. The run's own scratch (`$AJCREW_SCRATCH`, its `TMPDIR`, and the floor an xdist
+  worker inherits through `AJCREW_TEST_HOME_FLOOR`) is not live data for the guard when
   it sits strictly inside `<home>/scratch/`, so that floor passes
   `_refuse_a_real_data_home`. Another session's scratch tree, the scratch root and a live
   home exported by hand are still refused. Before this, the refusal sent agents to `HOME=/tmp/<name>`, and each fake
   `HOME` rebuilt the uv, npm and bytecode caches under it: those homes exhausted the
   `/tmp` tmpfs inode budget on a developer host. When `HOME` is faked anyway, the guard
   also checks the password-database home, and `conftest_floor_configure` keeps the
-  bytecode and hypothesis caches under that real home's `.cache/kirocrew`, the path an
+  bytecode and hypothesis caches under that real home's `.cache/ajcrew`, the path an
   unfaked run uses.
 
 The third full-run audit ran five backend and five frontend runs on a **macOS** host,
-from inside a Kiro Crew agent session, with the audit hook attributing every write,
+from inside an Aj Crew agent session, with the audit hook attributing every write,
 spawn, connect and kill to a test and a per-test census of duration, RSS, threads and
 descriptors. Both changes of venue mattered: the two earlier audits ran on Linux, and a
 suite that is clean there had 227 deterministic failures and four 120-second hangs on a
@@ -2023,9 +2023,9 @@ tests; the classes below are what the rest was made of.
   halves: `undo()` in a test body leaves every pin in force, and the fixture in force is
   the rootdir override. Never `undo()` a shared instance to lift one patch; use
   `pytest.MonkeyPatch.context()`.
-- **A pin that lives in `test/conftest.py` is not a floor.** `KIROCREW_PROFILE=standalone`
-  was pinned there, so the ~108 modules under `src/kiro_crew/apps/builtins/*/tests/`
-  never saw it. A Kiro Crew agent session exports the enterprise `KIROCREW_PROFILE` to every
+- **A pin that lives in `test/conftest.py` is not a floor.** `AJCREW_PROFILE=standalone`
+  was pinned there, so the ~108 modules under `src/aj_crew/apps/builtins/*/tests/`
+  never saw it. An Aj Crew agent session exports the enterprise `AJCREW_PROFILE` to every
   child it spawns; with no companion installed that profile FAILS CLOSED, and 150+
   builtin-app tests were red (every governance-gated route 500, every gated
   notification dropped) while `test/` was green. The pin is a rootdir autouse fixture
@@ -2040,7 +2040,7 @@ tests; the classes below are what the rest was made of.
   xdist worker (four worker pids' shards in the operator's metrics dir per run). The
   per-test exporter-leak guard cannot see it (the thread predates every test) and the
   per-test env pin cannot reach it (already built). Two fixes: `pytest_configure` pins
-  `KIROCREW_TELEMETRY=0` for the whole PROCESS, so even an emitter nobody has named
+  `AJCREW_TELEMETRY=0` for the whole PROCESS, so even an emitter nobody has named
   yet builds a no-op recorder; and `pytest_make_collect_report` records every module
   whose collection flipped `metrics.provider._ever_built` into
   `IMPORT_TIME_METRIC_EMITTERS`, resets the recorder for the next module, and fails
@@ -2076,17 +2076,17 @@ tests; the classes below are what the rest was made of.
   stay observable), because no test there is about visibility and a side task that
   never starts has nothing to drain.
 - **Dropping the override to test the DEFAULT home resolves, and creates, the real one.**
-  Five tests `delenv("KIROCREW_HOME")` (or `patch.dict(os.environ, {}, clear=True)`, or
+  Five tests `delenv("AJCREW_HOME")` (or `patch.dict(os.environ, {}, clear=True)`, or
   ran a module-scoped fixture BEFORE the function-scoped floor) and let `config_dir()`
   fall through to `~/.kiro/crew` plus the recovery breadcrumb beside it. A test of the
   default path relocates the default too: `monkeypatch.setattr(paths,
   "_resolve_default_home", lambda: tmp_path / "d")`, a fake `HOME` + `Path.home`, or
-  keep `KIROCREW_HOME` in the cleared environment. Ratcheted:
+  keep `AJCREW_HOME` in the cleared environment. Ratcheted:
   `pytest_runtest_teardown` reads `paths._resolved_home` BEFORE any fixture unwinds
   (a test that patched the global itself would otherwise restore the evidence first)
   and fails the test AFTER the floor has torn down, when it holds the operator's real
   home (`_refuse_a_resolved_real_default_home`). Relocating only the RESOLVER is not
-  enough: `config_dir()`'s default path also writes `~/.kirocrew.breadcrumb` beside the
+  enough: `config_dir()`'s default path also writes `~/.ajcrew.breadcrumb` beside the
   home, through `Path.home()`, so a tmp stand-in for `_resolve_default_home` alone
   rewrote the operator's real breadcrumb to point at a pytest directory (six writes per
   run, repaired only because the live gateway wrote it back). The floor wraps
@@ -2099,7 +2099,7 @@ tests; the classes below are what the rest was made of.
   trees per run (`scripts/`, `packaging/signing/`, every skill's `scripts/`), each from
   an import-by-path that round two had closed one site at a time with a scoped
   `sys.dont_write_bytecode`. `pytest_configure` now sets `sys.pycache_prefix` (and
-  `PYTHONPYCACHEPREFIX` for children) to `~/.cache/kirocrew/pycache`: every import's
+  `PYTHONPYCACHEPREFIX` for children) to `~/.cache/ajcrew/pycache`: every import's
   bytecode lands in a mirror tree under the cache root, still persistent across runs.
   A test that wants a module's stale bytecode gone locates it with
   `importlib.util.cache_from_source`, not by assuming a sibling `__pycache__/`.
@@ -2162,7 +2162,7 @@ tests; the classes below are what the rest was made of.
 Two ways to see all of the above on your own machine: run a touched file under
 `trace_home.py`-style tracing (an `sys.addaudithook` that prints the stack of every
 write under the real home — the recipe is in "The measurement" above), and compare
-`systemctl --user list-units --all | grep -c kirocrew-agents` before and after a run.
+`systemctl --user list-units --all | grep -c ajcrew-agents` before and after a run.
 On macOS the manager to compare is `launchctl list`, and the metrics dir to watch is
 `ls -la ~/.kiro/crew/metrics`, where a shard named after a pytest worker's pid is the
 import-time-emission class above. A thread that exists at the FIRST test's setup with
@@ -2196,14 +2196,14 @@ run, and each named a class the floor did not yet close.
   the instance it is called on, and the rootdir floor used to patch through the same
   function-scoped `monkeypatch` a test receives. About ninety tests call `undo()` mid-way
   to drop one of their own patches before a final assertion; every one of them also
-  unpinned `KIROCREW_HOME` for the rest of the test. `test_session_storage` then ran
+  unpinned `AJCREW_HOME` for the rest of the test. `test_session_storage` then ran
   `empty_trash()` against the operator's REAL trash and left `trash/session-storage.lock`
   behind. Fix, structural: the floor fixtures patch through their own `_floor_monkeypatch`
   instance, undone at their own teardown, so a test's `undo()` reverts only the test's
   records (`TestTheFloorSurvivesATestsOwnUndo` ratchets it). Fix, local: a patch you need
   to drop before the test ends belongs in `with pytest.MonkeyPatch.context() as patched:`,
   never behind `monkeypatch.undo()` — the shared instance also carries every fixture the
-  test requested (`stores` sets `KIROCREW_HOME` through it), and those are gone too.
+  test requested (`stores` sets `AJCREW_HOME` through it), and those are gone too.
 - **A detached boot task resolves the data home after the test has returned.**
   `_start_channel_transports` schedules `_replay_spooled_inbound` with
   `asyncio.create_task` and never awaits it; the task runs `inbound_spool.peek_next`
@@ -2222,9 +2222,9 @@ run, and each named a class the floor did not yet close.
   code under test detached and the test never awaited — destroyed with the loop, its
   coroutine gets `GeneratorExit` at garbage collection, so its `finally` blocks run
   *then*; `_run_chat`'s queue-cycle `finally` reaches a synchronous
-  `KiroCrewConfig.load()` — and a default-executor job (`asyncio.to_thread`,
+  `AjCrewConfig.load()` — and a default-executor job (`asyncio.to_thread`,
   `run_in_executor(None, ...)`), which `close()` abandons without waiting. Either one
-  resolving `config_dir()` after `KIROCREW_HOME` is unpinned creates the operator's
+  resolving `config_dir()` after `AJCREW_HOME` is unpinned creates the operator's
   `~/.kiro/crew` and refreshes the breadcrumb: a fresh fake `HOME` grew both after four
   subagent `on_done` tests, none of which failed. Structural fix in the floor's
   `tryfirst` teardown hook, beside the receipt-worker join: cancel every pending task
@@ -2238,27 +2238,27 @@ run, and each named a class the floor did not yet close.
   `coroutine ... was never awaited` warning at that point instead of as residue.
 - **A default that bypasses the data-home pin BY DESIGN.** `PodConfig.load()` derives
   `pods_dir` from `_default_home()` — the operator's real `~/.kiro/crew/pods` — precisely so
-  a pod running with its own isolated `KIROCREW_HOME` cannot redirect the host's pod
-  registry, and `pod_root` from `Path.home()/.kirocrew-pods`. A fixture that was simply
+  a pod running with its own isolated `AJCREW_HOME` cannot redirect the host's pod
+  registry, and `pod_root` from `Path.home()/.ajcrew-pods`. A fixture that was simply
   `PodConfig.load()` therefore recorded `viability-*.refused` notes into the real pod plane.
-  The floor now pins `KIROCREW_POD_ROOT` and `KIROCREW_POD_ENV_DIR` per test
+  The floor now pins `AJCREW_POD_ROOT` and `AJCREW_POD_ENV_DIR` per test
   (`TestThePodPlaneIsPinnedForEveryTestpath`); the modules that import `pod_helpers.py`'s
   autouse `_isolate_pod_host_state` (`test_pod.py` among them) clear them deliberately because
   the pod tests' subject includes the home-derived defaults, with `HOME` redirected first.
 - **A collection-time probe reads the operator's config.** `test_app_backend.py`'s
   `_sandbox_can_spawn()` runs at import, before any per-test pin, and called
-  `wrap_argv()` — which loads `KiroCrewConfig` from the REAL `~/.kiro/crew/config.json`.
+  `wrap_argv()` — which loads `AjCrewConfig` from the REAL `~/.kiro/crew/config.json`.
   A developer box that carries `sandbox_allow_unsandboxed_exec=true` (redundant on Windows
   since the platform default already permits it, but common on a backend-less Linux box) made the probe say "can spawn", and the three tests it gates then ran
   under the fixture's default config and failed closed, while CI skipped them. A
   `skipif` helper must observe what the tests will observe: run it under an empty
-  `KIROCREW_HOME`. The pattern to grep for is a module-level `def _can_*()` (or
-  `_has_*`, `_probe_*`) used by a `skipif` whose body touches `KiroCrewConfig`,
+  `AJCREW_HOME`. The pattern to grep for is a module-level `def _can_*()` (or
+  `_has_*`, `_probe_*`) used by a `skipif` whose body touches `AjCrewConfig`,
   `config_dir()`, `data_home()` or `Path.home()`.
 - **`monkeypatch.delenv` records nothing for an absent variable, and an after-the-fact
   `delenv` records the leaked value.** Both spellings were found around variables the code
-  under test WRITES: `_export_bound_port` publishing `KIROCREW_BOUND_PORT`, `cli.main`
-  pinning `KIROCREW_PROJECT_DIR`, the Webex save handler exporting the token, a cron
+  under test WRITES: `_export_bound_port` publishing `AJCREW_BOUND_PORT`, `cli.main`
+  pinning `AJCREW_PROJECT_DIR`, the Webex save handler exporting the token, a cron
   preview applying `--env`, `load_credentials` propagating `OWNER_ID`. `delenv(name,
   raising=False)` BEFORE the write does not restore (pytest only records an undo for a key
   that existed); `delenv(name)` AFTER the write records the written token as the value to
@@ -2313,8 +2313,8 @@ added a fourth; each was a real defect:
 
 ### What the fourth five-run pass found (Linux, 106k tests per run)
 
-Five full backend runs plus five frontend runs on a 32-core Linux host, from inside a
-Kiro Crew agent session, with an in-process audit hook attributing every write, spawn,
+Five full backend runs plus five frontend runs on a 32-core Linux host, from inside an
+Aj Crew agent session, with an in-process audit hook attributing every write, spawn,
 connect and kill to a test and a per-test census of duration, RSS, threads and
 descriptors. **Zero flaky tests across 5 × 106,199** — every failure was identical in
 all five runs. That is the headline, and it changes where the value of a pass like this
@@ -2437,7 +2437,7 @@ Two instrument lessons, because both misled this pass before they were caught:
   a 960s run — they advance a fake clock and the sampler read it. Cross-check any
   per-test timing against pytest's own `--durations`.
 - **An env-delta census in a plain `pytest_runtest_teardown` hook reports the FLOOR's own
-  undo as a leak.** Fixture finalizers had already run, so `KIROCREW_HOME` and the git
+  undo as a leak.** Fixture finalizers had already run, so `AJCREW_HOME` and the git
   identity pins read as "removed" on ~30 tests that leak nothing. The rootdir conftest's
   teardown hook is `tryfirst` for exactly this reason; a census hook must be too.
 
@@ -2491,10 +2491,10 @@ about the code. Each is a hermeticity gap, and each has one fix:
   auto-update tests passed vacuously on the refusal branch. When the subject is what the
   seam does with the tool's ANSWERS, pin the resolver (to the fixture's own `git`, or to a
   fake absolute path when the spawn is faked); the resolver's own tests patch it explicitly.
-- **`tmp_path` has ancestors.** A walk that runs to the filesystem root — the kirocrew
+- **`tmp_path` has ancestors.** A walk that runs to the filesystem root — the ajcrew
   launcher resolver's `.venv` search, `artifact_source`'s project-marker walk — finds what
   sits above the temp root: with `TMPDIR` inside a checkout that is a real
-  `.venv/Scripts/kirocrew.exe`, and under `~/.kiro/crew/workspace` a `.kiro` marker, so
+  `.venv/Scripts/ajcrew.exe`, and under `~/.kiro/crew/workspace` a `.kiro` marker, so
   "a plain directory" classified as a project and "no launcher anywhere" found one. Confine
   the walk to `tmp_path` at the validator (`launchers_confined_to_tmp`,
   `cap_project_root_walk`, and `cap_node_module_walk` for the ACP adapter's
@@ -2520,7 +2520,7 @@ about the code. Each is a hermeticity gap, and each has one fix:
   autouse fixture so it reads the state after `monkeypatch` has undone, which is why
   it lives in the root conftest.
 - **A fixed system path is the host's, not the test's.** `service.linux` reads
-  `/etc/kirocrew/kirocrew.env` to decide whether uninstall deletes it, so on a host where
+  `/etc/ajcrew/ajcrew.env` to decide whether uninstall deletes it, so on a host where
   a real install left the untouched seed there, a test that pinned only `UNIT_PATH` saw
   `rm` and `rmdir` it never caused. `test/service_helpers.py`'s autouse `_no_host_env_file`
   (imported by `test_service.py` and its sibling suites) points `ENV_DIR` and
@@ -2542,12 +2542,12 @@ about the code. Each is a hermeticity gap, and each has one fix:
   literal name fails with cmd's 9009 and every verdict downstream reads as a plain failure.
 - **A child interpreter must import the tree under test, not the installed one.**
   `setup.cfg`'s `pythonpath = src` reaches only pytest's own interpreter; a
-  `sys.executable -c` child resolves `kiro_crew` from the venv's install. On CI that is
+  `sys.executable -c` child resolves `aj_crew` from the venv's install. On CI that is
   the checkout being tested, so CI stays green; in a linked worktree that borrows another
   checkout's venv, every child imported THAT checkout, and a child calling a symbol the
   worktree added failed with `AttributeError`. The rootdir conftest's
   `_put_the_tree_under_test_first_on_child_paths` closes the class once: in
-  `pytest_configure` it prepends the directory `kiro_crew` resolves from to
+  `pytest_configure` it prepends the directory `aj_crew` resolves from to
   `os.environ["PYTHONPATH"]`, keeps any inherited entries after it and never writes an
   empty component (an empty entry is the child's CWD on `sys.path`). A child that
   inherits the environment needs nothing of its own; a test that builds a child env from
@@ -2610,7 +2610,7 @@ The ten failures were the venv, not the code:
 - **A fake `subprocess.run` that routes by SUBSTRING of the joined argv is
   host-dependent.** The Linux service test's responder matched `"restart" in " ".join(argv)`;
   the unit-file write's argv carries a `mkstemp` path under `TMPDIR`, and in
-  `KIROCREW_TMP_PER_TEST` mode that directory is named after the test's own nodeid —
+  `AJCREW_TMP_PER_TEST` mode that directory is named after the test's own nodeid —
   which contains "restart". The fake returned the restart failure at the write step and
   the branch under test was never reached (the `..._at_enable` sibling had the same
   exposure). Route on whole tokens, `needle in argv_list`; a path element can contain any
@@ -2640,7 +2640,7 @@ Host writes and leaks the earlier passes did not have the hooks to see:
 
 - **A platform default that is not HOME-derived cannot be relocated by faking HOME.**
   `workspace_root()` on macOS defaults to `/Volumes/workplace` — the operator's real
-  workspace — and `_resolve_workspace_root()` mkdirs it. `delenv("KIROCREW_WORKSPACE")`
+  workspace — and `_resolve_workspace_root()` mkdirs it. `delenv("AJCREW_WORKSPACE")`
   to test the default therefore created the operator's directory on every run
   (invisible because it already existed). Patch the resolver's default in the namespace
   the caller reads (`loader._default_workspace_base`) and assert the result lands under
@@ -2648,7 +2648,7 @@ Host writes and leaks the earlier passes did not have the hooks to see:
 - **A module-scoped fixture holding a `MonkeyPatch` over env leaks across the FIRST
   test that requests it and the LAST test the module runs on each worker**, so the
   attributed test differs per run. `test_otlp_wire_e2e`'s `exported` fixture held
-  `KIROCREW_HOME` and `KIROCREW_TELEMETRY` for the module's lifetime although nothing
+  `AJCREW_HOME` and `AJCREW_TELEMETRY` for the module's lifetime although nothing
   downstream read them. When the shared value is fully built by the fixture body, scope
   the patches to the build with `pytest.MonkeyPatch.context()` and return the value.
 - **A session-scoped autouse fixture that writes `os.environ` directly leaks for the
@@ -2676,7 +2676,7 @@ Host writes and leaks the earlier passes did not have the hooks to see:
   `worktree_ops` registers its `mkdtemp` snapshot and runner directories in
   `cleanup_paths` and hands them to `_start_run`, whose `finally` removes them; eight
   `test_dev_fleet_app` tests replaced `_start_run` with a bare `AsyncMock` and 15
-  `kirocrew-sync-runner-*` / `kirocrew-npm-preflight-*` directories outlived every run.
+  `ajcrew-sync-runner-*` / `ajcrew-npm-preflight-*` directories outlived every run.
   Production was correct. A stub for a runner that owns cleanup reaps `cleanup_paths`
   itself (`_start_run_stub`).
 - **A file the code guards with a sidecar must live under `tmp_path`.** Config tests
@@ -2706,7 +2706,7 @@ Host writes and leaks the earlier passes did not have the hooks to see:
   because every run is a fresh process warming in the same order. Print thread NAMES in
   the probe before treating a count as a leak.
 - **The per-test residue bisector applied the allow-list to the wrong level.** In
-  `KIROCREW_TMP_PER_TEST` mode the by-design entries (`kirocrew-computer-shots`, a nested
+  `AJCREW_TMP_PER_TEST` mode the by-design entries (`ajcrew-computer-shots`, a nested
   basetemp) sit INSIDE the per-test base, and the filter matched only the base's name, so
   144 spool "leaks" per run were attributed to whichever computer-use test reached the
   feature. The filter applies to the leaf as well now.
@@ -2807,7 +2807,7 @@ the host, not the suite — see the section above.
 
 - **A singleton built at COLLECTION outlives the tmp dir it was bound to.**
   `test_app_backend.py`'s `_sandbox_can_spawn()` probe runs `wrap_argv()` under an
-  empty `KIROCREW_HOME` inside a `TemporaryDirectory`. On a host with no sandbox
+  empty `AJCREW_HOME` inside a `TemporaryDirectory`. On a host with no sandbox
   backend the call fail-closes and records a `denied` audit through `sel()` — the
   process singleton, which binds `_dir` once from whatever `_default_dir()` says at
   that moment: the throwaway home. The `_isolate_sel_default_dir` session floor resets
@@ -2871,7 +2871,7 @@ the host, not the suite — see the section above.
   itself is also asserted structurally where it can be: no
   closer, opener or wrapper character `isspace()` or is a label separator.
 - **A refused "system directory" is platform-shaped, and the refusal path CREATES
-  what it does not refuse.** `KIROCREW_HOME=/usr` resolves to `C:\usr` on Windows,
+  what it does not refuse.** `AJCREW_HOME=/usr` resolves to `C:\usr` on Windows,
   which `_is_unsafe_home` (correctly) does not know, so `config_dir()` accepted the
   override and made the directory on the system drive every run; the test was a
   strict xfail there for the wrong reason. The test now names the location the guard
@@ -3064,7 +3064,7 @@ negative control before it was believed, and that is what caught them.
   alike.
 - **A repo-relative build-product filter cannot reach a cache the tooling keeps OUTSIDE the
   repo.** The suite points hypothesis' example database and `PYTHONPYCACHEPREFIX` at
-  `~/.cache/kirocrew/...`, so every property test and every subprocess import wrote there,
+  `~/.cache/ajcrew/...`, so every property test and every subprocess import wrote there,
   and the suite's own socket directories added the rest. Sanctioning those two took the
   class from 331 tests over 85 files to 63, and the 63 that remain are attempts that could
   not succeed — a write to `/proc/nonexistent`, a path a monkeypatched ingest returned — so
@@ -3086,7 +3086,7 @@ negative control before it was believed, and that is what caught them.
   re-resolving the name is. Both halves are worth having: the test stops accusing observers,
   and a well-behaved observer stops being visible to tests that patch a stdlib symbol.
 - **A datagram `connect()` sends no packet, so it is a routing-table query and not a network
-  connection.** `src/kiro_crew/security/argv_floor_hosts.py`'s own-address enumeration connects a
+  connection.** `src/aj_crew/security/argv_floor_hosts.py`'s own-address enumeration connects a
   `SOCK_DGRAM` socket to `198.51.100.1:53` and `2001:db8::1:53` — TEST-NET-2 and
   documentation addresses, contacted by nobody — to learn the primary outbound address per
   family, and says so in a comment three lines above. The `socket.connect` audit hook never
@@ -3135,7 +3135,7 @@ before rerunning.
 
 - `test/test_kiro_cli_pin.py`'s two `*_never_runs_a_path_shadowed_shim` tests pin `PATH` to a
   fake shim directory and pass a fake `home`, but the candidate list in
-  `src/kiro_crew/kiro_cli.py` also carries a HARDCODED `/Applications` bundle path that no
+  `src/aj_crew/kiro_cli.py` also carries a HARDCODED `/Applications` bundle path that no
   fixture argument reaches. On a developer machine with the real app installed the product
   CORRECTLY resolves a pinned absolute path there, and the test's "nothing was spawned"
   assertion fails. A resolver whose candidate set mixes injectable locations with a fixed
@@ -3146,7 +3146,7 @@ before rerunning.
   Not the platform, and the first diagnosis — that a macOS host has no namespace backend to
   write a launcher for, so the test wants a Linux-only guard — was **wrong**, and requiring
   Linux would have thrown away coverage the host genuinely has. A macOS kiro-cli spawn is
-  handed to kiro-cli's OWN sandbox when the internal edition's settings ask for it, and Kiro
+  handed to kiro-cli's OWN sandbox when the internal edition's settings ask for it, and Aj
   Crew then writes no launcher at all; `is_kiro_cli=True` is what reaches that decision,
   which is why the sibling seatbelt case never saw it. With the delegation pinned off the
   launcher IS written on macOS and the window reaches it, so the test now runs there. A
@@ -3249,7 +3249,7 @@ mechanism, and one of them a production defect wearing a test's clothes.
   paths, one in the reader -- route through one `store.log_exception_text` helper, which
   renders the traceback to text and skips the render when the level is off. The pin,
   `test_crew_log_exc_info_sites.py`, walks the source tree's AST: no `exc_info` call in
-  a `CrewLog` method or in any function under `kiro_crew` that names a handle anywhere
+  a `CrewLog` method or in any function under `aj_crew` that names a handle anywhere
   in its body (the invariant is process-wide, so the walk is too -- files naming no handle
   are skipped before the parse, which keeps it under a second), and the sites left in the
   package equal to a vetted list. A checklist item asks a reviewer to notice; the pin
@@ -3348,14 +3348,14 @@ went red, or the fix lands in the wrong file and the leak stays.
   two readings would let a stall that reproduces intermittently pass.
 - **A helper that counts WARNINGs over unfiltered `caplog.records` asserts on every thread
   in the worker.** `test_taskq_runner_adapter_durability.py`'s `_one_warning` demanded exactly one
-  record while the test had scoped `at_level` to `kiro_crew.taskq.adapters.runner`; the
-  second record was `kiro_crew.sandbox`'s mount-source sweep, finishing on the shared
+  record while the test had scoped `at_level` to `aj_crew.taskq.adapters.runner`; the
+  second record was `aj_crew.sandbox`'s mount-source sweep, finishing on the shared
   `mc-maint` executor seconds after the `SessionManager` test that armed it had torn down
   (`close_all()` cancels the asyncio task but cannot stop an executor thread mid-`/proc`
   scan). Two fixes, in two places: the helper filters `rec.name == _RUNNER_LOGGER`, and
   `test/conftest.py`'s autouse `_no_boot_sandbox_sweep` pins
-  `kiro_crew.session.cleanup_stale_sandbox_profiles` to a no-op for every test under
-  `test/` -- the app test trees under `src/kiro_crew/apps/builtins` do not load
+  `aj_crew.session.cleanup_stale_sandbox_profiles` to a no-op for every test under
+  `test/` -- the app test trees under `src/aj_crew/apps/builtins` do not load
   `test/conftest.py` and so get no such pin (the table in § Which conftest you are
   standing on says which floors each testpath gets); a test of the sweep itself patches
   the same name inside its body and so still wins. Measured
@@ -3395,7 +3395,7 @@ went red, or the fix lands in the wrong file and the leak stays.
   moment at which every thread is provably idle short of process exit, so it gets no
   consumer there -- built from a module flag (`_ALLOW_CROSS_THREAD_CLOSE_FOR_TESTS`) that
   `test/conftest.py` flips once per session (so only the `test/` testpath has it: the app
-  test trees under `src/kiro_crew/apps/builtins` do not load `test/conftest.py` and do not
+  test trees under `src/aj_crew/apps/builtins` do not load `test/conftest.py` and do not
   activate the flip themselves), under which a connection opens
   `check_same_thread=False` through a factory that re-applies the thread-affinity guard in
   Python on every statement entry point the store uses (`cursor`, `execute*`, `commit`,
@@ -3677,7 +3677,7 @@ inherits, not in the test that noticed.
 - **The conftest's own cache tree is not a host write.** Run 1 filed 210 tests in 77 files
   under `host_write`; 209 were `.pyc` files landing in the `sys.pycache_prefix` mirror the
   rootdir conftest sets (a fresh venv compiles everything once) and the redirected
-  hypothesis example database, both under `~/.cache/kirocrew` by that conftest's documented
+  hypothesis example database, both under `~/.cache/ajcrew` by that conftest's documented
   choice. The probe now sanctions the interpreter's bytecode prefix by construction and
   reads a per-sweep `allow-roots.txt` for roots a harness owns, and the analyser re-cuts
   runs recorded before the root was learned (`--allow-root`). After the re-cut the class
@@ -3687,7 +3687,7 @@ inherits, not in the test that noticed.
   innocent tests across five runs -- the same shape as the `XDG_RUNTIME_DIR` pop the
   analyser already excludes, and now excluded with it. The one real leak underneath was a
   module-scoped `mock.patch.dict(os.environ, {...})` in `test_issue_radar_crew_runtime.py`
-  (159 of 160 tests, `KIROCREW_CREW_LOG` on and a foreign `KIROCREW_HOME` between tests);
+  (159 of 160 tests, `AJCREW_CREW_LOG` on and a foreign `AJCREW_HOME` between tests);
   a function-scoped `monkeypatch.setenv` on the flag, and the conftest's own per-test home
   pin for the home, took it to 0 of 160 under a per-test env probe.
 - **The driver ignored SIGINT for the whole suite.** `cmd &` in a non-interactive bash
@@ -3907,7 +3907,7 @@ assertion for the host fact it depends on before reading the test for a bug.
   `CreateProcess`-es the base interpreter as its own child and stays alive as its
   parent. With the limit at one that `CreateProcess` fails with `ERROR_NOT_ENOUGH_QUOTA`,
   the redirector prints `Unable to create process using '"C:\Python312\python.exe" -s -P
-  -m kiro_crew.pdf_extract_child ...'` and exits 101, and the reader files it as
+  -m aj_crew.pdf_extract_child ...'` and exits 101, and the reader files it as
   `protocol`. So PDF extraction never worked from a venv-hosted gateway on Windows; the
   five red tests (`test_file_grep.py::TestDocumentPass`, `test_knowledge.py::
   TestFileReaderPdf`) were deterministic, and CI's `setup-python` interpreter is not a
@@ -4048,7 +4048,7 @@ review finding; the version below is what the lane accepted.
 - **A hung reset the test does not bound waits the shipped `_RESET_TIMEOUT`.** Five
   `TestEveryCandidateUnderTheKeyIsKilledOnItsOwnHandle` cases in
   `test_subagent_force_stop_audit.py` hand the reaper `_hanging_reset` (a reset that sleeps
-  999 s) without the `patch("kiro_crew.subagent._RESET_TIMEOUT", 0.05)` every sibling class
+  999 s) without the `patch("aj_crew.subagent._RESET_TIMEOUT", 0.05)` every sibling class
   in the file carries: 30.04 s each, 150 s of worker time per round, on CI exactly as here.
   `test_subagent_reap_race.py::test_cancel_all_keeps_the_tombstone_when_delivery_already_happened`
   spent 60 s the same way: its docstring described a report "cancelled in the wait that
@@ -4298,10 +4298,10 @@ do not quote a layer's absolute number as current. Re-ablate before optimizing o
 
 - **~77 MiB is spent before collection starts** — interpreter, pytest, its
   auto-loaded plugins, and the two conftests. The rootdir conftest alone is ~35 MiB;
-  `test/conftest.py` adds the rest, mostly `hypothesis` and `kiro_crew.slack`.
+  `test/conftest.py` adds the rest, mostly `hypothesis` and `aj_crew.slack`.
 - **~320 MiB imports the ~1,540 test modules** and, through them, most of
-  `kiro_crew`. The package's ~960 modules cost ~145 MiB to import on their own, so
-  the product is a sixth of the floor, not a rounding error — `import kiro_crew`
+  `aj_crew`. The package's ~960 modules cost ~145 MiB to import on their own, so
+  the product is a sixth of the floor, not a rounding error — `import aj_crew`
   alone is 2 MiB and is the wrong number to plan around.
 - **~350 MiB is pytest's item tree**, ~6 KiB per item. Roughly half of that is the
   fixture closure, and the autouse guards in the two conftests are what fill it: they
@@ -4340,7 +4340,7 @@ not treated as zero memory — a platform we cannot read keeps its parallelism i
 of silently dropping to one worker.
 
 Concurrent runs coordinate through advisory locks under
-`~/.cache/kirocrew/test-slots/<hostname>`, one file per worker a run intends to
+`~/.cache/ajcrew/test-slots/<hostname>`, one file per worker a run intends to
 spawn, held for the process's lifetime. The kernel releases them when the process
 exits, so an orphaned or killed run frees its share with no cleanup logic. A run
 arriving at a fully-locked machine drops to one worker: slow, never stalled.
@@ -4350,11 +4350,11 @@ The knobs, tightest-wins:
 | Knob | Effect |
 |---|---|
 | `-n <N>` on the command line | Skips the memory readings, but still claims N slots from the same host pool (rootdir `pytest_cmdline_main`). Fewer than N free: clamped to what it got, floor 1, with a warning. |
-| `KIROCREW_TEST_SLOTS_BYPASS=1` | Lets an explicit `-n <N>` skip the host pool too. Only for a host you own outright. |
+| `AJCREW_TEST_SLOTS_BYPASS=1` | Lets an explicit `-n <N>` skip the host pool too. Only for a host you own outright. |
 | `--maxprocesses=<N>` | Clamps *after* the budget, so it can only tighten. |
-| `KIROCREW_MAX_TEST_WORKERS` | Per-run ceiling, default 32. |
-| `PYTEST_XDIST_AUTO_NUM_WORKERS` | xdist's own ceiling. Honoured here, because this hook replaces xdist's default implementation. Kiro Crew seeds it with a memory-aware cap at every agent spawn boundary. |
-| `KIROCREW_TEST_SLOT_DIR` | Where the slot locks live. Point it at a throwaway dir to measure without contending with another run. |
+| `AJCREW_MAX_TEST_WORKERS` | Per-run ceiling, default 32. |
+| `PYTEST_XDIST_AUTO_NUM_WORKERS` | xdist's own ceiling. Honoured here, because this hook replaces xdist's default implementation. Aj Crew seeds it with a memory-aware cap at every agent spawn boundary. |
+| `AJCREW_TEST_SLOT_DIR` | Where the slot locks live. Point it at a throwaway dir to measure without contending with another run. |
 
 If the suite is slow on your machine, the answer is usually not a bigger `-n`: run
 the slice you are working on. A full-suite checkpoint is what CI is for.
@@ -4922,7 +4922,7 @@ More shapes this class hides, all Windows-only and all green on every Linux run:
   writes it, so an empty buffer is what a wedged writer and a finished one both show —
   the failing shard's own teardown warning read `0 append(s) buffered, batch in
   flight=True`. That barrier is `test/crew_log_drain.py::assert_drained`; its twin
-  `settle()` runs in teardown BEFORE the `KIROCREW_HOME` pin lifts, because a writer
+  `settle()` runs in teardown BEFORE the `AJCREW_HOME` pin lifts, because a writer
   job resolves the data home when it runs, so a batch still in flight lands in the
   next test's home (read there as a duplicate append). A test whose subject is the
   records rather than their durability takes the fsync out with `unsync_appends`.
@@ -5087,7 +5087,7 @@ The same reach applies, more mildly, to a patch of `asyncio.create_subprocess_ex
 value; otherwise patch only for the span of the call, through `monkeypatch`.
 
 **A reload or a `sys.modules` eviction leaves the parent package pointing somewhere
-else.** A string target (`monkeypatch.setattr("kiro_crew.agent_state.config_dir", ...)`)
+else.** A string target (`monkeypatch.setattr("aj_crew.agent_state.config_dir", ...)`)
 is resolved through the PARENT PACKAGE's attribute, not through `sys.modules`. Two shapes
 break it, both reproduced:
 
@@ -5101,15 +5101,15 @@ break it, both reproduced:
   one, so the patch silently misses.
 
 `importlib.reload` is the same trap one step over. It rebinds the module's globals to new
-objects, but every `from kiro_crew.learn import Lesson` taken earlier keeps the old class,
+objects, but every `from aj_crew.learn import Lesson` taken earlier keeps the old class,
 so an `isinstance` or identity check in a later test fails. `test_learn.py` reloads
-`kiro_crew.learn` to prove its import is side-effect free, and
+`aj_crew.learn` to prove its import is side-effect free, and
 `test_onboarding_import_refactor_contract.py` is the victim; a second reload to "restore"
 does not undo it. So never reload a shared module in-process: probe an import on a private
 copy instead, loaded with `importlib.util.spec_from_file_location` under a unique name and
 registered under that unique name with `monkeypatch.setitem(sys.modules, name, mod)`
 before `spec.loader.exec_module(mod)`. Without the registration a module like
-`kiro_crew.learn` (`from __future__ import annotations` plus `@dataclass`) raises
+`aj_crew.learn` (`from __future__ import annotations` plus `@dataclass`) raises
 `AttributeError` inside `dataclasses`; never register the copy under the real name. A
 test that must evict a `sys.modules` entry restores both the entry and the parent
 attribute in the same scope (`monkeypatch.setitem(sys.modules, ...)` and
@@ -5170,7 +5170,7 @@ stopping it propagating is the part that is never optional.
 **Work QUEUED by a test is shared state too, and resetting the object it runs against is
 not enough.** MEASURED: a member row's event is fire-and-forget on the single `eventlog-io`
 worker (`eventlog_hooks.submit`), and the member log's path is resolved from
-`KIROCREW_HOME` when the append RUNS, not when it was queued. In three failing Windows
+`AJCREW_HOME` when the append RUNS, not when it was queued. In three failing Windows
 shard-8 runs, the test just before the red on the same worker was a member resume that
 ends just after appending a row. Its append ran during the next test, opened that
 member's log under the next test's home, and the lock it held there refused that test's
@@ -5183,7 +5183,7 @@ slow.
 
 The rootdir `conftest.py`'s `_reset_member_eventlog_singleton` (rootdir, so the
 in-package app suites get it too) drains that queue at teardown, before the home pin is
-undone (it depends on `_isolate_kirocrew_home`), and FAILS the test that filled a queue
+undone (it depends on `_isolate_ajcrew_home`), and FAILS the test that filled a queue
 which will not drain — so the cost lands on the test that queued the work rather than on
 whichever test would have inherited it. It binds `drain_for_shutdown` at SETUP when the
 module is already loaded, so a test of the shutdown path that replaces that function
@@ -5201,7 +5201,7 @@ payload's `root` with a live `_current_root()` when it WOKE, a debounce after th
 that armed it had ended). Under the per-test home these resolve another test's home and
 nothing notices. The visible failure needs a third party: a test that cleared
 `os.environ` (`patch.dict("os.environ", {}, clear=True)`) for its own reasons has no
-`KIROCREW_HOME` for its duration, so a tick inside that window falls through to the
+`AJCREW_HOME` for its duration, so a tick inside that window falls through to the
 operator's real `~/.kiro/crew`, and `_refuse_a_resolved_real_default_home` fails THAT
 test -- `test_dashboard_origin.py`'s hanging-lookup test, whose 200 ms window was the
 widest in its file, on nine PR branches in a week; the leakers passed every time.
@@ -5498,15 +5498,15 @@ commands and both outputs in the pull request.
 
 ### The gateway harness runs on all three platforms
 
-`kiro_crew.testing.harness.spawn_feature_gateway` boots a real gateway subprocess
-on an isolated throwaway `KIROCREW_HOME`. Two of its internals are platform
+`aj_crew.testing.harness.spawn_feature_gateway` boots a real gateway subprocess
+on an isolated throwaway `AJCREW_HOME`. Two of its internals are platform
 contracts rather than implementation taste, and both used to be POSIX-shaped:
 
-- The `KIROCREW_READY:` wait reads the child's stdout through ONE daemon reader
+- The `AJCREW_READY:` wait reads the child's stdout through ONE daemon reader
   thread feeding a `queue.Queue`. It is not a selector, because
   `selectors.DefaultSelector()` is select()-based on Windows and accepts sockets
   only, so registering a subprocess pipe there raises. The queue's bounded `get`
-  keeps what the selector poll bought: the `KIROCREW_HARNESS_READY_TIMEOUT`
+  keeps what the selector poll bought: the `AJCREW_HARNESS_READY_TIMEOUT`
   deadline (default 60s) is enforced even while the child is alive and silent,
   and a child that exits during the wait fails IMMEDIATELY with its stderr tail
   rather than waiting out the deadline.
@@ -5833,13 +5833,13 @@ in the same shard inherits the load.
 
 ### Verify an optimization did not weaken the test
 
-**Prefer the command.** `prove.py` in the `kirocrew-prepare-pr` skill does this for a whole
+**Prefer the command.** `prove.py` in the `ajcrew-prepare-pr` skill does this for a whole
 change and cannot cost you work: it reverts the change's production hunks inside a
 throwaway git worktree, so your tree is never mutated and nothing needs restoring,
 and it refuses to run while a file under proof carries uncommitted edits.
 
 ```bash
-python3 src/kiro_crew/builtin_skills/kirocrew-dev/kirocrew-prepare-pr/scripts/prove.py
+python3 src/aj_crew/builtin_skills/ajcrew-dev/ajcrew-prepare-pr/scripts/prove.py
 # 0 PROVEN · 20 NOT_PROVEN · 21 INCONCLUSIVE · 10 nothing to prove · 11 frontend tests · 30 baseline red
 # it also prints the `Proof:` line a fix PR pastes under `## Tests`
 # add --per-hunk to name the hunks no test catches
@@ -5859,7 +5859,7 @@ pytest exits 0, i.e. only in the case where the mutation did *not* do its job, l
 correctly-failing mutation in your tree.
 
 ```bash
-f=src/kiro_crew/foo.py
+f=src/aj_crew/foo.py
 cp "$f" "$f.premutation"                 # back up whatever is there now
 # ...edit $f to invert the branch the test covers...
 pytest test/test_foo.py -n0 -q           # expect RED; if it passes, the test is weak
@@ -5945,11 +5945,11 @@ tools), use the **observe → diagnose → fix → verify** pattern:
 ```python
 """Test ACP handshake and MCP server loading."""
 import asyncio, json, time
-import kiro_crew
+import aj_crew
 
 async def main():
     kiro = await asyncio.create_subprocess_exec(
-        "kiro-cli", "acp", "--agent", "kirocrew",  # --agent must name an installed agent
+        "kiro-cli", "acp", "--agent", "ajcrew",  # --agent must name an installed agent
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.DEVNULL,
@@ -5992,7 +5992,7 @@ async def main():
             "fs": {"readTextFile": False, "writeTextFile": False},
             "terminal": False,
         },
-        "clientInfo": {"name": "kirocrew", "version": kiro_crew.__version__},
+        "clientInfo": {"name": "ajcrew", "version": aj_crew.__version__},
     }))
     await wait_response(await send("session/new", {"cwd": "/tmp", "mcpServers": []}))
 

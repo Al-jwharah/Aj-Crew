@@ -20,9 +20,9 @@ from typing import Any, Iterator
 import pytest
 from overload_fakes import Clock, open_task_store
 
-from kiro_crew.taskq import model
-from kiro_crew.taskq.store import TaskStore, TaskStoreUnavailable
-from kiro_crew.taskq.waits import WaitRecord
+from aj_crew.taskq import model
+from aj_crew.taskq.store import TaskStore, TaskStoreUnavailable
+from aj_crew.taskq.waits import WaitRecord
 
 
 @pytest.fixture

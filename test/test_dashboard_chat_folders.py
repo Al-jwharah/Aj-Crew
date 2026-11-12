@@ -18,7 +18,7 @@ from chat_test_helpers import (
     close_before_resume,
 )
 
-from kiro_crew.testing.wait import until_parked
+from aj_crew.testing.wait import until_parked
 
 # ── Folder CRUD tests ──
 
@@ -26,7 +26,7 @@ from kiro_crew.testing.wait import until_parked
 class TestFolderCRUD:
     @pytest.mark.asyncio
     async def test_list_folders_empty(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -36,7 +36,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_create_folder(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -51,7 +51,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_create_folder_with_parent(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -66,22 +66,22 @@ class TestFolderCRUD:
     @pytest.mark.asyncio
     async def test_create_folder_accepts_default_agent(self, tmp_path, monkeypatch):
         """The create modal collects the full folder config, so POST must take it."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
             resp = await client.post(
                 "/api/chat/folders",
-                json={"name": "Payments", "default_agent": "kirocrew-dev"},
+                json={"name": "Payments", "default_agent": "ajcrew-dev"},
             )
             assert resp.status == 201
             data = await resp.json()
-            assert data["default_agent"] == "kirocrew-dev"
+            assert data["default_agent"] == "ajcrew-dev"
 
     @pytest.mark.asyncio
     async def test_create_folder_accepts_palette_color(self, tmp_path, monkeypatch):
         """Create persists an allowlisted palette color and rejects others."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -101,7 +101,7 @@ class TestFolderCRUD:
         means the UI offers a swatch the backend rejects with a 400."""
         from pathlib import Path
 
-        from kiro_crew.dashboard.chat_folders import _FOLDER_COLOR_PALETTE
+        from aj_crew.dashboard.chat_folders import _FOLDER_COLOR_PALETTE
 
         catalog = (
             Path(__file__).resolve().parent.parent
@@ -116,7 +116,7 @@ class TestFolderCRUD:
     @pytest.mark.asyncio
     async def test_patch_color_set_and_clear(self, tmp_path, monkeypatch):
         """PATCH color: allowlisted value sets, empty string clears the key."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -131,7 +131,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_create_folder_invalid_parent_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -142,7 +142,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_create_folder_empty_name_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -151,7 +151,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_update_folder_rename(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -169,7 +169,7 @@ class TestFolderCRUD:
         Slots are unfiled before the folder removal commits; a failed commit would strand
         them outside a folder that still exists.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -196,7 +196,7 @@ class TestFolderCRUD:
         Parent existence is checked before the store lock, so a concurrent delete of the
         parent would otherwise persist an orphan.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -222,7 +222,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_update_folder_collapse(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -234,7 +234,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_update_folder_reparent_into_folder(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -247,7 +247,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_update_folder_reparent_to_root(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -274,7 +274,7 @@ class TestFolderCRUD:
         Both requests can pass the pre-lock check on the same state, so the tree rules are
         re-tested under the lock. The test holds the lock so both handlers queue on it.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -331,7 +331,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_update_folder_reparent_self_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -342,7 +342,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_update_folder_reparent_unknown_parent_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -352,7 +352,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_update_folder_reparent_cycle_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -379,7 +379,7 @@ class TestFolderCRUD:
         """A PATCH mixing a VALID field (name) with an INVALID one (bad parent_id)
         must be all-or-nothing: the 400 rejection must NOT persist the name change
         (validate-all-before-mutate)."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -398,7 +398,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_create_folder_hidden_defaults_false(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -409,7 +409,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_update_folder_hidden(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -423,7 +423,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_folders_get_includes_history_count(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state._folders = [
             {"id": "f1", "name": "A", "order": 0, "collapsed": False},
@@ -450,7 +450,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_assign_slot_to_folder_unhides(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("myslot")
         state._folders = [
@@ -471,9 +471,9 @@ class TestFolderCRUD:
         re-engage happens via api_chat_slot_resume loading an archived session
         from history, which is the revive path that lets a hidden folder reappear.
         """
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state._folders = [
             {"id": "f1", "name": "Test", "order": 0, "collapsed": False, "hidden": True}
@@ -506,9 +506,9 @@ class TestFolderCRUD:
         switch, leaving the active row hidden. Both the revive path and the
         already-open path answer with it.
         """
-        from kiro_crew.dashboard.chat import _save_slot_to_history
+        from aj_crew.dashboard.chat import _save_slot_to_history
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state._folders = [{"id": "f1", "name": "Test", "order": 0, "collapsed": True}]
         slot = state.get_or_create_slot("revive2")
@@ -534,7 +534,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_update_folder_default_agent(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -549,7 +549,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_update_folder_clear_default_agent(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state._folders = [
             {"id": "f1", "name": "Test", "order": 0, "collapsed": False, "default_agent": "nissay"}
@@ -562,7 +562,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_create_folder_with_project_dir(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         proj = tmp_path / "proj"
@@ -577,7 +577,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_create_folder_relative_project_dir_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -588,7 +588,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_create_folder_nonexistent_project_dir_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         missing = tmp_path / "does-not-exist"
@@ -600,7 +600,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_create_folder_sensitive_project_dir_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -618,10 +618,10 @@ class TestFolderCRUD:
         """A stalled sensitive-path resolver is not a match. The person is told the
         directory could not be verified and to retry, not that an ordinary repo is
         sensitive, and the audit line records the stall rather than a match."""
-        import kiro_crew.dashboard.chat_folders as cf
-        from kiro_crew.security import UNVERIFIABLE_PATH_PREFIX
+        import aj_crew.dashboard.chat_folders as cf
+        from aj_crew.security import UNVERIFIABLE_PATH_PREFIX
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         proj = tmp_path / "ordinary-repo"
         proj.mkdir()
         monkeypatch.setattr(
@@ -653,9 +653,9 @@ class TestFolderCRUD:
     ):
         """The validator computes the realpath itself and hands THAT to the gate, so
         a saturated resolver pool cannot refuse a healthy directory off the loop."""
-        import kiro_crew.dashboard.chat_folders as cf
+        import aj_crew.dashboard.chat_folders as cf
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         proj = tmp_path / "ordinary-repo"
         proj.mkdir()
         seen: list[str] = []
@@ -676,7 +676,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_update_folder_project_dir(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         proj = tmp_path / "proj2"
@@ -694,7 +694,7 @@ class TestFolderCRUD:
     @pytest.mark.asyncio
     async def test_slot_create_inherits_nearest_folder_project(self, tmp_path, monkeypatch):
         """The server owns folder inheritance when the client cache omits project."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         root_project = tmp_path / "root-project"
         parent_project = tmp_path / "parent-project"
@@ -731,15 +731,13 @@ class TestFolderCRUD:
         # json.dumps ("Object of type MagicMock is not JSON serializable"),
         # 500ing the create. Pin it to a string like the sibling cfg mocks.
         mock_cfg.default_agent = ""
+        monkeypatch.setattr("aj_crew.dashboard.chat_handlers.AjCrewConfig.load", lambda: mock_cfg)
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.KiroCrewConfig.load", lambda: mock_cfg
-        )
-        monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.default_project_dir",
+            "aj_crew.dashboard.chat_handlers.default_project_dir",
             lambda _workspace: str(root_project),
         )
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.schedule_eager_spawn",
+            "aj_crew.dashboard.chat_handlers.schedule_eager_spawn",
             lambda *_args, **_kwargs: None,
         )
 
@@ -758,7 +756,7 @@ class TestFolderCRUD:
     @pytest.mark.asyncio
     async def test_slot_create_rejects_invalid_inherited_project(self, tmp_path, monkeypatch):
         """A stale folder path fails before a partially configured slot is created."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state._folders = [
             {
@@ -784,7 +782,7 @@ class TestFolderCRUD:
     @pytest.mark.asyncio
     async def test_slot_create_does_not_rescope_existing_named_slot(self, tmp_path, monkeypatch):
         """Folder inheritance initializes new slots; explicit project changes stay explicit."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         old_project = tmp_path / "old-project"
         folder_project = tmp_path / "folder-project"
@@ -804,7 +802,7 @@ class TestFolderCRUD:
             }
         ]
         monkeypatch.setattr(
-            "kiro_crew.dashboard.chat_handlers.schedule_eager_spawn",
+            "aj_crew.dashboard.chat_handlers.schedule_eager_spawn",
             lambda *_args, **_kwargs: None,
         )
 
@@ -818,7 +816,7 @@ class TestFolderCRUD:
         assert slot.project == str(old_project)
 
     def test_resolve_folder_project_dir_terminates_on_cycle(self):
-        from kiro_crew.dashboard.chat_folders import _resolve_folder_project_dir
+        from aj_crew.dashboard.chat_folders import _resolve_folder_project_dir
 
         folders = [
             {"id": "a", "parent_id": "b", "project_dir": ""},
@@ -828,7 +826,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_update_folder_empty_name_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -839,7 +837,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_update_nonexistent_folder(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -848,7 +846,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_delete_folder(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -861,7 +859,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_delete_folder_reparents_children(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state._folders = [
             {"id": "parent", "name": "Parent", "order": 0, "collapsed": False},
@@ -876,7 +874,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_delete_folder_ungroups_slots(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.folder_id = "f-del"
@@ -888,7 +886,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_assign_slot_to_folder(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("myslot")
         state._folders = [{"id": "f1", "name": "Test", "order": 0, "collapsed": False}]
@@ -902,7 +900,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_slot_folder_change_sets_reinject_flag(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("myslot")
         state._folders = [{"id": "f1", "name": "Test", "order": 0, "collapsed": False}]
@@ -920,7 +918,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_unassign_slot_from_folder(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("myslot")
         slot.folder_id = "f1"
@@ -932,7 +930,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_assign_folder_nonexistent_slot(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -943,7 +941,7 @@ class TestFolderCRUD:
     async def test_expected_created_matching_the_live_slot_files_it(self, tmp_path, monkeypatch):
         """The generation token is optional; when it matches the slot's own
         ``created_at`` the write lands exactly as an untokened one does."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("myslot")
         state._folders = [{"id": "f1", "name": "Test", "order": 0, "collapsed": False}]
@@ -966,7 +964,7 @@ class TestFolderCRUD:
         the same ``dashboard:<key>`` transcript key, so only the token can tell
         them apart — and it must, or the stale write files someone else's
         session."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         first = state.get_or_create_slot("myslot")
         stale_token = first.created_at
@@ -990,7 +988,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_assign_nonexistent_folder_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("myslot")
         app = _make_folder_app(state)
@@ -1002,7 +1000,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_pin_slot(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.get_or_create_slot("myslot")
         app = _make_folder_app(state)
@@ -1015,7 +1013,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_unpin_slot(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("myslot")
         slot.pinned = True
@@ -1029,7 +1027,7 @@ class TestFolderCRUD:
     @pytest.mark.parametrize("value", ["false", "true", 0, 1, None, []])
     async def test_pin_slot_rejects_non_boolean_values(self, tmp_path, monkeypatch, value):
         """The API must not apply Python truthiness to JSON metadata."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("myslot")
         app = _make_folder_app(state)
@@ -1043,7 +1041,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_slots_include_pinned(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.pinned = True
@@ -1055,7 +1053,7 @@ class TestFolderCRUD:
 
     @pytest.mark.asyncio
     async def test_slots_include_folder_id(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("s1")
         slot.folder_id = "f-abc"
@@ -1068,7 +1066,7 @@ class TestFolderCRUD:
 
 class TestFolderPersistence:
     def test_load_folders_from_disk(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         import json
 
         (tmp_path / "folders.json").write_text(
@@ -1080,7 +1078,7 @@ class TestFolderPersistence:
         assert state._folders[0]["name"] == "Test"
 
     def test_save_and_load_roundtrip(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state._folders = [{"id": "f1", "name": "Roundtrip", "order": 0, "collapsed": True}]
         state.save_folders()
@@ -1090,13 +1088,13 @@ class TestFolderPersistence:
         assert state._folders[0]["collapsed"] is True
 
     def test_load_missing_file(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.load_folders()
         assert state._folders == []
 
     def test_load_corrupted_file(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         (tmp_path / "folders.json").write_text("not json")
         state = _make_state(tmp_path)
         state.load_folders()
@@ -1112,7 +1110,7 @@ class TestChatFolderOrderIsNotA500:
     async def test_bad_order_does_not_500(self, tmp_path, monkeypatch, bad_order):
         """1e309 parses to float('inf'), which body_int turns into a ValueError
         where int(inf) would raise OverflowError."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -1126,7 +1124,7 @@ class TestChatFolderOrderIsNotA500:
 
     @pytest.mark.asyncio
     async def test_valid_order_is_still_applied(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:

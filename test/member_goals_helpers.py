@@ -8,20 +8,20 @@ from typing import Any
 import pytest
 from guide_route_helpers import FakeState, agent, run_guide_app
 
-from kiro_crew import member_goals
-from kiro_crew import members as members_mod
-from kiro_crew.agent_files import ASSISTANT_MEMBER_NAME
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, _invalidate_config_cache
-from kiro_crew.config.paths import data_home
-from kiro_crew.cron import CronService
-from kiro_crew.dashboard import goal_reminder
-from kiro_crew.dashboard.handlers import guide as guide_routes
-from kiro_crew.dashboard.handlers import member_goals as goal_routes
-from kiro_crew.dashboard.handlers import member_self as self_routes
+from aj_crew import member_goals
+from aj_crew import members as members_mod
+from aj_crew.agent_files import ASSISTANT_MEMBER_NAME
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, _invalidate_config_cache
+from aj_crew.config.paths import data_home
+from aj_crew.cron import CronService
+from aj_crew.dashboard import goal_reminder
+from aj_crew.dashboard.handlers import guide as guide_routes
+from aj_crew.dashboard.handlers import member_goals as goal_routes
+from aj_crew.dashboard.handlers import member_self as self_routes
 
 #: A credential-shaped string the goal text must never carry through.
 TOKEN = "ghp_" + "a" * 36
-DEFAULT = "kirocrew"
+DEFAULT = "ajcrew"
 
 
 ORDINARY = "scout"
@@ -85,11 +85,11 @@ def _owner_ok(_floor_monkeypatch):
 
 
 def _seed() -> None:
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        DEFAULT: KiroCrewAgentConfig(kiro_agent=DEFAULT),
-        ASSISTANT_MEMBER_NAME: KiroCrewAgentConfig(kiro_agent=DEFAULT),
-        ORDINARY: KiroCrewAgentConfig(kiro_agent=DEFAULT, display_name="Scout"),
+        DEFAULT: AjCrewAgentConfig(kiro_agent=DEFAULT),
+        ASSISTANT_MEMBER_NAME: AjCrewAgentConfig(kiro_agent=DEFAULT),
+        ORDINARY: AjCrewAgentConfig(kiro_agent=DEFAULT, display_name="Scout"),
     }
     cfg.default_agent = DEFAULT
     cfg.save()

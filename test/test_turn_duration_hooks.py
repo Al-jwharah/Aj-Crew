@@ -15,9 +15,9 @@ from __future__ import annotations
 
 import asyncio
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent, TurnUsage
-from kiro_crew.dashboard.handlers import usage
-from kiro_crew.dashboard.handlers.hooks import _run_hook_inner
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent, TurnUsage
+from aj_crew.dashboard.handlers import usage
+from aj_crew.dashboard.handlers.hooks import _run_hook_inner
 
 # A provider-reported duration no sub-second test turn could ever produce
 # (~16 min). A record showing it proves the provider value won over the local
@@ -37,7 +37,7 @@ class _FakeClient:
     def __init__(self, complete_event: AcpEvent) -> None:
         self._complete_event = complete_event
         # read_effective_agent / _resolve_model walk the wrapper chain for these.
-        self._agent = "kirocrew"
+        self._agent = "ajcrew"
         self._model = "claude-test"
 
     async def stream(self, _message: str):

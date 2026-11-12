@@ -19,9 +19,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.dashboard.handlers.prompts as prompts_mod
-import kiro_crew.skills as skills_mod
-from kiro_crew.skills import SkillsLoader
+import aj_crew.dashboard.handlers.prompts as prompts_mod
+import aj_crew.skills as skills_mod
+from aj_crew.skills import SkillsLoader
 
 
 def _winerror(code: int) -> OSError:

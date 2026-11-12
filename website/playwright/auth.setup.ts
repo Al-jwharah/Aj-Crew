@@ -24,8 +24,8 @@ setup('authenticate', async ({ page }) => {
   }
   await page.goto(`/?token=${encodeURIComponent(token)}`, { waitUntil: 'domcontentloaded', timeout: 30000 })
   await page.waitForLoadState('load', { timeout: 30000 })
-  if (process.env.KIROCREW_E2E_EPHEMERAL === '1') {
-    const configResponse = await page.request.get('/api/config/kirocrew')
+  if (process.env.AJCREW_E2E_EPHEMERAL === '1') {
+    const configResponse = await page.request.get('/api/config/ajcrew')
     expect(configResponse.ok(), await configResponse.text()).toBeTruthy()
     const config = await configResponse.json()
     const backend = config.agent.acp_backend
@@ -38,7 +38,7 @@ setup('authenticate', async ({ page }) => {
       { path: 'agent.sandbox', value: 'auto' },
       { path: 'agent.acp_backend', value: backend },
     ]) {
-      const response = await page.request.patch('/api/config/kirocrew', { data: change })
+      const response = await page.request.patch('/api/config/ajcrew', { data: change })
       expect(response.ok(), await response.text()).toBeTruthy()
     }
   }

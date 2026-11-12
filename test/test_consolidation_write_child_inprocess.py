@@ -19,13 +19,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.consolidation_write_child as cwc
-import kiro_crew.consolidation_write_offload as offload
-from kiro_crew.consolidation_write_child import WriteChild
-from kiro_crew.history import ConversationLog, HistoryConsolidator
-from kiro_crew.history_consolidation_span import _RunCommitState
-from kiro_crew.memory_schema import MemoryFacets
-from kiro_crew.vector_memory import VectorMemoryStore
+import aj_crew.consolidation_write_child as cwc
+import aj_crew.consolidation_write_offload as offload
+from aj_crew.consolidation_write_child import WriteChild
+from aj_crew.history import ConversationLog, HistoryConsolidator
+from aj_crew.history_consolidation_span import _RunCommitState
+from aj_crew.memory_schema import MemoryFacets
+from aj_crew.vector_memory import VectorMemoryStore
 
 _DIM = 4
 _KEY = "dashboard:chat-inproc"
@@ -104,7 +104,7 @@ class _World:
 @pytest.fixture
 def config_file():
     """Write ``config.json`` under the test home and remove it afterwards."""
-    from kiro_crew.config.loader import config_path
+    from aj_crew.config.loader import config_path
 
     path = config_path()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -297,7 +297,7 @@ def test_the_publication_fences_come_back_as_named_outcomes(world, config_file) 
 
 
 def test_a_busy_transcript_lock_is_reported_as_busy(world, monkeypatch) -> None:
-    from kiro_crew.history_derivation import TranscriptBusy
+    from aj_crew.history_derivation import TranscriptBusy
 
     def busy(self, key, **kwargs):
         raise TranscriptBusy("lock not taken in time")
@@ -430,12 +430,12 @@ def test_the_process_wide_handle_is_shared_and_can_be_stopped(monkeypatch) -> No
 
 
 def test_an_unreadable_config_keeps_the_switch_off(monkeypatch) -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     def broken():
         raise RuntimeError("unreadable")
 
-    monkeypatch.setattr(KiroCrewConfig, "load", staticmethod(broken))
+    monkeypatch.setattr(AjCrewConfig, "load", staticmethod(broken))
     assert cwc.write_child_enabled() is False
 
 
@@ -613,7 +613,7 @@ def test_the_embed_service_returns_the_vector_with_its_space_token(world) -> Non
 
 
 def test_a_busy_frame_is_raised_as_the_transcript_busy_error(world, client, monkeypatch) -> None:
-    from kiro_crew.history_derivation import TranscriptBusy
+    from aj_crew.history_derivation import TranscriptBusy
 
     monkeypatch.setattr(
         client,

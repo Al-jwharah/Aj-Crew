@@ -25,9 +25,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.mcp_discovery import McpServerInfo
-from kiro_crew.mcp_gateway.preflight import PREFLIGHT_IDENTITY_NAMES, preflight
-from kiro_crew.mcp_gateway.shareability import ShareEvidence, Strength, assess
+from aj_crew.mcp_discovery import McpServerInfo
+from aj_crew.mcp_gateway.preflight import PREFLIGHT_IDENTITY_NAMES, preflight
+from aj_crew.mcp_gateway.shareability import ShareEvidence, Strength, assess
 
 # A server whose declared capabilities depend on who is asking. This is the
 # hazard the pre-flight exists to detect: the pool caches the FIRST caller's
@@ -127,7 +127,7 @@ def real_probe_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         json.dumps({"agent": {"sandbox_allow_unsandboxed_exec": True}}),
         encoding="utf-8",
     )
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     return home
 
 
@@ -164,7 +164,7 @@ async def test_a_caller_sensitive_server_is_caught_by_provoking_it(
         pytest.skip(
             "the probe did not spawn anything on this host, so nothing here is "
             "proven. The isolated home does set the unsandboxed opt-in, so the "
-            "blocker is upstream of it — a governance floor above Kiro Crew's own "
+            "blocker is upstream of it — a governance floor above Aj Crew's own "
             "config, or no usable spawn backend at all"
         )
     if len(seen) == 1 and result.ran is False and result.detail == "timeout":

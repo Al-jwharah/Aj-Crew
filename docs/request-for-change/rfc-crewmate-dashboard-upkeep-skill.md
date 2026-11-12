@@ -1,7 +1,7 @@
 ---
 title: Crewmate dashboard upkeep -- per-field upkeep text served by dashboard_fields, generated helper scripts for the fields whose data is outside the crew log, named by one pointer line that survives compaction
 status: in-progress
-author: Raymond Chen, with kirocrew-worker
+author: Raymond Chen, with ajcrew-worker
 created: 2026-10-11
 last-audited: 2026-10-12
 audited-at: 0cda1525d8

@@ -220,11 +220,11 @@ describe('contributedFileMenuItems — resolving untrusted manifest data', () =>
     // It comes from `name`, NEVER `displayName`: `displayName` is free text the app
     // chooses, so as provenance it can claim to be anything the host is called.
     const rows = contributedFileMenuItems([
-      { name: 'doc-store', displayName: 'Kiro Crew', enabled: true, manifest: { contributes: { fileMenuItems: [{ ...DECL, label: 'Download' }] } } },
+      { name: 'doc-store', displayName: 'Aj Crew', enabled: true, manifest: { contributes: { fileMenuItems: [{ ...DECL, label: 'Download' }] } } },
     ])
     expect(rows).toHaveLength(1)
     expect(rows[0].appLabel).toBe('doc-store')
-    expect(rows[0].appLabel).not.toBe('Kiro Crew')
+    expect(rows[0].appLabel).not.toBe('Aj Crew')
 
     // Every shape of displayName is ignored, including the ones that used to win: a
     // friendly name, whitespace, and a zero-width character that survives `.trim()`.
@@ -255,7 +255,7 @@ describe('contributedFileMenuItems — resolving untrusted manifest data', () =>
     // Two copies of one security control drift apart invisibly, and the drift only shows
     // up as something being let through. Read the owning module rather than restating it.
     const py = readFileSync(
-      resolve(__dirname, '../../../src/kiro_crew/apps/manifest.py'),
+      resolve(__dirname, '../../../src/aj_crew/apps/manifest.py'),
       'utf8',
     )
     const block = /CORE_APP_ROUTE_SEGMENTS = frozenset\(\s*\{([^}]*)\}/.exec(py)
@@ -512,17 +512,17 @@ describe('FolderRowActions — folder-row surface', () => {
 
   it('frames the identifier in host-owned copy so a plausible app name cannot pass as core', () => {
     // The identifier alone is unspoofable as a host WORD (`KEBAB_RE` allows no space and
-    // no capital), but nothing reserves `kiro-crew`, and a bare slug still reads as core.
+    // no capital), but nothing reserves `aj-crew`, and a bare slug still reads as core.
     // The surrounding word comes from the catalog, so it is core's and translated.
     const rows = contributedFileMenuItems([
-      { name: 'kiro-crew', displayName: 'Kiro Crew', enabled: true, manifest: { contributes: { fileMenuItems: [{ ...DECL, endpoint: '/api/apps/kiro-crew/send' }] } } },
+      { name: 'aj-crew', displayName: 'Aj Crew', enabled: true, manifest: { contributes: { fileMenuItems: [{ ...DECL, endpoint: '/api/apps/aj-crew/send' }] } } },
     ])
     expect(rows).toHaveLength(1)
     render(<>{FileMenuItemLabel({ item: rows[0] })}</>)
     // The attribution is announced, not decorative: it is the security-relevant part.
-    expect(screen.getByText(/kiro-crew/)).toBeInTheDocument()
+    expect(screen.getByText(/aj-crew/)).toBeInTheDocument()
     // And it is framed rather than bare, so the row does not read as a core action.
-    expect(screen.getByText(/kiro-crew/).textContent).not.toBe('kiro-crew')
+    expect(screen.getByText(/aj-crew/).textContent).not.toBe('aj-crew')
   })
 
   it('shows the Send result as plain text with a safe url in the host toast', async () => {

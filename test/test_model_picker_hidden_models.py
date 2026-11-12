@@ -10,23 +10,23 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config.loader import AjCrewConfig
 
 
 @pytest.fixture()
 def cfg_file(tmp_path):
     path = tmp_path / "config.json"
     path.write_text("{}", encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=path):
+    with patch("aj_crew.config.loader.config_path", return_value=path):
         yield path
 
 
 @pytest.fixture()
 def handler_app(cfg_file):
-    from kiro_crew.dashboard.handlers.files import api_dashboard_config
+    from aj_crew.dashboard.handlers.files import api_dashboard_config
 
     audit = MagicMock()
-    with patch("kiro_crew.dashboard.handlers.files._sel", return_value=audit):
+    with patch("aj_crew.dashboard.handlers.files._sel", return_value=audit):
         app = web.Application()
         app.router.add_get("/api/dashboard/config", api_dashboard_config)
         app.router.add_put("/api/dashboard/config", api_dashboard_config)
@@ -34,8 +34,8 @@ def handler_app(cfg_file):
 
 
 def test_default_is_empty():
-    assert KiroCrewConfig().dashboard.model_picker_hidden_models == []
-    assert KiroCrewConfig().dashboard.model_picker_configured is False
+    assert AjCrewConfig().dashboard.model_picker_hidden_models == []
+    assert AjCrewConfig().dashboard.model_picker_configured is False
 
 
 def test_loader_trims_deduplicates_and_ignores_auto(cfg_file):
@@ -55,7 +55,7 @@ def test_loader_trims_deduplicates_and_ignores_auto(cfg_file):
         ),
         encoding="utf-8",
     )
-    assert KiroCrewConfig.load().dashboard.model_picker_hidden_models == ["model-a"]
+    assert AjCrewConfig.load().dashboard.model_picker_hidden_models == ["model-a"]
 
 
 def test_loader_rejects_non_array_shape_to_default(cfg_file):
@@ -63,7 +63,7 @@ def test_loader_rejects_non_array_shape_to_default(cfg_file):
         json.dumps({"dashboard": {"model_picker_hidden_models": "model-a"}}),
         encoding="utf-8",
     )
-    assert KiroCrewConfig.load().dashboard.model_picker_hidden_models == []
+    assert AjCrewConfig.load().dashboard.model_picker_hidden_models == []
 
 
 @pytest.mark.asyncio
@@ -143,7 +143,7 @@ async def test_dashboard_put_rejects_invalid_delta_values(handler_app, field):
 
 @pytest.mark.asyncio
 async def test_dashboard_put_rejects_oversized_list(handler_app):
-    from kiro_crew.validation import MODEL_PICKER_HIDDEN_MODELS_MAX
+    from aj_crew.validation import MODEL_PICKER_HIDDEN_MODELS_MAX
 
     async with TestClient(TestServer(handler_app)) as client:
         # A delta at the cap is accepted; one entry over the cap is rejected.
@@ -194,7 +194,7 @@ async def test_configured_fact_requires_successful_model_save(handler_app, cfg_f
         assert await configured() is False
 
         with patch(
-            "kiro_crew.config.loader.update_config_locked",
+            "aj_crew.config.loader.update_config_locked",
             side_effect=OSError("test write failure"),
         ):
             response = await client.put(
@@ -209,7 +209,7 @@ async def test_configured_fact_requires_successful_model_save(handler_app, cfg_f
         )
         assert response.status == 200
         assert await configured() is True
-        assert KiroCrewConfig.load().dashboard.model_picker_configured is True
+        assert AjCrewConfig.load().dashboard.model_picker_configured is True
 
         response = await client.put(
             "/api/dashboard/config",
@@ -234,7 +234,7 @@ async def test_configured_fact_requires_successful_model_save(handler_app, cfg_f
 def test_full_config_serialization_does_not_complete_setup():
     from dataclasses import asdict
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     assert asdict(cfg.dashboard)["model_picker_configured"] is False
     assert cfg.dashboard.model_picker_hidden_models == []
     assert cfg.dashboard.model_picker_configured is False
@@ -254,7 +254,7 @@ def test_existing_hidden_models_migrate_configured_fact(cfg_file, hidden, expect
         json.dumps({"dashboard": {"model_picker_hidden_models": hidden}}),
         encoding="utf-8",
     )
-    assert KiroCrewConfig.load().dashboard.model_picker_configured is expected
+    assert AjCrewConfig.load().dashboard.model_picker_configured is expected
 
 
 @pytest.mark.asyncio
@@ -270,7 +270,7 @@ async def test_migrated_customizer_stays_configured_after_restore(handler_app, c
             "/api/dashboard/config", json={"model_picker_hidden_models": []}
         )
         assert response.status == 200
-        assert KiroCrewConfig.load().dashboard.model_picker_configured is True
+        assert AjCrewConfig.load().dashboard.model_picker_configured is True
 
 
 # ---------------------------------------------------------------------------

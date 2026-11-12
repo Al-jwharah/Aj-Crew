@@ -8,7 +8,7 @@ rather than blow up the run that is about to be started.
 
 from __future__ import annotations
 
-from kiro_crew.apps.builtins.auto_research.workflow_template import (
+from aj_crew.apps.builtins.auto_research.workflow_template import (
     RESEARCH_WORKFLOW_SOURCE,
     build_workflow_args,
 )

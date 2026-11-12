@@ -15,9 +15,9 @@ from wheel_engine_helpers import (
     _stub_children,
 )
 
-from kiro_crew.platform import wheel_engine
-from kiro_crew.platform.wheel_engine import ManagedVenvLayout, WheelUpdateError, promote
-from kiro_crew.platform_compat import IS_POSIX
+from aj_crew.platform import wheel_engine
+from aj_crew.platform.wheel_engine import ManagedVenvLayout, WheelUpdateError, promote
+from aj_crew.platform_compat import IS_POSIX
 
 # The engine is POSIX-only by construction: cli.sh is a POSIX installer, and
 # running_from_managed_venv() answers False on Windows, so no production path
@@ -95,14 +95,14 @@ class TestShadowBuildGuards:
         shadow = tmp_path / "crew-venv-9.9.9"
         shadow.symlink_to(target)
         with pytest.raises(WheelUpdateError, match="not a plain directory"):
-            wheel_engine.build_shadow_venv(tmp_path / "kirocrew.whl", shadow)
+            wheel_engine.build_shadow_venv(tmp_path / "ajcrew.whl", shadow)
 
     def test_refuses_to_remove_a_non_venv_directory(self, tmp_path: Path) -> None:
         shadow = tmp_path / "crew-venv-9.9.9"
         shadow.mkdir()
         (shadow / "user-data.txt").write_text("precious")
         with pytest.raises(WheelUpdateError, match="not a virtual"):
-            wheel_engine.build_shadow_venv(tmp_path / "kirocrew.whl", shadow)
+            wheel_engine.build_shadow_venv(tmp_path / "ajcrew.whl", shadow)
         assert (shadow / "user-data.txt").exists()
 
     def test_refuses_to_rebuild_the_promoted_tree(self, tmp_path: Path) -> None:
@@ -113,7 +113,7 @@ class TestShadowBuildGuards:
         stable = tmp_path / "crew-venv-current"
         stable.symlink_to(live)
         with pytest.raises(WheelUpdateError, match="already promoted"):
-            wheel_engine.build_shadow_venv(tmp_path / "kirocrew.whl", live, stable_link=stable)
+            wheel_engine.build_shadow_venv(tmp_path / "ajcrew.whl", live, stable_link=stable)
         assert live.exists(), "the live tree must never be removed"
         assert stable.resolve() == live.resolve()
 
@@ -123,18 +123,18 @@ class TestShadowBuildGuards:
         (tree / "bin").mkdir(parents=True)
         (tree / "pyvenv.cfg").write_text("")
         with pytest.raises(WheelUpdateError, match="refusing to remove"):
-            wheel_engine.build_shadow_venv(tmp_path / "kirocrew.whl", tree)
+            wheel_engine.build_shadow_venv(tmp_path / "ajcrew.whl", tree)
         assert tree.exists(), "a sentinel-less tree must never be removed"
 
     def test_refuses_an_unrelated_sibling_venv(self, tmp_path: Path) -> None:
-        """A custom KIROCREW_VENV shares a parent with unrelated venvs; a name
+        """A custom AJCREW_VENV shares a parent with unrelated venvs; a name
         collision must never delete someone else's environment."""
         foreign = tmp_path / "crew-venv-9.9.9"
         (foreign / "bin").mkdir(parents=True)
         (foreign / "pyvenv.cfg").write_text("")
         (foreign / "precious-data.txt").write_text("not ours")
         with pytest.raises(WheelUpdateError, match="refusing to remove"):
-            wheel_engine.build_shadow_venv(tmp_path / "kirocrew.whl", foreign)
+            wheel_engine.build_shadow_venv(tmp_path / "ajcrew.whl", foreign)
         assert (foreign / "precious-data.txt").exists()
 
     def test_own_incomplete_debris_is_clearable(
@@ -151,7 +151,7 @@ class TestShadowBuildGuards:
             "_run",
             lambda argv, timeout, step, ctx=None: calls.append(step),
         )
-        wheel_engine.build_shadow_venv(tmp_path / "kirocrew.whl", tree)
+        wheel_engine.build_shadow_venv(tmp_path / "ajcrew.whl", tree)
         assert "venv creation" in calls, "the retry must rebuild after clearing debris"
         assert (
             tree / wheel_engine._SHADOW_SENTINEL
@@ -169,7 +169,7 @@ class TestShadowBuildGuards:
             lambda p: type(usage)(usage.total, usage.total - 1024, 1024),
         )
         with pytest.raises(WheelUpdateError, match="disk space"):
-            wheel_engine.build_shadow_venv(tmp_path / "kirocrew.whl", tmp_path / "crew-venv-9.9.9")
+            wheel_engine.build_shadow_venv(tmp_path / "ajcrew.whl", tmp_path / "crew-venv-9.9.9")
 
 
 class TestShadowVerification:
@@ -195,7 +195,7 @@ class TestShadowVerification:
     ) -> None:
         shadow = tmp_path / "crew-venv-9.9.9"
         (shadow / "bin").mkdir(parents=True)
-        (shadow / "bin" / "kirocrew").write_text("")
+        (shadow / "bin" / "ajcrew").write_text("")
         self._stub_probe(monkeypatch)
         wheel_engine.verify_shadow_venv(shadow, "9.9.9")
 
@@ -204,7 +204,7 @@ class TestShadowVerification:
     ) -> None:
         shadow = tmp_path / "crew-venv-9.9.9"
         (shadow / "bin").mkdir(parents=True)
-        (shadow / "bin" / "kirocrew").write_text("")
+        (shadow / "bin" / "ajcrew").write_text("")
         self._stub_probe(monkeypatch, stdout="1.0.0\n")
         with pytest.raises(WheelUpdateError, match="not promoting"):
             wheel_engine.verify_shadow_venv(shadow, "9.9.9")
@@ -252,12 +252,12 @@ class TestApplyWheelUpdateOrchestration:
                 "sha256": "a" * 64,
                 "python_requires": python_requires,
                 "wheel_url": f"{_ARTIFACT_BASE}/cli/stable/{feed_version}/"
-                f"kirocrew-{feed_version}-py3-none-any.whl",
+                f"ajcrew-{feed_version}-py3-none-any.whl",
             }
 
         def fake_download(payload: dict[str, str], dest: Path, **_kw: object) -> Path:
             calls.append("download")
-            out = dest / "kirocrew.whl"
+            out = dest / "ajcrew.whl"
             out.write_bytes(b"wheel")
             return out
 
@@ -383,7 +383,7 @@ class TestApplyWheelUpdateOrchestration:
         """The update lock admits ONE writer; a second run refuses cleanly."""
         import os as _os
 
-        from kiro_crew.platform_compat import try_acquire_lock as _try
+        from aj_crew.platform_compat import try_acquire_lock as _try
 
         layout, calls = self._wire(monkeypatch, tmp_path)
         lock_path = layout.stable_link.with_name(f"{layout.legacy.name}.update.lock")
@@ -587,7 +587,7 @@ class TestApplyWheelUpdateOrchestration:
         layout, calls = self._wire(monkeypatch, tmp_path)
 
         def failing_verify(shadow: Path, version: str, **_kw: object) -> None:
-            raise WheelUpdateError("shadow venv cannot import kiro_crew — not promoting")
+            raise WheelUpdateError("shadow venv cannot import aj_crew — not promoting")
 
         monkeypatch.setattr(wheel_engine, "verify_shadow_venv", failing_verify)
         with pytest.raises(WheelUpdateError, match="not promoting"):

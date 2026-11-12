@@ -14,7 +14,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.apps.builtins.design_tweak.backend import server
+from aj_crew.apps.builtins.design_tweak.backend import server
 
 
 @pytest.fixture()
@@ -53,7 +53,7 @@ def _make_handler(
     """Construct a Handler via __new__ (no socket) and wire up routing."""
     h = server.Handler.__new__(server.Handler)
     h.path = path
-    h.headers = {"Content-Length": "0", "X-KiroCrew-Proxy": ""}
+    h.headers = {"Content-Length": "0", "X-AjCrew-Proxy": ""}
     rec = _Recorded()
 
     raw = b""
@@ -61,7 +61,7 @@ def _make_handler(
         raw = json.dumps(body).encode()
         h.headers = {
             "Content-Length": str(len(raw)),
-            "X-KiroCrew-Proxy": "",
+            "X-AjCrew-Proxy": "",
         }
     h.rfile = io.BytesIO(raw)
     h._cached_body = raw

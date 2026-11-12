@@ -9,7 +9,7 @@ import pytest
 from member_memory_helpers import env as _member_env
 from member_memory_helpers import request
 
-from kiro_crew.dashboard.handlers import memory
+from aj_crew.dashboard.handlers import memory
 
 env = _member_env
 
@@ -39,13 +39,13 @@ def test_semantic_search_finds_later_pages_and_offsets_only_live_matches(env, na
 def test_episode_search_filters_before_pagination_and_intersects_tags(env, name):
     tier = env.tiers[name]
     for day in (1, 2, 3):
-        with patch("kiro_crew.vector_memory._now_iso", return_value=f"2020-01-0{day}T00:00:00Z"):
+        with patch("aj_crew.vector_memory._now_iso", return_value=f"2020-01-0{day}T00:00:00Z"):
             assert tier.write_episodic(
                 f"Needle matched episode {day}", tags=["selected"], defer_embedding=True
             )
     removed = tier.get_episodic_list()[1]["id"]
     tier.delete_episodic(removed)
-    with patch("kiro_crew.vector_memory._now_iso", return_value="2021-01-01T00:00:00Z"):
+    with patch("aj_crew.vector_memory._now_iso", return_value="2021-01-01T00:00:00Z"):
         for index in range(120):
             assert tier.write_episodic(
                 f"Unrelated background entry {index}", tags=["selected"], defer_embedding=True

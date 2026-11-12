@@ -22,13 +22,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import kiro_crew.slack.gateway as gw_mod
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.memory import MemoryStore
-from kiro_crew.session import HEARTBEAT_KEY
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.slack.gateway_runtime.heartbeat_turns import _HEARTBEAT_KEEP_INJECTION
+import aj_crew.slack.gateway as gw_mod
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.memory import MemoryStore
+from aj_crew.session import HEARTBEAT_KEY
+from aj_crew.skills import SkillsLoader
+from aj_crew.slack.gateway_runtime.heartbeat_turns import _HEARTBEAT_KEEP_INJECTION
 
 BODY_SENTINEL = "STEP ONE: pour the concrete before the rebar."
 HINT_HEADER = "[Relevant skills for this message]"
@@ -52,7 +52,7 @@ def _builder(tmp_path: Path, trigger: str = "zebra quokka") -> ContextBuilder:
     loader = SkillsLoader(
         skills_path=tmp_path / "skills",
         install_builtins=False,
-        config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+        config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
     )
     return ContextBuilder(memory=MemoryStore(workspace=tmp_path / "ws"), skills=loader)
 

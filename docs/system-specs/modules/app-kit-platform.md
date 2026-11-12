@@ -254,21 +254,21 @@ contract and the distinction between a frontend guardrail and token enforcement.
 
 ## Shared frontend module resolution
 
-External app bundles import shared UI values through `@kirocrew/app-sdk/ui`.
+External app bundles import shared UI values through `@ajcrew/app-sdk/ui`.
 Its vendor stub exports the same runtime names as the host UI barrel, including
 `SourceBadge`. Settings primitives, `Clickable`, `Modal` and `ErrorNotice` also
 reuse the host implementations rather than copied interaction/focus logic.
-The registry key `@kirocrew/ui` is internal to the host registry,
+The registry key `@ajcrew/ui` is internal to the host registry,
 not a browser import-map specifier.
 
 The types of both specifiers ship the same way the values do: from the host.
 `npm run build` runs `website/scripts/gen-app-sdk-types.mjs`, which writes
-`kirocrew-app-sdk.d.ts` into the build's `vendor/` directory, and the gateway
-serves it at `/vendor/kirocrew-app-sdk.d.ts` with the other vendor files. It is
+`ajcrew-app-sdk.d.ts` into the build's `vendor/` directory, and the gateway
+serves it at `/vendor/ajcrew-app-sdk.d.ts` with the other vendor files. It is
 generated, never committed, so it always describes the SDK that host runs and no
 source change has a second file to keep in step. The generator emits declarations for the two barrels and, transitively, only the host
 modules those declarations name; each lands in a `declare module` block, the
-barrels under their public specifiers and the rest under a `kirocrew-host:` name
+barrels under their public specifiers and the rest under an `ajcrew-host:` name
 the import map does not resolve, which marks it as no entry point an app can load.
 `src/test/appSdkTypes.test.ts` runs the generator and compiles an app
 source against its output.
@@ -281,7 +281,7 @@ against the pinned dependency. That runtime export surface is app-facing: a
 dependency upgrade must preserve those names and their behavior, or ship an
 explicit breaking App Kit migration rather than silently removing exports. The
 export-parity test makes removed or renamed stub bindings fail the host build.
-Apps needing a newly added export declare `minKiroCrewVersion` for the first
+Apps needing a newly added export declare `minAjCrewVersion` for the first
 host release supplying it; this minimum-version gate is not protection against
 future incompatible removals. No independent dependency-version negotiation is
 introduced.
@@ -580,7 +580,7 @@ generic `stop_failed` message, with the raw `API <status>: <body>` text as its
 detail.
 Writers: `website/src/chat-core/stop/useStopPress.ts`, `website/src/app-sdk/embedStopTransport.ts`,
 `website/src/app-sdk/ChatEmbed.tsx`, `website/src/components/useChatPaneTurnControl.ts`,
-`src/kiro_crew/dashboard/chat_api/slot_detail.py` (`stop_declined`).
+`src/aj_crew/dashboard/chat_api/slot_detail.py` (`stop_declined`).
 Tests: `website/src/test/useStopPress.test.ts`, `website/src/test/ChatEmbed.stop.test.tsx`,
 `website/src/test/ChatPane.stopEscalation.test.tsx`, `test/test_slot_detail_stop_state.py`.
 
@@ -731,8 +731,8 @@ Files app's row is the one that declares it today (`path`).
 
 The Files app is held apart from the core on both sides.
 `test/test_core_file_explorer_decoupling.py` fails on any module under
-`src/kiro_crew` outside `apps/builtins/`, or any script under `scripts/`, that
-imports `kiro_crew.apps.builtins.file_explorer` or names `file_explorer` /
+`src/aj_crew` outside `apps/builtins/`, or any script under `scripts/`, that
+imports `aj_crew.apps.builtins.file_explorer` or names `file_explorer` /
 `file-explorer` in a non-docstring string. `website/src/apps/file-explorer/fileExplorerBoundary.test.ts`
 fails on any dashboard module outside `src/apps/file-explorer/` except
 `builtinRegistry.ts` that imports from it. What the two share is core code the app
@@ -742,7 +742,7 @@ copy of the core file-read endpoint's binary-extension set in its own `tests/`.
 Code Review Sage needs no seam: it reaches core only through public surfaces it
 imports itself (the ACP worker pool, `github_runner`, the dashboard's pull-request
 panel and resize grip). `test/test_core_code_review_sage_decoupling.py` fails on any
-core module or script that imports `kiro_crew.apps.builtins.code_review_sage` or names
+core module or script that imports `aj_crew.apps.builtins.code_review_sage` or names
 `code_review_sage` / `code-review-sage` in a non-docstring string, except its pinned
 rows: the `security_posture.py` redaction rows for the app's modules and the
 `scripts/docs_lint.py` skip of the app's test fixtures, each deleted with the app.
@@ -795,7 +795,7 @@ like any other non-built-in app. Each built-in that still ships moves out with i
 user's record, data and enablement kept, so everything this document says about
 `origin: builtin` holds for those apps until each one's move lands. A capability an
 app could only get by being built in is a seam gap in these contracts, and the fix
-is a seam every app can use ([decision](../../decisions/2026-11-01-kiro-crew-accepts-no-new-built-in-apps.md);
+is a seam every app can use ([decision](../../decisions/2026-11-01-aj-crew-accepts-no-new-built-in-apps.md);
 gated by `no-new-builtin-apps` in `AUTOSDE.yaml`).
 
 Behaviour hangs off `resources` and `lifecycle`, never off `origin`:
@@ -838,7 +838,7 @@ before the app.json merge — never from the repo-fetched manifest — because
 `origin` and `author` are otherwise copied verbatim from index or manifest
 content for a not-yet-installed app: deriving trust from either let an added
 registry publish `origin: "builtin"`, or a third-party core repo publish
-`author: "KiroCrew"`, and self-award the first-party mark next to a button
+`author: "AjCrew"`, and self-award the first-party mark next to a button
 that runs its setup code with gateway privileges. The author comparison runs
 through `_fold_author` (NFKC, drop category-`Cf`, collapse whitespace, lower)
 against `FIRST_PARTY_AUTHORS`, so both the joined historical spelling and the
@@ -1033,15 +1033,15 @@ falls back to the legacy `origin`/`author` derivation only for rows from
 older gateways that emit neither field. An installed record carries no
 `provenance`, so the trust dialog's source badge reads its `origin`: a `local`
 one with no `_registry` tag shows Local install under a "Source" label, and its
-review note drops the claim that Kiro Crew lists the app. `_registry` itself must keep being
+review note drops the claim that Aj Crew lists the app. `_registry` itself must keep being
 emitted: besides the external-source label and older clients,
 `appManifest.ts::keysFor` (first-party copy gate) and `pickFeatured`'s
 legacy arm still read it.
 
-## 1. App MCP servers land in Kiro Crew's agent config, never the shared kiro file
+## 1. App MCP servers land in Aj Crew's agent config, never the shared kiro file
 
-An app's `mcpServers` are written into Kiro Crew's own agent config
-(`<kiro agents dir>/kirocrew.json`, resolved through `config.paths.kiro_agents_dir`
+An app's `mcpServers` are written into Aj Crew's own agent config
+(`<kiro agents dir>/ajcrew.json`, resolved through `config.paths.kiro_agents_dir`
 so test/dev home redirects are honoured), **not** the shared
 `~/.kiro/settings/mcp.json`.
 
@@ -1049,7 +1049,7 @@ Why it is a contract and not a detail: the shared file is read by everything els
 living under `~/.kiro` — the Kiro IDE and every other kiro-cli agent — so
 registering an app's servers there leaked that app's private tools into surfaces
 that never installed it, and a dead HTTP entry there broke EVERY kiro session, not
-just the app's. Kiro Crew sessions read only the agent config (`includeMcpJson` is
+just the app's. Aj Crew sessions read only the agent config (`includeMcpJson` is
 pinned False in `agent.py`), so the narrower target is also sufficient.
 
 **Migration is finished at boot, not at disable.** `reconcile_enabled_app_resources`
@@ -1080,10 +1080,10 @@ managed map** — the preservation is justified by that re-add, so it reaches
 exactly as far. The handler therefore asks the emitter
 (`agent.emission_eligible_mcp_servers`, the one predicate both spec writers also
 consult) rather than testing membership itself. Two managed entries are NOT
-re-added and stay deletable: `kirocrew-dashboard` carries `opt_in`, an assignable
+re-added and stay deletable: `ajcrew-dashboard` carries `opt_in`, an assignable
 set that `build_agent_config` never emits and that a refresh keeps current without
 ever re-granting, so preserving it left the grant unrevocable through the only
-surface that can revoke it; and `kirocrew-computer` carries a `spec_gate` that both
+surface that can revoke it; and `ajcrew-computer` carries a `spec_gate` that both
 writers `pop` while it is shut, so preserving it resurrected the backend the gate
 exists to keep unspawned — and the next rebuild removed it again, the two surfaces
 disagreeing about one config. A gate that raises counts as shut, matching the
@@ -1110,9 +1110,9 @@ declared name with no proven owner is deleted by the general rule anyway.
 | `<app>:<name>` the app never declared, absent | **deleted** — squatting a namespace confers nothing |
 | `<app>:<server>` of a DISABLED app, absent | **deleted** — the disable lifecycle owns bridge removal, so a failed removal must be cleanable here |
 | `<app>:<server>` whose app dir or `installed.json` is absent | **deleted** — not installed |
-| host-managed server the rebuild always emits (`kirocrew-cron`, `kirocrew-core`, edition extras), absent | **preserved** — the rebuild re-adds it anyway, so removing it here never stuck |
-| host-managed server flagged `opt_in` (`kirocrew-dashboard`), absent | **deleted** — an assignable grant no rebuild re-adds (a refresh keeps an existing one current but never re-grants), so revocation must stick here |
-| host-managed server whose `spec_gate` is CLOSED (`kirocrew-computer` off or unsupported), absent | **deleted** — both spec writers `pop` it, so the rebuild would not re-add it and preserving it resurrects the backend the gate withholds |
+| host-managed server the rebuild always emits (`ajcrew-cron`, `ajcrew-core`, edition extras), absent | **preserved** — the rebuild re-adds it anyway, so removing it here never stuck |
+| host-managed server flagged `opt_in` (`ajcrew-dashboard`), absent | **deleted** — an assignable grant no rebuild re-adds (a refresh keeps an existing one current but never re-grants), so revocation must stick here |
+| host-managed server whose `spec_gate` is CLOSED (`ajcrew-computer` off or unsupported), absent | **deleted** — both spec writers `pop` it, so the rebuild would not re-add it and preserving it resurrects the backend the gate withholds |
 | `installed.json` present but corrupt | **refused** (500, `app_ownership_unreadable`) |
 | `installed.json` present but non-regular (broken symlink, directory, unstattable) | **refused** (500, `app_ownership_unreadable`) |
 | apps root present but not a directory | **refused** (500, `app_ownership_unreadable`) |
@@ -1265,11 +1265,11 @@ Writer: `apps/bridges_agents.py::_apply_agent_mcp_policy`, `apps/bridges_mcp_con
 `_drop_unbacked_app_entries` for the PUT side.
 
 App agent registration materializes a host-managed server for both a whole-server
-reference (`@kirocrew-core`) and a specific tool reference
-(`@kirocrew-core/memory_recall`). It resolves the server portion for its launch
+reference (`@ajcrew-core`) and a specific tool reference
+(`@ajcrew-core/memory_recall`). It resolves the server portion for its launch
 spec and preserves the original `tools` and `allowedTools` grants; requesting
 one tool never becomes a grant to the whole server. A server whose `spec_gate` is
-closed (`kirocrew-computer` while computer use is off) is not copied, as on the
+closed (`ajcrew-computer` while computer use is off) is not copied, as on the
 host agent.
 
 ## 2. Auto-approve is intersected with the governance ceiling
@@ -1442,7 +1442,7 @@ only on an allowed backend.
 On Kiro the turn does not hand kiro-cli the bare name, which kiro-cli resolves
 project-first. `apps.agent_launch.publish_app_agent_launch` copies the app's registered
 `<app>--<agent>.json`, read by its path, to
-`~/.kiro/agents/kirocrew-app-launch-<app tag>-<agent tag>.json` with `name` set to that
+`~/.kiro/agents/ajcrew-app-launch-<app tag>-<agent tag>.json` with `name` set to that
 reserved name. The name is wire-only, like KAS's `kas_wire_agent_id`: the session is
 allocated with `app_launch_agent`, and the Kiro runtime (`AcpRuntime(launch_agent=…)`)
 hands it to kiro-cli on `--agent` and in `session/set_mode`, while the session's agent
@@ -1484,8 +1484,8 @@ kiro-cli (#22783) would retire the launch directory; until then it is the interi
 
 The copy is the registered spec's native skill
 view, the one every Kiro launch runs (`acp.skill_projection.project_agent_view`):
-`skill://` resources are dropped and the agent's skills come through `kirocrew-core`'s
-`skill_search`; a spec that view refuses (its `kirocrew-core` or `skill_search`
+`skill://` resources are dropped and the agent's skills come through `ajcrew-core`'s
+`skill_search`; a spec that view refuses (its `ajcrew-core` or `skill_search`
 restricted) refuses the turn (`no_skill_view`). Past that only `name` and `description`
 change, so grants and trust are the app's own. The session's skill scope is pinned to
 the registered file (`skill_scope_pin`, set on each turn's admission and cleared on every
@@ -1493,7 +1493,7 @@ other turn of the key), so `skill_search`, dollar skills and the injected skill 
 read that file by its path and a checkout's same-named spec never sets the scope. The
 spawn holds the copy as its prepared view and makes the same launch-steering decision
 (`inherits_default_resources`) every Kiro launch makes. An app agent may not take the
-`kirocrew-app-launch-*` prefix; a checkout spec of a copy's name is not refused, because
+`ajcrew-app-launch-*` prefix; a checkout spec of a copy's name is not refused, because
 kiro-cli never reads it for the copy. A foreign file at the path, a second user-level spec declaring the name,
 or an unregistered agent refuses the turn. A warm-pool process is never claimed for it
 (`bypass_app_launch`). After the claim, a Kiro provider that did not ask kiro-cli for
@@ -1557,7 +1557,7 @@ reserved (`_RESERVED_SKILL_DIRS`, i.e. `auto`), and when a real directory of tha
 name already exists; an existing flat link is repointed, so when two apps ship a
 same-named skill it resolves to the one registered last. A `skill://` mapping of
 an app skill therefore names the namespaced path, one skill or `<app>/*/SKILL.md`
-for all of them, as `src/kiro_crew/docs/agent-spec-fields.md` (Resources)
+for all of them, as `src/aj_crew/docs/agent-spec-fields.md` (Resources)
 documents. The catalog lists each skill once, under whichever link its walk reached
 first; `_alias_selected` in `skill_runtime/catalog.py` still selects a row listed
 under its flat link when the namespaced link one level under the mapping's literal
@@ -1621,7 +1621,7 @@ the stored snapshot a restarted gateway would serve goes with them. An unchanged
 snapshot, so a boot pays no cold walk for it. Another process (a CLI enable) has no
 loader of the gateway's to clear and converges on the catalog TTL. The file is a published view of the layout above plus the install records,
 versioned so that layout can change without breaking the scripts that read it. The user-facing list of provenance markers is
-`src/kiro_crew/docs/skills.md`.
+`src/aj_crew/docs/skills.md`.
 
 Writer: `apps/bridges_skills.py::_register_skills`, `_deregister_skills`,
 `reconcile_app_skills`, `_write_app_skill_links`; the catalog
@@ -1676,7 +1676,7 @@ skills/crons/MCP registration overwrite in place.
 
 Writer: `apps/bridges_register.py::reconcile_enabled_app_resources`.
 
-Enablement also decides which of an app's **`kirocrew-core` tools are advertised**.
+Enablement also decides which of an app's **`ajcrew-core` tools are advertised**.
 The four built-in apps reached through that server — Issue Radar, Dev Fleet, Ops
 Mission Control, Design Tweak — gate every agent route on `is_app_enabled` (a 403
 whose body differs per app: `POST /api/app-tools/call`, which Dev Fleet's, Design
@@ -1719,7 +1719,7 @@ it is unbounded third-party code and must not overlap the still-running startup
 hook against partially initialized state.
 
 Normal recovery is to retry after retained startup execution exits. If a startup
-hook is permanently wedged, `kirocrew app disable <name>` performs runtime
+hook is permanently wedged, `ajcrew app disable <name>` performs runtime
 teardown when it reaches the running Gateway through its owner-only Unix socket;
 a retained hook can still make that live request return the retryable refusal
 above. If the CLI cannot reach that socket, it only records `enabled=false` for
@@ -1801,7 +1801,7 @@ contract (`pgid == leader pid`) and the group's members are reaped through
 `session_pid.signal_orphaned_spawn_group`. That path never signals the group
 NUMBER, which the kernel may have reissued to an unrelated session leader; it
 lists the group's live members, keeps only those whose environment carries the
-spawn's own `KIROCREW_SPAWN_INSTANCE` token (minted per spawn and persisted in the
+spawn's own `AJCREW_SPAWN_INSTANCE` token (minted per spawn and persisted in the
 pidfile row beside `(pid, start_time)`), and signals each one pinned to its own pid
 plus start instant. No vouching member means no signal, and the vouch reads
 `/proc/<pid>/environ`, so off Linux nothing is signalled at all. Nothing else
@@ -1881,7 +1881,7 @@ left holding the app's files.
 POSIX reaches a live root's tree through the process group the leader led, and
 that path is unchanged; an exited root's tree cannot use `kill_process_tree`
 (`getpgid` raises for a reaped leader), so both dead-root exits take the
-stale-reap's route -- members vouched by the spawn's `KIROCREW_SPAWN_INSTANCE`,
+stale-reap's route -- members vouched by the spawn's `AJCREW_SPAWN_INSTANCE`,
 which `AppProcess.spawn_instance` carries beside `pid_start_time`, signalled
 pinned to their own identity, then an unconditional SIGKILL pass after
 `_REAP_SIGTERM_GRACE` that is also the FINAL census (the opening one cannot
@@ -1937,11 +1937,11 @@ new record disabled, so a fresh managed install from the registry route, its SSE
 stream or the local-path route registers nothing and starts no backend; its
 `registration` is empty and `GET /api/apps` shows it disabled with no files in the
 agents directory. The resources arrive at the guarded `enable_app` transition
-(`routes_enable.handle_enable_app`, `kirocrew app enable`), which the detail
+(`routes_enable.handle_enable_app`, `ajcrew app enable`), which the detail
 page's Enable button calls after the install. A record that is enabled after the
 install (an update of an enabled app, a self-managed record
 `register_external_app` writes enabled) registers and starts as before. The
-file-only `kirocrew app install` follows the same rule and prints the enable
+file-only `ajcrew app install` follows the same rule and prints the enable
 hint. Registry default installs (§15.1) read
 `_app_may_enable_after_install` instead, which answers only "may this be enabled
 without the user" (a record exists and no consent is pending), and then take the
@@ -2136,7 +2136,7 @@ merge, each write being a whole-file rewrite of one snapshot:
   `app_lifecycle_lock`, because a step of
   the uninstall released before the clear lands lets a concurrent reinstall be serving
   the same slot key again — and the pointer dropped is then the new installation's.
-- **Gateway-less** (`kirocrew app uninstall`) writes through its own `SessionMap`
+- **Gateway-less** (`ajcrew app uninstall`) writes through its own `SessionMap`
   while HOLDING `GatewayLock` across the scan and the write, and declines when it
   cannot take it. Asking whether a gateway is up cannot establish this: one starting
   between the question and the write lands in exactly the excluded case. Holding the
@@ -2168,7 +2168,7 @@ merge, each write being a whole-file rewrite of one snapshot:
   the command that otherwise printed a success tick; they get different text because
   they need different actions — stop the gateway, versus fix the storage or lock-file
   error the log names. The recovery is re-running
-  `kirocrew app uninstall <name>` with the gateway stopped, which works because the
+  `ajcrew app uninstall <name>` with the gateway stopped, which works because the
   bookkeeping half also runs when `uninstall_app` fails with *not installed* — the
   pointers outlive the app, so that is the one failure whose cleanup is still owed.
   Every other failure leaves the app whole and must keep its pointers.
@@ -2307,7 +2307,7 @@ and the seconds used. It fires once per script run, not per listing, so it needs
 no memory of what it already said.
 
 The update's stop → deregister → swap → re-register → restart chain has one
-terminal entry point besides the dashboard's Sync: `kirocrew app update <name>
+terminal entry point besides the dashboard's Sync: `ajcrew app update <name>
 [--source DIR]`, which is `POST /api/apps/{name}/update` sent through the
 owner-only socket the way `enable`, `disable` and `uninstall` are. It is the one app
 verb with NO gateway-less path. Only the gateway's process can run that chain; a
@@ -2386,7 +2386,7 @@ Writers: `apps/dependency_ledger.py`, `apps/dependencies.py`;
 ### 11.1 Python runtime dependency installation is serialized
 
 Separately from capability resolution, `apps/backend_runtime/provisioning.py::provision_app_deps`
-serializes each app's Python dependency install with `data/.kirocrew-deps.lock`.
+serializes each app's Python dependency install with `data/.ajcrew-deps.lock`.
 The installer and the data-preserving uninstall path in `apps/manager_uninstall.py` both
 first create that lock with `O_CREAT | O_EXCL`. Only `FileExistsError`
 permits reopening the existing file, without creation or truncation flags.
@@ -2491,7 +2491,7 @@ with it), so it is a trust-scale indicator, not a live metric. Absence means
 
 Writers: `apps/manager_builtins.py` (`_BUILTIN_APPS`, `_DEFAULT_ON_BUILTINS`,
 `_DEFAULT_ON_BACKFILL`, `register_builtin_apps`, `backfill_default_on_builtins`),
-`agent_parts/kirocrew_launcher.py::run_first_run_setup`, `apps/discovery.py::discover_builtin_apps`,
+`agent_parts/ajcrew_launcher.py::run_first_run_setup`, `apps/discovery.py::discover_builtin_apps`,
 `apps/registry_pipeline/catalog.py::_apply_trust_fields`;
 consumers: `website/src/pages/apps/useAppsData.ts` (`pickFeatured`),
 `website/src/components/appstore/types.ts` (`isVerified`, `sourceLabel`).
@@ -2536,10 +2536,10 @@ change to the default lesson store, never its text, and no read grant with it
 ([learn-cron-dashboard](learn-cron-dashboard.md)).
 
 **An app backend subscribes the way its page does.** The gateway hands a backend
-it spawns `KIROCREW_GATEWAY_ORIGIN` and `KIROCREW_PROXY_SECRET`, which is the
+it spawns `AJCREW_GATEWAY_ORIGIN` and `AJCREW_PROXY_SECRET`, which is the
 app's `.app_secret`; `POST /api/apps/<name>/token` with that value as
 `X-App-Secret` returns the same app-scoped token the page uses, and `/api/ws`
-with it is the same scoped stream. `kirocrew_client.KiroCrewClient(app_name=...)`
+with it is the same scoped stream. `ajcrew_client.AjCrewClient(app_name=...)`
 does the exchange (`authenticate()`) and `create_ws()` opens that socket. There is no
 second delivery channel, and an origin the gateway could not prove is omitted, so
 such a backend has none.
@@ -2783,7 +2783,7 @@ consent that did not cover it. `_session_approval_consent_unrecorded` reads the
 manifest even for an already-consented record, so a manifest that gains
 `memberThreads` without going through an update (edited in place, for example)
 leaves the app disabled at the next reconcile until the owner consents again.
-After `KIROCREW_READY`, `apps/session_consent.reconcile_after_ready`
+After `AJCREW_READY`, `apps/session_consent.reconcile_after_ready`
 (a tracked background task started from `service_boot.run`) handles each such
 record, and any record that reads both enabled and pending, under
 `app_lifecycle_lock`: it re-checks the record, runs the disable route's bounded
@@ -3226,7 +3226,7 @@ catalog's OFFLINE SNAPSHOT, not a peer source: a reachable catalog means the
 store renders the published document's list, display copy, AND installable
 inventory; an unreachable one degrades the listing to the seed.
 
-Setting `KIROCREW_SKIP_APP_STORE_FETCH=1` in the gateway environment forces that
+Setting `AJCREW_SKIP_APP_STORE_FETCH=1` in the gateway environment forces that
 degradation: `official_catalog.fetch_document` answers `None` before it reaches the
 network seam, so the listing renders the seed, and `_resolve_manifest` returns a
 seed row with no cached manifest as its minimal entry instead of cloning its
@@ -3462,7 +3462,7 @@ the install clone, the pinned-commit fetch and the fast-forward pull
 `git_clone_failed_strict_ssh_route` with a fixed sentence: the install ran in the
 strict sandbox, which hides `~/.ssh`, so neither `~/.ssh/config` nor the
 ssh-agent applied, and the operator can clone the repository from their own
-shell and run `kirocrew app install <dir>`. The posture is unchanged; only the
+shell and run `ajcrew app install <dir>`. The posture is unchanged; only the
 refusal names it.
 
 **The tier is not readable from a cached row, and that is the whole difficulty.**
@@ -3740,7 +3740,7 @@ for a build-pinned row, and from the operator's keystone grant
 a row in `config.json` reads as `index` no matter what it declares. The reason
 is that `config.json` is an ordinary settings file: the sandbox seals it
 read-only against an in-sandbox shell (`sandbox._CREW_READONLY_LEAVES`), but it is
-not owner-gated — the config PATCH, `kirocrew config set`, an unsandboxed spawn
+not owner-gated — the config PATCH, `ajcrew config set`, an unsandboxed spawn
 and, on Linux, the rename-detach window after a gateway save all still reach it
 (see [security](security.md), runtime-config seal). So a tier read from there
 would not be an operator's assertion at all. A write through any of those
@@ -3869,7 +3869,7 @@ display name shown instead of the `name` id. Both are build-only for the same
 reason `owner` is: `GET /api/apps/registries` reports them empty on operator rows
 and the PUT drops them, so a write into `config.json` (sealed read-only against an
 in-sandbox shell, but an ordinary settings file to every other writer) cannot stamp
-a source "Reviewed by the Kiro Crew team". An unrecognised `review` DEGRADES to `""` (no
+a source "Reviewed by the Aj Crew team". An unrecognised `review` DEGRADES to `""` (no
 claim) and is logged at error level; it never drops the pinned row. This list
 also feeds index fetch, the trusted-host allowlist and install, so dropping would
 let a typo in a display field take a whole registry offline — its apps gone from
@@ -3925,7 +3925,7 @@ ships a builtin already enabled. Two switches, held by two owners, must both be 
 background task. For each opted-in registry it fetches the index fresh, then
 installs each marked app whose name is not yet in
 `agent.apps_default_installs_applied`: `install_from_registry`, then activation
-the way `kirocrew app enable` does it. The pass calls `enable_app` (the guarded
+the way `ajcrew app enable` does it. The pass calls `enable_app` (the guarded
 transition that applies the `apps` governance ceiling and the admission policy)
 and registers resources and starts the backend only when it succeeds. Like the
 CLI enable it runs no `onEnable` and leaves hook loading to the hook reconciler.
@@ -4104,7 +4104,7 @@ otherwise leave the handler as a 500 on a route whose every other refusal is a
 clean status; the app that plants the link is the one whose art this serves, so
 that input is exactly what the endpoint reads. None of the three is a different
 ANSWER: all mean the path is not servable, which is the same 404 as undeclared
-and missing. The publisher's `EditorialAssets.add` in KiroCrewApps documents the
+and missing. The publisher's `EditorialAssets.add` in AjCrewApps documents the
 same `RuntimeError` trap from the other side of the same operation.
 
 **The route serves BYTES read under a pinned descriptor, not a path.** Validating
@@ -4464,7 +4464,7 @@ state that is no longer on disk, so nothing retries. **The scrub also re-materia
   check, so only a status on a response the opener RETURNED can be healthy — in practice a
   2xx, which is what the manifest reference asks a `healthCheck` route for.
 - **Every writer of an app's MCP and agent state shares one serialization.** Two
-  independent families write it: the lifecycle paths of `kiro_crew.apps.bridges` (enable,
+  independent families write it: the lifecycle paths of `aj_crew.apps.bridges` (enable,
   update, boot reconcile) and the backend's health watch. Unserialized they interleave
   their DECISIONS — each performing a correct read-modify-write, with the stale one
   landing last — so `_register_mcp_servers`, `_deregister_mcp_servers` and
@@ -4476,7 +4476,7 @@ state that is no longer on disk, so nothing retries. **The scrub also re-materia
   first, then `_lock` or `_mcp_lock` — never the reverse — which is what keeps the two
   families from deadlocking against each other.
 - **A promotion requires a positively confirmed ENABLED app; a demotion never does.**
-  `kirocrew app disable` runs in its own process: it deregisters the app's resources and
+  `ajcrew app disable` runs in its own process: it deregisters the app's resources and
   never touches the gateway's tracking table, so the record survives and a later health
   recovery would re-register the MCP servers and agents the operator just removed. The
   check fails CLOSED — an unreadable enabled-state refuses the promotion rather than
@@ -4487,7 +4487,7 @@ state that is no longer on disk, so nothing retries. **The scrub also re-materia
   The flag has to be flipped BEFORE the resources come down, or the check reads a stale
   `enabled` while they are already gone. The gateway's own disable path has no such
   window — `teardown_app_runtime` stops the backend first, which pops the record and ends
-  the watch — but `kirocrew app disable` runs in ANOTHER process and cannot pop it, so it
+  the watch — but `ajcrew app disable` runs in ANOTHER process and cannot pop it, so it
   closes the window by ordering: `disable_app` then `deregister_app`.
 
   Ordering closes one interleave; it cannot close the other, where the check passes and
@@ -4662,7 +4662,7 @@ the tracking record, and that pop is what ends the watch's authority to reconcil
 the app — so it has to happen BEFORE `deregister_app`. Scrubbing first leaves a window in
 which a backend that recovers re-registers the OLD manifest's servers, and entries the
 update removed survive it. Uninstall, the disable rollback, the two update paths in
-`kiro_crew.apps.routes` and a registry install over an installed app all order it
+`aj_crew.apps.routes` and a registry install over an installed app all order it
 this way, and
 `test_update_stops_the_backend_before_deregistering_resources` pins it.
 
@@ -4725,7 +4725,7 @@ announces new bytes.
 The gateway announces them with the `app_reload` frame, which the dashboard
 socket re-dispatches as `mc:app-reload`. Every route that replaces an app's files
 sends it once on success, through `_announce_app_ui_changed`: `handle_install_app`,
-both branches of `handle_update_app` (`kirocrew app update` and the Sync button),
+both branches of `handle_update_app` (`ajcrew app update` and the Sync button),
 `handle_registry_install` and `handle_registry_install_stream`. The dev-mode
 watcher sends the same frame on a `ui/` edit. A failed install or update replaced
 nothing and sends nothing. A mounted host reloads at once. A document that
@@ -4741,7 +4741,7 @@ app the document never imported changes nothing.
 The boot-time adoption swap (§33) sends no frame: it runs
 before any route is registered, so no dashboard socket is open to hear one.
 
-Shared host capability reaches an app through `@kirocrew/app-sdk`, which the host
+Shared host capability reaches an app through `@ajcrew/app-sdk`, which the host
 provides rather than publishing to npm — the SDK lives in the dashboard bundle, so
 an app externalizes it at build time instead of vendoring a second copy and a
 second React. Apps receive host events as `CustomEvent`s on `window`
@@ -4750,7 +4750,7 @@ rail listens for two window events: `mc:app:badge` sets an app row's badge
 (`website/src/shell/nav/railBadges.ts`), and `mc:apps-changed` re-reads the
 installed apps (`refreshAppNav` in `website/src/shell/appShell.tsx`).
 `mc:apps-changed` only fires for a change made in the same tab. A change made
-elsewhere (`kirocrew app install` or `uninstall`, another tab) sends no event to
+elsewhere (`ajcrew app install` or `uninstall`, another tab) sends no event to
 the tab, and CLI uninstall never reaches the gateway at all, so the shell also
 re-reads the list when the tab regains focus or becomes visible. Focus that
 returns from one of the page's own app iframes is skipped, and one return reads
@@ -4760,7 +4760,7 @@ what keeps the rail and the link-preview layer current without a reload.
 This is a different mechanism from the MCP App (SEP-1865) `srcdoc` iframes, which
 load their own ESM runtime from a CDN through an import map and are confined by
 the response CSP. §13 covers their token scoping;
-`src/kiro_crew/docs/mcp-apps.md` covers the iframe contract itself.
+`src/aj_crew/docs/mcp-apps.md` covers the iframe contract itself.
 
 Writers: `website/src/components/AppHost.tsx`,
 `website/src/components/appBundleFreshness.ts` (the bundles a document imported
@@ -4846,7 +4846,7 @@ an HTML 403. So:
   served (localhost, a plain forward) nothing changes. When it is refused (Firefox
   sends the cookie on the iframe navigation, so the URL document loads but its
   cookieless module import does not), the frame fetches the source through the relay and runs it as a nonce'd inline module;
-  that module hands over its entry with `globalThis.kirocrew.register(activate)`
+  that module hands over its entry with `globalThis.ajcrew.register(activate)`
   (a function only, the same `activate` it exports), read only while it evaluates, so a module imported by URL
   that also registers activates once. A module that only exports `activate` keeps
   the URL path and still fails behind an authenticating proxy. The ready deadline
@@ -4870,7 +4870,7 @@ The boundary:
   (`readFrameMessage`), and each one can only show, hide, size, move or clip that
   one iframe.
 - **Its fetch.** `/app-frame-fetch/{name}/{path}` answers only a request whose
-  `X-KiroCrew-Capability` verifies. The capability is minted per frame by
+  `X-AjCrew-Capability` verifies. The capability is minted per frame by
   `POST /api/apps/{name}/frames/linkPreviews/{id}`, which only a person's dashboard session
   may call (an app token, an internal caller or a link token is refused), and is
   bound to the app, the client address, the frame id and the `(point, id)`, for 15
@@ -5260,7 +5260,7 @@ click-driven point on the shared frame contract (§18b); the RFC is
   - the paste token and the attachment and folder markers (`PASTE_TOKEN_REGEX`,
     `fileTokens.parseFiles`, `parseDirs`);
   - a path separator followed on the same line by an `IMG_EXT` suffix: every match
-    of `kiro_crew.image_refs._PATH_RE` has that shape;
+    of `aj_crew.image_refs._PATH_RE` has that shape;
   - markdown image syntax `![`, any raw HTML tag (`<` then a letter, `!`, `/` or
     `?`, since `rehypeRaw` passes HTML through), and any `[attached_file` /
     `[attached_dir` marker, however spaced or encoded: the transcript renderer decodes and fetches a local media
@@ -5369,7 +5369,7 @@ Writers: `apps/selection_action_frame.py`, `apps/selection_action_grants.py`,
 
 ## 18g. The pull-request panel reaches an app through the SDK, behind the declared read
 
-`PullRequestPanel` on `@kirocrew/app-sdk` (`website/src/app-sdk/PullRequestPanel.tsx`)
+`PullRequestPanel` on `@ajcrew/app-sdk` (`website/src/app-sdk/PullRequestPanel.tsx`)
 is the chat window's own `components/PullRequestPanel`, the Changes side panel, offered
 to an app page. It is App Kit seam level 2. The panel and the `CommentThreads` it renders
 call the provider through one injected client (`components/pullRequestClient.tsx`),
@@ -5415,7 +5415,7 @@ alone covers every endpoint the panel calls, that an external panel's writes go 
 the app's transport, and the request bodies.
 
 Writers: `website/src/app-sdk/PullRequestPanel.tsx`, `website/src/app-sdk/index.ts`,
-`website/public/vendor/kirocrew-app-sdk.mjs`, `website/src/components/pullRequestClient.tsx`,
+`website/public/vendor/ajcrew-app-sdk.mjs`, `website/src/components/pullRequestClient.tsx`,
 `website/src/components/PullRequestPanel.tsx`, `website/src/components/CommentThreads.tsx`,
 `website/src/app-sdk/sdkLevel.ts`, `apps/app_sdk_level.py`.
 
@@ -5429,7 +5429,7 @@ identity, and Stop/Delete revocation — is specified in
 [security](security.md) under "Spec Builder's decision record". This section
 records which module owns which part, so a change lands in its owner.
 
-| Module under `src/kiro_crew/apps/builtins/spec_builder/backend/` | Owns |
+| Module under `src/aj_crew/apps/builtins/spec_builder/backend/` | Owns |
 |---|---|
 | `routes.py` | Route registration and the enabled-app gate |
 | `handlers.py` | The route facade, plus every response that projects stored or agent-writable values through the app redactor: list, detail, settings, repo info, browse, messages, and the duplicate adapter |
@@ -5475,8 +5475,8 @@ The per-helper coverage suites, `tests/test_routes_coverage*.py`, share their fa
 in `tests/routes_coverage_helpers.py`.
 
 **Repository boundary.** Spec Builder is to leave this repository whole, so no module
-under `src/kiro_crew` outside `apps/builtins/`, and no `scripts/` file, imports
-`kiro_crew.apps.builtins.spec_builder` or names `spec_builder` / `spec-builder` in a
+under `src/aj_crew` outside `apps/builtins/`, and no `scripts/` file, imports
+`aj_crew.apps.builtins.spec_builder` or names `spec_builder` / `spec-builder` in a
 non-docstring string. The core needs nothing from the app, so there is no seam to
 fill. The outbox's two process-local claim sets (in flight, and consumed but not yet
 finalized) are the app's own: `orchestration/decision_outbox.py` creates them on the
@@ -5517,7 +5517,7 @@ the store listing, and the install transaction. That behaviour is specified in �
 validation & refresh". This section records which module owns which part, so a
 change lands in its owner.
 
-| Module under `src/kiro_crew/apps/` | Owns |
+| Module under `src/aj_crew/apps/` | Owns |
 |---|---|
 | `registry.py` | The facade: the only import path and patch surface, plus the build step (`_run_app_build`) and the two index-entry name gates (`_admit_cached_index_entries`, `_admit_fetched_index_entries`) |
 | `registry_pipeline/subprocess_env.py` | The environments registry children start with: `minimal_env`, the credential-free `anonymous_git_env`, the `detectInstalled` probe env, and `_git_network_env`, which adds the operator's proxy and CA-bundle variables (`_GIT_NETWORK_ENV_KEYS`) to the git clone/fetch/pull spawn only, never to an install, build or app child, because a proxy URL can carry credentials. A fetch, pull or clone that cannot reach the remote appends the fixed `_GIT_NETWORK_FAILURE_HINT` (`git_targets.py`), which names the variables and never their values. The `_SAFE_ENV_KEYS` allowlist that `minimal_env` and `anonymous_git_env` share carries `ProgramData`, a path rather than a credential, because Win32-OpenSSH exits 255 with no output when it is unset and every ssh:// clone on Windows then fails |
@@ -5547,10 +5547,10 @@ security handler and the platform defaults keep one import path.
 
 Every patch seam stays on the facade. A write to `registry.<name>` reaches every
 module that binds that name, and each owner reads its own bindings, so a
-`monkeypatch.setattr(registry, ...)` or `mock.patch("kiro_crew.apps.registry.<name>")`
+`monkeypatch.setattr(registry, ...)` or `mock.patch("aj_crew.apps.registry.<name>")`
 reaches the call site in whichever owner makes the call. That holds because every
 module holding a name holds the same object, every owner logs through the
-`kiro_crew.apps.registry` logger, and `importlib.reload(registry)` reloads each owner
+`aj_crew.apps.registry` logger, and `importlib.reload(registry)` reloads each owner
 in layer order. `mock.patch(..., create=True)` on a forwarded name is the one
 spelling the facade cannot undo, and a guard refuses it.
 
@@ -5584,7 +5584,7 @@ MCP transition and restart, and the boot wave. That behaviour is specified in §
 [security](security.md). This section records which module owns which part, so a
 change lands in its owner.
 
-| Module under `src/kiro_crew/apps/` | Owns |
+| Module under `src/aj_crew/apps/` | Owns |
 |---|---|
 | `backend.py` | The facade: the only import path and patch surface, plus the spawn transaction (`start_app_backend`, `_start_app_backend`, `_clear_failed_spawn_state`, and `_start_app_backend_body` with the entry-point classification, child environment, sandbox wrap, and spawn and adoption records it builds) and `_pid_alive` |
 | `backend_runtime/tracking.py` | The process table: `AppProcess`, `_processes` under `_lock`, the STARTING placeholder's owner (`_spawn_publication_owner`), `_restart_attempts`, the lifecycle generation (`_advance_lifecycle_locked`), `_health_reconcile_lock`, the cross-process spawn flock, the wait on an in-flight spawn, the table reads the proxy and routes use, and `running_spawned_backend_pids`, the read the runtime reconciler's membership uses |
@@ -5612,12 +5612,12 @@ and the dashboard server keep one import path.
 
 Every patch seam stays on the facade. A write to `backend.<name>` reaches every module
 that binds that name, and each owner reads its own bindings, so a
-`monkeypatch.setattr(bmod, ...)` or `mock.patch("kiro_crew.apps.backend.<name>")`
+`monkeypatch.setattr(bmod, ...)` or `mock.patch("aj_crew.apps.backend.<name>")`
 reaches the call site in whichever owner makes the call. The mutable state is one
 object per name, defined once in its owner and imported by the owners that act on it,
 so `bmod._processes.clear()` empties the table every owner reads and replacing it
 through the facade reaches every holder. The one flag rebound with `global` has one
-holder: `_warned_unconfined_cache` in `backend.py`. Every owner logs through the `kiro_crew.apps.backend` logger, and
+holder: `_warned_unconfined_cache` in `backend.py`. Every owner logs through the `aj_crew.apps.backend` logger, and
 `importlib.reload(backend)` reloads each owner in layer order.
 `mock.patch(..., create=True)` on a forwarded name is the one spelling the facade
 cannot undo, and a guard refuses it. The lock order is unchanged: `_health_reconcile_lock`
@@ -5842,7 +5842,7 @@ its own. `POST /api/chat/slots` and the auto-create on `POST /api/chat` accept o
   unreadable route file is skipped like any unreadable app, not fatal.
 
 Design Critique is held to it by `test/test_core_design_critique_decoupling.py`, which
-runs the shared `test/core_app_independence.py` scans: no module under `src/kiro_crew`
+runs the shared `test/core_app_independence.py` scans: no module under `src/aj_crew`
 outside `apps/builtins/`, and no `scripts/` file, imports the app's package or names
 `design_critique` / `design-critique` in a non-docstring string. Its UI is held the
 same way by `website/src/apps/design-critique/designCritiqueBoundary.test.ts`: outside that
@@ -5856,9 +5856,9 @@ Tests: `test/test_app_seams.py`,
 
 ## 24. A backend's principal claim is opt-in and bound to one request
 
-`X-KiroCrew-Proxy` proves only that the gateway forwarded a request. An app whose
+`X-AjCrew-Proxy` proves only that the gateway forwarded a request. An app whose
 manifest sets `backend.signedPrincipal: true` also receives
-`X-KiroCrew-Principal`, which says which kind of caller the gateway authenticated.
+`X-AjCrew-Principal`, which says which kind of caller the gateway authenticated.
 The claim is signed with the same per-app secret, under its own domain tag, and
 the HMAC binds the encoded claim, the method, the raw target, the body digest and
 the issue time. The wire format and the verifier's steps are in
@@ -5885,7 +5885,7 @@ the issue time. The wire format and the verifier's steps are in
    teammates.
 4. `none` for every other request.
 
-The proxy strips any caller-sent `X-KiroCrew-Proxy` and `X-KiroCrew-Principal`
+The proxy strips any caller-sent `X-AjCrew-Proxy` and `X-AjCrew-Principal`
 for every app, opted in or not, so a backend sees only the gateway's values. It
 also drops every relay identity header (`x-kiro-relay-*`, matched by prefix in any
 case), so no backend receives one. It forwards no credential of the caller's
@@ -5912,11 +5912,11 @@ covers it. Only the JSON boolean `true` turns it on.
 
 ### 24a. Every proxied request carries a replay-proof v2 signature
 
-The v1 `X-KiroCrew-Proxy` value, `<ts>:<hmac>` over
+The v1 `X-AjCrew-Proxy` value, `<ts>:<hmac>` over
 `<ts>:<method>:<raw target>:<sha256(body)>`, has no nonce, so a backend cannot
 refuse a copy of a request it already served. `handle_app_api_proxy` therefore
-also sends, to every app and with no manifest field, `X-KiroCrew-Proxy-Nonce`
-(`new_proxy_nonce`, 32 lowercase hex) and `X-KiroCrew-Proxy-V2`, `<ts>:<hmac>`
+also sends, to every app and with no manifest field, `X-AjCrew-Proxy-Nonce`
+(`new_proxy_nonce`, 32 lowercase hex) and `X-AjCrew-Proxy-V2`, `<ts>:<hmac>`
 over `v2:<ts>:<nonce>:<method>:<raw target>:<sha256(body)>` with the same secret
 and the same `ts`. The `v2:` prefix keeps the two MAC inputs disjoint.
 
@@ -5924,7 +5924,7 @@ and the same `ts`. The `v2:` prefix keeps the two MAC inputs disjoint.
   strictly keep working, and a backend that does not know the new headers
   ignores them. Opting in would only delay protection, and the new headers cost
   an unaware backend nothing, so they are always sent.
-- The proxy strips caller-sent `X-KiroCrew-Proxy-V2` and `X-KiroCrew-Proxy-Nonce`
+- The proxy strips caller-sent `X-AjCrew-Proxy-V2` and `X-AjCrew-Proxy-Nonce`
   for every app, like the v1 and principal headers above.
 - The nonce and a principal claim's `requestId` are independent random values of
   one shape, checked by one helper, `_is_request_id`.
@@ -6034,7 +6034,7 @@ behaviour is specified in §5.1, §13, §18, §24 and §25 above, in the
 [durable-jobs RFC](../../request-for-change/rfc-app-sdk-durable-jobs-and-view-state.md).
 This section records which module owns which part, so a change lands in its owner.
 
-| Module under `src/kiro_crew/apps/` | Owns |
+| Module under `src/aj_crew/apps/` | Owns |
 |---|---|
 | `manifest.py` | The facade: the only import path and patch surface, plus `AppManifest` (parse, validate, serialize, `signing_payload`), the cron grant rule (`cron_permission_error`), the endpoint allowlist every app-declared URL is checked against (`app_endpoint_allowed`, `CORE_APP_ROUTE_SEGMENTS`), and the provisioning predicates `runtime_provisions_requirements` composes |
 | `manifest_names.py` | The app-name contract (`app_name_error`, `is_reserved_app_name`, the reserved sets, `KEBAB_RE`) and the version grammar (`SEMVER_RE`) |
@@ -6050,8 +6050,8 @@ Imports only point down. `manifest_sections` imports `KEBAB_RE` from `manifest_n
 `manifest_containment`, `manifest_contributes`, `job_sdk_records`, `job_sdk_returns` and
 `job_sdk_retention` import no owner, and no owner imports its facade, even for type checking. Each facade
 imports every name its owners define
-at its own import, private names included, so every `from kiro_crew.apps.manifest
-import ...` and every `kiro_crew.apps.job_sdk.<name>` read keeps one path and the same
+at its own import, private names included, so every `from aj_crew.apps.manifest
+import ...` and every `aj_crew.apps.job_sdk.<name>` read keeps one path and the same
 object.
 
 The re-exports are plain bindings, so a write to `manifest.<name>` or `job_sdk.<name>`
@@ -6061,7 +6061,7 @@ which only `JobStore` and `JobSDK` read, and `manifest.sys.platform`, which is t
 shared `sys` module `PlatformConfig` reads. `test_manifest_facade.py` and
 `test_job_sdk_facade.py` pin that no owner reads or binds a name the test trees patch
 through its facade, and the layering above. The Job SDK owners log through the
-`kiro_crew.apps.job_sdk` logger; the Job SDK's three exceptions and the manifest's
+`aj_crew.apps.job_sdk` logger; the Job SDK's three exceptions and the manifest's
 `Containment` enum keep the facade as their `__module__`, so a traceback, a repr or a
 pickle names the path callers import.
 
@@ -6140,9 +6140,9 @@ The app manager (`apps/manager.py`) is one import path over sibling owner module
 Its behaviour is specified in the sections above that name it. This section records
 which module owns which part, so a change lands in its owner.
 
-| Module under `src/kiro_crew/apps/` | Owns |
+| Module under `src/aj_crew/apps/` | Owns |
 |---|---|
-| `manager.py` | The facade: the only import path and patch surface. It defines nothing and installs `kiro_crew._facade_mirror` over the owners below |
+| `manager.py` | The facade: the only import path and patch surface. It defines nothing and installs `aj_crew._facade_mirror` over the owners below |
 | `manager_records.py` | Where an app lives (`apps_dir`, `app_dir`, `app_data_dir`), its `installed.json` record (`InstalledApp`, `_read_installed`, `_write_installed`), the approved `permissions.api` / `permissions.events` set, the update-in-flight fencing every grant read checks (`staged_app_grants`), `AppResult` and `get_app_manifest` |
 | `manager_tree.py` | Validating a source directory (`_validate_source_path`, `_check_min_version`), the copy (`_copy_app_tree`, `copy_app_tree_as_installed`), the preserved-`data/` rules (`gateway_data_dir_obstruction`, `_owned_data_dir`), `_remove_any_shape` and `InstalledTreeRefused` |
 | `manager_install.py` | `install_app`, `update_app`, the per-app `app_lifecycle_lock` and the scoped `registry_source_repository` |
@@ -6159,14 +6159,14 @@ each import of `bridges`, `registry`, `backend`, `dev_mode` or `routes` stays in
 the function that needs it, because those modules import the manager at their own
 import.
 
-Every patch seam stays on the facade. It installs `kiro_crew._facade_mirror`, so a
+Every patch seam stays on the facade. It installs `aj_crew._facade_mirror`, so a
 write to `manager.<name>` reaches every owner that binds the name (the owner that
 defines it and each owner that imports it), and a read is served by the defining
 owner. The two globals rebound at run time each live in one owner with their writers:
 `_tree_swap_seq` in `manager_records.py` and `_orphaned_builtins_cache` in
 `manager_builtins.py`, where `test/integration/test_boot_smoke.py` keys it. Every owner
-logs as `kiro_crew.apps.manager`, and `InstalledTreeRefused` keeps
-`kiro_crew.apps.manager` as its `__module__`, so a traceback names the path callers
+logs as `aj_crew.apps.manager`, and `InstalledTreeRefused` keeps
+`aj_crew.apps.manager` as its `__module__`, so a traceback names the path callers
 import. `test/test_manager_facade.py` pins the owner set, every name the one-module
 file bound resolving to its owner's object, the logger, the type-checking groups and
 that nothing outside the family imports an owner; `test/test_facade_mirror_guards.py`
@@ -6182,28 +6182,28 @@ The registration bridges (`apps/bridges.py`) are one import path over sibling ow
 modules. Their behaviour is specified in the sections above that name them. This section
 records which module owns which part, so a change lands in its owner.
 
-| Module under `src/kiro_crew/apps/` | Owns |
+| Module under `src/aj_crew/apps/` | Owns |
 |---|---|
-| `bridges.py` | The facade: the only import path and patch surface. It defines nothing and installs `kiro_crew._facade_mirror` over the owners below |
-| `bridges_sources.py` | Which manifest and root an app's executable resources register from (`_registration_source`, `_app_resource_root`), the shared execution decision (`_registration_denied`), namespaced resource and link names, and the kiro-cli agents directory (`KIRO_AGENTS_DIR`, `_kiro_agents_dir`) and Kiro Crew skills directory (`app_skills_dir`) the bridges write into |
-| `bridges_mcp_config.py` | Kiro Crew's own agent config (`kirocrew.json`): its path (`_mcp_json_path`), the cross-process lock (`_mcp_lock`), the unlocked reads and writes made under it, and the writer serialization against backend health transitions (`_health_reconcile_guard`) |
+| `bridges.py` | The facade: the only import path and patch surface. It defines nothing and installs `aj_crew._facade_mirror` over the owners below |
+| `bridges_sources.py` | Which manifest and root an app's executable resources register from (`_registration_source`, `_app_resource_root`), the shared execution decision (`_registration_denied`), namespaced resource and link names, and the kiro-cli agents directory (`KIRO_AGENTS_DIR`, `_kiro_agents_dir`) and Aj Crew skills directory (`app_skills_dir`) the bridges write into |
+| `bridges_mcp_config.py` | Aj Crew's own agent config (`ajcrew.json`): its path (`_mcp_json_path`), the cross-process lock (`_mcp_lock`), the unlocked reads and writes made under it, and the writer serialization against backend health transitions (`_health_reconcile_guard`) |
 | `bridges_agents.py` | Materializing an app's agents: the app MCP policy (`_apply_agent_mcp_policy`, `_apply_agent_prompt`), host-managed MCP references, user edits carried across a refresh, shipped agent templates, `_register_agents` / `_deregister_agents` and `purge_uninstalled_agent_residue` |
 | `bridges_skills.py` | `_register_skills`, `_deregister_skills` and the startup `reconcile_app_skills` |
 | `bridges_crons.py` | The app cron manifest (`load_app_cron_defs`), the manifest digest and the resync of a changed job, `register_app_crons_with_service`, deregistration, and the execution-driven disarm and reconcile passes |
-| `bridges_mcp.py` | Registering an app's MCP servers: `resolve_stdio_command` and its interpreter and launch-target rules, the `kirocrew` host-CLI pin, the live backend port rewrite (its launch-target anchor is also what adoption's E10 asks of a pinned tree's stdio server), the unresolvable-command and secret-reference warnings, backendless deps provisioning, `_register_mcp_servers` / `_deregister_mcp_servers`, re-registration and scrub, and the legacy shared `mcp.json` scrub |
+| `bridges_mcp.py` | Registering an app's MCP servers: `resolve_stdio_command` and its interpreter and launch-target rules, the `ajcrew` host-CLI pin, the live backend port rewrite (its launch-target anchor is also what adoption's E10 asks of a pinned tree's stdio server), the unresolvable-command and secret-reference warnings, backendless deps provisioning, `_register_mcp_servers` / `_deregister_mcp_servers`, re-registration and scrub, and the legacy shared `mcp.json` scrub |
 | `bridges_register.py` | `register_app` / `deregister_app` with `RegistrationResult`, `refresh_app_agents` and `refresh_app_agents_if_enabled`, the manifest-upgrade prune, `reconcile_enabled_app_resources`, and dropping the session resume pointers an app's conversations held (`discard_app_session_pointers`) |
 
 Imports only point down, in the facade's `_OWNERS` order: sources, mcp_config, agents,
 skills, crons, mcp, register. No owner imports the facade; owners import the app manager
-through `kiro_crew.apps.manager`, and each import of `agent`, `backend`, `mcp_cron` or the
+through `aj_crew.apps.manager`, and each import of `agent`, `backend`, `mcp_cron` or the
 gateway rewriter stays inside the function that needs it.
 
-Every patch seam stays on the facade. It installs `kiro_crew._facade_mirror`, so a
+Every patch seam stays on the facade. It installs `aj_crew._facade_mirror`, so a
 write to `bridges.<name>` reaches every owner that binds the name, and a read is served
 by the defining owner. Two names keep a single holder on purpose: `KIRO_AGENTS_DIR`
 lives in `bridges_sources.py` beside its one reader, and `_LEGACY_SHARED_MCP_PATH` in
 `bridges_mcp.py` beside its scrubber, where the root conftest's `_SHARED_KIRO_PATHS`
-pins it. Every owner logs as `kiro_crew.apps.bridges`, the logger name `caplog` and the
+pins it. Every owner logs as `aj_crew.apps.bridges`, the logger name `caplog` and the
 lock diagnostics key on. `test/test_bridges_facade.py` pins the owner set, every name
 the one-module file bound resolving to its owner's object, the logger, the type-checking
 groups and that nothing outside the family imports an owner;
@@ -6221,9 +6221,9 @@ The app management REST routes (`apps/routes.py`) are one import path over sibli
 modules. Their behaviour is specified in the sections above that name them. This section
 records which module owns which part, so a change lands in its owner.
 
-| Module under `src/kiro_crew/apps/` | Owns |
+| Module under `src/aj_crew/apps/` | Owns |
 |---|---|
-| `routes.py` | The facade: the only import path and patch surface, installing `kiro_crew._facade_mirror` over the owners below, and the route table (`register_app_routes`) |
+| `routes.py` | The facade: the only import path and patch surface, installing `aj_crew._facade_mirror` over the owners below, and the route table (`register_app_routes`) |
 | `routes_lifecycle.py` | The steps the install, update, uninstall, enable and disable handlers share: `_check_min_version`, the dual-pass warning redactor `_redact_warning`, `_register_app_off_loop` / `_deregister_app_off_loop`, `_start_backend_after_install`, `_stop_backend_and_observe`, `_app_may_run_after_install`, `_restore_app_after_failed_update`, `_reinstall_from_registry`, `_suspend_app_for_session_approval_reconsent`, `_refuse_while_startup_hook_runs`, `_unregister_notification_channels`, the `app_reload` announcement after a route replaced an app's files (`_announce_app_ui_changed`), and the `setup.onEnable` runner Enable and every update of an enabled app share (`_run_on_enable_script`, `_rerun_on_enable_after_update`) with the client-install platform check (`_client_install_manifest`) and the bell note for a failed re-run (`_note_on_enable_failed_after_update`) |
 | `routes_proxy.py` | The reverse proxy from an app's dashboard UI to its own backend (`handle_app_api_proxy`): `_resolve_app_backend_url`, the per-app secret cache it signs with (`_get_app_secret`, `invalidate_app_secret_cache`), the principal claim (`_proxy_principal`), the headers and the `token` query credential it strips (`_forwarded_query`) and the event-stream relay |
 | `routes_static.py` | An installed app's UI bundle (`handle_app_ui_file`, `_open_ui_file` and the stream bounds), the content types the UI and art routes answer with, and `handle_app_dev_mode` |
@@ -6241,13 +6241,13 @@ enable, registry. No owner imports the facade; the facade imports the handlers i
 table names, and every import that ran inside a handler still runs there, so a gateway
 boot loads what it loaded before.
 
-Every patch seam stays on the facade. It installs `kiro_crew._facade_mirror`, so a write
+Every patch seam stays on the facade. It installs `aj_crew._facade_mirror`, so a write
 to `routes.<name>` reaches every owner that binds the name, and a read is served by the
 defining owner. Each shared
 table stays one object in one owner: `_BUILTIN_SERVICE_APPS` in `routes_enable.py`,
 `_app_secret_cache` in `routes_proxy.py`, the UI stream semaphore in `routes_static.py`
 and the blob fetch semaphore in `routes_art.py`. Every owner logs as
-`kiro_crew.apps.routes`, the logger name `caplog` assertions key on.
+`aj_crew.apps.routes`, the logger name `caplog` assertions key on.
 `test/test_routes_facade.py` pins the owner set, every name the one-module file bound
 resolving through the facade to its owner's object, each handler's owner, every import the
 facade binds being accounted for, the logger, the type-checking groups and that nothing
@@ -6268,7 +6268,7 @@ Writers: `apps/routes.py`, `apps/routes_lifecycle.py`, `apps/routes_proxy.py`,
 
 ## 30. A core feature that needs an app's code asks a seam, and never imports the app
 
-`kiro_crew/apps/seams.py` is a registry of the things a core feature needs and only an
+`aj_crew/apps/seams.py` is a registry of the things a core feature needs and only an
 app ships. Core names each need as a seam and asks for its provider when it runs. The
 app registers the provider. Core therefore never imports the app, and the app can leave
 this repository without core changing.
@@ -6301,8 +6301,8 @@ looks a seam up. The registry is process state and holds no per-caller data.
 
 `test_app_seams.py` pins the registry, the shipped providers, and each core caller's
 answer with no provider. `test_core_aws_control_decoupling.py` is the gate: no module
-under `src/kiro_crew` outside `apps/builtins/`, and no `scripts/` file, imports
-`kiro_crew.apps.builtins.aws_control` in any form. The string constants there that still
+under `src/aj_crew` outside `apps/builtins/`, and no `scripts/` file, imports
+`aj_crew.apps.builtins.aws_control` in any form. The string constants there that still
 name the package are a pinned list that may only shrink (see `aws-control.md`,
 "Repository boundary"). Its scans are the shared `test/core_app_independence.py`.
 
@@ -6311,14 +6311,14 @@ name the package are a pinned list that may only shrink (see `aws-control.md`,
 Some apps hand their agent work whose progress it must post back to the app. The agent
 cannot call the app itself: the app's routes need a dashboard credential no agent session
 holds. Ruling 2 of #26967 (comment 6713005850) settled where such a tool runs: app code
-never runs in the `kirocrew-core` MCP server, which holds the gateway's internal secret;
+never runs in the `ajcrew-core` MCP server, which holds the gateway's internal secret;
 app tools are MCP tools the app registers and serves from its own process.
 
 **The declaration.** An app's `app.json` may carry an `agentTools` block: one `route`
 below the app's own API, and up to 16 `tools`, each with a `name`, the model-facing
 `description`, an optional one-line `title`, the `inputSchema` and an optional
 `maxResultChars` (default 20,000, at most 60,000), an optional `timeoutSeconds` (how
-long `kirocrew-core` waits for the answer: default 30, the wait of every core post to the
+long `ajcrew-core` waits for the answer: default 30, the wait of every core post to the
 gateway, at most 600) and an optional `result` (`json`, the default, or `text`, below).
 `apps/manifest_agent_tools.py` owns the rules, and `AppManifest.validate` refuses an
 install that breaks one:
@@ -6351,8 +6351,8 @@ The block is in `signing_payload` (a description is text every agent reads as an
 instruction, and the route decides where calls go), in `to_dict` and in the built-in
 discovery conversion, so a built-in's persisted `app.json` keeps it.
 
-**Which apps are read: first-party only.** The tools are listed under `kirocrew-core`,
-and the default agent's `allowedTools` grants `@kirocrew-core` as a whole server
+**Which apps are read: first-party only.** The tools are listed under `ajcrew-core`,
+and the default agent's `allowedTools` grants `@ajcrew-core` as a whole server
 (`config/defaults.json`), so a call to a tool listed there is auto-approved with no
 permission prompt. Ruling 2 places the tool's code in the app; it does not give a
 third-party app core's auto-approval. So `apps/app_agent_tools.py` reads the block of an
@@ -6376,7 +6376,7 @@ in it names an app:
 
 | Reader | What it does |
 |---|---|
-| `mcp_tools/app_tools.py`, the last domain of `kirocrew-core` | `schemas()` names every tool a shipped first-party manifest declares, installed, released by adoption or neither (`app_agent_tools.shipped_tools`, read once per process with no release check, so this names-only build reads no config). It is the names-only build an app agent's deny universe reads, and that universe is fixed when the agent is materialized, so a tool is withheld from a scoped agent before its app is installed. `advertised()` lists the installed first-party apps' tools in `tools/list`, minus a readably disabled app's (the `apps.advertised` rule). Every name in `schemas()` is answered by one core handler, `app_agent_tool`, which refuses a tool no installed first-party app declares without posting |
+| `mcp_tools/app_tools.py`, the last domain of `ajcrew-core` | `schemas()` names every tool a shipped first-party manifest declares, installed, released by adoption or neither (`app_agent_tools.shipped_tools`, read once per process with no release check, so this names-only build reads no config). It is the names-only build an app agent's deny universe reads, and that universe is fixed when the agent is materialized, so a tool is withheld from a scoped agent before its app is installed. `advertised()` lists the installed first-party apps' tools in `tools/list`, minus a readably disabled app's (the `apps.advertised` rule). Every name in `schemas()` is answered by one core handler, `app_agent_tool`, which refuses a tool no installed first-party app declares without posting |
 | `mcp_core._validate_args` | checks a call against the declared schema through the field engine every core tool uses (`app_tools.tool_schema`): strings sanitized and bounded, enums held, an undeclared argument refused |
 | `dashboard/handlers/app_agent_tools.py`, `POST /api/app-tools/call` | decides the call (below) |
 
@@ -6385,7 +6385,7 @@ For a `strictSession` tool, `app_agent_tool` resolves the caller through
 and posts nothing, so `mcp_tools/app_tools.py` is in `REFLEXIVE_TOOL_MODULES`. Any other
 tool's post carries the lenient key, as every core post does.
 
-A name any other `kirocrew-core` domain declares is never an app's: the domain drops it,
+A name any other `ajcrew-core` domain declares is never an app's: the domain drops it,
 so a core tool keeps its name, its schema and its handler.
 
 **The call.** `app_agent_tool` posts `{"tool", "arguments"}` to `POST /api/app-tools/call`,
@@ -6440,7 +6440,7 @@ route, with declared arguments.
 
 **One core table still names tools one by one.** The display-title table
 (`data/mcp_tool_titles.json`) is read by the chat's tool-call label on both sides, and
-a remote session's whole-`@kirocrew-core` grant is expanded per tool from it
+a remote session's whole-`@ajcrew-core` grant is expanded per tool from it
 (`acp/runtime_remote_workspace._without_local_only_grants`), where every row is
 reviewed remote-safe or local-only. A declared tool with no row there shows its
 humanized name in the chat and is not granted to a remote session by a whole-server
@@ -6461,7 +6461,7 @@ Two shipped tools are on the seam. Design Tweak's `design_tweak_update_thread`: 
 `/thread` write the tool always made. Its row in the title table stays, so its chat label
 and its remote-session grant are unchanged; the row leaves with the app. `test/test_app_agent_tools.py` pins the seam with
 synthetic apps, including every way a call beyond the declaration is refused before it
-reaches the app; `src/kiro_crew/apps/builtins/design_tweak/tests/test_agent_api_tool.py`
+reaches the app; `src/aj_crew/apps/builtins/design_tweak/tests/test_agent_api_tool.py`
 pins Design Tweak's declaration and route. `test/test_core_design_tweak_decoupling.py`
 is Design Tweak's gate, on the shared `test/core_app_independence.py` scans: no core
 module or script imports the app, and the only core strings naming it are the
@@ -6479,7 +6479,7 @@ schema checked beyond this seam's subset (a `base_sha` pattern and the event/pha
 coupling) the app checks, with the same refusal text. `test/test_core_issue_radar_decoupling.py`
 pins the rows that still name it, and `test/test_issue_radar_crew_mcp_tools.py` and
 `test/test_issue_radar_investigation_tool.py` drive the tools through the real
-`kirocrew-core` call path (`issue-radar.md`, "Repository boundary"). Its `radar` crew-log
+`ajcrew-core` call path (`issue-radar.md`, "Repository boundary"). Its `radar` crew-log
 fold is still core's: there is no app-keyed fold seam yet.
 
 Dev Fleet's five pod tools are on the seam: its shipped `app.json` declares `pod_up`,
@@ -6519,7 +6519,7 @@ schema and allowlist (the `validation_parts` owner `app_schemas`, which held not
 and was deleted), the internal-secret admission
 of the routes it reached (`dashboard/server_internal_paths.py`), and the per-operation
 channel deny (`channel.py`, `mcp_core_parts/governance.py`). The header the hold reads
-is set by the `kirocrew-core` client's lenient resolver, which tries the sources the
+is set by the `ajcrew-core` client's lenient resolver, which tries the sources the
 strict one accepts, in the same order, before its ancestor walk: whenever the strict
 resolver names a channel agent, the header names the same key, so every call the core
 deny refused is refused here
@@ -6531,7 +6531,7 @@ the app's `log_api_access` row (`agent_tool`, `denied`) where the core wrote a
 `apps` domain, so that domain's module and its `DOMAIN_MODULES` entry were deleted and
 `core_named_apps` no longer reads a tool table; adoption's E10 still refuses
 `ops-mission-control` on the core's `webhook_sources.SOURCE_OPS_MISSION_CONTROL`. The tool's title row
-stays. `src/kiro_crew/apps/builtins/ops_mission_control/tests/test_agent_api_tool.py`
+stays. `src/aj_crew/apps/builtins/ops_mission_control/tests/test_agent_api_tool.py`
 pins the declaration, the route and the gateway's own path to it.
 
 Writers: `apps/manifest_agent_tools.py`, `apps/manifest.py`, `apps/discovery.py`,
@@ -6617,7 +6617,7 @@ Writers: `apps/marketplace_install.py`, `apps/market_client.py`,
 ## 32. App Kit seam level 1: what a former built-in needs, offered to every app
 
 An installed app reaches the host only through its context and the dashboard SDK,
-never through a `kiro_crew` import or a dashboard source path: such an import pins the
+never through an `aj_crew` import or a dashboard source path: such an import pins the
 app to one wheel's private layout and breaks silently on the next upgrade. Level 1 is
 the set of seams a built-in's code needed from core, published generically. Nothing in
 any of them names an app. `APP_SDK_LEVEL` is one integer on both sides
@@ -6670,8 +6670,8 @@ without `slotKey`, and either one makes the launch a new draft (`chatLaunchOpens
 in `app-sdk/chatLaunch.ts`). The routed chat's `?new=1` intake claims that intent and
 passes `memory_mode` and `sessionFolder` into `createSlot`. The send intake leaves it
 alone, so the message is staged and never auto-sent. `fmtCurrency` and `APP_SDK_LEVEL`
-join `@kirocrew/app-sdk`. `Select` (a narrowed wrapper over the host's own select) and
-`guideCaution` join `@kirocrew/app-sdk/ui`. Each vendor stub names exactly its
+join `@ajcrew/app-sdk`. `Select` (a narrowed wrapper over the host's own select) and
+`guideCaution` join `@ajcrew/app-sdk/ui`. Each vendor stub names exactly its
 barrel's runtime exports, pinned by `src/test/appSharedModuleBoundary.test.ts`, because
 a name a stub omits fails the importing bundle at link time.
 
@@ -6679,8 +6679,8 @@ Writers: `apps/app_sdk_level.py`, `apps/route_registry.py`, `apps/context.py`,
 `apps/embed_sdk.py`, `apps/manifest_sections.py`, `apps/manifest.py`,
 `apps/discovery.py`, `apps/manager_tree.py`, `website/src/app-sdk/index.ts`,
 `website/src/app-sdk/chatLaunch.ts`, `website/src/app-sdk/sdkLevel.ts`,
-`website/src/kirocrew-ui/index.ts`, `website/src/kirocrew-ui/Select.tsx`,
-`website/public/vendor/kirocrew-app-sdk.mjs`, `website/public/vendor/kirocrew-ui.mjs`,
+`website/src/ajcrew-ui/index.ts`, `website/src/ajcrew-ui/Select.tsx`,
+`website/public/vendor/ajcrew-app-sdk.mjs`, `website/public/vendor/ajcrew-ui.mjs`,
 `website/src/pages/chat/useChatPageSessionController.ts`,
 `website/src/pages/chat/page/launchIntake.ts`, `website/src/appNav.ts`,
 `website/src/components/appstore/appManifest.ts`.
@@ -6707,7 +6707,7 @@ operation=BACKGROUND)`. Session acquisition is outside the budget; past it, or o
 the caller's cancellation, the provider is asked to cancel and the session is reset
 when it does not acknowledge, and the turn lease is always released, never the
 session. `run_oneshot(prompt, *, label)` is the tool-less pattern
-(`kirocrew-lite`, `REJECT_ALL`, released and destroyed). `has_session(key)` reads
+(`ajcrew-lite`, `REJECT_ALL`, released and destroyed). `has_session(key)` reads
 liveness. No method takes an app name, an approval policy or an admission class.
 A key must be `<app>-<id>` with *id* 1 to 400 of `[A-Za-z0-9._-]`, checked before
 the session manager is touched, so an app cannot address a person's chat slot or a
@@ -6723,9 +6723,9 @@ whether spawning is on for the app and whether the agent is in its `agents` scop
 the same two questions `SpawnSDK` and the workflow `ctx.agent()` step ask. An
 empty `agent` is resolved first to the template a plain session runs
 (`dispatch_kiro_agent(default_template(...))`, off the loop), `run_oneshot` asks
-about `kirocrew-lite`, and a default that cannot be resolved is a refusal. The
+about `ajcrew-lite`, and a default that cannot be resolved is a refusal. The
 session is then opened BY that name (`get_or_create(key, agent=<name>)`, never
-`None`): a cold start with a `None` agent launches the literal `kirocrew`
+`None`): a cold start with a `None` agent launches the literal `ajcrew`
 (`providers/acp_runtime_start.py`), not `agent.default_agent`, so passing the name
 is what makes the agent that starts the agent the ceiling was asked about. Once
 the lease is held, the agent the turn carries is read back from the session
@@ -6867,7 +6867,7 @@ first. Deleting a wheel-copy file is always allowed. The line's shape and slug a
 checked, not that the commit carries the same change.
 
 **Who owns the pinned repositories.** The first-party app repositories a pin
-names live under `KiroCrewCaptain`, the Kiro Crew team's GitHub bot account, and
+names live under `KiroCrewCaptain`, the upstream Kiro Crew team's GitHub bot account, and
 that account is their trust owner (a maintainer ruling). A pin's `commit`,
 `treeSha256` and `archiveSha256` bind one tree, so the owner cannot change what
 an already-shipped pin runs; a later pin, and any pin-follow, trusts whoever
@@ -6894,7 +6894,7 @@ only remove first-party status, never grant it. It gates:
   registers;
 - the `on_disable` import of `apps/routes_enable.py` (the check awaited off the
   loop), and the `mcp-<pkg>` CLI verb (refused with a pointer to
-  `kirocrew app mcp <name>`), through the one-package form
+  `ajcrew app mcp <name>`), through the one-package form
   `builtin_package_released`;
 - `execution.shipped_builtin_app_root`, so every root chooser
   (`hooks_integration._app_hook_root`, `bridges_sources`, `lifecycle`,
@@ -6950,7 +6950,7 @@ without it keeps the wheel copy. The scan errs wide: a false hit only asks for a
 higher level, and a miss would adopt a tree onto a host without a seam it calls.
 `test_builtin_adoption_pins.py` pins the scan and the refusal.
 
-**The harness pin table.** `KIROCREW_HARNESS_ADOPTION_PINS`
+**The harness pin table.** `AJCREW_HARNESS_ADOPTION_PINS`
 (`builtin_adoption_pins.HARNESS_PINS_ENV`) names a test-owned table that
 `load_adoption_pins` reads instead of the wheel's. `testing.harness.harness_environment`
 and the integration fixture `integration_home` set it to a path nothing writes, and
@@ -6968,7 +6968,7 @@ A pinned name is never an orphan (`detect_orphaned_builtins`,
 name whose record is still builtin-owned with `code: "adoption_pending"` before
 any clone, since such an install would keep `origin=builtin`. Its `error`
 (`builtin_adoption.pending_install_refusal`) says what this host does next: a
-newer Kiro Crew is needed (`needs_newer_sdk`, or a `host_*` ledger reason), a
+newer Aj Crew is needed (`needs_newer_sdk`, or a `host_*` ledger reason), a
 restart switches it (a `staged` ledger for the pin commit, the only state APPLY
 consumes), it is on hold (`blocked`), or it switches in the background. Only the
 `staged` wording mentions a restart.
@@ -7041,7 +7041,7 @@ launcher" in the manifest reference): the check asks the same
 `bridges._resolve_app_launcher_arg`, so a tree is accepted only when its server will
 register from the adopted root. Everything else runs code the pin's `treeSha256` does
 not cover and is refused: `-m` (it would run the released wheel package or another
-installed module), `-c`, the `kirocrew` host CLI, a PATH binary, a command or launch
+installed module), `-c`, the `ajcrew` host CLI, a PATH binary, a command or launch
 target carrying an absolute path, a file outside the tree, a missing file, and any
 `url` (an HTTP server is not carried). The wheel built-in's own `mcpServers` is the
 ceiling, never more: no server name it does not declare, no `autoApprove` verb it does
@@ -7085,7 +7085,7 @@ APPLY included.
 **Agent tools through adoption** (`apps/app_agent_tools.py`, `_adopted_first_party_apps`).
 A built-in's `agentTools` (section 30.1) are listed from its shipped `app.json` while the
 builtin owns the record; adoption releases that copy, so on their own the tools would
-leave `kirocrew-core` with it and the agent would lose them. The reader therefore also
+leave `ajcrew-core` with it and the agent would lose them. The reader therefore also
 reads an installed name whose wheel copy declares tools when
 `builtin_adoption_gate.adopted_under_pin_trust` holds: the first three conditions of the
 own-server grant above (the wheel pins the app, the record is adopted from the pin's
@@ -7158,7 +7158,7 @@ mounts the wheel routes, and those direct routes win over the RouteRegistry
 catch-all, so the same-version wheel code serves the same data. An app uninstalled
 on N-1 comes back on N-1 as a disabled built-in; N cannot prevent that. N+k to N:
 the record stays adopted, is never re-registered or re-adopted, and a
-`minKiroCrewVersion` newer than the host shows `hostTooOld`. There is no automatic
+`minAjCrewVersion` newer than the host shows `hostTooOld`. There is no automatic
 revert: rewriting a newer record back to `origin=builtin` would run older code over
 data a newer version may have migrated. A build older than the recorded legacy
 nav (0.12.0, whose pin table names fewer apps) answers no `legacyNav` for an app
@@ -7179,7 +7179,7 @@ its tree, record and commit. The comparison is
 `catalog._version_newer`, the one the store's `updateAvailable` uses: a pre-release
 of the installed release is older, a re-sync of the same version passes, and a
 version either side cannot read is never refused. A fresh install has no record
-to compare. A local `kirocrew app update --source DIR` is not compared: it installs
+to compare. A local `ajcrew app update --source DIR` is not compared: it installs
 the tree the operator named. There is no override; whether a deliberate catalog
 rollback gets one is a maintainer decision. Pinned by
 `TestDowngradeGateRefusesAnOlderVersionBeforeTheBuild`.
@@ -7275,7 +7275,7 @@ through one seam that is empty by default:
 - **Host grants** (`apps/builtin_host_grants.py`). A package in `BUILTIN_NAMES` may ship
   a `host_grants.py` data module holding one `HOST_GRANTS` mapping: `build_rlimit` (the
   backend spawns with `RLIMIT_PROFILE_BUILD`), `backend_env_names` / `backend_env_prefixes`
-  (operator-set `KIROCREW_*` variables `apps/backend.py` forwards to every backend),
+  (operator-set `AJCREW_*` variables `apps/backend.py` forwards to every backend),
   `config_top_keys` (`config/validation._APP_OWNED_TOP_KEYS`), `strict_internal_paths`
   (folded into `server._STRICT_INTERNAL_API_PATHS`) and `relay_credential_paths`
   (`kiro_relay/limits._LOCAL_CREDENTIAL_EXACT`). The loader looks for the file on disk
@@ -7283,8 +7283,8 @@ through one seam that is empty by default:
   the rows once per process. A row may grant only its own app (`app` must be the
   package's installed name), every path must sit under that app's own
   `/api/apps/<app>/` or `/apps/<app>/` namespace and not end in `/` (the strict tier
-  also admits an entry's children, so a row names leaf verbs), and a forwarded variable must be a
-  `KIROCREW_*` name; a malformed row raises at load, so a grant cannot silently stop
+  also admits an entry's children, so a row names leaf verbs), and a forwarded variable must be an
+  `AJCREW_*` name; a malformed row raises at load, so a grant cannot silently stop
   applying. Only `BUILTIN_NAMES` is read: an installed or registry app can claim none
   of this, whatever its manifest says.
 - **Agent-template placeholders** (`bridges_agents._placeholder_values`). Every app,
@@ -7318,7 +7318,7 @@ through one seam that is empty by default:
 A capability the core itself offers lives in the core, and an app that needs it too
 imports it there rather than the other way round: the file panel's slide previews and
 PPTX Maker both find `soffice` (and its install hint) through
-`kiro_crew.soffice_discovery`, the only copy in the repository.
+`aj_crew.soffice_discovery`, the only copy in the repository.
 `test/test_core_dev_fleet_pptx_maker_decoupling.py` fails, through the shared scan in
 `test/core_app_independence.py`, on any core module or script that imports Dev Fleet
 or PPTX Maker.
@@ -7390,7 +7390,7 @@ main-frame error document or transport failure is latched hidden (§6) until a l
 answered tick reloads it. A crashed page is closed; an `openOnEnable` one is reopened at
 tick cadence.
 
-**The bridge.** The page gets `window.kirocrewDesktopWindow`: `level` (1), `app`,
+**The bridge.** The page gets `window.ajcrewDesktopWindow`: `level` (1), `app`,
 `window`, `kind`, `ready()`, `close()`, `open(id)`, `setHitRegions(rects)`,
 `setFocusable(bool)` and `onShortcut(cb)`. The identity is informational: the host
 resolves every message to the window that sent it, from its main frame, still showing
@@ -7487,7 +7487,7 @@ Issue Radar declares it and holds its crews' grant through it
 (`crew_runtime_session._GRANTS`, scope name `crew-<id>`), with the same 900 s TTL slid
 each watchdog cycle, the same re-mint at the ceiling and the same revocation paths.
 `apps/builtins/issue_radar/tests/test_auto_approve_seam.py` pins the declaration, that
-no backend module imports `kiro_crew.safety_override`, and that the built-in registered
+no backend module imports `aj_crew.safety_override`, and that the built-in registered
 as at startup passes the seam's own gate with nothing stubbed. Its audit trail moved
 with it: the SEL source is `app:issue-radar` (was `issue-radar-crew`) and the scope key
 `app:issue-radar:grant:crew-<id>:autoapprove` (was `crew:<id>:autoapprove`).
@@ -7555,7 +7555,7 @@ targets; `sandbox_aliases._hidden_leaves` adds it to the alias pass, so a symlin
 leaf or at any component below the data home refuses the spawn; and
 `sandbox_aliases._hardlink_refused_leaves` adds it to the hard-link set, so a second name
 inside a data home is masked too and one outside every data home refuses the spawn,
-which `kirocrew doctor` reports first. An entry names a file: a directory at a declared
+which `ajcrew doctor` reports first. An entry names a file: a directory at a declared
 spelling in the live home refuses the spawn (`_refuse_aliased_masked_leaves`), so no
 declared directory hides files the hard-link pass never judged. On Seatbelt, whose masks are path rules, every parent of every
 declared spelling joins the literal ancestor guards (`readonly_ancestor_guards`), so no

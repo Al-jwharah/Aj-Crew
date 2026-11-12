@@ -23,11 +23,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.subagent_wait_reasons import (
+from aj_crew.subagent_wait_reasons import (
     QUEUED_REASON_CONCURRENCY_LIMIT,
     QUEUED_REASON_LOW_MEMORY,
 )
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.testing.wait import async_wait_until
 
 pytestmark = pytest.mark.integration
 

@@ -15,12 +15,12 @@ _CONNECTED_AFTER_ANY_WRITE = 4102444800.0
 
 class TestHandlers:
     def _reg(self, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.registry import InstancesRegistry
 
         return InstancesRegistry(path=tmp_path / "instances.json")
 
     def test_disabled_returns_403(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch, enabled=False)
         r = asyncio.run(handlers.api_instances_list(_FakeReq(_State(self._reg(tmp_path)))))
@@ -32,7 +32,7 @@ class TestHandlers:
         # below share the status and must still be reported.  Dropping or renaming
         # the code silently re-breaks the spurious-error-report defect, so it is
         # asserted here rather than left to the SPA's fixture to assume.
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch, enabled=False)
         r = asyncio.run(handlers.api_instances_list(_FakeReq(_State(self._reg(tmp_path)))))
@@ -41,7 +41,7 @@ class TestHandlers:
     def test_slack_origin_denial_carries_no_benign_code(self, tmp_path, monkeypatch):
         # The converse guard: a denial the dashboard must REPORT may not wear the
         # benign code, or it would be swallowed with the routine one.
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         req = _FakeReq(_State(self._reg(tmp_path)), headers={"X-Session-Key": "slack:T:C"})
@@ -50,7 +50,7 @@ class TestHandlers:
         assert _body(r).get("code") != "instances_disabled"
 
     def test_slack_origin_rejected(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         req = _FakeReq(_State(self._reg(tmp_path)), headers={"X-Session-Key": "slack:T:C"})
@@ -58,7 +58,7 @@ class TestHandlers:
         assert r.status == 403 and "owner-only" in _body(r)["error"]
 
     def test_unauthenticated_rejected(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         # No authenticated user (require_auth would have set request["user"]).
@@ -67,7 +67,7 @@ class TestHandlers:
         assert r.status == 401 and "authentication required" in _body(r)["error"]
 
     def test_add_list_includes_cap(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -95,7 +95,7 @@ class TestHandlers:
         late, and the viewport evicts a random pane (reads as a disconnect). Here 3 are
         registered and 2 connected; the cap must still be 3.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -107,7 +107,7 @@ class TestHandlers:
         assert b["warm_set_cap"] == 3
 
     def test_automatic_cap_serves_ten_and_then_stops_growing(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -126,7 +126,7 @@ class TestHandlers:
         Forgetting that edit reintroduces the eviction above, so the cap has to
         rise on its own when the fleet grows.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -139,7 +139,7 @@ class TestHandlers:
 
     def test_explicit_cap_is_served_even_below_the_registered_count(self, tmp_path, monkeypatch):
         """An operator's own number is the budget and is not widened for them."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch, warm_set_cap=1)
         reg = self._reg(tmp_path)
@@ -149,7 +149,7 @@ class TestHandlers:
         assert _body(asyncio.run(handlers.api_instances_list(_FakeReq(state))))["warm_set_cap"] == 1
 
     def test_list_active_reflects_manager_running(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -160,7 +160,7 @@ class TestHandlers:
         assert _body(r)["active"] is False
 
     def test_add_invalid_ssh_host_400(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         r = asyncio.run(
@@ -171,8 +171,8 @@ class TestHandlers:
         assert r.status == 400
 
     def test_connect_returns_token_but_list_does_not_leak(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -229,8 +229,8 @@ class TestHandlers:
         next connect first. So the frozen port can name a forward that now belongs
         to another crew, and the pane would load that one holding this crew's token.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -273,8 +273,8 @@ class TestHandlers:
         live status ERROR with the port unchanged, so comparing ports alone still
         agrees while there is no forward left to load.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -310,8 +310,8 @@ class TestHandlers:
         forwarded as ``rebuild=True`` and nothing else about the response changes.
         Without the flag the manager is called with its plain positional
         contract, so every existing caller (and fake) keeps working."""
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -361,8 +361,8 @@ class TestHandlers:
         as `warm-declined` — never the 502 a real connect failure gets. A live
         tunnel is answered exactly like a plain connect. Combining it with
         ``rebuild`` is a 400."""
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -420,7 +420,7 @@ class TestHandlers:
         so it must leave the same ``instances_connect`` / ``denied`` SEL line —
         an owner hand-crafting the pair must not be the one connect outcome the
         audit trail cannot see."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -454,8 +454,8 @@ class TestHandlers:
         assert "mutually exclusive" in events[0]["error"]
 
     def test_connect_remints_when_stored_token_stale(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -492,8 +492,8 @@ class TestHandlers:
         assert mgr.refreshed == ["cd-1"]
 
     def test_connect_502_when_stale_and_remint_fails(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -536,8 +536,8 @@ class TestHandlers:
         The error journal reads a top-level ``code``, so ``diagnosis.code`` is promoted.
         Only a NEGATIVE verdict is: the stored diagnosis may be a stale ``ok``.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -589,7 +589,7 @@ class TestHandlers:
         assert _body(stale_ok)["code"] == "instance_connect_failed"
 
     def test_connect_missing_manager_and_unknown_id_carry_codes(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -613,7 +613,7 @@ class TestHandlers:
         assert ghost.status == 404 and _body(ghost)["code"] == "instance_not_found"
 
     def test_status_404(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         r = asyncio.run(
@@ -624,7 +624,7 @@ class TestHandlers:
         assert r.status == 404
 
     def test_status_diagnose_runs_ladder(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -668,8 +668,8 @@ class TestHandlers:
         Driven through the HTTP path the Add form calls: a test via ``reg.add`` cannot
         see a handler-side literal that drifts from the registry default.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.registry import DEFAULT_REMOTE_PORT
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.registry import DEFAULT_REMOTE_PORT
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -679,7 +679,7 @@ class TestHandlers:
         assert reg.get("cd-1").remote_port == DEFAULT_REMOTE_PORT == 5476
 
     def test_add_duplicate_and_bad_body(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         state = _State(self._reg(tmp_path))
@@ -698,7 +698,7 @@ class TestHandlers:
         ``utils/errorReport``'s ``parseErrorCode`` reads it for agent hand-offs. A
         duplicate stays distinct from an invalid field: rename versus correct.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         state = _State(self._reg(tmp_path))
@@ -730,7 +730,7 @@ class TestHandlers:
     @pytest.mark.parametrize("raw", ["1e999", "-1e999"])
     def test_add_infinite_port_is_an_invalid_field(self, tmp_path, monkeypatch, field, raw):
         """JSON reads ``1e999`` as an infinite float: the invalid_field 400, never a 500."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -740,7 +740,7 @@ class TestHandlers:
         assert resp.status == 400 and _body(resp)["code"] == "invalid_field"
 
     def test_update_paths(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -791,7 +791,7 @@ class TestHandlers:
         400 specifically, because coercing the value would store a port or a name
         the caller never asked for.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -825,7 +825,7 @@ class TestHandlers:
         """
         import inspect
 
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         src = inspect.getsource(handlers.api_instances_update)
         assert "allowed = set(_PATCH_FIELD_TYPES)" in src
@@ -837,7 +837,7 @@ class TestHandlers:
         under the new label. The edit must tear it down, and must keep
         ``was_connected`` — that flag records an explicit user disconnect, which an
         edit is not, and clearing it would drop the crew out of the switcher."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -889,8 +889,8 @@ class TestHandlers:
         through is persisted happily and then fails at the next connect, blaming
         the tunnel for a value the edit should have refused — so the registry
         enforces the same bound the minters do."""
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.registry import InvalidInstanceError
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.registry import InvalidInstanceError
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -917,7 +917,7 @@ class TestHandlers:
         """A rejected save must not cost the user their connection: the proposed
         record is validated before the teardown, so a typo answers 400 with the
         crew still connected."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -958,7 +958,7 @@ class TestHandlers:
         """``disconnect()`` clears the persisted intent whether or not it tracked
         a live tunnel, and reports False in that case. Restoring only on a True
         return would drop the crew out of the switcher."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -998,8 +998,8 @@ class TestHandlers:
         """One teardown, inside the reconfiguration. An extra one after the write
         would hit whatever connected next — i.e. a Connect the user just made on
         the new coordinates."""
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -1047,7 +1047,7 @@ class TestHandlers:
         """An explicit Disconnect landing while a transport edit is in flight must
         win. The edit's teardown preserves intent rather than restoring a snapshot
         of it, so the user's disconnect is not overwritten."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -1099,7 +1099,7 @@ class TestHandlers:
         whether its tunnel is CONNECTED or still CONNECTING when the write lands
         decides whether anything notices — so the handler must not persist on its
         own when a manager is present."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -1157,7 +1157,7 @@ class TestHandlers:
         the one the user reaches. So the edit aborts, nothing is written, and the
         caller is told to disconnect and retry.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -1200,7 +1200,7 @@ class TestHandlers:
     ):
         """A rename does not change how the tunnel is opened, so dropping the
         connection for it would be a self-inflicted outage."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -1237,8 +1237,8 @@ class TestHandlers:
         assert mgr.disconnected == []
 
     def test_rename_persists_in_instances_json_and_survives_reload(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.registry import InstancesRegistry
 
         _enable(tmp_path, monkeypatch)
         path = tmp_path / "instances.json"
@@ -1257,8 +1257,8 @@ class TestHandlers:
         assert InstancesRegistry(path=path).get("crew-1").name == "New name"
 
     def test_blank_rename_is_rejected_without_changing_the_stored_name(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.registry import InstancesRegistry
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.registry import InstancesRegistry
 
         _enable(tmp_path, monkeypatch)
         path = tmp_path / "instances.json"
@@ -1276,7 +1276,7 @@ class TestHandlers:
         assert InstancesRegistry(path=path).get("crew-1").name == "Keep me"
 
     def test_remove_success_and_404(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -1297,7 +1297,7 @@ class TestHandlers:
         tunnel for the record mid-delete. A successful removal must disconnect
         AGAIN afterwards: the record is gone by then, so connect refuses new
         attempts and the sweep tears down whatever slipped in."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -1326,8 +1326,8 @@ class TestHandlers:
         assert mgr.live is False, "the racing reconnect's tunnel survived the removal"
 
     def test_connect_503_404_and_502(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -1362,7 +1362,7 @@ class TestHandlers:
         assert r.status == 502 and _body(r)["error"] == "boom"
 
     def test_disconnect_reports_was_connected(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
 
@@ -1378,7 +1378,7 @@ class TestHandlers:
         assert r.status == 200 and _body(r)["was_connected"] is True
 
     def test_restart_paths(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -1423,7 +1423,7 @@ class TestHandlers:
         assert r.status == 502
 
     def test_audit_failure_never_breaks_request(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
 
@@ -1440,10 +1440,10 @@ class TestHandlers:
     ):
         # PATCH must not let a non-dashboard caller
         # (CLI, script, agent) rewrite the fields Stop/Start/Delete use to
-        # resolve an EC2 stack launched by Kiro Crew — doing so strands a running,
+        # resolve an EC2 stack launched by Aj Crew — doing so strands a running,
         # billing instance with no dashboard path to reach it.
-        from kiro_crew.cloud import launch_job as lj
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.cloud import launch_job as lj
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -1455,9 +1455,9 @@ class TestHandlers:
             aws_region="us-east-1",
             instance_id="cloud-launched",
         )
-        # A job Kiro Crew provisioned whose EC2 instance id matches the
+        # A job Aj Crew provisioned whose EC2 instance id matches the
         # instance's ssm_target — this is what makes it "correlated".
-        store = lj.LaunchJobStore()  # honours KIROCREW_HOME, same as production
+        store = lj.LaunchJobStore()  # honours AJCREW_HOME, same as production
         job = store.create(profile="prod", region="us-east-1", size_key="light")
         job.instance_id = "i-0123abcd"
         store.save(job)
@@ -1506,7 +1506,7 @@ class TestHandlers:
         # edit through and strand a launched, billing instance. The PATCH
         # refuses the edit instead of persisting one it
         # could not verify was safe.
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -1562,8 +1562,8 @@ _MANAGER_ROUTES = (
 
 @pytest.mark.parametrize("route", _MANAGER_ROUTES)
 def test_missing_manager_answers_one_restart_hint(route, tmp_path, monkeypatch):
-    from kiro_crew.dashboard import handlers_instances as handlers
-    from kiro_crew.instances.registry import InstancesRegistry
+    from aj_crew.dashboard import handlers_instances as handlers
+    from aj_crew.instances.registry import InstancesRegistry
 
     _enable(tmp_path, monkeypatch)
     reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -1576,4 +1576,4 @@ def test_missing_manager_answers_one_restart_hint(route, tmp_path, monkeypatch):
     assert resp.status == 503
     body = _body(resp)
     assert body["code"] == "instances_manager_unavailable"
-    assert "kirocrew restart" in body["error"]
+    assert "ajcrew restart" in body["error"]

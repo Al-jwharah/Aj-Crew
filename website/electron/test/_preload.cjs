@@ -31,6 +31,17 @@ if (!process.env.ELECTRON_OVERRIDE_DIST_PATH) {
   const path = require("path");
   process.env.ELECTRON_OVERRIDE_DIST_PATH = path.join(
     os.tmpdir(),
-    "kirocrew-electron-test-stub"
+    "ajcrew-electron-test-stub"
   );
+}
+
+// The shipped build names no byte host for manual downloads (auto-update.js:
+// DOWNLOAD_BASE is empty unless AJCREW_DOWNLOAD_BASE names one), which makes
+// manualDownloadUrl() return null on every platform. The suite exists to pin
+// the link's shape per platform and channel, so it names a host here, the way
+// an operator's mirror would. It is a reserved test name and nothing resolves
+// it. test/auto-update-no-feed.test.js covers the shipped, unset behavior in a
+// child process that does not inherit this.
+if (!process.env.AJCREW_DOWNLOAD_BASE) {
+  process.env.AJCREW_DOWNLOAD_BASE = "https://download.ajcrew.test";
 }

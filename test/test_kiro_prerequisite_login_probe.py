@@ -28,11 +28,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.sandbox as sandbox_mod
-from kiro_crew import lts_boot
-from kiro_crew.kiro_prerequisite_process import _host_can_reap, _run_process
-from kiro_crew.lts_gate import LoginWatch, LtsGate
-from kiro_crew.testing.wait import async_wait_until
+import aj_crew.sandbox as sandbox_mod
+from aj_crew import lts_boot
+from aj_crew.kiro_prerequisite_process import _host_can_reap, _run_process
+from aj_crew.lts_gate import LoginWatch, LtsGate
+from aj_crew.testing.wait import async_wait_until
 
 pytestmark = pytest.mark.skipif(
     sys.platform == "win32", reason="Windows skips the sandbox wrap entirely"
@@ -43,7 +43,7 @@ _SIGNED_IN = 'echo "Logged in as tester"'
 
 @pytest.fixture
 def lts(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("kiro_crew.edition.EDITION", "lts")
+    monkeypatch.setattr("aj_crew.edition.EDITION", "lts")
 
 
 @pytest.fixture
@@ -52,18 +52,18 @@ def sel_events(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     writer = MagicMock()
     writer.log_tool_invocation.side_effect = lambda **event: events.append(event)
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: writer)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: writer)
     return events
 
 
 @pytest.fixture
 def no_backend(monkeypatch: pytest.MonkeyPatch, sel_events: list[dict[str, Any]]) -> None:
     """A host with genuinely no sandbox backend and the default fail-close config."""
-    monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
-    monkeypatch.delenv("KIROCREW_ALLOW_UNSANDBOXED", raising=False)
+    monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
+    monkeypatch.delenv("AJCREW_ALLOW_UNSANDBOXED", raising=False)
     monkeypatch.setattr(
-        "kiro_crew.sandbox._KIRO_INTERNAL_SETTINGS_PATH",
-        "/nonexistent/kirocrew-test/amazon-internal.json",
+        "aj_crew.sandbox._KIRO_INTERNAL_SETTINGS_PATH",
+        "/nonexistent/ajcrew-test/amazon-internal.json",
     )
     monkeypatch.setattr(sandbox_mod, "detect_backend", lambda config_mode="auto": "none")
     monkeypatch.setattr(sandbox_mod, "_allow_unsandboxed_exec", lambda: False)
@@ -88,7 +88,7 @@ class _Host:
     def __init__(self, tmp_path: Path, whoami: str) -> None:
         from kiro_prerequisite_helpers import _no_audit
 
-        from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+        from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
         self.log = tmp_path / "runs.log"
         self.pidfile = tmp_path / "child.pid"
@@ -121,7 +121,7 @@ class _Host:
 def _host(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, whoami: str = _SIGNED_IN) -> _Host:
     host = _Host(tmp_path, whoami)
     monkeypatch.setattr(
-        "kiro_crew.kiro_prerequisite.KiroPrerequisiteService",
+        "aj_crew.kiro_prerequisite.KiroPrerequisiteService",
         lambda **_kwargs: host.service,
     )
     return host
@@ -166,7 +166,7 @@ async def test_require_sandbox_does_not_block_the_sign_in_check(
     """``boot.require_sandbox: true`` governs agent tools only (owner decision);
     ``sandbox_allow_unsandboxed_exec`` is pinned False by ``no_backend``."""
     policy = SimpleNamespace(governance=SimpleNamespace(boot=SimpleNamespace(require_sandbox=True)))
-    monkeypatch.setattr("kiro_crew.platform.context.current_context", lambda: policy)
+    monkeypatch.setattr("aj_crew.platform.context.current_context", lambda: policy)
     host = _host(tmp_path, monkeypatch)
     assert (await host.service.boot_login_status()).authenticated
     assert host.runs() == ["--version", "whoami"]
@@ -223,7 +223,7 @@ async def test_the_full_probe_logs_the_confirmed_sign_in(
 ) -> None:
     """Smoke test N1: the carve-out confirmed the sign-in, so the log says so."""
     host = _host(tmp_path, monkeypatch)
-    with caplog.at_level("WARNING", logger="kiro_crew.kiro_prerequisite"):
+    with caplog.at_level("WARNING", logger="aj_crew.kiro_prerequisite"):
         status = await host.service._probe(force=True)
     assert status.sandbox_unavailable and status.authenticated and not status.ready
     messages = [r.getMessage() for r in caplog.records]
@@ -240,7 +240,7 @@ async def test_the_full_probe_keeps_the_old_line_when_signed_out(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     host = _host(tmp_path, monkeypatch, whoami='echo "error: Not logged in" >&2; exit 1')
-    with caplog.at_level("WARNING", logger="kiro_crew.kiro_prerequisite"):
+    with caplog.at_level("WARNING", logger="aj_crew.kiro_prerequisite"):
         status = await host.service._probe(force=True)
     assert status.sandbox_unavailable and not status.authenticated and not status.ready
     assert any("could not be verified" in r.getMessage() for r in caplog.records)
@@ -262,7 +262,7 @@ async def test_a_hung_whoami_is_killed_and_boot_refused(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setattr("kiro_crew.kiro_prerequisite._IDENTITY_PROBE_TIMEOUT_SECS", 2)
+    monkeypatch.setattr("aj_crew.kiro_prerequisite._IDENTITY_PROBE_TIMEOUT_SECS", 2)
     host = _host(tmp_path, monkeypatch, whoami="echo $$ > {pidfile}; exec sleep 60")
     status = await host.service.boot_login_status()
     assert "whoami timed out" in status.probe_error
@@ -293,7 +293,7 @@ async def test_a_relative_cli_override_reaches_the_probe_absolute(
 ) -> None:
     host = _host(tmp_path, monkeypatch)
     monkeypatch.chdir(host.executable.parent)
-    host.service._environ["KIROCREW_KIRO_BIN"] = "./kiro-cli"
+    host.service._environ["AJCREW_KIRO_BIN"] = "./kiro-cli"
     assert (await host.service.boot_login_status()).authenticated
     assert host.runs() == ["--version", "whoami"]
 
@@ -305,10 +305,10 @@ async def test_the_lts_start_check_never_runs_kiro_cli(
     """The start check reads Crew's vault sign-in (RFC D4), not ``kiro-cli whoami``."""
     from datetime import datetime, timedelta, timezone
 
-    from kiro_crew.auth.store import KasToken, TokenStore
+    from aj_crew.auth.store import KasToken, TokenStore
 
     store = TokenStore(tmp_path / "vault")
-    monkeypatch.setattr("kiro_crew.auth.bridge.default_token_store", lambda: store)
+    monkeypatch.setattr("aj_crew.auth.bridge.default_token_store", lambda: store)
     store.save(
         KasToken(
             access_token="vault-access",
@@ -349,7 +349,7 @@ def _script(tmp_path: Path, body: str) -> str:
 @pytest.fixture
 def passthrough_sandbox(monkeypatch: pytest.MonkeyPatch) -> None:
     """Take the sandbox out of the picture so only the reaping choice is tested."""
-    from kiro_crew import kiro_prerequisite_process as process
+    from aj_crew import kiro_prerequisite_process as process
 
     async def passthrough(argv: list[str], *, env: dict[str, str], **_kwargs: Any) -> Any:
         return argv, env, None

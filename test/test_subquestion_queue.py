@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.apps.builtins.auto_research.subquestion_queue import (
+from aj_crew.apps.builtins.auto_research.subquestion_queue import (
     QUEUE_FILENAME,
     dequeue_top_k,
     enqueue,

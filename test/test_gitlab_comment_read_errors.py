@@ -7,9 +7,9 @@ read may fail the whole probe. The rest of the GitLab provider is pinned in
 
 from __future__ import annotations
 
-from kiro_crew.github_runner import SetupError
-from kiro_crew.monitoring.gitlab_merge_request import GitLabMergeRequestProvider
-from kiro_crew.monitoring.models import MonitorObservationStatus
+from aj_crew.github_runner import SetupError
+from aj_crew.monitoring.gitlab_merge_request import GitLabMergeRequestProvider
+from aj_crew.monitoring.models import MonitorObservationStatus
 
 _TARGET = "https://gitlab.com/acme/widgets/-/merge_requests/8"
 

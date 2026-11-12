@@ -1,5 +1,5 @@
 /**
- * The dashboard's pull-request panel, offered to apps (`@kirocrew/app-sdk`).
+ * The dashboard's pull-request panel, offered to apps (`@ajcrew/app-sdk`).
  *
  * It is the same `components/PullRequestPanel` the chat window's side panel
  * renders (description, checks, review threads, the file diff, commits), so an

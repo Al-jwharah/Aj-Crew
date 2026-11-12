@@ -9,8 +9,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.chat import api_chat_slot_project
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.chat import api_chat_slot_project
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 
 def _make_app(state: DashboardState) -> web.Application:
@@ -46,7 +46,7 @@ class TestChatSlotProject:
     async def test_set_project(self, tmp_path):
         slot = _ChatSlot("test")
         state = _mock_state(slot)
-        with patch("kiro_crew.dashboard.chat_handlers._save_recent_project"):
+        with patch("aj_crew.dashboard.chat_handlers._save_recent_project"):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/chat/slots/test/project",
@@ -86,7 +86,7 @@ class TestChatSlotProject:
     async def test_sensitive_path_returns_403(self, tmp_path):
         slot = _ChatSlot("test")
         state = _mock_state(slot)
-        with patch("kiro_crew.dashboard.chat_handlers.is_sensitive_path", return_value=True):
+        with patch("aj_crew.dashboard.chat_handlers.is_sensitive_path", return_value=True):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/chat/slots/test/project",
@@ -98,7 +98,7 @@ class TestChatSlotProject:
     async def test_data_home_overlap_returns_actionable_400(self, tmp_path, monkeypatch):
         """Pre-flight: a workspace containing the voice runtime is refused
         at the endpoint with the actionable message, before any session spawn."""
-        import kiro_crew.sandbox as sandbox_mod
+        import aj_crew.sandbox as sandbox_mod
 
         # The pre-flight is darwin-gated to match the spawn-time guards it
         # mirrors, so pin the platform for the refusal path.
@@ -134,7 +134,7 @@ class TestChatSlotProject:
         slot = _ChatSlot("test")
         slot.total_messages = 5
         state = _mock_state(slot)
-        with patch("kiro_crew.dashboard.chat_handlers._save_recent_project"):
+        with patch("aj_crew.dashboard.chat_handlers._save_recent_project"):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/chat/slots/test/project",
@@ -166,7 +166,7 @@ class TestChatSlotProject:
         # A live session under the slot's key — it carries the old CWD, so the
         # reset must arm.
         state.sessions.get_provider = MagicMock(return_value=object())
-        with patch("kiro_crew.dashboard.chat_handlers._save_recent_project"):
+        with patch("aj_crew.dashboard.chat_handlers._save_recent_project"):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/chat/slots/test/project",
@@ -191,7 +191,7 @@ class TestChatSlotProject:
         state.sessions.get_provider = MagicMock(return_value=None)
         # Eager spawn disabled in tests (live.snapshot() is None), so
         # schedule_eager_spawn returns None and no spawn is in flight.
-        with patch("kiro_crew.dashboard.chat_handlers._save_recent_project"):
+        with patch("aj_crew.dashboard.chat_handlers._save_recent_project"):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/chat/slots/test/project",
@@ -214,9 +214,9 @@ class TestChatSlotProject:
         state.sessions.get_provider = MagicMock(return_value=None)
         pending = asyncio.Future()  # a task that is not done()
         with (
-            patch("kiro_crew.dashboard.chat_handlers._save_recent_project"),
+            patch("aj_crew.dashboard.chat_handlers._save_recent_project"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.schedule_eager_spawn",
+                "aj_crew.dashboard.chat_handlers.schedule_eager_spawn",
                 return_value=pending,
             ),
         ):
@@ -244,9 +244,9 @@ class TestChatSlotProject:
         # registered provider and no eager spawn.
         slot._turn_admission_reserved = True
         with (
-            patch("kiro_crew.dashboard.chat_handlers._save_recent_project"),
+            patch("aj_crew.dashboard.chat_handlers._save_recent_project"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.schedule_eager_spawn",
+                "aj_crew.dashboard.chat_handlers.schedule_eager_spawn",
                 return_value=None,
             ),
         ):
@@ -273,9 +273,9 @@ class TestChatSlotProject:
         # reserved under the key — session_keys() includes reservations.
         state.sessions.session_keys = MagicMock(return_value=frozenset({"dashboard:test"}))
         with (
-            patch("kiro_crew.dashboard.chat_handlers._save_recent_project"),
+            patch("aj_crew.dashboard.chat_handlers._save_recent_project"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.schedule_eager_spawn",
+                "aj_crew.dashboard.chat_handlers.schedule_eager_spawn",
                 return_value=None,
             ),
         ):
@@ -301,9 +301,9 @@ class TestChatSlotProject:
         # Idle-reaped / restart-lost: resumable on disk, nothing live.
         state.sessions.resumable_hint = MagicMock(return_value=True)
         with (
-            patch("kiro_crew.dashboard.chat_handlers._save_recent_project"),
+            patch("aj_crew.dashboard.chat_handlers._save_recent_project"),
             patch(
-                "kiro_crew.dashboard.chat_handlers.schedule_eager_spawn",
+                "aj_crew.dashboard.chat_handlers.schedule_eager_spawn",
                 return_value=None,
             ),
         ):
@@ -322,7 +322,7 @@ class TestChatSlotProject:
         slot = _ChatSlot("test")
         slot.project = str(tmp_path)
         state = _mock_state(slot)
-        with patch("kiro_crew.dashboard.chat_handlers._save_recent_project"):
+        with patch("aj_crew.dashboard.chat_handlers._save_recent_project"):
             async with TestClient(TestServer(_make_app(state))) as client:
                 resp = await client.post(
                     "/api/chat/slots/test/project",
@@ -342,8 +342,8 @@ class TestChatSlotProject:
         binding changed during preparation"."""
         import asyncio
 
-        from kiro_crew.llm_helpers import slot_switch_session_lock
-        from kiro_crew.testing.wait import until_parked
+        from aj_crew.llm_helpers import slot_switch_session_lock
+        from aj_crew.testing.wait import until_parked
 
         slot = _ChatSlot("test")
         slot.project = "/start-of-turn"
@@ -354,8 +354,8 @@ class TestChatSlotProject:
         state.sessions.get_provider = MagicMock(return_value=object())
         dispatch_lock = slot_switch_session_lock("dashboard:test")
         with (
-            patch("kiro_crew.dashboard.chat_handlers._save_recent_project"),
-            patch("kiro_crew.dashboard.chat_handlers.schedule_eager_spawn"),
+            patch("aj_crew.dashboard.chat_handlers._save_recent_project"),
+            patch("aj_crew.dashboard.chat_handlers.schedule_eager_spawn"),
         ):
             async with TestClient(TestServer(_make_app(state))) as client:
                 # Stand in for a turn that has captured its binding and is
@@ -392,7 +392,7 @@ class TestFolderProjectDirOverlapPreflight:
     slot-create read path re-runs against stored values."""
 
     def _pin_runtime(self, tmp_path, monkeypatch):
-        import kiro_crew.sandbox as sandbox_mod
+        import aj_crew.sandbox as sandbox_mod
 
         monkeypatch.setattr(sandbox_mod.sys, "platform", "darwin")
         runtime = tmp_path / "data" / "run" / "voice-runtime"
@@ -405,7 +405,7 @@ class TestFolderProjectDirOverlapPreflight:
         return runtime
 
     def test_folder_overlap_denied_with_guard_message(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_folders import _folder_project_overlap_denied
+        from aj_crew.dashboard.chat_folders import _folder_project_overlap_denied
 
         runtime = self._pin_runtime(tmp_path, monkeypatch)
         err = _folder_project_overlap_denied(str(tmp_path))
@@ -416,7 +416,7 @@ class TestFolderProjectDirOverlapPreflight:
         assert "Pick a project subdirectory" in err
 
     def test_folder_overlap_check_accepts_non_overlapping_dir(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_folders import _folder_project_overlap_denied
+        from aj_crew.dashboard.chat_folders import _folder_project_overlap_denied
 
         self._pin_runtime(tmp_path, monkeypatch)
         clean = tmp_path / "clean"

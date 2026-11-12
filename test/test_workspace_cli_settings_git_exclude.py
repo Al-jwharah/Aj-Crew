@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.providers.acp import _write_cli_overlay, _write_tool_search_overlay
-from kiro_crew.workspace_cli_settings import (
+from aj_crew.providers.acp import _write_cli_overlay, _write_tool_search_overlay
+from aj_crew.workspace_cli_settings import (
     CLI_SETTINGS_LOCK_NAME,
     workspace_cli_settings_lock,
 )

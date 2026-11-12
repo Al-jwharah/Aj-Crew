@@ -29,13 +29,13 @@ from aiohttp.test_utils import TestClient, TestServer
 from test_browser_live_hub import SESSION, FakeStream
 from test_browser_live_routes import _app, _post
 
-from kiro_crew.browser_harness import live_hub as lh
-from kiro_crew.browser_harness import quick_ask as qa
-from kiro_crew.dashboard.handlers import browser_ask
-from kiro_crew.dashboard.handlers import browser_live as live_mod
-from kiro_crew.dashboard.routes import browser_live as route_slice
-from kiro_crew.mcp_tools import browser as tool
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.browser_harness import live_hub as lh
+from aj_crew.browser_harness import quick_ask as qa
+from aj_crew.dashboard.handlers import browser_ask
+from aj_crew.dashboard.handlers import browser_live as live_mod
+from aj_crew.dashboard.routes import browser_live as route_slice
+from aj_crew.mcp_tools import browser as tool
+from aj_crew.testing.wait import async_wait_until
 
 pytestmark = pytest.mark.asyncio
 
@@ -293,7 +293,7 @@ class Recorder:
 
 @pytest.fixture(autouse=True)
 def _home(tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     _floor_monkeypatch.setattr(
         live_mod, "_sel", lambda: SimpleNamespace(log_api_access=lambda **_: None)
     )
@@ -541,7 +541,7 @@ async def test_a_wrong_username_or_any_bad_password_still_refuses_the_ask(
 
 
 def test_the_outline_marks_a_password_field_with_no_ref() -> None:
-    from kiro_crew.browser_harness.ops import format_outline
+    from aj_crew.browser_harness.ops import format_outline
 
     def line(why: str) -> str:
         node = {"depth": 0, "role": "textbox", "name": "Password"}
@@ -570,7 +570,7 @@ async def test_a_stale_ref_and_a_non_web_page_are_refused() -> None:
 async def test_an_ask_on_a_page_the_url_gate_refuses_writes_nothing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    from kiro_crew.dashboard.handlers import browser_ops
+    from aj_crew.dashboard.handlers import browser_ops
 
     page = FakePage()
     _login(page)
@@ -1066,7 +1066,7 @@ async def test_the_turn_ending_cancels_the_ask() -> None:
 async def test_a_screenshot_is_refused_while_an_asked_field_holds_its_value(
     asked: int, refused: bool, tmp_path: Path
 ) -> None:
-    from kiro_crew.browser_harness import ops
+    from aj_crew.browser_harness import ops
 
     calls: list[str] = []
 
@@ -1095,7 +1095,7 @@ async def test_a_screenshot_is_refused_while_an_asked_field_holds_its_value(
 
 
 def test_the_walker_withholds_an_asked_field_and_the_mask_covers_it() -> None:
-    from kiro_crew.browser_harness import ops, screencast
+    from aj_crew.browser_harness import ops, screencast
 
     assert 'hasAttribute("data-kc-asked")' in ops.WALKER_SOURCE
     assert "askedValues" in ops.WALKER_SOURCE

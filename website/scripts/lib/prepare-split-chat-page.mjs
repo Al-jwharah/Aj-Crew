@@ -102,8 +102,8 @@ export function splitPaneFixtures(slots) {
 export function queuedPaneFixtures(now, queued, meta = {}) {
   return {
     slots: [
-      { key: 'pane-a', title: 'Design notes', running: false, last_message: 'Working through phase one…', messages: 2, agent: 'kirocrew', memory_mode: 'persistent', modified: Math.floor(now) },
-      { key: 'pane-b', title: 'Release checklist', running: true, last_message: 'Summarized the layout options.', messages: 3, agent: 'kirocrew', memory_mode: 'persistent', modified: Math.floor(now) - 60 },
+      { key: 'pane-a', title: 'Design notes', running: false, last_message: 'Working through phase one…', messages: 2, agent: 'ajcrew', memory_mode: 'persistent', modified: Math.floor(now) },
+      { key: 'pane-b', title: 'Release checklist', running: true, last_message: 'Summarized the layout options.', messages: 3, agent: 'ajcrew', memory_mode: 'persistent', modified: Math.floor(now) - 60 },
     ],
     detailA: {
       running: false, has_more: false, total: 2, queue: [],

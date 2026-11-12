@@ -14,11 +14,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import crewmate_harness
-from kiro_crew.agent_sdk import backend_install, kas_bundle
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.auth import bridge, whoami
-from kiro_crew.kiro_prerequisite_service import KiroPrerequisiteService
+from aj_crew import crewmate_harness
+from aj_crew.agent_sdk import backend_install, kas_bundle
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.auth import bridge, whoami
+from aj_crew.kiro_prerequisite_service import KiroPrerequisiteService
 
 
 @pytest.mark.parametrize("route_half", [True, False])
@@ -26,7 +26,7 @@ from kiro_crew.kiro_prerequisite_service import KiroPrerequisiteService
 def test_every_reader_answers_from_the_shared_route_half(monkeypatch, backend, route_half):
     agent = SimpleNamespace(acp_backend=backend, kas_bundle=False)
     config = SimpleNamespace(agent=agent)
-    monkeypatch.setattr("kiro_crew.config.KiroCrewConfig.load", lambda: config)
+    monkeypatch.setattr("aj_crew.config.AjCrewConfig.load", lambda: config)
     monkeypatch.setattr(kas_bundle, "kas_spawn_takes_bundle", lambda a: a is agent and route_half)
     monkeypatch.setattr(kas_bundle, "kas_route", lambda: pytest.fail("route rule re-spelled"))
     monkeypatch.setattr(bridge, "vault_holds_identity", lambda: False)

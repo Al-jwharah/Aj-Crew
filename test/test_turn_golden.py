@@ -13,7 +13,7 @@ unchanged. A change that alters frames on purpose rewrites the files with
 ``python3 scripts/update_turn_golden_snapshots.py`` in the same commit, so the
 review shows the frame diff. The test itself never writes into the repository.
 
-When ``KIROCREW_TURN_GOLDEN_OUT`` names a directory, the test writes the rendered
+When ``AJCREW_TURN_GOLDEN_OUT`` names a directory, the test writes the rendered
 result there instead of comparing it. Only the writer script sets it, and it
 points outside the repository.
 """
@@ -34,10 +34,10 @@ from turn_golden_harness import (
     run_scenario,
 )
 
-from kiro_crew.dashboard.handlers import source_providers
-from kiro_crew.platform import governance_profiles
+from aj_crew.dashboard.handlers import source_providers
+from aj_crew.platform import governance_profiles
 
-_OUT_ENV = "KIROCREW_TURN_GOLDEN_OUT"
+_OUT_ENV = "AJCREW_TURN_GOLDEN_OUT"
 
 
 @pytest.mark.asyncio

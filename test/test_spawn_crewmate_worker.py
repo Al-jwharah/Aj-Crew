@@ -1,6 +1,6 @@
 """``spawn_run(crew=<crewmate>)`` of a crewmate that owns its file runs on its worker.
 
-Such a crewmate's chat runs on ``kirocrew-mate-conductor``, whose spec lives in
+Such a crewmate's chat runs on ``ajcrew-mate-conductor``, whose spec lives in
 the crewmate folder: it is no agent a sub-agent can load by name, and the
 conductor hands work off rather than doing it. A spawn that selects the crewmate
 with no ``agent`` named therefore runs on the crewmate's worker
@@ -16,22 +16,22 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from member_memory_helpers import write_member_home
 
-from kiro_crew import mate_worker
-from kiro_crew.config import loader
-from kiro_crew.config import paths as paths_mod
-from kiro_crew.config.loader import KiroCrewConfig, config_dir
-from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
-from kiro_crew.mate_worker import MATE_CONDUCTOR_AGENT, MATE_WORKER_AGENT
-from kiro_crew.subagent import AGENT_NOT_FOUND_CODE, SubagentManager
-from kiro_crew.subagent_manager.admission.gate import _GateMixin
+from aj_crew import mate_worker
+from aj_crew.config import loader
+from aj_crew.config import paths as paths_mod
+from aj_crew.config.loader import AjCrewConfig, config_dir
+from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
+from aj_crew.mate_worker import MATE_CONDUCTOR_AGENT, MATE_WORKER_AGENT
+from aj_crew.subagent import AGENT_NOT_FOUND_CODE, SubagentManager
+from aj_crew.subagent_manager.admission.gate import _GateMixin
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
 #: The parent: a default-crew chat on the shared store.
-PARENT = ExecutionContext(None, MemoryStoreRef("default"), "template", "kirocrew")
+PARENT = ExecutionContext(None, MemoryStoreRef("default"), "template", "ajcrew")
 
 
-def _home(*, owns_file: bool) -> KiroCrewConfig:
+def _home(*, owns_file: bool) -> AjCrewConfig:
     write_member_home(config_dir(), "alpha")
     path = config_dir() / "config.json"
     doc = json.loads(path.read_text(encoding="utf-8"))
@@ -45,7 +45,7 @@ def _home(*, owns_file: bool) -> KiroCrewConfig:
         )
     loader._invalidate_config_cache()
     loader.refresh_materialized_agents(heal_default=False)
-    return KiroCrewConfig.load()
+    return AjCrewConfig.load()
 
 
 def _resolve(**kwargs) -> ExecutionContext:
@@ -61,7 +61,7 @@ def _sessions() -> MagicMock:
     sessions.get_or_create = AsyncMock(side_effect=RuntimeError("stop before the provider"))
     sessions.release = MagicMock()
     sessions.get_agent = MagicMock(return_value="")
-    sessions.get_agent_selection = MagicMock(return_value=("template", "kirocrew"))
+    sessions.get_agent_selection = MagicMock(return_value=("template", "ajcrew"))
     sessions.get_approval_policy = MagicMock(return_value="")
     sessions._sessions = {}
     sessions._pool_cwd = ""
@@ -72,7 +72,7 @@ def _sessions() -> MagicMock:
 def test_a_crewmate_that_owns_its_file_is_spawned_on_its_worker(selector):
     _home(owns_file=True)
     # The crewmate's own selection names its conductor, the agent its chat runs on.
-    assert loader.member_template_id(KiroCrewConfig.load().agents["alpha"]) == MATE_CONDUCTOR_AGENT
+    assert loader.member_template_id(AjCrewConfig.load().agents["alpha"]) == MATE_CONDUCTOR_AGENT
 
     execution = _resolve(**{selector: "alpha"})
 
@@ -86,7 +86,7 @@ def test_the_dashboard_spawn_routes_admitted_crewmate_runs_on_its_worker():
     """``/api/spawn`` derives the member's execution itself and hands it over as
     ``_execution_context``; that record names the conductor and maps the same way."""
     config = _home(owns_file=True)
-    from kiro_crew.execution_context import resolve_member_execution
+    from aj_crew.execution_context import resolve_member_execution
 
     admitted = resolve_member_execution(config, "alpha", validate_memory_files=False)
     assert admitted.template_id == MATE_CONDUCTOR_AGENT
@@ -115,9 +115,9 @@ def test_a_crewmate_bound_to_a_shared_agent_keeps_its_member_selection():
 def test_a_crew_spawn_naming_its_agent_keeps_that_agent():
     _home(owns_file=True)
 
-    execution = _resolve(crew="alpha", agent="kirocrew-worker")
+    execution = _resolve(crew="alpha", agent="ajcrew-worker")
 
-    assert (execution.selection_kind, execution.template_id) == ("member", "kirocrew-worker")
+    assert (execution.selection_kind, execution.template_id) == ("member", "ajcrew-worker")
     assert execution.member_id == "alpha"
 
 
@@ -156,9 +156,9 @@ def test_spawn_of_a_crewmate_that_owns_its_file_is_not_refused_for_its_conductor
     _home(owns_file=True)
     manager = SubagentManager(sessions=_sessions(), ctx_builder=None)
     with (
-        patch("kiro_crew.subagent.list_agents", return_value=[]),
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
+        patch("aj_crew.subagent.list_agents", return_value=[]),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
     ):
         info = manager.spawn("task", parent_session_key="dashboard:chat-1", crew="alpha")
     assert info is not None
@@ -169,9 +169,9 @@ def test_spawn_of_a_crewmate_that_owns_its_file_is_not_refused_for_its_conductor
 
 async def _run(manager: SubagentManager) -> "object":
     with (
-        patch("kiro_crew.subagent.list_agents", return_value=[]),
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
+        patch("aj_crew.subagent.list_agents", return_value=[]),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
     ):
         info = await manager.spawn_async(
             "task", parent_session_key="dashboard:chat-1", crew="alpha", approval_mode="auto"
@@ -185,7 +185,7 @@ async def _run(manager: SubagentManager) -> "object":
 
 @pytest.mark.asyncio
 async def test_the_worker_run_takes_its_crewmates_backend_route(monkeypatch):
-    from kiro_crew.members import is_crewmate_worker_session
+    from aj_crew.members import is_crewmate_worker_session
 
     _home(owns_file=True)
     monkeypatch.setattr(mate_worker, "worker_kit_backend_refusal", lambda *_a, **_k: None)
@@ -205,7 +205,7 @@ async def test_the_worker_run_takes_its_crewmates_backend_route(monkeypatch):
 async def test_a_worker_run_records_its_activity_under_the_crewmate(monkeypatch):
     """The worker record names the worker template; the crewmate's activity log
     is keyed by the crewmate, so the run is recorded under it."""
-    from kiro_crew import members
+    from aj_crew import members
 
     _home(owns_file=True)
     monkeypatch.setattr(mate_worker, "worker_kit_backend_refusal", lambda *_a, **_k: None)
@@ -254,7 +254,7 @@ def _pin_harness(stored: str) -> None:
 @pytest.fixture
 def _kit_backends(monkeypatch):
     """Record the backend the worker run is judged on, and let every one through."""
-    from kiro_crew.agent_sdk import backends
+    from aj_crew.agent_sdk import backends
 
     monkeypatch.setattr(backends, "selectable_backends", lambda: frozenset({"", "kas", "claude"}))
     judged: list[str] = []
@@ -329,4 +329,4 @@ def test_the_worker_backend_refuses_a_config_section():
     """Handing the helper ``config.agent`` instead of the config is a type error,
     not a silent "no pin, no member route" answer."""
     with pytest.raises(TypeError):
-        mate_worker.crewmate_worker_backend(KiroCrewConfig().agent)
+        mate_worker.crewmate_worker_backend(AjCrewConfig().agent)

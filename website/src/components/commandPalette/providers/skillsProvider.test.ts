@@ -85,7 +85,7 @@ describe('createSkillsProvider — listing + filtering', () => {
         { name: 'untrusted-proj', source: 'kiro-workspace', trusted: false },
         // An untrusted row does not hide a usable skill of the same name.
         { name: 'shared', source: 'kiro-workspace', trusted: false },
-        { name: 'shared', source: 'kirocrew' },
+        { name: 'shared', source: 'ajcrew' },
       ]),
     })
     expect((await run(p, '')).map((r) => r.title).sort()).toEqual(['shared', 'trusted-proj'])

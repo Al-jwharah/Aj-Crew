@@ -22,7 +22,7 @@ vi.mock('../../api/client', () => ({
     monitorForSlot: vi.fn(() => Promise.resolve({ enabled: true, monitor: null })),
     memberFreshStart: vi.fn(),
     // The Profile card's own reads (the narrow-screen entry lives there).
-    kirocrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'kirocrew' })),
+    ajcrewAgents: vi.fn(() => Promise.resolve({ agents: [], default_agent: 'ajcrew' })),
     memberProjections: vi.fn(() => Promise.resolve({ asOfSeq: 0, values: {} })),
     memberBriefing: vi.fn(() => Promise.resolve({ slug: '', member: '', supported: true, text: '', updated_ts: null, redacted: false, truncated: false })),
     crewBoard: vi.fn(() => Promise.reject(Object.assign(new Error('no_ledger'), { status: 404 }))),
@@ -44,7 +44,7 @@ const THREAD_OPEN_TIMEOUT_MS = 5000
 function row(name: string) {
   return {
     name, slug: name, slot_key: `member-${name}`, running: false, kiro_agent: name,
-    workspace: 'default', memory_store: 'default', model: '', source: 'kirocrew', starred: false,
+    workspace: 'default', memory_store: 'default', model: '', source: 'ajcrew', starred: false,
   }
 }
 

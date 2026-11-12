@@ -1,8 +1,8 @@
-"""``kiro_crew.transcribe`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.transcribe`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.transcribe`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over
+``aj_crew.transcribe`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over
 ``transcribe_ffmpeg``, ``transcribe_aws`` and ``transcribe_local``. Callers, tests and
-documents still reach every name as ``kiro_crew.transcribe.<name>``, and the moved code
+documents still reach every name as ``aj_crew.transcribe.<name>``, and the moved code
 reads its names as plain module globals, so a patch through the facade reaches that code
 only because the mirror writes it into every module holding the name.
 
@@ -28,7 +28,7 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror, transcribe
+from aj_crew import _facade_mirror, transcribe
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_transcribe_facade")
 
@@ -36,7 +36,7 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_transcribe_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams",)
 
-FACADE = "kiro_crew.transcribe"
+FACADE = "aj_crew.transcribe"
 SRC_DIR = Path(transcribe.__file__).resolve().parent
 
 #: Names the test trees are known to patch through the facade, one per kind of seam:
@@ -61,16 +61,16 @@ _KNOWN_SEAMS = frozenset(
 )
 
 #: The project names the facade imported before the split, with their home modules. A
-#: reader that spells one through ``kiro_crew.transcribe`` keeps type-checking only while
+#: reader that spells one through ``aj_crew.transcribe`` keeps type-checking only while
 #: the facade binds it itself.
 _BASE_PROJECT_IMPORTS = {
-    "aws_consent": "kiro_crew",
-    "decoder": "kiro_crew.stt",
-    "filter_hallucinations": "kiro_crew.stt.hallucinations",
-    "install_hint": "kiro_crew.extras",
-    "pinned_fs": "kiro_crew",
-    "platform_compat": "kiro_crew",
-    "stt": "kiro_crew",
+    "aws_consent": "aj_crew",
+    "decoder": "aj_crew.stt",
+    "filter_hallucinations": "aj_crew.stt.hallucinations",
+    "install_hint": "aj_crew.extras",
+    "pinned_fs": "aj_crew",
+    "platform_compat": "aj_crew",
+    "stt": "aj_crew",
 }
 
 
@@ -89,7 +89,7 @@ def _test_tree_files() -> list[Path]:
         rel = path.relative_to(root).as_posix()
         if rel == "conftest.py" or rel.startswith("test/"):
             found.append(path)
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and (
+        elif rel.startswith("src/aj_crew/apps/builtins/") and (
             "/tests/" in rel or path.name.startswith("test_") or path.name == "conftest.py"
         ):
             found.append(path)
@@ -101,9 +101,9 @@ def _spellings() -> dict[str, str]:
     spellings = {FACADE: FACADE}
     for path, _text, tree in source_corpus.parsed_candidates(require_any=("transcribe",)):
         rel = path.relative_to(source_corpus.src_root()).with_suffix("")
-        module = ".".join(("kiro_crew", *rel.parts)).removesuffix(".__init__")
+        module = ".".join(("aj_crew", *rel.parts)).removesuffix(".__init__")
         for node in tree.body:
-            if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew":
+            if isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
                 for alias in node.names:
                     if alias.name == "transcribe" and module != FACADE:
                         spellings[f"{module}.{alias.asname or alias.name}"] = FACADE
@@ -156,7 +156,7 @@ def test_the_owners_are_the_transcribe_siblings_in_layer_order() -> None:
     """``_OWNERS`` names every ``transcribe_*.py`` sibling, and each owner imports only
     owners listed before it: the order the facade loads them and a read resolves in."""
     owners = list(_index().owners)
-    on_disk = {f"kiro_crew.{p.stem}": p for p in SRC_DIR.glob("transcribe_*.py")}
+    on_disk = {f"aj_crew.{p.stem}": p for p in SRC_DIR.glob("transcribe_*.py")}
     assert sorted(owners) == sorted(on_disk)
     late: dict[str, list[str]] = {}
     for position, owner in enumerate(owners):
@@ -178,7 +178,7 @@ def test_the_facade_keeps_the_default_read_path_and_forwards_no_table() -> None:
 
 
 def test_the_family_logs_through_one_logger_named_for_the_facade() -> None:
-    """``caplog`` filters keyed on ``kiro_crew.transcribe`` keep seeing the moved code."""
+    """``caplog`` filters keyed on ``aj_crew.transcribe`` keep seeing the moved code."""
     assert transcribe.logger.name == FACADE
     loggers = [m for m in _family() if "logger" in vars(m)]
     assert len(loggers) >= 3
@@ -187,7 +187,7 @@ def test_the_family_logs_through_one_logger_named_for_the_facade() -> None:
 
 def test_an_exception_an_owner_defines_keeps_the_facade_module() -> None:
     """A traceback or a log line renders a raised class as ``module.qualname``, so an
-    exception or enum class an owner defines reports ``kiro_crew.transcribe``, as it
+    exception or enum class an owner defines reports ``aj_crew.transcribe``, as it
     did before it moved."""
     found = {
         name: value
@@ -221,7 +221,7 @@ def _home(value: object) -> str:
 
 
 def test_every_project_name_the_facade_imported_stays_bound_on_it() -> None:
-    """A name the facade imported from the rest of ``kiro_crew`` is bound on it still,
+    """A name the facade imported from the rest of ``aj_crew`` is bound on it still,
     statically and as its home module's object; and no name the mirror serves comes
     from a project module outside the family, which would be visible to a type checker
     only through a ``TYPE_CHECKING`` import."""
@@ -244,7 +244,7 @@ def test_every_project_name_the_facade_imported_stays_bound_on_it() -> None:
     served_from_outside = {
         name: _home(getattr(transcribe, name))
         for name in imported_by_owners
-        if _home(getattr(transcribe, name)).startswith("kiro_crew")
+        if _home(getattr(transcribe, name)).startswith("aj_crew")
         and _home(getattr(transcribe, name)) not in family
     }
     assert served_from_outside == {}

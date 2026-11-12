@@ -14,8 +14,8 @@ superseded-by: []
 
 # RFC: Arrival provenance filing — file every arriving session under Imported / from &lt;sender&gt;
 
-- Status: implemented in `src/kiro_crew/dashboard/arrival_folders.py` and
-  `src/kiro_crew/dashboard/session_transfer_install.py`. This remains the decision
+- Status: implemented in `src/aj_crew/dashboard/arrival_folders.py` and
+  `src/aj_crew/dashboard/session_transfer_install.py`. This remains the decision
   record for the **changed default** on an existing route; every historical
   "exists today" claim below was checked at `f31f25a8a2` (main, 2026-09-19),
   and citations name symbols rather than line numbers.
@@ -33,7 +33,7 @@ Instances tunnel, and a person installs one from a file exported by
 mixed in with the sessions the person started themselves.
 
 The receiving code says so deliberately. `api_chat_slot_import` in
-`src/kiro_crew/dashboard/session_transfer.py` composes the imported slot's
+`src/aj_crew/dashboard/session_transfer.py` composes the imported slot's
 metadata with no `folder_id`, and its comment records that the imported session
 "lands unfiled just as the tunnel importer always has".
 
@@ -65,7 +65,7 @@ The change is reversible by deletion, not by a flag. There is no
 `Imported` folder, and the delete handler's own unfile sweep returns its
 sessions to the top level. A later arrival recreates the folder, which is the
 behaviour the channel-filing precedent already has
-(`ensure_channel_folder` in `src/kiro_crew/dashboard/channel_folders.py`
+(`ensure_channel_folder` in `src/aj_crew/dashboard/channel_folders.py`
 recreates a deleted folder on the next settings save). A configuration knob is
 deliberately not added: the feature has one sensible destination, and a
 per-instance setting would be a second thing to migrate for a grouping the
@@ -127,7 +127,7 @@ them.
    therefore lands unfiled and touches the folder store not at all — it does not
    create, and it does not adopt a folder the person owns. Identity comes from
    the shared `effective_request_app` rule in
-   `src/kiro_crew/dashboard/token_auth_callers.py`, never from the request body.
+   `src/aj_crew/dashboard/token_auth_callers.py`, never from the request body.
 
 2. **Placement is resolved only after the slot exists.** The import handler
    re-checks the live-slot cap after its last `await` and can answer `409` there.

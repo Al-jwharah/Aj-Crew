@@ -18,10 +18,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.handlers import _shared
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.handlers import _shared
 
-MEMBER_STORE = "member-kirocrew-conductor-deadbeef"
+MEMBER_STORE = "member-ajcrew-conductor-deadbeef"
 MEMBER_SESSION = "dashboard:member-conductor"
 MEMBER_PRINCIPAL = f"member:{MEMBER_STORE}"
 
@@ -136,7 +136,7 @@ class TestSharedPredicate:
     def test_one_flip_moves_both_gates(self, monkeypatch):
         # Monkeypatching the SHARED helper flips the chat-route admission AND the
         # session-control gate together, proving they read one predicate.
-        from kiro_crew.dashboard.handlers import session_control as sc_handler
+        from aj_crew.dashboard.handlers import session_control as sc_handler
 
         seen = {}
 
@@ -180,7 +180,7 @@ class TestChatRouteGate:
         refusal = await _shared.private_chat_route_refusal(req)
         assert refusal is None
         # The verified principal is carried for the handler fence.
-        from kiro_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
+        from aj_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
 
         assert req[MEMBER_CHAT_PRINCIPAL_KEY] == MEMBER_PRINCIPAL
 
@@ -268,14 +268,14 @@ class TestChatRouteGate:
 # --------------------------------------------------------------------------- #
 class TestFolderPrincipal:
     def test_app_principal_is_the_bare_name_unchanged(self):
-        from kiro_crew.dashboard.token_auth import folder_principal
+        from aj_crew.dashboard.token_auth import folder_principal
 
         req = make_mocked_request("POST", "/api/chat/folders")
         req["app"] = "scaffolder"
         assert folder_principal(SimpleNamespace(_slots={}), req) == "scaffolder"
 
     def test_member_principal_read_from_the_carried_key(self):
-        from kiro_crew.dashboard.token_auth import (
+        from aj_crew.dashboard.token_auth import (
             MEMBER_CHAT_PRINCIPAL_KEY,
             folder_principal,
         )
@@ -289,7 +289,7 @@ class TestFolderPrincipal:
     def test_app_claim_wins_over_a_stray_member_key(self):
         # An app never carries a member key, but if both were present the app
         # arm is checked first so an app's principal stays byte-identical.
-        from kiro_crew.dashboard.token_auth import (
+        from aj_crew.dashboard.token_auth import (
             MEMBER_CHAT_PRINCIPAL_KEY,
             folder_principal,
         )
@@ -300,7 +300,7 @@ class TestFolderPrincipal:
         assert folder_principal(SimpleNamespace(_slots={}), req) == "scaffolder"
 
     def test_person_principal_is_empty(self):
-        from kiro_crew.dashboard.token_auth import folder_principal
+        from aj_crew.dashboard.token_auth import folder_principal
 
         req = make_mocked_request("POST", "/api/chat/folders")
         assert folder_principal(SimpleNamespace(_slots={}), req) == ""
@@ -308,12 +308,12 @@ class TestFolderPrincipal:
 
 class TestFolderOwnerComparisons:
     def test_member_owned_folder_reads_its_principal(self):
-        from kiro_crew.dashboard.chat_folders import _folder_owner_app
+        from aj_crew.dashboard.chat_folders import _folder_owner_app
 
         assert _folder_owner_app({"owner_app": MEMBER_PRINCIPAL}) == MEMBER_PRINCIPAL
 
     def test_absent_owner_reads_as_person(self):
-        from kiro_crew.dashboard.chat_folders import _folder_owner_app
+        from aj_crew.dashboard.chat_folders import _folder_owner_app
 
         assert _folder_owner_app({}) == ""
         assert _folder_owner_app({"owner_app": ""}) == ""
@@ -321,7 +321,7 @@ class TestFolderOwnerComparisons:
     def test_app_and_member_principals_do_not_collide(self):
         # A bare app name never equals a member principal, so the same
         # ``stored != principal`` comparison fences both without a migration.
-        from kiro_crew.dashboard.chat_folders import _folder_owner_app
+        from aj_crew.dashboard.chat_folders import _folder_owner_app
 
         assert _folder_owner_app({"owner_app": "scaffolder"}) != MEMBER_PRINCIPAL
 
@@ -437,20 +437,20 @@ class TestMemberSlotWriteFence:
             f"/api/chat/slots/{slot_name}/folder",
             headers={"X-Session-Key": MEMBER_SESSION},
         )
-        from kiro_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
+        from aj_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
 
         req[MEMBER_CHAT_PRINCIPAL_KEY] = MEMBER_PRINCIPAL
         return req
 
     def test_non_member_caller_is_a_no_op(self):
-        from kiro_crew.dashboard.chat_folders import member_slot_write_refused
+        from aj_crew.dashboard.chat_folders import member_slot_write_refused
 
         req = make_mocked_request("PATCH", "/api/chat/slots/x/folder")  # no member key
         slot = SimpleNamespace(key="x", _created_by="dashboard:owner")
         assert member_slot_write_refused(SimpleNamespace(), req, slot, "chat.slot_folder") is None
 
     def test_member_refused_on_a_session_it_does_not_own(self, monkeypatch):
-        from kiro_crew.dashboard.chat_folders import member_slot_write_refused
+        from aj_crew.dashboard.chat_folders import member_slot_write_refused
 
         monkeypatch.setattr(sc, "member_owns_slot", lambda state, slot, key: False)
         slot = SimpleNamespace(key="chat-1-1", _created_by="dashboard:owner")
@@ -461,7 +461,7 @@ class TestMemberSlotWriteFence:
         assert json.loads(refusal.text)["code"] == "slot_not_found"
 
     def test_member_allowed_on_a_session_it_owns(self, monkeypatch):
-        from kiro_crew.dashboard.chat_folders import member_slot_write_refused
+        from aj_crew.dashboard.chat_folders import member_slot_write_refused
 
         monkeypatch.setattr(sc, "member_owns_slot", lambda state, slot, key: True)
         slot = SimpleNamespace(key="chat-9-9", _created_by=MEMBER_SESSION)
@@ -478,8 +478,8 @@ class TestMemberSlotWriteFence:
 # --------------------------------------------------------------------------- #
 class TestTagVocabularyFence:
     def test_member_cannot_write_the_shared_vocabulary(self, monkeypatch):
-        from kiro_crew.dashboard import chat_tags
-        from kiro_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
+        from aj_crew.dashboard import chat_tags
+        from aj_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
 
         # No app claim, no unattributable refusal -- a member reaching the write.
         monkeypatch.setattr(chat_tags, "refuse_unattributable_caller", lambda *a, **k: None)
@@ -493,7 +493,7 @@ class TestTagVocabularyFence:
         assert json.loads(refusal.text)["code"] == "app_forbidden"
 
     def test_person_may_write_the_vocabulary(self, monkeypatch):
-        from kiro_crew.dashboard import chat_tags
+        from aj_crew.dashboard import chat_tags
 
         monkeypatch.setattr(chat_tags, "refuse_unattributable_caller", lambda *a, **k: None)
         monkeypatch.setattr(chat_tags, "effective_request_app", lambda *a, **k: "")
@@ -509,9 +509,9 @@ class TestSessionListMemberFilter:
     async def test_member_slots_omit_foreign_sessions(self, monkeypatch):
         import json as _json
 
-        from kiro_crew.dashboard import chat_handlers
-        from kiro_crew.dashboard.handlers import source_providers
-        from kiro_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
+        from aj_crew.dashboard import chat_handlers
+        from aj_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
 
         # Three slots: the member's own, one it created, and a foreign one.
         # The own slot's history key is dashboard:member-conductor == MEMBER_SESSION,
@@ -567,8 +567,8 @@ class TestSessionListMemberFilter:
     async def test_person_sees_every_session(self, monkeypatch):
         import json as _json
 
-        from kiro_crew.dashboard import chat_handlers
-        from kiro_crew.dashboard.handlers import source_providers
+        from aj_crew.dashboard import chat_handlers
+        from aj_crew.dashboard.handlers import source_providers
 
         payloads = [{"key": "member-conductor"}, {"key": "chat-9-9"}]
         state = SimpleNamespace(_slots={}, serialize_slots=lambda **_k: list(payloads))

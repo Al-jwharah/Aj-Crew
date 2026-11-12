@@ -1,4 +1,4 @@
-"""The ``kirocrew-debug`` MCP server: its tool set, its caps, and its refusals.
+"""The ``ajcrew-debug`` MCP server: its tool set, its caps, and its refusals.
 
 * **The tool set is exactly five READS**, ratcheted by name: a write tool would change
   what a server reading cross-session state is.
@@ -20,7 +20,7 @@ from unittest.mock import patch
 import mcp_tool_set_checks
 import pytest
 
-from kiro_crew import mcp_debug as server
+from aj_crew import mcp_debug as server
 
 CALLER = "dashboard:chat-owner"
 
@@ -75,7 +75,7 @@ class TestTheToolSetIsRatcheted(mcp_tool_set_checks.TheDeclaredSetMatchesWhatIsA
             assert not any(verb in name for verb in forbidden), name
 
     def test_every_tool_has_a_schema_so_args_are_never_passed_through_raw(self) -> None:
-        from kiro_crew.validation import MCP_DEBUG_SCHEMAS
+        from aj_crew.validation import MCP_DEBUG_SCHEMAS
 
         assert set(MCP_DEBUG_SCHEMAS) == set(server.TOOLS)
 
@@ -87,7 +87,7 @@ class TestTheToolSetIsRatcheted(mcp_tool_set_checks.TheDeclaredSetMatchesWhatIsA
         server capable of an action whatever the handlers currently do with it, so
         the absence is pinned rather than left to review.
         """
-        from kiro_crew.validation import MCP_DEBUG_SCHEMAS
+        from aj_crew.validation import MCP_DEBUG_SCHEMAS
 
         banned = {"path", "file", "pid", "signal", "command", "cmd", "flag", "enable", "value"}
         for tool, schema in MCP_DEBUG_SCHEMAS.items():
@@ -108,15 +108,15 @@ class TestTheToolSetIsRatcheted(mcp_tool_set_checks.TheDeclaredSetMatchesWhatIsA
             get.assert_not_called()
 
     def test_the_caller_name_matches_the_one_the_route_recognizes(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import DEBUG_MCP_CALLER
-        from kiro_crew.dashboard.token_auth import KNOWN_INTERNAL_CALLERS
+        from aj_crew.dashboard.handlers.debug import DEBUG_MCP_CALLER
+        from aj_crew.dashboard.token_auth import KNOWN_INTERNAL_CALLERS
 
         assert server.SERVER_NAME == DEBUG_MCP_CALLER
         assert server.SERVER_NAME in KNOWN_INTERNAL_CALLERS
 
     def test_the_route_prefix_is_on_the_strict_internal_transport(self) -> None:
         """Without this entry every internal call falls through to cookie auth."""
-        from kiro_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
+        from aj_crew.dashboard.server import _STRICT_INTERNAL_API_PATHS
 
         assert server.ROUTE_PREFIX in _STRICT_INTERNAL_API_PATHS
 
@@ -126,7 +126,7 @@ class TestTheToolSetIsRatcheted(mcp_tool_set_checks.TheDeclaredSetMatchesWhatIsA
 
     def test_the_server_declares_no_auto_approve(self) -> None:
         """An autoApproved tool never reaches hooks.on_tool_call."""
-        from kiro_crew.agent import _MANAGED_MCP_SERVERS
+        from aj_crew.agent import _MANAGED_MCP_SERVERS
 
         entry = _MANAGED_MCP_SERVERS[server.SERVER_NAME]
         assert "autoApprove" not in entry
@@ -137,7 +137,7 @@ class TestTheDiagGapIsRelayedVerbatim:
     """An agent must tell 'cannot answer yet' from 'the answer is nothing'."""
 
     def test_the_route_body_and_the_server_contract_are_the_same_string(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import DIAG_UNAVAILABLE
+        from aj_crew.dashboard.handlers.debug import DIAG_UNAVAILABLE
 
         assert server.DIAG_UNAVAILABLE == DIAG_UNAVAILABLE
 
@@ -155,7 +155,7 @@ class TestTheDiagGapIsRelayedVerbatim:
         assert result["error"]["code"] != "unavailable"
 
     def test_tools_are_advertised_even_though_three_cannot_answer(self) -> None:
-        """A missing tool reads as 'Kiro Crew cannot do this', which is wrong."""
+        """A missing tool reads as 'Aj Crew cannot do this', which is wrong."""
         assert len(server._list_tools()) == 5
 
 
@@ -270,8 +270,8 @@ class TestTheRefusalClassifier:
     """
 
     def test_a_budget_timeout_is_not_reported_as_a_match(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import _classify_refusal
-        from kiro_crew.security.paths import UNVERIFIABLE_PATH_PREFIX
+        from aj_crew.dashboard.handlers.debug import _classify_refusal
+        from aj_crew.security.paths import UNVERIFIABLE_PATH_PREFIX
 
         # The real refusal text, led by the prefix the gate writes -- an earlier
         # version of this test dropped that lead and so tested a shape no writer
@@ -285,7 +285,7 @@ class TestTheRefusalClassifier:
         assert _classify_refusal(row) == "unverifiable_path"
 
     def test_a_real_match_is_reported_as_a_match(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import _classify_refusal
+        from aj_crew.dashboard.handlers.debug import _classify_refusal
 
         row = {"error": "refused: sensitive path match on a credential file"}
         assert _classify_refusal(row) == "sensitive_path_match"
@@ -297,28 +297,26 @@ class TestTheRefusalClassifier:
         the refusal is correct -- so the agent's action is identical: stop, do not
         retry. Grouped rather than given a sixth class name for that reason.
         """
-        from kiro_crew.dashboard.handlers.debug import _classify_refusal
+        from aj_crew.dashboard.handlers.debug import _classify_refusal
 
         row = {
-            "error": (
-                "Blocked: modification of write-protected config path: " "kirocrew/policy.toml"
-            )
+            "error": ("Blocked: modification of write-protected config path: " "ajcrew/policy.toml")
         }
         assert _classify_refusal(row) == "sensitive_path_match"
 
     def test_a_governance_ceiling_is_its_own_class(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import _classify_refusal
+        from aj_crew.dashboard.handlers.debug import _classify_refusal
 
         assert _classify_refusal({"error": "denied by the governance ceiling"}) == "governance"
 
     def test_a_row_with_no_reason_is_unclassified_rather_than_guessed(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import _classify_refusal
+        from aj_crew.dashboard.handlers.debug import _classify_refusal
 
         assert _classify_refusal({}) == "unclassified"
 
     def test_the_refusal_diagnostic_id_is_parsed_not_recomputed(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import _refusal_diagnostic_id
-        from kiro_crew.security.diagnostics import annotate_refusal, refusal_diagnostic
+        from aj_crew.dashboard.handlers.debug import _refusal_diagnostic_id
+        from aj_crew.security.diagnostics import annotate_refusal, refusal_diagnostic
 
         # Built by the REAL writer rather than by a hand-spelled string, so the test
         # cannot drift from the shape the gate actually records.
@@ -333,8 +331,8 @@ class TestTheRefusalClassifier:
         Reading the first match would let that text name the rule an operator then
         reads as authoritative.
         """
-        from kiro_crew.dashboard.handlers.debug import _refusal_diagnostic_id
-        from kiro_crew.security.diagnostics import (
+        from aj_crew.dashboard.handlers.debug import _refusal_diagnostic_id
+        from aj_crew.security.diagnostics import (
             REFUSAL_DIAGNOSTIC_PREFIX,
             annotate_refusal,
             refusal_diagnostic,
@@ -347,8 +345,8 @@ class TestTheRefusalClassifier:
     def test_a_rule_token_that_is_not_an_identifier_is_dropped(self) -> None:
         """Validated through the writer's own id rule, so a traversal-shaped or
         otherwise non-identifier token is not echoed to the operator as a rule name."""
-        from kiro_crew.dashboard.handlers.debug import _refusal_diagnostic_id
-        from kiro_crew.security.diagnostics import REFUSAL_DIAGNOSTIC_PREFIX
+        from aj_crew.dashboard.handlers.debug import _refusal_diagnostic_id
+        from aj_crew.security.diagnostics import REFUSAL_DIAGNOSTIC_PREFIX
 
         row = {"error": f"{REFUSAL_DIAGNOSTIC_PREFIX}rule=../../etc/shadow component=x"}
         assert _refusal_diagnostic_id(row) == ""
@@ -357,13 +355,13 @@ class TestTheRefusalClassifier:
         """Both refusals name the sensitive-path list, so a budget row that does not
         carry the structural prefix must not fall through to the match arm: that would
         tell a caller "protected, stop asking" about a timeout it should retry."""
-        from kiro_crew.dashboard.handlers.debug import _classify_refusal
+        from aj_crew.dashboard.handlers.debug import _classify_refusal
 
         row = {"error": "the sensitive-path list could not be checked, resolver budget spent"}
         assert _classify_refusal(row) == "unclassified"
 
     def test_a_row_without_a_diagnostic_yields_no_id(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import _refusal_diagnostic_id
+        from aj_crew.dashboard.handlers.debug import _refusal_diagnostic_id
 
         assert _refusal_diagnostic_id({"error": "plain refusal"}) == ""
 
@@ -414,7 +412,7 @@ class TestTheRouteAuthorizationMatrix:
     def _request(self, path: str, state: Any, **headers: str) -> Any:
         from aiohttp.test_utils import make_mocked_request
 
-        hdrs = {"X-Internal-Secret": "s", "X-Internal-Caller": "kirocrew-debug"}
+        hdrs = {"X-Internal-Secret": "s", "X-Internal-Caller": "ajcrew-debug"}
         hdrs.update({k.replace("_", "-"): v for k, v in headers.items()})
         hdrs.setdefault("X-Session-Key", self.OWNER)
         from aiohttp import web
@@ -431,7 +429,7 @@ class TestTheRouteAuthorizationMatrix:
         # ``member_identity_unavailable`` before the handler runs. Supplying both is
         # what makes these tests exercise the wrapped route rather than a
         # pass-through of it.
-        from kiro_crew.dashboard.handlers._shared import MemberScope
+        from aj_crew.dashboard.handlers._shared import MemberScope
 
         request["internal_auth"] = True
         request["_member_scope"] = MemberScope(self.OWNER, True, None, None)
@@ -445,7 +443,7 @@ class TestTheRouteAuthorizationMatrix:
         from aiohttp import web
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.handlers.debug import api_debug_gateway
+        from aj_crew.dashboard.handlers.debug import api_debug_gateway
 
         app = web.Application()
         app["state"] = self._state(self._slot())
@@ -454,7 +452,7 @@ class TestTheRouteAuthorizationMatrix:
             "/api/debug/gateway",
             headers={
                 "X-Internal-Secret": "whatever-the-caller-likes",
-                "X-Internal-Caller": "kirocrew-debug",
+                "X-Internal-Caller": "ajcrew-debug",
                 "X-Session-Key": self.OWNER,
             },
             app=app,
@@ -468,7 +466,7 @@ class TestTheRouteAuthorizationMatrix:
         return asyncio.run(handler(request))
 
     def test_the_owner_at_a_tab_gets_the_host_wide_view(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import api_debug_gateway
+        from aj_crew.dashboard.handlers.debug import api_debug_gateway
 
         slot = self._slot()
         got = self._run(api_debug_gateway, self._request("/api/debug/gateway", self._state(slot)))
@@ -479,7 +477,7 @@ class TestTheRouteAuthorizationMatrix:
         from aiohttp import web
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.handlers.debug import api_debug_gateway
+        from aj_crew.dashboard.handlers.debug import api_debug_gateway
 
         app = web.Application()
         app["state"] = self._state(self._slot())
@@ -487,15 +485,15 @@ class TestTheRouteAuthorizationMatrix:
         assert self._run(api_debug_gateway, request).status == 403
 
     def test_a_request_naming_another_component_is_refused(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import api_debug_gateway
+        from aj_crew.dashboard.handlers.debug import api_debug_gateway
 
         request = self._request(
-            "/api/debug/gateway", self._state(self._slot()), X_Internal_Caller="kirocrew-panel"
+            "/api/debug/gateway", self._state(self._slot()), X_Internal_Caller="ajcrew-panel"
         )
         assert self._run(api_debug_gateway, request).status == 403
 
     def test_a_request_with_no_session_identity_is_refused(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import api_debug_gateway
+        from aj_crew.dashboard.handlers.debug import api_debug_gateway
 
         request = self._request("/api/debug/gateway", self._state(self._slot()), X_Session_Key="")
         assert self._run(api_debug_gateway, request).status == 403
@@ -505,28 +503,28 @@ class TestTheRouteAuthorizationMatrix:
         create verb. That child carries a ``dashboard:`` key, a live slot and no app
         of its own, so every other condition in the owner gate passes and only
         ``_created_by`` tells it apart from the person's own tab."""
-        from kiro_crew.dashboard.handlers.debug import api_debug_gateway
+        from aj_crew.dashboard.handlers.debug import api_debug_gateway
 
         slot = self._slot(_created_by="conductor-session")
         got = self._run(api_debug_gateway, self._request("/api/debug/gateway", self._state(slot)))
         assert got.status == 403
 
     def test_a_channel_linked_session_is_refused_the_host_wide_view(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import api_debug_gateway
+        from aj_crew.dashboard.handlers.debug import api_debug_gateway
 
         slot = self._slot(linked_session_key="slack:C123")
         got = self._run(api_debug_gateway, self._request("/api/debug/gateway", self._state(slot)))
         assert got.status == 403
 
     def test_an_incognito_session_is_refused_the_host_wide_view(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import api_debug_gateway
+        from aj_crew.dashboard.handlers.debug import api_debug_gateway
 
         slot = self._slot(is_restricted=True)
         got = self._run(api_debug_gateway, self._request("/api/debug/gateway", self._state(slot)))
         assert got.status == 403
 
     def test_a_key_naming_no_live_slot_is_refused(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import api_debug_gateway
+        from aj_crew.dashboard.handlers.debug import api_debug_gateway
 
         state = self._state(self._slot())
         request = self._request("/api/debug/gateway", state, X_Session_Key="dashboard:chat-gone")
@@ -534,14 +532,14 @@ class TestTheRouteAuthorizationMatrix:
 
     def test_a_channel_linked_session_still_reads_its_own_refusals(self) -> None:
         """Narrowed, not refused: its own rows tell it nothing it did not experience."""
-        from kiro_crew.dashboard.handlers.debug import api_debug_refusals
+        from aj_crew.dashboard.handlers.debug import api_debug_refusals
 
         slot = self._slot(linked_session_key="slack:C123")
         got = self._run(api_debug_refusals, self._request("/api/debug/refusals", self._state(slot)))
         assert got.status == 200
 
     def test_a_channel_linked_session_cannot_name_another_session(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import api_debug_refusals
+        from aj_crew.dashboard.handlers.debug import api_debug_refusals
 
         slot = self._slot(linked_session_key="slack:C123")
         request = self._request(
@@ -550,7 +548,7 @@ class TestTheRouteAuthorizationMatrix:
         assert self._run(api_debug_refusals, request).status == 403
 
     def test_a_non_integer_last_is_a_400_carrying_its_code(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import api_debug_refusals
+        from aj_crew.dashboard.handlers.debug import api_debug_refusals
 
         request = self._request("/api/debug/refusals?last=lots", self._state(self._slot()))
         got = self._run(api_debug_refusals, request)
@@ -567,8 +565,8 @@ class TestTheRouteAuthorizationMatrix:
         import tempfile
         from pathlib import Path
 
-        from kiro_crew.dashboard.handlers import debug as mod
-        from kiro_crew.security.paths import UNVERIFIABLE_PATH_PREFIX
+        from aj_crew.dashboard.handlers import debug as mod
+        from aj_crew.security.paths import UNVERIFIABLE_PATH_PREFIX
 
         budget = f"{UNVERIFIABLE_PATH_PREFIX} (symlink resolution did not complete in time)"
         rows = [
@@ -626,8 +624,8 @@ class TestTheRouteAuthorizationMatrix:
         import tempfile
         from pathlib import Path
 
-        from kiro_crew.dashboard.handlers import debug as mod
-        from kiro_crew.security.paths import UNVERIFIABLE_PATH_PREFIX
+        from aj_crew.dashboard.handlers import debug as mod
+        from aj_crew.security.paths import UNVERIFIABLE_PATH_PREFIX
 
         with tempfile.TemporaryDirectory() as tmp:
             log = Path(tmp) / "security_events.jsonl"
@@ -658,7 +656,7 @@ class TestTheRouteAuthorizationMatrix:
         assert entry["action"]
 
     def test_the_window_parser_takes_a_duration_and_rejects_nonsense(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import _parse_window
+        from aj_crew.dashboard.handlers.debug import _parse_window
 
         assert _parse_window("") is None
         assert _parse_window("nonsense") is None
@@ -668,14 +666,14 @@ class TestTheRouteAuthorizationMatrix:
         """The reason this tool exists: a daemon that outlived a code change keeps
         serving backends built from the old checkout, and the symptom appears far from
         the cause. The mismatch verdict itself had no test."""
-        from kiro_crew.dashboard.handlers import debug as mod
+        from aj_crew.dashboard.handlers import debug as mod
 
         info = type(
             "Info", (), {"pid": 4242, "fingerprint": "old-sha", "owner_pid": 1, "owner_alive": True}
         )()
         monkeypatch.setitem(
             __import__("sys").modules,
-            "kiro_crew.mcp_gateway.daemon_control",
+            "aj_crew.mcp_gateway.daemon_control",
             type("M", (), {"describe_daemon": staticmethod(lambda: info)}),
         )
         got = mod._daemon_block()
@@ -684,14 +682,14 @@ class TestTheRouteAuthorizationMatrix:
         assert got["matches_this_install"] is False
 
     def test_a_pre_fingerprint_daemon_is_named_as_such_not_left_blank(self, monkeypatch) -> None:
-        from kiro_crew.dashboard.handlers import debug as mod
+        from aj_crew.dashboard.handlers import debug as mod
 
         info = type(
             "Info", (), {"pid": 7, "fingerprint": "", "owner_pid": 1, "owner_alive": True}
         )()
         monkeypatch.setitem(
             __import__("sys").modules,
-            "kiro_crew.mcp_gateway.daemon_control",
+            "aj_crew.mcp_gateway.daemon_control",
             type("M", (), {"describe_daemon": staticmethod(lambda: info)}),
         )
         got = mod._daemon_block()
@@ -699,11 +697,11 @@ class TestTheRouteAuthorizationMatrix:
         assert got["matches_this_install"] is False
 
     def test_a_stopped_daemon_is_reported_as_stopped(self, monkeypatch) -> None:
-        from kiro_crew.dashboard.handlers import debug as mod
+        from aj_crew.dashboard.handlers import debug as mod
 
         monkeypatch.setitem(
             __import__("sys").modules,
-            "kiro_crew.mcp_gateway.daemon_control",
+            "aj_crew.mcp_gateway.daemon_control",
             type("M", (), {"describe_daemon": staticmethod(lambda: None)}),
         )
         assert mod._daemon_block()["running"] is False
@@ -714,20 +712,20 @@ class TestTheRouteAuthorizationMatrix:
         A ``None`` entry in ``sys.modules`` makes this probe's own import raise. The
         route-level tests patch ``_diag_module``, while this probe imports the recorder.
         """
-        from kiro_crew.dashboard.handlers import debug as mod
+        from aj_crew.dashboard.handlers import debug as mod
 
-        monkeypatch.setitem(__import__("sys").modules, "kiro_crew.diag.recorder", None)
+        monkeypatch.setitem(__import__("sys").modules, "aj_crew.diag.recorder", None)
         got = mod._recorder_health()
         assert got["available"] is False
         assert got["reason"] == mod.DIAG_UNAVAILABLE
 
     def test_a_present_recorder_is_reported_with_its_health(self, monkeypatch) -> None:
-        from kiro_crew.dashboard.handlers import debug as mod
+        from aj_crew.dashboard.handlers import debug as mod
 
         rec = type("Rec", (), {"health": staticmethod(lambda: {"running": True, "queued": 3})})()
         monkeypatch.setitem(
             __import__("sys").modules,
-            "kiro_crew.diag.recorder",
+            "aj_crew.diag.recorder",
             type("M", (), {"get_recorder": staticmethod(lambda: rec)}),
         )
         got = mod._recorder_health()
@@ -735,11 +733,11 @@ class TestTheRouteAuthorizationMatrix:
         assert got["queued"] == 3
 
     def test_a_registered_but_unstarted_recorder_reads_as_not_running(self, monkeypatch) -> None:
-        from kiro_crew.dashboard.handlers import debug as mod
+        from aj_crew.dashboard.handlers import debug as mod
 
         monkeypatch.setitem(
             __import__("sys").modules,
-            "kiro_crew.diag.recorder",
+            "aj_crew.diag.recorder",
             type("M", (), {"get_recorder": staticmethod(lambda: None)}),
         )
         got = mod._recorder_health()
@@ -752,8 +750,8 @@ class TestTheRouteAuthorizationMatrix:
         would undo the environment allowlist this module keeps elsewhere."""
         from pathlib import Path
 
-        from kiro_crew.dashboard.handlers import debug as mod
-        from kiro_crew.service.linux import SERVICE_NAME, USER_UNIT_SUBDIR
+        from aj_crew.dashboard.handlers import debug as mod
+        from aj_crew.service.linux import SERVICE_NAME, USER_UNIT_SUBDIR
 
         unit_dir = tmp_path / USER_UNIT_SUBDIR / f"{SERVICE_NAME}.service.d"
         unit_dir.mkdir(parents=True)
@@ -773,7 +771,7 @@ class TestTheRouteAuthorizationMatrix:
         alone dropped every continued subagent, and the failure was silent in the worst
         direction: the parent's read came back SHORT rather than refused, so a caller
         would conclude a child had no refusals when the scope never covered it."""
-        from kiro_crew.dashboard.handlers.debug import _spawn_tree_keys
+        from aj_crew.dashboard.handlers.debug import _spawn_tree_keys
 
         recs = [
             type(
@@ -813,7 +811,7 @@ class TestTheRouteAuthorizationMatrix:
     def test_the_spawn_tree_walks_past_the_first_generation(self) -> None:
         """A grandchild's refusals are in scope for the session that owns the tree;
         stopping at depth one would silently narrow the answer."""
-        from kiro_crew.dashboard.handlers.debug import _spawn_tree_keys
+        from aj_crew.dashboard.handlers.debug import _spawn_tree_keys
 
         recs = [
             type(
@@ -856,20 +854,20 @@ class TestTheRouteAuthorizationMatrix:
     def test_a_star_read_is_narrowed_for_a_channel_linked_caller(self) -> None:
         """``*`` is the widest ask, so it is exactly where a class that must not read
         past itself has to be narrowed rather than obeyed."""
-        from kiro_crew.dashboard.handlers.debug import _refusal_scope_keys
+        from aj_crew.dashboard.handlers.debug import _refusal_scope_keys
 
         slot = self._slot(linked_session_key="slack:C1")
         request = self._request("/api/debug/refusals?session=*", self._state(slot))
         assert _refusal_scope_keys(request, self.OWNER, "*") == {self.OWNER}
 
     def test_a_star_read_is_unnarrowed_for_the_owner_at_a_tab(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import _refusal_scope_keys
+        from aj_crew.dashboard.handlers.debug import _refusal_scope_keys
 
         request = self._request("/api/debug/refusals?session=*", self._state(self._slot()))
         assert _refusal_scope_keys(request, self.OWNER, "*") is None
 
     def test_a_star_read_is_narrowed_for_an_agent_minted_session(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import _refusal_scope_keys
+        from aj_crew.dashboard.handlers.debug import _refusal_scope_keys
 
         slot = self._slot(_created_by="conductor")
         request = self._request("/api/debug/refusals?session=*", self._state(slot))
@@ -878,7 +876,7 @@ class TestTheRouteAuthorizationMatrix:
     def test_authorization_going_stale_across_the_offload_is_caught(self) -> None:
         """The gate runs before a threaded read; the grant is re-tested after it,
         because the slot can be linked to a channel while the read is in flight."""
-        from kiro_crew.dashboard.handlers.debug import _stale_grant_refusal
+        from aj_crew.dashboard.handlers.debug import _stale_grant_refusal
 
         slot = self._slot(linked_session_key="slack:C1")
         request = self._request("/api/debug/gateway", self._state(slot))
@@ -888,7 +886,7 @@ class TestTheRouteAuthorizationMatrix:
         """The re-check precedes the route's own shaping, not just its return: a
         shaping that ran first would touch a payload outside the caller's current
         grant, which no assertion on the response alone can see."""
-        from kiro_crew.dashboard.handlers.debug import _offload_then_recheck
+        from aj_crew.dashboard.handlers.debug import _offload_then_recheck
 
         slot = self._slot(linked_session_key="slack:C1")
         request = self._request("/api/debug/gateway", self._state(slot))
@@ -910,7 +908,7 @@ class TestTheRouteAuthorizationMatrix:
     def test_a_self_narrowed_read_is_not_refused_by_the_recheck(self) -> None:
         """The re-check must mirror the gate: applying the class test where the gate
         did not apply it would refuse the one view a channel-linked session is owed."""
-        from kiro_crew.dashboard.handlers.debug import _stale_grant_refusal
+        from aj_crew.dashboard.handlers.debug import _stale_grant_refusal
 
         slot = self._slot(linked_session_key="slack:C1")
         request = self._request("/api/debug/refusals", self._state(slot))
@@ -933,7 +931,7 @@ class TestTheRouteAuthorizationMatrix:
         import json
         import tempfile
 
-        from kiro_crew.dashboard.handlers import debug as mod
+        from aj_crew.dashboard.handlers import debug as mod
 
         good = json.dumps(
             {
@@ -974,7 +972,7 @@ class TestTheRouteAuthorizationMatrix:
         import json
         import tempfile
 
-        from kiro_crew.dashboard.handlers import debug as mod
+        from aj_crew.dashboard.handlers import debug as mod
 
         def row(stamp: str, tool: str) -> str:
             return json.dumps(
@@ -1013,7 +1011,7 @@ class TestTheRouteAuthorizationMatrix:
         import json
         import tempfile
 
-        from kiro_crew.dashboard.handlers import debug as mod
+        from aj_crew.dashboard.handlers import debug as mod
 
         rows = [
             json.dumps(
@@ -1043,7 +1041,7 @@ class TestTheRouteAuthorizationMatrix:
     def test_an_unreadable_log_file_is_skipped_not_fatal(self) -> None:
         from pathlib import Path
 
-        from kiro_crew.dashboard.handlers import debug as mod
+        from aj_crew.dashboard.handlers import debug as mod
 
         original = mod._sel_files
         mod._sel_files = lambda: [Path("/nonexistent/security_events.jsonl")]  # type: ignore[assignment]
@@ -1054,8 +1052,8 @@ class TestTheRouteAuthorizationMatrix:
         assert got["refusals"] == []
 
     def test_the_remaining_refusal_classes_are_each_reachable(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import _classify_refusal
-        from kiro_crew.security.diagnostics import REFUSAL_DIAGNOSTIC_PREFIX
+        from aj_crew.dashboard.handlers.debug import _classify_refusal
+        from aj_crew.security.diagnostics import REFUSAL_DIAGNOSTIC_PREFIX
 
         assert _classify_refusal({"error": "the call timed out waiting on approval"}) == (
             "tool_policy_timeout"
@@ -1069,7 +1067,7 @@ class TestTheRouteAuthorizationMatrix:
     def test_a_non_owner_naming_a_session_outside_its_tree_is_refused(self) -> None:
         """Not its own rows, not a session it spawned, and not the owner: the one arm
         that has to refuse rather than narrow."""
-        from kiro_crew.dashboard.handlers.debug import api_debug_refusals
+        from aj_crew.dashboard.handlers.debug import api_debug_refusals
 
         slot = self._slot(_created_by="conductor")
         request = self._request(
@@ -1078,7 +1076,7 @@ class TestTheRouteAuthorizationMatrix:
         assert self._run(api_debug_refusals, request).status == 403
 
     def test_a_key_with_no_slot_part_names_no_slot(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import _live_slot
+        from aj_crew.dashboard.handlers.debug import _live_slot
 
         state = self._state(self._slot())
         assert _live_slot(state, "") is None
@@ -1089,9 +1087,9 @@ class TestTheRouteAuthorizationMatrix:
         """The contract string the MCP relay matches on, plus its error code.
 
         Driven through ``_diag_module``, so it pins the route's answer when the module is
-        missing, independent of which ``kiro_crew.diag`` submodules this checkout ships.
+        missing, independent of which ``aj_crew.diag`` submodules this checkout ships.
         """
-        from kiro_crew.dashboard.handlers import debug as mod
+        from aj_crew.dashboard.handlers import debug as mod
 
         with patch.object(mod, "_diag_module", return_value=None):
             for handler in (
@@ -1112,7 +1110,7 @@ class TestTheRouteAuthorizationMatrix:
         route at all, and the gap relay could be reached unconditionally while the
         absent-module test still passed.
         """
-        from kiro_crew.dashboard.handlers import debug as mod
+        from aj_crew.dashboard.handlers import debug as mod
 
         def _stateless() -> dict[str, object]:
             raise AssertionError(
@@ -1169,8 +1167,8 @@ class TestTheRouteAuthorizationMatrix:
         Answering 500 would report a gateway fault for an ordinary race, and an
         agent retrying on 500 would retry something that cannot succeed.
         """
-        from kiro_crew.dashboard.handlers import debug as mod
-        from kiro_crew.diag import threads as dt
+        from aj_crew.dashboard.handlers import debug as mod
+        from aj_crew.diag import threads as dt
 
         def gone(_name: str) -> object:
             raise FileNotFoundError("stall-20231114-221320.txt")
@@ -1193,7 +1191,7 @@ class TestTheRouteAuthorizationMatrix:
         it pins the relay decision. This one pins the SHAPE the live surface returns,
         which is what a reader of these routes actually consumes.
         """
-        from kiro_crew.dashboard.handlers import debug as mod
+        from aj_crew.dashboard.handlers import debug as mod
 
         got = self._run(
             mod.api_debug_threads, self._request("/api/debug/threads", self._state(self._slot()))
@@ -1208,8 +1206,8 @@ class TestTheRouteAuthorizationMatrix:
         self, tmp_path, monkeypatch
     ) -> None:
         """Recorded rows reach the route, with the query answer's own shape."""
-        from kiro_crew.dashboard.handlers import debug as mod
-        from kiro_crew.diag import recorder as rec
+        from aj_crew.dashboard.handlers import debug as mod
+        from aj_crew.diag import recorder as rec
 
         (tmp_path / "home").mkdir(parents=True, exist_ok=True)
         recorder = rec.Recorder(config_dir=tmp_path / "home", env={}, clock=lambda: 1_700_000_000.0)
@@ -1239,8 +1237,8 @@ class TestTheRouteAuthorizationMatrix:
         8601, so those shapes must work, and a value that fits neither must read
         as a bad request rather than as a recorder crash.
         """
-        from kiro_crew.dashboard.handlers import debug as mod
-        from kiro_crew.diag import recorder as rec
+        from aj_crew.dashboard.handlers import debug as mod
+        from aj_crew.diag import recorder as rec
 
         (tmp_path / "home").mkdir(parents=True, exist_ok=True)
         recorder = rec.Recorder(config_dir=tmp_path / "home", env={}, clock=lambda: 1_700_000_000.0)
@@ -1282,7 +1280,7 @@ class TestTheRouteAuthorizationShape:
         """
         import inspect
 
-        from kiro_crew.dashboard.handlers import debug as handlers
+        from aj_crew.dashboard.handlers import debug as handlers
 
         src = inspect.getsource(handlers._authorize_debug_read)
         head, _, tail = src.partition("_spawn_tree_keys")
@@ -1296,7 +1294,7 @@ class TestTheRouteAuthorizationShape:
         so the scope helper narrows instead -- and this pins that it narrows to
         exactly the caller's own key.
         """
-        from kiro_crew.dashboard.handlers import debug as handlers
+        from aj_crew.dashboard.handlers import debug as handlers
 
         class Slot:
             _app = ""
@@ -1330,7 +1328,7 @@ class TestTheRouteAuthorizationShape:
         import ast
         import inspect
 
-        from kiro_crew.dashboard.handlers import debug as handlers
+        from aj_crew.dashboard.handlers import debug as handlers
 
         tree = ast.parse(inspect.getsource(handlers))
         functions = [
@@ -1382,19 +1380,19 @@ class TestTheRouteAuthorizationShape:
         """Otherwise a member's own ``debug_refusals`` 403s before its own gate runs."""
         import inspect
 
-        from kiro_crew.dashboard.handlers import debug as handlers
+        from aj_crew.dashboard.handlers import debug as handlers
 
         src = inspect.getsource(handlers)
         assert 'member_scoped=frozenset({"api_debug_refusals"})' in src
 
     def test_the_four_host_wide_views_are_named(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import HOST_WIDE_VIEWS
+        from aj_crew.dashboard.handlers.debug import HOST_WIDE_VIEWS
 
         assert HOST_WIDE_VIEWS == frozenset({"gateway", "threads", "processes", "snapshots"})
 
     def test_refusals_is_the_only_per_session_view(self) -> None:
         """A route added later must choose a side rather than inherit the weak one."""
-        from kiro_crew.dashboard.handlers.debug import HOST_WIDE_VIEWS
+        from aj_crew.dashboard.handlers.debug import HOST_WIDE_VIEWS
 
         views = {name.removeprefix("debug_") for name in server.TOOLS}
         assert views - HOST_WIDE_VIEWS == {"refusals"}
@@ -1406,21 +1404,21 @@ class TestTheRouteAuthorizationShape:
         rows whose outcome is denied or rejected. Reading the spec's literal wording
         would have matched nothing at all, so the real vocabulary is pinned here.
         """
-        from kiro_crew.dashboard.handlers.debug import REFUSAL_EVENT_TYPES, REFUSAL_OUTCOMES
+        from aj_crew.dashboard.handlers.debug import REFUSAL_EVENT_TYPES, REFUSAL_OUTCOMES
 
         assert "tool_denied" not in REFUSAL_EVENT_TYPES
         assert "tool_denial" in REFUSAL_EVENT_TYPES
         assert REFUSAL_OUTCOMES == frozenset({"denied", "rejected"})
 
     def test_an_approval_row_is_never_read_as_a_refusal(self) -> None:
-        from kiro_crew.dashboard.handlers.debug import REFUSAL_EVENT_TYPES
+        from aj_crew.dashboard.handlers.debug import REFUSAL_EVENT_TYPES
 
         assert "tool_approval" not in REFUSAL_EVENT_TYPES
 
     def test_the_five_routes_are_registered(self) -> None:
         from aiohttp import web
 
-        from kiro_crew.dashboard.routes import sessions
+        from aj_crew.dashboard.routes import sessions
 
         app = web.Application()
         sessions.register(app)
@@ -1442,14 +1440,14 @@ class TestTheRouteAuthorizationShape:
         from aiohttp import web
         from aiohttp.test_utils import make_mocked_request
 
-        from kiro_crew.dashboard.handlers import debug as handlers
+        from aj_crew.dashboard.handlers import debug as handlers
 
         request = make_mocked_request(
             "GET",
             "/api/debug/refusals?last=not-a-number",
             headers={
                 "X-Internal-Secret": "s",
-                "X-Internal-Caller": "kirocrew-debug",
+                "X-Internal-Caller": "ajcrew-debug",
                 "X-Session-Key": "dashboard:chat-owner",
             },
         )
@@ -1465,17 +1463,17 @@ class TestTheDiagImportStaysLazy:
     def test_importing_the_route_module_loads_no_diag_submodule(self) -> None:
         """This module is on the gateway's boot path.
 
-        The prefix is ``kiro_crew.diag.`` with the dot, plus the package itself: a bare
-        prefix would match the unrelated ``kiro_crew.diagnostics``, which the dashboard
+        The prefix is ``aj_crew.diag.`` with the dot, plus the package itself: a bare
+        prefix would match the unrelated ``aj_crew.diagnostics``, which the dashboard
         does import.
         """
         import subprocess
         import sys
 
         probe = (
-            "import sys; import kiro_crew.dashboard.handlers.debug as d; "
+            "import sys; import aj_crew.dashboard.handlers.debug as d; "
             "print(sorted(m for m in sys.modules "
-            "if m == 'kiro_crew.diag' or m.startswith('kiro_crew.diag.')))"
+            "if m == 'aj_crew.diag' or m.startswith('aj_crew.diag.')))"
         )
         done = subprocess.run(
             [sys.executable, "-c", probe],

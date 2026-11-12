@@ -32,14 +32,14 @@ from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 from turn_harness import ScriptedProvider, TurnScript, run_turn
 
-from kiro_crew.acp.types import EVENT_COMPLETE, STOP_REASON_END_TURN, AcpEvent
-from kiro_crew.acp_backends import ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk.capabilities import capabilities_for
-from kiro_crew.dashboard import chat_runner as cr
-from kiro_crew.dashboard import chat_utils as cu
-from kiro_crew.dashboard.chat_utils import chunk_generation
-from kiro_crew.dashboard.slot_projection import SlotProjection
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.acp.types import EVENT_COMPLETE, STOP_REASON_END_TURN, AcpEvent
+from aj_crew.acp_backends import ACP_BACKEND_KIRO
+from aj_crew.agent_sdk.capabilities import capabilities_for
+from aj_crew.dashboard import chat_runner as cr
+from aj_crew.dashboard import chat_utils as cu
+from aj_crew.dashboard.chat_utils import chunk_generation
+from aj_crew.dashboard.slot_projection import SlotProjection
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 _FRONTEND = "the dashboard frontend depends on this (runState settleEndedActiveTurn)"
 
@@ -410,7 +410,7 @@ async def test_a_frame_that_does_not_end_the_turn_carries_no_identity(tmp_path):
 async def test_restored_cards_the_user_has_not_sent_are_not_continuing_work(tmp_path):
     """No drain runs a restored card on its own, so a queue holding only those
     ends the turn: the done frame must not suppress the turn-done chime."""
-    from kiro_crew.dashboard.slot_queue_repository import (
+    from aj_crew.dashboard.slot_queue_repository import (
         RESTORED_SEND_CHOSEN_KEY,
         sanitize_restored_queue,
     )

@@ -38,11 +38,11 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew import code_fingerprint as cf
-from kiro_crew import platform_compat
-from kiro_crew.instances import run_marker
-from kiro_crew.mcp_gateway import manager as mgr
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import code_fingerprint as cf
+from aj_crew import platform_compat
+from aj_crew.instances import run_marker
+from aj_crew.mcp_gateway import manager as mgr
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 _PORT = 5476
 
@@ -60,7 +60,7 @@ _NEW_GATEWAY = textwrap.dedent("""
     from pathlib import Path
     check, port, old_pid, sock = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]
     if check == "marker":
-        from kiro_crew.instances import run_marker
+        from aj_crew.instances import run_marker
         record = run_marker.read_pid_record_path(run_marker.pid_path(port))
         token_matches = (
             record is not None
@@ -71,7 +71,7 @@ _NEW_GATEWAY = textwrap.dedent("""
         run_marker.write_marker(port)
         print(os.getpid(), os.getppid(), token_matches, run_marker.read_pid(port))
     else:
-        from kiro_crew.mcp_gateway import manager as m
+        from aj_crew.mcp_gateway import manager as m
         g = m.GatewayManager(m.GatewaySpec(socket_path=Path(sock)))
         print(os.getpid(), os.getppid(), True, g._owned_by_a_live_other({"owner_pid": old_pid}))
     """)
@@ -83,8 +83,8 @@ _OLD_GATEWAY = textwrap.dedent("""
     import os, subprocess, sys
     layout, check, port, sock, new_gateway = sys.argv[1:6]
     if check == "marker":
-        from kiro_crew.dashboard import server as dashboard_server
-        from kiro_crew.instances import run_marker
+        from aj_crew.dashboard import server as dashboard_server
+        from aj_crew.instances import run_marker
         p = run_marker.pid_path(int(port))
         dashboard_server._write_secret_file(p, f"{os.getpid()}\\n")
         token = run_marker.pid_start_token(os.getpid())
@@ -118,7 +118,7 @@ def _restart(layout: str, check: str, home: Path, tmp_path: Path) -> tuple[int, 
             str(tmp_path / "gw.sock"),
             _NEW_GATEWAY,
         ],
-        env={**os.environ, "KIROCREW_HOME": str(home), "HOME": str(user_home)},
+        env={**os.environ, "AJCREW_HOME": str(home), "HOME": str(user_home)},
         # Both processes may create files (the record, marker temporaries); the
         # grandchild inherits this directory through the supervisor.
         cwd=tmp_path,
@@ -146,8 +146,8 @@ def _restart(layout: str, check: str, home: Path, tmp_path: Path) -> tuple[int, 
 
 @pytest.fixture()
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    from kiro_crew.config import paths
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    from aj_crew.config import paths
 
     monkeypatch.setattr(paths, "_config_dir_memo", None, raising=False)
     monkeypatch.setattr(run_marker, "_PUBLISHED_LISTENERS", {}, raising=True)
@@ -246,7 +246,7 @@ class TestTheSupervisorPredicate:
             ("C:\\Python312\\python.exe", True),
             ("/home/u/.toolbox/bin/toolbox-exec", False),
             ("/usr/bin/bash", False),
-            ("/home/u/.toolbox/bin/kirocrew", False),
+            ("/home/u/.toolbox/bin/ajcrew", False),
         ],
     )
     def test_what_counts_as_a_python_image(self, exe: str, is_python: bool) -> None:

@@ -22,16 +22,16 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from body_stream_helpers import attach_json_body
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew import publish_sync
-from kiro_crew.artifacts import ArtifactNotFoundError, ArtifactStore, ArtifactValidationError
-from kiro_crew.dashboard.handlers import artifacts as art_handlers
-from kiro_crew.dashboard.handlers.artifacts import (
+from aj_crew import artifacts as art_mod
+from aj_crew import publish_sync
+from aj_crew.artifacts import ArtifactNotFoundError, ArtifactStore, ArtifactValidationError
+from aj_crew.dashboard.handlers import artifacts as art_handlers
+from aj_crew.dashboard.handlers.artifacts import (
     _validate_sharing_body,
     api_artifact_unpublish,
     api_artifact_update_sharing,
 )
-from kiro_crew.publish_provider import DEFAULT_PROVIDER
+from aj_crew.publish_provider import DEFAULT_PROVIDER
 
 # ── Fixtures (mirrors test_remote_artifacts.py) ───────────────────────────────
 

@@ -32,13 +32,13 @@ from pathlib import Path
 
 import pytest
 
-import kiro_crew.skills as skills_module
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.testing.wait import wait_until
+import aj_crew.skills as skills_module
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.skills import SkillsLoader
+from aj_crew.testing.wait import wait_until
 
 ROOT = Path(__file__).resolve().parent.parent
-SKILL_DIR = ROOT / "src" / "kiro_crew" / "builtin_skills" / "explain-for"
+SKILL_DIR = ROOT / "src" / "aj_crew" / "builtin_skills" / "explain-for"
 SKILL_FILE = SKILL_DIR / "SKILL.md"
 EVAL_DIR = ROOT / "evals" / "explain-for"
 CASES_FILE = EVAL_DIR / "cases.json"
@@ -70,9 +70,9 @@ def loader(tmp_path: Path, opened) -> SkillsLoader:
     than this skill's own triggers.
 
     **``config`` is passed explicitly, and the fixture is function-scoped.**
-    ``SkillsLoader(config=None)`` falls back to ``KiroCrewConfig.load()``, which
+    ``SkillsLoader(config=None)`` falls back to ``AjCrewConfig.load()``, which
     resolves ``config_dir()`` — and that CREATES the operator's real data home as
-    a side effect (see ``_isolate_kirocrew_home`` in ``test/conftest_floor_home.py``),
+    a side effect (see ``_isolate_ajcrew_home`` in ``test/conftest_floor_home.py``),
     which ``no-test-side-effects`` forbids. A module-scoped fixture is built
     BEFORE that function-scoped autouse isolation applies, so the scope is load
     bearing here, not a performance choice.
@@ -113,7 +113,7 @@ def loader(tmp_path: Path, opened) -> SkillsLoader:
         SkillsLoader(
             skills_path=tmp_path / "skills",
             install_builtins=False,
-            config=KiroCrewConfig(skills=SkillsConfig(max_triggered=1)),
+            config=AjCrewConfig(skills=SkillsConfig(max_triggered=1)),
         )
     )
     _settle_catalog(loader)

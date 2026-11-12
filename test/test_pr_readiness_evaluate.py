@@ -1292,7 +1292,7 @@ class TestForkScanVerdictIsBoundToItsPullRequest:
                         # Same head SHA, higher id -- but another fork's branch.
                         "id": RUN_ID + 1,
                         "run_attempt": 1,
-                        "head_repository": {"full_name": "someone-else/KiroCrew"},
+                        "head_repository": {"full_name": "someone-else/AjCrew"},
                         "head_branch": "their/branch",
                         "path": ".github/workflows/fast-gate.yml",
                         "status": "completed",
@@ -1458,7 +1458,7 @@ class _ForkLaneVerdictBinding:
                         # Same head SHA, higher id -- but another fork's branch.
                         "id": RUN_ID + 1,
                         "run_attempt": 1,
-                        "head_repository": {"full_name": "someone-else/KiroCrew"},
+                        "head_repository": {"full_name": "someone-else/AjCrew"},
                         "head_branch": "their/branch",
                         "path": ".github/workflows/fast-gate.yml",
                         "status": "completed",
@@ -1659,7 +1659,7 @@ class TestAwaitingApprovalIsAttributedToTheMaintainer:
 
 
 class TestDispositionViolationsBlockTheVerdict:
-    """The disposition rule binds only a writer running the kirocrew-prepare-pr loop
+    """The disposition rule binds only a writer running the ajcrew-prepare-pr loop
     unless readiness enforces it too. Readiness publishes the repository's sole
     required status, so folding the violation list in here binds every
     writer -- including one who never runs that loop."""
@@ -1889,10 +1889,10 @@ def _whole_design_lanes() -> tuple[str, ...]:
     contract = (
         WORKFLOW.parents[2]
         / "src"
-        / "kiro_crew"
+        / "aj_crew"
         / "builtin_skills"
-        / "kirocrew-dev"
-        / "kirocrew-prepare-pr"
+        / "ajcrew-dev"
+        / "ajcrew-prepare-pr"
         / "scripts"
         / "_review_contract.py"
     )

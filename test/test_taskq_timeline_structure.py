@@ -13,7 +13,7 @@ import ast
 import pytest
 import source_corpus
 
-from kiro_crew.dashboard.handlers import tasks as tasks_mod
+from aj_crew.dashboard.handlers import tasks as tasks_mod
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_test_taskq_timeline_structure")
 
@@ -30,8 +30,8 @@ _ALLOWED_IMPORTS = {
     "dataclasses",
     "datetime",
     "typing",
-    "kiro_crew.taskq",
-    "kiro_crew.taskq.adapters.runner",
+    "aj_crew.taskq",
+    "aj_crew.taskq.adapters.runner",
 }
 #: Calls that would write, mutate or emit through the task store, a file or the crew
 #: log. ``append`` and ``replace`` are not listed: here they are a list's and a
@@ -78,14 +78,14 @@ def test_the_timeline_is_a_read_only_leaf_with_no_scrubber_of_its_own() -> None:
             for inner in node.body:
                 if isinstance(inner, ast.ImportFrom) and inner.module:
                     imported.add(inner.module)
-    extra = imported - _ALLOWED_IMPORTS - {"kiro_crew.taskq.store"}
+    extra = imported - _ALLOWED_IMPORTS - {"aj_crew.taskq.store"}
     assert not extra, f"timeline.py imports {sorted(extra)}; it is a leaf under taskq"
     names = {
         n.name for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
     }
     assert not {n for n in names if any(w in n.lower() for w in ("scrub", "redact", "mask"))}, names
     source = (source_corpus.src_root() / _TIMELINE).read_text(encoding="utf-8")
-    assert "kiro_crew.security" not in source and "redact_and_truncate" not in source
+    assert "aj_crew.security" not in source and "redact_and_truncate" not in source
 
 
 def test_the_timeline_makes_no_mutating_call_and_never_opens_a_file() -> None:
@@ -101,13 +101,11 @@ def test_the_crew_log_is_reached_only_through_its_read_surface() -> None:
     tree = _timeline_tree()
     pulled: set[str] = set()
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith(
-            "kiro_crew.crew_log"
-        ):
+        if isinstance(node, ast.ImportFrom) and (node.module or "").startswith("aj_crew.crew_log"):
             pulled |= {f"{node.module}.{alias.name}" for alias in node.names}
     assert pulled == {
-        "kiro_crew.crew_log.read.read_page",
-        "kiro_crew.crew_log.resolve.child_record",
+        "aj_crew.crew_log.read.read_page",
+        "aj_crew.crew_log.resolve.child_record",
     }, sorted(pulled)
 
 

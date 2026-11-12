@@ -22,7 +22,7 @@ from agent_home_isolation_helpers import (
     _spec_pinned_to,
 )
 
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -39,7 +39,7 @@ def _child_env(**overrides: str) -> dict[str, str]:
         **os.environ,
         "PYTHONPATH": os.pathsep.join([str(REPO_ROOT / "src"), *deps]),
     }
-    env.pop("KIROCREW_HOME", None)
+    env.pop("AJCREW_HOME", None)
     env.update(overrides)
     return env
 
@@ -54,8 +54,8 @@ class TestForeignHomeDerivedSpecWrites:
     def _foreign_shared_dir(monkeypatch, agent_mod, tmp_path) -> Path:
         """A shared agents dir whose owned specs are pinned to ANOTHER home."""
         monkeypatch.delenv("KIRO_HOME", raising=False)
-        monkeypatch.delenv("KIROCREW_POD", raising=False)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "my-home"))
+        monkeypatch.delenv("AJCREW_POD", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "my-home"))
         _durable_checkout(monkeypatch, agent_mod)
         shared = tmp_path / "agents"
         shared.mkdir()
@@ -67,14 +67,14 @@ class TestForeignHomeDerivedSpecWrites:
 
     def test_a_new_derived_spec_is_not_created(self, monkeypatch, tmp_path):
         """The write is refused, not merely warned about."""
-        from kiro_crew import agent
-        from kiro_crew.agent_files import WORKER_AGENT_FILENAME
+        from aj_crew import agent
+        from aj_crew.agent_files import WORKER_AGENT_FILENAME
 
         shared = self._foreign_shared_dir(monkeypatch, agent, tmp_path)
         target = shared / WORKER_AGENT_FILENAME
 
         with pytest.raises(agent.SharedAgentHomeRefused):
-            agent._atomic_json_write(target, {"name": "kirocrew-worker"})
+            agent._atomic_json_write(target, {"name": "ajcrew-worker"})
 
         assert (
             not target.exists()
@@ -86,8 +86,8 @@ class TestForeignHomeDerivedSpecWrites:
         The spec editor, the side spec and the Connections mint already treat
         ``OSError`` as a failure, so the base class is the contract.
         """
-        from kiro_crew import agent
-        from kiro_crew.agent_files import WORKER_AGENT_FILENAME
+        from aj_crew import agent
+        from aj_crew.agent_files import WORKER_AGENT_FILENAME
 
         shared = self._foreign_shared_dir(monkeypatch, agent, tmp_path)
 
@@ -97,8 +97,8 @@ class TestForeignHomeDerivedSpecWrites:
 
     def test_an_existing_derived_spec_is_left_byte_identical(self, monkeypatch, tmp_path):
         """The harm is an OVERWRITE of the real install's working spec."""
-        from kiro_crew import agent
-        from kiro_crew.agent_files import WORKER_AGENT_FILENAME
+        from aj_crew import agent
+        from aj_crew.agent_files import WORKER_AGENT_FILENAME
 
         shared = self._foreign_shared_dir(monkeypatch, agent, tmp_path)
         target = shared / WORKER_AGENT_FILENAME
@@ -106,7 +106,7 @@ class TestForeignHomeDerivedSpecWrites:
         target.write_text(sentinel, encoding="utf-8")
 
         with pytest.raises(agent.SharedAgentHomeRefused):
-            agent._atomic_json_write(target, {"name": "kirocrew-worker", "sentinel": "mine"})
+            agent._atomic_json_write(target, {"name": "ajcrew-worker", "sentinel": "mine"})
 
         assert (
             target.read_text(encoding="utf-8") == sentinel
@@ -119,9 +119,9 @@ class TestForeignHomeDerivedSpecWrites:
         dispatch machinery) and reaches the shared directory the same way the
         other writers that go through :func:`_atomic_json_write` do.
         """
-        from kiro_crew import agent
-        from kiro_crew.agent_files import GUEST_AGENT_FILENAME
-        from kiro_crew.agent_materialization import service_agents
+        from aj_crew import agent
+        from aj_crew.agent_files import GUEST_AGENT_FILENAME
+        from aj_crew.agent_materialization import service_agents
 
         shared = self._foreign_shared_dir(monkeypatch, agent, tmp_path)
 
@@ -138,8 +138,8 @@ class TestForeignHomeDerivedSpecWrites:
         A permission decision missing from the audit trail cannot be reviewed, so
         ``_declined_home_warned`` dedupes only the log line, never the denied event.
         """
-        from kiro_crew import agent
-        from kiro_crew.agent_files import GUEST_AGENT_FILENAME, WORKER_AGENT_FILENAME
+        from aj_crew import agent
+        from aj_crew.agent_files import GUEST_AGENT_FILENAME, WORKER_AGENT_FILENAME
 
         shared = self._foreign_shared_dir(monkeypatch, agent, tmp_path)
         events: list[dict] = []
@@ -176,11 +176,11 @@ class TestForeignHomeDerivedSpecWrites:
         """A refused worker write must not stamp the mirror as re-derived.
 
         The spawn gate reads ``set_mirrored_from``: a stamp for unwritten bytes would
-        pass it while the mirror still carries grants revoked from ``kirocrew.json``.
+        pass it while the mirror still carries grants revoked from ``ajcrew.json``.
         """
-        from kiro_crew import agent, agent_state
-        from kiro_crew.agent_files import WORKER_AGENT_FILENAME
-        from kiro_crew.agent_materialization import worker_agent
+        from aj_crew import agent, agent_state
+        from aj_crew.agent_files import WORKER_AGENT_FILENAME
+        from aj_crew.agent_materialization import worker_agent
 
         shared = self._foreign_shared_dir(monkeypatch, agent, tmp_path)
         recorded: list[tuple] = []
@@ -192,7 +192,7 @@ class TestForeignHomeDerivedSpecWrites:
 
         with pytest.raises(OSError):
             worker_agent._write_worker_spec(
-                {"name": "kirocrew-worker"},
+                {"name": "ajcrew-worker"},
                 shared / WORKER_AGENT_FILENAME,
                 template_grants=[],
             )
@@ -205,11 +205,11 @@ class TestForeignHomeDerivedSpecWrites:
     @pytest.mark.parametrize(
         "module, function, needs_specific_arm",
         [
-            ("kiro_crew.dashboard.agent_admin.agent_detail", "api_agent_detail", True),
-            ("kiro_crew.dashboard.side_readonly_spec", "publish_readonly_spec", False),
-            ("kiro_crew.dashboard.handlers.mcp_agent_sync", "_sync_mcp_to_agent_unlocked", True),
+            ("aj_crew.dashboard.agent_admin.agent_detail", "api_agent_detail", True),
+            ("aj_crew.dashboard.side_readonly_spec", "publish_readonly_spec", False),
+            ("aj_crew.dashboard.handlers.mcp_agent_sync", "_sync_mcp_to_agent_unlocked", True),
             (
-                "kiro_crew.dashboard.handlers.mcp_agent_sync",
+                "aj_crew.dashboard.handlers.mcp_agent_sync",
                 "_sync_mcp_to_agent_batch_unlocked",
                 True,
             ),
@@ -271,9 +271,9 @@ class TestForeignHomeDerivedSpecWrites:
         from aiohttp import web
         from body_stream_helpers import attach_body
 
-        from kiro_crew import agent
-        from kiro_crew.dashboard.handlers import mcp as mcp_mod
-        from kiro_crew.dashboard.handlers.mcp import api_mcp_remove
+        from aj_crew import agent
+        from aj_crew.dashboard.handlers import mcp as mcp_mod
+        from aj_crew.dashboard.handlers.mcp import api_mcp_remove
 
         shared = self._foreign_shared_dir(monkeypatch, agent, tmp_path)
         monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", shared)
@@ -296,7 +296,7 @@ class TestForeignHomeDerivedSpecWrites:
             return None
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers._shared.require_owner_dashboard_request",
+            "aj_crew.dashboard.handlers._shared.require_owner_dashboard_request",
             _no_denial,
         )
 
@@ -337,9 +337,9 @@ class TestForeignHomeDerivedSpecWrites:
         from aiohttp import web
         from body_stream_helpers import attach_body
 
-        from kiro_crew import agent
-        from kiro_crew.dashboard.handlers import mcp as mcp_mod
-        from kiro_crew.dashboard.handlers.mcp import api_mcp_toggle
+        from aj_crew import agent
+        from aj_crew.dashboard.handlers import mcp as mcp_mod
+        from aj_crew.dashboard.handlers.mcp import api_mcp_toggle
 
         shared = self._foreign_shared_dir(monkeypatch, agent, tmp_path)
         monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", shared)
@@ -362,7 +362,7 @@ class TestForeignHomeDerivedSpecWrites:
             return None
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers._shared.require_owner_dashboard_request",
+            "aj_crew.dashboard.handlers._shared.require_owner_dashboard_request",
             _no_denial,
         )
 
@@ -393,25 +393,25 @@ class TestForeignHomeDerivedSpecWrites:
         """A refused mirror re-derive must not read as a generation mismatch.
 
         ``rederive_worker_agent`` never raises, so the gate asks the ownership question
-        itself. The remedy is removing stale ``kirocrew*.json`` specs, not ``KIRO_HOME``,
-        which moves kiro-cli session storage that Kiro Crew still reads from the host.
+        itself. The remedy is removing stale ``ajcrew*.json`` specs, not ``KIRO_HOME``,
+        which moves kiro-cli session storage that Aj Crew still reads from the host.
         """
         import json
 
-        from kiro_crew import agent
-        from kiro_crew.agent_materialization import worker_agent
+        from aj_crew import agent
+        from aj_crew.agent_materialization import worker_agent
 
         shared = self._foreign_shared_dir(monkeypatch, agent, tmp_path)
         monkeypatch.setattr(agent, "KIRO_AGENTS_DIR", shared)
         # A mirror that exists, parses, and carries the two marks every
-        # derivation writes (the declared name and a kirocrew-work reference),
+        # derivation writes (the declared name and an ajcrew-work reference),
         # so the gate attributes it as ours and reaches the re-derive instead
         # of refusing earlier as a foreign spec.
         (shared / worker_agent._WORKER_AGENT_FILENAME).write_text(
             json.dumps(
                 {
-                    "name": "kirocrew-worker",
-                    "mcpServers": {"kirocrew-work": {"command": "x"}},
+                    "name": "ajcrew-worker",
+                    "mcpServers": {"ajcrew-work": {"command": "x"}},
                 }
             ),
             encoding="utf-8",
@@ -423,7 +423,7 @@ class TestForeignHomeDerivedSpecWrites:
 
         message = str(caught.value)
         assert str(shared) in message, "the refusal does not name the directory it cannot write"
-        assert "kirocrew*.json" in message, "the refusal does not name the remedy"
+        assert "ajcrew*.json" in message, "the refusal does not name the remedy"
 
     def test_a_refused_fork_refresh_blocks_its_sessions(self, monkeypatch, tmp_path):
         """An ownership refusal must record the fork as unrefreshed.
@@ -435,11 +435,11 @@ class TestForeignHomeDerivedSpecWrites:
         import json
         from types import SimpleNamespace
 
-        from kiro_crew import agent, agent_state
-        from kiro_crew.agent_materialization import fork_refresh
+        from aj_crew import agent, agent_state
+        from aj_crew.agent_materialization import fork_refresh
 
         shared = self._foreign_shared_dir(monkeypatch, agent, tmp_path)
-        fork_name = "kirocrew-fork-of-something"
+        fork_name = "ajcrew-fork-of-something"
         crew = "some-crew"
         (shared / f"{fork_name}.json").write_text(
             json.dumps({"name": fork_name, "mcpServers": {}}),
@@ -453,14 +453,14 @@ class TestForeignHomeDerivedSpecWrites:
         monkeypatch.setattr(
             agent_state,
             "all_fork_info",
-            lambda: {fork_name: {"forked_from": "kirocrew", "private_to": crew}},
+            lambda: {fork_name: {"forked_from": "ajcrew", "private_to": crew}},
         )
         monkeypatch.setattr(agent_state, "get_capabilities", lambda name: None)
 
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.config.loader import AjCrewConfig
 
         monkeypatch.setattr(
-            KiroCrewConfig,
+            AjCrewConfig,
             "load",
             classmethod(
                 lambda cls: SimpleNamespace(agents={crew: SimpleNamespace(kiro_agent=fork_name)})
@@ -487,20 +487,20 @@ class TestForeignHomeDerivedSpecWrites:
 
         from aiohttp import web
 
-        from kiro_crew import agent
-        from kiro_crew.dashboard.handlers.agents import api_agent_detail
+        from aj_crew import agent
+        from aj_crew.dashboard.handlers.agents import api_agent_detail
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+            "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
             lambda request: True,
         )
         shared = self._foreign_shared_dir(monkeypatch, agent, tmp_path)
-        spec = shared / "kirocrew.json"
+        spec = shared / "ajcrew.json"
         before = spec.read_text(encoding="utf-8")
 
         request = MagicMock(spec=web.Request)
         request.method = "PATCH"
-        request.match_info = {"name": "kirocrew"}
+        request.match_info = {"name": "ajcrew"}
         request.app = {"state": MagicMock()}
 
         async def _json():
@@ -519,7 +519,7 @@ class TestForeignHomeDerivedSpecWrites:
         ), "the refused PATCH still modified the spec on disk"
         # The model branch writes a per-home sidecar BEFORE the spec, so ownership
         # must be checked first or the sidecar records a model the spec never got.
-        from kiro_crew import agent_state
+        from aj_crew import agent_state
 
         assert not agent_state._state_path().exists(), (
             "the refused model PATCH still wrote the per-home sidecar, which now "
@@ -532,8 +532,8 @@ class TestForeignHomeDerivedSpecWrites:
         Audit calls tolerate an unwritable SEL log, but the refusal must still hold
         with the sink raising on every call.
         """
-        from kiro_crew import agent
-        from kiro_crew.agent_files import WORKER_AGENT_FILENAME
+        from aj_crew import agent
+        from aj_crew.agent_files import WORKER_AGENT_FILENAME
 
         shared = self._foreign_shared_dir(monkeypatch, agent, tmp_path)
 
@@ -556,8 +556,8 @@ class TestForeignHomeDerivedSpecWrites:
         nothing. It is authorized by the writer, not by filename, since any writer could
         pick the right name; both an authorized and an unauthorized write are pinned.
         """
-        from kiro_crew import agent
-        from kiro_crew.connections.mint import _mint_spec_name
+        from aj_crew import agent
+        from aj_crew.connections.mint import _mint_spec_name
 
         shared = self._foreign_shared_dir(monkeypatch, agent, tmp_path)
         target = shared / f"{_mint_spec_name('some-provider')}.json"
@@ -581,7 +581,7 @@ class TestForeignHomeDerivedSpecWrites:
         import ast as _ast
 
         source = (
-            Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "connections" / "mint.py"
+            Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "connections" / "mint.py"
         ).read_text(encoding="utf-8")
         authorized = [
             node.lineno
@@ -608,7 +608,7 @@ class TestForeignHomeDerivedSpecWrites:
         source = (
             Path(__file__).resolve().parents[1]
             / "src"
-            / "kiro_crew"
+            / "aj_crew"
             / "dashboard"
             / "handlers"
             / "mcp.py"
@@ -642,31 +642,31 @@ class TestForeignHomeDerivedSpecWrites:
 
     def test_the_default_home_instance_still_writes_derived_specs(self, monkeypatch, tmp_path):
         """The other half of the contract: the real install keeps owning them."""
-        from kiro_crew import agent
-        from kiro_crew.agent_files import WORKER_AGENT_FILENAME
+        from aj_crew import agent
+        from aj_crew.agent_files import WORKER_AGENT_FILENAME
 
         monkeypatch.delenv("KIRO_HOME", raising=False)
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
-        monkeypatch.delenv("KIROCREW_POD", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_POD", raising=False)
         _durable_checkout(monkeypatch, agent)
         shared = tmp_path / "agents"
         shared.mkdir()
         _pretend_target_is_shared(monkeypatch, agent, shared)
         target = shared / WORKER_AGENT_FILENAME
 
-        agent._atomic_json_write(target, {"name": "kirocrew-worker"})
+        agent._atomic_json_write(target, {"name": "ajcrew-worker"})
 
         assert target.is_file(), "the default-home instance must still write derived specs"
 
     def test_self_pinned_specs_keep_their_writer(self, monkeypatch, tmp_path):
         """A relocated install that wrote these specs must not lock itself out."""
-        from kiro_crew import agent
-        from kiro_crew.agent_files import WORKER_AGENT_FILENAME
+        from aj_crew import agent
+        from aj_crew.agent_files import WORKER_AGENT_FILENAME
 
         own_home = (tmp_path / "relocated-home").resolve()
         monkeypatch.delenv("KIRO_HOME", raising=False)
-        monkeypatch.delenv("KIROCREW_POD", raising=False)
-        monkeypatch.setenv("KIROCREW_HOME", str(own_home))
+        monkeypatch.delenv("AJCREW_POD", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(own_home))
         _durable_checkout(monkeypatch, agent)
         shared = tmp_path / "agents"
         shared.mkdir()
@@ -674,18 +674,18 @@ class TestForeignHomeDerivedSpecWrites:
         _pretend_target_is_shared(monkeypatch, agent, shared)
         target = shared / WORKER_AGENT_FILENAME
 
-        agent._atomic_json_write(target, {"name": "kirocrew-worker"})
+        agent._atomic_json_write(target, {"name": "ajcrew-worker"})
 
         assert target.is_file(), "provenance matching must let the writer keep refreshing"
 
     def test_a_private_target_is_untouched(self, monkeypatch, tmp_path):
         """A redirected (private) agents dir is nobody else's — write it."""
-        from kiro_crew import agent
-        from kiro_crew.agent_files import WORKER_AGENT_FILENAME
+        from aj_crew import agent
+        from aj_crew.agent_files import WORKER_AGENT_FILENAME
 
         monkeypatch.delenv("KIRO_HOME", raising=False)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "my-home"))
-        monkeypatch.delenv("KIROCREW_POD", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "my-home"))
+        monkeypatch.delenv("AJCREW_POD", raising=False)
         _durable_checkout(monkeypatch, agent)
         private = tmp_path / "private-agents"
         private.mkdir()
@@ -693,13 +693,13 @@ class TestForeignHomeDerivedSpecWrites:
         monkeypatch.setattr(agent, "ambient_agents_dir", lambda: tmp_path / "ambient-agents")
         target = private / WORKER_AGENT_FILENAME
 
-        agent._atomic_json_write(target, {"name": "kirocrew-worker"})
+        agent._atomic_json_write(target, {"name": "ajcrew-worker"})
 
         assert target.is_file(), "a private target must not be guarded"
 
     def test_a_non_spec_write_is_never_guarded(self, monkeypatch, tmp_path):
         """The guard is scoped to the agents dir; other JSON writers are untouched."""
-        from kiro_crew import agent
+        from aj_crew import agent
 
         self._foreign_shared_dir(monkeypatch, agent, tmp_path)
         elsewhere = tmp_path / "elsewhere"
@@ -731,9 +731,9 @@ class TestTheMcpRegistryStaysWithItsWriter:
         kiro_home_dir.mkdir()
         probe = (
             "import json, pathlib\n"
-            "from kiro_crew import agent\n"
-            "from kiro_crew.agent_materialization import mcp_sources\n"
-            "from kiro_crew.dashboard.handlers import mcp as mcp_handlers\n"
+            "from aj_crew import agent\n"
+            "from aj_crew.agent_materialization import mcp_sources\n"
+            "from aj_crew.dashboard.handlers import mcp as mcp_handlers\n"
             "import inspect\n"
             "print(json.dumps({\n"
             "    'reader': str(agent._KIRO_MCP_JSON),\n"
@@ -778,21 +778,19 @@ def _stub_disconnect_collaborators(monkeypatch, *, url: str, purge) -> None:
 
     Patched at each DEFINING module: ``remove_provider_entry`` imports them inside its
     body, so a patch on ``ownership`` would do nothing. ``spec_census`` lives in
-    ``ownership``; its one ``kirocrew``-scope entry is the minimum that makes the slug
+    ``ownership``; its one ``ajcrew``-scope entry is the minimum that makes the slug
     owned with no second holder, so the revoke is reached.
     """
     monkeypatch.setattr(
-        "kiro_crew.connections.ownership.spec_census",
-        lambda *a, **k: ({"kirocrew": {"demo": {"url": url}}}, ()),
+        "aj_crew.connections.ownership.spec_census",
+        lambda *a, **k: ({"ajcrew": {"demo": {"url": url}}}, ()),
     )
-    monkeypatch.setattr("kiro_crew.mcp_discovery.list_servers", lambda *a, **k: [])
-    monkeypatch.setattr("kiro_crew.mcp_grant.revoke_local_grant", lambda *a, **k: [])
-    monkeypatch.setattr("kiro_crew.mcp_grant.surviving_grant_artifacts", lambda *a, **k: ())
-    monkeypatch.setattr("kiro_crew.dashboard.handlers.mcp._purge_server_config", purge)
-    monkeypatch.setattr("kiro_crew.agent.rebuild_agent_config", lambda *a, **k: None)
-    monkeypatch.setattr(
-        "kiro_crew.connections.warm.rearm_invalidated_provider", lambda *a, **k: None
-    )
+    monkeypatch.setattr("aj_crew.mcp_discovery.list_servers", lambda *a, **k: [])
+    monkeypatch.setattr("aj_crew.mcp_grant.revoke_local_grant", lambda *a, **k: [])
+    monkeypatch.setattr("aj_crew.mcp_grant.surviving_grant_artifacts", lambda *a, **k: ())
+    monkeypatch.setattr("aj_crew.dashboard.handlers.mcp._purge_server_config", purge)
+    monkeypatch.setattr("aj_crew.agent.rebuild_agent_config", lambda *a, **k: None)
+    monkeypatch.setattr("aj_crew.connections.warm.rearm_invalidated_provider", lambda *a, **k: None)
 
 
 # A refusal reported as success stops the operator from fixing what is still broken.
@@ -806,8 +804,8 @@ class TestARefusedWriteIsNotReportedAsDone:
         The purge may fail without stopping the grant revoke, but nothing reconciles
         the leftover entry, so ``entryRemoved`` must not claim it is gone.
         """
-        from kiro_crew.agent import SharedAgentHomeRefused
-        from kiro_crew.connections import ownership as own
+        from aj_crew.agent import SharedAgentHomeRefused
+        from aj_crew.connections import ownership as own
 
         url = "https://example.invalid/mcp"
         refused: list[str] = []
@@ -834,7 +832,7 @@ class TestARefusedWriteIsNotReportedAsDone:
         false unconditionally, which would tell every operator their disconnect
         failed.
         """
-        from kiro_crew.connections import ownership as own
+        from aj_crew.connections import ownership as own
 
         url = "https://example.invalid/mcp"
         _stub_disconnect_collaborators(
@@ -846,7 +844,7 @@ class TestARefusedWriteIsNotReportedAsDone:
         assert scope.entry_removed is True, "a committed purge must still report the removal"
 
 
-# The rebuild's derived installs run after it writes kirocrew.json, and the temp-checkout
+# The rebuild's derived installs run after it writes ajcrew.json, and the temp-checkout
 # arm declines once a spec exists, so a per-write answer would refuse the rebuild itself.
 class TestTheRebuildsOwnDecisionCoversItsDerivedSpecs:
     """One ownership decision per rebuild, not one per spec it writes."""
@@ -859,8 +857,8 @@ class TestTheRebuildsOwnDecisionCoversItsDerivedSpecs:
         predates the suite's tempfile redirect, so the temp arm would be missed.
         """
         monkeypatch.delenv("KIRO_HOME", raising=False)
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
-        monkeypatch.delenv("KIROCREW_POD", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_POD", raising=False)
         _pretend_target_is_shared(monkeypatch, agent_mod, shared)
 
     def test_a_fresh_temp_install_is_refused_once_its_own_main_spec_exists(
@@ -868,20 +866,20 @@ class TestTheRebuildsOwnDecisionCoversItsDerivedSpecs:
     ):
         """The defect, stated as the guard's own answer flipping mid-rebuild.
 
-        An empty shared dir is writable; writing ``kirocrew.json`` flips the answer. This
+        An empty shared dir is writable; writing ``ajcrew.json`` flips the answer. This
         pins :func:`_decline_shared_agent_home` so the fix is about the rebuild's scope.
         """
         import tempfile
 
-        from kiro_crew import agent
+        from aj_crew import agent
 
         shared = tmp_path / "agents"
         shared.mkdir()
         with tempfile.TemporaryDirectory(prefix="kc-fresh-") as scratch_name:
             clone = Path(scratch_name) / "repo"
-            (clone / "src" / "kiro_crew").mkdir(parents=True)
+            (clone / "src" / "aj_crew").mkdir(parents=True)
             (clone / ".git").mkdir()  # a DIRECTORY -> ordinary clone, not a worktree
-            monkeypatch.setattr(agent, "__file__", str(clone / "src" / "kiro_crew" / "agent.py"))
+            monkeypatch.setattr(agent, "__file__", str(clone / "src" / "aj_crew" / "agent.py"))
             self._temp_checkout(monkeypatch, agent, shared)
 
             assert agent._decline_shared_agent_home(audit=False) is None, (
@@ -904,17 +902,17 @@ class TestTheRebuildsOwnDecisionCoversItsDerivedSpecs:
         """
         import tempfile
 
-        from kiro_crew import agent
-        from kiro_crew.agent_files import WORKER_AGENT_FILENAME
+        from aj_crew import agent
+        from aj_crew.agent_files import WORKER_AGENT_FILENAME
 
         shared = tmp_path / "agents"
         shared.mkdir()
         (shared / agent.AGENT_FILENAME).write_text("{}", encoding="utf-8")
         with tempfile.TemporaryDirectory(prefix="kc-fresh-") as scratch_name:
             clone = Path(scratch_name) / "repo"
-            (clone / "src" / "kiro_crew").mkdir(parents=True)
+            (clone / "src" / "aj_crew").mkdir(parents=True)
             (clone / ".git").mkdir()
-            monkeypatch.setattr(agent, "__file__", str(clone / "src" / "kiro_crew" / "agent.py"))
+            monkeypatch.setattr(agent, "__file__", str(clone / "src" / "aj_crew" / "agent.py"))
             self._temp_checkout(monkeypatch, agent, shared)
             target = shared / WORKER_AGENT_FILENAME
 
@@ -940,8 +938,8 @@ class TestTheRebuildsOwnDecisionCoversItsDerivedSpecs:
         The flag must reset in a ``finally``, or one raise exempts every later write in
         the process from the guard.
         """
-        from kiro_crew import agent
-        from kiro_crew.agent_files import WORKER_AGENT_FILENAME
+        from aj_crew import agent
+        from aj_crew.agent_files import WORKER_AGENT_FILENAME
 
         shared = self._foreign_shared_dir_for_rebuild(monkeypatch, agent, tmp_path)
 
@@ -972,8 +970,8 @@ class TestTheRebuildsOwnDecisionCoversItsDerivedSpecs:
         """
         import threading
 
-        from kiro_crew import agent
-        from kiro_crew.agent_files import WORKER_AGENT_FILENAME
+        from aj_crew import agent
+        from aj_crew.agent_files import WORKER_AGENT_FILENAME
 
         shared = self._foreign_shared_dir_for_rebuild(monkeypatch, agent, tmp_path)
         monkeypatch.setattr(agent, "_decline_shared_agent_home", lambda **_k: shared)
@@ -1010,8 +1008,8 @@ class TestTheRebuildsOwnDecisionCoversItsDerivedSpecs:
     def _foreign_shared_dir_for_rebuild(monkeypatch, agent_mod, tmp_path) -> Path:
         """A shared agents dir this instance does not own, for the raise test."""
         monkeypatch.delenv("KIRO_HOME", raising=False)
-        monkeypatch.delenv("KIROCREW_POD", raising=False)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "my-home"))
+        monkeypatch.delenv("AJCREW_POD", raising=False)
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "my-home"))
         _durable_checkout(monkeypatch, agent_mod)
         shared = tmp_path / "agents"
         shared.mkdir()

@@ -1,8 +1,8 @@
-"""``kiro_crew.session_pid`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.session_pid`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.session_pid`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over the
+``aj_crew.session_pid`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over the
 ``session_pid_*.py`` owners beside it. Callers, tests and documents still reach every
-name as ``kiro_crew.session_pid.<name>``, and the moved code reads its names as plain
+name as ``aj_crew.session_pid.<name>``, and the moved code reads its names as plain
 module globals, so a patch through the facade reaches that code only because the mirror
 writes it into every module holding the name.
 
@@ -27,7 +27,7 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror, session_pid
+from aj_crew import _facade_mirror, session_pid
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_session_pid_facade")
 
@@ -35,12 +35,12 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_session_pid_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams",)
 
-FACADE = "kiro_crew.session_pid"
+FACADE = "aj_crew.session_pid"
 SRC_DIR = Path(session_pid.__file__).resolve().parent
 
 #: ``session_pid_*.py`` siblings that are modules of their own, not owners: the HMAC
 #: sidecar contract for ``session_pid_<pid>`` mappings, which never lived in the facade.
-_NOT_OWNERS = frozenset({"kiro_crew.session_pid_sig"})
+_NOT_OWNERS = frozenset({"aj_crew.session_pid_sig"})
 
 #: Names the test trees are known to patch through the facade, one per kind of seam: a
 #: tracking-file probe every sweep reads, an environ marker read several owners call, the
@@ -52,7 +52,7 @@ _KNOWN_SEAMS = frozenset(
     {
         "_pid_start_token",
         "_pid_file_path",
-        "_env_has_kirocrew_marker",
+        "_env_has_ajcrew_marker",
         "_our_orphan_pids",
         "_PROTECTED_PIDS",
         "_rss_ceiling_inert_warned",
@@ -64,28 +64,28 @@ _KNOWN_SEAMS = frozenset(
 )
 
 #: The project names the facade imported before its owners moved out, with their home
-#: modules. A reader that spells one through ``kiro_crew.session_pid`` keeps
+#: modules. A reader that spells one through ``aj_crew.session_pid`` keeps
 #: type-checking only while the facade binds it itself.
 _BASE_PROJECT_IMPORTS = {
-    "platform_compat": "kiro_crew",
-    "agent_process_markers": "kiro_crew.agent_sdk.backends",
-    "node_adapter_entry_relpaths": "kiro_crew.agent_sdk.backends",
-    "atomic_write": "kiro_crew.atomic_write",
-    "config_dir": "kiro_crew.config.paths",
-    "KIROCREW_SANDBOX_TOOL_ENV": "kiro_crew.constants",
-    "KIROCREW_SANDBOX_TOOL_VALUE": "kiro_crew.constants",
-    "KIROCREW_SPAWN_HOME_ENV": "kiro_crew.constants",
-    "KIROCREW_SPAWN_INSTANCE_ENV": "kiro_crew.constants",
-    "KIROCREW_SPAWNED_ENV": "kiro_crew.constants",
-    "KIROCREW_SPAWNED_VALUE": "kiro_crew.constants",
-    "TOTAL_SHUTDOWN_BUDGET_SECS": "kiro_crew.mcp_gateway.shutdown_budget",
-    "ensure_directory": "kiro_crew.owner_only_files",
-    "owner_only_opener_for": "kiro_crew.owner_only_files",
-    "PidRefcount": "kiro_crew.runtime_ownership",
-    "authorize_runtime_kill": "kiro_crew.runtime_ownership",
-    "commit_runtime_teardown": "kiro_crew.runtime_ownership",
-    "release_runtime_teardown": "kiro_crew.runtime_ownership",
-    "tenancy_epoch": "kiro_crew.runtime_ownership",
+    "platform_compat": "aj_crew",
+    "agent_process_markers": "aj_crew.agent_sdk.backends",
+    "node_adapter_entry_relpaths": "aj_crew.agent_sdk.backends",
+    "atomic_write": "aj_crew.atomic_write",
+    "config_dir": "aj_crew.config.paths",
+    "AJCREW_SANDBOX_TOOL_ENV": "aj_crew.constants",
+    "AJCREW_SANDBOX_TOOL_VALUE": "aj_crew.constants",
+    "AJCREW_SPAWN_HOME_ENV": "aj_crew.constants",
+    "AJCREW_SPAWN_INSTANCE_ENV": "aj_crew.constants",
+    "AJCREW_SPAWNED_ENV": "aj_crew.constants",
+    "AJCREW_SPAWNED_VALUE": "aj_crew.constants",
+    "TOTAL_SHUTDOWN_BUDGET_SECS": "aj_crew.mcp_gateway.shutdown_budget",
+    "ensure_directory": "aj_crew.owner_only_files",
+    "owner_only_opener_for": "aj_crew.owner_only_files",
+    "PidRefcount": "aj_crew.runtime_ownership",
+    "authorize_runtime_kill": "aj_crew.runtime_ownership",
+    "commit_runtime_teardown": "aj_crew.runtime_ownership",
+    "release_runtime_teardown": "aj_crew.runtime_ownership",
+    "tenancy_epoch": "aj_crew.runtime_ownership",
 }
 
 
@@ -104,7 +104,7 @@ def _test_tree_files() -> list[Path]:
         rel = path.relative_to(root).as_posix()
         if rel == "conftest.py" or rel.startswith("test/"):
             found.append(path)
-        elif rel.startswith("src/kiro_crew/apps/builtins/") and (
+        elif rel.startswith("src/aj_crew/apps/builtins/") and (
             "/tests/" in rel or path.name.startswith("test_") or path.name == "conftest.py"
         ):
             found.append(path)
@@ -114,13 +114,13 @@ def _test_tree_files() -> list[Path]:
 def _spellings() -> dict[str, str]:
     """The facade's own name and every src module's module-level binding of it
     (``cli_doctor``, ``diag.procs`` and ``runtime_reconcile`` bind
-    ``from kiro_crew import session_pid``)."""
+    ``from aj_crew import session_pid``)."""
     spellings = {FACADE: FACADE}
     for path, _text, tree in source_corpus.parsed_candidates(require_any=("session_pid",)):
         rel = path.relative_to(source_corpus.src_root()).with_suffix("")
-        module = ".".join(("kiro_crew", *rel.parts)).removesuffix(".__init__")
+        module = ".".join(("aj_crew", *rel.parts)).removesuffix(".__init__")
         for node in tree.body:
-            if isinstance(node, ast.ImportFrom) and node.module == "kiro_crew":
+            if isinstance(node, ast.ImportFrom) and node.module == "aj_crew":
                 for alias in node.names:
                     if alias.name == "session_pid" and module != FACADE:
                         spellings[f"{module}.{alias.asname or alias.name}"] = FACADE
@@ -174,7 +174,7 @@ def test_the_owners_are_the_session_pid_siblings_in_layer_order() -> None:
     imports only owners listed before it: the order the facade loads them and a read
     resolves in."""
     owners = list(_index().owners)
-    on_disk = {f"kiro_crew.{p.stem}": p for p in SRC_DIR.glob("session_pid_*.py")}
+    on_disk = {f"aj_crew.{p.stem}": p for p in SRC_DIR.glob("session_pid_*.py")}
     assert set(on_disk) >= _NOT_OWNERS, "a listed non-owner module is gone; drop it here"
     assert sorted(owners) == sorted(set(on_disk) - _NOT_OWNERS)
     late: dict[str, list[str]] = {}
@@ -197,7 +197,7 @@ def test_the_facade_keeps_the_default_read_path_and_forwards_no_table() -> None:
 
 
 def test_the_family_logs_through_one_logger_named_for_the_facade() -> None:
-    """``caplog`` filters keyed on ``kiro_crew.session_pid`` keep seeing the moved code."""
+    """``caplog`` filters keyed on ``aj_crew.session_pid`` keep seeing the moved code."""
     assert session_pid.logger.name == FACADE
     loggers = [m for m in _family() if "logger" in vars(m)]
     assert len(loggers) == len(_family())
@@ -221,7 +221,7 @@ def _home(value: object) -> str:
 
 
 def test_every_project_name_the_facade_imported_stays_bound_on_it() -> None:
-    """A name the facade imported from the rest of ``kiro_crew`` is bound on it still,
+    """A name the facade imported from the rest of ``aj_crew`` is bound on it still,
     statically and as its home module's object; and no name the mirror serves comes
     from a project module outside the family, which would be visible to a type checker
     only through a ``TYPE_CHECKING`` import."""
@@ -242,7 +242,7 @@ def test_every_project_name_the_facade_imported_stays_bound_on_it() -> None:
     served_from_outside = {
         name: _home(getattr(session_pid, name))
         for name in sorted(set(_index().exports) - defined)
-        if _home(getattr(session_pid, name)).startswith("kiro_crew")
+        if _home(getattr(session_pid, name)).startswith("aj_crew")
         and _home(getattr(session_pid, name)) not in family
     }
     assert served_from_outside == {}

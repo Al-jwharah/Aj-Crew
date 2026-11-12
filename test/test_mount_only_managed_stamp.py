@@ -1,8 +1,8 @@
 """A mount-only record of an opt-in managed server can be taken away again.
 
 ``template_mcp_additions.reconcile_default_spec`` stamps each entry it merges into
-``kirocrew.json`` with ``MERGED_MARK`` and removes a stamped entry once its record
-is gone. For an opt-in managed server (``kirocrew-dashboard``, ``kirocrew-debug``)
+``ajcrew.json`` with ``MERGED_MARK`` and removes a stamped entry once its record
+is gone. For an opt-in managed server (``ajcrew-dashboard``, ``ajcrew-debug``)
 the next rebuild's managed refresh runs ``_enforce_managed_mcp_ownership`` over
 the entry, which drops every key outside the managed allow-list. Pinned here: the
 refresh keeps the stamp on an opt-in entry, so removing the record unmounts the
@@ -17,33 +17,33 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import template_mcp_additions as additions
-from kiro_crew.agent_files import WORKER_AGENT_FILENAME
+from aj_crew import agent as agent_mod
+from aj_crew import template_mcp_additions as additions
+from aj_crew.agent_files import WORKER_AGENT_FILENAME
 
-DASH = "kirocrew-dashboard"
-DEBUG = "kirocrew-debug"
+DASH = "ajcrew-dashboard"
+DEBUG = "ajcrew-debug"
 
 
 @pytest.fixture()
 def env(tmp_path, monkeypatch) -> Path:
     """A throwaway project, data home and agents dir for ``rebuild_agent_config``."""
-    from kiro_crew.apps import bridges
+    from aj_crew.apps import bridges
 
     project = tmp_path / "project" / "agents"
     project.mkdir(parents=True)
     (project / "defaults.json").write_text(
-        json.dumps({"name": "kirocrew", "tools": ["@kirocrew-core"]}), encoding="utf-8"
+        json.dumps({"name": "ajcrew", "tools": ["@ajcrew-core"]}), encoding="utf-8"
     )
     (project / "prompt.md").write_text("prompt", encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path / "project"))
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path / "project"))
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
 
     kiro_dir = tmp_path / ".kiro" / "agents"
     kiro_dir.mkdir(parents=True)
-    spec_path = kiro_dir / "kirocrew.json"
+    spec_path = kiro_dir / "ajcrew.json"
     monkeypatch.setattr(agent_mod, "KIRO_AGENTS_DIR", kiro_dir)
     monkeypatch.setattr(agent_mod, "kiro_agents_dir_path", lambda: kiro_dir)
     monkeypatch.setattr(agent_mod, "_KIRO_MCP_JSON", tmp_path / "absent-kiro.json")
@@ -118,7 +118,7 @@ def test_the_worker_never_gets_a_recorded_opt_in_set(env):
 
 def test_the_stamp_does_not_withhold_the_per_session_element(env):
     """The stamp is Crew's own bookkeeping, so a stamped entry still mounts per session."""
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     _record(DASH, "mcp-dashboard")
     agent_mod.rebuild_agent_config()
@@ -144,7 +144,7 @@ def test_an_unstamped_opt_in_entry_is_refreshed_as_before(env):
 
 def test_an_always_on_entry_does_not_keep_a_planted_stamp(env):
     spec = _spec(env)
-    spec["mcpServers"]["kirocrew-core"][additions.MERGED_MARK] = True
+    spec["mcpServers"]["ajcrew-core"][additions.MERGED_MARK] = True
     _write(env, spec)
     agent_mod.rebuild_agent_config()
-    assert additions.MERGED_MARK not in _spec(env)["mcpServers"]["kirocrew-core"]
+    assert additions.MERGED_MARK not in _spec(env)["mcpServers"]["ajcrew-core"]

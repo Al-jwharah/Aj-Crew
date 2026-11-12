@@ -37,21 +37,21 @@ import pytest
 # fake sessions, dispatcher factory) so this suite exercises the SAME doubles.
 from test_telegram import _cfg, _dispatcher, _prime_live  # noqa: E402
 
-from kiro_crew.messaging import spawn_approval_delivery as seam
-from kiro_crew.messaging.display_safety import canonicalize_display
-from kiro_crew.messaging.link import (
+from aj_crew.messaging import spawn_approval_delivery as seam
+from aj_crew.messaging.display_safety import canonicalize_display
+from aj_crew.messaging.link import (
     CHAT_TYPE_FORUM,
     CHAT_TYPE_PRIVATE_TOPIC,
     parse_session_key,
 )
-from kiro_crew.messaging.session_trust import (
+from aj_crew.messaging.session_trust import (
     _trusted_sessions,
     clear_trusted_sessions,
     is_session_trusted,
 )
-from kiro_crew.subagent import SpawnApprovalUnreachable
-from kiro_crew.telegram.renderer import TelegramApprovalDecider
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.subagent import SpawnApprovalUnreachable
+from aj_crew.telegram.renderer import TelegramApprovalDecider
+from aj_crew.testing.wait import async_wait_until, await_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -82,7 +82,7 @@ class TestDeliverySeamRegistry:
             return True
 
         seam.register_channel_delivery("telegram", _hook)
-        resolved = seam.resolve_channel_delivery("telegram:kirocrew:direct:7")
+        resolved = seam.resolve_channel_delivery("telegram:ajcrew:direct:7")
         assert resolved is _hook
 
     @pytest.mark.asyncio
@@ -167,8 +167,8 @@ def _spawn_callback():  # type: ignore[no-untyped-def]
     the Slack-DM/dashboard gate does when no surface is attached. The source
     ratchet below pins that the production callback keeps this shape.
     """
-    from kiro_crew.messaging.spawn_approval_delivery import deliver_spawn_approval
-    from kiro_crew.providers.base import LLMEvent
+    from aj_crew.messaging.spawn_approval_delivery import deliver_spawn_approval
+    from aj_crew.providers.base import LLMEvent
 
     async def _approve_spawn_gate(_event: LLMEvent, _parent: str) -> bool:
         raise SpawnApprovalUnreachable("no interactive surface is attached")
@@ -230,7 +230,7 @@ class TestWrappedSpawnApproval:
         REAL ``_spawn_approve`` keeps the seam-first shape and that the exact
         substring the unreachable-gate ratchet also asserts is still present.
         """
-        import kiro_crew.slack.gateway as gateway_mod
+        import aj_crew.slack.gateway as gateway_mod
 
         # ``_spawn_approve`` is a closure of ``_init_subagents``, which the facade
         # composes from its subagent_wiring owner.
@@ -259,7 +259,7 @@ def _press_lands_inside_the_window(
     press resolves nothing. A press that lands returns at once, so this costs no
     time; one that never resolves still fails by name well inside ``--timeout``.
     """
-    import kiro_crew.telegram.renderer as renderer_mod
+    import aj_crew.telegram.renderer as renderer_mod
 
     monkeypatch.setattr(renderer_mod, "_APPROVAL_TIMEOUT_S", 30.0)
 
@@ -428,7 +428,7 @@ class TestTelegramDeliveryHook:
         # rotation between spawn and press bumps the generation, so the recomputed
         # key does not match the armed one: the press resolves nothing and the
         # prompt deny-by-defaults at the timeout. Pin that coupling here.
-        import kiro_crew.telegram.renderer as renderer_mod
+        import aj_crew.telegram.renderer as renderer_mod
 
         monkeypatch.setattr(renderer_mod, "_APPROVAL_TIMEOUT_S", 0.2)
         d, cli, _sess = _dispatcher({7})
@@ -546,7 +546,7 @@ class TestASilentSendFailureFallsThroughAtOnce:
         ``_APPROVAL_TIMEOUT_S`` (minutes) and surface as a suite-wide timeout
         instead of a failed assertion.
         """
-        import kiro_crew.telegram.renderer as renderer_mod
+        import aj_crew.telegram.renderer as renderer_mod
 
         monkeypatch.setattr(renderer_mod, "_APPROVAL_TIMEOUT_S", 0.2)
 
@@ -677,7 +677,7 @@ class TestAutoApprovedNeverReachesTheChannel:
 
     @pytest.mark.asyncio
     async def test_a_trusted_parent_never_calls_the_spawn_approval(self) -> None:
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         ctx = MagicMock()
         ctx.build_message = MagicMock(return_value=("built", None))
@@ -734,7 +734,7 @@ class TestTheDestinationIsReauthorizedBeforeTheSend:
         ``_APPROVAL_TIMEOUT_S`` (minutes) and surface as a suite-wide timeout
         instead of a failed assertion.
         """
-        import kiro_crew.telegram.renderer as renderer_mod
+        import aj_crew.telegram.renderer as renderer_mod
 
         monkeypatch.setattr(renderer_mod, "_APPROVAL_TIMEOUT_S", 0.2)
 
@@ -887,7 +887,7 @@ class TestTheDestinationIsReauthorizedBeforeTheSend:
         # must still read it, rather than time out and report a denial.
         import time
 
-        import kiro_crew.messaging.identity as identity_mod
+        import aj_crew.messaging.identity as identity_mod
 
         real = identity_mod._channel_inbound_permitted_sync
 
@@ -1015,7 +1015,7 @@ class TestTheDeliveryHookCharacterization:
 
     @pytest.fixture(autouse=True)
     def _short_prompt_wait(self, monkeypatch: pytest.MonkeyPatch) -> Any:
-        import kiro_crew.telegram.renderer as renderer_mod
+        import aj_crew.telegram.renderer as renderer_mod
 
         monkeypatch.setattr(renderer_mod, "_APPROVAL_TIMEOUT_S", 0.2)
         _clear_windows()
@@ -1034,13 +1034,13 @@ class TestTheDeliveryHookCharacterization:
         "parent",
         [
             "",
-            "telegram:kirocrew",
-            "telegram:kirocrew:direct:abc",
-            "telegram:kirocrew:forum:-1001234567890",
-            "telegram:kirocrew:group:7",
-            "discord:kirocrew:direct:7",
+            "telegram:ajcrew",
+            "telegram:ajcrew:direct:abc",
+            "telegram:ajcrew:forum:-1001234567890",
+            "telegram:ajcrew:group:7",
+            "discord:ajcrew:direct:7",
             "dashboard:chat-1",
-            "unified:kirocrew",
+            "unified:ajcrew",
         ],
     )
     def test_an_unaddressable_parent_arms_nothing(self, parent: str) -> None:
@@ -1051,19 +1051,19 @@ class TestTheDeliveryHookCharacterization:
     @pytest.mark.parametrize(
         ("parent", "expected"),
         [
-            ("telegram:kirocrew:direct:7", (7, None)),
-            ("telegram:kirocrew:direct:7:gen3", (7, None)),
-            ("telegram:kirocrew:forum:-1001234567890:42", (-1001234567890, 42)),
-            ("telegram:kirocrew:forum:-1001234567890:42:gen1", (-1001234567890, 42)),
-            ("telegram:kirocrew:forum:-1001234567890:42:9", (-1001234567890, 42)),
-            ("telegram:kirocrew:forum:-1001234567890", None),
-            ("telegram:kirocrew:direct:7:8", None),
-            ("telegram:kirocrew:direct:abc", None),
-            ("telegram:kirocrew:forum:x:42", None),
-            ("telegram:kirocrew:group:7", None),
-            ("telegram:kirocrew:direct:", None),
-            ("unified:kirocrew", None),
-            ("discord:kirocrew:direct:7", None),
+            ("telegram:ajcrew:direct:7", (7, None)),
+            ("telegram:ajcrew:direct:7:gen3", (7, None)),
+            ("telegram:ajcrew:forum:-1001234567890:42", (-1001234567890, 42)),
+            ("telegram:ajcrew:forum:-1001234567890:42:gen1", (-1001234567890, 42)),
+            ("telegram:ajcrew:forum:-1001234567890:42:9", (-1001234567890, 42)),
+            ("telegram:ajcrew:forum:-1001234567890", None),
+            ("telegram:ajcrew:direct:7:8", None),
+            ("telegram:ajcrew:direct:abc", None),
+            ("telegram:ajcrew:forum:x:42", None),
+            ("telegram:ajcrew:group:7", None),
+            ("telegram:ajcrew:direct:", None),
+            ("unified:ajcrew", None),
+            ("discord:ajcrew:direct:7", None),
             ("", None),
         ],
     )
@@ -1079,14 +1079,14 @@ class TestTheDeliveryHookCharacterization:
         real_send = d.client.send_message
 
         async def _record(chat_id: int, text: str, **kw: Any) -> Any:
-            key = TelegramApprovalDecider.key("telegram:kirocrew:direct:7", "spawn:abc")
+            key = TelegramApprovalDecider.key("telegram:ajcrew:direct:7", "spawn:abc")
             calls.append((chat_id, text, dict(kw), TelegramApprovalDecider._NONCES.get(key)))
             return await real_send(chat_id, text, **kw)
 
         d.client.send_message = _record  # type: ignore[method-assign]
         asyncio.run(
             d.deliver_spawn_approval(
-                "spawn:abc", "spawn_run(<b>\"x\"</b>\n\t& 'y')", "telegram:kirocrew:direct:7"
+                "spawn:abc", "spawn_run(<b>\"x\"</b>\n\t& 'y')", "telegram:ajcrew:direct:7"
             )
         )
         chat_id, text, kw, nonce = calls[0]
@@ -1125,15 +1125,13 @@ class TestTheDeliveryHookCharacterization:
     )
     def test_the_detail_defaults_and_collapses(self, description: Any, detail: str) -> None:
         d, cli, _sess = _dispatcher({7})
-        asyncio.run(
-            d.deliver_spawn_approval("spawn:abc", description, "telegram:kirocrew:direct:7")
-        )
+        asyncio.run(d.deliver_spawn_approval("spawn:abc", description, "telegram:ajcrew:direct:7"))
         assert cli.sent[0][0] == f"🔐 Approve sub-agent spawn?\n<pre>{detail}</pre>"
 
     def test_the_window_is_armed_detached_before_the_send(self) -> None:
         d, _cli, _sess = _dispatcher({7})
         assert d.client is not None
-        key = TelegramApprovalDecider.key("telegram:kirocrew:direct:7", "spawn:abc")
+        key = TelegramApprovalDecider.key("telegram:ajcrew:direct:7", "spawn:abc")
         seen: list[tuple[bool, bool, bool]] = []
         real_send = d.client.send_message
 
@@ -1148,13 +1146,13 @@ class TestTheDeliveryHookCharacterization:
             return await real_send(chat_id, text, **kw)
 
         d.client.send_message = _record  # type: ignore[method-assign]
-        asyncio.run(d.deliver_spawn_approval("spawn:abc", "d", "telegram:kirocrew:direct:7"))
+        asyncio.run(d.deliver_spawn_approval("spawn:abc", "d", "telegram:ajcrew:direct:7"))
         assert seen == [(True, True, True)]
         assert _no_window_left(key)
 
     def test_the_destination_is_checked_after_the_arm(self) -> None:
         d, cli, _sess = _dispatcher({7})
-        key = TelegramApprovalDecider.key("telegram:kirocrew:direct:7", "spawn:abc")
+        key = TelegramApprovalDecider.key("telegram:ajcrew:direct:7", "spawn:abc")
         seen: list[tuple[Any, ...]] = []
 
         def _check(chat_id: int, thread_id: Any) -> bool:
@@ -1162,9 +1160,7 @@ class TestTheDeliveryHookCharacterization:
             return False
 
         d._spawn_prompt_destination_permitted = _check  # type: ignore[method-assign]
-        result = asyncio.run(
-            d.deliver_spawn_approval("spawn:abc", "d", "telegram:kirocrew:direct:7")
-        )
+        result = asyncio.run(d.deliver_spawn_approval("spawn:abc", "d", "telegram:ajcrew:direct:7"))
         assert result is None and seen == [(7, None, True)] and cli.sent == []
         assert _no_window_left(key)
 
@@ -1172,7 +1168,7 @@ class TestTheDeliveryHookCharacterization:
     def test_a_failed_send_retires_the_window(self, outcome: str) -> None:
         d, _cli, _sess = _dispatcher({7})
         assert d.client is not None
-        key = TelegramApprovalDecider.key("telegram:kirocrew:direct:7", "spawn:abc")
+        key = TelegramApprovalDecider.key("telegram:ajcrew:direct:7", "spawn:abc")
 
         async def _send(chat_id: int, text: str, **kw: Any) -> Any:
             if outcome == "raises":
@@ -1180,16 +1176,14 @@ class TestTheDeliveryHookCharacterization:
             return None if outcome == "none" else 0
 
         d.client.send_message = _send  # type: ignore[method-assign]
-        result = asyncio.run(
-            d.deliver_spawn_approval("spawn:abc", "d", "telegram:kirocrew:direct:7")
-        )
+        result = asyncio.run(d.deliver_spawn_approval("spawn:abc", "d", "telegram:ajcrew:direct:7"))
         assert result is None
         assert _no_window_left(key)
 
     def test_a_cancel_during_the_send_retires_and_reraises(self) -> None:
         d, cli, _sess = _dispatcher({7})
         assert d.client is not None
-        key = TelegramApprovalDecider.key("telegram:kirocrew:direct:7", "spawn:abc")
+        key = TelegramApprovalDecider.key("telegram:ajcrew:direct:7", "spawn:abc")
         entered = asyncio.Event()
 
         async def _hang(chat_id: int, text: str, **kw: Any) -> Any:
@@ -1200,7 +1194,7 @@ class TestTheDeliveryHookCharacterization:
 
         async def _go() -> None:
             task = asyncio.ensure_future(
-                d.deliver_spawn_approval("spawn:abc", "d", "telegram:kirocrew:direct:7")
+                d.deliver_spawn_approval("spawn:abc", "d", "telegram:ajcrew:direct:7")
             )
             await await_until(entered)
             task.cancel()
@@ -1221,7 +1215,7 @@ class TestTheDeliveryHookCharacterization:
 
         monkeypatch.setattr(TelegramApprovalDecider, "__call__", _decide)
         d, _cli, _sess = _dispatcher({7})
-        parent = "telegram:kirocrew:direct:7:gen2"
+        parent = "telegram:ajcrew:direct:7:gen2"
         assert asyncio.run(d.deliver_spawn_approval("spawn:abc", "d", parent)) is True
         assert captured == [(parent, "spawn:abc")]
 
@@ -1234,7 +1228,7 @@ class TestTheDeliveryHookCharacterization:
             asked.append((channel, rid))
             return True
 
-        monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.unpressed_wait_answer", _answer)
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.unpressed_wait_answer", _answer)
         d, _cli, _sess = _dispatcher({7})
         reads: list[tuple[Any, Any]] = []
         real_check = d._spawn_prompt_destination_permitted
@@ -1244,9 +1238,7 @@ class TestTheDeliveryHookCharacterization:
             return real_check(chat_id, thread_id)
 
         d._spawn_prompt_destination_permitted = _count  # type: ignore[method-assign]
-        result = asyncio.run(
-            d.deliver_spawn_approval("spawn:abc", "d", "telegram:kirocrew:direct:7")
-        )
+        result = asyncio.run(d.deliver_spawn_approval("spawn:abc", "d", "telegram:ajcrew:direct:7"))
         assert result is True and asked == [("telegram", "spawn:abc")]
         assert reads == [(7, None), (7, None)]
 
@@ -1261,9 +1253,7 @@ class TestTheDeliveryHookCharacterization:
             return True
 
         d.transport = SimpleNamespace(may_send_to=_gate)  # type: ignore[assignment]
-        result = asyncio.run(
-            d.deliver_spawn_approval("spawn:abc", "d", "telegram:kirocrew:direct:7")
-        )
+        result = asyncio.run(d.deliver_spawn_approval("spawn:abc", "d", "telegram:ajcrew:direct:7"))
         assert result is None and len(cli.sent) == 1
 
     def test_the_destination_table(self) -> None:

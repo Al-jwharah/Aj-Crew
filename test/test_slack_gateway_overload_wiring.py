@@ -14,9 +14,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.dashboard import session_health
-from kiro_crew.slack.gateway import GatewayOrchestrator
-from kiro_crew.taskq import dependency as taskq_dependency
+from aj_crew.dashboard import session_health
+from aj_crew.slack.gateway import GatewayOrchestrator
+from aj_crew.taskq import dependency as taskq_dependency
 
 
 class _Controller:
@@ -115,7 +115,7 @@ def test_manager_without_a_coordinator_leaves_the_handle_empty(clean_sources) ->
 def test_adaptive_controller_is_not_started_during_subagent_init():
     import inspect
 
-    from kiro_crew.slack.gateway import _compose_subagent_completion
+    from aj_crew.slack.gateway import _compose_subagent_completion
 
     # ``_init_subagents`` and the completion consumer's phases it calls, which the
     # facade composes from its sub-agent owners.
@@ -148,14 +148,14 @@ def test_importing_the_gateway_loads_no_adaptive_module(tmp_path) -> None:
 
     env = dict(os.environ)
     env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "src")
-    env["KIROCREW_HOME"] = str(tmp_path / "crew")
+    env["AJCREW_HOME"] = str(tmp_path / "crew")
     result = subprocess.run(
         [
             sys.executable,
             "-B",
             "-c",
-            "import sys, importlib; importlib.import_module('kiro_crew.slack.gateway'); "
-            "leaked = sorted(m for m in sys.modules if m.startswith('kiro_crew.adaptive')); "
+            "import sys, importlib; importlib.import_module('aj_crew.slack.gateway'); "
+            "leaked = sorted(m for m in sys.modules if m.startswith('aj_crew.adaptive')); "
             "assert not leaked, leaked",
         ],
         cwd=tmp_path,
@@ -172,13 +172,13 @@ def test_importing_the_gateway_loads_no_adaptive_module(tmp_path) -> None:
 async def test_disabled_gateway_constructs_controller_only_on_live_enable(monkeypatch):
     from unittest.mock import MagicMock
 
-    from kiro_crew.adaptive import controller as adaptive_controller
-    from kiro_crew.config import live
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.adaptive import controller as adaptive_controller
+    from aj_crew.config import live
+    from aj_crew.config.loader import AjCrewConfig
 
     orch = _orch()
     orch._adaptive_controller = None
-    orch._cfg = KiroCrewConfig()
+    orch._cfg = AjCrewConfig()
     orch._cfg.agent.adaptive_concurrency = False
     monkeypatch.setattr(orch, "_wire_overload_health", MagicMock())
     factory = MagicMock()
@@ -193,7 +193,7 @@ async def test_disabled_gateway_constructs_controller_only_on_live_enable(monkey
     factory.assert_not_called()
     subscriptions = list(watch.subscriptions())
     assert len(subscriptions) == 1
-    enabled = KiroCrewConfig()
+    enabled = AjCrewConfig()
     enabled.agent.adaptive_concurrency = True
     enabled.agent.adaptive_initial = 7
     callback = subscriptions[0].callback()
@@ -217,11 +217,11 @@ async def test_disabled_gateway_constructs_controller_only_on_live_enable(monkey
 def _started_controller_kwargs(monkeypatch, orch) -> dict:
     from unittest.mock import MagicMock
 
-    from kiro_crew.adaptive import controller as adaptive_controller
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.adaptive import controller as adaptive_controller
+    from aj_crew.config.loader import AjCrewConfig
 
     orch._adaptive_controller = None
-    orch._cfg = KiroCrewConfig()
+    orch._cfg = AjCrewConfig()
     orch._cfg.agent.adaptive_concurrency = True
     monkeypatch.setattr(orch, "_wire_overload_health", MagicMock())
     factory = MagicMock()
@@ -250,7 +250,7 @@ def test_active_session_reader_counts_live_providers_and_never_raises(monkeypatc
 
 
 def test_cron_queue_reader_is_the_executor_depth(monkeypatch) -> None:
-    from kiro_crew import executors
+    from aj_crew import executors
 
     orch = _orch()
     orch.sessions = None
@@ -313,9 +313,9 @@ async def test_run_starts_adaptive_only_after_dashboard_and_taskq_ready(
     import inspect
     from unittest.mock import AsyncMock, MagicMock
 
-    from kiro_crew import session
-    from kiro_crew.metrics import sessions as session_metrics
-    from kiro_crew.slack import events, gateway
+    from aj_crew import session
+    from aj_crew.metrics import sessions as session_metrics
+    from aj_crew.slack import events, gateway
 
     class ReachedController(Exception):
         pass
@@ -339,7 +339,7 @@ async def test_run_starts_adaptive_only_after_dashboard_and_taskq_ready(
         order.append("bound")
 
     async def memory_ready():
-        assert "KIROCREW_READY:" in capsys.readouterr().out
+        assert "AJCREW_READY:" in capsys.readouterr().out
         order.append("ready")
         return True
 

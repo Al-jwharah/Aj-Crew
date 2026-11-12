@@ -1,15 +1,15 @@
-"""``kiro_crew.apps.manager`` stays the one import path and patch surface of its owners.
+"""``aj_crew.apps.manager`` stays the one import path and patch surface of its owners.
 
 The app manager module was split into sibling owners (``manager_<role>.py``) behind a
-:mod:`kiro_crew._facade_mirror` facade. These tests pin what the split must keep:
+:mod:`aj_crew._facade_mirror` facade. These tests pin what the split must keep:
 
 * the facade serves a mirror over exactly the ``manager_*`` modules beside it, and every
   module-level name the unsplit file bound still resolves through it, to the object each
   owner holds;
-* every owner logs as ``kiro_crew.apps.manager``, the logger name log filters and
+* every owner logs as ``aj_crew.apps.manager``, the logger name log filters and
   ``caplog`` assertions use;
 * every name the facade serves from outside the family is named in a ``TYPE_CHECKING``
-  group, so ``from kiro_crew.apps.manager import <name>`` stays visible to type checkers;
+  group, so ``from aj_crew.apps.manager import <name>`` stays visible to type checkers;
 * nothing outside the family imports an owner: callers install, update, uninstall, enable, disable and list apps through the facade.
 * ``InstalledTreeRefused`` keeps the facade's ``__module__``: it is an exception, and its
   dotted name is what a traceback or a log line shows.
@@ -28,20 +28,20 @@ import owner_import_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew.apps import manager as facade
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew.apps import manager as facade
 
-# Walks src/kiro_crew for owner imports; keep it on one worker.
+# Walks src/aj_crew for owner imports; keep it on one worker.
 pytestmark = pytest.mark.xdist_group(name="tree_scan_manager_facade")
 
 #: Checks ``test_facade_shared_checks.py`` runs against this module's helpers; each is
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("base_names_resolve", "owners_log_as_facade")
 
-_SRC = Path(kiro_crew.__file__).resolve().parent
-_FACADE = "kiro_crew.apps.manager"
-_OWNER_PREFIX = "kiro_crew.apps.manager_"
+_SRC = Path(aj_crew.__file__).resolve().parent
+_FACADE = "aj_crew.apps.manager"
+_OWNER_PREFIX = "aj_crew.apps.manager_"
 
 #: Every module-level name ``apps/manager.py`` bound before the split.
 _BASE_MODULE_NAMES = frozenset("""
@@ -103,7 +103,7 @@ def _source(module_name: str) -> str:
 def test_the_facade_serves_a_mirror_over_every_sibling_owner() -> None:
     assert isinstance(facade, _facade_mirror.MirroredModule)
     index = _index()
-    on_disk = sorted(f"kiro_crew.apps.{path.stem}" for path in (_SRC / "apps").glob("manager_*.py"))
+    on_disk = sorted(f"aj_crew.apps.{path.stem}" for path in (_SRC / "apps").glob("manager_*.py"))
     assert sorted(index.owners) == on_disk
     assert index.excluded == ()
     assert index.divergent() == ()
@@ -140,7 +140,7 @@ def test_every_served_import_is_named_for_type_checkers() -> None:
     """A name the family imports and the facade serves is in a ``TYPE_CHECKING`` group.
 
     The facade binds none of them, so this group is what keeps
-    ``from kiro_crew.apps.manager import config_dir`` visible to mypy.
+    ``from aj_crew.apps.manager import config_dir`` visible to mypy.
     """
     index = _index()
     served = _served_imports(index)
@@ -166,7 +166,7 @@ def test_the_refusal_exception_keeps_the_facade_module() -> None:
     assert getattr(importlib.import_module(refused.__module__), refused.__qualname__) is refused
     assert (
         f"{refused.__module__}.{refused.__qualname__}"
-        == "kiro_crew.apps.manager.InstalledTreeRefused"
+        == "aj_crew.apps.manager.InstalledTreeRefused"
     )
 
 
@@ -193,13 +193,13 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
+    root = tmp_path / "aj_crew"
     sources = {
-        root / "pkg" / "caller.py": "from kiro_crew.apps.manager_records import app_dir\n",
-        root / "other.py": "from kiro_crew.apps import manager_records as low\n",
+        root / "pkg" / "caller.py": "from aj_crew.apps.manager_records import app_dir\n",
+        root / "other.py": "from aj_crew.apps import manager_records as low\n",
         root / "apps" / "relative.py": "from .manager_records import app_dir\n",
         root / "apps" / "deep" / "up.py": "from .. import manager_records\n",
-        root / "facade_user.py": "from kiro_crew.apps.manager import app_dir\n",
+        root / "facade_user.py": "from aj_crew.apps.manager import app_dir\n",
     }
     assert _owner_importers(sources.items(), root) == {
         "pkg/caller.py",

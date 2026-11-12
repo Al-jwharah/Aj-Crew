@@ -22,14 +22,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.chat_persistence import (
+from aj_crew.dashboard.chat_persistence import (
     _build_message_entry,
     _rehydrate_slot_from_history,
     _save_slot_to_history,
     restore_recent_sessions,
 )
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog, carry_provenance
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog, carry_provenance
 
 SLACK_THREAD = "slack:1785861252.833429"
 SLACK_USER = "W017SQBPZBN"
@@ -151,7 +151,7 @@ class TestRehydrateThenFlushRoundTrip:
     """
 
     def _rehydrated(self, tmp_path: Path, monkeypatch: Any, messages: list[dict]) -> Any:
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         _write_session(tmp_path, "dashboard_chat1", messages, meta={"title": "T"})
         state = _make_state(tmp_path)
         slot = _rehydrate_slot_from_history(state, "chat1")
@@ -231,7 +231,7 @@ class TestRehydrateThenFlushRoundTrip:
     def test_frozen_prefix_and_window_agree(self, tmp_path: Path, monkeypatch: Any) -> None:
         """The prefix keeps provenance because it is copied verbatim; the window
         must now match it instead of contradicting it in the same file."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         messages = [
             {**_inbound_slack_turn(f"2026-08-04T16:{i:02d}:00.000000"), "content": f"m{i}"}
             for i in range(6)
@@ -256,7 +256,7 @@ class TestRehydrateThenFlushRoundTrip:
 class TestBulkRestoreRoundTrip:
     def test_startup_restore_carries_provenance(self, tmp_path: Path, monkeypatch: Any) -> None:
         """``restore_recent_sessions`` is a second, independent load path."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         path = _write_session(tmp_path, "dashboard_chat1", [_inbound_slack_turn()])
         path.touch()
         state = _make_state(tmp_path)
@@ -274,9 +274,9 @@ class TestChannelWindowRoundTrip:
     it reads back arrived from the channel."""
 
     def test_rebuild_window_carries_provenance(self, tmp_path: Path, monkeypatch: Any) -> None:
-        from kiro_crew.dashboard.channel_slots import _rebuild_window
+        from aj_crew.dashboard.channel_slots import _rebuild_window
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         slot = state.get_or_create_slot("slack_1.1", linked_session_key="slack:1.1")
         _rebuild_window(slot, [_inbound_slack_turn()])
@@ -303,7 +303,7 @@ class TestForeignAppendDedup:
     def test_window_entry_is_not_duplicated_as_a_foreign_append(
         self, tmp_path: Path, monkeypatch: Any
     ) -> None:
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         _write_session(tmp_path, "dashboard_chat1", [_inbound_slack_turn()])
         state = _make_state(tmp_path)
         slot = _rehydrate_slot_from_history(state, "chat1")
@@ -323,7 +323,7 @@ class TestForeignAppendDedup:
     ) -> None:
         """Foreign lines are merged as raw bytes, so they were always correct --
         lock that in so the merge is not 'fixed' into a rebuild later."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         path = _write_session(tmp_path, "dashboard_chat1", [_inbound_slack_turn()])
         state = _make_state(tmp_path)
         slot = _rehydrate_slot_from_history(state, "chat1")

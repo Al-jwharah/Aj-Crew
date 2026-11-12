@@ -26,9 +26,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from test_cron_thread_routing import _capture_subagent_done, _make_gateway
 
-from kiro_crew import subagent as sa
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import subagent as sa
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.testing.wait import async_wait_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -76,7 +76,7 @@ async def _hold_one_member(clock: _SteppedClock) -> tuple[SubagentManager, Subag
     finished = _member("m1", done=True)
     for info in (finished, _member("m2", done=False), _member("m3", done=False)):
         mgr._agents[info.id] = info
-    with patch("kiro_crew.slack.gateway.time", clock):
+    with patch("aj_crew.slack.gateway.time", clock):
         await done_cb(finished)
     assert finished._digest_held, "the closure did not hold the finished member for the digest"
     return mgr, finished

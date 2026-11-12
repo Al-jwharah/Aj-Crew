@@ -16,14 +16,14 @@ from urllib.error import URLError
 
 import pytest
 
-from kiro_crew import github_runner
-from kiro_crew.monitoring import bitbucket_pull_request as bitbucket_module
-from kiro_crew.monitoring import provider_cli as provider_cli_module
-from kiro_crew.monitoring.bitbucket_pull_request import BitbucketPullRequestProvider
-from kiro_crew.monitoring.github_pull_request import GitHubPullRequestProvider
-from kiro_crew.monitoring.gitlab_merge_request import GitLabMergeRequestProvider
-from kiro_crew.monitoring.provider_cli import run_provider_cli
-from kiro_crew.sel import SecurityEventLog
+from aj_crew import github_runner
+from aj_crew.monitoring import bitbucket_pull_request as bitbucket_module
+from aj_crew.monitoring import provider_cli as provider_cli_module
+from aj_crew.monitoring.bitbucket_pull_request import BitbucketPullRequestProvider
+from aj_crew.monitoring.github_pull_request import GitHubPullRequestProvider
+from aj_crew.monitoring.gitlab_merge_request import GitLabMergeRequestProvider
+from aj_crew.monitoring.provider_cli import run_provider_cli
+from aj_crew.sel import SecurityEventLog
 
 _GITLAB_URL = "https://gitlab.example.com/acme/widgets/-/merge_requests/8"
 _GITHUB_URL = "https://github.com/acme/widgets/pull/1"
@@ -117,7 +117,7 @@ def stand_in(monkeypatch, tmp_path):
         "sandboxed_spawn_argv",
         lambda argv, **kwargs: (argv, kwargs["env"], None),
     )
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
 
 
 @pytest.mark.parametrize(

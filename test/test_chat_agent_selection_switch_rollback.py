@@ -30,18 +30,18 @@ from chat_agent_selection_helpers import (
 from chat_test_helpers import _make_app_with_agent_routes, drain_background_tasks
 from dashboard_owner_helpers import as_owner
 
-from kiro_crew.config.loader import KiroCrewConfig, resolve_agent_bindings
-from kiro_crew.dashboard import chat_handlers, chat_runner
-from kiro_crew.dashboard.chat_persistence import (
+from aj_crew.config.loader import AjCrewConfig, resolve_agent_bindings
+from aj_crew.dashboard import chat_handlers, chat_runner
+from aj_crew.dashboard.chat_persistence import (
     _apply_recent_session,
     _rehydrate_slot_from_history,
     rehydrate_slot_from_history_async,
 )
-from kiro_crew.execution_context import read_session_execution
-from kiro_crew.member_memory_auth import read_private_session_store
-from kiro_crew.memory_stores import provision_member_memory
-from kiro_crew.session_agent_selection import record_agent_selection, session_agent_selection_kind
-from kiro_crew.testing.wait import await_until, default_timeout
+from aj_crew.execution_context import read_session_execution
+from aj_crew.member_memory_auth import read_private_session_store
+from aj_crew.memory_stores import provision_member_memory
+from aj_crew.session_agent_selection import record_agent_selection, session_agent_selection_kind
+from aj_crew.testing.wait import await_until, default_timeout
 
 
 @pytest.mark.asyncio
@@ -52,9 +52,9 @@ async def test_failed_agent_history_write_keeps_prior_selection(tmp_path, monkey
         _template_chat(tmp_path, monkeypatch), "the template chat setup"
     )
     key = "dashboard:template-chat"
-    later_agent = "kirocrew-worker"
+    later_agent = "ajcrew-worker"
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name in (TEMPLATE, later_agent) else "",
     )
     state.sessions.reset = AsyncMock(return_value=True)
@@ -91,7 +91,7 @@ async def test_failed_agent_history_write_keeps_prior_selection(tmp_path, monkey
             restored.conversation_log._read_messages(key),
             conv_log=restored.conversation_log,
             kiro_model_map={},
-            restore_cfg=KiroCrewConfig.load(),
+            restore_cfg=AjCrewConfig.load(),
         )
         slot = restored._slots["template-chat"]
     else:
@@ -160,7 +160,7 @@ async def test_cancelled_agent_lookup_preserves_existing_selection(tmp_path, mon
     metadata = state.conversation_log.get_metadata(key)
     prior = (slot.agent, slot.workspace, slot.project, slot.memory_store)
     state.sessions.reset = AsyncMock(return_value=True)
-    body = json.dumps({"agent": "kirocrew-worker"}).encode()
+    body = json.dumps({"agent": "ajcrew-worker"}).encode()
     payload = MagicMock()
 
     async def chunks(_size):
@@ -226,17 +226,17 @@ async def test_non_owner_switch_keeps_durable_selection(tmp_path, monkeypatch, s
     state, slot, _ = await _finished(
         _template_chat(tmp_path, monkeypatch), "the template chat setup"
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     default_agent = cfg.default_agent
     cfg.agents["legacy-worker"] = replace(cfg.agents[default_agent])
     cfg.save()
     later_agent = {
-        "template": "kirocrew-worker",
+        "template": "ajcrew-worker",
         "legacy_member": "legacy-worker",
         "default": "",
     }[selection]
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name in (TEMPLATE, later_agent) else "",
     )
     state.sessions.reset = AsyncMock(return_value=True)
@@ -259,7 +259,7 @@ async def test_non_owner_switch_keeps_durable_selection(tmp_path, monkeypatch, s
     restored_slot = _rehydrate_slot_from_history(restored, slot.key)
     # An empty switch is the default TEMPLATE, stamped like an agent-less
     # create -- never the default crewmate alias.
-    assert restored_slot is not None and restored_slot.agent == (later_agent or "kirocrew")
+    assert restored_slot is not None and restored_slot.agent == (later_agent or "ajcrew")
     await _finished(chat_runner._run_chat(restored, restored_slot, "Continue."), "the chat turn")
     await _finished(drain_background_tasks(restored), "the background tasks draining")
     restored.sessions.record_failure.assert_not_awaited()
@@ -268,7 +268,7 @@ async def test_non_owner_switch_keeps_durable_selection(tmp_path, monkeypatch, s
     if selection == "legacy_member":
         # A permitted V1 choice is not authority to admit private memory after
         # that member is upgraded. Exercise the live slot, not only a restore.
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         provision_member_memory(cfg, later_agent)
         cfg.save()
         state.sessions.get_or_create.reset_mock()
@@ -285,7 +285,7 @@ async def test_non_owner_member_upgraded_during_lookup_is_refused(tmp_path, monk
     state, slot, _ = await _finished(
         _template_chat(tmp_path, monkeypatch), "the template chat setup"
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["legacy-worker"] = replace(cfg.agents[cfg.default_agent])
     cfg.save()
     key = "dashboard:template-chat"
@@ -300,7 +300,7 @@ async def test_non_owner_member_upgraded_during_lookup_is_refused(tmp_path, monk
         result = resolve_agent_bindings(config, name, *args, **kwargs)
         calls += 1
         if calls == 1:
-            upgraded = KiroCrewConfig.load()
+            upgraded = AjCrewConfig.load()
             provision_member_memory(upgraded, "legacy-worker")
             upgraded.save()
         return result
@@ -359,9 +359,9 @@ async def test_cancelled_agent_history_write_drains_before_restore(
         _template_chat(tmp_path, monkeypatch), "the template chat setup"
     )
     key = "dashboard:template-chat"
-    later_agent = "kirocrew-worker"
+    later_agent = "ajcrew-worker"
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name in (TEMPLATE, later_agent) else "",
     )
     state.sessions.reset = AsyncMock(return_value=True)
@@ -462,14 +462,14 @@ async def test_cancelled_agent_history_write_drains_before_restore(
 @pytest.mark.parametrize("restore", ["open", "recent", "resume", "async"])
 async def test_cancelled_agent_switch_with_failed_history_restore(tmp_path, monkeypatch, restore):
     """A failed rollback must not leave an empty conversation unresumable."""
-    from kiro_crew.history import HistoryLockTimeout
+    from aj_crew.history import HistoryLockTimeout
 
     state, slot, _ = await _finished(
         _template_chat(tmp_path, monkeypatch, first_turn=False), "the template chat setup"
     )
-    later_agent = "kirocrew-worker"
+    later_agent = "ajcrew-worker"
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name in (TEMPLATE, later_agent) else "",
     )
     state.sessions.reset = AsyncMock(return_value=True)
@@ -539,7 +539,7 @@ async def test_cancelled_agent_switch_with_failed_history_restore(tmp_path, monk
                 restored.conversation_log._read_messages(key),
                 conv_log=restored.conversation_log,
                 kiro_model_map={},
-                restore_cfg=KiroCrewConfig.load(),
+                restore_cfg=AjCrewConfig.load(),
             )
             restored_slot = restored._slots[slot.key]
         else:
@@ -624,12 +624,12 @@ async def test_cancelled_owner_writer_cannot_overwrite_later_choice(
         _template_chat(tmp_path, monkeypatch, first_turn=False), "the template chat setup"
     )
     key = "dashboard:template-chat"
-    later_agent = TEMPLATE if later_choice == "same_name_template" else "kirocrew-worker"
+    later_agent = TEMPLATE if later_choice == "same_name_template" else "ajcrew-worker"
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name in (TEMPLATE, later_agent) else "",
     )
-    monkeypatch.setattr("kiro_crew.llm_helpers._slot_switch_session_locks", {})
+    monkeypatch.setattr("aj_crew.llm_helpers._slot_switch_session_locks", {})
     state.sessions.reset = AsyncMock(return_value=True)
     app = _make_app_with_agent_routes(state)
     loop_thread = threading.get_ident()
@@ -724,7 +724,7 @@ async def test_cancelled_owner_writer_cannot_overwrite_later_choice(
             # A already resolved the discovered member. Removing that member
             # makes B's explicit same-name choice resolve the available template.
             def remove_member():
-                cfg = KiroCrewConfig.load()
+                cfg = AjCrewConfig.load()
                 del cfg.agents[TEMPLATE]
                 cfg.save()
 
@@ -806,12 +806,12 @@ async def test_cancelled_rebound_cleanup_finishes_before_later_owner(
     )
     history_key = "dashboard:template-chat"
     rebound_key = "task:rebound-cleanup"
-    later_agent = "kirocrew-worker"
+    later_agent = "ajcrew-worker"
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name in (TEMPLATE, later_agent) else "",
     )
-    monkeypatch.setattr("kiro_crew.llm_helpers._slot_switch_session_locks", {})
+    monkeypatch.setattr("aj_crew.llm_helpers._slot_switch_session_locks", {})
     state.sessions.reset = AsyncMock(return_value=True)
     app = _make_app_with_agent_routes(state)
     loop_thread = threading.get_ident()

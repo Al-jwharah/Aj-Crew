@@ -4,8 +4,8 @@ import dataclasses
 
 import pytest
 
-from kiro_crew import guide_catalog
-from kiro_crew.dashboard.guide_runs import GuideError, GuideStore
+from aj_crew import guide_catalog
+from aj_crew.dashboard.guide_runs import GuideError, GuideStore
 
 
 @pytest.fixture

@@ -32,7 +32,7 @@ import '../src/index.css'
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const project = { id: 'acme-site', path: '/home/dev/acme-site', name: 'Acme Site' }
 const request = {
@@ -64,7 +64,7 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   if (p === '/apps/design-tweak/api/projects') return json({ projects: [project], activeId: project.id, serving: true })
   if (p === '/apps/design-tweak/api/queue') return json({ pending: [request] })
   if (p === '/apps/design-tweak/api/history') return json({ history: [] })
-  if (p === '/apps/design-tweak/api/health') return json({ status: 'ok', app: 'design-tweak', dataDir: '/home/dev/.kirocrew/apps/design-tweak' })
+  if (p === '/apps/design-tweak/api/health') return json({ status: 'ok', app: 'design-tweak', dataDir: '/home/dev/.ajcrew/apps/design-tweak' })
   // The seal: the backend returns the sealed snapshot the prompt is built from.
   if (p === '/apps/design-tweak/api/send') return json({ ok: true, request: { ...request, status: 'sent', sentAt: '2026-09-15T18:03:00Z' } })
   // The chat host adopts the app's slot and binds it to the project ...

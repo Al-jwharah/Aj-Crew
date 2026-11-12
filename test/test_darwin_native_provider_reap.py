@@ -22,11 +22,11 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew import session, session_pid, session_pool
-from kiro_crew.acp.client import _capture_child_records
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.testing.wait import await_until
+from aj_crew import platform_compat as pc
+from aj_crew import session, session_pid, session_pool
+from aj_crew.acp.client import _capture_child_records
+from aj_crew.config import AjCrewConfig
+from aj_crew.testing.wait import await_until
 
 pytestmark = [
     pytest.mark.skipif(sys.platform != "darwin", reason="requires the real Darwin kernel"),
@@ -260,7 +260,7 @@ def test_native_reaped_root_recovers_group_and_escaped_descendant(native):
 @pytest.mark.asyncio
 @pytest.mark.parametrize("path", ["idle", "pool_health", "pool_claim"])
 async def test_native_expiry_repeatedly_reclaims_whole_trees(native, monkeypatch, path):
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.pool_size = 2
     cfg.session.pool_agent = ""
     cfg.session.pool_ttl_secs = 1800

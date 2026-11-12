@@ -22,7 +22,7 @@ from issue_radar_crew_routes_helpers import (
 )
 from off_loop_helpers import off_loop
 
-from kiro_crew.apps.builtins.issue_radar.backend import (
+from aj_crew.apps.builtins.issue_radar.backend import (
     crew_routes,
     crew_runtime,
     crew_store,

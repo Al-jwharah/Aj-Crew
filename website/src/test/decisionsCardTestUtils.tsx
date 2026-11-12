@@ -152,7 +152,7 @@ export function stubGateway(
   dashboard: unknown = { decisions_enabled: true },
 ) {
   vi.spyOn(api, 'dashboardConfig').mockResolvedValue(dashboard as never)
-  vi.spyOn(api, 'kirocrewConfig').mockResolvedValue(config as never)
+  vi.spyOn(api, 'ajcrewConfig').mockResolvedValue(config as never)
   // Names only, which is all the vault ever hands back: the card shows set or unset
   // and never holds the credential. Stubbed in every case so no test reaches the
   // network for a field most of them do not open.

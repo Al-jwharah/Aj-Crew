@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.apps.manager — App lifecycle management.
+"""Tests for aj_crew.apps.manager — App lifecycle management.
 
 This file holds the lifecycle doors: name admission, source validation, install, uninstall
 and data preservation, the admission-policy gate, enable/disable and listing. The rest of the
@@ -20,9 +20,8 @@ import pytest
 from app_manager_helpers import app_home_fixture  # noqa: F401 - fixture
 from app_manager_helpers import _DATA_IS_A_FILE, _DATA_IS_A_LINK, _make_app_source
 
-from conftest import requires_symlinks
-from kiro_crew import platform_compat
-from kiro_crew.apps.manager import (
+from aj_crew import platform_compat
+from aj_crew.apps.manager import (
     APP_MANIFEST_FILENAME,
     _read_installed,
     _validate_source_path,
@@ -36,6 +35,7 @@ from kiro_crew.apps.manager import (
     uninstall_app,
     update_app,
 )
+from conftest import requires_symlinks
 
 # App-name admission contract
 
@@ -72,7 +72,7 @@ class TestUnportableAppName:
         assert not (app_home / "apps" / "nul").exists()
 
     def test_register_external_refuses_it_before_materialization(self, app_home):
-        from kiro_crew.apps.manager import register_external_app
+        from aj_crew.apps.manager import register_external_app
 
         result = register_external_app("nul", "1.0.0", "Null App")
         assert not result.ok
@@ -81,7 +81,7 @@ class TestUnportableAppName:
         assert not (app_home / "apps" / "nul").exists()
 
     def test_builtin_registration_refuses_it(self):
-        from kiro_crew.apps.manager import _validate_builtin_app
+        from aj_crew.apps.manager import _validate_builtin_app
 
         errors = _validate_builtin_app(
             {
@@ -187,7 +187,7 @@ class TestInstall:
         assert _read_installed("test-app").origin == "registry"
 
     def test_registry_update_over_a_built_in_keeps_its_origin(self, tmp_path, app_home):
-        from kiro_crew.apps.manager import _write_installed
+        from aj_crew.apps.manager import _write_installed
 
         assert install_app(_make_app_source(tmp_path / "v1")).ok
         meta = _read_installed("test-app")
@@ -225,7 +225,7 @@ class TestInstall:
         assert not r2.ok
         assert "already installed" in r2.error
         # It points at the in-place update rather than only at uninstall.
-        assert f"kirocrew app update {r1.name}" in r2.error
+        assert f"ajcrew app update {r1.name}" in r2.error
 
     def test_install_with_agents_and_skills(self, tmp_path, app_home):
         src = _make_app_source(
@@ -361,7 +361,7 @@ class TestInstall:
 
         assert not result.ok
         assert result.error == (
-            f"{planted} is a link; Kiro Crew keeps the app's data directory at that name "
+            f"{planted} is a link; Aj Crew keeps the app's data directory at that name "
             "while it replaces the app files and cannot use it -- remove it first"
         ), result.error
         assert _read_installed("test-app") is None
@@ -412,7 +412,7 @@ class TestInstall:
 
         Otherwise orphan cleanup would unlink it and install would return `ok=True` with an
         empty `data/`; `update_app` and `uninstall_app` refuse the same shape."""
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.manager import app_dir
 
         elsewhere = tmp_path / "elsewhere"
         elsewhere.mkdir()
@@ -439,7 +439,7 @@ class TestInstall:
         file and the move-aside skips it, so without the refusal the orphan cleanup
         would delete it and the install would succeed over a fresh empty `data/`.
         Refused before anything moves; the file and its content are intact."""
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.manager import app_dir
 
         dest = app_dir("test-app")
         dest.mkdir(parents=True)
@@ -461,14 +461,14 @@ class TestInstall:
         (no POSIX junction exists): a real directory at `data` that
         `is_link_or_junction` reports as a junction is refused with the link
         sentence, and the directory and its content are untouched."""
-        from kiro_crew.apps.manager import app_dir
+        from aj_crew.apps.manager import app_dir
 
         dest = app_dir("test-app")
         (dest / "data").mkdir(parents=True)
         (dest / "data" / "state.json").write_text('{"k": 1}', encoding="utf-8")
         junction = dest / "data"
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.is_link_or_junction", lambda path: Path(path) == junction
+            "aj_crew.apps.manager.is_link_or_junction", lambda path: Path(path) == junction
         )
 
         result = install_app(_make_app_source(tmp_path))
@@ -493,14 +493,14 @@ class TestUninstall:
         data = app_home / "apps" / "test-app" / "data"
         marker = data / "user.txt"
         marker.write_text("keep me", encoding="utf-8")
-        lock = data / ".kirocrew-deps.lock"
+        lock = data / ".ajcrew-deps.lock"
         if existing:
             lock.write_text("existing lock", encoding="utf-8")
         calls = []
         real_open = os.open
 
         def record_open(path, flags, mode=0o777, *, dir_fd=None):
-            if str(path).endswith(".kirocrew-deps.lock"):
+            if str(path).endswith(".ajcrew-deps.lock"):
                 calls.append((flags, dir_fd))
             return real_open(path, flags, mode, dir_fd=dir_fd)
 
@@ -534,7 +534,7 @@ class TestUninstall:
         real_open = os.open
 
         def race_open(path, flags, mode=0o777, *, dir_fd=None):
-            if str(path).endswith(".kirocrew-deps.lock"):
+            if str(path).endswith(".ajcrew-deps.lock"):
                 calls.append(flags)
                 if len(calls) == 1:
                     raise FileExistsError("a contender created the lock")
@@ -549,7 +549,7 @@ class TestUninstall:
         assert not calls[1] & (os.O_CREAT | os.O_EXCL)
         assert (root / APP_MANIFEST_FILENAME).is_file()
         assert marker.read_text(encoding="utf-8") == "keep me"
-        assert not (root / "data" / ".kirocrew-deps.lock").exists()
+        assert not (root / "data" / ".ajcrew-deps.lock").exists()
 
     def test_uninstall_preserves_data_by_default(self, tmp_path, app_home):
         src = _make_app_source(tmp_path)
@@ -583,7 +583,7 @@ class TestUninstall:
 
     def _hold_app_dir(self, monkeypatch, app_root, *, releases_after, exc_factory):
         """Make ``rmtree`` of *app_root* fail ``releases_after`` times, then delete it."""
-        import kiro_crew.platform_compat_files as files_mod
+        import aj_crew.platform_compat_files as files_mod
 
         monkeypatch.setattr(files_mod, "_RMTREE_BACKOFF_SECONDS", 0)
         real_rmtree = shutil.rmtree
@@ -620,7 +620,7 @@ class TestUninstall:
         self, tmp_path, app_home, monkeypatch
     ):
         """A holder that never releases fails the purge, names the file, keeps the app."""
-        import kiro_crew.platform_compat_files as files_mod
+        import aj_crew.platform_compat_files as files_mod
 
         install_app(_make_app_source(tmp_path))
         app_root = app_home / "apps" / "test-app"
@@ -661,7 +661,7 @@ class TestUninstall:
         # Deregistration unlinks ``<app>--<agent>.json``; uninstall also removes
         # the empty ``<app>--<agent>.lock`` beside it and the MCP gateway's
         # overlay copy ``mcp-gateway/agents/<app>--<agent>.json``.
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         agents = tmp_path / "kiro-agents"
         agents.mkdir()
@@ -678,7 +678,7 @@ class TestUninstall:
         other_lock.touch()
         other_overlay = overlay / "test-app-two--bg.json"
         other_overlay.write_text("{}", encoding="utf-8")
-        user_overlay = overlay / "kirocrew.json"
+        user_overlay = overlay / "ajcrew.json"
         user_overlay.write_text("{}", encoding="utf-8")
 
         install_app(_make_app_source(tmp_path))
@@ -697,7 +697,7 @@ class TestUninstall:
         # A spec that is still on disk (deregistration did not run or failed)
         # keeps its lock and overlay; a non-empty ``.lock`` is not the launcher's
         # empty sentinel and is never deleted.
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         agents = tmp_path / "kiro-agents"
         agents.mkdir()
@@ -721,7 +721,7 @@ class TestUninstall:
         assert full_lock.exists()
 
     def test_uninstall_leaves_a_held_agent_lock(self, tmp_path, app_home, monkeypatch):
-        from kiro_crew.apps import bridges
+        from aj_crew.apps import bridges
 
         agents = tmp_path / "kiro-agents"
         agents.mkdir()
@@ -761,7 +761,7 @@ class TestUninstall:
         """
         import os as _os
 
-        from kiro_crew.apps import manager as _mgr
+        from aj_crew.apps import manager as _mgr
 
         if not _mgr.platform_compat.IS_WINDOWS:
             linked_home = tmp_path / "home-link"
@@ -791,7 +791,7 @@ class TestUninstall:
         install_app(src)
         data_dir = app_home / "apps" / "test-app" / "data"
         (data_dir / "cache.json").write_text('{"key": "value"}')
-        for gen in (".kirocrew-deps", ".kirocrew-deps-staging", ".kirocrew-deps-prior"):
+        for gen in (".ajcrew-deps", ".ajcrew-deps-staging", ".ajcrew-deps-prior"):
             (data_dir / gen).mkdir(parents=True)
             (data_dir / gen / "sitecustomize.py").write_text("planted = True\n")
 
@@ -799,7 +799,7 @@ class TestUninstall:
         assert result.ok
         preserved = app_home / "apps" / "test-app" / "data"
         assert (preserved / "cache.json").is_file()  # user data kept
-        for gen in (".kirocrew-deps", ".kirocrew-deps-staging", ".kirocrew-deps-prior"):
+        for gen in (".ajcrew-deps", ".ajcrew-deps-staging", ".ajcrew-deps-prior"):
             assert not (preserved / gen).exists(), gen
 
     def test_uninstall_refuses_a_linked_data_directory(self, tmp_path, app_home):
@@ -818,8 +818,8 @@ class TestUninstall:
         app_root = app_home / "apps" / "test-app"
         victim = tmp_path / "victim-data"
         victim.mkdir()
-        (victim / ".kirocrew-deps").mkdir()
-        (victim / ".kirocrew-deps" / "keepme.py").write_text("x = 1\n")
+        (victim / ".ajcrew-deps").mkdir()
+        (victim / ".ajcrew-deps" / "keepme.py").write_text("x = 1\n")
         data = app_root / "data"
         import shutil as _shutil
 
@@ -832,7 +832,7 @@ class TestUninstall:
         result = uninstall_app("test-app", keep_data=True)
         assert not result.ok
         # the victim's tree is untouched and the app is still installed
-        assert (victim / ".kirocrew-deps" / "keepme.py").is_file()
+        assert (victim / ".ajcrew-deps" / "keepme.py").is_file()
         assert (app_root / APP_MANIFEST_FILENAME).exists()
 
     def test_suffixed_staging_leftovers_are_purged_at_uninstall(self, tmp_path, app_home):
@@ -842,13 +842,13 @@ class TestUninstall:
         src = _make_app_source(tmp_path)
         install_app(src)
         app_root = app_home / "apps" / "test-app"
-        leftover = app_root / "data" / ".kirocrew-deps-staging-1234-deadbeef"
+        leftover = app_root / "data" / ".ajcrew-deps-staging-1234-deadbeef"
         leftover.mkdir()
         (leftover / "pkg.py").write_text("x = 1\n")
         result = uninstall_app("test-app", keep_data=True)
         assert result.ok, result
         preserved = app_home / "apps" / "test-app" / "data"
-        assert not list(preserved.glob(".kirocrew-deps-staging*"))
+        assert not list(preserved.glob(".ajcrew-deps-staging*"))
 
     def test_failed_purge_restores_preserved_data_to_its_home(
         self, tmp_path, app_home, monkeypatch
@@ -856,7 +856,7 @@ class TestUninstall:
         """A raise after data/ was moved to its temp name must move it BACK:
         the app is still installed, and its user data must not be orphaned
         under a hidden dot-name."""
-        import kiro_crew.apps.manager as mgr
+        import aj_crew.apps.manager as mgr
 
         src = _make_app_source(tmp_path)
         install_app(src)
@@ -882,26 +882,26 @@ class TestUninstall:
         self, tmp_path, app_home
     ):
         """The sweep deletes only the gateway's own generated names: an
-        app-owned entry that merely shares the .kirocrew-deps prefix (a
+        app-owned entry that merely shares the .ajcrew-deps prefix (a
         user's backup dir) is preserved data, not a purge target."""
         src = _make_app_source(tmp_path)
         install_app(src)
         app_root = app_home / "apps" / "test-app"
-        backup = app_root / "data" / ".kirocrew-deps-backup"
+        backup = app_root / "data" / ".ajcrew-deps-backup"
         backup.mkdir(parents=True, exist_ok=True)
         (backup / "precious.txt").write_text("keep me")
         # A staging-prefix-sharing app name must equally survive: the
         # quarantine's strict matcher only claims the generated
         # -<pid>-<8hex> shape.
-        assets = app_root / "data" / ".kirocrew-deps-staging-assets"
+        assets = app_root / "data" / ".ajcrew-deps-staging-assets"
         assets.mkdir(parents=True, exist_ok=True)
         (assets / "art.bin").write_text("app asset")
         result = uninstall_app("test-app", keep_data=True)
         assert result.ok, result.error
-        preserved = app_root / "data" / ".kirocrew-deps-backup" / "precious.txt"
+        preserved = app_root / "data" / ".ajcrew-deps-backup" / "precious.txt"
         assert preserved.exists(), "app-owned prefix-sharing data must survive"
         assert (
-            app_root / "data" / ".kirocrew-deps-staging-assets" / "art.bin"
+            app_root / "data" / ".ajcrew-deps-staging-assets" / "art.bin"
         ).exists(), "app-owned staging-prefix data must survive"
 
     def test_a_file_shaped_deps_artifact_is_purged_and_does_not_poison(
@@ -914,19 +914,19 @@ class TestUninstall:
         src = _make_app_source(tmp_path)
         install_app(src)
         app_root = app_home / "apps" / "test-app"
-        (app_root / "data" / ".kirocrew-deps").write_text("not a directory\n")
+        (app_root / "data" / ".ajcrew-deps").write_text("not a directory\n")
         result = uninstall_app("test-app", keep_data=True)
         assert result.ok, result
         preserved = app_home / "apps" / "test-app" / "data"
-        assert not (preserved / ".kirocrew-deps").exists()
+        assert not (preserved / ".ajcrew-deps").exists()
         # the poison scenario: same name, directory shape, next round
         install_app(src)
-        deps = app_home / "apps" / "test-app" / "data" / ".kirocrew-deps"
+        deps = app_home / "apps" / "test-app" / "data" / ".ajcrew-deps"
         deps.mkdir()
         (deps / "pkg.py").write_text("x = 1\n")
         result2 = uninstall_app("test-app", keep_data=True)
         assert result2.ok, result2
-        assert not (app_home / "apps" / "test-app" / "data" / ".kirocrew-deps").exists()
+        assert not (app_home / "apps" / "test-app" / "data" / ".ajcrew-deps").exists()
 
     def test_uninstall_purge_unlinks_a_planted_deps_symlink(self, tmp_path, app_home):
         """rmtree refuses a symlink, so a malicious app could plant one at
@@ -944,15 +944,15 @@ class TestUninstall:
         target.mkdir()
         (target / "sitecustomize.py").write_text("planted = True\n")
         try:
-            _os.symlink(target, data_dir / ".kirocrew-deps")
+            _os.symlink(target, data_dir / ".ajcrew-deps")
         except OSError:
             pytest.skip("symlink not permitted")
 
         result = uninstall_app("test-app", keep_data=True)
         assert result.ok
         preserved = app_home / "apps" / "test-app" / "data"
-        assert not (preserved / ".kirocrew-deps").exists()
-        assert not (preserved / ".kirocrew-deps").is_symlink()
+        assert not (preserved / ".ajcrew-deps").exists()
+        assert not (preserved / ".ajcrew-deps").is_symlink()
         # the purge removed the LINK, not the linked target's content
         assert (target / "sitecustomize.py").is_file()
 
@@ -1019,13 +1019,13 @@ class TestUninstall:
         src = _make_app_source(tmp_path, name="evil-app")
         sel_calls = []
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.sel",
+            "aj_crew.apps.manager.sel",
             lambda: type(
                 "FakeSel", (), {"log_api_access": lambda self, **kw: sel_calls.append(kw)}
             )(),
         )
         monkeypatch.setattr(
-            "kiro_crew.apps.manager._check_path_safety",
+            "aj_crew.apps.manager._check_path_safety",
             lambda name: False,
         )
         result = install_app(src)
@@ -1092,7 +1092,7 @@ class TestUninstall:
         """Successful install must emit SEL audit event."""
         sel_calls = []
         monkeypatch.setattr(
-            "kiro_crew.apps.manager.sel",
+            "aj_crew.apps.manager.sel",
             lambda: type(
                 "FakeSel", (), {"log_api_access": lambda self, **kw: sel_calls.append(kw)}
             )(),
@@ -1166,7 +1166,7 @@ class TestAppAdmission:
         assert "blocked by admission policy" in result.error
 
     def test_register_external_denied_when_banned(self, tmp_path, app_home):
-        from kiro_crew.apps.manager import register_external_app
+        from aj_crew.apps.manager import register_external_app
 
         self._write_policy(app_home, {"mode": "enforce", "banned": ["ext-app"]})
         result = register_external_app("ext-app", "1.0.0", "Ext App")
@@ -1182,8 +1182,8 @@ class TestAppAdmission:
         import hashlib
         import hmac
 
-        from kiro_crew.apps.manager import register_external_app
-        from kiro_crew.apps.manifest import AppManifest
+        from aj_crew.apps.manager import register_external_app
+        from aj_crew.apps.manifest import AppManifest
 
         secret = "s3cr3t"
         manifest_data = {
@@ -1217,7 +1217,7 @@ class TestAppAdmission:
         assert _read_installed("ext-signed") is not None
 
     def test_register_external_denies_unsigned_manifest(self, tmp_path, app_home):
-        from kiro_crew.apps.manager import register_external_app
+        from aj_crew.apps.manager import register_external_app
 
         self._write_policy(
             app_home,
@@ -1242,7 +1242,7 @@ class TestAppAdmission:
         import hashlib
         import hmac
 
-        from kiro_crew.apps.manifest import AppManifest
+        from aj_crew.apps.manifest import AppManifest
 
         secret = "s3cr3t"
         m = AppManifest.from_dict(
@@ -1293,7 +1293,7 @@ class TestAppAdmission:
         # Builtins ship unsigned with defaultEnabled=False; a require_signature
         # policy must NOT strand them (they are trusted first-party code). The
         # admission gate governs third-party enable, not builtins.
-        from kiro_crew.apps.manager import _write_installed
+        from aj_crew.apps.manager import _write_installed
 
         src = _make_app_source(tmp_path, name="builtin-app")
         assert install_app(src).ok
@@ -1336,8 +1336,8 @@ class TestAppAdmission:
     def test_non_ascii_signature_is_clean_deny(self):
         # A non-ASCII signature (attacker-controlled) must NOT raise TypeError out
         # of hmac.compare_digest — it must be a clean deny (no unhandled 500 DoS).
-        from kiro_crew.apps.admission import AppAdmissionPolicy, _signature_valid
-        from kiro_crew.apps.manifest import AppManifest
+        from aj_crew.apps.admission import AppAdmissionPolicy, _signature_valid
+        from aj_crew.apps.manifest import AppManifest
 
         policy = AppAdmissionPolicy(
             mode="enforce", require_signature=True, trust_keys={"acme": "s3cr3t"}

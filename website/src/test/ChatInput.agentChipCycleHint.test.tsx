@@ -26,7 +26,7 @@ const props = (over: Record<string, unknown> = {}) => ({
   connected: true,
   onAgentClick: vi.fn(),
   onProjectClick: vi.fn(),
-  agentName: 'kirocrew',
+  agentName: 'ajcrew',
   ...over,
 })
 
@@ -53,7 +53,7 @@ describe('ChatInput — agent chip advertises the cycle-agent chords', () => {
     renderWithProviders(<ChatInput {...props()} />)
     const title = agentChip().getAttribute('title') ?? ''
     const [first, second] = title.split('\n')
-    expect(first).toBe('Agent: kirocrew')
+    expect(first).toBe('Agent: ajcrew')
     expect(second).toBe('Next agent: Alt+Shift+A · Previous: Alt+Shift+Z')
   })
 
@@ -61,13 +61,13 @@ describe('ChatInput — agent chip advertises the cycle-agent chords', () => {
     renderWithProviders(<ChatInput {...props()} />)
     expect(agentChip()).toHaveAttribute('aria-keyshortcuts', 'Alt+Shift+A')
     // The accessible name stays the plain label; the chord has its own channel.
-    expect(agentChip()).toHaveAttribute('aria-label', 'Agent: kirocrew')
+    expect(agentChip()).toHaveAttribute('aria-label', 'Agent: ajcrew')
   })
 
   it('drops the factory line but keeps aria-keyshortcuts live after a rebind', () => {
     localStorage.setItem(SHORTCUT_OVERRIDES_KEY, JSON.stringify({ 'cycle-agent': { key: 'j', alt: true, shift: true } }))
     renderWithProviders(<ChatInput {...props()} />)
-    expect(agentChip().getAttribute('title')).toBe('Agent: kirocrew')
+    expect(agentChip().getAttribute('title')).toBe('Agent: ajcrew')
     expect(agentChip()).toHaveAttribute('aria-keyshortcuts', 'Alt+Shift+J')
   })
 
@@ -77,7 +77,7 @@ describe('ChatInput — agent chip advertises the cycle-agent chords', () => {
       localStorage.setItem(SHORTCUTS_ENABLED_KEY, '0')
       window.dispatchEvent(new Event(SHORTCUTS_ENABLED_EVENT))
     })
-    expect(agentChip().getAttribute('title')).toBe('Agent: kirocrew')
+    expect(agentChip().getAttribute('title')).toBe('Agent: ajcrew')
     expect(agentChip()).not.toHaveAttribute('aria-keyshortcuts')
   })
 
@@ -94,7 +94,7 @@ describe('ChatInput — agent chip advertises the cycle-agent chords', () => {
       window.dispatchEvent(new Event(SHORTCUT_OVERRIDES_EVENT))
     })
     // Unbound: nothing fires, so nothing is taught.
-    expect(agentChip().getAttribute('title')).toBe('Agent: kirocrew')
+    expect(agentChip().getAttribute('title')).toBe('Agent: ajcrew')
     expect(agentChip()).not.toHaveAttribute('aria-keyshortcuts')
   })
 })

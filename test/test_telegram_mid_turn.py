@@ -25,11 +25,11 @@ from telegram_helpers import (
     _tg_origin,
 )
 
-from kiro_crew.acp.types import EVENT_COMPLETE
-from kiro_crew.messaging.transport import InboundMessage
-from kiro_crew.telegram.transport import TelegramInboundMessage
-from kiro_crew.telegram.transport_dispatch import _STEER_ACK_EMOJI
-from kiro_crew.testing.wait import await_until
+from aj_crew.acp.types import EVENT_COMPLETE
+from aj_crew.messaging.transport import InboundMessage
+from aj_crew.telegram.transport import TelegramInboundMessage
+from aj_crew.telegram.transport_dispatch import _STEER_ACK_EMOJI
+from aj_crew.testing.wait import await_until
 
 
 class TestTelegramMidTurn:
@@ -44,7 +44,7 @@ class TestTelegramMidTurn:
         second turn -- deferring without looping just strands it until the user
         happens to send something else.
         """
-        from kiro_crew.messaging.attachments import IngestLimits
+        from aj_crew.messaging.attachments import IngestLimits
 
         cap = IngestLimits().max_attachments
         d, cli, sess = _dispatcher({7})
@@ -336,7 +336,7 @@ class TestTelegramMidTurn:
         """A busy session in steer mode, a ``/incognito`` message, and a provider
         whose steer answers *steer_result* (a bool, or an exception to raise).
         Returns the dispatcher, the client and the provider's steer log."""
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         privacy_mode.reset()
         d, cli, sess = _dispatcher({7})
@@ -378,7 +378,7 @@ class TestTelegramMidTurn:
         through the same producer -- never that the mode was not applied (a
         message the backend records would then run unprotected). RED-BEFORE:
         the raise released the mode and announced "not made incognito"."""
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess, sent_at_steer, go = self._incognito_steer(RuntimeError("acp gone"))
         with pytest.raises(RuntimeError, match="acp gone"):
@@ -402,7 +402,7 @@ class TestTelegramMidTurn:
         RED-BEFORE: the bare ``await commit(...)`` in the ``except BaseException``
         arm let the sender's error escape, so its ``raise`` never ran and the
         caller saw the notice failure instead of the steer's."""
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess, sent_at_steer, go = self._incognito_steer(RuntimeError("acp gone"))
         notices: list[str] = []
@@ -430,7 +430,7 @@ class TestTelegramMidTurn:
         and runs at the drain, where the modifier is applied and announced. This
         path says nothing about the mode -- a confirmation here, for a message
         that has not run, would be false -- and takes the reservation back."""
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess, sent_at_steer, go = self._incognito_steer(False)
         asyncio.run(go())
@@ -444,7 +444,7 @@ class TestTelegramMidTurn:
     def test_a_steer_that_lands_is_confirmed_once_after_it_landed(self) -> None:
         """The confirmation follows the steer's result: one notice, sent AFTER the
         provider reported the message in the turn -- never before it."""
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess, sent_at_steer, go = self._incognito_steer(True)
         asyncio.run(go())
@@ -488,7 +488,7 @@ class TestTelegramMidTurn:
             )
 
         asyncio.run(_go())
-        assert sess.successes == ["telegram:kirocrew:direct:7"]
+        assert sess.successes == ["telegram:ajcrew:direct:7"]
         assert sess._gp.steered == []
 
     def test_drain_collapses_queued_into_one_turn(self) -> None:
@@ -496,12 +496,12 @@ class TestTelegramMidTurn:
         sess.queued = [("t1", "first", _origin()), ("t2", "second", _origin())]
 
         async def _go() -> None:
-            await d._drain_queue("telegram:kirocrew:direct:7")
+            await d._drain_queue("telegram:ajcrew:direct:7")
 
         asyncio.run(_go())
         # All queued messages collapse into ONE combined turn (drain=False ->
         # no recursion), and the queue is emptied.
-        assert sess.successes == ["telegram:kirocrew:direct:7"]
+        assert sess.successes == ["telegram:ajcrew:direct:7"]
         assert sess.queued == []
 
     def test_queue_receipt_collapses_into_single_bubble(self) -> None:
@@ -557,7 +557,7 @@ class TestTelegramMidTurn:
         # profile load: otherwise whichever checks arrive while the first load is
         # in progress are denied before they ever reach the receipt queue.
         monkeypatch.setattr(
-            "kiro_crew.telegram.transport_dispatch.channel_inbound_permitted",
+            "aj_crew.telegram.transport_dispatch.channel_inbound_permitted",
             AsyncMock(return_value=True),
         )
 
@@ -602,7 +602,7 @@ class TestTelegramMidTurn:
         async def _go() -> None:
             d.handle_message = _spy  # type: ignore[assignment]
             try:
-                await d._drain_queue("telegram:kirocrew:direct:7")
+                await d._drain_queue("telegram:ajcrew:direct:7")
             finally:
                 d.handle_message = original  # type: ignore[assignment]
 
@@ -617,7 +617,7 @@ class TestTelegramMidTurn:
 
     def test_flip_count_reflects_answered_not_full_queue(self) -> None:
         d, cli, sess = _dispatcher({7})
-        key = "telegram:kirocrew:direct:7"
+        key = "telegram:ajcrew:direct:7"
         sess._busy = True
         d.cfg.messaging.queue_mode = "queue"
         _prime_live(d.cfg)
@@ -642,7 +642,7 @@ class TestTelegramMidTurn:
 
         async def _go() -> bool:
             return await d._enqueue_with_receipt(
-                "telegram:kirocrew:direct:7", 7, "late message", origin=_tg_origin()
+                "telegram:ajcrew:direct:7", 7, "late message", origin=_tg_origin()
             )
 
         queued = asyncio.run(_go())
@@ -658,7 +658,7 @@ class TestMidTurnSharedKey:
     turn running on it can be answering someone else's chat."""
 
     def test_another_chats_message_is_queued_not_steered(self, monkeypatch: Any) -> None:
-        from kiro_crew.messaging import auto_title
+        from aj_crew.messaging import auto_title
 
         monkeypatch.setattr(auto_title, "try_claim", lambda _key: False)
         d, _cli, sess = _dispatcher({7, 8}, dm_scope="unified")
@@ -700,7 +700,7 @@ class TestMidTurnSharedKey:
     def test_a_stale_record_does_not_steer_into_a_successor_turn(self, monkeypatch: Any) -> None:
         # A reset hands the shared key to another channel's turn while this Telegram
         # turn's record is still in place: the chat matches, the provider does not.
-        from kiro_crew.messaging import auto_title
+        from aj_crew.messaging import auto_title
 
         monkeypatch.setattr(auto_title, "try_claim", lambda _key: False)
         d, _cli, sess = _dispatcher({7}, dm_scope="unified")
@@ -753,7 +753,7 @@ class TestMidTurnSharedKey:
     ) -> None:
         # The other channel's turn ends without draining Telegram's queue, so the
         # queueing path itself schedules the drain for when the key is free.
-        from kiro_crew.telegram.dispatch import midturn
+        from aj_crew.telegram.dispatch import midturn
 
         scheduled: list[str] = []
 
@@ -771,7 +771,7 @@ class TestMidTurnSharedKey:
         assert scheduled == ["telegram"]
 
     def test_a_finished_turn_leaves_a_later_turns_record(self, monkeypatch: Any) -> None:
-        from kiro_crew.messaging import auto_title
+        from aj_crew.messaging import auto_title
 
         monkeypatch.setattr(auto_title, "try_claim", lambda _key: False)
         d, _cli, sess = _dispatcher({7})
@@ -796,11 +796,11 @@ class TestMidTurnPrivacyTransaction:
     with the backend), and released only when the provider explicitly declines.
     """
 
-    _KEY = "telegram:kirocrew:direct:7"
+    _KEY = "telegram:ajcrew:direct:7"
 
     @pytest.fixture(autouse=True)
     def _reset_modes(self) -> Any:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         privacy_mode.reset()
         yield
@@ -808,12 +808,12 @@ class TestMidTurnPrivacyTransaction:
 
     @staticmethod
     def _unconfirmed() -> str:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         return f"{privacy_mode.NOTICE_INCOGNITO} {privacy_mode.NOTICE_UNCONFIRMED_SUFFIX}"
 
     def test_a_cancelled_steer_keeps_the_mode_and_reraises_the_cancellation(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess, _at_steer, go = TestTelegramMidTurn._incognito_steer(asyncio.CancelledError())
         notes: list[str] = []
@@ -828,7 +828,7 @@ class TestMidTurnPrivacyTransaction:
         assert sess.queued == [] and cli.reactions == [] and notes == []
 
     def test_a_cancelled_steer_whose_notice_fails_still_raises_the_cancellation(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess, _at_steer, go = TestTelegramMidTurn._incognito_steer(asyncio.CancelledError())
 
@@ -844,7 +844,7 @@ class TestMidTurnPrivacyTransaction:
         assert sess.queued == []
 
     def test_a_base_exception_from_the_steer_is_reraised_as_itself(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         class _Halt(BaseException):
             pass
@@ -864,7 +864,7 @@ class TestMidTurnPrivacyTransaction:
 
     def _record(self, monkeypatch: Any, d: Any, cli: Any, sess: Any, steer_result: Any) -> list:
         """Log reserve/steer/commit/release, sends, the chip and the reaction in order."""
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         log: list[tuple[Any, ...]] = []
         real_reserve, real_commit, real_release = (
@@ -925,7 +925,7 @@ class TestMidTurnPrivacyTransaction:
         )
 
     def test_a_landed_steer_commits_then_notes_then_reacts(self, monkeypatch: Any) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess = _dispatcher({7})
         sess._busy = True
@@ -957,7 +957,7 @@ class TestMidTurnPrivacyTransaction:
     ) -> None:
         # The reservation awaits: the turn the ownership check saw can end and a
         # new turn take the key on the same provider before the steer would land.
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess = _dispatcher({7})
         sess._busy = True
@@ -1027,7 +1027,7 @@ class TestMidTurnPrivacyTransaction:
     def test_a_landed_steer_whose_notice_fails_propagates_before_chip_and_reaction(
         self,
     ) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess, _at_steer, go = TestTelegramMidTurn._incognito_steer(True)
         notes: list[str] = []
@@ -1045,7 +1045,7 @@ class TestMidTurnPrivacyTransaction:
         assert list(privacy_mode._tracker("incognito")) != []
 
     def test_an_already_marked_key_steers_without_a_notice(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess = _dispatcher({7})
         sess._busy = True
@@ -1058,7 +1058,7 @@ class TestMidTurnPrivacyTransaction:
         assert cli.reactions == [(12, _STEER_ACK_EMOJI)]
 
     def test_a_reserve_refusal_returns_without_rerun_or_queue(self, monkeypatch: Any) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess = _dispatcher({7})
         sess._busy = True
@@ -1086,7 +1086,7 @@ class TestMidTurnPrivacyTransaction:
     def test_no_reservation_when_the_steer_is_unavailable(
         self, monkeypatch: Any, dead_turn: bool
     ) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess = _dispatcher({7})
         sess._busy = True
@@ -1106,7 +1106,7 @@ class TestMidTurnPrivacyTransaction:
         assert not privacy_mode.is_incognito(self._KEY)
 
     def test_the_steer_capability_is_read_once_before_the_reservation(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         class _Probe:
             def __init__(self) -> None:
@@ -1167,7 +1167,7 @@ class TestMidTurnPrivacyTransaction:
     def test_a_bare_modifier_refusal_sends_nothing_more_and_runs_nothing(
         self, monkeypatch: Any, mode: str
     ) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess = _dispatcher({7})
         calls: list[tuple[str, str, dict[str, Any]]] = []
@@ -1193,7 +1193,7 @@ class TestMidTurnPrivacyTransaction:
 
     @pytest.mark.parametrize("mode", ["temporary", "incognito"])
     def test_a_bare_modifier_confirms_exactly_once_each_time(self, mode: str) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         literal = {
             "temporary": "🔒 Temporary mode ON — this thread won't read or save memory.",
@@ -1208,7 +1208,7 @@ class TestMidTurnPrivacyTransaction:
         assert [t for t, _ in cli.sent] == [literal, literal]
 
     def test_a_bare_modifier_while_busy_applies_without_steer_or_queue(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess = _dispatcher({7})
         sess._busy = True
@@ -1220,7 +1220,7 @@ class TestMidTurnPrivacyTransaction:
         assert sess.queued == [] and sess._gp.steered == [] and cli.reactions == []
 
     def test_a_turn_path_refusal_runs_nothing(self, monkeypatch: Any) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess = _dispatcher({7})
         monkeypatch.setattr(
@@ -1240,7 +1240,7 @@ class TestMidTurnPrivacyTransaction:
         assert sess.successes == [] and sess.released == []
 
     def test_the_turn_path_hydrates_then_applies_then_acquires(self, monkeypatch: Any) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess = _dispatcher({7})
         log: list[tuple[Any, ...]] = []
@@ -1277,7 +1277,7 @@ class TestMidTurnPrivacyTransaction:
         assert "Answer: summarise this" in (cli.final_text() or "")
 
     def test_an_already_marked_key_runs_the_turn_without_a_notice(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         d, cli, sess = _dispatcher({7})
         privacy_mode.mark_incognito(self._KEY)

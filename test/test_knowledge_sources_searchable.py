@@ -14,10 +14,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew import aws_consent
-from kiro_crew.dashboard.handlers.knowledge import list_sources
-from kiro_crew.knowledge.connectors import bedrock_kb
-from kiro_crew.knowledge.store import KnowledgeStore
+from aj_crew import aws_consent
+from aj_crew.dashboard.handlers.knowledge import list_sources
+from aj_crew.knowledge.connectors import bedrock_kb
+from aj_crew.knowledge.store import KnowledgeStore
 
 _URI = "bedrock-kb://us-east-1/ABCDEFGHIJ"
 _PROPS = {"kb_ids": "ABCDEFGHIJ", "region": "us-east-1", "profile": "team-a"}

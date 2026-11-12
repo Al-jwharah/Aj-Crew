@@ -16,10 +16,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import crew_log_path, crew_log_root, eager, emit
-from kiro_crew.crew_log.lease import LEASE_FILE
-from kiro_crew.platform_compat import file_lock
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import crew_log_path, crew_log_root, eager, emit
+from aj_crew.crew_log.lease import LEASE_FILE
+from aj_crew.platform_compat import file_lock
 
 SESSION = "acp-sess-0001"
 
@@ -60,7 +60,7 @@ def _isolated_home(tmp_path, _floor_monkeypatch):
     the same three tests passed locally and on Windows while failing a loaded Linux
     shard. Zeroed, they wait only on the writer's own barrier.
     """
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     _floor_monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     _floor_monkeypatch.setattr(emit, "_retry_delay", lambda _attempts: 0.0)
     emit.reset_caches()
@@ -118,7 +118,7 @@ def _body(session_id: str = SESSION) -> list[dict]:
 def _open_session() -> None:
     emit.on_session_opened(
         SESSION,
-        agent="kirocrew",
+        agent="ajcrew",
         slot="chat-7",
         model="claude-opus-5",
         cwd="/home/dev/project",
@@ -160,8 +160,8 @@ def _can_take_ownership(session_id: str = SESSION) -> bool:
 
 
 def _tool_result_event(output: str | None):
-    from kiro_crew.acp._dispatch import parse_session_update
-    from kiro_crew.acp.types import EVENT_TOOL_RESULT
+    from aj_crew.acp._dispatch import parse_session_update
+    from aj_crew.acp.types import EVENT_TOOL_RESULT
 
     raw_output = {"items": [] if output is None else [{"Text": output}]}
     events = parse_session_update(
@@ -187,7 +187,7 @@ def _open_successor(**kwargs) -> None:
     """Open ``SUCCESSOR`` on the same slot ``_open_session`` uses."""
     emit.on_session_opened(
         SUCCESSOR,
-        agent="kirocrew",
+        agent="ajcrew",
         slot="chat-7",
         model="claude-opus-5",
         cwd="/home/dev/project",

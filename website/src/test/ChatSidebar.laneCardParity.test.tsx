@@ -105,8 +105,8 @@ type TestSlot = Record<string, unknown>
 const NOW = Date.now()
 const iso = (msAgo: number) => new Date(NOW - msAgo).toISOString()
 const SUBJECT: TestSlot[] = [
-  { key: 'k-parent', title: 'Refactor the ingest pipeline', messages: 12, running: false, modified: NOW - 60_000, last_turn_ts: iso(60_000), agent: 'kirocrew' },
-  { key: 'k-subject', title: 'Migrate the schema module', messages: 8, running: true, modified: NOW - 120_000, last_turn_ts: iso(120_000), agent: 'kirocrew', parent: { slot: 'k-parent', key: 'k-parent' } },
+  { key: 'k-parent', title: 'Refactor the ingest pipeline', messages: 12, running: false, modified: NOW - 60_000, last_turn_ts: iso(60_000), agent: 'ajcrew' },
+  { key: 'k-subject', title: 'Migrate the schema module', messages: 8, running: true, modified: NOW - 120_000, last_turn_ts: iso(120_000), agent: 'ajcrew', parent: { slot: 'k-parent', key: 'k-parent' } },
 ]
 
 function renderLane(lane: 'flat' | 'conductor', slots: TestSlot[] = SUBJECT) {
@@ -135,7 +135,7 @@ function renderLane(lane: 'flat' | 'conductor', slots: TestSlot[] = SUBJECT) {
           <MemoryRouter>
             <ChatSidebar
               slots={slots as never} activeSlot={null} unreadSlots={[]}
-              history={[]} historyHasMore={false} defaultAgent="kirocrew" installedAgents={[]}
+              history={[]} historyHasMore={false} defaultAgent="ajcrew" installedAgents={[]}
             />
           </MemoryRouter>
         </ThemeProvider>
@@ -218,7 +218,7 @@ describe('conductor lane card parity', () => {
     // card's own trailing-meta group, counts first.
     const { row } = renderLane('conductor', [
       ...SUBJECT,
-      { key: 'k-grandchild', title: 'Profile the hot loop', messages: 2, running: false, modified: NOW - 180_000, last_turn_ts: iso(180_000), agent: 'kirocrew', parent: { slot: 'k-subject', key: 'k-subject' } },
+      { key: 'k-grandchild', title: 'Profile the hot loop', messages: 2, running: false, modified: NOW - 180_000, last_turn_ts: iso(180_000), agent: 'ajcrew', parent: { slot: 'k-subject', key: 'k-subject' } },
     ])
     const count = within(row).getByTestId('conductor-child-count-k-subject')
     const meta = count.parentElement!
@@ -236,7 +236,7 @@ describe('conductor lane card parity', () => {
     // Indent lives on a spacer inside the row; the divider's own insets are untouched.
     const { container } = renderLane('conductor', [
       ...SUBJECT,
-      { key: 'k-grandchild', title: 'Profile the hot loop', messages: 2, running: false, modified: NOW - 180_000, last_turn_ts: iso(180_000), agent: 'kirocrew', parent: { slot: 'k-subject', key: 'k-subject' } },
+      { key: 'k-grandchild', title: 'Profile the hot loop', messages: 2, running: false, modified: NOW - 180_000, last_turn_ts: iso(180_000), agent: 'ajcrew', parent: { slot: 'k-subject', key: 'k-subject' } },
     ])
     const dividers = Array.from(container.querySelectorAll('.border-b.border-border'))
       .filter(d => (d as HTMLElement).className.includes('-mt-px'))

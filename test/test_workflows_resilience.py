@@ -24,8 +24,8 @@ import asyncio
 
 import pytest
 
-from kiro_crew.workflows.registry import STATUS_FAILED, RunRegistry
-from kiro_crew.workflows.runner import WorkflowRunner
+from aj_crew.workflows.registry import STATUS_FAILED, RunRegistry
+from aj_crew.workflows.runner import WorkflowRunner
 
 pytestmark = pytest.mark.asyncio
 
@@ -326,8 +326,8 @@ async def test_service_threads_and_clamps_a_per_run_timeout() -> None:
     that only passes `timeout_secs` to the WorkflowRunner constructor would not
     cover the "configurable per run" claim at all.
     """
-    from kiro_crew.workflows.runner import MAX_RUN_TIMEOUT_SECS, MIN_RUN_TIMEOUT_SECS
-    from kiro_crew.workflows.service import WorkflowService
+    from aj_crew.workflows.runner import MAX_RUN_TIMEOUT_SECS, MIN_RUN_TIMEOUT_SECS
+    from aj_crew.workflows.service import WorkflowService
 
     svc = WorkflowService(sessions=None, persist=False, timeout_secs=1800)
     assert svc.timeout_secs == 1800  # service default, clamped at construction
@@ -341,8 +341,8 @@ async def test_service_threads_and_clamps_a_per_run_timeout() -> None:
 
 
 async def test_service_default_timeout_is_itself_clamped() -> None:
-    from kiro_crew.workflows.runner import DEFAULT_RUN_TIMEOUT_SECS, MAX_RUN_TIMEOUT_SECS
-    from kiro_crew.workflows.service import WorkflowService
+    from aj_crew.workflows.runner import DEFAULT_RUN_TIMEOUT_SECS, MAX_RUN_TIMEOUT_SECS
+    from aj_crew.workflows.service import WorkflowService
 
     assert WorkflowService(sessions=None, persist=False).timeout_secs == (
         DEFAULT_RUN_TIMEOUT_SECS

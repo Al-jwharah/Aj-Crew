@@ -9,11 +9,11 @@ from unittest.mock import AsyncMock
 import pytest
 import test_shared_crew_turn_gate as turn_tests
 
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import turn_gate
-from kiro_crew.shared_crew.admission import Liveness, OperationKind, OperationState, StaleRevision
-from kiro_crew.taskq.store import TaskStoreUnavailable
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import turn_gate
+from aj_crew.shared_crew.admission import Liveness, OperationKind, OperationState, StaleRevision
+from aj_crew.taskq.store import TaskStoreUnavailable
+from aj_crew.testing.wait import async_wait_until, await_until
 
 S = OperationState
 service = turn_tests.service
@@ -170,8 +170,8 @@ async def test_unavailable_admission_closes_work_and_notifies(unavailable, wrapp
 async def test_unavailable_store_cleans_up_thread_and_side(unavailable, monkeypatch):
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard import chat_threads
-    from kiro_crew.dashboard.handlers import side
+    from aj_crew.dashboard import chat_threads
+    from aj_crew.dashboard.handlers import side
 
     frames = []
     monkeypatch.setattr(chat_threads, "_thread_turn_body", AsyncMock())
@@ -204,8 +204,8 @@ async def test_unavailable_store_cleans_up_thread_and_side(unavailable, monkeypa
 async def test_remote_crew_store_failure_keeps_unavailable_code(unavailable, monkeypatch):
     from aiohttp.test_utils import make_mocked_request
 
-    from kiro_crew.dashboard import handlers_crew_turn, handlers_instances
-    from kiro_crew.dashboard.handlers import source_providers
+    from aj_crew.dashboard import handlers_crew_turn, handlers_instances
+    from aj_crew.dashboard.handlers import source_providers
 
     monkeypatch.setattr(handlers_instances, "_guard", lambda _r, _op: None)
     monkeypatch.setattr(source_providers, "is_owner_dashboard_request", lambda _r: True)

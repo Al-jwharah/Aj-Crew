@@ -32,11 +32,11 @@ from discord_resumed_busy_helpers import (
 from test_discord import _prime_live
 from test_discord_sessions import _bind_to_chat1, _dispatcher, _log, _message
 
-from kiro_crew.dashboard import chat_delivery as cd
-from kiro_crew.dashboard import chat_runner as cr
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.history import HUMAN_TURN_META_KEY
-from kiro_crew.messaging.transport import InboundMessage
+from aj_crew.dashboard import chat_delivery as cd
+from aj_crew.dashboard import chat_runner as cr
+from aj_crew.dashboard import session_control as sc
+from aj_crew.history import HUMAN_TURN_META_KEY
+from aj_crew.messaging.transport import InboundMessage
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _isolated_home = discord_resumed_busy_helpers._isolated_home
@@ -361,9 +361,9 @@ async def test_run_chat_hands_a_commands_off_message_to_the_model_as_text(
     from chat_test_helpers import pin_kiro_cli_harness
 
     pin_kiro_cli_harness()
-    from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
+    from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.push_slots_update = MagicMock()
@@ -407,9 +407,9 @@ async def test_a_recovery_requeue_keeps_the_commands_off_stamp(tmp_path, monkeyp
     from chat_test_helpers import pin_kiro_cli_harness
 
     pin_kiro_cli_harness()
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _make_state(tmp_path)
     state.broadcast_ws = MagicMock()
     state.push_slots_update = MagicMock()

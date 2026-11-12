@@ -18,10 +18,10 @@ from unittest.mock import MagicMock
 import pytest
 from multidict import CIMultiDict
 
-import kiro_crew.config.loader as loader
-from kiro_crew.config.loader import _tailscale_config_from
-from kiro_crew.dashboard import tailnet
-from kiro_crew.dashboard.tailnet import (
+import aj_crew.config.loader as loader
+from aj_crew.config.loader import _tailscale_config_from
+from aj_crew.dashboard import tailnet
+from aj_crew.dashboard.tailnet import (
     PIN_SCOPE_LOGIN,
     PIN_SCOPE_NODE,
     TAGGED_DEVICES_LOGIN,
@@ -323,7 +323,7 @@ class TestPeerPinKey:
         tagged = ForwardedPeer(
             login=TAGGED_DEVICES_LOGIN, node="ci.tail.ts.net", address="100.64.0.6"
         )
-        with caplog.at_level("WARNING", logger="kiro_crew.dashboard.tailnet"):
+        with caplog.at_level("WARNING", logger="aj_crew.dashboard.tailnet"):
             key = peer_pin_key(tagged, PIN_SCOPE_LOGIN)
         assert key == f"ts:node:{TAGGED_DEVICES_LOGIN}|ci.tail.ts.net"
         assert any("overridden" in r.message for r in caplog.records)
@@ -355,13 +355,13 @@ class TestLoginAllowlist:
 
 class TestConfigLoadValidation:
     def test_trust_with_empty_allowlist_is_refused_at_load(self, caplog) -> None:
-        with caplog.at_level("ERROR", logger="kiro_crew.config.loader"):
+        with caplog.at_level("ERROR", logger="aj_crew.config.loader"):
             cfg = _tailscale_config_from({"enabled": True, "trust_identity": True})
         assert cfg.trust_identity is False
         assert any("allowed_logins" in r.message for r in caplog.records)
 
     def test_unrecognised_pin_scope_narrows_to_node_with_warning(self, caplog) -> None:
-        with caplog.at_level("WARNING", logger="kiro_crew.config.loader"):
+        with caplog.at_level("WARNING", logger="aj_crew.config.loader"):
             cfg = _tailscale_config_from(
                 {"trust_identity": True, "allowed_logins": ["a@b.c"], "pin_scope": "everyone"}
             )
@@ -391,7 +391,7 @@ class TestConfigLoadValidation:
         assert cfg.pin_scope == "node"
 
     def test_non_list_allowed_logins_is_treated_as_empty(self, caplog) -> None:
-        with caplog.at_level("ERROR", logger="kiro_crew.config.loader"):
+        with caplog.at_level("ERROR", logger="aj_crew.config.loader"):
             cfg = _tailscale_config_from({"trust_identity": True, "allowed_logins": "a@b.c"})
         assert cfg.trust_identity is False
 
@@ -403,7 +403,7 @@ class TestVerifiedPeerStaysReadOnly:
     def test_verified_peer_request_is_not_direct_local(self) -> None:
         """A verified tailnet peer still sends X-Forwarded-For, so the
         config-write / secret-reveal predicate stays False for it."""
-        from kiro_crew.dashboard.origin import is_direct_local_request
+        from aj_crew.dashboard.origin import is_direct_local_request
 
         req = SimpleNamespace(
             remote="127.0.0.1",
@@ -417,7 +417,7 @@ class TestVerifiedPeerStaysReadOnly:
         """RFC §5 regression: a whois-verified tailnet peer receives
         ``read_only: true`` on the handlers/messaging.py config surfaces —
         identity trust must not unlock the config-write surfaces."""
-        import kiro_crew.dashboard.handlers.messaging as messaging
+        import aj_crew.dashboard.handlers.messaging as messaging
 
         monkeypatch.setattr(loader, "env_path", lambda: tmp_path / ".env")
         monkeypatch.setattr(loader, "config_path", lambda: tmp_path / "config.json")
@@ -506,8 +506,8 @@ class TestRefreshRotationRebind:
 
     @pytest.mark.asyncio
     async def test_rotation_rebinds_when_a_peer_resolves(self, monkeypatch) -> None:
-        from kiro_crew.dashboard import token_auth as _ta
-        from kiro_crew.dashboard.handlers.auth_refresh import _rebind_rotated_token_to_peer
+        from aj_crew.dashboard import token_auth as _ta
+        from aj_crew.dashboard.handlers.auth_refresh import _rebind_rotated_token_to_peer
 
         _ta._state.clear_all()
         _patch_whois(monkeypatch, _whois_json())
@@ -526,8 +526,8 @@ class TestRefreshRotationRebind:
     async def test_rotation_stays_unbound_without_a_peer(self, monkeypatch) -> None:
         """No peer (trust off / daemon down / non-tailnet): byte-for-byte the
         pre-identity refresh behaviour — the token stays unbound."""
-        from kiro_crew.dashboard import token_auth as _ta
-        from kiro_crew.dashboard.handlers.auth_refresh import _rebind_rotated_token_to_peer
+        from aj_crew.dashboard import token_auth as _ta
+        from aj_crew.dashboard.handlers.auth_refresh import _rebind_rotated_token_to_peer
 
         _ta._state.clear_all()
         _patch_whois(monkeypatch, None)

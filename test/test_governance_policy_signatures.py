@@ -3,7 +3,7 @@
 The signing payload, the verified / unverified / unsigned / unchecked states the
 loader records per tier, the opt-in ``require_policy_signature`` boot gate
 (``assert_policy_signature_satisfied``) that absence must not satisfy, and the
-provenance ``kirocrew policy show`` reports. The archetypes, the loader and the
+provenance ``ajcrew policy show`` reports. The archetypes, the loader and the
 resolution engine are in ``test_governance_policy.py``; the shared policy-body
 builder is ``governance_policy_helpers.py``.
 """
@@ -17,9 +17,9 @@ import json
 import pytest
 from governance_policy_helpers import _policy_body
 
-from kiro_crew.platform import governance
-from kiro_crew.platform.context import PlatformCompositionError
-from kiro_crew.platform.governance import (
+from aj_crew.platform import governance
+from aj_crew.platform.context import PlatformCompositionError
+from aj_crew.platform.governance import (
     SIGNATURE_UNCHECKED,
     SIGNATURE_UNSIGNED,
     SIGNATURE_UNVERIFIED,
@@ -49,7 +49,7 @@ def _sign_policy(body: dict, secret: str) -> dict:
 def _patch_trust(monkeypatch, *, require: bool, keys: dict):
     """Point the loader's trust root at fixed settings (no admission file I/O)."""
     monkeypatch.setattr(
-        "kiro_crew.platform.governance._policy_trust_settings",
+        "aj_crew.platform.governance._policy_trust_settings",
         lambda: (require, dict(keys), {}),
     )
 
@@ -63,7 +63,7 @@ def _real_trust_file(monkeypatch, tmp_path, *, require: bool, keys: dict):
     """
     adm = tmp_path / "admission_policy.json"
     adm.write_text(json.dumps({"require_policy_signature": require, "trust_keys": dict(keys)}))
-    monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
+    monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
 
 
 def _load_and_enforce(**kwargs):
@@ -106,7 +106,7 @@ class TestPolicySigningPayload:
     def test_shares_admission_canonicalization(self):
         # One canonicalizer for both trust roots — a divergence here is exactly how
         # a signer and a verifier drift apart.
-        from kiro_crew.platform.admission import canonical_signing_bytes
+        from aj_crew.platform.admission import canonical_signing_bytes
 
         body = {"version": 1, "boot": {"fail_closed": True}}
         assert policy_signing_payload(body) == canonical_signing_bytes(body)
@@ -118,7 +118,7 @@ class TestPolicySignatureStates:
         body = _sign_policy(_policy_body(identity={"issuer": "fleet-control"}), secret)
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(body))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         _patch_trust(monkeypatch, require=False, keys={"fleet-control": secret})
         ceiling = load_security_policy()
         assert ceiling is not None
@@ -132,7 +132,7 @@ class TestPolicySignatureStates:
         body = _sign_policy(_policy_body(identity={"issuer": "fleet-control"}), secret)
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(body, indent=4, sort_keys=True) + "\n")
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         _patch_trust(monkeypatch, require=False, keys={"fleet-control": secret})
         assert load_security_policy().signature_state == SIGNATURE_VERIFIED
 
@@ -153,7 +153,7 @@ class TestPolicySignatureStates:
             body = _policy_body(identity={"issuer": "fleet-control", "signature": signature})
             p = tmp_path / "policy.json"
             p.write_text(json.dumps(body))
-            monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+            monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
             _patch_trust(monkeypatch, require=False, keys={"fleet-control": "trust-key"})
             ceiling = load_security_policy()
             assert ceiling is not None
@@ -195,7 +195,7 @@ class TestPolicySignatureStates:
         body = _policy_body(identity={"issuer": "fleet-control", "signature": "tamper\u2013ed"})
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(body))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         _real_trust_file(monkeypatch, tmp_path, require=True, keys={"fleet-control": "trust-key"})
         with pytest.raises(PlatformCompositionError):
             _load_and_enforce()
@@ -204,7 +204,7 @@ class TestPolicySignatureStates:
         body = _policy_body(identity={"issuer": "fleet-control", "signature": "not-the-mac"})
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(body))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         _patch_trust(monkeypatch, require=False, keys={"fleet-control": "trust-key"})
         ceiling = load_security_policy()
         assert ceiling is not None
@@ -224,14 +224,14 @@ class TestPolicySignatureStates:
         body["commands"] = {"mode": "deny", "deny": []}  # ceiling widened in place
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(body))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         _patch_trust(monkeypatch, require=False, keys={"fleet-control": secret})
         assert load_security_policy().signature_state == SIGNATURE_UNVERIFIED
 
     def test_signature_without_issuer_is_unverified(self, monkeypatch, tmp_path):
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(_policy_body(identity={"signature": "abc"})))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         _patch_trust(monkeypatch, require=False, keys={"fleet-control": "k"})
         assert load_security_policy().signature_state == SIGNATURE_UNVERIFIED
 
@@ -239,7 +239,7 @@ class TestPolicySignatureStates:
         body = _sign_policy(_policy_body(identity={"issuer": "unknown-issuer"}), "k")
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(body))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         _patch_trust(monkeypatch, require=False, keys={"fleet-control": "k"})
         assert load_security_policy().signature_state == SIGNATURE_UNVERIFIED
 
@@ -247,7 +247,7 @@ class TestPolicySignatureStates:
         body = _sign_policy(_policy_body(identity={"issuer": "fleet-control"}), "real-key")
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(body))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         _patch_trust(monkeypatch, require=False, keys={"fleet-control": "other-key"})
         assert load_security_policy().signature_state == SIGNATURE_UNVERIFIED
 
@@ -260,7 +260,7 @@ class TestPolicySignatureOptIn:
         # working unchanged, with no signature and no trust key provisioned.
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(_policy_body(commands={"mode": "deny", "deny": ["git push*"]})))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         _patch_trust(monkeypatch, require=False, keys={})
         ceiling = load_security_policy()
         assert ceiling is not None
@@ -271,14 +271,14 @@ class TestPolicySignatureOptIn:
     def test_unverified_with_require_off_still_loads(self, monkeypatch, tmp_path):
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(_policy_body(identity={"issuer": "x", "signature": "bogus"})))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         _patch_trust(monkeypatch, require=False, keys={})
         assert load_security_policy() is not None
 
     def test_unsigned_with_require_on_fails_closed(self, monkeypatch, tmp_path):
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(_policy_body()))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         _real_trust_file(monkeypatch, tmp_path, require=True, keys={"fleet-control": "k"})
         with pytest.raises(PlatformCompositionError):
             _load_and_enforce()
@@ -290,7 +290,7 @@ class TestPolicySignatureOptIn:
         body["boot"] = {"fail_closed": False}  # tampered after signing
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(body))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         _real_trust_file(monkeypatch, tmp_path, require=True, keys={"fleet-control": secret})
         with pytest.raises(PlatformCompositionError):
             _load_and_enforce()
@@ -300,17 +300,17 @@ class TestPolicySignatureOptIn:
         body = _sign_policy(_policy_body(identity={"issuer": "fleet-control"}), secret)
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(body))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         _patch_trust(monkeypatch, require=True, keys={"fleet-control": secret})
         assert load_security_policy().signature_state == SIGNATURE_VERIFIED
 
     def test_require_on_marks_governance_health_incident(self, monkeypatch, tmp_path):
-        from kiro_crew.platform import governance_health
+        from aj_crew.platform import governance_health
 
         governance_health.reset()
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(_policy_body()))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         _real_trust_file(monkeypatch, tmp_path, require=True, keys={})
         with pytest.raises(PlatformCompositionError):
             _load_and_enforce()
@@ -320,20 +320,20 @@ class TestPolicySignatureOptIn:
 
     def test_home_tier_is_verified_too(self, monkeypatch, tmp_path):
         secret = "trust-key"
-        monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
         home = tmp_path / "security_policy.json"
         home.write_text(
             json.dumps(_sign_policy(_policy_body(identity={"issuer": "operator"}), secret))
         )
-        monkeypatch.setattr("kiro_crew.platform.governance._policy_home_path", lambda: home)
+        monkeypatch.setattr("aj_crew.platform.governance._policy_home_path", lambda: home)
         _patch_trust(monkeypatch, require=False, keys={"operator": secret})
         assert load_security_policy().signature_state == SIGNATURE_VERIFIED
 
     def test_home_tier_unsigned_with_require_on_fails_closed(self, monkeypatch, tmp_path):
-        monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
         home = tmp_path / "security_policy.json"
         home.write_text(json.dumps(_policy_body()))
-        monkeypatch.setattr("kiro_crew.platform.governance._policy_home_path", lambda: home)
+        monkeypatch.setattr("aj_crew.platform.governance._policy_home_path", lambda: home)
         _real_trust_file(monkeypatch, tmp_path, require=True, keys={})
         with pytest.raises(PlatformCompositionError):
             _load_and_enforce()
@@ -346,10 +346,10 @@ class TestPolicySignatureOptIn:
         # is what the final ceiling comes from. Enforcement moved to the composed
         # result so precedence decides which verdict is judged.
         secret = "trust-key"
-        monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
         home = tmp_path / "security_policy.json"
         home.write_text(json.dumps(_policy_body()))  # unsigned, lower precedence
-        monkeypatch.setattr("kiro_crew.platform.governance._policy_home_path", lambda: home)
+        monkeypatch.setattr("aj_crew.platform.governance._policy_home_path", lambda: home)
         _real_trust_file(monkeypatch, tmp_path, require=True, keys={"fleet-control": secret})
         # The core's loader-less pass must not abort on the lower-precedence tier…
         assert load_security_policy() is not None
@@ -362,9 +362,9 @@ class TestPolicySignatureOptIn:
     def test_bundled_tier_is_advisory_when_require_off(self, monkeypatch, tmp_path):
         # With require OFF (a downstream edition ships no require), an unsigned
         # bundled policy still loads — advisory, exactly like the file tiers.
-        monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
         monkeypatch.setattr(
-            "kiro_crew.platform.governance._policy_home_path", lambda: tmp_path / "nope.json"
+            "aj_crew.platform.governance._policy_home_path", lambda: tmp_path / "nope.json"
         )
         _patch_trust(monkeypatch, require=False, keys={})
         ceiling = load_security_policy(bundled_loader=lambda: _policy_body())
@@ -377,9 +377,9 @@ class TestPolicySignatureOptIn:
         # security_policy.json bytes, so "covered by admission" never protected
         # the resource — a tampered bundled policy loaded unchecked. Under
         # require_policy_signature the bundled tier must verify like any other.
-        monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
         monkeypatch.setattr(
-            "kiro_crew.platform.governance._policy_home_path", lambda: tmp_path / "nope.json"
+            "aj_crew.platform.governance._policy_home_path", lambda: tmp_path / "nope.json"
         )
         _real_trust_file(monkeypatch, tmp_path, require=True, keys={"fleet-control": "trust-key"})
         # An unsigned bundled policy under require must abort, not load.
@@ -395,9 +395,9 @@ class TestPolicySignatureOptIn:
 
     def test_no_policy_stays_none_when_require_off(self, monkeypatch, tmp_path):
         # require OFF: an ungoverned standalone host stays ungoverned.
-        monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
         monkeypatch.setattr(
-            "kiro_crew.platform.governance._policy_home_path", lambda: tmp_path / "nope.json"
+            "aj_crew.platform.governance._policy_home_path", lambda: tmp_path / "nope.json"
         )
         _patch_trust(monkeypatch, require=False, keys={})
         assert load_security_policy() is None
@@ -409,9 +409,9 @@ class TestPolicySignatureOptIn:
         # enterprise host before its edition is consulted, or — keyed on the loader
         # being present — misses a standalone host entirely (the GPT finding). So
         # absence always yields None here; the refusal lives in the boot gate.
-        monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
         monkeypatch.setattr(
-            "kiro_crew.platform.governance._policy_home_path", lambda: tmp_path / "nope.json"
+            "aj_crew.platform.governance._policy_home_path", lambda: tmp_path / "nope.json"
         )
         adm = tmp_path / "admission_policy.json"
         adm.write_text(
@@ -419,7 +419,7 @@ class TestPolicySignatureOptIn:
                 {"require_policy_signature": True, "trust_keys": {"fleet-control": "trust-key"}}
             )
         )
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
         assert load_security_policy() is None  # core's loader-less pass
         assert load_security_policy(bundled_loader=lambda: None) is None  # edition's pass
 
@@ -437,7 +437,7 @@ class TestPolicySignatureAbsenceGate:
                 {"require_policy_signature": True, "trust_keys": {"fleet-control": "trust-key"}}
             )
         )
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
         with pytest.raises(PlatformCompositionError):
             assert_policy_signature_satisfied(None)
 
@@ -448,10 +448,10 @@ class TestPolicySignatureAbsenceGate:
         # composed context, so it does not depend on a loader existing at all.
         adm = tmp_path / "admission_policy.json"
         adm.write_text(json.dumps({"require_policy_signature": True}))
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
-        monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
+        monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
         monkeypatch.setattr(
-            "kiro_crew.platform.governance._policy_home_path", lambda: tmp_path / "nope.json"
+            "aj_crew.platform.governance._policy_home_path", lambda: tmp_path / "nope.json"
         )
         ceiling = load_security_policy()  # standalone: no bundled_loader, ever
         assert ceiling is None
@@ -487,7 +487,7 @@ class TestPolicySignatureAbsenceGate:
         # host stays ungoverned rather than being refused boot.
         adm = tmp_path / "admission_policy.json"
         adm.write_text(json.dumps({"mode": "open"}))
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
         assert_policy_signature_satisfied(None)
 
     @pytest.mark.parametrize(
@@ -501,11 +501,11 @@ class TestPolicySignatureAbsenceGate:
         fail-closing on a *malformed* file catches only a clumsy version of an attack
         the design concedes, while turning a non-atomic fleet push or a hand-edit
         typo into an unbootable host. Corruption here is a reliability event: logged,
-        predictable, reported by ``kirocrew doctor``.
+        predictable, reported by ``ajcrew doctor``.
         """
         bad = tmp_path / "admission_policy.json"
         bad.write_text(shape)
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(bad))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(bad))
         assert_policy_signature_satisfied(None)
         assert_policy_signature_satisfied(
             parse_policy(_policy_body(), signature_state=SIGNATURE_UNSIGNED)
@@ -520,7 +520,7 @@ class TestPolicySignatureAbsenceGate:
         # strict read as the key store.
         adm = tmp_path / "admission_policy.json"
         adm.write_text(json.dumps({"require_policy_signature": junk}))
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
         with pytest.raises(PlatformCompositionError):
             assert_policy_signature_satisfied(
                 parse_policy(_policy_body(), signature_state=SIGNATURE_UNSIGNED)
@@ -529,7 +529,7 @@ class TestPolicySignatureAbsenceGate:
     def test_absent_admission_file_is_a_noop(self, monkeypatch, tmp_path):
         # No trust root: nobody opted in, so an unsigned policy still loads and
         # governs (the compatibility contract) and no policy stays ungoverned.
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(tmp_path / "missing.json"))
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(tmp_path / "missing.json"))
         assert_policy_signature_satisfied(None)
         assert_policy_signature_satisfied(
             parse_policy(_policy_body(), signature_state=SIGNATURE_UNSIGNED)
@@ -538,26 +538,26 @@ class TestPolicySignatureAbsenceGate:
     def test_absent_admission_policy_keeps_verification_advisory(self, monkeypatch, tmp_path):
         # An admission-policy problem is handled loudly in admission's OWN domain;
         # it must not additionally make the security ceiling unloadable here.
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
         monkeypatch.setattr(
-            "kiro_crew.platform.admission._policy_default_path",
+            "aj_crew.platform.admission._policy_default_path",
             lambda: tmp_path / "no-admission.json",
         )
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(_policy_body()))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         ceiling = load_security_policy()
         assert ceiling is not None
         assert ceiling.signature_state == SIGNATURE_UNSIGNED
 
     def test_raising_trust_root_keeps_verification_advisory(self, monkeypatch, tmp_path):
         monkeypatch.setattr(
-            "kiro_crew.platform.admission.read_policy_trust_root",
+            "aj_crew.platform.admission.read_policy_trust_root",
             lambda: (_ for _ in ()).throw(RuntimeError("boom")),
         )
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(_policy_body()))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         assert load_security_policy().signature_state == SIGNATURE_UNSIGNED
 
     def test_trust_settings_read_from_admission_policy_file(self, monkeypatch, tmp_path):
@@ -567,8 +567,8 @@ class TestPolicySignatureAbsenceGate:
         adm.write_text(
             json.dumps({"require_policy_signature": True, "trust_keys": {"fleet-control": "k"}})
         )
-        monkeypatch.setenv("KIROCREW_ADMISSION_POLICY", str(adm))
-        from kiro_crew.platform.governance import _policy_trust_settings
+        monkeypatch.setenv("AJCREW_ADMISSION_POLICY", str(adm))
+        from aj_crew.platform.governance import _policy_trust_settings
 
         require, keys, public_keys = _policy_trust_settings()
         assert require is True
@@ -581,7 +581,7 @@ class TestPolicySignatureAbsenceGate:
         # honored — a document must not be the authority on its own authenticity.
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(_policy_body(require_policy_signature=True)))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         _patch_trust(monkeypatch, require=False, keys={})
         with pytest.raises(PlatformCompositionError):
             load_security_policy()
@@ -590,17 +590,17 @@ class TestPolicySignatureAbsenceGate:
         # The trust-root read must NOT run the audited admission loader: that
         # records posture + a critical SEL, and gatewayd re-loads the security
         # policy per app call.
-        from kiro_crew.platform import governance_health
+        from aj_crew.platform import governance_health
 
         governance_health.reset()
-        monkeypatch.delenv("KIROCREW_ADMISSION_POLICY", raising=False)
+        monkeypatch.delenv("AJCREW_ADMISSION_POLICY", raising=False)
         monkeypatch.setattr(
-            "kiro_crew.platform.admission._policy_default_path",
+            "aj_crew.platform.admission._policy_default_path",
             lambda: tmp_path / "no-admission.json",
         )
         p = tmp_path / "policy.json"
         p.write_text(json.dumps(_policy_body()))
-        monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(p))
+        monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(p))
         load_security_policy()
         assert governance_health.governance_status() == "unknown"
         assert governance_health.last_incident() is None
@@ -622,19 +622,19 @@ class TestParsePolicySignatureState:
 
 
 class TestPolicyShowReporting:
-    """`kirocrew policy show` must distinguish the three provenance states."""
+    """`ajcrew policy show` must distinguish the three provenance states."""
 
     def _show(self, capsys, ceiling):
         import argparse
         from unittest.mock import patch
 
-        from kiro_crew import cli_commands
+        from aj_crew import cli_commands
 
         args = argparse.Namespace(policy_action="show")
         # _policy imports current_context lazily from platform.context, so patch
         # it at the definition site.
         with patch(
-            "kiro_crew.platform.context.current_context",
+            "aj_crew.platform.context.current_context",
             return_value=type("Ctx", (), {"governance": ceiling})(),
         ):
             cli_commands._policy(args)

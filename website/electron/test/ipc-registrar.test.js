@@ -191,7 +191,7 @@ function harness({
   port = 5476,
   wslOwner = { fake: "wsl-owner" },
   wslGatewayLocal = true,
-  primaryPortOwner = "kirocrew",
+  primaryPortOwner = "ajcrew",
   isCurrentBundleGateway = true,
   // What the supervisor answers for first-run setup's remote-crew exit.
   canSwitchToRemoteCrew = true,
@@ -266,7 +266,7 @@ function harness({
   };
   const electron = {
     app: {
-      name: "Kiro Crew Test",
+      name: "Aj Crew Test",
       isPackaged: true,
       getVersion: () => "9.8.7",
       focus: (...args) => appCalls.push(["focus", ...args]),
@@ -1019,7 +1019,7 @@ test("wsl:detect rejects every non-owned primary-port classification", async () 
 });
 
 test("wsl:detect allows owned and service-managed primary gateways without reshaping", async () => {
-  for (const portOwner of ["kirocrew", "service"]) {
+  for (const portOwner of ["ajcrew", "service"]) {
     const result = {
       available: true,
       distros: [{
@@ -1259,7 +1259,7 @@ test("dashboard:can-pick-folder answers false wherever the pick is refused", asy
 });
 
 test("dashboard:can-pick-folder answers true on the local dashboard without opening a dialog", async () => {
-  for (const portOwner of ["kirocrew", "service"]) {
+  for (const portOwner of ["ajcrew", "service"]) {
     const h = harness({ primaryPortOwner: portOwner });
     h.registrar.registerShell();
     assert.equal(await h.handlers.get("dashboard:can-pick-folder")(wslEvent()), true, portOwner);
@@ -1628,7 +1628,7 @@ test("registerUpdater owns six handlers and preserves lazy gateway hooks", async
 
   // Build a minimal fake event that satisfies assertLocalDashboard's three gates.
   // The harness's windows mock already returns true for isGatewayLocalForWindow
-  // and resolves "kirocrew" from probePrimaryPortOwner.
+  // and resolves "ajcrew" from probePrimaryPortOwner.
   let nextId = 1;
   const makeEvent = (url = "http://localhost:5476/") => {
     const id = nextId++;
@@ -1699,7 +1699,7 @@ test("registerUpdater owns six handlers and preserves lazy gateway hooks", async
     "a destroyed governing window clears governance while a dashboard window remains open");
   delete h.electron.BaseWindow;
 
-  // Remote-gateway gate: a harness that simulates a non-kirocrew port owner
+  // Remote-gateway gate: a harness that simulates a non-ajcrew port owner
   // (SSH tunnel holding the primary port) must reject governance via gate 3.
   {
     let remoteDeps;
@@ -1813,7 +1813,7 @@ test("pane:clear-http-cache purges only a loopback pane origin's HTTP cache", as
   const purges = [];
   // A sender the three-gate local-dashboard check accepts: served by this
   // shell's own gateway URL, in a window whose gateway is local, primary port
-  // held by kirocrew (the harness defaults).
+  // held by ajcrew (the harness defaults).
   const event = {
     sender: { session: { clearData: async (opts) => { purges.push(opts); } } },
     senderFrame: { url: "http://localhost:5476/instances" },
@@ -1915,7 +1915,7 @@ function assertCloseActionRefused(h, channel) {
 
 test("close-action channels answer the main window's dashboard, including on a remote gateway", async () => {
   for (const [mainBackendUrl, wslGatewayLocal, primaryPortOwner] of [
-    ["http://localhost:5476", true, "kirocrew"],
+    ["http://localhost:5476", true, "ajcrew"],
     // A main window connected to a configured remote host through a tunnel:
     // the three-gate check would refuse it, this one must not.
     ["http://localhost:5476", false, "foreign"],
@@ -1980,7 +1980,7 @@ test("tray-icon channels answer the main window's dashboard, including on a remo
 test("close-action channels never run the port-owner probe", async () => {
   const h = closeActionHarness();
   let probes = 0;
-  h.gateway.probePrimaryPortOwner = () => { probes += 1; return Promise.resolve("kirocrew"); };
+  h.gateway.probePrimaryPortOwner = () => { probes += 1; return Promise.resolve("ajcrew"); };
   await h.handlers.get("close-action:get")(mainFrameEvent());
   await h.handlers.get("close-action:set")(mainFrameEvent(), "quit");
   assert.equal(probes, 0, "the check is synchronous so no write waits on a probe");

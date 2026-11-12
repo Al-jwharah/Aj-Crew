@@ -81,9 +81,9 @@ function resolveWindowsGatewayBin(gatewayBin, { pathEnv, accessSync }) {
   return path.win32.normalize(resolved);
 }
 
-// A distlib console launcher: `<env>\Scripts\kirocrew.exe`.
+// A distlib console launcher: `<env>\Scripts\ajcrew.exe`.
 function isScriptsConsoleLauncher(normalized) {
-  return /^kirocrew\.exe$/i.test(path.win32.basename(normalized))
+  return /^ajcrew\.exe$/i.test(path.win32.basename(normalized))
     && /^scripts$/i.test(path.win32.basename(path.win32.dirname(normalized)));
 }
 
@@ -171,9 +171,9 @@ function pyvenvBaseInterpreters(text) {
  * host can run. Its path alone therefore proves nothing and is never added to
  * the trusted executables. A launch entry ties it to this venv instead: the
  * interpreter is trusted only for a command line whose script is exactly this
- * venv's `Scripts\kirocrew.exe` (`isKirocrewCommand`'s `trustedVenvLaunches`).
+ * venv's `Scripts\ajcrew.exe` (`isAjcrewCommand`'s `trustedVenvLaunches`).
  *
- * Empty unless the resolved launcher is a `Scripts\kirocrew.exe` whose
+ * Empty unless the resolved launcher is a `Scripts\ajcrew.exe` whose
  * environment root holds a readable `pyvenv.cfg` naming one: a
  * bundled tree or a non-venv install runs its own interpreter, which
  * `windowsGatewayExecutablePaths` already trusts.

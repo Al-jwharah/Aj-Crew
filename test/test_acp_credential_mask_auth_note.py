@@ -15,17 +15,17 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.acp.client import AcpAuthRequired, AcpError
-from kiro_crew.acp.runtime import AcpRuntimeError
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.transport_errors import _raise_acp_error
-from kiro_crew.acp.types import ACP_BACKEND_CODEX, ACP_BACKEND_KIRO, ACP_BACKEND_OPENCODE
-from kiro_crew.agent_sdk import host_auth
-from kiro_crew.agent_sdk.tool_gate import adapter_hidden_credential_dirs
-from kiro_crew.providers import acp_runtime_start
-from kiro_crew.providers.acp import AcpProvider
-from kiro_crew.providers.acp_runtime_start import _with_credential_mask_note
-from kiro_crew.testing.ids import UNALLOCATABLE_PID
+from aj_crew.acp.client import AcpAuthRequired, AcpError
+from aj_crew.acp.runtime import AcpRuntimeError
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.transport_errors import _raise_acp_error
+from aj_crew.acp.types import ACP_BACKEND_CODEX, ACP_BACKEND_KIRO, ACP_BACKEND_OPENCODE
+from aj_crew.agent_sdk import host_auth
+from aj_crew.agent_sdk.tool_gate import adapter_hidden_credential_dirs
+from aj_crew.providers import acp_runtime_start
+from aj_crew.providers.acp import AcpProvider
+from aj_crew.providers.acp_runtime_start import _with_credential_mask_note
+from aj_crew.testing.ids import UNALLOCATABLE_PID
 
 _AUTH_RPC_ERROR = "RPC error: {'code': -32000, 'message': 'Authentication required'}"
 _AWS_STDERR = "ERROR codex: failed to load AWS credentials"
@@ -45,7 +45,7 @@ def _note(backend: str = ACP_BACKEND_CODEX, hidden: tuple[str, ...] | None = Non
 
 
 # Shaped like the codex mask: the AWS store, a sign-in cookie store, the SSH key
-# store, and a deeper leaf of Kiro Crew's own data home.
+# store, and a deeper leaf of Aj Crew's own data home.
 _COOKIE_MASK = (_home(".aws"), _home(".midway"), _home(".ssh"), _home(".kiro", "crew", ".env"))
 
 
@@ -76,12 +76,12 @@ def _runtime(
 
 
 def _provider(backend: str = ACP_BACKEND_CODEX) -> AcpProvider:
-    with patch("kiro_crew.providers.acp.AcpClient"):
+    with patch("aj_crew.providers.acp.AcpClient"):
         provider = AcpProvider(acp_backend=backend)
     client = MagicMock()
     client.backend = backend
     client._work_dir = "/tmp/ws"
-    client._agent = "kirocrew"
+    client._agent = "ajcrew"
     client._sandbox_mode = "auto"
     client._extra_env = {}
     client._mcp_gateway_overlay = None
@@ -95,8 +95,8 @@ def _provider(backend: str = ACP_BACKEND_CODEX) -> AcpProvider:
 async def _start_error(runtime: MagicMock, backend: str = ACP_BACKEND_CODEX) -> BaseException:
     provider = _provider(backend)
     with (
-        patch("kiro_crew.providers.acp.AcpRuntime", return_value=runtime),
-        patch("kiro_crew.metrics.provider.get_recorder", return_value=MagicMock()),
+        patch("aj_crew.providers.acp.AcpRuntime", return_value=runtime),
+        patch("aj_crew.metrics.provider.get_recorder", return_value=MagicMock()),
     ):
         with pytest.raises((AcpRuntimeError, AcpAuthRequired)) as caught:
             await provider._start_kiro_runtime()
@@ -131,8 +131,8 @@ async def test_an_auth_answer_at_the_respawn_after_a_dead_runtime_names_the_mask
     runtimes = iter([dead, respawned])
     provider = _provider()
     with (
-        patch("kiro_crew.providers.acp.AcpRuntime", side_effect=lambda **kw: next(runtimes)),
-        patch("kiro_crew.metrics.provider.get_recorder", return_value=MagicMock()),
+        patch("aj_crew.providers.acp.AcpRuntime", side_effect=lambda **kw: next(runtimes)),
+        patch("aj_crew.metrics.provider.get_recorder", return_value=MagicMock()),
     ):
         with pytest.raises(AcpRuntimeError) as caught:
             await provider._start_kiro_runtime()
@@ -236,10 +236,10 @@ async def test_the_kiro_start_path_never_calls_the_mask_helpers(path: str, signe
     runtimes = iter(_kiro_runtimes(path, signed_out=signed_out))
     provider = _provider(ACP_BACKEND_KIRO)
     with (
-        patch("kiro_crew.providers.acp.AcpRuntime", side_effect=lambda **kw: next(runtimes)),
-        patch("kiro_crew.metrics.provider.get_recorder", return_value=MagicMock()),
-        patch("kiro_crew.providers.acp_runtime_start._with_credential_mask_note") as note_helper,
-        patch("kiro_crew.providers.acp_runtime_start._name_credential_mask") as name_helper,
+        patch("aj_crew.providers.acp.AcpRuntime", side_effect=lambda **kw: next(runtimes)),
+        patch("aj_crew.metrics.provider.get_recorder", return_value=MagicMock()),
+        patch("aj_crew.providers.acp_runtime_start._with_credential_mask_note") as note_helper,
+        patch("aj_crew.providers.acp_runtime_start._name_credential_mask") as name_helper,
     ):
         with pytest.raises((AcpAuthRequired, AcpRuntimeError)) as caught:
             await provider._start_kiro_runtime()
@@ -339,7 +339,7 @@ async def test_a_turn_failure_that_already_names_the_mask_is_not_doubled():
 async def test_the_kiro_turn_path_never_calls_the_mask_helper():
     # harness-parity H13: kiro compares the backend against the table and stops.
     provider = _turn_provider(_TURN_AWS_FRAME, backend=ACP_BACKEND_KIRO)
-    with patch("kiro_crew.providers.acp_runtime_start._name_credential_mask") as name_helper:
+    with patch("aj_crew.providers.acp_runtime_start._name_credential_mask") as name_helper:
         error = await _turn_error(provider)
     name_helper.assert_not_called()
     assert _note(ACP_BACKEND_KIRO) not in str(error)

@@ -14,9 +14,9 @@ from pathlib import Path
 import pytest
 from token_auth_helpers import clear_nonces  # noqa: F401 -- autouse fixture
 
-import kiro_crew.dashboard.token_auth as _ta
-from kiro_crew.dashboard.refresh_tokens import RefreshStateManager
-from kiro_crew.dashboard.token_auth import generate_token, revoke_access_cookie, validate_token
+import aj_crew.dashboard.token_auth as _ta
+from aj_crew.dashboard.refresh_tokens import RefreshStateManager
+from aj_crew.dashboard.token_auth import generate_token, revoke_access_cookie, validate_token
 
 
 def _block_reads(monkeypatch, name: str) -> None:

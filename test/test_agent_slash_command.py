@@ -19,14 +19,14 @@ from dashboard_owner_helpers import as_owner
 from named_cases_helpers import named_cases
 from test_chat_agent_selection import TEMPLATE, _template_chat
 
-from kiro_crew.agent_switch_command import agent_switch_target, switch_announcement
-from kiro_crew.dashboard import chat_handlers, chat_runner
-from kiro_crew.dashboard.chat_handlers import SlotAgentSwitchCaller, _switch_target_busy
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.execution_context import read_session_execution
-from kiro_crew.testing.wait import await_until
+from aj_crew.agent_switch_command import agent_switch_target, switch_announcement
+from aj_crew.dashboard import chat_handlers, chat_runner
+from aj_crew.dashboard.chat_handlers import SlotAgentSwitchCaller, _switch_target_busy
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.execution_context import read_session_execution
+from aj_crew.testing.wait import await_until
 
-WORKER = "kirocrew-worker"
+WORKER = "ajcrew-worker"
 
 
 # ── The parser ──
@@ -139,7 +139,7 @@ async def test_a_turns_caller_is_refused_an_owner_only_choice():
 async def _chat_with_worker(tmp_path, monkeypatch):
     state, slot, _ = await await_until(asyncio.ensure_future(_template_chat(tmp_path, monkeypatch)))
     monkeypatch.setattr(
-        "kiro_crew.config.loader._materialized_kiro_agent",
+        "aj_crew.config.loader._materialized_kiro_agent",
         lambda name, project_dir=None: name if name in (TEMPLATE, WORKER) else "",
     )
     state.sessions.reset = AsyncMock(return_value=True)
@@ -325,7 +325,7 @@ def _slack():
 
 @pytest.mark.asyncio
 async def test_slack_thread_agent_command_switches_the_thread_agent():
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     thread_agent = AsyncMock(return_value="")
     with (
@@ -342,7 +342,7 @@ async def test_slack_thread_agent_command_switches_the_thread_agent():
 
 @pytest.mark.asyncio
 async def test_slack_agent_command_is_owner_only():
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     slack = _slack()
     thread_agent = AsyncMock(return_value="")
@@ -361,7 +361,7 @@ async def test_slack_agent_command_is_owner_only():
 
 @pytest.mark.asyncio
 async def test_slack_agent_subcommands_fall_through():
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     thread_agent = AsyncMock(return_value="")
     with patch.object(handler, "_bang_thread_agent", thread_agent):
@@ -374,7 +374,7 @@ async def test_slack_agent_subcommands_fall_through():
 
 
 def test_slack_thread_agent_accepts_kiro_cli_builtins(tmp_path):
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     with (
         patch.object(handler, "kiro_agents_dir", return_value=tmp_path / "agents"),
@@ -401,21 +401,21 @@ def _linked_ds():
 @pytest.mark.parametrize(
     ("text", "delivered"),
     [
-        ("<@UBOT|kirocrew> /agent fable", "/agent fable"),
+        ("<@UBOT|ajcrew> /agent fable", "/agent fable"),
         ("/agent fable", "/agent fable"),
         # Only the command loses its mention; ordinary speech is delivered as typed.
-        ("<@UBOT|kirocrew> hello", "<@UBOT|kirocrew> hello"),
+        ("<@UBOT|ajcrew> hello", "<@UBOT|ajcrew> hello"),
     ],
 )
 async def test_linked_thread_delivers_the_agent_command_to_the_chat_runner(text, delivered):
-    from kiro_crew.slack import handler
+    from aj_crew.slack import handler
 
     ds, _slot = _linked_ds()
     run_chat = AsyncMock()
     with (
         patch.object(handler, "_dashboard_state", ds),
         patch.object(handler, "is_allowed_user", return_value=True),
-        patch("kiro_crew.dashboard.chat._run_chat", run_chat),
+        patch("aj_crew.dashboard.chat._run_chat", run_chat),
     ):
         handled = await handler.maybe_route_linked_thread(
             text, "slack:t1", "U1", "C1", _slack(), "t1"
@@ -430,17 +430,17 @@ async def test_linked_thread_delivers_the_agent_command_to_the_chat_runner(text,
 
 
 def _channel_roster():
-    from kiro_crew.agent_discovery import AgentInfo
+    from aj_crew.agent_discovery import AgentInfo
 
     return [
         AgentInfo(name="beta", filename="beta.json", description="", model=""),
         AgentInfo(name="gamma", filename="gamma.json", description="", model=""),
         AgentInfo(
-            name="kirocrew-worker",
-            filename="kirocrew-worker.json",
+            name="ajcrew-worker",
+            filename="ajcrew-worker.json",
             description="",
             model="",
-            kirocrew_owned=True,
+            ajcrew_owned=True,
         ),
         AgentInfo(name="tool", filename="someapp--tool.json", description="", model=""),
     ]
@@ -461,17 +461,17 @@ class _ChannelSessions:
 
 
 async def _channel_agent(picks, arg: str, sessions=None, conv=None) -> str:
-    from kiro_crew.agent_switch_command import handle_channel_agent_command
-    from kiro_crew.messaging.conversation import ConversationState
+    from aj_crew.agent_switch_command import handle_channel_agent_command
+    from aj_crew.messaging.conversation import ConversationState
 
     return await handle_channel_agent_command(
         picks,
         "route",
         arg,
         conv=conv or ConversationState(),
-        configured="kirocrew",
+        configured="ajcrew",
         sessions=sessions or _ChannelSessions(),
-        session_key=lambda: f"k:{picks.resolve('route', 'kirocrew')}",
+        session_key=lambda: f"k:{picks.resolve('route', 'ajcrew')}",
     )
 
 
@@ -479,25 +479,25 @@ class TestChannelAgentCommand:
     @pytest.fixture(autouse=True)
     def _roster(self, _floor_monkeypatch):
         _floor_monkeypatch.setattr(
-            "kiro_crew.telegram.transport_dispatch.list_agents", _channel_roster
+            "aj_crew.telegram.transport_dispatch.list_agents", _channel_roster
         )
 
     @pytest.mark.asyncio
     async def test_switch_then_back_to_default(self) -> None:
-        from kiro_crew.agent_switch_command import ChannelAgentPicks
+        from aj_crew.agent_switch_command import ChannelAgentPicks
 
         picks = ChannelAgentPicks()
         assert "Agent set to `beta`" in await _channel_agent(picks, "beta")
-        assert picks.resolve("route", "kirocrew") == "beta"
-        assert picks.resolve("other", "kirocrew") == "kirocrew"
+        assert picks.resolve("route", "ajcrew") == "beta"
+        assert picks.resolve("other", "ajcrew") == "ajcrew"
         assert "Already using `beta`" in await _channel_agent(picks, "beta")
-        assert "default (kirocrew)" in await _channel_agent(picks, "default")
-        assert picks.resolve("route", "kirocrew") == "kirocrew"
+        assert "default (ajcrew)" in await _channel_agent(picks, "default")
+        assert picks.resolve("route", "ajcrew") == "ajcrew"
 
     @pytest.mark.asyncio
-    @pytest.mark.parametrize("name", ["kirocrew-worker", "tool", "missing"])
+    @pytest.mark.parametrize("name", ["ajcrew-worker", "tool", "missing"])
     async def test_only_pickable_agents_are_accepted(self, name: str) -> None:
-        from kiro_crew.agent_switch_command import ChannelAgentPicks
+        from aj_crew.agent_switch_command import ChannelAgentPicks
 
         picks = ChannelAgentPicks()
         assert "No agent named" in await _channel_agent(picks, name)
@@ -505,7 +505,7 @@ class TestChannelAgentCommand:
 
     @pytest.mark.asyncio
     async def test_bad_name_shape_answers_with_usage(self) -> None:
-        from kiro_crew.agent_switch_command import ChannelAgentPicks
+        from aj_crew.agent_switch_command import ChannelAgentPicks
 
         picks = ChannelAgentPicks()
         assert "not an agent name" in await _channel_agent(picks, "two words")
@@ -513,8 +513,8 @@ class TestChannelAgentCommand:
 
     @pytest.mark.asyncio
     async def test_naming_the_default_agent_is_not_a_switch(self) -> None:
-        from kiro_crew.agent_switch_command import ChannelAgentPicks, handle_channel_agent_command
-        from kiro_crew.messaging.conversation import ConversationState
+        from aj_crew.agent_switch_command import ChannelAgentPicks, handle_channel_agent_command
+        from aj_crew.messaging.conversation import ConversationState
 
         picks = ChannelAgentPicks()
         reply = await handle_channel_agent_command(
@@ -531,7 +531,7 @@ class TestChannelAgentCommand:
 
     @pytest.mark.asyncio
     async def test_a_running_reply_refuses_the_switch(self) -> None:
-        from kiro_crew.agent_switch_command import ChannelAgentPicks
+        from aj_crew.agent_switch_command import ChannelAgentPicks
 
         picks = ChannelAgentPicks()
         reply = await _channel_agent(picks, "beta", _ChannelSessions(busy=True))
@@ -541,12 +541,10 @@ class TestChannelAgentCommand:
 
     @pytest.mark.asyncio
     async def test_a_live_conversation_is_told_the_switch_starts_fresh(self) -> None:
-        from kiro_crew.agent_switch_command import ChannelAgentPicks
+        from aj_crew.agent_switch_command import ChannelAgentPicks
 
         # The live session is the DEFAULT agent's; the switch leaves it behind.
-        reply = await _channel_agent(
-            ChannelAgentPicks(), "beta", _ChannelSessions(live="k:kirocrew")
-        )
+        reply = await _channel_agent(ChannelAgentPicks(), "beta", _ChannelSessions(live="k:ajcrew"))
         assert "leaves the current conversation" in reply
 
     @pytest.mark.asyncio
@@ -554,12 +552,12 @@ class TestChannelAgentCommand:
         # After a restart the route's counter was seeded from the default
         # agent's bucket (gen 0) while beta's bucket already holds gen 2. The
         # switch must move the counter to beta's latest, so /new goes past it.
-        from kiro_crew.agent_switch_command import ChannelAgentPicks
-        from kiro_crew.messaging.conversation import ConversationState
+        from aj_crew.agent_switch_command import ChannelAgentPicks
+        from aj_crew.messaging.conversation import ConversationState
 
         picks = ChannelAgentPicks()
-        persisted = {"kirocrew": 0, "beta": 2}
-        conv = ConversationState(seed_fn=lambda r: persisted[picks.resolve(r, "kirocrew")])
+        persisted = {"ajcrew": 0, "beta": 2}
+        conv = ConversationState(seed_fn=lambda r: persisted[picks.resolve(r, "ajcrew")])
         assert conv.current_gen("route") == 0
         await _channel_agent(picks, "beta", conv=conv)
         assert conv.current_gen("route") == 2
@@ -569,24 +567,24 @@ class TestChannelAgentCommand:
 
     @pytest.mark.asyncio
     async def test_show_lists_the_pickable_agents(self) -> None:
-        from kiro_crew.agent_switch_command import ChannelAgentPicks
+        from aj_crew.agent_switch_command import ChannelAgentPicks
 
         reply = await _channel_agent(ChannelAgentPicks(), "")
         assert "`beta`" in reply and "`gamma`" in reply
-        assert "kirocrew-worker" not in reply and "`tool`" not in reply
+        assert "ajcrew-worker" not in reply and "`tool`" not in reply
 
 
 class TestTelegramAndSlackUnchanged:
     def test_channels_offer_the_same_agents_as_the_telegram_picker(self, monkeypatch) -> None:
-        from kiro_crew.agent_switch_command import pickable_agent_names
-        from kiro_crew.telegram import transport_dispatch as td
+        from aj_crew.agent_switch_command import pickable_agent_names
+        from aj_crew.telegram import transport_dispatch as td
 
         monkeypatch.setattr(td, "list_agents", _channel_roster)
         assert pickable_agent_names() == td.TelegramDispatcher._installed_agent_names()
         assert pickable_agent_names() == ["beta", "gamma"]
 
     def test_telegram_keeps_its_picker_command(self) -> None:
-        from kiro_crew.telegram.commands import parse_command
+        from aj_crew.telegram.commands import parse_command
 
         assert parse_command("/agent") == "agent"
         assert parse_command("/agent beta") == "agent"

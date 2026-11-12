@@ -16,18 +16,18 @@ import logging
 
 import pytest
 
-from kiro_crew import (
+from aj_crew import (
     mcp_cleanup,
     onboarding_import,
     onboarding_plan,
     onboarding_scan,
     onboarding_sources,
 )
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.onboarding_sources import lineage as lineage_source
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.context import reset_context, set_context
-from kiro_crew.platform.interfaces import ImportSource
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.onboarding_sources import lineage as lineage_source
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.context import reset_context, set_context
+from aj_crew.platform.interfaces import ImportSource
 
 
 def _provider_of(*sources: ImportSource):
@@ -47,7 +47,7 @@ def _install(*sources: ImportSource) -> None:
         def import_sources(self) -> list[ImportSource]:
             return list(sources)
 
-    base = build_default_context(KiroCrewConfig())
+    base = build_default_context(AjCrewConfig())
     set_context(dataclasses.replace(base, import_sources=_Provider()))
 
 
@@ -143,7 +143,7 @@ class TestRegistration:
         The handler projects a skipped entry whose source was never scanned and
         gives it a placeholder name, so an unknown id does not render blank.
         """
-        from kiro_crew.dashboard.handlers import onboarding_import as handler
+        from aj_crew.dashboard.handlers import onboarding_import as handler
 
         response = handler._scan_response(
             {
@@ -175,7 +175,7 @@ class TestRegistration:
         A hardcoded copy in the handler would let a source be known to the engine
         yet rejected by the API, so the id set derives from the one registry.
         """
-        from kiro_crew.dashboard.handlers import onboarding_import as handler
+        from aj_crew.dashboard.handlers import onboarding_import as handler
 
         _install(_lineage_source())
         assert "predecessor" in frozenset(handler._backend()._sources())
@@ -374,7 +374,7 @@ class TestNormalization:
         one that imports nothing and gives no reason why.
         """
         _install(_lineage_source(id="quick"))
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.onboarding_import"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.onboarding_import"):
             ids = tuple(onboarding_import._sources())
         assert "reserved" in caplog.text
         assert "quick" not in ids
@@ -438,7 +438,7 @@ class TestMalformedContributions:
     )
     def test_dropped_with_a_warning(self, overrides, reason, caplog):
         _install(_lineage_source(**overrides))
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.onboarding_import"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.onboarding_import"):
             ids = tuple(onboarding_import._sources())
         assert reason in caplog.text
         # The builtins survive intact, and a shadowing id keeps its builtin.
@@ -486,7 +486,7 @@ class TestMalformedContributions:
             def import_sources(self):
                 raise RuntimeError("adapter exploded")
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, import_sources=_Broken()))
         with caplog.at_level(logging.WARNING):
             assert tuple(onboarding_import._sources()) == (
@@ -669,7 +669,7 @@ class TestRegistrySnapshotIsStable:
                     raise RuntimeError("adapter went away")
                 return [_lineage_source()]
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, import_sources=_Flaky()))
 
         preview = onboarding_import._preview(None, tmp_path, {})
@@ -693,7 +693,7 @@ class TestRegistryCache:
                 calls.append(1)
                 return [_lineage_source()]
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, import_sources=_Counting()))
         for _ in range(4):
             assert "predecessor" in tuple(onboarding_import._sources())
@@ -710,7 +710,7 @@ class TestRegistryCache:
                     raise RuntimeError("provider went away")
                 return [_lineage_source()]
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, import_sources=_Flaky()))
         assert "predecessor" in tuple(onboarding_import._sources())
         state["fail"] = True
@@ -727,14 +727,14 @@ class TestRegistryCache:
                     raise RuntimeError("transient")
                 return [_lineage_source()]
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, import_sources=_Flaky()))
         assert "predecessor" not in tuple(onboarding_import._sources())
         state["fail"] = False
         assert "predecessor" in tuple(onboarding_import._sources())
 
     def test_a_new_context_is_resolved_afresh(self):
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, import_sources=_provider_of(_lineage_source())))
         assert "predecessor" in tuple(onboarding_import._sources())
 
@@ -822,9 +822,9 @@ class TestHostileDescriptorsCannotCrashDiscovery:
             def import_sources(self):
                 return [TestHostileDescriptorsCannotCrashDiscovery._Raising()]
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, import_sources=_Provider()))
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.onboarding_import"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.onboarding_import"):
             ids = tuple(onboarding_import._sources())
         assert ("codex", "claude_code", "gemini", "openclaw", "hermes", "amazon_quick") == ids
 
@@ -836,7 +836,7 @@ class TestHostileDescriptorsCannotCrashDiscovery:
                     _lineage_source(id="usable"),
                 ]
 
-        base = build_default_context(KiroCrewConfig())
+        base = build_default_context(AjCrewConfig())
         set_context(dataclasses.replace(base, import_sources=_Provider()))
         ids = tuple(onboarding_import._sources())
         assert "usable" in ids and "broken" not in ids

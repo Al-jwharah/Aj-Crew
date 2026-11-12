@@ -20,16 +20,16 @@ import logging
 
 import pytest
 
-from kiro_crew import model_registry as mr
-from kiro_crew import model_scope
-from kiro_crew.acp_backends import (
+from aj_crew import model_registry as mr
+from aj_crew import model_scope
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     ACP_BACKENDS_KNOWN,
 )
-from kiro_crew.agent_sdk.backends import model_registry_namespace
+from aj_crew.agent_sdk.backends import model_registry_namespace
 
 # What each harness advertises, in its OWN vocabulary. Spelled with the effort
 # and window suffixes the real adapters send, because folding those is half the
@@ -184,7 +184,7 @@ class TestKiroCatalogAsVocabulary:
         # folds it onto the catalog, so it is native, not foreign -- and the
         # spelling fold answers the advertised id the wire should send. The two
         # folds agree, which is what makes the cold start name the right cause.
-        from kiro_crew.acp.client import resolve_pin_spelling
+        from aj_crew.acp.client import resolve_pin_spelling
 
         pin = "global.anthropic.claude-opus-4-8[1m]"
         assert model_scope.pin_applies(pin, "acp") is True
@@ -223,7 +223,7 @@ class TestKiroCatalogAsVocabulary:
         # The two readers that fold a pin onto an advertised spelling are gated
         # to ACP_BACKENDS_ADVERTISED_MODEL_SELECTION at their call sites; kiro
         # and kas are not members, so a warm bucket cannot rewrite their wire id.
-        from kiro_crew.agent_sdk.backends import ACP_BACKENDS_ADVERTISED_MODEL_SELECTION
+        from aj_crew.agent_sdk.backends import ACP_BACKENDS_ADVERTISED_MODEL_SELECTION
 
         assert ACP_BACKEND_KIRO not in ACP_BACKENDS_ADVERTISED_MODEL_SELECTION
         assert ACP_BACKEND_KAS not in ACP_BACKENDS_ADVERTISED_MODEL_SELECTION
@@ -327,9 +327,9 @@ class TestScopedPin:
         The WARNING this replaces came from the adapter refusing the id on the
         wire, which is the event the scope gate exists to stop happening.
         """
-        with caplog.at_level(logging.INFO, logger="kiro_crew.model_scope"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.model_scope"):
             model_scope.scoped_pin(CLAUDE_PIN, "codex", source="agent.model")
-        records = [r for r in caplog.records if r.name == "kiro_crew.model_scope"]
+        records = [r for r in caplog.records if r.name == "aj_crew.model_scope"]
         assert records, "an out-of-scope pin must leave a note"
         assert all(r.levelno == logging.INFO for r in records)
         message = records[0].getMessage()
@@ -339,9 +339,9 @@ class TestScopedPin:
     def test_nothing_is_logged_when_the_pin_applies(
         self, both_warm: None, caplog: pytest.LogCaptureFixture
     ) -> None:
-        with caplog.at_level(logging.INFO, logger="kiro_crew.model_scope"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.model_scope"):
             model_scope.scoped_pin(CLAUDE_PIN, "claude_code")
-        assert [r for r in caplog.records if r.name == "kiro_crew.model_scope"] == []
+        assert [r for r in caplog.records if r.name == "aj_crew.model_scope"] == []
 
 
 class TestEveryBackendIsCovered:
@@ -368,6 +368,6 @@ class TestEveryBackendIsCovered:
 
     def test_the_default_model_sentinel_comes_from_config_sections(self) -> None:
         """``config.sections`` owns the sentinel used by model scope."""
-        from kiro_crew.config.sections import DEFAULT_MODEL
+        from aj_crew.config.sections import DEFAULT_MODEL
 
         assert model_scope.DEFAULT_MODEL == DEFAULT_MODEL

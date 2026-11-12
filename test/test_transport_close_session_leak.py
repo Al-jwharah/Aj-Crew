@@ -59,31 +59,31 @@ async def _task_that_died(exc: BaseException) -> asyncio.Task:
 
 
 def _discord():
-    from kiro_crew.discord.client import DiscordClient
+    from aj_crew.discord.client import DiscordClient
 
     return DiscordClient(token="t", on_message=AsyncMock())
 
 
 def _telegram():
-    from kiro_crew.telegram.client import TelegramClient
+    from aj_crew.telegram.client import TelegramClient
 
     return TelegramClient(token="t", on_message=AsyncMock())
 
 
 def _wecom():
-    from kiro_crew.wecom.client import WeComClient
+    from aj_crew.wecom.client import WeComClient
 
     return WeComClient(bot_id="b", secret="s", ws_url="wss://fake", on_message=AsyncMock())
 
 
 def _webex():
-    from kiro_crew.webex.client import WebexClient
+    from aj_crew.webex.client import WebexClient
 
     return WebexClient(token="t", on_message=AsyncMock())
 
 
 def _teams():
-    from kiro_crew.teams.client import TeamsClient
+    from aj_crew.teams.client import TeamsClient
 
     return TeamsClient(app_id="a", app_password="p", on_message=AsyncMock())
 

@@ -1,4 +1,4 @@
-"""The macOS arm of the ``KIROCREW_SPAWNED`` identity oracle.
+"""The macOS arm of the ``AJCREW_SPAWNED`` identity oracle.
 
 The marked-MCP-launcher sweep needs positive identity before it signals
 anything, because the cmdlines it matches (``npx @playwright/mcp``,
@@ -26,12 +26,12 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew import session_pid as sp
-from kiro_crew.constants import KIROCREW_SPAWNED_ENV, KIROCREW_SPAWNED_VALUE
-from kiro_crew.testing.wait import wait_until
+from aj_crew import platform_compat as pc
+from aj_crew import session_pid as sp
+from aj_crew.constants import AJCREW_SPAWNED_ENV, AJCREW_SPAWNED_VALUE
+from aj_crew.testing.wait import wait_until
 
-_MARKER = f"{KIROCREW_SPAWNED_ENV}={KIROCREW_SPAWNED_VALUE}".encode()
+_MARKER = f"{AJCREW_SPAWNED_ENV}={AJCREW_SPAWNED_VALUE}".encode()
 
 
 def _procargs(
@@ -100,7 +100,7 @@ class TestDarwinProcessEnviron:
         """The forgery the count-based skip exists to refuse.
 
         A user's own shell can put anything in argv, so a record whose ARGUMENT
-        reads ``KIROCREW_SPAWNED=1`` must not answer for the environment -- that
+        reads ``AJCREW_SPAWNED=1`` must not answer for the environment -- that
         would hand an unprivileged process the marker the sweep kills on.
         """
         libc({77: _procargs([b"npx", _MARKER], [b"PATH=/usr/bin"])})
@@ -169,12 +169,12 @@ class TestPlatformArms:
         (proc / "environ").write_bytes(b"PATH=/usr/bin\x00" + _MARKER + b"\x00")
 
         with (
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(pc, "darwin_process_environ") as mock_darwin,
         ):
             mock_sys.platform = "linux"
-            assert sp._read_env_has_kirocrew_marker(101, tmp_path) is True
-            assert sp._env_has_kirocrew_marker(101, tmp_path) is True
+            assert sp._read_env_has_ajcrew_marker(101, tmp_path) is True
+            assert sp._env_has_ajcrew_marker(101, tmp_path) is True
         mock_darwin.assert_not_called()
 
     def test_linux_without_the_marker_is_false(self, tmp_path) -> None:
@@ -182,55 +182,55 @@ class TestPlatformArms:
         proc.mkdir()
         (proc / "environ").write_bytes(b"PATH=/usr/bin\x00")
 
-        with patch("kiro_crew.session_pid.sys") as mock_sys:
+        with patch("aj_crew.session_pid.sys") as mock_sys:
             mock_sys.platform = "linux"
-            assert sp._read_env_has_kirocrew_marker(102, tmp_path) is False
+            assert sp._read_env_has_ajcrew_marker(102, tmp_path) is False
 
     def test_windows_stays_unproven_and_never_reads_the_darwin_oracle(self) -> None:
         """Windows has no same-uid environ oracle; the gate must keep refusing."""
         with (
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(pc, "darwin_process_environ") as mock_darwin,
         ):
             mock_sys.platform = "win32"
-            assert sp._read_env_has_kirocrew_marker(103) is None
-            assert sp._env_has_kirocrew_marker(103) is False
+            assert sp._read_env_has_ajcrew_marker(103) is None
+            assert sp._env_has_ajcrew_marker(103) is False
             assert sp._is_sweepable_orphan_mcp(103, self._CMDLINE) is False
         mock_darwin.assert_not_called()
 
     def test_darwin_marker_present_is_proven(self) -> None:
         with (
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(pc, "darwin_process_environ", return_value=[b"PATH=/bin", _MARKER]),
         ):
             mock_sys.platform = "darwin"
-            assert sp._read_env_has_kirocrew_marker(104) is True
+            assert sp._read_env_has_ajcrew_marker(104) is True
             assert sp._is_sweepable_orphan_mcp(104, self._CMDLINE) is True
 
     def test_darwin_marker_absent_is_a_refusal_not_an_unknown(self) -> None:
         with (
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(pc, "darwin_process_environ", return_value=[b"PATH=/bin"]),
         ):
             mock_sys.platform = "darwin"
-            assert sp._read_env_has_kirocrew_marker(105) is False
+            assert sp._read_env_has_ajcrew_marker(105) is False
             assert sp._is_sweepable_orphan_mcp(105, self._CMDLINE) is False
 
     def test_darwin_unreadable_fails_closed(self) -> None:
         """An unreadable environment is unproven identity, never a licence."""
         with (
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(pc, "darwin_process_environ", return_value=None),
         ):
             mock_sys.platform = "darwin"
-            assert sp._read_env_has_kirocrew_marker(106) is None
-            assert sp._env_has_kirocrew_marker(106) is False
+            assert sp._read_env_has_ajcrew_marker(106) is None
+            assert sp._env_has_ajcrew_marker(106) is False
             assert sp._is_sweepable_orphan_mcp(106, self._CMDLINE) is False
 
     def test_darwin_does_not_relax_the_cmdline_gate(self) -> None:
         """A readable marker is not identity on its own: the shape still rules."""
         with (
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(pc, "darwin_process_environ", return_value=[_MARKER]),
         ):
             mock_sys.platform = "darwin"
@@ -247,11 +247,11 @@ class TestPlatformArms:
         (proc / "environ").write_bytes(_MARKER + b"\x00")
 
         with (
-            patch("kiro_crew.session_pid.sys") as mock_sys,
+            patch("aj_crew.session_pid.sys") as mock_sys,
             patch.object(pc, "darwin_process_environ") as mock_darwin,
         ):
             mock_sys.platform = "darwin"
-            assert sp._read_env_has_kirocrew_marker(108, tmp_path) is True
+            assert sp._read_env_has_ajcrew_marker(108, tmp_path) is True
         mock_darwin.assert_not_called()
 
 
@@ -272,9 +272,9 @@ class TestTheArmLicensesNothingElse:
     def darwin_with_marker(self, monkeypatch: pytest.MonkeyPatch):
         """macOS, and every environ read answers "marked"."""
         monkeypatch.setattr(pc, "darwin_process_environ", lambda _pid: [_MARKER])
-        with patch("kiro_crew.session_pid.sys") as mock_sys:
+        with patch("aj_crew.session_pid.sys") as mock_sys:
             mock_sys.platform = "darwin"
-            assert sp._env_has_kirocrew_marker(4242) is True, "fixture must be permissive"
+            assert sp._env_has_ajcrew_marker(4242) is True, "fixture must be permissive"
             yield
 
     def test_the_work_class_still_declines(self, darwin_with_marker) -> None:
@@ -398,7 +398,7 @@ class TestDarwinEnvironIsReadableSameUid:
         try:
             self._await_ready(proc)
             with patch.object(pc, "darwin_process_environ", _recorded):
-                verdict = sp._read_env_has_kirocrew_marker(proc.pid)
+                verdict = sp._read_env_has_ajcrew_marker(proc.pid)
             return verdict, self._state(reads)
         finally:
             proc.kill()
@@ -408,7 +408,7 @@ class TestDarwinEnvironIsReadableSameUid:
 
     def test_a_child_spawned_with_the_marker_is_identified(self) -> None:
         verdict, state = self._read_settled(
-            {**os.environ, KIROCREW_SPAWNED_ENV: KIROCREW_SPAWNED_VALUE}
+            {**os.environ, AJCREW_SPAWNED_ENV: AJCREW_SPAWNED_VALUE}
         )
         assert verdict is True, state
         assert os.geteuid() != 0, "the read must be proven unprivileged"
@@ -416,6 +416,6 @@ class TestDarwinEnvironIsReadableSameUid:
     def test_a_child_spawned_without_the_marker_is_refused(self) -> None:
         """Readable AND unmarked: ``None`` here would mean the read never happened."""
         verdict, state = self._read_settled(
-            {k: v for k, v in os.environ.items() if k != KIROCREW_SPAWNED_ENV}
+            {k: v for k, v in os.environ.items() if k != AJCREW_SPAWNED_ENV}
         )
         assert verdict is False, state

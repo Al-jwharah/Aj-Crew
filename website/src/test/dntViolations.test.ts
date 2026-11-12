@@ -24,7 +24,7 @@ import { describe, it, expect } from 'vitest'
 
 import { dntViolations } from '../../scripts/lib/render-scan.mjs'
 
-const TERMS = ['GitHub', 'Node.js', 'Git', 'Playwright', 'KiroCrew', 'YAML', 'npm']
+const TERMS = ['GitHub', 'Node.js', 'Git', 'Playwright', 'AjCrew', 'YAML', 'npm'] // brand-ok: glossary term
 
 /** The respellings the detector exists to catch. */
 const found = (text: string) => dntViolations(text, TERMS).map(v => v.found)
@@ -62,7 +62,7 @@ describe('dntViolations exempts the command form', () => {
 describe('dntViolations exempts SCREAMING_SNAKE identifiers', () => {
   // Built by joining so the literal env var names do not appear verbatim in source.
   const tokenVar = ['PLAYWRIGHT', 'MCP', 'EXTENSION', 'TOK' + 'EN'].join('_')
-  const ownerVar = ['KIROCREW', 'OWNER', 'ID'].join('_')
+  const ownerVar = ['AJCREW', 'OWNER', 'ID'].join('_')
 
   it('ignores an all-caps hit adjacent to an underscore', () => {
     expect(found(`Paste the ${tokenVar} value`)).toEqual([])
@@ -84,7 +84,7 @@ describe('dntViolations cannot see an absent term, by design', () => {
   })
 
   it('says nothing when a translation drops the term', () => {
-    // `Tell Kiro about you` -> Chinese naturally omits the addressee. A presence
+    // `Tell Aj about you` -> Chinese naturally omits the addressee. A presence
     // check would flag this; a near-miss detector correctly cannot.
     expect(found('介绍一下你自己')).toEqual([])
   })

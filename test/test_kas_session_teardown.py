@@ -17,18 +17,18 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.acp.runtime import (
+from aj_crew.acp.runtime import (
     _TERMINATE_TIMEOUT,
     AcpRequestTimeout,
     AcpRuntime,
     AcpRuntimeError,
 )
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     METHOD_KAS_SESSION_DELETE,
     METHOD_SESSION_TERMINATE,
 )
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.testing.wait import await_until, finished
 
 
 def _runtime(tmp_path, backend: str) -> AcpRuntime:
@@ -101,7 +101,7 @@ class TestTeardownIsStillBestEffort:
 
 def _readiness_subject(tmp_path, monkeypatch, wait_mcp_ready):
     """Build one failed KAS session beside an unaffected resident sibling."""
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     runtime = _runtime(tmp_path, ACP_BACKEND_KAS)
     runtime._process = object()  # type: ignore[assignment]
@@ -191,10 +191,10 @@ class TestReadinessReadsTheWireBatch:
 
     @pytest.mark.asyncio
     async def test_a_reserved_crewmate_still_waits_for_its_managed_servers(self, tmp_path):
-        from kiro_crew.acp._dispatch import attach_kas_custom_agents
-        from kiro_crew.mcp_cleanup import KIROCREW_BIN_MCP_SERVERS
+        from aj_crew.acp._dispatch import attach_kas_custom_agents
+        from aj_crew.mcp_cleanup import AJCREW_BIN_MCP_SERVERS
 
-        server = KIROCREW_BIN_MCP_SERVERS[0]
+        server = AJCREW_BIN_MCP_SERVERS[0]
         runtime = _runtime(tmp_path, ACP_BACKEND_KAS)
         waited: list = []
 

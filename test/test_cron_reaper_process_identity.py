@@ -25,9 +25,9 @@ from cron_reaper_helpers import (
     _start_id_reads,
 )
 
-from kiro_crew import platform_compat
-from kiro_crew.cron import _JOB_TIMEOUT_SECS, CronService
-from kiro_crew.process_identity import ProcessHandle, process_survived
+from aj_crew import platform_compat
+from aj_crew.cron import _JOB_TIMEOUT_SECS, CronService
+from aj_crew.process_identity import ProcessHandle, process_survived
 
 #: Every cron reaper suite pins a healthy free-memory reading (see
 #: ``ample_host_free_memory``): ``test_cron_reaper.py`` fires cron jobs through the
@@ -41,7 +41,7 @@ _kill_seam = cron_reaper_helpers._kill_seam
 
 def _child_helpers() -> Any:
     """The client's child helpers, resolved the way cron resolves them (so patches apply)."""
-    from kiro_crew.session import child_process_helpers
+    from aj_crew.session import child_process_helpers
 
     return child_process_helpers()
 
@@ -70,15 +70,15 @@ class TestAGoneWindowsRootDrainsItsPendingTreeCleanup:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
-            patch("kiro_crew.platform_compat.windows_tree_cleanup_pending", return_value=True),
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=True),
             patch(
-                "kiro_crew.platform_compat.kill_process_tree_pinned", side_effect=[False, True]
+                "aj_crew.platform_compat.kill_process_tree_pinned", side_effect=[False, True]
             ) as drain,
         ):
             await svc._force_reap("win-pin1", _JOB_TIMEOUT_SECS + 60, claim=claim)
@@ -97,15 +97,15 @@ class TestAGoneWindowsRootDrainsItsPendingTreeCleanup:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()),
-            patch("kiro_crew.platform_compat.windows_tree_cleanup_pending", return_value=True),
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()),
+            patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=True),
             patch(
-                "kiro_crew.platform_compat.kill_process_tree_pinned",
+                "aj_crew.platform_compat.kill_process_tree_pinned",
                 side_effect=[False, OSError("Windows tree cleanup incomplete: 2 handles retained")],
             ),
         ):
@@ -129,9 +129,9 @@ class TestAGoneWindowsRootDrainsItsPendingTreeCleanup:
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()),
-            patch("kiro_crew.platform_compat.windows_tree_cleanup_pending", return_value=True),
-            patch("kiro_crew.platform_compat.kill_process_tree_pinned", return_value=False),
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()),
+            patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=True),
+            patch("aj_crew.platform_compat.kill_process_tree_pinned", return_value=False),
         ):
             failure = await svc._sigkill_session("cron:win-pin3", _handle_of(svc, "cron:win-pin3"))
 
@@ -145,7 +145,7 @@ class TestAGoneWindowsRootDrainsItsPendingTreeCleanup:
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The pin answers by root pid alone; without a creation time nothing can be drained safely."""
-        from kiro_crew.process_identity import (
+        from aj_crew.process_identity import (
             ProcessHandle,
             kill_verified_process,
             process_survived,
@@ -155,13 +155,11 @@ class TestAGoneWindowsRootDrainsItsPendingTreeCleanup:
         handle = ProcessHandle(pid=8686, start_id=None, pgid=None, child_pids={})
 
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch(
-                "kiro_crew.platform_compat.windows_tree_cleanup_pending", return_value=True
-            ) as pin,
-            patch("kiro_crew.platform_compat.kill_process_tree_pinned") as drain,
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=True) as pin,
+            patch("aj_crew.platform_compat.kill_process_tree_pinned") as drain,
+            patch("aj_crew.acp.client._kill_escaped_children"),
         ):
             assert process_survived(handle) is True
             failure = await kill_verified_process(
@@ -185,17 +183,17 @@ class TestAGoneWindowsRootDrainsItsPendingTreeCleanup:
         svc._sessions.reset = AsyncMock(return_value=True)
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
-            patch("kiro_crew.acp.client._get_child_pids", return_value=[]),
-            patch("kiro_crew.acp.client._kill_escaped_children"),
+            patch("aj_crew.acp.client._get_child_pids", return_value=[]),
+            patch("aj_crew.acp.client._kill_escaped_children"),
             # The creation time still reads back through the held handle; the exit
             # code says gone; the pin says the tree's cleanup is still owed.
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.windows_tree_cleanup_pending", return_value=True),
-            patch("kiro_crew.platform_compat.kill_process_tree_pinned", return_value=True) as drain,
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=True),
+            patch("aj_crew.platform_compat.kill_process_tree_pinned", return_value=True) as drain,
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
         ):
             await svc._force_reap("win-pin4", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -231,21 +229,19 @@ class TestALiveWindowsRootIsKilledThroughItsPinnedHandle:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
+            patch("aj_crew.platform_compat.kill_process_group", return_value=True) as group_kill,
             patch(
-                "kiro_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)
+                "aj_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)
             ) as pid_kill,
             # The recycled pid: no process object with the recorded creation time
             # can be opened any more, and the old identity owes no cleanup.
-            patch(
-                "kiro_crew.platform_compat.kill_process_tree_pinned", return_value=False
-            ) as drain,
-            patch("kiro_crew.platform_compat.windows_tree_cleanup_pending", return_value=False),
+            patch("aj_crew.platform_compat.kill_process_tree_pinned", return_value=False) as drain,
+            patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=False),
         ):
             await svc._force_reap("win-live1", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -268,14 +264,14 @@ class TestALiveWindowsRootIsKilledThroughItsPinnedHandle:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
-            patch("kiro_crew.platform_compat.kill_process_tree_pinned", return_value=False),
-            patch("kiro_crew.platform_compat.windows_tree_cleanup_pending", return_value=True),
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_process_tree_pinned", return_value=False),
+            patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=True),
         ):
             await svc._force_reap("win-live2", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -295,14 +291,14 @@ class TestALiveWindowsRootIsKilledThroughItsPinnedHandle:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
-            patch("kiro_crew.platform_compat.kill_process_tree_pinned", return_value=True) as drain,
-            patch("kiro_crew.platform_compat.windows_tree_cleanup_pending") as pin,
+            patch("aj_crew.platform_compat.kill_process_tree_async", AsyncMock()) as tree_kill,
+            patch("aj_crew.platform_compat.kill_process_tree_pinned", return_value=True) as drain,
+            patch("aj_crew.platform_compat.windows_tree_cleanup_pending") as pin,
         ):
             await svc._force_reap("win-live3", _JOB_TIMEOUT_SECS + 60, claim=claim)
 
@@ -321,16 +317,16 @@ class TestALiveWindowsRootIsKilledThroughItsPinnedHandle:
         children, start_id, sweep = _kill_path_stubs()
 
         with (
-            patch("kiro_crew.sel.sel") as mock_sel,
+            patch("aj_crew.sel.sel") as mock_sel,
             patch.object(svc, "_save"),
             children,
             start_id,
             sweep,
             patch(
-                "kiro_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)
+                "aj_crew.platform_compat.kill_pid_async", AsyncMock(return_value=True)
             ) as pid_kill,
             patch(
-                "kiro_crew.platform_compat.kill_process_tree_pinned",
+                "aj_crew.platform_compat.kill_process_tree_pinned",
                 side_effect=OSError("Windows process tree did not drain before the deadline"),
             ),
         ):
@@ -363,7 +359,7 @@ class TestALiveWindowsRootIsKilledThroughItsPinnedHandle:
             children,
             start_id,
             sweep,
-            patch("kiro_crew.platform_compat.kill_process_tree_pinned", side_effect=_drain),
+            patch("aj_crew.platform_compat.kill_process_tree_pinned", side_effect=_drain),
         ):
             assert (
                 await svc._sigkill_session("cron:win-live5", _handle_of(svc, "cron:win-live5"))
@@ -399,8 +395,8 @@ class TestProcessSurvived:
     ) -> None:
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", windows)
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
         ):
             assert process_survived(self._handle()) is True
 
@@ -416,8 +412,8 @@ class TestProcessSurvived:
         """
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", windows)
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
             _group_gone(),
         ):
             assert process_survived(self._handle()) is False
@@ -429,16 +425,16 @@ class TestProcessSurvived:
         """A live pid is guarded by identity: a different start id is another process's pid now."""
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", windows)
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="9999999"),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="9999999"),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
             _group_gone(),
         ):
             assert process_survived(self._handle()) is False
 
     def test_a_recycled_pid_is_decided_by_identity_before_the_platform_is_asked(self) -> None:
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value="9999999"),
-            patch("kiro_crew.platform_compat.pid_exists") as exists,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value="9999999"),
+            patch("aj_crew.platform_compat.pid_exists") as exists,
             _group_gone(),
         ):
             assert process_survived(self._handle()) is False
@@ -457,9 +453,9 @@ class TestProcessSurvived:
         """
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", windows)
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.pgroup_exists", return_value=True) as group,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.pgroup_exists", return_value=True) as group,
         ):
             assert process_survived(self._handle(pgid=7070)) is (not windows)
         if windows:
@@ -473,9 +469,9 @@ class TestProcessSurvived:
         """POSIX: a ``start_new_session`` leader's pid IS its group id; with no verified id it is probed, never signalled."""
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", False)
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch("kiro_crew.platform_compat.pgroup_exists", return_value=True) as group,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.pgroup_exists", return_value=True) as group,
         ):
             assert process_survived(self._handle(pgid=None)) is True
         group.assert_called_once_with(7070)
@@ -486,12 +482,10 @@ class TestProcessSurvived:
         """Windows asks the exact-tree cleanup pin: pending means descendants or debt outlived the root."""
         monkeypatch.setattr(platform_compat, "IS_WINDOWS", True)
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=_START_ID),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=False),
-            patch(
-                "kiro_crew.platform_compat.windows_tree_cleanup_pending", return_value=True
-            ) as pin,
-            patch("kiro_crew.platform_compat.pgroup_exists") as group,
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=_START_ID),
+            patch("aj_crew.platform_compat.pid_exists", return_value=False),
+            patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=True) as pin,
+            patch("aj_crew.platform_compat.pgroup_exists") as group,
         ):
             assert process_survived(self._handle()) is True
         pin.assert_called_once_with(7070, _START_ID)
@@ -500,8 +494,8 @@ class TestProcessSurvived:
     def test_a_live_pid_with_no_readable_start_id_survived(self) -> None:
         """Alive but unverifiable is the kill's to decide (a named failure), not a gone process."""
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", return_value=None),
-            patch("kiro_crew.platform_compat.pid_exists", return_value=True),
+            patch("aj_crew.platform_compat.get_process_start_id", return_value=None),
+            patch("aj_crew.platform_compat.pid_exists", return_value=True),
         ):
             assert process_survived(self._handle()) is True
 
@@ -524,34 +518,34 @@ class TestProcessSurvived:
         )
         reads = _start_id_reads({7070: None, child: "5150001"})
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=reads),
-            patch("kiro_crew.platform_compat.pid_exists", side_effect=lambda pid: pid == child),
-            patch("kiro_crew.platform_compat.pid_is_zombie", return_value=False),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=reads),
+            patch("aj_crew.platform_compat.pid_exists", side_effect=lambda pid: pid == child),
+            patch("aj_crew.platform_compat.pid_is_zombie", return_value=False),
             _group_gone(),
-            patch("kiro_crew.platform_compat.windows_tree_cleanup_pending", return_value=False),
+            patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=False),
         ):
             assert process_survived(handle) is True
         with (
-            patch("kiro_crew.platform_compat.get_process_start_id", side_effect=reads),
-            patch("kiro_crew.platform_compat.pid_exists", side_effect=lambda pid: pid == child),
-            patch("kiro_crew.platform_compat.pid_is_zombie", return_value=True),
+            patch("aj_crew.platform_compat.get_process_start_id", side_effect=reads),
+            patch("aj_crew.platform_compat.pid_exists", side_effect=lambda pid: pid == child),
+            patch("aj_crew.platform_compat.pid_is_zombie", return_value=True),
             _group_gone(),
-            patch("kiro_crew.platform_compat.windows_tree_cleanup_pending", return_value=False),
+            patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=False),
         ):
             assert process_survived(handle) is False, "a zombie child is finished, not standing"
         with (
             patch(
-                "kiro_crew.platform_compat.get_process_start_id",
+                "aj_crew.platform_compat.get_process_start_id",
                 side_effect=_start_id_reads({7070: None, child: "9999999"}),
             ),
-            patch("kiro_crew.platform_compat.pid_exists", side_effect=lambda pid: pid == child),
-            patch("kiro_crew.platform_compat.pid_is_zombie", return_value=False),
+            patch("aj_crew.platform_compat.pid_exists", side_effect=lambda pid: pid == child),
+            patch("aj_crew.platform_compat.pid_is_zombie", return_value=False),
             _group_gone(),
-            patch("kiro_crew.platform_compat.windows_tree_cleanup_pending", return_value=False),
+            patch("aj_crew.platform_compat.windows_tree_cleanup_pending", return_value=False),
         ):
             assert process_survived(handle) is False, "a recycled child pid is another process's"
 
     def test_no_usable_pid_did_not_survive(self) -> None:
-        with patch("kiro_crew.platform_compat.get_process_start_id") as start_id:
+        with patch("aj_crew.platform_compat.get_process_start_id") as start_id:
             assert process_survived(self._handle(pid=None)) is False
         start_id.assert_not_called()

@@ -1,7 +1,7 @@
 """Per-session stub tokens: one runtime PID, one identity per ACP session.
 
 Every identity channel the broker-stub path had before this token is keyed on
-the PROCESS TREE — the stub's own ``KIROCREW_SESSION_KEY``/pid-file walk,
+the PROCESS TREE — the stub's own ``AJCREW_SESSION_KEY``/pid-file walk,
 gatewayd's SO_PEERCRED ``/proc`` walk, and claim-push, which re-targets every
 connection indexed under a runtime PID. One kiro-cli process hosts N ACP
 sessions (``agent.session_sharing``: a ``spawn_run`` subagent runs on its
@@ -56,16 +56,16 @@ from test_mcp_gateway_claim import (
     _register,
 )
 
-from kiro_crew import mcp_caller, platform_compat
-from kiro_crew.mcp_caller import CallerContext
-from kiro_crew.mcp_gateway import gatewayd as gw
-from kiro_crew.mcp_gateway import prewarm as prewarm_mod
-from kiro_crew.mcp_gateway import stub as stub_mod
-from kiro_crew.mcp_gateway.pool import PoolKey
-from kiro_crew.mcp_gateway.session_servers import (
+from aj_crew import mcp_caller, platform_compat
+from aj_crew.mcp_caller import CallerContext
+from aj_crew.mcp_gateway import gatewayd as gw
+from aj_crew.mcp_gateway import prewarm as prewarm_mod
+from aj_crew.mcp_gateway import stub as stub_mod
+from aj_crew.mcp_gateway.pool import PoolKey
+from aj_crew.mcp_gateway.session_servers import (
     STUB_SESSION_TOKEN_ENV,
 )
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew.testing.wait import await_until, finished
 
 pytestmark = pytest.mark.xdist_group("mcp_gateway")
 
@@ -206,12 +206,12 @@ def _capture_fallback_env(monkeypatch: pytest.MonkeyPatch, args: Any) -> dict[st
 def test_the_fallback_keeps_the_token_for_a_vetted_control_plane(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Kiro Crew's own control plane is what the token exists for. Without it a
-    fallback kirocrew-core refuses every call identity_unattested wherever the
+    """Aj Crew's own control plane is what the token exists for. Without it a
+    fallback ajcrew-core refuses every call identity_unattested wherever the
     kernel peer check cannot name the session (a runtime hosting several
     sessions, a TCP connection). It is kept only when gatewayd's own vetting
     accepts the target, and that vetting judges the env the child really gets,
-    minus the token and minus Kiro Crew's pinned UTF-8 keys."""
+    minus the token and minus Aj Crew's pinned UTF-8 keys."""
     monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN_A)
     for key, value in platform_compat._UTF8_PROCESS_ENV.items():
         monkeypatch.setenv(key, value)
@@ -226,14 +226,14 @@ def test_the_fallback_keeps_the_token_for_a_vetted_control_plane(
     monkeypatch.setattr(gw, "_spawns_own_control_plane", _vet)
     monkeypatch.setattr(gw, "_user_site_holds_our_package", lambda: False)
     env = _capture_fallback_env(
-        monkeypatch, _fallback_args(tmp_path, "kirocrew-core", "/opt/kc/bin/kirocrew", ["mcp-core"])
+        monkeypatch, _fallback_args(tmp_path, "ajcrew-core", "/opt/kc/bin/ajcrew", ["mcp-core"])
     )
 
     assert env[STUB_SESSION_TOKEN_ENV] == TOKEN_A
     assert env["PYTHONSAFEPATH"] == "1"
     assert env["PYTHONNOUSERSITE"] == "1"
     [(name, command, target_args, verdict_env)] = judged
-    assert (name, command, target_args) == ("kirocrew-core", "/opt/kc/bin/kirocrew", ["mcp-core"])
+    assert (name, command, target_args) == ("ajcrew-core", "/opt/kc/bin/ajcrew", ["mcp-core"])
     assert STUB_SESSION_TOKEN_ENV not in verdict_env
     assert not set(platform_compat._UTF8_PROCESS_ENV) & set(verdict_env)
     assert verdict_env["SOME_OTHER_VAR"] == "x"
@@ -254,7 +254,7 @@ def test_a_non_pinned_utf8_value_still_reaches_the_vetting(
 
     monkeypatch.setattr(gw, "_spawns_own_control_plane", _vet)
     env = _capture_fallback_env(
-        monkeypatch, _fallback_args(tmp_path, "kirocrew-core", "/opt/kc/bin/kirocrew", ["mcp-core"])
+        monkeypatch, _fallback_args(tmp_path, "ajcrew-core", "/opt/kc/bin/ajcrew", ["mcp-core"])
     )
     assert judged[0]["PYTHONIOENCODING"] == "latin-1"
     assert STUB_SESSION_TOKEN_ENV not in env
@@ -270,12 +270,12 @@ def test_a_reserved_name_on_a_foreign_binary_does_not_get_the_token(
     monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN_A)
     with caplog.at_level(logging.INFO, logger=stub_mod.logger.name):
         env = _capture_fallback_env(
-            monkeypatch, _fallback_args(tmp_path, "kirocrew-core", sys.executable, ["mcp-core"])
+            monkeypatch, _fallback_args(tmp_path, "ajcrew-core", sys.executable, ["mcp-core"])
         )
     assert STUB_SESSION_TOKEN_ENV not in env
     assert TOKEN_A not in json.dumps(env)
     (record,) = [r for r in caplog.records if "without the session token" in r.getMessage()]
-    assert record.levelno == logging.WARNING and "'kirocrew-core'" in record.getMessage()
+    assert record.levelno == logging.WARNING and "'ajcrew-core'" in record.getMessage()
     # The real vetting ran to a verdict: this is a refusal, not a broken check.
     assert not [r for r in caplog.records if "vetting of" in r.getMessage()]
     assert TOKEN_A not in caplog.text
@@ -291,19 +291,19 @@ def test_a_refused_reserved_name_logs_the_vettings_reason(
 
     def _refuse(*_a: Any, denial: Any = None, **_kw: Any) -> bool:
         assert denial is not None, "the fallback discards the vetting's reason"
-        denial.append("spawned '/opt/evil' is not the spec's '/opt/kc/bin/kirocrew'")
+        denial.append("spawned '/opt/evil' is not the spec's '/opt/kc/bin/ajcrew'")
         return False
 
     monkeypatch.setattr(gw, "_spawns_own_control_plane", _refuse)
     with caplog.at_level(logging.INFO, logger=stub_mod.logger.name):
         env = _capture_fallback_env(
-            monkeypatch, _fallback_args(tmp_path, "kirocrew-core", "/opt/evil", ["mcp-core"])
+            monkeypatch, _fallback_args(tmp_path, "ajcrew-core", "/opt/evil", ["mcp-core"])
         )
     assert STUB_SESSION_TOKEN_ENV not in env
     (record,) = [r for r in caplog.records if r.levelno >= logging.INFO]
     assert record.levelno == logging.WARNING
-    assert "'kirocrew-core'" in record.getMessage()
-    assert "is not the spec's '/opt/kc/bin/kirocrew'" in record.getMessage()
+    assert "'ajcrew-core'" in record.getMessage()
+    assert "is not the spec's '/opt/kc/bin/ajcrew'" in record.getMessage()
     assert TOKEN_A not in caplog.text
 
 
@@ -331,15 +331,15 @@ def test_the_fallback_precheck_covers_every_control_plane() -> None:
     superset of the daemon's ``CONTROL_PLANE_BACKENDS``, or a control plane added
     to the daemon's set alone would be skipped here silently: no vetting, no
     token, no WARNING -- the exact tokenless shape this PR fixed."""
-    from kiro_crew import mcp_cleanup
+    from aj_crew import mcp_cleanup
 
-    assert stub_mod.KIROCREW_BIN_MCP_SERVERS is mcp_cleanup.KIROCREW_BIN_MCP_SERVERS
-    assert gw.CONTROL_PLANE_BACKENDS <= frozenset(stub_mod.KIROCREW_BIN_MCP_SERVERS)
+    assert stub_mod.AJCREW_BIN_MCP_SERVERS is mcp_cleanup.AJCREW_BIN_MCP_SERVERS
+    assert gw.CONTROL_PLANE_BACKENDS <= frozenset(stub_mod.AJCREW_BIN_MCP_SERVERS)
 
 
 _FALLBACK_IMPORT_PROBE = r"""
 import json, sys
-from kiro_crew.mcp_gateway import stub
+from aj_crew.mcp_gateway import stub
 
 def _capture(*_a, **_k):
     raise SystemExit(0)
@@ -356,20 +356,20 @@ except SystemExit:
     pass
 print(json.dumps({
     "stub": stub.__file__,
-    "modules": sorted(m for m in sys.modules if m.startswith("kiro_crew.mcp_gateway.")),
+    "modules": sorted(m for m in sys.modules if m.startswith("aj_crew.mcp_gateway.")),
 }))
 """
 
-_HEAVY = ("kiro_crew.mcp_gateway.gatewayd", "kiro_crew.mcp_gateway.daemon")
+_HEAVY = ("aj_crew.mcp_gateway.gatewayd", "aj_crew.mcp_gateway.daemon")
 
 
 def _fallback_import_footprint(server: str, command: str, tmp_path: Path) -> list[str]:
-    """The ``kiro_crew.mcp_gateway`` modules a fresh stub process holds after one
+    """The ``aj_crew.mcp_gateway`` modules a fresh stub process holds after one
     fallback exec of *server*. A subprocess, because this test process imported
     gatewayd at collection and ``sys.modules`` here can prove nothing. The child
     is pinned to THIS checkout's package by absolute path: the harness's
     ``PYTHONPATH`` may be relative, and resolved from ``tmp_path`` it would hand
-    the child whatever ``kiro_crew`` the interpreter has installed instead."""
+    the child whatever ``aj_crew`` the interpreter has installed instead."""
     src_root = Path(stub_mod.__file__).resolve().parents[2]
     env = {**os.environ, STUB_SESSION_TOKEN_ENV: TOKEN_A}
     env["PYTHONPATH"] = os.pathsep.join(
@@ -399,9 +399,9 @@ def test_a_third_party_fallback_does_not_import_gatewayd(tmp_path: Path) -> None
     control: it shows the probe can see the import when it does happen."""
     third_party = _fallback_import_footprint("echo-mcp", sys.executable, tmp_path)
     assert not set(third_party) & set(_HEAVY), third_party
-    assert "kiro_crew.mcp_gateway.stub" in third_party
+    assert "aj_crew.mcp_gateway.stub" in third_party
 
-    control_plane = _fallback_import_footprint("kirocrew-core", sys.executable, tmp_path)
+    control_plane = _fallback_import_footprint("ajcrew-core", sys.executable, tmp_path)
     assert set(_HEAVY) <= set(control_plane), control_plane
 
 
@@ -417,7 +417,7 @@ def test_a_tokenless_fallback_never_consults_the_vetting(
 
     monkeypatch.setattr(gw, "_spawns_own_control_plane", _never)
     env = _capture_fallback_env(
-        monkeypatch, _fallback_args(tmp_path, "kirocrew-core", "/opt/kc/bin/kirocrew", ["mcp-core"])
+        monkeypatch, _fallback_args(tmp_path, "ajcrew-core", "/opt/kc/bin/ajcrew", ["mcp-core"])
     )
     assert STUB_SESSION_TOKEN_ENV not in env
 
@@ -438,12 +438,12 @@ def test_a_vetting_error_drops_the_token(
     with caplog.at_level(logging.INFO, logger=stub_mod.logger.name):
         env = _capture_fallback_env(
             monkeypatch,
-            _fallback_args(tmp_path, "kirocrew-core", "/opt/kc/bin/kirocrew", ["mcp-core"]),
+            _fallback_args(tmp_path, "ajcrew-core", "/opt/kc/bin/ajcrew", ["mcp-core"]),
         )
     assert STUB_SESSION_TOKEN_ENV not in env
     (record,) = [r for r in caplog.records if r.levelno >= logging.INFO]
     assert record.levelno == logging.WARNING
-    assert "vetting of 'kirocrew-core' raised" in record.getMessage()
+    assert "vetting of 'ajcrew-core' raised" in record.getMessage()
     assert record.exc_info is not None and "config plane down" in caplog.text
     assert not [r for r in caplog.records if "without the session token" in r.getMessage()]
     assert TOKEN_A not in caplog.text
@@ -459,13 +459,13 @@ def test_the_fallback_calls_the_real_vetting_in_the_shape_it_accepts(tmp_path: P
     reaches it, and a real call in that shape must reach a verdict."""
     import inspect
 
-    from kiro_crew.mcp_gateway.daemon import control_plane as control_plane_mod
+    from aj_crew.mcp_gateway.daemon import control_plane as control_plane_mod
 
     vetting = gw._spawns_own_control_plane
     assert vetting is control_plane_mod._spawns_own_control_plane
     denial: list[str] = []
     bound = inspect.signature(vetting).bind(
-        "kirocrew-core",
+        "ajcrew-core",
         str(tmp_path / "not-the-launcher"),
         ["mcp-core"],
         env={},
@@ -523,7 +523,7 @@ async def test_the_token_never_reaches_the_prewarm_file(
 
 
 # ---------------------------------------------------------------------------
-# The token reaches Kiro Crew's OWN pooled control planes, and nothing else
+# The token reaches Aj Crew's OWN pooled control planes, and nothing else
 # ---------------------------------------------------------------------------
 
 
@@ -553,8 +553,8 @@ async def test_a_pooled_control_plane_is_handed_the_sessions_token(
     monkeypatch: pytest.MonkeyPatch, server_name: str
 ) -> None:
     """gatewayd spawns a pooled backend from its OWN environment, so the
-    per-session token is not in that backend's env. ``kirocrew-core`` and
-    ``kirocrew-cron`` post back to the gateway for the session they act for and
+    per-session token is not in that backend's env. ``ajcrew-core`` and
+    ``ajcrew-cron`` post back to the gateway for the session they act for and
     must prove it with ``X-Session-Token``; the caller block is the only channel
     that can carry it to them."""
     _attest(monkeypatch, _ANCESTORS)
@@ -618,7 +618,7 @@ async def test_a_respawned_replacement_is_judged_on_its_own(
     session forwards afterwards. The base caller the handler holds for the
     connection never carries the token, so the token the dead backend was
     entitled to cannot ride along to whatever answers next."""
-    from kiro_crew.mcp_gateway.backend import BackendGone
+    from aj_crew.mcp_gateway.backend import BackendGone
 
     class _DiesOnce(_FakeBackendType):
         control_plane = True
@@ -650,7 +650,7 @@ async def test_a_respawned_replacement_is_judged_on_its_own(
     monkeypatch.setattr(gw, "_respawn_backend_for_stub", _fake_respawn)
     reader = _QueueReader()
     frame = _register_with_token(PARENT_KEY, TOKEN_A, stub_uuid="stub-respawn")
-    frame["server_name"] = "kirocrew-core"
+    frame["server_name"] = "ajcrew-core"
     reader.feed(frame)
     reader.feed(_CALL)
     reader.feed(dict(_CALL, id=2))
@@ -694,7 +694,7 @@ def test_the_token_is_attached_per_backend_never_to_the_base_caller() -> None:
 
 def test_control_plane_backends_contain_session_mcp_and_justify_the_difference() -> None:
     """gatewayd names the set itself so the daemon does not import
-    ``kiro_crew.agent`` at boot, and this pin is what stops the two copies
+    ``aj_crew.agent`` at boot, and this pin is what stops the two copies
     drifting -- the two sets are not EQUAL, so it pins the RELATIONSHIP.
 
     ``CONTROL_PLANE_SERVERS`` decides which servers every session mounts and which
@@ -707,7 +707,7 @@ def test_control_plane_backends_contain_session_mcp_and_justify_the_difference()
     tools off unenforceable.
 
     The extras are pinned BY NAME to exactly the opt-in managed servers plus the
-    spec-gated ``kirocrew-computer`` and the platform guide set, and each is also
+    spec-gated ``ajcrew-computer`` and the platform guide set, and each is also
     checked BY PROPERTY. The guide set is emitted into every default spec but is
     still a spec's to withhold (an operator or a policy can take it off), so it
     is not mounted regardless of the spec the way the control plane is. The name
@@ -717,23 +717,23 @@ def test_control_plane_backends_contain_session_mcp_and_justify_the_difference()
     ``acp.session_mcp.IDENTITY_BOUND_SERVERS`` -- the kiro-backend element list that
     carries the same token -- so the two identity paths grant the same servers.
     """
-    from kiro_crew.acp.session_mcp import CONTROL_PLANE_SERVERS, IDENTITY_BOUND_SERVERS
-    from kiro_crew.agent import _MANAGED_MCP_SERVERS
-    from kiro_crew.mcp_cleanup import OPT_IN_BIN_MCP_SERVERS
+    from aj_crew.acp.session_mcp import CONTROL_PLANE_SERVERS, IDENTITY_BOUND_SERVERS
+    from aj_crew.agent import _MANAGED_MCP_SERVERS
+    from aj_crew.mcp_cleanup import OPT_IN_BIN_MCP_SERVERS
 
     assert gw.CONTROL_PLANE_BACKENDS == frozenset(IDENTITY_BOUND_SERVERS)
     assert frozenset(CONTROL_PLANE_SERVERS) < gw.CONTROL_PLANE_BACKENDS
 
     token_only = gw.CONTROL_PLANE_BACKENDS - frozenset(CONTROL_PLANE_SERVERS)
     assert token_only == frozenset(OPT_IN_BIN_MCP_SERVERS) | {
-        "kirocrew-computer",
-        "kirocrew-guide",
-        "kirocrew-mate",
+        "ajcrew-computer",
+        "ajcrew-guide",
+        "ajcrew-mate",
     }, (
         "a new token recipient must be added to this pin in the same commit that adds it "
         "to mcp_cleanup's managed-server tuples"
     )
-    from kiro_crew.acp.session_mcp import session_mcp_servers
+    from aj_crew.acp.session_mcp import session_mcp_servers
 
     for name in sorted(token_only):
         spec = _MANAGED_MCP_SERVERS.get(name)
@@ -742,7 +742,7 @@ def test_control_plane_backends_contain_session_mcp_and_justify_the_difference()
         # mounted. Checked by behaviour for every recipient: a spec whose `tools`
         # does not name it withholds it, while a control-plane server would be
         # mounted regardless of the spec.
-        withheld = {"mcpServers": {name: {"command": "kirocrew", "args": ["x"]}}, "tools": []}
+        withheld = {"mcpServers": {name: {"command": "ajcrew", "args": ["x"]}}, "tools": []}
         named = {**withheld, "tools": [f"@{name}"]}
         assert name not in [e.get("name") for e in session_mcp_servers("probe", spec=withheld)], (
             f"{name!r} is token-only but is mounted even when the spec does not name it; "
@@ -761,11 +761,11 @@ def test_the_control_plane_check_asks_for_an_opt_in_invocation(
 
     Pinned as the CALL and not only its effect, because every double in this file
     now swallows keywords: dropping that argument at the call site would leave
-    ``kirocrew-dashboard`` permanently unverifiable -- every tool of its answering
+    ``ajcrew-dashboard`` permanently unverifiable -- every tool of its answering
     409 -- with this whole file still green. That is the exact shape of the bug
     this pins against.
     """
-    from kiro_crew import agent as agent_mod
+    from aj_crew import agent as agent_mod
 
     seen: list[dict[str, Any]] = []
 
@@ -774,25 +774,25 @@ def test_the_control_plane_check_asks_for_an_opt_in_invocation(
         return None
 
     monkeypatch.setattr(agent_mod, "managed_mcp_spec_entry", _record)
-    gw._spawns_own_control_plane("kirocrew-dashboard", "/bin/true", [], env={})
+    gw._spawns_own_control_plane("ajcrew-dashboard", "/bin/true", [], env={})
 
     assert seen, "the check resolved no spec for a name that IS in CONTROL_PLANE_BACKENDS"
     assert seen[0].get("include_opt_in") is True
 
 
 class TestTokenOnlyControlPlane:
-    """``kirocrew-dashboard`` is the one control plane that is ``opt_in``: it
+    """``ajcrew-dashboard`` is the one control plane that is ``opt_in``: it
     posts back to the gateway for the CALLING session, so it needs the token,
     but no spec writer auto-emits it. Every branch that lets the check see it is
     pinned in BOTH directions here -- the grant, and what the grant does not do."""
 
-    NAME = "kirocrew-dashboard"
+    NAME = "ajcrew-dashboard"
 
     def test_the_real_dashboard_entry_matches_itself(self) -> None:
         """No patching: whatever this install emits for the dashboard set must be
         recognised as ours, or the token is never handed over and every
         ``session_create`` / ``session_send`` answers 409."""
-        from kiro_crew.agent import managed_mcp_spec_entry
+        from aj_crew.agent import managed_mcp_spec_entry
 
         entry = managed_mcp_spec_entry(self.NAME, include_opt_in=True)
         assert entry is not None
@@ -813,7 +813,7 @@ class TestTokenOnlyControlPlane:
         caplog: pytest.LogCaptureFixture,
     ) -> None:
         """A managed argv cannot earn the token while its loader can replace code."""
-        from kiro_crew.agent import managed_mcp_spec_entry
+        from aj_crew.agent import managed_mcp_spec_entry
 
         entry = managed_mcp_spec_entry(self.NAME, include_opt_in=True)
         assert entry is not None
@@ -840,7 +840,7 @@ class TestTokenOnlyControlPlane:
         frame = _register(PARENT_KEY)
         frame["server_name"] = self.NAME
         key = PoolKey.from_register(frame)
-        monkeypatch.setenv("MC_MCP_TARGET_KIROCREW_DASHBOARD", "kirocrew mcp-dashboard")
+        monkeypatch.setenv("MC_MCP_TARGET_AJCREW_DASHBOARD", "ajcrew mcp-dashboard")
         monkeypatch.setenv("LD_PRELOAD", "/host/preload.so")
 
         resolved = gw.env_target_resolver(key)
@@ -862,7 +862,7 @@ class TestTokenOnlyControlPlane:
         """Membership is necessary, never sufficient: the same binary/argv/env
         fences that guard the always-on planes deny a dashboard spawn that is not
         byte-for-byte the managed invocation, and each denial names its reason."""
-        from kiro_crew.agent import managed_mcp_spec_entry
+        from aj_crew.agent import managed_mcp_spec_entry
 
         entry = managed_mcp_spec_entry(self.NAME, include_opt_in=True)
         assert entry is not None
@@ -890,7 +890,7 @@ class TestTokenOnlyControlPlane:
         """The flag is the control-plane check's, not the spec writers': without
         it the dashboard entry is still ``None``, so an opt-in server the user
         never granted is not resurrected by the same helper that now verifies it."""
-        from kiro_crew.agent import managed_mcp_spec_entry
+        from aj_crew.agent import managed_mcp_spec_entry
 
         assert managed_mcp_spec_entry(self.NAME) is None
         assert managed_mcp_spec_entry("not-a-managed-server", include_opt_in=True) is None
@@ -901,10 +901,10 @@ class TestTokenOnlyControlPlane:
         """The flag skips exactly ONE disqualifier. A closed ``spec_gate`` keeps a
         backend unspawned, so a spawn under that name is anomalous: the entry stays
         ``None`` under the flag, and a gate that raises reads as closed."""
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         gate = {"open": False}
-        invocation = (sys.executable, ["-m", "kiro_crew", "mcp-probe"])
+        invocation = (sys.executable, ["-m", "aj_crew", "mcp-probe"])
 
         def _raise() -> bool:
             raise RuntimeError("keystone unreadable")
@@ -914,25 +914,25 @@ class TestTokenOnlyControlPlane:
             "opt_in": True,
             "spec_gate": lambda: gate["open"],
         }
-        monkeypatch.setitem(agent_mod._MANAGED_MCP_SERVERS, "kirocrew-probe", spec)
-        assert agent_mod.managed_mcp_spec_entry("kirocrew-probe", include_opt_in=True) is None
+        monkeypatch.setitem(agent_mod._MANAGED_MCP_SERVERS, "ajcrew-probe", spec)
+        assert agent_mod.managed_mcp_spec_entry("ajcrew-probe", include_opt_in=True) is None
         gate["open"] = True
-        resolved = agent_mod.managed_mcp_spec_entry("kirocrew-probe", include_opt_in=True)
+        resolved = agent_mod.managed_mcp_spec_entry("ajcrew-probe", include_opt_in=True)
         assert resolved is not None and resolved["args"] == invocation[1]
-        assert agent_mod.managed_mcp_spec_entry("kirocrew-probe") is None
+        assert agent_mod.managed_mcp_spec_entry("ajcrew-probe") is None
         monkeypatch.setitem(
             agent_mod._MANAGED_MCP_SERVERS,
-            "kirocrew-probe",
+            "ajcrew-probe",
             {**spec, "spec_gate": _raise},
         )
-        assert agent_mod.managed_mcp_spec_entry("kirocrew-probe", include_opt_in=True) is None
+        assert agent_mod.managed_mcp_spec_entry("ajcrew-probe", include_opt_in=True) is None
 
     def test_a_gate_closed_dashboard_is_denied_the_token(
         self, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
     ) -> None:
         """Through the production path: the real dashboard invocation, under a
         spec whose gate has shut, gets no token and the denial says why."""
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         entry = agent_mod.managed_mcp_spec_entry(self.NAME, include_opt_in=True)
         assert entry is not None
@@ -952,7 +952,7 @@ class TestTokenOnlyControlPlane:
         name leaves one DEBUG line naming the set and no WARNING, while a reserved
         name that fails leaves the WARNING and never the DEBUG line. A control
         plane missing from the set is exactly the silent shape this pins against."""
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         with caplog.at_level(logging.DEBUG, logger=gw.__name__):
             assert not gw._spawns_own_control_plane("echo-mcp", "/bin/true", [], env={})
@@ -962,7 +962,7 @@ class TestTokenOnlyControlPlane:
 
             caplog.clear()
             monkeypatch.setattr(agent_mod, "managed_mcp_spec_entry", lambda name, **_kw: None)
-            assert not gw._spawns_own_control_plane("kirocrew-core", "/bin/true", [], env={})
+            assert not gw._spawns_own_control_plane("ajcrew-core", "/bin/true", [], env={})
             assert not [r for r in caplog.records if "not in CONTROL_PLANE_BACKENDS" in r.message]
             assert [r for r in caplog.records if r.levelno == logging.WARNING]
 
@@ -973,41 +973,39 @@ class TestSpawnsOwnControlPlane:
 
     @pytest.fixture
     def managed(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[str, Any]:
-        launcher = tmp_path / "kirocrew"
+        launcher = tmp_path / "ajcrew"
         launcher.write_text("#!/bin/sh\n")
         entry = {"command": str(launcher), "args": ["mcp-core"]}
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         monkeypatch.setattr(
             agent_mod,
             "managed_mcp_spec_entry",
-            lambda name, **_kw: dict(entry) if name == "kirocrew-core" else None,
+            lambda name, **_kw: dict(entry) if name == "ajcrew-core" else None,
         )
         return entry
 
     def test_the_managed_invocation_is_ours(self, managed: dict[str, Any]) -> None:
-        assert gw._spawns_own_control_plane(
-            "kirocrew-core", managed["command"], ["mcp-core"], env={}
-        )
+        assert gw._spawns_own_control_plane("ajcrew-core", managed["command"], ["mcp-core"], env={})
 
     def test_a_symlink_to_the_launcher_is_the_same_program(
         self, managed: dict[str, Any], tmp_path: Path
     ) -> None:
         alias = tmp_path / "alias"
         alias.symlink_to(managed["command"])
-        assert gw._spawns_own_control_plane("kirocrew-core", str(alias), ["mcp-core"], env={})
+        assert gw._spawns_own_control_plane("ajcrew-core", str(alias), ["mcp-core"], env={})
 
     def test_a_foreign_binary_under_the_reserved_name_is_not(
         self, managed: dict[str, Any], tmp_path: Path
     ) -> None:
         other = tmp_path / "evil"
         other.write_text("#!/bin/sh\n")
-        assert not gw._spawns_own_control_plane("kirocrew-core", str(other), ["mcp-core"])
+        assert not gw._spawns_own_control_plane("ajcrew-core", str(other), ["mcp-core"])
 
     def test_our_binary_with_different_args_is_not(self, managed: dict[str, Any]) -> None:
-        assert not gw._spawns_own_control_plane("kirocrew-core", managed["command"], ["mcp-cron"])
+        assert not gw._spawns_own_control_plane("ajcrew-core", managed["command"], ["mcp-cron"])
         assert not gw._spawns_own_control_plane(
-            "kirocrew-core", managed["command"], ["mcp-core", "--extra"]
+            "ajcrew-core", managed["command"], ["mcp-core", "--extra"]
         )
 
     def test_a_name_outside_the_set_is_never_ours(self, managed: dict[str, Any]) -> None:
@@ -1026,8 +1024,8 @@ class TestSpawnsOwnControlPlane:
         other = tmp_path / "evil"
         other.write_text("#!/bin/sh\n")
         shadow_root = tmp_path / "proj"
-        (shadow_root / "kiro_crew").mkdir(parents=True)
-        (shadow_root / "kiro_crew" / "__init__.py").write_text("")
+        (shadow_root / "aj_crew").mkdir(parents=True)
+        (shadow_root / "aj_crew" / "__init__.py").write_text("")
         cases = [
             (dict(command=str(other), args=["mcp-core"]), "is not the spec's"),
             (dict(command=managed["command"], args=["mcp-cron"]), "differ from spec"),
@@ -1043,16 +1041,14 @@ class TestSpawnsOwnControlPlane:
         with caplog.at_level(logging.WARNING, logger=gw.__name__):
             for kwargs, fragment in cases:
                 caplog.clear()
-                assert not gw._spawns_own_control_plane("kirocrew-core", **kwargs)
+                assert not gw._spawns_own_control_plane("ajcrew-core", **kwargs)
                 (record,) = [r for r in caplog.records if "denied the session token" in r.message]
-                assert "'kirocrew-core'" in record.message and fragment in record.message
+                assert "'ajcrew-core'" in record.message and fragment in record.message
             caplog.clear()
-            import kiro_crew.agent as agent_mod
+            import aj_crew.agent as agent_mod
 
             monkeypatch.setattr(agent_mod, "managed_mcp_spec_entry", lambda name, **_kw: None)
-            assert not gw._spawns_own_control_plane(
-                "kirocrew-core", managed["command"], ["mcp-core"]
-            )
+            assert not gw._spawns_own_control_plane("ajcrew-core", managed["command"], ["mcp-core"])
             assert any("no managed spec entry" in r.message for r in caplog.records)
             # A name outside the set is not a denial of anything reserved: silent.
             caplog.clear()
@@ -1062,33 +1058,31 @@ class TestSpawnsOwnControlPlane:
     def test_an_unresolvable_managed_entry_fails_closed(
         self, monkeypatch: pytest.MonkeyPatch, managed: dict[str, Any]
     ) -> None:
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         monkeypatch.setattr(agent_mod, "managed_mcp_spec_entry", lambda name, **_kw: None)
-        assert not gw._spawns_own_control_plane("kirocrew-core", managed["command"], ["mcp-core"])
+        assert not gw._spawns_own_control_plane("ajcrew-core", managed["command"], ["mcp-core"])
 
     def test_the_real_managed_entry_matches_itself(self) -> None:
-        """No patching: whatever this install emits for ``kirocrew-cron`` must be
+        """No patching: whatever this install emits for ``ajcrew-cron`` must be
         recognised as ours, or the fix that hands the token over is inert."""
-        from kiro_crew.agent import managed_mcp_spec_entry
+        from aj_crew.agent import managed_mcp_spec_entry
 
-        entry = managed_mcp_spec_entry("kirocrew-cron")
+        entry = managed_mcp_spec_entry("ajcrew-cron")
         assert entry is not None
-        assert gw._spawns_own_control_plane(
-            "kirocrew-cron", entry["command"], entry["args"], env={}
-        )
+        assert gw._spawns_own_control_plane("ajcrew-cron", entry["command"], entry["args"], env={})
 
-    def test_a_kiro_crew_package_beside_the_launcher_is_not_ours(
+    def test_a_aj_crew_package_beside_the_launcher_is_not_ours(
         self, managed: dict[str, Any]
     ) -> None:
         """Script form: the launcher's directory is ``sys.path[0]``."""
-        beside = Path(managed["command"]).parent / "kiro_crew"
+        beside = Path(managed["command"]).parent / "aj_crew"
         beside.mkdir()
         (beside / "__init__.py").write_text("")
-        assert not gw._spawns_own_control_plane("kirocrew-core", managed["command"], ["mcp-core"])
+        assert not gw._spawns_own_control_plane("ajcrew-core", managed["command"], ["mcp-core"])
 
     def test_the_spawn_site_decides_off_the_event_loop(self) -> None:
-        """The classifier imports ``kiro_crew.agent``, reads config and stats a
+        """The classifier imports ``aj_crew.agent``, reads config and stats a
         fixed local root; the one production call must run in a thread."""
         import inspect
         import re
@@ -1117,7 +1111,7 @@ class TestSpawnsOwnControlPlane:
         flag nor the token."""
         from test_mcp_gateway_spawn_gate import _fake_backend, _register_frame
 
-        from kiro_crew.mcp_gateway.pool import BackendPool, PoolKey
+        from aj_crew.mcp_gateway.pool import BackendPool, PoolKey
 
         order: list[str] = []
         spawned_env: dict[str, str] = {}
@@ -1126,7 +1120,7 @@ class TestSpawnsOwnControlPlane:
         def classify(
             server_name: str, command: str, args: Any, *, env: Any, work_dir: Any, denial: Any
         ) -> bool:
-            assert server_name == "kirocrew-cron" and command == "kirocrew" and args == ["mcp-cron"]
+            assert server_name == "ajcrew-cron" and command == "ajcrew" and args == ["mcp-cron"]
             assert "PYTHONSAFEPATH" not in env, "the check sees the env the child would get"
             order.append("verdict")
             return verdict
@@ -1140,11 +1134,11 @@ class TestSpawnsOwnControlPlane:
         monkeypatch.setattr(gw, "spawn_backend", fake_spawn)
         monkeypatch.setattr(gw, "_declared_env_to_forward", lambda k: {})
         monkeypatch.setattr(gw, "resolve_secret_uris", lambda env, home: (dict(env), []))
-        key = PoolKey.from_register(_register_frame(server_name="kirocrew-cron"))
+        key = PoolKey.from_register(_register_frame(server_name="ajcrew-cron"))
         got, was_spawned = await gw._acquire_backend(
             BackendPool(max_backends=4),
             key,
-            lambda k: ("kirocrew", ["mcp-cron"], {}, k.work_dir),
+            lambda k: ("ajcrew", ["mcp-cron"], {}, k.work_dir),
         )
 
         assert got is backend and was_spawned
@@ -1155,20 +1149,20 @@ class TestSpawnsOwnControlPlane:
     @pytest.mark.asyncio
     @pytest.mark.parametrize(
         ("server_name", "command", "args"),
-        [("kirocrew-cron", "kirocrew", ["mcp-cron"]), ("echo-mcp", "echo-server", ["--stdio"])],
+        [("ajcrew-cron", "ajcrew", ["mcp-cron"]), ("echo-mcp", "echo-server", ["--stdio"])],
         ids=["control-plane", "third-party"],
     )
     async def test_utf8_pinning_is_applied_after_the_verdict_for_every_backend(
         self, monkeypatch: pytest.MonkeyPatch, server_name: str, command: str, args: list[str]
     ) -> None:
         """The classifier is handed a ``PYTHON*``-free environment and the child
-        still receives Kiro Crew's UTF-8 pair. Re-asserting the pair before the
+        still receives Aj Crew's UTF-8 pair. Re-asserting the pair before the
         verdict would deny every control plane its own token; dropping it would
         let a pooled interpreter build stdio from a Windows ANSI codepage."""
         from test_mcp_gateway_spawn_gate import _fake_backend, _register_frame
 
-        from kiro_crew.mcp_gateway.pool import BackendPool, PoolKey
-        from kiro_crew.platform_compat import _UTF8_PROCESS_ENV
+        from aj_crew.mcp_gateway.pool import BackendPool, PoolKey
+        from aj_crew.platform_compat import _UTF8_PROCESS_ENV
 
         classifier_env: dict[str, str] = {}
         spawned_env: dict[str, str] = {}
@@ -1178,7 +1172,7 @@ class TestSpawnsOwnControlPlane:
             name: str, cmd: str, argv: Any, *, env: Any, work_dir: Any, denial: Any
         ) -> bool:
             classifier_env.update(env)
-            return name == "kirocrew-cron"
+            return name == "ajcrew-cron"
 
         async def fake_spawn(**kwargs: Any) -> Any:
             spawned_env.update(kwargs["env"])
@@ -1200,23 +1194,21 @@ class TestSpawnsOwnControlPlane:
         assert not [k for k in classifier_env if k.upper().startswith("PYTHON")]
         for env_key, value in _UTF8_PROCESS_ENV.items():
             assert spawned_env[env_key] == value
-        assert backend.control_plane is (server_name == "kirocrew-cron")
+        assert backend.control_plane is (server_name == "ajcrew-cron")
 
     def test_utf8_pinning_keeps_the_real_fence_on_our_side(self, managed: dict[str, Any]) -> None:
         """The pair the spawn site adds is exactly what the real classifier
         would deny, which is why it is added only after the verdict."""
-        from kiro_crew.platform_compat import _UTF8_PROCESS_ENV
+        from aj_crew.platform_compat import _UTF8_PROCESS_ENV
 
-        assert gw._spawns_own_control_plane(
-            "kirocrew-core", managed["command"], ["mcp-core"], env={}
-        )
+        assert gw._spawns_own_control_plane("ajcrew-core", managed["command"], ["mcp-core"], env={})
         assert not gw._spawns_own_control_plane(
-            "kirocrew-core", managed["command"], ["mcp-core"], env=dict(_UTF8_PROCESS_ENV)
+            "ajcrew-core", managed["command"], ["mcp-core"], env=dict(_UTF8_PROCESS_ENV)
         )
 
 
 class TestModuleFormShadowing:
-    """A managed ``<python> -m kiro_crew <sub>`` still needs a token fence.
+    """A managed ``<python> -m aj_crew <sub>`` still needs a token fence.
 
     The fixed CWD or launcher root must not shadow this process's package.
     The complete Python environment namespace denies the token without
@@ -1230,19 +1222,19 @@ class TestModuleFormShadowing:
     def module_entry(self, monkeypatch: pytest.MonkeyPatch) -> dict[str, Any]:
         entry = {
             "command": sys.executable,
-            "args": ["-s", "-P", "-m", "kiro_crew", self.SUB],
+            "args": ["-s", "-P", "-m", "aj_crew", self.SUB],
         }
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         monkeypatch.setattr(
             agent_mod,
             "managed_mcp_spec_entry",
-            lambda name, **_kw: dict(entry) if name == "kirocrew-cron" else None,
+            lambda name, **_kw: dict(entry) if name == "ajcrew-cron" else None,
         )
         return entry
 
     def _ours(self, entry: dict[str, Any], **kw: Any) -> bool:
-        return gw._spawns_own_control_plane("kirocrew-cron", entry["command"], entry["args"], **kw)
+        return gw._spawns_own_control_plane("ajcrew-cron", entry["command"], entry["args"], **kw)
 
     def test_a_clean_project_cwd_is_ours(
         self, module_entry: dict[str, Any], tmp_path: Path
@@ -1250,43 +1242,43 @@ class TestModuleFormShadowing:
         (tmp_path / "README.md").write_text("not a package")
         assert self._ours(module_entry, env={}, work_dir=tmp_path)
 
-    def test_a_project_carrying_its_own_kiro_crew_package_is_not(
+    def test_a_project_carrying_its_own_aj_crew_package_is_not(
         self, module_entry: dict[str, Any], tmp_path: Path
     ) -> None:
-        (tmp_path / "kiro_crew").mkdir()
-        (tmp_path / "kiro_crew" / "__init__.py").write_text("")
+        (tmp_path / "aj_crew").mkdir()
+        (tmp_path / "aj_crew" / "__init__.py").write_text("")
         assert not self._ours(module_entry, env={}, work_dir=tmp_path)
 
     # The extension suffix is the platform's own (``.so`` / ``.pyd``): the
     # classifier asks the import system for its suffixes, so the test must too.
     @pytest.mark.parametrize("suffix", [".py", ".pyc", importlib.machinery.EXTENSION_SUFFIXES[-1]])
-    def test_a_project_carrying_a_kiro_crew_module_file_is_not(
+    def test_a_project_carrying_a_aj_crew_module_file_is_not(
         self, module_entry: dict[str, Any], tmp_path: Path, suffix: str
     ) -> None:
-        (tmp_path / f"kiro_crew{suffix}").write_bytes(b"")
+        (tmp_path / f"aj_crew{suffix}").write_bytes(b"")
         assert not self._ours(module_entry, env={}, work_dir=tmp_path)
 
     def test_a_namespace_directory_does_not_shadow(
         self, module_entry: dict[str, Any], tmp_path: Path
     ) -> None:
         """No ``__init__.py``: the import system scans past it to the real package."""
-        (tmp_path / "kiro_crew").mkdir()
+        (tmp_path / "aj_crew").mkdir()
         assert self._ours(module_entry, env={}, work_dir=tmp_path)
 
     def test_our_own_checkout_as_cwd_is_ours(self, module_entry: dict[str, Any]) -> None:
         """A dev gateway running from ``src/`` with ``src/`` as the project CWD
         loads the very package this process runs -- that is not a shadow."""
-        import kiro_crew
+        import aj_crew
 
-        src = Path(kiro_crew.__file__).resolve().parent.parent
+        src = Path(aj_crew.__file__).resolve().parent.parent
         assert self._ours(module_entry, env={}, work_dir=src)
 
     def test_pythonpath_can_shadow_too(self, module_entry: dict[str, Any], tmp_path: Path) -> None:
         clean = tmp_path / "project"
         clean.mkdir()
         foreign = tmp_path / "lib"
-        (foreign / "kiro_crew").mkdir(parents=True)
-        (foreign / "kiro_crew" / "__init__.py").write_text("")
+        (foreign / "aj_crew").mkdir(parents=True)
+        (foreign / "aj_crew" / "__init__.py").write_text("")
         assert self._ours(module_entry, env={}, work_dir=clean)
         assert not self._ours(module_entry, env={"PYTHONPATH": str(foreign)}, work_dir=clean)
         # Relative values are non-empty too; no child-root model is consulted.
@@ -1307,7 +1299,7 @@ class TestModuleFormShadowing:
         """A zipimport package bypassed the old directory-and-suffix scan."""
         archive = tmp_path / "foreign.egg"
         with zipfile.ZipFile(archive, "w") as bundle:
-            bundle.writestr("kiro_crew/__init__.py", "")
+            bundle.writestr("aj_crew/__init__.py", "")
         assert not self._ours(module_entry, env={"PYTHONPATH": str(archive)}, work_dir=tmp_path)
 
     def test_any_non_empty_pythonhome_denies_the_token(
@@ -1358,8 +1350,8 @@ class TestModuleFormShadowing:
         than disabling it and ``PYTHONSAFEPATH`` does not cover it either.
         """
         user_site = tmp_path / "user-site"
-        (user_site / "kiro_crew").mkdir(parents=True)
-        (user_site / "kiro_crew" / "__init__.py").write_text("")
+        (user_site / "aj_crew").mkdir(parents=True)
+        (user_site / "aj_crew" / "__init__.py").write_text("")
         monkeypatch.setattr(gw.site, "ENABLE_USER_SITE", True)
         monkeypatch.setattr(gw.site, "getusersitepackages", lambda: str(user_site))
 
@@ -1381,10 +1373,10 @@ class TestModuleFormShadowing:
         Disabling user-site would break that shape outright, so the check must
         compare the package it finds rather than refuse the root's existence.
         """
-        ours = Path(gw.kiro_crew.__file__).resolve().parent
+        ours = Path(gw.aj_crew.__file__).resolve().parent
         user_site = tmp_path / "user-site"
         user_site.mkdir()
-        (user_site / "kiro_crew").symlink_to(ours, target_is_directory=True)
+        (user_site / "aj_crew").symlink_to(ours, target_is_directory=True)
         monkeypatch.setattr(gw.site, "ENABLE_USER_SITE", True)
         monkeypatch.setattr(gw.site, "getusersitepackages", lambda: str(user_site))
 
@@ -1420,8 +1412,8 @@ class TestModuleFormShadowing:
         """Its own package lives there; switching user-site off would break it."""
         user_site = tmp_path / "user-site"
         user_site.mkdir()
-        (user_site / "kiro_crew").symlink_to(
-            Path(gw.kiro_crew.__file__).resolve().parent, target_is_directory=True
+        (user_site / "aj_crew").symlink_to(
+            Path(gw.aj_crew.__file__).resolve().parent, target_is_directory=True
         )
         monkeypatch.setattr(gw.site, "ENABLE_USER_SITE", True)
         monkeypatch.setattr(gw.site, "getusersitepackages", lambda: str(user_site))
@@ -1449,14 +1441,14 @@ class TestModuleFormShadowing:
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         """``-P``/``-I`` semantics may change; the token fence stays stricter."""
-        entry = {"command": sys.executable, "args": ["-P", "-s", "-m", "kiro_crew", self.SUB]}
-        import kiro_crew.agent as agent_mod
+        entry = {"command": sys.executable, "args": ["-P", "-s", "-m", "aj_crew", self.SUB]}
+        import aj_crew.agent as agent_mod
 
         monkeypatch.setattr(agent_mod, "managed_mcp_spec_entry", lambda name, **_kw: dict(entry))
-        (tmp_path / "kiro_crew").mkdir()
-        (tmp_path / "kiro_crew" / "__init__.py").write_text("")
+        (tmp_path / "aj_crew").mkdir()
+        (tmp_path / "aj_crew" / "__init__.py").write_text("")
         assert not self._ours(entry, env={}, work_dir=tmp_path)
         assert not self._ours(entry, env={"PYTHONPATH": str(tmp_path)}, work_dir=tmp_path)
-        isolated = {"command": sys.executable, "args": ["-I", "-m", "kiro_crew", self.SUB]}
+        isolated = {"command": sys.executable, "args": ["-I", "-m", "aj_crew", self.SUB]}
         monkeypatch.setattr(agent_mod, "managed_mcp_spec_entry", lambda name, **_kw: dict(isolated))
         assert not self._ours(isolated, env={"PYTHONPATH": str(tmp_path)}, work_dir=tmp_path)

@@ -17,7 +17,7 @@ from pathlib import Path
 import member_essential_context_helpers
 import pytest
 
-from kiro_crew import member_essential_context as _mec
+from aj_crew import member_essential_context as _mec
 
 _close_skills_loaders = member_essential_context_helpers._close_skills_loaders
 env = member_essential_context_helpers.env

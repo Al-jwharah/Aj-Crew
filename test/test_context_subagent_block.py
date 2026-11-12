@@ -15,15 +15,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.context import ContextBuilder
-from kiro_crew.context_assembly import sections
-from kiro_crew.mate_worker import (
+from aj_crew.context import ContextBuilder
+from aj_crew.context_assembly import sections
+from aj_crew.mate_worker import (
     MATE_CONDUCTOR_AGENT,
     MATE_CONDUCTOR_EXCLUDED_TOOLS,
     MATE_WORKER_AGENT,
 )
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 _SHIPPED_PROMPT = Path(sections.__file__).resolve().parents[1] / "config" / "prompt.md"
 # Phrases only the full span carries.
@@ -40,7 +40,7 @@ _SPAN_ONLY = (
 
 @pytest.fixture
 def builder(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> ContextBuilder:
-    monkeypatch.setattr("kiro_crew.context._prompt_path", lambda **_kw: _SHIPPED_PROMPT)
+    monkeypatch.setattr("aj_crew.context._prompt_path", lambda **_kw: _SHIPPED_PROMPT)
     return ContextBuilder(
         memory=MemoryStore(workspace=tmp_path / "ws"),
         skills=SkillsLoader(skills_path=tmp_path / "skills", install_builtins=False),
@@ -105,7 +105,7 @@ class TestTheConductor:
         assert set(re.findall(r"`([a-z_]+)`", rule)) <= excluded
 
 
-@pytest.mark.parametrize("agent", [None, "kirocrew", MATE_WORKER_AGENT])
+@pytest.mark.parametrize("agent", [None, "ajcrew", MATE_WORKER_AGENT])
 def test_every_other_agent_keeps_the_span(builder: ContextBuilder, agent: str | None) -> None:
     prompt = _resolve(builder, agent)
     for phrase in _SPAN_ONLY:

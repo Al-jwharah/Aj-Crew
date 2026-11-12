@@ -26,7 +26,7 @@ import functools
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-RUNTIME = ROOT / "src" / "kiro_crew" / "apps" / "builtins" / "aws_control" / "crew" / "runtime"
+RUNTIME = ROOT / "src" / "aj_crew" / "apps" / "builtins" / "aws_control" / "crew" / "runtime"
 SIDECAR = RUNTIME / "container" / "sidecar"
 FACADE = SIDECAR / "backup.py"
 CORPUS = RUNTIME / "container_tests"

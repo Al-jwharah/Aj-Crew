@@ -10,7 +10,7 @@
     docs_url: docs/build/gui-user-test.md   # optional: where the feature is documented
     summary: one line for the report table
     preconditions:
-      seed: rich                         # KIROCREW_HOME fixture the target boots from
+      seed: rich                         # AJCREW_HOME fixture the target boots from
       members: []                        # crew member slugs boot.sh adds to config.agents
       start_url: /settings               # path the browser opens (token is appended)
       fresh_target: false                # true: reads the target as boot left it (runs first)
@@ -115,7 +115,7 @@ MAX_SECONDS_CEILING = 900
 #: expert path, or to measure the channel's own cost.
 PERSONAS: dict[str, str] = {
     "new-user": (
-        "WHO YOU ARE: this is your first time using Kiro Crew. You have not read its documentation "
+        "WHO YOU ARE: this is your first time using Aj Crew. You have not read its documentation "
         "and nobody has shown it to you. You have used ordinary chat apps and a code editor before, "
         "so you know what a sidebar, a settings page and a message box are, but every name, icon "
         "and layout in THIS app is new to you. You are patient and honest about what you do not "

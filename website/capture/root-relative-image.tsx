@@ -21,7 +21,7 @@ const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
 const file = params.get('file') || ''
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 // The broken-image chip's HEAD probe goes through fetch, which page.route does
 // not see for a same-origin dev-server request in every Chromium build; answer

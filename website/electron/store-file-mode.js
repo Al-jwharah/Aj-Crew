@@ -1,7 +1,7 @@
 "use strict";
 
 // Owner-only mode for the shell's electron-store files (config.json and Mochi's
-// mochi-machine.json). config.json holds the remote hosts and the kirocrew
+// mochi-machine.json). config.json holds the remote hosts and the ajcrew
 // binary path the app runs over ssh, so another local account must not be able
 // to read or rewrite it.
 //

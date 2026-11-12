@@ -187,7 +187,7 @@ function createHolderDecision({
   async function askAboutExistingGateway(kind, {
     localOwner, orphaned = false, oldVersion = "", appVersion = app.getVersion(),
   }) {
-    const stopCommand = `kirocrew stop --port ${PORT}`;
+    const stopCommand = `ajcrew stop --port ${PORT}`;
     const serviceNote = localOwner === "service"
       ? "\nIf the gateway starts again automatically, stop or update the service that restarts it."
       : "";
@@ -195,7 +195,7 @@ function createHolderDecision({
       const { response } = await dialog.showMessageBox({
         type: "warning",
         message: "The gateway is not responding.",
-        detail: `A Kiro Crew gateway for this data folder is running on port ${PORT} but has not answered for at least ${Math.round(STUCK_GATEWAY_GRACE_MS / 1000)} seconds.\n\nStop and restart stops that gateway and starts a fresh one. Anything the stuck gateway was still doing is stopped with it.${serviceNote ? "\nIf a background service restarts it automatically, Kiro Crew connects to it once it answers." : ""}`,
+        detail: `An Aj Crew gateway for this data folder is running on port ${PORT} but has not answered for at least ${Math.round(STUCK_GATEWAY_GRACE_MS / 1000)} seconds.\n\nStop and restart stops that gateway and starts a fresh one. Anything the stuck gateway was still doing is stopped with it.${serviceNote ? "\nIf a background service restarts it automatically, Aj Crew connects to it once it answers." : ""}`,
         buttons: ["Stop and restart", "Quit"],
         defaultId: 0,
         cancelId: 1,
@@ -208,7 +208,7 @@ function createHolderDecision({
       await dialog.showMessageBox({
         type: "warning",
         message: "The gateway is not responding.",
-        detail: `A Kiro Crew gateway for this data folder is running on port ${PORT} but has not answered for at least ${Math.round(STUCK_GATEWAY_GRACE_MS / 1000)} seconds.\n\nTo fix it, quit Kiro Crew.\nRun this command in Terminal:\n${stopCommand}${serviceNote}\nThen reopen Kiro Crew.`,
+        detail: `An Aj Crew gateway for this data folder is running on port ${PORT} but has not answered for at least ${Math.round(STUCK_GATEWAY_GRACE_MS / 1000)} seconds.\n\nTo fix it, quit Aj Crew.\nRun this command in Terminal:\n${stopCommand}${serviceNote}\nThen reopen Aj Crew.`,
         buttons: ["Quit"],
         defaultId: 0,
         cancelId: 0,
@@ -229,7 +229,7 @@ function createHolderDecision({
     const { response } = await dialog.showMessageBox({
       type: "warning",
       message: "The gateway is still running an older version.",
-      detail: `This app is version ${appVersion}. The gateway is still running version ${oldVersion}.\n\nContinue will try to connect to the existing gateway; updated features may be unavailable.\n\nTo finish the update, quit Kiro Crew.\nRun this command in Terminal:\n${stopCommand}${serviceNote}\nThen reopen Kiro Crew.`,
+      detail: `This app is version ${appVersion}. The gateway is still running version ${oldVersion}.\n\nContinue will try to connect to the existing gateway; updated features may be unavailable.\n\nTo finish the update, quit Aj Crew.\nRun this command in Terminal:\n${stopCommand}${serviceNote}\nThen reopen Aj Crew.`,
       buttons: ["Continue with existing gateway", "Quit"],
       defaultId: 0,
       cancelId: 0,
@@ -240,7 +240,7 @@ function createHolderDecision({
   /**
    * Launch found the port held but no health answer. Today's answer is to
    * spawn anyway. That stays the answer for every holder except one: a local
-   * Kiro Crew gateway for this app's own data folder that keeps failing its
+   * Aj Crew gateway for this app's own data folder that keeps failing its
    * health check past the grace window. That one is offered a stop-and-restart.
    *
    * @returns {Promise<"spawn"|"healthy"|"abort"|{stopFailed:number[]}>}
@@ -249,7 +249,7 @@ function createHolderDecision({
     if (!getRunLocalGateway() || getRemoteHostConfig(store, PORT)?.host) return "spawn";
     if ((await probeGatewayPortBinding(PORT)) !== "bound") return "spawn";
     const localOwner = await probeGatewayPortOwner(PORT);
-    if (localOwner !== "kirocrew" && localOwner !== "service") return "spawn";
+    if (localOwner !== "ajcrew" && localOwner !== "service") return "spawn";
     const provenPid = await sameHomeGatewayPid();
     if (!provenPid) return "spawn";
     sendStatus("Waiting for the existing gateway to respond…");
@@ -261,7 +261,7 @@ function createHolderDecision({
       catch { /* still not answering */ }
     }
     glog(`stuck gateway: :${PORT} is held by this data folder's gateway (owner=${localOwner}) and failed its health check for ${STUCK_GATEWAY_GRACE_MS}ms — offering stop and restart`);
-    // `kirocrew stop --expect-pid` pins its signal with a pidfd, which only
+    // `ajcrew stop --expect-pid` pins its signal with a pidfd, which only
     // Linux has. Elsewhere the app names the command and stops nothing.
     if (processObj.platform !== "linux") {
       await askAboutExistingGateway("stuck-manual", { localOwner });
@@ -346,14 +346,14 @@ function createHolderDecision({
     let bundleVersion = "";
     const bundledGateway = getRunLocalGateway()
       && health?.version !== app.getVersion()
-      && (localOwner === "kirocrew" || localOwner === "service")
+      && (localOwner === "ajcrew" || localOwner === "service")
       && (await isCurrentBundleGateway()
         || Boolean(bundleVersion = await previousManagedVersionFolder(health?.version)));
     const decision = decideGatewayAction(app.getVersion(), health, {
       localOwner, bundledGateway, bundleVersion, ownEdition: readBakedEdition(),
     });
     // The rule this enforces, as one sentence: adopt a responder on this port
-    // only when the port can be attributed either to us (a Kiro Crew LISTEN
+    // only when the port can be attributed either to us (an Aj Crew LISTEN
     // owner, or a service-managed one) or to a crew the user configured here.
     //
     // It is deliberately NOT gated on which reuse reason decideGatewayAction
@@ -367,12 +367,12 @@ function createHolderDecision({
     // any 403 is seen, so there is no recovery after the fact.
     //
     // A `foreign` owner with no `remoteHosts` entry is exactly "cannot attribute
-    // it". `kirocrew` and `service` still adopt, and so do `none` and `unknown`:
+    // it". `ajcrew` and `service` still adopt, and so do `none` and `unknown`:
     // the fail-open this narrows is preserved wherever the probe did not
     // positively find someone else holding the port.
     //
     // `warn-stale` cannot reach here with a `foreign` owner: the bundled-path
-    // probe above only runs for a `kirocrew` or `service` owner, so that action
+    // probe above only runs for an `ajcrew` or `service` owner, so that action
     // is unreachable without positive local attribution.
     if (decision.action === "reuse" && localOwner === "foreign" && !remoteHost) {
       glog(`:${PORT} is served by a process this app did not start and no remote crew is configured there — refusing to adopt it`);

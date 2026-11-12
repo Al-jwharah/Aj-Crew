@@ -82,7 +82,7 @@ beforeEach(() => {
   localStorage.clear()
   applyLockedControls([])
   // Every read the page makes, stubbed: a real one cannot succeed under vitest.
-  vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({} as never)
+  vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({} as never)
   vi.spyOn(api, 'dashboardConfig').mockResolvedValue({ decisions_enabled: true } as never)
   vi.spyOn(api, 'sharedCrewPreview').mockResolvedValue(null)
   vi.spyOn(api, 'getDecisionsConsent').mockResolvedValue({

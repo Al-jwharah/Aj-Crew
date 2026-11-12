@@ -9,8 +9,8 @@ trustworthy, and never raises. The gauge is registered through the same
 
 from __future__ import annotations
 
-from kiro_crew.crew_log import otel_session_tree_roots as roots
-from kiro_crew.crew_log.session_tree import TreeNode
+from aj_crew.crew_log import otel_session_tree_roots as roots
+from aj_crew.crew_log.session_tree import TreeNode
 
 
 def _node(slot: str, parent: str | None = None, cycle: bool = False) -> TreeNode:
@@ -36,7 +36,7 @@ class _FakeProjection:
 
 
 def _install_projection(monkeypatch, proj: _FakeProjection) -> None:
-    monkeypatch.setattr("kiro_crew.crew_log.session_tree_projection.projection", lambda: proj)
+    monkeypatch.setattr("aj_crew.crew_log.session_tree_projection.projection", lambda: proj)
 
 
 def _one_branched() -> dict[str, TreeNode]:
@@ -87,7 +87,7 @@ class TestTheRead:
         def _raise():
             raise RuntimeError("projection unavailable")
 
-        monkeypatch.setattr("kiro_crew.crew_log.session_tree_projection.projection", _raise)
+        monkeypatch.setattr("aj_crew.crew_log.session_tree_projection.projection", _raise)
         assert roots.read_roots_with_children() is None
 
 
@@ -123,7 +123,7 @@ class TestRegistration:
         assert created[0][1] == (roots._roots_callback,)
 
     def test_the_metric_name_validates(self) -> None:
-        from kiro_crew.metrics.schema import validate_name
+        from aj_crew.metrics.schema import validate_name
 
         # Core namespace, no raise.
         assert validate_name(roots.SESSION_TREE_ROOTS_METRIC) == roots.SESSION_TREE_ROOTS_METRIC

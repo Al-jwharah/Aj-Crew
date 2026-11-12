@@ -9,7 +9,7 @@ each route returns, and the logger every route writes to.
 
 Everything is patched at the ``routes`` / ``store`` / ``provider`` / model
 boundary; nothing spawns ``gh``, calls a model, or writes outside the per-test
-``KIROCREW_HOME``. Concurrency tests hold the shared operation open on an event
+``AJCREW_HOME``. Concurrency tests hold the shared operation open on an event
 rather than sleeping.
 """
 
@@ -30,18 +30,18 @@ from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 from dashboard_owner_helpers import NoConfiguredOwner
 
-from kiro_crew import llm_helpers
-from kiro_crew.apps.builtins.issue_radar.backend import github_client as gh
-from kiro_crew.apps.builtins.issue_radar.backend import provider, routes, store
-from kiro_crew.start_priority import StartPriority
-from kiro_crew.testing.wait import await_until, finished
+from aj_crew import llm_helpers
+from aj_crew.apps.builtins.issue_radar.backend import github_client as gh
+from aj_crew.apps.builtins.issue_radar.backend import provider, routes, store
+from aj_crew.start_priority import StartPriority
+from aj_crew.testing.wait import await_until, finished
 
 BASE = "/api/apps/issue-radar"
 SHA = "a" * 40
 OTHER_SHA = "b" * 40
 KEY = provider.key_from_parts("o", "r")
 REG = "github:github.com:o/r"
-LOGGER = "kirocrew.app.issue-radar"
+LOGGER = "ajcrew.app.issue-radar"
 
 
 def _get(path: str, query: dict | None = None, app: web.Application | None = None) -> web.Request:
@@ -328,7 +328,7 @@ class TestProbeCoalescing(unittest.IsolatedAsyncioTestCase):
         with (
             mock.patch.object(gh, "probe_open_list", return_value=dict(READING)) as github_probe,
             mock.patch(
-                "kiro_crew.apps.builtins.issue_radar.backend.gitlab_client.probe_open_list",
+                "aj_crew.apps.builtins.issue_radar.backend.gitlab_client.probe_open_list",
                 gitlab_probe,
             ),
         ):
@@ -811,7 +811,7 @@ class TestModelAdapter(unittest.IsolatedAsyncioTestCase):
                 await routes._run_oneshot_model(_get("issue-ai", app=app), "k1", "prompt")
         # No owner claim on the request: not a person's click, so BACKGROUND.
         state.sessions.get_or_create.assert_awaited_once_with(
-            "k1", agent="kirocrew-lite", start_priority=StartPriority.BACKGROUND
+            "k1", agent="ajcrew-lite", start_priority=StartPriority.BACKGROUND
         )
         self.assertIs(
             stream.await_args.kwargs["approval_policy"], llm_helpers.ToolApprovalPolicy.REJECT_ALL
@@ -834,7 +834,7 @@ class TestModelAdapter(unittest.IsolatedAsyncioTestCase):
         self.assertRegex(key, r"^issue-radar-reco:o/r:[0-9a-f]{32}$")
         self.assertEqual(
             state.sessions.get_or_create.await_args.kwargs,
-            {"agent": "kirocrew-lite", "start_priority": StartPriority.BACKGROUND},
+            {"agent": "ajcrew-lite", "start_priority": StartPriority.BACKGROUND},
         )
         self.assertIs(
             stream.await_args.kwargs["approval_policy"], llm_helpers.ToolApprovalPolicy.REJECT_ALL
@@ -1053,7 +1053,7 @@ class TestConfigRoutesKeepTheirProvider(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(remove.call_args, mock.call("g", "p", **identity))
 
     async def test_account_routes_dispatch_to_the_requested_provider(self):
-        gitlab = "kiro_crew.apps.builtins.issue_radar.backend.gitlab_client"
+        gitlab = "aj_crew.apps.builtins.issue_radar.backend.gitlab_client"
         with (
             mock.patch(f"{gitlab}.get_current_login", return_value="alice.smith") as login,
             mock.patch(
@@ -1093,7 +1093,7 @@ class TestConfigRoutesKeepTheirProvider(unittest.IsolatedAsyncioTestCase):
             {"owner": "g", "repo": "p", "provider": "gitlab", "host": "gitlab.com"},
             {"owner": "o", "repo": "bad"},
         ]
-        gitlab = "kiro_crew.apps.builtins.issue_radar.backend.gitlab_client"
+        gitlab = "aj_crew.apps.builtins.issue_radar.backend.gitlab_client"
         with (
             mock.patch.object(store, "list_connected_repos", return_value=rows),
             mock.patch(

@@ -14,7 +14,7 @@ table below), where each crew is a standing agent with its own thread.
 
 The name now belongs to something else: **Ultra Mode** is the composer switch that
 runs a dashboard chat on a conductor template -- `agent.crew_mode_agent`, default
-`kirocrew-conductor`, with the Ultra Mode family in `kiro_crew/crew_mode.py` (a UI over
+`ajcrew-conductor`, with the Ultra Mode family in `aj_crew/crew_mode.py` (a UI over
 that agent; its rules are in [Ultra Mode](#ultra-mode) below, its session-control
 verbs in [session-control](session-control.md)). It shares nothing with the
 retired slot mode: no `"crew"` mode value, no `crew_chat.py`, no queue or topic
@@ -27,8 +27,8 @@ The person sees the chat; the crew it dispatched is the chat's to show.
 
 | Rule | Where |
 |---|---|
-| `agent.crew_mode_agent` names THE conductor a chat switches to when Ultra Mode is turned on (default `kirocrew-team-lead`); read live from the config snapshot, so no restart | `config/sections_agent.py`, `crew_mode.crew_mode_agent` |
-| `kirocrew-team-lead` can call every server an edition contributes (`McpToolingProvider.extra_mcp_servers()`) that its spec mounts: each gets an `@<server>` ref in `tools`, which `build_agent_config()` leaves out; `allowedTools` gains nothing, so those tools prompt. A standalone build contributes none, so its lead spec is unchanged | `service_agents._install_team_lead_agent`, `service_agents._register_edition_refs` |
+| `agent.crew_mode_agent` names THE conductor a chat switches to when Ultra Mode is turned on (default `ajcrew-team-lead`); read live from the config snapshot, so no restart | `config/sections_agent.py`, `crew_mode.crew_mode_agent` |
+| `ajcrew-team-lead` can call every server an edition contributes (`McpToolingProvider.extra_mcp_servers()`) that its spec mounts: each gets an `@<server>` ref in `tools`, which `build_agent_config()` leaves out; `allowedTools` gains nothing, so those tools prompt. A standalone build contributes none, so its lead spec is unchanged | `service_agents._install_team_lead_agent`, `service_agents._register_edition_refs` |
 | Every conductor is Ultra Mode: `conductor_agents` is the shipped conductor templates plus the configured one and the deprecated names that resolve to it; the catalog lists them as `conductor_agents` and names `crew_mode_agent`, and masks both for a non-owner | `crew_mode.conductor_agents`, `handlers/agent_catalog.py` |
 | A chat that turned Ultra Mode on carries the stamp `crew_mode_agent` (the slot field, persisted with the slot's own metadata), so a root on a custom conductor absent from the config stays Ultra Mode | `crew_mode.STAMP_FIELD`, `slot_persistence/metadata_codec.py` |
 | An **Ultra Mode root** is a root session (nothing dispatched it) running a conductor as a template. Every session it dispatched, directly or through another, is its **crew member**: the slot list stamps `crew_mode_root: true` on the root and `crew_root: <root key>` on each member, following the persisted lineage past closed sessions, so a member whose root's tab closed after this gateway saw the root, or one reopened from History while its root is known, keeps its root. The known roots are in memory: a root still closed when the gateway starts is not remembered until it is reopened (the migration part reads closed roots from saved metadata) | `crew_mode.stamp_rows`, `state_parts/slots_frame.py`; the lineage patch frame carries the two stamps when they change (`state_parts/slots_push.py`) |
@@ -38,12 +38,12 @@ The person sees the chat; the crew it dispatched is the chat's to show.
 | **The person's session list leaves crew members out.** `GET /api/chat/slots` drops `crew_root` rows for a person; `?crew=all` keeps them (the dashboard reads this and filters on the client); a read with `internal_auth` (an agent's folder, status and lineage tools) keeps every row | `crew_mode.list_view`, `chat_api/slot_detail.py` |
 | An Ultra Mode chat and its crew are filed in no folder: `session_create` and `session_fork` from inside the tree leave the child unfiled and say so | [session-control](session-control.md) § `session_create`'s folder |
 | `dashboard.new_chat_crew_mode` (default off; Settings → Chat → Sessions → **Start New Chats in Ultra Mode**, shown while the Ultra Mode preview is on) turns Ultra Mode on for the person's New chat the way a press of the chip does: the create is unchanged, then the ordinary agent switch moves the new chat to the conductor before it opens, so the chip starts pressed and can still be turned off before the first message. Only the entry points that pass `crewModeDefault` (New chat in the sidebar and a folder's `+`, the new-chat shortcut, the palette and command bar, the Sessions page, an embed tab, a Split View pane, the phone session menu's New chat, the empty chat page) ask for it, and only a created chat the chip would be offered on switches: still on the default agent after the server applied any folder or default-folder pin, no chat mode, Persistent, a default agent that is no conductor. A catalog not read yet is read first. A failed read or a refused switch leaves the plain chat. A first send from a chat page with no session open keeps the default agent | `store/chat/lifecycle.ts` (`createSlot`, `startNewChatInCrewMode`), `lib/crewMode.ts` (`newChatCrewModeAgent`) |
-| A new chat born on a conductor counts once in `kirocrew.crew_mode.turned_on`; every new chat counts once in `kirocrew.crew_mode.new_chats` with `crew_mode` true or false; no attribute carries a key, a title or an agent name | `metrics/crew_mode.py`, [metrics](metrics.md) |
+| A new chat born on a conductor counts once in `ajcrew.crew_mode.turned_on`; every new chat counts once in `ajcrew.crew_mode.new_chats` with `crew_mode` true or false; no attribute carries a key, a title or an agent name | `metrics/crew_mode.py`, [metrics](metrics.md) |
 
 The design and its parts are recorded in
 `docs/decisions/2026-10-27-crew-mode-is-a-composer-switch-to-the-conductor-template.md`.
 
-A crew is not a *Remote Crew* — that is another machine running its own Kiro Crew
+A crew is not a *Remote Crew* — that is another machine running its own Aj Crew
 gateway, which this one reaches through a tunnel (see [instances.md](instances.md))
 — and not an Issue Radar *crew*, which is that app's own repository work crew
 (see [issue-radar.md](issue-radar.md)).
@@ -55,36 +55,36 @@ which restates what a member's DM session carries in its context.
 
 | File | Role |
 |---|---|
-| `src/kiro_crew/config/sections_session.py` | `KiroCrewAgentConfig` — the crew record: `kiro_agent`, `workspace`, `memory_store`, `model`, `reasoning_effort`, `display_name`, `description`, `triggers`, `source`, `session_color`, `avatar`, per-crew watchdog overrides |
-| `src/kiro_crew/config/loader_agents.py`, `src/kiro_crew/config/loader.py` | `resolve_agent_bindings` (crew to workspace / memory store / template) and `resolve_effective_model` (the default-model precedence) |
-| `src/kiro_crew/mcp_core_parts/crew.py` | `_do_select_crew` — the roster and bind bodies |
-| `src/kiro_crew/mcp_tools/control.py` | The `select_crew` tool handler and its `HANDLERS` row |
-| `src/kiro_crew/mcp_tools/control_parts/schemas.py` | The `select_crew` tool declaration |
-| `src/kiro_crew/validation_parts/messaging_session_schemas.py` | `SELECT_CREW_SCHEMA` — argument validation for that tool (imported through `kiro_crew.validation`) |
-| `src/kiro_crew/members.py` | The per-crew member space's import and patch surface: a mirror facade over the `members_parts` owners below, so every name is still read and patched through `kiro_crew.members`; new member-space code goes to the owner whose responsibility it is |
-| `src/kiro_crew/members_parts/member_space.py` | The space's layout (every file and directory name), member display names and crew ids, slugs, the containment-checked member paths, the first-welcome marker, the create-request record |
-| `src/kiro_crew/members_parts/member_sessions.py` | A member's DM session: its key and alias, the backend it routes to, the session-level MCP mounts, the member turn chokepoint |
-| `src/kiro_crew/members_parts/dm_bindings.py` | The DM-thread binding under `member-records/` and the identity it answers for a session |
-| `src/kiro_crew/members_parts/self_edit.py` | What a Bot may change on its own record: cleaning, the update, its undo, the rename |
-| `src/kiro_crew/members_parts/prompt_layers.py` | The permanent rules and the self-maintained briefing |
-| `src/kiro_crew/members_parts/member_activity.py` | The activity log |
-| `src/kiro_crew/subagent_parts/agent_policy.py` | `_validate_agent` — what an `agent=` name is checked against, and `UNADVERTISED_AGENTS` (both read and patched through `kiro_crew.subagent`) |
-| `src/kiro_crew/dashboard/handlers/agents.py` | The agents handlers' import and patch surface: `GET /api/agents`, the model picker reads and the crew model-pin checks, composed with the `agent_admin` owners below |
-| `src/kiro_crew/dashboard/agent_admin/` | Crew CRUD on `/api/agents` (`crew_records.py`, `crew_update.py`, `crew_removal.py`), the roster row serializer (`roster.py`), the Custom agents tab's detail, fork, publish and reset (`agent_detail.py`, `fork_publish.py`, `template_lineage.py`) and the default-agent write (`default_agent.py`) |
-| `src/kiro_crew/dashboard/handlers/agent_catalog.py` | Read-only `/api/agents/catalog` execution choices, with separate member and template namespaces, plus Ultra Mode's `crew_mode_agent` and `conductor_agents` |
-| `src/kiro_crew/crew_mode.py` | Ultra Mode's facts: the configured conductor (`agent.crew_mode_agent`), the one conductor set (every conductor is Ultra Mode, `conductor_agents`), the stamp that marks a chat as Ultra Mode, the known roots and the persisted lineage, which slot rows are Ultra Mode roots and which are their workers (`stamp_rows`), and the session list's view (`list_view`) |
-| `src/kiro_crew/dashboard/handlers/crew_workers.py` | An Ultra Mode root's or a Bot thread's worker list (`GET /api/chat/slots/{slot}/crew-workers`), its timeline (`GET .../crew-timeline`) and the person's steer into one worker (`POST .../crew-workers/{worker}/steer`), owner only |
-| `src/kiro_crew/crew_timeline.py` | The timeline's lanes, bars, marks, hand-offs and header, derived from recorded transcript rows only, and the named gaps it does not draw |
-| `src/kiro_crew/dashboard/handlers/agent_templates.py` | The Custom agents tab's roster (`/api/agents/templates`), create, delete with reference guard, and the read-only rule the detail PATCH applies to definition edits |
-| `website/src/pages/overview/AgentTemplatesTab.tsx` | The **Custom agents** tab of `CapabilitiesPage` (Customize): list by origin, edit the shared definition, create, delete, chat-with / enroll (an enroll invalidates `['kirocrew-agents']` and `['kirocrewConfig']`) |
-| `src/kiro_crew/dashboard/handlers/members.py` and its `members_<role>.py` owners | `/api/members` roster, thread get-or-create, rules, activity |
-| `src/kiro_crew/crew_teams.py` + `src/kiro_crew/dashboard/handlers/teams.py` | Bot teams (`teams.json` in the masked gateway-only data-home directory `crew-teams`; `/api/teams`): the Bots page's roster grouping and team view — specified under [learn-cron-dashboard](learn-cron-dashboard.md) with the members handlers |
-| `website/src/pages/KiroCrewAgentsPage.tsx` | The Bot roster, mounted as the **Bots** tab of `CapabilitiesPage` (Customize), and a host of the one Bot editor. The page holds the roster query, the create door (`NewCrewmateDialog`), the deep links (`?crew=`, `&avatar=1`, `&pane=capabilities`, `?new=1`), the fresh-roster admission latch the editor opens behind, and the editor's guide facts, and composes the roster cards, rows, toolbar and list (`KiroCrewAgentsPageRoster.tsx`) and mounts the binding fields every crew form shares (`components/crew/crewFields.tsx`; each consumer imports them from there, and the page re-exports each for its existing importers). Editing a Bot opens `components/crew/CrewEditorModal.tsx` (`CrewEditorNextDialog` driven by `useCrewEditor`), the same editor the Bots page opens in place; that hook re-exports `INHERIT_MODEL` from `crewFields.tsx` |
+| `src/aj_crew/config/sections_session.py` | `AjCrewAgentConfig` — the crew record: `kiro_agent`, `workspace`, `memory_store`, `model`, `reasoning_effort`, `display_name`, `description`, `triggers`, `source`, `session_color`, `avatar`, per-crew watchdog overrides |
+| `src/aj_crew/config/loader_agents.py`, `src/aj_crew/config/loader.py` | `resolve_agent_bindings` (crew to workspace / memory store / template) and `resolve_effective_model` (the default-model precedence) |
+| `src/aj_crew/mcp_core_parts/crew.py` | `_do_select_crew` — the roster and bind bodies |
+| `src/aj_crew/mcp_tools/control.py` | The `select_crew` tool handler and its `HANDLERS` row |
+| `src/aj_crew/mcp_tools/control_parts/schemas.py` | The `select_crew` tool declaration |
+| `src/aj_crew/validation_parts/messaging_session_schemas.py` | `SELECT_CREW_SCHEMA` — argument validation for that tool (imported through `aj_crew.validation`) |
+| `src/aj_crew/members.py` | The per-crew member space's import and patch surface: a mirror facade over the `members_parts` owners below, so every name is still read and patched through `aj_crew.members`; new member-space code goes to the owner whose responsibility it is |
+| `src/aj_crew/members_parts/member_space.py` | The space's layout (every file and directory name), member display names and crew ids, slugs, the containment-checked member paths, the first-welcome marker, the create-request record |
+| `src/aj_crew/members_parts/member_sessions.py` | A member's DM session: its key and alias, the backend it routes to, the session-level MCP mounts, the member turn chokepoint |
+| `src/aj_crew/members_parts/dm_bindings.py` | The DM-thread binding under `member-records/` and the identity it answers for a session |
+| `src/aj_crew/members_parts/self_edit.py` | What a Bot may change on its own record: cleaning, the update, its undo, the rename |
+| `src/aj_crew/members_parts/prompt_layers.py` | The permanent rules and the self-maintained briefing |
+| `src/aj_crew/members_parts/member_activity.py` | The activity log |
+| `src/aj_crew/subagent_parts/agent_policy.py` | `_validate_agent` — what an `agent=` name is checked against, and `UNADVERTISED_AGENTS` (both read and patched through `aj_crew.subagent`) |
+| `src/aj_crew/dashboard/handlers/agents.py` | The agents handlers' import and patch surface: `GET /api/agents`, the model picker reads and the crew model-pin checks, composed with the `agent_admin` owners below |
+| `src/aj_crew/dashboard/agent_admin/` | Crew CRUD on `/api/agents` (`crew_records.py`, `crew_update.py`, `crew_removal.py`), the roster row serializer (`roster.py`), the Custom agents tab's detail, fork, publish and reset (`agent_detail.py`, `fork_publish.py`, `template_lineage.py`) and the default-agent write (`default_agent.py`) |
+| `src/aj_crew/dashboard/handlers/agent_catalog.py` | Read-only `/api/agents/catalog` execution choices, with separate member and template namespaces, plus Ultra Mode's `crew_mode_agent` and `conductor_agents` |
+| `src/aj_crew/crew_mode.py` | Ultra Mode's facts: the configured conductor (`agent.crew_mode_agent`), the one conductor set (every conductor is Ultra Mode, `conductor_agents`), the stamp that marks a chat as Ultra Mode, the known roots and the persisted lineage, which slot rows are Ultra Mode roots and which are their workers (`stamp_rows`), and the session list's view (`list_view`) |
+| `src/aj_crew/dashboard/handlers/crew_workers.py` | An Ultra Mode root's or a Bot thread's worker list (`GET /api/chat/slots/{slot}/crew-workers`), its timeline (`GET .../crew-timeline`) and the person's steer into one worker (`POST .../crew-workers/{worker}/steer`), owner only |
+| `src/aj_crew/crew_timeline.py` | The timeline's lanes, bars, marks, hand-offs and header, derived from recorded transcript rows only, and the named gaps it does not draw |
+| `src/aj_crew/dashboard/handlers/agent_templates.py` | The Custom agents tab's roster (`/api/agents/templates`), create, delete with reference guard, and the read-only rule the detail PATCH applies to definition edits |
+| `website/src/pages/overview/AgentTemplatesTab.tsx` | The **Custom agents** tab of `CapabilitiesPage` (Customize): list by origin, edit the shared definition, create, delete, chat-with / enroll (an enroll invalidates `['ajcrew-agents']` and `['ajcrewConfig']`) |
+| `src/aj_crew/dashboard/handlers/members.py` and its `members_<role>.py` owners | `/api/members` roster, thread get-or-create, rules, activity |
+| `src/aj_crew/crew_teams.py` + `src/aj_crew/dashboard/handlers/teams.py` | Bot teams (`teams.json` in the masked gateway-only data-home directory `crew-teams`; `/api/teams`): the Bots page's roster grouping and team view — specified under [learn-cron-dashboard](learn-cron-dashboard.md) with the members handlers |
+| `website/src/pages/AjCrewAgentsPage.tsx` | The Bot roster, mounted as the **Bots** tab of `CapabilitiesPage` (Customize), and a host of the one Bot editor. The page holds the roster query, the create door (`NewCrewmateDialog`), the deep links (`?crew=`, `&avatar=1`, `&pane=capabilities`, `?new=1`), the fresh-roster admission latch the editor opens behind, and the editor's guide facts, and composes the roster cards, rows, toolbar and list (`AjCrewAgentsPageRoster.tsx`) and mounts the binding fields every crew form shares (`components/crew/crewFields.tsx`; each consumer imports them from there, and the page re-exports each for its existing importers). Editing a Bot opens `components/crew/CrewEditorModal.tsx` (`CrewEditorNextDialog` driven by `useCrewEditor`), the same editor the Bots page opens in place; that hook re-exports `INHERIT_MODEL` from `crewFields.tsx` |
 | `website/src/components/crew/crewEditorSections.ts` | The `CrewPaneKey` names and section facts `useCrewEditor` keeps for its deep links and dirty tracking. No dashboard editor renders a Routing, template or Capabilities pane from it, so `triggers` has no editing surface |
 | `website/src/components/CrewWakeSection.tsx` | "What wakes this agent" — schedules, deliberately distinct from `triggers` |
 | `website/src/components/CrewWebhookSection.tsx` | "Webhooks that wake this agent" — the tokens whose call runs as this crew. A token pins a template, never a crew, so it is listed for every crew that runs that template or is named like it (`webhookBoundToCrew` in `components/crew/wakesCrew.ts`; the name covers an older row that stores the template's file name), a crew with its own memory included: a hook it registers keeps its memory, so the pane may over-list but never hides a token with real access |
 | `website/src/components/chat/crewmateBubbles.ts` | A Bot's chat: what the transcript draws (`filterCrewmateChat`) and the run / corner rule for its bubbles (`crewmateRunPosition`, `crewmateBubbleClass`) |
-| `src/kiro_crew/dashboard/warm_task_brief.py` | Owner-return trigger, 30-minute away time from the in-memory last-on-screen time with a durable chat-history fallback, durable task-fingerprint claims, one ordinary Bot message (a fixed quiet line, or one bounded background call over sectioned inputs from `warm_task_brief_inputs.py` with a bounded live PR read), and stale-result suppression |
+| `src/aj_crew/dashboard/warm_task_brief.py` | Owner-return trigger, 30-minute away time from the in-memory last-on-screen time with a durable chat-history fallback, durable task-fingerprint claims, one ordinary Bot message (a fixed quiet line, or one bounded background call over sectioned inputs from `warm_task_brief_inputs.py` with a bounded live PR read), and stale-result suppression |
 | `website/src/pages/chat/CrewmateMessage.tsx` | One Bot message in its chat: the bubble alone, placed by its run position (no author line, no avatar gutter) |
 
 Crew creation reports `409 agent_exists` for both an existing name and a
@@ -141,19 +141,19 @@ is refused before anything resolves it, and a refusal is SEL-audited as
 global templates only. Project templates shadow same-named global templates
 according to discovery's existing execution precedence, not member-name precedence.
 
-Private copies and the runtime's two background-only specs, `kirocrew-lite` and
-`kirocrew-guest` (`_BACKGROUND_ONLY_FILES`, matched on
+Private copies and the runtime's two background-only specs, `ajcrew-lite` and
+`ajcrew-guest` (`_BACKGROUND_ONLY_FILES`, matched on
 the owned file, so a project checkout's own same-named spec stays an ordinary
-choice) are withheld from standalone choices. The primary `kirocrew` spec is
+choice) are withheld from standalone choices. The primary `ajcrew` spec is
 offered and leads the template rows: a chat session is a template choice, and the
 main managed agent is the default one. This is deliberately narrower than the sync
 route's exclusion, which decides enrolment as a crew member, a different question:
-the sync enrols no `source == "kirocrew"` spec, no other managed spec
-(`kirocrew_owned`: conductor, worker, knowledge, research, heartbeat, ...) and no
+the sync enrols no `source == "ajcrew"` spec, no other managed spec
+(`ajcrew_owned`: conductor, worker, knowledge, research, heartbeat, ...) and no
 generated internal spec (`is_internal_agent_spec`: a derived `<agent>--readonly`
 side-turn spec, a skill-view alias), because each is a template the runtime spawns,
 not a Bot: a row written for one would sit on the shared `default` memory store as a
-Bot nobody created, and the startup prune never removes a `kirocrew_owned` row. In
+Bot nobody created, and the startup prune never removes an `ajcrew_owned` row. In
 the catalog those shipped specs are ordinary template rows.
 Lineage is read strictly in addition to discovery's optional display enrichment:
 an unreadable lineage file cannot make a private copy appear shared. Discovery,
@@ -183,7 +183,7 @@ as** switch (Custom agent / Bot) and hands the selector one kind at a time
 resolution runs an unaliased template on `default_workspace` and Global memory, so
 no cron contract changes. Unless the config key
 `dashboard.crewmates_in_agent_picker` is on (off by default, read from the shared
-`/api/config/kirocrew` query), `useAgents.ts` withholds from `choices` every member
+`/api/config/ajcrew` query), `useAgents.ts` withholds from `choices` every member
 row a listed template already COVERS (`withoutCoveredCrewmates`): the member has no
 memory of its own (`memory_store` is `default`), runs a listed template, and has
 nothing of its own. Its row shows the first part: its workspace is
@@ -212,8 +212,8 @@ default": a session created without a Bot runs the default TEMPLATE, which
 the catalog lists as its own row (`default_agent` in the catalog response is
 `default_template(config)`) and the badge marks, so the way back from any switch
 is that template row. With the key off, a stock install's pop-up therefore lists
-the **Custom agents** group with `kirocrew` wearing the default badge, and the
-built-in `default` Bot -- shared memory, the `kirocrew` template -- is
+the **Custom agents** group with `ajcrew` wearing the default badge, and the
+built-in `default` Bot -- shared memory, the `ajcrew` template -- is
 withheld as a covered mate.
 Turning the key on lists every member; the folded `agents` list and the request
 contract below are unaffected either way.
@@ -258,7 +258,7 @@ nothing to switch to; a built-in id keeps the engine's own definition
 Bot's name on it. Measured on kiro-cli 2.23.0, with each injected entry
 carrying a distinctive description: every case variant (`Default`, `Vibe`,
 `PLAN`) and every collision with an on-disk `~/.kiro/agents/<id>.json`
-(`kirocrew-conductor`) registered the client entry (`origin: client`, the wire
+(`ajcrew-conductor`) registered the client entry (`origin: client`, the wire
 definition replacing the on-disk one), so the match is exact and
 case-sensitive. The fork suffixes past a reserved stem (`default-2`), publish
 and create refuse it as `400 template_name_reserved_by_engine` (its own code,
@@ -277,7 +277,7 @@ refusal in the user's language inside the dialog that sent the name
 
 The **Abilities** section of the Bot editor (section key `builtFrom`) is the
 **capabilities view**: "What *&lt;Bot&gt;* can do", split into two bands —
-**Comes with** (read-only: what the worker base, `kirocrew-mate-worker`,
+**Comes with** (read-only: what the worker base, `ajcrew-mate-worker`,
 provides) and **Added to** (what the Bot's own file adds beyond that base).
 Both list tools, MCP servers, skills and resources, partitioned by each
 capability row's `state` (`inherited` → Comes with, `local` → Added to). The
@@ -315,7 +315,7 @@ on a 290px card), and the toolbar carries, once a second Bot exists, a
 control's own sentence — to the Default Bot row, ringed on arrival through
 `useSettingHighlight`'s late-mount anchor `default-crewmate`; and the
 per-binding memory tips stay. The default itself is changed in
-Settings → Developer → Kiro Crew config (`KiroCrewCfgTab`), whose agents table
+Settings → Developer → Aj Crew config (`AjCrewCfgTab`), whose agents table
 already badges the default: a "Default mate" select, rendered whenever a
 Bot exists (the roster link deep-links here even with one), calls
 `PUT /api/config/default-agent` and reports a refusal in
@@ -350,7 +350,7 @@ the roster's **default Bot** (top-level `default_agent`: the badge, the
 undeletable row) and a different setting; a non-alias name in the `member`
 namespace answers `400 default_agent_not_alias` and is never rerouted to the
 template write. `GET` returns both: `default_agent`, the Bot alias (the
-Kiro Crew config tab's select), and `default_template`, the default custom agent
+Aj Crew config tab's select), and `default_template`, the default custom agent
 (`default_template(config)`), which the shared `['default-agent']` query reads
 so the Schedule page's agent column and the Worlds agent rail label an
 agent-less job or slot with the template it runs, never the alias. The
@@ -360,7 +360,7 @@ the badge marks the template row of that name, the ✓ row names that agent
 ("`atlas` is the default for new sessions"), and a Bot's chat shows no such
 row (a Bot is never the default for a new session) -- a slot stamped
 `member`, or one with no kind whose agent the roster lists as a Bot; a
-kind-less slot writes with no namespace, so the server routes the name. A default template whose spec is GONE falls back to `kirocrew` at
+kind-less slot writes with no namespace, so the server routes the name. A default template whose spec is GONE falls back to `ajcrew` at
 resolution (`default_template`): "gone" is a removed name in the landed,
 complete materialized snapshot that the edition does not supply, the evidence
 `reset_dangling_default_agent` acts on; absence alone is not evidence, since a
@@ -415,7 +415,7 @@ name; the top-level `default_agent` is a crew alias `load()` normalizes onto
 `agents`, and the template that crew runs is already counted as that crew, so
 a template merely sharing the alias is not "the default"), each schedule that DISPATCHES it
 (through `cron.dispatched_agents_from_disk(loadable_only=True)`, the ONE walk
-that encodes the dispatch rule for both this guard and `kirocrew doctor`'s
+that encodes the dispatch rule for both this guard and `ajcrew doctor`'s
 `job_agent_names_from_disk` wrapper — a multi-entry `agent_sequence` over a
 dormant `agent_id`; otherwise the captured `execution_context.template_id`
 when the record carries one, which is where the dispatcher reads the template a
@@ -618,8 +618,8 @@ confirm a row switch does, rather than greying out with the reason in a
 title); **Enroll as
 Bot** is the ordinary `POST /api/agents` with the template as
 `kiro_agent`, and its menu row says what it starts (a Bot with its own
-memory, nothing running). A successful enroll invalidates `['kirocrew-agents']`
-and `['kirocrewConfig']`: the QueryClient sets `staleTime: Infinity` and
+memory, nothing running). A successful enroll invalidates `['ajcrew-agents']`
+and `['ajcrewConfig']`: the QueryClient sets `staleTime: Infinity` and
 `POST /api/agents` pushes no `refresh` frame, so without it the Bots tab
 would keep serving a cached roster that lacks the new mate. The unsaved-changes bar names how many Bots a
 save affects and says in one line what a save does and does not reach (save;
@@ -666,18 +666,18 @@ MCP server reaches an already-running chat only after a relaunch.) The MCP serve
 the acronym ("external tool connections"). The Add tool
 input keeps the words "Add tool" visible as its label while open (one control
 in two states, not two controls), is wide enough for its example placeholder (`fs_write or @github/…`)
-and offers a datalist of kiro-cli's native tool names, Kiro Crew's
-background-subagent tools (`@kirocrew-core/spawn_run`, `spawn_list`,
+and offers a datalist of kiro-cli's native tool names, Aj Crew's
+background-subagent tools (`@ajcrew-core/spawn_run`, `spawn_list`,
 `spawn_status`, `spawn_steer`, `spawn_continue`, `spawn_release`), plus every name the
 template already grants (offered, not enforced). Until an editable template
-gets the whole spawn family (it grants `@kirocrew-core`, or `*` with
-`kirocrew-core` declared, or all six refs), a muted line under the
+gets the whole spawn family (it grants `@ajcrew-core`, or `*` with
+`ajcrew-core` declared, or all six refs), a muted line under the
 tools says what background agents give it (`spawn_tool_hint`) beside a one-click
 **Allow background agents** button that adds every spawn ref the draft still
-lacks (`spawn_tool_add`, with `@kirocrew-core/spawn_*` as its tooltip rather than
+lacks (`spawn_tool_add`, with `@ajcrew-core/spawn_*` as its tooltip rather than
 in the label), so
 `spawn_status` and `spawn_release` come with `spawn_run`. A tools save that names a
-Crew control-plane server (`kirocrew-core`, `kirocrew-cron`) by an explicit
+Crew control-plane server (`ajcrew-core`, `ajcrew-cron`) by an explicit
 `@server` or `@server/tool` ref -- with or without `*` beside it -- that the spec
 does not declare also writes that server's managed `mcpServers` entry
 (`agent_templates.control_plane_declarations`, added to the spec re-read
@@ -747,7 +747,7 @@ twin, `/api/agents/b64/{name_b64}...`, whose segment uses only
 `POST .../capabilities/detach`, `GET`/`PUT .../worker-kit` and
 `POST .../worker-kit/preview`.
 
-- **Encoding** (`kiro_crew/agent_url_path.py`): unpadded base64url of the
+- **Encoding** (`aj_crew/agent_url_path.py`): unpadded base64url of the
   UTF-8 bytes. A segment that does not re-encode to itself (padding, spare
   bits set, not UTF-8) is refused `400 name_segment_invalid`, so one name has
   one spelling. The dashboard's `website/src/api/agentPath.ts` builds the same
@@ -1131,7 +1131,7 @@ selection into `ResolvedBindings`, in this order (#18328):
    with no Bot model pin and an empty `resolved_alias`: the **materialized**
    kiro agent the name declares (an app-registered agent under the user's
    `~/.kiro/agents/`, or a project agent), else the **default template**
-   (`default_template(config)`: `agent.default_agent`, `kirocrew` when unset).
+   (`default_template(config)`: `agent.default_agent`, `ajcrew` when unset).
    A name that matched neither sets `requested_resolved` False so a caller never
    advertises a binding that is not running; the default template itself always
    resolves, even on a cold materialized snapshot.
@@ -1148,7 +1148,7 @@ existing V1 members keep their declared V1 binding.
 
 A new crew gets a **workspace of its own**, the way it gets its own member memory
 (`member_workspace.py`). A create that names no workspace (`POST /api/agents` with
-`workspace` absent or `""`; `kirocrew agent create` without `--workspace`) binds
+`workspace` absent or `""`; `ajcrew agent create` without `--workspace`) binds
 the crew to a fresh `member-<slug>` workspace whose directory is
 `<data home>/workspace-member-<slug>`; a same-slug collision takes a numeric suffix.
 Naming a workspace is the explicit opt-in to share one, stored as given the way
@@ -1172,17 +1172,17 @@ does not become the `project` of the crew's sessions. Its pinned thread's
 and each earlier store's that still maps a session, through the gateway's session
 manager (`crew_removal._destroy_member_thread_sessions`),
 which also ends a live process for the thread, unless another live crew still
-derives the slug. `kirocrew agent delete` leaves them: it has no session manager,
+derives the slug. `ajcrew agent delete` leaves them: it has no session manager,
 and the map is the gateway's to rewrite.
 A template has no workspace of its own, so a worker template a crew opens with
-`session_create` (`agent="kirocrew-worker"`) inherits the crew's workspace along
+`session_create` (`agent="ajcrew-worker"`) inherits the crew's workspace along
 with its store; naming another crew bound elsewhere stays refused
 (`agent_workspace_mismatch`, see session-control.md's refusal table).
 The first Bot (config key `mate`, `agent_files.ASSISTANT_MEMBER_NAME`,
 shown as Bot while its `display_name` is empty) is an ordinary mate. Every
 install, fresh or upgraded, creates it once (`agent_materialization/first_crewmate.create_first_crewmate_once`,
 called from `rebuild_agent_config`) bound to the same template a user-created Bot
-gets (the configured `agent.default_agent`, else `kirocrew`), with its own private V2
+gets (the configured `agent.default_agent`, else `ajcrew`), with its own private V2
 store and its own workspace from the start: the row is built in memory, given a store by
 `provision_member_memory` (the ordinary, collision-reserving identity: a deleted
 predecessor's retained DM binding or another legacy member's slug is never inherited),
@@ -1192,7 +1192,7 @@ creation takes. It is never written on Global memory. A creation that fails leav
 row, no store and no sidecar, so the next start tries again. It carries no tool, Global-memory access, template or prompt of its own:
 its identity block is the ordinary member identity, and it can be renamed, rebound to
 another template and deleted through every ordinary path (`DELETE /api/agents/{name}`,
-`kirocrew agent delete`, a change card's undo), and its key and label are free for another
+`ajcrew agent delete`, a change card's undo), and its key and label are free for another
 Bot to use. The `mate_member_created.json` sidecar records the attempt and
 whether it created the row (`created`), so a deleted first Bot is never
 re-created. The creation is skipped when the key already
@@ -1210,8 +1210,8 @@ first-welcome paragraph below), and it is the Bot the Bots page opens when there
 is no previously used conversation.
 
 Guides, change cards, `find_ui` and `search_docs` are platform capabilities of the
-default `kirocrew` template, every Bot built from it, the worker derived from it, and
-every dashboard session on them, on the always-mounted `kirocrew-guide` server
+default `ajcrew` template, every Bot built from it, the worker derived from it, and
+every dashboard session on them, on the always-mounted `ajcrew-guide` server
 ([MCP architecture](../../architecture/mcp.md)). The conductor and background templates
 keep their own narrow server sets and do not mount it. The guide and card tools answer
 only a turn the user sent from the dashboard; a message from Slack or another channel is
@@ -1226,9 +1226,9 @@ that decides what an agent may do without asking (Settings → Security, approva
 Approval mode picker, Computer Use, Secrets) in words, without a guide; describe what a
 removal deletes only from the page's own `caution_text`; and propose a denied-command,
 approval or secret change only when the user asked for that exact change. The operating
-contract every session receives (`config/prompt.md`, section `KiroCrew Capabilities`) carries one
+contract every session receives (`config/prompt.md`, section `Aj Crew Capabilities`) carries one
 line pointing at these tools.
-In a dashboard turn, a change to Kiro Crew itself that the user asked for (settings,
+In a dashboard turn, a change to Aj Crew itself that the user asked for (settings,
 schedules, Bots and their capabilities, templates, MCP servers, connections, secrets,
 app trust, denied-command rules) is preferably offered as a change card, which the user
 confirms; a card is never a way around a denial. No kind lifts a built-in denied-command
@@ -1257,7 +1257,7 @@ fallback to `node`). A stored card whose `risk` differs from the one its kind an
 now derive, because a setting was reclassified, keeps loading with the newly derived
 `risk` rather than being dropped; every other derived field must still match. A reminder that runs once is a `schedule.create` card with `at` (a local
 ISO-8601 date-time, no offset) instead of `cron_expr`. `search_docs` searches and pages
-through `kiro_crew/docs/*.md` only, by the directory's own listing, and `find_ui` searches
+through `aj_crew/docs/*.md` only, by the directory's own listing, and `find_ui` searches
 the packaged dashboard location index
 ([mcp](../../architecture/mcp.md#find_ui-and-the-ui-location-index)); its labels follow the
 language the user's dashboard renders (the tab's `X-UI-Lang`, read back through
@@ -1333,7 +1333,7 @@ Undo sends the mode the card wrote, and a profile save that landed in between an
 of a card made from an unset mode restores the unset-effective mode explicitly, since the
 route accepts no `""`.
 Bot proposals are
-`crewmate.create` cards; the card builds the Bot from `kirocrew`
+`crewmate.create` cards; the card builds the Bot from `ajcrew`
 (`change_card_catalog.DEFAULT_CREWMATE_TEMPLATE`, the Bots page's own default)
 and sends `first_greeting`, so the Bot opens its chat by asking about the
 proposed goal exactly as one created on the Bots page does (see the goal
@@ -1417,7 +1417,7 @@ when navigation permits. The cached conversation and its drafts remain available
 
 The Bots page (`/members`, titled "Mates") creates a Bot in place.
 Landing rule: with no Bots the page
-shows a single empty-state hero (ghost avatar, "No Bots yet", one line,
+shows a single empty-state hero (gem avatar, "No Bots yet", one line,
 "New mate") in place of a roster call to action and a "pick a member" pane;
 a roster containing only the first Bot (`mate`) is not an empty state.
 With Bots and no `?member=`, the page opens like a messages app: Bot, the
@@ -1486,7 +1486,7 @@ given and following up unasked, and learning how the user likes things done. It 
 it is the user's first Bot (`FIRST_WELCOME`), or one more Bot on their crew when
 the roster already holds a Bot besides Bot and `default` (`FIRST_WELCOME_WITH_CREW`).
 It ends by saying that once it has a name it will show the user how to work with it
-and then suggest something for it to own. It never offers to set up or fix Kiro Crew
+and then suggest something for it to own. It never offers to set up or fix Aj Crew
 and lists no features. The kickoff is written as plain principles, and the greeting
 itself is the model's own words; because the kickoff stays in the session context,
 its instructions for the next turns carry over to them. The introduction comes
@@ -1508,7 +1508,7 @@ ordinary goal setup, whose `[Goal set]` turn asks nothing more about the Heartbe
 after a goal card, and then hands the milestone research to a worker (see the
 goal-setup nudge below).
 When the user answers with a name, that later turn says plainly that the Bot now
-goes by it and calls the `kirocrew-mate` tool `update_self` with `display_name`
+goes by it and calls the `ajcrew-mate` tool `update_self` with `display_name`
 (`POST /api/member/self/update`, `handlers/member_self.py`), which renames ONLY the calling
 Bot -- the member is derived from the caller's own pinned thread, never from an
 argument -- and only from a turn the user sent in the dashboard (`_turn_user_sent`,
@@ -1616,16 +1616,16 @@ with `set_check_ins` after the goal is saved. The member identity sentence
 long-term aim the user describes is proposed as a goal, not only remembered.
 
 **Every new Bot gets its own-record tools.** A Bot's template need not
-carry `kirocrew-mate`, and it does not have to: a Bot on its own file chats
+carry `ajcrew-mate`, and it does not have to: a Bot on its own file chats
 on the conductor and works through its worker, and the gateway builds both with
-`kirocrew-mate` whatever the template carried. So creation never writes a
+`ajcrew-mate` whatever the template carried. So creation never writes a
 platform server into the Bot's file. Each create path -- the dashboard
 create (`dashboard/agent_admin/crew_records.py`), the first-crewmate step
-(`agent_materialization/first_crewmate.py`) and `kirocrew agent create` -- calls
+(`agent_materialization/first_crewmate.py`) and `ajcrew agent create` -- calls
 `member_mate_tools.grant_mate_tools_to_new_member` once, which writes nothing and
 answers `platform_provided` for a Bot on its own file (`mate_file_missing`
 when the eager copy did not land). An entry that names a platform server with no
-transport (`"kirocrew-mate": {"disabled": false}`, which an older create wrote
+transport (`"ajcrew-mate": {"disabled": false}`, which an older create wrote
 from such a template) is dropped wherever the file is written
 (`mate_config.write_mate_spec`) or projected (`acp.harness.kas.resolve_projected_spec`),
 and the startup migration rewrites any file that still holds one
@@ -1659,7 +1659,7 @@ roster's hero and the switcher's New Bot) opens the
 **Name** field under its own visible label, an **Advanced settings** row, and
 **Create**; no line under the name explains what happens after
 Create, since the new Bot's first message says it. Create builds the
-Bot from `kirocrew`, and the folded card does not name that template. The
+Bot from `ajcrew`, and the folded card does not name that template. The
 tile shows a name-seeded icon (a pose and background colour derived from the
 name) until the user presses it (or its pencil badge),
 which opens `CrewAvatarBuilder` with `iconOnly`: a pose and a background colour,
@@ -1668,7 +1668,7 @@ record for a picture or a pack. Apply pins the pick and sends it as
 `avatar: {kind: 'icon', pose, bg}`, and it survives a renamed draft; with no
 pick the create still carries that name-seeded icon as its `avatar` (frozen into
 a stored choice at create, never re-derived from a later rename), so a new Bot
-is born an icon rather than wearing the name's ghost. The **Advanced settings** row unfolds inline below
+is born an icon rather than wearing the name's gem. The **Advanced settings** row unfolds inline below
 the avatar, in the same card: Goal and the crew
 editor fields (workspace, model, triggers, session colour), ending with a second
 Create. It is folded by default; `startExpanded` opens it unfolded, which is what
@@ -1698,8 +1698,8 @@ runs is not asked on the card: its goal welcome settles that in conversation.
 That card is the ONE "New mate" dialog
 (`website/src/pages/members/NewCrewmateDialog.tsx`): it is
 also mounted by the crew manager's "New mate" tile / header button and its
-dashed roster card (`pages.kiroCrewAgentsPage.add_crew_member` in
-`website/src/pages/KiroCrewAgentsPageRoster.tsx`, the Bots tab of Customize), which
+dashed roster card (`pages.ajCrewAgentsPage.add_crew_member` in
+`website/src/pages/AjCrewAgentsPageRoster.tsx`, the Bots tab of Customize), which
 has no separate create sheet. Both doors use the
 existing owner-gated `POST /api/agents`; editing an existing member still uses
 the crew manager. The crew manager's door opens with Advanced settings unfolded
@@ -1727,7 +1727,7 @@ consumer closes an import cycle through it.
 The roster lists a row unasked (`listedByDefault`) when the user starred it;
 when it is Bot, the first Bot (key `mate`), listed from the start so its
 welcome has a row to open; when it is a Bot the PERSON created
-(`dashboard_created` on `GET /api/members`: `source` `kirocrew` and a member
+(`dashboard_created` on `GET /api/members`: `source` `ajcrew` and a member
 id, which both the Bots page's create and an approved `crewmate.create`
 or `crewmate.import` card write through `POST /api/agents`), even while its
 chat is empty and was never opened; and, for every other row, when its DM
@@ -1872,7 +1872,7 @@ does not migrate it or grant access to that member's member store.
 
 `resolve_effective_model` is the single source of truth for what model a new
 session on a crew starts with, highest tier first: the crew's own `model`, the
-bound kiro agent's pinned model (skipped for the built-in `kirocrew` agent), the
+bound kiro agent's pinned model (skipped for the built-in `ajcrew` agent), the
 global `agent.model`, then the installed agent file's model. A per-session pick
 outranks all four and is not considered there. The session layer
 (`session._session_model`, run by `get_or_create` for a caller that names no model)
@@ -1888,7 +1888,7 @@ wrong-typed key reads exactly like an absent one. Two identity fields are the
 exception. `memory_store` defaults to the shared store, and `member_id` defaults
 to `""`, which reads as "no identity yet". Collapsing either would switch off a
 fail-closed check in `memory_stores.py`, so both load as written and the
-resolvers refuse them; `kirocrew agent list` shows a malformed `memory_store` as
+resolvers refuse them; `ajcrew agent list` shows a malformed `memory_store` as
 `(invalid: <type>)`. The roster and config views still mask a non-string on their
 own side as defence in depth.
 
@@ -2081,7 +2081,7 @@ is reported. A goal record changes rarely and nothing else announced those write
 to the dashboard, so `members_roster_goals.start_roster_refresh` (started beside
 `crewmate_feed.start`) registers one `member_goals.add_change_listener` that pushes
 an `agents` refresh frame on the serving loop after every write -- the frame the
-roster query already re-reads on, its key sitting under `kirocrew-agents`.
+roster query already re-reads on, its key sitting under `ajcrew-agents`.
 The closed chip shows a small `warn` needs-you dot over the face stack, and adds
 that label to its accessible name, only while a Bot OTHER than the open one
 needs you: the open Bot's parked turn is already on screen in its thread.
@@ -2281,7 +2281,7 @@ it and in the work it hands to its worker"). Slot trust lives in memory, so
 `chat_runner` seeds a Bot's sessions again at the start of each turn,
 once per live slot and before the provider is claimed
 (`crewmate_approval.seed_for_turn`): the conductor chat (a `member` record on
-the conductor) and each worker (a `template` record on `kirocrew-mate-worker`
+the conductor) and each worker (a `template` record on `ajcrew-mate-worker`
 carrying the Bot's `member_id`), so a session restored, revived or resumed
 after a restart runs under the Bot's Permissions instead of asking for
 every tool. A worker opened by the conductor takes the record's mode at birth,
@@ -2714,7 +2714,7 @@ draft guard, so a veto neither remounts the card nor loses its pushed form.
   and Remove goal. Create a goal ALWAYS opens the modal, with no branch on the
   Bot's tools: every Bot's chat holds `set_goal` (a Bot on its
   own file chats on the conductor, which the gateway builds with
-  `kirocrew-mate` whatever the template carried; `member_mate_tools`
+  `ajcrew-mate` whatever the template carried; `member_mate_tools`
   `PLATFORM_PROVIDED`), so a chat that cannot write the goal down is a defect
   in that chat, never a state this tab routes around. The Bot's no-tools
   prompts name the Schedules tab for the Heartbeat
@@ -3018,7 +3018,7 @@ draft guard, so a veto neither remounts the card nor loses its pushed form.
   minutes, so no interval on the list finds the previous wake's cache warm and
   credits scale with the number of wakes alone; 30 minutes caps it at 48 a day,
   the hourly default at 24. A wake that finds the gateway stopping after its
-  reads (`kiro_crew.shutdown_event` set, read by `goal_reminder.gateway_stopping`;
+  reads (`aj_crew.shutdown_event` set, read by `goal_reminder.gateway_stopping`;
   the cron timer itself stops firing once the event is set) starts no turn and
   logs `skipped: the gateway is stopping`. A wake whose thread a monitor loop
   drives (`goal_reminder._monitor_loop_drives`, the work ledger's own
@@ -3057,9 +3057,9 @@ draft guard, so a veto neither remounts the card nor loses its pushed form.
   answer the context builder gives a member turn without session evidence when
   it decides on the operating-mode block, `context._member_dispatch_held(None,
   cfg)` -- the configured member backend mounts session control per session --
-  narrowed by a user-level switch-off of `kirocrew-dashboard`, read through the
+  narrowed by a user-level switch-off of `ajcrew-dashboard`, read through the
   `agent_sdk.agent_specs.session_mcp_server_is_disabled` seam, never
-  `kiro_crew.acp`; any failure answers False), and otherwise do it in small steps across wakes, noting in the
+  `aj_crew.acp`; any failure answers False), and otherwise do it in small steps across wakes, noting in the
   work ledger where it stopped; either way the next heartbeat is the patrol, so
   the wake arms no monitor loop or wait (`monitor_start` refuses on a turn no
   person opened); record quiet work in the work ledger, with
@@ -3129,7 +3129,7 @@ never replaces another's real text with redaction placeholders. Deleting a Bot r
 (`crew_removal._remove_goal_check_ins`) unless another live crew still derives
 the slug; the goal record stays, like the rules file. Every removal of a Bot
 runs it through `crew_removal._remove_member_leftovers`: the route,
-`kirocrew agent delete`, the `POST /api/agents/sync` prune of a package Bot
+`ajcrew agent delete`, the `POST /api/agents/sync` prune of a package Bot
 whose spec is gone, and the startup prune of never-chatted generated mates.
 
 Since such a Bot has a goal and no description, the Profile card's About
@@ -3319,7 +3319,7 @@ the installed-agent lookup in `resolve_agent_bindings`; one whose record names
 the Bot as a `member` selection does not, because a member selection never
 takes that lookup, so the record decoder re-reads exactly the shape this pass
 removes as that agent (see "Records that picked a removed row" below), and every
-other missing member stays refused. A recorded `kirocrew-skill-view-*`
+other missing member stays refused. A recorded `ajcrew-skill-view-*`
 name is mapped back to its source agent through the projection's sidecar
 (`source_agent_name`) before either lookup. The headless `start_api_server` / `--slack-only`
 entrypoint has no dashboard and does not run it) and settles that without any
@@ -3340,16 +3340,16 @@ sync-shaped record the row was judged as. The pass itself:
   the spec and exempt from the default comparison, so editing it does not keep
   a never-chatted generated row. The spec must be installed and must itself
   have a source in `builtin`, `package` or `aim`; a missing spec, a row or spec
-  stamped `kirocrew`, a non-string or mismatched row source, and a crew's
+  stamped `ajcrew`, a non-string or mismatched row source, and a crew's
   private copy (`private_to`) are never candidates. Nor is any row bound to one
-  of the runtime's own agents: a spec discovery marks `kirocrew_owned` — the
+  of the runtime's own agents: a spec discovery marks `ajcrew_owned` — the
   conductor, worker, knowledge, research and heartbeat specs, which read as
   `builtin` because `agent_discovery` deliberately keeps that flag apart from
   `source` — is skipped whatever its source, so rows bound to the runtime's
-  own agents (kirocrew-owned specs, and rows stamped `kirocrew`) are never
+  own agents (ajcrew-owned specs, and rows stamped `ajcrew`) are never
   removed. Both config layers are
   read: a name that `config.local.json` mentions in its own `agents` section —
-  a `kirocrew config set --local agents.<name>.…` leaf, the capability writer's
+  an `ajcrew config set --local agents.<name>.…` leaf, the capability writer's
   overlay binding — is never a candidate, whatever the leaf says, because
   deleting the base row would leave the overlay leaf as a Bot bound to
   nothing. Nor is a Bot any team lists (`crew_teams.read_teams`, the
@@ -3357,7 +3357,7 @@ sync-shaped record the row was judged as. The pass itself:
   the owner's own act, so a teamed Bot is never removed whatever its
   shape. A created Bot has a `member_id` and is never removed. No memory
   directory is inspected. A row bound to a skill-view alias
-  (exactly the prefix `kirocrew-skill-view-` plus 24 lowercase hex digits, the
+  (exactly the prefix `ajcrew-skill-view-` plus 24 lowercase hex digits, the
   name the projection writes; any other tail is an ordinary row) is
   the one exception to the installed-spec test: the runtime writes those files
   to project a spec's skills, discovery never lists them, and an older sync
@@ -3388,7 +3388,7 @@ sync-shaped record the row was judged as. The pass itself:
   fresh-sync shape, `config.local.json` still does not name it — read under the
   overlay's own sidecar lock — and the bound spec, when re-read from disk under
   `agents_spec_lock`, still declares the bound `kiro_agent`, remains non-private
-  (`private_to` is empty) and not `kirocrew_owned`, and has the same canonical
+  (`private_to` is empty) and not `ajcrew_owned`, and has the same canonical
   discovery source (a skill-view alias row has no spec to re-read, so its row
   identity and shape are the whole test); and no team lists it, the team document re-read under
   `crew_teams.document_lock`. The three
@@ -3472,7 +3472,7 @@ sync-shaped record the row was judged as. The pass itself:
   nothing; it does not stop the pass. The writers that do not come through HTTP
   — the subagent pump, channel agent resume, cron dispatch — start only after
   `await_crewmate_prune_settled` returns (`GatewayOrchestrator.run`, after the
-  memory barrier and past `KIROCREW_READY`, so readiness never waits; the
+  memory barrier and past `AJCREW_READY`, so readiness never waits; the
   standalone dashboard before its inline channel resume), and that helper
   returns only once the pass has RETURNED — never beside a pass that can still
   delete. Its 60 s budget bounds how long the pass may keep deleting, not how
@@ -3557,7 +3557,7 @@ made — and that is what this migration settles.
 ### Where a Bot's prompt text lives
 
 Every piece of text a Bot is told lives in one file,
-`src/kiro_crew/crewmate_prompts.json` (package data, listed in `setup.cfg`
+`src/aj_crew/crewmate_prompts.json` (package data, listed in `setup.cfg`
 and `MANIFEST.in`): the conductor's member section (`conductor.*`, assembled by
 `context_assembly/member.py:build_member_section` and `operating_mode_block`),
 the worker's principles (`worker.principles`, `mate_worker.MATE_WORKER_PROMPT`),
@@ -3582,14 +3582,14 @@ log and its readers (`crew_log_read`, `crew_log_list`,
 `crew_log_projection`) and folds; the Dashboard tab as a page the Bot
 owns and builds from folds, styled from its project and goal unless the user
 asked for a style, with a missing fact recorded as a new crew-log event type;
-the Kiro Crew docs search (`search_docs`, `find_ui` on `kirocrew-guide`, which
+the Aj Crew docs search (`search_docs`, `find_ui` on `ajcrew-guide`, which
 both the conductor's fixed servers and the worker's base config mount);
 `work_ledger_record` / `work_ledger_read`, `save_goal_report`, `save_notes`;
 the worker's kit, the capability card that adds to it, the Profile's
 Permissions reaching its sessions, and its own worktree under the crew/
 prefix. `test_every_crewmate_only_tool_is_named_in_the_assembled_conductor_prompt`
-reads the tool names from the `kirocrew-mate`, `kirocrew-panel`,
-`kirocrew-crew-log` and `kirocrew-work` server sources plus the guide and
+reads the tool names from the `ajcrew-mate`, `ajcrew-panel`,
+`ajcrew-crew-log` and `ajcrew-work` server sources plus the guide and
 session tools, and fails when the assembled prompt omits one, with an explicit
 exempt list (`panel_templates`, `work_brief`, `work_report`,
 `work_ledger_rebuild`, `offer_dashboard_page`). `offer_dashboard_page` is exempt
@@ -3733,7 +3733,7 @@ BUBBLE — three bouncing dots in the Bot's own gray bubble (the same
 so a theme restyling those restyles this), the iMessage sign that a reply is
 being typed (#19997) — with ONE status line under it naming what the Bot
 is doing right now, both rendered by `CrewmateLiveActivity` in the footer
-column. The chat page's ghost-pose carousel (`ChatFooter`) is NOT mounted in a
+column. The chat page's gem-pose carousel (`ChatFooter`) is NOT mounted in a
 Bot chat: `ChatPane` draws one or the other, never both, so a DM reads as
 a conversation and not as a loader, and only one thing moves. The dots are
 decorative (`aria-hidden`); the caption is the live region. The dots are the
@@ -3905,14 +3905,14 @@ emitted by `createTranscriptRenderers` whenever the host passes `crewmate` (or
 asks to hide the steer badge). The Bot surface hides the Steered chip
 and ordinary interruption markings; user messages remain plain accent bubbles.
 The transcript retains its delivery metadata for identity and recovery. `--bg-hover` is the gray because
-`--bg-elevated` and `--card` equal the page background in kiro-light,
+`--bg-elevated` and `--card` equal the page background in aj-light,
 highcontrast-light and everforest-light (the bubble would vanish), while
 `--bg-hover` sits above the page in every shipped theme; in forced-colors mode
 the gray bubble draws a border instead. The `.crewmate-bubble` rule in
 `website/src/styles/chat-transcript.css` also scopes the surface tokens the reply's contents paint with
 (`--bg-hover`, `--bg-elevated`, `--card`) one step off the fill for its subtree
-— kiro-light's inline-code patch IS `var(--bg-hover)`, and so is every
-`hover:bg-bg-hover` control, so on the bare fill they would vanish; kiro-dark's
+— aj-light's inline-code patch IS `var(--bg-hover)`, and so is every
+`hover:bg-bg-hover` control, so on the bare fill they would vanish; aj-dark's
 literal code patch gets the same step by one scoped rule. Inside the accent bubble the
 `user-bubble-accent` hook in `website/src/styles/chat-transcript.css` REDEFINES the theme tokens for the
 subtree (`--text`, `--muted`, `--accent`, `--border`, the `--bg*` surfaces, …)
@@ -4061,9 +4061,9 @@ A Bot whose binding owns its own file (`kiro_agent` names a spec found in
 `mate_worker.is_mate_owned_agent`, an in-memory set
 `refresh_materialized_agents` publishes beside the agent snapshot) is two
 source-defined agents plus that file. Every creation path writes the file
-through one writer, `mate_config.write_mate_spec` (`src/kiro_crew/mate_config.py`,
+through one writer, `mate_config.write_mate_spec` (`src/aj_crew/mate_config.py`,
 application code: it and every Bot module read agent specs and the MCP
-switch-off through `agent_sdk.agent_specs`, never `kiro_crew.acp`, so the
+switch-off through `agent_sdk.agent_specs`, never `aj_crew.acp`, so the
 agent-SDK boundary gate holds none of them), which adds it to that
 set in the same call (`loader.publish_mate_agents`): the create route and the
 `agent create` command share the copy-and-repoint `mate_config.adopt_own_file`,
@@ -4087,7 +4087,7 @@ chat, the hand-off (`_dispatching_crewmate`) and `is_conductor_execution` alike
 chat and `is_conductor_execution` also read the member's CURRENT bound
 `kiro_agent` (`mate_worker.member_record_template`): when that binding owns a
 Bot file the record is the conductor, whatever older `template_id` it kept
-(the pre-conductor `kirocrew-conductor`), with no record rewritten. Any other
+(the pre-conductor `ajcrew-conductor`), with no record rewritten. Any other
 member keeps the template its record names, so a shared-agent Bot's thread
 runs the agent it recorded. A `template` record (a worker included) stays exact
 (`test/test_mate_chat_agent_resolution.py`). A chat that keeps its record's
@@ -4111,10 +4111,10 @@ the mark is set before the hidden turn, which is held in memory only: a restart
 before it runs, or a hidden turn that fails, leaves that user untold. The three
 parts:
 
-- **The conductor**, `kirocrew-mate-conductor`, is what its own chat runs on.
+- **The conductor**, `ajcrew-mate-conductor`, is what its own chat runs on.
   `mate_worker.member_chat_agent` maps the binding to it, and it is the one rule
   `member_template_id` and both member arms of `resolve_agent_bindings` read, so
-  a Bot's execution record carries `template_id` `kirocrew-mate-conductor`
+  a Bot's execution record carries `template_id` `ajcrew-mate-conductor`
   and nothing from the file reaches the chat. A binding on a shared template
   runs that template, as before. **The conductor only dispatches**: its
   hand-off is a worker session (`session_create`, `session_send`,
@@ -4144,21 +4144,21 @@ parts:
   `agent._MANAGED_MCP_SERVERS`), `includeMcpJson` is off, and no `tools` or
   `allowedTools` ref to any other server survives, so the user's own servers
   reach the Bot's worker only, through its file. On top of that filter
-  it mounts the work ledger, `kirocrew-work`, which `build_agent_config()`
+  it mounts the work ledger, `ajcrew-work`, which `build_agent_config()`
   skips as an `opt_in` server (`service_agents._mount_work_ledger`, the entry
   built by `managed_mcp._managed_opt_in_entry("mcp-work")` so it keeps
-  `"type": "registry"` and the `KIROCREW_HOME` pin): `@kirocrew-work` in
+  `"type": "registry"` and the `AJCREW_HOME` pin): `@ajcrew-work` in
   `tools` and the ledger conductor's grants
   (`agent._LEDGER_CONDUCTOR_WORK_GRANTS`, `work_ledger_read` /
   `work_ledger_record` among them) in `allowedTools`, through the governance
   ceiling, so a withheld verb stays mounted and prompts. Every Bot gets
   it (`test/test_mate_work_ledger_mount.py`). Computer use
-  (`@kirocrew-computer`) and the browser tool stay, and so does `cron_add`,
+  (`@ajcrew-computer`) and the browser tool stay, and so does `cron_add`,
   scripted jobs included. A Bot's
   scheduled AGENT turn does not run on the conductor at all: at every fire,
   `mate_worker.cron_worker_execution` turns the job's captured `member`
   selection into the worker's record shape (a `template` selection on
-  `kirocrew-mate-worker`; member, store, memory mode and app kept) for a
+  `ajcrew-mate-worker`; member, store, memory mode and app kept) for a
   Bot whose binding owns its file, or claims it (`kiro_agent` is its own
   alias) while the file is absent and the Bot owner record names it for
   this data home (`mate_config.crewmate_file_on_record`, written with every Bot file and never pruned;
@@ -4169,7 +4169,7 @@ parts:
   workspace with no crew alias, as a hand-off opens it. The job keeps its
   `cron:` key and principal, so the worker projection reads that Bot's kit
   (`worker_session_spec`) and the backend selection routes it to the Bot's
-  backend. A 1.0 job (`template_id` `kirocrew` with the member id) takes the
+  backend. A 1.0 job (`template_id` `ajcrew` with the member id) takes the
   same path; the record its stable key holds is rewritten once by
   `cron_service.identity.rebind_cron_session_template`, compare-and-set, with no
   data migration. A deleted own file fails closed: the worker refuses the turn
@@ -4195,7 +4195,7 @@ parts:
   prompt all dispatch and END the turn rather than waiting or polling: without
   the ledger the worker's report wakes the thread, and no monitor loop is
   armed. **Ledger-tracked work is the one exception**, and only where the
-  conductor's chat spec mounts `kirocrew-work` and grants `work_ledger_record`
+  conductor's chat spec mounts `ajcrew-work` and grants `work_ledger_record`
   after the governance ceiling
   (`member_mate_tools.binding_has_ledger_tools`). There the tracking sentence
   names `work_ledger_record` / `work_ledger_read` (`conductor.tracking_ledger`
@@ -4239,14 +4239,14 @@ parts:
   (`test_crewmate_prompts.py`, `test_mate_conductor_agent.py`). Who gets which
   MCP servers and skills is summed up in
   [Agent MCP servers and skills](../../architecture/agent-mcp-and-skill-reach.md).
-- **The worker**, `kirocrew-mate-worker`, is what the conductor hands work to:
+- **The worker**, `ajcrew-mate-worker`, is what the conductor hands work to:
   its `session_create` opens the worker template on the Bot's own
   workspace, store and member identity whatever `agent` it names, because the
   gateway reads the caller from its attested execution record; only naming
   another Bot keeps that Bot's resolution, which refuses it
   (session-control.md, "What a created child inherits"). The worker's own
   unnamed children inherit the worker, and it has no request tool ("What the
-  worker lacks" below). It mounts `kirocrew-work` the same way as the
+  worker lacks" below). It mounts `ajcrew-work` the same way as the
   conductor, granting only the worker's verbs (`agent._WORKER_WORK_GRANTS`:
   `work_brief`, `work_report`), so a worker bound to an item in its
   Bot's ledger can read its brief and report on it (`worker.principles` tells
@@ -4278,10 +4278,10 @@ parts:
   that name is kept, unread, with a warning
   (`service_agents._remove_user_level_copy`, `test/test_mate_service_specs.py`).
   Both are background-only in the agent catalog, and
-  are in `agent_files.KIROCREW_DEFAULT_AGENT_NAMES`, so their sessions keep the
+  are in `agent_files.AJCREW_DEFAULT_AGENT_NAMES`, so their sessions keep the
   default agent's context blocks.
 - **The Bot's file** extends the worker only, and only by addition
-  (`kiro_crew.mate_worker`): its `prompt` is appended after the worker's own
+  (`aj_crew.mate_worker`): its `prompt` is appended after the worker's own
   prompt; `mcpServers` the worker base lacks are added and mounted in `tools`
   (a base server of the same name always wins); `resources` and `skills`
   entries the base lacks are added; `tools` and `allowedTools` entries are taken
@@ -4376,7 +4376,7 @@ parts:
   (`agents.<name>.acp_backend`, see "A Bot's own harness" below) when it has
   one, else `agent.member_acp_backend` through the same gate (a stored `kiro`
   reads as KAS), never `agent.acp_backend`. The identity is
-  positive: a `template` record on `kirocrew-mate-worker` with a member id
+  positive: a `template` record on `ajcrew-mate-worker` with a member id
   (`mate_worker.is_own_worker_execution`). A record that no longer says so drops the
   key, on every read before an allocation and at an explicit selection's commit
   (`slot_guards._record_explicit_agent_selection`), so a session switched off the
@@ -4402,8 +4402,8 @@ parts:
   names (`mate_worker.uncarried_tool_limits_of`). The worker's model pin is judged against the same backend
   (`mate_worker.crewmate_worker_backend`).
 
-**The two conductors stay in step.** `kirocrew-conductor` (Ultra Mode, Ultra
-chats) and `kirocrew-mate-conductor` both conduct work through a work ledger, from
+**The two conductors stay in step.** `ajcrew-conductor` (Ultra Mode, Ultra
+chats) and `ajcrew-mate-conductor` both conduct work through a work ledger, from
 different installers and different prompt files. A conductor change lands on
 both, or it lands on the parity allowlist with a reason. The rules both need
 (dispatch and bind before the seed, the `watch="work-ledger"` patrol, the
@@ -4415,7 +4415,7 @@ each as a placeholder (`context_assembly.member.ledger_rules_block`).
 `test/test_mate_conductor_parity.py` compares the effective agents, not the spec
 files alone: both installed specs put through the per-session projection
 (`acp.kas_agents.to_client_custom_agent`), which for a Bot's thread adds the
-session-level `kirocrew-dashboard` and `kirocrew-panel` with their grants. It fails on any root charter section,
+session-level `ajcrew-dashboard` and `ajcrew-panel` with their grants. It fails on any root charter section,
 MCP server, tool, auto-approve grant or mapped skill the Bot's conductor
 lacks unless its `ALLOWLIST` names it with a one-line reason; on a Bot piece
 that copies root charter text instead of naming the rule; and on an allowlist
@@ -4433,7 +4433,7 @@ conductor's `session_send` to it revives it first (session-control.md). The
 conductor reads `process: live | released` on `session_status`, and the worker
 tab shows a released one with a small marker (`session-row-released`).
 
-**Each Bot works in a git worktree of its own** (`kiro_crew.crewmate_worktree`,
+**Each Bot works in a git worktree of its own** (`aj_crew.crewmate_worktree`,
 `dashboard/crewmate_worktree_scope.py`), so two Bots handed one repository
 never share a working tree or a checked-out branch. The gateway does three
 things here and leaves every other git step to the worker's prompt
@@ -4461,7 +4461,7 @@ things here and leaves every other git step to the worker's prompt
    directory, so a path inside another Bot's worktree maps to the same
    repository.
 2. **The worker runs there.** At the start of a worker's turn (a `template`
-   record on `kirocrew-mate-worker` with the Bot's `member_id`; the
+   record on `ajcrew-mate-worker` with the Bot's `member_id`; the
    conductor is left alone), after its Permissions are seeded and before the
    provider is claimed, turn admission (`chat_turn/turn_admission._turn_admit`)
    calls `scope_worker_turn`. It reads the repository from the paths the
@@ -4479,7 +4479,7 @@ things here and leaves every other git step to the worker's prompt
    the cwd is matched as the same path in the checkout, asked of git each time
    (`crewmate_worktree.source_path`; config.md, "Project AWS profiles").
 3. **It goes with the crewmate.** Deleting the Bot, from the dashboard
-   or with `kirocrew agent delete`, or a prune removing it (the agent sync's,
+   or with `ajcrew agent delete`, or a prune removing it (the agent sync's,
    the startup pass's) (`crew_removal._remove_member_leftovers`,
    `crewmate_worktree.remove_for_member`) lists `<workspace>/worktrees/<slug>` and removes each folder git registers as
    a worktree of its repository with `git worktree remove` (never `--force`).
@@ -4540,7 +4540,7 @@ the thread's own turn task, so a report is delivered once, never twice; pending
 reports live in memory. While the app is stopping
 (`mate_welcome.app_is_stopping`) no hidden turn starts and reports stay pending.
 
-**Adding abilities to a Bot** (`kiro_crew.mate_worker_kit`, owner-only
+**Adding abilities to a Bot** (`aj_crew.mate_worker_kit`, owner-only
 `GET/PUT /api/agents/{name}/worker-kit` and `POST .../worker-kit/preview`,
 handler `dashboard/handlers/member_worker_kit.py`): the owner picks another
 agent, and its `mcpServers` (with `autoApprove`), `resources`, `skills`, the
@@ -4632,18 +4632,18 @@ row with the preview's own `workerKitLabels.skillLabel`. Every other resource
 the worker loads (one that is neither a catalog skill nor `skill://`) is a
 `resources` row, so a `file://` resource an add copied in is listed with a
 Remove of its stored `resources` row. The Customize > Bots roster
-(`pages/kiroCrewAgentsPageRosterLabels.ts`) names bindings the same way and
+(`pages/ajCrewAgentsPageRosterLabels.ts`) names bindings the same way and
 shows **Memory store** as "Private to this crewmate", "Shared" or "Open to
 check".
 
-**Existing Bots move at startup** (`kiro_crew.mate_config_migration`, off
+**Existing Bots move at startup** (`aj_crew.mate_config_migration`, off
 the loop before the slot restores, never gating readiness). Every Bot whose
 `kiro_agent` does not name its own file is a candidate
 (the 2026-10-28 owner decision in docs/decisions, every Bot on a user-level agent moves to the conductor
 supersedes the 2026-10-27 entry). A binding with an empty `member_id` is not a Bot
-(an old `assistant`, the built-in `kirocrew-conductor`): skipped silently, except a used
-row a person or a package sync wrote on a user-level spec Kiro Crew does not own. Such a
-row (`source` `kirocrew`, `package` or `aim`; not `default`, the default agent, a legacy
+(an old `assistant`, the built-in `ajcrew-conductor`): skipped silently, except a used
+row a person or a package sync wrote on a user-level spec Aj Crew does not own. Such a
+row (`source` `ajcrew`, `package` or `aim`; not `default`, the default agent, a legacy
 built-in or an app's row) whose DM thread holds a turn (the evidence the synced-crewmate
 prune keeps a row on) is first given a `member_id` and its own V2 store
 (`_move_with_identity`, `provision_member_memory(upgrade=True)`) once its Bot file is
@@ -4724,8 +4724,8 @@ own private copy (a fork whose lineage is private to it and that its binding run
 `_crew_owned_shadow`): the copy is moved to `~/.kiro/mates/retired/` and its
 lineage dropped just before the repoint (`_retire_shadow`), so pointing the binding
 back and moving the file back is a rollback. Any other user-level agent under its id
-is not Kiro Crew's: the Bot stays and is told once, and that spec is never
-written. A Bot named after a spec Kiro Crew generates is skipped. Its file would
+is not Aj Crew's: the Bot stays and is told once, and that spec is never
+written. A Bot named after a spec Aj Crew generates is skipped. Its file would
 never be read, and giving it another file name breaks every reader that knows a
 Bot's file by its binding key (`mate_capabilities.binding_is_mate`,
 `member_mate_tools`, `mate_worker._claimed_file`, the revocations keyed by file id). Any other binding
@@ -4755,11 +4755,11 @@ boot that still owes it). A thread's own execution record names its old agent,
 so the pass rewrites, by compare-and-set (`bind_session_execution`), each
 persistent `member` record on the Bot's DM transcripts that carries its
 `member_id` and runs the `from` agent: only `template_id` becomes
-`kirocrew-mate-conductor`, so memory routing stays. Others are left alone.
+`ajcrew-mate-conductor`, so memory routing stays. Others are left alone.
 `repointed` lists the keys moved; `done` is set once every thread was read
 (`test/test_mate_config_migration.py`).
 
-**A moved Bot tells its user once** (`kiro_crew.mate_upgrade_notice`).
+**A moved Bot tells its user once** (`aj_crew.mate_upgrade_notice`).
 The migration writes `members/<slug>/worker_notice_owed.json` after a repoint.
 The gateway offers it to each open Bot thread after the slots restore
 (`offer_upgrade_notices`), or at a thread's first turn end, and claims it with
@@ -4784,7 +4784,7 @@ waits for its next turn end, like a pending report
 
 **What the worker lacks, the conductor asks for.** A worker that lacks a tool or
 a skill says so in its report; it has no request tool (its spec lists
-`@kirocrew-mate/request_capabilities` and `@kirocrew-mate/find_capabilities` in
+`@ajcrew-mate/request_capabilities` and `@ajcrew-mate/find_capabilities` in
 `excludedTools`, `mate_worker.MATE_WORKER_EXCLUDED_TOOLS`). Its source-defined
 prompt is the default prompt followed by `mate_worker.MATE_WORKER_PROMPT`
 (`service_agents._install_mate_worker_agent`): a task that needs a tool, server
@@ -4801,8 +4801,8 @@ a blocked step that names no tool, or a tool named with no blocked step, adds
 nothing. The conductor also learns what
 its worker can use when it hands work off: the result of its own
 `session_create` and `session_send` to a worker of the same Bot (both
-attested execution records: the caller a conductor, the target a
-`kirocrew-mate-worker` record with the same `member_id`) carries
+attested execution records: the caller a conductor, the target an
+`ajcrew-mate-worker` record with the same `member_id`) carries
 `worker_capabilities`, the worker's MCP servers and the servers this gateway has
 loaded that it lacks and the user has not switched off (one switched off cannot be
 added, so it is not offered; `dashboard/crewmate_dispatch_capabilities.own_worker_note`,
@@ -4911,7 +4911,7 @@ turned back on, which drops the record. Revocations are written before the file
 and re-grants only after it.
 
 **Other guards.** A create names its starting template, and the only one it
-accepts is the built-in worker, `kirocrew` (`DEFAULT_CREWMATE_TEMPLATE`).
+accepts is the built-in worker, `ajcrew` (`DEFAULT_CREWMATE_TEMPLATE`).
 `adopt_own_file` writes the source-free worker file and reads no template, so
 another template's tools, `excludedTools`, `disabledTools`, deny rules, servers,
 skills and prompt would never reach the crewmate. Any other value is refused
@@ -5045,7 +5045,7 @@ kiro-cli that lacks its engine.
   `GET /api/members` leave it out. `GET /api/models?backend=<harness>` lists one
   harness's models for the picker.
 - **When it applies.** A save that changes the pin reloads the Bot's live
-  DM chat (`crew_update.api_kirocrew_agent_update`) through `reload_slot_session`,
+  DM chat (`crew_update.api_ajcrew_agent_update`) through `reload_slot_session`,
   and writes the record in that reload's `after_reset_in_lock` hook: after the
   busy and sub-agent guards pass and the old process is gone, with the slot and
   session locks still held. A turn that cold-starts in the meantime waits on the
@@ -5069,18 +5069,18 @@ kiro-cli that lacks its engine.
 
 **A per-crewmate preview, off by default.** Each Bot's record carries
 `dynamic_capabilities` (`agents.<name>` in `config.json`,
-`KiroCrewAgentConfig.dynamic_capabilities`, a strict bool; absent or any other
+`AjCrewAgentConfig.dynamic_capabilities`, a strict bool; absent or any other
 value is off). It holds only that Bot's crewmate-driven capability path: it
 finding a skill or an MCP server for its own worker and asking for it on a card.
 There is no global key. It is set on the Bot's own Profile card
 (`pages/members/CrewProfileSettings.tsx`: a **Dynamic capabilities** row with a
 **Preview** tag), which writes
 `PUT /api/agents/{name}` `{dynamic_capabilities}` for that Bot alone; the
-roster serves it. `kiro_crew/crewmate_dynamic_capabilities.py` reads it per
+roster serves it. `aj_crew/crewmate_dynamic_capabilities.py` reads it per
 request: `enabled_for(member)` is the Bot's flag,
 `restricted_for(member)` is the flag off. A check with no Bot in
 scope (no name, not on the roster) is off. Both capability tools stay listed on
-every Bot's conductor: the pooled `kirocrew-mate` server caches a session's
+every Bot's conductor: the pooled `ajcrew-mate` server caches a session's
 tool policy with no way to drop it, so a tool cut there would outlive a Turn on.
 The routes read the flag on every call instead, so a change takes effect at once,
 also in a running session. Off, for that Bot:
@@ -5095,7 +5095,7 @@ also in a running session. Off, for that Bot:
 | `handlers/change_cards._complete` | no `[Capabilities added]` nudge (the card's `params.member`) |
 | `context_assembly/member.build_member_section` | `conductor.mate_tools_identity_manual` and `conductor.crew_log_section_manual`: no `find_capabilities`; a gap goes to `request_capabilities`, as before the preview |
 
-**The Preview opt-in** (`kiro_crew/mate_tool_access.py`). With the flag off,
+**The Preview opt-in** (`aj_crew/mate_tool_access.py`). With the flag off,
 `request_capabilities` stays mounted, so no Bot loses it. Its first call
 (`member_self.api_member_self_propose`, `request: capabilities`) is checked and
 resolved exactly as with the flag on (the user-turn rule, `additions_to_draft`),
@@ -5141,7 +5141,7 @@ hand-off, so a worker started after a grant has it. One already running is
 reloaded in place (`dashboard/crewmate_worker_reload.py`): after a
 `PUT /api/agents/{name}/capabilities` on a Bot that owns its file (a
 `request_capabilities` card applied, or the user adding one in advanced settings),
-each of the Bot's live workers (a `template` record on `kirocrew-mate-worker`
+each of the Bot's live workers (a `template` record on `ajcrew-mate-worker`
 with its `member_id`) is torn down with the tab menu's Reload teardown
 (`reload_slot_session`) and resumes the SAME conversation on the rebuilt spec; no
 new worker is opened. Only an idle one is reloaded; a busy one (a turn in flight,
@@ -5276,12 +5276,12 @@ cross-member ACL. Continuations retain the original run's member/store even if
 a different member now requests the continuation. The gateway still requires
 ordinary authenticated session identity before accepting a parent session.
 
-A Bot whose binding owns its file chats on `kirocrew-mate-conductor`, whose
+A Bot whose binding owns its file chats on `ajcrew-mate-conductor`, whose
 spec lives in the Bot folder and is no agent a sub-agent loads by name. A
 `spawn_run(crew=<member>)` (or `target_member`) that names no `agent` runs on
 that Bot's WORKER instead: `mate_worker.spawn_worker_execution` turns the
 resolved `member` selection on the conductor into the worker's record shape (a
-`template` selection on `kirocrew-mate-worker`; member, store, memory mode and
+`template` selection on `ajcrew-mate-worker`; member, store, memory mode and
 app kept), the shape a hand-off and a scheduled turn give it. Answered from the
 record alone, so it reads no file on the loop. The run is never looked up by
 name (`_validate_agent` is unchanged, so neither the conductor nor the worker
@@ -5353,7 +5353,7 @@ Parent-change and impact previews use the server's redacted projection.
 
 - A crew's `triggers` is free text read by a model. It is not a matcher, and no
   regex interprets it.
-- `POST /api/agents` requires an explicit `kiro_agent`; the silent `"kirocrew"`
+- `POST /api/agents` requires an explicit `kiro_agent`; the silent `"ajcrew"`
   default is refused, because it made every template-less crew an alias for the
   default agent. A template absent from the installed listing is accepted with a
   warning rather than refused, since an edition may resolve a row the listing
@@ -5362,8 +5362,8 @@ Parent-change and impact previews use the server's redacted projection.
   masked for every caller but the owner. An already-stored name is not renamed
   retroactively, which is why the owner keeps reading it verbatim: a name must
   be legible to be renamed.
-- `kirocrew`, `kirocrew-conductor`, `kirocrew-pipeline-conductor` and
-  `kirocrew-security-conductor` are in `UNADVERTISED_AGENTS`, so they never
+- `ajcrew`, `ajcrew-conductor`, `ajcrew-pipeline-conductor` and
+  `ajcrew-security-conductor` are in `UNADVERTISED_AGENTS`, so they never
   appear in a rendered roster.
 
 ## Tests that pin this
@@ -5383,7 +5383,7 @@ Parent-change and impact previews use the server's redacted projection.
 | `test/test_members.py`, `test/test_members_dm_thread.py`, `test/test_members_dm_thread_activity_and_briefing.py` | Slug validation and containment, activity recording and dedupe, DM-binding canonicality, rules and briefing reads, briefing endpoint |
 | `test/test_chat_send_agent_model_default.py` | The crew model default a new session starts on |
 | `test/test_cron_conductor_scripted.py` | A scripted `cron_add` from a Bot's conductor is dispatched like any caller's |
-| `test/test_mate_conductor_parity.py` | Every section of the root conductor's charter is a shared rule the Bot's conductor is told, a heading, or allowlisted with a reason; no Bot piece copies charter text; every MCP server, tool, auto-approve grant and mapped skill of `kirocrew-conductor` is on `kirocrew-mate-conductor`, both read through the per-session projection, or allowlisted; no allowlist entry is stale; a planted root-only section, server, tool, grant or skill is caught |
+| `test/test_mate_conductor_parity.py` | Every section of the root conductor's charter is a shared rule the Bot's conductor is told, a heading, or allowlisted with a reason; no Bot piece copies charter text; every MCP server, tool, auto-approve grant and mapped skill of `ajcrew-conductor` is on `ajcrew-mate-conductor`, both read through the per-session projection, or allowlisted; no allowlist entry is stale; a planted root-only section, server, tool, grant or skill is caught |
 | `test/test_mate_config_migration.py` | The upgrade migration carries a shared template's or a `crew-<hex>` copy's kit and nothing the worker base has, gives a default-template Bot a file that adds nothing, gives the conductor-bound first Bot what a default-template Bot gets, leaves a binding without a `member_id` alone without a log line above DEBUG, records the kit's source, skips and logs a Bot whose worker would differ (binding and disk untouched), changes nothing on a second run, leaves a hand-made rollback alone, and the carried capabilities read as already there |
 | `test/test_mate_thread_wakes.py` | A worker's turn end wakes its Bot once; no wake for a session the Bot did not create or that this process did not witness; a busy thread gets one report (the latest, with the turn count) after its turn ends; a held report waits for the thread's next turn end; the excerpt's end marker cannot be forged; only the creator's send witnesses the link; a quiet worker end (`nothing_to_do`, no text) reports nothing and leaves a pending report as it was, while an empty reply without it or a reply with text still reports; every top-level turn end reaches the wake path with its quiet-end fact |
 | `test/test_mate_upgrade_notice.py` | A moved Bot's notice is posted once and never on a later start, never by a Bot created after the upgrade or on a thread whose binding names another member, reaches a thread not open at startup at its next turn end, and is owed only by Bots the migration moved |
@@ -5462,7 +5462,7 @@ Ultra Mode chat.
 | The one client filter is `crewModeView(rows, rootsOnly?)`: drop every `crew_root` row whose root is a row of the same list; `rootsOnly` keeps the roots alone. A crew member whose root is closed keeps its row -- no Crew panel lists it, the server keeps its stamp, and its own approval or question must still reach the person -- so the sidebar, All Dashboards and the Command Bar's Needs You show it and its approval as any chat's. `selectPersonSlots` is the memoized store read of it. The `crew_root` drop went live with the Crew panel (the side panel's Crew tab), which lists a root's crew members; the part before wired every person-facing list through this one function with the drop inert, so no list ever lost a row it could not reach elsewhere | `website/src/lib/crewMode.ts`, `website/src/store/personSlots.ts` |
 | Neither a close nor the page's own pick lands on a crew member: `deleteSlot` leaves `crew_root` rows out of both landing sets (the sidebar's displayed order and recency), and the chat page's auto-open reads `autoOpenRows`, so a first visit or a close with only crew members left creates an ordinary chat. A crew member opened on purpose stays open | `store/chatSlice.ts`, `lib/crewMode.ts`, `pages/chat/useChatPageSessionController.ts` |
 | `website/src/lib/crewMode.ts`, `website/src/lib/crewWorkers.ts`, `website/src/pages/chat/command-center/CrewWorkerList.tsx`, `website/src/pages/chat/command-center/UltraCrewPanel.tsx`, `website/src/components/crew/` | The dashboard's Ultra Mode helpers (`runsConductor`, `withoutConductors`, `crewModeView`, `agentCycleTarget`, the worker groups), the side panel's Crew tab (shown as Ultra Mode) with its Status \| List switch, and the crew marks (badge, eyebrow, breadcrumb, the turn-on effect) |
-| The Crew tab's list has two sources. The slot store's own rows -- every open slot stamped `crew_root` for the root, a peer's left out -- are shaped as list rows (`liveCrewWorkers`: state to status and group, lineage from `created_by`) and are always in, so a crew member the person's lists leave out is reachable from the tab whether or not the gateway serves `GET /api/chat/slots/{root}/crew-workers`. That route adds what the store has not (closed crew members, the ledger item, the summary, the server's own group) and its rows win where both name a key (`mergeCrewWorkers`). A 404 on a crew route (an older gateway, or the part that serves it has not landed) is NO DATA, not a failure (`crewRouteNotServed`): the list, the sidebar row's crew summary and the Timeline say nothing is wrong and hand nothing to the agent -- the list shows the open crew members or "No crew yet", the Timeline one muted line that this gateway has no timeline yet -- and the route is not polled again. A read that fails for a real reason still says so. The route is re-read when the slot store says the crew moved (`useCrewWorkersPush`: a crew row's state, title or `parent` from the lineage push, or the `crew_work` of the root or of a sub-conductor, which the gateway follows for any crew member that dispatched another), one coalesced re-read per burst, with a 60 s poll for what no push carries; the gateway keeps each root's closed workers, their titles and every ledger store's facts until the session tree, the live keys or that store's change mark moves (`crew_workers._root_cache`) | `website/src/lib/crewWorkers.ts`, `website/src/pages/chat/command-center/CrewWorkerList.tsx`, `src/kiro_crew/dashboard/handlers/crew_workers.py` |
+| The Crew tab's list has two sources. The slot store's own rows -- every open slot stamped `crew_root` for the root, a peer's left out -- are shaped as list rows (`liveCrewWorkers`: state to status and group, lineage from `created_by`) and are always in, so a crew member the person's lists leave out is reachable from the tab whether or not the gateway serves `GET /api/chat/slots/{root}/crew-workers`. That route adds what the store has not (closed crew members, the ledger item, the summary, the server's own group) and its rows win where both name a key (`mergeCrewWorkers`). A 404 on a crew route (an older gateway, or the part that serves it has not landed) is NO DATA, not a failure (`crewRouteNotServed`): the list, the sidebar row's crew summary and the Timeline say nothing is wrong and hand nothing to the agent -- the list shows the open crew members or "No crew yet", the Timeline one muted line that this gateway has no timeline yet -- and the route is not polled again. A read that fails for a real reason still says so. The route is re-read when the slot store says the crew moved (`useCrewWorkersPush`: a crew row's state, title or `parent` from the lineage push, or the `crew_work` of the root or of a sub-conductor, which the gateway follows for any crew member that dispatched another), one coalesced re-read per burst, with a 60 s poll for what no push carries; the gateway keeps each root's closed workers, their titles and every ledger store's facts until the session tree, the live keys or that store's change mark moves (`crew_workers._root_cache`) | `website/src/lib/crewWorkers.ts`, `website/src/pages/chat/command-center/CrewWorkerList.tsx`, `src/aj_crew/dashboard/handlers/crew_workers.py` |
 | A PEER's crew members stay rows in the federated session list (`sessionSources.ts`): a local crew member leaves the list because its root's Crew panel lists it, but a peer's root opens in the crew window, which has no such panel, and the panel reads this gateway's slots and routes, so for a peer's crew member the list is the one way in. The rows keep their `crew_root` / `crew_mode_root` stamps for the marks | `website/src/pages/chat-sidebar/sessionSources.ts`, `website/src/hooks/useInstanceSessions.ts` |
 | What a hidden crew member (its root open) owes the person rides on its root. The Command Bar's Needs You lifts an Ultra Mode root whose workers wait on a tool approval with the Approve pill and the count (`crewWaitingApprovals` over the FULL slot set, the count the fleet page's command center uses); the root's own approval, when it has one, reads as any session's. The sessions view still lists no crew member | `website/src/apps/command-bar/CommandBarOverlay.tsx`, `website/src/apps/command-bar/CommandBarOverlayRootRows.tsx` |
 | Crew panel data: a worker's group (`approval`, `working`, `with_conductor`, `waiting`, `done`; an idle worker whose own bounded loop will wake it, `ledger_wake.worker_looping` sent as `looping`, is `working`, and so is its milestone, its goal-board card and, when every open item loops, its conductor's row: "N running", no new word), the root summary, the sub-dispatcher order, the Status view's milestone state, Done-when and Recap rules, and the steer receipt notice | `lib/crewWorkers.ts`, `pages/chat/command-center/UltraCrewPanel.tsx`, `lib/crewSteerNotice.ts`, `types/index.chat.ts` |

@@ -2,7 +2,7 @@
 
 ``_fire_dashboard_nudge`` prepends ``[auto-nudge cycle N]``, a capped loop's
 ``[patrol budget: ...]`` line and any ledger news to the loop's message. Those
-are Kiro Crew's words, but the runner matched skill triggers on the whole
+are Aj Crew's words, but the runner matched skill triggers on the whole
 turn, so a skill triggered by "patrol budget" loaded on every capped cycle of
 a loop that never asked for it. The fire path now hands ``_run_chat`` the
 loop's message as ``_skill_trigger_text``, and ``_turn_build_prompt`` passes
@@ -25,16 +25,16 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from chat_test_helpers import _make_state, drain_background_tasks
 
-from kiro_crew.autonudge import NudgeLoop
-from kiro_crew.config.loader import KiroCrewConfig, SkillsConfig
-from kiro_crew.context import ContextBuilder
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.memory import MemoryStore
-from kiro_crew.monitoring.models import MonitorState
-from kiro_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
-from kiro_crew.skills import SkillsLoader
-from kiro_crew.slack import gateway as gw
-from kiro_crew.testing.wait import finished
+from aj_crew.autonudge import NudgeLoop
+from aj_crew.config.loader import AjCrewConfig, SkillsConfig
+from aj_crew.context import ContextBuilder
+from aj_crew.dashboard import chat_runner
+from aj_crew.memory import MemoryStore
+from aj_crew.monitoring.models import MonitorState
+from aj_crew.providers.base import EVENT_COMPLETE, EVENT_TEXT_CHUNK, LLMEvent
+from aj_crew.skills import SkillsLoader
+from aj_crew.slack import gateway as gw
+from aj_crew.testing.wait import finished
 
 pytestmark = pytest.mark.usefixtures("close_skills_loaders")
 
@@ -74,8 +74,8 @@ def _slot() -> MagicMock:
 
 
 def _orchestrator() -> gw.GatewayOrchestrator:
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U_OWNER"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U_OWNER"}):
         orch = gw.GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
     orch.dashboard_state = SimpleNamespace(
         get_slot=MagicMock(return_value=_slot()),
@@ -109,7 +109,7 @@ async def _fire(loop: NudgeLoop, wake_message: str | None = None) -> AsyncMock:
     run_chat = AsyncMock(side_effect=_authorize_monitor_turn)
     with (
         patch.object(gw, "spawn_guarded_turn", _spawn),
-        patch("kiro_crew.dashboard.chat._run_chat", new=run_chat),
+        patch("aj_crew.dashboard.chat._run_chat", new=run_chat),
     ):
         await asyncio.wait_for(orch._fire_dashboard_nudge(loop, wake_message), _HANG_CEILING_S)
         await asyncio.wait_for(asyncio.gather(*spawned), _HANG_CEILING_S)
@@ -130,7 +130,7 @@ def _builder(tmp_path: Path) -> ContextBuilder:
     loader = SkillsLoader(
         skills_path=skills,
         install_builtins=False,
-        config=KiroCrewConfig(skills=SkillsConfig(max_triggered=3)),
+        config=AjCrewConfig(skills=SkillsConfig(max_triggered=3)),
     )
     return ContextBuilder(memory=MemoryStore(workspace=tmp_path / "ws"), skills=loader)
 

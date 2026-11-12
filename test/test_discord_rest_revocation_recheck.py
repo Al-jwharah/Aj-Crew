@@ -21,9 +21,9 @@ import aiohttp
 import pytest
 from multidict import CIMultiDict
 
-from kiro_crew.discord import client as dc
-from kiro_crew.discord import transport as dt
-from kiro_crew.discord.client import (
+from aj_crew.discord import client as dc
+from aj_crew.discord import transport as dt
+from aj_crew.discord.client import (
     _REVOKED_DETAIL,
     _UNANSWERABLE_DETAIL,
     _UNATTRIBUTABLE_DETAIL,
@@ -35,7 +35,7 @@ from kiro_crew.discord.client import (
     SendPermission,
     _guarded_destination,
 )
-from kiro_crew.discord.transport import DiscordTransport
+from aj_crew.discord.transport import DiscordTransport
 
 #: Structural assertions read their sources from here, not from the process
 #: working directory, so a run started anywhere reads this checkout.
@@ -549,7 +549,7 @@ class TestCallerSuppliedDestination:
         """A send is outbound traffic, so the row it leaves has to say so. Pinned
         by which name the client calls, because the direction is carried by the
         entry point rather than by an argument."""
-        import kiro_crew.discord.client as dc
+        import aj_crew.discord.client as dc
 
         assert hasattr(dc, "channel_outbound_permitted")
         assert not hasattr(dc, "channel_inbound_permitted")
@@ -645,7 +645,7 @@ class TestCallerSuppliedDestination:
         Two ephemeral refusal notices are exempt, found by their text, not line number:
         gated by the authority they announce, they could never be delivered.
         """
-        from kiro_crew.discord import transport_dispatch as td
+        from aj_crew.discord import transport_dispatch as td
 
         # The dispatcher is its facade and the owners it is composed from, read as one text.
         source = "\n".join(
@@ -1031,7 +1031,7 @@ class TestTransportPredicate:
         # The client is its facade and the owners it is composed from, read as one text.
         client_src = "\n".join(
             p.read_text(encoding="utf-8")
-            for p in sorted((_REPO_ROOT / "src/kiro_crew/discord").glob("client*.py"))
+            for p in sorted((_REPO_ROOT / "src/aj_crew/discord").glob("client*.py"))
         )
         tree = _ast.parse(client_src)
         holders: list[str] = []
@@ -1072,7 +1072,7 @@ class TestTransportPredicate:
         # through the one public method whose callers are checked below.
         assert funnel_callers == ["create_dm_channel", "remember_dm_recipient"], funnel_callers
 
-        discord = _REPO_ROOT / "src/kiro_crew/discord"
+        discord = _REPO_ROOT / "src/aj_crew/discord"
         for path, src in (
             (discord / "transport.py", (discord / "transport.py").read_text(encoding="utf-8")),
             # The dispatcher is its facade and the owners it is composed from, read as one text.

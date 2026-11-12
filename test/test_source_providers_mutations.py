@@ -15,8 +15,8 @@ from source_providers_helpers import _mock_source_sel_fixture  # noqa: F401
 from source_providers_helpers import _no_visibility_refresh_side_task  # noqa: F401
 from source_providers_helpers import _app
 
-from kiro_crew.dashboard.handlers import source_providers as source
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.handlers import source_providers as source
+from aj_crew.testing.wait import await_until
 
 
 @pytest.mark.asyncio

@@ -24,7 +24,7 @@
  * wins over the harness catch-all).
  *
  * Usage:  node scripts/capture-session-breakdown.mjs [outDir]
- * Output: <outDir> || $KIROCREW_SCRATCH || os.tmpdir()/session-tree-cap/
+ * Output: <outDir> || $AJCREW_SCRATCH || os.tmpdir()/session-tree-cap/
  *   session-tree.png, session-tree.mp4
  */
 import { mkdirSync } from 'node:fs'
@@ -35,10 +35,10 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 import { json } from './lib/boot-api.mjs'
 
 const SLOT = 'chat-1'
-const PROJECT = '/home/user/workspace/KiroCrew'
-// Output dir: first CLI arg, else $KIROCREW_SCRATCH, else the OS temp dir —
+const PROJECT = '/home/user/workspace/AjCrew'
+// Output dir: first CLI arg, else $AJCREW_SCRATCH, else the OS temp dir —
 // never a hardcoded personal path.
-const OUT = process.argv[2] || join(process.env.KIROCREW_SCRATCH || tmpdir(), 'session-tree-cap')
+const OUT = process.argv[2] || join(process.env.AJCREW_SCRATCH || tmpdir(), 'session-tree-cap')
 mkdirSync(OUT, { recursive: true })
 
 // ---------------------------------------------------------------------------
@@ -125,7 +125,7 @@ const slots = [{
   running: false,
   last_message: 'Babysit PR #5966 to green and review it',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),

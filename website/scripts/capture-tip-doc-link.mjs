@@ -30,7 +30,7 @@ const slots = [{
   running: true, // the tip trigger only arms on a running slot
   last_message: 'Fanning the file survey out now.',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: '/home/user/workspace/notes',
   folder_id: '',
@@ -54,7 +54,7 @@ const detail = {
 // The restored curated tips: doc="" (dismissal identity stays empty, so
 // dismissing them cannot suppress the catalog tip for the same doc) while
 // doc_link carries the learn-more target — exactly the shape shipped in
-// src/kiro_crew/data/tips_curated.json.
+// src/aj_crew/data/tips_curated.json.
 const TIPS = {
   'delegate-independent-work': {
     id: 'delegate-independent-work',
@@ -119,7 +119,7 @@ async function main() {
     await stubDashboardApi(page, { folders: [], slots, theme, extra })
     await page.addInitScript(slot => {
       localStorage.setItem('mc-active-slot', slot)
-      localStorage.removeItem('kirocrew.tips.lastShownAt')
+      localStorage.removeItem('ajcrew.tips.lastShownAt')
     }, SLOT)
     await page.goto(base + '/', { waitUntil: 'domcontentloaded' })
     await page.waitForTimeout(2500)

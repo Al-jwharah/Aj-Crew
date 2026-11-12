@@ -7,7 +7,7 @@
  *
  * Shoots the three states that carry the change, because none alone shows it:
  * the sheet as it OPENS (the template now reads a placeholder instead of a
- * pre-filled `kirocrew`, which is the whole defect — a pre-filled built-in made
+ * pre-filled `ajcrew`, which is the whole defect — a pre-filled built-in made
  * every untouched crew an alias for the default agent), the dropdown OPEN (so the
  * shot proves the real options are reachable rather than that the field is inert),
  * and the REFUSAL after pressing Create without choosing one.
@@ -34,14 +34,14 @@ const PREFIX = process.argv[3] || 'after'
 mkdirSync(OUT, { recursive: true })
 
 const CREWS = [
-  { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default' },
+  { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default' },
   { name: 'oncall', kiro_agent: 'oncall-agent', workspace: 'oncall', memory_store: 'default' },
 ]
-const INSTALLED = ['kirocrew', 'oncall-agent', 'reviewer']
+const INSTALLED = ['ajcrew', 'oncall-agent', 'reviewer']
 
 const API = crewsApi({
   crews: CREWS,
-  defaultAgent: 'kirocrew',
+  defaultAgent: 'ajcrew',
   installed: INSTALLED,
   workspaces: ['default', 'oncall', 'research'],
   memoryStores: ['default', 'research'],

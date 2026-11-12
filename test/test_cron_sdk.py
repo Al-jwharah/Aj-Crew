@@ -16,10 +16,10 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from kiro_crew.apps.cron_sdk import CronSDK
-from kiro_crew.cron import CronService
-from kiro_crew.llm_helpers import ToolApprovalPolicy
-from kiro_crew.testing.wait import await_until
+from aj_crew.apps.cron_sdk import CronSDK
+from aj_crew.cron import CronService
+from aj_crew.llm_helpers import ToolApprovalPolicy
+from aj_crew.testing.wait import await_until
 
 pytestmark = pytest.mark.usefixtures("command_crons_run_here")
 
@@ -687,7 +687,7 @@ class TestCronApprovalAndTimeoutFieldsAgainstRealService:
             # Local import: pulling the gateway module in at collection time
             # would cost every other test in this file, which needs none of it.
             # Same placement as test_cron_approval_mode.py's own harness.
-            from kiro_crew.slack.gateway import GatewayOrchestrator
+            from aj_crew.slack.gateway import GatewayOrchestrator
 
             gw = GatewayOrchestrator.__new__(GatewayOrchestrator)
             gw.sessions = MagicMock()
@@ -723,10 +723,10 @@ class TestCronApprovalAndTimeoutFieldsAgainstRealService:
             # different invariant with its own coverage; neutralising it here is
             # what lets this test measure the approval decision rather than
             # re-measure the gate.
-            with patch("kiro_crew.slack.gateway.stream_and_collect", fake_stream), patch(
-                "kiro_crew.slack.gateway.vet_job_at_fire_time", lambda _job: None
+            with patch("aj_crew.slack.gateway.stream_and_collect", fake_stream), patch(
+                "aj_crew.slack.gateway.vet_job_at_fire_time", lambda _job: None
             ), patch(
-                "kiro_crew.slack.gateway.CronService"
+                "aj_crew.slack.gateway.CronService"
             ) as mock_cron_cls:
 
                 def capture_cron(on_job: Any = None, **kw: Any) -> Any:
@@ -915,13 +915,13 @@ class TestCronVettingDenyPath:
     def test_add_job_rejects_malicious_script(self, tmp_path, monkeypatch) -> None:
         """A script whose body fails vetting raises and creates no job.
 
-        Uses a real script under the sanctioned ``~/.kirocrew/crons/`` dir (so
+        Uses a real script under the sanctioned ``~/.ajcrew/crons/`` dir (so
         ``resolve_script_path`` succeeds) whose body references a credential
         path, so ``_vet_script_file`` returns an error and add_job hits the
         script deny branch.
         """
         monkeypatch.setenv("HOME", str(tmp_path))
-        crons_dir = tmp_path / ".kirocrew" / "crons"
+        crons_dir = tmp_path / ".ajcrew" / "crons"
         crons_dir.mkdir(parents=True)
         evil = crons_dir / "evil.py"
         evil.write_text(
@@ -938,7 +938,7 @@ class TestCronVettingDenyPath:
             _run(sdk.add_job(
                 name="exfil",
                 message="",
-                script="~/.kirocrew/crons/evil.py:run",
+                script="~/.ajcrew/crons/evil.py:run",
                 cron_expr="* * * * *",
             ))
 
@@ -948,7 +948,7 @@ class TestCronVettingDenyPath:
     def test_add_job_rejects_script_outside_sanctioned_dir(
         self, tmp_path, monkeypatch
     ) -> None:
-        """A script path outside ~/.kirocrew/crons/ is denied (resolve raises).
+        """A script path outside ~/.ajcrew/crons/ is denied (resolve raises).
 
         ``resolve_script_path`` raises ``PermissionError``/``FileNotFoundError``
         for paths outside the sanctioned dir; add_job must convert that into a
@@ -956,7 +956,7 @@ class TestCronVettingDenyPath:
         propagate unaudited.
         """
         monkeypatch.setenv("HOME", str(tmp_path))
-        (tmp_path / ".kirocrew" / "crons").mkdir(parents=True)
+        (tmp_path / ".ajcrew" / "crons").mkdir(parents=True)
 
         svc = MockCronService()
         sdk = CronSDK("evil-app", svc)
@@ -997,7 +997,7 @@ class TestOwnedCronToggle:
         from unittest.mock import Mock
 
         audit = Mock()
-        monkeypatch.setattr("kiro_crew.apps.cron_sdk.sel", lambda: audit)
+        monkeypatch.setattr("aj_crew.apps.cron_sdk.sel", lambda: audit)
         other = CronSDK("other", service).add_job(name="other/job", message="hello", every_secs=600)
         sdk = CronSDK("example", service)
         before = service._path.read_bytes()
@@ -1020,7 +1020,7 @@ class TestOwnedCronToggle:
 
     @pytest.mark.asyncio
     async def test_async_toggle_and_sync_loop_refusal(self, service):
-        from kiro_crew.apps.cron_sdk import CronSyncOnLoopError
+        from aj_crew.apps.cron_sdk import CronSyncOnLoopError
 
         sdk = CronSDK("example", service)
         job = await sdk.add_job_async(name="example/job", message="hello", every_secs=600)
@@ -1091,7 +1091,7 @@ class TestOwnedCronRunNow:
     @pytest.mark.asyncio
     async def test_a_foreign_job_is_refused_and_audited(self, service, monkeypatch):
         audit = MagicMock()
-        monkeypatch.setattr("kiro_crew.apps.cron_sdk.sel", lambda: audit)
+        monkeypatch.setattr("aj_crew.apps.cron_sdk.sel", lambda: audit)
         other = await CronSDK("other", service).add_job_async(
             name="other/job", message="hello", every_secs=600
         )

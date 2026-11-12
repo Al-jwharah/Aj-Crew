@@ -9,7 +9,7 @@ because the child's whole purpose is to draw on the real desktop session, which 
 rewritten process identity would be denied.
 
 Every binary named here ships in a fixed system directory on its platform, so
-:func:`kiro_crew.platform_compat.trusted_system_bin` resolves it on a stock host
+:func:`aj_crew.platform_compat.trusted_system_bin` resolves it on a stock host
 and the pin costs no function. The audit is mechanical for the reason the spawn
 audit is mechanical: the rule is easy to state, and easy to forget at the next
 call site.

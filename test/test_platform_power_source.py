@@ -12,8 +12,8 @@ import os
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.platform_compat import (
+from aj_crew import platform_compat
+from aj_crew.platform_compat import (
     POWER_AC,
     POWER_BATTERY,
     POWER_UNKNOWN,

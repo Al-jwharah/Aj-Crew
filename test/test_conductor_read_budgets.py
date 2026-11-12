@@ -32,14 +32,14 @@ import pytest
 from aiohttp.test_utils import make_mocked_request
 from test_session_ledger import _TimingUrlopen
 
-from kiro_crew import dashboard_agentic, mcp_core, mcp_dashboard, mcp_panel
-from kiro_crew import members as members_mod
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log_projection
-from kiro_crew.dashboard.handlers import agent_panel as routes
-from kiro_crew.mcp_dashboard import SESSION_STATUS_READ_TIMEOUT_SECS
-from kiro_crew.mcp_tools.dashboard_client import LoopbackDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew import dashboard_agentic, mcp_core, mcp_dashboard, mcp_panel
+from aj_crew import members as members_mod
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log_projection
+from aj_crew.dashboard.handlers import agent_panel as routes
+from aj_crew.mcp_dashboard import SESSION_STATUS_READ_TIMEOUT_SECS
+from aj_crew.mcp_tools.dashboard_client import LoopbackDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
 
 #: Longer than ``mcp_core._get``'s 10 s telemetry default and shorter than either
 #: tool's budget: the route the old bound failed on and the new one must not.
@@ -169,13 +169,13 @@ async def test_the_field_list_pays_one_queue_wait_for_all_its_reads(monkeypatch)
     """The five reads after the gate run inside ONE worker job.
 
     Each ``asyncio.to_thread`` hop queues on the shared executor, so separate hops pay
-    a saturated queue's wait five times. ``kirocrew-conductor`` is used because it has
+    a saturated queue's wait five times. ``ajcrew-conductor`` is used because it has
     a shipped page, so every read runs for real.
     """
     monkeypatch.setenv(crew_log_emit.CREW_LOG_ENV, "1")
     crew_log_emit.reset_caches()
     crew_log_projection.forget_slot_folds()
-    crew = "kirocrew-conductor"
+    crew = "ajcrew-conductor"
     slug = members_mod.member_slug(crew)
     slot = members_mod.member_slot_key(slug)
 

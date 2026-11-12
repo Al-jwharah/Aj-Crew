@@ -63,17 +63,17 @@ function config(over: Partial<SlackConfigData> = {}): SlackConfigData {
   return {
     connected: true, connect_error: '', configured: true, read_only: false,
     bot_token_set: true, app_token_set: true, bot_token_preview: 'xoxb-••••', app_token_preview: 'xapp-••••',
-    owner_id: 'U000OWNER', command: 'kirocrew', allowed_enterprise_ids: [],
+    owner_id: 'U000OWNER', command: 'ajcrew', allowed_enterprise_ids: [],
     reactions_enabled: true, show_thinking: true,
     agent_sessions: false,
     code_channels: false,
     code_channel_defaults: { folder: null, agent: null, model: null, reasoning_effort: null },
     code_channel_effective: {
-      folder: null, agent: 'kirocrew', agent_source: 'slack', model: null, reasoning_effort: null,
-      project_dir: null, project_source: '', slack_agent: 'kirocrew',
+      folder: null, agent: 'ajcrew', agent_source: 'slack', model: null, reasoning_effort: null,
+      project_dir: null, project_source: '', slack_agent: 'ajcrew',
     },
     code_channel_warnings: [],
-    code_channel_auto_folder: { name: 'Code channels', agent: 'kirocrew-conductor', id: null },
+    code_channel_auto_folder: { name: 'Code channels', agent: 'ajcrew-conductor', id: null },
     code_channel_agents: ['builder', 'reviewer'],
     ...over,
   }
@@ -81,7 +81,7 @@ function config(over: Partial<SlackConfigData> = {}): SlackConfigData {
 
 function seed(cfg: Partial<SlackConfigData> = {}, st: SlackManifestStatus = status(), folders: unknown[] = FOLDERS) {
   vi.spyOn(api, 'getSlackConfig').mockResolvedValue(config(cfg))
-  vi.spyOn(api, 'getSlackManifest').mockResolvedValue({ alias: 'kirocrew', manifest: 'display_information: {}\n', create_url: 'https://example.invalid/new' })
+  vi.spyOn(api, 'getSlackManifest').mockResolvedValue({ alias: 'ajcrew', manifest: 'display_information: {}\n', create_url: 'https://example.invalid/new' })
   const getStatus = vi.spyOn(api, 'getSlackManifestStatus').mockResolvedValue(st)
   vi.spyOn(api, 'chatFolders').mockResolvedValue(folders as never)
   vi.spyOn(api, 'chatTags').mockResolvedValue([] as never)
@@ -233,19 +233,19 @@ describe('Code channels card', () => {
     const preview = screen.getByTestId('slack-code-preview')
     expect(preview).toHaveTextContent('Unfiled')
     expect(preview).not.toHaveTextContent('created on first use')
-    expect(preview).not.toHaveTextContent('kirocrew-conductor')
+    expect(preview).not.toHaveTextContent('ajcrew-conductor')
   })
   it('with nothing configured, files into an auto-created Code channels folder run by the conductor', async () => {
     seed({ code_channels: true }, status(), [])
     await hydrated()
     const card = await screen.findByTestId('slack-code-defaults', {}, CHAINED)
-    await waitFor(() => expect(within(card).getByLabelText('Default folder')).toHaveTextContent('Code channels (created automatically · kirocrew-conductor)'), CHAINED)
+    await waitFor(() => expect(within(card).getByLabelText('Default folder')).toHaveTextContent('Code channels (created automatically · ajcrew-conductor)'), CHAINED)
     // The hint names the picker that holds New folder…, since the row is
     // only visible once that picker is open.
     expect(card).toHaveTextContent('No folders yet. To create one, open Default folder and pick New folder…')
     const preview = screen.getByTestId('slack-code-preview')
     expect(preview).toHaveTextContent('Code channels (created automatically)')
-    expect(preview).toHaveTextContent('kirocrew-conductor')
+    expect(preview).toHaveTextContent('ajcrew-conductor')
     expect(preview).toHaveTextContent('Inherited from folder')
   })
 
@@ -264,11 +264,11 @@ describe('Code channels card', () => {
   })
 
   it('offers the shipped agents the server lists, conductor and team lead included', async () => {
-    seed({ code_channels: true, code_channel_agents: ['kirocrew', 'kirocrew-conductor', 'kirocrew-team-lead'] })
+    seed({ code_channels: true, code_channel_agents: ['ajcrew', 'ajcrew-conductor', 'ajcrew-team-lead'] })
     await hydrated()
     const card = await screen.findByTestId('slack-code-defaults', {}, CHAINED)
     await userEvent.click(within(card).getByLabelText('Default agent'))
-    for (const name of ['kirocrew-conductor', 'kirocrew-team-lead']) {
+    for (const name of ['ajcrew-conductor', 'ajcrew-team-lead']) {
       expect(await screen.findByRole('option', { name })).toBeInTheDocument()
     }
   })
@@ -309,7 +309,7 @@ describe('Code channels card', () => {
   it('does not offer to copy a manifest from before the saved switches', async () => {
     seed({ code_channels: false }, status({ status: 'needs_update', missing_scopes: ['code_channels:manage'] }))
     const manifest = vi.mocked(api.getSlackManifest)
-    manifest.mockResolvedValue({ alias: 'kirocrew', manifest: 'old: yaml\n', create_url: 'https://example.invalid/new', features: [] })
+    manifest.mockResolvedValue({ alias: 'ajcrew', manifest: 'old: yaml\n', create_url: 'https://example.invalid/new', features: [] })
     await hydrated()
     // The saved config now has the switch on, but the manifest refetch fails:
     // React Query keeps the old YAML, which must not be copyable.
@@ -334,10 +334,10 @@ describe('Code channels card', () => {
     const manifest = vi.mocked(api.getSlackManifest)
     const panel = await screen.findByTestId('slack-manifest-update', {}, CHAINED)
     const copyBtn = () => within(panel).getByRole('button', { name: 'Copy manifest YAML' })
-    manifest.mockResolvedValue({ alias: 'kirocrew', manifest: 'old: yaml\n', create_url: 'https://example.invalid/new', features: [] })
+    manifest.mockResolvedValue({ alias: 'ajcrew', manifest: 'old: yaml\n', create_url: 'https://example.invalid/new', features: [] })
     fireEvent.click(within(panel).getByRole('button', { name: /Check again/ }))
     await waitFor(() => expect(copyBtn()).toBeDisabled())
-    manifest.mockResolvedValue({ alias: 'kirocrew', manifest: 'new: yaml\n', create_url: 'https://example.invalid/new', features: ['code_channels'] })
+    manifest.mockResolvedValue({ alias: 'ajcrew', manifest: 'new: yaml\n', create_url: 'https://example.invalid/new', features: ['code_channels'] })
     fireEvent.click(within(panel).getByRole('button', { name: /Check again/ }))
     await waitFor(() => expect(copyBtn()).toBeEnabled())
   })
@@ -350,9 +350,9 @@ describe('Code channels card', () => {
   })
 
   it('creates a folder from the picker through the sidebar create call and selects it', async () => {
-    const { save } = seed({ code_channels: true, code_channel_agents: ['kirocrew-conductor', 'kirocrew-team-lead'] }, status(), [])
+    const { save } = seed({ code_channels: true, code_channel_agents: ['ajcrew-conductor', 'ajcrew-team-lead'] }, status(), [])
     const created = {
-      id: 'eeeeeeeeeeee', name: 'Payments', order: 0, project_dir: '/repo/payments', default_agent: 'kirocrew-team-lead',
+      id: 'eeeeeeeeeeee', name: 'Payments', order: 0, project_dir: '/repo/payments', default_agent: 'ajcrew-team-lead',
     }
     const create = vi.spyOn(api, 'createChatFolder').mockImplementation(async () => {
       // As on the server: the next folder read includes it.
@@ -376,7 +376,7 @@ describe('Code channels card', () => {
     expect(within(card).getByLabelText('Default folder')).toHaveTextContent('Payments')
     const preview = screen.getByTestId('slack-code-preview')
     expect(preview).toHaveTextContent('/repo/payments')
-    expect(preview).toHaveTextContent('kirocrew-team-lead')
+    expect(preview).toHaveTextContent('ajcrew-team-lead')
 
     fireEvent.click(saveBtn())
     await waitFor(() => expect(save).toHaveBeenCalledTimes(1))
@@ -465,7 +465,7 @@ describe('Code channels card', () => {
       code_channel_effective: {
         folder: { id: 'bbbbbbbbbbbb', path: 'Dev/Slack Code', project_dir: '/repo/app', default_agent: 'builder' },
         agent: 'builder', agent_source: 'folder', model: null, reasoning_effort: null,
-        project_dir: '/repo/app', project_source: 'folder', slack_agent: 'kirocrew',
+        project_dir: '/repo/app', project_source: 'folder', slack_agent: 'ajcrew',
       },
     })
     const preview = await screen.findByTestId('slack-code-preview', {}, CHAINED)
@@ -490,7 +490,7 @@ describe('Code channels card', () => {
     // The preview names the agent that runs instead, not the missing one.
     const preview = screen.getByTestId('slack-code-preview')
     expect(preview).not.toHaveTextContent('ghost')
-    expect(preview).toHaveTextContent(/Agent\s*kirocrew-conductor\s*Inherited from folder/)
+    expect(preview).toHaveTextContent(/Agent\s*ajcrew-conductor\s*Inherited from folder/)
   })
 
   it('previews the inherited agent when the picked one is not in the folder', async () => {

@@ -72,7 +72,7 @@ const MD_CONTENT = '# Side panel\n\nThis file is flagged in this fixture so the 
 
 const slots = [{
   key: SLOT, title: 'Tree download', running: false, last_message: 'Tree download',
-  messages: 1, agent: 'kirocrew', memory_mode: 'persistent', project: PROJECT,
+  messages: 1, agent: 'ajcrew', memory_mode: 'persistent', project: PROJECT,
   modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
 }]
 const slotDetail = { running: false, has_more: false, total: 0, queue: [], messages: [] }
@@ -168,7 +168,7 @@ async function main() {
       localStorage.setItem('mc-files-rail-w', '300')
       localStorage.setItem('mc-side-panel-width', '640')
       localStorage.setItem('mc-file-linenums', '1')
-      localStorage.setItem('kirocrew:comment-hint-dismissed', '1')
+      localStorage.setItem('ajcrew:comment-hint-dismissed', '1')
       localStorage.setItem('mc-git-panel-opened:' + slot + ':' + project, '1')
       localStorage.setItem('mc-chat-config', JSON.stringify({ pinLastPrompt: false, streamMode: 'immediate' }))
     }, [SLOT, bucket([FILES_TAB, fileTab], `file:${MD_PATH}`), PROJECT])

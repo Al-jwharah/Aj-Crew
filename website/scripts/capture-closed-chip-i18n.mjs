@@ -37,7 +37,7 @@ const now = Math.floor(Date.now() / 1000)
 const SLOTS = [
   {
     key: ACTIVE, title: 'Retire the legacy importer', running: false, messages: 6,
-    agent: 'kirocrew', modified: now, last_ts: '2026-09-04T00:10:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now, last_ts: '2026-09-04T00:10:00Z', folder_id: '',
     last_message: 'Superseded by the streaming path.',
     // The case under test: a terminal closed pull request.
     source_links: [
@@ -47,7 +47,7 @@ const SLOTS = [
   },
   {
     key: 'chat-b', title: 'Ship the compaction fix', running: false, messages: 12,
-    agent: 'kirocrew', modified: now - 600, last_ts: '2026-09-04T00:00:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now - 600, last_ts: '2026-09-04T00:00:00Z', folder_id: '',
     last_message: 'Merged after the second review round.',
     // The sibling precedent the fix mirrors: merged renders a translated glyph.
     source_links: [
@@ -57,7 +57,7 @@ const SLOTS = [
   },
   {
     key: 'chat-c', title: 'Wire the audit worker', running: false, messages: 3,
-    agent: 'kirocrew', modified: now - 1800, last_ts: '2026-09-03T23:30:00Z', folder_id: '',
+    agent: 'ajcrew', modified: now - 1800, last_ts: '2026-09-03T23:30:00Z', folder_id: '',
     last_message: 'Checks are green, awaiting review.',
     // Live control: an open chip keeps its CI glyph and shows no lifecycle text.
     source_links: [

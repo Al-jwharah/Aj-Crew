@@ -78,10 +78,10 @@ from pathlib import Path
 _GATE = (
     Path(__file__).resolve().parents[1].parent
     / "src"
-    / "kiro_crew"
+    / "aj_crew"
     / "builtin_skills"
-    / "kirocrew-dev"
-    / "kirocrew-prepare-pr"
+    / "ajcrew-dev"
+    / "ajcrew-prepare-pr"
     / "scripts"
     / "pr_status.py"
 )

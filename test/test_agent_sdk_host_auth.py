@@ -19,17 +19,17 @@ from pathlib import Path
 import pytest
 from source_corpus import parsed_candidates
 
-from kiro_crew import acp_backends, kiro_cli_bundle, security
-from kiro_crew.acp import types as acp_types
-from kiro_crew.agent_sdk import host_auth, native_allow_stores, tool_gate
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.doctor_checks import render
-from kiro_crew.security import paths as security_paths
-from kiro_crew.security import paths_targets
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import acp_backends, kiro_cli_bundle, security
+from aj_crew.acp import types as acp_types
+from aj_crew.agent_sdk import host_auth, native_allow_stores, tool_gate
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.doctor_checks import render
+from aj_crew.security import paths as security_paths
+from aj_crew.security import paths_targets
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 SRC = Path(__file__).resolve().parent.parent / "src"
-HOST_AUTH_PY = SRC / "kiro_crew" / "agent_sdk" / "host_auth.py"
+HOST_AUTH_PY = SRC / "aj_crew" / "agent_sdk" / "host_auth.py"
 
 #: Stdlib modules this table may import, named one by one.
 #:
@@ -60,19 +60,19 @@ _ALLOWED_STDLIB = frozenset(
 #: The only in-tree imports allowed here, each itself a stdlib-only leaf: the module
 #: that supplies the backend ids this table is keyed by, and the one that composes
 #: the kiro-cli sign-in command its remedy text names.
-_ALLOWED_IN_TREE = frozenset({"kiro_crew.agent_sdk.backends", "kiro_crew.kiro_cli_bundle"})
+_ALLOWED_IN_TREE = frozenset({"aj_crew.agent_sdk.backends", "aj_crew.kiro_cli_bundle"})
 
 #: Stdlib modules the sign-in-command leaf may import. Kept apart from the table's
 #: own list so that list does not widen to cover what only the leaf needs.
 _ALLOWED_BUNDLE_STDLIB = frozenset({"__future__", "collections.abc", "os", "shlex", "sys"})
-KIRO_CLI_BUNDLE_PY = SRC / "kiro_crew" / "kiro_cli_bundle.py"
+KIRO_CLI_BUNDLE_PY = SRC / "aj_crew" / "kiro_cli_bundle.py"
 
 #: Packages whose arrival would close the cycle the leaf exists to avoid.
 _FORBIDDEN_IN_TREE = (
-    "kiro_crew.security",
-    "kiro_crew.acp",
-    "kiro_crew.config",
-    "kiro_crew.sandbox",
+    "aj_crew.security",
+    "aj_crew.acp",
+    "aj_crew.config",
+    "aj_crew.sandbox",
 )
 
 #: The methods :class:`host_auth.AgentInteractiveLogin` requires.
@@ -181,7 +181,7 @@ def test_importing_the_table_pulls_in_nothing_heavy() -> None:
             "import sys",
             f"sys.path.insert(0, {str(SRC)!r})",
             "before = set(sys.modules)",
-            "import kiro_crew.agent_sdk.host_auth as m",
+            "import aj_crew.agent_sdk.host_auth as m",
             "assert m.credential_leaves(), 'table did not load'",
             "added = sorted(set(sys.modules) - before)",
             f"forbidden_roots = {_FORBIDDEN_IN_TREE!r}",
@@ -219,7 +219,7 @@ def test_importing_the_table_pulls_in_nothing_heavy() -> None:
         f"importing host_auth loaded third-party module(s) {loaded['vendored']}; the "
         "table must be readable before any dependency is available"
     )
-    assert "kiro_crew.agent_sdk.backends" in loaded["added"], (
+    assert "aj_crew.agent_sdk.backends" in loaded["added"], (
         "the probe did not observe the backend-id leaf loading, so it was measuring "
         "an already-warm interpreter rather than a cold import"
     )
@@ -553,7 +553,7 @@ def test_no_current_driver_implements_the_login_protocol() -> None:
     """Asserted POSITIVELY, so the day a harness gains an in-product sign-in this
     test is the thing that notices.
 
-    The panel, doctor row and remedy string have no answer yet for a login Kiro Crew
+    The panel, doctor row and remedy string have no answer yet for a login Aj Crew
     drives, so a first implementer must be noticed.
     """
     implementers: list[str] = []
@@ -577,7 +577,7 @@ def test_no_current_driver_implements_the_login_protocol() -> None:
     assert implementers == [], (
         f"{implementers} now implement AgentInteractiveLogin. That is a real "
         "capability change, not a refactor: the panel, the doctor row and the "
-        "sign-in remedy each need an answer for a harness Kiro Crew logs in itself"
+        "sign-in remedy each need an answer for a harness Aj Crew logs in itself"
     )
 
 
@@ -650,7 +650,7 @@ def test_every_declared_expose_leaf_sits_under_a_masked_directory() -> None:
     necessary but not sufficient (a private key under a masked dir passes too), so the
     table stays host-owned with no declared field.
     """
-    from kiro_crew.agent_sdk import tool_gate as gate
+    from aj_crew.agent_sdk import tool_gate as gate
 
     for backend, leaves in gate.ADAPTER_EXPOSED_CREDENTIAL_LEAVES.items():
         if not leaves or not gate.is_enforced(backend):
@@ -673,7 +673,7 @@ def test_an_uncontained_expose_leaf_is_dropped_not_honoured(monkeypatch) -> None
     actually being applied, rather than where the table is written: the floor is not
     readable from a leaf this early.
     """
-    from kiro_crew.agent_sdk import tool_gate as gate
+    from aj_crew.agent_sdk import tool_gate as gate
 
     enforced = next(
         b
@@ -696,7 +696,7 @@ def test_a_sibling_of_a_masked_directory_is_not_treated_as_inside_it() -> None:
     one the declaration named. A root that IS the target is not inside itself
     either.
     """
-    from kiro_crew.agent_sdk import tool_gate as gate
+    from aj_crew.agent_sdk import tool_gate as gate
 
     root = os.path.join(os.path.sep, "tmp", "authseam-root", ".aws")
     assert gate._sits_under_any(os.path.join(root, "config"), (root,))
@@ -735,7 +735,7 @@ def test_the_kiro_signed_out_message_tells_the_user_to_send_again() -> None:
     )
     assert host_auth.signed_out_message("") == expected
     assert "start a new chat" not in host_auth.sign_in_remedy("")
-    # Choosing KAS means Kiro Crew's own sign-in: where kiro-cli cannot run a
+    # Choosing KAS means Aj Crew's own sign-in: where kiro-cli cannot run a
     # session the spawn moves onto Crew's own engine, so the KAS sentence names
     # the Kiro sign-in card alone and never sends the user to kiro-cli.
     kas = host_auth.signed_out_message("kas")
@@ -752,8 +752,8 @@ def test_the_kiro_signed_out_message_tells_the_user_to_send_again() -> None:
 def test_kas_messages_name_the_route_the_last_spawn_took(monkeypatch):
     """Once a spawn chose a route, the KAS messages lead with it, so a person reads
     which engine answered; other harnesses' messages are untouched."""
-    from kiro_crew.acp import kas_route
-    from kiro_crew.agent_sdk import kas_bundle
+    from aj_crew.acp import kas_route
+    from aj_crew.agent_sdk import kas_bundle
 
     base = host_auth.signed_out_message("kas")
     monkeypatch.setattr(
@@ -762,9 +762,9 @@ def test_kas_messages_name_the_route_the_last_spawn_took(monkeypatch):
         kas_route.KasRoute(bundle=True, reason=kas_route.REASON_NO_KIRO_CLI),
     )
     led = host_auth.signed_out_message("kas")
-    assert led == ("KAS runs on Kiro Crew's own engine because kiro-cli is not installed. " + base)
-    assert host_auth.sign_in_remedy("kas").startswith("KAS runs on Kiro Crew's own engine")
-    assert "Kiro Crew's own engine" not in host_auth.signed_out_message("")
+    assert led == ("KAS runs on Aj Crew's own engine because kiro-cli is not installed. " + base)
+    assert host_auth.sign_in_remedy("kas").startswith("KAS runs on Aj Crew's own engine")
+    assert "Aj Crew's own engine" not in host_auth.signed_out_message("")
     # A relay pinned to kiro-cli's launcher names kiro-cli's sign-in, and still
     # ends at sending again, as the bundle route's doctor remedy does.
     monkeypatch.setattr(
@@ -780,8 +780,8 @@ def test_kas_messages_name_the_route_the_last_spawn_took(monkeypatch):
 
 # The kiro-cli command named is the one this host's spawn runs
 
-_BUNDLED_POSIX_DIR = "/Applications/Kiro Crew.app/Contents/Resources/kiro-cli"
-_BUNDLED_WINDOWS_DIR = r"C:\Program Files\Kiro Crew\resources\kiro-cli"
+_BUNDLED_POSIX_DIR = "/Applications/Aj Crew.app/Contents/Resources/kiro-cli"
+_BUNDLED_WINDOWS_DIR = r"C:\Program Files\Aj Crew\resources\kiro-cli"
 
 
 def _gate_login_command(environ: dict, platform_name: str) -> str:
@@ -815,7 +815,7 @@ def test_a_path_install_names_the_bare_sign_in_command(backend: str, platform_na
     ("platform_name", "bundled_dir", "entry"),
     [
         ("darwin", _BUNDLED_POSIX_DIR, "kiro-cli-chat"),
-        ("linux", "/opt/Kiro Crew/resources/kiro-cli", "kiro-cli-chat"),
+        ("linux", "/opt/Aj Crew/resources/kiro-cli", "kiro-cli-chat"),
         ("win32", _BUNDLED_WINDOWS_DIR, "kiro-cli.exe"),
     ],
 )
@@ -848,7 +848,7 @@ def test_a_bundled_install_names_the_absolute_path_the_gate_serves(
 def test_doctor_prints_the_bundled_sign_in_command_on_one_line(
     backend: str, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    """``kirocrew doctor`` wraps its details at 80 columns, and the default macOS
+    """``ajcrew doctor`` wraps its details at 80 columns, and the default macOS
     app path has a space in it. A break there would leave two halves that run as
     nothing, so the command the signed-out row names is kept on one line."""
     environ = {"PATH": "/usr/bin", kiro_cli_bundle.BUNDLED_KIRO_DIR_ENV: _BUNDLED_POSIX_DIR}
@@ -863,7 +863,7 @@ def test_doctor_prints_the_bundled_sign_in_command_on_one_line(
 
 @pytest.mark.parametrize("bundled", [False, True])
 def test_an_off_path_override_keeps_the_bare_command(bundled: bool) -> None:
-    """An operator's ``KIROCREW_KIRO_BIN`` may name a binary that is gone, and the
+    """An operator's ``AJCREW_KIRO_BIN`` may name a binary that is gone, and the
     spawn then runs an install directory or the bundled copy instead. The remedy
     cannot stat which one ran, so it never names the override's path."""
     environ = {"PATH": "/usr/bin", kiro_cli_bundle.KIRO_BIN_OVERRIDE_ENV: "/opt/gone/kiro-cli"}

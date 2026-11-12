@@ -717,7 +717,7 @@ def _self_test() -> int:
 
     # Escalations.
     check("empty diff escalates", verdict([]) is None)
-    check("source change escalates", verdict(["src/kiro_crew/session.py"]) is None)
+    check("source change escalates", verdict(["src/aj_crew/session.py"]) is None)
     check("conftest escalates", verdict(["test/conftest.py"]) is None)
     check("shared helper escalates", verdict(["test/source_corpus.py"]) is None)
     check("fixture tree escalates", verdict(["test/fixtures/npm-audit/x.json"]) is None)
@@ -730,7 +730,7 @@ def _self_test() -> int:
     )
     check(
         "mixed leaf + source escalates",
-        verdict(["test/test_ask_question_roundtrip.py", "src/kiro_crew/agent.py"]) is None,
+        verdict(["test/test_ask_question_roundtrip.py", "src/aj_crew/agent.py"]) is None,
     )
     check("workflow change escalates", verdict([".github/workflows/ci.yml"]) is None)
 

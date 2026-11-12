@@ -20,12 +20,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.types import METHOD_PROMPT, METHOD_SESSION_UPDATE, JsonRpcMessage
-from kiro_crew.acp_backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.acp.client import AcpError
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.types import METHOD_PROMPT, METHOD_SESSION_UPDATE, JsonRpcMessage
+from aj_crew.acp_backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.providers.acp import AcpProvider
 
 # The engine's wire name, spelled out: a rename on Crew's side must not move it.
 _REVERT = "_kiro/checkpoint/revertMultiple"

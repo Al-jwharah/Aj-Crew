@@ -9,7 +9,7 @@ synthetic header holding every value type, string arrays, scalar arrays of
 every element type and a nested array, at chunk sizes small enough that every
 field straddles a chunk boundary somewhere, and at every truncation point.
 ``TestRealModel`` repeats the comparison on a real GGUF when
-``KIROCREW_TEST_EMBED_MODEL`` names one.
+``AJCREW_TEST_EMBED_MODEL`` names one.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from typing import BinaryIO
 
 import pytest
 
-import kiro_crew.embeddings_gguf as gguf
+import aj_crew.embeddings_gguf as gguf
 
 # ── The oracle: the per-field walker the buffered one replaced ──
 
@@ -368,12 +368,12 @@ class TestBoundedReads:
         assert requests[-1][0] + requests[-1][1] <= len(_EVERY_TYPE_HEADER) + 64
 
 
-_REAL_MODEL = os.environ.get("KIROCREW_TEST_EMBED_MODEL", "")
+_REAL_MODEL = os.environ.get("AJCREW_TEST_EMBED_MODEL", "")
 
 
 @pytest.mark.skipif(
     not _REAL_MODEL or not Path(_REAL_MODEL).is_file(),
-    reason="set KIROCREW_TEST_EMBED_MODEL to a GGUF embedding model to run",
+    reason="set AJCREW_TEST_EMBED_MODEL to a GGUF embedding model to run",
 )
 class TestRealModel:
     def test_the_real_header_parses_to_the_same_metadata(self) -> None:

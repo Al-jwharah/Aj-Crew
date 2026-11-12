@@ -17,8 +17,8 @@ import pytest
 from design_tweak_backend_helpers import isolated_queue_fixture  # noqa: F401
 from design_tweak_backend_helpers import _JsonHandler
 
-from kiro_crew.apps.builtins.design_tweak.backend import server
-from kiro_crew.platform_compat import IS_POSIX
+from aj_crew.apps.builtins.design_tweak.backend import server
+from aj_crew.platform_compat import IS_POSIX
 
 
 class TestRemovingAProjectReleasesItsResources:
@@ -208,7 +208,7 @@ class TestDevProxyStripsCredentials:
         """Reproduce the response-header filter over a realistic header set."""
         upstream = [
             ("Content-Type", "text/html"),
-            ("Set-Cookie", "kirocrew_session=attacker; Path=/"),
+            ("Set-Cookie", "ajcrew_session=attacker; Path=/"),
             ("set-cookie", "another=1"),
             ("Cache-Control", "no-store"),
             ("Connection", "keep-alive"),
@@ -245,7 +245,7 @@ class TestDevProxyStripsCredentials:
             b"Upgrade: websocket\r\n"
             b"Connection: Upgrade\r\n"
             b"Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n"
-            b"Set-Cookie: kirocrew_session=attacker; Path=/\r\n"
+            b"Set-Cookie: ajcrew_session=attacker; Path=/\r\n"
             b"set-cookie: another=1\r\n"
             b"Sec-WebSocket-Protocol: vite-hmr\r\n"
         )
@@ -290,7 +290,7 @@ class TestDevProxyStripsCredentials:
     def test_relay_http_drops_credentials(self, header):
         """Reproduce _relay_http's header filter over a realistic header set."""
         incoming = {
-            header: "kirocrew_token=super-secret",
+            header: "ajcrew_token=super-secret",
             "Accept": "text/html",
             "Accept-Encoding": "gzip",
             "Host": "127.0.0.1:5476",
@@ -317,7 +317,7 @@ class TestDevProxyStripsCredentials:
         """The HMR upgrade path replays headers verbatim, so it needs the same strip."""
         incoming = {
             "Host": "127.0.0.1:5476",
-            "Cookie": "kirocrew_token=super-secret",
+            "Cookie": "ajcrew_token=super-secret",
             "Upgrade": "websocket",
             "Sec-WebSocket-Key": "abc",
         }

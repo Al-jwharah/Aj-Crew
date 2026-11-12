@@ -103,7 +103,7 @@ describe('the transport keeps a permission refusal', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
 
     // What a loading document posts: it may carry a new sign-in on the shared cookie.
-    const otherTab = new BroadcastChannel('kirocrew-caller-changed')
+    const otherTab = new BroadcastChannel('ajcrew-caller-changed')
     otherTab.postMessage(null)
     otherTab.close()
     // Still refused, so exactly one more request, after which it is kept again.
@@ -120,7 +120,7 @@ describe('the transport keeps a permission refusal', () => {
     fetchMock.mockImplementationOnce(() => new Promise<Response>((resolve) => { release = resolve }))
     const pending = settle(api.members())
 
-    const otherTab = new BroadcastChannel('kirocrew-caller-changed')
+    const otherTab = new BroadcastChannel('ajcrew-caller-changed')
     otherTab.postMessage(null)
     otherTab.close()
     // The kept People refusal is asked again once the message has landed.

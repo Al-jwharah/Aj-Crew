@@ -1,4 +1,4 @@
-"""Tests for the warm-set cap policy (``kiro_crew.instances.warm_set``).
+"""Tests for the warm-set cap policy (``aj_crew.instances.warm_set``).
 
 The cap decides how many remote-crew panes stay mounted. It matters because
 eviction is indistinguishable from a disconnect at the pane -- the iframe is
@@ -9,12 +9,12 @@ switch.
 
 from __future__ import annotations
 
-from kiro_crew.instances.constants import (
+from aj_crew.instances.constants import (
     DEFAULT_WARM_SET_CAP,
     WARM_SET_CAP_AUTO,
     WARM_SET_CAP_AUTO_CEILING,
 )
-from kiro_crew.instances.warm_set import resolve_warm_set_cap
+from aj_crew.instances.warm_set import resolve_warm_set_cap
 
 
 class TestAutomatic:

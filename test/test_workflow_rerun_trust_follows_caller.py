@@ -22,8 +22,8 @@ from test_r7_owner_gate_positive_controls import (  # noqa: F401
 )
 from test_workflows_service import GOOD_SCRIPT, FakeSessions, _wait_terminal
 
-from kiro_crew.slack import gateway as gw
-from kiro_crew.workflows.service import WorkflowService
+from aj_crew.slack import gateway as gw
+from aj_crew.workflows.service import WorkflowService
 
 pytestmark = pytest.mark.asyncio
 
@@ -83,7 +83,7 @@ async def test_internal_secret_rerun_from_other_session_is_rebound(
     """The reviewer's handler path: internal secret + another X-Session-Key + source."""
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers.workflows import api_workflow_run_rerun
+    from aj_crew.dashboard.handlers.workflows import api_workflow_run_rerun
 
     svc, prior = await _origin_run()
     app = web.Application()

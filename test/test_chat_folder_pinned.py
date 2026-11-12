@@ -18,7 +18,7 @@ from chat_test_helpers import _make_folder_app, _make_state
 
 @pytest.fixture
 def state(tmp_path, monkeypatch) -> Any:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     return _make_state(tmp_path)
 
 
@@ -87,8 +87,8 @@ async def test_an_app_cannot_pin_its_own_folder(tmp_path) -> None:
 
     from aiohttp import web
 
-    from kiro_crew.dashboard.chat_folders import api_chat_folder_update
-    from kiro_crew.dashboard.state import DashboardState
+    from aj_crew.dashboard.chat_folders import api_chat_folder_update
+    from aj_crew.dashboard.state import DashboardState
 
     own = {"id": "f1", "name": "Radar", "parent_id": None, "order": 0, "owner_app": "acme"}
     st = DashboardState.__new__(DashboardState)

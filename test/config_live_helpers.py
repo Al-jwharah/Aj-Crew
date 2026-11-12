@@ -12,7 +12,7 @@ from unittest.mock import patch
 import pytest
 from _hot_reload_helpers import write_config as _write
 
-from kiro_crew.config import live
+from aj_crew.config import live
 
 # ── helpers ───────────────────────────────────────────────────────────────
 
@@ -23,8 +23,8 @@ def cfg_file_fixture(tmp_path: Path):
     cfg = tmp_path / "config.json"
     _write(cfg, {"agent": {"model": "model-a", "log_level": "INFO"}})
     with (
-        patch("kiro_crew.config.loader.config_path", return_value=cfg),
-        patch("kiro_crew.config.loader.config_local_path", return_value=tmp_path / "local.json"),
+        patch("aj_crew.config.loader.config_path", return_value=cfg),
+        patch("aj_crew.config.loader.config_local_path", return_value=tmp_path / "local.json"),
     ):
         yield cfg
     live.reset_for_tests()

@@ -1,8 +1,8 @@
 """Mint a fresh pod dashboard URL for the scroll rigs.
 
-Usage: python3 mint-pod-url.py <pod-worktree-name> <session-key> [kirocrew-bin]
+Usage: python3 mint-pod-url.py <pod-worktree-name> <session-key> [ajcrew-bin]
 
-Writes the URL to $KIROCREW_SCRATCH/kc-pod-url.txt (or $TMPDIR, else the
+Writes the URL to $AJCREW_SCRATCH/kc-pod-url.txt (or $TMPDIR, else the
 current directory) with mode 0600 -- it carries a live bearer token, so it
 does not go to a world-writable shared path. Pod dashboard tokens expire within
 minutes, so re-mint immediately before every rig run rather than once per
@@ -20,7 +20,7 @@ import sys
 
 POD = sys.argv[1]
 KEY = sys.argv[2]
-KC = sys.argv[3] if len(sys.argv) > 3 else "kirocrew"
+KC = sys.argv[3] if len(sys.argv) > 3 else "ajcrew"
 
 # Developer-facing helper: argv comes from the developer's own shell, but
 # validate anyway so nothing shell-metacharacter-shaped ever reaches the
@@ -31,7 +31,7 @@ if not re.fullmatch(r"[A-Za-z0-9._-]+", KEY):
     raise SystemExit(f"invalid session key: {KEY!r}")
 kc_bin = shutil.which(KC) if "/" not in KC else (KC if pathlib.Path(KC).is_file() else None)
 if not kc_bin:
-    raise SystemExit(f"kirocrew binary not found: {KC!r}")
+    raise SystemExit(f"ajcrew binary not found: {KC!r}")
 
 # List argv, binary resolved via shutil.which, both args allowlist-validated
 # above -- the taint rule cannot see the re.fullmatch sanitizers.
@@ -64,9 +64,9 @@ url = f"{base}/chat/{KEY}?token={d['token']}&sid={KEY}"
 # rather than following it, O_NOFOLLOW refuses a symlink, and 0600 keeps the
 # token off other accounts. A stale file from a previous mint is replaced by
 # unlinking it first -- that unlink is on a path we just refused to follow.
-# A directory this user owns. $KIROCREW_SCRATCH is reclaimed with the session;
+# A directory this user owns. $AJCREW_SCRATCH is reclaimed with the session;
 # the shared /tmp is deliberately NOT a fallback (see the write below).
-OUT_DIR = os.environ.get("KIROCREW_SCRATCH") or os.environ.get("TMPDIR") or "."
+OUT_DIR = os.environ.get("AJCREW_SCRATCH") or os.environ.get("TMPDIR") or "."
 URL_PATH = pathlib.Path(OUT_DIR) / "kc-pod-url.txt"
 URL_PATH.unlink(missing_ok=True)
 fd = os.open(

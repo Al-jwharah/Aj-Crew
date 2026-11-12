@@ -13,8 +13,8 @@ import time
 
 from members_eventlog_wiring_helpers import _fresh_eventlog  # noqa: F401
 
-from kiro_crew import eventlog_hooks
-from kiro_crew.testing.wait import default_timeout
+from aj_crew import eventlog_hooks
+from aj_crew.testing.wait import default_timeout
 
 
 class TestMemberEventLogAppendsAreOrdered:
@@ -25,7 +25,7 @@ class TestMemberEventLogAppendsAreOrdered:
     """
 
     def test_the_shared_executor_has_exactly_one_worker(self):
-        from kiro_crew import eventlog_hooks as hooks
+        from aj_crew import eventlog_hooks as hooks
 
         ex = hooks.io_executor()
         assert ex is hooks.io_executor(), "a fresh pool per call orders nothing"
@@ -35,7 +35,7 @@ class TestMemberEventLogAppendsAreOrdered:
         )
 
     def test_it_runs_submissions_in_submission_order(self):
-        from kiro_crew import eventlog_hooks as hooks
+        from aj_crew import eventlog_hooks as hooks
 
         ex = hooks.io_executor()
         seen: list[int] = []
@@ -61,9 +61,9 @@ class TestMemberEventLogAppendsAreOrdered:
         import ast
         import pathlib
 
-        import kiro_crew
+        import aj_crew
 
-        root = pathlib.Path(kiro_crew.__file__).parent
+        root = pathlib.Path(aj_crew.__file__).parent
         offenders: list[str] = []
         for f in sorted(root.rglob("*.py")):
             src = f.read_text(encoding="utf-8", errors="replace")
@@ -96,9 +96,9 @@ class TestMemberEventLogAppendsAreOrdered:
     def test_every_writer_reaches_the_executor_through_the_hooks_module(self):
         import pathlib
 
-        import kiro_crew
+        import aj_crew
 
-        root = pathlib.Path(kiro_crew.__file__).parent
+        root = pathlib.Path(aj_crew.__file__).parent
         calls = sum(
             f.read_text(encoding="utf-8", errors="replace").count("eventlog_hooks.submit(")
             for f in root.rglob("*.py")
@@ -117,7 +117,7 @@ class TestQueuedAppendsSurviveShutdown:
 
         def _slow_append() -> None:
             # flake-ok: pre-existing 50 ms sleep inside the stubbed slow append the drain waits for, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing sleep barrier, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing sleep barrier, moved verbatim; tracked for a de-flake pass
             time.sleep(0.05)
             landed.append("written")
 
@@ -169,9 +169,9 @@ def _gateway_source() -> str:
     """The Slack gateway facade's text followed by its composed owners' text."""
     import pathlib
 
-    import kiro_crew
+    import aj_crew
 
-    facade = pathlib.Path(kiro_crew.__file__).parent / "slack" / "gateway.py"
+    facade = pathlib.Path(aj_crew.__file__).parent / "slack" / "gateway.py"
     return "\n".join(
         path.read_text(encoding="utf-8")
         for path in (facade, *sorted((facade.parent / "gateway_runtime").glob("*.py")))

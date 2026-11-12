@@ -7,10 +7,10 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from kiro_crew.messaging import channel_fair_admission as cfa
-from kiro_crew.messaging.dispatch_contract import Verdict
-from kiro_crew.messaging.renderer import Renderer
-from kiro_crew.shared_crew import turn_gate
+from aj_crew.messaging import channel_fair_admission as cfa
+from aj_crew.messaging.dispatch_contract import Verdict
+from aj_crew.messaging.renderer import Renderer
+from aj_crew.shared_crew import turn_gate
 
 
 class _Renderer:

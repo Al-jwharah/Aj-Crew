@@ -38,7 +38,7 @@ const DASHBOARD_KEY = ['member-dashboard', 'atlas']
 /** A composed page with a data island, so a refill has values to post. The same
  *  version every time: the re-mint under test is a same-page one. */
 function page(body: string, over: Record<string, unknown> = {}) {
-  const island = `<script type="application/json" id="kirocrew-dashboard-data">${JSON.stringify({
+  const island = `<script type="application/json" id="ajcrew-dashboard-data">${JSON.stringify({
     fields: { boards: body.length },
     agentic: [],
     seq: 0,

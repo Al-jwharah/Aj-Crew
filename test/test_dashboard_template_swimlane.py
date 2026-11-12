@@ -10,7 +10,7 @@ Two risks of this page's own, and they are different kinds.
 -- an item whose worker reported ``done`` and which nothing has ruled on yet -- is named
 by neither ``state`` nor ``status`` alone, so the mapping is the page's own. A state the
 product adds and this page has no column for would land in "in progress" and read as work
-still moving, so the vocabulary is pinned against :mod:`kiro_crew.work_vocab` rather than
+still moving, so the vocabulary is pinned against :mod:`aj_crew.work_vocab` rather than
 against this page's own list.
 
 **The lane is the item's own round.** There is no epic field anywhere in the work fold, so
@@ -30,8 +30,8 @@ from typing import Any
 import dashboard_template_checks
 import pytest
 
-from kiro_crew.dashboard_templates.manifest import ManifestError, load_template
-from kiro_crew.work_vocab import (
+from aj_crew.dashboard_templates.manifest import ManifestError, load_template
+from aj_crew.work_vocab import (
     WORK_FOLD_NAME,
     WORK_ITEM_STATES,
     WORK_STORED_ITEM_LIMIT,
@@ -40,7 +40,7 @@ from kiro_crew.work_vocab import (
 
 TEMPLATE_ID = "swimlane"
 ROOT = Path(__file__).resolve().parents[1]
-DIRECTORY = ROOT / "src/kiro_crew/dashboard_templates/builtin" / TEMPLATE_ID
+DIRECTORY = ROOT / "src/aj_crew/dashboard_templates/builtin" / TEMPLATE_ID
 FIXTURES = ROOT / "test/fixtures/dashboard_templates"
 POD = FIXTURES / "pod_folds.json"
 SAMPLE = FIXTURES / "sample_work-kanban.json"

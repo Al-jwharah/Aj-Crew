@@ -17,8 +17,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.history import ConversationLog
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.history import ConversationLog
 
 CHANNEL_KEY = "whatsapp:default:dm:15551234567"
 
@@ -52,7 +52,7 @@ def _make_state(tmp_path) -> DashboardState:
 
 
 def _make_app(state: DashboardState) -> web.Application:
-    from kiro_crew.dashboard.chat import api_chat_mode, api_chat_slot_approve
+    from aj_crew.dashboard.chat import api_chat_mode, api_chat_slot_approve
 
     @web.middleware
     async def _test_auth(request: web.Request, handler):
@@ -78,7 +78,7 @@ def _surfaced_slot(state: DashboardState, name: str = "whatsapp_15551234567"):
 
 @pytest.fixture(autouse=True)
 def _pin_config_dir(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
 
 
 class TestModeEndpointSymmetry:
@@ -215,7 +215,7 @@ class TestOneDerivationForGrantAndRevoke:
     def _handler_sources(self) -> str:
         import inspect
 
-        from kiro_crew.dashboard import chat_handlers, server
+        from aj_crew.dashboard import chat_handlers, server
 
         # The expiry handler is nested inside `setup_routes`, so its own source is
         # not reachable by name; the enclosing function is sliced to it instead.

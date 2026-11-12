@@ -10,14 +10,14 @@ from member_memory_helpers import env as _member_env
 from member_memory_helpers import request
 from test_memory_startup import _gateway
 
-from kiro_crew import member_memory_backup, memory_backup, memory_stores
-from kiro_crew.config import loader
-from kiro_crew.dashboard.handlers import memory_admin, memory_member
-from kiro_crew.dashboard.handlers._shared import markdown_memory_for_store
-from kiro_crew.heartbeat import HeartbeatService
-from kiro_crew.memory import MemoryStore
-from kiro_crew.memory_startup import MemoryStartup, MemoryStartupUnavailable, require_memory_ready
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import member_memory_backup, memory_backup, memory_stores
+from aj_crew.config import loader
+from aj_crew.dashboard.handlers import memory_admin, memory_member
+from aj_crew.dashboard.handlers._shared import markdown_memory_for_store
+from aj_crew.heartbeat import HeartbeatService
+from aj_crew.memory import MemoryStore
+from aj_crew.memory_startup import MemoryStartup, MemoryStartupUnavailable, require_memory_ready
+from aj_crew.vector_memory import VectorMemoryStore
 
 env = _member_env
 
@@ -248,7 +248,7 @@ async def test_failed_global_skips_its_open_or_migration_but_members_remain_usab
 @pytest.mark.asyncio
 @pytest.mark.parametrize("failed", ["default", "legacy-team"])
 async def test_named_v1_markdown_vectors_and_factories_keep_their_own_startup_identity(env, failed):
-    config = loader.KiroCrewConfig.load()
+    config = loader.AjCrewConfig.load()
     config.memory_stores["legacy-team"] = loader.MemoryStoreConfig(memory_version=1)
     config.save()
     memory_stores._DECLARED_MEMO = None

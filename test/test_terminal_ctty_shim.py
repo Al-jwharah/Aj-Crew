@@ -24,9 +24,9 @@ from unittest.mock import patch
 import pytest
 from named_cases_helpers import named_cases
 
-from kiro_crew import _spawn_exec_shim as shim
-from kiro_crew import sandbox
-from kiro_crew.sandbox import (
+from aj_crew import _spawn_exec_shim as shim
+from aj_crew import sandbox
+from aj_crew.sandbox import (
     RLIMIT_PROFILE_NONE,
     RLIMIT_PROFILE_TOOL,
     spawn_shim_argv,

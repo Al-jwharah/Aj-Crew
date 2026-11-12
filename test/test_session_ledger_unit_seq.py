@@ -27,12 +27,12 @@ from collections.abc import Callable
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew import session_ledger as sl
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log.errors import CODE_BAD_HEADER, CrewLogError
+from aj_crew import crew_log as lg
+from aj_crew import session_ledger as sl
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log.errors import CODE_BAD_HEADER, CrewLogError
 
 SLOT = "chat-1"
 RETIRED = "acp-retired"
@@ -132,8 +132,8 @@ class _SyncWriter:
 def home(tmp_path, monkeypatch):
     """Own data home with the crew log on, no writer state carried in or out, and no
     retry pause to wait out."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     monkeypatch.setattr(sl, "_SEQ_READ_BACKOFF_SECS", 0.0)
     crew_log_emit.reset_caches()
     crew_log.forget_slot_folds()
@@ -171,7 +171,7 @@ def writer(home, monkeypatch) -> _SyncWriter:
 
 def _unit(unit_id: str) -> None:
     """One session crew log on SLOT, with the creating handle dropped at once."""
-    CrewLog.create(lg.KIND_SESSION, unit_id, owner="owner", agent="kirocrew", slot=SLOT)
+    CrewLog.create(lg.KIND_SESSION, unit_id, owner="owner", agent="ajcrew", slot=SLOT)
 
 
 def _legacy_document(**fields) -> None:

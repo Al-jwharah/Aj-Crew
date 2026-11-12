@@ -21,7 +21,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import platform_compat, sandbox
+from aj_crew import platform_compat, sandbox
 
 
 @pytest.fixture

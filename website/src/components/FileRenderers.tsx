@@ -512,7 +512,7 @@ export const PdfViewer = memo(function PdfViewer({ filePath }: { filePath: strin
  *      install command — the product does not install system packages from a
  *      browser request, so the honest answer is to say what is missing.
  *   1. **Text preview** — for .docx and .pptx the backend can extract plaintext
- *      via `kiro_crew.doc_parser` (defusedxml-hardened, no python-docx /
+ *      via `aj_crew.doc_parser` (defusedxml-hardened, no python-docx /
  *      python-pptx dep). A .docx renders as one scrollable pre; a .pptx
  *      comes back slide by slide (`slides`) and renders as a slide outline —
  *      one card per slide under a notice that this is the deck's TEXT, not
@@ -550,7 +550,7 @@ function OfficeCard({ filePath, showBigDownload, hideHint, compact }: {
    *  the file (the slide pager's footer) and just needs the two actions. */
   compact?: boolean
 }) {
-  // Split on BOTH separators — Kiro Crew ships native on Windows where paths
+  // Split on BOTH separators — Aj Crew ships native on Windows where paths
   // arrive as `C:\Users\…\report.docx`, and a `/`-only split would surface the
   // whole path as the "filename". Matches the pattern in MarkdownRenderer.tsx
   // and VectorMemoryCard.tsx.
@@ -891,7 +891,7 @@ function SlideOutline({ slides }: { slides: OfficePreviewSlide[] }) {
 
 /** Why the deck is shown as text instead of slides. The install command is the
  *  one the gateway computed for ITS host — the browser may be on another machine,
- *  so the copy says "the machine Kiro Crew runs on", never "your computer".
+ *  so the copy says "the machine Aj Crew runs on", never "your computer".
  *
  *  The install is also offered as an agent hand-off, not only as a command to
  *  copy: the user this row addresses has no LibreOffice and often no terminal

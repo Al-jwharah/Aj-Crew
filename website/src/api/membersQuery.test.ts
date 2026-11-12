@@ -40,10 +40,10 @@ describe('forgetUnobservedMemberThreads', () => {
 
   it('leaves other caches alone', () => {
     const qc = new QueryClient()
-    qc.setQueryData(['kirocrew-agents', 'members-roster'], [])
+    qc.setQueryData(['ajcrew-agents', 'members-roster'], [])
     qc.setQueryData(memberThreadQueryKey('radar'), { slot_key: 'member-radar' })
     forgetUnobservedMemberThreads(qc)
-    expect(qc.getQueryData(['kirocrew-agents', 'members-roster'])).toEqual([])
+    expect(qc.getQueryData(['ajcrew-agents', 'members-roster'])).toEqual([])
     expect(qc.getQueryData(memberThreadQueryKey('radar'))).toBeUndefined()
   })
 })
@@ -78,9 +78,9 @@ describe('memberProjectionsQuery', () => {
   })
 
   it('is keyed under the roster scope so one invalidation revalidates both', () => {
-    // A crew edited in another tab invalidates ['kirocrew-agents']; the drawer
+    // A crew edited in another tab invalidates ['ajcrew-agents']; the drawer
     // must not keep showing what the log held before that save.
-    expect(memberProjectionsQueryKey('radar', 'Radar')[0]).toBe('kirocrew-agents')
+    expect(memberProjectionsQueryKey('radar', 'Radar')[0]).toBe('ajcrew-agents')
     // Keyed by exact NAME as well as slug: slugs are lossy, so two names can
     // share one log and the server answers 409 rather than guessing.
     expect(memberProjectionsQueryKey('radar', 'Radar')).not.toEqual(

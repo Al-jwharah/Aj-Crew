@@ -24,11 +24,11 @@ from typing import Any, List
 
 import pytest
 
-from kiro_crew.config.validation import extension_config_keys, replace_extension_config_keys
-from kiro_crew.platform import discovery as discovery_mod
-from kiro_crew.platform.admission import MODE_OPEN, AdmissionPolicy, PluginManifest
-from kiro_crew.platform.context import PROFILE_STANDALONE, PlatformCompositionError
-from kiro_crew.platform.discovery import (
+from aj_crew.config.validation import extension_config_keys, replace_extension_config_keys
+from aj_crew.platform import discovery as discovery_mod
+from aj_crew.platform.admission import MODE_OPEN, AdmissionPolicy, PluginManifest
+from aj_crew.platform.context import PROFILE_STANDALONE, PlatformCompositionError
+from aj_crew.platform.discovery import (
     PLUGIN_GROUP,
     PluginAdmissionError,
     discover_companion_context,
@@ -58,7 +58,7 @@ class _FakeEntryPoint:
 def open_policy(monkeypatch: pytest.MonkeyPatch) -> AdmissionPolicy:
     """An open policy plus a stub manifest reader, so admission never touches disk."""
     monkeypatch.setattr(
-        "kiro_crew.platform.admission._read_plugin_manifest",
+        "aj_crew.platform.admission._read_plugin_manifest",
         lambda ep: PluginManifest(name=ep.name, publisher="p13n", version="1"),
     )
     return AdmissionPolicy(mode=MODE_OPEN)
@@ -154,7 +154,7 @@ def test_startup_plugin_refresh_publishes_only_admitted_manifest_without_loading
     manifest = PluginManifest(name="zibble", config_keys=["aim_update"])
     monkeypatch.setattr(discovery_mod, "plugin_entry_points", lambda: [entry_point])
     monkeypatch.setattr(discovery_mod, "read_policy_trust_root", lambda: AdmissionPolicy())
-    monkeypatch.setattr("kiro_crew.platform.admission._read_plugin_manifest", lambda _ep: manifest)
+    monkeypatch.setattr("aj_crew.platform.admission._read_plugin_manifest", lambda _ep: manifest)
     replace_extension_config_keys("plugins", ())
     try:
         assert refresh_installed_plugin_config_keys() == frozenset({"aim_update"})
@@ -188,7 +188,7 @@ def test_companion_discovery_refreshes_from_existing_entry_point_snapshot(
         manifest_reads.append(ep.name)
         return PluginManifest(name=ep.name, config_keys=["aim_update"])
 
-    monkeypatch.setattr("kiro_crew.platform.admission._read_plugin_manifest", _read_manifest)
+    monkeypatch.setattr("aj_crew.platform.admission._read_plugin_manifest", _read_manifest)
     replace_extension_config_keys("plugins", ())
     try:
         assert discover_companion_context("zibble", _NO_CFG, policy=open_policy) is not None
@@ -205,7 +205,7 @@ def test_rejected_plugin_does_not_publish_its_config_keys(
     entry_point = _FakeEntryPoint("zibble", loaded=lambda _cfg: object())
     monkeypatch.setattr(discovery_mod, "plugin_entry_points", lambda: [entry_point])
     monkeypatch.setattr(
-        "kiro_crew.platform.admission._read_plugin_manifest",
+        "aj_crew.platform.admission._read_plugin_manifest",
         lambda ep: PluginManifest(name=ep.name, config_keys=["rejected_key"]),
     )
     replace_extension_config_keys("plugins", ())
@@ -230,7 +230,7 @@ class TestDenyAudit:
     ) -> None:
         """The DENY audit is best-effort: it runs on the bootstrap path where SEL
         may not be wired, and its failure must not mask the refusal."""
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         def _boom() -> Any:
             raise RuntimeError("SEL is not wired yet")
@@ -240,7 +240,7 @@ class TestDenyAudit:
             discovery_mod, "plugin_entry_points", lambda: [_FakeEntryPoint("zibble")]
         )
         monkeypatch.setattr(
-            "kiro_crew.platform.admission._read_plugin_manifest",
+            "aj_crew.platform.admission._read_plugin_manifest",
             lambda ep: PluginManifest(name="zibble", publisher="p13n", version="1"),
         )
         policy = AdmissionPolicy(mode=MODE_OPEN, banned=["zibble"])

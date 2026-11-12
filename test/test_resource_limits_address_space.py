@@ -23,8 +23,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.cli_config import _config_cmd
-from kiro_crew.config.loader import _WARNED_RESOURCE_LIMIT_KEYS
+from aj_crew.cli_config import _config_cmd
+from aj_crew.config.loader import _WARNED_RESOURCE_LIMIT_KEYS
 
 _MIB = 1024 * 1024
 # The reporter's value: a 5 GiB resident cap on a 31 GB host.
@@ -40,12 +40,12 @@ def _reset_warn_once():
 
 
 def _with_config(raw: dict):
-    return patch("kiro_crew.config.loader._raw_config", return_value=raw)
+    return patch("aj_crew.config.loader._raw_config", return_value=raw)
 
 
 class TestResidentCapSetsNoAddressSpaceLimit:
     def test_max_memory_mb_emits_no_rlimit_as(self):
-        from kiro_crew.security import resource_limit_spec
+        from aj_crew.security import resource_limit_spec
 
         spec = dict(resource_limit_spec({"resource_limits": {"max_memory_mb": _RESIDENT_MB}}))
         assert "RLIMIT_AS" not in spec
@@ -54,7 +54,7 @@ class TestResidentCapSetsNoAddressSpaceLimit:
 
     def test_the_tool_profile_shim_payload_carries_no_address_space_cap(self):
         """The exact seam a script cron child is spawned through."""
-        from kiro_crew.sandbox_rlimit import RLIMIT_PROFILE_TOOL, _rlimit_spec
+        from aj_crew.sandbox_rlimit import RLIMIT_PROFILE_TOOL, _rlimit_spec
 
         with _with_config({"resource_limits": {"max_memory_mb": _RESIDENT_MB}}):
             payload = _rlimit_spec(RLIMIT_PROFILE_TOOL)
@@ -63,7 +63,7 @@ class TestResidentCapSetsNoAddressSpaceLimit:
 
     def test_the_resident_cap_still_reaches_the_cgroup_memory_max(self):
         """A fix that dropped the memory cap would pass the two tests above."""
-        from kiro_crew.sandbox_cgroup import _cgroup_limits_from_config
+        from aj_crew.sandbox_cgroup import _cgroup_limits_from_config
 
         with _with_config({"resource_limits": {"max_memory_mb": _RESIDENT_MB}}):
             _procs, mem_mb, _weight, _quota = _cgroup_limits_from_config()
@@ -72,13 +72,13 @@ class TestResidentCapSetsNoAddressSpaceLimit:
 
 class TestAddressSpaceKey:
     def test_max_address_space_mb_sets_rlimit_as(self):
-        from kiro_crew.security import resource_limit_spec
+        from aj_crew.security import resource_limit_spec
 
         spec = dict(resource_limit_spec({"resource_limits": {"max_address_space_mb": 65536}}))
         assert spec["RLIMIT_AS"] == 65536 * _MIB
 
     def test_zero_and_unset_leave_the_address_space_inherited(self):
-        from kiro_crew.security import resource_limit_spec
+        from aj_crew.security import resource_limit_spec
 
         assert "RLIMIT_AS" not in dict(resource_limit_spec({}))
         assert "RLIMIT_AS" not in dict(
@@ -86,14 +86,14 @@ class TestAddressSpaceKey:
         )
 
     def test_the_tool_profile_carries_the_opt_in_cap(self):
-        from kiro_crew.sandbox_rlimit import RLIMIT_PROFILE_TOOL, _rlimit_spec
+        from aj_crew.sandbox_rlimit import RLIMIT_PROFILE_TOOL, _rlimit_spec
 
         with _with_config({"resource_limits": {"max_address_space_mb": 65536}}):
             payload = _rlimit_spec(RLIMIT_PROFILE_TOOL)
         assert f"RLIMIT_AS:{65536 * _MIB}" in payload
 
     def test_the_key_is_independent_of_the_cgroup_memory_max(self):
-        import kiro_crew.sandbox_cgroup as cg
+        import aj_crew.sandbox_cgroup as cg
 
         with _with_config({"resource_limits": {"max_address_space_mb": 65536}}):
             _procs, mem_mb, _weight, _quota = cg._cgroup_limits_from_config()
@@ -103,9 +103,9 @@ class TestAddressSpaceKey:
     def test_the_extractor_fallback_keeps_its_fixed_address_space_ceiling(self, monkeypatch):
         """The shim-less extractor path asks for its 1 GiB ``RLIMIT_AS`` through
         the same config shape, so it has to name the key that still sets it."""
-        import kiro_crew.sandbox_rlimit as sr
-        from kiro_crew import security
-        from kiro_crew.security import resource_limit_spec
+        import aj_crew.sandbox_rlimit as sr
+        from aj_crew import security
+        from aj_crew.security import resource_limit_spec
 
         seen: list[dict] = []
         monkeypatch.setattr(sr, "_EXTRACTOR_PREEXEC", sr._UNSET)
@@ -127,11 +127,11 @@ def _set(home: Path, key: str, value: str, *, local: bool = False) -> None:
         local=local,
     )
     with (
-        patch("kiro_crew.cli_config.config_path", return_value=home / "config.json"),
-        patch("kiro_crew.cli_config.config_local_path", return_value=home / "config.local.json"),
-        patch("kiro_crew.config.loader.config_path", return_value=home / "config.json"),
-        patch("kiro_crew.config.loader.config_dir", return_value=home),
-        patch("kiro_crew.cli_config.sel"),
+        patch("aj_crew.cli_config.config_path", return_value=home / "config.json"),
+        patch("aj_crew.cli_config.config_local_path", return_value=home / "config.local.json"),
+        patch("aj_crew.config.loader.config_path", return_value=home / "config.json"),
+        patch("aj_crew.config.loader.config_dir", return_value=home),
+        patch("aj_crew.cli_config.sel"),
     ):
         _config_cmd(args)
 

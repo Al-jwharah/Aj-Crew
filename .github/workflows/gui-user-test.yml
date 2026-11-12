@@ -3,7 +3,7 @@ name: GUI User Test
 # ADVISORY agentic "real user" GUI test lane (tracking: #9578, docs:
 # docs/build/gui-user-test.md). A Claude model on Amazon Bedrock drives a real
 # Chromium window on a private Xvfb display through the mouse and keyboard
-# only -- no DOM, no accessibility tree -- against a seeded Kiro Crew gateway
+# only -- no DOM, no accessibility tree -- against a seeded Aj Crew gateway
 # running the packaged fake ACP backend. It catches the class of defect the
 # Playwright E2E suite structurally cannot see (a control the DOM calls visible
 # but a person cannot click, a theme that flipped a class name and not the
@@ -80,12 +80,12 @@ concurrency:
 jobs:
   gui-user-test:
     name: GUI User Test
-    # The `kirocrew-runners` group in THIS repository, rather than the standard
+    # The `ajcrew-runners` group in THIS repository, rather than the standard
     # pool whose concurrency is shared enterprise-wide. Named by its runner
     # LABEL, not by `group:`: the group belongs to the kirodotdev organization,
     # so a fork running its own copy cannot reach it and would wait forever for
     # a runner. The `||` leg keeps a fork on the hosted image.
-    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' || 'ubuntu-latest' }}
+    runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core' || 'ubuntu-latest' }}
     # Boot (~4 min: npm ci + build) + every shipped scenario at ~2-4 min each
     # with one retry apiece, plus model-latency tail. The USD budget below is
     # the real stop; this is the backstop for a hung target. The last 20 min
@@ -154,13 +154,13 @@ jobs:
         working-directory: website
         run: npm run build
 
-      # The gateway serves the dashboard from src/kiro_crew/static/dist (same
+      # The gateway serves the dashboard from src/aj_crew/static/dist (same
       # staging as the E2E job).
       - name: Stage frontend into package
         run: |
-          rm -rf src/kiro_crew/static/dist
-          mkdir -p src/kiro_crew/static
-          cp -R website/dist src/kiro_crew/static/dist
+          rm -rf src/aj_crew/static/dist
+          mkdir -p src/aj_crew/static
+          cp -R website/dist src/aj_crew/static/dist
 
       - name: Resolve run parameters
         id: params

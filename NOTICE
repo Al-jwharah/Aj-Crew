@@ -1,3 +1,21 @@
+Aj Crew
+Modifications Copyright 2026 Al-jwharah (https://github.com/Al-jwharah).
+
+Aj Crew is a modified version of KiroCrew
+(https://github.com/kirodotdev/KiroCrew), used under the Apache License,
+Version 2.0. Changes made in this fork: the product, its package, its command
+and its identifiers were renamed from "Kiro Crew" to "Aj Crew" in every file
+(see scripts/rebrand/rebrand_aj.py), and later changes are recorded in the
+repository history. Aj Crew is not affiliated with, sponsored by or endorsed by
+Amazon. "Kiro" and "Amazon" are trademarks of their respective owners and are
+used here only to identify the original work and the third-party tools this
+software can connect to.
+
+The notice of the original work follows, unchanged except for the file paths it
+cites, which name the files as they are in this repository.
+
+--------------------------------------------------------------------------------
+
 KiroCrew
 Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
@@ -20,7 +38,7 @@ directory is the license text, and the same text is reproduced under
 "Bundled Fonts" in THIRD-PARTY-NOTICES.
 
 The macOS computer-use feature's optional background-window click path
-(src/kiro_crew/computer_use/macos_skylight.py) uses undocumented macOS
+(src/aj_crew/computer_use/macos_skylight.py) uses undocumented macOS
 window-server interfaces. The symbol declarations and the event-field
 recipe are derived from prior MIT-licensed open-source projects that
 reverse-engineered that path. No third-party code is copied; the
@@ -29,14 +47,14 @@ dependency is auditable in one place.
 
 The shell-command classifier behind the chat transcript's tool-call titles
 (website/src/utils/shellCommandParse.ts and its Python mirror,
-src/kiro_crew/tool_call_title_shell_parse.py and
-src/kiro_crew/tool_call_title_shell_classify.py, behind
-src/kiro_crew/tool_call_title.py) reimplements the rule set of OpenAI
+src/aj_crew/tool_call_title_shell_parse.py and
+src/aj_crew/tool_call_title_shell_classify.py, behind
+src/aj_crew/tool_call_title.py) reimplements the rule set of OpenAI
 Codex's parse_command.rs (https://github.com/openai/codex, Apache-2.0) in
 TypeScript and Python. No Rust source is copied; the Apache-2.0 notice for
 Codex is reproduced under "Ported rule sets" in THIRD-PARTY-NOTICES.
 
-The browser tool's fast loop (src/kiro_crew/browser_harness/snapshot_walker.js,
+The browser tool's fast loop (src/aj_crew/browser_harness/snapshot_walker.js,
 reflex_space.py and reflex_realtime.py) adapts the element table, target guard
 and operation/target decision design of browser-use/jev-ultrafast (MIT,
 Copyright (c) 2026 Browser Use) and reimplements the pipelined decision clock of

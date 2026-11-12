@@ -1,8 +1,8 @@
 """The shipped system prompts must not promise directly callable MCP tools.
 
 ``agent.tool_search`` ships enabled, and Tool Search's only precondition is one
-configured MCP server -- which a Kiro Crew install always has, because it
-registers its own managed ``kirocrew-core`` / ``kirocrew-cron``. Every MCP tool
+configured MCP server -- which an Aj Crew install always has, because it
+registers its own managed ``ajcrew-core`` / ``ajcrew-cron``. Every MCP tool
 is therefore deferred: its spec is absent from the model's tool list until
 ``tool_search`` loads it. A prompt that names those tools and says to use them
 directly makes the model emit a call that CANNOT succeed, and the resulting
@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-CONFIG_DIR = Path(__file__).resolve().parents[1] / "src" / "kiro_crew" / "config"
+CONFIG_DIR = Path(__file__).resolve().parents[1] / "src" / "aj_crew" / "config"
 PROMPTS = ("prompt.md",)
 
 

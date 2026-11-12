@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.cloud.microvm.api import MAX_RUN_HOOK_PAYLOAD_BYTES
-from kiro_crew.cloud.microvm.payload import RunHookPayload, decode_payload
+from aj_crew.cloud.microvm.api import MAX_RUN_HOOK_PAYLOAD_BYTES
+from aj_crew.cloud.microvm.payload import RunHookPayload, decode_payload
 
 
 def _payload(**overrides) -> RunHookPayload:
@@ -14,8 +14,8 @@ def _payload(**overrides) -> RunHookPayload:
         activation_id="0d4a4a6a-1111-2222-3333-444455556666",
         activation_code="abcdefghijklmnopqrstuvwx",
         region="us-east-1",
-        control_secret_ref="kirocrew/crew/kc-a1b2c3/CONTROL_SECRET",
-        identity_secret_ref="kirocrew/identity/demo-crew",
+        control_secret_ref="ajcrew/crew/kc-a1b2c3/CONTROL_SECRET",
+        identity_secret_ref="ajcrew/identity/demo-crew",
         generation=3,
     )
     base.update(overrides)
@@ -31,7 +31,7 @@ class TestPayload:
     def test_an_oversized_payload_is_refused_before_the_launch(self):
         """A payload refused at RunMicrovm fails a launch that already minted one."""
         with pytest.raises(ValueError, match="over the"):
-            _payload(control_secret_ref="kirocrew/crew/" + "x" * 5000 + "/CONTROL_SECRET").encode()
+            _payload(control_secret_ref="ajcrew/crew/" + "x" * 5000 + "/CONTROL_SECRET").encode()
 
     def test_the_payload_round_trips(self):
         data = decode_payload(_payload().encode())
@@ -54,10 +54,10 @@ class TestPayload:
     def test_the_payload_carries_a_reference_and_never_a_secret_value(self):
         """The payload is an API argument and may persist in CloudTrail history."""
         data = decode_payload(_payload().encode())
-        assert data["secretRef"] == "kirocrew/crew/kc-a1b2c3/CONTROL_SECRET"
+        assert data["secretRef"] == "ajcrew/crew/kc-a1b2c3/CONTROL_SECRET"
         flat = _payload().encode()
         assert "CONTROL_SECRET" in flat
-        assert data["identityRef"] == "kirocrew/identity/demo-crew"
+        assert data["identityRef"] == "ajcrew/identity/demo-crew"
         # No field on the dataclass could hold a VALUE, which is the structural
         # half of the guarantee. Stated as a naming rule rather than a list, so a
         # field added later is covered: every secret-related field is a reference
@@ -70,4 +70,4 @@ class TestPayload:
     def test_the_embedding_model_download_is_turned_off_at_boot(self):
         """639 MB the crew will not use, fetched before it can answer anything."""
         env = decode_payload(_payload().encode())["env"]
-        assert env["KIROCREW_SKIP_MODEL_DOWNLOAD"] == "1"
+        assert env["AJCREW_SKIP_MODEL_DOWNLOAD"] == "1"

@@ -20,10 +20,10 @@ from kiro_prerequisite_helpers import _agents_dir_never_the_real_home  # noqa: F
 from kiro_prerequisite_helpers import _isolate_agent_specs  # noqa: F401
 from kiro_prerequisite_helpers import _FakeRuntime, _make_executable, _no_audit
 
-from kiro_crew import kiro_prerequisite as prerequisite_module
-from kiro_crew.dashboard.kiro_readiness import kiro_session_ready
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService, ProcessResult
-from kiro_crew.testing.wait import await_until
+from aj_crew import kiro_prerequisite as prerequisite_module
+from aj_crew.dashboard.kiro_readiness import kiro_session_ready
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService, ProcessResult
+from aj_crew.testing.wait import await_until
 
 
 class TestKiroPrerequisiteWorkflowReadinessLatch:
@@ -41,7 +41,7 @@ class TestKiroPrerequisiteWorkflowReadinessLatch:
         without a verified readiness latch.
         """
 
-        from kiro_crew.dashboard.kiro_readiness import reject_if_kiro_unverified
+        from aj_crew.dashboard.kiro_readiness import reject_if_kiro_unverified
 
         app = web.Application()
         app["state"] = SimpleNamespace()
@@ -57,7 +57,7 @@ class TestKiroPrerequisiteWorkflowReadinessLatch:
     async def test_explicit_test_harness_mode_assumes_ready(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         def no_host_probe():
             raise AssertionError("test harness readiness must not probe sandbox facts")
@@ -137,7 +137,7 @@ class TestKiroPrerequisiteWorkflowReadinessLatch:
                 assert runtime.kwargs[index]["sandbox_mode"] == "strict"
                 assert runtime.kwargs[index]["extra_hidden_dirs"] == (
                     str(tmp_path / ".kiro" / "crew"),
-                    str(tmp_path / ".kirocrew"),
+                    str(tmp_path / ".ajcrew"),
                     str(tmp_path / ".aws" / "sso" / "cache"),
                     str(tmp_path / ".local" / "share" / "kiro-cli"),
                     str(tmp_path / ".local" / "share" / "amazon-q"),
@@ -1008,8 +1008,8 @@ class TestKasRecordsFirstRunSetup:
         runner: Any = None,
         resolved: bool = True,
     ):
-        from kiro_crew import acp_backends, sandbox
-        from kiro_crew.agent_sdk import backend_install
+        from aj_crew import acp_backends, sandbox
+        from aj_crew.agent_sdk import backend_install
 
         executable = tmp_path / ".local" / "bin" / "kiro-cli"
         if runner is None and resolved:
@@ -1050,7 +1050,7 @@ class TestKasRecordsFirstRunSetup:
         # or installable by the first spawn -- and nothing may try to spawn the
         # absent binary while deciding. Here the host cannot run the engine, so
         # only an installed one completes setup.
-        from kiro_crew.agent_sdk import backend_install, kas_bundle
+        from aj_crew.agent_sdk import backend_install, kas_bundle
 
         monkeypatch.setattr(backend_install, "_engine_installable_here", lambda: False)
 
@@ -1197,13 +1197,13 @@ class TestKasRecordsFirstRunSetup:
     async def test_kas_refused_when_an_agent_spec_is_missing(
         self, tmp_path: Path, monkeypatch
     ) -> None:
-        # KAS loads Kiro Crew's agent specs, so a missing spec keeps the gate on
+        # KAS loads Aj Crew's agent specs, so a missing spec keeps the gate on
         # its repair card (client) and must not write the marker (server).
         service = self._service(tmp_path, monkeypatch, acp_supported=True)
         monkeypatch.setattr(
             KiroPrerequisiteService,
             "_missing_agent_specs",
-            staticmethod(lambda: ["kirocrew-lite"]),
+            staticmethod(lambda: ["ajcrew-lite"]),
         )
         assert await service.record_independent_backend_setup("kas") is False
         assert service.initial_setup_complete is False
@@ -1213,13 +1213,13 @@ class TestKasRecordsFirstRunSetup:
         self, tmp_path: Path, monkeypatch
     ) -> None:
         service = self._service(tmp_path, monkeypatch, acp_supported=True)
-        service._status = replace(service._status, rejected_agent_specs=["kirocrew"])
+        service._status = replace(service._status, rejected_agent_specs=["ajcrew"])
         assert await service.record_independent_backend_setup("kas") is False
         assert service.initial_setup_complete is False
         assert not service._setup_marker.exists()
 
     async def test_kas_refused_when_not_selectable(self, tmp_path: Path, monkeypatch) -> None:
-        from kiro_crew import acp_backends
+        from aj_crew import acp_backends
 
         service = self._service(tmp_path, monkeypatch, acp_supported=True)
         # KAS is only selectable in Developer Mode; when it is not offered, the
@@ -1253,8 +1253,8 @@ class TestUnsandboxedExecRecordsIndependentSetup:
         mask_applies: bool = True,
         selectable=("claude", "codex"),
     ):
-        from kiro_crew import acp_backends, sandbox
-        from kiro_crew.agent_sdk import backend_install
+        from aj_crew import acp_backends, sandbox
+        from aj_crew.agent_sdk import backend_install
 
         # KAS runs on kiro-cli: give the gateway the binary its probe resolved,
         # so a KAS case reaches the sandbox rule this class is about.
@@ -1312,8 +1312,8 @@ class TestUnsandboxedExecRecordsIndependentSetup:
         floor: str | None,
         permitted: bool,
     ) -> None:
-        from kiro_crew import sandbox
-        from kiro_crew.platform import governance_profiles
+        from aj_crew import sandbox
+        from aj_crew.platform import governance_profiles
 
         service = self._service(
             tmp_path,

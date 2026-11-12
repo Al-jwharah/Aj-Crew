@@ -10,8 +10,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew import platform_compat as pc
-from kiro_crew.testing.wait import await_until
+from aj_crew import platform_compat as pc
+from aj_crew.testing.wait import await_until
 
 
 async def _bounded(coro, *, what: str):
@@ -179,7 +179,7 @@ def test_transient_failure_duplicate_and_metadata_retry_refund_once(kernel, monk
 
     # Fail the drain's OWN retirement rather than a caller-supplied stand-in, so
     # the retained-receipt path is exercised where production runs it.
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     original_retire = session_pid.retire_windows_tree_tracking
 
@@ -363,9 +363,9 @@ def test_both_physical_spawn_expressions_obey_admission(kernel, module_name, man
 
     import acp_launch_capture as capture_mod
 
-    from kiro_crew.agent_sdk.backends import ACP_BACKEND_CODEX, ACP_BACKEND_KIRO
+    from aj_crew.agent_sdk.backends import ACP_BACKEND_CODEX, ACP_BACKEND_KIRO
 
-    mod = importlib.import_module(f"kiro_crew.acp.{module_name}")
+    mod = importlib.import_module(f"aj_crew.acp.{module_name}")
     backend = ACP_BACKEND_KIRO if module_name == "client" else ACP_BACKEND_CODEX
     real_admission = pc.create_windows_cleanup_owned_process
     state = pc.reserve_windows_tree_cleanup()
@@ -392,14 +392,14 @@ def test_both_physical_spawn_expressions_obey_admission(kernel, module_name, man
     import inspect
     import sys
 
-    from kiro_crew.acp import launch as launch_mod
+    from aj_crew.acp import launch as launch_mod
 
     def _reads(module, name):
         modules = [module]
-        if module is sys.modules["kiro_crew.acp.client"]:
+        if module is sys.modules["aj_crew.acp.client"]:
             # client.py's owner modules hold code that was its own.
             modules += [sys.modules[owner] for owner in module._CLIENT_OWNERS]
-        if module is sys.modules["kiro_crew.acp.runtime"]:
+        if module is sys.modules["aj_crew.acp.runtime"]:
             # runtime.py's owner modules hold code that was its own.
             modules += [sys.modules[owner] for owner in module._RUNTIME_OWNERS]
         found = []
@@ -421,7 +421,7 @@ def test_both_physical_spawn_expressions_obey_admission(kernel, module_name, man
 
 
 def test_app_capacity_refusal_and_manual_dead_root_preserve_rows(kernel, monkeypatch, tmp_path):
-    from kiro_crew.apps import backend
+    from aj_crew.apps import backend
 
     path = tmp_path / "apps.json"
     monkeypatch.setattr(backend, "_pidfile_path", lambda: path)
@@ -449,7 +449,7 @@ def test_app_capacity_refusal_and_manual_dead_root_preserve_rows(kernel, monkeyp
 
 
 def test_app_metadata_failure_keeps_pin_and_capacity_for_maintenance(kernel, monkeypatch, tmp_path):
-    from kiro_crew.apps import backend
+    from aj_crew.apps import backend
 
     path = tmp_path / "apps.json"
     monkeypatch.setattr(backend, "_pidfile_path", lambda: path)
@@ -504,7 +504,7 @@ async def test_resume_worker_settles_before_repeated_cancellation(kernel):
 
 @pytest.mark.parametrize("shape", ["_client", "_proc", "_active_proc"])
 def test_sync_provider_shapes_cannot_bypass_capacity(kernel, monkeypatch, shape):
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     root = kernel.add(100)
     for _ in range(2):
@@ -726,7 +726,7 @@ async def test_failed_executor_submission_preserves_admitted_pin_for_maintenance
 
 
 def test_pending_root_tracking_survives_sweep_and_delayed_writeback(kernel, monkeypatch, tmp_path):
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     root = kernel.add(100)
     kernel.denied.add(root)
@@ -750,7 +750,7 @@ def test_pending_root_tracking_survives_sweep_and_delayed_writeback(kernel, monk
 
 
 def test_pending_root_tracking_survives_the_tracked_child_sweep(kernel, monkeypatch, tmp_path):
-    from kiro_crew import session_pid
+    from aj_crew import session_pid
 
     root = kernel.add(100)
     kernel.denied.add(root)

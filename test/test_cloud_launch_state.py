@@ -12,8 +12,8 @@ import json
 
 import pytest
 
-from kiro_crew.cloud.config import DEFAULT_REGION, CloudConfig
-from kiro_crew.cloud.launch_state import LaunchState, state_path
+from aj_crew.cloud.config import DEFAULT_REGION, CloudConfig
+from aj_crew.cloud.launch_state import LaunchState, state_path
 
 
 class TestTheLaunchRecord:
@@ -28,8 +28,8 @@ class TestTheLaunchRecord:
         assert (state.profile, state.region, state.last_tag) == ("work", "eu-west-1", "kc-a1b2c3")
 
     def test_it_is_written_where_the_crew_home_is(self, tmp_path, monkeypatch):
-        """Under ``config_dir()``, so ``KIROCREW_HOME`` moves it with everything else."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        """Under ``config_dir()``, so ``AJCREW_HOME`` moves it with everything else."""
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
         assert state_path().parent == tmp_path
         assert state_path().name == "cloud_launch_state.json"
@@ -63,7 +63,7 @@ class TestTheLaunchRecord:
         Same tolerant policy the configuration reader has, for the same reason, and it matters
         more here: this file is the one every ``cloud`` subcommand reads to find the tag.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         p = tmp_path / "cloud_launch_state.json"
         p.write_bytes(blob)
 
@@ -77,7 +77,7 @@ class TestTheLaunchRecord:
         An empty tag already means "no last launch", which is a state every caller handles, so
         a malformed one is answered with that rather than carried inward.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         p = tmp_path / "cloud_launch_state.json"
         p.write_text(json.dumps({"profile": "w", "region": "us-east-1", "last_tag": "kc/../../x"}))
 
@@ -86,7 +86,7 @@ class TestTheLaunchRecord:
         assert LaunchState.load(p).profile == "w"
 
     def test_an_absent_record_is_unset_not_an_error(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
         state = LaunchState.load(tmp_path / "nothing-here.json")
 
@@ -103,7 +103,7 @@ class TestTheReadIsBoundedBeforeItAllocates:
     """
 
     def test_an_oversized_record_is_refused(self, tmp_path):
-        from kiro_crew.cloud.launch_state import _MAX_FILE_BYTES
+        from aj_crew.cloud.launch_state import _MAX_FILE_BYTES
 
         p = tmp_path / "cloud_launch_state.json"
         # Sparse, so the test costs no disk: the file reports its full size and the read is
@@ -121,7 +121,7 @@ class TestTheReadIsBoundedBeforeItAllocates:
         """
         import os as _os
 
-        from kiro_crew.cloud.launch_state import _MAX_FILE_BYTES
+        from aj_crew.cloud.launch_state import _MAX_FILE_BYTES
 
         p = tmp_path / "cloud_launch_state.json"
         with open(p, "wb") as fh:
@@ -155,7 +155,7 @@ class TestTheReadIsBoundedBeforeItAllocates:
 
     def test_a_record_at_exactly_the_ceiling_still_reads(self, tmp_path):
         """The allowed size is allowed: a document exactly at the limit is not refused."""
-        from kiro_crew.cloud.launch_state import _MAX_FILE_BYTES
+        from aj_crew.cloud.launch_state import _MAX_FILE_BYTES
 
         p = tmp_path / "cloud_launch_state.json"
         body = {"profile": "p", "region": "us-east-1", "last_tag": "kc-a1b2c3"}
@@ -173,7 +173,7 @@ class TestTheReadIsBoundedBeforeItAllocates:
         Reading exactly the ceiling cannot tell "that long" from "longer", so a valid prefix
         would be adopted.
         """
-        from kiro_crew.cloud.launch_state import _MAX_FILE_BYTES
+        from aj_crew.cloud.launch_state import _MAX_FILE_BYTES
 
         p = tmp_path / "cloud_launch_state.json"
         body = {"profile": "p", "region": "us-east-1", "last_tag": "kc-prefix"}
@@ -195,7 +195,7 @@ class TestResumeStillReattachesAfterTheMove:
     """
 
     def test_a_legacy_pointer_is_still_found(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         # Exactly what an install that launched under the old code has on disk: the pointer in
         # cloud.json, and no launch record at all.
         (tmp_path / "cloud.json").write_text(
@@ -213,7 +213,7 @@ class TestResumeStillReattachesAfterTheMove:
         Migrating by writing would reintroduce the write this change removes -- and it would
         write on a READ, so any ``cloud`` subcommand would touch the operator's file.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         legacy = json.dumps({"profile": "work", "region": "eu-west-1", "last_tag": "kc-legacy"})
         (tmp_path / "cloud.json").write_text(legacy)
 
@@ -229,7 +229,7 @@ class TestResumeStillReattachesAfterTheMove:
         Otherwise a stale pointer in ``cloud.json`` -- which nothing clears now, because
         nothing writes it -- would outrank the tag of the launch that actually happened.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "cloud.json").write_text(json.dumps({"last_tag": "kc-stale-legacy"}))
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-current")
 
@@ -242,7 +242,7 @@ class TestResumeStillReattachesAfterTheMove:
         it on the tag would make a cleared pointer reappear from ``cloud.json`` and send the
         next command at a stack that was just deleted.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "cloud.json").write_text(json.dumps({"last_tag": "kc-legacy"}))
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-1")
 
@@ -255,7 +255,7 @@ class TestClearingThePointerIsOwnedByTheStackItNames:
     """``destroy`` owns the pointer for the stack it deleted, and for no other."""
 
     def test_a_matching_tag_is_cleared(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-1")
 
         assert LaunchState.clear_tag("kc-1") is True
@@ -267,7 +267,7 @@ class TestClearingThePointerIsOwnedByTheStackItNames:
         Cleared unconditionally, this command would wipe the pointer of a launch it never saw
         -- and the operator's new instance would look unlaunched.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-2-launched-since")
 
         assert LaunchState.clear_tag("kc-1-being-destroyed") is False
@@ -276,7 +276,7 @@ class TestClearingThePointerIsOwnedByTheStackItNames:
     def test_the_other_fields_survive_the_clear(self, tmp_path, monkeypatch):
         """Only the tag is this command's to clear: the profile and region still name where
         the operator's other stacks live, and ``cloud list`` needs them."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         LaunchState.record(profile="work", region="eu-west-1", last_tag="kc-1")
 
         LaunchState.clear_tag("kc-1")
@@ -295,7 +295,7 @@ class TestTheOperatorsFileIsNeverWritten:
         two review findings this replaces were both about what that writer had to do when the
         operator's file was not in a state it could use.
         """
-        import kiro_crew.cloud.config as config_mod
+        import aj_crew.cloud.config as config_mod
 
         assert not hasattr(CloudConfig, "save")
         assert not hasattr(CloudConfig, "apply_update")
@@ -314,7 +314,7 @@ class TestTheOperatorsFileIsNeverWritten:
         import ast
         import inspect
 
-        import kiro_crew.cloud.config as config_mod
+        import aj_crew.cloud.config as config_mod
 
         tree = ast.parse(inspect.getsource(config_mod))
         called = set()
@@ -351,7 +351,7 @@ class TestTheOperatorsFileIsNeverWritten:
         it is valid JSON the operator is still filling in, which is the state that forced the
         choice between overwriting it and refusing.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         config = tmp_path / "cloud.json"
         hand_written = json.dumps(
             {"fargate": {"cluster": "crews", "subnets": ["subnet-a"]}}, indent=4
@@ -373,7 +373,7 @@ class TestTheOperatorsFileIsNeverWritten:
         The record's write path does not read that file at all, so there is nothing for a
         hand-edit to fail on -- which is the property that keeps a billed deploy from ending
         before sign-in over a document the launch never needed."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         broken = b"{ this is hand-edited and unparseable"
         (tmp_path / "cloud.json").write_bytes(broken)
 
@@ -384,7 +384,7 @@ class TestTheOperatorsFileIsNeverWritten:
 
     @pytest.mark.parametrize(
         "path",
-        ("~/.kiro/crew/cloud_launch_state.json", "~/.kirocrew/cloud_launch_state.json"),
+        ("~/.kiro/crew/cloud_launch_state.json", "~/.ajcrew/cloud_launch_state.json"),
     )
     def test_an_agent_may_not_write_the_record(self, path):
         """Its tag is what ``cloud destroy`` resolves without ``--tag``.
@@ -393,7 +393,7 @@ class TestTheOperatorsFileIsNeverWritten:
         ``destroy --yes`` deletes. Interactive ``destroy`` describes the instance and asks
         first; ``--yes`` is exactly the path that does not.
         """
-        from kiro_crew.security.paths import is_sensitive_write_path
+        from aj_crew.security.paths import is_sensitive_write_path
 
         assert is_sensitive_write_path(path) is True
 
@@ -402,7 +402,7 @@ class TestTheOperatorsFileIsNeverWritten:
         enough: it covers an agent's file-edit tool, while a sandboxed shell's
         ``open(..., "w")`` reaches the path however the write is spelled, and pre-creation is
         what gives the mount seal a file to bind to when none exists yet."""
-        from kiro_crew.sandbox import (
+        from aj_crew.sandbox import (
             _CREW_PRECREATE_READONLY_FILE_LEAVES,
             _CREW_READONLY_LEAVES,
         )
@@ -417,7 +417,7 @@ class TestTheOperatorsFileIsNeverWritten:
         host with legitimate hard links. The alias refusal lives in
         ``require_unaliased_launch_state`` (from ``LaunchState.load``) instead.
         """
-        from kiro_crew.sandbox import _CREW_NOFOLLOW_READONLY_FILE_LEAVES
+        from aj_crew.sandbox import _CREW_NOFOLLOW_READONLY_FILE_LEAVES
 
         assert "cloud_launch_state.json" not in _CREW_NOFOLLOW_READONLY_FILE_LEAVES
 
@@ -430,7 +430,7 @@ class TestTheOperatorsFileIsNeverWritten:
         """
         import json as _json
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "cloud.json").write_text(_json.dumps({"last_tag": "kc-legacy"}))
         (tmp_path / "cloud_launch_state.json").write_text("{}")
 
@@ -441,7 +441,7 @@ class TestTheOperatorsFileIsNeverWritten:
         must NOT fall back -- otherwise the pointer to the stack it just deleted comes back."""
         import json as _json
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "cloud.json").write_text(_json.dumps({"last_tag": "kc-legacy"}))
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-1")
         LaunchState.clear_tag("kc-1")
@@ -461,9 +461,9 @@ class TestTheTwoProductWritersAreSerialised:
         """A launch that records its tag between ``clear_tag``'s read and its write must not be
         overwritten. Forced deterministically: the record lands from inside the lock's own
         critical section, which is where an unlocked implementation leaves the window."""
-        import kiro_crew.cloud.launch_state as ls
+        import aj_crew.cloud.launch_state as ls
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         p = tmp_path / "cloud_launch_state.json"
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-1", path=p)
 
@@ -496,7 +496,7 @@ class TestTheTwoProductWritersAreSerialised:
         import inspect
         import textwrap
 
-        import kiro_crew.cloud.launch_state as ls
+        import aj_crew.cloud.launch_state as ls
 
         for method in (LaunchState.record, LaunchState.try_clear_tag):
             tree = ast.parse(textwrap.dedent(inspect.getsource(method)))
@@ -525,9 +525,9 @@ class TestTheTwoProductWritersAreSerialised:
 
         A launch recording its tag in that gap would have its pointer erased by the destroy.
         """
-        import kiro_crew.cloud.launch_state as ls
+        import aj_crew.cloud.launch_state as ls
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         p = tmp_path / "cloud_launch_state.json"
 
         def _boom(*a, **k):
@@ -544,10 +544,10 @@ class TestTheTwoProductWritersAreSerialised:
         After a confirmed deploy the launch warns and continues; before provisioning it aborts
         with nothing billed. An unlockable mount costs a pointer, never a command.
         """
-        import kiro_crew.cloud.launch_state as ls
-        from kiro_crew.cloud import wizard
+        import aj_crew.cloud.launch_state as ls
+        from aj_crew.cloud import wizard
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         warnings: list[str] = []
         failures: list[str] = []
         monkeypatch.setattr(wizard.ui, "warn", lambda msg, *a, **k: warnings.append(str(msg)))
@@ -573,9 +573,9 @@ class TestTheTwoProductWritersAreSerialised:
         Checked by watching which helper the lock calls, since the platform where the
         difference shows is not the one this test runs on.
         """
-        import kiro_crew.cloud.launch_state as ls
+        import aj_crew.cloud.launch_state as ls
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         p = tmp_path / "cloud_launch_state.json"
         seen = []
         real = ls.platform_compat.file_lock
@@ -599,9 +599,9 @@ class TestTheTwoProductWritersAreSerialised:
         inside the hold must be refused. That is the exclusion itself rather than a call to
         something named like a lock.
         """
-        import kiro_crew.cloud.launch_state as ls
+        import aj_crew.cloud.launch_state as ls
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         p = tmp_path / "cloud_launch_state.json"
         p.parent.mkdir(parents=True, exist_ok=True)
         lock_path = p.with_name(p.name + ".lock")
@@ -640,9 +640,9 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
 
     @pytest.mark.parametrize("shape", ("symlink", "hardlink"))
     def test_the_read_that_every_verb_goes_through_refuses(self, tmp_path, monkeypatch, shape):
-        from kiro_crew.sandbox import SandboxCeilingUnsealable
+        from aj_crew.sandbox import SandboxCeilingUnsealable
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         self._aliased_record(tmp_path, shape)
 
         with pytest.raises(SandboxCeilingUnsealable):
@@ -653,7 +653,7 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
 
         Without this, deleting the whole read would satisfy the two tests above.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-mine")
 
         assert LaunchState.load().last_tag == "kc-mine"
@@ -666,10 +666,10 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
         """
         import os
 
-        import kiro_crew.cloud.launch_state as ls
-        from kiro_crew.sandbox import SandboxCeilingUnsealable
+        import aj_crew.cloud.launch_state as ls
+        from aj_crew.sandbox import SandboxCeilingUnsealable
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-mine")
         p = ls.state_path()
         alias = tmp_path / "planted-in-the-window.json"
@@ -703,8 +703,8 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
         """
         import os
 
-        import kiro_crew.cloud.launch_state as ls
-        from kiro_crew.sandbox import SandboxCeilingUnsealable
+        import aj_crew.cloud.launch_state as ls
+        from aj_crew.sandbox import SandboxCeilingUnsealable
 
         if not getattr(os, "O_NOFOLLOW", 0):
             pytest.skip(
@@ -713,7 +713,7 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
                 "test_the_read_that_every_verb_goes_through_refuses[symlink]"
             )
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-mine")
         p = ls.state_path()
         elsewhere = tmp_path / "theirs.json"
@@ -748,10 +748,10 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
         import errno as _errno
         import os as _os
 
-        import kiro_crew.cloud.launch_state as ls
-        from kiro_crew.sandbox import SandboxCeilingUnsealable
+        import aj_crew.cloud.launch_state as ls
+        from aj_crew.sandbox import SandboxCeilingUnsealable
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-mine")
         p = ls.state_path()
         real_os_read = _os.read
@@ -791,9 +791,9 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
         import errno as _errno
         import os as _os
 
-        import kiro_crew.cloud.launch_state as ls
+        import aj_crew.cloud.launch_state as ls
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-gone")
         p = ls.state_path()
         real_os_open = _os.open
@@ -818,9 +818,9 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
 
         A by-name-only implementation passes every other test in this class.
         """
-        import kiro_crew.cloud.launch_state as ls
+        import aj_crew.cloud.launch_state as ls
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-ok")
         real_check = ls.require_unaliased_launch_state
         by_descriptor: list = []
@@ -841,9 +841,9 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
 
         Refusing is affordable here because nothing has been provisioned yet.
         """
-        from kiro_crew.sandbox import SandboxCeilingUnsealable
+        from aj_crew.sandbox import SandboxCeilingUnsealable
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         p = self._aliased_record(tmp_path, shape)
 
         with pytest.raises(SandboxCeilingUnsealable):
@@ -855,10 +855,10 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
 
         That would leave a live stack named by a pointer a later bare ``destroy`` resolves.
         """
-        from kiro_crew.cloud import wizard
-        from kiro_crew.sandbox import SandboxCeilingUnsealable
+        from aj_crew.cloud import wizard
+        from aj_crew.sandbox import SandboxCeilingUnsealable
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         self._aliased_record(tmp_path, shape)
 
         with pytest.raises(SandboxCeilingUnsealable):
@@ -875,10 +875,10 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
         """
         import shlex
 
-        from kiro_crew import platform_compat
-        from kiro_crew.sandbox import SandboxCeilingUnsealable
+        from aj_crew import platform_compat
+        from aj_crew.sandbox import SandboxCeilingUnsealable
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         p = self._aliased_record(tmp_path, shape)
 
         with pytest.raises(SandboxCeilingUnsealable) as caught:
@@ -898,7 +898,7 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
 
         A renderer reading only ``IS_WINDOWS`` could test its Windows branch on Windows alone.
         """
-        from kiro_crew.sandbox import _delete_file_command
+        from aj_crew.sandbox import _delete_file_command
 
         win = _delete_file_command(r"C:\Users\me\AppData\cloud_launch_state.json", windows=True)
         assert win == 'del "C:\\Users\\me\\AppData\\cloud_launch_state.json"'
@@ -908,8 +908,8 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
         assert not win.startswith("rm ")
 
         assert (
-            _delete_file_command("/home/me/.kirocrew/x.json", windows=False)
-            == "rm /home/me/.kirocrew/x.json"
+            _delete_file_command("/home/me/.ajcrew/x.json", windows=False)
+            == "rm /home/me/.ajcrew/x.json"
         )
         # POSIX quoting is still applied where POSIX needs it.
         assert _delete_file_command("/home/a b/x.json", windows=False) == "rm '/home/a b/x.json'"
@@ -920,10 +920,10 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
 
         The spelling is chosen when the refusal is built; path separators stay POSIX here.
         """
-        import kiro_crew.sandbox as sandbox_mod
-        from kiro_crew.sandbox import SandboxCeilingUnsealable
+        import aj_crew.sandbox as sandbox_mod
+        from aj_crew.sandbox import SandboxCeilingUnsealable
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         monkeypatch.setattr(sandbox_mod.platform_compat, "IS_WINDOWS", True)
         p = self._aliased_record(tmp_path, shape)
 
@@ -939,9 +939,9 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
 
         Here the crew home holds an ordinary record and the file actually read is aliased.
         """
-        from kiro_crew.sandbox import SandboxCeilingUnsealable
+        from aj_crew.sandbox import SandboxCeilingUnsealable
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-mine")
         elsewhere = tmp_path / "elsewhere"
         elsewhere.mkdir()
@@ -958,7 +958,7 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
 
         The guard already ran at the consume point that produced the tag being cleared.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         self._aliased_record(tmp_path, shape)
 
         assert LaunchState.clear_tag("kc-theirs") is True
@@ -972,9 +972,9 @@ class TestAnAliasedRecordIsRefusedWhereItsTagIsConsumed:
         Refusing there would cost a stow / chezmoi / ``rsync --link-dest`` host every chat,
         cron and subagent for one command's exposure. The warn stays a warn.
         """
-        import kiro_crew.sandbox as sandbox_mod
+        import aj_crew.sandbox as sandbox_mod
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         self._aliased_record(tmp_path, shape)
 
         created = sandbox_mod._materialize_sealable_ceilings()
@@ -1000,9 +1000,9 @@ class TestTheLegacyFallbackIsGuardedToo:
     def test_an_aliased_config_is_refused_when_the_record_is_the_precreated_stub(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew.sandbox import SandboxCeilingUnsealable
+        from aj_crew.sandbox import SandboxCeilingUnsealable
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         self._aliased_config(tmp_path)
         # Exactly what the sandbox writes so its read-only seal has a file to bind to.
         (tmp_path / "cloud_launch_state.json").write_text("{}", encoding="utf-8")
@@ -1012,9 +1012,9 @@ class TestTheLegacyFallbackIsGuardedToo:
 
     def test_an_aliased_config_is_refused_when_the_record_is_absent(self, tmp_path, monkeypatch):
         """The other way the fallback is reached, so the fix cannot depend on the stub existing."""
-        from kiro_crew.sandbox import SandboxCeilingUnsealable
+        from aj_crew.sandbox import SandboxCeilingUnsealable
 
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         self._aliased_config(tmp_path)
 
         with pytest.raises(SandboxCeilingUnsealable):
@@ -1022,7 +1022,7 @@ class TestTheLegacyFallbackIsGuardedToo:
 
     def test_a_lone_config_still_supplies_the_legacy_pointer(self, tmp_path, monkeypatch):
         """Positive control: refusing everything would satisfy both tests above and break resume."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "cloud.json").write_text(
             json.dumps({"last_tag": "kc-legacy"}), encoding="utf-8"
         )
@@ -1037,7 +1037,7 @@ class TestTheLegacyFallbackIsGuardedToo:
         `cloud.json` is managed by stow or chezmoi -- the refusal only fires where the file is
         actually the source of the tag.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         self._aliased_config(tmp_path)
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-mine")
 
@@ -1048,7 +1048,7 @@ class TestTheLegacyFallbackIsGuardedToo:
 
         It runs after the stack is deleted, when a refusal would only abort finished work.
         """
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         self._aliased_config(tmp_path, tag="kc-gone")
 
         assert LaunchState.clear_tag("kc-gone") is True
@@ -1062,7 +1062,7 @@ class TestADeclinedClearReportsWhatIsSaved:
     """
 
     def test_a_decline_reports_the_tag_that_is_there(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-b")
 
         assert LaunchState.try_clear_tag("kc-a") == (False, "kc-b")
@@ -1070,7 +1070,7 @@ class TestADeclinedClearReportsWhatIsSaved:
         assert LaunchState.load().last_tag == "kc-b"
 
     def test_a_match_clears_and_reports_no_tag(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-b")
 
         assert LaunchState.try_clear_tag("kc-b") == (True, "")
@@ -1078,13 +1078,13 @@ class TestADeclinedClearReportsWhatIsSaved:
 
     def test_an_absent_pointer_declines_with_no_tag(self, tmp_path, monkeypatch):
         """The safe decline, at the level the value is produced rather than through the wizard."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
 
         assert LaunchState.try_clear_tag("kc-a") == (False, "")
 
     def test_the_thin_wrapper_still_answers_the_same_bool(self, tmp_path, monkeypatch):
         """`clear_tag`'s contract is unchanged, so its existing callers are unaffected."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         LaunchState.record(profile="p", region="us-east-1", last_tag="kc-b")
 
         assert LaunchState.clear_tag("kc-a") is False

@@ -13,15 +13,15 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat, sandbox, sandbox_cgroup
-from kiro_crew.config.sections_shared_crew import SharedCrewConfig, effective_limits
-from kiro_crew.shared_crew import admission_runtime as ar
-from kiro_crew.shared_crew import containment as c
-from kiro_crew.shared_crew.admission import Liveness, RuntimeOwnershipRef
-from kiro_crew.shared_crew.contracts import CapabilityState, EnforcementLevel
+from aj_crew import platform_compat, sandbox, sandbox_cgroup
+from aj_crew.config.sections_shared_crew import SharedCrewConfig, effective_limits
+from aj_crew.shared_crew import admission_runtime as ar
+from aj_crew.shared_crew import containment as c
+from aj_crew.shared_crew.admission import Liveness, RuntimeOwnershipRef
+from aj_crew.shared_crew.contracts import CapabilityState, EnforcementLevel
 
 SYSTEMCTL = "/usr/bin/systemctl"
-INSTANCE = "kirocrew-agents-test.slice"
+INSTANCE = "ajcrew-agents-test.slice"
 
 
 class FakeRunner:
@@ -198,12 +198,12 @@ def test_populated_scopes(systemctl, tmp_path):
     show = ("--user", "show", "-p", "ControlGroup", "--value", "p.slice")
     run = FakeRunner({show: (0, "/u/p.slice")})
     assert c.populated_scopes("p.slice", runner=run, cgroup_root=str(tmp_path)) == []
-    _events(tmp_path, "/u/p.slice/kirocrew-rt-a.scope", "1")
-    _events(tmp_path, "/u/p.slice/kirocrew-rt-b.scope", "0")
+    _events(tmp_path, "/u/p.slice/ajcrew-rt-a.scope", "1")
+    _events(tmp_path, "/u/p.slice/ajcrew-rt-b.scope", "0")
     _events(tmp_path, "/u/p.slice/other.scope", "1")
-    (tmp_path / "u/p.slice/kirocrew-rt-c.scope").mkdir()  # no events file yet
+    (tmp_path / "u/p.slice/ajcrew-rt-c.scope").mkdir()  # no events file yet
     got = c.populated_scopes("p.slice", runner=run, cgroup_root=str(tmp_path))
-    assert got == ["kirocrew-rt-a.scope"]
+    assert got == ["ajcrew-rt-a.scope"]
     assert c.populated_scopes("p.scope", runner=run, cgroup_root=str(tmp_path)) is None
     run.answers[show] = (0, "")
     assert c.populated_scopes("p.slice", runner=run, cgroup_root=str(tmp_path)) == []
@@ -272,7 +272,7 @@ def test_slice_manager_release(systemctl):
     assert m.release("p.slice", busy=lambda n: []) is False  # not owned
     assert m.release("p.scope", busy=lambda n: [], owned_only=False) is False
     m.apply("p.slice", c.SliceLimits(), cpu_delegated=False)
-    assert m.release("p.slice", busy=lambda n: ["kirocrew-rt-a.scope"]) is False
+    assert m.release("p.slice", busy=lambda n: ["ajcrew-rt-a.scope"]) is False
     assert m.is_ready("p.slice")  # a busy slice is kept and stays sized
     assert m.release("p.slice", busy=lambda n: None) is False
     assert m.is_ready("p.slice")
@@ -455,7 +455,7 @@ def _ref(unit: str) -> RuntimeOwnershipRef:
 )
 def test_scope_liveness(monkeypatch, state, want):
     monkeypatch.setattr(c, "unit_active_state", lambda unit: state)
-    assert ar.systemd_unit_liveness(_ref("kirocrew-rt-a.scope")) is want
+    assert ar.systemd_unit_liveness(_ref("ajcrew-rt-a.scope")) is want
 
 
 @pytest.mark.parametrize(

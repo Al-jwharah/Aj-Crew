@@ -1,6 +1,6 @@
 """``TaskRunner`` mirrors a run onto its shared workflow run, best-effort once attached.
 
-Pins the workflow-history port (``kiro_crew.taskrunner_parts.workflow_port``) through the
+Pins the workflow-history port (``aj_crew.taskrunner_parts.workflow_port``) through the
 runner itself: each terminal status reaches the service as its own call, a publication
 failure is logged and never fails the run, a task-snapshot failure while a run is being
 registered is the one error that passes through, and the attachment gate refuses new work
@@ -16,8 +16,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.taskrunner import Project, Task, TaskRunner, WorkflowInitializing
-from kiro_crew.workflow_memory import TaskSnapshotError
+from aj_crew.taskrunner import Project, Task, TaskRunner, WorkflowInitializing
+from aj_crew.workflow_memory import TaskSnapshotError
 
 
 class _Service:
@@ -125,12 +125,12 @@ async def test_a_failed_publication_is_logged_and_never_fails_the_run(
     service = _Service(failing=frozenset({"fail", "set_source", "status", "delete_run"}))
     runner = _runner(tmp_path, service)
     run = _run(tmp_path, "failed", error="boom")
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.taskrunner"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.taskrunner"):
         await runner._workflow_finalize(run)
         await runner._workflow_set_plan(run)
         await runner._workflow_rebind(run)
         await runner._workflow_delete_link(run)
-    messages = [r.getMessage() for r in caplog.records if r.name == "kiro_crew.taskrunner"]
+    messages = [r.getMessage() for r in caplog.records if r.name == "aj_crew.taskrunner"]
     assert messages == [
         "TaskRunner workflow publication failed to finalize",
         "TaskRunner workflow plan publication failed",
@@ -146,10 +146,10 @@ async def test_a_failed_registration_is_logged_and_leaves_the_run_unlinked(
     service = _Service(failing=frozenset({"begin_host_run"}))
     run = _run(tmp_path, "planning")
     run.workflow_run_id = ""
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.taskrunner"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.taskrunner"):
         await _runner(tmp_path, service)._workflow_begin(run)
     assert run.workflow_run_id == ""
-    records = [r for r in caplog.records if r.name == "kiro_crew.taskrunner"]
+    records = [r for r in caplog.records if r.name == "aj_crew.taskrunner"]
     assert [r.getMessage() for r in records] == ["TaskRunner workflow publication failed to start"]
     assert [str(r.exc_info[1]) for r in records if r.exc_info] == ["begin_host_run is unavailable"]
 

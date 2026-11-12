@@ -18,15 +18,15 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from conftest import make_escaping_link
-from kiro_crew.task_models import Project, Task, TaskStatus
-from kiro_crew.task_planner import (
+from aj_crew.task_models import Project, Task, TaskStatus
+from aj_crew.task_planner import (
     decompose_yaml,
     plan_to_chat_context,
     plan_to_yaml,
     update_plan_tasks,
 )
-from kiro_crew.taskrunner import TaskRunner
+from aj_crew.taskrunner import TaskRunner
+from conftest import make_escaping_link
 
 _CURRENT = re.compile(r"^## Current Task \(\d+/\d+\)\n(.*?)(?=^## |\Z)", re.S | re.M)
 
@@ -44,7 +44,7 @@ agents:
 
 
 def _event(kind: str, text: str = ""):
-    from kiro_crew.providers.base import LLMEvent
+    from aj_crew.providers.base import LLMEvent
 
     return LLMEvent(kind=kind, text=text)
 
@@ -279,20 +279,20 @@ class TestReadingTheFile:
         ],
     )
     def test_what_the_file_says(self, tmp_path: Path, content: str, expected: str) -> None:
-        from kiro_crew.task_status_file import declared_failure
+        from aj_crew.task_status_file import declared_failure
 
         (tmp_path / "s.json").write_text(content, encoding="utf-8")
         got = declared_failure(tmp_path, "s.json")
         assert (expected in got) if expected else got == ""
 
     def test_a_file_too_large_to_read_fails_the_step(self, tmp_path: Path) -> None:
-        from kiro_crew.task_status_file import STATUS_FILE_MAX_BYTES, declared_failure
+        from aj_crew.task_status_file import STATUS_FILE_MAX_BYTES, declared_failure
 
         (tmp_path / "s.json").write_bytes(b" " * (STATUS_FILE_MAX_BYTES + 1))
         assert "is larger than" in declared_failure(tmp_path, "s.json")
 
     def test_a_link_out_of_the_work_dir_is_not_followed(self, tmp_path: Path) -> None:
-        from kiro_crew.task_status_file import declared_failure
+        from aj_crew.task_status_file import declared_failure
 
         outside = tmp_path / "outside"
         outside.mkdir()
@@ -309,7 +309,7 @@ class TestReadingTheFile:
     def test_a_credential_file_in_a_home_work_dir_is_refused_unread(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.task_status_file import declared_failure
+        from aj_crew.task_status_file import declared_failure
 
         home = tmp_path / "home"
         (home / ".aws").mkdir(parents=True)
@@ -324,7 +324,7 @@ class TestReadingTheFile:
 
     @pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="no FIFOs on this platform")
     def test_a_fifo_with_no_writer_is_refused_without_blocking(self, tmp_path: Path) -> None:
-        from kiro_crew.task_status_file import declared_failure
+        from aj_crew.task_status_file import declared_failure
 
         fifo = tmp_path / "s.json"
         os.mkfifo(fifo)

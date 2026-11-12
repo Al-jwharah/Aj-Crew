@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CI's find_ui index freshness check: fail a PR only when the PR made it stale.
 
-``src/kiro_crew/docs/ui-index.generated.json`` and
+``src/aj_crew/docs/ui-index.generated.json`` and
 ``website/src/uiLocations/guidePlans.gen.ts`` are committed and regenerated from
 the dashboard source plus the 12 catalogs. Every PR is checked fresh at its OWN
 head, but merges onto a ``main`` that has moved since (branch protection does not

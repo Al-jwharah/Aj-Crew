@@ -23,11 +23,11 @@ from session_transfer_helpers import (  # noqa: F401 -- the autouse fixture regi
 )
 from slot_ownership_checkpoint_helpers import state_fixture  # noqa: F401 -- requested by name
 
-from kiro_crew.dashboard import handlers_instances as hi
-from kiro_crew.dashboard import openai_compat
-from kiro_crew.dashboard import session_transfer as st
-from kiro_crew.dashboard import slot_ownership
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
+from aj_crew.dashboard import handlers_instances as hi
+from aj_crew.dashboard import openai_compat
+from aj_crew.dashboard import session_transfer as st
+from aj_crew.dashboard import slot_ownership
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService
 
 OWNER_APP = "owner-app"
 CHANNEL_KEY = "slack:1700000000.000100"
@@ -145,7 +145,7 @@ def _completion_request(state, slot_key: str, app: str = OWNER_APP) -> MagicMock
     request = MagicMock()
     request.json = AsyncMock(
         return_value={
-            "model": "kirocrew",
+            "model": "ajcrew",
             "id": slot_key,
             "messages": [{"role": "user", "content": "hello"}],
         }

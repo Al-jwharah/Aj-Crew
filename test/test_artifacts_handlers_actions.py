@@ -22,9 +22,9 @@ from artifacts_handlers_helpers import (  # noqa: F401 -- fixtures are requested
 )
 from stray_line_helpers import cyclic_gc_quiesced  # noqa: F401 - fixture
 
-from kiro_crew import artifacts as art_mod
-from kiro_crew.artifacts import ArtifactStore
-from kiro_crew.dashboard.handlers.artifacts import (
+from aj_crew import artifacts as art_mod
+from aj_crew.artifacts import ArtifactStore
+from aj_crew.dashboard.handlers.artifacts import (
     api_artifact_materialize,
     api_artifact_relocate,
     api_artifact_session_docs,
@@ -49,7 +49,7 @@ class TestRecordEvent:
     async def test_referenced_event_recorded_with_metadata(
         self, isolated_store, patch_restricted
     ) -> None:
-        from kiro_crew.dashboard.handlers.artifacts import api_artifact_record_event
+        from aj_crew.dashboard.handlers.artifacts import api_artifact_record_event
 
         isolated_store.create(name="X", content="<div>x</div>", slug="x", kind="widget")
         resp = await api_artifact_record_event(
@@ -80,7 +80,7 @@ class TestRecordEvent:
     async def test_mcp_actor_inferred_from_internal_secret(
         self, isolated_store, patch_restricted
     ) -> None:
-        from kiro_crew.dashboard.handlers.artifacts import api_artifact_record_event
+        from aj_crew.dashboard.handlers.artifacts import api_artifact_record_event
 
         isolated_store.create(name="X", content="<div>x</div>", slug="x", kind="widget")
         resp = await api_artifact_record_event(
@@ -99,7 +99,7 @@ class TestRecordEvent:
         # for non-chat-scoped requests. That literal isn't a real slot key
         # and would mislead the activity timeline if recorded — the handler
         # explicitly drops it. Same rule as the create/update endpoints.
-        from kiro_crew.dashboard.handlers.artifacts import api_artifact_record_event
+        from aj_crew.dashboard.handlers.artifacts import api_artifact_record_event
 
         isolated_store.create(name="X", content="<div>x</div>", slug="x", kind="widget")
         resp = await api_artifact_record_event(
@@ -115,7 +115,7 @@ class TestRecordEvent:
 
     @pytest.mark.asyncio
     async def test_real_session_key_recorded(self, isolated_store, patch_restricted) -> None:
-        from kiro_crew.dashboard.handlers.artifacts import api_artifact_record_event
+        from aj_crew.dashboard.handlers.artifacts import api_artifact_record_event
 
         isolated_store.create(name="X", content="<div>x</div>", slug="x", kind="widget")
         resp = await api_artifact_record_event(
@@ -132,7 +132,7 @@ class TestRecordEvent:
     async def test_rejects_content_mutating_event_types(
         self, isolated_store, patch_restricted
     ) -> None:
-        from kiro_crew.dashboard.handlers.artifacts import api_artifact_record_event
+        from aj_crew.dashboard.handlers.artifacts import api_artifact_record_event
 
         isolated_store.create(name="X", content="<div>x</div>", slug="x", kind="widget")
         for bad_type in ("created", "edited", "iterated", "reverted"):
@@ -146,7 +146,7 @@ class TestRecordEvent:
 
     @pytest.mark.asyncio
     async def test_unknown_slug_returns_404(self, isolated_store, patch_restricted) -> None:
-        from kiro_crew.dashboard.handlers.artifacts import api_artifact_record_event
+        from aj_crew.dashboard.handlers.artifacts import api_artifact_record_event
 
         resp = await api_artifact_record_event(
             _request(
@@ -161,7 +161,7 @@ class TestRecordEvent:
         # Appending events mutates meta.json, so a restricted session must
         # be rejected with 403 like the other mutation endpoints — it must
         # not be able to flood an artifact's event log.
-        from kiro_crew.dashboard.handlers.artifacts import api_artifact_record_event
+        from aj_crew.dashboard.handlers.artifacts import api_artifact_record_event
 
         isolated_store.create(name="X", content="<div>x</div>", slug="x", kind="widget")
         resp = await api_artifact_record_event(
@@ -183,7 +183,7 @@ class TestRecordEvent:
         # When the session already has a CUD event, the impression is
         # suppressed: the handler must return suppressed:true with a null
         # event, NOT a stale prior event echoed as if it were recorded.
-        from kiro_crew.dashboard.handlers.artifacts import api_artifact_record_event
+        from aj_crew.dashboard.handlers.artifacts import api_artifact_record_event
 
         isolated_store.create(name="X", content="<div>x</div>", slug="x", kind="widget")
         isolated_store.update(
@@ -214,7 +214,7 @@ class TestRecordEvent:
         # the frontend sessionStorage debounce, so the same chat session
         # re-POSTs a `referenced` for the same impression. The store must
         # record it once — the second POST returns suppressed:true.
-        from kiro_crew.dashboard.handlers.artifacts import api_artifact_record_event
+        from aj_crew.dashboard.handlers.artifacts import api_artifact_record_event
 
         isolated_store.create(name="X", content="<div>x</div>", slug="x", kind="widget")
         body = {"type": "referenced", "metadata": {"message_ts": "1780036091.1", "widget_index": 0}}
@@ -238,7 +238,7 @@ class TestRecordEvent:
         # future refactor that accidentally routes referenced events
         # through update() (which DOES bump on content change) doesn't
         # silently turn impression-logging into a version-churn engine.
-        from kiro_crew.dashboard.handlers.artifacts import api_artifact_record_event
+        from aj_crew.dashboard.handlers.artifacts import api_artifact_record_event
 
         art = isolated_store.create(name="X", content="<div>orig</div>", slug="x", kind="widget")
         original_version = art.version
@@ -270,7 +270,7 @@ class TestDenialAudit:
     def _capture_sel(self, monkeypatch):
         from unittest.mock import MagicMock
 
-        from kiro_crew.dashboard.handlers import artifacts as art_handlers
+        from aj_crew.dashboard.handlers import artifacts as art_handlers
 
         sel_stub = MagicMock()
         monkeypatch.setattr(art_handlers, "sel", lambda: sel_stub)
@@ -405,11 +405,11 @@ class TestRelocate:
         target = extra / "doc.md"
         target.write_text("# shared")
         # Configure the extra root via publish.relocate_roots.
-        from kiro_crew.config.loader import KiroCrewConfig, PublishConfig
+        from aj_crew.config.loader import AjCrewConfig, PublishConfig
 
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.publish = PublishConfig(relocate_roots=[str(extra)])
-        monkeypatch.setattr(KiroCrewConfig, "load", staticmethod(lambda: cfg))
+        monkeypatch.setattr(AjCrewConfig, "load", staticmethod(lambda: cfg))
         isolated_store.create(name="Doc", content="x", slug="doc", kind="markdown")
         resp = await api_artifact_relocate(
             _request(match={"slug": "doc"}, body={"source_path": str(target)})
@@ -435,7 +435,7 @@ class TestTeardown:
     @pytest.fixture(autouse=True)
     def patch_deploy_restricted(self, _floor_monkeypatch):
         """Patch _is_restricted_session at the import point used by deploy handlers."""
-        from kiro_crew.dashboard.handlers import _shared
+        from aj_crew.dashboard.handlers import _shared
 
         def _stub(_state, req) -> bool:
             return req.app.get("_restricted_session", False)
@@ -444,7 +444,7 @@ class TestTeardown:
 
     @pytest.mark.asyncio
     async def test_restricted_session_denied(self, isolated_store, patch_restricted) -> None:
-        from kiro_crew.deploy.handlers import _handle_teardown
+        from aj_crew.deploy.handlers import _handle_teardown
 
         req = _request(match={"slug": "x"}, body={"confirm": True}, restricted=True)
         resp = await _handle_teardown(req)
@@ -453,7 +453,7 @@ class TestTeardown:
 
     @pytest.mark.asyncio
     async def test_missing_confirm_returns_400(self, isolated_store, patch_restricted) -> None:
-        from kiro_crew.deploy.handlers import _handle_teardown
+        from aj_crew.deploy.handlers import _handle_teardown
 
         req = _request(match={"slug": "x"}, body={})
         resp = await _handle_teardown(req)
@@ -462,7 +462,7 @@ class TestTeardown:
 
     @pytest.mark.asyncio
     async def test_confirm_false_returns_400(self, isolated_store, patch_restricted) -> None:
-        from kiro_crew.deploy.handlers import _handle_teardown
+        from aj_crew.deploy.handlers import _handle_teardown
 
         req = _request(match={"slug": "x"}, body={"confirm": False})
         resp = await _handle_teardown(req)
@@ -485,7 +485,7 @@ class TestTeardown:
         confirm: the same 400 a missing confirm gets, not a 500."""
         from stray_line_helpers import too_deep_to_decode
 
-        from kiro_crew.deploy.handlers import _handle_teardown
+        from aj_crew.deploy.handlers import _handle_teardown
 
         body = too_deep_to_decode().encode("ascii") if raw == "nested" else raw
         req = _request(match={"slug": "x"}, body=body)
@@ -498,7 +498,7 @@ class TestTeardown:
 
     @pytest.mark.asyncio
     async def test_not_found_returns_404(self, isolated_store, patch_restricted) -> None:
-        from kiro_crew.deploy.handlers import _handle_teardown
+        from aj_crew.deploy.handlers import _handle_teardown
 
         req = _request(match={"slug": "nonexistent"}, body={"confirm": True})
         resp = await _handle_teardown(req)
@@ -506,7 +506,7 @@ class TestTeardown:
 
     @pytest.mark.asyncio
     async def test_success_includes_infra_note(self, isolated_store, patch_restricted) -> None:
-        from kiro_crew.deploy.handlers import _handle_teardown
+        from aj_crew.deploy.handlers import _handle_teardown
 
         # Create a webapp artifact to tear down
         isolated_store.create(
@@ -535,9 +535,9 @@ class TestTeardown:
         self, isolated_store, patch_restricted, monkeypatch
     ) -> None:
         """When engine.run_aws succeeds, manifest field should be 'expired-now'."""
-        from kiro_crew.deploy import engine
-        from kiro_crew.deploy import profiles as profiles_mod
-        from kiro_crew.deploy.handlers import _handle_teardown
+        from aj_crew.deploy import engine
+        from aj_crew.deploy import profiles as profiles_mod
+        from aj_crew.deploy.handlers import _handle_teardown
 
         # Register the profile so _expire_manifest_best_effort passes the registry check.
         reg = profiles_mod.load_registry()
@@ -599,7 +599,7 @@ class TestTeardown:
         s3_calls = [c for c in calls if "s3" in c[0] and "cp" in c[0]]
         assert len(s3_calls) == 2
         for call in s3_calls:
-            assert any("expire-app/.kirocrew-deploy.json" in a for a in call[0])
+            assert any("expire-app/.ajcrew-deploy.json" in a for a in call[0])
 
     @pytest.mark.asyncio
     async def test_teardown_fail_closed_when_aws_unreachable(
@@ -608,8 +608,8 @@ class TestTeardown:
         """When engine.run_aws fails, the reaper check cannot be confirmed —
         teardown must fail closed (409, NO tombstone) rather than expiring the
         manifest into the void (round-18: reaper-not-installed guard)."""
-        from kiro_crew.deploy import engine
-        from kiro_crew.deploy.handlers import _handle_teardown
+        from aj_crew.deploy import engine
+        from aj_crew.deploy.handlers import _handle_teardown
 
         isolated_store.create(
             name="Fail App",
@@ -629,7 +629,7 @@ class TestTeardown:
         monkeypatch.setattr(engine, "run_aws", mock_run_aws)
         # F2 (r4): register the profile so this test exercises the
         # AWS-unreachable path, not the unregistered-profile 409.
-        from kiro_crew.deploy import profiles as _profiles_mod
+        from aj_crew.deploy import profiles as _profiles_mod
 
         monkeypatch.setattr(
             _profiles_mod,
@@ -730,7 +730,7 @@ class TestSettleBlankEndpoint:
         no trace of it."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.dashboard.handlers import artifacts as art_handlers
+        from aj_crew.dashboard.handlers import artifacts as art_handlers
 
         sel_stub = MagicMock()
         monkeypatch.setattr(art_handlers, "sel", lambda: sel_stub)

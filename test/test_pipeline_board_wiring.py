@@ -1,7 +1,7 @@
 """The contract, wired: the reader derives the numbers and the writer is refused them.
 
 ``build_pipeline_board`` type-checks with no caller at all, so these tests fail when the
-wire is cut. The WRITER (:func:`kiro_crew.agent_panel.publish`) refuses a payload that is
+wire is cut. The WRITER (:func:`aj_crew.agent_panel.publish`) refuses a payload that is
 not a :class:`PipelineBoardJudgment`, since agent JSON meets no type checker. The READER
 (``_panel_record``) replaces a free-shape record's data with the provider's and says so.
 
@@ -17,32 +17,32 @@ from typing import Any
 import pytest
 from crew_log_drain import assert_drained
 
-from kiro_crew import agent_panel
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.dashboard.handlers import agent_panel as panel_routes
-from kiro_crew.pipeline_board_contract import (
+from aj_crew import agent_panel
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.dashboard.handlers import agent_panel as panel_routes
+from aj_crew.pipeline_board_contract import (
     BOARD_TEMPLATE_ID,
     CONTRACT_VERSION,
     UNSAID,
     JudgmentError,
     validate_judgment,
 )
-from kiro_crew.work_vocab import WORK_FOLD_NAME
+from aj_crew.work_vocab import WORK_FOLD_NAME
 
 SLOT = "member-pipeline-conductor"
 UNIT = "acp-pipeline-conductor"
-CREW = "KiroCrew Pipeline Conductor"  # brand-ok: slugified into a template id, not prose
-SLUG = "kirocrew-pipeline-conductor"
+CREW = "AjCrew Pipeline Conductor"  # brand-ok: slugified into a template id, not prose
+SLUG = "ajcrew-pipeline-conductor"
 
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, monkeypatch):
     """Own data home, crew log on, and no warm fold carried between tests."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     crew_log_emit.reset_caches()
     crew_log.forget_slot_folds()
     yield
@@ -134,7 +134,7 @@ def test_every_judgment_field_has_a_runtime_check() -> None:
     agree read ONE table. A field added to the type with no checker here would be
     accepted unvalidated, which is the hole this whole commit closes.
     """
-    from kiro_crew.pipeline_board_contract import (
+    from aj_crew.pipeline_board_contract import (
         _JUDGMENT_CHECKS,
         PipelineBoardJudgment,
     )
@@ -444,9 +444,7 @@ def test_the_document_carries_the_board_and_the_docked_data_stays_published(
     assert html is not None
 
     island = json.loads(
-        html.split('id="kirocrew-panel-data">', 1)[1]
-        .split("</script>", 1)[0]
-        .replace("\\u003c", "<")
+        html.split('id="ajcrew-panel-data">', 1)[1].split("</script>", 1)[0].replace("\\u003c", "<")
     )
     assert island["progress"]["total"] == 2, "the document did not get the derived board"
     assert island["contract_version"] == CONTRACT_VERSION
@@ -464,8 +462,6 @@ def test_a_record_with_no_board_still_composes_from_its_published_data(monkeypat
     html = agent_panel.render_record(served)
     assert html is not None
     island = json.loads(
-        html.split('id="kirocrew-panel-data">', 1)[1]
-        .split("</script>", 1)[0]
-        .replace("\\u003c", "<")
+        html.split('id="ajcrew-panel-data">', 1)[1].split("</script>", 1)[0].replace("\\u003c", "<")
     )
     assert island == {"cycle": 3, "holding": "two workers"}

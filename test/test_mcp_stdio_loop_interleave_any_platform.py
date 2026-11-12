@@ -5,7 +5,7 @@ The gateway recycles a pooled backend whose oldest call is past
 ``PING_STALE_SECS`` (``mcp_gateway/backend_liveness.py``). A loop that reads nothing
 while a tool runs therefore has every call over five minutes recycled --
 ``wait`` included -- and every other session's call on the shared
-``kirocrew-core`` backend queued behind it.
+``ajcrew-core`` backend queued behind it.
 
 Windows ``select.select`` cannot poll stdin, so the loop there reads frames on
 a pump thread instead. ``reader`` runs each test on the platform's own path and
@@ -20,9 +20,9 @@ import threading
 import pytest
 from test_mcp_shared import _initialize, _LoopHarness, _slow_then_echo, _tools_call
 
-import kiro_crew.mcp_shared as mcp_shared
-from kiro_crew.mcp_caller import INFLIGHT_CAPABILITY_KEY
-from kiro_crew.mcp_shared import DeferredTool
+import aj_crew.mcp_shared as mcp_shared
+from aj_crew.mcp_caller import INFLIGHT_CAPABILITY_KEY
+from aj_crew.mcp_shared import DeferredTool
 
 
 @pytest.fixture(autouse=True)

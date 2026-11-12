@@ -11,8 +11,8 @@ from typing import Any, Iterator
 
 import pytest
 
-from kiro_crew.shared_crew import work_store as ws
-from kiro_crew.shared_crew.admission import (
+from aj_crew.shared_crew import work_store as ws
+from aj_crew.shared_crew.admission import (
     IDEMPOTENCY_TTL_SECONDS,
     AcceptedWork,
     AdmissionRequest,
@@ -23,20 +23,20 @@ from kiro_crew.shared_crew.admission import (
     RuntimeOwnershipRef,
     StaleRevision,
 )
-from kiro_crew.shared_crew.admission_http import (
+from aj_crew.shared_crew.admission_http import (
     IDEMPOTENCY_HEADER,
     coded_json_response,
     idempotency_key_of,
     request_digest,
 )
-from kiro_crew.shared_crew.contracts import (
+from aj_crew.shared_crew.contracts import (
     DisplaySnapshot,
     Principal,
     PrincipalKind,
     Provenance,
     principal_id_for,
 )
-from kiro_crew.taskq.store import TaskStore
+from aj_crew.taskq.store import TaskStore
 
 S = OperationState
 

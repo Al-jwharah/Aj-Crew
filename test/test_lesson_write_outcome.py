@@ -23,8 +23,8 @@ from lesson_write_outcome_helpers import (
 )
 from named_cases_helpers import named_cases
 
-from kiro_crew.model_registry import MODEL_ID_LITERAL_PATTERN
-from kiro_crew.vector_memory import LessonWriteOutcome, LessonWriteResult
+from aj_crew.model_registry import MODEL_ID_LITERAL_PATTERN
+from aj_crew.vector_memory import LessonWriteOutcome, LessonWriteResult
 
 
 class TestVolatileLessonWriteBoundary:
@@ -244,7 +244,7 @@ class TestVolatileLessonWriteBoundary:
     def test_jsonl_context_hides_legacy_sentence_boundary_pin(self, tmp_path) -> None:
         import json as _json
 
-        from kiro_crew.learn import LessonStore
+        from aj_crew.learn import LessonStore
 
         (tmp_path / "lessons.jsonl").write_text(
             _json.dumps(
@@ -265,8 +265,8 @@ class TestVolatileLessonWriteBoundary:
         assert "gpt-5.6-sol" not in store.get_context()
 
     def test_onboarding_reports_sentence_boundary_jsonl_directive_rejected(self, tmp_path) -> None:
-        from kiro_crew import onboarding_import
-        from kiro_crew.learn import LessonStore
+        from aj_crew import onboarding_import
+        from aj_crew.learn import LessonStore
 
         item = onboarding_import._Item(
             "codex",
@@ -325,7 +325,7 @@ class TestVolatileLessonWriteBoundary:
             store.close()
 
     def test_automatic_jsonl_save_reports_refusal(self, tmp_path) -> None:
-        from kiro_crew.learn import Lesson, LessonStore
+        from aj_crew.learn import Lesson, LessonStore
 
         store = LessonStore(base_dir=tmp_path)
         outcome = store.save(
@@ -384,7 +384,7 @@ class TestVolatileLessonWriteBoundary:
             store.close()
 
     def test_vector_context_hides_key_confirmed_legacy_negative_pin(self, tmp_path) -> None:
-        from kiro_crew.vector_memory import _LESSON_NEGATIVE_SEP, _lesson_key
+        from aj_crew.vector_memory import _LESSON_NEGATIVE_SEP, _lesson_key
 
         rule = "automatic selection is safest"
         store = _store(tmp_path)
@@ -406,7 +406,7 @@ class TestVolatileLessonWriteBoundary:
             store.close()
 
     def test_vector_context_keeps_key_confirmed_legacy_version_reference(self, tmp_path) -> None:
-        from kiro_crew.vector_memory import _LESSON_NEGATIVE_SEP, _lesson_key
+        from aj_crew.vector_memory import _LESSON_NEGATIVE_SEP, _lesson_key
 
         rule = "check streaming compatibility before release"
         negative = "assume gpt-5.6-sol supports the streaming flag"
@@ -435,8 +435,8 @@ class TestVolatileLessonWriteBoundary:
     ) -> None:
         import json as _json
 
-        from kiro_crew.dashboard.handlers import cron
-        from kiro_crew.vector_memory import _LESSON_NEGATIVE_SEP, _lesson_key
+        from aj_crew.dashboard.handlers import cron
+        from aj_crew.vector_memory import _LESSON_NEGATIVE_SEP, _lesson_key
 
         rule = "automatic selection is safest"
         store = _store(tmp_path)
@@ -479,7 +479,7 @@ class TestVolatileLessonWriteBoundary:
     def test_jsonl_context_hides_preexisting_volatile_lesson(self, tmp_path) -> None:
         import json as _json
 
-        from kiro_crew.learn import LessonStore
+        from aj_crew.learn import LessonStore
 
         (tmp_path / "lessons.jsonl").write_text(
             _json.dumps(
@@ -500,8 +500,8 @@ class TestVolatileLessonWriteBoundary:
         assert "gpt-5.6-sol" not in store.get_context()
 
     def test_jsonl_consolidation_does_not_count_a_refusal(self, tmp_path) -> None:
-        from kiro_crew.history import HistoryConsolidator
-        from kiro_crew.learn import LessonStore
+        from aj_crew.history import HistoryConsolidator
+        from aj_crew.learn import LessonStore
 
         store = LessonStore(base_dir=tmp_path)
         consolidator = HistoryConsolidator(
@@ -509,15 +509,15 @@ class TestVolatileLessonWriteBoundary:
             memory=MagicMock(),
             lesson_store=store,
         )
-        with patch("kiro_crew.history_consolidation._HISTORY_LOGGER.info") as info:
+        with patch("aj_crew.history_consolidation._HISTORY_LOGGER.info") as info:
             consolidator._save_lessons([{"rule": self.VOLATILE_IDENTITY, "category": "knowledge"}])
 
         assert store.load_all() == []
         info.assert_not_called()
 
     def test_onboarding_reports_volatile_jsonl_directive_rejected(self, tmp_path) -> None:
-        from kiro_crew import onboarding_import
-        from kiro_crew.learn import LessonStore
+        from aj_crew import onboarding_import
+        from aj_crew.learn import LessonStore
 
         item = onboarding_import._Item(
             "codex",
@@ -534,8 +534,8 @@ class TestVolatileLessonWriteBoundary:
         assert outcome.status == "rejected"
 
     def test_onboarding_reports_volatile_vector_directive_rejected(self, tmp_path) -> None:
-        from kiro_crew import onboarding_import
-        from kiro_crew.learn import LessonStore
+        from aj_crew import onboarding_import
+        from aj_crew.learn import LessonStore
 
         vector_store = _store(tmp_path)
         try:
@@ -580,7 +580,7 @@ class TestVolatileLessonWriteBoundary:
         )[1].split('echo "::endgroup::"', 1)[0]
 
         assert MODEL_ID_LITERAL_PATTERN in model_gate
-        assert "from kiro_crew.model_registry" not in model_gate
+        assert "from aj_crew.model_registry" not in model_gate
 
 
 class TestDurableModelVersionReferences:
@@ -621,7 +621,7 @@ class TestDurableModelVersionReferences:
         category: str,
         negative: str | None,
     ) -> None:
-        from kiro_crew.mcp_tools import learn
+        from aj_crew.mcp_tools import learn
 
         store = _store(tmp_path)
 
@@ -660,8 +660,8 @@ class TestDurableModelVersionReferences:
             store.close()
 
     def test_consolidation_keeps_durable_version_references(self, tmp_path: Path) -> None:
-        from kiro_crew.history import HistoryConsolidator
-        from kiro_crew.learn import LessonStore
+        from aj_crew.history import HistoryConsolidator
+        from aj_crew.learn import LessonStore
 
         store = LessonStore(base_dir=tmp_path)
         consolidator = HistoryConsolidator(
@@ -707,8 +707,8 @@ class TestDurableModelVersionReferences:
     def test_onboarding_keeps_durable_version_reference(
         self, tmp_path: Path, use_vector_store: bool, rule: str
     ) -> None:
-        from kiro_crew import onboarding_import
-        from kiro_crew.learn import LessonStore
+        from aj_crew import onboarding_import
+        from aj_crew.learn import LessonStore
 
         jsonl_store = LessonStore(base_dir=tmp_path)
         vector_store = _store(tmp_path) if use_vector_store else None
@@ -736,7 +736,7 @@ class TestDurableModelVersionReferences:
                 vector_store.close()
 
     def test_tool_description_states_the_narrow_boundary(self) -> None:
-        from kiro_crew.mcp_tools import learn
+        from aj_crew.mcp_tools import learn
 
         descriptor = next(item for item in learn.schemas() if item["name"] == "learn_add")
         description = descriptor["description"]

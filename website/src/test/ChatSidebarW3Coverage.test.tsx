@@ -129,7 +129,7 @@ const mocks = vi.hoisted(() => ({
   sessionsSearch: vi.fn(),
   chatTags: vi.fn(),
   tagColumns: vi.fn(),
-  kirocrewConfig: vi.fn(),
+  ajcrewConfig: vi.fn(),
   patchConfig: vi.fn(),
 }))
 vi.mock('../api/client', () => ({
@@ -274,7 +274,7 @@ beforeEach(() => {
   mocks.sessionsSearch.mockResolvedValue({ sessions: [] })
   mocks.chatTags.mockResolvedValue([])
   mocks.tagColumns.mockResolvedValue([])
-  mocks.kirocrewConfig.mockResolvedValue({ dashboard: { recent_tint_count: 3 } })
+  mocks.ajcrewConfig.mockResolvedValue({ dashboard: { recent_tint_count: 3 } })
   mocks.patchConfig.mockResolvedValue({ ok: true })
 })
 afterEach(() => {

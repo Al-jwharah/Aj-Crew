@@ -11,12 +11,12 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-DEPLOY_SKILL = ROOT / "src/kiro_crew/deploy/skills/artifact-deploy/SKILL.md"
-DEPLOY_WEB_SKILL = ROOT / "src/kiro_crew/deploy/skills/deploy-web/SKILL.md"
-DETACH = ROOT / "src/kiro_crew/deploy/skills/artifact-deploy/scripts/detach_backend.py"
-HANDLERS = ROOT / "src/kiro_crew/deploy/handlers.py"
-HANDLERS_SITES = ROOT / "src/kiro_crew/deploy/handlers_sites.py"
-WIDGETS_SKILL = ROOT / "src/kiro_crew/builtin_skills/widgets/SKILL.md"
+DEPLOY_SKILL = ROOT / "src/aj_crew/deploy/skills/artifact-deploy/SKILL.md"
+DEPLOY_WEB_SKILL = ROOT / "src/aj_crew/deploy/skills/deploy-web/SKILL.md"
+DETACH = ROOT / "src/aj_crew/deploy/skills/artifact-deploy/scripts/detach_backend.py"
+HANDLERS = ROOT / "src/aj_crew/deploy/handlers.py"
+HANDLERS_SITES = ROOT / "src/aj_crew/deploy/handlers_sites.py"
+WIDGETS_SKILL = ROOT / "src/aj_crew/builtin_skills/widgets/SKILL.md"
 WIDGET_SRCDOC = ROOT / "website/src/lib/widgetSrcdoc.ts"
 WIDGET_HEIGHT_REPORTER = ROOT / "website/src/lib/widgetHeightReporter.ts"
 

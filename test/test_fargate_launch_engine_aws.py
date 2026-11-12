@@ -28,13 +28,13 @@ from fargate_launch_engine_helpers import (
     _spec,
 )
 
-from kiro_crew.cloud import fargate_engine
-from kiro_crew.cloud import launch_job as lj
-from kiro_crew.cloud import sizes
-from kiro_crew.cloud.aws import AWSError
-from kiro_crew.cloud.ec2 import MANAGED_TAG_KEY
-from kiro_crew.cloud.fargate import credential_recipient
-from kiro_crew.cloud.fargate_engine import (
+from aj_crew.cloud import fargate_engine
+from aj_crew.cloud import launch_job as lj
+from aj_crew.cloud import sizes
+from aj_crew.cloud.aws import AWSError
+from aj_crew.cloud.ec2 import MANAGED_TAG_KEY
+from aj_crew.cloud.fargate import credential_recipient
+from aj_crew.cloud.fargate_engine import (
     MANAGED_TAG_VALUE,
     FargateLaunchEngine,
     FargateSigninHandle,
@@ -50,7 +50,7 @@ from kiro_crew.cloud.fargate_engine import (
 
 def test_preflight_validates_region_and_refuses_without_a_spec() -> None:
     """A refusal, not a probe: no ECS call, and it names the missing fields."""
-    from kiro_crew.cloud.fargate.identity import DocumentRefused
+    from aj_crew.cloud.fargate.identity import DocumentRefused
 
     engine = FargateLaunchEngine(_spec())
     engine.preflight("p", "us-west-2")  # a spec present: returns without an AWS call
@@ -307,12 +307,12 @@ def test_teardown_removes_the_stopped_tasks_registry_row(monkeypatch, tmp_path) 
     after it unwinds through teardown with the row already written. Stopping the
     task and leaving the row offers a crew whose target resolves to nothing, and
     nothing else removes it."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    from kiro_crew.instances.registry import InstancesRegistry
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    from aj_crew.instances.registry import InstancesRegistry
 
     reg = InstancesRegistry(tmp_path / "instances.json")
     reg.add(
-        name="Kiro Crew Cloud (kc-a1b2c3)",
+        name="Aj Crew Cloud (kc-a1b2c3)",
         ssm_target=EXPECTED_TARGET,
         connection_method="fargate",
         instance_id="doomed",
@@ -330,8 +330,8 @@ def test_teardown_removes_the_stopped_tasks_registry_row(monkeypatch, tmp_path) 
 def test_teardown_leaves_another_tasks_row_alone(monkeypatch, tmp_path) -> None:
     """The removal is keyed on the task it stopped, so a sibling crew in the same
     cluster keeps its record."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    from kiro_crew.instances.registry import InstancesRegistry
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    from aj_crew.instances.registry import InstancesRegistry
 
     other_task_id = "f" * 32
     reg = InstancesRegistry(tmp_path / "instances.json")
@@ -361,8 +361,8 @@ def test_teardown_does_not_confirm_when_the_row_could_not_be_removed(monkeypatch
     a stopped task is something of ours. The task did stop, so returning True would
     tell the operator the cleanup is finished while a row they cannot see the cause
     of is still there."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    from kiro_crew.cloud import connect as connect_mod
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    from aj_crew.cloud import connect as connect_mod
 
     monkeypatch.setattr(
         connect_mod, "unregister_ecs_task", lambda *_a, **_k: connect_mod.UNREGISTER_FAILED
@@ -381,7 +381,7 @@ def test_teardown_does_not_confirm_when_the_row_could_not_be_removed(monkeypatch
 def test_teardown_confirms_when_there_was_no_row_to_remove(monkeypatch, tmp_path) -> None:
     """An absent row is not a failure: a task registered by nothing, or already
     removed by hand, leaves nothing behind, so the confirmation stands."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     double = _EcsDouble()
     double.tasks_for_teardown = [_our_registrable_task()]
     _patch_aws(monkeypatch, double)
@@ -433,7 +433,7 @@ def test_teardown_refuses_a_mislabelled_task_and_says_which_one(monkeypatch, cap
         }
     ]
     _patch_aws(monkeypatch, double)
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.cloud.fargate_engine"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.cloud.fargate_engine"):
         confirmed = FargateLaunchEngine(_spec()).teardown(tag=TAG, profile="p", region="us-west-2")
     assert confirmed is False
     assert double.stops == [], "a mislabelled task must not be stopped on a startedBy match"
@@ -473,7 +473,7 @@ def _run_through_engine(engine, store_root):
 
     The job comes from the real store, so both engines read the same ``size_key`` and ``tag``.
     """
-    from kiro_crew.dashboard import handlers_cloud
+    from aj_crew.dashboard import handlers_cloud
 
     class _StubState:
         def __init__(self, e) -> None:

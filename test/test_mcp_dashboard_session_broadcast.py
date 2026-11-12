@@ -20,13 +20,13 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import mcp_dashboard as md
-from kiro_crew import validation
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.mcp_dashboard import TABLE
-from kiro_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
-from kiro_crew.mcp_tools.table import Caller, ToolContext
-from kiro_crew.validation import (
+from aj_crew import mcp_dashboard as md
+from aj_crew import validation
+from aj_crew.dashboard import session_control as sc
+from aj_crew.mcp_dashboard import TABLE
+from aj_crew.mcp_tools.dashboard_client import DashboardRequest, InMemoryDashboardClient
+from aj_crew.mcp_tools.table import Caller, ToolContext
+from aj_crew.validation import (
     SESSION_BROADCAST_SCHEMA,
     ValidationError,
     validate_tool_args,
@@ -484,7 +484,7 @@ class TestBroadcastSchema:
         assert cleaned["mode"] == mode
 
     def test_the_schema_advertises_all_as_an_optional_boolean(self) -> None:
-        from kiro_crew.mcp_dashboard import _tool_definitions
+        from aj_crew.mcp_dashboard import _tool_definitions
 
         tool = next(t for t in _tool_definitions() if t["name"] == "session_broadcast")
         schema = tool["inputSchema"]
@@ -535,7 +535,7 @@ def test_both_tools_are_advertised_and_identity_gated() -> None:
     """A tool in the dispatcher but absent from the advertised set is unreachable;
     one advertised but outside `SESSION_CONTROL_TOOLS` skips the caller-identity
     gate and would let a subagent drive its parent's sessions."""
-    from kiro_crew.mcp_dashboard import SESSION_CONTROL_TOOLS, _tool_definitions
+    from aj_crew.mcp_dashboard import SESSION_CONTROL_TOOLS, _tool_definitions
 
     advertised = {t["name"] for t in _tool_definitions()}
     for tool in ("session_broadcast", "session_status"):
@@ -546,7 +546,7 @@ def test_both_tools_are_advertised_and_identity_gated() -> None:
 def test_the_schemas_are_registered_for_the_dashboard_server() -> None:
     """A tool absent from its server's registry has its args passed through RAW,
     which for `mode` means an unvalidated string reaching the delivery choice."""
-    from kiro_crew.validation import MCP_DASHBOARD_SCHEMAS
+    from aj_crew.validation import MCP_DASHBOARD_SCHEMAS
 
     assert MCP_DASHBOARD_SCHEMAS["session_broadcast"] is SESSION_BROADCAST_SCHEMA
     assert "session_status" in MCP_DASHBOARD_SCHEMAS

@@ -17,12 +17,12 @@ import codex_session_mcp_helpers
 import pytest
 from codex_session_mcp_helpers import _CODEX_1_11_CAPS, _by_name, _codex_session_array, _write_spec
 
-from kiro_crew.acp._dispatch import identified_mcp_call
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.session_handle import AcpSessionHandle
-from kiro_crew.acp.types import JsonRpcMessage
-from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX
-from kiro_crew.providers.mirrors.codex import codex_projection
+from aj_crew.acp._dispatch import identified_mcp_call
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.session_handle import AcpSessionHandle
+from aj_crew.acp.types import JsonRpcMessage
+from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_CODEX
+from aj_crew.providers.mirrors.codex import codex_projection
 
 # The shared fixtures, bound here by name so pytest registers them for this module.
 agents_dir = codex_session_mcp_helpers.agents_dir
@@ -78,7 +78,7 @@ class TestSpecDisabledToolRefusal:
 
     kiro-cli enforces it itself (``_MANAGED_MCP_ENTRY_KEYS`` admits the key on a
     managed entry) and claude gets it as ``permissions.deny``; codex has no wire
-    channel for it, and withholding ``kirocrew-core`` whole would leave the session
+    channel for it, and withholding ``ajcrew-core`` whole would leave the session
     unable to report back. So the server mounts and the CALL is refused where codex
     asks: every un-annotated MCP call prompts under ``mode=read-only``
     (codex-rs ``requires_mcp_tool_approval`` with ``AppToolApproval::Auto``), Crew's
@@ -90,15 +90,15 @@ class TestSpecDisabledToolRefusal:
         _write_spec(
             agents_dir,
             servers={
-                "kirocrew-core": {
-                    "command": "/opt/kirocrew",
+                "ajcrew-core": {
+                    "command": "/opt/ajcrew",
                     "args": ["mcp-core"],
                     "disabledTools": disabled,
                 }
             },
-            tools=["@kirocrew-core"],
+            tools=["@ajcrew-core"],
         )
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CODEX)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CODEX)
         client._agent_mcp_capabilities = dict(_CODEX_1_11_CAPS)
         # The spawn path's warm, run inline: this is where the deny set is derived.
         client._session_mcp_cache = client._resolve_session_mcp_servers()
@@ -116,10 +116,10 @@ class TestSpecDisabledToolRefusal:
 
     def test_the_deny_set_comes_out_of_the_projection(self, tmp_path, agents_dir):
         client = self._client(tmp_path, agents_dir, disabled=["spawn_run"])
-        assert ("kirocrew-core", "spawn_run") in client._spec_denied_tools
+        assert ("ajcrew-core", "spawn_run") in client._spec_denied_tools
         # And the server itself is still mounted: the restriction narrows a tool,
         # it does not cost the session its control plane.
-        assert "kirocrew-core" in _by_name(_codex_session_array(caps=_CODEX_1_11_CAPS)[1])
+        assert "ajcrew-core" in _by_name(_codex_session_array(caps=_CODEX_1_11_CAPS)[1])
 
     @pytest.mark.asyncio
     async def test_a_switched_off_tool_is_refused_at_the_approval_request(
@@ -133,12 +133,12 @@ class TestSpecDisabledToolRefusal:
             def log_tool_invocation(self, **kw):
                 audited.append(kw)
 
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(sel_mod, "sel", lambda: _Sel())
 
         # The tool_call frame arrives first and is cached by toolCallId...
-        assert client._extract_tool_event(_codex_mcp_tool_call("c1", "kirocrew-core", "spawn_run"))
+        assert client._extract_tool_event(_codex_mcp_tool_call("c1", "ajcrew-core", "spawn_run"))
         # ...then codex asks. The event is built exactly as the dispatch loop builds it.
         event = client._build_permission_event(_codex_mcp_approval(7, "c1"))
         assert event.raw_params_trusted
@@ -148,14 +148,14 @@ class TestSpecDisabledToolRefusal:
         # cancelled outcome is the turn-scoped fallback, this is one call.
         assert sent == [(7, {"outcome": {"outcome": "selected", "optionId": "cancel"}})]
         assert audited and audited[0]["outcome"] == "denied"
-        assert audited[0]["tool_name"] == "mcp__kirocrew-core__spawn_run"
+        assert audited[0]["tool_name"] == "mcp__ajcrew-core__spawn_run"
         assert audited[0]["metadata"]["reason"] == "spec_disabled_tool"
 
     @pytest.mark.asyncio
     async def test_a_tool_the_spec_left_on_goes_to_the_ordinary_gate(self, tmp_path, agents_dir):
         client = self._client(tmp_path, agents_dir, disabled=["spawn_run"])
         sent = self._capture(client)
-        client._extract_tool_event(_codex_mcp_tool_call("c2", "kirocrew-core", "send_message"))
+        client._extract_tool_event(_codex_mcp_tool_call("c2", "ajcrew-core", "send_message"))
         event = client._build_permission_event(_codex_mcp_approval(8, "c2"))
         assert await client._deny_spec_disabled_tool(event) is False
         assert sent == []
@@ -174,7 +174,7 @@ class TestSpecDisabledToolRefusal:
         client = self._client(tmp_path, agents_dir, disabled=["spawn_run"])
         sent = self._capture(client)
         msg = _codex_mcp_approval(9, "never-seen")
-        msg.params["toolCall"]["rawInput"] = {"server": "kirocrew-core", "tool": "spawn_run"}
+        msg.params["toolCall"]["rawInput"] = {"server": "ajcrew-core", "tool": "spawn_run"}
         event = client._build_permission_event(msg)
         assert not event.raw_params_trusted
         assert await client._deny_spec_disabled_tool(event) is False
@@ -184,14 +184,14 @@ class TestSpecDisabledToolRefusal:
     async def test_a_non_codex_client_is_untouched(self, tmp_path, agents_dir):
         _write_spec(
             agents_dir,
-            servers={"kirocrew-core": {"command": "/x", "disabledTools": ["spawn_run"]}},
-            tools=["@kirocrew-core"],
+            servers={"ajcrew-core": {"command": "/x", "disabledTools": ["spawn_run"]}},
+            tools=["@ajcrew-core"],
         )
-        client = AcpClient(work_dir=tmp_path, agent="kirocrew", acp_backend=ACP_BACKEND_CLAUDE)
+        client = AcpClient(work_dir=tmp_path, agent="ajcrew", acp_backend=ACP_BACKEND_CLAUDE)
         client._write_claude_local_settings()
         client._session_mcp_cache = client._resolve_session_mcp_servers()
         assert client._spec_denied_tools == frozenset()
-        client._extract_tool_event(_codex_mcp_tool_call("c3", "kirocrew-core", "spawn_run"))
+        client._extract_tool_event(_codex_mcp_tool_call("c3", "ajcrew-core", "spawn_run"))
         event = client._build_permission_event(_codex_mcp_approval(10, "c3"))
         assert await client._deny_spec_disabled_tool(event) is False
 
@@ -203,12 +203,12 @@ class TestSpecDisabledToolRefusal:
         refusal must run there too -- and it does, before the approve."""
         client = self._client(tmp_path, agents_dir, disabled=["spawn_run"])
         sent = self._capture(client)
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(
             sel_mod, "sel", lambda: type("S", (), {"log_tool_invocation": lambda *a, **k: None})()
         )
-        client._extract_tool_event(_codex_mcp_tool_call("c4", "kirocrew-core", "spawn_run"))
+        client._extract_tool_event(_codex_mcp_tool_call("c4", "ajcrew-core", "spawn_run"))
         await client._handle_permission(_codex_mcp_approval(11, "c4"))
         assert sent == [(11, {"outcome": {"outcome": "selected", "optionId": "cancel"}})]
 
@@ -220,11 +220,11 @@ class TestSpecDisabledToolRefusal:
         513-character tool half is retained verbatim, an exact deny on it binds,
         and nothing is marked or refused for it (H13)."""
         client = self._client(tmp_path, agents_dir, disabled=[])
-        client._extract_tool_event(_codex_mcp_tool_call("c9", "kirocrew-core", "t" * 513))
+        client._extract_tool_event(_codex_mcp_tool_call("c9", "ajcrew-core", "t" * 513))
         assert client._tool_call_identity_unreadable == {}
         event = client._build_permission_event(_codex_mcp_approval(31, "c9"))
         assert event is not None and event.mcp_identity_unreadable is False
-        assert (event.mcp_server_name, event.tool_name) == ("kirocrew-core", "t" * 513)
+        assert (event.mcp_server_name, event.tool_name) == ("ajcrew-core", "t" * 513)
 
     @pytest.mark.asyncio
     async def test_the_auto_approve_site_refuses_an_MCP_approval_it_cannot_identify(
@@ -247,7 +247,7 @@ class TestSpecDisabledToolRefusal:
             def log_tool_invocation(self, **kw):
                 audited.append(kw)
 
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(sel_mod, "sel", lambda: _Sel())
         await client._handle_permission(_codex_mcp_approval(12, "never-seen"))
@@ -291,7 +291,7 @@ class TestSpecDisabledToolRefusal:
         no unit seam, and the failure mode is a switched-off tool running."""
         import inspect
 
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         body = inspect.getsource(client_mod.AcpClient.send_message_stream)
         # The predicate is true on every session with a deny set (and on a harness
@@ -308,16 +308,16 @@ class TestSpecDisabledToolRefusal:
         the deny set must still name it."""
         _write_spec(
             agents_dir,
-            servers={"kirocrew-core": {"command": "/opt/kirocrew", "args": ["mcp-core"]}},
-            tools=["@kirocrew-core"],
+            servers={"ajcrew-core": {"command": "/opt/ajcrew", "args": ["mcp-core"]}},
+            tools=["@ajcrew-core"],
         )
         (tmp_path / "settings-mcp.json").write_text(
-            json.dumps({"mcpServers": {"kirocrew-core": {"disabledTools": ["spawn_run"]}}}),
+            json.dumps({"mcpServers": {"ajcrew-core": {"disabledTools": ["spawn_run"]}}}),
             encoding="utf-8",
         )
         projection, kept = _codex_session_array(caps=_CODEX_1_11_CAPS)
-        assert ("kirocrew-core", "spawn_run") in projection.denied_tools
-        assert "kirocrew-core" in _by_name(kept)
+        assert ("ajcrew-core", "spawn_run") in projection.denied_tools
+        assert "ajcrew-core" in _by_name(kept)
 
     def test_a_third_party_server_narrowed_only_in_the_global_file_is_withheld(
         self, tmp_path, agents_dir
@@ -333,17 +333,17 @@ class TestSpecDisabledToolRefusal:
         _write_spec(
             agents_dir,
             servers={
-                "kirocrew-core": {"command": "/opt/kirocrew", "args": ["mcp-core"]},
+                "ajcrew-core": {"command": "/opt/ajcrew", "args": ["mcp-core"]},
                 "third": {"command": "/bin/third"},
             },
-            tools=["@kirocrew-core", "@third"],
+            tools=["@ajcrew-core", "@third"],
         )
         (tmp_path / "settings-mcp.json").write_text(
             json.dumps(
                 {
                     "mcpServers": {
                         "third": {"command": "/bin/third", "disabledTools": ["risky"]},
-                        "kirocrew-core": {"disabledTools": ["spawn_run"]},
+                        "ajcrew-core": {"disabledTools": ["spawn_run"]},
                     }
                 }
             ),
@@ -352,8 +352,8 @@ class TestSpecDisabledToolRefusal:
         projection, kept = _codex_session_array(caps=_CODEX_1_11_CAPS)
         names = _by_name(kept)
         assert "third" not in names
-        assert "kirocrew-core" in names
-        assert ("kirocrew-core", "spawn_run") in projection.denied_tools
+        assert "ajcrew-core" in names
+        assert ("ajcrew-core", "spawn_run") in projection.denied_tools
 
     def test_a_switched_off_tool_that_ran_anyway_trips_the_wire(
         self, tmp_path, agents_dir, monkeypatch
@@ -368,10 +368,10 @@ class TestSpecDisabledToolRefusal:
             def log_tool_invocation(self, **kw):
                 audited.append(kw)
 
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(sel_mod, "sel", lambda: _Sel())
-        client._extract_tool_event(_codex_mcp_tool_call("c9", "kirocrew-core", "spawn_run"))
+        client._extract_tool_event(_codex_mcp_tool_call("c9", "ajcrew-core", "spawn_run"))
         done = JsonRpcMessage(
             method="session/update",
             params={
@@ -388,11 +388,11 @@ class TestSpecDisabledToolRefusal:
         assert result is not None and result.tool_final
         client._tripwire_spec_disabled_tool(result)
         assert audited and audited[0]["outcome"] == "ran_despite_spec_disable"
-        assert audited[0]["tool_name"] == "mcp__kirocrew-core__spawn_run"
+        assert audited[0]["tool_name"] == "mcp__ajcrew-core__spawn_run"
 
         # A permitted tool completing, or a denied one that did NOT complete, is silent.
         audited.clear()
-        client._extract_tool_event(_codex_mcp_tool_call("c10", "kirocrew-core", "send_message"))
+        client._extract_tool_event(_codex_mcp_tool_call("c10", "ajcrew-core", "send_message"))
         done.params["update"]["toolCallId"] = "c10"
         client._tripwire_spec_disabled_tool(client._extract_tool_call_update(done))
         done.params["update"]["toolCallId"] = "c9"
@@ -405,7 +405,7 @@ class TestSpecDisabledToolRefusal:
     def test_every_result_site_runs_the_tripwire(self):
         import inspect
 
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         for site in ("_dispatch_events", "_read_prompt_response"):
             body = inspect.getsource(getattr(client_mod.AcpClient, site))
@@ -425,12 +425,12 @@ class TestSpecDisabledToolRefusal:
         annotation-free here; the day one needs an annotation, this is the test that
         says the codex refusal must then fire on the ``tool_call`` frame instead.
         """
-        from kiro_crew import mcp_core, mcp_cron
+        from aj_crew import mcp_core, mcp_cron
 
         core_tools = mcp_core._list_tools()
         for server, tools in (
-            ("kirocrew-core", core_tools),
-            ("kirocrew-cron", mcp_cron._list_tools()),
+            ("ajcrew-core", core_tools),
+            ("ajcrew-cron", mcp_cron._list_tools()),
         ):
             assert tools, server
             annotated = [t["name"] for t in tools if t.get("annotations")]
@@ -456,7 +456,7 @@ class TestSpecDisabledToolRefusal:
             servers={"my tool": {"command": "/bin/foo", "disabledTools": ["x"]}},
             tools=["@my tool"],
         )
-        projection = codex_projection("kirocrew")
+        projection = codex_projection("ajcrew")
         assert ("my_tool", "x") in projection.denied_tools
         assert ("my tool", "x") not in projection.denied_tools
 
@@ -471,7 +471,7 @@ class TestSpecDisabledToolRefusal:
         """
         import inspect
 
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         source = "".join(
             inspect.getsource(sys.modules[name])
@@ -515,20 +515,20 @@ class TestTheRuntimeApprovalPathHonoursTheDenySet:
 
     @pytest.mark.asyncio
     async def test_a_switched_off_tool_is_refused_at_the_approval_request(self, monkeypatch):
-        handle, sent = self._handle({("kirocrew-core", "spawn_run")})
+        handle, sent = self._handle({("ajcrew-core", "spawn_run")})
         audited: list[dict] = []
 
         class _Sel:
             def log_tool_invocation(self, **kw):
                 audited.append(kw)
 
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(sel_mod, "sel", lambda: _Sel())
 
         # The tool_call frame arrives first and is cached by toolCallId, which is the
         # only channel the model cannot reach...
-        list(handle._handle_update(_codex_mcp_tool_call("c1", "kirocrew-core", "spawn_run")))
+        list(handle._handle_update(_codex_mcp_tool_call("c1", "ajcrew-core", "spawn_run")))
         # ...then codex asks.
         event = handle._build_permission_event(_codex_mcp_approval(7, "c1"))
         assert event.raw_params_trusted
@@ -541,13 +541,13 @@ class TestTheRuntimeApprovalPathHonoursTheDenySet:
         for task in list(handle._audit_tasks):
             await task
         assert audited and audited[0]["outcome"] == "denied"
-        assert audited[0]["tool_name"] == "mcp__kirocrew-core__spawn_run"
+        assert audited[0]["tool_name"] == "mcp__ajcrew-core__spawn_run"
         assert audited[0]["error"] == "spec_disabled_tool"
 
     @pytest.mark.asyncio
     async def test_a_tool_the_spec_left_on_goes_to_the_consumers_gate(self):
-        handle, sent = self._handle({("kirocrew-core", "spawn_run")})
-        list(handle._handle_update(_codex_mcp_tool_call("c2", "kirocrew-core", "send_message")))
+        handle, sent = self._handle({("ajcrew-core", "spawn_run")})
+        list(handle._handle_update(_codex_mcp_tool_call("c2", "ajcrew-core", "send_message")))
         event = handle._build_permission_event(_codex_mcp_approval(8, "c2"))
         assert await handle._deny_spec_disabled_tool(event) is False
         assert sent == []
@@ -557,9 +557,9 @@ class TestTheRuntimeApprovalPathHonoursTheDenySet:
         """An uncorrelated approval carries its own ``rawInput``, which a forged frame
         could fill with anything. With no cached frame the params are untrusted and the
         request goes on to the consumer -- toward ASKING, never toward running."""
-        handle, sent = self._handle({("kirocrew-core", "spawn_run")})
+        handle, sent = self._handle({("ajcrew-core", "spawn_run")})
         msg = _codex_mcp_approval(9, "never-seen")
-        msg.params["toolCall"]["rawInput"] = {"server": "kirocrew-core", "tool": "spawn_run"}
+        msg.params["toolCall"]["rawInput"] = {"server": "ajcrew-core", "tool": "spawn_run"}
         event = handle._build_permission_event(msg)
         assert not event.raw_params_trusted
         assert await handle._deny_spec_disabled_tool(event) is False
@@ -574,7 +574,7 @@ class TestTheRuntimeApprovalPathHonoursTheDenySet:
         consumer auto-approves by hook glob or in trust mode. Left to the consumer
         that is a switched-off tool running unasked, so it is refused here.
         """
-        handle, sent = self._handle({("kirocrew-core", "spawn_run")})
+        handle, sent = self._handle({("ajcrew-core", "spawn_run")})
         msg = _codex_mcp_approval(11, "standalone-no-tool-call")
         event = handle._build_permission_event(msg)
         assert identified_mcp_call(event) is None
@@ -597,7 +597,7 @@ class TestTheRuntimeApprovalPathHonoursTheDenySet:
     async def test_a_non_mcp_approval_is_never_refused_by_this(self):
         """A shell or edit approval carries neither codex's marker nor a trusted
         ``_meta`` identity, so the deny set has nothing to say about it."""
-        handle, sent = self._handle({("kirocrew-core", "spawn_run")})
+        handle, sent = self._handle({("ajcrew-core", "spawn_run")})
         msg = _codex_mcp_approval(13, "shellish")
         del msg.params["_meta"]
         event = handle._build_permission_event(msg)
@@ -608,8 +608,8 @@ class TestTheRuntimeApprovalPathHonoursTheDenySet:
     async def test_an_identified_allowed_call_is_not_swept_up(self):
         """An MCP approval the handle CAN identify goes to the identified check, which
         lets a tool the spec left on through. This refusal must not double-refuse it."""
-        handle, sent = self._handle({("kirocrew-core", "spawn_run")})
-        list(handle._handle_update(_codex_mcp_tool_call("c9", "kirocrew-core", "send_message")))
+        handle, sent = self._handle({("ajcrew-core", "spawn_run")})
+        list(handle._handle_update(_codex_mcp_tool_call("c9", "ajcrew-core", "send_message")))
         msg = _codex_mcp_approval(14, "c9")
         event = handle._build_permission_event(msg)
         assert await handle._deny_spec_disabled_tool(event) is False
@@ -621,7 +621,7 @@ class TestTheRuntimeApprovalPathHonoursTheDenySet:
         """Every host with no mirror, and every mirrored session whose spec switched
         nothing off: one falsy read and out."""
         handle, sent = self._handle(set())
-        list(handle._handle_update(_codex_mcp_tool_call("c3", "kirocrew-core", "spawn_run")))
+        list(handle._handle_update(_codex_mcp_tool_call("c3", "ajcrew-core", "spawn_run")))
         event = handle._build_permission_event(_codex_mcp_approval(10, "c3"))
         assert await handle._deny_spec_disabled_tool(event) is False
         assert sent == []
@@ -667,7 +667,7 @@ class TestTheTripwireNoticesASwitchedOffToolThatRan:
             def log_tool_invocation(self, **kw):
                 audited.append(kw)
 
-        import kiro_crew.sel as sel_mod
+        import aj_crew.sel as sel_mod
 
         monkeypatch.setattr(sel_mod, "sel", lambda: _Sel())
         return audited
@@ -680,24 +680,24 @@ class TestTheTripwireNoticesASwitchedOffToolThatRan:
 
     @pytest.mark.asyncio
     async def test_a_completed_switched_off_call_is_logged_and_audited(self, monkeypatch, caplog):
-        handle = self._handle({("kirocrew-core", "spawn_run")})
+        handle = self._handle({("ajcrew-core", "spawn_run")})
         audited = self._audited(monkeypatch)
-        self._feed(handle, _codex_mcp_tool_call("t1", "kirocrew-core", "spawn_run"))
+        self._feed(handle, _codex_mcp_tool_call("t1", "ajcrew-core", "spawn_run"))
         with caplog.at_level("WARNING"):
             self._feed(handle, _codex_mcp_tool_result("t1"))
         assert "COMPLETED although the agent spec switches it off" in caplog.text
         for task in list(handle._audit_tasks):
             await task
-        assert audited and audited[0]["tool_name"] == "mcp__kirocrew-core__spawn_run"
+        assert audited and audited[0]["tool_name"] == "mcp__ajcrew-core__spawn_run"
         # NOT "denied": the call ran. A false record here is worse than no record.
         assert audited[0]["outcome"] == "ran_despite_spec_disable"
         assert audited[0]["error"] == "spec_disabled_tool_completed"
 
     @pytest.mark.asyncio
     async def test_a_completed_allowed_call_is_silent(self, monkeypatch, caplog):
-        handle = self._handle({("kirocrew-core", "spawn_run")})
+        handle = self._handle({("ajcrew-core", "spawn_run")})
         audited = self._audited(monkeypatch)
-        self._feed(handle, _codex_mcp_tool_call("t2", "kirocrew-core", "send_message"))
+        self._feed(handle, _codex_mcp_tool_call("t2", "ajcrew-core", "send_message"))
         with caplog.at_level("WARNING"):
             self._feed(handle, _codex_mcp_tool_result("t2"))
         assert "COMPLETED although" not in caplog.text
@@ -708,7 +708,7 @@ class TestTheTripwireNoticesASwitchedOffToolThatRan:
         """Every host that needs no projection: one falsy read and out."""
         handle = self._handle(set())
         audited = self._audited(monkeypatch)
-        self._feed(handle, _codex_mcp_tool_call("t3", "kirocrew-core", "spawn_run"))
+        self._feed(handle, _codex_mcp_tool_call("t3", "ajcrew-core", "spawn_run"))
         with caplog.at_level("WARNING"):
             self._feed(handle, _codex_mcp_tool_result("t3"))
         assert "COMPLETED although" not in caplog.text
@@ -718,10 +718,10 @@ class TestTheTripwireNoticesASwitchedOffToolThatRan:
     async def test_a_pending_frame_is_not_a_completed_call(self, monkeypatch, caplog):
         """It reads ``tool_final``, so the tool_call frame that OPENS the call -- the
         one the refusals act on -- must not be reported as a call that ran."""
-        handle = self._handle({("kirocrew-core", "spawn_run")})
+        handle = self._handle({("ajcrew-core", "spawn_run")})
         audited = self._audited(monkeypatch)
         with caplog.at_level("WARNING"):
-            self._feed(handle, _codex_mcp_tool_call("t4", "kirocrew-core", "spawn_run"))
+            self._feed(handle, _codex_mcp_tool_call("t4", "ajcrew-core", "spawn_run"))
         assert "COMPLETED although" not in caplog.text
         assert audited == []
 
@@ -737,9 +737,9 @@ class TestTheTripwireNoticesASwitchedOffToolThatRan:
         scope dropped from the key both halves collapse to the bare id, the lookup
         hits, and the tripwire fires on an entry it does not own.
         """
-        handle = self._handle({("kirocrew-core", "spawn_run")})
+        handle = self._handle({("ajcrew-core", "spawn_run")})
         audited = self._audited(monkeypatch)
-        child_call = _codex_mcp_tool_call("t5", "kirocrew-core", "spawn_run")
+        child_call = _codex_mcp_tool_call("t5", "ajcrew-core", "spawn_run")
         child_call.params["sessionId"] = "some-child-session"
         self._feed(handle, child_call)
         # Written, but under the child's scope.

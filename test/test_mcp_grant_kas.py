@@ -11,10 +11,10 @@ from mcp_discovery_helpers import (  # noqa: F401 -- the autouse fixture registe
     _stub_remote_probe_ssrf_vet,
 )
 
-from kiro_crew import hooks, mcp_discovery_remote, mcp_grant_kas
-from kiro_crew.acp import kas_secret_storage as kss
-from kiro_crew.secrets import SecretVault
-from kiro_crew.testing.links import make_dir_link
+from aj_crew import hooks, mcp_discovery_remote, mcp_grant_kas
+from aj_crew.acp import kas_secret_storage as kss
+from aj_crew.secrets import SecretVault
+from aj_crew.testing.links import make_dir_link
 
 _FIGMA = "https://mcp.figma.com/mcp"
 # sha256("https://mcp.figma.com/mcp|"): the input ``calculateConnectionHash`` in
@@ -315,13 +315,11 @@ async def test_the_probe_passes_whether_the_row_has_headers(monkeypatch, headers
     """A KAS-only grant reads "Signed in" for a plain row, "Not verified" with headers."""
     from unittest.mock import patch
 
-    from kiro_crew.mcp_discovery import McpServerInfo, _probe_remote
+    from aj_crew.mcp_discovery import McpServerInfo, _probe_remote
 
     _patch_lookups(monkeypatch, False, True)
     server = McpServerInfo(name="figma", url=_FIGMA, headers=headers)
-    with patch(
-        "kiro_crew.mcp_discovery.aiohttp.ClientSession", return_value=_challenging_session()
-    ):
+    with patch("aj_crew.mcp_discovery.aiohttp.ClientSession", return_value=_challenging_session()):
         result = await _probe_remote(server)
 
     assert result.status == "needs_auth"

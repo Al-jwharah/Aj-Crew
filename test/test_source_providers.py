@@ -10,7 +10,7 @@ from source_providers_helpers import _clear_shared_fetch_state  # noqa: F401
 from source_providers_helpers import _mock_source_sel_fixture  # noqa: F401
 from source_providers_helpers import _no_visibility_refresh_side_task  # noqa: F401
 
-from kiro_crew.dashboard.handlers import source_providers as source
+from aj_crew.dashboard.handlers import source_providers as source
 
 # ── Jira issue fetching tests ────────────────────────────────────────────────
 

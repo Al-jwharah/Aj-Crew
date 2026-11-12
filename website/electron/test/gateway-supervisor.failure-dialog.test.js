@@ -121,7 +121,7 @@ function clientOnlyClickHarness({
       arch: "x64",
       execPath: APP_EXEC_PATH,
       argv: APP_ARGV,
-      env: { KIROCREW_HOME: "/virtual/kirocrew-home" },
+      env: { AJCREW_HOME: "/virtual/ajcrew-home" },
       resourcesPath: "/virtual/resources",
       kill() { throw new Error("process kill must not run in this harness"); },
     },
@@ -209,7 +209,7 @@ test("a gateway is not started on a port a configured crew is on", async () => {
   );
 });
 
-// Something IS answering on the port, and its payload carries no Kiro Crew
+// Something IS answering on the port, and its payload carries no Aj Crew
 // identity -- the shape decideGatewayAction reuses by design. Whether that
 // responder is a legacy gateway or an unrelated service is exactly what the
 // LISTEN owner decides, so these two tests differ only in the owner probe.
@@ -296,7 +296,7 @@ test("a port holder whose command could not be read is named by pid, not called 
   // ps answered nothing, which is what a failed or timed-out read leaves. The
   // holder is still refused, because adopting a program no one identified
   // would post this machine's local secret to it, but it is reported as
-  // unread rather than as a program positively identified as not Kiro Crew.
+  // unread rather than as a program positively identified as not Aj Crew.
   const { supervisor, documents, mainWindow, spawnCalls, logs } = clientOnlyClickHarness({
     actions: ["quit"],
     store: fakeStore({ runLocalGateway: true, remoteHosts: {} }),
@@ -307,7 +307,7 @@ test("a port holder whose command could not be read is named by pid, not called 
 
   assert.strictEqual(await supervisor.start(), false, "the unread holder is not adopted");
   assert.strictEqual(spawnCalls.length, 0);
-  assert.ok(!logs.some((line) => line.includes("NON-KiroCrew")), "the log does not call it non-Kiro-Crew");
+  assert.ok(!logs.some((line) => line.includes("NON-AjCrew")), "the log does not call it non-Aj-Crew");
 
   await supervisor.connect(mainWindow);
   for (let i = 0; i < 80 && documents.length < 1; i += 1) await flush();
@@ -422,7 +422,7 @@ test("a probe that cannot run reports its own outcome, not a successor that neve
     "the message states what actually failed");
   assert.doesNotMatch(reopened, /never served one/,
     "it must not deny a successor that answered");
-  assert.match(reopened, /KIROCREW_PORT set to a port number that has no remote host/,
+  assert.match(reopened, /AJCREW_PORT set to a port number that has no remote host/,
     "and it names the route that actually starts a gateway here");
   assert.doesNotMatch(reopened, /open it again instead/,
     "a plain reopen lands on the crew-configured refusal and starts nothing");
@@ -684,8 +684,8 @@ test("clicking Start Local Gateway onto an occupied port names the port and keep
 // "Installation still finishing" dialog: auto-retry while the bundle lands.
 // ---------------------------------------------------------------------------
 
-const BUNDLE_ROOT = "/virtual/resources/backend-dist/kirocrew-backend-x64";
-const BUNDLE_BIN = `${BUNDLE_ROOT}/bin/kirocrew`;
+const BUNDLE_ROOT = "/virtual/resources/backend-dist/ajcrew-backend-x64";
+const BUNDLE_BIN = `${BUNDLE_ROOT}/bin/ajcrew`;
 const BUNDLE_LIB = `${BUNDLE_ROOT}/lib/python3.12`;
 const { REQUIRED_STDLIB_PARTS, SPAWN_MARKER } = require(path.join(__dirname, "..", "bundle-integrity.js"));
 
@@ -693,7 +693,7 @@ const { REQUIRED_STDLIB_PARTS, SPAWN_MARKER } = require(path.join(__dirname, "..
 // paths on disk right now. Only the supervisor's own fs calls are modelled.
 function extractingBundleFs(files, { launchLog = null } = {}) {
   const dirs = () => ({
-    [`${BUNDLE_ROOT}/bin`]: ["python3", "kirocrew"],
+    [`${BUNDLE_ROOT}/bin`]: ["python3", "ajcrew"],
     [`${BUNDLE_ROOT}/lib`]: ["python3.12"],
   });
   return {
@@ -832,7 +832,7 @@ test("installing dialog escalates after five unchanged minutes and still retries
   assert.deepStrictEqual(titlePaints(), []);
 
   timers.tick(INSTALLING_PROBE_MS);
-  assert.match(dialog.paintedMessages().at(-1), /^Some of Kiro Crew's app files were removed/);
+  assert.match(dialog.paintedMessages().at(-1), /^Some of Aj Crew's app files were removed/);
   const escalated = titlePaints().at(-1) || "";
   assert.match(escalated, /app files missing/);
   assert.match(escalated, /act\('quit'\)"\) b\.className = 'ok'/, "Quit takes the accent");
@@ -868,7 +868,7 @@ test("two open installing dialogs still escalate only after five unchanged minut
   assert.deepStrictEqual(dialog.paintedMessages(), [], "one period short of five minutes, nothing escalates");
   assert.deepStrictEqual(windows[1].paintedMessages(), []);
   tickAll();
-  assert.match(dialog.paintedMessages().at(-1), /^Some of Kiro Crew's app files were removed/);
+  assert.match(dialog.paintedMessages().at(-1), /^Some of Aj Crew's app files were removed/);
   dialog.click("quit");
   windows[1].click("quit");
 });
@@ -880,13 +880,13 @@ test("a reopened installing dialog keeps the escalated copy of a stalled bundle"
     missing: ["zoneinfo"],
   });
   for (let i = 0; i < INSTALLING_STALL_MS / INSTALLING_PROBE_MS; i += 1) timers.tick(INSTALLING_PROBE_MS);
-  assert.match(dialog.paintedMessages().at(-1), /^Some of Kiro Crew's app files were removed/);
+  assert.match(dialog.paintedMessages().at(-1), /^Some of Aj Crew's app files were removed/);
   dialog.click("reveal");
   await flush();
   assert.strictEqual(windows.length, 2, "Reveal Log reopened the dialog");
   const reopened = decodeURIComponent(windows[1].loaded[0]);
   assert.match(reopened, /app files missing/);
-  assert.match(reopened, /Some of Kiro Crew's app files were removed/);
+  assert.match(reopened, /Some of Aj Crew's app files were removed/);
   assert.match(reopened, /<button class="ok" onclick="act\('quit'\)">Quit<\/button>/, "Quit keeps the accent");
   assert.match(reopened, /var primaryAct = "act\('quit'\)"/, "Enter still presses Quit");
   timers.tick(INSTALLING_PROBE_MS);
@@ -929,7 +929,7 @@ test("installing dialog retries exactly once when the probe reports complete", a
   // whole frame agrees with it: title swapped, Retry greyed, Quit restated.
   assert.match(dialog.paintedMessages().at(-1), /Installation finished/);
   const chrome = dialog.completionChrome();
-  assert.match(chrome, /"Kiro Crew — installation finished"/, "the title no longer says finishing");
+  assert.match(chrome, /"Aj Crew — installation finished"/, "the title no longer says finishing");
   assert.match(chrome, /act\('retry'\)"\) \{ b\.disabled = true; b\.textContent = 'Starting…'; \}/,
     "Retry is disabled AND relabelled, so a paler button is not the only cue");
   assert.match(chrome, /Quit anyway/, "Quit names its changed stakes");
@@ -1151,7 +1151,7 @@ test("the failure dialog leaves the splash's Close window usable on Windows and 
       processRef: {
         platform,
         arch: "x64",
-        env: { KIROCREW_HOME: "/virtual/kirocrew-home" },
+        env: { AJCREW_HOME: "/virtual/ajcrew-home" },
         resourcesPath: "/virtual/resources",
         kill() { throw new Error("process kill must not run in this harness"); },
       },

@@ -44,14 +44,14 @@ from remote_crew_chaining_helpers import (
     _State,
 )
 
-from kiro_crew.instances.registry import (
+from aj_crew.instances.registry import (
     INSTANCE_NAME_MAX,
     MAX_CHAINED_PER_PARENT,
     MAX_VIA_HOPS,
     InstancesRegistry,
     InvalidInstanceError,
 )
-from kiro_crew.instances.ssh_tunnel_manager import _Mint
+from aj_crew.instances.ssh_tunnel_manager import _Mint
 
 # ── the depth cap, at the add boundary ───────────────────────────────────
 
@@ -63,7 +63,7 @@ class TestDepthCap:
         return reg
 
     def test_a_second_hop_is_allowed(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -80,7 +80,7 @@ class TestDepthCap:
         assert reg.get("c").via_remote_port == 53999
 
     def test_a_third_hop_is_refused_before_anything_is_written(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -122,7 +122,7 @@ class TestDepthCap:
         subject left the reader unable to tell what was refused or what had been
         doing it. Each refusal names the crew and reads as a whole sentence.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -175,7 +175,7 @@ class TestDepthCap:
             assert name in error, f"{code} does not name {name!r}: {error!r}"
 
     def test_an_unknown_parent_is_refused(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -199,7 +199,7 @@ class TestDepthCap:
         take under a suffixed id, giving one remote crew two rows, two forwards, two
         tabs and two charges against the width cap.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -226,7 +226,7 @@ class TestDepthCap:
         remote id behind a different parent -- two parents can each hold a crew whose
         id on that parent happens to read the same.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -260,7 +260,7 @@ class TestDepthCap:
         place. A retry from the announcing pane produces exactly this pair, so it is
         the ordinary case rather than an error path.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -298,7 +298,7 @@ class TestDepthCap:
         import ast
         import inspect
 
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         tree = ast.parse(inspect.getsource(handlers.api_instances_add))
         fn = tree.body[0]
@@ -335,7 +335,7 @@ class TestDepthCap:
         bound at all: eight chained rows of arbitrary-length names are still an
         arbitrary-size registry and an arbitrary-size response.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -366,7 +366,7 @@ class TestDepthCap:
         for anything else to bind. The cap belongs at the write sites, which is where
         ``ttl`` already puts it for this same reason.
         """
-        from kiro_crew.instances.registry import validate_instance_name
+        from aj_crew.instances.registry import validate_instance_name
 
         path = tmp_path / "instances.json"
         reg = InstancesRegistry(path=path)
@@ -429,7 +429,7 @@ class TestDepthCap:
         its own cap -- these rows are created by that parent's pane announcing crews,
         not by anyone at this dashboard, and each one is a forward and a mint here.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -466,7 +466,7 @@ class TestDepthCap:
         """A full parent must not refuse crews riding a DIFFERENT one, or one parent's
         pane could stop every other parent from being used.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -538,7 +538,7 @@ class TestDepthCap:
         """Both or neither: a consumer that gets a remaining without the total it
         counts down from has to invent a denominator, which is the defect.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         class _St:
             def to_dict(self):
@@ -567,7 +567,7 @@ class TestDepthCap:
         assert "token_ttl_total" not in d2
 
     def test_an_ssm_parent_is_refused(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -592,7 +592,7 @@ class TestDepthCap:
     def test_a_patch_cannot_re_parent_a_crew(self, tmp_path, monkeypatch):
         """Re-parenting would move a crew onto a hop whose depth was never
         checked, so only the hop PORT is editable."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         assert "via_instance_id" not in handlers._PATCH_FIELD_TYPES
         assert handlers._PATCH_FIELD_TYPES["via_remote_port"] is int
@@ -638,7 +638,7 @@ class TestEmbedTokenEndpoint:
             return self.result
 
     def test_it_hands_back_the_token_and_the_hop_port(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -655,7 +655,7 @@ class TestEmbedTokenEndpoint:
     def test_a_malformed_port_is_refused_before_any_mint(self, tmp_path, monkeypatch):
         """`isinstance(True, int)` is True, so a bool would otherwise be accepted
         as port 1 and mint a token no page can use."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -673,7 +673,7 @@ class TestEmbedTokenEndpoint:
         """The flag lifts the depth refusal for a page of our own, so a value that
         merely looks true is refused rather than read as one; a peer's request,
         which never sends it, keeps the refusal."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -706,7 +706,7 @@ class TestEmbedTokenEndpoint:
             assert mgr.calls == []
 
     def test_a_refusal_carries_the_managers_status(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -724,7 +724,7 @@ class TestEmbedTokenEndpoint:
     def test_a_non_owner_caller_is_refused(self, tmp_path, monkeypatch):
         """The route mints a credential for a machine, so it carries the same
         owner-only gate as every other route in this control plane."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = InstancesRegistry(path=tmp_path / "instances.json")
@@ -749,7 +749,7 @@ class TestEmbedTokenEndpoint:
         ...)``, so a POST-only stub would see no catch-all at all and the assertion
         would pass without checking anything.
         """
-        from kiro_crew.dashboard.routes import connections
+        from aj_crew.dashboard.routes import connections
 
         paths: list[str] = []
 

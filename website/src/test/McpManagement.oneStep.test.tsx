@@ -54,7 +54,7 @@ function server(over: Record<string, unknown> = {}) {
     can_stub: true,
     in_allowlist: false,
     entry_poolable: false,
-    agents: ['kirocrew'],
+    agents: ['ajcrew'],
     transport: 'stdio',
     denylisted: false,
     ...over,
@@ -713,7 +713,7 @@ describe('the launch a share approves', () => {
     // No value, not even the gateway's redacted form, and no repeat of USED BY.
     expect(details.textContent).not.toContain('=')
     expect(details.textContent).not.toContain('sha256')
-    expect(details.textContent).not.toContain('kirocrew')
+    expect(details.textContent).not.toContain('ajcrew')
 
     fireEvent.click(toggle)
     expect(toggle.getAttribute('aria-expanded')).toBe('false')

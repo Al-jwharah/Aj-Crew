@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.security: ``is_denied`` and the built-in deny patterns.
+"""Tests for aj_crew.security: ``is_denied`` and the built-in deny patterns.
 
 The ada / AWS command patterns and the ``self-protection-kill`` rule through the real gate, then
 ``BUILTIN_DENY_PATTERNS``, with the own-host seed's datagram socket stubbed so no test opens a
@@ -17,7 +17,7 @@ class TestSandboxDeniedCommands:
 
     Command denial is not injected into the kiro-cli agent spec
     (``config/defaults.json`` does not carry ``deniedCommands``); it is
-    enforced solely at Kiro Crew's own ``hooks.py`` PreToolUse gate, whose
+    enforced solely at Aj Crew's own ``hooks.py`` PreToolUse gate, whose
     decision function is ``security.is_denied`` (built-in regex tier + the
     always-on keystone controls for exfiltration / sensitive-path reads).  These
     tests therefore exercise the real gate directly.
@@ -25,7 +25,7 @@ class TestSandboxDeniedCommands:
 
     @staticmethod
     def _is_denied(cmd: str) -> bool:
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         return is_denied(cmd) is not None
 
@@ -109,18 +109,18 @@ class TestKiroCliBundledDeniedCommands:
     Command denial is not injected into the kiro-cli agent spec — the
     bundled ``config/defaults.json`` does not carry ``deniedCommands``.  The
     self-protection kill guard is now a ``BUILTIN_DENIED_RULES`` entry
-    (``self-protection-kill``) enforced at Kiro Crew's own ``hooks.py`` PreToolUse
+    (``self-protection-kill``) enforced at Aj Crew's own ``hooks.py`` PreToolUse
     gate, whose decision function is ``security.is_denied``.  These tests
     therefore exercise ``is_denied`` directly (tool-shape agnostic — the same
     gate runs regardless of whether the tool is ``execute_bash`` or ``shell``).
 
-    Regression tests for the ``kill``/``kirocrew`` pattern false positive,
+    Regression tests for the ``kill``/``ajcrew`` pattern false positive,
     narrowed in two steps.
 
-    Step 1 (word boundaries): the original pattern ``.*kill.*kiro.?crew.*``
-    matched any command whose argv contained ``~/.kirocrew/skills/...``
+    Step 1 (word boundaries): the original pattern ``.*kill.*aj.?crew.*``
+    matched any command whose argv contained ``~/.ajcrew/skills/...``
     (because ``skills`` contains the substring ``kill``) followed by
-    ``kirocrew`` anywhere.  Anchoring the kill word on word boundaries
+    ``ajcrew`` anywhere.  Anchoring the kill word on word boundaries
     stopped skill-dir paths from reading as ``kill``.
 
     Step 2 (command structure): boundaries still left the rule matching mere
@@ -132,84 +132,84 @@ class TestKiroCliBundledDeniedCommands:
     PIDs, so it only matches when the name is resolved to one inside a
     command substitution.  ``[^|;&]*`` confines each arm to a single command
     segment, so an unrelated later command in a ``;``/``&&``/pipe chain is not
-    captured.  Every by-name kill form is still blocked; ``kiro-crew`` is
+    captured.  Every by-name kill form is still blocked; ``aj-crew`` is
     still covered by the ``[-.]?`` separator.
     """
 
     @staticmethod
     def _is_denied(cmd: str) -> bool:
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         return is_denied(cmd) is not None
 
     # --- real kill attempts: blocked ---
 
-    def test_pkill_kirocrew_blocked(self) -> None:
-        assert self._is_denied("pkill kirocrew")
+    def test_pkill_ajcrew_blocked(self) -> None:
+        assert self._is_denied("pkill ajcrew")
 
-    def test_kill_kirocrew_pid_blocked(self) -> None:
-        assert self._is_denied("kill -9 $(pgrep kirocrew)")
+    def test_kill_ajcrew_pid_blocked(self) -> None:
+        assert self._is_denied("kill -9 $(pgrep ajcrew)")
 
-    def test_killall_kirocrew_blocked(self) -> None:
-        assert self._is_denied("sudo killall kirocrew")
+    def test_killall_ajcrew_blocked(self) -> None:
+        assert self._is_denied("sudo killall ajcrew")
 
-    def test_kill_kiro_crew_hyphenated_blocked(self) -> None:
+    def test_kill_aj_crew_hyphenated_blocked(self) -> None:
         # The `.?` in the pattern covers an optional separator so agents can't
-        # bypass with "kiro-crew".
-        assert self._is_denied("pkill kiro-crew")
+        # bypass with "aj-crew".
+        assert self._is_denied("pkill aj-crew")
 
     def test_kill_pidof_substitution_blocked(self) -> None:
         # `pidof` resolves the name to a PID exactly as `pgrep` does, so a
         # resolver-name allowlist would have been a bypass.
-        assert self._is_denied("kill $(pidof kirocrew)")
+        assert self._is_denied("kill $(pidof ajcrew)")
 
     def test_kill_pidfile_substitution_blocked(self) -> None:
-        assert self._is_denied("kill $(cat /var/run/kirocrew.pid)")
+        assert self._is_denied("kill $(cat /var/run/ajcrew.pid)")
 
     def test_kill_backtick_substitution_blocked(self) -> None:
-        assert self._is_denied("kill `pgrep kirocrew`")
+        assert self._is_denied("kill `pgrep ajcrew`")
 
     # --- skill-dir false positives: must be allowed ---
 
-    def test_skill_create_sh_kirocrew_domain_allowed(self) -> None:
+    def test_skill_create_sh_ajcrew_domain_allowed(self) -> None:
         """The brazil-workspace skill scaffold must not be blocked."""
-        cmd = "/Users/user/.kirocrew/skills/brazil-workspace/create.sh --domain kirocrew"
+        cmd = "/Users/user/.ajcrew/skills/brazil-workspace/create.sh --domain ajcrew"
         assert not self._is_denied(cmd)
 
     def test_skills_dir_listing_allowed(self) -> None:
-        assert not self._is_denied("ls ~/.kirocrew/skills/")
+        assert not self._is_denied("ls ~/.ajcrew/skills/")
 
-    def test_skill_run_with_kirocrew_arg_allowed(self) -> None:
-        cmd = "/Users/user/.kirocrew/skills/coder/run.sh kirocrew --dry-run"
+    def test_skill_run_with_ajcrew_arg_allowed(self) -> None:
+        cmd = "/Users/user/.ajcrew/skills/coder/run.sh ajcrew --dry-run"
         assert not self._is_denied(cmd)
 
     def test_bash_skill_script_allowed(self) -> None:
-        assert not self._is_denied("bash ~/.kirocrew/skills/something.sh")
+        assert not self._is_denied("bash ~/.ajcrew/skills/something.sh")
 
-    def test_cat_kirocrew_config_allowed(self) -> None:
+    def test_cat_ajcrew_config_allowed(self) -> None:
         # "cat" has no "kill" word anywhere — must not match.
-        assert not self._is_denied("cat ~/.kirocrew/config.json")
+        assert not self._is_denied("cat ~/.ajcrew/config.json")
 
     # --- incidental-mention false positives: must be allowed ---
-    # A bare `kill` takes PIDs, so none of these can aim at a kirocrew process
+    # A bare `kill` takes PIDs, so none of these can aim at an ajcrew process
     # by name; the product name is a FILE, a LOG PATH, or a COMMENT.
 
     def test_kill_bare_pid_allowed(self) -> None:
         assert not self._is_denied("kill 12345")
 
     def test_kill_pid_then_restore_config_file_allowed(self) -> None:
-        cmd = "kill 12345 && cp /tmp/bk/kirocrew.json ~/.kiro/agents/"
+        cmd = "kill 12345 && cp /tmp/bk/ajcrew.json ~/.kiro/agents/"
         assert not self._is_denied(cmd)
 
     def test_kill_pid_then_diff_config_file_allowed(self) -> None:
-        cmd = "kill $PID; diff /tmp/bk/kirocrew.json ~/.kiro/agents/kirocrew.json"
+        cmd = "kill $PID; diff /tmp/bk/ajcrew.json ~/.kiro/agents/ajcrew.json"
         assert not self._is_denied(cmd)
 
     def test_kill_pid_with_trailing_comment_allowed(self) -> None:
-        assert not self._is_denied("kill $PID  # stop the stray kirocrew instance")
+        assert not self._is_denied("kill $PID  # stop the stray ajcrew instance")
 
-    def test_kill_pid_piped_to_kirocrew_log_allowed(self) -> None:
-        assert not self._is_denied("kill 12345 | tee /tmp/kirocrew.log")
+    def test_kill_pid_piped_to_ajcrew_log_allowed(self) -> None:
+        assert not self._is_denied("kill 12345 | tee /tmp/ajcrew.log")
 
 
 #: The peers the ssh-to-self floor's own-host seed UDP-``connect``s to learn this
@@ -271,7 +271,7 @@ class TestBuiltinDenyPatterns:
 
     @pytest.fixture(autouse=True)
     # flake-ok: pre-existing class autouse stub on the shared monkeypatch moved verbatim; tracked for a de-flake pass
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class autouse stub moved verbatim; no test in this class calls monkeypatch.undo()
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class autouse stub moved verbatim; no test in this class calls monkeypatch.undo()
     def _own_host_seed_connects_nothing(self, monkeypatch) -> list[tuple[int, object]]:
         """The ``ssh`` cases here are the first own-host lookup in the process.
 
@@ -297,7 +297,7 @@ class TestBuiltinDenyPatterns:
         The own-host cache is reset for the test and restored after it, so the
         stub's addresses never become another test's idea of this machine.
         """
-        from kiro_crew.security import argv_floor
+        from aj_crew.security import argv_floor
 
         recorded: list[tuple[int, object]] = []
         real_socket = argv_floor.socket
@@ -327,14 +327,14 @@ class TestBuiltinDenyPatterns:
 
     def test_allows_command_with_credential_in_path(self) -> None:
         """Commands in dirs like CredentialValidatorServiceCDK must not be blocked."""
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         cmd = "cd /home/user/src/CredentialValidatorServiceCDK && git status"
         assert is_denied(cmd) is None
 
     def test_allows_credential_in_package_name(self) -> None:
         """Package names containing 'credential' must not be blocked."""
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied("ada credentials update --account 123") is None
         assert is_denied("credential-rotation-service build") is None
@@ -351,18 +351,18 @@ class TestBuiltinDenyPatterns:
         always-on keystone catches actual exfil), while a destructive
         ``delete-secret`` stays blocked.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied("aws secretsmanager delete-secret --secret-id x") is not None
 
     def test_secret_exfil_still_blocked_by_keystone(self) -> None:
         """Dumping an AWS secret env var stays blocked (credential-exfil rule)."""
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied("echo $AWS_SECRET_ACCESS_KEY") is not None
 
     def test_blocks_git_push(self) -> None:
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         # ── Real publish invocations: must remain BLOCKED ──
         assert is_denied("git push origin main") is not None
@@ -416,7 +416,7 @@ class TestBuiltinDenyPatterns:
         ``test_blocks_git_push`` for the bypass-attempt cases that remain
         blocked because the embedded segment IS a real publish.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         # The original pain point: stash output piped into a filter.
         assert is_denied('git stash push -m "wip" 2>&1 | tail -3') is None
@@ -445,7 +445,7 @@ class TestBuiltinDenyPatterns:
         literal ` stash push` substring (with leading space) which this
         input lacks → outright deny on pass 1, no fall-through to pass 2.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         # Concrete bypass attempt.
         assert is_denied("git$(echo ' ')push origin main") is not None
@@ -467,7 +467,7 @@ class TestBuiltinDenyPatterns:
         ``&(?!&)`` follows ``&&`` in the alternation so ``&&`` is consumed
         as a single token and a lone ``&`` is split on.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         # Core bypass.
         assert is_denied("git stash push & git push origin main") is not None
@@ -500,7 +500,7 @@ class TestBuiltinDenyPatterns:
         must fall through to the second glob and deny outright.  A ``break``
         regression would skip the second glob and falsely allow.
         """
-        import kiro_crew.security as security_module
+        import aj_crew.security as security_module
 
         monkeypatch.setattr(security_module, "_DENY_EXCEPTIONS", {"*alpha*": ["* stash *"]})
         # Pass 1 sees:
@@ -526,7 +526,7 @@ class TestBuiltinDenyPatterns:
         approval prompt.  Anchoring ``push`` as the git subcommand fixes it
         while keeping real ``git push`` blocked.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied("git commit -m 'fix: do not push secrets to remote'") is None
         assert (
@@ -553,7 +553,7 @@ class TestBuiltinDenyPatterns:
         the payload into a file, which is not scanned) while blocking anyone
         working ON these rules.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         for verb in ("grep -rn", "egrep -r", "fgrep"):
             assert is_denied(f'{verb} "{self.ROOT_WIPE}" test/') is None, verb
@@ -581,7 +581,7 @@ class TestBuiltinDenyPatterns:
         current behaviour rather than xfailing it, so the boundary is explicit and
         a future segmentation fix has to update this test consciously.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied(f'grep -rln "rm-rf-root\\|{self.ROOT_WIPE}" test/') is not None
         # The same search without the alternation IS exonerated — isolating the
@@ -596,7 +596,7 @@ class TestBuiltinDenyPatterns:
         every execution boundary, so the destructive SEGMENT is still evaluated in
         its own right and the Pass 1 whole-string exception only defers to Pass 2.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         # Bare, and behind a wrapper that DOES execute its operands.
         assert is_denied(self.ROOT_WIPE) is not None
@@ -614,7 +614,7 @@ class TestBuiltinDenyPatterns:
     def test_the_carve_out_does_not_exonerate_other_rules(self) -> None:
         """The exception is keyed to the two rm patterns only, so a search verb
         must not become a blanket allowlist for unrelated deny rules."""
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         # A different local-destructive rule in the same segment as a search verb.
         assert is_denied("grep -rn x test/ && mkfs.ext4 /dev/sda1") is not None
@@ -635,7 +635,7 @@ class TestBuiltinDenyPatterns:
         longer exonerated, asserted below so the trade-off is explicit rather
         than looking like an oversight.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied(f"{self.ROOT_WIPE} /bin/grep x") is not None
         assert is_denied(f"{self.ROOT_WIPE} x/grep y") is not None
@@ -659,7 +659,7 @@ class TestBuiltinDenyPatterns:
         funsub. ``_exception_eligible`` now refuses any view containing a
         shell-active character, closing the class instead of chasing spellings.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         # Process substitution, input and output forms, and a bare subshell.
         assert is_denied(f"grep x <({self.ROOT_WIPE}tmp/victim)") is not None
@@ -689,7 +689,7 @@ class TestBuiltinDenyPatterns:
         the premise true rather than merely asserted. ``grep``/``egrep``/``fgrep``
         have no flag that spawns a helper.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied(f'rg --pre sh "{self.ROOT_WIPE}tmp/victim" payload.sh') is not None
         # Dropped wholesale, not just for the executing flag: a glob cannot tell
@@ -713,7 +713,7 @@ class TestBuiltinDenyPatterns:
         ``_exception_eligible`` requires a single plain command, not merely one
         free of expansion openers.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied(f"grep '{self.ROOT_WIPE}tmp/victim' payload.py | python") is not None
         assert is_denied(f"grep '{self.ROOT_WIPE}' payload.sh | sh") is not None
@@ -738,7 +738,7 @@ class TestBuiltinDenyPatterns:
         "push" in an earlier chained segment never blocks a real
         feature-branch push, while chained protected pushes stay denied.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied("git commit -m 'ready to push' && git push origin feature-x") is None
         assert is_denied("echo 'time to push' && git push origin my-feature") is None
@@ -752,7 +752,7 @@ class TestBuiltinDenyPatterns:
         names, grep patterns, config keys) must be ALLOWED — only an actual
         ``git push`` invocation is a publish.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied("git log --grep push") is None
         assert is_denied("git config push.default current") is None
@@ -779,7 +779,7 @@ class TestBuiltinDenyPatterns:
         got there only because the real enumeration read them back from the
         stubbed socket, and the fixture's filter admits nothing else.
         """
-        from kiro_crew.security import argv_floor, is_denied
+        from aj_crew.security import argv_floor, is_denied
 
         assert is_denied("ssh dev-dsk 'cd /workplace && git status'") is None
         assert is_denied("ssh dev-dsk 'git commit -m \"address push-back from review\"'") is None
@@ -791,7 +791,7 @@ class TestBuiltinDenyPatterns:
 
     def test_blocks_ssh_remote_real_git_push(self) -> None:
         """A real ``git push`` inside an ``ssh`` remote command stays BLOCKED."""
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied("ssh host 'cd /repo && git push origin main'") is not None
 
@@ -801,7 +801,7 @@ class TestBuiltinDenyPatterns:
         Auditing only the exception-granted path would leave denials
         un-audited.
         """
-        import kiro_crew.security as security_module
+        import aj_crew.security as security_module
 
         captured: list[tuple[str, str, str]] = []
 
@@ -844,13 +844,13 @@ class TestBuiltinDenyPatterns:
         ``aws cloudformation delete-stack`` invocation instead (see
         ``test_blocks_real_hyphenated_destructive_aws_cli``).
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied("aws cloudformation delete-stack --stack-name foo") is not None
 
     def test_blocks_terminate_instance(self) -> None:
         """The real hyphenated EC2 terminate is blocked (underscore form retired)."""
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied("aws ec2 terminate-instances --instance-ids i-123") is not None
 
@@ -865,7 +865,7 @@ class TestBuiltinDenyPatterns:
         scheduling destructive shell, so this was an exploitable gap on the
         cron command path.
         """
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied("aws cloudformation delete-stack --stack-name prod") is not None
         assert is_denied("aws ec2 terminate-instances --instance-ids i-123") is not None
@@ -879,7 +879,7 @@ class TestBuiltinDenyPatterns:
     def test_allows_benign_aws_reads_after_deny_fix(self) -> None:
         """The hyphenated destructive patterns must not over-block benign
         AWS reads or package/command names that merely contain 'delete'/'credential'."""
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         # Read-only AWS operations stay allowed.
         assert is_denied("aws ec2 describe-instances") is None
@@ -892,16 +892,16 @@ class TestBuiltinDenyPatterns:
         assert is_denied("get-credentials --profile default") is None
 
     def test_allows_git_status(self) -> None:
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied("git status") is None
 
     def test_allows_git_log(self) -> None:
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied("git -P log --oneline -5") is None
 
     def test_allows_cr_command(self) -> None:
-        from kiro_crew.security import is_denied
+        from aj_crew.security import is_denied
 
         assert is_denied("cr --summary 'Fix test discovery'") is None

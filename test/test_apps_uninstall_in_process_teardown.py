@@ -1,7 +1,7 @@
 """Uninstall must stop an app's in-process code, at least as much as disable does.
 
 An app's ``backend.hooks`` run inside the gateway: its ``routes`` are dispatched by
-:class:`~kiro_crew.apps.route_registry.RouteRegistry`, and its ``on_shutdown`` is
+:class:`~aj_crew.apps.route_registry.RouteRegistry`, and its ``on_shutdown`` is
 invoked by the lifecycle dispatcher. Disable reaches both through
 ``teardown_app_runtime`` -> ``on_app_disable``. The uninstall handler runs its own
 backend stop and deregistration, and these tests pin that it also runs the
@@ -21,9 +21,9 @@ from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 from dashboard_owner_helpers import owner_claims
 
-import kiro_crew.apps.hooks_integration as hooks_integration
-import kiro_crew.apps.teardown as teardown
-from kiro_crew.apps.route_registry import RouteRegistry
+import aj_crew.apps.hooks_integration as hooks_integration
+import aj_crew.apps.teardown as teardown
+from aj_crew.apps.route_registry import RouteRegistry
 
 APP = "probe-routes"
 ROUTES_HOOK = "app.hooks:register_routes"
@@ -32,7 +32,7 @@ SHUTDOWN_HOOK = "app.hooks:on_shutdown"
 
 @dataclass
 class _Route:
-    """An installed app's own route type: structural, no ``kiro_crew`` import."""
+    """An installed app's own route type: structural, no ``aj_crew`` import."""
 
     method: str
     path: str
@@ -85,7 +85,7 @@ def _clean_loaded_record():
 
 async def _mount(reg: RouteRegistry) -> None:
     with patch(
-        "kiro_crew.apps.route_registry.load_app_module",
+        "aj_crew.apps.route_registry.load_app_module",
         return_value=lambda ctx: [_Route("GET", "/data", _serve_data)],
     ):
         await reg.register_app_routes(APP, MagicMock(), ROUTES_HOOK, MagicMock())
@@ -96,7 +96,7 @@ async def _get_data(reg: RouteRegistry) -> int:
     request = make_mocked_request(
         "GET", f"/api/apps/{APP}/data", match_info={"app_name": APP, "path": "data"}
     )
-    with patch("kiro_crew.apps.route_registry.sel", return_value=MagicMock()):
+    with patch("aj_crew.apps.route_registry.sel", return_value=MagicMock()):
         response = await reg.dispatch(request)
     return response.status
 
@@ -126,25 +126,25 @@ async def _uninstall(manifest: dict[str, Any]) -> web.Response:
     request.json = AsyncMock(return_value={})
 
     with (
-        patch("kiro_crew.apps.routes.get_app", return_value=fake_app),
+        patch("aj_crew.apps.routes.get_app", return_value=fake_app),
         patch(
-            "kiro_crew.apps.routes.uninstall_app",
+            "aj_crew.apps.routes.uninstall_app",
             return_value=MagicMock(ok=True, to_dict=lambda: {"ok": True}),
         ),
-        patch("kiro_crew.apps.routes.stop_app_backend", return_value=None),
-        patch("kiro_crew.apps.routes.deregister_app", return_value=None),
-        patch("kiro_crew.apps.routes.sel", return_value=MagicMock()),
+        patch("aj_crew.apps.routes.stop_app_backend", return_value=None),
+        patch("aj_crew.apps.routes.deregister_app", return_value=None),
+        patch("aj_crew.apps.routes.sel", return_value=MagicMock()),
         patch(
-            "kiro_crew.apps.routes.classify_and_clean_for_uninstall",
+            "aj_crew.apps.routes.classify_and_clean_for_uninstall",
             return_value={"removable": [], "shared": [], "userInstalled": []},
         ),
         patch(
-            "kiro_crew.apps.routes.clean_dependencies",
+            "aj_crew.apps.routes.clean_dependencies",
             new_callable=AsyncMock,
             return_value=[],
         ),
     ):
-        from kiro_crew.apps.routes import handle_uninstall_app
+        from aj_crew.apps.routes import handle_uninstall_app
 
         response = await handle_uninstall_app(request)
     assert response.status < 400, f"uninstall failed with {response.status}"
@@ -213,7 +213,7 @@ class TestUninstallReportsResidualExecution:
     async def test_incomplete_job_cleanup_reaches_both_outputs(self):
         """A worker still running after uninstall must not read as a clean removal."""
         with patch(
-            "kiro_crew.apps.teardown.on_app_disable",
+            "aj_crew.apps.teardown.on_app_disable",
             new_callable=AsyncMock,
             return_value={"job_cleanup": "partial: removed 1; 1 worker(s) still running"},
         ):
@@ -226,7 +226,7 @@ class TestUninstallReportsResidualExecution:
 
     async def test_a_raising_teardown_is_reported_and_the_uninstall_completes(self):
         with patch(
-            "kiro_crew.apps.teardown.on_app_disable",
+            "aj_crew.apps.teardown.on_app_disable",
             new_callable=AsyncMock,
             side_effect=RuntimeError("boom"),
         ):
@@ -238,7 +238,7 @@ class TestUninstallReportsResidualExecution:
 
     async def test_a_clean_teardown_adds_no_warning(self):
         with patch(
-            "kiro_crew.apps.teardown.on_app_disable",
+            "aj_crew.apps.teardown.on_app_disable",
             new_callable=AsyncMock,
             return_value={"job_cleanup": "removed 2 run record(s)"},
         ):

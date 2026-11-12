@@ -19,10 +19,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from aj_crew import mcp_core, members, session_pid, session_pid_sig, session_token_sig
+from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV, mint_stub_session_token
+from aj_crew.providers.mirrors.identity import control_plane_identity_env
 from conftest import make_dir_link
-from kiro_crew import mcp_core, members, session_pid, session_pid_sig, session_token_sig
-from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV, mint_stub_session_token
-from kiro_crew.providers.mirrors.identity import control_plane_identity_env
 
 LIVE_KEY = "dashboard:chat-9-current"
 STALE_KEY = "dashboard:chat-7-previous"
@@ -31,7 +31,7 @@ OTHER_TOKEN = "d" * 64
 
 
 def test_tool_policy_tracks_signed_session_rekeys_instead_of_stale_parent(cfg, monkeypatch):
-    from kiro_crew import mcp_shared
+    from aj_crew import mcp_shared
 
     monkeypatch.setattr(mcp_shared, "_excluded_tools_by_session", {})
     monkeypatch.setattr(mcp_shared, "_last_failure_time", 0.0)
@@ -53,7 +53,7 @@ def test_tool_policy_tracks_signed_session_rekeys_instead_of_stale_parent(cfg, m
 
     monkeypatch.setattr(mcp_shared, "loopback_urlopen", policy)
     monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN)
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+    monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
     session_token_sig.publish_session_token(TOKEN, LIVE_KEY)
     assert mcp_shared._resolve_excluded_tools() == {LIVE_KEY}
     session_token_sig.publish_session_token(TOKEN, "subagent:child")
@@ -76,8 +76,8 @@ def cfg(tmp_path, monkeypatch):
     key_path = tmp_path / "sel_hmac.key"
     key_path.write_bytes(b"\x02" * 32)
     monkeypatch.delenv(STUB_SESSION_TOKEN_ENV, raising=False)
-    monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-    monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
+    monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+    monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
     with (
         patch.object(session_token_sig, "config_dir", return_value=tmp_path),
         patch.object(session_pid_sig, "sel_hmac_key_path", return_value=key_path),
@@ -100,13 +100,13 @@ class TestResolverPrecedence:
         """THE warm-pool case: both sources present and disagreeing.
 
         The element was built for the session that held the process before the
-        rekey, so its ``KIROCREW_SESSION_KEY`` names that session; the mapping was
+        rekey, so its ``AJCREW_SESSION_KEY`` names that session; the mapping was
         republished at claim time and names the current one. Answering with the env
         var here is the misattribution the whole change exists to remove.
         """
         session_token_sig.publish_session_token(TOKEN, LIVE_KEY)
         monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
         assert resolve() == LIVE_KEY
 
     @pytest.mark.parametrize(
@@ -122,7 +122,7 @@ class TestResolverPrecedence:
         stale-identity bug for a no-identity one.
         """
         monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
         assert resolve() == STALE_KEY
 
     @pytest.mark.parametrize(
@@ -134,7 +134,7 @@ class TestResolverPrecedence:
         """An agent writes a mapping it cannot sign: refused, not trusted."""
         _path_for(cfg, TOKEN).write_text(f"{'0' * 64}\n{LIVE_KEY}", encoding="utf-8")
         monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN)
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
         assert resolve() == STALE_KEY
 
     @pytest.mark.parametrize(
@@ -144,7 +144,7 @@ class TestResolverPrecedence:
     )
     def test_no_token_leaves_behaviour_unchanged(self, cfg, monkeypatch, resolve):
         """Every install that has no token must resolve exactly as it did before."""
-        monkeypatch.setenv("KIROCREW_SESSION_KEY", STALE_KEY)
+        monkeypatch.setenv("AJCREW_SESSION_KEY", STALE_KEY)
         assert resolve() == STALE_KEY
 
     def test_no_token_and_nothing_else_still_refuses(self, cfg):
@@ -170,14 +170,14 @@ class TestDiagnosis:
         """The channel exists and the MAPPING failed — do not send the reader to
         configure routing they already have."""
         monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN)
-        text = mcp_core.strict_identity_diagnosis("kirocrew-core")
+        text = mcp_core.strict_identity_diagnosis("ajcrew-core")
         assert "session token" in text and "trust root" in text
         assert "stub_servers" not in text
 
     def test_resolvable_identity_produces_no_diagnosis(self, cfg, monkeypatch):
         session_token_sig.publish_session_token(TOKEN, LIVE_KEY)
         monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, TOKEN)
-        assert mcp_core.strict_identity_diagnosis("kirocrew-core") == ""
+        assert mcp_core.strict_identity_diagnosis("ajcrew-core") == ""
 
 
 class TestElementCarriage:
@@ -188,12 +188,12 @@ class TestElementCarriage:
         assert env[STUB_SESSION_TOKEN_ENV] == TOKEN
         # BESIDE, not instead of: the key remains the fallback for a host with no
         # SEL trust root to sign a mapping with.
-        assert env["KIROCREW_SESSION_KEY"] == LIVE_KEY
+        assert env["AJCREW_SESSION_KEY"] == LIVE_KEY
 
     def test_no_token_leaves_the_env_byte_identical(self):
         with_token = control_plane_identity_env(LIVE_KEY, "C123", label="codex")
         assert STUB_SESSION_TOKEN_ENV not in with_token
-        assert with_token["KIROCREW_SESSION_KEY"] == LIVE_KEY
+        assert with_token["AJCREW_SESSION_KEY"] == LIVE_KEY
 
     def test_codex_puts_the_token_on_the_control_plane_and_nowhere_else(self):
         """The identity line the codex mirror draws must hold for the token too.
@@ -202,11 +202,11 @@ class TestElementCarriage:
         chose, so handing it a bearer name for this session would let a
         hand-edited line drive the session it was mounted into.
         """
-        from kiro_crew.providers.mirrors.codex import codex_elements
+        from aj_crew.providers.mirrors.codex import codex_elements
 
         out = codex_elements(
             [
-                {"name": "kirocrew-core", "command": "kirocrew", "env": []},
+                {"name": "ajcrew-core", "command": "ajcrew", "env": []},
                 {"name": "third-party", "command": "x", "env": []},
             ],
             session_key=LIVE_KEY,
@@ -214,16 +214,16 @@ class TestElementCarriage:
             session_token=TOKEN,
         )
         by_name = {e["name"]: e for e in out}
-        core_env = {p["name"]: p["value"] for p in by_name["kirocrew-core"]["env"]}
+        core_env = {p["name"]: p["value"] for p in by_name["ajcrew-core"]["env"]}
         assert core_env[STUB_SESSION_TOKEN_ENV] == TOKEN
         assert by_name["third-party"]["env"] == []
 
     def test_opencode_puts_the_token_on_the_control_plane_and_nowhere_else(self):
-        from kiro_crew.providers.mirrors.opencode import opencode_elements
+        from aj_crew.providers.mirrors.opencode import opencode_elements
 
         out = opencode_elements(
             [
-                {"name": "kirocrew-core", "command": "kirocrew", "env": []},
+                {"name": "ajcrew-core", "command": "ajcrew", "env": []},
                 {"name": "third-party", "command": "x", "env": []},
             ],
             session_key=LIVE_KEY,
@@ -231,30 +231,30 @@ class TestElementCarriage:
             session_token=TOKEN,
         )
         by_name = {e["name"]: e for e in out}
-        core_env = {p["name"]: p["value"] for p in by_name["kirocrew-core"]["env"]}
+        core_env = {p["name"]: p["value"] for p in by_name["ajcrew-core"]["env"]}
         assert core_env[STUB_SESSION_TOKEN_ENV] == TOKEN
         assert by_name["third-party"]["env"] == []
 
     def test_member_dispatch_element_carries_the_token(self, monkeypatch):
         monkeypatch.setattr(
             members,
-            "_kirocrew_mcp_invocation",
-            lambda _v: ("kirocrew", ["mcp-dashboard"]),
+            "_ajcrew_mcp_invocation",
+            lambda _v: ("ajcrew", ["mcp-dashboard"]),
             raising=False,
         )
         with (
             patch(
-                "kiro_crew.agent._kirocrew_mcp_invocation",
-                return_value=("kirocrew", ["mcp-dashboard"]),
+                "aj_crew.agent._ajcrew_mcp_invocation",
+                return_value=("ajcrew", ["mcp-dashboard"]),
             ),
-            patch("kiro_crew.agent._managed_mcp_env", return_value={}),
-            patch("kiro_crew.port_resolution.resolve_serving_port", return_value=4711),
+            patch("aj_crew.agent._managed_mcp_env", return_value={}),
+            patch("aj_crew.port_resolution.resolve_serving_port", return_value=4711),
         ):
             entry = members.member_dispatch_session_server("dashboard:member-x", TOKEN)
         assert entry is not None
         env = {p["name"]: p["value"] for p in entry["env"]}
         assert env[STUB_SESSION_TOKEN_ENV] == TOKEN
-        assert env["KIROCREW_SESSION_KEY"] == "dashboard:member-x"
+        assert env["AJCREW_SESSION_KEY"] == "dashboard:member-x"
 
     def test_the_kiro_cli_child_env_carries_the_token_beside_the_key(self):
         """The one-session-per-process carrier: ``AcpClient``, which serves kiro.
@@ -263,7 +263,7 @@ class TestElementCarriage:
         claimed the process), but one AcpClient drives one child serving one
         session, so here the process names exactly one session.
         """
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = object.__new__(AcpClient)
         client._session_key = LIVE_KEY
@@ -271,7 +271,7 @@ class TestElementCarriage:
         env: dict[str, str] = {}
         client._apply_session_identity_env(env)
         assert env[STUB_SESSION_TOKEN_ENV] == TOKEN
-        assert env["KIROCREW_SESSION_KEY"] == LIVE_KEY
+        assert env["AJCREW_SESSION_KEY"] == LIVE_KEY
 
     def test_a_warm_pool_child_is_spawned_WITH_the_token_and_no_key(self):
         """THE pooled case, and the reason the two values are not symmetric.
@@ -279,7 +279,7 @@ class TestElementCarriage:
         A child's env is fixed at spawn, so a pooled (keyless) client must still pass the
         token, minted in ``__init__``; its mapping is published once the key is known.
         """
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = object.__new__(AcpClient)
         client._session_key = ""
@@ -287,7 +287,7 @@ class TestElementCarriage:
         env: dict[str, str] = {}
         client._apply_session_identity_env(env)
         assert env[STUB_SESSION_TOKEN_ENV] == TOKEN
-        assert "KIROCREW_SESSION_KEY" not in env
+        assert "AJCREW_SESSION_KEY" not in env
 
     def test_an_inherited_key_is_cleared_and_an_inherited_token_is_replaced(self):
         """The stale-value hazard, resolved per value rather than in one sweep.
@@ -297,19 +297,19 @@ class TestElementCarriage:
         this client's rather than dropped: the token is a pointer whose mapping is
         rewritten on every rekey, so the right answer is to make it name THIS client.
         """
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = object.__new__(AcpClient)
         client._session_key = ""
         client._stub_session_token = TOKEN
-        env = {"KIROCREW_SESSION_KEY": STALE_KEY, STUB_SESSION_TOKEN_ENV: OTHER_TOKEN}
+        env = {"AJCREW_SESSION_KEY": STALE_KEY, STUB_SESSION_TOKEN_ENV: OTHER_TOKEN}
         client._apply_session_identity_env(env)
-        assert "KIROCREW_SESSION_KEY" not in env
+        assert "AJCREW_SESSION_KEY" not in env
         assert env[STUB_SESSION_TOKEN_ENV] == TOKEN
 
     def test_a_client_with_no_token_carries_no_empty_value(self):
         """An empty token would be tried FIRST and can never verify."""
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = object.__new__(AcpClient)
         client._session_key = LIVE_KEY
@@ -317,16 +317,16 @@ class TestElementCarriage:
         env = {STUB_SESSION_TOKEN_ENV: OTHER_TOKEN}
         client._apply_session_identity_env(env)
         assert STUB_SESSION_TOKEN_ENV not in env
-        assert env["KIROCREW_SESSION_KEY"] == LIVE_KEY
+        assert env["AJCREW_SESSION_KEY"] == LIVE_KEY
 
     def test_member_dispatch_element_without_a_token_is_unchanged(self):
         with (
             patch(
-                "kiro_crew.agent._kirocrew_mcp_invocation",
-                return_value=("kirocrew", ["mcp-dashboard"]),
+                "aj_crew.agent._ajcrew_mcp_invocation",
+                return_value=("ajcrew", ["mcp-dashboard"]),
             ),
-            patch("kiro_crew.agent._managed_mcp_env", return_value={}),
-            patch("kiro_crew.port_resolution.resolve_serving_port", return_value=4711),
+            patch("aj_crew.agent._managed_mcp_env", return_value={}),
+            patch("aj_crew.port_resolution.resolve_serving_port", return_value=4711),
         ):
             entry = members.member_dispatch_session_server("dashboard:member-x")
         assert entry is not None
@@ -338,7 +338,7 @@ class TestMintIsSwitchFree:
     """The mint must not depend on a reachable gatewayd — that is the S2 change."""
 
     def test_own_stub_session_mints_and_publishes_with_no_gateway_socket(self, cfg):
-        from kiro_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp.runtime import AcpRuntime
 
         runtime = object.__new__(AcpRuntime)
         runtime._mcp_gateway_socket = None  # gateway off: the default install
@@ -351,7 +351,7 @@ class TestMintIsSwitchFree:
                 side_effect=lambda t, k: published.append((t, k)),
             ),
             patch(
-                "kiro_crew.acp.runtime.publish_session_token",
+                "aj_crew.acp.runtime.publish_session_token",
                 side_effect=lambda t, k: published.append((t, k)),
             ),
         ):
@@ -363,12 +363,12 @@ class TestMintIsSwitchFree:
 
     def test_a_session_with_no_key_yet_mints_but_publishes_nothing(self, cfg):
         """A warm-pool worker is claimed later; ``rekey()`` publishes for it."""
-        from kiro_crew.acp.runtime import AcpRuntime
+        from aj_crew.acp.runtime import AcpRuntime
 
         runtime = object.__new__(AcpRuntime)
         runtime._mcp_gateway_socket = None
         with patch(
-            "kiro_crew.acp.runtime.publish_session_token",
+            "aj_crew.acp.runtime.publish_session_token",
             side_effect=AssertionError("must not publish without a session key"),
         ):
             _entries, token = asyncio.run(runtime._own_stub_session([], ""))
@@ -385,11 +385,11 @@ class TestMintIsSwitchFree:
 async def test_kiro_unpooled_control_plane_receives_session_token(cfg, monkeypatch, resume):
     from test_acp_runtime import _make_runtime
 
-    from kiro_crew.acp import session_handle, session_mcp
-    from kiro_crew.acp.types import METHOD_SESSION_LOAD, METHOD_SESSION_NEW
+    from aj_crew.acp import session_handle, session_mcp
+    from aj_crew.acp.types import METHOD_SESSION_LOAD, METHOD_SESSION_NEW
 
     entry = {"command": "test-crew", "args": ["mcp"], "env": {}}
-    spec = {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": entry}}
+    spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": entry}}
     monkeypatch.setattr(session_mcp, "_agent_spec_for", lambda *a, **k: spec)
     monkeypatch.setattr(session_mcp, "_global_settings", lambda **kwargs: {})
     monkeypatch.setattr(session_mcp, "_registry_mode", lambda: False)
@@ -402,7 +402,7 @@ async def test_kiro_unpooled_control_plane_receives_session_token(cfg, monkeypat
     async def send(method, params, timeout=None):
         if method in (METHOD_SESSION_NEW, METHOD_SESSION_LOAD):
             sent.append(params)
-        return {"sessionId": "sid-token", "modes": {"currentModeId": "kirocrew"}}
+        return {"sessionId": "sid-token", "modes": {"currentModeId": "ajcrew"}}
 
     monkeypatch.setattr(runtime, "_send_and_await", send)
     if resume:
@@ -410,8 +410,8 @@ async def test_kiro_unpooled_control_plane_receives_session_token(cfg, monkeypat
     else:
         await runtime.create_session(session_key=LIVE_KEY)
     servers = {item["name"]: item for item in sent[0]["mcpServers"]}
-    assert "kirocrew-core" in servers
-    env = {item["name"]: item["value"] for item in servers["kirocrew-core"]["env"]}
+    assert "ajcrew-core" in servers
+    env = {item["name"]: item["value"] for item in servers["ajcrew-core"]["env"]}
     monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, env[STUB_SESSION_TOKEN_ENV])
     assert mcp_core._resolve_session_key_strict() == LIVE_KEY
 
@@ -420,11 +420,11 @@ async def test_kiro_unpooled_control_plane_receives_session_token(cfg, monkeypat
 async def test_projected_skill_search_receives_the_shared_sessions_identity(cfg, monkeypatch):
     from test_acp_runtime import _make_runtime
 
-    from kiro_crew.acp import session_mcp
-    from kiro_crew.acp.skill_projection import NativeSkillProjection
+    from aj_crew.acp import session_mcp
+    from aj_crew.acp.skill_projection import NativeSkillProjection
 
     entry = {"command": "test-crew", "args": ["mcp"]}
-    spec = {"tools": ["@kirocrew-core/skill_search"], "mcpServers": {"kirocrew-core": entry}}
+    spec = {"tools": ["@ajcrew-core/skill_search"], "mcpServers": {"ajcrew-core": entry}}
     monkeypatch.setattr(session_mcp, "_agent_spec_for", lambda *a, **k: {"tools": []})
     monkeypatch.setattr(session_mcp, "_global_settings", lambda **kw: {})
     monkeypatch.setattr(session_mcp, "_registry_mode", lambda: False)
@@ -448,11 +448,11 @@ async def test_projected_skill_search_receives_the_shared_sessions_identity(cfg,
 def test_kiro_identity_projection_preserves_native_restrictions(tmp_path, monkeypatch, restriction):
     import json
 
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     managed = {"command": "test-crew", "args": ["mcp"]}
     entry = dict(managed)
-    spec = {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": entry}}
+    spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": entry}}
     settings = {}
     if restriction == "unreferenced":
         spec["tools"] = []
@@ -461,7 +461,7 @@ def test_kiro_identity_projection_preserves_native_restrictions(tmp_path, monkey
     elif restriction == "tool":
         entry["disabledTools"] = ["workflow_run"]
     elif restriction in {"global", "project"}:
-        settings = {"mcpServers": {"kirocrew-core": {"disabledTools": ["workflow_run"]}}}
+        settings = {"mcpServers": {"ajcrew-core": {"disabledTools": ["workflow_run"]}}}
         if restriction == "project":
             path = tmp_path / ".kiro" / "settings" / "mcp.json"
             path.parent.mkdir(parents=True)
@@ -473,9 +473,9 @@ def test_kiro_identity_projection_preserves_native_restrictions(tmp_path, monkey
     monkeypatch.setattr(session_mcp, "managed_mcp_spec_entry", lambda name, **_kw: managed)
     assert (
         session_mcp.kiro_control_plane_servers(
-            "kirocrew",
+            "ajcrew",
             work_dir=tmp_path,
-            existing_names={"kirocrew-core"} if restriction == "stub" else (),
+            existing_names={"ajcrew-core"} if restriction == "stub" else (),
         ).elements
         == []
     )
@@ -485,14 +485,14 @@ def test_kiro_identity_projection_reads_global_restrictions_after_workspace_retr
     tmp_path, monkeypatch
 ):
     """A tool disabled during a workspace retry must not reach the session element."""
-    from kiro_crew import agent as agent_mod
-    from kiro_crew import hooks
-    from kiro_crew.acp import session_mcp
+    from aj_crew import agent as agent_mod
+    from aj_crew import hooks
+    from aj_crew.acp import session_mcp
 
     managed = {"command": "test-crew", "args": ["mcp"]}
     spec = {
-        "tools": ["@kirocrew-core"],
-        "mcpServers": {"kirocrew-core": dict(managed)},
+        "tools": ["@ajcrew-core"],
+        "mcpServers": {"ajcrew-core": dict(managed)},
     }
     global_path = tmp_path / "global-mcp.json"
     global_path.write_text(json.dumps({"mcpServers": {}}), encoding="utf-8")
@@ -512,7 +512,7 @@ def test_kiro_identity_projection_reads_global_restrictions_after_workspace_retr
         nonlocal workspace_retry_paused
         workspace_retry_paused = True
         global_path.write_text(
-            json.dumps({"mcpServers": {"kirocrew-core": {"disabledTools": ["workflow_run"]}}}),
+            json.dumps({"mcpServers": {"ajcrew-core": {"disabledTools": ["workflow_run"]}}}),
             encoding="utf-8",
         )
 
@@ -523,11 +523,11 @@ def test_kiro_identity_projection_reads_global_restrictions_after_workspace_retr
     monkeypatch.setattr(session_mcp, "_registry_mode", lambda: False)
     monkeypatch.setattr(session_mcp, "managed_mcp_spec_entry", lambda name, **_kw: managed)
 
-    mount = session_mcp.kiro_control_plane_servers("kirocrew", work_dir=tmp_path)
+    mount = session_mcp.kiro_control_plane_servers("ajcrew", work_dir=tmp_path)
 
     assert workspace_retry_paused
     assert mount.elements == []
-    assert "kirocrew-core" in mount.withheld
+    assert "ajcrew-core" in mount.withheld
 
 
 def test_kiro_identity_projection_rereads_the_workspace_after_a_global_retry_pause(
@@ -540,14 +540,14 @@ def test_kiro_identity_projection_rereads_the_workspace_after_a_global_retry_pau
     workspace snapshot older than the file on disk; the set is re-read until two
     passes agree.
     """
-    from kiro_crew import agent as agent_mod
-    from kiro_crew import hooks
-    from kiro_crew.acp import session_mcp
+    from aj_crew import agent as agent_mod
+    from aj_crew import hooks
+    from aj_crew.acp import session_mcp
 
     managed = {"command": "test-crew", "args": ["mcp"]}
     spec = {
-        "tools": ["@kirocrew-core"],
-        "mcpServers": {"kirocrew-core": dict(managed)},
+        "tools": ["@ajcrew-core"],
+        "mcpServers": {"ajcrew-core": dict(managed)},
     }
     global_path = tmp_path / "global-mcp.json"
     global_path.write_text(json.dumps({"mcpServers": {}}), encoding="utf-8")
@@ -567,7 +567,7 @@ def test_kiro_identity_projection_rereads_the_workspace_after_a_global_retry_pau
         global_retry_paused = True
         staged = workspace_path.with_name("mcp.json.tmp")
         staged.write_text(
-            json.dumps({"mcpServers": {"kirocrew-core": {"disabledTools": ["workflow_run"]}}}),
+            json.dumps({"mcpServers": {"ajcrew-core": {"disabledTools": ["workflow_run"]}}}),
             encoding="utf-8",
         )
         os.replace(staged, workspace_path)
@@ -579,22 +579,22 @@ def test_kiro_identity_projection_rereads_the_workspace_after_a_global_retry_pau
     monkeypatch.setattr(session_mcp, "_registry_mode", lambda: False)
     monkeypatch.setattr(session_mcp, "managed_mcp_spec_entry", lambda name, **_kw: managed)
 
-    mount = session_mcp.kiro_control_plane_servers("kirocrew", work_dir=tmp_path)
+    mount = session_mcp.kiro_control_plane_servers("ajcrew", work_dir=tmp_path)
 
     assert global_retry_paused
     assert mount.elements == []
-    assert "kirocrew-core" in mount.withheld
+    assert "ajcrew-core" in mount.withheld
 
 
 def _bracket_fixture(tmp_path, monkeypatch, on_read, after_read=lambda n, path: None):
     """A real workspace settings file; its reader runs *on_read* before and
     *after_read* after each read."""
-    from kiro_crew import agent as agent_mod
-    from kiro_crew.acp import session_mcp
+    from aj_crew import agent as agent_mod
+    from aj_crew.acp import session_mcp
 
     workspace_path = tmp_path / ".kiro" / "settings" / "mcp.json"
     workspace_path.parent.mkdir(parents=True)
-    restriction = {"mcpServers": {"kirocrew-core": {"disabledTools": ["workflow_run"]}}}
+    restriction = {"mcpServers": {"ajcrew-core": {"disabledTools": ["workflow_run"]}}}
     workspace_path.write_text(json.dumps(restriction), encoding="utf-8")
     reads = []
 
@@ -629,7 +629,7 @@ def test_native_settings_sources_steady_files_cost_one_pass(tmp_path, monkeypatc
         session_mcp.NATIVE_SOURCE_GLOBAL,
         session_mcp.NATIVE_SOURCE_PROJECT,
     ]
-    assert sources[1].servers["kirocrew-core"]["disabledTools"] == ["workflow_run"]
+    assert sources[1].servers["ajcrew-core"]["disabledTools"] == ["workflow_run"]
 
 
 def test_native_settings_sources_repeated_permissive_reads_do_not_hide_a_restriction(
@@ -663,7 +663,7 @@ def test_native_settings_sources_repeated_permissive_reads_do_not_hide_a_restric
     sources = session_mcp.native_settings_sources(tmp_path)
 
     assert len(reads) == 3
-    assert sources[1].servers["kirocrew-core"]["disabledTools"] == ["workflow_run"]
+    assert sources[1].servers["ajcrew-core"]["disabledTools"] == ["workflow_run"]
 
 
 def test_native_settings_sources_refuses_files_that_never_hold_still(tmp_path, monkeypatch):
@@ -686,7 +686,7 @@ def test_native_settings_sources_screens_every_identity_sample(tmp_path, monkeyp
     so the bracket re-runs the credential screen for every file on both sides of
     every pass instead of remembering which paths it admitted.
     """
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     session_mcp, reads = _bracket_fixture(tmp_path, monkeypatch, lambda n, path: None)
     real_validate = hooks.validate_file_path
@@ -707,7 +707,7 @@ def test_native_settings_sources_screens_every_identity_sample(tmp_path, monkeyp
 
 def test_safe_file_identity_reads_through_the_gate(tmp_path, monkeypatch):
     """The identity comes from a screened, no-reparse descriptor, and refusals raise."""
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     target = tmp_path / "mcp.json"
     assert hooks.safe_file_identity(str(target)) is None
@@ -727,7 +727,7 @@ def test_safe_file_identity_refuses_a_descriptor_that_does_not_match_the_screen(
     tmp_path, monkeypatch
 ):
     """An opened descriptor that is not the validated file yields no identity."""
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     target = tmp_path / "mcp.json"
     target.write_text("{}", encoding="utf-8")
@@ -739,7 +739,7 @@ def test_safe_file_identity_refuses_a_descriptor_that_does_not_match_the_screen(
 
 def test_native_settings_sources_refuses_when_no_identity_can_be_taken(tmp_path, monkeypatch):
     """Two unknown samples are not an unchanged file: every pass is voided, then refused."""
-    from kiro_crew import hooks
+    from aj_crew import hooks
 
     session_mcp, reads = _bracket_fixture(tmp_path, monkeypatch, lambda n, path: None)
 
@@ -759,9 +759,9 @@ def test_native_settings_sources_refuses_when_no_identity_can_be_taken(tmp_path,
     [
         # The shape no spec author can avoid: the documented Toolbox launcher,
         # which resolves to the shared dispatcher, not the versioned binary.
-        {"command": "kirocrew", "args": ["mcp-core"]},
+        {"command": "ajcrew", "args": ["mcp-core"]},
         # A path pinned to a version since reaped by an upgrade.
-        {"command": "/opt/toolbox/tools/kirocrew/0.6.0.9/bin/kirocrew", "args": ["mcp-core"]},
+        {"command": "/opt/toolbox/tools/ajcrew/0.6.0.9/bin/ajcrew", "args": ["mcp-core"]},
         # A third-party binary squatting the reserved name.
         {"command": "untrusted-custom-command", "args": ["mcp"]},
         # Right command, foreign args.
@@ -777,7 +777,7 @@ def test_kiro_identity_projection_repairs_a_stale_reserved_name_command(
     Skipping the entry would mount a server with no identity that refuses every call
     ``identity_unattested``. A squatter's command never runs, so it gets no token; spec
     restrictions still apply (parametrized test above)."""
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     managed = {"command": "test-crew", "args": ["mcp"]}
     if where == "spec":
@@ -785,16 +785,16 @@ def test_kiro_identity_projection_repairs_a_stale_reserved_name_command(
         settings = {}
     else:
         entry = dict(managed)
-        settings = {"mcpServers": {"kirocrew-core": dict(declared)}}
-    spec = {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": entry}}
+        settings = {"mcpServers": {"ajcrew-core": dict(declared)}}
+    spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": entry}}
     monkeypatch.setattr(session_mcp, "_agent_spec_for", lambda *a, **k: spec)
     monkeypatch.setattr(session_mcp, "_global_settings", lambda **kwargs: settings)
     monkeypatch.setattr(session_mcp, "_registry_mode", lambda: False)
     monkeypatch.setattr(session_mcp, "managed_mcp_spec_entry", lambda name, **_kw: dict(managed))
 
-    elements = session_mcp.kiro_control_plane_servers("kirocrew", work_dir=tmp_path).elements
+    elements = session_mcp.kiro_control_plane_servers("ajcrew", work_dir=tmp_path).elements
 
-    assert [e["name"] for e in elements] == ["kirocrew-core"]
+    assert [e["name"] for e in elements] == ["ajcrew-core"]
     launched = (elements[0]["command"], elements[0]["args"])
     assert launched == ("test-crew", ["mcp"])
     # Negative control for the class: the declared launch never reaches the element.
@@ -810,7 +810,7 @@ def test_kiro_identity_projection_survives_a_scalar_args_on_a_reserved_name(
     on; the repair's comparison must not raise on it either -- a TypeError here
     leaves ``create_session`` and aborts ``session/new``. It reads as "not the
     managed launch" and the managed one is mounted."""
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     managed = {"command": "test-crew", "args": ["mcp"]}
     if where == "spec":
@@ -818,37 +818,37 @@ def test_kiro_identity_projection_survives_a_scalar_args_on_a_reserved_name(
         settings = {}
     else:
         entry = dict(managed)
-        settings = {"mcpServers": {"kirocrew-core": {"args": bad_args}}}
-    spec = {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": entry}}
+        settings = {"mcpServers": {"ajcrew-core": {"args": bad_args}}}
+    spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": entry}}
     monkeypatch.setattr(session_mcp, "_agent_spec_for", lambda *a, **k: spec)
     monkeypatch.setattr(session_mcp, "_global_settings", lambda **kwargs: settings)
     monkeypatch.setattr(session_mcp, "_registry_mode", lambda: False)
     monkeypatch.setattr(session_mcp, "managed_mcp_spec_entry", lambda name, **_kw: dict(managed))
 
-    elements = session_mcp.kiro_control_plane_servers("kirocrew", work_dir=tmp_path).elements
+    elements = session_mcp.kiro_control_plane_servers("ajcrew", work_dir=tmp_path).elements
 
     assert [(e["name"], e["command"], e["args"]) for e in elements] == [
-        ("kirocrew-core", "test-crew", ["mcp"])
+        ("ajcrew-core", "test-crew", ["mcp"])
     ]
 
 
-@pytest.mark.parametrize("server", ["kirocrew-dashboard", "kirocrew-work", "kirocrew-crew-log"])
+@pytest.mark.parametrize("server", ["ajcrew-dashboard", "ajcrew-work", "ajcrew-crew-log"])
 def test_kiro_identity_projection_covers_a_granted_opt_in_server(tmp_path, monkeypatch, server):
-    """The reported defect: a spec that grants ``@kirocrew-dashboard`` on the kiro
+    """The reported defect: a spec that grants ``@ajcrew-dashboard`` on the kiro
     backend mounted the server straight from the spec, with no session-valued
     environment, so its every ``tools/call`` refused as ``identity_unattested``.
     The identity projection must re-emit the granted opt-in element exactly as it
     does the control plane's, so the token attach that follows reaches it."""
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
-    sub = {"kirocrew-dashboard": "mcp-dashboard", "kirocrew-work": "mcp-work"}.get(
+    sub = {"ajcrew-dashboard": "mcp-dashboard", "ajcrew-work": "mcp-work"}.get(
         server, "mcp-crew-log"
     )
     managed = {"command": "test-crew", "args": [sub]}
     spec = {
-        "tools": ["@kirocrew-core", f"@{server}"],
+        "tools": ["@ajcrew-core", f"@{server}"],
         "mcpServers": {
-            "kirocrew-core": {"command": "test-crew", "args": ["mcp-core"]},
+            "ajcrew-core": {"command": "test-crew", "args": ["mcp-core"]},
             server: dict(managed),
         },
     }
@@ -860,9 +860,9 @@ def test_kiro_identity_projection_covers_a_granted_opt_in_server(tmp_path, monke
         "managed_mcp_spec_entry",
         lambda name, **_kw: dict(spec["mcpServers"][name]) if name in spec["mcpServers"] else None,
     )
-    elements = session_mcp.kiro_control_plane_servers("kirocrew", work_dir=tmp_path).elements
+    elements = session_mcp.kiro_control_plane_servers("ajcrew", work_dir=tmp_path).elements
     names = [e["name"] for e in elements]
-    assert names == ["kirocrew-core", server], names
+    assert names == ["ajcrew-core", server], names
     granted = next(e for e in elements if e["name"] == server)
     assert granted["command"] == "test-crew" and granted["args"] == [sub]
 
@@ -871,13 +871,13 @@ def test_kiro_identity_projection_leaves_an_ungranted_opt_in_server_out(tmp_path
     """Widening the set must not widen the GRANT: a spec whose ``tools`` does not
     name the opt-in server gets no element for it, exactly as kiro-cli mounts
     nothing the allowlist does not reference."""
-    from kiro_crew.acp import session_mcp
+    from aj_crew.acp import session_mcp
 
     spec = {
-        "tools": ["@kirocrew-core"],
+        "tools": ["@ajcrew-core"],
         "mcpServers": {
-            "kirocrew-core": {"command": "test-crew", "args": ["mcp-core"]},
-            "kirocrew-dashboard": {"command": "test-crew", "args": ["mcp-dashboard"]},
+            "ajcrew-core": {"command": "test-crew", "args": ["mcp-core"]},
+            "ajcrew-dashboard": {"command": "test-crew", "args": ["mcp-dashboard"]},
         },
     }
     monkeypatch.setattr(session_mcp, "_agent_spec_for", lambda *a, **k: spec)
@@ -888,8 +888,8 @@ def test_kiro_identity_projection_leaves_an_ungranted_opt_in_server_out(tmp_path
         "managed_mcp_spec_entry",
         lambda name, **_kw: dict(spec["mcpServers"][name]) if name in spec["mcpServers"] else None,
     )
-    elements = session_mcp.kiro_control_plane_servers("kirocrew", work_dir=tmp_path).elements
-    assert [e["name"] for e in elements] == ["kirocrew-core"]
+    elements = session_mcp.kiro_control_plane_servers("ajcrew", work_dir=tmp_path).elements
+    assert [e["name"] for e in elements] == ["ajcrew-core"]
 
 
 def test_identity_bound_set_is_every_managed_server():
@@ -897,10 +897,10 @@ def test_identity_bound_set_is_every_managed_server():
     construction, the two always-on control planes are a strict subset, and they
     LEAD in their own order -- a session granting only those two emits exactly the
     elements, in exactly the order, it emitted before the set widened."""
-    from kiro_crew.acp.session_mcp import CONTROL_PLANE_SERVERS, IDENTITY_BOUND_SERVERS
-    from kiro_crew.mcp_cleanup import KIROCREW_BIN_MCP_SERVERS
+    from aj_crew.acp.session_mcp import CONTROL_PLANE_SERVERS, IDENTITY_BOUND_SERVERS
+    from aj_crew.mcp_cleanup import AJCREW_BIN_MCP_SERVERS
 
-    assert set(IDENTITY_BOUND_SERVERS) == set(KIROCREW_BIN_MCP_SERVERS)
+    assert set(IDENTITY_BOUND_SERVERS) == set(AJCREW_BIN_MCP_SERVERS)
     assert len(IDENTITY_BOUND_SERVERS) == len(set(IDENTITY_BOUND_SERVERS))
     assert IDENTITY_BOUND_SERVERS[: len(CONTROL_PLANE_SERVERS)] == CONTROL_PLANE_SERVERS
 
@@ -908,25 +908,25 @@ def test_identity_bound_set_is_every_managed_server():
 class TestGrantedOptInResolution:
     """``managed_mcp_spec_entry(name, include_opt_in=True)`` is the form both
     identity paths read for an opt-in server the spec granted. Every opt-in managed
-    server must resolve under it -- not only ``kirocrew-dashboard`` -- or the widened
+    server must resolve under it -- not only ``ajcrew-dashboard`` -- or the widened
     :data:`IDENTITY_BOUND_SERVERS` projection silently skips that server (the
     element loop drops a name whose invocation is ``None``) and its calls keep
     refusing as ``identity_unattested``."""
 
     def test_every_opt_in_server_resolves_only_under_the_flag(self):
-        from kiro_crew.agent import managed_mcp_spec_entry
-        from kiro_crew.mcp_cleanup import OPT_IN_BIN_MCP_SERVERS
+        from aj_crew.agent import managed_mcp_spec_entry
+        from aj_crew.mcp_cleanup import OPT_IN_BIN_MCP_SERVERS
 
         for name in OPT_IN_BIN_MCP_SERVERS:
             assert managed_mcp_spec_entry(name) is None, f"{name}: a writer never mints a grant"
             entry = managed_mcp_spec_entry(name, include_opt_in=True)
             assert entry is not None and entry["command"], name
-            assert entry["args"] == [name.replace("kirocrew-", "mcp-")]
+            assert entry["args"] == [name.replace("ajcrew-", "mcp-")]
 
     def test_kiro_projection_asks_for_an_opt_in_invocation(self, tmp_path, monkeypatch):
-        from kiro_crew.acp import session_mcp
+        from aj_crew.acp import session_mcp
 
-        name = "kirocrew-dashboard"
+        name = "ajcrew-dashboard"
         managed = {"command": "test-crew", "args": ["mcp-dashboard"]}
         spec = {"tools": [f"@{name}"], "mcpServers": {name: dict(managed)}}
         seen = []
@@ -940,14 +940,14 @@ class TestGrantedOptInResolution:
         monkeypatch.setattr(session_mcp, "_registry_mode", lambda: False)
         monkeypatch.setattr(session_mcp, "managed_mcp_spec_entry", _record)
 
-        elements = session_mcp.kiro_control_plane_servers("kirocrew", work_dir=tmp_path).elements
+        elements = session_mcp.kiro_control_plane_servers("ajcrew", work_dir=tmp_path).elements
 
         assert [element["name"] for element in elements] == [name]
         assert seen == [(name, {"include_opt_in": True})]
 
     def test_the_flag_leaves_the_control_plane_answer_unchanged(self):
-        from kiro_crew.acp.session_mcp import CONTROL_PLANE_SERVERS
-        from kiro_crew.agent import managed_mcp_spec_entry
+        from aj_crew.acp.session_mcp import CONTROL_PLANE_SERVERS
+        from aj_crew.agent import managed_mcp_spec_entry
 
         for name in CONTROL_PLANE_SERVERS:
             assert managed_mcp_spec_entry(name, include_opt_in=True) == managed_mcp_spec_entry(name)
@@ -972,11 +972,11 @@ class TestGrantedOptInResolution:
 def test_kiro_identity_projection_fails_closed_on_settings_errors(
     tmp_path, monkeypatch, scope, failure
 ):
-    from kiro_crew import agent, hooks
-    from kiro_crew.acp import session_mcp
+    from aj_crew import agent, hooks
+    from aj_crew.acp import session_mcp
 
     managed = {"command": "test-crew", "args": ["mcp"]}
-    spec = {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": managed}}
+    spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": managed}}
     global_path = tmp_path / "global" / "mcp.json"
     project_path = tmp_path / ".kiro" / "settings" / "mcp.json"
     path = global_path if scope == "global" else project_path
@@ -1016,7 +1016,7 @@ def test_kiro_identity_projection_fails_closed_on_settings_errors(
             lambda *a, **k: pytest.fail("A refused credential target must never be opened"),
         )
 
-    assert session_mcp.kiro_control_plane_servers("kirocrew", work_dir=tmp_path).elements == []
+    assert session_mcp.kiro_control_plane_servers("ajcrew", work_dir=tmp_path).elements == []
 
 
 @pytest.mark.parametrize(
@@ -1031,11 +1031,11 @@ def test_kiro_identity_projection_fails_closed_on_settings_errors(
     ids=["bom_object", "bom_only", "bom_crlf"],
 )
 def test_kiro_identity_projection_accepts_utf8_bom_in_global_settings(tmp_path, monkeypatch, raw):
-    from kiro_crew import agent
-    from kiro_crew.acp import session_mcp
+    from aj_crew import agent
+    from aj_crew.acp import session_mcp
 
     managed = {"command": "test-crew", "args": ["mcp"]}
-    spec = {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": managed}}
+    spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": managed}}
     global_path = tmp_path / "global" / "mcp.json"
     global_path.parent.mkdir(parents=True)
     global_path.write_bytes(raw)
@@ -1044,9 +1044,9 @@ def test_kiro_identity_projection_accepts_utf8_bom_in_global_settings(tmp_path, 
     monkeypatch.setattr(session_mcp, "_registry_mode", lambda: False)
     monkeypatch.setattr(session_mcp, "managed_mcp_spec_entry", lambda name, **_kw: managed)
 
-    elements = session_mcp.kiro_control_plane_servers("kirocrew", work_dir=tmp_path).elements
+    elements = session_mcp.kiro_control_plane_servers("ajcrew", work_dir=tmp_path).elements
 
-    assert [element["name"] for element in elements] == ["kirocrew-core"]
+    assert [element["name"] for element in elements] == ["ajcrew-core"]
 
 
 def test_the_control_plane_element_env_matches_the_spec_writing_consumer(tmp_path, monkeypatch):
@@ -1056,9 +1056,9 @@ def test_the_control_plane_element_env_matches_the_spec_writing_consumer(tmp_pat
     environment. It must EQUAL ``agent._enforce_managed_mcp_ownership``'s result, which
     catches both an unsafe name added and a user variable dropped.
     """
-    from kiro_crew import agent as agent_mod
-    from kiro_crew.acp import session_mcp
-    from kiro_crew.mcp_gateway.session_servers import attach_stub_session_token
+    from aj_crew import agent as agent_mod
+    from aj_crew.acp import session_mcp
+    from aj_crew.mcp_gateway.session_servers import attach_stub_session_token
 
     withheld = agent_mod._HOME_DERIVING_ENV_KEYS | agent_mod._LAUNCHER_EXEC_ENV_KEYS
     # PRECONDITION -- the control being mirrored exists for this population, so what
@@ -1067,19 +1067,19 @@ def test_the_control_plane_element_env_matches_the_spec_writing_consumer(tmp_pat
     assert "HOME" in withheld, "home-deriving class absent"
 
     managed_home = str(tmp_path / "managed-home")
-    monkeypatch.setattr(agent_mod, "_managed_mcp_env", lambda: {"KIROCREW_HOME": managed_home})
+    monkeypatch.setattr(agent_mod, "_managed_mcp_env", lambda: {"AJCREW_HOME": managed_home})
     declared = {
         "BASH_ENV": "/tmp/preload.sh",
         "NODE_OPTIONS": "--require /tmp/preload.js",
         "PATH": "/tmp/shadow-bin",
         "HOME": "/tmp/fake-home",
-        "KIROCREW_SESSION_KEY": "forged:session",
-        "KIROCREW_HOME": "/tmp/spec-home",
+        "AJCREW_SESSION_KEY": "forged:session",
+        "AJCREW_HOME": "/tmp/spec-home",
         "RUST_LOG": "debug",
     }
     managed = {"command": "test-crew", "args": ["mcp"]}
     entry = {**managed, "env": dict(declared)}
-    spec = {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": entry}}
+    spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": entry}}
     monkeypatch.setattr(session_mcp, "_agent_spec_for", lambda *a, **k: spec)
     monkeypatch.setattr(session_mcp, "_global_settings", lambda **kwargs: {})
     monkeypatch.setattr(session_mcp, "_registry_mode", lambda: False)
@@ -1089,7 +1089,7 @@ def test_the_control_plane_element_env_matches_the_spec_writing_consumer(tmp_pat
 
     # PRECONDITION -- the entry really is projected, so every env assertion below is
     # about a value that reaches a session, not about an element that was dropped.
-    assert [e.get("name") for e in elements] == ["kirocrew-core"], "the entry was not projected"
+    assert [e.get("name") for e in elements] == ["ajcrew-core"], "the entry was not projected"
     env = {p["name"]: p["value"] for p in elements[0]["env"]}
 
     # The user's own ordinary variable survives, which is the half a stricter rule
@@ -1098,8 +1098,8 @@ def test_the_control_plane_element_env_matches_the_spec_writing_consumer(tmp_pat
     leaked = sorted(name for name in env if name.upper() in withheld)
     assert leaked == [], f"a spec chose what Crew's own shim executes or reads: {leaked}"
     # Crew's managed value is pinned LAST, so the spec's spelling of the same name loses.
-    assert env["KIROCREW_HOME"] == managed_home
-    assert "KIROCREW_SESSION_KEY" not in env
+    assert env["AJCREW_HOME"] == managed_home
+    assert "AJCREW_SESSION_KEY" not in env
 
     disk_entry = {**managed, "env": dict(declared)}
     agent_mod._enforce_managed_mcp_ownership(disk_entry, {}, False, auto_approve="own")
@@ -1149,8 +1149,8 @@ class TestSettingsReadRaceKeepsIdentity:
     def test_a_refused_read_that_succeeds_on_retry_returns_the_settings(
         self, tmp_path, monkeypatch
     ):
-        from kiro_crew import hooks
-        from kiro_crew.acp import session_mcp
+        from aj_crew import hooks
+        from aj_crew.acp import session_mcp
 
         path = tmp_path / "mcp.json"
         path.write_text(json.dumps({"mcpServers": {}}))
@@ -1167,8 +1167,8 @@ class TestSettingsReadRaceKeepsIdentity:
         assert len(calls) == 2
 
     def test_a_read_that_never_succeeds_still_raises(self, tmp_path, monkeypatch):
-        from kiro_crew import hooks
-        from kiro_crew.acp import session_mcp
+        from aj_crew import hooks
+        from aj_crew.acp import session_mcp
 
         path = tmp_path / "mcp.json"
         path.write_text(json.dumps({"mcpServers": {}}))
@@ -1193,8 +1193,8 @@ class TestSettingsReadRaceKeepsIdentity:
     ):
         # A saturated resolver pool refuses the first attempt AND the immediate
         # re-check; only the paused final attempt finds a worker free.
-        from kiro_crew import hooks
-        from kiro_crew.acp import session_mcp
+        from aj_crew import hooks
+        from aj_crew.acp import session_mcp
 
         path = tmp_path / "mcp.json"
         path.write_text(json.dumps({"mcpServers": {}}))
@@ -1215,8 +1215,8 @@ class TestSettingsReadRaceKeepsIdentity:
     def test_a_resolver_stall_on_the_path_screen_is_retried(self, tmp_path, monkeypatch):
         # The sensitive-path resolver refuses fail-closed when its pool misses the
         # budget under load; the screen then answers None for a path that is fine.
-        from kiro_crew import hooks
-        from kiro_crew.acp import session_mcp
+        from aj_crew import hooks
+        from aj_crew.acp import session_mcp
 
         path = tmp_path / "mcp.json"
         path.write_text(json.dumps({"mcpServers": {}}))
@@ -1231,8 +1231,8 @@ class TestSettingsReadRaceKeepsIdentity:
         assert session_mcp._read_mcp_settings(path) == {"mcpServers": {}}
 
     def test_a_path_that_stays_refused_still_raises(self, tmp_path, monkeypatch):
-        from kiro_crew import hooks
-        from kiro_crew.acp import session_mcp
+        from aj_crew import hooks
+        from aj_crew.acp import session_mcp
 
         path = tmp_path / "mcp.json"
         path.write_text(json.dumps({"mcpServers": {}}))
@@ -1246,8 +1246,8 @@ class TestSettingsReadRaceKeepsIdentity:
         # pool is worth one pause sized to the resolver's 2 s candidate budget,
         # after the immediate re-check that clears a rename-over. Only
         # ``session_mcp._sleep`` is replaced, never the shared ``time`` module.
-        from kiro_crew import hooks
-        from kiro_crew.acp import session_mcp
+        from aj_crew import hooks
+        from aj_crew.acp import session_mcp
 
         path = tmp_path / "mcp.json"
         path.write_text(json.dumps({"mcpServers": {}}))
@@ -1276,8 +1276,8 @@ class TestSettingsReadRaceKeepsIdentity:
         # Each attempt is two to three bounded path resolutions that can block the
         # loop for the resolver's whole per-thread allowance, so on a loop thread
         # the read makes exactly one attempt, never pauses, and fails closed.
-        from kiro_crew import hooks
-        from kiro_crew.acp import session_mcp
+        from aj_crew import hooks
+        from aj_crew.acp import session_mcp
 
         path = tmp_path / "mcp.json"
         path.write_text(json.dumps({"mcpServers": {}}))
@@ -1316,8 +1316,8 @@ class TestSettingsReadRaceKeepsIdentity:
         # A read that WOULD succeed on a re-check is still not re-checked on the
         # loop thread: the re-check costs the loop another two to three bounded
         # resolutions, so the stall is left to the fail-closed contract there.
-        from kiro_crew import hooks
-        from kiro_crew.acp import session_mcp
+        from aj_crew import hooks
+        from aj_crew.acp import session_mcp
 
         path = tmp_path / "mcp.json"
         path.write_text(json.dumps({"mcpServers": {}}))
@@ -1340,8 +1340,8 @@ class TestSettingsReadRaceKeepsIdentity:
 
     def test_off_the_loop_the_rename_race_recovers_without_a_pause(self, tmp_path, monkeypatch):
         # The immediate re-check is what clears a rename-over; it costs no pause.
-        from kiro_crew import hooks
-        from kiro_crew.acp import session_mcp
+        from aj_crew import hooks
+        from aj_crew.acp import session_mcp
 
         path = tmp_path / "mcp.json"
         path.write_text(json.dumps({"mcpServers": {}}))
@@ -1365,10 +1365,10 @@ class TestSettingsReadRaceKeepsIdentity:
     ):
         from test_acp_runtime import _make_runtime
 
-        from kiro_crew import agent as agent_mod
-        from kiro_crew import hooks
-        from kiro_crew.acp import session_handle, session_mcp
-        from kiro_crew.acp.types import METHOD_SESSION_NEW
+        from aj_crew import agent as agent_mod
+        from aj_crew import hooks
+        from aj_crew.acp import session_handle, session_mcp
+        from aj_crew.acp.types import METHOD_SESSION_NEW
 
         settings = tmp_path / "settings-mcp.json"
         body = json.dumps({"mcpServers": {"other": {"command": "true"}}})
@@ -1390,7 +1390,7 @@ class TestSettingsReadRaceKeepsIdentity:
 
         monkeypatch.setattr(hooks, "safe_read_file_bytes", refuse_settings_once)
         entry = {"command": "test-crew", "args": ["mcp"], "env": {}}
-        spec = {"tools": ["@kirocrew-core"], "mcpServers": {"kirocrew-core": entry}}
+        spec = {"tools": ["@ajcrew-core"], "mcpServers": {"ajcrew-core": entry}}
         monkeypatch.setattr(session_mcp, "_agent_spec_for", lambda *a, **k: spec)
         monkeypatch.setattr(session_mcp, "_registry_mode", lambda: False)
         monkeypatch.setattr(session_mcp, "managed_mcp_spec_entry", lambda name, **_kw: entry)
@@ -1401,14 +1401,14 @@ class TestSettingsReadRaceKeepsIdentity:
         async def send(method, params, timeout=None):
             if method == METHOD_SESSION_NEW:
                 sent.append(params)
-            return {"sessionId": "sid-race", "modes": {"currentModeId": "kirocrew"}}
+            return {"sessionId": "sid-race", "modes": {"currentModeId": "ajcrew"}}
 
         monkeypatch.setattr(runtime, "_send_and_await", send)
         await runtime.create_session(session_key=LIVE_KEY)
 
         assert refused == [False], "the guarded settings read was not refused off the loop"
         servers = {item["name"]: item for item in sent[0]["mcpServers"]}
-        assert "kirocrew-core" in servers
-        env = {item["name"]: item["value"] for item in servers["kirocrew-core"]["env"]}
+        assert "ajcrew-core" in servers
+        env = {item["name"]: item["value"] for item in servers["ajcrew-core"]["env"]}
         monkeypatch.setenv(STUB_SESSION_TOKEN_ENV, env[STUB_SESSION_TOKEN_ENV])
         assert mcp_core._resolve_session_key_strict() == LIVE_KEY

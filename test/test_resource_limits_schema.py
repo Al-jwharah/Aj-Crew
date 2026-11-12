@@ -18,9 +18,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.config.loader import (
+from aj_crew.config.loader import (
     _WARNED_RESOURCE_LIMIT_KEYS,
-    KiroCrewConfig,
+    AjCrewConfig,
     ResourceLimitsConfig,
 )
 
@@ -51,14 +51,14 @@ def _reset_warn_once():
     _WARNED_RESOURCE_LIMIT_KEYS.clear()
 
 
-def _load_from_dict(data: object) -> KiroCrewConfig:
+def _load_from_dict(data: object) -> AjCrewConfig:
     """Write *data* to a temp config file and load it through the real loader."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(data, f)
         tmp = Path(f.name)
     try:
-        with unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=tmp):
-            return KiroCrewConfig.load()
+        with unittest.mock.patch("aj_crew.config.loader.config_path", return_value=tmp):
+            return AjCrewConfig.load()
     finally:
         tmp.unlink(missing_ok=True)
 
@@ -98,7 +98,7 @@ class TestSchemaShape:
         assert set(emitted) == set(_ALL_KEYS)
 
     def test_a_fraction_survives_the_FULL_loader_path_and_truncates(self):
-        """The truncation rule has to hold through ``KiroCrewConfig.load()``, not
+        """The truncation rule has to hold through ``AjCrewConfig.load()``, not
         just through ``from_raw`` in isolation.
 
         ``config/validation.py`` runs jsonschema over the raw dict and POPS a
@@ -160,7 +160,7 @@ class TestParseRule:
         """The reported shape, end to end: before the fix ``-0.5`` reached
         ``resource_limit_spec`` as ``0``, and ``0`` is dropped there, so the
         process ran with no RLIMIT_NOFILE at all."""
-        from kiro_crew.security import _RLIMIT_DEFAULTS, resource_limit_spec
+        from aj_crew.security import _RLIMIT_DEFAULTS, resource_limit_spec
 
         spec = dict(resource_limit_spec({"resource_limits": {"max_open_files": -0.5}}))
         assert spec["RLIMIT_NOFILE"] == _RLIMIT_DEFAULTS["max_open_files"]
@@ -209,7 +209,7 @@ class TestParseRule:
     def test_a_refusal_is_logged_once_per_key(self, caplog):
         """Silence is what made this class of typo undiagnosable: the operator
         saw a systemd range error, or nothing at all."""
-        with caplog.at_level("WARNING", logger="kiro_crew.config.loader"):
+        with caplog.at_level("WARNING", logger="aj_crew.config.loader"):
             for _ in range(3):
                 ResourceLimitsConfig.from_raw({"max_processes": 0.5})
         hits = [r for r in caplog.records if "resource_limits.max_processes" in r.getMessage()]
@@ -223,10 +223,10 @@ class TestCgroupConsumerUnchanged:
 
     @staticmethod
     def _limits(raw: dict | None):
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         with unittest.mock.patch(
-            "kiro_crew.config.loader._raw_config",
+            "aj_crew.config.loader._raw_config",
             return_value={} if raw is None else {"resource_limits": raw},
         ):
             return sb._cgroup_limits_from_config()
@@ -250,7 +250,7 @@ class TestCgroupConsumerUnchanged:
         ],
     )
     def test_everything_out_of_domain_lands_on_the_module_default(self, raw):
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         procs, mem, weight, quota = self._limits(raw)
         assert procs == sb._CGROUP_DEFAULT_MAX_PROCESSES
@@ -262,7 +262,7 @@ class TestCgroupConsumerUnchanged:
         """The original outage: ``TasksMax=0`` / ``MemoryMax=0M`` are rejected by
         systemd, ``cgroup_scope_argv`` has no unwrapped-retry fallback, and both
         call sites spawn the argv as-is -- so a zero here fails every spawn."""
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         hostile = [
             {"max_processes": 0.5, "max_memory_mb": 0.5},
@@ -284,11 +284,11 @@ class TestCgroupConsumerUnchanged:
                 # resolution so this test keeps exercising the ceiling-emitting
                 # path on every platform, same as the probe mock above.
                 unittest.mock.patch(
-                    "kiro_crew.platform_compat.trusted_system_bin",
+                    "aj_crew.platform_compat.trusted_system_bin",
                     return_value="/usr/bin/systemd-run",
                 ),
                 unittest.mock.patch(
-                    "kiro_crew.config.loader._raw_config",
+                    "aj_crew.config.loader._raw_config",
                     return_value={"resource_limits": raw},
                 ),
             ):
@@ -312,7 +312,7 @@ class TestCgroupConsumerUnchanged:
         "degrading must not mean unbounded" invariant is about the emitted
         limit VALUES, and this is the shape degradation takes -- no properties
         at all, never a zero ceiling."""
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         try:
             with (
@@ -327,7 +327,7 @@ class TestCgroupConsumerUnchanged:
                 # stays mocked so a REGRESSION of the fail-open (proceeding
                 # past the gate) still cannot read the host's real config.
                 unittest.mock.patch(
-                    "kiro_crew.config.loader._raw_config",
+                    "aj_crew.config.loader._raw_config",
                     return_value={"resource_limits": {"max_processes": 0.5, "max_memory_mb": 0.5}},
                 ),
             ):
@@ -346,10 +346,10 @@ class TestCgroupConsumerUnchanged:
 class TestSliceConsumer:
     @staticmethod
     def _limits(raw: dict):
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         with unittest.mock.patch(
-            "kiro_crew.config.loader._raw_config", return_value={"resource_limits": raw}
+            "aj_crew.config.loader._raw_config", return_value={"resource_limits": raw}
         ):
             return sb._slice_limits_from_config()
 
@@ -364,7 +364,7 @@ class TestSliceConsumer:
         ``int(nan)`` raises, the raise landed in the function's own except, and
         BOTH fields fell back -- silently dropping an aggregate task ceiling the
         operator had set correctly, because a different key was malformed."""
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         mem, tasks = self._limits(
             {"max_total_memory_mb": float("nan"), "max_total_processes": 1000}
@@ -373,7 +373,7 @@ class TestSliceConsumer:
         assert mem == sb._default_max_total_memory_mb()
 
     def test_zero_and_junk_still_mean_use_the_default(self):
-        import kiro_crew.sandbox as sb
+        import aj_crew.sandbox as sb
 
         for raw in (
             {"max_total_memory_mb": 0, "max_total_processes": 0},
@@ -389,13 +389,13 @@ class TestRlimitConsumer:
     behaviour has existing configs behind it and must survive the convergence."""
 
     def test_an_explicit_zero_still_disables_a_limit(self):
-        from kiro_crew.security import resource_limit_spec
+        from aj_crew.security import resource_limit_spec
 
         spec = dict(resource_limit_spec({"resource_limits": {"max_open_files": 0}}))
         assert "RLIMIT_NOFILE" not in spec
 
     def test_defaults_apply_when_the_section_is_absent(self):
-        from kiro_crew.security import _RLIMIT_DEFAULTS, resource_limit_spec
+        from aj_crew.security import _RLIMIT_DEFAULTS, resource_limit_spec
 
         spec = dict(resource_limit_spec({}))
         assert spec["RLIMIT_NOFILE"] == _RLIMIT_DEFAULTS["max_open_files"]
@@ -405,7 +405,7 @@ class TestRlimitConsumer:
         assert "RLIMIT_AS" not in spec
 
     def test_configured_values_are_honoured(self):
-        from kiro_crew.security import resource_limit_spec
+        from aj_crew.security import resource_limit_spec
 
         spec = dict(
             resource_limit_spec(
@@ -421,7 +421,7 @@ class TestRlimitConsumer:
         OverflowError. Nothing on this path catches it: it propagated out of
         ``sandbox.resource_limit_preexec``, which builds the preexec_fn for every
         routed spawn, so one typo in config.json failed every agent launch."""
-        from kiro_crew.security import _RLIMIT_DEFAULTS, resource_limit_spec
+        from aj_crew.security import _RLIMIT_DEFAULTS, resource_limit_spec
 
         spec = dict(resource_limit_spec({"resource_limits": {"max_processes": bad}}))
         assert "RLIMIT_NPROC" not in spec
@@ -432,7 +432,7 @@ class TestRlimitConsumer:
         """``int(0.5) == 0`` is this path's "leave inherited" sentinel, so a
         fractional request would silently remove the ceiling the operator asked
         for, so it lands on the documented default instead."""
-        from kiro_crew.security import _RLIMIT_DEFAULTS, resource_limit_spec
+        from aj_crew.security import _RLIMIT_DEFAULTS, resource_limit_spec
 
         spec = dict(resource_limit_spec({"resource_limits": {"max_open_files": 0.5}}))
         assert spec["RLIMIT_NOFILE"] == _RLIMIT_DEFAULTS["max_open_files"]
@@ -441,10 +441,10 @@ class TestRlimitConsumer:
 class TestXdistConsumer:
     @staticmethod
     def _cap(raw: dict):
-        import kiro_crew.resource_status as rs
+        import aj_crew.resource_status as rs
 
         with unittest.mock.patch(
-            "kiro_crew.config.loader._raw_config", return_value={"resource_limits": raw}
+            "aj_crew.config.loader._raw_config", return_value={"resource_limits": raw}
         ):
             return rs._xdist_cap_config()
 
@@ -476,10 +476,10 @@ class TestOverlayOwnership:
         cfg_file.write_text(json.dumps(base), encoding="utf-8")
         local.write_text(json.dumps(overlay), encoding="utf-8")
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_file),
-            unittest.mock.patch("kiro_crew.config.loader.config_local_path", return_value=local),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_file),
+            unittest.mock.patch("aj_crew.config.loader.config_local_path", return_value=local),
         ):
-            KiroCrewConfig.load().save()
+            AjCrewConfig.load().save()
         return json.loads(cfg_file.read_text(encoding="utf-8"))
 
     def test_an_integer_overlay_limit_stays_out_of_the_base_config(self, tmp_path: Path):
@@ -526,7 +526,7 @@ class TestSingleParseSite:
     this test rather than be discovered later."""
 
     def test_no_module_outside_the_section_parser_parses_these_keys_itself(self):
-        src = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+        src = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
         allowed = src / "config" / "sections_limits.py"
         # A raw ``.get("<key>")`` is how each of the retired readers pulled its
         # value straight out of the config dict.
@@ -549,7 +549,7 @@ class TestSingleParseSite:
         """The other half of the guard: the readers must still be READING the
         block, so a refactor cannot satisfy the test above by dropping config
         support altogether."""
-        src = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+        src = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
         for rel in (
             "sandbox_cgroup.py",
             "sandbox_slice.py",

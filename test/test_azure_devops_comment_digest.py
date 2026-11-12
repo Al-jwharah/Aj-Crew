@@ -12,8 +12,8 @@ edges. Kept in its own module so the main provider-monitor suite stays under the
 
 import pytest
 
-from kiro_crew.monitoring.azure_devops_pull_request import AzureDevOpsPullRequestProvider
-from kiro_crew.monitoring.models import MonitorObservationStatus
+from aj_crew.monitoring.azure_devops_pull_request import AzureDevOpsPullRequestProvider
+from aj_crew.monitoring.models import MonitorObservationStatus
 
 _TARGET = "https://dev.azure.com/acme/project/_git/widgets/pullrequest/9"
 
@@ -28,7 +28,7 @@ def _isolate_azure_cli_config_dirs(_floor_monkeypatch):
     monkeypatch = _floor_monkeypatch
     monkeypatch.delenv("AZURE_CONFIG_DIR", raising=False)
     monkeypatch.delenv("AZURE_EXTENSION_DIR", raising=False)
-    monkeypatch.delenv("KIROCREW_POD", raising=False)
+    monkeypatch.delenv("AJCREW_POD", raising=False)
 
 
 def _comment_condition_key(result):

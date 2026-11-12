@@ -20,7 +20,7 @@ describe('the library kind badge', () => {
 
   it('covers the kind the backend lists a dashboard package under', () => {
     const src = readFileSync(
-      resolve(__dirname, '../../../src/kiro_crew/artifact_store/dashboard_package.py'),
+      resolve(__dirname, '../../../src/aj_crew/artifact_store/dashboard_package.py'),
       'utf8',
     )
     const declared = src.match(/^DASHBOARD_KIND = "([a-z][a-z_]*)"/m)?.[1]

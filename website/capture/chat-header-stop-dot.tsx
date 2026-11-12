@@ -33,7 +33,7 @@ const theme = params.get('theme') || 'dark'
 const state = params.get('state') || 'running'
 const stopUW = state === 'stopping' || state === 'killing'
 const stopPhase = state === 'killing' ? 'killing' : state === 'stopping' ? 'soft_pending' : 'idle'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
 

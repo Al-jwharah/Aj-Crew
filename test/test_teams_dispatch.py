@@ -10,11 +10,11 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
-from kiro_crew.messaging.session_resume import RoutingDecision
-from kiro_crew.session_allocation import SessionClosingError
-from kiro_crew.teams.client import TeamsInbound
-from kiro_crew.teams.transport_dispatch import TeamsDispatcher
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, AcpEvent
+from aj_crew.messaging.session_resume import RoutingDecision
+from aj_crew.session_allocation import SessionClosingError
+from aj_crew.teams.client import TeamsInbound
+from aj_crew.teams.transport_dispatch import TeamsDispatcher
 
 
 class FakeProvider:
@@ -317,12 +317,12 @@ class TestTurn:
         assert (key, "assistant", "hi there") in conv.appended
 
     @pytest.mark.asyncio
-    async def test_agent_resolves_to_kirocrew_when_unset(self) -> None:
+    async def test_agent_resolves_to_ajcrew_when_unset(self) -> None:
         provider = FakeProvider([AcpEvent(kind=EVENT_COMPLETE)])
         sessions = FakeSessions(provider)
         d = _dispatcher(sessions, FakeCtx(), FakeClient(), cfg=_cfg(default_agent=""))
         await d.handle_message(_inbound("hi"))
-        assert sessions.last_agent == "kirocrew"
+        assert sessions.last_agent == "ajcrew"
 
     @pytest.mark.asyncio
     async def test_cold_start_failure_finalizes_and_skips_release(self) -> None:
@@ -426,7 +426,7 @@ class TestCommands:
         client = FakeClient()
         d = _dispatcher(sessions, FakeCtx(), client)
         spool = AsyncMock(return_value=True)
-        monkeypatch.setattr("kiro_crew.messaging.dispatch.spool_refused_turn", spool)
+        monkeypatch.setattr("aj_crew.messaging.dispatch.spool_refused_turn", spool)
 
         await d.handle_message(_inbound("/new"))
 
@@ -447,7 +447,7 @@ class TestCommands:
         sessions.reserve_inbound_callback = lambda: None  # type: ignore[attr-defined]
         d = _dispatcher(sessions, FakeCtx(), FakeClient())
         spool = AsyncMock(return_value=True)
-        monkeypatch.setattr("kiro_crew.messaging.dispatch.spool_refused_turn", spool)
+        monkeypatch.setattr("aj_crew.messaging.dispatch.spool_refused_turn", spool)
 
         await d.handle_message(_inbound("hello", attachments=[_BODY_ECHO]))
         await d.handle_message(_inbound("hello", attachments=[_BODY_ECHO, _FILE_UPLOAD]))
@@ -469,7 +469,7 @@ class TestCommands:
         )
         d._session_restricted = AsyncMock(side_effect=lambda key: key == "dashboard:restricted")
         spool = AsyncMock(return_value=True)
-        monkeypatch.setattr("kiro_crew.messaging.dispatch.spool_refused_turn", spool)
+        monkeypatch.setattr("aj_crew.messaging.dispatch.spool_refused_turn", spool)
 
         await d.handle_message(_inbound("keep this private"))
 
@@ -546,14 +546,12 @@ class TestCommands:
         ingested: list[list] = []
 
         async def _no_fetch(_client, raw):
-            from kiro_crew.messaging.attachments import IngestResult
+            from aj_crew.messaging.attachments import IngestResult
 
             ingested.append(list(raw))
             return IngestResult()
 
-        monkeypatch.setattr(
-            "kiro_crew.teams.transport_dispatch.process_teams_attachments", _no_fetch
-        )
+        monkeypatch.setattr("aj_crew.teams.transport_dispatch.process_teams_attachments", _no_fetch)
 
         await d.handle_message(_inbound("/help", attachments=[_BODY_ECHO, _FILE_UPLOAD]))
 
@@ -649,7 +647,7 @@ class TestInboundGovernance:
         # ``inbound_permitted`` wrapper, which resolves
         # ``channel_inbound_permitted`` from ``dispatch_admission``'s globals at call time --
         # so this one patch covers both the channel-side and pipeline gates.
-        monkeypatch.setattr("kiro_crew.messaging.dispatch.channel_inbound_permitted", _deny)
+        monkeypatch.setattr("aj_crew.messaging.dispatch.channel_inbound_permitted", _deny)
         provider = FakeProvider([AcpEvent(kind=EVENT_COMPLETE)])
         sessions = FakeSessions(provider)
         client = FakeClient()
@@ -667,16 +665,16 @@ class TestInboundGovernance:
 
 
 def _agent_roster():
-    from kiro_crew.agent_discovery import AgentInfo
+    from aj_crew.agent_discovery import AgentInfo
 
     return [
         AgentInfo(name="beta", filename="beta.json", description="", model=""),
         AgentInfo(
-            name="kirocrew-worker",
-            filename="kirocrew-worker.json",
+            name="ajcrew-worker",
+            filename="ajcrew-worker.json",
             description="",
             model="",
-            kirocrew_owned=True,
+            ajcrew_owned=True,
         ),
     ]
 
@@ -684,7 +682,7 @@ def _agent_roster():
 class TestAgentCommand:
     @pytest.mark.asyncio
     async def test_agent_name_switches_the_next_turn(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.list_agents", _agent_roster)
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.list_agents", _agent_roster)
         sessions = FakeSessions(FakeProvider([AcpEvent(kind=EVENT_COMPLETE)]))
         client = FakeClient()
         d = _dispatcher(sessions, FakeCtx(), client, cfg=_cfg(default_agent=""))
@@ -695,11 +693,11 @@ class TestAgentCommand:
 
     @pytest.mark.asyncio
     async def test_internal_agent_is_refused(self, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.list_agents", _agent_roster)
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.list_agents", _agent_roster)
         sessions = FakeSessions(FakeProvider([AcpEvent(kind=EVENT_COMPLETE)]))
         client = FakeClient()
         d = _dispatcher(sessions, FakeCtx(), client, cfg=_cfg(default_agent=""))
-        await d.handle_message(_inbound("/agent kirocrew-worker"))
+        await d.handle_message(_inbound("/agent ajcrew-worker"))
         assert any("No agent named" in content for _, content, _ in client.sent)
         await d.handle_message(_inbound("hi"))
-        assert sessions.last_agent == "kirocrew"
+        assert sessions.last_agent == "ajcrew"

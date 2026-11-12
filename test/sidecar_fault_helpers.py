@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import agent_state
+from aj_crew import agent_state
 
 
 def fail_one_sidecar_read(monkeypatch: pytest.MonkeyPatch, func_name: str, agent: str) -> None:

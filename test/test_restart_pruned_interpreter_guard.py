@@ -40,9 +40,9 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard.handlers import updates
-from kiro_crew.slack import gateway as slack_gateway
+from aj_crew import platform_compat
+from aj_crew.dashboard.handlers import updates
+from aj_crew.slack import gateway as slack_gateway
 
 
 def _executable(tmp_path, name: str = "shim") -> str:
@@ -313,7 +313,7 @@ class TestAKernelRefusalPastTheDrainExits:
     @pytest.mark.asyncio
     async def test_the_launcher_branch_exits_too(self, monkeypatch, tmp_path):
         """A declared launcher is validated by its own resolver, not by this guard."""
-        launcher = _executable(tmp_path, "kirocrew")
+        launcher = _executable(tmp_path, "ajcrew")
         monkeypatch.setattr(slack_gateway, "resolve_restart_launcher", lambda: launcher)
         monkeypatch.setattr(slack_gateway, "flush_breadcrumb_writes", Mock())
         monkeypatch.setattr(platform_compat, "reexec_launcher", _enoexec)
@@ -361,8 +361,8 @@ class TestTheFatalExitCannotBeHeldUp:
 
     @pytest.mark.asyncio
     async def test_a_wedged_drain_does_not_stop_the_exit(self, monkeypatch):
-        from kiro_crew import cli as kiro_cli
-        from kiro_crew import eventlog_hooks
+        from aj_crew import cli as kiro_cli
+        from aj_crew import eventlog_hooks
 
         def wedged(*_args, **_kwargs):
             raise RuntimeError("disk is not answering")
@@ -372,7 +372,7 @@ class TestTheFatalExitCannotBeHeldUp:
         codes = _capture_exit(monkeypatch)
 
         with pytest.raises(_Exited):
-            await platform_compat.exit_after_failed_restart_exec("/opt/kirocrew/bin/python3")
+            await platform_compat.exit_after_failed_restart_exec("/opt/ajcrew/bin/python3")
 
         assert codes == [1]
 
@@ -381,12 +381,12 @@ class TestTheFatalExitCannotBeHeldUp:
         """The exit status is generic, so the log line carries the whole diagnosis."""
         codes = _capture_exit(monkeypatch)
 
-        with caplog.at_level(logging.CRITICAL, logger="kiro_crew.platform_compat"):
+        with caplog.at_level(logging.CRITICAL, logger="aj_crew.platform_compat"):
             with pytest.raises(_Exited):
-                await platform_compat.exit_after_failed_restart_exec("/opt/kirocrew/bin/python3")
+                await platform_compat.exit_after_failed_restart_exec("/opt/ajcrew/bin/python3")
 
         assert codes == [1]
-        assert "/opt/kirocrew/bin/python3" in caplog.text
+        assert "/opt/ajcrew/bin/python3" in caplog.text
 
 
 class TestTheseChecksDoNotBlockTheEventLoop:
@@ -433,8 +433,8 @@ class TestTheseChecksDoNotBlockTheEventLoop:
         offloaded and one inline still freezes the loop, so a single recorded thread
         would pass while the defect stands.
         """
-        from kiro_crew import cli as kiro_cli
-        from kiro_crew import eventlog_hooks
+        from aj_crew import cli as kiro_cli
+        from aj_crew import eventlog_hooks
 
         loop_thread = threading.current_thread()
         flush_threads: list[threading.Thread] = []
@@ -447,7 +447,7 @@ class TestTheseChecksDoNotBlockTheEventLoop:
         codes = _capture_exit(monkeypatch)
 
         with pytest.raises(_Exited):
-            await platform_compat.exit_after_failed_restart_exec("/opt/kirocrew/bin/python3")
+            await platform_compat.exit_after_failed_restart_exec("/opt/ajcrew/bin/python3")
 
         assert codes == [1]
         assert len(flush_threads) == 2, flush_threads
@@ -469,8 +469,8 @@ class TestTheseChecksDoNotBlockTheEventLoop:
         so a few seconds of the measured time are that contract holding rather than
         this one.
         """
-        from kiro_crew import cli as kiro_cli
-        from kiro_crew import eventlog_hooks
+        from aj_crew import cli as kiro_cli
+        from aj_crew import eventlog_hooks
 
         started = threading.Event()
         released = threading.Event()
@@ -487,7 +487,7 @@ class TestTheseChecksDoNotBlockTheEventLoop:
         began = time.monotonic()
         try:
             with pytest.raises(_Exited):
-                await platform_compat.exit_after_failed_restart_exec("/opt/kirocrew/bin/python3")
+                await platform_compat.exit_after_failed_restart_exec("/opt/ajcrew/bin/python3")
         finally:
             released.set()
         elapsed = time.monotonic() - began

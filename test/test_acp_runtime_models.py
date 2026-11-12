@@ -14,9 +14,9 @@ from acp_runtime_helpers import _pinned_kiro_cli_version  # noqa: F401
 from acp_runtime_helpers import _stub_sel_for_permission_tests  # noqa: F401
 from acp_runtime_helpers import _make_runtime, _register
 
-from kiro_crew.acp.runtime import AcpRuntimeError, AcpSessionHandle
-from kiro_crew.acp.types import METHOD_SESSION_NEW, METHOD_SESSION_TERMINATE
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.acp.runtime import AcpRuntimeError, AcpSessionHandle
+from aj_crew.acp.types import METHOD_SESSION_NEW, METHOD_SESSION_TERMINATE
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # ── store_session_config: resolved-model capture ──
 
@@ -533,20 +533,20 @@ class TestParseAdvertisedModels:
     session-init snapshot are directly comparable."""
 
     def test_models_object_shape(self):
-        from kiro_crew.acp.session_handle import parse_advertised_models
+        from aj_crew.acp.session_handle import parse_advertised_models
 
         out = parse_advertised_models(_PROBE_RESP)
         assert [m["modelId"] for m in out] == ["auto", "claude-opus-5"]
         assert all(set(m) == {"modelId", "name", "description"} for m in out)
 
     def test_bare_list_shape(self):
-        from kiro_crew.acp.session_handle import parse_advertised_models
+        from aj_crew.acp.session_handle import parse_advertised_models
 
         out = parse_advertised_models({"availableModels": [{"modelId": "claude-sonnet-4"}]})
         assert [m["modelId"] for m in out] == ["claude-sonnet-4"]
 
     def test_absent_or_malformed_yields_empty(self):
-        from kiro_crew.acp.session_handle import parse_advertised_models
+        from aj_crew.acp.session_handle import parse_advertised_models
 
         assert parse_advertised_models({}) == []
         assert parse_advertised_models({"models": {"availableModels": "nope"}}) == []
@@ -612,7 +612,7 @@ class TestStoreSessionConfigParseConsolidation:
         ``parse_advertised_models`` AND call it with the checked-binding
         envelope — a restored inline walk, a whole-response re-resolution, or
         a wrong envelope all fail this pin."""
-        import kiro_crew.acp.session_handle as sh
+        import aj_crew.acp.session_handle as sh
 
         sentinel = [
             {"modelId": "sentinel-a", "name": "A", "description": ""},
@@ -631,7 +631,7 @@ class TestStoreSessionConfigParseConsolidation:
         assert calls == [{"models": {"availableModels": [{"modelId": "real"}]}}]
 
     def test_bare_list_branch_delegates_to_canonical_parser(self, monkeypatch):
-        import kiro_crew.acp.session_handle as sh
+        import aj_crew.acp.session_handle as sh
 
         sentinel = [
             {"modelId": "sentinel-a", "name": "A", "description": ""},
@@ -905,7 +905,7 @@ async def test_probe_deadline_timeout_raises_revalidating_but_probe_completes():
     re-polls rather than caching the un-revalidated snapshot as live), and the
     probe is NOT cancelled — it keeps running to completion and replaces the
     snapshot, so the next read serves the corrected list."""
-    from kiro_crew.acp.session_handle import EntitlementRevalidating
+    from aj_crew.acp.session_handle import EntitlementRevalidating
 
     rt, _, _ = _make_runtime()
     rt._spawn_monotonic = time.monotonic() - 3600.0
@@ -925,7 +925,7 @@ async def test_probe_deadline_timeout_raises_revalidating_but_probe_completes():
         ]
 
     rt.probe_advertised_models = AsyncMock(side_effect=_slow)  # type: ignore[method-assign]
-    from kiro_crew.acp import session_handle as _sh
+    from aj_crew.acp import session_handle as _sh
 
     with patch.object(_sh, "_READ_PATH_PROBE_DEADLINE_SECS", 0.01):
         with pytest.raises(EntitlementRevalidating):
@@ -951,7 +951,7 @@ async def test_in_flight_probe_is_awaited_not_bypassed_on_the_next_poll():
     would serve as a live 200 the frontend caches). It re-awaits the same task,
     so it raises EntitlementRevalidating again; only once the probe lands does a
     read return the corrected list."""
-    from kiro_crew.acp.session_handle import EntitlementRevalidating
+    from aj_crew.acp.session_handle import EntitlementRevalidating
 
     rt, _, _ = _make_runtime()
     rt._spawn_monotonic = time.monotonic() - 3600.0
@@ -969,7 +969,7 @@ async def test_in_flight_probe_is_awaited_not_bypassed_on_the_next_poll():
         ]
 
     rt.probe_advertised_models = AsyncMock(side_effect=_slow)  # type: ignore[method-assign]
-    from kiro_crew.acp import session_handle as _sh
+    from aj_crew.acp import session_handle as _sh
 
     with patch.object(_sh, "_READ_PATH_PROBE_DEADLINE_SECS", 0.01):
         # First read: starts the probe, times out, raises.

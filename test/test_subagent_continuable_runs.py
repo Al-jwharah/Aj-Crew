@@ -17,9 +17,9 @@ import pytest
 import subagent_continuable_helpers
 from subagent_continuable_helpers import _manager, _mock_sessions, _stop_reason
 
-from kiro_crew.subagent import SubagentInfo, SubagentManager
-from kiro_crew.subagent_persistence import create_agent_folder, write_run_agent
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.subagent import SubagentInfo, SubagentManager
+from aj_crew.subagent_persistence import create_agent_folder, write_run_agent
+from aj_crew.testing.wait import async_wait_until, await_until
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -52,7 +52,7 @@ class TestSteerRun:
         sessions.get_provider = MagicMock(return_value=provider)
         manager = _manager(sessions)
         manager._agents["a1"] = SubagentInfo(id="a1", task="t")
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             ok, detail = await manager.steer_run("a1", "course correct")
         assert ok and detail == "ok"
         provider.steer.assert_awaited_once_with("course correct")
@@ -66,7 +66,7 @@ class TestSteerRun:
         info._session_sharing = True
         info._shared_provider = shared
         manager._agents["a1"] = info
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             ok, _ = await manager.steer_run("a1", "adjust")
         assert ok
         shared.steer.assert_awaited_once_with("adjust")
@@ -92,7 +92,7 @@ class TestSteerRun:
         """A live run with no reachable session now gets the startup
         grace, then the typed ``session_starting`` refusal (retryable) —
         not the old terminal bare ``no_session``."""
-        import kiro_crew.subagent as subagent_mod
+        import aj_crew.subagent as subagent_mod
 
         sessions = _mock_sessions()
         sessions.get_provider = MagicMock(return_value=None)
@@ -131,7 +131,7 @@ class TestReleaseAndSweep:
         )
         ok, detail = manager.release_conversation("qc1")
         assert not ok and detail.startswith("conversation_busy")
-        with patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.sel"):
             info = manager.continue_conversation("qc1", "another follow-up")
         assert info is not None and info.done
         assert info.error.startswith("conversation_busy")
@@ -151,7 +151,7 @@ class TestReleaseAndSweep:
         manager = _manager(sessions)
         # flake-ok: live-clock registry stamp; release never reads its age
         manager._conversations["subagent:c1"] = time.time()
-        with patch("kiro_crew.subagent._cleanup_session_files_sync") as cleanup:
+        with patch("aj_crew.subagent._cleanup_session_files_sync") as cleanup:
             ok, detail = manager.release_conversation("c1")
         assert ok and detail == "released"
         cleanup.assert_called_once_with("sid-123", "acp")
@@ -173,7 +173,7 @@ class TestReleaseAndSweep:
         now = time.time()
         manager._conversations["subagent:old1"] = now - 7 * 3600  # expired
         manager._conversations["subagent:new1"] = now - 60  # fresh
-        with patch("kiro_crew.subagent._cleanup_session_files_sync"):
+        with patch("aj_crew.subagent._cleanup_session_files_sync"):
             await manager._sweep_conversations_async(now)
         assert "subagent:old1" not in manager._conversations
         assert "subagent:new1" in manager._conversations
@@ -210,9 +210,9 @@ async def test_the_continuation_path_takes_no_store_call_on_the_loop(monkeypatch
     ``OnLoopDBGuard.check`` raise. The sync entry's ``taskq_accept`` / ``taskq_claim`` wait
     on ``TaskStore._lock`` and froze the loop (0 of ~95 10ms heartbeat ticks served, vs 91).
     """
-    from kiro_crew.subagent_manager import admission as admission_mod
-    from kiro_crew.subagent_persistence import create_agent_folder
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.subagent_manager import admission as admission_mod
+    from aj_crew.subagent_persistence import create_agent_folder
+    from aj_crew.taskq import store as store_mod
 
     monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
     create_agent_folder("no-loop-db", task="original", memory_mode="persistent")
@@ -256,7 +256,7 @@ def test_a_stale_resume_entry_does_not_hold_a_conversation() -> None:
     ended with its request still queued keeps the entry (dropping it would publish "never
     started" over a live run), so counting it would refuse every continuation and release.
     """
-    from kiro_crew.subagent_persistence import create_agent_folder
+    from aj_crew.subagent_persistence import create_agent_folder
 
     create_agent_folder("resume-held", task="original", memory_mode="persistent")
     manager = _manager(_mock_sessions(resumed=True))
@@ -288,9 +288,9 @@ async def test_the_followup_watcher_dispatches_no_store_call_on_the_loop(monkeyp
     ``_deliver_followups`` runs on the gateway loop, and the dispatch pin's counter over
     ``continue_conversation_async`` does not see which entry this site calls.
     """
-    from kiro_crew.subagent_manager import admission as admission_mod
-    from kiro_crew.subagent_persistence import create_agent_folder
-    from kiro_crew.taskq import store as store_mod
+    from aj_crew.subagent_manager import admission as admission_mod
+    from aj_crew.subagent_persistence import create_agent_folder
+    from aj_crew.taskq import store as store_mod
 
     monkeypatch.setattr(admission_mod.SpawnAdmissionCoordinator, "pump_off_loop", True)
     create_agent_folder("followup-conv", task="original", memory_mode="persistent")
@@ -338,7 +338,7 @@ async def test_the_followup_watcher_dispatches_no_store_call_on_the_loop(monkeyp
 @pytest.mark.asyncio
 @pytest.mark.parametrize("moved_pool", [False, True], ids=["same-default", "changed-default"])
 async def test_default_cwd_continuation_does_not_request_override(tmp_path, moved_pool):
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     project = tmp_path / "original-project"
     project.mkdir()
@@ -346,7 +346,7 @@ async def test_default_cwd_continuation_does_not_request_override(tmp_path, move
     other.mkdir()
 
     def disable_overrides():
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agent.subagent_cwd_allowed_roots = []
         cfg.save()
 
@@ -357,7 +357,7 @@ async def test_default_cwd_continuation_does_not_request_override(tmp_path, move
     provider.cwd = str(project)
     manager = _manager(sessions)
     manager._spawn_stagger_secs = 0
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         original = manager.spawn("first task", keep=True)
         assert original is not None and not original.error
         await await_until(manager._tasks[original.id], what="the original run finishing")
@@ -409,8 +409,8 @@ async def test_continuation_without_a_model_keeps_the_runs_model_and_effort() ->
     manager = _manager(sessions)
     _pinned_run(manager, "pinned-b")
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
         patch.object(manager, "_promote_conversation", return_value=object()),
     ):
         info = manager.continue_conversation("pinned-b", "follow-up work")
@@ -463,9 +463,9 @@ async def test_continuation_after_a_restart_keeps_the_recorded_model_and_effort(
         **recorded,
     }
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.read_state", return_value=state),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.read_state", return_value=state),
         patch.object(manager, "_promote_conversation", return_value=object()),
     ):
         info = manager.continue_conversation("pinned-c", "follow-up after restart")
@@ -493,9 +493,9 @@ async def test_a_continuation_keeps_the_runs_lineage_depth(restart: bool) -> Non
     else:
         manager._agents[conv_id] = SubagentInfo(id=conv_id, task="first task", done=True, depth=4)
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.read_state", return_value=state),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.read_state", return_value=state),
         patch.object(manager, "_promote_conversation", return_value=object()),
     ):
         info = manager.continue_conversation(
@@ -527,9 +527,9 @@ async def test_a_continuation_keeps_the_runs_root_chat(asker: str, root: str) ->
     manager._agents[conv_id] = original
     state = {"session_id": "sid-from-state", "provider": "acp", "cwd": "", "keep": True}
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.read_state", return_value=state),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.read_state", return_value=state),
         patch.object(manager, "_promote_conversation", return_value=object()),
     ):
         info = manager.continue_conversation(conv_id, "follow-up", parent_session_key=asker)
@@ -547,8 +547,8 @@ async def test_a_follow_up_keeps_the_runs_model_and_effort() -> None:
     run = _pinned_run(manager, "pinned-a")
     run.done = False
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
         patch.object(manager, "_promote_conversation", return_value=object()),
     ):
         ok, detail = await manager.follow_up_run("pinned-a", "one more thing")
@@ -576,8 +576,8 @@ async def test_an_explicit_model_on_a_continuation_wins_over_the_runs_model() ->
     manager = _manager(sessions)
     _pinned_run(manager, "pinned-x")
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
         patch.object(manager, "_promote_conversation", return_value=object()),
     ):
         info = manager.continue_conversation("pinned-x", "follow-up work", model="model-b")
@@ -615,11 +615,11 @@ async def test_a_continuation_follows_a_later_change_of_the_role_pin(restart: bo
         run.requested_model = "role-model-x"
         manager._agents[conv_id] = run
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.read_state", return_value=state),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.read_state", return_value=state),
         # The operator moved the role pin from X to Y after the run started.
-        patch("kiro_crew.subagent._subagent_default_model", return_value="role-model-y"),
+        patch("aj_crew.subagent._subagent_default_model", return_value="role-model-y"),
         patch.object(manager, "_promote_conversation", return_value=object()),
     ):
         info = manager.continue_conversation(conv_id, "follow-up work")
@@ -651,9 +651,9 @@ async def test_a_continuation_naming_another_model_carries_no_effort(restart: bo
     if not restart:
         _pinned_run(manager, conv_id)
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
-        patch("kiro_crew.subagent.read_state", return_value=state),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
+        patch("aj_crew.subagent.read_state", return_value=state),
         patch.object(manager, "_promote_conversation", return_value=object()),
     ):
         info = manager.continue_conversation(conv_id, "follow-up work", model="model-b")

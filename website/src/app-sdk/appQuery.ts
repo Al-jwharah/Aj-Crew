@@ -18,7 +18,7 @@
  *
  * Deliberately NOT on the `./index` barrel, following the same reasoning
  * `useComposerDraft` records there: `chatProtocolBoundary.test.ts` holds that
- * barrel in exact agreement with `public/vendor/kirocrew-app-sdk.mjs`, so a name
+ * barrel in exact agreement with `public/vendor/ajcrew-app-sdk.mjs`, so a name
  * on it is PUBLISHED to third-party apps — and a hook that hands out a
  * host-namespaced cache client is precisely what must not be published. In-tree
  * callers import this module by path.

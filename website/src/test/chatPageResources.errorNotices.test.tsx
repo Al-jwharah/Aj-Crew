@@ -53,8 +53,8 @@ describe('dropping a space-named folder (#30416)', () => {
    *  the given regular `files`, to exercise mixed drops. The bridge resolves
    *  each item to the path its File name carries. */
   function dirDrop(dirPath: string, files: File[] = []): DataTransfer {
-    const w = window as { kirocrew?: { getPathForFile?: (f: File) => string } }
-    w.kirocrew = { getPathForFile: f => f.name }
+    const w = window as { ajcrew?: { getPathForFile?: (f: File) => string } }
+    w.ajcrew = { getPathForFile: f => f.name }
     const items: unknown[] = [
       { kind: 'file', webkitGetAsEntry: () => ({ isDirectory: true }), getAsFile: () => new File(['x'], dirPath, { type: '' }) },
     ]
@@ -87,8 +87,8 @@ describe('dropping a space-named folder (#30416)', () => {
   }
 
   afterEach(() => {
-    const w = window as { kirocrew?: unknown }
-    delete w.kirocrew
+    const w = window as { ajcrew?: unknown }
+    delete w.ajcrew
   })
 
   function dropOn(result: ReturnType<typeof renderController>['result'], dataTransfer: DataTransfer) {

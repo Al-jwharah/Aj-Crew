@@ -26,10 +26,10 @@ from member_session_control_helpers import (  # noqa: F401 -- the fixture is req
     _fresh_create_budget_fixture,
 )
 
-from kiro_crew.dashboard import session_control as sc
-from kiro_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard import session_control as sc
+from aj_crew.dashboard.chat_utils import slot_history_key
 
-_CONDUCTOR = "kirocrew-conductor"
+_CONDUCTOR = "ajcrew-conductor"
 
 
 def _owner_conductor(state, key: str = "chat-1-owner"):
@@ -49,7 +49,7 @@ def _switch_off(monkeypatch):
 def _conductor_resolves(_floor_monkeypatch):
     """Resolve the Conductor name the way the default agent resolves.
 
-    The test config has no ``kirocrew-conductor`` binding, and a created child
+    The test config has no ``ajcrew-conductor`` binding, and a created child
     inherits its creator's agent; what is under test is the gate, not the binding.
     """
     real = sc.resolve_agent_bindings
@@ -97,13 +97,13 @@ class TestOwnerTabConductorPredicate:
         assert sc._owner_tab_conductor(self._state(slot), slot.key)
 
     def test_deprecated_alias_is_recognised(self):
-        slot = self._slot(agent="kirocrew-ledger-conductor")
+        slot = self._slot(agent="ajcrew-ledger-conductor")
         assert sc._owner_tab_conductor(self._state(slot), slot.key)
 
     @pytest.mark.parametrize(
         "overrides",
         [
-            {"agent": "kirocrew"},
+            {"agent": "ajcrew"},
             {"agent": ""},
             {"_created_by": "chat-1-owner"},
             {"linked_session_key": "slack:T1:C1"},
@@ -190,7 +190,7 @@ class TestOwnerTabConductorEndToEnd:
     ):
         state = _make_state(tmp_path)
         caller = state.get_or_create_slot("chat-1-owner")
-        caller.agent = "kirocrew"
+        caller.agent = "ajcrew"
         with pytest.raises(sc.SessionControlError) as exc:
             _create(state, caller)
         assert exc.value.code == "session_control_disabled"
@@ -279,7 +279,7 @@ class TestCeilingWithdrawsTheBypass:
         )
         state = _make_state(tmp_path)
         caller = _owner_conductor(state)
-        with patch.object(sc.KiroCrewConfig, "load", return_value=cfg):
+        with patch.object(sc.AjCrewConfig, "load", return_value=cfg):
             assert sc.member_dispatch_enabled() is False
             assert not sc._dispatch_bypass(state, caller.key)
             with pytest.raises(sc.SessionControlError) as exc:
@@ -290,5 +290,5 @@ class TestCeilingWithdrawsTheBypass:
         monkeypatch.setattr(sc, "session_control_enabled", lambda: False)
         state = _make_state(tmp_path)
         caller = _owner_conductor(state)
-        with patch.object(sc.KiroCrewConfig, "load", side_effect=RuntimeError("boom")):
+        with patch.object(sc.AjCrewConfig, "load", side_effect=RuntimeError("boom")):
             assert not sc._dispatch_bypass(state, caller.key)

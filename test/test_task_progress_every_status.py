@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.task_models import Project, Task, TaskStatus
-from kiro_crew.task_reporter import PROGRESS_FILE, load_checkpoint, save_progress
+from aj_crew.task_models import Project, Task, TaskStatus
+from aj_crew.task_reporter import PROGRESS_FILE, load_checkpoint, save_progress
 
 
 def _run(tmp_path, statuses: list[TaskStatus]) -> Project:

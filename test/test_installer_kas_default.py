@@ -2,14 +2,14 @@
 
 The engine is not part of the wheel (it must never reach a GitHub Release or a
 ghcr image, and it belongs in the data home's read-only ``engines/`` leaf), so
-each installer runs the just-installed ``kirocrew kas install`` once Kiro Crew
+each installer runs the just-installed ``ajcrew kas install`` once Aj Crew
 itself is in. A failed download must not fail the install: it warns and names
 the exact command to retry. ``--no-kas`` skips the step, and the installer never
 turns ``agent.kas_bundle`` on.
 
 The ``cli.sh`` cases drive the real script through the signed-manifest harness
 of ``test_installer_binary_only`` (pipx branch, everything faked), with a
-recorder standing in for the installed ``kirocrew`` launcher.
+recorder standing in for the installed ``ajcrew`` launcher.
 """
 
 from __future__ import annotations
@@ -34,10 +34,10 @@ CLI_SH = ROOT / "cli.sh"
 
 # Stands in for the launcher pipx puts in PIPX_BIN_DIR (the fake pipx answers
 # $HOME/.local/bin). Records every invocation, one per line, and exits with
-# FAKE_KIROCREW_EXIT so the failure branch is reachable without a network.
+# FAKE_AJCREW_EXIT so the failure branch is reachable without a network.
 _RECORDER = """#!/bin/sh
-printf '%s\\n' "$*" >> "$FAKE_KIROCREW_LOG"
-exit "${FAKE_KIROCREW_EXIT:-0}"
+printf '%s\\n' "$*" >> "$FAKE_AJCREW_LOG"
+exit "${FAKE_AJCREW_EXIT:-0}"
 """
 
 
@@ -60,11 +60,11 @@ def _run_cli_sh(
     )
     bin_dir = run_root / "home" / ".local" / "bin"
     bin_dir.mkdir(parents=True, exist_ok=True)
-    launcher = bin_dir / "kirocrew"
+    launcher = bin_dir / "ajcrew"
     launcher.write_text(_RECORDER, encoding="utf-8")
     launcher.chmod(0o755)
-    log = run_root / "kirocrew-calls"
-    env["FAKE_KIROCREW_LOG"] = str(log)
+    log = run_root / "ajcrew-calls"
+    env["FAKE_AJCREW_LOG"] = str(log)
     result = run_bounded([*argv, *extra_args], env, cwd=str(run_root))
     calls = log.read_text(encoding="utf-8").splitlines() if log.exists() else []
     return result, calls, launcher
@@ -80,14 +80,14 @@ def test_cli_sh_runs_kas_install_after_the_wheel_by_default(
     assert calls == ["kas install"], calls
     out = result.stdout
     assert "Downloading the built-in KAS engine" in out
-    # Kiro Crew itself is installed first; the engine is fetched by the new CLI.
-    assert out.index("Installed kirocrew") < out.index("Downloading the built-in KAS engine")
+    # Aj Crew itself is installed first; the engine is fetched by the new CLI.
+    assert out.index("Installed ajcrew") < out.index("Downloading the built-in KAS engine")
     assert "could not download the built-in KAS engine" not in result.stderr
 
 
 @pytest.mark.parametrize(
     ("extra_args", "extra_env"),
-    [(("--no-kas",), None), ((), {"KIROCREW_INSTALL_KAS": "0"})],
+    [(("--no-kas",), None), ((), {"AJCREW_INSTALL_KAS": "0"})],
     ids=["flag", "env"],
 )
 def test_cli_sh_no_kas_skips_the_engine(
@@ -109,13 +109,13 @@ def test_cli_sh_failed_engine_download_warns_with_the_retry_command(
     tmp_path: Path, signing_key: SigningKey
 ) -> None:
     result, calls, launcher = _run_cli_sh(
-        tmp_path / "case", signing_key, extra_env={"FAKE_KIROCREW_EXIT": "1"}
+        tmp_path / "case", signing_key, extra_env={"FAKE_AJCREW_EXIT": "1"}
     )
 
     # The install itself succeeded, so the run does too.
     assert result.returncode == 0, result.stderr
     assert calls == ["kas install"], calls
-    assert "Installed kirocrew" in result.stdout
+    assert "Installed ajcrew" in result.stdout
     assert "could not download the built-in KAS engine" in result.stderr
     assert f"Retry when online: {launcher} kas install" in result.stderr
 
@@ -126,7 +126,7 @@ def test_cli_sh_interrupted_engine_download_stops_the_install(
     """A `kas install` killed by Ctrl-C exits 130 (faked here): the installer
     stops there with that status instead of warning and printing its banner."""
     result, calls, _launcher = _run_cli_sh(
-        tmp_path / "case", signing_key, extra_env={"FAKE_KIROCREW_EXIT": "130"}
+        tmp_path / "case", signing_key, extra_env={"FAKE_AJCREW_EXIT": "130"}
     )
 
     assert result.returncode == 130, result.stderr
@@ -141,7 +141,7 @@ def test_cli_sh_host_that_cannot_run_the_engine_gets_no_retry_advice(
     """Exit 3 is `kas install`'s "this host cannot run the engine" (old glibc):
     a retry cannot help, so none is suggested."""
     result, calls, _launcher = _run_cli_sh(
-        tmp_path / "case", signing_key, extra_env={"FAKE_KIROCREW_EXIT": "3"}
+        tmp_path / "case", signing_key, extra_env={"FAKE_AJCREW_EXIT": "3"}
     )
 
     assert result.returncode == 0, result.stderr
@@ -179,11 +179,11 @@ def test_install_sh_downloads_the_engine_by_default() -> None:
 
 def test_install_sh_failed_engine_download_only_warns() -> None:
     text = _install_sh()
-    block = text[text.index('"$_kirocrew" kas install || _kas_rc=$?') :]
+    block = text[text.index('"$_ajcrew" kas install || _kas_rc=$?') :]
     block = block[: block.index("\n        fi\n")]
 
     assert "exit" not in block, "a failed engine download must not fail the install"
-    assert 'detail "Retry when online: kirocrew kas install"' in block
+    assert 'detail "Retry when online: ajcrew kas install"' in block
     # Exit 3 (the host cannot run the engine) gets no retry advice.
     unsupported = block[block.index('"$_kas_rc" -eq 3') :]
     unsupported = unsupported[: unsupported.index("else")]

@@ -49,7 +49,7 @@ import { SpendTab, ContextTab } from './TelemetryPanelConversations'
 const TURN_NON_FAULT_OUTCOMES = new Set([
   'ok',
   // Recovered-in-place watchdog stalls, tracked separately under
-  // kirocrew.watchdog.recovery.outcome.
+  // ajcrew.watchdog.recovery.outcome.
   'tool_stall',
   'stale_recover',
   // The operator pressed Stop. Counting it would report a deliberate user

@@ -18,7 +18,7 @@ from aws_control_app_helpers import (  # noqa: F401 -- fixtures are used by name
     _request,
 )
 
-from kiro_crew.apps.builtins.aws_control.backend import routes as routes_mod
+from aj_crew.apps.builtins.aws_control.backend import routes as routes_mod
 
 
 def _denial(audit: mock.Mock, error: str) -> str:
@@ -601,7 +601,7 @@ class TestBootstrapReauthorizes:
             # A real bucket name, so a missing gate fails on the 403 contract
             # below rather than on an unserializable mock in the 200 body.
             mock.patch.object(
-                routes_mod.storage_mod, "create_drive", return_value="kirocrew-drive-abc123def456"
+                routes_mod.storage_mod, "create_drive", return_value="ajcrew-drive-abc123def456"
             ) as create,
             mock.patch.object(routes_mod, "_audit") as audit,
         ):
@@ -721,7 +721,7 @@ class TestBootstrapReauthorizes:
             mock.patch.object(routes_mod, "_consent", AsyncMock(return_value=None)),
             mock.patch.object(routes_mod, "_drive_bucket", AsyncMock(return_value="")),
             mock.patch.object(
-                routes_mod.storage_mod, "create_drive", return_value="kirocrew-drive-abc123def456"
+                routes_mod.storage_mod, "create_drive", return_value="ajcrew-drive-abc123def456"
             ) as create,
         ):
             resp = asyncio.run(
@@ -729,5 +729,5 @@ class TestBootstrapReauthorizes:
                     self._confirm_request()
                 )
             )
-        assert _payload(resp) == {"created": True, "bucket": "kirocrew-drive-abc123def456"}
+        assert _payload(resp) == {"created": True, "bucket": "ajcrew-drive-abc123def456"}
         create.assert_called_once()

@@ -13,13 +13,13 @@
  *
  * Usage:
  *   node ./node_modules/.bin/vite --host 127.0.0.1 --port 6813 --strictPort   # in another shell
- *   node scripts/capture-devfleet-prune-untracked.mjs http://127.0.0.1:6813 "$KIROCREW_SCRATCH/shots"
+ *   node scripts/capture-devfleet-prune-untracked.mjs http://127.0.0.1:6813 "$AJCREW_SCRATCH/shots"
  */
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 
 const BASE = process.argv[2] || 'http://127.0.0.1:6813'
-const OUT = process.argv[3] || `${process.env.KIROCREW_SCRATCH || '/tmp'}/shots`
+const OUT = process.argv[3] || `${process.env.AJCREW_SCRATCH || '/tmp'}/shots`
 mkdirSync(OUT, { recursive: true })
 
 const browser = await chromium.launch()

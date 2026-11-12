@@ -515,7 +515,7 @@ def test_no_fetch_has_a_credential_or_header_to_send_even_when_the_runner_has_th
         encoding="utf-8",
     )
     ask = "protocol=https\nhost=github.com\n\n"
-    url = "https://github.com/kirodotdev/KiroCrew"
+    url = "https://github.com/Al-jwharah/Aj-Crew"
     runner_env = {**o.env, "GIT_CONFIG_GLOBAL": str(runner_config)}
     # Outside the script, the runner's config hands out both.
     outside = subprocess.run(

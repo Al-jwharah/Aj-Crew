@@ -21,12 +21,12 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.dashboard.routes import agent_config as agent_config_routes
-from kiro_crew.dashboard.routes import agents as agents_routes
+from aj_crew.dashboard.routes import agent_config as agent_config_routes
+from aj_crew.dashboard.routes import agents as agents_routes
 
 pytestmark = pytest.mark.asyncio
 
-_AGENTS_HANDLER_MODULE = "kiro_crew.dashboard.handlers.agents"
+_AGENTS_HANDLER_MODULE = "aj_crew.dashboard.handlers.agents"
 _MUTATING_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
 #: Coherence floor so the router walk cannot go vacuous (a refactor that moved

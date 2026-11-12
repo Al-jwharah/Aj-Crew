@@ -173,7 +173,7 @@ def test_still_attached_after_force_is_a_failure(tmp_path: Path) -> None:
             "\t\t\t<key>content-hint</key>\n\t\t\t<string>GUID_partition_scheme</string>\n"
             "\t\t\t<key>dev-entry</key>\n\t\t\t<string>/dev/disk5</string>\n\t\t</dict>\n"
             "\t\t<dict>\n\t\t\t<key>dev-entry</key>\n\t\t\t<string>/dev/disk5s1</string>\n"
-            "\t\t\t<key>mount-point</key>\n\t\t\t<string>/private/tmp/kirocrew-dmg.x/mount</string>\n"
+            "\t\t\t<key>mount-point</key>\n\t\t\t<string>/private/tmp/ajcrew-dmg.x/mount</string>\n"
             "\t\t</dict>\n\t</array>\n</dict>\n</plist>\n",
             "/dev/disk5",
         ),

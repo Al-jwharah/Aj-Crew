@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import sandbox
-from kiro_crew.platform_compat import IS_WINDOWS
+from aj_crew import sandbox
+from aj_crew.platform_compat import IS_WINDOWS
 
 _PREFIX = ".kiro/crew/"
 
@@ -34,11 +34,11 @@ def _assert_mode(path: Path, mode: int) -> None:
 
 @pytest.fixture(autouse=True)
 def fresh_home(tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch) -> Path:
-    """A data home with no stores in it, resolved by every module through ``KIROCREW_HOME``."""
+    """A data home with no stores in it, resolved by every module through ``AJCREW_HOME``."""
     home = tmp_path / "crew"
     home.mkdir()
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(home))
-    _floor_monkeypatch.delenv("KIROCREW_MCP_APPS_SPOOL", raising=False)
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(home))
+    _floor_monkeypatch.delenv("AJCREW_MCP_APPS_SPOOL", raising=False)
     _floor_monkeypatch.setattr(sandbox, "config_dir", lambda: home)
     return home
 
@@ -59,7 +59,7 @@ def test_the_secret_store_dir_is_precreated_owner_only(fresh_home: Path, leaf: s
 
 
 def test_the_vault_saves_and_loads_in_a_premade_dir(fresh_home: Path) -> None:
-    from kiro_crew.secrets import SecretVault
+    from aj_crew.secrets import SecretVault
 
     sandbox._materialize_maskable_dirs()
     assert not any((fresh_home / ".vault").iterdir())
@@ -72,7 +72,7 @@ def test_the_vault_saves_and_loads_in_a_premade_dir(fresh_home: Path) -> None:
 
 
 def test_the_sign_in_store_saves_and_loads_in_a_premade_dir(fresh_home: Path) -> None:
-    from kiro_crew.auth.store import KasToken, TokenStore
+    from aj_crew.auth.store import KasToken, TokenStore
 
     sandbox._materialize_maskable_dirs()
     assert not any((fresh_home / "kas").iterdir())
@@ -101,7 +101,7 @@ def test_the_sign_in_store_saves_and_loads_in_a_premade_dir(fresh_home: Path) ->
 
 
 def test_cron_running_reads_an_empty_root_as_no_markers(fresh_home: Path) -> None:
-    from kiro_crew import cron_inflight
+    from aj_crew import cron_inflight
 
     sandbox._materialize_maskable_dirs()
 
@@ -112,7 +112,7 @@ def test_cron_running_reads_an_empty_root_as_no_markers(fresh_home: Path) -> Non
 
 
 def test_the_workflow_library_reads_an_empty_root_as_no_definitions(fresh_home: Path) -> None:
-    from kiro_crew.workflows.library import WorkflowDefinitionLibrary
+    from aj_crew.workflows.library import WorkflowDefinitionLibrary
 
     sandbox._materialize_maskable_dirs()
 
@@ -120,7 +120,7 @@ def test_the_workflow_library_reads_an_empty_root_as_no_definitions(fresh_home: 
 
 
 def test_the_mcp_apps_spool_accepts_an_empty_root(fresh_home: Path) -> None:
-    from kiro_crew.mcp_gateway import apps
+    from aj_crew.mcp_gateway import apps
 
     sandbox._materialize_maskable_dirs()
 
@@ -130,7 +130,7 @@ def test_the_mcp_apps_spool_accepts_an_empty_root(fresh_home: Path) -> None:
 
 
 def test_an_empty_backup_dir_leaves_outbound_redaction_off(fresh_home: Path) -> None:
-    from kiro_crew import snapshot_redact
+    from aj_crew import snapshot_redact
 
     sandbox._materialize_maskable_dirs()
 

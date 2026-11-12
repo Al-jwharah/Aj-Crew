@@ -32,16 +32,16 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.acp_backends import (
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_DEEPSEEK,
     ACP_BACKEND_KAS,
     ACP_BACKEND_OPENCODE,
     ACP_BACKEND_PI,
 )
-from kiro_crew.agent_sdk import INSTALLED, MISSING
-from kiro_crew.agent_sdk import backend_install as probe
-from kiro_crew.dashboard.routes import agent_config as agent_config_routes
+from aj_crew.agent_sdk import INSTALLED, MISSING
+from aj_crew.agent_sdk import backend_install as probe
+from aj_crew.dashboard.routes import agent_config as agent_config_routes
 
 pytestmark = pytest.mark.asyncio
 
@@ -64,7 +64,7 @@ class _State:
 @pytest.fixture(autouse=True)
 def _clean(monkeypatch):
     """Both caches cleared on both sides, so no test inherits a verdict."""
-    from kiro_crew.acp import client
+    from aj_crew.acp import client
 
     probe.clear_probe_cache()
     monkeypatch.setattr(client, "_self_served_bin_caches", {})
@@ -112,7 +112,7 @@ def _binary_name() -> str:
     ``_resolve_self_served_bin`` looks up, and the test would then install a file
     nothing resolves and still pass its first assertion for the wrong reason.
     """
-    from kiro_crew.agent_sdk.backends import launch_for
+    from aj_crew.agent_sdk.backends import launch_for
 
     return launch_for(ACP_BACKEND_DEEPSEEK).binary
 
@@ -160,7 +160,7 @@ class TestRecheckOverHttp:
         Every step goes over HTTP. The only thing stubbed is PATH, and that is the
         subject: the binary genuinely is not there and then genuinely is.
         """
-        from kiro_crew.acp import client as acp_client
+        from aj_crew.acp import client as acp_client
 
         bindir = _bin_dir(tmp_path)
         monkeypatch.setenv("PATH", str(bindir))
@@ -225,7 +225,7 @@ class TestRecheckOverHttp:
         self, tmp_path, monkeypatch, owner_middleware
     ):
         """The same path, without the install: no parameter fakes a green."""
-        from kiro_crew.acp import client as acp_client
+        from aj_crew.acp import client as acp_client
 
         bindir = _bin_dir(tmp_path)
         monkeypatch.setenv("PATH", str(bindir))
@@ -283,7 +283,7 @@ class TestGenerationFence:
         The resolver blocks until this test releases it, so the clear is guaranteed to
         land mid-flight rather than by luck.
         """
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         monkeypatch.setattr(client, "_self_served_bin_caches", {})
         monkeypatch.setattr(client, "_resolution_generation", {})
@@ -314,7 +314,7 @@ class TestGenerationFence:
 
         # The operator installs the component and presses Re-check WHILE that resolve
         # is still in flight.
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         driver.forget_cached_resolution(ACP_BACKEND_OPENCODE)
 
@@ -332,7 +332,7 @@ class TestGenerationFence:
         Asserts the test above is load-bearing. If this did not revive the miss, the
         fence would be guarding nothing and the case above would pass either way.
         """
-        from kiro_crew.acp import client
+        from aj_crew.acp import client
 
         monkeypatch.setattr(client, "_self_served_bin_caches", {})
         monkeypatch.setattr(client, "_resolution_generation", {})
@@ -350,8 +350,8 @@ class TestGenerationFence:
 
     async def test_a_clear_bumps_the_generation(self, monkeypatch):
         """The wiring, so the fence cannot be left un-armed by the clear."""
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_resolution_generation", {})
         monkeypatch.setattr(client, "_self_served_bin_caches", {})
@@ -361,8 +361,8 @@ class TestGenerationFence:
 
     async def test_both_pi_caches_share_one_generation(self, monkeypatch):
         """pi keeps two caches under one id, so one bump has to fence both."""
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_resolution_generation", {})
         monkeypatch.setattr(client, "_pi_acp_argv_cache", (None, "/usr/bin"), raising=False)
@@ -375,8 +375,8 @@ class TestGenerationFence:
 
     async def test_one_backends_bump_does_not_fence_another(self, monkeypatch):
         """A re-check of one harness must not make another re-resolve."""
-        from kiro_crew.acp import client
-        from kiro_crew.agent_sdk.drivers import acp as driver
+        from aj_crew.acp import client
+        from aj_crew.agent_sdk.drivers import acp as driver
 
         monkeypatch.setattr(client, "_resolution_generation", {})
         monkeypatch.setattr(client, "_self_served_bin_caches", {})

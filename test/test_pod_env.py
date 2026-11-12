@@ -25,9 +25,9 @@ from pod_helpers import (  # noqa: F401 -- the fixtures register by import
     requires_posix_pod_lifecycle,
 )
 
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod.config import PodConfig
-from kiro_crew.testing.wait import default_timeout
+from aj_crew.pod import runtime as rt
+from aj_crew.pod.config import PodConfig
+from aj_crew.testing.wait import default_timeout
 
 
 class TestSeedSanitization:
@@ -110,7 +110,7 @@ class TestSeedSanitization:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         seed = self._write(tmp_path / "s", {"tunnel": {"enabled": True}})
-        monkeypatch.setattr("kiro_crew.security.is_sensitive_path", lambda p, base_dir=None: True)
+        monkeypatch.setattr("aj_crew.security.is_sensitive_path", lambda p, base_dir=None: True)
         assert rt.sanitized_seed_config(seed) is None
 
     def test_forces_teams_off_and_keeps_its_app_id(self, tmp_path: Path) -> None:
@@ -140,10 +140,10 @@ class TestSeedSanitization:
         """
         import dataclasses
 
-        from kiro_crew.channels import builtin_channel_descriptors
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.channels import builtin_channel_descriptors
+        from aj_crew.config.loader import AjCrewConfig
 
-        section_fields = {f.name: f for f in dataclasses.fields(KiroCrewConfig)}
+        section_fields = {f.name: f for f in dataclasses.fields(AjCrewConfig)}
         exempt: set[str] = set()
         ungated: list[str] = []
         for desc in builtin_channel_descriptors():
@@ -183,9 +183,9 @@ class TestPodEnvCredentialScrub:
         """The scrub covers the loader's whole credential roster, not just its patterns.
 
         Kept on purpose: ``KIRO_API_KEY`` (the agent's model credential) and
-        ``KIROCREW_OWNER_ID`` (the pod dashboard's owner, not a bot credential).
+        ``AJCREW_OWNER_ID`` (the pod dashboard's owner, not a bot credential).
         """
-        from kiro_crew.config.loader import CRED_KIRO_API_KEY, CRED_OWNER_ID, CREDENTIAL_KEYS
+        from aj_crew.config.loader import CRED_KIRO_API_KEY, CRED_OWNER_ID, CREDENTIAL_KEYS
 
         for key in CREDENTIAL_KEYS:
             monkeypatch.setenv(key, f"live-{key}")
@@ -197,15 +197,15 @@ class TestPodEnvCredentialScrub:
     def test_bind_is_pinned_to_the_loopback_every_pod_client_dials(
         self, cfg: PodConfig, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, inherited: str
     ) -> None:
-        """An inherited KIROCREW_BIND must never reach the pod gateway.
+        """An inherited AJCREW_BIND must never reach the pod gateway.
 
         `health()`, `mint_token()` and `pod_api()` dial `127.0.0.1:<port>`, and the
         attestation vouches for the process, not the address. `::1` would let a foreign
         process take `127.0.0.1:<port>`; `0.0.0.0` would expose the pod off-host.
         """
-        monkeypatch.setenv("KIROCREW_BIND", inherited)
+        monkeypatch.setenv("AJCREW_BIND", inherited)
         env = rt.build_pod_env(cfg, tmp_path / "home", 7999, tmp_path / "co")
-        assert env["KIROCREW_BIND"] == "127.0.0.1"
+        assert env["AJCREW_BIND"] == "127.0.0.1"
 
 
 class TestPodEnv:
@@ -242,9 +242,9 @@ class TestPodEnv:
         # AWS_* kept (agent turns need it); AWS_SESSION_TOKEN must survive.
         assert env.get("AWS_REGION") == "us-west-2"
         assert env.get("AWS_SESSION_TOKEN") == "sts-temp"
-        assert env["KIROCREW_PORT"] == "7999"
-        assert env["KIROCREW_HOME"].endswith("home")
-        assert env["KIROCREW_PROJECT_DIR"].endswith("co")
+        assert env["AJCREW_PORT"] == "7999"
+        assert env["AJCREW_HOME"].endswith("home")
+        assert env["AJCREW_PROJECT_DIR"].endswith("co")
 
 
 class TestPodConfigWrite:
@@ -280,7 +280,7 @@ class TestPodConfigWrite:
     def test_a_failed_lockdown_publishes_no_config(self, tmp_path: Path, monkeypatch) -> None:
         """restrict_to_owner runs on the temp; a failure must not leave config.json."""
         monkeypatch.setattr(
-            "kiro_crew.atomic_write.platform_compat.restrict_to_owner",
+            "aj_crew.atomic_write.platform_compat.restrict_to_owner",
             lambda path: (_ for _ in ()).throw(OSError("icacls: transient failure")),
         )
         home = tmp_path / "pod-home"
@@ -331,7 +331,7 @@ class TestSeedPodOsHome:
         grant pairs must NEVER be seeded forward. Seeding one would make a
         pod boot already "Connected" to a provider nobody consented to from
         inside it."""
-        from kiro_crew import mcp_grant
+        from aj_crew import mcp_grant
 
         real_cache = Path.home() / ".aws" / "sso" / "cache"
         real_cache.mkdir(parents=True)
@@ -499,7 +499,7 @@ class TestAnAcpTurnHasNoInheritedAwsCredentials:
     environment and the child's are not the same."""
 
     def test_the_scrubber_removes_the_secret_and_session_token(self) -> None:
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         scrubbed = sandbox.scrub_agent_subprocess_env(
             {
@@ -520,7 +520,7 @@ class TestAnAcpTurnHasNoInheritedAwsCredentials:
     def test_the_prefixes_the_posture_depends_on_are_pinned(self) -> None:
         """If either prefix left the list, the corrected claim would silently
         become false again."""
-        from kiro_crew import sandbox
+        from aj_crew import sandbox
 
         assert "AWS_SECRET" in sandbox._SENSITIVE_ENV_PREFIXES
         assert "AWS_SESSION" in sandbox._SENSITIVE_ENV_PREFIXES
@@ -565,15 +565,15 @@ class TestReviewRound1Fixes:
     def test_build_pod_env_scopes_oauth_grant_reads_to_the_pod(
         self, cfg: PodConfig, tmp_path: Path
     ) -> None:
-        """KIROCREW_OS_HOME is what makes the pod's OWN mcp_grant reads (mint,
+        """AJCREW_OS_HOME is what makes the pod's OWN mcp_grant reads (mint,
         status, disconnect, mcp_discovery) resolve the pod's tree instead of the
         real host's ``~/.aws/sso/cache`` -- see mcp_grant.kiro_oauth_cache_dir's
         docstring for the split this closes."""
         home = tmp_path / "home"
         env = rt.build_pod_env(cfg, home, 7999, tmp_path / "co")
-        assert env["KIROCREW_OS_HOME"] == str(home / "os-home")
+        assert env["AJCREW_OS_HOME"] == str(home / "os-home")
         # Reclaimed by cleanup_home alongside everything else under home_dir.
-        assert Path(env["KIROCREW_OS_HOME"]).is_relative_to(home)
+        assert Path(env["AJCREW_OS_HOME"]).is_relative_to(home)
 
     def test_seed_forces_feishu_off(self, tmp_path: Path) -> None:
         """A seed cloned from a real home must not boot a live Feishu bot.
@@ -610,7 +610,7 @@ class TestReviewRound1Fixes:
     def test_read_env_file_matched_quote_pair_only(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path))
         c = PodConfig.load()
         c.pods_dir.mkdir(parents=True, exist_ok=True)
         # An inner apostrophe survives; only the one surrounding pair is stripped.
@@ -618,7 +618,7 @@ class TestReviewRound1Fixes:
         assert rt.read_env_file(c, "x")["CHECKOUT"] == "/a/o'brien"
 
     def test_mint_token_quotes_ttl(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path))
         c = PodConfig.load()
         home = c.home_dir("demo")
         home.mkdir(parents=True)
@@ -661,7 +661,7 @@ class TestReviewRound2Fix:
     def test_write_env_file_rejects_newline_value(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path))
         c = PodConfig.load()
         with pytest.raises(rt.PodError):
             rt.write_env_file(c, "x", {"SEED": "/a/\nevil"})
@@ -687,7 +687,7 @@ class TestEnvFileConcurrentWrite:
         re-entering from one thread exercises the reentrant counter instead of the
         cross-writer exclusion this is about.
         """
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path))
         c = PodConfig.load()
         rt.write_env_file(c, "demo", {"CHECKOUT": "/first", "APPROVAL": "reads"})
 
@@ -728,7 +728,7 @@ class TestEnvFileConcurrentWrite:
         only ``write_env_file`` took would leave the writes made inside it unexcluded.
         Holding the mutex here must therefore block a competing writer outright.
         """
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path))
         c = PodConfig.load()
         rt.write_env_file(c, "demo", {"CHECKOUT": "/first"})
 
@@ -782,7 +782,7 @@ class TestEnvFileConcurrentWrite:
         No race: the reader reads half, a write lands, then it reads the rest. Under
         temp-file + rename both halves come from one generation (the old inode).
         """
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path))
         c = PodConfig.load()
         # Enough keys that a spliced read is unambiguous rather than a near-miss.
         first = {"APPROVAL": "interactive", "CHECKOUT": "/a"}

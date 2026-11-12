@@ -2,7 +2,7 @@
  * Hook event names, as the backend spells them.
  *
  * These are WIRE VALUES, not copy: the API matches them by value against the
- * backend's own event allowlist (`kiro_crew.hooks.HOOK_EVENTS_ALL`), and the hook
+ * backend's own event allowlist (`aj_crew.hooks.HOOK_EVENTS_ALL`), and the hook
  * table renders the stored value verbatim, so a translated or reworded one is
  * rejected on save and would disagree with its own row. They live here, apart from
  * the page, so that boundary is visible in one place and the i18n literal-string
@@ -45,7 +45,7 @@ export const EVENTS = [
 /**
  * The six no event fires, and the two of those a Kiro Agent asks its client for.
  *
- * Mirrors `kiro_crew.hooks.HOOK_EVENTS_KAS_ONLY` and
+ * Mirrors `aj_crew.hooks.HOOK_EVENTS_KAS_ONLY` and
  * `HOOK_EVENTS_AGENT_REQUESTED`; `test_hook_events_kas_triggers.py` pins both
  * against those tuples, so the round that ships delivery moves a name out of a
  * tuple instead of rewriting copy in five places.

@@ -32,8 +32,8 @@ Standard Latin spacing rules. No special handling required.
 
 ## 3. Do not translate
 
-Product names stay as-is. The canonical list in `glossary.json` includes `KiroCrew`,
-`MCP`, `Slack`, `GitHub`, and others. The prose brand `Kiro Crew` also remains unchanged.
+Product names stay as-is. The canonical list in `glossary.json` includes `AjCrew`,
+`MCP`, `Slack`, `GitHub`, and others. The prose brand `Aj Crew` also remains unchanged.
 
 Checked by `glossary.test.ts`.
 

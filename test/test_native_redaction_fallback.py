@@ -12,7 +12,7 @@ import types
 
 import pytest
 
-from kiro_crew.security import redaction, redaction_patterns
+from aj_crew.security import redaction, redaction_patterns
 
 _SAMPLES = [
     "",
@@ -25,7 +25,7 @@ _SAMPLES = [
 
 
 def test_default_is_on(monkeypatch):
-    monkeypatch.delenv("KIROCREW_NATIVE_REDACTION", raising=False)
+    monkeypatch.delenv("AJCREW_NATIVE_REDACTION", raising=False)
     fake = types.ModuleType("kc_native")
     fake.GATE_FINGERPRINT = redaction._native_gate_fingerprint()
     fake.might_contain_credential = lambda text: True
@@ -34,13 +34,13 @@ def test_default_is_on(monkeypatch):
 
 
 def test_missing_module_keeps_python(monkeypatch):
-    monkeypatch.delenv("KIROCREW_NATIVE_REDACTION", raising=False)
+    monkeypatch.delenv("AJCREW_NATIVE_REDACTION", raising=False)
     monkeypatch.setitem(sys.modules, "kc_native", None)  # import raises ImportError
     assert redaction._load_native_gate() is None
 
 
 def test_stale_module_keeps_python(monkeypatch, caplog):
-    monkeypatch.delenv("KIROCREW_NATIVE_REDACTION", raising=False)
+    monkeypatch.delenv("AJCREW_NATIVE_REDACTION", raising=False)
     fake = types.ModuleType("kc_native")
     fake.GATE_FINGERPRINT = "not-this-build"
     fake.might_contain_credential = lambda text: True
@@ -55,7 +55,7 @@ def test_env_zero_turns_it_off(monkeypatch):
     fake.GATE_FINGERPRINT = redaction._native_gate_fingerprint()
     fake.might_contain_credential = lambda text: True
     monkeypatch.setitem(sys.modules, "kc_native", fake)
-    monkeypatch.setenv("KIROCREW_NATIVE_REDACTION", "0")
+    monkeypatch.setenv("AJCREW_NATIVE_REDACTION", "0")
     assert redaction._load_native_gate() is None
 
 

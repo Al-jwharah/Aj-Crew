@@ -272,7 +272,7 @@ export function failureReason(run: {
   //
   // Matched on the specific phrase, NOT on the word `kiro-cli`: a missing agent
   // spec also names it ("Agent spec '…' is not installed: kiro-cli found no
-  // '….json' in … — repair with `kirocrew setup --agent-only --clean`", from
+  // '….json' in … — repair with `ajcrew setup --agent-only --clean`", from
   // acp/runtime_reader_loop.py) and reaches this function through the pool's spawn error. A
   // bare /kiro-cli/ branch would replace that message — which already carries
   // the exact repair command — with "install kiro-cli", losing the fix.
@@ -323,7 +323,7 @@ export function failureReason(run: {
   // fixed sentences the token faithfully stands in for. `review_failed` labels
   // whatever the failed dispatch returned, so its prose is arbitrary and usually
   // far more specific than the token: the missing-agent-spec message arrives on
-  // that path carrying its own `kirocrew setup --agent-only --clean` repair
+  // that path carrying its own `ajcrew setup --agent-only --clean` repair
   // command. Substituting the generic "the review turn failed" for it would lose
   // the fix -- the same information loss a broad /kiro-cli/ branch would cause,
   // just reached through the token. Its card passes the backend text through

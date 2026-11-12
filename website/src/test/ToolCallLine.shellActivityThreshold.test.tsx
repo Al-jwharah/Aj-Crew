@@ -116,12 +116,12 @@ describe('ToolCallLine — shell activity line threshold', () => {
 
   it('labels a pending ask_question Waiting for your answer, not Running', () => {
     freezeClock()
-    const msg: ChatMessage = { role: 'tool', content: '🔧 @kirocrew-core/ask_question', cls: '', meta: { tool_call_id: 'tc_ask' } }
+    const msg: ChatMessage = { role: 'tool', content: '🔧 @ajcrew-core/ask_question', cls: '', meta: { tool_call_id: 'tc_ask' } }
     const store = createTestStore({
       chat: {
         messages: [msg],
         activeSlot: 'S',
-        toolLog: [{ type: 'tool', text: '@kirocrew-core/ask_question', tool_name: 'ask_question', mcp_server: 'kirocrew-core', tool_call_id: 'tc_ask', ts: NOW_MS - 30_000 }],
+        toolLog: [{ type: 'tool', text: '@ajcrew-core/ask_question', tool_name: 'ask_question', mcp_server: 'ajcrew-core', tool_call_id: 'tc_ask', ts: NOW_MS - 30_000 }],
         slotRunning: true,
       } as unknown as ChatState,
     })
@@ -130,7 +130,7 @@ describe('ToolCallLine — shell activity line threshold', () => {
     expect(screen.queryByText(/Running ·/)).toBeNull()
   })
 
-  it.each(['ask_question', '@kirocrew-core/ask_question'])(
+  it.each(['ask_question', '@ajcrew-core/ask_question'])(
     'labels %s Waiting for your answer before MCP server metadata arrives',
     (toolName) => {
       freezeClock()

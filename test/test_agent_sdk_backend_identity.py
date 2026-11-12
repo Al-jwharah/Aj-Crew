@@ -1,6 +1,6 @@
 """The ``agent.acp_backend`` axis has one comparison, and it lives in agent_sdk.
 
-Three sites delegate to :func:`kiro_crew.agent_sdk.backend_identity.is_claude_backend_name`;
+Three sites delegate to :func:`aj_crew.agent_sdk.backend_identity.is_claude_backend_name`;
 ``AcpClient._is_claude`` keeps its own for layering. The helper takes the backend NAME,
 and reading that string keeps the predicates mock-safe, unlike the property.
 """
@@ -15,11 +15,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk.backend_identity import is_claude_backend_name
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.agent_sdk.backend_identity import is_claude_backend_name
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
-SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 #: Sites that must ask the helper rather than compare the constant themselves.
 DELEGATING = (
@@ -73,8 +73,8 @@ def test_a_failed_lookup_reads_as_not_claude() -> None:
 def test_module_reaches_only_the_leaf_constants() -> None:
     """The helper may import ``acp_backends`` and nothing else from the package.
 
-    ``agent_sdk.backends`` is a leaf. Importing ``kiro_crew.acp`` or ``kiro_crew.providers``
-    would give every consumer a forbidden edge, and the ``kiro_crew.acp_backends`` shim
+    ``agent_sdk.backends`` is a leaf. Importing ``aj_crew.acp`` or ``aj_crew.providers``
+    would give every consumer a forbidden edge, and the ``aj_crew.acp_backends`` shim
     imports this package, so reading it would close a cycle.
     """
     tree = ast.parse((SRC / "agent_sdk" / "backend_identity.py").read_text(encoding="utf-8"))
@@ -84,7 +84,7 @@ def test_module_reaches_only_the_leaf_constants() -> None:
             imported.append(node.module)
         elif isinstance(node, ast.Import):
             imported.extend(alias.name for alias in node.names)
-    assert [m for m in imported if m.startswith("kiro_crew")] == ["kiro_crew.agent_sdk.backends"]
+    assert [m for m in imported if m.startswith("aj_crew")] == ["aj_crew.agent_sdk.backends"]
 
 
 def test_importing_this_module_does_not_load_acp_or_providers() -> None:
@@ -96,12 +96,12 @@ def test_importing_this_module_does_not_load_acp_or_providers() -> None:
     probe = (
         "import sys\n"
         f"sys.path.insert(0, {str(SRC.parent)!r})\n"
-        "from kiro_crew.agent_sdk.backend_identity import is_claude_backend_name\n"
+        "from aj_crew.agent_sdk.backend_identity import is_claude_backend_name\n"
         "assert is_claude_backend_name('claude') is True\n"
         "loaded = {\n"
-        "    'acp': 'kiro_crew.acp' in sys.modules,\n"
-        "    'providers': 'kiro_crew.providers' in sys.modules,\n"
-        "    'backends': 'kiro_crew.agent_sdk.backends' in sys.modules,\n"
+        "    'acp': 'aj_crew.acp' in sys.modules,\n"
+        "    'providers': 'aj_crew.providers' in sys.modules,\n"
+        "    'backends': 'aj_crew.agent_sdk.backends' in sys.modules,\n"
         "}\n"
         "print(repr(loaded))\n"
     )
@@ -114,8 +114,8 @@ def test_importing_this_module_does_not_load_acp_or_providers() -> None:
     assert result.returncode == 0, f"probe failed: {result.stderr[-2000:]}"
     loaded = ast.literal_eval(result.stdout.strip().splitlines()[-1])
 
-    assert loaded["acp"] is False, "importing the helper loaded kiro_crew.acp"
-    assert loaded["providers"] is False, "importing the helper loaded kiro_crew.providers"
+    assert loaded["acp"] is False, "importing the helper loaded aj_crew.acp"
+    assert loaded["providers"] is False, "importing the helper loaded aj_crew.providers"
     # Asserted, not tolerated: the helper reads its constant from here.
     assert loaded["backends"] is True
 
@@ -182,7 +182,7 @@ def test_delegating_files_ask_the_helper(rel: str) -> None:
 def test_acp_client_keeps_its_own_comparison() -> None:
     """``AcpClient._is_claude`` is the documented exception, not an oversight.
 
-    ``agent_sdk`` sits above ``kiro_crew.acp``, so routing the client through the
+    ``agent_sdk`` sits above ``aj_crew.acp``, so routing the client through the
     helper would invert the layering and drag the SDK package -- and the
     backend-install registry its ``__init__`` builds -- into every client import.
     If the layering changes, delete this test deliberately.
@@ -211,7 +211,7 @@ def _provider_with_backend(backend: str):
     ``__init__`` spawns a real ``AcpClient``; the two predicates under test read
     only ``client.backend``, so bypassing construction keeps this a unit test.
     """
-    from kiro_crew.providers.acp import AcpProvider
+    from aj_crew.providers.acp import AcpProvider
 
     provider = object.__new__(AcpProvider)
     provider._client = _FakeClient(backend)  # type: ignore[attr-defined]
@@ -229,8 +229,8 @@ def test_the_property_and_the_session_predicate_agree(backend: str, expected: bo
     on ``isinstance`` and defers its import across the providers/session cycle --
     so nothing but a test can hold them equal.
     """
-    from kiro_crew.providers.acp import is_claude_backend
-    from kiro_crew.session import _is_claude_backend
+    from aj_crew.providers.acp import is_claude_backend
+    from aj_crew.session import _is_claude_backend
 
     provider = _provider_with_backend(backend)
     assert provider.is_claude_backend is expected
@@ -244,8 +244,8 @@ def test_a_spec_mock_is_not_every_backend_at_once() -> None:
     A ``MagicMock(spec=...)`` makes the ``is_claude_backend`` property truthy; the session
     predicate reads ``client.backend`` and is not fooled.
     """
-    from kiro_crew.providers.acp import AcpProvider
-    from kiro_crew.session import _is_claude_backend
+    from aj_crew.providers.acp import AcpProvider
+    from aj_crew.session import _is_claude_backend
 
     spec_mock = MagicMock(spec=AcpProvider)
     assert bool(spec_mock.is_claude_backend) is True, "premise changed: spec mock is not truthy"
@@ -254,8 +254,8 @@ def test_a_spec_mock_is_not_every_backend_at_once() -> None:
 
 def test_non_acp_objects_are_not_the_claude_backend() -> None:
     """A provider this axis knows nothing about answers False, not an error."""
-    from kiro_crew.providers.acp import is_claude_backend
-    from kiro_crew.session import _is_claude_backend
+    from aj_crew.providers.acp import is_claude_backend
+    from aj_crew.session import _is_claude_backend
 
     assert is_claude_backend(object()) is False
     assert _is_claude_backend(object()) is False

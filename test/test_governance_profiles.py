@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.platform import governance_profiles as gp
-from kiro_crew.platform.governance import resolve
+from aj_crew.platform import governance_profiles as gp
+from aj_crew.platform.governance import resolve
 
 
 @pytest.fixture
@@ -187,7 +187,7 @@ def _write_host_profile(path):
 
 
 def _make_ceiling():
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.platform.governance import parse_policy
 
     return parse_policy({"version": 1, "boot": {"fail_closed": True}})
 
@@ -198,8 +198,8 @@ def test_unreadable_profile_governed_fleet_boot_aborts(profiles_dir, monkeypatch
     # the bind). For a GOVERNED fleet (ceiling present) it fails CLOSED to a
     # boot-abort: assert_profiles_within_ceiling raises PlatformCompositionError
     # rather than run with a silently-dropped restrictive profile.
-    from kiro_crew.platform.context import PlatformCompositionError
-    from kiro_crew.platform.governance_profiles import assert_profiles_within_ceiling
+    from aj_crew.platform.context import PlatformCompositionError
+    from aj_crew.platform.governance_profiles import assert_profiles_within_ceiling
 
     path = profiles_dir / "host.json"
     _write_host_profile(path)
@@ -215,7 +215,7 @@ def test_unreadable_profile_standalone_is_lenient(profiles_dir, monkeypatch):
     # on an unreadable profile blip. assert_profiles_within_ceiling(None) is a
     # no-op, and the unbound deny-all fallback simply drops out — the surface
     # falls to policy-only (matches pre-split standalone behavior, no regression).
-    from kiro_crew.platform.governance_profiles import (
+    from aj_crew.platform.governance_profiles import (
         HOST_SESSION_KEY,
         assert_profiles_within_ceiling,
     )
@@ -235,8 +235,8 @@ def test_invalid_utf8_profile_governed_fleet_boot_aborts(profiles_dir, monkeypat
     # UnicodeError), which is NOT an OSError. The read guard must catch
     # (OSError, UnicodeError) so it does not escape both handlers and crash boot
     # uncaught. Treated as present-but-unreadable → governed fleet boot-aborts.
-    from kiro_crew.platform.context import PlatformCompositionError
-    from kiro_crew.platform.governance_profiles import assert_profiles_within_ceiling
+    from aj_crew.platform.context import PlatformCompositionError
+    from aj_crew.platform.governance_profiles import assert_profiles_within_ceiling
 
     path = profiles_dir / "host.json"
     # Write raw invalid UTF-8 bytes (0xff is never valid UTF-8).
@@ -251,7 +251,7 @@ def test_invalid_utf8_profile_governed_fleet_boot_aborts(profiles_dir, monkeypat
 def test_invalid_utf8_profile_standalone_does_not_crash(profiles_dir):
     # F2-1: the SAME invalid-encoding file on a standalone host (no ceiling) must
     # be tolerated — resolve must not raise UnicodeDecodeError.
-    from kiro_crew.platform.governance_profiles import HOST_SESSION_KEY
+    from aj_crew.platform.governance_profiles import HOST_SESSION_KEY
 
     path = profiles_dir / "host.json"
     path.write_bytes(b'{"name": "host", "bind": {"type": "surface", "id": "\xff\xfe"}}')
@@ -561,14 +561,14 @@ def test_directory_unenumerable_preserves_last_known_good(profiles_dir, monkeypa
 
 def test_missing_profiles_dir_is_absent_no_warning(profiles_dir, monkeypatch, caplog):
     # A NON-EXISTENT profiles dir is the normal "no profiles configured" case
-    # (fresh KIROCREW_HOME). It must publish an empty index (policy-only) WITHOUT
+    # (fresh AJCREW_HOME). It must publish an empty index (policy-only) WITHOUT
     # a WARNING — sandbox/no-isolation tests assert no unexpected WARNING logs and
     # the earlier fix regressed them by warning on every such host.
     import logging
 
     monkeypatch.setattr(gp, "_PROFILES_DIR", profiles_dir.parent / "does-not-exist")
     gp.reset_store()
-    with caplog.at_level(logging.WARNING, logger="kiro_crew.platform.governance_profiles"):
+    with caplog.at_level(logging.WARNING, logger="aj_crew.platform.governance_profiles"):
         assert gp.resolve_active_scope("cli_chat") is None
     assert not [r for r in caplog.records if r.levelno == logging.WARNING], caplog.records
 
@@ -580,8 +580,8 @@ def test_cold_start_dir_error_governed_boot_aborts(profiles_dir, monkeypatch):
     # governed fleet boot-aborts.
     from pathlib import Path
 
-    from kiro_crew.platform.context import PlatformCompositionError
-    from kiro_crew.platform.governance_profiles import assert_profiles_within_ceiling
+    from aj_crew.platform.context import PlatformCompositionError
+    from aj_crew.platform.governance_profiles import assert_profiles_within_ceiling
 
     real_iterdir = Path.iterdir
     target_dir = str(profiles_dir)
@@ -642,14 +642,14 @@ def test_runtime_hot_added_unrecoverable_marks_health_incident(profiles_dir, mon
     import os
     from pathlib import Path
 
-    # The reload does `from kiro_crew.platform.context import current_context`
+    # The reload does `from aj_crew.platform.context import current_context`
     # locally, so patch the SOURCE symbol (not a governance_profiles attribute).
     monkeypatch.setattr(
-        "kiro_crew.platform.context.current_context",
+        "aj_crew.platform.context.current_context",
         lambda: type("C", (), {"governance": object()})(),
     )
     incidents: list = []
-    import kiro_crew.platform.governance_health as gh
+    import aj_crew.platform.governance_health as gh
 
     monkeypatch.setattr(
         gh, "mark_governance_incident", lambda k, detail="": incidents.append((k, detail))
@@ -693,7 +693,7 @@ def test_preserved_dir_error_then_delete_forces_rescan(profiles_dir, monkeypatch
     # fingerprints), not leave stale profiles active.
     from pathlib import Path
 
-    from kiro_crew.platform.governance_profiles import HOST_SESSION_KEY
+    from aj_crew.platform.governance_profiles import HOST_SESSION_KEY
 
     (profiles_dir / "host.json").write_text(
         json.dumps(
@@ -735,8 +735,8 @@ def test_non_directory_profiles_path_governed_boot_aborts(tmp_path, monkeypatch)
     # must NOT be treated as benign absence (which would drop all Level-2 narrowing
     # to policy-only). It routes through the unreadable/OSError branch → a governed
     # cold boot aborts.
-    from kiro_crew.platform.context import PlatformCompositionError
-    from kiro_crew.platform.governance_profiles import assert_profiles_within_ceiling
+    from aj_crew.platform.context import PlatformCompositionError
+    from aj_crew.platform.governance_profiles import assert_profiles_within_ceiling
 
     not_a_dir = tmp_path / "profiles"
     not_a_dir.write_text("i am a file, not a directory")  # NotADirectoryError on iterdir
@@ -750,7 +750,7 @@ def test_non_directory_profiles_path_governed_boot_aborts(tmp_path, monkeypatch)
 def test_non_directory_profiles_path_standalone_is_lenient(tmp_path, monkeypatch):
     # The same misconfig on a standalone host (no ceiling) must not crash — it
     # yields policy-only (empty index), matching pre-split lenient behavior.
-    from kiro_crew.platform.governance_profiles import (
+    from aj_crew.platform.governance_profiles import (
         HOST_SESSION_KEY,
         assert_profiles_within_ceiling,
     )
@@ -1046,7 +1046,7 @@ def test_index_published_atomically_as_one_snapshot(profiles_dir):
     # new names with old bindings after a rename and for_bind would miss the new
     # binding (fail-open to policy-only). Assert the store exposes a single _snap
     # object and that a reader reads all fields from it consistently.
-    from kiro_crew.platform.governance_profiles import _Snapshot
+    from aj_crew.platform.governance_profiles import _Snapshot
 
     _write(
         profiles_dir,
@@ -1123,7 +1123,7 @@ def test_metadata_change_reload_walks_dir_once(profiles_dir, monkeypatch):
     # reload.
     import os
 
-    import kiro_crew.platform.governance_profiles as gpm
+    import aj_crew.platform.governance_profiles as gpm
 
     path = profiles_dir / "cron.json"
     path.write_text(
@@ -1162,7 +1162,7 @@ def test_absent_profile_still_yields_policy_only(profiles_dir):
     # GUARDRAIL: the fix must NOT manufacture a deny for a surface that has NO
     # profile at all. An absent host profile → resolve_active_scope returns None
     # (attended/host surface, policy ceiling alone governs), NOT a false deny.
-    from kiro_crew.platform.governance_profiles import HOST_SESSION_KEY
+    from aj_crew.platform.governance_profiles import HOST_SESSION_KEY
 
     # profiles_dir is empty (no host.json).
     assert gp.resolve_active_scope(HOST_SESSION_KEY) is None
@@ -1173,7 +1173,7 @@ def test_vanished_profile_mid_reload_is_absent_not_deny(profiles_dir, monkeypatc
     # (skipped), not as a present-but-unreadable deny — a missing file is not a
     # policy. FileNotFoundError is a subclass of OSError, so the reload must
     # distinguish it from the genuine-unreadable case.
-    from kiro_crew.platform.governance_profiles import HOST_SESSION_KEY
+    from aj_crew.platform.governance_profiles import HOST_SESSION_KEY
 
     path = profiles_dir / "host.json"
     path.write_text(
@@ -1817,8 +1817,8 @@ def test_fallback_profile_names_bind_preserved_unreadable(profiles_dir, monkeypa
 
 
 def test_policy_fallback_key_parses_into_ceiling():
-    from kiro_crew.platform.context import PlatformCompositionError
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.platform.context import PlatformCompositionError
+    from aj_crew.platform.governance import parse_policy
 
     # Absent → None: the deny-all default is preserved (public edition unchanged).
     c0 = parse_policy({"version": 1, "boot": {"fail_closed": True}})
@@ -1874,7 +1874,7 @@ def _install_ceiling(monkeypatch, ceiling):
     """Point governance_profiles' current_context() at a ceiling for the test."""
     import types
 
-    from kiro_crew.platform import context as ctx_mod
+    from aj_crew.platform import context as ctx_mod
 
     monkeypatch.setattr(
         ctx_mod, "current_context", lambda: types.SimpleNamespace(governance=ceiling)
@@ -1885,7 +1885,7 @@ def test_unusable_profile_uses_declared_loosened_fallback(profiles_dir, monkeypa
     # With a ceiling that declares a loosened fallback (deny only channels+apps),
     # an unusable profile FILE falls back to THAT profile, NOT deny-all: the basic
     # operational planes stay permitted, only channels + apps are denied.
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.platform.governance import parse_policy
 
     ceiling = parse_policy(
         {
@@ -1920,7 +1920,7 @@ def test_unusable_profile_uses_declared_loosened_fallback(profiles_dir, monkeypa
 def test_unusable_profile_defaults_to_deny_all_without_declared_fallback(profiles_dir, monkeypatch):
     # No declared fallback (governance present but fallback_profile is None) →
     # deny-all is preserved: the public/default posture is unchanged.
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.platform.governance import parse_policy
 
     _install_ceiling(monkeypatch, parse_policy({"version": 1, "boot": {"fail_closed": True}}))
     _write(
@@ -1943,8 +1943,8 @@ def test_declared_fallback_applies_after_governance_composes(profiles_dir, monke
     # silently ignoring the declared fallback (the boot-order race the fix closes).
     import types
 
-    from kiro_crew.platform import context as ctx_mod
-    from kiro_crew.platform.governance import parse_policy
+    from aj_crew.platform import context as ctx_mod
+    from aj_crew.platform.governance import parse_policy
 
     _write(
         profiles_dir,

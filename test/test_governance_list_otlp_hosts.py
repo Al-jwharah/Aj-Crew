@@ -14,7 +14,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.platform.governance import parse_policy, resolve
+from aj_crew.platform.governance import parse_policy, resolve
 
 
 def _policy(scope: str, body: dict) -> dict:
@@ -31,13 +31,13 @@ def _allow(scope: str, key: str, allowed: str) -> dict:
 
 @pytest.fixture
 def isolated_home(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return tmp_path
 
 
 @pytest.fixture
 def fake_sel(monkeypatch):
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     fake = MagicMock()
     monkeypatch.setattr(sel_mod, "sel", lambda: fake)
@@ -45,8 +45,8 @@ def fake_sel(monkeypatch):
 
 
 def _install_policy(monkeypatch, doc: dict | None) -> None:
-    from kiro_crew.metrics import provider
-    from kiro_crew.platform import context as pc
+    from aj_crew.metrics import provider
+    from aj_crew.platform import context as pc
 
     ceiling = parse_policy(doc) if doc is not None else None
     ctx = SimpleNamespace(governance=ceiling)
@@ -79,7 +79,7 @@ _CFG = SimpleNamespace(otlp_endpoint="")
 
 def _provider_with(monkeypatch, dests, **extra):
     """Point ``metrics.provider`` at a telemetry provider that supplies *dests*."""
-    from kiro_crew.metrics import provider
+    from aj_crew.metrics import provider
 
     prov = SimpleNamespace(otlp_destinations=lambda cfg: list(dests), **extra)
     monkeypatch.setattr(provider, "_telemetry_provider", lambda: prov)
@@ -138,8 +138,8 @@ class TestTelemetryDestinations:
         """The MCP gateway daemon installs no context; the provider the bootstrap
         composes for it carries the companion's ceiling, for the build and for
         every export."""
-        from kiro_crew.platform import context as pc
-        from kiro_crew.platform.bootstrap import _PolicyBoundTelemetry
+        from aj_crew.platform import context as pc
+        from aj_crew.platform.bootstrap import _PolicyBoundTelemetry
 
         def _raise():
             raise pc.PlatformCompositionError("no context")
@@ -158,9 +158,9 @@ class TestTelemetryDestinations:
     def test_a_process_without_a_context_still_writes_the_audit_row(self, monkeypatch) -> None:
         """With no context the SEL's own redaction shim raises; the row goes
         through the composed companion's redaction instead of being dropped."""
-        from kiro_crew import sel as sel_mod
-        from kiro_crew.platform import context as pc
-        from kiro_crew.platform.bootstrap import _PolicyBoundTelemetry
+        from aj_crew import sel as sel_mod
+        from aj_crew.platform import context as pc
+        from aj_crew.platform.bootstrap import _PolicyBoundTelemetry
 
         def _raise():
             raise pc.PlatformCompositionError("no context")
@@ -206,7 +206,7 @@ class TestTelemetryDestinations:
         pytest.importorskip("opentelemetry.sdk.metrics.export")
         from opentelemetry.sdk.metrics.export import MetricExportResult
 
-        from kiro_crew.metrics import otlp_governance
+        from aj_crew.metrics import otlp_governance
 
         sent: list[object] = []
         exporter = SimpleNamespace(export=lambda data, **kw: sent.append(data) or "sent")
@@ -315,7 +315,7 @@ class TestEndpointReadings:
     def test_the_shared_host_matcher_is_unchanged(self) -> None:
         """``network.egress`` shares the matcher, so these lists change nothing there:
         a Unicode entry still matches only the Unicode spelling."""
-        from kiro_crew.platform.governance import _match_host
+        from aj_crew.platform.governance import _match_host
 
         assert _match_host("b\u00fccher.example", "b\u00fc*.example")
         assert not _match_host("xn--bcher-kva.example", "b\u00fccher.example")
@@ -345,7 +345,7 @@ class TestUnevaluableCeiling:
         self, fake_sel, monkeypatch
     ) -> None:
         """A daemon whose policy could not be loaded must not export as if ungoverned."""
-        from kiro_crew.platform import context as pc
+        from aj_crew.platform import context as pc
 
         def _raise():
             raise pc.PlatformCompositionError("policy unreadable")
@@ -362,7 +362,7 @@ class TestWrongShape:
     @pytest.mark.parametrize("value", [["otel.corp.example"], "otel.corp.example", 1, None])
     def test_a_host_list_in_the_wrong_shape_fails_to_load(self, value) -> None:
         """A malformed host list must not load as no list, which permits every host."""
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         with pytest.raises(PlatformCompositionError, match="scopes.otlp_hosts must be an object"):
             parse_policy(_policy("capabilities.telemetry", {"scopes": {"otlp_hosts": value}}))
@@ -373,7 +373,7 @@ class TestNoCeilingAsksTheEvaluator:
         """With no policy, the build and each export take ``resolve``'s answer."""
         from types import SimpleNamespace
 
-        from kiro_crew.metrics import otlp_governance as og
+        from aj_crew.metrics import otlp_governance as og
 
         dest = SimpleNamespace(name="d", endpoint="https://otel.corp.example/v1/metrics")
         assert og.governed_destinations([dest], None) == (dest,)
@@ -381,7 +381,7 @@ class TestNoCeilingAsksTheEvaluator:
         def _deny(*_a, **_k):
             return SimpleNamespace(permitted=False, rule="baseline", reason="denied")
 
-        monkeypatch.setattr("kiro_crew.platform.governance.resolve", _deny)
+        monkeypatch.setattr("aj_crew.platform.governance.resolve", _deny)
         assert og.governed_destinations([dest], None) == ()
 
         sent = []
@@ -436,7 +436,7 @@ class TestUnmatchableEntriesAreRefused:
         ],
     )
     def test_the_policy_fails_to_load(self, mode, entry) -> None:
-        from kiro_crew.platform.context import PlatformCompositionError
+        from aj_crew.platform.context import PlatformCompositionError
 
         doc = _policy(self._SCOPE, {"scopes": {"otlp_hosts": {"mode": mode, mode: [entry]}}})
         with pytest.raises(PlatformCompositionError, match=r"otlp_hosts"):

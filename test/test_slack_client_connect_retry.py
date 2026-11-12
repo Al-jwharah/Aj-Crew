@@ -22,7 +22,7 @@ from slack_sdk.http_retry.state import RetryState
 from slack_sdk.web import WebClient
 from slack_sdk.web.async_client import AsyncWebClient
 
-from kiro_crew.slack.client import RealSlackClient
+from aj_crew.slack.client import RealSlackClient
 
 _POST_LINE = "POST /api/chat.postMessage "
 _OK_BODY = b'{"ok": true, "ts": "1700000000.000100", "channel": "C0LANE51"}'
@@ -165,7 +165,7 @@ def _a_real_connector_error() -> aiohttp.ClientConnectorError:
 
 
 def test_a_connection_that_never_reached_slack_is_retried_once():
-    from kiro_crew.slack.client import _ConnectSetupRetryHandler
+    from aj_crew.slack.client import _ConnectSetupRetryHandler
 
     handler = _ConnectSetupRetryHandler(max_retry_count=1)
     connector_error = _a_real_connector_error()

@@ -1,10 +1,10 @@
 """The work-ledger routes' facade keeps the patch seams the one module had.
 
-``kiro_crew.dashboard.handlers.work_ledger`` is a mirror facade
-(:mod:`kiro_crew._facade_mirror`) over the ``kiro_crew.dashboard.handlers.work_ledger_<role>``
+``aj_crew.dashboard.handlers.work_ledger`` is a mirror facade
+(:mod:`aj_crew._facade_mirror`) over the ``aj_crew.dashboard.handlers.work_ledger_<role>``
 owners. Its callers (the deferred route binder, session control and the Crew board reader
 among them) and tests still reach every name as
-``kiro_crew.dashboard.handlers.work_ledger.<name>``, and the moved code
+``aj_crew.dashboard.handlers.work_ledger.<name>``, and the moved code
 reads its names as plain module globals, so a patch through the facade reaches that code
 only because the mirror writes it into every module holding the name.
 
@@ -14,7 +14,7 @@ through it reaches every module holding it; the owners are the ``work_ledger_*.p
 siblings except ``work_ledger_board.py`` (the Crew page's read, which imports the facade),
 loaded lowest layer first, and only the family imports them; the facade keeps no code of
 its own and serves every route the deferred binder names; the handlers package still
-loads none of the family at boot; the names it serves from the rest of ``kiro_crew`` stay
+loads none of the family at boot; the names it serves from the rest of ``aj_crew`` stay
 visible to type checkers; the family logs under the facade's name; the moved dataclass
 resolves through its own module; and the facade still runs as ``python -m``.
 """
@@ -38,10 +38,10 @@ import owner_import_scan
 import pytest
 import source_corpus
 
-import kiro_crew
-from kiro_crew import _facade_mirror
-from kiro_crew.dashboard.handlers import work_ledger
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew
+from aj_crew import _facade_mirror
+from aj_crew.dashboard.handlers import work_ledger
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_work_ledger_handler_facade")
 
@@ -49,10 +49,10 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_work_ledger_handler_facade"
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.dashboard.handlers.work_ledger"
-PACKAGE = "kiro_crew.dashboard.handlers"
+FACADE = "aj_crew.dashboard.handlers.work_ledger"
+PACKAGE = "aj_crew.dashboard.handlers"
 HANDLERS_DIR = Path(work_ledger.__file__).resolve().parent
-_SRC = Path(kiro_crew.__file__).resolve().parent
+_SRC = Path(aj_crew.__file__).resolve().parent
 _THIS_FILE = Path(__file__).resolve()
 
 #: The ``work_ledger_*.py`` sibling that is NOT an owner: the Crew page's masked read of
@@ -212,7 +212,7 @@ def test_the_facade_keeps_the_default_read_path_and_no_code_of_its_own() -> None
 def test_every_route_the_deferred_binder_names_is_served_by_an_owner() -> None:
     """The binder resolves each handler BY NAME on the facade at the first request, so each
     name it binds must resolve to a coroutine function an owner defines."""
-    mcp_routes = importlib.import_module("kiro_crew.dashboard.server_runtime.mcp_routes")
+    mcp_routes = importlib.import_module("aj_crew.dashboard.server_runtime.mcp_routes")
     bound = {
         node.args[0].value
         for node in ast.walk(ast.parse(inspect.getsource(mcp_routes)))
@@ -231,7 +231,7 @@ def test_every_route_the_deferred_binder_names_is_served_by_an_owner() -> None:
 
 
 def test_the_handlers_package_loads_no_member_of_the_family(tmp_path: Path) -> None:
-    """``kirocrew-work`` is an opt-in MCP server, so the handlers package -- the gateway's
+    """``ajcrew-work`` is an opt-in MCP server, so the handlers package -- the gateway's
     boot path -- imports neither the facade nor any owner; the deferred binder does, on the
     first request."""
     env = dict(os.environ)
@@ -239,7 +239,7 @@ def test_the_handlers_package_loads_no_member_of_the_family(tmp_path: Path) -> N
     env["PYTHONPATH"] = os.pathsep.join(p for p in (src, env.get("PYTHONPATH", "")) if p)
     probe = (
         "import json, sys\n"
-        "import kiro_crew.dashboard.handlers  # noqa: F401\n"
+        "import aj_crew.dashboard.handlers  # noqa: F401\n"
         "print(json.dumps(sorted(m for m in sys.modules\n"
         f"    if m.startswith({FACADE!r}))))\n"
     )
@@ -265,13 +265,13 @@ def _home_imports() -> dict[str, tuple[str, str]]:
         for node in ast.parse(path.read_text(encoding="utf-8")).body:
             if isinstance(node, ast.Import):
                 for alias in node.names:
-                    if alias.asname and alias.name.startswith("kiro_crew"):
+                    if alias.asname and alias.name.startswith("aj_crew"):
                         found.setdefault(alias.asname, (alias.name, ""))
                 continue
             if not isinstance(node, ast.ImportFrom) or not node.module:
                 continue
             home = f"{PACKAGE}.{node.module}" if node.level == 1 else node.module
-            if not home.startswith("kiro_crew") or home in family:
+            if not home.startswith("aj_crew") or home in family:
                 continue
             for alias in node.names:
                 if f"{home}.{alias.name}" not in family:
@@ -299,7 +299,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
     """At BASE the module bound these by import, so ``from
-    kiro_crew.dashboard.handlers.work_ledger import WorkLedgerError`` type-checked. Now an
+    aj_crew.dashboard.handlers.work_ledger import WorkLedgerError`` type-checked. Now an
     owner holds them, so the facade names each one from its home module under
     ``TYPE_CHECKING``, and nothing else."""
     served = set(_index().exports)
@@ -362,19 +362,17 @@ def test_only_the_family_imports_an_owner() -> None:
 
 
 def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None:
-    root = tmp_path / "kiro_crew"
-    owners = (f"kiro_crew.dashboard.handlers.work_ledger_{r}" for r in ("caller", "read"))
+    root = tmp_path / "aj_crew"
+    owners = (f"aj_crew.dashboard.handlers.work_ledger_{r}" for r in ("caller", "read"))
     sources = {
         root
         / "pkg"
-        / "caller.py": (
-            "from kiro_crew.dashboard.handlers.work_ledger_caller import _caller_key\n"
-        ),
-        root / "other.py": "from kiro_crew.dashboard.handlers import work_ledger_read as r\n",
+        / "caller.py": ("from aj_crew.dashboard.handlers.work_ledger_caller import _caller_key\n"),
+        root / "other.py": "from aj_crew.dashboard.handlers import work_ledger_read as r\n",
         root / "dashboard" / "handlers" / "relative.py": "from .work_ledger_read import x\n",
-        root / "board_user.py": "from kiro_crew.dashboard.handlers import work_ledger_board\n",
+        root / "board_user.py": "from aj_crew.dashboard.handlers import work_ledger_board\n",
         root
-        / "facade_user.py": ("from kiro_crew.dashboard.handlers.work_ledger import _caller_key\n"),
+        / "facade_user.py": ("from aj_crew.dashboard.handlers.work_ledger import _caller_key\n"),
     }
     assert _owner_importers(sources.items(), root, owners) == {
         "pkg/caller.py",
@@ -384,7 +382,7 @@ def test_the_owner_import_scan_finds_an_outside_importer(tmp_path: Path) -> None
 
 
 def test_the_facade_runs_as_a_module(tmp_path: Path) -> None:
-    """``python -m kiro_crew.dashboard.handlers.work_ledger`` imported cleanly before the
+    """``python -m aj_crew.dashboard.handlers.work_ledger`` imported cleanly before the
     split; the mirror installs on ``__main__`` too, because every member binds one logger
     by name."""
     env = dict(os.environ)

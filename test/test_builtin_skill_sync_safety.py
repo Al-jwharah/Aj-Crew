@@ -26,16 +26,16 @@ from pathlib import Path
 import pytest
 from windows_sim import replace_sharing_violation
 
-from conftest import requires_symlinks
-from kiro_crew import atomic_write as aw
-from kiro_crew import platform_compat
-from kiro_crew import skills as skills_mod
-from kiro_crew.skills import (
+from aj_crew import atomic_write as aw
+from aj_crew import platform_compat
+from aj_crew import skills as skills_mod
+from aj_crew.skills import (
     _PROVENANCE_MARKER,
     _ensure_builtin_skills,
     _record_builtin_provenance,
     _skill_tree_fingerprint,
 )
+from conftest import requires_symlinks
 
 
 def _make_skill(root: Path, name: str, body: str, extra: dict[str, str] | None = None) -> Path:
@@ -282,16 +282,16 @@ class TestStaleCleanupGuard:
     def test_a_dropped_nested_builtin_is_retired_beside_itself(
         self, builtin_root: Path, base: Path
     ) -> None:
-        # kirocrew-codebase-refactor is not shipped: an unchanged installed
+        # ajcrew-codebase-refactor is not shipped: an unchanged installed
         # copy is parked next to it, inside the family directory.
-        name = "kirocrew-dev/kirocrew-codebase-refactor"
+        name = "ajcrew-dev/ajcrew-codebase-refactor"
         _make_skill(base, name, "old builtin")
         _record_builtin_provenance(base / name)
 
         _ensure_builtin_skills(base)
 
         assert not (base / name).exists()
-        parked = base / "kirocrew-dev" / ".kirocrew-codebase-refactor.superseded"
+        parked = base / "ajcrew-dev" / ".ajcrew-codebase-refactor.superseded"
         assert "old builtin" in (parked / "SKILL.md").read_text(encoding="utf-8")
 
     @requires_symlinks
@@ -301,15 +301,15 @@ class TestStaleCleanupGuard:
         # The family directory itself is a user-made link: nothing is moved
         # through it, so the linked tree keeps its copy.
         outside = tmp_path / "outside-family"
-        _make_skill(outside, "kirocrew-codebase-refactor", "linked copy")
-        _record_builtin_provenance(outside / "kirocrew-codebase-refactor")
+        _make_skill(outside, "ajcrew-codebase-refactor", "linked copy")
+        _record_builtin_provenance(outside / "ajcrew-codebase-refactor")
         base.mkdir(parents=True, exist_ok=True)
-        (base / "kirocrew-dev").symlink_to(outside, target_is_directory=True)
+        (base / "ajcrew-dev").symlink_to(outside, target_is_directory=True)
 
         _ensure_builtin_skills(base)
 
-        assert (outside / "kirocrew-codebase-refactor" / "SKILL.md").is_file()
-        assert not (outside / ".kirocrew-codebase-refactor.superseded").exists()
+        assert (outside / "ajcrew-codebase-refactor" / "SKILL.md").is_file()
+        assert not (outside / ".ajcrew-codebase-refactor.superseded").exists()
 
     @requires_symlinks
     def test_a_parked_slot_behind_a_linked_family_is_not_disposed(
@@ -318,10 +318,10 @@ class TestStaleCleanupGuard:
         # Only the parked copy is left, inside the linked family's target: the
         # disposal of a parked slot must not reach through the link either.
         outside = tmp_path / "outside-family"
-        slot = outside / ".kirocrew-codebase-refactor.superseded"
-        _make_skill(outside, ".kirocrew-codebase-refactor.superseded", "parked copy")
+        slot = outside / ".ajcrew-codebase-refactor.superseded"
+        _make_skill(outside, ".ajcrew-codebase-refactor.superseded", "parked copy")
         base.mkdir(parents=True, exist_ok=True)
-        (base / "kirocrew-dev").symlink_to(outside, target_is_directory=True)
+        (base / "ajcrew-dev").symlink_to(outside, target_is_directory=True)
 
         _ensure_builtin_skills(base)
 
@@ -440,7 +440,7 @@ class TestLegitimateUpdatesStillHappen:
         # only touches a bundled script leaves SKILL.md byte-identical with its
         # packaged mtime, and a manifest-only update gate then reports "up to
         # date" forever -- the install keeps executing superseded code. Broke
-        # kirocrew-prepare-pr in practice: its extractor was fixed in the package while
+        # ajcrew-prepare-pr in practice: its extractor was fixed in the package while
         # every install kept the previous copy and failed against CI's current
         # workflow.
         src = _make_skill(builtin_root, "helper", "v1", {"scripts/tool.py": "# v1"})
@@ -668,7 +668,7 @@ class TestFingerprint:
         # platform_compat.open_file_no_reparse -- CreateFileW on Windows, so a patch on
         # os.open alone would leave the Windows shard reading the file happily and
         # fingerprinting a tree this test needs to be unprovable. Deny at that seam too.
-        from kiro_crew import platform_compat as _pc
+        from aj_crew import platform_compat as _pc
 
         real_no_reparse = _pc.open_file_no_reparse
 
@@ -1128,7 +1128,7 @@ class TestStandaloneCliPathsSync:
     """Gateway-less async entry points must run the explicit sync seam.
 
     Construction-time sync skips itself on a running event loop; the gateway
-    compensates at startup, but standalone ``kirocrew run`` and the eval
+    compensates at startup, but standalone ``ajcrew run`` and the eval
     runner have no gateway to own the sync and must call the seam themselves
     (off-loop, mirroring the gateway pattern).
     """
@@ -1136,7 +1136,7 @@ class TestStandaloneCliPathsSync:
     def test_run_task_uses_explicit_off_loop_sync(self) -> None:
         import inspect
 
-        from kiro_crew import cli_server
+        from aj_crew import cli_server
 
         src = inspect.getsource(cli_server._run_task)
         assert "SkillsLoader(install_builtins=False)" in src
@@ -1145,7 +1145,7 @@ class TestStandaloneCliPathsSync:
     def test_eval_runner_uses_explicit_off_loop_sync(self) -> None:
         import inspect
 
-        from kiro_crew.eval import runner as eval_runner
+        from aj_crew.eval import runner as eval_runner
 
         src = inspect.getsource(eval_runner)
         assert "install_builtins=False" in src
@@ -1361,7 +1361,7 @@ def _inject_on_trigger_off(dest_dir: Path) -> bool:
     Mirrors how the loader reads it (`_dest_opted_out_of_injection`): a
     top-level ``inject_on_trigger: false`` frontmatter line.
     """
-    from kiro_crew.frontmatter import SKILL_LOADER, parse_frontmatter
+    from aj_crew.frontmatter import SKILL_LOADER, parse_frontmatter
 
     meta = parse_frontmatter((dest_dir / "SKILL.md").read_text(encoding="utf-8"), SKILL_LOADER)
     return str(meta.get("inject_on_trigger", "")).strip().lower() == "false"
@@ -1432,7 +1432,7 @@ def _currency(name: str) -> str:
 
 
 class TestContextBudgetSwitchSurvivesUpdate:
-    """The per-skill Context-budget switch must survive a Kiro Crew update.
+    """The per-skill Context-budget switch must survive an Aj Crew update.
 
     The switch is the one user-mutable setting on a built-in skill: turning it
     off writes ``inject_on_trigger: false`` into the installed SKILL.md
@@ -1802,7 +1802,7 @@ class TestContextBudgetSwitchSurvivesUpdate:
         assert (src / "SKILL.md").stat().st_mtime > v2_mtime
 
     def test_rewrite_keeps_the_file_newline_style(self) -> None:
-        from kiro_crew.skill_runtime.authoring import rewrite_inject_on_trigger
+        from aj_crew.skill_runtime.authoring import rewrite_inject_on_trigger
 
         lf = "---\nname: x\ndescription: d\n---\nbody\n"
         crlf = lf.replace("\n", "\r\n")
@@ -1909,11 +1909,11 @@ class TestContextBudgetSwitchSurvivesUpdate:
         _make_skill(tmp_path, "web-verify", "v1")
         skill_md = tmp_path / "web-verify" / "SKILL.md"
         try:
-            os.setxattr(str(skill_md), "user.kirocrew_test", b"keepme")
+            os.setxattr(str(skill_md), "user.ajcrew_test", b"keepme")
         except OSError:
             pytest.skip("filesystem has no user xattr support")
 
         loader = skills_mod.SkillsLoader(skills_path=tmp_path, install_builtins=False)
         assert loader.set_inject_on_trigger("web-verify", False) is True
         assert _inject_on_trigger_off(tmp_path / "web-verify")
-        assert os.getxattr(str(skill_md), "user.kirocrew_test") == b"keepme"
+        assert os.getxattr(str(skill_md), "user.ajcrew_test") == b"keepme"

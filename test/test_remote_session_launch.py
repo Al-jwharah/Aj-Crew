@@ -22,16 +22,16 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.acp import runtime as runtime_mod
-from kiro_crew.acp.kas_permissions import KAS_TOOL_IDS_BY_KIRO_TOOL
-from kiro_crew.acp.runtime import AcpRuntime, AcpRuntimeError
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS
-from kiro_crew.coder import remote_worker
-from kiro_crew.coder.client import CoderClientError
-from kiro_crew.remote_session import link as link_mod
-from kiro_crew.remote_session import workspace_tools
-from kiro_crew.remote_session.link import RemoteLink
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.acp import runtime as runtime_mod
+from aj_crew.acp.kas_permissions import KAS_TOOL_IDS_BY_KIRO_TOOL
+from aj_crew.acp.runtime import AcpRuntime, AcpRuntimeError
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS
+from aj_crew.coder import remote_worker
+from aj_crew.coder.client import CoderClientError
+from aj_crew.remote_session import link as link_mod
+from aj_crew.remote_session import workspace_tools
+from aj_crew.remote_session.link import RemoteLink
+from aj_crew.testing.wait import async_wait_until, await_until
 
 pytestmark = pytest.mark.skipif(sys.platform == "win32", reason="POSIX guest shell")
 # The guest's worker-identity check reads /proc/<pid>/cmdline; Coder guests are Linux.
@@ -138,7 +138,7 @@ async def test_install_writes_every_worker_file_in_one_round_trip(tmp_path):
     await launch.install()
     assert len(commands) == 1
     here = Path(remote_worker.wire.__file__).resolve().parent
-    guest = tmp_path / "guest" / ".kirocrew-worker"
+    guest = tmp_path / "guest" / ".ajcrew-worker"
     for name in remote_worker._WORKER_FILES:
         assert (guest / name).read_bytes() == (here / name).read_bytes()
         assert stat_mode(guest / name) == 0o600
@@ -256,7 +256,7 @@ async def test_end_to_end_token_callback_and_echo(tmp_path, service_launch):
             await link.write(line)
             assert await _link_line(link) == line
         # The guest unlinked its copy of the one-use secret.
-        assert not (tmp_path / "guest/.kirocrew-worker/sessions/sess-e2e.key").exists()
+        assert not (tmp_path / "guest/.ajcrew-worker/sessions/sess-e2e.key").exists()
         link.close_input()
         await async_wait_until(lambda: link.state == link_mod.FINISHED, describe=lambda: link.state)
     finally:
@@ -270,7 +270,7 @@ async def test_link_reports_lost_when_worker_is_gone(tmp_path):
     launch.link_options = {"keepalive": 0.2, "stall": 0.5, "lease": 2}
     secret, port = await _start_worker(launch, "sess-lost")
     # The host is reclaimed: kill the worker's session so nothing answers the dials.
-    port_file = tmp_path / "guest/.kirocrew-worker/sessions/sess-lost.port"
+    port_file = tmp_path / "guest/.ajcrew-worker/sessions/sess-lost.port"
     pid = int(port_file.read_text().split()[1])
     try:
         os.killpg(pid, signal.SIGKILL)  # setsid made it a group leader (Linux)
@@ -353,16 +353,16 @@ def _runtime(backend=ACP_BACKEND_KAS, workspace=_WS):
 
 def test_remote_workspace_unmounts_every_builtin_tool():
     rt = _runtime()
-    servers = [{"name": "kirocrew-core"}, {"name": "workspace"}]
+    servers = [{"name": "ajcrew-core"}, {"name": "workspace"}]
     agents = [
-        {"id": "a", "prompt": "p", "tools": ["read", "write", "shell", "@kirocrew-core", "@x/y"]},
+        {"id": "a", "prompt": "p", "tools": ["read", "write", "shell", "@ajcrew-core", "@x/y"]},
         {"id": "b", "prompt": "", "tools": "*"},
         {"id": "c", "tools": ["*", "read"]},
     ]
     out = AcpRuntime._remote_workspace_agents(rt, agents, servers)
     # The core grant is narrowed to non-local-only tools (test_remote_session_local_only_tools.py).
-    core = [t for t in out[1]["tools"] if t.startswith("@kirocrew-core/")]
-    assert core and "@kirocrew-core/file_send" not in core
+    core = [t for t in out[1]["tools"] if t.startswith("@ajcrew-core/")]
+    assert core and "@ajcrew-core/file_send" not in core
     # read + write + shell: their workspace tools, not glob/grep, no whole grant.
     assert out[0]["tools"] == [
         *core,
@@ -432,7 +432,7 @@ def test_remote_workspace_grants_follow_the_agents_own_allowlist(tools, expected
 def test_an_agent_with_a_spec_allowlist_is_refused_on_a_remote_workspace(key):
     """The gate binds those allowlists to built-in calls, which a remote workspace
     replaces with MCP tools, so the agent would run without them."""
-    from kiro_crew.session_environment import REMOTE_AGENT_RESTRICTED
+    from aj_crew.session_environment import REMOTE_AGENT_RESTRICTED
 
     with pytest.raises(AcpRuntimeError, match="limit shell commands or file paths"):
         AcpRuntime._remote_workspace_agents(
@@ -461,9 +461,9 @@ def test_local_session_is_untouched():
 def test_remote_workspace_git_notice_is_true_on_every_tier(monkeypatch, tier, lent):
     """The proxy reads the tier per request, so the notice is tier-neutral: it never
     promises private repositories, and it names what ``strict`` refuses."""
-    from kiro_crew import sandbox
-    from kiro_crew.config.loader import config_dir
-    from kiro_crew.remote_session import git_gateway
+    from aj_crew import sandbox
+    from aj_crew.config.loader import config_dir
+    from aj_crew.remote_session import git_gateway
 
     (config_dir() / "config.json").write_text(
         json.dumps({"agent": {"sandbox": tier}}), encoding="utf-8"
@@ -531,7 +531,7 @@ async def test_end_to_end_mcp_tools_over_the_tunnel(tmp_path):
         return result["content"][0]["text"], result["isError"]
 
     try:
-        assert await _mcp_initialize(bridge) == "kirocrew-workspace"
+        assert await _mcp_initialize(bridge) == "ajcrew-workspace"
         names = {t["name"] for t in (await call("tools/list"))["result"]["tools"]}
         assert {"read_file", "write_file", "edit_file", "run_command", "grep"} <= names
         assert (await tool("write_file", path="src/a.txt", content="hello\nworld\n"))[1] is False
@@ -577,12 +577,12 @@ async def test_the_server_command_works_every_time_it_is_launched(tmp_path):
     server = await launch.workspace_server(str(tmp_path / "guest" / "p"))
     server = _with_token(launch, server, tmp_path / "scratch")
     argv = [server["command"], *server["args"]]
-    sessions = tmp_path / "guest" / ".kirocrew-worker" / "sessions"
+    sessions = tmp_path / "guest" / ".ajcrew-worker" / "sessions"
     try:
         spare_id = (await launch.relay._spare)[0]
         first, second = await _spawn_bridge(argv), await _spawn_bridge(argv)
         for bridge in (first, second):
-            assert await _mcp_initialize(bridge) == "kirocrew-workspace"
+            assert await _mcp_initialize(bridge) == "ajcrew-workspace"
         # Two connected workers plus a spare; the first launch used the spare.
         await launch.relay._spare
         assert len(list(sessions.glob("*.port"))) == 3
@@ -590,7 +590,7 @@ async def test_the_server_command_works_every_time_it_is_launched(tmp_path):
         await _end(first)
         await _end(second)
         third = await _spawn_bridge(argv)
-        assert await _mcp_initialize(third) == "kirocrew-workspace"
+        assert await _mcp_initialize(third) == "ajcrew-workspace"
         await _end(third)
     finally:
         await launch.relay.close()
@@ -612,7 +612,7 @@ async def test_a_replacement_waits_for_an_unconfirmed_worker_stop(tmp_path):
     root = str(tmp_path / "guest" / "p")
     await launch.workspace_server(root)
     spare_id = (await launch.relay._spare)[0]
-    sessions = tmp_path / "guest" / ".kirocrew-worker" / "sessions"
+    sessions = tmp_path / "guest" / ".ajcrew-worker" / "sessions"
     real_run = launch.shell.run
     refused: list[str] = []
 
@@ -648,7 +648,7 @@ async def test_a_second_runtime_on_the_binding_leaves_the_live_relays_workers(tm
     parent = _launch(tmp_path, "sess-shared")
     await parent.workspace_server(root)
     spare_id = (await parent.relay._spare)[0]
-    sessions = tmp_path / "guest" / ".kirocrew-worker" / "sessions"
+    sessions = tmp_path / "guest" / ".ajcrew-worker" / "sessions"
     child = remote_worker.RemoteWorkerLaunch("sess-shared", parent.shell, orphan_timeout=60)
     await child.workspace_server(root)
     try:
@@ -665,7 +665,7 @@ async def test_the_stale_worker_reaper_waits_for_each_exit(tmp_path):
     # A worker left by an earlier gateway process may still be running a command, so
     # the reaper returns only once it has exited.
     shell = LocalShell(tmp_path / "guest")
-    sessions = tmp_path / "guest" / ".kirocrew-worker" / "sessions"
+    sessions = tmp_path / "guest" / ".ajcrew-worker" / "sessions"
     sessions.mkdir(parents=True)
     record = sessions / "sess-stale-gzzzzzz-0001.port"
     ready = tmp_path / "ready"
@@ -702,7 +702,7 @@ async def test_a_stop_that_times_out_keeps_the_workers_record(tmp_path, monkeypa
     assert short_wait != remote_worker._WAIT_GONE
     monkeypatch.setattr(remote_worker, "_WAIT_GONE", short_wait)
     shell = LocalShell(tmp_path / "guest")
-    sessions = tmp_path / "guest" / ".kirocrew-worker" / "sessions"
+    sessions = tmp_path / "guest" / ".ajcrew-worker" / "sessions"
     sessions.mkdir(parents=True)
     record = sessions / "sess-paused-g000000-0001.port"
     ready = tmp_path / "ready"
@@ -760,7 +760,7 @@ async def test_a_failed_reap_refuses_the_start_and_is_retried(tmp_path):
 async def test_the_relay_refuses_a_connection_without_the_token(tmp_path):
     launch = _launch(tmp_path, "sess-token")
     await launch.workspace_server(str(tmp_path / "guest" / "p"))
-    sessions = tmp_path / "guest" / ".kirocrew-worker" / "sessions"
+    sessions = tmp_path / "guest" / ".ajcrew-worker" / "sessions"
     try:
         await launch.relay._spare
         # The relay listens on loopback only.
@@ -813,7 +813,7 @@ async def test_git_proxy_runs_in_the_guest_and_answers_through_the_gateway(tmp_p
             egress_permitted=lambda key, host, agent: True,
             http_session=upstream,
         )
-        port_file = tmp_path / "guest" / ".kirocrew-worker" / launch.git_proxy_port_file
+        port_file = tmp_path / "guest" / ".ajcrew-worker" / launch.git_proxy_port_file
         await async_wait_until(
             port_file.exists, off_loop=True, describe=lambda: "guest proxy port is unpublished"
         )

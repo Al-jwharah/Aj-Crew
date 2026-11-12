@@ -176,8 +176,8 @@ describe('composeMessage / attachmentsFrom', () => {
   // drops the backslash before an unknown escape), and the fixture would stop
   // being a Windows path at all.
   it('labels a chip by basename when the upload route returns a Windows path', () => {
-    const shot = String.raw`C:\Users\dev\AppData\Local\KiroCrew\uploads\shot.PNG`
-    const notes = String.raw`C:\Users\dev\AppData\Local\KiroCrew\uploads\notes.pdf`
+    const shot = String.raw`C:\Users\dev\AppData\Local\AjCrew\uploads\shot.PNG`
+    const notes = String.raw`C:\Users\dev\AppData\Local\AjCrew\uploads\notes.pdf`
     // Guard the guard: these really are separator-free as far as the old rule
     // was concerned, so nothing here can pass by accident.
     expect(shot.includes('/')).toBe(false)

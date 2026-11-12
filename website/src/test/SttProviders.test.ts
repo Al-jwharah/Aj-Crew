@@ -99,7 +99,7 @@ describe('the model picker gate', () => {
 
 describe('availability reasons', () => {
   it('names every code the backend can report', () => {
-    // `kiro_crew.stt.engine`'s CODE_* constants plus `transcribe.py`'s own three,
+    // `aj_crew.stt.engine`'s CODE_* constants plus `transcribe.py`'s own three,
     // mirrored by hand because they are Python. An unmapped code falls back to the
     // backend's untranslated `detail`.
     expect(Object.keys(UNAVAILABLE_CODE_KEY).sort()).toEqual([

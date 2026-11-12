@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.dashboard.handlers import get_update_info, updates
+from aj_crew.dashboard.handlers import get_update_info, updates
 
 
 @pytest.fixture(autouse=True)

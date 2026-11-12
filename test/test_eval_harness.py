@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.acp.types import AcpEvent as LLMEvent
-from kiro_crew.eval.runner import (
+from aj_crew.acp.types import AcpEvent as LLMEvent
+from aj_crew.eval.runner import (
     EvalRunner,
     ScenarioResult,
     SessionResult,
@@ -17,7 +17,7 @@ from kiro_crew.eval.runner import (
     format_results,
     score_by_dimension,
 )
-from kiro_crew.eval.scenario import (
+from aj_crew.eval.scenario import (
     Assertion,
     AssertionType,
     Scenario,
@@ -27,7 +27,7 @@ from kiro_crew.eval.scenario import (
     load_scenario,
     load_scenarios,
 )
-from kiro_crew.providers.base import (
+from aj_crew.providers.base import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_TEXT_CHUNK,
@@ -271,7 +271,7 @@ class TestSeedProfile:
 # ── Runner Tests ──
 # Note: These tests work because MockProvider is passed via provider_factory and
 # EvalRunner.run_scenario uses a temp workspace_dir, which triggers _run_scenario_in
-# with lazy imports of SessionManager/KiroCrewConfig. The tests exercise the full
+# with lazy imports of SessionManager/AjCrewConfig. The tests exercise the full
 # memory loop (consolidation, vector store) but MockProvider short-circuits actual
 # LLM calls, so no real kiro-cli session is needed.
 
@@ -452,7 +452,7 @@ class TestPermissionFlow:
             seen.update(kwargs)
             return "policy"
 
-        runner_module = __import__("kiro_crew.eval.runner", fromlist=["refusal_for"])
+        runner_module = __import__("aj_crew.eval.runner", fromlist=["refusal_for"])
         refusal_for = getattr(runner_module, "refusal_for", None)
         assert refusal_for is not None, "eval runner has no identity-bearing permission gate"
         monkeypatch.setattr(runner_module, "refusal_for", _deny)
@@ -590,7 +590,7 @@ class TestPermissionFlow:
         """The fs tool's target is resolved and checked on a worker thread."""
         import threading
 
-        import kiro_crew.security as security_mod
+        import aj_crew.security as security_mod
 
         loop_thread = threading.get_ident()
         if expected == "approved":
@@ -654,14 +654,14 @@ class TestPermissionFlow:
         """A pending row precedes the wire call; the definitive row follows the answer."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.permission_floor import (
+        from aj_crew.permission_floor import (
             OUTCOME_PENDING_APPROVAL,
             OUTCOME_REJECTED_TRANSPORT_FLOOR,
         )
 
         assert OUTCOME_REJECTED_TRANSPORT_FLOOR == "rejected_transport_floor"
         audit = MagicMock()
-        monkeypatch.setattr("kiro_crew.eval.runner.sel", lambda: audit)
+        monkeypatch.setattr("aj_crew.eval.runner.sel", lambda: audit)
 
         class PermProvider(MockProvider):
             async def stream(self, message):
@@ -699,11 +699,11 @@ class TestPermissionFlow:
         """``approve_tool`` can raise (a dead runtime); the decision must already be on record."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.acp.session_handle import AcpRuntimeDead
-        from kiro_crew.permission_floor import OUTCOME_PENDING_APPROVAL
+        from aj_crew.acp.session_handle import AcpRuntimeDead
+        from aj_crew.permission_floor import OUTCOME_PENDING_APPROVAL
 
         audit = MagicMock()
-        monkeypatch.setattr("kiro_crew.eval.runner.sel", lambda: audit)
+        monkeypatch.setattr("aj_crew.eval.runner.sel", lambda: audit)
 
         class PermProvider(MockProvider):
             async def stream(self, message):
@@ -855,7 +855,7 @@ class TestJudgeParsing:
 
     @pytest.mark.asyncio
     async def test_judge_parses_valid_json(self):
-        from kiro_crew.eval.judge import LLMJudge
+        from aj_crew.eval.judge import LLMJudge
 
         class JudgeProvider(MockProvider):
             async def stream(self, message):
@@ -875,7 +875,7 @@ class TestJudgeParsing:
 
     @pytest.mark.asyncio
     async def test_judge_handles_unparseable_response(self):
-        from kiro_crew.eval.judge import LLMJudge
+        from aj_crew.eval.judge import LLMJudge
 
         class BadProvider(MockProvider):
             async def stream(self, message):
@@ -902,8 +902,8 @@ class TestJudgeParsing:
         redactors take text only, so a non-text reason raised there and turned
         the passing verdict into a failed one.
         """
-        from kiro_crew.eval.judge import LLMJudge
-        from kiro_crew.security import redact_credentials, redact_exfiltration_urls
+        from aj_crew.eval.judge import LLMJudge
+        from aj_crew.security import redact_credentials, redact_exfiltration_urls
 
         class OddProvider(MockProvider):
             async def stream(self, message):
@@ -954,7 +954,7 @@ class TestConsolidationFailure:
         runner = EvalRunner(provider_factory=lambda key, **kw: MockProvider())
 
         with patch(
-            "kiro_crew.history.HistoryConsolidator._consolidate",
+            "aj_crew.history.HistoryConsolidator._consolidate",
             new_callable=AsyncMock,
             side_effect=RuntimeError("consolidation boom"),
         ):
@@ -1018,7 +1018,7 @@ class TestJudgeFiltering:
 async def test_eval_context_explicitly_reads_default_store_off_loop(tmp_path):
     import threading
 
-    from kiro_crew.memory_stores import DEFAULT_MEMORY_STORE
+    from aj_crew.memory_stores import DEFAULT_MEMORY_STORE
 
     loop_thread = threading.get_ident()
     calls = []

@@ -1,7 +1,7 @@
 ---
 title: Conductor patrol session -- a crewmate conductor's patrol wakes run in a small patrol session beside the DM, not in the person's DM
 status: draft
-author: iamwhatever, with kirocrew-worker
+author: iamwhatever, with ajcrew-worker
 created: 2026-10-24
 last-audited: 2026-10-24
 audited-at: 1270c45f4d
@@ -78,8 +78,8 @@ is the proof the implementation must show before the default flips.
 | # | Condition | Proof now | Proof at exit |
 |---|---|---|---|
 | C1 | No regression from missing context: the patrol session takes the same act/no-act decision and the same action the DM would | Offline replay of 40 real patrol wakes from this DM (section 7): worker-facing act/no-act agrees on 37/40, same action classes on 31/40, same classes and items on 30/40. In no wake did the small session close, accept, dispatch or write to GitHub where the DM did not. 2 to 3 misses trace to DM context; section 7.3 adds those to the packet | Same replay on at least 30 new wakes with the final packet, plus a noise-floor run (section 9, phase 2) |
-| C2 | The main DM is not reclaimed by the idle timeout while the patrol session runs | The sweep and its exemption hook exist today: `SessionCleanup._expire_idle` and `_idle_exempt_keys` in `src/kiro_crew/session_cleanup.py` (section 5) | Test: a conductor DM idle past `session.timeout_secs` with a routed patrol loop stays live; with the loop stopped it is reaped |
-| C3 | If the DM is reclaimed anyway (restart, crash, RSS recycle), reload is fast | The focus prefetch already covers a mounted crewmate thread (section 6). DM send to first visible row today: section 6.2 | Telemetry `kirocrew.chat.first_token.duration{first_turn=true,resumed=true}` p50 on a reaped DM within 5 s of a warm DM send |
+| C2 | The main DM is not reclaimed by the idle timeout while the patrol session runs | The sweep and its exemption hook exist today: `SessionCleanup._expire_idle` and `_idle_exempt_keys` in `src/aj_crew/session_cleanup.py` (section 5) | Test: a conductor DM idle past `session.timeout_secs` with a routed patrol loop stays live; with the loop stopped it is reaped |
+| C3 | If the DM is reclaimed anyway (restart, crash, RSS recycle), reload is fast | The focus prefetch already covers a mounted crewmate thread (section 6). DM send to first visible row today: section 6.2 | Telemetry `ajcrew.chat.first_token.duration{first_turn=true,resumed=true}` p50 on a reaped DM within 5 s of a warm DM send |
 
 ## 3. Goals and non-goals
 
@@ -97,10 +97,10 @@ Non-goals:
 
 - Other crewmates, normal sidebar chats, workers, and sidebar sessions that
   run the conductor agent. Only a member DM whose agent is the goal
-  conductor (`WAKE_RESET_AGENTS` in `src/kiro_crew/autonudge_selfarm.py`:
-  `kirocrew-conductor` and its deprecated alias) is in scope.
+  conductor (`WAKE_RESET_AGENTS` in `src/aj_crew/autonudge_selfarm.py`:
+  `ajcrew-conductor` and its deprecated alias) is in scope.
 - Worker-report hidden turns (`[Worker report]`,
-  `src/kiro_crew/dashboard/mate_thread_wakes.py`) and goal check-ins. They
+  `src/aj_crew/dashboard/mate_thread_wakes.py`) and goal check-ins. They
   keep running in the DM. A later revision can route them once phase 2 shows
   the packet is enough.
 - The wake gate. When a wake fires stays as it is today. R10 B3 option (a)
@@ -137,9 +137,9 @@ flowchart LR
 - **Key.** `patrol:<DM slot key>`, outside the `dashboard:member-` namespace
   on purpose. A suffix on the DM's own alias (`dashboard:member-<slug>.patrol`)
   would pass `is_member_session_key`
-  (`src/kiro_crew/members_parts/member_sessions.py`) and get every
+  (`src/aj_crew/members_parts/member_sessions.py`) and get every
   member-DM behaviour, yet `slug_from_dm_slot_key`
-  (`src/kiro_crew/members_parts/dm_bindings.py`) would read the slug as
+  (`src/aj_crew/members_parts/dm_bindings.py`) would read the slug as
   `<slug>.patrol` and resolve it to no crewmate. Instead, one resolver,
   `patrol_dm_slot(key)`, maps the patrol key back to its DM slot key, and the
   member, binding, memory store and grants are all read through that DM slot.
@@ -151,7 +151,7 @@ flowchart LR
   builder as the DM's, so every standing rule the DM sees, it sees.
 - **Its own history.** It keeps its own short chat, so it remembers its last
   few wakes. The #22718 trim (`_context_cap_trim` in
-  `src/kiro_crew/dashboard/chat_turn/context_cap.py`) applies to it with its
+  `src/aj_crew/dashboard/chat_turn/context_cap.py`) applies to it with its
   own marks: trim to the newest turns when it passes 80K tokens. Its credits
   stay near the floor.
 - **Lifetime.** Started on the first routed wake. Ordinary idle reap
@@ -160,14 +160,14 @@ flowchart LR
   The transcript is kept and linked from each report row.
 - **Turns.** Each wake runs as one gateway-authored turn, through the same
   door as `dispatch_hidden_turn`
-  (`src/kiro_crew/dashboard/mate_welcome.py`). The turn is not one the
+  (`src/aj_crew/dashboard/mate_welcome.py`). The turn is not one the
   person sent, so the operations only a person's turn may run refuse, exactly
   as they refuse in a DM patrol turn today.
 
 ### 4.3 Routing a wake
 
 `_fire` and `_fire_monitor` in
-`src/kiro_crew/slack/gateway_runtime/nudge_wiring.py` already route a wake by
+`src/aj_crew/slack/gateway_runtime/nudge_wiring.py` already route a wake by
 the loop's binding key. One branch is added before the dashboard path: when
 the flag is on and `loop.slot_key` is a conductor-template member DM slot, the
 wake is delivered into that DM's patrol session instead of the DM.
@@ -216,7 +216,7 @@ had in its own context, so it reveals nothing new to the member.
 
 The patrol session hands a wake to the DM in three cases:
 
-- **It says so.** A new `kirocrew-core` tool, `patrol_escalate(reason)`, is
+- **It says so.** A new `ajcrew-core` tool, `patrol_escalate(reason)`, is
   admitted only in a patrol session. The gateway then runs the same wake as a
   DM turn, today's path, with the patrol turn's reason seated as context.
 - **The patrol turn fails.** A timeout, a backend error or a crash
@@ -235,18 +235,18 @@ into the DM:
 
 1. **A visible row.** `append_and_surface(state, dm_slot, "assistant", text,
    meta={"kind": "patrol_report", "patrol_turn": <id>})`
-   (`src/kiro_crew/dashboard/state_parts/transcript_rows.py`). It renders
+   (`src/aj_crew/dashboard/state_parts/transcript_rows.py`). It renders
    as the conductor speaking, with its `[OPTIONS:]` chips, and carries a link
    to the patrol transcript. The text passes the same redaction as any
    gateway-written row.
 2. **Seated context for the DM's next turn.** The same text, as one
    pending-context entry (`append_pending_context`,
-   `src/kiro_crew/dashboard/state_parts/slot_turns.py`), the seam `/note`
+   `src/aj_crew/dashboard/state_parts/slot_turns.py`), the seam `/note`
    uses (`POST /api/chat/slots/{slot}/note`). The DM model reads it on the
    person's next message, with no turn spent now. A seat refused for space is
    logged; the visible row still lands.
 3. **The crewmate notification**, through `post_member_message`
-   (`src/kiro_crew/dashboard/member_message_notes.py`), so a person on
+   (`src/aj_crew/dashboard/member_message_notes.py`), so a person on
    another page sees it as they see a DM reply today.
 
 A quiet wake (nothing for the person) posts nothing. `is_member_message` and
@@ -267,7 +267,7 @@ On the measured host that is one DM.
 ## 5. Keeping the DM live (C2)
 
 Today the sweep is `SessionCleanup._expire_idle`
-(`src/kiro_crew/session_cleanup.py`). A session is idle when
+(`src/aj_crew/session_cleanup.py`). A session is idle when
 `now - last_used > session.timeout_secs` (3600 s), unless its key is in
 `_idle_exempt_keys()`, which reads `session.idle_exempt_keys` at
 every sweep. That config list exists today for "a chat that automation wakes
@@ -299,7 +299,7 @@ Why this is safe:
 ### 6.1 The prefetch already covers the DM
 
 The resume prefetch of #2386 runs on a `slot_focused` frame:
-`_handle_slot_focused` in `src/kiro_crew/dashboard/ws.py` calls
+`_handle_slot_focused` in `src/aj_crew/dashboard/ws.py` calls
 `schedule_eager_spawn(state, slot, allow_resume=True)` for a slot whose
 session is persisted but not live. The frontend sends that frame for a mounted
 crewmate thread as well as for a chat tab:
@@ -316,7 +316,7 @@ never open the DM, and the prefetch runs when they do.
 ### 6.2 What a reload costs today
 
 Measured from the DM's dashboard chat history
-(`~/.kiro/crew/sessions/dashboard_member-kirocrew-conductor.jsonl`): the time
+(`~/.kiro/crew/sessions/dashboard_member-ajcrew-conductor.jsonl`): the time
 from a person's send to the first tool or reply row, bucketed by how long the
 DM sat idle before the send. "Reaped" means idle past the 3600-s timeout. A
 row is written when its segment starts, so this includes the model's thinking
@@ -479,7 +479,7 @@ Exit criteria, each pinned by a test:
   act/no-act agreement at or above the noise floor, and no close, accept,
   dispatch or GitHub write the DM would not make.
 - Every wrong wake the person reports, in the DM or on the tracking issue.
-- C3: `kirocrew.chat.first_token.duration{first_turn=true,resumed=true}` on
+- C3: `ajcrew.chat.first_token.duration{first_turn=true,resumed=true}` on
   the DM, with `telemetry.enabled` on for the window.
 
 **Phase 3: default on for conductor-template crewmates.** Only after phase 2
@@ -488,7 +488,7 @@ meets every target and the user rules on it. This document then moves to
 
 ## 10. Rollback
 
-- **Now, one host:** `kirocrew config set session.conductor_patrol_session false`.
+- **Now, one host:** `ajcrew config set session.conductor_patrol_session false`.
   The next wake runs in the DM. The DM's idle exemption ends at the next sweep.
   The patrol session idles out on its own. Nothing to migrate: report rows stay
   in the DM history as ordinary rows.

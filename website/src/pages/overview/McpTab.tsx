@@ -46,7 +46,7 @@ async function fetchServers(): Promise<McpServer[]> {
 // browser session. Not the URL: the sidebar's Customize entry reopens
 // `/capabilities` with no query string, so URL state would not survive the trip
 // to a chat and back that it exists for.
-const MCP_LIST_VIEW_KEY = 'kirocrew:mcp-servers-list-view'
+const MCP_LIST_VIEW_KEY = 'ajcrew:mcp-servers-list-view'
 function loadListView(): { q: string; open: string[] } {
   try {
     const saved = JSON.parse(safeGetSessionItem(MCP_LIST_VIEW_KEY) || '{}')
@@ -54,7 +54,7 @@ function loadListView(): { q: string; open: string[] } {
   } catch { return { q: '', open: [] } }
 }
 
-// A scope key: the core scopes 'kirocrew' / 'kiroGlobal', or a provider scope
+// A scope key: the core scopes 'ajcrew' / 'kiroGlobal', or a provider scope
 // id like 'ccGlobal' contributed at runtime via the extra_mcp_scopes() seam.
 type ScopeKey = string
 
@@ -64,7 +64,7 @@ type PendingChange = {
   uninstall?: boolean
 }
 
-const DEFAULT_PRESENCE: McpScopePresence = { kirocrew: true, kiroGlobal: false }
+const DEFAULT_PRESENCE: McpScopePresence = { ajcrew: true, kiroGlobal: false }
 
 function effectivePresence(s: McpServer, pending: PendingChange | undefined): McpScopePresence {
   // Spread so provider scopes (e.g. ccGlobal) carried on the server's presence
@@ -127,12 +127,12 @@ function pruneStagedTools(
  * why the backend keeps the row and this table shows it inert instead of hiding
  * it. The row says so in words, with the file to edit when the backend names it.
  *
- * A consent-disabled row in Kiro Crew's OWN store is a different state and
- * keeps its controls: the Kiro Crew scope badge + Apply IS the consent step the
+ * A consent-disabled row in Aj Crew's OWN store is a different state and
+ * keeps its controls: the Aj Crew scope badge + Apply IS the consent step the
  * install flow points at. The two are told apart by `disabledIn`, which the
  * backend stamps on `GET /api/mcp` and the probe response alike — never by
- * `enabled` + `kirocrewManaged`: a store-managed server that the SHARED config
- * disables is `kirocrewManaged` too, and reading it as a consent row would offer
+ * `enabled` + `ajcrewManaged`: a store-managed server that the SHARED config
+ * disables is `ajcrewManaged` too, and reading it as a consent row would offer
  * a re-enable that cannot land (lifting the store's flag leaves the shared one).
  */
 function disabledInSharedConfig(s: McpServer): boolean {
@@ -282,8 +282,8 @@ function ScopeBadge({
   const pendingRing = pendingChange
     ? 'ring-1 ring-[var(--warn)] ring-offset-1 ring-offset-bg border-dashed'
     : ''
-  // Each badge is an on/off switch for one scope (#13076): the Kiro Crew
-  // badge is the per-server enable/disable for Kiro Crew sessions. A bare
+  // Each badge is an on/off switch for one scope (#13076): the Aj Crew
+  // badge is the per-server enable/disable for Aj Crew sessions. A bare
   // coloured word did not read as a control, so it carries switch semantics
   // and a toggle glyph that shows the state without relying on colour.
   // An inert switch (shared-config disable or a staged uninstall) is off
@@ -313,7 +313,7 @@ function ScopeBadge({
  * Badge label for a probe status.
  *
  * `needs_auth` is not a failure. The status probe runs WITHOUT the OAuth token
- * kiro-cli holds (Kiro Crew keeps no credentials), so a remote OAuth server
+ * kiro-cli holds (Aj Crew keeps no credentials), so a remote OAuth server
  * answers it with 401 while the agent runtime calls the same server fine —
  * reported as "Error / HTTP 401" in #1853.
  *
@@ -580,8 +580,8 @@ export default function McpTab({ onManagedProviderClick }: McpTabProps = {}) {
   // permanent answers; either leaves `data` undefined and nothing renders, as
   // it does while a query is still in flight.
   const { data: harnessCfg } = useQuery<AcpBackendConfig>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig(),
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig(),
   })
   const { data: harnessProbe } = useQuery<{ backends: AcpBackendProbe[] }>({
     queryKey: ['acpBackends'],
@@ -696,7 +696,7 @@ export default function McpTab({ onManagedProviderClick }: McpTabProps = {}) {
         // effectivePresence(s, undefined) correctly returns the server's
         // current on-disk presence.
         const eff = effectivePresence(s, p)
-        change.kirocrew = eff.kirocrew
+        change.ajcrew = eff.ajcrew
         change.kiroGlobal = eff.kiroGlobal
         // Seam scopes: send each provider scope's effective presence so the
         // backend preserves/updates it. Omitting one means "preserve" backend
@@ -816,7 +816,7 @@ export default function McpTab({ onManagedProviderClick }: McpTabProps = {}) {
         <div className="mb-3 p-3 rounded border border-[var(--warn)] bg-warn/20 flex items-center justify-between">
           <div className="text-[13px] text-[var(--warn)]">
             <AlertTriangle className="lucide-inline" /> {i18nT('pages.overview.mcpTab.pending_change', { count: pendingCount })}
-            <span className="ml-2 text-muted">{i18nT('pages.overview.mcpTab.apply_commits_to_kirocrew_mcp_json_provider_glob')}</span>
+            <span className="ml-2 text-muted">{i18nT('pages.overview.mcpTab.apply_commits_to_ajcrew_mcp_json_provider_glob')}</span>
           </div>
           {/* The stock Btn is transparent, so on the warn tint it has no edge until hovered. */}
           <div className="flex gap-2">
@@ -867,7 +867,7 @@ export default function McpTab({ onManagedProviderClick }: McpTabProps = {}) {
             ROWS set scrollWidth, which the scroller's own box never reports. */}
         <table ref={attachMcpTable} className="w-full border-collapse table-striped"><thead><tr>
           <SortableHeader label={i18nT('pages.overview.mcpTab.name')} sortKey="name" sort={mcpSort} onToggle={toggleMcpSort} />
-          <th className="text-left text-muted text-[12px] uppercase tracking-[.04em] px-2.5 py-2 border-b border-border font-medium">{i18nT('pages.overview.mcpTab.kirocrew')}</th>
+          <th className="text-left text-muted text-[12px] uppercase tracking-[.04em] px-2.5 py-2 border-b border-border font-medium">{i18nT('pages.overview.mcpTab.ajcrew')}</th>
           <th className="text-left text-muted text-[12px] uppercase tracking-[.04em] px-2.5 py-2 border-b border-border font-medium">{i18nT('pages.overview.mcpTab.globals')}</th>
           <SortableHeader label={i18nT('pages.overview.mcpTab.status')} sortKey="status" sort={mcpSort} onToggle={toggleMcpSort} />
           <SortableHeader label={i18nT('pages.overview.mcpTab.tools')} sortKey="tools" sort={mcpSort} onToggle={toggleMcpSort} />
@@ -978,13 +978,13 @@ export default function McpTab({ onManagedProviderClick }: McpTabProps = {}) {
                 </td>
                 <td className="px-2.5 py-2 border-b border-border text-sm whitespace-nowrap" style={dimmedCell}>
                   <ScopeBadge
-                    label={i18nT('pages.overview.mcpTab.kirocrew')}
-                    scope="kirocrew"
-                    active={eff.kirocrew}
-                    pendingChange={!pendingUninstall && !!p?.scopes && 'kirocrew' in p.scopes}
+                    label={i18nT('pages.overview.mcpTab.ajcrew')}
+                    scope="ajcrew"
+                    active={eff.ajcrew}
+                    pendingChange={!pendingUninstall && !!p?.scopes && 'ajcrew' in p.scopes}
                     disabled={pendingUninstall || disabledInConfig}
                     disabledInConfig={disabledInConfig && !pendingUninstall}
-                    onClick={() => toggleScope(s.name, 'kirocrew', !eff.kirocrew, base)}
+                    onClick={() => toggleScope(s.name, 'ajcrew', !eff.ajcrew, base)}
                   />
                 </td>
                 <td className="px-2.5 py-2 border-b border-border text-sm whitespace-nowrap" style={dimmedCell}>
@@ -1280,7 +1280,7 @@ export default function McpTab({ onManagedProviderClick }: McpTabProps = {}) {
                     <Btn onClick={() => revertRow(s.name)}>{i18nT('pages.overview.mcpTab.undo')}</Btn>
                   ) : (
                     <div className="flex gap-1 justify-end">
-                      {s.kirocrewManaged && (
+                      {s.ajcrewManaged && (
                         <Btn onClick={() => setEditTarget(s.name)} aria-label={i18nT('pages.overview.mcpTab.edit_json_for', { name: s.name })} title={i18nT('pages.overview.mcpTab.edit_the_server_s_json_spec')}><Braces size={13} /></Btn>
                       )}
                       {/* Live on a config-disabled row too: Uninstall is the one

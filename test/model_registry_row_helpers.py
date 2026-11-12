@@ -2,7 +2,7 @@
 
 A shipped row for a model kiro-cli serves carries that model's ``acp`` id, so no
 shipped Claude row is one ``model_registry.lacks_acp_id`` flags. A test of what
-Kiro Crew does with such a row adds one: :func:`add_claude_only_row` copies the
+Aj Crew does with such a row adds one: :func:`add_claude_only_row` copies the
 registry, adds a row whose only provider is ``claude_code`` and rebuilds the
 lookup indices into fresh dicts, so ``monkeypatch`` restores the shipped registry
 and its indices when the test ends.
@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew import model_registry
+from aj_crew import model_registry
 
 #: The added row's canonical key.
 CLAUDE_ONLY_KEY = "test-only-1-1m"

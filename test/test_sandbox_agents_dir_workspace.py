@@ -1,5 +1,5 @@
 """``delegated_workspace_exposes_sealed_target``: the agents-tree seal is a rule
-of Kiro Crew's own launcher, so a kiro-cli spawn delegated to kiro-cli's
+of Aj Crew's own launcher, so a kiro-cli spawn delegated to kiro-cli's
 internal sandbox (macOS with that sandbox on, first-party Windows) must be
 refused when its workspace is, contains, or sits inside the agents directory.
 Where the launcher wraps the child the seal holds and the workspace is free."""
@@ -10,8 +10,8 @@ import os
 
 import pytest
 
-from kiro_crew import sandbox as sandbox_mod
-from kiro_crew.instances import run_marker
+from aj_crew import sandbox as sandbox_mod
+from aj_crew.instances import run_marker
 
 
 @pytest.fixture
@@ -57,7 +57,7 @@ class TestDelegatedWorkspaceExposesAgentsDir:
     def test_darwin_without_internal_sandbox_keeps_the_seal_and_allows(
         self, monkeypatch, agents_dir
     ):
-        # Kiro Crew's seatbelt wraps the child, so the seal applies whatever
+        # Aj Crew's seatbelt wraps the child, so the seal applies whatever
         # the workspace is; refusing here would break $HOME-rooted workspaces
         # for no gain.
         monkeypatch.setattr(sandbox_mod.sys, "platform", "darwin")
@@ -73,7 +73,7 @@ class TestDelegatedWorkspaceExposesAgentsDir:
             assert sandbox_mod.delegated_workspace_exposes_sealed_target(workspace) is None
 
     def test_windows_refuses_regardless_of_kiro_setting(self, monkeypatch, agents_dir):
-        # Windows has no Kiro Crew backend: every first-party spawn delegates.
+        # Windows has no Aj Crew backend: every first-party spawn delegates.
         monkeypatch.setattr(sandbox_mod.sys, "platform", "win32")
         monkeypatch.setattr(sandbox_mod, "kiro_internal_sandbox_enabled", lambda: False)
         assert sandbox_mod.delegated_workspace_exposes_sealed_target(agents_dir) is not None

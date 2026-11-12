@@ -1,6 +1,6 @@
 """``SessionAllocationService`` keeps every member it had, each bound from the module that owns it.
 
-The class's two largest member groups live in ``kiro_crew.session_allocation_parts``: each
+The class's two largest member groups live in ``aj_crew.session_allocation_parts``: each
 member's body is a module-level function there whose first parameter is ``self``, and the
 class binds it by name (``m = _owner.m``, or ``staticmethod(_owner.f)``), so tests,
 ``SessionAllocationService.__new__`` builds and ``SessionManager``'s delegates see the
@@ -13,10 +13,10 @@ same class they always did. This file pins that contract:
   attribute, which only work inside a class body;
 * no owner imports the facade at run time;
 * each owner's docstring names the instance fields its members write and read;
-* the refusals keep naming ``kiro_crew.session_allocation`` as their module;
+* the refusals keep naming ``aj_crew.session_allocation`` as their module;
 * the names the facade serves from its owners are the ones its ``TYPE_CHECKING`` manifest
   imports, each the object its home module holds;
-* a write through ``kiro_crew.session_allocation`` reaches every owner that reads the name,
+* a write through ``aj_crew.session_allocation`` reaches every owner that reads the name,
   for every name the test trees patch there (the facade's mirror, ``_facade_mirror``).
 """
 
@@ -33,8 +33,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import session_allocation as facade
-from kiro_crew.session_allocation import SessionAllocationService
+from aj_crew import session_allocation as facade
+from aj_crew.session_allocation import SessionAllocationService
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_session_allocation_bindings")
 
@@ -43,11 +43,11 @@ SHARED_BINDINGS_CHECKS = (
     "leaf_test_scope_derives_this_file_as_a_corpus_gate",
 )
 
-#: Owner label -> module. ``facade`` is ``kiro_crew.session_allocation`` itself.
+#: Owner label -> module. ``facade`` is ``aj_crew.session_allocation`` itself.
 _HOMES: dict[str, str] = {
-    "facade": "kiro_crew.session_allocation",
-    "companions": "kiro_crew.session_allocation_parts.companions",
-    "get_or_create": "kiro_crew.session_allocation_parts.get_or_create",
+    "facade": "aj_crew.session_allocation",
+    "companions": "aj_crew.session_allocation_parts.companions",
+    "get_or_create": "aj_crew.session_allocation_parts.get_or_create",
 }
 
 #: Member -> (kind, coroutine, signature digest, owner). Frozen at the split: the kind,
@@ -259,7 +259,7 @@ def test_no_bound_function_needs_its_class_body(owner: str) -> None:
 
 
 def _runtime_facade_imports(tree: ast.Module) -> list[int]:
-    """Lines importing ``kiro_crew.session_allocation`` outside a ``TYPE_CHECKING`` block."""
+    """Lines importing ``aj_crew.session_allocation`` outside a ``TYPE_CHECKING`` block."""
     guarded: set[int] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.If) and ast.unparse(node.test) == "TYPE_CHECKING":
@@ -270,8 +270,7 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
             continue
         if isinstance(node, ast.ImportFrom):
             if node.module == facade.__name__ or (
-                node.module == "kiro_crew"
-                and any(a.name == "session_allocation" for a in node.names)
+                node.module == "aj_crew" and any(a.name == "session_allocation" for a in node.names)
             ):
                 lines.append(node.lineno)
         elif isinstance(node, ast.Import):
@@ -283,17 +282,15 @@ def _runtime_facade_imports(tree: ast.Module) -> list[int]:
 def test_the_facade_import_scan_can_fail() -> None:
     tree = ast.parse(
         "from typing import TYPE_CHECKING\n"
-        "if TYPE_CHECKING:\n    from kiro_crew.session_allocation import X\n"
-        "def f():\n    from kiro_crew.session_allocation import y\n"
-        "import kiro_crew.session_allocation\n"
-        "from kiro_crew import session_allocation\n"
+        "if TYPE_CHECKING:\n    from aj_crew.session_allocation import X\n"
+        "def f():\n    from aj_crew.session_allocation import y\n"
+        "import aj_crew.session_allocation\n"
+        "from aj_crew import session_allocation\n"
     )
     assert sorted(_runtime_facade_imports(tree)) == [5, 6, 7]
 
 
-@pytest.mark.parametrize(
-    "owner", ("kiro_crew.session_allocation_parts", *facade._ALLOCATION_OWNERS)
-)
+@pytest.mark.parametrize("owner", ("aj_crew.session_allocation_parts", *facade._ALLOCATION_OWNERS))
 def test_no_owner_imports_the_facade_at_run_time(owner: str) -> None:
     assert _runtime_facade_imports(_tree(importlib.import_module(owner))) == []
 
@@ -377,8 +374,8 @@ def _listed(doc: str, label: str) -> set[str]:
 @pytest.mark.parametrize(
     "owner",
     [
-        "kiro_crew.session_allocation_parts.companions",
-        "kiro_crew.session_allocation_parts.get_or_create",
+        "aj_crew.session_allocation_parts.companions",
+        "aj_crew.session_allocation_parts.get_or_create",
     ],
 )
 def test_each_owner_names_the_fields_it_writes_and_reads(owner: str) -> None:
@@ -403,7 +400,7 @@ _REFUSALS = (
 def test_a_moved_refusal_keeps_the_facade_as_its_module(name: str) -> None:
     """Error chains and tracebacks render a class as ``module.qualname``; a refusal that
     moved to an owner keeps naming the path callers import it from."""
-    errors = sys.modules["kiro_crew.session_allocation_parts.errors"]
+    errors = sys.modules["aj_crew.session_allocation_parts.errors"]
     cls = vars(errors)[name]
     assert getattr(facade, name) is cls
     assert cls.__module__ == facade.__name__
@@ -420,7 +417,7 @@ def test_every_class_an_owner_defines_is_a_listed_refusal() -> None:
 
 
 def test_a_refusal_names_the_facade_in_an_error_chain() -> None:
-    from kiro_crew.subagent import _describe_exception
+    from aj_crew.subagent import _describe_exception
 
     try:
         try:
@@ -431,7 +428,7 @@ def test_a_refusal_names_the_facade_in_an_error_chain() -> None:
         text = _describe_exception(outer)
     assert text == (
         "RuntimeError: turn refused <- caused by "
-        "kiro_crew.session_allocation.SessionClosingError: manager is closing"
+        "aj_crew.session_allocation.SessionClosingError: manager is closing"
     )
 
 
@@ -501,7 +498,7 @@ def test_the_reach_check_can_fail() -> None:
     import test_facade_mirror_guards as guards
 
     index = facade._MIRROR
-    owner = "kiro_crew.session_allocation_parts.get_or_create"
+    owner = "aj_crew.session_allocation_parts.get_or_create"
     holders = dict(index.holders)
     holders["record_session_started"] = tuple(
         h for h in holders["record_session_started"] if h != owner

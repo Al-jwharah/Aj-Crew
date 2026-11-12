@@ -16,7 +16,7 @@ from subagent_persistence_helpers import (  # noqa: F401 -- the fixture is reque
     agent_root_fixture,
 )
 
-from kiro_crew.subagent_persistence import create_agent_folder
+from aj_crew.subagent_persistence import create_agent_folder
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -33,8 +33,8 @@ class TestOrphanReconciliation:
     async def test_dead_pid_with_complete_result_tombstoned_as_delivered(self, agent_root):
         from unittest.mock import MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder, write_result_chunk
+        from aj_crew.subagent import SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder, write_result_chunk
 
         sessions = MagicMock()
         manager = SubagentManager(sessions=sessions, ctx_builder=MagicMock())
@@ -43,7 +43,7 @@ class TestOrphanReconciliation:
         # finished writing (result_complete recorded at the complete event).
         create_agent_folder("orphan1", task="old task", parent_session="dashboard:default")
         write_result_chunk("orphan1", "some result")
-        from kiro_crew.subagent_persistence import update_state
+        from aj_crew.subagent_persistence import update_state
 
         update_state("orphan1", pid=99999, result_complete=True)  # dead PID
 
@@ -65,15 +65,15 @@ class TestOrphanReconciliation:
         """
         from unittest.mock import MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder, write_result_chunk
+        from aj_crew.subagent import SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder, write_result_chunk
 
         manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
 
         create_agent_folder("orphan1p", task="old task", parent_session="dashboard:default")
         # An opening sentence, nothing more — no complete event ever arrived.
         write_result_chunk("orphan1p", "I'll start by opening a scratch worktree")
-        from kiro_crew.subagent_persistence import update_state
+        from aj_crew.subagent_persistence import update_state
 
         update_state("orphan1p", pid=99999)
 
@@ -89,8 +89,8 @@ class TestOrphanReconciliation:
         """The notice is the only thing standing between a fragment and a parent."""
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder, write_result_chunk
+        from aj_crew.subagent import SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder, write_result_chunk
 
         manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
         create_agent_folder("orphan1n", task="old task", parent_session="dashboard:default")
@@ -124,11 +124,11 @@ class TestOrphanReconciliation:
         """
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         sessions_dir = tmp_path / "kiro-sessions"
         sessions_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.session_map._KIRO_SESSIONS_DIR", sessions_dir)
+        monkeypatch.setattr("aj_crew.session_map._KIRO_SESSIONS_DIR", sessions_dir)
         manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
         create_agent_folder("orphan1r", task="old task", parent_session="dashboard:default")
         state = {
@@ -241,11 +241,11 @@ class TestOrphanReconciliation:
         """
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         sessions_dir = tmp_path / "kiro-sessions"
         sessions_dir.mkdir()
-        monkeypatch.setattr("kiro_crew.session_map._KIRO_SESSIONS_DIR", sessions_dir)
+        monkeypatch.setattr("aj_crew.session_map._KIRO_SESSIONS_DIR", sessions_dir)
         (sessions_dir / "sid-orphan1c.json").write_text("{}", encoding="utf-8")
         (sessions_dir / "sid-orphan1c.jsonl").write_text(
             '{"turn": 1, "text": "hello"}\n', encoding="utf-8"
@@ -281,8 +281,8 @@ class TestOrphanReconciliation:
     async def test_dead_pid_no_result_tombstoned_as_notified(self, agent_root):
         from unittest.mock import MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder, update_state
+        from aj_crew.subagent import SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder, update_state
 
         sessions = MagicMock()
         manager = SubagentManager(sessions=sessions, ctx_builder=MagicMock())
@@ -301,8 +301,8 @@ class TestOrphanReconciliation:
     async def test_alive_pid_killed_and_tombstoned(self, agent_root):
         from unittest.mock import MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder, update_state
+        from aj_crew.subagent import SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder, update_state
 
         sessions = MagicMock()
         manager = SubagentManager(sessions=sessions, ctx_builder=MagicMock())
@@ -327,8 +327,8 @@ class TestOrphanReconciliation:
         """A live PID that doesn't belong to the original agent must not be killed."""
         from unittest.mock import MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder, update_state
+        from aj_crew.subagent import SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder, update_state
 
         manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
 
@@ -351,8 +351,8 @@ class TestOrphanReconciliation:
         """pid_recorded_at (not started) is passed to _is_orphan_process."""
         from unittest.mock import MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder, update_state
+        from aj_crew.subagent import SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder, update_state
 
         sessions = MagicMock()
         manager = SubagentManager(sessions=sessions, ctx_builder=MagicMock())
@@ -375,8 +375,8 @@ class TestOrphanReconciliation:
     async def test_already_tombstoned_skipped(self, agent_root):
         from unittest.mock import MagicMock
 
-        from kiro_crew.subagent import SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder, write_tombstone
+        from aj_crew.subagent import SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder, write_tombstone
 
         manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
 
@@ -393,8 +393,8 @@ class TestOrphanReconciliation:
     async def test_tracked_agents_skipped(self, agent_root):
         from unittest.mock import MagicMock
 
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder
 
         manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
 
@@ -416,8 +416,8 @@ class TestOrphanNotification:
     async def test_notification_called_for_orphan_with_result(self, agent_root):
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
-        from kiro_crew.subagent_persistence import (
+        from aj_crew.subagent import SubagentManager
+        from aj_crew.subagent_persistence import (
             create_agent_folder,
             update_state,
             write_result_chunk,
@@ -446,8 +446,8 @@ class TestOrphanNotification:
     async def test_notification_called_for_orphan_without_result(self, agent_root):
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder, update_state
+        from aj_crew.subagent import SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder, update_state
 
         manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
 
@@ -475,8 +475,8 @@ class TestOrphanNotification:
         """
         from unittest.mock import AsyncMock, MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder, write_result_chunk
+        from aj_crew.subagent import SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder, write_result_chunk
 
         manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
 
@@ -511,8 +511,8 @@ class TestOrphanNotification:
         """msg must be redacted before _try_inject_orphan_notification (not just Slack DM)."""
         from unittest.mock import MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder, write_result_chunk
+        from aj_crew.subagent import SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder, write_result_chunk
 
         manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
         create_agent_folder("notif_redact", task="secret task")
@@ -538,7 +538,7 @@ class TestOrphanNotification:
         with (
             patch.object(manager, "_try_inject_orphan_notification", side_effect=_capture_inject),
             patch(
-                "kiro_crew.subagent._redact", side_effect=lambda m: f"[REDACTED]{m}"
+                "aj_crew.subagent._redact", side_effect=lambda m: f"[REDACTED]{m}"
             ) as mock_redact,
         ):
             await manager._notify_orphan("notif_redact", state, True)
@@ -573,7 +573,7 @@ class TestOrphanNotification:
         the card's structured outcome and note match the prose."""
         from unittest.mock import MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
+        from aj_crew.subagent import SubagentManager
 
         manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
         create_agent_folder("notif_rec", task="recorded task")
@@ -601,8 +601,8 @@ class TestOrphanNotification:
         """Notification failure should not prevent reconciliation of other orphans."""
         from unittest.mock import MagicMock, patch
 
-        from kiro_crew.subagent import SubagentManager
-        from kiro_crew.subagent_persistence import create_agent_folder
+        from aj_crew.subagent import SubagentManager
+        from aj_crew.subagent_persistence import create_agent_folder
 
         manager = SubagentManager(sessions=MagicMock(), ctx_builder=MagicMock())
 
@@ -637,8 +637,8 @@ class TestReaperPrunesTombstones:
     @pytest.mark.asyncio
     async def test_reaper_prunes_old_tombstones(self, agent_root, manual_clock, monkeypatch):
         """Old tombstoned folders are pruned during reaper sweep."""
-        from kiro_crew import subagent_persistence
-        from kiro_crew.subagent_persistence import (
+        from aj_crew import subagent_persistence
+        from aj_crew.subagent_persistence import (
             create_agent_folder,
             prune_stale_tombstones,
             write_tombstone,
@@ -674,7 +674,7 @@ class TestSpawnStatusReadsFromAgentFolder:
 
     def test_result_path_points_to_agent_folder(self, agent_root):
         """After spawn+run, info.result_path should point to agent folder."""
-        from kiro_crew.subagent_persistence import (
+        from aj_crew.subagent_persistence import (
             _agent_dir,
             create_agent_folder,
             write_result_chunk,
@@ -690,7 +690,7 @@ class TestSpawnStatusReadsFromAgentFolder:
 
     def test_read_state_for_orphaned_agent(self, agent_root):
         """read_state returns data for orphaned agents (not in memory)."""
-        from kiro_crew.subagent_persistence import create_agent_folder, read_state, write_tombstone
+        from aj_crew.subagent_persistence import create_agent_folder, read_state, write_tombstone
 
         create_agent_folder(
             "orphan_status", task="orphaned task", parent_session="dashboard:default"
@@ -706,8 +706,8 @@ class TestSpawnStatusReadsFromAgentFolder:
         """api_spawn_status returns disk data when agent not in memory."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.dashboard.handlers.messaging import api_spawn_status
-        from kiro_crew.subagent_persistence import (
+        from aj_crew.dashboard.handlers.messaging import api_spawn_status
+        from aj_crew.subagent_persistence import (
             create_agent_folder,
             write_result_chunk,
             write_tombstone,
@@ -748,8 +748,8 @@ class TestSpawnStatusReadsFromAgentFolder:
         """Pre-feature state files stay honest instead of inventing zero usage."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.dashboard.handlers.messaging import api_spawn_status
-        from kiro_crew.subagent_persistence import create_agent_folder, write_result_chunk
+        from aj_crew.dashboard.handlers.messaging import api_spawn_status
+        from aj_crew.subagent_persistence import create_agent_folder, write_result_chunk
 
         create_agent_folder("legacy_agent", task="legacy task")
         write_result_chunk("legacy_agent", "legacy result")
@@ -772,7 +772,7 @@ class TestSpawnStatusReadsFromAgentFolder:
         """api_spawn_status returns 404 when agent not in memory or on disk."""
         from unittest.mock import MagicMock
 
-        from kiro_crew.dashboard.handlers.messaging import api_spawn_status
+        from aj_crew.dashboard.handlers.messaging import api_spawn_status
 
         subagents = MagicMock()
         subagents.get = MagicMock(return_value=None)

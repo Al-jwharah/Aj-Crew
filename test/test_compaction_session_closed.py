@@ -16,10 +16,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.config import KiroCrewConfig
-from kiro_crew.metrics.events import CONTEXT_COMPACTIONS
-from kiro_crew.session import SessionManager
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.config import AjCrewConfig
+from aj_crew.metrics.events import CONTEXT_COMPACTIONS
+from aj_crew.session import SessionManager
+from aj_crew.testing.wait import async_wait_until, await_until
 
 KEY = "dashboard:chat-1"
 FAILED_WARNING = "in-place /compact failed"
@@ -83,11 +83,11 @@ async def _setup(monkeypatch, *, die_at_once: bool):
     streaming: list[asyncio.Event] = []
     counted: list[dict] = []
     monkeypatch.setattr(
-        "kiro_crew.session_compaction.emit_counter",
+        "aj_crew.session_compaction.emit_counter",
         lambda name, labels: counted.append(labels) if name == CONTEXT_COMPACTIONS else None,
     )
     mgr = SessionManager(
-        KiroCrewConfig(), provider_factory=_factory(shutdowns, streaming, die_at_once=die_at_once)
+        AjCrewConfig(), provider_factory=_factory(shutdowns, streaming, die_at_once=die_at_once)
     )
     await mgr.get_or_create(KEY)
     key = mgr._fold_key(KEY)
@@ -106,7 +106,7 @@ async def _setup(monkeypatch, *, die_at_once: bool):
 async def test_a_session_closed_during_compact_ends_quietly(monkeypatch, caplog):
     mgr, key, shutdowns, streaming, counted, notices = await _setup(monkeypatch, die_at_once=False)
     session = mgr._sessions[key]
-    caplog.set_level(logging.DEBUG, logger="kiro_crew")
+    caplog.set_level(logging.DEBUG, logger="aj_crew")
 
     task = asyncio.ensure_future(mgr._compact_in_place(key, session, 95.0))
     await async_wait_until(streaming[0].is_set, describe=lambda: "/compact is streaming")
@@ -131,7 +131,7 @@ async def test_a_session_closed_during_compact_ends_quietly(monkeypatch, caplog)
 async def test_a_real_compact_failure_still_warns_counts_and_recycles(monkeypatch, caplog):
     mgr, key, shutdowns, _streaming, counted, notices = await _setup(monkeypatch, die_at_once=True)
     session = mgr._sessions[key]
-    caplog.set_level(logging.DEBUG, logger="kiro_crew")
+    caplog.set_level(logging.DEBUG, logger="aj_crew")
 
     outcome = await await_until(
         asyncio.ensure_future(mgr._compact_in_place(key, session, 95.0)),

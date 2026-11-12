@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.dashboard.handlers.usage."""
+"""Tests for aj_crew.dashboard.handlers.usage."""
 
 from __future__ import annotations
 
@@ -16,9 +16,9 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-import kiro_crew.dashboard.handlers.usage as usage_mod
-from kiro_crew import platform_compat
-from kiro_crew.dashboard.handlers.usage import (
+import aj_crew.dashboard.handlers.usage as usage_mod
+from aj_crew import platform_compat
+from aj_crew.dashboard.handlers.usage import (
     _cached_parse_sessions,
     _parse_sessions,
     _parse_token_history,
@@ -81,7 +81,7 @@ class TestParseSessions:
         d.mkdir()
         with (
             patch.object(usage_mod, "_SESSIONS_DIR", d),
-            patch("kiro_crew.platform_compat.PinnedDirectory.names", side_effect=OSError("boom")),
+            patch("aj_crew.platform_compat.PinnedDirectory.names", side_effect=OSError("boom")),
         ):
             result = _parse_sessions()
             assert "error" in result
@@ -171,7 +171,7 @@ class TestParseSessions:
         with (
             patch.object(usage_mod, "_SESSIONS_DIR", d),
             patch.object(usage_mod, "validate_file_path", side_effect=_files_validate_as(None)),
-            caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.handlers.usage"),
+            caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.handlers.usage"),
         ):
             r = _parse_sessions()
         assert r["total_sessions"] == 0
@@ -192,7 +192,7 @@ class TestParseSessions:
         with (
             patch.object(usage_mod, "_SESSIONS_DIR", d),
             patch.object(usage_mod, "validate_file_path", side_effect=_files_validate_as(str(f))),
-            caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.handlers.usage"),
+            caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.handlers.usage"),
         ):
             r = _parse_sessions()
         assert r["total_sessions"] == 1
@@ -263,7 +263,7 @@ class TestParseSessions:
             patch.object(usage_mod, "validate_file_path", side_effect=validate),
             patch.object(Path, "stat", stat_side_effect),
             patch.object(Path, "open", open_side_effect),
-            caplog.at_level(logging.WARNING, logger="kiro_crew.dashboard.handlers.usage"),
+            caplog.at_level(logging.WARNING, logger="aj_crew.dashboard.handlers.usage"),
         ):
             r = _parse_sessions()
         assert r["total_sessions"] == 0
@@ -467,18 +467,18 @@ class TestGetUsageCache:
         mock_cache = {"credits_used": 42}
         with patch.dict(
             "sys.modules",
-            {"kiro_crew.dashboard.handlers.sessions": MagicMock(_usage_cache=mock_cache)},
+            {"aj_crew.dashboard.handlers.sessions": MagicMock(_usage_cache=mock_cache)},
         ):
             assert get_usage_cache() == {"credits_used": 42}
 
     def test_empty_cache(self):
         with patch.dict(
-            "sys.modules", {"kiro_crew.dashboard.handlers.sessions": MagicMock(_usage_cache={})}
+            "sys.modules", {"aj_crew.dashboard.handlers.sessions": MagicMock(_usage_cache={})}
         ):
             assert get_usage_cache() == {}
 
     def test_import_error(self):
-        with patch.dict("sys.modules", {"kiro_crew.dashboard.handlers.sessions": None}):
+        with patch.dict("sys.modules", {"aj_crew.dashboard.handlers.sessions": None}):
             assert get_usage_cache() == {}
 
 
@@ -1290,12 +1290,12 @@ class TestBuildTokenRecordContextFields:
             "acp",
             datetime.now(timezone.utc),
             surface="dashboard",
-            agent="kirocrew",
+            agent="ajcrew",
             context_used=44_000,
             context_window=1_000_000,
         )
         assert rec["surface"] == "dashboard"
-        assert rec["agent"] == "kirocrew"
+        assert rec["agent"] == "ajcrew"
         assert rec["context_used"] == 44_000
         assert rec["context_window"] == 1_000_000
 
@@ -1382,14 +1382,14 @@ class TestBuildTokenRecordContextFields:
             self._event(),
             provider="acp",
             surface="dashboard",
-            agent="kirocrew",
+            agent="ajcrew",
             context_used=44_000,
             context_window=1_000_000,
         )
         today = datetime.now().astimezone().strftime("%Y-%m-%d")
         record = json.loads((shard_dir / f"{today}.jsonl").read_text(encoding="utf-8").strip())
         assert record["surface"] == "dashboard"
-        assert record["agent"] == "kirocrew"
+        assert record["agent"] == "ajcrew"
         assert record["context_used"] == 44_000
         assert record["context_window"] == 1_000_000
 
@@ -1574,14 +1574,14 @@ class TestReadEffectiveAgent:
     """The resolved agent, not the slot alias."""
 
     def test_reads_resolved_agent_off_client(self):
-        inner = type("C", (), {"_agent": "kirocrew"})()
-        assert read_effective_agent(inner) == "kirocrew"
+        inner = type("C", (), {"_agent": "ajcrew"})()
+        assert read_effective_agent(inner) == "ajcrew"
 
     def test_walks_nested_handle(self):
-        handle = type("H", (), {"_agent": "kirocrew-lite"})()
+        handle = type("H", (), {"_agent": "ajcrew-lite"})()
         mid = type("SessionProvider", (), {"_handle": handle})()
         outer = type("P", (), {"client": mid})()
-        assert read_effective_agent(outer) == "kirocrew-lite"
+        assert read_effective_agent(outer) == "ajcrew-lite"
 
     def test_blank_when_absent(self):
         assert read_effective_agent(object()) == ""
@@ -1597,10 +1597,10 @@ class TestReadEffectiveAgent:
     def test_reads_agent_off_the_runtime(self):
         # The session-provider shape: the agent is held only by the spawned CLI
         # runtime (AcpRuntime._agent), reached via provider -> _handle -> _runtime.
-        runtime = type("Runtime", (), {"_agent": "kirocrew"})()
+        runtime = type("Runtime", (), {"_agent": "ajcrew"})()
         handle = type("Handle", (), {"_runtime": runtime})()
         provider = type("SessionProvider", (), {"_handle": handle})()
-        assert read_effective_agent(provider) == "kirocrew"
+        assert read_effective_agent(provider) == "ajcrew"
 
     def test_session_model_outranks_runtime_model(self):
         # _runtime is walked last so its process-level --model argument cannot

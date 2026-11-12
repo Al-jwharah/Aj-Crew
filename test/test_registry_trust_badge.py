@@ -31,9 +31,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.apps.registry_pipeline import sources
-from kiro_crew.config.loader import _invalidate_config_cache
-from kiro_crew.dashboard.handlers.security import build_trusted_registries_snapshot
+from aj_crew.apps.registry_pipeline import sources
+from aj_crew.config.loader import _invalidate_config_cache
+from aj_crew.dashboard.handlers.security import build_trusted_registries_snapshot
 
 # Two config rows sharing one identity key: the cache-path form of the name is
 # case-folded, so "Acme" and "acme" collide (see `_registry_identity_key`).
@@ -51,9 +51,9 @@ _CONTENDER = "https://git.example.test/team/contender-index.git"
 
 @pytest.fixture
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    h = tmp_path / "kirocrew-home"
+    h = tmp_path / "ajcrew-home"
     h.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(h))
+    monkeypatch.setenv("AJCREW_HOME", str(h))
     _invalidate_config_cache()
     yield h
     _invalidate_config_cache()
@@ -70,7 +70,7 @@ def _write_config(home: Path, registries: list[dict]) -> None:
 
 
 def _write_grant(*repos: str) -> None:
-    from kiro_crew.config.loader import registry_trust_path
+    from aj_crew.config.loader import registry_trust_path
 
     registry_trust_path().write_text(
         json.dumps({"version": 1, "owner_trusted": list(repos)}),

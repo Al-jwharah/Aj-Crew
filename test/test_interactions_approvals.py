@@ -1,4 +1,4 @@
-"""Approval presses in Slack, driven through ``kiro_crew.slack.interactions``.
+"""Approval presses in Slack, driven through ``aj_crew.slack.interactions``.
 
 Covers the native tool-approval press (the DM-only rule for Trust, the outcome label
 and a failing label edit) and the review-draft handlers: each refusal (no
@@ -22,13 +22,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.config.loader import ACTIVATION_REVIEW
-from kiro_crew.slack import handler as sh
-from kiro_crew.slack import interactions as ix
-from kiro_crew.start_priority import StartPriority
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.config.loader import ACTIVATION_REVIEW
+from aj_crew.slack import handler as sh
+from aj_crew.slack import interactions as ix
+from aj_crew.start_priority import StartPriority
+from aj_crew.testing.wait import async_wait_until, await_until
 
-LOGGER = "kiro_crew.slack.interactions"
+LOGGER = "aj_crew.slack.interactions"
 OWNER = "UOWNER"
 REQUESTER = "UREQ"
 STRANGER = "USTRANGER"
@@ -131,7 +131,7 @@ def audit(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
 @pytest.fixture
 def sel_log(tmp_path: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
     """A real, synchronous security event log under tmp_path for both modules that audit."""
-    from kiro_crew import sel as sel_mod
+    from aj_crew import sel as sel_mod
 
     monkeypatch.setattr(sel_mod.SecurityEventLog, "_instance", None)
     monkeypatch.setattr(sel_mod.SecurityEventLog, "_initialized", False)

@@ -8,8 +8,8 @@ import pytest
 from acp_client_helpers import _native_projection_for_fake_processes  # noqa: F401 - fixture
 from acp_client_helpers import _pin_the_installed_kiro_cli_version  # noqa: F401 - fixture
 
-import kiro_crew.acp.client as acp_client
-from kiro_crew.acp.client import AcpClient
+import aj_crew.acp.client as acp_client
+from aj_crew.acp.client import AcpClient
 
 # ── _extract_tool_call_update tests ──
 
@@ -18,7 +18,7 @@ class TestExtractToolCallUpdate:
     """Tests for real-time tool result extraction from session updates."""
 
     def _make_msg(self, update):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         return JsonRpcMessage(params={"update": update})
 
@@ -26,7 +26,7 @@ class TestExtractToolCallUpdate:
         return AcpClient()
 
     def test_ignores_non_tool_call_update(self):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = self._client()
         msg = JsonRpcMessage(params={"update": {"sessionUpdate": "other"}})
@@ -181,7 +181,7 @@ class TestExtractToolCallUpdate:
         assert len(event.tool_output) <= 8000
 
     def test_long_output_metadata_covers_full_redacted_text(self, monkeypatch):
-        monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+        monkeypatch.setenv("AJCREW_CREW_LOG", "1")
         output = "A" * 8000 + "é-tail"
         full_redacted = acp_client.redact_text(output)
         full_bytes = full_redacted.encode("utf-8", "replace")
@@ -215,7 +215,7 @@ class TestExtractToolCallUpdate:
         while nothing will read it is work the default path must not do. ``-1``
         distinguishes "not recorded" from a real zero-length output.
         """
-        monkeypatch.setenv("KIROCREW_CREW_LOG", "0")
+        monkeypatch.setenv("AJCREW_CREW_LOG", "0")
         client = self._client()
         msg = self._make_msg(
             {
@@ -373,7 +373,7 @@ class TestExtractToolCallUpdate:
         assert client._extract_tool_call_update(msg) is None
 
     def test_none_params(self):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = self._client()
         msg = JsonRpcMessage(params=None)
@@ -411,7 +411,7 @@ class TestExtractToolCallUpdate:
                 "content": [{"type": "resource_link", "uri": "file:///etc/secret.txt"}],
             }
         )
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
             assert client._extract_tool_call_update(msg) is None
         hits = [r.getMessage() for r in caplog.records if "could be rendered" in r.getMessage()]
         assert len(hits) == 1
@@ -426,7 +426,7 @@ class TestExtractToolCallUpdate:
 
         client = self._client()
         msg = self._make_msg({"sessionUpdate": "tool_call_update", "toolCallId": "tc-quiet"})
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp.client"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp.client"):
             assert client._extract_tool_call_update(msg) is None
         assert [r for r in caplog.records if "could be rendered" in r.getMessage()] == []
 
@@ -440,7 +440,7 @@ class TestDispatchToolResultContentShapes:
     a backend's shape is not a function of which of the two loops read it."""
 
     def test_bare_text_block_in_content_is_accepted(self):
-        from kiro_crew.acp._dispatch import _build_tool_result_event
+        from aj_crew.acp._dispatch import _build_tool_result_event
 
         event = _build_tool_result_event(
             {
@@ -455,9 +455,9 @@ class TestDispatchToolResultContentShapes:
     def test_unrenderable_content_entries_are_logged_with_shape(self, caplog):
         import logging
 
-        from kiro_crew.acp._dispatch import _build_tool_result_event
+        from aj_crew.acp._dispatch import _build_tool_result_event
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp._dispatch"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp._dispatch"):
             assert (
                 _build_tool_result_event(
                     {
@@ -480,14 +480,14 @@ class TestDispatchToolResultContentShapes:
         credential in either -- both must be scrubbed before they are logged."""
         import logging
 
-        from kiro_crew.acp._dispatch import _build_tool_result_event
+        from aj_crew.acp._dispatch import _build_tool_result_event
 
         # Split so this file holds no literal-looking key; matches
         # (?:AKIA|ASIA)[A-Z0-9]{16}, the same shape as
         # test_core_path_redact_before_bound.
         token = "AKIA" + "SHAPELEAK0123456"
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp._dispatch"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp._dispatch"):
             assert (
                 _build_tool_result_event(
                     {
@@ -509,11 +509,11 @@ class TestDispatchToolResultContentShapes:
         whole id on one line with the newline escaped."""
         import logging
 
-        from kiro_crew.acp._dispatch import _build_tool_result_event
+        from aj_crew.acp._dispatch import _build_tool_result_event
 
-        forged = "tc-1\nWARNING kiro_crew: drive deleted by owner"
+        forged = "tc-1\nWARNING aj_crew: drive deleted by owner"
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp._dispatch"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp._dispatch"):
             assert (
                 _build_tool_result_event(
                     {
@@ -536,7 +536,7 @@ class TestDispatchToolResultContentShapes:
         """The constant's docstring names four entry types as understood. If one is
         dropped from the frozenset a real backend's frame starts warning, so pin
         the documented set rather than trusting the comment above it."""
-        from kiro_crew.acp._dispatch import _KNOWN_TOOL_CONTENT_TYPES, unrenderable_content_shapes
+        from aj_crew.acp._dispatch import _KNOWN_TOOL_CONTENT_TYPES, unrenderable_content_shapes
 
         assert _KNOWN_TOOL_CONTENT_TYPES == frozenset({"content", "diff", "terminal", "text"})
         for known in sorted(_KNOWN_TOOL_CONTENT_TYPES):
@@ -550,11 +550,11 @@ class TestDispatchToolResultContentShapes:
         to abort the turn it is reporting on."""
         import logging
 
-        from kiro_crew.acp._dispatch import _build_tool_result_event, _loggable_request_id
+        from aj_crew.acp._dispatch import _build_tool_result_event, _loggable_request_id
 
         assert _loggable_request_id(1234) == "1234"
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.acp._dispatch"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.acp._dispatch"):
             assert (
                 _build_tool_result_event(
                     {
@@ -572,7 +572,7 @@ class TestDispatchToolResultContentShapes:
         entry, so a frame that pads them cannot be held in memory in full. Bounds
         are applied AFTER redaction, never before -- a cut taken first can split a
         credential into fragments no pattern matches."""
-        from kiro_crew.acp._dispatch import (
+        from aj_crew.acp._dispatch import (
             _REQUEST_ID_LOG_CAP,
             _loggable_request_id,
             unrenderable_content_shapes,
@@ -592,7 +592,7 @@ class TestDispatchToolResultContentShapes:
 
         Counts entry visits, because the output is cut the same either way.
         """
-        from kiro_crew.acp._dispatch import unrenderable_content_shapes
+        from aj_crew.acp._dispatch import unrenderable_content_shapes
 
         visits = 0
 
@@ -615,7 +615,7 @@ class TestDispatchToolResultContentShapes:
         prints its nested VALUES, so a credential parked one level down would reach
         the log ring through the very diagnostic that promises names only. A
         non-string type renders by CLASS instead."""
-        from kiro_crew.acp._dispatch import unrenderable_content_shapes
+        from aj_crew.acp._dispatch import unrenderable_content_shapes
 
         token = "AKIA" + "NESTEDLEAK012345"
         out = unrenderable_content_shapes([{"type": {"secret": token}, "other": 1}])
@@ -629,7 +629,7 @@ class TestDispatchToolResultContentShapes:
         """Per-entry key rendering is capped by DROPPING whole names, never by
         cutting through one: a cut ahead of redaction could leave half a credential
         that no pattern matches."""
-        from kiro_crew.acp._dispatch import unrenderable_content_shapes
+        from aj_crew.acp._dispatch import unrenderable_content_shapes
 
         entry = {"type": "unknown"} | {f"k{i:04d}": 1 for i in range(500)}
         out = unrenderable_content_shapes([entry])
@@ -644,7 +644,7 @@ class TestDispatchToolResultContentShapes:
         of that shape discriminates nothing. The ordering is enforced by the
         function returning a single joined string, not by a test.
         """
-        from kiro_crew.acp._dispatch import unrenderable_content_shapes
+        from aj_crew.acp._dispatch import unrenderable_content_shapes
 
         joined = unrenderable_content_shapes([{"type": "one"}, {"type": "two"}])
         assert "type='one'" in joined and "type='two'" in joined
@@ -657,7 +657,7 @@ class TestDispatchToolResultContentShapes:
         level it said nothing either: the same undiagnosable blank the shape
         diagnostic exists to eliminate, one level down.
         """
-        from kiro_crew.acp._dispatch import unrenderable_content_shapes
+        from aj_crew.acp._dispatch import unrenderable_content_shapes
 
         out = unrenderable_content_shapes(
             [{"type": "content", "content": {"kind": "text", "text": "AKIAIOSFODNN7SECRET"}}]
@@ -673,7 +673,7 @@ class TestDispatchToolResultContentShapes:
 
         Hence an allowlist; see `test_content_free_frame_is_not_warned_about`.
         """
-        from kiro_crew.acp._dispatch import unrenderable_content_shapes
+        from aj_crew.acp._dispatch import unrenderable_content_shapes
 
         for kind in ("text", "image", "audio", "resource", "resource_link"):
             entry = {"type": "content", "content": {"type": kind}}
@@ -687,7 +687,7 @@ class TestDispatchToolResultContentShapes:
         understood, and it is why the check cannot be a plain ``.get("content")``,
         which would collapse this case into the null one below.
         """
-        from kiro_crew.acp._dispatch import unrenderable_content_shapes
+        from aj_crew.acp._dispatch import unrenderable_content_shapes
 
         assert unrenderable_content_shapes([{"type": "content"}]) == ""
         assert unrenderable_content_shapes([{"type": "content", "content": None}]) != ""
@@ -696,7 +696,7 @@ class TestDispatchToolResultContentShapes:
         """``{"type": "content", "content": "<secret>"}`` is unreadable too, and the
         inner is not a dict, so there are no key names -- only its CLASS may be
         named, never the string itself."""
-        from kiro_crew.acp._dispatch import unrenderable_content_shapes
+        from aj_crew.acp._dispatch import unrenderable_content_shapes
 
         out = unrenderable_content_shapes([{"type": "content", "content": "AKIAIOSFODNN7SECRET"}])
         assert "inner=<str>" in out
@@ -711,7 +711,7 @@ class TestExtractToolCallRefinement:
     tool input is complete; the refinement carries title / kind / rawInput."""
 
     def _make_msg(self, update):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         return JsonRpcMessage(params={"update": update})
 
@@ -719,7 +719,7 @@ class TestExtractToolCallRefinement:
         return AcpClient()
 
     def test_ignores_non_tool_call_update(self):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = self._client()
         msg = JsonRpcMessage(params={"update": {"sessionUpdate": "other"}})
@@ -772,7 +772,7 @@ class TestExtractToolCallRefinement:
 
     def test_prefers_rawinput_description_over_title(self):
         # Bash tool emits both `command` and `description` — the description
-        # is the human-readable purpose ("List Kiro Crew dashboard module
+        # is the human-readable purpose ("List Aj Crew dashboard module
         # files"), and that's what we surface on the pill.
         client = self._client()
         msg = self._make_msg(
@@ -783,13 +783,13 @@ class TestExtractToolCallRefinement:
                 "kind": "execute",
                 "rawInput": {
                     "command": "ls /workplace/.../dashboard/",
-                    "description": "List Kiro Crew dashboard module files",
+                    "description": "List Aj Crew dashboard module files",
                 },
             }
         )
         event = client._extract_tool_call_refinement(msg)
         assert event is not None
-        assert event.title == "List Kiro Crew dashboard module files"
+        assert event.title == "List Aj Crew dashboard module files"
 
     def test_generic_shell_title_yields_the_command(self):
         # A backend whose shell `title` is a kind label ("Run Command") names no
@@ -1009,7 +1009,7 @@ class TestAcpClientIsShellSignal:
     """
 
     def _tool_call_msg(self, kind, tool_call_id="tc-1", command="echo hi"):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         return JsonRpcMessage(
             method="session/update",
@@ -1025,7 +1025,7 @@ class TestAcpClientIsShellSignal:
         )
 
     def _permission_msg(self, tool_call_id="tc-1", kind=None):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         tool_call = {"toolCallId": tool_call_id, "title": "x" * 400}
         # By default no "kind" on the permission payload — mirrors live
@@ -1043,7 +1043,7 @@ class TestAcpClientIsShellSignal:
         )
 
     def _refinement_msg(self, kind, tool_call_id="tc-1", command="echo hi"):
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.types import JsonRpcMessage
 
         update = {
             "sessionUpdate": "tool_call_update",
@@ -1058,7 +1058,7 @@ class TestAcpClientIsShellSignal:
         return JsonRpcMessage(method="session/update", params={"update": update})
 
     def test_execute_kind_marks_event_is_shell(self, tmp_path):
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = AcpClient(work_dir=tmp_path)
         ev = client._extract_tool_event(self._tool_call_msg("execute"))
@@ -1067,7 +1067,7 @@ class TestAcpClientIsShellSignal:
         assert client._tool_call_is_shell.get("tc-1") is True
 
     def test_non_shell_kind_not_is_shell(self, tmp_path):
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = AcpClient(work_dir=tmp_path)
         ev = client._extract_tool_event(self._tool_call_msg("edit"))
@@ -1082,7 +1082,7 @@ class TestAcpClientIsShellSignal:
         ],
     )
     def test_permission_event_is_shell_from_the_tool_call(self, tmp_path, kind, expected):
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = AcpClient(work_dir=tmp_path)
         # 1. tool_call notification arrives first and carries the kind
@@ -1099,8 +1099,8 @@ class TestAcpClientIsShellSignal:
         # app-own-server auto-approve's per-tool governance. Without the
         # tool_name cache the permission event's tool_name is always "" and the
         # auto-approve fails closed (never fires).
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.types import JsonRpcMessage
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.types import JsonRpcMessage
 
         client = AcpClient(work_dir=tmp_path)
         tc = JsonRpcMessage(
@@ -1128,9 +1128,9 @@ class TestAcpClientIsShellSignal:
 
     def test_permission_event_does_not_promote_title_on_identity_cache_miss(self, tmp_path):
         """Legacy per-session transport fails closed without ``_meta.kiro``."""
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.types import JsonRpcMessage
-        from kiro_crew.trust_patterns import approval_command
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.types import JsonRpcMessage
+        from aj_crew.trust_patterns import approval_command
 
         client = AcpClient(work_dir=tmp_path)
         client._extract_tool_event(
@@ -1164,9 +1164,9 @@ class TestAcpClientIsShellSignal:
 
     def test_structured_non_shell_reprompt_keeps_argument_provenance(self, tmp_path):
         """A repeated MCP permission retains both display and raw provenance."""
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.types import JsonRpcMessage
-        from kiro_crew.trust_patterns import approval_command
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.types import JsonRpcMessage
+        from aj_crew.trust_patterns import approval_command
 
         client = AcpClient(work_dir=tmp_path)
         client._extract_tool_event(
@@ -1212,9 +1212,9 @@ class TestAcpClientIsShellSignal:
         self, tmp_path, raw_input
     ):
         """String/list rawInput must not become argument-free after one prompt."""
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.types import JsonRpcMessage
-        from kiro_crew.trust_patterns import approval_command
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.types import JsonRpcMessage
+        from aj_crew.trust_patterns import approval_command
 
         client = AcpClient(work_dir=tmp_path)
         client._extract_tool_event(
@@ -1252,8 +1252,8 @@ class TestAcpClientIsShellSignal:
     def test_end_to_end_long_shell_title_passes_validation(self, tmp_path):
         """The full regression: a 400-char shell title validates only because
         is_shell propagated from tool_call → permission → _validate_tool_name."""
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.dashboard.chat_utils import _validate_tool_name
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.dashboard.chat_utils import _validate_tool_name
 
         client = AcpClient(work_dir=tmp_path)
         client._extract_tool_event(self._tool_call_msg("execute"))
@@ -1274,7 +1274,7 @@ class TestAcpClientIsShellSignal:
         ],
     )
     def test_refinement_leaves_a_shell_verdict(self, tmp_path, initial_kind, refinement_kind):
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = AcpClient(work_dir=tmp_path)
         client._extract_tool_event(self._tool_call_msg(initial_kind))
@@ -1290,7 +1290,7 @@ class TestAcpClientIsShellSignal:
         length cap on the very name being validated. With no preceding
         tool_call to populate the cache, is_shell must stay False even when the
         payload claims kind="execute"."""
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = AcpClient(work_dir=tmp_path)
         # No _extract_tool_event call → cache miss; payload tries kind="execute".
@@ -1302,7 +1302,7 @@ class TestAcpClientIsShellSignal:
         .pop(): a later tool_call_update refinement for the same toolCallId
         reads the same cache, so popping would make it wrongly see is_shell=
         False. The read must use .get(), not a .pop() that consumes the entry."""
-        from kiro_crew.acp.client import AcpClient
+        from aj_crew.acp.client import AcpClient
 
         client = AcpClient(work_dir=tmp_path)
         client._extract_tool_event(self._tool_call_msg("execute"))
@@ -1317,7 +1317,7 @@ class TestAcpClientIsShellSignal:
         """_is_shell_kind tolerates a non-str/None kind without raising — the
         ACP payload can carry "kind": null (JSON-legal), and equality keeps the
         classifier crash-free where a `.lower()`-based predicate would not."""
-        from kiro_crew.acp.client import _is_shell_kind
+        from aj_crew.acp.client import _is_shell_kind
 
         assert _is_shell_kind(None) is False
         assert _is_shell_kind("") is False
@@ -1329,9 +1329,9 @@ class TestAcpClientIsShellSignal:
         emitted by real ACP/MCP servers) must not crash event construction, and
         the resulting title must still validate. Guards the chat-runner event
         loop against a null-kind AttributeError on the length-cap path."""
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.acp.types import JsonRpcMessage
-        from kiro_crew.dashboard.chat_utils import _validate_tool_name
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.acp.types import JsonRpcMessage
+        from aj_crew.dashboard.chat_utils import _validate_tool_name
 
         client = AcpClient(work_dir=tmp_path)
         msg = JsonRpcMessage(
@@ -1351,9 +1351,9 @@ class TestAcpClientIsShellSignal:
         """AcpProvider._to_llm_event re-wraps an event field-by-field; the
         is_shell flag must survive that copy or the dashboard (which consumes
         the re-wrapped LLMEvent) would never see it on the live ACP path."""
-        from kiro_crew.acp.types import AcpEvent
-        from kiro_crew.providers.acp import AcpProvider
-        from kiro_crew.providers.base import EVENT_PERMISSION_REQUEST
+        from aj_crew.acp.types import AcpEvent
+        from aj_crew.providers.acp import AcpProvider
+        from aj_crew.providers.base import EVENT_PERMISSION_REQUEST
 
         src = AcpEvent(kind=EVENT_PERMISSION_REQUEST, title="x" * 400, is_shell=True)
         wrapped = AcpProvider._to_llm_event(src)

@@ -28,8 +28,8 @@ cannot "fix" the leak by breaking generation allocation:
 
 from __future__ import annotations
 
-from kiro_crew.cron_service.claims import RunClaims
-from kiro_crew.cron_service.model import CronJob, CronSchedule
+from aj_crew.cron_service.claims import RunClaims
+from aj_crew.cron_service.model import CronJob, CronSchedule
 
 
 def _one_shot_job(job_id: str) -> CronJob:

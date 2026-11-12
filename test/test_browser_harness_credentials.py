@@ -1,4 +1,4 @@
-"""Browser credentials: the edition seam and how it reaches Kiro's Chromium
+"""Browser credentials: the edition seam and how it reaches Aj's Chromium
 (``browser_harness/credentials.py`` and the supervisor's start).
 
 Every test is deterministic: the relay is a fake that records the CDP it is asked to
@@ -16,11 +16,11 @@ from typing import Any
 
 import pytest
 
-from kiro_crew.browser_harness import HARNESS_VERSION, credentials, supervisor
-from kiro_crew.browser_harness.supervisor import HarnessSupervisor
-from kiro_crew.platform import interfaces
-from kiro_crew.platform.bootstrap import build_default_context
-from kiro_crew.platform.defaults import DefaultBrowserCredentialProvider
+from aj_crew.browser_harness import HARNESS_VERSION, credentials, supervisor
+from aj_crew.browser_harness.supervisor import HarnessSupervisor
+from aj_crew.platform import interfaces
+from aj_crew.platform.bootstrap import build_default_context
+from aj_crew.platform.defaults import DefaultBrowserCredentialProvider
 
 #: A value no output except the browser-bound CDP params may ever carry.
 SECRET = "s3cr3t-cookie-value-9f1c"
@@ -137,9 +137,9 @@ def _target(kind: str = "kiro_chromium", reason: str = "start") -> Any:
 
 
 def test_the_default_context_composes_a_provider_that_supplies_nothing() -> None:
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
-    ctx = build_default_context(KiroCrewConfig())
+    ctx = build_default_context(AjCrewConfig())
     provider = ctx.browser_credentials
     assert isinstance(provider, DefaultBrowserCredentialProvider)
     assert provider.name() is None
@@ -324,7 +324,7 @@ def test_the_snapshot_walker_never_reads_document_cookie() -> None:
 def test_no_helper_the_agent_reaches_can_read_cookies() -> None:
     for name in supervisor.HELPERS:
         assert "cookie" not in name.lower()
-    from kiro_crew.browser_harness import ops
+    from aj_crew.browser_harness import ops
 
     assert not any("cookie" in op.lower() for op in ops.OPS)
 
@@ -522,7 +522,7 @@ async def test_the_provider_status_is_reduced_and_needs_refresh_is_a_state(tmp_p
 
 @pytest.mark.asyncio
 async def test_a_missing_or_expired_source_is_needs_refresh_not_a_crash(tmp_path: Path) -> None:
-    from kiro_crew.browser_harness.credential_files import CredentialSourceError
+    from aj_crew.browser_harness.credential_files import CredentialSourceError
 
     missing = FakeProvider(raises=CredentialSourceError("source_missing"))
     status = await _apply(FakeRelay(), missing)
@@ -547,7 +547,7 @@ class _Sel:
 async def test_each_injection_writes_one_audit_row_without_a_value(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    import kiro_crew.sel as sel_module
+    import aj_crew.sel as sel_module
 
     fake = _Sel()
     monkeypatch.setattr(sel_module, "sel", lambda: fake)
@@ -579,7 +579,7 @@ async def test_a_changed_fingerprint_re_pulls_before_the_next_navigation(
 
 @pytest.mark.asyncio
 async def test_the_op_route_asks_before_navigating_and_never_fails_the_op() -> None:
-    from kiro_crew.dashboard.handlers import browser_ops
+    from aj_crew.dashboard.handlers import browser_ops
 
     assert {"navigate", "tabs"} <= browser_ops._NAVIGATING_OPS
     assert "click" not in browser_ops._NAVIGATING_OPS
@@ -601,7 +601,7 @@ def test_read_source_file_refuses_what_a_provider_must_not_read(
 ) -> None:
     import os
 
-    from kiro_crew.browser_harness import credential_files as cf
+    from aj_crew.browser_harness import credential_files as cf
 
     def code(path: Path, **kw: Any) -> str:
         with pytest.raises(cf.CredentialSourceError) as err:
@@ -629,7 +629,7 @@ def test_read_source_file_refuses_what_a_provider_must_not_read(
 def test_source_fingerprint_moves_when_the_file_does(tmp_path: Path) -> None:
     import os
 
-    from kiro_crew.browser_harness.credential_files import source_fingerprint
+    from aj_crew.browser_harness.credential_files import source_fingerprint
 
     path = tmp_path / "jar"
     assert source_fingerprint(path) is None

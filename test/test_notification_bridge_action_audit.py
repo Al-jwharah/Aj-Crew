@@ -21,8 +21,8 @@ from crew_log_emit_helpers import (  # noqa: F401 -- the autouse fixture registe
     _open_session,
 )
 
-from kiro_crew.notifications.bridge_action_audit import SEL_OPERATION, audit_action
-from kiro_crew.notifications.bridge_actions import ActionOutcome, BridgeActionRegistry
+from aj_crew.notifications.bridge_action_audit import SEL_OPERATION, audit_action
+from aj_crew.notifications.bridge_actions import ActionOutcome, BridgeActionRegistry
 
 _CHOICES = {"approve": True, "deny": False}
 _DEADLINE = {"ttl_s": 300.0}  # flake-ok: a bind deadline nothing waits on
@@ -39,7 +39,7 @@ class _Sel:
 @pytest.fixture()
 def sel_log(monkeypatch) -> _Sel:
     log = _Sel()
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: log)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: log)
     return log
 
 
@@ -152,7 +152,7 @@ async def test_a_refusal_names_the_bound_owner_beside_the_stranger(sel_log):
 async def test_a_press_after_the_binding_was_pruned_is_audited_as_expired(sel_log, monkeypatch):
     """A late press is recorded as expired against its own session, not as a forgery."""
     clock = {"now": 1000.0}
-    monkeypatch.setattr("kiro_crew.notifications.bridge_actions.bridge_clock", lambda: clock["now"])
+    monkeypatch.setattr("aj_crew.notifications.bridge_actions.bridge_clock", lambda: clock["now"])
     _open_session()
     registry = BridgeActionRegistry()
     _decision, token = await _bound(registry)
@@ -245,8 +245,8 @@ async def test_a_failing_audit_never_reaches_the_caller(monkeypatch):
     def _boom(*args: Any, **kwargs: Any) -> None:
         raise OSError("disk full")
 
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: type("S", (), {"log_api_access": _boom})())
-    monkeypatch.setattr("kiro_crew.crew_log.emit.on_approval_bridged", _boom)
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: type("S", (), {"log_api_access": _boom})())
+    monkeypatch.setattr("aj_crew.crew_log.emit.on_approval_bridged", _boom)
     registry = BridgeActionRegistry()
     _decision, token = await _bound(registry)
     audit_action(registry, token, ActionOutcome.ADMITTED, transport="slack")

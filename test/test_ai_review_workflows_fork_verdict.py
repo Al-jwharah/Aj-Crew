@@ -776,10 +776,10 @@ class TestForkLaneSurfacesAnUnstampedReviewBody:
     def _findings_body(self, stamp: str | None) -> str:
         """A complete review with two findings; ``stamp`` None means unstamped."""
         body = (
-            "BLOCKING -- src/kiro_crew/apps/builtins/thing/app.json:2 -- new built-in app\n"
+            "BLOCKING -- src/aj_crew/apps/builtins/thing/app.json:2 -- new built-in app\n"
             "Anchor: no-new-builtin-apps\n"
             "\n"
-            "BLOCKING -- src/kiro_crew/dashboard/chat_folders.py:618 -- blocking call on the loop\n"
+            "BLOCKING -- src/aj_crew/dashboard/chat_folders.py:618 -- blocking call on the loop\n"
             "Anchor: no-blocking-call-on-event-loop\n"
             "\n"
             f"[BLOCK-MERGE] {self.HEAD}\n"

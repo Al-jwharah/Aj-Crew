@@ -14,8 +14,8 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import chat_fork, chat_utils_display, display_verdicts
-from kiro_crew.dashboard.chat_persistence import save_slot_off_loop
+from aj_crew.dashboard import chat_fork, chat_utils_display, display_verdicts
+from aj_crew.dashboard.chat_persistence import save_slot_off_loop
 
 # Stored verdicts are off where there is no effective uid (Windows).
 pytestmark = pytest.mark.skipif(os.name == "nt", reason="stored verdicts are POSIX-only")

@@ -15,7 +15,7 @@ from unittest.mock import MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew.dashboard.handlers import source_providers as source
+from aj_crew.dashboard.handlers import source_providers as source
 
 
 @pytest.fixture(autouse=True, name="_mock_source_sel")
@@ -33,7 +33,7 @@ def _no_visibility_refresh_side_task(_floor_monkeypatch):
     task; nothing in this module awaits it, so it ran on into the NEXT test and
     past this one's pins. Its ``_run_provider`` resolves the provider CLI on a
     worker thread, and that resolution reads ``workspace_root()``, which reached
-    ``config_dir()`` after ``KIROCREW_HOME`` had been unpinned and created the
+    ``config_dir()`` after ``AJCREW_HOME`` had been unpinned and created the
     operator's real ``~/.kiro/crew`` (third side-effect audit, four tests here).
     No test in this module asserts anything about visibility
     (``test_public_repo_chip_status.py`` owns that surface and drains the set

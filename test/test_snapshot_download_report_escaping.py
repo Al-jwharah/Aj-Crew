@@ -10,7 +10,7 @@ import textwrap
 from contextlib import redirect_stdout
 from pathlib import Path
 
-from kiro_crew import snapshot as snap
+from aj_crew import snapshot as snap
 
 ESC = chr(27)
 PAYLOAD = f"{ESC}[2J{ESC}[1;1HRESTORE SUCCEEDED -- nothing was redacted"

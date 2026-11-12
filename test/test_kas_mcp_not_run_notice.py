@@ -13,8 +13,8 @@ from __future__ import annotations
 import pytest
 from kas_agents_helpers import _spec
 
-from kiro_crew.acp import kas_agents, kas_env_launch
-from kiro_crew.acp.kas_agents import (
+from aj_crew.acp import kas_agents, kas_env_launch
+from aj_crew.acp.kas_agents import (
     NOT_RUN_INSECURE_URL,
     NOT_RUN_REGISTRY,
     NOT_RUN_REGISTRY_IF_GOVERNED,
@@ -22,20 +22,20 @@ from kiro_crew.acp.kas_agents import (
     build_kas_custom_agents,
     to_client_custom_agent,
 )
-from kiro_crew.acp.kas_env_launch import bridgeable, kas_accepts_url
-from kiro_crew.acp.kas_withheld_notice import withheld_credentials_notice
-from kiro_crew.kas_env_shim import SHIM_MODULE
+from aj_crew.acp.kas_env_launch import bridgeable, kas_accepts_url
+from aj_crew.acp.kas_withheld_notice import withheld_credentials_notice
+from aj_crew.kas_env_shim import SHIM_MODULE
 
 
 @pytest.fixture(autouse=True)
 def home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     return tmp_path
 
 
 def _collect(servers: dict, session_key: str = "s-1") -> tuple[dict, WithheldOut]:
     withheld: WithheldOut = {}
-    spec = _spec(mcpServers={"kirocrew-core": {"command": "x"}, **servers})
+    spec = _spec(mcpServers={"ajcrew-core": {"command": "x"}, **servers})
     entry = to_client_custom_agent(
         "a",
         spec,
@@ -145,12 +145,12 @@ class TestRegistryMode:
         _, withheld = _collect({"gitlab": {"command": "g", "env": {"TOKEN": "v"}}})
         assert withheld == {
             "gitlab": ((), (NOT_RUN_REGISTRY,), True),
-            "kirocrew-core": ((), (NOT_RUN_REGISTRY_IF_GOVERNED,), True),
+            "ajcrew-core": ((), (NOT_RUN_REGISTRY_IF_GOVERNED,), True),
         }
         notice = withheld_credentials_notice(withheld)
-        assert "• gitlab" in notice and "• kirocrew-core" in notice
+        assert "• gitlab" in notice and "• ajcrew-core" in notice
         assert "If your Kiro profile is registry-governed" in notice
-        assert "kirocrew config set agent.mcp_registry_mode false" in notice
+        assert "ajcrew config set agent.mcp_registry_mode false" in notice
 
     def test_registry_mode_off_names_nothing(self, monkeypatch):
         monkeypatch.setattr(kas_agents, "_registry_governed", lambda: False)
@@ -178,7 +178,7 @@ def test_a_loopback_bridge_never_goes_through_an_environment_proxy(monkeypatch, 
     accepts would otherwise reach ``http_proxy`` in cleartext with the headers."""
     import urllib.request
 
-    from kiro_crew.kas_http_bridge import _opener
+    from aj_crew.kas_http_bridge import _opener
 
     monkeypatch.setenv("http_proxy", "http://proxy.invalid:8080")
     monkeypatch.setenv("no_proxy", "localhost,127.0.0.1,::1")
@@ -211,7 +211,7 @@ def test_the_bridge_dials_the_canonical_loopback_host(home, url, dialled):
     through DNS, so the snapshot must hold the canonical host the bridge dials."""
     import json
 
-    from kiro_crew.acp import kas_env_launch
+    from aj_crew.acp import kas_env_launch
 
     entry, relayed = kas_env_launch.relay_withheld_headers(
         {"type": "http", "url": url}, {"X": "y"}, session_key="s", agent_id="a", server="r"

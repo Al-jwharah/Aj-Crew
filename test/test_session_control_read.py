@@ -18,7 +18,7 @@ from session_control_helpers import (  # noqa: F401 -- the autouse fixtures regi
     _slot,
 )
 
-from kiro_crew.dashboard import session_control as sc
+from aj_crew.dashboard import session_control as sc
 
 # ── Reading: cursor semantics ────────────────────────────────────────────────
 

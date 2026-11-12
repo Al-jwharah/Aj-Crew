@@ -13,7 +13,7 @@ import { i18nT } from '../i18n/t'
 export interface TemplateProvenance {
   source?: string
   package?: string
-  kirocrew_owned?: boolean
+  ajcrew_owned?: boolean
   /** Crew this template is a private copy for (fork-on-edit lineage). */
   private_to?: string
 }
@@ -34,9 +34,9 @@ export interface TemplateProvenance {
 export type TemplateSourceKind = 'builtin' | 'package' | 'custom' | 'private'
 
 export function templateSourceKind(a: TemplateProvenance | undefined): TemplateSourceKind {
-  // Ownership first: Kiro Crew rewrites the files it owns unconditionally, so
+  // Ownership first: Aj Crew rewrites the files it owns unconditionally, so
   // that fact outranks a filename that also happens to look package-shaped.
-  if (a?.kirocrew_owned === true || a?.source === 'kirocrew') return 'builtin'
+  if (a?.ajcrew_owned === true || a?.source === 'ajcrew') return 'builtin'
   if (a?.private_to) return 'private'
   if (a?.source === 'package') return 'package'
   return 'custom'

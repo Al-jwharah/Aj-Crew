@@ -17,14 +17,14 @@ from typing import Any
 import pytest
 from acp_runtime_helpers import _make_runtime, _register
 
-from kiro_crew.acp.runtime import AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.runtime import AcpSessionHandle
+from aj_crew.acp.types import (
     EVENT_STEER_CLEARED,
     EVENT_STEER_CONSUMED,
     EVENT_STEER_QUEUED,
     JsonRpcMessage,
 )
-from kiro_crew.acp_backends import (
+from aj_crew.acp_backends import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     ACP_BACKENDS_COMPACT,

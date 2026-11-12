@@ -1,7 +1,7 @@
 """How the channel turn pipeline reads its recovery state and charges a failed turn.
 
-The helpers live in :mod:`kiro_crew.messaging.dispatch_recovery` and are reached, as every
-caller reaches them, through :mod:`kiro_crew.messaging.dispatch`. Each reader of the session
+The helpers live in :mod:`aj_crew.messaging.dispatch_recovery` and are reached, as every
+caller reaches them, through :mod:`aj_crew.messaging.dispatch`. Each reader of the session
 manager is defensive: a stand-in lacking the method, or answering with the wrong shape, reads
 as "nothing to report" rather than raising into a turn. ``charge_turn_failure`` exempts the
 death of a runtime other sessions shared, up to the breaker's own threshold, and at the
@@ -17,10 +17,10 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import runtime_death
-from kiro_crew.acp.client import AcpProcessDied
-from kiro_crew.messaging import dispatch
-from kiro_crew.messaging.link import build_dm_session_key
+from aj_crew import runtime_death
+from aj_crew.acp.client import AcpProcessDied
+from aj_crew.messaging import dispatch
+from aj_crew.messaging.link import build_dm_session_key
 
 #: A DM key with a generation, and the bucket the generation reader is asked for.
 _DM_KEY = build_dm_session_key("weixin", "agent", "u1", gen=2)
@@ -144,12 +144,10 @@ class TestReplayGap:
 
     def test_a_failing_gap_method_is_swallowed(self, caplog: pytest.LogCaptureFixture) -> None:
         sessions = SimpleNamespace(open_replay_gap=_Raises(), close_replay_gap=_Raises())
-        with caplog.at_level("DEBUG", logger="kiro_crew.messaging.dispatch"):
+        with caplog.at_level("DEBUG", logger="aj_crew.messaging.dispatch"):
             dispatch._set_replay_gap(sessions, "k", opened=True)
             dispatch._set_replay_gap(sessions, "k", opened=False)
-        logged = [
-            r.getMessage() for r in caplog.records if r.name == "kiro_crew.messaging.dispatch"
-        ]
+        logged = [r.getMessage() for r in caplog.records if r.name == "aj_crew.messaging.dispatch"]
         assert logged == ["replay gap open failed for k", "replay gap close failed for k"]
 
 

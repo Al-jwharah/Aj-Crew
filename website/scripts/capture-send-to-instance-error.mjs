@@ -25,12 +25,12 @@ import { json, makeFixedApi, handleBootRoute } from './lib/boot-api.mjs'
 
 const OUT = process.argv[2] || '../temp-screenshots/transfer-peer-too-old'
 const SLOT = 'chat-peerold'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 const INSTANCE = 'devdesk-2'
 
 /** The gateway's 502 body for a peer with no importer route. */
 const PEER_TOO_OLD = {
-  error: 'instance is running an older Kiro Crew that cannot receive sessions — update it, then reconnect',
+  error: 'instance is running an older Aj Crew that cannot receive sessions — update it, then reconnect',
   code: 'transfer_peer_too_old',
 }
 
@@ -42,7 +42,7 @@ const slots = [{
   running: false,
   last_message: '',
   messages: 2,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   memory_mode: 'persistent',
   project: PROJECT,
   modified: Math.floor(Date.now() / 1000),
@@ -135,7 +135,7 @@ const reason = await page.evaluate(() => {
     .find(n => (n.textContent || '').trim() === 'Failed')
   return el ? el.getAttribute('title') : ''
 })
-if (!reason.includes('older Kiro Crew')) errors.push(`ASSERT: reason does not name the cause: ${reason}`)
+if (!reason.includes('older Aj Crew')) errors.push(`ASSERT: reason does not name the cause: ${reason}`)
 if (!reason.includes('update it')) errors.push(`ASSERT: reason does not name the remedy: ${reason}`)
 if (/HTTP \d\d\d/.test(reason)) errors.push(`ASSERT: reason still leaks a status code: ${reason}`)
 

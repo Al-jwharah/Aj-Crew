@@ -18,9 +18,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.acp import runtime as rt
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew import platform_compat
+from aj_crew.acp import runtime as rt
+from aj_crew.testing.wait import async_wait_until
 
 
 def _bare_runtime(pid: int = 54321) -> rt.AcpRuntime:

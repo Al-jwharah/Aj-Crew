@@ -26,21 +26,21 @@ const extract = (source: string, pattern: RegExp, what: string): string => {
 
 describe('remoteCrew.ts mirrors of backend constants', () => {
   it('WARM_SET_CAP_AUTO_CEILING equals its Python namesake in instances/constants.py', () => {
-    const py = read('../../../src/kiro_crew/instances/constants.py')
+    const py = read('../../../src/aj_crew/instances/constants.py')
     const ceiling = extract(
       py,
       /^WARM_SET_CAP_AUTO_CEILING: int = (\d+)$/m,
-      'WARM_SET_CAP_AUTO_CEILING in src/kiro_crew/instances/constants.py',
+      'WARM_SET_CAP_AUTO_CEILING in src/aj_crew/instances/constants.py',
     )
     expect(WARM_SET_CAP_AUTO_CEILING).toBe(Number(ceiling))
   })
 
   it('BUILTIN_PROVISIONER_ID equals BUILTIN_PROVISIONER_ID in platform/interfaces.py', () => {
-    const py = read('../../../src/kiro_crew/platform/interfaces.py')
+    const py = read('../../../src/aj_crew/platform/interfaces.py')
     const id = extract(
       py,
       /^BUILTIN_PROVISIONER_ID(?::\s*str)?\s*=\s*"([^"]+)"/m,
-      'BUILTIN_PROVISIONER_ID in src/kiro_crew/platform/interfaces.py',
+      'BUILTIN_PROVISIONER_ID in src/aj_crew/platform/interfaces.py',
     )
     expect(BUILTIN_PROVISIONER_ID).toBe(id)
   })

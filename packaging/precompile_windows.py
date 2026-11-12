@@ -77,7 +77,7 @@ _PYC_FLAGS = {
 # Sorted ahead of every other ``.pth`` in the directory: ``site`` runs them in
 # name order, and one that imports a site-packages module before this line has
 # run could still write that module's cache.
-WRITE_BAN_PTH = "00-kirocrew-no-bytecode-writes.pth"
+WRITE_BAN_PTH = "00-ajcrew-no-bytecode-writes.pth"
 WRITE_BAN_LINE = "import sys; sys.dont_write_bytecode = True\n"
 
 

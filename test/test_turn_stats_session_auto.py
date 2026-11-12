@@ -16,10 +16,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.acp.types import TurnUsage
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.dashboard.chat_turn.turn_stats import _session_selected_auto
-from kiro_crew.dashboard.state import _ChatSlot, row_mid
+from aj_crew.acp.types import TurnUsage
+from aj_crew.dashboard import chat_runner
+from aj_crew.dashboard.chat_turn.turn_stats import _session_selected_auto
+from aj_crew.dashboard.state import _ChatSlot, row_mid
 
 
 @pytest.mark.parametrize(

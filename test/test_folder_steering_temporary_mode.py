@@ -14,11 +14,11 @@ from pathlib import Path
 import pytest
 from test_member_essential_context import env as _member_env
 
-from kiro_crew import folder_steering
-from kiro_crew.context import ContextBuilder
-from kiro_crew.folder_steering import FOLDER_STEERING_HEADER as _RAW_HEADER
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew import folder_steering
+from aj_crew.context import ContextBuilder
+from aj_crew.folder_steering import FOLDER_STEERING_HEADER as _RAW_HEADER
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 member_env = _member_env
 

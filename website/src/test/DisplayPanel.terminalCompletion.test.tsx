@@ -13,9 +13,9 @@ import { renderWithProviders } from './helpers'
  * off — the same rule the backend applies.
  */
 
-const { patchConfigMock, kirocrewConfigMock } = vi.hoisted(() => ({
+const { patchConfigMock, ajcrewConfigMock } = vi.hoisted(() => ({
   patchConfigMock: vi.fn((_path: string, _value: unknown) => Promise.resolve({})),
-  kirocrewConfigMock: vi.fn(() => Promise.resolve({})),
+  ajcrewConfigMock: vi.fn(() => Promise.resolve({})),
 }))
 
 vi.mock('../api/client', () => {
@@ -31,7 +31,7 @@ vi.mock('../api/client', () => {
   }
   return {
     api: {
-      kirocrewConfig: kirocrewConfigMock,
+      ajcrewConfig: ajcrewConfigMock,
       patchConfig: patchConfigMock,
       installTheme: vi.fn(() => Promise.resolve({ ok: true })),
       kiroPrerequisite: vi.fn(() => new Promise(() => {})),
@@ -101,7 +101,7 @@ import { DisplayPanel } from '../pages/settings/DisplayPanel'
 const KEY = 'dashboard.terminal.completion.enabled'
 
 function seed(completion: Record<string, unknown> | undefined) {
-  kirocrewConfigMock.mockImplementation(() =>
+  ajcrewConfigMock.mockImplementation(() =>
     Promise.resolve({ dashboard: { terminal: completion === undefined ? {} : { completion } } }),
   )
 }
@@ -162,7 +162,7 @@ describe('DisplayPanel → Terminal command completion', () => {
       stored = value
       return Promise.resolve({})
     }) as never)
-    kirocrewConfigMock.mockImplementation(() =>
+    ajcrewConfigMock.mockImplementation(() =>
       Promise.resolve({
         dashboard: { terminal: stored === undefined ? {} : { completion: { enabled: stored } } },
       }),

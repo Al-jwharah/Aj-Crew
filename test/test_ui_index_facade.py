@@ -1,10 +1,10 @@
-"""``kiro_crew.ui_index`` keeps the patch seams and the surface the one module had.
+"""``aj_crew.ui_index`` keeps the patch seams and the surface the one module had.
 
-``kiro_crew.ui_index`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over
+``aj_crew.ui_index`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over
 ``ui_index_match``, ``ui_index_load`` and ``ui_index_records``, and keeps the public
 surface itself: ``find_ui``, ``browse_ui`` and its areas, the guide bindings and
 ``setting_labels``. Callers, tests and documents still reach every name as
-``kiro_crew.ui_index.<name>``, and the moved code reads its names as plain module
+``aj_crew.ui_index.<name>``, and the moved code reads its names as plain module
 globals, so a patch through the facade reaches that code only because the mirror writes
 it into every module holding the name.
 
@@ -29,7 +29,7 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror, ui_index
+from aj_crew import _facade_mirror, ui_index
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_ui_index_facade")
 
@@ -37,13 +37,13 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_ui_index_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.ui_index"
+FACADE = "aj_crew.ui_index"
 SRC_DIR = Path(ui_index.__file__).resolve().parent
 #: The owners, lowest layer first.
 OWNERS = (
-    "kiro_crew.ui_index_match",
-    "kiro_crew.ui_index_load",
-    "kiro_crew.ui_index_records",
+    "aj_crew.ui_index_match",
+    "aj_crew.ui_index_load",
+    "aj_crew.ui_index_records",
 )
 _THIS_FILE = Path(__file__).resolve()
 
@@ -119,7 +119,7 @@ def test_a_facade_patch_of_every_scanned_name_reaches_every_module_holding_it() 
 def test_a_patched_index_path_reaches_the_loader() -> None:
     """``load_index`` reads ``INDEX_PATH`` in its owner; a patch through the facade is
     the path it reads, as it was when both lived in one module."""
-    load = sys.modules["kiro_crew.ui_index_load"]
+    load = sys.modules["aj_crew.ui_index_load"]
     missing = SRC_DIR / "docs" / "no-such-ui-index.json"
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(ui_index, "INDEX_PATH", missing)
@@ -134,7 +134,7 @@ def test_the_owners_load_lowest_layer_first() -> None:
     owners listed before it -- the order the facade loads them and a read resolves in."""
     owners = list(_index().owners)
     assert owners == list(OWNERS)
-    on_disk = sorted(f"kiro_crew.{p.stem}" for p in SRC_DIR.glob("ui_index_*.py"))
+    on_disk = sorted(f"aj_crew.{p.stem}" for p in SRC_DIR.glob("ui_index_*.py"))
     assert on_disk == sorted(OWNERS)
     late: dict[str, list[str]] = {}
     for position, owner in enumerate(owners):
@@ -164,7 +164,7 @@ def test_the_facade_keeps_the_default_read_path_and_forwards_no_table() -> None:
 def test_the_index_cache_is_one_dict_reached_through_the_facade() -> None:
     """The test trees reset the cache with ``ui_index._cache.update(...)``: the facade must
     serve the very dict ``load_index`` reads, not a copy."""
-    load = sys.modules["kiro_crew.ui_index_load"]
+    load = sys.modules["aj_crew.ui_index_load"]
     assert "_cache" not in vars(ui_index)
     assert ui_index._cache is vars(load)["_cache"]
 
@@ -172,7 +172,7 @@ def test_the_index_cache_is_one_dict_reached_through_the_facade() -> None:
 def test_the_packaged_index_paths_resolve_beside_the_package() -> None:
     """``INDEX_PATH``, ``AUTO_INDEX_PATH`` and the built-in apps directory are computed from
     their module's own path, so their owners sit beside ``ui_index.py`` in
-    ``src/kiro_crew`` and the files are the ones they always were."""
+    ``src/aj_crew`` and the files are the ones they always were."""
     assert ui_index.INDEX_PATH == SRC_DIR / "docs" / "ui-index.generated.json"
     assert ui_index.AUTO_INDEX_PATH == SRC_DIR / "static" / "dist" / "ui-index.auto.json"
     assert ui_index._BUILTIN_APPS_DIR == SRC_DIR / "apps" / "builtins"
@@ -181,16 +181,16 @@ def test_the_packaged_index_paths_resolve_beside_the_package() -> None:
 
 
 def test_the_family_logs_through_one_logger_named_for_the_facade() -> None:
-    """``caplog`` filters keyed on ``kiro_crew.ui_index`` keep seeing the moved code."""
+    """``caplog`` filters keyed on ``aj_crew.ui_index`` keep seeing the moved code."""
     assert ui_index.logger.name == FACADE
     loggers = {m.__name__: vars(m)["logger"] for m in _family() if "logger" in vars(m)}
-    assert "kiro_crew.ui_index_load" in loggers
+    assert "aj_crew.ui_index_load" in loggers
     assert sorted(name for name, value in loggers.items() if value is not ui_index.logger) == []
 
 
 def test_an_exception_an_owner_defines_keeps_the_facade_module() -> None:
     """A traceback or a log line renders a raised class as ``module.qualname``, so an
-    exception class an owner defines reports ``kiro_crew.ui_index``, as it did before it
+    exception class an owner defines reports ``aj_crew.ui_index``, as it did before it
     moved."""
     found = {
         name: value

@@ -3,8 +3,8 @@
 Seeds old-style ``config.json`` rows beside created and customized crewmates and
 asserts that only generated rows bound to installed matching-source specs are
 candidates. A candidate's description may differ from its spec; ``member_id``,
-private specs, the runtime's own (``kirocrew_owned``) specs, missing specs,
-non-string or mismatched sources, ``kirocrew``
+private specs, the runtime's own (``ajcrew_owned``) specs, missing specs,
+non-string or mismatched sources, ``ajcrew``
 rows, non-default protected fields, unknown keys, overlay-owned rows and rows
 some team lists keep a
 crewmate. Package and legacy ``aim`` sources are equivalent.
@@ -32,12 +32,12 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import crewmate_prune_migration as mig
-from kiro_crew.agent import kiro_agents_dir_path
-from kiro_crew.agent_discovery import AgentInfo
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig, config_path
-from kiro_crew.memory_stores import provision_member_memory
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew import crewmate_prune_migration as mig
+from aj_crew.agent import kiro_agents_dir_path
+from aj_crew.agent_discovery import AgentInfo
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig, config_path
+from aj_crew.memory_stores import provision_member_memory
+from aj_crew.testing.wait import async_wait_until, await_until
 
 
 @pytest.fixture(autouse=True)
@@ -50,7 +50,7 @@ def _agents_dir(tmp_path, monkeypatch):
     """
     root = tmp_path / "agents"
     root.mkdir()
-    monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", root)
+    monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", root)
     return root
 
 
@@ -66,9 +66,9 @@ def _spec(name: str, **kw) -> AgentInfo:
     return AgentInfo(**base)
 
 
-def _synced(name: str, source: str = "builtin") -> KiroCrewAgentConfig:
+def _synced(name: str, source: str = "builtin") -> AjCrewAgentConfig:
     # Exactly what an older sync wrote: the spec's description and source.
-    return KiroCrewAgentConfig(kiro_agent=name, description=f"{name} agent", source=source)
+    return AjCrewAgentConfig(kiro_agent=name, description=f"{name} agent", source=source)
 
 
 def _spec_path(name: str) -> Path:
@@ -139,8 +139,8 @@ def bindings_dir(tmp_path, monkeypatch):
     """Point the DM-binding path at a scratch dir; ``write(name)`` opens a thread."""
     root = tmp_path / "dm"
     root.mkdir()
-    monkeypatch.setattr("kiro_crew.members.dm_binding_path", lambda slug: root / f"{slug}.json")
-    monkeypatch.setattr("kiro_crew.members.member_slug", lambda name, cfg=None: name)
+    monkeypatch.setattr("aj_crew.members.dm_binding_path", lambda slug: root / f"{slug}.json")
+    monkeypatch.setattr("aj_crew.members.member_slug", lambda name, cfg=None: name)
 
     def write(
         name: str,
@@ -164,10 +164,10 @@ def bindings_dir(tmp_path, monkeypatch):
 @pytest.fixture
 def old_style_config():
     """Three rows: two the sync left (one chatted, one never), one made by hand."""
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.agents["radar"] = _synced("radar")
     cfg.agents["scout"] = _synced("scout")
-    cfg.agents["by-hand"] = KiroCrewAgentConfig(kiro_agent="radar", description="mine")
+    cfg.agents["by-hand"] = AjCrewAgentConfig(kiro_agent="radar", description="mine")
     provision_member_memory(cfg, "by-hand")
     # A row that was provisioned (own store, so `memory_store != "default"`)
     # but whose member_id is blank: not the never-provisioned signature, so not
@@ -176,17 +176,17 @@ def old_style_config():
     store = provision_member_memory(cfg, "kept-memory")
     cfg.agents["kept-memory"].member_id = ""  # back to the sync's shape, store kept
     cfg.save()
-    from kiro_crew.memory_stores import _named_store_dir
+    from aj_crew.memory_stores import _named_store_dir
 
     (_named_store_dir(store) / "memory" / "note.md").write_text("kept\n")
-    hand = KiroCrewConfig.load().agents["by-hand"]
+    hand = AjCrewConfig.load().agents["by-hand"]
     assert hand.member_id and hand.memory_store != "default"
     return {"radar": _spec("radar"), "scout": _spec("scout"), "kept-memory": _spec("kept-memory")}
 
 
 def _run(specs: dict, log, **kw):
     _write_specs(specs)
-    with patch("kiro_crew.agent_discovery.list_agents", return_value=list(specs.values())):
+    with patch("aj_crew.agent_discovery.list_agents", return_value=list(specs.values())):
         return mig.prune_synced_crewmates(log, **kw)
 
 
@@ -194,35 +194,33 @@ class TestThePass:
     def test_never_removes_the_first_crewmate(self, old_style_config, bindings_dir, log):
         # The row the installer writes for the first crewmate is bound to the
         # ordinary template under a different key, so it is never a sync row.
-        from kiro_crew.agent_files import ASSISTANT_MEMBER_NAME
+        from aj_crew.agent_files import ASSISTANT_MEMBER_NAME
 
-        cfg = KiroCrewConfig.load()
-        cfg.agents[ASSISTANT_MEMBER_NAME] = KiroCrewAgentConfig(
-            kiro_agent="kirocrew", source="builtin"
-        )
+        cfg = AjCrewConfig.load()
+        cfg.agents[ASSISTANT_MEMBER_NAME] = AjCrewAgentConfig(kiro_agent="ajcrew", source="builtin")
         cfg.save()
 
         report = _run(old_style_config, log)
 
         assert ASSISTANT_MEMBER_NAME not in report.removed
-        assert ASSISTANT_MEMBER_NAME in KiroCrewConfig.load().agents
+        assert ASSISTANT_MEMBER_NAME in AjCrewConfig.load().agents
         assert "scout" in report.removed
 
     def test_removes_never_chatted_keeps_chatted_leaves_hand_made(
         self, old_style_config, bindings_dir, log
     ):
-        before = KiroCrewConfig.load()
+        before = AjCrewConfig.load()
         hand_before = before.agents["by-hand"]
         assert not mig.marker_path().exists()
         bindings_dir("radar")
         log.dm("radar")  # the owner chatted with radar on the Crewmates page
-        log.session("chat-1", "kirocrew")
+        log.session("chat-1", "ajcrew")
 
         report = _run(old_style_config, log)
 
         assert report.removed == ["scout"]
         assert report.kept == ["radar"]
-        after = KiroCrewConfig.load()
+        after = AjCrewConfig.load()
         assert "scout" not in after.agents
         # The chatted row keeps its exact binding: a memory binding is identity,
         # chosen at creation, and no startup pass rewrites it.
@@ -249,7 +247,7 @@ class TestThePass:
         each such record must decode as the installed template on the shared
         store -- otherwise every reader refuses it as an unavailable member.
         """
-        from kiro_crew.execution_context import (
+        from aj_crew.execution_context import (
             EXECUTION_CONTEXT_KEY,
             ExecutionContext,
             MemoryStoreRef,
@@ -341,7 +339,7 @@ class TestThePass:
         assert report.kept == ["scout"]
 
     def test_sync_rows_with_matching_sources_are_removed(self, bindings_dir, log):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents["builtin"] = _synced("builtin", source="builtin")
         cfg.agents["omni"] = _synced("omni", source="package")
         cfg.agents["legacy"] = _synced("legacy", source="aim")
@@ -355,8 +353,8 @@ class TestThePass:
         assert set(report.removed) == {"builtin", "omni", "legacy"}
 
     def test_an_edited_description_without_a_dm_turn_is_removed(self, bindings_dir, log):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["scout"] = KiroCrewAgentConfig(
+        cfg = AjCrewConfig.load()
+        cfg.agents["scout"] = AjCrewAgentConfig(
             kiro_agent="scout", description="owner wording", source="package"
         )
         cfg.save()
@@ -365,27 +363,27 @@ class TestThePass:
             log,
         )
         assert report.removed == ["scout"]
-        assert "scout" not in KiroCrewConfig.load().agents
+        assert "scout" not in AjCrewConfig.load().agents
 
     def test_a_spec_less_row_is_never_removed(self, bindings_dir, log):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["empty"] = KiroCrewAgentConfig(
+        cfg = AjCrewConfig.load()
+        cfg.agents["empty"] = AjCrewAgentConfig(
             kiro_agent="empty", description="", source="package"
         )
-        cfg.agents["described"] = KiroCrewAgentConfig(
+        cfg.agents["described"] = AjCrewAgentConfig(
             kiro_agent="described", description="owner wording", source="package"
         )
         cfg.save()
         report = _run({}, log)
         assert report.removed == []
-        assert {"empty", "described"} <= KiroCrewConfig.load().agents.keys()
+        assert {"empty", "described"} <= AjCrewConfig.load().agents.keys()
 
     def test_rows_bound_to_skill_view_aliases_are_removed(self, bindings_dir, log):
-        # Discovery never lists a ``kirocrew-skill-view-*`` alias, so no spec is
+        # Discovery never lists an ``ajcrew-skill-view-*`` alias, so no spec is
         # reported for these rows; the older sync still wrote one per alias file.
-        a = "kirocrew-skill-view-000d98d7ce0f52f0500da355"
-        b = "kirocrew-skill-view-0245aff77b1473735250d2a0"
-        cfg = KiroCrewConfig.load()
+        a = "ajcrew-skill-view-000d98d7ce0f52f0500da355"
+        b = "ajcrew-skill-view-0245aff77b1473735250d2a0"
+        cfg = AjCrewConfig.load()
         cfg.save()
         raw = json.loads(config_path().read_text())
         raw["agents"][a] = {
@@ -413,34 +411,34 @@ class TestThePass:
         config_path().write_text(json.dumps(raw))
         report = _run({}, log)
         assert set(report.removed) == {a, b}
-        assert not {a, b} & KiroCrewConfig.load().agents.keys()
+        assert not {a, b} & AjCrewConfig.load().agents.keys()
 
     def test_a_skill_view_row_the_owner_chatted_with_or_claimed_is_kept(self, bindings_dir, log):
-        chatted = "kirocrew-skill-view-" + "1" * 24
-        created = "kirocrew-skill-view-" + "2" * 24
-        tuned = "kirocrew-skill-view-" + "3" * 24
-        runtime = "kirocrew-skill-view-" + "4" * 24
-        plain = "kirocrew-skill-view-" + "5" * 24
-        cfg = KiroCrewConfig.load()
+        chatted = "ajcrew-skill-view-" + "1" * 24
+        created = "ajcrew-skill-view-" + "2" * 24
+        tuned = "ajcrew-skill-view-" + "3" * 24
+        runtime = "ajcrew-skill-view-" + "4" * 24
+        plain = "ajcrew-skill-view-" + "5" * 24
+        cfg = AjCrewConfig.load()
         for name in (chatted, created, tuned, plain):
             cfg.agents[name] = _synced(name)
         cfg.agents[created].member_id = "member-created"
         cfg.agents[tuned].model = "m"
-        cfg.agents[runtime] = _synced(runtime, source="kirocrew")
+        cfg.agents[runtime] = _synced(runtime, source="ajcrew")
         cfg.save()
         log.dm(chatted)
         report = _run({}, log)
         assert report.removed == [plain] and report.refused == []
-        assert {chatted, created, tuned, runtime} <= KiroCrewConfig.load().agents.keys()
+        assert {chatted, created, tuned, runtime} <= AjCrewConfig.load().agents.keys()
 
     @pytest.mark.parametrize(
         "name",
         [
-            "kirocrew-skill-view-mine",
-            "kirocrew-skill-view-" + "a" * 23,
-            "kirocrew-skill-view-" + "a" * 25,
-            "kirocrew-skill-view-" + "A" * 24,
-            "kirocrew-skill-view-" + "g" * 24,
+            "ajcrew-skill-view-mine",
+            "ajcrew-skill-view-" + "a" * 23,
+            "ajcrew-skill-view-" + "a" * 25,
+            "ajcrew-skill-view-" + "A" * 24,
+            "ajcrew-skill-view-" + "g" * 24,
         ],
     )
     def test_a_prefixed_row_that_is_not_an_exact_alias_name_needs_a_spec(
@@ -449,37 +447,37 @@ class TestThePass:
         # Only the name the projection writes (prefix + 24 lowercase hex) is
         # judged on the row alone; any other tail is an ordinary row, and with
         # no installed spec it is kept.
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents[name] = _synced(name)
         cfg.save()
         report = _run({}, log)
         assert report.removed == []
-        assert name in KiroCrewConfig.load().agents
+        assert name in AjCrewConfig.load().agents
 
     def test_a_created_crewmate_is_never_removed(self, bindings_dir, log):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents["created"] = _synced("created")
         cfg.agents["created"].member_id = "member-created"
         cfg.save()
         report = _run({"created": _spec("created")}, log)
         assert report.removed == []
-        assert KiroCrewConfig.load().agents["created"].member_id == "member-created"
+        assert AjCrewConfig.load().agents["created"].member_id == "member-created"
 
     def test_second_boot_is_a_no_op(self, old_style_config, bindings_dir, log):
         log.dm("radar")
         _run(old_style_config, log)
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents["late"] = _synced("late")
         cfg.save()
         specs = dict(old_style_config, late=_spec("late"))
         report = _run(specs, log)
         assert report.skipped_marker is True
-        assert "late" in KiroCrewConfig.load().agents
+        assert "late" in AjCrewConfig.load().agents
 
     def test_the_first_passes_marker_does_not_stop_this_one(
         self, old_style_config, bindings_dir, log
     ):
-        from kiro_crew.config.paths import config_dir
+        from aj_crew.config.paths import config_dir
 
         earlier = [
             config_dir() / "crewmate_prune_migrated.json",
@@ -524,7 +522,7 @@ class TestKeptOnDoubt:
         assert report.kept == ["radar"]
         assert list(report.doubted) == ["scout"]
         assert "could not list archived transcripts" in report.doubted["scout"]
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         assert json.loads(mig.marker_path().read_text())["doubted"] == report.doubted
 
     def test_a_listed_archive_segment_that_disappears_keeps_that_crewmate(
@@ -544,7 +542,7 @@ class TestKeptOnDoubt:
         assert report.removed == ["radar"]
         assert list(report.doubted) == ["scout"]
         assert "disappeared before it could be opened" in report.doubted["scout"]
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         assert json.loads(mig.marker_path().read_text())["doubted"] == report.doubted
 
     def test_a_thread_whose_first_line_does_not_parse_keeps_that_crewmate(
@@ -554,7 +552,7 @@ class TestKeptOnDoubt:
         report = _run(old_style_config, log)
         assert report.removed == ["radar"]
         assert list(report.doubted) == ["scout"]
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         assert json.loads(mig.marker_path().read_text())["doubted"] == report.doubted
 
     def test_a_thread_that_is_not_utf8_keeps_that_crewmate(
@@ -635,7 +633,7 @@ class TestKeptOnDoubt:
         bindings_dir("scout", raw=b"{not json")
         report = _run(old_style_config, log)
         assert list(report.doubted) == ["scout"]
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         report = _run(old_style_config, log)
         assert report.skipped_marker is True
 
@@ -643,7 +641,7 @@ class TestKeptOnDoubt:
         report = _run(old_style_config, None)
         assert report.removed == []
         assert set(report.doubted) == {"radar", "scout"}
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         assert mig.marker_path().exists()
 
     def test_a_malformed_binding_file_keeps_that_crewmate(
@@ -655,7 +653,7 @@ class TestKeptOnDoubt:
         report = _run(old_style_config, log)
         assert report.removed == ["radar"]
         assert list(report.doubted) == ["scout"]
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         assert json.loads(mig.marker_path().read_text())["doubted"] == report.doubted
 
     def test_an_unreadable_binding_file_keeps_that_crewmate(
@@ -664,7 +662,7 @@ class TestKeptOnDoubt:
         bindings_dir("scout", raw=b"\xff\xfe")  # not UTF-8
         report = _run(old_style_config, log)
         assert list(report.doubted) == ["scout"]
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
 
     def test_an_unresolvable_binding_path_keeps_the_crewmate(
         self, old_style_config, bindings_dir, monkeypatch, log
@@ -672,10 +670,10 @@ class TestKeptOnDoubt:
         def _boom(slug):
             raise OSError("members root unreadable")
 
-        monkeypatch.setattr("kiro_crew.members.dm_binding_path", _boom)
+        monkeypatch.setattr("aj_crew.members.dm_binding_path", _boom)
         report = _run(old_style_config, log)
         assert set(report.doubted) == {"radar", "scout"}
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
 
     def test_a_binding_path_refused_by_containment_keeps_the_crewmate(
         self, old_style_config, bindings_dir, monkeypatch, log
@@ -683,15 +681,15 @@ class TestKeptOnDoubt:
         # A slug that passed ``member_slug`` but whose binding path resolves
         # outside the trust root (a symlinked component) is a binding that MAY
         # exist, not one that does not.
-        from kiro_crew.members import MemberSlugError
+        from aj_crew.members import MemberSlugError
 
         def _escapes(slug):
             raise MemberSlugError(f"member slug {slug!r} escapes root")
 
-        monkeypatch.setattr("kiro_crew.members.dm_binding_path", _escapes)
+        monkeypatch.setattr("aj_crew.members.dm_binding_path", _escapes)
         report = _run(old_style_config, log)
         assert set(report.doubted) == {"radar", "scout"}
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
 
     def test_a_doubt_on_one_candidate_does_not_spare_the_next(
         self, old_style_config, bindings_dir, log
@@ -702,7 +700,7 @@ class TestKeptOnDoubt:
         report = _run(old_style_config, log)
         assert list(report.doubted) == ["radar"]
         assert report.removed == ["scout"]
-        after = KiroCrewConfig.load()
+        after = AjCrewConfig.load()
         assert "radar" in after.agents and "scout" not in after.agents
 
     def test_a_row_that_changed_under_the_lock_is_refused_and_no_marker(
@@ -715,7 +713,7 @@ class TestKeptOnDoubt:
         original = mig.remove_never_chatted
 
         def _edit_then_remove(cfg_, names, **kw):
-            live = KiroCrewConfig.load()
+            live = AjCrewConfig.load()
             live.agents["scout"].model = "some-model"
             live.save()
             return original(cfg_, names, **kw)
@@ -724,7 +722,7 @@ class TestKeptOnDoubt:
             report = _run(old_style_config, log)
         assert report.removed == []
         assert report.refused == ["scout"]
-        assert KiroCrewConfig.load().agents["scout"].model == "some-model"
+        assert AjCrewConfig.load().agents["scout"].model == "some-model"
         assert not mig.marker_path().exists()
 
     def test_a_legacy_row_with_fewer_keys_is_still_removed(
@@ -732,7 +730,7 @@ class TestKeptOnDoubt:
     ):
         # A build whose record had no member_id wrote rows without that key;
         # the delete's fence is identity and shape, not key-for-key equality.
-        from kiro_crew.config.loader import read_config_for_update, update_config_locked
+        from aj_crew.config.loader import read_config_for_update, update_config_locked
 
         def _strip(doc):
             row = doc["agents"]["scout"]
@@ -762,7 +760,7 @@ class TestAbandoned:
             "radar": mig.ABANDONED_REASON,
             "scout": mig.ABANDONED_REASON,
         }
-        after = KiroCrewConfig.load()
+        after = AjCrewConfig.load()
         assert "radar" in after.agents and "scout" in after.agents
         assert json.loads(mig.marker_path().read_text())["doubted"] == report.doubted
         assert _run(old_style_config, log).skipped_marker is True
@@ -772,7 +770,7 @@ class TestAbandoned:
         # the config lock right before the delete. The signal lands between the
         # two, which is the last place a delete could still happen.
         _write_specs(old_style_config)
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         polls = 0
 
         def _second_poll_says_stop() -> bool:
@@ -786,7 +784,7 @@ class TestAbandoned:
         )
         assert (removed, refused, left) == ([], [], ["scout"])
         assert polls == 2
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
 
     def test_a_stop_during_the_pass_keeps_the_rest_and_writes_the_marker(
         self, old_style_config, bindings_dir, log
@@ -806,36 +804,36 @@ class TestAbandoned:
         assert report.kept == ["radar"]
         assert report.removed == [] and report.refused == []
         assert report.doubted == {"scout": mig.ABANDONED_REASON}
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         assert mig.marker_path().exists()
 
 
 class TestCandidates:
     def test_only_matching_builtin_package_and_aim_sources_are_candidates(self):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents["radar"] = _synced("radar")
         cfg.agents["omni"] = _synced("omni", source="package")
         cfg.agents["older"] = _synced("older", source="aim")
-        cfg.agents["runtime"] = KiroCrewAgentConfig(kiro_agent="runtime", source="kirocrew")
+        cfg.agents["runtime"] = AjCrewAgentConfig(kiro_agent="runtime", source="ajcrew")
         # The runtime's own helper specs read as ``builtin`` -- discovery keeps
-        # ``kirocrew_owned`` apart from ``source`` -- and a sync-shaped row
+        # ``ajcrew_owned`` apart from ``source`` -- and a sync-shaped row
         # bound to one is still never a candidate.
-        cfg.agents["kirocrew-conductor"] = _synced("kirocrew-conductor")
+        cfg.agents["ajcrew-conductor"] = _synced("ajcrew-conductor")
         # Never a candidate: a private copy, a row the owner tuned or routed, a
         # row whose name is not its binding, or a source the sync rule excludes.
-        cfg.agents["copy"] = KiroCrewAgentConfig(kiro_agent="copy", source="builtin")
-        cfg.agents["tuned"] = KiroCrewAgentConfig(kiro_agent="tuned", source="builtin", model="m")
-        cfg.agents["routed"] = KiroCrewAgentConfig(
+        cfg.agents["copy"] = AjCrewAgentConfig(kiro_agent="copy", source="builtin")
+        cfg.agents["tuned"] = AjCrewAgentConfig(kiro_agent="tuned", source="builtin", model="m")
+        cfg.agents["routed"] = AjCrewAgentConfig(
             kiro_agent="routed", source="builtin", triggers="x"
         )
         cfg.agents["renamed"] = _synced("radar")
-        cfg.agents["odd"] = KiroCrewAgentConfig(kiro_agent="odd", source="somewhere")
+        cfg.agents["odd"] = AjCrewAgentConfig(kiro_agent="odd", source="somewhere")
         specs = {
             "radar": _spec("radar"),
             "omni": _spec("omni", filename="Pkg-omni.json", source="package", package="Pkg"),
             "older": _spec("older", source="package", package="Pkg"),
-            "runtime": _spec("runtime", source="kirocrew", kirocrew_owned=True),
-            "kirocrew-conductor": _spec("kirocrew-conductor", kirocrew_owned=True),
+            "runtime": _spec("runtime", source="ajcrew", ajcrew_owned=True),
+            "ajcrew-conductor": _spec("ajcrew-conductor", ajcrew_owned=True),
             "copy": _spec("copy", private_to="someone"),
             "tuned": _spec("tuned"),
             "routed": _spec("routed"),
@@ -844,8 +842,8 @@ class TestCandidates:
         cfg.save()
         raw = mig._raw_agents_section()
         with (
-            patch("kiro_crew.agent_discovery.list_agents", return_value=list(specs.values())),
-            patch("kiro_crew.agent.kiro_agents_dir_path", return_value="/nowhere"),
+            patch("aj_crew.agent_discovery.list_agents", return_value=list(specs.values())),
+            patch("aj_crew.agent.kiro_agents_dir_path", return_value="/nowhere"),
         ):
             got = mig._synced_candidates(cfg, raw, {}, frozenset())
         assert list(got) == ["radar", "omni", "older"]
@@ -853,17 +851,17 @@ class TestCandidates:
         assert got["older"].source == "package"
 
     def test_a_spec_less_row_is_not_a_candidate(self):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["gone"] = KiroCrewAgentConfig(
+        cfg = AjCrewConfig.load()
+        cfg.agents["gone"] = AjCrewAgentConfig(
             kiro_agent="gone", description="any wording", source="package"
         )
         cfg.save()
         assert mig._synced_candidates(cfg, mig._raw_agents_section(), {}, frozenset()) == {}
 
     def test_a_non_string_row_source_is_kept_without_exception(self, log):
-        from kiro_crew.config.loader import update_config_locked
+        from aj_crew.config.loader import update_config_locked
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents["scout"] = _synced("scout")
         cfg.save()
 
@@ -874,56 +872,56 @@ class TestCandidates:
         update_config_locked(mutate=_break_source)
         report = _run({"scout": _spec("scout")}, log)
         assert report.removed == [] and report.refused == []
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         assert mig.marker_path().exists()
 
     def test_a_source_mismatch_is_kept(self, log):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents["scout"] = _synced("scout", source="builtin")
         cfg.save()
         spec = _spec("scout", source="package", package="Pkg")
         report = _run({"scout": spec}, log)
         assert report.removed == [] and report.refused == []
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         assert mig.marker_path().exists()
 
     def test_an_aim_row_bound_to_a_package_spec_is_a_candidate(self):
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents["legacy"] = _synced("legacy", source="aim")
         cfg.save()
         spec = _spec("legacy", source="package", package="Pkg")
-        with patch("kiro_crew.agent_discovery.list_agents", return_value=[spec]):
+        with patch("aj_crew.agent_discovery.list_agents", return_value=[spec]):
             got = mig._synced_candidates(cfg, mig._raw_agents_section(), {}, frozenset())
         assert got == {"legacy": mig.SyncedCandidate(filename="legacy.json", source="package")}
 
-    def test_a_kirocrew_row_is_kept(self, log):
-        cfg = KiroCrewConfig.load()
-        cfg.agents["runtime"] = KiroCrewAgentConfig(kiro_agent="runtime", source="kirocrew")
+    def test_a_ajcrew_row_is_kept(self, log):
+        cfg = AjCrewConfig.load()
+        cfg.agents["runtime"] = AjCrewAgentConfig(kiro_agent="runtime", source="ajcrew")
         cfg.save()
-        spec = _spec("runtime", source="kirocrew", kirocrew_owned=True)
+        spec = _spec("runtime", source="ajcrew", ajcrew_owned=True)
         report = _run({"runtime": spec}, log)
         assert report.removed == [] and report.refused == []
-        assert "runtime" in KiroCrewConfig.load().agents
+        assert "runtime" in AjCrewConfig.load().agents
         assert mig.marker_path().exists()
 
     def test_a_row_bound_to_a_runtime_owned_builtin_spec_is_kept(self, bindings_dir, log):
         # The conductor, worker, knowledge, research and heartbeat specs are
-        # ``builtin``-sourced but ``kirocrew_owned``: the flag is kept apart
+        # ``builtin``-sourced but ``ajcrew_owned``: the flag is kept apart
         # from ``source`` in discovery, so the source rule alone would let a
         # sync-shaped row bound to one through. It is never a candidate, so
         # with no DM turn it is neither removed nor refused, and the pass
         # records itself as complete.
-        cfg = KiroCrewConfig.load()
-        cfg.agents["kirocrew-conductor"] = _synced("kirocrew-conductor")
+        cfg = AjCrewConfig.load()
+        cfg.agents["ajcrew-conductor"] = _synced("ajcrew-conductor")
         cfg.agents["scout"] = _synced("scout")
         cfg.save()
         specs = {
-            "kirocrew-conductor": _spec("kirocrew-conductor", kirocrew_owned=True),
+            "ajcrew-conductor": _spec("ajcrew-conductor", ajcrew_owned=True),
             "scout": _spec("scout"),
         }
         report = _run(specs, log)
         assert report.removed == ["scout"] and report.refused == []
-        assert "kirocrew-conductor" in KiroCrewConfig.load().agents
+        assert "ajcrew-conductor" in AjCrewConfig.load().agents
         assert mig.marker_path().exists()
 
     @pytest.mark.parametrize(
@@ -931,13 +929,13 @@ class TestCandidates:
         [
             # The bound file is now one of ``OWNED_KIRO_AGENT_FILES``: discovery
             # still derives ``builtin`` from it (the stem is not ``<pkg>-scout``),
-            # so only the ``kirocrew_owned`` re-check can refuse.
+            # so only the ``ajcrew_owned`` re-check can refuse.
             pytest.param(
-                "kirocrew-conductor.json",
+                "ajcrew-conductor.json",
                 id="test_a_spec_that_became_runtime_owned_under_the_lock_refuses_the_delete",
             ),
             pytest.param(
-                "kirocrew.json", id="test_a_spec_replaced_by_a_kirocrew_source_refuses_the_delete"
+                "ajcrew.json", id="test_a_spec_replaced_by_a_ajcrew_source_refuses_the_delete"
             ),
         ],
     )
@@ -957,7 +955,7 @@ class TestCandidates:
         with patch.object(mig, "remove_never_chatted", _replace_spec_then_remove):
             report = _run(specs, log)
         assert report.refused == ["scout"]
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         assert not mig.marker_path().exists()
 
     def test_an_unchanged_spec_identity_under_the_lock_still_allows_delete(
@@ -974,7 +972,7 @@ class TestCandidates:
         with patch.object(mig, "remove_never_chatted", _edit_description_then_remove):
             report = _run(old_style_config, log)
         assert "scout" in report.removed
-        assert "scout" not in KiroCrewConfig.load().agents
+        assert "scout" not in AjCrewConfig.load().agents
         assert json.loads(_spec_path("scout").read_text())["description"] == (
             "rewritten in the file"
         )
@@ -992,13 +990,13 @@ class TestCandidates:
         with patch.object(mig, "remove_never_chatted", _rename_spec_then_remove):
             report = _run(old_style_config, log)
         assert report.refused == ["scout"]
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         assert not mig.marker_path().exists()
 
     def test_a_spec_made_private_under_the_lock_refuses_the_delete(
         self, old_style_config, bindings_dir, log
     ):
-        from kiro_crew import agent_state
+        from aj_crew import agent_state
 
         original = mig.remove_never_chatted
 
@@ -1009,7 +1007,7 @@ class TestCandidates:
         with patch.object(mig, "remove_never_chatted", _make_spec_private_then_remove):
             report = _run(old_style_config, log)
         assert report.refused == ["scout"]
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         assert not mig.marker_path().exists()
 
     def test_a_spec_that_vanished_under_the_lock_refuses_the_delete(
@@ -1028,35 +1026,35 @@ class TestCandidates:
         with patch.object(mig, "remove_never_chatted", _unlink_then_remove):
             report = _run(old_style_config, log)
         assert report.refused == ["scout"]
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         assert not mig.marker_path().exists()
 
     def test_a_row_the_overlay_touches_is_never_a_candidate(self):
-        # ``kirocrew config set --local agents.radar.model m`` leaves the base
+        # ``ajcrew config set --local agents.radar.model m`` leaves the base
         # row pristine and puts one leaf in config.local.json; deleting the
         # base row would leave that leaf as a crewmate bound to nothing.
-        from kiro_crew.config.loader import config_local_path
+        from aj_crew.config.loader import config_local_path
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents["radar"] = _synced("radar")
         cfg.agents["scout"] = _synced("scout")
         cfg.save()
         config_local_path().write_text(json.dumps({"agents": {"radar": {"model": "m"}}}))
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         raw = mig._raw_agents_section()
         overlay = mig._raw_agents_section(config_local_path())
         assert overlay == {"radar": {"model": "m"}}
         specs = {"radar": _spec("radar"), "scout": _spec("scout")}
         with (
-            patch("kiro_crew.agent_discovery.list_agents", return_value=list(specs.values())),
-            patch("kiro_crew.agent.kiro_agents_dir_path", return_value="/nowhere"),
+            patch("aj_crew.agent_discovery.list_agents", return_value=list(specs.values())),
+            patch("aj_crew.agent.kiro_agents_dir_path", return_value="/nowhere"),
         ):
             assert list(mig._synced_candidates(cfg, raw, overlay, frozenset())) == ["scout"]
 
     def test_an_overlay_leaf_appearing_under_the_lock_refuses_the_delete(
         self, old_style_config, bindings_dir, log
     ):
-        from kiro_crew.config.loader import config_local_path
+        from aj_crew.config.loader import config_local_path
 
         original = mig.remove_never_chatted
 
@@ -1067,15 +1065,15 @@ class TestCandidates:
         with patch.object(mig, "remove_never_chatted", _overlay_then_remove):
             report = _run(old_style_config, log)
         assert report.refused == ["scout"]
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         assert not mig.marker_path().exists()
 
     def test_a_teamed_row_is_never_a_candidate(self):
         # Placing a crewmate on a team is the owner's own act, so the row is
         # the owner's whatever its shape.
-        from kiro_crew import crew_teams
+        from aj_crew import crew_teams
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         cfg.agents["radar"] = _synced("radar")
         cfg.agents["scout"] = _synced("scout")
         cfg.save()
@@ -1084,8 +1082,8 @@ class TestCandidates:
         assert teamed == frozenset({"radar"})
         specs = {"radar": _spec("radar"), "scout": _spec("scout")}
         with (
-            patch("kiro_crew.agent_discovery.list_agents", return_value=list(specs.values())),
-            patch("kiro_crew.agent.kiro_agents_dir_path", return_value="/nowhere"),
+            patch("aj_crew.agent_discovery.list_agents", return_value=list(specs.values())),
+            patch("aj_crew.agent.kiro_agents_dir_path", return_value="/nowhere"),
         ):
             assert list(mig._synced_candidates(cfg, mig._raw_agents_section(), {}, teamed)) == [
                 "scout"
@@ -1096,25 +1094,25 @@ class TestCandidates:
     ):
         # Neither removed, refused nor doubted: not a candidate at all, so the
         # pass records itself as complete with the row in place.
-        from kiro_crew import crew_teams
+        from aj_crew import crew_teams
 
         crew_teams.create_team("ops", ["scout"], known=lambda: {"radar", "scout"})
         report = _run(old_style_config, log)
         assert report.removed == ["radar"]
         assert report.refused == [] and report.doubted == {}
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         assert [t.members for t in crew_teams.read_teams()] == [["scout"]]
         assert mig.marker_path().exists()
 
     def test_an_unteamed_row_is_still_removed_when_teams_exist(
         self, old_style_config, bindings_dir, log
     ):
-        from kiro_crew import crew_teams
+        from aj_crew import crew_teams
 
         crew_teams.create_team("ops", ["by-hand"], known=lambda: {"by-hand"})
         report = _run(old_style_config, log)
         assert set(report.removed) == {"radar", "scout"}
-        assert "scout" not in KiroCrewConfig.load().agents
+        assert "scout" not in AjCrewConfig.load().agents
         assert mig.marker_path().exists()
 
     def test_a_row_teamed_under_the_lock_refuses_the_delete(
@@ -1122,7 +1120,7 @@ class TestCandidates:
     ):
         # The team write lands between discovery and the delete: newer
         # evidence, the delete is refused, no marker, the row and its team stay.
-        from kiro_crew import crew_teams
+        from aj_crew import crew_teams
 
         original = mig.remove_never_chatted
 
@@ -1136,7 +1134,7 @@ class TestCandidates:
             report = _run(old_style_config, log)
         assert report.removed == ["radar"]
         assert report.refused == ["scout"]
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
         assert [t.members for t in crew_teams.read_teams()] == [["scout"]]
         assert not mig.marker_path().exists()
 
@@ -1145,7 +1143,7 @@ class TestCandidates:
     ):
         # None of them can be shown to be off a team, so all are kept on doubt
         # -- the way no conversation log keeps them -- and the marker records it.
-        from kiro_crew import crew_teams
+        from aj_crew import crew_teams
 
         path = crew_teams.teams_path()
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -1154,13 +1152,13 @@ class TestCandidates:
         assert report.removed == [] and report.refused == []
         assert set(report.doubted) == {"radar", "scout"}
         assert all(mig.TEAMS_UNREADABLE_REASON in why for why in report.doubted.values())
-        assert {"radar", "scout"} <= KiroCrewConfig.load().agents.keys()
+        assert {"radar", "scout"} <= AjCrewConfig.load().agents.keys()
         assert json.loads(mig.marker_path().read_text())["doubted"] == report.doubted
 
     def test_a_team_document_turned_unreadable_under_the_lock_refuses_the_delete(
         self, old_style_config, bindings_dir, log
     ):
-        from kiro_crew import crew_teams
+        from aj_crew import crew_teams
 
         original = mig.remove_never_chatted
 
@@ -1182,7 +1180,7 @@ class TestCandidates:
         # document lock is released the base file has already lost the row, so
         # a team write that waited on it cannot place a name the pass is about
         # to delete.
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         log.dm("radar")
         base_at_release: list[dict] = []
@@ -1210,7 +1208,7 @@ class TestCandidates:
         # after the peek: at the moment it is released, the base file on disk
         # has already lost the row. An overlay writer that waited on the lock
         # therefore finds the row gone, never a row it can still bind to.
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
         log.dm("radar")
         base_at_release: list[dict] = []
@@ -1240,8 +1238,8 @@ class TestCandidates:
         # has already lost the row, so a spec writer that waited on the lock
         # edits a spec no row is bound to -- never one about to be judged
         # against a description it just changed.
-        import kiro_crew.agent as agent_mod
-        from kiro_crew.config.loader import config_path
+        import aj_crew.agent as agent_mod
+        from aj_crew.config.loader import config_path
 
         log.dm("radar")
         base_at_release: list[dict] = []
@@ -1271,7 +1269,7 @@ class TestCandidates:
         # nothing takes a registry, overlay or spec lock while holding it), so
         # no writer that holds the base lock can wait on this pass for a lock
         # this pass waits on it for.
-        import kiro_crew.agent as agent_mod
+        import aj_crew.agent as agent_mod
 
         log.dm("radar")
         order: list[str] = []
@@ -1340,7 +1338,7 @@ class TestTheGate:
 
         from aiohttp import web
 
-        from kiro_crew.dashboard import server as server_mod
+        from aj_crew.dashboard import server as server_mod
 
         event = asyncio.Event()
         event.set()
@@ -1419,7 +1417,7 @@ class TestTheGate:
         # dashboard route; the gate keys on the method, never on the path.
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard import server as server_mod
+        from aj_crew.dashboard import server as server_mod
 
         monkeypatch.setattr(server_mod, "_CREWMATE_PRUNE_GATE_TIMEOUT_S", 0.05)
         app, _state, hits = self._app()
@@ -1432,7 +1430,7 @@ class TestTheGate:
     async def test_a_pass_that_never_settles_answers_503(self, monkeypatch):
         from aiohttp.test_utils import TestClient, TestServer
 
-        from kiro_crew.dashboard import server as server_mod
+        from aj_crew.dashboard import server as server_mod
 
         monkeypatch.setattr(server_mod, "_CREWMATE_PRUNE_GATE_TIMEOUT_S", 0.05)
         app, _state, hits = self._app()
@@ -1472,7 +1470,7 @@ class TestAwaitSettled:
     async def test_a_pass_that_settles_in_time_is_not_told_to_stop(self):
         import asyncio
 
-        from kiro_crew.dashboard import server as server_mod
+        from aj_crew.dashboard import server as server_mod
 
         state = self._state()
         waiter = asyncio.ensure_future(
@@ -1488,7 +1486,7 @@ class TestAwaitSettled:
     async def test_a_pass_past_its_budget_is_told_to_stop_and_still_waited_for(self, monkeypatch):
         import asyncio
 
-        from kiro_crew.dashboard import server as server_mod
+        from aj_crew.dashboard import server as server_mod
 
         monkeypatch.setattr(server_mod, "_CREWMATE_PRUNE_GATE_TIMEOUT_S", 0.05)
         state = self._state()
@@ -1512,7 +1510,7 @@ class TestAwaitSettled:
         # the same claimed-slot set, and it is tracked like the pass itself.
         import asyncio
 
-        from kiro_crew.dashboard import server as server_mod
+        from aj_crew.dashboard import server as server_mod
 
         calls: list[dict] = []
 
@@ -1552,7 +1550,7 @@ class TestOneProcess:
         # nothing of its own -- the other pass already judged the rows.
         import threading
 
-        from kiro_crew.platform_compat import file_lock, open_lock_file
+        from aj_crew.platform_compat import file_lock, open_lock_file
 
         log.dm("radar")
         holding = threading.Event()
@@ -1577,7 +1575,7 @@ class TestOneProcess:
         assert json.loads(mig.marker_path().read_text())["removed"] == ["scout"]
         # And the row is still here: the stand-in never deleted it, and this
         # pass, finding the marker, did not either.
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
 
     def test_a_holder_that_outlasts_the_wait_is_waited_for_not_given_up_on(
         self, old_style_config, bindings_dir, log, monkeypatch
@@ -1592,7 +1590,7 @@ class TestOneProcess:
         # lock and runs the pass itself.
         import threading
 
-        from kiro_crew.platform_compat import file_lock, open_lock_file
+        from aj_crew.platform_compat import file_lock, open_lock_file
 
         monkeypatch.setattr(mig, "PRUNE_LOCK_WAIT_S", 0.1)
         log.dm("radar")
@@ -1638,7 +1636,7 @@ class TestOneProcess:
         # The marker is written last, under the lock: its presence means the
         # holder's deletes are done, so a waiting pass may settle on it even
         # before the holder lets go of the lock.
-        from kiro_crew.platform_compat import file_lock, open_lock_file
+        from aj_crew.platform_compat import file_lock, open_lock_file
 
         monkeypatch.setattr(mig, "PRUNE_LOCK_WAIT_S", 0.1)
         log.dm("radar")
@@ -1648,7 +1646,7 @@ class TestOneProcess:
         assert report.skipped_marker is True
         assert report.lock_waits == 1
         assert report.removed == []
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
 
     def test_the_marker_is_created_exclusively(self, bindings_dir):
         mig._write_marker(mig.PruneReport(kept=["radar"]))
@@ -1667,10 +1665,10 @@ class TestOneProcess:
             with pytest.raises(PermissionError):
                 _run(old_style_config, log)
         assert not mig.marker_path().exists()
-        assert "scout" in KiroCrewConfig.load().agents
+        assert "scout" in AjCrewConfig.load().agents
 
     def test_the_lock_is_released_after_the_pass(self, old_style_config, bindings_dir, log):
-        from kiro_crew.platform_compat import file_lock, open_lock_file
+        from aj_crew.platform_compat import file_lock, open_lock_file
 
         log.dm("radar")
         report = _run(old_style_config, log)
@@ -1681,7 +1679,7 @@ class TestOneProcess:
                 pass
 
     def test_the_lock_is_released_when_the_pass_raises(self, old_style_config, bindings_dir, log):
-        from kiro_crew.platform_compat import file_lock, open_lock_file
+        from aj_crew.platform_compat import file_lock, open_lock_file
 
         with patch.object(mig, "_synced_candidates", side_effect=PermissionError("config")):
             with pytest.raises(PermissionError):

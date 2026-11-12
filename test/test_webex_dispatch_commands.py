@@ -1,4 +1,4 @@
-"""WebexDispatcher's slash commands: ``/yolo``, ``/kirocrew dashboard``, ``/sessions``, ``/model``
+"""WebexDispatcher's slash commands: ``/yolo``, ``/ajcrew dashboard``, ``/sessions``, ``/model``
 and ``/agent``.
 """
 
@@ -22,11 +22,11 @@ from webex_dispatch_helpers import (
     _space,
 )
 
-from kiro_crew.acp.types import EVENT_COMPLETE, AcpEvent
-from kiro_crew.webex import transport_dispatch as webex_dispatch
-from kiro_crew.webex.client import WebexInbound
-from kiro_crew.webex.commands import build_help_text, parse_command
-from kiro_crew.webex.transport_dispatch import WebexDispatcher
+from aj_crew.acp.types import EVENT_COMPLETE, AcpEvent
+from aj_crew.webex import transport_dispatch as webex_dispatch
+from aj_crew.webex.client import WebexInbound
+from aj_crew.webex.commands import build_help_text, parse_command
+from aj_crew.webex.transport_dispatch import WebexDispatcher
 
 # ------------------------------------------------------------------
 # /yolo — the global auto-approve grant
@@ -114,7 +114,7 @@ class TestYolo:
 
 
 # ------------------------------------------------------------------
-# /kirocrew dashboard — presigned login link
+# /ajcrew dashboard — presigned login link
 # ------------------------------------------------------------------
 
 
@@ -138,10 +138,10 @@ class TestDashboardLink:
         d.cfg.dashboard = SimpleNamespace(url=origin)
 
         with mock.patch(
-            "kiro_crew.dashboard.token_auth.generate_token", return_value=self.TOKEN
+            "aj_crew.dashboard.token_auth.generate_token", return_value=self.TOKEN
         ) as gen:
             with mock.patch.object(webex_dispatch, "sel") as sel_mock:
-                await d.handle_message(_inbound("/kirocrew dashboard 2h"))
+                await d.handle_message(_inbound("/ajcrew dashboard 2h"))
 
         assert gen.call_args.kwargs["ttl_seconds"] == 7200
         # The WHOLE token, not a prefix: a redacted link would still contain
@@ -161,19 +161,19 @@ class TestDashboardLink:
         """
         d = _dispatcher(FakeSessions(FakeProvider([])), FakeCtx(), FakeClient())
         inbound = WebexInbound(
-            person_email=_EMAIL, room_id="ROOM", text="/kirocrew dashboard", room_type="group"
+            person_email=_EMAIL, room_id="ROOM", text="/ajcrew dashboard", room_type="group"
         )
 
-        with mock.patch("kiro_crew.dashboard.token_auth.generate_token") as gen:
+        with mock.patch("aj_crew.dashboard.token_auth.generate_token") as gen:
             await d._handle_dashboard(inbound)
 
         gen.assert_not_called()
         assert "direct message" in d.client.sent[-1][1]
 
     @pytest.mark.asyncio
-    async def test_a_bare_kirocrew_answers_with_usage(self) -> None:
+    async def test_a_bare_ajcrew_answers_with_usage(self) -> None:
         d = _dispatcher(FakeSessions(FakeProvider([])), FakeCtx(), FakeClient())
-        await d.handle_message(_inbound("/kirocrew"))
+        await d.handle_message(_inbound("/ajcrew"))
         assert "Usage:" in d.client.sent[-1][1]
 
     @pytest.mark.asyncio
@@ -183,10 +183,10 @@ class TestDashboardLink:
         d.cfg.dashboard = SimpleNamespace(url="http://localhost:8765")
 
         with mock.patch(
-            "kiro_crew.dashboard.token_auth.generate_token",
+            "aj_crew.dashboard.token_auth.generate_token",
             side_effect=RuntimeError("secret=abc"),
         ):
-            await d.handle_message(_inbound("/kirocrew dashboard"))
+            await d.handle_message(_inbound("/ajcrew dashboard"))
 
         reply = d.client.sent[-1][1]
         assert "RuntimeError" in reply and "secret=abc" not in reply
@@ -201,7 +201,7 @@ class TestDashboardLink:
         Only the token SPLITTING is local, so a unit added to the shared parser
         reaches this command instead of diverging silently.
         """
-        from kiro_crew.dashboard.token_auth import parse_duration
+        from aj_crew.dashboard.token_auth import parse_duration
 
         assert parse_duration(webex_dispatch._ttl_spec(arg)) == secs
 
@@ -217,8 +217,8 @@ class TestDashboardLink:
         d = _dispatcher(FakeSessions(FakeProvider([])), FakeCtx(), FakeClient())
         d.cfg.dashboard = SimpleNamespace(url="http://localhost:8765")
 
-        with mock.patch("kiro_crew.dashboard.token_auth.generate_token", return_value="TOK") as gen:
-            await d.handle_message(_inbound(f"/kirocrew {arg}"))
+        with mock.patch("aj_crew.dashboard.token_auth.generate_token", return_value="TOK") as gen:
+            await d.handle_message(_inbound(f"/ajcrew {arg}"))
 
         assert gen.call_args.kwargs["ttl_seconds"] == 3600
         # The user is told the window they actually got.
@@ -227,7 +227,7 @@ class TestDashboardLink:
 
     def test_the_ttl_is_clamped_to_the_server_maximum(self) -> None:
         # A user-supplied duration must not be able to widen the login window.
-        from kiro_crew.dashboard.token_auth import MAX_SESSION_TTL_SECS, parse_duration
+        from aj_crew.dashboard.token_auth import MAX_SESSION_TTL_SECS, parse_duration
 
         assert parse_duration(webex_dispatch._ttl_spec("dashboard 9999h")) == MAX_SESSION_TTL_SECS
 
@@ -255,7 +255,7 @@ class FakeListingLog(FakeConvLog):
 class TestSessionsCommand:
     @staticmethod
     def _stem(d: WebexDispatcher, route: str, gen: int = 0) -> str:
-        from kiro_crew.history import transcript_stem
+        from aj_crew.history import transcript_stem
 
         key = d._session_key(route)
         return transcript_stem(f"{key}:gen{gen}" if gen else key)
@@ -559,7 +559,7 @@ class TestModelCommand:
             models.append(turn.model)
 
         await d.handle_message(_inbound("/model 2"))
-        with mock.patch("kiro_crew.webex.transport_dispatch.drive_turn", _capture):
+        with mock.patch("aj_crew.webex.transport_dispatch.drive_turn", _capture):
             await d.handle_message(_inbound("hello"))
 
         assert models == ["m-1"]
@@ -581,16 +581,16 @@ class TestModelCommand:
 
 
 def _agent_roster():
-    from kiro_crew.agent_discovery import AgentInfo
+    from aj_crew.agent_discovery import AgentInfo
 
     return [
         AgentInfo(name="beta", filename="beta.json", description="", model=""),
         AgentInfo(
-            name="kirocrew-worker",
-            filename="kirocrew-worker.json",
+            name="ajcrew-worker",
+            filename="ajcrew-worker.json",
             description="",
             model="",
-            kirocrew_owned=True,
+            ajcrew_owned=True,
         ),
     ]
 
@@ -601,7 +601,7 @@ class TestAgentCommand:
         sessions = FakeSessions(FakeProvider([AcpEvent(kind=EVENT_COMPLETE)]))
         client = FakeClient()
         d = _dispatcher(sessions, FakeCtx(), client, cfg=_cfg(default_agent=""))
-        with mock.patch("kiro_crew.telegram.transport_dispatch.list_agents", _agent_roster):
+        with mock.patch("aj_crew.telegram.transport_dispatch.list_agents", _agent_roster):
             await d.handle_message(_inbound("/agent beta"))
         assert "Agent set to `beta`" in client.sent[-1][1]
         assert sessions.successes == []  # a command, not a turn
@@ -613,24 +613,24 @@ class TestAgentCommand:
     async def test_bare_agent_lists_only_pickable_agents(self) -> None:
         client = FakeClient()
         d = _dispatcher(FakeSessions(FakeProvider([])), FakeCtx(), client)
-        with mock.patch("kiro_crew.telegram.transport_dispatch.list_agents", _agent_roster):
+        with mock.patch("aj_crew.telegram.transport_dispatch.list_agents", _agent_roster):
             await d.handle_message(_inbound("/agent"))
         reply = client.sent[-1][1]
-        assert "currently `default (kirocrew)`" in reply
+        assert "currently `default (ajcrew)`" in reply
         assert "`beta`" in reply
-        assert "kirocrew-worker" not in reply
+        assert "ajcrew-worker" not in reply
 
     @pytest.mark.asyncio
     async def test_internal_or_unknown_agent_is_refused(self) -> None:
         sessions = FakeSessions(FakeProvider([AcpEvent(kind=EVENT_COMPLETE)]))
         client = FakeClient()
         d = _dispatcher(sessions, FakeCtx(), client, cfg=_cfg(default_agent=""))
-        with mock.patch("kiro_crew.telegram.transport_dispatch.list_agents", _agent_roster):
-            await d.handle_message(_inbound("/agent kirocrew-worker"))
+        with mock.patch("aj_crew.telegram.transport_dispatch.list_agents", _agent_roster):
+            await d.handle_message(_inbound("/agent ajcrew-worker"))
             await d.handle_message(_inbound("/agent nope"))
         assert all("No agent named" in m for _, m in client.sent)
         await d.handle_message(_inbound("hi"))
-        assert sessions.last_agent == "kirocrew"
+        assert sessions.last_agent == "ajcrew"
 
     def test_agent_is_in_the_help_card(self) -> None:
         assert parse_command("/agent beta") == "agent"
@@ -641,7 +641,7 @@ class TestAgentSwitchGenerations:
     @pytest.mark.asyncio
     async def test_new_after_a_switch_never_resumes_the_new_agents_old_conversation(self) -> None:
         # Restart shape: nothing in memory, beta's bucket already holds gen 1-2.
-        from kiro_crew.messaging.link import build_dm_session_key
+        from aj_crew.messaging.link import build_dm_session_key
 
         sessions = FakeSessions(FakeProvider([]))
         for gen in (1, 2):
@@ -650,7 +650,7 @@ class TestAgentSwitchGenerations:
             )
         client = FakeClient()
         d = _dispatcher(sessions, FakeCtx(), client, cfg=_cfg(default_agent=""))
-        with mock.patch("kiro_crew.telegram.transport_dispatch.list_agents", _agent_roster):
+        with mock.patch("aj_crew.telegram.transport_dispatch.list_agents", _agent_roster):
             await d.handle_message(_inbound("/agent beta"))
         assert d._session_key(_EMAIL).endswith(":gen2")
         await d.handle_message(_inbound("/new"))

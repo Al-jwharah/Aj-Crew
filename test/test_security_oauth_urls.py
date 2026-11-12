@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.security: the OAuth authorization-URL credential gate.
+"""Tests for aj_crew.security: the OAuth authorization-URL credential gate.
 
 Where OAuth entropy is exempt, how ``sanitized_oauth_endpoint`` and its display form name a
 rejected endpoint without leaking it, whether the allowlist would fix a rejection, and the
@@ -19,8 +19,8 @@ from urllib.parse import unquote
 import pytest
 from oauth_url_corpus import OPERATOR_EXTENSION_OAUTH_URLS
 
-from kiro_crew import security
-from kiro_crew.security import (
+from aj_crew import security
+from aj_crew.security import (
     exfil,
     is_sensitive_path,
     oauth_url_contains_credential,
@@ -381,7 +381,7 @@ class TestOAuthAuthorizationUrlRedaction:
         assert diagnostic is not None
         assert diagnostic.rule == "exfil_query_length"
         assert diagnostic.parameter is None
-        with caplog.at_level("WARNING", logger="kiro_crew.security"):
+        with caplog.at_level("WARNING", logger="aj_crew.security"):
             assert oauth_url_contains_credential(url) is True
         output = json.dumps(diagnostic.as_dict(), sort_keys=True) + "\n" + caplog.text
         assert raw_name not in output
@@ -399,7 +399,7 @@ class TestOAuthAuthorizationUrlRedaction:
         assert diagnostic.component == "query_parameter"
         assert diagnostic.parameter == "state"
 
-        with caplog.at_level("WARNING", logger="kiro_crew.security"):
+        with caplog.at_level("WARNING", logger="aj_crew.security"):
             assert oauth_url_contains_credential(url) is True
 
         serialized = json.dumps(diagnostic.as_dict(), sort_keys=True)
@@ -628,7 +628,7 @@ class TestOAuthAuthorizationUrlRedaction:
         """
         from urllib.parse import quote
 
-        from kiro_crew.security import _MAX_URL_DECODE_PASSES
+        from aj_crew.security import _MAX_URL_DECODE_PASSES
 
         encoded = quote("-----BEGIN RSA " "PRIVATE KEY-----", safe="-")
         for _ in range(_MAX_URL_DECODE_PASSES):
@@ -1182,9 +1182,9 @@ class TestOperatorOAuthEndpointExtension:
         a reset, tests exercising the real emit path would depend on execution
         order.
         """
-        from kiro_crew import security
+        from aj_crew import security
 
-        _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         _floor_monkeypatch.setattr(security, "_OAUTH_EXTENSION_AUDITED", set())
         _floor_monkeypatch.setattr(security, "_OAUTH_EXTENSION_MEMO", {})
         return tmp_path
@@ -1196,7 +1196,7 @@ class TestOperatorOAuthEndpointExtension:
     # ── Loader: fail-soft postures ──
 
     def test_missing_file_yields_empty_set(self, ext_home: Path) -> None:
-        from kiro_crew.security import _load_operator_oauth_endpoints
+        from aj_crew.security import _load_operator_oauth_endpoints
 
         assert _load_operator_oauth_endpoints() == frozenset()
 
@@ -1206,20 +1206,20 @@ class TestOperatorOAuthEndpointExtension:
         ids=["corrupt", "non-object", "string", "key-not-list"],
     )
     def test_defective_file_yields_empty_set(self, ext_home: Path, content: str) -> None:
-        from kiro_crew.security import _load_operator_oauth_endpoints
+        from aj_crew.security import _load_operator_oauth_endpoints
 
         self._write_extension(ext_home, content)
         assert _load_operator_oauth_endpoints() == frozenset()
 
     def test_valid_entry_accepted_and_host_lowercased(self, ext_home: Path) -> None:
-        from kiro_crew.security import _load_operator_oauth_endpoints
+        from aj_crew.security import _load_operator_oauth_endpoints
 
         self._write_extension(ext_home, [{"host": "ACME.Okta.com", "path": self.PATH}])
         assert _load_operator_oauth_endpoints() == frozenset({(self.HOST, self.PATH)})
 
     def test_hand_edit_takes_effect_without_restart(self, ext_home: Path) -> None:
         """The check-time re-read contract: no gateway restart, no stale memo."""
-        from kiro_crew.security import _load_operator_oauth_endpoints
+        from aj_crew.security import _load_operator_oauth_endpoints
 
         self._write_extension(ext_home, [{"host": self.HOST, "path": self.PATH}])
         assert _load_operator_oauth_endpoints() == frozenset({(self.HOST, self.PATH)})
@@ -1279,7 +1279,7 @@ class TestOperatorOAuthEndpointExtension:
         ],
     )
     def test_hostile_host_skipped(self, ext_home: Path, host: str) -> None:
-        from kiro_crew.security import _load_operator_oauth_endpoints
+        from aj_crew.security import _load_operator_oauth_endpoints
 
         self._write_extension(ext_home, [{"host": host, "path": self.PATH}])
         assert _load_operator_oauth_endpoints() == frozenset()
@@ -1310,7 +1310,7 @@ class TestOperatorOAuthEndpointExtension:
         ],
     )
     def test_hostile_path_skipped(self, ext_home: Path, path: str) -> None:
-        from kiro_crew.security import _load_operator_oauth_endpoints
+        from aj_crew.security import _load_operator_oauth_endpoints
 
         self._write_extension(ext_home, [{"host": self.HOST, "path": path}])
         assert _load_operator_oauth_endpoints() == frozenset()
@@ -1327,13 +1327,13 @@ class TestOperatorOAuthEndpointExtension:
         ids=["string-entry", "int-host", "none-path", "missing-path", "empty-dict"],
     )
     def test_non_string_entry_skipped(self, ext_home: Path, entry: object) -> None:
-        from kiro_crew.security import _load_operator_oauth_endpoints
+        from aj_crew.security import _load_operator_oauth_endpoints
 
         self._write_extension(ext_home, [entry])
         assert _load_operator_oauth_endpoints() == frozenset()
 
     def test_one_bad_entry_does_not_poison_the_rest(self, ext_home: Path) -> None:
-        from kiro_crew.security import _load_operator_oauth_endpoints
+        from aj_crew.security import _load_operator_oauth_endpoints
 
         self._write_extension(
             ext_home,
@@ -1342,7 +1342,7 @@ class TestOperatorOAuthEndpointExtension:
         assert _load_operator_oauth_endpoints() == frozenset({(self.HOST, self.PATH)})
 
     def test_entry_cap_bounds_both_acceptance_and_iteration(self, ext_home: Path) -> None:
-        from kiro_crew.security import (
+        from aj_crew.security import (
             _ENDPOINT_EXTENSION_CAP,
             _load_operator_oauth_endpoints,
         )
@@ -1583,7 +1583,7 @@ class TestOperatorOAuthEndpointExtension:
     def test_extension_approval_emits_audit_event(
         self, ext_home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import security
+        from aj_crew import security
 
         self._write_extension(ext_home, [{"host": self.HOST, "path": self.PATH}])
         seen: list[tuple[str, str]] = []
@@ -1598,7 +1598,7 @@ class TestOperatorOAuthEndpointExtension:
     def test_builtin_approval_does_not_emit_audit_event(
         self, ext_home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import security
+        from aj_crew import security
 
         seen: list[tuple[str, str]] = []
         monkeypatch.setattr(
@@ -1616,8 +1616,8 @@ class TestOperatorOAuthEndpointExtension:
     def test_audit_event_deduped_per_endpoint_but_not_across_endpoints(
         self, ext_home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew import security
-        from kiro_crew.security import exfil
+        from aj_crew import security
+        from aj_crew.security import exfil
 
         logged: list = []
 
@@ -1738,7 +1738,7 @@ class TestOperatorOAuthEndpointExtension:
     def test_audit_failure_does_not_break_the_approval(
         self, ext_home: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.security import exfil
+        from aj_crew.security import exfil
 
         class _BrokenLog:
             def log(self, event: object) -> None:
@@ -1750,9 +1750,9 @@ class TestOperatorOAuthEndpointExtension:
 
     # ── Keystone fence: the agent cannot widen its own trust boundary ──
 
-    @pytest.mark.parametrize("prefix", [".kiro/crew", ".kirocrew"])
+    @pytest.mark.parametrize("prefix", [".kiro/crew", ".ajcrew"])
     def test_extension_file_is_sensitive_under_every_home_prefix(self, prefix: str) -> None:
-        from kiro_crew.security import is_sensitive_write_path
+        from aj_crew.security import is_sensitive_write_path
 
         assert is_sensitive_path(f"~/{prefix}/oauth_endpoints.json") is True
         # The write gate is a superset of the read gate; assert it directly so

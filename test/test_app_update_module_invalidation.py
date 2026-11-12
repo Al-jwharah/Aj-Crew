@@ -1,6 +1,6 @@
 """In-place app update: the next load must not reuse the previous version's modules.
 
-An app's route hook is loaded under the synthetic ``_kirocrew_app_<name>.*``
+An app's route hook is loaded under the synthetic ``_ajcrew_app_<name>.*``
 namespace, and ``unload_app_modules`` has always evicted that namespace on
 disable / update / reinstall. But a hook may also register its own package under
 its REAL import name, straight from files inside the app's install directory (a
@@ -28,18 +28,16 @@ import pytest
 from aiohttp.test_utils import make_mocked_request
 from skill_script_helpers import no_bytecode
 
-from kiro_crew.apps import module_loader
-from kiro_crew.apps.module_loader import is_app_module_loaded, unload_app_modules
-from kiro_crew.apps.route_registry import RouteRegistry
+from aj_crew.apps import module_loader
+from aj_crew.apps.module_loader import is_app_module_loaded, unload_app_modules
+from aj_crew.apps.route_registry import RouteRegistry
 
 
 @pytest.fixture(autouse=True)
 def _admit_third_party_execution(_floor_monkeypatch) -> None:
     # The floor monkeypatch, not the shared one: a test that calls
     # ``monkeypatch.undo()`` must not lift this admission (D11).
-    _floor_monkeypatch.setattr(
-        "kiro_crew.apps.execution.third_party_execution_allowed", lambda: True
-    )
+    _floor_monkeypatch.setattr("aj_crew.apps.execution.third_party_execution_allowed", lambda: True)
 
 
 @pytest.fixture(autouse=True)
@@ -62,7 +60,7 @@ from pathlib import Path
 
 from aiohttp import web
 
-from kiro_crew.apps.route_registry import AppRoute
+from aj_crew.apps.route_registry import AppRoute
 
 _PACKAGE_NAME = {pkg!r}
 
@@ -272,7 +270,7 @@ class TestInPlaceUpdate:
         assert await registry.register_app_routes(app_name, app_dir, _HOOK, _ctx())
         registry.deregister_app_routes(app_name)
 
-        monkeypatch.setattr("kiro_crew.apps.execution.third_party_execution_allowed", lambda: False)
+        monkeypatch.setattr("aj_crew.apps.execution.third_party_execution_allowed", lambda: False)
         _write_version(app_dir, pkg_name, _V2_HELPERS, _V2_ROUTES)
         denied_ctx = _ctx()
         assert await registry.register_app_routes(app_name, app_dir, _HOOK, denied_ctx) == []
@@ -330,7 +328,7 @@ class TestOwnershipBoundary:
         monkeypatch.setitem(sys.modules, outside.__name__, outside)
         # Core's namespace is never evicted, even if a file under the app dir
         # was somehow imported under it.
-        core_named = types.ModuleType("kiro_crew._update_fixture_probe")
+        core_named = types.ModuleType("aj_crew._update_fixture_probe")
         core_named.__file__ = str(app_dir / "src" / "pkg" / "probe.py")
         monkeypatch.setitem(sys.modules, core_named.__name__, core_named)
         # A native extension under the app dir is left alone: CPython cannot
@@ -378,7 +376,7 @@ class TestOwnershipBoundary:
     def test_builtin_apps_are_not_swept(
         self, tmp_path: Path, app_name: str, pkg_name: str, monkeypatch
     ) -> None:
-        # Builtin apps ship inside the Kiro Crew package and are trusted like Core
+        # Builtin apps ship inside the Aj Crew package and are trusted like Core
         # code; their real-name modules are Core modules and stay resident.
         monkeypatch.setattr(module_loader, "_is_builtin_app", lambda *_: True)
         app_dir = tmp_path / app_name

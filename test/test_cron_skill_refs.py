@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 
-from kiro_crew import cron as cron_mod
+from aj_crew import cron as cron_mod
 
 
 def test_referenced_skill_names_reads_dollar_tokens(tmp_path, monkeypatch):

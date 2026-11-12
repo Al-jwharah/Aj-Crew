@@ -35,7 +35,7 @@ const messages = [
 const slots = [{
   key: 'demo-session', title: 'Deployment checklist', running: false,
   last_message: 'Great, start with phase one please.', messages: 3,
-  agent: 'kirocrew', memory_mode: 'persistent', modified: Math.floor(now),
+  agent: 'ajcrew', memory_mode: 'persistent', modified: Math.floor(now),
 }]
 const details = { running: false, has_more: false, total: 3, queue: [], messages }
 

@@ -38,11 +38,11 @@ from subagent_stop_reason_helpers import (
 )
 from test_subagent_leaked_tool_call_note import _permission_request, _tool_call
 
-import kiro_crew.subagent_persistence as sp
-from kiro_crew.acp.types import STOP_REASON_END_TURN
-from kiro_crew.messaging.empty_turn_copy import EMPTY_TURN_NOTICE_AFTER_WORK
-from kiro_crew.subagent import SubagentInfo
-from kiro_crew.testing.wait import async_wait_until
+import aj_crew.subagent_persistence as sp
+from aj_crew.acp.types import STOP_REASON_END_TURN
+from aj_crew.messaging.empty_turn_copy import EMPTY_TURN_NOTICE_AFTER_WORK
+from aj_crew.subagent import SubagentInfo
+from aj_crew.testing.wait import async_wait_until
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -151,8 +151,8 @@ async def test_the_wave_digest_names_an_empty_turn_after_work_as_its_cause():
     slot.task = None
     slot._subagent_deliveries_inflight = 0
     orch.dashboard_state.get_slot = MagicMock(return_value=slot)
-    with patch("kiro_crew.slack.handler.is_yolo_mode", return_value=False):
-        with patch("kiro_crew.slack.gateway.SubagentManager") as mock_sm:
+    with patch("aj_crew.slack.handler.is_yolo_mode", return_value=False):
+        with patch("aj_crew.slack.gateway.SubagentManager") as mock_sm:
             mgr = MagicMock()
             mgr.start_reaper = MagicMock()
             mgr.wave_has_live_nested_spawns = MagicMock(return_value=False)
@@ -185,8 +185,8 @@ async def test_the_wave_digest_names_an_empty_turn_after_work_as_its_cause():
         injected.append(text)
 
     with (
-        patch("kiro_crew.dashboard.chat_runner._run_chat", side_effect=_fake_run_chat),
-        patch("kiro_crew.subagent_persistence.mark_delivered"),
+        patch("aj_crew.dashboard.chat_runner._run_chat", side_effect=_fake_run_chat),
+        patch("aj_crew.subagent_persistence.mark_delivered"),
     ):
         mgr.batch_members_pending = MagicMock(return_value=True)
         await on_done(empty)

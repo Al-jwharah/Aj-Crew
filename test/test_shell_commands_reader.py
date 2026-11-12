@@ -13,10 +13,10 @@ import re
 
 import pytest
 
-from kiro_crew.security import exfil_bash, rm_floor
-from kiro_crew.security import shell_normalizer as _shell
-from kiro_crew.security.deny_gate import is_denied
-from kiro_crew.security.shell_commands import SUBST, read_commands
+from aj_crew.security import exfil_bash, rm_floor
+from aj_crew.security import shell_normalizer as _shell
+from aj_crew.security.deny_gate import is_denied
+from aj_crew.security.shell_commands import SUBST, read_commands
 
 
 def _shape(text: str) -> "list[tuple[str, list[str], list[tuple[str, str | None]]]]":

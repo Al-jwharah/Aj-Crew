@@ -55,7 +55,7 @@ describe("installEarlyBootGuard (unit)", () => {
 
     assert.deepEqual(calls.map((c) => c[0]), ["glog", "showErrorBox", "exit"]);
     const [, title, content] = calls[1];
-    assert.equal(title, "Kiro Crew failed to start");
+    assert.equal(title, "Aj Crew failed to start");
     assert.ok(content.includes("boom"), "the dialog names the error");
     assert.ok(content.includes(deps.logPath()), "the dialog tells the user where the log is");
     assert.deepEqual(calls[2], ["exit", 1]);
@@ -162,7 +162,7 @@ describe("main.js executes under a stubbed electron (load test)", () => {
   // `electron` at the require boundary and requires main.js in a child node.
 
   function runDriver(mode) {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), "kirocrew-early-boot-"));
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), "ajcrew-early-boot-"));
     const logsDir = path.join(root, "logs");
     const userDataDir = path.join(root, "userData");
     const home = path.join(root, "home");
@@ -177,8 +177,8 @@ describe("main.js executes under a stubbed electron (load test)", () => {
         env: {
           ...process.env,
           // Keep every path main.js derives from the data home inside the sandbox.
-          KIROCREW_HOME: home,
-          KIROCREW_PORT: "5476",
+          AJCREW_HOME: home,
+          AJCREW_PORT: "5476",
         },
       });
       const logPath = path.join(logsDir, "gateway-launch.log");
@@ -210,7 +210,7 @@ describe("main.js executes under a stubbed electron (load test)", () => {
     assert.match(run.log, /main\.js:\d+/, "the stack names the main.js call site");
 
     // Dialog before exit: the stub prints both markers to stdout in call order.
-    const box = run.stdout.indexOf("SHOW_ERROR_BOX:Kiro Crew failed to start");
+    const box = run.stdout.indexOf("SHOW_ERROR_BOX:Aj Crew failed to start");
     const exit = run.stdout.indexOf("APP_EXIT:1");
     assert.notEqual(box, -1, "showErrorBox was called");
     assert.notEqual(exit, -1, "app.exit(1) was called");

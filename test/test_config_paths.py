@@ -1,7 +1,7 @@
-"""Tests for the pure path-primitives leaf ``kiro_crew.config.paths``.
+"""Tests for the pure path-primitives leaf ``aj_crew.config.paths``.
 
-Pins that the primitives match the ``kiro_crew.config.loader`` names, and that
-importing ``kiro_crew.config.paths`` pulls in no ``kiro_crew`` module, so callers of
+Pins that the primitives match the ``aj_crew.config.loader`` names, and that
+importing ``aj_crew.config.paths`` pulls in no ``aj_crew`` module, so callers of
 ``config_dir()`` skip the heavy ``config.loader``.
 """
 
@@ -17,32 +17,32 @@ from pathlib import Path
 
 import pytest
 
+from aj_crew.config import paths
 from conftest import make_dir_link
-from kiro_crew.config import paths
 
 
 class TestConfigDir:
-    """``config_dir()`` resolves ~/.kiro/crew, honoring KIROCREW_HOME."""
+    """``config_dir()`` resolves ~/.kiro/crew, honoring AJCREW_HOME."""
 
     @pytest.fixture(autouse=True)
     def _reset_resolved_home(self, monkeypatch: pytest.MonkeyPatch) -> None:
         # config_dir() caches the resolved data home in a module global for the
         # process lifetime; reset it so each test resolves fresh against its own
-        # patched Path.home / KIROCREW_HOME rather than a value another test cached.
+        # patched Path.home / AJCREW_HOME rather than a value another test cached.
         monkeypatch.setattr(paths, "_resolved_home", None)
 
-    def test_default_is_home_dotkiro_crew(
+    def test_default_is_home_dotaj_crew(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        monkeypatch.delenv("KIROCREW_HOME", raising=False)
+        monkeypatch.delenv("AJCREW_HOME", raising=False)
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
         result = paths.config_dir()
         assert result == tmp_path / ".kiro" / "crew"
         assert result.is_dir()  # created on access
 
-    def test_kirocrew_home_override(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    def test_ajcrew_home_override(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         home = tmp_path / "custom-home"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         result = paths.config_dir()
         assert result == home.resolve()
         assert result.is_dir()
@@ -59,12 +59,12 @@ class TestConfigDir:
             real_mkdir(self, mode, **kwargs)  # type: ignore[arg-type]
 
         monkeypatch.setattr(Path, "mkdir", recording_mkdir)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "fresh-home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "fresh-home"))
         paths.config_dir()
 
         assert seen == [0o777 if sys.platform == "win32" else 0o700]
 
-    def test_kirocrew_home_system_dir_is_ignored(
+    def test_ajcrew_home_system_dir_is_ignored(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
         # A system directory must be refused and fall back to ~/.kiro/crew.
@@ -78,15 +78,15 @@ class TestConfigDir:
             system_dir = Path.cwd().anchor  # e.g. ``C:\``
         else:
             system_dir = "/usr"
-        monkeypatch.setenv("KIROCREW_HOME", system_dir)
+        monkeypatch.setenv("AJCREW_HOME", system_dir)
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: tmp_path))
         result = paths.config_dir()
         assert result == tmp_path / ".kiro" / "crew"
 
 
 class TestScratchRootOverride:
-    """``valid_scratch_root_override()`` validates ``KIROCREW_SCRATCH_ROOT`` with
-    the same ``_is_unsafe_home`` predicate as ``KIROCREW_HOME``."""
+    """``valid_scratch_root_override()`` validates ``AJCREW_SCRATCH_ROOT`` with
+    the same ``_is_unsafe_home`` predicate as ``AJCREW_HOME``."""
 
     @pytest.fixture(autouse=True)
     def _home_off_the_real_tree(self, _floor_monkeypatch, tmp_path: Path) -> None:
@@ -108,8 +108,8 @@ class TestScratchRootOverride:
         # the owner read to "current user owns it" by default; the owner-refusal path is
         # exercised explicitly in test_agent_scratch. ``_floor_monkeypatch`` keeps it from
         # being lifted by a test's own ``monkeypatch.undo()``.
-        from kiro_crew import platform_compat as _pc
-        from kiro_crew import windows_acl as _wacl
+        from aj_crew import platform_compat as _pc
+        from aj_crew import windows_acl as _wacl
 
         _floor_monkeypatch.setattr(_pc, "current_user_sid", lambda: "S-1-5-21-TEST-ME")
 
@@ -129,7 +129,7 @@ class TestScratchRootOverride:
         _floor_monkeypatch.setattr(_wacl, "describe", lambda p: _Owned())
 
     def test_unset_is_none(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.delenv("KIROCREW_SCRATCH_ROOT", raising=False)
+        monkeypatch.delenv("AJCREW_SCRATCH_ROOT", raising=False)
         assert paths.valid_scratch_root_override() is None
 
     def test_valid_override_is_resolved(
@@ -141,7 +141,7 @@ class TestScratchRootOverride:
         monkeypatch.setattr(sys, "platform", "win32")
         paths._scratch_root_override_pin = paths._UNSET
         target = tmp_path / "scratch-elsewhere"
-        monkeypatch.setenv("KIROCREW_SCRATCH_ROOT", str(target))
+        monkeypatch.setenv("AJCREW_SCRATCH_ROOT", str(target))
         assert paths.valid_scratch_root_override() == target.resolve()
 
     @pytest.mark.parametrize("platform", ["linux", "darwin"])
@@ -153,7 +153,7 @@ class TestScratchRootOverride:
         # "unsupported platform". The target is one Windows would accept, so only the
         # platform decides.
         target = tmp_path / "data-drive" / "scratch"
-        monkeypatch.setenv("KIROCREW_SCRATCH_ROOT", str(target))
+        monkeypatch.setenv("AJCREW_SCRATCH_ROOT", str(target))
         monkeypatch.setattr(sys, "platform", platform)
         paths._scratch_root_override_pin = paths._UNSET
         with caplog.at_level(logging.WARNING, logger=paths.__name__):
@@ -161,7 +161,7 @@ class TestScratchRootOverride:
         assert any(
             "is unsupported platform, ignoring" in record.message for record in caplog.records
         ), [r.message for r in caplog.records]
-        import kiro_crew.agent_scratch as agent_scratch
+        import aj_crew.agent_scratch as agent_scratch
 
         assert agent_scratch.scratch_root() == paths.config_dir() / "scratch"
 
@@ -174,18 +174,18 @@ class TestScratchRootOverride:
         # does not apply.
         target = tmp_path / "data-drive" / "scratch"
         monkeypatch.setattr(sys, "platform", "win32")
-        monkeypatch.setenv("KIROCREW_SCRATCH_ROOT", str(target))
+        monkeypatch.setenv("AJCREW_SCRATCH_ROOT", str(target))
         paths._scratch_root_override_pin = paths._UNSET
         assert paths.valid_scratch_root_override() == target.resolve()
 
     def test_system_dir_is_refused(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        # Same refusal shape as ``KIROCREW_HOME``: a drive/filesystem root is
+        # Same refusal shape as ``AJCREW_HOME``: a drive/filesystem root is
         # refused on every OS (``p == p.parent``) without being created.
         if sys.platform == "win32":
             system_dir = Path.cwd().anchor
         else:
             system_dir = "/usr"
-        monkeypatch.setenv("KIROCREW_SCRATCH_ROOT", system_dir)
+        monkeypatch.setenv("AJCREW_SCRATCH_ROOT", system_dir)
         assert paths.valid_scratch_root_override() is None
 
     def test_ancestor_of_config_dir_is_refused(
@@ -194,12 +194,12 @@ class TestScratchRootOverride:
         # Masking a path that equals or contains the data home would hide the policy
         # ceiling and the operator's files below it, so it is refused.
         home = tmp_path / "home" / ".kiro" / "crew"
-        monkeypatch.setenv("KIROCREW_HOME", str(home))
+        monkeypatch.setenv("AJCREW_HOME", str(home))
         # config_dir() itself.
-        monkeypatch.setenv("KIROCREW_SCRATCH_ROOT", str(paths.config_dir()))
+        monkeypatch.setenv("AJCREW_SCRATCH_ROOT", str(paths.config_dir()))
         assert paths.valid_scratch_root_override() is None
         # An ancestor of config_dir().
-        monkeypatch.setenv("KIROCREW_SCRATCH_ROOT", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_SCRATCH_ROOT", str(tmp_path / "home"))
         assert paths.valid_scratch_root_override() is None
 
     def test_sibling_of_config_dir_is_accepted(
@@ -207,9 +207,9 @@ class TestScratchRootOverride:
     ) -> None:
         monkeypatch.setattr(sys, "platform", "win32")
         paths._scratch_root_override_pin = paths._UNSET
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home" / ".kiro" / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home" / ".kiro" / "crew"))
         sibling = tmp_path / "data-drive" / "scratch"
-        monkeypatch.setenv("KIROCREW_SCRATCH_ROOT", str(sibling))
+        monkeypatch.setenv("AJCREW_SCRATCH_ROOT", str(sibling))
         assert paths.valid_scratch_root_override() == sibling.resolve()
 
     def test_path_inside_data_home_is_refused(
@@ -219,27 +219,27 @@ class TestScratchRootOverride:
         # hiding whatever governance tree sits there -- e.g. ``<data home>/profiles``
         # drops the read-only profile seal, so a profile-bound policy silently falls
         # back to the permissive default. Any descendant of config_dir() is refused.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home" / ".kiro" / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home" / ".kiro" / "crew"))
         home = paths.config_dir()
         for inside in (home / "profiles", home / "scratch" / "moved", home / "deep" / "nested"):
-            monkeypatch.setenv("KIROCREW_SCRATCH_ROOT", str(inside))
+            monkeypatch.setenv("AJCREW_SCRATCH_ROOT", str(inside))
             paths._scratch_root_override_pin = paths._UNSET
             assert paths.valid_scratch_root_override() is None, inside
 
     def test_path_inside_legacy_home_is_refused_even_with_active_home_elsewhere(
         self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     ) -> None:
-        # With a non-default KIROCREW_HOME active, an override inside the pre-move legacy
-        # ``~/.kirocrew`` home is refused as a crew home. The override must be refused at ANY
-        # crew-home spelling (active config_dir, default ~/.kiro/crew, legacy ~/.kirocrew),
+        # With a non-default AJCREW_HOME active, an override inside the pre-move legacy
+        # ``~/.ajcrew`` home is refused as a crew home. The override must be refused at ANY
+        # crew-home spelling (active config_dir, default ~/.kiro/crew, legacy ~/.ajcrew),
         # not only the active one. Pin ``win32`` so the override passes the Windows-only
         # platform gate and the crew-home refusal is actually reached (on a non-Windows
         # runner the validator returns at the unsupported-platform guard first).
         monkeypatch.setattr(sys, "platform", "win32")
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "active" / ".kiro" / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "active" / ".kiro" / "crew"))
         legacy = paths._legacy_home()
         for inside in (legacy / "scratch" / "moved", legacy, paths._default_home() / "x"):
-            monkeypatch.setenv("KIROCREW_SCRATCH_ROOT", str(inside))
+            monkeypatch.setenv("AJCREW_SCRATCH_ROOT", str(inside))
             paths._scratch_root_override_pin = paths._UNSET
             assert paths.valid_scratch_root_override() is None, inside
 
@@ -255,7 +255,7 @@ class TestScratchRootOverride:
         # is exactly what the validator refuses, so the refusal/pinning asserts run on
         # every OS. If a runner cannot create the reparse point at all, only that creation
         # is skipped (with a reason) -- never the assertions.
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home" / ".kiro" / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home" / ".kiro" / "crew"))
         real_a = tmp_path / "scratch-a"
         real_a.mkdir()
         real_b = tmp_path / "scratch-b"
@@ -276,9 +276,9 @@ class TestScratchRootOverride:
         # symlink on POSIX, so the reparse point is created on every CI runner -- the refusal
         # and pinning assertions below then run everywhere, not only where a symlink is allowed.
         make_dir_link(alias, real_a)
-        monkeypatch.setenv("KIROCREW_SCRATCH_ROOT", str(alias))
+        monkeypatch.setenv("AJCREW_SCRATCH_ROOT", str(alias))
         paths._scratch_root_override_pin = paths._UNSET
-        import kiro_crew.agent_scratch as agent_scratch
+        import aj_crew.agent_scratch as agent_scratch
 
         before = agent_scratch.scratch_root()
         # The override is a reparse point, so it is refused and scratch_root() is the default.
@@ -296,10 +296,10 @@ class TestScratchRootOverride:
         # which ``allocate_scratch`` does not catch; the override must be refused and
         # ``scratch_root()`` must not raise. The error is injected for the override path
         # only, so no symlink privilege is needed.
-        import kiro_crew.agent_scratch as agent_scratch
+        import aj_crew.agent_scratch as agent_scratch
 
         monkeypatch.setattr(sys, "platform", "win32")
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home" / ".kiro" / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home" / ".kiro" / "crew"))
         loop = tmp_path / "loop"
         real_resolve = Path.resolve
 
@@ -309,7 +309,7 @@ class TestScratchRootOverride:
             return real_resolve(self, *args, **kwargs)
 
         monkeypatch.setattr(Path, "resolve", _resolve)
-        monkeypatch.setenv("KIROCREW_SCRATCH_ROOT", str(loop))
+        monkeypatch.setenv("AJCREW_SCRATCH_ROOT", str(loop))
         monkeypatch.setattr(paths, "_scratch_root_override_pin", paths._UNSET)
         # Refused fail-safe (not raised), and scratch_root() falls back to the default.
         assert paths.valid_scratch_root_override() is None
@@ -322,10 +322,10 @@ class TestScratchRootOverride:
         # the pin, so even repointing a symlink that sits BELOW the override name cannot
         # change the resolved root mid-process. A changed env string recomputes.
         monkeypatch.setattr(sys, "platform", "win32")
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home" / ".kiro" / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home" / ".kiro" / "crew"))
         target = tmp_path / "data-drive" / "scratch"
         target.mkdir(parents=True)
-        monkeypatch.setenv("KIROCREW_SCRATCH_ROOT", str(target))
+        monkeypatch.setenv("AJCREW_SCRATCH_ROOT", str(target))
         paths._scratch_root_override_pin = paths._UNSET
         first = paths.valid_scratch_root_override()
         assert first == target.resolve()
@@ -334,7 +334,7 @@ class TestScratchRootOverride:
         # A genuinely CHANGED variable is honoured (different relocation).
         other = tmp_path / "other-drive" / "scratch"
         other.mkdir(parents=True)
-        monkeypatch.setenv("KIROCREW_SCRATCH_ROOT", str(other))
+        monkeypatch.setenv("AJCREW_SCRATCH_ROOT", str(other))
         assert paths.valid_scratch_root_override() == other.resolve()
 
     def test_different_case_real_dir_is_accepted_when_realpath_renormalises(
@@ -345,7 +345,7 @@ class TestScratchRootOverride:
         # ``realpath`` vs ``abspath`` compare would refuse ``d:\scratch``. ``realpath`` is
         # forced to an upper-cased leaf to mimic Windows on any runner.
         monkeypatch.setattr(sys, "platform", "win32")
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home" / ".kiro" / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home" / ".kiro" / "crew"))
         target = tmp_path / "data-drive" / "scratch"
         target.mkdir(parents=True)
         typed = os.path.abspath(str(target))
@@ -357,7 +357,7 @@ class TestScratchRootOverride:
             return os.path.abspath(path)
 
         monkeypatch.setattr(os.path, "realpath", _casing_realpath)
-        monkeypatch.setenv("KIROCREW_SCRATCH_ROOT", typed)
+        monkeypatch.setenv("AJCREW_SCRATCH_ROOT", typed)
         paths._scratch_root_override_pin = paths._UNSET
         resolved, reason = paths._validate_scratch_root_override()
         # The real directory is accepted (resolved, no refusal reason), not dropped as "a link".
@@ -385,10 +385,10 @@ class TestScratchRootOverride:
         # per distinct value when it is computed, so an operator can tell a crew-home or
         # platform refusal apart from a real system-directory one, and ``scratch_root()``
         # still falls back to the default.
-        import kiro_crew.agent_scratch as agent_scratch
+        import aj_crew.agent_scratch as agent_scratch
 
         monkeypatch.setattr(sys, "platform", platform)
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home" / ".kiro" / "crew"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home" / ".kiro" / "crew"))
         if make_env == "crew_home":
             value = str(paths.config_dir())  # the data home itself
         elif make_env == "system_dir":
@@ -400,7 +400,7 @@ class TestScratchRootOverride:
             off = tmp_path / "data-drive" / "scratch"
             off.mkdir(parents=True)
             value = str(off)
-        monkeypatch.setenv("KIROCREW_SCRATCH_ROOT", value)
+        monkeypatch.setenv("AJCREW_SCRATCH_ROOT", value)
         monkeypatch.setattr(paths, "_scratch_root_override_pin", paths._UNSET)
 
         # The warning fires once when the pin is computed (in config.paths).
@@ -435,7 +435,7 @@ class TestWindowsSystemDirExtendedLength:
         assert paths._is_windows_system_dir(Path("\\\\?\\UNC\\server\\share\\protected\\x")) is True
         # A path that is genuinely NOT under a protected dir is still accepted.
         monkeypatch.setattr(paths, "_windows_system_dirs", lambda: [Path("C:\\ProgramData")])
-        assert paths._is_windows_system_dir(Path("\\\\?\\D:\\kirocrew-scratch")) is False
+        assert paths._is_windows_system_dir(Path("\\\\?\\D:\\ajcrew-scratch")) is False
 
 
 class TestLedgerRoot:
@@ -535,7 +535,7 @@ class TestCannotRestrictWarnings:
     def _refuse_only_the_home(
         monkeypatch: pytest.MonkeyPatch, home: Path, exc: BaseException
     ) -> list[Path]:
-        from kiro_crew import platform_compat
+        from aj_crew import platform_compat
 
         real = platform_compat.restrict_dir_to_owner
         refused: list[Path] = []
@@ -603,7 +603,7 @@ class TestCannotRestrictWarnings:
 
 
 class TestConfigPackageDir:
-    """``config_package_dir()`` points at the installed ``kiro_crew/config/``."""
+    """``config_package_dir()`` points at the installed ``aj_crew/config/``."""
 
     def test_points_at_config_package_with_defaults_json(self) -> None:
         pkg = paths.config_package_dir()
@@ -674,26 +674,26 @@ class TestSafeDirName:
 class TestLeafPurity:
     """The whole point of the extraction: importing the leaf is cheap.
 
-    Importing ``kiro_crew.config.paths`` in a fresh interpreter must NOT import
-    ``kiro_crew.config.loader`` (or any other ``kiro_crew`` submodule). Run in a
+    Importing ``aj_crew.config.paths`` in a fresh interpreter must NOT import
+    ``aj_crew.config.loader`` (or any other ``aj_crew`` submodule). Run in a
     subprocess so the already-warm modules in this test process don't mask a
     regression.
     """
 
-    def test_importing_paths_pulls_no_kiro_crew_modules(self) -> None:
+    def test_importing_paths_pulls_no_aj_crew_modules(self) -> None:
         code = (
             "import sys\n"
-            "import kiro_crew.config.paths\n"
+            "import aj_crew.config.paths\n"
             "leaked = sorted(\n"
             "    m for m in sys.modules\n"
-            "    if m.startswith('kiro_crew')\n"
-            "    and m not in {'kiro_crew', 'kiro_crew.config', 'kiro_crew.config.paths'}\n"
+            "    if m.startswith('aj_crew')\n"
+            "    and m not in {'aj_crew', 'aj_crew.config', 'aj_crew.config.paths'}\n"
             ")\n"
             "print(','.join(leaked))\n"
         )
         import os
 
-        # Ensure kiro_crew is importable in the subprocess on local dev runs
+        # Ensure aj_crew is importable in the subprocess on local dev runs
         # where PYTHONPATH may not already include the src/ directory.
         src_dir = str(Path(__file__).resolve().parents[1] / "src")
         env = dict(os.environ)
@@ -707,14 +707,14 @@ class TestLeafPurity:
             env=env,
         )
         leaked = [m for m in out.stdout.strip().split(",") if m]
-        assert leaked == [], f"config.paths leaf leaked kiro_crew modules: {leaked}"
+        assert leaked == [], f"config.paths leaf leaked aj_crew modules: {leaked}"
 
 
 class TestBackCompatReexport:
-    """All primitives remain importable from ``kiro_crew.config.loader``."""
+    """All primitives remain importable from ``aj_crew.config.loader``."""
 
     def test_loader_reexports_match_paths(self) -> None:
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         for name in (
             "config_dir",
@@ -728,9 +728,9 @@ class TestBackCompatReexport:
             assert getattr(loader, name) is getattr(paths, name), name
 
     def test_config_package_lazy_surface(self) -> None:
-        # `from kiro_crew.config import X` still resolves the public surface
+        # `from aj_crew.config import X` still resolves the public surface
         # without eagerly importing the loader at package import time.
-        import kiro_crew.config as cfg
+        import aj_crew.config as cfg
 
         assert cfg.config_dir is paths.config_dir
-        assert cfg.KiroCrewConfig.__name__ == "KiroCrewConfig"
+        assert cfg.AjCrewConfig.__name__ == "AjCrewConfig"

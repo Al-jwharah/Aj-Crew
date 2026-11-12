@@ -1,7 +1,7 @@
 """The by-name kill leg must read a quoted ERE alternation as a pattern.
 
-``pkill``/``killall`` take an ERE, so in ``'zz|kiro'${x:-crew}`` bash passes
-``zz|kirocrew`` and the second alternative selects protected processes.  The
+``pkill``/``killall`` take an ERE, so in ``'zz|aj'${x:-crew}`` bash passes
+``zz|ajcrew`` and the second alternative selects protected processes.  The
 raw view cannot resolve the parameter default or the empty substitution, and
 the operand view truncates at the pattern's own ``|``, so the leg also searches
 each argument through ``_resolved_word_view`` (construct-span rewrites only)
@@ -15,15 +15,15 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.security import argv_floor as _argv_floor
-from kiro_crew.security import is_denied
+from aj_crew.security import argv_floor as _argv_floor
+from aj_crew.security import is_denied
 
 _K = "k" + "ill"
 _PK = "p" + _K
 _KA = _K + "all"
-_NAME = "kiro" + "crew"
-_HEAD = _NAME[:4]
-_TAIL = _NAME[4:]
+_NAME = "aj" + "crew"
+_HEAD = _NAME[:2]
+_TAIL = _NAME[2:]
 
 
 def _floor(cmd: str) -> bool:

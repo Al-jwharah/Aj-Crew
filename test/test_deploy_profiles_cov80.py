@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.deploy import profiles as profiles_mod
+from aj_crew.deploy import profiles as profiles_mod
 
 # profiles.py refuses deploy outright on Windows ("deploy features are not supported on
 # Windows"), so a test asserting the POSIX behaviour can never hold there. Applied

@@ -2,24 +2,24 @@
 caller's workspace sessions), including the opt-in ``summarize`` path.
 
 Companion to test_search_chat_history.py — same seeding/dispatch conventions
-(KIROCREW_HOME env + mcp_core._call_tool_inner).
+(AJCREW_HOME env + mcp_core._call_tool_inner).
 """
 
 from __future__ import annotations
 
 import pytest
 
-from kiro_crew import mcp_core
-from kiro_crew.history import ConversationLog
+from aj_crew import mcp_core
+from aj_crew.history import ConversationLog
 
 
 @pytest.fixture(autouse=True)
 def established_session(monkeypatch):
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:global-v1")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:global-v1")
 
 
 def _seed_sessions(home):
-    """Create a sessions dir with a few transcripts under KIROCREW_HOME=home."""
+    """Create a sessions dir with a few transcripts under AJCREW_HOME=home."""
     sessions = home / "sessions"
     sessions.mkdir(parents=True, exist_ok=True)
     cl = ConversationLog(base_dir=sessions)
@@ -34,7 +34,7 @@ def _seed_sessions(home):
 
 class TestListSessionsTool:
     def test_lists_sessions_with_titles(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         _seed_sessions(tmp_path)
         out = mcp_core._call_tool_inner("list_sessions", {})
         assert "dashboard_chat-1" in out
@@ -43,20 +43,20 @@ class TestListSessionsTool:
         assert "redis timeout" in out or "barcelona" in out
 
     def test_incognito_excluded(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         _seed_sessions(tmp_path)
         out = mcp_core._call_tool_inner("list_sessions", {})
         assert "dashboard_chat-secret" not in out
         assert "hunter2" not in out
 
     def test_empty_returns_message_not_error(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         (tmp_path / "sessions").mkdir(parents=True, exist_ok=True)
         out = mcp_core._call_tool_inner("list_sessions", {})
         assert "No sessions found" in out
 
     def test_limit_is_respected(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         sessions = tmp_path / "sessions"
         sessions.mkdir(parents=True, exist_ok=True)
         cl = ConversationLog(base_dir=sessions)
@@ -67,7 +67,7 @@ class TestListSessionsTool:
         assert out.count("`dashboard_chat-") == 2
 
     def test_summarize_attaches_summaries(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         _seed_sessions(tmp_path)
 
         def _fake_post(path, body=None, *, timeout=30, session_key=None):
@@ -83,7 +83,7 @@ class TestListSessionsTool:
         assert "dashboard_chat-2" in out
 
     def test_summarize_failure_falls_back_to_titles(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         _seed_sessions(tmp_path)
 
         def _fake_post(path, body=None, *, timeout=30, session_key=None):
@@ -97,7 +97,7 @@ class TestListSessionsTool:
         assert "dashboard_chat-2" in out
 
     def test_summarize_false_does_not_call_gateway(self, tmp_path, monkeypatch):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         _seed_sessions(tmp_path)
 
         def _boom(*a, **k):
@@ -111,7 +111,7 @@ class TestListSessionsTool:
         # Regression: list_sessions() rows omit `workspace`, so scoping MUST
         # re-read full metadata. A session tagged to another workspace must not
         # leak to a default-workspace caller (Codex round-3 HIGH).
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         sessions = tmp_path / "sessions"
         sessions.mkdir(parents=True, exist_ok=True)
         cl = ConversationLog(base_dir=sessions)

@@ -97,7 +97,7 @@ describe('createSessionsProvider — result mapping', () => {
   it('maps a backend session to a Result with id, title, subtitle, and highlight indices', async () => {
     const fetchSessions = vi.fn(
       async (): Promise<SessionSearchResponse> => ({
-        sessions: [{ key: 's-1', title: 'Session Grid', agent: 'kirocrew' }],
+        sessions: [{ key: 's-1', title: 'Session Grid', agent: 'ajcrew' }],
       }),
     )
     const { d } = deps({ fetchSessions })
@@ -109,7 +109,7 @@ describe('createSessionsProvider — result mapping', () => {
     expect(r.id).toBe('sessions:s-1')
     expect(r.providerId).toBe('sessions')
     expect(r.title).toBe('Session Grid')
-    expect(r.subtitle).toBe('kirocrew')
+    expect(r.subtitle).toBe('ajcrew')
     expect(r.score).toBeGreaterThan(0)
     // 'grid' lands on the second word — indices into the title, ascending.
     expect(r.indices.length).toBe(4)
@@ -161,7 +161,7 @@ describe('createSessionsProvider — result mapping', () => {
   it('keeps the snippet, not the key, as an untitled body hit\'s subtitle', async () => {
     const fetchSessions = vi.fn(
       async (): Promise<SessionSearchResponse> => ({
-        sessions: [{ key: 'chat-9-1785440411', snippet: 'fix the grid', agent: 'kirocrew' }],
+        sessions: [{ key: 'chat-9-1785440411', snippet: 'fix the grid', agent: 'ajcrew' }],
       }),
     )
     const { d } = deps({ fetchSessions })
@@ -408,7 +408,7 @@ describe('createSessionsProvider — federated (remote-instance) rows', () => {
   //    shifts them (wrong characters would be marked).
   const remoteFixture = async (): Promise<SessionSearchResponse> => ({
     sessions: [
-      { key: 'chat-1', title: 'deploy notes', agent: 'kirocrew' },
+      { key: 'chat-1', title: 'deploy notes', agent: 'ajcrew' },
       {
         key: 'chat-1', // deliberately same key as the local row
         title: 'deploy notes',
@@ -443,7 +443,7 @@ describe('createSessionsProvider — federated (remote-instance) rows', () => {
     expect(remote.subtitle!.slice(idx[0], idx[idx.length - 1] + 1)).toBe('deploy')
     // The local sibling has no snippet — subtitle falls back to the agent name.
     const local = results.find(r => r.id === 'sessions:chat-1')!
-    expect(local.subtitle).toBe('kirocrew')
+    expect(local.subtitle).toBe('ajcrew')
   })
 
   it('falls back to instance_id in the subtitle when the instance name is absent', async () => {

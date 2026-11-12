@@ -486,7 +486,7 @@ it('renders an env-override refusal through the check ErrorNotice, with the unse
   setStatus(CUSTOM_OK)
   const apiError = Object.assign(new Error('override'), {
     name: 'ApiError', status: 409,
-    body: JSON.stringify({ ok: false, error: 'KIROCREW_EMBED_MODEL_PATH is set', code: 'env_override_active' }),
+    body: JSON.stringify({ ok: false, error: 'AJCREW_EMBED_MODEL_PATH is set', code: 'env_override_active' }),
   })
   vi.mocked(api.vectorValidateEmbedModel).mockRejectedValueOnce(apiError)
   renderWithProviders(<EmbeddingModelCard />)
@@ -495,7 +495,7 @@ it('renders an env-override refusal through the check ErrorNotice, with the unse
   fireEvent.blur(input)
   const notice = await screen.findByTestId('embed-model-check-error')
   expect(notice).toHaveAttribute('role', 'alert')
-  expect(notice).toHaveTextContent('KIROCREW_EMBED_MODEL_PATH is set and overrides this setting. Unset it to change the model here.')
-  expect(within(notice).getByRole('button', { name: /KIROCREW_EMBED_MODEL_PATH/ })).toBeInTheDocument()
+  expect(notice).toHaveTextContent('AJCREW_EMBED_MODEL_PATH is set and overrides this setting. Unset it to change the model here.')
+  expect(within(notice).getByRole('button', { name: /AJCREW_EMBED_MODEL_PATH/ })).toBeInTheDocument()
   expect(applyButton()).toBeDisabled()
 })

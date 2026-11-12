@@ -94,19 +94,19 @@ describe('applyThemeId — copies the dashboard theme selection onto <html>', ()
   })
 
   it('resolves `system` preference through prefers-color-scheme: dark', () => {
-    localStorage.setItem('mc-color-theme', 'kiro')
+    localStorage.setItem('mc-color-theme', 'aj')
     localStorage.setItem('mc-theme', 'system')
     window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia
     applyThemeId()
-    expect(document.documentElement.dataset.theme).toBe('kiro-dark')
+    expect(document.documentElement.dataset.theme).toBe('aj-dark')
     expect(document.documentElement.dataset.mode).toBe('dark')
   })
 
   it('falls back to the kiro default when nothing is persisted', () => {
     window.matchMedia = vi.fn().mockReturnValue({ matches: false }) as unknown as typeof window.matchMedia
     applyThemeId()
-    // kiro + system(light) → kiro-light
-    expect(document.documentElement.dataset.theme).toBe('kiro-light')
+    // kiro + system(light) → aj-light
+    expect(document.documentElement.dataset.theme).toBe('aj-light')
   })
 })
 

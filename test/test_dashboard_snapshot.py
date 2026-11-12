@@ -2,7 +2,7 @@
 
 Four layers, cheapest first.
 
-* :mod:`kiro_crew.dashboard_page_image`: how a picture is read, bounded and taken again
+* :mod:`aj_crew.dashboard_page_image`: how a picture is read, bounded and taken again
   smaller, with the browser call stubbed.
 * The page run against the FAKE DevTools browser: the picture is asked for only when the
   caller asks, taken after the page settles, and missing with a reason whenever the run
@@ -35,7 +35,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from fake_devtools_browser import FakeBrowser
 
-from kiro_crew import (
+from aj_crew import (
     dashboard_frame,
     dashboard_page_image,
     dashboard_snapshot_look,
@@ -45,9 +45,9 @@ from kiro_crew import (
     pinned_fs,
     platform_compat,
 )
-from kiro_crew.dashboard.handlers import agent_panel as routes
-from kiro_crew.dashboard.handlers import agent_panel_snapshot, member_dashboard_fields
-from kiro_crew.dashboard_page_image import PageImage
+from aj_crew.dashboard.handlers import agent_panel as routes
+from aj_crew.dashboard.handlers import agent_panel_snapshot, member_dashboard_fields
+from aj_crew.dashboard_page_image import PageImage
 
 LINUX_ONLY = pytest.mark.skipif(
     not platform_compat.IS_LINUX, reason="the page check runs on Linux only"
@@ -409,7 +409,7 @@ _LOOK = "<style>look</style>\n<script>runtime</script>\n"
 @pytest.fixture
 def glue(monkeypatch):
     """The glue with the runner, the grant and its audit stubbed; what each was given."""
-    from kiro_crew.dashboard.handlers import member_dashboard
+    from aj_crew.dashboard.handlers import member_dashboard
 
     state = SimpleNamespace(asked=[], audited=[], answer=None)
 
@@ -501,7 +501,7 @@ def test_a_snapshot_error_line_is_counted_from_view_html_not_the_theme(glue):
 def test_the_snapshot_reads_the_live_sessions_unit_and_the_save_check_the_newest(glue, monkeypatch):
     """A slot can hold a live session and a later, unrelated chain; the tab reads the
     live one, so the picture must too."""
-    from kiro_crew.dashboard.handlers import member_dashboard
+    from aj_crew.dashboard.handlers import member_dashboard
 
     units: list[str] = []
     gateway = SimpleNamespace(sessions="live-sessions")
@@ -615,7 +615,7 @@ def test_a_snapshot_with_no_built_tailwind_runtime_draws_nothing_and_says_why(gl
 
 def test_the_look_inlines_the_built_runtime_and_the_light_tokens(monkeypatch, tmp_path):
     """The runtime is publish_sync's, escaped in any casing, as a published widget is."""
-    from kiro_crew import publish_sync
+    from aj_crew import publish_sync
 
     runtime = tmp_path / "tailwindcss-browser.js"
     runtime.write_text('var s="</script>",t="</SCRIPT>";tw()')
@@ -633,7 +633,7 @@ def test_the_look_inlines_the_built_runtime_and_the_light_tokens(monkeypatch, tm
 
 
 def test_the_look_without_a_built_runtime_names_the_missing_file(monkeypatch, tmp_path):
-    from kiro_crew import publish_sync
+    from aj_crew import publish_sync
 
     monkeypatch.setattr(publish_sync, "_TAILWIND_RUNTIME_FILE", tmp_path / "absent.js")
 
@@ -726,7 +726,7 @@ def ran(monkeypatch):
 
 
 def _live(monkeypatch, *, pinned: dict[str, Any] | None, package_slug: str = "dashboard-0"):
-    from kiro_crew.dashboard_templates import instance as instance_store
+    from aj_crew.dashboard_templates import instance as instance_store
 
     # A template page in force: a record that released packages, so the older rule is off.
     record = SimpleNamespace(
@@ -825,9 +825,9 @@ async def test_a_template_page_in_force_has_no_image(monkeypatch, ran, home):
 
 def _older_record(monkeypatch, *, cut_version: int, package: dict[str, Any] | None = None):
     """An unlocked record from before pins: no package key, nothing released."""
-    from kiro_crew import artifacts, dashboard_agentic
-    from kiro_crew.dashboard.handlers import member_dashboard
-    from kiro_crew.dashboard_templates import instance as instance_store
+    from aj_crew import artifacts, dashboard_agentic
+    from aj_crew.dashboard.handlers import member_dashboard
+    from aj_crew.dashboard_templates import instance as instance_store
 
     record = SimpleNamespace(package_slug="", package_released=False, structure_locked=False)
     monkeypatch.setattr(instance_store, "read", lambda _slug: record)
@@ -1043,15 +1043,15 @@ async def test_a_host_with_no_pinned_walk_answers_no_image_and_writes_nothing(
 def test_the_picture_directory_is_readable_by_the_crewmate_and_served_by_nothing(tmp_path):
     """The crewmate's own file-read tool reaches it; the file explorer, the one route that
     lists the data home, refuses it."""
-    from kiro_crew.apps.builtins.file_explorer import server as explorer
-    from kiro_crew.security import is_sensitive_path
+    from aj_crew.apps.builtins.file_explorer import server as explorer
+    from aj_crew.security import is_sensitive_path
 
     crew_home = Path.home() / ".kiro" / "crew"
     picture = crew_home / agent_panel_snapshot.SHOT_ROOT / SLUG / "page-1-abcd.png"
 
     assert not is_sensitive_path(str(picture))
     assert explorer._is_sensitive(picture)
-    assert agent_panel_snapshot.SHOT_ROOT not in explorer._KIROCREW_SAFE_SUBDIRS
+    assert agent_panel_snapshot.SHOT_ROOT not in explorer._AJCREW_SAFE_SUBDIRS
 
 
 # --------------------------------------------------------------------------- #
@@ -1133,7 +1133,7 @@ def test_the_tool_refuses_a_caller_whose_identity_is_not_strict(monkeypatch):
 
 
 def test_the_tool_takes_no_arguments():
-    from kiro_crew.validation import MCP_PANEL_SCHEMAS, ValidationError, validate_tool_args
+    from aj_crew.validation import MCP_PANEL_SCHEMAS, ValidationError, validate_tool_args
 
     schema = MCP_PANEL_SCHEMAS["dashboard_snapshot"]
     assert validate_tool_args({}, schema) == {}

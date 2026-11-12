@@ -36,7 +36,7 @@ async function openAllDisclosures(page) {
 }
 
 const OUT = process.argv[2] || '../temp-screenshots/agent-backend-probe'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -387,7 +387,7 @@ const SCENE_NOT_OFFERED = {
  * Three rows, one per answer a reader has to be able to tell apart: kiro-cli reads
  * the agent file itself, codex has it copied across and keeps a per-tool channel,
  * and opencode has no per-tool channel at all — so switching one tool off there
- * withholds the whole server, Kiro Crew's own control plane included. Every value
+ * withholds the whole server, Aj Crew's own control plane included. Every value
  * is the declaration's own; the panel authors none of it.
  */
 const SCENE_MCP = {
@@ -438,7 +438,7 @@ await page.route('**/api/**', route => {
     })
   }
   // Which option is pressed.
-  if (path === '/api/config/kirocrew') return json(route, { agent: { acp_backend: '' } })
+  if (path === '/api/config/ajcrew') return json(route, { agent: { acp_backend: '' } })
 
   return handleBootRoute(route, path, { project: PROJECT, fixedApi })
 })

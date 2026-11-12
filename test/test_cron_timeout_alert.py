@@ -18,9 +18,9 @@ import pytest
 from cron_gateway_integration_helpers import _make_gw
 from test_cron_reaper import _kill_seam, _live_task, _make_job, _mock_sessions  # noqa: F401
 
-from kiro_crew import cron as cron_mod
-from kiro_crew.cron import _JOB_TIMEOUT_SECS, CronJob, CronService, _RunClaim
-from kiro_crew.cron_history import CronHistoryStore
+from aj_crew import cron as cron_mod
+from aj_crew.cron import _JOB_TIMEOUT_SECS, CronJob, CronService, _RunClaim
+from aj_crew.cron_history import CronHistoryStore
 
 pytestmark = pytest.mark.usefixtures("ample_host_free_memory")
 
@@ -133,7 +133,7 @@ async def test_a_failing_alert_is_logged_and_the_run_still_settles(
     svc.set_timeout_alert(_not_a_coroutine)
     job = CronJob(id="t5", name="slow", message="hi")
 
-    with caplog.at_level("WARNING", logger="kiro_crew.cron"):
+    with caplog.at_level("WARNING", logger="aj_crew.cron"):
         await svc._execute_with_timeout(job)
 
     assert job.last_status == "error"
@@ -173,7 +173,7 @@ async def test_the_reaper_alerts_a_reaped_run_on_the_terms_it_counts_it(
         started_monotonic=(time.monotonic() - _JOB_TIMEOUT_SECS - 10) if started else None,
     )
 
-    with patch("kiro_crew.sel.sel"), patch.object(svc, "_save"):
+    with patch("aj_crew.sel.sel"), patch.object(svc, "_save"):
         await svc._force_reap("reap1", _JOB_TIMEOUT_SECS + 10, claim=claim)
     await _settle(svc)
 
@@ -190,8 +190,8 @@ async def test_the_reaper_alerts_a_reaped_run_on_the_terms_it_counts_it(
 @pytest.mark.asyncio
 async def test_the_gateway_wires_its_failure_alert_into_the_service(tmp_path, monkeypatch) -> None:
     gw = _make_gw()
-    monkeypatch.setattr("kiro_crew.slack.gateway.data_home", lambda: tmp_path)
-    with patch("kiro_crew.slack.gateway.sel"):
+    monkeypatch.setattr("aj_crew.slack.gateway.data_home", lambda: tmp_path)
+    with patch("aj_crew.slack.gateway.sel"):
         await gw._init_cron(arm=False)
 
     # The timeout alert also records a bound script's failure, then calls
@@ -212,7 +212,7 @@ async def test_a_timed_out_run_reaches_the_bell_and_the_job_destination(
     svc.set_timeout_alert(gw._alert_cron_failure)
     job = CronJob(id="t6", name="nightly-sync", message="hi", channel="C123")
 
-    with patch("kiro_crew.slack.gateway.sel"):
+    with patch("aj_crew.slack.gateway.sel"):
         await svc._execute_with_timeout(job)
         await _settle(svc)
 
@@ -234,7 +234,7 @@ async def test_a_silent_job_times_out_without_an_alert(tmp_path, short_deadline)
     svc.set_timeout_alert(gw._alert_cron_failure)
     job = CronJob(id="t7", name="quiet", message="hi", channel="C123", silent=True)
 
-    with patch("kiro_crew.slack.gateway.sel"):
+    with patch("aj_crew.slack.gateway.sel"):
         await svc._execute_with_timeout(job)
         await _settle(svc)
 

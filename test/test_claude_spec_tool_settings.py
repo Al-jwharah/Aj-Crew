@@ -24,16 +24,16 @@ from acp_session_mcp_helpers import _pinned_kiro_cli_version  # noqa: F401
 from acp_session_mcp_helpers import agents_dir_fixture  # noqa: F401
 from acp_session_mcp_helpers import isolated_seed_provenance  # noqa: F401
 
-from kiro_crew import permission_floor
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.spec_tools_allowlists import (
+from aj_crew import permission_floor
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.spec_tools_allowlists import (
     CLAUDE_SHELL_ASK_RULES,
     CLAUDE_WRITE_ASK_RULES,
     claude_ask_rules,
 )
-from kiro_crew.acp.types import AcpEvent, JsonRpcMessage
-from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
-from kiro_crew.agent_sdk.backends import ACP_BACKENDS_CREW_ENFORCES_SPEC_TOOLS_SETTINGS
+from aj_crew.acp.types import AcpEvent, JsonRpcMessage
+from aj_crew.acp_backends import ACP_BACKEND_CLAUDE, ACP_BACKEND_KIRO
+from aj_crew.agent_sdk.backends import ACP_BACKENDS_CREW_ENFORCES_SPEC_TOOLS_SETTINGS
 
 _AGENT = "probe"
 _SHELL = {"shell": {"denyByDefault": True, "allowedCommands": ["git status"]}}
@@ -43,8 +43,8 @@ _WRITE = {"fs_write": {"fallbackAction": "deny", "allowedPaths": ["docs/**"]}}
 @pytest.fixture(autouse=True)
 def _ungoverned(tmp_path: Path, _floor_monkeypatch: pytest.MonkeyPatch):
     """No governance profile on the host decides any of these calls."""
-    from kiro_crew.platform import context as ctx_mod
-    from kiro_crew.platform import governance_profiles as gp
+    from aj_crew.platform import context as ctx_mod
+    from aj_crew.platform import governance_profiles as gp
 
     profiles = tmp_path / "profiles"
     profiles.mkdir()

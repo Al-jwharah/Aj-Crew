@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 import sys
 
-import kiro_crew.sandbox as sb
+import aj_crew.sandbox as sb
 
 
 def _reset_warned():
@@ -30,7 +30,7 @@ def _reset_warned():
 
 def _neutralize_passthrough(monkeypatch):
     """Prevent the 'already inside a sandbox' passthrough from short-circuiting."""
-    monkeypatch.setattr(sb, "_inside_kirocrew_sandbox", lambda: False)
+    monkeypatch.setattr(sb, "_inside_ajcrew_sandbox", lambda: False)
     monkeypatch.setattr(sb, "_macos_sandbox_state", lambda: None)
     # Neutralize cgroup scope so it doesn't prepend systemd-run
     monkeypatch.setattr(sb, "_probe_cgroup_scope", lambda: (False, "disabled-in-test"))
@@ -135,7 +135,7 @@ def test_scrub_env_drops_credential_keys():
         "AWS_SESSION_TOKEN": "st",
         "SSH_AUTH_SOCK": "/tmp/agent.sock",
         "SLACK_BOT_TOKEN": "xoxb-1",
-        "KIROCREW_OWNER_ID": "U123",
+        "AJCREW_OWNER_ID": "U123",
     }
     out = sb.scrub_env(env)
     assert out == {"PATH": "/usr/bin", "HOME": "/home/x"}
@@ -231,7 +231,7 @@ def test_strip_python_env_holds_on_fail_open_path(monkeypatch):
     monkeypatch.setattr(sb, "_allow_no_isolation", lambda: True)
     monkeypatch.setattr(sb, "_allow_unsandboxed_exec", lambda: True)
 
-    base = {"PATH": "/usr/bin", "PYTHONPATH": "/kirocrew/site", "PYTHONHOME": "/py"}
+    base = {"PATH": "/usr/bin", "PYTHONPATH": "/ajcrew/site", "PYTHONHOME": "/py"}
     argv, env, cleanup = sb.sandboxed_spawn_argv(
         ["mcp-server"], mode="standard", env=base, strip_python_env=True
     )
@@ -246,13 +246,13 @@ def test_strip_python_env_holds_on_fail_open_path(monkeypatch):
 
 def test_strip_python_env_false_keeps_python_env(monkeypatch):
     """Without strip_python_env, the chokepoint leaves PYTHONPATH intact (our own
-    sandboxed Python children import kiro_crew via it)."""
+    sandboxed Python children import aj_crew via it)."""
     _reset_warned()
     _neutralize_passthrough(monkeypatch)
     monkeypatch.setattr(sb, "detect_backend", lambda config_mode="auto": "none")
     monkeypatch.setattr(sb, "_allow_no_isolation", lambda: True)
     monkeypatch.setattr(sb, "_allow_unsandboxed_exec", lambda: True)
 
-    base = {"PATH": "/usr/bin", "PYTHONPATH": "/kirocrew/site"}
+    base = {"PATH": "/usr/bin", "PYTHONPATH": "/ajcrew/site"}
     _, env, _ = sb.sandboxed_spawn_argv(["python", "-m", "x"], env=base)
-    assert env["PYTHONPATH"] == "/kirocrew/site"
+    assert env["PYTHONPATH"] == "/ajcrew/site"

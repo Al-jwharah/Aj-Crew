@@ -32,7 +32,7 @@ from turn_harness import (
     run_turn,
 )
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_PERMISSION_REQUEST,
     EVENT_STEER_CONSUMED,
@@ -40,24 +40,24 @@ from kiro_crew.acp.types import (
     STOP_REASON_END_TURN,
     AcpEvent,
 )
-from kiro_crew.config.loader import (
+from aj_crew.config.loader import (
     APPROVAL_TURN_MARGIN_SECS,
     TOOL_APPROVAL_TIMEOUT_MAX,
     TOOL_APPROVAL_TIMEOUT_MIN,
     AgentConfig,
     _clamp_security_bounds,
 )
-from kiro_crew.constants import (
+from aj_crew.constants import (
     CHAT_TURN_TIMEOUT,
     DENY_CAUSE_APPROVAL_NO_BUDGET,
     DENY_CAUSE_APPROVAL_TIMEOUT,
     STEER_NOTICE_BOUND_SECS,
     TOOL_APPROVAL_TIMEOUT,
 )
-from kiro_crew.dashboard import turn_dispatch as td
-from kiro_crew.dashboard.state import REFUSAL_RECOVERY_PREFIX
-from kiro_crew.hook_runtime.script_hooks import ScriptHookResult
-from kiro_crew.hooks import HOOK_EVENT_PRE_TOOL_USE
+from aj_crew.dashboard import turn_dispatch as td
+from aj_crew.dashboard.state import REFUSAL_RECOVERY_PREFIX
+from aj_crew.hook_runtime.script_hooks import ScriptHookResult
+from aj_crew.hooks import HOOK_EVENT_PRE_TOOL_USE
 
 
 class _Cfg:
@@ -75,7 +75,7 @@ def cfg(monkeypatch: pytest.MonkeyPatch):
 
     def _apply(*, window: int, turn: int = 7200) -> None:
         monkeypatch.setattr(
-            td.KiroCrewConfig, "load", staticmethod(lambda: _Cfg(window=window, turn=turn))
+            td.AjCrewConfig, "load", staticmethod(lambda: _Cfg(window=window, turn=turn))
         )
 
     return _apply
@@ -134,7 +134,7 @@ class TestResolver:
         def _boom() -> None:
             raise RuntimeError("no config")
 
-        monkeypatch.setattr(td.KiroCrewConfig, "load", staticmethod(_boom))
+        monkeypatch.setattr(td.AjCrewConfig, "load", staticmethod(_boom))
         assert td.tool_approval_timeout_secs() == TOOL_APPROVAL_TIMEOUT
 
     def test_non_positive_window_falls_back(self, cfg) -> None:
@@ -164,7 +164,7 @@ class TestResolver:
 class TestLoadTimeClamp:
     def test_window_at_the_ceiling_is_clamped(self, caplog: pytest.LogCaptureFixture) -> None:
         data = {"agent": {"tool_approval_timeout_secs": 7200, "chat_turn_timeout_secs": 7200}}
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.config.loader"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.config.loader"):
             _clamp_security_bounds(data)
         assert data["agent"]["tool_approval_timeout_secs"] == 7200 - APPROVAL_TURN_MARGIN_SECS
         assert "can never fire" in caplog.text
@@ -187,7 +187,7 @@ class TestLoadTimeClamp:
         binds first, so the cross-field clamp can only be SEEN to consult the
         field default by lowering that default below the static max.
         """
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         monkeypatch.setattr(loader_mod, "_DEFAULT_CHAT_TURN_TIMEOUT_SECS", 1200)
         data = {"agent": {"tool_approval_timeout_secs": 7200}}
@@ -244,7 +244,7 @@ class TestLoadTimeClamp:
     def test_non_int_ceiling_falls_back_to_the_default(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         # Lowered below the static max so the fallback is observable (see
         # test_absent_ceiling_uses_the_field_default).
@@ -642,7 +642,7 @@ class TestTheRunnersApprovalWindow:
         # start for it: the chat app would hear "waiting" for a refused tool.
         handed: list[str] = []
         monkeypatch.setattr(
-            "kiro_crew.notifications.bridge_approval_note.schedule_pending_approval",
+            "aj_crew.notifications.bridge_approval_note.schedule_pending_approval",
             lambda state, fut, **kw: handed.append(kw["request_id"]),
         )
         await run_turn(script(), config={"agent": {"chat_turn_timeout_secs": _CEILING}})
@@ -756,7 +756,7 @@ def test_the_bounded_steer_is_never_wrapped_again_at_a_call_site() -> None:
     ``test_a_steer_that_never_returns_still_lets_the_reject_through``). Counted in
     ``test_source_pin_budget.py``.
     """
-    from kiro_crew.dashboard import chat_runner, chat_turn
+    from aj_crew.dashboard import chat_runner, chat_turn
 
     sources = [Path(chat_runner.__file__)] + sorted(Path(chat_turn.__file__).parent.glob("*.py"))
     rewrapped = [

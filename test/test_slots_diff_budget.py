@@ -13,8 +13,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.state import DashboardState
-from kiro_crew.dashboard.websocket_hub import SLOT_DIFF_WS_FLAG, SLOT_PATCH_WS_FLAG
+from aj_crew.dashboard.state import DashboardState
+from aj_crew.dashboard.websocket_hub import SLOT_DIFF_WS_FLAG, SLOT_PATCH_WS_FLAG
 
 _SLOTS = 400
 _ROUNDS = 25
@@ -38,8 +38,8 @@ class _WS(dict):
 
 @pytest.fixture(name="state")
 def _state(monkeypatch: pytest.MonkeyPatch, tmp_path: Any) -> DashboardState:
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
-    monkeypatch.setattr("kiro_crew.session_map.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.session_map.config_dir", lambda: tmp_path)
     sessions = MagicMock(count=0)
     sessions.get_provider.return_value = None
     state = DashboardState(

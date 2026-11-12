@@ -24,8 +24,8 @@ from typing import Any
 import pytest
 from test_app_frame import MINT, PID, _client, _mint  # noqa: F401  (shared fixtures)
 
-from kiro_crew.apps import app_frame as lp
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.apps import app_frame as lp
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 APP = "cards-app"
 
@@ -135,7 +135,7 @@ globalThis.document = {
 """
 
 _DRIVER = r"""
-const DTAG = 'kirocrew-app-frame';
+const DTAG = 'ajcrew-app-frame';
 const deliver = (data) => (listeners.message || []).forEach((f) => f({ source: parent, data: { [DTAG]: 1, ...data } }));
 const until = async (f) => { for (let i = 0; i < 200 && !f(); i++) await new Promise((r) => setTimeout(r, 10)); };
 const answerRelays = async () => {
@@ -155,7 +155,7 @@ deliver({ type: 'init', capability: 'cap-1', relay: 'nonce-1', base: globalThis.
 await until(() => posted.some((m) => m.type === 'ready' || m.type === 'failed'));
 let fetched = null;
 if (posted.some((m) => m.type === 'ready') && globalThis.FETCH_PATH) {
-  const res = await globalThis.kirocrewCtx.fetch(globalThis.FETCH_PATH, { method: 'POST', body: '{"k":1}', headers: { 'content-type': 'application/json' } });
+  const res = await globalThis.ajcrewCtx.fetch(globalThis.FETCH_PATH, { method: 'POST', body: '{"k":1}', headers: { 'content-type': 'application/json' } });
   fetched = { status: res.status, text: await res.text() };
 }
 clearInterval(pump);
@@ -170,12 +170,12 @@ console.log(JSON.stringify({
 #: Provider module bodies. Each counts activations and hands its ctx out.
 _REGISTERS = (
     "export function activate(ctx) { globalThis.activations = (globalThis.activations||0)+1;"
-    " globalThis.kirocrewCtx = ctx; return { show() {} }; }\n"
-    "globalThis.kirocrew.register(activate)\n"
+    " globalThis.ajcrewCtx = ctx; return { show() {} }; }\n"
+    "globalThis.ajcrew.register(activate)\n"
 )
 _ACTIVATE_ONLY = (
     "export function activate(ctx) { globalThis.activations = (globalThis.activations||0)+1;"
-    " globalThis.kirocrewCtx = ctx; return { show() {} }; }\n"
+    " globalThis.ajcrewCtx = ctx; return { show() {} }; }\n"
 )
 
 
@@ -272,7 +272,7 @@ def test_ctx_fetch_goes_through_the_relay_with_the_capability() -> None:
     # header the frame always sent; the frame's own nonce.
     assert echoed["path"] == f"/app-frame-fetch/{APP}/kv?x=1"
     assert echoed["method"] == "POST"
-    assert ["x-kirocrew-capability", "cap-1"] in echoed["headers"]
+    assert ["x-ajcrew-capability", "cap-1"] in echoed["headers"]
     assert ["content-type", "application/json"] in echoed["headers"]
     assert echoed["body"] == '{"k":1}'
     assert echoed["nonce"] == "nonce-1"
@@ -291,8 +291,8 @@ def test_a_refused_relay_answer_is_a_network_error_as_a_refused_cors_read_was() 
         "  fetched = { status: res.status, text: await res.text() };",
         "  fetched = { status: res.status };",
     ).replace(
-        "  const res = await globalThis.kirocrewCtx.fetch(",
-        "  const res = await globalThis.kirocrewCtx.fetch(",
+        "  const res = await globalThis.ajcrewCtx.fetch(",
+        "  const res = await globalThis.ajcrewCtx.fetch(",
     )
     prelude = (
         f"globalThis.CONFIG = {json.dumps(_config(_REFUSED))};\n"
@@ -340,7 +340,7 @@ def _run_script(config: dict[str, Any], answer_js: str, script: str) -> dict[str
         pytest.skip("node is not installed")
     driver = _DRIVER.split("let fetched = null;", 1)[0] + (
         "let out = null;\n"
-        "if (posted.some((m) => m.type === 'ready')) { const ctx = globalThis.kirocrewCtx; "
+        "if (posted.some((m) => m.type === 'ready')) { const ctx = globalThis.ajcrewCtx; "
         "try { out = await (async () => {"
         + script
         + "})(); } catch (e) { out = { error: e.name } } }\n"
@@ -457,7 +457,7 @@ def test_a_url_loaded_frame_whose_import_is_refused_falls_back_to_the_relay() ->
     )
     driver = _DRIVER.split("let fetched = null;", 1)[0] + (
         "let out = null;\n"
-        "if (posted.some((m) => m.type === 'ready')) { const ctx = globalThis.kirocrewCtx; "
+        "if (posted.some((m) => m.type === 'ready')) { const ctx = globalThis.ajcrewCtx; "
         "try { out = await (async () => {"
         + script
         + "})(); } catch (e) { out = { error: e.name } } }\n"
@@ -497,16 +497,16 @@ async def test_a_cookie_bearing_relayed_fetch_is_signed_as_the_app_not_the_owner
     from aiohttp import web
     from aiohttp.test_utils import TestClient, TestServer
 
-    from kiro_crew.apps import routes_proxy
+    from aj_crew.apps import routes_proxy
 
     monkeypatch.setattr(
         lp,
         "_provider_entry",
         lambda name, pid=None: ("dist/lp.mjs", True, APP) if name == APP else None,
     )
-    monkeypatch.setattr("kiro_crew.dashboard.server._embed_parent_port", lambda request, app: None)
+    monkeypatch.setattr("aj_crew.dashboard.server._embed_parent_port", lambda request, app: None)
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
     seen: list[tuple[str, str]] = []
@@ -515,7 +515,7 @@ async def test_a_cookie_bearing_relayed_fetch_is_signed_as_the_app_not_the_owner
         seen.append(routes_proxy._proxy_principal(request))
         return web.json_response({"proxied": True})
 
-    monkeypatch.setattr("kiro_crew.apps.routes.handle_app_api_proxy", proxy)
+    monkeypatch.setattr("aj_crew.apps.routes.handle_app_api_proxy", proxy)
 
     @web.middleware
     async def cookie_session(request: web.Request, handler: Any) -> web.StreamResponse:

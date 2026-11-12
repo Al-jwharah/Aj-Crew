@@ -62,7 +62,7 @@ sessions are unchanged.
 ## Cost
 
 The fresh conversation is a `session/new` on a running runtime: p50 0.15 s on a
-dev host (15 samples), against p50 1.48 s / p95 2.05 s for a kirocrew-lite cold
+dev host (15 samples), against p50 1.48 s / p95 2.05 s for an ajcrew-lite cold
 start. The peak job rate seen is 9 jobs in 60 s and 56 in 10 min (1437 jobs on
 2026-10-19). The job count itself is high and is a separate follow-up.
 

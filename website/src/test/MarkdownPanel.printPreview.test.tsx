@@ -42,7 +42,7 @@ beforeEach(() => {
   qc.clear()
   localStorage.clear()
   atPrint = undefined
-  document.title = 'Kiro Crew'
+  document.title = 'Aj Crew'
   vi.stubGlobal('fetch', vi.fn(async (input: unknown) => {
     const url = String(input)
     if (url.startsWith('/api/knowledge/config')) return { ok: true, json: async () => ({ enabled: false, supported_formats: [] }) }
@@ -97,7 +97,7 @@ describe('MarkdownPanel ⋯ Print or save as PDF', () => {
     act(() => { window.dispatchEvent(new Event('afterprint')) })
     expect(document.querySelector('[data-print-root]')).toBeNull()
     expect(document.documentElement).not.toHaveAttribute('data-printing-preview')
-    expect(document.title).toBe('Kiro Crew')
+    expect(document.title).toBe('Aj Crew')
   })
 
   it('names a partial read like its download, never as the whole file', async () => {
@@ -170,7 +170,7 @@ describe('MarkdownPanel ⋯ Print or save as PDF', () => {
     await printPreview(root, '/tmp/release-notes.md', false)
     expect(window.print).not.toHaveBeenCalled()
     expect(root).not.toHaveAttribute('data-print-root')
-    expect(document.title).toBe('Kiro Crew')
+    expect(document.title).toBe('Aj Crew')
   })
 
   it('offers no print row while the file is open in the editor', async () => {

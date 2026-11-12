@@ -16,16 +16,16 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.client_claude_session import (
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.client_claude_session import (
     CLAUDE_ACP_STEERING_MIN_VERSION,
     _adapter_version_at_least,
 )
-from kiro_crew.acp.client_turn_control import GOOSE_STEER_MIN_VERSION, steer_version_issue
-from kiro_crew.agent_sdk import backends as sdk_backends
-from kiro_crew.agent_sdk.backend_cards import card_payload
-from kiro_crew.dashboard import chat_runner
-from kiro_crew.providers.acp import AcpProvider
+from aj_crew.acp.client_turn_control import GOOSE_STEER_MIN_VERSION, steer_version_issue
+from aj_crew.agent_sdk import backends as sdk_backends
+from aj_crew.agent_sdk.backend_cards import card_payload
+from aj_crew.dashboard import chat_runner
+from aj_crew.providers.acp import AcpProvider
 
 CLAUDE = sdk_backends.ACP_BACKEND_CLAUDE
 GOOSE = sdk_backends.ACP_BACKEND_GOOSE

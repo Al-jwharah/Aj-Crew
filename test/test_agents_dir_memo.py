@@ -1,12 +1,12 @@
 """The agents-directory revision and the memo pinned to it, shared by the two
 ``spec_by_declared_name`` callers.
 
-:func:`kiro_crew.agent_discovery.agents_dir_revision` is a fingerprint strong
+:func:`aj_crew.agent_discovery.agents_dir_revision` is a fingerprint strong
 enough to pin a read answer to: entry metadata, plus a digest of the bytes of
 any entry too young for its metadata to be trusted. It answers ``None`` whenever
 freshness cannot be proven (a symlinked spec, a young entry it cannot hash, a
 bulk write past the digest budget). Where ``ctime`` is creation time (Windows)
-every entry is pinned on its bytes. :class:`kiro_crew.agent_discovery.AgentsDirMemo` holds the store and hit
+every entry is pinned on its bytes. :class:`aj_crew.agent_discovery.AgentsDirMemo` holds the store and hit
 rules once, so the tool-policy read and the KAS projection cannot drift apart.
 
 The KAS tests pin the second caller: a KAS session start resolves its agent by
@@ -28,8 +28,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import agent_discovery
-from kiro_crew.acp import kas_agents
+from aj_crew import agent_discovery
+from aj_crew.acp import kas_agents
 
 AGENT = "reviewer"
 
@@ -694,7 +694,7 @@ def test_a_prefill_read_across_an_edit_stores_nothing(tmp_path: Path) -> None:
 
 
 def test_a_prefill_stores_no_alias_and_survives_its_own_os_error(tmp_path: Path) -> None:
-    from kiro_crew.agent_spec_format import NATIVE_SKILL_ALIAS_PREFIX
+    from aj_crew.agent_spec_format import NATIVE_SKILL_ALIAS_PREFIX
 
     alias = f"{NATIVE_SKILL_ALIAS_PREFIX}0123456789abcdef01234567"
     _write_spec(tmp_path / "a.json", {"name": "a"})

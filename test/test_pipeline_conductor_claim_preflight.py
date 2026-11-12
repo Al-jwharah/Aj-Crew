@@ -950,7 +950,7 @@ class TestForgeClaim:
         That comment always lands with the label and assignee, so check 6 is its channel.
         The pin is on that shared sentence alone, since "picking it up" already fires."""
         shared = (
-            "Kiro Crew Auto-Pipeline [operator: redacted]: Starting an automated "
+            "Aj Crew Auto-Pipeline [operator: redacted]: Starting an automated "
             "fix -- this issue is now claimed by redacted's instance."
         )
         assert mod._first_match(mod.SELF_CLAIM_RES, mod.plain_prose(shared)) is None

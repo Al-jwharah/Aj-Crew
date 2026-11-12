@@ -14,8 +14,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
-from kiro_crew.kiro_prerequisite_service import KiroPrerequisiteService
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KAS, ACP_BACKEND_KIRO
+from aj_crew.kiro_prerequisite_service import KiroPrerequisiteService
 
 _BAD_CONFIG = object()
 
@@ -33,7 +33,7 @@ def _pin_config(monkeypatch: pytest.MonkeyPatch, config: object) -> None:
             raise ValueError("unreadable config")
         return config
 
-    monkeypatch.setattr("kiro_crew.config.KiroCrewConfig.load", _load)
+    monkeypatch.setattr("aj_crew.config.AjCrewConfig.load", _load)
 
 
 def _config(backend: str, kas_bundle: bool) -> SimpleNamespace:
@@ -72,7 +72,7 @@ def test_an_unreadable_config_still_reads_as_the_relay_route(monkeypatch, backen
     ],
 )
 def test_the_helper_is_the_shared_two_fact_predicate(monkeypatch, backend, kas_bundle, expected):
-    from kiro_crew.agent_sdk import kas_bundle as kas_bundle_mod
+    from aj_crew.agent_sdk import kas_bundle as kas_bundle_mod
 
     _pin_config(monkeypatch, _config(backend, kas_bundle))
 

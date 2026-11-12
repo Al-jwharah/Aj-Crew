@@ -1,6 +1,6 @@
 """A returned sub-agent result settles at its turn's release on every route.
 
-The mark-and-settle rule of ``kiro_crew.parent_turns``, driven through each route
+The mark-and-settle rule of ``aj_crew.parent_turns``, driven through each route
 a completion can take, a dashboard tab's own turn included:
 
 * a cron job whose tab is bound, a channel conversation with an open tab and a
@@ -45,15 +45,15 @@ from test_spawn_sub_agents_duplicate_never_loss import (
 )
 from test_subagent_injection_live_turn import _HANG_CEILING_S
 
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     EVENT_COMPACTION_STATUS,
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     AcpEvent,
 )
-from kiro_crew.llm_helpers_parts.turn_stream import stream_and_collect as _real_stream
-from kiro_crew.messaging.turn_bracket import stop_reason_landed
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.llm_helpers_parts.turn_stream import stream_and_collect as _real_stream
+from aj_crew.messaging.turn_bracket import stop_reason_landed
+from aj_crew.testing.wait import async_wait_until
 
 
 @pytest.fixture
@@ -77,7 +77,7 @@ async def _settled(gateway: Any) -> None:
 @contextlib.contextmanager
 def _surfaced(*keys: str):
     """Publish *keys* as having an open tab, as ``_sync_dashboard_slots`` does."""
-    from kiro_crew.session_surface import dashboard_surfaced_keys, set_dashboard_surfaced
+    from aj_crew.session_surface import dashboard_surfaced_keys, set_dashboard_surfaced
 
     prior = dashboard_surfaced_keys()
     set_dashboard_surfaced(set(keys))
@@ -109,7 +109,7 @@ async def _drive_tab_parent(
     ends: landed (its engine notes it, then releases) or not (a deadline or a stop:
     released with no note). *held* are the wave siblings the completion's digest
     carries, and *close_tab* closes the tab before the turn ends."""
-    from kiro_crew.dashboard.chat_utils import dashboard_slot_key
+    from aj_crew.dashboard.chat_utils import dashboard_slot_key
 
     key, surface = parent
     sessions = _new_sessions()
@@ -248,11 +248,11 @@ async def test_a_pending_mark_leaves_a_cron_tabs_queued_completion_queued(tmp_pa
     from chat_test_helpers import _make_state
     from test_subagent_queued_visibility import _Req
 
-    from kiro_crew.constants import SUBAGENT_COMPLETION_META_KEY
-    from kiro_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND, dashboard_slot_key
-    from kiro_crew.dashboard.handlers.messaging import api_spawn_mark_collected
-    from kiro_crew.subagent import SubagentDelivery
-    from kiro_crew.subagent_completion_meta import single_completion_meta
+    from aj_crew.constants import SUBAGENT_COMPLETION_META_KEY
+    from aj_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND, dashboard_slot_key
+    from aj_crew.dashboard.handlers.messaging import api_spawn_mark_collected
+    from aj_crew.subagent import SubagentDelivery
+    from aj_crew.subagent_completion_meta import single_completion_meta
 
     key = "cron:j1"
     state = _make_state(tmp_path)
@@ -343,7 +343,7 @@ async def _drive_nested(stop_reason: str | None) -> dict[str, Any]:
 
         return await _real_stream(_EndsAs(stop_reason, during), message, **kw)
 
-    with patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream):
+    with patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream):
         await asyncio.wait_for(_channel_route(gateway, x, key), _HANG_CEILING_S)
         await _settled(gateway)
     seen.update(gateway=gateway, g=g, x=x)
@@ -395,7 +395,7 @@ async def test_a_failed_attempt_does_not_hand_its_inline_marks_to_the_retry_that
     carrying G and then failed; attempt 2 re-sends the announce and lands. G's
     mark is settled by attempt 1's own end, so attempt 2's landing never confirms
     a result the attempt that received it did not keep."""
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
     sessions = _new_sessions()
     key = "slack:C1:1700000000.1"
@@ -416,7 +416,7 @@ async def test_a_failed_attempt_does_not_hand_its_inline_marks_to_the_retry_that
             on_complete(SimpleNamespace(stop_reason="end_turn"))
         return f"answered {message}"
 
-    with patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream):
+    with patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream):
         await asyncio.wait_for(_channel_route(gateway, x, key), _HANG_CEILING_S)
         await _settled(gateway)
 
@@ -466,7 +466,7 @@ async def test_a_late_mark_is_not_confirmed_by_a_siblings_landed_injection() -> 
             on_complete(SimpleNamespace(stop_reason="end_turn"))  # this injected turn landed
         return f"answered {message}"
 
-    with patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream):
+    with patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream):
         await sessions.get_or_create(key)  # the cron turn, answering with the reply
         _poll_done(sessions, orch.subagent_mgr, key, a.id)  # its tool read A done
         c_route = asyncio.create_task(
@@ -601,8 +601,8 @@ async def test_only_the_parent_tools_done_read_under_the_spawning_turn_names_a_h
     from chat_test_helpers import _make_state
     from test_subagent_queued_visibility import _Req
 
-    from kiro_crew.dashboard.handlers import messaging
-    from kiro_crew.dashboard.messaging_api import run_views
+    from aj_crew.dashboard.handlers import messaging
+    from aj_crew.dashboard.messaging_api import run_views
 
     key = "telegram:42"
     state = _make_state(tmp_path)
@@ -682,10 +682,10 @@ async def test_a_queued_tab_completion_is_settled_only_by_its_turns_landed_relea
     it queued, to play once."""
     from chat_test_helpers import _make_state
 
-    from kiro_crew.constants import SUBAGENT_COMPLETION_META_KEY
-    from kiro_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND
-    from kiro_crew.subagent import SubagentDelivery
-    from kiro_crew.subagent_completion_meta import single_completion_meta
+    from aj_crew.constants import SUBAGENT_COMPLETION_META_KEY
+    from aj_crew.dashboard.chat_utils import SUBAGENT_COMPLETION_KIND
+    from aj_crew.subagent import SubagentDelivery
+    from aj_crew.subagent_completion_meta import single_completion_meta
 
     state = _make_state(tmp_path)
     sessions = _new_sessions()
@@ -748,7 +748,7 @@ async def test_a_parked_tab_digest_owes_its_held_siblings_on_every_ending(
     acknowledges it and pays the member's mark and the siblings' together. A
     revoked one hands it to the tab's turn, which owes both to its consumption
     (``_defer_queued_delivery``), never to nobody."""
-    from kiro_crew.subagent import SubagentDelivery
+    from aj_crew.subagent import SubagentDelivery
 
     sibling = SubagentDelivery("sib-1", 2.0, 0.1)
     seen = await _drive_tab_parent(done, _SLACK_TAB, lands=lands, held=(sibling,))
@@ -795,7 +795,7 @@ async def test_a_failed_attempts_mark_processed_in_the_retry_backoff_is_not_held
     same claim. The retry is a new attempt with a new token, so the mark is not held
     under it, its landing confirms nothing it did not receive, and G's completion is
     delivered as a turn of its own."""
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
     sessions = _new_sessions()
     key = "slack:C1:1700000000.1"
@@ -828,7 +828,7 @@ async def test_a_failed_attempts_mark_processed_in_the_retry_backoff_is_not_held
             on_complete(SimpleNamespace(stop_reason="end_turn"))
         return f"answered {message}"
 
-    with patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream):
+    with patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream):
         marker = asyncio.create_task(mark_in_the_backoff())
         await asyncio.wait_for(_channel_route(gateway, x, key), _HANG_CEILING_S)
         await asyncio.wait_for(marker, _HANG_CEILING_S)
@@ -876,7 +876,7 @@ async def test_a_late_mark_is_not_held_under_the_same_tasks_next_turn() -> None:
 
 
 def test_each_attempt_of_a_holding_gets_a_token_no_earlier_attempt_had() -> None:
-    from kiro_crew.parent_turns import ParentTurnLedger
+    from aj_crew.parent_turns import ParentTurnLedger
 
     ledger = ParentTurnLedger()
     settled: list[tuple[Any, bool, list[str]]] = []
@@ -904,7 +904,7 @@ async def test_an_attempt_its_finished_task_left_open_is_ended_by_the_next_open(
     compaction) never ends its attempt itself. Once its task has finished, the next
     attempt opened anywhere ends it: its marks are settled as its release would
     have settled them, and the ledger keeps no attempt of a finished task."""
-    from kiro_crew.parent_turns import ParentTurnLedger
+    from aj_crew.parent_turns import ParentTurnLedger
 
     ledger = ParentTurnLedger()
     settled: list[tuple[Any, bool, list[str]]] = []
@@ -930,10 +930,10 @@ async def test_an_attempt_its_finished_task_left_open_is_ended_by_the_next_open(
 def _cron_route_gateway(key: str) -> tuple[Any, Any, Any]:
     from test_subagent_injection_live_turn import _gateway, _provider_factory
 
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.session import SessionManager
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.session import SessionManager
 
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     gateway = _gateway(sessions)
     gateway.cron_svc = MagicMock(name="cron_svc")
     info = _returned_child("child-1", key)
@@ -956,7 +956,7 @@ async def test_a_cron_run_whose_last_completion_timed_out_still_retires_its_key(
         return "unreachable"
 
     gateway._inject_with_retry = AsyncMock(side_effect=hangs)
-    with patch("kiro_crew.slack.gateway.INJECTION_TIMEOUT", 0.05):
+    with patch("aj_crew.slack.gateway.INJECTION_TIMEOUT", 0.05):
         await asyncio.wait_for(
             gateway._finish_subagent_cron_or_notify(
                 info, announce="done", body="b", title="t", carried=(info.id,), parent_key=key
@@ -1007,7 +1007,7 @@ async def test_a_turn_that_claims_the_cron_parent_during_the_reset_keeps_the_ses
 
 def _registered(gateway: Any, key: str) -> Any:
     """A real cron service with the run's key registered, as the cron callback does."""
-    from kiro_crew.cron import CronService
+    from aj_crew.cron import CronService
 
     svc = CronService()
     svc.register_active_session_key("j1", key)
@@ -1083,12 +1083,12 @@ async def test_a_cron_turn_resumed_after_a_post_token_error_confirms_nothing_its
     from test_spawn_sub_agents_duplicate_never_loss import _cron_callback, _cron_job
     from test_subagent_injection_live_turn import _provider_factory
 
-    from kiro_crew.acp.client import AcpError
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.session import SessionManager
+    from aj_crew.acp.client import AcpError
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.session import SessionManager
 
     key = "cron:j1:r1"
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     a = _returned_child("child-a", key)
     orch = _cron_orchestrator(sessions, [a])
     seen: dict[str, Any] = {"prompts": [], "injected": []}
@@ -1121,9 +1121,9 @@ async def test_a_cron_turn_resumed_after_a_post_token_error_confirms_nothing_its
         return "the rest of the answer"
 
     with (
-        patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream),
-        patch("kiro_crew.slack.gateway.build_cron_session_context", return_value=(key, "task")),
-        patch("kiro_crew.slack.gateway.transient_retry_delay", return_value=0.0),
+        patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream),
+        patch("aj_crew.slack.gateway.build_cron_session_context", return_value=(key, "task")),
+        patch("aj_crew.slack.gateway.transient_retry_delay", return_value=0.0),
     ):
         await asyncio.wait_for(callback(_cron_job()), _HANG_CEILING_S)
         await asyncio.wait_for(asyncio.shield(seen["route"]), _HANG_CEILING_S)
@@ -1149,11 +1149,11 @@ async def test_the_real_cron_turn_keeps_its_key_while_a_confirmed_completion_is_
     from test_spawn_sub_agents_duplicate_never_loss import _confirmed, _cron_callback, _cron_job
     from test_subagent_injection_live_turn import _provider_factory
 
-    from kiro_crew.config import KiroCrewConfig
-    from kiro_crew.session import SessionManager
+    from aj_crew.config import AjCrewConfig
+    from aj_crew.session import SessionManager
 
     key = "cron:j1:r1"
-    sessions = SessionManager(KiroCrewConfig(), provider_factory=_provider_factory())
+    sessions = SessionManager(AjCrewConfig(), provider_factory=_provider_factory())
     c = _returned_child("child-c", key)
     _confirmed(c)
     orch = _cron_orchestrator(sessions, [c])
@@ -1174,8 +1174,8 @@ async def test_the_real_cron_turn_keeps_its_key_while_a_confirmed_completion_is_
         return "the cron's answer"
 
     with (
-        patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream),
-        patch("kiro_crew.slack.gateway.build_cron_session_context", return_value=(key, "task")),
+        patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream),
+        patch("aj_crew.slack.gateway.build_cron_session_context", return_value=(key, "task")),
     ):
         await asyncio.wait_for(callback(_cron_job()), _HANG_CEILING_S)
 
@@ -1207,7 +1207,7 @@ async def _drive_a_cut_turns_call(
     from chat_test_helpers import _make_state
     from test_subagent_queued_visibility import _Req
 
-    from kiro_crew.dashboard.messaging_api import run_views
+    from aj_crew.dashboard.messaging_api import run_views
 
     sessions = _new_sessions()
     key = "cron:j1:r1"
@@ -1253,7 +1253,7 @@ async def _drive_a_cut_turns_call(
         _prompt_in_flight(sessions, key, False)
         return f"answered {message}"
 
-    with patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream):
+    with patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream):
         await sessions.get_or_create(key)  # the cron run's turn
         _prompt_in_flight(sessions, key)  # its prompt is answering
         await _spawn_from_the_parents_tool(state, key, a, c)  # its call spawns A and C
@@ -1322,7 +1322,7 @@ def test_a_parked_completion_keeps_its_leaked_process_flag(leaked: bool) -> None
     """A completion parked on a pending mark owes the tombstone its run loop did not
     write, so a teardown that left the process running rides on that owed mark;
     without it the settled tombstone hides the process from leaked-process recovery."""
-    from kiro_crew.slack.gateway_runtime.subagent_injection import _park_inline
+    from aj_crew.slack.gateway_runtime.subagent_injection import _park_inline
 
     orch = SimpleNamespace(_inline_parked={})
     info = make_info()

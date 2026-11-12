@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.knowledge import readers
-from kiro_crew.knowledge.readers import FileReader
+from aj_crew.knowledge import readers
+from aj_crew.knowledge.readers import FileReader
 
 
 @pytest.fixture(autouse=True)

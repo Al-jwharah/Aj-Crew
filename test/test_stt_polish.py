@@ -20,7 +20,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew.dashboard.handlers import core
+from aj_crew.dashboard.handlers import core
 
 
 @pytest.fixture
@@ -29,7 +29,7 @@ def polish(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(core, "_deny_app_token", lambda request, scope: None)
     cfg = MagicMock()
     cfg.stt.polish = True
-    monkeypatch.setattr(core.KiroCrewConfig, "load", staticmethod(lambda: cfg))
+    monkeypatch.setattr(core.AjCrewConfig, "load", staticmethod(lambda: cfg))
     sent: list[str] = []
 
     def set_reply(reply: str | Exception) -> None:
@@ -39,7 +39,7 @@ def polish(monkeypatch: pytest.MonkeyPatch):
                 raise reply
             return reply
 
-        import kiro_crew.llm_helpers as helpers
+        import aj_crew.llm_helpers as helpers
 
         monkeypatch.setattr(helpers, "run_bg_oneliner", _oneliner)
 
@@ -83,7 +83,7 @@ class TestTheSwitchIsTheConsent:
     @pytest.mark.asyncio
     async def test_the_default_configuration_has_it_off(self):
         """Read from the real dataclass, not the fixture's stub."""
-        from kiro_crew.config.loader import _build_stt_config
+        from aj_crew.config.loader import _build_stt_config
 
         assert _build_stt_config({}).polish is False
 

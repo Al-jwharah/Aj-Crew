@@ -18,7 +18,7 @@
 import { chromium } from 'playwright'
 import { mkdirSync } from 'node:fs'
 import { serveDist, DEFAULT_DIST } from './lib/serve-dist.mjs'
-import { KIROCREW_CONFIG_FIXTURE, logPageProblems, stubDashboardApi, json } from './lib/stub-dashboard-api.mjs'
+import { AJCREW_CONFIG_FIXTURE, logPageProblems, stubDashboardApi, json } from './lib/stub-dashboard-api.mjs'
 
 // The node toolchain injects its own libstdc++ on LD_LIBRARY_PATH, which the
 // bundled Chromium then loads in preference to the system one and fails on.
@@ -32,7 +32,7 @@ const OUT = args.find((a, i) => !a.startsWith('--') && args[i - 1] !== '--dist')
 if (!VERIFY_ONLY) mkdirSync(OUT, { recursive: true })
 
 const URL_FIXTURE = 'https://app.kiro.dev/account/device?user_code=WXYZ-1234'
-const KAS_CONFIG = { ...KIROCREW_CONFIG_FIXTURE, agent: { ...KIROCREW_CONFIG_FIXTURE.agent, acp_backend: 'kas' } }
+const KAS_CONFIG = { ...AJCREW_CONFIG_FIXTURE, agent: { ...AJCREW_CONFIG_FIXTURE.agent, acp_backend: 'kas' } }
 const SIGNED_OUT = {
   authenticated: false, provider: '', identity: '', transport: 'device',
   expires_at: null, expired: false, has_refresh_token: false, refresh_rejected: false, usable: false,
@@ -56,7 +56,7 @@ async function main() {
     const page = await context.newPage()
     logPageProblems(page)
     const extra = async (path, route) => {
-      if (path === '/api/config/kirocrew') { await json(route, KAS_CONFIG); return true }
+      if (path === '/api/config/ajcrew') { await json(route, KAS_CONFIG); return true }
       if (path === '/api/kas-login') { await json(route, SIGNED_OUT); return true }
       if (path === '/api/kas-login/device') {
         await json(route, { login_id: 'lid-1', user_code: 'WXYZ-1234', verification_uri_complete: URL_FIXTURE, expires_at: '2099-01-01T00:00:00Z' })
@@ -64,7 +64,7 @@ async function main() {
       }
       if (path === '/api/kas-login/poll') { await json(route, { status: 'pending' }); return true }
       if (path === '/api/agents' || path === '/api/chat/agents' || path === '/api/agents/catalog') {
-        await json(route, { agents: [{ name: 'kirocrew', source: 'builtin' }], default_agent: 'kirocrew' })
+        await json(route, { agents: [{ name: 'ajcrew', source: 'builtin' }], default_agent: 'ajcrew' })
         return true
       }
       if (path === '/api/acp-backends') { await json(route, { backends: [KAS_ROW] }); return true }

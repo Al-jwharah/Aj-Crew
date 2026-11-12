@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.security: the bare-secret classifier behind ``redact_credentials``.
+"""Tests for aj_crew.security: the bare-secret classifier behind ``redact_credentials``.
 
 Deep CamelCase paths are not bare secrets, the slash cap is the knee of the classifier, the
 run-level fast path is an optimization only, the gates run in cost order without changing a
@@ -21,8 +21,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import security
-from kiro_crew.security import (
+from aj_crew import security
+from aj_crew.security import (
     _SECRET_KEY_LEN,
     _SECRET_MAX_SLASHES,
     REDACTED_CREDENTIAL_TAG,
@@ -126,7 +126,7 @@ class TestPathWindowsAreNotBareSecrets:
     @staticmethod
     def _as_host(monkeypatch: pytest.MonkeyPatch, host_id: str | None) -> None:
         """Make *host_id* the directory id the OS reports; None is "not macOS"."""
-        from kiro_crew.security import redaction as redaction_mod
+        from aj_crew.security import redaction as redaction_mod
 
         monkeypatch.setattr(redaction_mod, "_host_darwin_user_dir_id", lambda: host_id)
 
@@ -137,8 +137,8 @@ class TestPathWindowsAreNotBareSecrets:
         Produced by the real spooler rather than spelled here, so the directory
         name and the ``shot-<ms>-<random>.jpeg`` file name are the shipped ones.
         """
-        from kiro_crew.computer_use import service as service_mod
-        from kiro_crew.computer_use.types import AppRef, Snapshot
+        from aj_crew.computer_use import service as service_mod
+        from aj_crew.computer_use.types import AppRef, Snapshot
 
         monkeypatch.setattr(service_mod.tempfile, "gettempdir", lambda: str(tmp_path))
         snap = Snapshot(
@@ -154,7 +154,7 @@ class TestPathWindowsAreNotBareSecrets:
         return Path(produced).relative_to(tmp_path).as_posix()
 
     def test_the_darwin_fixtures_have_the_real_shape(self) -> None:
-        from kiro_crew.security import redaction as redaction_mod
+        from aj_crew.security import redaction as redaction_mod
 
         for bucket, name in self.DARWIN_USER_DIR_IDS:
             assert re.fullmatch(r"[a-z0-9]{2}", bucket)
@@ -174,7 +174,7 @@ class TestPathWindowsAreNotBareSecrets:
         through ``/private``, as the markdown image the agent prompt asks for,
         and as the tool result's own ``Screenshot:`` line.
         """
-        from kiro_crew.computer_use.types import SCREENSHOT_DIR_NAME
+        from aj_crew.computer_use.types import SCREENSHOT_DIR_NAME
 
         spooled = self._produced_spool_path(tmp_path, monkeypatch)
         assert spooled.startswith(f"{SCREENSHOT_DIR_NAME}/shot-")
@@ -195,7 +195,7 @@ class TestPathWindowsAreNotBareSecrets:
         _, name = self.DARWIN_USER_DIR_IDS[0]
         for host_id, path in (
             (f"zz/{name}", f"/var/folders/zz/{name}/C/com.apple.QuickLook.thumbnailcache/index"),
-            (f"_w/{name}", f"/var/folders/_w/{name}/T/kirocrew-computer-shots/shot-1.jpeg"),
+            (f"_w/{name}", f"/var/folders/_w/{name}/T/ajcrew-computer-shots/shot-1.jpeg"),
         ):
             self._as_host(monkeypatch, host_id)
             assert redact_credentials(path) == (path, []), path
@@ -239,7 +239,7 @@ class TestPathWindowsAreNotBareSecrets:
         """
         self._as_host(monkeypatch, None)
         for bucket, name in self.DARWIN_USER_DIR_IDS:
-            path = f"{self._darwin_root(bucket, name)}/kirocrew-computer-shots/shot-1.jpeg"
+            path = f"{self._darwin_root(bucket, name)}/ajcrew-computer-shots/shot-1.jpeg"
             result, warnings = redact_credentials(path)
             assert result != path, path
             assert warnings
@@ -253,7 +253,7 @@ class TestPathWindowsAreNotBareSecrets:
         therefore judged exactly as it would be with no exemption at all.
         """
         (host_bucket, host_name), (bucket, name) = self.DARWIN_USER_DIR_IDS
-        path = f"{self._darwin_root(bucket, name)}/kirocrew-computer-shots/shot-1.jpeg"
+        path = f"{self._darwin_root(bucket, name)}/ajcrew-computer-shots/shot-1.jpeg"
         self._as_host(monkeypatch, None)
         canonical = redact_credentials(path)
         self._as_host(monkeypatch, f"{host_bucket}/{host_name}")
@@ -265,7 +265,7 @@ class TestPathWindowsAreNotBareSecrets:
         [
             ("key as a file in the temp dir", "{root}/{key}"),
             ("key with an extension", "{root}/{key}.txt"),
-            ("key deeper in the temp dir", "{root}/kirocrew-computer-shots/{key}"),
+            ("key deeper in the temp dir", "{root}/ajcrew-computer-shots/{key}"),
             ("key in the markdown image form", "![shot]({root}/{key})"),
             # No exemption applies: the glued key means ``T`` does not end its component.
             ("key glued to the directory letter", "{root}{key}"),
@@ -304,7 +304,7 @@ class TestPathWindowsAreNotBareSecrets:
         begins inside the id, sharing only those bytes in place. A seeded search
         fills the rest until the heuristic accepts, which is deterministic.
         """
-        from kiro_crew.security import redaction as redaction_mod
+        from aj_crew.security import redaction as redaction_mod
 
         head = name[-shared:] + "/T/"
         rng = random.Random(f"edge-key-{name}-{shared}")
@@ -327,7 +327,7 @@ class TestPathWindowsAreNotBareSecrets:
         ``<last-id-byte>/T/`` case; ``shared=3`` pins that a three-byte overlap
         is judged too.
         """
-        from kiro_crew.security import redaction as redaction_mod
+        from aj_crew.security import redaction as redaction_mod
 
         bucket, name = self.DARWIN_USER_DIR_IDS[0]
         key = self._edge_key(name, shared)
@@ -383,7 +383,7 @@ class TestPathWindowsAreNotBareSecrets:
         was found.
         """
         _, name = self.DARWIN_USER_DIR_IDS[0]
-        text = path.format(name=name, tail="/kirocrew-computer-shots/shot-1.jpeg")
+        text = path.format(name=name, tail="/ajcrew-computer-shots/shot-1.jpeg")
         self._as_host(monkeypatch, None)
         canonical = redact_credentials(text)
         self._as_host(monkeypatch, f"zz/{name}")
@@ -405,9 +405,9 @@ class TestPathWindowsAreNotBareSecrets:
             # The byte after the letter ends the run, so these are the bare root
             # followed by another run, and the prefix and ``/T`` pieces are each
             # shorter than one key.
-            ("T followed by an underscore", "{root}_evil/kirocrew-computer-shots/shot-1.jpeg"),
-            ("T followed by a hyphen", "{root}-evil/kirocrew-computer-shots/shot-1.jpeg"),
-            ("T followed by a dot", "{root}.evil/kirocrew-computer-shots/shot-1.jpeg"),
+            ("T followed by an underscore", "{root}_evil/ajcrew-computer-shots/shot-1.jpeg"),
+            ("T followed by a hyphen", "{root}-evil/ajcrew-computer-shots/shot-1.jpeg"),
+            ("T followed by a dot", "{root}.evil/ajcrew-computer-shots/shot-1.jpeg"),
         ],
     )
     def test_a_bare_temp_root_survives_whatever_ends_it(
@@ -476,7 +476,7 @@ class TestPathWindowsAreNotBareSecrets:
         pass. The tail piece begins at a different offset modulo four, so cut
         loose it decodes to garbage and its windows read as key-shaped.
         """
-        from kiro_crew.security import redaction as redaction_mod
+        from aj_crew.security import redaction as redaction_mod
 
         bucket, name = self.DARWIN_USER_DIR_IDS[0]
         head = f"{self._darwin_root(bucket, name)}/"
@@ -514,7 +514,7 @@ class TestPathWindowsAreNotBareSecrets:
         self, key: str, prefix: str, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """A piece's printable decode must not replace the whole run's verdict."""
-        from kiro_crew.security import redaction as redaction_mod
+        from aj_crew.security import redaction as redaction_mod
 
         bucket, name = self.DARWIN_USER_DIR_IDS[0]
         self._as_host(monkeypatch, f"{bucket}/{name}")
@@ -542,14 +542,14 @@ class TestPathWindowsAreNotBareSecrets:
         bucket, name = self.DARWIN_USER_DIR_IDS[0]
         self._as_host(monkeypatch, f"{bucket}/{name}")
         root = self._darwin_root(bucket, name)
-        result, warnings = redact_credentials(f"{root}/kirocrew-computer-shots/{key}")
+        result, warnings = redact_credentials(f"{root}/ajcrew-computer-shots/{key}")
         assert key not in result
         assert result.startswith(root)
         assert warnings
 
     def test_the_host_id_is_what_confstr_reports(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Asked once of the OS; a refusal or an off-grammar answer withholds nothing."""
-        from kiro_crew.security import redaction as redaction_mod
+        from aj_crew.security import redaction as redaction_mod
 
         bucket, name = self.DARWIN_USER_DIR_IDS[0]
         calls: list[int] = []
@@ -590,12 +590,12 @@ class TestPathWindowsAreNotBareSecrets:
 
     @pytest.mark.skipif(sys.platform != "darwin", reason="reads the real macOS confstr")
     def test_the_real_temp_dir_survives_on_macos(self) -> None:
-        from kiro_crew.security import redaction as redaction_mod
+        from aj_crew.security import redaction as redaction_mod
 
         redaction_mod._host_darwin_user_dir_id.cache_clear()
         host_id = redaction_mod._host_darwin_user_dir_id()
         assert host_id is not None, "confstr(_CS_DARWIN_USER_TEMP_DIR) must report the id"
-        path = f"/var/folders/{host_id}/T/kirocrew-computer-shots/shot-1700000000000-ab12cd34.jpeg"
+        path = f"/var/folders/{host_id}/T/ajcrew-computer-shots/shot-1700000000000-ab12cd34.jpeg"
         assert redact_credentials(f"![screenshot]({path})")[0] == f"![screenshot]({path})"
 
     # ── a standalone key is never subject to the ceiling ──
@@ -1035,7 +1035,7 @@ class TestSecretGateOrderIsVerdictNeutral:
     SOURCES = (
         "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
         "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4ifQ",
-        "src/kiro_crew/security/redaction/Handler2/Manager3/Factory4/Builder5x",
+        "src/aj_crew/security/redaction/Handler2/Manager3/Factory4/Builder5x",
         "getUserAccountManagerFactory2BuilderHelperImpl3ServiceProvider4x",
         "0123456789abcdefABCD" "EF0123456789abcdefAB",
         "TheGatewayRestoredTheSessionAndReplayed12ToolCallsSeeSecurityPy",
@@ -1121,7 +1121,7 @@ class TestShannonEntropyIsBitIdentical:
     """``_shannon_entropy`` precomputes its terms, and must not move a single bit.
 
     The value feeds a ``>= _SECRET_ENTROPY_MIN`` comparison in
-    :func:`~kiro_crew.security._looks_like_secret_key`, so it decides whether a
+    :func:`~aj_crew.security._looks_like_secret_key`, so it decides whether a
     token is redacted. That makes ``math.isclose`` the WRONG assertion for this
     function: a drift small enough to pass a tolerance check is still large
     enough to flip the comparison for a token sitting on the boundary, and a flip

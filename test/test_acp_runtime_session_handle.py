@@ -28,14 +28,14 @@ from acp_runtime_helpers import (
     _stop_reader,
 )
 
-from kiro_crew.acp.runtime import (
+from aj_crew.acp.runtime import (
     _TERMINATE_TIMEOUT,
     AcpRuntime,
     AcpRuntimeDead,
     AcpRuntimeError,
     AcpSessionHandle,
 )
-from kiro_crew.acp.types import (
+from aj_crew.acp.types import (
     ACP_BACKEND_KIRO,
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
@@ -45,7 +45,7 @@ from kiro_crew.acp.types import (
     METHOD_SET_CONFIG_OPTION,
     JsonRpcMessage,
 )
-from kiro_crew.testing.wait import await_until, until_parked
+from aj_crew.testing.wait import await_until, until_parked
 
 # ── Send paths ──
 
@@ -194,7 +194,7 @@ async def test_is_stale_none_when_fresh_and_small(monkeypatch):
         called["n"] += 1
         return 999999.0  # would be "stale" if ever consulted
 
-    monkeypatch.setattr("kiro_crew.acp.runtime._get_rss_tree_mb", _boom)
+    monkeypatch.setattr("aj_crew.acp.runtime._get_rss_tree_mb", _boom)
     assert await rt._is_stale() is None
     assert called["n"] == 0  # young runtime never probes RSS
 
@@ -207,7 +207,7 @@ async def test_is_stale_none_when_old_but_small_rss(monkeypatch):
     rt._max_age_secs = 6 * 3600
     rt._spawn_monotonic = time.monotonic() - 600.0  # older than the probe band
     rt._max_rss_mb = 500.0
-    monkeypatch.setattr("kiro_crew.acp.runtime._get_rss_tree_mb", lambda pid, depth=None: 10.0)
+    monkeypatch.setattr("aj_crew.acp.runtime._get_rss_tree_mb", lambda pid, depth=None: 10.0)
     assert await rt._is_stale() is None
 
 
@@ -227,7 +227,7 @@ async def test_is_stale_rss_when_tree_over_threshold(monkeypatch):
     rt._max_age_secs = 6 * 3600
     rt._spawn_monotonic = time.monotonic() - 600.0  # old enough to probe
     rt._max_rss_mb = 100.0
-    monkeypatch.setattr("kiro_crew.acp.runtime._get_rss_tree_mb", lambda pid, depth=None: 250.0)
+    monkeypatch.setattr("aj_crew.acp.runtime._get_rss_tree_mb", lambda pid, depth=None: 250.0)
     assert await rt._is_stale() == "rss"
 
 
@@ -249,7 +249,7 @@ async def test_the_declared_reclaim_scope_reaches_the_probe(monkeypatch):
         seen.append(depth)
         return 250.0
 
-    monkeypatch.setattr("kiro_crew.acp.runtime._get_rss_tree_mb", _probe)
+    monkeypatch.setattr("aj_crew.acp.runtime._get_rss_tree_mb", _probe)
     assert await rt._is_stale() is None
     assert seen == [1]
 
@@ -267,7 +267,7 @@ async def test_an_unbounded_scope_is_the_default_and_is_passed_as_such(monkeypat
         seen.append(depth)
         return 250.0
 
-    monkeypatch.setattr("kiro_crew.acp.runtime._get_rss_tree_mb", _probe)
+    monkeypatch.setattr("aj_crew.acp.runtime._get_rss_tree_mb", _probe)
     assert await rt._is_stale() == "rss"
     assert seen == [None]
 
@@ -275,30 +275,30 @@ async def test_an_unbounded_scope_is_the_default_and_is_passed_as_such(monkeypat
 def test_a_forking_sandbox_backend_adds_one_generation():
     """``self._pid`` is the launcher there, not the adapter the harness counts from.
 
-    The probe is patched in the module that CALLS it, not in ``kiro_crew.sandbox``:
+    The probe is patched in the module that CALLS it, not in ``aj_crew.sandbox``:
     the harness binds the name at import, so patching the definition site leaves the
     real backend probe in place and the assertion reads this host instead of the case.
     """
-    from kiro_crew.acp.harness.codex import _sandbox_wrapper_generations
+    from aj_crew.acp.harness.codex import _sandbox_wrapper_generations
 
-    with patch("kiro_crew.acp.harness.codex.detect_backend", return_value="namespace"):
+    with patch("aj_crew.acp.harness.codex.detect_backend", return_value="namespace"):
         assert _sandbox_wrapper_generations("standard") == 1
 
 
 @pytest.mark.parametrize("backend", ["sandbox-exec", "none"])
 def test_an_execing_or_absent_backend_adds_none(backend):
     """Both leave the adapter AS ``self._pid``, so a declared depth is already right."""
-    from kiro_crew.acp.harness.codex import _sandbox_wrapper_generations
+    from aj_crew.acp.harness.codex import _sandbox_wrapper_generations
 
-    with patch("kiro_crew.acp.harness.codex.detect_backend", return_value=backend):
+    with patch("aj_crew.acp.harness.codex.detect_backend", return_value=backend):
         assert _sandbox_wrapper_generations("standard") == 0
 
 
 def test_a_failed_probe_answers_zero_and_can_only_under_count():
     """Fail-safe direction: an offset too small reaches the ceiling late, never early."""
-    from kiro_crew.acp.harness.codex import _sandbox_wrapper_generations
+    from aj_crew.acp.harness.codex import _sandbox_wrapper_generations
 
-    with patch("kiro_crew.acp.harness.codex.detect_backend", side_effect=OSError("boom")):
+    with patch("aj_crew.acp.harness.codex.detect_backend", side_effect=OSError("boom")):
         assert _sandbox_wrapper_generations("standard") == 0
 
 
@@ -336,7 +336,7 @@ async def test_a_bounded_scope_is_offset_by_the_launcher_generation(monkeypatch)
         seen.append(depth)
         return 100.0
 
-    monkeypatch.setattr("kiro_crew.acp.runtime._get_rss_tree_mb", _probe)
+    monkeypatch.setattr("aj_crew.acp.runtime._get_rss_tree_mb", _probe)
     assert await rt._is_stale() is None
     assert seen == [2]
 
@@ -360,7 +360,7 @@ async def test_the_offset_does_not_touch_an_unbounded_scope(monkeypatch):
         seen.append(depth)
         return 250.0
 
-    monkeypatch.setattr("kiro_crew.acp.runtime._get_rss_tree_mb", _probe)
+    monkeypatch.setattr("aj_crew.acp.runtime._get_rss_tree_mb", _probe)
     assert await rt._is_stale() == "rss"
     assert seen == [None]
 
@@ -378,7 +378,7 @@ async def test_an_unreadable_bounded_measurement_does_not_recycle(monkeypatch):
     rt._spawn_monotonic = time.monotonic() - 600.0
     rt._max_rss_mb = 1.0
     rt._max_rss_depth = 1
-    monkeypatch.setattr("kiro_crew.acp.runtime._get_rss_tree_mb", lambda pid, depth=None: None)
+    monkeypatch.setattr("aj_crew.acp.runtime._get_rss_tree_mb", lambda pid, depth=None: None)
     assert await rt._is_stale() is None
 
 
@@ -405,7 +405,7 @@ def test_get_rss_mb_real_process():
     positive MiB value; a nonexistent PID returns None. Skips where the
     platform can't introspect RSS (no /proc AND ps blocked, e.g. a locked-down
     macOS sandbox) — _get_rss_mb returns None there by design."""
-    from kiro_crew.acp.runtime import _get_rss_mb
+    from aj_crew.acp.runtime import _get_rss_mb
 
     rss = _get_rss_mb(os.getpid())
     if rss is None:
@@ -420,7 +420,7 @@ def test_get_rss_tree_mb_real_process():
     Not compared with a single-process read: Windows may trim the working set between
     calls. The arithmetic is in ``test_platform_compat_coverage_metrics.py``.
     """
-    from kiro_crew.acp.runtime import _get_rss_tree_mb
+    from aj_crew.acp.runtime import _get_rss_tree_mb
 
     tree = _get_rss_tree_mb(os.getpid())
     if tree is None:
@@ -631,7 +631,7 @@ async def test_prompt_resets_turn_done_when_cancelled_while_building_blocks():
     rt.send_request = AsyncMock(return_value=1)
 
     with patch(
-        "kiro_crew.acp.session_handle.build_prompt_blocks",
+        "aj_crew.acp.session_handle.build_prompt_blocks",
         side_effect=asyncio.CancelledError(),
     ):
         gen = handle.prompt("hi", timeout=3.0)
@@ -691,7 +691,7 @@ async def test_handle_wait_turn_done_timeout():
 
 def _recorded_request(request_id):
     """The event the handle builds for a permission request it routes."""
-    from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
+    from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
 
     return AcpEvent(kind=EVENT_PERMISSION_REQUEST, request_id=request_id, title="notes.txt")
 
@@ -725,10 +725,10 @@ async def test_handle_set_mode():
     rt, _, proc = _make_runtime()
     q = _register(rt, "sA")
     handle = AcpSessionHandle("sA", q["sA"], rt)
-    await handle.set_mode("kirocrew-lite")
+    await handle.set_mode("ajcrew-lite")
     sent = json.loads(proc.stdin.write.call_args.args[0].decode())
     assert sent["method"] == "session/set_mode"
-    assert sent["params"]["modeId"] == "kirocrew-lite"
+    assert sent["params"]["modeId"] == "ajcrew-lite"
 
 
 @pytest.mark.asyncio
@@ -783,7 +783,7 @@ async def test_handle_set_model_refusal_is_recorded_and_keeps_the_serving_model(
 async def test_handle_set_model_without_a_reply_records_the_switch(monkeypatch):
     """Silence is not a refusal: an adapter that never answers keeps the old,
     unawaited outcome, so only an explicit error reply stops the switch."""
-    from kiro_crew.acp import session_handle as sh
+    from aj_crew.acp import session_handle as sh
 
     monkeypatch.setattr(sh, "_SET_MODEL_REPLY_TIMEOUT", 0.05)
     rt = MagicMock()
@@ -928,8 +928,8 @@ async def test_approve_tool_echoes_recorded_option():
 async def test_approve_tool_answers_a_connection_tool_once(bridged, sent):
     """An allow-always on a Crew-owned Connection would stop the harness asking,
     and the gateway proxy refuses every call no approval was minted for."""
-    from kiro_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
-    from kiro_crew.connections import crew_oauth_proxy
+    from aj_crew.acp.types import EVENT_PERMISSION_REQUEST, AcpEvent
+    from aj_crew.connections import crew_oauth_proxy
 
     rt, _, proc = _make_runtime()
     q = _register(rt, "sA")
@@ -975,7 +975,7 @@ async def test_reject_tool_prefers_recorded_reject_option():
 @pytest.mark.asyncio
 async def test_prompt_error_response_raises():
     """An error response for the prompt request raises AcpError."""
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -1001,7 +1001,7 @@ async def test_prompt_transient_error_sets_transient_flag():
     """A transient backend 5xx error response (a mid-stream InternalServerError
     surfaced as JSON-RPC -32603) raises AcpError with transient=True, so the
     chat_runner / llm_helpers retry ladder fires instead of a bare error card."""
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -1041,7 +1041,7 @@ async def test_prompt_transient_error_sets_transient_flag():
 async def test_prompt_auth_error_not_transient():
     """An auth error response raises AcpError with transient=False so it fails
     fast — a retry cannot fix an expired/denied credential."""
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -1079,7 +1079,7 @@ async def test_wait_for_response_transient_error_sets_flag():
     backend 5xx (a -32603 InternalServerError) as transient=True, so
     request/response turns (session/new, set_mode, cancel, …) share the same
     retry eligibility. Covers the second kiro raise site."""
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
     rt, _, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -1173,7 +1173,7 @@ async def test_one_session_errors_others_unaffected():
     """When one session's turn errors, the other concurrent session still
     completes normally — failures are isolated per session.
     """
-    from kiro_crew.acp.client import AcpError
+    from aj_crew.acp.client import AcpError
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sOk", "sErr")
@@ -1233,7 +1233,7 @@ async def test_interleaved_tool_calls_routed_per_session():
     """tool_call frames for two concurrent sessions are each delivered only to
     the originating session's stream.
     """
-    from kiro_crew.acp.types import EVENT_TOOL_CALL
+    from aj_crew.acp.types import EVENT_TOOL_CALL
 
     rt, reader, _ = _make_runtime()
     q = _register(rt, "sA", "sB")

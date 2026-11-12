@@ -1,4 +1,4 @@
-"""Tests for kiro_crew.sandbox — launcher-interpreter ENOENT spawn retry.
+"""Tests for aj_crew.sandbox — launcher-interpreter ENOENT spawn retry.
 
 ``sys.executable`` is often a symlink into a managed install tree, and rebuilding
 that tree deletes and re-creates its entries, including the interpreter
@@ -33,10 +33,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import kiro_crew.sandbox as sandbox_mod
-from kiro_crew import platform_compat as pc
-from kiro_crew.sandbox import _INTERPRETER_ENOENT_DELAYS, _is_transient_interpreter_enoent
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew.sandbox as sandbox_mod
+from aj_crew import platform_compat as pc
+from aj_crew.sandbox import _INTERPRETER_ENOENT_DELAYS, _is_transient_interpreter_enoent
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 #: The argv ``_prepare_limited_spawn`` is stubbed to return: a launcher argv
 #: whose argv[0] is this process's own interpreter, i.e. the shape wrap_argv
@@ -65,7 +65,7 @@ def _patched_sleep(*, side_effect=None):
     ``test-stdlib-clock-rebound`` rule) call for rebinding the module's own
     ``time`` NAME to a clock instead of mutating the shared module.
 
-    ``time`` is one of the names the ``kiro_crew.sandbox`` facade mirrors onto
+    ``time`` is one of the names the ``aj_crew.sandbox`` facade mirrors onto
     every carved owner (``sandbox_rlimit`` among them), so the rebind MUST go
     through the facade -- ``patch.object(sandbox_mod, "time", proxy)`` -- not onto
     an owner directly: ``test_facade_mirror_guards`` refuses a direct owner patch
@@ -142,7 +142,7 @@ def _isolated_cron_registries(monkeypatch):
     registry reads inside ``cron_script`` resolve these names at call time, so the
     functions under test see the rebound containers.
     """
-    cron = importlib.import_module("kiro_crew.cron_script")
+    cron = importlib.import_module("aj_crew.cron_script")
     monkeypatch.setattr(cron, "_SPAWNING_JOBS", set())
     monkeypatch.setattr(cron, "_CANCELLED_PROC_JOBS", set())
     monkeypatch.setattr(cron, "_RUNNING_PROCS", {})
@@ -470,7 +470,7 @@ class TestCommandCronSpawnFailureIsCancellable:
 
     @pytest.fixture
     def cron(self, monkeypatch):
-        cron = importlib.import_module("kiro_crew.cron_script")
+        cron = importlib.import_module("aj_crew.cron_script")
         monkeypatch.setattr(cron, "_resolve_command_shell", lambda: "/bin/sh")
         monkeypatch.setattr(cron, "wrap_argv", lambda argv, **k: (list(argv), None))
         monkeypatch.setattr(cron, "cgroup_scope_argv", lambda argv: list(argv))
@@ -588,7 +588,7 @@ class TestCommandOutputUsesLocaleDecoding:
 
     @pytest.fixture
     def cron(self, monkeypatch):
-        cron = importlib.import_module("kiro_crew.cron_script")
+        cron = importlib.import_module("aj_crew.cron_script")
         monkeypatch.setattr(cron, "_resolve_command_shell", lambda: "/bin/sh")
         monkeypatch.setattr(cron, "wrap_argv", lambda argv, **k: (list(argv), None))
         monkeypatch.setattr(cron, "cgroup_scope_argv", lambda argv: list(argv))
@@ -638,7 +638,7 @@ class TestCommandOutputUsesLocaleDecoding:
 
     def test_neither_cron_spawn_pins_an_encoding(self):
         """Source-level guard: re-pinning either site fails here, at source."""
-        cron = importlib.import_module("kiro_crew.cron_script")
+        cron = importlib.import_module("aj_crew.cron_script")
         family = sorted(pathlib.Path(cron.__file__).parent.glob("cron_script*.py"))
         cron_spawns = [
             node
@@ -669,7 +669,7 @@ class TestAnOverlappingWakeCostsNoFailureStrike:
 
     @pytest.fixture
     def cron(self, monkeypatch):
-        cron = importlib.import_module("kiro_crew.cron_script")
+        cron = importlib.import_module("aj_crew.cron_script")
         monkeypatch.setattr(cron, "_resolve_command_shell", lambda: "/bin/sh")
         monkeypatch.setattr(cron, "wrap_argv", lambda argv, **k: (list(argv), None))
         monkeypatch.setattr(cron, "cgroup_scope_argv", lambda argv: list(argv))
@@ -708,7 +708,7 @@ class TestAnOverlappingWakeCostsNoFailureStrike:
 
     def test_the_consumer_treats_skipped_as_non_counting(self):
         """The status is inert unless the consumer honours it -- pin that too."""
-        slack_dir = pathlib.Path(importlib.import_module("kiro_crew.slack.gateway").__file__).parent
+        slack_dir = pathlib.Path(importlib.import_module("aj_crew.slack.gateway").__file__).parent
         gateway = "\n".join(
             path.read_text(encoding="utf-8")
             for path in [
@@ -737,7 +737,7 @@ class TestARefusedOverlapIsNotPersistedAsASuccessfulRun:
     """
 
     def _dispatch_source(self) -> str:
-        slack_dir = pathlib.Path(importlib.import_module("kiro_crew.slack.gateway").__file__).parent
+        slack_dir = pathlib.Path(importlib.import_module("aj_crew.slack.gateway").__file__).parent
         return "\n".join(
             path.read_text(encoding="utf-8")
             for path in [
@@ -801,7 +801,7 @@ class TestARefusedOverlapIsNotPersistedAsASuccessfulRun:
         """
         cron_src = "".join(
             pathlib.Path(importlib.import_module(name).__file__).read_text(encoding="utf-8")
-            for name in ("kiro_crew.cron", "kiro_crew.cron_service.service.run_execution")
+            for name in ("aj_crew.cron", "aj_crew.cron_service.service.run_execution")
         )
         assert 'if job.last_status != "error":' in cron_src
         assert "job.record_success()" in cron_src
@@ -1112,7 +1112,7 @@ class TestTheStrictShellProbeNoLongerLatchesOnABlip:
     """
 
     def test_a_transient_blip_no_longer_caches_a_wrong_answer(self):
-        cron = importlib.import_module("kiro_crew.cron_script")
+        cron = importlib.import_module("aj_crew.cron_script")
         shell = "/bin/dash"
         cron._POSIX_STRICT_CACHE.pop(shell, None)
 
@@ -1147,7 +1147,7 @@ class TestTheStrictShellProbeNoLongerLatchesOnABlip:
         unguarded final attempt raises immediately -- which is exactly the
         pre-fix shape. The wrong answer is cached, which the retry budget prevents.
         """
-        cron = importlib.import_module("kiro_crew.cron_script")
+        cron = importlib.import_module("aj_crew.cron_script")
         shell = "/bin/dash"
         cron._POSIX_STRICT_CACHE.pop(shell, None)
 
@@ -1186,7 +1186,7 @@ class TestACancelDuringTheShellProbeIsNotLost:
 
     @pytest.fixture
     def cron(self):
-        cron = importlib.import_module("kiro_crew.cron_script")
+        cron = importlib.import_module("aj_crew.cron_script")
 
         def _reset():
             with cron._PROCS_LOCK:
@@ -1324,9 +1324,9 @@ class TestSpawnOnlyCancellationIsReportedHonestly:
     def _cron_source() -> str:
         import pkgutil
 
-        service = importlib.import_module("kiro_crew.cron_service.service")
+        service = importlib.import_module("aj_crew.cron_service.service")
         names = (
-            "kiro_crew.cron",
+            "aj_crew.cron",
             *(f"{service.__name__}.{info.name}" for info in pkgutil.iter_modules(service.__path__)),
         )
         return "".join(
@@ -1344,7 +1344,7 @@ class TestSpawnOnlyCancellationIsReportedHonestly:
         """
         assert "if self._sessions and is_agent_job and not killed_proc:" in self._cron_source()
 
-        cron_script = importlib.import_module("kiro_crew.cron_script")
+        cron_script = importlib.import_module("aj_crew.cron_script")
         claimers = {
             node.name
             for path in sorted(pathlib.Path(cron_script.__file__).parent.glob("cron_script*.py"))

@@ -19,14 +19,14 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import pipeline_board_contract as contract
-from kiro_crew.dashboard.dynamic_cards import (
+from aj_crew import pipeline_board_contract as contract
+from aj_crew.dashboard.dynamic_cards import (
     _FIELD_NAME,
     MAX_DATA_BYTES,
     MAX_HTML_BYTES,
     normalize_card,
 )
-from kiro_crew.pipeline_board_contract import (
+from aj_crew.pipeline_board_contract import (
     BOARD_COLUMN_NAMES,
     BOARD_STAT_KEYS,
     BOARD_TEMPLATE_ID,
@@ -40,8 +40,8 @@ from kiro_crew.pipeline_board_contract import (
     panel_card_data,
     validate_judgment,
 )
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
-from kiro_crew.work_vocab import WORK_ITEM_STATES, WorkBoardView
+from aj_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.work_vocab import WORK_ITEM_STATES, WorkBoardView
 
 # ``MAX_DATA_BYTES``/``MAX_HTML_BYTES`` and ``_FIELD_NAME`` are IMPORTED FROM THE HOST,
 # not restated. The contract module keeps its own copies so it can bound a card without
@@ -229,7 +229,7 @@ def _full_board() -> PipelineBoardPanel:
     return build_pipeline_board(
         _view(items, omitted=2),
         judgment,
-        name="KiroCrew Pipeline Conductor",  # brand-ok: the crew's own display name
+        name="AjCrew Pipeline Conductor",  # brand-ok: the crew's own display name
         captured_at="2026-09-29T15:37:00Z",
         stale_after_seconds=900,
         now_epoch=1790696200.0,
@@ -652,16 +652,16 @@ def test_a_note_that_adds_something_is_kept() -> None:
 
 #: The drawer template whose rendering this card replaces. While it exists it is the card's
 #: post-restart producer: opening the drawer republishes a card the in-memory store lost.
-_DRAWER_TEMPLATE = "src/kiro_crew/agent_panel_templates/kirocrew-pipeline-conductor.html"
+_DRAWER_TEMPLATE = "src/aj_crew/agent_panel_templates/ajcrew-pipeline-conductor.html"
 
 #: Where a rehydrator may live, as (module, attribute) pairs. Resolved with ``getattr`` on the
 #: IMPORTED module, never grepped: a comment, a docstring or an unrelated identifier carrying one of
 #: these words satisfies a text search, and the one check standing between the drawer's removal and
 #: a board nobody can see must not be satisfiable by prose.
 _REHYDRATOR_SITES = (
-    ("kiro_crew.dashboard.card_lifecycle", "rehydrate_derived"),
-    ("kiro_crew.dashboard.handlers.agent_panel", "_rehydrate_derived_card"),
-    ("kiro_crew.dashboard.card_lifecycle", "rebuild_derived_card"),
+    ("aj_crew.dashboard.card_lifecycle", "rehydrate_derived"),
+    ("aj_crew.dashboard.handlers.agent_panel", "_rehydrate_derived_card"),
+    ("aj_crew.dashboard.card_lifecycle", "rebuild_derived_card"),
 )
 
 
@@ -693,7 +693,7 @@ def _rehydrator_probe() -> tuple[Any, Any, Any, None]:
     """
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard import card_lifecycle as lifecycle_mod
+    from aj_crew.dashboard import card_lifecycle as lifecycle_mod
 
     slot = SimpleNamespace(
         key="chat-1875",
@@ -1420,7 +1420,7 @@ def test_the_card_page_ships_in_the_wheel_and_the_sdist() -> None:
     root = card_template_path().parents[3]
     directory = card_template_path().parent.name
     assert f"{directory}/*.html" in (root / "setup.cfg").read_text(encoding="utf-8")
-    assert f"src/kiro_crew/{directory} *.html" in (root / "MANIFEST.in").read_text(encoding="utf-8")
+    assert f"src/aj_crew/{directory} *.html" in (root / "MANIFEST.in").read_text(encoding="utf-8")
 
 
 # the publisher's own text is bounded too, not just the row lists

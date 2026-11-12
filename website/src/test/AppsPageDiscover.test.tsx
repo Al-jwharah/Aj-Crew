@@ -83,14 +83,14 @@ function renderPage(path = '/apps') {
 
 const REGISTRY_APPS = [
   {
-    name: 'code-review-sage', displayName: 'Code Review Sage', author: 'kirocrew',
+    name: 'code-review-sage', displayName: 'Code Review Sage', author: 'ajcrew',
     description: 'Self-evolving deep code reviewer for GitHub PRs.', version: '3.2.0',
     tags: ['code-review', 'github'], featured: 1, installed: false, updateAvailable: false,
     heroImage: '/api/apps/blob?repo=Sage&path=hero-light.png',
     heroImageDark: '/api/apps/blob?repo=Sage&path=hero-dark.png',
   },
   {
-    name: 'oncall-radar', displayName: 'Oncall Radar', author: 'kirocrew',
+    name: 'oncall-radar', displayName: 'Oncall Radar', author: 'ajcrew',
     description: 'Oncall operations dashboard.', version: '2.0.0',
     tags: ['oncall', 'tickets'], featured: 2, installed: false, updateAvailable: false,
   },
@@ -273,10 +273,10 @@ describe('AppsPage — hero art and provenance trust', () => {
     })
   })
 
-  it('does not badge an external app that claims kirocrew authorship', async () => {
+  it('does not badge an external app that claims ajcrew authorship', async () => {
     listRegistry.mockResolvedValue({
       apps: [
-        { name: 'impostor', displayName: 'Impostor', author: 'KiroCrew', _registry: 'evil', description: 'Trust me.', version: '9.9.9', tags: ['github'], installed: false },
+        { name: 'impostor', displayName: 'Impostor', author: 'AjCrew', _registry: 'evil', description: 'Trust me.', version: '9.9.9', tags: ['github'], installed: false }, // brand-ok: registry author id
       ],
       serverPlatform: { os: 'darwin', arch: 'arm64' },
     })

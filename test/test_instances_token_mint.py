@@ -10,13 +10,13 @@ import subprocess
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.testing.wait import await_until
+from aj_crew import platform_compat
+from aj_crew.testing.wait import await_until
 
 
 class TestTokenMint:
     def test_parse(self):
-        from kiro_crew.instances.token_mint import parse_token_from_stdout
+        from aj_crew.instances.token_mint import parse_token_from_stdout
 
         assert parse_token_from_stdout("http://localhost:7777?token=eyJa.b\n") == "eyJa.b"
         assert parse_token_from_stdout("https://h/?x=1&token=TOK&y=2") == "TOK"
@@ -24,42 +24,42 @@ class TestTokenMint:
 
     @pytest.mark.parametrize("bad", ["abc", "20", "0h", "-1h", "20s", "99999h"])
     def test_ttl_rejects(self, bad):
-        from kiro_crew.instances.token_mint import TokenMintError, _validate_ttl
+        from aj_crew.instances.token_mint import TokenMintError, _validate_ttl
 
         with pytest.raises(TokenMintError):
             _validate_ttl(bad)
 
     def test_command_builders(self):
-        from kiro_crew.instances.token_mint import build_remote_token_command
+        from aj_crew.instances.token_mint import build_remote_token_command
 
         # empty remote_bin -> candidate-ladder path (build_remote_command -> build_candidate_command)
         assert 'exec "$b" token --ttl 20h;' in build_remote_token_command("", ttl="20h")
-        custom = build_remote_token_command("~/bin/kirocrew", ttl="30m")
-        assert '"$HOME/bin/kirocrew" token --ttl 30m' in custom
+        custom = build_remote_token_command("~/bin/ajcrew", ttl="30m")
+        assert '"$HOME/bin/ajcrew" token --ttl 30m' in custom
         default = build_remote_token_command("", ttl=None)
         assert 'exec "$b" token;' in default and "--ttl" not in default
         # port is threaded through so the remote mint targets the right gateway
         # (not the default 7777) — essential for instances on a custom port.
-        with_port = build_remote_token_command("~/bin/kirocrew", ttl="20h", port=7879)
-        assert '"$HOME/bin/kirocrew" token --ttl 20h --port 7879' in with_port
+        with_port = build_remote_token_command("~/bin/ajcrew", ttl="20h", port=7879)
+        assert '"$HOME/bin/ajcrew" token --ttl 20h --port 7879' in with_port
         # invalid port is rejected (kept out of the shell command unvalidated)
-        from kiro_crew.instances.token_mint import TokenMintError
+        from aj_crew.instances.token_mint import TokenMintError
 
         with pytest.raises(TokenMintError):
             build_remote_token_command("", ttl="20h", port=99999)
 
     def test_token_command_prefers_run_marker_for_port(self):
-        from kiro_crew.config.paths import CONFIG_DIR_NAME, LEGACY_CONFIG_DIR_NAME
-        from kiro_crew.instances.token_mint import (
+        from aj_crew.config.paths import CONFIG_DIR_NAME, LEGACY_CONFIG_DIR_NAME
+        from aj_crew.instances.token_mint import (
             build_candidate_command,
             build_remote_token_command,
         )
 
         # empty remote_bin + port -> run-marker clause runs BEFORE the candidate
         # ladder, keyed by the same port, and execs the recorded launcher. The
-        # marker is probed under each candidate data home (KIROCREW_HOME override,
+        # marker is probed under each candidate data home (AJCREW_HOME override,
         # the current default, then the legacy home) so a migrated remote whose
-        # non-interactive SSH shell doesn't export KIROCREW_HOME still hits the
+        # non-interactive SSH shell doesn't export AJCREW_HOME still hits the
         # marker written under the new default home. The default/legacy home
         # segments are asserted via the SHARED config.paths constants (not
         # re-hardcoded literals) so that re-hardcoding — the read/write desync
@@ -67,7 +67,7 @@ class TestTokenMint:
         default_marker = f'"$HOME/{CONFIG_DIR_NAME}/run/gateway-7879.bin"'
         legacy_marker = f'"$HOME/{LEGACY_CONFIG_DIR_NAME}/run/gateway-7879.bin"'
         cmd = build_remote_token_command("", ttl="20h", port=7879)
-        assert '"${KIROCREW_HOME:+$KIROCREW_HOME/run/gateway-7879.bin}"' in cmd
+        assert '"${AJCREW_HOME:+$AJCREW_HOME/run/gateway-7879.bin}"' in cmd
         assert default_marker in cmd
         assert legacy_marker in cmd
         # new default home is probed before the legacy home
@@ -85,27 +85,27 @@ class TestTokenMint:
         assert "for __mk in" not in no_port and "gateway-" not in no_port
 
         # explicit custom remote_bin is never overridden by the marker.
-        custom = build_remote_token_command("~/bin/kirocrew", ttl="20h", port=7879)
+        custom = build_remote_token_command("~/bin/ajcrew", ttl="20h", port=7879)
         assert "for __mk in" not in custom and "gateway-" not in custom
-        assert '"$HOME/bin/kirocrew" token --ttl 20h --port 7879' in custom
+        assert '"$HOME/bin/ajcrew" token --ttl 20h --port 7879' in custom
 
         # generic candidate builder: marker only when a port is supplied.
         assert "for __mk in" not in build_candidate_command("restart")
         assert "gateway-" not in build_candidate_command("restart")
         assert "gateway-7880.bin" in build_candidate_command("token", marker_port=7880)
 
-        # the sibling remote-exec path (restart, via run_remote_kirocrew) also
+        # the sibling remote-exec path (restart, via run_remote_ajcrew) also
         # prefers the marker when the caller passes the remote port.
-        from kiro_crew.instances.token_mint import build_remote_command
+        from aj_crew.instances.token_mint import build_remote_command
 
         restart = build_remote_command("", "restart", marker_port=7781)
         assert "gateway-7781.bin" in restart and 'exec "$__kb" restart;' in restart
         # ...unless an explicit custom remote_bin is set (never overridden).
-        pinned_restart = build_remote_command("~/bin/kirocrew", "restart", marker_port=7781)
+        pinned_restart = build_remote_command("~/bin/ajcrew", "restart", marker_port=7781)
         assert "for __mk in" not in pinned_restart and "gateway-" not in pinned_restart
 
     def test_ssh_argv_shape(self):
-        from kiro_crew.instances.token_mint import _build_ssh_argv
+        from aj_crew.instances.token_mint import _build_ssh_argv
 
         argv = _build_ssh_argv("cd-1", "echo hi")
         assert argv[0] == "ssh" and argv[-2] == "cd-1"
@@ -123,7 +123,7 @@ class TestTokenMint:
         assert "-T" in argv
         assert argv.index("-T") < argv.index("cd-1")
         # Default fail-fast connect bound is preserved for callers that
-        # don't thread a budget (e.g. run_remote_kirocrew).
+        # don't thread a budget (e.g. run_remote_ajcrew).
         assert "ConnectTimeout=10" in argv
         # The mint threads its configurable budget into ConnectTimeout so a
         # slow ProxyCommand/banner exchange isn't killed at the 10s default
@@ -136,7 +136,7 @@ class TestTokenMint:
         assert "ConnectTimeout=1" in argv
 
     def test_mint_success_and_no_token_in_logs(self, monkeypatch, caplog):
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         class FakeProc:
             returncode = 0
@@ -154,13 +154,13 @@ class TestTokenMint:
         assert "SECRETJWT" not in caplog.text
 
     def test_mint_nonzero_exit_raises(self, monkeypatch):
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         class FakeProc:
             returncode = 127
 
             async def communicate(self):
-                return b"", b"kirocrew binary not found"
+                return b"", b"ajcrew binary not found"
 
         async def fake_exec(*a, **k):
             return FakeProc()
@@ -186,11 +186,11 @@ class TestTokenMint:
     def test_nonzero_exit_surfaces_stdout_tail_when_stderr_empty(self, monkeypatch):
         """The real reason travels with the error instead of '<no stderr>'.
 
-        Pre-fix ``kirocrew token`` printed its failure prose to stdout, so a
+        Pre-fix ``ajcrew token`` printed its failure prose to stdout, so a
         stderr-only message degraded to a useless ``<no stderr>`` and someone
         had to SSH in to find out why.
         """
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         self._fake_proc(
             monkeypatch,
@@ -206,7 +206,7 @@ class TestTokenMint:
         assert "<no stderr>" in msg  # stderr genuinely was empty — still reported
 
     def test_unparseable_output_surfaces_stdout_tail(self, monkeypatch):
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         self._fake_proc(monkeypatch, 0, b"Gateway returned empty token\n", b"")
         with pytest.raises(tm.TokenMintError) as excinfo:
@@ -229,7 +229,7 @@ class TestTokenMint:
         tokens unscrubbed, so the segment count is asserted explicitly and
         ``test_bare_token_scrubbed_at_every_segment_count`` pins the full range.
         """
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         minted = "eyJzdWIiOiJvd25lciIsImV4cCI6MTIzfQ.c2lnbmF0dXJlLWJ5dGVz"
         assert minted.count(".") == 1
@@ -257,7 +257,7 @@ class TestTokenMint:
         Five segments is the compact-JWE shape: a pattern capped lower would
         match a prefix and leave ``.ciphertext.tag`` in the surfaced error.
         """
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         bare = "eyJhbGciOiJIUzI1NiJ9" + "".join(f".seg{i}" for i in range(segments - 1))
         self._fake_proc(monkeypatch, 1, f"{bare}\nwhy it died\n".encode(), b"")
@@ -269,7 +269,7 @@ class TestTokenMint:
         assert "why it died" in msg
 
     def test_stdout_tail_is_bounded_and_absent_when_stdout_empty(self, monkeypatch):
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         # bounded: only the TAIL is carried (the reason is printed last). The
         # reason sits on its own line, as a real remote prints it — the scan
@@ -285,11 +285,11 @@ class TestTokenMint:
 
         # modern remote (reason on stderr, nothing on stdout) keeps the original
         # single-stream message shape — no empty "stdout tail:" noise.
-        self._fake_proc(monkeypatch, 127, b"", b"kirocrew binary not found")
+        self._fake_proc(monkeypatch, 127, b"", b"ajcrew binary not found")
         with pytest.raises(tm.TokenMintError) as excinfo:
             asyncio.run(tm.mint_remote_token("cd-1", ttl="20h"))
         assert "stdout tail:" not in str(excinfo.value)
-        assert "kirocrew binary not found" in str(excinfo.value)
+        assert "ajcrew binary not found" in str(excinfo.value)
 
     def test_success_path_never_builds_the_stdout_tail(self, monkeypatch):
         """The tail is built inside the failure branches only.
@@ -299,7 +299,7 @@ class TestTokenMint:
         "only ever built on a failure path" invariant the helper documents. This
         locks the invariant to control flow instead of a comment.
         """
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         calls: list[str] = []
         monkeypatch.setattr(
@@ -325,7 +325,7 @@ class TestTokenMint:
         same payload, GIL-bound). Asserting on the *input length* handed to the
         redactors instead of on wall-clock keeps this deterministic.
         """
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         seen: list[int] = []
         real = tm.redact
@@ -351,7 +351,7 @@ class TestTokenMint:
         the tail when the scrubbers shrink the text around it, which the third
         case below pins.
         """
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         secret = "eyJ" + "A" * 3000 + ".SIGNATURE-MUST-NOT-APPEAR"
         for stdout in (f"noise\n{secret}\n", secret):  # with and without a trailing newline
@@ -398,9 +398,9 @@ class TestTokenMintHomePointer:
 
     def _home_with_marker(self, home, rel):
         data_home = home / rel
-        launcher = data_home / "kirocrew"
+        launcher = data_home / "ajcrew"
         launcher.parent.mkdir(parents=True, exist_ok=True)
-        launcher.write_text(f'#!/bin/sh\necho "{rel} $KIROCREW_HOME $*"\n')
+        launcher.write_text(f'#!/bin/sh\necho "{rel} $AJCREW_HOME $*"\n')
         launcher.chmod(0o755)
         marker = data_home / "run" / f"gateway-{self.PORT}.bin"
         marker.parent.mkdir(parents=True, exist_ok=True)
@@ -418,12 +418,12 @@ class TestTokenMintHomePointer:
         return home / rel
 
     def _launcher(self, path, mode=0o755):
-        path.write_text('#!/bin/sh\necho "launcher $KIROCREW_HOME $*"\n')
+        path.write_text('#!/bin/sh\necho "launcher $AJCREW_HOME $*"\n')
         path.chmod(mode)
         return path
 
     def _mint(self, home, *flags, shell="/bin/sh", **env):
-        from kiro_crew.instances.token_mint import build_remote_token_command
+        from aj_crew.instances.token_mint import build_remote_token_command
 
         cmd = build_remote_token_command("", ttl="20h", port=self.PORT)
         return subprocess.run(
@@ -436,15 +436,15 @@ class TestTokenMintHomePointer:
         )
 
     def _point(self, home, content):
-        from kiro_crew.config.paths import CONFIG_DIR_NAME
+        from aj_crew.config.paths import CONFIG_DIR_NAME
 
         pointer = home / CONFIG_DIR_NAME / "run" / f"gateway-{self.PORT}.home"
         pointer.parent.mkdir(parents=True, exist_ok=True)
         pointer.write_text(content)
 
     @pytest.mark.parametrize("suffix", ["", " "], ids=["plain", "trailing-space"])
-    def test_execs_the_pointers_launcher_with_kirocrew_home_set(self, tmp_path, suffix):
-        from kiro_crew.config.paths import CONFIG_DIR_NAME
+    def test_execs_the_pointers_launcher_with_ajcrew_home_set(self, tmp_path, suffix):
+        from aj_crew.config.paths import CONFIG_DIR_NAME
 
         self._home_with_marker(tmp_path, CONFIG_DIR_NAME)
         wrapped = self._plant_marker(tmp_path, f".kiro/crew-wrapped{suffix}")
@@ -456,17 +456,17 @@ class TestTokenMintHomePointer:
         assert out == f"launcher {wrapped} token --ttl 20h --port 5477\n"
         assert not (tmp_path / "X").exists()
 
-    def test_an_exported_kirocrew_home_wins_over_the_pointer(self, tmp_path):
+    def test_an_exported_ajcrew_home_wins_over_the_pointer(self, tmp_path):
         wrapped = self._home_with_marker(tmp_path, ".kiro/crew-wrapped")
         other = self._home_with_marker(tmp_path, "other")
-        self._point(tmp_path, f"{wrapped}\n{wrapped / 'kirocrew'}\n")
+        self._point(tmp_path, f"{wrapped}\n{wrapped / 'ajcrew'}\n")
 
-        out = self._mint(tmp_path, KIROCREW_HOME=str(other)).stdout
+        out = self._mint(tmp_path, AJCREW_HOME=str(other)).stdout
 
         assert out == f"other {other} token --ttl 20h --port 5477\n"
 
-    def test_execs_the_pointers_launcher_under_set_u_with_no_kirocrew_home(self, tmp_path):
-        from kiro_crew.config.paths import CONFIG_DIR_NAME
+    def test_execs_the_pointers_launcher_under_set_u_with_no_ajcrew_home(self, tmp_path):
+        from aj_crew.config.paths import CONFIG_DIR_NAME
 
         self._home_with_marker(tmp_path, CONFIG_DIR_NAME)
         wrapped = self._plant_marker(tmp_path, ".kiro/crew-wrapped")
@@ -479,7 +479,7 @@ class TestTokenMintHomePointer:
         assert proc.stderr == ""
 
     def test_runs_the_default_home_marker_under_set_u_with_no_pointer(self, tmp_path):
-        from kiro_crew.config.paths import CONFIG_DIR_NAME
+        from aj_crew.config.paths import CONFIG_DIR_NAME
 
         self._home_with_marker(tmp_path, CONFIG_DIR_NAME)
 
@@ -506,7 +506,7 @@ class TestTokenMintHomePointer:
     def test_runs_the_default_home_marker_quietly_when_the_pointer_cannot_be_opened(
         self, tmp_path, shell, flags
     ):
-        from kiro_crew.config.paths import CONFIG_DIR_NAME
+        from aj_crew.config.paths import CONFIG_DIR_NAME
 
         self._home_with_marker(tmp_path, CONFIG_DIR_NAME)
         wrapped = self._plant_marker(tmp_path, ".kiro/crew-wrapped")
@@ -550,7 +550,7 @@ class TestTokenMintHomePointer:
     def test_runs_the_default_home_marker_unless_the_pointer_names_a_launcher_for_a_marked_home(
         self, tmp_path, pointer, marked
     ):
-        from kiro_crew.config.paths import CONFIG_DIR_NAME
+        from aj_crew.config.paths import CONFIG_DIR_NAME
 
         self._home_with_marker(tmp_path, CONFIG_DIR_NAME)
         wrapped = tmp_path / ".kiro" / "crew-wrapped"
@@ -571,15 +571,15 @@ class TestTokenMintHomePointer:
 
 class TestRunMarkerClauseRestart:
     def test_restart_through_the_pointer_targets_the_port_not_the_service_unit(self):
-        from kiro_crew.instances.token_mint import build_candidate_command
+        from aj_crew.instances.token_mint import build_candidate_command
 
         cmd = build_candidate_command("restart", marker_port=7879)
 
-        assert 'KIROCREW_HOME="$__kh" exec "$__kp" restart --port 7879;' in cmd
+        assert 'AJCREW_HOME="$__kh" exec "$__kp" restart --port 7879;' in cmd
         assert 'exec "$__kb" restart;' in cmd
 
     def test_the_idle_gated_restart_through_the_pointer_targets_the_port_too(self):
-        from kiro_crew.instances.token_mint import build_candidate_command
+        from aj_crew.instances.token_mint import build_candidate_command
 
         cmd = build_candidate_command("restart --when-idle --max-wait 0", marker_port=7879)
 
@@ -587,7 +587,7 @@ class TestRunMarkerClauseRestart:
         assert 'exec "$__kb" restart --when-idle --max-wait 0;' in cmd
 
     def test_token_through_the_pointer_gains_no_port_flag(self):
-        from kiro_crew.instances.token_mint import _run_marker_clause
+        from aj_crew.instances.token_mint import _run_marker_clause
 
         clause = _run_marker_clause("token --ttl 20h --port 7879", 7879)
 
@@ -596,7 +596,7 @@ class TestRunMarkerClauseRestart:
 
 class TestTokenMintGeneric:
     def test_ttl_to_seconds(self):
-        from kiro_crew.instances.token_mint import TokenMintError, ttl_to_seconds
+        from aj_crew.instances.token_mint import TokenMintError, ttl_to_seconds
 
         assert ttl_to_seconds("20h") == 72000
         assert ttl_to_seconds("30m") == 1800
@@ -604,14 +604,14 @@ class TestTokenMintGeneric:
             ttl_to_seconds("bad")
 
     def test_generic_builders_and_token_delegation(self):
-        from kiro_crew.instances.token_mint import (
+        from aj_crew.instances.token_mint import (
             build_candidate_command,
             build_remote_command,
             build_remote_token_command,
         )
 
         assert 'exec "$b" restart;' in build_candidate_command("restart")
-        assert '"$HOME/bin/kirocrew" restart' in build_remote_command("~/bin/kirocrew", "restart")
+        assert '"$HOME/bin/ajcrew" restart' in build_remote_command("~/bin/ajcrew", "restart")
         # token builder emits identical strings via the generic builders it delegates to
         assert 'exec "$b" token --ttl 20h;' in build_remote_token_command("", ttl="20h")
 
@@ -623,7 +623,7 @@ class TestTokenMintGeneric:
         that never got written) was invisible. The failure branch now diagnoses
         each candidate to stderr before exiting 127.
         """
-        from kiro_crew.instances.token_mint import build_candidate_command
+        from aj_crew.instances.token_mint import build_candidate_command
 
         cmd = build_candidate_command("token")
 
@@ -640,36 +640,36 @@ class TestTokenMintGeneric:
 
         # Ordering (mutation check): the diagnosis runs AFTER the not-found echo
         # and BEFORE `exit 127`, i.e. only on the failure path.
-        not_found = cmd.index("kirocrew binary not found")
+        not_found = cmd.index("ajcrew binary not found")
         diagnosis = cmd.index("candidate diagnosis:")
         exit_127 = cmd.index("exit 127")
         assert not_found < diagnosis < exit_127
 
     def test_candidate_ladder_covers_managed_launcher_dir(self):
-        """A remote provisioned by a managed installer has ``kirocrew`` under
+        """A remote provisioned by a managed installer has ``ajcrew`` under
         ``~/.toolbox/bin`` -- the launcher dir ``env._EXTRA_PATH_DIRS`` already
         searches locally -- and in neither of the two classic locations. Every
         mint on such a remote exits 127 unless ``remote_bin`` is set by hand.
         The ladder must try that dir, AFTER the two install-script locations so
         nothing moves for a remote that has those."""
-        from kiro_crew.env import _EXTRA_PATH_DIRS
-        from kiro_crew.instances.token_mint import REMOTE_BIN_CANDIDATES, build_candidate_command
+        from aj_crew.env import _EXTRA_PATH_DIRS
+        from aj_crew.instances.token_mint import REMOTE_BIN_CANDIDATES, build_candidate_command
 
         assert REMOTE_BIN_CANDIDATES[:2] == (
-            "$HOME/.local/bin/kirocrew",
-            "$HOME/.kirocrew-app/.venv/bin/kirocrew",
+            "$HOME/.local/bin/ajcrew",
+            "$HOME/.ajcrew-app/.venv/bin/ajcrew",
         )
-        assert "$HOME/.toolbox/bin/kirocrew" in REMOTE_BIN_CANDIDATES
+        assert "$HOME/.toolbox/bin/ajcrew" in REMOTE_BIN_CANDIDATES
         # The ladder names the same directory the local launcher search does, so
         # the two cannot disagree about where a managed install puts the binary.
         assert "{home}/.toolbox/bin" in _EXTRA_PATH_DIRS
         cmd = build_candidate_command("token")
-        assert '"$HOME/.toolbox/bin/kirocrew"' in cmd
+        assert '"$HOME/.toolbox/bin/ajcrew"' in cmd
         # Every candidate is a $HOME-rooted literal: the snippet is double-quoted
         # shell, so a candidate with a quote or a `$(` would be a new injection
         # surface on the remote command line.
         for cand in REMOTE_BIN_CANDIDATES:
-            assert re.fullmatch(r"\$HOME(/[A-Za-z0-9._-]+)+/kirocrew", cand), cand
+            assert re.fullmatch(r"\$HOME(/[A-Za-z0-9._-]+)+/ajcrew", cand), cand
 
     def test_not_found_path_names_the_remote_bin_override(self):
         """When no candidate is executable the error must say what to do, not
@@ -677,7 +677,7 @@ class TestTokenMintGeneric:
         example is in ``~/`` form because the validator refuses ``$``. The hint
         comes AFTER the per-candidate diagnosis and BEFORE ``exit 127``, so it
         is only ever printed on the failure path."""
-        from kiro_crew.instances.token_mint import REMOTE_BIN_HINT, build_candidate_command
+        from aj_crew.instances.token_mint import REMOTE_BIN_HINT, build_candidate_command
 
         assert "remote_bin" in REMOTE_BIN_HINT
         assert "~/" in REMOTE_BIN_HINT
@@ -692,8 +692,8 @@ class TestTokenMintGeneric:
         # The success path never prints it: the hint sits after the exec loop.
         assert cmd.index('exec "$b" token;') < hint
 
-    def test_run_remote_kirocrew(self, monkeypatch):
-        from kiro_crew.instances import token_mint as tm
+    def test_run_remote_ajcrew(self, monkeypatch):
+        from aj_crew.instances import token_mint as tm
 
         class FakeProc:
             returncode = 0
@@ -705,14 +705,14 @@ class TestTokenMintGeneric:
             return FakeProc()
 
         monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
-        rc, err = asyncio.run(tm.run_remote_kirocrew("cd-1", "restart"))
+        rc, err = asyncio.run(tm.run_remote_ajcrew("cd-1", "restart"))
         assert rc == 0 and err == ""
 
-    def test_run_remote_kirocrew_honors_connect_timeout_secs(self, monkeypatch):
+    def test_run_remote_ajcrew_honors_connect_timeout_secs(self, monkeypatch):
         """The fail-fast 10s ConnectTimeout default must not silently
         override a caller-supplied budget -- a restart on a slow-proxy host
         needs the same connect budget the mint itself gets."""
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         class FakeProc:
             returncode = 0
@@ -727,14 +727,14 @@ class TestTokenMintGeneric:
             return FakeProc()
 
         monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
-        rc, _ = asyncio.run(tm.run_remote_kirocrew("cd-1", "restart", connect_timeout_secs=45.0))
+        rc, _ = asyncio.run(tm.run_remote_ajcrew("cd-1", "restart", connect_timeout_secs=45.0))
         assert rc == 0
         assert "ConnectTimeout=45" in captured["argv"]
 
-    def test_run_remote_kirocrew_redacts_stderr(self, monkeypatch):
+    def test_run_remote_ajcrew_redacts_stderr(self, monkeypatch):
         # Proxy-controlled stderr carrying a credential is redacted before return,
         # so a caller logging the tail cannot leak it.
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         class FakeProc:
             returncode = 255
@@ -746,12 +746,12 @@ class TestTokenMintGeneric:
             return FakeProc()
 
         monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
-        rc, err = asyncio.run(tm.run_remote_kirocrew("cd-1", "restart"))
+        rc, err = asyncio.run(tm.run_remote_ajcrew("cd-1", "restart"))
         assert rc == 255
         assert "AKIAIOSFODNN7EXAMPLE" not in err
         assert "[REDACTED: credential]" in err
 
-    def test_run_remote_kirocrew_redacts_urls_before_credentials(self, monkeypatch):
+    def test_run_remote_ajcrew_redacts_urls_before_credentials(self, monkeypatch):
         """Pin the ORDER of the redaction passes, not just the redaction.
 
         The exfiltration-URL pass keys on the token-bearing URL shape, so
@@ -762,7 +762,7 @@ class TestTokenMintGeneric:
         a credential distinguishes the two orders. This test fails if the
         composition is ever reversed again.
         """
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         class FakeProc:
             returncode = 255
@@ -774,7 +774,7 @@ class TestTokenMintGeneric:
             return FakeProc()
 
         monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
-        rc, err = asyncio.run(tm.run_remote_kirocrew("cd-1", "restart"))
+        rc, err = asyncio.run(tm.run_remote_ajcrew("cd-1", "restart"))
         assert rc == 255
         # The URL pass must fire: the destination must be suppressed, not just
         # the credential inside it. Under the reversed (credentials-first)
@@ -791,7 +791,7 @@ class TestTokenMintGeneric:
         the raised TokenMintError even with the composed helper in place. Pins
         that the generic redactors see the window before the token scrubs.
         """
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         stdout = b"fail: see https://evil.example.com/x?token=AKIAIOSFODNN7EXAMPLE now"
 
@@ -819,7 +819,7 @@ class TestTokenMintGeneric:
         caller forever."""
 
         def __init__(self) -> None:
-            # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing literal pid on a fake child, never signalled; moved verbatim
+            # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing literal pid on a fake child, never signalled; moved verbatim
             self.pid = 4242
             self.returncode: int | None = None
             self.kill_calls = 0
@@ -841,7 +841,7 @@ class TestTokenMintGeneric:
             return -9
 
     def test_mint_timeout_reaps_child_via_communicate_not_wait(self, monkeypatch):
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         proc = self._HangProc()
 
@@ -865,7 +865,7 @@ class TestTokenMintGeneric:
 
     def test_a_cancelled_mint_kills_and_reaps_the_ssh_child(self, monkeypatch):
         """Cancelling the mint mid-wait kills and reaps ssh, then re-raises."""
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         proc = self._HangProc()
         waiting = asyncio.Event()
@@ -912,7 +912,7 @@ class TestTokenMintGeneric:
         At the ceiling the setting cannot go higher, so the message points at the
         host's reachability instead of telling the user to raise it.
         """
-        from kiro_crew.instances import token_mint as tm
+        from aj_crew.instances import token_mint as tm
 
         proc = self._HangProc()
 
@@ -933,8 +933,8 @@ class TestTokenMintGeneric:
         assert ("applies to SSH and SSM mints alike" in msg) is names_setting
         assert ("already at its maximum" in msg) is not names_setting
 
-    def test_run_remote_kirocrew_timeout_reaps_child_via_communicate_not_wait(self, monkeypatch):
-        from kiro_crew.instances import token_mint as tm
+    def test_run_remote_ajcrew_timeout_reaps_child_via_communicate_not_wait(self, monkeypatch):
+        from aj_crew.instances import token_mint as tm
 
         proc = self._HangProc()
 
@@ -949,7 +949,7 @@ class TestTokenMintGeneric:
 
         monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
         monkeypatch.setattr(platform_compat, "kill_process_tree_async", _tree)
-        rc, err = asyncio.run(tm.run_remote_kirocrew("cd-1", "restart"))
+        rc, err = asyncio.run(tm.run_remote_ajcrew("cd-1", "restart"))
         assert rc == -1
         assert "timed out after" in err
         assert killed == [(proc.pid, platform_compat.SIGKILL)]

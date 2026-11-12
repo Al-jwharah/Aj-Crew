@@ -1,6 +1,6 @@
 """A whole-document save must never replace a config.json the load could not read.
 
-``KiroCrewConfig.load`` answers an unparseable ``config.json`` with DEFAULTS (it
+``AjCrewConfig.load`` answers an unparseable ``config.json`` with DEFAULTS (it
 warns and marks the file degraded), and ``save`` publishes the instance it is
 called on. So "load, change one display field, save" over such a file replaced
 every setting the user had with defaults, silently. ``PUT /api/config/theme``
@@ -22,8 +22,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from aiohttp import web
 
-from kiro_crew.config.loader import ConfigReadError, KiroCrewConfig, config_path
-from kiro_crew.dashboard.handlers import core as core_mod
+from aj_crew.config.loader import AjCrewConfig, ConfigReadError, config_path
+from aj_crew.dashboard.handlers import core as core_mod
 
 # Cut off mid-document, as a torn hand edit leaves it.
 _UNREADABLE = b'{"dashboard": {"theme_mode": "light", "onboarded": tr'
@@ -31,7 +31,7 @@ _UNREADABLE = b'{"dashboard": {"theme_mode": "light", "onboarded": tr'
 
 @pytest.fixture
 def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     assert config_path().parent == tmp_path
     return tmp_path
 
@@ -52,7 +52,7 @@ def _owner_put(body: dict) -> MagicMock:
 
 def test_save_refuses_to_replace_an_unreadable_config(home: Path) -> None:
     config_path().write_bytes(_UNREADABLE)
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     # The load really did fall back to defaults: this is the snapshot save holds.
     assert cfg.dashboard.onboarded is False
 
@@ -68,7 +68,7 @@ def test_save_refuses_a_defaults_snapshot_even_after_the_file_is_repaired(home: 
     # load and its save. The file now parses, but this snapshot still holds
     # defaults, so publishing it would replace the repaired settings.
     config_path().write_bytes(_UNREADABLE)
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     repaired = json.dumps({"dashboard": {"theme_mode": "light", "onboarded": True}}).encode()
     config_path().write_bytes(repaired)
 
@@ -82,14 +82,14 @@ def test_save_refuses_a_defaults_snapshot_even_after_the_file_is_repaired(home: 
 def test_save_still_creates_a_missing_config(home: Path) -> None:
     assert not config_path().exists()
 
-    KiroCrewConfig().save()
+    AjCrewConfig().save()
 
     assert isinstance(json.loads(config_path().read_text(encoding="utf-8")), dict)
 
 
 def test_save_still_rewrites_a_readable_config(home: Path) -> None:
     config_path().write_text(json.dumps({"dashboard": {"theme_mode": "light"}}), encoding="utf-8")
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.dashboard.theme_mode = "dark"
 
     cfg.save()

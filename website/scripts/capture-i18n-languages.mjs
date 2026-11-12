@@ -2,7 +2,7 @@
  * Screenshot harness for the shipped UI languages.
  *
  * Points a real browser at a REAL gateway (`./dev-backend.sh`, isolated
- * `.kirocrew-dev/` data home) rather than mocking `/api/**` from fixtures.
+ * `.ajcrew-dev/` data home) rather than mocking `/api/**` from fixtures.
  * That matters here: hand-written fixtures drifted from the live contracts and
  * produced frames of the SPA's error boundary — a screenshot that verifies
  * nothing. Driving the real backend means a frame is evidence.
@@ -24,7 +24,7 @@
  *
  * Usage:
  *   ./dev-backend.sh &                       # real gateway on :6777
- *   TOKEN=$(curl -s -H "X-Local-Secret: $(cat .kirocrew-dev/.local_secret)" \
+ *   TOKEN=$(curl -s -H "X-Local-Secret: $(cat .ajcrew-dev/.local_secret)" \
  *     http://127.0.0.1:6777/api/token/local | python3 -c 'import sys,json;print(json.load(sys.stdin)["token"])')
  *   node scripts/capture-i18n-languages.mjs <outDir> <baseUrl> "$TOKEN"
  *

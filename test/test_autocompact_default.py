@@ -24,16 +24,16 @@ import tempfile
 import unittest.mock
 from pathlib import Path
 
-from kiro_crew.config.loader import (
+from aj_crew.config.loader import (
     CONTEXT_WARN_MARGIN_PCT,
     DEFAULT_AUTOCOMPACT_PCT,
-    KiroCrewConfig,
+    AjCrewConfig,
     SessionConfig,
 )
-from kiro_crew.dashboard.handlers.core import _EDITABLE_CONFIG
+from aj_crew.dashboard.handlers.core import _EDITABLE_CONFIG
 
 
-def _load_with_session(session_block: dict) -> KiroCrewConfig:
+def _load_with_session(session_block: dict) -> AjCrewConfig:
     """Load config from a temp file holding *session_block*.
 
     Mirrors ``config_loader_helpers._load_from_dict``: patch ``config_path`` rather
@@ -47,10 +47,10 @@ def _load_with_session(session_block: dict) -> KiroCrewConfig:
 
     try:
         with unittest.mock.patch(
-            "kiro_crew.config.loader.config_path",
+            "aj_crew.config.loader.config_path",
             return_value=tmp,
         ):
-            return KiroCrewConfig.load()
+            return AjCrewConfig.load()
     finally:
         tmp.unlink(missing_ok=True)
 
@@ -86,7 +86,7 @@ def _reset_published_threshold() -> None:
     that pass synthetic ticket numbers, which a real drawn ticket would outrank
     once enough loads had run in the same worker.
     """
-    from kiro_crew.config import loader as _loader
+    from aj_crew.config import loader as _loader
 
     _loader._CONFIG_AUTOCOMPACT_PCT = DEFAULT_AUTOCOMPACT_PCT
     _loader._CONFIG_AUTOCOMPACT_TICKET = 0
@@ -99,18 +99,18 @@ def test_a_threshold_change_reaches_an_already_live_manager() -> None:
     The threshold is captured on the manager's ``_cfg`` when the gateway starts,
     so before this a config write reached disk and stopped there. Publishing on
     every ``load()`` is what lets ANY writer -- the dashboard PATCH handler or
-    ``kirocrew config set``, which never contacts the gateway -- take effect
+    ``ajcrew config set``, which never contacts the gateway -- take effect
     without a restart.
     """
-    from kiro_crew.config.loader import publish_autocompact_pct
-    from kiro_crew.session import SessionManager
+    from aj_crew.config.loader import publish_autocompact_pct
+    from aj_crew.session import SessionManager
 
     # Reset first so this does not depend on what an earlier test in this
     # process published, and pass explicit tickets for the same reason: the
     # ordering guard drops a publish holding a ticket older than the current one.
     _reset_published_threshold()
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     mgr = SessionManager(cfg, provider_factory=lambda *a, **k: object())
     provider = object()
 
@@ -118,7 +118,7 @@ def test_a_threshold_change_reaches_an_already_live_manager() -> None:
     assert cfg.session.autocompact_pct == 70.0
     assert mgr._compaction_gate_decision("k", provider, 65.0) == "below_threshold"
 
-    lowered = KiroCrewConfig()
+    lowered = AjCrewConfig()
     lowered.session.autocompact_pct = 60.0
     try:
         publish_autocompact_pct(lowered, 1000)
@@ -143,9 +143,9 @@ def test_a_caller_supplied_threshold_survives_until_a_load_publishes() -> None:
     the last load in this process happened to publish. Without this, every test
     (and any embedder) handing in a tuned config would race the global.
     """
-    from kiro_crew.session import SessionManager
+    from aj_crew.session import SessionManager
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session.autocompact_pct = 20.0
     mgr = SessionManager(cfg, provider_factory=lambda *a, **k: object())
 
@@ -248,9 +248,9 @@ def test_no_consumer_hardcodes_its_own_warn_threshold() -> None:
     import re
     from pathlib import Path
 
-    import kiro_crew
+    import aj_crew
 
-    root = Path(kiro_crew.__file__).parent
+    root = Path(aj_crew.__file__).parent
     for rel in ("session.py", "cli_chat.py"):
         src = (root / rel).read_text(encoding="utf-8")
         if rel == "session.py":  # read with the owners its members moved to
@@ -273,7 +273,7 @@ def test_load_publishes_the_threshold_it_resolved() -> None:
     assembly loads config once per turn, so a value written by any writer is
     published without that writer knowing the gateway exists.
     """
-    from kiro_crew.config.loader import published_autocompact_pct
+    from aj_crew.config.loader import published_autocompact_pct
 
     try:
         _load_with_session({"autocompact_pct": 42.0})
@@ -289,15 +289,15 @@ def test_an_older_load_cannot_republish_over_a_newer_one() -> None:
     last would leave live sessions compacting at a threshold the operator had
     already changed.
     """
-    from kiro_crew.config.loader import publish_autocompact_pct, published_autocompact_pct
+    from aj_crew.config.loader import publish_autocompact_pct, published_autocompact_pct
 
     # Reset first: the tickets below are synthetic, and a higher one published by
     # an earlier test in this worker would drop every publish here.
     _reset_published_threshold()
 
-    newer = KiroCrewConfig()
+    newer = AjCrewConfig()
     newer.session.autocompact_pct = 55.0
-    older = KiroCrewConfig()
+    older = AjCrewConfig()
     older.session.autocompact_pct = 85.0
     try:
         publish_autocompact_pct(newer, 2000)
@@ -322,14 +322,14 @@ def test_deleting_the_config_restores_the_default_threshold() -> None:
     and wins by ordinary comparison, which is the property an ordering read off
     the files' mtime cannot provide.
     """
-    from kiro_crew.config.loader import (
+    from aj_crew.config.loader import (
         next_config_load_ticket,
         publish_autocompact_pct,
         published_autocompact_pct,
     )
 
     _reset_published_threshold()
-    tuned = KiroCrewConfig()
+    tuned = AjCrewConfig()
     tuned.session.autocompact_pct = 45.0
     try:
         publish_autocompact_pct(tuned, next_config_load_ticket())
@@ -337,11 +337,11 @@ def test_deleting_the_config_restores_the_default_threshold() -> None:
 
         # Both files deleted: the loader takes its defaults path, holding a ticket
         # drawn after the one above.
-        publish_autocompact_pct(KiroCrewConfig(), next_config_load_ticket())
+        publish_autocompact_pct(AjCrewConfig(), next_config_load_ticket())
         assert published_autocompact_pct() == DEFAULT_AUTOCOMPACT_PCT
 
         # A file recreated afterwards orders normally against the reset.
-        recreated = KiroCrewConfig()
+        recreated = AjCrewConfig()
         recreated.session.autocompact_pct = 50.0
         publish_autocompact_pct(recreated, next_config_load_ticket())
         assert published_autocompact_pct() == 50.0
@@ -363,7 +363,7 @@ def test_deleting_a_newer_overlay_does_not_reinstate_its_threshold(tmp_path, mon
     created would push the base's mtime past the overlay's and mask the very
     rollback under test.
     """
-    from kiro_crew.config import loader as _loader
+    from aj_crew.config import loader as _loader
 
     base = tmp_path / "config.json"
     overlay = tmp_path / "config.local.json"
@@ -377,13 +377,13 @@ def test_deleting_a_newer_overlay_does_not_reinstate_its_threshold(tmp_path, mon
         # Settle the base: this load runs the write-back migration, so afterwards
         # the base's mtime does not move under us.
         _loader._invalidate_config_cache()
-        _loader.KiroCrewConfig.load()
+        _loader.AjCrewConfig.load()
         assert _loader.published_autocompact_pct() == 70.0
 
         # Overlay created second, so it is the NEWER file of the two.
         overlay.write_text(json.dumps({"session": {"autocompact_pct": 50.0}}))
         _loader._invalidate_config_cache()
-        _loader.KiroCrewConfig.load()
+        _loader.AjCrewConfig.load()
         assert _loader.published_autocompact_pct() == 50.0, "the overlay must apply"
 
         # Remove it. The newest mtime across the set now goes BACKWARDS to the
@@ -391,7 +391,7 @@ def test_deleting_a_newer_overlay_does_not_reinstate_its_threshold(tmp_path, mon
         # stale read.
         overlay.unlink()
         _loader._invalidate_config_cache()
-        _loader.KiroCrewConfig.load()
+        _loader.AjCrewConfig.load()
         assert _loader.published_autocompact_pct() == 70.0, (
             "deleting the overlay must publish the base's threshold, not leave "
             "the deleted file's value in force"
@@ -413,13 +413,13 @@ def test_concurrent_publishes_never_let_an_older_ticket_win() -> None:
     """
     import threading
 
-    from kiro_crew.config import loader as _loader
-    from kiro_crew.config.loader import publish_autocompact_pct, published_autocompact_pct
+    from aj_crew.config import loader as _loader
+    from aj_crew.config.loader import publish_autocompact_pct, published_autocompact_pct
 
     _reset_published_threshold()
-    older = KiroCrewConfig()
+    older = AjCrewConfig()
     older.session.autocompact_pct = 30.0
-    newer = KiroCrewConfig()
+    newer = AjCrewConfig()
     newer.session.autocompact_pct = 80.0
 
     entered = threading.Event()
@@ -471,7 +471,7 @@ def test_load_publishes_without_a_second_stat_pass(tmp_path, monkeypatch) -> Non
     already fetched. One fingerprint pass per load is the contract: it serves
     the cache lookup and the pre-read TOCTOU capture.
     """
-    from kiro_crew.config import loader as _loader
+    from aj_crew.config import loader as _loader
 
     cfg_file = tmp_path / "config.json"
     cfg_file.write_text(json.dumps({"session": {"autocompact_pct": 41.0}}))
@@ -492,12 +492,12 @@ def test_load_publishes_without_a_second_stat_pass(tmp_path, monkeypatch) -> Non
         _loader._invalidate_config_cache()
 
         passes["n"] = 0
-        _loader.KiroCrewConfig.load()
+        _loader.AjCrewConfig.load()
         assert passes["n"] == 1, f"cache-miss load took {passes['n']} stat passes, want 1"
         assert _loader.published_autocompact_pct() == 41.0
 
         passes["n"] = 0
-        _loader.KiroCrewConfig.load()
+        _loader.AjCrewConfig.load()
         assert passes["n"] == 1, f"cache-hit load took {passes['n']} stat passes, want 1"
     finally:
         _loader._invalidate_config_cache()

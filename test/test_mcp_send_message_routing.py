@@ -12,9 +12,9 @@ import re
 
 import pytest
 
-from kiro_crew.constants import CHANNEL_SESSION_NAMESPACES
-from kiro_crew.mcp_tools.messaging import _CHANNEL_SESSIONS, schemas
-from kiro_crew.validation import SEND_MESSAGE_SCHEMA, ValidationError, validate_tool_args
+from aj_crew.constants import CHANNEL_SESSION_NAMESPACES
+from aj_crew.mcp_tools.messaging import _CHANNEL_SESSIONS, schemas
+from aj_crew.validation import SEND_MESSAGE_SCHEMA, ValidationError, validate_tool_args
 
 
 def _advertised() -> dict:
@@ -122,8 +122,8 @@ def test_the_channel_session_roster_is_the_gateways_minus_owner_inference_gaps()
     infers a recipient through ``_owner_dm_target``, so its transport must also tell
     configured recipients from peers learned off inbound traffic.
     """
-    from kiro_crew.constants import CHANNEL_OWNER_DM_NAMESPACES, CHANNEL_SEND_NAMESPACES
-    from kiro_crew.dashboard.handlers.messaging import _SEND_MESSAGE_CHANNEL_TYPES
+    from aj_crew.constants import CHANNEL_OWNER_DM_NAMESPACES, CHANNEL_SEND_NAMESPACES
+    from aj_crew.dashboard.handlers.messaging import _SEND_MESSAGE_CHANNEL_TYPES
 
     assert _CHANNEL_SESSIONS is CHANNEL_OWNER_DM_NAMESPACES
     assert set(_SEND_MESSAGE_CHANNEL_TYPES) == set(CHANNEL_SEND_NAMESPACES)
@@ -145,8 +145,8 @@ def test_a_learned_peer_channel_takes_channel_type_but_never_an_inferred_owner_d
     read as the owner, and both ``may_send_to`` allow it under the open policy.
     ``channel_type`` stays: it never consults ``_owner_dm_target``.
     """
-    from kiro_crew.constants import CHANNEL_SEND_NAMESPACES
-    from kiro_crew.dashboard.handlers.messaging import _SEND_MESSAGE_CHANNEL_TYPES
+    from aj_crew.constants import CHANNEL_SEND_NAMESPACES
+    from aj_crew.dashboard.handlers.messaging import _SEND_MESSAGE_CHANNEL_TYPES
 
     assert channel not in _CHANNEL_SESSIONS
     assert channel not in _advertised()["session"]["enum"]
@@ -163,13 +163,13 @@ def test_no_owner_dm_channel_advertises_learned_identities() -> None:
     """
     import inspect
 
-    from kiro_crew.constants import CHANNEL_OWNER_DM_NAMESPACES
+    from aj_crew.constants import CHANNEL_OWNER_DM_NAMESPACES
 
     learned = re.compile(r"_(known|learned|warm|seen|peers|authorized)[a-z_]*")
     offenders = {}
     for channel in CHANNEL_OWNER_DM_NAMESPACES:
         try:
-            module = importlib.import_module(f"kiro_crew.{channel}.transport")
+            module = importlib.import_module(f"aj_crew.{channel}.transport")
         except ModuleNotFoundError:
             continue  # a rostered namespace with no transport package in this fork
         transport_cls = next(
@@ -212,8 +212,8 @@ def test_webex_advertises_a_resolvable_owner_dm_target() -> None:
     can serve Webex from Webex's OWN configured-target allowlist, so a stub that
     invents the target id would prove nothing about Webex's spelling of it.
     """
-    from kiro_crew.dashboard.handlers.messaging import _owner_dm_target
-    from kiro_crew.webex.transport import WebexTransport
+    from aj_crew.dashboard.handlers.messaging import _owner_dm_target
+    from aj_crew.webex.transport import WebexTransport
 
     transport = WebexTransport(client=object(), allowed_emails=["owner@example.invalid"])
 
@@ -227,8 +227,8 @@ def test_an_ambiguous_webex_allowlist_is_refused_rather_than_guessed() -> None:
     recipient, and picking one would send private agent output to the wrong human.
     The empty answer degrades to the dashboard notification instead.
     """
-    from kiro_crew.dashboard.handlers.messaging import _owner_dm_target
-    from kiro_crew.webex.transport import WebexTransport
+    from aj_crew.dashboard.handlers.messaging import _owner_dm_target
+    from aj_crew.webex.transport import WebexTransport
 
     transport = WebexTransport(
         client=object(), allowed_emails=["a@example.invalid", "b@example.invalid"]
@@ -245,8 +245,8 @@ def test_a_channel_needing_prior_inbound_is_in_the_roster_but_yields_no_target()
     ``TeamsTransport``: a stub with ``available=False`` would not prove a shipped
     channel sets the flag.
     """
-    from kiro_crew.dashboard.handlers.messaging import _owner_dm_target
-    from kiro_crew.teams.transport import TeamsTransport
+    from aj_crew.dashboard.handlers.messaging import _owner_dm_target
+    from aj_crew.teams.transport import TeamsTransport
 
     transport = TeamsTransport(client=object(), allowed_emails=["a@example.invalid"])
 
@@ -260,8 +260,8 @@ def test_the_roster_move_did_not_change_the_roster() -> None:
 
     Several readers import it from ``messaging.link``.
     """
-    from kiro_crew.constants import CHANNEL_SESSION_NAMESPACES as canonical
-    from kiro_crew.messaging.link import CHANNEL_SESSION_NAMESPACES as re_exported
+    from aj_crew.constants import CHANNEL_SESSION_NAMESPACES as canonical
+    from aj_crew.messaging.link import CHANNEL_SESSION_NAMESPACES as re_exported
 
     assert canonical is re_exported
     assert canonical == (
@@ -287,7 +287,7 @@ def test_a_channel_session_forwards_a_strict_caller_session_when_one_exists() ->
     """
     from unittest.mock import patch
 
-    from kiro_crew.mcp_tools import messaging as tool
+    from aj_crew.mcp_tools import messaging as tool
 
     with (
         patch.object(tool.mcp_core, "_resolve_session_key", return_value="dashboard:7"),
@@ -319,11 +319,11 @@ def test_a_channel_session_without_a_strict_key_is_refused() -> None:
     The lenient resolver walks process ancestors, so an unidentified sub-agent would
     resolve to its parent and skip the ``channel:`` containment check; the gateway's
     ``channels`` re-vet covers transport scope, not containment. Every agent
-    subprocess and cron run has ``KIROCREW_SESSION_KEY``, so no real caller is refused.
+    subprocess and cron run has ``AJCREW_SESSION_KEY``, so no real caller is refused.
     """
     from unittest.mock import patch
 
-    from kiro_crew.mcp_tools import messaging as tool
+    from aj_crew.mcp_tools import messaging as tool
 
     with (
         patch.object(tool.mcp_core, "_resolve_session_key", return_value=""),

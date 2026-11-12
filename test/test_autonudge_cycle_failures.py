@@ -17,20 +17,20 @@ import json
 
 import pytest
 
-from kiro_crew import autonudge as _an
-from kiro_crew.autonudge import (
+from aj_crew import autonudge as _an
+from aj_crew.autonudge import (
     CONSECUTIVE_FAILURE_REASON,
     AutoNudgeService,
     NudgeLoop,
 )
-from kiro_crew.monitoring.models import MonitorState
+from aj_crew.monitoring.models import MonitorState
 
 SLOT = "chat-1-654"
 
 
 @pytest.fixture(autouse=True)
 def _enable(monkeypatch):
-    monkeypatch.setenv("KIROCREW_AUTONUDGE", "1")
+    monkeypatch.setenv("AJCREW_AUTONUDGE", "1")
 
 
 @pytest.fixture(autouse=True)
@@ -402,7 +402,7 @@ async def test_the_gate_charges_a_self_wake_dispatched_death(monkeypatch):
     """The generic case the whole bound exists for: a self-wake cycle that reached
     a session and died with a plain error charges the streak, carrying the fired
     loop's id and generation through so the service can scope it."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     svc = _RecordingSvc()
     monkeypatch.setattr(_an, "_INSTANCE", svc, raising=False)
@@ -423,7 +423,7 @@ async def test_the_gate_ignores_a_human_turn(monkeypatch):
     """A human turn that happened to error on a slot that also carries a loop must
     not spend the loop's stand-down budget -- the self-wake guard is the whole
     reason a human's failure cannot stop the agent's loop."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     svc = _RecordingSvc()
     monkeypatch.setattr(_an, "_INSTANCE", svc, raising=False)
@@ -439,7 +439,7 @@ async def test_the_gate_ignores_a_human_turn(monkeypatch):
 async def test_the_gate_ignores_a_fire_with_no_loop_identity(monkeypatch):
     """A self-wake with no fired loop id (the non-self-wake default of "") has
     nothing to scope the charge to, so it records nothing rather than guess."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     svc = _RecordingSvc()
     monkeypatch.setattr(_an, "_INSTANCE", svc, raising=False)
@@ -455,7 +455,7 @@ async def test_the_gate_ignores_a_fire_with_no_loop_identity(monkeypatch):
 async def test_the_gate_excludes_a_structural_rejection(monkeypatch):
     """A structurally rejected payload is one deterministic turn with its own
     terminal stop; counting it here would double-charge the same fault."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     svc = _RecordingSvc()
     monkeypatch.setattr(_an, "_INSTANCE", svc, raising=False)
@@ -473,7 +473,7 @@ async def test_the_gate_excludes_a_structural_rejection(monkeypatch):
 async def test_the_gate_excludes_a_session_start_failure(monkeypatch):
     """A cycle that never obtained a session has its own streak
     (``notify_cycle_start_failed``); the two bounds must not both charge it."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     svc = _RecordingSvc()
     monkeypatch.setattr(_an, "_INSTANCE", svc, raising=False)
@@ -494,7 +494,7 @@ async def test_the_gate_excludes_a_pre_dispatch_fault(monkeypatch, code):
     memory store that would not open and a member agent file changed out of band.
     The stand-down (and the operator notice naming a backend/tool/timeout cause)
     must not fire for a turn that never dispatched -- the maintainer's point 1."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     svc = _RecordingSvc()
     monkeypatch.setattr(_an, "_INSTANCE", svc, raising=False)
@@ -516,7 +516,7 @@ async def test_the_gate_still_charges_a_plain_internal_bug_with_meta(monkeypatch
     """A plain internal bug is NOT a pre-dispatch class: a self-wake cycle that
     dispatches and raises the same bug every interval is the no-progress waste the
     bound ends, so a row meta that is not one of the two excluded codes charges."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     svc = _RecordingSvc()
     monkeypatch.setattr(_an, "_INSTANCE", svc, raising=False)
@@ -540,9 +540,9 @@ async def test_the_gate_charges_the_timeout_family_that_lands_in_the_generic_arm
     DID reach a session and then died, so it charges; a SESSION-START timeout
     carries ``session_start_failed`` (set in its ``__init__``) and the
     start-failure bound owns it instead."""
-    from kiro_crew.acp.runtime import AcpSessionStartTimeout
-    from kiro_crew.acp.session_handle import AcpRequestTimeout
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.acp.runtime import AcpSessionStartTimeout
+    from aj_crew.acp.session_handle import AcpRequestTimeout
+    from aj_crew.dashboard import chat_runner
 
     svc = _RecordingSvc()
     monkeypatch.setattr(_an, "_INSTANCE", svc, raising=False)
@@ -569,7 +569,7 @@ async def test_the_gate_charges_the_timeout_family_that_lands_in_the_generic_arm
 async def test_the_gate_is_silent_when_no_service_is_published(monkeypatch):
     """Best-effort: a monitoring convenience never changes how the turn is reported,
     so a missing singleton is swallowed, not raised, out of the terminal arm."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     monkeypatch.setattr(_an, "_INSTANCE", None, raising=False)
 

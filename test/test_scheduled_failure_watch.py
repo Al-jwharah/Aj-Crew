@@ -203,7 +203,7 @@ def test_the_watcher_never_checks_out_or_runs_source_code() -> None:
         for step in job["steps"]:
             assert "uses" not in step, step
         assert job["runs-on"] == (
-            "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core'"
+            "${{ github.repository == 'kirodotdev/KiroCrew' && 'ajcrew-linux-4-core'"
             " || 'ubuntu-latest' }}"
         )
 

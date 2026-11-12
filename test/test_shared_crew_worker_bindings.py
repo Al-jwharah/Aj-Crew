@@ -7,9 +7,9 @@ import json
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import routes_admission
+from aj_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import routes_admission
 
 
 def _service() -> ag.AdmissionService:
@@ -72,7 +72,7 @@ def test_every_built_service_gets_the_hosts_child_hooks(monkeypatch):
     """A service rebuilt after a restart can settle recovered children before any spawn."""
     from types import SimpleNamespace
 
-    from kiro_crew.shared_crew import host_hooks
+    from aj_crew.shared_crew import host_hooks
 
     monkeypatch.setattr(ag, "_SERVICE", None)
     monkeypatch.setattr(ag, "_HOOKS", ag.HostHooks())
@@ -94,7 +94,7 @@ def test_both_gateway_entrypoints_prepare_admission_after_the_bind():
     import ast
     import inspect
 
-    from kiro_crew.dashboard.server_runtime import api_entrypoint, session_restore
+    from aj_crew.dashboard.server_runtime import api_entrypoint, session_restore
 
     for module in (api_entrypoint, session_restore):
         tree = ast.parse(inspect.getsource(module))
@@ -112,7 +112,7 @@ def test_a_delayed_child_start_keeps_its_own_admitted_principal(monkeypatch):
     """The parent session's next sender never moves an attached child's slice."""
     from types import SimpleNamespace
 
-    from kiro_crew.shared_crew import containment
+    from aj_crew.shared_crew import containment
 
     svc = _service()
     monkeypatch.setattr(ag, "_SERVICE", svc)
@@ -129,7 +129,7 @@ def test_a_delayed_child_start_keeps_its_own_admitted_principal(monkeypatch):
 
 
 def test_a_workflow_attach_names_every_worker_namespace():
-    from kiro_crew.dashboard.handlers import workflows
+    from aj_crew.dashboard.handlers import workflows
 
     keys = workflows._workflow_worker_keys("r1")
     assert keys == ("wf:r1", "wf-pool:r1", "wf-unpooled:r1", "wf-worker:r1")
@@ -144,7 +144,7 @@ def test_an_http_launch_runs_in_the_admitted_principal_scope():
     """A parentless spawn's task copies the admitted budget before the attach."""
     from types import SimpleNamespace
 
-    from kiro_crew.shared_crew import admission_entry, containment
+    from aj_crew.shared_crew import admission_entry, containment
 
     admitted = ag.Admission(None, "admitted", work=SimpleNamespace(budget_key="p_alice"))
     with containment.principal_scope("p_outer"):
@@ -165,7 +165,7 @@ def test_an_admission_that_ends_before_the_turn_hands_the_queue_off(reason, note
     """The dispatch is marked unstarted so its done callback ends the chat cycle."""
     from types import SimpleNamespace
 
-    from kiro_crew.shared_crew import turn_gate
+    from aj_crew.shared_crew import turn_gate
 
     rows: list[tuple] = []
     slot = SimpleNamespace(

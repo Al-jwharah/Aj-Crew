@@ -29,11 +29,11 @@ vi.mock('../api/client', () => ({
     agentCatalog: vi.fn(),
     // useAgents reads dashboard.crewmates_in_agent_picker from the shared
     // config query; an empty config keeps the default templates-only picker.
-    kirocrewConfig: vi.fn(() => Promise.resolve({})),
+    ajcrewConfig: vi.fn(() => Promise.resolve({})),
   },
 }))
 
-// useAgents reads the shared ['kirocrewConfig'] query, so every render needs a
+// useAgents reads the shared ['ajcrewConfig'] query, so every render needs a
 // QueryClient. Same call shape as RTL's renderHook.
 const renderHook = ((cb: never, opts?: Record<string, unknown>) => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -51,10 +51,10 @@ beforeEach(() => {
   vi.clearAllMocks()
   mockApi.agentCatalog.mockResolvedValue({
     agents: [
-      { name: 'kirocrew', scope: 'global' },
+      { name: 'ajcrew', scope: 'global' },
       { name: 'project-agent', scope: 'project' },
     ],
-    default_agent: 'kirocrew',
+    default_agent: 'ajcrew',
   })
 })
 
@@ -104,7 +104,7 @@ describe('useAgents session scoping', () => {
     // In-flight: the old roster must be gone, not selectable.
     expect(result.current.agents).toHaveLength(0)
 
-    resolveSecond({ agents: [{ name: 'other-project-agent', scope: 'project' }], default_agent: 'kirocrew' })
+    resolveSecond({ agents: [{ name: 'other-project-agent', scope: 'project' }], default_agent: 'ajcrew' })
     await waitFor(() => expect(result.current.agents).toHaveLength(1))
     expect(result.current.agents[0].name).toBe('other-project-agent')
   })

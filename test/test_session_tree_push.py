@@ -18,21 +18,21 @@ import pytest
 from crew_log_drain import assert_drained
 from turn_harness import Do, ScriptedProvider, SlotSpec, TurnScript, run_turn
 
-from kiro_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN, AcpEvent
-from kiro_crew.crew_log import bus, emit
-from kiro_crew.crew_log import session_tree_projection as stp
-from kiro_crew.crew_log.session_tree import EDGE_NAMED, EDGE_NONE, EdgeRecord, OpenedRecord
-from kiro_crew.dashboard.state import DashboardState, SlotOrigin
-from kiro_crew.dashboard.websocket_hub import SLOT_PATCH_WS_FLAG
-from kiro_crew.testing.wait import wait_until
+from aj_crew.acp.types import EVENT_COMPLETE, EVENT_TEXT_CHUNK, STOP_REASON_END_TURN, AcpEvent
+from aj_crew.crew_log import bus, emit
+from aj_crew.crew_log import session_tree_projection as stp
+from aj_crew.crew_log.session_tree import EDGE_NAMED, EDGE_NONE, EdgeRecord, OpenedRecord
+from aj_crew.dashboard.state import DashboardState, SlotOrigin
+from aj_crew.dashboard.websocket_hub import SLOT_PATCH_WS_FLAG
+from aj_crew.testing.wait import wait_until
 
 
 @pytest.fixture(autouse=True)
 def _isolated(tmp_path, monkeypatch):
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
     monkeypatch.setenv(emit.CREW_LOG_ENV, "1")
     monkeypatch.setattr(
-        "kiro_crew.executors.maintenance_executor",
+        "aj_crew.executors.maintenance_executor",
         lambda: type("_NoPool", (), {"submit": staticmethod(lambda *a, **k: None)}),
     )
     stp.reset_for_tests()
@@ -145,10 +145,10 @@ def test_a_restored_slot_s_first_turn_seeds_before_it_reads():
     The real path: two logs on disk, a fresh process image of the tree, and the
     call ``chat_runner`` makes for a slot with no witness of its own.
     """
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
-    emit.on_session_opened("s-lead", agent="kirocrew-lead", slot="lead")
-    emit.on_session_opened("s-worker-1", agent="kirocrew-worker", slot="worker", parent_slot="lead")
+    emit.on_session_opened("s-lead", agent="ajcrew-lead", slot="lead")
+    emit.on_session_opened("s-worker-1", agent="ajcrew-worker", slot="worker", parent_slot="lead")
     stp.reset_for_tests()
     emit.reset_caches()
     assert not stp.projection().seeded_for_current_store
@@ -167,7 +167,7 @@ async def test_a_restored_child_that_never_ran_writes_no_creator_into_its_first_
     restored from an editable transcript, and trusting it would let a forged claim pass
     ``session_control.revive_session``'s ownership check.
     """
-    emit.on_session_opened("s-lead", agent="kirocrew-lead", slot="lead")
+    emit.on_session_opened("s-lead", agent="ajcrew-lead", slot="lead")
     assert_drained()
     stp.reset_for_tests()
     emit.reset_caches()
@@ -185,7 +185,7 @@ async def test_a_restored_child_that_never_ran_writes_no_creator_into_its_first_
 
 def test_a_new_slot_on_a_reused_key_inherits_nothing():
     """A key is reusable; the old worker's edge must not attach to a fresh tab."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
     proj = stp.projection()
     proj.ensure_seeded()
@@ -206,9 +206,9 @@ def test_a_restored_child_with_no_predecessor_inherits_from_the_spawn():
     predecessor log, so the edge is read from the creator's trusted session/spawned
     record. The forged-attribution fence still holds: the answer must match the
     restored _created_by."""
-    from kiro_crew.dashboard import chat_runner
+    from aj_crew.dashboard import chat_runner
 
-    emit.on_session_opened("s-lead", agent="kirocrew-lead", slot="lead")
+    emit.on_session_opened("s-lead", agent="ajcrew-lead", slot="lead")
     emit.on_session_spawned("s-lead", creator_slot="lead", child_slot="worker")
     assert_drained()
     stp.reset_for_tests()
@@ -413,7 +413,7 @@ class _WS:
 def state(monkeypatch, tmp_path):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     yield DashboardState(
         sessions=MagicMock(count=0), crons=MagicMock(), lessons=MagicMock(), start_time=0.0
     )
@@ -432,7 +432,7 @@ def test_a_moved_parent_is_pushed_once_as_a_patch(state, monkeypatch):
         for row in rows:
             row["parent"] = parents.get(row["key"])
 
-    monkeypatch.setattr("kiro_crew.dashboard.state._attach_slot_parents", fake_attach)
+    monkeypatch.setattr("aj_crew.dashboard.state._attach_slot_parents", fake_attach)
 
     state.push_lineage_patch()
     parents["worker"] = {"slot": "lead", "key": "lead"}
@@ -450,12 +450,12 @@ def test_a_moved_parent_is_pushed_once_as_a_patch(state, monkeypatch):
 
 def _opened_log(sid: str, slot: str, *, parent: str | None = None) -> None:
     """One session log on disk, opened the way the emitter opens one."""
-    from kiro_crew import crew_log as lg
-    from kiro_crew.crew_log import CrewLog
+    from aj_crew import crew_log as lg
+    from aj_crew.crew_log import CrewLog
 
-    handle = CrewLog.create(lg.KIND_SESSION, sid, owner="raymond", agent="kirocrew", slot=slot)
+    handle = CrewLog.create(lg.KIND_SESSION, sid, owner="raymond", agent="ajcrew", slot=slot)
     data: dict[str, object] = {
-        "agent": "kirocrew",
+        "agent": "ajcrew",
         "slot": slot,
         "model": "opus",
         "cwd": "/w",
@@ -539,7 +539,7 @@ def test_a_removed_conductor_re_states_its_workers_under_the_lead(state):
 
 
 def test_the_publisher_coalesces_a_burst_into_one_push():
-    from kiro_crew.dashboard.handlers.crew_log import COALESCE_SECONDS, CrewLogPublisher
+    from aj_crew.dashboard.handlers.crew_log import COALESCE_SECONDS, CrewLogPublisher
 
     loop = asyncio.new_event_loop()
     try:
@@ -560,7 +560,7 @@ async def test_installing_the_publisher_pushes_once_for_a_seed_it_missed(monkeyp
     """The bus keeps nothing: a seed announced before the subscription reached nobody."""
     from unittest.mock import patch
 
-    from kiro_crew.dashboard.handlers import crew_log as routes
+    from aj_crew.dashboard.handlers import crew_log as routes
 
     monkeypatch.setenv(routes.CREW_LOG_ENV, "1")
     fake_state = MagicMock()
@@ -577,10 +577,10 @@ async def test_installing_the_publisher_pushes_once_for_a_seed_it_missed(monkeyp
 
 def test_a_cold_scan_marks_a_log_whose_decision_could_not_be_read(monkeypatch):
     """The real cold path: logs on disk, no checkpoint, one unit's tail faults."""
-    from kiro_crew.crew_log.session_tree import SessionTree
+    from aj_crew.crew_log.session_tree import SessionTree
 
-    emit.on_session_opened("s-lead", agent="kirocrew-lead", slot="lead")
-    emit.on_session_opened("s-worker-1", agent="kirocrew-worker", slot="worker", parent_slot="lead")
+    emit.on_session_opened("s-lead", agent="ajcrew-lead", slot="lead")
+    emit.on_session_opened("s-worker-1", agent="ajcrew-worker", slot="worker", parent_slot="lead")
     stp.reset_for_tests()
     emit.reset_caches()
     real = SessionTree._read_edge
@@ -621,10 +621,10 @@ def test_the_suspect_set_holds_only_units_the_tree_still_holds(monkeypatch):
 def test_the_walk_passes_through_logs_loaded_from_a_checkpoint():
     """A checkpoint keeps ``previous_sid`` and not the scanner's edge kind; the walk must
     still follow it, or a parentless successor would stop it on every warm restart."""
-    emit.on_session_opened("s-lead", agent="kirocrew-lead", slot="lead")
-    emit.on_session_opened("s-worker-1", agent="kirocrew-worker", slot="worker", parent_slot="lead")
+    emit.on_session_opened("s-lead", agent="ajcrew-lead", slot="lead")
+    emit.on_session_opened("s-worker-1", agent="ajcrew-worker", slot="worker", parent_slot="lead")
     emit.on_session_opened(
-        "s-worker-2", agent="kirocrew-worker", slot="worker", previous_sid="s-worker-1"
+        "s-worker-2", agent="ajcrew-worker", slot="worker", previous_sid="s-worker-1"
     )
     stp.reset_for_tests()
     emit.reset_caches()
@@ -789,13 +789,13 @@ async def test_a_cancel_requested_while_the_class_is_read_finds_the_log_opened(m
 
 def test_a_replay_marks_every_unit_whose_decision_it_did_not_read(monkeypatch):
     """Past the cap the replay keeps records it reads no decision for; those are suspect."""
-    from kiro_crew.crew_log.session_tree import _ScanFaults
+    from aj_crew.crew_log.session_tree import _ScanFaults
 
-    emit.on_session_opened("s-a", agent="kirocrew-worker", slot="a")
-    emit.on_session_opened("s-b", agent="kirocrew-worker", slot="b")
-    emit.on_session_opened("s-c", agent="kirocrew-worker", slot="c")
+    emit.on_session_opened("s-a", agent="ajcrew-worker", slot="a")
+    emit.on_session_opened("s-b", agent="ajcrew-worker", slot="b")
+    emit.on_session_opened("s-c", agent="ajcrew-worker", slot="c")
     emit.reset_caches()
-    from kiro_crew.crew_log import session_tree
+    from aj_crew.crew_log import session_tree
 
     monkeypatch.setattr(stp, "TREE_UNIT_CAP", 2)
     monkeypatch.setattr(session_tree, "TREE_UNIT_CAP", 2)

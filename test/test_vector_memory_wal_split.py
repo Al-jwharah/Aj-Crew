@@ -19,16 +19,16 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import _sqlite_compat, diagnose_probes, sqlite_wal
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import _sqlite_compat, diagnose_probes, sqlite_wal
+from aj_crew.vector_memory import VectorMemoryStore
 
 pytestmark = pytest.mark.xdist_group(name="vector_memory_wal_split")
 
 _SECOND_PROCESS = """
 import sys
 from pathlib import Path
-from kiro_crew import sqlite_wal
-from kiro_crew.vector_memory import VectorMemoryStore
+from aj_crew import sqlite_wal
+from aj_crew.vector_memory import VectorMemoryStore
 
 if sys.argv[2] == "without-setconfig":
     # What a driver with no Connection.setconfig (pysqlite3) reports.

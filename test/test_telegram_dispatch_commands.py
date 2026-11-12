@@ -17,18 +17,18 @@ import pytest
 from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
 from telegram_helpers import _dispatcher, _dm, _origin, _tg_origin
 
-from kiro_crew import safety_override_grant
-from kiro_crew.messaging.session_resume import RoutingDecision
-from kiro_crew.telegram.commands import build_help_text
-from kiro_crew.telegram.transport import TelegramInboundMessage
-from kiro_crew.testing.clock import ManualClock
+from aj_crew import safety_override_grant
+from aj_crew.messaging.session_resume import RoutingDecision
+from aj_crew.telegram.commands import build_help_text
+from aj_crew.telegram.transport import TelegramInboundMessage
+from aj_crew.testing.clock import ManualClock
 
 
 class TestYoloCommand:
     """/yolo drives the SAME process-wide grant as the dashboard and Slack."""
 
     def _reset(self) -> Any:
-        from kiro_crew.safety_override import safety_override
+        from aj_crew.safety_override import safety_override
 
         so = safety_override()
         if so.is_active():
@@ -118,7 +118,7 @@ class TestYoloCommand:
                 return "ok"
 
         try:
-            with patch("kiro_crew.telegram.transport_dispatch.TurnDriver", _Recorder):
+            with patch("aj_crew.telegram.transport_dispatch.TurnDriver", _Recorder):
                 asyncio.run(d.handle_message(_dm("hi")))
             predicate = captured[0]
             assert predicate is not None
@@ -139,7 +139,7 @@ class TestBareMidTurnDirective:
     def test_queue_with_a_body_still_runs_as_content(self) -> None:
         d, _cli, sess = _dispatcher({7})
         asyncio.run(d.handle_message(_dm("/queue do the thing")))
-        assert sess.successes == ["telegram:kirocrew:direct:7"]
+        assert sess.successes == ["telegram:ajcrew:direct:7"]
 
 
 class TestCommandDispatchTable:
@@ -183,9 +183,9 @@ class TestCommandDispatchTable:
             ),
             ("/yolo on", "_handle_yolo", (7, "on", 7), {"thread": None}),
             (
-                "/kirocrew dashboard 2h",
+                "/ajcrew dashboard 2h",
                 "_handle_dashboard",
-                (_ROUTE, 7, "/kirocrew dashboard 2h", 7),
+                (_ROUTE, 7, "/ajcrew dashboard 2h", 7),
                 {},
             ),
         ],
@@ -210,7 +210,7 @@ class TestCommandDispatchTable:
 
     @pytest.mark.parametrize(
         "text",
-        ["/ping", "/cron list", "/yolo", "/kirocrew dashboard", "/voice", "/agent", "/sessions"],
+        ["/ping", "/cron list", "/yolo", "/ajcrew dashboard", "/voice", "/agent", "/sessions"],
     )
     def test_an_exempt_command_never_asks_the_resume_router(self, text: str) -> None:
         d, _cli, _sess = _dispatcher({7})
@@ -272,21 +272,21 @@ class TestCommandReplies:
     """The exact replies of the commands the dispatcher answers itself."""
 
     _ROUTE = ("direct", "7")
-    _KEY = "telegram:kirocrew:direct:7"
+    _KEY = "telegram:ajcrew:direct:7"
     _RELEASE = (
         "⚠️ Could not leave the resumed session safely, so nothing changed. "
         "Try again before sending another message."
     )
 
     def test_new_replies(self) -> None:
-        from kiro_crew.messaging.session_resume import ResumeReleaseError
+        from aj_crew.messaging.session_resume import ResumeReleaseError
 
         d, cli, sess = _dispatcher({7})
         reserved: list[str] = []
         sess.reserve_generation = lambda key: reserved.append(key)  # type: ignore[attr-defined]
         asyncio.run(d.handle_message(_dm("/new")))
         assert cli.sent == [("✅ New conversation started.", None)]
-        assert reserved == ["telegram:kirocrew:direct:7:gen1"]
+        assert reserved == ["telegram:ajcrew:direct:7:gen1"]
 
         d, cli, sess = _dispatcher({7})
         asyncio.run(d.handle_message(_dm("/new")))
@@ -365,7 +365,7 @@ class TestCommandReplies:
         assert cli.sent[-1][0] == "✅ Context compacted." and cli.edits == []
 
     def test_link_and_unlink_replies(self) -> None:
-        from kiro_crew.messaging.session_resume import ResumeReleaseError
+        from aj_crew.messaging.session_resume import ResumeReleaseError
 
         d, cli, sess = _dispatcher({7})
         asyncio.run(d._handle_link(self._ROUTE, 7, resumed_key="dashboard:x"))
@@ -399,7 +399,7 @@ class TestCommandReplies:
         recorder = SimpleNamespace(
             inc_message_received=lambda: seen.append("received"), summary=lambda: "S-42"
         )
-        monkeypatch.setattr("kiro_crew.telegram.transport_dispatch.Stats", lambda: recorder)
+        monkeypatch.setattr("aj_crew.telegram.transport_dispatch.Stats", lambda: recorder)
         d, cli, _sess = _dispatcher({7})
         asyncio.run(d.handle_message(_dm("/status")))
         assert cli.sent == [("S-42", None)] and seen == ["received"]
@@ -442,15 +442,15 @@ class TestCommandReplies:
         assert len(cli.sent) == 1 and cli.send_threads == [4]
 
     def test_bare_directives_and_override_payloads(self) -> None:
-        from kiro_crew.messaging import privacy_mode
+        from aj_crew.messaging import privacy_mode
 
         usage = "Those take a message: /queue <msg> or /steer <msg>."
         d, cli, sess = _dispatcher({7})
         asyncio.run(d.handle_message(_dm("/queue")))
         assert cli.sent == [(usage, None)]
         d, cli, sess = _dispatcher({7})
-        d.bot_username = "KiroCrewBot"
-        asyncio.run(d.handle_message(_dm("/steer@KiroCrewBot")))
+        d.bot_username = "AjCrewBot"
+        asyncio.run(d.handle_message(_dm("/steer@AjCrewBot")))
         assert cli.sent == [(usage, None)]
 
         d, cli, sess = _dispatcher({7})

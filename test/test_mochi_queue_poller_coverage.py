@@ -16,12 +16,12 @@ from unittest import mock
 
 import pytest
 
-from kiro_crew.apps.builtins.mochi import queue_file as qf
-from kiro_crew.apps.builtins.mochi import queue_poller as qp
-from kiro_crew.apps.builtins.mochi.activity_budget import ActivityBudget
-from kiro_crew.apps.builtins.mochi.queue_poller import MAX_FAIL_COUNT, SPAWN_TIMEOUT_MS, QueuePoller
-from kiro_crew.apps.spawn_sdk import SpawnError
-from kiro_crew.testing.wait import finished
+from aj_crew.apps.builtins.mochi import queue_file as qf
+from aj_crew.apps.builtins.mochi import queue_poller as qp
+from aj_crew.apps.builtins.mochi.activity_budget import ActivityBudget
+from aj_crew.apps.builtins.mochi.queue_poller import MAX_FAIL_COUNT, SPAWN_TIMEOUT_MS, QueuePoller
+from aj_crew.apps.spawn_sdk import SpawnError
+from aj_crew.testing.wait import finished
 
 pytestmark = pytest.mark.asyncio
 

@@ -14,9 +14,9 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state, _make_tags_app
 
-from kiro_crew.dashboard import chat_tags as chat_tags_module
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.testing.wait import async_wait_until, until_parked
+from aj_crew.dashboard import chat_tags as chat_tags_module
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.testing.wait import async_wait_until, until_parked
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _hermetic_signing_secret = chat_tags_helpers._hermetic_signing_secret
@@ -29,7 +29,7 @@ class TestLoadTagsSafety:
     def test_load_failure_does_not_overwrite_with_defaults(self, tmp_path, monkeypatch):
         """If tags.json exists but cannot be parsed, never silently overwrite it
         with the seed vocabulary — that would destroy the user's data."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         # Write an unreadable / corrupt tags file
         corrupt = tmp_path / "tags.json"
         corrupt.write_text("not-json-at-all", encoding="utf-8")
@@ -42,7 +42,7 @@ class TestLoadTagsSafety:
 
     def test_missing_file_seeds_defaults(self, tmp_path, monkeypatch):
         """If tags.json doesn't exist, seed the default 5 status tags."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.load_tags()
         names = {t["name"] for t in state._tags}
@@ -58,10 +58,10 @@ class TestLoadTagsSafety:
         defaults resolve agent-drivable. With the reverse order that boot reads
         as an upgraded install and seeds an EMPTY store, so every default
         workflow state silently becomes human-only."""
-        from kiro_crew.dashboard import chat_tags as ct
-        from kiro_crew.dashboard import state as state_mod
+        from aj_crew.dashboard import chat_tags as ct
+        from aj_crew.dashboard import state as state_mod
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         crashed = _make_state(tmp_path)
         real_seed = state_mod.seed_default_grants
 
@@ -87,7 +87,7 @@ class TestLoadTagsSafety:
     def test_explicitly_empty_file_is_not_reseeded(self, tmp_path, monkeypatch):
         """If tags.json contains [], the user explicitly cleared every tag —
         do not re-seed defaults across restart."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         (tmp_path / "tags.json").write_text("[]", encoding="utf-8")
         state = _make_state(tmp_path)
         state.load_tags()
@@ -101,7 +101,7 @@ class TestLoadTagsSafety:
         id left in place would make that column's filter un-editable."""
         import json as _json
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         (tmp_path / "tags.json").write_text(
             _json.dumps([{"id": "live1", "name": "Live", "color": "#111111", "order": 0}]),
             encoding="utf-8",
@@ -130,7 +130,7 @@ class TestLoadTagsSafety:
         the slot-restore prune."""
         import json as _json
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         (tmp_path / "tags.json").write_text("not-json-at-all", encoding="utf-8")
         (tmp_path / "tag_boards.json").write_text(
             _json.dumps([{"id": "c1", "name": "L", "tag_ids": ["t1"], "mode": "any", "order": 0}]),
@@ -151,7 +151,7 @@ class TestDeleteSlotPersistPropagatesFromUnderlying:
 
     @pytest.mark.asyncio
     async def test_delete_succeeds_despite_underlying_write_failure(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -182,7 +182,7 @@ class TestTagCreatePersistFailure:
 
     @pytest.mark.asyncio
     async def test_create_returns_500_and_rolls_back_on_write_failure(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -210,7 +210,7 @@ class TestBoardColumnConcurrency:
     async def test_concurrent_column_creates_both_persisted(self, tmp_path, monkeypatch):
         import asyncio
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
 
@@ -249,7 +249,7 @@ class TestDeleteVocabWriteCompensation:
 
     @pytest.mark.asyncio
     async def test_vocab_write_failure_leaves_slots_untouched(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -291,7 +291,7 @@ class TestUpdateDeleteRace:
         import asyncio as _asyncio
         import threading as _threading
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -314,7 +314,7 @@ class TestUpdateDeleteRace:
 
             # Run DELETE and PATCH concurrently.
             # DELETE wins the lock; PATCH waits, then re-resolves -> 404.
-            with patch("kiro_crew.dashboard.chat_tags.revoke_grant", side_effect=_held_revoke):
+            with patch("aj_crew.dashboard.chat_tags.revoke_grant", side_effect=_held_revoke):
                 delete_task = _asyncio.ensure_future(client.delete(f"/api/chat/tags/{tid}"))
                 await async_wait_until(entered.is_set, timeout=30)
                 patch_task = _asyncio.ensure_future(
@@ -343,7 +343,7 @@ class TestTagOrderInfinity:
     @pytest.mark.asyncio
     async def test_infinite_order_is_skipped_not_a_500(self, tmp_path, monkeypatch, raw):
         """JSON reads ``1e999`` as an infinite float: the field is skipped, as for "abc"."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:

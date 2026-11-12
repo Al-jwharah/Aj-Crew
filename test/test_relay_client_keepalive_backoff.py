@@ -22,17 +22,17 @@ from relay_client_helpers import (
     valid_message,
 )
 
-from kiro_crew.relay_client.backoff import Backoff, CloseAction, ConnectionEnd, classify
-from kiro_crew.relay_client.client import STATE_CONNECTED, STATE_ERROR, STATE_RECONNECTING
-from kiro_crew.relay_client.connection import RelayTimings
-from kiro_crew.relay_client.protocol import (
+from aj_crew.relay_client.backoff import Backoff, CloseAction, ConnectionEnd, classify
+from aj_crew.relay_client.client import STATE_CONNECTED, STATE_ERROR, STATE_RECONNECTING
+from aj_crew.relay_client.connection import RelayTimings
+from aj_crew.relay_client.protocol import (
     BACKOFF_RESET_AFTER_SECONDS,
     BACKOFF_STEPS_SECONDS,
     PING_INTERVAL_SECONDS,
     SILENCE_REPLACE_SECONDS,
 )
-from kiro_crew.relay_client.token_source import HostTokenRetryLater
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.relay_client.token_source import HostTokenRetryLater
+from aj_crew.testing.wait import async_wait_until, await_until
 
 #: What the client does when the relay closes a connection that had reached ready,
 #: by member name, so a missing member fails its own case instead of the import.
@@ -287,7 +287,7 @@ async def test_a_refused_host_token_renews_once_then_stops() -> None:
 
 @asyncio_test
 async def test_a_source_that_cannot_renew_yet_does_not_spend_the_one_renewal() -> None:
-    from kiro_crew.relay_client.token_source import HostTokenRetryLater
+    from aj_crew.relay_client.token_source import HostTokenRetryLater
 
     async with FakeRelay() as relay, FakeCrew() as crew:
         client, source, ingress = make_client(relay, crew, sleep=RecordingSleep())

@@ -86,7 +86,7 @@ function setWindowWidth(px: number) {
 function row(overrides: Record<string, unknown> = {}) {
   return {
     name: 'oncall', slug: 'oncall', bound: false, slot_key: '', running: false,
-    kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', model: '',
+    kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', model: '',
     ...overrides,
   }
 }
@@ -97,7 +97,7 @@ const tabLabels = () => screen.getAllByRole('tab').map((t) => t.getAttribute('ar
 const sideTab = () => screen.queryByRole('tab', { name: 'Side Chat' })
 
 async function openThread() {
-  ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: [row()], default_agent: 'kirocrew' })
+  ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({ members: [row()], default_agent: 'ajcrew' })
   ;(api.memberThread as ReturnType<typeof vi.fn>).mockResolvedValue({ slot_key: 'member-oncall', slug: 'oncall', member: 'oncall', created: true })
   renderWithProviders(<MembersPage />)
   fireEvent.click(await screen.findByText('oncall'))
@@ -159,7 +159,7 @@ describe('MembersPage Side Chat in the side panel (selection Ask)', () => {
   it('switching members swaps the strip — a Side Chat is about the member it was asked on', async () => {
     ;(api.members as ReturnType<typeof vi.fn>).mockResolvedValue({
       members: [row(), row({ name: 'fixer', slug: 'fixer' })],
-      default_agent: 'kirocrew',
+      default_agent: 'ajcrew',
     })
     ;(api.memberThread as ReturnType<typeof vi.fn>).mockImplementation((slug: string) =>
       Promise.resolve({ slot_key: `member-${slug}`, slug, member: slug, created: true }),
@@ -187,7 +187,7 @@ describe('MembersPage Side Chat in the side panel (selection Ask)', () => {
       // `other` claims a bound roster key the thread endpoint will NOT confirm
       // for it: the slug's thread belongs to another crew.
       members: [row(), row({ name: 'other', slug: 'other', bound: true, slot_key: 'member-other' })],
-      default_agent: 'kirocrew',
+      default_agent: 'ajcrew',
     })
     ;(api.memberThread as ReturnType<typeof vi.fn>).mockImplementation((slug: string) =>
       Promise.resolve(slug === 'other'

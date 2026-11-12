@@ -41,9 +41,9 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.dashboard.handlers import mcp as mcp_mod
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew import platform_compat
+from aj_crew.dashboard.handlers import mcp as mcp_mod
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 pytestmark = pytest.mark.skipif(
     not platform_compat.IS_POSIX,
@@ -56,7 +56,7 @@ _TEST_CEILING = 1.0
 
 _KIRO_HOME_REMEDY = "KIRO_HOME"
 
-_LOGGER_NAME = "kiro_crew.dashboard.handlers.mcp"
+_LOGGER_NAME = "aj_crew.dashboard.handlers.mcp"
 
 
 @pytest.fixture

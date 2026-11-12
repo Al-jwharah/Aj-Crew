@@ -21,12 +21,12 @@ from knowledge_handlers_coverage_helpers import (  # noqa: F401 -- the fixture i
     store_fixture,
 )
 
-from kiro_crew.dashboard.handlers import knowledge as kh
-from kiro_crew.knowledge.chunker import HeadingAwareChunker
-from kiro_crew.knowledge.ingestion import IngestionPipeline
-from kiro_crew.knowledge.readers import FileReader
-from kiro_crew.knowledge.url_fetch import FetchedPage
-from kiro_crew.testing.wait import await_until
+from aj_crew.dashboard.handlers import knowledge as kh
+from aj_crew.knowledge.chunker import HeadingAwareChunker
+from aj_crew.knowledge.ingestion import IngestionPipeline
+from aj_crew.knowledge.readers import FileReader
+from aj_crew.knowledge.url_fetch import FetchedPage
+from aj_crew.testing.wait import await_until
 
 # agent document
 
@@ -35,7 +35,7 @@ from kiro_crew.testing.wait import await_until
 def _listed_test_hosts(_floor_monkeypatch):
     """List the hosts these sources name in ``knowledge.doc_ingest_hosts``.
 
-    A source with no connector is fetched by Kiro Crew only from a listed host,
+    A source with no connector is fetched by Aj Crew only from a listed host,
     and the list is empty by default; these tests exercise what happens after
     that gate lets the URL through.
     """
@@ -46,7 +46,7 @@ class TestAddAgentDocumentRoute:
     @pytest.mark.asyncio
     async def test_disabled_toggle_is_403(self, store, monkeypatch):
         monkeypatch.setattr(
-            f"{MODULE}.KiroCrewConfig.load", staticmethod(lambda: _cfg(auto_add=False))
+            f"{MODULE}.AjCrewConfig.load", staticmethod(lambda: _cfg(auto_add=False))
         )
         async with _client(_make_app(store, pipeline=MagicMock())) as client:
             resp = await client.post("/api/knowledge/agent-document", json={})
@@ -55,7 +55,7 @@ class TestAddAgentDocumentRoute:
 
     @pytest.mark.asyncio
     async def test_missing_pipeline_is_503(self, store, monkeypatch):
-        monkeypatch.setattr(f"{MODULE}.KiroCrewConfig.load", staticmethod(_cfg))
+        monkeypatch.setattr(f"{MODULE}.AjCrewConfig.load", staticmethod(_cfg))
         async with _client(_make_app(store)) as client:
             resp = await client.post("/api/knowledge/agent-document", json={})
             assert resp.status == 503
@@ -63,7 +63,7 @@ class TestAddAgentDocumentRoute:
 
     @pytest.mark.asyncio
     async def test_invalid_json_is_400(self, store, monkeypatch):
-        monkeypatch.setattr(f"{MODULE}.KiroCrewConfig.load", staticmethod(_cfg))
+        monkeypatch.setattr(f"{MODULE}.AjCrewConfig.load", staticmethod(_cfg))
         async with _client(_make_app(store, pipeline=MagicMock())) as client:
             resp = await client.post(
                 "/api/knowledge/agent-document",
@@ -75,7 +75,7 @@ class TestAddAgentDocumentRoute:
 
     @pytest.mark.asyncio
     async def test_rejected_document_is_400(self, store, monkeypatch):
-        monkeypatch.setattr(f"{MODULE}.KiroCrewConfig.load", staticmethod(_cfg))
+        monkeypatch.setattr(f"{MODULE}.AjCrewConfig.load", staticmethod(_cfg))
         monkeypatch.setattr(
             f"{MODULE}.add_agent_document",
             AsyncMock(return_value={"status": "error", "error": "too short"}),
@@ -90,7 +90,7 @@ class TestAddAgentDocumentRoute:
 
     @pytest.mark.asyncio
     async def test_accepted_document_returns_result_and_coerces_fields(self, store, monkeypatch):
-        monkeypatch.setattr(f"{MODULE}.KiroCrewConfig.load", staticmethod(_cfg))
+        monkeypatch.setattr(f"{MODULE}.AjCrewConfig.load", staticmethod(_cfg))
         fake_add = AsyncMock(return_value={"status": "added", "title": "T", "item_ids": ["i1"]})
         monkeypatch.setattr(f"{MODULE}.add_agent_document", fake_add)
         async with _client(_make_app(store, pipeline=MagicMock())) as client:

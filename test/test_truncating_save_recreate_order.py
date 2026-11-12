@@ -39,12 +39,12 @@ from types import SimpleNamespace
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard import chat_fork
-from kiro_crew.dashboard import chat_handlers as handlers
-from kiro_crew.dashboard import chat_persistence, chat_regenerate, chat_rewind
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.dashboard_persistence import DashboardPersistenceCoordinator
-from kiro_crew.testing.wait import async_wait_until, await_until
+from aj_crew.dashboard import chat_fork
+from aj_crew.dashboard import chat_handlers as handlers
+from aj_crew.dashboard import chat_persistence, chat_regenerate, chat_rewind
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.dashboard_persistence import DashboardPersistenceCoordinator
+from aj_crew.testing.wait import async_wait_until, await_until
 
 NAME = "chat-1-9905"
 

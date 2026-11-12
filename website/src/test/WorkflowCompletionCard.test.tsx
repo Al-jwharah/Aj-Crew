@@ -12,7 +12,7 @@ type ChatState = RootState['chat']
 
 const FINISHED = [
   '[Workflow completion event]',
-  'Workflow `kirocrew-bug-deep-dive` (wf_000001) → **finished**',
+  'Workflow `ajcrew-bug-deep-dive` (wf_000001) → **finished**',
   '',
   'Result:',
   '```json',
@@ -38,7 +38,7 @@ describe('WorkflowCompletionCard parsing/detection', () => {
 
   it('parses name, run id, status and strips the trailing tool hint from the body', () => {
     const p = parseWorkflowCompletion(FINISHED)!
-    expect(p.name).toBe('kirocrew-bug-deep-dive')
+    expect(p.name).toBe('ajcrew-bug-deep-dive')
     expect(p.runId).toBe('wf_000001')
     expect(p.status).toBe('finished')
     expect(p.body).toContain('Result:')
@@ -57,7 +57,7 @@ describe('WorkflowCompletionCard parsing/detection', () => {
   })
 
   it('tolerates a newline inside the workflow name', () => {
-    const withNewline = FINISHED.replace('kirocrew-bug-deep-dive', 'deep\ndive')
+    const withNewline = FINISHED.replace('ajcrew-bug-deep-dive', 'deep\ndive')
     const p = parseWorkflowCompletion(withNewline)!
     expect(p).not.toBeNull()
     expect(p.runId).toBe('wf_000001')
@@ -69,7 +69,7 @@ describe('WorkflowCompletionCard rendering', () => {
   it('renders a compact header with name + status, result folded by default', () => {
     const store = createTestStore({ chat: {} as unknown as ChatState })
     renderWithProviders(<WorkflowCompletionCard message={completionMsg()} />, { store })
-    expect(screen.getByText('kirocrew-bug-deep-dive')).toBeTruthy()
+    expect(screen.getByText('ajcrew-bug-deep-dive')).toBeTruthy()
     expect(screen.getByText('finished')).toBeTruthy()
     // Collapsed by default: the toggle offers to reveal, raw JSON not shown yet.
     expect(screen.getByText('Show result')).toBeTruthy()
@@ -126,7 +126,7 @@ describe('card containment', () => {
     expect(body.getAttribute('role')).toBe('region')
     const labelId = body.getAttribute('aria-labelledby')
     expect(labelId).toBeTruthy()
-    expect(document.getElementById(labelId!)?.textContent).toContain('kirocrew-bug-deep-dive')
+    expect(document.getElementById(labelId!)?.textContent).toContain('ajcrew-bug-deep-dive')
     // The ring must be inset: the card root's overflow-hidden clips anything
     // painted outside the box, and the global :focus-visible outline is
     // disabled, so a non-inset ring renders as no indicator at all. The shared

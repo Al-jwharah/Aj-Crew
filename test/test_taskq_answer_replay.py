@@ -18,14 +18,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew import task_executor
-from kiro_crew.acp.types import TurnUsage
-from kiro_crew.providers.base import EVENT_COMPLETE, LLMEvent
-from kiro_crew.task_models import SESSION_PREFIX, Project, Task
-from kiro_crew.taskq import model as m
-from kiro_crew.taskq.adapters import runner as r
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.taskq.waits import WaitLedger, WaitRecord
+from aj_crew import task_executor
+from aj_crew.acp.types import TurnUsage
+from aj_crew.providers.base import EVENT_COMPLETE, LLMEvent
+from aj_crew.task_models import SESSION_PREFIX, Project, Task
+from aj_crew.taskq import model as m
+from aj_crew.taskq.adapters import runner as r
+from aj_crew.taskq.store import TaskStore
+from aj_crew.taskq.waits import WaitLedger, WaitRecord
 
 _RUN_TASK_ID = "task-replay"
 _SESSION_KEY = f"{SESSION_PREFIX}:{_RUN_TASK_ID}:task1"
@@ -74,7 +74,7 @@ def _patch_executor(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     fake_config = MagicMock()
     fake_config.load.return_value = SimpleNamespace(agent=SimpleNamespace(provider="acp"))
-    monkeypatch.setattr(task_executor, "KiroCrewConfig", fake_config)
+    monkeypatch.setattr(task_executor, "AjCrewConfig", fake_config)
     monkeypatch.setattr(task_executor, "persist_token_record_async", AsyncMock(), raising=False)
 
 

@@ -12,7 +12,7 @@ remote-only transport (no ``command``) has no such fallback: an empty
 
 from __future__ import annotations
 
-from kiro_crew.agent_state import capability_transport_fields_valid
+from aj_crew.agent_state import capability_transport_fields_valid
 
 
 def test_stdio_transport_without_url_is_valid():

@@ -15,7 +15,7 @@ import { openTranscriptHarness } from './lib/transcript-harness.mjs'
 const OUT = process.argv[2] || '../temp-screenshots/flyout-corner'
 const DIST = process.argv[3] || undefined
 const SLOT = 'chat-aaa'
-const PROJECT = '/home/user/workspace/KiroCrew'
+const PROJECT = '/home/user/workspace/AjCrew'
 
 mkdirSync(OUT, { recursive: true })
 
@@ -26,7 +26,7 @@ const slots = Array.from({ length: 6 }, (_, i) => ({
   running: false,
   needs_input: false,
   pending_approval: false,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   updated: now - i * 60,
   created: now - i * 600,
 }))

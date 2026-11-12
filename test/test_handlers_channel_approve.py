@@ -19,8 +19,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.channel import _match_trusted_channel_command
-from kiro_crew.dashboard.handlers_channel import api_channel_approve_agent
+from aj_crew.channel import _match_trusted_channel_command
+from aj_crew.dashboard.handlers_channel import api_channel_approve_agent
 
 
 def _make_agent(pending: bool = True, pending_command: str = "ls /tmp"):
@@ -60,10 +60,10 @@ async def _call(body: dict, agent):
     request = _make_request(body)
     with (
         patch(
-            "kiro_crew.dashboard.handlers_channel._mgr",
+            "aj_crew.dashboard.handlers_channel._mgr",
             return_value=MagicMock(get=MagicMock(return_value=ch)),
         ),
-        patch("kiro_crew.dashboard.handlers_channel.sel", return_value=MagicMock()),
+        patch("aj_crew.dashboard.handlers_channel.sel", return_value=MagicMock()),
     ):
         resp = await api_channel_approve_agent(request)
     return resp, ch
@@ -318,10 +318,10 @@ class TestChannelApproveTrustTiers:
         sel_mock = MagicMock()
         with (
             patch(
-                "kiro_crew.dashboard.handlers_channel._mgr",
+                "aj_crew.dashboard.handlers_channel._mgr",
                 return_value=MagicMock(get=MagicMock(return_value=ch)),
             ),
-            patch("kiro_crew.dashboard.handlers_channel.sel", return_value=sel_mock),
+            patch("aj_crew.dashboard.handlers_channel.sel", return_value=sel_mock),
         ):
             resp = await api_channel_approve_agent(request)
         assert resp.status == 400

@@ -15,24 +15,24 @@ const fs = require("fs");
 const path = require("path");
 const { dialTarget, listenerSecretsFor } = require("./local-token");
 
-const KIROCREW_EXE_NAMES = new Set(["kirocrew", "kirocrew-backend"]);
+const AJCREW_EXE_NAMES = new Set(["ajcrew", "ajcrew-backend"]);
 const PYTHON_EXE_RE = /^(?:python(?:\d+(?:\.\d+)*)?w?|py)$/i;
-// The module a `python -m <module>` gateway is booted from. `kiro_crew` is the
+// The module a `python -m <module>` gateway is booted from. `aj_crew` is the
 // core. A composed edition boots from its companion's own top-level module so
 // the composition root runs instead of the core CLI, and the companion is named
-// `kirocrew_<edition>` (the `kirocrew.plugins` entry-point convention the Python
+// `ajcrew_<edition>` (the `ajcrew.plugins` entry-point convention the Python
 // side reads in `port_resolution._gateway_module_roots()`). This process has no
 // installed-entry-point view of that Python environment, so it matches the
 // naming convention instead; the core never learns any edition's name. Exact
 // top-level module only: a dotted submodule is not a gateway entry point.
-const KIROCREW_MODULE_RE = /^(?:kiro_crew|kirocrew_[a-z0-9][a-z0-9_]*)$/;
+const AJCREW_MODULE_RE = /^(?:aj_crew|ajcrew_[a-z0-9][a-z0-9_]*)$/;
 // A gateway module is only a gateway when argparse's first positional after it
-// is a server subcommand -- the same set `port_resolution._KIROCREW_SERVER_SUBCOMMANDS`
-// gates `kirocrew stop` on. Without this the module name alone would authorize a
-// SIGKILL of any process that merely imports a `kirocrew_*` module on our port.
+// is a server subcommand -- the same set `port_resolution._AJCREW_SERVER_SUBCOMMANDS`
+// gates `ajcrew stop` on. Without this the module name alone would authorize a
+// SIGKILL of any process that merely imports an `ajcrew_*` module on our port.
 // Both constants are pinned to their Python twins by
 // `test/test_cli_stop.py::TestDesktopGatewayIdentityParity`; change them together.
-const KIROCREW_SERVER_SUBCOMMANDS = new Set(["gateway", "dashboard", "start"]);
+const AJCREW_SERVER_SUBCOMMANDS = new Set(["gateway", "dashboard", "start"]);
 
 // The code the updater's pre-swap stop rejects with when a gateway running from
 // this app's own bundle still holds the port after the stop. Both update lanes
@@ -43,7 +43,7 @@ const GATEWAY_STILL_RUNNING = "gateway-still-running";
 // `stopCommand` is the command the user runs to stop that gateway themselves.
 // The lanes carry it to the renderer and the quit-time notification, so the
 // refusal names the step that lets the next install through.
-function gatewayStillRunningError(port, stopCommand = `kirocrew stop --port ${port}`) {
+function gatewayStillRunningError(port, stopCommand = `ajcrew stop --port ${port}`) {
   const error = new Error(`a gateway from this app's bundle still holds port ${port}`);
   error.code = GATEWAY_STILL_RUNNING;
   error.stopCommand = stopCommand;
@@ -100,7 +100,7 @@ function executableSelector(tokens) {
   let candidate = first;
   for (let index = 1; ; index++) {
     const name = executableName(candidate);
-    if (KIROCREW_EXE_NAMES.has(name) || PYTHON_EXE_RE.test(name)) return { name, next: index };
+    if (AJCREW_EXE_NAMES.has(name) || PYTHON_EXE_RE.test(name)) return { name, next: index };
     const token = tokens[index];
     if (token === undefined || token.startsWith("-") || token.startsWith("/")) return fallback;
     candidate += ` ${token}`;
@@ -108,10 +108,10 @@ function executableSelector(tokens) {
 }
 
 /**
- * Match only a Kiro Crew executable, or a Python process whose first execution
- * selector invokes a Kiro Crew gateway module (`kiro_crew`, or a composed
- * edition's `kirocrew_<edition>` companion — `KIROCREW_MODULE_RE`) followed by
- * a server subcommand (`KIROCREW_SERVER_SUBCOMMANDS`), or a Kiro Crew script.
+ * Match only an Aj Crew executable, or a Python process whose first execution
+ * selector invokes an Aj Crew gateway module (`aj_crew`, or a composed
+ * edition's `ajcrew_<edition>` companion — `AJCREW_MODULE_RE`) followed by
+ * a server subcommand (`AJCREW_SERVER_SUBCOMMANDS`), or an Aj Crew script.
  * Later process arguments never establish ownership, so SSH aliases and
  * unrelated script arguments cannot authorize a kill.
  *
@@ -126,21 +126,21 @@ function executableSelector(tokens) {
  * only in the exact launch shape `trustedVenvLaunches` pins
  * (`venvBaseInterpreterShape`).
  */
-function isKirocrewCommand(commandLine, options) {
-  return kirocrewCommandShape(commandLine, options) !== null;
+function isAjcrewCommand(commandLine, options) {
+  return ajcrewCommandShape(commandLine, options) !== null;
 }
 
 /**
- * `isKirocrewCommand`, narrowed to a Kiro Crew SERVER: argparse's first
+ * `isAjcrewCommand`, narrowed to an Aj Crew SERVER: argparse's first
  * positional after the executable (or after the console script) must be one of
- * `KIROCREW_SERVER_SUBCOMMANDS`, exactly as the Python twin
- * `port_resolution._args_look_like_kirocrew` gates its console-script form.
- * `isKirocrewCommand` alone accepts any `kirocrew` executable, which also
- * matches the built-in MCP servers the gateway spawns as `<root>/bin/kirocrew
+ * `AJCREW_SERVER_SUBCOMMANDS`, exactly as the Python twin
+ * `port_resolution._args_look_like_ajcrew` gates its console-script form.
+ * `isAjcrewCommand` alone accepts any `ajcrew` executable, which also
+ * matches the built-in MCP servers the gateway spawns as `<root>/bin/ajcrew
  * mcp-core` / `mcp-cron`; the survivor sweep must never signal those.
  */
-function isKirocrewGatewayCommand(commandLine, options) {
-  const shape = kirocrewCommandShape(commandLine, options);
+function isAjcrewGatewayCommand(commandLine, options) {
+  const shape = ajcrewCommandShape(commandLine, options);
   return shape !== null && shape.serverSubcommand;
 }
 
@@ -199,12 +199,12 @@ function strictWindowsArguments(commandLine, count) {
  * `"<ExecutablePath>" <CommandLine>`, and the shape is exact, nothing between:
  * the executable is the interpreter the venv's `pyvenv.cfg` names; argv0 names
  * that interpreter or the venv's own `Scripts\python.exe` redirector; the
- * script is exactly the venv's `Scripts\kirocrew.exe`; then a server
+ * script is exactly the venv's `Scripts\ajcrew.exe`; then a server
  * subcommand. argv0 is required because the process creator picks it freely:
  * a launcher spelled as argv0 would leave Python running whatever the next
  * argument names. An interpreter option, another script, another venv's
  * launcher, a non-server subcommand or an ambiguous argument boundary stays
- * foreign: the shared interpreter alone never names a Kiro Crew gateway.
+ * foreign: the shared interpreter alone never names an Aj Crew gateway.
  *
  * This is command-line attribution, like every other Windows rule here: a
  * process of this account that starts the interpreter with this exact command
@@ -237,19 +237,19 @@ function venvBaseInterpreterShape(commandLine, observed, launches, canonical) {
     if (!observed.some((candidate) => candidate && interpreters.has(candidate))) continue;
     if (!names(argv0, interpreters) && !names(argv0, spellings(launch.venvInterpreters))) continue;
     if (!names(script, spellings(launch.launchers))) continue;
-    if (KIROCREW_SERVER_SUBCOMMANDS.has(subcommand)) return { serverSubcommand: true };
+    if (AJCREW_SERVER_SUBCOMMANDS.has(subcommand)) return { serverSubcommand: true };
   }
   return null;
 }
 
 /**
- * Classify a command line: `null` when it is not a Kiro Crew command, else
+ * Classify a command line: `null` when it is not an Aj Crew command, else
  * `{ serverSubcommand }` -- whether argparse's first positional selects a
  * server subcommand. The `-m <module>` shape only ever matches WITH that
  * subcommand, so it is always `true` there.
  */
 
-function kirocrewCommandShape(
+function ajcrewCommandShape(
   commandLine,
   { trustedExecutablePaths = [], trustedVenvLaunches = [], canonicalizePath = () => "" } = {}
 ) {
@@ -288,8 +288,8 @@ function kirocrewCommandShape(
   if (normalizedWindowsPath(tokens[index]) === normalizedWindowsPath(tokens[0])) {
     index += 1;
   }
-  if (KIROCREW_EXE_NAMES.has(selector.name)) {
-    return { serverSubcommand: KIROCREW_SERVER_SUBCOMMANDS.has(tokens[index]) };
+  if (AJCREW_EXE_NAMES.has(selector.name)) {
+    return { serverSubcommand: AJCREW_SERVER_SUBCOMMANDS.has(tokens[index]) };
   }
   if (!PYTHON_EXE_RE.test(selector.name)) return null;
 
@@ -298,9 +298,9 @@ function kirocrewCommandShape(
     if (token === "-m") {
       // Module AND server subcommand, both in their fixed argparse slots. The
       // subcommand is the first positional after the module, so only that slot
-      // is read: a later argument (`-m kiro_crew run gateway`) never qualifies.
-      const isGatewayModule = KIROCREW_MODULE_RE.test(tokens[index + 1] || "")
-        && KIROCREW_SERVER_SUBCOMMANDS.has(tokens[index + 2]);
+      // is read: a later argument (`-m aj_crew run gateway`) never qualifies.
+      const isGatewayModule = AJCREW_MODULE_RE.test(tokens[index + 1] || "")
+        && AJCREW_SERVER_SUBCOMMANDS.has(tokens[index + 2]);
       return isGatewayModule ? { serverSubcommand: true } : null;
     }
     if (token === "-c" || token === "-") return null;
@@ -317,8 +317,8 @@ function kirocrewCommandShape(
   }
 
   const script = tokens[index];
-  if (!(/[\\/]/.test(script || "") && KIROCREW_EXE_NAMES.has(executableName(script)))) return null;
-  return { serverSubcommand: KIROCREW_SERVER_SUBCOMMANDS.has(tokens[index + 1]) };
+  if (!(/[\\/]/.test(script || "") && AJCREW_EXE_NAMES.has(executableName(script)))) return null;
+  return { serverSubcommand: AJCREW_SERVER_SUBCOMMANDS.has(tokens[index + 1]) };
 }
 
 // A gateway whose parent is init (PID 1) may be owned by the OS service manager:
@@ -354,14 +354,14 @@ const INIT_PPID = 1;
  */
 async function postShutdown({
   backendUrl,
-  kirocrewHome,
+  ajcrewHome,
   httpMod = http,
   fsMod = fs,
   pathMod = path,
   timeoutMs = 5000,
 }) {
   const target = dialTarget(backendUrl);
-  if (!target || !kirocrewHome) return false;
+  if (!target || !ajcrewHome) return false;
   // More than one candidate can be present, and the running gateway is
   // authenticated by whichever one it actually loaded. Try every candidate and
   // let a 200 pick the live one: a stale entry returning 403 must NOT
@@ -369,7 +369,7 @@ async function postShutdown({
   // session/memory/cron persistence. Every candidate names the dialed listener,
   // so the walk never widens where a secret goes.
   const secretList = listenerSecretsFor({
-    target, home: kirocrewHome, path: pathMod, fs: fsMod,
+    target, home: ajcrewHome, path: pathMod, fs: fsMod,
   });
   if (!secretList || !secretList.length) return false;
 
@@ -429,14 +429,14 @@ function readCommandBounded(getCommandFn, pid, timeoutMs = SURVIVOR_COMMAND_READ
  * `deadline` has passed AND `graceMs` has elapsed since the last SIGTERM was
  * sent. Identity is re-read right before each signal, so a pid that exited and
  * was reused by an unrelated process is never signalled. The identity test is
- * the SERVER one (`isKirocrewGatewayCommand`): a `kirocrew mcp-core` /
- * `mcp-cron` descendant is a Kiro Crew executable too, but it belongs to the
+ * the SERVER one (`isAjcrewGatewayCommand`): an `ajcrew mcp-core` /
+ * `mcp-cron` descendant is an Aj Crew executable too, but it belongs to the
  * backend's own orphan sweep, not to this one.
  */
 async function stopForkedGatewaySurvivors(pids, { deadline, graceMs, getCommandFn, signalPidFn, pollMs }) {
   const stillGateway = async (pid) => {
     if (!pidIsAlive(pid, signalPidFn)) return false;
-    return isKirocrewGatewayCommand(await readCommandBounded(getCommandFn, pid));
+    return isAjcrewGatewayCommand(await readCommandBounded(getCommandFn, pid));
   };
   // Validate and signal each pid in the same step: no other pid's identity
   // read (a /bin/ps spawn) may sit between this pid's check and its signal.
@@ -530,7 +530,7 @@ async function stopGatewayGracefully(
   proc,
   {
     backendUrl,
-    kirocrewHome,
+    ajcrewHome,
     timeoutMs = 15000,
     postShutdownFn = postShutdown,
     httpMod,
@@ -629,7 +629,7 @@ async function stopGatewayGracefully(
     armEscalation(deadline);
     proc.once("exit", () => { clearTimeout(killTimer); clearTimeout(hardTimer); });
     // Prefer the clean endpoint; kill only if it didn't take.
-    postShutdownFn({ backendUrl, kirocrewHome, httpMod, fsMod, pathMod }).then((ok) => {
+    postShutdownFn({ backendUrl, ajcrewHome, httpMod, fsMod, pathMod }).then((ok) => {
       if (ok || proc.exitCode !== null) return;
       killWith("SIGTERM");
     });
@@ -711,7 +711,7 @@ async function confirmedFree(port, { confirmFree, waitMs, sleep, onWait, isAbort
 }
 
 /**
- * Force-stop whatever KiroCrew process is LISTENing on `port`, then VERIFY the
+ * Force-stop whatever Aj Crew process is LISTENing on `port`, then VERIFY the
  * port actually freed before reporting success.
  *
  * The old inline version SIGKILLed the owner and resolved after a fixed 800ms
@@ -723,8 +723,8 @@ async function confirmedFree(port, { confirmFree, waitMs, sleep, onWait, isAbort
  *
  * This version polls the listener set after killing and returns `freed` based on
  * whether the port is ACTUALLY free afterwards (not merely whether our targets
- * died), plus `survivors` (the KiroCrew PIDs we tried to kill that are still
- * holding the port) and `foreignHolder` (a non-KiroCrew process still owns it).
+ * died), plus `survivors` (the Aj Crew PIDs we tried to kill that are still
+ * holding the port) and `foreignHolder` (a non-AjCrew process still owns it).
  * `freed === false` means a respawn would just fail to bind — the caller MUST
  * NOT respawn; it should tell the user a restart is required (`survivors`, an
  * unkillable wedge) or that another app holds the port (`foreignHolder`).
@@ -760,7 +760,7 @@ async function forceStopPort(
     sleep,
     getPpid = null,
     isLaunchdJob = null,
-    isKirocrew = isKirocrewCommand,
+    isAjcrew = isAjcrewCommand,
     verifyTimeoutMs = 4000,
     pollIntervalMs = 250,
     failClosedOnProbeError = false,
@@ -797,20 +797,20 @@ async function forceStopPort(
     return { killed: 0, freed: true, survivors: [], foreignHolder: false, serviceHolder: false };
   }
 
-  // Only signal PIDs we can positively identify as KiroCrew — never SIGKILL an
+  // Only signal PIDs we can positively identify as Aj Crew — never SIGKILL an
   // unrelated app that happens to share the port.
   const targets = [];
   let serviceHolder = false;
   for (const pid of owners) {
     const cmd = (await getCommand(pid)).trim();
-    const ours = isKirocrew(cmd);
+    const ours = isAjcrew(cmd);
     if (ours) {
       // A service-managed gateway is respawned by launchd/systemd the moment we
       // kill it, so evicting it cannot free the port — it only makes the retry
       // race the respawn. Leave it alone and tell the caller why.
       if (await isServiceManaged(pid, getPpid, isLaunchdJob)) {
         serviceHolder = true;
-        log(`force-stop: SKIP pid=${pid} — service-managed KiroCrew gateway (${cmd.slice(0, 80)})`);
+        log(`force-stop: SKIP pid=${pid} — service-managed Aj Crew gateway (${cmd.slice(0, 80)})`);
         continue;
       }
       try {
@@ -821,7 +821,7 @@ async function forceStopPort(
         log(`force-stop: kill pid=${pid} failed: ${e && e.message}`);
       }
     } else {
-      log(`force-stop: SKIP pid=${pid} — not a KiroCrew process (${cmd.slice(0, 80)})`);
+      log(`force-stop: SKIP pid=${pid} — not an Aj Crew process (${cmd.slice(0, 80)})`);
     }
   }
 
@@ -883,7 +883,7 @@ async function forceStopPort(
     log(`force-stop: port :${port} STILL held after ${waited}ms by pid ${survivors.join(", ")} `
       + `— process is unkillable (likely uninterruptible sleep); a system restart is required`);
   } else if (foreignHolder) {
-    log(`force-stop: port :${port} held by a non-KiroCrew process we won't kill — respawn would fail to bind`);
+    log(`force-stop: port :${port} held by a non-AjCrew process we won't kill — respawn would fail to bind`);
   }
   if (serviceHolder && !freed) {
     log(`force-stop: port :${port} is held by a service-managed gateway — the OS respawns it, so the app must reuse it instead of retrying a spawn`);
@@ -945,8 +945,8 @@ async function probePortBinding(port, { getListenPids, log = () => {} }) {
  * owner is the ground truth the payload lacks — on a tunnel it is `ssh`.
  *
  * Deliberately fail-safe: every outcome except a positively identified local
- * KiroCrew process is a reason NOT to evict.
- *   "kirocrew" — a local LISTEN owner matching isKirocrewCommand. Only this
+ * Aj Crew process is a reason NOT to evict.
+ *   "ajcrew" — a local LISTEN owner matching isAjcrewCommand. Only this
  *                value may authorise a takeover.
  *   "foreign"  — a local LISTEN owner exists but is not ours (e.g. `ssh`).
  *                A holder whose command could not be read is not ours either.
@@ -967,13 +967,13 @@ async function probePortBinding(port, { getListenPids, log = () => {} }) {
  * @param {Array<{pid:number, command:string|null}>} [deps.holders]  on a
  *        "foreign" verdict, receives every holder found, so a caller can name
  *        them to the user; `command` is null when it could not be read.
- * @returns {Promise<"kirocrew"|"service"|"foreign"|"none"|"unknown">}
+ * @returns {Promise<"ajcrew"|"service"|"foreign"|"none"|"unknown">}
  */
 async function classifyPortOwner(
   port,
   {
     getListenPids, getCommand, getPpid = null, isLaunchdJob = null,
-    isKirocrew = isKirocrewCommand, log = () => {}, holders = null,
+    isAjcrew = isAjcrewCommand, log = () => {}, holders = null,
   }
 ) {
   let pids;
@@ -995,20 +995,20 @@ async function classifyPortOwner(
       // time, and when the holder exited between the two probes. None of
       // those says what the holder is, so it is reported as unread rather
       // than as a program positively identified as someone else's.
-      log(`port-owner: :${port} held by pid=${pid}, whose command could not be read; not identified as Kiro Crew`);
+      log(`port-owner: :${port} held by pid=${pid}, whose command could not be read; not identified as Aj Crew`);
       found.push({ pid, command: null });
       continue;
     }
-    const ours = isKirocrew(cmd);
+    const ours = isAjcrew(cmd);
     if (ours) {
       if (await isServiceManaged(pid, getPpid, isLaunchdJob)) {
-        log(`port-owner: :${port} held by SERVICE-MANAGED KiroCrew pid=${pid} (${cmd.slice(0, 80)}) — reuse, never evict`);
+        log(`port-owner: :${port} held by SERVICE-MANAGED Aj Crew pid=${pid} (${cmd.slice(0, 80)}) — reuse, never evict`);
         return "service";
       }
-      log(`port-owner: :${port} held by local KiroCrew pid=${pid} (${cmd.slice(0, 80)})`);
-      return "kirocrew";
+      log(`port-owner: :${port} held by local Aj Crew pid=${pid} (${cmd.slice(0, 80)})`);
+      return "ajcrew";
     }
-    log(`port-owner: :${port} held by NON-KiroCrew pid=${pid} (${cmd.slice(0, 80)})`);
+    log(`port-owner: :${port} held by NON-AjCrew pid=${pid} (${cmd.slice(0, 80)})`);
     found.push({ pid, command: cmd });
   }
   if (holders) holders.push(...found);
@@ -1052,8 +1052,8 @@ module.exports = {
   classifyPortOwner,
   probePortBinding,
   isServiceManaged,
-  isKirocrewCommand,
-  isKirocrewGatewayCommand,
+  isAjcrewCommand,
+  isAjcrewGatewayCommand,
   INIT_PPID,
   GATEWAY_STILL_RUNNING,
   gatewayStillRunningError,

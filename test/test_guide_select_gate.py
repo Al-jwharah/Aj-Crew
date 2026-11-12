@@ -16,8 +16,8 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import guide_catalog, mcp_guide
-from kiro_crew.dashboard.guide_runs import GuideError, GuideStore
+from aj_crew import guide_catalog, mcp_guide
+from aj_crew.dashboard.guide_runs import GuideError, GuideStore
 
 _INDEX = Path(guide_catalog.__file__).parent / "docs" / "ui-index.generated.json"
 

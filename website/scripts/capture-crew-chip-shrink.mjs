@@ -54,7 +54,7 @@ const PINS = ['devdesk', 'prod', 'staging', 'sandbox']
 const SSO = { state: 'ok', seconds_remaining: 72000, expires_at: null, reason: 'valid' }
 const SLOTS = [{
   key: 'crew-chip-shrink', title: 'Pinned chips adapt to their track', running: false,
-  last_message: '', messages: 2, agent: 'kirocrew', memory_mode: 'persistent',
+  last_message: '', messages: 2, agent: 'ajcrew', memory_mode: 'persistent',
   folder_id: '', modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
 }]
 

@@ -3,7 +3,7 @@
 kiro-cli applies an admin MCP registry only to a sign-in governance reaches
 (Identity Center or an API key). On any other sign-in the client is not in
 registry mode and drops every entry marked ``"type": "registry"``, so a marked
-``kirocrew-core`` / ``kirocrew-cron`` takes ``spawn_run``, ``cron_add`` and
+``ajcrew-core`` / ``ajcrew-cron`` takes ``spawn_run``, ``cron_add`` and
 ``learn_add`` out of every session. When that sign-in is KNOWN, the control plane
 stays a plain local server; any doubt keeps the marker a governed account needs.
 """
@@ -17,12 +17,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from kiro_crew import agent as agent_mod
-from kiro_crew import kiro_cli
-from kiro_crew.kiro_cli import registry_governance_known_unreachable as real_probe
+from aj_crew import agent as agent_mod
+from aj_crew import kiro_cli
+from aj_crew.kiro_cli import registry_governance_known_unreachable as real_probe
 
-CONTROL_PLANE = ("kirocrew-core", "kirocrew-cron")
-OTHER_MANAGED = ("kirocrew-guide", "kirocrew-mate")
+CONTROL_PLANE = ("ajcrew-core", "ajcrew-cron")
+OTHER_MANAGED = ("ajcrew-guide", "ajcrew-mate")
 NO_GATES: frozenset[str] = frozenset()
 PERSONAL = {"account_type": "BuilderId"}
 PINNED = "/opt/kiro/bin/kiro-cli"
@@ -64,15 +64,15 @@ class TestSpecMarker:
 
     def test_member_transport_keeps_the_control_plane_unmarked(self, monkeypatch):
         _registry_declared(monkeypatch, unreachable=True)
-        entry = agent_mod.managed_member_transport("kirocrew-core")
+        entry = agent_mod.managed_member_transport("ajcrew-core")
         assert entry is not None
         assert "type" not in entry
 
     def test_template_declaration_keeps_the_control_plane_unmarked(self, monkeypatch):
-        from kiro_crew.dashboard.handlers.agent_templates import control_plane_declarations
+        from aj_crew.dashboard.handlers.agent_templates import control_plane_declarations
 
         _registry_declared(monkeypatch, unreachable=True)
-        out = control_plane_declarations(["@kirocrew-core", "@kirocrew-cron"], {})
+        out = control_plane_declarations(["@ajcrew-core", "@ajcrew-cron"], {})
         assert sorted(out) == sorted(CONTROL_PLANE)
         for name in CONTROL_PLANE:
             assert "type" not in out[name], name
@@ -83,10 +83,10 @@ class TestSessionElement:
     what carries the session identity, so an unmarked entry needs one."""
 
     def _mount(self, tmp_path, monkeypatch, *, unreachable: bool) -> list[str]:
-        from kiro_crew.acp import session_mcp
+        from aj_crew.acp import session_mcp
 
         managed = {"command": "test-crew", "args": ["mcp"]}
-        names = (*CONTROL_PLANE, "kirocrew-dashboard")
+        names = (*CONTROL_PLANE, "ajcrew-dashboard")
         spec = {
             "tools": [f"@{name}" for name in names],
             "mcpServers": {name: dict(managed) for name in names},
@@ -96,7 +96,7 @@ class TestSessionElement:
         monkeypatch.setattr(session_mcp, "_registry_mode", lambda: True)
         monkeypatch.setattr(session_mcp, "managed_mcp_spec_entry", lambda name, **_kw: managed)
         monkeypatch.setattr(kiro_cli, "registry_governance_known_unreachable", lambda: unreachable)
-        mount = session_mcp.kiro_control_plane_servers("kirocrew", work_dir=tmp_path)
+        mount = session_mcp.kiro_control_plane_servers("ajcrew", work_dir=tmp_path)
         return sorted(element["name"] for element in mount.elements)
 
     def test_ungoverned_sign_in_mounts_only_the_control_plane(self, tmp_path, monkeypatch):
@@ -108,7 +108,7 @@ class TestSessionElement:
 
 class TestReachabilityProbe:
     def _probe(self, monkeypatch, *, may_apply, whoami) -> tuple[bool, list[int]]:
-        from kiro_crew.cloud import login_target
+        from aj_crew.cloud import login_target
 
         calls: list[int] = []
 
@@ -135,7 +135,7 @@ class TestReachabilityProbe:
 
     def _scrubbed_env_file(self, tmp_path, monkeypatch, text: str | None):
         """The Docker shape: the key is only in the data home's ``.env``."""
-        from kiro_crew.config import loader
+        from aj_crew.config import loader
 
         env = tmp_path / ".env"
         if text is None:
@@ -143,7 +143,7 @@ class TestReachabilityProbe:
         else:
             env.write_text(text, encoding="utf-8")
         monkeypatch.setattr(loader, "env_path", lambda: env)
-        monkeypatch.setenv("_KIROCREW_CREDS_SCRUBBED", "1")
+        monkeypatch.setenv("_AJCREW_CREDS_SCRUBBED", "1")
         monkeypatch.delenv("KIRO_API_KEY", raising=False)
         self.real_env_file = True
 
@@ -247,12 +247,12 @@ class TestProbeOnEventLoop:
     an event loop the probe must never run it, never wait for that lock, and never
     answer anything but a cached verdict or doubt."""
 
-    WARM_THREAD = "kirocrew-registry-probe"
+    WARM_THREAD = "ajcrew-registry-probe"
 
     @pytest.fixture(autouse=True)
     def _signals(self, _floor_monkeypatch):
-        from kiro_crew.atomic_write import on_event_loop
-        from kiro_crew.cloud import login_target
+        from aj_crew.atomic_write import on_event_loop
+        from aj_crew.cloud import login_target
 
         self.fingerprint = ["store-v1"]
         self.whoami_threads: list[bool] = []
@@ -334,13 +334,13 @@ class TestProbeOnEventLoop:
         assert kiro_cli._governance_unreachable_cache[0] > aged
 
     def test_a_spec_write_on_the_loop_keeps_the_marker_until_known(self, monkeypatch):
-        from kiro_crew.agent_materialization import managed_mcp
+        from aj_crew.agent_materialization import managed_mcp
 
         monkeypatch.setattr(kiro_cli, "registry_governance_known_unreachable", real_probe)
-        assert self._on_loop(lambda: managed_mcp._registry_marker_for("kirocrew-core", True))
+        assert self._on_loop(lambda: managed_mcp._registry_marker_for("ajcrew-core", True))
         self._wait_for_warm()
         assert self.whoami_threads == [False]
-        assert not self._on_loop(lambda: managed_mcp._registry_marker_for("kirocrew-core", True))
+        assert not self._on_loop(lambda: managed_mcp._registry_marker_for("ajcrew-core", True))
 
     def test_off_the_loop_the_probe_still_asks_inline(self):
         assert real_probe() is True

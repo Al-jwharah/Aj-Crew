@@ -1,9 +1,9 @@
 /**
- * The shared screenshot stub's /api/config/kirocrew fixture (#3696).
+ * The shared screenshot stub's /api/config/ajcrew fixture (#3696).
  *
  * `website/scripts/lib/stub-dashboard-api.mjs` used to answer every path
- * matching /config/ from a catch-all that returns `{}`. `/api/config/kirocrew`
- * matched, so `KiroCrewCfgTab` got `cfg.agents === undefined`,
+ * matching /config/ from a catch-all that returns `{}`. `/api/config/ajcrew`
+ * matched, so `AjCrewCfgTab` got `cfg.agents === undefined`,
  * `Object.entries(undefined)` threw, the app-shell error boundary swallowed it,
  * and the WHOLE PAGE rendered blank -- while the harness still exited 0 and
  * still wrote a PNG. The failure fails toward a FALSE PASS: a PR can cite a
@@ -11,17 +11,17 @@
  *
  * The stub is a Playwright-only module, so these assert the contract that
  * actually matters: the fixture it now serves is a shape this component can
- * render. A future field added to `KiroCrewCfg` and read unguarded (the exact
+ * render. A future field added to `AjCrewCfg` and read unguarded (the exact
  * shape of the original bug) fails here rather than silently blanking ~140
  * capture harnesses.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen } from '@testing-library/react'
-import KiroCrewCfgTab from '../pages/overview/KiroCrewCfgTab'
+import AjCrewCfgTab from '../pages/overview/AjCrewCfgTab'
 import { renderWithProviders } from './helpers'
 import { api } from '../api/client'
 import {
-  KIROCREW_CONFIG_FIXTURE,
+  AJCREW_CONFIG_FIXTURE,
   KIRO_BACKEND_CONFIG_FIXTURE,
   AGENT_CONFIG_FIXTURE,
 } from '../../scripts/lib/stub-dashboard-api.mjs'
@@ -46,15 +46,15 @@ vi.mock('../components/SimpleSelect', () => ({
 beforeEach(() => {
   vi.clearAllMocks()
   const m = vi.mocked(api)
-  m.kirocrewConfig = vi.fn().mockResolvedValue(KIROCREW_CONFIG_FIXTURE)
-  m.patchConfig = vi.fn().mockResolvedValue(KIROCREW_CONFIG_FIXTURE)
-  m.saveKirocrewConfig = vi.fn().mockResolvedValue({ ok: true })
+  m.ajcrewConfig = vi.fn().mockResolvedValue(AJCREW_CONFIG_FIXTURE)
+  m.patchConfig = vi.fn().mockResolvedValue(AJCREW_CONFIG_FIXTURE)
+  m.saveAjcrewConfig = vi.fn().mockResolvedValue({ ok: true })
   m.themeBoot = vi.fn().mockResolvedValue({})
 })
 
 describe('stub-dashboard-api config fixture', () => {
   it('renders the config surface instead of blanking the page', async () => {
-    renderWithProviders(<KiroCrewCfgTab />)
+    renderWithProviders(<AjCrewCfgTab />)
     // Reaching the first table means the three Object.entries() calls that
     // threw under the catch-all's `{}` all survived.
     expect(await screen.findByRole('heading', { name: /Bots/ })).toBeInTheDocument()
@@ -62,7 +62,7 @@ describe('stub-dashboard-api config fixture', () => {
   })
 
   it('populates every table the tab renders, not just the headers', async () => {
-    renderWithProviders(<KiroCrewCfgTab />)
+    renderWithProviders(<AjCrewCfgTab />)
     await screen.findByRole('heading', { name: /Bots/ })
     // An empty-but-present object would still render three tables with zero
     // rows -- a screenshot of empty tables is barely better evidence than a
@@ -78,8 +78,8 @@ describe('stub-dashboard-api config fixture', () => {
     // where WorkspaceCfg declares `dir`, so the directory cell rendered blank
     // in screenshots meant to show it. One shared fixture is the fix; this
     // pins the field name so the drift cannot silently return.
-    expect(Object.values(KIROCREW_CONFIG_FIXTURE.workspaces)[0]).toHaveProperty('dir')
-    renderWithProviders(<KiroCrewCfgTab />)
+    expect(Object.values(AJCREW_CONFIG_FIXTURE.workspaces)[0]).toHaveProperty('dir')
+    renderWithProviders(<AjCrewCfgTab />)
     await screen.findByRole('heading', { name: /Bots/ })
     expect(screen.getByText('~/.kiro/crew/workspace')).toBeInTheDocument()
   })
@@ -87,16 +87,16 @@ describe('stub-dashboard-api config fixture', () => {
   it('carries the nested objects the tab dereferences unguarded', () => {
     // cfg.agent.*, cfg.session.* and cfg.memory.* are read without optional
     // chaining, so a missing branch is a throw, not a blank row.
-    expect(KIROCREW_CONFIG_FIXTURE.agent).toBeTypeOf('object')
-    expect(KIROCREW_CONFIG_FIXTURE.session).toBeTypeOf('object')
-    expect(KIROCREW_CONFIG_FIXTURE.memory).toBeTypeOf('object')
-    expect(KIROCREW_CONFIG_FIXTURE.auto_update).toBeTypeOf('boolean')
+    expect(AJCREW_CONFIG_FIXTURE.agent).toBeTypeOf('object')
+    expect(AJCREW_CONFIG_FIXTURE.session).toBeTypeOf('object')
+    expect(AJCREW_CONFIG_FIXTURE.memory).toBeTypeOf('object')
+    expect(AJCREW_CONFIG_FIXTURE.auto_update).toBeTypeOf('boolean')
     for (const key of ['agents', 'workspaces', 'memory_stores'] as const) {
-      expect(KIROCREW_CONFIG_FIXTURE[key]).toBeTypeOf('object')
-      expect(KIROCREW_CONFIG_FIXTURE[key]).not.toBeNull()
+      expect(AJCREW_CONFIG_FIXTURE[key]).toBeTypeOf('object')
+      expect(AJCREW_CONFIG_FIXTURE[key]).not.toBeNull()
     }
     for (const key of ['default_agent', 'default_workspace', 'default_memory_store'] as const) {
-      expect(KIROCREW_CONFIG_FIXTURE[key]).toBeTypeOf('string')
+      expect(AJCREW_CONFIG_FIXTURE[key]).toBeTypeOf('string')
     }
   })
 
@@ -104,10 +104,10 @@ describe('stub-dashboard-api config fixture', () => {
     // The tab badges the default row by matching name === cfg.default_*. A
     // default naming a missing key renders three tables with no badge at all,
     // which is exactly the detail a Config screenshot exists to show.
-    expect(KIROCREW_CONFIG_FIXTURE.agents).toHaveProperty(KIROCREW_CONFIG_FIXTURE.default_agent)
-    expect(KIROCREW_CONFIG_FIXTURE.workspaces).toHaveProperty(KIROCREW_CONFIG_FIXTURE.default_workspace)
-    expect(KIROCREW_CONFIG_FIXTURE.memory_stores).toHaveProperty(KIROCREW_CONFIG_FIXTURE.default_memory_store)
-    renderWithProviders(<KiroCrewCfgTab />)
+    expect(AJCREW_CONFIG_FIXTURE.agents).toHaveProperty(AJCREW_CONFIG_FIXTURE.default_agent)
+    expect(AJCREW_CONFIG_FIXTURE.workspaces).toHaveProperty(AJCREW_CONFIG_FIXTURE.default_workspace)
+    expect(AJCREW_CONFIG_FIXTURE.memory_stores).toHaveProperty(AJCREW_CONFIG_FIXTURE.default_memory_store)
+    renderWithProviders(<AjCrewCfgTab />)
     await screen.findByRole('heading', { name: /Bots/ })
     expect(screen.getAllByText('default').length).toBeGreaterThan(0)
   })
@@ -125,6 +125,6 @@ describe('stub-dashboard-api config fixture', () => {
     expect(configuredAcpBackend(KIRO_BACKEND_CONFIG_FIXTURE)).toBe(ACP_BACKEND_KIRO)
     expect(isKiroBackend(KIRO_BACKEND_CONFIG_FIXTURE)).toBe(true)
     // Everything else is the base fixture, so the pages it renders still render.
-    expect({ ...KIRO_BACKEND_CONFIG_FIXTURE, agent: KIROCREW_CONFIG_FIXTURE.agent }).toEqual(KIROCREW_CONFIG_FIXTURE)
+    expect({ ...KIRO_BACKEND_CONFIG_FIXTURE, agent: AJCREW_CONFIG_FIXTURE.agent }).toEqual(AJCREW_CONFIG_FIXTURE)
   })
 })

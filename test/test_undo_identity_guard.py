@@ -10,7 +10,7 @@ the request-key string the parent and the route must agree on.
 
 from __future__ import annotations
 
-from kiro_crew.dashboard.handlers import undo_identity_guard as guard
+from aj_crew.dashboard.handlers import undo_identity_guard as guard
 
 # ── the armed request key and the shared refusal outcome ──
 

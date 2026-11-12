@@ -64,7 +64,7 @@ describe('PortabilityTab agent templates on export', () => {
   it('warns about templates left out even when only a count is known', async () => {
     stubDownload(vi.fn(async () => new Response(new Blob(['PK']), {
       status: 200,
-      headers: { 'X-Kirocrew-Unbundled-Templates': '["+2"]' },
+      headers: { 'X-Ajcrew-Unbundled-Templates': '["+2"]' },
     })))
     render(<PortabilityTab />)
     fireEvent.click(screen.getByRole('checkbox', { name: /include agent templates/i }))

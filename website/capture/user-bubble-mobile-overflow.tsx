@@ -27,7 +27,7 @@ const width = parseInt(params.get('w') || '390', 10)
 const scene = params.get('scene') || 'plain'
 const fixOn = params.get('fix') !== 'off'
 
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 document.documentElement.setAttribute('data-fix', fixOn ? 'on' : 'off')
 
 /** A message whose fenced block's max-content width far exceeds any phone. */

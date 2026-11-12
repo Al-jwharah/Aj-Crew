@@ -25,11 +25,11 @@ const mockApi = vi.hoisted(() => ({
 }))
 vi.mock('./api', () => ({ issueRadarApi: mockApi }))
 
-/* The transport under the REAL `useAgents`: rejecting `kirocrewAgents` is the
+/* The transport under the REAL `useAgents`: rejecting `ajcrewAgents` is the
    defect this suite exists for, so the hook must not be stubbed here. */
 vi.mock('../../api/client', () => ({
   api: {
-    kirocrewAgents: vi.fn(),
+    ajcrewAgents: vi.fn(),
     agentCatalog: vi.fn(),
   },
 }))
@@ -77,7 +77,7 @@ vi.mock('../../components/SimpleSelect', () => ({
   },
 }))
 
-const ACTIVE = { owner: 'kirodotdev', repo: 'KiroCrew' } // brand-ok: the repository name
+const ACTIVE = { owner: 'kirodotdev', repo: 'AjCrew' } // brand-ok: the repository name
 vi.mock('./context', () => ({
   useIssueRadar: () => ({ active: ACTIVE }),
 }))
@@ -88,8 +88,8 @@ import type { Crew } from './api'
 const K = 'apps.issueRadar.views.crews.editor'
 
 const ROSTER = [
-  { name: 'kirocrew', source: 'kiro', description: 'The default agent' },
-  { name: 'kirocrew-crew', source: 'kiro', description: 'Issue worker' },
+  { name: 'ajcrew', source: 'kiro', description: 'The default agent' },
+  { name: 'ajcrew-crew', source: 'kiro', description: 'Issue worker' },
 ]
 
 /** A stored crew whose agent is ABSENT from the roster, so the edit-mode case
@@ -135,7 +135,7 @@ describe('CrewEditor roster failure wiring (#7656)', () => {
     mockApi.suggestCrewNames.mockResolvedValue({ suggestions: ['Sombrero'] })
     mockApi.labels.mockResolvedValue({ owner: ACTIVE.owner, repo: ACTIVE.repo, labels: [], from_cache: false })
     const { api } = await import('../../api/client')
-    vi.mocked(api).kirocrewAgents.mockRejectedValue(new Error('gateway restarting'))
+    vi.mocked(api).ajcrewAgents.mockRejectedValue(new Error('gateway restarting'))
     vi.mocked(api).agentCatalog.mockRejectedValue(new Error('gateway restarting'))
   })
 
@@ -157,13 +157,13 @@ describe('CrewEditor roster failure wiring (#7656)', () => {
       expect(agentField().getByText(i18nT(`${K}.agent_roster_retry`))).toBeInTheDocument()
     })
 
-    vi.mocked(api).kirocrewAgents.mockResolvedValue({ agents: ROSTER, default_agent: 'kirocrew' })
+    vi.mocked(api).ajcrewAgents.mockResolvedValue({ agents: ROSTER, default_agent: 'ajcrew' })
 
-    vi.mocked(api).agentCatalog.mockResolvedValue({ agents: ROSTER, default_agent: 'kirocrew' })
+    vi.mocked(api).agentCatalog.mockResolvedValue({ agents: ROSTER, default_agent: 'ajcrew' })
     fireEvent.click(agentField().getByText(i18nT(`${K}.agent_roster_retry`)))
 
     await waitFor(() => {
-      expect(agentField().getByRole('option', { name: 'kirocrew-crew' })).toBeInTheDocument()
+      expect(agentField().getByRole('option', { name: 'ajcrew-crew' })).toBeInTheDocument()
     })
     expect(agentField().queryByText(i18nT(`${K}.agent_roster_failed`))).not.toBeInTheDocument()
   })

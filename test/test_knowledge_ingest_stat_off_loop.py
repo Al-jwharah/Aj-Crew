@@ -15,12 +15,12 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.artifacts import ArtifactStore
-from kiro_crew.knowledge.artifact_ingest import ensure_artifact_source, ingest_artifact
-from kiro_crew.knowledge.ingestion import IngestionPipeline
-from kiro_crew.knowledge.readers import FileReader
-from kiro_crew.knowledge.store import KnowledgeStore
-from kiro_crew.knowledge.watcher import KnowledgeWatcher
+from aj_crew.artifacts import ArtifactStore
+from aj_crew.knowledge.artifact_ingest import ensure_artifact_source, ingest_artifact
+from aj_crew.knowledge.ingestion import IngestionPipeline
+from aj_crew.knowledge.readers import FileReader
+from aj_crew.knowledge.store import KnowledgeStore
+from aj_crew.knowledge.watcher import KnowledgeWatcher
 
 
 @pytest.fixture()

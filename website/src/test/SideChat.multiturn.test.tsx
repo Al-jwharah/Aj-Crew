@@ -190,7 +190,7 @@ describe('Side multi-turn conversation', () => {
       expect(await screen.findByRole('note')).toHaveTextContent('No lookups')
       sideTools.mockResolvedValue({ read_only_tools: true, claude_adapter_outdated: false })
       // What a config refresh frame does (hooks/websocket/serverState.ts).
-      await queryClient.invalidateQueries({ queryKey: ['kirocrewConfig'] })
+      await queryClient.invalidateQueries({ queryKey: ['ajcrewConfig'] })
       expect(await screen.findByText(/^Read-only/)).toBeInTheDocument()
     })
   })

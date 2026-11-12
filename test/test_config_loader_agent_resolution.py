@@ -19,16 +19,16 @@ from config_loader_helpers import _load_from_dict, _safe_name_st, _store_name_st
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
-import kiro_crew.config.loader as loader_module
-from kiro_crew.config.loader import (
-    KiroCrewAgentConfig,
-    KiroCrewConfig,
+import aj_crew.config.loader as loader_module
+from aj_crew.config.loader import (
+    AjCrewAgentConfig,
+    AjCrewConfig,
     MemoryStoreConfig,
     WorkspaceConfig,
     resolve_agent_bindings,
 )
-from kiro_crew.memory_stores import provision_member_memory
-from kiro_crew.testing.wait import async_wait_until
+from aj_crew.memory_stores import provision_member_memory
+from aj_crew.testing.wait import async_wait_until
 
 # Phase 3: Multi-Agent Orchestration Property Tests (Task 1.5)
 
@@ -57,7 +57,7 @@ class TestMultiAgentOrchestrationProperties:
     ) -> None:
         """For any valid JSON config (including empty objects, configs with no
         agents key, configs with empty agents dict, and configs with missing
-        default_agent), loading via KiroCrewConfig.load() shall produce a config
+        default_agent), loading via AjCrewConfig.load() shall produce a config
         where len(config.agents) >= 1 and config.default_agent names a key in
         config.agents.
 
@@ -73,7 +73,7 @@ class TestMultiAgentOrchestrationProperties:
             data = {
                 "agents": {
                     "myagent": {
-                        "kiro_agent": "kirocrew",
+                        "kiro_agent": "ajcrew",
                         "workspace": "default",
                         "memory_store": "default",
                     }
@@ -83,7 +83,7 @@ class TestMultiAgentOrchestrationProperties:
             data = {
                 "agents": {
                     "coding": {
-                        "kiro_agent": "kirocrew",
+                        "kiro_agent": "ajcrew",
                         "workspace": "default",
                         "memory_store": "default",
                     }
@@ -212,10 +212,10 @@ class TestMultiAgentOrchestrationProperties:
         cfg = _load_from_dict(data)
 
         # The legacy fallback would have used:
-        # - kiro_agent = agent.default_agent or "kirocrew"
+        # - kiro_agent = agent.default_agent or "ajcrew"
         # - workspace = default_workspace → workspaces["default"].dir
         # - memory_store = default_memory_store
-        expected_kiro = legacy_kiro if legacy_kiro else "kirocrew"
+        expected_kiro = legacy_kiro if legacy_kiro else "ajcrew"
 
         result = resolve_agent_bindings(cfg)
 
@@ -249,15 +249,15 @@ class TestMultiAgentOrchestrationProperties:
         kiro_agent_name: str,
         ws_dir: str,
     ) -> None:
-        """For any KiroCrewConfig with agents and a valid agent name, calling
+        """For any AjCrewConfig with agents and a valid agent name, calling
         resolve_agent_bindings(config, agent_name) shall return correct
         workspace_dir and memory_store_name.
 
         **Validates: Requirements 1.1, 1.3, 2.1, 2.4**
         """
-        config = KiroCrewConfig(
+        config = AjCrewConfig(
             agents={
-                agent_name: KiroCrewAgentConfig(
+                agent_name: AjCrewAgentConfig(
                     kiro_agent=kiro_agent_name,
                     workspace=ws_name,
                     memory_store=store_name,
@@ -279,7 +279,7 @@ class TestMultiAgentOrchestrationProperties:
         assert result.memory_store_name == expected_store
         assert result.kiro_agent == kiro_agent_name
 
-    # Feature: multi-agent-orchestration, Property 6: Non-KiroCrew agent names
+    # Feature: multi-agent-orchestration, Property 6: Non-AjCrew agent names
     # resolve as the default TEMPLATE session, never as the default crewmate
     @given(
         default_name=_safe_name_st,
@@ -289,7 +289,7 @@ class TestMultiAgentOrchestrationProperties:
         store_name=_safe_name_st,
     )
     @settings(deadline=None)
-    def test_non_kirocrew_agent_names_resolve_as_the_default_template(
+    def test_non_ajcrew_agent_names_resolve_as_the_default_template(
         self,
         default_name: str,
         unknown_name: str,
@@ -306,11 +306,11 @@ class TestMultiAgentOrchestrationProperties:
         **Validates: Requirements 1.2, 2.2, 7.2**
         """
         assume(unknown_name != default_name)
-        assume(unknown_name != "kirocrew")
+        assume(unknown_name != "ajcrew")
 
-        config = KiroCrewConfig(
+        config = AjCrewConfig(
             agents={
-                default_name: KiroCrewAgentConfig(
+                default_name: AjCrewAgentConfig(
                     kiro_agent=kiro_agent_name,
                     workspace="default",
                     memory_store=store_name,
@@ -338,7 +338,7 @@ class TestMultiAgentOrchestrationProperties:
         for result in (result_unknown, result_plain):
             assert result.workspace_dir == Path(ws_dir)
             assert result.memory_store_name == "default"
-            assert result.kiro_agent == "kirocrew"
+            assert result.kiro_agent == "ajcrew"
             assert result.selection_kind == "template"
             assert result.resolved_alias == ""
             assert result.model == ""
@@ -371,15 +371,15 @@ class TestMultiAgentMigrationEdgeCases:
 
         try:
             with unittest.mock.patch(
-                "kiro_crew.config.loader.config_path",
+                "aj_crew.config.loader.config_path",
                 return_value=tmp,
             ):
-                cfg = KiroCrewConfig.load()
+                cfg = AjCrewConfig.load()
 
                 # In-memory: default agent exists
                 assert "default" in cfg.agents
                 assert cfg.default_agent == "default"
-                assert cfg.agents["default"].kiro_agent == "kirocrew"
+                assert cfg.agents["default"].kiro_agent == "ajcrew"
                 assert cfg.agents["default"].workspace == "default"
                 assert cfg.agents["default"].memory_store == "default"
 
@@ -388,7 +388,7 @@ class TestMultiAgentMigrationEdgeCases:
                 assert "agents" in on_disk
                 assert "default" in on_disk["agents"]
                 assert on_disk["default_agent"] == "default"
-                assert on_disk["agents"]["default"]["kiro_agent"] == "kirocrew"
+                assert on_disk["agents"]["default"]["kiro_agent"] == "ajcrew"
         finally:
             tmp.unlink(missing_ok=True)
             bak = tmp.with_suffix(".json.bak")
@@ -405,7 +405,7 @@ class TestMultiAgentMigrationEdgeCases:
         assert "default" in cfg.agents
         assert cfg.default_agent == "default"
         assert len(cfg.agents) == 1
-        assert cfg.agents["default"].kiro_agent == "kirocrew"
+        assert cfg.agents["default"].kiro_agent == "ajcrew"
 
     def test_legacy_agent_default_agent_used_as_kiro_agent(self) -> None:
         """Legacy agent.default_agent value used as kiro_agent in migrated default.
@@ -421,14 +421,14 @@ class TestMultiAgentMigrationEdgeCases:
         assert cfg.agents["default"].kiro_agent == "oncall-agent"
 
     def test_setup_writes_default_agent(self) -> None:
-        """kirocrew setup creates config with default agent via
+        """ajcrew setup creates config with default agent via
         _ensure_default_agent_in_config.
 
         **Validates: Requirement 6.7**
         """
         import tempfile
 
-        from kiro_crew.cli_chat import _ensure_default_agent_in_config
+        from aj_crew.cli_chat import _ensure_default_agent_in_config
 
         with tempfile.TemporaryDirectory() as tmpdir:
             tmp_config = Path(tmpdir) / "config.json"
@@ -436,11 +436,11 @@ class TestMultiAgentMigrationEdgeCases:
 
             with (
                 unittest.mock.patch(
-                    "kiro_crew.config.loader.config_path",
+                    "aj_crew.config.loader.config_path",
                     return_value=tmp_config,
                 ),
                 unittest.mock.patch(
-                    "kiro_crew.cli_chat.config_path",
+                    "aj_crew.cli_chat.config_path",
                     return_value=tmp_config,
                 ),
             ):
@@ -450,7 +450,7 @@ class TestMultiAgentMigrationEdgeCases:
                 assert "agents" in on_disk
                 assert "default" in on_disk["agents"]
                 assert on_disk["default_agent"] == "default"
-                assert on_disk["agents"]["default"]["kiro_agent"] == "kirocrew"
+                assert on_disk["agents"]["default"]["kiro_agent"] == "ajcrew"
                 assert on_disk["agents"]["default"]["workspace"] == "default"
                 assert on_disk["agents"]["default"]["memory_store"] == "default"
 
@@ -459,10 +459,10 @@ class TestMultiAgentMigrationEdgeCases:
 
         **Validates: Requirement 1.4**
         """
-        config = KiroCrewConfig(
+        config = AjCrewConfig(
             agents={
-                "test": KiroCrewAgentConfig(
-                    kiro_agent="kirocrew",
+                "test": AjCrewAgentConfig(
+                    kiro_agent="ajcrew",
                     workspace="nonexistent",
                     memory_store="default",
                 ),
@@ -488,10 +488,10 @@ class TestMultiAgentMigrationEdgeCases:
 
         **Validates: Requirement 3.4**
         """
-        config = KiroCrewConfig(
+        config = AjCrewConfig(
             agents={
-                "mydefault": KiroCrewAgentConfig(
-                    kiro_agent="kirocrew",
+                "mydefault": AjCrewAgentConfig(
+                    kiro_agent="ajcrew",
                     workspace="default",
                     memory_store="default",
                 ),
@@ -507,7 +507,7 @@ class TestMultiAgentMigrationEdgeCases:
 
         for empty in ("", None):
             result = resolve_agent_bindings(config, agent_name=empty)
-            assert result.kiro_agent == "kirocrew"
+            assert result.kiro_agent == "ajcrew"
             assert result.workspace_dir == Path("ws-dir")
             assert result.memory_store_name == "default"
             assert result.selection_kind == "template"
@@ -527,7 +527,7 @@ class TestAppAgentDispatch(unittest.TestCase):
         # snapshot from a sibling test would be read instead of the tmpdir under
         # test. Left cold on purpose — these tests run synchronously (no event
         # loop), where the lookup is allowed to build it lazily.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         loader._MATERIALIZED_AGENTS = frozenset()
         loader._MATERIALIZED_STEMS = {}
@@ -545,18 +545,18 @@ class TestAppAgentDispatch(unittest.TestCase):
         # A package installs `KiroPkg-captain.json` declaring "captain", and kiro-cli
         # lists only "captain". A crewmate that recorded the FILE name dispatches
         # the declared agent, and its row is not edited.
-        import kiro_crew.config.loader as loader
-        from kiro_crew.config.loader import KiroCrewAgentConfig
+        import aj_crew.config.loader as loader
+        from aj_crew.config.loader import AjCrewAgentConfig
 
         with tempfile.TemporaryDirectory() as td:
             d = self._agents_dir(Path(td), {"KiroPkg-captain.json": {"name": "captain"}})
             cfg = self._config()
-            cfg.agents["KiroPkg-captain"] = KiroCrewAgentConfig(kiro_agent="KiroPkg-captain")
+            cfg.agents["KiroPkg-captain"] = AjCrewAgentConfig(kiro_agent="KiroPkg-captain")
             cfg.default_agent = "KiroPkg-captain"
             with unittest.mock.patch.object(loader, "kiro_agents_dir", lambda: d):
                 assert loader.resolve_agent_bindings(cfg, "KiroPkg-captain").kiro_agent == "captain"
                 # No name is the default TEMPLATE, not this default crewmate.
-                assert loader.resolve_agent_bindings(cfg).kiro_agent == "kirocrew"
+                assert loader.resolve_agent_bindings(cfg).kiro_agent == "ajcrew"
                 assert loader.resolve_agent_identity(cfg, "KiroPkg-captain")[1] == "captain"
         assert cfg.agents["KiroPkg-captain"].kiro_agent == "KiroPkg-captain"
 
@@ -567,19 +567,19 @@ class TestAppAgentDispatch(unittest.TestCase):
         # conversation, and a spawn inheriting the parent's member selection.
         from types import SimpleNamespace
 
-        import kiro_crew.config.loader as loader
-        from kiro_crew import execution_context as ec
-        from kiro_crew.config.loader import KiroCrewAgentConfig
-        from kiro_crew.subagent_manager.admission.gate import _GateMixin
+        import aj_crew.config.loader as loader
+        from aj_crew import execution_context as ec
+        from aj_crew.config.loader import AjCrewAgentConfig
+        from aj_crew.subagent_manager.admission.gate import _GateMixin
 
         with tempfile.TemporaryDirectory() as td:
             d = self._agents_dir(Path(td), {"KiroPkg-captain.json": {"name": "captain"}})
             cfg = self._config()
-            cfg.agents["pkg"] = KiroCrewAgentConfig(kiro_agent="KiroPkg-captain")
+            cfg.agents["pkg"] = AjCrewAgentConfig(kiro_agent="KiroPkg-captain")
             with (
                 unittest.mock.patch.object(loader, "kiro_agents_dir", lambda: d),
                 unittest.mock.patch.object(
-                    loader.KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg)
+                    loader.AjCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg)
                 ),
             ):
                 member = ec.resolve_member_execution(cfg, "pkg")
@@ -610,7 +610,7 @@ class TestAppAgentDispatch(unittest.TestCase):
                     ).kiro_agent
                     == "captain"
                 )
-                from kiro_crew import session_agent_selection as sas
+                from aj_crew import session_agent_selection as sas
 
                 with unittest.mock.patch.object(sas, "read_session_execution", lambda _k: stale):
                     session = sas.resolve_session_agent_bindings(
@@ -647,7 +647,7 @@ class TestAppAgentDispatch(unittest.TestCase):
     def test_stem_mapping_never_overrides_a_declared_name(self):
         # Only a name kiro-cli does not know is mapped: a declared name, a stem two
         # configs share, and an unknown name all pass through unchanged.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             d = self._agents_dir(
@@ -667,15 +667,15 @@ class TestAppAgentDispatch(unittest.TestCase):
     def test_file_name_bound_crewmate_takes_the_background_role_effort(self):
         # The role set holds declared names; a crew that recorded a background
         # worker's FILE name runs that worker, so it takes the role effort too.
-        import kiro_crew.config.loader as loader
-        from kiro_crew.config.loader import KiroCrewAgentConfig
+        import aj_crew.config.loader as loader
+        from aj_crew.config.loader import AjCrewAgentConfig
 
         with tempfile.TemporaryDirectory() as td:
-            d = self._agents_dir(Path(td), {"Pkg-kirocrew-lite.json": {"name": "kirocrew-lite"}})
+            d = self._agents_dir(Path(td), {"Pkg-ajcrew-lite.json": {"name": "ajcrew-lite"}})
             cfg = self._config()
             cfg.agent.reasoning_effort = "high"
             cfg.agent.role_efforts = {"background": "low"}
-            cfg.agents["bg"] = KiroCrewAgentConfig(kiro_agent="Pkg-kirocrew-lite")
+            cfg.agents["bg"] = AjCrewAgentConfig(kiro_agent="Pkg-ajcrew-lite")
             with unittest.mock.patch.object(loader, "kiro_agents_dir", lambda: d):
                 assert cfg.resolve_session_effort(None, "bg") == "low"
                 # A pin on the crew still outranks the role effort.
@@ -687,21 +687,21 @@ class TestAppAgentDispatch(unittest.TestCase):
         # _resolve_named_agent_model already matches the file stem, so the file
         # name finds the pin the declared name finds, and the factory selection
         # both feed answers the same for either spelling.
-        import kiro_crew.config.loader as loader
-        from kiro_crew import subagent
-        from kiro_crew.config.loader import KiroCrewAgentConfig
-        from kiro_crew.session import _session_model
+        import aj_crew.config.loader as loader
+        from aj_crew import subagent
+        from aj_crew.config.loader import AjCrewAgentConfig
+        from aj_crew.session import _session_model
 
         with tempfile.TemporaryDirectory() as td:
             d = self._agents_dir(
                 Path(td), {"KiroPkg-captain.json": {"name": "captain", "model": "claude-opus-4.8"}}
             )
             cfg = self._config()
-            cfg.agents["pkg"] = KiroCrewAgentConfig(kiro_agent="KiroPkg-captain")
+            cfg.agents["pkg"] = AjCrewAgentConfig(kiro_agent="KiroPkg-captain")
             with (
                 unittest.mock.patch.object(loader, "kiro_agents_dir", lambda: d),
                 unittest.mock.patch.object(
-                    loader.KiroCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg)
+                    loader.AjCrewConfig, "load", classmethod(lambda cls, *a, **k: cfg)
                 ),
             ):
                 by_stem = cfg._resolve_named_agent_model("KiroPkg-captain", agents_dir=d)
@@ -714,15 +714,15 @@ class TestAppAgentDispatch(unittest.TestCase):
                 assert subagent._spawn_effective_model(None, "pkg") == selected
 
     def _config(self):
-        from kiro_crew.config.loader import (
-            KiroCrewAgentConfig,
-            KiroCrewConfig,
+        from aj_crew.config.loader import (
+            AjCrewAgentConfig,
+            AjCrewConfig,
             MemoryStoreConfig,
             WorkspaceConfig,
         )
 
-        return KiroCrewConfig(
-            agents={"default": KiroCrewAgentConfig(kiro_agent="kirocrew")},
+        return AjCrewConfig(
+            agents={"default": AjCrewAgentConfig(kiro_agent="ajcrew")},
             default_agent="default",
             workspaces={"default": WorkspaceConfig(dir="/tmp/ws")},
             default_workspace="default",
@@ -740,9 +740,9 @@ class TestAppAgentDispatch(unittest.TestCase):
     def test_app_agent_matched_by_name_field_dispatches_itself(self):
         # bridges._register_agents writes the NAMESPACED filename while the config
         # inside keeps the app's bare name, and app panels bind the slot to that
-        # bare name. Before this fix the bare name was not a Kiro Crew alias, so it
+        # bare name. Before this fix the bare name was not an Aj Crew alias, so it
         # fell through to default_agent and the DEFAULT agent answered.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             d = self._agents_dir(Path(td), {"mochi--mochi.json": {"name": "mochi"}})
@@ -756,18 +756,18 @@ class TestAppAgentDispatch(unittest.TestCase):
         # `mochi--mochi` is not listed at all. Trusting the stem would hand
         # kiro-cli a name it cannot resolve, and it would fall back to its own
         # default silently -- the invisible mismatch this change exists to remove.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             d = self._agents_dir(Path(td), {"mochi--mochi.json": {"name": "mochi"}})
             with unittest.mock.patch.object(loader, "kiro_agents_dir", lambda: d):
                 cfg = self._config()
                 assert loader.resolve_agent_bindings(cfg, "mochi").kiro_agent == "mochi"
-                assert loader.resolve_agent_bindings(cfg, "mochi--mochi").kiro_agent == "kirocrew"
+                assert loader.resolve_agent_bindings(cfg, "mochi--mochi").kiro_agent == "ajcrew"
 
     def test_stem_is_used_when_no_name_is_declared(self):
         # With no `name` the stem is the only identifier, so it is trusted there.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             d = self._agents_dir(Path(td), {"solo.json": {"description": "no name field"}})
@@ -777,22 +777,22 @@ class TestAppAgentDispatch(unittest.TestCase):
     def test_genuinely_unknown_agent_still_falls_back_to_default(self):
         # Unchanged behavior: a name nothing declares must NOT be passed through
         # to kiro-cli.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             d = self._agents_dir(Path(td), {"mochi--mochi.json": {"name": "mochi"}})
             with unittest.mock.patch.object(loader, "kiro_agents_dir", lambda: d):
                 r = loader.resolve_agent_bindings(self._config(), agent_name="nope-xyz")
-        assert r.kiro_agent == "kirocrew"
+        assert r.kiro_agent == "ajcrew"
 
     def test_alias_still_wins_over_materialized_file(self):
-        # A Kiro Crew alias keeps full control of the binding (and the directory is
+        # An Aj Crew alias keeps full control of the binding (and the directory is
         # not even scanned for it).
-        import kiro_crew.config.loader as loader
-        from kiro_crew.config.loader import KiroCrewAgentConfig
+        import aj_crew.config.loader as loader
+        from aj_crew.config.loader import AjCrewAgentConfig
 
         cfg = self._config()
-        cfg.agents["mochi"] = KiroCrewAgentConfig(kiro_agent="explicitly-bound")
+        cfg.agents["mochi"] = AjCrewAgentConfig(kiro_agent="explicitly-bound")
         private_store = provision_member_memory(cfg, "mochi")
         with tempfile.TemporaryDirectory() as td:
             d = self._agents_dir(Path(td), {"mochi--mochi.json": {"name": "mochi"}})
@@ -802,7 +802,7 @@ class TestAppAgentDispatch(unittest.TestCase):
         assert r.memory_store_name == private_store
 
     def test_non_object_json_in_agents_dir_is_skipped(self):
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             d = Path(td) / "agents"
@@ -812,13 +812,13 @@ class TestAppAgentDispatch(unittest.TestCase):
             with unittest.mock.patch.object(loader, "kiro_agents_dir", lambda: d):
                 cfg = self._config()
                 r = loader.resolve_agent_bindings(cfg, agent_name="mochi")
-                assert r.kiro_agent == "kirocrew"
+                assert r.kiro_agent == "ajcrew"
                 # The FILENAME must not make an unparseable file dispatchable:
                 # kiro-cli could not load it and would fall back to its own
                 # default silently, which is the mismatch this change removes.
                 for stem in ("junk", "broken"):
                     assert (
-                        loader.resolve_agent_bindings(cfg, agent_name=stem).kiro_agent == "kirocrew"
+                        loader.resolve_agent_bindings(cfg, agent_name=stem).kiro_agent == "ajcrew"
                     )
 
     def test_lookup_does_no_filesystem_io(self):
@@ -826,7 +826,7 @@ class TestAppAgentDispatch(unittest.TestCase):
         # resolve_agent_bindings) and an app agent takes it on EVERY turn, so it
         # must touch the filesystem zero times: no glob, no reads, not even a
         # stat. The snapshot is refreshed only off-loop.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             d = self._agents_dir(Path(td), {"mochi--mochi.json": {"name": "mochi"}})
@@ -844,7 +844,7 @@ class TestAppAgentDispatch(unittest.TestCase):
         # Enabling an app writes its agent configs and then refreshes the
         # snapshot (bridges._register_agents), so a freshly registered app agent
         # dispatches immediately instead of after a gateway restart.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             d = self._agents_dir(Path(td), {"other--other.json": {"name": "other"}})
@@ -853,7 +853,7 @@ class TestAppAgentDispatch(unittest.TestCase):
                 # Not registered yet -> falls back to the default.
                 assert (
                     loader.resolve_agent_bindings(self._config(), agent_name="mochi").kiro_agent
-                    == "kirocrew"
+                    == "ajcrew"
                 )
                 (d / "mochi--mochi.json").write_text(
                     json.dumps({"name": "mochi"}), encoding="utf-8"
@@ -870,8 +870,8 @@ class TestAppAgentDispatch(unittest.TestCase):
         # (`evil.json` -> `~/.aws/credentials`) must not be read by a boot refresh.
         # Reads go through hooks.safe_read_file, and a refused path is skipped
         # without taking the rest of the directory down with it.
-        import kiro_crew.config.loader as loader
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.config.loader as loader
+        import aj_crew.hooks as hooks_mod
 
         real = hooks_mod.safe_read_file
         refused: list[str] = []
@@ -892,8 +892,8 @@ class TestAppAgentDispatch(unittest.TestCase):
                     loader.refresh_materialized_agents()
                     cfg = self._config()
                     # The refused entry contributes NOTHING — not even its stem.
-                    assert loader.resolve_agent_bindings(cfg, "stolen").kiro_agent == "kirocrew"
-                    assert loader.resolve_agent_bindings(cfg, "evil").kiro_agent == "kirocrew"
+                    assert loader.resolve_agent_bindings(cfg, "stolen").kiro_agent == "ajcrew"
+                    assert loader.resolve_agent_bindings(cfg, "evil").kiro_agent == "ajcrew"
                     # …and the rest of the directory still scans.
                     assert loader.resolve_agent_bindings(cfg, "good").kiro_agent == "good"
         assert refused, "the gate was never consulted for the planted entry"
@@ -903,8 +903,8 @@ class TestAppAgentDispatch(unittest.TestCase):
         # whose file is still on disk: its sessions would fail memory_unavailable
         # until the next complete refresh. An incomplete scan keeps what the last
         # snapshot declared.
-        import kiro_crew.config.loader as loader
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.config.loader as loader
+        import aj_crew.hooks as hooks_mod
 
         real = hooks_mod.safe_read_file
 
@@ -943,8 +943,8 @@ class TestAppAgentDispatch(unittest.TestCase):
     def test_an_incomplete_scan_keeps_the_stems_the_last_snapshot_had(self):
         # The stem map is a second half of the same snapshot: a crewmate bound to
         # a FILE name must not lose its mapping to one unreadable read either.
-        import kiro_crew.config.loader as loader
-        import kiro_crew.hooks as hooks_mod
+        import aj_crew.config.loader as loader
+        import aj_crew.hooks as hooks_mod
 
         real = hooks_mod.safe_read_file
 
@@ -969,7 +969,7 @@ class TestAppAgentDispatch(unittest.TestCase):
         # Only what a SKIPPED spec declared is kept. A spec that never parses
         # makes every scan incomplete; an app disabled meanwhile must still
         # leave resolution, or its sessions would dispatch a config that is gone.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             d = self._agents_dir(
@@ -993,7 +993,7 @@ class TestAppAgentDispatch(unittest.TestCase):
         # removal, would reinstall the deleted name — and the next turn would hand
         # kiro-cli a config that is gone. The interleaving is driven exactly:
         # a newer refresh completes from inside the older one's scan.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         def _older_scan_that_is_overtaken(_p):
             with unittest.mock.patch.object(
@@ -1012,7 +1012,7 @@ class TestAppAgentDispatch(unittest.TestCase):
 
         cfg = self._config()
         assert loader.resolve_agent_bindings(cfg, "kept").kiro_agent == "kept"
-        assert loader.resolve_agent_bindings(cfg, "deleted").kiro_agent == "kirocrew"
+        assert loader.resolve_agent_bindings(cfg, "deleted").kiro_agent == "ajcrew"
 
     def test_an_unhonored_name_is_the_default_template_not_the_default_crewmate(self):
         # The old trap: storing the DEFAULT crewmate's physical `kiro_agent` when
@@ -1020,13 +1020,13 @@ class TestAppAgentDispatch(unittest.TestCase):
         # that name. An unhonored request is now the default TEMPLATE session
         #: no alias is reported, no crewmate's store or pin is taken,
         # and a same-named alias still resolves to its own target.
-        import kiro_crew.config.loader as loader
-        from kiro_crew.config.loader import KiroCrewAgentConfig
+        import aj_crew.config.loader as loader
+        from aj_crew.config.loader import AjCrewAgentConfig
 
         cfg = self._config()
-        cfg.agents["default"] = KiroCrewAgentConfig(kiro_agent="worker")
-        cfg.agents["worker"] = KiroCrewAgentConfig(kiro_agent="other")
-        cfg.agents["kirocrew"] = KiroCrewAgentConfig(kiro_agent="elsewhere")
+        cfg.agents["default"] = AjCrewAgentConfig(kiro_agent="worker")
+        cfg.agents["worker"] = AjCrewAgentConfig(kiro_agent="other")
+        cfg.agents["ajcrew"] = AjCrewAgentConfig(kiro_agent="elsewhere")
         private_store = provision_member_memory(cfg, "worker")
 
         with tempfile.TemporaryDirectory() as td:
@@ -1034,15 +1034,15 @@ class TestAppAgentDispatch(unittest.TestCase):
             with unittest.mock.patch.object(loader, "kiro_agents_dir", lambda: d):
                 first = loader.resolve_agent_bindings(cfg, agent_name="does-not-exist")
                 assert first.requested_resolved is False
-                assert first.kiro_agent == "kirocrew"
+                assert first.kiro_agent == "ajcrew"
                 assert first.resolved_alias == ""
                 assert first.selection_kind == "template"
                 assert first.memory_store_name == "default"
                 # A crewmate that happens to be NAMED like the default template is
                 # still its own binding when picked -- the namespaces never cross.
-                alias = loader.resolve_agent_bindings(cfg, agent_name="kirocrew")
+                alias = loader.resolve_agent_bindings(cfg, agent_name="ajcrew")
                 assert alias.kiro_agent == "elsewhere"
-                assert alias.resolved_alias == "kirocrew"
+                assert alias.resolved_alias == "ajcrew"
                 trap = loader.resolve_agent_bindings(cfg, agent_name="worker")
                 assert trap.kiro_agent == "other"
                 assert trap.memory_store_name == private_store
@@ -1056,17 +1056,17 @@ class TestAppAgentDispatch(unittest.TestCase):
         # that store is reached only by the crewmate (its DM thread, or an
         # explicit pick), never inherited by a session that picked nobody. The
         # doctor line beside the binding (test_cli_doctor_config_sections) says so.
-        import kiro_crew.config.loader as loader
-        from kiro_crew.config.loader import KiroCrewAgentConfig
+        import aj_crew.config.loader as loader
+        from aj_crew.config.loader import AjCrewAgentConfig
 
         cfg = self._config()
-        cfg.agents["scout"] = KiroCrewAgentConfig(kiro_agent="kirocrew", model="pinned-model")
+        cfg.agents["scout"] = AjCrewAgentConfig(kiro_agent="ajcrew", model="pinned-model")
         cfg.default_agent = "scout"
         private_store = provision_member_memory(cfg, "scout")
         assert cfg.agents["scout"].memory_store == private_store
 
         with tempfile.TemporaryDirectory() as td:
-            d = self._agents_dir(Path(td), {"kirocrew.json": {"name": "kirocrew"}})
+            d = self._agents_dir(Path(td), {"ajcrew.json": {"name": "ajcrew"}})
             with unittest.mock.patch.object(loader, "kiro_agents_dir", lambda: d):
                 for empty in ("", None):
                     plain = loader.resolve_agent_bindings(cfg, agent_name=empty)
@@ -1086,7 +1086,7 @@ class TestAppAgentDispatch(unittest.TestCase):
         # it, the registration publishes, then the stale scan finishes and assigns.
         # A plain replace would drop the published name and un-dispatch a freshly
         # enabled app. Simulated by publishing from inside the scan.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         def _scan_that_races(_p):
             # Stands in for "the directory as it looked before the write".
@@ -1105,7 +1105,7 @@ class TestAppAgentDispatch(unittest.TestCase):
     def test_refresh_replaces_when_no_publish_intervened(self):
         # Without an intervening publish the refresh is authoritative, so removals
         # take effect — a union-always policy would make deleted agents immortal.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         loader.publish_materialized_agents({"gone"})
         assert loader.resolve_agent_bindings(self._config(), agent_name="gone").kiro_agent == "gone"
@@ -1117,7 +1117,7 @@ class TestAppAgentDispatch(unittest.TestCase):
 
         cfg = self._config()
         assert loader.resolve_agent_bindings(cfg, agent_name="kept").kiro_agent == "kept"
-        assert loader.resolve_agent_bindings(cfg, agent_name="gone").kiro_agent == "kirocrew"
+        assert loader.resolve_agent_bindings(cfg, agent_name="gone").kiro_agent == "ajcrew"
 
     def test_publish_makes_names_dispatchable_with_no_filesystem_access(self):
         # _register_agents publishes what it just wrote BEFORE scheduling the
@@ -1125,7 +1125,7 @@ class TestAppAgentDispatch(unittest.TestCase):
         # created in that window is normalized to the default AND stored — the
         # slot would stay bound to the wrong agent. Publishing must therefore be
         # immediate and touch nothing on disk.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         def _explode(_p):
             raise AssertionError("publish must not scan the filesystem")
@@ -1140,10 +1140,10 @@ class TestAppAgentDispatch(unittest.TestCase):
             )
             # Unrelated names are unaffected — publishing adds, never asserts
             # completeness.
-            assert loader.resolve_agent_bindings(cfg, agent_name="nope").kiro_agent == "kirocrew"
+            assert loader.resolve_agent_bindings(cfg, agent_name="nope").kiro_agent == "ajcrew"
 
     def test_publish_ignores_empty_input(self):
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         loader.publish_materialized_agents([])
         assert loader._MATERIALIZED_AGENTS_READY is False
@@ -1158,7 +1158,7 @@ class TestAppAgentDispatch(unittest.TestCase):
         import asyncio
         import threading
 
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         scan_threads: list[int] = []
         real_scan = loader._scan_materialized_index
@@ -1192,7 +1192,7 @@ class TestAppAgentDispatch(unittest.TestCase):
     def test_registration_refresh_runs_inline_without_a_loop(self):
         # In a synchronous context (CLI, the boot warm already on an executor)
         # there is no loop to protect, so the refresh happens immediately.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             d = self._agents_dir(Path(td), {"mochi--mochi.json": {"name": "mochi"}})
@@ -1206,7 +1206,7 @@ class TestAppAgentDispatch(unittest.TestCase):
         # turn, so this is the safety net, not the expected path.
         import asyncio
 
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             d = self._agents_dir(Path(td), {"mochi--mochi.json": {"name": "mochi"}})
@@ -1217,7 +1217,7 @@ class TestAppAgentDispatch(unittest.TestCase):
             with unittest.mock.patch.object(loader, "kiro_agents_dir", lambda: d):
                 with unittest.mock.patch.object(loader, "_MATERIALIZED_AGENTS", frozenset()):
                     with unittest.mock.patch.object(loader, "_MATERIALIZED_AGENTS_READY", False):
-                        assert asyncio.run(_on_loop()).kiro_agent == "kirocrew"
+                        assert asyncio.run(_on_loop()).kiro_agent == "ajcrew"
 
     def _project_dir(self, tmp: Path, files: dict[str, dict]) -> Path:
         d = tmp / "repo" / ".kiro" / "agents"
@@ -1227,11 +1227,11 @@ class TestAppAgentDispatch(unittest.TestCase):
         return tmp / "repo"
 
     def test_project_agent_dispatches_itself(self):
-        # A project-local agent is resolvable by kiro-cli (Kiro Crew spawns it with
-        # the project dir as cwd) but is not a Kiro Crew alias, so without the
+        # A project-local agent is resolvable by kiro-cli (Aj Crew spawns it with
+        # the project dir as cwd) but is not an Aj Crew alias, so without the
         # project scope it fell through to default_agent and the DEFAULT agent
         # answered a session the user bound to the repo's own agent.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             agents = self._agents_dir(Path(td), {})
@@ -1247,20 +1247,20 @@ class TestAppAgentDispatch(unittest.TestCase):
         # Without the project dir there is no second scope to search, so the same
         # agent must still fall back — the pre-existing contract for callers that
         # have no session context.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             agents = self._agents_dir(Path(td), {})
             self._project_dir(Path(td), {"repobot.json": {"name": "repobot"}})
             with unittest.mock.patch.object(loader, "kiro_agents_dir", lambda: agents):
                 r = loader.resolve_agent_bindings(self._config(), agent_name="repobot")
-        assert r.kiro_agent == "kirocrew"
+        assert r.kiro_agent == "ajcrew"
         assert r.requested_resolved is False
 
     def test_alias_still_wins_over_a_project_agent(self):
-        # An explicit Kiro Crew alias is authored config; it must not be displaced by
+        # An explicit Aj Crew alias is authored config; it must not be displaced by
         # a file that happens to share its name.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             agents = self._agents_dir(Path(td), {})
@@ -1269,12 +1269,12 @@ class TestAppAgentDispatch(unittest.TestCase):
                 r = loader.resolve_agent_bindings(
                     self._config(), agent_name="default", project_dir=str(proj)
                 )
-        assert r.kiro_agent == "kirocrew"
+        assert r.kiro_agent == "ajcrew"
 
     def test_unknown_name_still_falls_back_with_a_project_dir(self):
         # The project scope widens where a name can be found; it must not make an
         # unknown name dispatchable.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             agents = self._agents_dir(Path(td), {})
@@ -1283,13 +1283,13 @@ class TestAppAgentDispatch(unittest.TestCase):
                 r = loader.resolve_agent_bindings(
                     self._config(), agent_name="nope", project_dir=str(proj)
                 )
-        assert r.kiro_agent == "kirocrew"
+        assert r.kiro_agent == "ajcrew"
         assert r.requested_resolved is False
 
     def test_user_level_hit_does_no_project_filesystem_io(self):
         # The hot path must stay filesystem-free: a name already in the snapshot
         # must not trigger the project probe, even when a project dir is supplied.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             d = self._agents_dir(Path(td), {"mochi--mochi.json": {"name": "mochi"}})
@@ -1312,8 +1312,8 @@ class TestAppAgentDispatch(unittest.TestCase):
         # would otherwise stall every turn of a project-bound session.
         import asyncio
 
-        import kiro_crew.agent_discovery as ad
-        import kiro_crew.config.loader as loader
+        import aj_crew.agent_discovery as ad
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             agents = self._agents_dir(Path(td), {})
@@ -1327,7 +1327,7 @@ class TestAppAgentDispatch(unittest.TestCase):
 
             with unittest.mock.patch.object(loader, "kiro_agents_dir", lambda: agents):
                 with unittest.mock.patch.object(loader, "_MATERIALIZED_AGENTS_READY", True):
-                    assert asyncio.run(_on_loop()).kiro_agent == "kirocrew"
+                    assert asyncio.run(_on_loop()).kiro_agent == "ajcrew"
 
     def test_warming_off_loop_lets_the_loop_resolve_a_project_agent(self):
         # The shape the dashboard call sites use: warm through the discovery pool,
@@ -1335,8 +1335,8 @@ class TestAppAgentDispatch(unittest.TestCase):
         # project-bound session dispatches its own agent on the very first turn.
         import asyncio
 
-        import kiro_crew.agent_discovery as ad
-        import kiro_crew.config.loader as loader
+        import aj_crew.agent_discovery as ad
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             agents = self._agents_dir(Path(td), {})
@@ -1357,7 +1357,7 @@ class TestAppAgentDispatch(unittest.TestCase):
         # _run_chat's `except Exception` catches what the resolver raises, so the resolver
         # stays inline and must not raise StopIteration, which a Future cannot deliver
         # (hangs on 3.10). An unresolvable name is the default template; no `next()`.
-        import kiro_crew.config.loader as loader
+        import aj_crew.config.loader as loader
 
         with self.assertRaises(Exception) as caught:
             loader.resolve_agent_bindings(unittest.mock.MagicMock(), "anything", None)
@@ -1367,8 +1367,8 @@ class TestAppAgentDispatch(unittest.TestCase):
         # kiro-cli cannot activate a name declared only in
         # <project>/.kiro/*.agent-spec.json, so resolution must NOT dispatch it --
         # otherwise the slot advertises an agent that fails at set_mode.
-        import kiro_crew.agent_discovery as ad
-        import kiro_crew.config.loader as loader
+        import aj_crew.agent_discovery as ad
+        import aj_crew.config.loader as loader
 
         with tempfile.TemporaryDirectory() as td:
             agents = self._agents_dir(Path(td), {})
@@ -1380,5 +1380,5 @@ class TestAppAgentDispatch(unittest.TestCase):
                 r = loader.resolve_agent_bindings(
                     self._config(), agent_name="legacy", project_dir=str(Path(td) / "repo")
                 )
-        assert r.kiro_agent == "kirocrew"
+        assert r.kiro_agent == "ajcrew"
         assert r.requested_resolved is False

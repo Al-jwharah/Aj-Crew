@@ -6,8 +6,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from kiro_crew import publish_provider as pp
-from kiro_crew.publish_provider import (
+from aj_crew import publish_provider as pp
+from aj_crew.publish_provider import (
     DEFAULT_PROVIDER,
     Capability,
     CapabilityNotSupportedError,

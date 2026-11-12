@@ -1,8 +1,8 @@
 """The dashboard messaging handlers keep their surface and contracts while their owners move.
 
-``kiro_crew.dashboard.handlers.messaging`` is the messaging API's import path and its
+``aj_crew.dashboard.handlers.messaging`` is the messaging API's import path and its
 patch surface. Most of what it defined now lives in the modules of
-``kiro_crew.dashboard.messaging_api``, one responsibility each, and
+``aj_crew.dashboard.messaging_api``, one responsibility each, and
 ``_facade_compose.compose`` runs every function they define on the facade's globals.
 These tests pin:
 
@@ -44,12 +44,12 @@ import pytest
 from aiohttp import web
 from source_corpus import iter_statements, repo_files_named, repo_root
 
-import kiro_crew.dashboard.handlers as handlers_pkg
-import kiro_crew.dashboard.handlers.messaging as msg
-from kiro_crew._facade_compose import compose as facade_compose
-from kiro_crew.dashboard import messaging_api
-from kiro_crew.secrets import SecretVault
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+import aj_crew.dashboard.handlers as handlers_pkg
+import aj_crew.dashboard.handlers.messaging as msg
+from aj_crew._facade_compose import compose as facade_compose
+from aj_crew.dashboard import messaging_api
+from aj_crew.secrets import SecretVault
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 # One worker per file, so the shared checks run beside the tests that load this module.
 pytestmark = pytest.mark.xdist_group(name="handlers_messaging_composition_contract")
@@ -73,7 +73,7 @@ _BASE_NAMES = frozenset("""
         CRON_SESSION_RE Callable ChannelLink CronStoreBusy CronStoreUnreadable
         DEFERRED_QUEUED_REASONS DISMISSAL_FAILED DISMISSAL_LOG_ABSENT DISMISSAL_LOG_COMMITTED
         DISMISSAL_LOG_FAILED DISMISSAL_NO_FOLDER DM_TARGET_PREFIX DashboardState
-        HOST_SESSION_KEY IMESSAGE_SERVICES IS_MACOS KiroCrewConfig LINK_WINDOW_SECS
+        HOST_SESSION_KEY IMESSAGE_SERVICES IS_MACOS AjCrewConfig LINK_WINDOW_SECS
         NATIVE_CHILD_NOT_RESUMABLE NotificationPayload NotificationValidationError
         OPTIONS_FALLBACK_TEXT PERSISTED_SUBAGENT_REPLAY_KEEP
         PERSISTED_SUBAGENT_REPLAY_MAX_AGE_SECS PanelRecords Path PostedOptions
@@ -351,8 +351,8 @@ def test_a_fresh_interpreter_sees_every_base_public_name(tmp_path: Path) -> None
         tmp_path,
         """
         import sys
-        import kiro_crew.dashboard.handlers as pkg
-        import kiro_crew.dashboard.handlers.messaging as msg
+        import aj_crew.dashboard.handlers as pkg
+        import aj_crew.dashboard.handlers.messaging as msg
         missing = [n for n in sys.argv[1:] if not hasattr(msg, n)]
         assert missing == [], missing
         foreign = [n for n in sys.argv[1:] if hasattr(pkg, n) and n.startswith("api_")
@@ -377,7 +377,7 @@ def _package_reexports() -> list[str]:
 def _server_handler_names() -> set[str]:
     """``handlers.<name>`` attributes ``dashboard/server.py`` registers or calls, with
     the ``server_runtime`` owners it composes (the MCP route table lives in one)."""
-    from kiro_crew.dashboard import server
+    from aj_crew.dashboard import server
 
     owners = sorted((Path(server.__file__).parent / "server_runtime").glob("[!_]*.py"))
     assert owners, "expected the server_runtime owners beside server.py"
@@ -399,7 +399,7 @@ def test_the_routes_and_the_package_reach_the_facade_objects() -> None:
     """Every route the gateway registers for a messaging handler, every name the
     handlers package re-exports, and every handler ``server.py`` names is the
     facade's object, so the guarded ``api_spawn*`` wrappers are what is served."""
-    from kiro_crew.dashboard import routes
+    from aj_crew.dashboard import routes
 
     app = web.Application()
     routes.register_all(app)
@@ -440,13 +440,13 @@ def test_a_spawn_route_is_guarded_around_its_composed_function(name: str) -> Non
 def test_the_seams_other_modules_import_keep_their_identity() -> None:
     """``files.py``, the QR and WhatsApp setup handlers and the Slack gateway import
     names from the facade; each still resolves there, as the same object."""
-    from kiro_crew.dashboard.handlers import files, weixin_qr, whatsapp_setup
+    from aj_crew.dashboard.handlers import files, weixin_qr, whatsapp_setup
 
     assert files._resolve_session_target is msg._resolve_session_target
     assert weixin_qr.is_direct_local_request is msg.is_direct_local_request
     assert whatsapp_setup.is_direct_local_request is msg.is_direct_local_request
     lazy: set[str] = set()
-    for path in [_SRC / "kiro_crew/slack/gateway.py", *(_SRC / "kiro_crew/slack").rglob("*.py")]:
+    for path in [_SRC / "aj_crew/slack/gateway.py", *(_SRC / "aj_crew/slack").rglob("*.py")]:
         tree = ast.parse(path.read_text(encoding="utf-8"))
         lazy |= {
             alias.name
@@ -461,10 +461,10 @@ def test_the_seams_other_modules_import_keep_their_identity() -> None:
 #: Names the moved code imports in its own body, from the module that owns them,
 #: and must keep importing from there (not from a re-route).
 _IMPORTED_BY_NAME = {
-    "_resolve_channel_target": "kiro_crew.dashboard.chat_runner",
-    "_get_config_lock": "kiro_crew.dashboard.handlers.agents",
-    "is_allowed_user": "kiro_crew.slack.handler",
-    "is_tracked_channel": "kiro_crew.slack.handler",
+    "_resolve_channel_target": "aj_crew.dashboard.chat_runner",
+    "_get_config_lock": "aj_crew.dashboard.handlers.agents",
+    "is_allowed_user": "aj_crew.slack.handler",
+    "is_tracked_channel": "aj_crew.slack.handler",
 }
 
 
@@ -485,7 +485,7 @@ def test_a_star_import_carries_the_moved_public_names(tmp_path: Path) -> None:
     assert not hasattr(msg, "__all__")
     probe = tmp_path / "messaging_star_probe.py"
     probe.write_text(
-        "from kiro_crew.dashboard.handlers.messaging import *  # noqa: F401,F403\n",
+        "from aj_crew.dashboard.handlers.messaging import *  # noqa: F401,F403\n",
         encoding="utf-8",
     )
     spec = importlib.util.spec_from_file_location("messaging_star_probe", probe)
@@ -644,7 +644,7 @@ def test_a_facade_definition_stays_in_the_facade_file(name: str) -> None:
 
 
 def test_the_owners_log_as_the_facade() -> None:
-    """Log capture keyed to ``kiro_crew.dashboard.handlers.messaging`` keeps seeing
+    """Log capture keyed to ``aj_crew.dashboard.handlers.messaging`` keeps seeing
     the moved sites: an owner function logs through the facade's ``logger``."""
     assert msg.logger.name == _FACADE
     readers = [
@@ -654,7 +654,7 @@ def test_the_owners_log_as_the_facade() -> None:
 
 
 def test_every_owner_function_runs_on_the_facade_globals() -> None:
-    """A patch of ``kiro_crew.dashboard.handlers.messaging.<name>`` reaches an owner
+    """A patch of ``aj_crew.dashboard.handlers.messaging.<name>`` reaches an owner
     function only because the function reads the facade's globals, not its own."""
     labels = {label for label, _ in _owner_functions()}
     assert len(labels) >= sum(len(names) for names in _BASE_OWNERS.values())
@@ -798,17 +798,17 @@ def _owner_runtime_edges(source: str, package: str) -> list[int]:
         ("from . import spawn\n", True),
         ("from .run_views import api_spawn_list\n", True),
         ("from ..handlers import messaging\n", True),
-        ("from kiro_crew.dashboard.handlers import messaging\n", True),
-        ("import kiro_crew.dashboard.handlers.messaging as handlers\n", True),
-        ("def f():\n    from kiro_crew.dashboard.handlers.messaging import _sel\n", True),
+        ("from aj_crew.dashboard.handlers import messaging\n", True),
+        ("import aj_crew.dashboard.handlers.messaging as handlers\n", True),
+        ("def f():\n    from aj_crew.dashboard.handlers.messaging import _sel\n", True),
         (
-            "import importlib\nimportlib.import_module('kiro_crew.dashboard.handlers.messaging')\n",
+            "import importlib\nimportlib.import_module('aj_crew.dashboard.handlers.messaging')\n",
             True,
         ),
-        ("__import__('kiro_crew.dashboard.messaging_api.spawn')\n", True),
-        ("if TYPE_CHECKING:\n    from kiro_crew.dashboard.handlers.messaging import _sel\n", False),
-        ("from kiro_crew.dashboard import chat_utils\n", False),
-        ("import kiro_crew.dashboard.handlers.messaging_elsewhere\n", False),
+        ("__import__('aj_crew.dashboard.messaging_api.spawn')\n", True),
+        ("if TYPE_CHECKING:\n    from aj_crew.dashboard.handlers.messaging import _sel\n", False),
+        ("from aj_crew.dashboard import chat_utils\n", False),
+        ("import aj_crew.dashboard.handlers.messaging_elsewhere\n", False),
     ],
 )
 def test_the_owner_edge_check_sees_every_spelling(source: str, flagged: bool) -> None:
@@ -818,7 +818,7 @@ def test_the_owner_edge_check_sees_every_spelling(source: str, flagged: bool) ->
 def test_nothing_but_the_facade_imports_an_owner() -> None:
     """The facade is the one import path and the one patch surface."""
     importers = []
-    for path in sorted((_SRC / "kiro_crew").rglob("*.py")):
+    for path in sorted((_SRC / "aj_crew").rglob("*.py")):
         resolved = path.resolve()
         if _OWNER_DIR in resolved.parents or resolved == _FACADE_PATH or "_vendor" in path.parts:
             continue
@@ -847,10 +847,10 @@ def test_an_owner_imports_the_facade_and_its_siblings_only_for_type_checking() -
 #: agent-SDK boundary counts a type-only edge too, and the chat runner and chat
 #: handler owners are reached only through their own facades.
 _OWNER_FORBIDDEN = (
-    "kiro_crew.acp",
-    "kiro_crew.providers",
-    "kiro_crew.dashboard.chat_turn",
-    "kiro_crew.dashboard.chat_api",
+    "aj_crew.acp",
+    "aj_crew.providers",
+    "aj_crew.dashboard.chat_turn",
+    "aj_crew.dashboard.chat_api",
 )
 
 
@@ -871,9 +871,9 @@ def test_a_fresh_facade_import_loads_every_owner(tmp_path: Path) -> None:
         tmp_path,
         """
         import sys
-        import kiro_crew.dashboard.handlers.messaging
+        import aj_crew.dashboard.handlers.messaging
         missing = [n for n in sys.argv[1:]
-                   if f"kiro_crew.dashboard.messaging_api.{n}" not in sys.modules]
+                   if f"aj_crew.dashboard.messaging_api.{n}" not in sys.modules]
         assert missing == [], missing
         print("ok")
         """,
@@ -886,10 +886,10 @@ def test_a_second_facade_import_recomposes_the_owners_onto_it(tmp_path: Path) ->
         tmp_path,
         """
         import sys
-        import kiro_crew.dashboard.handlers.messaging as first
-        del sys.modules["kiro_crew.dashboard.handlers.messaging"]
-        import kiro_crew.dashboard.handlers.messaging as second
-        from kiro_crew.dashboard.messaging_api import run_views
+        import aj_crew.dashboard.handlers.messaging as first
+        del sys.modules["aj_crew.dashboard.handlers.messaging"]
+        import aj_crew.dashboard.handlers.messaging as second
+        from aj_crew.dashboard.messaging_api import run_views
         assert second is not first
         assert second.api_spawn_status.__wrapped__.__globals__ is vars(second)
         assert run_views.api_spawn_list is second.api_spawn_list
@@ -906,7 +906,7 @@ _FUNCTIONS = frozenset({ast.FunctionDef, ast.AsyncFunctionDef})
 _ASSIGNMENTS = frozenset({ast.Assign, ast.AugAssign})
 #: Nodes with no call inside and no binding: a name, a constant, an expression context.
 _LEAVES = frozenset({ast.Name, ast.Constant, ast.Load, ast.Store, ast.Del})
-_FACADE_STRING = re.compile(r"""^kiro_crew\.dashboard\.handlers\.messaging\.(\w+)$""")
+_FACADE_STRING = re.compile(r"""^aj_crew\.dashboard\.handlers\.messaging\.(\w+)$""")
 
 #: The patches whose attribute the scan cannot resolve from the source: each reads
 #: its validator name from the channel-env test's module-level table. Keyed by
@@ -943,7 +943,7 @@ def _facade_aliases(tree: ast.Module) -> set[str]:
     for node in iter_statements(tree):
         if isinstance(node, ast.Import):
             aliases |= {a.asname for a in node.names if a.name == _FACADE and a.asname}
-        elif isinstance(node, ast.ImportFrom) and node.module == "kiro_crew.dashboard.handlers":
+        elif isinstance(node, ast.ImportFrom) and node.module == "aj_crew.dashboard.handlers":
             aliases |= {a.asname or a.name for a in node.names if a.name == "messaging"}
         elif isinstance(node, ast.Assign) and len(node.targets) == 1:
             assignments.append((node.targets[0], node.value))
@@ -1095,7 +1095,7 @@ def _patched_names_in(text: str) -> tuple[set[str], set[str]]:
                         visit(item, params, label)
 
     visit(tree, {}, "<module>")
-    found |= set(re.findall(r"""["']kiro_crew\.dashboard\.handlers\.messaging\.(\w+)["']""", text))
+    found |= set(re.findall(r"""["']aj_crew\.dashboard\.handlers\.messaging\.(\w+)["']""", text))
     return found, dynamic
 
 
@@ -1219,17 +1219,17 @@ def _captured_names(source: str) -> set[str]:
 def test_the_patch_scan_reads_every_spelling() -> None:
     planted = (
         "import importlib, sys\n"
-        "import kiro_crew.dashboard.handlers.messaging as handlers\n"
-        "from kiro_crew.dashboard.handlers import messaging as ms\n"
-        "facade = importlib.import_module('kiro_crew.dashboard.handlers.messaging')\n"
+        "import aj_crew.dashboard.handlers.messaging as handlers\n"
+        "from aj_crew.dashboard.handlers import messaging as ms\n"
+        "facade = importlib.import_module('aj_crew.dashboard.handlers.messaging')\n"
         "alias = facade\n"
-        "held = sys.modules['kiro_crew.dashboard.handlers.messaging']\n"
+        "held = sys.modules['aj_crew.dashboard.handlers.messaging']\n"
         "def test(monkeypatch):\n"
         "    monkeypatch.setattr(handlers, 'first', 1)\n"
         "    monkeypatch.setattr(ms, 'second', 2)\n"
         "    patch.object(alias, 'third')\n"
         "    ms.fourth = 4\n"
-        "    monkeypatch.setattr('kiro_crew.dashboard.handlers.messaging.fifth', 5)\n"
+        "    monkeypatch.setattr('aj_crew.dashboard.handlers.messaging.fifth', 5)\n"
         "    monkeypatch.setattr(ms.Shared, 'attr', 7)\n"
         "    monkeypatch.setattr(other, 'not_the_facade', 8)\n"
         "    monkeypatch.delattr(ms, 'sixth')\n"
@@ -1237,12 +1237,12 @@ def test_the_patch_scan_reads_every_spelling() -> None:
         "    patch.multiple(held, eighth=1, create=True)\n"
         "@pytest.mark.parametrize('which', ['ninth', 'tenth'])\n"
         "def test_param(which):\n"
-        "    patch(f'kiro_crew.dashboard.handlers.messaging.{which}')\n"
+        "    patch(f'aj_crew.dashboard.handlers.messaging.{which}')\n"
         "def test_dunder(monkeypatch):\n"
-        "    mod = __import__('kiro_crew.dashboard.handlers.messaging', fromlist=['x'])\n"
+        "    mod = __import__('aj_crew.dashboard.handlers.messaging', fromlist=['x'])\n"
         "    patch.object(mod, 'eleventh')\n"
-        "    patch.object(__import__('kiro_crew.dashboard.handlers.messaging', fromlist=['y']), 'twelfth')\n"
-        "    patch.object(__import__('kiro_crew.dashboard.handlers.messaging'), 'not_the_facade')\n"
+        "    patch.object(__import__('aj_crew.dashboard.handlers.messaging', fromlist=['y']), 'twelfth')\n"
+        "    patch.object(__import__('aj_crew.dashboard.handlers.messaging'), 'not_the_facade')\n"
     )
     names, dynamic = _patched_names_in(planted)
     assert names == {
@@ -1261,7 +1261,7 @@ def test_the_patch_scan_reads_every_spelling() -> None:
     }
     assert dynamic == set()
     unresolvable = (
-        "from kiro_crew.dashboard.handlers import messaging as ms\n"
+        "from aj_crew.dashboard.handlers import messaging as ms\n"
         "def _drive(monkeypatch, name):\n"
         "    monkeypatch.setattr(ms, name, 1)\n"
     )
@@ -1274,7 +1274,7 @@ def test_the_capture_scan_flags_what_an_owner_evaluates_when_it_loads() -> None:
         "from typing import TYPE_CHECKING\n"
         "import asyncio as aio\n"
         "if TYPE_CHECKING:\n"
-        "    from kiro_crew.dashboard.handlers.messaging import _sel\n"
+        "    from aj_crew.dashboard.handlers.messaging import _sel\n"
         "LIMIT = _CAP * 2\n"
         "def f(x=_DEFAULT, *, y=_KW):\n"
         "    return _sel(), is_direct_local_request\n"
@@ -1396,9 +1396,9 @@ def _mirror(tmp_path: Path) -> Path:
         *(f"dashboard/messaging_api/{path.name}" for path in _OWNER_DIR.glob("*.py")),
     ]
     for rel in rels:
-        target = root / "src/kiro_crew" / rel
+        target = root / "src/aj_crew" / rel
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(_SRC / "kiro_crew" / rel, target)
+        shutil.copyfile(_SRC / "aj_crew" / rel, target)
     (root / "test").mkdir()
     return root
 
@@ -1406,7 +1406,7 @@ def _mirror(tmp_path: Path) -> Path:
 def _red_green(root: Path, check: Any, owner: str, old: str | None, new: str) -> None:
     """*check* passes on the copy, fails once *new* is planted in *owner* (replacing
     every *old*, or appended), and passes again once the owner is restored."""
-    path = root / "src/kiro_crew/dashboard/messaging_api" / f"{owner}.py"
+    path = root / "src/aj_crew/dashboard/messaging_api" / f"{owner}.py"
     text = path.read_text(encoding="utf-8")
     check()
     if old is None:
@@ -1421,7 +1421,7 @@ def _red_green(root: Path, check: Any, owner: str, old: str | None, new: str) ->
 
 
 def _facade_in(root: Path) -> str:
-    return str(root / "src/kiro_crew/dashboard/handlers/messaging.py")
+    return str(root / "src/aj_crew/dashboard/handlers/messaging.py")
 
 
 def test_the_parked_run_ratchet_reads_the_owners(
@@ -1484,7 +1484,7 @@ def test_the_splitter_offload_ratchet_reads_the_owners(
     import test_split_credential_boundary as guard
 
     root = _mirror(tmp_path)
-    monkeypatch.setattr(guard, "SRC", root / "src/kiro_crew")
+    monkeypatch.setattr(guard, "SRC", root / "src/aj_crew")
     check = (
         guard.TestTheDashboardHandlerLegsOffloadTheSplitter().test_both_dashboard_legs_offload_the_splitter
     )
@@ -1513,7 +1513,7 @@ def test_the_config_dir_ratchet_reads_the_owners(
     import test_no_config_dir_in_async as guard
 
     root = _mirror(tmp_path)
-    monkeypatch.setattr(guard, "SRC", root / "src/kiro_crew")
+    monkeypatch.setattr(guard, "SRC", root / "src/aj_crew")
     check = guard.TestNoConfigDirInAsync().test_update_layout_channel_helpers_never_maintain
     _red_green(root, check, "notifications", None, "\n\nasync def _planted():\n    config_dir()\n")
 
@@ -1592,7 +1592,7 @@ def _saver_put(
     """Drive ``PUT /api/<channel>/config`` with the config and ``.env`` in *tmp_path*."""
     from aiohttp.test_utils import TestClient, TestServer
 
-    import kiro_crew.config.loader as loader
+    import aj_crew.config.loader as loader
 
     env = tmp_path / ".env"
     if not env.exists():
@@ -1819,8 +1819,8 @@ def _globstar(pattern: str) -> re.Pattern[str]:
 
 #: Each facade the review rules name, and the owner package composed into it.
 _FACADE_OWNER_DIRS = {
-    "src/kiro_crew/dashboard/handlers/messaging.py": "src/kiro_crew/dashboard/messaging_api",
-    "src/kiro_crew/dashboard/chat_handlers.py": "src/kiro_crew/dashboard/chat_api",
+    "src/aj_crew/dashboard/handlers/messaging.py": "src/aj_crew/dashboard/messaging_api",
+    "src/aj_crew/dashboard/chat_handlers.py": "src/aj_crew/dashboard/chat_api",
 }
 
 

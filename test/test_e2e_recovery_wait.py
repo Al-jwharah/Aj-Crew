@@ -1,7 +1,7 @@
 """Unit coverage for the E2E harness's startup-recovery wait.
 
 ``_await_memory_recovery`` is what stops an E2E test from writing inside the
-window between ``KIROCREW_READY`` and the end of memory recovery. It runs only
+window between ``AJCREW_READY`` and the end of memory recovery. It runs only
 in the gated E2E job, so without these tests a change to it would be proven by
 nothing until a real gateway race reappeared in CI.
 

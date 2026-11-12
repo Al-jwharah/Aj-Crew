@@ -336,7 +336,7 @@ export default function AppDetailPage() {
         // the browse list uses. Spelled separately, the two chains disagreed:
         // this page preferred the manifest (`m.author || registryEntry?.author`)
         // while the list preferred the row, so one app could read
-        // "Kiro Crew · Developer Tools" in the list and "kirocrew · Productivity"
+        // "Aj Crew · Developer Tools" in the list and "ajcrew · Productivity"
         // one click later. The catalog is the store's inventory on both surfaces
         // or on neither.
         if (rawRegistryEntry && registryEntry && isBuiltinServerRow(registryEntry)) {
@@ -1471,7 +1471,7 @@ export default function AppDetailPage() {
                   {app.enabled ? (
                     <>
                       {app.updateAvailable && <Btn onClick={handleInstall} disabled={actionBusy || installRefusedForGood} title={installDisabledTitle} className="!bg-[var(--info)] !text-info-fg hover:!opacity-80">{isActionRunning('install') ? <><Loader2 size={14} className="animate-spin" /> {i18nT('pages.appDetailPage.updating')}</> : <><ArrowUp size={14} /> {i18nT('pages.appDetailPage.update')}</>}</Btn>}
-                      {canUninstall && <Btn danger onClick={() => handleAction('uninstall')} disabled={actionBusy} title={i18nT('pages.appDetailPage.removes_kirocrew_metadata_only_the_app_itself_is')}><Trash2 size={14} /> {i18nT('pages.appDetailPage.uninstall')}</Btn>}
+                      {canUninstall && <Btn danger onClick={() => handleAction('uninstall')} disabled={actionBusy} title={i18nT('pages.appDetailPage.removes_ajcrew_metadata_only_the_app_itself_is')}><Trash2 size={14} /> {i18nT('pages.appDetailPage.uninstall')}</Btn>}
                     </>
                   ) : (
                     /* A self-managed app can be disabled too (Library's menu, or
@@ -1495,7 +1495,7 @@ export default function AppDetailPage() {
                               </DropdownMenuItem>
                             )}
                             {canUninstall && (
-                              <DropdownMenuItem disabled={actionBusy} title={i18nT('pages.appDetailPage.removes_kirocrew_metadata_only_the_app_itself_is')} onSelect={() => {
+                              <DropdownMenuItem disabled={actionBusy} title={i18nT('pages.appDetailPage.removes_ajcrew_metadata_only_the_app_itself_is')} onSelect={() => {
                                 uninstallOpenerRef.current = overflowTriggerRef.current
                                 overflowMenu.openLayer(() => { void handleAction('uninstall') })
                               }}>
@@ -1988,7 +1988,7 @@ export default function AppDetailPage() {
                   })}
                 </div>
               )}
-              {app.manifest?.minKiroCrewVersion && <div>{i18nT('pages.appDetailPage.min_product_version', { version: app.manifest.minKiroCrewVersion })}</div>}
+              {app.manifest?.minAjCrewVersion && <div>{i18nT('pages.appDetailPage.min_product_version', { version: app.manifest.minAjCrewVersion })}</div>}
               {app.platform?.os && <div>{i18nT('pages.appDetailPage.platform_list', { os: fmtList(app.platform.os.map((o) => String(o ?? '')), { style: 'narrow' }) })}</div>}
             </div>
           </Card>

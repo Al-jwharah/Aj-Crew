@@ -1,6 +1,6 @@
 """A docker-backed stand-in for the MicroVM platform, so the lane is testable.
 
-Under ``test/`` and NOT under ``src/kiro_crew/``, which is a security boundary and
+Under ``test/`` and NOT under ``src/aj_crew/``, which is a security boundary and
 not tidiness. :meth:`LocalLaunchEngine.exec_in` runs a caller-supplied argv inside a
 container, and the spawn audit requires every spawn primitive in the shipped package
 to be routed through the OS sandbox or individually justified. A harness that drives
@@ -29,12 +29,12 @@ no local container enforces.
 
 Three settings are not optional and each was bought with a failed run:
 
-``KIROCREW_SKIP_MODEL_DOWNLOAD=1``
+``AJCREW_SKIP_MODEL_DOWNLOAD=1``
     Without it the gateway fetches a 639 MB embedding model about forty seconds
     after start, which it will not use and which makes every run minutes longer.
     With it the home is under five megabytes.
 
-``KIROCREW_BIND=0.0.0.0``
+``AJCREW_BIND=0.0.0.0``
     A container port has to leave the container to be reachable.
 
 A readiness probe with an explicit timeout
@@ -56,14 +56,14 @@ import urllib.request
 from dataclasses import dataclass, field
 from typing import Optional
 
-from kiro_crew.subprocess_utf8 import UTF8_TEXT
+from aj_crew.subprocess_utf8 import UTF8_TEXT
 
 logger = logging.getLogger(__name__)
 
 #: The crew image this harness runs. Pinned by DIGEST, not by tag, for the reason
 #: the Fargate lane refuses an undigested reference: a movable tag means the thing
 #: that was tested and the thing that runs are two different images.
-DEFAULT_IMAGE = "ghcr.io/kirodotdev/kirocrew:stable"
+DEFAULT_IMAGE = "ghcr.io/al-jwharah/ajcrew:stable"
 
 #: The port the gateway listens on inside the image.
 GATEWAY_PORT = 5476
@@ -126,7 +126,7 @@ class LocalLaunchEngine:
 
     Injected as a sibling of the real launcher, NEVER routed through
     ``cloud/aws.py``'s ``run_aws``. That chokepoint refuses any non-allowlisted
-    ``aws`` call once ``KIROCREW_SESSION_KEY`` is set, so a harness that reused it
+    ``aws`` call once ``AJCREW_SESSION_KEY`` is set, so a harness that reused it
     would be refused from inside an agent session -- which is exactly where this
     harness has to run.
     """
@@ -138,13 +138,13 @@ class LocalLaunchEngine:
     name_prefix: str = "kc-microvm-"
     env: dict[str, str] = field(
         default_factory=lambda: {
-            "KIROCREW_SKIP_MODEL_DOWNLOAD": "1",
-            "KIROCREW_BIND": "0.0.0.0",
+            "AJCREW_SKIP_MODEL_DOWNLOAD": "1",
+            "AJCREW_BIND": "0.0.0.0",
             # The MicroVM is the isolation boundary on the real lane, and a
             # container cannot provide the user namespace the model subprocess
             # would otherwise need. Set here so the harness boots at all, and
             # stated so nobody reads a green harness run as a sandbox claim.
-            "KIROCREW_ALLOW_UNSANDBOXED": "1",
+            "AJCREW_ALLOW_UNSANDBOXED": "1",
         }
     )
     _crews: dict[str, LocalCrew] = field(default_factory=dict)

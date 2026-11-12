@@ -36,14 +36,14 @@ from slot_ownership_checkpoint_helpers import (  # noqa: F401 -- fixtures reques
     state_fixture,
 )
 
-from kiro_crew.dashboard.handlers.slot_question import (
+from aj_crew.dashboard.handlers.slot_question import (
     _release_native_steer,
     _reserve_native_steer,
     api_chat_slot_question_dismiss,
     api_chat_slot_question_steer,
 )
-from kiro_crew.dashboard.state import SlotOrigin
-from kiro_crew.history import HUMAN_TURN_META_KEY
+from aj_crew.dashboard.state import SlotOrigin
+from aj_crew.history import HUMAN_TURN_META_KEY
 
 _QUESTIONS = [{"question": "Which branch?", "options": [{"label": "main"}, {"label": "dev"}]}]
 
@@ -499,8 +499,8 @@ async def test_a_requeued_app_steer_drains_as_an_app_turn_not_a_user_turn(state,
     # `from ...steer_queue import _actor_for_queue_items` skips that bind and the
     # function then NameErrors on `crew_log_emit` -- a harness artifact, not a
     # runtime bug.
-    import kiro_crew.dashboard.chat_runner  # noqa: F401  -- triggers the bind
-    from kiro_crew.dashboard.chat_turn.steer_queue import _actor_for_queue_items
+    import aj_crew.dashboard.chat_runner  # noqa: F401  -- triggers the bind
+    from aj_crew.dashboard.chat_turn.steer_queue import _actor_for_queue_items
 
     _seed(state)
     _native_card(state, "mine", "c1")
@@ -537,8 +537,8 @@ async def test_an_invalid_app_label_still_requeues_as_an_app_turn(state, sel_spy
     its ``appLabel`` dropped, but the answer must STILL requeue as an app turn --
     `turnActor='app'` -- or it would drain as `user` and hit the user-only gate.
     """
-    import kiro_crew.dashboard.chat_runner  # noqa: F401 -- triggers the bind
-    from kiro_crew.dashboard.chat_turn.steer_queue import _actor_for_queue_items
+    import aj_crew.dashboard.chat_runner  # noqa: F401 -- triggers the bind
+    from aj_crew.dashboard.chat_turn.steer_queue import _actor_for_queue_items
 
     long_app = "x" * 200  # over MAX_SOURCE_LABEL_LEN (64): the label is dropped
     state.get_or_create_slot("mine", app=long_app)
@@ -570,7 +570,7 @@ async def test_the_steer_reservation_never_leaks_into_a_pending_card(state, sel_
     So a listed pending card (GET .../question, the question_card broadcast)
     carries no steer-claim key even while a steer for that card is in flight.
     """
-    from kiro_crew.dashboard.handlers.ask_question import pending_question_cards
+    from aj_crew.dashboard.handlers.ask_question import pending_question_cards
 
     _seed(state)
     _native_card(state, "mine", "c1")
@@ -598,7 +598,7 @@ async def test_a_requeued_app_answer_drains_with_commands_off(state, sel_spy) ->
     as plain text, exactly as a channel steer's requeue does. Without it the
     drained entry would execute "/clear" as a dashboard command.
     """
-    from kiro_crew.dashboard.chat_delivery import COMMANDS_OFF_META_KEY
+    from aj_crew.dashboard.chat_delivery import COMMANDS_OFF_META_KEY
 
     _seed(state)
     _native_card(state, "mine", "c1")
@@ -633,7 +633,7 @@ async def test_a_composer_steer_requeue_meta_has_no_commands_off(state, sel_spy)
     steer passes) must leave COMMANDS_OFF off the requeue meta -- the app change
     must not silently disarm slash commands for a human's own composer steer.
     """
-    from kiro_crew.dashboard.chat_delivery import (
+    from aj_crew.dashboard.chat_delivery import (
         COMMANDS_OFF_META_KEY,
         steer_into_running_turn,
     )

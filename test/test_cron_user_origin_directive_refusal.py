@@ -13,8 +13,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from cron_gateway_integration_helpers import _make_gw_for_llm, _make_llm_job
 
-from kiro_crew import session_directive
-from kiro_crew.acp.types import EVENT_TOOL_CALL, EVENT_TOOL_RESULT, AcpEvent
+from aj_crew import session_directive
+from aj_crew.acp.types import EVENT_TOOL_CALL, EVENT_TOOL_RESULT, AcpEvent
 
 _REQUESTED = "Project change requested for this session."
 
@@ -45,7 +45,7 @@ async def test_cron_set_project_is_refused_in_the_result_and_audited_denied(shap
         def log_tool_invocation(self, **kw: Any) -> None:
             audits.append(kw)
 
-    monkeypatch.setattr("kiro_crew.sel.sel", lambda: _SelSpy())
+    monkeypatch.setattr("aj_crew.sel.sel", lambda: _SelSpy())
     call, output = _SHAPES[shape]
 
     async def stream(_client: Any, _msg: str, *, on_event: Any = None, **_k: Any) -> str:
@@ -73,18 +73,18 @@ async def test_cron_set_project_is_refused_in_the_result_and_audited_denied(shap
         return svc
 
     with (
-        patch("kiro_crew.slack.gateway.CronService") as cron_cls,
+        patch("aj_crew.slack.gateway.CronService") as cron_cls,
         patch(
-            "kiro_crew.slack.gateway.run_in_embed_pool",
+            "aj_crew.slack.gateway.run_in_embed_pool",
             AsyncMock(return_value=("full prompt", None)),
         ),
-        patch("kiro_crew.slack.gateway.stream_and_collect", side_effect=stream),
-        patch("kiro_crew.slack.gateway.sel"),
+        patch("aj_crew.slack.gateway.stream_and_collect", side_effect=stream),
+        patch("aj_crew.slack.gateway.sel"),
         patch(
-            "kiro_crew.slack.gateway.build_cron_session_context",
+            "aj_crew.slack.gateway.build_cron_session_context",
             return_value=(f"cron:{job.id}", job.message),
         ),
-        patch("kiro_crew.cron_service.agent_presence.cron_agent_missing", return_value=False),
+        patch("aj_crew.cron_service.agent_presence.cron_agent_missing", return_value=False),
     ):
         cron_cls.create = AsyncMock(side_effect=capture_cron)
         await gw._init_cron()

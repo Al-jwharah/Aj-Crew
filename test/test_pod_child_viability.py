@@ -17,8 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod.config import EXIT_REFUSED_UNRECOVERABLE, PodConfig
+from aj_crew.pod import runtime as rt
+from aj_crew.pod.config import EXIT_REFUSED_UNRECOVERABLE, PodConfig
 
 
 @pytest.fixture
@@ -29,8 +29,8 @@ def cfg(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> PodConfig:
     data-home pin does not reach; unpinned, refusal notes would land in the
     operator's real ``~/.kiro/crew/pods``.
     """
-    monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-    monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "envs"))
+    monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+    monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "envs"))
     (tmp_path / "envs").mkdir()
     loaded = PodConfig.load()
     assert loaded.pods_dir == tmp_path / "envs", "the pod plane must be this test's own"
@@ -48,8 +48,8 @@ def _pod_env(tmp_path: Path) -> dict[str, str]:
     return {
         "PATH": "/usr/bin:/bin",
         "HOME": str(tmp_path / "real-home"),
-        "KIROCREW_POD": "1",
-        "KIROCREW_OS_HOME": str(tmp_path / "os-home"),
+        "AJCREW_POD": "1",
+        "AJCREW_OS_HOME": str(tmp_path / "os-home"),
     }
 
 
@@ -62,8 +62,8 @@ def resolved(monkeypatch: pytest.MonkeyPatch):
     the final argv. Substituting ``[sys.executable, <script>, <subcmd>]`` keeps that
     path intact while staying executable on Windows.
     """
-    from kiro_crew import sandbox
-    from kiro_crew.acp import client as acp_client
+    from aj_crew import sandbox
+    from aj_crew.acp import client as acp_client
 
     def _install(script: Path) -> None:
         # The confinement legs are neutralised for the CLASSIFICATION tests: what
@@ -108,7 +108,7 @@ def test_a_child_still_serving_when_the_bound_expires_is_viable(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, resolved
 ) -> None:
     """Waiting on stdin is what a healthy ACP child does -- accept, do not refuse."""
-    from kiro_crew.agent_sdk import pod_child_probe as probe_mod
+    from aj_crew.agent_sdk import pod_child_probe as probe_mod
 
     monkeypatch.setattr(rt, "_CHILD_VIABILITY_TIMEOUT_SECS", 1.0)
     resolved(_fake_cli(tmp_path, "import time\ntime.sleep(30)\n"))
@@ -126,7 +126,7 @@ def test_a_clean_zero_exit_is_viable_not_a_failure(tmp_path: Path, resolved) -> 
     auth store was staged: every healthy child then exited 0 with empty stderr, and
     the probe read that as "could not bootstrap" and refused with exit 78.
     """
-    from kiro_crew.agent_sdk import pod_child_probe as probe_mod
+    from aj_crew.agent_sdk import pod_child_probe as probe_mod
 
     resolved(_fake_cli(tmp_path, "raise SystemExit(0)\n"))
 
@@ -159,7 +159,7 @@ def test_a_host_without_kiro_cli_is_not_a_refusal(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """kiro-cli is a separate prerequisite; its absence has its own message."""
-    from kiro_crew.acp import client as acp_client
+    from aj_crew.acp import client as acp_client
 
     monkeypatch.setattr(acp_client, "_resolve_kiro_bin", lambda **_kw: None)
 
@@ -176,8 +176,8 @@ def test_an_unspawnable_child_refuses_rather_than_tracebacks(
     The wrap seam is FAKED as working: on a backend-less runner the real one refuses
     with "could not be sandboxed" before the binary is exec'd.
     """
-    from kiro_crew import sandbox
-    from kiro_crew.acp import client as acp_client
+    from aj_crew import sandbox
+    from aj_crew.acp import client as acp_client
 
     missing = tmp_path / "not-there" / "kiro-cli"
     monkeypatch.setattr(acp_client, "_resolve_kiro_bin", lambda **_kw: str(missing))
@@ -210,9 +210,9 @@ def test_a_sandbox_refusal_outranks_a_missing_binary(
     sandbox: it blocks every spawn whatever binary is resolved. Full order:
     unavailable (no kiro-cli, skip) > sandbox-unavailable > dead(binary).
     """
-    from kiro_crew import sandbox
-    from kiro_crew.acp import client as acp_client
-    from kiro_crew.agent_sdk import pod_child_probe as probe_mod
+    from aj_crew import sandbox
+    from aj_crew.acp import client as acp_client
+    from aj_crew.agent_sdk import pod_child_probe as probe_mod
 
     missing = tmp_path / "not-there" / "kiro-cli"
     monkeypatch.setattr(acp_client, "_resolve_kiro_bin", lambda **_kw: str(missing))
@@ -283,9 +283,9 @@ class TestTheProbeIsConfined:
     @staticmethod
     def _spy_on_spawn(monkeypatch, tmp_path: Path, script: Path) -> dict:
         """Point resolution at a Python fake and capture the wrap + spawn calls."""
-        from kiro_crew import sandbox
-        from kiro_crew.acp import client as acp_client
-        from kiro_crew.agent_sdk import pod_child_probe as probe_mod
+        from aj_crew import sandbox
+        from aj_crew.acp import client as acp_client
+        from aj_crew.agent_sdk import pod_child_probe as probe_mod
 
         seen: dict = {}
         monkeypatch.setattr(acp_client, "_resolve_kiro_bin", lambda **_kw: sys.executable)
@@ -320,8 +320,8 @@ class TestTheProbeIsConfined:
         the delegation decision carried through from ``apply_pod_bundle_spawn``
         rather than re-derived.
         """
-        from kiro_crew import sandbox
-        from kiro_crew.agent_sdk import pod_child_probe as probe_mod
+        from aj_crew import sandbox
+        from aj_crew.agent_sdk import pod_child_probe as probe_mod
 
         script = _fake_cli(tmp_path, "raise SystemExit(0)\n")
         seen = self._spy_on_spawn(monkeypatch, tmp_path, script)
@@ -332,12 +332,12 @@ class TestTheProbeIsConfined:
             asked["mode"] = mode
             asked.update(kwargs)
             # What config THIS call would read, captured at call time.
-            asked["seen_kirocrew_home"] = os.environ.get("KIROCREW_HOME", "")
+            asked["seen_ajcrew_home"] = os.environ.get("AJCREW_HOME", "")
             return (["WRAPPED", *argv], dict(kwargs["env"]), "cleanup-token")
 
         monkeypatch.setattr(sandbox, "sandboxed_spawn_argv", _fake_chokepoint)
         env = _pod_env(tmp_path)
-        env["KIROCREW_HOME"] = str(tmp_path / "pod-crew-home")
+        env["AJCREW_HOME"] = str(tmp_path / "pod-crew-home")
         env["AWS_SECRET_ACCESS_KEY"] = "shhh"
 
         probe_mod.probe_pod_child_bootstrap(env, timeout_secs=10.0)
@@ -353,33 +353,33 @@ class TestTheProbeIsConfined:
     ) -> None:
         """Tier + opt-in must resolve under the POD home, not the host's.
 
-        The probe's ambient ``KIROCREW_HOME`` is the host's; the real spawn reads the
+        The probe's ambient ``AJCREW_HOME`` is the host's; the real spawn reads the
         pod's. A host-only ``sandbox_allow_unsandboxed_exec`` would pass the probe and
         leave a pod whose agent can never spawn.
         """
-        from kiro_crew import sandbox
-        from kiro_crew.agent_sdk import pod_child_probe as probe_mod
+        from aj_crew import sandbox
+        from aj_crew.agent_sdk import pod_child_probe as probe_mod
 
         script = _fake_cli(tmp_path, "raise SystemExit(0)\n")
         self._spy_on_spawn(monkeypatch, tmp_path, script)
         pod_home = tmp_path / "pod-crew-home"
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "HOST-crew-home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "HOST-crew-home"))
         seen_homes: list[str] = []
 
         def _record_context(argv, mode="standard", **kwargs):
-            seen_homes.append(os.environ.get("KIROCREW_HOME", ""))
+            seen_homes.append(os.environ.get("AJCREW_HOME", ""))
             return (list(argv), dict(kwargs["env"]), None)
 
         monkeypatch.setattr(sandbox, "sandboxed_spawn_argv", _record_context)
 
         def _record_mode_read() -> str:
             # The tier read is the other config-dependent decision on this path.
-            seen_homes.append(os.environ.get("KIROCREW_HOME", ""))
+            seen_homes.append(os.environ.get("AJCREW_HOME", ""))
             return "standard"
 
         monkeypatch.setattr(sandbox, "configured_sandbox_mode", _record_mode_read)
         env = _pod_env(tmp_path)
-        env["KIROCREW_HOME"] = str(pod_home)
+        env["AJCREW_HOME"] = str(pod_home)
 
         probe_mod.probe_pod_child_bootstrap(env, timeout_secs=10.0)
 
@@ -387,7 +387,7 @@ class TestTheProbeIsConfined:
         assert all(home == str(pod_home) for home in seen_homes), seen_homes
         # And the host's environment is restored afterwards -- the swap is scoped to
         # the preparation, not leaked into the rest of the boot.
-        assert os.environ["KIROCREW_HOME"] == str(tmp_path / "HOST-crew-home")
+        assert os.environ["AJCREW_HOME"] == str(tmp_path / "HOST-crew-home")
 
     def test_a_host_that_cannot_build_a_sandbox_is_dead_not_a_traceback(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -398,8 +398,8 @@ class TestTheProbeIsConfined:
         probe, ``boot`` exited 1, and the service manager restarted into the same
         failure every few seconds -- the loop the terminal-exit work exists to stop.
         """
-        from kiro_crew import sandbox
-        from kiro_crew.agent_sdk import pod_child_probe as probe_mod
+        from aj_crew import sandbox
+        from aj_crew.agent_sdk import pod_child_probe as probe_mod
 
         script = _fake_cli(tmp_path, "raise SystemExit(0)\n")
         seen = self._spy_on_spawn(monkeypatch, tmp_path, script)
@@ -428,8 +428,8 @@ class TestTheProbeIsConfined:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The other sandbox-preparation refusal maps the same way, not to a crash."""
-        from kiro_crew import sandbox
-        from kiro_crew.agent_sdk import pod_child_probe as probe_mod
+        from aj_crew import sandbox
+        from aj_crew.agent_sdk import pod_child_probe as probe_mod
 
         script = _fake_cli(tmp_path, "raise SystemExit(0)\n")
         self._spy_on_spawn(monkeypatch, tmp_path, script)
@@ -448,8 +448,8 @@ class TestTheProbeIsConfined:
         self, cfg: PodConfig, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """End to end: unsandboxable host -> recorded terminal refusal, not exit 1."""
-        from kiro_crew import sandbox
-        from kiro_crew.agent_sdk import pod_child_probe as probe_mod
+        from aj_crew import sandbox
+        from aj_crew.agent_sdk import pod_child_probe as probe_mod
 
         script = _fake_cli(tmp_path, "raise SystemExit(0)\n")
         self._spy_on_spawn(monkeypatch, tmp_path, script)
@@ -497,7 +497,7 @@ class TestTheRefusalNoteIsReadNoFollow:
         return dataclasses.replace(PodConfig.load(), pods_dir=pods)
 
     def test_a_regular_note_still_prints(self, tmp_path: Path) -> None:
-        from kiro_crew import pinned_fs
+        from aj_crew import pinned_fs
 
         note = tmp_path / "pod-a.refused"
         pinned_fs.write_file_pinned(note, "child could not bootstrap\n", what="note")
@@ -508,7 +508,7 @@ class TestTheRefusalNoteIsReadNoFollow:
 
     def test_a_planted_symlink_note_is_refused_and_never_read(self, tmp_path: Path) -> None:
         """Red-first: a by-name ``read_text`` returned the SECRET here."""
-        from kiro_crew import pinned_fs
+        from aj_crew import pinned_fs
 
         secret = tmp_path / "host-credential"
         secret.write_text("SECRET-MATERIAL\n")
@@ -529,7 +529,7 @@ class TestTheRefusalNoteIsReadNoFollow:
         one would hang ``pod ls`` rather than leak. The same lstat gate catches both,
         which is why the check is "is a regular file" and not "is not a symlink".
         """
-        from kiro_crew import pinned_fs
+        from aj_crew import pinned_fs
 
         if not hasattr(os, "mkfifo"):  # pragma: no cover - POSIX-only shape
             pytest.skip("mkfifo is POSIX-only; the lstat gate itself is not")

@@ -19,8 +19,8 @@ from publish_sync_helpers import (  # noqa: F401 -- fixtures are requested by na
     wire,
 )
 
-from kiro_crew import publish_provider, publish_sync
-from kiro_crew.artifacts import ArtifactPublication
+from aj_crew import publish_provider, publish_sync
+from aj_crew.artifacts import ArtifactPublication
 
 
 def _published(store, slug="a"):
@@ -31,7 +31,7 @@ def _published(store, slug="a"):
             artifact_id="ext-1",
             view_url="https://x/ext-1",
             version_map={"1": 1},
-            last_synced_kirocrew_version=1,
+            last_synced_ajcrew_version=1,
         ),
     )
     return slug

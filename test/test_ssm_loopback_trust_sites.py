@@ -22,11 +22,11 @@ from types import SimpleNamespace
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard.origin import is_direct_local_request, is_ssm_request
-from kiro_crew.shared_crew.contracts import SSM_GUEST_REQUEST_KEY, SSM_REQUEST_KEY
-from kiro_crew.shared_crew.ssm_invites import SsmGuest
+from aj_crew.dashboard.origin import is_direct_local_request, is_ssm_request
+from aj_crew.shared_crew.contracts import SSM_GUEST_REQUEST_KEY, SSM_REQUEST_KEY
+from aj_crew.shared_crew.ssm_invites import SsmGuest
 
-SRC = Path(__file__).resolve().parent.parent / "src" / "kiro_crew"
+SRC = Path(__file__).resolve().parent.parent / "src" / "aj_crew"
 
 
 def _request(**extra: object):
@@ -57,7 +57,7 @@ def test_an_ssm_request_is_never_direct_local(marker: dict[str, object]) -> None
 
 
 def test_the_marker_keys_are_the_ones_the_gate_sets() -> None:
-    from kiro_crew.dashboard import ssm_gate
+    from aj_crew.dashboard import ssm_gate
 
     source = (SRC / "dashboard" / "ssm_gate.py").read_text()
     assert "SSM_REQUEST_KEY" in source and "SSM_GUEST_REQUEST_KEY" in source
@@ -65,7 +65,7 @@ def test_the_marker_keys_are_the_ones_the_gate_sets() -> None:
 
 
 def test_the_raw_loopback_checks_on_update_and_frame_routes_refuse_an_ssm_request() -> None:
-    from kiro_crew.dashboard.handlers.updates_step_up import _loopback_peer
+    from aj_crew.dashboard.handlers.updates_step_up import _loopback_peer
 
     assert _loopback_peer(_request()) is True
     assert _loopback_peer(_request(**{SSM_REQUEST_KEY: True})) is False
@@ -75,7 +75,7 @@ def test_the_raw_loopback_checks_on_update_and_frame_routes_refuse_an_ssm_reques
 
 def test_an_ssm_request_mints_no_bearer_link() -> None:
     """A token minted for a guest would outlive a revoke and work on the dashboard port."""
-    from kiro_crew.dashboard.handlers._shared_access import _caller_bounds
+    from aj_crew.dashboard.handlers._shared_access import _caller_bounds
 
     plain = _request(auth_token="")
     assert _caller_bounds(plain)[1] > 0

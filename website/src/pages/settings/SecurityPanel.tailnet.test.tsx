@@ -21,7 +21,7 @@ vi.mock('../../api/client', () => ({
     deniedCommands: vi.fn(),
     governancePolicy: vi.fn(),
     securityPosture: vi.fn(),
-    kirocrewConfig: vi.fn(),
+    ajcrewConfig: vi.fn(),
     patchConfig: vi.fn(),
     tailnetStatus: vi.fn(),
   },
@@ -79,7 +79,7 @@ describe('SecurityPanel — tailnet origin', () => {
     ;(api.governancePolicy as ReturnType<typeof vi.fn>).mockResolvedValue({
       version: null, has_policy: false, profile: null, unavailable: false, scopes: [],
     })
-    ;(api.kirocrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
+    ;(api.ajcrewConfig as ReturnType<typeof vi.fn>).mockResolvedValue({})
     ;(api.patchConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true })
   })
 

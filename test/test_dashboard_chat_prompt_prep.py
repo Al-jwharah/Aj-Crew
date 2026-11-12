@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from chat_test_helpers import _make_state
 
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard.state import _ChatSlot
 
 # ── Slash command tests ──
 
@@ -32,29 +32,29 @@ class TestBlockedSlashCommands:
         ],
     )
     def test_is_blocked(self, command: str):
-        from kiro_crew.dashboard.chat import _BLOCKED_SLASH_COMMANDS
+        from aj_crew.dashboard.chat import _BLOCKED_SLASH_COMMANDS
 
         assert command in _BLOCKED_SLASH_COMMANDS
 
     def test_compact_is_not_blocked(self):
-        from kiro_crew.dashboard.chat import _BLOCKED_SLASH_COMMANDS
+        from aj_crew.dashboard.chat import _BLOCKED_SLASH_COMMANDS
 
         assert "/compact" not in _BLOCKED_SLASH_COMMANDS
 
     def test_blocked_is_subset_of_slash(self):
-        from kiro_crew.dashboard.chat import _BLOCKED_SLASH_COMMANDS, _SLASH_COMMANDS
+        from aj_crew.dashboard.chat import _BLOCKED_SLASH_COMMANDS, _SLASH_COMMANDS
 
         assert _BLOCKED_SLASH_COMMANDS.issubset(_SLASH_COMMANDS)
 
     @pytest.mark.asyncio
     async def test_blocked_command_returns_warning_no_session(self, tmp_path, monkeypatch):
         """Posting /quit should add warning to slot and never acquire a session."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.push_slots_update = MagicMock()
         slot = state.get_or_create_slot("s1")
 
-        from kiro_crew.dashboard.chat import _run_chat
+        from aj_crew.dashboard.chat import _run_chat
 
         await _run_chat(state, slot, "/quit")
 
@@ -83,10 +83,10 @@ class TestInstalledPackConsentInjection:
         return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
     def test_matching_sha_injects(self):
-        from kiro_crew.dashboard.chat import _maybe_inject_persona
+        from aj_crew.dashboard.chat import _maybe_inject_persona
 
         with patch(
-            "kiro_crew.dashboard.chat_utils._installed_theme_persona",
+            "aj_crew.dashboard.chat_utils._installed_theme_persona",
             return_value=self.PERSONA,
         ):
             result = _maybe_inject_persona(
@@ -101,10 +101,10 @@ class TestInstalledPackConsentInjection:
     def test_stale_sha_not_injected(self):
         # Reinstall rewrote persona.md; the stored hash does not match the
         # on-disk text -> the new, never-consented persona must NOT be injected.
-        from kiro_crew.dashboard.chat import _maybe_inject_persona
+        from aj_crew.dashboard.chat import _maybe_inject_persona
 
         with patch(
-            "kiro_crew.dashboard.chat_utils._installed_theme_persona",
+            "aj_crew.dashboard.chat_utils._installed_theme_persona",
             return_value=self.PERSONA,
         ):
             result = _maybe_inject_persona(
@@ -116,10 +116,10 @@ class TestInstalledPackConsentInjection:
         assert result == "hello"
 
     def test_absent_sha_not_injected(self):
-        from kiro_crew.dashboard.chat import _maybe_inject_persona
+        from aj_crew.dashboard.chat import _maybe_inject_persona
 
         with patch(
-            "kiro_crew.dashboard.chat_utils._installed_theme_persona",
+            "aj_crew.dashboard.chat_utils._installed_theme_persona",
             return_value=self.PERSONA,
         ):
             result = _maybe_inject_persona("hello", "custom-mypack", True)
@@ -129,10 +129,10 @@ class TestInstalledPackConsentInjection:
         # The legacy boolean consent field grants nothing on its own: with no
         # content-bound sha, an installed pack persona is never injected even
         # though the pack ships one.
-        from kiro_crew.dashboard.chat import _maybe_inject_persona
+        from aj_crew.dashboard.chat import _maybe_inject_persona
 
         with patch(
-            "kiro_crew.dashboard.chat_utils._installed_theme_persona",
+            "aj_crew.dashboard.chat_utils._installed_theme_persona",
             return_value=self.PERSONA,
         ):
             result = _maybe_inject_persona(
@@ -144,10 +144,10 @@ class TestInstalledPackConsentInjection:
         assert result == "hello"
 
     def test_not_injected_on_followup(self):
-        from kiro_crew.dashboard.chat import _maybe_inject_persona
+        from aj_crew.dashboard.chat import _maybe_inject_persona
 
         with patch(
-            "kiro_crew.dashboard.chat_utils._installed_theme_persona",
+            "aj_crew.dashboard.chat_utils._installed_theme_persona",
             return_value=self.PERSONA,
         ):
             result = _maybe_inject_persona(
@@ -164,7 +164,7 @@ class TestInstalledPackConsentInjection:
         # non-ASCII str, aborting the whole chat turn). The compare-site guard
         # treats anything that is not exactly 64 lowercase-hex as ABSENT:
         # no exception AND no injection.
-        from kiro_crew.dashboard.chat import _maybe_inject_persona
+        from aj_crew.dashboard.chat import _maybe_inject_persona
 
         valid = self._sha(self.PERSONA)
         malformed = [
@@ -179,7 +179,7 @@ class TestInstalledPackConsentInjection:
             valid[:-2] + "gg",  # non-hex chars
         ]
         with patch(
-            "kiro_crew.dashboard.chat_utils._installed_theme_persona",
+            "aj_crew.dashboard.chat_utils._installed_theme_persona",
             return_value=self.PERSONA,
         ):
             for bad in malformed:
@@ -197,7 +197,7 @@ class TestInstalledPackConsentInjection:
         # The parse-site normalizer (validation.normalize_theme_consent_sha)
         # rejects malformed values (-> None, fail closed) and salvages a valid
         # sha wrapped in surrounding whitespace / uppercase (strip + lower).
-        from kiro_crew.validation import normalize_theme_consent_sha
+        from aj_crew.validation import normalize_theme_consent_sha
 
         valid = self._sha(self.PERSONA)
         assert normalize_theme_consent_sha("é") is None
@@ -209,10 +209,10 @@ class TestInstalledPackConsentInjection:
         # salvage: leading/trailing whitespace + uppercase normalize to canonical
         assert normalize_theme_consent_sha("  " + valid.upper() + "\n") == valid
         # a normalized value then injects through the real gate
-        from kiro_crew.dashboard.chat import _maybe_inject_persona
+        from aj_crew.dashboard.chat import _maybe_inject_persona
 
         with patch(
-            "kiro_crew.dashboard.chat_utils._installed_theme_persona",
+            "aj_crew.dashboard.chat_utils._installed_theme_persona",
             return_value=self.PERSONA,
         ):
             norm = normalize_theme_consent_sha("  " + valid.upper() + "\n")
@@ -240,8 +240,8 @@ class TestExpandDollarSkills:
         """A DashboardState whose _get_skills() returns a hermetic loader
         pointed at *skills* (each a ``(name, body)`` pair)."""
         # Keep edition-contributed skill roots out of the hermetic loader.
-        from kiro_crew.platform.defaults import DefaultMcpToolingProvider
-        from kiro_crew.skills import SkillsLoader
+        from aj_crew.platform.defaults import DefaultMcpToolingProvider
+        from aj_crew.skills import SkillsLoader
 
         monkeypatch.setattr(DefaultMcpToolingProvider, "extra_skills", lambda self: [])
         skills_dir = tmp_path / "skills"
@@ -256,7 +256,7 @@ class TestExpandDollarSkills:
         return state
 
     def test_no_dollar_short_circuits(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_runner import _expand_dollar_skills
+        from aj_crew.dashboard.chat_runner import _expand_dollar_skills
 
         state = self._state_with_skills(tmp_path, monkeypatch)
         slot = _ChatSlot("s1")
@@ -266,7 +266,7 @@ class TestExpandDollarSkills:
         state.push_slots_update.assert_not_called()
 
     def test_resolves_appends_block_and_chip(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_runner import _expand_dollar_skills
+        from aj_crew.dashboard.chat_runner import _expand_dollar_skills
 
         state = self._state_with_skills(
             tmp_path,
@@ -295,7 +295,7 @@ class TestExpandDollarSkills:
         state.push_slots_update.assert_called_once()
 
     def test_skill_notice_preserves_multiple_resolved_bodies_in_order(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_runner import _expand_dollar_skills
+        from aj_crew.dashboard.chat_runner import _expand_dollar_skills
 
         state = self._state_with_skills(
             tmp_path,
@@ -322,7 +322,7 @@ class TestExpandDollarSkills:
         }
 
     def test_unresolved_token_no_chip(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = self._state_with_skills(
             tmp_path,
@@ -345,7 +345,7 @@ class TestExpandDollarSkills:
         assert kwargs.get("tool_name") == "skill_dollar_expansion"
 
     def test_incidental_dollar_not_audited(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = self._state_with_skills(
             tmp_path,
@@ -364,7 +364,7 @@ class TestExpandDollarSkills:
         sel_mock.log_tool_invocation.assert_not_called()
 
     def test_credentials_redacted_in_loaded_body(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_runner import _expand_dollar_skills
+        from aj_crew.dashboard.chat_runner import _expand_dollar_skills
 
         secret = "AKIAIOSFODNN7EXAMPLE"
         state = self._state_with_skills(
@@ -379,7 +379,7 @@ class TestExpandDollarSkills:
         assert secret not in out
 
     def test_resolution_exception_audited_and_swallowed(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import chat_runner
+        from aj_crew.dashboard import chat_runner
 
         state = self._state_with_skills(tmp_path, monkeypatch)
         slot = _ChatSlot("s1")

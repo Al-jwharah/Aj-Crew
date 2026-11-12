@@ -4,7 +4,7 @@ A key file shorter than 32 bytes would make every boot sign with an ephemeral
 secret, logging every dashboard session out at each restart and quarantining the
 HMAC-certified tag grants, with one WARNING line saying why. The gateway refuses to
 start on such a file and prints manual repair steps; the same probe backs
-``kirocrew doctor``. Nothing here repairs the file: that is a deliberate operator
+``ajcrew doctor``. Nothing here repairs the file: that is a deliberate operator
 action (see the ``signing_key_preflight`` docstring).
 """
 
@@ -18,11 +18,11 @@ from pathlib import Path
 
 import pytest
 
+from aj_crew import sandbox as kc_sandbox
+from aj_crew.dashboard import token_secret as ts
+from aj_crew.doctor_checks import access as doctor_access
+from aj_crew.slack import gateway
 from conftest import requires_symlinks
-from kiro_crew import sandbox as kc_sandbox
-from kiro_crew.dashboard import token_secret as ts
-from kiro_crew.doctor_checks import access as doctor_access
-from kiro_crew.slack import gateway
 
 # The real confinement probe, captured before the autouse fixture below
 # neutralises it. One probe now backs the masked state (it reads the Linux
@@ -31,7 +31,7 @@ _REAL_EVIDENCE = kc_sandbox.agent_confinement_evidence
 
 # The own-confinement subset (marker or cgroup only, never the Seatbelt verdict),
 # captured the same way for the same reason.
-_REAL_OWN = kc_sandbox.agent_confinement_is_kirocrew_own
+_REAL_OWN = kc_sandbox.agent_confinement_is_ajcrew_own
 
 # A fixed, full-length key (D6: no unseeded draws). Distinct from every
 # truncated fixture below and from any ephemeral secret the loader would mint.
@@ -41,13 +41,13 @@ _FULL_KEY = bytes(range(1, ts._MIN_KEY_BYTES + 1))
 @pytest.fixture(autouse=True)
 def _outside_the_agent_sandbox(_floor_monkeypatch):
     """These tests model the HOST (gateway boot, an operator's shell). The suite
-    itself may run inside a Kiro Crew agent sandbox, where the launcher exports the
-    marker and places the process under ``kirocrew-agents.slice``; neutralise the
+    itself may run inside an Aj Crew agent sandbox, where the launcher exports the
+    marker and places the process under ``ajcrew-agents.slice``; neutralise the
     single confinement probe at its source so a real file is judged by its size.
     The tests about the masked state set the signals back on purpose."""
-    _floor_monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+    _floor_monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
     # Boot preflight and doctor both read sandbox.agent_confinement_evidence;
-    # the preflight imports it locally from kiro_crew.sandbox, and doctor reads
+    # the preflight imports it locally from aj_crew.sandbox, and doctor reads
     # it through cli_doctor.sandbox (the same module object).
     _floor_monkeypatch.setattr(kc_sandbox, "agent_confinement_evidence", lambda **kw: None)
     _floor_monkeypatch.setattr(
@@ -55,9 +55,9 @@ def _outside_the_agent_sandbox(_floor_monkeypatch):
     )
     # The own-confinement subset (marker or cgroup, never the Seatbelt verdict),
     # read on the same two module objects. A host shows neither.
-    _floor_monkeypatch.setattr(kc_sandbox, "agent_confinement_is_kirocrew_own", lambda **kw: False)
+    _floor_monkeypatch.setattr(kc_sandbox, "agent_confinement_is_ajcrew_own", lambda **kw: False)
     _floor_monkeypatch.setattr(
-        doctor_access.cli_doctor.sandbox, "agent_confinement_is_kirocrew_own", lambda **kw: False
+        doctor_access.cli_doctor.sandbox, "agent_confinement_is_ajcrew_own", lambda **kw: False
     )
     # The TestConfinementProbes cases drive the REAL agent_confinement_evidence through
     # a fixture cgroup file, and that function consults the macOS kernel's Seatbelt
@@ -133,7 +133,7 @@ class TestSigningKeyHealth:
         assert sorted(p.name for p in tmp_path.iterdir()) == [ts._SECRET_KEY_FILE]
 
     def test_default_path_is_the_data_home_key(self, tmp_path: Path, monkeypatch) -> None:
-        monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
         state, key = ts.signing_key_health()
         assert state == "absent"
         assert key == tmp_path / ts._SECRET_KEY_FILE
@@ -141,7 +141,7 @@ class TestSigningKeyHealth:
     def test_own_confinement_masks_a_readable_fallback_key(
         self, tmp_path: Path, monkeypatch
     ) -> None:
-        """Inside Kiro Crew's OWN sandbox (marker or ``kirocrew-agents.slice``
+        """Inside Aj Crew's OWN sandbox (marker or ``ajcrew-agents.slice``
         cgroup) the key is masked, so the caller passes ``confined=True`` and
         leaves ``require_denied_open`` false. The Linux mask falls back to a
         READABLE empty 0600 stand-in when its private-tmpfs mount fails
@@ -162,7 +162,7 @@ class TestSigningKeyHealth:
     def test_seatbelt_only_masks_only_when_the_open_is_refused(self, tmp_path: Path) -> None:
         """When the SOLE confinement signal is the macOS Seatbelt verdict (no marker,
         no cgroup — the state at macOS boot), the caller sets
-        ``require_denied_open=True``. The Kiro Crew macOS mask denies the open, so a
+        ``require_denied_open=True``. The Aj Crew macOS mask denies the open, so a
         genuinely masked key is unreadable and still answers "masked"."""
         key = tmp_path / ts._SECRET_KEY_FILE
         key.write_bytes(b"")
@@ -183,7 +183,7 @@ class TestSigningKeyHealth:
         self, tmp_path: Path
     ) -> None:
         """The must-fix regression guard. ``agent_confinement_evidence`` reports a
-        Seatbelt sandbox Kiro Crew did not create (kiro-cli's own, an operator-
+        Seatbelt sandbox Aj Crew did not create (kiro-cli's own, an operator-
         wrapped process), so the boot preflight on macOS can see ``confined=True``
         for a process that can still open the real key — but with
         ``require_denied_open=True`` because that is the only signal. If the key is
@@ -225,16 +225,16 @@ class TestSigningKeyHealth:
     ) -> None:
         key = tmp_path / ts._SECRET_KEY_FILE
         key.write_bytes(b"")
-        monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+        monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
         assert ts.signing_key_health(key) == ("short", key)
 
 
 class TestConfinementProbes:
     """The single confinement probe behind ``"masked"``: the launcher marker and
-    the Linux ``kirocrew-agents.slice`` cgroup an in-sandbox process cannot scrub."""
+    the Linux ``ajcrew-agents.slice`` cgroup an in-sandbox process cannot scrub."""
 
     def test_the_marker_alone_answers_true(self, monkeypatch, tmp_path: Path) -> None:
-        monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
+        monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
         empty = tmp_path / "cgroup"
         empty.write_text("0::/user.slice/user-1000.slice/session-1.scope\n")
         assert _REAL_EVIDENCE(cgroup_path=str(empty)) is not None
@@ -242,23 +242,23 @@ class TestConfinementProbes:
     def test_the_agents_slice_answers_true_without_the_marker(
         self, monkeypatch, tmp_path: Path
     ) -> None:
-        monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+        monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
         cg = tmp_path / "cgroup"
         cg.write_text(
-            "0::/user.slice/user-1000.slice/kirocrew.slice/kirocrew-agents.slice/run-1.scope\n"
+            "0::/user.slice/user-1000.slice/ajcrew.slice/ajcrew-agents.slice/run-1.scope\n"
         )
         reason = _REAL_EVIDENCE(cgroup_path=str(cg))
-        assert reason is not None and "kirocrew-agents.slice" in reason
+        assert reason is not None and "ajcrew-agents.slice" in reason
 
     def test_the_slice_is_matched_against_the_constant_not_a_literal(self) -> None:
         """One name for the slice spelling: the probe matches against
         ``sandbox_cgroup._CGROUP_AGENTS_SLICE`` so a rename moves in one place."""
-        from kiro_crew.sandbox_cgroup import _CGROUP_AGENTS_SLICE
+        from aj_crew.sandbox_cgroup import _CGROUP_AGENTS_SLICE
 
-        assert _CGROUP_AGENTS_SLICE == "kirocrew-agents.slice"
+        assert _CGROUP_AGENTS_SLICE == "ajcrew-agents.slice"
 
     def test_a_plain_session_answers_false(self, monkeypatch, tmp_path: Path) -> None:
-        monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+        monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
         cg = tmp_path / "cgroup"
         cg.write_text("0::/user.slice/user-1000.slice/session-1.scope\n")
         assert _REAL_EVIDENCE(cgroup_path=str(cg)) is None
@@ -267,12 +267,12 @@ class TestConfinementProbes:
         """Fail-safe: an unreadable or absent cgroup file withholds the reason, it
         never fabricates one, so a confined process is never read as unconfined
         here (callers pair this with a structural sealed-artifact probe)."""
-        monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+        monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
         assert _REAL_EVIDENCE(cgroup_path=str(tmp_path / "missing")) is None
 
     def test_own_confinement_is_true_for_the_marker(self, monkeypatch, tmp_path: Path) -> None:
-        """``agent_confinement_is_kirocrew_own`` is the marker-or-cgroup subset."""
-        monkeypatch.setenv("KIROCREW_SANDBOX_ACTIVE", "1")
+        """``agent_confinement_is_ajcrew_own`` is the marker-or-cgroup subset."""
+        monkeypatch.setenv("AJCREW_SANDBOX_ACTIVE", "1")
         plain = tmp_path / "cgroup"
         plain.write_text("0::/user.slice/user-1000.slice/session-1.scope\n")
         assert _REAL_OWN(cgroup_path=str(plain)) is True
@@ -280,18 +280,18 @@ class TestConfinementProbes:
     def test_own_confinement_is_true_for_the_agents_slice(
         self, monkeypatch, tmp_path: Path
     ) -> None:
-        monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+        monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
         cg = tmp_path / "cgroup"
-        cg.write_text("0::/user.slice/kirocrew.slice/kirocrew-agents.slice/run-1.scope\n")
+        cg.write_text("0::/user.slice/ajcrew.slice/ajcrew-agents.slice/run-1.scope\n")
         assert _REAL_OWN(cgroup_path=str(cg)) is True
 
     def test_own_confinement_is_false_for_a_plain_session(
         self, monkeypatch, tmp_path: Path
     ) -> None:
         """A host terminal: no marker, no agents-slice cgroup. The Seatbelt verdict is
-        NOT consulted here, so a macOS Seatbelt sandbox Kiro Crew did not create does
+        NOT consulted here, so a macOS Seatbelt sandbox Aj Crew did not create does
         not make this true — that is the whole point of the own-confinement subset."""
-        monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+        monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
         cg = tmp_path / "cgroup"
         cg.write_text("0::/user.slice/user-1000.slice/session-1.scope\n")
         assert _REAL_OWN(cgroup_path=str(cg)) is False
@@ -300,7 +300,7 @@ class TestConfinementProbes:
         self, monkeypatch, tmp_path: Path
     ) -> None:
         """Fail-safe: an unreadable/absent cgroup withholds the stronger 'ours' claim."""
-        monkeypatch.delenv("KIROCREW_SANDBOX_ACTIVE", raising=False)
+        monkeypatch.delenv("AJCREW_SANDBOX_ACTIVE", raising=False)
         assert _REAL_OWN(cgroup_path=str(tmp_path / "missing")) is False
 
 
@@ -311,7 +311,7 @@ class TestBootSecretLoad:
     def _fresh_secret(self, tmp_path: Path, _floor_monkeypatch):
         _floor_monkeypatch.setattr(ts, "_SECRET", None)
         _floor_monkeypatch.setattr(ts, "_CREATE_BACKOFF_SECONDS", 0)
-        _floor_monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+        _floor_monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
 
     def test_a_short_file_at_load_time_answers_short(self, tmp_path: Path) -> None:
         (tmp_path / ts._SECRET_KEY_FILE).write_bytes(b"\x01" * 5)
@@ -707,12 +707,12 @@ class TestSigningKeyRemedy:
 
         monkeypatch.setattr("platform.system", lambda: "Linux")
         key = tmp_path / hostile / ts._SECRET_KEY_FILE
-        remedy = ts.signing_key_remedy(key, "kirocrew restart")
+        remedy = ts.signing_key_remedy(key, "ajcrew restart")
         commands = [step.split("Run: ", 1)[1] for step in remedy if "Run: " in step]
         check, remove, restart = (shlex.split(c) for c in commands)
         assert check == ["wc", "-c", "<", str(key)], "the path must round-trip as one word"
         assert remove == ["rm", str(key)], "the path must round-trip as one word"
-        assert restart == ["kirocrew", "restart"]
+        assert restart == ["ajcrew", "restart"]
 
     @pytest.mark.parametrize("system", ["Linux", "Darwin", "Windows"])
     def test_the_remedy_is_manual_steps_with_the_writer_stopped_first(
@@ -723,7 +723,7 @@ class TestSigningKeyRemedy:
         gateway and any restore are stopped before a person checks and deletes, and
         no copy of the key bytes is made at another name the sandbox does not mask."""
         monkeypatch.setattr("platform.system", lambda: system)
-        steps = ts.signing_key_remedy(tmp_path / ts._SECRET_KEY_FILE, "kirocrew restart")
+        steps = ts.signing_key_remedy(tmp_path / ts._SECRET_KEY_FILE, "ajcrew restart")
         assert [s.split(".")[0] for s in steps] == ["1", "2", "3", "4"]
         assert steps[0].startswith("1. Stop the gateway") and "restoring" in steps[0]
         assert "less than 32" in steps[1] and "skip to step 4" in steps[1]
@@ -738,9 +738,9 @@ class TestSigningKeyRemedy:
     @pytest.mark.parametrize(
         "restart",
         [
-            "sudo systemctl restart kirocrew",
-            "systemctl --user restart kirocrew",
-            "kirocrew restart",
+            "sudo systemctl restart ajcrew",
+            "systemctl --user restart ajcrew",
+            "ajcrew restart",
         ],
     )
     def test_posix_restart_is_the_callers_service_aware_command(
@@ -783,7 +783,7 @@ class TestSigningKeyRemedy:
     ) -> None:
         monkeypatch.setattr("platform.system", lambda: "Windows")
         key = tmp_path / "it's" / ts._SECRET_KEY_FILE
-        remedy = ts.signing_key_remedy(key, "kirocrew restart")
+        remedy = ts.signing_key_remedy(key, "ajcrew restart")
         literal = "'" + str(key).replace("'", "''") + "'"
         assert remedy[1].endswith(f"Run: (Get-Item -LiteralPath {literal}).Length")
         assert remedy[2].endswith(f"Run: Remove-Item -LiteralPath {literal}")
@@ -797,7 +797,7 @@ class TestSigningKeyRemedy:
         ASCII ', so an O\u2019Brien data home must not end the literal early."""
         monkeypatch.setattr("platform.system", lambda: "Windows")
         key = tmp_path / f"O{quote}Brien" / ts._SECRET_KEY_FILE
-        remedy = ts.signing_key_remedy(key, "kirocrew restart")
+        remedy = ts.signing_key_remedy(key, "ajcrew restart")
         literal = "'" + str(key).replace(quote, quote * 2) + "'"
         assert remedy[2].endswith(f"Run: Remove-Item -LiteralPath {literal}")
 
@@ -939,22 +939,22 @@ class TestDoctorSigningKey:
     def test_own_confinement_doctor_masks_a_readable_fallback_key(
         self, tmp_path: Path, monkeypatch, capsys
     ) -> None:
-        """Inside Kiro Crew's own sandbox on a Linux host whose private-tmpfs mount
+        """Inside Aj Crew's own sandbox on a Linux host whose private-tmpfs mount
         failed, the mask is a READABLE empty 0600 stand-in. doctor must still report
         it masked (never a removal step for a healthy host key), because
-        ``agent_confinement_is_kirocrew_own()`` is true so the open-refusal check is
+        ``agent_confinement_is_ajcrew_own()`` is true so the open-refusal check is
         not applied. Fails on 2e82af0711, where doctor would count it and print
         deletion advice."""
         key = tmp_path / ts._SECRET_KEY_FILE
         key.write_bytes(b"")  # the readable empty fallback mask
-        monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
             doctor_access.cli_doctor.sandbox,
             "agent_confinement_evidence",
-            lambda: "this process is in the kirocrew-agents.slice cgroup scope",
+            lambda: "this process is in the ajcrew-agents.slice cgroup scope",
         )
         monkeypatch.setattr(
-            doctor_access.cli_doctor.sandbox, "agent_confinement_is_kirocrew_own", lambda: True
+            doctor_access.cli_doctor.sandbox, "agent_confinement_is_ajcrew_own", lambda: True
         )
         issues: list[str] = []
         doctor_access._doctor_signing_key(issues)
@@ -973,20 +973,20 @@ class TestDoctorSigningKey:
         """On macOS there is no cgroup to read and ``cli.main()`` has already popped
         the marker; the kernel's Seatbelt verdict is what keeps a sandboxed doctor
         from reading the denied key as unreadable and printing destructive advice.
-        The Kiro Crew Seatbelt profile denies the open of the key leaf, so the mask
+        The Aj Crew Seatbelt profile denies the open of the key leaf, so the mask
         is both Seatbelt-confined and open-refused — and because confinement is
         Seatbelt-only, doctor applies that open-refusal check."""
         key = tmp_path / ts._SECRET_KEY_FILE
         key.write_bytes(b"")
         key.chmod(0)  # the macOS mask denies the open of the key leaf
-        monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
             doctor_access.cli_doctor.sandbox,
             "agent_confinement_evidence",
             lambda: "the kernel reports this process is Seatbelt-confined",
         )
         monkeypatch.setattr(
-            doctor_access.cli_doctor.sandbox, "agent_confinement_is_kirocrew_own", lambda: False
+            doctor_access.cli_doctor.sandbox, "agent_confinement_is_ajcrew_own", lambda: False
         )
         try:
             issues: list[str] = []
@@ -1005,21 +1005,21 @@ class TestDoctorSigningKey:
     def test_a_foreign_seatbelt_doctor_still_counts_a_readable_short_key(
         self, tmp_path: Path, monkeypatch, capsys
     ) -> None:
-        """The must-fix at the doctor seam: a Seatbelt sandbox Kiro Crew did not
-        create reports confinement (Seatbelt-only, so ``agent_confinement_is_kirocrew_own``
+        """The must-fix at the doctor seam: a Seatbelt sandbox Aj Crew did not
+        create reports confinement (Seatbelt-only, so ``agent_confinement_is_ajcrew_own``
         is false), yet can read the real key. A truncated key there must not be
         hidden as "masked"; doctor reports it short and counts it so the operator
         fixes it. Fails before the fix (masked on confinement alone)."""
         key = tmp_path / ts._SECRET_KEY_FILE
         key.write_bytes(b"\x01" * 5)  # a real, readable, truncated key
-        monkeypatch.setattr("kiro_crew.config.loader.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.config.loader.config_dir", lambda: tmp_path)
         monkeypatch.setattr(
             doctor_access.cli_doctor.sandbox,
             "agent_confinement_evidence",
             lambda: "the kernel reports this process is Seatbelt-confined",
         )
         monkeypatch.setattr(
-            doctor_access.cli_doctor.sandbox, "agent_confinement_is_kirocrew_own", lambda: False
+            doctor_access.cli_doctor.sandbox, "agent_confinement_is_ajcrew_own", lambda: False
         )
         issues: list[str] = []
         doctor_access._doctor_signing_key(issues)

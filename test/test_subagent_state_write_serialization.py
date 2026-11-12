@@ -13,7 +13,7 @@ import time
 
 import pytest
 
-from kiro_crew import subagent_persistence as sp
+from aj_crew import subagent_persistence as sp
 
 # ``SubagentManager.spawn`` refuses -- registering no task -- while the host
 # looks short of memory, which is the runner's state, not this test's input.
@@ -39,7 +39,7 @@ def _new_agent(agent_id: str) -> None:
     sp.create_agent_folder(
         agent_id,
         task="t",
-        agent="kirocrew",
+        agent="ajcrew",
         parent_session="dashboard:default",
         max_turns=10,
     )
@@ -48,7 +48,7 @@ def _new_agent(agent_id: str) -> None:
 @pytest.fixture()
 def agent_root(tmp_path, monkeypatch):
     """Point persistence at a temp directory."""
-    monkeypatch.setattr("kiro_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.subagent_persistence._SUBAGENTS_DIR", tmp_path)
     return tmp_path
 
 
@@ -292,7 +292,7 @@ class TestLockRegistry:
         A single process-wide lock would also pass the races above while making
         every unrelated run queue behind one agent's fsync.
         """
-        from kiro_crew.subagent_persistence import _lock_for_agent
+        from aj_crew.subagent_persistence import _lock_for_agent
 
         a = _lock_for_agent("agent-a")
         assert _lock_for_agent("agent-a") is a
@@ -432,8 +432,8 @@ class TestOnLoopKeepWriteAgainstACancelledRunsWorker:
     async def test_keep_survives_a_cancelled_runs_provenance_worker(self, agent_root, monkeypatch):
         from unittest.mock import patch
 
-        from kiro_crew.execution_context import execution_for_store
-        from kiro_crew.subagent import SubagentInfo, SubagentManager
+        from aj_crew.execution_context import execution_for_store
+        from aj_crew.subagent import SubagentInfo, SubagentManager
 
         conv_id = "keep01"
         _new_agent(conv_id)
@@ -451,11 +451,11 @@ class TestOnLoopKeepWriteAgainstACancelledRunsWorker:
             id=conv_id,
             task="keep vs zombie",
             model="model-req",
-            execution_context=execution_for_store("", template_id="kirocrew"),
+            execution_context=execution_for_store("", template_id="ajcrew"),
         )
         manager._agents[info.id] = info
 
-        with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+        with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
             task = asyncio.ensure_future(manager._run_inner(info, f"subagent:{conv_id}"))
             assert await asyncio.to_thread(inside.wait, 5.0), "provenance write never started"
             task.cancel()

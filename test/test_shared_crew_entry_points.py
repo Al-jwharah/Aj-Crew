@@ -16,15 +16,15 @@ from types import SimpleNamespace
 import pytest
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
-from kiro_crew.shared_crew import admission_gate as ag
-from kiro_crew.shared_crew import turn_gate
-from kiro_crew.shared_crew.admission import Liveness, OperationKind, OperationState, ReasonCode
-from kiro_crew.shared_crew.containment import ContainmentReport, SliceManager
-from kiro_crew.shared_crew.contracts import EnforcementLevel, Principal
-from kiro_crew.shared_crew.work_store import WorkStore
-from kiro_crew.taskq.store import TaskStore
-from kiro_crew.testing.clock import ManualClock
+from aj_crew.config.sections_shared_crew import effective_limits, shared_crew_config_from
+from aj_crew.shared_crew import admission_gate as ag
+from aj_crew.shared_crew import turn_gate
+from aj_crew.shared_crew.admission import Liveness, OperationKind, OperationState, ReasonCode
+from aj_crew.shared_crew.containment import ContainmentReport, SliceManager
+from aj_crew.shared_crew.contracts import EnforcementLevel, Principal
+from aj_crew.shared_crew.work_store import WorkStore
+from aj_crew.taskq.store import TaskStore
+from aj_crew.testing.clock import ManualClock
 
 S = OperationState
 ALICE = Principal.system("alice-entry").id
@@ -140,7 +140,7 @@ async def test_without_a_gateway_service_work_runs_unchanged(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_refused_thread_reply_frees_its_slot_and_says_why(monkeypatch):
-    from kiro_crew.dashboard import chat_threads
+    from aj_crew.dashboard import chat_threads
 
     _refusing(monkeypatch)
     frames: list[dict] = []
@@ -163,7 +163,7 @@ async def test_refused_thread_reply_frees_its_slot_and_says_why(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_refused_side_turn_settles_the_sidecar(monkeypatch):
-    from kiro_crew.dashboard.handlers import side
+    from aj_crew.dashboard.handlers import side
 
     _refusing(monkeypatch)
     frames: list[dict] = []
@@ -188,8 +188,8 @@ async def test_refused_side_turn_settles_the_sidecar(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_remote_crew_turn_refusal_answers_the_coded_envelope(monkeypatch):
-    from kiro_crew.dashboard import handlers_crew_turn, handlers_instances
-    from kiro_crew.dashboard.handlers import source_providers
+    from aj_crew.dashboard import handlers_crew_turn, handlers_instances
+    from aj_crew.dashboard.handlers import source_providers
 
     _refusing(monkeypatch, ReasonCode.PRINCIPAL_ACTIVE_LIMIT)
     reached: list[str] = []
@@ -209,7 +209,7 @@ async def test_remote_crew_turn_refusal_answers_the_coded_envelope(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_app_spawn_is_an_admitted_child_or_a_host_decline(service, monkeypatch):
-    from kiro_crew.apps import spawn_sdk
+    from aj_crew.apps import spawn_sdk
 
     monkeypatch.setattr(
         spawn_sdk,
@@ -248,7 +248,7 @@ async def test_app_spawn_is_an_admitted_child_or_a_host_decline(service, monkeyp
 
 @pytest.mark.asyncio
 async def test_taskrunner_retry_is_admitted_like_start(monkeypatch):
-    from kiro_crew.dashboard.handlers import taskrunner
+    from aj_crew.dashboard.handlers import taskrunner
 
     async def owner(_r, _op):
         return None
@@ -280,9 +280,9 @@ async def test_taskrunner_retry_is_admitted_like_start(monkeypatch):
 async def test_taskrunner_resume_inherits_admitted_principal(monkeypatch, endpoint, outcome):
     from unittest.mock import AsyncMock
 
-    from kiro_crew.dashboard.handlers import taskrunner
-    from kiro_crew.shared_crew import containment
-    from kiro_crew.testing.wait import await_until
+    from aj_crew.dashboard.handlers import taskrunner
+    from aj_crew.shared_crew import containment
+    from aj_crew.testing.wait import await_until
 
     expected = None if outcome == "passthrough" else ALICE
     admission = SimpleNamespace(
@@ -376,7 +376,7 @@ async def test_taskrunner_start_digest_binds_requested_work(
 
     from handlers_taskrunner_coverage_helpers import _runner, _state
 
-    from kiro_crew.dashboard.handlers import taskrunner
+    from aj_crew.dashboard.handlers import taskrunner
 
     runner = _runner(tmp_path)
     state = _state(runner)
@@ -418,7 +418,7 @@ async def test_taskrunner_resume_digest_binds_action_and_options(
 
     from handlers_taskrunner_coverage_helpers import _runner, _state
 
-    from kiro_crew.dashboard.handlers import taskrunner
+    from aj_crew.dashboard.handlers import taskrunner
 
     runner = _runner(tmp_path)
     runner._runs = {"t-1": SimpleNamespace(status="planned")}
@@ -444,11 +444,11 @@ async def test_slot_create_rate_charges_only_new_slots(service, monkeypatch, tmp
 
     from chat_test_helpers import _make_state
 
-    from kiro_crew.dashboard import chat_handlers
-    from kiro_crew.shared_crew import audit
+    from aj_crew.dashboard import chat_handlers
+    from aj_crew.shared_crew import audit
 
     state = _make_state(tmp_path)
-    monkeypatch.setattr(chat_handlers.KiroCrewConfig, "load", lambda: None)
+    monkeypatch.setattr(chat_handlers.AjCrewConfig, "load", lambda: None)
     monkeypatch.setattr(chat_handlers, "default_project_dir", lambda _workspace: str(tmp_path))
     monkeypatch.setattr(chat_handlers, "schedule_eager_spawn", lambda *_a, **_kw: None)
     monkeypatch.setattr(audit, "schedule_action_audit", lambda *_a, **_kw: None)

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.apps import registry
+from aj_crew.apps import registry
 
 
 def _catalog(monkeypatch, rows):
@@ -180,14 +180,14 @@ class TestCatalogBuiltinRowsIntersectShippedBuiltins:
             registry,
             "_edition_registry_rows",
             lambda: [
-                {"name": "indexed-by-us", "repo": "example/indexed-by-us", "author": "kirocrew"},
+                {"name": "indexed-by-us", "repo": "example/indexed-by-us", "author": "ajcrew"},
                 {"name": "claims-us", "repo": "example/claims-us"},
             ],
         )
 
         async def _resolve_manifest(entry):
             # Each app's own manifest says the opposite of its index row.
-            author = "someone-else" if entry["name"] == "indexed-by-us" else "kirocrew"
+            author = "someone-else" if entry["name"] == "indexed-by-us" else "ajcrew"
             return {**entry, "author": author}
 
         monkeypatch.setattr(registry, "_resolve_manifest", _resolve_manifest)
@@ -285,8 +285,8 @@ class TestCatalogBuiltinRowsIntersectShippedBuiltins:
         """Discovery validates the manifest; registration wants more than that."""
         import json
 
-        from kiro_crew.apps import manager
-        from kiro_crew.apps.discovery import discover_builtin_apps
+        from aj_crew.apps import manager
+        from aj_crew.apps.discovery import discover_builtin_apps
 
         builtins_dir = tmp_path / "builtins"
         (builtins_dir / "authorless").mkdir(parents=True)
@@ -314,7 +314,7 @@ class TestCatalogBuiltinRowsIntersectShippedBuiltins:
 
     def test_an_installed_builtin_whose_manifest_broke_is_not_orphaned(self, tmp_path, monkeypatch):
         """Orphan detection asks a wider question and must not inherit the screen."""
-        from kiro_crew.apps import manager
+        from aj_crew.apps import manager
 
         valid = {
             "name": "brokenish",
@@ -344,8 +344,8 @@ class TestCatalogBuiltinRowsIntersectShippedBuiltins:
 
     def test_shipped_builtin_names_reports_the_packages_own_builtins(self):
         """The helper reads the real shipped set, not a hand-written list."""
-        from kiro_crew.apps.discovery import discover_builtin_apps
-        from kiro_crew.apps.manager import shipped_builtin_names
+        from aj_crew.apps.discovery import discover_builtin_apps
+        from aj_crew.apps.manager import shipped_builtin_names
 
         discovered = {a["name"] for a in discover_builtin_apps()}
         assert discovered

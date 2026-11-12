@@ -1,7 +1,7 @@
 /**
  * `agentPath` keeps a crew name a proxy would mangle out of the URL path:
  * a name that needs percent-encoding becomes an unpadded base64url
- * segment, the spelling `kiro_crew/agent_url_path.py` decodes.
+ * segment, the spelling `aj_crew/agent_url_path.py` decodes.
  */
 import { describe, expect, it } from 'vitest'
 

@@ -15,13 +15,13 @@ from typing import Any
 
 import pytest
 
-from kiro_crew import crew_log as lg
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import checkpoint as savepoints
-from kiro_crew.crew_log import eager, emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import store as crew_log_store
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew import crew_log as lg
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import checkpoint as savepoints
+from aj_crew.crew_log import eager, emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import store as crew_log_store
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 GATEWAY = "gateway"
 #: A busy host's largest unit, in synthetic entries of about 646 bytes.
@@ -32,8 +32,8 @@ APPEND_EVERY = 500
 
 @pytest.fixture(autouse=True)
 def _isolated_home(tmp_path, _floor_monkeypatch):
-    _floor_monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     eager.stop_for_tests()
     crew_log.forget_session_folds()
     emit.reset_caches()

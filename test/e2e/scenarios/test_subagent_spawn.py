@@ -36,7 +36,7 @@ TURN_TIMEOUT = 300.0
 
 
 def test_one_agent_turn_completes_with_a_tool_call(pod) -> None:
-    from kiro_crew.testing.fake_acp_backend import REPLY_TEXT, TOOL_TRIGGER
+    from aj_crew.testing.fake_acp_backend import REPLY_TEXT, TOOL_TRIGGER
 
     slot = "e2e-scenario-turn"
     # POST /api/chat streams the turn as SSE and closes when the turn ends, so

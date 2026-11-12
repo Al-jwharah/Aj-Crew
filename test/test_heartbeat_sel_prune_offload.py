@@ -27,11 +27,11 @@ import pytest
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 
-import kiro_crew.heartbeat as hb_mod
-from kiro_crew.heartbeat import HeartbeatService
-from kiro_crew.metrics.recorder import MetricsRecorder
+import aj_crew.heartbeat as hb_mod
+from aj_crew.heartbeat import HeartbeatService
+from aj_crew.metrics.recorder import MetricsRecorder
 
-_PRUNE_COUNTER = "kirocrew.sel.prune_failed.count"
+_PRUNE_COUNTER = "ajcrew.sel.prune_failed.count"
 
 
 def _service(
@@ -53,7 +53,7 @@ def _service(
     svc._processing = True
     svc._tick = 0  # 0 % _PRUNE_TICKS == 0 -> prune branch runs
 
-    monkeypatch.setattr(hb_mod.KiroCrewConfig, "load", classmethod(lambda cls: MagicMock()))
+    monkeypatch.setattr(hb_mod.AjCrewConfig, "load", classmethod(lambda cls: MagicMock()))
     ran_on: list[str] = []
 
     def _prune() -> None:
@@ -106,7 +106,7 @@ class TestSelPruneFailureIsLoud:
         svc, _, _ran = _service(monkeypatch, prune_error=OSError("no space left on device"))
         monkeypatch.setattr(hb_mod, "get_recorder", lambda: MagicMock())
 
-        with caplog.at_level(logging.WARNING, logger="kiro_crew.heartbeat"):
+        with caplog.at_level(logging.WARNING, logger="aj_crew.heartbeat"):
             await svc._beat()
 
         assert any(

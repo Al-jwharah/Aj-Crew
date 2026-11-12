@@ -1,4 +1,4 @@
-"""``kirocrew tailnet`` — the command that makes exposing the dashboard one step.
+"""``ajcrew tailnet`` — the command that makes exposing the dashboard one step.
 
 Reaching the dashboard from another device on a tailnet takes two independent
 changes: publish it with ``tailscale serve``, and tell the gateway to trust the
@@ -21,7 +21,7 @@ import json
 
 import pytest
 
-from kiro_crew.dashboard.tailnet_serve import ServeResult, ServeState
+from aj_crew.dashboard.tailnet_serve import ServeResult, ServeState
 
 #: Tell ``_stub_serve`` to leave ``_marker_port`` alone (the test patched it itself).
 KEEP = object()
@@ -35,7 +35,7 @@ def _args(action: str) -> argparse.Namespace:
 def cfg_file(tmp_path, monkeypatch):
     """An isolated data home, so no test touches a real config.
 
-    Isolation is by ``KIROCREW_HOME`` rather than by patching ``config_path`` in
+    Isolation is by ``AJCREW_HOME`` rather than by patching ``config_path`` in
     each module that imports it. Same mechanism the sibling governance suite uses,
     and it is the one that composes: patching the symbol reaches only the modules
     you remembered, and the ones you did not keep resolving the real home — which
@@ -43,7 +43,7 @@ def cfg_file(tmp_path, monkeypatch):
     """
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     path = home / "config.json"
     # ``dashboard.tailscale.enabled`` is a PRECONDITION of `up`, not something it sets:
     # the command checks the trust flag and refuses rather than writing config, so the
@@ -72,8 +72,8 @@ def _stub_serve(
     a precondition of the ordinary success path, not an extra. Tests that exercise port
     resolution itself pass ``marker=KEEP`` and install their own.
     """
-    from kiro_crew import cli_commands
-    from kiro_crew.dashboard import tailnet, tailnet_serve
+    from aj_crew import cli_commands
+    from aj_crew.dashboard import tailnet, tailnet_serve
 
     if marker is not KEEP:
         monkeypatch.setattr(cli_commands, "_marker_port", lambda: marker)
@@ -107,7 +107,7 @@ class TestUpOrdering:
     """
 
     def test_publish_happens_and_the_url_is_printed(self, cfg_file, monkeypatch, capsys):
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         _stub_serve(monkeypatch)
         _tailnet(_args("up"))
@@ -116,7 +116,7 @@ class TestUpOrdering:
     def test_a_failed_publish_exits_nonzero_and_leaves_the_flag_alone(
         self, cfg_file, monkeypatch
     ) -> None:
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         _stub_serve(monkeypatch, publish=ServeResult(False, "no_permission", "access denied"))
         with pytest.raises(SystemExit) as exc:
@@ -125,7 +125,7 @@ class TestUpOrdering:
         assert _enabled(cfg_file) is True, "the operator's flag must be left as they set it"
 
     def test_a_pinned_host_is_refused(self, cfg_file, monkeypatch) -> None:
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         _stub_serve(
             monkeypatch,
@@ -136,7 +136,7 @@ class TestUpOrdering:
         assert _enabled(cfg_file) is True
 
     def test_other_settings_survive(self, cfg_file, monkeypatch) -> None:
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         _stub_serve(monkeypatch)
         _tailnet(_args("up"))
@@ -150,7 +150,7 @@ class TestRestartNotice:
         A gateway that booted before this command has an allowlist that does not
         contain the name, so "already on" is not "already working".
         """
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         cfg_file.write_text(
             json.dumps(
@@ -174,7 +174,7 @@ class TestRestartNotice:
         so a restart alone will not fix it. Printing only the restart note would
         send the operator in circles.
         """
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         _stub_serve(monkeypatch, name=None)
         _tailnet(_args("up"))
@@ -194,8 +194,8 @@ class TestTheEffectiveValueIsWhatGates:
     def test_an_overlay_that_disables_refuses_and_names_the_overlay(
         self, cfg_file, monkeypatch, capsys
     ) -> None:
-        from kiro_crew.cli_commands import _tailnet
-        from kiro_crew.dashboard import tailnet_serve
+        from aj_crew.cli_commands import _tailnet
+        from aj_crew.dashboard import tailnet_serve
 
         (cfg_file.parent / "config.local.json").write_text(
             json.dumps({"dashboard": {"tailscale": {"enabled": False}}})
@@ -214,7 +214,7 @@ class TestTheEffectiveValueIsWhatGates:
         assert "config.local.json" in capsys.readouterr().err
 
     def test_an_enabled_host_publishes(self, cfg_file, monkeypatch, capsys) -> None:
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         _stub_serve(monkeypatch)
         _tailnet(_args("up"))
@@ -224,7 +224,7 @@ class TestTheEffectiveValueIsWhatGates:
 class TestPortResolution:
     """The port must be the one the gateway is actually bound to.
 
-    A gateway started with `--port` (or `KIROCREW_PORT`) is not described by
+    A gateway started with `--port` (or `AJCREW_PORT`) is not described by
     `dashboard.url`, so parsing the config would publish 443 in front of a port
     nothing is listening on — a publish that looks fine and 502s. This repo's own
     dev hosts run exactly that way.
@@ -244,11 +244,11 @@ class TestPortResolution:
         service that publishing would expose. Naming the port must beat every
         heuristic, including the marker and the env var.
         """
-        from kiro_crew import cli_commands
-        from kiro_crew.cli_commands import _tailnet
-        from kiro_crew.dashboard import tailnet_serve
+        from aj_crew import cli_commands
+        from aj_crew.cli_commands import _tailnet
+        from aj_crew.dashboard import tailnet_serve
 
-        monkeypatch.setenv("KIROCREW_PORT", "9001")
+        monkeypatch.setenv("AJCREW_PORT", "9001")
         monkeypatch.setattr(cli_commands, "_marker_port", lambda: 7788)
         seen: list[int] = []
         _stub_serve(monkeypatch, marker=KEEP)
@@ -261,12 +261,12 @@ class TestPortResolution:
         assert seen == [6000]
 
     def test_the_run_marker_outranks_the_configured_url(self, cfg_file, monkeypatch) -> None:
-        from kiro_crew import cli_commands
-        from kiro_crew.cli_commands import _tailnet
-        from kiro_crew.dashboard import tailnet_serve
+        from aj_crew import cli_commands
+        from aj_crew.cli_commands import _tailnet
+        from aj_crew.dashboard import tailnet_serve
 
         # config says 5476; a verified gateway is actually listening on 7788.
-        monkeypatch.delenv("KIROCREW_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_PORT", raising=False)
         monkeypatch.setattr(cli_commands, "_marker_port", lambda: 7788)
         seen: list[int] = []
         _stub_serve(monkeypatch, marker=KEEP)
@@ -280,11 +280,11 @@ class TestPortResolution:
 
     def test_an_explicit_env_port_outranks_the_marker(self, cfg_file, monkeypatch) -> None:
         """An operator naming the port directly wins over discovery."""
-        from kiro_crew import cli_commands
-        from kiro_crew.cli_commands import _tailnet
-        from kiro_crew.dashboard import tailnet_serve
+        from aj_crew import cli_commands
+        from aj_crew.cli_commands import _tailnet
+        from aj_crew.dashboard import tailnet_serve
 
-        monkeypatch.setenv("KIROCREW_PORT", "9001")
+        monkeypatch.setenv("AJCREW_PORT", "9001")
         monkeypatch.setattr(cli_commands, "_marker_port", lambda: 7788)
         seen: list[int] = []
         _stub_serve(monkeypatch, marker=KEEP)
@@ -307,11 +307,11 @@ class TestPortResolution:
         configured port, the fallback exposes an unrelated local service to every
         device on the tailnet. Refusing is recoverable; that exposure is not.
         """
-        from kiro_crew import cli_commands
-        from kiro_crew.cli_commands import _tailnet
-        from kiro_crew.dashboard import tailnet_serve
+        from aj_crew import cli_commands
+        from aj_crew.cli_commands import _tailnet
+        from aj_crew.dashboard import tailnet_serve
 
-        monkeypatch.delenv("KIROCREW_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_PORT", raising=False)
 
         def _boom():
             raise RuntimeError("marker directory unreadable")
@@ -337,37 +337,37 @@ class TestPortResolution:
     ) -> None:
         """The way out the refusal offers must be one the operator can type.
 
-        It once said to start the dashboard with ``kirocrew dashboard``, which is not
+        It once said to start the dashboard with ``ajcrew dashboard``, which is not
         a command: the operator who followed it got argparse's ``invalid choice``
-        instead of a running gateway. Each ``kirocrew <command>`` it names is parsed
+        instead of a running gateway. Each ``ajcrew <command>`` it names is parsed
         by the real CLI here, so a renamed or invented command fails this test.
         """
         import re
         import sys
 
-        from kiro_crew import cli_commands
-        from kiro_crew.cli import main
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew import cli_commands
+        from aj_crew.cli import main
+        from aj_crew.cli_commands import _tailnet
 
-        monkeypatch.delenv("KIROCREW_PORT", raising=False)
+        monkeypatch.delenv("AJCREW_PORT", raising=False)
         monkeypatch.setattr(cli_commands, "_marker_port", lambda: None)
         _stub_serve(monkeypatch, marker=KEEP)
         with pytest.raises(SystemExit):
             _tailnet(_args("up"))
         err = capsys.readouterr().err
 
-        named = re.findall(r"`kirocrew ([a-z][a-z-]*)", err)
+        named = re.findall(r"`ajcrew ([a-z][a-z-]*)", err)
         assert "gateway" in named, f"must name the command that serves the dashboard: {err!r}"
 
         # ``main()`` auto-detects and exports a project dir unless one is pinned.
-        monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
+        monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
         for command in sorted(set(named)):
-            monkeypatch.setattr(sys, "argv", ["kirocrew", command, "--help"])
+            monkeypatch.setattr(sys, "argv", ["ajcrew", command, "--help"])
             with pytest.raises(SystemExit) as exc:
                 main()
             captured = capsys.readouterr()
             assert exc.value.code == 0, (
-                f"the refusal names `kirocrew {command}`, which the CLI rejects: "
+                f"the refusal names `ajcrew {command}`, which the CLI rejects: "
                 f"{captured.err!r}"
             )
 
@@ -375,7 +375,7 @@ class TestPortResolution:
 class TestCorruptConfigIsNeverReplaced:
     """A malformed config.json must abort the write, not get replaced by defaults.
 
-    `KiroCrewConfig.load()` swallows a bad file and returns DEFAULTS, and the writer
+    `AjCrewConfig.load()` swallows a bad file and returns DEFAULTS, and the writer
     persists a full serialisation — so without a guard, `tailnet up` on a host with
     a hand-edited (or half-written) config.json silently replaces every setting the
     user has and prints success. The repo's own `read_config_for_update` docstring
@@ -384,7 +384,7 @@ class TestCorruptConfigIsNeverReplaced:
 
     @pytest.mark.parametrize("raw", ["{not json", '["an", "array"]', '"a string"'])
     def test_the_file_survives(self, cfg_file, monkeypatch, raw: str) -> None:
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         cfg_file.write_text(raw)
         _stub_serve(monkeypatch)
@@ -404,8 +404,8 @@ class TestCorruptConfigIsNeverReplaced:
         the failure atomic: nothing published, nothing written, and a message naming
         the file.
         """
-        from kiro_crew.cli_commands import _tailnet
-        from kiro_crew.dashboard import tailnet_serve
+        from aj_crew.cli_commands import _tailnet
+        from aj_crew.dashboard import tailnet_serve
 
         published: list[int] = []
         _stub_serve(monkeypatch)
@@ -423,7 +423,7 @@ class TestCorruptConfigIsNeverReplaced:
 
 
 class TestACorruptConfigStopsEveryAction:
-    """Validation runs before anything calls ``KiroCrewConfig.load()``.
+    """Validation runs before anything calls ``AjCrewConfig.load()``.
 
     That ordering is the point: ``load()`` is itself destructive on a file it cannot
     parse — its migration write-back rewrites the file — so a section it chokes on is
@@ -436,12 +436,12 @@ class TestACorruptConfigStopsEveryAction:
     def test_every_action_refuses_rather_than_rewriting(self, cfg_file, monkeypatch, action):
         """Even `status` must not rewrite the file just by reading it.
 
-        `KiroCrewConfig.load()` migration-writes a parseable-but-wrongly-typed config,
+        `AjCrewConfig.load()` migration-writes a parseable-but-wrongly-typed config,
         and both `status` and `down` need the dashboard port, which resolves through
         `load()` as well — so there is no version of them that reads without
         rewriting. Declining beats corrupting.
         """
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         bad = '{"dashboard": 5}'
         cfg_file.write_text(bad)
@@ -455,7 +455,7 @@ class TestACorruptConfigStopsEveryAction:
         self, cfg_file, monkeypatch, capsys
     ):
         """Refusing `down` is only acceptable if withdrawal is still reachable."""
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         cfg_file.write_text('{"dashboard": 5}')
         _stub_serve(monkeypatch)
@@ -471,14 +471,14 @@ class TestACorruptConfigStopsEveryAction:
         reads — and the effective-value check would then blame a config.local.json
         overlay that does not exist.
         """
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
-        assert isinstance(KiroCrewConfig().dashboard.tailscale.enabled, bool)
+        assert isinstance(AjCrewConfig().dashboard.tailscale.enabled, bool)
 
 
 class TestDown:
     def test_withdraw_leaves_the_config_alone(self, cfg_file, monkeypatch, capsys) -> None:
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         cfg_file.write_text(
             json.dumps(
@@ -498,7 +498,7 @@ class TestDown:
         assert "unchanged" in capsys.readouterr().out
 
     def test_a_failed_withdraw_exits_nonzero(self, cfg_file, monkeypatch) -> None:
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         _stub_serve(monkeypatch, unpublish=ServeResult(False, "no_permission", "denied"))
         with pytest.raises(SystemExit) as exc:
@@ -514,7 +514,7 @@ class TestStatus:
         chair (the dashboard does not open), which is why a single "on/off" line
         would not be diagnostic.
         """
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         _stub_serve(monkeypatch)
         _tailnet(_args("status"))
@@ -525,15 +525,15 @@ class TestStatus:
         assert "URL:        https://d.t.ts.net" in out
 
     def test_unknown_published_state_is_not_shown_as_no(self, cfg_file, monkeypatch, capsys):
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         _stub_serve(monkeypatch, state=ServeState(None, None, "could not tell"))
         _tailnet(_args("status"))
         assert "Published:  unknown" in capsys.readouterr().out
 
     def test_a_pin_is_named(self, cfg_file, monkeypatch, capsys) -> None:
-        from kiro_crew.cli_commands import _tailnet
-        from kiro_crew.dashboard import tailnet
+        from aj_crew.cli_commands import _tailnet
+        from aj_crew.dashboard import tailnet
 
         _stub_serve(monkeypatch)
         monkeypatch.setattr(tailnet, "is_governance_pinned_off", lambda *a, **k: True)
@@ -541,7 +541,7 @@ class TestStatus:
         assert "PINNED OFF" in capsys.readouterr().out
 
     def test_unknown_action_exits_nonzero(self, cfg_file, monkeypatch) -> None:
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         _stub_serve(monkeypatch)
         with pytest.raises(SystemExit) as exc:
@@ -552,7 +552,7 @@ class TestStatus:
 class TestEverySectionIsGuardedNotJustOurs:
     """A read-only command must not be able to destroy an unrelated section.
 
-    ``KiroCrewConfig.load()`` performs a migration write-back, so merely *loading* a
+    ``AjCrewConfig.load()`` performs a migration write-back, so merely *loading* a
     file it cannot parse replaces that section with defaults. Guarding only the
     sections this command writes was not enough: the destructive write comes from
     ``load()``, which covers all of them, so ``{"slack": 5}`` plus a ``tailnet status``
@@ -564,7 +564,7 @@ class TestEverySectionIsGuardedNotJustOurs:
     def test_a_non_object_section_survives_every_action(
         self, cfg_file, monkeypatch, section, action, capsys
     ) -> None:
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         cfg_file.write_text(json.dumps({"timezone": "UTC", section: 5}))
         before = cfg_file.read_bytes()
@@ -579,13 +579,13 @@ class TestEverySectionIsGuardedNotJustOurs:
         """So a section added to the model later is covered without an edit here."""
         import dataclasses
 
-        from kiro_crew.cli_commands import _container_valued_sections
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.cli_commands import _container_valued_sections
+        from aj_crew.config.loader import AjCrewConfig
 
         guarded = set(_container_valued_sections())
         expected = {
             f.name
-            for f in dataclasses.fields(KiroCrewConfig)
+            for f in dataclasses.fields(AjCrewConfig)
             if dataclasses.is_dataclass(f.type) or getattr(f.type, "__origin__", None) is dict
         }
         missing = expected - guarded
@@ -610,14 +610,14 @@ class TestUpNeverWritesConfig:
         """Every value the operator set survives, and the trust flag is untouched.
 
         Deliberately NOT a byte-for-byte assertion, which would be a false claim: the
-        first ``KiroCrewConfig.load()`` on a minimal config performs a one-time
+        first ``AjCrewConfig.load()`` on a minimal config performs a one-time
         migration write-back that materialises every default key (98 bytes became 9187
-        in a direct measurement), and that happens for `kirocrew status`, `config get`
+        in a direct measurement), and that happens for `ajcrew status`, `config get`
         and every other command in this repo — it is not something this feature does or
         can stop. What this feature owes is narrower and checkable: it must not change
         any value the operator chose.
         """
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         _stub_serve(monkeypatch)
         before = json.loads(cfg_file.read_text())
@@ -635,7 +635,7 @@ class TestUpNeverWritesConfig:
 
     def test_no_write_helper_survives(self) -> None:
         """A future edit must not quietly reintroduce the write path."""
-        from kiro_crew import cli_commands
+        from aj_crew import cli_commands
 
         for gone in ("_record_tailnet_enabled", "_tailnet_config_lock", "TailnetConfigBusy"):
             assert not hasattr(cli_commands, gone), f"{gone} is back; the write returned"
@@ -647,8 +647,8 @@ class TestUpNeverWritesConfig:
         whenever the write failed — reachable on the tailnet and answering 403, the
         exact confusing state this command exists to remove.
         """
-        from kiro_crew.cli_commands import _tailnet
-        from kiro_crew.dashboard import tailnet_serve
+        from aj_crew.cli_commands import _tailnet
+        from aj_crew.dashboard import tailnet_serve
 
         cfg_file.write_text(json.dumps({"dashboard": {"tailscale": {"enabled": False}}}))
         published: list[int] = []
@@ -678,7 +678,7 @@ class TestListSectionsAreGuardedToo:
     def test_a_scalar_array_section_is_refused_not_iterated(
         self, cfg_file, monkeypatch, action, capsys
     ) -> None:
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         cfg_file.write_text(json.dumps({"timezone": "UTC", "registries": 5}))
         before = cfg_file.read_bytes()
@@ -694,11 +694,11 @@ class TestListSectionsAreGuardedToo:
     def test_the_expected_shape_matches_the_model(self) -> None:
         import dataclasses
 
-        from kiro_crew.cli_commands import _container_valued_sections
-        from kiro_crew.config.loader import KiroCrewConfig
+        from aj_crew.cli_commands import _container_valued_sections
+        from aj_crew.config.loader import AjCrewConfig
 
         shapes = _container_valued_sections()
-        for field in dataclasses.fields(KiroCrewConfig):
+        for field in dataclasses.fields(AjCrewConfig):
             origin = getattr(field.type, "__origin__", None)
             if origin is list:
                 assert shapes.get(field.name) is list, f"{field.name} must expect an array"
@@ -721,7 +721,7 @@ class TestTheOverlayIsGuardedToo:
     def test_a_malformed_overlay_is_refused_by_every_action(
         self, cfg_file, monkeypatch, action, bad, capsys
     ) -> None:
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         overlay = cfg_file.parent / "config.local.json"
         overlay.write_text(bad)
@@ -736,7 +736,7 @@ class TestTheOverlayIsGuardedToo:
         self, cfg_file, monkeypatch, capsys
     ) -> None:
         """Naming the wrong file sends the operator to edit a healthy one."""
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         overlay = cfg_file.parent / "config.local.json"
         overlay.write_text('{"registries": 5}')
@@ -749,7 +749,7 @@ class TestTheOverlayIsGuardedToo:
 
     def test_a_missing_overlay_is_not_an_error(self, cfg_file, monkeypatch) -> None:
         """The overlay is optional; absence must not be treated as malformed."""
-        from kiro_crew.cli_commands import _tailnet
+        from aj_crew.cli_commands import _tailnet
 
         assert not (cfg_file.parent / "config.local.json").exists()
         _stub_serve(monkeypatch)

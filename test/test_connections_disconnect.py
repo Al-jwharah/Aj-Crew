@@ -17,8 +17,8 @@ from urllib.parse import urlsplit
 
 import pytest
 
-from kiro_crew import mcp_grant
-from kiro_crew.connections.tool_aliases import normalized_endpoint
+from aj_crew import mcp_grant
+from aj_crew.connections.tool_aliases import normalized_endpoint
 
 _URL = "https://mcp.notion.com/mcp"
 
@@ -136,16 +136,16 @@ import pytest_asyncio  # noqa: E402  (imported for its marker plugin)
 from aiohttp import web  # noqa: E402
 from aiohttp.test_utils import TestClient, TestServer  # noqa: E402
 
-from kiro_crew import agent as agent_mod  # noqa: E402
-from kiro_crew import mcp_discovery  # noqa: E402
-from kiro_crew.config import paths as connections_paths  # noqa: E402
-from kiro_crew.connections import get_provider  # noqa: E402
-from kiro_crew.connections import mint  # noqa: E402
-from kiro_crew.connections import ownership  # noqa: E402
-from kiro_crew.connections import warm  # noqa: E402
-from kiro_crew.dashboard.handlers import connections  # noqa: E402
-from kiro_crew.dashboard.handlers import mcp as mcp_handlers  # noqa: E402
-from kiro_crew.testing.wait import await_until  # noqa: E402
+from aj_crew import agent as agent_mod  # noqa: E402
+from aj_crew import mcp_discovery  # noqa: E402
+from aj_crew.config import paths as connections_paths  # noqa: E402
+from aj_crew.connections import get_provider  # noqa: E402
+from aj_crew.connections import mint  # noqa: E402
+from aj_crew.connections import ownership  # noqa: E402
+from aj_crew.connections import warm  # noqa: E402
+from aj_crew.dashboard.handlers import connections  # noqa: E402
+from aj_crew.dashboard.handlers import mcp as mcp_handlers  # noqa: E402
+from aj_crew.testing.wait import await_until  # noqa: E402
 
 _ = pytest_asyncio
 
@@ -224,7 +224,7 @@ def _wire(
 
     monkeypatch.setattr(mint, "cancel_mint", _no_mint)
     monkeypatch.setattr(mcp_discovery, "list_servers", lambda: list(inventory))
-    default_raw = {"kirocrew": {s.name: {"url": s.url} for s in inventory}}
+    default_raw = {"ajcrew": {s.name: {"url": s.url} for s in inventory}}
 
     def _census(_project_dirs: tuple[pathlib.Path, ...] = ()) -> tuple[dict, tuple[str, ...]]:
         return (raw_specs if raw_specs is not None else default_raw, unreadable)
@@ -363,7 +363,7 @@ async def test_disconnect_logs_a_composition_refused_rebuild_as_governance(
 ) -> None:
     """The host's enterprise setup could not be built: the response keeps its shape,
     and the gateway log names governance at ERROR."""
-    from kiro_crew.platform import PlatformCompositionError
+    from aj_crew.platform import PlatformCompositionError
 
     def _refused(**_: object) -> pathlib.Path:
         raise PlatformCompositionError("companion missing")
@@ -377,7 +377,7 @@ async def test_disconnect_logs_a_composition_refused_rebuild_as_governance(
         purged=purged,
     )
     monkeypatch.setattr(agent_mod, "rebuild_agent_config", _refused)
-    caplog.set_level("ERROR", logger="kiro_crew.connections.ownership")
+    caplog.set_level("ERROR", logger="aj_crew.connections.ownership")
 
     body = await _disconnect()
 
@@ -387,7 +387,7 @@ async def test_disconnect_logs_a_composition_refused_rebuild_as_governance(
     errors = [
         r
         for r in caplog.records
-        if r.name == "kiro_crew.connections.ownership" and r.levelname == "ERROR"
+        if r.name == "aj_crew.connections.ownership" and r.levelname == "ERROR"
     ]
     assert len(errors) == 1
     assert "governance" in errors[0].getMessage()
@@ -496,7 +496,7 @@ async def test_a_query_string_variant_shares_the_grant_and_blocks_the_revoke(
         purged=[],
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": _provider_url()}},
+            "ajcrew": {_SLUG: {"url": _provider_url()}},
             "global": {"notion-work": {"url": _provider_url() + "?workspace=team"}},
         },
     )
@@ -527,7 +527,7 @@ async def test_a_trailing_slash_variant_owns_a_different_grant_and_never_blocks(
         purged=[],
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": _provider_url()}},
+            "ajcrew": {_SLUG: {"url": _provider_url()}},
             "global": {"notion-slash": {"url": _provider_url() + "/"}},
         },
     )
@@ -545,7 +545,7 @@ async def test_a_disabled_entry_still_counts_as_a_grant_sharer(
 ) -> None:
     """A switched-off server still owns its grant.
 
-    ``list_servers`` drops disabled entries outside the Kiro Crew scope, so the
+    ``list_servers`` drops disabled entries outside the Aj Crew scope, so the
     sharing sweep must read the raw specs -- otherwise disabling an entry makes
     its grant deletable, and re-enabling it demands a fresh consent with nothing
     having said so.
@@ -560,7 +560,7 @@ async def test_a_disabled_entry_still_counts_as_a_grant_sharer(
         purged=[],
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": _provider_url()}},
+            "ajcrew": {_SLUG: {"url": _provider_url()}},
             "global": {"notion-work": {"url": _provider_url(), "disabled": True}},
         },
     )
@@ -601,7 +601,7 @@ async def test_a_malformed_config_url_neither_crashes_nor_blocks_the_revoke(
         purged=[],
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": _provider_url()}},
+            "ajcrew": {_SLUG: {"url": _provider_url()}},
             "global": {
                 "template-junk": {"url": "http://localhost:${PORT}/mcp"},
                 "port-overflow": {"url": "https://host:99999/mcp"},
@@ -681,9 +681,9 @@ async def test_disconnect_leaves_a_same_named_server_on_another_endpoint_alone(
 async def test_a_custom_agent_config_sharing_the_endpoint_blocks_the_revoke(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Blocker 1: the census must include agent specs Kiro Crew does not own.
+    """Blocker 1: the census must include agent specs Aj Crew does not own.
 
-    Discovery merges only ``kirocrew.json``, so a spec the user wrote by hand is
+    Discovery merges only ``ajcrew.json``, so a spec the user wrote by hand is
     invisible to the scope sweep -- while kiro-cli authorizes from it and shares
     the one artifact pair the endpoint names. Judging ownership without it deletes
     that agent's authorization, and the refresh token is not recoverable locally.
@@ -697,7 +697,7 @@ async def test_a_custom_agent_config_sharing_the_endpoint_blocks_the_revoke(
         purged=[],
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": _provider_url()}},
+            "ajcrew": {_SLUG: {"url": _provider_url()}},
             "agent:my-research.json": {"notion-research": {"url": _provider_url()}},
         },
     )
@@ -734,7 +734,7 @@ async def test_a_refused_purge_keeps_the_surviving_mirrors_grant(
         revoked=revoked,
         raw_specs={
             # Owned registry scope (a purge target) ...
-            "kirocrew": {_SLUG: {"url": _provider_url()}},
+            "ajcrew": {_SLUG: {"url": _provider_url()}},
             # ... mirrored into a shared agent file another data home owns, at the
             # same endpoint, so it holds the same artifact pair.
             f"{ownership._MIRROR_PREFIX}kiroGlobal": {_SLUG: {"url": _provider_url()}},
@@ -777,7 +777,7 @@ async def test_a_refused_purge_keeps_a_query_variant_mirrors_grant(
         purged=[],
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": _provider_url()}},
+            "ajcrew": {_SLUG: {"url": _provider_url()}},
             # Same artifact pair, different (query-qualified) endpoint, in a shared
             # agent file another data home owns.
             f"{ownership._MIRROR_PREFIX}kiroGlobal": {
@@ -818,7 +818,7 @@ async def test_a_mismatched_entry_in_another_scope_survives_the_purge(
         purged=[],
         scopes=scopes,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": _provider_url()}},
+            "ajcrew": {_SLUG: {"url": _provider_url()}},
             "kiroGlobal": {_SLUG: {"url": "https://notion.example.internal/mcp"}},
         },
     )
@@ -826,7 +826,7 @@ async def test_a_mismatched_entry_in_another_scope_survives_the_purge(
     body = await _disconnect()
 
     assert body["entryRemoved"] is True
-    assert scopes == [("kirocrew",)], "the purge reached a scope it never judged"
+    assert scopes == [("ajcrew",)], "the purge reached a scope it never judged"
 
 
 @pytest.mark.asyncio
@@ -1072,14 +1072,14 @@ def _agents_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path) -> path
     """Point every census source at ``tmp_path`` and return the agents dir."""
     agents = tmp_path / "agents"
     agents.mkdir()
-    monkeypatch.setattr(mcp_discovery, "_MCP_SOURCES", ((tmp_path / "mcp.json", "kirocrew"),))
+    monkeypatch.setattr(mcp_discovery, "_MCP_SOURCES", ((tmp_path / "mcp.json", "ajcrew"),))
     monkeypatch.setattr(mcp_discovery, "_extra_scope_sources", list)
     monkeypatch.setattr(connections_paths, "kiro_agents_dir", lambda: agents)
     monkeypatch.setattr(mcp_handlers, "_extra_mcp_scopes", list)
     return agents
 
 
-def test_the_census_reads_agent_specs_kirocrew_does_not_own(
+def test_the_census_reads_agent_specs_ajcrew_does_not_own(
     monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path
 ) -> None:
     """A hand-written agent spec is a census source, not an invisible one."""
@@ -1180,7 +1180,7 @@ async def test_a_same_named_entry_at_a_query_variant_still_shares_the_grant(
         purged=purged,
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": _provider_url()}},
+            "ajcrew": {_SLUG: {"url": _provider_url()}},
             "global": {_SLUG: {"url": _provider_url() + "?workspace=acme"}},
         },
     )
@@ -1211,7 +1211,7 @@ async def test_a_same_named_agent_spec_entry_still_shares_the_grant(
         purged=purged,
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": _provider_url()}},
+            "ajcrew": {_SLUG: {"url": _provider_url()}},
             "agent:custom.json": {_SLUG: {"url": _provider_url()}},
         },
     )
@@ -1288,7 +1288,7 @@ async def test_a_percent_encoded_host_variant_fails_closed(
         purged=[],
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": _provider_url()}},
+            "ajcrew": {_SLUG: {"url": _provider_url()}},
             "global": {"pct-host": {"url": "https://%6dcp.notion.com/mcp"}},
         },
     )
@@ -1314,7 +1314,7 @@ async def test_a_dot_segment_path_variant_fails_closed(
         purged=[],
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": base}},
+            "ajcrew": {_SLUG: {"url": base}},
             "global": {"dotted-path": {"url": dotted}},
         },
     )
@@ -1337,7 +1337,7 @@ async def test_a_unicode_host_variant_fails_closed(
         purged=[],
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": _provider_url()}},
+            "ajcrew": {_SLUG: {"url": _provider_url()}},
             "global": {"invisible": {"url": "https://m\u2061cp.notion.com/mcp"}},
         },
     )
@@ -1367,7 +1367,7 @@ async def test_an_owned_trailing_slash_variant_revokes_both_pairs(
         inventory=[_entry(_SLUG, base + "/")],
         purged=purged,
         revoked=revoked,
-        raw_specs={"kirocrew": {_SLUG: {"url": base + "/"}}},
+        raw_specs={"ajcrew": {_SLUG: {"url": base + "/"}}},
     )
     body = await _disconnect()
     assert set(revoked) == {base, base + "/"}
@@ -1524,7 +1524,7 @@ async def test_a_project_local_agent_spec_is_never_a_purge_target(
 
     A project spec named ``notion`` at the exact endpoint is a SHARER, so it
     blocks the revoke -- but it must never join the scope list the purge is
-    restricted to, because Kiro Crew does not write version-controlled files.
+    restricted to, because Aj Crew does not write version-controlled files.
     """
     project = _project_spec(monkeypatch, tmp_path, entry=_SLUG, url=_provider_url())
     scopes: list[tuple[str, ...]] = []
@@ -1542,7 +1542,7 @@ async def test_a_project_local_agent_spec_is_never_a_purge_target(
 
     body = await _disconnect(project)
 
-    assert scopes == [("kirocrew",)], "purge reached outside the mcp.json scopes"
+    assert scopes == [("ajcrew",)], "purge reached outside the mcp.json scopes"
     assert revoked == []
     assert body["grantSharedWith"] == [_SLUG]
     labels = [label for label, _path in ownership.agent_spec_sources((project,))]
@@ -1681,7 +1681,7 @@ async def test_a_backslash_path_variant_fails_closed(
         purged=[],
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": base}},
+            "ajcrew": {_SLUG: {"url": base}},
             "global": {"backslash-path": {"url": backslash}},
         },
     )
@@ -1698,7 +1698,7 @@ async def test_the_rendered_agent_mirror_does_not_block_the_revoke(
     """The purge strips its own rendered mirror, so the mirror is not a sharer.
 
     ``_purge_server_config`` removes the entry from
-    ``<agents>/kirocrew.json`` and every ``scope.agent_mcp_file`` in the SAME
+    ``<agents>/ajcrew.json`` and every ``scope.agent_mcp_file`` in the SAME
     transaction. Counting those mirrored entries as independent grant holders
     makes ``shared`` non-empty on an ORDINARY disconnect, so the revoke is
     skipped forever and the stale grant stays reusable -- the feature never
@@ -1717,8 +1717,8 @@ async def test_the_rendered_agent_mirror_does_not_block_the_revoke(
         revoked=revoked,
         scopes=scopes,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": base}},
-            "mirror:kirocrew.json": {_SLUG: {"url": base}},
+            "ajcrew": {_SLUG: {"url": base}},
+            "mirror:ajcrew.json": {_SLUG: {"url": base}},
         },
     )
     body = await _disconnect()
@@ -1728,7 +1728,7 @@ async def test_the_rendered_agent_mirror_does_not_block_the_revoke(
     assert purged == [_SLUG]
     # A mirror is not a purgeable SCOPE either: only mcp.json scope labels are,
     # and the purge strips the rendered files unconditionally on its own.
-    assert scopes == [("kirocrew",)], f"mirror label leaked into the purge scopes: {scopes}"
+    assert scopes == [("ajcrew",)], f"mirror label leaked into the purge scopes: {scopes}"
 
 
 @pytest.mark.asyncio
@@ -1751,7 +1751,7 @@ async def test_a_mirror_entry_still_blocks_when_no_scope_is_purged(
         inventory=[],
         purged=purged,
         revoked=revoked,
-        raw_specs={"mirror:kirocrew.json": {_SLUG: {"url": base}}},
+        raw_specs={"mirror:ajcrew.json": {_SLUG: {"url": base}}},
     )
     body = await _disconnect()
     assert revoked == []
@@ -1782,7 +1782,7 @@ async def test_a_sharer_of_one_owned_key_never_suppresses_another(
         purged=purged,
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": base}},
+            "ajcrew": {_SLUG: {"url": base}},
             "kiroGlobal": {_SLUG: {"url": base + "/"}},
             "global": {"notion-work": {"url": base}},
         },
@@ -1810,7 +1810,7 @@ async def test_a_deliberately_kept_pair_is_not_reported_as_surviving(
         inventory=[_entry(_SLUG, _provider_url())],
         purged=[],
         raw_specs={
-            "kirocrew": {_SLUG: {"url": _provider_url()}},
+            "ajcrew": {_SLUG: {"url": _provider_url()}},
             "global": {"notion-work": {"url": _provider_url()}},
         },
     )
@@ -1822,22 +1822,22 @@ async def test_a_deliberately_kept_pair_is_not_reported_as_surviving(
 def test_agent_sources_separate_purge_owned_mirrors_from_user_specs(
     monkeypatch: pytest.MonkeyPatch, tmp_path: pathlib.Path
 ) -> None:
-    """The rendered Kiro Crew agent file is a MIRROR; a user's agent spec is not.
+    """The rendered Aj Crew agent file is a MIRROR; a user's agent spec is not.
 
-    ``_purge_server_config`` strips ``<agents>/kirocrew.json`` itself, so its
+    ``_purge_server_config`` strips ``<agents>/ajcrew.json`` itself, so its
     entries are reflections of the scopes being purged rather than independent
-    grant holders. A hand-written ``custom.json`` is the opposite: Kiro Crew
+    grant holders. A hand-written ``custom.json`` is the opposite: Aj Crew
     never touches it, so its entry keeps its grant and must block a revoke.
     Labelling them identically is what made an ordinary Disconnect see its own
     reflection as a sharer.
     """
     agents = _agents_dir(monkeypatch, tmp_path)
-    (agents / "kirocrew.json").write_text('{"mcpServers": {}}', encoding="utf-8")
+    (agents / "ajcrew.json").write_text('{"mcpServers": {}}', encoding="utf-8")
     (agents / "custom.json").write_text('{"mcpServers": {}}', encoding="utf-8")
 
     labels = dict((label, path.name) for label, path in ownership.agent_spec_sources())
 
-    assert "mirror:kirocrew.json" in labels, f"rendered mirror not labelled: {labels}"
+    assert "mirror:ajcrew.json" in labels, f"rendered mirror not labelled: {labels}"
     assert "agent:custom.json" in labels, f"user spec mislabelled: {labels}"
 
 
@@ -1866,8 +1866,8 @@ async def test_a_differently_named_mirror_entry_still_blocks_the_revoke(
         purged=purged,
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": base}},
-            "mirror:kirocrew.json": {
+            "ajcrew": {_SLUG: {"url": base}},
+            "mirror:ajcrew.json": {
                 _SLUG: {"url": base},
                 "notion-work": {"url": base},
             },
@@ -1902,8 +1902,8 @@ async def test_a_mirrored_slug_variant_contributes_its_own_pair(
         purged=[],
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": base}},
-            "mirror:kirocrew.json": {_SLUG: {"url": base + "/"}},
+            "ajcrew": {_SLUG: {"url": base}},
+            "mirror:ajcrew.json": {_SLUG: {"url": base + "/"}},
         },
     )
     body = await _disconnect()
@@ -1937,8 +1937,8 @@ async def test_a_probe_row_mirroring_a_census_entry_does_not_vote_twice(
         purged=[],
         revoked=revoked,
         raw_specs={
-            "kirocrew": {_SLUG: {"url": base}},
-            "mirror:kirocrew.json": {_SLUG: {"url": variant}},
+            "ajcrew": {_SLUG: {"url": base}},
+            "mirror:ajcrew.json": {_SLUG: {"url": variant}},
         },
     )
     body = await _disconnect()
@@ -1953,10 +1953,10 @@ def test_the_mirror_strip_serializes_against_the_agent_files_own_lock(
     """The purge's rendered-mirror strip runs under that FILE's sidecar lock.
 
     ``_purge_server_config`` does not only write mcp.json scopes: it strips the
-    entry from ``<agents>/kirocrew.json`` too (``_remove_from_agent_file``), and
+    entry from ``<agents>/ajcrew.json`` too (``_remove_from_agent_file``), and
     that file has a SECOND independent writer -- ``apps/bridges_mcp.py`` does
     whole-file read-modify-writes of it under ``bridges._mcp_lock``
-    (``kirocrew.lock``). The MCP transaction lock the purge runs under is a
+    (``ajcrew.lock``). The MCP transaction lock the purge runs under is a
     DIFFERENT sidecar (``settings/mcp.lock``), so it excludes nothing here: an
     app registration that read the file before the strip and wrote it back after
     resurrects the purged entry -- and Disconnect has by then deleted the grant,
@@ -1969,10 +1969,10 @@ def test_the_mirror_strip_serializes_against_the_agent_files_own_lock(
     """
     import threading
 
-    from kiro_crew.apps.bridges import _mcp_lock
-    from kiro_crew.dashboard.handlers.mcp import _remove_from_agent_file
+    from aj_crew.apps.bridges import _mcp_lock
+    from aj_crew.dashboard.handlers.mcp import _remove_from_agent_file
 
-    mirror = tmp_path / "kirocrew.json"
+    mirror = tmp_path / "ajcrew.json"
     mirror.write_text(json.dumps({"mcpServers": {_SLUG: {"url": _URL}}}), encoding="utf-8")
 
     done = threading.Event()

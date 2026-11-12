@@ -87,18 +87,18 @@ const LAST_TS = '2026-08-13T18:00:00Z'
 // Tag vocabulary: two plain (identity) tags plus one status tag, so the
 // two plain tags exercise the multi-tag run; the status tag exercises ordering.
 const TAGS = [
-  { id: 'kirocrew', name: 'backend', color: '#6b7280', order: 5, status: false },
+  { id: 'ajcrew', name: 'backend', color: '#6b7280', order: 5, status: false },
   { id: 'themes', name: 'kc-themes', color: '#6b7280', order: 6, status: false },
   { id: 'review', name: 'Review', color: '#f59e0b', order: 3, status: true },
 ]
 
 const SLOTS: ChatSlot[] = [
-  { key: 'k-tag', title: 'has-a-tag', running: false, messages: 2, agent: 'kirocrew', tags: ['kirocrew'], last_ts: LAST_TS },
-  { key: 'k-bare', title: 'no-tags', running: false, messages: 2, agent: 'kirocrew', tags: [], last_ts: LAST_TS },
-  { key: 'k-pin', title: 'is-pinned', running: false, messages: 2, agent: 'kirocrew', tags: ['themes'], pinned: true, last_ts: LAST_TS },
+  { key: 'k-tag', title: 'has-a-tag', running: false, messages: 2, agent: 'ajcrew', tags: ['ajcrew'], last_ts: LAST_TS },
+  { key: 'k-bare', title: 'no-tags', running: false, messages: 2, agent: 'ajcrew', tags: [], last_ts: LAST_TS },
+  { key: 'k-pin', title: 'is-pinned', running: false, messages: 2, agent: 'ajcrew', tags: ['themes'], pinned: true, last_ts: LAST_TS },
   // A status tag alongside a plain tag: both render in the meta line, ordered by
   // tag order (status Review at order 3 sorts ahead of the plain tag at 5).
-  { key: 'k-mixed', title: 'status-plus-identity', running: false, messages: 2, agent: 'kirocrew', tags: ['review', 'kirocrew'], last_ts: LAST_TS },
+  { key: 'k-mixed', title: 'status-plus-identity', running: false, messages: 2, agent: 'ajcrew', tags: ['review', 'ajcrew'], last_ts: LAST_TS },
 ] as unknown as ChatSlot[]
 
 function renderSidebar(slots: ChatSlot[] = SLOTS, tags: Array<{ id: string; name: string; color: string; order: number; status: boolean }> = TAGS) {
@@ -155,7 +155,7 @@ describe('chat sidebar — session row meta line', () => {
   it('renders the session\'s tag after the agent name, separated by "·"', () => {
     const { container } = renderSidebar()
     const line = metaLineFor(container, 'has-a-tag')
-    expect(line.textContent).toContain('kirocrew')   // agent
+    expect(line.textContent).toContain('ajcrew')   // agent
     expect(line.textContent).toContain('·')
     expect(line.textContent).toContain('backend')    // tag name
   })
@@ -193,11 +193,11 @@ describe('chat sidebar — session row meta line', () => {
     // must appear inside this row's meta line and NOT a second time below it.
     const { container } = renderSidebar()
     const line = metaLineFor(container, 'has-a-tag')
-    expect(line.querySelector('[data-testid="slot-tag-kirocrew"]')).toBeTruthy()
+    expect(line.querySelector('[data-testid="slot-tag-ajcrew"]')).toBeTruthy()
     // The row's content column is the meta line's parent; scan it for a second
     // copy of the tag (a chip row would put one outside the meta line).
     const content = line.parentElement as HTMLElement
-    expect(content.querySelectorAll('[data-testid="slot-tag-kirocrew"]')).toHaveLength(1)
+    expect(content.querySelectorAll('[data-testid="slot-tag-ajcrew"]')).toHaveLength(1)
   })
 
   it('places the pin glyph last in the line, after the timestamp', () => {

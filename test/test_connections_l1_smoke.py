@@ -13,10 +13,10 @@ from copy import deepcopy
 
 import pytest
 
-from kiro_crew import mcp_grant
-from kiro_crew.connections import get_provider, l1_smoke
-from kiro_crew.mcp_discovery import McpServerInfo
-from kiro_crew.testing.wait import wait_until
+from aj_crew import mcp_grant
+from aj_crew.connections import get_provider, l1_smoke
+from aj_crew.mcp_discovery import McpServerInfo
+from aj_crew.testing.wait import wait_until
 
 MCP_URL = "https://mcp.example.com/mcp"
 SESSION_ID = "sess-abc123"
@@ -362,7 +362,7 @@ async def test_a_multi_feed_body_is_accumulated_not_truncated(granted):
 
 @pytest.mark.asyncio
 async def test_a_tokenless_401_is_grant_held_not_needs_reconsent(granted):
-    """The regression that matters most: Kiro Crew holds no bearer, so a healthy
+    """The regression that matters most: Aj Crew holds no bearer, so a healthy
     authorized provider answers with 401 -- grading that NEEDS_RECONSENT would
     report every working provider as broken, every run."""
     session = FakeSession([FakeResponse(401, None)])
@@ -885,7 +885,7 @@ def test_a_small_report_on_a_hung_up_pipe_still_exits_clean():
     """
     program = (
         "import time\n"
-        "from kiro_crew.connections.l1_smoke import _echo\n"
+        "from aj_crew.connections.l1_smoke import _echo\n"
         "time.sleep(0.5)\n"  # let the parent hang up before anything is written
         '_echo(\'{"ok": true, "providers": []}\')\n'
     )

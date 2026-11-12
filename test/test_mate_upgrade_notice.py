@@ -11,9 +11,9 @@ import asyncio
 
 import pytest
 
-from kiro_crew import mate_upgrade_notice as notice
-from kiro_crew import members as members_mod
-from kiro_crew.dashboard import mate_thread_wakes as wakes
+from aj_crew import mate_upgrade_notice as notice
+from aj_crew import members as members_mod
+from aj_crew.dashboard import mate_thread_wakes as wakes
 
 
 class _Slot:
@@ -47,7 +47,7 @@ def dispatched(monkeypatch):
     def dispatch(state, slot, prompt, *, human_seen, heartbeat=False):
         calls.append((slot.key, prompt))
 
-    monkeypatch.setattr("kiro_crew.dashboard.mate_welcome.dispatch_hidden_turn", dispatch)
+    monkeypatch.setattr("aj_crew.dashboard.mate_welcome.dispatch_hidden_turn", dispatch)
     return calls
 
 
@@ -142,7 +142,7 @@ def test_the_migration_owes_the_notice_only_for_crewmates_it_moved(monkeypatch, 
 def test_a_crewmate_the_migration_left_behind_tells_its_user_why_once(
     monkeypatch, tmp_path, dispatched
 ):
-    """A user-level agent Kiro Crew does not own carries ``orbit``'s id, so its own file
+    """A user-level agent Aj Crew does not own carries ``orbit``'s id, so its own file
     would never be read and it stays on its template; its thread says so once, with
     the reason."""
     _migrate_atlas_and_orbit(monkeypatch, tmp_path)
@@ -163,8 +163,8 @@ def test_a_left_behind_crewmate_that_moves_later_never_says_it_was_left(
 ):
     """Start 1 leaves ``orbit`` behind with its thread unopened; start 2 moves it.
     Its thread then gets the moved notice only, never the stale kept one."""
-    import kiro_crew.config.paths as paths_mod
-    from kiro_crew.mate_config_migration import migrate_existing_crewmates
+    import aj_crew.config.paths as paths_mod
+    from aj_crew.mate_config_migration import migrate_existing_crewmates
 
     cfg = _migrate_atlas_and_orbit(monkeypatch, tmp_path)
     (paths_mod.kiro_agents_dir() / "orbit.json").unlink()
@@ -215,32 +215,32 @@ def _migrate_atlas_and_orbit(monkeypatch, tmp_path):
     """``atlas`` moves; a user-level agent named ``orbit`` shadows its file, so it stays."""
     import json
 
-    import kiro_crew.config.paths as paths_mod
-    from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-    from kiro_crew.mate_config_migration import migrate_existing_crewmates
+    import aj_crew.config.paths as paths_mod
+    from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+    from aj_crew.mate_config_migration import migrate_existing_crewmates
 
     user = tmp_path / "home" / "agents"
     user.mkdir(parents=True)
     monkeypatch.setattr(paths_mod, "kiro_agents_dir", lambda: user)
     monkeypatch.setattr(paths_mod, "kiro_home", lambda: tmp_path / "home")
-    base = {"name": "kirocrew-mate-worker", "prompt": "p", "tools": ["fs_read"], "mcpServers": {}}
+    base = {"name": "ajcrew-mate-worker", "prompt": "p", "tools": ["fs_read"], "mcpServers": {}}
     mates = tmp_path / "home" / "mates" / "agents"
     mates.mkdir(parents=True)
-    (mates / "kirocrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
+    (mates / "ajcrew-mate-worker.json").write_text(json.dumps(base), encoding="utf-8")
     (user / "plain.json").write_text(json.dumps({**base, "name": "plain"}), encoding="utf-8")
     (user / "shell.json").write_text(json.dumps({**base, "name": "shell"}), encoding="utf-8")
-    # Someone else's agent under orbit's id: not Kiro Crew's to move or write.
+    # Someone else's agent under orbit's id: not Aj Crew's to move or write.
     (user / "orbit.json").write_text(json.dumps({**base, "name": "orbit"}), encoding="utf-8")
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.agents = {
-        "atlas": KiroCrewAgentConfig(member_id="atlas", kiro_agent="plain"),
-        "orbit": KiroCrewAgentConfig(member_id="orbit", kiro_agent="shell"),
+        "atlas": AjCrewAgentConfig(member_id="atlas", kiro_agent="plain"),
+        "orbit": AjCrewAgentConfig(member_id="orbit", kiro_agent="shell"),
     }
     monkeypatch.setattr(
-        "kiro_crew.mate_config_migration.KiroCrewConfig",
+        "aj_crew.mate_config_migration.AjCrewConfig",
         type("Shim", (), {"load": staticmethod(lambda: cfg)}),
     )
-    monkeypatch.setattr("kiro_crew.memory_stores.persist_member_config", lambda c, n, **kw: None)
+    monkeypatch.setattr("aj_crew.memory_stores.persist_member_config", lambda c, n, **kw: None)
 
     assert migrate_existing_crewmates(cfg).migrated == ["atlas"]
     return cfg

@@ -48,7 +48,7 @@ async function openPage(context) {
   const page = await context.newPage()
   await stubDashboardApi(page, {
     theme: THEME,
-    slots: [{ key: 'chat-1', title: 'Release prep', messages: 0, running: false, agent: 'kirocrew', mode: '' }],
+    slots: [{ key: 'chat-1', title: 'Release prep', messages: 0, running: false, agent: 'ajcrew', mode: '' }],
     extra: holdChat,
     localStorageEntries: { 'mc-active-slot': 'chat-1', 'mc-lang': 'en' },
   })
@@ -60,7 +60,7 @@ async function openPage(context) {
 async function openPane(context) {
   const slots = ['pane-a', 'pane-b'].map((key, i) => ({
     key, title: i ? 'Release prep' : 'Design notes', running: false, messages: 1,
-    agent: 'kirocrew', memory_mode: 'persistent', modified: Math.floor(now) - i * 60,
+    agent: 'ajcrew', memory_mode: 'persistent', modified: Math.floor(now) - i * 60,
   }))
   const detail = text => ({
     running: false, has_more: false, total: 1, queue: [],

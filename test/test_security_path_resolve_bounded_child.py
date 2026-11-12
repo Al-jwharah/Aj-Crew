@@ -29,10 +29,10 @@ from security_path_resolve_bounded_helpers import (  # noqa: F401 -- the autouse
     _StalledResolver,
 )
 
-import kiro_crew.executors as ex
-from kiro_crew import security
-from kiro_crew.subprocess_pool import SubprocessPoolUnavailable
-from kiro_crew.subprocess_pool.executor import proc_syscall
+import aj_crew.executors as ex
+from aj_crew import security
+from aj_crew.subprocess_pool import SubprocessPoolUnavailable
+from aj_crew.subprocess_pool.executor import proc_syscall
 
 
 @contextlib.contextmanager
@@ -113,7 +113,7 @@ def test_a_saturated_pool_refuses_without_charging_or_tracking(caplog) -> None:
     pool = ex.path_resolve_executor()
     leased = [pool._free.get(timeout=5.0) for _ in pool._children]
     try:
-        with caplog.at_level(logging.DEBUG, logger="kiro_crew.security.paths"):
+        with caplog.at_level(logging.DEBUG, logger="aj_crew.security.paths"):
             with pytest.raises(security.PathResolutionStalled):
                 security._candidate_forms("/home/someone/ws/file")
         assert security._path_resolve_degraded == {}, "lease wait must open no cooldown"
@@ -495,7 +495,7 @@ def test_resolution_completes_inside_the_budget_while_a_sibling_thread_hogs_the_
     must not red it -- and the real assertions are the two that cannot flake: a healthy
     file is not refused, and no prefix is charged.
     """
-    # nosemgrep: kirocrew.test-bare-monkeypatch-undo -- pre-existing undo that drops the autouse fixture's scaled-down budgets so the reproduction runs on the shipped ones, moved verbatim
+    # nosemgrep: ajcrew.test-bare-monkeypatch-undo -- pre-existing undo that drops the autouse fixture's scaled-down budgets so the reproduction runs on the shipped ones, moved verbatim
     monkeypatch.undo()
     security._path_resolve_degraded.clear()
     security._home_targets_cache.clear()
@@ -509,7 +509,7 @@ def test_resolution_completes_inside_the_budget_while_a_sibling_thread_hogs_the_
     hog.start()
     try:
         # flake-ok: pre-existing 50 ms head start for the GIL hog, moved verbatim; the assertions that cannot flake (no refusal, no charged prefix) do not depend on it
-        # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing head start for the hog thread, moved verbatim; tracked for a de-flake pass
+        # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing head start for the hog thread, moved verbatim; tracked for a de-flake pass
         time.sleep(0.05)
         started = time.monotonic()
         refusal = security.sensitive_path_refusal(str(target))
@@ -604,7 +604,7 @@ def test_a_run_of_child_faults_is_warned_about_once_and_degrades_in_process(
             r for r in caplog.records if "faulted" in r.message and r.levelno >= logging.WARNING
         ]
 
-    with _armed(), caplog.at_level(logging.DEBUG, logger="kiro_crew.security.paths"):
+    with _armed(), caplog.at_level(logging.DEBUG, logger="aj_crew.security.paths"):
         for _ in range(threshold - 1):
             with pytest.raises(security.PathResolutionStalled):
                 security._resolved_spellings("/home/someone/ws/file")
@@ -643,7 +643,7 @@ def test_a_child_that_cannot_start_falls_back_in_process_once(monkeypatch, caplo
 
     monkeypatch.setattr(security.paths, "path_resolve_executor", lambda: _Unspawnable())
     monkeypatch.setattr(security.paths, "_child_fallback_warned", False)
-    with _armed(), caplog.at_level(logging.WARNING, logger="kiro_crew.security.paths"):
+    with _armed(), caplog.at_level(logging.WARNING, logger="aj_crew.security.paths"):
         for _ in range(3):
             assert security._resolved_spellings("/") == security.paths._resolved_spellings_inline(
                 "/"

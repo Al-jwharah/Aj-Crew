@@ -1,4 +1,4 @@
-"""``kirocrew cron add``, ``update`` and ``remove``: the ``_cron`` handler and ``--agent`` parsing.
+"""``ajcrew cron add``, ``update`` and ``remove``: the ``_cron`` handler and ``--agent`` parsing.
 
 ``TestCronCli`` pins that one locked ``add_job`` / ``update_job`` call carries every field the flags
 set, that invalid input is refused, and how the ``--agent`` and ``--channel`` values are normalised;
@@ -14,12 +14,12 @@ from cli_helpers import (  # noqa: F401 -- the autouse fixture registers by impo
     _doctor_reads_the_warm_probe_cache,
 )
 
-from kiro_crew.cli_commands import _cron
-from kiro_crew.cron import CronService
+from aj_crew.cli_commands import _cron
+from aj_crew.cron import CronService
 
 
 def _add_job_kwargs(**overrides):
-    """The FULL kwarg set ``kirocrew cron add`` hands to ``CronService.add_job``.
+    """The FULL kwarg set ``ajcrew cron add`` hands to ``CronService.add_job``.
 
     Every create field rides in the ONE locked ``add_job`` call -- there is no
     second unlocked ``_save()`` after it -- so a test that pins the call pins
@@ -55,10 +55,10 @@ def _add_job_kwargs(**overrides):
 class TestCronCli:
     @pytest.mark.parametrize("action", ["add", "update"])
     def test_auto_pause_after_help_documents_default_and_zero(self, action, monkeypatch, capsys):
-        from kiro_crew.cli import main
-        from kiro_crew.cron_service.model import _AUTO_PAUSE_MAX, _AUTO_PAUSE_THRESHOLD
+        from aj_crew.cli import main
+        from aj_crew.cron_service.model import _AUTO_PAUSE_MAX, _AUTO_PAUSE_THRESHOLD
 
-        monkeypatch.setattr(sys, "argv", ["kirocrew", "cron", action, "--help"])
+        monkeypatch.setattr(sys, "argv", ["ajcrew", "cron", action, "--help"])
         with pytest.raises(SystemExit) as exc_info:
             main()
         assert exc_info.value.code == 0
@@ -80,16 +80,16 @@ class TestCronCli:
         assert "through MCP" not in flat
 
     def test_auto_pause_after_omitted_builds_job_with_model_default(self):
-        from kiro_crew.cron import build_job
-        from kiro_crew.cron_service.model import _AUTO_PAUSE_THRESHOLD
+        from aj_crew.cron import build_job
+        from aj_crew.cron_service.model import _AUTO_PAUSE_THRESHOLD
 
         job = build_job("j", "msg", every_secs=60)
         assert job.auto_pause_after_failures == _AUTO_PAUSE_THRESHOLD
 
     def test_cron_add_with_channel(self, tmp_path, capsys):
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel"),
         ):
             mock_svc = mock_svc_cls.return_value
             mock_job = MagicMock()
@@ -121,8 +121,8 @@ class TestCronCli:
 
     def test_cron_add_with_cron_expr_and_channel(self, tmp_path, capsys):
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel"),
         ):
             mock_svc = mock_svc_cls.return_value
             mock_job = MagicMock()
@@ -163,7 +163,7 @@ class TestCronCli:
     def test_cron_add_refuses_invalid_input(
         self, name, cron_expr, every, expected, tmp_path, monkeypatch, capsys
     ):
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path / "home"))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path / "home"))
         args = argparse.Namespace(
             cron_action="add",
             name=name,
@@ -187,8 +187,8 @@ class TestCronCli:
 
     def test_cron_add_with_approval_mode(self, tmp_path, capsys):
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel") as mock_sel,
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel") as mock_sel,
         ):
             mock_svc = mock_svc_cls.return_value
             mock_job = MagicMock()
@@ -227,8 +227,8 @@ class TestCronCli:
 
     def test_cron_add_with_silent(self, capsys):
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel"),
         ):
             mock_svc = mock_svc_cls.return_value
             mock_job = MagicMock()
@@ -263,8 +263,8 @@ class TestCronCli:
 
     def test_cron_update_approval_mode(self, tmp_path, capsys):
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel") as mock_sel,
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel") as mock_sel,
         ):
             mock_svc = mock_svc_cls.return_value
             mock_job = MagicMock()
@@ -293,7 +293,7 @@ class TestCronCli:
         assert capsys.readouterr().out == "Updated job: abc123 (existing)\n"
 
     def test_cron_update_whitespace_channel_skipped(self, tmp_path, capsys):
-        with patch("kiro_crew.cli_commands.CronService") as mock_svc_cls:
+        with patch("aj_crew.cli_commands.CronService") as mock_svc_cls:
             mock_svc = mock_svc_cls.return_value
             mock_svc.update_job.return_value = None
             args = argparse.Namespace(
@@ -317,7 +317,7 @@ class TestCronCli:
 
     def test_cron_update_bad_channel_exits_1_on_stderr(self, tmp_path, capsys):
         """A refused channel writes nothing and must not read as a success to a script."""
-        with patch("kiro_crew.cli_commands.CronService") as mock_svc_cls:
+        with patch("aj_crew.cli_commands.CronService") as mock_svc_cls:
             mock_svc = mock_svc_cls.return_value
             args = argparse.Namespace(
                 cron_action="update",
@@ -338,7 +338,7 @@ class TestCronCli:
             mock_svc.update_job.assert_not_called()
 
     def test_cron_update_every_and_cron_exclusive(self, tmp_path, capsys):
-        with patch("kiro_crew.cli_commands.CronService") as mock_svc_cls:
+        with patch("aj_crew.cli_commands.CronService") as mock_svc_cls:
             args = argparse.Namespace(
                 cron_action="update",
                 job_id="job1",
@@ -359,8 +359,8 @@ class TestCronCli:
 
     def test_cron_update_not_found(self, tmp_path, capsys):
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel") as mock_sel,
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel") as mock_sel,
         ):
             mock_svc = mock_svc_cls.return_value
             mock_svc.update_job.return_value = None
@@ -407,8 +407,8 @@ class TestCronCli:
     def test_cron_add_with_agent_every(self, tmp_path, capsys):
         """--agent on `cron add` with --every sets job.agent_id, persists, and audits."""
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel") as mock_sel,
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel") as mock_sel,
         ):
             mock_svc = mock_svc_cls.return_value
             mock_job = self._make_add_job_mock(job_id="ag1", every_secs=600)
@@ -449,8 +449,8 @@ class TestCronCli:
     def test_cron_add_with_agent_cron_expr(self, tmp_path, capsys):
         """--agent on `cron add` with --cron sets job.agent_id and persists."""
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel"),
         ):
             mock_svc = mock_svc_cls.return_value
             mock_job = self._make_add_job_mock(
@@ -479,8 +479,8 @@ class TestCronCli:
     def test_cron_add_without_agent_does_not_save(self, tmp_path):
         """Empty/omitted --agent leaves job.agent_id untouched, no extra _save."""
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel"),
         ):
             mock_svc = mock_svc_cls.return_value
             mock_job = self._make_add_job_mock(job_id="ag3", every_secs=300)
@@ -501,8 +501,8 @@ class TestCronCli:
 
     def test_cron_add_agent_whitespace_stripped(self, tmp_path, monkeypatch):
         """Whitespace-only --agent is treated as omitted (no agent_id set)."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-        with patch("kiro_crew.cli_commands.sel"):
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+        with patch("aj_crew.cli_commands.sel"):
             args = argparse.Namespace(
                 cron_action="add",
                 name="basic",
@@ -520,8 +520,8 @@ class TestCronCli:
     def test_cron_update_with_agent(self, tmp_path, capsys):
         """--agent on `cron update` passes agent_id kwarg to update_job."""
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel") as mock_sel,
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel") as mock_sel,
         ):
             mock_svc = mock_svc_cls.return_value
             mock_job = MagicMock()
@@ -553,8 +553,8 @@ class TestCronCli:
     def test_cron_update_agent_empty_resets(self, tmp_path, capsys):
         """--agent '' on update resets agent_id to default (mirrors MCP cron_update)."""
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel") as mock_sel,
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel") as mock_sel,
         ):
             mock_svc = mock_svc_cls.return_value
             mock_job = MagicMock()
@@ -580,11 +580,11 @@ class TestCronCli:
 
     def test_cron_update_agent_omitted_skipped(self, tmp_path, capsys, monkeypatch):
         """When --agent is omitted (None), the job's agent is left as it was."""
-        monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+        monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
         existing = CronService(base_dir=tmp_path).add_job(
             name="existing", message="hi", every_secs=300, agent_id="oncall-agent"
         )
-        with patch("kiro_crew.cli_commands.sel"):
+        with patch("aj_crew.cli_commands.sel"):
             args = argparse.Namespace(
                 cron_action="update",
                 job_id=existing.id,
@@ -604,8 +604,8 @@ class TestCronCli:
     def test_cron_add_invalid_agent_name_rejected(self, tmp_path, capsys):
         """Bad-format --agent on add is rejected with sys.exit(1) before any add_job call."""
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel"),
         ):
             mock_svc = mock_svc_cls.return_value
             args = argparse.Namespace(
@@ -631,8 +631,8 @@ class TestCronCli:
     def test_cron_update_invalid_agent_name_rejected(self, tmp_path, capsys):
         """Bad-format --agent on update is rejected with sys.exit(1) before any update_job call."""
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel"),
         ):
             mock_svc = mock_svc_cls.return_value
             args = argparse.Namespace(
@@ -658,8 +658,8 @@ class TestCronCli:
     def test_cron_update_agent_whitespace_stripped(self, tmp_path, capsys):
         """Whitespace around --agent on update is stripped before forwarding to update_job."""
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel"),
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel"),
         ):
             mock_svc = mock_svc_cls.return_value
             mock_job = MagicMock()
@@ -682,11 +682,11 @@ class TestCronCli:
         assert capsys.readouterr().out == "Updated job: abc123 (existing)\n"
 
     def test_cli_argparse_cron_add_agent_flag(self) -> None:
-        """`kirocrew cron add ... --agent NAME` parses into args.agent."""
+        """`ajcrew cron add ... --agent NAME` parses into args.agent."""
         import sys
 
         argv = [
-            "kirocrew",
+            "ajcrew",
             "cron",
             "add",
             "daily-briefing",
@@ -696,8 +696,8 @@ class TestCronCli:
             "--agent",
             "ea-briefing",
         ]
-        with patch.object(sys, "argv", argv), patch("kiro_crew.cli_commands._cron") as mock_cron:
-            from kiro_crew.cli import main
+        with patch.object(sys, "argv", argv), patch("aj_crew.cli_commands._cron") as mock_cron:
+            from aj_crew.cli import main
 
             main()
             mock_cron.assert_called_once()
@@ -711,7 +711,7 @@ class TestCronCli:
         import sys
 
         argv = [
-            "kirocrew",
+            "ajcrew",
             "cron",
             "add",
             "basic",
@@ -719,27 +719,27 @@ class TestCronCli:
             "--every",
             "300",
         ]
-        with patch.object(sys, "argv", argv), patch("kiro_crew.cli_commands._cron") as mock_cron:
-            from kiro_crew.cli import main
+        with patch.object(sys, "argv", argv), patch("aj_crew.cli_commands._cron") as mock_cron:
+            from aj_crew.cli import main
 
             main()
             ns = mock_cron.call_args[0][0]
             assert ns.agent == ""
 
     def test_cli_argparse_cron_update_agent_flag(self) -> None:
-        """`kirocrew cron update <id> --agent NAME` parses into args.agent."""
+        """`ajcrew cron update <id> --agent NAME` parses into args.agent."""
         import sys
 
         argv = [
-            "kirocrew",
+            "ajcrew",
             "cron",
             "update",
             "abc123",
             "--agent",
             "oncall-agent",
         ]
-        with patch.object(sys, "argv", argv), patch("kiro_crew.cli_commands._cron") as mock_cron:
-            from kiro_crew.cli import main
+        with patch.object(sys, "argv", argv), patch("aj_crew.cli_commands._cron") as mock_cron:
+            from aj_crew.cli import main
 
             main()
             ns = mock_cron.call_args[0][0]
@@ -752,15 +752,15 @@ class TestCronCli:
         import sys
 
         argv = [
-            "kirocrew",
+            "ajcrew",
             "cron",
             "update",
             "abc123",
             "--name",
             "renamed",
         ]
-        with patch.object(sys, "argv", argv), patch("kiro_crew.cli_commands._cron") as mock_cron:
-            from kiro_crew.cli import main
+        with patch.object(sys, "argv", argv), patch("aj_crew.cli_commands._cron") as mock_cron:
+            from aj_crew.cli import main
 
             main()
             ns = mock_cron.call_args[0][0]
@@ -772,8 +772,8 @@ class TestCronCli:
         # way to tell a deliberate delete from data loss. The audit is
         # remove_job's (actor/source below), so the CLI must not write a second.
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel") as mock_sel,
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel") as mock_sel,
         ):
             mock_svc = mock_svc_cls.return_value
             mock_svc.remove_job.return_value = True
@@ -787,8 +787,8 @@ class TestCronCli:
         # A miss must fail like pause/resume do, or `cron remove x && next`
         # runs `next` after nothing was removed.
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel") as mock_sel,
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel") as mock_sel,
         ):
             mock_svc = mock_svc_cls.return_value
             mock_svc.remove_job.return_value = False
@@ -807,8 +807,8 @@ class TestCronCli:
         # job is already removed by then, so the command must still report the
         # completed delete instead of crashing.
         with (
-            patch("kiro_crew.cli_commands.CronService") as mock_svc_cls,
-            patch("kiro_crew.cli_commands.sel") as mock_sel,
+            patch("aj_crew.cli_commands.CronService") as mock_svc_cls,
+            patch("aj_crew.cli_commands.sel") as mock_sel,
         ):
             mock_svc = mock_svc_cls.return_value
             mock_svc.remove_job.return_value = True

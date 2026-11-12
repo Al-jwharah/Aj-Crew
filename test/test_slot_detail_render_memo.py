@@ -15,12 +15,12 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_app, _make_state
 
-from kiro_crew.dashboard import channel_slots
-from kiro_crew.dashboard import chat_utils as cu
-from kiro_crew.dashboard import mcp_oauth_provenance, wire_render
-from kiro_crew.history import _safe_key
-from kiro_crew.security import exfil
-from kiro_crew.security.redaction_switch import owner_view
+from aj_crew.dashboard import channel_slots
+from aj_crew.dashboard import chat_utils as cu
+from aj_crew.dashboard import mcp_oauth_provenance, wire_render
+from aj_crew.history import _safe_key
+from aj_crew.security import exfil
+from aj_crew.security.redaction_switch import owner_view
 
 SECRET = "AKIAIOSFODNN7EXAMPLE"
 TENANT_URL = (

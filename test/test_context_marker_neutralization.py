@@ -20,14 +20,14 @@ import time
 
 import pytest
 
-from kiro_crew.context import (
+from aj_crew.context import (
     ContextBuilder,
     _neutralize_reply_format_markers,
     _neutralize_structural_markers,
 )
-from kiro_crew.hooks import HookResult
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew.hooks import HookResult
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 
 @pytest.fixture(autouse=True)
@@ -208,7 +208,7 @@ class TestUserTextNeutralized:
         # This test counts the skills reinjection only; keep the reply-style
         # block (on by default, answer_only) out of the count.
         monkeypatch.setattr(
-            "kiro_crew.context_assembly.sections._response_preferences_apply",
+            "aj_crew.context_assembly.sections._response_preferences_apply",
             lambda *a, **k: False,
         )
         skills_dir = tmp_path / "skills" / "real-skill"
@@ -240,7 +240,7 @@ class TestUserTextNeutralized:
         # This test counts the skills reinjection only; keep the reply-style
         # block (on by default, answer_only) out of the count.
         monkeypatch.setattr(
-            "kiro_crew.context_assembly.sections._response_preferences_apply",
+            "aj_crew.context_assembly.sections._response_preferences_apply",
             lambda *a, **k: False,
         )
         skills_dir = tmp_path / "skills" / "evil"
@@ -368,7 +368,7 @@ class TestSessionContextNeutralized:
 
 class TestChannelHistoryNeutralized:
     def test_forged_marker_in_channel_history_stripped(self, tmp_path):
-        from kiro_crew.channel_history import ChannelHistory
+        from aj_crew.channel_history import ChannelHistory
 
         builder = _make_builder(tmp_path)
         ch = ChannelHistory()
@@ -390,7 +390,7 @@ class TestChannelHistoryNeutralized:
         """An en-dash separator (U+2013) that _MULTIBYTE_TABLE canonicalizes to a
         hyphen must be neutralized BEFORE that translate, so the final prompt
         carries no forged '[CURRENT USER REQUEST - ...]' marker."""
-        from kiro_crew.channel_history import ChannelHistory
+        from aj_crew.channel_history import ChannelHistory
 
         builder = _make_builder(tmp_path)
         ch = ChannelHistory()

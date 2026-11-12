@@ -17,18 +17,18 @@ from pathlib import Path
 
 import test_member_mount_deepseek as deepseek_mount
 
-import kiro_crew.validation  # noqa: F401 - break the legacy import cycle first
-from kiro_crew import acp_tool_gate
-from kiro_crew.acp.harness.pi import pi_mcp_handoff_payload
-from kiro_crew.acp.types import (
+import aj_crew.validation  # noqa: F401 - break the legacy import cycle first
+from aj_crew import acp_tool_gate
+from aj_crew.acp.harness.pi import pi_mcp_handoff_payload
+from aj_crew.acp.types import (
     ACP_BACKEND_PI,
     ACP_BACKENDS_MEMBER_DISPATCH,
     ACP_BACKENDS_MEMBER_PANEL,
     ACP_BACKENDS_SESSION_MCP_ARRAY,
 )
-from kiro_crew.agent_sdk import backend_cards
-from kiro_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
-from kiro_crew.members import MEMBER_DISPATCH_SERVER, MEMBER_PANEL_SERVER
+from aj_crew.agent_sdk import backend_cards
+from aj_crew.mcp_gateway.claim import STUB_SESSION_TOKEN_ENV
+from aj_crew.members import MEMBER_DISPATCH_SERVER, MEMBER_PANEL_SERVER
 
 FIXTURES = Path(__file__).parent / "fixtures" / "acp_frames" / "pi"
 
@@ -69,16 +69,16 @@ def _updates(frames: list[dict]) -> list[dict]:
 
 
 def test_the_panel_is_mounted_gated_and_answered_on_a_live_capture() -> None:
-    """A member thread on pi registers ``kirocrew-panel`` and its call reaches the server.
+    """A member thread on pi registers ``ajcrew-panel`` and its call reaches the server.
 
     The capture's array is the resolver's own output for a member key on pi; pi spells
-    the panel tool ``mcp__kirocrew_panel__<tool>``, the call asks the host first through
+    the panel tool ``mcp__ajcrew_panel__<tool>``, the call asks the host first through
     the gate extension's dialog, and the result is the panel server's own answer.
     """
     header, *frames = _frames("member-panel-mount-live.jsonl")
     meta = header["_meta"]
     assert meta["recorded"] == "live" and meta["backend"] == ACP_BACKEND_PI
-    title = "mcp__kirocrew_panel__panel_publish"
+    title = "mcp__ajcrew_panel__panel_publish"
     calls = [u for u in _updates(frames) if u.get("title") == title]
     assert calls and calls[0]["sessionUpdate"] == "tool_call"
     call_id = calls[0]["toolCallId"]
@@ -102,7 +102,7 @@ def test_the_captured_array_is_what_the_pi_resolver_composes(agents_dir, tmp_pat
     """The two member mounts the capture handed off are the last two the resolver composes.
 
     The capture's array is the member mounts for an agent whose spec declared no
-    extra servers; this test's ``agents_dir`` spec also declares ``kirocrew-core``,
+    extra servers; this test's ``agents_dir`` spec also declares ``ajcrew-core``,
     which the resolver carries ahead of the member mounts (the same server
     opencode/deepseek place from the same spec). So the member pair the capture
     names is the tail of the array, in the capture's order.
@@ -124,21 +124,21 @@ def test_the_card_reads_member_threads_available() -> None:
 def test_the_member_mounts_reach_the_handoff_with_their_identity(agents_dir, tmp_path) -> None:
     """Each element the resolver builds is an entry the extension registers, env intact.
 
-    The ``agents_dir`` spec declares ``kirocrew-core`` too, so the array leads with
+    The ``agents_dir`` spec declares ``ajcrew-core`` too, so the array leads with
     it (the same server a mirrored harness carries from the same spec); the member
     dispatch and panel follow. Every control-plane entry -- the spec's own
-    ``kirocrew-core`` and the two member mounts -- carries THIS session's identity,
+    ``ajcrew-core`` and the two member mounts -- carries THIS session's identity,
     resolved live rather than read from the spec.
     """
     client = _client(tmp_path, MEMBER_KEY, backend=ACP_BACKEND_PI)
     out = client._resolve_session_mcp_servers()
-    assert _names(out) == ["kirocrew-core", MEMBER_DISPATCH_SERVER, MEMBER_PANEL_SERVER]
+    assert _names(out) == ["ajcrew-core", MEMBER_DISPATCH_SERVER, MEMBER_PANEL_SERVER]
     assert client.member_dispatch_mounted is True
     from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
     nonce, key = "a" * 32, bytes(range(32))
     payload, names = pi_mcp_handoff_payload(out, nonce, key)
-    assert names == ("kirocrew-core", MEMBER_DISPATCH_SERVER, MEMBER_PANEL_SERVER)
+    assert names == ("ajcrew-core", MEMBER_DISPATCH_SERVER, MEMBER_PANEL_SERVER)
     # The member's identity is in the file only under the seal.
     assert MEMBER_KEY.encode() not in payload
     body = json.loads(payload)
@@ -147,7 +147,7 @@ def test_the_member_mounts_reach_the_handoff_with_their_identity(agents_dir, tmp
     )
     servers = json.loads(plain)["servers"]
     for name in names:
-        assert servers[name]["env"]["KIROCREW_SESSION_KEY"] == MEMBER_KEY
+        assert servers[name]["env"]["AJCREW_SESSION_KEY"] == MEMBER_KEY
         assert servers[name]["env"][STUB_SESSION_TOKEN_ENV] == client._stub_session_token
         assert servers[name]["exposure"] == "direct"
 
@@ -166,13 +166,13 @@ def test_an_ordinary_pi_session_carries_nothing(agents_dir, tmp_path) -> None:
 
 def test_the_panel_switch_withholds_only_the_panel(agents_dir, tmp_path, monkeypatch) -> None:
     """``agent.crew_panel: false`` reaches pi: session control stays, the panel goes."""
-    import kiro_crew.members as members_mod
+    import aj_crew.members as members_mod
 
     monkeypatch.setattr(members_mod, "crew_panel_enabled", lambda: False)
     client = _client(tmp_path, MEMBER_KEY, backend=ACP_BACKEND_PI)
-    # The spec's kirocrew-core leads; session control stays, the panel goes.
+    # The spec's ajcrew-core leads; session control stays, the panel goes.
     assert _names(client._resolve_session_mcp_servers()) == [
-        "kirocrew-core",
+        "ajcrew-core",
         MEMBER_DISPATCH_SERVER,
     ]
 
@@ -184,7 +184,7 @@ def test_a_disabled_panel_server_is_not_mounted(agents_dir, tmp_path) -> None:
     )
     client = _client(tmp_path, MEMBER_KEY, backend=ACP_BACKEND_PI)
     assert _names(client._resolve_session_mcp_servers()) == [
-        "kirocrew-core",
+        "ajcrew-core",
         MEMBER_DISPATCH_SERVER,
     ]
 
@@ -197,7 +197,7 @@ def test_a_switched_off_panel_tool_withholds_the_whole_panel(agents_dir, tmp_pat
     )
     client = _client(tmp_path, MEMBER_KEY, backend=ACP_BACKEND_PI)
     assert _names(client._resolve_session_mcp_servers()) == [
-        "kirocrew-core",
+        "ajcrew-core",
         MEMBER_DISPATCH_SERVER,
     ]
 
@@ -208,11 +208,11 @@ def test_a_switched_off_panel_tool_withholds_the_whole_panel(agents_dir, tmp_pat
 
 def _spec_with_own_server(agents_dir) -> dict:
     spec = {
-        "name": "kirocrew",
+        "name": "ajcrew",
         "tools": ["*"],
         "mcpServers": {"spec-probe": {"command": "python3", "args": ["probe_server.py"]}},
     }
-    (agents_dir / "kirocrew.json").write_text(json.dumps(spec), encoding="utf-8")
+    (agents_dir / "ajcrew.json").write_text(json.dumps(spec), encoding="utf-8")
     return spec
 
 
@@ -230,8 +230,8 @@ def test_a_spec_with_its_own_mcp_server_reaches_pi(agents_dir, tmp_path) -> None
     assert "spec-probe" in names
     # tools ["*"] grants the control plane too; the member mounts ride at the tail.
     assert names == [
-        "kirocrew-core",
-        "kirocrew-cron",
+        "ajcrew-core",
+        "ajcrew-cron",
         "spec-probe",
         MEMBER_DISPATCH_SERVER,
         MEMBER_PANEL_SERVER,
@@ -246,14 +246,14 @@ def test_a_spec_with_its_own_mcp_server_reaches_pi(agents_dir, tmp_path) -> None
 
 def test_a_spec_server_with_a_switched_off_tool_is_withheld(agents_dir, tmp_path) -> None:
     """A spec server narrowed by `disabledTools` is not mounted at all on pi."""
-    (agents_dir / "kirocrew.json").write_text(
+    (agents_dir / "ajcrew.json").write_text(
         json.dumps(
             {
-                "name": "kirocrew",
-                "tools": ["@foo", "@kirocrew-core"],
+                "name": "ajcrew",
+                "tools": ["@foo", "@ajcrew-core"],
                 "mcpServers": {
                     "foo": {"command": "/bin/foo", "disabledTools": ["dangerous"]},
-                    "kirocrew-core": {"command": "/opt/kirocrew", "args": ["mcp-core"]},
+                    "ajcrew-core": {"command": "/opt/ajcrew", "args": ["mcp-core"]},
                 },
             }
         ),
@@ -262,25 +262,25 @@ def test_a_spec_server_with_a_switched_off_tool_is_withheld(agents_dir, tmp_path
     client = _client(tmp_path, MEMBER_KEY, backend=ACP_BACKEND_PI)
     names = _names(client._resolve_session_mcp_servers())
     assert "foo" not in names
-    # kirocrew-core is un-narrowed, so it still reaches pi.
-    assert "kirocrew-core" in names
+    # ajcrew-core is un-narrowed, so it still reaches pi.
+    assert "ajcrew-core" in names
 
 
-def test_kirocrew_core_with_a_switched_off_tool_is_withheld(agents_dir, tmp_path) -> None:
-    """The control plane is NOT exempt: a narrowed kirocrew-core is withheld too.
+def test_ajcrew_core_with_a_switched_off_tool_is_withheld(agents_dir, tmp_path) -> None:
+    """The control plane is NOT exempt: a narrowed ajcrew-core is withheld too.
 
     pi has no per-call deny, so unlike a mirrored backend it cannot refuse the
     switched-off tool while keeping the server; the whole server is withheld.
     """
-    (agents_dir / "kirocrew.json").write_text(
+    (agents_dir / "ajcrew.json").write_text(
         json.dumps(
             {
-                "name": "kirocrew",
-                "tools": ["@foo", "@kirocrew-core"],
+                "name": "ajcrew",
+                "tools": ["@foo", "@ajcrew-core"],
                 "mcpServers": {
                     "foo": {"command": "/bin/foo"},
-                    "kirocrew-core": {
-                        "command": "/opt/kirocrew",
+                    "ajcrew-core": {
+                        "command": "/opt/ajcrew",
                         "args": ["mcp-core"],
                         "disabledTools": ["learn_add"],
                     },
@@ -291,7 +291,7 @@ def test_kirocrew_core_with_a_switched_off_tool_is_withheld(agents_dir, tmp_path
     )
     client = _client(tmp_path, MEMBER_KEY, backend=ACP_BACKEND_PI)
     names = _names(client._resolve_session_mcp_servers())
-    assert "kirocrew-core" not in names
+    assert "ajcrew-core" not in names
     # foo is un-narrowed, so it still reaches pi.
     assert "foo" in names
 
@@ -302,14 +302,14 @@ def test_a_settings_file_tool_off_withholds_the_whole_server(agents_dir, tmp_pat
     The dashboard writes a per-tool switch-off into the global MCP settings file;
     on pi, with no per-call deny, the whole named server is withheld.
     """
-    (agents_dir / "kirocrew.json").write_text(
+    (agents_dir / "ajcrew.json").write_text(
         json.dumps(
             {
-                "name": "kirocrew",
-                "tools": ["@foo", "@kirocrew-core"],
+                "name": "ajcrew",
+                "tools": ["@foo", "@ajcrew-core"],
                 "mcpServers": {
                     "foo": {"command": "/bin/foo"},
-                    "kirocrew-core": {"command": "/opt/kirocrew", "args": ["mcp-core"]},
+                    "ajcrew-core": {"command": "/opt/ajcrew", "args": ["mcp-core"]},
                 },
             }
         ),
@@ -322,19 +322,19 @@ def test_a_settings_file_tool_off_withholds_the_whole_server(agents_dir, tmp_pat
     client = _client(tmp_path, MEMBER_KEY, backend=ACP_BACKEND_PI)
     names = _names(client._resolve_session_mcp_servers())
     assert "foo" not in names
-    assert "kirocrew-core" in names
+    assert "ajcrew-core" in names
 
 
 def test_an_un_narrowed_spec_server_still_mounts(agents_dir, tmp_path) -> None:
     """A spec server with no switched-off tool reaches pi as before."""
-    (agents_dir / "kirocrew.json").write_text(
+    (agents_dir / "ajcrew.json").write_text(
         json.dumps(
             {
-                "name": "kirocrew",
-                "tools": ["@foo", "@kirocrew-core"],
+                "name": "ajcrew",
+                "tools": ["@foo", "@ajcrew-core"],
                 "mcpServers": {
                     "foo": {"command": "/bin/foo", "args": ["serve"]},
-                    "kirocrew-core": {"command": "/opt/kirocrew", "args": ["mcp-core"]},
+                    "ajcrew-core": {"command": "/opt/ajcrew", "args": ["mcp-core"]},
                 },
             }
         ),
@@ -343,4 +343,4 @@ def test_an_un_narrowed_spec_server_still_mounts(agents_dir, tmp_path) -> None:
     client = _client(tmp_path, MEMBER_KEY, backend=ACP_BACKEND_PI)
     names = _names(client._resolve_session_mcp_servers())
     assert "foo" in names
-    assert "kirocrew-core" in names
+    assert "ajcrew-core" in names

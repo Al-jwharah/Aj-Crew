@@ -16,13 +16,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew.autonudge import NudgeLoop
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.monitoring.completion import MonitorCompletionHook
-from kiro_crew.monitoring.models import MonitorState
-from kiro_crew.slack import gateway as gw
-from kiro_crew.testing.wait import await_until
+from aj_crew.autonudge import NudgeLoop
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.monitoring.completion import MonitorCompletionHook
+from aj_crew.monitoring.models import MonitorState
+from aj_crew.slack import gateway as gw
+from aj_crew.testing.wait import await_until
 
 
 def _loop(slot_key: str = "chat-1-1785") -> NudgeLoop:
@@ -66,8 +66,8 @@ def _slot(key: str = "chat-1-1785", *, running: bool = False) -> MagicMock:
 
 
 def _orchestrator() -> gw.GatewayOrchestrator:
-    cfg = KiroCrewConfig()
-    with patch.object(cfg, "load_credentials", return_value={"KIROCREW_OWNER_ID": "U_OWNER"}):
+    cfg = AjCrewConfig()
+    with patch.object(cfg, "load_credentials", return_value={"AJCREW_OWNER_ID": "U_OWNER"}):
         orch = gw.GatewayOrchestrator(cfg, no_dashboard=True, no_crons=True, no_open=True)
     orch.dashboard_state = SimpleNamespace(
         get_slot=MagicMock(return_value=None),
@@ -133,7 +133,7 @@ class TestDashboardNudgeSlotResolution:
                 new=AsyncMock(return_value=restored),
             ) as rehydrate,
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
         ):
             assert await orch._fire_dashboard_nudge(loop) is True
         rehydrate.assert_awaited_once_with(orch.dashboard_state, loop.slot_key, adopt_closed=True)
@@ -158,7 +158,7 @@ class TestDashboardNudgeSlotResolution:
                 gw, "rehydrate_slot_from_history_async", new=AsyncMock(return_value=restored)
             ) as rehydrate,
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
         ):
             assert await orch._fire_dashboard_nudge(loop) is True
         rehydrate.assert_awaited_once_with(orch.dashboard_state, loop.slot_key, adopt_closed=True)
@@ -180,7 +180,7 @@ class TestDashboardNudgeSlotResolution:
                 gw, "rehydrate_slot_from_history_async", new=AsyncMock(return_value=_slot())
             ),
             patch.object(gw, "spawn_guarded_turn", _fake_spawn()),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
         ):
             await orch._fire_dashboard_nudge(_loop())
         assert (
@@ -197,7 +197,7 @@ class TestDashboardNudgeSlotResolution:
         with (
             patch.object(gw, "rehydrate_slot_from_history_async", new=AsyncMock()) as rehydrate,
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
         ):
             assert await orch._fire_dashboard_nudge(_loop()) is True
         rehydrate.assert_not_awaited()
@@ -228,7 +228,7 @@ class TestDashboardNudgeSlotResolution:
         run_chat = AsyncMock(side_effect=_run_chat_through_monitor_boundary)
         with (
             patch.object(gw, "spawn_guarded_turn", _spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=run_chat),
+            patch("aj_crew.dashboard.chat._run_chat", new=run_chat),
         ):
             assert await orch._fire_dashboard_nudge(structured) is True
             assert await orch._fire_dashboard_nudge(_loop()) is True
@@ -275,7 +275,7 @@ class TestDashboardNudgeSlotResolution:
 
         with (
             patch.object(gw, "spawn_guarded_turn", _spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=run_chat),
+            patch("aj_crew.dashboard.chat._run_chat", new=run_chat),
         ):
             fire = asyncio.create_task(orch._fire_dashboard_nudge(structured, "[Monitor wake]"))
             await queued.wait()
@@ -330,7 +330,7 @@ class TestDashboardNudgeSlotResolution:
         orch.autonudge_svc.monitor_dispatch_is_authorized.return_value = True
         with (
             patch.object(gw, "spawn_guarded_turn", _spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=_run_chat_at_real_boundary),
+            patch("aj_crew.dashboard.chat._run_chat", new=_run_chat_at_real_boundary),
         ):
             fire = asyncio.create_task(orch._fire_dashboard_nudge(structured, "[Monitor wake]"))
             await setup_entered.wait()
@@ -369,7 +369,7 @@ class TestDashboardNudgeSlotResolution:
                 new=_stop_during_rehydration,
             ),
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
         ):
             result = await orch._fire_dashboard_nudge(structured, "[Monitor wake]")
 
@@ -406,7 +406,7 @@ class TestDashboardNudgeSlotResolution:
 
         with (
             patch.object(gw, "spawn_guarded_turn", _spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=_run_chat_refused_by_shutdown),
+            patch("aj_crew.dashboard.chat._run_chat", new=_run_chat_refused_by_shutdown),
         ):
             result = await orch._fire_dashboard_nudge(structured, "[Monitor wake]")
             await spawned[0]
@@ -442,7 +442,7 @@ class TestDashboardNudgeSlotResolution:
         with (
             patch.object(gw, "spawn_guarded_turn", _spawn),
             patch(
-                "kiro_crew.dashboard.chat._run_chat",
+                "aj_crew.dashboard.chat._run_chat",
                 new=_switch_mode_before_authorization,
             ),
         ):
@@ -487,7 +487,7 @@ class TestDashboardNudgeSlotResolution:
 
         with (
             patch.object(gw, "spawn_guarded_turn", _spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=run_chat),
+            patch("aj_crew.dashboard.chat._run_chat", new=run_chat),
         ):
             result = await orch._fire_dashboard_nudge(structured, "[Monitor wake]")
             await spawned[0]
@@ -534,7 +534,7 @@ class TestDashboardNudgeSlotResolution:
 
         with (
             patch.object(gw, "spawn_guarded_turn", _spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=_run_chat_at_real_boundary),
+            patch("aj_crew.dashboard.chat._run_chat", new=_run_chat_at_real_boundary),
         ):
             fire = asyncio.create_task(
                 orch._fire_dashboard_nudge(_structured_loop(), "[Monitor wake]")
@@ -581,7 +581,7 @@ class TestDashboardNudgeSlotResolution:
         orch.dashboard_state.run_background_turn = _reject_at_capacity
         with (
             patch.object(gw, "spawn_guarded_turn", _spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
         ):
             fire = asyncio.create_task(
                 orch._fire_dashboard_nudge(_structured_loop(), "[Monitor wake]")
@@ -632,7 +632,7 @@ class TestDashboardNudgeSlotResolution:
         spawn = _fake_spawn()
         with (
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
         ):
             assert await orch._fire_dashboard_nudge(loop) is False
         orch.autonudge_svc.remove.assert_not_awaited()
@@ -674,7 +674,7 @@ class TestStructuralTerminalGuard:
         spawn = _fake_spawn()
         with (
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
         ):
             # bool path (message loop) → False: nothing dispatched.
             assert await orch._fire_dashboard_nudge(loop) is False
@@ -711,7 +711,7 @@ class TestStructuralTerminalGuard:
         spawn = _fake_spawn()
         with (
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
         ):
             # bool path (message loop) -> False: nothing dispatched.
             assert await orch._fire_dashboard_nudge(loop) is False
@@ -737,7 +737,7 @@ class TestStructuralTerminalGuard:
         spawn = _fake_spawn()
         with (
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
         ):
             assert await orch._fire_dashboard_nudge(new_loop) is True
         orch.autonudge_svc.update.assert_not_awaited()
@@ -763,7 +763,7 @@ class TestStructuralTerminalGuard:
         spawn = _fake_spawn()
         with (
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
         ):
             assert await orch._fire_dashboard_nudge(loop) is True
         # The guard DID consult the fence (passing the stale generation) but the
@@ -789,7 +789,7 @@ class TestStructuralTerminalGuard:
         spawn = _fake_spawn()
         with (
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
         ):
             assert await orch._fire_dashboard_nudge(_loop()) is True
         orch.autonudge_svc.update.assert_not_awaited()
@@ -823,7 +823,7 @@ class TestStructuralTerminalGuard:
         orch.autonudge_svc.monitor_dispatch_is_authorized.return_value = True
         with (
             patch.object(gw, "spawn_guarded_turn", _spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=_run_chat_through_monitor_boundary),
+            patch("aj_crew.dashboard.chat._run_chat", new=_run_chat_through_monitor_boundary),
         ):
             result = await orch._fire_dashboard_nudge(structured, "[Monitor wake]")
             if spawned:
@@ -861,7 +861,7 @@ class TestModelRefusedGuard:
         spawn = _fake_spawn()
         with (
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
             patch.object(orch, "_notify_nudge_expired") as notify,
         ):
             assert await orch._fire_dashboard_nudge(loop) is False
@@ -889,7 +889,7 @@ class TestModelRefusedGuard:
         spawn = _fake_spawn()
         with (
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
             patch.object(orch, "_notify_nudge_expired") as notify,
         ):
             assert await orch._fire_dashboard_nudge(loop) is False
@@ -907,7 +907,7 @@ class TestModelRefusedGuard:
         spawn = _fake_spawn()
         with (
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
         ):
             assert await orch._fire_dashboard_nudge(_loop()) is True
         orch.autonudge_svc.update.assert_not_awaited()
@@ -925,7 +925,7 @@ class TestModelRefusedGuard:
         spawn = _fake_spawn()
         with (
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
             patch.object(orch, "_notify_nudge_expired") as notify,
         ):
             assert await orch._fire_dashboard_nudge(loop) is True
@@ -940,7 +940,7 @@ class TestModelRefusedGuard:
 
     def test_the_stop_is_system_imposed_and_re_armable(self) -> None:
         """Kept over nothing the user did, and displaceable by a later arm."""
-        from kiro_crew.autonudge_service import model
+        from aj_crew.autonudge_service import model
 
         assert gw.MODEL_REFUSED_REASON in model._KEPT_STOP_REASONS
         assert gw.MODEL_REFUSED_REASON in model._REPLACEABLE_LOOP_STOP_REASONS
@@ -955,7 +955,7 @@ class TestModelRefusedGuard:
         spawn = _fake_spawn()
         with (
             patch.object(gw, "spawn_guarded_turn", spawn),
-            patch("kiro_crew.dashboard.chat._run_chat", new=AsyncMock()),
+            patch("aj_crew.dashboard.chat._run_chat", new=AsyncMock()),
         ):
             assert await orch._fire_dashboard_nudge(_loop()) is True
         orch.autonudge_svc.update.assert_not_awaited()
@@ -972,7 +972,7 @@ class TestChannelStructuralTerminalHelper:
     """
 
     def _malformed_exc(self):
-        from kiro_crew.acp.client import AcpError
+        from aj_crew.acp.client import AcpError
 
         exc = AcpError("The request was rejected as malformed.", transient=False)
         exc.structural_terminal = True
@@ -1098,7 +1098,7 @@ class TestFireScopesTheTurnToTheConfigGeneration:
         run_chat = AsyncMock(side_effect=_run_chat_through_monitor_boundary)
         with (
             patch.object(gw, "spawn_guarded_turn", self._running_spawn(spawned)),
-            patch("kiro_crew.dashboard.chat._run_chat", new=run_chat),
+            patch("aj_crew.dashboard.chat._run_chat", new=run_chat),
         ):
             assert isinstance(
                 await orch._fire_dashboard_nudge(loop, "[Monitor wake]"),
@@ -1125,7 +1125,7 @@ class TestFireScopesTheTurnToTheConfigGeneration:
         run_chat = AsyncMock()
         with (
             patch.object(gw, "spawn_guarded_turn", self._running_spawn(spawned)),
-            patch("kiro_crew.dashboard.chat._run_chat", new=run_chat),
+            patch("aj_crew.dashboard.chat._run_chat", new=run_chat),
         ):
             # The plain-nudge shape (wake_message is None).
             assert await orch._fire_dashboard_nudge(loop) is True

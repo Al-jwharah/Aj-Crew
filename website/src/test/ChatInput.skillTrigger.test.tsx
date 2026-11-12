@@ -16,7 +16,7 @@ import ChatInput from '../components/ChatInput'
 
 const SKILLS = [
   { key: 'WorkforceEmploymentKnowledgeBase/oncall-handover', name: 'oncall-handover', description: 'Handover', source: 'package' },
-  { key: 'grill', name: 'grill', description: 'Questioning', source: 'kirocrew' },
+  { key: 'grill', name: 'grill', description: 'Questioning', source: 'ajcrew' },
 ]
 
 beforeEach(() => {

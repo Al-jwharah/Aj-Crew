@@ -6,7 +6,7 @@ the two are shipped together.
 The host renders a card as `{html, data}`. The `html` is inert layout it sanitizes; the
 `data` is a flat map of text it binds into that layout by `data-dashboard-field`, setting
 each matching element's text. The host is two files, and both are worth reading before
-authoring a page: `src/kiro_crew/dashboard/dynamic_cards.py` (`normalize_card`, which
+authoring a page: `src/aj_crew/dashboard/dynamic_cards.py` (`normalize_card`, which
 accepts or refuses the card) and `website/src/pages/chat/command-center/dashboardDocument.ts`
 (which queries `[data-dashboard-field]` and does the binding). No type checker sees that
 binding, because one half is markup. Two tests stand in for one: `parity.py` checks the
@@ -22,15 +22,15 @@ of them belongs in the same pull request as the others:
 
 | Artifact | Where | What it is |
 |---|---|---|
-| the page | `src/kiro_crew/dashboard_templates/` | inert html, one `data-dashboard-field` per value, no controls |
-| the contract | `src/kiro_crew/dashboard_templates/` | a flat `TypedDict` naming exactly those fields, plus the judgment type and `CONTRACT_VERSION` |
-| the provider | `src/kiro_crew/dashboard_templates/` | `build_<slug>`, whose **return type is the contract** |
+| the page | `src/aj_crew/dashboard_templates/` | inert html, one `data-dashboard-field` per value, no controls |
+| the contract | `src/aj_crew/dashboard_templates/` | a flat `TypedDict` naming exactly those fields, plus the judgment type and `CONTRACT_VERSION` |
+| the provider | `src/aj_crew/dashboard_templates/` | `build_<slug>`, whose **return type is the contract** |
 | the gate | `test/test_dashboard_templates.py` and one test per template | asserts the page and the contract agree |
-| the registration | `src/kiro_crew/dashboard_templates/registry.py` | `slug -> (contract, provider, source fold, version)` |
+| the registration | `src/aj_crew/dashboard_templates/registry.py` | `slug -> (contract, provider, source fold, version)` |
 
-Shared pieces live in `src/kiro_crew/dashboard_templates/__init__.py` (the `Unsaid`
+Shared pieces live in `src/aj_crew/dashboard_templates/__init__.py` (the `Unsaid`
 sentinel, the fold readers, the single exit to a card) and
-`src/kiro_crew/dashboard_templates/parity.py` (the page reader and the two structural
+`src/aj_crew/dashboard_templates/parity.py` (the page reader and the two structural
 rules). The authoring procedure is the `dashboard-template` skill, and its
 `scaffold.py` emits all four artifacts from one field list so they cannot disagree about
 what the fields are.
@@ -162,7 +162,7 @@ rather than drifting. `registry.py` keeps no copy of the names; it exports only
 
 ## The Bot
 
-The four artifacts are produced by a dedicated agent, `kirocrew-dashboard-author`, whose
+The four artifacts are produced by a dedicated agent, `ajcrew-dashboard-author`, whose
 built-in prompt is this procedure. Its spec ships as a markdown agent spec beside the
 skill: the charter — outputs land as a pull request and never at run time, pick an existing
 fold first, every field a writer could omit is `Unsaid`, no percentages, zero controls —
@@ -179,7 +179,7 @@ web tools (every input is on disk or behind `gh`), and no cron, artifact, deploy
 `allowedTools` has no argument matching and this agent's whole safety story is that a human
 reads its diff before it lands.
 
-The spec is registered in `OWNED_KIRO_AGENT_FILES` as `kirocrew-dashboard-author.json`,
+The spec is registered in `OWNED_KIRO_AGENT_FILES` as `ajcrew-dashboard-author.json`,
 so the runtime installs and rebuilds it: `rebuild_agent_config` calls
 `_install_dashboard_author_agent`, which writes the spec from the skill's
 `agent-spec.md` at every gateway start and re-filters its auto-approve grants through

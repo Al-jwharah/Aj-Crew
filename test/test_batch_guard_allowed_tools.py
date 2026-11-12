@@ -2,7 +2,7 @@
 
 A tool the spec's ``allowedTools`` names is approved by the engine itself: on KAS
 the projection turns it into a ``permissions`` ``allow`` rule, so no permission
-request reaches Kiro Crew and ``batch_guard.screen_approval`` never runs. With
+request reaches Aj Crew and ``batch_guard.screen_approval`` never runs. With
 ``hooks.batch_write_guard`` on, the projection must keep every write-class tool of
 the guard's table out of that auto-approval, so the call comes back as a request.
 Crew then answers it itself: alone it is approved with no prompt, and batched with
@@ -20,14 +20,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp import kas_agents
-from kiro_crew.acp.types import (
+from aj_crew.acp import kas_agents
+from aj_crew.acp.types import (
     EVENT_PERMISSION_REQUEST,
     AcpEvent,
     JsonRpcMessage,
 )
-from kiro_crew.constants import DENY_CAUSE_BATCH_READ_WRITE
-from kiro_crew.hooks import (
+from aj_crew.constants import DENY_CAUSE_BATCH_READ_WRITE
+from aj_crew.hooks import (
     TOOL_ALLOW,
     TOOL_AUTO_APPROVE,
     HookManager,
@@ -35,12 +35,12 @@ from kiro_crew.hooks import (
     hook_gate_kwargs,
 )
 
-_SEND = ("kirocrew-dashboard", "session_send")
-_LEDGER_READ = ("kirocrew-work", "work_ledger_read")
+_SEND = ("ajcrew-dashboard", "session_send")
+_LEDGER_READ = ("ajcrew-work", "work_ledger_read")
 
 
 def _guard():
-    return importlib.import_module("kiro_crew.acp.batch_guard")
+    return importlib.import_module("aj_crew.acp.batch_guard")
 
 
 @pytest.fixture
@@ -57,8 +57,8 @@ def _spec(**extra: Any) -> dict[str, Any]:
     return {
         "name": "lead",
         "prompt": "p",
-        "tools": ["@kirocrew-dashboard", "@kirocrew-work", "@kirocrew-core"],
-        "allowedTools": ["@kirocrew-dashboard/session_send", "@kirocrew-work"],
+        "tools": ["@ajcrew-dashboard", "@ajcrew-work", "@ajcrew-core"],
+        "allowedTools": ["@ajcrew-dashboard/session_send", "@ajcrew-work"],
         **extra,
     }
 
@@ -132,7 +132,7 @@ def _frame(call_id: str, server: str, tool: str) -> JsonRpcMessage:
 
 
 def _handle():
-    from kiro_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.session_handle import AcpSessionHandle
 
     runtime = MagicMock()
     runtime.send_response = AsyncMock()
@@ -171,32 +171,32 @@ async def test_a_granted_write_batched_with_a_granted_read_is_refused(guard_on, 
 
 
 def test_an_authored_allow_on_a_whole_server_still_asks_for_its_writes(guard_on):
-    # The shape of the generated team-lead spec: ``@kirocrew-core`` granted and
-    # the derived block allowing ``kirocrew-core/*``.
+    # The shape of the generated team-lead spec: ``@ajcrew-core`` granted and
+    # the derived block allowing ``ajcrew-core/*``.
     entry = _project(
         _spec(
-            allowedTools=["@kirocrew-core", "@kirocrew-work/work_ledger_record"],
+            allowedTools=["@ajcrew-core", "@ajcrew-work/work_ledger_record"],
             permissions={
                 "rules": [
                     {
                         "capability": "mcp",
-                        "match": ["kirocrew-core/*", "kirocrew-work/work_ledger_record"],
+                        "match": ["ajcrew-core/*", "ajcrew-work/work_ledger_record"],
                         "effect": "allow",
                     }
                 ]
             },
         )
     )
-    assert _effect(entry, "kirocrew-core", "send_message") == "ask"
-    assert _effect(entry, "kirocrew-core", "session_ledger_record") == "ask"
-    assert _effect(entry, "kirocrew-work", "work_ledger_record") == "ask"
-    assert _effect(entry, "kirocrew-core", "memory_recall") == "allow"
-    assert _effect(entry, "kirocrew-core", "spawn_run") == "allow"
+    assert _effect(entry, "ajcrew-core", "send_message") == "ask"
+    assert _effect(entry, "ajcrew-core", "session_ledger_record") == "ask"
+    assert _effect(entry, "ajcrew-work", "work_ledger_record") == "ask"
+    assert _effect(entry, "ajcrew-core", "memory_recall") == "allow"
+    assert _effect(entry, "ajcrew-core", "spawn_run") == "allow"
     granted = kas_agents.projected_crew_answered([entry], "lead")
     assert {
-        "@kirocrew-core/send_message",
-        "@kirocrew-core/session_ledger_record",
-        "@kirocrew-work/work_ledger_record",
+        "@ajcrew-core/send_message",
+        "@ajcrew-core/session_ledger_record",
+        "@ajcrew-work/work_ledger_record",
     } <= granted
 
 
@@ -219,9 +219,9 @@ async def test_a_granted_write_alone_is_approved_without_a_prompt(guard_on, monk
 
 def test_a_write_the_spec_never_granted_still_asks_a_person(guard_on):
     granted = kas_agents.projected_crew_answered(
-        [_project(_spec(allowedTools=["@kirocrew-work/work_ledger_read"]))], "lead"
+        [_project(_spec(allowedTools=["@ajcrew-work/work_ledger_read"]))], "lead"
     )
-    assert "@kirocrew-dashboard/session_send" not in granted
+    assert "@ajcrew-dashboard/session_send" not in granted
     verdict = _judge(_permission(53, "tc-send", *_SEND, granted))
     assert verdict.action == TOOL_ALLOW
 
@@ -233,7 +233,7 @@ def test_an_authored_ask_on_the_write_is_not_answered_by_crew(guard_on):
                 "rules": [
                     {
                         "capability": "mcp",
-                        "match": ["kirocrew-dashboard/session_send"],
+                        "match": ["ajcrew-dashboard/session_send"],
                         "effect": "ask",
                     }
                 ]
@@ -241,7 +241,7 @@ def test_an_authored_ask_on_the_write_is_not_answered_by_crew(guard_on):
         )
     )
     granted = kas_agents.projected_crew_answered([entry], "lead")
-    assert "@kirocrew-dashboard/session_send" not in granted
+    assert "@ajcrew-dashboard/session_send" not in granted
 
 
 @pytest.mark.parametrize(
@@ -249,8 +249,8 @@ def test_an_authored_ask_on_the_write_is_not_answered_by_crew(guard_on):
     [
         {"capability": "mcp", "match": [], "effect": "ask"},
         {"capability": "mcp", "match": ["**"], "effect": "ask"},
-        {"capability": "mcp", "match": ["kirocrew-*/session_*"], "effect": "deny"},
-        {"capability": "mcp", "match": ["kirocrew-dashboard/[s]ession_send"], "effect": "ask"},
+        {"capability": "mcp", "match": ["ajcrew-*/session_*"], "effect": "deny"},
+        {"capability": "mcp", "match": ["ajcrew-dashboard/[s]ession_send"], "effect": "ask"},
         {"capability": "all", "effect": "ask"},
     ],
     ids=["empty-match", "recursive-glob", "wildcards", "unread-glob", "meta-all"],
@@ -260,7 +260,7 @@ def test_an_authored_catch_all_hold_is_never_answered_by_crew(guard_on, rule):
     # cannot read counts as covering, so the author's hold keeps prompting.
     entry = _project(_spec(permissions={"rules": [rule]}))
     granted = kas_agents.projected_crew_answered([entry], "lead")
-    assert "@kirocrew-dashboard/session_send" not in granted
+    assert "@ajcrew-dashboard/session_send" not in granted
 
 
 # ── (c) guard off: the projection is unchanged ────────────────────────────────
@@ -275,9 +275,7 @@ def test_with_the_guard_off_the_projection_is_unchanged(guard_off, monkeypatch):
     monkeypatch.setattr(guard, "guard_settings", lambda: (True, ()))
     assert _project(spec) == off
     assert _effect(off, *_SEND) == "allow"
-    assert "@kirocrew-dashboard/session_send" not in kas_agents.projected_crew_answered(
-        [off], "lead"
-    )
+    assert "@ajcrew-dashboard/session_send" not in kas_agents.projected_crew_answered([off], "lead")
 
 
 # ── (d) read-class tools stay auto-approved ───────────────────────────────────
@@ -288,8 +286,8 @@ def test_with_the_guard_off_the_projection_is_unchanged(guard_off, monkeypatch):
 )
 def test_read_class_tools_stay_auto_approved_with_the_guard_on(guard_on, tool):
     entry = _project(_spec())
-    assert _effect(entry, "kirocrew-work", tool) == "allow"
-    assert f"@kirocrew-work/{tool}" not in kas_agents.projected_crew_answered([entry], "lead")
+    assert _effect(entry, "ajcrew-work", tool) == "allow"
+    assert f"@ajcrew-work/{tool}" not in kas_agents.projected_crew_answered([entry], "lead")
 
 
 # ── the guard fails open: an error in its step leaves the projection alone ────
@@ -303,6 +301,6 @@ def test_an_error_in_the_guard_step_leaves_the_projection_unchanged(guard_on, mo
     entry = _project(_spec())
     # No raise, and the spec's own grant stands as if the guard were off.
     assert _effect(entry, *_SEND) == "allow"
-    assert "@kirocrew-dashboard/session_send" not in kas_agents.projected_crew_answered(
+    assert "@ajcrew-dashboard/session_send" not in kas_agents.projected_crew_answered(
         [entry], "lead"
     )

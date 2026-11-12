@@ -1,9 +1,9 @@
-"""The serviceless ``crons.json`` readers and the run-identity helpers, through ``kiro_crew.cron``.
+"""The serviceless ``crons.json`` readers and the run-identity helpers, through ``aj_crew.cron``.
 
-``kirocrew doctor``, the Agent templates delete guard, the skill lifecycle and the
+``ajcrew doctor``, the Agent templates delete guard, the skill lifecycle and the
 dashboard count read the store with no scheduler running
-(:mod:`kiro_crew.cron_service.readers`). Each case writes a store, points
-``kiro_crew.cron.config_dir`` at it -- the seam those readers go through -- and
+(:mod:`aj_crew.cron_service.readers`). Each case writes a store, points
+``aj_crew.cron.config_dir`` at it -- the seam those readers go through -- and
 asks the reader what a caller would.
 """
 
@@ -15,8 +15,8 @@ from typing import Any
 
 import pytest
 
-import kiro_crew.cron as cron
-from kiro_crew.cron import CronJob, CronStoreUnreadable
+import aj_crew.cron as cron
+from aj_crew.cron import CronJob, CronStoreUnreadable
 
 
 def _record(job_id: str, **fields: Any) -> dict[str, Any]:
@@ -136,7 +136,7 @@ class TestCountsAndSkillReferences:
 
 class TestRunIdentity:
     def test_a_persistent_key_is_stable_and_carries_the_last_result(self) -> None:
-        from kiro_crew.cron_service.identity import cron_prior_result_context
+        from aj_crew.cron_service.identity import cron_prior_result_context
 
         job = CronJob(id="j1", name="n", message="go", last_result="x" * 2100, minimal_context=True)
         key, prompt = cron.build_cron_session_context(job)

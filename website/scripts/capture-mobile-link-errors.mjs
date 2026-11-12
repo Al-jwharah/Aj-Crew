@@ -46,7 +46,7 @@ const FIXTURES = {
   },
   '/api/security/trusted-apps': { apps: [], ineffective: [], allowAll: false },
   '/api/tailnet/status': { enabled: false, state: 'off', governance_pinned: false },
-  '/api/config/kirocrew': { agent: { yolo_duration: '6h', apps_allow_third_party: false } },
+  '/api/config/ajcrew': { agent: { yolo_duration: '6h', apps_allow_third_party: false } },
 }
 
 /** Every refusal the card distinguishes, plus one it deliberately does not. */

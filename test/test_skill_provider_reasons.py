@@ -24,10 +24,10 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.skill_providers import _http
-from kiro_crew.skill_providers import github as gh
-from kiro_crew.skill_providers import skillsh
-from kiro_crew.skill_providers.base import (
+from aj_crew.skill_providers import _http
+from aj_crew.skill_providers import github as gh
+from aj_crew.skill_providers import skillsh
+from aj_crew.skill_providers.base import (
     ProviderRegistry,
     SkillProviderError,
     SkillSearchResult,

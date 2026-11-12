@@ -12,8 +12,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.client import AcpClient, AcpError
-from kiro_crew.acp.stderr_tail import STDERR_TAIL_MAX_CHARS, STDERR_WITHHELD, safe_stderr_tail
+from aj_crew.acp.client import AcpClient, AcpError
+from aj_crew.acp.stderr_tail import STDERR_TAIL_MAX_CHARS, STDERR_WITHHELD, safe_stderr_tail
 
 # The issue's fixture: a 40-character AWS secret access key, no prefix and no
 # label the redactor anchors on, wrapped across two lines.

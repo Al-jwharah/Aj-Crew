@@ -35,7 +35,7 @@ import { closeBottomTerminal } from '../hooks/useBottomTerminal'
  * fresh.
  */
 
-export const TERMINAL_POPOUT_CHANNEL = 'kirocrew-terminal-popout'
+export const TERMINAL_POPOUT_CHANNEL = 'ajcrew-terminal-popout'
 
 /** The singleton entity id for the (one) terminal panel popout. */
 export const TERMINAL_POPOUT_ID = 'terminal-panel'

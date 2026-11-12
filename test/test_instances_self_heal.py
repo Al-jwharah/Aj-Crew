@@ -12,15 +12,15 @@ import time
 import pytest
 from instances_helpers import _FakeTunnel, _patch_port_probe
 
-from kiro_crew.testing.wait import await_until
+from aj_crew.testing.wait import await_until
 
 
 class TestReconfigureAtomicity:
     """`reconfigure` must serialize against everything else taking the lock."""
 
     def _manager(self, tmp_path):
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         reg = InstancesRegistry(tmp_path / "instances.json")
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -65,7 +65,7 @@ class TestReconfigureAtomicity:
                 started.set()
                 try:
                     # flake-ok: pre-existing 30 s sleep stands in for a recovery that is always cancelled, moved verbatim
-                    # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing sleep shape, moved verbatim; tracked for a de-flake pass
+                    # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing sleep shape, moved verbatim; tracked for a de-flake pass
                     await asyncio.sleep(30)
                     outcome.append("reinstalled-old-coordinates")
                 except asyncio.CancelledError:
@@ -75,7 +75,7 @@ class TestReconfigureAtomicity:
             async def other_instance_recovery():
                 try:
                     # flake-ok: pre-existing 30 s sleep stands in for another instance's recovery the test cancels, moved verbatim
-                    # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing sleep shape, moved verbatim; tracked for a de-flake pass
+                    # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing sleep shape, moved verbatim; tracked for a de-flake pass
                     await asyncio.sleep(30)
                 except asyncio.CancelledError:
                     outcome.append("other-cancelled")
@@ -114,7 +114,7 @@ class TestReconfigureAtomicity:
         async def slow_mint():
             try:
                 # flake-ok: pre-existing 30 s sleep stands in for a token mint that reconfigure always cancels, moved verbatim
-                # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing sleep shape, moved verbatim; tracked for a de-flake pass
+                # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing sleep shape, moved verbatim; tracked for a de-flake pass
                 await asyncio.sleep(30)
                 events.append("stored-stale-token")
             except asyncio.CancelledError:
@@ -190,7 +190,7 @@ class TestReconfigureAtomicity:
 
         async def idle_refresh():
             # flake-ok: pre-existing 30 s sleep stands in for an idle refresh loop the test cancels, moved verbatim
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing sleep shape, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing sleep shape, moved verbatim; tracked for a de-flake pass
             await asyncio.sleep(30)
 
         async def scenario():
@@ -230,7 +230,7 @@ class TestReconfigureAtomicity:
         def slow_write():
             started.set()
             # flake-ok: pre-existing 0.3 s sleep keeps the registry write in flight while the test cancels the request, moved verbatim
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing sleep shape, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing sleep shape, moved verbatim; tracked for a de-flake pass
             time.sleep(0.3)
             finished.set()
             return "persisted"
@@ -269,7 +269,7 @@ class _ResilTunnel:
         aws_profile="",
         aws_region="",
     ):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, TunnelStatus
 
         self._S = TunnelState
         self.transport = transport
@@ -289,13 +289,13 @@ class _ResilTunnel:
 class TestSelfHealRefreshRestart:
     @pytest.fixture(autouse=True)
     # flake-ok: pre-existing class autouse fixture patches the port probe on the shared monkeypatch, moved verbatim
-    # nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
+    # nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- pre-existing class-local autouse stub, moved verbatim; de-flake pass tracked
     def _free_ports(self, monkeypatch):
         _patch_port_probe(monkeypatch)
 
     def _mgr(self, tmp_path, *, mint=None, factory=_ResilTunnel):
-        from kiro_crew.instances.registry import InstancesRegistry
-        from kiro_crew.instances.ssh_tunnel_manager import SshTunnelManager
+        from aj_crew.instances.registry import InstancesRegistry
+        from aj_crew.instances.ssh_tunnel_manager import SshTunnelManager
 
         reg = InstancesRegistry(path=tmp_path / "instances.json")
 
@@ -320,7 +320,7 @@ class TestSelfHealRefreshRestart:
         import logging
 
         _reg, mgr = self._mgr(tmp_path)
-        with caplog.at_level(logging.INFO, logger="kiro_crew.instances.ssh_tunnel_manager"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.instances.ssh_tunnel_manager"):
             await mgr._recover("gone-1")
         assert "Self-heal for gone-1 not run" in caplog.text
 
@@ -333,7 +333,7 @@ class TestSelfHealRefreshRestart:
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
         mgr._reconfiguring.add("cd-1")
         try:
-            with caplog.at_level(logging.INFO, logger="kiro_crew.instances.ssh_tunnel_manager"):
+            with caplog.at_level(logging.INFO, logger="aj_crew.instances.ssh_tunnel_manager"):
                 await mgr._recover_after("cd-1", 0)
         finally:
             mgr._reconfiguring.discard("cd-1")
@@ -341,7 +341,7 @@ class TestSelfHealRefreshRestart:
 
     @pytest.mark.asyncio
     async def test_recover_tier1_then_tier2(self, tmp_path):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -368,7 +368,7 @@ class TestSelfHealRefreshRestart:
         is down from resetting its budget every rebuild and churning forever,
         while a single slow post-rebuild probe cannot ratchet the budget down
         permanently — the next good probe clears it."""
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -401,8 +401,8 @@ class TestSelfHealRefreshRestart:
     async def test_probe_loop_fires_on_healthy_on_a_successful_probe(self, tmp_path):
         """Wiring guard: a successful _forward_alive in the probe loop must fire
         the _on_healthy seam so the manager can clear the attempt counter."""
-        from kiro_crew.instances import ssh_tunnel_manager as stm
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
+        from aj_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
 
         stm_interval = stm._PROBE_INTERVAL
         healthy: list[str] = []
@@ -432,7 +432,7 @@ class TestSelfHealRefreshRestart:
         assert healthy == ["cd-1"]
 
     def test_recover_releases_lock_during_io(self, tmp_path):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         started = asyncio.Event()
         release = asyncio.Event()
@@ -471,8 +471,8 @@ class TestSelfHealRefreshRestart:
         re-mint. The recovery must try again once the mint can succeed; standing
         down after one failed mint leaves the tunnel in ERROR until the operator
         clicks reconnect."""
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
-        from kiro_crew.instances.token_mint import TokenMintError
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.token_mint import TokenMintError
 
         fail_next = {"tunnel": 0, "mint": 0}
         mints = {"n": 0}
@@ -529,8 +529,8 @@ class TestSelfHealRefreshRestart:
         """The cap hands the tunnel to diagnosis, but an outage that outlasts it (a
         sleeping laptop) must not leave the tunnel in ERROR for good: a later cycle
         reconnects once the cause is gone."""
-        from kiro_crew.instances import ssh_tunnel_manager_self_heal as heal
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances import ssh_tunnel_manager_self_heal as heal
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         monkeypatch.setattr(heal, "_GIVE_UP_RETRY_SECS", 0.0)
         reg, mgr = self._mgr(tmp_path)
@@ -570,8 +570,8 @@ class TestSelfHealRefreshRestart:
         diagnosis runs once, and the tunnel's error says it gave up."""
         import time
 
-        from kiro_crew.instances import ssh_tunnel_manager_self_heal as heal
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances import ssh_tunnel_manager_self_heal as heal
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -591,7 +591,7 @@ class TestSelfHealRefreshRestart:
 
     @pytest.mark.asyncio
     async def test_recover_attempt_cap_then_diagnose(self, tmp_path, monkeypatch):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         def failing(*a, **k):
             t = _ResilTunnel(*a, **k)
@@ -615,7 +615,7 @@ class TestSelfHealRefreshRestart:
 
     @pytest.mark.asyncio
     async def test_rebuild_stops_old_before_replace(self, tmp_path):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -634,7 +634,7 @@ class TestSelfHealRefreshRestart:
 
     @pytest.mark.asyncio
     async def test_connect_stops_stale_tunnel_before_replace(self, tmp_path):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         # Use the _FakeTunnel (tracks .stopped) for this manager.
         reg, mgr = self._mgr(tmp_path, factory=_FakeTunnel)
@@ -649,7 +649,7 @@ class TestSelfHealRefreshRestart:
 
     @pytest.mark.asyncio
     async def test_wait_until_ready_rejects_child_that_dies_during_probe(self):
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
 
         class _Proc:
             def __init__(self):
@@ -677,7 +677,7 @@ class TestSelfHealRefreshRestart:
 
     @staticmethod
     async def _timeout_error_for_live_child(*, tunable=True, **kwargs):
-        from kiro_crew.instances.ssh_tunnel_manager import _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import _SshTunnel
 
         class _LiveProc:
             returncode = None  # never exits: still connecting at the deadline
@@ -720,8 +720,8 @@ class TestSelfHealRefreshRestart:
     def test_ready_timeout_at_ceiling_does_not_suggest_raising_it(self):
         # A budget already at the ceiling cannot be raised: the message points
         # at reachability and omits the tunable.
-        from kiro_crew.instances.constants import CONNECT_TIMEOUT_CEILING_SECS
-        from kiro_crew.instances.ssh_tunnel_manager import _SshTunnel
+        from aj_crew.instances.constants import CONNECT_TIMEOUT_CEILING_SECS
+        from aj_crew.instances.ssh_tunnel_manager import _SshTunnel
 
         class _LiveProc:
             returncode = None
@@ -746,14 +746,14 @@ class TestSelfHealRefreshRestart:
         assert "timed out after 0.05s" in err
         assert "reachable" in err
         assert "instances.connect_timeout_secs" not in err
-        assert "kirocrew config set" not in err
+        assert "ajcrew config set" not in err
 
     @pytest.mark.asyncio
     async def test_a_bare_tunnel_is_untunable_and_the_manager_marks_its_own(self, tmp_path):
         # The default is off, so a tunnel built outside the manager (tunnel_keeper's
         # make_tunnel) names no setting. The manager reads the setting into the
         # budget, so connect() and a self-heal rebuild both turn it on.
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
 
         assert _SshTunnel("cd-1", "cd-1-alias", 53995, 7777)._timeout_tunable is False
         reg, mgr = self._mgr(tmp_path)
@@ -769,7 +769,7 @@ class TestSelfHealRefreshRestart:
         # A child that exited in the same tick the loop gave up (too late for
         # _failed_on_child_exit to classify) keeps the generic wording rather
         # than guessing the proxy-handshake cause.
-        from kiro_crew.instances.ssh_tunnel_manager import _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import _SshTunnel
 
         class _DeadProc:
             returncode = 255  # already gone by the deadline
@@ -793,7 +793,7 @@ class TestSelfHealRefreshRestart:
         assert "instances.connect_timeout_secs" not in err
 
     def test_exit_error_strips_post_quantum_noise(self):
-        from kiro_crew.instances.ssh_tunnel_manager import _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import _SshTunnel
 
         t = _SshTunnel("cd-1", "h", 1, 2)
         t._stderr_buf = (
@@ -812,7 +812,7 @@ class TestSelfHealRefreshRestart:
         assert t._exit_error(255) == "ssh exited with code 255"
 
     def test_exit_error_classifies_wssh_transport_vs_auth(self):
-        from kiro_crew.instances.ssh_tunnel_manager import _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import _SshTunnel
 
         t = _SshTunnel("cd-1", "h", 1, 2)
 
@@ -849,7 +849,7 @@ class TestSelfHealRefreshRestart:
         handshake and ssh prints only "Connection closed by UNKNOWN". The
         first-connect classification must name ``ssh_host``; a drop on a tunnel
         that WAS up must not, because that host was reachable."""
-        from kiro_crew.instances.ssh_tunnel_manager import _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import _SshTunnel
 
         t = _SshTunnel("cd-1", "h", 1, 2)
         t._stderr_buf = (
@@ -875,7 +875,7 @@ class TestSelfHealRefreshRestart:
         """``_wait_until_ready`` is the first-connect path, so a child that dies
         there with a transport drop surfaces the ``ssh_host`` hint in
         ``status.error`` -- the string the dashboard shows on Connect."""
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
 
         class _Proc:
             def __init__(self):
@@ -897,7 +897,7 @@ class TestSelfHealRefreshRestart:
         assert t.status.error.startswith("ssh tunnel transport drop (")
 
     def test_recover_backoff_grows_and_caps(self):
-        from kiro_crew.instances.ssh_tunnel_manager import (
+        from aj_crew.instances.ssh_tunnel_manager import (
             _RECOVER_BACKOFF_MAX_SECS,
             _recover_backoff_secs,
         )
@@ -1025,7 +1025,7 @@ class TestSelfHealRefreshRestart:
         timestamp and ttl would be overwritten by a mint it never requested,
         and the stale rebuild would replace its live tunnel.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr, arm, started, release, fail_next = self._tier2_rig(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -1068,7 +1068,7 @@ class TestSelfHealRefreshRestart:
         replacement before start() reports failure, so an undisturbed tier 2
         always sees the Phase 1 stamp plus exactly one.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr, _arm, _started, _release, fail_next = self._tier2_rig(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -1096,7 +1096,7 @@ class TestSelfHealRefreshRestart:
         is the ONLY thing that clears the counter. Asserting the reset after that
         seam runs — not after a manual pop — pins the real production reset: were
         the reset deleted from `_on_tunnel_healthy`, the final assert reds."""
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr, _arm, _started, _release, fail_next = self._tier2_rig(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -1129,7 +1129,7 @@ class TestSelfHealRefreshRestart:
         expected generation stale, so the gated install refuses and the
         recovery stands down.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         arm = asyncio.Event()
         parked = asyncio.Event()
@@ -1177,7 +1177,7 @@ class TestSelfHealRefreshRestart:
         and connect's tunnel, token and record stay exactly as connect left
         them.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         arm = asyncio.Event()
         parked = asyncio.Event()
@@ -1228,7 +1228,7 @@ class TestSelfHealRefreshRestart:
         reaps the rebuild's own tunnel and stands the recovery down instead of
         leaving an untracked forwarder holding its port.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         arm = asyncio.Event()
         parked = asyncio.Event()
@@ -1278,7 +1278,7 @@ class TestSelfHealRefreshRestart:
         epoch before its stop awaits — so its gated install refuses and no
         child is spawned after cleanup.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         arm = asyncio.Event()
         parked = asyncio.Event()
@@ -1332,7 +1332,7 @@ class TestSelfHealRefreshRestart:
         pins the property that decision rests on: a recovery whose mint
         returns after the disconnect stores no token and reinstalls no tunnel.
         """
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState
 
         reg, mgr, arm, started, release, fail_next = self._tier2_rig(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -1404,7 +1404,7 @@ class TestSelfHealRefreshRestart:
         assert seen[-1] == 9001  # proactive refresh re-mints with the same port
 
     def test_restart_remote(self, tmp_path, monkeypatch):
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -1425,7 +1425,7 @@ class TestSelfHealRefreshRestart:
             calls["stdout_tail"] = stdout_tail
             return (0, "")
 
-        monkeypatch.setattr(stm, "run_remote_kirocrew", fake_run)
+        monkeypatch.setattr(stm, "run_remote_ajcrew", fake_run)
         r = asyncio.run(mgr.restart_remote("cd-1"))
         # remote_port defaults to 5476 → threaded so restart uses the marker resolver.
         # connect_timeout_secs comes from the configured mint budget (unset here,
@@ -1453,7 +1453,7 @@ class TestSelfHealRefreshRestart:
         under a minute, not silently inherit the full tunable -- diagnose()
         must cap what it forwards, not pass the configured value straight
         through."""
-        from kiro_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances import ssh_tunnel_manager as stm
 
         reg, mgr = self._mgr(tmp_path)
         reg.add(name="CD", ssh_host="cd-1-alias", instance_id="cd-1")
@@ -1462,7 +1462,7 @@ class TestSelfHealRefreshRestart:
 
         async def fake_diagnose(ssh_host, remote_port, local_port, connect_timeout_secs=10.0):
             captured["connect_timeout_secs"] = connect_timeout_secs
-            from kiro_crew.instances.diagnostics import OK, DiagnosisResult
+            from aj_crew.instances.diagnostics import OK, DiagnosisResult
 
             return DiagnosisResult(OK, "ok", [])
 
@@ -1473,8 +1473,8 @@ class TestSelfHealRefreshRestart:
         assert captured["connect_timeout_secs"] < 90.0
 
     def test_probe_loop_tears_down_after_threshold(self, tmp_path, monkeypatch):
-        from kiro_crew.instances import ssh_tunnel_manager as stm
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
+        from aj_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
 
         monkeypatch.setattr(stm, "_PROBE_INTERVAL", 0.01)
 
@@ -1508,7 +1508,7 @@ class TestSelfHealRefreshRestart:
             t._forward_alive = _unreachable
             await await_until(asyncio.ensure_future(t._probe_loop()), what="the probe loop exiting")
             # flake-ok: pre-existing 50 ms sleep after the probe loop already exited, moved verbatim; tracked for a de-flake pass
-            # nosemgrep: kirocrew.test-sleep-as-barrier -- pre-existing sleep shape, moved verbatim; tracked for a de-flake pass
+            # nosemgrep: ajcrew.test-sleep-as-barrier -- pre-existing sleep shape, moved verbatim; tracked for a de-flake pass
             await asyncio.sleep(0.05)
             assert t._probe_failed is True
             assert "health probe failed" in t._exit_error(-15)
@@ -1516,8 +1516,8 @@ class TestSelfHealRefreshRestart:
         asyncio.run(main())
 
     def test_sshtunnel_start_success_then_stop(self, monkeypatch):
-        from kiro_crew.instances import ssh_tunnel_manager as stm
-        from kiro_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
+        from aj_crew.instances import ssh_tunnel_manager as stm
+        from aj_crew.instances.ssh_tunnel_manager import TunnelState, _SshTunnel
 
         monkeypatch.setattr(stm, "_PROBE_INTERVAL", 0)  # no probe-loop task
 

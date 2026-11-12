@@ -18,13 +18,13 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state, move_transcript_past
 
-from kiro_crew.config.loader import KiroCrewConfig, SessionSummaryConfig
-from kiro_crew.dashboard import chat_handlers, chat_summary
-from kiro_crew.dashboard.chat import api_chat_slot_summary, api_chat_slot_summary_generate
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.history import HistoryLockTimeout, TranscriptBusy
-from kiro_crew.session_summary import count_user_turns_in_records
+from aj_crew.config.loader import AjCrewConfig, SessionSummaryConfig
+from aj_crew.dashboard import chat_handlers, chat_summary
+from aj_crew.dashboard.chat import api_chat_slot_summary, api_chat_slot_summary_generate
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.history import HistoryLockTimeout, TranscriptBusy
+from aj_crew.session_summary import count_user_turns_in_records
 
 pytestmark = pytest.mark.asyncio
 
@@ -57,11 +57,11 @@ def _make_app(state) -> web.Application:
 
 def _pin_flag(monkeypatch, enabled: bool) -> None:
     def _load():
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.session_summary = SessionSummaryConfig(enabled=enabled)
         return cfg
 
-    monkeypatch.setattr(chat_handlers.KiroCrewConfig, "load", staticmethod(_load))
+    monkeypatch.setattr(chat_handlers.AjCrewConfig, "load", staticmethod(_load))
 
 
 class TestSummaryEndpoint:
@@ -153,7 +153,7 @@ class TestSummaryEndpoint:
 
     async def test_the_endpoint_never_generates(self, tmp_path, monkeypatch):
         """Opening the panel must not spend tokens."""
-        from kiro_crew.dashboard import chat_summary
+        from aj_crew.dashboard import chat_summary
 
         called: list[int] = []
 
@@ -269,7 +269,7 @@ class TestSummaryAppIsolation:
     ):
         mock_sel = MagicMock()
         monkeypatch.setattr(chat_handlers, "sel", lambda: mock_sel)
-        monkeypatch.setattr("kiro_crew.dashboard.slot_ownership.sel", lambda: mock_sel)
+        monkeypatch.setattr("aj_crew.dashboard.slot_ownership.sel", lambda: mock_sel)
         _pin_flag(monkeypatch, True)
         state = _make_state(tmp_path)
         slot = _ChatSlot("s1")
@@ -415,7 +415,7 @@ def _seed_slot(state, *, user_turns=3, app_owner="", memory_mode="default") -> _
 
 def _stub_generation(monkeypatch, reply=_GOOD_REPLY) -> list[int]:
     """Patch the model call the forced pass makes; return its call log."""
-    from kiro_crew.dashboard import chat_summary
+    from aj_crew.dashboard import chat_summary
 
     called: list[int] = []
 
@@ -448,7 +448,7 @@ class TestSummaryGenerateEndpoint:
         be the laxer of the two (App Kit §5.2)."""
         mock_sel = MagicMock()
         monkeypatch.setattr(chat_handlers, "sel", lambda: mock_sel)
-        monkeypatch.setattr("kiro_crew.dashboard.slot_ownership.sel", lambda: mock_sel)
+        monkeypatch.setattr("aj_crew.dashboard.slot_ownership.sel", lambda: mock_sel)
         _pin_flag(monkeypatch, True)
         called = _stub_generation(monkeypatch)
         state = _make_state(tmp_path)
@@ -716,7 +716,7 @@ class TestPanelGateDrift:
 
     async def test_each_mirrored_gate_refuses_on_both_sides(self):
         """The panel never offers a button for a session the generator refuses."""
-        cases: list[tuple[str, KiroCrewConfig, _ChatSlot]] = []
+        cases: list[tuple[str, AjCrewConfig, _ChatSlot]] = []
 
         def _slot(**attrs: object) -> _ChatSlot:
             slot = _ChatSlot("s1")
@@ -730,8 +730,8 @@ class TestPanelGateDrift:
                 setattr(slot, name, value)
             return slot
 
-        def _cfg(enabled: bool = True) -> KiroCrewConfig:
-            cfg = KiroCrewConfig()
+        def _cfg(enabled: bool = True) -> AjCrewConfig:
+            cfg = AjCrewConfig()
             cfg.session_summary = SessionSummaryConfig(enabled=enabled, min_user_turns=2)
             return cfg
 
@@ -756,7 +756,7 @@ class TestPanelGateDrift:
         own live turn state, so the generator legitimately refuses a slot this
         function still reports `ready`.
         """
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.session_summary = SessionSummaryConfig(enabled=True, min_user_turns=2)
         slot = _ChatSlot("s1")
         slot.messages = [
@@ -782,7 +782,7 @@ class TestGenerateState:
     """
 
     async def test_ready_for_a_long_enough_session(self):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.session_summary = SessionSummaryConfig(enabled=True, min_user_turns=2)
         slot = _ChatSlot("s1")
         slot.messages = [
@@ -793,7 +793,7 @@ class TestGenerateState:
         assert chat_handlers._generate_state(cfg, slot) == "ready"
 
     async def test_too_few_turns_below_the_minimum(self):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.session_summary = SessionSummaryConfig(enabled=True, min_user_turns=2)
         slot = _ChatSlot("s1")
         slot.messages = [{"role": "user", "content": "only one"}]
@@ -802,7 +802,7 @@ class TestGenerateState:
     async def test_injected_rows_do_not_make_a_session_look_long_enough(self):
         """Automation posts under role "user"; counting it would offer a button
         the generator then refuses."""
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.session_summary = SessionSummaryConfig(enabled=True, min_user_turns=2)
         slot = _ChatSlot("s1")
         slot.messages = [
@@ -813,7 +813,7 @@ class TestGenerateState:
         assert chat_handlers._generate_state(cfg, slot) == "too_few_turns"
 
     async def test_unavailable_when_the_feature_is_off(self):
-        cfg = KiroCrewConfig()  # enabled defaults to False
+        cfg = AjCrewConfig()  # enabled defaults to False
         slot = _ChatSlot("s1")
         slot.messages = [
             {"role": "user", "content": "one"},
@@ -822,7 +822,7 @@ class TestGenerateState:
         assert chat_handlers._generate_state(cfg, slot) == "unavailable"
 
     async def test_unavailable_while_a_pass_is_in_flight(self):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.session_summary = SessionSummaryConfig(enabled=True, min_user_turns=2)
         slot = _ChatSlot("s1")
         slot.messages = [
@@ -833,7 +833,7 @@ class TestGenerateState:
         assert chat_handlers._generate_state(cfg, slot) == "unavailable"
 
     async def test_unavailable_for_an_incognito_or_temporary_slot(self):
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.session_summary = SessionSummaryConfig(enabled=True, min_user_turns=2)
         for mode in ("incognito", "Incognito", "temporary"):
             slot = _ChatSlot("s1")
@@ -851,7 +851,7 @@ class TestGenerateState:
         after a turn that writes none. The panel shows the live turn signal; the server-side
         refusals (``running`` gate, 409 ``summary_turn_running``) are pinned elsewhere here.
         """
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.session_summary = SessionSummaryConfig(enabled=True, min_user_turns=2)
         slot = _ChatSlot("s1")
         slot.messages = [

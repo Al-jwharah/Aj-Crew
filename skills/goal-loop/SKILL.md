@@ -82,13 +82,13 @@ the board for automatic claim and handoff.
 The current scaffold also requires a `readlink` implementation that supports
 `-f` (GNU coreutils). Stock macOS `readlink` does not provide that flag.
 
-**Kiro Crew `autonudge_stop` MCP tool** — included with Kiro Crew. Used
+**Aj Crew `autonudge_stop` MCP tool** — included with Aj Crew. Used
 by the agent to self-halt when DoD is met; no extra install is required.
 
 ## Run it
 
 From a repo checkout (this skill and its `scaffold.sh` are repo-checkout-only, so
-the path below exists only where `KIROCREW_PROJECT_DIR` names such a checkout):
+the path below exists only where `AJCREW_PROJECT_DIR` names such a checkout):
 
 ```bash
 cd ~/.kiro/crew/skills/goal-loop

@@ -25,7 +25,7 @@ function LocationProbe() {
 
 // The Feature Previews section this panel mounts carries one card whose switch is
 // backend config (Decisions), so the panel reads the shared
-// `['kirocrewConfig']` cache and needs a provider. `retry: false` keeps the
+// `['ajcrewConfig']` cache and needs a provider. `retry: false` keeps the
 // stubbed read from being retried after a test ends.
 function renderPanel(path = '/settings/developer/feature-previews') {
   return render(
@@ -45,7 +45,7 @@ describe('DeveloperPanel', () => {
     // Stubbed rather than left to reach the network: every case here is about the
     // panel's own sections, and a real config read cannot succeed under vitest.
     // `decisionsCard.test.tsx` owns that card's states.
-    vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({} as never)
+    vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({} as never)
   })
 
   it('has no Developer Mode toggle and no Updates section', () => {
@@ -173,7 +173,7 @@ describe('DeveloperPanel', () => {
       const link = screen.getByRole('link', { name: /How to set up an SSH tunnel/ })
       expect(link).toHaveAttribute(
         'href',
-        'https://github.com/kirodotdev/KiroCrew/blob/main/docs/guides/remote-and-mobile.md#ssh-tunnel-laptop',
+        'https://github.com/Al-jwharah/Aj-Crew/blob/main/docs/guides/remote-and-mobile.md#ssh-tunnel-laptop',
       )
       expect(link).toHaveAttribute('target', '_blank')
     })

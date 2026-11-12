@@ -45,18 +45,18 @@ const OUT = process.argv[2] || '/tmp/agent-selector-6358-shots'
 mkdirSync(OUT, { recursive: true })
 
 const AGENTS = [
-  { name: 'kirocrew', kiro_agent: 'kirocrew', workspace: 'default', memory_store: 'default', description: 'Default crew', source: 'builtin' },
-  { name: 'oncall', kiro_agent: 'oncall-agent', workspace: 'oncall', memory_store: 'oncall-kb', description: 'Oncall crew', source: 'kirocrew' },
-  { name: 'research', kiro_agent: 'kirocrew', workspace: 'research', memory_store: 'research-mem', description: 'Research crew', source: 'kirocrew' },
+  { name: 'ajcrew', kiro_agent: 'ajcrew', workspace: 'default', memory_store: 'default', description: 'Default crew', source: 'builtin' },
+  { name: 'oncall', kiro_agent: 'oncall-agent', workspace: 'oncall', memory_store: 'oncall-kb', description: 'Oncall crew', source: 'ajcrew' },
+  { name: 'research', kiro_agent: 'ajcrew', workspace: 'research', memory_store: 'research-mem', description: 'Research crew', source: 'ajcrew' },
   // Filler rows so the list overflows its max-h-[280px] — the wheel-scroll
   // assertion below is vacuous on a list that fits.
   ...Array.from({ length: 9 }, (_, i) => ({
     name: `crew-${String(i + 1).padStart(2, '0')}`,
-    kiro_agent: 'kirocrew',
+    kiro_agent: 'ajcrew',
     workspace: 'default',
     memory_store: 'default',
     description: `Filler crew ${i + 1}`,
-    source: 'kirocrew',
+    source: 'ajcrew',
   })),
 ]
 
@@ -64,7 +64,7 @@ const AGENTS = [
 // is reachable only through an existing job (SchedulePage's `openDetail` on
 // the row) — exactly the leg an empty cron fixture left undriven. A plain
 // message job (no `script`/`command`) keeps the agent picker rendered, and
-// `agent: 'kirocrew'` keeps the non-default selections below meaningful —
+// `agent: 'ajcrew'` keeps the non-default selections below meaningful —
 // driveAgentPicker asserts that invariant before relying on it. `every_secs`
 // is the shape JobForm's parseJobDefaults actually recognises (the same shape
 // verify-timezone-search.mjs seeds), so the edit dialog opens on a coherent
@@ -72,7 +72,7 @@ const AGENTS = [
 const JOB = {
   id: 'job-01', name: 'Nightly digest', message: 'Summarize the day',
   enabled: true, schedule: 'every 24 hours', every_secs: 86400,
-  last_status: 'ok', agent: 'kirocrew',
+  last_status: 'ok', agent: 'ajcrew',
 }
 
 /** Open the create-job MODAL dialog from the schedule toolbar. The seeded
@@ -246,7 +246,7 @@ try {
       // `/api/agents` left the catalog on the stub's `[]` guess, so the picker
       // opened empty and the option click timed out (#21664).
       if (path === '/api/agents/catalog') {
-        await json(route, { agents: AGENTS.map(a => ({ ...a, selection_kind: 'member' })), default_agent: 'kirocrew' })
+        await json(route, { agents: AGENTS.map(a => ({ ...a, selection_kind: 'member' })), default_agent: 'ajcrew' })
         return true
       }
       if (path === '/api/crons') {

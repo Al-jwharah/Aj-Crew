@@ -4,7 +4,7 @@ kiro-cli reads an agent spec off disk, so a server declared there starts with it
 whole ``env``. KAS takes the agent over the ACP wire, so every ``env`` value the
 projection keeps is in the ``session/new`` frame -- and in any frame recording
 and log of it. These tests pin the rule in
-:func:`kiro_crew.acp.kas_agents._relayable_literal`: a value crosses only when it
+:func:`aj_crew.acp.kas_agents._relayable_literal`: a value crosses only when it
 is exactly ``true`` or ``false`` (case-insensitive, trimmed), its key is not
 credential-shaped, and the credential redactor leaves it alone. No secret is a
 boolean, so the rule needs no guess about which names or shapes carry one; every
@@ -21,8 +21,8 @@ import logging
 import pytest
 from kas_agents_helpers import _spec
 
-from kiro_crew.acp._dispatch import build_session_new_params
-from kiro_crew.acp.kas_agents import hoist_servers_for_session, to_client_custom_agent
+from aj_crew.acp._dispatch import build_session_new_params
+from aj_crew.acp.kas_agents import hoist_servers_for_session, to_client_custom_agent
 
 #: Boolean flags, the one value shape that crosses.
 _FLAGS = {
@@ -75,10 +75,10 @@ class TestBooleansReachTheServer:
         extra literal is a hand edit and stays withheld."""
         out = to_client_custom_agent(
             "a",
-            _spec(mcpServers={"kirocrew-core": {"command": "x", "env": {"DEBUG": "true"}}}),
+            _spec(mcpServers={"ajcrew-core": {"command": "x", "env": {"DEBUG": "true"}}}),
             "p",
         )
-        assert "env" not in out["mcpServers"]["kirocrew-core"]
+        assert "env" not in out["mcpServers"]["ajcrew-core"]
 
 
 #: (key, value) pairs that are not booleans. Every VALUE must stay off the wire,
@@ -168,8 +168,8 @@ class TestTheRuleIsLocalToTheKasProjection:
         """``PW_TEST_HTML_REPORT_OPEN`` is withheld on KAS (not a boolean), while
         ``agent.env``, which keeps the shared class unchanged, still saves and
         loads it."""
-        from kiro_crew.config.sections import agent_env_refusal, coerce_agent_env
-        from kiro_crew.config.sections_agent_env import agent_env_write_refusals
+        from aj_crew.config.sections import agent_env_refusal, coerce_agent_env
+        from aj_crew.config.sections_agent_env import agent_env_write_refusals
 
         name = "PW_TEST_HTML_REPORT_OPEN"
         assert _relayed_env({name: "never"}) == {}
@@ -180,7 +180,7 @@ class TestTheRuleIsLocalToTheKasProjection:
 
 class TestTheWithholdIsLogged:
     def test_withheld_keys_are_named_and_values_are_not(self, caplog):
-        with caplog.at_level(logging.INFO, logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.acp.kas_agents"):
             _relayed_env({**_FLAGS, "DB_PASSWORD": "hunter2", "LOG_LEVEL": "debug"})
         assert "'vendor'" in caplog.text
         assert "DB_PASSWORD" in caplog.text and "LOG_LEVEL" in caplog.text
@@ -189,12 +189,12 @@ class TestTheWithholdIsLogged:
 
     def test_a_credential_shaped_key_name_is_counted_not_printed(self, caplog):
         key = "ghp_" + "b2" * 18
-        with caplog.at_level(logging.INFO, logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.acp.kas_agents"):
             assert _relayed_env({key: "x"}) == {}
         assert "1 unnamed" in caplog.text
         assert key not in caplog.text
 
     def test_nothing_withheld_logs_nothing(self, caplog):
-        with caplog.at_level(logging.INFO, logger="kiro_crew.acp.kas_agents"):
+        with caplog.at_level(logging.INFO, logger="aj_crew.acp.kas_agents"):
             _relayed_env(_FLAGS)
         assert "not relaying" not in caplog.text

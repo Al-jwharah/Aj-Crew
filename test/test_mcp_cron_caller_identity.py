@@ -1,4 +1,4 @@
-"""``kirocrew-cron`` resolves the calling session from the injected caller block.
+"""``ajcrew-cron`` resolves the calling session from the injected caller block.
 
 Identity must come from the injected caller block, not the process environment.
 On a pooled backend one process serves many sessions, so process environment can
@@ -33,10 +33,10 @@ import uuid
 
 import pytest
 
-from kiro_crew import mcp_cron, mcp_shared, session_pid_sig
-from kiro_crew.cron import CronService
-from kiro_crew.mcp_caller import CALLER_META_KEY, CallerContext, set_current_caller
-from kiro_crew.mcp_cron import _authz_session_key, _call_tool_inner
+from aj_crew import mcp_cron, mcp_shared, session_pid_sig
+from aj_crew.cron import CronService
+from aj_crew.mcp_caller import CALLER_META_KEY, CallerContext, set_current_caller
+from aj_crew.mcp_cron import _authz_session_key, _call_tool_inner
 
 _MUTATING_TOOLS = ("cron_update", "cron_remove", "cron_pause", "cron_resume", "cron_trigger")
 
@@ -48,13 +48,13 @@ def _isolate(monkeypatch, tmp_path):
     Identity is granted per test rather than by a shared fixture: half of this
     module is about what happens when there is none.
     """
-    monkeypatch.setattr("kiro_crew.cron._DEFAULT_DIR", tmp_path)
-    monkeypatch.setattr("kiro_crew.mcp_cron.config_dir", lambda: tmp_path)
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
-    monkeypatch.delenv("KIROCREW_SESSION_KEY", raising=False)
-    monkeypatch.delenv("KIROCREW_HOST_PID", raising=False)
-    monkeypatch.delenv("KIROCREW_CHANNEL_ID", raising=False)
-    monkeypatch.delenv("KIROCREW_CLI", raising=False)
+    monkeypatch.setattr("aj_crew.cron._DEFAULT_DIR", tmp_path)
+    monkeypatch.setattr("aj_crew.mcp_cron.config_dir", lambda: tmp_path)
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
+    monkeypatch.delenv("AJCREW_SESSION_KEY", raising=False)
+    monkeypatch.delenv("AJCREW_HOST_PID", raising=False)
+    monkeypatch.delenv("AJCREW_CHANNEL_ID", raising=False)
+    monkeypatch.delenv("AJCREW_CLI", raising=False)
     set_current_caller(None)
     yield tmp_path
     set_current_caller(None)
@@ -81,7 +81,7 @@ def test_the_caller_block_beats_the_process_environment(monkeypatch) -> None:
     environment can only ever name one session (or, in practice, none), so the
     block has to outrank it rather than merely be consulted.
     """
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:from-env")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:from-env")
     _as_session("dashboard:from-block")
 
     assert _authz_session_key() == "dashboard:from-block"
@@ -89,7 +89,7 @@ def test_the_caller_block_beats_the_process_environment(monkeypatch) -> None:
 
 def test_no_caller_block_falls_back_to_the_process_environment(monkeypatch) -> None:
     """A non-gateway launch has no block to read and must not be regressed."""
-    monkeypatch.setenv("KIROCREW_SESSION_KEY", "dashboard:from-env")
+    monkeypatch.setenv("AJCREW_SESSION_KEY", "dashboard:from-env")
 
     assert _authz_session_key() == "dashboard:from-env"
 
@@ -163,11 +163,11 @@ def test_an_unidentified_caller_reads_nothing() -> None:
 #: Every test below sets it from OUTSIDE, which is the only thing an attacker
 #: has to do: a spawned server's environment is shaped by the spec that spawns
 #: it, and the two channels the spec has -- an ``env`` block and a ``command``
-#: like ``sh -c 'KIROCREW_CLI=1 exec kirocrew-cron'`` -- differ only in which
+#: like ``sh -c 'AJCREW_CLI=1 exec ajcrew-cron'`` -- differ only in which
 #: one a filter happens to inspect. By the time the value is in ``os.environ``
 #: they are the same fact, which is why asserting on the CONSUMER covers both
 #: channels at once and why no test here needs to spawn anything.
-_FORGED = ("KIROCREW_CLI", "1")
+_FORGED = ("AJCREW_CLI", "1")
 
 
 @pytest.mark.parametrize("tool", _MUTATING_TOOLS)
@@ -258,7 +258,7 @@ def test_the_flag_changes_no_answer_this_server_gives(monkeypatch) -> None:
 
     for tool, args in probes:
         set_current_caller(None)
-        monkeypatch.delenv("KIROCREW_CLI", raising=False)
+        monkeypatch.delenv("AJCREW_CLI", raising=False)
         without = _call_tool_inner(tool, args)
 
         set_current_caller(None)
@@ -289,7 +289,7 @@ def test_one_session_cannot_see_or_touch_another_sessions_job() -> None:
 
 
 def test_the_channel_default_also_comes_from_the_caller_block() -> None:
-    """``KIROCREW_CHANNEL_ID`` had the same defect as the session key.
+    """``AJCREW_CHANNEL_ID`` had the same defect as the session key.
 
     Process environment can only name one session's channel, and gatewayd forwards
     none to a shared backend -- so a pooled ``cron_add`` defaulted the delivery
@@ -583,7 +583,7 @@ def test_channel_agent_cannot_create_cron() -> None:
         {
             "name": f"esc-{uuid.uuid4().hex[:8]}",
             "message": "go",
-            "agent": "kirocrew",
+            "agent": "ajcrew",
             "approval_mode": "auto",
             "every": 60,
         },
@@ -599,7 +599,7 @@ def test_channel_agent_cannot_update_cron() -> None:
     so it does not even reveal whether the job exists."""
     _as_session("channel:C123:reviewer")
 
-    result = _call_tool_inner("cron_update", {"job_id": "any-job-id", "agent": "kirocrew"})
+    result = _call_tool_inner("cron_update", {"job_id": "any-job-id", "agent": "ajcrew"})
 
     assert "not available to channel agents" in result
 
@@ -648,7 +648,7 @@ def test_dashboard_session_may_schedule_for_another_crew() -> None:
         {
             "name": f"crew-{uuid.uuid4().hex[:8]}",
             "message": "go",
-            "agent": "kirocrew-conductor",
+            "agent": "ajcrew-conductor",
             "every": 120,
         },
     )

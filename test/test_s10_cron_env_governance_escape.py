@@ -4,8 +4,8 @@
 ``apps.manifest.CronEntry.from_dict`` copies verbatim -- keys are stringified,
 never screened -- and the gateway hands it to the scheduled session's spawn as
 ``extra_env``. Two names in it decide how the run is GOVERNED rather than what it
-does: ``platform.governance`` reads ``KIROCREW_SECURITY_POLICY`` and
-``platform.admission`` reads ``KIROCREW_ADMISSION_POLICY`` as a tier resolved
+does: ``platform.governance`` reads ``AJCREW_SECURITY_POLICY`` and
+``platform.admission`` reads ``AJCREW_ADMISSION_POLICY`` as a tier resolved
 ahead of the operator's own ``security_policy.json``, first-present-wins, so a
 job-supplied path replaces the operator's ceiling for the scheduled agent and
 every MCP server it starts.
@@ -27,24 +27,24 @@ import json
 from pathlib import Path
 from typing import Callable, cast
 
-import kiro_crew.slack.gateway as gateway_mod
-from kiro_crew.apps.manifest import CronEntry
-from kiro_crew.cron import CronService
-from kiro_crew.platform import governance
-from kiro_crew.platform.governance import (
+import aj_crew.slack.gateway as gateway_mod
+from aj_crew.apps.manifest import CronEntry
+from aj_crew.cron import CronService
+from aj_crew.platform import governance
+from aj_crew.platform.governance import (
     TIER_ENV,
     TIER_HOME,
     load_security_policy,
     resolve,
 )
-from kiro_crew.sandbox import scrub_agent_subprocess_env
+from aj_crew.sandbox import scrub_agent_subprocess_env
 
 #: The two governance trust-root path variables under test.
-_POLICY_PATH_VARS = ("KIROCREW_SECURITY_POLICY", "KIROCREW_ADMISSION_POLICY")
+_POLICY_PATH_VARS = ("AJCREW_SECURITY_POLICY", "AJCREW_ADMISSION_POLICY")
 
 #: The reserved control variable the seam already dropped. Positive control: it
 #: must keep being dropped, so the change adds names rather than replacing them.
-_ALREADY_STRIPPED = "KIROCREW_APPROVAL_MODE"
+_ALREADY_STRIPPED = "AJCREW_APPROVAL_MODE"
 
 #: Name of the gateway seam that filters a cron job's declared ``env``.
 _SEAM = "cron_job_env_without_reserved"
@@ -60,7 +60,7 @@ def _cron_env_seam() -> Callable[[dict[str, str] | None], dict[str, str]]:
     """The gateway's cron ``env`` filter, or a failure naming what is missing."""
     seam = getattr(gateway_mod, _SEAM, None)
     assert seam is not None, (
-        f"kiro_crew.slack.gateway exposes no {_SEAM}: nothing screens a cron job's "
+        f"aj_crew.slack.gateway exposes no {_SEAM}: nothing screens a cron job's "
         "declared env before it becomes the scheduled session's extra_env"
     )
     return cast(Callable[[dict[str, str] | None], dict[str, str]], seam)
@@ -83,21 +83,21 @@ def test_manifest_cron_env_is_copied_without_screening() -> None:
             "every": 3600,
             "message": "summarise",
             "env": {
-                "KIROCREW_SECURITY_POLICY": "/opt/app/loose.json",
-                "KIROCREW_ADMISSION_POLICY": "/opt/app/loose_admission.json",
+                "AJCREW_SECURITY_POLICY": "/opt/app/loose.json",
+                "AJCREW_ADMISSION_POLICY": "/opt/app/loose_admission.json",
                 "BENIGN": "1",
             },
         }
     )
-    assert entry.env["KIROCREW_SECURITY_POLICY"] == "/opt/app/loose.json"
-    assert entry.env["KIROCREW_ADMISSION_POLICY"] == "/opt/app/loose_admission.json"
+    assert entry.env["AJCREW_SECURITY_POLICY"] == "/opt/app/loose.json"
+    assert entry.env["AJCREW_ADMISSION_POLICY"] == "/opt/app/loose_admission.json"
     assert entry.env["BENIGN"] == "1"
 
 
 def test_env_tier_policy_path_replaces_a_home_tier_command_deny(
     monkeypatch, tmp_path: Path
 ) -> None:
-    """Holding ``KIROCREW_SECURITY_POLICY`` is enough to swap the ceiling.
+    """Holding ``AJCREW_SECURITY_POLICY`` is enough to swap the ceiling.
 
     Documented precedence, not a defect on its own -- it is what makes delivery
     of the variable an escalation rather than a cosmetic leak.
@@ -108,7 +108,7 @@ def test_env_tier_policy_path_replaces_a_home_tier_command_deny(
         encoding="utf-8",
     )
     monkeypatch.setattr(governance, "_policy_home_path", lambda: home)
-    monkeypatch.delenv("KIROCREW_SECURITY_POLICY", raising=False)
+    monkeypatch.delenv("AJCREW_SECURITY_POLICY", raising=False)
 
     home_ceiling = load_security_policy()
     assert home_ceiling is not None
@@ -120,7 +120,7 @@ def test_env_tier_policy_path_replaces_a_home_tier_command_deny(
     loose.write_text(
         json.dumps(_policy_doc(commands={"mode": "deny", "deny": []})), encoding="utf-8"
     )
-    monkeypatch.setenv("KIROCREW_SECURITY_POLICY", str(loose))
+    monkeypatch.setenv("AJCREW_SECURITY_POLICY", str(loose))
 
     env_ceiling = load_security_policy()
     assert env_ceiling is not None
@@ -135,8 +135,8 @@ def test_cron_job_env_must_not_deliver_governance_policy_paths(tmp_path: Path) -
     attacker_policy.write_text(json.dumps(_policy_doc()), encoding="utf-8")
 
     declared = {
-        "KIROCREW_SECURITY_POLICY": str(attacker_policy),
-        "KIROCREW_ADMISSION_POLICY": str(attacker_policy),
+        "AJCREW_SECURITY_POLICY": str(attacker_policy),
+        "AJCREW_ADMISSION_POLICY": str(attacker_policy),
         _ALREADY_STRIPPED: "auto",
         "BENIGN": "1",
     }
@@ -164,8 +164,8 @@ def test_cron_job_env_must_not_deliver_governance_policy_paths(tmp_path: Path) -
 def test_cron_job_env_matches_reserved_names_case_insensitively(tmp_path: Path) -> None:
     """Policy-path names are reserved regardless of their declared case."""
     declared = {
-        "kirocrew_security_policy": "/opt/app/loose.json",
-        "kirocrew_admission_policy": "/opt/app/loose_admission.json",
+        "ajcrew_security_policy": "/opt/app/loose.json",
+        "ajcrew_admission_policy": "/opt/app/loose_admission.json",
         "MixedCaseJobValue": "preserved",
     }
 
@@ -174,7 +174,7 @@ def test_cron_job_env_matches_reserved_names_case_insensitively(tmp_path: Path) 
 
     extra_env = _cron_env_seam()(stored_env)
 
-    for name in ("kirocrew_security_policy", "kirocrew_admission_policy"):
+    for name in ("ajcrew_security_policy", "ajcrew_admission_policy"):
         assert name not in extra_env, (
             f"a cron job's env delivered lowercase reserved name {name} to the "
             "scheduled session's spawn"
@@ -183,17 +183,17 @@ def test_cron_job_env_matches_reserved_names_case_insensitively(tmp_path: Path) 
 
 
 def test_cron_job_env_must_not_deliver_the_data_home(tmp_path: Path) -> None:
-    """``KIROCREW_HOME`` picks the same ceiling one level up, so it is reserved.
+    """``AJCREW_HOME`` picks the same ceiling one level up, so it is reserved.
 
     ``config.paths`` resolves the data home from it and
     ``governance._policy_home_path`` resolves ``security_policy.json`` under that
     home, so a job-supplied value points the ceiling read at a directory the job
     controls. It is absent from ``sandbox._AGENT_DENIED_ENV_KEYS``, unlike the
-    ``KIROCREW_POLICY_*`` fetch family, so this seam is what stops it.
+    ``AJCREW_POLICY_*`` fetch family, so this seam is what stops it.
     """
     declared = {
-        "KIROCREW_HOME": str(tmp_path / "app_controlled_home"),
-        "kirocrew_home": str(tmp_path / "app_controlled_home_lower"),
+        "AJCREW_HOME": str(tmp_path / "app_controlled_home"),
+        "ajcrew_home": str(tmp_path / "app_controlled_home_lower"),
         "BENIGN": "1",
     }
 
@@ -202,7 +202,7 @@ def test_cron_job_env_must_not_deliver_the_data_home(tmp_path: Path) -> None:
 
     extra_env = _cron_env_seam()(stored_env)
 
-    for name in ("KIROCREW_HOME", "kirocrew_home"):
+    for name in ("AJCREW_HOME", "ajcrew_home"):
         assert name not in extra_env, (
             f"a cron job's env delivered {name} -- which relocates the home every "
             "keystone file resolves from -- to the scheduled session's spawn"
@@ -211,15 +211,15 @@ def test_cron_job_env_must_not_deliver_the_data_home(tmp_path: Path) -> None:
 
 
 def test_cron_job_env_must_not_deliver_the_edition_profile(tmp_path: Path) -> None:
-    """``KIROCREW_PROFILE`` picks which ceiling is composed, so it is reserved.
+    """``AJCREW_PROFILE`` picks which ceiling is composed, so it is reserved.
 
     ``platform.resolve_profile`` reads it, and a job-supplied ``standalone``
     drops a companion edition's overlay, so an operation the enterprise ceiling
     denies resolves as permitted.
     """
     declared = {
-        "KIROCREW_PROFILE": "standalone",
-        "kirocrew_profile": "standalone",
+        "AJCREW_PROFILE": "standalone",
+        "ajcrew_profile": "standalone",
         "BENIGN": "1",
     }
 
@@ -228,7 +228,7 @@ def test_cron_job_env_must_not_deliver_the_edition_profile(tmp_path: Path) -> No
 
     extra_env = _cron_env_seam()(stored_env)
 
-    for name in ("KIROCREW_PROFILE", "kirocrew_profile"):
+    for name in ("AJCREW_PROFILE", "ajcrew_profile"):
         assert name not in extra_env, (
             f"a cron job's env delivered {name} -- which picks which ceiling is "
             "composed -- to the scheduled session's spawn"
@@ -239,15 +239,15 @@ def test_cron_job_env_must_not_deliver_the_edition_profile(tmp_path: Path) -> No
 def test_the_policy_fetch_family_is_stopped_by_the_spawn_scrub(tmp_path: Path) -> None:
     """The fetch family needs no cron reservation: the spawn scrub owns it.
 
-    ``sandbox._AGENT_DENIED_ENV_KEYS`` carries the ``KIROCREW_POLICY_*`` names by
+    ``sandbox._AGENT_DENIED_ENV_KEYS`` carries the ``AJCREW_POLICY_*`` names by
     exact spelling, so a job-supplied value is dropped before the child reads it.
     This records where that boundary is, so the cron seam is not widened to
     duplicate it.
     """
     fetch_family = (
-        "KIROCREW_POLICY_URL",
-        "KIROCREW_POLICY_CACHE_ONLY",
-        "KIROCREW_POLICY_MAX_CACHE_AGE_SECS",
+        "AJCREW_POLICY_URL",
+        "AJCREW_POLICY_CACHE_ONLY",
+        "AJCREW_POLICY_MAX_CACHE_AGE_SECS",
     )
     declared = {name: "https://attacker.invalid/policy.json" for name in fetch_family}
 
@@ -272,7 +272,7 @@ def test_the_operators_own_policy_path_still_reaches_the_child(monkeypatch) -> N
     ``job.env`` leaves that inheritance intact; scrubbing the pair from every
     agent child would not.
     """
-    operator_policy = "/etc/kirocrew/operator_policy.json"
+    operator_policy = "/etc/ajcrew/operator_policy.json"
     gateway_env = {"PATH": "/usr/bin"}
     for name in _POLICY_PATH_VARS:
         monkeypatch.setenv(name, operator_policy)

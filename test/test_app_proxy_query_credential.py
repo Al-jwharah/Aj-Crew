@@ -19,10 +19,10 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from apps_routes_coverage_helpers import APP, _install, _make_app, _setup_env
 
-import kiro_crew.apps.routes as routes_mod
-import kiro_crew.apps.routes_proxy as routes_proxy
-from kiro_crew.apps.manager import enable_app
-from kiro_crew.apps.proxy_auth import (
+import aj_crew.apps.routes as routes_mod
+import aj_crew.apps.routes_proxy as routes_proxy
+from aj_crew.apps.manager import enable_app
+from aj_crew.apps.proxy_auth import (
     PROXY_NONCE_HEADER,
     PROXY_V2_HEADER,
     ProxyPrincipalReplayCache,
@@ -30,7 +30,7 @@ from kiro_crew.apps.proxy_auth import (
     verify_proxy_request,
     verify_proxy_request_v2,
 )
-from kiro_crew.apps.routes import invalidate_app_secret_cache
+from aj_crew.apps.routes import invalidate_app_secret_cache
 
 
 @pytest.mark.parametrize(
@@ -118,7 +118,7 @@ async def test_the_backend_receives_no_token_and_the_signatures_verify(
     assert "token" not in seen["query"]
     assert "owner-credential" not in seen["target"]
     assert verify_proxy_request(
-        seen["headers"]["X-KiroCrew-Proxy"],
+        seen["headers"]["X-AjCrew-Proxy"],
         method="GET",
         target=seen["target"],
         body=seen["body"],

@@ -26,11 +26,11 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import context as ctx_mod
-from kiro_crew.agent import _shipped_prompt
-from kiro_crew.context import ContextBuilder
-from kiro_crew.memory import MemoryStore
-from kiro_crew.skills import SkillsLoader
+from aj_crew import context as ctx_mod
+from aj_crew.agent import _shipped_prompt
+from aj_crew.context import ContextBuilder
+from aj_crew.memory import MemoryStore
+from aj_crew.skills import SkillsLoader
 
 _UTF16_OVERRIDE = b"\xff\xfe" + "You are helpful.".encode("utf-16-le")
 _UTF8_OVERRIDE = "UTF8-OVERRIDE-MARKER: you are the override prompt.\n"
@@ -44,7 +44,7 @@ def home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """A private data home so the override lives where ``_prompt_path`` looks."""
     home = tmp_path / "home"
     home.mkdir()
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     return home
 
 
@@ -135,17 +135,17 @@ class TestUtf16OverrideDegradesToShippedPrompt:
         # match its control, so the comparison does not depend on the figure.
         # Set the sentinel explicitly so a future default cannot make the
         # moving cap a no-op.
-        real_load = ctx_mod.KiroCrewConfig.load
+        real_load = ctx_mod.AjCrewConfig.load
 
-        def _auto_cap_load() -> ctx_mod.KiroCrewConfig:
+        def _auto_cap_load() -> ctx_mod.AjCrewConfig:
             cfg = real_load()
             cfg.agent.max_subagents = 0
             return cfg
 
-        monkeypatch.setattr(ctx_mod.KiroCrewConfig, "load", staticmethod(_auto_cap_load))
+        monkeypatch.setattr(ctx_mod.AjCrewConfig, "load", staticmethod(_auto_cap_load))
         sizes = iter(range(15, 0, -1))
-        monkeypatch.setattr("kiro_crew.subagent.compute_max_subagents", lambda cfg: next(sizes))
-        monkeypatch.setattr("kiro_crew.resource_status.adaptive_exec_cap", lambda: 0)
+        monkeypatch.setattr("aj_crew.subagent.compute_max_subagents", lambda cfg: next(sizes))
+        monkeypatch.setattr("aj_crew.resource_status.adaptive_exec_cap", lambda: 0)
 
         # The drift is live: unpinned, two readings of the figure differ.
         assert _REAL_LIVE_CAP_FIGURE() != _REAL_LIVE_CAP_FIGURE()
@@ -192,8 +192,8 @@ class TestManagedContractAgent:
             json.dumps({"name": "fork", "prompt": prompt}), encoding="utf-8"
         )
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
-        monkeypatch.setattr("kiro_crew.agent.KIRO_AGENTS_DIR", agents_dir)
-        monkeypatch.setattr("kiro_crew.agent_discovery._KIRO_AGENTS_DIR", agents_dir)
+        monkeypatch.setattr("aj_crew.agent.KIRO_AGENTS_DIR", agents_dir)
+        monkeypatch.setattr("aj_crew.agent_discovery._KIRO_AGENTS_DIR", agents_dir)
 
     def test_utf16_override_degrades_to_shipped_contract(
         self,
@@ -202,13 +202,13 @@ class TestManagedContractAgent:
         monkeypatch: pytest.MonkeyPatch,
         caplog: pytest.LogCaptureFixture,
     ) -> None:
-        from kiro_crew.agent import _NATIVE_PROMPT_STUB
+        from aj_crew.agent import _NATIVE_PROMPT_STUB
 
         shipped = tmp_path / "pkg" / "prompt.md"
         shipped.parent.mkdir()
         shipped.write_text("SHIPPED_CONTRACT", encoding="utf-8")
-        monkeypatch.setattr("kiro_crew.agent._BUNDLED_CFG_DIR", shipped.parent)
-        monkeypatch.setattr("kiro_crew.agent._project_dir", lambda: None)
+        monkeypatch.setattr("aj_crew.agent._BUNDLED_CFG_DIR", shipped.parent)
+        monkeypatch.setattr("aj_crew.agent._project_dir", lambda: None)
         self._write_spec(tmp_path, monkeypatch, _NATIVE_PROMPT_STUB)
 
         assert ContextBuilder._load_agent_prompt("fork") == "SHIPPED_CONTRACT"

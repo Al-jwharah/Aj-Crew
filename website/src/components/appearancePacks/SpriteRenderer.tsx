@@ -70,7 +70,7 @@ const SpriteRendererInner: React.FC<SpriteRendererProps> = ({
     // the same-origin per-slot route for a crew avatar (`packSlotUrl`), or the
     // Companion's own data:/blob: URL from a file the user picked — no externally
     // controlled input reaches the sink.
-    // nosemgrep: semgrep.kirocrew.frontend-external-script-inject
+    // nosemgrep: semgrep.ajcrew.frontend-external-script-inject
     img.src = src
     frameRef.current = 0
     lastTimeRef.current = 0

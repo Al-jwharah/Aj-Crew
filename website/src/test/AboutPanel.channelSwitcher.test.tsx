@@ -129,13 +129,13 @@ describe('AboutPanel channel switcher', () => {
       requiredChannel: 'stable',
       packaged: true,
       disabled: 'policy-channel',
-      downloadUrl: 'https://downloads.example.dev/desktop/stable/latest/KiroCrew.dmg',
+      downloadUrl: 'https://downloads.example.dev/desktop/stable/latest/AjCrew.dmg',
     })
     const notice = await screen.findByTestId('updates-policy-channel')
     expect(notice.textContent).toContain("This nightly build can't switch to stable updates")
     expect(notice.textContent).toContain('Your settings, chats and files are kept.')
     const link = notice.querySelector('a')
-    expect(link?.getAttribute('href')).toBe('https://downloads.example.dev/desktop/stable/latest/KiroCrew.dmg')
+    expect(link?.getAttribute('href')).toBe('https://downloads.example.dev/desktop/stable/latest/AjCrew.dmg')
     expect(link?.textContent).toBe('Install the stable app')
     // The row names the installed lane and the requirement, not one for the other.
     expect(screen.getByTestId('channel-requires').textContent).toBe('requires stable')

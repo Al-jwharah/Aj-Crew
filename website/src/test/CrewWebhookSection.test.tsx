@@ -83,17 +83,17 @@ describe('crew webhook pane — lists only this crew\'s bindings', () => {
 
   it('lists a token pinned to the template the default crew runs', async () => {
     // A token can pin only an agent template, and its call runs that template on
-    // the shared memory: the built-in `default` crew on `kirocrew` is that run.
-    mockApi.webhooks.mockResolvedValue(view([token({ label: 'Poller', agent: 'kirocrew' })]))
-    renderPane({ name: 'default', kiro_agent: 'kirocrew', memory_store: 'default' })
+    // the shared memory: the built-in `default` crew on `ajcrew` is that run.
+    mockApi.webhooks.mockResolvedValue(view([token({ label: 'Poller', agent: 'ajcrew' })]))
+    renderPane({ name: 'default', kiro_agent: 'ajcrew', memory_store: 'default' })
     await waitFor(() => expect(screen.getByText('Poller')).toBeInTheDocument())
   })
 
   it('still lists a token on its template for a crew with its own memory', async () => {
     // A hook this crew registers keeps its own memory, and a token on its template
     // can deliver to that hook: hiding the token would hide real access.
-    mockApi.webhooks.mockResolvedValue(view([token({ label: 'Poller', agent: 'kirocrew' })]))
-    renderPane({ name: 'radar', kiro_agent: 'kirocrew', memory_store: 'radar' })
+    mockApi.webhooks.mockResolvedValue(view([token({ label: 'Poller', agent: 'ajcrew' })]))
+    renderPane({ name: 'radar', kiro_agent: 'ajcrew', memory_store: 'radar' })
     await waitFor(() => expect(screen.getByText('Poller')).toBeInTheDocument())
   })
 

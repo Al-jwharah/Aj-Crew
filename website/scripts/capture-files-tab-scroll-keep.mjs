@@ -65,7 +65,7 @@ const EXPANDED = ['src', ...FOLDERS.map(folder => `src/${folder}`).reverse()]
 const OTHER_PATH = `${PROJECT}/README.md`
 const slots = [{
   key: SLOT, title: 'Files scroll', running: false, last_message: 'hi', messages: 2,
-  agent: 'kirocrew', memory_mode: 'persistent', project: PROJECT,
+  agent: 'ajcrew', memory_mode: 'persistent', project: PROJECT,
   modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
 }]
 const t0 = Math.floor(Date.now() / 1000) - 600
@@ -132,7 +132,7 @@ async function run(browser, base, scenario) {
     localStorage.setItem('mc-side-panel-width', '560')
     // The file tab shows its own tree beside the document.
     localStorage.setItem('mc-files-rail-open', '1')
-    localStorage.setItem('kirocrew:comment-hint-dismissed', '1')
+    localStorage.setItem('ajcrew:comment-hint-dismissed', '1')
     localStorage.setItem('mc-chat-config', JSON.stringify({ pinLastPrompt: false, streamMode: 'immediate' }))
   }, [SLOT, JSON.stringify({ activeId: 'files', tabs })])
   await page.goto(base + '/?sid=' + encodeURIComponent(SLOT), { waitUntil: 'domcontentloaded' })

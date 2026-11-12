@@ -8,8 +8,8 @@ separate contract, pinned by ``test_workflows_lifecycle_evidence.py``.
 
 from __future__ import annotations
 
-from kiro_crew.dashboard.workflow_inject import _summarize
-from kiro_crew.workflows.registry import RunHandle
+from aj_crew.dashboard.workflow_inject import _summarize
+from aj_crew.workflows.registry import RunHandle
 
 
 def _handle(status: str, outcomes: list[str | None]) -> RunHandle:

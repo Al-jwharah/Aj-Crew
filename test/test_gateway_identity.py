@@ -15,7 +15,7 @@ import threading
 
 import pytest
 
-from kiro_crew import gateway_identity
+from aj_crew import gateway_identity
 
 
 @pytest.fixture(autouse=True)

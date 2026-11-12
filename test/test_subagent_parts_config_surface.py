@@ -1,6 +1,6 @@
 """The manager keeps working limits when a reload hands it input it cannot use.
 
-``kiro_crew/subagent_parts/config_surface.py`` holds ``SubagentManager.reconfigure``,
+``aj_crew/subagent_parts/config_surface.py`` holds ``SubagentManager.reconfigure``,
 ``apply_limits`` and the cap-raise hook. A reload that cannot size the auto cap keeps the
 cap in force, a limit whose value does not parse keeps the limit already in force, and a
 broken cap-raise hook cannot block the raise it rings.
@@ -14,8 +14,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import kiro_crew.subagent as subagent
-from kiro_crew.config.loader import KiroCrewConfig
+import aj_crew.subagent as subagent
+from aj_crew.config.loader import AjCrewConfig
 
 pytestmark = pytest.mark.usefixtures("close_subagent_managers")
 
@@ -48,7 +48,7 @@ async def test_a_reload_that_cannot_size_the_cap_keeps_the_cap_in_force(
     mgr = _manager(4)
     monkeypatch.setattr(subagent, "resolve_max_subagents", _unsizable)
     with caplog.at_level(logging.WARNING, logger=subagent.__name__):
-        await mgr.reconfigure(KiroCrewConfig())
+        await mgr.reconfigure(AjCrewConfig())
     assert mgr.user_max_concurrent == 4
     assert "keeping the current cap" in caplog.text
 
@@ -59,7 +59,7 @@ def test_applying_limits_without_a_cap_keeps_the_cap_when_sizing_fails(
     mgr = _manager(5)
     monkeypatch.setattr(subagent, "resolve_max_subagents", _unsizable)
     with caplog.at_level(logging.WARNING, logger=subagent.__name__):
-        mgr.apply_limits(KiroCrewConfig())
+        mgr.apply_limits(AjCrewConfig())
     assert mgr.user_max_concurrent == 5
     assert "keeping max_concurrent=5" in caplog.text
 
@@ -68,7 +68,7 @@ def test_applying_limits_without_a_cap_keeps_the_cap_when_sizing_fails(
 def test_a_limit_that_does_not_parse_keeps_the_limit_in_force(bad: object) -> None:
     mgr = _manager(4)
     before = {attr: getattr(mgr, attr) for attr in _LIMIT_FIELDS.values()}
-    real = KiroCrewConfig().agent
+    real = AjCrewConfig().agent
     agent = SimpleNamespace(
         completion_keep=real.completion_keep,
         completion_keep_chars=real.completion_keep_chars,

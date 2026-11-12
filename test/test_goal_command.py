@@ -13,10 +13,10 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-import kiro_crew.dashboard.chat_runner as chat_runner
+import aj_crew.dashboard.chat_runner as chat_runner
 
 
-def _make_slot(key: str = "slot-1", agent: str = "kirocrew") -> MagicMock:
+def _make_slot(key: str = "slot-1", agent: str = "ajcrew") -> MagicMock:
     slot = MagicMock()
     slot.key = key
     slot.agent = agent
@@ -119,12 +119,12 @@ async def test_arm_default_budget(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
     audit = _install(monkeypatch, svc)
     monkeypatch.setattr(chat_runner.Path, "home", classmethod(lambda cls: tmp_path))
     # The goal-stop sentinel now derives from data_home() (data home moved to
-    # ~/.kiro/crew). data_home() reads KIROCREW_HOME (pinned elsewhere by
+    # ~/.kiro/crew). data_home() reads AJCREW_HOME (pinned elsewhere by
     # conftest), so redirect it to track the patched home and keep the
-    # ~/.kirocrew/goal-stop layout this test builds authoritative.
-    monkeypatch.setattr(chat_runner, "data_home", lambda: tmp_path / ".kirocrew")
+    # ~/.ajcrew/goal-stop layout this test builds authoritative.
+    monkeypatch.setattr(chat_runner, "data_home", lambda: tmp_path / ".ajcrew")
     slot, state = _make_slot(key="a/b:c"), _make_state()
-    stale_sentinel = tmp_path / ".kirocrew" / "goal-stop" / "a_b_c.stop"
+    stale_sentinel = tmp_path / ".ajcrew" / "goal-stop" / "a_b_c.stop"
     stale_sentinel.parent.mkdir(parents=True)
     stale_sentinel.write_text("stop", encoding="utf-8")
 

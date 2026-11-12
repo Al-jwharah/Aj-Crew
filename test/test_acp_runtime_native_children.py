@@ -25,9 +25,9 @@ from acp_runtime_helpers import (
     _stop_reader,
 )
 
-from kiro_crew.acp.runtime import AcpSessionHandle
-from kiro_crew.acp.session_handle import NATIVE_CHILD_ROSTER_CAP
-from kiro_crew.acp.types import (
+from aj_crew.acp.runtime import AcpSessionHandle
+from aj_crew.acp.session_handle import NATIVE_CHILD_ROSTER_CAP
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     EVENT_PERMISSION_REQUEST,
     EVENT_SUBAGENT_ACTIVITY,
@@ -38,7 +38,7 @@ from kiro_crew.acp.types import (
     METHOD_REQUEST_PERMISSION,
     JsonRpcMessage,
 )
-from kiro_crew.metrics.events import CHILD_PERMISSION_DENIED
+from aj_crew.metrics.events import CHILD_PERMISSION_DENIED
 
 # ── what a TRUNCATED roster says out loud ─────
 #
@@ -92,7 +92,7 @@ async def test_roster_overflow_warns_once_per_episode_not_once_per_frame(caplog)
     roster = [{"sessionId": f"c-{i}"} for i in range(NATIVE_CHILD_ROSTER_CAP + overflow)]
     statuses = ("running", "pending", "completed")
 
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.acp.runtime"):
         rt._snapshot_subagent_sessions({"subagents": roster})
         truncation = [r for r in caplog.records if "recognition cap" in r.getMessage()]
         assert len(truncation) == 1
@@ -121,7 +121,7 @@ async def test_roster_overflow_warns_once_per_episode_not_once_per_frame(caplog)
         assert rt._roster_overflow_peak == overflow
 
     caplog.clear()
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.acp.runtime"):
         rt._snapshot_subagent_sessions({"subagents": roster[:8]})
     assert [r for r in caplog.records if r.levelno >= logging.WARNING] == []
     assert rt._subagent_roster_overflow == 0
@@ -143,7 +143,7 @@ async def test_repeated_roster_truncation_folds_into_one_throttled_summary(caplo
     """
     import logging
 
-    import kiro_crew.acp.runtime as runtime_mod
+    import aj_crew.acp.runtime as runtime_mod
 
     rt, _, _ = _make_runtime()
     _register(rt, "parent-session")
@@ -153,7 +153,7 @@ async def test_repeated_roster_truncation_folds_into_one_throttled_summary(caplo
             "subagents": [{"sessionId": f"c-{i}"} for i in range(NATIVE_CHILD_ROSTER_CAP + extra)]
         }
 
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.acp.runtime"):
         rt._snapshot_subagent_sessions(_over(40))  # the loud one, opens the window
         for extra in (40, 77, 40, 12):
             rt._snapshot_subagent_sessions(_over(extra))
@@ -195,7 +195,7 @@ async def test_a_truncation_after_the_roster_recovers_is_loud_again(caplog):
     def _loud() -> list[str]:
         return [r.getMessage() for r in caplog.records if r.levelno >= logging.WARNING]
 
-    with caplog.at_level(logging.DEBUG, logger="kiro_crew.acp.runtime"):
+    with caplog.at_level(logging.DEBUG, logger="aj_crew.acp.runtime"):
         rt._snapshot_subagent_sessions(over)
         rt._snapshot_subagent_sessions(over)
         assert len(_loud()) == 1
@@ -224,7 +224,7 @@ async def test_unroutable_permission_reason_follows_the_last_roster_snapshot():
     A `list_update` carries the full child list, so the next clean roster clears it.
     Asserted on the SEL row's `error` and the `child_permission_denied` metric.
     """
-    import kiro_crew.sel as sel_mod
+    import aj_crew.sel as sel_mod
 
     audited: list[dict] = []
     denied: list[dict] = []
@@ -243,7 +243,7 @@ async def test_unroutable_permission_reason_follows_the_last_roster_snapshot():
     try:
         with (
             patch.object(sel_mod, "sel", lambda: _CapturingSel()),
-            patch("kiro_crew.acp.runtime.emit_counter", _spy_counter),
+            patch("aj_crew.acp.runtime.emit_counter", _spy_counter),
         ):
             # Snapshotted by direct call, not fed as a frame: a roster naming
             # NATIVE_CHILD_ROSTER_CAP children serialises past this reader's
@@ -347,7 +347,7 @@ async def test_a_kas_frame_naming_the_parent_itself_gets_no_native_child_row():
 
 def _make_handle_for_child_frames():
     """A session handle over a mocked runtime, driven via _dispatch_events."""
-    from kiro_crew.acp.session_handle import AcpSessionHandle
+    from aj_crew.acp.session_handle import AcpSessionHandle
 
     queue: asyncio.Queue = asyncio.Queue()
     rt = MagicMock()
@@ -486,7 +486,7 @@ async def test_child_steer_echo_never_settles_parent_steer_ledger():
     another session, or a child's steering_consumed surfaces as a PARENT
     steer lifecycle event and can settle a pending user steer the parent
     backend never consumed. An own-session steer echo still yields."""
-    from kiro_crew.acp.types import EVENT_STEER_CONSUMED
+    from aj_crew.acp.types import EVENT_STEER_CONSUMED
 
     def _steer_frame(sid: str) -> JsonRpcMessage:
         return JsonRpcMessage(
@@ -667,7 +667,7 @@ async def test_notice_yield_abandonment_clears_turn_state():
     handle permanently turn-active (mark_turn_active leaked True /
     _turn_done cleared) — the notice loop must live inside the same
     try/finally as the dispatch loop."""
-    from kiro_crew.acp.types import EVENT_SUBAGENT_ACTIVITY
+    from aj_crew.acp.types import EVENT_SUBAGENT_ACTIVITY
 
     rt, _, _ = _make_runtime()
     q = _register(rt, "sA")

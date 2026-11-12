@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew.cloud import sizes
+from aj_crew.cloud import sizes
 
 PANEL = (
     Path(__file__).resolve().parent.parent

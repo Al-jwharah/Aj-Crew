@@ -66,7 +66,7 @@ vi.mock('../api/client', async (importOriginal) => {
       // A write that fails re-reads the rows.
       chatSlots: vi.fn(async () => structuredClone(gw.slots)),
       chatFolders: vi.fn().mockResolvedValue([{ id: 'f1', name: 'Work', order: 0 }]),
-      kirocrewConfig: vi.fn(async () => structuredClone(gw.config)),
+      ajcrewConfig: vi.fn(async () => structuredClone(gw.config)),
       patchConfig: vi.fn(async (path: string, value: unknown) => {
         if (path === 'dashboard.session_sort') gw.config.dashboard.session_sort = value
         return { ok: true }
@@ -160,7 +160,7 @@ function renderSidebar(slots: ChatSlot[], sort?: string) {
     } as unknown as RootState['chat'],
   })
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
-  qc.setQueryData(['kirocrewConfig'], structuredClone(gw.config))
+  qc.setQueryData(['ajcrewConfig'], structuredClone(gw.config))
   const tree = (s: ChatSlot[]) => (
     <QueryClientProvider client={qc}>
       <Provider store={store}>

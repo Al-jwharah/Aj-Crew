@@ -55,7 +55,7 @@ export type LocalSidebarSeed = Partial<LocalSidebarRow> &
 export const localRow = (over: LocalSidebarSeed): LocalSidebarRow => ({
   messages: 12,
   running: false,
-  agent: 'kirocrew',
+  agent: 'ajcrew',
   ...over,
 })
 
@@ -67,8 +67,8 @@ export const localRow = (over: LocalSidebarSeed): LocalSidebarRow => ({
 export function prepareLocalSidebar(params: URLSearchParams): void {
   const theme = params.get('theme') || 'dark'
   localStorage.setItem('mc-theme', theme === 'light' ? 'light' : 'dark')
-  localStorage.setItem('mc-color-theme', 'kiro')
-  document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+  localStorage.setItem('mc-color-theme', 'aj')
+  document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
   localStorage.setItem('mc-sidebar-lane', 'conductor')
   localStorage.setItem('mc-session-stale-collapse-ms', '0')
   localStorage.removeItem('mc-sidebar-conductor-expanded')
@@ -96,7 +96,7 @@ export function mountLocalSidebar(rows: LocalSidebarRow[], agents: string[]): vo
           unreadSlots={[]}
           history={[]}
           historyHasMore={false}
-          defaultAgent="kirocrew"
+          defaultAgent="ajcrew"
           installedAgents={agents.map((name) => ({ name, source: 'builtin' as const }))}
         />
       </div>

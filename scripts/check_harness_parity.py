@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """check_harness_parity.py — keep the Kiro harness first-class on lines a change adds.
 
-Kiro Crew drives one first-class agent harness, ``kiro-cli``
+Aj Crew drives one first-class agent harness, ``kiro-cli``
 (``ACP_BACKEND_KIRO``, spelled ``""``), plus adapted ones: the
 ``ACP_BACKEND_CLAUDE`` seam, KAS, and whatever a bring-your-own adapter
 registers next. An added harness may only adapt itself to the seams the Kiro
@@ -37,7 +37,7 @@ count is still printed as a non-failing report so the backlog stays visible.
     python3 scripts/check_harness_parity.py
 
     # scan explicit files, ignoring git entirely
-    python3 scripts/check_harness_parity.py src/kiro_crew/acp/runtime.py
+    python3 scripts/check_harness_parity.py src/aj_crew/acp/runtime.py
 
     # self-test: plant one probe per rule, assert each verdict
     python3 scripts/check_harness_parity.py --test
@@ -63,7 +63,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Only the backend package and its consumers can hold a harness identity test.
 # Widening this to the whole tree buys nothing and costs a scan of 6,000 files.
-SCAN_ROOTS = ("src/kiro_crew/",)
+SCAN_ROOTS = ("src/aj_crew/",)
 SCAN_SUFFIX = ".py"
 
 # This gate and its test spell every forbidden form out literally, and the
@@ -80,21 +80,21 @@ SKIP_PATHS = frozenset(
 # sets; the files allowed to DEFINE them are VOCABULARY_PATHS below.
 #
 # Moved out of ``acp/types.py`` deliberately: importing anything under
-# ``kiro_crew.acp`` executes that package's ``__init__`` (client + runtime), so the
+# ``aj_crew.acp`` executes that package's ``__init__`` (client + runtime), so the
 # config loader and the dashboard could not read the vocabulary and each kept a
 # literal copy of the selectable list instead — the drift this rule exists to
 # prevent, reached by obeying it. The vocabulary module imports nothing from
-# ``kiro_crew.acp``, so every consumer can name the constants instead of copying
+# ``aj_crew.acp``, so every consumer can name the constants instead of copying
 # them.
 #
-# Moved AGAIN by RFC PR 3a, from ``kiro_crew/acp_backends.py`` into
-# ``kiro_crew/agent_sdk/backends.py``, so the vocabulary sits behind the agent-SDK
+# Moved AGAIN by RFC PR 3a, from ``aj_crew/acp_backends.py`` into
+# ``aj_crew/agent_sdk/backends.py``, so the vocabulary sits behind the agent-SDK
 # boundary rather than beside it. The invariant is unchanged and this is still ONE
 # path, not two: ``acp/types.py`` and ``acp_backends.py`` both re-export from here,
 # and a re-export is an import rather than an assignment, so neither matches this
 # rule. Pointing the rule at the shim instead would be the drift it exists to
 # prevent -- a second place a definition could legally live.
-VOCABULARY_PATH = "src/kiro_crew/agent_sdk/backends.py"
+VOCABULARY_PATH = "src/aj_crew/agent_sdk/backends.py"
 
 # The files that may define it: the vocabulary module and the owners it re-exports every
 # name from, one owner per question. Callers still import from one path, so this does not
@@ -104,13 +104,13 @@ VOCABULARY_PATH = "src/kiro_crew/agent_sdk/backends.py"
 # pins this tuple to the vocabulary module's own owner imports.
 VOCABULARY_PATHS = (
     VOCABULARY_PATH,
-    "src/kiro_crew/agent_sdk/backends_launch.py",
-    "src/kiro_crew/agent_sdk/backends_mcp.py",
-    "src/kiro_crew/agent_sdk/backends_members.py",
-    "src/kiro_crew/agent_sdk/backends_models.py",
-    "src/kiro_crew/agent_sdk/backends_routing.py",
-    "src/kiro_crew/agent_sdk/backends_sessions.py",
-    "src/kiro_crew/agent_sdk/backends_turns.py",
+    "src/aj_crew/agent_sdk/backends_launch.py",
+    "src/aj_crew/agent_sdk/backends_mcp.py",
+    "src/aj_crew/agent_sdk/backends_members.py",
+    "src/aj_crew/agent_sdk/backends_models.py",
+    "src/aj_crew/agent_sdk/backends_routing.py",
+    "src/aj_crew/agent_sdk/backends_sessions.py",
+    "src/aj_crew/agent_sdk/backends_turns.py",
 )
 
 SUPPRESSION = re.compile(r"harness-ok")
@@ -603,7 +603,7 @@ def set_comments(root: str = REPO_ROOT) -> dict[str, str]:
 def live_sets(root: str = REPO_ROOT) -> dict[str, frozenset[str]]:
     sys.path.insert(0, os.path.join(root, "src"))
     try:
-        from kiro_crew.agent_sdk import backends
+        from aj_crew.agent_sdk import backends
     finally:
         sys.path.pop(0)
     return {
@@ -893,122 +893,122 @@ def enforce_x_captures(base: str | None) -> int:
 PROBES: tuple[tuple[str, str, str, str | None], ...] = (
     (
         "negative-property",
-        "src/kiro_crew/providers/acp.py",
+        "src/aj_crew/providers/acp.py",
         "        return not self.is_claude_backend",
         "negative-identity",
     ),
     (
         "negative-private",
-        "src/kiro_crew/acp/client.py",
+        "src/aj_crew/acp/client.py",
         "        if not self._is_claude:",
         "negative-identity",
     ),
     (
         "negative-module-helper",
-        "src/kiro_crew/session.py",
+        "src/aj_crew/session.py",
         "    if not provider.is_kas_backend:",
         "negative-identity",
     ),
     (
         "negative-constant",
-        "src/kiro_crew/acp/runtime.py",
+        "src/aj_crew/acp/runtime.py",
         "        if self._acp_backend != ACP_BACKEND_KAS:",
         "negative-constant",
     ),
     (
         "negative-constant-reversed",
-        "src/kiro_crew/acp/runtime.py",
+        "src/aj_crew/acp/runtime.py",
         "        if ACP_BACKEND_KAS != self._acp_backend:",
         "negative-constant",
     ),
     (
         "bare-literal",
-        "src/kiro_crew/session.py",
+        "src/aj_crew/session.py",
         '    return backend == "claude"',
         "bare-literal",
     ),
     (
         "sandbox-delegation",
-        "src/kiro_crew/acp/runtime.py",
+        "src/aj_crew/acp/runtime.py",
         "            is_kiro_cli=self._acp_backend != ACP_BACKEND_KAS,",
         "sandbox-delegation",
     ),
     (
         "sandbox-delegation-negation",
-        "src/kiro_crew/acp/client.py",
+        "src/aj_crew/acp/client.py",
         "            is_kiro_cli=not self._is_claude,",
         "negative-identity",
     ),
     (
         "sandbox-delegation-negation-also-flags-the-flag",
-        "src/kiro_crew/acp/client.py",
+        "src/aj_crew/acp/client.py",
         "            is_kiro_cli=not self._is_claude,",
         "sandbox-delegation",
     ),
     (
         "hash-inside-string-does-not-truncate",
-        "src/kiro_crew/acp/client.py",
+        "src/aj_crew/acp/client.py",
         '        if sep == "#" and not self._is_claude:',
         "negative-identity",
     ),
     (
         "vocabulary-elsewhere",
-        "src/kiro_crew/providers/acp.py",
+        "src/aj_crew/providers/acp.py",
         'ACP_BACKEND_BYO = "byo"',
         "vocabulary-home",
     ),
     (
         "membership-set-elsewhere",
-        "src/kiro_crew/subagent.py",
+        "src/aj_crew/subagent.py",
         "ACP_BACKENDS_FAST = frozenset({ACP_BACKEND_KIRO})",
         "vocabulary-home",
     ),
     (
         "membership-set-beside-the-vocabulary-owners",
-        "src/kiro_crew/agent_sdk/backends_extra.py",
+        "src/aj_crew/agent_sdk/backends_extra.py",
         "ACP_BACKENDS_FAST = frozenset({ACP_BACKEND_KIRO})",
         "vocabulary-home",
     ),
     (
         "non-kiro-default",
-        "src/kiro_crew/acp/runtime.py",
+        "src/aj_crew/acp/runtime.py",
         "        acp_backend: str = ACP_BACKEND_KAS,",
         "non-kiro-default",
     ),
     (
         "non-kiro-field-default",
-        "src/kiro_crew/config/loader.py",
+        "src/aj_crew/config/loader.py",
         "        default=ACP_BACKEND_CLAUDE,",
         "non-kiro-default",
     ),
     # ── allowed forms: each must produce NO hit ──
     (
         "positive-property",
-        "src/kiro_crew/providers/acp.py",
+        "src/aj_crew/providers/acp.py",
         "        return self.is_kiro_backend",
         None,
     ),
     (
         "positive-membership",
-        "src/kiro_crew/providers/acp.py",
+        "src/aj_crew/providers/acp.py",
         "        return self._client.backend in ACP_BACKENDS_SESSION_SHARING",
         None,
     ),
     (
         "positive-constant",
-        "src/kiro_crew/acp/runtime.py",
+        "src/aj_crew/acp/runtime.py",
         "        if self._acp_backend == ACP_BACKEND_KAS:",
         None,
     ),
     (
         "sandbox-membership",
-        "src/kiro_crew/acp/runtime.py",
+        "src/aj_crew/acp/runtime.py",
         "            is_kiro_cli=self._acp_backend in ACP_BACKENDS_INTERNAL_SANDBOX,",
         None,
     ),
     (
         "sandbox-literal",
-        "src/kiro_crew/dashboard/handlers/agents.py",
+        "src/aj_crew/dashboard/handlers/agents.py",
         "    return wrap_argv(argv, mode=configured_sandbox_mode(), is_kiro_cli=True)",
         None,
     ),
@@ -1029,37 +1029,37 @@ PROBES: tuple[tuple[str, str, str, str | None], ...] = (
     ),
     (
         "kiro-default",
-        "src/kiro_crew/acp/runtime.py",
+        "src/aj_crew/acp/runtime.py",
         "        acp_backend: str = ACP_BACKEND_KIRO,",
         None,
     ),
     (
         "unrelated-backend-word",
-        "src/kiro_crew/sandbox.py",
+        "src/aj_crew/sandbox.py",
         '    if backend == "namespace":',
         None,
     ),
     (
         "comment-naming-the-form",
-        "src/kiro_crew/acp/client.py",
+        "src/aj_crew/acp/client.py",
         "        # never write `not self._is_claude` here",
         None,
     ),
     (
         "docstring-prose-naming-the-form",
-        "src/kiro_crew/providers/acp.py",
+        "src/aj_crew/providers/acp.py",
         "        inferring it from ``not is_claude_backend`` — an inference that",
         None,
     ),
     (
         "trailing-comment-naming-the-form",
-        "src/kiro_crew/acp/runtime.py",
+        "src/aj_crew/acp/runtime.py",
         "        flag = True  # not self._is_claude, historically",
         None,
     ),
     (
         "suppressed",
-        "src/kiro_crew/acp/client.py",
+        "src/aj_crew/acp/client.py",
         "        x = not self._is_claude  # harness-ok: dormant seam, see H5",
         None,
     ),

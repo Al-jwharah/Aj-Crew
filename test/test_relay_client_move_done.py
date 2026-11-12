@@ -25,16 +25,16 @@ from relay_client_helpers import (
     valid_message,
 )
 
-from kiro_crew.relay_client import connection as connection_module
-from kiro_crew.relay_client.client import STATE_CONNECTED
-from kiro_crew.relay_client.connection import RelayTimings
-from kiro_crew.relay_client.protocol import (
+from aj_crew.relay_client import connection as connection_module
+from aj_crew.relay_client.client import STATE_CONNECTED
+from aj_crew.relay_client.connection import RelayTimings
+from aj_crew.relay_client.protocol import (
     MOVE_DONE_WAIT_SECONDS,
     OFFERED_FEATURES,
     FrameError,
     parse_inbound,
 )
-from kiro_crew.testing.wait import async_wait_until, until_parked
+from aj_crew.testing.wait import async_wait_until, until_parked
 
 
 def _agreed_ready() -> dict:
@@ -165,7 +165,7 @@ _LONG = 30.0
 async def test_an_agreed_move_done_that_never_comes_falls_back_and_is_counted(
     caplog, monkeypatch
 ) -> None:
-    caplog.set_level(logging.WARNING, logger="kiro_crew.relay_client.connection")
+    caplog.set_level(logging.WARNING, logger="aj_crew.relay_client.connection")
     expire = _expire_long_waits(monkeypatch)
     async with FakeRelay() as relay, FakeCrew() as crew:
         client, _, ingress = make_client(
@@ -431,7 +431,7 @@ async def test_a_relay_1012_while_waiting_for_move_done_is_not_a_fallback() -> N
 async def test_the_backstop_after_move_done_closes_with_a_request_still_open(
     caplog, monkeypatch
 ) -> None:
-    caplog.set_level(logging.INFO, logger="kiro_crew.relay_client.connection")
+    caplog.set_level(logging.INFO, logger="aj_crew.relay_client.connection")
     expire = _expire_long_waits(monkeypatch)
     async with FakeRelay() as relay, FakeCrew() as crew:
         client, _, ingress = make_client(

@@ -30,29 +30,29 @@ from slot_close_recreation_race_helpers import (
 )
 from turn_harness import Do, SlotSpec, TurnContext, TurnScript, run_turn
 
-from kiro_crew import execution_context
-from kiro_crew import history as history_mod
-from kiro_crew import mcp_apps_render
-from kiro_crew.acp.types import (
+from aj_crew import execution_context
+from aj_crew import history as history_mod
+from aj_crew import mcp_apps_render
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     EVENT_TEXT_CHUNK,
     EVENT_TOOL_CALL,
     EVENT_TOOL_RESULT,
     AcpEvent,
 )
-from kiro_crew.dashboard import chat_handlers as handlers
-from kiro_crew.dashboard import chat_runner, chat_summary
-from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-from kiro_crew.history import is_incognito_transcript
-from kiro_crew.memory_stores import UnknownMemoryStore
-from kiro_crew.testing.wait import finished
+from aj_crew.dashboard import chat_handlers as handlers
+from aj_crew.dashboard import chat_runner, chat_summary
+from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+from aj_crew.history import is_incognito_transcript
+from aj_crew.memory_stores import UnknownMemoryStore
+from aj_crew.testing.wait import finished
 
 
 def _summary_cfg():
     """A config with the session summary ON, so its gate is decided by the slot."""
-    from kiro_crew.config.loader import KiroCrewConfig, SessionSummaryConfig
+    from aj_crew.config.loader import AjCrewConfig, SessionSummaryConfig
 
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.session_summary = SessionSummaryConfig(enabled=True)
     return cfg
 
@@ -114,7 +114,7 @@ async def test_delete_handover_of_a_restricted_tail_tightens_a_persistent_line(
         None,
         execution_context.MemoryStoreRef("default"),
         "template",
-        "kirocrew",
+        "ajcrew",
     )
     await asyncio.to_thread(execution_context.bind_session_execution, HKEY, persistent)
     meta = state.conversation_log.get_metadata(HKEY)
@@ -185,7 +185,7 @@ async def test_tool_result_rows_tighten_a_same_transcript_replacement(
         None,
         execution_context.MemoryStoreRef("default"),
         "template",
-        "kirocrew",
+        "ajcrew",
     )
     await asyncio.to_thread(execution_context.bind_session_execution, HKEY, persistent)
     assert replacement.memory_mode == "persistent"
@@ -215,7 +215,7 @@ async def test_the_app_render_path_writes_its_tool_rows_through_the_privacy_wrap
     """
     spool = tmp_path / "mcp-apps"
     spool.mkdir()
-    monkeypatch.setenv("KIROCREW_MCP_APPS_SPOOL", str(spool))
+    monkeypatch.setenv("AJCREW_MCP_APPS_SPOOL", str(spool))
     sid = uuid.uuid4().hex
     (spool / f"{sid}.json").write_text(
         json.dumps(
@@ -262,7 +262,7 @@ async def test_the_app_render_path_writes_its_tool_rows_through_the_privacy_wrap
                 AcpEvent(
                     kind=EVENT_TOOL_RESULT,
                     tool_call_id="tc-app-1",
-                    tool_output=f"Done. [kirocrew-mcp-app:{sid}]",
+                    tool_output=f"Done. [ajcrew-mcp-app:{sid}]",
                     tool_final=True,
                 ),
                 AcpEvent(kind=EVENT_TEXT_CHUNK, text="There you go."),
@@ -369,7 +369,7 @@ async def test_failed_handover_restores_replacement_when_no_private_rows_landed(
 @pytest.mark.asyncio
 async def test_failed_handover_does_not_undo_a_concurrent_title_fold(tmp_path, monkeypatch) -> None:
     """A title writer ordered after the read leaves its pending mode before unlock."""
-    from kiro_crew.dashboard import chat_persistence, chat_utils
+    from aj_crew.dashboard import chat_persistence, chat_utils
 
     state = _make_state(tmp_path)
     original = state.get_or_create_slot(NAME, memory_mode="temporary")
@@ -429,7 +429,7 @@ async def test_failed_handover_keeps_replacement_restricted_when_line_unverifiab
     tmp_path, monkeypatch, failure
 ) -> None:
     """An unreadable line or unavailable transcript lock cannot authorize rollback."""
-    from kiro_crew.dashboard import chat_utils
+    from aj_crew.dashboard import chat_utils
 
     state = _make_state(tmp_path)
     original = state.get_or_create_slot(NAME, memory_mode="temporary")
@@ -503,7 +503,7 @@ async def test_failed_handover_keeps_replacement_restricted_when_atomic_write_la
 
 def test_tightening_retries_carrier_cas_before_mutating_replacement(tmp_path, monkeypatch) -> None:
     """One carrier rebind is retried before the slot and marker become restricted."""
-    from kiro_crew.dashboard import chat_utils as chat_utils_mod
+    from aj_crew.dashboard import chat_utils as chat_utils_mod
 
     state = _make_state(tmp_path)
     original = state.get_or_create_slot(NAME, memory_mode="temporary")
@@ -562,7 +562,7 @@ def test_tightening_retries_carrier_cas_before_mutating_replacement(tmp_path, mo
 
 def test_second_carrier_cas_failure_leaves_replacement_unmodified(tmp_path, monkeypatch) -> None:
     """Two carrier rebinds propagate without partially tightening slot-owned state."""
-    from kiro_crew.dashboard import chat_utils as chat_utils_mod
+    from aj_crew.dashboard import chat_utils as chat_utils_mod
 
     state = _make_state(tmp_path)
     original = state.get_or_create_slot(NAME, memory_mode="temporary")
@@ -610,7 +610,7 @@ async def test_delete_handover_saves_tail_after_second_carrier_cas_failure(
     tmp_path, monkeypatch
 ) -> None:
     """A CAS refusal cannot skip the rows-only save that owns the popped tail."""
-    from kiro_crew.dashboard import chat_utils as chat_utils_mod
+    from aj_crew.dashboard import chat_utils as chat_utils_mod
 
     state = _make_state(tmp_path)
     original = state.get_or_create_slot(NAME, memory_mode="temporary")
@@ -668,7 +668,7 @@ async def test_tightening_a_live_replacement_keeps_and_rolls_back_its_carrier(tm
     carrier is tightened in place: same identity, stricter mode, and a failed write
     restores that generation.
     """
-    from kiro_crew.dashboard.chat_utils import (
+    from aj_crew.dashboard.chat_utils import (
         effective_session_key,
         restore_replacement_if_handover_did_not_land,
         slot_history_key,
@@ -784,8 +784,8 @@ async def test_a_save_over_a_corrupt_line_rewrites_it_strictest_and_lands_the_ro
     and ``closed`` forever. The full save rewrites it with the STRICTEST mode and no
     store, since the real contract is unknowable.
     """
-    from kiro_crew.execution_context import STRICTEST_MEMORY_MODE
-    from kiro_crew.history import METADATA_LINE_CORRUPT, METADATA_LINE_READABLE
+    from aj_crew.execution_context import STRICTEST_MEMORY_MODE
+    from aj_crew.history import METADATA_LINE_CORRUPT, METADATA_LINE_READABLE
 
     state = _make_state(tmp_path)
     log = state.conversation_log
@@ -827,8 +827,8 @@ async def test_a_save_over_a_first_line_that_is_not_utf8_rewrites_it_and_keeps_o
     reads must not raise ``UnicodeDecodeError``. Rows older than the window are carried
     by the frozen prefix, by position.
     """
-    from kiro_crew.execution_context import STRICTEST_MEMORY_MODE
-    from kiro_crew.history import METADATA_LINE_CORRUPT, METADATA_LINE_READABLE
+    from aj_crew.execution_context import STRICTEST_MEMORY_MODE
+    from aj_crew.history import METADATA_LINE_CORRUPT, METADATA_LINE_READABLE
 
     state = _make_state(tmp_path)
     log = state.conversation_log
@@ -871,7 +871,7 @@ async def test_a_transient_read_failure_still_defers_the_save(tmp_path, monkeypa
     ``_dirty`` stays armed and no row is written; once the read clears the next
     attempt lands the rows under the line's own (folded) mode, untouched.
     """
-    from kiro_crew import history_projection
+    from aj_crew import history_projection
 
     state = _make_state(tmp_path)
     log = state.conversation_log
@@ -907,7 +907,7 @@ async def test_a_transient_read_failure_still_defers_the_save(tmp_path, monkeypa
 
 def test_a_corrupt_line_withholds_derivation(tmp_path) -> None:
     """Readers keep failing closed on a corrupt line: no rows are derived from it."""
-    from kiro_crew.history import transcript_withholds_derivation
+    from aj_crew.history import transcript_withholds_derivation
 
     state = _make_state(tmp_path)
     log = state.conversation_log
@@ -931,8 +931,8 @@ def test_a_metadata_merge_over_a_corrupt_line_heals_it_strictest(tmp_path, monke
     line keeps the rows, carries the strictest mode whatever the fields say, no
     store, and no minted ``created_at``.
     """
-    from kiro_crew import history_projection
-    from kiro_crew.execution_context import STRICTEST_MEMORY_MODE
+    from aj_crew import history_projection
+    from aj_crew.execution_context import STRICTEST_MEMORY_MODE
 
     state = _make_state(tmp_path)
     log = state.conversation_log
@@ -1087,7 +1087,7 @@ async def test_persistent_turn_binding_after_restricted_recreate_keeps_line_and_
         None,
         execution_context.MemoryStoreRef("default"),
         "template",
-        "kirocrew",
+        "ajcrew",
     )
     await asyncio.to_thread(execution_context.bind_session_execution, HKEY, persistent)
 

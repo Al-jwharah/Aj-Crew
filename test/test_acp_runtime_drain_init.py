@@ -23,14 +23,14 @@ from acp_runtime_helpers import (
     _stop_reader,
 )
 
-from kiro_crew.acp.runtime import AcpRuntime, AcpSessionHandle
-from kiro_crew.acp.types import (
+from aj_crew.acp.runtime import AcpRuntime, AcpSessionHandle
+from aj_crew.acp.types import (
     EVENT_COMPLETE,
     METHOD_SESSION_NEW,
     METHOD_SESSION_UPDATE,
     JsonRpcMessage,
 )
-from kiro_crew.testing.wait import async_wait_until, await_until, default_timeout
+from aj_crew.testing.wait import async_wait_until, await_until, default_timeout
 
 # ── Drift-parity fixes (AcpRuntime ↔ AcpClient): #1-#4 + #5b ──
 
@@ -40,7 +40,7 @@ async def test_steer_notifications_yield_steer_events():
     """steering_* session/update frames classify as "steer" and yield the
     EVENT_STEER_* events. Without a steer branch in classify_notification the
     shared demux path never surfaces mid-turn steer."""
-    from kiro_crew.acp.types import (
+    from aj_crew.acp.types import (
         EVENT_STEER_CLEARED,
         EVENT_STEER_CONSUMED,
         EVENT_STEER_QUEUED,
@@ -110,7 +110,7 @@ async def test_tool_interrupted_marker_synthesizes_complete(monkeypatch):
     must synthesize EVENT_COMPLETE so the turn does not hang until the 2h prompt
     timeout, and must emit the SEL audit. No prompt response is fed here — the
     turn MUST still terminate."""
-    import kiro_crew.acp.session_handle as sh
+    import aj_crew.acp.session_handle as sh
 
     sel_mock = MagicMock()
     monkeypatch.setattr(sh, "sel", lambda: sel_mock)
@@ -226,8 +226,8 @@ async def test_drain_init_consumes_init_frames_and_captures_config():
 
 @pytest.mark.asyncio
 async def test_drain_init_counts_an_owed_compaction_terminal():
-    from kiro_crew.acp import stale_compaction
-    from kiro_crew.acp.types import METHOD_COMPACTION_STATUS
+    from aj_crew.acp import stale_compaction
+    from aj_crew.acp.types import METHOD_COMPACTION_STATUS
 
     rt, _, _ = _make_runtime()
     q = _register(rt, "sA")
@@ -314,7 +314,7 @@ async def test_drain_init_records_the_session_mcp_report():
     rt, _, _ = _make_runtime()
     q = _register(rt, "sA")
     handle = AcpSessionHandle("sA", q["sA"], rt)
-    q["sA"].put_nowait(_mcp_initialized_frame("sA", "kirocrew-core"))
+    q["sA"].put_nowait(_mcp_initialized_frame("sA", "ajcrew-core"))
     q["sA"].put_nowait(_mcp_failure_frame("sA", "slack-mcp", "spawn ENOENT"))
     q["sA"].put_nowait(_metadata_frame("sA"))
 
@@ -322,7 +322,7 @@ async def test_drain_init_records_the_session_mcp_report():
 
     payload = handle.mcp_session_report().payload()
     assert payload is not None
-    assert payload["ready"] == ["kirocrew-core"]
+    assert payload["ready"] == ["ajcrew-core"]
     assert payload["failed"] == ["slack-mcp"]
     assert payload["failures"] == {"slack-mcp": "spawn ENOENT"}
 
@@ -472,11 +472,11 @@ async def test_create_session_records_the_wire_roster(monkeypatch):
         return {}
 
     monkeypatch.setattr(rt, "_send_and_await", _fake_send)
-    servers = [{"name": "kirocrew-core", "command": "x"}, {"name": "kirocrew-cron"}]
+    servers = [{"name": "ajcrew-core", "command": "x"}, {"name": "ajcrew-cron"}]
 
-    handle = await rt.create_session(cwd="/w", agent="kirocrew", mcp_servers=servers)
+    handle = await rt.create_session(cwd="/w", agent="ajcrew", mcp_servers=servers)
 
-    assert handle.mcp_session_report().configured == ("kirocrew-core", "kirocrew-cron")
+    assert handle.mcp_session_report().configured == ("ajcrew-core", "ajcrew-cron")
 
 
 @pytest.mark.asyncio
@@ -485,7 +485,7 @@ async def test_drain_init_waits_past_idle_window_for_first_mcp_report(monkeypatc
     registration frame. A server that stays silent past the idle window and
     THEN reports is still observed — non-MCP frames (metadata) that arrive
     immediately after set_mode must not arm the shortcut either."""
-    import kiro_crew.acp.session_handle as sh
+    import aj_crew.acp.session_handle as sh
 
     monkeypatch.setattr(sh, "_MCP_DRAIN_NO_REPORT_CEILING", 5.0, raising=False)
     rt, _, _ = _make_runtime()
@@ -576,7 +576,7 @@ async def test_mcp_free_runtime_skips_no_report_ceiling(monkeypatch):
     rt._initialized = True
     proc = MagicMock()
     proc.returncode = None
-    # nosemgrep: kirocrew.mock-pid-allocatable -- pre-existing literal pid on the fake process, moved verbatim; tracked for a de-flake pass
+    # nosemgrep: ajcrew.mock-pid-allocatable -- pre-existing literal pid on the fake process, moved verbatim; tracked for a de-flake pass
     proc.pid = 4242
     rt._process = proc
     rt._pid = 4242
@@ -595,7 +595,7 @@ async def test_mcp_free_runtime_skips_no_report_ceiling(monkeypatch):
         await orig(self, *args, **kwargs)
 
     with patch.object(AcpSessionHandle, "drain_init", _spy):
-        await rt.create_session(cwd="/w", agent="kirocrew-lite", mcp_servers=[])
+        await rt.create_session(cwd="/w", agent="ajcrew-lite", mcp_servers=[])
     assert seen.get("no_report_ceiling") == 0.0
 
 
@@ -605,7 +605,7 @@ async def test_drain_init_ignores_pre_switch_reports_still_waits_for_new_agent(m
     PARENT mode's servers; their staged registration frames must not arm the
     idle shortcut for a session that was then mode-SWITCHED — the switched-to
     agent's own slow server, reporting after set_mode, must still be observed."""
-    import kiro_crew.acp.session_handle as sh
+    import aj_crew.acp.session_handle as sh
 
     monkeypatch.setattr(sh, "_MCP_DRAIN_NO_REPORT_CEILING", 5.0, raising=False)
     rt, _, _ = _make_runtime()
@@ -673,7 +673,7 @@ async def test_reader_retains_mcp_registration_frames_during_init():
 
         with patch.object(rt, "_send_and_await", _fake_send):
             with patch.object(AcpSessionHandle, "drain_init", AsyncMock()) as mock_drain:
-                handle = await rt.create_session(cwd="/w", agent="kirocrew", mcp_servers=[])
+                handle = await rt.create_session(cwd="/w", agent="ajcrew", mcp_servers=[])
         assert handle.session_id == "sid-warm"
         mock_drain.assert_awaited_once()
         # Both registration frames were transferred into the session queue
@@ -700,7 +700,7 @@ async def test_reader_retains_mcp_registration_frames_during_init():
 def test_backfill_context_window_from_pct(monkeypatch):
     """Pct-only metadata (kiro 2.10+) backfills window/used tokens from the
     model registry; no-op once a real usage_update set the window."""
-    import kiro_crew.acp.session_handle as sh
+    import aj_crew.acp.session_handle as sh
 
     # The backfill only fires for a KNOWN window (has_known_window) and resolves
     # via the central model_window authority, so mock both for the fake model.
@@ -787,7 +787,7 @@ def test_backfill_context_window_clamps_malformed_pct(monkeypatch):
     """A degenerate metadata percentage (huge finite / inf / NaN) must not
     overflow round() and abort the turn on the shared-runtime path; derived
     used stays in [0, window]."""
-    import kiro_crew.acp.session_handle as sh
+    import aj_crew.acp.session_handle as sh
 
     monkeypatch.setattr(sh.model_registry, "has_known_window", lambda mid: True)
     monkeypatch.setattr(sh.model_registry, "model_window", lambda mid, **kw: 200000)

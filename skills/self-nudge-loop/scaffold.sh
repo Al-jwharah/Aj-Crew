@@ -44,7 +44,7 @@ write_if_absent() {  # $1=path  $2=content
 LOOP_MD=$(cat <<EOF
 # LOOP — $PROJECT continuous session guide
 
-One page. Tells you how to launch an autonomous AutoNudge loop in this KiroCrew session for **$PROJECT**.
+One page. Tells you how to launch an autonomous AutoNudge loop in this Aj Crew session for **$PROJECT**.
 
 Generated: $(date -u +%FT%TZ) by \`self-nudge-loop/scaffold.sh\`.
 
@@ -80,7 +80,7 @@ When all five are true, agent posts the DoD checklist with ticks, calls \`autonu
 
 \`\`\`bash
 # Human-controlled terminal only. Obtain a short-lived dashboard token (for
-# example with \`kirocrew token\`) without exposing it to an agent; agents arm
+# example with \`ajcrew token\`) without exposing it to an agent; agents arm
 # with the monitor_start MCP tool and never read local-secret files.
 TOKEN='<short-lived dashboard token>'
 
@@ -171,7 +171,7 @@ One cycle = one step.
 
 | Symptom | Check |
 |---|---|
-| UI icon dim | AutoNudge is on unless the GATEWAY's env sets \`KIROCREW_AUTONUDGE\` to \`0\`, \`false\` or \`no\` (your shell's value does not matter). \`GET /api/autonudge\` returns \`"enabled": false\` while it is disabled. |
+| UI icon dim | AutoNudge is on unless the GATEWAY's env sets \`AJCREW_AUTONUDGE\` to \`0\`, \`false\` or \`no\` (your shell's value does not matter). \`GET /api/autonudge\` returns \`"enabled": false\` while it is disabled. |
 | Nudge never fires | \`cat ~/.kiro/crew/autonudge.json\` — loop \`active:true\`? Right slot_key? |
 | Loop fires but agent does nothing | STOP sentinel present? \`ls $STOP_PATH\`. |
 | \`code=-15 SIGTERM\` after ~100 cycles | Context-window overflow. Re-arm with \`max_cycles: 30\`. |

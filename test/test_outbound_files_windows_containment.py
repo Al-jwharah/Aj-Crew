@@ -27,8 +27,8 @@ from typing import cast
 
 import pytest
 
-from kiro_crew.messaging import outbound_files as module
-from kiro_crew.messaging.outbound_files import ApprovedRoot, containing_root, lexically_within
+from aj_crew.messaging import outbound_files as module
+from aj_crew.messaging.outbound_files import ApprovedRoot, containing_root, lexically_within
 
 _ROOT = r"C:\work\proj"
 

@@ -20,12 +20,12 @@ from aiohttp import web
 def fake_home_fixture(tmp_path, monkeypatch):
     """Pin $HOME to tmp_path so Path.home() returns a writable sandbox.
 
-    Also clears KIROCREW_HOME so ``skills_dir()`` resolves to
+    Also clears AJCREW_HOME so ``skills_dir()`` resolves to
     ``<tmp>/.kiro/crew/skills`` rather than any value leaked from the
     surrounding build environment.
     """
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.delenv("KIROCREW_HOME", raising=False)
+    monkeypatch.delenv("AJCREW_HOME", raising=False)
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     return tmp_path
 
@@ -43,7 +43,7 @@ def _write_skill(root: Path, name: str, *, description: str = "", body: str = "b
 
 
 def _make_app(state):
-    from kiro_crew.dashboard.handlers import api_skill_file, api_skill_tree, api_skills
+    from aj_crew.dashboard.handlers import api_skill_file, api_skill_tree, api_skills
 
     app = web.Application()
     app["state"] = state

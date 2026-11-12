@@ -13,15 +13,15 @@ from unittest.mock import MagicMock
 import pytest
 from title_refresh_helpers import _fake_state, _patch_generator, _titled_slot
 
-from kiro_crew.dashboard import chat_persistence, chat_title
-from kiro_crew.dashboard.chat_title import (
+from aj_crew.dashboard import chat_persistence, chat_title
+from aj_crew.dashboard.chat_title import (
     _TITLE_ORIGIN_AUTO,
     _TITLE_ORIGIN_USER,
     _TITLE_REFRESH_MILESTONES,
     maybe_refresh_title,
 )
-from kiro_crew.dashboard.state import _ChatSlot
-from kiro_crew.testing.wait import async_wait_until, await_until, default_timeout, until_parked
+from aj_crew.dashboard.state import _ChatSlot
+from aj_crew.testing.wait import async_wait_until, await_until, default_timeout, until_parked
 
 
 # ── low-signal first-message titles: the early refresh milestone ─────────────
@@ -427,10 +427,10 @@ class TestSlotSavePersistsLowSignalFlag:
     """
 
     def _make_state(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.state import DashboardState
-        from kiro_crew.history import ConversationLog
+        from aj_crew.dashboard.state import DashboardState
+        from aj_crew.history import ConversationLog
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         sessions = MagicMock(count=0)
         sessions.get_pid = MagicMock(return_value=None)
         return DashboardState(
@@ -444,9 +444,9 @@ class TestSlotSavePersistsLowSignalFlag:
         )
 
     def test_full_save_persists_low_signal_flag(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-        from kiro_crew.dashboard.chat_utils import _history_key_for
-        from kiro_crew.history import ConversationLog
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_utils import _history_key_for
+        from aj_crew.history import ConversationLog
 
         state = self._make_state(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("lowsig-full")
@@ -463,9 +463,9 @@ class TestSlotSavePersistsLowSignalFlag:
         assert stored["title_low_signal"] is True
 
     def test_forced_empty_slot_save_persists_low_signal_flag(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-        from kiro_crew.dashboard.chat_utils import _history_key_for
-        from kiro_crew.history import ConversationLog
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_utils import _history_key_for
+        from aj_crew.history import ConversationLog
 
         state = self._make_state(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("lowsig-empty")
@@ -489,9 +489,9 @@ class TestSlotSavePersistsLowSignalFlag:
         ``_persist_title`` write failed transiently must not be resurrected
         as True from an earlier persist -- the full save overwrites it with
         the slot's live False."""
-        from kiro_crew.dashboard.chat_persistence import _save_slot_to_history
-        from kiro_crew.dashboard.chat_utils import _history_key_for
-        from kiro_crew.history import ConversationLog
+        from aj_crew.dashboard.chat_persistence import _save_slot_to_history
+        from aj_crew.dashboard.chat_utils import _history_key_for
+        from aj_crew.history import ConversationLog
 
         state = self._make_state(tmp_path, monkeypatch)
         slot = state.get_or_create_slot("lowsig-off")
@@ -519,7 +519,7 @@ class TestSlotSavePersistsLowSignalFlag:
         ``title_refresh_mark`` -- otherwise the popped slot's stale flag
         overwrites the replacement's and a restart wrongly suppresses or
         re-arms the turn-one refresh (GPT review of 3518b8081)."""
-        from kiro_crew.history import ROWS_ONLY_DEFERRED_META_KEYS
+        from aj_crew.history import ROWS_ONLY_DEFERRED_META_KEYS
 
         assert "title_low_signal" in ROWS_ONLY_DEFERRED_META_KEYS
         # The two siblings it must travel with.

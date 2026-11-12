@@ -1,9 +1,9 @@
-"""Tests for ``kiro_crew.testing.harness`` — gateway-spawning context manager.
+"""Tests for ``aj_crew.testing.harness`` — gateway-spawning context manager.
 
 Most tests exercise the harness's internal helpers in isolation with a
 stand-in for ``subprocess.Popen``. Spawning a real gateway takes 5–15s
 and pulls in the full MCP probe / config init / dashboard bind path, so
-the end-to-end test is gated behind ``KIROCREW_HARNESS_INTEGRATION``.
+the end-to-end test is gated behind ``AJCREW_HARNESS_INTEGRATION``.
 
 This file runs on Windows too. A wholesale collect-ignore of it is what
 hid the READY-wait and orchestration tests -- the majority of it, and all of the
@@ -33,8 +33,8 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew import platform_compat
-from kiro_crew.testing.harness import (
+from aj_crew import platform_compat
+from aj_crew.testing.harness import (
     DEFAULT_READY_TIMEOUT,
     READY_PREFIX,
     GatewayHandle,
@@ -172,7 +172,7 @@ def test_ready_line_raises_on_timeout_with_stderr() -> None:
 
     assert "did not emit" in str(exc.value)
     assert "WARNING something" in str(exc.value)
-    assert "KIROCREW_HARNESS_READY_TIMEOUT" in str(exc.value)
+    assert "AJCREW_HARNESS_READY_TIMEOUT" in str(exc.value)
 
 
 def test_ready_line_timeout_fires_when_subprocess_silent_but_alive() -> None:
@@ -232,7 +232,7 @@ def test_ready_line_no_output_timeout_includes_cold_import_hint() -> None:
 
     msg = str(exc.value)
     assert "cold import phase" in msg
-    assert "KIROCREW_HARNESS_READY_TIMEOUT" in msg
+    assert "AJCREW_HARNESS_READY_TIMEOUT" in msg
 
 
 def test_ready_line_timeout_message_includes_stdout_and_process_state() -> None:
@@ -570,7 +570,7 @@ def test_terminate_falls_back_to_sigkill() -> None:
         ready_line = proc.stdout.readline()
         assert ready_line == b"READY\n", f"child did not signal ready: {ready_line!r}"
 
-        with patch("kiro_crew.testing.harness.TERMINATE_GRACE_SECONDS", 0.5):
+        with patch("aj_crew.testing.harness.TERMINATE_GRACE_SECONDS", 0.5):
             _terminate_process_group(proc)
         assert proc.poll() is not None
         # On POSIX, SIGKILL is signal 9; returncode is -9 when killed.
@@ -602,13 +602,13 @@ def test_terminate_routes_through_process_tree_kill_on_windows() -> None:
     killed: list[int] = []
     try:
         with (
-            patch("kiro_crew.testing.harness.platform_compat.IS_WINDOWS", True),
+            patch("aj_crew.testing.harness.platform_compat.IS_WINDOWS", True),
             patch(
-                "kiro_crew.testing.harness.platform_compat.kill_process_tree",
+                "aj_crew.testing.harness.platform_compat.kill_process_tree",
                 side_effect=lambda pid, sig=None: killed.append(pid) or True,
             ),
-            patch("kiro_crew.testing.harness.terminate_pgid") as pgid,
-            patch("kiro_crew.testing.harness.TERMINATE_GRACE_SECONDS", 0.2),
+            patch("aj_crew.testing.harness.terminate_pgid") as pgid,
+            patch("aj_crew.testing.harness.TERMINATE_GRACE_SECONDS", 0.2),
         ):
             _terminate_process_group(proc)
         assert killed == [proc.pid], "Windows teardown did not kill the process tree"
@@ -634,12 +634,12 @@ def test_terminate_on_windows_survives_a_failed_tree_kill() -> None:
     )
     try:
         with (
-            patch("kiro_crew.testing.harness.platform_compat.IS_WINDOWS", True),
+            patch("aj_crew.testing.harness.platform_compat.IS_WINDOWS", True),
             patch(
-                "kiro_crew.testing.harness.platform_compat.kill_process_tree",
+                "aj_crew.testing.harness.platform_compat.kill_process_tree",
                 side_effect=PermissionError("taskkill rc=5 access denied"),
             ),
-            patch("kiro_crew.testing.harness.TERMINATE_GRACE_SECONDS", 0.2),
+            patch("aj_crew.testing.harness.TERMINATE_GRACE_SECONDS", 0.2),
         ):
             swept = _terminate_process_group(proc)
         # The root outlived the failed kill, so the tree is NOT reported gone:
@@ -785,7 +785,7 @@ def test_terminate_pgid_grace_default_resolved_at_call_time() -> None:
         assert proc.stdout is not None
         assert proc.stdout.readline() == b"READY\n"
         start = time.monotonic()
-        with patch("kiro_crew.testing.harness.TERMINATE_GRACE_SECONDS", 0.5):
+        with patch("aj_crew.testing.harness.TERMINATE_GRACE_SECONDS", 0.5):
             terminate_pgid(proc.pid)  # default grace — must pick up the patch
         elapsed = time.monotonic() - start
         assert elapsed < 3.0, f"patched grace ignored, took {elapsed:.2f}s"
@@ -836,7 +836,7 @@ def test_terminate_pgid_wait_hook_used_for_exit_detection() -> None:
 def test_resolve_workspace_src_finds_package() -> None:
     """When run from inside the package, returns ``<pkg>/src``."""
     src = _resolve_workspace_src()
-    assert (src / "kiro_crew" / "__init__.py").exists()
+    assert (src / "aj_crew" / "__init__.py").exists()
 
 
 def test_gateway_handle_is_frozen() -> None:
@@ -930,7 +930,7 @@ def test_crash_dump_diagnostic_replays_every_thread_uncapped(tmp_path: Path) -> 
         + workers[: len(workers) // 2]
         + "Thread 0xbeef (most recent call first):\n"
         '  File "/usr/lib/python3.12/ctypes/__init__.py", line 379 in __init__\n'
-        '  File "/home/u/src/kiro_crew/embeddings.py", line 700 in gil_holder\n'
+        '  File "/home/u/src/aj_crew/embeddings.py", line 700 in gil_holder\n'
         + workers[len(workers) // 2 :]
         + "Current thread 0xffff (most recent call first):\n"
         '  File "/usr/lib/python3.12/selectors.py", line 468 in select\n'
@@ -953,10 +953,10 @@ def test_gateway_diagnostics_include_the_crash_dump() -> None:
         '{"port": 51234, "token": "t-abc", "pid": 9876, "home": "/tmp/x"}'
     )
     with (
-        patch("kiro_crew.testing.harness.subprocess.Popen", return_value=fake_proc),
-        patch("kiro_crew.testing.harness._terminate_process_group", return_value=True),
+        patch("aj_crew.testing.harness.subprocess.Popen", return_value=fake_proc),
+        patch("aj_crew.testing.harness._terminate_process_group", return_value=True),
         patch(
-            "kiro_crew.testing.harness.platform_compat.process_descendants",
+            "aj_crew.testing.harness.platform_compat.process_descendants",
             return_value=[],
         ),
     ):
@@ -1014,13 +1014,13 @@ def test_spawn_feature_gateway_happy_path(body_fails: bool) -> None:
         return fake_proc
 
     with (
-        patch("kiro_crew.testing.harness.subprocess.Popen", side_effect=fake_popen),
+        patch("aj_crew.testing.harness.subprocess.Popen", side_effect=fake_popen),
         patch(
-            "kiro_crew.testing.harness._terminate_process_group",
+            "aj_crew.testing.harness._terminate_process_group",
             side_effect=fake_terminate,
         ),
         patch(
-            "kiro_crew.testing.harness.platform_compat.process_descendants",
+            "aj_crew.testing.harness.platform_compat.process_descendants",
             return_value=[],
         ),
     ):
@@ -1044,7 +1044,7 @@ def test_spawn_feature_gateway_happy_path(body_fails: bool) -> None:
     # Tmp home is cleaned up on context exit.
     assert not captured_home.exists()
 
-    # Spawn invokes ``kirocrew gateway --test-mode --seed <fixture>`` —
+    # Spawn invokes ``ajcrew gateway --test-mode --seed <fixture>`` —
     # seeding is atomic with gateway startup (no separate seed pass).
     assert captured_cmd, "Popen was not called"
     cmd_str = " ".join(captured_cmd[0])
@@ -1052,7 +1052,7 @@ def test_spawn_feature_gateway_happy_path(body_fails: bool) -> None:
     assert "--test-mode" in cmd_str
     assert "--seed empty" in cmd_str
     assert "--approval reads" in cmd_str
-    assert captured_env["KIROCREW_FAKE_ACP_TEST_MODE"] == "1"
+    assert captured_env["AJCREW_FAKE_ACP_TEST_MODE"] == "1"
     # ``crons`` defaults to False so the safe ``--no-crons`` flag is
     # included — a stray cron firing during an unrelated test is the
     # exact flake the default guards against.
@@ -1068,13 +1068,13 @@ def test_spawn_feature_gateway_keeps_the_home_when_the_gateway_will_not_die() ->
     )
 
     with (
-        patch("kiro_crew.testing.harness.subprocess.Popen", return_value=fake_proc),
+        patch("aj_crew.testing.harness.subprocess.Popen", return_value=fake_proc),
         patch(
-            "kiro_crew.testing.harness._terminate_process_group",
+            "aj_crew.testing.harness._terminate_process_group",
             return_value=False,
         ),
         patch(
-            "kiro_crew.testing.harness.platform_compat.process_descendants",
+            "aj_crew.testing.harness.platform_compat.process_descendants",
             return_value=[],
         ),
     ):
@@ -1095,7 +1095,7 @@ def test_spawn_feature_gateway_isolates_the_agent_spec_home() -> None:
 
     The gateway boot runs ``rebuild_agent_config``,
     which writes the managed MCP specs into ``kiro_agents_dir()``. With only
-    ``KIROCREW_HOME`` isolated (the data home) and ``KIRO_HOME`` left at the default,
+    ``AJCREW_HOME`` isolated (the data home) and ``KIRO_HOME`` left at the default,
     that resolver names the operator's real machine-wide ``~/.kiro/agents`` -- and the
     spawned gateway is an ordinary (non-worktree) install, so ``agent.py``'s write
     guard takes the "writing its own shared home" branch and does NOT decline. It would
@@ -1107,7 +1107,7 @@ def test_spawn_feature_gateway_isolates_the_agent_spec_home() -> None:
     private-target exemption already lets an isolated instance own -- and the whole tree
     is removed with ``home`` on teardown.
     """
-    from kiro_crew.config.paths import isolated_agents_dir
+    from aj_crew.config.paths import isolated_agents_dir
 
     fake_proc = _make_fake_proc_with_ready(
         '{"port": 51234, "token": "t-abc", "pid": 9876, "home": "/tmp/x"}'
@@ -1121,10 +1121,10 @@ def test_spawn_feature_gateway_isolates_the_agent_spec_home() -> None:
         return fake_proc
 
     with (
-        patch("kiro_crew.testing.harness.subprocess.Popen", side_effect=fake_popen),
-        patch("kiro_crew.testing.harness._terminate_process_group"),
+        patch("aj_crew.testing.harness.subprocess.Popen", side_effect=fake_popen),
+        patch("aj_crew.testing.harness._terminate_process_group"),
         patch(
-            "kiro_crew.testing.harness.platform_compat.process_descendants",
+            "aj_crew.testing.harness.platform_compat.process_descendants",
             return_value=[],
         ),
     ):
@@ -1146,20 +1146,20 @@ def test_spawn_feature_gateway_isolates_the_agent_spec_home() -> None:
             assert kiro_home / "agents" == isolated_agents_dir(data_home)
 
             # And the data home stays isolated too (unchanged by this fix).
-            assert captured_env["KIROCREW_HOME"] == str(data_home)
+            assert captured_env["AJCREW_HOME"] == str(data_home)
 
 
 def test_spawn_feature_gateway_explicit_host_inputs_are_child_scoped(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew import agent
+    from aj_crew import agent
 
     launcher_dir = tmp_path / "installed-bin"
     launcher_dir.mkdir()
-    launcher = launcher_dir / ("kirocrew.exe" if platform_compat.IS_WINDOWS else "kirocrew")
+    launcher = launcher_dir / ("ajcrew.exe" if platform_compat.IS_WINDOWS else "ajcrew")
     launcher.write_bytes(b"synthetic launcher, never executed")
     launcher.chmod(0o755)
-    monkeypatch.setattr(agent, "_resolve_kirocrew_bin", lambda: str(launcher))
+    monkeypatch.setattr(agent, "_resolve_ajcrew_bin", lambda: str(launcher))
     monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
     parent_path = os.environ["PATH"]
     fake_proc = _make_fake_proc_with_ready(
@@ -1184,20 +1184,20 @@ def test_spawn_feature_gateway_explicit_host_inputs_are_child_scoped(
             child.setattr(platform_compat, "IS_WINDOWS", False)
             child.setattr(agent, "_in_linked_git_worktree", lambda _path: False)
             child.setattr(agent, "_in_ephemeral_tree", lambda _path: False)
-            assert agent.ensure_kirocrew_on_path(tmp_path / "host-local-bin") is None
+            assert agent.ensure_ajcrew_on_path(tmp_path / "host-local-bin") is None
         assert not (tmp_path / "host-local-bin").exists()
         env["KIRO_HOME"] = "mutated-copy"
 
     binary = Path("/host/bin/kiro-cli")
     with (
         patch(
-            "kiro_crew.testing.harness.subprocess.run",
+            "aj_crew.testing.harness.subprocess.run",
             return_value=subprocess.CompletedProcess([], 0),
         ),
-        patch("kiro_crew.testing.harness.subprocess.Popen", side_effect=fake_popen),
-        patch("kiro_crew.testing.harness._terminate_process_group"),
+        patch("aj_crew.testing.harness.subprocess.Popen", side_effect=fake_popen),
+        patch("aj_crew.testing.harness._terminate_process_group"),
         patch(
-            "kiro_crew.testing.harness.platform_compat.process_descendants",
+            "aj_crew.testing.harness.platform_compat.process_descendants",
             return_value=[],
         ),
     ):
@@ -1211,12 +1211,12 @@ def test_spawn_feature_gateway_explicit_host_inputs_are_child_scoped(
     env = captured["env"]
     assert isinstance(env, dict)
     assert env["KIRO_HOME"] == str(data_home / "kiro")
-    assert env["KIROCREW_KIRO_BIN"] == str(binary)
-    assert env["KIROCREW_HOME"] == str(data_home)
+    assert env["AJCREW_KIRO_BIN"] == str(binary)
+    assert env["AJCREW_HOME"] == str(data_home)
     assert env["KIRO_HOME"] == str(data_home / "kiro")
     assert Path(captured["cwd"]) == data_home.parent
     assert preflight["env"]["KIRO_HOME"] == str(data_home / "kiro")
-    assert preflight["env"]["KIROCREW_KIRO_BIN"] == str(binary)
+    assert preflight["env"]["AJCREW_KIRO_BIN"] == str(binary)
     assert preflight["cwd"] == data_home.parent
     assert Path(captured["cwd"]) == preflight["cwd"]
     assert Path(captured["cwd"]) != _resolve_workspace_src().parent
@@ -1224,20 +1224,20 @@ def test_spawn_feature_gateway_explicit_host_inputs_are_child_scoped(
     assert os.environ["PATH"] == parent_path
 
 
-@pytest.mark.parametrize("candidate", ["kirocrew", "missing/kirocrew", "other-name"])
+@pytest.mark.parametrize("candidate", ["ajcrew", "missing/ajcrew", "other-name"])
 def test_explicit_binary_refuses_without_reachable_launcher(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, candidate: str
 ) -> None:
-    from kiro_crew import agent
+    from aj_crew import agent
 
-    launcher = "kirocrew" if candidate == "kirocrew" else str(tmp_path / candidate)
+    launcher = "ajcrew" if candidate == "ajcrew" else str(tmp_path / candidate)
     if candidate == "other-name":
         Path(launcher).write_bytes(b"synthetic launcher, never executed")
         Path(launcher).chmod(0o755)
     monkeypatch.setenv("PATH", str(tmp_path / "empty-path"))
-    monkeypatch.setattr(agent, "_resolve_kirocrew_bin", lambda: launcher)
-    with patch("kiro_crew.testing.harness.subprocess.Popen") as popen:
-        with pytest.raises(GatewaySpawnError, match="kirocrew launcher"):
+    monkeypatch.setattr(agent, "_resolve_ajcrew_bin", lambda: launcher)
+    with patch("aj_crew.testing.harness.subprocess.Popen") as popen:
+        with pytest.raises(GatewaySpawnError, match="ajcrew launcher"):
             with spawn_feature_gateway(kiro_bin="native-cli"):
                 pytest.fail("unreachable launcher must prevent boot")
     popen.assert_not_called()
@@ -1256,10 +1256,10 @@ def test_spawn_feature_gateway_host_inputs_default_to_isolation() -> None:
         return fake_proc
 
     with (
-        patch("kiro_crew.testing.harness.subprocess.Popen", side_effect=fake_popen),
-        patch("kiro_crew.testing.harness._terminate_process_group"),
+        patch("aj_crew.testing.harness.subprocess.Popen", side_effect=fake_popen),
+        patch("aj_crew.testing.harness._terminate_process_group"),
         patch(
-            "kiro_crew.testing.harness.platform_compat.process_descendants",
+            "aj_crew.testing.harness.platform_compat.process_descendants",
             return_value=[],
         ),
     ):
@@ -1285,10 +1285,10 @@ def test_spawn_feature_gateway_crons_opt_in() -> None:
         return fake_proc
 
     with (
-        patch("kiro_crew.testing.harness.subprocess.Popen", side_effect=fake_popen),
-        patch("kiro_crew.testing.harness._terminate_process_group"),
+        patch("aj_crew.testing.harness.subprocess.Popen", side_effect=fake_popen),
+        patch("aj_crew.testing.harness._terminate_process_group"),
         patch(
-            "kiro_crew.testing.harness.platform_compat.process_descendants",
+            "aj_crew.testing.harness.platform_compat.process_descendants",
             return_value=[],
         ),
     ):
@@ -1306,7 +1306,7 @@ def test_parallel_spawns_get_distinct_homes_and_ports() -> None:
     """Two concurrent spawns must each get their own tmp home + port.
 
     Pins the PRD acceptance "parallel invocations don't share
-    KIROCREW_HOME or port". Mocks Popen so each call returns a fake
+    AJCREW_HOME or port". Mocks Popen so each call returns a fake
     process emitting a different READY payload; the harness must
     propagate the distinct ports and create separate tmp dirs.
     """
@@ -1323,12 +1323,12 @@ def test_parallel_spawns_get_distinct_homes_and_ports() -> None:
 
     with (
         patch(
-            "kiro_crew.testing.harness.subprocess.Popen",
+            "aj_crew.testing.harness.subprocess.Popen",
             side_effect=lambda *a, **kw: next(procs),
         ),
-        patch("kiro_crew.testing.harness._terminate_process_group"),
+        patch("aj_crew.testing.harness._terminate_process_group"),
         patch(
-            "kiro_crew.testing.harness.platform_compat.process_descendants",
+            "aj_crew.testing.harness.platform_compat.process_descendants",
             return_value=[],
         ),
     ):
@@ -1351,9 +1351,9 @@ def test_default_timeout_constant() -> None:
 
 
 @pytest.mark.skipif(
-    not os.environ.get("KIROCREW_HARNESS_INTEGRATION"),
+    not os.environ.get("AJCREW_HARNESS_INTEGRATION"),
     reason=(
-        "Real-gateway integration test. Set KIROCREW_HARNESS_INTEGRATION=1 to run. "
+        "Real-gateway integration test. Set AJCREW_HARNESS_INTEGRATION=1 to run. "
         "Requires the composable-gateway CLI flags (--test-mode + --seed) to be "
         "present on the local feature branch."
     ),
@@ -1394,7 +1394,7 @@ def test_spawn_real_gateway_round_trip() -> None:
 # --------------------------------------------------------------------------- #
 def test_the_backend_shim_is_the_module_path_itself_off_windows(tmp_path: Path) -> None:
     """No shim where none is needed: POSIX spawns the module file directly."""
-    from kiro_crew.testing import harness as h
+    from aj_crew.testing import harness as h
 
     with patch.object(h.platform_compat, "IS_WINDOWS", False):
         produced = h.fake_acp_backend_launcher(tmp_path)
@@ -1411,7 +1411,7 @@ def test_the_backend_shim_is_written_in_the_console_code_page() -> None:
     decodes a batch file in the console's OEM code page: ``ascii`` raises outright
     on a non-ASCII interpreter path, and ``utf-8`` hands cmd.exe mojibake for one.
     """
-    from kiro_crew.testing import harness as h
+    from aj_crew.testing import harness as h
 
     assert h.SHIM_ENCODING == "oem"
 
@@ -1427,7 +1427,7 @@ def test_the_backend_shim_doubles_percent_so_cmd_cannot_expand_the_path(tmp_path
     rule under test is the ESCAPING, which is the same on every platform. The real
     codec is pinned by the test above, so nothing is lost by not using it here.
     """
-    from kiro_crew.testing import harness as h
+    from aj_crew.testing import harness as h
 
     interpreter = r"C:\tools\100%python\python.exe"
     with patch.object(h, "SHIM_ENCODING", "utf-8"):
@@ -1453,7 +1453,7 @@ def test_the_backend_shim_refuses_a_path_cmd_cannot_quote(tmp_path: Path) -> Non
     the wrong executable. The message has to name the path, because the operator
     cannot see the generated file.
     """
-    from kiro_crew.testing import harness as h
+    from aj_crew.testing import harness as h
 
     for hostile in ('C:\\to"ols\\python.exe', "C:\\tools\\py\nthon.exe"):
         with patch.object(h.platform_compat, "IS_WINDOWS", True):
@@ -1497,7 +1497,7 @@ class TestTeardownDoesNotTrustTheRootsExit:
             return 0
 
     def test_the_windows_sweep_still_runs_for_an_exited_root(self, monkeypatch) -> None:
-        from kiro_crew.testing import harness as h
+        from aj_crew.testing import harness as h
 
         swept: list[int] = []
         monkeypatch.setattr(h.platform_compat, "IS_WINDOWS", True)
@@ -1514,7 +1514,7 @@ class TestTeardownDoesNotTrustTheRootsExit:
 
     def test_an_exited_root_with_no_snapshot_never_calls_killpg(self, monkeypatch) -> None:
         """A recycled root pid cannot be used as a process-group identity."""
-        from kiro_crew.testing import harness as h
+        from aj_crew.testing import harness as h
 
         calls: list[tuple[int, int]] = []
         monkeypatch.setattr(h.platform_compat, "IS_WINDOWS", False)
@@ -1540,7 +1540,7 @@ class TestTeardownDoesNotTrustTheRootsExit:
         teardown polls the group itself, so its answer is read rather than
         re-probed here.
         """
-        from kiro_crew.testing import harness as h
+        from aj_crew.testing import harness as h
 
         monkeypatch.setattr(h.platform_compat, "IS_WINDOWS", False)
         monkeypatch.setattr(h.platform_compat, "process_descendants", lambda pid: [])
@@ -1557,7 +1557,7 @@ class TestTeardownDoesNotTrustTheRootsExit:
 
     def test_a_live_root_names_its_process_group_explicitly(self, monkeypatch) -> None:
         """The group id is passed rather than derived through another pid lookup."""
-        from kiro_crew.testing import harness as h
+        from aj_crew.testing import harness as h
 
         seen: list[object] = []
         monkeypatch.setattr(h.platform_compat, "IS_WINDOWS", False)
@@ -1587,7 +1587,7 @@ class TestTeardownDoesNotTrustTheRootsExit:
         recorded token. One still alive there keeps the HOME, because it can still be
         writing into it.
         """
-        from kiro_crew.testing import harness as h
+        from aj_crew.testing import harness as h
 
         ended: list[dict[int, str]] = []
         monkeypatch.setattr(h.platform_compat, "IS_WINDOWS", False)
@@ -1745,7 +1745,7 @@ def test_preflight_runs_after_seed_and_preserves_its_files(
     tmp_path, monkeypatch, nonbundled_python_with_user_site
 ):
     """A native whoami/config preflight may legitimately populate private state."""
-    from kiro_crew.seed import seed
+    from aj_crew.seed import seed
 
     events = []
     proc = _make_fake_proc_with_ready('{"port": 51234, "token": "synthetic"}')
@@ -1755,16 +1755,16 @@ def test_preflight_runs_after_seed_and_preserves_its_files(
         assert argv[-1] == "minimal"
         seed_source = argv[argv.index("-c") + 1]
         assert "replace" not in seed_source
-        home = Path(kwargs["env"]["KIROCREW_HOME"])
+        home = Path(kwargs["env"]["AJCREW_HOME"])
         assert not any(home.iterdir())
         with monkeypatch.context() as child:
-            child.setenv("KIROCREW_HOME", str(home))
+            child.setenv("AJCREW_HOME", str(home))
             seed("minimal")  # Actual seed guard and fixture copy, no replacement.
         events.append("seed")
         return subprocess.CompletedProcess(argv, 0, "", "")
 
     def preflight(env, cwd):
-        home = Path(env["KIROCREW_HOME"])
+        home = Path(env["AJCREW_HOME"])
         assert (home / "fixture.yaml").is_file(), "preflight ran before fixture seeding"
         settings = Path(env["KIRO_HOME"]) / "settings" / "cli.json"
         settings.parent.mkdir(parents=True)
@@ -1778,10 +1778,10 @@ def test_preflight_runs_after_seed_and_preserves_its_files(
         return proc
 
     with (
-        patch("kiro_crew.testing.harness.subprocess.run", side_effect=seed_child),
-        patch("kiro_crew.testing.harness.subprocess.Popen", side_effect=popen),
-        patch("kiro_crew.testing.harness._terminate_process_group", return_value=True),
-        patch("kiro_crew.testing.harness.platform_compat.process_descendants", return_value=[]),
+        patch("aj_crew.testing.harness.subprocess.run", side_effect=seed_child),
+        patch("aj_crew.testing.harness.subprocess.Popen", side_effect=popen),
+        patch("aj_crew.testing.harness._terminate_process_group", return_value=True),
+        patch("aj_crew.testing.harness.platform_compat.process_descendants", return_value=[]),
     ):
         with spawn_feature_gateway(fixture="minimal", before_spawn=preflight) as handle:
             home = handle.home
@@ -1793,10 +1793,10 @@ def test_failed_preflight_seed_never_calls_preflight_or_gateway():
     called = []
     with (
         patch(
-            "kiro_crew.testing.harness.subprocess.run",
+            "aj_crew.testing.harness.subprocess.run",
             return_value=subprocess.CompletedProcess([], 2, "", "seed refused"),
         ),
-        patch("kiro_crew.testing.harness.subprocess.Popen") as popen,
+        patch("aj_crew.testing.harness.subprocess.Popen") as popen,
         pytest.raises(GatewaySpawnError, match="seed refused"),
     ):
         with spawn_feature_gateway(before_spawn=lambda *_args: called.append(True)):
@@ -1807,7 +1807,7 @@ def test_failed_preflight_seed_never_calls_preflight_or_gateway():
 
 @pytest.mark.parametrize("field", ["command", "argv", "args", "executable"])
 def test_gateway_launcher_rejects_command_input(tmp_path, monkeypatch, field):
-    from kiro_crew.testing import harness
+    from aj_crew.testing import harness
 
     with patch.object(harness.subprocess, "Popen") as spawn:
         with pytest.raises(TypeError, match="unexpected keyword"):
@@ -1825,9 +1825,9 @@ def test_gateway_launcher_rejects_command_input(tmp_path, monkeypatch, field):
 def test_gateway_launcher_fixed_command_and_restart_seed(
     tmp_path, nonbundled_python_with_user_site
 ):
-    from kiro_crew.testing import harness
+    from aj_crew.testing import harness
 
-    env = {"KIROCREW_HOME": str(tmp_path)}
+    env = {"AJCREW_HOME": str(tmp_path)}
     with patch.object(harness.subprocess, "Popen") as spawn:
         for fixture in ("minimal", None):
             harness._launch_gateway(tmp_path, env, fixture=fixture, approval="reads", crons=False)
@@ -1837,7 +1837,7 @@ def test_gateway_launcher_fixed_command_and_restart_seed(
                 "-s",
                 "-P",
                 "-m",
-                "kiro_crew",
+                "aj_crew",
                 "gateway",
                 "--test-mode",
             ]
@@ -1858,19 +1858,19 @@ def test_gateway_launcher_fixed_command_and_restart_seed(
 
 
 def test_harness_environment_skips_the_model_download_by_default(tmp_path, monkeypatch) -> None:
-    monkeypatch.delenv("KIROCREW_SKIP_MODEL_DOWNLOAD", raising=False)
-    monkeypatch.delenv("KIROCREW_SKIP_APP_STORE_FETCH", raising=False)
+    monkeypatch.delenv("AJCREW_SKIP_MODEL_DOWNLOAD", raising=False)
+    monkeypatch.delenv("AJCREW_SKIP_APP_STORE_FETCH", raising=False)
     env = harness_environment(tmp_path, tmp_path / "src")
-    assert env["KIROCREW_SKIP_MODEL_DOWNLOAD"] == "1"
+    assert env["AJCREW_SKIP_MODEL_DOWNLOAD"] == "1"
     # The app store stays off the network: the browser specs' Discover page
     # must not wait on the live CDN.
-    assert env["KIROCREW_SKIP_APP_STORE_FETCH"] == "1"
-    assert env["KIROCREW_HOME"] == str(tmp_path)
+    assert env["AJCREW_SKIP_APP_STORE_FETCH"] == "1"
+    assert env["AJCREW_HOME"] == str(tmp_path)
     assert env["KIRO_HOME"] == str(tmp_path / "kiro")
     assert env["PYTHONUNBUFFERED"] == "1"
     # The adoption pin table is the test's own, absent and so empty: a harness
     # boot never fetches a shipped pin from GitHub.
-    from kiro_crew.apps.builtin_adoption_pins import HARNESS_PINS_ENV
+    from aj_crew.apps.builtin_adoption_pins import HARNESS_PINS_ENV
 
     pins = Path(env[HARNESS_PINS_ENV])
     assert pins.parent == tmp_path and not pins.exists()
@@ -1879,7 +1879,7 @@ def test_harness_environment_skips_the_model_download_by_default(tmp_path, monke
 def test_harness_environment_pins_the_adoption_table_over_an_inherited_one(
     tmp_path, monkeypatch
 ) -> None:
-    from kiro_crew.apps.builtin_adoption_pins import HARNESS_PINS_ENV
+    from aj_crew.apps.builtin_adoption_pins import HARNESS_PINS_ENV
 
     monkeypatch.setenv(HARNESS_PINS_ENV, "/operator/pins.json")
     env = harness_environment(tmp_path, tmp_path / "src")
@@ -1891,24 +1891,24 @@ def test_harness_environment_can_arm_the_download_path_for_one_gateway(
 ) -> None:
     # An inherited skip must not quietly re-arm itself: the evidence driver that
     # asks for the production download path is the only caller of False.
-    monkeypatch.setenv("KIROCREW_SKIP_MODEL_DOWNLOAD", "1")
-    monkeypatch.setenv("KIROCREW_EMBED_MODEL_URL", "https://127.0.0.1:9/never-served.gguf")
+    monkeypatch.setenv("AJCREW_SKIP_MODEL_DOWNLOAD", "1")
+    monkeypatch.setenv("AJCREW_EMBED_MODEL_URL", "https://127.0.0.1:9/never-served.gguf")
     env = harness_environment(tmp_path, tmp_path / "src", skip_model_download=False)
-    assert "KIROCREW_SKIP_MODEL_DOWNLOAD" not in env
+    assert "AJCREW_SKIP_MODEL_DOWNLOAD" not in env
     # Supported production knobs exported by the test process reach the gateway.
-    assert env["KIROCREW_EMBED_MODEL_URL"] == "https://127.0.0.1:9/never-served.gguf"
+    assert env["AJCREW_EMBED_MODEL_URL"] == "https://127.0.0.1:9/never-served.gguf"
     # The isolation the harness exists for is not negotiable through the switch.
-    assert env["KIROCREW_HOME"] == str(tmp_path)
+    assert env["AJCREW_HOME"] == str(tmp_path)
     assert env["KIRO_HOME"] == str(tmp_path / "kiro")
-    assert env["KIROCREW_SKIP_APP_STORE_FETCH"] == "1"
+    assert env["AJCREW_SKIP_APP_STORE_FETCH"] == "1"
 
 
 def test_harness_environment_pins_home_over_an_inherited_one(tmp_path, monkeypatch) -> None:
-    monkeypatch.setenv("KIROCREW_HOME", "/operator/real/home")
+    monkeypatch.setenv("AJCREW_HOME", "/operator/real/home")
     monkeypatch.setenv("KIRO_HOME", "/operator/real/kiro")
     for skip in (True, False):
         env = harness_environment(tmp_path, tmp_path / "src", skip_model_download=skip)
-        assert env["KIROCREW_HOME"] == str(tmp_path)
+        assert env["AJCREW_HOME"] == str(tmp_path)
         assert env["KIRO_HOME"] == str(tmp_path / "kiro")
 
 
@@ -1919,7 +1919,7 @@ def test_restart_without_a_supervisor_is_refused_with_the_download_switch() -> N
 
 
 def test_restart_changes_only_download_switch_and_keeps_environment(monkeypatch):
-    monkeypatch.setenv("KIROCREW_EMBED_MODEL_URL", "https://127.0.0.1:9/original.gguf")
+    monkeypatch.setenv("AJCREW_EMBED_MODEL_URL", "https://127.0.0.1:9/original.gguf")
     launches = []
 
     def fake_launch(_home, env, **_kwargs):
@@ -1929,24 +1929,24 @@ def test_restart_changes_only_download_switch_and_keeps_environment(monkeypatch)
         )
 
     with (
-        patch("kiro_crew.testing.harness._launch_gateway", side_effect=fake_launch),
-        patch("kiro_crew.testing.harness._terminate_process_group", return_value=True),
-        patch("kiro_crew.testing.harness.platform_compat.process_descendants", return_value=[]),
+        patch("aj_crew.testing.harness._launch_gateway", side_effect=fake_launch),
+        patch("aj_crew.testing.harness._terminate_process_group", return_value=True),
+        patch("aj_crew.testing.harness.platform_compat.process_descendants", return_value=[]),
     ):
         with spawn_feature_gateway(fixture="empty") as handle:
-            monkeypatch.setenv("KIROCREW_EMBED_MODEL_URL", "https://127.0.0.1:9/changed.gguf")
+            monkeypatch.setenv("AJCREW_EMBED_MODEL_URL", "https://127.0.0.1:9/changed.gguf")
             handle = handle.restart(skip_model_download=False)
             handle = handle.restart()
             handle.restart(skip_model_download=True)
-    assert [env.get("KIROCREW_SKIP_MODEL_DOWNLOAD") for env in launches] == ["1", None, None, "1"]
+    assert [env.get("AJCREW_SKIP_MODEL_DOWNLOAD") for env in launches] == ["1", None, None, "1"]
     snapshots = [
-        {k: v for k, v in env.items() if k != "KIROCREW_SKIP_MODEL_DOWNLOAD"} for env in launches
+        {k: v for k, v in env.items() if k != "AJCREW_SKIP_MODEL_DOWNLOAD"} for env in launches
     ]
     assert all(env == snapshots[0] for env in snapshots)
 
 
 def test_restart_tracks_each_tree_teardown_and_keeps_scratch_cwd():
-    from kiro_crew.testing import harness
+    from aj_crew.testing import harness
 
     launches = []
 

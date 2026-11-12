@@ -20,14 +20,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from kiro_crew.acp.client import AcpError
-from kiro_crew.acp.session_provider import AcpSessionProvider
-from kiro_crew.acp.types import (
+from aj_crew.acp.client import AcpError
+from aj_crew.acp.session_provider import AcpSessionProvider
+from aj_crew.acp.types import (
     ACP_BACKEND_KAS,
     ACP_BACKEND_KIRO,
     METHOD_SESSION_CLOSE,
 )
-from kiro_crew.testing.wait import await_until, until_parked
+from aj_crew.testing.wait import await_until, until_parked
 
 _SID = "sess-live-1"
 
@@ -35,9 +35,9 @@ _SID = "sess-live-1"
 def _handle(**overrides: object) -> SimpleNamespace:
     base: dict[str, object] = dict(
         session_id=_SID,
-        active_agent="kirocrew",
+        active_agent="ajcrew",
         _bound_cwd="/work",
-        _crew_agent="kirocrew",
+        _crew_agent="ajcrew",
         model="",
         keep_transcript=False,
         memory_mode="persistent",
@@ -57,7 +57,7 @@ def _runtime(
     runtime = SimpleNamespace(
         acp_backend=backend,
         is_cloud_sandbox=cloud,
-        _agent="kirocrew",
+        _agent="ajcrew",
         is_alive=lambda: alive,
         evict_session=AsyncMock(),
         load_session=AsyncMock(return_value=new_handle),
@@ -135,7 +135,7 @@ class TestACloudSession:
     def test_the_writer_neither_resets_nor_marks_it(self) -> None:
         """The dashboard writer's gate: a cloud session must not force a reset of
         every live session, and the mark it hands out must not stick."""
-        from kiro_crew.mcp_hot_reload import (
+        from aj_crew.mcp_hot_reload import (
             live_sessions_apply_mcp_live,
             mark_reinjecting_providers,
         )
@@ -170,8 +170,8 @@ class TestTheApply:
         args, kwargs = runtime.load_session.await_args
         assert args == ("", _SID)
         assert kwargs["cwd"] == "/work"
-        assert kwargs["agent"] == "kirocrew"
-        assert kwargs["crew_agent"] == "kirocrew"
+        assert kwargs["agent"] == "ajcrew"
+        assert kwargs["crew_agent"] == "ajcrew"
         assert kwargs["session_key"] == "dashboard:abc"
         assert kwargs["member_session_key"] == ""
         assert provider._handle is runtime.new_handle
@@ -329,7 +329,7 @@ class TestTheApply:
     @pytest.mark.asyncio
     async def test_a_member_dm_carries_its_member_key_onto_the_load(self, monkeypatch) -> None:
         """A member DM re-mounts its dispatch server on load, as the first load did."""
-        import kiro_crew.members as members
+        import aj_crew.members as members
 
         monkeypatch.setattr(members, "is_member_session_key", lambda key: key == "member:m1")
         runtime = _runtime()
@@ -367,7 +367,7 @@ class TestTheTurnBoundary:
     async def test_a_prompt_gate_refusal_after_the_apply_sends_nothing(self, monkeypatch) -> None:
         """The channel's gate reaches the session through the outer provider and is
         handed to the handle the apply swapped in; its refusal sends no prompt."""
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.providers.acp import AcpProvider
 
         runtime = _runtime()
         inner = _provider(runtime)
@@ -410,8 +410,8 @@ class TestTheTurnBoundary:
         """The direct client builds the prompt and waits for the write lock; a sender
         revoked during that wait is refused under the lock, nothing is written, and the
         turn is released."""
-        from kiro_crew.acp.client import AcpClient
-        from kiro_crew.providers.acp import AcpProvider
+        from aj_crew.acp.client import AcpClient
+        from aj_crew.providers.acp import AcpProvider
 
         client = AcpClient()
         client.ensure_ready = AsyncMock()  # type: ignore[method-assign]
@@ -448,7 +448,7 @@ class TestTheTurnBoundary:
 class TestKeepRecordOnTeardown:
     @staticmethod
     def _runtime() -> object:
-        from kiro_crew.acp.runtime_class import AcpRuntime
+        from aj_crew.acp.runtime_class import AcpRuntime
 
         runtime = object.__new__(AcpRuntime)
         runtime._dead = False
@@ -461,7 +461,7 @@ class TestKeepRecordOnTeardown:
 
     @pytest.mark.asyncio
     async def test_terminate_inside_the_scope_evicts_instead_of_deleting(self) -> None:
-        from kiro_crew.acp.runtime_class import AcpRuntime
+        from aj_crew.acp.runtime_class import AcpRuntime
 
         runtime = self._runtime()
         sent: list[str] = []
@@ -478,7 +478,7 @@ class TestKeepRecordOnTeardown:
 
     @pytest.mark.asyncio
     async def test_terminate_outside_the_scope_uses_the_harness_verb(self) -> None:
-        from kiro_crew.acp.runtime_class import AcpRuntime
+        from aj_crew.acp.runtime_class import AcpRuntime
 
         runtime = self._runtime()
         sent: list[str] = []
@@ -495,7 +495,7 @@ class TestKeepRecordOnTeardown:
 
     @pytest.mark.asyncio
     async def test_another_session_is_not_covered_by_the_scope(self) -> None:
-        from kiro_crew.acp.runtime_class import AcpRuntime
+        from aj_crew.acp.runtime_class import AcpRuntime
 
         runtime = self._runtime()
         sent: list[str] = []
@@ -515,7 +515,7 @@ class TestEvict:
     async def test_sends_the_standard_close_and_unregisters(self) -> None:
         """``session/close`` keeps the stored record; KAS's own teardown verb
         (``_kiro/session/delete``) would remove what the load restores."""
-        from kiro_crew.acp.runtime_class import AcpRuntime
+        from aj_crew.acp.runtime_class import AcpRuntime
 
         runtime = object.__new__(AcpRuntime)
         runtime._dead = False
@@ -536,7 +536,7 @@ class TestEvict:
     async def test_a_refused_close_still_unregisters(self, tmp_path) -> None:
         import asyncio
 
-        from kiro_crew.acp.runtime_class import AcpRuntime
+        from aj_crew.acp.runtime_class import AcpRuntime
 
         runtime = AcpRuntime(work_dir=tmp_path, sandbox_mode="off", acp_backend=ACP_BACKEND_KAS)
         runtime._session_queues[_SID] = asyncio.Queue()
@@ -549,7 +549,7 @@ class TestEvict:
     async def test_a_dead_runtime_sends_nothing(self, tmp_path) -> None:
         import asyncio
 
-        from kiro_crew.acp.runtime_class import AcpRuntime
+        from aj_crew.acp.runtime_class import AcpRuntime
 
         runtime = AcpRuntime(work_dir=tmp_path, sandbox_mode="off", acp_backend=ACP_BACKEND_KAS)
         runtime._session_queues[_SID] = asyncio.Queue()

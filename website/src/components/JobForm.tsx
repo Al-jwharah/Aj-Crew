@@ -5,7 +5,7 @@ import { api } from '../api/client'
 import { ApiError } from '../api/apiError'
 import { Btn, Input, SendBtn } from './ui'
 import { SettingsToggle } from './settings'
-import AgentSelector, { crewDisplayName, type KiroCrewAgent } from './AgentSelector'
+import AgentSelector, { crewDisplayName, type AjCrewAgent } from './AgentSelector'
 import SegmentedControl from './SegmentedControl'
 import SimpleSelect from './SimpleSelect'
 import type { ChatFolder, CronJob } from '../types'
@@ -35,7 +35,7 @@ const CRON_DOW_TO_GRID: Record<number, number> = { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5,
 /** What a job runs as: a custom agent (template) or a crewmate. */
 type RunsAs = 'template' | 'member'
 /** A roster row's kind, read the way AgentSelector groups it. */
-const runsAsOf = (a: KiroCrewAgent): RunsAs => a.selection_kind ?? 'member'
+const runsAsOf = (a: AjCrewAgent): RunsAs => a.selection_kind ?? 'member'
 
 
 /** The pinned crew, rendered as a fact rather than a disabled selector — a
@@ -245,7 +245,7 @@ interface Props {
   job?: CronJob // if provided, edit mode
   /** Seed values for a NEW job (create mode). Ignored when `job` is set. */
   prefill?: CronPrefill
-  agents: KiroCrewAgent[]
+  agents: AjCrewAgent[]
   defaultAgent: string
   /** The roster fetch failed — see AgentSelector's prop of the same name. */
   rosterFailure?: { reloading: boolean; onReload: () => void }
@@ -758,7 +758,7 @@ export default function JobForm({ job, prefill, agents, defaultAgent, rosterFail
    *  `TIMEZONES` is a curated 15-zone fast-pick list, not the IANA set, so this
    *  is a `SimpleSelect` — the searchable variant is for the full host list
    *  (see `TimezoneSelect`). 'local' leads, named with the zone the computer
-   *  Kiro Crew runs on is in now; the shown zone follows it so a job saved with
+   *  Aj Crew runs on is in now; the shown zone follows it so a job saved with
    *  a zone outside the curated list keeps it. */
   const tzOptions = Array.from(new Set([
     ...(shownTz === DEFAULT_ZONE_CHOICE ? [DEFAULT_ZONE_CHOICE] : []),

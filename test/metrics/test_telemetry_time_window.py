@@ -24,8 +24,8 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import make_mocked_request
 
-from kiro_crew.dashboard.handlers import telemetry as h
-from kiro_crew.dashboard.handlers import usage as usage_mod
+from aj_crew.dashboard.handlers import telemetry as h
+from aj_crew.dashboard.handlers import usage as usage_mod
 
 _DAY = 86400.0
 _NOW = 1_800_000_000.0
@@ -282,7 +282,7 @@ def _counter_shard(directory: Path, points: list[dict]) -> Path:
                     {
                         "metrics": [
                             {
-                                "name": "kirocrew.zz.window_probe",
+                                "name": "ajcrew.zz.window_probe",
                                 "data": {"aggregation_temporality": 1, "data_points": points},
                             }
                         ]
@@ -297,7 +297,7 @@ def _counter_shard(directory: Path, points: list[dict]) -> Path:
 
 
 def _probe_total(result: dict[str, Any]) -> float:
-    (row,) = [o for o in result["other"] if o["name"] == "kirocrew.zz.window_probe"]
+    (row,) = [o for o in result["other"] if o["name"] == "ajcrew.zz.window_probe"]
     return float(row["total"])
 
 

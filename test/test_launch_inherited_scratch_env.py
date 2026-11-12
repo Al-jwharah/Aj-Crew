@@ -1,7 +1,7 @@
 """A gateway started from an agent shell must not hand that shell's scratch to its children.
 
 The agent shell exports the whole ``agent_scratch.scratch_env`` set -- ``TMPDIR``,
-``TMP``, ``TEMP``, ``KIROCREW_SCRATCH`` and ``KIRO_CHAT_LOG_FILE`` -- naming its own
+``TMP``, ``TEMP``, ``AJCREW_SCRATCH`` and ``KIRO_CHAT_LOG_FILE`` -- naming its own
 per-process directory under the managed scratch root. A gateway restarted from inside
 such a shell keeps those values in its own environment, and every child it spawns
 starts from ``{**os.environ}``. A spawn whose own allocation succeeds overwrites all
@@ -27,11 +27,11 @@ from unittest.mock import patch
 import acp_launch_capture as capture_mod
 import pytest
 
-from kiro_crew import agent_scratch
-from kiro_crew.acp import client as client_mod
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_KIRO
+from aj_crew import agent_scratch
+from aj_crew.acp import client as client_mod
+from aj_crew.agent_sdk.backends import ACP_BACKEND_KIRO
 
-_SCRATCH_KEYS = ("TMPDIR", "TMP", "TEMP", "KIROCREW_SCRATCH", "KIRO_CHAT_LOG_FILE")
+_SCRATCH_KEYS = ("TMPDIR", "TMP", "TEMP", "AJCREW_SCRATCH", "KIRO_CHAT_LOG_FILE")
 
 
 def _shell_exports(tree: Path) -> dict[str, str]:
@@ -40,7 +40,7 @@ def _shell_exports(tree: Path) -> dict[str, str]:
         "TMPDIR": str(tree),
         "TMP": str(tree),
         "TEMP": str(tree),
-        "KIROCREW_SCRATCH": str(tree),
+        "AJCREW_SCRATCH": str(tree),
         "KIRO_CHAT_LOG_FILE": str(tree / "kiro-log" / "kiro-chat.log"),
     }
 
@@ -79,8 +79,8 @@ def test_an_operators_own_temp_directory_is_kept(value) -> None:
 
 def test_only_the_keys_under_the_root_go_and_the_rest_stay() -> None:
     tree = agent_scratch.scratch_root() / "runtime-f31604de"
-    env = {"TMPDIR": str(tree), "TMP": "/tmp", "KIROCREW_SCRATCH": str(tree), "TEMP": ""}
-    assert agent_scratch.drop_inherited_scratch_env(env) == ("TMPDIR", "KIROCREW_SCRATCH")
+    env = {"TMPDIR": str(tree), "TMP": "/tmp", "AJCREW_SCRATCH": str(tree), "TEMP": ""}
+    assert agent_scratch.drop_inherited_scratch_env(env) == ("TMPDIR", "AJCREW_SCRATCH")
     assert env == {"TMP": "/tmp", "TEMP": ""}
 
 
@@ -166,6 +166,6 @@ def test_a_spawn_that_allocates_scratch_overwrites_the_inherited_set_as_before(
 ) -> None:
     """With an allocation the child's own window wins on every key, inherited or not."""
     child_env = _capture_child_env(tmp_path, _dead_tree_exports, allocation_fails=False)
-    for key in ("TMPDIR", "TMP", "TEMP", "KIROCREW_SCRATCH"):
+    for key in ("TMPDIR", "TMP", "TEMP", "AJCREW_SCRATCH"):
         assert child_env.get(key) == "<scratch>", key
     assert child_env.get("KIRO_CHAT_LOG_FILE") == "<scratch-log>"

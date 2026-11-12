@@ -22,8 +22,8 @@ from test_member_dashboard_routes import (  # noqa: F401
     _q,
 )
 
-from kiro_crew.dashboard.handlers import member_dashboard as routes
-from kiro_crew.dashboard_templates import instance
+from aj_crew.dashboard.handlers import member_dashboard as routes
+from aj_crew.dashboard_templates import instance
 
 pytestmark = pytest.mark.asyncio
 
@@ -146,7 +146,7 @@ async def test_the_conditional_get_is_safe_on_a_per_user_authenticated_page():
     The ETag is keyed to the authenticated reader, the owner gate runs before any 304,
     and the response is ``Cache-Control: private``.
     """
-    import kiro_crew.dashboard.handlers.member_dashboard as mod
+    import aj_crew.dashboard.handlers.member_dashboard as mod
 
     # (3) + a reader-A baseline. The gate is open here (the sibling boundary); what we
     # read off A is its ETag and its Cache-Control.

@@ -21,11 +21,11 @@ from codex_session_mcp_helpers import (
     _write_spec,
 )
 
-from kiro_crew.acp import runtime as acp_runtime
-from kiro_crew.acp import session_mcp
-from kiro_crew.acp.harness.codex import CodexHarness
-from kiro_crew.acp.runtime import AcpRuntime
-from kiro_crew.acp_backends import (
+from aj_crew.acp import runtime as acp_runtime
+from aj_crew.acp import session_mcp
+from aj_crew.acp.harness.codex import CodexHarness
+from aj_crew.acp.runtime import AcpRuntime
+from aj_crew.acp_backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_CODEX,
     ACP_BACKEND_KAS,
@@ -33,9 +33,9 @@ from kiro_crew.acp_backends import (
     ACP_BACKENDS_MEMBER_DISPATCH,
     ACP_BACKENDS_SESSION_MCP_ARRAY,
 )
-from kiro_crew.members import MEMBER_DISPATCH_SERVER
-from kiro_crew.providers.mirrors import Concern, Disposition, mirror_for
-from kiro_crew.providers.mirrors.codex import (
+from aj_crew.members import MEMBER_DISPATCH_SERVER
+from aj_crew.providers.mirrors import Concern, Disposition, mirror_for
+from aj_crew.providers.mirrors.codex import (
     CodexMirror,
     _identity_bound_crew_servers,
     codex_elements,
@@ -58,7 +58,7 @@ def _element(name: str, **over) -> dict:
     element = {
         "name": name,
         "type": "stdio",
-        "command": "/opt/kirocrew",
+        "command": "/opt/ajcrew",
         "args": ["mcp-core"],
         "env": [],
     }
@@ -157,31 +157,31 @@ class TestIdentityEnvCarriage:
     """Crew's identity env goes only to the servers the translation REPLACES.
 
     ``codex-rs``'s stdio launcher runs ``Command::env_clear()`` and re-adds only
-    ``DEFAULT_ENV_VARS`` plus the entry's ``env``, so without ``KIROCREW_SESSION_KEY``
+    ``DEFAULT_ENV_VARS`` plus the entry's ``env``, so without ``AJCREW_SESSION_KEY``
     the control plane cannot name its session.
     """
 
     def test_the_control_plane_carries_the_session_key(self):
-        el = codex_elements([_element("kirocrew-core")], session_key="chat-7-123")[0]
-        assert _env(el)["KIROCREW_SESSION_KEY"] == "chat-7-123"
+        el = codex_elements([_element("ajcrew-core")], session_key="chat-7-123")[0]
+        assert _env(el)["AJCREW_SESSION_KEY"] == "chat-7-123"
 
     def test_the_control_plane_carries_the_bound_port(self):
         """Without the port the child falls back to the run marker and the default port.
 
         That check needs ``lsof``, which sees no listener inside a sandbox's user namespace.
         """
-        el = codex_elements([_element("kirocrew-cron")], session_key="chat-7-123")[0]
-        assert _env(el)["KIROCREW_BOUND_PORT"].isdigit()
+        el = codex_elements([_element("ajcrew-cron")], session_key="chat-7-123")[0]
+        assert _env(el)["AJCREW_BOUND_PORT"].isdigit()
 
     def test_the_channel_id_rides_along_when_there_is_one(self):
-        """``mcp_cron`` reads ``KIROCREW_CHANNEL_ID`` to place a cron's output."""
-        el = codex_elements(
-            [_element("kirocrew-cron")], session_key="chat-7-123", channel_id="C123"
-        )[0]
-        assert _env(el)["KIROCREW_CHANNEL_ID"] == "C123"
+        """``mcp_cron`` reads ``AJCREW_CHANNEL_ID`` to place a cron's output."""
+        el = codex_elements([_element("ajcrew-cron")], session_key="chat-7-123", channel_id="C123")[
+            0
+        ]
+        assert _env(el)["AJCREW_CHANNEL_ID"] == "C123"
 
     def test_a_THIRD_PARTY_server_gets_no_crew_identity(self):
-        """``KIROCREW_SESSION_KEY`` is a credential, so a spec-described server never gets it.
+        """``AJCREW_SESSION_KEY`` is a credential, so a spec-described server never gets it.
 
         Handing it over would let any server a spec names drive the session.
         """
@@ -194,24 +194,24 @@ class TestIdentityEnvCarriage:
         ``codex_withheld_servers`` drops them upstream; this pins that one which still
         arrives gets no key.
         """
-        el = codex_elements(
-            [_element("kirocrew-work", args=["mcp-work"])], session_key="chat-7-123"
-        )[0]
+        el = codex_elements([_element("ajcrew-work", args=["mcp-work"])], session_key="chat-7-123")[
+            0
+        ]
         assert _env(el) == {}
 
     def test_a_stale_spec_value_is_replaced_not_duplicated(self):
         """Resolved-live beats spec-declared, and the array holds one pair per name."""
         el = codex_elements(
-            [_element("kirocrew-core", env=[{"name": "KIROCREW_SESSION_KEY", "value": "stale"}])],
+            [_element("ajcrew-core", env=[{"name": "AJCREW_SESSION_KEY", "value": "stale"}])],
             session_key="fresh",
         )[0]
         names = [pair["name"] for pair in el["env"]]
-        assert names.count("KIROCREW_SESSION_KEY") == 1
-        assert _env(el)["KIROCREW_SESSION_KEY"] == "fresh"
+        assert names.count("AJCREW_SESSION_KEY") == 1
+        assert _env(el)["AJCREW_SESSION_KEY"] == "fresh"
 
     def test_no_session_key_means_no_env_work_at_all(self):
         """A keyless client (a worker pool, a probe) must not gain a bogus identity."""
-        assert _env(codex_elements([_element("kirocrew-core")])[0]) == {}
+        assert _env(codex_elements([_element("ajcrew-core")])[0]) == {}
 
 
 class TestNameFolding:
@@ -222,31 +222,31 @@ class TestNameFolding:
     """
 
     def test_the_fold_matches_codex_character_for_character(self):
-        for raw in ("my server", "a  b", " lead", "trail ", "x\ty", "plain", "kirocrew-core"):
+        for raw in ("my server", "a  b", " lead", "trail ", "x\ty", "plain", "ajcrew-core"):
             assert codex_name(raw) == re.sub(r"\s", "_", raw), raw
 
     def test_no_spec_name_can_fold_onto_the_control_plane(self):
-        """The only string that folds onto ``kirocrew-core`` is itself.
+        """The only string that folds onto ``ajcrew-core`` is itself.
 
         Folding only replaces whitespace with ``_`` and the name contains no ``_``.
         """
-        for impostor in ("kirocrew-core ", " kirocrew-core", "kirocrew core", "kirocrew_core"):
-            assert codex_name(impostor) != "kirocrew-core", impostor
-        assert codex_name("kirocrew-core") == "kirocrew-core"
+        for impostor in ("ajcrew-core ", " ajcrew-core", "ajcrew core", "ajcrew_core"):
+            assert codex_name(impostor) != "ajcrew-core", impostor
+        assert codex_name("ajcrew-core") == "ajcrew-core"
 
     def test_a_whitespace_variant_reaches_codex_under_its_own_distinct_name(self):
         """The impostor mounts under its own folded name, with no Crew identity."""
         kept = codex_elements(
             [
-                _element("kirocrew-core"),
-                _element("kirocrew-core ", command="/tmp/not-crews-binary"),
+                _element("ajcrew-core"),
+                _element("ajcrew-core ", command="/tmp/not-crews-binary"),
             ],
             session_key="chat-7-123",
         )
         by_name = {e["name"]: e for e in kept}
-        assert set(by_name) == {"kirocrew-core", "kirocrew-core_"}
-        assert _env(by_name["kirocrew-core"])["KIROCREW_SESSION_KEY"] == "chat-7-123"
-        assert _env(by_name["kirocrew-core_"]) == {}
+        assert set(by_name) == {"ajcrew-core", "ajcrew-core_"}
+        assert _env(by_name["ajcrew-core"])["AJCREW_SESSION_KEY"] == "chat-7-123"
+        assert _env(by_name["ajcrew-core_"]) == {}
 
     def test_a_genuine_fold_collision_keeps_the_first_writer(self):
         """Two spec names CAN fold together; codex would take the last, Crew keeps the first."""
@@ -276,7 +276,7 @@ class TestCodexRulings:
         ruling = mirror_for(ACP_BACKEND_CODEX).rulings()[Concern.MCP_SERVERS]
         assert ruling.disposition is Disposition.DELIVERED
         assert "drop_unadvertised_transports" in ruling.reason
-        assert "KIROCREW_SESSION_KEY" in ruling.reason
+        assert "AJCREW_SESSION_KEY" in ruling.reason
 
     def test_disabled_tools_is_honoured_by_withholding_the_server(self):
         """With no deny channel, the only faithful option is to withhold the server.
@@ -306,9 +306,9 @@ class TestCodexRulings:
         mechanism in ``ENFORCED_ROUTINGS`` -- so a session that cannot arm
         ``mode=read-only`` is refused rather than run, and there is no file to own.
         """
-        _write_spec(agents_dir, servers={}, tools=["@kirocrew-core"])
-        params = CodexMirror().session_params("kirocrew", permission_surface_owned=False)
-        assert [e["name"] for e in params["mcpServers"]] == ["kirocrew-core"]
+        _write_spec(agents_dir, servers={}, tools=["@ajcrew-core"])
+        params = CodexMirror().session_params("ajcrew", permission_surface_owned=False)
+        assert [e["name"] for e in params["mcpServers"]] == ["ajcrew-core"]
 
 
 # ── the session array seam ──────────────────────────────────────────────────
@@ -331,17 +331,17 @@ class TestTheSessionArraySeam:
         assert ACP_BACKEND_CODEX in ACP_BACKENDS_MEMBER_DISPATCH
 
     def test_the_spec_can_never_supply_the_dashboard_server_itself(self, agents_dir):
-        """A spec naming ``@kirocrew-dashboard`` still gets it withheld.
+        """A spec naming ``@ajcrew-dashboard`` still gets it withheld.
 
         A spec-described element carries no session identity and would answer
         ``identity_unattested`` to every verb; only the runtime's entry has the key.
         """
         _write_spec(
             agents_dir,
-            servers={MEMBER_DISPATCH_SERVER: {"command": "/opt/kirocrew"}},
-            tools=[f"@{MEMBER_DISPATCH_SERVER}", "@kirocrew-core"],
+            servers={MEMBER_DISPATCH_SERVER: {"command": "/opt/ajcrew"}},
+            tools=[f"@{MEMBER_DISPATCH_SERVER}", "@ajcrew-core"],
         )
-        projection = codex_projection("kirocrew")
+        projection = codex_projection("ajcrew")
         names = [e["name"] for e in projection.params["mcpServers"]]
         assert MEMBER_DISPATCH_SERVER not in names
         assert MEMBER_DISPATCH_SERVER in codex_withheld_servers(frozenset())
@@ -356,14 +356,14 @@ class TestTheSessionArraySeam:
             agents_dir,
             servers={"foo": {"command": "/bin/foo"}},
             # The control plane is NOT exempt from the allowlist -- kiro-cli drops
-            # kirocrew-core from a spec whose `tools` stops naming it, and this
+            # ajcrew-core from a spec whose `tools` stops naming it, and this
             # backend must not re-grant what kiro-cli would drop -- so a spec that
             # wants both has to name both.
-            tools=["@foo", "@kirocrew-core"],
+            tools=["@foo", "@ajcrew-core"],
         )
         names = set(_by_name(_codex_session_array(caps=_CODEX_1_11_CAPS)[1]))
         assert "foo" in names
-        assert "kirocrew-core" in names
+        assert "ajcrew-core" in names
 
     def test_an_sse_spec_entry_never_reaches_a_codex_session(self, agents_dir):
         """End to end through both owners, against the advertisement a session holds."""
@@ -393,7 +393,7 @@ class TestTheSessionArraySeam:
             },
             tools=["@remote", "@local"],
         )
-        unnarrowed = codex_projection("kirocrew").params["mcpServers"]
+        unnarrowed = codex_projection("ajcrew").params["mcpServers"]
         assert "remote" in _by_name(unnarrowed)
         kept = _by_name(drop_unadvertised_transports(unnarrowed, _CODEX_1_11_CAPS))
         assert "remote" not in kept
@@ -416,12 +416,12 @@ class TestTheSessionArraySeam:
         ``False`` is what a real session is built with; claude's answer to it (an empty
         array) is asserted beside codex's.
         """
-        _write_spec(agents_dir, servers={}, tools=["@kirocrew-core"])
-        codex = CodexMirror().session_projection("kirocrew", permission_surface_owned=False)
-        assert "kirocrew-core" in _by_name(codex.params["mcpServers"])
+        _write_spec(agents_dir, servers={}, tools=["@ajcrew-core"])
+        codex = CodexMirror().session_projection("ajcrew", permission_surface_owned=False)
+        assert "ajcrew-core" in _by_name(codex.params["mcpServers"])
         claude = mirror_for(ACP_BACKEND_CLAUDE)
         assert claude is not None
-        withheld = claude.session_projection("kirocrew", permission_surface_owned=False)
+        withheld = claude.session_projection("ajcrew", permission_surface_owned=False)
         assert withheld.params["mcpServers"] == []
 
     def test_a_server_narrowed_per_tool_is_withheld_end_to_end(self, agents_dir):
@@ -457,23 +457,23 @@ class TestTheSessionArraySeam:
             },
             tools=["@empty", "@bogus"],
         )
-        assert session_mcp.session_mcp_projection("kirocrew").restricted == frozenset()
+        assert session_mcp.session_mcp_projection("ajcrew").restricted == frozenset()
         names = set(_by_name(_codex_session_array(caps=_CODEX_1_11_CAPS)[1]))
         assert {"empty", "bogus"} <= names
 
     def test_an_identity_bound_crew_server_is_not_mounted_at_all(self, agents_dir):
-        """A ``kirocrew-work`` with no session identity answers ``not_bound``, so it is withheld.
+        """An ``ajcrew-work`` with no session identity answers ``not_bound``, so it is withheld.
 
         The control plane is re-derived, so it keeps its identity and stays.
         """
         _write_spec(
             agents_dir,
-            servers={"kirocrew-work": {"command": "/opt/kirocrew", "args": ["mcp-work"]}},
-            tools=["@kirocrew-work", "@kirocrew-core"],
+            servers={"ajcrew-work": {"command": "/opt/ajcrew", "args": ["mcp-work"]}},
+            tools=["@ajcrew-work", "@ajcrew-core"],
         )
         names = set(_by_name(_codex_session_array(caps=_CODEX_1_11_CAPS)[1]))
-        assert "kirocrew-work" not in names
-        assert "kirocrew-core" in names
+        assert "ajcrew-work" not in names
+        assert "ajcrew-core" in names
 
     def test_the_control_plane_is_never_withheld_by_its_own_disabled_tools(self, agents_dir):
         """The control plane stays mounted; its ``disabledTools`` is enforced at approval.
@@ -484,16 +484,16 @@ class TestTheSessionArraySeam:
         _write_spec(
             agents_dir,
             servers={
-                "kirocrew-core": {
-                    "command": "/opt/kirocrew",
+                "ajcrew-core": {
+                    "command": "/opt/ajcrew",
                     "args": ["mcp-core"],
                     "disabledTools": ["spawn_run"],
                 }
             },
-            tools=["@kirocrew-core"],
+            tools=["@ajcrew-core"],
         )
-        assert "kirocrew-core" not in session_mcp.session_mcp_projection("kirocrew").restricted
-        assert "kirocrew-core" in _by_name(_codex_session_array(caps=_CODEX_1_11_CAPS)[1])
+        assert "ajcrew-core" not in session_mcp.session_mcp_projection("ajcrew").restricted
+        assert "ajcrew-core" in _by_name(_codex_session_array(caps=_CODEX_1_11_CAPS)[1])
 
     def test_the_pooled_resolution_cannot_run_beside_the_projection(self):
         """The raw ``pooled_session_servers`` must not run beside the projection.
@@ -541,7 +541,7 @@ class TestTheSessionArraySeam:
             {"name": "unrelated", "command": "/stub", "args": [], "env": [], "type": "stdio"},
         ]
         projection = codex_projection(
-            "kirocrew", stub_server_names=("narrowed", "unrelated"), stub_elements=stubs
+            "ajcrew", stub_server_names=("narrowed", "unrelated"), stub_elements=stubs
         )
         names = [e["name"] for e in projection.params["mcpServers"]]
         assert "narrowed" not in names
@@ -549,7 +549,7 @@ class TestTheSessionArraySeam:
         # The wire face IS the projection's params, pinned so the two cannot drift.
         assert (
             CodexMirror().session_params(
-                "kirocrew", stub_server_names=("narrowed", "unrelated"), stub_elements=stubs
+                "ajcrew", stub_server_names=("narrowed", "unrelated"), stub_elements=stubs
             )
             == projection.params
         )
@@ -568,7 +568,7 @@ class TestTheSessionArraySeam:
         names = [
             e["name"]
             for e in codex_projection(
-                "kirocrew", stub_server_names=("granted", "unreferenced"), stub_elements=stubs
+                "ajcrew", stub_server_names=("granted", "unreferenced"), stub_elements=stubs
             ).params["mcpServers"]
         ]
         assert "granted" in names
@@ -578,7 +578,7 @@ class TestTheSessionArraySeam:
         names = [
             e["name"]
             for e in codex_projection(
-                "kirocrew", stub_server_names=("granted", "unreferenced"), stub_elements=stubs
+                "ajcrew", stub_server_names=("granted", "unreferenced"), stub_elements=stubs
             ).params["mcpServers"]
         ]
         assert {"granted", "unreferenced"} <= set(names)
@@ -587,7 +587,7 @@ class TestTheSessionArraySeam:
         names = [
             e["name"]
             for e in codex_projection(
-                "kirocrew", stub_server_names=("granted", "unreferenced"), stub_elements=stubs
+                "ajcrew", stub_server_names=("granted", "unreferenced"), stub_elements=stubs
             ).params["mcpServers"]
         ]
         assert "granted" not in names and "unreferenced" not in names
@@ -599,7 +599,7 @@ class TestTheSessionArraySeam:
         next mirror author has no codex-specific branch to copy."""
         import inspect
 
-        from kiro_crew.acp import client as client_mod
+        from aj_crew.acp import client as client_mod
 
         source = "".join(
             inspect.getsource(sys.modules[name])
@@ -619,25 +619,25 @@ class TestTheSessionArraySeam:
         empty deny set -- claude here -- so the client needs no per-backend branch
         to read the seam, and a codex-only shape does not leak into the client.
         """
-        from kiro_crew.acp_backends import ACP_BACKEND_CLAUDE
-        from kiro_crew.providers.mirrors import SessionProjection
+        from aj_crew.acp_backends import ACP_BACKEND_CLAUDE
+        from aj_crew.providers.mirrors import SessionProjection
 
         _write_spec(
             agents_dir,
-            servers={"kirocrew-core": {"command": "/x", "disabledTools": ["spawn_run"]}},
-            tools=["@kirocrew-core"],
+            servers={"ajcrew-core": {"command": "/x", "disabledTools": ["spawn_run"]}},
+            tools=["@ajcrew-core"],
         )
         claude = mirror_for(ACP_BACKEND_CLAUDE)
         assert claude is not None
         projection = claude.session_projection(
-            "kirocrew", permission_surface_owned=True, stub_elements=[{"name": "ignored"}]
+            "ajcrew", permission_surface_owned=True, stub_elements=[{"name": "ignored"}]
         )
         assert isinstance(projection, SessionProjection)
         assert projection.denied_tools == frozenset()
-        assert projection.params == claude.session_params("kirocrew", permission_surface_owned=True)
+        assert projection.params == claude.session_params("ajcrew", permission_surface_owned=True)
         # Codex's answer is the same shape, carrying its obligation.
-        assert ("kirocrew-core", "spawn_run") in CodexMirror().session_projection(
-            "kirocrew"
+        assert ("ajcrew-core", "spawn_run") in CodexMirror().session_projection(
+            "ajcrew"
         ).denied_tools
 
     def test_the_withheld_set_takes_the_restriction_half_from_its_caller(self):
@@ -656,7 +656,7 @@ class TestTheSessionArraySeam:
             servers={"narrowed": {"command": "/bin/foo", "disabledTools": ["x"]}},
             tools=["@narrowed"],
         )
-        withheld = codex_withheld_servers(session_mcp.session_mcp_projection("kirocrew").restricted)
+        withheld = codex_withheld_servers(session_mcp.session_mcp_projection("ajcrew").restricted)
         assert "narrowed" in withheld
         assert _identity_bound_crew_servers() <= withheld
         assert not _identity_bound_crew_servers() & set(session_mcp.CONTROL_PLANE_SERVERS)
@@ -670,16 +670,16 @@ class TestTheSessionArraySeam:
         import ast
         import inspect
 
-        from kiro_crew.mcp_cleanup import KIROCREW_BIN_MCP_SERVERS
-        from kiro_crew.providers.mirrors import codex as codex_mod
+        from aj_crew.mcp_cleanup import AJCREW_BIN_MCP_SERVERS
+        from aj_crew.providers.mirrors import codex as codex_mod
 
         derived = _identity_bound_crew_servers()
-        assert derived == frozenset(KIROCREW_BIN_MCP_SERVERS) - frozenset(
+        assert derived == frozenset(AJCREW_BIN_MCP_SERVERS) - frozenset(
             session_mcp.CONTROL_PLANE_SERVERS
         )
         # Non-empty on both sides, or the equality above passes vacuously.
         assert derived
-        assert frozenset(session_mcp.CONTROL_PLANE_SERVERS) <= frozenset(KIROCREW_BIN_MCP_SERVERS)
+        assert frozenset(session_mcp.CONTROL_PLANE_SERVERS) <= frozenset(AJCREW_BIN_MCP_SERVERS)
 
         tree = ast.parse(inspect.getsource(codex_mod))
         docstrings = set()
@@ -721,7 +721,7 @@ class TestTheSessionArraySeam:
             return real(agent, work_dir, **kwargs)
 
         monkeypatch.setattr(session_mcp, "_agent_spec_and_snapshot_for", counting)
-        params = CodexMirror().session_params("kirocrew", session_key="k", channel_id="c")
+        params = CodexMirror().session_params("ajcrew", session_key="k", channel_id="c")
 
         assert len(calls) == 1, f"the codex projection parsed the agent spec {len(calls)} times"
         assert "narrowed" not in _by_name(params["mcpServers"])
@@ -743,7 +743,7 @@ class TestTheSessionArraySeam:
             return spec, snapshot
 
         monkeypatch.setattr(session_mcp, "_agent_spec_and_snapshot_for", drifting)
-        params = CodexMirror().session_params("kirocrew", session_key="k", channel_id="c")
+        params = CodexMirror().session_params("ajcrew", session_key="k", channel_id="c")
 
         assert seen["n"] == 1
         # Both halves saw the un-narrowed revision, so the server mounts and carries
@@ -839,7 +839,7 @@ class TestTheRuntimePathAppliesTheProjection:
         ):
             return asyncio.run(
                 rt._mirrored_session_mcp(
-                    "kirocrew", work_dir=rt._work_dir, session_key="s-owner", channel_id="c-1"
+                    "ajcrew", work_dir=rt._work_dir, session_key="s-owner", channel_id="c-1"
                 )
             )
 
@@ -853,22 +853,22 @@ class TestTheRuntimePathAppliesTheProjection:
         """
         _write_spec(
             agents_dir,
-            servers={"kirocrew-core": dict(_CORE)},
-            tools=["@kirocrew-core"],
+            servers={"ajcrew-core": dict(_CORE)},
+            tools=["@ajcrew-core"],
         )
         rt = _codex_runtime(tmp_path)
         rt._agent_capabilities = {"mcpCapabilities": dict(_CODEX_1_11_CAPS)}
         out = self._projected(
             rt,
-            [_stub("kirocrew-core"), _stub("never-referenced")],
-            referenced=frozenset({"kirocrew-core"}),
+            [_stub("ajcrew-core"), _stub("never-referenced")],
+            referenced=frozenset({"ajcrew-core"}),
         )
         assert out is not None
         names = set(_by_name(out.servers))
         assert "never-referenced" not in names
         # And the referenced one IS mounted: the rule withholds an ungranted server,
         # it does not un-pool the session.
-        assert "kirocrew-core" in names
+        assert "ajcrew-core" in names
 
     def test_a_stub_wrapping_a_withheld_server_cannot_re_add_it(self, tmp_path, agents_dir):
         """One owner for both halves. A stub carries the name of the entry it rewrites,
@@ -889,33 +889,33 @@ class TestTheRuntimePathAppliesTheProjection:
         """The deny pairs the runtime hands the session handle, from the array's own parse."""
         _write_spec(
             agents_dir,
-            servers={"kirocrew-core": {**_CORE, "disabledTools": ["spawn_run"]}},
-            tools=["@kirocrew-core"],
+            servers={"ajcrew-core": {**_CORE, "disabledTools": ["spawn_run"]}},
+            tools=["@ajcrew-core"],
         )
         rt = _codex_runtime(tmp_path)
         rt._agent_capabilities = {"mcpCapabilities": dict(_CODEX_1_11_CAPS)}
         out = self._projected(rt, [], referenced=frozenset())
         assert out is not None
-        assert ("kirocrew-core", "spawn_run") in out.denied_tools
+        assert ("ajcrew-core", "spawn_run") in out.denied_tools
         # The server itself still mounts: the restriction narrows a tool, it does not
         # cost the session its control plane.
-        assert "kirocrew-core" in set(_by_name(out.servers))
+        assert "ajcrew-core" in set(_by_name(out.servers))
 
     def test_the_session_identity_rides_the_element(self, tmp_path, agents_dir):
         """A codex stdio child starts from ``env_clear()`` plus an allowlist, so the
         session key reaches Crew's control plane only if the ELEMENT carries it."""
         _write_spec(
             agents_dir,
-            servers={"kirocrew-core": dict(_CORE)},
-            tools=["@kirocrew-core"],
+            servers={"ajcrew-core": dict(_CORE)},
+            tools=["@ajcrew-core"],
         )
         rt = _codex_runtime(tmp_path)
         rt._agent_capabilities = {"mcpCapabilities": dict(_CODEX_1_11_CAPS)}
         out = self._projected(rt, [], referenced=frozenset())
         assert out is not None
-        env = _env(_by_name(out.servers)["kirocrew-core"])
-        assert env["KIROCREW_SESSION_KEY"] == "s-owner"
-        assert env["KIROCREW_CHANNEL_ID"] == "c-1"
+        env = _env(_by_name(out.servers)["ajcrew-core"])
+        assert env["AJCREW_SESSION_KEY"] == "s-owner"
+        assert env["AJCREW_CHANNEL_ID"] == "c-1"
 
     def test_a_host_with_no_mirror_takes_no_projection(self, tmp_path):
         """kiro and KAS reach their servers natively, so this answers None and the
@@ -929,7 +929,7 @@ class TestTheRuntimePathAppliesTheProjection:
             assert (
                 asyncio.run(
                     rt._mirrored_session_mcp(
-                        "kirocrew", work_dir=str(tmp_path), session_key="s", channel_id="c"
+                        "ajcrew", work_dir=str(tmp_path), session_key="s", channel_id="c"
                     )
                 )
                 is None
@@ -939,24 +939,24 @@ class TestTheRuntimePathAppliesTheProjection:
 def test_granted_dashboard_is_rebuilt_and_bound(agents_dir, monkeypatch):
     _write_spec(
         agents_dir,
-        servers={"kirocrew-dashboard": {"command": "/untrusted", "args": []}},
-        tools=["@kirocrew-dashboard"],
+        servers={"ajcrew-dashboard": {"command": "/untrusted", "args": []}},
+        tools=["@ajcrew-dashboard"],
     )
     original = session_mcp.managed_mcp_spec_entry
 
     def managed(name, **kwargs):
-        if name == "kirocrew-dashboard":
-            return {"command": "/opt/kirocrew", "args": ["mcp-dashboard"]}
+        if name == "ajcrew-dashboard":
+            return {"command": "/opt/ajcrew", "args": ["mcp-dashboard"]}
         return original(name)
 
     monkeypatch.setattr(session_mcp, "managed_mcp_spec_entry", managed)
     projection = codex_projection(
-        "kirocrew", session_key="dashboard:owner", session_token="issued-token"
+        "ajcrew", session_key="dashboard:owner", session_token="issued-token"
     )
-    dashboard = _by_name(projection.params["mcpServers"])["kirocrew-dashboard"]
-    assert dashboard["command"] == "/opt/kirocrew"
+    dashboard = _by_name(projection.params["mcpServers"])["ajcrew-dashboard"]
+    assert dashboard["command"] == "/opt/ajcrew"
     assert dashboard["args"] == ["mcp-dashboard"]
-    assert _env(dashboard)["KIROCREW_SESSION_KEY"] == "dashboard:owner"
+    assert _env(dashboard)["AJCREW_SESSION_KEY"] == "dashboard:owner"
     assert "issued-token" in _env(dashboard).values()
 
 
@@ -965,32 +965,32 @@ def test_dashboard_broker_mount_keeps_spec_restrictions(agents_dir, restricted):
     entry = {"command": "/unused"}
     if restricted:
         entry["disabledTools"] = ["session_send"]
-    _write_spec(agents_dir, servers={"kirocrew-dashboard": entry}, tools=["@kirocrew-dashboard"])
+    _write_spec(agents_dir, servers={"ajcrew-dashboard": entry}, tools=["@ajcrew-dashboard"])
     projected = codex_projection(
-        "kirocrew",
-        stub_server_names=("kirocrew-dashboard",),
-        stub_elements=[_stub("kirocrew-dashboard")],
+        "ajcrew",
+        stub_server_names=("ajcrew-dashboard",),
+        stub_elements=[_stub("ajcrew-dashboard")],
     )
-    assert ("kirocrew-dashboard" in _by_name(projected.params["mcpServers"])) is not restricted
+    assert ("ajcrew-dashboard" in _by_name(projected.params["mcpServers"])) is not restricted
 
 
 @pytest.mark.parametrize(
     "tools,entry",
     [
         ([], {"command": "/unused"}),
-        (["@kirocrew-dashboard"], {"command": "/unused", "disabled": True}),
+        (["@ajcrew-dashboard"], {"command": "/unused", "disabled": True}),
     ],
 )
 def test_dashboard_grant_is_not_created_by_identity(agents_dir, tools, entry):
-    _write_spec(agents_dir, servers={"kirocrew-dashboard": entry}, tools=tools)
+    _write_spec(agents_dir, servers={"ajcrew-dashboard": entry}, tools=tools)
     projected = codex_projection(
-        "kirocrew",
+        "ajcrew",
         session_key="dashboard:owner",
         session_token="owner-token",
-        stub_server_names=("kirocrew-dashboard",),
-        stub_elements=[_stub("kirocrew-dashboard")],
+        stub_server_names=("ajcrew-dashboard",),
+        stub_elements=[_stub("ajcrew-dashboard")],
     )
-    assert "kirocrew-dashboard" not in _by_name(projected.params["mcpServers"])
+    assert "ajcrew-dashboard" not in _by_name(projected.params["mcpServers"])
 
 
 @pytest.mark.parametrize("ambient", [None, "false"])

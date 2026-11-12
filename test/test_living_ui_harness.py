@@ -28,10 +28,10 @@ from typing import Any
 import pytest
 from skill_script_helpers import load_skill_script
 
-from kiro_crew import dashboard_frame
+from aj_crew import dashboard_frame
 
 ROOT = Path(__file__).resolve().parents[1]
-HARNESS = ROOT / "src" / "kiro_crew" / "builtin_skills" / "living-ui" / "scripts" / "harness.py"
+HARNESS = ROOT / "src" / "aj_crew" / "builtin_skills" / "living-ui" / "scripts" / "harness.py"
 WEB = ROOT / "website" / "src"
 WIDGET_SRCDOC = WEB / "lib" / "widgetSrcdoc.ts"
 WIDGET_FRAME = WEB / "components" / "WidgetFrame.tsx"
@@ -507,9 +507,9 @@ def test_read_fields_accepts_a_leading_byte_order_mark(
 def test_imports_nothing_that_could_open_a_socket() -> None:
     """The page is a file and nothing serves it, so a new import is a choice made here.
 
-    ``kiro_crew`` is imported for the host's own Dashboard frame code, which builds
+    ``aj_crew`` is imported for the host's own Dashboard frame code, which builds
     markup and opens nothing. ``subprocess`` only re-runs this script under the
-    interpreter ``KIROCREW_RUNTIME_PYTHON`` names; ``os`` reads that variable and
+    interpreter ``AJCREW_RUNTIME_PYTHON`` names; ``os`` reads that variable and
     the script's own path; ``typing`` holds an annotation.
     """
     tree = ast.parse(HARNESS.read_text(encoding="utf-8"))
@@ -524,7 +524,7 @@ def test_imports_nothing_that_could_open_a_socket() -> None:
         "argparse",
         "html",
         "json",
-        "kiro_crew",
+        "aj_crew",
         "os",
         "pathlib",
         "re",
@@ -679,7 +679,7 @@ def test_each_push_is_the_next_patch_of_the_same_read(harness: Any) -> None:
     pushes = (("next.json", {"n": 2}), ("later.json", {"m": "x"}))
     config = _config(harness.dashboard_page("<p>x</p>", {"n": 1}, pushes))
     island = re.search(
-        r'<script type="application/json" id="kirocrew-dashboard-data">(.*?)</script>',
+        r'<script type="application/json" id="ajcrew-dashboard-data">(.*?)</script>',
         config["body"],
     )
     assert island, "the frame body carries no data island"
@@ -721,7 +721,7 @@ const island = { textContent: ISLAND };
 globalThis.document = {
   readyState: 'loading',
   documentElement: { setAttribute() {}, lang: '' },
-  getElementById: (id) => (id === 'kirocrew-dashboard-data' ? island : null),
+  getElementById: (id) => (id === 'ajcrew-dashboard-data' ? island : null),
   querySelectorAll: (selector) => (selector === '[data-dashboard-field]' ? [cell] : []),
 };
 """
@@ -730,10 +730,10 @@ globalThis.document = {
 #: preview's two pushes, sent from the parent the way its page script sends them.
 _FRAME_SCENARIO = r"""
 const heard = [];
-window.kirocrew.subscribe('n', (value, name) => heard.push([name, value]));
-addEventListener('kirocrew-dashboard', () => heard.push(['refill', window.kirocrew.fields.n]));
+window.ajcrew.subscribe('n', (value, name) => heard.push([name, value]));
+addEventListener('ajcrew-dashboard', () => heard.push(['refill', window.ajcrew.fields.n]));
 const look = () => ({
-  fields: { ...window.kirocrew.fields }, cell: cell.textContent, heard: heard.splice(0),
+  fields: { ...window.ajcrew.fields }, cell: cell.textContent, heard: heard.splice(0),
   posted: posted.splice(0),
 });
 const out = [look()];
@@ -757,7 +757,7 @@ def test_the_frame_answers_fields_and_subscribe_as_the_host_does(harness: Any) -
     assert node is not None, "Node is needed on PATH to run the frame's bootstrap"
     pushes = (("next.json", {"n": 5}), ("later.json", {"m": "x"}))
     config = _config(harness.dashboard_page("<p>x</p>", {"n": 2, "m": "a"}, pushes))
-    island = config["body"].split('id="kirocrew-dashboard-data">', 1)[1].split("</script>", 1)[0]
+    island = config["body"].split('id="ajcrew-dashboard-data">', 1)[1].split("</script>", 1)[0]
     program = "\n".join(
         (
             f"const ISLAND = {json.dumps(island)};",
@@ -838,7 +838,7 @@ def test_the_dashboard_mode_reruns_under_the_runtime_python(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """A Python that cannot import Kiro Crew hands the run to the one that can, once."""
+    """A Python that cannot import Aj Crew hands the run to the one that can, once."""
     monkeypatch.setattr(harness, "_host_frame", lambda: None)
     view = tmp_path / "view.html"
     view.write_text('<b data-dashboard-field="n">-</b>', encoding="utf-8")
@@ -856,7 +856,7 @@ def test_the_dashboard_mode_reruns_under_the_runtime_python(
 
     monkeypatch.setattr(harness.subprocess, "call", bounded)
     monkeypatch.delenv("LIVING_UI_HARNESS_REEXEC", raising=False)
-    monkeypatch.setenv("KIROCREW_RUNTIME_PYTHON", sys.executable)
+    monkeypatch.setenv("AJCREW_RUNTIME_PYTHON", sys.executable)
     assert harness.main(argv) == 0
     assert started == [([sys.executable, "-I", "-B", str(HARNESS), *argv], "1")]
     config = _config(out.read_text(encoding="utf-8"))
@@ -866,12 +866,12 @@ def test_the_dashboard_mode_reruns_under_the_runtime_python(
     )
     out.unlink()
     capsys.readouterr()
-    refusal = "frames the page with Kiro Crew's own code"
-    monkeypatch.delenv("KIROCREW_RUNTIME_PYTHON")
+    refusal = "frames the page with Aj Crew's own code"
+    monkeypatch.delenv("AJCREW_RUNTIME_PYTHON")
     assert harness.main(argv) == 2
     assert refusal in capsys.readouterr().err
     # The run already started under the runtime Python does not start another.
-    monkeypatch.setenv("KIROCREW_RUNTIME_PYTHON", sys.executable)
+    monkeypatch.setenv("AJCREW_RUNTIME_PYTHON", sys.executable)
     monkeypatch.setenv("LIVING_UI_HARNESS_REEXEC", "1")
     assert harness.main(argv) == 2
     assert refusal in capsys.readouterr().err

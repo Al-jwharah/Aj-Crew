@@ -1,9 +1,9 @@
 """MCP discovery's facade keeps the patch seams the one module had.
 
-``kiro_crew.mcp_discovery`` is a mirror facade (:mod:`kiro_crew._facade_mirror`) over six
+``aj_crew.mcp_discovery`` is a mirror facade (:mod:`aj_crew._facade_mirror`) over six
 sibling owners, and keeps the discovery passes for itself: ``probe_all`` and the
 discover-and-sync step. Callers, tests and documents still reach every name as
-``kiro_crew.mcp_discovery.<name>``, and the moved code reads its names as plain module
+``aj_crew.mcp_discovery.<name>``, and the moved code reads its names as plain module
 globals, so a patch through the facade reaches that code only because the mirror writes
 it into every module holding the name.
 
@@ -27,7 +27,7 @@ import facade_mirror_scan
 import pytest
 import source_corpus
 
-from kiro_crew import _facade_mirror, mcp_discovery
+from aj_crew import _facade_mirror, mcp_discovery
 
 pytestmark = pytest.mark.xdist_group(name="tree_scan_mcp_discovery_facade")
 
@@ -35,16 +35,16 @@ pytestmark = pytest.mark.xdist_group(name="tree_scan_mcp_discovery_facade")
 #: the same for every facade, so it is written once there and parametrized per module.
 SHARED_FACADE_CHECKS = ("known_seams", "corpus_gate")
 
-FACADE = "kiro_crew.mcp_discovery"
+FACADE = "aj_crew.mcp_discovery"
 SRC_DIR = Path(mcp_discovery.__file__).resolve().parent
 #: The owners, lowest layer first.
 OWNERS = (
-    "kiro_crew.mcp_discovery_server_info",
-    "kiro_crew.mcp_discovery_probe_state",
-    "kiro_crew.mcp_discovery_managed",
-    "kiro_crew.mcp_discovery_config",
-    "kiro_crew.mcp_discovery_remote",
-    "kiro_crew.mcp_discovery_probe",
+    "aj_crew.mcp_discovery_server_info",
+    "aj_crew.mcp_discovery_probe_state",
+    "aj_crew.mcp_discovery_managed",
+    "aj_crew.mcp_discovery_config",
+    "aj_crew.mcp_discovery_remote",
+    "aj_crew.mcp_discovery_probe",
 )
 _THIS_FILE = Path(__file__).resolve()
 
@@ -183,7 +183,7 @@ def test_the_facade_binds_the_discovery_passes_it_keeps() -> None:
         "sync_to_agent_config",
         "_SYNC_MUTEX",
         "sync_discovered_servers",
-        "kirocrew_managed_names",
+        "ajcrew_managed_names",
         "register_servers_for_cc",
     }
     index = _index()
@@ -199,7 +199,7 @@ def test_probe_server_and_the_private_loop_that_re_enters_it_share_one_owner() -
     """``probe_server`` hands a local probe to ``_probe_on_private_loop``, which calls
     ``probe_server`` again on its own loop. Owners import in one direction only, so the
     two must be defined in the same owner, and the facade binds neither."""
-    probe = sys.modules["kiro_crew.mcp_discovery_probe"]
+    probe = sys.modules["aj_crew.mcp_discovery_probe"]
     for name in ("probe_server", "_probe_on_private_loop"):
         assert getattr(mcp_discovery, name).__globals__ is vars(probe), name
     assert "_probe_on_private_loop" not in vars(mcp_discovery)
@@ -212,7 +212,7 @@ def _home_imports() -> dict[str, tuple[str, str]]:
     for owner in _index().owners:
         for node in ast.parse(_owner_path(owner).read_text(encoding="utf-8")).body:
             if isinstance(node, ast.ImportFrom) and node.module and not node.level:
-                if not node.module.startswith("kiro_crew") or node.module in family:
+                if not node.module.startswith("aj_crew") or node.module in family:
                     continue
                 for alias in node.names:
                     if f"{node.module}.{alias.name}" not in family:
@@ -236,7 +236,7 @@ def _home_manifest() -> dict[str, tuple[str, str]]:
 
 def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers() -> None:
     """An owner binds these by import, so the facade names each one from its home module
-    under ``TYPE_CHECKING`` and ``from kiro_crew.mcp_discovery import safe_read_file``
+    under ``TYPE_CHECKING`` and ``from aj_crew.mcp_discovery import safe_read_file``
     type-checks as it did before the split."""
     served = set(_index().exports)
     expected = {name: home for name, home in _home_imports().items() if name in served}
@@ -246,11 +246,11 @@ def test_every_name_served_from_outside_the_family_is_visible_to_type_checkers()
 
 def test_the_family_logs_under_the_facade_name() -> None:
     """One logger, still named for the facade module, held by every module that logs:
-    ``caplog`` filters and levels keyed on ``kiro_crew.mcp_discovery`` keep seeing the
+    ``caplog`` filters and levels keyed on ``aj_crew.mcp_discovery`` keep seeing the
     probes' and the config readers' records."""
     assert mcp_discovery.logger.name == FACADE
     loggers = {m.__name__: vars(m)["logger"] for m in _family() if "logger" in vars(m)}
-    assert {FACADE, "kiro_crew.mcp_discovery_probe"} <= set(loggers)
+    assert {FACADE, "aj_crew.mcp_discovery_probe"} <= set(loggers)
     others = sorted(name for name, value in loggers.items() if value is not mcp_discovery.logger)
     assert others == []
 

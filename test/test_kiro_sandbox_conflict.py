@@ -1,14 +1,14 @@
-"""kiro-cli's own sandbox stops Kiro Crew's MCP servers from starting.
+"""kiro-cli's own sandbox stops Aj Crew's MCP servers from starting.
 
 With ``"sandbox": true`` in ``~/.kiro/settings/amazon-internal.json`` on macOS,
-kiro-cli confines itself and the MCP servers it starts. ``kirocrew-core`` fails to
+kiro-cli confines itself and the MCP servers it starts. ``ajcrew-core`` fails to
 start there, so every session ends with kiro-cli's own words::
 
     JSON-RPC error: {'code': -32603, 'message': 'Internal error', 'data':
-    {'details': 'mcp-client(kirocrew-core): initial connection or tool
+    {'details': 'mcp-client(ajcrew-core): initial connection or tool
     synchronization failed'}}
 
-and ``kirocrew doctor`` was all green, because its MCP probe starts the server
+and ``ajcrew doctor`` was all green, because its MCP probe starts the server
 outside that sandbox. These tests pin both surfaces naming the setting and the fix:
 the session's start error, and a doctor row that is fatal only when a selected
 harness actually runs kiro-cli.
@@ -31,23 +31,23 @@ from acp_runtime_helpers import (
     _stop_reader,
 )
 
-from kiro_crew import cli_doctor, kiro_sandbox_conflict, sandbox
-from kiro_crew.acp.client import AcpClient
-from kiro_crew.acp.session_handle import AcpRuntimeError
-from kiro_crew.acp.transport_errors import AcpError
-from kiro_crew.acp.types import ACP_BACKEND_KAS, METHOD_SESSION_NEW, METHOD_SET_MODEL
-from kiro_crew.agent_sdk.backends import (
+from aj_crew import cli_doctor, kiro_sandbox_conflict, sandbox
+from aj_crew.acp.client import AcpClient
+from aj_crew.acp.session_handle import AcpRuntimeError
+from aj_crew.acp.transport_errors import AcpError
+from aj_crew.acp.types import ACP_BACKEND_KAS, METHOD_SESSION_NEW, METHOD_SET_MODEL
+from aj_crew.agent_sdk.backends import (
     ACP_BACKEND_CLAUDE,
     ACP_BACKEND_DEEPSEEK,
     ACP_BACKEND_KIRO,
 )
-from kiro_crew.doctor_checks import confinement
-from kiro_crew.testing.wait import await_until
+from aj_crew.doctor_checks import confinement
+from aj_crew.testing.wait import await_until
 
 #: The reporter's error ``data``, verbatim from the issue.
 _REPORTED = (
     "{'code': -32603, 'message': 'Internal error', 'data': {'details': "
-    "'mcp-client(kirocrew-core): initial connection or tool synchronization failed'}}"
+    "'mcp-client(ajcrew-core): initial connection or tool synchronization failed'}}"
 )
 
 
@@ -78,7 +78,7 @@ class TestSessionStartHint:
         assert f'"{key}": true' in hint
         assert f'Set "{key}" to false' in hint
         assert "start a new session" in hint
-        assert "kirocrew-core" in hint
+        assert "ajcrew-core" in hint
 
     def test_silent_when_the_setting_is_off(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """The same error has other causes; without the setting, claim none."""
@@ -93,17 +93,17 @@ class TestSessionStartHint:
 
     def test_silent_for_a_third_party_server(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _host(monkeypatch, platform="darwin", enabled=True)
-        other = _REPORTED.replace("kirocrew-core", "github")
+        other = _REPORTED.replace("ajcrew-core", "github")
 
         assert kiro_sandbox_conflict.session_start_hint(other, ACP_BACKEND_KIRO) is None
 
     def test_names_the_crew_server_that_failed(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _host(monkeypatch, platform="darwin", enabled=True)
-        sibling = _REPORTED.replace("kirocrew-core", "kirocrew-cron")
+        sibling = _REPORTED.replace("ajcrew-core", "ajcrew-cron")
 
         hint = kiro_sandbox_conflict.session_start_hint(sibling, ACP_BACKEND_KIRO)
 
-        assert hint is not None and "mcp-client(kirocrew-cron)" in hint
+        assert hint is not None and "mcp-client(ajcrew-cron)" in hint
 
     def test_tier_off_never_gets_the_bare_advice(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """With agent.sandbox off, the plain advice leaves no confinement at all."""
@@ -144,13 +144,13 @@ class TestSessionStartHint:
     def test_kas_is_hinted_only_on_the_relay_route(
         self, monkeypatch: pytest.MonkeyPatch, bundle: bool, hinted: bool
     ) -> None:
-        """Relay KAS runs inside kiro-cli; Kiro Crew's own KAS bundle does not."""
-        from kiro_crew.config.loader import KiroCrewConfig
+        """Relay KAS runs inside kiro-cli; Aj Crew's own KAS bundle does not."""
+        from aj_crew.config.loader import AjCrewConfig
 
         _host(monkeypatch, platform="darwin", enabled=True)
-        cfg = KiroCrewConfig()
+        cfg = AjCrewConfig()
         cfg.agent.kas_bundle = bundle
-        monkeypatch.setattr(KiroCrewConfig, "load", classmethod(lambda cls: cfg))
+        monkeypatch.setattr(AjCrewConfig, "load", classmethod(lambda cls: cfg))
 
         hint = kiro_sandbox_conflict.session_start_hint(_REPORTED, ACP_BACKEND_KAS)
 
@@ -175,7 +175,7 @@ def _error_frame(req_id: int) -> MagicMock:
         "message": "Internal error",
         "data": {
             "details": (
-                "mcp-client(kirocrew-core): initial connection or tool synchronization failed"
+                "mcp-client(ajcrew-core): initial connection or tool synchronization failed"
             )
         },
     }
@@ -207,7 +207,7 @@ class TestSessionStartErrorCarriesTheHint:
         emitted = _flat(str(excinfo.value))
         settings_path, key = sandbox.kiro_internal_sandbox_switch()
         assert emitted.startswith("JSON-RPC error: ")
-        assert "mcp-client(kirocrew-core)" in emitted
+        assert "mcp-client(ajcrew-core)" in emitted
         assert f'{settings_path} sets "{key}": true' in emitted
         assert f'Set "{key}" to false' in emitted
 
@@ -272,7 +272,7 @@ _RUNTIME_ERROR = {
     "code": -32603,
     "message": "Internal error",
     "data": {
-        "details": "mcp-client(kirocrew-core): initial connection or tool synchronization failed"
+        "details": "mcp-client(ajcrew-core): initial connection or tool synchronization failed"
     },
 }
 
@@ -319,7 +319,7 @@ class TestRuntimeSessionStartErrorCarriesTheHint:
         exc = await _runtime_session_error()
 
         assert "Likely cause" not in str(exc)
-        assert "mcp-client(kirocrew-core)" in str(exc)
+        assert "mcp-client(ajcrew-core)" in str(exc)
 
 
 class TestDoctorRow:

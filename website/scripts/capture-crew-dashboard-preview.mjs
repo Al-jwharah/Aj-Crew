@@ -34,7 +34,7 @@ const STAGED = `<!doctype html><html><head><style>
     <div class="card"><div class="n">1</div><div class="l">Open PR</div></div>
   </div>
   <ul><li>Weekly metrics refresh: on track</li><li>Query cost review: waiting on you</li><li>Schema change: in review</li></ul>
-  <script>parent.postMessage({type:'kirocrew-dashboard:ready'},'*')</script>
+  <script>parent.postMessage({type:'ajcrew-dashboard:ready'},'*')</script>
 </body></html>`
 
 const browser = await chromium.launch()
@@ -55,10 +55,10 @@ async function open({ theme, staged = true, viewport = { width: 1360, height: 82
     const url = new URL(route.request().url())
     const path = url.pathname
     const json = (body, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
-    if (path === '/api/members') return json({ members: MEMBERS, default_agent: 'kirocrew' })
+    if (path === '/api/members') return json({ members: MEMBERS, default_agent: 'ajcrew' })
     if (path === '/api/crons') return json({ jobs: [] })
     if (path === '/api/webhooks') return json({ tokens: [] })
-    if (path === '/api/agents') return json({ agents: [], default_agent: 'kirocrew' })
+    if (path === '/api/agents') return json({ agents: [], default_agent: 'ajcrew' })
     if (path === '/api/sandbox-doc' && route.request().method() === 'POST') {
       // A data: URL of exactly what the host built, so the frame shows the real srcdoc.
       const { html } = JSON.parse(route.request().postData() || '{}')

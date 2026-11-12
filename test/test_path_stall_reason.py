@@ -15,10 +15,10 @@ from pathlib import Path
 
 import pytest
 
-from kiro_crew import security
-from kiro_crew.hooks import TOOL_DENY, HookManager, HooksConfig
-from kiro_crew.llm_helpers import _edit_target_denial
-from kiro_crew.security import paths
+from aj_crew import security
+from aj_crew.hooks import TOOL_DENY, HookManager, HooksConfig
+from aj_crew.llm_helpers import _edit_target_denial
+from aj_crew.security import paths
 
 _NOW = 1_000_000.0
 

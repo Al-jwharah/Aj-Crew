@@ -42,9 +42,9 @@ const BOARD = {
   asks: { it_tea: ['Oolong', 'Green', 'Both, oolong first'] },
 }
 const WORKERS = [
-  { key: 'w-tea', title: 'Drinks menu', agent: 'kirocrew-worker', status: 'idle', group: 'with_conductor', last_activity: ago(4), ledger_item: 'it_tea', created_by: 'root' },
-  { key: 'w-poster', title: 'Opening poster', agent: 'kirocrew-worker', status: 'working', group: 'working', last_activity: ago(1), ledger_item: 'it_poster', created_by: 'root' },
-  { key: 'w-price', title: 'Price list', agent: 'kirocrew-worker', status: 'needs_approval', group: 'approval', last_activity: ago(2), ledger_item: 'it_price', created_by: 'root' },
+  { key: 'w-tea', title: 'Drinks menu', agent: 'ajcrew-worker', status: 'idle', group: 'with_conductor', last_activity: ago(4), ledger_item: 'it_tea', created_by: 'root' },
+  { key: 'w-poster', title: 'Opening poster', agent: 'ajcrew-worker', status: 'working', group: 'working', last_activity: ago(1), ledger_item: 'it_poster', created_by: 'root' },
+  { key: 'w-price', title: 'Price list', agent: 'ajcrew-worker', status: 'needs_approval', group: 'approval', last_activity: ago(2), ledger_item: 'it_price', created_by: 'root' },
 ]
 Object.assign(api, {
   crewWorkers: async () => ({ root: 'root', workers: WORKERS }),
@@ -53,7 +53,7 @@ Object.assign(api, {
 })
 if (params.get('approval') !== '0') {
   store.dispatch(sseSlots([
-    { key: 'root', title: 'Tea shop launch', messages: 3, crew_mode_root: true, agent: 'kirocrew-conductor', agent_kind: 'template' },
+    { key: 'root', title: 'Tea shop launch', messages: 3, crew_mode_root: true, agent: 'ajcrew-conductor', agent_kind: 'template' },
     {
       key: 'w-price', title: 'Price list', messages: 2, crew_root: 'root', created_by: 'root', pending_approval: true,
       pending_approval_info: { origin: 'native', tool: 'fs_write', request_id: 'req-1', request_mid: 'mid-1', tool_purpose: 'Save the price list', tool_input: '{"path": "/tmp/prices.md"}' },

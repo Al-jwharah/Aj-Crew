@@ -30,16 +30,16 @@ from aiohttp.test_utils import make_mocked_request
 from crew_log_drain import assert_drained
 from off_loop_helpers import off_loop
 
-from kiro_crew.apps.builtins.issue_radar.backend import (
+from aj_crew.apps.builtins.issue_radar.backend import (
     crew_routes,
     crew_store,
     routes,
     store,
 )
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log.schema import KIND_SESSION
-from kiro_crew.crew_log.store import CrewLog
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log.schema import KIND_SESSION
+from aj_crew.crew_log.store import CrewLog
 
 OWNER, REPO = "kirodotdev", "KiroCrew"  # brand-ok: the repository name
 BASE = "/api/apps/issue-radar"
@@ -56,7 +56,7 @@ def _isolate_crew_log(case: unittest.TestCase) -> None:
     """Own crew log data home, crew log on, writer state reset around *case*."""
     home = tempfile.TemporaryDirectory()
     case.addCleanup(home.cleanup)
-    env = mock.patch.dict(os.environ, {"KIROCREW_HOME": home.name, crew_log_emit.CREW_LOG_ENV: "1"})
+    env = mock.patch.dict(os.environ, {"AJCREW_HOME": home.name, crew_log_emit.CREW_LOG_ENV: "1"})
     env.start()
     case.addCleanup(env.stop)
     crew_log_emit.reset_caches()
@@ -77,7 +77,7 @@ def _crew(root: Path, name: str = "Andromeda") -> dict:
     crew = crew_store.create_crew(OWNER, REPO, {"name": name}, root)
     sid = f"acp-{next(_SEQ)}"
     CrewLog.create(
-        KIND_SESSION, sid, owner="owner", agent="kirocrew", slot=crew_store.slot_key_for(crew["id"])
+        KIND_SESSION, sid, owner="owner", agent="ajcrew", slot=crew_store.slot_key_for(crew["id"])
     )
     _UNITS[crew["id"]] = sid
     return crew
@@ -608,7 +608,7 @@ class TitleHintDegradationTest(unittest.TestCase):
         _step(self.root, self.cid, 5109, "claimed", "claim", "mine")
 
     def test_an_unreadable_title_cache_still_folds_the_lane(self):
-        import kiro_crew.apps.builtins.issue_radar.backend.store as ir_store
+        import aj_crew.apps.builtins.issue_radar.backend.store as ir_store
 
         def boom(*a, **k):
             raise OSError("cache vanished mid-refresh")

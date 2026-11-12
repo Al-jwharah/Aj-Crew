@@ -7,7 +7,7 @@ serves a fleet as soon as one resolves, with no restart.
 
 Only the ``dev_fleet.repo_path`` half of the remedy can self-heal:
 ``_load_dev_fleet_cfg`` re-reads ``config.json`` on every call, whereas
-``KIROCREW_DEVFLEET_REPO`` is read off this process's own environment, which no
+``AJCREW_DEVFLEET_REPO`` is read off this process's own environment, which no
 outside shell can change. The setup card's copy says so.
 """
 
@@ -17,7 +17,7 @@ import asyncio
 
 import pytest
 
-from kiro_crew.apps.builtins.dev_fleet import repository, runtime, worktree_ops
+from aj_crew.apps.builtins.dev_fleet import repository, runtime, worktree_ops
 
 pytestmark = pytest.mark.asyncio
 
@@ -77,7 +77,7 @@ def _discovers(monkeypatch: pytest.MonkeyPatch, *results: str) -> list[int]:
     monkeypatch.setattr(repository, "_configured_main_repo", lambda: "")
     monkeypatch.setattr(repository, "_discover_main_repo", _discover)
     monkeypatch.setattr(repository, "_resolve_primary_checkout", lambda p: p)
-    monkeypatch.setattr(repository, "_is_kirocrew_checkout", lambda p: True)
+    monkeypatch.setattr(repository, "_is_ajcrew_checkout", lambda p: True)
     monkeypatch.setattr(repository, "_repo_source_hint", lambda: "set dev_fleet.repo_path")
     return attempts
 
@@ -99,11 +99,11 @@ class TestTheLatchWaitsForAnAnswerWorthKeeping:
     async def test_the_first_attempt_that_resolves_latches(
         self, fresh_discovery, monkeypatch
     ) -> None:
-        attempts = _discovers(monkeypatch, "", "/somewhere/kirocrew")
+        attempts = _discovers(monkeypatch, "", "/somewhere/ajcrew")
         await repository.ensure_main_repo_discovered()
         assert repository.MAIN_REPO == ""
         await repository.ensure_main_repo_discovered()
-        assert repository.MAIN_REPO == "/somewhere/kirocrew"
+        assert repository.MAIN_REPO == "/somewhere/ajcrew"
         assert repository._DISCOVERY_DONE is True
         await repository.ensure_main_repo_discovered()
         assert len(attempts) == 2, "a resolved checkout is discovered once per process"
@@ -119,7 +119,7 @@ class TestTheLatchWaitsForAnAnswerWorthKeeping:
         latch: see ``TestACorrectedPathIsNotFrozenBehindTheLatch``.
         """
         attempts = _discovers(monkeypatch, "/somewhere/not-a-checkout")
-        monkeypatch.setattr(repository, "_is_kirocrew_checkout", lambda p: False)
+        monkeypatch.setattr(repository, "_is_ajcrew_checkout", lambda p: False)
         await repository.ensure_main_repo_discovered()
         await repository.ensure_main_repo_discovered()
         assert len(attempts) == 1
@@ -130,7 +130,7 @@ class TestTheLatchWaitsForAnAnswerWorthKeeping:
         self, fresh_discovery, monkeypatch
     ) -> None:
         """An embedded NUL follows the configured-path refusal, never a 500."""
-        malformed = "/somewhere/kirocrew\x00bad"
+        malformed = "/somewhere/ajcrew\x00bad"
         monkeypatch.setattr(
             repository, "_configured_main_repo_checked", lambda failed=None: (malformed, True)
         )
@@ -141,7 +141,7 @@ class TestTheLatchWaitsForAnAnswerWorthKeeping:
 
         assert repository.MAIN_REPO == malformed
         assert repository._DISCOVERY_DONE is True
-        with pytest.raises(repository.RepoUnreadable, match="not a Kiro Crew checkout"):
+        with pytest.raises(repository.RepoUnreadable, match="not an Aj Crew checkout"):
             repository._repo()
 
 
@@ -155,7 +155,7 @@ class TestNoVerdictOutlivesTheAttemptThatProducedIt:
         — and ``worktree remove``, ``update-ref -d`` and ``pip install -e`` run
         inside whatever that is.
         """
-        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not a Kiro Crew checkout: /gone")
+        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not an Aj Crew checkout: /gone")
         _discovers(monkeypatch, "")
         await repository.ensure_main_repo_discovered()
         assert repository._REPO_INVALID_MSG is None
@@ -177,7 +177,7 @@ class TestNoVerdictOutlivesTheAttemptThatProducedIt:
 
 class TestTheRouteOnlyPaysWhileUnresolved:
     async def test_a_resolved_install_runs_no_discovery(self, monkeypatch) -> None:
-        monkeypatch.setattr(repository, "MAIN_REPO", "/somewhere/kirocrew")
+        monkeypatch.setattr(repository, "MAIN_REPO", "/somewhere/ajcrew")
         ran = []
 
         async def _never() -> None:
@@ -198,7 +198,7 @@ class TestTheRouteOnlyPaysWhileUnresolved:
         monkeypatch.setattr(worktree_ops, "_background_tasks_disabled", lambda: False)
 
         async def _resolve() -> None:
-            monkeypatch.setattr(repository, "MAIN_REPO", "/somewhere/kirocrew")
+            monkeypatch.setattr(repository, "MAIN_REPO", "/somewhere/ajcrew")
 
         started: list[int] = []
 
@@ -240,7 +240,7 @@ class TestTheRouteOnlyPaysWhileUnresolved:
         monkeypatch.setattr(worktree_ops, "_background_tasks_disabled", lambda: True)
 
         async def _resolve() -> None:
-            monkeypatch.setattr(repository, "MAIN_REPO", "/somewhere/kirocrew")
+            monkeypatch.setattr(repository, "MAIN_REPO", "/somewhere/ajcrew")
 
         monkeypatch.setattr(repository, "ensure_main_repo_discovered", _resolve)
         await worktree_ops._ensure_repo_resolved()
@@ -266,7 +266,7 @@ def _configured_tiers(monkeypatch: pytest.MonkeyPatch, *, valid: bool) -> dict:
         lambda failed=None: (state["configured"], state["whole"]),
     )
     monkeypatch.setattr(repository, "_resolve_primary_checkout", lambda p: p)
-    monkeypatch.setattr(repository, "_is_kirocrew_checkout", lambda p: state["valid"])
+    monkeypatch.setattr(repository, "_is_ajcrew_checkout", lambda p: state["valid"])
     monkeypatch.setattr(repository, "_repo_source_hint", lambda: "set dev_fleet.repo_path")
 
     def _discover(configured: str | None = None) -> str:
@@ -296,14 +296,14 @@ class TestACorrectedPathIsNotFrozenBehindTheLatch:
         assert state["attempts"] == 1
         assert repository._REPO_INVALID_MSG is not None
 
-        state["configured"] = "/somewhere/kirocrew"
+        state["configured"] = "/somewhere/ajcrew"
         state["valid"] = True
         await repository.ensure_main_repo_discovered()
         assert state["attempts"] == 2, (
             "the operator corrected dev_fleet.repo_path, which tier 2 re-reads per "
             "call, so the latched verdict is about a string this process has left"
         )
-        assert repository.MAIN_REPO == "/somewhere/kirocrew"
+        assert repository.MAIN_REPO == "/somewhere/ajcrew"
         assert repository._REPO_INVALID_MSG is None
 
     async def test_an_unchanged_invalid_path_buys_no_second_attempt(
@@ -329,20 +329,18 @@ class TestACorrectedPathIsNotFrozenBehindTheLatch:
         would pay a re-resolution for a config nobody edited.
         """
         state = _configured_tiers(monkeypatch, valid=False)
-        state["configured"] = "/somewhere/kirocrew/wt/feature"
-        monkeypatch.setattr(
-            repository, "_resolve_primary_checkout", lambda p: "/somewhere/kirocrew"
-        )
+        state["configured"] = "/somewhere/ajcrew/wt/feature"
+        monkeypatch.setattr(repository, "_resolve_primary_checkout", lambda p: "/somewhere/ajcrew")
         await repository.ensure_main_repo_discovered()
-        assert repository.MAIN_REPO == "/somewhere/kirocrew"
-        assert repository._LATCHED_CONFIGURED == "/somewhere/kirocrew/wt/feature"
+        assert repository.MAIN_REPO == "/somewhere/ajcrew"
+        assert repository._LATCHED_CONFIGURED == "/somewhere/ajcrew/wt/feature"
         await repository.ensure_main_repo_discovered()
         assert state["attempts"] == 1
 
     async def test_an_env_set_path_wins_so_a_config_edit_cannot_reopen_it(
         self, fresh_discovery, monkeypatch
     ) -> None:
-        """``KIROCREW_DEVFLEET_REPO`` is read off this process's own environment.
+        """``AJCREW_DEVFLEET_REPO`` is read off this process's own environment.
 
         Env wins over config, so editing ``config.json`` underneath an env-set path
         changes nothing this process resolves: the compare stays equal, no attempt is
@@ -350,10 +348,10 @@ class TestACorrectedPathIsNotFrozenBehindTheLatch:
         Drives the real ``_configured_main_repo`` so the precedence is what is tested.
         """
         cfg = {"repo_path": "/somewhere/kirocrw"}
-        monkeypatch.setenv("KIROCREW_DEVFLEET_REPO", "/somewhere/kirocrw")
+        monkeypatch.setenv("AJCREW_DEVFLEET_REPO", "/somewhere/kirocrw")
         monkeypatch.setattr(repository, "_load_dev_fleet_cfg", lambda: cfg)
         monkeypatch.setattr(repository, "_resolve_primary_checkout", lambda p: p)
-        monkeypatch.setattr(repository, "_is_kirocrew_checkout", lambda p: False)
+        monkeypatch.setattr(repository, "_is_ajcrew_checkout", lambda p: False)
         monkeypatch.setattr(repository, "_repo_source_hint", lambda: "set by the env var")
         attempts: list[int] = []
 
@@ -366,7 +364,7 @@ class TestACorrectedPathIsNotFrozenBehindTheLatch:
         assert len(attempts) == 1
         assert repository._REPO_INVALID_MSG is not None
 
-        cfg["repo_path"] = "/somewhere/kirocrew"
+        cfg["repo_path"] = "/somewhere/ajcrew"
         await repository.ensure_main_repo_discovered()
         assert len(attempts) == 1, (
             "env wins over config, so a config edit changes nothing this process "
@@ -378,7 +376,7 @@ class TestACorrectedPathIsNotFrozenBehindTheLatch:
     ) -> None:
         monkeypatch.setattr(repository, "MAIN_REPO", "/somewhere/kirocrw")
         monkeypatch.setattr(
-            repository, "_REPO_INVALID_MSG", "not a Kiro Crew checkout: /somewhere/kirocrw"
+            repository, "_REPO_INVALID_MSG", "not an Aj Crew checkout: /somewhere/kirocrw"
         )
         monkeypatch.setattr(worktree_ops, "_refresher_task", None)
         monkeypatch.setattr(worktree_ops, "_background_tasks_disabled", lambda: False)
@@ -414,7 +412,7 @@ class TestAConfigReadThatFailedIsNotAConfigChange:
     async def test_a_partial_config_read_does_not_reopen_the_latch(self, monkeypatch) -> None:
         """The whole point: no whole read, no verdict about what the operator wants."""
         monkeypatch.setattr(repository, "_DISCOVERY_DONE", True)
-        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not a Kiro Crew checkout")
+        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not an Aj Crew checkout")
         monkeypatch.setattr(repository, "MAIN_REPO", "/opt/typo")
         monkeypatch.setattr(repository, "_LATCHED_CONFIGURED", "/opt/typo")
         monkeypatch.setattr(
@@ -433,7 +431,7 @@ class TestAConfigReadThatFailedIsNotAConfigChange:
         FAILED carries no evidence.
         """
         monkeypatch.setattr(repository, "_DISCOVERY_DONE", True)
-        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not a Kiro Crew checkout")
+        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not an Aj Crew checkout")
         monkeypatch.setattr(repository, "MAIN_REPO", "/opt/typo")
         monkeypatch.setattr(repository, "_LATCHED_CONFIGURED", "/opt/typo")
         monkeypatch.setattr(
@@ -445,7 +443,7 @@ class TestAConfigReadThatFailedIsNotAConfigChange:
         self, monkeypatch, tmp_path
     ) -> None:
         """Drives the real reader, so the flag is measured rather than stubbed."""
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         monkeypatch.setattr(loader_mod, "config_dir", lambda: tmp_path)
         cfg = tmp_path / "config.json"
@@ -460,11 +458,11 @@ class TestAConfigReadThatFailedIsNotAConfigChange:
 
     async def test_a_config_naming_no_path_is_a_whole_read(self, monkeypatch, tmp_path) -> None:
         """A parseable file carrying no ``repo_path`` is an answer, not a missing read."""
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         monkeypatch.setattr(loader_mod, "config_dir", lambda: tmp_path)
         (tmp_path / "config.json").write_text('{"dev_fleet": {}}', encoding="utf-8")
-        monkeypatch.delenv("KIROCREW_DEVFLEET_REPO", raising=False)
+        monkeypatch.delenv("AJCREW_DEVFLEET_REPO", raising=False)
         assert repository._configured_main_repo_checked() == ("", True)
 
     async def test_an_unresolvable_config_dir_is_a_partial_read(self, monkeypatch) -> None:
@@ -474,7 +472,7 @@ class TestAConfigReadThatFailedIsNotAConfigChange:
         flag, because this is the one path that reaches the caller without having read
         any file at all.
         """
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         def _boom() -> object:
             raise RuntimeError("no data home")
@@ -490,7 +488,7 @@ class TestAConfigReadThatFailedIsNotAConfigChange:
         or an unreachable network-backed home) must fold into ``whole=False`` rather
         than propagate.
         """
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         monkeypatch.setattr(loader_mod, "config_dir", lambda: tmp_path)
         (tmp_path / "config.json").write_text(
@@ -530,12 +528,12 @@ class TestTheUnreadableConfigIsNamedNotMistakenForAMissingCheckout:
         ``RepoUnreadable`` naming ``config.local.json`` ahead of the missing-checkout
         gate, so the operator learns the real cause.
         """
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         monkeypatch.setattr(loader_mod, "config_dir", lambda: tmp_path)
         (tmp_path / "config.json").write_text('{"dev_fleet": {}}', encoding="utf-8")
         (tmp_path / "config.local.json").write_text("{not json", encoding="utf-8")
-        monkeypatch.delenv("KIROCREW_DEVFLEET_REPO", raising=False)
+        monkeypatch.delenv("AJCREW_DEVFLEET_REPO", raising=False)
 
         await repository.ensure_main_repo_discovered()
 
@@ -551,7 +549,7 @@ class TestTheUnreadableConfigIsNamedNotMistakenForAMissingCheckout:
         No second pass over the config directory: ``_load_dev_fleet_cfg_checked``
         appends to the list it is handed as it reads each file once.
         """
-        from kiro_crew.config import loader as loader_mod
+        from aj_crew.config import loader as loader_mod
 
         monkeypatch.setattr(loader_mod, "config_dir", lambda: tmp_path)
         (tmp_path / "config.json").write_text('{"dev_fleet": {}}', encoding="utf-8")
@@ -589,7 +587,7 @@ class TestTheUnreadableConfigIsNamedNotMistakenForAMissingCheckout:
         )
         monkeypatch.setattr(repository, "_discover_main_repo", lambda configured=None: "/opt/kc")
         monkeypatch.setattr(repository, "_resolve_primary_checkout", lambda p: p)
-        monkeypatch.setattr(repository, "_is_kirocrew_checkout", lambda p: True)
+        monkeypatch.setattr(repository, "_is_ajcrew_checkout", lambda p: True)
         monkeypatch.setattr(repository, "_repo_source_hint", lambda: "set dev_fleet.repo_path")
         await repository.ensure_main_repo_discovered()
         assert repository.MAIN_REPO == "/opt/kc"
@@ -627,7 +625,7 @@ class TestAPartialReadAtDiscoveryLatchesNothing:
 
         def _discover(configured: str | None = None) -> str:
             calls.append(1)
-            return "/opt/inferred-kirocrew"
+            return "/opt/inferred-ajcrew"
 
         def _checked(failed: list[str] | None = None) -> tuple[str, bool]:
             if failed is not None:
@@ -639,7 +637,7 @@ class TestAPartialReadAtDiscoveryLatchesNothing:
         monkeypatch.setattr(repository, "_configured_main_repo_checked", _checked)
         monkeypatch.setattr(repository, "_discover_main_repo", _discover)
         monkeypatch.setattr(repository, "_resolve_primary_checkout", lambda p: p)
-        monkeypatch.setattr(repository, "_is_kirocrew_checkout", lambda p: True)
+        monkeypatch.setattr(repository, "_is_ajcrew_checkout", lambda p: True)
         await repository.ensure_main_repo_discovered()
         assert calls == []
         assert repository.MAIN_REPO == ""
@@ -671,7 +669,7 @@ class TestAPartialReadAtDiscoveryLatchesNothing:
 
         monkeypatch.setattr(repository, "_DISCOVERY_DONE", True)
         monkeypatch.setattr(repository, "MAIN_REPO", "/opt/latched-invalid")
-        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not a kirocrew checkout")
+        monkeypatch.setattr(repository, "_REPO_INVALID_MSG", "not an ajcrew checkout")
         monkeypatch.setattr(repository, "_invalid_resolution_is_stale", lambda: True)
         monkeypatch.setattr(repository, "_configured_main_repo_checked", _checked)
         monkeypatch.setattr(repository, "_discover_main_repo", lambda configured=None: "")
@@ -692,12 +690,12 @@ class TestAPartialReadAtDiscoveryLatchesNothing:
             repository, "_configured_main_repo_checked", lambda failed=None: ("", True)
         )
         monkeypatch.setattr(
-            repository, "_discover_main_repo", lambda configured=None: "/opt/inferred-kirocrew"
+            repository, "_discover_main_repo", lambda configured=None: "/opt/inferred-ajcrew"
         )
         monkeypatch.setattr(repository, "_resolve_primary_checkout", lambda p: p)
-        monkeypatch.setattr(repository, "_is_kirocrew_checkout", lambda p: True)
+        monkeypatch.setattr(repository, "_is_ajcrew_checkout", lambda p: True)
         await repository.ensure_main_repo_discovered()
-        assert repository.MAIN_REPO == "/opt/inferred-kirocrew"
+        assert repository.MAIN_REPO == "/opt/inferred-ajcrew"
         assert repository._DISCOVERY_DONE is True
         assert repository.MAIN_REPO_INFERRED is True
 
@@ -723,7 +721,7 @@ class TestAPartialReadAtDiscoveryLatchesNothing:
         )
         monkeypatch.setattr(repository, "_discover_main_repo", _discover)
         monkeypatch.setattr(repository, "_resolve_primary_checkout", lambda p: p)
-        monkeypatch.setattr(repository, "_is_kirocrew_checkout", lambda p: True)
+        monkeypatch.setattr(repository, "_is_ajcrew_checkout", lambda p: True)
         await repository.ensure_main_repo_discovered()
         assert seen == ["/opt/named-by-operator"]
         assert repository.MAIN_REPO == "/opt/named-by-operator"

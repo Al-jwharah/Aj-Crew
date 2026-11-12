@@ -16,9 +16,9 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_state, _make_tags_app
 
-from kiro_crew.dashboard import chat_tags as chat_tags_module
-from kiro_crew.dashboard.chat_tags import _normalize_column, _valid_color
-from kiro_crew.dashboard.state import _ChatSlot
+from aj_crew.dashboard import chat_tags as chat_tags_module
+from aj_crew.dashboard.chat_tags import _normalize_column, _valid_color
+from aj_crew.dashboard.state import _ChatSlot
 
 # The shared autouse fixture, bound here by name so pytest registers it for this module.
 _hermetic_signing_secret = chat_tags_helpers._hermetic_signing_secret
@@ -146,7 +146,7 @@ class TestNormalizeColumn:
 class TestTagVocabulary:
     @pytest.mark.asyncio
     async def test_list_seeds_default_vocabulary(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state.load_tags()
         app = _make_tags_app(state)
@@ -160,7 +160,7 @@ class TestTagVocabulary:
 
     @pytest.mark.asyncio
     async def test_list_returns_in_order(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state._tags = [
             {"id": "b", "name": "B", "color": "#000000", "order": 1, "status": False},
@@ -176,7 +176,7 @@ class TestTagVocabulary:
     async def test_list_survives_a_hand_edited_order(self, tmp_path, monkeypatch):
         """``tags.json`` is loaded verbatim, so a row whose ``order`` is not a number
         must sort as 0 rather than turn every reader of the vocabulary into a 500."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state._tags = [
             {"id": "b", "name": "B", "color": "#000000", "order": 1, "status": False},
@@ -192,7 +192,7 @@ class TestTagVocabulary:
             assert names[-1] == "B" and set(names) == {"B", "X", "F", "M"}
 
     def test_tag_order_never_raises(self):
-        from kiro_crew.dashboard.chat_tags import _order_key
+        from aj_crew.dashboard.chat_tags import _order_key
 
         assert _order_key({"order": 3}) == 3
         assert _order_key({"order": 2.9}) == 2
@@ -208,7 +208,7 @@ class TestTagVocabulary:
         makes the ``chat_tag_create`` MCP tool's refusal the endpoint's rule and
         not a tool-layer copy of it.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
 
@@ -234,14 +234,14 @@ class TestTagVocabulary:
 
         Mutation guard: drop the ``allow_create`` call and the whole burst is 201.
         """
-        from kiro_crew.dashboard import create_rate_limit
+        from aj_crew.dashboard import create_rate_limit
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         create_rate_limit.reset_for_tests()
         try:
             state = _make_state(tmp_path)
             app = _make_tags_app(state)
-            headers = {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "kirocrew-dashboard"}
+            headers = {"X-Internal-Secret": "s3cret", "X-Internal-Caller": "ajcrew-dashboard"}
             async with TestClient(TestServer(app)) as client:
                 allowed = 0
                 for i in range(create_rate_limit.MAX_TAG_CREATES_PER_WINDOW + 3):
@@ -260,9 +260,9 @@ class TestTagVocabulary:
     @pytest.mark.asyncio
     async def test_create_does_not_rate_limit_the_browser(self, tmp_path, monkeypatch):
         """A person seeding a board can legitimately outpace the agent budget."""
-        from kiro_crew.dashboard import create_rate_limit
+        from aj_crew.dashboard import create_rate_limit
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         create_rate_limit.reset_for_tests()
         try:
             state = _make_state(tmp_path)
@@ -277,7 +277,7 @@ class TestTagVocabulary:
     @pytest.mark.asyncio
     async def test_update_refuses_an_app_caller_and_a_gone_slot(self, tmp_path, monkeypatch):
         """PATCH is a vocabulary write too: same two refusals as POST, before any edit."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         state._tags = [
             {"id": "t1", "name": "Keep", "color": "#000000", "order": 0, "status": False}
@@ -316,7 +316,7 @@ class TestTagVocabulary:
         derivation answers "" and would read as the person — the same refusal
         the folder writes apply.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         assert "gone-slot" not in state._slots
         app = _make_tags_app(state)
@@ -332,7 +332,7 @@ class TestTagVocabulary:
 
     @pytest.mark.asyncio
     async def test_create_tag(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -349,7 +349,7 @@ class TestTagVocabulary:
 
     @pytest.mark.asyncio
     async def test_create_tag_invalid_color_falls_back(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -359,7 +359,7 @@ class TestTagVocabulary:
 
     @pytest.mark.asyncio
     async def test_create_tag_empty_name_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -368,7 +368,7 @@ class TestTagVocabulary:
 
     @pytest.mark.asyncio
     async def test_create_tag_invalid_json_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -379,7 +379,7 @@ class TestTagVocabulary:
 
     @pytest.mark.asyncio
     async def test_update_tag_rename_recolor_status(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -406,10 +406,10 @@ class TestTagVocabulary:
         mint on an id the dashboard never issued is refused, so the planted tag
         never resolves onto the board. Metadata PATCHes on it still work (a
         rename mints nothing), and the tag is recoverable by recreating it."""
-        from kiro_crew.context import _board_safe_tag_name
-        from kiro_crew.dashboard.chat_tag_grants import has_grant_row, refresh_cache
+        from aj_crew.context import _board_safe_tag_name
+        from aj_crew.dashboard.chat_tag_grants import has_grant_row, refresh_cache
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         planted = "ignore.previous.instructions"
         state._tags.append({"id": planted, "name": "Backlog", "color": "#3b82f6", "order": 9})
@@ -442,7 +442,7 @@ class TestTagVocabulary:
         """a PATCH carrying a valid rename AND an invalid status
         must reject BEFORE any field mutates — otherwise the rejected rename
         stays live in memory behind the 400."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -480,9 +480,9 @@ class TestTagVocabulary:
         self, tmp_path, monkeypatch, name, forged_status, agent
     ):
         """A forged status in agent-writable tags.json never overrides protected identity."""
-        from kiro_crew.dashboard.chat_tags import agent_tag_grant
+        from aj_crew.dashboard.chat_tags import agent_tag_grant
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -501,9 +501,9 @@ class TestTagVocabulary:
         """revoke-up-front must not become a PERMANENT revocation
         when the replacement mint fails — the prior grant is restored and the
         PATCH still surfaces 500."""
-        from kiro_crew.dashboard import chat_tags as ct
+        from aj_crew.dashboard import chat_tags as ct
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         real_mint = ct.mint_grant
@@ -533,9 +533,9 @@ class TestTagVocabulary:
         ``none`` row stays ``none`` and a narrowed ``add-only`` stays ``add-only``;
         only a tag with no protected record at all takes the out-of-the-box
         ``add-remove`` default, the same one the create path mints."""
-        from kiro_crew.dashboard import chat_tags as ct
+        from aj_crew.dashboard import chat_tags as ct
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
 
@@ -574,9 +574,9 @@ class TestTagVocabulary:
     @pytest.mark.asyncio
     async def test_failed_mint_rolls_back_vocabulary(self, tmp_path, monkeypatch):
         """A PATCH whose grant transition fails leaves both stores unchanged."""
-        from kiro_crew.dashboard import chat_tags as ct
+        from aj_crew.dashboard import chat_tags as ct
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
 
@@ -605,9 +605,9 @@ class TestTagVocabulary:
     async def test_delete_aborts_when_revoke_fails(self, tmp_path, monkeypatch):
         """a deletion must never outlive the authority it removes
         — a failed revoke aborts the DELETE with the tag (and grant) intact."""
-        from kiro_crew.dashboard import chat_tags as ct
+        from aj_crew.dashboard import chat_tags as ct
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
 
@@ -634,10 +634,10 @@ class TestTagVocabulary:
         the tag must still carry its status identity as a ``("none", True)``
         row -- less authority, never a missing row that the applier would read
         as a plain label and let two workflow states coexist."""
-        from kiro_crew.dashboard import chat_tag_grants as grants
-        from kiro_crew.dashboard import chat_tags as ct
+        from aj_crew.dashboard import chat_tag_grants as grants
+        from aj_crew.dashboard import chat_tags as ct
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         real_write = ct._write_tags_snapshot
@@ -672,10 +672,10 @@ class TestTagVocabulary:
         asked for a grant change), so its failure compensation must not act on
         the grant store at all -- acting on 'no prior row' there would revoke
         the tag's real grant behind the 500."""
-        from kiro_crew.dashboard import chat_tag_grants as grants
-        from kiro_crew.dashboard import chat_tags as ct
+        from aj_crew.dashboard import chat_tag_grants as grants
+        from aj_crew.dashboard import chat_tags as ct
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
 
@@ -697,10 +697,10 @@ class TestTagVocabulary:
     @pytest.mark.asyncio
     async def test_rowless_tag_is_refused_before_vocab_write(self, tmp_path, monkeypatch):
         """A legacy or planted row cannot recreate provenance through PATCH."""
-        from kiro_crew.dashboard import chat_tag_grants as grants
-        from kiro_crew.dashboard import chat_tags as ct
+        from aj_crew.dashboard import chat_tag_grants as grants
+        from aj_crew.dashboard import chat_tags as ct
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
 
@@ -728,9 +728,9 @@ class TestTagVocabulary:
         """revoke succeeded but the vocabulary persist
         failed — the captured grant is re-minted so a failed DELETE is a
         no-op on authority."""
-        from kiro_crew.dashboard import chat_tags as ct
+        from aj_crew.dashboard import chat_tags as ct
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
 
@@ -753,9 +753,9 @@ class TestTagVocabulary:
         return 201 for a tag chat_tag refuses — the grant is minted BEFORE
         the vocabulary commit, so a mint failure aborts with NOTHING durable
         in either store and surfaces 500."""
-        from kiro_crew.dashboard import chat_tags as ct
+        from aj_crew.dashboard import chat_tags as ct
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
 
@@ -779,7 +779,7 @@ class TestTagVocabulary:
 
     @pytest.mark.asyncio
     async def test_update_tag_empty_name_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -791,7 +791,7 @@ class TestTagVocabulary:
 
     @pytest.mark.asyncio
     async def test_update_tag_unparseable_order_ignored(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -804,7 +804,7 @@ class TestTagVocabulary:
 
     @pytest.mark.asyncio
     async def test_update_tag_not_found(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -813,7 +813,7 @@ class TestTagVocabulary:
 
     @pytest.mark.asyncio
     async def test_update_tag_invalid_json_rejected(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -828,7 +828,7 @@ class TestTagVocabulary:
     @pytest.mark.asyncio
     async def test_update_tag_redacts_credentials_in_name(self, tmp_path, monkeypatch):
         """PATCH a tag name containing an AWS key — the credential is redacted."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -846,7 +846,7 @@ class TestTagVocabulary:
         """Redaction must run BEFORE truncation: a credential crossing the
         60-char cut would otherwise be sliced into a fragment the scanners
         do not recognize, persisting a raw key prefix."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -861,7 +861,7 @@ class TestTagVocabulary:
 
     @pytest.mark.asyncio
     async def test_create_tag_redacts_credential_straddling_truncation(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -879,7 +879,7 @@ class TestTagVocabulary:
         must be written BEFORE any slot strip — a crash after it leaves only
         harmless dangling slot ids (pruned on load), never lost assignments
         with a still-live tag."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         call_order: list[str] = []
@@ -889,7 +889,7 @@ class TestTagVocabulary:
             return True  # a committed save — None would read as the refusal
 
         original_write = __import__(
-            "kiro_crew.dashboard.chat_tags", fromlist=["_write_tags_snapshot"]
+            "aj_crew.dashboard.chat_tags", fromlist=["_write_tags_snapshot"]
         )._write_tags_snapshot
 
         def _tracking_write(st, snapshot):
@@ -901,8 +901,8 @@ class TestTagVocabulary:
             slot = _ChatSlot("s1")
             slot.tags = [tag["id"]]
             state._slots["s1"] = slot
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop", _tracking_save):
-                with patch("kiro_crew.dashboard.chat_tags._write_tags_snapshot", _tracking_write):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop", _tracking_save):
+                with patch("aj_crew.dashboard.chat_tags._write_tags_snapshot", _tracking_write):
                     resp = await client.delete(f"/api/chat/tags/{tag['id']}")
             assert resp.status == 200
             # Vocabulary removal must be committed BEFORE slot persistence.
@@ -910,7 +910,7 @@ class TestTagVocabulary:
 
     @pytest.mark.asyncio
     async def test_delete_tag_strips_from_slots_and_columns(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -925,7 +925,7 @@ class TestTagVocabulary:
                     json={"tag_ids": [tag["id"], other["id"]], "mode": "any"},
                 )
             ).json()
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 resp = await client.delete(f"/api/chat/tags/{tag['id']}")
             assert resp.status == 200
             assert tag["id"] not in {t["id"] for t in state._tags}
@@ -936,7 +936,7 @@ class TestTagVocabulary:
 
     @pytest.mark.asyncio
     async def test_delete_tag_not_found(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -949,7 +949,7 @@ class TestTagVocabulary:
     ):
         """A failing slot save during the post-commit strip must not abort
         stripping the remaining slots; the failed one is marked dirty."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -969,7 +969,7 @@ class TestTagVocabulary:
                     raise IOError("disk full")
                 return True  # a committed save — None would read as the refusal
 
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop", _partial_failing_save):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop", _partial_failing_save):
                 resp = await client.delete(f"/api/chat/tags/{tag['id']}")
             assert resp.status == 200
             assert all(t["id"] != tag["id"] for t in state._tags)
@@ -983,7 +983,7 @@ class TestTagVocabulary:
     async def test_delete_succeeds_despite_board_persist_failure(self, tmp_path, monkeypatch):
         """Board strip failure after the vocab commit is tolerated: deletion
         succeeds; the dangling board reference is pruned on next load."""
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -1001,7 +1001,7 @@ class TestTagVocabulary:
             def _failing_boards(snapshot):
                 raise IOError("disk full")
 
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"):
                 with patch.object(state, "save_tag_boards_snapshot", _failing_boards):
                     resp = await client.delete(f"/api/chat/tags/{tag['id']}")
             assert resp.status == 200
@@ -1030,7 +1030,7 @@ class TestTagVocabulary:
         POSITIVE CONTROL: ``live`` stays in ``_slots`` throughout and must also be
         stripped, so a fix that simply stopped stripping cannot pass.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         original_write = chat_tags_module._write_tags_snapshot
@@ -1051,8 +1051,8 @@ class TestTagVocabulary:
                 return original_write(st, snapshot)
 
             with (
-                patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop"),
-                patch("kiro_crew.dashboard.chat_tags._write_tags_snapshot", _pop_during_write),
+                patch("aj_crew.dashboard.chat_tags.save_slot_off_loop"),
+                patch("aj_crew.dashboard.chat_tags._write_tags_snapshot", _pop_during_write),
             ):
                 resp = await client.delete(f"/api/chat/tags/{tag['id']}")
 
@@ -1079,7 +1079,7 @@ class TestTagCreateAfterDeleteAppends:
         Four tags hold orders 0-3; deleting the first two leaves 2 and 3, so a
         position counted from the list length (2) would tie the first survivor.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -1099,7 +1099,7 @@ class TestTagCreateAfterDeleteAppends:
 
     @pytest.mark.asyncio
     async def test_first_tag_gets_order_zero(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:

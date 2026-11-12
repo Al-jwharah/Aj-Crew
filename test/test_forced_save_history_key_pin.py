@@ -22,12 +22,12 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_folder_app, _make_state, _make_tags_app
 
-from kiro_crew.dashboard.chat import api_chat_slot_mode
-from kiro_crew.dashboard.chat_persistence import save_slot_off_loop as _real_save
-from kiro_crew.dashboard.chat_tags import tags_write_lock
-from kiro_crew.dashboard.chat_utils import slot_history_key
-from kiro_crew.dashboard.snapshot_commit import close_in_flight
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.chat import api_chat_slot_mode
+from aj_crew.dashboard.chat_persistence import save_slot_off_loop as _real_save
+from aj_crew.dashboard.chat_tags import tags_write_lock
+from aj_crew.dashboard.chat_utils import slot_history_key
+from aj_crew.dashboard.snapshot_commit import close_in_flight
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
 
 _FOREIGN_KEY = "channel:foreign:123"
 
@@ -59,7 +59,7 @@ class TestRealSaveRefusalThroughEndpoints:
 
     @pytest.mark.asyncio
     async def test_slot_tags_put_refuses_409_and_writes_nothing(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -68,7 +68,7 @@ class TestRealSaveRefusalThroughEndpoints:
             slot.append("user", "hello")
             slot.drain()
             pinned = slot_history_key(slot)
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop", _rebinding_save(slot)):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop", _rebinding_save(slot)):
                 resp = await client.put("/api/chat/slots/s1/tags", json={"tags": [tag["id"]]})
             assert resp.status == 409
             assert (await resp.json())["code"] == "session_gone"
@@ -82,7 +82,7 @@ class TestRealSaveRefusalThroughEndpoints:
 
     @pytest.mark.asyncio
     async def test_slot_folder_patch_refuses_409_and_writes_nothing(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -91,9 +91,7 @@ class TestRealSaveRefusalThroughEndpoints:
             slot.append("user", "hello")
             slot.drain()
             pinned = slot_history_key(slot)
-            with patch(
-                "kiro_crew.dashboard.chat_folders.save_slot_off_loop", _rebinding_save(slot)
-            ):
+            with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", _rebinding_save(slot)):
                 resp = await client.patch(
                     "/api/chat/slots/s1/folder", json={"folder_id": folder["id"]}
                 )
@@ -111,14 +109,14 @@ class TestRefusalDispositionPerSite:
 
     @pytest.mark.asyncio
     async def test_slot_pin_rolls_back_and_409(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         refusing = AsyncMock(return_value=False)
         async with TestClient(TestServer(app)) as client:
             slot = state.get_or_create_slot("s1")
             pinned = slot_history_key(slot)
-            with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", refusing):
+            with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", refusing):
                 resp = await client.patch("/api/chat/slots/s1/pin", json={"pinned": True})
             assert resp.status == 409
             assert (await resp.json())["code"] == "session_gone"
@@ -134,7 +132,7 @@ class TestRefusalDispositionPerSite:
         state.push_slots_update = MagicMock()
         pinned = slot_history_key(slot)
         refusing = AsyncMock(return_value=False)
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", refusing):
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", refusing):
             async with TestClient(TestServer(_make_mode_app(state))) as client:
                 resp = await client.patch("/api/chat/slots/test/mode", json={"mode": ""})
                 assert resp.status == 409
@@ -144,7 +142,7 @@ class TestRefusalDispositionPerSite:
 
     @pytest.mark.asyncio
     async def test_slot_drop_answers_in_rejection_shape(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         refusing = AsyncMock(return_value=False)
@@ -159,7 +157,7 @@ class TestRefusalDispositionPerSite:
             ).json()
             slot = state.get_or_create_slot("s1")
             pinned = slot_history_key(slot)
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop", refusing):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop", refusing):
                 resp = await client.post("/api/chat/slots/s1/drop", json={"column_id": col["id"]})
             # This endpoint reports rejections as ok:False in a 200 body (the
             # card stays put); the refusal takes the same shape, with the
@@ -174,7 +172,7 @@ class TestRefusalDispositionPerSite:
 
     @pytest.mark.asyncio
     async def test_tag_delete_strip_marks_dirty_and_delete_succeeds(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         refusing = AsyncMock(return_value=False)
@@ -183,7 +181,7 @@ class TestRefusalDispositionPerSite:
             slot = state.get_or_create_slot("s1")
             slot.tags = [tag["id"]]
             pinned = slot_history_key(slot)
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop", refusing):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop", refusing):
                 resp = await client.delete(f"/api/chat/tags/{tag['id']}")
             # The vocabulary commit already made the deletion durable; the
             # refused strip is best-effort cleanup, so the delete still
@@ -198,7 +196,7 @@ class TestRefusalDispositionPerSite:
     async def test_folder_delete_unfile_marks_dirty_and_delete_succeeds(
         self, tmp_path, monkeypatch
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         refusing = AsyncMock(return_value=False)
@@ -207,7 +205,7 @@ class TestRefusalDispositionPerSite:
             slot = state.get_or_create_slot("s1")
             slot.folder_id = folder["id"]
             pinned = slot_history_key(slot)
-            with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", refusing):
+            with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", refusing):
                 resp = await client.delete(f"/api/chat/folders/{folder['id']}")
             # The unfile stands in memory (the folder is gone); the refused
             # persist marks the slot dirty so the flush re-persists wherever
@@ -229,7 +227,7 @@ class TestRefusalDispositionPerSite:
         it. Asserting the save is never REACHED is what discriminates, since unfiling
         first calls it twice -- once to unfile, once to restore.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         refusing = AsyncMock(return_value=False)
@@ -239,7 +237,7 @@ class TestRefusalDispositionPerSite:
             slot.folder_id = folder["id"]
             slot._dirty = False
             with (
-                patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", refusing),
+                patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", refusing),
                 patch.object(state, "mutate_folders", AsyncMock(side_effect=OSError("disk full"))),
             ):
                 resp = await client.delete(f"/api/chat/folders/{folder['id']}")
@@ -282,7 +280,7 @@ class TestCancellationMidCommitStillSweepsAndAudits:
     async def test_a_cancellation_inside_the_commit_still_unfiles_and_still_audits(
         self, tmp_path, monkeypatch
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         audited: list[dict] = []
@@ -300,15 +298,15 @@ class TestCancellationMidCommitStillSweepsAndAudits:
             slot.folder_id = folder["id"]
             saving = AsyncMock(return_value=True)
             with (
-                patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", saving),
+                patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", saving),
                 patch(
-                    "kiro_crew.dashboard.chat_folders.sel",
+                    "aj_crew.dashboard.chat_folders.sel",
                     lambda: MagicMock(log_api_access=lambda **kw: audited.append(kw)),
                 ),
                 patch.object(state, "mutate_folders", _commit_then_cancel),
             ):
                 with pytest.raises(asyncio.CancelledError):
-                    from kiro_crew.dashboard.chat_folders import api_chat_folder_delete
+                    from aj_crew.dashboard.chat_folders import api_chat_folder_delete
 
                     await api_chat_folder_delete(self._delete_request(app, folder["id"]))
 
@@ -344,7 +342,7 @@ class TestCancellationMidCommitStillSweepsAndAudits:
         unfiling here strands a conversation with no folder while the folder still
         exists, and nothing later puts the filing back.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         saving = AsyncMock(return_value=True)
@@ -362,10 +360,10 @@ class TestCancellationMidCommitStillSweepsAndAudits:
             on_disk = json.loads((tmp_path / "folders.json").read_text())
             assert any(f["id"] == folder["id"] for f in on_disk)
             with (
-                patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", saving),
+                patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", saving),
                 patch.object(state, "mutate_folders", _cancel_before_the_write),
             ):
-                from kiro_crew.dashboard.chat_folders import api_chat_folder_delete
+                from aj_crew.dashboard.chat_folders import api_chat_folder_delete
 
                 try:
                     await api_chat_folder_delete(self._delete_request(app, folder["id"]))
@@ -402,7 +400,7 @@ class TestSweepDoesNotOverwriteACompletedClose:
 
     @pytest.mark.asyncio
     async def test_the_sweep_leaves_a_slot_a_completed_close_popped(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -444,7 +442,7 @@ class TestSweepDoesNotOverwriteACompletedClose:
         held until the strip and the single audit line are done. Re-raising at the
         cancellation instead leaves the tag gone with slots still naming it.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         audited: list[dict] = []
@@ -454,7 +452,7 @@ class TestSweepDoesNotOverwriteACompletedClose:
             slot = state.get_or_create_slot("s1")
             slot.tags = [tag["id"]]
 
-            import kiro_crew.dashboard.chat_tags as chat_tags_mod
+            import aj_crew.dashboard.chat_tags as chat_tags_mod
 
             real_commit = chat_tags_mod._commit_tags_snapshot
 
@@ -507,7 +505,7 @@ class TestSweepDoesNotOverwriteACompletedClose:
         written, and the post-commit confirmation never fires. Stripping here loses a
         slot's assignment while the tag itself still exists, and nothing puts it back.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         saving = AsyncMock(return_value=True)
@@ -520,7 +518,7 @@ class TestSweepDoesNotOverwriteACompletedClose:
             slot = state.get_or_create_slot("s1")
             slot.tags = [tag["id"]]
 
-            import kiro_crew.dashboard.chat_tags as chat_tags_mod
+            import aj_crew.dashboard.chat_tags as chat_tags_mod
 
             # POSITIVE CONTROL for the fence's premise: the tag is still on disk, so this
             # is the unprovable-removal arm rather than the landed one.
@@ -575,11 +573,11 @@ class TestSweepDoesNotOverwriteACompletedClose:
         """
         import threading
 
-        import kiro_crew.dashboard.chat_tags as chat_tags_mod
-        from kiro_crew.dashboard import chat_tag_grants as grants
-        from kiro_crew.testing.wait import await_until
+        import aj_crew.dashboard.chat_tags as chat_tags_mod
+        from aj_crew.dashboard import chat_tag_grants as grants
+        from aj_crew.testing.wait import await_until
 
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         loop = asyncio.get_running_loop()
@@ -652,7 +650,7 @@ class TestSweepDoesNotOverwriteACompletedClose:
         reason the folder sweep's does, and force-saving a slot whose close COMPLETED
         writes a metadata line with no ``closed`` key.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -665,7 +663,7 @@ class TestSweepDoesNotOverwriteACompletedClose:
             assert await _real_save(state, slot, closed=True, force=True)
             assert (state.conversation_log._read_metadata(key) or {}).get("closed")
 
-            import kiro_crew.dashboard.chat_tags as chat_tags_mod
+            import aj_crew.dashboard.chat_tags as chat_tags_mod
 
             real_commit = chat_tags_mod._commit_tags_snapshot
             popped: dict = {}
@@ -705,7 +703,7 @@ class TestSweepReachesACloseAlreadyInFlight:
     async def test_the_folder_sweep_reaches_a_slot_popped_before_the_capture(
         self, tmp_path, monkeypatch
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -735,7 +733,7 @@ class TestSweepReachesACloseAlreadyInFlight:
     async def test_the_tag_sweep_reaches_a_slot_popped_before_the_capture(
         self, tmp_path, monkeypatch
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         async with TestClient(TestServer(app)) as client:
@@ -771,7 +769,7 @@ class TestRefusalRollbackHardening:
 
     @pytest.mark.asyncio
     async def test_folder_refusal_preserves_pending_breadcrumb_latch(self, tmp_path, monkeypatch):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_folder_app(state)
         refusing = AsyncMock(return_value=False)
@@ -782,7 +780,7 @@ class TestRefusalRollbackHardening:
             # taken its next turn yet, so the breadcrumb re-injection is
             # still pending and must survive this request's refusal.
             slot._folder_changed = True
-            with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", refusing):
+            with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", refusing):
                 resp = await client.patch(
                     "/api/chat/slots/s1/folder", json={"folder_id": folder["id"]}
                 )
@@ -804,7 +802,7 @@ class TestRefusalRollbackHardening:
             target.mode = "design-critique"
             return False
 
-        with patch("kiro_crew.dashboard.chat_folders.save_slot_off_loop", _concurrent_writer_wins):
+        with patch("aj_crew.dashboard.chat_folders.save_slot_off_loop", _concurrent_writer_wins):
             async with TestClient(TestServer(_make_mode_app(state))) as client:
                 resp = await client.patch("/api/chat/slots/test/mode", json={"mode": ""})
                 assert resp.status == 409
@@ -814,7 +812,7 @@ class TestRefusalRollbackHardening:
     async def test_tags_rebind_while_waiting_on_lock_is_refused_before_mutation(
         self, tmp_path, monkeypatch
     ):
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         recording = AsyncMock(return_value=True)
@@ -822,7 +820,7 @@ class TestRefusalRollbackHardening:
             tag = await (await client.post("/api/chat/tags", json={"name": "T"})).json()
             slot = state.get_or_create_slot("s1")
             lock = tags_write_lock(state)
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop", recording):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop", recording):
                 # Hold the tags write lock so the PUT parks on a REAL await
                 # window, rebind the slot while it waits, then release. The
                 # post-await re-check must refuse before any mutation.
@@ -848,7 +846,7 @@ class TestRefusalRollbackHardening:
         Resolving before the lock would persist a tag id a concurrent delete just
         removed; under the lock the drop is a rejected no-op.
         """
-        monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+        monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
         state = _make_state(tmp_path)
         app = _make_tags_app(state)
         recording = AsyncMock(return_value=True)
@@ -862,7 +860,7 @@ class TestRefusalRollbackHardening:
             ]
             slot = state.get_or_create_slot("s1")
             slot.tags = ["keep-me"]
-            with patch("kiro_crew.dashboard.chat_tags.save_slot_off_loop", recording):
+            with patch("aj_crew.dashboard.chat_tags.save_slot_off_loop", recording):
                 resp = await client.post("/api/chat/slots/s1/drop", json={"column_id": "col1"})
             assert resp.status == 200
             body = await resp.json()

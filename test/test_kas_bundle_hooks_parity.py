@@ -1,11 +1,11 @@
-"""The bundled engine route hands Kiro Crew's tool gate the same hook events as the relay.
+"""The bundled engine route hands Aj Crew's tool gate the same hook events as the relay.
 
-Kiro Crew's PreToolUse gate (``HookManager.on_tool_call``) and the SEL tool records
+Aj Crew's PreToolUse gate (``HookManager.on_tool_call``) and the SEL tool records
 are fed from three agent-to-client frame classes: the ``tool_call`` update, the
 ``session/request_permission`` request, and the ``tool_call_update`` frames through
 ``completed``. On the KAS relay route those shapes were captured live in
 ``test/fixtures/acp_frames/kas/session.jsonl``. ``agent.kas_bundle`` spawns the same
-engine from Kiro Crew's own pinned bundle with no kiro-cli in between, and nothing
+engine from Aj Crew's own pinned bundle with no kiro-cli in between, and nothing
 pinned that the gate still sees the same thing -- a regression there would be silent,
 because the gate would simply not fire.
 
@@ -35,12 +35,12 @@ from typing import Any, Iterator
 import pytest
 from acp_frame_replay_harness import CORPUS, read_fixture, replay_frames
 
-from kiro_crew.acp import kas_wire
-from kiro_crew.acp._dispatch import build_permission_event, parse_session_update
-from kiro_crew.acp.harness.kas import KasHarness
-from kiro_crew.acp.types import KAS_CLIENT_CAPABILITIES, JsonRpcMessage
-from kiro_crew.hook_runtime.tool_identity import hook_gate_kwargs
-from kiro_crew.hooks import TOOL_DENY, HookManager, HooksConfig
+from aj_crew.acp import kas_wire
+from aj_crew.acp._dispatch import build_permission_event, parse_session_update
+from aj_crew.acp.harness.kas import KasHarness
+from aj_crew.acp.types import KAS_CLIENT_CAPABILITIES, JsonRpcMessage
+from aj_crew.hook_runtime.tool_identity import hook_gate_kwargs
+from aj_crew.hooks import TOOL_DENY, HookManager, HooksConfig
 
 RELAY = CORPUS / "kas" / "session.jsonl"
 BUNDLE = CORPUS / "kas" / "bundle-tool-path.jsonl"
@@ -271,7 +271,7 @@ def test_the_gate_keywords_are_the_same_on_both_routes() -> None:
 
 def test_the_gate_judges_both_routes_alike(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Same event shape in, same decision out -- and the judged text is the command."""
-    monkeypatch.setenv("KIROCREW_HOME", str(tmp_path))
+    monkeypatch.setenv("AJCREW_HOME", str(tmp_path))
     manager = HookManager(HooksConfig())
     decisions = []
     for path in (RELAY, BUNDLE):

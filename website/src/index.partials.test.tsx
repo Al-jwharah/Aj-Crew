@@ -60,7 +60,7 @@ describe('index.css partials', () => {
     for (const partial of IMPORTED) {
       const text = readFileSync(join(SRC, partial), 'utf8')
       expect(text, partial).not.toMatch(/^\s*@(?:import|source|tailwind)\b/m)
-      expect(text, partial).not.toContain('@kirocrew-edition-source')
+      expect(text, partial).not.toContain('@ajcrew-edition-source')
     }
   })
 

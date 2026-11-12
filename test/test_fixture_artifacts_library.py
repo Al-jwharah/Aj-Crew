@@ -1,5 +1,5 @@
-from kiro_crew.artifacts import ArtifactStore
-from kiro_crew.testing.fixtures import seeded_home
+from aj_crew.artifacts import ArtifactStore
+from aj_crew.testing.fixtures import seeded_home
 
 
 def test_artifacts_library_fixture_drives_the_production_store() -> None:

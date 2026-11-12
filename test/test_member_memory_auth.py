@@ -7,11 +7,11 @@ import pytest
 from member_memory_helpers import env as _member_env
 from member_memory_helpers import request
 
-from kiro_crew import execution_context
-from kiro_crew import member_memory_auth as auth
-from kiro_crew.config.loader import KiroCrewConfig
-from kiro_crew.dashboard.handlers import _shared
-from kiro_crew.execution_context import bind_session_execution, read_session_execution
+from aj_crew import execution_context
+from aj_crew import member_memory_auth as auth
+from aj_crew.config.loader import AjCrewConfig
+from aj_crew.dashboard.handlers import _shared
+from aj_crew.execution_context import bind_session_execution, read_session_execution
 
 env = _member_env
 
@@ -87,7 +87,7 @@ async def test_token_naming_another_session_attests_neither(env, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_missing_canonical_member_is_not_global(env):
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     key = "dashboard:missing"
     ConversationLog().update_metadata(key, {"memory_store": "member-bob"})
@@ -98,10 +98,10 @@ async def test_missing_canonical_member_is_not_global(env):
 
 @pytest.mark.asyncio
 async def test_code_cron_uses_captured_execution_without_a_transcript(env):
-    from kiro_crew.cron import CronJob
-    from kiro_crew.execution_context import resolve_member_execution
+    from aj_crew.cron import CronJob
+    from aj_crew.execution_context import resolve_member_execution
 
-    execution = resolve_member_execution(KiroCrewConfig.load(), "alice")
+    execution = resolve_member_execution(AjCrewConfig.load(), "alice")
     job = CronJob(
         id="member-cron",
         name="synthetic",
@@ -124,7 +124,7 @@ async def test_code_cron_uses_captured_execution_without_a_transcript(env):
 
 @pytest.mark.asyncio
 async def test_missing_code_cron_record_does_not_fall_back_to_global(env):
-    from kiro_crew.cron import CronJob
+    from aj_crew.cron import CronJob
 
     env.state.crons = SimpleNamespace(
         _jobs=[
@@ -247,7 +247,7 @@ def test_gateway_spawned_app_backend_names_no_app_when_the_registry_cannot_impor
     real_import = builtins.__import__
 
     def _refuse_backend(name, *args, **kwargs):
-        if name == "kiro_crew.apps.backend":
+        if name == "aj_crew.apps.backend":
             raise ImportError(name)
         return real_import(name, *args, **kwargs)
 
@@ -279,8 +279,8 @@ def test_unknown_or_sandboxed_host_provenance_refuses_owner(monkeypatch, platfor
 
 @pytest.mark.parametrize("peer", ["match", "mismatch", "unverifiable"])
 def test_owner_bootstrap_checks_unix_peer_before_process_provenance(monkeypatch, peer):
-    from kiro_crew.dashboard import token_auth
-    from kiro_crew.mcp_gateway import socketsec
+    from aj_crew.dashboard import token_auth
+    from aj_crew.mcp_gateway import socketsec
 
     sock = object()
     monkeypatch.setattr(token_auth, "_unix_request_socket", lambda _request: sock)
@@ -311,7 +311,7 @@ def test_owner_bootstrap_checks_unix_peer_before_process_provenance(monkeypatch,
     ],
 )
 def test_owner_bootstrap_requires_both_tcp_endpoints_to_be_loopback(monkeypatch, server, client):
-    from kiro_crew.dashboard import token_auth
+    from aj_crew.dashboard import token_auth
 
     monkeypatch.setattr(token_auth, "_unix_request_socket", lambda _request: None)
     resolve = Mock(return_value=123)
@@ -324,7 +324,7 @@ def test_owner_bootstrap_requires_both_tcp_endpoints_to_be_loopback(monkeypatch,
 
 
 def test_owner_bootstrap_requires_transport_and_available_tcp_resolver(monkeypatch):
-    from kiro_crew.dashboard import token_auth
+    from aj_crew.dashboard import token_auth
 
     monkeypatch.setattr(token_auth, "_unix_request_socket", lambda _request: None)
     monkeypatch.setattr(auth.platform_compat, "get_tcp_peer_pid", None)
@@ -345,7 +345,7 @@ class _Transport:
 
 @pytest.mark.parametrize("pid", [123, True, None])
 def test_owner_bootstrap_uses_exact_tcp_pair_and_valid_process_identity(monkeypatch, pid):
-    from kiro_crew.dashboard import token_auth
+    from aj_crew.dashboard import token_auth
 
     monkeypatch.setattr(token_auth, "_unix_request_socket", lambda _request: None)
     server, client = ("::1", 1234, 0, 0), ("::1", 5678, 0, 0)
@@ -364,7 +364,7 @@ def test_owner_bootstrap_uses_exact_tcp_pair_and_valid_process_identity(monkeypa
 
 
 def test_owner_bootstrap_resolves_a_tcp_caller_once_per_connection(monkeypatch):
-    from kiro_crew.dashboard import token_auth
+    from aj_crew.dashboard import token_auth
 
     monkeypatch.setattr(token_auth, "_unix_request_socket", lambda _request: None)
     server, client = ("127.0.0.1", 1234), ("127.0.0.1", 5678)

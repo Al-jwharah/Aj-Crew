@@ -24,7 +24,7 @@ from work_ledger_projection_helpers import (
     _Slot,
 )
 
-from kiro_crew import work_ledger as wl
+from aj_crew import work_ledger as wl
 
 _isolated = work_ledger_projection_helpers._isolated
 

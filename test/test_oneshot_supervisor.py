@@ -28,11 +28,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from kiro_crew import _process_group_supervisor as supervisor
-from kiro_crew import kiro_prerequisite, platform_compat
-from kiro_crew.dashboard.handlers import agents
-from kiro_crew.kiro_prerequisite import KiroPrerequisiteService
-from kiro_crew.testing.wait import wait_until
+from aj_crew import _process_group_supervisor as supervisor
+from aj_crew import kiro_prerequisite, platform_compat
+from aj_crew.dashboard.handlers import agents
+from aj_crew.kiro_prerequisite import KiroPrerequisiteService
+from aj_crew.testing.wait import wait_until
 
 # Above every supported platform's pid_max, so no cleanup path can reach a live
 # process by it (same spelling as test/test_update_provider.py).
@@ -484,16 +484,16 @@ def test_api_models_spawns_the_list_under_the_reaping_supervisor(tmp_path: Path)
     request.app = {"kiro_prerequisite_service": service}
     cfg = SimpleNamespace(agent=SimpleNamespace(provider="kiro"))
     with (
-        patch.object(agents.KiroCrewConfig, "load", return_value=cfg),
-        patch("kiro_crew.acp.client._resolve_kiro_bin_for_spawn", return_value="/usr/bin/kiro-cli"),
-        patch("kiro_crew.acp.client._resolve_ssh_auth_sock", lambda env: None),
-        patch("kiro_crew.env.augmented_path", lambda p: p),
+        patch.object(agents.AjCrewConfig, "load", return_value=cfg),
+        patch("aj_crew.acp.client._resolve_kiro_bin_for_spawn", return_value="/usr/bin/kiro-cli"),
+        patch("aj_crew.acp.client._resolve_ssh_auth_sock", lambda env: None),
+        patch("aj_crew.env.augmented_path", lambda p: p),
         patch(
-            "kiro_crew.dashboard.handlers.agents.wrap_argv",
+            "aj_crew.dashboard.handlers.agents.wrap_argv",
             lambda argv, **kwargs: (argv, None),
         ),
-        patch("kiro_crew.dashboard.handlers.agents.cgroup_scope_argv", lambda argv: argv),
-        patch("kiro_crew.sandbox.resource_limit_preexec", lambda: None),
+        patch("aj_crew.dashboard.handlers.agents.cgroup_scope_argv", lambda argv: argv),
+        patch("aj_crew.sandbox.resource_limit_preexec", lambda: None),
         patch.object(agents.asyncio, "create_subprocess_exec", spawn),
     ):
         resp = asyncio.run(agents.api_models(request))

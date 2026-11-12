@@ -13,9 +13,9 @@ import { capWhitespaceRuns } from './markdownDepthBound'
  * each one as an "Open file" chip under the reply.
  *
  * The signal is a hidden HTML comment the agent writes after a file the user
- * should see: `<!-- kirocrew:open-file path="/abs/path/notes.md" -->`.
+ * should see: `<!-- ajcrew:open-file path="/abs/path/notes.md" -->`.
  * rehypeRaw drops HTML comments from the rendered message, so the marker itself
- * is invisible, like the `kirocrew:preview` marker it sits beside (see
+ * is invisible, like the `ajcrew:preview` marker it sits beside (see
  * detectPreviewUrl).
  *
  * The marker only decides that a chip is SHOWN. Nothing opens until the user
@@ -32,8 +32,8 @@ import { capWhitespaceRuns } from './markdownDepthBound'
  * fence inside a blockquote or glued to a sentence -- gets no chip.
  */
 
-// `<!-- kirocrew:open-file path="..." -->`, tolerant of surrounding whitespace.
-const MARKER_RE = /<!--\s*kirocrew:open-file\s+path="([^"]*)"\s*-->/gi
+// `<!-- ajcrew:open-file path="..." -->`, tolerant of surrounding whitespace.
+const MARKER_RE = /<!--\s*ajcrew:open-file\s+path="([^"]*)"\s*-->/gi
 
 /** Most chips one reply shows; markers past this are ignored. */
 export const OPEN_FILE_MARKER_MAX_CHIPS = 8
@@ -67,12 +67,12 @@ function htmlValues(tree: MdastNodes, out: string[]): string[] {
  * At most `OPEN_FILE_MARKER_MAX_CHIPS` paths are returned.
  */
 export function openFileMarkerPaths(content: string): string[] {
-  if (!content || !content.includes('kirocrew:open-file')) return []
+  if (!content || !content.includes('ajcrew:open-file')) return []
   const html: string[] = []
   for (const block of parseBlocks(content, false)) {
     // Code, diff, diagram and widget blocks render as code or a frame: a
     // marker inside one is never hidden HTML.
-    if (block.type !== 'markdown' || !block.content.includes('kirocrew:open-file')) continue
+    if (block.type !== 'markdown' || !block.content.includes('ajcrew:open-file')) continue
     const source = fixCodeFences(capWhitespaceRuns(block.content))
     htmlValues(PARSER.runSync(PARSER.parse(source)) as MdastRoot, html)
   }

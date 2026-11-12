@@ -1,9 +1,9 @@
-"""Behavioural coverage for :mod:`kiro_crew.mcp_gateway.backend`.
+"""Behavioural coverage for :mod:`aj_crew.mcp_gateway.backend`.
 
 Complements the existing focused suites (``test_mcp_gateway_wedge_ping_gate``
 for heartbeat classification, ``test_mcp_gateway_apps_spool`` for the MCP Apps
 interception seam, ``test_mcp_gateway_oversize`` for the spill helpers) by
-driving the parts of :class:`~kiro_crew.mcp_gateway.backend.Backend` that had no
+driving the parts of :class:`~aj_crew.mcp_gateway.backend.Backend` that had no
 direct test:
 
 * ``forward_from_stub`` — id rewriting, caller-identity strip/inject, the
@@ -55,14 +55,14 @@ import pytest
 from mcp_gateway_backend_coverage_helpers import _no_real_metrics_file  # noqa: F401 -- autouse
 from mcp_gateway_backend_coverage_helpers import _drain, _frames, _make_backend
 
-from kiro_crew.mcp_caller import (
+from aj_crew.mcp_caller import (
     CALLER_META_KEY,
     TENANT_META_KEY,
     CallerContext,
     tenant_nonce_from_meta,
 )
-from kiro_crew.mcp_gateway import backend as backend_mod
-from kiro_crew.mcp_gateway.backend import (
+from aj_crew.mcp_gateway import backend as backend_mod
+from aj_crew.mcp_gateway.backend import (
     HEARTBEAT_PING_ID,
     MCP_APPS_ENV_FLAG,
     MCP_APPS_EXTENSION_KEY,
@@ -77,7 +77,7 @@ from kiro_crew.mcp_gateway.backend import (
     _PendingRequest,
     _strip_caller_meta,
 )
-from kiro_crew.mcp_gateway.backend_wire import _carry_tool_call_id
+from aj_crew.mcp_gateway.backend_wire import _carry_tool_call_id
 
 # --- Pure request-shaping helpers -------------------------------------------
 
@@ -283,9 +283,9 @@ class TestAttachDetachAndAccounting:
         """
         backend = _make_backend()
         await backend.attach_stub("s1", agent="gpu-dev")
-        await backend.attach_stub("s2", agent="kirocrew")
+        await backend.attach_stub("s2", agent="ajcrew")
         assert backend.agent_for_stub("s1") == "gpu-dev"
-        assert backend.agent_for_stub("s2") == "kirocrew"
+        assert backend.agent_for_stub("s2") == "ajcrew"
 
         await backend.detach_stub("s2")
         assert backend.agent_for_stub("s2") == ""
@@ -615,9 +615,7 @@ class TestUpstreamInitializeResolution:
         inbox1 = await backend.attach_stub("s1")
         inbox2 = await backend.attach_stub("s2")
         backend._init_pending = [("s1", 1), ("s2", 2)]
-        result: dict[str, Any] = {
-            "capabilities": {"experimental": {"kirocrew.caller-identity": {}}}
-        }
+        result: dict[str, Any] = {"capabilities": {"experimental": {"ajcrew.caller-identity": {}}}}
         await backend._on_upstream_initialize({"jsonrpc": "2.0", "id": "gw-1", "result": result})
         assert backend._init_state == "ready"
         assert backend._init_result == result

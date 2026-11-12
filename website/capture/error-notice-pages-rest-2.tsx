@@ -32,9 +32,9 @@ import '../src/index.css'
 
 const params = new URLSearchParams(location.search)
 const theme = params.get('theme') || 'dark'
-document.documentElement.setAttribute('data-theme', theme === 'light' ? 'kiro-light' : 'kiro-dark')
+document.documentElement.setAttribute('data-theme', theme === 'light' ? 'aj-light' : 'aj-dark')
 
-const LAST_ERROR = 'Traceback (most recent call last):\n  File "digest.py", line 41, in run\n    raise Skip("no new issues")\nkiro_crew.crons.Skip: no new issues'
+const LAST_ERROR = 'Traceback (most recent call last):\n  File "digest.py", line 41, in run\n    raise Skip("no new issues")\naj_crew.crons.Skip: no new issues'
 const ROW_ACTION_ERROR = 'HTTP 409: job is already running'
 const WEBHOOKS_LOAD_ERROR = 'HTTP 502: gateway unavailable'
 const PLAN_ERROR = 'HTTP 422: spec has no runnable steps'

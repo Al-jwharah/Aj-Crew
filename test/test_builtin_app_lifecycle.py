@@ -21,8 +21,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from dashboard_owner_helpers import NoConfiguredOwner, owner_claims
 
-from kiro_crew.apps import routes
-from kiro_crew.apps.routes import (
+from aj_crew.apps import routes
+from aj_crew.apps.routes import (
     _notify_builtin_service,
     _sync_builtin_config,
     handle_disable_app,
@@ -53,7 +53,7 @@ class TestSyncBuiltinConfig:
     def test_sets_enabled_false(self, tmp_path, register_test_builtin):
         cfg = tmp_path / "config.json"
         cfg.write_text(json.dumps({_TEST_CFG_KEY: {"enabled": True, "poll_interval_seconds": 60}}))
-        with patch("kiro_crew.apps.routes.config_path", return_value=cfg):
+        with patch("aj_crew.apps.routes.config_path", return_value=cfg):
             _sync_builtin_config(_TEST_BUILTIN, enabled=False)
         data = json.loads(cfg.read_text(encoding="utf-8"))
         assert data[_TEST_CFG_KEY]["enabled"] is False
@@ -62,7 +62,7 @@ class TestSyncBuiltinConfig:
     def test_sets_enabled_true(self, tmp_path, register_test_builtin):
         cfg = tmp_path / "config.json"
         cfg.write_text(json.dumps({_TEST_CFG_KEY: {"enabled": False}}))
-        with patch("kiro_crew.apps.routes.config_path", return_value=cfg):
+        with patch("aj_crew.apps.routes.config_path", return_value=cfg):
             _sync_builtin_config(_TEST_BUILTIN, enabled=True)
         data = json.loads(cfg.read_text(encoding="utf-8"))
         assert data[_TEST_CFG_KEY]["enabled"] is True
@@ -70,7 +70,7 @@ class TestSyncBuiltinConfig:
     def test_creates_section_if_missing(self, tmp_path, register_test_builtin):
         cfg = tmp_path / "config.json"
         cfg.write_text(json.dumps({"agent": {"model": "auto"}}))
-        with patch("kiro_crew.apps.routes.config_path", return_value=cfg):
+        with patch("aj_crew.apps.routes.config_path", return_value=cfg):
             _sync_builtin_config(_TEST_BUILTIN, enabled=False)
         data = json.loads(cfg.read_text(encoding="utf-8"))
         assert data[_TEST_CFG_KEY]["enabled"] is False
@@ -78,7 +78,7 @@ class TestSyncBuiltinConfig:
 
     def test_creates_file_if_missing(self, tmp_path, register_test_builtin):
         cfg = tmp_path / "config.json"
-        with patch("kiro_crew.apps.routes.config_path", return_value=cfg):
+        with patch("aj_crew.apps.routes.config_path", return_value=cfg):
             _sync_builtin_config(_TEST_BUILTIN, enabled=True)
         data = json.loads(cfg.read_text(encoding="utf-8"))
         assert data[_TEST_CFG_KEY]["enabled"] is True
@@ -86,7 +86,7 @@ class TestSyncBuiltinConfig:
     def test_noop_for_non_builtin(self, tmp_path):
         cfg = tmp_path / "config.json"
         cfg.write_text(json.dumps({}))
-        with patch("kiro_crew.apps.routes.config_path", return_value=cfg):
+        with patch("aj_crew.apps.routes.config_path", return_value=cfg):
             _sync_builtin_config("some-other-app", enabled=False)
         data = json.loads(cfg.read_text(encoding="utf-8"))
         assert _TEST_CFG_KEY not in data
@@ -94,7 +94,7 @@ class TestSyncBuiltinConfig:
     def test_raises_on_corrupt_config(self, tmp_path, register_test_builtin):
         cfg = tmp_path / "config.json"
         cfg.write_text("{corrupt json!!!")
-        with patch("kiro_crew.apps.routes.config_path", return_value=cfg):
+        with patch("aj_crew.apps.routes.config_path", return_value=cfg):
             with pytest.raises(OSError):
                 _sync_builtin_config(_TEST_BUILTIN, enabled=False)
         # File should be untouched — not overwritten with empty dict
@@ -119,9 +119,9 @@ class TestSyncBuiltinConfig:
             calls.append(path)
             return real(path, **kw)
 
-        with patch("kiro_crew.apps.routes.config_path", return_value=cfg):
-            with patch("kiro_crew.config.loader.config_path", return_value=cfg):
-                with patch("kiro_crew.apps.routes.update_config_locked", side_effect=_spy):
+        with patch("aj_crew.apps.routes.config_path", return_value=cfg):
+            with patch("aj_crew.config.loader.config_path", return_value=cfg):
+                with patch("aj_crew.apps.routes.update_config_locked", side_effect=_spy):
                     _sync_builtin_config(_TEST_BUILTIN, enabled=True)
         assert len(calls) == 1
         assert json.loads(cfg.read_text(encoding="utf-8"))[_TEST_CFG_KEY]["enabled"] is True
@@ -150,7 +150,7 @@ class TestSyncBuiltinConfig:
             raise OSError("icacls failed")
 
         win_refuse = SimpleNamespace(IS_POSIX=False, restrict_to_owner=_boom)
-        with patch("kiro_crew.apps.routes.config_path", return_value=cfg):
+        with patch("aj_crew.apps.routes.config_path", return_value=cfg):
             with patch.object(routes, "platform_compat", win_ok):
                 _sync_builtin_config(_TEST_BUILTIN, enabled=True)
             assert seen == [cfg]
@@ -168,9 +168,9 @@ class TestSyncBuiltinConfig:
         cfg = tmp_path / "config.json"
         cfg.write_text(json.dumps({_TEST_CFG_KEY: {"enabled": False}}))
         before = cfg.read_text(encoding="utf-8")
-        with patch("kiro_crew.apps.routes.config_path", return_value=cfg):
+        with patch("aj_crew.apps.routes.config_path", return_value=cfg):
             with patch(
-                "kiro_crew.apps.routes.update_config_locked",
+                "aj_crew.apps.routes.update_config_locked",
                 side_effect=OSError("disk full"),
             ):
                 with pytest.raises(OSError):
@@ -259,16 +259,16 @@ class TestHandleDisableBuiltin:
         owner_claims(request)
 
         with (
-            patch("kiro_crew.apps.routes.get_app", return_value={
+            patch("aj_crew.apps.routes.get_app", return_value={
                 "name": _TEST_BUILTIN, "origin": "builtin",
                 "resources": "gateway", "lifecycle": "locked",
                 "enabled": True, "manifest": {},
             }),
-            patch("kiro_crew.apps.routes.disable_app") as mock_disable,
-            patch("kiro_crew.apps.routes.stop_app_backend"),
-            patch("kiro_crew.apps.routes.deregister_app"),
-            patch("kiro_crew.apps.routes.config_path", return_value=cfg),
-            patch("kiro_crew.apps.routes.sel"),
+            patch("aj_crew.apps.routes.disable_app") as mock_disable,
+            patch("aj_crew.apps.routes.stop_app_backend"),
+            patch("aj_crew.apps.routes.deregister_app"),
+            patch("aj_crew.apps.routes.config_path", return_value=cfg),
+            patch("aj_crew.apps.routes.sel"),
         ):
             mock_disable.return_value = type("R", (), {"ok": True, "to_dict": lambda self: {"ok": True, "name": _TEST_BUILTIN, "message": "disabled"}})()
             resp = await handle_disable_app(request)
@@ -292,16 +292,16 @@ class TestHandleDisableBuiltin:
         owner_claims(request)
 
         with (
-            patch("kiro_crew.apps.routes.get_app", return_value={
+            patch("aj_crew.apps.routes.get_app", return_value={
                 "name": "my-app", "origin": "registry",
                 "resources": "gateway", "lifecycle": "gateway",
                 "enabled": True, "manifest": {},
             }),
-            patch("kiro_crew.apps.routes.disable_app") as mock_disable,
-            patch("kiro_crew.apps.routes.stop_app_backend"),
-            patch("kiro_crew.apps.routes.deregister_app"),
-            patch("kiro_crew.apps.routes.config_path", return_value=cfg),
-            patch("kiro_crew.apps.routes.sel"),
+            patch("aj_crew.apps.routes.disable_app") as mock_disable,
+            patch("aj_crew.apps.routes.stop_app_backend"),
+            patch("aj_crew.apps.routes.deregister_app"),
+            patch("aj_crew.apps.routes.config_path", return_value=cfg),
+            patch("aj_crew.apps.routes.sel"),
         ):
             mock_disable.return_value = type("R", (), {"ok": True, "to_dict": lambda self: {"ok": True, "name": "my-app", "message": "disabled"}})()
             resp = await handle_disable_app(request)
@@ -318,11 +318,11 @@ class TestHandleDisableBuiltin:
 
 class TestRedactWarning:
     def test_passes_through_clean_string(self):
-        from kiro_crew.apps.routes import _redact_warning
+        from aj_crew.apps.routes import _redact_warning
         assert _redact_warning("config sync failed: boom") == "config sync failed: boom"
 
     def test_redacts_credentials(self):
-        from kiro_crew.apps.routes import _redact_warning
+        from aj_crew.apps.routes import _redact_warning
         result = _redact_warning("error: AKIA1234567890ABCDEF leaked")
         assert "AKIA" not in result or "[REDACTED]" in result
 
@@ -377,7 +377,7 @@ class TestBuiltinConfigSyncHoldsBothConfigLocks:
         seen = {}
 
         def _spy(name, *, enabled):
-            from kiro_crew.dashboard.handlers.agents import _get_config_lock
+            from aj_crew.dashboard.handlers.agents import _get_config_lock
 
             seen["locked"] = _get_config_lock().locked()
             seen["thread"] = threading.current_thread()
@@ -397,16 +397,16 @@ class TestBuiltinConfigSyncHoldsBothConfigLocks:
         state = type("S", (), {_TEST_RESTART_ATTR: restart_fn})()
 
         with (
-            patch("kiro_crew.apps.routes.get_app", return_value={
+            patch("aj_crew.apps.routes.get_app", return_value={
                 "name": _TEST_BUILTIN, "origin": "builtin", "resources": "gateway",
                 "lifecycle": "locked", "enabled": True, "manifest": {},
             }),
-            patch("kiro_crew.apps.routes.disable_app") as mock_disable,
-            patch("kiro_crew.apps.routes.stop_app_backend"),
-            patch("kiro_crew.apps.routes.deregister_app"),
-            patch("kiro_crew.apps.routes.config_path", return_value=cfg),
-            patch("kiro_crew.apps.routes.sel"),
-            patch("kiro_crew.apps.routes._sync_builtin_config", spy),
+            patch("aj_crew.apps.routes.disable_app") as mock_disable,
+            patch("aj_crew.apps.routes.stop_app_backend"),
+            patch("aj_crew.apps.routes.deregister_app"),
+            patch("aj_crew.apps.routes.config_path", return_value=cfg),
+            patch("aj_crew.apps.routes.sel"),
+            patch("aj_crew.apps.routes._sync_builtin_config", spy),
         ):
             mock_disable.return_value = type("R", (), {
                 "ok": True,
@@ -440,15 +440,15 @@ class TestBuiltinConfigSyncHoldsBothConfigLocks:
             # `resources` deliberately not "gateway": the config sync is gated on
             # origin/builtin alone, so skipping the registration branch keeps this
             # test on the lock property instead of the whole enable pipeline.
-            patch("kiro_crew.apps.routes.get_app", return_value={
+            patch("aj_crew.apps.routes.get_app", return_value={
                 "name": _TEST_BUILTIN, "origin": "builtin", "resources": "",
                 "lifecycle": "locked", "enabled": False, "manifest": {},
             }),
-            patch("kiro_crew.apps.routes.enable_app") as mock_enable,
-            patch("kiro_crew.apps.routes.on_app_enable", AsyncMock(return_value=None)),
-            patch("kiro_crew.apps.routes.config_path", return_value=cfg),
-            patch("kiro_crew.apps.routes.sel"),
-            patch("kiro_crew.apps.routes._sync_builtin_config", spy),
+            patch("aj_crew.apps.routes.enable_app") as mock_enable,
+            patch("aj_crew.apps.routes.on_app_enable", AsyncMock(return_value=None)),
+            patch("aj_crew.apps.routes.config_path", return_value=cfg),
+            patch("aj_crew.apps.routes.sel"),
+            patch("aj_crew.apps.routes._sync_builtin_config", spy),
         ):
             mock_enable.return_value = type("R", (), {
                 "ok": True,
@@ -466,7 +466,7 @@ class TestBuiltinConfigSyncHoldsBothConfigLocks:
         self, tmp_path, register_test_builtin
     ):
         """Holding it is only correct if the handler also gives it back."""
-        from kiro_crew.dashboard.handlers.agents import _get_config_lock
+        from aj_crew.dashboard.handlers.agents import _get_config_lock
 
         cfg = tmp_path / "config.json"
         cfg.write_text(json.dumps({_TEST_CFG_KEY: {"enabled": True}}))
@@ -474,15 +474,15 @@ class TestBuiltinConfigSyncHoldsBothConfigLocks:
         state = type("S", (), {_TEST_RESTART_ATTR: restart_fn})()
 
         with (
-            patch("kiro_crew.apps.routes.get_app", return_value={
+            patch("aj_crew.apps.routes.get_app", return_value={
                 "name": _TEST_BUILTIN, "origin": "builtin", "resources": "gateway",
                 "lifecycle": "locked", "enabled": True, "manifest": {},
             }),
-            patch("kiro_crew.apps.routes.disable_app") as mock_disable,
-            patch("kiro_crew.apps.routes.stop_app_backend"),
-            patch("kiro_crew.apps.routes.deregister_app"),
-            patch("kiro_crew.apps.routes.config_path", return_value=cfg),
-            patch("kiro_crew.apps.routes.sel"),
+            patch("aj_crew.apps.routes.disable_app") as mock_disable,
+            patch("aj_crew.apps.routes.stop_app_backend"),
+            patch("aj_crew.apps.routes.deregister_app"),
+            patch("aj_crew.apps.routes.config_path", return_value=cfg),
+            patch("aj_crew.apps.routes.sel"),
         ):
             mock_disable.return_value = type("R", (), {
                 "ok": True,

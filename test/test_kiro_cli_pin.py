@@ -1,18 +1,18 @@
 """The two sync kiro-cli spawns resolve through the PATH-excluding pin.
 
-``kirocrew update`` (``cli_server._update``) and the diagnostics support
+``ajcrew update`` (``cli_server._update``) and the diagnostics support
 bundle (``diagnostics._kiro_cli_version``) both spawn kiro-cli from a process
 whose inherited ``PATH`` can lead with an agent-writable directory — a worktree
 venv's ``bin``. A bare ``"kiro-cli"`` argv0 is re-resolved off that ``PATH``
 inside ``exec``, so whatever that directory names would run as the gateway
-user. Both sites now route through :func:`kiro_crew.kiro_cli.pin_kiro_cli`,
+user. Both sites now route through :func:`aj_crew.kiro_cli.pin_kiro_cli`,
 the sync form of the pin the unattended gateway spawns already use: an
 absolute path from the known install directories plus the operator's
-``KIROCREW_KIRO_BIN``, with the inherited ``PATH`` excluded, refusing rather
+``AJCREW_KIRO_BIN``, with the inherited ``PATH`` excluded, refusing rather
 than falling back to the bare name.
 
 The structural guard at the bottom keeps the count of bare-name kiro-cli
-spawns under ``src/kiro_crew`` at zero, so a new site of the same shape fails
+spawns under ``src/aj_crew`` at zero, so a new site of the same shape fails
 here rather than in a review lane.
 """
 
@@ -34,7 +34,7 @@ from source_corpus import parsed_candidates, src_root
 # git stubbed by argv prefix. Reused rather than copied so the two stay one.
 from test_cli_server_more_coverage import _GitStub, git_checkout  # noqa: F401
 
-from kiro_crew import cli_server, diagnostics, kiro_cli
+from aj_crew import cli_server, diagnostics, kiro_cli
 
 _SRC_ROOT = src_root()
 
@@ -85,7 +85,7 @@ def shadowed_path(monkeypatch, tmp_path):
     monkeypatch.setattr(kiro_cli, "resolve_kiro_cli", _REAL_RESOLVE)
     monkeypatch.setattr(kiro_cli, "_MACOS_SYSTEM_DIRS", ())
     monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
-    monkeypatch.delenv("KIROCREW_KIRO_BIN", raising=False)
+    monkeypatch.delenv("AJCREW_KIRO_BIN", raising=False)
     # The desktop app exports its bundled kiro-cli directory to every child,
     # and ``known_kiro_cli_dirs`` ranks that directory FIRST. A test process
     # started from a dashboard session (a sweep run that way sees it)
@@ -183,7 +183,7 @@ class TestPinKiroCli:
     def test_relative_override_is_refused_and_flagged(self, monkeypatch) -> None:
         """A relative pin is not a pin.
 
-        ``KIROCREW_KIRO_BIN=kiro-cli`` passes the resolver's existence check
+        ``AJCREW_KIRO_BIN=kiro-cli`` passes the resolver's existence check
         against the current directory, but ``exec`` would re-resolve that bare
         argv0 off ``PATH`` — probe and spawn naming different files is the
         divergence the pin removes. Refused, and reported so the operator learns
@@ -201,7 +201,7 @@ class TestPinKiroCli:
         cwd = tmp_path / "cwd"
         shim = _plant_shim(cwd)
         monkeypatch.setattr(Path, "home", classmethod(lambda cls: home))
-        monkeypatch.setenv("KIROCREW_KIRO_BIN", "kiro-cli")
+        monkeypatch.setenv("AJCREW_KIRO_BIN", "kiro-cli")
         monkeypatch.setenv("PATH", str(cwd))
         monkeypatch.chdir(cwd)
         pinned, unpinned_exists = kiro_cli.pin_kiro_cli()
@@ -274,9 +274,9 @@ class TestUpdateKiroCliPin:
         cli_server._update()
         assert update_checkout.kiro_argvs() == []
         out = capsys.readouterr().out
-        assert "Kiro Crew updated!" in out
+        assert "Aj Crew updated!" in out
         # An absent backend is not worth a line: it is optional.
-        assert "KIROCREW_KIRO_BIN" not in out
+        assert "AJCREW_KIRO_BIN" not in out
 
     def test_update_reports_a_path_only_install_it_declined(
         self, monkeypatch, update_checkout, capsys
@@ -284,7 +284,7 @@ class TestUpdateKiroCliPin:
         """Refusing is right; refusing SILENTLY is not.
 
         A host whose only kiro-cli is reachable through ``PATH`` never gets the
-        backend updated by ``kirocrew update`` — the operator is told, and told
+        backend updated by ``ajcrew update`` — the operator is told, and told
         the override that puts it back.
         """
         monkeypatch.setattr(
@@ -297,8 +297,8 @@ class TestUpdateKiroCliPin:
         cli_server._update()
         assert update_checkout.kiro_argvs() == []
         out = capsys.readouterr().out
-        assert "KIROCREW_KIRO_BIN" in out
-        assert "Kiro Crew updated!" in out
+        assert "AJCREW_KIRO_BIN" in out
+        assert "Aj Crew updated!" in out
 
     @posix_only
     def test_update_never_runs_a_path_shadowed_shim(
@@ -313,7 +313,7 @@ class TestUpdateKiroCliPin:
         spawned = update_checkout.kiro_argvs()
         assert spawned == [], f"a PATH-only kiro-cli was spawned: {spawned}"
         assert all(c[0] != "kiro-cli" for c in update_checkout.calls)
-        assert "KIROCREW_KIRO_BIN" in capsys.readouterr().out
+        assert "AJCREW_KIRO_BIN" in capsys.readouterr().out
 
 
 # --------------------------------------------------------------------------- #
@@ -361,7 +361,7 @@ class TestDiagnosticsKiroCliPin:
     def test_path_only_install_is_named_as_such_not_as_absent(self, monkeypatch) -> None:
         """A maintainer reading versions.txt must be able to tell "not installed"
         from "installed where the pin does not look" — the second is the
-        operator's fix (``KIROCREW_KIRO_BIN``), the first is not a defect."""
+        operator's fix (``AJCREW_KIRO_BIN``), the first is not a defect."""
         argvs = self._capture(monkeypatch)
         monkeypatch.setattr(
             kiro_cli,
@@ -373,7 +373,7 @@ class TestDiagnosticsKiroCliPin:
         line = diagnostics._kiro_cli_version()
         assert argvs == []
         assert line != "unavailable"
-        assert "PATH" in line and "KIROCREW_KIRO_BIN" in line
+        assert "PATH" in line and "AJCREW_KIRO_BIN" in line
 
     def test_probe_failure_still_reads_unavailable(self, monkeypatch) -> None:
         monkeypatch.setattr(kiro_cli, "resolve_kiro_cli", lambda **kw: "/opt/pinned/bin/kiro-cli")
@@ -396,11 +396,11 @@ class TestDiagnosticsKiroCliPin:
 
     @staticmethod
     def _route(monkeypatch, *, backend: str, bundle: bool) -> None:
-        from kiro_crew.config import KiroCrewConfig
+        from aj_crew.config import AjCrewConfig
 
         agent = SimpleNamespace(acp_backend=backend, kas_bundle=bundle)
         monkeypatch.setattr(
-            KiroCrewConfig, "load", classmethod(lambda cls: SimpleNamespace(agent=agent))
+            AjCrewConfig, "load", classmethod(lambda cls: SimpleNamespace(agent=agent))
         )
 
     def test_absent_backend_on_the_bundle_route_says_it_is_not_used(self, monkeypatch) -> None:
@@ -426,7 +426,7 @@ class TestDiagnosticsKiroCliPin:
     def test_the_engine_line_names_the_installed_engine_and_the_pin(
         self, monkeypatch, tmp_path
     ) -> None:
-        from kiro_crew.agent_sdk import kas_bundle
+        from aj_crew.agent_sdk import kas_bundle
 
         self._route(monkeypatch, backend="kas", bundle=True)
         monkeypatch.setattr(
@@ -446,13 +446,13 @@ class TestDiagnosticsKiroCliPin:
         )
 
     def test_the_engine_line_without_an_install_names_the_command(self, monkeypatch) -> None:
-        from kiro_crew.agent_sdk import kas_bundle
+        from aj_crew.agent_sdk import kas_bundle
 
         self._route(monkeypatch, backend="kas", bundle=True)
         monkeypatch.setattr(kas_bundle, "installed_bundle", lambda: None)
         line = diagnostics._kas_engine_version()
         assert line.startswith("not installed")
-        assert "kirocrew kas install" in line
+        assert "ajcrew kas install" in line
 
     def test_the_engine_line_is_not_selected_on_the_relay_route(self, monkeypatch) -> None:
         self._route(monkeypatch, backend="kas", bundle=False)
@@ -470,11 +470,11 @@ class TestDiagnosticsKiroCliPin:
         line = diagnostics._kiro_cli_version()
         assert argvs == [], f"a PATH-only kiro-cli was spawned: {argvs}"
         assert line != "SHIM_RAN"
-        assert "KIROCREW_KIRO_BIN" in line
+        assert "AJCREW_KIRO_BIN" in line
 
 
 # --------------------------------------------------------------------------- #
-# Structural guard: no bare-name kiro-cli spawn anywhere under src/kiro_crew   #
+# Structural guard: no bare-name kiro-cli spawn anywhere under src/aj_crew   #
 # --------------------------------------------------------------------------- #
 
 _SPAWN_FUNCS = {
@@ -492,14 +492,14 @@ _BARE_NAME_CONSTANTS = {"KIRO_CLI_BIN", "KIRO_CLI_NAME"}
 
 #: Bare-name sites the guard SEES but this ratchet still admits, as
 #: ``<path>::<function>``. All are interactive: they run under an operator's
-#: own ``kirocrew doctor`` / ``kirocrew setup`` on a TTY, where the inherited
+#: own ``ajcrew doctor`` / ``ajcrew setup`` on a TTY, where the inherited
 #: ``PATH`` is the documented default (see ``resolve_kiro_cli``) and the
 #: exposure the pin closes — an unattended or click-reachable spawn — does not
 #: apply. Shrink-only: a fixed site must be deleted here or the test fails,
 #: and a new site anywhere is refused outright.
 _KNOWN_INTERACTIVE_SITES = frozenset(
     {
-        # `kirocrew setup` prerequisite notice: which(KIRO_CLI_BIN), no spawn.
+        # `ajcrew setup` prerequisite notice: which(KIRO_CLI_BIN), no spawn.
         "cli_setup.py::_ensure_prerequisites",
     }
 )

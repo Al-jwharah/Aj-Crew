@@ -90,7 +90,7 @@ describe('useNativeNotification', () => {
         body: '2 new notifications',
         icon: '/avatar.png',
         silent: true,
-        tag: 'kirocrew-notif',
+        tag: 'ajcrew-notif',
         data: { url: '/' },
       }),
     )
@@ -109,7 +109,7 @@ describe('useNativeNotification', () => {
       body: 'there',
       icon: '/avatar.png',
       silent: true,
-      tag: 'kirocrew-notif',
+      tag: 'ajcrew-notif',
       data: { url: '/' },
     })
   })

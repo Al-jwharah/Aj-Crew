@@ -20,11 +20,11 @@ from pathlib import Path
 import pytest
 from stall_dump_helpers import CHAT_STACK, CRON_STACK, write_dump
 
-from kiro_crew import cron_inflight
-from kiro_crew.cron import CronJob, CronService, CronStoreUnreadable
-from kiro_crew.dashboard import crash_dump_store
-from kiro_crew.stall_attribution import attribute_dump, describe
-from kiro_crew.testing.wait import finished
+from aj_crew import cron_inflight
+from aj_crew.cron import CronJob, CronService, CronStoreUnreadable
+from aj_crew.dashboard import crash_dump_store
+from aj_crew.stall_attribution import attribute_dump, describe
+from aj_crew.testing.wait import finished
 
 pytestmark = pytest.mark.asyncio
 
@@ -93,7 +93,7 @@ class TestBreaker:
             assert paused.last_status == "error"
             assert paused.last_error is not None
             assert "loop-stall watchdog" in paused.last_error
-            assert f"kirocrew cron resume {job.id}" in paused.last_error
+            assert f"ajcrew cron resume {job.id}" in paused.last_error
             # Persisted, so a reload sees the pause.
             raw = json.loads((tmp_path / "crons.json").read_text(encoding="utf-8"))
             (rec,) = [r for r in raw["jobs"] if r["id"] == job.id]
@@ -253,7 +253,7 @@ class TestBreaker:
     ) -> None:
         from unittest.mock import MagicMock
 
-        from kiro_crew import sel as sel_mod
+        from aj_crew import sel as sel_mod
 
         seed = CronService(base_dir=tmp_path)
         job = seed.add_job(name="audited", message="m", every_secs=3600)

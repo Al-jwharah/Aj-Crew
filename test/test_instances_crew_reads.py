@@ -1,7 +1,7 @@
 """Tests for the MCP-only crew-scoped session reads: the wire behaviour.
 
 ``/api/crew-sessions/{search,list,read}`` (``handlers_instances_crew_reads``) back
-the ``crew=`` scope on the kirocrew-core session read tools; these pin what crosses
+the ``crew=`` scope on the ajcrew-core session read tools; these pin what crosses
 the tunnel. Who may call is pinned in ``test_instances_crew_reads_auth.py``.
 
 Shared doubles come from ``instances_crew_reads_helpers`` (this family) and
@@ -22,7 +22,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
     """MCP-only crew-scoped session reads (api_crew_sessions_search|list|read)."""
 
     def test_search_requires_internal_secret(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -34,7 +34,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         assert _body(r)["code"] == "internal_secret_required"
 
     def test_search_unknown_crew_404(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -46,7 +46,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         assert _body(r)["code"] == "crew_unknown"
 
     def test_search_reshapes_and_resolves_by_name(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -71,7 +71,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         assert rows[0]["title"] == "Hello"
 
     def test_search_maps_remote_failure(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -86,7 +86,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         assert "peer prose" not in r.text
 
     def test_list_reshapes_rows(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -101,7 +101,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         assert rows[0]["key"] == "s1" and rows[0]["messages"] == 4
 
     def test_read_returns_tail_capped_messages(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -128,7 +128,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         """A refused key is a denied crew read and is audited as one, with the
         caller's key: the audit middleware skips GETs, so without the handler's own
         row SEL would hold the authorization and not the refusal."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -149,8 +149,8 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         assert getattr(mgr, "last_path", None) is None, "a refused key must not reach the peer"
 
     def test_read_maps_proxy_error(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.ssh_tunnel_manager import ProxyRequestError
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.ssh_tunnel_manager import ProxyRequestError
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -183,7 +183,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         A ``503 transcript_busy`` is a retryable lock, not an empty conversation, and a
         ``404`` is an unknown key. The peer's body is untrusted and never echoed.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -205,7 +205,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
     def test_list_404_is_a_refusal_not_a_missing_session(self, tmp_path, monkeypatch):
         """The list path names no session, so a peer ``404`` there cannot mean "no
         such session"; it is reported as the peer's refusal."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -219,8 +219,8 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         """A reply past ``PEER_SESSIONS_REPLY_MAX_BYTES`` is a size the hub refuses,
         reported as ``crew_reply_too_large`` so a session that outgrew the bound is
         told so -- not as a peer that answered garbage."""
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.instances.constants import PEER_SESSIONS_REPLY_MAX_BYTES
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.instances.constants import PEER_SESSIONS_REPLY_MAX_BYTES
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -247,8 +247,8 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         """
         import threading
 
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.dashboard import handlers_instances_crew_reads as crew_reads
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances_crew_reads as crew_reads
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -316,9 +316,9 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         """A field over ``_FIELD_MAX_RAW_CHARS`` becomes the placeholder; under it the
         chain sees every character. Cutting raw text could split a credential (or hide it
         behind zero-width padding) so the detector misses it."""
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.dashboard import handlers_instances_crew_reads as crew_reads
-        from kiro_crew.dashboard.handlers_instances_gate import _PEER_FIELD_MAX_CHARS
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances_crew_reads as crew_reads
+        from aj_crew.dashboard.handlers_instances_gate import _PEER_FIELD_MAX_CHARS
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -375,8 +375,8 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         from aiohttp import ClientPayloadError
         from instances_crew_reads_helpers import _FakeResp
 
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.history import INCOGNITO_EXCLUDED_HEADER
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.history import INCOGNITO_EXCLUDED_HEADER
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -418,7 +418,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         ``crew_ambiguous`` and the caller is told to use an id. An exact id still
         resolves even when it collides with another crew's name, and a name only
         one crew carries still resolves."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -451,7 +451,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         name is stored as typed. Compared through the same pipeline, a name the
         owner typed with a decomposed accent still resolves, and two names the
         pipeline folds together are ``crew_ambiguous`` rather than the first one."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -486,8 +486,8 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         none) every leg answers ``MANAGER_UNAVAILABLE_CODE`` -- the answer every
         instances route gives in that state -- and never ``crew_unknown`` for a crew
         that IS in the registry."""
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.dashboard.handlers_instances_gate import MANAGER_UNAVAILABLE_CODE
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard.handlers_instances_gate import MANAGER_UNAVAILABLE_CODE
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -507,7 +507,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
             assert _body(r)["code"] == MANAGER_UNAVAILABLE_CODE
 
     def test_search_drops_incognito_rows(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -531,7 +531,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         assert [row["key"] for row in _body(r)["sessions"]] == ["pub"]
 
     def test_list_drops_incognito_rows(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -549,7 +549,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         assert [row["key"] for row in _body(r)["sessions"]] == ["pub"]
 
     def test_read_filters_to_recall_roles(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -571,7 +571,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         assert [m["role"] for m in _body(r)["messages"]] == ["user", "assistant"]
 
     def test_resolve_prefers_exact_id_over_colliding_name(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -595,7 +595,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         assert seen["iid"] == "cd-1"  # the entry whose ID is cd-1, not the one NAMED cd-1
 
     def test_crew_pattern_accepts_display_names(self):
-        from kiro_crew.validation import _CREW_RE
+        from aj_crew.validation import _CREW_RE
 
         assert _CREW_RE.match("chick")
         assert _CREW_RE.match("My Crew")  # spaces allowed (display name)
@@ -611,7 +611,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         ``SELECT_CREW_SCHEMA``'s own ``crew`` field already uses. The bound is a
         TRANSPORT one (the value rides a proxy query leg), not a semantic one.
         """
-        from kiro_crew.validation import _CREW_RE, MAX_SHORT_STRING
+        from aj_crew.validation import _CREW_RE, MAX_SHORT_STRING
 
         assert _CREW_RE.match("x" * 65)  # the length the old {1,64} refused
         assert _CREW_RE.match("x" * MAX_SHORT_STRING)
@@ -624,7 +624,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         by the field cap with a different message — so this pins them together
         rather than trusting they were edited in step.
         """
-        from kiro_crew.validation import (
+        from aj_crew.validation import (
             GET_CHAT_SESSION_SCHEMA,
             LIST_SESSIONS_SCHEMA,
             MAX_SHORT_STRING,
@@ -642,8 +642,8 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         matches no entry (``crew_unknown``). Driven through the handler: a schema-only
         check passes while that bug is live.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
-        from kiro_crew.validation import MAX_SHORT_STRING
+        from aj_crew.dashboard import handlers_instances as handlers
+        from aj_crew.validation import MAX_SHORT_STRING
 
         _enable(tmp_path, monkeypatch)
         long_name = "c" * 65
@@ -668,7 +668,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         assert MAX_SHORT_STRING > 64
 
     def test_read_requests_incognito_exclusion(self, tmp_path, monkeypatch):
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -689,7 +689,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         ``INCOGNITO_EXCLUDED_HEADER``; that is ``crew_peer_too_old`` and the body is never
         read. The discovery legs filter on ``memory_mode`` locally.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -736,8 +736,8 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         and the ``[]`` refusal -- and NOT on the plain click-through, which never
         asked for the exclusion and must not claim it.
         """
-        from kiro_crew.dashboard.handlers import sessions as sessions_handlers
-        from kiro_crew.history import INCOGNITO_EXCLUDED_HEADER, TranscriptWithheld
+        from aj_crew.dashboard.handlers import sessions as sessions_handlers
+        from aj_crew.history import INCOGNITO_EXCLUDED_HEADER, TranscriptWithheld
 
         class _Log:
             def __init__(self, exc=None):
@@ -787,7 +787,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         """
         import threading
 
-        from kiro_crew.dashboard.handlers import sessions as sessions_handlers
+        from aj_crew.dashboard.handlers import sessions as sessions_handlers
 
         seen: dict[str, str] = {}
 
@@ -833,8 +833,8 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         ``TranscriptWithheld`` answers ``[]``; a busy lock answers 503 (retryable). The
         ungated ``read_messages`` must never be reached on this arm.
         """
-        from kiro_crew.dashboard.handlers import sessions as sessions_handlers
-        from kiro_crew.history import TranscriptBusy, TranscriptWithheld
+        from aj_crew.dashboard.handlers import sessions as sessions_handlers
+        from aj_crew.history import TranscriptBusy, TranscriptWithheld
 
         class _Log:
             def __init__(self, exc):
@@ -874,7 +874,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         An unhashable value like ``[]`` raises ``TypeError`` against the ``frozenset``.
         The row is dropped and the sibling still lists, so the guard is a filter.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -894,7 +894,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
         missing mode as restricted would drop nearly every legitimate row — the
         opposite failure from the crash it fixes.
         """
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)
@@ -906,7 +906,7 @@ class TestCrewScopedSessionReads(CrewReadsCase):
 
     def test_a_string_incognito_mode_is_still_excluded(self, tmp_path, monkeypatch):
         """The membership test itself must survive the type guard."""
-        from kiro_crew.dashboard import handlers_instances as handlers
+        from aj_crew.dashboard import handlers_instances as handlers
 
         _enable(tmp_path, monkeypatch)
         reg = self._reg(tmp_path)

@@ -24,12 +24,12 @@ from session_ledger_projection_helpers import (  # noqa: F401 -- the autouse fix
     _unit,
 )
 
-from kiro_crew import crew_log as lg
-from kiro_crew import session_ledger as sl
-from kiro_crew.crew_log import CrewLog, eager
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log
-from kiro_crew.crew_log import store
+from aj_crew import crew_log as lg
+from aj_crew import session_ledger as sl
+from aj_crew.crew_log import CrewLog, eager
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log
+from aj_crew.crew_log import store
 
 
 def test_a_refusal_during_the_append_is_not_reported_durable():

@@ -16,14 +16,14 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer, make_mocked_request
 
-from kiro_crew.dashboard.chat_folders import (
+from aj_crew.dashboard.chat_folders import (
     _refuse_mate_move_out,
     api_chat_folder_delete,
     api_chat_folder_update,
 )
-from kiro_crew.dashboard.mate_folders import MATE_HOME_KEY
-from kiro_crew.dashboard.state import DashboardState, _ChatSlot
-from kiro_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
+from aj_crew.dashboard.mate_folders import MATE_HOME_KEY
+from aj_crew.dashboard.state import DashboardState, _ChatSlot
+from aj_crew.dashboard.token_auth import MEMBER_CHAT_PRINCIPAL_KEY
 
 MATE = "member:member-radar-0123"
 HOME = "fldrhome0001"
@@ -171,7 +171,7 @@ def _create_state(tmp_path: Any) -> DashboardState:
     """A real state for POST /api/chat/slots, holding the folders above."""
     from chat_test_helpers import _make_ready_kiro_prerequisite
 
-    from kiro_crew.history import ConversationLog
+    from aj_crew.history import ConversationLog
 
     sessions = MagicMock(count=0)
     sessions.remove = AsyncMock()
@@ -193,9 +193,9 @@ def _create_state(tmp_path: Any) -> DashboardState:
 async def test_a_create_naming_a_chat_in_a_mate_home_may_not_move_it_out(
     tmp_path: Any, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from kiro_crew.dashboard.chat import api_chat_slot_create
+    from aj_crew.dashboard.chat import api_chat_slot_create
 
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     state = _create_state(tmp_path)
     app = web.Application()
     app["state"] = state

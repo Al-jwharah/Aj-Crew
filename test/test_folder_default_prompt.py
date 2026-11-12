@@ -10,14 +10,14 @@ import pytest
 from aiohttp.test_utils import TestClient, TestServer
 from chat_test_helpers import _make_folder_app, _make_state
 
-from kiro_crew.dashboard.chat_folders_records import MAX_FOLDER_DEFAULT_PROMPT_CHARS
+from aj_crew.dashboard.chat_folders_records import MAX_FOLDER_DEFAULT_PROMPT_CHARS
 
 _PROMPT = "You are helping the {{customer}} team.\nStart by reading the open tickets."
 
 
 @pytest.fixture
 def state(tmp_path, monkeypatch):
-    monkeypatch.setattr("kiro_crew.dashboard.state.config_dir", lambda: tmp_path)
+    monkeypatch.setattr("aj_crew.dashboard.state.config_dir", lambda: tmp_path)
     return _make_state(tmp_path)
 
 
@@ -87,7 +87,7 @@ async def test_an_unusable_prompt_is_refused_on_create_and_update(state, bad) ->
 
 
 def test_a_folder_carrying_it_is_kept_by_cleanup() -> None:
-    from kiro_crew.dashboard.chat_folder_cleanup import removable_folder_ids
+    from aj_crew.dashboard.chat_folder_cleanup import removable_folder_ids
 
     folders = [
         {"id": "top", "name": "top", "order": 0, "parent_id": ""},

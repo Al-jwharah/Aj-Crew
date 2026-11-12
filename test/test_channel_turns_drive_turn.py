@@ -31,15 +31,15 @@ from channel_turns_helpers import published_fixture  # noqa: F401
 from channel_turns_helpers import spooled_fixture  # noqa: F401
 from channel_turns_helpers import _ROOM, CONV, KEY, ROUTE, _bound_as_room
 
-from kiro_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
-from kiro_crew.messaging.dispatch import (
+from aj_crew.agent_sdk.backends import ACP_BACKEND_CLAUDE
+from aj_crew.messaging.dispatch import (
     TOOLLESS_TURN_AGENT,
     ChannelTurn,
     TurnRecord,
     drive_turn,
     exchange_writer,
 )
-from kiro_crew.start_priority import StartPriority
+from aj_crew.start_priority import StartPriority
 
 # ── the record adapter every exchange-only channel uses ──────────────────────
 

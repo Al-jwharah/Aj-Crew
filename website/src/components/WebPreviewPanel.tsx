@@ -38,7 +38,7 @@ export {
  * It opens ONLY the origins listed in `dashboard.browser_local_origins`
  * (Settings -> Browser -> Local preview). A loopback address outside the list is
  * answered with a one-click "Allow" that adds it; an outside URL is answered with
- * "Open this in your Chrome, or ask Kiro" — the agent's browser is the live card
+ * "Open this in your Chrome, or ask Aj" — the agent's browser is the live card
  * in the chat (RFC browser-live-harness), and the agent never drives this tab.
  *
  * In the desktop app the page opens in the NATIVE Chromium view instead
@@ -69,7 +69,7 @@ export {
  * plain window event (not prop-drilling) keeps this leaf panel decoupled from
  * the two ancestors that own that layout.
  */
-export const PREVIEW_EXPAND_EVENT = 'kirocrew-preview-expand'
+export const PREVIEW_EXPAND_EVENT = 'ajcrew-preview-expand'
 /**
  * Window event: request an area screenshot into the chat input. ChatPage owns
  * the capture pipeline (getDisplayMedia in the browser / the same path routed
@@ -77,7 +77,7 @@ export const PREVIEW_EXPAND_EVENT = 'kirocrew-preview-expand'
  * SnipOverlay crop surface → attach the PNG to the composer), so the preview's
  * crop button just asks for it via this event rather than duplicating capture.
  */
-export const PREVIEW_SNIP_EVENT = 'kirocrew-web-preview-snip'
+export const PREVIEW_SNIP_EVENT = 'ajcrew-web-preview-snip'
 
 /** iframe sandbox — permissive enough for real apps + HMR, but still a sandbox. */
 const SANDBOX = 'allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads'
@@ -224,7 +224,7 @@ function useLivenessProbe(url: string, enabled: boolean, resetKey = 0): boolean 
   return unreachable
 }
 
-/** The slice of `GET /api/config/kirocrew` the Preview tab reads. */
+/** The slice of `GET /api/config/ajcrew` the Preview tab reads. */
 interface PreviewOriginsConfig {
   dashboard?: { browser_local_origins?: unknown }
 }
@@ -237,8 +237,8 @@ interface PreviewOriginsConfig {
 function usePreviewOrigins() {
   const qc = useQueryClient()
   const q = useQuery<PreviewOriginsConfig>({
-    queryKey: ['kirocrewConfig'],
-    queryFn: () => api.kirocrewConfig() as Promise<PreviewOriginsConfig>,
+    queryKey: ['ajcrewConfig'],
+    queryFn: () => api.ajcrewConfig() as Promise<PreviewOriginsConfig>,
   })
   const origins = useMemo(() => {
     const raw = q.data?.dashboard?.browser_local_origins
@@ -246,7 +246,7 @@ function usePreviewOrigins() {
   }, [q.data])
   const allow = useMutation({
     mutationFn: (origin: string) => api.patchConfig('dashboard.browser_local_origins', [...origins, origin]),
-    onSettled: () => { void qc.invalidateQueries({ queryKey: ['kirocrewConfig'] }) },
+    onSettled: () => { void qc.invalidateQueries({ queryKey: ['ajcrewConfig'] }) },
   })
   return { origins, loaded: q.isSuccess || q.isError, loadError: q.isError, allow }
 }

@@ -177,7 +177,7 @@ EXEMPTIONS: tuple[Exemption, ...] = (
         "data and catalogues (lockfiles, i18n locale catalogues), not code",
     ),
     Exemption(
-        ("src/kiro_crew/_vendor/*", "*.min.js"),
+        ("src/aj_crew/_vendor/*", "*.min.js"),
         "vendored third-party code, kept byte-for-byte equal to its upstream",
     ),
     Exemption(

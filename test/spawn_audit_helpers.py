@@ -1,6 +1,6 @@
 """The spawn audit's benign-spawn rows for spawns outside ``apps/builtins/``.
 
-``test_spawn_audit.py`` checks the unrouted spawns in ``src/kiro_crew`` against
+``test_spawn_audit.py`` checks the unrouted spawns in ``src/aj_crew`` against
 ``BENIGN_SPAWNS``, the union of this table and ``BENIGN_APP_SPAWNS`` in
 ``spawn_audit_app_spawns.py``. A row is keyed by ``<relpath>::<enclosing function>``, and a
 comment above a row or a run of rows justifies them; the rule for adding one is the
@@ -141,7 +141,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # ``test/test_acp_opencode_backend.py`` pins that.
         "acp/harness/opencode.py::_opencode_reported_major",
         # The pi gate read-back, the same shape as the opencode one above. ONE fixed
-        # argv -- Kiro Crew's own gate launcher (a file this core wrote into the
+        # argv -- Aj Crew's own gate launcher (a file this core wrote into the
         # sandbox run directory, execing the resolved ``pi`` binary) plus the three
         # literal words in ``_PI_RPC_ARGS`` (``--mode rpc --no-themes``, what the
         # adapter itself passes) -- no shell, a 30s timeout, and a cwd that is the
@@ -200,13 +200,13 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         "acp/harness/strands.py::_verify_strands_gate",
         # The Strands gate module's child-environment probe. It runs INSIDE the
         # Strands CLI's Python worker -- itself the sandboxed, credential-masked child
-        # Kiro Crew spawned -- and never in the gateway. ONE fixed argv:
+        # Aj Crew spawned -- and never in the gateway. ONE fixed argv:
         # ``sys.executable -c <constant probe source> <the withheld NAMES>``, through
         # the local sandbox's own ``_stream_process`` (the path the agent's shell
         # commands take, which is exactly what it proves), to report which names a
         # child still sees. No agent value reaches it; it runs once at load, before
         # any tool call.
-        "agent_sdk/gate_extensions/strands/kiro_crew_strands_gate.py::in_thread",
+        "agent_sdk/gate_extensions/strands/aj_crew_strands_gate.py::in_thread",
         # NOT a subprocess spawn: the AST heuristic matches ``asyncio.run``, which
         # here only drives ``kiro_prerequisite_process._run_process`` -- the
         # sandbox-routed probe runner listed below -- and that runner makes the spawn.
@@ -230,7 +230,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # parent.
         "subprocess_pool/executor.py::_spawn",
         # The PDF extractor child: ONE fixed argv, ``sys.executable -P -m
-        # kiro_crew.pdf_extract_child --max-chars=N --max-pages=M`` with both
+        # aj_crew.pdf_extract_child --max-chars=N --max-pages=M`` with both
         # numbers module constants of the two callers (file-grep, knowledge
         # ingest). The untrusted input -- the document -- travels on stdin, never
         # on argv, cwd or env, and the env is ``scrub_env()``. It is spawned
@@ -252,7 +252,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # because the engine's whole job is to build the NEXT gateway install
         # outside the agent sandbox. _spawn_build_child runs, in its own session
         # (inside the gateway with the trusted-PATH scrubbed environment, under
-        # `kirocrew update` with the operator's own shell environment; interpreter
+        # `ajcrew update` with the operator's own shell environment; interpreter
         # children run -I either way): the openssl binary
         # resolved via trusted_system_bin (never PATH), which reads the pinned key
         # on stdin and the key and signature over anonymous pipe FDs (no file is
@@ -284,7 +284,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # import, `-S` keeping `site` -- and with it every `.pth` in the venv's
         # site-packages -- from running at all in a child that is unsandboxed on
         # purpose, and an environment reduced to a fixed allow-list (no credentials,
-        # no `PYTHON*`, no `KIROCREW_*`). The one argument is the path of the
+        # no `PYTHON*`, no `AJCREW_*`). The one argument is the path of the
         # installed `_pywhispercpp` extension as the interpreter's OWN finder
         # resolved it (`binary_identity()`, i.e. `importlib.util.find_spec`), never
         # anything an agent supplied; it is passed so the `-I` child, which cannot
@@ -375,13 +375,13 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # Nothing here is agent-influenced.
         "platform_compat_identity.py::_process_lstart",
         "apps/backend.py::_resolve_nvm_path",
-        # py-spy attach for `kirocrew perf sample --pid`: fixed list-argv (no
+        # py-spy attach for `ajcrew perf sample --pid`: fixed list-argv (no
         # shell=True), binary resolved via shutil.which rather than from input,
         # and every value is either a range-validated int (pid/seconds/rate) or a
         # path passed as a flag VALUE. NOT sandboxed because py-spy's whole job is
         # reading another process's memory (ptrace / task_for_pid) — a sandbox that
         # scrubbed that capability would break the feature it is guarding. Gated
-        # behind KIROCREW_DEBUG and reachable only from the CLI.
+        # behind AJCREW_DEBUG and reachable only from the CLI.
         "cli_perf.py::_sample_out_of_process",
         # The SINGLE shared gh spawn chokepoint (github_runner.run_gh), serving
         # Issue Radar (`_gh_run`), Code Review Sage (`run_gh_json`,
@@ -401,7 +401,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # secrets), and emits an SEL audit event on success/failure/timeout.
         "github_runner.py::run_gh",
         # Fixed `git -C <package root> rev-parse HEAD` / `git diff --quiet HEAD -- <root>`
-        # argv (shell=False). The only path is the kiro_crew package directory this
+        # argv (shell=False). The only path is the aj_crew package directory this
         # process imported, derived from `__file__`; no agent-influenced input reaches
         # it, and it runs once per process (lru_cache) to name the code revision the
         # MCP gateway daemon and its owner compare.
@@ -447,7 +447,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # PYTHONPATH/CWD answer for the interpreter under test.
         "dep_sync.py::_probe_interpreter",
         # The stale-asset watchdog's relaunch probe: `<python> -X utf8 -c "import
-        # kiro_crew.cli, kiro_crew.cli_server"` from `/`, a fixed literal. The interpreter is the one
+        # aj_crew.cli, aj_crew.cli_server"` from `/`, a fixed literal. The interpreter is the one
         # the service manager's own loaded command names, run under that unit's
         # environment, which the supervisor's relaunch would execute anyway; it
         # is unisolated on purpose, because the relaunch is.
@@ -466,7 +466,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # npm_preflight._extract above.
         "dep_sync.py::_git_blob_text",
         # Browser Mode setup/install path, run only from the dashboard settings
-        # save (off the event loop) or the `kirocrew browse setup` CLI. Fixed
+        # save (off the event loop) or the `ajcrew browse setup` CLI. Fixed
         # argv of trusted node-toolchain tools resolved via find_node_tool
         # (npm/npx/node) plus the ``playwright install <engine>`` subcommand,
         # Browser Harness (``browser_harness/``), the agent's one browser
@@ -490,7 +490,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         #     real browser and the loopback relay, so a sandbox would break them.
         "browser_harness/install.py::_run",
         "browser_harness/supervisor.py::_spawn",
-        # The KAS engine installer (`kirocrew kas install`, operator terminal, outside
+        # The KAS engine installer (`ajcrew kas install`, operator terminal, outside
         # the sandbox). `_open_tar` runs the host's `zstd -d -c` on an archive whose
         # name the manifest validated as a bare object name and whose bytes were
         # sha256-pinned before extraction; `_probe_node` runs the just-extracted Node
@@ -538,13 +538,13 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         "cli_commands_app.py::_register_app_crons_to_scheduler",
         # NOT a subprocess spawn: the AST heuristic matches ``asyncio.run`` (attr
         # ``run`` on base ``asyncio``) driving the shared ``_remove_member_leftovers``
-        # teardown from the loop-less ``kirocrew agent delete``. No child process is
+        # teardown from the loop-less ``ajcrew agent delete``. No child process is
         # created here; the only input is the operator-typed agent name. The
         # worktree step's git calls run inside ``crewmate_worktree``'s own runner.
         "cli_commands_agent.py::_remove_deleted_agent_leftovers",
         # NOT a subprocess spawn: the AST heuristic matches ``asyncio.run`` (attr
         # ``run`` on base ``asyncio``) driving ``KasLoginService``'s device-code
-        # sign-in and sign-out coroutines from the loop-less ``kirocrew kas
+        # sign-in and sign-out coroutines from the loop-less ``ajcrew kas
         # login`` / ``kas logout`` verbs. No child process is created: the
         # inputs are operator-typed flags (provider, start URL, region) that go
         # into HTTPS requests to the issuer and into Crew's own vault, never
@@ -593,7 +593,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # all.
         # Read-only and 10s-capped. These two exist SO THAT doctor does not parse
         # ``~/.aws/config`` itself: that file is inside a directory the sensitive-
-        # path floor fences from the agent, and ``kirocrew doctor`` is reachable
+        # path floor fences from the agent, and ``ajcrew doctor`` is reachable
         # from a tool call, so reading it here would vend through a diagnostic what
         # the floor refuses directly. ``aws configure`` is the sanctioned path the
         # deny-remediation text itself names, and the profile set it returns is the
@@ -682,7 +682,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # `checkout_on_no_branch` tests in test_cli_server_more_coverage.py.
         "cli_server_update.py::_detached_upstream_branch",
         # The agent-only config refresh extracted from _update: a fixed argv
-        # (`<this interpreter> -m kiro_crew setup --agent-only`) built from
+        # (`<this interpreter> -m aj_crew setup --agent-only`) built from
         # sys.executable plus literals, cwd from the detected install layout —
         # no shell, no PATH lookup, nothing agent-influenced. stdin=DEVNULL
         # and TimeoutExpired handling are pinned by
@@ -695,7 +695,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # run by the operator from the CLI, each call capped by a timeout.
         "cli_setup.py::_run_desktop_build_step",
         # Cursor Motion overlay renderer: `<this interpreter> -m
-        # kiro_crew.computer_use.overlay_proc`, a fixed argv built from
+        # aj_crew.computer_use.overlay_proc`, a fixed argv built from
         # sys.executable plus a module constant — no shell, no PATH lookup, and
         # nothing agent-supplied (pinned structurally by
         # test_computer_use_unsupported.py::test_overlay_spawn_is_a_fixed_module_launch).
@@ -787,7 +787,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         "cloud/login_target.py::discover_local_identity",
         "dashboard/chat_voice.py::api_voice_voices",
         # Computer-use permission probe: `<this interpreter> -P -m
-        # kiro_crew.computer_use.permission_probe`, a fixed argv (a module
+        # aj_crew.computer_use.permission_probe`, a fixed argv (a module
         # constant) with no shell and no agent-reachable input; the handler
         # passes nothing from the request body. The interpreter is the gateway's
         # own `sys.executable`, i.e. the SAME install as the running gateway,
@@ -818,7 +818,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         "dashboard/handlers/terminal.py::api_terminal_ws",
         "dashboard/handlers/updates_apply.py::_apply",
         # The update check's git side: fixed `git fetch` / `rev-parse` / `show` /
-        # `diff` list-argv (no shell=True) run in KIROCREW_PROJECT_DIR, an operator
+        # `diff` list-argv (no shell=True) run in AJCREW_PROJECT_DIR, an operator
         # environment value, never agent input. Read-only version comparison —
         # nothing here writes to the tree.
         "dashboard/handlers/updates_check.py::_check_git_checkout",
@@ -857,7 +857,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         "env.py::_run",
         "env.py::activate_mise",
         # Node bootstrap: runs the bundled ``ensure-node.sh`` (a fixed `bash
-        # <script>` argv, script path derived from KIROCREW_PROJECT_DIR / the
+        # <script>` argv, script path derived from AJCREW_PROJECT_DIR / the
         # module's own location, never agent input) when no node resolves. Same
         # class as cli.py::_ensure_node, which invokes the identical script.
         "env.py::ensure_node",
@@ -885,7 +885,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # The shared ahead/behind divergence count: a read-only ``git rev-list
         # --count --left-right HEAD...<upstream>`` fixed list-argv (no shell)
         # run against the install's own checkout. Callers pass the repo path
-        # (KIROCREW_PROJECT_DIR, an operator environment value) and the
+        # (AJCREW_PROJECT_DIR, an operator environment value) and the
         # upstream spelling — a literal ``@{u}`` or ``origin/<branch>`` where
         # <branch> is git's own ``rev-parse --abbrev-ref HEAD`` output sitting
         # after the ``origin/`` prefix so it cannot become an option. Nothing
@@ -912,7 +912,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         "instances/diagnostics.py::_run_stdout",
         "instances/ssh_tunnel_manager_child.py::start",
         "instances/token_mint.py::mint_remote_token",
-        "instances/token_mint.py::run_remote_kirocrew",
+        "instances/token_mint.py::run_remote_ajcrew",
         # NOT a subprocess spawn: the AST heuristic matches ``asyncio.run`` in the
         # desktop tunnel keeper's CLI entry point. The only child it creates is the
         # forward ``_SshTunnel.start`` spawns, listed just above.
@@ -929,8 +929,8 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         "mcp_gateway/backend.py::spawn_backend",
         # NOT a subprocess spawn: the AST heuristic matches ``asyncio.run`` (attr
         # ``run`` on base ``asyncio``), used here only to drive the one-shot
-        # ``_ping_async`` coroutine from a synchronous CLI path -- ``kirocrew
-        # doctor`` and ``kirocrew stop`` have no event loop of their own. The
+        # ``_ping_async`` coroutine from a synchronous CLI path -- ``ajcrew
+        # doctor`` and ``ajcrew stop`` have no event loop of their own. The
         # coroutine opens a local endpoint (``AF_UNIX`` socket or named pipe) and
         # exchanges two frames with a daemon that is already running; no child
         # process is created and there is no argv to sandbox. Same classification
@@ -989,7 +989,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         "platform/update_governance.py::_read_protected_safe_directories",
         # Read-only `git rev-parse --show-toplevel` deciding whether the install
         # root IS a working tree. Fixed list-argv (no shell=True); the only
-        # variable is the path, which comes from KIROCREW_PROJECT_DIR — an
+        # variable is the path, which comes from AJCREW_PROJECT_DIR — an
         # operator environment value, never agent input — and is absolutized,
         # NUL-rejected and dash-rejected before being passed to `-C`, so it cannot
         # be read as an option. The environment is stripped of the GIT_DIR family
@@ -1071,7 +1071,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         "power.py::_spawn_posix_inhibitor",
         "pod/cli.py::_logs",
         # launchd twin of pod/runtime.py::_run below: the single chokepoint for
-        # `launchctl <verb> gui/<uid>/dev.kirocrew.pod.<name>`. Argv is a fixed
+        # `launchctl <verb> gui/<uid>/dev.ajcrew.pod.<name>`. Argv is a fixed
         # verb set plus a label built from a validate_name-checked pod name —
         # not agent-influenced. Same disposition as the systemctl wrapper.
         "pod/launchd.py::launchctl",
@@ -1102,14 +1102,14 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         "pod/runtime.py::_git_worktrees",
         "pod/runtime.py::_run",
         "pod/runtime.py::recent_journal",
-        # `kirocrew pod exec` on Windows. POSIX execs the pod's own kirocrew in
+        # `ajcrew pod exec` on Windows. POSIX execs the pod's own ajcrew in
         # place; Windows has no exec, so the CLI runs the same binary as a child
         # and returns its exit code. Argv is the pod venv's entry point plus a
         # verb that already passed require_pod_safe_verb, run from the user's own
         # terminal, not from an agent turn.
         "pod/runtime_boot.py::_run_in_pod_as_child",
         # Task Scheduler twin of launchctl above: the single chokepoint for
-        # `schtasks.exe /<verb> /TN KiroCrewPod-<name> ...`. Argv is a fixed verb
+        # `schtasks.exe /<verb> /TN AjCrewPod-<name> ...`. Argv is a fixed verb
         # set plus a task name built from a validate_name-checked pod name and a
         # script path under the pod dir. `schtasks()` routes through it, and the
         # gate's own create-and-delete probe of a throwaway task calls it
@@ -1117,7 +1117,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         "pod/windows.py::_schtasks_raw",
         # The pod's own gateway. On Linux and macOS the service manager execs
         # it; Windows has no exec, so the task's wrapper spawns
-        # `<python> -m kiro_crew gateway ...` itself and supervises it. Argv is
+        # `<python> -m aj_crew gateway ...` itself and supervises it. Argv is
         # the interpreter plus a fixed module and flags from the pod's config,
         # created CREATE_SUSPENDED so the Job object ceiling is applied before
         # the first instruction. It IS the product, not an agent subprocess; the
@@ -1126,9 +1126,9 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         "sandbox_probe.py::_probe_sandbox_exec",
         "sandbox_argv.py::_ssh_supports_accept_new",
         # The aggregate slice-ceiling apply: `systemctl --user set-property
-        # --runtime kirocrew-agents.slice MemoryMax=<N>M MemorySwapMax=0
+        # --runtime ajcrew-agents.slice MemoryMax=<N>M MemorySwapMax=0
         # TasksMax=<N>`. Argv is a fixed verb plus the module-constant unit name
-        # (inside a pod, its child `kirocrew-agents-<hex token>.slice`, the
+        # (inside a pod, its child `ajcrew-agents-<hex token>.slice`, the
         # token hashed from the data home); the only variable tokens are
         # integers derived from config/sysconf
         # (type-checked, junk falls back to defaults) — not agent-influenced.
@@ -1138,7 +1138,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         "sandbox_slice.py::ensure_agents_slice_limits",
         # A pod's fill of the parent from the same startup call: `systemctl
         # --user show --property=MemoryMax --property=TasksMax
-        # kirocrew-agents.slice`, then `set-property --runtime` on that
+        # ajcrew-agents.slice`, then `set-property --runtime` on that
         # constant unit with only the properties shown as `infinity`. Same
         # trusted systemctl and config-derived integers as the apply above.
         "sandbox_slice.py::_fill_unset_parent_limits",
@@ -1152,7 +1152,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # aggregate ceiling above, it builds the boundary agents are confined by.
         "shared_crew/containment.py::_run",
         # The agent-slice MemoryHigh reconciler. Fixed argv: `systemctl --user
-        # set-property --runtime kirocrew-agents.slice MemoryHigh=<value>`, where
+        # set-property --runtime ajcrew-agents.slice MemoryHigh=<value>`, where
         # the binary is resolved with shutil.which (never a caller-supplied PATH)
         # and <value> is derived from host RAM, never from agent input.
         # Sandboxing it would also be circular: it CONFIGURES the cgroup
@@ -1174,7 +1174,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # it goes through the caller's privileged runner rather than spawning.)
         # The binaries are resolved with shutil.which (never a caller-supplied PATH),
         # the only variable argument is a tempfile path this module just wrote,
-        # and the whole flow runs from `kirocrew service install` on a TTY, not
+        # and the whole flow runs from `ajcrew service install` on a TTY, not
         # from an agent turn. Sandboxing them would also be circular: their
         # purpose is to make the sandbox constructible in the first place.
         "service/apparmor.py::parser_version",
@@ -1201,12 +1201,12 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # system directories; a miss returns without spawning, so PATH and agent
         # input cannot choose it. Argv is fixed `--user show` / `--user stop`
         # apart from a unit name enumerated from this install's own per-instance
-        # `kirocrew-agents-<token>.slice` cgroup tree. The unit is one separate
+        # `ajcrew-agents-<token>.slice` cgroup tree. The unit is one separate
         # list-argv element, shell is never enabled, and no cwd is passed.
         "session_scope_reap.py::_scope_active_enter_us",
         "session_scope_reap.py::_systemctl_stop",
         # The stale-asset watchdog's re-entry check reads the gateway's own unit:
-        # `systemctl [--user] show -p <fixed properties> kirocrew.service`, a fixed
+        # `systemctl [--user] show -p <fixed properties> ajcrew.service`, a fixed
         # argv with no agent input, bounded by a timeout. The binary comes only from
         # platform_compat.trusted_system_bin("systemctl"); a miss is inconclusive
         # and spawns nothing, so neither PATH nor an agent can choose it.
@@ -1238,7 +1238,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # same reason as the other boot-time self-checks above.
         "slack/gateway_runtime/install_repair.py::_warn_if_kiro_cli_outdated",
         # Only spawn_feature_gateway calls this helper, for initial boot and
-        # restart. It fixes sys.executable -m kiro_crew gateway --test-mode;
+        # restart. It fixes sys.executable -m aj_crew gateway --test-mode;
         # no executable/argv parameter exists. Home/env come from the isolated
         # test supervisor, never HTTP/MCP requests. Dynamic projected MCP
         # commands in workflow_memory_scenario instead use sandboxed_spawn_argv.
@@ -1250,7 +1250,7 @@ BENIGN_PACKAGE_SPAWNS: frozenset[str] = frozenset(
         # call has timeout=30. No HTTP/MCP-selected command reaches this site.
         "testing/harness.py::spawn_feature_gateway",
         # Apple on-device speech (macOS only). None of these takes an agent-authored
-        # command: the argv is a fixed toolchain path or the helper Kiro Crew itself
+        # command: the argv is a fixed toolchain path or the helper Aj Crew itself
         # compiled. `_build_helper` runs swiftc over a file that ships inside the
         # package, writing to the data home's `run/` dir (sensitive-path fenced,
         # 0700). The three spawns that EXECUTE the compiled helper

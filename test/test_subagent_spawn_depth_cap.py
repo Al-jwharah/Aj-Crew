@@ -19,10 +19,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from subagent_helpers import _mock_ctx_builder_auto_spawn, _mock_sessions
 
-from kiro_crew.execution_context import execution_for_store
-from kiro_crew.subagent import _MAX_SPAWN_DEPTH, SubagentInfo, SubagentManager
-from kiro_crew.subagent_manager.admission.types import PreparedSpawn
-from kiro_crew.testing.wait import FALLBACK_TIMEOUT_SECS
+from aj_crew.execution_context import execution_for_store
+from aj_crew.subagent import _MAX_SPAWN_DEPTH, SubagentInfo, SubagentManager
+from aj_crew.subagent_manager.admission.types import PreparedSpawn
+from aj_crew.testing.wait import FALLBACK_TIMEOUT_SECS
 
 pytestmark = pytest.mark.usefixtures("healthy_host_memory")
 
@@ -44,7 +44,7 @@ def _manager_with_parent(parent_depth: int) -> tuple[SubagentManager, str]:
 @pytest.mark.asyncio
 async def test_child_of_root_session_is_depth_one() -> None:
     manager = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx_builder_auto_spawn())
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = manager.spawn("root child", parent_session_key="dashboard:root")
         assert info is not None
         await manager._tasks[info.id]
@@ -58,7 +58,7 @@ async def test_child_of_a_sub_agent_with_no_live_record_is_depth_two() -> None:
     """A ``subagent:`` parent key proves one sub-agent level on its own, so with
     no live parent record and no carried depth the child records depth 2."""
     manager = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx_builder_auto_spawn())
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = manager.spawn("child of a gone parent", parent_session_key="subagent:gone01")
         assert info is not None
         await manager._tasks[info.id]
@@ -85,7 +85,7 @@ async def test_the_deepest_live_parent_record_sets_the_childs_depth(
             conversation_key="subagent:orig01",
             depth=depth,
         )
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = manager.spawn("child of the continued run", parent_session_key="subagent:orig01")
         assert info is not None
         await manager._tasks[info.id]
@@ -135,7 +135,7 @@ async def test_a_spawn_records_the_chat_its_tree_started_from(
         )
         run.root_session_key = record.get("root", "")
         manager._agents[run.id] = run
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = manager.spawn("child", parent_session_key=parent_key)
         assert info is not None
         await manager._tasks[info.id]
@@ -155,8 +155,8 @@ async def test_stop_all_stops_a_nested_run_drawn_in_its_root_chat() -> None:
         await asyncio.wait_for(asyncio.Event().wait(), timeout=FALLBACK_TIMEOUT_SECS)
 
     with (
-        patch("kiro_crew.subagent.Stats"),
-        patch("kiro_crew.subagent.sel"),
+        patch("aj_crew.subagent.Stats"),
+        patch("aj_crew.subagent.sel"),
         patch.object(SubagentManager, "_run", new=_park_forever),
     ):
         try:
@@ -175,8 +175,8 @@ async def test_stop_all_stops_a_nested_run_drawn_in_its_root_chat() -> None:
 
 @pytest.mark.asyncio
 async def test_a_retry_keeps_the_root_of_the_run_it_replaces() -> None:
-    from kiro_crew.dashboard.handlers.messaging import api_spawn_retry
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.dashboard.handlers.messaging import api_spawn_retry
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
     mgr = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx_builder_auto_spawn())
     mgr._run = AsyncMock()  # type: ignore[method-assign]
@@ -196,7 +196,7 @@ async def test_a_retry_keeps_the_root_of_the_run_it_replaces() -> None:
     request.app = {"state": SimpleNamespace(subagents=mgr)}
     request.headers = {}
     request.match_info = {"agent_id": old.id}
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         try:
             assert old.outcome == "failed"
             resp = await api_spawn_retry(request)
@@ -211,7 +211,7 @@ async def test_a_retry_keeps_the_root_of_the_run_it_replaces() -> None:
 @pytest.mark.asyncio
 async def test_child_at_the_cap_is_admitted_one_deeper_than_its_parent() -> None:
     manager, parent_key = _manager_with_parent(_MAX_SPAWN_DEPTH - 1)
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = manager.spawn("deepest allowed", parent_session_key=parent_key)
         assert info is not None
         await manager._tasks[info.id]
@@ -225,7 +225,7 @@ async def test_queued_child_keeps_its_depth_after_the_parent_record_is_gone() ->
     """The row a spawn persists carries its depth, so a drain that cannot
     find the parent's live record keeps the count instead of restarting at 2."""
     manager, parent_key = _manager_with_parent(_MAX_SPAWN_DEPTH - 1)
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         prepared = manager.prepare_spawn("queued deep child", parent_session_key=parent_key)
         assert isinstance(prepared, PreparedSpawn)
         assert prepared.params["_depth"] == _MAX_SPAWN_DEPTH
@@ -246,7 +246,7 @@ async def test_queued_child_keeps_its_depth_after_the_parent_record_is_gone() ->
 @pytest.mark.asyncio
 async def test_a_carried_depth_never_lowers_what_the_live_parent_proves() -> None:
     manager, parent_key = _manager_with_parent(_MAX_SPAWN_DEPTH - 1)
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = manager.spawn("stale carried depth", parent_session_key=parent_key, _depth=1)
         assert info is not None
         await manager._tasks[info.id]
@@ -259,7 +259,7 @@ def test_a_carried_depth_past_the_cap_is_refused_without_a_live_parent() -> None
     """A retry of a run that sat at the cap, whose parent record is gone, stays
     refused for its children: the retry carries its depth back in."""
     manager = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx_builder_auto_spawn())
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = manager.spawn(
             "too deep", parent_session_key="subagent:gone", _depth=_MAX_SPAWN_DEPTH + 1
         )
@@ -281,7 +281,7 @@ def test_a_child_of_a_continuation_counts_from_the_continuations_depth() -> None
         conversation_key="subagent:orig01",
         depth=_MAX_SPAWN_DEPTH,
     )
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = manager.spawn("one level too deep", parent_session_key="subagent:orig01")
 
     assert info is not None
@@ -302,7 +302,7 @@ async def test_a_finished_continuation_does_not_charge_a_later_one_its_depth() -
             depth=depth,
             done=done,
         )
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel"):
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel"):
         info = manager.spawn("child of the shallow turn", parent_session_key="subagent:orig01")
         assert info is not None
         await manager._tasks[info.id]
@@ -316,7 +316,7 @@ def test_a_claimed_reentry_is_never_refused_for_depth() -> None:
     registered during the claim write) does not refuse the claimed half: that
     refusal would hand the claimed row back to the store as claimable work."""
     manager, parent_key = _manager_with_parent(_MAX_SPAWN_DEPTH)
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel") as mock_sel:
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel") as mock_sel:
         info = manager.spawn(
             "admitted at the cap",
             parent_session_key=parent_key,
@@ -334,7 +334,7 @@ def test_a_claimed_reentry_is_never_refused_for_depth() -> None:
 
 def test_child_past_the_cap_is_refused_and_audited() -> None:
     manager, parent_key = _manager_with_parent(_MAX_SPAWN_DEPTH)
-    with patch("kiro_crew.subagent.Stats"), patch("kiro_crew.subagent.sel") as mock_sel:
+    with patch("aj_crew.subagent.Stats"), patch("aj_crew.subagent.sel") as mock_sel:
         mock_sel.return_value.log_tool_invocation = MagicMock()
         info = manager.spawn("one level too deep", parent_session_key=parent_key)
 
@@ -354,8 +354,8 @@ def test_child_past_the_cap_is_refused_and_audited() -> None:
 async def test_a_retry_carries_the_failed_runs_depth() -> None:
     from types import SimpleNamespace
 
-    from kiro_crew.dashboard.handlers.messaging import api_spawn_retry
-    from kiro_crew.execution_context import ExecutionContext, MemoryStoreRef
+    from aj_crew.dashboard.handlers.messaging import api_spawn_retry
+    from aj_crew.execution_context import ExecutionContext, MemoryStoreRef
 
     old = SimpleNamespace(
         id="a1",
@@ -394,7 +394,7 @@ async def test_a_retry_carries_the_failed_runs_depth() -> None:
 
 def test_the_spawn_writes_the_depth_into_the_run_record(tmp_path, monkeypatch) -> None:
     """state.json carries the depth, which a continuation after a restart reads."""
-    from kiro_crew import subagent_persistence
+    from aj_crew import subagent_persistence
 
     monkeypatch.setattr(subagent_persistence, "_subagents_dir", lambda: tmp_path)
     manager = SubagentManager(sessions=_mock_sessions(), ctx_builder=_mock_ctx_builder_auto_spawn())

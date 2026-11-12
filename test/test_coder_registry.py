@@ -11,20 +11,20 @@ from types import SimpleNamespace
 
 import pytest
 
-import kiro_crew.coder.registry as registry_mod
-from kiro_crew import platform_compat
-from kiro_crew.coder.registry import (
+import aj_crew.coder.registry as registry_mod
+from aj_crew import platform_compat
+from aj_crew.coder.registry import (
     WorkspaceBinding,
     WorkspaceBindingRegistry,
     WorkspaceRegistryCorrupt,
 )
-from kiro_crew.constants import CODER_WORKSPACE_PREFIX_MAX_CHARS
+from aj_crew.constants import CODER_WORKSPACE_PREFIX_MAX_CHARS
 
 _CODER_NAME_RE = re.compile(r"[a-z0-9][a-z0-9-]{0,31}")
 
 
 _ALLOCATE_DEFAULTS = dict(
-    template="kirocrew-arm",
+    template="ajcrew-arm",
     preset="",
     prefix="crew-session",
     owner_name="kyleseaman",

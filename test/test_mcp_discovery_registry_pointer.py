@@ -11,8 +11,8 @@ from __future__ import annotations
 import asyncio
 import json
 
-from kiro_crew import mcp_quarantine
-from kiro_crew.mcp_discovery import (
+from aj_crew import mcp_quarantine
+from aj_crew.mcp_discovery import (
     McpServerInfo,
     _probe_cache,
     _server_from_spec,
@@ -71,9 +71,9 @@ def test_list_servers_reports_pointer_as_registry_before_any_probe(tmp_path, mon
     agent_dir.mkdir()
     cfg = {"mcpServers": {"gov": dict(POINTER), "local": {"command": "cmd"}}}
     (agent_dir / "defaults.json").write_text(json.dumps(cfg), encoding="utf-8")
-    monkeypatch.setenv("KIROCREW_PROJECT_DIR", str(tmp_path))
-    monkeypatch.setattr("kiro_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "x",))
-    monkeypatch.setattr("kiro_crew.mcp_discovery.Path.home", lambda: tmp_path)
+    monkeypatch.setenv("AJCREW_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setattr("aj_crew.mcp_discovery._MCP_JSON_PATHS", (tmp_path / "x",))
+    monkeypatch.setattr("aj_crew.mcp_discovery.Path.home", lambda: tmp_path)
     _probe_cache.pop("gov", None)
     _probe_cache.pop("local", None)
 

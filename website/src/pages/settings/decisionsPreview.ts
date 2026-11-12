@@ -103,7 +103,7 @@ export const DECISIONS_BUCKET_PATH = 'decisions.bucket'
  *
  * Not what the card writes: the number that decides how much conversation may leave
  * is the CEILING on the keystone (`historyBudget` on the view,
- * `api.saveDecisionsHistoryBudget`), and `PATCH /api/config/kirocrew` does not
+ * `api.saveDecisionsHistoryBudget`), and `PATCH /api/config/ajcrew` does not
  * accept this path. Named here for the pointer line that tells a reader where the
  * asked-for value lives.
  */
@@ -112,7 +112,7 @@ export const DECISIONS_HISTORY_BUDGET_PATH = 'decisions.history_budget_chars'
 /**
  * Config path of the address decisions are sent to.
  *
- * READ-ONLY from the dashboard, deliberately: `PATCH /api/config/kirocrew` excludes
+ * READ-ONLY from the dashboard, deliberately: `PATCH /api/config/ajcrew` excludes
  * `decisions.provider.*` so a dashboard caller cannot choose where the state a
  * decision point collects is sent, and `api_key` beside it is schema-sensitive, so
  * the masked read hands back a sentinel a write would clobber. The card shows the
@@ -347,7 +347,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
 }
 
 /**
- * The sampling rate out of a `GET /api/config/kirocrew` body, or `null` when the
+ * The sampling rate out of a `GET /api/config/ajcrew` body, or `null` when the
  * config gives nothing printable.
  *
  * A percentage of 0 IS printable and is kept: "on, and sampling nobody" is a
@@ -446,7 +446,7 @@ export function readDecisions(consentBody: unknown, config: unknown): DecisionsV
 }
 
 /**
- * The tier-to-model map out of a `GET /api/config/kirocrew` body.
+ * The tier-to-model map out of a `GET /api/config/ajcrew` body.
  *
  * Every tier is present in the result, and a tier the config does not name reads as
  * `''` — INHERIT, the turn keeps the model its session is already on. That is the
@@ -467,7 +467,7 @@ export function readModelRoute(config: unknown): Record<string, string> {
 }
 
 /**
- * The judge point's two settings out of a `GET /api/config/kirocrew` body.
+ * The judge point's two settings out of a `GET /api/config/ajcrew` body.
  *
  * `provider` falls back to the shipped `auto`, and an unknown word reads as `auto`
  * too, because that is what the backend's own normalizer does with it — a picker

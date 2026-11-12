@@ -17,7 +17,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import kiro_crew.apps.backend as bmod
+import aj_crew.apps.backend as bmod
 
 # ---------------------------------------------------------------------------
 # Shared doubles
@@ -178,13 +178,13 @@ def _record_runs(
 
 
 @pytest.fixture(autouse=True)
-# nosemgrep: kirocrew.test-autouse-shared-monkeypatch -- the family's clean process table and pidfile, moved verbatim; tracked for a de-flake pass
+# nosemgrep: ajcrew.test-autouse-shared-monkeypatch -- the family's clean process table and pidfile, moved verbatim; tracked for a de-flake pass
 def _isolated_module_state(tmp_path: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
     """Give every test a clean process table, pidfile, and audit sink."""
 
-    home = tmp_path / "kirocrew-home"
+    home = tmp_path / "ajcrew-home"
     home.mkdir(parents=True, exist_ok=True)
-    monkeypatch.setenv("KIROCREW_HOME", str(home))
+    monkeypatch.setenv("AJCREW_HOME", str(home))
     monkeypatch.setattr(bmod, "_pidfile_path", lambda: tmp_path / "app_backends.pids.json")
     monkeypatch.setattr(bmod, "sel", lambda: MagicMock())
     with bmod._lock:

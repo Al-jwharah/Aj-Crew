@@ -19,7 +19,7 @@ import pytest
 from stray_line_helpers import cyclic_gc_quiesced  # noqa: F401 - fixture
 from stray_line_helpers import too_deep_line
 
-from kiro_crew.deploy import profiles as profiles_mod
+from aj_crew.deploy import profiles as profiles_mod
 
 BOM = b"\xef\xbb\xbf"
 

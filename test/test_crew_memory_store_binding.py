@@ -10,10 +10,10 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
-from kiro_crew.cli import main
-from kiro_crew.config.loader import KiroCrewAgentConfig, KiroCrewConfig
-from kiro_crew.config.sections import MemoryStoreConfig
-from kiro_crew.memory_stores import (
+from aj_crew.cli import main
+from aj_crew.config.loader import AjCrewAgentConfig, AjCrewConfig
+from aj_crew.config.sections import MemoryStoreConfig
+from aj_crew.memory_stores import (
     DEFAULT_MEMORY_STORE,
     memory_store_binding_defect,
     memory_store_dir_for,
@@ -46,31 +46,31 @@ NON_STRINGS = [None, 7, ["work"], {"work": 1}]
 def _owner_caller(monkeypatch: pytest.MonkeyPatch) -> None:
     """Exercise the agent handlers past their independent owner-auth boundary."""
     monkeypatch.setattr(
-        "kiro_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
+        "aj_crew.dashboard.handlers.source_providers.is_owner_dashboard_request",
         lambda request: True,
     )
 
 
 def _crud_app() -> web.Application:
-    from kiro_crew.dashboard.handlers import (
-        api_kirocrew_agent_delete,
-        api_kirocrew_agent_update,
-        api_kirocrew_agents_create,
+    from aj_crew.dashboard.handlers import (
+        api_ajcrew_agent_delete,
+        api_ajcrew_agent_update,
+        api_ajcrew_agents_create,
     )
 
     app = web.Application()
-    app.router.add_post("/api/agents", api_kirocrew_agents_create)
-    app.router.add_put("/api/agents/{name}", api_kirocrew_agent_update)
-    app.router.add_delete("/api/agents/{name}", api_kirocrew_agent_delete)
+    app.router.add_post("/api/agents", api_ajcrew_agents_create)
+    app.router.add_put("/api/agents/{name}", api_ajcrew_agent_update)
+    app.router.add_delete("/api/agents/{name}", api_ajcrew_agent_delete)
     return app
 
 
 @pytest.fixture()
 def seeded_agent() -> str:
     """One stored crew on the default store, written through the real config API."""
-    cfg = KiroCrewConfig.load()
-    cfg.agents["existing"] = KiroCrewAgentConfig(
-        kiro_agent="kirocrew", workspace="default", memory_store=DEFAULT_MEMORY_STORE
+    cfg = AjCrewConfig.load()
+    cfg.agents["existing"] = AjCrewAgentConfig(
+        kiro_agent="ajcrew", workspace="default", memory_store=DEFAULT_MEMORY_STORE
     )
     cfg.save()
     return "existing"
@@ -78,7 +78,7 @@ def seeded_agent() -> str:
 
 def _declare_store(name: str) -> None:
     """Add *name* to the operator's ``memory_stores`` table."""
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.memory_stores[name] = MemoryStoreConfig()
     cfg.save()
 
@@ -91,7 +91,7 @@ def _store_warnings(caplog: pytest.LogCaptureFixture) -> list[str]:
     with no installed kiro agents and names the same crew — lands in the same list.
     A substring match on the crew name would find that one instead.
     """
-    return [r.getMessage() for r in caplog.records if r.name == "kiro_crew.memory_stores"]
+    return [r.getMessage() for r in caplog.records if r.name == "aj_crew.memory_stores"]
 
 
 class TestTheBindingPredicate:
@@ -129,7 +129,7 @@ class TestTheDashboardRefusesAMalformedBinding:
         async with TestClient(TestServer(_crud_app())) as client:
             resp = await client.post(
                 "/api/agents",
-                json={"name": "reviewer", "kiro_agent": "kirocrew", "memory_store": bad},
+                json={"name": "reviewer", "kiro_agent": "ajcrew", "memory_store": bad},
             )
             assert resp.status == 400
             body = await resp.json()
@@ -138,7 +138,7 @@ class TestTheDashboardRefusesAMalformedBinding:
             # author guessing which of nine rules they tripped.
             assert memory_store_name_defect(bad) in body["error"]
 
-        assert "reviewer" not in KiroCrewConfig.load().agents
+        assert "reviewer" not in AjCrewConfig.load().agents
 
     @pytest.mark.parametrize("bad", NON_STRINGS)
     @pytest.mark.asyncio
@@ -146,12 +146,12 @@ class TestTheDashboardRefusesAMalformedBinding:
         async with TestClient(TestServer(_crud_app())) as client:
             resp = await client.post(
                 "/api/agents",
-                json={"name": "reviewer", "kiro_agent": "kirocrew", "memory_store": bad},
+                json={"name": "reviewer", "kiro_agent": "ajcrew", "memory_store": bad},
             )
             assert resp.status == 400
             assert (await resp.json())["code"] == "invalid_memory_store"
 
-        assert "reviewer" not in KiroCrewConfig.load().agents
+        assert "reviewer" not in AjCrewConfig.load().agents
 
     @pytest.mark.parametrize("bad", MALFORMED)
     @pytest.mark.asyncio
@@ -171,7 +171,7 @@ class TestTheDashboardRefusesAMalformedBinding:
             assert resp.status == 400
             assert (await resp.json())["code"] == "invalid_memory_store"
 
-        stored = KiroCrewConfig.load().agents[seeded_agent]
+        stored = AjCrewConfig.load().agents[seeded_agent]
         assert stored.memory_store == DEFAULT_MEMORY_STORE
         assert stored.workspace == "default"
 
@@ -182,7 +182,7 @@ class TestTheDashboardRefusesAMalformedBinding:
             assert resp.status == 400
             assert (await resp.json())["code"] == "invalid_memory_store"
 
-        assert KiroCrewConfig.load().agents[seeded_agent].memory_store == DEFAULT_MEMORY_STORE
+        assert AjCrewConfig.load().agents[seeded_agent].memory_store == DEFAULT_MEMORY_STORE
 
 
 class TestDashboardMemberBinding:
@@ -191,10 +191,10 @@ class TestDashboardMemberBinding:
     async def test_create_without_a_store_allocates_member_memory(self):
         async with TestClient(TestServer(_crud_app())) as client:
             resp = await client.post(
-                "/api/agents", json={"name": "reviewer", "kiro_agent": "kirocrew"}
+                "/api/agents", json={"name": "reviewer", "kiro_agent": "ajcrew"}
             )
             assert resp.status == 200
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         store = cfg.agents["reviewer"].memory_store
         assert store != DEFAULT_MEMORY_STORE
         assert cfg.memory_stores[store].owner_member == "reviewer"
@@ -206,7 +206,7 @@ class TestDashboardMemberBinding:
     async def test_delete_then_same_name_create_keeps_old_store_and_starts_fresh(self):
         async with TestClient(TestServer(_crud_app())) as client:
             created = await client.post(
-                "/api/agents", json={"name": "reviewer", "kiro_agent": "kirocrew"}
+                "/api/agents", json={"name": "reviewer", "kiro_agent": "ajcrew"}
             )
             assert created.status == 200
             old_store = (await created.json())["memory_store"]
@@ -214,12 +214,12 @@ class TestDashboardMemberBinding:
             deleted = await client.delete("/api/agents/reviewer")
             assert deleted.status == 200
             recreated = await client.post(
-                "/api/agents", json={"name": "reviewer", "kiro_agent": "kirocrew"}
+                "/api/agents", json={"name": "reviewer", "kiro_agent": "ajcrew"}
             )
             assert recreated.status == 200
             new_store = (await recreated.json())["memory_store"]
 
-        cfg = KiroCrewConfig.load()
+        cfg = AjCrewConfig.load()
         assert new_store != old_store
         assert old_store in cfg.memory_stores
         assert cfg.memory_stores[old_store].owner_member == "reviewer"
@@ -227,10 +227,10 @@ class TestDashboardMemberBinding:
 
     @pytest.mark.asyncio
     async def test_failed_delete_save_preserves_the_member_binding(self, monkeypatch):
-        from kiro_crew.config.loader import config_path
+        from aj_crew.config.loader import config_path
 
-        cfg = KiroCrewConfig.load()
-        cfg.agents["reviewer"] = KiroCrewAgentConfig()
+        cfg = AjCrewConfig.load()
+        cfg.agents["reviewer"] = AjCrewAgentConfig()
         store = provision_member_memory(cfg, "reviewer")
         cfg.save()
 
@@ -240,7 +240,7 @@ class TestDashboardMemberBinding:
             raise OSError("read only")
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.agents.update_config_locked",
+            "aj_crew.dashboard.handlers.agents.update_config_locked",
             fail_after_mutation,
         )
 
@@ -248,16 +248,16 @@ class TestDashboardMemberBinding:
             response = await client.delete("/api/agents/reviewer")
             assert response.status == 500
 
-        persisted = KiroCrewConfig.load()
+        persisted = AjCrewConfig.load()
         assert persisted.agents["reviewer"].memory_store == store
         assert require_member_memory_store(persisted, "reviewer") == store
 
     @pytest.mark.asyncio
     async def test_delete_with_a_lost_ack_keeps_committed_config_and_database(self, monkeypatch):
-        from kiro_crew.config.loader import config_path, write_config_atomically
+        from aj_crew.config.loader import config_path, write_config_atomically
 
-        cfg = KiroCrewConfig.load()
-        cfg.agents["reviewer"] = KiroCrewAgentConfig()
+        cfg = AjCrewConfig.load()
+        cfg.agents["reviewer"] = AjCrewAgentConfig()
         store = provision_member_memory(cfg, "reviewer")
         cfg.save()
 
@@ -269,14 +269,14 @@ class TestDashboardMemberBinding:
             raise OSError("original writer lost its completion signal")
 
         monkeypatch.setattr(
-            "kiro_crew.dashboard.handlers.agents.update_config_locked",
+            "aj_crew.dashboard.handlers.agents.update_config_locked",
             competitor_commits_then_writer_reports_failure,
         )
         async with TestClient(TestServer(_crud_app())) as client:
             response = await client.delete("/api/agents/reviewer")
             assert response.status == 500
 
-        persisted = KiroCrewConfig.load()
+        persisted = AjCrewConfig.load()
         assert "reviewer" not in persisted.agents
         assert store in persisted.memory_stores
         assert memory_store_dir_for(store).joinpath("memory.db").is_file()
@@ -289,11 +289,11 @@ class TestDashboardMemberBinding:
         async with TestClient(TestServer(_crud_app())) as client:
             resp = await client.post(
                 "/api/agents",
-                json={"name": "reviewer", "kiro_agent": "kirocrew", "memory_store": "work"},
+                json={"name": "reviewer", "kiro_agent": "ajcrew", "memory_store": "work"},
             )
             assert resp.status == 400
             assert (await resp.json())["code"] == "member_memory_required"
-        assert "reviewer" not in KiroCrewConfig.load().agents
+        assert "reviewer" not in AjCrewConfig.load().agents
 
     @pytest.mark.parametrize("target", ["", "ghost", "work"])
     @pytest.mark.asyncio
@@ -303,7 +303,7 @@ class TestDashboardMemberBinding:
             resp = await client.put(f"/api/agents/{seeded_agent}", json={"memory_store": target})
             assert resp.status == 409
             assert (await resp.json())["code"] == "member_memory_immutable"
-        assert KiroCrewConfig.load().agents[seeded_agent].memory_store == DEFAULT_MEMORY_STORE
+        assert AjCrewConfig.load().agents[seeded_agent].memory_store == DEFAULT_MEMORY_STORE
 
 
 def _cli_config(tmp_path: Path) -> Path:
@@ -311,7 +311,7 @@ def _cli_config(tmp_path: Path) -> Path:
     payload = {
         "agents": {
             "default": {
-                "kiro_agent": "kirocrew",
+                "kiro_agent": "ajcrew",
                 "workspace": "default",
                 "memory_store": DEFAULT_MEMORY_STORE,
             },
@@ -330,7 +330,7 @@ def _cli_config(tmp_path: Path) -> Path:
 # resolver, so a member bound to it fails every turn and cannot repair itself
 # through a path that validates the binding it is about to replace.
 class TestTheCliRefusesAMalformedBinding:
-    """``kirocrew agent create``/``update`` apply the same predicate.
+    """``ajcrew agent create``/``update`` apply the same predicate.
 
     Two surfaces writing one ``config.json`` must not accept different sets of
     values, or the stricter one is decoration: the operator reaches the same bad
@@ -345,9 +345,9 @@ class TestTheCliRefusesAMalformedBinding:
         # ``--memory-store=<value>``, never the two-token form: a value that opens
         # with a hyphen is an option to argparse, so the two-token form would test
         # the parser rather than the guard.
-        argv = ["kirocrew", "agent", "create", "--name", "reviewer", f"--memory-store={bad}"]
+        argv = ["ajcrew", "agent", "create", "--name", "reviewer", f"--memory-store={bad}"]
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch("sys.argv", argv),
             pytest.raises(SystemExit) as exc,
         ):
@@ -371,9 +371,9 @@ class TestTheCliRefusesAMalformedBinding:
         """
         cfg_path = _cli_config(tmp_path)
         before = cfg_path.read_bytes()
-        argv = ["kirocrew", "agent", "create", "--name", "ggseng", f"--memory-store={store}"]
+        argv = ["ajcrew", "agent", "create", "--name", "ggseng", f"--memory-store={store}"]
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch("sys.argv", argv),
             pytest.raises(SystemExit) as exc,
         ):
@@ -389,9 +389,9 @@ class TestTheCliRefusesAMalformedBinding:
     ) -> None:
         cfg_path = _cli_config(tmp_path)
         # ``update`` takes the crew name positionally.
-        argv = ["kirocrew", "agent", "update", "default", f"--memory-store={bad}"]
+        argv = ["ajcrew", "agent", "update", "default", f"--memory-store={bad}"]
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch("sys.argv", argv),
             pytest.raises(SystemExit) as exc,
         ):
@@ -403,9 +403,9 @@ class TestTheCliRefusesAMalformedBinding:
 
     def test_update_refuses_an_undeclared_name(self, tmp_path):
         cfg_path = _cli_config(tmp_path)
-        argv = ["kirocrew", "agent", "update", "default", "--memory-store=ghost"]
+        argv = ["ajcrew", "agent", "update", "default", "--memory-store=ghost"]
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch("sys.argv", argv),
             pytest.raises(SystemExit) as exc,
         ):
@@ -416,16 +416,16 @@ class TestTheCliRefusesAMalformedBinding:
 
     def test_delete_preserves_the_member_database(self, tmp_path, monkeypatch):
         cfg_path = _cli_config(tmp_path)
-        monkeypatch.setattr("kiro_crew.config.loader.config_path", lambda: cfg_path)
-        cfg = KiroCrewConfig.load()
-        cfg.agents["reviewer"] = KiroCrewAgentConfig()
+        monkeypatch.setattr("aj_crew.config.loader.config_path", lambda: cfg_path)
+        cfg = AjCrewConfig.load()
+        cfg.agents["reviewer"] = AjCrewAgentConfig()
         store = provision_member_memory(cfg, "reviewer")
         cfg.save()
 
-        with unittest.mock.patch("sys.argv", ["kirocrew", "agent", "delete", "reviewer"]):
+        with unittest.mock.patch("sys.argv", ["ajcrew", "agent", "delete", "reviewer"]):
             main()
 
-        saved = KiroCrewConfig.load()
+        saved = AjCrewConfig.load()
         assert "reviewer" not in saved.agents
         assert store in saved.memory_stores
         assert memory_store_dir_for(store).joinpath("memory.db").is_file()
@@ -443,9 +443,9 @@ class TestTheUpdateHelpMatchesTheRefusal:
     def _memory_store_help() -> str:
         import argparse
 
-        from kiro_crew import cli_parser_agent
+        from aj_crew import cli_parser_agent
 
-        root = argparse.ArgumentParser(prog="kirocrew")
+        root = argparse.ArgumentParser(prog="ajcrew")
         cli_parser_agent.register_agent_parser(root.add_subparsers(dest="command"))
         sub = next(a for a in root._actions if isinstance(a, argparse._SubParsersAction))
         agent = sub.choices["agent"]
@@ -463,12 +463,12 @@ class TestTheUpdateHelpMatchesTheRefusal:
     def test_an_unusable_legacy_binding_is_not_moved_to_default(self, tmp_path: Path) -> None:
         cfg_path = _cli_config(tmp_path)
         payload = json.loads(cfg_path.read_text(encoding="utf-8"))
-        payload["agents"]["m1"] = {"kiro_agent": "kirocrew", "memory_store": "Bad_Name"}
+        payload["agents"]["m1"] = {"kiro_agent": "ajcrew", "memory_store": "Bad_Name"}
         payload["memory_stores"]["Bad_Name"] = {}
         cfg_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-        argv = ["kirocrew", "agent", "update", "m1", f"--memory-store={DEFAULT_MEMORY_STORE}"]
+        argv = ["ajcrew", "agent", "update", "m1", f"--memory-store={DEFAULT_MEMORY_STORE}"]
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
             unittest.mock.patch("sys.argv", argv),
             pytest.raises(SystemExit) as exc,
         ):
@@ -482,7 +482,7 @@ class TestWhyAMalformedBindingHadToBeRefused:
     def test_a_non_string_binding_is_shown_not_repaired(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        """``kirocrew agent list`` shows the malformed binding; the loader keeps it.
+        """``ajcrew agent list`` shows the malformed binding; the loader keeps it.
 
         A hand-edited ``config.json`` can still reach this state. The listing
         prints ``(invalid: NoneType)`` so the operator can see the binding that
@@ -496,9 +496,9 @@ class TestWhyAMalformedBindingHadToBeRefused:
         cfg_path.write_text(json.dumps(payload), encoding="utf-8")
 
         with (
-            unittest.mock.patch("kiro_crew.config.loader.config_path", return_value=cfg_path),
-            unittest.mock.patch("sys.argv", ["kirocrew", "agent", "list"]),
+            unittest.mock.patch("aj_crew.config.loader.config_path", return_value=cfg_path),
+            unittest.mock.patch("sys.argv", ["ajcrew", "agent", "list"]),
         ):
             main()
-            assert KiroCrewConfig.load().agents["default"].memory_store is None
+            assert AjCrewConfig.load().agents["default"].memory_store is None
         assert "(invalid: NoneType)" in capsys.readouterr().out

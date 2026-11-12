@@ -37,9 +37,11 @@ export function hiddenChromeProps(hidden: boolean): HTMLAttributes<HTMLElement> 
  * classes, the native traffic lights and drag bar, the embedded-pane relay and
  * the macOS drag gaps of the local header.
  */
-export function useFocusChrome({ isMobile, navCollapsed, activeInstanceId, topReservePx = 0 }: {
+export function useFocusChrome({ isMobile, navCollapsed, simpleShell = false, activeInstanceId, topReservePx = 0 }: {
   isMobile: boolean
   navCollapsed: boolean
+  /** The Simple layout's sidebar is wider than the Advanced rail (`railWidthFor`). */
+  simpleShell?: boolean
   activeInstanceId: string | null
   /** CSS px the shell sits below the window top (macOS fullscreen). */
   topReservePx?: number
@@ -81,7 +83,7 @@ export function useFocusChrome({ isMobile, navCollapsed, activeInstanceId, topRe
     // exists — an overlay opened with the pointer OFF-window has no
     // enter/leave history for the event-based close to work from. The band is
     // the rail track at the user's collapse state; +12 slack.
-    departWhen: e => e.clientX > railWidthFor({ isMobile: false, collapsed: navCollapsed }) + 12,
+    departWhen: e => e.clientX > railWidthFor({ isMobile: false, collapsed: navCollapsed, simple: simpleShell }) + 12,
     dismissOnWindowExit: true,
   })
   // Edge-slam reveal: overshooting a trigger straight OUT of the window must

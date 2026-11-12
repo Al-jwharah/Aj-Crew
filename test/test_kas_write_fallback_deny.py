@@ -22,20 +22,20 @@ import pytest
 from test_kas_spec_builtin_grant import _handle, _permission
 from test_tool_call_classification_kas import _kas_builtin_flow
 
-from kiro_crew import permission_floor
-from kiro_crew.acp import kas_agents, kas_write_allowlist
-from kiro_crew.acp._dispatch import attach_kas_custom_agents
-from kiro_crew.acp.kas_permissions import (
+from aj_crew import permission_floor
+from aj_crew.acp import kas_agents, kas_write_allowlist
+from aj_crew.acp._dispatch import attach_kas_custom_agents
+from aj_crew.acp.kas_permissions import (
     CREW_WRITE_ALLOWLIST_KEY,
     spec_write_allowlist,
     tools_settings_to_permissions,
 )
-from kiro_crew.acp.types import AcpEvent
-from kiro_crew.acp_backends import ACP_BACKEND_KAS
-from kiro_crew.hooks import TOOL_DENY, HookManager, HooksConfig, hook_gate_kwargs
-from kiro_crew.platform import allowed_paths
-from kiro_crew.platform import context as ctx_mod
-from kiro_crew.platform import governance_profiles as gp
+from aj_crew.acp.types import AcpEvent
+from aj_crew.acp_backends import ACP_BACKEND_KAS
+from aj_crew.hooks import TOOL_DENY, HookManager, HooksConfig, hook_gate_kwargs
+from aj_crew.platform import allowed_paths
+from aj_crew.platform import context as ctx_mod
+from aj_crew.platform import governance_profiles as gp
 
 #: Creating a symlink on Windows needs a privilege a runner may not hold.
 _needs_symlinks = pytest.mark.skipif(
@@ -340,7 +340,7 @@ def test_the_notice_no_longer_names_fallback_action() -> None:
 
 
 def test_the_session_record_follows_the_active_agent_and_a_mode_switch() -> None:
-    from kiro_crew.agent_files import kas_wire_agent_id
+    from aj_crew.agent_files import kas_wire_agent_id
 
     batch = [
         {"id": "probe", "prompt": "p", CREW_WRITE_ALLOWLIST_KEY: ["out", 7]},
@@ -441,19 +441,19 @@ def test_anchoring_does_no_filesystem_work(monkeypatch) -> None:
     _real_lstat = os.lstat
 
     def _refuse_realpath(*_a: Any, **_k: Any) -> Any:
-        # Raise only when the immediate caller is inside kiro_crew, so that
+        # Raise only when the immediate caller is inside aj_crew, so that
         # coverage.py's canonical_filename() -- which calls os.path.realpath
         # the first time it traces a new source file in this xdist worker --
         # does not trip the assertion.  The global patch keeps both
         # kas_write_allowlist AND allowed_paths (posixpath is os.path on POSIX)
         # covered; coverage frames are let through by delegating to the real
         # function instead of returning None (which would hand coverage a bad path).
-        if sys._getframe(1).f_globals.get("__name__", "").startswith("kiro_crew"):
+        if sys._getframe(1).f_globals.get("__name__", "").startswith("aj_crew"):
             raise AssertionError("filesystem touched while anchoring")
         return _real_realpath(*_a, **_k)
 
     def _refuse_lstat(*_a: Any, **_k: Any) -> Any:
-        if sys._getframe(1).f_globals.get("__name__", "").startswith("kiro_crew"):
+        if sys._getframe(1).f_globals.get("__name__", "").startswith("aj_crew"):
             raise AssertionError("filesystem touched while anchoring")
         return _real_lstat(*_a, **_k)
 

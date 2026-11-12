@@ -15,13 +15,13 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 from off_loop_helpers import off_loop
 
-from kiro_crew import agent_panel
-from kiro_crew import crew_log as lg
-from kiro_crew import members as members_mod
-from kiro_crew.crew_log import CrewLog
-from kiro_crew.crew_log import emit as crew_log_emit
-from kiro_crew.crew_log import projection as crew_log_projection
-from kiro_crew.dashboard.handlers import agent_panel as routes
+from aj_crew import agent_panel
+from aj_crew import crew_log as lg
+from aj_crew import members as members_mod
+from aj_crew.crew_log import CrewLog
+from aj_crew.crew_log import emit as crew_log_emit
+from aj_crew.crew_log import projection as crew_log_projection
+from aj_crew.dashboard.handlers import agent_panel as routes
 
 CREW = "fleet-crew"
 SLUG = "fleet-crew"
@@ -33,11 +33,11 @@ def _crew_slot(crew_name: str) -> str:
     ``member_slot_key(slug)`` is only the resolver's fallback; hard-coding it would never
     exercise the V2 path, where the key carries the member's private store.
     """
-    from kiro_crew.config.loader import KiroCrewConfig
+    from aj_crew.config.loader import AjCrewConfig
 
     slug = members_mod.member_slug(crew_name)
     try:
-        slot, _store = routes._member_thread_slot(KiroCrewConfig.load(), crew_name, slug)
+        slot, _store = routes._member_thread_slot(AjCrewConfig.load(), crew_name, slug)
     except Exception:
         # The resolver's own fallback, for a crew with no addressable member space.
         return members_mod.member_slot_key(slug)
@@ -187,7 +187,7 @@ def _crew_log_on(_floor_monkeypatch):
     cell keyed by slot, and these tests reuse slot names across a fresh data home,
     so a fold carried in from a previous test would answer from the wrong unit.
     """
-    _floor_monkeypatch.setenv("KIROCREW_CREW_LOG", "1")
+    _floor_monkeypatch.setenv("AJCREW_CREW_LOG", "1")
     crew_log_emit.reset_caches()
     crew_log_projection.forget_slot_folds()
     yield

@@ -21,9 +21,9 @@ from pod_helpers import (  # noqa: F401 -- the autouse fixtures register by impo
     requires_posix_pod_lifecycle,
 )
 
-from kiro_crew.pod import cli as pod_cli
-from kiro_crew.pod import runtime as rt
-from kiro_crew.pod.config import PodConfig
+from aj_crew.pod import cli as pod_cli
+from aj_crew.pod import runtime as rt
+from aj_crew.pod.config import PodConfig
 
 
 @requires_posix_pod_lifecycle
@@ -31,7 +31,7 @@ class TestBootTimeSettings:
     """``pod up --approval`` / ``--crons`` / ``--no-embeddings`` are persisted per
     pod and applied at boot.
 
-    Both backends run a flagless ``kirocrew pod _run <name>``, so they travel through
+    Both backends run a flagless ``ajcrew pod _run <name>``, so they travel through
     the per-pod env file, as ``SEED`` does. ``--approval`` and ``--crons`` reach the
     gateway argv; ``--no-embeddings`` is an env var the embedder reads.
     """
@@ -40,8 +40,8 @@ class TestBootTimeSettings:
         self, root: Path, monkeypatch: pytest.MonkeyPatch, env: dict[str, str]
     ) -> list[str]:
         """Boot a ready pod with *env* merged into its env file; return the exec argv."""
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(root / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(root / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(root / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(root / "pods"))
         c = PodConfig.load()
         rt.pin_checkout(c, "x", _ready_worktree(root, "x"))
         if env:
@@ -69,8 +69,8 @@ class TestBootTimeSettings:
         nothing about the other, and an env-only option that accidentally grew an
         argv flag (or the reverse) would pass a single-sided check.
         """
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(root / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(root / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(root / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(root / "pods"))
         # A value inherited from the runner's own environment would make an
         # assertion about what boot exports unfalsifiable.
         monkeypatch.delenv(rt.SKIP_MODEL_DOWNLOAD_ENV, raising=False)
@@ -137,7 +137,7 @@ class TestBootTimeSettings:
         root.mkdir()
         c = PodConfig.load()
         rt.pin_checkout(c, "x", _ready_worktree(root, "x", flags=False))
-        # Seed tunnel.enabled=TRUE; boot() must leave it alone. KiroCrewConfig.load()
+        # Seed tunnel.enabled=TRUE; boot() must leave it alone. AjCrewConfig.load()
         # lets config.local.json win over config.json, so rewriting this file would not
         # pin the setting and would mutate an operator's file. True makes a re-pin visible.
         home = c.home_dir("x")
@@ -165,7 +165,7 @@ class TestBootTimeSettings:
         flag for every pod; teach ``target_supports_flag`` the new place instead.
         """
         repo_root = Path(rt.__file__).resolve().parents[3]
-        assert (repo_root / "src" / "kiro_crew" / "cli.py").is_file(), repo_root
+        assert (repo_root / "src" / "aj_crew" / "cli.py").is_file(), repo_root
         assert rt.target_supports_flag(repo_root, "--no-tunnel") is True
         assert rt.target_supports_flag(repo_root, "--no-crons") is True
         # A flag this repo does not declare must still read as unsupported, so the
@@ -177,8 +177,8 @@ class TestBootTimeSettings:
         # comment as a declaration would pass the flag and produce exactly the
         # argparse-exit restart loop the probe exists to prevent.
         co = tmp_path / "co"
-        (co / "src" / "kiro_crew").mkdir(parents=True)
-        cli = co / "src" / "kiro_crew" / "cli.py"
+        (co / "src" / "aj_crew").mkdir(parents=True)
+        cli = co / "src" / "aj_crew" / "cli.py"
 
         cli.write_text('# TODO: someday accept "--no-tunnel" here\ngw.add_argument("--x")\n')
         assert rt.target_supports_flag(co, "--no-tunnel") is False
@@ -198,8 +198,8 @@ class TestBootTimeSettings:
         # source -- that distinction is the entire point, so it is asserted
         # directly rather than only through boot().
         co = tmp_path / "co"
-        (co / "src" / "kiro_crew").mkdir(parents=True)
-        cli = co / "src" / "kiro_crew" / "cli.py"
+        (co / "src" / "aj_crew").mkdir(parents=True)
+        cli = co / "src" / "aj_crew" / "cli.py"
 
         cli.write_text('gw.add_argument("--no-crons")\n')
         assert rt.target_supports_flag(co, "--no-tunnel") is False
@@ -299,9 +299,9 @@ class TestBootTimeSettings:
     def _prep_up(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, active: bool
     ) -> PodConfig:
-        monkeypatch.setenv("KIROCREW_POD_WORKTREES_ROOT", str(tmp_path / "wts"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_WORKTREES_ROOT", str(tmp_path / "wts"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
         monkeypatch.setattr(rt, "_git_worktrees", lambda ref: {})
         monkeypatch.setattr(rt, "require_backend", lambda: None)
         _ready_worktree(tmp_path / "wts", "demo")
@@ -353,7 +353,7 @@ class TestBootTimeSettings:
             ),
         )
         err = capsys.readouterr().err
-        assert "kirocrew pod down demo && kirocrew pod up demo --approval reads" in err
+        assert "ajcrew pod down demo && ajcrew pod up demo --approval reads" in err
         assert "pod restart" not in err
 
     def test_up_tolerates_a_namespace_without_the_flag(
@@ -449,7 +449,7 @@ class TestBootTimeSettings:
         # what keeps the two spellings from drifting. A typo here exports a variable
         # nothing reads and the pod downloads the model anyway -- silently, since a
         # pod with the model IS healthy.
-        from kiro_crew import embeddings
+        from aj_crew import embeddings
 
         assert rt.SKIP_MODEL_DOWNLOAD_ENV == embeddings._SKIP_DOWNLOAD_ENV
 
@@ -537,7 +537,7 @@ class TestBootTimeSettings:
     def test_the_embed_model_override_env_names_match_the_embedder(self) -> None:
         # Same drift guard as the skip switch: a misspelt override name here is a
         # variable nothing reads, and the pod loads the custom model anyway.
-        from kiro_crew import embeddings
+        from aj_crew import embeddings
 
         assert set(rt.EMBED_MODEL_OVERRIDE_ENVS) == {
             embeddings._MODEL_PATH_ENV,
@@ -548,31 +548,31 @@ class TestBootTimeSettings:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # The skip switch gates only the DOWNLOAD; resolve_custom_model reads
-        # KIROCREW_EMBED_MODEL_PATH first. Inherited, it would make the pod load the
+        # AJCREW_EMBED_MODEL_PATH first. Inherited, it would make the pod load the
         # operator's GGUF and embed while the journal says it does not -- so the
         # override must leave the mapping together with the switch arriving.
         monkeypatch.delenv(rt.SKIP_MODEL_DOWNLOAD_ENV, raising=False)
-        monkeypatch.setenv("KIROCREW_EMBED_MODEL_PATH", str(tmp_path / "custom.gguf"))
-        monkeypatch.setenv("KIROCREW_EMBED_MODEL_URL", "https://mirror.example/m.gguf")
+        monkeypatch.setenv("AJCREW_EMBED_MODEL_PATH", str(tmp_path / "custom.gguf"))
+        monkeypatch.setenv("AJCREW_EMBED_MODEL_URL", "https://mirror.example/m.gguf")
         cfg = PodConfig.load()
         env = rt.build_pod_env(
             cfg, tmp_path / "home", 7999, tmp_path / "co", skip_model_download=True
         )
         assert env[rt.SKIP_MODEL_DOWNLOAD_ENV] == "1"
-        assert "KIROCREW_EMBED_MODEL_PATH" not in env
-        assert "KIROCREW_EMBED_MODEL_URL" not in env
+        assert "AJCREW_EMBED_MODEL_PATH" not in env
+        assert "AJCREW_EMBED_MODEL_URL" not in env
         # Dropped from the pod's mapping only; the operator's shell keeps its model.
-        assert os.environ["KIROCREW_EMBED_MODEL_PATH"] == str(tmp_path / "custom.gguf")
+        assert os.environ["AJCREW_EMBED_MODEL_PATH"] == str(tmp_path / "custom.gguf")
 
     def test_build_pod_env_keeps_a_custom_model_path_on_a_normal_pod(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         # Without the option a pod is a normal gateway and inherits the override
         # like any other setting; the scrub is tied to the switch, not to the env.
-        monkeypatch.setenv("KIROCREW_EMBED_MODEL_PATH", str(tmp_path / "custom.gguf"))
+        monkeypatch.setenv("AJCREW_EMBED_MODEL_PATH", str(tmp_path / "custom.gguf"))
         cfg = PodConfig.load()
         env = rt.build_pod_env(cfg, tmp_path / "home", 7999, tmp_path / "co")
-        assert env["KIROCREW_EMBED_MODEL_PATH"] == str(tmp_path / "custom.gguf")
+        assert env["AJCREW_EMBED_MODEL_PATH"] == str(tmp_path / "custom.gguf")
 
     def test_boot_announces_an_inherited_skip_switch(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys
@@ -598,8 +598,8 @@ class TestBootTimeSettings:
         # setting here, a single `pod exec` against an embedding-light pod starts
         # the download the pod was booted to do without -- and the measurement it
         # was booted for is then taken against a pod that has the model.
-        monkeypatch.setenv("KIROCREW_POD_ENV_DIR", str(tmp_path / "env"))
-        monkeypatch.setenv("KIROCREW_POD_ROOT", str(tmp_path / "pods"))
+        monkeypatch.setenv("AJCREW_POD_ENV_DIR", str(tmp_path / "env"))
+        monkeypatch.setenv("AJCREW_POD_ROOT", str(tmp_path / "pods"))
         monkeypatch.delenv(rt.SKIP_MODEL_DOWNLOAD_ENV, raising=False)
         cfg = PodConfig.load()
         rt.pin_checkout(cfg, "x", _ready_worktree(tmp_path, "x"))

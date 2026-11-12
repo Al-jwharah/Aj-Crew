@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import pytest
 
-from kiro_crew.eval.bench.corpus import (
+from aj_crew.eval.bench.corpus import (
     CAT_MULTI_HOP,
     CAT_SINGLE_HOP,
     BenchInstance,

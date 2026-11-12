@@ -21,7 +21,7 @@
  * a "before" run uses the same harness; PREFIX names the frames.
  *
  * Usage: node scripts/capture-side-panel-drag-ceiling.mjs [outDir]
- *        DIST=../../KiroCrew-main/website/dist PREFIX=10-before node scripts/capture-side-panel-drag-ceiling.mjs [outDir]
+ *        DIST=../../AjCrew-main/website/dist PREFIX=10-before node scripts/capture-side-panel-drag-ceiling.mjs [outDir]
  */
 import { chromium } from 'playwright'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -63,7 +63,7 @@ const FILE_CONTENT = { [MD_PATH]: MD_CONTENT }
 
 const slots = [{
   key: SLOT, title: 'Release checklist', running: false, last_message: 'Release checklist',
-  messages: 2, agent: 'kirocrew', memory_mode: 'persistent', project: PROJECT,
+  messages: 2, agent: 'ajcrew', memory_mode: 'persistent', project: PROJECT,
   modified: Math.floor(Date.now() / 1000), source_links: [], source_links_total: 0,
 }]
 const t0 = Math.floor(Date.now() / 1000) - 900
@@ -135,7 +135,7 @@ async function main() {
         'mc-files-rail-open': '0',
         'mc-side-panel-width': '460',
         'mc-nav': railCollapsed ? '1' : '0',
-        'kirocrew:comment-hint-dismissed': '1',
+        'ajcrew:comment-hint-dismissed': '1',
         ['mc-git-panel-opened:' + SLOT + ':' + PROJECT]: '1',
         'mc-chat-config': JSON.stringify({ pinLastPrompt: false, streamMode: 'immediate' }),
       },

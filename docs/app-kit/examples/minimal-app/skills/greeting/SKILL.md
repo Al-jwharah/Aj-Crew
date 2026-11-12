@@ -5,10 +5,10 @@ always: false
 
 # Greeting Skill
 
-Help new users get oriented with Kiro Crew.
+Help new users get oriented with Aj Crew.
 
 ## Key Commands
 
-- `kirocrew app list` — see installed apps
-- `kirocrew cron list` — see scheduled jobs
-- `kirocrew learn list` — see learned preferences
+- `ajcrew app list` — see installed apps
+- `ajcrew cron list` — see scheduled jobs
+- `ajcrew learn list` — see learned preferences

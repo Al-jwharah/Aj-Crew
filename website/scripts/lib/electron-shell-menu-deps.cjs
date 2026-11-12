@@ -30,7 +30,7 @@ const noop = () => {};
 function menuDeps(isMac) {
   return {
     isMac,
-    appName: "Kiro Crew",
+    appName: "Aj Crew",
     openSettings: noop,
     openAbout: noop,
     reload: noop,

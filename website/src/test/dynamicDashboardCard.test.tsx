@@ -74,7 +74,7 @@ describe('host-owned card freshness and cost controls', () => {
   })
 
   it('uses an explicit native config action, never viewing, to opt into generation', async () => {
-    vi.spyOn(api, 'kirocrewConfig').mockResolvedValue({ dashboard: { dynamic_dashboard_cards: false } })
+    vi.spyOn(api, 'ajcrewConfig').mockResolvedValue({ dashboard: { dynamic_dashboard_cards: false } })
     const patch = vi.spyOn(api, 'patchConfig').mockResolvedValue({})
     renderWithProviders(<AutomaticCardSetting active />)
     const toggle = await screen.findByRole('switch', { name: /Automatic cards for all sessions/ })

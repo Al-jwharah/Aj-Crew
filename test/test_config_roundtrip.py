@@ -1,4 +1,4 @@
-"""Tests that KiroCrewConfig.save() preserves all dataclass fields.
+"""Tests that AjCrewConfig.save() preserves all dataclass fields.
 
 Regression test for the bug where to_dict() omitted secretary,
 taskrunner, skills, and tunnel — causing save() to
@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 import pytest
 
-from kiro_crew.config.loader import KiroCrewConfig
+from aj_crew.config.loader import AjCrewConfig
 
 
 @pytest.fixture()
@@ -21,17 +21,17 @@ def cfg_file(tmp_path):
     """Redirect config_path() to a temp file for isolation."""
     p = tmp_path / "config.json"
     p.write_text("{}", encoding="utf-8")
-    with patch("kiro_crew.config.loader.config_path", return_value=p):
+    with patch("aj_crew.config.loader.config_path", return_value=p):
         yield p
 
 
 def test_to_dict_includes_all_dataclass_fields():
-    """Every public field on KiroCrewConfig must appear in to_dict() output."""
-    cfg = KiroCrewConfig()
+    """Every public field on AjCrewConfig must appear in to_dict() output."""
+    cfg = AjCrewConfig()
     d = cfg.to_dict()
     # Fields that are serialized under a different key or merged into slack
     SPECIAL = {"slack_channels", "slack_dm_activation", "observe_max_messages", "observe_ttl_hours"}
-    for f in fields(KiroCrewConfig):
+    for f in fields(AjCrewConfig):
         if f.name in SPECIAL:
             continue
         if f.name.startswith("_"):
@@ -44,7 +44,7 @@ def test_to_dict_includes_all_dataclass_fields():
 
 def test_save_load_roundtrip_taskrunner(cfg_file):
     """TaskRunner config must survive a save/load cycle."""
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.taskrunner.max_parallel_steps = 5
     cfg.save()
 
@@ -57,7 +57,7 @@ def test_retired_orchestrator_section_is_dropped_on_save(cfg_file):
     cfg_file.write_text(
         json.dumps({"orchestrator": {"stage_timeout_seconds": 900}}), encoding="utf-8"
     )
-    cfg = KiroCrewConfig.load()
+    cfg = AjCrewConfig.load()
     cfg.save()
 
     raw = json.loads(cfg_file.read_text(encoding="utf-8"))
@@ -66,7 +66,7 @@ def test_retired_orchestrator_section_is_dropped_on_save(cfg_file):
 
 def test_save_load_roundtrip_skills(cfg_file):
     """Skills config must survive a save/load cycle."""
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.skills.max_triggered = 5
     cfg.save()
 
@@ -76,7 +76,7 @@ def test_save_load_roundtrip_skills(cfg_file):
 
 def test_save_load_roundtrip_tunnel(cfg_file):
     """Tunnel config must survive a save/load cycle."""
-    cfg = KiroCrewConfig()
+    cfg = AjCrewConfig()
     cfg.tunnel.enabled = True
     cfg.save()
 
